@@ -1,0 +1,177 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abxi700" module="abx" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="06814" crtdt="2016-07-07 09:12:32" modid="06814" moddt="2016-07-07 09:12:32" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="年度保稅原料結算資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bxgfsite,bxgf001,bxgf002,bxgf002_desc(chr80),bxgf002_desc_1(chr80),iman013,iman012,bxgfstus,bxgf003,bxgf004,bxgf005,bxgf006,bxgf007,bxgf009,bxgf008,bxgf010,bxgf011,bxgf012,bxgf013,bxgf014,bxgf015,bxgf016,bxgfownid,bxgfownid_desc(chr80),bxgfowndp,bxgfowndp_desc(chr80),bxgfcrtid,bxgfcrtid_desc(chr80),bxgfcrtdp,bxgfcrtdp_desc(chr80),bxgfcrtdt,bxgfmodid,bxgfmodid_desc(chr80),bxgfmoddt,bxgfcnfid,bxgfcnfid_desc(chr80),bxgfcnfdt"/>
+      <var id="bs_field" value="bxgfsite,bxgf001,bxgf002,bxgf003,bxgf004,bxgf005,bxgf006,bxgf007,bxgf008,bxgf009,bxgf010,bxgf011,bxgf012,bxgf013,bxgf014,bxgf015,bxgf016" pk="bxgfsite,bxgf001,bxgf002" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abx" filename="abxi700" method="dialog">
+    <section id="input">
+      <input id="head" field="bxgfsite,bxgf001,bxgf002,bxgfstus,bxgf003,bxgf004,bxgf005,bxgf006,bxgf007,bxgf009,bxgf008,bxgf010,bxgf011,bxgf012,bxgf013,bxgf014,bxgf015,bxgf016"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bxgfsite,bxgf001,bxgf002,iman013,iman012,bxgfstus,bxgf003,bxgf004,bxgf005,bxgf006,bxgf007,bxgf009,bxgf008,bxgf010,bxgf011,bxgf012,bxgf013,bxgf014,bxgf015,bxgf016,bxgfownid,bxgfowndp,bxgfcrtid,bxgfcrtdp,bxgfcrtdt,bxgfmodid,bxgfmoddt,bxgfcnfid,bxgfcnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bxgfsite,bxgf001,bxgf002"/>
+      <set id="head" type="no_entry" field="bxgfsite,bxgf001,bxgf002"/>
+    </init>
+    <init id="head">
+      <column id="bxgfsite"/>
+      <column id="bxgf001">
+        <after>
+          <check id="range" st="3000" st_type="1" errno="azz-00087" bt="1911" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="bxgf002">
+        <after>
+          <check chkid="v_imaf001_1" id="isExist"/>
+          <reference field="bxgf002_desc" ref_field="bxgf_t.bxgf002" map_field="bxgf002" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001" state="i"/>
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="bxgf002_desc"/>
+      <column id="bxgf002_desc_1"/>
+      <column id="iman013" def_scc="1022"/>
+      <column id="iman012"/>
+      <column id="bxgfstus" scc="50" type="S" default="Y">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="bxgf003" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bxgf004" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bxgf005" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bxgf006" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bxgf007" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bxgf009" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bxgf008" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bxgf010" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bxgf011" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bxgf012" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bxgf013" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bxgf014" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bxgf015" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bxgf016" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bxgfownid">
+        <after>
+          <reference field="bxgfownid_desc" ref_field="bxgf_t.bxgfownid" map_field="bxgfownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxgfownid_desc"/>
+      <column id="bxgfowndp">
+        <after>
+          <reference field="bxgfowndp_desc" ref_field="bxgf_t.bxgfowndp" map_field="bxgfowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bxgfowndp_desc"/>
+      <column id="bxgfcrtid">
+        <after>
+          <reference field="bxgfcrtid_desc" ref_field="bxgf_t.bxgfcrtid" map_field="bxgfcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxgfcrtid_desc"/>
+      <column id="bxgfcrtdp">
+        <after>
+          <reference field="bxgfcrtdp_desc" ref_field="bxgf_t.bxgfcrtdp" map_field="bxgfcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bxgfcrtdp_desc"/>
+      <column id="bxgfcrtdt"/>
+      <column id="bxgfmodid">
+        <after>
+          <reference field="bxgfmodid_desc" ref_field="bxgf_t.bxgfmodid" map_field="bxgfmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxgfmodid_desc"/>
+      <column id="bxgfmoddt"/>
+      <column id="bxgfcnfid">
+        <after>
+          <reference field="bxgfcnfid_desc" ref_field="bxgf_t.bxgfcnfid" map_field="bxgfcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxgfcnfid_desc"/>
+      <column id="bxgfcnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bxgf_t" pk="bxgfsite,bxgf001,bxgf002">
+      <sql id="forupd_sql" type="sql" query="SELECT bxgfsite,bxgf001,bxgf002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,bxgfstus,bxgf003,bxgf004,bxgf005,bxgf006,bxgf007,bxgf009,bxgf008,bxgf010,bxgf011,bxgf012,bxgf013,bxgf014,bxgf015,bxgf016,bxgfownid,&apos;&apos;,bxgfowndp,&apos;&apos;,bxgfcrtid,&apos;&apos;,bxgfcrtdp,&apos;&apos;,bxgfcrtdt,bxgfmodid,&apos;&apos;,bxgfmoddt,bxgfcnfid,&apos;&apos;,bxgfcnfdt FROM bxgf_t WHERE bxgfent= ? AND bxgfsite=? AND bxgf001=? AND bxgf002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bxgfsite,bxgf001,bxgf002 FROM bxgf_t" order="bxgfsite,bxgf001,bxgf002"/>
+    </head>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,94 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astq501" module="ast" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="06814" crtdt="2015-05-06 15:41:46" modid="08742" moddt="2016-09-14 09:52:18" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="專櫃每日銷售成本明細查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),stgasite,stga001,stga002,stga002_desc(chr500),stga003,stga003_desc(chr500),stga004,stga004_desc(chr500),stga005,stga005_desc(chr500),stga006,stga006_desc(chr500),stga007,stga008,stga009,stga010,stga011,stga012,stga013,stga014,stgadocno,stga015,stga016,stga017"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),stgasite(b_stgasite),stga001(b_stga001),stga002(b_stga002),stga002_desc(b_stga002_desc),stga003(b_stga003),stga003_desc(b_stga003_desc),stga004(b_stga004),stga004_desc(b_stga004_desc),stga005(b_stga005),stga005_desc(b_stga005_desc),stga006(b_stga006),stga006_desc(b_stga006_desc),stga007(b_stga007),stga008(b_stga008),stga009(b_stga009),stga010(b_stga010),stga011(b_stga011),stga012(b_stga012),stga013(b_stga013),stga014(b_stga014),stgadocno(b_stgadocno),stga015(b_stga015),stga016(b_stga016),stga017(b_stga017)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="astq501" method="dialog">
+    <section id="input"/>
+    <section id="construct">
+      <construct id="body" page="1" field="stgasite(b_stgasite)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="stgasite">
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="stga001"/>
+      <column id="stga002">
+        <after>
+          <reference field="stga002_desc" ref_field="stga002" map_field="stga002" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="stga002_desc"/>
+      <column id="stga003">
+        <after>
+          <reference field="stga003_desc" ref_field="stga003" map_field="stga003" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inaa001" state="c"/>
+      </column>
+      <column id="stga003_desc"/>
+      <column id="stga004">
+        <after>
+          <reference field="stga004_desc" ref_field="stga004" map_field="stga004" ref_sql="SELECT mhael023 FROM mhael_t WHERE mhaelent=$varg_enterprise$var AND mhael001=? AND mhael022=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhae001" state="c"/>
+      </column>
+      <column id="stga004_desc"/>
+      <column id="stga005">
+        <after>
+          <reference field="stga005_desc" ref_field="stga005" map_field="stga005" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="stga005_desc"/>
+      <column id="stga006">
+        <after>
+          <reference field="stga006_desc" ref_field="stga006" map_field="stga006" ref_sql="SELECT stael003 FROM stael_t WHERE staelent=$varg_enterprise$var AND stael001=? AND stael002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_stae001" state="c"/>
+      </column>
+      <column id="stga006_desc"/>
+      <column id="stga007"/>
+      <column id="stga008" type="S" default="0"/>
+      <column id="stga009" type="S" default="0"/>
+      <column id="stga010" type="S" default="0"/>
+      <column id="stga011" type="S" default="0"/>
+      <column id="stga012" type="S" default="0"/>
+      <column id="stga013" def_scc="6800"/>
+      <column id="stga014" def_scc="6006"/>
+      <column id="stgadocno">
+        <controlp form="q_stgadocno" state="c"/>
+      </column>
+      <column id="stga015" type="S" default="N"/>
+      <column id="stga016">
+        <controlp form="q_stga016" state="c"/>
+      </column>
+      <column id="stga017" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="stga_t" page="1" linked="" pk="stgasite,stga001,stga002,stga003,stga013,stgadocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,stgasite,stga001,stga002,&apos;&apos;,stga003,&apos;&apos;,stga004,&apos;&apos;,stga005,&apos;&apos;,stga006,&apos;&apos;,stga007,stga008,stga009,stga010,stga011,stga012,stga013,stga014,stgadocno,stga015,stga016,stga017 FROM stga_t WHERE stgaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

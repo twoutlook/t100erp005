@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asrr310" module="asr" jobmode="N" type="r01" industry="std" fix_arg="1" crtid="05423" crtdt="2015-01-07 15:18:25" modid="05423" moddt="2015-04-16 15:52:51" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="重複性生產發料單列印">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="sfdadocno,sfdadocdt,sfda001,sfda004,sfda003,sfda009,sfdastus,l_pr1(chr500),l_pr2(chr500),l_pr3(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="asr" filename="asrr310" method="dialog">
+    <section id="input">
+      <input id="head" field="sfdastus,l_pr1,l_pr2,l_pr3"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="sfdadocno,sfdadocdt,sfda001,sfda004,sfda003,sfda009"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="sfdadocno">
+        <controlp form="q_sfdadocno" state="c"/>
+      </column>
+      <column id="sfdadocdt"/>
+      <column id="sfda001"/>
+      <column id="sfda004">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+        </after>
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="sfda003">
+        <after>
+          <check chkid="v_ooeg001_3" id="isExist"/>
+        </after>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="sfda009">
+        <controlp form="q_sraa001" state="c"/>
+      </column>
+      <column id="sfdastus" scc="13">
+        <stus id="D" pic="withdraw"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="W" pic="signing"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="S" pic="posted"/>
+        <stus id="X" pic="invalid"/>
+        <stus id="Z" pic="unposted"/>
+      </column>
+      <column id="l_pr1"/>
+      <column id="l_pr2"/>
+      <column id="l_pr3"/>
+    </init>
+  </form>
+</assembly>
+

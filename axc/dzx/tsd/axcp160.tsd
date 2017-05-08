@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axcp160" std_prog="axcp160" erpver="1.0" ver="1" module="AXC" booking="Y" class="p" template="P001_00" env="s" zone="t10dev">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：1.按法人检核工单状况，是否有主料的成本阶比元料的成本阶数值大的状况，如果有则自动设置该工单为返工工单
+               
+作業功能：按法人设置工单的返工状况
+作業類型：批次作業
+輸入模式： 
+資料來源：工单单头档()
+          工单单身档()
+          料件据点成本资料期设定档(xcbb_t)
+
+處理邏輯：
+检查工单是否返工并设置返工的逻辑：
+依QBE条件找出没有做成本结案的且工单类型是非“试产工单”和“预测工单”的工单单头的主件料号等资料
+进入FOREACH
+  1.条件选项中“设置一般工单”=‘N’的，且工单类型是“一般工单”的，则CONTINUE FOREACH
+  2.条件选项中“设置委外工单”=‘N’的，且工单类型是“委外工单”的，则CONTINUE FOREACH
+  3.按集团\法人组织\成本年度\期别\主件料号从料件据点成本期资料档(xcbb_t)中抓出该料的成本阶数值(xcbb005)
+  4.根据集团\法人组织\工单编码\成本年度\期别\发料料号从工单发料明细档和料件据点成本期资料档(xcbb_t)中找出最小的成本阶数值
+  5.IF 第4步没找到 THEN
+      再根据集团\法人组织\工单编码\成本年度\期别\元件料号从工单备料明细档和料件据点成本期资料档(xcbb_t)中找出最小的成本阶数值
+    END IF
+  6.IF根据工单发料档和工单备料档抓出来的成本阶数值小于等于工单主件料号的成本阶数值 THEN
+       该工单的返工否字段设为“Y”
+    ELSE
+       IF 该工单是委外工单（含一般委外和返工委外） THEN
+          根据集团\法人组织\工单编码\成本年度\期别\料号从库存进出明细档（tlf）和料件据点成本期资料档(xcbb_t)中找出该委外工单所发料的最小的成本阶数值
+          IF 根据工单工单和库存进出明细档抓出来的成本阶数值小于等于工单主件料号的成本阶数值 THEN
+              该工单的返工否字段设为“Y” 
+          END IF
+       END IF
+    END IF
+　7.更新(UPDATE)该工单的返工否字段的值
+结束FOREACH
+]]>
+  </all>
+  <field cite_std="N" name="glaacomp" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="q_ooef001" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[ ●欄位控管：
+     資料欄位:[T.法人帳務設定檔ooidsite]
+              可Display可Input
+     預設值:無 
+     校驗:1.不允許空白
+]]>
+  </field>
+  <field cite_std="N" name="month" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[根据法人组织到成本参数中抓出现行成本计算期别，显示在画面上。]]>
+  </field>
+  <field cite_std="N" name="sfaa019" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfaadocdt" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfaadocno" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="q_sfaadocno_3" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sw_1" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sw_2" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="year" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[根据法人组织到成本参数中抓出现行成本计算年度，显示在画面上。]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="glaacomp_desc" src="s" depend_field="glaacomp" correspon_key="glaaent,glaacomp" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="glaacomp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="month" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sw_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sw_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="year" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="group_qbe" text="QBE條件" lstr=""/>
+    <sfield name="lbl_glaacomp" text="法人組織" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_sfaadocno" text="工單單號" lstr=""/>
+    <sfield name="lbl_sfaa019" text="預計生產日" lstr=""/>
+    <sfield name="lbl_sfaadocdt" text="開單日期" lstr=""/>
+    <sfield name="group_input" text="條件選項" lstr=""/>
+    <sfield name="lbl_year" text="成本年度/期別" lstr=""/>
+    <sfield name="lbl_sw_1" text="設置一般工單" lstr=""/>
+    <sfield name="lbl_sw_2" text="設置委外工單" lstr=""/>
+    <sfield name="lbl_dummy01" text="注意:本作業將針對各工單，若下階料成本階數小于工單製成品成本階數，" lstr=""/>
+    <sfield name="lbl_dummy02" text="則返工碼自動設置為&apos;Y&apos;" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="cl_err_s01_Detail" text="詳細資訊" lstr=""/>
+    <sfield name="cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="cl_err_s01_Detail" text="詳細資訊" lstr=""/>
+    <sfield name="cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="lbl_gzpd001" text="背景排程作業執行序號" lstr=""/>
+    <sfield name="lbl_gzpd002" text="排程編號" lstr=""/>
+    <sfield name="lbl_gzpd003" text="執行序號" lstr=""/>
+    <sfield name="lbl_gzpd004" text="執行作業" lstr=""/>
+    <sfield name="lbl_gzpd005" text="傳入參數" lstr=""/>
+    <sfield name="lbl_gzpc006" text="執行結束時間" lstr=""/>
+    <sfield name="lbl_gzpd007" text="作業執行狀態" lstr=""/>
+    <sfield name="lbl_gzpd008" text="作業執行時間" lstr=""/>
+    <sfield name="lbl_gzpd009" text="執行員工編號" lstr=""/>
+    <sfield name="lbl_gzpd010" text="作業完成時間" lstr=""/>
+    <sfield name="btn_schedule_reexec" text="重新執行" lstr=""/>
+    <sfield name="btn_view" text="重新查看" lstr=""/>
+    <sfield name="btn_schedule_adv" text="進階查詢" lstr=""/>
+    <sfield name="lbl_gzpa003" text="執行類型" lstr=""/>
+    <sfield name="lbl_gzpa002" text="排程說明" lstr=""/>
+    <sfield name="lbl_asign" text="指定時間執行" lstr=""/>
+    <sfield name="lbl_gzpa007" text="預定執行時間" lstr=""/>
+    <sfield name="lbl_exec" text="執行時間設定" lstr=""/>
+    <sfield name="lbl_wk1" text="第一週" lstr=""/>
+    <sfield name="lbl_wk2" text="第二週" lstr=""/>
+    <sfield name="lbl_wk3" text="第三週" lstr=""/>
+    <sfield name="lbl_wk4" text="第四週" lstr=""/>
+    <sfield name="lbl_wk5" text="第五週" lstr=""/>
+    <sfield name="lbl_wd0" text="週日" lstr=""/>
+    <sfield name="lbl_wd1" text="週一" lstr=""/>
+    <sfield name="lbl_wd2" text="週二" lstr=""/>
+    <sfield name="lbl_wd3" text="週三" lstr=""/>
+    <sfield name="lbl_wd4" text="週四" lstr=""/>
+    <sfield name="lbl_wd5" text="週五" lstr=""/>
+    <sfield name="lbl_wd6" text="週六" lstr=""/>
+    <sfield name="lbl_dayend" text="月底" lstr=""/>
+    <sfield name="lbl_sc1" text="時段一" lstr=""/>
+    <sfield name="lbl_to" text="至" lstr=""/>
+    <sfield name="lbl_per" text="每" lstr=""/>
+    <sfield name="lbl_times" text="執行一次" lstr=""/>
+    <sfield name="lbl_sc2" text="時段二" lstr=""/>
+    <sfield name="lbl_to" text="至" lstr=""/>
+    <sfield name="lbl_per" text="每" lstr=""/>
+    <sfield name="lbl_times" text="執行一次" lstr=""/>
+    <sfield name="lbl_sc3" text="時段三" lstr=""/>
+    <sfield name="lbl_to" text="至" lstr=""/>
+    <sfield name="lbl_per" text="每" lstr=""/>
+    <sfield name="lbl_times" text="執行一次" lstr=""/>
+    <sfield name="lbl_spec" text="特殊指定" lstr=""/>
+    <sfield name="lbl_gzpa029" text="執行日遇到假日" lstr=""/>
+    <sfield name="lbl_gzpa031" text="前一程序未完成時不執行新程序" lstr=""/>
+    <sfield name="lbl_end_call" text="執行結束通知人員" lstr=""/>
+    <sfield name="lbl_gzpe003" text="執行狀況" lstr=""/>
+    <sfield name="lbl_gzpe004" text="收件人員工編號" lstr=""/>
+    <sfield name="lbl_gzpe004_desc" text="員工姓名" lstr=""/>
+    <sfield name="lbl_addr" text="收件人信件位址" lstr=""/>
+    <sfield name="lbl_gzpe005" text="信件主旨" lstr=""/>
+    <sfield name="add_favorite_catalog" text="新增目錄" lstr=""/>
+    <sfield name="modify_favorite_desc" text="修改" lstr=""/>
+    <sfield name="favorite_del" text="移除" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="add_catalog" text="" lstr=""/>
+    <sfield name="accept" text="確定" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" lstr=""/>
+    <sfield name="cl_ask_s04_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s03_Test" text="測試" lstr=""/>
+    <sfield name="cl_ask_s03_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s01_Choice" text="選擇" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_ooef001" text="組織編號" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_gzxm001" text="QBE編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm005" text="查詢方案名稱" lstr=""/>
+    <sfield name="lbl_gzxm002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxm003" text="員工編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm004" text="設為預設查詢條件" lstr=""/>
+    <sfield name="cl_qbe_s02.bpage_1" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn005" text="欄位說明" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="cl_qbe_s02_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s02_Cancel" text="取消" lstr=""/>
+    <sfield name="lbl_funid" text="函式代碼" lstr=""/>
+    <sfield name="lbl_fundesc" text="函式說明" lstr=""/>
+    <sfield name="cl_qbe_s01_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s01_Cancel" text="取消" lstr=""/>
+    <sfield name="cl_qbe_s03.bpage_1" text="查詢方案列表" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxmstus" text="有效" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm004" text="預設" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm009" text="順序" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxml005" text="查詢方案說明" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm007" text="自設SQL條件" lstr=""/>
+    <sfield name="cl_qbe_s03.page_2" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn004" text="序號" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn005" text="條件欄位" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_sfaadocno" text="單號" lstr=""/>
+    <sfield name="lbl_sfaadocdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_sfaa003" text="工單類型" lstr=""/>
+    <sfield name="lbl_sfaa006" text="來源單號" lstr=""/>
+    <sfield name="lbl_sfaa007" text="來源項次" lstr=""/>
+    <sfield name="lbl_sfaa010" text="生產料號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="lbl_sfaa012" text="生產數量" lstr=""/>
+    <sfield name="lbl_sfaa049" text="已發料套數" lstr=""/>
+    <sfield name="lbl_sfaa050" text="已入庫合格量" lstr=""/>
+    <sfield name="lbl_sfaa056" text="報廢數量" lstr=""/>
+    <sfield name="lbl_sfaa002" text="生管人員" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_ooag001" text="員工編號" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

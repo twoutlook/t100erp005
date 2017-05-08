@@ -1,0 +1,91 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi840" module="azz" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="01856" crtdt="2014-06-17 17:17:37" modid="01856" moddt="2014-06-17 00:00:00" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="遮罩樣式設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzyestus,gzye001,gzye002,gzye003,gzye004,gzye005"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gzye001,gzyeownid,gzyeownid_desc(chr500),gzyeowndp,gzyeowndp_desc(chr500),gzyecrtid,gzyecrtid_desc(chr500),gzyecrtdp,gzyecrtdp_desc(chr500),gzyecrtdt,gzyemodid,gzyemodid_desc(chr500),gzyemoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="modify" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi840" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="gzyestus,gzye001,gzye002,gzye003,gzye004,gzye005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="gzyestus,gzye001,gzye002,gzye003,gzye004,gzye005"/>
+      <construct id="body" page="2" field="gzyeownid,gzyeowndp,gzyecrtid,gzyecrtdp,gzyecrtdt,gzyemodid,gzyemoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzyestus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="gzye001"/>
+      <column id="gzye002"/>
+      <column id="gzye003" def_scc="124"/>
+      <column id="gzye004" def_scc="131"/>
+      <column id="gzye005"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gzyeownid">
+        <after>
+          <reference field="gzyeownid_desc" ref_field="gzye_t.gzyeownid" map_field="gzyeownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzyeownid_desc"/>
+      <column id="gzyeowndp">
+        <after>
+          <reference field="gzyeowndp_desc" ref_field="gzye_t.gzyeowndp" map_field="gzyeowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzyeowndp_desc"/>
+      <column id="gzyecrtid">
+        <after>
+          <reference field="gzyecrtid_desc" ref_field="gzye_t.gzyecrtid" map_field="gzyecrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzyecrtid_desc"/>
+      <column id="gzyecrtdp">
+        <after>
+          <reference field="gzyecrtdp_desc" ref_field="gzye_t.gzyecrtdp" map_field="gzyecrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzyecrtdp_desc"/>
+      <column id="gzyecrtdt"/>
+      <column id="gzyemodid">
+        <after>
+          <reference field="gzyemodid_desc" ref_field="gzye_t.gzyemodid" map_field="gzyemodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzyemodid_desc"/>
+      <column id="gzyemoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="gzye_t" page="1,2" linked="" pk="gzye001">
+      <sql id="forupd_sql_detail" query="SELECT gzyestus,gzye001,gzye002,gzye003,gzye004,gzye005,&apos;&apos;,gzyeownid,&apos;&apos;,gzyeowndp,&apos;&apos;,gzyecrtid,&apos;&apos;,gzyecrtdp,&apos;&apos;,gzyecrtdt,gzyemodid,&apos;&apos;,gzyemoddt FROM gzye_t WHERE gzyeent=? AND gzye001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzyestus,gzye001,gzye002,gzye003,gzye004,gzye005,&apos;&apos;,gzyeownid,&apos;&apos;,gzyeowndp,&apos;&apos;,gzyecrtid,&apos;&apos;,gzyecrtdp,&apos;&apos;,gzyecrtdt,gzyemodid,&apos;&apos;,gzyemoddt FROM gzye_t WHERE gzyeent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

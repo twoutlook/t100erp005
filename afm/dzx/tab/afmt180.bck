@@ -1,0 +1,180 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmt180" module="afm" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="06862" crtdt="2015-11-19 18:03:14" modid="08729" moddt="2016-09-28 14:43:28" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="融資計提利息維護">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="fmcysite,fmcysite_desc(chr80),fmcycomp,fmcycomp_desc(chr80),fmcy001,fmcy002,fmcydocno,fmcydocdt,fmcystus,fmcyownid,fmcyownid_desc(chr80),fmcyowndp,fmcyowndp_desc(chr80),fmcycrtid,fmcycrtid_desc(chr80),fmcycrtdp,fmcycrtdp_desc(chr80),fmcycrtdt,fmcymodid,fmcymodid_desc(chr80),fmcymoddt,fmcycnfid,fmcycnfid_desc(chr80),fmcycnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="fmczseq,fmcz016,fmcz017,fmcz001,fmcz002,fmcz003,fmcz018,fmcz004,fmcz005,fmcz006,fmcz003_desc(chr500),fmcz007,fmcz008,fmcz009,fmcz010,fmcz011,fmcz023"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="fmczseq,fmcz016_desc(chr20),fmcz017_desc(num10),fmcz002_desc(chr20),fmcz003_desc1(num10),fmcz018_desc(num10),fmcz004_desc(chr1),fmcz009_desc(num20_6),fmcz010_desc(num26_10),fmcz011_desc(num20_6),fmcz012,fmcz013,fmcz014,fmcz015"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmt180" method="dialog">
+    <section id="input">
+      <input id="head" field="fmcysite,fmcycomp,fmcy001,fmcy002,fmcydocno,fmcydocdt,fmcystus"/>
+      <input id="body" page="1" field="fmczseq,fmcz016,fmcz017,fmcz001,fmcz002,fmcz003,fmcz018,fmcz005,fmcz006,fmcz003_desc,fmcz007,fmcz008,fmcz009,fmcz010,fmcz011,fmcz023" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="fmcz016_desc,fmcz017_desc,fmcz002_desc,fmcz003_desc1,fmcz018_desc,fmcz004_desc,fmcz009_desc,fmcz010_desc,fmcz011_desc,fmcz012,fmcz013,fmcz014,fmcz015" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="fmcysite,fmcycomp,fmcy001,fmcy002,fmcydocno,fmcydocdt,fmcystus,fmcyownid,fmcyowndp,fmcycrtid,fmcycrtdp,fmcycrtdt,fmcymodid,fmcymoddt,fmcycnfid,fmcycnfdt"/>
+      <construct id="body" page="1" field="fmczseq,fmcz016,fmcz017,fmcz001,fmcz002,fmcz003,fmcz018,fmcz005,fmcz006,fmcz003_desc,fmcz007,fmcz008,fmcz009,fmcz010,fmcz011,fmcz023"/>
+      <construct id="body" page="2" field="fmcz016_desc,fmcz017_desc,fmcz002_desc,fmcz003_desc1,fmcz018_desc,fmcz004_desc,fmcz009_desc,fmcz010_desc,fmcz011_desc,fmcz012,fmcz013,fmcz014,fmcz015"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="fmcydocno"/>
+      <set id="head" type="no_entry" field="fmcydocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="fmcysite">
+        <after>
+          <reference field="fmcysite_desc" ref_field="fmcy_t.fmcysite" map_field="fmcyent,fmcysite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="fmcysite_desc"/>
+      <column id="fmcycomp">
+        <after>
+          <reference field="fmcycomp_desc" ref_field="fmcy_t.fmcycomp" map_field="fmcyent,fmcycomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="fmcycomp_desc"/>
+      <column id="fmcy001"/>
+      <column id="fmcy002"/>
+      <column id="fmcydocno">
+        <controlp form="q_fmcydocno" state="c"/>
+      </column>
+      <column id="fmcydocdt"/>
+      <column id="fmcystus" scc="13">
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="X" pic="invalid"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="C" pic="closed"/>
+      </column>
+      <column id="fmcyownid">
+        <after>
+          <reference field="fmcyownid_desc" ref_field="fmcy_t.fmcyownid" map_field="fmcyownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmcyownid_desc"/>
+      <column id="fmcyowndp">
+        <after>
+          <reference field="fmcyowndp_desc" ref_field="fmcy_t.fmcyowndp" map_field="fmcyowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmcyowndp_desc"/>
+      <column id="fmcycrtid">
+        <after>
+          <reference field="fmcycrtid_desc" ref_field="fmcy_t.fmcycrtid" map_field="fmcycrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmcycrtid_desc"/>
+      <column id="fmcycrtdp">
+        <after>
+          <reference field="fmcycrtdp_desc" ref_field="fmcy_t.fmcycrtdp" map_field="fmcycrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmcycrtdp_desc"/>
+      <column id="fmcycrtdt"/>
+      <column id="fmcymodid">
+        <after>
+          <reference field="fmcymodid_desc" ref_field="fmcy_t.fmcymodid" map_field="fmcymodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmcymodid_desc"/>
+      <column id="fmcymoddt"/>
+      <column id="fmcycnfid">
+        <after>
+          <reference field="fmcycnfid_desc" ref_field="fmcy_t.fmcycnfid" map_field="fmcycnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmcycnfid_desc"/>
+      <column id="fmcycnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="fmczseq"/>
+      <column id="fmcz016">
+        <after/>
+        <controlp form="q_fmcrdocno_2" state="i"/>
+        <controlp form="q_fmcrdocno_2" state="c"/>
+      </column>
+      <column id="fmcz017" type="S" default="0">
+        <after/>
+        <controlp form="q_fmcrdocno_2" state="i"/>
+        <controlp form="q_fmcrdocno_2" state="c"/>
+      </column>
+      <column id="fmcz001"/>
+      <column id="fmcz002">
+        <after/>
+      </column>
+      <column id="fmcz003"/>
+      <column id="fmcz018" type="S" default="0">
+        <after/>
+      </column>
+      <column id="fmcz004"/>
+      <column id="fmcz005"/>
+      <column id="fmcz006" type="S" default="0"/>
+      <column id="fmcz003_desc"/>
+      <column id="fmcz007" type="S" default="0"/>
+      <column id="fmcz008"/>
+      <column id="fmcz009" type="S" default="0">
+        <after/>
+      </column>
+      <column id="fmcz010">
+        <after/>
+      </column>
+      <column id="fmcz011" type="S" default="0">
+        <after/>
+      </column>
+      <column id="fmcz023"/>
+    </init>
+    <init id="body" page="2">
+      <column id="fmcz016_desc"/>
+      <column id="fmcz017_desc" type="S" default="0"/>
+      <column id="fmcz002_desc"/>
+      <column id="fmcz003_desc1"/>
+      <column id="fmcz018_desc" type="S" default="0"/>
+      <column id="fmcz004_desc"/>
+      <column id="fmcz009_desc" type="S" default="0"/>
+      <column id="fmcz010_desc"/>
+      <column id="fmcz011_desc" type="S" default="0"/>
+      <column id="fmcz012"/>
+      <column id="fmcz013" type="S" default="0"/>
+      <column id="fmcz014"/>
+      <column id="fmcz015" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="fmcy_t" pk="fmcydocno">
+      <sql id="forupd_sql" type="sql" query="SELECT fmcysite,&apos;&apos;,fmcycomp,&apos;&apos;,fmcy001,fmcy002,fmcydocno,fmcydocdt,fmcystus,fmcyownid,&apos;&apos;,fmcyowndp,&apos;&apos;,fmcycrtid,&apos;&apos;,fmcycrtdp,&apos;&apos;,fmcycrtdt,fmcymodid,&apos;&apos;,fmcymoddt,fmcycnfid,&apos;&apos;,fmcycnfdt FROM fmcy_t WHERE fmcyent= ? AND fmcydocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT fmcysite,&apos;&apos;,fmcycomp,&apos;&apos;,fmcy001,fmcy002,fmcydocno,fmcydocdt,fmcystus,fmcyownid,&apos;&apos;,fmcyowndp,&apos;&apos;,fmcycrtid,&apos;&apos;,fmcycrtdp,&apos;&apos;,fmcycrtdt,fmcymodid,&apos;&apos;,fmcymoddt,fmcycnfid,&apos;&apos;,fmcycnfdt FROM fmcy_t" order="fmcydocno"/>
+    </head>
+    <body id="fmcz_t" page="1,2" linked="" pk="fmczseq" fk="fmczdocno">
+      <sql id="forupd_sql_detail" query="SELECT fmczseq,fmcz016,fmcz017,fmcz001,fmcz002,fmcz003,fmcz018,fmcz004,fmcz005,fmcz006,&apos;&apos;,fmcz007,fmcz008,fmcz009,fmcz010,fmcz011,fmcz023,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,fmcz012,fmcz013,fmcz014,fmcz015 FROM fmcz_t WHERE fmczent=? AND fmczdocno=? AND fmczseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT fmczseq,fmcz016,fmcz017,fmcz001,fmcz002,fmcz003,fmcz018,fmcz004,fmcz005,fmcz006,&apos;&apos;,fmcz007,fmcz008,fmcz009,fmcz010,fmcz011,fmcz023,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,fmcz012,fmcz013,fmcz014,fmcz015 FROM fmcz_t WHERE fmczent=? AND fmczdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

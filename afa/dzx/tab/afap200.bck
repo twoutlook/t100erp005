@@ -1,0 +1,69 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afap200" module="afa" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="01531" crtdt="2014-02-21 13:49:44" modid="01531" moddt="2017-02-07 17:38:58" sdver="0008" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="固定資產/底稿產生作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="fabgsite(chr10),fabgsite_desc(chr80),ooef001,ooef001_desc(chr80),glaald(chr5),glaald_desc(chr80),f(chr500),apca004(chr10),apcadocno(chr20),apcadocdt(dat),a(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="other_check_no_all"/>
+      <action id="check_no_all"/>
+      <action id="check_all"/>
+      <action id="faak_ins"/>
+      <action id="other_check_all"/>
+    </section>
+  </structure>
+  <form id="0" module="afa" filename="afap200" method="dialog">
+    <section id="input">
+      <input id="head" field="fabgsite,ooef001,glaald,f,a"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="apca004,apcadocno,apcadocdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="fabgsite">
+        <after>
+          <reference field="fabgsite_desc" ref_field="fabgsite" map_field="bgsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_faab001" state="i"/>
+        <controlp form="q_faab001" state="c"/>
+      </column>
+      <column id="fabgsite_desc"/>
+      <column id="ooef001">
+        <after>
+          <check chkid="v_ooef001_7" id="isExist"/>
+          <reference field="ooef001_desc" ref_field="ooef_t.ooef001" map_field="ooefent,ooef001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_8" state="i"/>
+        <controlp form="q_ooef001_8" state="c"/>
+      </column>
+      <column id="ooef001_desc"/>
+      <column id="glaald">
+        <after>
+          <reference field="glaald_desc" ref_field="glaald" map_field="glaald" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_glaa" state="c"/>
+      </column>
+      <column id="glaald_desc"/>
+      <column id="f" type="S" default="1"/>
+      <column id="apca004">
+        <controlp form="q_pmaa001" state="i"/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="apcadocno">
+        <controlp form="q_ooba002_3" state="i"/>
+        <controlp form="q_apcadocno" state="c"/>
+      </column>
+      <column id="apcadocdt"/>
+      <column id="a" type="S" default="N"/>
+    </init>
+  </form>
+</assembly>
+

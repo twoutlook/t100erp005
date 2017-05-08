@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asfp310_01" module="asf" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="00768" crtdt="2014-04-22 09:40:53" modid="00593" moddt="2015-12-23 15:22:39" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="產生發料單">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="sfdadocno,method(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+    </section>
+  </structure>
+  <form id="0" module="asf" filename="asfp310_01" method="dialog">
+    <section id="input">
+      <input id="head" field="sfdadocno,method"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="sfdadocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_sfdadocno" state="c"/>
+      </column>
+      <column id="method" type="S" default="4"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="sfda_t" pk="sfdadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT sfdadocno,&apos;&apos; FROM sfda_t WHERE sfdaent= ? AND sfdadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="sfdadocno"/>
+    </head>
+  </dataset>
+</assembly>
+

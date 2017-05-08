@@ -1,0 +1,1260 @@
+<add_points prog="asfp370" std_prog="asfp370" erpver="1.0" module="ASF" ver="1" env="s" zone="t10dev" booking="Y" type="M" identity="s">
+  <other>
+    <code_template value="W" status="" />
+    <free_style value="Y" status="" />
+  </other>
+  <point name="function.asfp370_b_fill" cite_std="N" status="d" ver="1" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION asfp370_b_fill()
+
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define
+
+   #end add-point
+
+   #add-point:b_fill段sql_before
+
+   #end add-point
+
+   PREPARE asfp370_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR asfp370_sel
+
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空
+
+   #end add-point
+
+   LET g_cnt = l_ac
+   LET l_ac = 1
+   ERROR "Searching!"
+
+   FOREACH b_fill_curs USING g_enterprise INTO
+   #add-point:b_fill段foreach_into
+
+   #end add-point
+
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+
+      #add-point:b_fill段資料填充
+
+      #end add-point
+
+      CALL asfp370_detail_show()
+
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+
+   END FOREACH
+   LET g_error_show = 0
+
+   #add-point:b_fill段資料填充(其他單身)
+
+   #end add-point
+
+   LET g_detail_cnt = l_ac - 1
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+
+   CLOSE b_fill_curs
+   FREE asfp370_sel
+
+   LET l_ac = 1
+   CALL asfp370_fetch()
+   #add-point:b_fill段資料填充(其他單身)
+
+   #end add-point
+
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_detail_show" cite_std="N" status="d" ver="1" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION asfp370_detail_show()
+   #add-point:show段define
+
+   #end add-point
+
+   #add-point:detail_show段
+
+   #end add-point
+
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_fetch" cite_std="N" status="d" ver="1" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION asfp370_fetch()
+
+   DEFINE li_ac           LIKE type_t.num5
+   #add-point:fetch段define
+
+   #end add-point
+
+   LET li_ac = l_ac
+
+   #add-point:單身填充後
+
+   #end add-point
+
+   LET l_ac = li_ac
+
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_filter" cite_std="N" status="d" ver="1" src="s" new="Y" order="3" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION asfp370_filter()
+   #add-point:filter段define
+
+   #end add-point
+
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+
+   END DISPLAY
+
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define
+
+   #end add-point
+
+   LET INT_FLAG = 0
+
+   LET g_qryparam.state = 'c'
+
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+
+   CALL asfp370_b_fill()
+   CALL asfp370_fetch()
+
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_filter_parser" cite_std="N" status="d" ver="1" src="s" new="Y" order="4" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION asfp370_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   #add-point:filter段define
+
+   #end add-point
+
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+
+   RETURN ls_var
+
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_filter_show" cite_std="N" status="d" ver="1" src="s" new="Y" order="4" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION asfp370_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+
+   LET ls_name = "formonly.", ps_object
+
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+
+   #顯示資料組合
+   LET ls_condition = asfp370_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_query" cite_std="N" status="d" ver="1" src="s" new="Y" order="4" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION asfp370_query()
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING
+   #add-point:query段define
+
+   #end add-point
+
+   #add-point:cs段after_construct
+
+   #end add-point
+
+   LET g_error_show = 1
+   CALL asfp370_b_fill()
+   LET l_ac = g_master_idx
+   CALL asfp370_fetch()
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      CALL cl_err("",-100,1)
+   END IF
+
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_ui_dialog" cite_std="N" status="d" ver="1" src="s" new="Y" order="5" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION asfp370_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num5
+   #add-point:ui_dialog段define
+
+   #end add-point
+
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+
+   LET g_action_choice = " "
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog
+
+   #end add-point
+
+   WHILE TRUE
+
+      CALL cl_dlg_query_bef_disp()  #相關查詢
+
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct
+
+         #end add-point
+         #add-point:ui_dialog段input
+
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+
+         #end add-point
+
+         SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2
+
+            #end add-point
+
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+            END FOR
+            #add-point:ui_dialog段on action selall
+
+            #end add-point
+
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+            END FOR
+            #add-point:ui_dialog段on action selnone
+
+            #end add-point
+
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel
+
+            #end add-point
+
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel
+
+            #end add-point
+
+         ON ACTION close
+            LET INT_FLAG=FALSE
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+
+         ON ACTION accept
+            CALL asfp370_query()
+
+         # 條件清除
+         ON ACTION qbeclear
+
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            CALL asfp370_b_fill()
+            CALL asfp370_fetch()
+
+         #add-point:ui_dialog段action
+
+         #end add-point
+
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+
+   END WHILE
+
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_create_temp" cite_std="N" status="d" ver="" src="s" new="Y" order="5">
+<![CDATA[
+#建立临时表
+PRIVATE FUNCTION asfp370_create_temp()
+
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_delete_temp" cite_std="N" status="d" ver="" src="s" new="Y" order="5">
+<![CDATA[
+#删除临时表
+PRIVATE FUNCTION asfp370_delete_temp()
+   CALL asfp370_01_delete_temp_table()
+   CALL asfp370_02_delete_temp_table()
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_ui_dialog_step3" cite_std="N" status="d" ver="" src="s" new="Y" order="4">
+<![CDATA[
+#第三步
+PRIVATE FUNCTION asfp370_ui_dialog_step3()
+
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_ui_dialog_step2" cite_std="N" status="d" ver="" src="s" new="Y" order="3">
+<![CDATA[
+#第二步
+PRIVATE FUNCTION asfp370_ui_dialog_step2()
+
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_init" cite_std="N" status="u" ver="1" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION asfp370_init()
+   #add-point:init段define
+
+   #end add-point
+
+   LET g_error_show  = 1
+
+
+   #add-point:畫面資料初始化
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+
+   #畫面嵌入
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("asf", "asfp370_01"), "main_grid01", "VBox", "master")
+   CALL asfp370_01_init()        #asfp370_01的畫面預設
+
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("asf", "asfp370_02"), "main_grid02", "VBox", "master")
+   CALL asfp370_02_init()        #asfp370_02的畫面預設
+
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("asf", "asfp370_03"), "main_grid03", "VBox", "master")
+   CALL asfp370_03_init()        #asfp370_03的畫面預設
+
+
+   #先將嵌入的畫面都隱藏
+   CALL cl_set_comp_visible("group_progress",FALSE)
+   CALL cl_set_comp_visible("main_vbox01",FALSE)
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+
+   #add-point:畫面資料初始化
+   #CALL cl_set_combo_scc_part('pmdl005','2052','1,2')
+
+   #end add-point
+
+END FUNCTION]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="u" ver="" src="s" new="Y">
+<![CDATA[IMPORT util
+IMPORT FGL asf_asfp370_01
+IMPORT FGL asf_asfp370_02
+IMPORT FGL asf_asfp370_03]]>
+</point>
+  <point name="free_style.variable" cite_std="N" status="u" ver="" src="s" new="Y">
+<![CDATA[#GLOBALS "../4gl/asfp370_01.inc"
+GLOBALS "../4gl/asfp370_02.inc"
+GLOBALS "../4gl/asfp370_03.inc"]]>
+</point>
+  <point name="global.variable" cite_std="N" status="u" ver="" src="s" new="Y">
+<![CDATA[DEFINE li_step              LIKE type_t.num5
+DEFINE gwin_curr            ui.Window
+DEFINE gfrm_curr            ui.Form
+DEFINE g_forupd_sql         STRING
+DEFINE g_error_show         LIKE type_t.num5
+]]>
+</point>
+  <point name="main.define" cite_std="N" status="u" ver="" src="s" new="Y">
+<![CDATA[   DEFINE l_success     LIKE type_t.num5]]>
+</point>
+  <point name="main.init" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.define_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="function.asfp370_ui_dialog_step1" cite_std="N" status="u" ver="" src="s" new="Y" order="2">
+<![CDATA[#第一步
+PRIVATE FUNCTION asfp370_ui_dialog_step1()
+   DEFINE l_cnt              LIKE type_t.num5
+   DEFINE l_success          LIKE type_t.num5
+                   
+   #設定左方的流程圖  
+   CALL gfrm_curr.setElementImage("step01","32/step01on.png")    #有on的是顏色不同的圖  
+   CALL gfrm_curr.setElementImage("step02","32/step02.png")
+   CALL gfrm_curr.setElementImage("step03","32/step03.png")
+   
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("main_vbox01",TRUE)       #將第一步的畫面顯示  
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+
+   #設定下方的button的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("save",FALSE)              #收貨資料寫入 (使用於第一步)  
+   CALL cl_set_comp_visible("back_step",FALSE)        #回上一步     (第一步,第四步不使用)
+   CALL cl_set_comp_visible("next_step",TRUE)         #下一步       (第四步不使用) 
+   CALL cl_set_comp_visible("continue",FALSE)         #處理其他資料 (使用於第四步) 
+
+   CALL cl_set_comp_visible("delete_data,return_step01",FALSE) 
+
+   LET g_action_choice = ''
+   WHILE TRUE
+
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         SUBDIALOG asf_asfp370_01.asfp370_01_construct
+         SUBDIALOG asf_asfp370_01.asfp370_01_input
+         
+         BEFORE DIALOG
+            
+         #ON ACTION save
+         #   CALL apmp520_01_save_data()      
+         #   CALL apmp520_01_b_fill(g_wc,g_wc2)  
+            
+         ON ACTION continue
+         
+         ON ACTION back_step
+            
+         ON ACTION next_step
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt FROM asfp370_01_temp WHERE sel = 'Y'
+            IF l_cnt > 0 THEN
+               CALL asfp370_01_insert_asfp370_02_temp() RETURNING l_success
+               IF l_success THEN
+                  LET g_action_choice = "next_step"
+                  EXIT DIALOG
+               END IF
+            ELSE
+               #拟调拨料号中没有选择要处理的资料,請先選擇要處理的資料!
+               CALL cl_err('','asf-00355',1)
+            END IF
+            
+         ON ACTION step01
+               
+         ON ACTION step02
+         
+         ON ACTION step03
+
+         ON ACTION CLOSE
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+            
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF 
+
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+   
+   CASE g_action_choice
+      WHEN "next_step"
+         LET g_action_choice = ''
+         RETURN 2
+      OTHERWISE
+         RETURN 0
+   END CASE
+
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_ui_dialog_step2" cite_std="N" status="u" ver="" src="s" new="Y" order="3">
+<![CDATA[
+#第二步
+PRIVATE FUNCTION asfp370_ui_dialog_step2()
+   #設定左方的流程圖  
+   CALL gfrm_curr.setElementImage("step01","32/step01.png")    #有on的是顏色不同的圖  
+   CALL gfrm_curr.setElementImage("step02","32/step02on.png")
+   CALL gfrm_curr.setElementImage("step03","32/step03.png")
+   
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("main_vbox01",FALSE)       #將第一步的畫面顯示  
+   CALL cl_set_comp_visible("main_vbox02",TRUE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+
+   #設定下方的button的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("save",FALSE)             #收貨資料寫入 (使用於第一步)  
+   CALL cl_set_comp_visible("back_step",TRUE)         #回上一步     (第一步,第四步不使用)
+   CALL cl_set_comp_visible("next_step",TRUE)         #下一步       (第四步不使用) 
+   CALL cl_set_comp_visible("continue",FALSE)         #處理其他資料 (使用於第四步) 
+
+   CALL asfp370_02_b_fill()
+
+   IF cl_null(g_asfp370_02_m.chief_default) THEN
+      LET g_asfp370_02_m.chief_default = 'N'
+   END IF
+   
+   LET g_action_choice = ''
+   
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         
+         SUBDIALOG asf_asfp370_02.asfp370_02_construct
+         SUBDIALOG asf_asfp370_02.asfp370_02_input
+         SUBDIALOG asf_asfp370_02.asfp370_02_display2
+         SUBDIALOG asf_asfp370_02.asfp370_02_input3
+         SUBDIALOG asf_asfp370_02.asfp370_02_input5
+         
+         BEFORE DIALOG
+
+         ON ACTION save
+         
+         ON ACTION continue
+         
+         ON ACTION back_step
+            IF cl_ask_confirm('apm-00541') THEN #zll
+               LET g_action_choice = "back_step"
+               EXIT DIALOG
+            END IF
+            
+         ON ACTION next_step
+            IF cl_ask_confirm('apm-00542') THEN #zll
+               LET g_action_choice = "next_step"
+               EXIT DIALOG
+            END IF 
+            
+         ON ACTION step01
+            
+         ON ACTION step02
+         
+         ON ACTION step03
+
+         ON ACTION CLOSE
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF 
+      
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+
+   END WHILE
+   
+   CASE g_action_choice
+      WHEN "next_step"
+         RETURN 3
+      WHEN "back_step"
+         RETURN 1
+      OTHERWISE
+         RETURN 0
+   END CASE
+
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_ui_dialog_step3" cite_std="N" status="u" ver="" src="s" new="Y" order="4">
+<![CDATA[
+#第三步
+PRIVATE FUNCTION asfp370_ui_dialog_step3()
+   #設定左方的流程圖  
+   CALL gfrm_curr.setElementImage("step01","32/step01.png")  
+   CALL gfrm_curr.setElementImage("step02","32/step02.png")
+   CALL gfrm_curr.setElementImage("step03","32/step03on.png")
+   
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("main_vbox01",FALSE)
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",TRUE)
+
+   #設定下方的button的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("save",FALSE)             #收貨資料寫入 (使用於第一步)  
+   CALL cl_set_comp_visible("back_step",FALSE)        #回上一步     (第一步,第四步不使用)
+   CALL cl_set_comp_visible("next_step",FALSE)        #下一步       (第四步不使用) 
+   CALL cl_set_comp_visible("continue",TRUE)          #處理其他資料 (使用於第四步) 
+   
+   LET g_asfp370_03_m.indcdocdt = cl_get_today()
+   
+   LET g_action_choice = ''
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         
+         SUBDIALOG asf_asfp370_03.asfp370_03_input 
+         SUBDIALOG asf_asfp370_03.asfp370_03_display1
+
+         BEFORE DIALOG
+
+         ON ACTION save
+         
+         ON ACTION continue
+        #   IF cl_ask_confirm('apm-00542') THEN
+               LET g_action_choice = "continue"
+               EXIT DIALOG
+        #   END IF 
+            
+         ON ACTION step01
+            
+         ON ACTION step02
+         
+         ON ACTION step03
+
+         ON ACTION CLOSE
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF 
+      
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+
+   END WHILE
+   
+   CASE g_action_choice
+      WHEN "continue"
+         RETURN 1
+      OTHERWISE
+         RETURN 0
+   END CASE
+
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_delete_temp" cite_std="N" status="u" ver="" src="s" new="Y" order="5">
+<![CDATA[
+#删除临时表
+PRIVATE FUNCTION asfp370_delete_temp()
+   CALL asfp370_01_delete_temp_table()
+   CALL asfp370_02_delete_temp_table()
+END FUNCTION]]>
+</point>
+  <section id="asfp370.b_fill" ver="1" status="" src="s">
+<![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION asfp370_b_fill()
+ 
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   PREPARE asfp370_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR asfp370_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空
+   {<point name="b_fill.clear"/>}
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into
+   {<point name="b_fill.foreach_into"/>}
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.foreach_iside"/>}
+      #end add-point
+      
+      CALL asfp370_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.other_table"/>}
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE asfp370_sel
+   
+   LET l_ac = 1
+   CALL asfp370_fetch()
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.after_b_fill"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="asfp370.description" ver="1" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000005
+#+ 
+#+ Filename...: asfp370
+#+ Description: 發料前調撥作業
+#+ Creator....: 00768(2014/07/01)
+#+ Modifier...: 00768(2014/07/03)
+#+ Buildtype..: 應用 i00 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="asfp370.detail_show" ver="1" status="" src="s">
+<![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION asfp370_detail_show()
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段
+   {<point name="detail_show.detail_show"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="asfp370.fetch" ver="1" status="" src="s">
+<![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION asfp370_fetch()
+ 
+   DEFINE li_ac           LIKE type_t.num5
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後
+   {<point name="fetch.after_fill" />}
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+]]>
+</section>
+  <section id="asfp370.filter" ver="1" status="" src="s">
+<![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION asfp370_filter()
+   #add-point:filter段define
+   {<point name="filter.define"/>}
+   #end add-point    
+ 
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define
+   {<point name="filter.detail_cnt"/>}
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL asfp370_b_fill()
+   CALL asfp370_fetch()
+   
+END FUNCTION
+]]>
+</section>
+  <section id="asfp370.filter_parser" ver="1" status="" src="s">
+<![CDATA[#+ filter欄位解析
+PRIVATE FUNCTION asfp370_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   #add-point:filter段define
+   {<point name="filter_parser.define"/>}
+   #end add-point    
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="asfp370.filter_show" ver="1" status="" src="s">
+<![CDATA[#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION asfp370_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = asfp370_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="asfp370.global" ver="2" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+</section>
+  <section id="asfp370.init" ver="1" status="" src="s">
+<![CDATA[#+ 畫面資料初始化
+PRIVATE FUNCTION asfp370_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point   
+ 
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+</section>
+  <section id="asfp370.main" ver="2" status="u" src="s">
+<![CDATA[#+ 作業開始
+MAIN
+   #add-point:main段define
+{<point name="main.define"/>}
+   #end add-point    
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("asf","")
+ 
+   #add-point:作業初始化
+{<point name="main.init"/>}
+   #end add-point
+ 
+   #add-point:SQL_define
+{<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE asfp370_cl CURSOR FROM g_forupd_sql 
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+{<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_asfp370 WITH FORM cl_ap_formpath("asf",g_code)
+   
+      #程式初始化
+      CALL asfp370_init()
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      ##進入選單 Menu (='N')
+      #CALL asfp370_ui_dialog()
+      
+      #建立各程式的temp table
+      CALL asfp370_01_create_temp_table() RETURNING l_success
+      IF NOT l_success THEN
+         EXIT PROGRAM
+      END IF
+      CALL asfp370_02_create_temp_table() RETURNING l_success
+      IF NOT l_success THEN
+         EXIT PROGRAM
+      END IF
+      LET li_step = 1
+      IF l_success THEN
+         WHILE TRUE
+            CASE li_step
+               WHEN 1
+                  CALL asfp370_ui_dialog_step1() RETURNING li_step
+               WHEN 2
+                  CALL asfp370_ui_dialog_step2() RETURNING li_step
+               WHEN 3
+                  CALL asfp370_ui_dialog_step3() RETURNING li_step
+                  CALL asfp370_delete_temp()
+               WHEN 0
+                  EXIT WHILE
+               OTHERWISE
+                  EXIT WHILE
+            END CASE
+         END WHILE
+      END IF
+
+      CALL asfp370_01_drop_temp_table() RETURNING l_success
+      CALL asfp370_02_drop_temp_table() RETURNING l_success
+   
+      #畫面關閉
+      CLOSE WINDOW w_asfp370
+   END IF
+ 
+   #add-point:作業離開前
+{<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+]]>
+</section>
+  <section id="asfp370.other_function" ver="1" status="" src="s">
+<![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+</section>
+  <section id="asfp370.query" ver="1" status="" src="s">
+<![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION asfp370_query()
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+   {<point name="query.define" />}
+   #end add-point 
+   
+   #add-point:cs段after_construct
+   {<point name="query.after_construct" />}
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL asfp370_b_fill()
+   LET l_ac = g_master_idx
+   CALL asfp370_fetch()
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      CALL cl_err("",-100,1)
+   END IF
+   
+END FUNCTION
+]]>
+</section>
+  <section id="asfp370.ui_dialog" ver="1" status="" src="s">
+<![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION asfp370_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num5
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point 
+ 
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE
+ 
+      CALL cl_dlg_query_bef_disp()  #相關查詢
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2
+            {<point name="ui_dialog.before_dialog2"/>}
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+            END FOR
+            #add-point:ui_dialog段on action selall
+            {<point name="ui_dialog.onaction_selall"/>}
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+            END FOR
+            #add-point:ui_dialog段on action selnone
+            {<point name="ui_dialog.onaction_selnone"/>}
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel
+            {<point name="ui_dialog.onaction_sel"/>}
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel
+            {<point name="ui_dialog.onaction_unsel"/>}
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL asfp370_filter()
+            #add-point:ON ACTION filter
+            {<point name="menu.filter" />}
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            CALL asfp370_query()
+ 
+         # 條件清除
+         ON ACTION qbeclear
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            CALL asfp370_b_fill()
+            CALL asfp370_fetch()
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+]]>
+</section>
+</add_points>

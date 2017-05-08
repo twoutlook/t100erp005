@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astt540_01" module="ast" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="06189" crtdt="2015-05-25 14:25:50" modid="06189" moddt="2015-05-25 14:36:00" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="結算調整元件">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="stetdocno,stetseq,stet001,stet002,stet003,stet004,stet005,stet006,stet006_desc(chr500),stet007,stet007_desc(chr500),stetcomp,stetsite"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="astt540_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="stetdocno,stetseq,stet001,stet002,stet003,stet004,stet005,stet006,stet007,stetcomp,stetsite" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="stetdocno,stetseq,stet001,stet002,stet003,stet004,stet005,stet006,stet007,stetcomp,stetsite"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="stetdocno"/>
+      <column id="stetseq"/>
+      <column id="stet001"/>
+      <column id="stet002">
+        <controlp form="q_steudocno" state="i"/>
+        <controlp form="q_steudocno" state="c"/>
+      </column>
+      <column id="stet003" type="S" default="0"/>
+      <column id="stet004" type="S" default="0"/>
+      <column id="stet005"/>
+      <column id="stet006">
+        <after>
+          <reference field="stet006_desc" ref_field="stet_t.stet006" map_field="stetent,stet006" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_6" state="c"/>
+      </column>
+      <column id="stet006_desc"/>
+      <column id="stet007">
+        <after>
+          <reference field="stet007_desc" ref_field="stet_t.stet007" map_field="stetent,stet007" ref_sql="SELECT mhael023 FROM mhael_t WHERE mhaelent=$varg_enterprise$var AND mhael001=? AND mhael022=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhae001" state="c"/>
+      </column>
+      <column id="stet007_desc"/>
+      <column id="stetcomp"/>
+      <column id="stetsite"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="stet_t" page="1" linked="" pk="stetdocno,stetseq">
+      <sql id="forupd_sql_detail" query="SELECT stetdocno,stetseq,stet001,stet002,stet003,stet004,stet005,stet006,&apos;&apos;,stet007,&apos;&apos;,stetcomp,stetsite FROM stet_t WHERE stetent=? AND stetdocno=? AND stetseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT stetdocno,stetseq,stet001,stet002,stet003,stet004,stet005,stet006,&apos;&apos;,stet007,&apos;&apos;,stetcomp,stetsite FROM stet_t WHERE stetent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

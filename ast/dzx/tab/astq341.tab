@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astq341" module="ast" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="06189" crtdt="2015-08-02 12:17:24" modid="08742" moddt="2016-09-14 10:10:17" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="扣率代銷銷售成本查詢">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="stbcsite,stbc008,stbc025,stbc030,sdate,edate"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),stbcsite,stbcsite_desc(chr500),stbc008,stbc008_desc(chr500),stbc002,stbc025,stbc025_desc(chr500),stbcud001,stbc042,stbc041,stao011,stbc039,stbc020,stbc018,stbc017,stbc021,stbe031,stbc030"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),stbcsite(b_stbcsite),stbcsite_desc(b_stbcsite_desc),stbc008(b_stbc008),stbc008_desc(b_stbc008_desc),stbc002(b_stbc002),stbc025(b_stbc025),stbc025_desc(b_stbc025_desc),stbcud001(b_stbcud001),stbc042(b_stbc042),stbc041(b_stbc041),stao011(b_stao011),stbc039(b_stbc039),stbc020(b_stbc020),stbc018(b_stbc018),stbc017(b_stbc017),stbc021(b_stbc021),stbe031(b_stbe031),stbc030(b_stbc030)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="astq341" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="stbcsite,stbc008,stbc002,stbc025,stbcud001,stbc042,stbc041,stao011,stbc039,stbc020,stbc018,stbc017,stbc021,stbe031,stbc030" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="stbcsite(b_stbcsite),stbc008(b_stbc008),stbc002(b_stbc002),stbc025(b_stbc025),stbcud001(b_stbcud001),stbc042(b_stbc042),stbc041(b_stbc041),stao011(b_stao011),stbc039(b_stbc039),stbc020(b_stbc020),stbc018(b_stbc018),stbc017(b_stbc017),stbc021(b_stbc021),stbe031(b_stbe031),stbc030(b_stbc030)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="stbcsite">
+        <after>
+          <reference field="stbcsite_desc" ref_field="stbcsite" map_field="stbcent,stbcsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_14" state="c"/>
+      </column>
+      <column id="stbcsite_desc"/>
+      <column id="stbc008">
+        <after>
+          <reference field="stbc008_desc" ref_field="stbc008" map_field="stbcent,stbc008" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_10" state="c"/>
+      </column>
+      <column id="stbc008_desc"/>
+      <column id="stbc002"/>
+      <column id="stbc025">
+        <after>
+          <reference field="stbc025_desc" ref_field="stbc025" map_field="stbc025" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stbc025_desc"/>
+      <column id="stbcud001"/>
+      <column id="stbc042" type="S" default="0"/>
+      <column id="stbc041"/>
+      <column id="stao011" type="S" default="0"/>
+      <column id="stbc039" type="S" default="0"/>
+      <column id="stbc020" type="S" default="0"/>
+      <column id="stbc018" type="S" default="0"/>
+      <column id="stbc017" type="S" default="0"/>
+      <column id="stbc021" type="S" default="0"/>
+      <column id="stbe031" type="S" default="0"/>
+      <column id="stbc030">
+        <controlp form="q_stce001_4" state="c"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <body id="stbc_t" page="1" linked="" pk="stbc001,stbc004,stbc005">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,stbcsite,&apos;&apos;,stbc008,&apos;&apos;,stbc002,stbc025,&apos;&apos;,stbcud001,stbc042,stbc041,&apos;&apos;,stbc039,stbc020,stbc018,stbc017,stbc021,&apos;&apos;,stbc030 FROM stbc_t WHERE stbcent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

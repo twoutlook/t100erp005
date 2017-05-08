@@ -1,0 +1,607 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axri012_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2013-07-23 11:42:22), PR版次:0002(2016-09-05 20:05:44)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000136
+#+ Filename...: axri012_01
+#+ Description: 產生多帳期資料
+#+ Creator....: 01258(2013-08-16 10:55:53)
+#+ Modifier...: 02299 -SD/PR- 05423
+ 
+{</section>}
+ 
+{<section id="axri012_01.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#Memos
+#160905-00007#3   2016/09/05 By zhujing 调整系统中无ENT的SQL条件增加ent
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_xrac_m        RECORD
+       xrac003 LIKE xrac_t.xrac003, 
+   oocq004 LIKE oocq_t.oocq004, 
+   xrac007 LIKE xrac_t.xrac007, 
+   xrac006 LIKE xrac_t.xrac006, 
+   xrac005 LIKE xrac_t.xrac005, 
+   xrac004 LIKE xrac_t.xrac004, 
+   xrac001 LIKE xrac_t.xrac001, 
+   xrac002 LIKE xrac_t.xrac002
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+
+#end add-point
+ 
+DEFINE g_xrac_m        type_g_xrac_m
+ 
+   DEFINE g_xrac003_t LIKE xrac_t.xrac003
+DEFINE g_xrac001_t LIKE xrac_t.xrac001
+DEFINE g_xrac002_t LIKE xrac_t.xrac002
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axri012_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axri012_01(--)
+   #add-point:input段變數傳入
+   p_oocq002,p_oocq004
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE p_oocq002 LIKE oocq_t.oocq002
+   DEFINE p_oocq004 LIKE oocq_t.oocq004
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axri012_01 WITH FORM cl_ap_formpath("axr","axri012_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   CALL cl_set_combo_scc('oocq004','8314') 
+   CALL cl_set_combo_scc('xrac007','8310')
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_xrac_m.xrac003,g_xrac_m.oocq004,g_xrac_m.xrac007,g_xrac_m.xrac006,g_xrac_m.xrac005, 
+          g_xrac_m.xrac004,g_xrac_m.xrac001,g_xrac_m.xrac002 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            LET g_xrac_m.xrac001 = '3114'
+            LET g_xrac_m.xrac002 = p_oocq002
+            LET g_xrac_m.oocq004 = p_oocq004
+            LET g_xrac_m.xrac003 = 0
+            LET g_xrac_m.xrac004 = 0
+            LET g_xrac_m.xrac005 = 0
+            LET g_xrac_m.xrac006 = 0
+            LET g_xrac_m.xrac007 = 10
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrac003
+            #add-point:BEFORE FIELD xrac003 name="input.b.xrac003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrac003
+            
+            #add-point:AFTER FIELD xrac003 name="input.a.xrac003"
+            #此段落由子樣板a05產生
+            IF NOT axri012_01_num_chk(g_xrac_m.xrac003,0,20) THEN
+               LET g_xrac_m.xrac003 = 0 
+               NEXT FIELD xrac003
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrac003
+            #add-point:ON CHANGE xrac003 name="input.g.xrac003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD oocq004
+            #add-point:BEFORE FIELD oocq004 name="input.b.oocq004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD oocq004
+            
+            #add-point:AFTER FIELD oocq004 name="input.a.oocq004"
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE oocq004
+            #add-point:ON CHANGE oocq004 name="input.g.oocq004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrac007
+            #add-point:BEFORE FIELD xrac007 name="input.b.xrac007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrac007
+            
+            #add-point:AFTER FIELD xrac007 name="input.a.xrac007"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrac007
+            #add-point:ON CHANGE xrac007 name="input.g.xrac007"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrac006
+            #add-point:BEFORE FIELD xrac006 name="input.b.xrac006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrac006
+            
+            #add-point:AFTER FIELD xrac006 name="input.a.xrac006"
+            IF NOT axri012_01_num_chk(g_xrac_m.xrac006,-999,999) THEN
+               LET g_xrac_m.xrac006 = 0 
+               NEXT FIELD xrac006
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrac006
+            #add-point:ON CHANGE xrac006 name="input.g.xrac006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrac005
+            #add-point:BEFORE FIELD xrac005 name="input.b.xrac005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrac005
+            
+            #add-point:AFTER FIELD xrac005 name="input.a.xrac005"
+            IF NOT axri012_01_num_chk(g_xrac_m.xrac005,-12,12) THEN
+               LET g_xrac_m.xrac005 = 0 
+               NEXT FIELD xrac005
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrac005
+            #add-point:ON CHANGE xrac005 name="input.g.xrac005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrac004
+            #add-point:BEFORE FIELD xrac004 name="input.b.xrac004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrac004
+            
+            #add-point:AFTER FIELD xrac004 name="input.a.xrac004"
+            IF NOT axri012_01_num_chk(g_xrac_m.xrac004,0,99) THEN
+               LET g_xrac_m.xrac004 = 0 
+               NEXT FIELD xrac004
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrac004
+            #add-point:ON CHANGE xrac004 name="input.g.xrac004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrac001
+            #add-point:BEFORE FIELD xrac001 name="input.b.xrac001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrac001
+            
+            #add-point:AFTER FIELD xrac001 name="input.a.xrac001"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrac001
+            #add-point:ON CHANGE xrac001 name="input.g.xrac001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrac002
+            #add-point:BEFORE FIELD xrac002 name="input.b.xrac002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrac002
+            
+            #add-point:AFTER FIELD xrac002 name="input.a.xrac002"
+            #此段落由子樣板a05產生
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrac002
+            #add-point:ON CHANGE xrac002 name="input.g.xrac002"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.xrac003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrac003
+            #add-point:ON ACTION controlp INFIELD xrac003 name="input.c.xrac003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.oocq004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD oocq004
+            #add-point:ON ACTION controlp INFIELD oocq004 name="input.c.oocq004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrac007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrac007
+            #add-point:ON ACTION controlp INFIELD xrac007 name="input.c.xrac007"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrac006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrac006
+            #add-point:ON ACTION controlp INFIELD xrac006 name="input.c.xrac006"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrac005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrac005
+            #add-point:ON ACTION controlp INFIELD xrac005 name="input.c.xrac005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrac004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrac004
+            #add-point:ON ACTION controlp INFIELD xrac004 name="input.c.xrac004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrac001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrac001
+            #add-point:ON ACTION controlp INFIELD xrac001 name="input.c.xrac001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrac002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrac002
+            #add-point:ON ACTION controlp INFIELD xrac002 name="input.c.xrac002"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            CALL axri012_01_xrac('3114',p_oocq002,g_xrac_m.oocq004,g_xrac_m.xrac003,g_xrac_m.xrac004,
+                                     g_xrac_m.xrac005,g_xrac_m.xrac006,g_xrac_m.xrac007) 
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axri012_01 
+   
+   #add-point:input段after input 
+   LET INT_FLAG = FALSE
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axri012_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="axri012_01.other_function" readonly="Y" >}
+# #檢查輸入的值是否有效
+# #p_min：最小值(必須錄入)
+# #p_max：最大值(必須錄入)
+# #p_num：傳入值（必須錄入）
+PRIVATE FUNCTION axri012_01_num_chk(p_num,p_min,p_max)
+  DEFINE p_num LIKE xrac_t.xrac005
+   DEFINE p_min LIKE xrac_t.xrac005
+   DEFINE p_max LIKE xrac_t.xrac005
+   DEFINE r_success LIKE type_t.num5
+   DEFINE l_errno LIKE type_t.chr20
+
+   LET r_success = TRUE
+   LET l_errno = ''
+
+   IF NOT cl_null(p_min) AND NOT cl_null(p_max) AND NOT cl_null(p_num) THEN
+      IF p_max = 12 THEN LET l_errno = 'axr-00001' END IF  #請錄入-12到12之間的數！
+      IF p_max = 999 THEN LET l_errno = 'axr-00002' END IF #請錄入-999到999之間的數！
+      IF p_max = 99 THEN LET l_errno = 'axr-00005' END IF  #請錄入0到99之間的數！
+      IF p_max = 20 THEN LET l_errno = 'axr-00007' END IF  #請錄入0到20之間的數！
+      IF NOT ap_chk_Range(p_num,p_min,1,p_max,1,l_errno,0) THEN
+         LET r_success = FALSE
+      END IF
+   END IF
+   RETURN r_success
+END FUNCTION
+
+PRIVATE FUNCTION axri012_01_xrac(p_xrac001,p_xrac002,p_oocq004,p_xrac003,p_xrac004,p_xrac005,p_xrac006,p_xrac007)
+DEFINE p_xrac001 LIKE xrac_t.xrac001
+   DEFINE p_xrac002 LIKE xrac_t.xrac002
+   DEFINE p_oocq004 LIKE oocq_t.oocq001
+   DEFINE p_xrac003 LIKE xrac_t.xrac003
+   DEFINE p_xrac004 LIKE xrac_t.xrac004
+   DEFINE p_xrac005 LIKE xrac_t.xrac005
+   DEFINE p_xrac006 LIKE xrac_t.xrac006
+   DEFINE p_xrac007 LIKE xrac_t.xrac007
+   DEFINE l_success LIKE type_t.chr1
+   DEFINE l_xrac    RECORD LIKE xrac_t.*
+   DEFINE l_cnt     LIKE type_t.num10   #用於判斷是否存在與xrac_t中
+   DEFINE l_xrac008 LIKE xrac_t.xrac008 #用於累加xrac008的值
+#初始化
+   LET l_success = 'Y'
+   INITIALIZE l_xrac.* TO NULL 
+   LET l_cnt = 0
+   LET l_xrac008 = 0
+   
+#由於axri012是使用的SCC：3114，故此處對第一個傳入的參數進行判斷
+   #不等於的時候直接退出
+   IF p_xrac001 != 3114 THEN RETURN END IF 
+#判斷傳入值并給預設值
+  #如果xrac001（應用分類），xrac002（應用分類碼），oocq004（金額設定），xrac003（產生期數）
+  #為空，則RETURN
+   IF cl_null(p_xrac001) OR cl_null(p_xrac002) OR cl_null(p_oocq004) OR cl_null(p_xrac003) THEN
+      RETURN 
+   END IF 
+   LET l_xrac.xrac001 = p_xrac001
+   LET l_xrac.xrac002 = p_xrac002
+  #xrac004，xrac005，xrac006傳入值為空時初始化0
+   IF cl_null(p_xrac004) THEN LET p_xrac004 = 0 END IF 
+   IF cl_null(p_xrac005) THEN LET p_xrac005 = 0 END IF 
+   IF cl_null(p_xrac006) THEN LET p_xrac006 = 0 END IF 
+   LET l_xrac.xrac004 = p_xrac004
+   LET l_xrac.xrac005 = p_xrac005
+   LET l_xrac.xrac006 = p_xrac006
+  #xrac003錄入值處理
+   IF p_xrac003 = 0 THEN RETURN END IF  
+  #xrac007給默認值10.現金類型
+   LET l_xrac.xrac007 = p_xrac007
+  #xrac008給默認值0
+   IF p_oocq004 = '1' THEN
+      LET l_xrac.xrac008 = s_num_round('1',(100/p_xrac003),1)
+   ELSE
+      LET l_xrac.xrac008 = 0 
+   END IF 
+   
+  #xrac003給默認值
+   LET l_xrac.xrac003 = 1
+#判斷是否已經存在xrac_t的資料
+   SELECT COUNT(*) INTO l_cnt FROM xrac_t
+    WHERE xrac001 = p_xrac001
+      AND xrac002 = p_xrac002
+      AND xracent = g_enterprise #160905-00007#3 add
+
+#啟用事務
+   CALL s_transaction_begin()
+   
+   #開始插入操作
+   WHILE TRUE
+     #判斷要插入的xrac003與p_xrac003相等，且p_oocq004 = 1.比率分攤
+     #或者要插入的xrac003大於p_xrac003
+     #使用while外部的插入，否則xrac008均給與預設值0
+      IF (l_xrac.xrac003 = p_xrac003 AND p_oocq004 = 1) OR l_xrac.xrac003 > p_xrac003 THEN
+         EXIT WHILE
+      END IF 
+
+     #插入數據庫操作
+      CALL axri012_01_xrac_ins(l_xrac.xrac001,l_xrac.xrac002,l_xrac.xrac003,
+                               l_xrac.xrac004,l_xrac.xrac005,l_xrac.xrac006,
+                               l_xrac.xrac007,l_xrac.xrac008)
+           RETURNING l_success
+      IF l_success = 'N' THEN EXIT WHILE END IF 
+     #xrac003自動加1
+      LET l_xrac.xrac003 = l_xrac.xrac003 + 1
+     #xrac008累加
+      LET l_xrac008 = l_xrac008 + l_xrac.xrac008
+   END WHILE 
+   
+  #當p_oocq004 = '1',最後一筆資料由於xrac008的特殊性，直接在while外面插入數據庫中
+   IF l_success = 'Y' AND p_oocq004 = '1'  THEN 
+     #給xrac003 ,xrac008賦值
+      LET l_xrac.xrac003 = p_xrac003
+      LET l_xrac.xrac008 = 100 - l_xrac008
+      CALL axri012_01_xrac_ins(l_xrac.xrac001,l_xrac.xrac002,l_xrac.xrac003,
+                              l_xrac.xrac004,l_xrac.xrac005,l_xrac.xrac006,
+                              l_xrac.xrac007,l_xrac.xrac008)
+          RETURNING l_success 
+   END IF
+   
+#結束事務
+   CALL s_transaction_end(l_success,1)
+END FUNCTION
+
+PRIVATE FUNCTION axri012_01_xrac_ins(p_xrac001,p_xrac002,p_xrac003,p_xrac004,p_xrac005,p_xrac006,p_xrac007,p_xrac008)
+DEFINE p_xrac001 LIKE xrac_t.xrac001
+   DEFINE p_xrac002 LIKE xrac_t.xrac002
+   DEFINE p_xrac003 LIKE xrac_t.xrac003
+   DEFINE p_xrac004 LIKE xrac_t.xrac004
+   DEFINE p_xrac005 LIKE xrac_t.xrac005
+   DEFINE p_xrac006 LIKE xrac_t.xrac006
+   DEFINE p_xrac007 LIKE xrac_t.xrac007
+   DEFINE p_xrac008 LIKE xrac_t.xrac008
+   
+   DEFINE r_success LIKE type_t.chr1
+   LET r_success = 'Y'
+   INSERT INTO xrac_t(xracent,xrac001,xrac002,xrac003,xrac004,
+                      xrac005,xrac006,xrac007,xrac008)
+               VALUES(g_enterprise,p_xrac001,p_xrac002,p_xrac003,p_xrac004,
+                      p_xrac005,p_xrac006,p_xrac007,p_xrac008)      
+   IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "ins xrac_t"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = 'N'
+   END IF
+   RETURN r_success
+END FUNCTION
+
+ 
+{</section>}
+ 

@@ -1,0 +1,158 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli513" module="agl" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="05016" crtdt="2015-03-10 16:30:33" modid="05016" moddt="2015-03-11 18:30:11" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="合併報表股東權益歷史維護">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gldi002,gldi002_desc(chr80),gldi001,gldi001_desc(chr80),gldi004,gldi004_desc(chr80),gldi003,gldi003_desc(chr80),gldi005,gldi006,gldi007"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gldistus,gldi008,gldi008_desc(chr500),gldi009,gldi009_desc(chr500),gldi010,gldi010_desc(chr500),gldi011,gldi012,gldi013,gldi014,gldi015,gldi016,gldi017"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gldi008,gldi009,gldi011,gldiownid,gldiownid_desc(chr500),gldiowndp,gldiowndp_desc(chr500),gldicrtid,gldicrtid_desc(chr500),gldicrtdp,gldicrtdp_desc(chr500),gldicrtdt,gldimodid,gldimodid_desc(chr500),gldimoddt"/>
+      <var id="bs_field" value="gldi001,gldi002,gldi003,gldi004" pk="gldi001,gldi002,gldi003,gldi004" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="agli513" method="dialog">
+    <section id="input">
+      <input id="head" field="gldi002,gldi001,gldi004,gldi003"/>
+      <input id="body" page="1" field="gldistus,gldi008,gldi009,gldi010,gldi011,gldi012,gldi013,gldi014,gldi015,gldi016,gldi017" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gldi002,gldi002_desc,gldi001,gldi004,gldi003"/>
+      <construct id="body" page="1" field="gldistus,gldi008,gldi009,gldi010,gldi011,gldi012,gldi013,gldi014,gldi015,gldi016,gldi017"/>
+      <construct id="body" page="2" field="gldiownid,gldiowndp,gldicrtid,gldicrtdp,gldicrtdt,gldimodid,gldimoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gldi001,gldi002,gldi003,gldi004"/>
+      <set id="head" type="no_entry" field="gldi001,gldi002,gldi003,gldi004"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gldi002">
+        <after/>
+      </column>
+      <column id="gldi002_desc"/>
+      <column id="gldi001">
+        <after/>
+      </column>
+      <column id="gldi001_desc"/>
+      <column id="gldi004">
+        <after/>
+      </column>
+      <column id="gldi004_desc"/>
+      <column id="gldi003">
+        <after/>
+      </column>
+      <column id="gldi003_desc"/>
+      <column id="gldi005"/>
+      <column id="gldi006"/>
+      <column id="gldi007"/>
+    </init>
+    <init id="body" page="1">
+      <column id="gldistus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="gldi008">
+        <after/>
+      </column>
+      <column id="gldi008_desc"/>
+      <column id="gldi009">
+        <after/>
+      </column>
+      <column id="gldi009_desc"/>
+      <column id="gldi010">
+        <after/>
+      </column>
+      <column id="gldi010_desc"/>
+      <column id="gldi011"/>
+      <column id="gldi012" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="gldi013" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="gldi014" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="gldi015" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="gldi016" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="gldi017" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="gldiownid">
+        <after>
+          <reference field="gldiownid_desc" ref_field="gldi_t.gldiownid" map_field="gldiownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gldiownid_desc"/>
+      <column id="gldiowndp">
+        <after>
+          <reference field="gldiowndp_desc" ref_field="gldi_t.gldiowndp" map_field="gldiowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gldiowndp_desc"/>
+      <column id="gldicrtid">
+        <after>
+          <reference field="gldicrtid_desc" ref_field="gldi_t.gldicrtid" map_field="gldicrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gldicrtid_desc"/>
+      <column id="gldicrtdp">
+        <after>
+          <reference field="gldicrtdp_desc" ref_field="gldi_t.gldicrtdp" map_field="gldicrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gldicrtdp_desc"/>
+      <column id="gldicrtdt"/>
+      <column id="gldimodid">
+        <after>
+          <reference field="gldimodid_desc" ref_field="gldi_t.gldimodid" map_field="gldimodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gldimodid_desc"/>
+      <column id="gldimoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gldi_t" pk="gldi001,gldi002,gldi003,gldi004">
+      <sql id="forupd_sql" type="sql" query="SELECT gldi002,&apos;&apos;,gldi001,&apos;&apos;,gldi004,&apos;&apos;,gldi003,&apos;&apos;,gldi005,gldi006,gldi007 FROM gldi_t WHERE gldient= ? AND gldi001=? AND gldi002=? AND gldi003=? AND gldi004=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gldi002,&apos;&apos;,gldi001,&apos;&apos;,gldi004,&apos;&apos;,gldi003,&apos;&apos;,gldi005,gldi006,gldi007 FROM gldi_t" order="gldi001,gldi002,gldi003,gldi004"/>
+    </head>
+    <body id="gldi_t" page="1,2" linked="" pk="gldi008,gldi009,gldi010,gldi011" fk="gldi001,gldi002,gldi003,gldi004">
+      <sql id="forupd_sql_detail" query="SELECT gldistus,gldi008,&apos;&apos;,gldi009,&apos;&apos;,gldi010,&apos;&apos;,gldi011,gldi012,gldi013,gldi014,gldi015,gldi016,gldi017,&apos;&apos;,&apos;&apos;,&apos;&apos;,gldiownid,&apos;&apos;,gldiowndp,&apos;&apos;,gldicrtid,&apos;&apos;,gldicrtdp,&apos;&apos;,gldicrtdt,gldimodid,&apos;&apos;,gldimoddt FROM gldi_t WHERE gldient=? AND gldi001=? AND gldi002=? AND gldi003=? AND gldi004=? AND gldi008=? AND gldi009=? AND gldi010=? AND gldi011=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gldistus,gldi008,&apos;&apos;,gldi009,&apos;&apos;,gldi010,&apos;&apos;,gldi011,gldi012,gldi013,gldi014,gldi015,gldi016,gldi017,&apos;&apos;,&apos;&apos;,&apos;&apos;,gldiownid,&apos;&apos;,gldiowndp,&apos;&apos;,gldicrtid,&apos;&apos;,gldicrtdp,&apos;&apos;,gldicrtdt,gldimodid,&apos;&apos;,gldimoddt FROM gldi_t WHERE gldient= ? AND gldi001=? AND gldi002=? AND gldi003=? AND gldi004=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,310 @@
+<add_points prog="axrt400_09" std_prog="axrt400_09" erpver="1.0" module="AXR" ver="1" env="s" zone="t10dev" normal_style="Y" booking="Y">
+  <point name="input.a.xrdadocno" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_xrda_m.xrdald) AND NOT cl_null(g_xrda_m.xrdadocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_xrda_m.xrdald != g_xrdald_t  OR g_xrda_m.xrdadocno != g_xrdadocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xrda_t WHERE "||"xrdaent = '" ||g_enterprise|| "' AND "||"xrdald = '"||g_xrda_m.xrdald ||"' AND "|| "xrdadocno = '"||g_xrda_m.xrdadocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.xrdald" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_xrda_m.xrdald) AND NOT cl_null(g_xrda_m.xrdadocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_xrda_m.xrdald != g_xrdald_t  OR g_xrda_m.xrdadocno != g_xrdadocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xrda_t WHERE "||"xrdaent = '" ||g_enterprise|| "' AND "||"xrdald = '"||g_xrda_m.xrdald ||"' AND "|| "xrdadocno = '"||g_xrda_m.xrdadocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="function.axrt400_09_ins_xrce" cite_std="N" status="u" ver="1" src="s" new="Y" order="1" cite_ver="" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 根據條件,處理單據金額差異
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt400_09_ins_xrce()
+   
+   INITIALIZE g_xrce_t.* To Null
+   
+   SELECT MAX(xrceseq) + 1 INTO g_xrce_t.xrceseq
+     FROM xrce_t
+    WHERE xrceent = g_enterprise AND xrceld = g_ld
+      AND xrcedocno = g_docno
+      
+   LET g_xrce_t.xrceent  = g_enterprise
+   LET g_xrce_t.xrcecomp = g_comp
+   LET g_xrce_t.xrceld   = g_ld
+   LET g_xrce_t.xrcedocno= g_docno
+#  LET g_xrce_t.xrcelegl = 
+#  LET g_xrce_t.xrcesite = 
+   LET g_xrce_t.xrce006  = ''
+   LET g_xrce_t.xrce001  = 'axrt400'
+   LET g_xrce_t.xrce003  = ''
+   LET g_xrce_t.xrce004  = ''
+   LET g_xrce_t.xrce005  = ''
+   LET g_xrce_t.xrce024  = ''
+   LET g_xrce_t.xrce025  = ''
+   LET g_xrce_t.xrce007  = ''
+   LET g_xrce_t.xrce008  = ''
+   LET g_xrce_t.xrce009  = ''
+   LET g_xrce_t.xrce027  = 'N'
+   LET g_xrce_t.xrce109  = g_amt
+   LET g_xrce_t.xrce119  = g_amt
+   
+   IF g_glaa_t.glaa015 = 'Y' THEN
+                               #匯率參照表;帳套;  日期;        來源幣別
+      CALL s_aooi160_get_exrate('2',g_ld,g_docdt,g_glaa_t.glaa001,
+                               #目的幣別;         交易金額; 匯類類型
+                                g_glaa_t.glaa016,0,g_glaa_t.glaa018)
+         RETURNING g_xrce_t.xrce121
+      LET g_xrce_t.xrce129  = g_xrce_t.xrce109 * g_xrce_t.xrce121
+   END IF
+   IF g_glaa_t.glaa019 = 'Y' THEN
+                               #匯率參照表;帳套;  日期;        來源幣別
+      CALL s_aooi160_get_exrate('2',g_ld,g_docdt,g_glaa_t.glaa001,
+                               #目的幣別;         交易金額; 匯類類型
+                                g_glaa_t.glaa020,0,g_glaa_t.glaa022)
+         RETURNING g_xrce_t.xrce131
+      LET g_xrce_t.xrce139  = g_xrce_t.xrce109 * g_xrce_t.xrce131
+   END IF
+   
+   SELECT ooag004 INTO g_xrce_t.xrceorga FROM ooag_t
+    WHERE ooagent = g_enterprise
+      AND ooag001 = g_xrda003
+   
+   
+   IF NOT cl_null(g_xrda_m.lbl_ra1) AND g_xrda_m.lbl_ra1 != 21 THEN
+      LET g_xrce_t.xrce010  = ''
+      LET g_xrce_t.xrce017 = g_xrda003
+      SELECT ooag003,ooag004 INTO g_xrce_t.xrce018,g_xrce_t.xrce019 FROM ooag_t
+       WHERE ooagent = g_enterprise
+         AND ooag001 = g_xrda003
+      SELECT nmad003 INTO g_xrce_t.xrce012 FROM nmad_t
+       WHERE nmadent = g_enterprise
+         AND nmad001 = g_glaa_t.glaa005
+         AND nmad002 = g_xrce_t.xrce011
+      LET g_xrce_t.xrce100  = g_glaa_t.glaa001
+      LET g_xrce_t.xrce101  = 1
+      LET g_xrce_t.xrce120  = g_glaa_t.glaa016
+      LET g_xrce_t.xrce130  = g_glaa_t.glaa020
+      LET g_xrce_t.xrce020  = ''
+      LET g_xrce_t.xrce021  = ''
+      LET g_xrce_t.xrce022  = ''
+      LET g_xrce_t.xrce023  = ''
+   END IF
+   
+   #收款＞帳款
+   IF NOT cl_null(g_xrda_m.lbl_ra1) THEN
+      CASE
+         WHEN g_xrda_m.lbl_ra1 = '12'
+            SELECT glab005,glab010 INTO g_xrce_t.xrce016,g_xrce_t.xrce011 FROM glab_t
+             WHERE glabent = g_enterprise
+               AND glabld = g_ld
+               AND glab003 = '9711_11'
+            LET g_xrce_t.xrce013 = ''
+            LET g_xrce_t.xrce002 = '12'
+         
+         WHEN g_xrda_m.lbl_ra1 = '20'
+            SELECT glab005,glab010 INTO g_xrce_t.xrce016,g_xrce_t.xrce011 FROM glab_t
+             WHERE glabent = g_enterprise
+               AND glabld = g_ld
+               AND glab003 = '9711_24'
+            LET g_xrce_t.xrce013 = g_xrda004
+            LET g_xrce_t.xrce002 = '20'
+         
+         WHEN g_xrda_m.lbl_ra1 = '21'
+            LET g_xrce_t.xrce013 = g_xrda004
+            LET g_xrce_t.xrce002 = '21'
+      END CASE
+   END IF
+   
+   #收款＜帳款
+   IF NOT cl_null(g_xrda_m.lbl_ra2) THEN
+      CASE
+         WHEN g_xrda_m.lbl_ra2 = '11'
+            SELECT glab005,glab010 INTO g_xrce_t.xrce016,g_xrce_t.xrce011 FROM glab_t
+             WHERE glabent = g_enterprise
+               AND glabld = g_ld
+               AND glab003 = '9711_12'
+            LET g_xrce_t.xrce013 = ''
+            LET g_xrce_t.xrce002 = '11'
+            
+         WHEN g_xrda_m.lbl_ra2 = '15'
+            SELECT glab005,glab010 INTO g_xrce_t.xrce016,g_xrce_t.xrce011 FROM glab_t
+             WHERE glabent = g_enterprise
+               AND glabld = g_ld
+               AND glab003 = '9711_24'
+            LET g_xrce_t.xrce013 = ''
+            LET g_xrce_t.xrce002 = '15'
+            
+         WHEN g_xrda_m.lbl_ra2 = '14'
+            SELECT glab005,glab010 INTO g_xrce_t.xrce016,g_xrce_t.xrce011 FROM glab_t
+             WHERE glabent = g_enterprise
+               AND glabld = g_ld
+               AND glab003 = '9711_21'
+            LET g_xrce_t.xrce013 = ''
+            LET g_xrce_t.xrce002 = '14'
+            
+         WHEN g_xrda_m.lbl_ra2 = '22'
+        #   SELECT glab005,glab010 INTO g_xrce_t.xrce016,g_xrce_t.xrce011 FROM glab_t
+        #    WHERE glabent = g_enterprise
+        #      AND glabld = g_ld
+        #      AND glab003 = '9711_12'
+        #   LET g_xrce_t.xrce013 = ''
+        #   LET g_xrce_t.xrce002 = '22'
+      END CASE
+   END IF
+   
+   INSERT INTO xrce_t VALUES(g_xrce_t.*)
+END FUNCTION]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[DEFINE g_type          LIKE type_t.chr1
+DEFINE g_xrce_t        RECORD LIKE xrce_t.*
+DEFINE g_glaa_t        RECORD LIKE glaa_t.*
+DEFINE g_comp          LIKE xrda_t.xrdacomp
+DEFINE g_xrda003       LIKE xrda_t.xrda003
+DEFINE g_xrda004       LIKE xrda_t.xrda004
+DEFINE g_docno         LIKE xrda_t.xrdadocno
+DEFINE g_docdt         LIKE xrda_t.xrdadocdt
+DEFINE g_ld            LIKE xrda_t.xrdald
+DEFINE g_amt           LIKE xrce_t.xrce109]]>
+</point>
+  <point name="input.b.lbl_ra1" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            IF g_type = '2' THEN
+               NEXT FIELD lbl_ra2
+            END IF]]>
+</point>
+  <point name="input.b.lbl_ra2" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            IF g_type = '1' THEN
+               NEXT FIELD lbl_ra1
+            END IF]]>
+</point>
+  <point name="input.before_input" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            LET g_xrda_m.lbl_esc = ''
+            IF g_type = '1' THEN
+               LET g_xrda_m.lbl_ra1 = '12'
+            ELSE
+               LET g_xrda_m.lbl_ra2 = '11'
+            END IF
+            DISPLAY BY NAME g_xrda_m.lbl_esc,g_xrda_m.lbl_ra1,g_xrda_m.lbl_ra2]]>
+</point>
+  <point name="input.define" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   DEFINE p_type          LIKE type_t.chr1
+   DEFINE p_comp          LIKE xrda_t.xrdacomp
+   DEFINE p_xrda003       LIKE xrda_t.xrda003
+   DEFINE p_xrda004       LIKE xrda_t.xrda004
+   DEFINE p_docno         LIKE xrda_t.xrdadocno
+   DEFINE p_docdt         LIKE xrda_t.xrdadocdt
+   DEFINE p_ld            LIKE xrda_t.xrdald
+   DEFINE p_amt           LIKE xrce_t.xrce109]]>
+</point>
+  <point name="input.g.lbl_esc" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_xrda_m.lbl_esc) AND g_xrda_m.lbl_esc = '1' THEN
+               LET g_xrda_m.lbl_ra1 = ''
+               LET g_xrda_m.lbl_ra2 = ''
+               DISPLAY BY NAME g_xrda_m.lbl_ra1,g_xrda_m.lbl_ra2
+               EXIT DIALOG
+            END IF]]>
+</point>
+  <point name="input.g.lbl_ra1" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_xrda_m.lbl_ra1) THEN lET g_xrda_m.lbl_ra2 = Null END IF
+            DISPLAY BY NAME g_xrda_m.lbl_ra1]]>
+</point>
+  <point name="input.g.lbl_ra2" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_xrda_m.lbl_ra1) THEN lET g_xrda_m.lbl_ra2 = Null END IF
+            DISPLAY BY NAME g_xrda_m.lbl_ra2]]>
+</point>
+  <point name="input.get_var" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   p_type,p_comp,p_xrda003,p_xrda004,p_docno,p_docdt,p_ld,p_amt]]>
+</point>
+  <point name="input.post_input" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   IF INT_FLAG OR g_xrda_m.lbl_esc = '1' THEN
+      LET INT_FLAG = FALSE
+      RETURN
+   END IF
+   
+   CALL axrt400_09_ins_xrce()]]>
+</point>
+  <point name="input.pre_input" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   LET g_type    = p_type
+   LET g_comp    = p_comp
+   LET g_xrda003 = p_xrda003
+   LET g_xrda004 = p_xrda004
+   LET g_docno   = p_docno
+   LET g_docdt   = p_docdt
+   LET g_ld      = p_ld
+   LET g_amt     = p_amt
+   
+   IF g_type = '1' THEN
+      CALL cl_set_comp_entry('lbl_ra2',FALSE)
+      LET g_xrda_m.lbl_ra2 = 0
+   ELSE
+      CALL cl_set_comp_entry('lbl_ra1',FALSE)
+      LET g_xrda_m.lbl_ra1 = 0
+   END IF
+   
+   IF g_prog = 'axrt330' THEN
+      CALL cl_set_comp_visible('lbl_group3',FALSE)
+   END IF
+   
+   SELECT * INTO g_glaa_t.* FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald  = g_ld]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.action" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.lbl_esc" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.lbl_esc" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.lbl_ra1" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.lbl_ra2" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.lbl_esc" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.lbl_ra1" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.lbl_ra2" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.after_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.more_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.before_close" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+</add_points>

@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ FOURJS_START_COPYRIGHT(D,2011)
+ Property of Four Js*
+ (c) Copyright Four Js 2011, 2014. All Rights Reserved.
+ * Trademark of Four Js Development Tools Europe Ltd
+   in the United States and elsewhere
+ 
+ This file can be modified by licensees according to the
+ product manual.
+ FOURJS_END_COPYRIGHT
+ -->
+<!-- 
+Modify.........: No:FUN-T100 2014/04/02 by tsai_yen
+-->
+<html
+	xmlns='http://www.w3.org/1999/xhtml'
+	xmlns:gwc='http://www.4js.com/GWC'
+>
+	<head>
+		<meta
+			content='text/html; charset=utf-8'
+			http-equiv='Content-Type'
+		/>
+	</head>
+
+	<body>
+
+<gwc:snippet-root>
+	<div
+		gwc:condition='renderForDisplay'
+		gwc:replace='edit'
+	/>
+
+	<div
+		gwc:condition='!renderForDisplay'
+		gwc:omit-tag='renderNoLayout'
+
+		class='gFieldContainer'
+	>
+		<div
+			gwc:condition='!edit/hidden'
+
+			class='gWid g{type} gSStar gS{type} {prefix("gc", class)} widget'
+            
+			data-g-qa-name='{type},{name || ""}'
+			data-g-qa-idRef='{auiid(edit/id)}'
+			data-g-active='{edit/isModifiable || edit/isSelectable}'
+			data-g-focus='{edit/hasFocus || null}'
+			data-g-id='{type},{button/idid},{button/name || ""}'
+			data-g-layout-container='{renderNoLayout ? null : "\"horizontalBubbling\": 0, \"verticalBubbling\": 0"}'
+			data-g-modif='{edit/isModifiable || null}'
+			data-g-query='{edit/isQuery || null}'
+			data-g-selectable='{edit/isSelectable || null}'
+			data-g-selected='{ignoreSelection ? null : ((edit/isSelectable &amp;&amp; check(isSelected)) || null)}'
+            gwc:define='l_content edit/isPassword == false ? edit/value : null;'
+		><!-- FUN-T100 add l_content -->        
+			<button
+				class='gToolButton gButtonCommon button-style {isModifiable ? "gToolButtonUsable" : "gToolButtonDecoration"}'
+				disabled='{button/isactive ? null : ""}'
+				style='{renderNoLayout ? "float: right" + ";" : null}'
+				title='{l_content || button/comment || edit/comment || null}'
+
+				data-g-qa-name='{button/type},{button/name || ""}'
+				data-g-edit-did='{edit/xdid}'
+				data-g-edit-focusable='{edit/isModifiable ? "1" : null}'
+				data-g-id='{button/type},{button/idid},{button/name || ""}'
+				data-g-layout-item='{renderNoLayout ? null : "\"column\": 1"}'
+				data-g-layout-policy='{renderNoLayout ? null : "\"deferSizing\": 1"}'
+			><!-- FUN-T100 add l_content -->
+				<div
+					gwc:define='
+						scaleIcon style["scaleIcon"];
+						iconSize scaleIcon ? (contains(scaleIcon,"px") ? scaleIcon : null) : null;
+						scaleIconYes scaleIcon=="yes";
+					'
+					gwc:condition='!renderNoLayout'
+					gwc:omit-tag='!iconSize &amp;&amp; !scaleIconYes'
+
+					class='gFixedIconContainer'
+					style='{iconSize ? "height:" + iconSize + ";" + "width:" + iconSize + ";" : null}'
+				>
+					<div
+						gwc:omit-tag='!iconSize &amp;&amp; !scaleIconYes'
+					>
+						<img
+							gwc:define='
+								fallbackSrc imageURI("html5_dots.png");
+								src button/image ? imageURI(button/image) : fallbackSrc;
+							'
+
+							class='gImageLoading'
+							draggable='false'
+							onerror='this.gLoadedState = 2'
+							onload='this.gLoadedState = 1'
+							src='{src}'
+							style='{iconSize ? "max-height:" + iconSize + ";" + "max-width:" + iconSize + ";" : null}'
+
+							data-g-squarescale='{scaleIconYes || null}'
+							data-g-id='Image,{fallbackSrc}'
+						/>
+					</div>
+				</div>
+
+				<img
+					gwc:condition='renderNoLayout &amp;&amp; button/image'
+
+					alt='...'
+					draggable='false'
+					src='{imageURI(button/image)}'
+				/>{renderNoLayout &amp;&amp; !button/image ? "..." : null}
+			</button>
+
+			<span
+				gwc:omit-tag='!renderNoLayout'
+
+				style='
+					display: block;
+					overflow: hidden;
+				'
+			>
+				<div
+					gwc:omit-tag='renderNoLayout'
+
+					data-g-layout-item='"isXSpacer": 1'
+				>   
+					<input
+						gwc:define='
+							inputType switch(true, [edit/isPassword, edit/style["dataTypeHint"] == "email", edit/style["dataTypeHint"] == "url", edit/style["dataTypeHint"] == "tel", edit/style["dataTypeHint"] == "search"], ["password", "email", "url", "tel", "search"], "text");
+						'
+
+						class='gWid g{edit/type} {edit/shift ? "gShift_" + edit/shift : ""} {edit/isNumeric ? "gNumeric" : ""} {edit/justify ? "gJustify_" + edit/justify : ""} widget-style widget-style-focus'
+						maxlength='{edit/maxlength || null}'
+						readonly='{noteditable ? "" : (edit/isModifiable ? null : "") }'
+						style='{edit/ttycolor ? "color: " + edit/ttycolor + ";" : null}{edit/ttybackgroundcolor ? "background-color: " + edit/ttybackgroundcolor + ";" : null}{edit/ttyfontfamily ? "font-family: " + edit/ttyfontfamily + ";" : null}{edit/ttytextdecoration ? "text-decoration: " + edit/ttytextdecoration + ";" : null}{edit/ttyfontweight ? "font-weight: " + edit/ttyfontweight + ";" : null}'
+						tabindex='{edit/isModifiable &amp;&amp; edit/tabIndex ? edit/tabIndex : null}'
+						title='{l_content || edit/comment || null}'
+						type='{inputType}'
+
+						data-g-id='{edit/type},{edit/xdid}'
+						data-g-layout-policy='{renderNoLayout ? null : "\"widthHint\": " + width + ", \"widthPolicy\": \"Fixed\""}'
+						data-g-modif='{edit/isModifiable || null}'
+						data-g-no-loc-accel='{edit/style["localAccelerators"] != "yes" || null}'
+						data-g-notabnext='{edit/verify || null}'
+						data-g-picture='{(!edit/isQuery &amp;&amp; edit/picture) ? edit/picture : null}'
+						data-g-query='{edit/isQuery || null}'
+						data-g-selectable='{edit/isSelectable || null}'
+						data-g-selected='{ignoreSelection ? null : ((edit/isSelectable &amp;&amp; check(isSelected)) || null)}'
+						data-g-state='{edit/hasOnChange ? "1" : ""},{edit/isNumeric ? "1" : ""},{edit/autoNext ? "1" : ""}'
+						data-g-subtabindex='{edit/isModifiable &amp;&amp; edit/subtabindex ? edit/subtabindex : null}'
+						data-g-value='{edit/value}'
+					/><!-- FUN-T100 add l_content -->
+				</div>
+			</span>
+		</div>
+
+		<gwc:dummy
+			gwc:replace='includeSnippet("UIError")'
+		/>
+	</div>
+</gwc:snippet-root>
+
+	</body>
+</html>

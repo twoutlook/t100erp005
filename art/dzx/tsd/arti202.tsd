@@ -1,0 +1,368 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="arti202" std_prog="arti202" erpver="1.0" ver="7" module="ART" type="M" booking="Y" designer_ver="1.0" class="i" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="rtax_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Tree" status=""/>
+    </tbl>
+  </table>
+  <tree name="s_browse" ver="1" src="s" kind="recu_01" att="type,id,pid,desc,speed,stype,sid,spid" cite_std="N" status="">
+    <type no="1" table="" col=""/>
+    <id no="2" table="rtax_t" col="rtax001"/>
+    <pid no="3" table="rtax_t" col="rtax003"/>
+    <desc no="4" table="" col=""/>
+    <speed no="5" table="rtaxs_t" col=""/>
+    <stype no="6" table="" col=""/>
+    <sid no="7" table="rtaxs_t" col="rtaxs001"/>
+    <spid no="8" table="rtaxs_t" col="rtaxs002"/>
+    <type2 no="" table="" col=""/>
+    <type3 no="" table="" col=""/>
+    <type4 no="" table="" col=""/>
+    <type5 no="" table="" col=""/>
+    <type6 no="" table="" col=""/>
+  </tree>
+  <all cite_std="N" ver="6" src="s" status="">
+    <![CDATA[1.每一品類結點新增存檔時，應更新上級結點的下級品類數(rtax005)
+
+2. a.當上級品類值更改存檔時，應同時更新舊值的上級品類資料的下級品類數及新值的上級品類資料的下級品類數
+    b.更新該筆資料與下級品類的 所屬一級品類(rtax006) 和 層級資料(rtax004)
+
+3.存檔時應判斷，當新增的品類分類類別為（2.商品分類)時，則該結點的前面各階層應要存在品類分類為(1.經營分類)的品類資料才可存檔
+  (第一層 一定要是1.經營分類) 
+
+4.新增時，於"品類分類"輸入完後判斷，依參數"經營小類階層"設定的階層數為基凖， 
+  該階層(含)以下(<=參數設定的階層者)，只能建立經營品類，
+  該階層(含)以上( >參數設定的階層者)，只能建立商品品類
+  (此項控卡應於參數規劃完整後再加上)
+
+5.資料刪除前,先判斷是否有下級品類,如果有則不允許刪除,
+   ps:待子程式發展完成後,在刪除前則彈出視窗讓使用者選擇下級品類
+        在此筆資料刪除後,欲移動到哪一個品類編號之下
+
+
+
+
+  ]]>
+  </all>
+  <field cite_std="N" name="b_rtax001" ver="1" src="s" column="rtax001" table="rtax_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_rtax001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_rtax002" ver="1" src="s" column="rtax002" table="rtax_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_rtax003" ver="1" src="s" column="rtax003" table="rtax_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_rtax003" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_rtax004" ver="1" src="s" column="rtax004" table="rtax_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_rtax005" ver="1" src="s" column="rtax005" table="rtax_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_rtax006" ver="1" src="s" column="rtax006" table="rtax_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_rtax006" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_rtax007" ver="1" src="s" column="rtax007" table="rtax_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_crtdp" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_crtdt" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_crtid" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_moddt" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_modid" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_owndp" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_ownid" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_rtaxl003" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_rtaxl004" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtax_t.rtax001" ver="1" src="s" column="rtax001" table="rtax_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_rtax001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[1.允許空白: No 
+
+2.此欄位為Key值，應檢查不可重複
+
+開窗：
+1.查詢時：
+參考函式：依標準查詢視窗
+查詢欄位：[T:品類基本資料檔 rtax_t].[C:品類編號(rtax001)],[T:品類多語言檔 rtaxl_t].[C:說明 (rtaxl003)]
+回值類型：多重回值
+
+2.新增/修改時：
+不提供開窗功能
+]]>
+  </field>
+  <field cite_std="N" name="rtax_t.rtax002" ver="1" src="s" column="rtax002" table="rtax_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[允許空白: No
+預設值: 1
+資料選項來源: 
+  資料庫: 抓取[T:系統分類值檔gzcb_t].[C:系統分類碼(gzcb001)]=2000 的資料,
+　　　　　　[T:系統分類值檔gzcb_t].[C:系統分類值(gzcb002)]為下拉選項代號,
+                       [T:系統分類值多語言檔gzcbl_t].[C:說明(gzcbl004)]為下拉選項說明]]>
+  </field>
+  <field cite_std="N" name="rtax_t.rtax003" ver="3" src="s" column="rtax003" table="rtax_t" attribute="" type="" req="Y" i_zoom="q_rtax001_1" c_zoom="q_rtax003" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[1.於新增時，如該結點為最上層，則此欄位值 = 品類編號(rtax001)
+
+2.如有點選上方的樹狀結點資料，則新增時，此欄位值 = 上方樹狀所點選的結點的品類編號
+
+3.修改時需同步修改 a.舊的上級品類的下級品類數(rtax005)
+                                  b.新的上級類品的下級品類數(rtax005)
+                                  c.筆此資料的階層(rtax004)與所屬一級品類的值(rtax006)
+                                  c.所有下級品類的階層(rtax004)與所屬一級品類的值(rtax006)
+
+開窗：
+1.查詢時：
+參考函式：依標準查詢視窗 
+查詢欄位：[T:品類基本資料檔rtax_t].[C:上層品類(rtax003)],[T:品類多語言檔 rtaxl_t].[C:說明(rtaxl003)]
+回值類型：多重回值
+
+2.新增/修改時：
+參考函式：依標準查詢視窗
+查詢欄位：[T:品類基本資料檔 rtax_t].[C:品類編號(rtax001)],[T:品類多語言檔 rtaxl_t].[C:說明 (rtaxl003)]
+回值類型：單一回傳]]>
+  </field>
+  <field cite_std="N" name="rtax_t.rtax004" ver="1" src="s" column="rtax004" table="rtax_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[計算或處理:
+  1.於新增及調整上級品類(rtax003)時更新此欄位值
+  2.當該品類為最上層(rtax001=rtax003)時，此欄位值為1
+  3.自動算出該品類結點為第幾層，放於此欄位，且不可修改]]>
+  </field>
+  <field cite_std="N" name="rtax_t.rtax005" ver="1" src="s" column="rtax005" table="rtax_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設值: 0
+
+計算或處理:
+  1.於新增及新增下級品類結點時更此欄位值
+  2.新增該點結資料時，此欄位值為0
+]]>
+  </field>
+  <field cite_std="N" name="rtax_t.rtax006" ver="1" src="s" column="rtax006" table="rtax_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_rtax006" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[計算或處理:
+  1.於新增及更改[T:品類基本資料檔rtax_t].[C:上級品類(rtax003)] 時更新此欄位
+  2.新增該點結資料時，如該結點為最上層(rtax001=rtax003)，此欄位值為結點自己([T:品類基本資料檔rtax_t].[C:品類編號rtax001]) 
+                                       如該結點不是最上層，則此欄位記錄該結點的最上層品類編號
+
+開窗：
+1.查詢時：
+參考函式：依標準查詢視窗 
+查詢欄位：[T:品類基本資料檔 rtax_t].[C:上層品類(rtax003)],[T:品類多語言檔 rtaxl_t].[C:說明(rtaxl003)]
+回值類型：多重回值
+
+2.新增/修改時：
+不提供開窗功能]]>
+  </field>
+  <field cite_std="N" name="rtax_t.rtax007" ver="3" src="s" column="rtax007" table="rtax_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[重要等級：
+     校驗:1. 呼叫 s_azzi650_chk_exist 校驗
+                  輸入值須存在[T:應用分類碼檔].[C:應用分類碼]、[C:應用分類]=200 且為有效資料
+
+   開窗處理：
+       過濾條件：arg1 傳入 [C:應用分類]=200]]>
+  </field>
+  <field cite_std="N" name="rtax_t.rtax009" ver="6" src="s" column="rtax009" table="rtax_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="N" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[Display Only,[檢驗否]由apmi840控制]]>
+  </field>
+  <field cite_std="N" name="rtax_t.rtaxcrtdp" ver="1" src="s" column="rtaxcrtdp" table="rtax_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtax_t.rtaxcrtdt" ver="1" src="s" column="rtaxcrtdt" table="rtax_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtax_t.rtaxcrtid" ver="1" src="s" column="rtaxcrtid" table="rtax_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtax_t.rtaxmoddt" ver="1" src="s" column="rtaxmoddt" table="rtax_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtax_t.rtaxmodid" ver="1" src="s" column="rtaxmodid" table="rtax_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtax_t.rtaxowndp" ver="1" src="s" column="rtaxowndp" table="rtax_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtax_t.rtaxownid" ver="1" src="s" column="rtaxownid" table="rtax_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtax_t.rtaxstus" ver="1" src="s" column="rtaxstus" table="rtax_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtax_t.rtaxunit" ver="5" src="s" column="rtaxunit" table="rtax_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[    預設值：套用 作業組織應用設定作業(aooi500)的內容進行
+    校驗：套用 作業組織應用設定作業(aooi500)的內容進行
+    開窗：套用 作業組織應用設定作業(aooi500)的內容進行
+]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_rtax006_desc" src="s" depend_field="b_rtax006" correspon_key="rtax006" ref_table="rtaxl_t" ref_fk="rtaxl001" ref_dlang="rtaxl002" ref_rtn="rtaxl003" status=""/>
+    <rfield cite_std="N" ver="2" name="rtax003_desc" src="s" depend_field="rtax_t.rtax003" correspon_key="rtaxent,rtax003" ref_table="rtaxl_t" ref_fk="rtaxlent,rtaxl001" ref_dlang="rtaxl002" ref_rtn="rtaxl003" status=""/>
+    <rfield cite_std="N" ver="2" name="rtax006_desc" src="s" depend_field="rtax_t.rtax006" correspon_key="rtaxent,rtax006" ref_table="rtaxl_t" ref_fk="rtaxlent,rtaxl001" ref_dlang="rtaxl002" ref_rtn="rtaxl003" status=""/>
+    <rfield cite_std="N" ver="2" name="rtax007_desc" src="s" depend_field="rtax_t.rtax007" correspon_key="rtaxent,&apos;200&apos;,rtax007" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtaxcrtdp_desc" src="s" depend_field="rtax_t.rtaxcrtdp" correspon_key="rtaxcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtaxcrtid_desc" src="s" depend_field="rtax_t.rtaxcrtid" correspon_key="rtaxcrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="rtaxmodid_desc" src="s" depend_field="rtax_t.rtaxmodid" correspon_key="rtaxmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="rtaxowndp_desc" src="s" depend_field="rtax_t.rtaxowndp" correspon_key="rtaxowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtaxownid_desc" src="s" depend_field="rtax_t.rtaxownid" correspon_key="rtaxownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="5" name="rtaxunit_desc" src="s" depend_field="rtax_t.rtaxunit" correspon_key="rtaxent,rtaxunit" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+  </ref_field>
+  <multi_lang>
+    <mfield cite_std="N" ver="1" name="rtaxl_t.rtaxl003" src="s" depend_field="rtax_t.rtax001" correspon_key="rtax001" lang_table="rtaxl_t" lang_fk="rtaxl001" lang_dlang="rtaxl002" lang_rtn="rtaxl003" status="">
+      <![CDATA[]]>
+    </mfield>
+    <mfield cite_std="N" ver="1" name="rtaxl_t.rtaxl004" src="s" depend_field="rtax_t.rtax001" correspon_key="rtax001" lang_table="rtaxl_t" lang_fk="rtaxl001" lang_dlang="rtaxl002" lang_rtn="rtaxl004" status="">
+      <![CDATA[]]>
+    </mfield>
+  </multi_lang>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_rtax001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_rtax002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_rtax003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_rtax004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_rtax005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_rtax006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_rtax007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_crtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_crtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_crtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_moddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_modid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_owndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_ownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_rtaxl003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_rtaxl004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtax_t.rtax001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtax_t.rtax002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="rtax_t.rtax003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtax_t.rtax004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtax_t.rtax005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtax_t.rtax006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="rtax_t.rtax007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="rtax_t.rtax009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtax_t.rtaxcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtax_t.rtaxcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtax_t.rtaxcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtax_t.rtaxmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtax_t.rtaxmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtax_t.rtaxowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtax_t.rtaxownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtax_t.rtaxstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="rtax_t.rtaxunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="compute_rtaw" ver="6" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[150126-00028#12
+1.產生最尾階品類資料 action ,
+   主要在於品類層級異動時處理,更新各階層品類編號對應最尾階產品品類
+   提供後續相關作業依不同管理品類快速取得產品對應產品品類
+2.執行此作業離開後,程式必須check 資料是否修改過,若修改過則必須自動
+   執行此程式
+3.此作業並非經常性作業,主要在於品類有異動時才需處理
+  
+功能:
+1.程式先判斷,[T:rtaw_t品類對應最尾階商品品類資料檔]count 筆數>0
+   則開窗詢問是否刪除後重新產生(Y/N)?
+   IF 'Y' 則刪除
+   IF 'N'則離開不執行此功能
+
+2.找出每一個品類的最尾階資料 新增至[rtaw_t 品類對應最尾階商品品類資料檔]
+
+ex: A - A1 - A11 - A111
+      A111 為最尾階品類
+    
+    新增資料至[T:品類對應最尾階產品品類檔]
+    [C:品類編號]       [C:最尾階品類編號]
+     A111                    A111
+     A11                      A111
+     A1                        A111
+     A                          A111]]>
+  </act>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="cbo_searchcol.0" text="選擇查詢欄位" lstr=""/>
+    <sfield name="lbl_rtax004" text="層級" lstr=""/>
+    <sfield name="lbl_rtax002" text="分類類別" lstr=""/>
+    <sfield name="lbl_rtax005" text="下級品類數" lstr=""/>
+    <sfield name="lbl_rtax006" text="所屬一級品類" lstr=""/>
+    <sfield name="lbl_rtax007" text="主分群碼" lstr=""/>
+    <sfield name="lbl_rtax001" text="品類編號" lstr=""/>
+    <sfield name="lbl_rtax003" text="上層品類" lstr=""/>
+    <sfield name="rdo_expand.1" text="上推" lstr=""/>
+    <sfield name="rdo_expand.2" text="下展" lstr=""/>
+    <sfield name="rdo_expand.3" text="全部" lstr=""/>
+    <sfield name="lbl_name" text="樹狀節點說明" lstr=""/>
+    <sfield name="lbl_rtax006_desc" text="說明" lstr=""/>
+    <sfield name="lbl_treetotal" text="共" lstr=""/>
+    <sfield name="lbl_treerows" text="筆" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_rtaxl003" text="說明" lstr=""/>
+    <sfield name="lbl_rtaxl004" text="助記碼" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_rtaxunit" text="制定組織" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_rtax009" text="檢驗" lstr=""/>
+    <sfield name="lbl_rtaxstus" text="狀態碼" lstr=""/>
+    <sfield name="page_info" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_rtaxl001" text="品類編號" lstr=""/>
+    <sfield name="lbl_rtaxl002" text="語言別" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="compute_rtaw" text="產生最尾階品類資料" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

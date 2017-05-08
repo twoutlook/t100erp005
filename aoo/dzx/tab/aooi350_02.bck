@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi350_02" module="aoo" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="01258" crtdt="2013-08-16 10:43:52" modid="02294" moddt="2015-06-30 15:26:18" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="通訊方式">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1_aooi350_02" page_id="1_aooi350_02" value="oofcstus,oofc001,oofc008,oofc009,oofc009_desc(chr500),oofc012,oofc010,oofc014,oofc011,oofc015,oofc013"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi350_02" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="oofcstus,oofc001,oofc008,oofc009,oofc012,oofc010,oofc014,oofc011,oofc015,oofc013" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="oofcstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="oofc001"/>
+      <column id="oofc008"/>
+      <column id="oofc009">
+        <after>
+          <reference field="oofc009_desc" ref_field="oofc009" map_field="oofc009" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;3&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="oofc009_desc"/>
+      <column id="oofc012"/>
+      <column id="oofc010" type="S" default="Y"/>
+      <column id="oofc014"/>
+      <column id="oofc011"/>
+      <column id="oofc015" type="S" default="Y"/>
+      <column id="oofc013"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="oofc_t" page="1" linked="" pk="oofc001">
+      <sql id="forupd_sql_detail" query="SELECT oofcstus,oofc001,oofc008,oofc009,&apos;&apos;,oofc012,oofc010,oofc014,oofc011,oofc015,oofc013 FROM oofc_t WHERE oofcent=? AND oofc001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT oofcstus,oofc001,oofc008,oofc009,&apos;&apos;,oofc012,oofc010,oofc014,oofc011,oofc015,oofc013 FROM oofc_t WHERE oofcent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

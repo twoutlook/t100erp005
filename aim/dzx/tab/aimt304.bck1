@@ -1,0 +1,297 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aimt304" module="aim" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="02587" crtdt="2013-08-14 16:01:03" modid="04441" moddt="2016-05-31 10:56:18" sdver="0007" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="料件申請據點採購資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="imbfdocno,imbadocdt,imba900,imba900_desc(chr80),oobxl003(chr80),imba000,imba901,imba901_desc(chr80),imba001,imba002,imbal002,imbal003,imbal004,imba009,imba009_desc(chr80),imba003,imba003_desc(chr80),imba004,imba005,imba005_desc(chr80),imba006,imba006_desc(chr80),imba010,imba010_desc(chr80),l_s1(chr500),imbf141,imbf141_desc(chr80),imbf142,imbf142_desc(chr80),imbf143,imbf143_desc(chr80),imbf144,imbf144_desc(chr80),imbf145,imbf146,imbf147,imbf148,imbf149,imbfownid,imbfownid_desc(chr80),imbfowndp,imbfowndp_desc(chr80),imbfcrtid,imbfcrtid_desc(chr80),imbfcrtdp,imbfcrtdp_desc(chr80),imbfcrtdt,imbfmodid,imbfmodid_desc(chr80),imbfmoddt,imbf151,imbf158,imbf157,imbf157_desc(chr80),imbf152,imbf153,imbf153_desc(chr80),imbf154,imbf155,imbf156,imbf161,imbf162,imbf163,imbf164,imbf165,imbf166,imbf171,imbf172,imbf173,imbf174,imbf175,imbf176,imbf176_desc(chr80)"/>
+      <var id="bs_field" value="imba000(imba_t.imba000),imbfdocno,imbadocdt(imba_t.imbadocdt),imba001(imba_t.imba001),imba001_desc(chr80),imba001_desc_desc(chr80),imba009(imba_t.imba009),imba009_desc(chr80),imba003(imba_t.imba003),imba003_desc(chr80),imbf141,imbf141_desc(chr80)" pk="imbfdocno" order=""/>
+      <bs_reference field="imba001_desc" ref_field="imba001" ref_sql="SELECT imbal002 FROM imbal_t WHERE imbalent=$varg_enterprise$var AND imbaldocno=? AND imbal001=$varg_dlang$var"/>
+      <bs_reference field="imba001_desc_desc" ref_field="imba001" ref_sql="SELECT imbal003 FROM imbal_t WHERE imbalent=$varg_enterprise$var AND imbaldocno=? AND imbal001=$varg_dlang$var"/>
+      <bs_reference field="imba009_desc" ref_field="imba009" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+      <bs_reference field="imba003_desc" ref_field="imba003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;200&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+      <bs_reference field="imbf141_desc" ref_field="imbf141" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;203&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="open_aimt306"/>
+      <action id="open_aimt307"/>
+      <action id="open_aimt308"/>
+      <action id="open_aimt310"/>
+      <action id="open_aimt303"/>
+      <action id="output"/>
+      <action id="open_aimt301"/>
+      <action id="query" type="standard"/>
+      <action id="open_aimt302"/>
+      <action id="open_aimt305"/>
+      <action id="prog_imba009" lib="cl_user_contact" parameter="&quot;aimi010&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,g_imba_m.imba009"/>
+      <action id="prog_imba003" lib="cl_user_contact" parameter="&quot;aimi100&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;,g_imba_m.imba003"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="aim" filename="aimt304" method="dialog">
+    <section id="input">
+      <input id="head" field="imbfdocno,imbadocdt,imba900,imba000,imba901,imba001,imba002,imbal002,imbal003,imbal004,imba009,imba003,imba004,imba005,imba006,imba010,l_s1,imbf141,imbf142,imbf143,imbf144,imbf145,imbf146,imbf147,imbf148,imbf149,imbf151,imbf158,imbf157,imbf152,imbf153,imbf154,imbf155,imbf156,imbf161,imbf162,imbf163,imbf164,imbf165,imbf166,imbf171,imbf172,imbf173,imbf174,imbf175,imbf176"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="imbfdocno,imbadocdt,imba900,imba000,imba901,imba001,imba002,imbal002,imbal003,imbal004,imba009,imba003,imba004,imba005,imba006,imba010,imbf141,imbf142,imbf143,imbf144,imbf145,imbf146,imbf147,imbf148,imbf149,imbfownid,imbfowndp,imbfcrtid,imbfcrtdp,imbfcrtdt,imbfmodid,imbfmoddt,imbf151,imbf158,imbf157,imbf152,imbf153,imbf154,imbf155,imbf156,imbf161,imbf162,imbf163,imbf164,imbf165,imbf166,imbf171,imbf172,imbf173,imbf174,imbf175,imbf176"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="imbfdocno"/>
+      <set id="head" type="no_entry" field="imbfdocno"/>
+    </init>
+    <init id="head">
+      <column id="imbfdocno">
+        <controlp form="q_imbadocno" state="c"/>
+      </column>
+      <column id="imbadocdt"/>
+      <column id="imba900">
+        <after>
+          <reference field="imba900_desc" ref_field="imba_t.imba900" map_field="imba900" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imba900_desc"/>
+      <column id="oobxl003"/>
+      <column id="imba000" type="S" default="I" def_scc="32"/>
+      <column id="imba901">
+        <after>
+          <reference field="imba901_desc" ref_field="imba_t.imba901" map_field="imba901" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="imba901_desc"/>
+      <column id="imba001">
+        <controlp form="q_imaa001" state="i"/>
+        <controlp form="q_imba001" state="c"/>
+      </column>
+      <column id="imba002"/>
+      <column id="imbal002"/>
+      <column id="imbal003"/>
+      <column id="imbal004"/>
+      <column id="imba009">
+        <after/>
+        <controlp form="q_rtax001" state="i"/>
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="imba009_desc"/>
+      <column id="imba003">
+        <after>
+          <reference field="imba003_desc" ref_field="imba003" map_field="imba003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;200&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imca001_1" state="i"/>
+        <controlp form="q_imca001_1" state="c"/>
+      </column>
+      <column id="imba003_desc"/>
+      <column id="imba004" type="S" default="M" def_scc="1001"/>
+      <column id="imba005">
+        <after>
+          <reference field="imba005_desc" ref_field="imba_t.imba005" map_field="imbaent,imba005" ref_sql="SELECT imeal003 FROM imeal_t WHERE imealent=$varg_enterprise$var AND imeal001=? AND imeal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imea001" state="c"/>
+      </column>
+      <column id="imba005_desc"/>
+      <column id="imba006">
+        <after>
+          <reference field="imba006_desc" ref_field="imba_t.imba006" map_field="imbaent,imba006" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="imba006_desc"/>
+      <column id="imba010">
+        <after>
+          <reference field="imba010_desc" ref_field="imba010" map_field="imba010" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;210&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imba010_desc"/>
+      <column id="l_s1"/>
+      <column id="imbf141">
+        <after>
+          <reference field="imbf141_desc" ref_field="imbf141" map_field="imbf141" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;203&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imbf141_desc"/>
+      <column id="imbf142">
+        <after>
+          <reference field="imbf142_desc" ref_field="imbf_t.imbf142" map_field="imbf142" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_2" state="i"/>
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="imbf142_desc"/>
+      <column id="imbf143">
+        <after>
+          <reference field="imbf143_desc" ref_field="imbf_t.imbf143" map_field="imbfent,imbf143" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="imbf143_desc"/>
+      <column id="imbf144">
+        <after>
+          <reference field="imbf144_desc" ref_field="imbf_t.imbf144" map_field="imbfent,imbf144" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="imbf144_desc"/>
+      <column id="imbf145" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imbf146" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imbf147" type="S" default="1" def_scc="2025"/>
+      <column id="imbf148" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imbf149" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imbfownid">
+        <after>
+          <reference field="imbfownid_desc" ref_field="imbf_t.imbfownid" map_field="imbfownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imbfownid_desc"/>
+      <column id="imbfowndp">
+        <after>
+          <reference field="imbfowndp_desc" ref_field="imbf_t.imbfowndp" map_field="imbfowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imbfowndp_desc"/>
+      <column id="imbfcrtid">
+        <after>
+          <reference field="imbfcrtid_desc" ref_field="imbf_t.imbfcrtid" map_field="imbfcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imbfcrtid_desc"/>
+      <column id="imbfcrtdp">
+        <after>
+          <reference field="imbfcrtdp_desc" ref_field="imbf_t.imbfcrtdp" map_field="imbfcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imbfcrtdp_desc"/>
+      <column id="imbfcrtdt"/>
+      <column id="imbfmodid">
+        <after>
+          <reference field="imbfmodid_desc" ref_field="imbf_t.imbfmodid" map_field="imbfmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imbfmodid_desc"/>
+      <column id="imbfmoddt"/>
+      <column id="imbf151" type="S" default="0" def_scc="2031"/>
+      <column id="imbf158" type="S" default="0" def_scc="2027"/>
+      <column id="imbf157">
+        <after>
+          <reference field="imbf157_desc" ref_field="imbf_t.imbf157" map_field="imbfent,imbf157" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001_3" state="i"/>
+        <controlp form="q_imaa001_3" state="c"/>
+      </column>
+      <column id="imbf157_desc"/>
+      <column id="imbf152" type="S" default="0" def_scc="2028"/>
+      <column id="imbf153">
+        <after>
+          <reference field="imbf153_desc" ref_field="imbf_t.imbf153" map_field="imbfent,imbf153" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001" state="i"/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="imbf153_desc"/>
+      <column id="imbf154" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imbf155" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imbf156" type="S" default="0" def_scc="2024"/>
+      <column id="imbf161" type="S" default="N"/>
+      <column id="imbf162" type="S" default="N"/>
+      <column id="imbf163" type="S" default="N"/>
+      <column id="imbf164" type="S" default="0">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="imbf165" type="S" default="0">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="imbf166" type="S" default="0">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="imbf171" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imbf172" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imbf173" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imbf174" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imbf175" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imbf176">
+        <after>
+          <reference field="imbf176_desc" ref_field="imbf176" map_field="imbf176" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;274&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002_3" state="i"/>
+        <controlp form="q_oocq002_3" state="c"/>
+      </column>
+      <column id="imbf176_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="imbf_t" pk="imbfdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT imbfdocno,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,imbf141,&apos;&apos;,imbf142,&apos;&apos;,imbf143,&apos;&apos;,imbf144,&apos;&apos;,imbf145,imbf146,imbf147,imbf148,imbf149,imbfownid,&apos;&apos;,imbfowndp,&apos;&apos;,imbfcrtid,&apos;&apos;,imbfcrtdp,&apos;&apos;,imbfcrtdt,imbfmodid,&apos;&apos;,imbfmoddt,imbf151,imbf158,imbf157,&apos;&apos;,imbf152,imbf153,&apos;&apos;,imbf154,imbf155,imbf156,imbf161,imbf162,imbf163,imbf164,imbf165,imbf166,imbf171,imbf172,imbf173,imbf174,imbf175,imbf176,&apos;&apos; FROM imbf_t WHERE imbfent= ? AND imbfsite= ? AND imbfdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT imbfdocno FROM imbf_t" order="imbfdocno"/>
+      <sql id="append" type="lang" target="imbal_t.imbal002,imbal_t.imbal003,imbal_t.imbal004" table="imbal_t" fk="imbfdocno" pk="imbaldocno,imbal001" field="imbal002,imbal003,imbal004"/>
+    </head>
+  </dataset>
+</assembly>
+

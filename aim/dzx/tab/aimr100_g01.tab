@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aimr100_g01" module="aim" jobmode="N" type="g01" industry="std" crtid="05423" crtdt="2014-08-06 15:24:00" modid="05423" moddt="2015-05-05 10:31:36" sdver="2" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="imai001,l_imaal002_imaal003(chr30|trim(imaal_t.imaal002)||&apos;/&apos;||trim(imaal_t.imaal003)),imai051,imai054,imai057,imai060,imai063,imai066,imai069,imaient,l_imai051_desc(chr30|NULL),l_imai054_desc(chr30|NULL),l_imai057_desc(chr30|NULL),l_imai060_desc(chr30|NULL),l_imai063_desc(chr30|NULL),l_imai066_desc(chr30|NULL),l_imai069_desc(chr30|NULL),imaisite"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="imai001,l_imaal002_imaal003(chr30|trim(imaal_t.imaal002)||&apos;/&apos;||trim(imaal_t.imaal003)),imai051,imai054,imai057,imai060,imai063,imai066,imai069,imaient,l_imai051_desc(chr30|NULL),l_imai054_desc(chr30|NULL),l_imai057_desc(chr30|NULL),l_imai060_desc(chr30|NULL),l_imai063_desc(chr30|NULL),l_imai066_desc(chr30|NULL),l_imai069_desc(chr30|NULL),imaisite"/>
+    <sql id="g_from" query="imai_t,imaa_t,imaal_t"/>
+    <sql id="g_where" query="" maintable="imai_t"/>
+    <sql id="g_order" query="imaient"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="imaient"/>
+    <section id="b_group" reptype="d01">
+      <rep type="imaient" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="imaient,imaient"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="imaient,imaient"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="imaient,imaient"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="imaient" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="imaient,imaient"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

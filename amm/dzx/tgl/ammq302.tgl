@@ -1,0 +1,3646 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="ammq302.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:4(2016-11-07 13:52:00), PR版次:
+#+ Customerized Version.: SD版次:(), PR版次:
+#+ Build......: 000037
+#+ Filename...: ammq302
+#+ Description: 卡資料查詢作業
+#+ Creator....: 01251(2015-06-09 10:53:51)
+#+ Modifier...: 02749 -SD/PR-
+
+{</section>}
+
+{<section id="ammq302.global" >}
+#應用 q02 樣板自動產生(Version:42)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_mmaq_d RECORD
+       #statepic       LIKE type_t.chr1,
+       
+       mmaq001 LIKE mmaq_t.mmaq001, 
+   mmaq002 LIKE mmaq_t.mmaq002, 
+   mmaq002_desc LIKE type_t.chr500, 
+   mmaq003 LIKE mmaq_t.mmaq003, 
+   mmaq003_desc LIKE type_t.chr500, 
+   mmaq004 LIKE mmaq_t.mmaq004, 
+   mmaq044 LIKE mmaq_t.mmaq044, 
+   mmaq005 LIKE mmaq_t.mmaq005, 
+   mmaq006 LIKE mmaq_t.mmaq006, 
+   mmaq007 LIKE mmaq_t.mmaq007, 
+   mmaq008 LIKE mmaq_t.mmaq008, 
+   mmaq009 LIKE mmaq_t.mmaq009, 
+   mmaq010 LIKE mmaq_t.mmaq010, 
+   mmaq011 LIKE mmaq_t.mmaq011, 
+   mmaq012 LIKE mmaq_t.mmaq012, 
+   mmaq013 LIKE mmaq_t.mmaq013, 
+   mmaq054 LIKE mmaq_t.mmaq054, 
+   mmaq054_desc LIKE type_t.chr500, 
+   mmaq055 LIKE mmaq_t.mmaq055, 
+   mmaq056 LIKE mmaq_t.mmaq056, 
+   mmaq014 LIKE mmaq_t.mmaq014, 
+   mmaq015 LIKE mmaq_t.mmaq015, 
+   mmaq016 LIKE mmaq_t.mmaq016, 
+   mmaq017 LIKE mmaq_t.mmaq017, 
+   mmaq018 LIKE mmaq_t.mmaq018, 
+   mmaq019 LIKE mmaq_t.mmaq019, 
+   mmaq032 LIKE mmaq_t.mmaq032, 
+   mmaq040 LIKE mmaq_t.mmaq040, 
+   mmaq041 LIKE mmaq_t.mmaq041, 
+   mmaq042 LIKE mmaq_t.mmaq042, 
+   mmaq043 LIKE mmaq_t.mmaq043, 
+   mmaq100 LIKE mmaq_t.mmaq100 
+       END RECORD
+PRIVATE TYPE type_g_mmaq2_d RECORD
+       mmaq001 LIKE mmaq_t.mmaq001, 
+   mmaq020 LIKE mmaq_t.mmaq020, 
+   mmaq020_desc LIKE type_t.chr500, 
+   mmaq021 LIKE mmaq_t.mmaq021, 
+   mmaq022 LIKE mmaq_t.mmaq022, 
+   mmaq022_desc LIKE type_t.chr500, 
+   mmaq023 LIKE mmaq_t.mmaq023, 
+   mmaq024 LIKE mmaq_t.mmaq024, 
+   mmaq024_desc LIKE type_t.chr500, 
+   mmaq025 LIKE mmaq_t.mmaq025, 
+   mmaq026 LIKE mmaq_t.mmaq026, 
+   mmaq026_desc LIKE type_t.chr500, 
+   mmaq027 LIKE mmaq_t.mmaq027, 
+   mmaq028 LIKE mmaq_t.mmaq028, 
+   mmaq028_desc LIKE type_t.chr500, 
+   mmaq029 LIKE mmaq_t.mmaq029, 
+   mmaq030 LIKE mmaq_t.mmaq030, 
+   mmaq030_desc LIKE type_t.chr500, 
+   mmaq031 LIKE mmaq_t.mmaq031, 
+   mmaq033 LIKE mmaq_t.mmaq033, 
+   mmaq033_desc LIKE type_t.chr500, 
+   mmaq034 LIKE mmaq_t.mmaq034, 
+   mmaq034_desc LIKE type_t.chr500, 
+   mmaq035 LIKE mmaq_t.mmaq035, 
+   mmaq035_desc LIKE type_t.chr500, 
+   mmaq036 LIKE mmaq_t.mmaq036, 
+   mmaq036_desc LIKE type_t.chr500, 
+   mmaq037 LIKE mmaq_t.mmaq037, 
+   mmaq037_desc LIKE type_t.chr500, 
+   mmaq038 LIKE mmaq_t.mmaq038, 
+   mmaq038_desc LIKE type_t.chr500
+       END RECORD
+ 
+PRIVATE TYPE type_g_mmaq3_d RECORD
+       mmaq001 LIKE mmaq_t.mmaq001, 
+   mmaq045 LIKE mmaq_t.mmaq045, 
+   mmaq046 LIKE mmaq_t.mmaq046, 
+   mmaq047 LIKE mmaq_t.mmaq047, 
+   mmaq048 LIKE mmaq_t.mmaq048, 
+   mmaq049 LIKE mmaq_t.mmaq049, 
+   mmaq050 LIKE mmaq_t.mmaq050, 
+   mmaq051 LIKE mmaq_t.mmaq051, 
+   mmaq052 LIKE mmaq_t.mmaq052, 
+   mmaq053 LIKE mmaq_t.mmaq053
+       END RECORD
+ 
+ 
+ 
+#add-point:自定義模組變數-標準(Module Variable)  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_master                     type_g_mmaq_d
+DEFINE g_master_t                   type_g_mmaq_d
+DEFINE g_mmaq_d          DYNAMIC ARRAY OF type_g_mmaq_d
+DEFINE g_mmaq_d_t        type_g_mmaq_d
+DEFINE g_mmaq2_d   DYNAMIC ARRAY OF type_g_mmaq2_d
+DEFINE g_mmaq2_d_t type_g_mmaq2_d
+ 
+DEFINE g_mmaq3_d   DYNAMIC ARRAY OF type_g_mmaq3_d
+DEFINE g_mmaq3_d_t type_g_mmaq3_d
+ 
+ 
+      
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10              #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num5              #目前所在頁數
+DEFINE g_detail_cnt         LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_detail_cnt2        LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+DEFINE g_detail_idx         LIKE type_t.num10
+DEFINE g_detail_idx2        LIKE type_t.num10
+DEFINE g_hyper_url          STRING                        #hyperlink的主要網址
+DEFINE g_tot_cnt            LIKE type_t.num10             #計算總筆數
+DEFINE g_num_in_page        LIKE type_t.num10             #每頁筆數
+DEFINE g_current_row_tot    LIKE type_t.num10             #目前所在總筆數
+DEFINE g_page_act_list      STRING                        #分頁ACTION清單
+DEFINE g_page_start_num     LIKE type_t.num10             #目前頁面起始筆數
+DEFINE g_page_end_num       LIKE type_t.num10             #目前頁面結束筆數
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+DEFINE g_wc_filter_table    STRING
+DEFINE g_detail_page_action STRING
+DEFINE g_pagestart          LIKE type_t.num10
+ 
+ 
+ 
+#add-point:自定義模組變數-客製(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+##end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="ammq302.main" >}
+ #應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   {<point name="main.define_customerization" edit="c" mark="Y"/>}
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   {<point name="main.define"/>}
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("amm","")
+ 
+   #add-point:作業初始化 name="main.init"
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = " ", 
+                      " FROM ",
+                      " "
+   #add-point:SQL_define name="main.after_define_sql"
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE ammq302_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT  ",
+               " FROM  t0",
+               
+               " WHERE  "
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   {<point name="main.after_refresh_sql"/>}
+   #end add-point
+   PREPARE ammq302_master_referesh FROM g_sql
+ 
+   #add-point:main段define_sql name="main.body.define_sql"
+   {<point name="main.body.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = ""
+   #add-point:main段define_sql name="main.body.after_define_sql"
+   {<point name="main.body.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE ammq302_bcl CURSOR FROM g_forupd_sql
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_ammq302 WITH FORM cl_ap_formpath("amm",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL ammq302_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL ammq302_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_ammq302
+      
+   END IF 
+   
+   CLOSE ammq302_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+
+{</section>}
+
+{<section id="ammq302.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION ammq302_init()
+   #add-point:init段define-客製 name="init.define_customerization"
+   {<point name="init.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:init段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   {<point name="init.define"/>}
+   #end add-point
+   
+ 
+   #add-point:FUNCTION前置處理 name="init.before_function"
+   {<point name="init.before_function" />}
+   #end add-point
+ 
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   
+      CALL cl_set_combo_scc('b_mmaq006','6515') 
+   CALL cl_set_combo_scc('b_mmaq056','6201') 
+   CALL cl_set_combo_scc('b_mmaq043','6872') 
+ 
+   
+   #add-point:畫面資料初始化 name="init.init"
+   {<point name="init.init" />}
+   #end add-point
+ 
+   CALL ammq302_default_search()  
+END FUNCTION
+
+{</section>}
+
+{<section id="ammq302.default_search" >}
+PRIVATE FUNCTION ammq302_default_search()
+   #add-point:default_search段define-客製 name="default_search.define_customerization"
+   {<point name="default_search.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:default_search段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   {<point name="default_search.define"/>}
+   #end add-point
+ 
+   #add-point:default_search段開始前 name="default_search.before"
+   {<point name="default_search.before"/>}
+   #end add-point
+ 
+   #應用 qs27 樣板自動產生(Version:3)
+   #+ 組承接外部參數時資料庫欄位對應條件(單身)
+   IF NOT cl_null(g_argv[01]) THEN
+      LET g_wc = g_wc, " mmaq001 = '", g_argv[01], "' AND "
+   END IF
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+   IF NOT cl_null(g_wc) THEN
+      LET g_wc = g_wc.subString(1,g_wc.getLength()-5)
+   ELSE
+      #預設查詢條件
+      LET g_wc = " 1=2"
+   END IF
+ 
+   #add-point:default_search段開始後 name="default_search.after"
+   {<point name="default_search.after"/>}
+   #end add-point
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="ammq302.ui_dialog" >}
+#+ 功能選單 
+PRIVATE FUNCTION ammq302_ui_dialog()
+   #add-point:ui_dialog段define-客製 name="ui_dialog.define_customerization"
+   {<point name="ui_dialog.define_customerization" edit="c" mark="Y"/>}
+   #end add-point 
+   DEFINE ls_wc      STRING
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE lc_action_choice_old     STRING
+   DEFINE lc_current_row           LIKE type_t.num10
+   DEFINE ls_js      STRING
+   DEFINE la_param   RECORD
+                     prog       STRING,
+                     actionid   STRING,
+                     background LIKE type_t.chr1,
+                     param      DYNAMIC ARRAY OF STRING
+                     END RECORD
+   #add-point:ui_dialog段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   {<point name="ui_dialog.define"/>}
+   #end add-point 
+ 
+   #add-point:FUNCTION前置處理 name="ui_dialog.before_function"
+   {<point name="ui_dialog.before_function" />}
+   #end add-point
+ 
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "
+   LET lc_action_choice_old = ""
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   CALL cl_get_num_in_page() RETURNING g_num_in_page
+         
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   LET g_detail_page_action = "detail_first"
+   LET g_pagestart = 1
+   LET g_current_row_tot = 1
+   LET g_page_start_num = 1
+   LET g_page_end_num = g_num_in_page
+   IF NOT cl_null(g_wc) AND g_wc != " 1=2" THEN
+      LET g_detail_idx = 1
+      LET g_detail_idx2 = 1
+      CALL ammq302_b_fill()
+   ELSE
+      CALL ammq302_query()
+   END IF
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_mmaq_d.clear()
+         CALL g_mmaq2_d.clear()
+ 
+         CALL g_mmaq3_d.clear()
+ 
+ 
+         LET g_wc  = " 1=2"
+         LET g_wc2 = " 1=1"
+         LET g_action_choice = ""
+         LET g_detail_page_action = "detail_first"
+         LET g_pagestart = 1
+         LET g_current_row_tot = 1
+         LET g_page_start_num = 1
+         LET g_page_end_num = g_num_in_page
+         LET g_detail_idx = 1
+         LET g_detail_idx2 = 1
+ 
+         CALL ammq302_init()
+      END IF
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_mmaq_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+ 
+               #為避免按上下筆影響執行效能，所以有作一些處理
+               LET lc_action_choice_old = g_action_choice
+               LET g_action_choice = "fetch"
+               CALL ammq302_fetch()
+               LET g_action_choice = lc_action_choice_old
+               LET g_master_idx = l_ac
+               CALL ammq302_detail_action_trans()
+               #add-point:input段before row name="input.body.before_row"
+               {<point name="input.body.before_row"/>}
+               #end add-point  
+            
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+            #add-point:page1自定義行為 name="ui_dialog.body.page1.action"
+            {<point name="ui_dialog.body.page1.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+      
+         DISPLAY ARRAY g_mmaq2_d TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               LET g_current_page = 2
+            
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_mmaq2_d.getLength() TO FORMONLY.h_count
+               CALL ammq302_fetch()
+               LET g_master_idx = l_ac
+               #add-point:input段before row name="input.body2.before_row"
+               {<point name="input.body2.before_row"/>}
+               #end add-point  
+ 
+            #自訂ACTION(detail_show,page_2)
+            
+ 
+            #add-point:page2自定義行為 name="ui_dialog.body2.action"
+            {<point name="ui_dialog.body2.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_mmaq3_d TO s_detail3.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               LET g_current_page = 3
+            
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail3")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_mmaq3_d.getLength() TO FORMONLY.h_count
+               CALL ammq302_fetch()
+               LET g_master_idx = l_ac
+               #add-point:input段before row name="input.body3.before_row"
+               {<point name="input.body3.before_row"/>}
+               #end add-point  
+ 
+            #自訂ACTION(detail_show,page_3)
+            
+ 
+            #add-point:page3自定義行為 name="ui_dialog.body3.action"
+            {<point name="ui_dialog.body3.action"/>}
+            #end add-point
+ 
+         END DISPLAY
+ 
+ 
+         
+ 
+      
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         
+         BEFORE DIALOG
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            CALL ammq302_detail_action_trans()
+ 
+            #add-point:ui_dialog段before dialog name="ui_dialog.bef_dialog"
+            {<point name="ui_dialog.bef_dialog"/>}
+            #end add-point
+ 
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               {<point name="menu.output" mark="Y"/>}
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               {<point name="menu.quickprint" mark="Y"/>}
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL ammq302_query()
+               #add-point:ON ACTION query name="menu.query"
+               {<point name="menu.query" mark="Y"/>}
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo name="menu.datainfo"
+               {<point name="menu.datainfo" mark="Y"/>}
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL ammq302_filter()
+            #add-point:ON ACTION filter name="menu.filter"
+            {<point name="menu.filter" />}
+            #END add-point
+ 
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+ 
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION datarefresh   # 重新整理
+            LET g_error_show = 1
+            CALL ammq302_b_fill()
+ 
+         ON ACTION exporttoexcel   #匯出excel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_mmaq_d)
+               LET g_export_id[1]   = "s_detail1"
+               LET g_export_node[2] = base.typeInfo.create(g_mmaq2_d)
+               LET g_export_id[2]   = "s_detail2"
+ 
+               LET g_export_node[3] = base.typeInfo.create(g_mmaq3_d)
+               LET g_export_id[3]   = "s_detail3"
+ 
+ 
+               #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+               {<point name="menu.exporttoexcel" />}
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+ 
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum name="ui_dialog.agendum"
+            {<point name="ui_dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+ 
+         ON ACTION detail_first               #page first
+            LET g_action_choice = "detail_first"
+            LET g_detail_page_action = "detail_first"
+            CALL ammq302_b_fill()
+ 
+         ON ACTION detail_previous                #page previous
+            LET g_action_choice = "detail_previous"
+            LET g_detail_page_action = "detail_previous"
+            CALL ammq302_b_fill()
+ 
+         ON ACTION detail_next                #page next
+            LET g_action_choice = "detail_next"
+            LET g_detail_page_action = "detail_next"
+            CALL ammq302_b_fill()
+ 
+         ON ACTION detail_last                #page last
+            LET g_action_choice = "detail_last"
+            LET g_detail_page_action = "detail_last"
+            CALL ammq302_b_fill()
+ 
+         
+         
+ 
+         #add-point:ui_dialog段自定義action name="ui_dialog.more_action"
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+      
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+ 
+         #add-point:查詢方案相關ACTION設定前 name="ui_dialog.set_qbe_action_before"
+         {<point name="ui_dialog.set_qbe_action_before" mark="Y"/>}
+         #end add-point
+ 
+         #add-point:查詢方案相關ACTION設定後 name="ui_dialog.set_qbe_action_after"
+         {<point name="ui_dialog.set_qbe_action_after"/>}
+         #end add-point
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="ammq302.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION ammq302_query()
+   #add-point:query段define-客製 name="query.define_customerization"
+   {<point name="query.define_customerization" edit="c" mark="Y"/>}
+   #end add-point 
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_wc2     LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   {<point name="query.define"/>}
+   #end add-point 
+   
+   #add-point:FUNCTION前置處理 name="query.before_function"
+   {<point name="query.before_function" />}
+   #end add-point
+ 
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_mmaq_d.clear()
+   CALL g_mmaq2_d.clear()
+ 
+   CALL g_mmaq3_d.clear()
+ 
+ 
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+   
+   LET g_qryparam.state = "c"
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_wc_filter = " 1=1"
+   LET g_detail_page_action = ""
+   LET g_pagestart = 1
+   
+   #wc備份
+   LET ls_wc = g_wc
+   LET ls_wc2 = g_wc2
+   LET g_master_idx = l_ac
+ 
+   
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc_table ON mmaq001,mmaq002,mmaq003,mmaq004,mmaq044,mmaq005,mmaq006,mmaq007,mmaq008, 
+          mmaq009,mmaq010,mmaq011,mmaq012,mmaq013,mmaq054,mmaq055,mmaq056,mmaq014,mmaq015,mmaq016,mmaq017, 
+          mmaq018,mmaq019,mmaq032,mmaq040,mmaq041,mmaq042,mmaq043,mmaq100,mmaq020,mmaq021,mmaq022,mmaq023, 
+          mmaq024,mmaq025,mmaq026,mmaq027,mmaq028,mmaq029,mmaq030,mmaq031,mmaq033,mmaq034,mmaq035,mmaq036, 
+          mmaq037,mmaq038,mmaq045,mmaq046,mmaq047,mmaq048,mmaq049,mmaq050,mmaq051,mmaq052,mmaq053
+           FROM s_detail1[1].b_mmaq001,s_detail1[1].b_mmaq002,s_detail1[1].b_mmaq003,s_detail1[1].b_mmaq004, 
+               s_detail1[1].b_mmaq044,s_detail1[1].b_mmaq005,s_detail1[1].b_mmaq006,s_detail1[1].b_mmaq007, 
+               s_detail1[1].b_mmaq008,s_detail1[1].b_mmaq009,s_detail1[1].b_mmaq010,s_detail1[1].b_mmaq011, 
+               s_detail1[1].b_mmaq012,s_detail1[1].b_mmaq013,s_detail1[1].b_mmaq054,s_detail1[1].b_mmaq055, 
+               s_detail1[1].b_mmaq056,s_detail1[1].b_mmaq014,s_detail1[1].b_mmaq015,s_detail1[1].b_mmaq016, 
+               s_detail1[1].b_mmaq017,s_detail1[1].b_mmaq018,s_detail1[1].b_mmaq019,s_detail1[1].b_mmaq032, 
+               s_detail1[1].b_mmaq040,s_detail1[1].b_mmaq041,s_detail1[1].b_mmaq042,s_detail1[1].b_mmaq043, 
+               s_detail1[1].b_mmaq100,s_detail2[1].b_mmaq020,s_detail2[1].b_mmaq021,s_detail2[1].b_mmaq022, 
+               s_detail2[1].b_mmaq023,s_detail2[1].b_mmaq024,s_detail2[1].b_mmaq025,s_detail2[1].b_mmaq026, 
+               s_detail2[1].b_mmaq027,s_detail2[1].b_mmaq028,s_detail2[1].b_mmaq029,s_detail2[1].b_mmaq030, 
+               s_detail2[1].b_mmaq031,s_detail2[1].b_mmaq033,s_detail2[1].b_mmaq034,s_detail2[1].b_mmaq035, 
+               s_detail2[1].b_mmaq036,s_detail2[1].b_mmaq037,s_detail2[1].b_mmaq038,s_detail3[1].b_mmaq045, 
+               s_detail3[1].b_mmaq046,s_detail3[1].b_mmaq047,s_detail3[1].b_mmaq048,s_detail3[1].b_mmaq049, 
+               s_detail3[1].b_mmaq050,s_detail3[1].b_mmaq051,s_detail3[1].b_mmaq052,s_detail3[1].b_mmaq053 
+
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct name="cs.head.before_construct"
+            {<point name="cs.head.before_construct"/>}
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+                #----<<b_mmaq001>>----
+         #Ctrlp:construct.c.page1.b_mmaq001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq001
+            #add-point:ON ACTION controlp INFIELD b_mmaq001 name="construct.c.page1.b_mmaq001"
+            {<point name="construct.c.page1.b_mmaq001" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq001
+            #add-point:BEFORE FIELD b_mmaq001 name="construct.b.page1.b_mmaq001"
+            {<point name="construct.b.page1.b_mmaq001" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq001
+            
+            #add-point:AFTER FIELD b_mmaq001 name="construct.a.page1.b_mmaq001"
+            {<point name="construct.a.page1.b_mmaq001" />}
+            #END add-point
+            
+ 
+ 
+         #----<<b_mmaq002>>----
+         #Ctrlp:construct.c.page1.b_mmaq002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq002
+            #add-point:ON ACTION controlp INFIELD b_mmaq002 name="construct.c.page1.b_mmaq002"
+            {<point name="construct.c.page1.b_mmaq002" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq002
+            #add-point:BEFORE FIELD b_mmaq002 name="construct.b.page1.b_mmaq002"
+            {<point name="construct.b.page1.b_mmaq002" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq002
+            
+            #add-point:AFTER FIELD b_mmaq002 name="construct.a.page1.b_mmaq002"
+            {<point name="construct.a.page1.b_mmaq002" />}
+            #END add-point
+            
+ 
+ 
+         #----<<b_mmaq002_desc>>----
+         #----<<b_mmaq003>>----
+         #Ctrlp:construct.c.page1.b_mmaq003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq003
+            #add-point:ON ACTION controlp INFIELD b_mmaq003 name="construct.c.page1.b_mmaq003"
+            {<point name="construct.c.page1.b_mmaq003" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq003
+            #add-point:BEFORE FIELD b_mmaq003 name="construct.b.page1.b_mmaq003"
+            {<point name="construct.b.page1.b_mmaq003" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq003
+            
+            #add-point:AFTER FIELD b_mmaq003 name="construct.a.page1.b_mmaq003"
+            {<point name="construct.a.page1.b_mmaq003" />}
+            #END add-point
+            
+ 
+ 
+         #----<<b_mmaq003_desc>>----
+         #----<<b_mmaq004>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq004
+            #add-point:BEFORE FIELD b_mmaq004 name="construct.b.page1.b_mmaq004"
+            {<point name="construct.b.page1.b_mmaq004" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq004
+            
+            #add-point:AFTER FIELD b_mmaq004 name="construct.a.page1.b_mmaq004"
+            {<point name="construct.a.page1.b_mmaq004" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq004
+            #add-point:ON ACTION controlp INFIELD b_mmaq004 name="construct.c.page1.b_mmaq004"
+            {<point name="construct.c.page1.b_mmaq004" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq044>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq044
+            #add-point:BEFORE FIELD b_mmaq044 name="construct.b.page1.b_mmaq044"
+            {<point name="construct.b.page1.b_mmaq044" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq044
+            
+            #add-point:AFTER FIELD b_mmaq044 name="construct.a.page1.b_mmaq044"
+            {<point name="construct.a.page1.b_mmaq044" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq044
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq044
+            #add-point:ON ACTION controlp INFIELD b_mmaq044 name="construct.c.page1.b_mmaq044"
+            {<point name="construct.c.page1.b_mmaq044" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq005>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq005
+            #add-point:BEFORE FIELD b_mmaq005 name="construct.b.page1.b_mmaq005"
+            {<point name="construct.b.page1.b_mmaq005" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq005
+            
+            #add-point:AFTER FIELD b_mmaq005 name="construct.a.page1.b_mmaq005"
+            {<point name="construct.a.page1.b_mmaq005" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq005
+            #add-point:ON ACTION controlp INFIELD b_mmaq005 name="construct.c.page1.b_mmaq005"
+            {<point name="construct.c.page1.b_mmaq005" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq006>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq006
+            #add-point:BEFORE FIELD b_mmaq006 name="construct.b.page1.b_mmaq006"
+            {<point name="construct.b.page1.b_mmaq006" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq006
+            
+            #add-point:AFTER FIELD b_mmaq006 name="construct.a.page1.b_mmaq006"
+            {<point name="construct.a.page1.b_mmaq006" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq006
+            #add-point:ON ACTION controlp INFIELD b_mmaq006 name="construct.c.page1.b_mmaq006"
+            {<point name="construct.c.page1.b_mmaq006" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq007>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq007
+            #add-point:BEFORE FIELD b_mmaq007 name="construct.b.page1.b_mmaq007"
+            {<point name="construct.b.page1.b_mmaq007" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq007
+            
+            #add-point:AFTER FIELD b_mmaq007 name="construct.a.page1.b_mmaq007"
+            {<point name="construct.a.page1.b_mmaq007" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq007
+            #add-point:ON ACTION controlp INFIELD b_mmaq007 name="construct.c.page1.b_mmaq007"
+            {<point name="construct.c.page1.b_mmaq007" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq008>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq008
+            #add-point:BEFORE FIELD b_mmaq008 name="construct.b.page1.b_mmaq008"
+            {<point name="construct.b.page1.b_mmaq008" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq008
+            
+            #add-point:AFTER FIELD b_mmaq008 name="construct.a.page1.b_mmaq008"
+            {<point name="construct.a.page1.b_mmaq008" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq008
+            #add-point:ON ACTION controlp INFIELD b_mmaq008 name="construct.c.page1.b_mmaq008"
+            {<point name="construct.c.page1.b_mmaq008" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq009>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq009
+            #add-point:BEFORE FIELD b_mmaq009 name="construct.b.page1.b_mmaq009"
+            {<point name="construct.b.page1.b_mmaq009" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq009
+            
+            #add-point:AFTER FIELD b_mmaq009 name="construct.a.page1.b_mmaq009"
+            {<point name="construct.a.page1.b_mmaq009" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq009
+            #add-point:ON ACTION controlp INFIELD b_mmaq009 name="construct.c.page1.b_mmaq009"
+            {<point name="construct.c.page1.b_mmaq009" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq010>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq010
+            #add-point:BEFORE FIELD b_mmaq010 name="construct.b.page1.b_mmaq010"
+            {<point name="construct.b.page1.b_mmaq010" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq010
+            
+            #add-point:AFTER FIELD b_mmaq010 name="construct.a.page1.b_mmaq010"
+            {<point name="construct.a.page1.b_mmaq010" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq010
+            #add-point:ON ACTION controlp INFIELD b_mmaq010 name="construct.c.page1.b_mmaq010"
+            {<point name="construct.c.page1.b_mmaq010" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq011>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq011
+            #add-point:BEFORE FIELD b_mmaq011 name="construct.b.page1.b_mmaq011"
+            {<point name="construct.b.page1.b_mmaq011" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq011
+            
+            #add-point:AFTER FIELD b_mmaq011 name="construct.a.page1.b_mmaq011"
+            {<point name="construct.a.page1.b_mmaq011" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq011
+            #add-point:ON ACTION controlp INFIELD b_mmaq011 name="construct.c.page1.b_mmaq011"
+            {<point name="construct.c.page1.b_mmaq011" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq012>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq012
+            #add-point:BEFORE FIELD b_mmaq012 name="construct.b.page1.b_mmaq012"
+            {<point name="construct.b.page1.b_mmaq012" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq012
+            
+            #add-point:AFTER FIELD b_mmaq012 name="construct.a.page1.b_mmaq012"
+            {<point name="construct.a.page1.b_mmaq012" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq012
+            #add-point:ON ACTION controlp INFIELD b_mmaq012 name="construct.c.page1.b_mmaq012"
+            {<point name="construct.c.page1.b_mmaq012" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq013>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq013
+            #add-point:BEFORE FIELD b_mmaq013 name="construct.b.page1.b_mmaq013"
+            {<point name="construct.b.page1.b_mmaq013" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq013
+            
+            #add-point:AFTER FIELD b_mmaq013 name="construct.a.page1.b_mmaq013"
+            {<point name="construct.a.page1.b_mmaq013" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq013
+            #add-point:ON ACTION controlp INFIELD b_mmaq013 name="construct.c.page1.b_mmaq013"
+            {<point name="construct.c.page1.b_mmaq013" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq054>>----
+         #Ctrlp:construct.c.page1.b_mmaq054
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq054
+            #add-point:ON ACTION controlp INFIELD b_mmaq054 name="construct.c.page1.b_mmaq054"
+            {<point name="construct.c.page1.b_mmaq054" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq054
+            #add-point:BEFORE FIELD b_mmaq054 name="construct.b.page1.b_mmaq054"
+            {<point name="construct.b.page1.b_mmaq054" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq054
+            
+            #add-point:AFTER FIELD b_mmaq054 name="construct.a.page1.b_mmaq054"
+            {<point name="construct.a.page1.b_mmaq054" />}
+            #END add-point
+            
+ 
+ 
+         #----<<b_mmaq054_desc>>----
+         #----<<b_mmaq055>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq055
+            #add-point:BEFORE FIELD b_mmaq055 name="construct.b.page1.b_mmaq055"
+            {<point name="construct.b.page1.b_mmaq055" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq055
+            
+            #add-point:AFTER FIELD b_mmaq055 name="construct.a.page1.b_mmaq055"
+            {<point name="construct.a.page1.b_mmaq055" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq055
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq055
+            #add-point:ON ACTION controlp INFIELD b_mmaq055 name="construct.c.page1.b_mmaq055"
+            {<point name="construct.c.page1.b_mmaq055" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq056>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq056
+            #add-point:BEFORE FIELD b_mmaq056 name="construct.b.page1.b_mmaq056"
+            {<point name="construct.b.page1.b_mmaq056" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq056
+            
+            #add-point:AFTER FIELD b_mmaq056 name="construct.a.page1.b_mmaq056"
+            {<point name="construct.a.page1.b_mmaq056" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq056
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq056
+            #add-point:ON ACTION controlp INFIELD b_mmaq056 name="construct.c.page1.b_mmaq056"
+            {<point name="construct.c.page1.b_mmaq056" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq014>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq014
+            #add-point:BEFORE FIELD b_mmaq014 name="construct.b.page1.b_mmaq014"
+            {<point name="construct.b.page1.b_mmaq014" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq014
+            
+            #add-point:AFTER FIELD b_mmaq014 name="construct.a.page1.b_mmaq014"
+            {<point name="construct.a.page1.b_mmaq014" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq014
+            #add-point:ON ACTION controlp INFIELD b_mmaq014 name="construct.c.page1.b_mmaq014"
+            {<point name="construct.c.page1.b_mmaq014" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq015>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq015
+            #add-point:BEFORE FIELD b_mmaq015 name="construct.b.page1.b_mmaq015"
+            {<point name="construct.b.page1.b_mmaq015" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq015
+            
+            #add-point:AFTER FIELD b_mmaq015 name="construct.a.page1.b_mmaq015"
+            {<point name="construct.a.page1.b_mmaq015" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq015
+            #add-point:ON ACTION controlp INFIELD b_mmaq015 name="construct.c.page1.b_mmaq015"
+            {<point name="construct.c.page1.b_mmaq015" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq016>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq016
+            #add-point:BEFORE FIELD b_mmaq016 name="construct.b.page1.b_mmaq016"
+            {<point name="construct.b.page1.b_mmaq016" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq016
+            
+            #add-point:AFTER FIELD b_mmaq016 name="construct.a.page1.b_mmaq016"
+            {<point name="construct.a.page1.b_mmaq016" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq016
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq016
+            #add-point:ON ACTION controlp INFIELD b_mmaq016 name="construct.c.page1.b_mmaq016"
+            {<point name="construct.c.page1.b_mmaq016" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq017>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq017
+            #add-point:BEFORE FIELD b_mmaq017 name="construct.b.page1.b_mmaq017"
+            {<point name="construct.b.page1.b_mmaq017" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq017
+            
+            #add-point:AFTER FIELD b_mmaq017 name="construct.a.page1.b_mmaq017"
+            {<point name="construct.a.page1.b_mmaq017" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq017
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq017
+            #add-point:ON ACTION controlp INFIELD b_mmaq017 name="construct.c.page1.b_mmaq017"
+            {<point name="construct.c.page1.b_mmaq017" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq018>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq018
+            #add-point:BEFORE FIELD b_mmaq018 name="construct.b.page1.b_mmaq018"
+            {<point name="construct.b.page1.b_mmaq018" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq018
+            
+            #add-point:AFTER FIELD b_mmaq018 name="construct.a.page1.b_mmaq018"
+            {<point name="construct.a.page1.b_mmaq018" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq018
+            #add-point:ON ACTION controlp INFIELD b_mmaq018 name="construct.c.page1.b_mmaq018"
+            {<point name="construct.c.page1.b_mmaq018" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq019>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq019
+            #add-point:BEFORE FIELD b_mmaq019 name="construct.b.page1.b_mmaq019"
+            {<point name="construct.b.page1.b_mmaq019" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq019
+            
+            #add-point:AFTER FIELD b_mmaq019 name="construct.a.page1.b_mmaq019"
+            {<point name="construct.a.page1.b_mmaq019" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq019
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq019
+            #add-point:ON ACTION controlp INFIELD b_mmaq019 name="construct.c.page1.b_mmaq019"
+            {<point name="construct.c.page1.b_mmaq019" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq032>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq032
+            #add-point:BEFORE FIELD b_mmaq032 name="construct.b.page1.b_mmaq032"
+            {<point name="construct.b.page1.b_mmaq032" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq032
+            
+            #add-point:AFTER FIELD b_mmaq032 name="construct.a.page1.b_mmaq032"
+            {<point name="construct.a.page1.b_mmaq032" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq032
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq032
+            #add-point:ON ACTION controlp INFIELD b_mmaq032 name="construct.c.page1.b_mmaq032"
+            {<point name="construct.c.page1.b_mmaq032" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq040>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq040
+            #add-point:BEFORE FIELD b_mmaq040 name="construct.b.page1.b_mmaq040"
+            {<point name="construct.b.page1.b_mmaq040" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq040
+            
+            #add-point:AFTER FIELD b_mmaq040 name="construct.a.page1.b_mmaq040"
+            {<point name="construct.a.page1.b_mmaq040" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq040
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq040
+            #add-point:ON ACTION controlp INFIELD b_mmaq040 name="construct.c.page1.b_mmaq040"
+            {<point name="construct.c.page1.b_mmaq040" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq041>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq041
+            #add-point:BEFORE FIELD b_mmaq041 name="construct.b.page1.b_mmaq041"
+            {<point name="construct.b.page1.b_mmaq041" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq041
+            
+            #add-point:AFTER FIELD b_mmaq041 name="construct.a.page1.b_mmaq041"
+            {<point name="construct.a.page1.b_mmaq041" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq041
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq041
+            #add-point:ON ACTION controlp INFIELD b_mmaq041 name="construct.c.page1.b_mmaq041"
+            {<point name="construct.c.page1.b_mmaq041" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq042>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq042
+            #add-point:BEFORE FIELD b_mmaq042 name="construct.b.page1.b_mmaq042"
+            {<point name="construct.b.page1.b_mmaq042" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq042
+            
+            #add-point:AFTER FIELD b_mmaq042 name="construct.a.page1.b_mmaq042"
+            {<point name="construct.a.page1.b_mmaq042" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq042
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq042
+            #add-point:ON ACTION controlp INFIELD b_mmaq042 name="construct.c.page1.b_mmaq042"
+            {<point name="construct.c.page1.b_mmaq042" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq043>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq043
+            #add-point:BEFORE FIELD b_mmaq043 name="construct.b.page1.b_mmaq043"
+            {<point name="construct.b.page1.b_mmaq043" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq043
+            
+            #add-point:AFTER FIELD b_mmaq043 name="construct.a.page1.b_mmaq043"
+            {<point name="construct.a.page1.b_mmaq043" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq043
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq043
+            #add-point:ON ACTION controlp INFIELD b_mmaq043 name="construct.c.page1.b_mmaq043"
+            {<point name="construct.c.page1.b_mmaq043" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq100>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq100
+            #add-point:BEFORE FIELD b_mmaq100 name="construct.b.page1.b_mmaq100"
+            {<point name="construct.b.page1.b_mmaq100" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq100
+            
+            #add-point:AFTER FIELD b_mmaq100 name="construct.a.page1.b_mmaq100"
+            {<point name="construct.a.page1.b_mmaq100" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_mmaq100
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq100
+            #add-point:ON ACTION controlp INFIELD b_mmaq100 name="construct.c.page1.b_mmaq100"
+            {<point name="construct.c.page1.b_mmaq100" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq020>>----
+         #Ctrlp:construct.c.page2.b_mmaq020
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq020
+            #add-point:ON ACTION controlp INFIELD b_mmaq020 name="construct.c.page2.b_mmaq020"
+            {<point name="construct.c.page2.b_mmaq020" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq020
+            #add-point:BEFORE FIELD b_mmaq020 name="construct.b.page2.b_mmaq020"
+            {<point name="construct.b.page2.b_mmaq020" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq020
+            
+            #add-point:AFTER FIELD b_mmaq020 name="construct.a.page2.b_mmaq020"
+            {<point name="construct.a.page2.b_mmaq020" />}
+            #END add-point
+            
+ 
+ 
+         #----<<b_mmaq020_desc>>----
+         #----<<b_mmaq021>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq021
+            #add-point:BEFORE FIELD b_mmaq021 name="construct.b.page2.b_mmaq021"
+            {<point name="construct.b.page2.b_mmaq021" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq021
+            
+            #add-point:AFTER FIELD b_mmaq021 name="construct.a.page2.b_mmaq021"
+            {<point name="construct.a.page2.b_mmaq021" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.b_mmaq021
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq021
+            #add-point:ON ACTION controlp INFIELD b_mmaq021 name="construct.c.page2.b_mmaq021"
+            {<point name="construct.c.page2.b_mmaq021" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq022>>----
+         #Ctrlp:construct.c.page2.b_mmaq022
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq022
+            #add-point:ON ACTION controlp INFIELD b_mmaq022 name="construct.c.page2.b_mmaq022"
+            {<point name="construct.c.page2.b_mmaq022" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq022
+            #add-point:BEFORE FIELD b_mmaq022 name="construct.b.page2.b_mmaq022"
+            {<point name="construct.b.page2.b_mmaq022" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq022
+            
+            #add-point:AFTER FIELD b_mmaq022 name="construct.a.page2.b_mmaq022"
+            {<point name="construct.a.page2.b_mmaq022" />}
+            #END add-point
+            
+ 
+ 
+         #----<<b_mmaq022_desc>>----
+         #----<<b_mmaq023>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq023
+            #add-point:BEFORE FIELD b_mmaq023 name="construct.b.page2.b_mmaq023"
+            {<point name="construct.b.page2.b_mmaq023" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq023
+            
+            #add-point:AFTER FIELD b_mmaq023 name="construct.a.page2.b_mmaq023"
+            {<point name="construct.a.page2.b_mmaq023" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.b_mmaq023
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq023
+            #add-point:ON ACTION controlp INFIELD b_mmaq023 name="construct.c.page2.b_mmaq023"
+            {<point name="construct.c.page2.b_mmaq023" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq024>>----
+         #Ctrlp:construct.c.page2.b_mmaq024
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq024
+            #add-point:ON ACTION controlp INFIELD b_mmaq024 name="construct.c.page2.b_mmaq024"
+            {<point name="construct.c.page2.b_mmaq024" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq024
+            #add-point:BEFORE FIELD b_mmaq024 name="construct.b.page2.b_mmaq024"
+            {<point name="construct.b.page2.b_mmaq024" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq024
+            
+            #add-point:AFTER FIELD b_mmaq024 name="construct.a.page2.b_mmaq024"
+            {<point name="construct.a.page2.b_mmaq024" />}
+            #END add-point
+            
+ 
+ 
+         #----<<b_mmaq024_desc>>----
+         #----<<b_mmaq025>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq025
+            #add-point:BEFORE FIELD b_mmaq025 name="construct.b.page2.b_mmaq025"
+            {<point name="construct.b.page2.b_mmaq025" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq025
+            
+            #add-point:AFTER FIELD b_mmaq025 name="construct.a.page2.b_mmaq025"
+            {<point name="construct.a.page2.b_mmaq025" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.b_mmaq025
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq025
+            #add-point:ON ACTION controlp INFIELD b_mmaq025 name="construct.c.page2.b_mmaq025"
+            {<point name="construct.c.page2.b_mmaq025" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq026>>----
+         #Ctrlp:construct.c.page2.b_mmaq026
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq026
+            #add-point:ON ACTION controlp INFIELD b_mmaq026 name="construct.c.page2.b_mmaq026"
+            {<point name="construct.c.page2.b_mmaq026" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq026
+            #add-point:BEFORE FIELD b_mmaq026 name="construct.b.page2.b_mmaq026"
+            {<point name="construct.b.page2.b_mmaq026" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq026
+            
+            #add-point:AFTER FIELD b_mmaq026 name="construct.a.page2.b_mmaq026"
+            {<point name="construct.a.page2.b_mmaq026" />}
+            #END add-point
+            
+ 
+ 
+         #----<<b_mmaq026_desc>>----
+         #----<<b_mmaq027>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq027
+            #add-point:BEFORE FIELD b_mmaq027 name="construct.b.page2.b_mmaq027"
+            {<point name="construct.b.page2.b_mmaq027" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq027
+            
+            #add-point:AFTER FIELD b_mmaq027 name="construct.a.page2.b_mmaq027"
+            {<point name="construct.a.page2.b_mmaq027" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.b_mmaq027
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq027
+            #add-point:ON ACTION controlp INFIELD b_mmaq027 name="construct.c.page2.b_mmaq027"
+            {<point name="construct.c.page2.b_mmaq027" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq028>>----
+         #Ctrlp:construct.c.page2.b_mmaq028
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq028
+            #add-point:ON ACTION controlp INFIELD b_mmaq028 name="construct.c.page2.b_mmaq028"
+            {<point name="construct.c.page2.b_mmaq028" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq028
+            #add-point:BEFORE FIELD b_mmaq028 name="construct.b.page2.b_mmaq028"
+            {<point name="construct.b.page2.b_mmaq028" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq028
+            
+            #add-point:AFTER FIELD b_mmaq028 name="construct.a.page2.b_mmaq028"
+            {<point name="construct.a.page2.b_mmaq028" />}
+            #END add-point
+            
+ 
+ 
+         #----<<b_mmaq028_desc>>----
+         #----<<b_mmaq029>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq029
+            #add-point:BEFORE FIELD b_mmaq029 name="construct.b.page2.b_mmaq029"
+            {<point name="construct.b.page2.b_mmaq029" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq029
+            
+            #add-point:AFTER FIELD b_mmaq029 name="construct.a.page2.b_mmaq029"
+            {<point name="construct.a.page2.b_mmaq029" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.b_mmaq029
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq029
+            #add-point:ON ACTION controlp INFIELD b_mmaq029 name="construct.c.page2.b_mmaq029"
+            {<point name="construct.c.page2.b_mmaq029" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq030>>----
+         #Ctrlp:construct.c.page2.b_mmaq030
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq030
+            #add-point:ON ACTION controlp INFIELD b_mmaq030 name="construct.c.page2.b_mmaq030"
+            {<point name="construct.c.page2.b_mmaq030" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq030
+            #add-point:BEFORE FIELD b_mmaq030 name="construct.b.page2.b_mmaq030"
+            {<point name="construct.b.page2.b_mmaq030" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq030
+            
+            #add-point:AFTER FIELD b_mmaq030 name="construct.a.page2.b_mmaq030"
+            {<point name="construct.a.page2.b_mmaq030" />}
+            #END add-point
+            
+ 
+ 
+         #----<<b_mmaq030_desc>>----
+         #----<<b_mmaq031>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq031
+            #add-point:BEFORE FIELD b_mmaq031 name="construct.b.page2.b_mmaq031"
+            {<point name="construct.b.page2.b_mmaq031" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq031
+            
+            #add-point:AFTER FIELD b_mmaq031 name="construct.a.page2.b_mmaq031"
+            {<point name="construct.a.page2.b_mmaq031" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.b_mmaq031
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq031
+            #add-point:ON ACTION controlp INFIELD b_mmaq031 name="construct.c.page2.b_mmaq031"
+            {<point name="construct.c.page2.b_mmaq031" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq033>>----
+         #Ctrlp:construct.c.page2.b_mmaq033
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq033
+            #add-point:ON ACTION controlp INFIELD b_mmaq033 name="construct.c.page2.b_mmaq033"
+            {<point name="construct.c.page2.b_mmaq033" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq033
+            #add-point:BEFORE FIELD b_mmaq033 name="construct.b.page2.b_mmaq033"
+            {<point name="construct.b.page2.b_mmaq033" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq033
+            
+            #add-point:AFTER FIELD b_mmaq033 name="construct.a.page2.b_mmaq033"
+            {<point name="construct.a.page2.b_mmaq033" />}
+            #END add-point
+            
+ 
+ 
+         #----<<b_mmaq033_desc>>----
+         #----<<b_mmaq034>>----
+         #Ctrlp:construct.c.page2.b_mmaq034
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq034
+            #add-point:ON ACTION controlp INFIELD b_mmaq034 name="construct.c.page2.b_mmaq034"
+            {<point name="construct.c.page2.b_mmaq034" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq034
+            #add-point:BEFORE FIELD b_mmaq034 name="construct.b.page2.b_mmaq034"
+            {<point name="construct.b.page2.b_mmaq034" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq034
+            
+            #add-point:AFTER FIELD b_mmaq034 name="construct.a.page2.b_mmaq034"
+            {<point name="construct.a.page2.b_mmaq034" />}
+            #END add-point
+            
+ 
+ 
+         #----<<b_mmaq034_desc>>----
+         #----<<b_mmaq035>>----
+         #Ctrlp:construct.c.page2.b_mmaq035
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq035
+            #add-point:ON ACTION controlp INFIELD b_mmaq035 name="construct.c.page2.b_mmaq035"
+            {<point name="construct.c.page2.b_mmaq035" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq035
+            #add-point:BEFORE FIELD b_mmaq035 name="construct.b.page2.b_mmaq035"
+            {<point name="construct.b.page2.b_mmaq035" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq035
+            
+            #add-point:AFTER FIELD b_mmaq035 name="construct.a.page2.b_mmaq035"
+            {<point name="construct.a.page2.b_mmaq035" />}
+            #END add-point
+            
+ 
+ 
+         #----<<b_mmaq035_desc>>----
+         #----<<b_mmaq036>>----
+         #Ctrlp:construct.c.page2.b_mmaq036
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq036
+            #add-point:ON ACTION controlp INFIELD b_mmaq036 name="construct.c.page2.b_mmaq036"
+            {<point name="construct.c.page2.b_mmaq036" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq036
+            #add-point:BEFORE FIELD b_mmaq036 name="construct.b.page2.b_mmaq036"
+            {<point name="construct.b.page2.b_mmaq036" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq036
+            
+            #add-point:AFTER FIELD b_mmaq036 name="construct.a.page2.b_mmaq036"
+            {<point name="construct.a.page2.b_mmaq036" />}
+            #END add-point
+            
+ 
+ 
+         #----<<b_mmaq036_desc>>----
+         #----<<b_mmaq037>>----
+         #Ctrlp:construct.c.page2.b_mmaq037
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq037
+            #add-point:ON ACTION controlp INFIELD b_mmaq037 name="construct.c.page2.b_mmaq037"
+            {<point name="construct.c.page2.b_mmaq037" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq037
+            #add-point:BEFORE FIELD b_mmaq037 name="construct.b.page2.b_mmaq037"
+            {<point name="construct.b.page2.b_mmaq037" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq037
+            
+            #add-point:AFTER FIELD b_mmaq037 name="construct.a.page2.b_mmaq037"
+            {<point name="construct.a.page2.b_mmaq037" />}
+            #END add-point
+            
+ 
+ 
+         #----<<b_mmaq037_desc>>----
+         #----<<b_mmaq038>>----
+         #Ctrlp:construct.c.page2.b_mmaq038
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq038
+            #add-point:ON ACTION controlp INFIELD b_mmaq038 name="construct.c.page2.b_mmaq038"
+            {<point name="construct.c.page2.b_mmaq038" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq038
+            #add-point:BEFORE FIELD b_mmaq038 name="construct.b.page2.b_mmaq038"
+            {<point name="construct.b.page2.b_mmaq038" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq038
+            
+            #add-point:AFTER FIELD b_mmaq038 name="construct.a.page2.b_mmaq038"
+            {<point name="construct.a.page2.b_mmaq038" />}
+            #END add-point
+            
+ 
+ 
+         #----<<b_mmaq038_desc>>----
+         #----<<b_mmaq045>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq045
+            #add-point:BEFORE FIELD b_mmaq045 name="construct.b.page3.b_mmaq045"
+            {<point name="construct.b.page3.b_mmaq045" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq045
+            
+            #add-point:AFTER FIELD b_mmaq045 name="construct.a.page3.b_mmaq045"
+            {<point name="construct.a.page3.b_mmaq045" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page3.b_mmaq045
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq045
+            #add-point:ON ACTION controlp INFIELD b_mmaq045 name="construct.c.page3.b_mmaq045"
+            {<point name="construct.c.page3.b_mmaq045" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq046>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq046
+            #add-point:BEFORE FIELD b_mmaq046 name="construct.b.page3.b_mmaq046"
+            {<point name="construct.b.page3.b_mmaq046" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq046
+            
+            #add-point:AFTER FIELD b_mmaq046 name="construct.a.page3.b_mmaq046"
+            {<point name="construct.a.page3.b_mmaq046" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page3.b_mmaq046
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq046
+            #add-point:ON ACTION controlp INFIELD b_mmaq046 name="construct.c.page3.b_mmaq046"
+            {<point name="construct.c.page3.b_mmaq046" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq047>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq047
+            #add-point:BEFORE FIELD b_mmaq047 name="construct.b.page3.b_mmaq047"
+            {<point name="construct.b.page3.b_mmaq047" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq047
+            
+            #add-point:AFTER FIELD b_mmaq047 name="construct.a.page3.b_mmaq047"
+            {<point name="construct.a.page3.b_mmaq047" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page3.b_mmaq047
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq047
+            #add-point:ON ACTION controlp INFIELD b_mmaq047 name="construct.c.page3.b_mmaq047"
+            {<point name="construct.c.page3.b_mmaq047" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq048>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq048
+            #add-point:BEFORE FIELD b_mmaq048 name="construct.b.page3.b_mmaq048"
+            {<point name="construct.b.page3.b_mmaq048" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq048
+            
+            #add-point:AFTER FIELD b_mmaq048 name="construct.a.page3.b_mmaq048"
+            {<point name="construct.a.page3.b_mmaq048" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page3.b_mmaq048
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq048
+            #add-point:ON ACTION controlp INFIELD b_mmaq048 name="construct.c.page3.b_mmaq048"
+            {<point name="construct.c.page3.b_mmaq048" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq049>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq049
+            #add-point:BEFORE FIELD b_mmaq049 name="construct.b.page3.b_mmaq049"
+            {<point name="construct.b.page3.b_mmaq049" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq049
+            
+            #add-point:AFTER FIELD b_mmaq049 name="construct.a.page3.b_mmaq049"
+            {<point name="construct.a.page3.b_mmaq049" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page3.b_mmaq049
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq049
+            #add-point:ON ACTION controlp INFIELD b_mmaq049 name="construct.c.page3.b_mmaq049"
+            {<point name="construct.c.page3.b_mmaq049" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq050>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq050
+            #add-point:BEFORE FIELD b_mmaq050 name="construct.b.page3.b_mmaq050"
+            {<point name="construct.b.page3.b_mmaq050" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq050
+            
+            #add-point:AFTER FIELD b_mmaq050 name="construct.a.page3.b_mmaq050"
+            {<point name="construct.a.page3.b_mmaq050" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page3.b_mmaq050
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq050
+            #add-point:ON ACTION controlp INFIELD b_mmaq050 name="construct.c.page3.b_mmaq050"
+            {<point name="construct.c.page3.b_mmaq050" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq051>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq051
+            #add-point:BEFORE FIELD b_mmaq051 name="construct.b.page3.b_mmaq051"
+            {<point name="construct.b.page3.b_mmaq051" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq051
+            
+            #add-point:AFTER FIELD b_mmaq051 name="construct.a.page3.b_mmaq051"
+            {<point name="construct.a.page3.b_mmaq051" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page3.b_mmaq051
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq051
+            #add-point:ON ACTION controlp INFIELD b_mmaq051 name="construct.c.page3.b_mmaq051"
+            {<point name="construct.c.page3.b_mmaq051" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq052>>----
+         #Ctrlp:construct.c.page3.b_mmaq052
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq052
+            #add-point:ON ACTION controlp INFIELD b_mmaq052 name="construct.c.page3.b_mmaq052"
+            {<point name="construct.c.page3.b_mmaq052" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq052
+            #add-point:BEFORE FIELD b_mmaq052 name="construct.b.page3.b_mmaq052"
+            {<point name="construct.b.page3.b_mmaq052" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq052
+            
+            #add-point:AFTER FIELD b_mmaq052 name="construct.a.page3.b_mmaq052"
+            {<point name="construct.a.page3.b_mmaq052" />}
+            #END add-point
+            
+ 
+ 
+         #----<<b_mmaq053>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_mmaq053
+            #add-point:BEFORE FIELD b_mmaq053 name="construct.b.page3.b_mmaq053"
+            {<point name="construct.b.page3.b_mmaq053" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_mmaq053
+            
+            #add-point:AFTER FIELD b_mmaq053 name="construct.a.page3.b_mmaq053"
+            {<point name="construct.a.page3.b_mmaq053" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page3.b_mmaq053
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq053
+            #add-point:ON ACTION controlp INFIELD b_mmaq053 name="construct.c.page3.b_mmaq053"
+            {<point name="construct.c.page3.b_mmaq053" />}
+            #END add-point
+ 
+ 
+   
+       
+      END CONSTRUCT
+      
+ 
+      
+ 
+  
+      #add-point:query段more_construct name="query.more_construct"
+      {<point name="query.more_construct"/>}
+      #end add-point 
+ 
+      ON ACTION accept
+         #add-point:ON ACTION accept name="query.accept"
+         {<point name="query.accept"/>}
+         #end add-point
+ 
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+ 
+      #add-point:query段查詢方案相關ACTION設定前 name="query.set_qbe_action_before"
+      {<point name="query.set_qbe_action_before" mark="Y"/>}
+      #end add-point 
+ 
+      ON ACTION qbeclear   # 條件清除
+         CLEAR FORM
+         #add-point:條件清除後 name="query.qbeclear"
+         {<point name="query.qbeclear"/>}
+         #end add-point 
+ 
+      #add-point:query段查詢方案相關ACTION設定後 name="query.set_qbe_action_after"
+      {<point name="query.set_qbe_action_after"/>}
+      #end add-point 
+ 
+   END DIALOG
+ 
+   
+ 
+   LET g_wc = g_wc_table 
+ 
+ 
+   
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+ 
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc = " 1=2"
+      LET g_wc2 = " 1=1"
+      LET g_wc_filter = g_wc_filter_t
+      RETURN
+   ELSE
+      LET g_master_idx = 1
+   END IF
+        
+   #add-point:cs段after_construct name="cs.after_construct"
+   {<point name="cs.after_construct"/>}
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL ammq302_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = -100 
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+   END IF
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="ammq302.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION ammq302_b_fill()
+   #add-point:b_fill段define-客製 name="b_fill.define_customerization"
+   {<point name="b_fill.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ls_wc           STRING
+   DEFINE ls_wc2          STRING
+   DEFINE ls_sql_rank     STRING
+   #add-point:b_fill段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   {<point name="b_fill.define"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter, cl_sql_auth_filter()   #(ver:40) add cl_sql_auth_filter()
+ 
+   LET ls_sql_rank = "SELECT  UNIQUE mmaq001,mmaq002,'',mmaq003,'',mmaq004,mmaq044,mmaq005,mmaq006,mmaq007, 
+       mmaq008,mmaq009,mmaq010,mmaq011,mmaq012,mmaq013,mmaq054,'',mmaq055,mmaq056,mmaq014,mmaq015,mmaq016, 
+       mmaq017,mmaq018,mmaq019,mmaq032,mmaq040,mmaq041,mmaq042,mmaq043,mmaq100,'',mmaq020,'',mmaq021, 
+       mmaq022,'',mmaq023,mmaq024,'',mmaq025,mmaq026,'',mmaq027,mmaq028,'',mmaq029,mmaq030,'',mmaq031, 
+       mmaq033,'',mmaq034,'',mmaq035,'',mmaq036,'',mmaq037,'',mmaq038,'','',mmaq045,mmaq046,mmaq047, 
+       mmaq048,mmaq049,mmaq050,mmaq051,mmaq052,mmaq053  ,DENSE_RANK() OVER( ORDER BY mmaq_t.mmaq001) AS RANK FROM mmaq_t", 
+
+ 
+ 
+                     "",
+                     " WHERE mmaqent= ? AND 1=1 AND ", ls_wc
+    
+   LET ls_sql_rank = ls_sql_rank, cl_sql_add_filter("mmaq_t"),
+                     " ORDER BY mmaq_t.mmaq001"
+ 
+   #add-point:b_fill段rank_sql_after name="b_fill.rank_sql_after"
+   {<point name="b_fill.rank_sql_after"/>}
+   #end add-point
+ 
+   LET g_sql = "SELECT COUNT(1) FROM (",ls_sql_rank,")"
+ 
+   PREPARE b_fill_cnt_pre FROM g_sql
+   EXECUTE b_fill_cnt_pre USING g_enterprise INTO g_tot_cnt
+   FREE b_fill_cnt_pre
+ 
+   #add-point:b_fill段rank_sql_after_count name="b_fill.rank_sql_after_count"
+   {<point name="b_fill.rank_sql_after_count"/>}
+   #end add-point
+ 
+   CASE g_detail_page_action
+      WHEN "detail_first"
+          LET g_pagestart = 1
+ 
+      WHEN "detail_previous"
+          LET g_pagestart = g_pagestart - g_num_in_page
+          IF g_pagestart < 1 THEN
+              LET g_pagestart = 1
+          END IF
+ 
+      WHEN "detail_next"
+         LET g_pagestart = g_pagestart + g_num_in_page
+         IF g_pagestart > g_tot_cnt THEN
+            LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+            WHILE g_pagestart > g_tot_cnt
+               LET g_pagestart = g_pagestart - g_num_in_page
+            END WHILE
+         END IF
+ 
+      WHEN "detail_last"
+         LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+         WHILE g_pagestart > g_tot_cnt
+            LET g_pagestart = g_pagestart - g_num_in_page
+         END WHILE
+ 
+      OTHERWISE
+         LET g_pagestart = 1
+ 
+   END CASE
+ 
+   LET g_sql = "SELECT mmaq001,mmaq002,'',mmaq003,'',mmaq004,mmaq044,mmaq005,mmaq006,mmaq007,mmaq008, 
+       mmaq009,mmaq010,mmaq011,mmaq012,mmaq013,mmaq054,'',mmaq055,mmaq056,mmaq014,mmaq015,mmaq016,mmaq017, 
+       mmaq018,mmaq019,mmaq032,mmaq040,mmaq041,mmaq042,mmaq043,mmaq100,'',mmaq020,'',mmaq021,mmaq022, 
+       '',mmaq023,mmaq024,'',mmaq025,mmaq026,'',mmaq027,mmaq028,'',mmaq029,mmaq030,'',mmaq031,mmaq033, 
+       '',mmaq034,'',mmaq035,'',mmaq036,'',mmaq037,'',mmaq038,'','',mmaq045,mmaq046,mmaq047,mmaq048, 
+       mmaq049,mmaq050,mmaq051,mmaq052,mmaq053",
+               " FROM (",ls_sql_rank,")",
+              " WHERE RANK >= ",g_pagestart,
+                " AND RANK < ",g_pagestart + g_num_in_page
+ 
+   #add-point:b_fill段sql_after name="b_fill.sql_after"
+   {<point name="b_fill.sql_after"/>}
+   #end add-point
+ 
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE ammq302_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR ammq302_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_mmaq_d.clear()
+   CALL g_mmaq2_d.clear()   
+ 
+   CALL g_mmaq3_d.clear()   
+ 
+ 
+   #add-point:陣列清空 name="b_fill.array_clear"
+   {<point name="b_fill.array_clear" />}
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   IF g_cnt = 0 THEN
+      LET g_cnt = 1
+   END IF
+   LET l_ac = 1   
+ 
+   FOREACH b_fill_curs INTO g_mmaq_d[l_ac].mmaq001,g_mmaq_d[l_ac].mmaq002,g_mmaq_d[l_ac].mmaq002_desc, 
+       g_mmaq_d[l_ac].mmaq003,g_mmaq_d[l_ac].mmaq003_desc,g_mmaq_d[l_ac].mmaq004,g_mmaq_d[l_ac].mmaq044, 
+       g_mmaq_d[l_ac].mmaq005,g_mmaq_d[l_ac].mmaq006,g_mmaq_d[l_ac].mmaq007,g_mmaq_d[l_ac].mmaq008,g_mmaq_d[l_ac].mmaq009, 
+       g_mmaq_d[l_ac].mmaq010,g_mmaq_d[l_ac].mmaq011,g_mmaq_d[l_ac].mmaq012,g_mmaq_d[l_ac].mmaq013,g_mmaq_d[l_ac].mmaq054, 
+       g_mmaq_d[l_ac].mmaq054_desc,g_mmaq_d[l_ac].mmaq055,g_mmaq_d[l_ac].mmaq056,g_mmaq_d[l_ac].mmaq014, 
+       g_mmaq_d[l_ac].mmaq015,g_mmaq_d[l_ac].mmaq016,g_mmaq_d[l_ac].mmaq017,g_mmaq_d[l_ac].mmaq018,g_mmaq_d[l_ac].mmaq019, 
+       g_mmaq_d[l_ac].mmaq032,g_mmaq_d[l_ac].mmaq040,g_mmaq_d[l_ac].mmaq041,g_mmaq_d[l_ac].mmaq042,g_mmaq_d[l_ac].mmaq043, 
+       g_mmaq_d[l_ac].mmaq100,g_mmaq2_d[l_ac].mmaq001,g_mmaq2_d[l_ac].mmaq020,g_mmaq2_d[l_ac].mmaq020_desc, 
+       g_mmaq2_d[l_ac].mmaq021,g_mmaq2_d[l_ac].mmaq022,g_mmaq2_d[l_ac].mmaq022_desc,g_mmaq2_d[l_ac].mmaq023, 
+       g_mmaq2_d[l_ac].mmaq024,g_mmaq2_d[l_ac].mmaq024_desc,g_mmaq2_d[l_ac].mmaq025,g_mmaq2_d[l_ac].mmaq026, 
+       g_mmaq2_d[l_ac].mmaq026_desc,g_mmaq2_d[l_ac].mmaq027,g_mmaq2_d[l_ac].mmaq028,g_mmaq2_d[l_ac].mmaq028_desc, 
+       g_mmaq2_d[l_ac].mmaq029,g_mmaq2_d[l_ac].mmaq030,g_mmaq2_d[l_ac].mmaq030_desc,g_mmaq2_d[l_ac].mmaq031, 
+       g_mmaq2_d[l_ac].mmaq033,g_mmaq2_d[l_ac].mmaq033_desc,g_mmaq2_d[l_ac].mmaq034,g_mmaq2_d[l_ac].mmaq034_desc, 
+       g_mmaq2_d[l_ac].mmaq035,g_mmaq2_d[l_ac].mmaq035_desc,g_mmaq2_d[l_ac].mmaq036,g_mmaq2_d[l_ac].mmaq036_desc, 
+       g_mmaq2_d[l_ac].mmaq037,g_mmaq2_d[l_ac].mmaq037_desc,g_mmaq2_d[l_ac].mmaq038,g_mmaq2_d[l_ac].mmaq038_desc, 
+       g_mmaq3_d[l_ac].mmaq001,g_mmaq3_d[l_ac].mmaq045,g_mmaq3_d[l_ac].mmaq046,g_mmaq3_d[l_ac].mmaq047, 
+       g_mmaq3_d[l_ac].mmaq048,g_mmaq3_d[l_ac].mmaq049,g_mmaq3_d[l_ac].mmaq050,g_mmaq3_d[l_ac].mmaq051, 
+       g_mmaq3_d[l_ac].mmaq052,g_mmaq3_d[l_ac].mmaq053
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #LET g_mmaq_d[l_ac].statepic = cl_get_actipic(g_mmaq_d[l_ac].statepic)
+ 
+      
+ 
+      #add-point:b_fill段資料填充 name="b_fill.fill"
+      {<point name="b_fill.fill"/>}
+      #end add-point
+ 
+      CALL ammq302_detail_show("'1'")      
+ 
+      CALL ammq302_mmaq_t_mask()
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "" 
+            LET g_errparam.code = 9035 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+ 
+   
+   CALL g_mmaq_d.deleteElement(g_mmaq_d.getLength())   
+   CALL g_mmaq2_d.deleteElement(g_mmaq2_d.getLength())
+ 
+   CALL g_mmaq3_d.deleteElement(g_mmaq3_d.getLength())
+ 
+ 
+   #add-point:陣列長度調整 name="b_fill.array_deleteElement"
+   {<point name="b_fill.array_deleteElement" />}
+   #end add-point
+   
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.others.fill"
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+ 
+   LET g_detail_cnt = g_mmaq_d.getLength()
+#  DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE ammq302_pb
+ 
+   #調整單身index指標，避免翻頁後指到空白筆數
+   CALL ammq302_detail_index_setting()
+ 
+   #重新計算單身筆數並呈現
+   CALL ammq302_detail_action_trans()
+ 
+   IF g_mmaq_d.getLength() > 0 THEN
+      LET l_ac = 1
+      CALL ammq302_fetch()
+   END IF
+   
+      CALL ammq302_filter_show('mmaq001','b_mmaq001')
+   CALL ammq302_filter_show('mmaq002','b_mmaq002')
+   CALL ammq302_filter_show('mmaq003','b_mmaq003')
+   CALL ammq302_filter_show('mmaq004','b_mmaq004')
+   CALL ammq302_filter_show('mmaq044','b_mmaq044')
+   CALL ammq302_filter_show('mmaq005','b_mmaq005')
+   CALL ammq302_filter_show('mmaq006','b_mmaq006')
+   CALL ammq302_filter_show('mmaq007','b_mmaq007')
+   CALL ammq302_filter_show('mmaq008','b_mmaq008')
+   CALL ammq302_filter_show('mmaq009','b_mmaq009')
+   CALL ammq302_filter_show('mmaq010','b_mmaq010')
+   CALL ammq302_filter_show('mmaq011','b_mmaq011')
+   CALL ammq302_filter_show('mmaq012','b_mmaq012')
+   CALL ammq302_filter_show('mmaq013','b_mmaq013')
+   CALL ammq302_filter_show('mmaq054','b_mmaq054')
+   CALL ammq302_filter_show('mmaq055','b_mmaq055')
+   CALL ammq302_filter_show('mmaq056','b_mmaq056')
+   CALL ammq302_filter_show('mmaq014','b_mmaq014')
+   CALL ammq302_filter_show('mmaq015','b_mmaq015')
+   CALL ammq302_filter_show('mmaq016','b_mmaq016')
+   CALL ammq302_filter_show('mmaq017','b_mmaq017')
+   CALL ammq302_filter_show('mmaq018','b_mmaq018')
+   CALL ammq302_filter_show('mmaq019','b_mmaq019')
+   CALL ammq302_filter_show('mmaq032','b_mmaq032')
+   CALL ammq302_filter_show('mmaq040','b_mmaq040')
+   CALL ammq302_filter_show('mmaq041','b_mmaq041')
+   CALL ammq302_filter_show('mmaq042','b_mmaq042')
+   CALL ammq302_filter_show('mmaq043','b_mmaq043')
+   CALL ammq302_filter_show('mmaq100','b_mmaq100')
+   CALL ammq302_filter_show('mmaq020','b_mmaq020')
+   CALL ammq302_filter_show('mmaq021','b_mmaq021')
+   CALL ammq302_filter_show('mmaq022','b_mmaq022')
+   CALL ammq302_filter_show('mmaq023','b_mmaq023')
+   CALL ammq302_filter_show('mmaq024','b_mmaq024')
+   CALL ammq302_filter_show('mmaq025','b_mmaq025')
+   CALL ammq302_filter_show('mmaq026','b_mmaq026')
+   CALL ammq302_filter_show('mmaq027','b_mmaq027')
+   CALL ammq302_filter_show('mmaq028','b_mmaq028')
+   CALL ammq302_filter_show('mmaq029','b_mmaq029')
+   CALL ammq302_filter_show('mmaq030','b_mmaq030')
+   CALL ammq302_filter_show('mmaq031','b_mmaq031')
+   CALL ammq302_filter_show('mmaq033','b_mmaq033')
+   CALL ammq302_filter_show('mmaq034','b_mmaq034')
+   CALL ammq302_filter_show('mmaq035','b_mmaq035')
+   CALL ammq302_filter_show('mmaq036','b_mmaq036')
+   CALL ammq302_filter_show('mmaq037','b_mmaq037')
+   CALL ammq302_filter_show('mmaq038','b_mmaq038')
+   CALL ammq302_filter_show('mmaq045','b_mmaq045')
+   CALL ammq302_filter_show('mmaq046','b_mmaq046')
+   CALL ammq302_filter_show('mmaq047','b_mmaq047')
+   CALL ammq302_filter_show('mmaq048','b_mmaq048')
+   CALL ammq302_filter_show('mmaq049','b_mmaq049')
+   CALL ammq302_filter_show('mmaq050','b_mmaq050')
+   CALL ammq302_filter_show('mmaq051','b_mmaq051')
+   CALL ammq302_filter_show('mmaq052','b_mmaq052')
+   CALL ammq302_filter_show('mmaq053','b_mmaq053')
+ 
+ 
+   #add-point:b_fill段結束前 name="b_fill.after"
+   {<point name="b_fill.after"/>}
+   #end add-point
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="ammq302.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION ammq302_fetch()
+   #add-point:fetch段define-客製 name="fetch.define_customerization"
+   {<point name="fetch.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   {<point name="fetch.define"/>}
+   #end add-point
+   
+   #add-point:FUNCTION前置處理 name="fetch.before_function"
+   {<point name="fetch.before_function" />}
+   #end add-point
+ 
+ 
+   #add-point:陣列清空 name="fetch.array_clear"
+   {<point name="fetch.array_clear" />}
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+ 
+   
+   #add-point:單身填充後 name="fetch.after_fill"
+   {<point name="fetch.after_fill" />}
+   #end add-point 
+   
+ 
+   #add-point:陣列筆數調整 name="fetch.array_deleteElement"
+   {<point name="fetch.array_deleteElement" />}
+   #end add-point
+ 
+   LET l_ac = li_ac
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="ammq302.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION ammq302_detail_show(ps_page)
+   #add-point:show段define-客製 name="detail_show.define_customerization"
+   {<point name="detail_show.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ps_page    STRING
+   DEFINE ls_sql     STRING
+   #add-point:show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之前 name="detail_show.before"
+   {<point name="detail_show.before"/>}
+   #end add-point
+   
+   
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      
+ 
+      #add-point:show段單身reference name="detail_show.body.reference"
+      {<point name="detail_show.body.reference"/>}
+      #end add-point
+   END IF
+   
+   IF ps_page.getIndexOf("'2'",1) > 0 THEN
+      #帶出公用欄位reference值page2
+      
+ 
+      #add-point:show段單身reference name="detail_show.body2.reference"
+      {<point name="detail_show.body2.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'3'",1) > 0 THEN
+      #帶出公用欄位reference值page3
+      
+ 
+      #add-point:show段單身reference name="detail_show.body3.reference"
+      {<point name="detail_show.body3.reference"/>}
+      #end add-point
+   END IF
+ 
+ 
+ 
+   #add-point:detail_show段之後 name="detail_show.after"
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="ammq302.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION ammq302_filter()
+   #add-point:filter段define-客製 name="filter.define_customerization"
+   {<point name="filter.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE  ls_result   STRING
+   #add-point:filter段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter.define"
+   {<point name="filter.define"/>}
+   #end add-point
+   
+   #add-point:FUNCTION前置處理 name="filter.before_function"
+   {<point name="filter.before_function" />}
+   #end add-point
+ 
+   LET l_ac = 1
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON mmaq001,mmaq002,mmaq003,mmaq004,mmaq044,mmaq005,mmaq006,mmaq007,mmaq008, 
+          mmaq009,mmaq010,mmaq011,mmaq012,mmaq013,mmaq054,mmaq055,mmaq056,mmaq014,mmaq015,mmaq016,mmaq017, 
+          mmaq018,mmaq019,mmaq032,mmaq040,mmaq041,mmaq042,mmaq043,mmaq100,mmaq020,mmaq021,mmaq022,mmaq023, 
+          mmaq024,mmaq025,mmaq026,mmaq027,mmaq028,mmaq029,mmaq030,mmaq031,mmaq033,mmaq034,mmaq035,mmaq036, 
+          mmaq037,mmaq038,mmaq045,mmaq046,mmaq047,mmaq048,mmaq049,mmaq050,mmaq051,mmaq052,mmaq053
+                          FROM s_detail1[1].b_mmaq001,s_detail1[1].b_mmaq002,s_detail1[1].b_mmaq003, 
+                              s_detail1[1].b_mmaq004,s_detail1[1].b_mmaq044,s_detail1[1].b_mmaq005,s_detail1[1].b_mmaq006, 
+                              s_detail1[1].b_mmaq007,s_detail1[1].b_mmaq008,s_detail1[1].b_mmaq009,s_detail1[1].b_mmaq010, 
+                              s_detail1[1].b_mmaq011,s_detail1[1].b_mmaq012,s_detail1[1].b_mmaq013,s_detail1[1].b_mmaq054, 
+                              s_detail1[1].b_mmaq055,s_detail1[1].b_mmaq056,s_detail1[1].b_mmaq014,s_detail1[1].b_mmaq015, 
+                              s_detail1[1].b_mmaq016,s_detail1[1].b_mmaq017,s_detail1[1].b_mmaq018,s_detail1[1].b_mmaq019, 
+                              s_detail1[1].b_mmaq032,s_detail1[1].b_mmaq040,s_detail1[1].b_mmaq041,s_detail1[1].b_mmaq042, 
+                              s_detail1[1].b_mmaq043,s_detail1[1].b_mmaq100,s_detail2[1].b_mmaq020,s_detail2[1].b_mmaq021, 
+                              s_detail2[1].b_mmaq022,s_detail2[1].b_mmaq023,s_detail2[1].b_mmaq024,s_detail2[1].b_mmaq025, 
+                              s_detail2[1].b_mmaq026,s_detail2[1].b_mmaq027,s_detail2[1].b_mmaq028,s_detail2[1].b_mmaq029, 
+                              s_detail2[1].b_mmaq030,s_detail2[1].b_mmaq031,s_detail2[1].b_mmaq033,s_detail2[1].b_mmaq034, 
+                              s_detail2[1].b_mmaq035,s_detail2[1].b_mmaq036,s_detail2[1].b_mmaq037,s_detail2[1].b_mmaq038, 
+                              s_detail3[1].b_mmaq045,s_detail3[1].b_mmaq046,s_detail3[1].b_mmaq047,s_detail3[1].b_mmaq048, 
+                              s_detail3[1].b_mmaq049,s_detail3[1].b_mmaq050,s_detail3[1].b_mmaq051,s_detail3[1].b_mmaq052, 
+                              s_detail3[1].b_mmaq053
+ 
+         BEFORE CONSTRUCT
+                     DISPLAY ammq302_filter_parser('mmaq001') TO s_detail1[1].b_mmaq001
+            DISPLAY ammq302_filter_parser('mmaq002') TO s_detail1[1].b_mmaq002
+            DISPLAY ammq302_filter_parser('mmaq003') TO s_detail1[1].b_mmaq003
+            DISPLAY ammq302_filter_parser('mmaq004') TO s_detail1[1].b_mmaq004
+            DISPLAY ammq302_filter_parser('mmaq044') TO s_detail1[1].b_mmaq044
+            DISPLAY ammq302_filter_parser('mmaq005') TO s_detail1[1].b_mmaq005
+            DISPLAY ammq302_filter_parser('mmaq006') TO s_detail1[1].b_mmaq006
+            DISPLAY ammq302_filter_parser('mmaq007') TO s_detail1[1].b_mmaq007
+            DISPLAY ammq302_filter_parser('mmaq008') TO s_detail1[1].b_mmaq008
+            DISPLAY ammq302_filter_parser('mmaq009') TO s_detail1[1].b_mmaq009
+            DISPLAY ammq302_filter_parser('mmaq010') TO s_detail1[1].b_mmaq010
+            DISPLAY ammq302_filter_parser('mmaq011') TO s_detail1[1].b_mmaq011
+            DISPLAY ammq302_filter_parser('mmaq012') TO s_detail1[1].b_mmaq012
+            DISPLAY ammq302_filter_parser('mmaq013') TO s_detail1[1].b_mmaq013
+            DISPLAY ammq302_filter_parser('mmaq054') TO s_detail1[1].b_mmaq054
+            DISPLAY ammq302_filter_parser('mmaq055') TO s_detail1[1].b_mmaq055
+            DISPLAY ammq302_filter_parser('mmaq056') TO s_detail1[1].b_mmaq056
+            DISPLAY ammq302_filter_parser('mmaq014') TO s_detail1[1].b_mmaq014
+            DISPLAY ammq302_filter_parser('mmaq015') TO s_detail1[1].b_mmaq015
+            DISPLAY ammq302_filter_parser('mmaq016') TO s_detail1[1].b_mmaq016
+            DISPLAY ammq302_filter_parser('mmaq017') TO s_detail1[1].b_mmaq017
+            DISPLAY ammq302_filter_parser('mmaq018') TO s_detail1[1].b_mmaq018
+            DISPLAY ammq302_filter_parser('mmaq019') TO s_detail1[1].b_mmaq019
+            DISPLAY ammq302_filter_parser('mmaq032') TO s_detail1[1].b_mmaq032
+            DISPLAY ammq302_filter_parser('mmaq040') TO s_detail1[1].b_mmaq040
+            DISPLAY ammq302_filter_parser('mmaq041') TO s_detail1[1].b_mmaq041
+            DISPLAY ammq302_filter_parser('mmaq042') TO s_detail1[1].b_mmaq042
+            DISPLAY ammq302_filter_parser('mmaq043') TO s_detail1[1].b_mmaq043
+            DISPLAY ammq302_filter_parser('mmaq100') TO s_detail1[1].b_mmaq100
+            DISPLAY ammq302_filter_parser('mmaq020') TO s_detail2[1].b_mmaq020
+            DISPLAY ammq302_filter_parser('mmaq021') TO s_detail2[1].b_mmaq021
+            DISPLAY ammq302_filter_parser('mmaq022') TO s_detail2[1].b_mmaq022
+            DISPLAY ammq302_filter_parser('mmaq023') TO s_detail2[1].b_mmaq023
+            DISPLAY ammq302_filter_parser('mmaq024') TO s_detail2[1].b_mmaq024
+            DISPLAY ammq302_filter_parser('mmaq025') TO s_detail2[1].b_mmaq025
+            DISPLAY ammq302_filter_parser('mmaq026') TO s_detail2[1].b_mmaq026
+            DISPLAY ammq302_filter_parser('mmaq027') TO s_detail2[1].b_mmaq027
+            DISPLAY ammq302_filter_parser('mmaq028') TO s_detail2[1].b_mmaq028
+            DISPLAY ammq302_filter_parser('mmaq029') TO s_detail2[1].b_mmaq029
+            DISPLAY ammq302_filter_parser('mmaq030') TO s_detail2[1].b_mmaq030
+            DISPLAY ammq302_filter_parser('mmaq031') TO s_detail2[1].b_mmaq031
+            DISPLAY ammq302_filter_parser('mmaq033') TO s_detail2[1].b_mmaq033
+            DISPLAY ammq302_filter_parser('mmaq034') TO s_detail2[1].b_mmaq034
+            DISPLAY ammq302_filter_parser('mmaq035') TO s_detail2[1].b_mmaq035
+            DISPLAY ammq302_filter_parser('mmaq036') TO s_detail2[1].b_mmaq036
+            DISPLAY ammq302_filter_parser('mmaq037') TO s_detail2[1].b_mmaq037
+            DISPLAY ammq302_filter_parser('mmaq038') TO s_detail2[1].b_mmaq038
+            DISPLAY ammq302_filter_parser('mmaq045') TO s_detail3[1].b_mmaq045
+            DISPLAY ammq302_filter_parser('mmaq046') TO s_detail3[1].b_mmaq046
+            DISPLAY ammq302_filter_parser('mmaq047') TO s_detail3[1].b_mmaq047
+            DISPLAY ammq302_filter_parser('mmaq048') TO s_detail3[1].b_mmaq048
+            DISPLAY ammq302_filter_parser('mmaq049') TO s_detail3[1].b_mmaq049
+            DISPLAY ammq302_filter_parser('mmaq050') TO s_detail3[1].b_mmaq050
+            DISPLAY ammq302_filter_parser('mmaq051') TO s_detail3[1].b_mmaq051
+            DISPLAY ammq302_filter_parser('mmaq052') TO s_detail3[1].b_mmaq052
+            DISPLAY ammq302_filter_parser('mmaq053') TO s_detail3[1].b_mmaq053
+ 
+ 
+         #單身公用欄位開窗相關處理
+         
+           
+         #單身一般欄位開窗相關處理
+                  #----<<b_mmaq001>>----
+         #Ctrlp:construct.c.page1.b_mmaq001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq001
+            #add-point:ON ACTION controlp INFIELD b_mmaq001 name="construct.c.filter.page1.b_mmaq001"
+            {<point name="construct.c.filter.page1.b_mmaq001" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq002>>----
+         #Ctrlp:construct.c.page1.b_mmaq002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq002
+            #add-point:ON ACTION controlp INFIELD b_mmaq002 name="construct.c.filter.page1.b_mmaq002"
+            {<point name="construct.c.filter.page1.b_mmaq002" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq002_desc>>----
+         #----<<b_mmaq003>>----
+         #Ctrlp:construct.c.page1.b_mmaq003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq003
+            #add-point:ON ACTION controlp INFIELD b_mmaq003 name="construct.c.filter.page1.b_mmaq003"
+            {<point name="construct.c.filter.page1.b_mmaq003" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq003_desc>>----
+         #----<<b_mmaq004>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq004
+            #add-point:ON ACTION controlp INFIELD b_mmaq004 name="construct.c.filter.page1.b_mmaq004"
+            {<point name="construct.c.filter.page1.b_mmaq004" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq044>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq044
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq044
+            #add-point:ON ACTION controlp INFIELD b_mmaq044 name="construct.c.filter.page1.b_mmaq044"
+            {<point name="construct.c.filter.page1.b_mmaq044" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq005>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq005
+            #add-point:ON ACTION controlp INFIELD b_mmaq005 name="construct.c.filter.page1.b_mmaq005"
+            {<point name="construct.c.filter.page1.b_mmaq005" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq006>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq006
+            #add-point:ON ACTION controlp INFIELD b_mmaq006 name="construct.c.filter.page1.b_mmaq006"
+            {<point name="construct.c.filter.page1.b_mmaq006" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq007>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq007
+            #add-point:ON ACTION controlp INFIELD b_mmaq007 name="construct.c.filter.page1.b_mmaq007"
+            {<point name="construct.c.filter.page1.b_mmaq007" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq008>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq008
+            #add-point:ON ACTION controlp INFIELD b_mmaq008 name="construct.c.filter.page1.b_mmaq008"
+            {<point name="construct.c.filter.page1.b_mmaq008" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq009>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq009
+            #add-point:ON ACTION controlp INFIELD b_mmaq009 name="construct.c.filter.page1.b_mmaq009"
+            {<point name="construct.c.filter.page1.b_mmaq009" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq010>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq010
+            #add-point:ON ACTION controlp INFIELD b_mmaq010 name="construct.c.filter.page1.b_mmaq010"
+            {<point name="construct.c.filter.page1.b_mmaq010" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq011>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq011
+            #add-point:ON ACTION controlp INFIELD b_mmaq011 name="construct.c.filter.page1.b_mmaq011"
+            {<point name="construct.c.filter.page1.b_mmaq011" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq012>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq012
+            #add-point:ON ACTION controlp INFIELD b_mmaq012 name="construct.c.filter.page1.b_mmaq012"
+            {<point name="construct.c.filter.page1.b_mmaq012" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq013>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq013
+            #add-point:ON ACTION controlp INFIELD b_mmaq013 name="construct.c.filter.page1.b_mmaq013"
+            {<point name="construct.c.filter.page1.b_mmaq013" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq054>>----
+         #Ctrlp:construct.c.page1.b_mmaq054
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq054
+            #add-point:ON ACTION controlp INFIELD b_mmaq054 name="construct.c.filter.page1.b_mmaq054"
+            {<point name="construct.c.filter.page1.b_mmaq054" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq054_desc>>----
+         #----<<b_mmaq055>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq055
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq055
+            #add-point:ON ACTION controlp INFIELD b_mmaq055 name="construct.c.filter.page1.b_mmaq055"
+            {<point name="construct.c.filter.page1.b_mmaq055" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq056>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq056
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq056
+            #add-point:ON ACTION controlp INFIELD b_mmaq056 name="construct.c.filter.page1.b_mmaq056"
+            {<point name="construct.c.filter.page1.b_mmaq056" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq014>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq014
+            #add-point:ON ACTION controlp INFIELD b_mmaq014 name="construct.c.filter.page1.b_mmaq014"
+            {<point name="construct.c.filter.page1.b_mmaq014" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq015>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq015
+            #add-point:ON ACTION controlp INFIELD b_mmaq015 name="construct.c.filter.page1.b_mmaq015"
+            {<point name="construct.c.filter.page1.b_mmaq015" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq016>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq016
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq016
+            #add-point:ON ACTION controlp INFIELD b_mmaq016 name="construct.c.filter.page1.b_mmaq016"
+            {<point name="construct.c.filter.page1.b_mmaq016" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq017>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq017
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq017
+            #add-point:ON ACTION controlp INFIELD b_mmaq017 name="construct.c.filter.page1.b_mmaq017"
+            {<point name="construct.c.filter.page1.b_mmaq017" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq018>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq018
+            #add-point:ON ACTION controlp INFIELD b_mmaq018 name="construct.c.filter.page1.b_mmaq018"
+            {<point name="construct.c.filter.page1.b_mmaq018" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq019>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq019
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq019
+            #add-point:ON ACTION controlp INFIELD b_mmaq019 name="construct.c.filter.page1.b_mmaq019"
+            {<point name="construct.c.filter.page1.b_mmaq019" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq032>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq032
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq032
+            #add-point:ON ACTION controlp INFIELD b_mmaq032 name="construct.c.filter.page1.b_mmaq032"
+            {<point name="construct.c.filter.page1.b_mmaq032" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq040>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq040
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq040
+            #add-point:ON ACTION controlp INFIELD b_mmaq040 name="construct.c.filter.page1.b_mmaq040"
+            {<point name="construct.c.filter.page1.b_mmaq040" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq041>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq041
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq041
+            #add-point:ON ACTION controlp INFIELD b_mmaq041 name="construct.c.filter.page1.b_mmaq041"
+            {<point name="construct.c.filter.page1.b_mmaq041" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq042>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq042
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq042
+            #add-point:ON ACTION controlp INFIELD b_mmaq042 name="construct.c.filter.page1.b_mmaq042"
+            {<point name="construct.c.filter.page1.b_mmaq042" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq043>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq043
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq043
+            #add-point:ON ACTION controlp INFIELD b_mmaq043 name="construct.c.filter.page1.b_mmaq043"
+            {<point name="construct.c.filter.page1.b_mmaq043" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq100>>----
+         #Ctrlp:construct.c.filter.page1.b_mmaq100
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq100
+            #add-point:ON ACTION controlp INFIELD b_mmaq100 name="construct.c.filter.page1.b_mmaq100"
+            {<point name="construct.c.filter.page1.b_mmaq100" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq020>>----
+         #Ctrlp:construct.c.page2.b_mmaq020
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq020
+            #add-point:ON ACTION controlp INFIELD b_mmaq020 name="construct.c.filter.page2.b_mmaq020"
+            {<point name="construct.c.filter.page2.b_mmaq020" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq020_desc>>----
+         #----<<b_mmaq021>>----
+         #Ctrlp:construct.c.filter.page2.b_mmaq021
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq021
+            #add-point:ON ACTION controlp INFIELD b_mmaq021 name="construct.c.filter.page2.b_mmaq021"
+            {<point name="construct.c.filter.page2.b_mmaq021" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq022>>----
+         #Ctrlp:construct.c.page2.b_mmaq022
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq022
+            #add-point:ON ACTION controlp INFIELD b_mmaq022 name="construct.c.filter.page2.b_mmaq022"
+            {<point name="construct.c.filter.page2.b_mmaq022" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq022_desc>>----
+         #----<<b_mmaq023>>----
+         #Ctrlp:construct.c.filter.page2.b_mmaq023
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq023
+            #add-point:ON ACTION controlp INFIELD b_mmaq023 name="construct.c.filter.page2.b_mmaq023"
+            {<point name="construct.c.filter.page2.b_mmaq023" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq024>>----
+         #Ctrlp:construct.c.page2.b_mmaq024
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq024
+            #add-point:ON ACTION controlp INFIELD b_mmaq024 name="construct.c.filter.page2.b_mmaq024"
+            {<point name="construct.c.filter.page2.b_mmaq024" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq024_desc>>----
+         #----<<b_mmaq025>>----
+         #Ctrlp:construct.c.filter.page2.b_mmaq025
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq025
+            #add-point:ON ACTION controlp INFIELD b_mmaq025 name="construct.c.filter.page2.b_mmaq025"
+            {<point name="construct.c.filter.page2.b_mmaq025" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq026>>----
+         #Ctrlp:construct.c.page2.b_mmaq026
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq026
+            #add-point:ON ACTION controlp INFIELD b_mmaq026 name="construct.c.filter.page2.b_mmaq026"
+            {<point name="construct.c.filter.page2.b_mmaq026" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq026_desc>>----
+         #----<<b_mmaq027>>----
+         #Ctrlp:construct.c.filter.page2.b_mmaq027
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq027
+            #add-point:ON ACTION controlp INFIELD b_mmaq027 name="construct.c.filter.page2.b_mmaq027"
+            {<point name="construct.c.filter.page2.b_mmaq027" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq028>>----
+         #Ctrlp:construct.c.page2.b_mmaq028
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq028
+            #add-point:ON ACTION controlp INFIELD b_mmaq028 name="construct.c.filter.page2.b_mmaq028"
+            {<point name="construct.c.filter.page2.b_mmaq028" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq028_desc>>----
+         #----<<b_mmaq029>>----
+         #Ctrlp:construct.c.filter.page2.b_mmaq029
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq029
+            #add-point:ON ACTION controlp INFIELD b_mmaq029 name="construct.c.filter.page2.b_mmaq029"
+            {<point name="construct.c.filter.page2.b_mmaq029" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq030>>----
+         #Ctrlp:construct.c.page2.b_mmaq030
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq030
+            #add-point:ON ACTION controlp INFIELD b_mmaq030 name="construct.c.filter.page2.b_mmaq030"
+            {<point name="construct.c.filter.page2.b_mmaq030" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq030_desc>>----
+         #----<<b_mmaq031>>----
+         #Ctrlp:construct.c.filter.page2.b_mmaq031
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq031
+            #add-point:ON ACTION controlp INFIELD b_mmaq031 name="construct.c.filter.page2.b_mmaq031"
+            {<point name="construct.c.filter.page2.b_mmaq031" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq033>>----
+         #Ctrlp:construct.c.page2.b_mmaq033
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq033
+            #add-point:ON ACTION controlp INFIELD b_mmaq033 name="construct.c.filter.page2.b_mmaq033"
+            {<point name="construct.c.filter.page2.b_mmaq033" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq033_desc>>----
+         #----<<b_mmaq034>>----
+         #Ctrlp:construct.c.page2.b_mmaq034
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq034
+            #add-point:ON ACTION controlp INFIELD b_mmaq034 name="construct.c.filter.page2.b_mmaq034"
+            {<point name="construct.c.filter.page2.b_mmaq034" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq034_desc>>----
+         #----<<b_mmaq035>>----
+         #Ctrlp:construct.c.page2.b_mmaq035
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq035
+            #add-point:ON ACTION controlp INFIELD b_mmaq035 name="construct.c.filter.page2.b_mmaq035"
+            {<point name="construct.c.filter.page2.b_mmaq035" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq035_desc>>----
+         #----<<b_mmaq036>>----
+         #Ctrlp:construct.c.page2.b_mmaq036
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq036
+            #add-point:ON ACTION controlp INFIELD b_mmaq036 name="construct.c.filter.page2.b_mmaq036"
+            {<point name="construct.c.filter.page2.b_mmaq036" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq036_desc>>----
+         #----<<b_mmaq037>>----
+         #Ctrlp:construct.c.page2.b_mmaq037
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq037
+            #add-point:ON ACTION controlp INFIELD b_mmaq037 name="construct.c.filter.page2.b_mmaq037"
+            {<point name="construct.c.filter.page2.b_mmaq037" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq037_desc>>----
+         #----<<b_mmaq038>>----
+         #Ctrlp:construct.c.page2.b_mmaq038
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq038
+            #add-point:ON ACTION controlp INFIELD b_mmaq038 name="construct.c.filter.page2.b_mmaq038"
+            {<point name="construct.c.filter.page2.b_mmaq038" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq038_desc>>----
+         #----<<b_mmaq045>>----
+         #Ctrlp:construct.c.filter.page3.b_mmaq045
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq045
+            #add-point:ON ACTION controlp INFIELD b_mmaq045 name="construct.c.filter.page3.b_mmaq045"
+            {<point name="construct.c.filter.page3.b_mmaq045" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq046>>----
+         #Ctrlp:construct.c.filter.page3.b_mmaq046
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq046
+            #add-point:ON ACTION controlp INFIELD b_mmaq046 name="construct.c.filter.page3.b_mmaq046"
+            {<point name="construct.c.filter.page3.b_mmaq046" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq047>>----
+         #Ctrlp:construct.c.filter.page3.b_mmaq047
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq047
+            #add-point:ON ACTION controlp INFIELD b_mmaq047 name="construct.c.filter.page3.b_mmaq047"
+            {<point name="construct.c.filter.page3.b_mmaq047" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq048>>----
+         #Ctrlp:construct.c.filter.page3.b_mmaq048
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq048
+            #add-point:ON ACTION controlp INFIELD b_mmaq048 name="construct.c.filter.page3.b_mmaq048"
+            {<point name="construct.c.filter.page3.b_mmaq048" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq049>>----
+         #Ctrlp:construct.c.filter.page3.b_mmaq049
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq049
+            #add-point:ON ACTION controlp INFIELD b_mmaq049 name="construct.c.filter.page3.b_mmaq049"
+            {<point name="construct.c.filter.page3.b_mmaq049" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq050>>----
+         #Ctrlp:construct.c.filter.page3.b_mmaq050
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq050
+            #add-point:ON ACTION controlp INFIELD b_mmaq050 name="construct.c.filter.page3.b_mmaq050"
+            {<point name="construct.c.filter.page3.b_mmaq050" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq051>>----
+         #Ctrlp:construct.c.filter.page3.b_mmaq051
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq051
+            #add-point:ON ACTION controlp INFIELD b_mmaq051 name="construct.c.filter.page3.b_mmaq051"
+            {<point name="construct.c.filter.page3.b_mmaq051" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq052>>----
+         #Ctrlp:construct.c.page3.b_mmaq052
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq052
+            #add-point:ON ACTION controlp INFIELD b_mmaq052 name="construct.c.filter.page3.b_mmaq052"
+            {<point name="construct.c.filter.page3.b_mmaq052" />}
+            #END add-point
+ 
+ 
+         #----<<b_mmaq053>>----
+         #Ctrlp:construct.c.filter.page3.b_mmaq053
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_mmaq053
+            #add-point:ON ACTION controlp INFIELD b_mmaq053 name="construct.c.filter.page3.b_mmaq053"
+            {<point name="construct.c.filter.page3.b_mmaq053" />}
+            #END add-point
+ 
+ 
+   
+ 
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs name="filter.add_cs"
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog name="filter.b_dialog"
+         {<point name="filter.b_dialog"/>}
+         #end add-point  
+ 
+      ON ACTION accept
+         ACCEPT DIALOG 
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+      LET g_wc_filter_t = g_wc_filter
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+   
+      CALL ammq302_filter_show('mmaq001','b_mmaq001')
+   CALL ammq302_filter_show('mmaq002','b_mmaq002')
+   CALL ammq302_filter_show('mmaq003','b_mmaq003')
+   CALL ammq302_filter_show('mmaq004','b_mmaq004')
+   CALL ammq302_filter_show('mmaq044','b_mmaq044')
+   CALL ammq302_filter_show('mmaq005','b_mmaq005')
+   CALL ammq302_filter_show('mmaq006','b_mmaq006')
+   CALL ammq302_filter_show('mmaq007','b_mmaq007')
+   CALL ammq302_filter_show('mmaq008','b_mmaq008')
+   CALL ammq302_filter_show('mmaq009','b_mmaq009')
+   CALL ammq302_filter_show('mmaq010','b_mmaq010')
+   CALL ammq302_filter_show('mmaq011','b_mmaq011')
+   CALL ammq302_filter_show('mmaq012','b_mmaq012')
+   CALL ammq302_filter_show('mmaq013','b_mmaq013')
+   CALL ammq302_filter_show('mmaq054','b_mmaq054')
+   CALL ammq302_filter_show('mmaq055','b_mmaq055')
+   CALL ammq302_filter_show('mmaq056','b_mmaq056')
+   CALL ammq302_filter_show('mmaq014','b_mmaq014')
+   CALL ammq302_filter_show('mmaq015','b_mmaq015')
+   CALL ammq302_filter_show('mmaq016','b_mmaq016')
+   CALL ammq302_filter_show('mmaq017','b_mmaq017')
+   CALL ammq302_filter_show('mmaq018','b_mmaq018')
+   CALL ammq302_filter_show('mmaq019','b_mmaq019')
+   CALL ammq302_filter_show('mmaq032','b_mmaq032')
+   CALL ammq302_filter_show('mmaq040','b_mmaq040')
+   CALL ammq302_filter_show('mmaq041','b_mmaq041')
+   CALL ammq302_filter_show('mmaq042','b_mmaq042')
+   CALL ammq302_filter_show('mmaq043','b_mmaq043')
+   CALL ammq302_filter_show('mmaq100','b_mmaq100')
+   CALL ammq302_filter_show('mmaq020','b_mmaq020')
+   CALL ammq302_filter_show('mmaq021','b_mmaq021')
+   CALL ammq302_filter_show('mmaq022','b_mmaq022')
+   CALL ammq302_filter_show('mmaq023','b_mmaq023')
+   CALL ammq302_filter_show('mmaq024','b_mmaq024')
+   CALL ammq302_filter_show('mmaq025','b_mmaq025')
+   CALL ammq302_filter_show('mmaq026','b_mmaq026')
+   CALL ammq302_filter_show('mmaq027','b_mmaq027')
+   CALL ammq302_filter_show('mmaq028','b_mmaq028')
+   CALL ammq302_filter_show('mmaq029','b_mmaq029')
+   CALL ammq302_filter_show('mmaq030','b_mmaq030')
+   CALL ammq302_filter_show('mmaq031','b_mmaq031')
+   CALL ammq302_filter_show('mmaq033','b_mmaq033')
+   CALL ammq302_filter_show('mmaq034','b_mmaq034')
+   CALL ammq302_filter_show('mmaq035','b_mmaq035')
+   CALL ammq302_filter_show('mmaq036','b_mmaq036')
+   CALL ammq302_filter_show('mmaq037','b_mmaq037')
+   CALL ammq302_filter_show('mmaq038','b_mmaq038')
+   CALL ammq302_filter_show('mmaq045','b_mmaq045')
+   CALL ammq302_filter_show('mmaq046','b_mmaq046')
+   CALL ammq302_filter_show('mmaq047','b_mmaq047')
+   CALL ammq302_filter_show('mmaq048','b_mmaq048')
+   CALL ammq302_filter_show('mmaq049','b_mmaq049')
+   CALL ammq302_filter_show('mmaq050','b_mmaq050')
+   CALL ammq302_filter_show('mmaq051','b_mmaq051')
+   CALL ammq302_filter_show('mmaq052','b_mmaq052')
+   CALL ammq302_filter_show('mmaq053','b_mmaq053')
+ 
+    
+   CALL ammq302_b_fill()
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="ammq302.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION ammq302_filter_parser(ps_field)
+   #add-point:filter段define-客製 name="filter_parser.define_customerization"
+   {<point name="filter_parser.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   #add-point:filter段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_parser.define"
+   {<point name="filter_parser.define"/>}
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter_parser.before_function"
+   {<point name="filter_parser.before_function" />}
+   #end add-point
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="ammq302.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION ammq302_filter_show(ps_field,ps_object)
+   #add-point:filter_show段define-客製 name="filter_show.define_customerization"
+   {<point name="filter_show.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+   #add-point:filter_show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_show.define"
+   {<point name="filter_show.define"/>}
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter_show.before_function"
+   {<point name="filter_show.before_function" />}
+   #end add-point
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = ammq302_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="ammq302.insert" >}
+#+ insert
+PRIVATE FUNCTION ammq302_insert()
+   #add-point:insert段define-客製 name="insert.define_customerization"
+   {<point name="insert.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:insert段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   {<point name="insert.define"/>}
+   #end add-point
+ 
+   #add-point:insert段control name="insert.control"
+   {<point name="insert.control"/>}
+   #end add-point    
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="ammq302.modify" >}
+#+ modify
+PRIVATE FUNCTION ammq302_modify()
+   #add-point:modify段define-客製 name="modify.define_customerization"
+   {<point name="modify.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:modify段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   {<point name="modify.define"/>}
+   #end add-point
+ 
+   #add-point:modify段control name="modify.control"
+   {<point name="modify.control"/>}
+   #end add-point 
+END FUNCTION
+
+{</section>}
+
+{<section id="ammq302.reproduce" >}
+#+ reproduce
+PRIVATE FUNCTION ammq302_reproduce()
+   #add-point:reproduce段define-客製 name="reproduce.define_customerization"
+   {<point name="reproduce.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:reproduce段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="reproduce.define"
+   {<point name="reproduce.define"/>}
+   #end add-point
+ 
+   #add-point:reproduce段control name="reproduce.control"
+   {<point name="reproduce.control"/>}
+   #end add-point 
+END FUNCTION
+
+{</section>}
+
+{<section id="ammq302.delete" >}
+#+ delete
+PRIVATE FUNCTION ammq302_delete()
+   #add-point:delete段define-客製 name="delete.define_customerization"
+   {<point name="delete.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:delete段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   {<point name="delete.define"/>}
+   #end add-point
+ 
+   #add-point:delete段control name="delete.control"
+   {<point name="delete.control"/>}
+   #end add-point 
+END FUNCTION
+
+{</section>}
+
+{<section id="ammq302.detail_action_trans" >}
+#+ 單身分頁筆數顯示及action圖片顯示切換功能
+PRIVATE FUNCTION ammq302_detail_action_trans()
+   #add-point:detail_action_trans段define-客製 name="detail_action_trans.define_customerization"
+   {<point name="detail_action_trans.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:detail_action_trans段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_action_trans.define"
+   {<point name="detail_action_trans.define"/>}
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="detail_action_trans.before_function"
+   {<point name="detail_action_trans.before_function" />}
+   #end add-point
+ 
+   #因應單身切頁功能，筆數計算方式調整
+   LET g_current_row_tot = g_pagestart + g_detail_idx - 1
+   DISPLAY g_current_row_tot TO FORMONLY.h_index
+   DISPLAY g_tot_cnt TO FORMONLY.h_count
+ 
+   #顯示單身頁面的起始與結束筆數
+   LET g_page_start_num = g_pagestart
+   LET g_page_end_num = g_pagestart + g_num_in_page - 1
+   DISPLAY g_page_start_num TO FORMONLY.p_start
+   DISPLAY g_page_end_num TO FORMONLY.p_end
+ 
+   #目前不支援跳頁功能
+   LET g_page_act_list = "detail_first,detail_previous,'',detail_next,detail_last"
+   CALL cl_navigator_detail_page_setting(g_page_act_list,g_current_row_tot,g_pagestart,g_num_in_page,g_tot_cnt)
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="ammq302.detail_index_setting" >}
+#+ 單身切頁後，index重新調整，避免翻頁後指到空白筆數
+PRIVATE FUNCTION ammq302_detail_index_setting()
+   #add-point:detail_index_setting段define-客製 name="deatil_index_setting.define_customerization"
+   {<point name="deatil_index_setting.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE li_redirect     BOOLEAN
+   DEFINE ldig_curr       ui.Dialog
+   #add-point:detail_index_setting段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_index_setting.define"
+   {<point name="detail_index_setting.define"/>}
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="detail_index_setting.before_function"
+   {<point name="detail_index_setting.before_function" />}
+   #end add-point
+ 
+   IF g_curr_diag IS NOT NULL THEN
+      CASE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") <= "0"
+            LET g_detail_idx = 1
+            IF g_mmaq_d.getLength() > 0 THEN
+               LET li_redirect = TRUE
+            END IF
+         WHEN g_curr_diag.getCurrentRow("s_detail1") > g_mmaq_d.getLength() AND g_mmaq_d.getLength() > 0
+            LET g_detail_idx = g_mmaq_d.getLength()
+            LET li_redirect = TRUE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") != g_detail_idx
+            IF g_detail_idx > g_mmaq_d.getLength() THEN
+               LET g_detail_idx = g_mmaq_d.getLength()
+            END IF
+            LET li_redirect = TRUE
+      END CASE
+   END IF
+ 
+   IF li_redirect THEN
+      LET ldig_curr = ui.Dialog.getCurrent()
+      CALL ldig_curr.setCurrentRow("s_detail1", g_detail_idx)
+   END IF
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="ammq302.mask_functions" >}
+ &include "erp/amm/ammq302_mask.4gl"
+
+{</section>}
+
+{<section id="ammq302.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

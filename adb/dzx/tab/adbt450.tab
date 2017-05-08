@@ -1,0 +1,240 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adbt450" module="adb" jobmode="N" type="t01" industry="std" fix_arg="1" crtid="02748" crtdt="2014-04-21 14:20:31" modid="05599" moddt="2016-08-30 19:31:14" sdver="0009" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="寄銷客戶庫存異動維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="dbdasite,dbdasite_desc(chr80),dbdadocdt,dbda003,dbdadocno,dbda000,dbda001,dbda001_desc(chr80),dbda002,dbda002_desc(chr80),dbda004,dbda004_desc(chr80),dbda005,dbda005_desc(chr80),dbda006,dbdaunit,dbdastus,dbdaownid,dbdaownid_desc(chr80),dbdaowndp,dbdaowndp_desc(chr80),dbdacrtid,dbdacrtid_desc(chr80),dbdacrtdp,dbdacrtdp_desc(chr80),dbdacrtdt,dbdamodid,dbdamodid_desc(chr80),dbdamoddt,dbdacnfid,dbdacnfid_desc(chr80),dbdacnfdt,dbdapstid,dbdapstid_desc(chr80),dbdapstdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="dbdbsite,dbdbunit,dbdbseq,dbdb001,dbdb002,dbdb003,dbdb004,dbdb005,dbdb005_desc(chr500),dbdb005_desc_desc(chr500),dbdb006,dbdb007,dbdb015,dbdb014,dbdb014_desc(chr500),dbdb008,dbdb009,dbdb009_desc(chr500),dbdb010,dbdb011,dbdb012,dbdb013"/>
+      <var id="bs_field" value="dbdasite,dbdasite_desc(chr80),dbdadocno,dbdadocdt,dbda003,dbda001,dbda001_desc(chr80),dbda002,dbda002_desc(chr80)" pk="dbdadocno" order=""/>
+      <bs_reference field="dbdasite_desc" ref_field="dbdasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="dbda001_desc" ref_field="dbda001" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+      <bs_reference field="dbda002_desc" ref_field="dbda002" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="prog_aooi130" lib="cl_user_contact" parameter="&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;,g_m.aooi130"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="detail_qrystr" mode="popup">
+        <action id="prog_adbt540" prog="adbt540" parameter="dbdb002"/>
+      </action>
+    </section>
+  </structure>
+  <form id="0" module="adb" filename="adbt450" method="dialog">
+    <section id="input">
+      <input id="head" field="dbdasite,dbdadocdt,dbda003,dbdadocno,dbda000,dbda001,dbda002,dbda004,dbda005,dbda006,dbdaunit,dbdastus"/>
+      <input id="body" page="1" field="dbdbsite,dbdbunit,dbdbseq,dbdb001,dbdb002,dbdb003,dbdb004,dbdb005,dbdb006,dbdb007,dbdb015,dbdb014,dbdb008,dbdb009,dbdb010,dbdb011,dbdb012,dbdb013" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="dbdasite,dbdadocdt,dbda003,dbdadocno,dbda001,dbda002,dbda004,dbda005,dbda006,dbdaunit,dbdastus,dbdaownid,dbdaowndp,dbdacrtid,dbdacrtdp,dbdacrtdt,dbdamodid,dbdamoddt,dbdacnfid,dbdacnfdt,dbdapstid,dbdapstdt"/>
+      <construct id="body" page="1" field="dbdbsite,dbdbunit,dbdbseq,dbdb001,dbdb002,dbdb003,dbdb004,dbdb005,dbdb006,dbdb007,dbdb015,dbdb014,dbdb008,dbdb009,dbdb010,dbdb011,dbdb012,dbdb013"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="dbdadocno"/>
+      <set id="head" type="no_entry" field="dbdadocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="dbdasite">
+        <after>
+          <reference field="dbdasite_desc" ref_field="dbda_t.dbdasite" map_field="dbdaent,dbdasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="dbdasite_desc"/>
+      <column id="dbdadocdt"/>
+      <column id="dbda003"/>
+      <column id="dbdadocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_dbdadocno" state="c"/>
+      </column>
+      <column id="dbda000"/>
+      <column id="dbda001">
+        <after>
+          <check chkid="v_pmaa001_13" id="isExist"/>
+          <reference field="dbda001_desc" ref_field="dbda_t.dbda001" map_field="dbdaent,dbda001" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_17" state="i"/>
+        <controlp form="q_pmaa001_17" state="c"/>
+      </column>
+      <column id="dbda001_desc"/>
+      <column id="dbda002">
+        <after>
+          <reference field="dbda002_desc" ref_field="dbda_t.dbda002" map_field="dbdaent,dbda002" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmac002_6" state="i"/>
+        <controlp form="q_pmac002_6" state="c"/>
+      </column>
+      <column id="dbda002_desc"/>
+      <column id="dbda004">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="dbda004_desc" ref_field="dbda_t.dbda004" map_field="dbda004" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="dbda004_desc"/>
+      <column id="dbda005">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="dbda005_desc" ref_field="dbda_t.dbda005" map_field="dbdaent,dbda005" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_4" state="i"/>
+        <controlp form="q_ooeg001_4" state="c"/>
+      </column>
+      <column id="dbda005_desc"/>
+      <column id="dbda006" type="S" default="N"/>
+      <column id="dbdaunit"/>
+      <column id="dbdastus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="S" pic="posted"/>
+        <stus id="Z" pic="unposted"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="dbdaownid">
+        <after>
+          <reference field="dbdaownid_desc" ref_field="dbda_t.dbdaownid" map_field="dbdaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="dbdaownid_desc"/>
+      <column id="dbdaowndp">
+        <after>
+          <reference field="dbdaowndp_desc" ref_field="dbda_t.dbdaowndp" map_field="dbdaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="dbdaowndp_desc"/>
+      <column id="dbdacrtid">
+        <after>
+          <reference field="dbdacrtid_desc" ref_field="dbda_t.dbdacrtid" map_field="dbdacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="dbdacrtid_desc"/>
+      <column id="dbdacrtdp">
+        <after>
+          <reference field="dbdacrtdp_desc" ref_field="dbda_t.dbdacrtdp" map_field="dbdacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="dbdacrtdp_desc"/>
+      <column id="dbdacrtdt"/>
+      <column id="dbdamodid">
+        <after>
+          <reference field="dbdamodid_desc" ref_field="dbda_t.dbdamodid" map_field="dbdamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="dbdamodid_desc"/>
+      <column id="dbdamoddt"/>
+      <column id="dbdacnfid">
+        <after>
+          <reference field="dbdacnfid_desc" ref_field="dbda_t.dbdacnfid" map_field="dbdacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="dbdacnfid_desc"/>
+      <column id="dbdacnfdt"/>
+      <column id="dbdapstid">
+        <after>
+          <reference field="dbdapstid_desc" ref_field="dbda_t.dbdapstid" map_field="dbdapstid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="dbdapstid_desc"/>
+      <column id="dbdapstdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="dbdbsite"/>
+      <column id="dbdbunit"/>
+      <column id="dbdbseq"/>
+      <column id="dbdb001"/>
+      <column id="dbdb002"/>
+      <column id="dbdb003"/>
+      <column id="dbdb004">
+        <after>
+          <check chkid="v_imay003_1" id="isExist"/>
+        </after>
+        <controlp form="q_imay003_6" state="i"/>
+        <controlp form="q_imay003_6" state="c"/>
+      </column>
+      <column id="dbdb005">
+        <after>
+          <check chkid="v_imaa001" id="isExist"/>
+          <reference field="dbdb005_desc" ref_field="dbdb_t.dbdb005" map_field="dbdbent,dbdb005" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="dbdb005_desc">
+        <after>
+          <reference field="dbdb005_desc_desc" ref_field="dbdb005_desc" map_field="dbdaent,dbda005" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="dbdb005_desc_desc"/>
+      <column id="dbdb006"/>
+      <column id="dbdb007">
+        <controlp form="q_inaj010" state="i"/>
+        <controlp form="q_dbdb007" state="c"/>
+      </column>
+      <column id="dbdb015" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="dbdb014">
+        <after>
+          <check chkid="v_imao002" id="isExist"/>
+          <reference field="dbdb014_desc" ref_field="dbdb_t.dbdb014" map_field="dbdb014" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imao002" state="i"/>
+        <controlp form="q_ooca001" state="c"/>
+      </column>
+      <column id="dbdb014_desc"/>
+      <column id="dbdb008" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="dbdb009">
+        <after>
+          <check chkid="v_imao002" id="isExist"/>
+          <reference field="dbdb009_desc" ref_field="dbdb_t.dbdb009" map_field="dbdb009" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imao002" state="i"/>
+        <controlp form="q_ooca001" state="c"/>
+      </column>
+      <column id="dbdb009_desc"/>
+      <column id="dbdb010"/>
+      <column id="dbdb011"/>
+      <column id="dbdb012"/>
+      <column id="dbdb013"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="dbda_t" pk="dbdadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT dbdasite,&apos;&apos;,dbdadocdt,dbda003,dbdadocno,dbda000,dbda001,&apos;&apos;,dbda002,&apos;&apos;,dbda004,&apos;&apos;,dbda005,&apos;&apos;,dbda006,dbdaunit,dbdastus,dbdaownid,&apos;&apos;,dbdaowndp,&apos;&apos;,dbdacrtid,&apos;&apos;,dbdacrtdp,&apos;&apos;,dbdacrtdt,dbdamodid,&apos;&apos;,dbdamoddt,dbdacnfid,&apos;&apos;,dbdacnfdt,dbdapstid,&apos;&apos;,dbdapstdt FROM dbda_t WHERE dbdaent= ? AND dbdadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT dbdasite,&apos;&apos;,dbdadocdt,dbda003,dbdadocno,dbda000,dbda001,&apos;&apos;,dbda002,&apos;&apos;,dbda004,&apos;&apos;,dbda005,&apos;&apos;,dbda006,dbdaunit,dbdastus,dbdaownid,&apos;&apos;,dbdaowndp,&apos;&apos;,dbdacrtid,&apos;&apos;,dbdacrtdp,&apos;&apos;,dbdacrtdt,dbdamodid,&apos;&apos;,dbdamoddt,dbdacnfid,&apos;&apos;,dbdacnfdt,dbdapstid,&apos;&apos;,dbdapstdt FROM dbda_t" order="dbdadocno"/>
+    </head>
+    <body id="dbdb_t" page="1" linked="" pk="dbdbseq" fk="dbdbdocno">
+      <sql id="forupd_sql_detail" query="SELECT dbdbsite,dbdbunit,dbdbseq,dbdb001,dbdb002,dbdb003,dbdb004,dbdb005,&apos;&apos;,&apos;&apos;,dbdb006,dbdb007,dbdb015,dbdb014,&apos;&apos;,dbdb008,dbdb009,&apos;&apos;,dbdb010,dbdb011,dbdb012,dbdb013 FROM dbdb_t WHERE dbdbent=? AND dbdbdocno=? AND dbdbseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT dbdbsite,dbdbunit,dbdbseq,dbdb001,dbdb002,dbdb003,dbdb004,dbdb005,&apos;&apos;,&apos;&apos;,dbdb006,dbdb007,dbdb015,dbdb014,&apos;&apos;,dbdb008,dbdb009,&apos;&apos;,dbdb010,dbdb011,dbdb012,dbdb013 FROM dbdb_t WHERE dbdbent=? AND dbdbdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

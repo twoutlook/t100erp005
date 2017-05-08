@@ -1,0 +1,128 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="amhi801" module="amh" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02749" crtdt="2016-05-07 09:17:36" modid="08742" moddt="2016-09-02 17:42:55" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="圖紙設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mhbjsite,mhbjsite_desc(chr500),mhbj001,mhbj001_desc(chr500),mhbj002,mhbj002_desc(chr500),mhbj003,mhbj005,mhbjl007,mhbj006,mhbj007,mhbjstus,mhbjunit"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="mhbjsite,mhbj003,mhbj005,mhbjownid,mhbjownid_desc(chr500),mhbjowndp,mhbjowndp_desc(chr500),mhbjcrtid,mhbjcrtid_desc(chr500),mhbjcrtdp,mhbjcrtdp_desc(chr500),mhbjcrtdt,mhbjmodid,mhbjmodid_desc(chr500),mhbjmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="draw_browse"/>
+      <action id="insert" type="standard"/>
+      <action id="draw_editor"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="amh" filename="amhi801" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="mhbjsite,mhbj001,mhbj002,mhbj003,mhbj005,mhbjl007,mhbj006,mhbj007,mhbjstus,mhbjunit" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="mhbjsite,mhbj001,mhbj002,mhbj003,mhbj005,mhbjl007,mhbj006,mhbj007,mhbjstus,mhbjunit"/>
+      <construct id="body" page="2" field="mhbjownid,mhbjowndp,mhbjcrtid,mhbjcrtdp,mhbjcrtdt,mhbjmodid,mhbjmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="mhbjsite">
+        <after>
+          <reference field="mhbjsite_desc" ref_field="mhbj_t.mhbjsite" map_field="mhbjsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="mhbjsite_desc"/>
+      <column id="mhbj001">
+        <after>
+          <check chkid="v_mhaa001" id="isExist"/>
+          <reference field="mhbj001_desc" ref_field="mhbj_t.mhbj001" map_field="mhbj001" ref_sql="SELECT mhaal003 FROM mhaal_t WHERE mhaalent=$varg_enterprise$var AND mhaal001=? AND mhaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhaa001" state="i"/>
+        <controlp form="q_mhaa001" state="c"/>
+      </column>
+      <column id="mhbj001_desc"/>
+      <column id="mhbj002">
+        <after>
+          <reference field="mhbj002_desc" ref_field="mhbj001,mhbj002" map_field="mhbj001,mhbj002" ref_sql="SELECT mhabl004 FROM mhabl_t WHERE mhablent=$varg_enterprise$var AND mhabl001=? AND mhabl002=? AND mhabl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhab002" state="i"/>
+        <controlp form="q_mhab002" state="c"/>
+      </column>
+      <column id="mhbj002_desc"/>
+      <column id="mhbj003">
+        <controlp form="q_mhbj003" state="c"/>
+      </column>
+      <column id="mhbj005"/>
+      <column id="mhbjl007"/>
+      <column id="mhbj006"/>
+      <column id="mhbj007"/>
+      <column id="mhbjstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="mhbjunit"/>
+    </init>
+    <init id="body" page="2">
+      <column id="mhbjownid">
+        <after>
+          <reference field="mhbjownid_desc" ref_field="mhbj_t.mhbjownid" map_field="mhbjownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhbjownid_desc"/>
+      <column id="mhbjowndp">
+        <after>
+          <reference field="mhbjowndp_desc" ref_field="mhbj_t.mhbjowndp" map_field="mhbjowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhbjowndp_desc"/>
+      <column id="mhbjcrtid">
+        <after>
+          <reference field="mhbjcrtid_desc" ref_field="mhbj_t.mhbjcrtid" map_field="mhbjcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhbjcrtid_desc"/>
+      <column id="mhbjcrtdp">
+        <after>
+          <reference field="mhbjcrtdp_desc" ref_field="mhbj_t.mhbjcrtdp" map_field="mhbjcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhbjcrtdp_desc"/>
+      <column id="mhbjcrtdt"/>
+      <column id="mhbjmodid">
+        <after>
+          <reference field="mhbjmodid_desc" ref_field="mhbj_t.mhbjmodid" map_field="mhbjmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhbjmodid_desc"/>
+      <column id="mhbjmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="mhbj_t" page="1,2" linked="" pk="mhbjsite,mhbj003,mhbj005">
+      <sql id="forupd_sql_detail" query="SELECT mhbjsite,&apos;&apos;,mhbj001,&apos;&apos;,mhbj002,&apos;&apos;,mhbj003,mhbj005,&apos;&apos;,mhbj006,mhbj007,mhbjstus,mhbjunit,&apos;&apos;,&apos;&apos;,&apos;&apos;,mhbjownid,&apos;&apos;,mhbjowndp,&apos;&apos;,mhbjcrtid,&apos;&apos;,mhbjcrtdp,&apos;&apos;,mhbjcrtdt,mhbjmodid,&apos;&apos;,mhbjmoddt FROM mhbj_t WHERE mhbjent=? AND mhbjsite=? AND mhbj003=? AND mhbj005=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mhbjsite,&apos;&apos;,mhbj001,&apos;&apos;,mhbj002,&apos;&apos;,mhbj003,mhbj005,&apos;&apos;,mhbj006,mhbj007,mhbjstus,mhbjunit,&apos;&apos;,&apos;&apos;,&apos;&apos;,mhbjownid,&apos;&apos;,mhbjowndp,&apos;&apos;,mhbjcrtid,&apos;&apos;,mhbjcrtdp,&apos;&apos;,mhbjcrtdt,mhbjmodid,&apos;&apos;,mhbjmoddt FROM mhbj_t WHERE mhbjent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="mhbjl_t.mhbjl007" table="mhbjl_t" fk="mhbjsite,mhbj003,mhbj005" pk="mhbjlsite,mhbjl003,mhbjl005,mhbjl006" field="mhbjl007"/>
+    </body>
+  </dataset>
+</assembly>
+

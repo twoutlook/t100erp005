@@ -1,0 +1,98 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afai030" module="afa" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02299" crtdt="2014-01-26 10:53:29" modid="02114" moddt="2015-06-17 14:49:01" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="固定資產次要類型維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="faadstus,faad001,faadl003,faad002,faad002_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="faad001,faadownid,faadownid_desc(chr500),faadowndp,faadowndp_desc(chr500),faadcrtid,faadcrtid_desc(chr500),faadcrtdp,faadcrtdp_desc(chr500),faadcrtdt,faadmodid,faadmodid_desc(chr500),faadmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="afa" filename="afai030" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="faadstus,faad001,faadl003,faad002,faad002_desc" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="faadstus,faad001,faadl003,faad002,faad002_desc"/>
+      <construct id="body" page="2" field="faadownid,faadowndp,faadcrtid,faadcrtdp,faadcrtdt,faadmodid,faadmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="faadstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="faad001"/>
+      <column id="faadl003"/>
+      <column id="faad002">
+        <after/>
+      </column>
+      <column id="faad002_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="faadownid">
+        <after>
+          <reference field="faadownid_desc" ref_field="faad_t.faadownid" map_field="faadownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="faadownid_desc"/>
+      <column id="faadowndp">
+        <after>
+          <reference field="faadowndp_desc" ref_field="faad_t.faadowndp" map_field="faadowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="faadowndp_desc"/>
+      <column id="faadcrtid">
+        <after>
+          <reference field="faadcrtid_desc" ref_field="faad_t.faadcrtid" map_field="faadcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="faadcrtid_desc"/>
+      <column id="faadcrtdp">
+        <after>
+          <reference field="faadcrtdp_desc" ref_field="faad_t.faadcrtdp" map_field="faadcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="faadcrtdp_desc"/>
+      <column id="faadcrtdt"/>
+      <column id="faadmodid">
+        <after>
+          <reference field="faadmodid_desc" ref_field="faad_t.faadmodid" map_field="faadmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="faadmodid_desc"/>
+      <column id="faadmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="faad_t" page="1,2" linked="" pk="faad001">
+      <sql id="forupd_sql_detail" query="SELECT faadstus,faad001,&apos;&apos;,faad002,&apos;&apos;,&apos;&apos;,faadownid,&apos;&apos;,faadowndp,&apos;&apos;,faadcrtid,&apos;&apos;,faadcrtdp,&apos;&apos;,faadcrtdt,faadmodid,&apos;&apos;,faadmoddt FROM faad_t WHERE faadent=? AND faad001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT faadstus,faad001,&apos;&apos;,faad002,&apos;&apos;,&apos;&apos;,faadownid,&apos;&apos;,faadowndp,&apos;&apos;,faadcrtid,&apos;&apos;,faadcrtdp,&apos;&apos;,faadcrtdt,faadmodid,&apos;&apos;,faadmoddt FROM faad_t WHERE faadent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="faadl_t.faadl003" table="faadl_t" fk="faad001" pk="faadl001,faadl002" field="faadl003"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,498 @@
+{<section id="aglt310_03.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2013-10-23 10:18:47), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000320
+#+ Filename...: aglt310_03
+#+ Description: 自由核算项维护
+#+ Creator....: 02298(2013-08-27 09:24:03)
+#+ Modifier...: 02298 -SD/PR-
+{</section>}
+
+
+
+{<section id="aglt310_03.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_glaq_m        RECORD
+       glaq029 LIKE glaq_t.glaq029, 
+   glaq029_desc LIKE type_t.chr80, 
+   glaq030 LIKE glaq_t.glaq030, 
+   glaq030_desc LIKE type_t.chr80, 
+   glaq031 LIKE glaq_t.glaq031, 
+   glaq031_desc LIKE type_t.chr80, 
+   glaq032 LIKE glaq_t.glaq032, 
+   glaq032_desc LIKE type_t.chr80, 
+   glaq033 LIKE glaq_t.glaq033, 
+   glaq033_desc LIKE type_t.chr80, 
+   glaq034 LIKE glaq_t.glaq034, 
+   glaq034_desc LIKE type_t.chr80, 
+   glaq035 LIKE glaq_t.glaq035, 
+   glaq035_desc LIKE type_t.chr80, 
+   glaq036 LIKE glaq_t.glaq036, 
+   glaq036_desc LIKE type_t.chr80, 
+   glaq037 LIKE glaq_t.glaq037, 
+   glaq037_desc LIKE type_t.chr80, 
+   glaq038 LIKE glaq_t.glaq038, 
+   glaq038_desc LIKE type_t.chr80
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_glaq_m        type_g_glaq_m
+ 
+   
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+{</section>}
+ 
+{<section id="aglt310_03.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aglt310_03(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aglt310_03 WITH FORM cl_ap_formpath("agl","aglt310_03")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_glaq_m.glaq029,g_glaq_m.glaq030,g_glaq_m.glaq031,g_glaq_m.glaq032,g_glaq_m.glaq033,g_glaq_m.glaq034,g_glaq_m.glaq035,g_glaq_m.glaq036,g_glaq_m.glaq037,g_glaq_m.glaq038 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glaq029
+            
+            #add-point:AFTER FIELD glaq029 name="input.a.glaq029"
+            {<point name="input.a.glaq029" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glaq029
+            #add-point:BEFORE FIELD glaq029 name="input.b.glaq029"
+            {<point name="input.b.glaq029" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glaq029
+            #add-point:ON CHANGE glaq029 name="input.g.glaq029"
+            {<point name="input.g.glaq029" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glaq030
+            
+            #add-point:AFTER FIELD glaq030 name="input.a.glaq030"
+            {<point name="input.a.glaq030" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glaq030
+            #add-point:BEFORE FIELD glaq030 name="input.b.glaq030"
+            {<point name="input.b.glaq030" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glaq030
+            #add-point:ON CHANGE glaq030 name="input.g.glaq030"
+            {<point name="input.g.glaq030" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glaq031
+            
+            #add-point:AFTER FIELD glaq031 name="input.a.glaq031"
+            {<point name="input.a.glaq031" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glaq031
+            #add-point:BEFORE FIELD glaq031 name="input.b.glaq031"
+            {<point name="input.b.glaq031" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glaq031
+            #add-point:ON CHANGE glaq031 name="input.g.glaq031"
+            {<point name="input.g.glaq031" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glaq032
+            
+            #add-point:AFTER FIELD glaq032 name="input.a.glaq032"
+            {<point name="input.a.glaq032" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glaq032
+            #add-point:BEFORE FIELD glaq032 name="input.b.glaq032"
+            {<point name="input.b.glaq032" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glaq032
+            #add-point:ON CHANGE glaq032 name="input.g.glaq032"
+            {<point name="input.g.glaq032" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glaq033
+            
+            #add-point:AFTER FIELD glaq033 name="input.a.glaq033"
+            {<point name="input.a.glaq033" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glaq033
+            #add-point:BEFORE FIELD glaq033 name="input.b.glaq033"
+            {<point name="input.b.glaq033" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glaq033
+            #add-point:ON CHANGE glaq033 name="input.g.glaq033"
+            {<point name="input.g.glaq033" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glaq034
+            
+            #add-point:AFTER FIELD glaq034 name="input.a.glaq034"
+            {<point name="input.a.glaq034" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glaq034
+            #add-point:BEFORE FIELD glaq034 name="input.b.glaq034"
+            {<point name="input.b.glaq034" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glaq034
+            #add-point:ON CHANGE glaq034 name="input.g.glaq034"
+            {<point name="input.g.glaq034" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glaq035
+            
+            #add-point:AFTER FIELD glaq035 name="input.a.glaq035"
+            {<point name="input.a.glaq035" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glaq035
+            #add-point:BEFORE FIELD glaq035 name="input.b.glaq035"
+            {<point name="input.b.glaq035" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glaq035
+            #add-point:ON CHANGE glaq035 name="input.g.glaq035"
+            {<point name="input.g.glaq035" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glaq036
+            
+            #add-point:AFTER FIELD glaq036 name="input.a.glaq036"
+            {<point name="input.a.glaq036" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glaq036
+            #add-point:BEFORE FIELD glaq036 name="input.b.glaq036"
+            {<point name="input.b.glaq036" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glaq036
+            #add-point:ON CHANGE glaq036 name="input.g.glaq036"
+            {<point name="input.g.glaq036" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glaq037
+            
+            #add-point:AFTER FIELD glaq037 name="input.a.glaq037"
+            {<point name="input.a.glaq037" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glaq037
+            #add-point:BEFORE FIELD glaq037 name="input.b.glaq037"
+            {<point name="input.b.glaq037" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glaq037
+            #add-point:ON CHANGE glaq037 name="input.g.glaq037"
+            {<point name="input.g.glaq037" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glaq038
+            
+            #add-point:AFTER FIELD glaq038 name="input.a.glaq038"
+            {<point name="input.a.glaq038" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glaq038
+            #add-point:BEFORE FIELD glaq038 name="input.b.glaq038"
+            {<point name="input.b.glaq038" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glaq038
+            #add-point:ON CHANGE glaq038 name="input.g.glaq038"
+            {<point name="input.g.glaq038" />}
+            #END add-point 
+
+
+ #欄位檢查
+                  #Ctrlp:input.c.glaq029
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glaq029
+            #add-point:ON ACTION controlp INFIELD glaq029 name="input.c.glaq029"
+            {<point name="input.c.glaq029" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.glaq030
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glaq030
+            #add-point:ON ACTION controlp INFIELD glaq030 name="input.c.glaq030"
+            {<point name="input.c.glaq030" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.glaq031
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glaq031
+            #add-point:ON ACTION controlp INFIELD glaq031 name="input.c.glaq031"
+            {<point name="input.c.glaq031" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.glaq032
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glaq032
+            #add-point:ON ACTION controlp INFIELD glaq032 name="input.c.glaq032"
+            {<point name="input.c.glaq032" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.glaq033
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glaq033
+            #add-point:ON ACTION controlp INFIELD glaq033 name="input.c.glaq033"
+            {<point name="input.c.glaq033" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.glaq034
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glaq034
+            #add-point:ON ACTION controlp INFIELD glaq034 name="input.c.glaq034"
+            {<point name="input.c.glaq034" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.glaq035
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glaq035
+            #add-point:ON ACTION controlp INFIELD glaq035 name="input.c.glaq035"
+            {<point name="input.c.glaq035" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.glaq036
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glaq036
+            #add-point:ON ACTION controlp INFIELD glaq036 name="input.c.glaq036"
+            {<point name="input.c.glaq036" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.glaq037
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glaq037
+            #add-point:ON ACTION controlp INFIELD glaq037 name="input.c.glaq037"
+            {<point name="input.c.glaq037" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.glaq038
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glaq038
+            #add-point:ON ACTION controlp INFIELD glaq038 name="input.c.glaq038"
+            {<point name="input.c.glaq038" />}
+            #END add-point
+
+
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aglt310_03 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="aglt310_03.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+{</section>}
+{<section id="aglt310_03.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+

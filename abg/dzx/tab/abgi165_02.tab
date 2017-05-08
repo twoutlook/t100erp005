@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abgi165_02" module="abg" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="06821" crtdt="2016-08-08 11:54:11" modid="06821" moddt="2016-12-13 11:47:26" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="預算組織料件批次產生">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bgea001,bgea001_desc(chr80),l_cover(chr1),bgas003(chr10),bgas001(chr500),bgas005(chr10),bgas004(chr10)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abg" filename="abgi165_02" method="dialog">
+    <section id="input">
+      <input id="head" field="bgea001,l_cover"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="bgea001">
+        <after/>
+      </column>
+      <column id="bgea001_desc"/>
+      <column id="l_cover" type="S" default="N"/>
+      <column id="bgas003"/>
+      <column id="bgas001"/>
+      <column id="bgas005"/>
+      <column id="bgas004"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bgea_t" pk="bgea001,bgea002,bgea003">
+      <sql id="forupd_sql" type="sql" query="SELECT bgea001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM bgea_t WHERE bgeaent= ? AND bgea001=? AND bgea002=? AND bgea003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="bgea001,bgea002,bgea003"/>
+    </head>
+  </dataset>
+</assembly>
+

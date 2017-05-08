@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcp201" module="axc" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="00537" crtdt="2014-07-28 09:16:12" modid="00537" moddt="2014-09-12 13:35:28" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="期末人工製費金額統計作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcbjcomp(chr10),xcbjcomp_desc(chr80),xcbjld(chr5),xcbjld_desc(chr80),xcbj001(chr10),xcbj001_desc(chr80),xcbj002(num5),xcbj003(num5),stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="axc" filename="axcp201" method="dialog">
+    <section id="input">
+      <input id="head" field="xcbjcomp,xcbjld,xcbj001,xcbj002,xcbj003"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcbjcomp">
+        <after>
+          <check chkid="v_ooef001_1" id="isExist"/>
+          <reference field="xcbjcomp_desc" ref_field="xcbjcomp" map_field="xcbjent,xcbjcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="xcbjcomp_desc"/>
+      <column id="xcbjld">
+        <after>
+          <check chkid="v_glaald" id="isExist"/>
+          <reference field="xcbjld_desc" ref_field="xcbjld" map_field="xcbjent,xcbjld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xcbjld_desc"/>
+      <column id="xcbj001">
+        <after>
+          <check chkid="v_xcat001" id="isExist"/>
+          <reference field="xcbj001_desc" ref_field="xcbj001" map_field="xcbjent,xcbj001" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcat001" state="i"/>
+        <controlp form="q_xcat001" state="c"/>
+      </column>
+      <column id="xcbj001_desc"/>
+      <column id="xcbj002"/>
+      <column id="xcbj003"/>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

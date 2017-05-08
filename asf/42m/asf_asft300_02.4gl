@@ -1,0 +1,1998 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="asft300_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0018(2016-09-26 14:38:24), PR版次:0018(2017-01-24 09:43:41)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000200
+#+ Filename...: asft300_02
+#+ Description: 取替代
+#+ Creator....: 01258(2014-01-02 15:46:29)
+#+ Modifier...: 00593 -SD/PR- 05384
+ 
+{</section>}
+ 
+{<section id="asft300_02.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#160905-00022#1  2016/09/06  by whitney  如果備料已存在發料單不能刪除，將應發調整為0
+#160908-00009#1  2016/09/22  by whitney  欄位給預設值，避免取替代後總應發數量為0
+#160914-00035#1  2016/09/26  By Sarah    1.將FUNCTION asft300_02_tmp_b_fill2()中抓取資料的CURSOR搬到FUNCTION asft300_02()
+#                                        2.程式中寫到g_sfba2_d[l_ac]的部分通通換成g_sfba2_d[l_ac2]
+#161024-00061#1  2016/10/26  By Whitney  已出現在工單則不考慮BOM失效
+#161109-00085#28 2016/11/11  By lienjunqi整批調整系統星號寫法
+#161109-00085#62 2016/11/25  By 08171    整批調整系統星號寫法
+#161230-00044#1  2017/01/03  By Whitney  将当前这颗备料项序>0且不存在于abmm217的料也带出到下单身
+#161123-00014#1  2017/01/16  By shiun    修正項目頁簽無法顯示導致無法取替代問題
+#170123-00011#1  2016/01/24  By 08992 補上SQL遺漏ent條件
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_sfba_d        RECORD
+       sfbaseq LIKE sfba_t.sfbaseq, 
+   sfbaseq1 LIKE sfba_t.sfbaseq1, 
+   sfba002 LIKE sfba_t.sfba002, 
+   sfba003 LIKE sfba_t.sfba003, 
+   sfba004 LIKE sfba_t.sfba004, 
+   sfba005 LIKE sfba_t.sfba005, 
+   sfba005_desc LIKE type_t.chr500, 
+   sfba005_desc_desc LIKE type_t.chr500, 
+   sfba021 LIKE sfba_t.sfba021, 
+   replace LIKE type_t.chr500, 
+   qty1 LIKE type_t.num20_6, 
+   qty2 LIKE type_t.num20_6, 
+   qty3 LIKE type_t.num20_6, 
+   sfba016 LIKE type_t.num20_6
+       END RECORD
+PRIVATE TYPE type_g_sfba2_d RECORD
+       seq LIKE type_t.num10, 
+   seq1 LIKE type_t.num10, 
+   part LIKE type_t.chr500, 
+   part_desc LIKE type_t.chr500, 
+   part_desc_desc LIKE type_t.chr500, 
+   feature LIKE type_t.chr500, 
+   unit LIKE type_t.chr10, 
+   mole LIKE type_t.num20_6, 
+   deno LIKE type_t.num20_6, 
+   qty4 LIKE type_t.num20_6, 
+   checkcl LIKE type_t.chr1, 
+   qty5 LIKE type_t.num20_6, 
+   qty6 LIKE type_t.num20_6, 
+   qty7 LIKE type_t.num20_6, 
+   qty8 LIKE type_t.num20_6, 
+   qty9 LIKE type_t.num20_6, 
+   qty10 LIKE type_t.num20_6
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_sfaadocno           LIKE sfaa_t.sfaadocno
+DEFINE g_sfaa009             LIKE sfaa_t.sfaa009
+DEFINE g_sfaa011             LIKE sfaa_t.sfaa011
+DEFINE g_sql                 STRING
+DEFINE l_ac2                 LIKE type_t.num5
+DEFINE g_rec_b2              LIKE type_t.num5
+DEFINE l_qty6                LIKE sfba_t.sfba013
+DEFINE l_qty6_t              LIKE sfba_t.sfba013
+DEFINE g_bmea                DYNAMIC ARRAY OF RECORD
+       bmea014               LIKE bmea_t.bmea014,
+       bmea016               LIKE bmea_t.bmea016,
+       bmea017               LIKE bmea_t.bmea017
+                             END RECORD
+                             
+#end add-point
+ 
+DEFINE g_sfba_d          DYNAMIC ARRAY OF type_g_sfba_d
+DEFINE g_sfba_d_t        type_g_sfba_d
+DEFINE g_sfba2_d   DYNAMIC ARRAY OF type_g_sfba2_d
+DEFINE g_sfba2_d_t type_g_sfba2_d
+ 
+ 
+DEFINE g_sfbadocno_t   LIKE sfba_t.sfbadocno    #Key值備份
+DEFINE g_sfbaseq_t      LIKE sfba_t.sfbaseq    #Key值備份
+DEFINE g_sfbaseq1_t      LIKE sfba_t.sfbaseq1    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point    
+ 
+{</section>}
+ 
+{<section id="asft300_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION asft300_02(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   p_sfaadocno
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE p_sfaadocno     LIKE sfaa_t.sfaadocno
+   DEFINE l_flag          LIKE type_t.chr1
+   DEFINE l_n1            LIKE type_t.num5
+   DEFINE l_date          LIKE type_t.dat
+   DEFINE l_sfba016       LIKE sfba_t.sfba016     #160726-00018 by whitney add
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_asft300_02 WITH FORM cl_ap_formpath("asf","asft300_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   #2015/09/24 by stellar add ----- (S)
+   WHENEVER ERROR CONTINUE
+   
+   #stellar修改：記錄下單身的資料，避免上單身移動筆數後，把修改的資料清除
+   DROP TABLE asft300_02_tmp2
+   CREATE TEMP TABLE asft300_02_tmp2(
+      seq             INTEGER,
+      seq1            INTEGER,
+      part            VARCHAR(40),
+      feature         VARCHAR(256),
+      unit            VARCHAR(10),
+      mole            DECIMAL(20,6),
+      deno            DECIMAL(20,6),
+      qty4            DECIMAL(20,6),
+      checkcl         VARCHAR(1),
+      qty5            DECIMAL(20,6),
+      qty6            DECIMAL(20,6),
+      qty7            DECIMAL(20,6),
+      qty8            DECIMAL(20,6),
+      qty9            DECIMAL(20,6),
+      qty10           DECIMAL(20,6))
+   IF SQLCA.sqlcode != 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create asft300_02_tmp2'
+      LET g_errparam.popup = TRUE
+      
+      CALL cl_err()
+      RETURN
+   END IF
+   #2015/09/24 by stellar add ----- (E)
+   
+   LET g_sfaadocno = p_sfaadocno
+   SELECT sfaa009,sfaa011 INTO g_sfaa009,g_sfaa011 FROM sfaa_t 
+    WHERE sfaaent = g_enterprise AND sfaasite = g_site AND sfaadocno = g_sfaadocno
+   LET l_date = cl_get_today()
+   
+   LET g_sql = "SELECT unique sfbaseq,sfbaseq1,sfba002,sfba003,sfba004,sfba006,imaal003,imaal004,sfba021,'',0,0,0,sfba016 FROM sfba_t",  #160726-00018 by whitney add sfba016
+               "  LEFT OUTER JOIN imaal_t ON imaalent = sfbaent AND imaal001 = sfba006 AND imaal002 = '",g_dlang,"',bmea_t ",
+               " WHERE sfbaent = bmeaent AND sfbasite = bmeasite ",
+               #161123-00014#1-s-mod
+#               "   AND ((bmea001 = sfba001 AND bmea003 = sfba006 AND bmea004 = sfba002 AND bmea005 = sfba003 AND bmea006 = sfba004) OR ",
+               "   AND ((bmea001 = sfba001 AND bmea003 = sfba006 AND bmea004 = sfba002 AND bmea005 = sfba003 AND bmea006 = sfba004 AND bmea002 = '",g_sfaa011,"') OR ",
+               #161123-00014#1-e-mod
+               "        (bmea003 = sfba006 AND bmea001 = 'ALL')) ",
+               "   AND sfbaent = ",g_enterprise," AND sfbasite = '",g_site,"'",
+               #161123-00014#1-s-mod
+#               "   AND sfbadocno = '",g_sfaadocno,"' AND sfbaseq1 = 0 AND bmea002 = '",g_sfaa011,"'",
+               "   AND sfbadocno = '",g_sfaadocno,"' AND sfbaseq1 = 0 ",
+               #161123-00014#1-e-mod
+              #161024-00061#1-s
+              #"   AND ((bmea009 IS NULL AND bmea010 IS NULL) OR ",
+              #"        (bmea009 <= '",l_date,"' AND (bmea010 IS NULL OR bmea010 > '",l_date,"')) OR",
+              #"        (bmea009 IS NULL AND bmea009 > '",l_date,"'))",
+              #161024-00061#1-e
+               " ORDER BY sfbaseq,sfbaseq1"
+   PREPARE asft300_02_pre1 FROM g_sql
+   DECLARE asft300_02_cs1 CURSOR FOR asft300_02_pre1 
+   
+#161230-00044#1-s
+#   #2015/09/24 by stellar modify ----- (S)
+##   LET g_sql = "SELECT unique bmea008,imaal003,imaal004,bmea019,bmea013,bmea011,bmea012,0,'N',0,0,0,0,0,0 FROM bmea_t ",
+#   LET g_sql = "SELECT unique 0,0,bmea008,imaal003,imaal004,bmea019,bmea013,bmea011,bmea012,0,'N',0,0,0,0,0,0 FROM bmea_t ",
+#   #2015/09/24 by stellar modify ----- (E)
+#               "  LEFT OUTER JOIN imaal_t ON imaalent = bmeaent AND imaal001 = bmea008 AND imaal002 = '",g_dlang,"'",
+#               " WHERE bmeaent = ",g_enterprise," AND bmeasite = '",g_site,"' AND ((bmea001 = ? AND bmea002 = '",g_sfaa011,"'",
+#               "   AND bmea003 = ? AND bmea004 = ? AND bmea005 = ? AND bmea006 = ? ) OR (bmea001 = 'ALL' AND bmea003 = ?))",
+#               #161024-00061#1-s
+#               "   AND (((bmea009 IS NULL AND bmea010 IS NULL) OR ",
+#               "         (bmea009 <= '",l_date,"' AND (bmea010 IS NULL OR bmea010 > '",l_date,"')) OR",
+#               "         (bmea009 IS NULL AND bmea009 > '",l_date,"'))",
+#               "    OR ( EXISTS (SELECT 1 FROM sfba_t WHERE sfbaent=bmeaent AND sfbasite=bmeasite AND sfbadocno='",g_sfaadocno,"' AND sfba006=bmea008) ))",
+#               #161024-00061#1-e
+#               " ORDER BY bmea008 "
+#161230-00044#1-e
+   #161230-00044#1-s
+   LET g_sql = " SELECT sfbaseq,sfbaseq1,sfba006,imaal003,imaal004,sfba021,sfba014,1,1,sfba013,'N',0,0,0,0,0,0 ",
+               "   FROM sfba_t ",
+               "   LEFT OUTER JOIN imaal_t ON imaalent = sfbaent AND imaal001 = sfba006 AND imaal002 = '",g_dlang,"' ",
+               "  WHERE sfbaent = ",g_enterprise," AND sfbasite = '",g_site,"' ",
+               "    AND sfbadocno = '",g_sfaadocno,"' AND sfbaseq = ? AND sfbaseq1 <> 0 ",
+               "  UNION ",
+               " SELECT UNIQUE 0,0,bmea008,imaal003,imaal004,bmea019,bmea013,bmea011,bmea012,0,'N',0,0,0,0,0,0 ",
+               "   FROM bmea_t ",
+               "   LEFT OUTER JOIN imaal_t ON imaalent = bmeaent AND imaal001 = bmea008 AND imaal002 = '",g_dlang,"' ",
+               "  WHERE bmeaent = ",g_enterprise," AND bmeasite = '",g_site,"' AND ((bmea001 = ? AND bmea002 = '",g_sfaa011,"' ",
+               "    AND bmea003 = ? AND bmea004 = ? AND bmea005 = ? AND bmea006 = ? ) OR (bmea001 = 'ALL' AND bmea003 = ?)) ",
+               "    AND ((bmea009 IS NULL AND bmea010 IS NULL) OR ",
+               "         (bmea009 <= '",l_date,"' AND (bmea010 IS NULL OR bmea010 > '",l_date,"')) OR ",
+               "         (bmea009 IS NULL AND bmea009 > '",l_date,"')) ",
+               "    AND NOT EXISTS (SELECT 1 FROM sfba_t WHERE sfbaent=bmeaent AND sfbasite=bmeasite AND sfbadocno='",g_sfaadocno,"' AND sfba006=bmea008) "
+   #161230-00044#1-e
+   PREPARE asft300_02_pre2 FROM g_sql
+   DECLARE asft300_02_cs2 CURSOR FOR asft300_02_pre2
+   
+#160914-00035#1-s add
+#將FUNCTION asft300_02_tmp_b_fill2()抓資料的CURSOR搬到這邊
+   LET g_sql = "SELECT seq,seq1,part,imaal003,imaal004,feature,unit,mole,deno,qty4, ",
+               "       checkcl,qty5,qty6,qty7,qty8,qty9,qty10 ",
+               "  FROM asft300_02_tmp2 ",
+               "  LEFT JOIN imaal_t ON imaalent = ? AND imaal001 = part AND imaal002 = ? ",
+               " WHERE seq = ?",
+               "   AND seq1= ?",
+               " ORDER BY part "
+   PREPARE asft300_02_tmp_b_fill2_pre FROM g_sql
+   DECLARE asft300_02_tmp_b_fill2_cs CURSOR FOR asft300_02_tmp_b_fill2_pre
+#160914-00035#1-e add
+   
+   #2015/09/24 by stellar mark ----- (S)
+#   CALL asft300_02_b_fill1()
+   #stellar註解：避免效能不加
+#   IF g_rec_b > 0 THEN
+#      CALL asft300_02_b_fill2(1)
+#   END IF 
+   #2015/09/24 by stellar mark ----- (E)
+   
+   WHILE TRUE
+      CALL asft300_02_b_fill1()   #2015/09/24 by stellar add
+      CALL s_transaction_begin()
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_sfba_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+            IF g_rec_b = 0 THEN
+               LET l_flag = 'N'
+               EXIT DIALOG
+            ELSE
+               #2015/09/24 by stellar mark ----- (S)
+#               CALL asft300_02_b_fill1()
+               #2015/09/24 by stellar mark ----- (E)
+            END IF
+            
+         BEFORE ROW
+            LET l_ac = ARR_CURR()
+            #2015/09/24 by stellar modify ----- (S)
+#            CALL asft300_02_b_fill2(l_ac)
+            CALL asft300_02_tmp_b_fill2()
+            #2015/09/24 by stellar modify ----- (E)
+            IF g_rec_b2 > 0 THEN
+               LET l_flag = 'Y'
+               NEXT FIELD qty5
+            ELSE
+               LET l_flag = 'N'
+               EXIT DIALOG
+            END IF               
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfba021
+            #add-point:BEFORE FIELD sfba021 name="input.b.page1.sfba021"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfba021
+            
+            #add-point:AFTER FIELD sfba021 name="input.a.page1.sfba021"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfba021
+            #add-point:ON CHANGE sfba021 name="input.g.page1.sfba021"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD replace
+            #add-point:BEFORE FIELD replace name="input.b.page1.replace"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD replace
+            
+            #add-point:AFTER FIELD replace name="input.a.page1.replace"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE replace
+            #add-point:ON CHANGE replace name="input.g.page1.replace"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD qty1
+            #add-point:BEFORE FIELD qty1 name="input.b.page1.qty1"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD qty1
+            
+            #add-point:AFTER FIELD qty1 name="input.a.page1.qty1"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE qty1
+            #add-point:ON CHANGE qty1 name="input.g.page1.qty1"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.sfba021
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfba021
+            #add-point:ON ACTION controlp INFIELD sfba021 name="input.c.page1.sfba021"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.replace
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD replace
+            #add-point:ON ACTION controlp INFIELD replace name="input.c.page1.replace"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.qty1
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD qty1
+            #add-point:ON ACTION controlp INFIELD qty1 name="input.c.page1.qty1"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            
+            #end add-point
+            
+      END INPUT
+      
+      INPUT ARRAY g_sfba2_d FROM s_detail2.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.body2.action"
+         
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.body2.before_input"
+         
+         BEFORE ROW
+            LET l_ac2 = ARR_CURR()
+            CALL cl_set_comp_entry("checkcl,qty5",TRUE)
+            #如果原來的工單備料裡沒有此筆替代料才允許勾選超领替代
+            SELECT COUNT(1) INTO l_n1 FROM sfba_t
+             WHERE sfbaent = g_enterprise AND sfbasite = g_site
+               AND sfbadocno = g_sfaadocno AND sfbaseq = g_sfba_d[l_ac].sfbaseq
+               AND sfba006 = g_sfba2_d[l_ac2].part
+            IF l_n1 = 0 THEN
+               CALL cl_set_comp_entry("checkcl",TRUE)
+            ELSE
+               CALL cl_set_comp_entry("checkcl",FALSE)
+            END IF
+            
+            IF g_sfba2_d[l_ac2].checkcl = 'Y' THEN
+               LET g_sfba2_d[l_ac2].qty5 = 0
+               CALL cl_set_comp_entry("qty5",FALSE)
+            END IF          
+
+         #2015/09/24 by stellar add ----- (S)
+         ON ROW CHANGE
+            UPDATE asft300_02_tmp2 SET checkcl = g_sfba2_d[l_ac2].checkcl,
+                                       qty5 = g_sfba2_d[l_ac2].qty5,
+                                       qty6 = g_sfba2_d[l_ac2].qty6
+             WHERE seq = g_sfba2_d[l_ac2].seq
+               AND seq1= g_sfba2_d[l_ac2].seq1
+               AND part= g_sfba2_d[l_ac2].part
+               AND feature = g_sfba2_d[l_ac2].feature
+         #2015/09/24 by stellar add ----- (E)
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD seq
+            #add-point:BEFORE FIELD seq name="input.b.page2.seq"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD seq
+            
+            #add-point:AFTER FIELD seq name="input.a.page2.seq"
+#160914-00035#1-s add
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sfba2_d[l_ac2].seq,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD seq
+            END IF
+#160914-00035#1-e add
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE seq
+            #add-point:ON CHANGE seq name="input.g.page2.seq"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD seq1
+            #add-point:BEFORE FIELD seq1 name="input.b.page2.seq1"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD seq1
+            
+            #add-point:AFTER FIELD seq1 name="input.a.page2.seq1"
+#160914-00035#1-s add
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sfba2_d[l_ac2].seq1,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD seq1
+            END IF
+#160914-00035#1-e add
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE seq1
+            #add-point:ON CHANGE seq1 name="input.g.page2.seq1"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD feature
+            #add-point:BEFORE FIELD feature name="input.b.page2.feature"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD feature
+            
+            #add-point:AFTER FIELD feature name="input.a.page2.feature"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE feature
+            #add-point:ON CHANGE feature name="input.g.page2.feature"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD qty4
+            #add-point:BEFORE FIELD qty4 name="input.b.page2.qty4"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD qty4
+            
+            #add-point:AFTER FIELD qty4 name="input.a.page2.qty4"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE qty4
+            #add-point:ON CHANGE qty4 name="input.g.page2.qty4"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD checkcl
+            #add-point:BEFORE FIELD checkcl name="input.b.page2.checkcl"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD checkcl
+            
+            #add-point:AFTER FIELD checkcl name="input.a.page2.checkcl"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE checkcl
+            #add-point:ON CHANGE checkcl name="input.g.page2.checkcl"
+            IF g_sfba2_d[l_ac2].checkcl = 'Y' THEN
+               #160908-00009#1-s
+               LET l_qty6 = 0
+               LET l_qty6_t = 0
+               LET g_sfba2_d[l_ac2].qty6 = l_qty6
+               LET g_sfba_d[l_ac].qty3 =  g_sfba_d[l_ac].qty3 - (g_sfba2_d[l_ac2].qty5 / g_sfba2_d[l_ac2].mole * g_sfba2_d[l_ac2].deno) 
+               #160908-00009#1-e
+               LET g_sfba2_d[l_ac2].qty5 = 0
+               CALL cl_set_comp_entry("qty5",FALSE)
+            END IF
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD qty5
+            #add-point:BEFORE FIELD qty5 name="input.b.page2.qty5"
+            LET l_ac2 = ARR_CURR()
+            LET g_sfba2_d_t.qty5 = g_sfba2_d[l_ac2].qty5
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD qty5
+            
+            #add-point:AFTER FIELD qty5 name="input.a.page2.qty5"
+            IF cl_null(g_sfba2_d[l_ac2].qty5) THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'asf-00067'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET g_sfba2_d[l_ac2].qty5 = g_sfba2_d_t.qty5
+               NEXT FIELD qty5
+            END IF 
+            #IF g_sfba2_d[l_ac2].qty5 != 0 THEN  #161230-00044#1
+            
+               #160726-00018 by whitney add start
+               #此替代料%1已有過帳數量，修改後的替代數量%2不可以小於發料數量%3！
+               LET l_sfba016 = 0
+               SELECT NVL(sfba016,0) INTO l_sfba016
+                 FROM sfba_t
+                WHERE sfbaent = g_enterprise
+                  AND sfbasite = g_site
+                  AND sfbadocno = g_sfaadocno
+                  AND sfbaseq = g_sfba_d[l_ac].sfbaseq
+                  AND sfba006 = g_sfba2_d[l_ac2].part
+               IF (g_sfba2_d[l_ac2].qty4 + g_sfba2_d[l_ac2].qty5) < l_sfba016 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'asf-00744'
+                  LET g_errparam.replace[1] = g_sfba2_d[l_ac2].part
+                  LET g_errparam.replace[2] = g_sfba2_d[l_ac2].qty4 + g_sfba2_d[l_ac2].qty5
+                  LET g_errparam.replace[3] = l_sfba016
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_sfba2_d[l_ac2].qty5 = g_sfba2_d_t.qty5
+                  NEXT FIELD qty5
+               END IF
+               #160726-00018 by whitney add end
+               
+               IF (g_sfba2_d[l_ac2].qty4 + g_sfba2_d[l_ac2].qty5) < 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'asf-00068'
+                  LET g_errparam.extend = g_sfba2_d[l_ac2].qty5
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_sfba2_d[l_ac2].qty5 = g_sfba2_d_t.qty5
+                  NEXT FIELD qty5
+               END IF 
+               
+                  
+               LET l_qty6 = g_sfba2_d[l_ac2].qty5 / g_sfba2_d[l_ac2].mole * g_sfba2_d[l_ac2].deno
+               LET l_qty6_t = g_sfba2_d_t.qty5 / g_sfba2_d[l_ac2].mole * g_sfba2_d[l_ac2].deno
+               
+               #160726-00018 by whitney add start
+               #調整後欲被替代的料號%1的應發數量不能小於已發數量%2！
+               IF g_sfba_d[l_ac].sfba016 > 0 THEN
+                  IF (g_sfba_d[l_ac].qty1 - g_sfba_d[l_ac].qty2 - g_sfba_d[l_ac].sfba016) < l_qty6 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'asf-00745'
+                     LET g_errparam.replace[1] = g_sfba_d[l_ac].sfba005
+                     LET g_errparam.replace[2] = g_sfba_d[l_ac].sfba016
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_sfba2_d[l_ac2].qty5 = g_sfba2_d_t.qty5
+                     NEXT FIELD qty5
+                  END IF
+               END IF
+               #160726-00018 by whitney add end
+               
+               #替代料為完全替代時，應要控制全部的應發量都要轉換為替代料數量
+               IF g_bmea[l_ac2].bmea016 = '2' THEN
+                  IF l_qty6 + g_sfba2_d[l_ac2].qty4 != g_sfba_d[l_ac].qty1 - g_sfba_d[l_ac].qty2 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'asf-00326'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_sfba2_d[l_ac2].qty5 = g_sfba2_d_t.qty5
+                     NEXT FIELD qty5
+                  END IF
+               END IF
+               
+               #替代料为部分替代时，替代料的數量不可超过上限比率
+               IF g_bmea[l_ac2].bmea016 = '1' THEN
+                  IF l_qty6 > g_sfba_d[l_ac].qty1 * g_bmea[l_ac2].bmea017 / 100 - g_sfba_d[l_ac].qty2 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'asf-00327'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_sfba2_d[l_ac2].qty5 = g_sfba2_d_t.qty5
+                     NEXT FIELD qty5
+                  END IF
+               END IF
+               
+               #折合量与已取代量之和不可大于总应发量
+               IF (g_sfba_d[l_ac].qty3 - l_qty6_t + l_qty6 + g_sfba_d[l_ac].qty2) > g_sfba_d[l_ac].qty1 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'asf-00069'
+                  LET g_errparam.extend = g_sfba2_d[l_ac2].qty5
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_sfba2_d[l_ac2].qty5 = g_sfba2_d_t.qty5
+                  NEXT FIELD qty5
+               END IF
+               LET g_sfba2_d[l_ac2].qty6 = l_qty6
+               LET g_sfba_d[l_ac].qty3 =  g_sfba_d[l_ac].qty3 - l_qty6_t + l_qty6
+               DISPLAY BY NAME g_sfba_d[l_ac].qty3 
+               
+            #END IF  #161230-00044#1
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE qty5
+            #add-point:ON CHANGE qty5 name="input.g.page2.qty5"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD qty6
+            #add-point:BEFORE FIELD qty6 name="input.b.page2.qty6"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD qty6
+            
+            #add-point:AFTER FIELD qty6 name="input.a.page2.qty6"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE qty6
+            #add-point:ON CHANGE qty6 name="input.g.page2.qty6"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD qty7
+            #add-point:BEFORE FIELD qty7 name="input.b.page2.qty7"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD qty7
+            
+            #add-point:AFTER FIELD qty7 name="input.a.page2.qty7"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE qty7
+            #add-point:ON CHANGE qty7 name="input.g.page2.qty7"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD qty8
+            #add-point:BEFORE FIELD qty8 name="input.b.page2.qty8"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD qty8
+            
+            #add-point:AFTER FIELD qty8 name="input.a.page2.qty8"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE qty8
+            #add-point:ON CHANGE qty8 name="input.g.page2.qty8"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD qty9
+            #add-point:BEFORE FIELD qty9 name="input.b.page2.qty9"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD qty9
+            
+            #add-point:AFTER FIELD qty9 name="input.a.page2.qty9"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE qty9
+            #add-point:ON CHANGE qty9 name="input.g.page2.qty9"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD qty10
+            #add-point:BEFORE FIELD qty10 name="input.b.page2.qty10"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD qty10
+            
+            #add-point:AFTER FIELD qty10 name="input.a.page2.qty10"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE qty10
+            #add-point:ON CHANGE qty10 name="input.g.page2.qty10"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page2.seq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD seq
+            #add-point:ON ACTION controlp INFIELD seq name="input.c.page2.seq"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.seq1
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD seq1
+            #add-point:ON ACTION controlp INFIELD seq1 name="input.c.page2.seq1"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.feature
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD feature
+            #add-point:ON ACTION controlp INFIELD feature name="input.c.page2.feature"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.qty4
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD qty4
+            #add-point:ON ACTION controlp INFIELD qty4 name="input.c.page2.qty4"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.checkcl
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD checkcl
+            #add-point:ON ACTION controlp INFIELD checkcl name="input.c.page2.checkcl"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.qty5
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD qty5
+            #add-point:ON ACTION controlp INFIELD qty5 name="input.c.page2.qty5"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.qty6
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD qty6
+            #add-point:ON ACTION controlp INFIELD qty6 name="input.c.page2.qty6"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.qty7
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD qty7
+            #add-point:ON ACTION controlp INFIELD qty7 name="input.c.page2.qty7"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.qty8
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD qty8
+            #add-point:ON ACTION controlp INFIELD qty8 name="input.c.page2.qty8"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.qty9
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD qty9
+            #add-point:ON ACTION controlp INFIELD qty9 name="input.c.page2.qty9"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.qty10
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD qty10
+            #add-point:ON ACTION controlp INFIELD qty10 name="input.c.page2.qty10"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.body2.other"
+                           
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.body2.after_input"
+ 
+            #end add-point
+            
+      END INPUT
+ 
+      
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   IF l_flag = 'N' THEN
+      DISPLAY ARRAY g_sfba_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b)
+         BEFORE ROW
+            LET l_ac = DIALOG.getCurrentRow("s_detail1")
+            
+         ON ACTION cancel
+            LET INT_FLAG = TRUE 
+            EXIT DISPLAY
+    
+         ON ACTION close
+            LET INT_FLAG = TRUE 
+            EXIT DISPLAY
+    
+         ON ACTION exit
+            LET INT_FLAG = TRUE 
+            EXIT DISPLAY          
+      END DISPLAY
+   END IF
+   
+   IF INT_FLAG THEN
+      CALL s_transaction_end('N',0)
+      LET INT_FLAG = 0
+      EXIT WHILE
+   ELSE
+      #2015/09/24 by stellar modify ----- (S)
+#      IF NOT asft300_02_sfba(l_ac) THEN
+      IF NOT asft300_02_sfba1() THEN
+      #2015/09/24 by stellar modify ----- (E)
+         CALL s_transaction_end('N',0)
+      ELSE
+         CALL s_transaction_end('Y',0)
+      END IF
+      IF NOT cl_ask_confirm('asf-00191') THEN
+         EXIT WHILE
+      END IF
+   END IF
+   
+   END WHILE
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_asft300_02 
+   
+   #add-point:input段after input name="input.post_input"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft300_02.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="asft300_02.other_function" readonly="Y" >}
+#单身一显示
+PRIVATE FUNCTION asft300_02_b_fill1()
+DEFINE l_i       LIKE type_t.num5
+DEFINE l_qty3    LIKE sfba_t.sfba013
+DEFINE l_sfba001 LIKE sfba_t.sfba001
+
+  DELETE FROM asft300_02_tmp2   #2015/09/24 by stellar add
+  
+  CALL g_sfba_d.clear()
+  CALL g_sfba2_d.clear()  #160329-00028 by whitney add
+  
+  LET l_ac = 1
+ #FOREACH asft300_02_cs1 INTO g_sfba_d[l_ac].* #161109-00085#62 mark
+  #161109-00085#62 --s add
+  FOREACH asft300_02_cs1 INTO g_sfba_d[l_ac].sfbaseq,g_sfba_d[l_ac].sfbaseq1,g_sfba_d[l_ac].sfba002,g_sfba_d[l_ac].sfba003,g_sfba_d[l_ac].sfba004,
+                              g_sfba_d[l_ac].sfba005,g_sfba_d[l_ac].sfba005_desc,g_sfba_d[l_ac].sfba005_desc_desc,g_sfba_d[l_ac].sfba021,g_sfba_d[l_ac].replace,
+                              g_sfba_d[l_ac].qty1,g_sfba_d[l_ac].qty2,g_sfba_d[l_ac].qty3,g_sfba_d[l_ac].sfba016
+  #161109-00085#62 --e add
+     IF SQLCA.sqlcode THEN
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.code = SQLCA.sqlcode
+        LET g_errparam.extend = "FOREACH:"
+        LET g_errparam.popup = TRUE
+        CALL cl_err()
+
+        EXIT FOREACH
+     END IF
+     CALL asft300_02_b_fill2(l_ac)
+     LET l_qty3 = 0
+     FOR l_i = 1 TO g_rec_b2
+        LET l_qty3 = l_qty3 + g_sfba2_d[l_i].qty6
+     END FOR
+     LET g_sfba_d[l_ac].qty3 = g_sfba_d[l_ac].qty3 + l_qty3
+     
+     #取替代建议
+     SELECT sfba001 INTO l_sfba001 FROM sfba_t
+      WHERE sfbaent = g_enterprise AND sfbasite = g_site AND sfbadocno = g_sfaadocno
+        AND sfbaseq = g_sfba_d[l_ac].sfbaseq AND sfbaseq1 = 0
+        
+     CALL s_abmm201_get_proposal(g_site,l_sfba001,g_sfaa011,g_sfba_d[l_ac].sfba005,g_sfba_d[l_ac].sfba002,g_sfba_d[l_ac].sfba003,g_sfba_d[l_ac].sfba004) RETURNING g_sfba_d[l_ac].replace
+     
+     SELECT SUM(sfba013/sfba022) INTO g_sfba_d[l_ac].qty1 FROM sfba_t 
+      WHERE sfbaent = g_enterprise AND sfbasite = g_site AND sfbadocno = g_sfaadocno AND sfbaseq = g_sfba_d[l_ac].sfbaseq
+     IF cl_null(g_sfba_d[l_ac].qty1) THEN
+        LET g_sfba_d[l_ac].qty1 = 0
+     END IF 
+     SELECT SUM(sfba013/sfba022) INTO g_sfba_d[l_ac].qty2 FROM sfba_t 
+      WHERE sfbaent = g_enterprise AND sfbasite = g_site AND sfbadocno = g_sfaadocno AND sfbaseq = g_sfba_d[l_ac].sfbaseq
+        AND sfbaseq1 != 0
+     IF cl_null(g_sfba_d[l_ac].qty2) THEN
+        LET g_sfba_d[l_ac].qty2 = 0
+     END IF 
+
+     LET l_ac = l_ac + 1
+     IF l_ac > g_max_rec THEN
+        EXIT FOREACH
+     END IF
+  END FOREACH
+  CALL g_sfba_d.deleteElement(g_sfba_d.getLength())
+  LET g_rec_b = l_ac - 1
+END FUNCTION
+#单身二显示
+PRIVATE FUNCTION asft300_02_b_fill2(p_ac)
+DEFINE p_ac         LIKE type_t.num5
+DEFINE l_n          LIKE type_t.num5
+DEFINE l_n1         LIKE type_t.num5
+DEFINE l_bmea014    LIKE bmea_t.bmea014
+DEFINE l_sfba001    LIKE sfba_t.sfba001
+DEFINE l_flag       LIKE type_t.chr1
+
+  CALL g_sfba2_d.clear()
+  
+  SELECT sfba001 INTO l_sfba001 FROM sfba_t
+   WHERE sfbaent = g_enterprise AND sfbasite = g_site AND sfbadocno = g_sfaadocno
+     AND sfbaseq = g_sfba_d[p_ac].sfbaseq AND sfbaseq1 = 0
+     
+  LET l_ac2 = 1
+  #161230-00044#1-s
+  #FOREACH asft300_02_cs2 USING l_sfba001,g_sfba_d[p_ac].sfba005,g_sfba_d[p_ac].sfba002,g_sfba_d[p_ac].sfba003,g_sfba_d[p_ac].sfba004,g_sfba_d[p_ac].sfba005 INTO g_sfba2_d[l_ac2].*
+  FOREACH asft300_02_cs2 USING g_sfba_d[p_ac].sfbaseq,l_sfba001,g_sfba_d[p_ac].sfba005,g_sfba_d[p_ac].sfba002,g_sfba_d[p_ac].sfba003,g_sfba_d[p_ac].sfba004,g_sfba_d[p_ac].sfba005 INTO g_sfba2_d[l_ac2].*
+  #161230-00044#1-e
+     IF SQLCA.sqlcode THEN
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.code = SQLCA.sqlcode
+        LET g_errparam.extend = "FOREACH:"
+        LET g_errparam.popup = TRUE
+        CALL cl_err()
+        EXIT FOREACH
+     END IF
+     
+     
+     #先判断是否是全主件替代
+     LET l_flag = 'N'  #全主件替代判断标识位
+     SELECT COUNT(1) INTO l_n FROM bmea_t WHERE bmeaent=g_enterprise AND bmeasite = g_site 
+        AND bmea001 = 'ALL' AND bmea003 = g_sfba_d[p_ac].sfba005 AND bmea008 = g_sfba2_d[l_ac2].part
+     IF l_n = 0 THEN
+        LET l_flag = 'Y'
+        SELECT COUNT(1) INTO l_n FROM bmea_t WHERE bmeaent=g_enterprise AND bmeasite = g_site AND bmea001 = l_sfba001 AND bmea002 = g_sfaa011
+           AND bmea003 = g_sfba_d[p_ac].sfba005 AND bmea004 = g_sfba_d[p_ac].sfba002 AND bmea005 = g_sfba_d[p_ac].sfba003 AND bmea006 = g_sfba_d[p_ac].sfba004
+           AND bmea008 = g_sfba2_d[l_ac2].part 
+           AND bmea019 = g_sfba2_d[l_ac2].feature
+     END IF
+     IF l_n > 1 THEN
+        SELECT bmea014,bmea016,bmea017 INTO g_bmea[l_ac2].* FROM bmea_t WHERE bmeaent=g_enterprise AND bmeasite = g_site AND bmea001 = l_sfba001 AND bmea002 = g_sfaa011
+           AND bmea003 = g_sfba_d[p_ac].sfba005 AND bmea004 = g_sfba_d[p_ac].sfba002 AND bmea005 = g_sfba_d[p_ac].sfba003 AND bmea006 = g_sfba_d[p_ac].sfba004
+           AND bmea008 = g_sfba2_d[l_ac2].part AND bmea007 = '2'
+           AND bmea019 = g_sfba2_d[l_ac2].feature
+        #替代料有限定客戶,需检查
+        IF g_bmea[l_ac2].bmea014 = 'Y' AND NOT cl_null(g_sfaa009) THEN
+           SELECT COUNT(1) INTO l_n1 FROM bmeb_t WHERE bmebent=g_enterprise AND bmebsite = g_site AND bmeb001 = l_sfba001 AND bmeb002 = g_sfaa011
+              AND bmeb003 = g_sfba_d[p_ac].sfba005 AND bmeb004 = g_sfba_d[p_ac].sfba002 AND bmeb005 = g_sfba_d[p_ac].sfba003 AND bmeb006 = g_sfba_d[p_ac].sfba004
+              AND bmeb008 = g_sfba2_d[l_ac2].part AND bmeb007 = '2' AND bmeb009 = g_sfaa009
+              AND bmeb010 = g_sfba2_d[l_ac2].feature
+           IF l_n1 = 0 THEN
+              CONTINUE FOREACH
+           END IF
+        END IF
+     ELSE
+        IF l_flag = 'N' THEN
+           SELECT bmea014,bmea016,bmea017 INTO g_bmea[l_ac2].* FROM bmea_t WHERE bmeaent=g_enterprise AND bmeasite = g_site
+              AND bmea001 = 'ALL' AND bmea003 = g_sfba_d[p_ac].sfba005
+              AND bmea008 = g_sfba2_d[l_ac2].part AND bmea019 = g_sfba2_d[l_ac2].feature
+           #替代料有限定客戶,需检查
+           IF g_bmea[l_ac2].bmea014 = 'Y' AND NOT cl_null(g_sfaa009) THEN
+              SELECT COUNT(1) INTO l_n1 FROM bmeb_t WHERE bmebent=g_enterprise AND bmebsite = g_site 
+                 AND bmeb001 = 'ALL' AND bmeb003 = g_sfba_d[p_ac].sfba005 
+                 AND bmeb008 = g_sfba2_d[l_ac2].part  AND bmeb009 = g_sfaa009
+                 AND bmeb010 = g_sfba2_d[l_ac2].feature
+              IF l_n1 = 0 THEN
+                 CONTINUE FOREACH
+              END IF
+           END IF
+        ELSE
+           SELECT bmea014,bmea016,bmea017 INTO g_bmea[l_ac2].* FROM bmea_t WHERE bmeaent=g_enterprise AND bmeasite = g_site AND bmea001 = l_sfba001 AND bmea002 = g_sfaa011
+              AND bmea003 = g_sfba_d[p_ac].sfba005 AND bmea004 = g_sfba_d[p_ac].sfba002 AND bmea005 = g_sfba_d[p_ac].sfba003 AND bmea006 = g_sfba_d[p_ac].sfba004
+              AND bmea008 = g_sfba2_d[l_ac2].part
+              AND bmea019 = g_sfba2_d[l_ac2].feature
+           #替代料有限定客戶,需检查
+           IF g_bmea[l_ac2].bmea014 = 'Y' AND NOT cl_null(g_sfaa009) THEN
+              SELECT COUNT(1) INTO l_n1 FROM bmeb_t WHERE bmebent=g_enterprise AND bmebsite = g_site AND bmeb001 = l_sfba001 AND bmeb002 = g_sfaa011
+                 AND bmeb003 = g_sfba_d[p_ac].sfba005 AND bmeb004 = g_sfba_d[p_ac].sfba002 AND bmeb005 = g_sfba_d[p_ac].sfba003 AND bmeb006 = g_sfba_d[p_ac].sfba004
+                 AND bmeb008 = g_sfba2_d[l_ac2].part  AND bmeb009 = g_sfaa009
+                 AND bmeb010 = g_sfba2_d[l_ac2].feature
+              IF l_n1 = 0 THEN
+                 CONTINUE FOREACH
+              END IF
+           END IF
+        END IF
+     END IF
+     
+     #161230-00044#1-s
+     #SELECT SUM(sfba013) INTO g_sfba2_d[l_ac2].qty4 FROM sfba_t WHERE sfbaent = g_enterprise AND sfbasite = g_site
+     #   AND sfbadocno = g_sfaadocno
+     #   AND sfbaseq = g_sfba_d[p_ac].sfbaseq AND sfba006 = g_sfba2_d[l_ac2].part
+     #   AND sfba021 = g_sfba2_d[l_ac2].feature
+     #161230-00044#1-e
+     IF cl_null(g_sfba2_d[l_ac2].qty4) THEN
+        LET g_sfba2_d[l_ac2].qty4 = 0
+     END IF 
+     LET g_sfba2_d[l_ac2].qty6 = g_sfba2_d[l_ac2].qty5*g_sfba2_d[l_ac2].mole/g_sfba2_d[l_ac2].deno
+     SELECT SUM(inag009) INTO g_sfba2_d[l_ac2].qty7 FROM inag_t WHERE inagent = g_enterprise AND inagsite = g_site 
+        AND inag001 = g_sfba2_d[l_ac2].part AND inag010 = 'Y'
+        AND inag002 = g_sfba2_d[l_ac2].feature
+     LET g_sfba2_d[l_ac2].qty10 = g_sfba2_d[l_ac2].qty7 + g_sfba2_d[l_ac2].qty8 - g_sfba2_d[l_ac2].qty9
+     
+     #2015/09/24 by stellar add ----- (S)
+     #stellar修改：記錄在temp table
+     INSERT INTO asft300_02_tmp2(seq,seq1,part,feature,unit,mole,deno,qty4,checkcl,qty5,qty6,qty7,qty8,qty9,qty10)
+        VALUES(g_sfba_d[l_ac].sfbaseq,g_sfba_d[l_ac].sfbaseq1,g_sfba2_d[l_ac2].part,g_sfba2_d[l_ac2].feature,
+               g_sfba2_d[l_ac2].unit,g_sfba2_d[l_ac2].mole,g_sfba2_d[l_ac2].deno,g_sfba2_d[l_ac2].qty4,
+               g_sfba2_d[l_ac2].checkcl,g_sfba2_d[l_ac2].qty5,g_sfba2_d[l_ac2].qty6,g_sfba2_d[l_ac2].qty7,
+               g_sfba2_d[l_ac2].qty8,g_sfba2_d[l_ac2].qty9,g_sfba2_d[l_ac2].qty10)
+     IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.code = SQLCA.sqlcode
+        LET g_errparam.extend = 'ins asft300_02_tmp2'
+        LET g_errparam.popup = TRUE
+        CALL cl_err()
+        EXIT FOREACH
+     END IF
+     #2015/09/24 by stellar add ----- (E)
+     
+     LET l_ac2 = l_ac2 + 1
+     IF l_ac2 > g_max_rec THEN
+        EXIT FOREACH
+     END IF
+  END FOREACH
+  CALL g_sfba2_d.deleteElement(g_sfba2_d.getLength())
+  LET g_rec_b2 = l_ac2 - 1
+
+END FUNCTION
+#将取替代料产生入工单单身
+PRIVATE FUNCTION asft300_02_sfba(p_ac)
+DEFINE p_ac                 LIKE type_t.num5
+DEFINE l_sfaa004            LIKE sfaa_t.sfaa004
+DEFINE l_i                  LIKE type_t.num5
+#161109-00085#28-s
+#DEFINE l_sfba               RECORD LIKE sfba_t.*
+DEFINE l_sfba RECORD  #工單備料單身檔
+       sfbaent LIKE sfba_t.sfbaent, #企業編號
+       sfbasite LIKE sfba_t.sfbasite, #營運據點
+       sfbadocno LIKE sfba_t.sfbadocno, #單號
+       sfbaseq LIKE sfba_t.sfbaseq, #項次
+       sfbaseq1 LIKE sfba_t.sfbaseq1, #項序
+       sfba001 LIKE sfba_t.sfba001, #上階料號
+       sfba002 LIKE sfba_t.sfba002, #部位
+       sfba003 LIKE sfba_t.sfba003, #作業編號
+       sfba004 LIKE sfba_t.sfba004, #作業序
+       sfba005 LIKE sfba_t.sfba005, #BOM料號
+       sfba006 LIKE sfba_t.sfba006, #發料料號
+       sfba007 LIKE sfba_t.sfba007, #投料時距
+       sfba008 LIKE sfba_t.sfba008, #必要特性
+       sfba009 LIKE sfba_t.sfba009, #倒扣料
+       sfba010 LIKE sfba_t.sfba010, #標準QPA分子
+       sfba011 LIKE sfba_t.sfba011, #標準QPA分母
+       sfba012 LIKE sfba_t.sfba012, #允許誤差率
+       sfba013 LIKE sfba_t.sfba013, #應發數量
+       sfba014 LIKE sfba_t.sfba014, #單位
+       sfba015 LIKE sfba_t.sfba015, #委外代買數量
+       sfba016 LIKE sfba_t.sfba016, #已發數量
+       sfba017 LIKE sfba_t.sfba017, #報廢數量
+       sfba018 LIKE sfba_t.sfba018, #盤虧數量
+       sfba019 LIKE sfba_t.sfba019, #指定發料倉庫
+       sfba020 LIKE sfba_t.sfba020, #指定發料儲位
+       sfba021 LIKE sfba_t.sfba021, #產品特徵
+       sfba022 LIKE sfba_t.sfba022, #替代率
+       sfba023 LIKE sfba_t.sfba023, #標準應發數量
+       sfba024 LIKE sfba_t.sfba024, #調整應發數量
+       sfba025 LIKE sfba_t.sfba025, #超領數量
+       sfba026 LIKE sfba_t.sfba026, #SET替代狀態
+       sfba027 LIKE sfba_t.sfba027, #SET替代群組
+       sfba028 LIKE sfba_t.sfba028, #客供料
+       sfba029 LIKE sfba_t.sfba029, #指定發料批號
+       sfba030 LIKE sfba_t.sfba030, #指定庫存管理特徵
+       #161109-00085#62 --s add
+       sfbaud001 LIKE sfba_t.sfbaud001, #自定義欄位(文字)001
+       sfbaud002 LIKE sfba_t.sfbaud002, #自定義欄位(文字)002
+       sfbaud003 LIKE sfba_t.sfbaud003, #自定義欄位(文字)003
+       sfbaud004 LIKE sfba_t.sfbaud004, #自定義欄位(文字)004
+       sfbaud005 LIKE sfba_t.sfbaud005, #自定義欄位(文字)005
+       sfbaud006 LIKE sfba_t.sfbaud006, #自定義欄位(文字)006
+       sfbaud007 LIKE sfba_t.sfbaud007, #自定義欄位(文字)007
+       sfbaud008 LIKE sfba_t.sfbaud008, #自定義欄位(文字)008
+       sfbaud009 LIKE sfba_t.sfbaud009, #自定義欄位(文字)009
+       sfbaud010 LIKE sfba_t.sfbaud010, #自定義欄位(文字)010
+       sfbaud011 LIKE sfba_t.sfbaud011, #自定義欄位(數字)011
+       sfbaud012 LIKE sfba_t.sfbaud012, #自定義欄位(數字)012
+       sfbaud013 LIKE sfba_t.sfbaud013, #自定義欄位(數字)013
+       sfbaud014 LIKE sfba_t.sfbaud014, #自定義欄位(數字)014
+       sfbaud015 LIKE sfba_t.sfbaud015, #自定義欄位(數字)015
+       sfbaud016 LIKE sfba_t.sfbaud016, #自定義欄位(數字)016
+       sfbaud017 LIKE sfba_t.sfbaud017, #自定義欄位(數字)017
+       sfbaud018 LIKE sfba_t.sfbaud018, #自定義欄位(數字)018
+       sfbaud019 LIKE sfba_t.sfbaud019, #自定義欄位(數字)019
+       sfbaud020 LIKE sfba_t.sfbaud020, #自定義欄位(數字)020
+       sfbaud021 LIKE sfba_t.sfbaud021, #自定義欄位(日期時間)021
+       sfbaud022 LIKE sfba_t.sfbaud022, #自定義欄位(日期時間)022
+       sfbaud023 LIKE sfba_t.sfbaud023, #自定義欄位(日期時間)023
+       sfbaud024 LIKE sfba_t.sfbaud024, #自定義欄位(日期時間)024
+       sfbaud025 LIKE sfba_t.sfbaud025, #自定義欄位(日期時間)025
+       sfbaud026 LIKE sfba_t.sfbaud026, #自定義欄位(日期時間)026
+       sfbaud027 LIKE sfba_t.sfbaud027, #自定義欄位(日期時間)027
+       sfbaud028 LIKE sfba_t.sfbaud028, #自定義欄位(日期時間)028
+       sfbaud029 LIKE sfba_t.sfbaud029, #自定義欄位(日期時間)029
+       sfbaud030 LIKE sfba_t.sfbaud030, #自定義欄位(日期時間)030
+       #161109-00085#62 --e add
+       sfba031 LIKE sfba_t.sfba031, #備置量
+       sfba032 LIKE sfba_t.sfba032, #備置理由碼
+       sfba033 LIKE sfba_t.sfba033, #保稅否
+       sfba034 LIKE sfba_t.sfba034, #SET被替代群組
+       sfba035 LIKE sfba_t.sfba035  #SET替代套數
+END RECORD
+#161109-00085#28-e
+
+DEFINE l_sfba015            LIKE sfba_t.sfba015    #20150909 by wuxja  add
+
+  # CALL s_transaction_begin()
+   FOR l_i = 1 TO g_rec_b2
+      IF (g_sfba2_d[l_i].qty4 = 0 AND g_sfba2_d[l_i].qty5 != 0) OR g_sfba2_d[l_i].checkcl = 'Y' THEN 
+         #161109-00085#28-s
+         #SELECT * INTO l_sfba.* FROM sfba_t WHERE sfbaent = g_enterprise AND sfbasite = g_site
+         #161109-00085#62 --s mark
+         #SELECT sfbaent,sfbasite,sfbadocno,sfbaseq,sfbaseq1,sfba001,sfba002,sfba003,sfba004,sfba005,
+         #       sfba006,sfba007,sfba008,sfba009,sfba010,sfba011,sfba012,sfba013,sfba014,sfba015,
+         #       sfba016,sfba017,sfba018,sfba019,sfba020,sfba021,sfba022,sfba023,sfba024,sfba025,
+         #       sfba026,sfba027,sfba028,sfba029,sfba030,sfba031,sfba032,sfba033,sfba034,sfba035
+         #  INTO l_sfba.sfbaent,l_sfba.sfbasite,l_sfba.sfbadocno,l_sfba.sfbaseq,l_sfba.sfbaseq1,
+         #       l_sfba.sfba001,l_sfba.sfba002,l_sfba.sfba003,l_sfba.sfba004,l_sfba.sfba005,
+         #       l_sfba.sfba006,l_sfba.sfba007,l_sfba.sfba008,l_sfba.sfba009,l_sfba.sfba010,
+         #       l_sfba.sfba011,l_sfba.sfba012,l_sfba.sfba013,l_sfba.sfba014,l_sfba.sfba015,
+         #       l_sfba.sfba016,l_sfba.sfba017,l_sfba.sfba018,l_sfba.sfba019,l_sfba.sfba020,
+         #       l_sfba.sfba021,l_sfba.sfba022,l_sfba.sfba023,l_sfba.sfba024,l_sfba.sfba025,
+         #       l_sfba.sfba026,l_sfba.sfba027,l_sfba.sfba028,l_sfba.sfba029,l_sfba.sfba030,
+         #       l_sfba.sfba031,l_sfba.sfba032,l_sfba.sfba033,l_sfba.sfba034,l_sfba.sfba035 
+         #161109-00085#62 --e mark
+         #161109-00085#62 --s add
+         SELECT sfbaent,sfbasite,sfbadocno,sfbaseq,sfbaseq1,
+                sfba001,sfba002,sfba003,sfba004,sfba005,
+                sfba006,sfba007,sfba008,sfba009,sfba010,
+                sfba011,sfba012,sfba013,sfba014,sfba015,
+                sfba016,sfba017,sfba018,sfba019,sfba020,
+                sfba021,sfba022,sfba023,sfba024,sfba025,
+                sfba026,sfba027,sfba028,sfba029,sfba030,
+                sfbaud001,sfbaud002,sfbaud003,sfbaud004,sfbaud005,
+                sfbaud006,sfbaud007,sfbaud008,sfbaud009,sfbaud010,
+                sfbaud011,sfbaud012,sfbaud013,sfbaud014,sfbaud015,
+                sfbaud016,sfbaud017,sfbaud018,sfbaud019,sfbaud020,
+                sfbaud021,sfbaud022,sfbaud023,sfbaud024,sfbaud025,
+                sfbaud026,sfbaud027,sfbaud028,sfbaud029,sfbaud030,
+                sfba031,sfba032,sfba033,sfba034,sfba035
+           INTO l_sfba.sfbaent,l_sfba.sfbasite,l_sfba.sfbadocno,l_sfba.sfbaseq,l_sfba.sfbaseq1,
+                l_sfba.sfba001,l_sfba.sfba002,l_sfba.sfba003,l_sfba.sfba004,l_sfba.sfba005,
+                l_sfba.sfba006,l_sfba.sfba007,l_sfba.sfba008,l_sfba.sfba009,l_sfba.sfba010,
+                l_sfba.sfba011,l_sfba.sfba012,l_sfba.sfba013,l_sfba.sfba014,l_sfba.sfba015,
+                l_sfba.sfba016,l_sfba.sfba017,l_sfba.sfba018,l_sfba.sfba019,l_sfba.sfba020,
+                l_sfba.sfba021,l_sfba.sfba022,l_sfba.sfba023,l_sfba.sfba024,l_sfba.sfba025,
+                l_sfba.sfba026,l_sfba.sfba027,l_sfba.sfba028,l_sfba.sfba029,l_sfba.sfba030,
+                l_sfba.sfbaud001,l_sfba.sfbaud002,l_sfba.sfbaud003,l_sfba.sfbaud004,l_sfba.sfbaud005,
+                l_sfba.sfbaud006,l_sfba.sfbaud007,l_sfba.sfbaud008,l_sfba.sfbaud009,l_sfba.sfbaud010,
+                l_sfba.sfbaud011,l_sfba.sfbaud012,l_sfba.sfbaud013,l_sfba.sfbaud014,l_sfba.sfbaud015,
+                l_sfba.sfbaud016,l_sfba.sfbaud017,l_sfba.sfbaud018,l_sfba.sfbaud019,l_sfba.sfbaud020,
+                l_sfba.sfbaud021,l_sfba.sfbaud022,l_sfba.sfbaud023,l_sfba.sfbaud024,l_sfba.sfbaud025,
+                l_sfba.sfbaud026,l_sfba.sfbaud027,l_sfba.sfbaud028,l_sfba.sfbaud029,l_sfba.sfbaud030,
+                l_sfba.sfba031,l_sfba.sfba032,l_sfba.sfba033,l_sfba.sfba034,l_sfba.sfba035
+         #161109-00085#62 --e add
+         FROM sfba_t
+        WHERE sfbaent = g_enterprise AND sfbasite = g_site
+         #161109-00085#28-e         
+            AND sfbadocno = g_sfaadocno AND sfbaseq = g_sfba_d[p_ac].sfbaseq AND sfbaseq1 = 0
+         LET l_sfba015 = l_sfba.sfba015            #20150909 by wuxja  add
+         LET l_sfba.sfbaent = g_enterprise
+         LET l_sfba.sfbasite = g_site
+         LET l_sfba.sfbadocno = g_sfaadocno
+         LET l_sfba.sfbaseq = g_sfba_d[p_ac].sfbaseq
+         SELECT MAX(sfbaseq1)+ 1 INTO l_sfba.sfbaseq1 FROM sfba_t
+          WHERE sfbaent = g_enterprise AND sfbasite = g_site AND sfbadocno = g_sfaadocno AND sfbaseq = l_sfba.sfbaseq
+         LET l_sfba.sfba002 = g_sfba_d[p_ac].sfba002
+         LET l_sfba.sfba003 = g_sfba_d[p_ac].sfba003
+         LET l_sfba.sfba004 = g_sfba_d[p_ac].sfba004
+         LET l_sfba.sfba005 = g_sfba_d[p_ac].sfba005
+         LET l_sfba.sfba006 = g_sfba2_d[l_i].part
+         LET l_sfba.sfba007=0        
+         LET l_sfba.sfba010=0
+         LET l_sfba.sfba011=0
+         LET l_sfba.sfba012=0
+         LET l_sfba.sfba015=0
+         LET l_sfba.sfba016=0
+         LET l_sfba.sfba017=0
+         LET l_sfba.sfba018=0
+         LET l_sfba.sfba021=g_sfba2_d[l_i].feature
+         LET l_sfba.sfba022=g_sfba2_d[l_i].mole/g_sfba2_d[l_i].deno
+         LET l_sfba.sfba023=0
+         LET l_sfba.sfba024=0
+         LET l_sfba.sfba025=0
+         LET l_sfba.sfba026='1'
+         LET l_sfba.sfba028='N'
+      #  SELECT sfaa004 INTO l_sfaa004 FROM sfaa_t WHERE sfaaent=g_enterprise AND sfaasite=g_site
+      #     AND sfaadocno=l_sfba.sfbadocno
+      #  IF l_sfaa004='1' THEN
+      #     LET l_sfba.sfba009='N'
+      #  END IF 
+      #  IF l_sfaa004='2' THEN
+      #     LET l_sfba.sfba009='Y'
+      #  END IF 
+         LET l_sfba.sfba013=g_sfba2_d[l_i].qty4+g_sfba2_d[l_i].qty5
+         LET l_sfba.sfba014=g_sfba2_d[l_i].unit
+        #20150909 by wuxja  add  --begin
+         IF l_sfba015 > 0 THEN
+            LET l_sfba.sfba015 = l_sfba.sfba013
+         END IF
+        #20150909 by wuxja  add  --end--
+         #161109-00085#28-s
+         #INSERT INTO sfba_t VALUES(l_sfba.*)
+         #161109-00085#62 --s mark
+         #INSERT INTO sfba_t(sfbaent,sfbasite,sfbadocno,sfbaseq,sfbaseq1,sfba001,sfba002,sfba003,sfba004,sfba005,sfba006,
+         #                   sfba007,sfba008,sfba009,sfba010,sfba011,sfba012,sfba013,sfba014,sfba015,sfba016,sfba017,sfba018,
+         #                   sfba019,sfba020,sfba021,sfba022,sfba023,sfba024,sfba025,sfba026,sfba027,sfba028,sfba029,sfba030,
+         #                   sfba031,sfba032,sfba033,sfba034,sfba035) 
+         #VALUES(l_sfba.sfbaent,l_sfba.sfbasite,l_sfba.sfbadocno,l_sfba.sfbaseq,l_sfba.sfbaseq1,
+         #       l_sfba.sfba001,l_sfba.sfba002,l_sfba.sfba003,l_sfba.sfba004,l_sfba.sfba005,l_sfba.sfba006,
+         #       l_sfba.sfba007,l_sfba.sfba008,l_sfba.sfba009,l_sfba.sfba010,l_sfba.sfba011,l_sfba.sfba012,
+         #       l_sfba.sfba013,l_sfba.sfba014,l_sfba.sfba015,l_sfba.sfba016,l_sfba.sfba017,l_sfba.sfba018,
+         #       l_sfba.sfba019,l_sfba.sfba020,l_sfba.sfba021,l_sfba.sfba022,l_sfba.sfba023,l_sfba.sfba024,
+         #       l_sfba.sfba025,l_sfba.sfba026,l_sfba.sfba027,l_sfba.sfba028,l_sfba.sfba029,l_sfba.sfba030,      
+         #       l_sfba.sfba031,l_sfba.sfba032,l_sfba.sfba033,l_sfba.sfba034,l_sfba.sfba035)
+         #161109-00085#62 --e mark
+         #161109-00085#28-e       
+         #161109-00085#62 --s add
+         INSERT INTO sfba_t(sfbaent,sfbasite,sfbadocno,sfbaseq,sfbaseq1,
+                            sfba001,sfba002,sfba003,sfba004,sfba005,
+                            sfba006,sfba007,sfba008,sfba009,sfba010,
+                            sfba011,sfba012,sfba013,sfba014,sfba015,
+                            sfba016,sfba017,sfba018,sfba019,sfba020,
+                            sfba021,sfba022,sfba023,sfba024,sfba025,
+                            sfba026,sfba027,sfba028,sfba029,sfba030,
+                            sfbaud001,sfbaud002,sfbaud003,sfbaud004,sfbaud005,
+                            sfbaud006,sfbaud007,sfbaud008,sfbaud009,sfbaud010,
+                            sfbaud011,sfbaud012,sfbaud013,sfbaud014,sfbaud015,
+                            sfbaud016,sfbaud017,sfbaud018,sfbaud019,sfbaud020,
+                            sfbaud021,sfbaud022,sfbaud023,sfbaud024,sfbaud025,
+                            sfbaud026,sfbaud027,sfbaud028,sfbaud029,sfbaud030,
+                            sfba031,sfba032,sfba033,sfba034,sfba035)
+         VALUES(l_sfba.sfbaent,l_sfba.sfbasite,l_sfba.sfbadocno,l_sfba.sfbaseq,l_sfba.sfbaseq1,
+                l_sfba.sfba001,l_sfba.sfba002,l_sfba.sfba003,l_sfba.sfba004,l_sfba.sfba005,
+                l_sfba.sfba006,l_sfba.sfba007,l_sfba.sfba008,l_sfba.sfba009,l_sfba.sfba010,
+                l_sfba.sfba011,l_sfba.sfba012,l_sfba.sfba013,l_sfba.sfba014,l_sfba.sfba015,
+                l_sfba.sfba016,l_sfba.sfba017,l_sfba.sfba018,l_sfba.sfba019,l_sfba.sfba020,
+                l_sfba.sfba021,l_sfba.sfba022,l_sfba.sfba023,l_sfba.sfba024,l_sfba.sfba025,
+                l_sfba.sfba026,l_sfba.sfba027,l_sfba.sfba028,l_sfba.sfba029,l_sfba.sfba030,
+                l_sfba.sfbaud001,l_sfba.sfbaud002,l_sfba.sfbaud003,l_sfba.sfbaud004,l_sfba.sfbaud005,
+                l_sfba.sfbaud006,l_sfba.sfbaud007,l_sfba.sfbaud008,l_sfba.sfbaud009,l_sfba.sfbaud010,
+                l_sfba.sfbaud011,l_sfba.sfbaud012,l_sfba.sfbaud013,l_sfba.sfbaud014,l_sfba.sfbaud015,
+                l_sfba.sfbaud016,l_sfba.sfbaud017,l_sfba.sfbaud018,l_sfba.sfbaud019,l_sfba.sfbaud020,
+                l_sfba.sfbaud021,l_sfba.sfbaud022,l_sfba.sfbaud023,l_sfba.sfbaud024,l_sfba.sfbaud025,
+                l_sfba.sfbaud026,l_sfba.sfbaud027,l_sfba.sfbaud028,l_sfba.sfbaud029,l_sfba.sfbaud030,
+                l_sfba.sfba031,l_sfba.sfba032,l_sfba.sfba033,l_sfba.sfba034,l_sfba.sfba035)
+         #161109-00085#62 --e add
+         IF SQLCA.SQLcode  THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "ins sfba_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+    #        CALL s_transaction_end('N',0)
+            RETURN FALSE
+         END IF 
+      END IF
+      IF g_sfba2_d[l_i].qty4 > 0 AND g_sfba2_d[l_i].checkcl = 'N' THEN
+         IF g_sfba2_d[l_i].qty4+g_sfba2_d[l_i].qty5 > 0 THEN
+           #20150909 by wuxja  add  --begin--
+            SELECT sfba015 INTO l_sfba015 FROM sfba_t
+             WHERE sfbaent = g_enterprise AND sfbasite = g_site AND sfbadocno = g_sfaadocno
+               AND sfbaseq = g_sfba_d[p_ac].sfbaseq AND sfba006 = g_sfba2_d[l_i].part
+            IF l_sfba015 >  0 THEN
+               UPDATE sfba_t SET sfba013 = g_sfba2_d[l_i].qty4+g_sfba2_d[l_i].qty5,
+                                 sfba015 = g_sfba2_d[l_i].qty4+g_sfba2_d[l_i].qty5               
+                WHERE sfbaent = g_enterprise AND sfbasite = g_site AND sfbadocno = g_sfaadocno
+                  AND sfbaseq= g_sfba_d[p_ac].sfbaseq AND sfba006 = g_sfba2_d[l_i].part
+            ELSE
+           #20150909 by wuxja  add  --end--
+               UPDATE sfba_t SET sfba013 = g_sfba2_d[l_i].qty4+g_sfba2_d[l_i].qty5           
+                WHERE sfbaent = g_enterprise AND sfbasite = g_site AND sfbadocno = g_sfaadocno
+                  AND sfbaseq= g_sfba_d[p_ac].sfbaseq AND sfba006 = g_sfba2_d[l_i].part
+            END IF
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "upd sfba_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+   #            CALL s_transaction_end('N',0)
+              RETURN FALSE
+            END IF
+         END IF 
+         IF g_sfba2_d[l_i].qty4+g_sfba2_d[l_i].qty5 = 0 THEN
+            DELETE FROM sfba_t WHERE sfbaent = g_enterprise AND sfbasite = g_site AND sfbadocno = g_sfaadocno
+               AND sfbaseq= g_sfba_d[p_ac].sfbaseq AND sfba006 = g_sfba2_d[l_i].part
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "del sfba_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+   #            CALL s_transaction_end('N',0)
+              RETURN FALSE
+            END IF
+         END IF
+      END IF       
+   END FOR
+   
+  #20150909 by wuxja  add  --begin--
+   SELECT SUM(sfba015/sfba022) INTO l_sfba015 FROM sfba_t
+    WHERE sfbaent = g_enterprise AND sfbasite = g_site AND sfbadocno = g_sfaadocno
+      AND sfbaseq = g_sfba_d[p_ac].sfbaseq
+   IF l_sfba015 > 0 THEN
+      UPDATE sfba_t SET sfba013 = g_sfba_d[p_ac].qty1 - g_sfba_d[p_ac].qty2 - g_sfba_d[p_ac].qty3 ,
+                        sfba015 = DECODE(SIGN(sfba015 - g_sfba_d[p_ac].qty3),1,(sfba015 - g_sfba_d[p_ac].qty3),0)
+       WHERE sfbaent = g_enterprise AND sfbasite = g_site AND sfbadocno = g_sfaadocno
+         AND sfbaseq =  g_sfba_d[p_ac].sfbaseq AND sfbaseq1 = 0
+   ELSE
+  #20150909 by wuxja  add  --end--
+      UPDATE sfba_t SET sfba013 =  g_sfba_d[p_ac].qty1 - g_sfba_d[p_ac].qty2 - g_sfba_d[p_ac].qty3 
+       WHERE sfbaent = g_enterprise AND sfbasite = g_site AND sfbadocno = g_sfaadocno
+         AND sfbaseq = g_sfba_d[p_ac].sfbaseq AND sfbaseq1 = 0
+   END IF
+   IF SQLCA.SQLcode  THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "upd sfba_t"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+    
+  #    CALL s_transaction_end('N',0)
+      RETURN FALSE
+   END IF
+   
+ # CALL s_transaction_end('Y',0)
+   RETURN TRUE   
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 抓取asft300_02_tmp2填充下單身
+# Memo...........:
+# Usage..........: CALL asft300_02_tmp_b_fill2()
+#                  
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2015/09/24 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asft300_02_tmp_b_fill2()
+DEFINE l_sql             STRING
+
+   CALL g_sfba2_d.clear()
+
+#160914-00035#1-s mark
+#將l_sql、DECLARE asft300_02_tmp_b_fill2_cs CURSOR往前搬到asft300_02()
+#   LET l_sql = "SELECT seq,seq1,part,imaal003,imaal004,feature,unit,mole,deno,qty4, ",
+#               "       checkcl,qty5,qty6,qty7,qty8,qty9,qty10 ",
+#               "  FROM asft300_02_tmp2 ",
+#               "  LEFT JOIN imaal_t ON imaalent = ",g_enterprise," AND imaal001 = part AND imaal002 = '",g_dlang,"' ",
+#               " WHERE seq = ",g_sfba_d[l_ac].sfbaseq,
+#               "   AND seq1= ",g_sfba_d[l_ac].sfbaseq1,
+#               " ORDER BY part "
+#   PREPARE asft300_02_tmp_b_fill2_pre FROM l_sql
+#   DECLARE asft300_02_tmp_b_fill2_cs CURSOR FOR asft300_02_tmp_b_fill2_pre
+#160914-00035#1-e mark
+   
+   LET l_ac2 = 1
+   FOREACH asft300_02_tmp_b_fill2_cs
+     USING g_enterprise,g_dlang,g_sfba_d[l_ac].sfbaseq,g_sfba_d[l_ac].sfbaseq1   #160914-00035#1 add
+      INTO g_sfba2_d[l_ac2].seq,g_sfba2_d[l_ac2].seq1,g_sfba2_d[l_ac2].part,
+           g_sfba2_d[l_ac2].part_desc,g_sfba2_d[l_ac2].part_desc_desc,
+           g_sfba2_d[l_ac2].feature,g_sfba2_d[l_ac2].unit,g_sfba2_d[l_ac2].mole,
+           g_sfba2_d[l_ac2].deno,g_sfba2_d[l_ac2].qty4,g_sfba2_d[l_ac2].checkcl,
+           g_sfba2_d[l_ac2].qty5,g_sfba2_d[l_ac2].qty6,g_sfba2_d[l_ac2].qty7,
+           g_sfba2_d[l_ac2].qty8,g_sfba2_d[l_ac2].qty9,g_sfba2_d[l_ac2].qty10
+      LET l_ac2 = l_ac2 + 1
+   END FOREACH
+   
+   CALL g_sfba2_d.deleteElement(g_sfba2_d.getLength())
+   LET g_rec_b2 = l_ac2 - 1
+   LET l_ac2 = g_rec_b2   #160914-00035#1 add
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 更新工單備料檔
+# Memo...........:
+# Usage..........: CALL asft300_02_sfba1()
+#                  RETURNING r_success
+# Input parameter: 
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2015/09/24 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asft300_02_sfba1()
+DEFINE r_success    LIKE type_t.num5
+DEFINE l_sfaa004    LIKE sfaa_t.sfaa004
+DEFINE l_i          LIKE type_t.num5
+#161109-00085#28-s
+#DEFINE l_sfba               RECORD LIKE sfba_t.*
+#161109-00085#62 --s mark
+DEFINE l_sfba RECORD  #工單備料單身檔
+       sfbaent LIKE sfba_t.sfbaent, #企業編號
+       sfbasite LIKE sfba_t.sfbasite, #營運據點
+       sfbadocno LIKE sfba_t.sfbadocno, #單號
+       sfbaseq LIKE sfba_t.sfbaseq, #項次
+       sfbaseq1 LIKE sfba_t.sfbaseq1, #項序
+       sfba001 LIKE sfba_t.sfba001, #上階料號
+       sfba002 LIKE sfba_t.sfba002, #部位
+       sfba003 LIKE sfba_t.sfba003, #作業編號
+       sfba004 LIKE sfba_t.sfba004, #作業序
+       sfba005 LIKE sfba_t.sfba005, #BOM料號
+       sfba006 LIKE sfba_t.sfba006, #發料料號
+       sfba007 LIKE sfba_t.sfba007, #投料時距
+       sfba008 LIKE sfba_t.sfba008, #必要特性
+       sfba009 LIKE sfba_t.sfba009, #倒扣料
+       sfba010 LIKE sfba_t.sfba010, #標準QPA分子
+       sfba011 LIKE sfba_t.sfba011, #標準QPA分母
+       sfba012 LIKE sfba_t.sfba012, #允許誤差率
+       sfba013 LIKE sfba_t.sfba013, #應發數量
+       sfba014 LIKE sfba_t.sfba014, #單位
+       sfba015 LIKE sfba_t.sfba015, #委外代買數量
+       sfba016 LIKE sfba_t.sfba016, #已發數量
+       sfba017 LIKE sfba_t.sfba017, #報廢數量
+       sfba018 LIKE sfba_t.sfba018, #盤虧數量
+       sfba019 LIKE sfba_t.sfba019, #指定發料倉庫
+       sfba020 LIKE sfba_t.sfba020, #指定發料儲位
+       sfba021 LIKE sfba_t.sfba021, #產品特徵
+       sfba022 LIKE sfba_t.sfba022, #替代率
+       sfba023 LIKE sfba_t.sfba023, #標準應發數量
+       sfba024 LIKE sfba_t.sfba024, #調整應發數量
+       sfba025 LIKE sfba_t.sfba025, #超領數量
+       sfba026 LIKE sfba_t.sfba026, #SET替代狀態
+       sfba027 LIKE sfba_t.sfba027, #SET替代群組
+       sfba028 LIKE sfba_t.sfba028, #客供料
+       sfba029 LIKE sfba_t.sfba029, #指定發料批號
+       sfba030 LIKE sfba_t.sfba030, #指定庫存管理特徵
+       #161109-00085#62 --s add
+       sfbaud001 LIKE sfba_t.sfbaud001, #自定義欄位(文字)001
+       sfbaud002 LIKE sfba_t.sfbaud002, #自定義欄位(文字)002
+       sfbaud003 LIKE sfba_t.sfbaud003, #自定義欄位(文字)003
+       sfbaud004 LIKE sfba_t.sfbaud004, #自定義欄位(文字)004
+       sfbaud005 LIKE sfba_t.sfbaud005, #自定義欄位(文字)005
+       sfbaud006 LIKE sfba_t.sfbaud006, #自定義欄位(文字)006
+       sfbaud007 LIKE sfba_t.sfbaud007, #自定義欄位(文字)007
+       sfbaud008 LIKE sfba_t.sfbaud008, #自定義欄位(文字)008
+       sfbaud009 LIKE sfba_t.sfbaud009, #自定義欄位(文字)009
+       sfbaud010 LIKE sfba_t.sfbaud010, #自定義欄位(文字)010
+       sfbaud011 LIKE sfba_t.sfbaud011, #自定義欄位(數字)011
+       sfbaud012 LIKE sfba_t.sfbaud012, #自定義欄位(數字)012
+       sfbaud013 LIKE sfba_t.sfbaud013, #自定義欄位(數字)013
+       sfbaud014 LIKE sfba_t.sfbaud014, #自定義欄位(數字)014
+       sfbaud015 LIKE sfba_t.sfbaud015, #自定義欄位(數字)015
+       sfbaud016 LIKE sfba_t.sfbaud016, #自定義欄位(數字)016
+       sfbaud017 LIKE sfba_t.sfbaud017, #自定義欄位(數字)017
+       sfbaud018 LIKE sfba_t.sfbaud018, #自定義欄位(數字)018
+       sfbaud019 LIKE sfba_t.sfbaud019, #自定義欄位(數字)019
+       sfbaud020 LIKE sfba_t.sfbaud020, #自定義欄位(數字)020
+       sfbaud021 LIKE sfba_t.sfbaud021, #自定義欄位(日期時間)021
+       sfbaud022 LIKE sfba_t.sfbaud022, #自定義欄位(日期時間)022
+       sfbaud023 LIKE sfba_t.sfbaud023, #自定義欄位(日期時間)023
+       sfbaud024 LIKE sfba_t.sfbaud024, #自定義欄位(日期時間)024
+       sfbaud025 LIKE sfba_t.sfbaud025, #自定義欄位(日期時間)025
+       sfbaud026 LIKE sfba_t.sfbaud026, #自定義欄位(日期時間)026
+       sfbaud027 LIKE sfba_t.sfbaud027, #自定義欄位(日期時間)027
+       sfbaud028 LIKE sfba_t.sfbaud028, #自定義欄位(日期時間)028
+       sfbaud029 LIKE sfba_t.sfbaud029, #自定義欄位(日期時間)029
+       sfbaud030 LIKE sfba_t.sfbaud030, #自定義欄位(日期時間)030
+       #161109-00085#62 --e add
+       sfba031 LIKE sfba_t.sfba031, #備置量
+       sfba032 LIKE sfba_t.sfba032, #備置理由碼
+       sfba033 LIKE sfba_t.sfba033, #保稅否
+       sfba034 LIKE sfba_t.sfba034, #SET被替代群組
+       sfba035 LIKE sfba_t.sfba035  #SET替代套數
+END RECORD
+#161109-00085#28-e
+
+DEFINE l_sfba015    LIKE sfba_t.sfba015    
+DEFINE l_n          LIKE type_t.num5  #160905-00022#1 
+
+   LET r_success = TRUE
+   
+   FOR l_ac = 1 TO g_rec_b
+  
+     DECLARE asft300_02_sfba1_cs CURSOR FOR
+       SELECT seq,seq1,part,feature,unit,mole,deno,qty4,checkcl,qty5,qty6,qty7,qty8,qty9,qty10
+         FROM asft300_02_tmp2
+        WHERE seq = g_sfba_d[l_ac].sfbaseq
+         AND seq1= g_sfba_d[l_ac].sfbaseq1
+        ORDER BY seq,seq1,part,feature
+     
+      LET l_i = 1
+      FOREACH asft300_02_sfba1_cs INTO g_sfba2_d[l_i].seq,g_sfba2_d[l_i].seq1,g_sfba2_d[l_i].part,
+                                       g_sfba2_d[l_i].feature,g_sfba2_d[l_i].unit,g_sfba2_d[l_i].mole,
+                                       g_sfba2_d[l_i].deno,g_sfba2_d[l_i].qty4,g_sfba2_d[l_i].checkcl,
+                                       g_sfba2_d[l_i].qty5,g_sfba2_d[l_i].qty6,g_sfba2_d[l_i].qty7,
+                                       g_sfba2_d[l_i].qty8,g_sfba2_d[l_i].qty9,g_sfba2_d[l_i].qty10
+   
+         IF (g_sfba2_d[l_i].qty4 = 0 AND g_sfba2_d[l_i].qty5 != 0) OR g_sfba2_d[l_i].checkcl = 'Y' THEN
+         #161109-00085#28-s
+         #SELECT * INTO l_sfba.*
+         #161109-00085#62 --s mark
+         #SELECT sfbaent,sfbasite,sfbadocno,sfbaseq,sfbaseq1,sfba001,sfba002,sfba003,sfba004,sfba005,
+         #       sfba006,sfba007,sfba008,sfba009,sfba010,sfba011,sfba012,sfba013,sfba014,sfba015,
+         #       sfba016,sfba017,sfba018,sfba019,sfba020,sfba021,sfba022,sfba023,sfba024,sfba025,
+         #       sfba026,sfba027,sfba028,sfba029,sfba030,sfba031,sfba032,sfba033,sfba034,sfba035
+         #  INTO l_sfba.sfbaent,l_sfba.sfbasite,l_sfba.sfbadocno,l_sfba.sfbaseq,l_sfba.sfbaseq1,
+         #       l_sfba.sfba001,l_sfba.sfba002,l_sfba.sfba003,l_sfba.sfba004,l_sfba.sfba005,
+         #       l_sfba.sfba006,l_sfba.sfba007,l_sfba.sfba008,l_sfba.sfba009,l_sfba.sfba010,
+         #       l_sfba.sfba011,l_sfba.sfba012,l_sfba.sfba013,l_sfba.sfba014,l_sfba.sfba015,
+         #       l_sfba.sfba016,l_sfba.sfba017,l_sfba.sfba018,l_sfba.sfba019,l_sfba.sfba020,
+         #       l_sfba.sfba021,l_sfba.sfba022,l_sfba.sfba023,l_sfba.sfba024,l_sfba.sfba025,
+         #       l_sfba.sfba026,l_sfba.sfba027,l_sfba.sfba028,l_sfba.sfba029,l_sfba.sfba030,
+         #       l_sfba.sfba031,l_sfba.sfba032,l_sfba.sfba033,l_sfba.sfba034,l_sfba.sfba035 
+         #161109-00085#62 --e mark
+         #161109-00085#28-e     
+         #161109-00085#62 --s add
+         SELECT sfbaent,sfbasite,sfbadocno,sfbaseq,sfbaseq1,
+                sfba001,sfba002,sfba003,sfba004,sfba005,
+                sfba006,sfba007,sfba008,sfba009,sfba010,
+                sfba011,sfba012,sfba013,sfba014,sfba015,
+                sfba016,sfba017,sfba018,sfba019,sfba020,
+                sfba021,sfba022,sfba023,sfba024,sfba025,
+                sfba026,sfba027,sfba028,sfba029,sfba030,
+                sfbaud001,sfbaud002,sfbaud003,sfbaud004,sfbaud005,
+                sfbaud006,sfbaud007,sfbaud008,sfbaud009,sfbaud010,
+                sfbaud011,sfbaud012,sfbaud013,sfbaud014,sfbaud015,
+                sfbaud016,sfbaud017,sfbaud018,sfbaud019,sfbaud020,
+                sfbaud021,sfbaud022,sfbaud023,sfbaud024,sfbaud025,
+                sfbaud026,sfbaud027,sfbaud028,sfbaud029,sfbaud030,
+                sfba031,sfba032,sfba033,sfba034,sfba035
+           INTO l_sfba.sfbaent,l_sfba.sfbasite,l_sfba.sfbadocno,l_sfba.sfbaseq,l_sfba.sfbaseq1,
+                l_sfba.sfba001,l_sfba.sfba002,l_sfba.sfba003,l_sfba.sfba004,l_sfba.sfba005,
+                l_sfba.sfba006,l_sfba.sfba007,l_sfba.sfba008,l_sfba.sfba009,l_sfba.sfba010,
+                l_sfba.sfba011,l_sfba.sfba012,l_sfba.sfba013,l_sfba.sfba014,l_sfba.sfba015,
+                l_sfba.sfba016,l_sfba.sfba017,l_sfba.sfba018,l_sfba.sfba019,l_sfba.sfba020,
+                l_sfba.sfba021,l_sfba.sfba022,l_sfba.sfba023,l_sfba.sfba024,l_sfba.sfba025,
+                l_sfba.sfba026,l_sfba.sfba027,l_sfba.sfba028,l_sfba.sfba029,l_sfba.sfba030,
+                l_sfba.sfbaud001,l_sfba.sfbaud002,l_sfba.sfbaud003,l_sfba.sfbaud004,l_sfba.sfbaud005,
+                l_sfba.sfbaud006,l_sfba.sfbaud007,l_sfba.sfbaud008,l_sfba.sfbaud009,l_sfba.sfbaud010,
+                l_sfba.sfbaud011,l_sfba.sfbaud012,l_sfba.sfbaud013,l_sfba.sfbaud014,l_sfba.sfbaud015,
+                l_sfba.sfbaud016,l_sfba.sfbaud017,l_sfba.sfbaud018,l_sfba.sfbaud019,l_sfba.sfbaud020,
+                l_sfba.sfbaud021,l_sfba.sfbaud022,l_sfba.sfbaud023,l_sfba.sfbaud024,l_sfba.sfbaud025,
+                l_sfba.sfbaud026,l_sfba.sfbaud027,l_sfba.sfbaud028,l_sfba.sfbaud029,l_sfba.sfbaud030,
+                l_sfba.sfba031,l_sfba.sfba032,l_sfba.sfba033,l_sfba.sfba034,l_sfba.sfba035
+         #161109-00085#62 --e add        
+              FROM sfba_t 
+             WHERE sfbaent = g_enterprise 
+               AND sfbasite = g_site 
+               AND sfbadocno = g_sfaadocno 
+               AND sfbaseq = g_sfba_d[l_ac].sfbaseq 
+               AND sfbaseq1 = 0
+            
+            LET l_sfba015 = l_sfba.sfba015 
+            LET l_sfba.sfbaent = g_enterprise
+            LET l_sfba.sfbasite = g_site
+            LET l_sfba.sfbadocno = g_sfaadocno
+            LET l_sfba.sfbaseq = g_sfba_d[l_ac].sfbaseq
+            SELECT MAX(sfbaseq1)+ 1 INTO l_sfba.sfbaseq1 
+              FROM sfba_t
+             WHERE sfbaent = g_enterprise 
+               AND sfbasite = g_site 
+               AND sfbadocno = g_sfaadocno 
+               AND sfbaseq = l_sfba.sfbaseq
+            LET l_sfba.sfba002 = g_sfba_d[l_ac].sfba002
+            LET l_sfba.sfba003 = g_sfba_d[l_ac].sfba003
+            LET l_sfba.sfba004 = g_sfba_d[l_ac].sfba004
+            LET l_sfba.sfba005 = g_sfba_d[l_ac].sfba005
+            LET l_sfba.sfba006 = g_sfba2_d[l_i].part
+            LET l_sfba.sfba007 = 0        
+            LET l_sfba.sfba010 = 0
+            LET l_sfba.sfba011 = 0
+            LET l_sfba.sfba012 = 0
+            LET l_sfba.sfba015 = 0
+            LET l_sfba.sfba016 = 0
+            LET l_sfba.sfba017 = 0
+            LET l_sfba.sfba018 = 0
+            LET l_sfba.sfba021 = g_sfba2_d[l_i].feature
+            LET l_sfba.sfba022 = g_sfba2_d[l_i].mole/g_sfba2_d[l_i].deno
+            LET l_sfba.sfba023 = 0
+            LET l_sfba.sfba024 = 0
+            LET l_sfba.sfba025 = 0
+            LET l_sfba.sfba026 = '1'
+            LET l_sfba.sfba028 = 'N'
+            LET l_sfba.sfba013 = g_sfba2_d[l_i].qty4+g_sfba2_d[l_i].qty5
+            LET l_sfba.sfba014 = g_sfba2_d[l_i].unit
+            IF l_sfba015 > 0 THEN
+               LET l_sfba.sfba015 = l_sfba.sfba013
+            END IF
+         #161109-00085#28-s
+         #INSERT INTO sfba_t VALUES(l_sfba.*)
+         #161109-00085#62 --s mark
+         #INSERT INTO sfba_t(sfbaent,sfbasite,sfbadocno,sfbaseq,sfbaseq1,sfba001,sfba002,sfba003,sfba004,sfba005,sfba006,
+         #                   sfba007,sfba008,sfba009,sfba010,sfba011,sfba012,sfba013,sfba014,sfba015,sfba016,sfba017,sfba018,
+         #                   sfba019,sfba020,sfba021,sfba022,sfba023,sfba024,sfba025,sfba026,sfba027,sfba028,sfba029,sfba030,                            
+         #                   sfba031,sfba032,sfba033,sfba034,sfba035) 
+         #VALUES(l_sfba.sfbaent,l_sfba.sfbasite,l_sfba.sfbadocno,l_sfba.sfbaseq,l_sfba.sfbaseq1,
+         #       l_sfba.sfba001,l_sfba.sfba002,l_sfba.sfba003,l_sfba.sfba004,l_sfba.sfba005,l_sfba.sfba006,
+         #       l_sfba.sfba007,l_sfba.sfba008,l_sfba.sfba009,l_sfba.sfba010,l_sfba.sfba011,l_sfba.sfba012,
+         #       l_sfba.sfba013,l_sfba.sfba014,l_sfba.sfba015,l_sfba.sfba016,l_sfba.sfba017,l_sfba.sfba018,
+         #       l_sfba.sfba019,l_sfba.sfba020,l_sfba.sfba021,l_sfba.sfba022,l_sfba.sfba023,l_sfba.sfba024,
+         #       l_sfba.sfba025,l_sfba.sfba026,l_sfba.sfba027,l_sfba.sfba028,l_sfba.sfba029,l_sfba.sfba030,               
+         #       l_sfba.sfba031,l_sfba.sfba032,l_sfba.sfba033,l_sfba.sfba034,l_sfba.sfba035)
+         #161109-00085#62 --e mark
+         #161109-00085#28-e     
+         #161109-00085#62 --s add
+         INSERT INTO sfba_t(sfbaent,sfbasite,sfbadocno,sfbaseq,sfbaseq1,
+                            sfba001,sfba002,sfba003,sfba004,sfba005,
+                            sfba006,sfba007,sfba008,sfba009,sfba010,
+                            sfba011,sfba012,sfba013,sfba014,sfba015,
+                            sfba016,sfba017,sfba018,sfba019,sfba020,
+                            sfba021,sfba022,sfba023,sfba024,sfba025,
+                            sfba026,sfba027,sfba028,sfba029,sfba030,
+                            sfbaud001,sfbaud002,sfbaud003,sfbaud004,sfbaud005,
+                            sfbaud006,sfbaud007,sfbaud008,sfbaud009,sfbaud010,
+                            sfbaud011,sfbaud012,sfbaud013,sfbaud014,sfbaud015,
+                            sfbaud016,sfbaud017,sfbaud018,sfbaud019,sfbaud020,
+                            sfbaud021,sfbaud022,sfbaud023,sfbaud024,sfbaud025,
+                            sfbaud026,sfbaud027,sfbaud028,sfbaud029,sfbaud030,
+                            sfba031,sfba032,sfba033,sfba034,sfba035)
+         VALUES(l_sfba.sfbaent,l_sfba.sfbasite,l_sfba.sfbadocno,l_sfba.sfbaseq,l_sfba.sfbaseq1,
+                l_sfba.sfba001,l_sfba.sfba002,l_sfba.sfba003,l_sfba.sfba004,l_sfba.sfba005,
+                l_sfba.sfba006,l_sfba.sfba007,l_sfba.sfba008,l_sfba.sfba009,l_sfba.sfba010,
+                l_sfba.sfba011,l_sfba.sfba012,l_sfba.sfba013,l_sfba.sfba014,l_sfba.sfba015,
+                l_sfba.sfba016,l_sfba.sfba017,l_sfba.sfba018,l_sfba.sfba019,l_sfba.sfba020,
+                l_sfba.sfba021,l_sfba.sfba022,l_sfba.sfba023,l_sfba.sfba024,l_sfba.sfba025,
+                l_sfba.sfba026,l_sfba.sfba027,l_sfba.sfba028,l_sfba.sfba029,l_sfba.sfba030,
+                l_sfba.sfbaud001,l_sfba.sfbaud002,l_sfba.sfbaud003,l_sfba.sfbaud004,l_sfba.sfbaud005,
+                l_sfba.sfbaud006,l_sfba.sfbaud007,l_sfba.sfbaud008,l_sfba.sfbaud009,l_sfba.sfbaud010,
+                l_sfba.sfbaud011,l_sfba.sfbaud012,l_sfba.sfbaud013,l_sfba.sfbaud014,l_sfba.sfbaud015,
+                l_sfba.sfbaud016,l_sfba.sfbaud017,l_sfba.sfbaud018,l_sfba.sfbaud019,l_sfba.sfbaud020,
+                l_sfba.sfbaud021,l_sfba.sfbaud022,l_sfba.sfbaud023,l_sfba.sfbaud024,l_sfba.sfbaud025,
+                l_sfba.sfbaud026,l_sfba.sfbaud027,l_sfba.sfbaud028,l_sfba.sfbaud029,l_sfba.sfbaud030,
+                l_sfba.sfba031,l_sfba.sfba032,l_sfba.sfba033,l_sfba.sfba034,l_sfba.sfba035)
+         #161109-00085#62 --e add         
+            IF SQLCA.SQLcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "ins sfba_t"
+               LET g_errparam.popup = TRUE
+               
+               CALL cl_err()
+               LET r_success = FALSE
+               EXIT FOREACH
+            END IF
+         END IF
+         
+         IF g_sfba2_d[l_i].qty4 > 0 AND g_sfba2_d[l_i].checkcl = 'N' THEN
+            IF g_sfba2_d[l_i].qty4+g_sfba2_d[l_i].qty5 > 0 THEN
+               SELECT sfba015 INTO l_sfba015 
+                 FROM sfba_t
+                WHERE sfbaent = g_enterprise
+                  AND sfbasite = g_site
+                  AND sfbadocno = g_sfaadocno
+                  AND sfbaseq = g_sfba_d[l_ac].sfbaseq 
+                  AND sfba006 = g_sfba2_d[l_i].part
+                  AND sfba021 = g_sfba2_d[l_i].feature  #161230-00044#1
+               IF l_sfba015 >  0 THEN
+                  UPDATE sfba_t SET sfba013 = g_sfba2_d[l_i].qty4+g_sfba2_d[l_i].qty5,
+                                    sfba015 = g_sfba2_d[l_i].qty4+g_sfba2_d[l_i].qty5               
+                   WHERE sfbaent = g_enterprise AND sfbasite = g_site AND sfbadocno = g_sfaadocno
+                     AND sfbaseq= g_sfba_d[l_ac].sfbaseq AND sfba006 = g_sfba2_d[l_i].part
+                     AND sfba021 = g_sfba2_d[l_i].feature  #161230-00044#1
+               ELSE
+                  UPDATE sfba_t SET sfba013 = g_sfba2_d[l_i].qty4+g_sfba2_d[l_i].qty5           
+                   WHERE sfbaent = g_enterprise AND sfbasite = g_site AND sfbadocno = g_sfaadocno
+                     AND sfbaseq= g_sfba_d[L_ac].sfbaseq AND sfba006 = g_sfba2_d[l_i].part
+                     AND sfba021 = g_sfba2_d[l_i].feature  #161230-00044#1
+               END IF
+               IF SQLCA.SQLcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "upd sfba_t"
+                  LET g_errparam.popup = TRUE
+                  
+                  CALL cl_err()
+                  LET r_success = FALSE
+                  EXIT FOREACH
+               END IF
+            END IF 
+            IF g_sfba2_d[l_i].qty4+g_sfba2_d[l_i].qty5 = 0 THEN
+               #160905-00022#1-s
+               LET l_n = 0
+               SELECT COUNT(1) INTO l_n
+                 FROM sfba_t
+                WHERE sfbaent = g_enterprise 
+                  AND sfbasite = g_site 
+                  AND sfbadocno = g_sfaadocno
+                  AND sfbaseq= g_sfba_d[l_ac].sfbaseq 
+                  AND sfba006 = g_sfba2_d[l_i].part
+                  AND sfba021 = g_sfba2_d[l_i].feature  #161230-00044#1
+                  #170123-00011#1-s-mod
+#                  AND EXISTS (SELECT 1 FROM sfdc_t WHERE sfdc001=sfbadocno AND sfdc002=sfbaseq AND sfdc003=sfbaseq1)
+                  AND EXISTS (SELECT 1 FROM sfdc_t WHERE sfdc001 = sfbadocno AND sfdc002 = sfbaseq AND sfdc003 = sfbaseq1 AND sfdcent = sfbaent)
+                  #170123-00011#1-e-mod
+               IF l_n > 0 THEN
+                  UPDATE sfba_t
+                     SET sfba013 = 0
+                   WHERE sfbaent = g_enterprise 
+                     AND sfbasite = g_site 
+                     AND sfbadocno = g_sfaadocno
+                     AND sfbaseq= g_sfba_d[l_ac].sfbaseq 
+                     AND sfba006 = g_sfba2_d[l_i].part
+                     AND sfba021 = g_sfba2_d[l_i].feature  #161230-00044#1
+                  IF SQLCA.SQLcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "UPDATE sfba_t",SQLERRMESSAGE
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET r_success = FALSE
+                     EXIT FOREACH
+                  END IF
+               ELSE
+                  DELETE FROM sfba_t 
+                   WHERE sfbaent = g_enterprise 
+                     AND sfbasite = g_site 
+                     AND sfbadocno = g_sfaadocno
+                     AND sfbaseq= g_sfba_d[l_ac].sfbaseq 
+                     AND sfba006 = g_sfba2_d[l_i].part
+                     AND sfba021 = g_sfba2_d[l_i].feature  #161230-00044#1
+                  IF SQLCA.SQLcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "DELETE sfba_t",SQLERRMESSAGE
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET r_success = FALSE
+                     EXIT FOREACH
+                  END IF
+               END IF
+               #160905-00022#1-e
+            END IF
+         END IF     
+      END FOREACH
+      
+      IF NOT r_success THEN
+         EXIT FOR
+      END IF
+   
+      SELECT SUM(sfba015/sfba022) INTO l_sfba015 
+        FROM sfba_t
+       WHERE sfbaent = g_enterprise
+         AND sfbasite = g_site 
+         AND sfbadocno = g_sfaadocno
+         AND sfbaseq = g_sfba_d[l_ac].sfbaseq
+      IF l_sfba015 > 0 THEN
+         UPDATE sfba_t SET sfba013 = g_sfba_d[l_ac].qty1 - g_sfba_d[l_ac].qty2 - g_sfba_d[l_ac].qty3 ,
+                           sfba015 = DECODE(SIGN(sfba015 - g_sfba_d[l_ac].qty3),1,(sfba015 - g_sfba_d[l_ac].qty3),0)
+          WHERE sfbaent = g_enterprise 
+            AND sfbasite = g_site 
+            AND sfbadocno = g_sfaadocno
+            AND sfbaseq = g_sfba_d[l_ac].sfbaseq
+            AND sfbaseq1 = 0
+      ELSE
+         UPDATE sfba_t SET sfba013 =  g_sfba_d[l_ac].qty1 - g_sfba_d[l_ac].qty2 - g_sfba_d[l_ac].qty3 
+          WHERE sfbaent = g_enterprise 
+            AND sfbasite = g_site 
+            AND sfbadocno = g_sfaadocno
+            AND sfbaseq = g_sfba_d[l_ac].sfbaseq 
+            AND sfbaseq1 = 0
+      END IF
+      IF SQLCA.SQLcode  THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "upd sfba_t"
+         LET g_errparam.popup = TRUE
+         
+         CALL cl_err()
+         LET r_success = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   RETURN r_success 
+END FUNCTION
+
+ 
+{</section>}
+ 

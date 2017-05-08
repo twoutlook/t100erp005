@@ -1,0 +1,187 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="arti902" module="art" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="06814" crtdt="2015-06-30 19:15:38" modid="06814" moddt="2015-07-01 15:27:33" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="預算設定維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="rtcb001,rtcbsite,rtcbsite_desc(chr500),rtcb002,rtcb002_desc(chr500),rtcb003,rtcb003_desc(chr500),rtcb004,rtcb004_desc(chr500),rtcb005,rtcb006,rtcb007,rtcb008,rtcb009,rtcb010,rtcb011,rtcb012,rtcb013,rtcb014,rtcb015,rtcb016,rtcbstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="rtcb001,rtcbsite,rtcbsite_2_desc(chr500),rtcb002,rtcb002_2_desc(chr500),rtcb003,rtcb003_2_desc(chr500),rtcb004,rtcb004_2_desc(chr500),rtcbownid,rtcbownid_desc(chr500),rtcbowndp,rtcbowndp_desc(chr500),rtcbcrtid,rtcbcrtid_desc(chr500),rtcbcrtdp,rtcbcrtdp_desc(chr500),rtcbcrtdt,rtcbmodid,rtcbmodid_desc(chr500),rtcbmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="art" filename="arti902" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="rtcb001,rtcbsite,rtcb002,rtcb003,rtcb004,rtcb005,rtcb006,rtcb007,rtcb008,rtcb009,rtcb010,rtcb011,rtcb012,rtcb013,rtcb014,rtcb015,rtcb016,rtcbstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="rtcb001,rtcbsite,rtcb002,rtcb003,rtcb004,rtcb005,rtcb006,rtcb007,rtcb008,rtcb009,rtcb010,rtcb011,rtcb012,rtcb013,rtcb014,rtcb015,rtcb016,rtcbstus"/>
+      <construct id="body" page="2" field="rtcbownid,rtcbowndp,rtcbcrtid,rtcbcrtdp,rtcbcrtdt,rtcbmodid,rtcbmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="rtcb001"/>
+      <column id="rtcbsite">
+        <after>
+          <check chkid="v_ooef001_20" id="isExist"/>
+          <reference field="rtcbsite_desc" ref_field="rtcb_t.rtcbsite" map_field="rtcbsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="rtcbsite_desc"/>
+      <column id="rtcb002">
+        <after>
+          <check chkid="v_ooeg001_2" id="isExist"/>
+          <reference field="rtcb002_desc" ref_field="rtcb_t.rtcb002" map_field="rtcb002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="rtcb002_desc"/>
+      <column id="rtcb003">
+        <after>
+          <check chkid="v_rtax001_3" id="isExist"/>
+          <reference field="rtcb003_desc" ref_field="rtcb_t.rtcb003" map_field="rtcb003" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001_3" state="i"/>
+        <controlp form="q_rtax001_3" state="c"/>
+      </column>
+      <column id="rtcb003_desc"/>
+      <column id="rtcb004">
+        <after>
+          <check chkid="v_rtca001" id="isExist"/>
+          <reference field="rtcb004_desc" ref_field="rtcb_t.rtcb004" map_field="rtcb004" ref_sql="SELECT rtcal003 FROM rtcal_t WHERE rtcalent=$varg_enterprise$var AND rtcal001=? AND rtcal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtca001" state="i"/>
+        <controlp form="q_rtca001" state="c"/>
+      </column>
+      <column id="rtcb004_desc"/>
+      <column id="rtcb005" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtcb006" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtcb007" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtcb008" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtcb009" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtcb010" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtcb011" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtcb012" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtcb013" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtcb014" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtcb015" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtcb016" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtcbstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="rtcbsite_2_desc"/>
+      <column id="rtcb002_2_desc"/>
+      <column id="rtcb003_2_desc"/>
+      <column id="rtcb004_2_desc"/>
+      <column id="rtcbownid">
+        <after>
+          <reference field="rtcbownid_desc" ref_field="rtcb_t.rtcbownid" map_field="rtcbownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtcbownid_desc"/>
+      <column id="rtcbowndp">
+        <after>
+          <reference field="rtcbowndp_desc" ref_field="rtcb_t.rtcbowndp" map_field="rtcbowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtcbowndp_desc"/>
+      <column id="rtcbcrtid">
+        <after>
+          <reference field="rtcbcrtid_desc" ref_field="rtcb_t.rtcbcrtid" map_field="rtcbcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtcbcrtid_desc"/>
+      <column id="rtcbcrtdp">
+        <after>
+          <reference field="rtcbcrtdp_desc" ref_field="rtcb_t.rtcbcrtdp" map_field="rtcbcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtcbcrtdp_desc"/>
+      <column id="rtcbcrtdt"/>
+      <column id="rtcbmodid">
+        <after>
+          <reference field="rtcbmodid_desc" ref_field="rtcb_t.rtcbmodid" map_field="rtcbmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtcbmodid_desc"/>
+      <column id="rtcbmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="rtcb_t" page="1,2" linked="" pk="rtcbsite,rtcb001,rtcb002,rtcb003,rtcb004">
+      <sql id="forupd_sql_detail" query="SELECT rtcb001,rtcbsite,&apos;&apos;,rtcb002,&apos;&apos;,rtcb003,&apos;&apos;,rtcb004,&apos;&apos;,rtcb005,rtcb006,rtcb007,rtcb008,rtcb009,rtcb010,rtcb011,rtcb012,rtcb013,rtcb014,rtcb015,rtcb016,rtcbstus,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,rtcbownid,&apos;&apos;,rtcbowndp,&apos;&apos;,rtcbcrtid,&apos;&apos;,rtcbcrtdp,&apos;&apos;,rtcbcrtdt,rtcbmodid,&apos;&apos;,rtcbmoddt FROM rtcb_t WHERE rtcbent=? AND rtcbsite=? AND rtcb001=? AND rtcb002=? AND rtcb003=? AND rtcb004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rtcb001,rtcbsite,&apos;&apos;,rtcb002,&apos;&apos;,rtcb003,&apos;&apos;,rtcb004,&apos;&apos;,rtcb005,rtcb006,rtcb007,rtcb008,rtcb009,rtcb010,rtcb011,rtcb012,rtcb013,rtcb014,rtcb015,rtcb016,rtcbstus,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,rtcbownid,&apos;&apos;,rtcbowndp,&apos;&apos;,rtcbcrtid,&apos;&apos;,rtcbcrtdp,&apos;&apos;,rtcbcrtdt,rtcbmodid,&apos;&apos;,rtcbmoddt FROM rtcb_t WHERE rtcbent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

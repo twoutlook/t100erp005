@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammm320_01" module="amm" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="01752" crtdt="2013-11-22 10:13:40" modid="08172" moddt="2016-07-22 09:34:16" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="會員卡種基本資料維護作業-生效範圍設定">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mmap001,mmap002,mmap003,mmap003_desc(chr500),mmap005,mmap006,mmap007,mmap004,mmapstus"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="amm" filename="ammm320_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="mmap001,mmap002,mmap003,mmap005,mmap006,mmap007,mmap004,mmapstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="mmap001"/>
+      <column id="mmap002"/>
+      <column id="mmap003">
+        <after>
+          <reference field="mmap003_desc" ref_field="mmap_t.mmap003" map_field="mmap003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="mmap003_desc"/>
+      <column id="mmap005" type="S" default="N"/>
+      <column id="mmap006" type="S" default="N"/>
+      <column id="mmap007" type="S" default="N"/>
+      <column id="mmap004" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mmapstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <body id="mmap_t" page="1" linked="" pk="mmap001,mmap002,mmap003">
+      <sql id="forupd_sql_detail" query="SELECT mmap001,mmap002,mmap003,&apos;&apos;,mmap005,mmap006,mmap007,mmap004,mmapstus FROM mmap_t WHERE mmapent=? AND mmap001=? AND mmap002=? AND mmap003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mmap001,mmap002,mmap003,&apos;&apos;,mmap005,mmap006,mmap007,mmap004,mmapstus FROM mmap_t WHERE mmapent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

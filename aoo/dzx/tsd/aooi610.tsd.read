@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aooi610" std_prog="aooi610" erpver="1.0" ver="4" module="AOO" type="M" booking="N" designer_ver="1.0" class="i" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="oodb_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 稅別基本資料維護
+                 本程式維護交易稅區下有幾種稅別
+                 稅別和母稅共用table , 故本程式寫入之資料母稅否='N' 
+                             
+標準作業功能：新增/修改/刪除/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：(基本資料/交易單據)維護作業
+輸入模式：假雙檔搭配查詢方案模式F003_sc
+作業資料來源 
+ 資料來源表：oodb_t(稅別基本資料檔)
+             oodbl_t(稅別基本資料檔多語言檔)          
+     
+
+補充說明: 查詢方案顯示欄位:
+          稅區,說明,
+           order by 稅區, 
+
+本程式寫入 oodb_t ,  aooi620 ,同樣也要寫入 oodb_t 
+
+差異欄位處理如下: 
+本程式寫入時:
+oodb004 課稅原則(scc=9706) = '1' 單一稅率
+查詢時只能取出课税类型 = '1' 的資料
+
+TOPMENU:
+相关资料：aooi072參照表維護作業-稅區，稅別計算公式
+相关查询：aooi620複合稅稅別設置作業，aimm201料件據點產品資料維護作業
+]]>
+  </all>
+  <field cite_std="N" name="b_oodb001" ver="1" src="s" column="oodb001" table="oodb_t" attribute="" type="" req="Y" i_zoom="q_ooal002_11" c_zoom="q_oodb001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oodb002_2" ver="1" src="s" column="oodb002" table="oodb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oodb_t.oodb001" ver="1" src="s" column="oodb001" table="oodb_t" attribute="" type="" req="Y" i_zoom="q_ooal002_11" c_zoom="q_oodb001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[交易稅區:
+  ●欄位控管：
+    資料欄位: oodb001 /可Display可Input
+    預設值:  無
+    校驗: 必須有效存在於稅區維護 aooi072 中
+    帶值:稅區名稱
+  
+
+]]>
+  </field>
+  <field cite_std="N" name="oodb_t.oodb002" ver="1" src="s" column="oodb002" table="oodb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[稅別代碼：
+   ●欄位控管：
+     資料欄位:oodb002 /可Display可Input
+     允許空白:No
+     預設值:無
+     校驗:檢查稅區 + 稅別代碼    為唯一值]]>
+  </field>
+  <field cite_std="N" name="oodb_t.oodb003" ver="1" src="s" column="oodb003" table="oodb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="9712" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[稅種：
+   ●欄位控管：
+     資料欄位:oodb003 /可Display可Input
+     允許空白:No
+     預設值:無
+     帶值:稅種說明
+  　 下拉：scc=9712 
+]]>
+  </field>
+  <field cite_std="N" name="oodb_t.oodb004" ver="1" src="s" column="oodb004" table="oodb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="9706" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oodb_t.oodb005" ver="1" src="s" column="oodb005" table="oodb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[含稅否：
+   ●欄位控管：
+     資料欄位:oodb005 /可Display可Input
+     允許空白:No
+     預設值:Y
+    
+]]>
+  </field>
+  <field cite_std="N" name="oodb_t.oodb006" ver="1" src="s" column="oodb006" table="oodb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[稅率：
+   ●欄位控管：
+     資料欄位:oodb006 /可Display可Input
+     允許空白:yes 
+         因為有些稅在公式中設定,故本欄允許空白
+       
+     預設值: 
+      if 課稅別= 2.零稅 or 3.免稅 ,則本欄預設為0 , 不可修改
+     
+  ]]>
+  </field>
+  <field cite_std="N" name="oodb_t.oodb007" ver="1" src="s" column="oodb007" table="oodb_t" attribute="" type="" req="N" i_zoom="q_isan002" c_zoom="q_isan002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[公式代碼：
+   ●欄位控管：
+     資料欄位:oodb007 /可Display可Input
+     允許空白:yes 
+     預設值無
+    　
+●開窗處理：
+     1.新增/修改時：
+       參考函式：依標準查詢視窗 / q_isan002
+       查詢欄位：select unique isan002 
+                  where isan001 = 交易稅區 
+
+       回值類型：單一回值]]>
+  </field>
+  <field cite_std="N" name="oodb_t.oodb008" ver="1" src="s" column="oodb008" table="oodb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="9708" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[課稅別：
+   ●欄位控管：
+     資料欄位:oodb008 /可Display可Input
+     允許空白:No
+     預設值:1.應稅
+     帶值:說明
+  　 下拉：scc=9708  ]]>
+  </field>
+  <field cite_std="N" name="oodb_t.oodb009" ver="1" src="s" column="oodb009" table="oodb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[下傳POS 否：
+   ●欄位控管：
+     資料欄位:oodb009 /可Display可Input
+     允許空白:N 
+     預設值:Y]]>
+  </field>
+  <field cite_std="N" name="oodb_t.oodb010" ver="1" src="s" column="oodb010" table="oodb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[下傳POS 狀態：
+   ●欄位控管：
+     資料欄位:oodb010 /可Display 
+     允許空白:N
+     預設值:N
+     下傳 pos  時回寫本狀態,  資料經修改則本欄要 update = 'N' ]]>
+  </field>
+  <field cite_std="N" name="oodb_t.oodb011" ver="1" src="s" column="oodb011" table="oodb_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="9727" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ComboBox" status="">
+    <![CDATA[稅率註記：
+   ●欄位控管：
+     資料欄位:oodb011 /可Display可Input
+     允許空白:yes 
+     預設值:1.正常稅率    　
+
+     下拉選項:SCC = 9727
+]]>
+  </field>
+  <field cite_std="N" name="oodb_t.oodb012" ver="1" src="s" column="oodb012" table="oodb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[含稅否：
+   ●欄位控管：
+     資料欄位:oodb012 /可Display可Input
+     允許空白:No
+     預設值:Y]]>
+  </field>
+  <field cite_std="N" name="oodb_t.oodb013" ver="4" src="s" column="oodb013" table="oodb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oodb_t.oodbcrtdp" ver="1" src="s" column="oodbcrtdp" table="oodb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oodb_t.oodbcrtdt" ver="1" src="s" column="oodbcrtdt" table="oodb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oodb_t.oodbcrtid" ver="1" src="s" column="oodbcrtid" table="oodb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oodb_t.oodbmoddt" ver="1" src="s" column="oodbmoddt" table="oodb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oodb_t.oodbmodid" ver="1" src="s" column="oodbmodid" table="oodb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oodb_t.oodbowndp" ver="1" src="s" column="oodbowndp" table="oodb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oodb_t.oodbownid" ver="1" src="s" column="oodbownid" table="oodb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oodb_t.oodbstus" ver="1" src="s" column="oodbstus" table="oodb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[有效
+  ●欄位控管：
+    資料欄位: oodbstus /可Display可Input
+    預設值:  Y
+    不可空白
+    選擇無效時: 1. 稅別主檔失效必須檢核是否有被'複合稅資料檔'運用,且為有效資料
+                   if   有的話則必須提示警訊,且不得執行失效]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_oodb001_desc" src="s" depend_field="b_oodb001" correspon_key="oodbent,&apos;2&apos;,oodb001" ref_table="ooall_t" ref_fk="ooallent,ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield cite_std="N" ver="1" name="oodb001_desc" src="s" depend_field="oodb_t.oodb001" correspon_key="oodbent,&apos;2&apos;,oodb001" ref_table="ooall_t" ref_fk="ooallent,ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield cite_std="N" ver="1" name="oodbcrtdp_desc" src="s" depend_field="oodb_t.oodbcrtdp" correspon_key="oodbcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="oodbcrtid_desc" src="s" depend_field="oodb_t.oodbcrtid" correspon_key="oodbcrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="oodbmodid_desc" src="s" depend_field="oodb_t.oodbmodid" correspon_key="oodbmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="oodbowndp_desc" src="s" depend_field="oodb_t.oodbowndp" correspon_key="oodbowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="oodbownid_desc" src="s" depend_field="oodb_t.oodbownid" correspon_key="oodbownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+  </ref_field>
+  <multi_lang>
+    <mfield cite_std="N" ver="1" name="oodbl_t.oodbl004" src="s" depend_field="oodb_t.oodb002" correspon_key="oodbent,oodb001,oodb002" lang_table="oodbl_t" lang_fk="oodblent,oodbl001,oodbl002" lang_dlang="oodbl003" lang_rtn="oodbl004" status="">
+      <![CDATA[]]>
+    </mfield>
+  </multi_lang>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_oodb001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oodb002_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oodb_t.oodb001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oodb_t.oodb002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oodb_t.oodb003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oodb_t.oodb004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oodb_t.oodb005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oodb_t.oodb006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oodb_t.oodb007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oodb_t.oodb008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oodb_t.oodb009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oodb_t.oodb010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oodb_t.oodb011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oodb_t.oodb012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="oodb_t.oodb013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="oodb_t.oodbcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oodb_t.oodbcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oodb_t.oodbcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oodb_t.oodbmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oodb_t.oodbmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oodb_t.oodbowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oodb_t.oodbownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oodb_t.oodbstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_oodb001" text="交易稅區" lstr=""/>
+    <sfield name="lbl_ooall004" text="說明" lstr=""/>
+    <sfield name="bpage_1" text="稅別資料" lstr=""/>
+    <sfield name="lbl_oodb002" text="稅別代碼" lstr=""/>
+    <sfield name="lbl_oodbl004" text="說明" lstr=""/>
+    <sfield name="lbl_oodb003" text="稅種代碼" lstr=""/>
+    <sfield name="lbl_oodb005" text="含稅否" lstr=""/>
+    <sfield name="lbl_oodb008" text="課稅別" lstr=""/>
+    <sfield name="lbl_oodb006_1" text="稅率(%)" lstr=""/>
+    <sfield name="lbl_oodb013" text="固定稅額" lstr=""/>
+    <sfield name="lbl_oodb007" text="公式代碼" lstr=""/>
+    <sfield name="lbl_oodb011" text="稅別應用" lstr=""/>
+    <sfield name="lbl_oodb012" text="併增值稅列印發票" lstr=""/>
+    <sfield name="lbl_oodb009" text="下傳POS否" lstr=""/>
+    <sfield name="lbl_oodb010" text="下傳POS狀態" lstr=""/>
+    <sfield name="lbl_stus" text="有效" lstr=""/>
+    <sfield name="lbl_oodb004" text="課稅原則" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="modid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="ownid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="owndp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="crtid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="crtdp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_oodbl001" text="交易稅區" lstr=""/>
+    <sfield name="lbl_oodbl002" text="稅別代碼" lstr=""/>
+    <sfield name="lbl_oodbl003" text="語言別" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

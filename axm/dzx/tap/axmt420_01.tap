@@ -1,0 +1,1110 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="axmt420_01" std_prog="axmt420_01" erpver="1.0" module="AXM" ver="2" env="s" zone="t10prd" booking="Y" type="S" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <point name="function.axmt420_01_b_fill" order="1" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 分量計價單身填充
+# Memo...........:
+# Usage..........: CALL axmt420_01_b_fill(p_xmdvdocno,p_xmdvseq)
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 14/02/11 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_01_b_fill(p_xmdvdocno,p_xmdvseq)
+   DEFINE l_sql   STRING 
+   DEFINE p_xmdvdocno   LIKE xmdv_t.xmdvdocno
+   DEFINE p_xmdvseq     LIKE xmdv_t.xmdvseq
+   
+   LET l_sql = "SELECT xmdvdocno,xmdvseq,xmdv001,xmdv002,xmdv003,xmdv004 ",
+               "  FROM xmdv_t ",
+               " WHERE xmdvdocno = '",p_xmdvdocno CLIPPED,"' ",
+               "   AND xmdvseq   = ",p_xmdvseq," ",
+               "   AND xmdvent   = '",g_enterprise CLIPPED,"' "
+   PREPARE axmt420_01_pb FROM l_sql
+   DECLARE b_fill_curs CURSOR FOR axmt420_01_pb 
+   
+   CALL g_xmdv_d.clear()
+   LET l_ac_t = l_ac
+   LET l_ac = 1
+   FOREACH b_fill_curs INTO g_xmdv_d[l_ac].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH 
+   CALL g_xmdv_d.deleteElement(g_xmdv_d.getLength())   
+   LET g_rec_b = l_ac - 1
+   DISPLAY g_rec_b TO FORMONLY.cnt
+   LET l_ac = l_ac_t
+   CLOSE b_fill_curs
+   FREE axmt420_01_pb
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt420_01_upd_xmdu" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 離開程式前更新主程式單身單價資訊
+# Memo...........:
+# Usage..........: CALL axmt420_01_upd_xmdu(p_xmdvdocno,p_xmdvseq)
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 14/02/11 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_01_upd_xmdu(p_xmdvdocno,p_xmdvseq)
+   DEFINE l_amt         LIKE type_t.num20_6
+   DEFINE p_xmdvdocno   LIKE xmdv_t.xmdvdocno
+   DEFINE p_xmdvseq     LIKE xmdv_t.xmdvseq
+   DEFINE l_xmdv        RECORD
+                xmdv001 LIKE xmdv_t.xmdv001,
+                xmdv002 LIKE xmdv_t.xmdv002,
+                xmdv003 LIKE xmdv_t.xmdv003,
+                xmdv004 LIKE xmdv_t.xmdv004
+                        END RECORD
+   
+   INITIALIZE l_xmdv.* TO NULL
+   SELECT xmdv001,xmdv002,xmdv003,xmdv004 
+     INTO l_xmdv.xmdv001,l_xmdv.xmdv002,l_xmdv.xmdv003,l_xmdv.xmdv004
+     FROM xmdv_t
+    WHERE xmdvdocno = p_xmdvdocno
+      AND xmdvseq   = p_xmdvseq
+      AND xmdvent   = g_enterprise
+      AND xmdv003 > 0 
+    ORDER BY xmdv003
+
+      
+   IF cl_null(l_xmdv.xmdv003)THEN LET l_xmdv.xmdv003 = 0 END IF
+   IF cl_null(l_xmdv.xmdv004)THEN LET l_xmdv.xmdv004 = 0 END IF
+   
+   UPDATE xmdu_t SET xmdu011 = l_xmdv.xmdv003,
+                     xmdu013 = l_xmdv.xmdv004
+    WHERE xmdudocno = p_xmdvdocno
+      AND xmduseq   = p_xmdvseq
+      AND xmduent   = g_enterprise
+   IF SQLCA.SQLCODE THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.extend = 'axmt420_01_upd_xmdu'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+   END IF
+      
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt420_01_xmdv001_chk" order="3" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 起始數量檢查
+# Memo...........:
+# Usage..........: CALL axmt420_01_xmdv001_chk(p_xmdv001,p_xmdv002)
+#                  RETURNING r_success
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 14/02/13 By albireo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt420_01_xmdv001_chk(p_xmdv001,p_xmdv002)
+   DEFINE l_count   LIKE type_t.num5
+   DEFINE p_xmdv001 LIKE xmdv_t.xmdv001
+   DEFINE p_xmdv002 LIKE xmdv_t.xmdv002
+   DEFINE l_xmdv001 LIKE xmdv_t.xmdv001
+   DEFINE l_xmdv002 LIKE xmdv_t.xmdv002
+   DEFINE l_sql     STRING
+
+   #如果之前沒資料就不檢查
+   LET l_count = NULL
+   SELECT COUNT(*) INTO l_count FROM xmdv_t
+    WHERE xmdvent = g_enterprise
+      AND xmdvdocno = g_xmdvdocno
+      AND xmdvseq   = g_xmdvseq 
+   IF cl_null(l_count)THEN LET l_count = 0 END IF
+   IF l_count = 0 THEN RETURN TRUE END IF
+
+   #起始值或截止值落入先前存在的區間(排除此筆)
+   LET l_count = NULL
+   #SELECT COUNT(*) INTO l_count FROM xmdv_t
+   # WHERE xmdvent = g_enterprise
+   #   AND xmdvdocno = g_xmdvdocno
+   #   AND xmdvseq   = g_xmdvseq
+   #   AND ((xmdv001   BETWEEN p_xmdv001 AND p_xmdv002) 
+   #        OR (xmdv002 BETWEEN p_xmdv001 AND p_xmdv002))
+   #   AND xmdv001 <> g_xmdv_d_t.xmdv001
+   #   AND xmdv002 <> g_xmdv_d_t.xmdv002     
+      
+   LET l_sql = "SELECT COUNT(*) FROM xmdv_t ",
+               " WHERE xmdvent = '",g_enterprise,"' ",
+               "   AND xmdvdocno = '",g_xmdvdocno,"' ",
+               "   AND xmdvseq   = ",g_xmdvseq," ",
+               "   AND ((xmdv001   BETWEEN ",p_xmdv001," AND ",p_xmdv002,")  ",
+               "   OR (xmdv002 BETWEEN ",p_xmdv001," AND ",p_xmdv002,")) "
+               
+   IF NOT cl_null(g_xmdv_d_t.xmdv001) AND NOT cl_null(g_xmdv_d_t.xmdv002)THEN
+      LET l_sql = l_sql CLIPPED," AND xmdv001 <> ",g_xmdv_d_t.xmdv001," ",
+                                " AND xmdv002 <> ",g_xmdv_d_t.xmdv002," "
+   END IF
+   PREPARE sel_xmdv001_chkp1 FROM l_sql
+   EXECUTE sel_xmdv001_chkp1 INTO l_count
+   IF cl_null(l_count)THEN LET l_count = 0 END IF
+
+   IF l_count = 0 THEN
+      #起始值或截止值落入輸入的區間(排除此筆)
+      LET l_count = NULL
+      #SELECT COUNT(*) INTO l_count FROM xmdv_t
+      # WHERE xmdvent = g_enterprise
+      #   AND xmdvdocno = g_xmdvdocno
+      #   AND xmdvseq   = g_xmdvseq
+      #   AND ((xmdv001 <= p_xmdv001
+      #         AND xmdv002 >= p_xmdv001)
+      #         OR (xmdv002 >=p_xmdv002 AND xmdv001 <= p_xmdv002))
+      #   AND xmdv001 <> g_xmdv_d_t.xmdv001
+      #   AND xmdv002 <> g_xmdv_d_t.xmdv002     
+         
+      LET l_sql = " SELECT COUNT(*) FROM xmdv_t ",
+                  "  WHERE xmdvent = '",g_enterprise,"' ",
+                  "    AND xmdvdocno = '",g_xmdvdocno,"' ",
+                  "    AND xmdvseq   =  ",g_xmdvseq," ",
+                  "    AND ((xmdv001 <= ",p_xmdv001," ",
+                  "          AND xmdv002 >= ",p_xmdv001,") ",
+                  "         OR (xmdv002 >= ",p_xmdv002," AND xmdv001 <= ",p_xmdv002,")) "
+                  
+      IF NOT cl_null(g_xmdv_d_t.xmdv001) AND NOT cl_null(g_xmdv_d_t.xmdv002)THEN
+         LET l_sql = l_sql CLIPPED," AND xmdv001 <> ",g_xmdv_d_t.xmdv001," ",
+                                   " AND xmdv002 <> ",g_xmdv_d_t.xmdv002," "
+      END IF   
+      PREPARE sel_xmdv001_chkp2 FROM l_sql
+      EXECUTE sel_xmdv001_chkp2 INTO l_count
+      
+      IF cl_null(l_count)THEN LET l_count = 0 END IF     
+      IF l_count = 0 THEN
+      ELSE
+         #起始值或截止值落入輸入的區間(排除此筆)
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'apm-00227'
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         RETURN FALSE
+      END IF      
+   ELSE
+      #起始值或截止值落入先前存在的區間(排除此筆)
+      INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'apm-00227'
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+      RETURN FALSE
+   END IF
+   
+   RETURN TRUE
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt420_01_xmdv001_round" order="4" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PUBLIC FUNCTION axmt420_01_xmdv001_round(p_xmdv001)
+   DEFINE p_xmdv001   LIKE xmdv_t.xmdv001
+   DEFINE l_success   LIKE type_t.num5
+   DEFINE l_ooca002   LIKE ooca_t.ooca002     
+   DEFINE l_ooca004   LIKE ooca_t.ooca004      
+   DEFINE r_xmdv001   LIKE xmdv_t.xmdv001
+
+       LET l_success = NULL
+       LET l_ooca002 = 0
+       LET l_ooca004 = NULL
+
+       LET r_xmdv001 = p_xmdv001
+
+       IF NOT cl_null(p_xmdv001) THEN
+          IF NOT cl_null(g_xmdu008) THEN
+             CALL s_aooi250_get_msg(g_xmdu008) RETURNING l_success,l_ooca002,l_ooca004
+             IF l_success THEN
+                CALL s_num_round(l_ooca004,p_xmdv001,l_ooca002) RETURNING r_xmdv001
+             END IF
+          END IF
+       END IF
+       RETURN r_xmdv001
+END FUNCTION]]>
+  </point>
+  <point name="global.import" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[IMPORT util]]>
+  </point>
+  <point name="global.variable" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE p_xmdvent             LIKE xmdv_t.xmdvent
+DEFINE g_xmdvdocno           LIKE xmdv_t.xmdvdocno
+DEFINE g_xmdvseq             LIKE xmdv_t.xmdvseq
+DEFINE l_ac_t                LIKE type_t.num5
+DEFINE g_xmdu008             LIKE xmdu_t.xmdu008
+DEFINE g_chk_transaction     LIKE type_t.num5        ##用來判斷在外層是否有開transaction，有的話就不再開/關
+]]>
+  </point>
+  <point name="input.a.page1.xmdv001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            
+            IF NOT cl_ap_chk_Range(g_xmdv_d[l_ac].xmdv001,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD xmdv001
+            END IF
+
+            IF NOT cl_null(g_xmdv_d[l_ac].xmdv001) THEN  
+               IF NOT cl_null(g_xmdv_d[l_ac].xmdv002) THEN
+                  IF g_xmdv_d[l_ac].xmdv001 > g_xmdv_d[l_ac].xmdv002 THEN  #起始數量不可大於截止數量
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'apm-00228'
+                     LET g_errparam.extend = g_xmdv_d[l_ac].xmdv001
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_xmdv_d[l_ac].xmdv001 = g_xmdv_d_t.xmdv001
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               IF NOT axmt420_01_xmdv001_chk(g_xmdv_d[l_ac].xmdv001,g_xmdv_d[l_ac].xmdv002) THEN
+                  LET g_xmdv_d[l_ac].xmdv001 = g_xmdv_d_t.xmdv001
+                  NEXT FIELD CURRENT
+               END IF                 
+            END IF
+
+            IF  g_xmdv_d[l_ac].xmdvdocno IS NOT NULL AND g_xmdv_d[l_ac].xmdvseq IS NOT NULL AND g_xmdv_d[l_ac].xmdv001 IS NOT NULL AND g_xmdv_d[l_ac].xmdv002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdv_d[l_ac].xmdvdocno != g_xmdv_d_t.xmdvdocno OR g_xmdv_d[l_ac].xmdvseq != g_xmdv_d_t.xmdvseq OR g_xmdv_d[l_ac].xmdv001 != g_xmdv_d_t.xmdv001 OR g_xmdv_d[l_ac].xmdv002 != g_xmdv_d_t.xmdv002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdv_t WHERE "||"xmdvent = '" ||g_enterprise|| "' AND "||"xmdvdocno = '"||g_xmdv_d[l_ac].xmdvdocno ||"' AND "|| "xmdvseq = '"||g_xmdv_d[l_ac].xmdvseq ||"' AND "|| "xmdv001 = '"||g_xmdv_d[l_ac].xmdv001 ||"' AND "|| "xmdv002 = '"||g_xmdv_d[l_ac].xmdv002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.xmdv002" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+
+            IF NOT cl_ap_chk_Range(g_xmdv_d[l_ac].xmdv002,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD xmdv002
+            END IF
+
+
+            IF NOT cl_null(g_xmdv_d[l_ac].xmdv002) THEN
+               IF NOT cl_null(g_xmdv_d[l_ac].xmdv001) THEN
+                  IF g_xmdv_d[l_ac].xmdv002 < g_xmdv_d[l_ac].xmdv002 THEN   #截止數量不可小於起始數量
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'apm-00229'
+                     LET g_errparam.extend = g_xmdv_d[l_ac].xmdv002
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_xmdv_d[l_ac].xmdv002 = g_xmdv_d_t.xmdv002
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               IF NOT axmt420_01_xmdv001_chk(g_xmdv_d[l_ac].xmdv001,g_xmdv_d[l_ac].xmdv002) THEN
+                  LET g_xmdv_d[l_ac].xmdv002 = g_xmdv_d_t.xmdv002
+                  NEXT FIELD CURRENT
+               END IF                  
+            END IF
+            
+            IF g_xmdv_d[l_ac].xmdvdocno IS NOT NULL AND g_xmdv_d[l_ac].xmdvseq IS NOT NULL AND g_xmdv_d[l_ac].xmdv001 IS NOT NULL AND g_xmdv_d[l_ac].xmdv002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdv_d[l_ac].xmdvdocno != g_xmdv_d_t.xmdvdocno OR g_xmdv_d[l_ac].xmdvseq != g_xmdv_d_t.xmdvseq OR g_xmdv_d[l_ac].xmdv001 != g_xmdv_d_t.xmdv001 OR g_xmdv_d[l_ac].xmdv002 != g_xmdv_d_t.xmdv002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdv_t WHERE "||"xmdvent = '" ||g_enterprise|| "' AND "||"xmdvdocno = '"||g_xmdv_d[l_ac].xmdvdocno ||"' AND "|| "xmdvseq = '"||g_xmdv_d[l_ac].xmdvseq ||"' AND "|| "xmdv001 = '"||g_xmdv_d[l_ac].xmdv001 ||"' AND "|| "xmdv002 = '"||g_xmdv_d[l_ac].xmdv002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            
+            CALL axmt420_01_xmdv001_round(g_xmdv_d[l_ac].xmdv002) RETURNING g_xmdv_d[l_ac].xmdv002
+            DISPLAY BY NAME g_xmdv_d[l_ac].xmdv002   
+
+]]>
+  </point>
+  <point name="input.a.page1.xmdv003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_ap_chk_Range(g_xmdv_d[l_ac].xmdv003,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD xmdv003
+            END IF
+
+            IF NOT cl_null(g_xmdv_d[l_ac].xmdv003) THEN
+               #呼叫幣別取位應用元件對單價作取位(依詢價單單頭幣別做取位基準)
+               CALL s_curr_round(g_site,l_xmdt.xmdt005,g_xmdv_d[l_ac].xmdv003,'1') RETURNING g_xmdv_d[l_ac].xmdv003
+               
+               DISPLAY BY NAME g_xmdv_d[l_ac].xmdv003
+            END IF]]>
+  </point>
+  <point name="input.a.page1.xmdv004" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_ap_chk_Range(g_xmdv_d[l_ac].xmdv004,"0.000","1","100.000","1","azz-00087",1) THEN
+               NEXT FIELD xmdv004
+            END IF]]>
+  </point>
+  <point name="input.a.page1.xmdvdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_xmdv_d[l_ac].xmdvdocno IS NOT NULL AND g_xmdv_d[l_ac].xmdvseq IS NOT NULL AND g_xmdv_d[l_ac].xmdv001 IS NOT NULL AND g_xmdv_d[l_ac].xmdv002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdv_d[l_ac].xmdvdocno != g_xmdv_d_t.xmdvdocno OR g_xmdv_d[l_ac].xmdvseq != g_xmdv_d_t.xmdvseq OR g_xmdv_d[l_ac].xmdv001 != g_xmdv_d_t.xmdv001 OR g_xmdv_d[l_ac].xmdv002 != g_xmdv_d_t.xmdv002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdv_t WHERE "||"xmdvent = '" ||g_enterprise|| "' AND "||"xmdvdocno = '"||g_xmdv_d[l_ac].xmdvdocno ||"' AND "|| "xmdvseq = '"||g_xmdv_d[l_ac].xmdvseq ||"' AND "|| "xmdv001 = '"||g_xmdv_d[l_ac].xmdv001 ||"' AND "|| "xmdv002 = '"||g_xmdv_d[l_ac].xmdv002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.xmdvseq" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_xmdv_d[l_ac].xmdvdocno IS NOT NULL AND g_xmdv_d[l_ac].xmdvseq IS NOT NULL AND g_xmdv_d[l_ac].xmdv001 IS NOT NULL AND g_xmdv_d[l_ac].xmdv002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdv_d[l_ac].xmdvdocno != g_xmdv_d_t.xmdvdocno OR g_xmdv_d[l_ac].xmdvseq != g_xmdv_d_t.xmdvseq OR g_xmdv_d[l_ac].xmdv001 != g_xmdv_d_t.xmdv001 OR g_xmdv_d[l_ac].xmdv002 != g_xmdv_d_t.xmdv002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdv_t WHERE "||"xmdvent = '" ||g_enterprise|| "' AND "||"xmdvdocno = '"||g_xmdv_d[l_ac].xmdvdocno ||"' AND "|| "xmdvseq = '"||g_xmdv_d[l_ac].xmdvseq ||"' AND "|| "xmdv001 = '"||g_xmdv_d[l_ac].xmdv001 ||"' AND "|| "xmdv002 = '"||g_xmdv_d[l_ac].xmdv002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.before_close" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL axmt420_01_upd_xmdu(p_xmdvdocno,p_xmdvseq)
+   #把放棄的狀態還原，才不會影響到主程式 
+   IF INT_FLAG THEN 
+      LET INT_FLAG = FALSE 
+   END IF]]>
+  </point>
+  <point name="input.before_input" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[         BEFORE ROW
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET l_lock_sw = 'N'            #DEFAULT
+            DISPLAY l_ac TO FORMONLY.idx
+
+            IF g_chk_transaction = 'N' THEN 
+               CALL s_transaction_begin()
+            END IF
+
+            IF g_rec_b >= l_ac THEN
+               LET l_cmd='u'
+               LET g_xmdv_d_t.* = g_xmdv_d[l_ac].*  #BACKUP
+               OPEN axmt420_01_cs USING p_xmdvdocno,p_xmdvseq,g_xmdv_d[l_ac].xmdv001,g_xmdv_d[l_ac].xmdv002
+		   
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "axmt420_01_cs"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH axmt420_01_cs INTO g_xmdv_d[l_ac].*
+                  IF SQLCA.sqlcode THEN
+                     LET l_lock_sw = "Y"
+                  END IF
+           #      CALL ammt320_01_mmam003_ref()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            
+            BEFORE INSERT
+               IF g_chk_transaction = 'N' THEN 
+                  CALL s_transaction_begin()
+               END IF
+               LET l_cmd = 'a'
+               INITIALIZE g_xmdv_d_t.* TO NULL
+               INITIALIZE g_xmdv_d[l_ac].* TO NULL 
+               LET g_xmdv_d[l_ac].xmdvdocno = p_xmdvdocno
+               LET g_xmdv_d[l_ac].xmdvseq   = p_xmdvseq
+               #LET g_xmdv_d[l_ac].xmdv001   = 0 
+               #LET g_xmdv_d[l_ac].xmdv002   = 0 
+               LET g_xmdv_d[l_ac].xmdv003   = 0 
+               LET g_xmdv_d[l_ac].xmdv004   = 0 
+               
+               #起始數量初始化，最大的截止數量 根據當前單位加上截取位數的小數數值
+               LET l_xmdv002 = 0
+               SELECT MAX(xmdv002) INTO l_xmdv002 FROM xmdv_t
+                WHERE xmdvent = g_enterprise 
+                  AND xmdvdocno = p_xmdvdocno
+                  AND xmdvseq = p_xmdvseq
+               IF cl_null(l_xmdv002) THEN
+                  LET l_xmdv002 = 0
+               END IF
+               
+               IF NOT cl_null(g_xmdu008) THEN
+                  LET l_ooca002 = 0
+                  LET l_ooca004 = NULL
+		       
+                  LET l_round = 0
+                  LET l_num = 0
+                  CALL s_aooi250_get_msg(g_xmdu008) RETURNING l_success,l_ooca002,l_ooca004
+                  IF l_success THEN
+                     LET l_round = util.Math.pow(10,l_ooca002)
+                     LET l_num = 1 / l_round
+                     LET g_xmdv_d[l_ac].xmdv001 = l_xmdv002 + l_num
+                  END IF
+               END IF
+               #CALL axmt420_01_xmdv001_round(g_xmdv_d[l_ac].xmdv001) RETURNING g_xmdv_d[l_ac].xmdv001
+               LET g_xmdv_d_t.* = g_xmdv_d[l_ac].*     #新輸入資料
+               CALL cl_show_fld_cont()
+
+            AFTER INSERT
+               IF INT_FLAG THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 9001
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+
+                  LET INT_FLAG = 0
+                  CANCEL INSERT
+               END IF
+		       
+               INITIALIZE l_xmdv.* TO NULL
+               LET l_xmdv.xmdvdocno = g_xmdv_d[l_ac].xmdvdocno 
+               LET l_xmdv.xmdvent   = g_enterprise
+               LET l_xmdv.xmdvsite  = g_site
+               LET l_xmdv.xmdvseq = g_xmdvseq  
+               LET l_xmdv.xmdv001 = g_xmdv_d[l_ac].xmdv001   
+               LET l_xmdv.xmdv002 = g_xmdv_d[l_ac].xmdv002   
+               LET l_xmdv.xmdv003 = g_xmdv_d[l_ac].xmdv003   
+               LET l_xmdv.xmdv004 = g_xmdv_d[l_ac].xmdv004   
+               
+               SELECT COUNT(*) INTO l_count FROM xmdv_t 
+                WHERE xmdvent = g_enterprise
+                  AND xmdvdocno = p_xmdvkdocno
+                  AND xmdvseq   = p_xmdvseq
+                  AND xmdv001   = g_xmdv_d[l_ac].xmdv001
+                  AND xmdv002   = g_xmdv_d[l_ac].xmdv002
+                   
+               #資料未重複, 插入新增資料
+               IF l_count = 0 THEN 
+                  INSERT INTO xmdv_t VALUES (l_xmdv.*)
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "xmdv_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     CONTINUE DIALOG
+                  END IF
+               ELSE    
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = "std-00006"
+                  LET g_errparam.extend = 'INSERT'
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  INITIALIZE g_xmdv_d[l_ac].* TO NULL
+                  IF g_chk_transaction = 'N' THEN 
+                     CALL s_transaction_end('N',0)
+                  END IF
+                  CANCEL INSERT
+               END IF
+               
+               IF SQLCA.SQLCODE THEN
+                  INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "xmdv_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+  
+                  IF g_chk_transaction = 'N' THEN 
+                     CALL s_transaction_end('N',0)                   
+                  END IF                
+                  CANCEL INSERT
+               ELSE
+                  IF g_chk_transaction = 'N' THEN 
+                     CALL s_transaction_end('Y',0)
+                  END IF
+                  ERROR 'INSERT O.K'
+                  LET g_rec_b = g_rec_b + 1
+               END IF
+               
+            BEFORE DELETE                            #是否取消單身
+               IF NOT cl_null(p_xmdvdocno) AND NOT cl_null(p_xmdvseq) 
+                  AND NOT cl_null(g_xmdv_d[l_ac].xmdv001) 
+                  AND NOT cl_null(g_xmdv_d[l_ac].xmdv002) THEN
+		       
+                  IF NOT cl_ask_del_detail() THEN
+                     CANCEL DELETE
+                  END IF
+                  IF l_lock_sw = "Y" THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code =  -263
+                     LET g_errparam.extend = ""
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     CANCEL DELETE
+                  END IF
+                  DELETE FROM xmdv_t
+                   WHERE xmdvent = g_enterprise 
+                     AND xmdvdocno = p_xmdvdocno
+                     AND xmdv001 = g_xmdv_d_t.xmdv001
+                     AND xmdv002 = g_xmdv_d_t.xmdv002
+               
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "xmdv_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     IF g_chk_transaction = 'N' THEN 
+                        CALL s_transaction_end('N',0)
+                     END IF
+                     CANCEL DELETE   
+                  ELSE
+                     LET g_rec_b = g_rec_b-1
+                     IF g_chk_transaction = 'N' THEN 
+                        CALL s_transaction_end('Y',0)
+                     END IF
+                  END IF 
+                  CLOSE axmt420_01_cs
+               END IF 
+               
+               
+            ON ROW CHANGE
+               IF INT_FLAG THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 9001
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+
+                  LET INT_FLAG = 0
+                  LET g_xmdv_d[l_ac].* = g_xmdv_d_t.*
+                  CLOSE axmt420_01_cs
+                  IF g_chk_transaction = 'N' THEN 
+                     CALL s_transaction_end('N',0)
+                  END IF
+                  EXIT DIALOG 
+               END IF
+                 
+               IF l_lock_sw = 'Y' THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = -263
+                  LET g_errparam.extend = l_xmdv.xmdv001
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_xmdv_d[l_ac].* = g_xmdv_d_t.*
+               ELSE
+                  UPDATE xmdv_t SET (xmdv001,xmdv002,xmdv003,xmdv004) = 
+                                    (g_xmdv_d[l_ac].xmdv001,g_xmdv_d[l_ac].xmdv002,g_xmdv_d[l_ac].xmdv003,
+                                     g_xmdv_d[l_ac].xmdv004)
+                   WHERE xmdvent = g_enterprise
+                     AND xmdvdocno = p_xmdvdocno
+                     AND xmdvseq = p_xmdvseq
+                     AND xmdv001 = g_xmdv_d_t.xmdv001
+                     AND xmdv002 = g_xmdv_d_t.xmdv002
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "xmdv_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+   
+                     LET g_xmdv_d[l_ac].* = g_xmdv_d_t.*
+                     IF g_chk_transaction = 'N' THEN 
+                        CALL s_transaction_end('N',0)
+                     END IF
+                  ELSE
+                     IF g_chk_transaction = 'N' THEN 
+                        CALL s_transaction_end('Y',0)               
+                     END IF               
+                  END IF
+               END IF
+               
+            AFTER ROW
+               CLOSE axmt420_01_cs]]>
+  </point>
+  <point name="input.define" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_lock_sw       LIKE type_t.chr1
+   DEFINE l_stus          LIKE type_t.chr1
+   DEFINE l_xmdv          RECORD LIKE xmdv_t.*
+   DEFINE l_forupd_sql    STRING
+   DEFINE l_xmdu          RECORD LIKE xmdu_t.*
+   DEFINE l_xmdt          RECORD LIKE xmdt_t.*
+   DEFINE l_imaal         RECORD
+                          imaal003  LIKE imaal_t.imaal003,
+                          imaal004  LIKE imaal_t.imaal004
+                          END RECORD
+   DEFINE l_xmdv001       LIKE xmdv_t.xmdv001
+   DEFINE l_xmdv002       LIKE xmdv_t.xmdv002
+   DEFINE l_ooca002   LIKE ooca_t.ooca002     
+   DEFINE l_ooca004   LIKE ooca_t.ooca004 
+   DEFINE l_success   LIKE type_t.num5
+   DEFINE l_round     LIKE xmdv_t.xmdv001
+   DEFINE l_num       LIKE xmdv_t.xmdv001
+   DEFINE p_xmdvdocno           LIKE xmdv_t.xmdvdocno
+   DEFINE p_xmdvseq             LIKE xmdv_t.xmdvseq
+   DEFINE p_xmdu002             LIKE xmdu_t.xmdu002 
+   DEFINE p_xmdu003             LIKE xmdu_t.xmdu003 
+   DEFINE p_xmdu031             LIKE xmdu_t.xmdu031 
+   DEFINE p_xmdu032             LIKE xmdu_t.xmdu032]]>
+  </point>
+  <point name="input.get_var" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   p_xmdvdocno,p_xmdvseq,p_xmdu002,p_xmdu003,p_xmdu031,p_xmdu032]]>
+  </point>
+  <point name="input.more_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[     ]]>
+  </point>
+  <point name="input.pre_input" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   WHENEVER ERROR CONTINUE
+
+   #預設進入時是無transaction的 
+   LET g_chk_transaction = 'N' 
+   #如果進來時是有開transaction的話，就做個記錄，之後不會關掉transaction 
+   IF g_intrans = 'Y' THEN 
+      LET g_chk_transaction = 'Y' 
+   END IF
+   
+   DISPLAY p_xmdvdocno TO xmdudocno
+   DISPLAY p_xmdvseq   TO xmduseq
+   INITIALIZE l_xmdu.* TO NULL
+   INITIALIZE l_xmdt.* TO NULL
+   
+   LET g_xmdvdocno = p_xmdvdocno
+   LET g_xmdvseq   = p_xmdvseq
+   
+   SELECT * INTO l_xmdu.* FROM xmdu_t
+    WHERE xmdudocno = p_xmdvdocno
+      AND xmduseq   = p_xmdvseq
+      AND xmduent   = g_enterprise
+      
+   SELECT * INTO l_xmdt.* FROM xmdt_t
+    WHERE xmdtdocno = p_xmdvdocno
+      AND xmdtent   = g_enterprise   
+      
+   LET g_xmdu008 = l_xmdu.xmdu008
+   LET l_xmdu.xmdu002 = p_xmdu002 
+   LET l_xmdu.xmdu003 = p_xmdu003 
+   LET l_xmdu.xmdu031 = p_xmdu031 
+   LET l_xmdu.xmdu032 = p_xmdu032
+   
+   DISPLAY BY NAME l_xmdt.xmdt005,l_xmdu.xmdu002,l_xmdu.xmdu003,l_xmdu.xmdu004,l_xmdu.xmdu006,l_xmdu.xmdu007
+   DISPLAY BY NAME l_xmdu.xmdu031,l_xmdu.xmdu032
+   
+   INITIALIZE l_imaal.* TO NULL
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = l_xmdu.xmdu002
+   CALL ap_ref_array2(g_ref_fields,"SELECT imaal003,imaal004 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001 = ? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET l_imaal.imaal003 = g_rtn_fields[1]
+   LET l_imaal.imaal004 = g_rtn_fields[2]
+   
+   DISPLAY BY NAME l_imaal.imaal003,l_imaal.imaal004
+   
+   WHENEVER ERROR CALL cl_err_msg_log
+   #b_fill單身跟show單頭
+   CALL axmt420_01_b_fill(p_xmdvdocno,p_xmdvseq)
+
+   LET l_stus = ''
+   SELECT xmdtstus INTO l_stus FROM xmdt_t
+    WHERE xmdtent = g_enterprise
+      AND xmdtdocno = p_xmdvdocno
+   IF l_stus != 'N' THEN
+   #   CALL ammt320_01_ui_dialog()
+      LET INT_FLAG = FALSE
+      CLOSE WINDOW w_axmt420_01
+      RETURN
+   END IF
+   LET l_forupd_sql = " SELECT xmdvdocno,xmdvseq,xmdv001,xmdv002,xmdv003,xmdv004 ",
+                      "   FROM xmdv_t ",
+                      "  WHERE xmdvent = '",g_enterprise,"' ",
+                      "    AND xmdvdocno = ? AND xmdvseq = ? AND xmdv001 = ? AND xmdv002 = ? FOR UPDATE"
+   LET l_forupd_sql = cl_sql_forupd(l_forupd_sql)
+   PREPARE axmt420_01_b FROM l_forupd_sql
+   DECLARE axmt420_01_cs CURSOR FOR axmt420_01_b
+   LET INT_FLAG = FALSE]]>
+  </point>
+  <section id="axmt420_01.description" ver="28" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000139
+#+ 
+#+ Filename...: axmt420_01
+#+ Description: 核價分量計價維護作業
+#+ Creator....: 03080(2014-02-06 16:30:22)
+#+ Modifier...: 07024(2015-06-16 15:12:43) -SD/PR-
+]]>
+  </section>
+  <section id="axmt420_01.global" ver="7" status="" src="s" readonly="">
+    <![CDATA[#應用 c02b 樣板自動產生(Version:5)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_xmdv_d        RECORD
+       xmdvdocno LIKE xmdv_t.xmdvdocno, 
+   xmdvseq LIKE xmdv_t.xmdvseq, 
+   xmdv001 LIKE xmdv_t.xmdv001, 
+   xmdv002 LIKE xmdv_t.xmdv002, 
+   xmdv003 LIKE xmdv_t.xmdv003, 
+   xmdv004 LIKE xmdv_t.xmdv004
+       END RECORD
+ 
+ 
+DEFINE g_xmdv_d          DYNAMIC ARRAY OF type_g_xmdv_d
+DEFINE g_xmdv_d_t        type_g_xmdv_d
+ 
+ 
+DEFINE g_xmdvdocno_t   LIKE xmdv_t.xmdvdocno    #Key值備份
+DEFINE g_xmdvseq_t      LIKE xmdv_t.xmdvseq    #Key值備份
+DEFINE g_xmdv001_t      LIKE xmdv_t.xmdv001    #Key值備份
+DEFINE g_xmdv002_t      LIKE xmdv_t.xmdv002    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+    
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point    
+]]>
+  </section>
+  <section id="axmt420_01.input" ver="8" status="" src="s" readonly="">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION axmt420_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define" edit="s"/>}
+   #end add-point
+   #add-point:input段define
+   {<point name="input.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axmt420_01 WITH FORM cl_ap_formpath("axm","axmt420_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_xmdv_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xmdvdocno
+            #add-point:BEFORE FIELD xmdvdocno
+            {<point name="input.b.page1.xmdvdocno" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xmdvdocno
+            
+            #add-point:AFTER FIELD xmdvdocno
+            {<point name="input.a.page1.xmdvdocno" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xmdvdocno
+            #add-point:ON CHANGE xmdvdocno
+            {<point name="input.g.page1.xmdvdocno" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xmdvseq
+            #add-point:BEFORE FIELD xmdvseq
+            {<point name="input.b.page1.xmdvseq" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xmdvseq
+            
+            #add-point:AFTER FIELD xmdvseq
+            {<point name="input.a.page1.xmdvseq" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xmdvseq
+            #add-point:ON CHANGE xmdvseq
+            {<point name="input.g.page1.xmdvseq" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xmdv001
+            #應用 a15 樣板自動產生(Version:2)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xmdv_d[l_ac].xmdv001,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD xmdv001
+            END IF 
+ 
+ 
+            #add-point:AFTER FIELD xmdv001
+            {<point name="input.a.page1.xmdv001" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xmdv001
+            #add-point:BEFORE FIELD xmdv001
+            {<point name="input.b.page1.xmdv001" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xmdv001
+            #add-point:ON CHANGE xmdv001
+            {<point name="input.g.page1.xmdv001" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xmdv002
+            #應用 a15 樣板自動產生(Version:2)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xmdv_d[l_ac].xmdv002,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD xmdv002
+            END IF 
+ 
+ 
+            #add-point:AFTER FIELD xmdv002
+            {<point name="input.a.page1.xmdv002" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xmdv002
+            #add-point:BEFORE FIELD xmdv002
+            {<point name="input.b.page1.xmdv002" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xmdv002
+            #add-point:ON CHANGE xmdv002
+            {<point name="input.g.page1.xmdv002" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xmdv003
+            #應用 a15 樣板自動產生(Version:2)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xmdv_d[l_ac].xmdv003,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD xmdv003
+            END IF 
+ 
+ 
+            #add-point:AFTER FIELD xmdv003
+            {<point name="input.a.page1.xmdv003" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xmdv003
+            #add-point:BEFORE FIELD xmdv003
+            {<point name="input.b.page1.xmdv003" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xmdv003
+            #add-point:ON CHANGE xmdv003
+            {<point name="input.g.page1.xmdv003" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xmdv004
+            #應用 a15 樣板自動產生(Version:2)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xmdv_d[l_ac].xmdv004,"0","1","100","1","azz-00087",1) THEN
+               NEXT FIELD xmdv004
+            END IF 
+ 
+ 
+            #add-point:AFTER FIELD xmdv004
+            {<point name="input.a.page1.xmdv004" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xmdv004
+            #add-point:BEFORE FIELD xmdv004
+            {<point name="input.b.page1.xmdv004" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xmdv004
+            #add-point:ON CHANGE xmdv004
+            {<point name="input.g.page1.xmdv004" />}
+            #END add-point 
+ 
+ 
+                  #Ctrlp:input.c.page1.xmdvdocno
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xmdvdocno
+            #add-point:ON ACTION controlp INFIELD xmdvdocno
+            {<point name="input.c.page1.xmdvdocno" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdvseq
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xmdvseq
+            #add-point:ON ACTION controlp INFIELD xmdvseq
+            {<point name="input.c.page1.xmdvseq" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdv001
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xmdv001
+            #add-point:ON ACTION controlp INFIELD xmdv001
+            {<point name="input.c.page1.xmdv001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdv002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xmdv002
+            #add-point:ON ACTION controlp INFIELD xmdv002
+            {<point name="input.c.page1.xmdv002" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdv003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xmdv003
+            #add-point:ON ACTION controlp INFIELD xmdv003
+            {<point name="input.c.page1.xmdv003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdv004
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xmdv004
+            #add-point:ON ACTION controlp INFIELD xmdv004
+            {<point name="input.c.page1.xmdv004" />}
+            #END add-point
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...)
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel
+         {<point name="input.cancel"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axmt420_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="axmt420_01.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="axmt420_01.other_function" ver="2" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="apsp600" std_prog="apsp600" erpver="1.0" ver="6" module="APS" type="M" booking="N" designer_ver="1.0" class="p" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="W" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="1" cite_std="N">
+    <tbl name="pspa_t" main="N" head="N" pk="pspaent,pspasite,pspa001,pspa002,pspa016" fk_detail="" parent="pspc_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail2" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="pspc_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail1" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：APS產生請購單作業
+標準作業功能：單選/單選取消/多選/多選取消/新增/報表/詳細資料/查詢/篩選/條件查詢/條件儲存/說明/離開/重新整理
+
+沒勾選會總方式，則匯總成一張；有勾選的會一選項的集合彙總
+請購單資料:
+pmdadocno =依單別自動編碼
+pmda001 = 0
+pmdadocdt=g_today
+pmda002 = 操作人員
+pmda003 = 操作人員部門
+
+pmdb001 = APS虛擬單號
+pmdb004 = 料件編號
+pmdb005 = 產品特徵
+pmdb007 = 單位
+pmdb006 = 建議數量
+pmdb030 = 需求日期
+
+其餘欄位依請購單輸入時預帶方式
+]]>
+  </all>
+  <db_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[單身一
+依QBE條件+請購單別設定的產品分類籂選APS版本最新一次執行時間的採購輸出結果(pspc_t)
+顯示建議新單的部分
+
+單身二：用以下條件抓取顯示上單身目前指定的供需狀態
+pspaent,pspasite,pspa001,pspa002,pspa012料號,pspa013產品特徵
+]]>
+  </db_all>
+  <field cite_std="N" name="b_bmif009" ver="6" src="s" column="bmif009" table="bmif_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_bmif012" ver="5" src="s" column="bmif012" table="bmif_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_bmia015" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_count" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[第一行的預計結存=供需數量
+之後每一行的預計結存=上一行預計結存+本行的供需數量]]>
+  </field>
+  <field cite_std="N" name="b_imaa009" ver="5" src="s" column="imaa009" table="imaa_t" attribute="" type="" req="N" i_zoom="q_rtax001" c_zoom="q_rtax001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_imae012" ver="1" src="s" column="imae012" table="imae_t" attribute="" type="" req="N" i_zoom="q_ooag001_2" c_zoom="q_ooag001_2" chk_ref="v_ooag001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_imaf016" ver="5" src="s" column="imaf016" table="imaf_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_imaf141" ver="5" src="s" column="imaf141" table="imaf_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_imaf142" ver="1" src="s" column="imaf142" table="imaf_t" attribute="" type="" req="N" i_zoom="q_ooag001_2" c_zoom="q_ooag001_2" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pspa004" ver="1" src="s" column="pspa004" table="pspa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pspa006" ver="1" src="s" column="pspa006" table="pspa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pspa009" ver="1" src="s" column="pspa009" table="pspa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pspa020" ver="2" src="s" column="pspa020" table="pspa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[   CALL cl_set_combo_scc('b_pspa005','5440')]]>
+  </field>
+  <field cite_std="N" name="b_pspc001" ver="1" src="s" column="pspc001" table="pspc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pspc002" ver="1" src="s" column="pspc002" table="pspc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pspc004" ver="1" src="s" column="pspc004" table="pspc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pspc010" ver="2" src="s" column="pspc010" table="pspc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[######140925改成pspc010#########################################################
+##從aimm214抓取imaf171+imaf172+imaf173+imaf174的總和
+##用需求日往回推(只計算工作日)
+##s_date_get_work_date(g_site,g_ooef008,g_ooef009,pspc045,0,(imaf171+imaf172+imaf173+imaf174))
+##從aooi100抓取ooef009
+##############################################################################]]>
+  </field>
+  <field cite_std="N" name="b_pspc014" ver="1" src="s" column="pspc014" table="pspc_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[轉成基礎單位imaa006]]>
+  </field>
+  <field cite_std="N" name="b_pspc018" ver="1" src="s" column="pspc018" table="pspc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pspc034" ver="3" src="s" column="pspc034" table="pspc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pspc045" ver="1" src="s" column="pspc045" table="pspc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pspc050" ver="6" src="s" column="pspc050" table="pspc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pspc051" ver="1" src="s" column="pspc051" table="pspc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_pspc055" ver="6" src="s" column="pspc055" table="pspc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[#2015/06/29 ming -----------------------------(S) 
+由於可分多次轉請購，所以此單位只記最後一筆的單號 
+#2015/06/29 ming -----------------------------(E) ]]>
+  </field>
+  <field cite_std="N" name="b_pspc056" ver="1" src="s" column="pspc056" table="pspc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[執行批次拋轉完要回寫項次且pspc054='Y'
+]]>
+  </field>
+  <field cite_std="N" name="b_pspc061" ver="6" src="s" column="pspc061" table="pspc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[#2015/06/29 ming add ----------------------------(S) 
+只顯示，小於建議量前都是未轉單的資料 
+#2015/06/29 ming add ----------------------------(E) ]]>
+  </field>
+  <field cite_std="N" name="b_qty" ver="6" src="s" column="pspc034" table="pspc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[#2015/06/29 ming add --------------------(S) 
+可分批轉請購，數量不可小於等於0，且不可大於建議量-已轉數量
+#2015/06/29 ming add --------------------(E) ]]>
+  </field>
+  <field cite_std="N" name="b_sel" ver="6" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="u">
+    <![CDATA[查詢條件的顯示已轉請購單資料pspc054='Y'，則拋轉過的資料(pspc054='Y')不能輸入sel]]>
+  </field>
+  <field cite_std="N" name="chk" ver="6" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="u">
+    <![CDATA[當有沒勾選時，右方預設轉請購資料已轉請購單的資料不要顯示
+
+#2015/06/29 ming --------------------------(S) 
+修改為 已轉數量小於建議數量前都是未轉單資料 
+#2015/06/29 ming --------------------------(E) ]]>
+  </field>
+  <field cite_std="N" name="chk1" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="chk2" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="chk3" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="chk4" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaa_t.imaa009" ver="1" src="s" column="imaa009" table="imaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_rtax001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imae_t.imae012" ver="1" src="s" column="imae012" table="imae_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf141" ver="1" src="s" column="imaf141" table="imaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_imce141" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf142" ver="1" src="s" column="imaf142" table="imaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooba002_desc" ver="4" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooba_t.ooba002" ver="1" src="s" column="ooba002" table="ooba_t" attribute="" type="" req="Y" i_zoom="q_ooba002_1" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[arg1:參照表號
+arg2:'apmt400'
+參照apmt400的校驗]]>
+  </field>
+  <field cite_std="N" name="pspc_t.pspc001" ver="2" src="s" column="pspc001" table="pspc_t" attribute="" type="" req="Y" i_zoom="q_psca001" c_zoom="q_psca001" chk_ref="v_psca001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[開窗：多串條件pscasite=g_site
+帶出下面的說明]]>
+  </field>
+  <field cite_std="N" name="pspc_t.pspc010" ver="2" src="s" column="pspc010" table="pspc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pspc_t.pspc045" ver="1" src="s" column="pspc045" table="pspc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pspc_t.pspc050" ver="1" src="s" column="pspc050" table="pspc_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_imaf001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="edit_1" ver="6" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="5" name="b_bmif009_desc" src="s" depend_field="b_bmif009" correspon_key="&apos;1116&apos;,b_bmif009" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="b_imaa009_desc" src="s" depend_field="b_imaa009" correspon_key="imaa009" ref_table="rtaxl_t" ref_fk="rtaxl001" ref_dlang="rtaxl002" ref_rtn="rtaxl003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_imae012_desc" src="s" depend_field="b_imae012" correspon_key="imae012" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="5" name="b_imaf016_desc" src="s" depend_field="b_imaf016" correspon_key="&apos;210&apos;,b_imaf016" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="b_imaf141_desc" src="s" depend_field="b_imaf141" correspon_key="&apos;203&apos;,imaf141" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="b_imaf142_desc" src="s" depend_field="b_imaf142" correspon_key="imaf142" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="b_pspc014_desc" src="s" depend_field="b_pspc014" correspon_key="pspc014" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_pspc050_desc" src="s" depend_field="b_pspc050" correspon_key="pspc050" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_pspc050_desc_desc" src="s" depend_field="b_pspc050" correspon_key="pspc050" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="pspc001_desc" src="s" depend_field="pspc_t.pspc001" correspon_key="pspc001" ref_table="pscal_t" ref_fk="pscal001" ref_dlang="pscal002" ref_rtn="pscal003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="6" name="b_bmif009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="5" name="b_bmif012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_count" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="b_imaa009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_imae012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="b_imaf016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="b_imaf141" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_imaf142" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pspa004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pspa006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pspa009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="b_pspa020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pspc001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pspc002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pspc004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="b_pspc010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pspc014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pspc018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="b_pspc034" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_pspc045" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="b_pspc050" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="b_pspc051" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="b_pspc055" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="b_pspc056" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="b_pspc061" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="6" name="b_qty" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="6" name="b_sel" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="6" name="chk" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="chk1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="chk2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="chk3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="chk4" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="edit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="imaa_t.imaa009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imae_t.imae012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf141" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf142" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="ooba002_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooba_t.ooba002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="pspc_t.pspc001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="pspc_t.pspc010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pspc_t.pspc045" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pspc_t.pspc050" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="page_qbe" text="基本查詢" lstr=""/>
+    <sfield name="lbl_pspc001" text="APS版本" lstr=""/>
+    <sfield name="lbl_pscal003" text="說明" lstr=""/>
+    <sfield name="apsp600.group1" text="QBE" lstr=""/>
+    <sfield name="lbl_imae012" text="計畫員" lstr=""/>
+    <sfield name="lbl_imaf142" text="採購員" lstr=""/>
+    <sfield name="lbl_pspc010" text="行動日" lstr=""/>
+    <sfield name="lbl_pspc045" text="需求日" lstr=""/>
+    <sfield name="lbl_imaa009" text="產品分類" lstr=""/>
+    <sfield name="lbl_imaf141" text="採購分類" lstr=""/>
+    <sfield name="lbl_pspc050" text="料件編號" lstr=""/>
+    <sfield name="apsp600.group2" text="INPUT" lstr=""/>
+    <sfield name="lbl_ooba002" text="請購單別" lstr=""/>
+    <sfield name="apsp600.group3" text="匯總方式" lstr=""/>
+    <sfield name="lbl_chk1" text="計畫員" lstr=""/>
+    <sfield name="lbl_chk2" text="採購員" lstr=""/>
+    <sfield name="lbl_chk3" text="產品分類" lstr=""/>
+    <sfield name="lbl_chk4" text="採購分類" lstr=""/>
+    <sfield name="lbl_chk" text="顯示已轉單資料" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="bpage_1" text="項目" lstr=""/>
+    <sfield name="lbl_sel" text="選擇" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="lbl_pspc051" text="產品特徵" lstr=""/>
+    <sfield name="lbl_rtaxl003" text="說明" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_pspc034" text="建議採購量" lstr=""/>
+    <sfield name="lbl_qty" text="本次採購數量" lstr=""/>
+    <sfield name="lbl_pspc014" text="單位" lstr=""/>
+    <sfield name="lbl_oocal003" text="說明" lstr=""/>
+    <sfield name="lbl_pspc018" text="需求單號" lstr=""/>
+    <sfield name="lbl_ooag011" text="全名" lstr=""/>
+    <sfield name="lbl_pspc061" text="已轉數量" lstr=""/>
+    <sfield name="lbl_pspc055" text="產生單號" lstr=""/>
+    <sfield name="lbl_pspc056" text="項次" lstr=""/>
+    <sfield name="lbl_pspc004" text="APS虛擬單號" lstr=""/>
+    <sfield name="lbl_pspc002" text="執行日期時間" lstr=""/>
+    <sfield name="lbl_imaf016" text="生命週期狀態" lstr=""/>
+    <sfield name="lbl_imaf016_desc" text="生命週期狀態" lstr=""/>
+    <sfield name="lbl_bmif009" text="承認狀態" lstr=""/>
+    <sfield name="lbl_bmif009_desc" text="承認狀態" lstr=""/>
+    <sfield name="lbl_bmif012" text="承認文號" lstr=""/>
+    <sfield name="lbl_pspa004" text="供需日期" lstr=""/>
+    <sfield name="lbl_pspa020" text="供需碼" lstr=""/>
+    <sfield name="lbl_pspa006" text="單號" lstr=""/>
+    <sfield name="lbl_pspa009" text="供需數量" lstr=""/>
+    <sfield name="lbl_count" text="預計結存" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="5" cite_std="N" src="s">
+    <widget name="b_bmif009" status=""/>
+    <widget name="b_bmif012" status=""/>
+  </exclude>
+</spec>

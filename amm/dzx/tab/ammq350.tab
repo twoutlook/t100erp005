@@ -1,0 +1,90 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammq350" module="amm" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="02748" crtdt="2014-02-14 15:50:10" modid="03247" moddt="2015-05-12 13:52:11" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="會員卡儲值異動查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),mmau001,mmaq002(chr500),mmaq002_desc(chr500),mmau002,mmau002_desc(chr500),mmau003,mmau004,mmau005,mmau018,mmau018_desc(chr500),mmau006,mmau007,mmau008,mmau009,mmau010,mmau011,mmau012,mmau013,mmau014,mmau015,mmau016,mmau017,mmau019,mmau019_desc(chr500),mmauseq"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),mmau001(b_mmau001),mmaq002(b_mmaq002),mmaq002_desc(b_mmaq002_desc),mmau002(b_mmau002),mmau002_desc(b_mmau002_desc),mmau003(b_mmau003),mmau004(b_mmau004),mmau005(b_mmau005),mmau018(b_mmau018),mmau018_desc(b_mmau018_desc),mmau006(b_mmau006),mmau007(b_mmau007),mmau008(b_mmau008),mmau009(b_mmau009),mmau010(b_mmau010),mmau011(b_mmau011),mmau012(b_mmau012),mmau013(b_mmau013),mmau014(b_mmau014),mmau015(b_mmau015),mmau016(b_mmau016),mmau017(b_mmau017),mmau019(b_mmau019),mmau019_desc(b_mmau019_desc),mmauseq(b_mmauseq)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="amm" filename="ammq350" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="mmau001,mmaq002,mmau002,mmau003,mmau004,mmau005,mmau018,mmau006,mmau007,mmau008,mmau009,mmau010,mmau011,mmau012,mmau013,mmau014,mmau015,mmau016,mmau017,mmau019,mmauseq" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="mmau001(b_mmau001),mmau002(b_mmau002),mmau003(b_mmau003),mmau004(b_mmau004),mmau005(b_mmau005),mmau018(b_mmau018),mmau006(b_mmau006),mmau007(b_mmau007),mmau008(b_mmau008),mmau009(b_mmau009),mmau010(b_mmau010),mmau011(b_mmau011),mmau012(b_mmau012),mmau013(b_mmau013),mmau014(b_mmau014),mmau015(b_mmau015),mmau016(b_mmau016),mmau017(b_mmau017),mmau019(b_mmau019),mmauseq(b_mmauseq)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="mmau001">
+        <controlp form="q_mmaq001_2" state="c"/>
+      </column>
+      <column id="mmaq002">
+        <after>
+          <reference field="mmaq002_desc" ref_field="mmaq002" map_field="mmaq002" ref_sql="SELECT mmanl003 FROM mmanl_t WHERE mmanlent=$varg_enterprise$var AND mmanl001=? AND mmanl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mman001" state="c"/>
+      </column>
+      <column id="mmaq002_desc"/>
+      <column id="mmau002">
+        <after>
+          <reference field="mmau002_desc" ref_field="mmau002" map_field="mmauent,mmau002" ref_sql="SELECT mmaf008 FROM mmaf_t WHERE mmafent=$varg_enterprise$var AND mmaf001=? "/>
+        </after>
+        <controlp form="q_mmaf001" state="c"/>
+      </column>
+      <column id="mmau002_desc"/>
+      <column id="mmau003" def_scc="6512"/>
+      <column id="mmau004" def_scc="6514"/>
+      <column id="mmau005">
+        <controlp form="q_mmau005" state="c"/>
+      </column>
+      <column id="mmau018">
+        <after>
+          <reference field="mmau018_desc" ref_field="mmau018" map_field="mmauent,mmau018" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="mmau018_desc"/>
+      <column id="mmau006"/>
+      <column id="mmau007"/>
+      <column id="mmau008"/>
+      <column id="mmau009"/>
+      <column id="mmau010"/>
+      <column id="mmau011"/>
+      <column id="mmau012"/>
+      <column id="mmau013"/>
+      <column id="mmau014"/>
+      <column id="mmau015"/>
+      <column id="mmau016"/>
+      <column id="mmau017"/>
+      <column id="mmau019">
+        <after>
+          <reference field="mmau019_desc" ref_field="mmau019" map_field="b_mmau019" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="mmau019_desc"/>
+      <column id="mmauseq"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="mmau_t" page="1" linked="" pk="mmau001,mmau004,mmau005,mmauseq">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,mmau001,&apos;&apos;,&apos;&apos;,mmau002,&apos;&apos;,mmau003,mmau004,mmau005,mmau018,&apos;&apos;,mmau006,mmau007,mmau008,mmau009,mmau010,mmau011,mmau012,mmau013,mmau014,mmau015,mmau016,mmau017,mmau019,&apos;&apos;,mmauseq FROM mmau_t WHERE mmauent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

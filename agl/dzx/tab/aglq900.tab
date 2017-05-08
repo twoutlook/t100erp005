@@ -1,0 +1,98 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglq900" module="agl" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="03080" crtdt="2015-03-13 11:10:28" modid="06821" moddt="2016-06-01 10:21:55" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="合併報表個體公司合併前各期科目餘額查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gldnld,gldnld_desc(chr80),gldn001,gldn001_desc(chr80),gldn002,gldn002_desc(chr80),gldn005,gldn006,gldn003,gldn032,gldn004,gldn033,gldn009,gldn026,gldn029"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gldn007,gldn0071_desc(chr100),gldn034,gldn010,gldn011,l_gldn011(num20_6),gldn008,gldn040,gldn041"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gldn007,gldn0072_desc(chr100),gldn035,gldn027,gldn028,l_gldn028(num20_6),gldn008,gldn040,gldn041"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="gldn007,gldn0073_desc(chr100),gldn036,gldn030,gldn031,l_gldn031(num20_6),gldn008,gldn040,gldn041"/>
+      <var id="bs_field" value="gldn001,gldn002,gldn003,gldn004,gldn005,gldn006,gldn008,gldn032,gldn033,gldnld" pk="gldnld,gldn001,gldn002,gldn003,gldn004,gldn005,gldn006,gldn032,gldn033" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="aglq900" method="dialog">
+    <section id="input">
+      <input id="head" field="gldnld,gldn001,gldn002,gldn005,gldn006,gldn003,gldn032,gldn004,gldn033,gldn009,gldn026,gldn029"/>
+      <input id="body" page="1" field="gldn007,gldn0071_desc,gldn034,gldn010,gldn011,l_gldn011,gldn008,gldn040,gldn041" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="gldn0072_desc,gldn035,gldn027,gldn028,l_gldn028" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="gldn0073_desc,gldn036,gldn030,gldn031,l_gldn031" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gldnld,gldn001,gldn002,gldn005,gldn006,gldn003,gldn032,gldn004,gldn033"/>
+      <construct id="body" page="1" field="gldn007,gldn008"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gldnld,gldn001,gldn002,gldn003,gldn004,gldn005,gldn006,gldn032,gldn033"/>
+      <set id="head" type="no_entry" field="gldnld,gldn001,gldn002,gldn003,gldn004,gldn005,gldn006,gldn032,gldn033"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gldnld">
+        <after/>
+      </column>
+      <column id="gldnld_desc"/>
+      <column id="gldn001">
+        <after/>
+      </column>
+      <column id="gldn001_desc"/>
+      <column id="gldn002">
+        <after/>
+      </column>
+      <column id="gldn002_desc"/>
+      <column id="gldn005" type="S" default="0"/>
+      <column id="gldn006" type="S" default="0"/>
+      <column id="gldn003" type="S" default="0"/>
+      <column id="gldn032"/>
+      <column id="gldn004" type="S" default="0"/>
+      <column id="gldn033"/>
+      <column id="gldn009"/>
+      <column id="gldn026"/>
+      <column id="gldn029"/>
+    </init>
+    <init id="body" page="1">
+      <column id="gldn007"/>
+      <column id="gldn0071_desc"/>
+      <column id="gldn034" type="S" default="0"/>
+      <column id="gldn010" type="S" default="0"/>
+      <column id="gldn011" type="S" default="0"/>
+      <column id="l_gldn011" type="S" default="0"/>
+      <column id="gldn008"/>
+      <column id="gldn040"/>
+      <column id="gldn041"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gldn0072_desc"/>
+      <column id="gldn035" type="S" default="0"/>
+      <column id="gldn027" type="S" default="0"/>
+      <column id="gldn028" type="S" default="0"/>
+      <column id="l_gldn028" type="S" default="0"/>
+    </init>
+    <init id="body" page="3">
+      <column id="gldn0073_desc"/>
+      <column id="gldn036" type="S" default="0"/>
+      <column id="gldn030" type="S" default="0"/>
+      <column id="gldn031" type="S" default="0"/>
+      <column id="l_gldn031" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gldn_t" pk="gldnld,gldn001,gldn002,gldn003,gldn004,gldn005,gldn006,gldn032,gldn033">
+      <sql id="forupd_sql" type="sql" query="SELECT gldnld,&apos;&apos;,gldn001,&apos;&apos;,gldn002,&apos;&apos;,gldn005,gldn006,gldn003,gldn032,gldn004,gldn033,gldn009,gldn026,gldn029 FROM gldn_t WHERE gldnent= ? AND gldnld=? AND gldn001=? AND gldn002=? AND gldn003=? AND gldn004=? AND gldn005=? AND gldn006=? AND gldn032=? AND gldn033=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gldnld,&apos;&apos;,gldn001,&apos;&apos;,gldn002,&apos;&apos;,gldn005,gldn006,gldn003,gldn032,gldn004,gldn033,gldn009,gldn026,gldn029 FROM gldn_t" order="gldnld,gldn001,gldn002,gldn003,gldn004,gldn005,gldn006,gldn032,gldn033"/>
+    </head>
+    <body id="gldn_t" page="1,2,3" linked="" pk="gldn007,gldn008,gldn040,gldn041" fk="gldnld,gldn001,gldn002,gldn003,gldn004,gldn005,gldn006,gldn032,gldn033">
+      <sql id="forupd_sql_detail" query="SELECT gldn007,&apos;&apos;,gldn034,gldn010,gldn011,&apos;&apos;,gldn008,gldn040,gldn041,&apos;&apos;,&apos;&apos;,gldn035,gldn027,gldn028,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,gldn036,gldn030,gldn031,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM gldn_t WHERE gldnent=? AND gldnld=? AND gldn001=? AND gldn002=? AND gldn003=? AND gldn004=? AND gldn005=? AND gldn006=? AND gldn032=? AND gldn033=? AND gldn007=? AND gldn008=? AND gldn040=? AND gldn041=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gldn007,&apos;&apos;,gldn034,gldn010,gldn011,&apos;&apos;,gldn008,gldn040,gldn041,&apos;&apos;,&apos;&apos;,gldn035,gldn027,gldn028,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,gldn036,gldn030,gldn031,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM gldn_t WHERE gldnent= ? AND gldnld=? AND gldn001=? AND gldn002=? AND gldn003=? AND gldn004=? AND gldn005=? AND gldn006=? AND gldn032=? AND gldn033=?"/>
+    </body>
+  </dataset>
+</assembly>
+

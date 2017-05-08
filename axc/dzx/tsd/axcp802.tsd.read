@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axcp802" std_prog="axcp802" erpver="1.0" ver="1" module="AXC" type="M" booking="N" designer_ver="1.0" class="p" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： LCM存货货龄计算作业
+標準作業功能：
+作業類型：批次作业
+資料來源(Master)：
+   xcfg_t(LCM存货成本和市价期资料档)
+   xcfj_t(LCM存货货龄明细计算档)
+
+
+
+按INPUT的条件法人、账套、年度、账套、成本计算类型、主本位币顺序和QBE的料件、特性、成本域、批号等范围从LCM存货成本和市价期资料档取出明细资料，进行FOREACH循环计算。
+    1.总库存量=LCM存货成本和市价期资料档取出的存货数量(xcfg014)  改为xccc901库存结余数量
+    2.根据料件、成本域、批号、项目号从库存进出明细档（inaj_t）中找出库存扣账日期和sum(交易数量*交易单位对成本单位换算率)进行FOREACH循环计算,按日期做降序排列。
+        注意： 1、库存进出的时间范围在库存进出起始日期(tm.date1)和截至日期之间(tm.date2)
+               2、排除参数中的设置的排除仓库(xcfd_t)的库存进出和非成本仓的库存进出。
+               3、库存入库的类型根据画面设置的入库范围(tm.storein)的范围内。
+        已计算量=己计算量(初始为0)+sum(交易数量*交易单位对成本单位换算率)
+        剩余量=总库存量-已计算量-sum(交易数量*交易单位对成本单位换算率)
+        如果剩余量大于0
+           本次计算量=sum(交易数量*交易单位对成本单位换算率)
+        如果剩余量小于0
+            本次计算量=总库存量-已计算量
+        新增LCM存货货龄计算明细档(xcfj_t)
+              集团(xcfjent)=集团
+              法人(xcfjcomp)=法人
+              账套(xcfjld)=账套
+              成本域(xcfj001)=成本域
+              成本计算类型(xcfj002)=成本计算类型
+              年度(xcfj003)=年度
+              期别(xcfj004)=期别
+              料号(xcfj005)=料号
+              批号(xcfj006)=批号
+              项目号(xcfj007)=项目号
+              日期(xcfj008)=库存扣账日期
+              数量(xcfj009)=本次计算量
+        如果计算量小于0了，则退出本FOREACH循环。
+    END FOREACH
+   3. 如果总库存量扣除时间范围内的异动量后的剩余量还是大于0，则再去跟库存账龄开账档(xcfk_t)的数据进行比较。
+          3.1如果库存账龄开账档(xcfk_t)的数据是0，则把剩余数量归属日期设为库存异动起始日期，存入LCM存货货龄计算明细档(xcfj_t)。
+          3.2如果库存账龄开账档(xcfk_t)的数据大于0，则找出该料件、成本域、批号、项目号的库存账龄开账档(xcfk_t)的明细资料进行FOREACH循环计算,按日期从近往远抓取库存数量
+             已计算量=己计算量(初始为0)+本笔库存数量
+             剩余量=总库存量(指在第2种的剩余量)-已计算量-本笔库存数量
+             如果剩余量大于0
+                本次计算量=本笔库存数量
+             如果剩余量小于0
+                本次计算量=总库存量(指在第2种的剩余量)-已计算量
+             新增LCM存货货龄计算明细档(xcfj_t)
+                集团(xcfjent)=集团
+                法人(xcfjcomp)=法人
+                账套(xcfjld)=账套
+                成本域(xcfj001)=成本域
+                成本计算类型(xcfj002)=成本计算类型
+                年度(xcfj003)=年度
+                期别(xcfj004)=期别
+                料号(xcfj005)=料号
+                批号(xcfj006)=批号
+                项目号(xcfj007)=项目号
+                日期(xcfj008)=库存扣账日期
+                数量(xcfj009)=本次计算量
+             
+             如果计算量小于0了，则退出本FOREACH循环。
+          END FOREACH
+END FOREACH
+
+]]>
+  </all>
+  <field cite_std="N" name="date1" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="date2" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="p1" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="storein1" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="storein2" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="storein3" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccc002" ver="1" src="s" column="xccc002" table="xccc_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_xccc002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccc003" ver="1" src="s" column="xccc003" table="xccc_t" attribute="" type="" req="Y" i_zoom="q_xcat001" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccc004" ver="1" src="s" column="xccc004" table="xccc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccc005" ver="1" src="s" column="xccc005" table="xccc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccc006" ver="1" src="s" column="xccc006" table="xccc_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_imaf001_13" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccc007" ver="1" src="s" column="xccc007" table="xccc_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_xccc007" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccc008" ver="1" src="s" column="xccc008" table="xccc_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_xccc008" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccccomp" ver="1" src="s" column="xccccomp" table="xccc_t" attribute="" type="" req="Y" i_zoom="q_ooef001_2" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcccld" ver="1" src="s" column="xcccld" table="xccc_t" attribute="" type="" req="Y" i_zoom="q_authorised_ld" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="n1" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="n2" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="n3" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="p2" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccc001" ver="1" src="s" column="xccc001" table="xccc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ComboBox" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="xccc001_desc" src="s" depend_field="xccc001" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status="d"/>
+    <rfield cite_std="N" ver="1" name="xccc003_desc" src="s" depend_field="xccc003" correspon_key="xcccent,xccc003" ref_table="xcatl_t" ref_fk="xcatlent,xcatl001" ref_dlang="xcatl002" ref_rtn="xcatl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xccc006_desc" src="s" depend_field="xccc006" correspon_key="xcccent,xccc006" ref_table="imaal_t" ref_fk="imaalent,imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status="d"/>
+    <rfield cite_std="N" ver="1" name="xccc006_desc_1" src="s" depend_field="xccc006" correspon_key="xcccent,xccc006" ref_table="imaal_t" ref_fk="imaalent,imaal001" ref_dlang="imaal002" ref_rtn="imaal004" status="d"/>
+    <rfield cite_std="N" ver="1" name="xccccomp_desc" src="s" depend_field="xccccomp" correspon_key="xcccent,xccccomp" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xcccld_desc" src="s" depend_field="xcccld" correspon_key="xcccent,xcccld" ref_table="glaal_t" ref_fk="glaalent,glaalld" ref_dlang="glaal001" ref_rtn="glaal002" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="date1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="date2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="n1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="n2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="n3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="p1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="p2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="storein1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="storein2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="storein3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccc001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="xccc002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccc003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccc004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccc005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccc006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccc007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccc008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccccomp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcccld" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="group_input" text="INPUT" lstr=""/>
+    <sfield name="lbl_lbl_xcccld" text="帳套" lstr=""/>
+    <sfield name="lbl_xcccld" text="帳套" lstr=""/>
+    <sfield name="lbl_glaal002" text="說明" lstr=""/>
+    <sfield name="lbl_lbl_xccccomp" text="法人組織" lstr=""/>
+    <sfield name="lbl_xccccomp" text="法人組織" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="axcp802.group_1" text="計算參數設置" lstr=""/>
+    <sfield name="lbl_lbl_xccc004" text="年度/期別" lstr=""/>
+    <sfield name="lbl_xccc004" text="年度" lstr=""/>
+    <sfield name="lbl_xccc005" text="期別" lstr=""/>
+    <sfield name="lbl_lbl_xccc003" text="成本計算類型" lstr=""/>
+    <sfield name="lbl_xccc003" text="成本計算類型" lstr=""/>
+    <sfield name="lbl_xcatl003" text="成本類型說明" lstr=""/>
+    <sfield name="lbl_date1" text="庫存異動起始日期" lstr=""/>
+    <sfield name="lbl_date2" text="庫存異動截止日期" lstr=""/>
+    <sfield name="axcp802.group_2" text="入庫範圍" lstr=""/>
+    <sfield name="lbl_checkbox_1" text="正常入庫（工單、採購、委外入庫）" lstr=""/>
+    <sfield name="lbl_checkbox_2" text="雜項入庫（雜收、盤盈）" lstr=""/>
+    <sfield name="lbl_checkbox_3" text="其他入庫（銷退、工單退料、拆件入庫）" lstr=""/>
+    <sfield name="group_qbe" text="QBE" lstr=""/>
+    <sfield name="lbl_lbl_xccc006" text="料號" lstr=""/>
+    <sfield name="lbl_xccc006" text="料號" lstr=""/>
+    <sfield name="lbl_lbl_xccc008" text="批號" lstr=""/>
+    <sfield name="lbl_xccc008" text="批號" lstr=""/>
+    <sfield name="lbl_lbl_xccc002" text="成本域" lstr=""/>
+    <sfield name="lbl_xccc002" text="成本域" lstr=""/>
+    <sfield name="lbl_lbl_xccc007" text="特性碼" lstr=""/>
+    <sfield name="lbl_xccc007" text="特性碼" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="lbl_item" text="料號" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

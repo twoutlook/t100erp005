@@ -1,0 +1,1225 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="agli020_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0005(2014-10-11 11:10:51), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000299
+#+ Filename...: agli020_01
+#+ Description: 
+#+ Creator....: 02299(2013-08-27 15:18:55)
+#+ Modifier...: 02599 -SD/PR-
+
+{</section>}
+
+{<section id="agli020_01.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+{<point name="global.memo" />}
+#end add-point
+#add-point:填寫註解說明(客製用)
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_glac_m        RECORD
+       glac001 LIKE glac_t.glac001, 
+   glac001_desc LIKE type_t.chr80, 
+   glac002 LIKE glac_t.glac002, 
+   glacl004 LIKE glacl_t.glacl004, 
+   glacl005 LIKE glacl_t.glacl005, 
+   glacstus LIKE glac_t.glacstus, 
+   glac003 LIKE glac_t.glac003, 
+   glac004 LIKE glac_t.glac004, 
+   glac005 LIKE glac_t.glac005, 
+   glac011 LIKE glac_t.glac011, 
+   glac016 LIKE glac_t.glac016, 
+   glac007 LIKE glac_t.glac007, 
+   glac006 LIKE glac_t.glac006, 
+   glac008 LIKE glac_t.glac008, 
+   glac010 LIKE glac_t.glac010, 
+   glac009 LIKE glac_t.glac009, 
+   glac017 LIKE glac_t.glac017, 
+   glac028 LIKE type_t.chr1, 
+   glac018 LIKE glac_t.glac018, 
+   glac029 LIKE type_t.chr1, 
+   glac019 LIKE glac_t.glac019, 
+   glac030 LIKE type_t.chr1, 
+   glac020 LIKE glac_t.glac020, 
+   glac023 LIKE glac_t.glac023, 
+   glac027 LIKE glac_t.glac027, 
+   glac025 LIKE glac_t.glac025, 
+   glac021 LIKE glac_t.glac021, 
+   glac026 LIKE glac_t.glac026, 
+   glac022 LIKE glac_t.glac022, 
+   glac012 LIKE glac_t.glac012, 
+   glac013 LIKE glac_t.glac013, 
+   glac014 LIKE glac_t.glac014, 
+   glac015 LIKE glac_t.glac015
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_glac_m        type_g_glac_m
+ 
+   DEFINE g_glac001_t LIKE glac_t.glac001
+DEFINE g_glac002_t LIKE glac_t.glac002
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="agli020_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION agli020_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_agli020_01 WITH FORM cl_ap_formpath("agl","agli020_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_glac_m.glac001,g_glac_m.glac002,g_glac_m.glacl004,g_glac_m.glacl005,g_glac_m.glacstus, 
+          g_glac_m.glac003,g_glac_m.glac004,g_glac_m.glac005,g_glac_m.glac011,g_glac_m.glac016,g_glac_m.glac007, 
+          g_glac_m.glac006,g_glac_m.glac008,g_glac_m.glac010,g_glac_m.glac009,g_glac_m.glac017,g_glac_m.glac028, 
+          g_glac_m.glac018,g_glac_m.glac029,g_glac_m.glac019,g_glac_m.glac030,g_glac_m.glac020,g_glac_m.glac023, 
+          g_glac_m.glac027,g_glac_m.glac025,g_glac_m.glac021,g_glac_m.glac026,g_glac_m.glac022,g_glac_m.glac012, 
+          g_glac_m.glac013,g_glac_m.glac014,g_glac_m.glac015 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION update_item
+            LET g_action_choice="update_item"
+            IF cl_auth_chk_act("update_item") THEN
+               
+               #add-point:ON ACTION update_item name="input.master_input.update_item"
+               {<point name="input.master_input.update_item" mark="Y"/>}
+               #END add-point
+            END IF
+ 
+ 
+ 
+ 
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac001
+            
+            #add-point:AFTER FIELD glac001 name="input.a.glac001"
+            {<point name="input.a.glac001" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac001
+            #add-point:BEFORE FIELD glac001 name="input.b.glac001"
+            {<point name="input.b.glac001" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac001
+            #add-point:ON CHANGE glac001 name="input.g.glac001"
+            {<point name="input.g.glac001" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac002
+            #add-point:BEFORE FIELD glac002 name="input.b.glac002"
+            {<point name="input.b.glac002" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac002
+            
+            #add-point:AFTER FIELD glac002 name="input.a.glac002"
+            {<point name="input.a.glac002" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac002
+            #add-point:ON CHANGE glac002 name="input.g.glac002"
+            {<point name="input.g.glac002" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glacl004
+            #add-point:BEFORE FIELD glacl004 name="input.b.glacl004"
+            {<point name="input.b.glacl004" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glacl004
+            
+            #add-point:AFTER FIELD glacl004 name="input.a.glacl004"
+            {<point name="input.a.glacl004" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glacl004
+            #add-point:ON CHANGE glacl004 name="input.g.glacl004"
+            {<point name="input.g.glacl004" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glacl005
+            #add-point:BEFORE FIELD glacl005 name="input.b.glacl005"
+            {<point name="input.b.glacl005" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glacl005
+            
+            #add-point:AFTER FIELD glacl005 name="input.a.glacl005"
+            {<point name="input.a.glacl005" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glacl005
+            #add-point:ON CHANGE glacl005 name="input.g.glacl005"
+            {<point name="input.g.glacl005" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glacstus
+            #add-point:BEFORE FIELD glacstus name="input.b.glacstus"
+            {<point name="input.b.glacstus" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glacstus
+            
+            #add-point:AFTER FIELD glacstus name="input.a.glacstus"
+            {<point name="input.a.glacstus" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glacstus
+            #add-point:ON CHANGE glacstus name="input.g.glacstus"
+            {<point name="input.g.glacstus" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac003
+            #add-point:BEFORE FIELD glac003 name="input.b.glac003"
+            {<point name="input.b.glac003" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac003
+            
+            #add-point:AFTER FIELD glac003 name="input.a.glac003"
+            {<point name="input.a.glac003" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac003
+            #add-point:ON CHANGE glac003 name="input.g.glac003"
+            {<point name="input.g.glac003" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac004
+            #add-point:BEFORE FIELD glac004 name="input.b.glac004"
+            {<point name="input.b.glac004" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac004
+            
+            #add-point:AFTER FIELD glac004 name="input.a.glac004"
+            {<point name="input.a.glac004" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac004
+            #add-point:ON CHANGE glac004 name="input.g.glac004"
+            {<point name="input.g.glac004" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac005
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_glac_m.glac005,"1","1","99","1","azz-00087",1) THEN
+               NEXT FIELD glac005
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD glac005 name="input.a.glac005"
+            {<point name="input.a.glac005" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac005
+            #add-point:BEFORE FIELD glac005 name="input.b.glac005"
+            {<point name="input.b.glac005" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac005
+            #add-point:ON CHANGE glac005 name="input.g.glac005"
+            {<point name="input.g.glac005" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac011
+            #add-point:BEFORE FIELD glac011 name="input.b.glac011"
+            {<point name="input.b.glac011" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac011
+            
+            #add-point:AFTER FIELD glac011 name="input.a.glac011"
+            {<point name="input.a.glac011" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac011
+            #add-point:ON CHANGE glac011 name="input.g.glac011"
+            {<point name="input.g.glac011" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac016
+            #add-point:BEFORE FIELD glac016 name="input.b.glac016"
+            {<point name="input.b.glac016" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac016
+            
+            #add-point:AFTER FIELD glac016 name="input.a.glac016"
+            {<point name="input.a.glac016" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac016
+            #add-point:ON CHANGE glac016 name="input.g.glac016"
+            {<point name="input.g.glac016" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac007
+            #add-point:BEFORE FIELD glac007 name="input.b.glac007"
+            {<point name="input.b.glac007" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac007
+            
+            #add-point:AFTER FIELD glac007 name="input.a.glac007"
+            {<point name="input.a.glac007" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac007
+            #add-point:ON CHANGE glac007 name="input.g.glac007"
+            {<point name="input.g.glac007" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac006
+            #add-point:BEFORE FIELD glac006 name="input.b.glac006"
+            {<point name="input.b.glac006" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac006
+            
+            #add-point:AFTER FIELD glac006 name="input.a.glac006"
+            {<point name="input.a.glac006" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac006
+            #add-point:ON CHANGE glac006 name="input.g.glac006"
+            {<point name="input.g.glac006" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac008
+            #add-point:BEFORE FIELD glac008 name="input.b.glac008"
+            {<point name="input.b.glac008" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac008
+            
+            #add-point:AFTER FIELD glac008 name="input.a.glac008"
+            {<point name="input.a.glac008" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac008
+            #add-point:ON CHANGE glac008 name="input.g.glac008"
+            {<point name="input.g.glac008" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac010
+            #add-point:BEFORE FIELD glac010 name="input.b.glac010"
+            {<point name="input.b.glac010" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac010
+            
+            #add-point:AFTER FIELD glac010 name="input.a.glac010"
+            {<point name="input.a.glac010" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac010
+            #add-point:ON CHANGE glac010 name="input.g.glac010"
+            {<point name="input.g.glac010" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac009
+            #add-point:BEFORE FIELD glac009 name="input.b.glac009"
+            {<point name="input.b.glac009" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac009
+            
+            #add-point:AFTER FIELD glac009 name="input.a.glac009"
+            {<point name="input.a.glac009" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac009
+            #add-point:ON CHANGE glac009 name="input.g.glac009"
+            {<point name="input.g.glac009" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac017
+            #add-point:BEFORE FIELD glac017 name="input.b.glac017"
+            {<point name="input.b.glac017" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac017
+            
+            #add-point:AFTER FIELD glac017 name="input.a.glac017"
+            {<point name="input.a.glac017" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac017
+            #add-point:ON CHANGE glac017 name="input.g.glac017"
+            {<point name="input.g.glac017" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac028
+            #add-point:BEFORE FIELD glac028 name="input.b.glac028"
+            {<point name="input.b.glac028" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac028
+            
+            #add-point:AFTER FIELD glac028 name="input.a.glac028"
+            {<point name="input.a.glac028" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac028
+            #add-point:ON CHANGE glac028 name="input.g.glac028"
+            {<point name="input.g.glac028" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac018
+            #add-point:BEFORE FIELD glac018 name="input.b.glac018"
+            {<point name="input.b.glac018" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac018
+            
+            #add-point:AFTER FIELD glac018 name="input.a.glac018"
+            {<point name="input.a.glac018" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac018
+            #add-point:ON CHANGE glac018 name="input.g.glac018"
+            {<point name="input.g.glac018" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac029
+            #add-point:BEFORE FIELD glac029 name="input.b.glac029"
+            {<point name="input.b.glac029" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac029
+            
+            #add-point:AFTER FIELD glac029 name="input.a.glac029"
+            {<point name="input.a.glac029" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac029
+            #add-point:ON CHANGE glac029 name="input.g.glac029"
+            {<point name="input.g.glac029" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac019
+            #add-point:BEFORE FIELD glac019 name="input.b.glac019"
+            {<point name="input.b.glac019" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac019
+            
+            #add-point:AFTER FIELD glac019 name="input.a.glac019"
+            {<point name="input.a.glac019" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac019
+            #add-point:ON CHANGE glac019 name="input.g.glac019"
+            {<point name="input.g.glac019" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac030
+            #add-point:BEFORE FIELD glac030 name="input.b.glac030"
+            {<point name="input.b.glac030" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac030
+            
+            #add-point:AFTER FIELD glac030 name="input.a.glac030"
+            {<point name="input.a.glac030" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac030
+            #add-point:ON CHANGE glac030 name="input.g.glac030"
+            {<point name="input.g.glac030" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac020
+            #add-point:BEFORE FIELD glac020 name="input.b.glac020"
+            {<point name="input.b.glac020" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac020
+            
+            #add-point:AFTER FIELD glac020 name="input.a.glac020"
+            {<point name="input.a.glac020" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac020
+            #add-point:ON CHANGE glac020 name="input.g.glac020"
+            {<point name="input.g.glac020" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac023
+            #add-point:BEFORE FIELD glac023 name="input.b.glac023"
+            {<point name="input.b.glac023" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac023
+            
+            #add-point:AFTER FIELD glac023 name="input.a.glac023"
+            {<point name="input.a.glac023" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac023
+            #add-point:ON CHANGE glac023 name="input.g.glac023"
+            {<point name="input.g.glac023" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac027
+            #add-point:BEFORE FIELD glac027 name="input.b.glac027"
+            {<point name="input.b.glac027" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac027
+            
+            #add-point:AFTER FIELD glac027 name="input.a.glac027"
+            {<point name="input.a.glac027" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac027
+            #add-point:ON CHANGE glac027 name="input.g.glac027"
+            {<point name="input.g.glac027" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac025
+            #add-point:BEFORE FIELD glac025 name="input.b.glac025"
+            {<point name="input.b.glac025" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac025
+            
+            #add-point:AFTER FIELD glac025 name="input.a.glac025"
+            {<point name="input.a.glac025" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac025
+            #add-point:ON CHANGE glac025 name="input.g.glac025"
+            {<point name="input.g.glac025" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac021
+            #add-point:BEFORE FIELD glac021 name="input.b.glac021"
+            {<point name="input.b.glac021" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac021
+            
+            #add-point:AFTER FIELD glac021 name="input.a.glac021"
+            {<point name="input.a.glac021" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac021
+            #add-point:ON CHANGE glac021 name="input.g.glac021"
+            {<point name="input.g.glac021" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac026
+            #add-point:BEFORE FIELD glac026 name="input.b.glac026"
+            {<point name="input.b.glac026" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac026
+            
+            #add-point:AFTER FIELD glac026 name="input.a.glac026"
+            {<point name="input.a.glac026" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac026
+            #add-point:ON CHANGE glac026 name="input.g.glac026"
+            {<point name="input.g.glac026" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac022
+            #add-point:BEFORE FIELD glac022 name="input.b.glac022"
+            {<point name="input.b.glac022" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac022
+            
+            #add-point:AFTER FIELD glac022 name="input.a.glac022"
+            {<point name="input.a.glac022" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac022
+            #add-point:ON CHANGE glac022 name="input.g.glac022"
+            {<point name="input.g.glac022" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac012
+            #add-point:BEFORE FIELD glac012 name="input.b.glac012"
+            {<point name="input.b.glac012" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac012
+            
+            #add-point:AFTER FIELD glac012 name="input.a.glac012"
+            {<point name="input.a.glac012" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac012
+            #add-point:ON CHANGE glac012 name="input.g.glac012"
+            {<point name="input.g.glac012" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac013
+            #add-point:BEFORE FIELD glac013 name="input.b.glac013"
+            {<point name="input.b.glac013" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac013
+            
+            #add-point:AFTER FIELD glac013 name="input.a.glac013"
+            {<point name="input.a.glac013" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac013
+            #add-point:ON CHANGE glac013 name="input.g.glac013"
+            {<point name="input.g.glac013" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac014
+            #add-point:BEFORE FIELD glac014 name="input.b.glac014"
+            {<point name="input.b.glac014" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac014
+            
+            #add-point:AFTER FIELD glac014 name="input.a.glac014"
+            {<point name="input.a.glac014" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac014
+            #add-point:ON CHANGE glac014 name="input.g.glac014"
+            {<point name="input.g.glac014" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac015
+            #add-point:BEFORE FIELD glac015 name="input.b.glac015"
+            {<point name="input.b.glac015" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac015
+            
+            #add-point:AFTER FIELD glac015 name="input.a.glac015"
+            {<point name="input.a.glac015" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac015
+            #add-point:ON CHANGE glac015 name="input.g.glac015"
+            {<point name="input.g.glac015" />}
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.glac001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac001
+            #add-point:ON ACTION controlp INFIELD glac001 name="input.c.glac001"
+            {<point name="input.c.glac001" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac002
+            #add-point:ON ACTION controlp INFIELD glac002 name="input.c.glac002"
+            {<point name="input.c.glac002" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glacl004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glacl004
+            #add-point:ON ACTION controlp INFIELD glacl004 name="input.c.glacl004"
+            {<point name="input.c.glacl004" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glacl005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glacl005
+            #add-point:ON ACTION controlp INFIELD glacl005 name="input.c.glacl005"
+            {<point name="input.c.glacl005" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glacstus
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glacstus
+            #add-point:ON ACTION controlp INFIELD glacstus name="input.c.glacstus"
+            {<point name="input.c.glacstus" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac003
+            #add-point:ON ACTION controlp INFIELD glac003 name="input.c.glac003"
+            {<point name="input.c.glac003" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac004
+            #add-point:ON ACTION controlp INFIELD glac004 name="input.c.glac004"
+            {<point name="input.c.glac004" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac005
+            #add-point:ON ACTION controlp INFIELD glac005 name="input.c.glac005"
+            {<point name="input.c.glac005" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac011
+            #add-point:ON ACTION controlp INFIELD glac011 name="input.c.glac011"
+            {<point name="input.c.glac011" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac016
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac016
+            #add-point:ON ACTION controlp INFIELD glac016 name="input.c.glac016"
+            {<point name="input.c.glac016" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac007
+            #add-point:ON ACTION controlp INFIELD glac007 name="input.c.glac007"
+            {<point name="input.c.glac007" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac006
+            #add-point:ON ACTION controlp INFIELD glac006 name="input.c.glac006"
+            {<point name="input.c.glac006" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac008
+            #add-point:ON ACTION controlp INFIELD glac008 name="input.c.glac008"
+            {<point name="input.c.glac008" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac010
+            #add-point:ON ACTION controlp INFIELD glac010 name="input.c.glac010"
+            {<point name="input.c.glac010" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac009
+            #add-point:ON ACTION controlp INFIELD glac009 name="input.c.glac009"
+            {<point name="input.c.glac009" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac017
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac017
+            #add-point:ON ACTION controlp INFIELD glac017 name="input.c.glac017"
+            {<point name="input.c.glac017" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac028
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac028
+            #add-point:ON ACTION controlp INFIELD glac028 name="input.c.glac028"
+            {<point name="input.c.glac028" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac018
+            #add-point:ON ACTION controlp INFIELD glac018 name="input.c.glac018"
+            {<point name="input.c.glac018" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac029
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac029
+            #add-point:ON ACTION controlp INFIELD glac029 name="input.c.glac029"
+            {<point name="input.c.glac029" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac019
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac019
+            #add-point:ON ACTION controlp INFIELD glac019 name="input.c.glac019"
+            {<point name="input.c.glac019" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac030
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac030
+            #add-point:ON ACTION controlp INFIELD glac030 name="input.c.glac030"
+            {<point name="input.c.glac030" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac020
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac020
+            #add-point:ON ACTION controlp INFIELD glac020 name="input.c.glac020"
+            {<point name="input.c.glac020" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac023
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac023
+            #add-point:ON ACTION controlp INFIELD glac023 name="input.c.glac023"
+            {<point name="input.c.glac023" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac027
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac027
+            #add-point:ON ACTION controlp INFIELD glac027 name="input.c.glac027"
+            {<point name="input.c.glac027" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac025
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac025
+            #add-point:ON ACTION controlp INFIELD glac025 name="input.c.glac025"
+            {<point name="input.c.glac025" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac021
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac021
+            #add-point:ON ACTION controlp INFIELD glac021 name="input.c.glac021"
+            {<point name="input.c.glac021" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac026
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac026
+            #add-point:ON ACTION controlp INFIELD glac026 name="input.c.glac026"
+            {<point name="input.c.glac026" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac022
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac022
+            #add-point:ON ACTION controlp INFIELD glac022 name="input.c.glac022"
+            {<point name="input.c.glac022" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac012
+            #add-point:ON ACTION controlp INFIELD glac012 name="input.c.glac012"
+            {<point name="input.c.glac012" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac013
+            #add-point:ON ACTION controlp INFIELD glac013 name="input.c.glac013"
+            {<point name="input.c.glac013" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac014
+            #add-point:ON ACTION controlp INFIELD glac014 name="input.c.glac014"
+            {<point name="input.c.glac014" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac015
+            #add-point:ON ACTION controlp INFIELD glac015 name="input.c.glac015"
+            {<point name="input.c.glac015" />}
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_agli020_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="agli020_01.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+
+{</section>}
+
+{<section id="agli020_01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

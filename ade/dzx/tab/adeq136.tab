@@ -1,0 +1,63 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adeq136" module="ade" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="06815" crtdt="2015-06-05 15:06:19" modid="02159" moddt="2015-07-03 15:39:35" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="會員卡積點異動日結查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),decd001,decd001_desc(chr500),decd002,decd003,decd004,decd005,decd006,decd007,decd008,decd008_desc(chr500),decd009"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),decd001(b_decd001),decd001_desc(b_decd001_desc),decd002(b_decd002),decd003(b_decd003),decd004(b_decd004),decd005(b_decd005),decd006(b_decd006),decd007(b_decd007),decd008(b_decd008),decd008_desc(b_decd008_desc),decd009(b_decd009)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adeq136" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="decd001,decd002,decd003,decd004,decd005,decd006,decd007,decd008,decd009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="decd001(b_decd001),decd002(b_decd002),decd003(b_decd003),decd004(b_decd004),decd005(b_decd005),decd006(b_decd006),decd007(b_decd007),decd008(b_decd008),decd009(b_decd009)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="decd001">
+        <after>
+          <reference field="decd001_desc" ref_field="decd001" map_field="decd001" ref_sql="SELECT mmanl003 FROM mmanl_t WHERE mmanlent=$varg_enterprise$var AND mmanl001=? AND mmanl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mman001_7" state="c"/>
+      </column>
+      <column id="decd001_desc"/>
+      <column id="decd002"/>
+      <column id="decd003" type="S" default="0"/>
+      <column id="decd004" type="S" default="0"/>
+      <column id="decd005" type="S" default="0"/>
+      <column id="decd006" type="S" default="0"/>
+      <column id="decd007" type="S" default="0"/>
+      <column id="decd008">
+        <after>
+          <reference field="decd008_desc" ref_field="decd008" map_field="decd008" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="decd008_desc"/>
+      <column id="decd009"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="decd_t" page="1" linked="" pk="decd001,decd002">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,decd001,&apos;&apos;,decd002,decd003,decd004,decd005,decd006,decd007,decd008,&apos;&apos;,decd009 FROM decd_t WHERE decdent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

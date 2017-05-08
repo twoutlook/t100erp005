@@ -1,0 +1,1420 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aini020.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2016-06-13 17:43:03), PR版次:0004(2016-06-21 11:44:14)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000147
+#+ Filename...: aini020
+#+ Description: 庫存有效日期及備註變更作業
+#+ Creator....: 02295(2014-06-24 10:23:54)
+#+ Modifier...: 07024 -SD/PR- 07024
+ 
+{</section>}
+ 
+{<section id="aini020.global" >}
+#應用 i00 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#160512-00004#2  2016/06/13 By dorislai 增加製造日期欄位
+#160512-00004#1  2016/06/20 By Whitney  inai012製造日期改抓inae010
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+IMPORT util
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable)
+#單身 type 宣告
+ TYPE type_g_inad_d RECORD
+   inad001 LIKE inad_t.inad001,
+   imaal003 LIKE imaal_t.imaal003,
+   imaal004 LIKE imaal_t.imaal004,   
+   inad002 LIKE inad_t.inad002, 
+   inad003 LIKE inad_t.inad003, 
+   inad014 LIKE inad_t.inad014,  #160512-00004#2-add
+   inad011 LIKE inad_t.inad011, 
+   inad012 LIKE inad_t.inad012 
+       END RECORD
+ TYPE type_g_inae_d RECORD
+   inae001 LIKE inae_t.inae001,
+   imaal003 LIKE imaal_t.imaal003,
+   imaal004 LIKE imaal_t.imaal004,    
+   inae002 LIKE inae_t.inae002, 
+   inae003 LIKE inae_t.inae003, 
+   inae004 LIKE inae_t.inae004, 
+   inae010 LIKE inae_t.inae010,  #160512-00004#2-add
+   inae011 LIKE inae_t.inae011, 
+   inae030 LIKE inae_t.inae030
+       END RECORD
+ 
+ TYPE type_g_inag_d RECORD
+   inag004 LIKE inag_t.inag004,
+   inaa002 LIKE inaa_t.inaa002,   
+   inag005 LIKE inag_t.inag005,
+   inab003 LIKE inab_t.inab003,   
+   inag006 LIKE inag_t.inag006, 
+   inag003 LIKE inag_t.inag003, 
+   inag007 LIKE inag_t.inag007, 
+   inag008 LIKE inag_t.inag008, 
+   inag017 LIKE inag_t.inag017, 
+   inag016 LIKE inag_t.inag016, 
+   inag015 LIKE inag_t.inag015, 
+   inag014 LIKE inag_t.inag014, 
+   inag026 LIKE inag_t.inag026, 
+   inag012 LIKE inag_t.inag012, 
+   inag011 LIKE inag_t.inag011, 
+   inag010 LIKE inag_t.inag010,
+   inaa015 LIKE inaa_t.inaa015,   
+   inag019 LIKE inag_t.inag019, 
+   inag020 LIKE inag_t.inag020
+       END RECORD
+ 
+ TYPE type_g_inaj_d RECORD
+   inaj035 LIKE inaj_t.inaj035, 
+   inaj004 LIKE inaj_t.inaj004, 
+   inaj001 LIKE inaj_t.inaj001, 
+   inaj022 LIKE inaj_t.inaj022, 
+   inaj018 LIKE inaj_t.inaj018, 
+   inaj017 LIKE inaj_t.inaj017, 
+   inaj002 LIKE inaj_t.inaj002, 
+   inaj003 LIKE inaj_t.inaj003, 
+   inaj012 LIKE inaj_t.inaj012, 
+   inaj011 LIKE inaj_t.inaj011, 
+   inaj016 LIKE inaj_t.inaj016
+       END RECORD
+
+DEFINE g_inad_d         DYNAMIC ARRAY OF type_g_inad_d
+DEFINE g_inad_d_t       type_g_inad_d
+DEFINE g_inae_d         DYNAMIC ARRAY OF type_g_inae_d
+DEFINE g_inae_d_t       type_g_inae_d                         
+DEFINE g_inag_d         DYNAMIC ARRAY OF type_g_inag_d                       
+DEFINE g_inaj_d         DYNAMIC ARRAY OF type_g_inaj_d
+
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING 
+DEFINE g_wc1                STRING
+DEFINE g_wc1_t              STRING 
+DEFINE g_wc2                STRING
+DEFINE g_wc2_t              STRING 
+DEFINE g_wc_filter1         STRING
+DEFINE g_wc_filter1_t       STRING
+DEFINE g_wc_filter2         STRING
+DEFINE g_wc_filter2_t       STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING 
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num5  
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_detail_cnt2        LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_detail_idx         LIKE type_t.num5
+DEFINE g_detail_idx2        LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num5
+DEFINE g_current_page       LIKE type_t.num5              #目前所在頁數
+DEFINE g_current_page2      LIKE type_t.num5              #目前所在頁數
+DEFINE g_wc_table     STRING
+DEFINE g_wc_table2    STRING
+DEFINE g_wc_table3    STRING
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aini020.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define
+   
+   #end add-point    
+   #add-point:main段define(客製用)
+   
+   #end add-point
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("ain","")
+ 
+   #add-point:作業初始化
+   
+   #end add-point
+ 
+   #add-point:SQL_define
+   #160512-00004#2-mod-(S)
+#   LET g_forupd_sql = "SELECT inae001,'','',inae002,inae003,inae004,inae011,inae030 FROM inae_t WHERE inaeent= ? AND inaesite= ? AND inae001=? AND inae002=? AND inae003 =? AND inae004 = ? FOR UPDATE"
+   LET g_forupd_sql = "SELECT inae001,'','',inae002,inae003,inae004,inae010,inae011,inae030 FROM inae_t WHERE inaeent= ? AND inaesite= ? AND inae001=? AND inae002=? AND inae003 =? AND inae004 = ? FOR UPDATE" 
+   #160512-00004#2-mod-(E)
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE aini020_cl2 CURSOR FROM g_forupd_sql    
+   
+   #160512-00004#2-mod-(S)
+#   LET g_forupd_sql = "SELECT inad001,'','',inad002,inad003,inad011,inad012 FROM inad_t WHERE inadent= ? AND inadsite= ? AND inad001=? AND inad002=? AND inad003 =? FOR UPDATE "
+   LET g_forupd_sql = "SELECT inad001,'','',inad002,inad003,inad014,inad011,inad012 FROM inad_t WHERE inadent= ? AND inadsite= ? AND inad001=? AND inad002=? AND inad003 =? FOR UPDATE "
+   #160512-00004#2-mod-(E)
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE aini020_cl CURSOR FROM g_forupd_sql 
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aini020 WITH FORM cl_ap_formpath("ain",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL aini020_init()
+ 
+      #進入選單 Menu (='N')
+      CALL aini020_ui_dialog()
+   
+      #畫面關閉
+      CLOSE WINDOW w_aini020
+   END IF
+ 
+   #add-point:作業離開前
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+ 
+{</section>}
+ 
+{<section id="aini020.other_function" readonly="Y" >}
+#add-point:自定義元件(Function)
+
+PRIVATE FUNCTION aini020_init()
+
+   LET g_error_show  = 1
+   LET g_wc_filter1   = " 1=1"
+   LET g_wc_filter1_t = " 1=1"
+   LET g_wc_filter2   = " 1=1"
+   LET g_wc_filter2_t = " 1=1"   
+   LET g_current_page = 1
+   LET g_current_page2 = 1
+   CALL cl_set_comp_visible("inag006,inag017",FALSE) 
+END FUNCTION
+
+PRIVATE FUNCTION aini020_ui_dialog()
+DEFINE li_idx   LIKE type_t.num5
+
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+
+   LET g_action_choice = " "
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+
+   CALL aini020_query()
+
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_inad_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+
+            BEFORE DISPLAY
+               LET g_current_page = 1
+               
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_inad_d.getLength() TO FORMONLY.h_count
+               LET g_master_idx = l_ac
+               CALL aini020_b_fill2()
+              
+         END DISPLAY
+
+         DISPLAY ARRAY g_inae_d TO s_detail2.* ATTRIBUTES(COUNT=g_detail_cnt)
+
+            BEFORE DISPLAY
+               LET g_current_page = 2
+               
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_inae_d.getLength() TO FORMONLY.h_count
+               LET g_master_idx = l_ac
+               CALL aini020_b_fill2()
+               
+
+         END DISPLAY
+
+         DISPLAY ARRAY g_inag_d TO s_detail3.* ATTRIBUTES(COUNT=g_detail_cnt)
+
+            BEFORE DISPLAY
+               LET g_current_page2 = 1
+
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail3")
+               LET l_ac = g_detail_idx2
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               DISPLAY g_inag_d.getLength() TO FORMONLY.cnt
+
+         END DISPLAY
+
+         DISPLAY ARRAY g_inaj_d TO s_detail4.* ATTRIBUTES(COUNT=g_detail_cnt)
+
+            BEFORE DISPLAY
+               LET g_current_page2 = 2
+
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail4")
+               LET l_ac = g_detail_idx2
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               DISPLAY g_inaj_d.getLength() TO FORMONLY.cnt
+
+         END DISPLAY
+ 
+         BEFORE DIALOG
+            CASE g_current_page 
+               WHEN 1 
+                  NEXT FIELD inad011
+               WHEN 2 
+                  NEXT FIELD inae011
+                  #CALL DIALOG.setCurrentRow("s_detail2", 1)            
+            END CASE
+            
+         ON ACTION act_inad
+            LET g_action_choice="act_inad"
+            CALL cl_set_comp_visible("inag006,inag017",FALSE)           
+            CALL aini020_detail_show()
+            LET g_current_page = 1
+            EXIT DIALOG
+#            CALL cl_set_comp_visible("bpage_1", FALSE)
+#            CALL cl_set_comp_visible("bpage_2", FALSE)
+#            CALL ui.interface.refresh()
+#            CALL cl_set_comp_visible("bpage_2", TRUE)
+#            CALL cl_set_comp_visible("bpage_1", TRUE)            
+            
+         ON ACTION act_inae 
+            LET g_action_choice="act_inae"
+            CALL cl_set_comp_visible("inag006,inag017",TRUE) 
+            CALL aini020_detail_show()
+            LET g_current_page = 2
+            EXIT DIALOG
+#            CALL cl_set_comp_visible("bpage_1", FALSE)
+#            CALL cl_set_comp_visible("bpage_2", FALSE)
+#            CALL ui.interface.refresh()
+#            CALL cl_set_comp_visible("bpage_1", TRUE)
+#            CALL cl_set_comp_visible("bpage_2", TRUE)
+               
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL aini020_query()
+               EXIT DIALOG
+            END IF
+
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+            
+               EXIT DIALOG
+            END IF
+
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               CALL aini020_modify()
+
+               EXIT DIALOG
+            END IF
+            
+         ON ACTION modify_detail
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               CALL aini020_modify()
+
+               EXIT DIALOG
+            END IF
+            
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL aini020_filter()
+            EXIT DIALOG
+            
+         ON ACTION close
+            LET INT_FLAG=FALSE
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+
+         ON ACTION datarefresh   # 重新整理
+            LET g_error_show = 1
+            CALL aini020_b_fill()
+
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum
+
+            #END add-point
+            CALL cl_user_overview()
+
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               
+               #add-point:ON ACTION exporttoexcel
+               #browser
+               -----2015-1-9 zj mod
+               CALL g_export_node.clear()
+               LET g_main_hidden = 0
+               LET g_export_node[1] = base.typeInfo.create(g_inad_d)
+               LET g_export_id[1]   = "s_detail1"
+ 
+               #add-point:ON ACTION exporttoexcel
+               LET g_export_node[2] = base.typeInfo.create(g_inae_d)
+               LET g_export_id[2]   = "s_detail2"
+               LET g_export_node[3] = base.typeInfo.create(g_inag_d)
+               LET g_export_id[3]   = "s_detail3"
+               LET g_export_node[4] = base.typeInfo.create(g_inaj_d)
+               LET g_export_id[4]   = "s_detail4"
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+               -----2015-1-9 zj mod
+               
+
+        
+               #END add-point
+               
+            END IF
+
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+   END WHILE
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+END FUNCTION
+
+PRIVATE FUNCTION aini020_query()
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING
+   DEFINE l_wc1_t    STRING
+   DEFINE l_wc2_t    STRING   
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)   
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_inad_d.clear()
+   CALL g_inae_d.clear()
+   CALL g_inag_d.clear()
+   CALL g_inaj_d.clear()
+   
+   LET g_qryparam.state = "c"
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_wc_filter1 = " 1=1"
+   LET g_wc_filter2 = " 1=1"
+
+   #wc備份
+   LET ls_wc = g_wc
+   LET l_wc1_t = g_wc1
+   LET l_wc2_t = g_wc2
+   LET g_wc1 = " 1=1"
+   LET g_wc2 = " 1=1"
+   LET g_master_idx = l_ac
+ 
+   
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+      #單身根據table分拆construct
+      CONSTRUCT g_wc_table ON imaa009
+           FROM imaa009
+                      
+         BEFORE CONSTRUCT   
+         ON ACTION controlp INFIELD imaa009
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_rtax001()                       
+            DISPLAY g_qryparam.return1 TO imaa009 
+            NEXT FIELD imaa009                           
+      END CONSTRUCT
+      
+ 
+      #160512-00004#2-mod-(S)
+#      CONSTRUCT g_wc_table2 ON inad001,inad002,inad011,inad003
+#           FROM inad001m,inad002m,inad011m,inad003m
+      CONSTRUCT g_wc_table2 ON inad001,inad002,inad014,inad011,inad003
+           FROM inad001m,inad002m,inad014m,inad011m,inad003m
+      #160512-00004#2-mod-(E)     
+                      
+         BEFORE CONSTRUCT   
+         
+         ON ACTION controlp INFIELD inad001m
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaf001_2()                       
+            DISPLAY g_qryparam.return1 TO inad001m 
+            NEXT FIELD inad001m  
+         
+         
+#         ON ACTION controlp INFIELD inad002
+#            INITIALIZE g_qryparam.* TO NULL
+#            LET g_qryparam.state = 'c'
+#            LET g_qryparam.reqry = FALSE
+#            CALL q_rtax001()                       
+#            DISPLAY g_qryparam.return1 TO inad002 
+#            NEXT FIELD inad002   
+            
+#         ON ACTION controlp INFIELD inad003
+#            INITIALIZE g_qryparam.* TO NULL
+#            LET g_qryparam.state = 'c'
+#            LET g_qryparam.reqry = FALSE
+#            CALL q_rtax001()                       
+#            DISPLAY g_qryparam.return1 TO inad003 
+#            NEXT FIELD inad003          
+      END CONSTRUCT
+      
+      CONSTRUCT g_wc_table3 ON inae003,inae004
+           FROM inae003m,inae004m
+                      
+         BEFORE CONSTRUCT   
+#         ON ACTION controlp INFIELD inae003
+#            INITIALIZE g_qryparam.* TO NULL
+#            LET g_qryparam.state = 'c'
+#            LET g_qryparam.reqry = FALSE
+#            CALL q_rtax001()                       
+#            DISPLAY g_qryparam.return1 TO inae003 
+#            NEXT FIELD inae003     
+#            
+#         ON ACTION controlp INFIELD inae004
+#            INITIALIZE g_qryparam.* TO NULL
+#            LET g_qryparam.state = 'c'
+#            LET g_qryparam.reqry = FALSE
+#            CALL q_rtax001()                       
+#            DISPLAY g_qryparam.return1 TO inae004 
+#            NEXT FIELD inae004          
+      END CONSTRUCT
+      
+      BEFORE DIALOG        
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+   END DIALOG
+
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc = ls_wc
+      LET g_wc1 = l_wc1_t
+      LET g_wc1 = l_wc2_t
+   ELSE
+      LET g_master_idx = 1
+   END IF
+   
+   LET g_wc = " 1=1" 
+   IF NOT cl_null(g_wc_table) AND g_wc_table <> " 1=1" THEN
+      LET g_wc = g_wc, " AND ", g_wc_table
+   END IF
+   IF NOT cl_null(g_wc_table2) AND g_wc_table2 <> " 1=1" THEN
+      LET g_wc = g_wc, " AND ", g_wc_table2
+   END IF
+   IF NOT cl_null(g_wc_table3) AND g_wc_table3 <> " 1=1" THEN
+      LET g_wc = g_wc, " AND ", g_wc_table3
+   END IF
+   
+   LET g_error_show = 1
+   CALL aini020_b_fill()
+   IF g_detail_cnt = 0 AND NOT INT_FLAG AND g_detail_cnt2 = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = -100
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+   END IF
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+END FUNCTION
+
+PRIVATE FUNCTION aini020_b_fill()
+DEFINE ls_wc1           STRING
+DEFINE ls_wc2           STRING
+
+   IF cl_null(g_wc_filter1) THEN
+      LET g_wc_filter1 = " 1=1"
+   END IF
+   IF cl_null(g_wc_filter2) THEN
+      LET g_wc_filter2 = " 1=1"
+   END IF   
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+#   IF cl_null(g_wc2) THEN
+#      LET g_wc2 = " 1=1"
+#   END IF 
+   
+   
+   LET ls_wc1 = g_wc," AND ", g_wc_filter1      
+   
+#   LET g_wc2 = cl_replace_str(g_wc2,'inad001','inae001')
+#   LET g_wc2 = cl_replace_str(g_wc2,'inad002','inae002')
+#   LET g_wc2 = cl_replace_str(g_wc2,'inad011','inae011')
+   LET ls_wc2 = g_wc," AND ", g_wc_filter2      
+   
+   LET g_cnt = l_ac
+   
+   CALL g_inad_d.clear()
+   CALL g_inae_d.clear()   
+   
+   LET l_ac = 1     
+   #160512-00004#2-add-inad014
+   LET g_sql = "SELECT DISTINCT inad001,imaal003,imaal004,inad002,inad003,inad014,inad011,inad012 FROM inad_t",
+               " LEFT JOIN imaal_t ON imaalent = inadent AND imaal001 = inad001 AND imaal002 = '",g_lang,"'",
+               " LEFT JOIN inag_t ON inadent = inagent AND inadsite = inagsite AND inad001 = inag001 ",
+               "                     AND inad002 = inag002 AND inad003 = inag006 ",
+               " LEFT JOIN inae_t ON inadent = inaeent AND inad001 = inae001 AND inadsite = inaesite AND inad002 = inae002 ",
+               " ,imaa_t",
+               " WHERE inadent = imaaent AND inad001 = imaa001 ",
+               "   AND inadent= ? AND inadsite= ? AND inag008 > 0  AND ", ls_wc1,
+               " ORDER BY inad_t.inad001,inad_t.inad002,inad_t.inad003"
+   PREPARE aini020_pb1 FROM g_sql
+   DECLARE b_fill_curs1 CURSOR FOR aini020_pb1
+   OPEN b_fill_curs1 USING g_enterprise, g_site 
+   FOREACH b_fill_curs1 INTO g_inad_d[l_ac].inad001,g_inad_d[l_ac].imaal003,g_inad_d[l_ac].imaal004,
+                            g_inad_d[l_ac].inad002,g_inad_d[l_ac].inad003, 
+                            g_inad_d[l_ac].inad014, #160512-00004#2-add
+                            g_inad_d[l_ac].inad011,g_inad_d[l_ac].inad012
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  9035
+            LET g_errparam.extend =  ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+         END IF
+         EXIT FOREACH
+      END IF
+   END FOREACH
+
+   LET l_ac = 1    
+   #160512-00004#2-add-inae010
+   LET g_sql = "SELECT  DISTINCT inae001,imaal003,imaal004,inae002,inae003,inae004,inae010,inae011,inae030 FROM inae_t",
+               " LEFT JOIN imaal_t ON imaalent = inaeent AND imaal001 = inae001 AND imaal002 = '",g_lang,"'",
+               " LEFT JOIN inai_t  ON inaeent = inaient AND inaesite = inaisite AND inae001 = inai001 ",
+               "                  AND inae002 = inai002 AND inae003 = inai007 AND inae004 = inai008 ",
+                " LEFT JOIN inad_t ON inadent = inaeent AND inad001 = inae001 AND inadsite = inaesite AND inad002 = inae002 ",
+               " ,imaa_t",
+               " WHERE inaeent = imaaent AND inae001 = imaa001 ",
+               "   AND inaeent= ? AND inaesite= ? AND inai010 > 0  AND ", ls_wc2,
+               " ORDER BY inae_t.inae001,inae_t.inae002,inae_t.inae003"
+   PREPARE aini020_pb2 FROM g_sql
+   DECLARE b_fill_curs2 CURSOR FOR aini020_pb2
+   OPEN b_fill_curs2 USING g_enterprise, g_site
+   FOREACH b_fill_curs2 INTO g_inae_d[l_ac].inae001,g_inae_d[l_ac].imaal003,g_inae_d[l_ac].imaal004,
+                             g_inae_d[l_ac].inae002,g_inae_d[l_ac].inae003,g_inae_d[l_ac].inae004, 
+                             g_inae_d[l_ac].inae010, #160512-00004#2-add
+                             g_inae_d[l_ac].inae011,g_inae_d[l_ac].inae030
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  9035
+            LET g_errparam.extend =  ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+         END IF
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   CALL g_inad_d.deleteElement(g_inad_d.getLength())
+   CALL g_inae_d.deleteElement(g_inae_d.getLength())
+   
+   LET g_detail_cnt = g_inad_d.getLength()
+   LET g_detail_cnt2 = g_inae_d.getLength()  
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET g_detail_idx = 1
+   DISPLAY g_detail_idx TO FORMONLY.h_index 
+   
+   CLOSE b_fill_curs1
+   FREE aini020_pb1
+   
+   CLOSE b_fill_curs2
+   FREE aini020_pb2
+   LET g_master_idx = 1
+   CALL aini020_b_fill2()
+END FUNCTION
+
+PRIVATE FUNCTION aini020_modify()
+   DEFINE  l_cmd                  LIKE type_t.chr1
+   DEFINE  l_ac_t                 LIKE type_t.num5                #未取消的ARRAY CNT 
+   DEFINE  l_n                    LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_cnt                  LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_lock_sw              LIKE type_t.chr1                #單身鎖住否 
+   DEFINE  li_reproduce           LIKE type_t.num5
+   DEFINE  li_reproduce_target    LIKE type_t.num5
+   DEFINE  lb_reproduce           BOOLEAN
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      INPUT ARRAY g_inad_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE, 
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)   
+
+         BEFORE INPUT
+            CALL aini020_b_fill()
+            LET g_detail_cnt = g_inad_d.getLength()
+            
+         BEFORE ROW 
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            LET l_cmd = ''
+            LET l_ac = g_detail_idx 
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.h_index
+            DISPLAY g_inad_d.getLength() TO FORMONLY.h_count
+         
+            CALL s_transaction_begin()
+            LET g_detail_cnt = g_inad_d.getLength()
+
+            IF g_detail_cnt >= l_ac  AND g_inad_d[l_ac].inad001 IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_inad_d_t.* = g_inad_d[l_ac].*  #BACKUP
+               OPEN aini020_cl USING g_enterprise,g_site,g_inad_d[g_detail_idx].inad001,
+                                      g_inad_d[g_detail_idx].inad002,g_inad_d[g_detail_idx].inad003                 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "aini020_cl"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH aini020_cl INTO g_inad_d[l_ac].inad001,g_inad_d[l_ac].imaal003,g_inad_d[l_ac].imaal004,
+                                        g_inad_d[l_ac].inad002,g_inad_d[l_ac].inad003,
+                                        g_inad_d[l_ac].inad014, #160512-00004#2-add
+                                        g_inad_d[l_ac].inad011,g_inad_d[l_ac].inad012
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = g_inad_d_t.inad001
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET l_lock_sw = "Y"
+                  END IF                  
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_inad_d[l_ac].inad001
+                  CALL ap_ref_array2(g_ref_fields,"SELECT imaal003,imaal004 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_inad_d[l_ac].imaal003 = g_rtn_fields[1]
+                  LET g_inad_d[l_ac].imaal004 = g_rtn_fields[2] 
+                  CALL aini020_detail_show()                
+                  CALL cl_show_fld_cont()
+               END IF
+            END IF 
+         
+         #160512-00004#2-add-(S)
+         AFTER FIELD inad011
+            IF NOT aini020_chk_date(g_inad_d[l_ac].inad011,g_inad_d[l_ac].inad014) THEN
+               LET g_inad_d[l_ac].inad011 = g_inad_d_t.inad011
+               NEXT FIELD CURRENT
+            END IF
+         AFTER FIELD inad014
+            IF NOT aini020_chk_date(g_inad_d[l_ac].inad011,g_inad_d[l_ac].inad014) THEN
+               LET g_inad_d[l_ac].inad014 = g_inad_d_t.inad014
+               NEXT FIELD CURRENT
+            END IF
+         #160512-00004#2-add-(E)
+
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_inad_d[l_ac].* = g_inad_d_t.*
+               CLOSE aini020_cl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = g_inad_d[l_ac].inad001
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_inad_d[l_ac].* = g_inad_d_t.*
+            ELSE
+               #160512-00004#2-mod-(S)
+#               UPDATE inad_t 
+#                  SET inad011 = g_inad_d[l_ac].inad011,
+#                      inad012 = g_inad_d[l_ac].inad012 
+#                WHERE inadent = g_enterprise
+#                  AND inadsite = g_site                
+#                  AND inad001 = g_inad_d_t.inad001
+#                  AND inad002 = g_inad_d_t.inad002
+#                  AND inad003 = g_inad_d_t.inad003
+               UPDATE inad_t 
+                  SET inad011 = g_inad_d[l_ac].inad011,
+                      inad012 = g_inad_d[l_ac].inad012, 
+                      inad014 = g_inad_d[l_ac].inad014
+                WHERE inadent = g_enterprise
+                  AND inadsite = g_site                
+                  AND inad001 = g_inad_d_t.inad001
+                  AND inad002 = g_inad_d_t.inad002
+                  AND inad003 = g_inad_d_t.inad003
+               #160512-00004#2-mod-(E)   
+                CASE
+                   WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = "std-00009"
+                      LET g_errparam.extend = "inad_t"
+                      LET g_errparam.popup = TRUE
+                      CALL cl_err()
+
+                      CALL s_transaction_end('N','0')
+                   WHEN SQLCA.sqlcode #其他錯誤
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = SQLCA.sqlcode
+                      LET g_errparam.extend = "inad_t"
+                      LET g_errparam.popup = TRUE
+                      CALL cl_err()
+  
+                      CALL s_transaction_end('N','0')
+               END CASE
+            END IF
+         AFTER ROW
+            CLOSE aini020_cl
+            CALL s_transaction_end('Y','0')
+#            #其他table進行unlock
+#            CALL cl_multitable_unlock() 
+         AFTER INPUT
+            #add-point:單身input後
+
+            #end add-point
+            
+         ON ACTION controlo   
+            CALL FGL_SET_ARR_CURR(g_inad_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_inad_d.getLength()+1
+      END INPUT
+
+      INPUT ARRAY g_inae_d FROM s_detail2.*
+          ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE, 
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)   
+
+         BEFORE INPUT
+            CALL aini020_b_fill()
+            LET g_detail_cnt = g_inad_d.getLength()
+            
+         BEFORE ROW 
+            LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail2")
+            LET l_cmd = ''
+            LET l_ac = g_detail_idx2 
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.h_index
+            DISPLAY g_inae_d.getLength() TO FORMONLY.h_count
+            
+            CALL s_transaction_begin()
+            LET g_detail_cnt = g_inae_d.getLength()
+            
+            IF g_detail_cnt >= l_ac  AND g_inae_d[l_ac].inae001 IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_inae_d_t.* = g_inae_d[l_ac].*  #BACKUP
+               OPEN aini020_cl2 USING g_enterprise,g_site,
+                                       g_inae_d[g_detail_idx2].inae001,
+                                       g_inae_d[g_detail_idx2].inae002,
+                                       g_inae_d[g_detail_idx2].inae003,
+                                       g_inae_d[g_detail_idx2].inae004                                       
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "aini020_cl2"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH aini020_cl2 INTO g_inae_d[l_ac].inae001,g_inae_d[l_ac].imaal003,g_inae_d[l_ac].imaal004,
+                                          g_inae_d[l_ac].inae002,g_inae_d[l_ac].inae003,g_inae_d[l_ac].inae004, 
+                                          g_inae_d[l_ac].inae010, #160512-00004#2-add
+                                          g_inae_d[l_ac].inae011,g_inae_d[l_ac].inae030
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = g_inae_d_t.inae001
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET l_lock_sw = "Y"
+                  END IF                  
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_inae_d[l_ac].inae001
+                  CALL ap_ref_array2(g_ref_fields,"SELECT imaal003,imaal004 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_inae_d[l_ac].imaal003 = g_rtn_fields[1]
+                  LET g_inae_d[l_ac].imaal004 = g_rtn_fields[2] 
+                  CALL aini020_detail_show()                   
+                  CALL cl_show_fld_cont()
+               END IF
+            END IF 
+
+         #160512-00004#2-add-(S)
+         AFTER FIELD inae010
+            IF NOT aini020_chk_date(g_inae_d[l_ac].inae011,g_inae_d[l_ac].inae010) THEN
+               LET g_inae_d[l_ac].inae010 = g_inae_d_t.inae010
+               NEXT FIELD CURRENT
+            END IF
+         AFTER FIELD inae011
+            IF NOT aini020_chk_date(g_inae_d[l_ac].inae011,g_inae_d[l_ac].inae010) THEN
+               LET g_inae_d[l_ac].inae011 = g_inae_d_t.inae011
+               NEXT FIELD CURRENT
+            END IF
+         #160512-00004#2-add-(E)
+         
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_inae_d[l_ac].* = g_inae_d_t.*
+               CLOSE aini020_cl2
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = g_inae_d[l_ac].inae001
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_inae_d[l_ac].* = g_inae_d_t.*
+            ELSE
+               #160512-00004#2-mod-(S)
+#               UPDATE inae_t 
+#                  SET inae011 = g_inae_d[l_ac].inae011,
+#                      inae030 = g_inae_d[l_ac].inae030
+#                WHERE inaeent = g_enterprise
+#                  AND inaesite = g_site                
+#                  AND inae001 = g_inae_d_t.inae001
+#                  AND inae002 = g_inae_d_t.inae002
+#                  AND inae003 = g_inae_d_t.inae003
+#                  AND inae004 = g_inae_d_t.inae004
+               UPDATE inae_t 
+                  SET inae010 = g_inae_d[l_ac].inae010,
+                      inae011 = g_inae_d[l_ac].inae011,
+                      inae030 = g_inae_d[l_ac].inae030
+                WHERE inaeent = g_enterprise
+                  AND inaesite = g_site                
+                  AND inae001 = g_inae_d_t.inae001
+                  AND inae002 = g_inae_d_t.inae002
+                  AND inae003 = g_inae_d_t.inae003
+                  AND inae004 = g_inae_d_t.inae004
+               #160512-00004#2-mod-(E)
+                CASE
+                   WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = "std-00009"
+                      LET g_errparam.extend = "inae_t"
+                      LET g_errparam.popup = TRUE
+                      CALL cl_err()
+
+                      CALL s_transaction_end('N','0')
+                   WHEN SQLCA.sqlcode #其他錯誤
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = SQLCA.sqlcode
+                      LET g_errparam.extend = "inae_t"
+                      LET g_errparam.popup = TRUE
+                      CALL cl_err()
+  
+                      CALL s_transaction_end('N','0')
+               END CASE
+            END IF
+         AFTER ROW
+            CLOSE aini020_cl2
+            CALL s_transaction_end('Y','0')
+#            #其他table進行unlock
+#            CALL cl_multitable_unlock() 
+         AFTER INPUT
+            #add-point:單身input後
+
+            #end add-point
+            
+         ON ACTION controlo   
+            CALL FGL_SET_ARR_CURR(g_inae_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_inae_d.getLength()+1
+      END INPUT
+
+
+      ON ACTION accept
+         ACCEPT DIALOG
+      
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION controlr
+         #CALL cl_show_req_fields()
+ 
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) 
+              RETURNING g_fld_name,g_frm_name 
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang) 
+           
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   
+   END DIALOG 
+   #CLOSE aini020_cl
+   #CLOSE aini020_cl2
+   #CALL s_transaction_end('Y','0')   
+END FUNCTION
+
+PRIVATE FUNCTION aini020_b_fill2()
+   
+   LET g_cnt = l_ac
+   CALL g_inag_d.clear()
+   CALL g_inaj_d.clear()
+   IF g_current_page = 1 THEN 
+      LET l_ac = 1     
+      LET g_sql = "SELECT DISTINCT inag004,inaa002,inag005,inab003,inag006,inag003,inag007,inag008,inag017,inag016,",
+                  "              inag015,inag014,inag026,inag012,inag011,inag010,inaa015,inag019,inag020 ",
+                  "  FROM inag_t",
+                  "  LEFT JOIN inaa_t ON inaaent = inagent AND inaa001 = inag004 AND inaasite = '",g_site,"'",
+                  "  LEFT JOIN inab_t ON inabent = inagent AND inab001 = inag004 AND inab002 = inag005 AND inabsite = '",g_site,"'",
+                  " WHERE inagent= '",g_enterprise,"'",
+                  "   AND inagsite= '",g_site,"'",
+                  "   AND inag001 = '",g_inad_d[g_master_idx].inad001,"'",
+                  "   AND inag002 = '",g_inad_d[g_master_idx].inad002,"'",
+                  "   AND inag006 = '",g_inad_d[g_master_idx].inad003,"'",
+                  "   AND inag008 > 0 ",
+                  " ORDER BY inag004,inag005,inag006"
+      PREPARE aini020_pb3 FROM g_sql
+      DECLARE b_fill_curs3 CURSOR FOR aini020_pb3
+      FOREACH b_fill_curs3 INTO g_inag_d[l_ac].inag004,g_inag_d[l_ac].inaa002,g_inag_d[l_ac].inag005,g_inag_d[l_ac].inab003,
+                                g_inag_d[l_ac].inag006,g_inag_d[l_ac].inag003,g_inag_d[l_ac].inag007,g_inag_d[l_ac].inag008,g_inag_d[l_ac].inag017, 
+                                g_inag_d[l_ac].inag016,g_inag_d[l_ac].inag015,g_inag_d[l_ac].inag014,g_inag_d[l_ac].inag026,
+                                g_inag_d[l_ac].inag012,g_inag_d[l_ac].inag011,g_inag_d[l_ac].inag010,g_inag_d[l_ac].inaa015,
+                                g_inag_d[l_ac].inag019,g_inag_d[l_ac].inag020
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH:"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            EXIT FOREACH
+         END IF
+         
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec THEN
+            IF g_error_show = 1 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  9035
+               LET g_errparam.extend =  ""
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+            END IF
+            EXIT FOREACH
+         END IF
+      END FOREACH
+   
+      LET l_ac = 1     
+      LET g_sql = "SELECT DISTINCT inaj035,inaj004,inaj001,inaj022,inaj018,inaj017,",
+                  "              inaj002,inaj003,inaj012,inaj011,inaj016 ",
+                  "  FROM inaj_t",
+                  " WHERE inajent= '",g_enterprise,"'",
+                  "   AND inajsite= '",g_site,"'",
+                  "   AND inaj005 = '",g_inad_d[g_master_idx].inad001,"'",
+                  "   AND inaj006 = '",g_inad_d[g_master_idx].inad002,"'",
+                  "   AND inaj010 = '",g_inad_d[g_master_idx].inad003,"'",
+                  " ORDER BY inaj035,inaj004,inaj001,inaj022"
+      PREPARE aini020_pb4 FROM g_sql
+      DECLARE b_fill_curs4 CURSOR FOR aini020_pb4
+      FOREACH b_fill_curs4 INTO g_inaj_d[l_ac].inaj035,g_inaj_d[l_ac].inaj004,g_inaj_d[l_ac].inaj001,
+                                g_inaj_d[l_ac].inaj022,g_inaj_d[l_ac].inaj018,g_inaj_d[l_ac].inaj017, 
+                                g_inaj_d[l_ac].inaj002,g_inaj_d[l_ac].inaj003,g_inaj_d[l_ac].inaj012,
+                                g_inaj_d[l_ac].inaj011,g_inaj_d[l_ac].inaj016
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH:"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            EXIT FOREACH
+         END IF
+         
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec THEN
+            IF g_error_show = 1 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  9035
+               LET g_errparam.extend =  ""
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+            END IF
+            EXIT FOREACH
+         END IF
+      END FOREACH  
+   END IF
+   IF g_current_page = 2 THEN 
+      LET l_ac = 1     
+      LET g_sql = "SELECT DISTINCT inag004,inaa002,inag005,inab003,inag006,inag003,inag007,inai010,inae010,inag016,",  #160512-00004#1 by whitney modify inai012->inae010
+                  "              inag015,inag014,inag026,inag012,inag011,inag010,inaa015,inag019,inag020 ",
+                  "  FROM inag_t ",
+                  "       LEFT JOIN inaa_t ON inaaent = inagent AND inaa001 = inag004 AND inaasite = '",g_site,"'",
+                  "       LEFT JOIN inab_t ON inabent = inagent AND inab001 = inag004 AND inab002 = inag005 AND inabsite = '",g_site,"'",
+                  "       ,inai_t ",
+                  "  LEFT JOIN inae_t ON inaeent=inaient AND inae001=inai001 AND inaesite=inaisite AND inae002=inai002 AND inae003=inai007 AND inae004=inai008 ",  #160512-00004#1 by whitney add
+                  " WHERE inagent = inaient AND inagsite = inaisite AND inag001 = inai001 AND inag002 = inai002 ",
+                  "   AND inag003 = inai003 AND inag004 = inai004 AND inag005 = inai005 AND inag006 = inai006 AND inag007 = inai009 ",
+                  "   AND inagent= '",g_enterprise,"'",
+                  "   AND inagsite= '",g_site,"'",
+                  "   AND inag001 = '",g_inae_d[g_master_idx].inae001,"'",
+                  "   AND inag002 = '",g_inae_d[g_master_idx].inae002,"'",
+                  "   AND inai007 = '",g_inae_d[g_master_idx].inae003,"'",
+                  "   AND inai008 = '",g_inae_d[g_master_idx].inae004,"'",
+                  "   AND inai010 > 0 ",
+                  " ORDER BY inag004,inag005,inag006"
+      PREPARE aini020_pb5 FROM g_sql
+      DECLARE b_fill_curs5 CURSOR FOR aini020_pb5
+      FOREACH b_fill_curs5 INTO g_inag_d[l_ac].inag004,g_inag_d[l_ac].inaa002,g_inag_d[l_ac].inag005,g_inag_d[l_ac].inab003,
+                                g_inag_d[l_ac].inag006,g_inag_d[l_ac].inag003,g_inag_d[l_ac].inag007,g_inag_d[l_ac].inag008,g_inag_d[l_ac].inag017, 
+                                g_inag_d[l_ac].inag016,g_inag_d[l_ac].inag015,g_inag_d[l_ac].inag014,g_inag_d[l_ac].inag026,
+                                g_inag_d[l_ac].inag012,g_inag_d[l_ac].inag011,g_inag_d[l_ac].inag010,g_inag_d[l_ac].inaa015,
+                                g_inag_d[l_ac].inag019,g_inag_d[l_ac].inag020
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH:"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            EXIT FOREACH
+         END IF
+         
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec THEN
+            IF g_error_show = 1 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  9035
+               LET g_errparam.extend =  ""
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+            END IF
+            EXIT FOREACH
+         END IF
+      END FOREACH
+   
+      LET l_ac = 1     
+      LET g_sql = "SELECT DISTINCT inal015,inal005,inal001,inal016,inaj018,inaj017,",
+                  "              inal002,inal003,inaj012,inal014,inaj016 ",
+                  "  FROM inaj_t,inal_t",
+                  " WHERE inajent= inalent AND inajsite = inalsite AND inaj001 = inal001 AND inaj002 = inal002 ",
+                  "   AND inaj003 = inal003 AND inaj004 = inal005 ",
+                  "   AND inajent= '",g_enterprise,"'",
+                  "   AND inajsite= '",g_site,"'",
+                  "   AND inaj005 = '",g_inae_d[g_master_idx].inae001,"'",
+                  "   AND inaj006 = '",g_inae_d[g_master_idx].inae002,"'",
+                  "   AND inal012 = '",g_inae_d[g_master_idx].inae003,"'",
+                  "   AND inal013 = '",g_inae_d[g_master_idx].inae004,"'", 
+                  " ORDER BY inal015,inal005,inal001,inal016"
+      PREPARE aini020_pb6 FROM g_sql
+      DECLARE b_fill_curs6 CURSOR FOR aini020_pb6
+      FOREACH b_fill_curs6 INTO g_inaj_d[l_ac].inaj035,g_inaj_d[l_ac].inaj004,g_inaj_d[l_ac].inaj001,
+                                g_inaj_d[l_ac].inaj022,g_inaj_d[l_ac].inaj018,g_inaj_d[l_ac].inaj017, 
+                                g_inaj_d[l_ac].inaj002,g_inaj_d[l_ac].inaj003,g_inaj_d[l_ac].inaj012,
+                                g_inaj_d[l_ac].inaj011,g_inaj_d[l_ac].inaj016
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH:"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            EXIT FOREACH
+         END IF
+         
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec THEN
+            IF g_error_show = 1 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  9035
+               LET g_errparam.extend =  ""
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+            END IF
+            EXIT FOREACH
+         END IF
+      END FOREACH     
+   END IF
+   CALL g_inag_d.deleteElement(g_inag_d.getLength()) 
+   CALL g_inaj_d.deleteElement(g_inaj_d.getLength())
+ 
+   IF g_current_page2 = 1 THEN 
+      LET g_detail_idx2 = 1 
+      DISPLAY g_detail_idx2 TO FORMONLY.idx
+      DISPLAY g_inag_d.getLength() TO FORMONLY.cnt   
+   END IF
+   
+   IF g_current_page2 = 2 THEN
+      LET g_detail_idx2 = 1   
+      DISPLAY g_detail_idx2 TO FORMONLY.idx
+      DISPLAY g_inaj_d.getLength() TO FORMONLY.cnt   
+   END IF 
+   LET l_ac = g_cnt   
+END FUNCTION
+
+PRIVATE FUNCTION aini020_filter()
+  
+   CLEAR FORM
+   CALL g_inad_d.clear()
+   CALL g_inae_d.clear()
+   CALL g_inag_d.clear()
+   CALL g_inaj_d.clear()
+
+   LET l_ac = 1
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter1_t = g_wc_filter1
+   LET g_wc_filter2_t = g_wc_filter2
+   LET g_wc1_t = g_wc1
+   LET g_wc2_t = g_wc2
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+ 
+   #LET g_wc1 = cl_replace_str(g_wc1, g_wc_filter1, '')
+   #LET g_wc2 = cl_replace_str(g_wc2, g_wc_filter2, '')
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter1 ON inad001,inad002,inad003,inad011,inad012
+                          FROM s_detail1[1].inad001,s_detail1[1].inad002,s_detail1[1].inad003,
+                               s_detail1[1].inad011,s_detail1[1].inad012
+ 
+         BEFORE CONSTRUCT
+         
+         ON ACTION controlp INFIELD inad001
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaf001_2()                       
+            DISPLAY g_qryparam.return1 TO inad001 
+            NEXT FIELD inad001  
+         
+ 
+      END CONSTRUCT
+      
+      CONSTRUCT g_wc_filter2 ON inae001,inae002,inae003,inae004,inae011,inae030
+                          FROM s_detail2[1].inae001,s_detail2[1].inae002,s_detail2[1].inae003,
+                               s_detail2[1].inae004,s_detail2[1].inae011,s_detail2[1].inae030
+ 
+         BEFORE CONSTRUCT
+
+         ON ACTION controlp INFIELD inae001
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaf001_2()                       
+            DISPLAY g_qryparam.return1 TO inae001 
+            NEXT FIELD inae001 
+         
+ 
+      END CONSTRUCT 
+      
+      BEFORE DIALOG
+  
+ 
+      ON ACTION accept
+         ACCEPT DIALOG 
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter1 = g_wc_filter1, " "
+      LET g_wc_filter2 = g_wc_filter2, " "
+   ELSE
+      LET g_wc_filter1 = g_wc_filter1_t
+      LET g_wc_filter2 = g_wc_filter2_t
+   END IF
+   
+   
+    
+   CALL aini020_b_fill()
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+END FUNCTION
+
+PRIVATE FUNCTION aini020_detail_show()
+   LET g_master_idx = l_ac
+   CALL aini020_b_fill2()
+   DISPLAY ARRAY g_inag_d TO s_detail3.* ATTRIBUTES(COUNT=g_detail_cnt)
+      BEFORE DISPLAY
+         EXIT DISPLAY
+   END DISPLAY
+
+   DISPLAY ARRAY g_inaj_d TO s_detail4.* ATTRIBUTES(COUNT=g_detail_cnt)
+      BEFORE DISPLAY
+         EXIT DISPLAY
+   END DISPLAY   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 有效日期>製造日期的檢查
+# Memo...........:
+# Usage..........: CALL aini020_chk_date(p_inad011,p_inad014)
+#                : RETURNING r_success
+# Input parameter: p_inad011 有效日期
+#                : p_inad014 製造日期
+# Return code....: r_success TRUE/FALSE
+# Date & Author..: 2016/06/13 By dorislai (#160512-00004#2)
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aini020_chk_date(p_inad011,p_inad014)
+   DEFINE  p_inad011   LIKE inad_t.inad011
+   DEFINE  p_inad014   LIKE inad_t.inad014
+   DEFINE  r_success   LIKE type_t.num5
+   
+   LET r_success = TRUE
+   
+   IF NOT cl_null(p_inad011) AND NOT cl_null(p_inad014) THEN
+      IF p_inad011 < p_inad014 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = "ain-00311"  #有效日期不可以小於製造日期！
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         LET r_success = FALSE
+      END IF
+   END IF
+   
+   RETURN r_success
+   
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

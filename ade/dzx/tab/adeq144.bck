@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adeq144" module="ade" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="02159" crtdt="2016-10-31 23:19:46" modid="02159" moddt="2016-12-13 15:18:55" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="新增會員消費統計查詢">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="decbsite,l_date_s,l_date_e"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),decbsite,decbsite_desc(chr500),l_total(num20_6),l_sales(num20_6),l_sales_n(num20_6),l_sales_rate_n(num20_6),l_total_point(num20_6),l_total_point_n(num20_6),l_point_rate_n(num20_6),l_piece(num20_6),l_piece_n(num20_6),l_piece_rate_n(num20_6),l_sales_total_piece(num20_6),l_sales_total_piece_n(num20_6),l_sales_piece_rate_n(num20_6)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),decbsite(b_decbsite),decbsite_desc(b_decbsite_desc),l_total(l_total),l_sales(l_sales),l_sales_n(l_sales_n),l_sales_rate_n(l_sales_rate_n),l_total_point(l_total_point),l_total_point_n(l_total_point_n),l_point_rate_n(l_point_rate_n),l_piece(l_piece),l_piece_n(l_piece_n),l_piece_rate_n(l_piece_rate_n),l_sales_total_piece(l_sales_total_piece),l_sales_total_piece_n(l_sales_total_piece_n),l_sales_piece_rate_n(l_sales_piece_rate_n)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adeq144" method="dialog">
+    <section id="input"/>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="decbsite(b_decbsite)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="decbsite">
+        <after>
+          <reference field="decbsite_desc" ref_field="decbsite" map_field="decbent,decbsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="decbsite_desc"/>
+      <column id="l_total"/>
+      <column id="l_sales"/>
+      <column id="l_sales_n"/>
+      <column id="l_sales_rate_n"/>
+      <column id="l_total_point"/>
+      <column id="l_total_point_n"/>
+      <column id="l_point_rate_n"/>
+      <column id="l_piece"/>
+      <column id="l_piece_n"/>
+      <column id="l_piece_rate_n"/>
+      <column id="l_sales_total_piece"/>
+      <column id="l_sales_total_piece_n"/>
+      <column id="l_sales_piece_rate_n"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="decb_t" page="1" linked="" pk="decbsite,decb002,decb005,decb006,decb020">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,decbsite,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM decb_t WHERE decbent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

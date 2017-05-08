@@ -1,0 +1,821 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="ammm320_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2016-07-22 09:34:16), PR版次:0003(2016-11-11 11:28:45)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000141
+#+ Filename...: ammm320_01
+#+ Description: 會員卡種基本資料維護作業-生效範圍設定
+#+ Creator....: 01752(2013-11-22 10:13:40)
+#+ Modifier...: 08172 -SD/PR- 02481
+ 
+{</section>}
+ 
+{<section id="ammm320_01.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#160604-00009#46    2016/06/20   by 08172    营运组织开窗修改
+#161111-00028#1   2016/11/11 BY 02481    标准程式定义采用宣告模式,弃用.*写法
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_mmap_d        RECORD
+       mmap001 LIKE mmap_t.mmap001, 
+   mmap002 LIKE mmap_t.mmap002, 
+   mmap003 LIKE mmap_t.mmap003, 
+   mmap003_desc LIKE type_t.chr500, 
+   mmap005 LIKE mmap_t.mmap005, 
+   mmap006 LIKE mmap_t.mmap006, 
+   mmap007 LIKE mmap_t.mmap007, 
+   mmap004 LIKE mmap_t.mmap004, 
+   mmapstus LIKE mmap_t.mmapstus
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+DEFINE g_mmap_d          DYNAMIC ARRAY OF type_g_mmap_d
+DEFINE g_mmap_d_t        type_g_mmap_d
+ 
+ 
+DEFINE g_mmap001_t   LIKE mmap_t.mmap001    #Key值備份
+DEFINE g_mmap002_t      LIKE mmap_t.mmap002    #Key值備份
+DEFINE g_mmap003_t      LIKE mmap_t.mmap003    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point    
+ 
+{</section>}
+ 
+{<section id="ammm320_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION ammm320_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   p_prog,p_mman001 
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE p_prog          LIKE mmap_t.mmap001
+   DEFINE p_mman001       LIKE mmap_t.mmap002
+  #DEFINE l_mmap          RECORD LIKE mmap_t.*   #161111-00028#1--mark
+  #161111-00028#1---add----begin------------
+   DEFINE l_mmap RECORD  #生效營運據點設定檔
+       mmapent LIKE mmap_t.mmapent, #企業編號
+       mmap001 LIKE mmap_t.mmap001, #程式編號
+       mmap002 LIKE mmap_t.mmap002, #卡種/券種
+       mmap003 LIKE mmap_t.mmap003, #生效營運據點
+       mmap004 LIKE mmap_t.mmap004, #卡/券安全庫量
+       mmap005 LIKE mmap_t.mmap005, #包括組織以下所有營運據點
+       mmap006 LIKE mmap_t.mmap006, #上級發佈卡儲值規則自行確認
+       mmap007 LIKE mmap_t.mmap007, #上級發佈卡積點規則自行確認
+       mmapstus LIKE mmap_t.mmapstus #有效
+       END RECORD
+   #161111-00028#1---add----end------------
+   DEFINE l_forupd_sql    STRING
+   DEFINE l_lock_sw       LIKE type_t.chr1
+   DEFINE l_stus          LIKE type_t.chr1    
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_ammm320_01 WITH FORM cl_ap_formpath("amm","ammm320_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   WHENEVER ERROR CALL cl_err_msg_log
+   CALL ammm320_01_b_fill(p_prog,p_mman001)
+   
+   LET l_stus = ''
+   SELECT mmanstus INTO l_stus FROM mman_t
+    WHERE mmanent = g_enterprise
+      AND mman001 = p_mman001
+   IF l_stus != 'N' THEN
+      CALL ammm320_01_ui_dialog()
+      LET INT_FLAG = FALSE
+      CLOSE WINDOW w_ammm320_01 
+      RETURN
+   END IF
+   LET l_forupd_sql = " SELECT mmap001,mmap002,mmap003,'',",
+                      "        mmap005,mmap006,mmap007,mmap004,mmapstus ",
+                      "   FROM mmap_t ",
+                      "  WHERE mmapent = '",g_enterprise,"' ",
+                      "    AND mmap001 = ? AND mmap002 = ? AND mmap003 = ? FOR UPDATE"
+   LET l_forupd_sql = cl_sql_forupd(l_forupd_sql)  
+   PREPARE ammm320_01_b FROM l_forupd_sql
+   DECLARE ammm320_01_cs CURSOR FOR ammm320_01_b 
+   LET INT_FLAG = FALSE  
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_mmap_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+         BEFORE ROW
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET l_lock_sw = 'N'            #DEFAULT
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            
+            IF g_rec_b >= l_ac THEN  
+               LET l_cmd='u'
+               LET g_mmap_d_t.* = g_mmap_d[l_ac].*  #BACKUP
+               OPEN ammm320_01_cs USING p_prog,p_mman001,g_mmap_d[l_ac].mmap003
+
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "ammm320_01_cs"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH ammm320_01_cs INTO g_mmap_d[l_ac].*
+                  IF SQLCA.sqlcode THEN
+                     LET l_lock_sw = "Y"
+                  END IF            
+                  CALL ammm320_01_mmap003_ref()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            
+         BEFORE INSERT
+            CALL s_transaction_begin()
+            LET l_cmd = 'a'
+            INITIALIZE g_mmap_d_t.* TO NULL
+            INITIALIZE g_mmap_d[l_ac].* TO NULL 
+            LET g_mmap_d[l_ac].mmap001 = p_prog
+            LET g_mmap_d[l_ac].mmap002 = p_mman001
+            LET g_mmap_d[l_ac].mmap004 = 0
+            LET g_mmap_d[l_ac].mmap005 = 'N'
+            LET g_mmap_d[l_ac].mmap006 = 'N'
+            LET g_mmap_d[l_ac].mmap007 = 'N'
+            LET g_mmap_d[l_ac].mmapstus = 'Y'
+            LET g_mmap_d_t.* = g_mmap_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()  
+            
+         AFTER INSERT
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+
+            INITIALIZE l_mmap.* TO NULL
+            LET l_mmap.mmapent = g_enterprise        
+            LET l_mmap.mmap001 = g_mmap_d[l_ac].mmap001
+            LET l_mmap.mmap002 = g_mmap_d[l_ac].mmap002
+            LET l_mmap.mmap003 = g_mmap_d[l_ac].mmap003
+            LET l_mmap.mmap004 = g_mmap_d[l_ac].mmap004
+            LET l_mmap.mmap005 = g_mmap_d[l_ac].mmap005
+            LET l_mmap.mmap006 = g_mmap_d[l_ac].mmap006
+            LET l_mmap.mmap007 = g_mmap_d[l_ac].mmap007
+            LET l_mmap.mmapstus = g_mmap_d[l_ac].mmapstus
+         
+            SELECT COUNT(*) INTO l_count FROM mmap_t 
+             WHERE mmapent = g_enterprise
+               AND mmap001 = p_prog
+               AND mmap002 = p_mman001
+               AND mmap003   = g_mmap_d[l_ac].mmap003
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+             
+              #INSERT INTO mmap_t VALUES (l_mmap.*)  #161111-00028#1--mark
+               #161111-00028#1----add----begin----------------
+               INSERT INTO mmap_t (mmapent,mmap001,mmap002,mmap003,mmap004,mmap005,mmap006,mmap007,mmapstus)
+               VALUES (l_mmap.mmapent,l_mmap.mmap001,l_mmap.mmap002,l_mmap.mmap003,l_mmap.mmap004,
+                       l_mmap.mmap005,l_mmap.mmap006,l_mmap.mmap007,l_mmap.mmapstus)
+ 
+               #161111-00028#1----add----end----------------
+      
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "mmap_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CONTINUE DIALOG
+               END IF
+            ELSE    
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               INITIALIZE g_mmap_d[l_ac].* TO NULL
+               CALL s_transaction_end('N',0)
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode THEN
+               INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "mmap_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+  
+               CALL s_transaction_end('N',0)                   
+               CANCEL INSERT
+            ELSE
+               CALL s_transaction_end('Y',0)
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+ 
+        BEFORE DELETE                            #是否取消單身
+            IF NOT cl_null(p_prog) AND NOT cl_null(p_mman001) AND 
+               NOT cl_null(g_mmap_d_t.mmap003)THEN
+
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  -263
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CANCEL DELETE
+               END IF
+               DELETE FROM mmap_t
+                WHERE mmapent = g_enterprise 
+                  AND mmap001 = p_prog
+                  AND mmap001 = p_mman001
+                  AND mmap003 = g_mmap_d_t.mmap003
+ 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "mmap_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CALL s_transaction_end('N',0)
+                  CANCEL DELETE   
+               ELSE
+                  LET g_rec_b = g_rec_b-1
+                  CALL s_transaction_end('Y',0)
+               END IF 
+               CLOSE ammm320_01_cs
+            END IF 
+            
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_mmap_d[l_ac].* = g_mmap_d_t.*
+               CLOSE ammm320_01_cs
+               CALL s_transaction_end('N',0)
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = l_mmap.mmap001
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_mmap_d[l_ac].* = g_mmap_d_t.*
+            ELSE
+               UPDATE mmap_t SET (mmap003,mmap004,mmap005,mmap006,mmap007,mmapstus) = 
+                                 (g_mmap_d[l_ac].mmap003,g_mmap_d[l_ac].mmap004,g_mmap_d[l_ac].mmap005,
+                                  g_mmap_d[l_ac].mmap006,g_mmap_d[l_ac].mmap007,g_mmap_d[l_ac].mmapstus)
+                WHERE mmapent = g_enterprise
+                  AND mmap001 = p_prog
+                  AND mmap002 = p_mman001
+                  AND mmap003 = g_mmap_d_t.mmap003
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "mmap_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+   
+                  LET g_mmap_d[l_ac].* = g_mmap_d_t.*
+                  CALL s_transaction_end('N',0)
+               ELSE
+                  CALL s_transaction_end('Y',0)               
+               END IF
+            END IF
+            
+         AFTER ROW
+            CLOSE ammm320_01_cs  
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmap001
+            #add-point:BEFORE FIELD mmap001 name="input.b.page1.mmap001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmap001
+            
+            #add-point:AFTER FIELD mmap001 name="input.a.page1.mmap001"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mmap001
+            #add-point:ON CHANGE mmap001 name="input.g.page1.mmap001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmap002
+            #add-point:BEFORE FIELD mmap002 name="input.b.page1.mmap002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmap002
+            
+            #add-point:AFTER FIELD mmap002 name="input.a.page1.mmap002"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mmap002
+            #add-point:ON CHANGE mmap002 name="input.g.page1.mmap002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmap003
+            
+            #add-point:AFTER FIELD mmap003 name="input.a.page1.mmap003"
+            LET g_mmap_d[l_ac].mmap003_desc = ''            
+            IF NOT cl_null(g_mmap_d[l_ac].mmap003) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mmap_d[l_ac].mmap003 != g_mmap_d_t.mmap003 OR g_mmap_d_t.mmap003 IS NULL)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmap_t WHERE "||"mmapent = '" ||g_enterprise|| "' AND "||"mmap001 = '"||g_mmap_d[l_ac].mmap001 ||"' AND "||"mmap002 = '"||g_mmap_d[l_ac].mmap002 ||"' AND "|| "mmap003 = '"||g_mmap_d[l_ac].mmap003 ||"'",'std-00004',0) THEN 
+                     LET g_mmap_d[l_ac].mmap003 = g_mmap_d_t.mmap003
+                     CALL ammm320_01_mmap003_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL ammm320_01_chk_mmap003()
+                  IF NOT cl_null(g_errno) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_mmap_d[l_ac].mmap003
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_mmap_d[l_ac].mmap003 = g_mmap_d_t.mmap003
+                     CALL ammm320_01_mmap003_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL ammm320_01_mmap003_ref()  
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmap003
+            #add-point:BEFORE FIELD mmap003 name="input.b.page1.mmap003"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mmap003
+            #add-point:ON CHANGE mmap003 name="input.g.page1.mmap003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmap005
+            #add-point:BEFORE FIELD mmap005 name="input.b.page1.mmap005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmap005
+            
+            #add-point:AFTER FIELD mmap005 name="input.a.page1.mmap005"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mmap005
+            #add-point:ON CHANGE mmap005 name="input.g.page1.mmap005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmap006
+            #add-point:BEFORE FIELD mmap006 name="input.b.page1.mmap006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmap006
+            
+            #add-point:AFTER FIELD mmap006 name="input.a.page1.mmap006"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mmap006
+            #add-point:ON CHANGE mmap006 name="input.g.page1.mmap006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmap007
+            #add-point:BEFORE FIELD mmap007 name="input.b.page1.mmap007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmap007
+            
+            #add-point:AFTER FIELD mmap007 name="input.a.page1.mmap007"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mmap007
+            #add-point:ON CHANGE mmap007 name="input.g.page1.mmap007"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmap004
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_mmap_d[l_ac].mmap004,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD mmap004
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD mmap004 name="input.a.page1.mmap004"
+
+            IF NOT cl_null(g_mmap_d[l_ac].mmap004) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmap004
+            #add-point:BEFORE FIELD mmap004 name="input.b.page1.mmap004"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mmap004
+            #add-point:ON CHANGE mmap004 name="input.g.page1.mmap004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmapstus
+            #add-point:BEFORE FIELD mmapstus name="input.b.page1.mmapstus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmapstus
+            
+            #add-point:AFTER FIELD mmapstus name="input.a.page1.mmapstus"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mmapstus
+            #add-point:ON CHANGE mmapstus name="input.g.page1.mmapstus"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.mmap001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmap001
+            #add-point:ON ACTION controlp INFIELD mmap001 name="input.c.page1.mmap001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.mmap002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmap002
+            #add-point:ON ACTION controlp INFIELD mmap002 name="input.c.page1.mmap002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.mmap003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmap003
+            #add-point:ON ACTION controlp INFIELD mmap003 name="input.c.page1.mmap003"
+            #此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_mmap_d[l_ac].mmap003        #給予default值
+            LET g_qryparam.where = " ooef201='Y'"      #160604-00009#46
+            CALL q_ooef001()                                        #呼叫開窗
+            LET g_mmap_d[l_ac].mmap003 = g_qryparam.return1         #將開窗取得的值回傳到變數
+            DISPLAY g_mmap_d[l_ac].mmap003 TO mmap003               #顯示到畫面上
+            CALL ammm320_01_mmap003_ref()
+            NEXT FIELD mmap003                                      #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.mmap005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmap005
+            #add-point:ON ACTION controlp INFIELD mmap005 name="input.c.page1.mmap005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.mmap006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmap006
+            #add-point:ON ACTION controlp INFIELD mmap006 name="input.c.page1.mmap006"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.mmap007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmap007
+            #add-point:ON ACTION controlp INFIELD mmap007 name="input.c.page1.mmap007"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.mmap004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmap004
+            #add-point:ON ACTION controlp INFIELD mmap004 name="input.c.page1.mmap004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.mmapstus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmapstus
+            #add-point:ON ACTION controlp INFIELD mmapstus name="input.c.page1.mmapstus"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            CLOSE ammm320_01_cs
+            CALL s_transaction_end('Y',0) 
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_ammm320_01 
+   
+   #add-point:input段after input name="input.post_input"
+   LET INT_FLAG = FALSE
+   CLOSE ammm320_01_cs
+   CALL s_transaction_end('Y',0) 
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ammm320_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="ammm320_01.other_function" readonly="Y" >}
+
+PRIVATE FUNCTION ammm320_01_mmap003_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_mmap_d[l_ac].mmap003
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_mmap_d[l_ac].mmap003_desc = '', g_rtn_fields[1] , ''
+  #DISPLAY BY NAME g_mmap_d[l_ac].mmap003_desc
+END FUNCTION
+
+PRIVATE FUNCTION ammm320_01_b_fill(p_prog,p_mman001)
+   DEFINE p_prog          LIKE mmap_t.mmap001
+   DEFINE p_mman001       LIKE mmap_t.mmap002
+   DEFINE l_sql           STRING
+   DEFINE l_ac_t          LIKE type_t.num5
+
+   LET l_sql = " SELECT mmap001,mmap002,mmap003,'',",
+               "        mmap005,mmap006,mmap007,mmap004,mmapstus ",
+               "   FROM mmap_t ",
+               "  WHERE mmapent   = ",g_enterprise,
+               "    AND mmap001 = '",p_prog,"' ",
+               "    AND mmap002 = '",p_mman001,"' ",
+               "  ORDER BY mmap003 " 
+   PREPARE ammm320_01_pb FROM l_sql
+   DECLARE b_fill_curs CURSOR FOR ammm320_01_pb 
+   
+   CALL g_mmap_d.clear()
+   LET l_ac_t = l_ac
+   LET l_ac = 1
+   FOREACH b_fill_curs INTO g_mmap_d[l_ac].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      CALL ammm320_01_mmap003_ref()
+
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH 
+   CALL g_mmap_d.deleteElement(g_mmap_d.getLength())   
+   LET g_rec_b = l_ac - 1
+   DISPLAY g_rec_b TO FORMONLY.cnt
+   LET l_ac = l_ac_t
+   CLOSE b_fill_curs
+   FREE ammm320_01_pb
+END FUNCTION
+
+PRIVATE FUNCTION ammm320_01_chk_mmap003()
+   DEFINE l_stus    LIKE type_t.chr1
+   
+   LET g_errno = ''
+   LET l_stus = ''
+   SELECT ooefstus INTO l_stus FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_mmap_d[l_ac].mmap003
+      AND ooef201 = 'Y'      #160604-00009#46
+   CASE WHEN SQLCA.SQLCODE = 100   LET g_errno = 'aoo-00016'
+        WHEN l_stus='N'            LET g_errno = 'aoo-00012'
+   END CASE
+END FUNCTION
+
+PRIVATE FUNCTION ammm320_01_ui_dialog()
+   DISPLAY ARRAY g_mmap_d TO s_detail1.* ATTRIBUTE(COUNT=g_rec_b)
+END FUNCTION
+
+ 
+{</section>}
+ 

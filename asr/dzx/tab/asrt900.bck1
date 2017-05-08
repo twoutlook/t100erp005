@@ -1,0 +1,111 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asrt900" module="asr" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="01258" crtdt="2015-05-04 10:18:52" modid="01258" moddt="2015-05-18 16:51:40" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="重複性生產當期在製查詢與調整作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="srda000,srda001,srda002,srda002_desc(chr80),srda003,srda003_desc(chr80),srda003_desc_1(chr80),srdasite,srda004,srda005,srda005_desc(chr80),srda006"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="srdbseq,srdb006,srdb006_desc(chr500),srdb006_desc_1(chr500),srdb007,srdb007_desc(chr500),inag007(chr10),inag007_desc(chr500),srdb008,srdb009,srdb010,srdb011,srdb012,srdb013"/>
+      <var id="bs_field" value="srda000,srda001,srda002,srda002_desc(chr80),srda003,srda003_desc(chr80),srda003_desc_1(chr80),srda004,srda005,srda005_desc(chr80),srdasite,srda006" pk="srdasite,srda000,srda001,srda002,srda003,srda004,srda005" order=""/>
+      <bs_reference field="srda002_desc" ref_field="srdasite,srda002" ref_sql="SELECT srza002 FROM srza_t WHERE srzaent=$varg_enterprise$var AND srzasite=? AND srza001=? "/>
+      <bs_reference field="srda003_desc" ref_field="srda003" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+      <bs_reference field="srda003_desc_1" ref_field="srda003" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND immal001=? AND imaal002=$varg_dlang$var"/>
+      <bs_reference field="srda005_desc" ref_field="srda005" ref_sql="SELECT imecl005 FROM imecl_t WHERE imeclent=$varg_enterprise$var AND imecl003=? AND imecl004=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="modify_srdb012"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="modify_srda006"/>
+    </section>
+  </structure>
+  <form id="0" module="asr" filename="asrt900" method="dialog">
+    <section id="input">
+      <input id="head" field="srda000,srda001"/>
+      <input id="body" page="1" field="srdb013" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="srda000,srda001,srda002,srda003,srdasite,srda004,srda005,srda006"/>
+      <construct id="body" page="1" field="srdbseq,srdb006,srdb007,srdb008,srdb009,srdb010,srdb011,srdb012,srdb013"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="srdasite,srda000,srda001,srda002,srda003,srda004,srda005"/>
+      <set id="head" type="no_entry" field="srdasite,srda000,srda001,srda002,srda003,srda004,srda005"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="srda000" type="S" default="0"/>
+      <column id="srda001" type="S" default="0"/>
+      <column id="srda002">
+        <after>
+          <reference field="srda002_desc" ref_field="srdasite,srda002" map_field="srdasite,srda002" ref_sql="SELECT srza002 FROM srza_t WHERE srzaent=$varg_enterprise$var AND srzasite=? AND srza001=? "/>
+        </after>
+        <controlp form="q_srac001" state="c"/>
+      </column>
+      <column id="srda002_desc"/>
+      <column id="srda003">
+        <after>
+          <reference field="srda003_desc" ref_field="srda_t.srda003" map_field="srda003" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_srac004" state="c"/>
+      </column>
+      <column id="srda003_desc"/>
+      <column id="srda003_desc_1"/>
+      <column id="srdasite"/>
+      <column id="srda004">
+        <controlp form="q_srac005" state="c"/>
+      </column>
+      <column id="srda005">
+        <after>
+          <reference field="srda005_desc" ref_field="srda_t.srda005" map_field="srda005" ref_sql="SELECT imecl005 FROM imecl_t WHERE imeclent=$varg_enterprise$var AND imecl003=? AND imecl004=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_srac006" state="c"/>
+      </column>
+      <column id="srda005_desc"/>
+      <column id="srda006" type="S" default="0"/>
+    </init>
+    <init id="body" page="1">
+      <column id="srdbseq" type="S" default="0"/>
+      <column id="srdb006">
+        <after>
+          <reference field="srdb006_desc" ref_field="srdb_t.srdb006" map_field="srdb006" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="srdb006_desc"/>
+      <column id="srdb006_desc_1"/>
+      <column id="srdb007" type="S" default="0">
+        <after>
+          <reference field="srdb007_desc" ref_field="srdb_t.srdb007" map_field="srdb007" ref_sql="SELECT imecl005 FROM imecl_t WHERE imeclent=$varg_enterprise$var AND imecl003=? AND imecl004=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="srdb007_desc"/>
+      <column id="inag007">
+        <after>
+          <reference field="inag007_desc" ref_field="inag007" map_field="inag007" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inag007" state="c"/>
+      </column>
+      <column id="inag007_desc"/>
+      <column id="srdb008" type="S" default="0"/>
+      <column id="srdb009" type="S" default="0"/>
+      <column id="srdb010" type="S" default="0"/>
+      <column id="srdb011" type="S" default="0"/>
+      <column id="srdb012" type="S" default="0"/>
+      <column id="srdb013" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="srda_t" pk="srdasite,srda000,srda001,srda002,srda003,srda004,srda005">
+      <sql id="forupd_sql" type="sql" query="SELECT srda000,srda001,srda002,&apos;&apos;,srda003,&apos;&apos;,&apos;&apos;,srdasite,srda004,srda005,&apos;&apos;,srda006 FROM srda_t WHERE srdaent= ? AND srdasite=? AND srda000=? AND srda001=? AND srda002=? AND srda003=? AND srda004=? AND srda005=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT srda000,srda001,srda002,&apos;&apos;,srda003,&apos;&apos;,&apos;&apos;,srdasite,srda004,srda005,&apos;&apos;,srda006 FROM srda_t" order="srdasite,srda000,srda001,srda002,srda003,srda004,srda005"/>
+    </head>
+    <body id="srdb_t" page="1" linked="" pk="srdbseq" fk="srdbsite,srdb000,srdb001,srdb002,srdb003,srdb004,srdb005">
+      <sql id="forupd_sql_detail" query="SELECT srdbseq,srdb006,&apos;&apos;,&apos;&apos;,srdb007,&apos;&apos;,&apos;&apos;,&apos;&apos;,srdb008,srdb009,srdb010,srdb011,srdb012,srdb013 FROM srdb_t WHERE srdbent=? AND srdbsite=? AND srdb000=? AND srdb001=? AND srdb002=? AND srdb003=? AND srdb004=? AND srdb005=? AND srdbseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT srdbseq,srdb006,&apos;&apos;,&apos;&apos;,srdb007,&apos;&apos;,&apos;&apos;,&apos;&apos;,srdb008,srdb009,srdb010,srdb011,srdb012,srdb013 FROM srdb_t WHERE srdbent=? AND srdbsite=? AND srdb000=? AND srdb001=? AND srdb002=? AND srdb003=? AND srdb004=? AND srdb005=?"/>
+    </body>
+  </dataset>
+</assembly>
+

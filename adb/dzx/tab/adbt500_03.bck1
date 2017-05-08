@@ -1,0 +1,105 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adbt500_03" module="adb" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="02748" crtdt="2014-05-16 09:45:06" modid="04226" moddt="2015-04-27 09:13:07" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="分銷訂單多交期明細維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xmdfdocno,xmdfseq,xmdfseq2,l_xmdc001(chr500),l_xmdc001_desc(chr500),l_xmdc001_desc_desc(chr500),l_xmdc002(chr500),xmdf002,xmdf007,xmdf003,xmdf004,xmdf005,xmdf005_desc(chr500),xmdfsite,xmdfunit,xmdfunit_desc(chr500),xmdf006,xmdf200,xmdf200_desc(chr500),xmdf201,xmdf201_desc(chr500),xmdf202,xmdf203"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="adb" filename="adbt500_03" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="xmdfdocno,xmdfseq,xmdfseq2,l_xmdc001,l_xmdc002,xmdf002,xmdf007,xmdf003,xmdf004,xmdf005,xmdfsite,xmdfunit,xmdf006,xmdf200,xmdf201,xmdf202,xmdf203" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="xmdfdocno"/>
+      <column id="xmdfseq"/>
+      <column id="xmdfseq2"/>
+      <column id="l_xmdc001">
+        <after>
+          <reference field="l_xmdc001_desc" ref_field="l_xmdc001" map_field="l_xmdc001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="l_xmdc001_desc">
+        <after>
+          <reference field="l_xmdc001_desc_desc" ref_field="l_xmdc001" map_field="l_xmdc001" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="l_xmdc001_desc_desc"/>
+      <column id="l_xmdc002"/>
+      <column id="xmdf002" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmdf007" type="S" default="1" def_scc="2057"/>
+      <column id="xmdf003"/>
+      <column id="xmdf004"/>
+      <column id="xmdf005">
+        <after>
+          <check chkid="v_oocq002_274" id="isExist"/>
+          <reference field="xmdf005_desc" ref_field="xmdf005" map_field="xmdf005" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;274&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="xmdf005_desc"/>
+      <column id="xmdfsite">
+        <after>
+          <check chkid="v_ooed004" id="isExist"/>
+        </after>
+        <controlp form="q_ooed004_3" state="i"/>
+        <controlp form="q_ooed004_3" state="c"/>
+      </column>
+      <column id="xmdfunit">
+        <after>
+          <check chkid="v_ooed004" id="isExist"/>
+          <reference field="xmdfunit_desc" ref_field="xmdf_t.xmdfunit" map_field="xmdfent,xmdfunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004_3" state="i"/>
+        <controlp form="q_ooed004_3" state="c"/>
+      </column>
+      <column id="xmdfunit_desc"/>
+      <column id="xmdf006" type="S" default="N"/>
+      <column id="xmdf200">
+        <after>
+          <check chkid="v_inaa001_16" id="isExist"/>
+          <reference field="xmdf200_desc" ref_field="xmdf_t.xmdf200" map_field="xmdf200" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inaa001_24" state="i"/>
+      </column>
+      <column id="xmdf200_desc"/>
+      <column id="xmdf201">
+        <after>
+          <check chkid="v_inab002" id="isExist"/>
+          <reference field="xmdf201_desc" ref_field="xmdf200,xmdf201" map_field="xmdf200,xmdf201" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inab002_6" state="i"/>
+      </column>
+      <column id="xmdf201_desc"/>
+      <column id="xmdf202"/>
+      <column id="xmdf203"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="xmdf_t" page="1" linked="" pk="xmdfdocno,xmdfseq,xmdfseq2">
+      <sql id="forupd_sql_detail" query="SELECT xmdfdocno,xmdfseq,xmdfseq2,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xmdf002,xmdf007,xmdf003,xmdf004,xmdf005,&apos;&apos;,xmdfsite,xmdfunit,&apos;&apos;,xmdf006,xmdf200,&apos;&apos;,xmdf201,&apos;&apos;,xmdf202,xmdf203 FROM xmdf_t WHERE xmdfent=? AND xmdfdocno=? AND xmdfseq=? AND xmdfseq2=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xmdfdocno,xmdfseq,xmdfseq2,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xmdf002,xmdf007,xmdf003,xmdf004,xmdf005,&apos;&apos;,xmdfsite,xmdfunit,&apos;&apos;,xmdf006,xmdf200,&apos;&apos;,xmdf201,&apos;&apos;,xmdf202,xmdf203 FROM xmdf_t WHERE xmdfent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

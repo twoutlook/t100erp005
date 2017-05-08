@@ -1,0 +1,291 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abmt500" module="abm" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02295" crtdt="2014-07-03 17:15:35" modid="02295" moddt="2014-10-30 16:55:30" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="ECR申請作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bmkadocno,oobxl003(chr80),bmkadocdt,bmka001,bmka001_desc(chr80),bmka002,bmka002_desc(chr80),bmka003,bmka003_desc(chr80),bmkastus,bmka004,bmka005,imaal003,imaal004,bmka006,bmka006_desc(chr80),bmka007,bmka007_desc(chr80),bmka008,bmkasite,bmka009,bmka009_desc(chr80),bmka010,bmka011,bmka011_desc(chr80),bmka012,bmka012_desc(chr80),bmka013,bmkaownid,bmkaownid_desc(chr80),bmkaowndp,bmkaowndp_desc(chr80),bmkacrtid,bmkacrtid_desc(chr80),bmkacrtdp,bmkacrtdp_desc(chr80),bmkacrtdt,bmkamodid,bmkamodid_desc(chr80),bmkamoddt,bmkacnfid,bmkacnfid_desc(chr80),bmkacnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bmkbseq,bmkb001,bmkb001_desc(chr500),bmkbseq1,bmkb002,bmkb002_desc(chr500),bmkb003,bmkb004,bmkbsite"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="bmkcseq,bmkc001,bmkc002,bmkc002_desc(chr500),bmkc003,bmkc004,bmkcsite"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="bmkdseq,bmkd001,bmkd001_desc(chr500),bmkdseq1,bmkd002,bmkd002_desc(chr500),bmkd003,bmkd004,bmkdsite"/>
+      <var id="bs_field" value="bmkadocno,bmkadocdt,bmka001,bmka001_desc(chr80),bmka002,bmka002_desc(chr80),bmka003,bmka003_desc(chr80),bmka009,bmka009_desc(chr80),bmkacrtid,bmkacrtid_desc(chr80),bmkacrtdt,bmkamodid,bmkamodid_desc(chr80),bmkamoddt" pk="bmkadocno" order=""/>
+      <bs_reference field="bmka001_desc" ref_field="bmka001" ref_sql="SELECT bmjal003 FROM bmjal_t WHERE bmjalent=$varg_enterprise$var AND bmjal001=? AND bmjal002=$varg_dlang$var"/>
+      <bs_reference field="bmka002_desc" ref_field="bmka002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="bmka003_desc" ref_field="bmka003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="bmka009_desc" ref_field="bmka009" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+      <bs_reference field="bmkacrtid_desc" ref_field="bmkacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="bmkamodid_desc" ref_field="bmkamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abm" filename="abmt500" method="dialog">
+    <section id="input">
+      <input id="head" field="bmkadocno,bmkadocdt,bmka001,bmka002,bmka003,bmkastus,bmka004,bmka005,bmka006,bmka007,bmka008,bmkasite,bmka009,bmka010,bmka011,bmka012,bmka013"/>
+      <input id="body" page="1" field="bmkbseq,bmkb001,bmkbseq1,bmkb002,bmkb003,bmkb004,bmkbsite" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="bmkcseq,bmkc001,bmkc002,bmkc003,bmkc004,bmkcsite" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="bmkdseq,bmkd001,bmkdseq1,bmkd002,bmkd003,bmkd004,bmkdsite" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bmkadocno,oobxl003,bmkadocdt,bmka001,bmka002,bmka003,bmkastus,bmka004,bmka005,bmka006,bmka006_desc,bmka007,bmka008,bmkasite,bmka009,bmka010,bmka011,bmka012,bmka013,bmkaownid,bmkaowndp,bmkacrtid,bmkacrtdp,bmkacrtdt,bmkamodid,bmkamoddt,bmkacnfid,bmkacnfdt"/>
+      <construct id="body" page="1" field="bmkbseq,bmkb001,bmkbseq1,bmkb002,bmkb003,bmkb004,bmkbsite"/>
+      <construct id="body" page="2" field="bmkcseq,bmkc001,bmkc002,bmkc003,bmkc004,bmkcsite"/>
+      <construct id="body" page="3" field="bmkdseq,bmkd001,bmkdseq1,bmkd002,bmkd003,bmkd004,bmkdsite"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bmkadocno"/>
+      <set id="head" type="no_entry" field="bmkadocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bmkadocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_bmkadocno" state="c"/>
+      </column>
+      <column id="oobxl003"/>
+      <column id="bmkadocdt"/>
+      <column id="bmka001">
+        <after>
+          <check chkid="v_bmja001" id="isExist"/>
+          <reference field="bmka001_desc" ref_field="bmka_t.bmka001" map_field="bmka001" ref_sql="SELECT bmjal003 FROM bmjal_t WHERE bmjalent=$varg_enterprise$var AND bmjal001=? AND bmjal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_bmja001" state="i"/>
+        <controlp form="q_bmja001" state="c"/>
+      </column>
+      <column id="bmka001_desc"/>
+      <column id="bmka002">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="bmka002_desc" ref_field="bmka_t.bmka002" map_field="bmka002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bmka002_desc"/>
+      <column id="bmka003">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="bmka003_desc" ref_field="bmka_t.bmka003" map_field="bmka003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="bmka003_desc"/>
+      <column id="bmkastus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="bmka004"/>
+      <column id="bmka005">
+        <after>
+          <check chkid="v_imaa001" id="isExist"/>
+        </after>
+        <controlp form="q_imaa001" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="imaal003"/>
+      <column id="imaal004"/>
+      <column id="bmka006">
+        <after/>
+      </column>
+      <column id="bmka006_desc"/>
+      <column id="bmka007">
+        <after>
+          <reference field="bmka007_desc" ref_field="bmka007" map_field="bmka007" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bmka007_desc"/>
+      <column id="bmka008"/>
+      <column id="bmkasite"/>
+      <column id="bmka009">
+        <after>
+          <check chkid="v_pmaa001_1" id="isExist"/>
+          <reference field="bmka009_desc" ref_field="bmka_t.bmka009" map_field="bmka009" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_3" state="i"/>
+        <controlp form="q_pmaa001_3" state="c"/>
+      </column>
+      <column id="bmka009_desc"/>
+      <column id="bmka010">
+        <controlp form="q_bmfa001" state="c"/>
+      </column>
+      <column id="bmka011">
+        <after>
+          <reference field="bmka011_desc" ref_field="bmka011" map_field="bmka011" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;210&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bmka011_desc"/>
+      <column id="bmka012">
+        <after>
+          <reference field="bmka012_desc" ref_field="bmka012" map_field="bmka012" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;210&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bmka012_desc"/>
+      <column id="bmka013"/>
+      <column id="bmkaownid">
+        <after>
+          <reference field="bmkaownid_desc" ref_field="bmka_t.bmkaownid" map_field="bmkaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bmkaownid_desc"/>
+      <column id="bmkaowndp">
+        <after>
+          <reference field="bmkaowndp_desc" ref_field="bmka_t.bmkaowndp" map_field="bmkaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bmkaowndp_desc"/>
+      <column id="bmkacrtid">
+        <after>
+          <reference field="bmkacrtid_desc" ref_field="bmka_t.bmkacrtid" map_field="bmkacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bmkacrtid_desc"/>
+      <column id="bmkacrtdp">
+        <after>
+          <reference field="bmkacrtdp_desc" ref_field="bmka_t.bmkacrtdp" map_field="bmkacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bmkacrtdp_desc"/>
+      <column id="bmkacrtdt"/>
+      <column id="bmkamodid">
+        <after>
+          <reference field="bmkamodid_desc" ref_field="bmka_t.bmkamodid" map_field="bmkamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bmkamodid_desc"/>
+      <column id="bmkamoddt"/>
+      <column id="bmkacnfid">
+        <after>
+          <reference field="bmkacnfid_desc" ref_field="bmka_t.bmkacnfid" map_field="bmkacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bmkacnfid_desc"/>
+      <column id="bmkacnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="bmkbseq">
+        <after>
+          <check id="range" bt="1.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bmkb001">
+        <after>
+          <reference field="bmkb001_desc" ref_field="bmkb001" map_field="bmkb001" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1117&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bmkb001_desc"/>
+      <column id="bmkbseq1">
+        <after>
+          <check id="range" bt="1.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bmkb002">
+        <after>
+          <reference field="bmkb002_desc" ref_field="bmkb002" map_field="bmkb002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1118&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bmkb002_desc"/>
+      <column id="bmkb003" type="S" default="N"/>
+      <column id="bmkb004"/>
+      <column id="bmkbsite"/>
+    </init>
+    <init id="body" page="2">
+      <column id="bmkcseq">
+        <after>
+          <check id="range" bt="1.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bmkc001" def_scc="5446"/>
+      <column id="bmkc002">
+        <after>
+          <reference field="bmkc002_desc" ref_field="bmkc002" map_field="bmkc002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1121&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bmkc002_desc"/>
+      <column id="bmkc003" type="S" default="0"/>
+      <column id="bmkc004"/>
+      <column id="bmkcsite"/>
+    </init>
+    <init id="body" page="3">
+      <column id="bmkdseq">
+        <after>
+          <check id="range" bt="1.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bmkd001">
+        <after>
+          <reference field="bmkd001_desc" ref_field="bmkd001" map_field="bmkd001" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1119&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bmkd001_desc"/>
+      <column id="bmkdseq1">
+        <after>
+          <check id="range" bt="1.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bmkd002">
+        <after>
+          <reference field="bmkd002_desc" ref_field="bmkd002" map_field="bmkd002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1120&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bmkd002_desc"/>
+      <column id="bmkd003" type="S" default="N"/>
+      <column id="bmkd004"/>
+      <column id="bmkdsite"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bmka_t" pk="bmkadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT bmkadocno,&apos;&apos;,bmkadocdt,bmka001,&apos;&apos;,bmka002,&apos;&apos;,bmka003,&apos;&apos;,bmkastus,bmka004,bmka005,&apos;&apos;,&apos;&apos;,bmka006,&apos;&apos;,bmka007,&apos;&apos;,bmka008,bmkasite,bmka009,&apos;&apos;,bmka010,bmka011,&apos;&apos;,bmka012,&apos;&apos;,bmka013,bmkaownid,&apos;&apos;,bmkaowndp,&apos;&apos;,bmkacrtid,&apos;&apos;,bmkacrtdp,&apos;&apos;,bmkacrtdt,bmkamodid,&apos;&apos;,bmkamoddt,bmkacnfid,&apos;&apos;,bmkacnfdt FROM bmka_t WHERE bmkaent= ? AND bmkadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bmkadocno,&apos;&apos;,bmkadocdt,bmka001,&apos;&apos;,bmka002,&apos;&apos;,bmka003,&apos;&apos;,bmkastus,bmka004,bmka005,&apos;&apos;,&apos;&apos;,bmka006,&apos;&apos;,bmka007,&apos;&apos;,bmka008,bmkasite,bmka009,&apos;&apos;,bmka010,bmka011,&apos;&apos;,bmka012,&apos;&apos;,bmka013,bmkaownid,&apos;&apos;,bmkaowndp,&apos;&apos;,bmkacrtid,&apos;&apos;,bmkacrtdp,&apos;&apos;,bmkacrtdt,bmkamodid,&apos;&apos;,bmkamoddt,bmkacnfid,&apos;&apos;,bmkacnfdt FROM bmka_t" order="bmkadocno"/>
+    </head>
+    <body id="bmkb_t" page="1" linked="" pk="bmkbseq,bmkbseq1" fk="bmkbdocno">
+      <sql id="forupd_sql_detail" query="SELECT bmkbseq,bmkb001,&apos;&apos;,bmkbseq1,bmkb002,&apos;&apos;,bmkb003,bmkb004,bmkbsite FROM bmkb_t WHERE bmkbent=? AND bmkbdocno=? AND bmkbseq=? AND bmkbseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bmkbseq,bmkb001,&apos;&apos;,bmkbseq1,bmkb002,&apos;&apos;,bmkb003,bmkb004,bmkbsite FROM bmkb_t WHERE bmkbent=? AND bmkbdocno=?"/>
+    </body>
+    <body id="bmkc_t" page="2" linked="" pk="bmkcseq" fk="bmkcdocno">
+      <sql id="forupd_sql_detail" query="SELECT bmkcseq,bmkc001,bmkc002,&apos;&apos;,bmkc003,bmkc004,bmkcsite FROM bmkc_t WHERE bmkcent=? AND bmkcdocno=? AND bmkcseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bmkcseq,bmkc001,bmkc002,&apos;&apos;,bmkc003,bmkc004,bmkcsite FROM bmkc_t WHERE bmkcent=? AND bmkcdocno=?"/>
+    </body>
+    <body id="bmkd_t" page="3" linked="" pk="bmkdseq,bmkdseq1" fk="bmkddocno">
+      <sql id="forupd_sql_detail" query="SELECT bmkdseq,bmkd001,&apos;&apos;,bmkdseq1,bmkd002,&apos;&apos;,bmkd003,bmkd004,bmkdsite FROM bmkd_t WHERE bmkdent=? AND bmkddocno=? AND bmkdseq=? AND bmkdseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bmkdseq,bmkd001,&apos;&apos;,bmkdseq1,bmkd002,&apos;&apos;,bmkd003,bmkd004,bmkdsite FROM bmkd_t WHERE bmkdent=? AND bmkddocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

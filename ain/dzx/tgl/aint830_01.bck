@@ -1,0 +1,1171 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aint830_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0009(2015-03-26 16:47:18), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000128
+#+ Filename...: aint830_01
+#+ Description: 盤點單製造批序號維護作業
+#+ Creator....: 01534(2014-07-06 22:15:18)
+#+ Modifier...: 01534 -SD/PR-
+
+{</section>}
+
+{<section id="aint830_01.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_inpe_d        RECORD
+       inpedocno LIKE inpe_t.inpedocno, 
+   inpeseq LIKE inpe_t.inpeseq, 
+   inpeseq2 LIKE inpe_t.inpeseq2, 
+   inpesite LIKE inpe_t.inpesite, 
+   inpe008 LIKE inpe_t.inpe008, 
+   inpe009 LIKE inpe_t.inpe009, 
+   inpe012 LIKE inpe_t.inpe012, 
+   inpe030 LIKE inpe_t.inpe030, 
+   inpe035 LIKE inpe_t.inpe035, 
+   inpe050 LIKE inpe_t.inpe050, 
+   inpe055 LIKE inpe_t.inpe055, 
+   inpe010 LIKE inpe_t.inpe010, 
+   inpe011 LIKE inpe_t.inpe011, 
+   inpe031 LIKE inpe_t.inpe031, 
+   inpe031_desc LIKE type_t.chr500, 
+   inpe032 LIKE inpe_t.inpe032, 
+   inpe033 LIKE inpe_t.inpe033, 
+   inpe033_desc LIKE type_t.chr500, 
+   inpe034 LIKE inpe_t.inpe034, 
+   inpe036 LIKE inpe_t.inpe036, 
+   inpe036_desc LIKE type_t.chr500, 
+   inpe037 LIKE inpe_t.inpe037, 
+   inpe038 LIKE inpe_t.inpe038, 
+   inpe038_desc LIKE type_t.chr500, 
+   inpe039 LIKE inpe_t.inpe039, 
+   inpe051 LIKE inpe_t.inpe051, 
+   inpe051_desc LIKE type_t.chr500, 
+   inpe052 LIKE inpe_t.inpe052, 
+   inpe053 LIKE inpe_t.inpe053, 
+   inpe053_desc LIKE type_t.chr500, 
+   inpe054 LIKE inpe_t.inpe054, 
+   inpe056 LIKE inpe_t.inpe056, 
+   inpe056_desc LIKE type_t.chr500, 
+   inpe057 LIKE inpe_t.inpe057, 
+   inpe058 LIKE inpe_t.inpe058, 
+   inpe058_desc LIKE type_t.chr500, 
+   inpe059 LIKE inpe_t.inpe059
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_inpe_d          DYNAMIC ARRAY OF type_g_inpe_d
+DEFINE g_inpe_d_t        type_g_inpe_d
+ 
+ 
+DEFINE g_inpesite_t   LIKE inpe_t.inpesite    #Key值備份
+DEFINE g_inpedocno_t      LIKE inpe_t.inpedocno    #Key值備份
+DEFINE g_inpeseq_t      LIKE inpe_t.inpeseq    #Key值備份
+DEFINE g_inpeseq2_t      LIKE inpe_t.inpeseq2    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point    
+
+{</section>}
+
+{<section id="aint830_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aint830_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aint830_01 WITH FORM cl_ap_formpath("ain","aint830_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_inpe_d FROM s_detail1_aint830_01.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpedocno
+            #add-point:BEFORE FIELD inpedocno name="input.b.page1_aint830_01.inpedocno"
+            {<point name="input.b.page1_aint830_01.inpedocno" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpedocno
+            
+            #add-point:AFTER FIELD inpedocno name="input.a.page1_aint830_01.inpedocno"
+            {<point name="input.a.page1_aint830_01.inpedocno" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpedocno
+            #add-point:ON CHANGE inpedocno name="input.g.page1_aint830_01.inpedocno"
+            {<point name="input.g.page1_aint830_01.inpedocno" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpeseq
+            #add-point:BEFORE FIELD inpeseq name="input.b.page1_aint830_01.inpeseq"
+            {<point name="input.b.page1_aint830_01.inpeseq" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpeseq
+            
+            #add-point:AFTER FIELD inpeseq name="input.a.page1_aint830_01.inpeseq"
+            {<point name="input.a.page1_aint830_01.inpeseq" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpeseq
+            #add-point:ON CHANGE inpeseq name="input.g.page1_aint830_01.inpeseq"
+            {<point name="input.g.page1_aint830_01.inpeseq" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpeseq2
+            #add-point:BEFORE FIELD inpeseq2 name="input.b.page1_aint830_01.inpeseq2"
+            {<point name="input.b.page1_aint830_01.inpeseq2" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpeseq2
+            
+            #add-point:AFTER FIELD inpeseq2 name="input.a.page1_aint830_01.inpeseq2"
+            {<point name="input.a.page1_aint830_01.inpeseq2" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpeseq2
+            #add-point:ON CHANGE inpeseq2 name="input.g.page1_aint830_01.inpeseq2"
+            {<point name="input.g.page1_aint830_01.inpeseq2" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpesite
+            #add-point:BEFORE FIELD inpesite name="input.b.page1_aint830_01.inpesite"
+            {<point name="input.b.page1_aint830_01.inpesite" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpesite
+            
+            #add-point:AFTER FIELD inpesite name="input.a.page1_aint830_01.inpesite"
+            {<point name="input.a.page1_aint830_01.inpesite" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpesite
+            #add-point:ON CHANGE inpesite name="input.g.page1_aint830_01.inpesite"
+            {<point name="input.g.page1_aint830_01.inpesite" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe008
+            #add-point:BEFORE FIELD inpe008 name="input.b.page1_aint830_01.inpe008"
+            {<point name="input.b.page1_aint830_01.inpe008" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe008
+            
+            #add-point:AFTER FIELD inpe008 name="input.a.page1_aint830_01.inpe008"
+            {<point name="input.a.page1_aint830_01.inpe008" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe008
+            #add-point:ON CHANGE inpe008 name="input.g.page1_aint830_01.inpe008"
+            {<point name="input.g.page1_aint830_01.inpe008" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe009
+            #add-point:BEFORE FIELD inpe009 name="input.b.page1_aint830_01.inpe009"
+            {<point name="input.b.page1_aint830_01.inpe009" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe009
+            
+            #add-point:AFTER FIELD inpe009 name="input.a.page1_aint830_01.inpe009"
+            {<point name="input.a.page1_aint830_01.inpe009" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe009
+            #add-point:ON CHANGE inpe009 name="input.g.page1_aint830_01.inpe009"
+            {<point name="input.g.page1_aint830_01.inpe009" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe012
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_inpe_d[l_ac].inpe012,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD inpe012
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD inpe012 name="input.a.page1_aint830_01.inpe012"
+            {<point name="input.a.page1_aint830_01.inpe012" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe012
+            #add-point:BEFORE FIELD inpe012 name="input.b.page1_aint830_01.inpe012"
+            {<point name="input.b.page1_aint830_01.inpe012" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe012
+            #add-point:ON CHANGE inpe012 name="input.g.page1_aint830_01.inpe012"
+            {<point name="input.g.page1_aint830_01.inpe012" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe030
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_inpe_d[l_ac].inpe030,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD inpe030
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD inpe030 name="input.a.page1_aint830_01.inpe030"
+            {<point name="input.a.page1_aint830_01.inpe030" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe030
+            #add-point:BEFORE FIELD inpe030 name="input.b.page1_aint830_01.inpe030"
+            {<point name="input.b.page1_aint830_01.inpe030" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe030
+            #add-point:ON CHANGE inpe030 name="input.g.page1_aint830_01.inpe030"
+            {<point name="input.g.page1_aint830_01.inpe030" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe035
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_inpe_d[l_ac].inpe035,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD inpe035
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD inpe035 name="input.a.page1_aint830_01.inpe035"
+            {<point name="input.a.page1_aint830_01.inpe035" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe035
+            #add-point:BEFORE FIELD inpe035 name="input.b.page1_aint830_01.inpe035"
+            {<point name="input.b.page1_aint830_01.inpe035" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe035
+            #add-point:ON CHANGE inpe035 name="input.g.page1_aint830_01.inpe035"
+            {<point name="input.g.page1_aint830_01.inpe035" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe050
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_inpe_d[l_ac].inpe050,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD inpe050
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD inpe050 name="input.a.page1_aint830_01.inpe050"
+            {<point name="input.a.page1_aint830_01.inpe050" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe050
+            #add-point:BEFORE FIELD inpe050 name="input.b.page1_aint830_01.inpe050"
+            {<point name="input.b.page1_aint830_01.inpe050" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe050
+            #add-point:ON CHANGE inpe050 name="input.g.page1_aint830_01.inpe050"
+            {<point name="input.g.page1_aint830_01.inpe050" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe055
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_inpe_d[l_ac].inpe055,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD inpe055
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD inpe055 name="input.a.page1_aint830_01.inpe055"
+            {<point name="input.a.page1_aint830_01.inpe055" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe055
+            #add-point:BEFORE FIELD inpe055 name="input.b.page1_aint830_01.inpe055"
+            {<point name="input.b.page1_aint830_01.inpe055" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe055
+            #add-point:ON CHANGE inpe055 name="input.g.page1_aint830_01.inpe055"
+            {<point name="input.g.page1_aint830_01.inpe055" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe010
+            #add-point:BEFORE FIELD inpe010 name="input.b.page1_aint830_01.inpe010"
+            {<point name="input.b.page1_aint830_01.inpe010" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe010
+            
+            #add-point:AFTER FIELD inpe010 name="input.a.page1_aint830_01.inpe010"
+            {<point name="input.a.page1_aint830_01.inpe010" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe010
+            #add-point:ON CHANGE inpe010 name="input.g.page1_aint830_01.inpe010"
+            {<point name="input.g.page1_aint830_01.inpe010" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe011
+            #add-point:BEFORE FIELD inpe011 name="input.b.page1_aint830_01.inpe011"
+            {<point name="input.b.page1_aint830_01.inpe011" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe011
+            
+            #add-point:AFTER FIELD inpe011 name="input.a.page1_aint830_01.inpe011"
+            {<point name="input.a.page1_aint830_01.inpe011" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe011
+            #add-point:ON CHANGE inpe011 name="input.g.page1_aint830_01.inpe011"
+            {<point name="input.g.page1_aint830_01.inpe011" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe031
+            
+            #add-point:AFTER FIELD inpe031 name="input.a.page1_aint830_01.inpe031"
+            {<point name="input.a.page1_aint830_01.inpe031" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe031
+            #add-point:BEFORE FIELD inpe031 name="input.b.page1_aint830_01.inpe031"
+            {<point name="input.b.page1_aint830_01.inpe031" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe031
+            #add-point:ON CHANGE inpe031 name="input.g.page1_aint830_01.inpe031"
+            {<point name="input.g.page1_aint830_01.inpe031" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe032
+            #add-point:BEFORE FIELD inpe032 name="input.b.page1_aint830_01.inpe032"
+            {<point name="input.b.page1_aint830_01.inpe032" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe032
+            
+            #add-point:AFTER FIELD inpe032 name="input.a.page1_aint830_01.inpe032"
+            {<point name="input.a.page1_aint830_01.inpe032" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe032
+            #add-point:ON CHANGE inpe032 name="input.g.page1_aint830_01.inpe032"
+            {<point name="input.g.page1_aint830_01.inpe032" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe033
+            
+            #add-point:AFTER FIELD inpe033 name="input.a.page1_aint830_01.inpe033"
+            {<point name="input.a.page1_aint830_01.inpe033" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe033
+            #add-point:BEFORE FIELD inpe033 name="input.b.page1_aint830_01.inpe033"
+            {<point name="input.b.page1_aint830_01.inpe033" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe033
+            #add-point:ON CHANGE inpe033 name="input.g.page1_aint830_01.inpe033"
+            {<point name="input.g.page1_aint830_01.inpe033" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe034
+            #add-point:BEFORE FIELD inpe034 name="input.b.page1_aint830_01.inpe034"
+            {<point name="input.b.page1_aint830_01.inpe034" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe034
+            
+            #add-point:AFTER FIELD inpe034 name="input.a.page1_aint830_01.inpe034"
+            {<point name="input.a.page1_aint830_01.inpe034" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe034
+            #add-point:ON CHANGE inpe034 name="input.g.page1_aint830_01.inpe034"
+            {<point name="input.g.page1_aint830_01.inpe034" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe036
+            
+            #add-point:AFTER FIELD inpe036 name="input.a.page1_aint830_01.inpe036"
+            {<point name="input.a.page1_aint830_01.inpe036" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe036
+            #add-point:BEFORE FIELD inpe036 name="input.b.page1_aint830_01.inpe036"
+            {<point name="input.b.page1_aint830_01.inpe036" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe036
+            #add-point:ON CHANGE inpe036 name="input.g.page1_aint830_01.inpe036"
+            {<point name="input.g.page1_aint830_01.inpe036" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe037
+            #add-point:BEFORE FIELD inpe037 name="input.b.page1_aint830_01.inpe037"
+            {<point name="input.b.page1_aint830_01.inpe037" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe037
+            
+            #add-point:AFTER FIELD inpe037 name="input.a.page1_aint830_01.inpe037"
+            {<point name="input.a.page1_aint830_01.inpe037" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe037
+            #add-point:ON CHANGE inpe037 name="input.g.page1_aint830_01.inpe037"
+            {<point name="input.g.page1_aint830_01.inpe037" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe038
+            
+            #add-point:AFTER FIELD inpe038 name="input.a.page1_aint830_01.inpe038"
+            {<point name="input.a.page1_aint830_01.inpe038" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe038
+            #add-point:BEFORE FIELD inpe038 name="input.b.page1_aint830_01.inpe038"
+            {<point name="input.b.page1_aint830_01.inpe038" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe038
+            #add-point:ON CHANGE inpe038 name="input.g.page1_aint830_01.inpe038"
+            {<point name="input.g.page1_aint830_01.inpe038" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe039
+            #add-point:BEFORE FIELD inpe039 name="input.b.page1_aint830_01.inpe039"
+            {<point name="input.b.page1_aint830_01.inpe039" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe039
+            
+            #add-point:AFTER FIELD inpe039 name="input.a.page1_aint830_01.inpe039"
+            {<point name="input.a.page1_aint830_01.inpe039" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe039
+            #add-point:ON CHANGE inpe039 name="input.g.page1_aint830_01.inpe039"
+            {<point name="input.g.page1_aint830_01.inpe039" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe051
+            
+            #add-point:AFTER FIELD inpe051 name="input.a.page1_aint830_01.inpe051"
+            {<point name="input.a.page1_aint830_01.inpe051" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe051
+            #add-point:BEFORE FIELD inpe051 name="input.b.page1_aint830_01.inpe051"
+            {<point name="input.b.page1_aint830_01.inpe051" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe051
+            #add-point:ON CHANGE inpe051 name="input.g.page1_aint830_01.inpe051"
+            {<point name="input.g.page1_aint830_01.inpe051" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe052
+            #add-point:BEFORE FIELD inpe052 name="input.b.page1_aint830_01.inpe052"
+            {<point name="input.b.page1_aint830_01.inpe052" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe052
+            
+            #add-point:AFTER FIELD inpe052 name="input.a.page1_aint830_01.inpe052"
+            {<point name="input.a.page1_aint830_01.inpe052" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe052
+            #add-point:ON CHANGE inpe052 name="input.g.page1_aint830_01.inpe052"
+            {<point name="input.g.page1_aint830_01.inpe052" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe053
+            
+            #add-point:AFTER FIELD inpe053 name="input.a.page1_aint830_01.inpe053"
+            {<point name="input.a.page1_aint830_01.inpe053" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe053
+            #add-point:BEFORE FIELD inpe053 name="input.b.page1_aint830_01.inpe053"
+            {<point name="input.b.page1_aint830_01.inpe053" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe053
+            #add-point:ON CHANGE inpe053 name="input.g.page1_aint830_01.inpe053"
+            {<point name="input.g.page1_aint830_01.inpe053" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe054
+            #add-point:BEFORE FIELD inpe054 name="input.b.page1_aint830_01.inpe054"
+            {<point name="input.b.page1_aint830_01.inpe054" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe054
+            
+            #add-point:AFTER FIELD inpe054 name="input.a.page1_aint830_01.inpe054"
+            {<point name="input.a.page1_aint830_01.inpe054" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe054
+            #add-point:ON CHANGE inpe054 name="input.g.page1_aint830_01.inpe054"
+            {<point name="input.g.page1_aint830_01.inpe054" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe056
+            
+            #add-point:AFTER FIELD inpe056 name="input.a.page1_aint830_01.inpe056"
+            {<point name="input.a.page1_aint830_01.inpe056" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe056
+            #add-point:BEFORE FIELD inpe056 name="input.b.page1_aint830_01.inpe056"
+            {<point name="input.b.page1_aint830_01.inpe056" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe056
+            #add-point:ON CHANGE inpe056 name="input.g.page1_aint830_01.inpe056"
+            {<point name="input.g.page1_aint830_01.inpe056" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe057
+            #add-point:BEFORE FIELD inpe057 name="input.b.page1_aint830_01.inpe057"
+            {<point name="input.b.page1_aint830_01.inpe057" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe057
+            
+            #add-point:AFTER FIELD inpe057 name="input.a.page1_aint830_01.inpe057"
+            {<point name="input.a.page1_aint830_01.inpe057" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe057
+            #add-point:ON CHANGE inpe057 name="input.g.page1_aint830_01.inpe057"
+            {<point name="input.g.page1_aint830_01.inpe057" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe058
+            
+            #add-point:AFTER FIELD inpe058 name="input.a.page1_aint830_01.inpe058"
+            {<point name="input.a.page1_aint830_01.inpe058" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe058
+            #add-point:BEFORE FIELD inpe058 name="input.b.page1_aint830_01.inpe058"
+            {<point name="input.b.page1_aint830_01.inpe058" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe058
+            #add-point:ON CHANGE inpe058 name="input.g.page1_aint830_01.inpe058"
+            {<point name="input.g.page1_aint830_01.inpe058" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inpe059
+            #add-point:BEFORE FIELD inpe059 name="input.b.page1_aint830_01.inpe059"
+            {<point name="input.b.page1_aint830_01.inpe059" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inpe059
+            
+            #add-point:AFTER FIELD inpe059 name="input.a.page1_aint830_01.inpe059"
+            {<point name="input.a.page1_aint830_01.inpe059" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inpe059
+            #add-point:ON CHANGE inpe059 name="input.g.page1_aint830_01.inpe059"
+            {<point name="input.g.page1_aint830_01.inpe059" />}
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1_aint830_01.inpedocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpedocno
+            #add-point:ON ACTION controlp INFIELD inpedocno name="input.c.page1_aint830_01.inpedocno"
+            {<point name="input.c.page1_aint830_01.inpedocno" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpeseq
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpeseq
+            #add-point:ON ACTION controlp INFIELD inpeseq name="input.c.page1_aint830_01.inpeseq"
+            {<point name="input.c.page1_aint830_01.inpeseq" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpeseq2
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpeseq2
+            #add-point:ON ACTION controlp INFIELD inpeseq2 name="input.c.page1_aint830_01.inpeseq2"
+            {<point name="input.c.page1_aint830_01.inpeseq2" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpesite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpesite
+            #add-point:ON ACTION controlp INFIELD inpesite name="input.c.page1_aint830_01.inpesite"
+            {<point name="input.c.page1_aint830_01.inpesite" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe008
+            #add-point:ON ACTION controlp INFIELD inpe008 name="input.c.page1_aint830_01.inpe008"
+            {<point name="input.c.page1_aint830_01.inpe008" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe009
+            #add-point:ON ACTION controlp INFIELD inpe009 name="input.c.page1_aint830_01.inpe009"
+            {<point name="input.c.page1_aint830_01.inpe009" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe012
+            #add-point:ON ACTION controlp INFIELD inpe012 name="input.c.page1_aint830_01.inpe012"
+            {<point name="input.c.page1_aint830_01.inpe012" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe030
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe030
+            #add-point:ON ACTION controlp INFIELD inpe030 name="input.c.page1_aint830_01.inpe030"
+            {<point name="input.c.page1_aint830_01.inpe030" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe035
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe035
+            #add-point:ON ACTION controlp INFIELD inpe035 name="input.c.page1_aint830_01.inpe035"
+            {<point name="input.c.page1_aint830_01.inpe035" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe050
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe050
+            #add-point:ON ACTION controlp INFIELD inpe050 name="input.c.page1_aint830_01.inpe050"
+            {<point name="input.c.page1_aint830_01.inpe050" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe055
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe055
+            #add-point:ON ACTION controlp INFIELD inpe055 name="input.c.page1_aint830_01.inpe055"
+            {<point name="input.c.page1_aint830_01.inpe055" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe010
+            #add-point:ON ACTION controlp INFIELD inpe010 name="input.c.page1_aint830_01.inpe010"
+            {<point name="input.c.page1_aint830_01.inpe010" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe011
+            #add-point:ON ACTION controlp INFIELD inpe011 name="input.c.page1_aint830_01.inpe011"
+            {<point name="input.c.page1_aint830_01.inpe011" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe031
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe031
+            #add-point:ON ACTION controlp INFIELD inpe031 name="input.c.page1_aint830_01.inpe031"
+            {<point name="input.c.page1_aint830_01.inpe031" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe032
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe032
+            #add-point:ON ACTION controlp INFIELD inpe032 name="input.c.page1_aint830_01.inpe032"
+            {<point name="input.c.page1_aint830_01.inpe032" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe033
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe033
+            #add-point:ON ACTION controlp INFIELD inpe033 name="input.c.page1_aint830_01.inpe033"
+            {<point name="input.c.page1_aint830_01.inpe033" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe034
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe034
+            #add-point:ON ACTION controlp INFIELD inpe034 name="input.c.page1_aint830_01.inpe034"
+            {<point name="input.c.page1_aint830_01.inpe034" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe036
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe036
+            #add-point:ON ACTION controlp INFIELD inpe036 name="input.c.page1_aint830_01.inpe036"
+            {<point name="input.c.page1_aint830_01.inpe036" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe037
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe037
+            #add-point:ON ACTION controlp INFIELD inpe037 name="input.c.page1_aint830_01.inpe037"
+            {<point name="input.c.page1_aint830_01.inpe037" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe038
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe038
+            #add-point:ON ACTION controlp INFIELD inpe038 name="input.c.page1_aint830_01.inpe038"
+            {<point name="input.c.page1_aint830_01.inpe038" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe039
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe039
+            #add-point:ON ACTION controlp INFIELD inpe039 name="input.c.page1_aint830_01.inpe039"
+            {<point name="input.c.page1_aint830_01.inpe039" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe051
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe051
+            #add-point:ON ACTION controlp INFIELD inpe051 name="input.c.page1_aint830_01.inpe051"
+            {<point name="input.c.page1_aint830_01.inpe051" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe052
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe052
+            #add-point:ON ACTION controlp INFIELD inpe052 name="input.c.page1_aint830_01.inpe052"
+            {<point name="input.c.page1_aint830_01.inpe052" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe053
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe053
+            #add-point:ON ACTION controlp INFIELD inpe053 name="input.c.page1_aint830_01.inpe053"
+            {<point name="input.c.page1_aint830_01.inpe053" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe054
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe054
+            #add-point:ON ACTION controlp INFIELD inpe054 name="input.c.page1_aint830_01.inpe054"
+            {<point name="input.c.page1_aint830_01.inpe054" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe056
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe056
+            #add-point:ON ACTION controlp INFIELD inpe056 name="input.c.page1_aint830_01.inpe056"
+            {<point name="input.c.page1_aint830_01.inpe056" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe057
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe057
+            #add-point:ON ACTION controlp INFIELD inpe057 name="input.c.page1_aint830_01.inpe057"
+            {<point name="input.c.page1_aint830_01.inpe057" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe058
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe058
+            #add-point:ON ACTION controlp INFIELD inpe058 name="input.c.page1_aint830_01.inpe058"
+            {<point name="input.c.page1_aint830_01.inpe058" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aint830_01.inpe059
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inpe059
+            #add-point:ON ACTION controlp INFIELD inpe059 name="input.c.page1_aint830_01.inpe059"
+            {<point name="input.c.page1_aint830_01.inpe059" />}
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         {<point name="input.cancel"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aint830_01 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="aint830_01.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+
+{</section>}
+
+{<section id="aint830_01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

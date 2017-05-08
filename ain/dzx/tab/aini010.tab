@@ -1,0 +1,115 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aini010" module="ain" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="01996" crtdt="2014-05-28 15:07:25" modid="07024" moddt="2016-06-13 15:01:44" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="料件批號維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="inad001,inad001_desc(chr80),inad001_desc_1(chr80),inad002,inadsite"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="inadstus,inad003,inad014,inad011,inad012"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="inad003,inadownid,inadownid_desc(chr500),inadowndp,inadowndp_desc(chr500),inadcrtid,inadcrtid_desc(chr500),inadcrtdp,inadcrtdp_desc(chr500),inadcrtdt,inadmodid,inadmodid_desc(chr500),inadmoddt"/>
+      <var id="bs_field" value="inad001,inad001_desc(chr80),inad002,inadsite" pk="inad001,inadsite,inad002" order=""/>
+      <bs_reference field="inad001_desc" ref_field="inad001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="modify" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="aini010" method="dialog">
+    <section id="input">
+      <input id="head" field="inad001,inad002,inadsite"/>
+      <input id="body" page="1" field="inadstus,inad003,inad014,inad011,inad012" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="inad001,inad002,inadsite"/>
+      <construct id="body" page="1" field="inadstus,inad003,inad014,inad011,inad012"/>
+      <construct id="body" page="2" field="inadownid,inadowndp,inadcrtid,inadcrtdp,inadcrtdt,inadmodid,inadmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="inad001,inadsite,inad002"/>
+      <set id="head" type="no_entry" field="inad001,inadsite,inad002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="inad001">
+        <after>
+          <check chkid="v_imaf001_1" id="isExist"/>
+          <reference field="inad001_desc" ref_field="inad_t.inad001" map_field="inad001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001_2" state="i"/>
+        <controlp form="q_imaf001_2" state="c"/>
+      </column>
+      <column id="inad001_desc"/>
+      <column id="inad001_desc_1"/>
+      <column id="inad002"/>
+      <column id="inadsite"/>
+    </init>
+    <init id="body" page="1">
+      <column id="inadstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="inad003"/>
+      <column id="inad014"/>
+      <column id="inad011"/>
+      <column id="inad012"/>
+    </init>
+    <init id="body" page="2">
+      <column id="inadownid">
+        <after>
+          <reference field="inadownid_desc" ref_field="inad_t.inadownid" map_field="inadownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inadownid_desc"/>
+      <column id="inadowndp">
+        <after>
+          <reference field="inadowndp_desc" ref_field="inad_t.inadowndp" map_field="inadowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="inadowndp_desc"/>
+      <column id="inadcrtid">
+        <after>
+          <reference field="inadcrtid_desc" ref_field="inad_t.inadcrtid" map_field="inadcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inadcrtid_desc"/>
+      <column id="inadcrtdp">
+        <after>
+          <reference field="inadcrtdp_desc" ref_field="inad_t.inadcrtdp" map_field="inadcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="inadcrtdp_desc"/>
+      <column id="inadcrtdt"/>
+      <column id="inadmodid">
+        <after>
+          <reference field="inadmodid_desc" ref_field="inad_t.inadmodid" map_field="inadmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inadmodid_desc"/>
+      <column id="inadmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="inad_t" pk="inad001,inadsite,inad002">
+      <sql id="forupd_sql" type="sql" query="SELECT inad001,&apos;&apos;,&apos;&apos;,inad002,inadsite FROM inad_t WHERE inadent= ? AND inad001=? AND inadsite=? AND inad002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT inad001,&apos;&apos;,&apos;&apos;,inad002,inadsite FROM inad_t" order="inad001,inadsite,inad002"/>
+    </head>
+    <body id="inad_t" page="1,2" linked="" pk="inad003" fk="inad001,inadsite,inad002">
+      <sql id="forupd_sql_detail" query="SELECT inadstus,inad003,inad014,inad011,inad012,&apos;&apos;,inadownid,&apos;&apos;,inadowndp,&apos;&apos;,inadcrtid,&apos;&apos;,inadcrtdp,&apos;&apos;,inadcrtdt,inadmodid,&apos;&apos;,inadmoddt FROM inad_t WHERE inadent=? AND inad001=? AND inadsite=? AND inad002=? AND inad003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT inadstus,inad003,inad014,inad011,inad012,&apos;&apos;,inadownid,&apos;&apos;,inadowndp,&apos;&apos;,inadcrtid,&apos;&apos;,inadcrtdp,&apos;&apos;,inadcrtdt,inadmodid,&apos;&apos;,inadmoddt FROM inad_t WHERE inadent= ? AND inad001=? AND inadsite=? AND inad002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

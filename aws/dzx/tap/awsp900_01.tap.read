@@ -1,0 +1,2023 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="awsp900_01" std_prog="awsp900_01" erpver="1.0" module="AWS" ver="8" env="s" zone="t10prd" booking="N" type="S" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="Y" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <point name="function.awsp900_01_init" order="1" ver="5" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_init ()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_init()
+    INITIALIZE g_request TO NULL
+    INITIALIZE g_response TO NULL
+    INITIALIZE gx_reqdoc TO NULL
+    INITIALIZE gx_payload_request TO NULL
+    INITIALIZE gi_err_code TO NULL 
+
+    #--------------------------------------------------------------------------#
+    # 初始 g_status 變數                                                       #
+    #--------------------------------------------------------------------------#
+    LET g_status.code = "0"
+    LET g_status.sqlcode = "0"
+    LET g_status.description = ""
+
+    LET g_success = 'Y'
+    LET g_bgjob = "Y"
+    LET g_srvcode = "000"                  #預設服務按照正常流程
+    LET g_gui_type = "0"
+    LET g_user = "tiptop"                  #当前运行的用户
+    LET g_lang = "zh_TW"                   #默认语言别（"zh_TW" - 繁体)
+    LET g_today = TODAY                    #默认的当前日期
+    LET g_time = TIME                      #默认系统当前时间
+    
+    DISPLAY "time_zone:" , cl_time_trans_by_tz("system_time") #設定時區
+
+    CALL FGL_SETENV("TPGateWay","1")
+    CALL FGL_SETENV("TPGateWayErr","1")
+    CALL FGL_SETENV("WSBGJOB","1")
+    CALL FGL_SETENV("FGLGUI",0) 
+    
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_read_file" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_read_file(p_file_path)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_read_file(p_file_path)
+   DEFINE p_file_path   STRING
+   DEFINE l_return_str STRING
+   DEFINE l_object TEXT
+
+   display "file:", p_file_path
+
+   IF os.Path.size(p_file_path.trim()) > 0 THEN
+
+      LOCATE l_object IN FILE
+
+      CALL l_object.readFile(p_file_path)
+      LET l_return_str = l_object
+
+      FREE l_object
+   END IF
+   RETURN l_return_str
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_writeRequestLog" order="3" ver="5" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_writeRequestLog()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_writeRequestLog()
+   DEFINE l_ch        base.Channel,
+           l_logFile   STRING,
+           l_str       STRING
+    DEFINE l_sb                   base.StringBuffer
+    DEFINE l_request_doc          xml.DomDocument
+    
+    WHENEVER ERROR CONTINUE
+        
+    #--------------------------------------------------------------------------#
+    # 記錄檔為 $TEMPDIR/aws-yyymmdd.log                                  #
+    #--------------------------------------------------------------------------#     
+    LET l_logFile = fgl_getenv("TEMPDIR"), "/", "aws-", TODAY USING 'YYYYMMDD', ".log"
+    LET l_ch = base.Channel.create()
+    CALL l_ch.setDelimiter(NULL)
+    CALL l_ch.openFile(l_logFile, "a")
+    IF STATUS = 0 THEN
+       LET g_serial = CURRENT HOUR TO FRACTION(3)
+       LET l_sb = base.StringBuffer.create()
+       CALL l_sb.append(g_serial)
+       CALL l_sb.replace(":", "", 0)
+       CALL l_sb.replace(".", "", 0)
+       LET g_serial = l_sb.toString()
+
+       LET l_request_doc = xml.DomDocument.create() 
+       CALL l_request_doc.loadFromString(g_request.request)
+       #CALL l_request_doc.setFeature("format-pretty-print", true)
+       
+       LET l_str = "#--------------------------- (", CURRENT YEAR TO SECOND, ") ----------------------------#",
+                   "\n[Request Service #", g_serial, "]", 
+                   "\n    '", g_service, "' begin at ", CURRENT HOUR TO FRACTION(3), "\n",
+                   "\n[Request Message #", g_serial, "]",
+                   "\n", l_request_doc.saveToString(), "\n"     
+
+
+       CALL l_ch.write(l_str)
+    END IF
+    CALL l_ch.close()
+ 
+    IF os.Path.chrwx(l_logFile CLIPPED,438) THEN END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_create_response" order="4" ver="6" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_create_response(p_response_str)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_create_response(p_response_str)
+DEFINE p_srvcode         STRING
+DEFINE p_response_str    STRING
+DEFINE l_resdoc         xml.DomDocument
+DEFINE l_node_list      xml.DomNodeList
+DEFINE l_res_root       xml.DomNode
+DEFINE l_tnode          xml.DomNode
+DEFINE l_pnode          xml.DomNode
+DEFINE l_payload_node    xml.DomNode
+DEFINE l_tp_version      STRING
+DEFINE l_bpm_xml         STRING
+DEFINE l_dom_doc         om.DomDocument
+DEFINE l_dom_node        om.DomNode
+DEFINE l_ch             base.Channel
+DEFINE l_i          INTEGER    
+
+    LET l_tp_version = "1.0"
+     
+    #產生 response xml.DomDocument
+    LET l_resdoc = xml.DomDocument.CreateDocument("response")
+    CALL l_resdoc.setFeature("format-pretty-print", true)
+
+    LET l_res_root = l_resdoc.getDocumentElement()
+
+    LET l_pnode = l_resdoc.createElement("srvver")    #建立 <srvver> 
+    CALL l_res_root.appendChild(l_pnode)
+    LET l_tnode = l_resdoc.createTextNode(l_tp_version)
+    CALL l_pnode.appendChild(l_tnode)
+
+    LET l_pnode = l_resdoc.createElement("srvcode")    #建立 <srvcode> 
+    CALL l_res_root.appendChild(l_pnode)
+    LET l_tnode = l_resdoc.createTextNode(g_srvcode)
+    CALL l_pnode.appendChild(l_tnode)
+
+    LET l_payload_node = l_resdoc.createElement("payload")    #建立 <payload> 
+    CALL l_res_root.appendChild(l_payload_node) 
+    
+    IF g_jason_param.getLength() > 0 THEN
+       FOR l_i = 1 TO g_jason_param.getLength()
+           LET l_tnode = l_resdoc.createElement("param")    #建立 <param> 
+           CALL l_payload_node.appendChild(l_tnode)
+           
+           CALL l_tnode.setAttribute("key", g_jason_param[l_i].datakey)
+           CALL l_tnode.setAttribute("type", "JSON")
+           
+           IF NOT cl_null(g_jason_param[l_i].jsontext) THEN
+              LET l_pnode = l_resdoc.createCDATASection(g_jason_param[l_i].jsontext)
+              CALL l_tnode.appendChild(l_pnode)
+           END IF   
+       END FOR       
+    ELSE
+       LET l_tnode = l_resdoc.createElement("param")    #建立 <param> 
+       CALL l_payload_node.appendChild(l_tnode)
+       CALL l_tnode.setAttribute("key", "data")
+       IF g_jason_type = "Y" THEN           
+          CALL l_tnode.setAttribute("type", "JSON")
+          LET l_pnode = l_resdoc.createTextNode(g_response.response)
+       ELSE
+          CALL l_tnode.setAttribute("type", "XML")
+          LET l_pnode = l_resdoc.createCDATASection(p_response_str)
+       END IF
+       CALL l_tnode.appendChild(l_pnode)
+    END IF
+
+    #將 Response xml 寫入回傳的檔案
+    #目前 xml dom 不會自動跳行, 所以改用 dom node 儲存與傳遞
+    #LET l_dom_doc = om.DomDocument.createFromString(l_resdoc.saveToString())
+    #LET l_dom_node = l_dom_doc.getDocumentElement()
+    #CALL l_dom_node.writeXml("bpm_test.txt")
+    #LET g_response.response = awsp900_01_read_file("bpm_test.txt")
+
+    #CALL l_resdoc.save(g_response_file_path)
+    LET g_response.response = l_resdoc.saveToString()
+    LET g_response.response = cl_str_replace( g_response.response ,"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>","")
+    display "response xml:" ,g_response.response
+    
+    LET l_ch = base.Channel.create()
+    CALL l_ch.openFile(g_response_file_path, "w")
+    CALL l_ch.setDelimiter("")       
+    CALL l_ch.write(g_response.response)
+    CALL l_ch.close()
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_preprocess" order="5" ver="7" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_preprocess()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_preprocess()
+DEFINE l_status          STRING
+DEFINE l_pnode           xml.DomNode
+DEFINE l_request_cdata   STRING
+DEFINE l_xmltype         STRING
+
+   #程式變數初始化
+   CALL awsp900_01_init()
+
+   #輸入檔案路徑
+   LET g_request_file_path = g_argv[1]
+   DISPLAY "request_file_path = ",g_request_file_path
+
+   #輸出檔案路徑
+   LET g_response_file_path = g_argv[2]
+   DISPLAY "response_file_path = ",g_response_file_path
+
+   LET g_count = 0
+   CALL awsp900_01_createPayloadResponse()
+      
+   #將 XML 檔案轉為 XML DomNode
+   CALL awsp900_01_filetoxml(g_request_file_path) 
+     RETURNING l_status,gx_reqdoc,g_response.response
+
+   IF l_status = FALSE THEN
+      RETURN
+   END IF
+   
+   LET g_datakey.EntId = awsp900_01_getNodeValue(gx_reqdoc,"key","EntId")
+   LET g_enterprise = g_datakey.EntId
+   IF cl_null(g_enterprise) THEN
+      LET g_enterprise = FGL_GETENV("TOPENT")
+   END IF
+   
+   LET g_datakey.CompanyId = awsp900_01_getNodeValue(gx_reqdoc,"key","CompanyId")  
+   LET g_site = g_datakey.CompanyId
+   IF cl_null(g_site) THEN
+      SELECT gzxa007 INTO g_site FROM gzxa_t
+       WHERE gzxa001 = g_account AND gzxaent = g_enterprise
+      IF (SQLCA.SQLCODE) THEN
+         LET g_status.code = "100"
+         LET g_status.description = "Site not found"
+      END IF
+   END IF
+   
+   LET g_lang = cl_bpm_get_node_attribute(gx_reqdoc,"host","lang")
+   #指定資料的語言別
+   LET g_dlang = g_lang   
+   LET g_account = cl_bpm_get_node_attribute(gx_reqdoc,"host","acct")
+
+   IF NOT cl_null(g_account) THEN
+      LET g_user = ""
+      SELECT gzxa003 INTO g_user      #員工編號
+      FROM gzxa_t
+      WHERE gzxa001 = g_account AND gzxaent = g_enterprise
+
+      IF cl_null(g_user) THEN 
+         LET g_status.code = "aws-00022"
+         LET g_status.description = "User account not found"
+         RETURN
+      END IF
+   ELSE
+      LET g_status.code = "aws-00022"
+      LET g_status.description = "User account not found"
+      RETURN
+   END IF
+
+   LET g_timestamp = cl_bpm_get_node_attribute(gx_reqdoc,"host","timestamp")
+   LET g_prod_name = cl_bpm_get_node_attribute(gx_reqdoc,"host","prod")
+   LET g_prod_ip = cl_bpm_get_node_attribute(gx_reqdoc,"host","ip")
+   LET g_pord_mach = cl_bpm_get_node_attribute(gx_reqdoc,"host","mach")
+   LET g_prod_shop = cl_bpm_get_node_attribute(gx_reqdoc,"host","shop")
+   
+   LET g_datakey.DocProp   = awsp900_01_getNodeValue(gx_reqdoc,"key","DocProp")  
+   LET g_datakey.Prog      = awsp900_01_getNodeValue(gx_reqdoc,"key","Prog")  
+   LET g_datakey.FormId    = awsp900_01_getNodeValue(gx_reqdoc,"key","FormId")  
+   LET g_datakey.SheetNo   = awsp900_01_getNodeValue(gx_reqdoc,"key","SheetNo")  
+   LET g_datakey.PK3       = awsp900_01_getNodeValue(gx_reqdoc,"key","PK3")  
+   LET g_datakey.DocKey    = awsp900_01_getNodeValue(gx_reqdoc,"key","DocKey")  
+   LET g_datakey.RefId     = awsp900_01_getNodeValue(gx_reqdoc,"key","RefId")  
+   LET g_messge.msgBatchNum = awsp900_01_getNodeValue(gx_reqdoc,"key","msgBatchNum")
+   
+   LET g_payload_request = ""
+   LET g_payload_request = awsp900_01_getNodeValue(gx_reqdoc, "param","")
+   
+   IF NOT cl_null(g_messge.msgBatchNum) THEN
+      CALL awsp900_01_getParamValue(gx_reqdoc)
+   END IF
+   #決定內容為 XML or JSON
+   LET l_xmltype = cl_bpm_get_node_attribute(gx_reqdoc, "param","type")
+   IF l_xmltype = "JSON" THEN
+      LET g_jason_type = "Y"
+      
+      CALL g_jason_param.clear()
+      LET g_messge.msgBatchNum = awsp900_01_getNodeValue(gx_reqdoc,"key","msgBatchNum")      
+      CALL awsp900_01_getParamValue(gx_reqdoc)
+   ELSE
+      LET g_jason_type = "N"   
+   END IF
+   
+   DISPLAY "payload request:", g_payload_request , ";"   
+
+   #IF NOT cl_null(g_datakey.EntId) THEN
+   #   LET g_enterprise = g_datakey.EntId
+   #END IF
+   
+   #IF NOT cl_null(g_site) THEN
+   #   LET g_site = g_datakey.CompanyId
+   #END IF
+  
+   #建立 Request XML Document
+   IF l_xmltype = "JSON" THEN
+      LET g_jason_request = g_payload_request.trim()
+   ELSE
+      LET gx_payload_request = xml.DomDocument.create()
+      CALL gx_payload_request.loadFromString(g_payload_request.trim())
+   END IF
+      
+   #服務啟始記錄
+   LET g_service = cl_bpm_get_node_attribute(gx_reqdoc,"service","name")
+   CALL cl_log_service_start("S", g_service) 
+
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_postprocess" order="6" ver="5" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_postprocess()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_postprocess()
+   DEFINE l_status RECORD
+                code    STRING,
+                sqlcode STRING,
+                description  STRING
+           END RECORD
+           
+   CALL awsp900_01_setStatus()
+  
+   IF g_jason_type = "Y" THEN
+      LET l_status.code = g_status.code
+      LET l_status.sqlcode = g_status.sqlcode
+      LET l_status.description = g_status.description 
+      IF cl_null(g_messge_out.paramKey) THEN      
+         LET g_response.response = util.JSON.stringify(l_status)
+      ELSE
+         LET g_response.response = g_messge_out.msgText
+      END IF
+   ELSE
+      LET g_response.response = g_resdoc.saveToString()
+   END IF 
+   #產生 response 資料
+   CALL awsp900_01_create_response(g_response.response)
+   
+   #服務結束記錄
+   CALL cl_log_service_exit("S", g_service)
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_createPayloadResponse" order="7" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_createPayloadResponse ()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_createPayloadResponse()
+    DEFINE l_node   xml.DomNode
+
+    LET g_resdoc = xml.DomDocument.createDocument("Response")     
+    CALL g_resdoc.setFeature("format-pretty-print", true)
+    
+    LET g_response_root = g_resdoc.getDocumentElement()  
+    
+    LET l_node = g_resdoc.createElement("Execution")         #建立 <Execution>
+    CALL g_response_root.appendChild(l_node)
+    LET g_snode = g_resdoc.createElement("Status")          #於 <Execution> 下建立 <Status>
+    CALL l_node.appendChild(g_snode)
+
+    LET l_node = g_resdoc.createElement("ResponseContent")   #建立 <ResponseContent>
+    CALL g_response_root.appendChild(l_node)
+    LET g_pnode = g_resdoc.createElement("Parameter")       #於 <ResponseContent> 下建立 <Parameter>
+    CALL l_node.appendChild(g_pnode)
+    LET g_dnode = g_resdoc.createElement("Document")        #於 <ResponseContent> 下建立 <Document>
+    CALL l_node.appendChild(g_dnode)
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_setStatus" order="8" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_setStatus()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_setStatus()
+   IF NOT cl_null(gi_err_code) AND (cl_null(g_status.code) OR g_status.code="0") THEN
+      LET g_status.code=gi_err_code
+   END IF
+   IF g_status.code != "0" AND cl_null(g_status.description) THEN
+      LET g_status.description = cl_getmsg(g_status.code, g_lang)   #取得 error code 說明
+   END IF
+       
+   CALL g_snode.setAttribute("code", g_status.code)
+   CALL g_snode.setAttribute("sqlcode", g_status.sqlcode)
+   CALL g_snode.setAttribute("description", g_status.description)
+
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_filetoxml" order="9" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_filetoxml(p_file)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_filetoxml(p_file)
+DEFINE p_file STRING
+DEFINE l_str  STRING
+DEFINE l_xmldoc         xml.DomDocument
+DEFINE l_i    INTEGER
+
+   IF cl_null(p_file) THEN
+      LET l_str = "XML document is NULL. "
+      LET g_status.code = "-1"
+      LET g_status.description = l_str
+      display l_str
+      RETURN FALSE,l_xmldoc,l_str     
+   END IF
+   
+   LET l_xmldoc = xml.DomDocument.Create()
+   CALL l_xmldoc.load(p_file)
+   IF l_xmldoc.getErrorsCount() > 0 THEN
+      LET l_str = "It isn't valid XML document. "
+      FOR l_i = 1 TO l_xmldoc.getErrorsCount()
+          LET l_str = l_str, l_xmldoc.getErrorDescription(l_i)
+      END FOR
+      LET g_status.code = "-1"
+      LET g_status.description = l_str
+      RETURN FALSE,l_xmldoc,l_str
+   END IF
+
+   RETURN TRUE,l_xmldoc,""
+
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_getTag" order="10" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_getTag(p_xmldoc,p_name)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_getTag(p_xmldoc,p_name)
+DEFINE p_xmldoc          xml.DomDocument
+DEFINE p_name            STRING
+DEFINE p_att             STRING
+DEFINE l_value           STRING
+DEFINE l_node_list      xml.DomNodeList
+DEFINE l_tnode          xml.DomNode
+DEFINE l_pnode          xml.DomNode
+
+
+   LET l_node_list = p_xmldoc.getElementsByTagName(p_name)
+   IF l_node_list.getCount() > 0 THEN
+      LET l_pnode = l_node_list.getitem(1)
+   END IF 
+
+   RETURN l_pnode
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_getParameter" order="11" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_getParameter(p_name)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_getParameter(p_name)
+DEFINE p_name    STRING
+DEFINE l_value   STRING
+DEFINE l_node_list      xml.DomNodeList
+DEFINE l_pnode          xml.DomNode
+
+
+    INITIALIZE l_value TO NULL
+
+    IF cl_null(p_name) THEN
+       RETURN NULL
+    END IF
+
+    #--------------------------------------------------------------------------#
+    # 搜尋 <Parameter> 是否有指定名稱的欄位                                    #
+    #--------------------------------------------------------------------------# 
+    LET l_node_list = gx_payload_request.selectByXPath("//Parameter/Record/Field[@name=\"" || p_name CLIPPED || "\"]","")
+    IF l_node_list.getCount() > 0 THEN
+        LET l_pnode = l_node_list.getitem(1)
+        LET l_value = l_pnode.getAttribute("value")
+    END IF
+
+    RETURN l_value
+
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_getNodeValue" order="12" ver="5" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_getNodeValue(p_xmldoc,p_tagname,p_attname)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_getNodeValue(p_xmldoc,p_tagname,p_attname)
+DEFINE p_xmldoc  xml.DomDocument
+DEFINE p_tagname    STRING
+DEFINE p_attname    STRING
+DEFINE l_value   STRING
+DEFINE l_node_list      xml.DomNodeList
+DEFINE l_pnode          xml.DomNode
+DEFINE l_tnode          xml.DomNode
+DEFINE l_str        STRING
+
+    INITIALIZE l_value TO NULL
+
+    IF NOT cl_null(p_attname) THEN
+       LET l_node_list = p_xmldoc.selectByXPath("//" || p_tagname.trim() || "[@name=\"" || p_attname CLIPPED || "\"]","")
+    ELSE 
+       LET l_node_list = p_xmldoc.getElementsByTagName(p_tagname)
+    END IF
+    IF l_node_list.getCount() > 0 THEN
+       LET l_pnode = l_node_list.getitem(1)
+       LET l_tnode = l_pnode.getFirstChild()
+       #CDATA的格式,一定要取得第二個子節點才可取得到CDATA的資料.
+       WHILE ( l_tnode IS NOT NULL )
+         LET l_value = l_value , l_tnode.getNodeValue() 
+         LET l_value = l_value.trim()         
+         LET l_tnode = l_tnode.getNextSibling()
+       END WHILE
+    END IF
+
+    RETURN l_value
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_wc_key" order="13" ver="7" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_wc_key(p_dockey)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_wc_key(p_dockey)
+    DEFINE p_dockey   STRING
+    DEFINE l_tok       base.StringTokenizer
+    DEFINE l_tok_key   base.StringTokenizer
+    DEFINE l_wc        STRING 
+    DEFINE l_str       STRING
+    DEFINE l_str2      STRING
+    DEFINE l_i         LIKE type_t.num10
+    DEFINE l_cnt       LIKE type_t.num10
+    DEFINE l_cnt2      LIKE type_t.num10
+    DEFINE l_key_str   STRING
+    DEFINE buf         base.StringBuffer
+            
+    LET l_wc = ""
+    LET l_str = ""
+
+    LET buf = base.StringBuffer.create()
+    CALL buf.append(p_dockey)
+    CALL buf.replace( "{+}","|", 0)
+    LET p_dockey = buf.toString()
+   
+    LET l_tok = base.StringTokenizer.createExt(p_dockey CLIPPED,"|","",TRUE)
+    
+    WHILE l_tok.hasMoreTokens()
+         LET l_str = l_tok.nextToken()
+         LET l_tok_key = base.StringTokenizer.createExt(l_str CLIPPED,"=","",TRUE)
+         LET l_key_str = ""
+         WHILE l_tok_key.hasMoreTokens()
+              LET l_str2 = l_tok_key.nextToken()
+              IF cl_null(l_key_str) THEN
+                 LET l_key_str = l_str2
+              ELSE                 
+                 LET l_key_str = l_key_str ,"='",l_str2,"'"
+              END IF
+         END WHILE
+         IF cl_null(l_wc) THEN 
+            LET l_wc = l_key_str
+         ELSE
+            LET l_wc = l_wc ," AND ",l_key_str
+         END IF
+    END WHILE
+
+    RETURN l_wc
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_splite" order="14" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_splite(p_dockey)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_splite(p_dockey)
+    DEFINE p_dockey   STRING
+    DEFINE l_tok       base.StringTokenizer
+    DEFINE l_tok_key   base.StringTokenizer
+    DEFINE l_wc        STRING 
+    DEFINE l_str       STRING
+    DEFINE l_str2      STRING
+    DEFINE l_cnt       LIKE type_t.num10
+    DEFINE l_cnt2      LIKE type_t.num10
+    DEFINE l_key_str   STRING
+    DEFINE buf         base.StringBuffer
+            
+    LET l_wc = ""
+    LET l_str = ""
+
+    LET l_tok = base.StringTokenizer.createExt(p_dockey CLIPPED,"|","",TRUE)
+    WHILE l_tok.hasMoreTokens()
+         LET l_str = l_tok.nextToken()
+         IF cl_null(l_wc) THEN 
+            LET l_wc = "'", l_str ,"'"
+         ELSE
+            LET l_wc = l_wc ,",", "'", l_str ,"'"
+         END IF
+    END WHILE
+
+    RETURN l_wc
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_addMasterRecord" order="15" ver="7" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_addMasterRecord(p_record, p_name)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_addMasterRecord(p_record,p_name)
+    DEFINE p_record            xml.DomNode,
+           p_name              STRING
+    DEFINE l_node              xml.DomNode
+    DEFINE l_tnode             xml.DomNode
+    DEFINE l_master_record     xml.DomNode
+    
+
+    WHENEVER ERROR CONTINUE
+
+    #IF p_record IS NULL THEN
+    #   RETURN NULL
+    #END IF
+
+    LET l_node = g_resdoc.createElement("RecordSet")   #於 <Document> 下建立 <RecordSet> 節點
+    CALL g_dnode.appendChild(l_node)
+
+    LET g_count = g_count + 1
+    CALL l_node.setAttribute("id", g_count)
+
+    LET l_tnode = g_resdoc.createElement("Master")   #於 <RecordSet> 下建立 <Master> 節點
+    CALL l_node.appendChild(l_tnode)
+    IF NOT cl_null(p_name) THEN
+       CALL l_tnode.setAttribute("name", p_name)
+       CALL l_tnode.setAttribute("node_id", g_count)
+    END IF
+    
+    IF p_record IS NULL THEN
+       LET l_master_record = g_resdoc.createElement("Record") 
+       LET g_master_record = l_master_record       
+       CALL l_tnode.appendChild(l_master_record)           
+       RETURN l_node
+    END IF
+
+    CALL awsp900_01_buildRecord(l_node, p_record)       #依照傳入的資料新增一筆單頭資料
+
+    RETURN l_node                                      #回傳此筆單頭資料節點
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_addMasterRecordField" order="16" ver="7" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_addMasterRecordField(p_json_record, p_name)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_addMasterRecordField(p_name,p_json_record)
+DEFINE p_json_record     util.JSONObject,
+       p_name            STRING,
+       p_detail          STRING
+DEFINE l_node            xml.DomNode,
+       l_master_record   xml.DomNode
+DEFINE l_node_list       xml.DomNodeList
+DEFINE l_list1           xml.DomNodeList
+DEFINE l_res_root        xml.DomNode
+DEFINE l_tnode           xml.DomNode
+DEFINE l_pnode           xml.DomNode
+DEFINE l_i               INTEGER
+
+    WHENEVER ERROR CONTINUE
+
+    IF p_json_record.getLength() = 0 THEN 
+       display "json length: 0"
+       RETURN NULL
+    END IF
+
+    LET l_node_list = g_dnode.selectByXPath("//Master[@name=\"" || p_name CLIPPED || "\"]","")
+    IF l_node_list.getCount() = 0 THEN
+
+       LET l_node = g_resdoc.createElement("RecordSet")   #於 <Document> 下建立 <RecordSet> 節點
+       CALL g_dnode.appendChild(l_node)
+
+       LET g_count = g_count + 1
+       CALL l_node.setAttribute("id", g_count)
+
+       LET l_tnode = g_resdoc.createElement("Master")   #於 <RecordSet> 下建立 <Master> 節點
+       CALL l_node.appendChild(l_tnode)
+       IF NOT cl_null(p_name) THEN
+          CALL l_tnode.setAttribute("name", p_name)
+          CALL l_tnode.setAttribute("node_id", g_count)
+       END IF
+
+       LET l_master_record = g_resdoc.createElement("Record")  #於 <Master>>下建立 <Record> 節點
+       LET g_master_record = l_master_record
+       
+       CALL l_tnode.appendChild(l_master_record)       
+    ELSE
+       LET l_pnode = l_node_list.getitem(1)
+       LET l_list1 = l_pnode.getElementsByTagName("Record")
+       FOR l_i = 1 TO l_list1.getCount()
+           LET l_master_record = l_list1.getItem(l_i)
+       END FOR
+    END IF 
+
+    CALL awsp900_01_buildMasterField(l_master_record, p_json_record)       #依照傳入的資料新增一筆單頭資料
+
+    RETURN l_node                                      #回傳此筆單頭資料節點
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_addDetailRecordField" order="17" ver="5" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_addDetailRecordField(p_name)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_addDetailRecordField(p_name)
+DEFINE p_json_record    util.JSONObject,
+       p_name           STRING
+DEFINE l_node           xml.DomNode,
+       l_master_record  xml.DomNode
+DEFINE l_node_list      xml.DomNodeList
+DEFINE l_list1          xml.DomNodeList
+DEFINE l_res_root       xml.DomNode
+DEFINE l_tnode          xml.DomNode
+DEFINE l_dnode          xml.DomNode
+DEFINE l_pnode          xml.DomNode
+DEFINE l_i              INTEGER
+DEFINE p_level          STRING
+
+    WHENEVER ERROR CONTINUE
+
+    LET l_node_list = g_dnode.selectByXPath("//Master[@name=\"" || p_name CLIPPED || "\"]","")
+    IF l_node_list.getCount() = 0 THEN
+
+       LET l_node = g_resdoc.createElement("RecordSet")   #於 <Document> 下建立 <RecordSet> 節點
+       CALL g_dnode.appendChild(l_node)
+
+       LET g_count = g_count + 1
+       CALL l_node.setAttribute("id", g_count)
+
+       LET l_tnode = g_resdoc.createElement("Master")   #於 <RecordSet> 下建立 <Master> 節點
+       CALL l_node.appendChild(l_tnode)
+       IF NOT cl_null(p_name) THEN
+          CALL l_tnode.setAttribute("name", p_name)
+          CALL l_tnode.setAttribute("node_id", g_count)
+       END IF
+
+       LET l_master_record = g_resdoc.createElement("Record")  #於 <Master>下建立 <Record> 節點
+       LET l_dnode = g_resdoc.createElement("Detail") 
+
+       IF cl_null(g_detail_name) THEN
+          CALL l_dnode.setAttribute("name", "d1_1")          
+       ELSE
+          CALL l_dnode.setAttribute("name", g_detail_name)    
+       END IF
+       
+       CALL l_dnode.setAttribute("node_id", "1_1")
+       CALL l_master_record.appendChild(l_dnode)               # 產生 <Detail>
+       CALL l_tnode.appendChild(l_master_record)
+    ELSE
+        LET l_pnode = l_node_list.getitem(1)
+        LET l_list1 = l_pnode.getElementsByTagName("Record")
+        FOR l_i = 1 TO l_list1.getCount()
+            LET l_master_record = l_list1.getItem(l_i)
+        END FOR
+    END IF 
+
+    RETURN l_dnode                                      #回傳此筆Detail資料節點
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_makeDetail" order="18" ver="5" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_makeDetail(p_name,p_id)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_makeDetail(p_name,p_detail,p_id,p_node,p_json_record)
+DEFINE p_name         STRING
+DEFINE p_detail       STRING
+DEFINE p_id           STRING
+DEFINE p_json_record  util.JSONObject
+DEFINE p_node         xml.DomNode
+DEFINE l_dnode        xml.DomNode
+
+DEFINE l_node_list    xml.DomNodeList
+DEFINE l_list1        xml.DomNodeList
+DEFINE l_node         xml.DomNode 
+DEFINE l_i            LIKE type_t.num5
+ 
+     LET l_node_list = g_dnode.selectByXPath("//Master/Record/Page[@name=\"" || p_name CLIPPED || "\"]/Detail/Record" ,"")
+     IF l_node_list.getCount() = 0 THEN
+         
+        LET l_dnode = g_resdoc.createElement("Detail")
+        CALL l_dnode.setAttribute("name", p_detail)
+        CALL l_dnode.setAttribute("node_id", "1_" || p_id )
+  
+        LET l_node = g_resdoc.createElement("Record")
+        CALL l_dnode.appendChild(l_node)     
+        CALL p_node.appendChild(l_dnode)
+     ELSE
+        LET l_dnode = l_node_list.getitem(1)
+        LET l_list1 = l_dnode.getElementsByTagName("Record")
+        FOR l_i = 1 TO l_list1.getCount()            
+          LET l_node = l_list1.getItem(l_i)
+        END FOR
+     END IF
+    
+     CALL awsp900_01_buildRecordField(l_node, p_json_record)
+     
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_buildDetailRecord" order="19" ver="5" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_buildDetailRecord(p_node, p_json_record)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_buildDetailRecord(p_node,p_json_record)
+DEFINE p_node         xml.DomNode
+DEFINE p_json_record  util.JSONObject
+DEFINE l_list1    xml.DomNodeList,                                 
+       l_list2    xml.DomNodeList
+DEFINE l_node     xml.DomNode,
+       l_child    xml.DomNode, 
+       l_record   xml.DomNode,
+       l_field    xml.DomNode
+DEFINE l_i        INTEGER,
+       l_j        INTEGER
+DEFINE l_name     STRING,
+       l_value    STRING 
+DEFINE l_k        INTEGER         #FUN-D80090
+               
+    LET l_node = g_resdoc.createElement("Record")  #於 <Master> / <Detail> / <Parameter>下建立 <Record> 節點
+    CALL p_node.appendChild(l_node)
+
+    FOR l_i = 1 TO p_json_record.getLength()
+ 
+       INITIALIZE l_name TO NULL
+       INITIALIZE l_value TO NULL
+
+       #取得欄位名稱和欄位值
+       LET l_name = p_json_record.name(l_i)
+       LET l_value = p_json_record.get(p_json_record.name(l_i))
+
+       LET l_child = g_resdoc.createElement("Field") #於 <Record> 下建立 <Field> 節點
+       CALL l_node.appendChild(l_child)
+       CALL l_child.setAttribute("name", l_name)
+       CALL l_child.setAttribute("value", l_value)
+    END FOR
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_buildRecord" order="20" ver="5" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_buildRecord(p_node, p_json_record)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_buildRecord(p_node,p_json_record)
+DEFINE p_node         xml.DomNode
+DEFINE p_json_record  util.JSONObject
+DEFINE l_list1    xml.DomNodeList,                                 
+       l_list2    xml.DomNodeList
+DEFINE l_node     xml.DomNode,
+       l_child    xml.DomNode, 
+       l_record   xml.DomNode,
+       l_field    xml.DomNode
+DEFINE l_i        INTEGER,
+       l_j        INTEGER
+DEFINE l_name     STRING,
+       l_value    STRING 
+DEFINE l_k        INTEGER         #FUN-D80090
+               
+    LET l_node = g_resdoc.createElement("Record")  #於 <Master> / <Detail> / <Parameter>下建立 <Record> 節點
+    CALL p_node.appendChild(l_node)
+
+    FOR l_i = 1 TO p_json_record.getLength()
+ 
+       INITIALIZE l_name TO NULL
+       INITIALIZE l_value TO NULL
+
+       #取得欄位名稱和欄位值
+       LET l_name = p_json_record.name(l_i)
+       LET l_value = p_json_record.get(p_json_record.name(l_i))
+
+       LET l_child = g_resdoc.createElement("Field") #於 <Record> 下建立 <Field> 節點
+       CALL l_node.appendChild(l_child)
+       CALL l_child.setAttribute("name", l_name)
+       CALL l_child.setAttribute("value", l_value)
+    END FOR
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_buildRecordField" order="21" ver="6" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_buildRecordField(p_node, p_json_record)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_buildRecordField(p_node,p_json_record)
+    DEFINE p_json_record     util.JSONObject
+    DEFINE p_node     xml.DomNode
+    DEFINE l_list1    xml.DomNodeList,                                 
+           l_list2    xml.DomNodeList
+    DEFINE l_node     xml.DomNode,
+           l_child    xml.DomNode, 
+           l_record   xml.DomNode,
+           l_field    xml.DomNode
+    DEFINE l_i        INTEGER,
+           l_j        INTEGER
+    DEFINE l_name     STRING,
+           l_value    STRING 
+    DEFINE l_k        INTEGER         #FUN-D80090
+
+    LET l_child = g_resdoc.createElement("Field") #於 <Record> 下建立 <Field> 節點
+    CALL p_node.appendChild(l_child)
+     
+    FOR l_i = 1 TO p_json_record.getLength()
+
+       INITIALIZE l_name TO NULL
+       INITIALIZE l_value TO NULL
+
+       #取得欄位名稱和欄位值
+       LET l_name = p_json_record.name(l_i)
+       LET l_value = p_json_record.get(p_json_record.name(l_i))
+           
+       #<Field name="imbadocno" datatype="0" type="Edit" label="bpm_imbadocno" ref="">  
+       CALL l_child.setAttribute(l_name CLIPPED, l_value CLIPPED)       
+
+   END FOR
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_addFieldLang" order="22" ver="8" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_addFieldLang(p_type,p_tagname, p_fieldname,p_json_array)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_addFieldLang(p_type,p_tagname,p_fieldname,p_json_array)
+DEFINE p_type            STRING
+DEFINE p_tagname         STRING             
+DEFINE p_fieldname       STRING           
+DEFINE p_json_array      util.JSONArray
+DEFINE l_json_record     util.JSONObject
+DEFINE l_node_list       xml.DomNodeList
+DEFINE l_pnode           xml.DomNode
+DEFINE l_child           xml.DomNode
+DEFINE l_i               LIKE type_t.num5
+DEFINE l_j               LIKE type_t.num5
+DEFINE l_name            STRING
+DEFINE l_value           STRING
+
+   IF p_json_array.getLength() = 0 THEN 
+      display "json length: 0"
+      RETURN 
+   END IF
+
+
+   CASE p_tagname
+     WHEN "Parameter"   
+          LET l_node_list = g_resdoc.selectByXPath("//" || p_tagname || "/Record/Field[@name=\"" || p_fieldname CLIPPED || "\"]","")
+     WHEN "Detail"
+          LET l_node_list = g_resdoc.selectByXPath("//" || p_tagname || "/Record/Field[@name=\"" || p_fieldname CLIPPED || "\"]","")        
+     WHEN "Page"
+         LET l_node_list = g_resdoc.selectByXPath("//Page[@name=\"" || p_fieldname CLIPPED|| "\"]","")
+     OTHERWISE         
+         LET l_node_list = g_resdoc.selectByXPath("//" || p_tagname || "/Record/Page/Field[@name=\"" || p_fieldname CLIPPED || "\"]","")         
+   END CASE
+   
+   IF l_node_list.getCount() > 0 THEN
+
+      LET l_pnode = l_node_list.getitem(1)
+               
+      FOR l_i = 1 TO p_json_array.getLength()
+
+          INITIALIZE l_json_record TO NULL
+          LET l_json_record = p_json_array.get(l_i)
+          #於 <Record> 下建立 <Field> 節點         
+          LET l_child = g_resdoc.createElement(p_type) 
+          FOR l_j = 1 TO l_json_record.getLength()
+ 
+             INITIALIZE l_name TO NULL
+             INITIALIZE l_value TO NULL
+
+             #取得欄位名稱和欄位值
+             LET l_name = l_json_record.name(l_j)
+             LET l_value = l_json_record.get(l_json_record.name(l_j))
+
+             CALL l_pnode.appendChild(l_child)
+             CALL l_child.setAttribute(l_name,l_value)
+          END FOR
+      END FOR
+   END IF 
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_addParameterRecord" order="23" ver="8" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_addParameterRecord(p_json_record)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_addParameterRecord(p_json_record)
+   DEFINE p_json_record     util.JSONObject
+   
+   WHENEVER ERROR CONTINUE
+
+   IF p_json_record.getLength() = 0 THEN 
+      display "json length: 0"
+      RETURN NULL
+   END IF
+
+   CALL awsp900_01_buildRecord(g_pnode, p_json_record)       #依照傳入的資料新增回傳參數資料
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_createJasonResponse" order="24" ver="8" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_createJasonResponse(p_str)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_createJasonResponse(p_str)
+   DEFINE p_str            STRING
+   
+   LET g_jason_type = "Y"
+   LET g_response.response = p_str
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_writeResponseLog" order="25" ver="8" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_writeResponseLog()
+#                  RETURNING 回传参数
+# Input parameter:  
+#                :  
+# Return code....:  
+#                :  
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_writeResponseLog()
+    DEFINE l_ch        base.Channel,
+           l_logFile   STRING,
+           l_str       STRING
+ 
+    # 記錄檔為 $TEMPDIR/aws-yyymmdd.log                                  #
+    #--------------------------------------------------------------------------# 
+    LET l_logFile = fgl_getenv("TEMPDIR"), "/", "aws-", TODAY USING 'YYYYMMDD', ".log"
+    LET l_ch = base.Channel.create()
+    CALL l_ch.setDelimiter(NULL)
+    CALL l_ch.openFile(l_logFile, "a")
+    IF STATUS = 0 THEN
+       LET l_str = "[Response Service #", g_serial, "]", 
+                   "\n    '", g_service, "' end at ", CURRENT HOUR TO FRACTION(3), "\n",
+                   "\n[Response Message #", g_serial, "]",
+                   "\n", g_response.response, "\n",
+                   "#------------------------------------------------------------------------------#\n\n"                         
+       CALL l_ch.write(l_str)
+    END IF
+    CALL l_ch.close()
+    
+    IF os.Path.chrwx(l_logFile CLIPPED,438) THEN END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_addPageField" order="26" ver="8" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_addPageField(p_json_record,p_name,p_master_name)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_addPageField(p_json_record,p_prog,p_name,p_type,p_master_name,p_detail_name)
+DEFINE p_json_record     util.JSONObject
+DEFINE p_prog            STRING             
+DEFINE p_name            STRING             
+DEFINE p_type            STRING             
+DEFINE p_master_name     STRING   
+DEFINE p_detail_name     STRING
+
+DEFINE l_node_list       xml.DomNodeList
+DEFINE l_node            xml.DomNode,
+       l_master_record   xml.DomNode
+DEFINE l_list1           xml.DomNodeList
+DEFINE l_tnode           xml.DomNode
+DEFINE l_pnode           xml.DomNode
+DEFINE l_page_node       xml.DomNode
+
+
+DEFINE l_i               LIKE type_t.num5
+DEFINE l_j               LIKE type_t.num5
+DEFINE l_name            STRING
+DEFINE l_value           STRING
+
+   WHENEVER ERROR CONTINUE
+
+   IF p_json_record.getLength() = 0 THEN 
+      display "json length: 0"
+      RETURN NULL
+   END IF
+   
+   LET l_node_list = g_dnode.selectByXPath("//Master/Record/Page[@name=\"" || p_name CLIPPED || "\"]" ,"")      
+   
+   IF l_node_list.getCount() = 0 THEN
+
+      LET g_count = g_count + 1
+      IF g_count = 1 THEN
+          LET l_node = g_resdoc.createElement("RecordSet")   #於 <Document> 下建立 <RecordSet> 節點
+          CALL g_dnode.appendChild(l_node)
+          CALL l_node.setAttribute("id", g_count)
+
+          LET l_tnode = g_resdoc.createElement("Master")   #於 <RecordSet> 下建立 <Master> 節點
+          CALL l_node.appendChild(l_tnode)
+          IF NOT cl_null(p_master_name) THEN
+             CALL l_tnode.setAttribute("name", p_master_name)
+             CALL l_tnode.setAttribute("node_id", g_count)
+          END IF
+
+          LET g_master_record = g_resdoc.createElement("Record")  #於 <Master>下建立 <Record> 節點       
+          CALL l_tnode.appendChild(g_master_record)
+       END IF
+       
+       LET l_page_node = g_resdoc.createElement("Page")      
+       CALL l_page_node.setAttribute("name", p_name)
+       CALL l_page_node.setAttribute("type", p_type)     
+                    
+       CALL g_master_record.appendChild(l_page_node)
+       
+       #建立page 多語言
+       IF p_type = "page" THEN
+          CALL awsp900_01_add_page_info(p_prog,p_name)
+       END IF       
+   ELSE      
+       LET l_pnode = l_node_list.getitem(1)
+       LET l_list1 = l_pnode.getElementsByTagName("Page")
+       FOR l_i = 1 TO l_list1.getCount()            
+          LET l_page_node = l_list1.getItem(l_i)
+       END FOR
+   END IF
+   
+   #依照傳入的資料新增一筆Page資料
+   IF p_master_name = "D1" THEN
+      CALL awsp900_01_makeDetail(p_name,p_detail_name,1,l_page_node,p_json_record)
+   ELSE
+      CALL awsp900_01_buildRecordField(l_page_node, p_json_record)       
+   END IF
+   RETURN l_node                                      #回傳此筆單頭資料節點
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_add_page_info" order="27" ver="8" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_add_page_info(p_prog,p_dzfb008)
+   DEFINE l_i            LIKE type_t.num5
+   DEFINE p_prog         STRING
+   
+   DEFINE p_dzfb008      LIKE dzfb_t.dzfb008
+   DEFINE l_lang         DYNAMIC ARRAY OF RECORD
+                          name    LIKE gzcbl_t.gzcbl003,
+                          value   LIKE gzcbl_t.gzcbl004
+                         END RECORD 
+   DEFINE l_lang_t       STRING                         
+                   
+   LET l_i = 1
+   LET l_lang_t = g_lang  
+   DECLARE gzzy_curs CURSOR FROM "SELECT gzzy001,'' FROM gzzy_t"
+   FOREACH gzzy_curs INTO l_lang[l_i].*  
+      LET g_lang = l_lang[l_i].name
+      LET l_lang[l_i].value = awsp900_01_get_description(p_prog ,p_dzfb008)      
+      LET l_i = l_i + 1     
+   END FOREACH
+   CALL l_lang.deleteElement(l_i)
+   CALL awsp900_01_addFieldLang("Lang","Page", p_dzfb008, util.JSONArray.fromFGL(l_lang))
+   LET g_lang = l_lang_t       #還原 g_lang
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_get_description" order="28" ver="8" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_get_description(p_gzzz002,p_name)
+   DEFINE p_name        LIKE gzzd_t.gzzd003
+   DEFINE p_gzzz002     LIKE gzzz_t.gzzz002
+   DEFINE p_text        STRING                  #預設顯示文字
+   DEFINE l_str         STRING                  #現行g_lang標籤說明文字(exp:料件編號)
+   DEFINE l_comment     STRING
+    
+   IF NOT cl_null(p_name) THEN
+      CALL s_azzi902_get_gzzd(p_gzzz002, p_name)
+         RETURNING l_str, l_comment 
+   END IF   
+    
+   RETURN l_str
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_getMasterRecordLength" order="29" ver="8" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 取得 Request XML <Document> 節點中的單檔筆數個數
+# Memo...........:
+# Usage..........: CALL awsp900_01_getMasterRecordLength(p_name)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_getMasterRecordLength(p_name)
+    DEFINE p_name   STRING
+    DEFINE l_list   xml.DomNodeList
+    DEFINE l_cnt    INTEGER
+
+
+    #--------------------------------------------------------------------------#
+    # 搜尋 <Document> 有多少筆對應的 <Master> 節點                             #
+    #--------------------------------------------------------------------------#
+    IF cl_null(p_name) THEN
+       LET l_list = gx_payload_request.selectByXPath("//Document/RecordSet/Master")
+    ELSE
+       LET l_list = gx_payload_request.selectByXPath("//Document/RecordSet/Master[@name=\"" || p_name || "\"]","")  
+    END IF
+
+    LET l_cnt = l_list.getCount()
+    RETURN l_cnt
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_getMasterRecord" order="30" ver="8" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 取得 Request XML 中指定的單檔節點 Dom Node
+# Memo...........:
+# Usage..........: CALL awsp900_01_getMasterRecord(p_i,p_name)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_getMasterRecord(p_i,p_name)
+    DEFINE p_i      INTEGER,
+           p_name   STRING
+    DEFINE l_list   xml.DomNodeList
+    DEFINE l_i      INTEGER
+    DEFINE l_node   xml.DomNode
+
+
+    IF cl_null(p_i) OR p_i = 0 THEN
+       RETURN NULL
+    END IF
+
+    IF cl_null(p_name) THEN
+       LET l_list = gx_payload_request.selectByXPath("//Document/RecordSet/Master")
+    ELSE
+       LET l_list = gx_payload_request.selectByXPath("//Document/RecordSet/Master[@name=\"" || p_name || "\"]", "") 
+    END IF
+
+    FOR l_i = 1 TO l_list.getCount()
+        LET l_node = l_list.getitem(l_i)
+        IF l_i = p_i THEN
+           LET l_node = l_node.getFirstChild()     #往下取得 <Record> 節點回傳
+           EXIT FOR
+        END IF
+    END FOR
+
+    RETURN l_node
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_getDetailRecordLength" order="31" ver="8" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 取得 Request XML <Document> 節點中的單身筆數個數
+# Memo...........:
+# Usage..........: CALL awsp900_01_getDetailRecordLength(p_node,p_name)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_getDetailRecordLength(p_node,p_name)
+    DEFINE p_node    xml.DomNode,
+           p_name    STRING
+    DEFINE l_list    xml.DomNodeList
+    DEFINE l_list2   xml.DomNodeList
+    DEFINE l_node    xml.DomNode
+    DEFINE l_detail  xml.DomNode
+    DEFINE l_i       INTEGER
+    DEFINE l_cnt     INTEGER
+
+    IF p_node IS NULL THEN
+       RETURN 0
+    END IF
+
+    LET l_node = p_node.getParentNode()   #從 <Record> 取 <Master> 父節點
+    LET l_node = l_node.getParentNode()   #再從 <Master> 取 <RecordSet> 父節點
+
+    #--------------------------------------------------------------------------#
+    # 搜尋 <RecordSet> 有對應的 <Detail> 節點                                  #
+    #--------------------------------------------------------------------------#
+    IF cl_null(p_name) THEN
+       LET l_list = l_node.selectByXPath("//Detail/Record")
+       RETURN l_list.getCount()
+    ELSE
+       #LET l_list = l_node.selectByXPath("//Detail[@name=\"" || p_name || "\"]/Record" , "")
+       LET l_list = l_node.getElementsByTagName("Detail") 
+    END IF
+
+    FOR l_i = 1 TO l_list.getCount()
+        LET l_detail = l_list.getitem(l_i)
+        IF l_detail.getAttribute("name") = p_name THEN
+           LET l_list2 = l_detail.getElementsByTagName("Record")
+           RETURN l_list2.getCount()
+        END IF
+    END FOR
+    LET l_cnt = 0   #找不到
+    RETURN l_cnt
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_getDetailRecord" order="32" ver="8" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 取得 Request XML 中指定的單檔節點 Dom Node
+# Memo...........:
+# Usage..........: CALL awsp900_01_getDetailRecord(p_node,p_i,p_name)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_getDetailRecord(p_node,p_i,p_name)
+    DEFINE p_node    xml.DomNode,
+           p_i       INTEGER,
+           p_name    STRING
+    DEFINE l_list    xml.DomNodeList
+    DEFINE l_list2   xml.DomNodeList
+    DEFINE l_node    xml.DomNode
+    DEFINE l_node2   xml.DomNode
+    DEFINE l_detail  xml.DomNode  
+    DEFINE l_i       INTEGER
+
+
+    IF p_node IS NULL THEN
+       RETURN 0
+    END IF
+
+    LET l_node = p_node.getParentNode()   #從 <Record> 取 <Master> 父節點
+    LET l_node = l_node.getParentNode()   #再從 <Master> 取 <RecordSet> 父節點
+
+    #--------------------------------------------------------------------------#
+    # 搜尋 <RecordSet> 有對應的 <Detail> 節點                                  #
+    #--------------------------------------------------------------------------#
+    IF cl_null(p_name) THEN
+       LET l_list = l_node.selectByXPath("//Detail/Record")
+    ELSE
+       #LET l_list = l_node.selectByXPath("//Detail[@name=\"" || p_name || "\"]/Record" , "")
+       LET l_list = l_node.getElementsByTagName("Detail")    
+    END IF
+
+    FOR l_i = 1 TO l_list.getCount()
+        LET l_detail = l_list.getitem(l_i)
+        IF l_detail.getAttribute("name") = p_name THEN
+           LET l_list2 = l_detail.getElementsByTagName("Record")
+           LET l_node2 = l_list2.getitem(p_i)  #取出指定的Record
+           EXIT FOR
+        END IF
+        #LET l_node2 = l_list.getitem(l_i)
+
+        #----------------------------------------------------------------------#
+        # 若搜尋的單身 <Record> 節點順序與呼叫時傳入的值相同時                 #
+        #----------------------------------------------------------------------#
+        #IF l_i = p_i THEN
+        #   EXIT FOR
+        #END IF
+    END FOR
+
+    RETURN l_node2
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_getRecordField" order="33" ver="8" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 取得指定的 單頭 / 單身 節點中的欄位值
+# Memo...........:
+# Usage..........: CALL awsp900_01_getRecordField(p_node,p_name)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_getRecordField(p_node,p_name)
+    DEFINE p_node    xml.DomNode,
+           p_name    STRING
+    DEFINE l_value   STRING
+    DEFINE l_list    xml.DomNodeList
+    DEFINE l_node    xml.DomNode
+    DEFINE l_i       LIKE type_t.num10
+    DEFINE l_name    STRING
+
+    IF p_node IS NULL OR cl_null(p_name) THEN
+       RETURN NULL
+    END IF
+
+    #--------------------------------------------------------------------------#
+    # 接著尋找是否為對應名稱的 <Field> 欄位                                    #
+    #--------------------------------------------------------------------------#
+    #LET l_list = p_node.selectByXPath("//Field[@name=\"" || p_name || "\"]" ,"")
+    #IF l_list.getCount() != 0 THEN   #找的到節點才取值
+    #   LET l_node = l_list.getitem(1)
+    #   LET l_value = l_node.getAttribute("value")
+    #END IF
+    
+    LET l_list = p_node.getElementsByTagName("Field")
+    IF l_list.getCount() > 0 THEN   #找的到節點才取值
+       FOR l_i = 1 TO l_list.getCount()
+           LET l_node = l_list.getitem(l_i)
+           LET l_name = l_node.getAttribute("name")
+           IF l_name = p_name THEN
+              LET l_value = l_node.getAttribute("value")
+              EXIT FOR
+           END IF
+       END FOR
+    END IF
+
+    RETURN l_value
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_getParamValue" order="34" ver="8" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_getParamValue(p_xmldoc)
+   DEFINE p_xmldoc  xml.DomDocument
+   DEFINE p_tagname    STRING
+   DEFINE p_attname    STRING
+   DEFINE l_value   STRING
+   DEFINE l_node_list      xml.DomNodeList
+   DEFINE l_pnode          xml.DomNode
+   DEFINE l_tnode          xml.DomNode
+   DEFINE l_str        STRING
+   DEFINE l_i       INTEGER
+   
+   INITIALIZE l_value TO NULL
+  
+   LET l_node_list = p_xmldoc.getElementsByTagName("param")
+  
+    IF l_node_list.getCount() > 0 THEN
+       FOR l_i = 1  TO l_node_list.getCount()
+          LET l_pnode = l_node_list.getitem(l_i)
+          LET g_messge.param[l_i].key = l_pnode.getAttribute("key")
+          LET l_tnode = l_pnode.getFirstChild()
+          #CDATA的格式,一定要取得第二個子節點才可取得到CDATA的資料.
+          LET l_value = ""
+          WHILE ( l_tnode IS NOT NULL )
+            LET l_value = l_value , l_tnode.getNodeValue() 
+            LET g_messge.param[l_i].Value = l_value.trim()         
+            LET l_tnode = l_tnode.getNextSibling()
+          END WHILE
+       END FOR 
+    END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_getDataKey" order="35" ver="8" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_getDataKey(p_attname)
+DEFINE p_tagname    STRING
+DEFINE p_attname    STRING
+DEFINE l_value   STRING
+DEFINE l_node_list      xml.DomNodeList
+DEFINE l_pnode          xml.DomNode
+DEFINE l_tnode          xml.DomNode
+DEFINE l_str        STRING
+
+    INITIALIZE l_value TO NULL
+
+    LET p_tagname = "key"
+    
+    IF NOT cl_null(p_attname) THEN
+       LET l_node_list = gx_reqdoc.selectByXPath("//" || p_tagname.trim() || "[@name=\"" || p_attname CLIPPED || "\"]","")
+    ELSE 
+       LET l_node_list = gx_reqdoc.getElementsByTagName(p_tagname)
+    END IF
+    IF l_node_list.getCount() > 0 THEN
+       LET l_pnode = l_node_list.getitem(1)
+       LET l_tnode = l_pnode.getFirstChild()
+       #CDATA的格式,一定要取得第二個子節點才可取得到CDATA的資料.
+       WHILE ( l_tnode IS NOT NULL )
+         LET l_value = l_value , l_tnode.getNodeValue() 
+         LET l_value = l_value.trim()         
+         LET l_tnode = l_tnode.getNextSibling()
+       END WHILE
+    END IF
+
+    RETURN l_value
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_build_JsonParam" order="36" ver="8" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_build_JsonParam(p_key,p_json_rec)
+   DEFINE p_key        STRING
+   DEFINE p_json_rec   util.JSONObject   
+   DEFINE l_i          INTEGER
+   
+   LET l_i = g_jason_param.getLength() + 1
+   LET g_jason_param[l_i].datakey = p_key
+   LET g_jason_param[l_i].jsontext = p_json_rec.toString()   
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_make_JsonParam" order="37" ver="8" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_make_JsonParam(p_key,p_value)
+   DEFINE p_key        STRING
+   DEFINE p_value      STRING  
+   DEFINE l_i          INTEGER
+   
+   LET g_jason_type = "Y"
+   
+   LET l_i = g_jason_param.getLength() + 1
+   LET g_jason_param[l_i].datakey = p_key
+   LET g_jason_param[l_i].jsontext = p_value
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_addDetail" order="38" ver="8" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsp900_01_addDetail()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_addDetail(p_name)
+    DEFINE p_name        STRING
+    DEFINE l_dnode       xml.DomNode
+              
+    LET l_dnode = g_resdoc.createElement("Detail") 
+
+    IF cl_null(p_name) THEN
+       CALL l_dnode.setAttribute("name", "d1_1")          
+    ELSE
+       CALL l_dnode.setAttribute("name", p_name)    
+    END IF
+    
+    CALL l_dnode.setAttribute("node_id", "1_1")       
+    CALL g_master_record.appendChild(l_dnode)       #產生 <Detail>
+    
+    RETURN l_dnode
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_buildMasterField" order="39" ver="8" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsp900_01_buildMasterField(p_node,p_json_record)
+    DEFINE p_node            xml.DomNode
+    DEFINE p_json_record     util.JSONObject
+   
+    DEFINE l_list1    xml.DomNodeList,                                 
+           l_list2    xml.DomNodeList
+    DEFINE l_node     xml.DomNode,
+           l_child    xml.DomNode, 
+           l_record   xml.DomNode,
+           l_field    xml.DomNode
+    DEFINE l_i        INTEGER,
+           l_j        INTEGER
+    DEFINE l_name     STRING,
+           l_value    STRING 
+    DEFINE l_k        INTEGER         #FUN-D80090
+
+   
+     
+    FOR l_i = 1 TO p_json_record.getLength()
+
+       INITIALIZE l_name TO NULL
+       INITIALIZE l_value TO NULL
+
+       #取得欄位名稱和欄位值
+       LET l_name = p_json_record.name(l_i)
+       LET l_value = p_json_record.get(p_json_record.name(l_i))
+       
+       #於 <Record> 下建立 <Field> 節點    
+       LET l_child = g_resdoc.createElement("Field") 
+       CALL p_node.appendChild(l_child)
+       CALL l_child.setAttribute("name", l_name)
+       CALL l_child.setAttribute("value", l_value)
+
+   END FOR
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_01_get_filetoxml" order="40" ver="8" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 提供程式load xml
+# Memo...........:
+# Usage..........: CALL awsp900_01_get_filetoxml(p_file)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_01_get_filetoxml(p_file)
+   DEFINE p_file STRING
+   DEFINE l_reqdoc       xml.DomDocument
+   DEFINE l_status       STRING
+
+   CALL awsp900_01_filetoxml(p_file)
+     RETURNING l_status,gx_reqdoc,g_response.response
+
+   IF l_status = FALSE THEN
+      RETURN l_status
+   END IF
+
+   LET g_payload_request = ""
+   LET g_payload_request = awsp900_01_getNodeValue(gx_reqdoc, "param","")
+
+   LET gx_payload_request = xml.DomDocument.create()
+   CALL gx_payload_request.loadFromString(g_payload_request.trim())
+
+   RETURN TRUE
+END FUNCTION]]>
+  </point>
+  <point name="global.inc" order="" ver="7" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[GLOBALS "../../cfg/top_ws.inc"            #TIPTOP Service Gateway 使用的全域變數檔
+TYPE type_g_attribute DYNAMIC ARRAY OF RECORD
+                name         STRING,      #屬性名稱
+                value        STRING       #屬性值
+             END RECORD
+DEFINE g_serial            STRING
+DEFINE gx_reqdoc           xml.DomDocument
+DEFINE gx_payload_request  xml.DomDocument
+DEFINE g_resdoc            xml.DomDocument   #Response XML Dom Document, #FUN-910058
+DEFINE g_dnode             xml.DomNode       #<Document> 節點
+DEFINE g_snode             xml.DomNode       #<Status> 節點
+DEFINE g_pnode             xml.DomNode       #<Parameter> 節點
+DEFINE g_count             INTEGER           #考慮多筆資料時的 id 序號計數
+DEFINE g_jason_type        STRING
+DEFINE g_master_record     xml.DomNode
+
+DEFINE g_jason_request     STRING
+DEFINE g_jason_param      DYNAMIC ARRAY OF RECORD
+             datakey      STRING,
+             jsontext     STRING
+          END RECORD
+]]>
+  </point>
+  <point name="main.import" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[IMPORT xml
+IMPORT com
+IMPORT util]]>
+  </point>
+  <section id="awsp900_01.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:8,PR版次:8) Build-000195
+#+ 
+#+ Filename...: awsp900_01
+#+ Description: awsp900_01
+#+ Creator....: 00544(2014-01-16 17:51:43)
+#+ Modifier...: 00509(2014-05-23 10:32:59) -SD/PR-
+]]>
+  </section>
+  <section id="awsp900_01.free_style_variable" ver="1" status="" src="s" readonly="">
+    <![CDATA[#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="awsp900_01.global" ver="2" status="" src="s" readonly="">
+    <![CDATA[#應用 p00 樣板自動產生(Version:2)
+#add-point:註解編寫項目
+{<point name="main.memo" />}
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="main.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+]]>
+  </section>
+  <section id="awsp900_01.global_variable" ver="1" status="" src="s" readonly="">
+    <![CDATA[#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="awsp900_01.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="awsp900_01.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

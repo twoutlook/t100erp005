@@ -1,0 +1,225 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="amht204" module="amh" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="04226" crtdt="2016-03-03 11:37:37" modid="08172" moddt="2016-07-27 10:50:18" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="場地申請維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mhbasite,mhbasite_desc(chr80),mhbadocdt,mhbadocno,mhba000,mhba006,mhba004,mhba004_desc(chr80),mhba005,mhba005_desc(chr80),mhba001,mhba001_desc(chr80),mhba002,mhba002_desc(chr80),mhba003,mhba003_desc(chr80),mhbaunit,mhbastus,mhbaownid,mhbaownid_desc(chr80),mhbaowndp,mhbaowndp_desc(chr80),mhbacrtid,mhbacrtid_desc(chr80),mhbacrtdp,mhbacrtdp_desc(chr80),mhbacrtdt,mhbamodid,mhbamodid_desc(chr80),mhbamoddt,mhbacnfid,mhbacnfid_desc(chr80),mhbacnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mhbbacti,mhbbsite,mhbb004,mhbbl003,mhbbl004,mhbb009,mhbb005,mhbb006,mhbb007,mhbb010,mhbb010_desc(chr500),mhbb008,mhbb001,mhbb001_desc(chr500),mhbb002,mhbb002_desc(chr500),mhbb003,mhbb003_desc(chr500),mhbbunit"/>
+      <var id="bs_field" value="mhbasite,mhbasite_desc(chr80),mhbadocdt,mhbadocno,mhba000,mhba004,mhba004_desc(chr80),mhba005,mhba005_desc(chr80)" pk="mhbadocno" order=""/>
+      <bs_reference field="mhbasite_desc" ref_field="mhbasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="mhba004_desc" ref_field="mhba004" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="mhba005_desc" ref_field="mhba005" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="prog_mhba004" lib="cl_user_contact" parameter="&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;,g_mhba_m.mhba004"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="amh" filename="amht204" method="dialog">
+    <section id="input">
+      <input id="head" field="mhbasite,mhbadocdt,mhbadocno,mhba000,mhba006,mhba004,mhba005,mhba001,mhba002,mhba003,mhbaunit,mhbastus"/>
+      <input id="body" page="1" field="mhbbacti,mhbbsite,mhbb004,mhbbl003,mhbbl004,mhbb009,mhbb005,mhbb006,mhbb007,mhbb010,mhbb008,mhbb001,mhbb002,mhbb003,mhbbunit" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mhbasite,mhbadocdt,mhbadocno,mhba000,mhba006,mhba004,mhba005,mhba001,mhba002,mhba003,mhbaunit,mhbastus,mhbaownid,mhbaowndp,mhbacrtid,mhbacrtdp,mhbacrtdt,mhbamodid,mhbamoddt,mhbacnfid,mhbacnfdt"/>
+      <construct id="body" page="1" field="mhbbacti,mhbbsite,mhbb004,mhbbl003,mhbbl004,mhbb009,mhbb005,mhbb006,mhbb007,mhbb010,mhbb008,mhbb001,mhbb002,mhbb003,mhbbunit"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mhbadocno"/>
+      <set id="head" type="no_entry" field="mhbadocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="mhbasite">
+        <after>
+          <reference field="mhbasite_desc" ref_field="mhba_t.mhbasite" map_field="mhbasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="mhbasite_desc"/>
+      <column id="mhbadocdt"/>
+      <column id="mhbadocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_mhbadocno" state="c"/>
+      </column>
+      <column id="mhba000" type="S" default="I" def_scc="32"/>
+      <column id="mhba006"/>
+      <column id="mhba004">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="mhba004_desc" ref_field="mhba_t.mhba004" map_field="mhba004" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhba004_desc"/>
+      <column id="mhba005">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="mhba005_desc" ref_field="mhba_t.mhba005" map_field="mhba005" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="mhba005_desc"/>
+      <column id="mhba001">
+        <after>
+          <check chkid="v_mhaa001" id="isExist"/>
+          <reference field="mhba001_desc" ref_field="mhba_t.mhba001" map_field="mhba001" ref_sql="SELECT mhaal003 FROM mhaal_t WHERE mhaalent=$varg_enterprise$var AND mhaal001=? AND mhaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhaa001" state="i"/>
+        <controlp form="q_mhaa001" state="c"/>
+      </column>
+      <column id="mhba001_desc"/>
+      <column id="mhba002">
+        <after>
+          <check chkid="v_mhab002" id="isExist"/>
+          <reference field="mhba002_desc" ref_field="mhba001,mhba002" map_field="mhba001,mhba002" ref_sql="SELECT mhabl004 FROM mhabl_t WHERE mhablent=$varg_enterprise$var AND mhabl001=? AND mhabl002=? AND mhabl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhab002" state="i"/>
+        <controlp form="q_mhab002" state="c"/>
+      </column>
+      <column id="mhba002_desc"/>
+      <column id="mhba003">
+        <after>
+          <check chkid="v_mhac003" id="isExist"/>
+          <reference field="mhba003_desc" ref_field="mhab001,mhab002,mhab003" map_field="mhab001,mhab002,mhab003" ref_sql="SELECT mhacl005 FROM mhacl_t WHERE mhaclent=$varg_enterprise$var AND mhacl001=? AND mhacl002=? AND mhacl003=? AND mhacl004=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhac003" state="i"/>
+        <controlp form="q_mhac003" state="c"/>
+      </column>
+      <column id="mhba003_desc"/>
+      <column id="mhbaunit"/>
+      <column id="mhbastus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="mhbaownid">
+        <after>
+          <reference field="mhbaownid_desc" ref_field="mhba_t.mhbaownid" map_field="mhbaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhbaownid_desc"/>
+      <column id="mhbaowndp">
+        <after>
+          <reference field="mhbaowndp_desc" ref_field="mhba_t.mhbaowndp" map_field="mhbaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhbaowndp_desc"/>
+      <column id="mhbacrtid">
+        <after>
+          <reference field="mhbacrtid_desc" ref_field="mhba_t.mhbacrtid" map_field="mhbacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhbacrtid_desc"/>
+      <column id="mhbacrtdp">
+        <after>
+          <reference field="mhbacrtdp_desc" ref_field="mhba_t.mhbacrtdp" map_field="mhbacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhbacrtdp_desc"/>
+      <column id="mhbacrtdt"/>
+      <column id="mhbamodid">
+        <after>
+          <reference field="mhbamodid_desc" ref_field="mhba_t.mhbamodid" map_field="mhbamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhbamodid_desc"/>
+      <column id="mhbamoddt"/>
+      <column id="mhbacnfid">
+        <after>
+          <reference field="mhbacnfid_desc" ref_field="mhba_t.mhbacnfid" map_field="mhbacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhbacnfid_desc"/>
+      <column id="mhbacnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="mhbbacti" type="S" default="Y"/>
+      <column id="mhbbsite"/>
+      <column id="mhbb004">
+        <controlp form="q_mhad001" state="i"/>
+        <controlp form="q_mhad001" state="c"/>
+      </column>
+      <column id="mhbbl003"/>
+      <column id="mhbbl004"/>
+      <column id="mhbb009" type="S" default="1"/>
+      <column id="mhbb005" type="S" default="0"/>
+      <column id="mhbb006"/>
+      <column id="mhbb007"/>
+      <column id="mhbb010">
+        <after>
+          <reference field="mhbb010_desc" ref_field="mhbb010" map_field="mhbb010" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2145&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mhbb010_desc"/>
+      <column id="mhbb008" type="S" default="0" def_scc="6020"/>
+      <column id="mhbb001">
+        <after>
+          <check chkid="v_mhaa001" id="isExist"/>
+          <reference field="mhbb001_desc" ref_field="mhbb_t.mhbb001" map_field="mhbb001" ref_sql="SELECT mhaal003 FROM mhaal_t WHERE mhaalent=$varg_enterprise$var AND mhaal001=? AND mhaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhaa001" state="i"/>
+        <controlp form="q_mhaa001" state="c"/>
+      </column>
+      <column id="mhbb001_desc"/>
+      <column id="mhbb002">
+        <after>
+          <check chkid="v_mhab002" id="isExist"/>
+          <reference field="mhbb002_desc" ref_field="mhbb001,mhbb002" map_field="mhbb001,mhbb002" ref_sql="SELECT mhabl004 FROM mhabl_t WHERE mhablent=$varg_enterprise$var AND mhabl001=? AND mhabl002=? AND mhabl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhab002" state="i"/>
+        <controlp form="q_mhab002" state="c"/>
+      </column>
+      <column id="mhbb002_desc"/>
+      <column id="mhbb003">
+        <after>
+          <check chkid="v_mhac003" id="isExist"/>
+          <reference field="mhbb003_desc" ref_field="mhbb001,mhbb002,mhbb003" map_field="mhbb001,mhbb002,mhbb003" ref_sql="SELECT mhacl005 FROM mhacl_t WHERE mhaclent=$varg_enterprise$var AND mhacl001=? AND mhacl002=? AND mhacl003=? AND mhacl004=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhac003" state="i"/>
+        <controlp form="q_mhac003" state="c"/>
+      </column>
+      <column id="mhbb003_desc"/>
+      <column id="mhbbunit"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="mhba_t" pk="mhbadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT mhbasite,&apos;&apos;,mhbadocdt,mhbadocno,mhba000,mhba006,mhba004,&apos;&apos;,mhba005,&apos;&apos;,mhba001,&apos;&apos;,mhba002,&apos;&apos;,mhba003,&apos;&apos;,mhbaunit,mhbastus,mhbaownid,&apos;&apos;,mhbaowndp,&apos;&apos;,mhbacrtid,&apos;&apos;,mhbacrtdp,&apos;&apos;,mhbacrtdt,mhbamodid,&apos;&apos;,mhbamoddt,mhbacnfid,&apos;&apos;,mhbacnfdt FROM mhba_t WHERE mhbaent= ? AND mhbadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mhbasite,&apos;&apos;,mhbadocdt,mhbadocno,mhba000,mhba006,mhba004,&apos;&apos;,mhba005,&apos;&apos;,mhba001,&apos;&apos;,mhba002,&apos;&apos;,mhba003,&apos;&apos;,mhbaunit,mhbastus,mhbaownid,&apos;&apos;,mhbaowndp,&apos;&apos;,mhbacrtid,&apos;&apos;,mhbacrtdp,&apos;&apos;,mhbacrtdt,mhbamodid,&apos;&apos;,mhbamoddt,mhbacnfid,&apos;&apos;,mhbacnfdt FROM mhba_t" order="mhbadocno"/>
+    </head>
+    <body id="mhbb_t" page="1" linked="" pk="mhbb004" fk="mhbbdocno">
+      <sql id="forupd_sql_detail" query="SELECT mhbbacti,mhbbsite,mhbb004,&apos;&apos;,&apos;&apos;,mhbb009,mhbb005,mhbb006,mhbb007,mhbb010,&apos;&apos;,mhbb008,mhbb001,&apos;&apos;,mhbb002,&apos;&apos;,mhbb003,&apos;&apos;,mhbbunit FROM mhbb_t WHERE mhbbent=? AND mhbbdocno=? AND mhbb004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mhbbacti,mhbbsite,mhbb004,&apos;&apos;,&apos;&apos;,mhbb009,mhbb005,mhbb006,mhbb007,mhbb010,&apos;&apos;,mhbb008,mhbb001,&apos;&apos;,mhbb002,&apos;&apos;,mhbb003,&apos;&apos;,mhbbunit FROM mhbb_t WHERE mhbbent=? AND mhbbdocno=?"/>
+      <sql id="detail_append" type="lang" target="mhbbl_t.mhbbl003,mhbbl_t.mhbbl004" table="mhbbl_t" fk="mhbadocno,mhbb004" pk="mhbbldocno,mhbbl001,mhbbl002" field="mhbbl003,mhbbl004"/>
+    </body>
+  </dataset>
+</assembly>
+

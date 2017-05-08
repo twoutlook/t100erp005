@@ -1,0 +1,752 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="abmr600_x01" std_prog="abmr600_x01" erpver="1.0" module="ABM" ver="1" env="s" zone="t10prd" booking="Y" type="X" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="X" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="function.abmr600_x01__bom" order="1" ver="1" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="function.abmr600_x01_bom" order="1" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 展BOM
+# Memo...........:
+# Usage..........: CALL abmr600_x01_bom(p_type,p_pid,p_id,p_bmaaent,p_bmaasite,p_bmaa001,p_bmaa002,p_times)
+#                  RETURNING 回传参数
+# Input parameter: p_type 樹狀type
+#                : p_pid 樹狀pid
+#                : p_id 樹狀id
+#                : p_bmaaent 企業編號
+#                : p_bmaasite 營運據點
+#                : p_bmaa001 料件編號
+#                : p_bmaa002 特性
+#                : p_times   有效日期
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 150709 By xujing
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abmr600_x01_bom(p_type,p_pid,p_id,p_bmaaent,p_bmaasite,p_bmaa001,p_bmaa002,p_times)
+DEFINE l_sql      STRING
+   DEFINE l_sql_2    STRING
+   DEFINE l_sql_3    STRING
+   DEFINE l_sql_4    STRING
+   DEFINE l_sql_5    STRING
+   DEFINE l_datetype STRING
+   DEFINE l_id_add   LIKE type_t.num5
+   DEFINE p_times    LIKE type_t.dat     #有效日期
+   DEFINE l_success  LIKE type_t.num5
+   DEFINE l_ac       LIKE type_t.num5
+   DEFINE l_ac2      LIKE type_t.num5
+   DEFINE l_count    LIKE type_t.num5
+   DEFINE l_count2   LIKE type_t.num5
+   DEFINE l_count3   LIKE type_t.num5
+   DEFINE l_first    LIKE type_t.chr1
+   DEFINE p_type     LIKE type_t.num20
+   DEFINE p_pid      LIKE type_t.num20
+   DEFINE p_id       LIKE type_t.num20
+   DEFINE l_type     LIKE type_t.num20
+   DEFINE l_pid      LIKE type_t.num20
+   DEFINE l_id       LIKE type_t.num20
+   DEFINE p_bmaaent  LIKE bmaa_t.bmaaent
+   DEFINE p_bmaasite LIKE bmaa_t.bmaasite
+   DEFINE p_bmaa001  LIKE bmaa_t.bmaa001
+   DEFINE p_bmaa002  LIKE bmaa_t.bmaa002
+   DEFINE l_bmbalen  LIKE type_t.num5
+   DEFINE l_bmealen  LIKE type_t.num5
+   DEFINE l_imaal003 LIKE imaal_t.imaal003
+   DEFINE l_imaal004 LIKE imaal_t.imaal004
+   DEFINE l_bmba005  LIKE ooff_t.ooff007
+   DEFINE l_bmba011  LIKE type_t.chr1000
+   DEFINE l_bmba012  LIKE type_t.chr1000
+   DEFINE l_bmea011  STRING
+   DEFINE l_bmea012  STRING
+   DEFINE l_bmba003_bmba002 LIKE type_t.chr100
+   DEFINE l_bmba004_desc LIKE oocql_t.oocql004
+   DEFINE l_bmba007_desc LIKE oocql_t.oocql004
+   DEFINE l_bmba011_bmba012 LIKE type_t.chr100
+   DEFINE l_bmea011_bmea012 LIKE type_t.chr100
+   DEFINE l_bmba009_1 LIKE type_t.chr1000
+   DEFINE l_bmba009_2 LIKE type_t.chr1000
+   DEFINE l_bmba     DYNAMIC ARRAY OF RECORD
+          bmbaent   LIKE bmba_t.bmbaent,
+          bmbasite  LIKE bmba_t.bmbasite,
+          bmba001   LIKE bmba_t.bmba001,
+          bmba002   LIKE bmba_t.bmba002,
+          bmba003   LIKE bmba_t.bmba003,
+          bmba009   LIKE bmba_t.bmba009,
+          bmba010   LIKE bmba_t.bmba010,
+          bmba011   LIKE bmba_t.bmba011,
+          bmba012   LIKE bmba_t.bmba012,
+          bmba022   LIKE bmba_t.bmba022,
+          imaal003  LIKE imaal_t.imaal003,
+          imaal004  LIKE imaal_t.imaal004,
+          imae051   LIKE imae_t.imae051,
+          imae052   LIKE imae_t.imae052,
+          l_ac      LIKE type_t.num5
+   END RECORD
+DEFINE l_price_1 LIKE type_t.num15_3, 
+       l_cmount LIKE type_t.num15_3, 
+       l_salary LIKE type_t.num15_3, 
+       l_rmount LIKE type_t.num20_6, 
+       l_cost LIKE type_t.num15_3, 
+       l_zmount LIKE type_t.num20_6, 
+       l_bmba011_1 LIKE type_t.num15_3, 
+       l_bmba010_2 LIKE bmba_t.bmba010, 
+       l_price_2 LIKE type_t.num15_3, 
+       l_jmount LIKE type_t.num20_6, 
+       l_current_sum LIKE type_t.num20_6,
+       l_vdate  DATETIME YEAR TO SECOND     #有效日期
+DEFINE l_imai021  LIKE imai_t.imai021
+DEFINE l_imai022  LIKE imai_t.imai022
+DEFINE l_imai023  LIKE imai_t.imai023
+DEFINE l_bmba009  STRING
+DEFINE l_num      LIKE type_t.num5
+DEFINE l_ooef017  LIKE ooef_t.ooef017
+DEFINE l_glaald   LIKE glaa_t.glaald
+DEFINE l_glaa RECORD LIKE glaa_t.*
+DEFINE l_bmba002  LIKE bmba_t.bmba002
+DEFINE l_month    LIKE type_t.num5
+DEFINE l_year     LIKE type_t.num5
+DEFINE l_n        LIKE type_t.num5  #0423
+DEFINE l_imaa006  LIKE imaa_t.imaa006  #0423
+DEFINE l_rate     LIKE inaj_t.inaj014  
+
+   
+   LET l_sql = " SELECT bmbaent,bmbasite,bmba001,bmba002,bmba003,bmba009,bmba010,bmba011,bmba012,bmba022,imaal003,imaal004,imae051,imae052",
+               "   FROM bmba_t LEFT OUTER JOIN imaal_t ON imaalent = bmbaent AND imaal001 = bmba003 AND imaal002 = '",g_dlang,"'",
+               "               LEFT OUTER JOIN imae_t  ON imaeent  = bmbaent AND imaesite = bmbasite AND imae001 = bmba003 ",
+               "  WHERE bmbaent = ",p_bmaaent,
+               "    AND bmbasite = '",p_bmaasite,"'",
+               "    AND bmba001 = '",p_bmaa001,"'",
+               "    AND bmba002 = '",p_bmaa002,"'",
+               "    AND to_char(bmba005,'yy-mm-dd') < '",p_times,"'",
+               "    AND (to_char(bmba006,'yy-mm-dd') >= '",p_times,"' OR bmba006 IS NULL)",
+               "    AND bmba019 <> '2'",
+               "  ORDER BY bmba009"
+     PREPARE abmr600_x01_prepare_bom FROM l_sql
+     DECLARE abmr600_x01_bom CURSOR FOR abmr600_x01_prepare_bom
+     LET l_ac = l_ac + 1
+     LET g_first = 'N'
+     FOREACH abmr600_x01_bom INTO l_bmba[l_ac].*
+        IF STATUS THEN
+           INITIALIZE g_errparam TO NULL
+           LET g_errparam.extend = 'foreach:'
+           LET g_errparam.code   = STATUS
+           LET g_errparam.popup  = TRUE
+           CALL cl_err()
+           LET g_rep_success = 'N'
+           EXIT FOREACH
+        END IF
+        LET g_first = 'Y'
+        
+        LET l_ac = l_ac + 1
+     END FOREACH
+     LET l_type = p_type
+     LET l_pid = p_id
+     LET l_bmbalen = l_bmba.getLength() - 1
+     IF l_bmbalen < 0 THEN
+        LET l_bmbalen = 0
+     END IF
+     
+     #輸出
+     LET l_count3 = 0    
+     FOR l_ac = 1 TO l_bmbalen
+          
+         LET p_id = p_id + 1
+         IF p_id < g_id THEN
+            LET p_id = g_id +1 
+         END IF
+         IF p_id = g_id THEN
+            LET p_id = p_id + 1
+         END IF
+         LET g_id = p_id
+         LET l_id = g_id
+         IF NOT cl_null(l_bmba[l_ac].bmba003) THEN
+            IF cl_null(l_bmba[l_ac].bmba002) THEN
+               LET l_bmba003_bmba002 = l_bmba[l_ac].bmba003
+            ELSE
+               LET l_bmba003_bmba002 = l_bmba[l_ac].bmba003 || '(' || l_bmba[l_ac].bmba002 || ')'
+            END IF
+         END IF
+         IF l_bmba[l_ac].l_ac <> (g_id+2) THEN
+            LET p_id = p_id + l_id_add
+            IF p_id < g_id THEN
+               LET p_id = g_id +1 
+            END IF
+            IF p_id = g_id THEN
+               LET p_id = p_id + 1
+            END IF
+            LET g_id = p_id
+            LET l_id = g_id
+         END IF
+         IF g_dead = 'Y' THEN
+            EXIT FOR
+         END IF
+         INITIALIZE l_price_1,l_cmount,l_salary,l_rmount,l_vdate,
+                    l_cost,l_zmount,l_bmba011_1,l_bmba010_2,l_price_2,l_jmount,l_current_sum TO NULL
+         
+         LET l_vdate = p_times
+         IF cl_null(l_cmount) THEN LET l_cmount = 0 END IF
+         IF cl_null(l_rmount) THEN LET l_rmount = 0 END IF
+         IF cl_null(l_zmount) THEN LET l_zmount = 0 END IF
+         IF cl_null(l_jmount) THEN LET l_jmount = 0 END IF             
+         IF cl_null(l_bmba[l_ac].imae051) THEN LET l_bmba[l_ac].imae051 = 0 END IF
+         IF cl_null(l_bmba[l_ac].imae052) THEN LET l_bmba[l_ac].imae052 = 0 END IF
+         INITIALIZE l_imai021 TO NULL
+         INITIALIZE l_imai022 TO NULL
+         INITIALIZE l_imai023 TO NULL
+         SELECT imai021,imai022,imai023 INTO l_imai021,l_imai022,l_imai023 FROM imai_t
+          WHERE imaient = l_bmba[l_ac].bmbaent AND imaisite = l_bmba[l_ac].bmbasite AND imai001 = l_bmba[l_ac].bmba003
+         IF cl_null(l_imai021) THEN LET l_imai021 = 0 END IF
+         IF cl_null(l_imai022) THEN LET l_imai022 = 0 END IF
+         IF cl_null(l_imai023) THEN LET l_imai023 = 0 END IF
+         CASE tm.price     #单价
+            WHEN '1'
+               LET l_price_1 = l_imai022
+            WHEN '2'
+               LET l_price_1 = l_imai023
+            WHEN '3'
+               LET l_price_1 = l_imai021
+         END CASE
+         #采购单价为0时取上月平均材料成本
+         IF tm.con2 = 'Y' THEN
+            IF cl_null(l_price_1) OR l_price_1 = 0 THEN 
+               SELECT ooef017 INTO l_ooef017 FROM ooef_t
+                WHERE ooefent = g_enterprise AND ooef001 = l_bmba[l_ac].bmbasite
+               SELECT glaald INTO l_glaald FROM glaa_t
+                WHERE glaaent = g_enterprise AND glaa014 = 'Y'
+                  AND glaacomp = l_ooef017
+               SELECT * INTO l_glaa.* FROM glaa_t
+                WHERE glaaent = l_bmba[l_ac].bmbaent AND glaald = l_glaald
+                
+              #抓取上月平均成本单价
+              IF MONTH(g_today) = 1 THEN
+                 LET l_year =  YEAR(g_today) - 1
+                 LET l_month = 12
+              ELSE
+                 LET l_year =  YEAR(g_today)
+                 LET l_month = MONTH(g_today) - 1
+              END IF
+              SELECT AVG(xccc280a) INTO l_price_1 FROM xccc_t
+                WHERE xcccent = g_enterprise AND xcccld = l_glaald
+                  AND xccc001 = 1 AND xccc003 = l_glaa.glaa120
+                  AND xccc004 = l_year AND xccc005 = l_month
+                  AND xccc006 = l_bmba[l_ac].bmba003 AND xccc007 = l_bmba[l_ac].bmba002
+               IF cl_null(l_price_1) THEN LET l_price_1 = 0 END IF
+            END IF
+          END IF
+          
+          SELECT imaa006 INTO l_imaa006 FROM imaa_t
+                   WHERE imaaent = l_bmba[l_ac].bmbaent AND imaa001 = l_bmba[l_ac].bmba003
+          IF NOT cl_null(l_bmba[l_ac].bmba003) AND NOT cl_null(l_imaa006) AND NOT cl_null(l_bmba[l_ac].bmba010) THEN
+             CALL s_aimi190_get_convert(l_bmba[l_ac].bmba003,l_imaa006,l_bmba[l_ac].bmba010) 
+               RETURNING g_success,l_rate
+             IF g_success THEN
+                LET l_price_1 = l_price_1 / l_rate
+             END IF
+          END IF
+          
+          IF l_bmba[l_ac].bmba022 = 'N' THEN   #判断是否委外
+             LET l_bmba[l_ac].bmba011 = l_bmba[l_ac].bmba011 / l_bmba[l_ac].bmba012   #标准用量
+             LET l_bmba011_1 = 0                   
+             LET l_price_2 = 0
+             LET l_cmount = l_price_1 * l_bmba[l_ac].bmba011  #材料金额
+             LET l_jmount = 0
+          ELSE
+             LET l_bmba011_1 = l_bmba[l_ac].bmba011 / l_bmba[l_ac].bmba012 #标准用量
+             LET l_bmba[l_ac].bmba011 = 0
+             LET l_price_2 = l_price_1            #委外单价
+             LET l_price_1 = 0
+             LET l_jmount = l_price_2 * l_bmba011_1 #加工金额
+             LET l_cmount = 0
+          END IF
+          
+          LET l_salary = tm.sal
+          LET l_rmount = l_bmba[l_ac].imae051 * l_salary
+          LET l_cost = tm.cost
+          LET l_zmount = l_bmba[l_ac].imae052 * l_cost
+          LET l_current_sum  = l_cmount + l_rmount + l_zmount + l_jmount
+         
+         IF tm.last = 'Y' THEN
+            LET l_sql_5 = " SELECT COUNT(*) ",
+                          "   FROM bmba_t ",
+                          " WHERE bmbaent = '",l_bmba[l_ac].bmbaent,"' ",
+                          " AND bmbasite = '",l_bmba[l_ac].bmbasite,"' ",
+                          " AND bmba001 = '",l_bmba[l_ac].bmba003,"' ",
+                          " AND bmba002 = '",l_bmba[l_ac].bmba002,"' ",
+                          " AND to_char(bmba005,'yy-mm-dd') < '",p_times,"'",
+                          " AND (to_char(bmba006,'yy-mm-dd') >= '",p_times,"' OR bmba006 IS NULL)",
+                          " AND bmba019 <> '2'"
+            PREPARE abmr600_count FROM l_sql_5
+            EXECUTE abmr600_count INTO l_count3
+            IF l_count3 = 0 THEN
+               EXECUTE insert_prep USING l_bmba[l_ac].bmba009,l_bmba003_bmba002,l_bmba[l_ac].imaal003,l_bmba[l_ac].imaal004,l_vdate,l_bmba[l_ac].bmba011,l_bmba[l_ac].bmba010,
+                                         l_price_1,l_cmount,l_bmba[l_ac].imae051,l_salary,l_rmount,l_bmba[l_ac].imae052,l_cost,l_zmount,
+                                         l_bmba011_1,l_bmba010_2,l_price_2,l_jmount,l_current_sum,l_type,g_bom,l_id
+            ELSE
+               IF g_cnt > 20 THEN
+                  LET g_dead = 'Y'
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = l_bmba[l_ac].bmba003||"--->"||p_bmaa001
+                  LET g_errparam.code   = 'abm-00260'
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()   
+                  EXIT FOR
+               END IF
+               LET g_cnt = g_cnt + 1
+               CALL abmr600_x01_bom(l_type,l_pid,l_id,l_bmba[l_ac].bmbaent,l_bmba[l_ac].bmbasite,l_bmba[l_ac].bmba003,l_bmba[l_ac].bmba002,p_times)
+                RETURNING l_id_add
+            END IF
+         ELSE
+            EXECUTE insert_prep USING l_bmba[l_ac].bmba009,l_bmba003_bmba002,l_bmba[l_ac].imaal003,l_bmba[l_ac].imaal004,l_vdate,l_bmba[l_ac].bmba011,l_bmba[l_ac].bmba010,
+                                         l_price_1,l_cmount,l_bmba[l_ac].imae051,l_salary,l_rmount,l_bmba[l_ac].imae052,l_cost,l_zmount,
+                                         l_bmba011_1,l_bmba010_2,l_price_2,l_jmount,l_current_sum,l_type,l_pid,l_id
+         END IF
+      END FOR
+      IF g_first = 'N' THEN
+        LET p_id = p_id + 1
+        IF g_id < p_id THEN
+           LET g_id = p_id
+        END IF
+     END IF
+     
+     RETURN l_bmbalen
+END FUNCTION]]>
+  </point>
+  <point name="create_tmp.after" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#   LET g_sql = "l_bmba009.type_t.chr1000,l_bmba003.bmba_t.bmba003,l_imaal003_2.imaal_t.imaal003,l_imaal004_2.imaal_t.imaal004,l_bmba011.bmba_t.bmba011,l_bmba010.bmba_t.bmba010,l_price_1.type_t.num15_3,l_cmount.type_t.num20_6,l_imae051_1.imae_t.imae051,l_salary.type_t.num15_3,l_rmount.type_t.num20_6,l_imae052_1.imae_t.imae052,l_cost.type_t.num15_3,l_zmount.type_t.num20_6,l_bmba011_1.bmba_t.bmba011,l_bmba010_2.bmba_t.bmba010,l_price_2.type_t.num15_3,l_jmount.type_t.num20_6,l_current_sum.type_t.num20_6,l_bmba022.bmba_t.bmba022,l_bmba012.bmba_t.bmba012,l_bmba001.bmba_t.bmba001,l_bmbaent.bmba_t.bmbaent,l_bmbasite.bmba_t.bmbasite,l_bmba002.bmba_t.bmba002" 
+#   
+#   #建立TEMP TABLE,主報表序號1 
+#   IF NOT cl_xg_create_tmptable(g_sql,2) THEN
+#      LET g_rep_success = 'N'            
+#   END IF]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE g_type     LIKE type_t.num20
+   DEFINE g_pid      LIKE type_t.num20
+   DEFINE g_id       LIKE type_t.num20
+   DEFINE g_first    LIKE type_t.chr1
+   DEFINE g_bom      LIKE type_t.num5
+   DEFINE g_dead     LIKE type_t.chr1
+   DEFINE g_cnt      LIKE type_t.num5]]>
+  </point>
+  <point name="ins_data.after" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[    CALL cl_err_collect_show()]]>
+  </point>
+  <point name="ins_data.after.save" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[       LET g_dead = 'N'
+       LET g_cnt = 1
+       LET l_a2 = tm.times
+       
+       LET g_bom = sr.l_id
+       CALL abmr600_x01_bom(sr.l_type,sr.l_pid,sr.l_id,sr.bmaaent,sr.bmaasite,sr.bmaa001,sr.bmaa002,l_a2)
+       RETURNING l_success
+       LET l_type = l_type + 1]]>
+  </point>
+  <point name="ins_data.before" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET l_type = 1
+   CALL cl_err_collect_init()]]>
+  </point>
+  <point name="ins_data.before.save" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[       LET sr.l_vdate = tm.times]]>
+  </point>
+  <point name="ins_data.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+   DEFINE l_type    LIKE type_t.num20
+   DEFINE l_pid     LIKE type_t.num20
+   DEFINE l_id      LIKE type_t.num20
+   DEFINE l_success LIKE type_t.num5
+   #modify--2015/06/24 By shiun--(S)
+#   DEFINE l_a2      LIKE type_t.dat
+   DEFINE l_a2     LIKE type_t.dat]]>
+  </point>
+  <point name="ins_data.foreach" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[       LET sr.l_type = l_type
+       LET sr.l_pid = ''
+       IF l_type = 1 THEN
+          LET sr.l_id = 1
+          LET g_id = 1
+       ELSE
+          LET sr.l_id = g_id + 1
+       END IF
+       IF NOT cl_null(sr.bmaa001) THEN
+          IF cl_null(sr.bmaa002) THEN
+             LET sr.l_bmaa001_bmaa002 = sr.bmaa001
+          ELSE
+             LET sr.l_bmaa001_bmaa002 = sr.bmaa001 || '(' || sr.bmaa002 || ')'
+          END IF
+       END IF]]>
+  </point>
+  <point name="insert_prep" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#         WHEN 2
+#         #INSERT INTO PREP
+#         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[2] CLIPPED," VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+#         PREPARE insert_prep1 FROM g_sql
+#         IF STATUS THEN
+#            LET l_prep_str ="insert_prep",i
+#            INITIALIZE g_errparam TO NULL
+#            LET g_errparam.extend = l_prep_str
+#            LET g_errparam.code   = status
+#            LET g_errparam.popup  = TRUE
+#            CALL cl_err()
+#            CALL cl_xg_drop_tmptable()
+#            LET g_rep_success = 'N'           
+#         END IF ]]>
+  </point>
+  <point name="sel_prep.g_from" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="Y">
+    <![CDATA[
+]]>
+  </point>
+  <point name="sel_prep.g_order" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#   LET g_sql = g_select CLIPPED ,g_from CLIPPED ,g_where CLIPPED]]>
+  </point>
+  <point name="sel_prep.g_select" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="Y">
+    <![CDATA[
+   LET g_sql  = "SELECT '','',imaal003,imaal004,'',bmaa001,bmaa002,'','','','','','','','','','','','','','','',bmaaent,bmaasite,'','',''",
+                " FROM bmaa_t LEFT OUTER JOIN imaal_t ON imaalent = bmaaent AND imaal001 = bmaa001 AND imaal002 = '",g_dlang,"'",
+                " WHERE ",tm.wc CLIPPED
+
+ ]]>
+  </point>
+  <point name="sel_prep.g_where" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="Y">
+    <![CDATA[]]>
+  </point>
+  <point name="sel_prep.sql.before" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="Y">
+    <![CDATA[]]>
+  </point>
+  <section id="abmr600_x01.create_tmptable" ver="9" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION abmr600_x01_create_tmptable()
+ 
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before
+   {<point name="create_tmp.before"/>}
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "l_bmba009.type_t.chr500,l_bmaa001_bmaa002.type_t.chr500,l_imaal003_1.imaal_t.imaal003,l_imaal004_1.imaal_t.imaal004,l_vdate.type_t.dat,l_bmba011.bmba_t.bmba011,l_bmba010.bmba_t.bmba010,l_price_1.type_t.num15_3,l_cmount.type_t.num15_3,l_imae051_1.imae_t.imae051,l_salary.type_t.num15_3,l_rmount.type_t.num20_6,l_imae052_1.type_t.num15_3,l_cost.type_t.num15_3,l_zmount.type_t.num20_6,l_bmba011_1.type_t.num15_3,l_bmba010_2.bmba_t.bmba010,l_price_2.type_t.num15_3,l_jmount.type_t.num20_6,l_current_sum.type_t.num20_6,l_type.type_t.num20,l_pid.type_t.num20,l_id.type_t.num20" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after
+   {<point name="create_tmp.after"/>}
+   #end add-point:create_tmp.after
+END FUNCTION
+]]>
+  </section>
+  <section id="abmr600_x01.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000007
+#+ 
+#+ Filename...: abmr600_x01
+#+ Description: BOM成本明細表
+#+ Creator....: 01996(2015-05-27 09:39:08)
+#+ Modifier...: 01996(2015-07-10 15:34:24) -SD/PR-
+]]>
+  </section>
+  <section id="abmr600_x01.global" ver="2" status="" src="s" readonly="">
+    <![CDATA[#報表 x01 樣板自動產生(Version:1)
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #條件 
+       price STRING,                  #單價條件 
+       con2 STRING,                  #採購價為0時 
+       sal LIKE type_t.num15_3,         #每小時工資率 
+       cost LIKE type_t.num15_3,         #每小時制費率 
+       last STRING,                  #展至尾階 
+       times STRING                   #有效日期
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+ 
+#add-point:自定義環境變數(Global Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="abmr600_x01.ins_data" ver="10" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION abmr600_x01_ins_data()
+DEFINE sr RECORD 
+   l_bmba009 LIKE type_t.chr500, 
+   l_bmaa001_bmaa002 LIKE type_t.chr500, 
+   l_imaal003_1 LIKE imaal_t.imaal003, 
+   l_imaal004_1 LIKE imaal_t.imaal004, 
+   l_vdate LIKE type_t.dat, 
+   bmaa001 LIKE bmaa_t.bmaa001, 
+   bmaa002 LIKE bmaa_t.bmaa002, 
+   l_bmba011 LIKE bmba_t.bmba011, 
+   l_bmba010 LIKE bmba_t.bmba010, 
+   l_price_1 LIKE type_t.num15_3, 
+   l_cmount LIKE type_t.num15_3, 
+   l_imae051_1 LIKE imae_t.imae051, 
+   l_salary LIKE type_t.num15_3, 
+   l_rmount LIKE type_t.num20_6, 
+   l_imae052_1 LIKE type_t.num15_3, 
+   l_cost LIKE type_t.num15_3, 
+   l_zmount LIKE type_t.num20_6, 
+   l_bmba011_1 LIKE type_t.num15_3, 
+   l_bmba010_2 LIKE bmba_t.bmba010, 
+   l_price_2 LIKE type_t.num15_3, 
+   l_jmount LIKE type_t.num20_6, 
+   l_current_sum LIKE type_t.num20_6, 
+   bmaaent LIKE bmaa_t.bmaaent, 
+   bmaasite LIKE bmaa_t.bmaasite, 
+   l_type LIKE type_t.num20, 
+   l_pid LIKE type_t.num20, 
+   l_id LIKE type_t.num20
+ END RECORD
+#add-point:ins_data段define
+{<point name="ins_data.define"/>}
+#end add-point
+ 
+    #add-point:ins_data段before
+    {<point name="ins_data.before"/>}
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH abmr600_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach
+       {<point name="ins_data.foreach"/>}
+       #end add-point
+ 
+       #add-point:ins_data段before.save
+       {<point name="ins_data.before.save"/>}
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.l_bmba009,sr.l_bmaa001_bmaa002,sr.l_imaal003_1,sr.l_imaal004_1,sr.l_vdate,sr.l_bmba011,sr.l_bmba010,sr.l_price_1,sr.l_cmount,sr.l_imae051_1,sr.l_salary,sr.l_rmount,sr.l_imae052_1,sr.l_cost,sr.l_zmount,sr.l_bmba011_1,sr.l_bmba010_2,sr.l_price_2,sr.l_jmount,sr.l_current_sum,sr.l_type,sr.l_pid,sr.l_id
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "abmr600_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save
+       {<point name="ins_data.after.save"/>}
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after
+    {<point name="ins_data.after"/>}
+    #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="abmr600_x01.ins_prep" ver="7" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION abmr600_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define
+{<point name="ins_prep.define"/>}
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段
+         {<point name="insert_prep"/>}
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+]]>
+  </section>
+  <section id="abmr600_x01.main" ver="2" status="" src="s" readonly="">
+    <![CDATA[PUBLIC FUNCTION abmr600_x01(p_arg1,p_arg2,p_arg3,p_arg4,p_arg5,p_arg6,p_arg7)
+DEFINE  p_arg1 STRING                  #tm.wc  條件 
+DEFINE  p_arg2 STRING                  #tm.price  單價條件 
+DEFINE  p_arg3 STRING                  #tm.con2  採購價為0時 
+DEFINE  p_arg4 LIKE type_t.num15_3         #tm.sal  每小時工資率 
+DEFINE  p_arg5 LIKE type_t.num15_3         #tm.cost  每小時制費率 
+DEFINE  p_arg6 STRING                  #tm.last  展至尾階 
+DEFINE  p_arg7 STRING                  #tm.times  有效日期
+#add-point:init段define
+{<point name="component.define"/>}
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.price = p_arg2
+   LET tm.con2 = p_arg3
+   LET tm.sal = p_arg4
+   LET tm.cost = p_arg5
+   LET tm.last = p_arg6
+   LET tm.times = p_arg7
+ 
+   #add-point:報表元件參數準備
+   {<point name="component.arg.prep" />}
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "abmr600_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL abmr600_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL abmr600_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL abmr600_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL abmr600_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL abmr600_x01_rep_data()
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="abmr600_x01.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="abmr600_x01.rep_data" ver="1" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION abmr600_x01_rep_data()
+#add-point:rep_data.define
+{<point name="rep_data.define"/>}
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before
+    {<point name="rep_data.before"/>}
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after
+    {<point name="rep_data.after"/>}
+    #end add-point:rep_data.after
+END FUNCTION
+]]>
+  </section>
+  <section id="abmr600_x01.sel_prep" ver="9" status="" src="s" readonly="">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION abmr600_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define
+{<point name="sel_prep.define"/>}
+#end add-point
+ 
+   #add-point:sel_prep before
+   {<point name="sel_prep.before" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep g_select
+   {<point name="sel_prep.g_select" mark="Y"/>}
+   #end add-point
+   LET g_select = " SELECT '','','','','',bmaa001,bmaa002,'','','','','','','','','','','','','','', 
+       '',bmaaent,bmaasite,'','',''"
+ 
+   #add-point:sel_prep g_from
+   {<point name="sel_prep.g_from" mark="Y"/>}
+   #end add-point
+    LET g_from = " FROM bmaa_t"
+ 
+   #add-point:sel_prep g_where
+   {<point name="sel_prep.g_where" mark="Y"/>}
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order
+   {<point name="sel_prep.g_order" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before
+   {<point name="sel_prep.sql.before" mark="Y"/>}
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("bmaa_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after
+   {<point name="sel_prep.sql.after" mark="Y"/>}
+   #end add-point
+   PREPARE abmr600_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE abmr600_x01_curs CURSOR FOR abmr600_x01_prepare
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

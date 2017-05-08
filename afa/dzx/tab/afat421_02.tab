@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afat421_02" module="afa" jobmode="N" type="c01c" industry="std" fix_arg="0" crtid="02599" crtdt="2015-08-21 16:46:23" modid="02599" moddt="2015-08-25 17:48:00" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="拋轉產生資產科目異動資料">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="fabgsite,fabgsite_desc(chr80),fabgld,fabgld_desc(chr80),fabgdocno,fabgdocdt,fabg005,fabg001,fabg001_desc(chr80),fabadocno,fabb001,fabb002,fabb000,fabb015,fabb017,fabb021"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="afa" filename="afat421_02" method="dialog">
+    <section id="input"/>
+    <section id="construct">
+      <construct id="head" field="fabadocno,fabb001,fabb002,fabb000,fabb015,fabb017,fabb021"/>
+    </section>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="fabgsite">
+        <after>
+          <reference field="fabgsite_desc" ref_field="fabg_t.fabgsite" map_field="fabgent,fabgsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+      </column>
+      <column id="fabgsite_desc"/>
+      <column id="fabgld">
+        <after>
+          <check chkid="v_fabgld" id="isExist"/>
+          <reference field="fabgld_desc" ref_field="fabg_t.fabgld" map_field="fabgent,fabgld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="fabgld_desc"/>
+      <column id="fabgdocno">
+        <controlp form="q_ooba002_3" state="i"/>
+        <controlp form="q_fabgdocno" state="c"/>
+      </column>
+      <column id="fabgdocdt"/>
+      <column id="fabg005" type="S" default="31" def_scc="9910"/>
+      <column id="fabg001">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="fabg001_desc" ref_field="fabg_t.fabg001" map_field="fabg001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fabg001_desc"/>
+      <column id="fabadocno">
+        <controlp form="q_fabadocno" state="c"/>
+      </column>
+      <column id="fabb001">
+        <controlp form="q_faah003_3" state="c"/>
+      </column>
+      <column id="fabb002">
+        <controlp form="q_faah003_3" state="c"/>
+      </column>
+      <column id="fabb000">
+        <controlp form="q_faah003_3" state="c"/>
+      </column>
+      <column id="fabb015">
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="fabb017">
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="fabb021">
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="fabb_t" pk="fabbdocno,fabbseq">
+      <sql id="forupd_sql" type="sql" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,fabb001,fabb002,fabb000,fabb015,fabb017,fabb021 FROM fabb_t WHERE fabbent= ? AND fabbdocno=? AND fabbseq=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="fabbdocno,fabbseq"/>
+    </head>
+  </dataset>
+</assembly>
+

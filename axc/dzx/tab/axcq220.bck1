@@ -1,0 +1,171 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcq220" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="03297" crtdt="2014-11-17 16:15:19" modid="03297" moddt="2014-11-19 15:04:30" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="期初開帳料件庫存與成本數量差異查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xccacomp,xccacomp_desc(chr80),xcca004,xcca001,xcca001_desc(chr80),chk(chr500),xccald,xccald_desc(chr80),xcca005,xcca003,xcca003_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcca002,xcca002_desc(chr500),xcca006,xcca006_desc(chr500),xcca006_desc_desc(chr500),imaa006(chr500),imaa006_desc(chr500),xcca007,xcca008,xcca101,xcbz901(num20_6),l_diff(num20_6)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xccaownid,xccaownid_desc(chr500),xccaowndp,xccaowndp_desc(chr500),xccacrtid,xccacrtid_desc(chr500),xccacrtdp,xccacrtdp_desc(chr500),xccacrtdt,xccamodid,xccamodid_desc(chr500),xccamoddt,xccacnfid,xccacnfid_desc(chr500),xccacnfdt,xccapstid,xccapstid_desc(chr500),xccapstdt,xcca002,xcca006,xcca006_2_desc(chr500),xcca007,xcca008"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axcq220" method="dialog">
+    <section id="input">
+      <input id="head" field="xccacomp,xcca004,xcca001,chk,xccald,xcca005,xcca003"/>
+      <input id="body" page="1" field="xcca002,xcca006,imaa006,xcca007,xcca008,xcca101,xcbz901,l_diff" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xccacomp,xcca004,xccald,xcca005"/>
+      <construct id="body" page="2" field="xccaownid,xccaowndp,xccacrtid,xccacrtdp,xccacrtdt,xccamodid,xccamoddt,xccacnfid,xccacnfdt,xccapstid,xccapstdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xccald,xcca001,xcca003,xcca004,xcca005"/>
+      <set id="head" type="no_entry" field="xccald,xcca001,xcca003,xcca004,xcca005"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xccacomp">
+        <after>
+          <reference field="xccacomp_desc" ref_field="xcca_t.xccacomp" map_field="xccaent,xccacomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="xccacomp_desc"/>
+      <column id="xcca004"/>
+      <column id="xcca001" type="S" default="1" def_scc="8914">
+        <after/>
+      </column>
+      <column id="xcca001_desc"/>
+      <column id="chk"/>
+      <column id="xccald">
+        <after>
+          <reference field="xccald_desc" ref_field="xcca_t.xccald" map_field="xccaent,xccald" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xccald_desc"/>
+      <column id="xcca005"/>
+      <column id="xcca003" type="S" default="1">
+        <after>
+          <reference field="xcca003_desc" ref_field="xcca_t.xcca003" map_field="xccaent,xcca003" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcat001" state="i"/>
+        <controlp form="q_xcat001" state="c"/>
+      </column>
+      <column id="xcca003_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcca002">
+        <after>
+          <reference field="xcca002_desc" ref_field="xccacomp,xcca002" map_field="xccacomp,xcca002" ref_sql="SELECT xcbfl003 FROM xcbfl_t WHERE xcbflent=$varg_enterprise$var AND xcbflcomp=? AND xcbfl001=? AND xcbfl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcbf001" state="i"/>
+        <controlp form="q_xcbf001" state="c"/>
+      </column>
+      <column id="xcca002_desc"/>
+      <column id="xcca006">
+        <after>
+          <reference field="xcca006_desc" ref_field="xcca_t.xcca006" map_field="xccaent,xcca006" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imag001_1" state="i"/>
+        <controlp form="q_imag001_1" state="c"/>
+      </column>
+      <column id="xcca006_desc">
+        <after>
+          <reference field="xcca006_desc_desc" ref_field="xcca_t.xcca006" map_field="xccaent,xcca006" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcca006_desc_desc"/>
+      <column id="imaa006">
+        <after/>
+      </column>
+      <column id="imaa006_desc"/>
+      <column id="xcca007">
+        <controlp form="q_bmaa002_1" state="c"/>
+      </column>
+      <column id="xcca008">
+        <controlp form="q_inag006_2" state="i"/>
+        <controlp form="q_inag006_2" state="c"/>
+      </column>
+      <column id="xcca101"/>
+      <column id="xcbz901"/>
+      <column id="l_diff"/>
+    </init>
+    <init id="body" page="2">
+      <column id="xccaownid">
+        <after>
+          <reference field="xccaownid_desc" ref_field="xcca_t.xccaownid" map_field="xccaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xccaownid_desc"/>
+      <column id="xccaowndp">
+        <after>
+          <reference field="xccaowndp_desc" ref_field="xcca_t.xccaowndp" map_field="xccaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xccaowndp_desc"/>
+      <column id="xccacrtid">
+        <after>
+          <reference field="xccacrtid_desc" ref_field="xcca_t.xccacrtid" map_field="xccacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xccacrtid_desc"/>
+      <column id="xccacrtdp">
+        <after>
+          <reference field="xccacrtdp_desc" ref_field="xcca_t.xccacrtdp" map_field="xccacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xccacrtdp_desc"/>
+      <column id="xccacrtdt"/>
+      <column id="xccamodid">
+        <after>
+          <reference field="xccamodid_desc" ref_field="xcca_t.xccamodid" map_field="xccamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xccamodid_desc"/>
+      <column id="xccamoddt"/>
+      <column id="xccacnfid">
+        <after>
+          <reference field="xccacnfid_desc" ref_field="xcca_t.xccacnfid" map_field="xccacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xccacnfid_desc"/>
+      <column id="xccacnfdt"/>
+      <column id="xccapstid">
+        <after>
+          <reference field="xccapstid_desc" ref_field="xcca_t.xccapstid" map_field="xccapstid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xccapstid_desc"/>
+      <column id="xccapstdt"/>
+      <column id="xcca006_2_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcca_t" pk="xccald,xcca001,xcca003,xcca004,xcca005">
+      <sql id="forupd_sql" type="sql" query="SELECT xccacomp,&apos;&apos;,xcca004,xcca001,&apos;&apos;,&apos;&apos;,xccald,&apos;&apos;,xcca005,xcca003,&apos;&apos; FROM xcca_t WHERE xccaent= ? AND xccald=? AND xcca001=? AND xcca003=? AND xcca004=? AND xcca005=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xccacomp,&apos;&apos;,xcca004,xcca001,&apos;&apos;,&apos;&apos;,xccald,&apos;&apos;,xcca005,xcca003,&apos;&apos; FROM xcca_t" order="xccald,xcca001,xcca003,xcca004,xcca005"/>
+    </head>
+    <body id="xcca_t" page="1,2" linked="" pk="xcca002,xcca006,xcca007,xcca008" fk="xccald,xcca001,xcca003,xcca004,xcca005">
+      <sql id="forupd_sql_detail" query="SELECT xcca002,&apos;&apos;,xcca006,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcca007,xcca008,xcca101,&apos;&apos;,&apos;&apos;,xccaownid,&apos;&apos;,xccaowndp,&apos;&apos;,xccacrtid,&apos;&apos;,xccacrtdp,&apos;&apos;,xccacrtdt,xccamodid,&apos;&apos;,xccamoddt,xccacnfid,&apos;&apos;,xccacnfdt,xccapstid,&apos;&apos;,xccapstdt,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xcca_t WHERE xccaent=? AND xccald=? AND xcca001=? AND xcca003=? AND xcca004=? AND xcca005=? AND xcca002=? AND xcca006=? AND xcca007=? AND xcca008=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcca002,&apos;&apos;,xcca006,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcca007,xcca008,xcca101,&apos;&apos;,&apos;&apos;,xccaownid,&apos;&apos;,xccaowndp,&apos;&apos;,xccacrtid,&apos;&apos;,xccacrtdp,&apos;&apos;,xccacrtdt,xccamodid,&apos;&apos;,xccamoddt,xccacnfid,&apos;&apos;,xccacnfdt,xccapstid,&apos;&apos;,xccapstdt,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xcca_t WHERE xccaent= ? AND xccald=? AND xcca001=? AND xcca003=? AND xcca004=? AND xcca005=?"/>
+    </body>
+  </dataset>
+</assembly>
+

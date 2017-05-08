@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aooi713" std_prog="aooi713" erpver="1.0" ver="2" module="AOO" type="M" booking="N" class="i" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items="delete,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="ooia_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Tree" status=""/>
+    </tbl>
+  </table>
+  <tree name="s_browse" ver="1" src="s" kind="" att="" cite_std="N" status="">
+    <type no="1" table="ooia_t" col="ooia002"/>
+    <type2 no="2" table="" col=""/>
+    <type3 no="3" table="" col=""/>
+    <type4 no="4" table="" col=""/>
+    <type5 no="5" table="" col=""/>
+    <type6 no="6" table="" col=""/>
+    <id no="7" table="ooia_t" col="ooia001"/>
+    <desc no="9" table="" col=""/>
+    <pid no="" table="" col=""/>
+    <speed no="" table="" col=""/>
+    <stype no="" table="" col=""/>
+    <sid no="" table="" col=""/>
+    <spid no="" table="" col=""/>
+  </tree>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 
+ 設定交易收受及支付款時，使用的款項型態，例如現金、票據、信用卡、禮券。。等。　
+作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：基本資料維護作業
+輸入模式：單檔搭配上方樹狀瀏覽模式F001_vt
+作業資料來源(Master)：
+ 資料來源表：款別主檔（ooia_t）(資料檔)
+                                    ( ooial_t)(多語言資料檔)
+ 關聯資料表：ooias_t(提速檔)
+
+樹狀瀏覽設定：
+ (1)快速查詢下拉選項：xxxx001(Key1)
+可選項：
+　１。款別編號
+　２。款別分類
+　３。ＰＯＳ整合否
+
+ (2)樹狀設定：
+    父節點：款別分類
+    子節點：款別編號
+ (3)樹狀顯示欄位：
+    欄位1：編號
+    欄位2：名稱
+
+欄位串查：（不需要請刪除）
+    欄位1：款別分類  串查程式：azzi600 系統分類碼 8310
+    欄位2：憑證類型  串查程式：待補   
+補充說明：(輸入此作的補充說明事項)
+資料處理：
+初始化：
+款別主檔(ooia_t)
+１。初始化依查詢樹cursor所在編號顯示。
+２。新增完成時，查詢樹及單頭應顯示該新增編號。
+３。刪除時，依查詢樹的排序移至下筆有效資料顯示。
+新增：
+１。檢核據點層設置資料，有無＂ＡＬＬ＂代表性記錄。
+ 查［Ｔ.款別據點檔ooie_t］ WHERE 同款別 AND SITE='ALL'
+２。無則新增一筆資料。 SITE='ALL'  
+  ent  =ENT
+  SITE =ALL
+  款別編號 = 來源編號
+  餘字段欄位內容，依table設置時之預設值代入。 無預設值者,則空白。
+刪除：
+１。無效資料始可刪除。
+２。提示標準是否確認刪除的訊息。
+無效：
+１。有效資料始可異動。
+２。檢核據點層資料是否己有設定(ooie_t)，己存在資料者，提示訊息。
+    ［此款別資料，已於據點層設定相關資料，請檢核＂款別依據點設置作業(aooi901)＂；
+ 設定無效者，將一併更動下層資料為無效狀態，無法於交易作業使用。］（Ｙ／Ｎ）
+有效：
+１。無效資料始可異動。
+２。檢核據點層資料，是否有相同［款別編號］設定
+　 IF count() > 0
+          [此款已有設定於據點層級資料，將一併異動據點層資料狀態為有效設定。]
+    ELSE
+        ［原資料變更為有效狀態後，即可於交易作業中使用。］
+    END IF
+TOPMENU:[相關作業]--[(aooi901)款別據點層設置作業]
+                                  --[(agli190)款別依帳套設置科目作業]
+                  [相關查詢]--[(aooi903)法人帳務應用設定作業]]]>
+  </all>
+  <field cite_std="N" name="b_ooia001" ver="1" src="s" column="ooia001" table="ooia_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_ooia002" ver="1" src="s" column="ooia002" table="ooia_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="8310" default="" max="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_ooia003" ver="1" src="s" column="ooia003" table="ooia_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max="" min="" can_edit="N" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_ooia004" ver="1" src="s" column="ooia004" table="ooia_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_ooia005" ver="1" src="s" column="ooia005" table="ooia_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="N" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_ooiastus" ver="1" src="s" column="ooiastus" table="ooia_t" attribute="C822" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_ooial003" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooia_t.ooia001" ver="1" src="s" column="ooia001" table="ooia_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="" c_zoom="q_ooia" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：款別編號
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值: 無 
+     校驗:1.不允許空白
+             2.重複性檢查
+]]>
+  </field>
+  <field cite_std="N" name="ooia_t.ooia002" ver="1" src="s" column="ooia002" table="ooia_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="8310" default="10" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：款別分類
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值: 10
+     校驗:無
+]]>
+  </field>
+  <field cite_std="N" name="ooia_t.ooia003" ver="1" src="s" column="ooia003" table="ooia_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[欄位名稱：本幣否
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值: Y
+     校驗:無
+]]>
+  </field>
+  <field cite_std="N" name="ooia_t.ooia004" ver="1" src="s" column="ooia004" table="ooia_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：憑證類型
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值: 無 
+     校驗:存在ACC=3112且有效
+]]>
+  </field>
+  <field cite_std="N" name="ooia_t.ooia005" ver="1" src="s" column="ooia005" table="ooia_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[欄位名稱：POS整合否
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值: Y
+     校驗:無
+]]>
+  </field>
+  <field cite_std="N" name="ooia_t.ooia006" ver="1" src="s" column="ooia006" table="ooia_t" attribute="C008" type="varchar2(10)" req="N" i_zoom="q_ooai001" c_zoom="q_ooai001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：本幣否
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值: 無
+     允許空白：YES
+     校驗:1.存在幣別檔ooai_t中
+             2.IF  [本幣否(ooia003)]='Y'  THEN ooia006 noentry ELSE  ooia006 entry可維護。
+]]>
+  </field>
+  <field cite_std="N" name="ooia_t.ooiacrtdp" ver="1" src="s" column="ooiacrtdp" table="ooia_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooia_t.ooiacrtdt" ver="1" src="s" column="ooiacrtdt" table="ooia_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooia_t.ooiacrtid" ver="1" src="s" column="ooiacrtid" table="ooia_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooia_t.ooiamoddt" ver="1" src="s" column="ooiamoddt" table="ooia_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooia_t.ooiamodid" ver="1" src="s" column="ooiamodid" table="ooia_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooia_t.ooiaowndp" ver="1" src="s" column="ooiaowndp" table="ooia_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooia_t.ooiaownid" ver="1" src="s" column="ooiaownid" table="ooia_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooia_t.ooiastus" ver="1" src="s" column="ooiastus" table="ooia_t" attribute="C822" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="1" name="prog_ooia002" depend_field="ooia_t.ooia002" src="s" status="">
+      <program order="1" type="1" name="azzi600"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_ooia004_desc" src="s" depend_field="b_ooia004" correspon_key="ooiaent,&apos;3112&apos;,ooia004" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="ooia004_desc" src="s" depend_field="ooia_t.ooia004" correspon_key="ooiaent,&apos;3112&apos;,ooia004" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="ooiacrtdp_desc" src="s" depend_field="ooia_t.ooiacrtdp" correspon_key="ooiacrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="ooiacrtid_desc" src="s" depend_field="ooia_t.ooiacrtid" correspon_key="ooiacrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="ooiamodid_desc" src="s" depend_field="ooia_t.ooiamodid" correspon_key="ooiamodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="ooiaowndp_desc" src="s" depend_field="ooia_t.ooiaowndp" correspon_key="ooiaowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="ooiaownid_desc" src="s" depend_field="ooia_t.ooiaownid" correspon_key="ooiaownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+  </ref_field>
+  <multi_lang>
+    <mfield cite_std="N" ver="1" name="ooial_t.ooial003" src="s" depend_field="ooia_t.ooia001" correspon_key="ooiaent,ooia001" lang_table="ooial_t" lang_fk="ooialent,ooial001" lang_dlang="ooial002" lang_rtn="ooial003" status="">
+      <![CDATA[]]>
+    </mfield>
+  </multi_lang>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_ooia001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_ooia002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_ooia003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_ooia004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_ooia005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_ooiastus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_ooial003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooia_t.ooia001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooia_t.ooia002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooia_t.ooia003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooia_t.ooia004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooia_t.ooia005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooia_t.ooia006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooia_t.ooiacrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooia_t.ooiacrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooia_t.ooiacrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooia_t.ooiamoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooia_t.ooiamodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooia_t.ooiaowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooia_t.ooiaownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooia_t.ooiastus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="cbo_searchcol.0" text="選擇查詢欄位" lstr=""/>
+    <sfield name="lbl_ooia001" text="款別編號" lstr=""/>
+    <sfield name="lbl_ooia002" text="款別分類" lstr=""/>
+    <sfield name="lbl_ooia005" text="POS整合否" lstr=""/>
+    <sfield name="rdo_expand.1" text="上推" lstr=""/>
+    <sfield name="rdo_expand.2" text="下展" lstr=""/>
+    <sfield name="rdo_expand.3" text="全部" lstr=""/>
+    <sfield name="lbl_name" text="樹狀節點說明" lstr=""/>
+    <sfield name="lbl_ooia004" text="交易憑證類型" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_ooia003" text="本幣否" lstr=""/>
+    <sfield name="lbl_ooiastus" text="狀態碼" lstr=""/>
+    <sfield name="lbl_treetotal" text="共" lstr=""/>
+    <sfield name="lbl_treerows" text="筆" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_ooial003" text="名稱說明" lstr=""/>
+    <sfield name="lbl_ooia006" text="預設幣別" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_collect_gzze001" text="訊息代碼" lstr=""/>
+    <sfield name="lbl_collect_gzze003" text="訊息內容" lstr=""/>
+    <sfield name="lbl_collect_gzze006" text="進階訊息" lstr=""/>
+    <sfield name="lbl_cl_err_s02_accept" text="確定" lstr=""/>
+    <sfield name="lbl_err_detail" text="進階訊息" lstr=""/>
+    <sfield name="lbl_suggest_exe" text="建議執行" lstr=""/>
+    <sfield name="lbl_err_contact" text="反應問題" lstr=""/>
+    <sfield name="lbl_cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="lbl_group_cl_err_s01" text="進階訊息" lstr=""/>
+    <sfield name="lbl_gzze001" text="訊息代碼:" lstr=""/>
+    <sfield name="lbl_gzze006" text="訊息內容:" lstr=""/>
+    <sfield name="lbl_sqlerrd2" text="SQL錯誤碼:" lstr=""/>
+    <sfield name="lbl_gzxm001" text="QBE編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm005" text="設為首頁-自動查詢方案" lstr=""/>
+    <sfield name="lbl_gzxm002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxm003" text="員工編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm004" text="設為預設查詢條件" lstr=""/>
+    <sfield name="cl_qbe_s02.bpage_1" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn005" text="欄位說明" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="cl_qbe_s02_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s02_Cancel" text="取消" lstr=""/>
+    <sfield name="lbl_funid" text="函式代碼" lstr=""/>
+    <sfield name="lbl_fundesc" text="函式說明" lstr=""/>
+    <sfield name="cl_qbe_s01_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s01_Cancel" text="取消" lstr=""/>
+    <sfield name="cl_qbe_s03.bpage_1" text="查詢方案列表" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxmstus" text="有效" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm004" text="預設" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm005" text="顯示於首頁" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm009" text="順序" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxml005" text="查詢方案說明" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm007" text="自設SQL條件" lstr=""/>
+    <sfield name="cl_qbe_s03.page_2" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn004" text="序號" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn005" text="條件欄位" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="page_cl_doc_s01_page1" text="相關文件清單" lstr=""/>
+    <sfield name="lbl_loaa006" text="文件版本" lstr=""/>
+    <sfield name="lbl_loaa007" text="文件序號" lstr=""/>
+    <sfield name="lbl_loaa011" text="文件型態" lstr=""/>
+    <sfield name="lbl_loaa013" text="文件說明" lstr=""/>
+    <sfield name="lbl_loaa010" text="文件原始檔名" lstr=""/>
+    <sfield name="btn_upload" text="本地文件上傳" lstr=""/>
+    <sfield name="btn_crt_text" text="新建純文字紀錄" lstr=""/>
+    <sfield name="btn_doccrt_url" text="新建URL" lstr=""/>
+    <sfield name="btn_docopen" text="文件下載" lstr=""/>
+    <sfield name="btn_docupdate" text="文件資料修改" lstr=""/>
+    <sfield name="btn_docremove" text="文件刪除" lstr=""/>
+    <sfield name="btn_exit" text="關閉功能" lstr=""/>
+    <sfield name="page_cl_doc_s01_page2" text="文件基本資料" lstr=""/>
+    <sfield name="lbl_loaa004" text="用途類別" lstr=""/>
+    <sfield name="lbl_loaa005" text="預設顯示圖片" lstr=""/>
+    <sfield name="lbl_loaa012" text="文件位置(URL)" lstr=""/>
+    <sfield name="page_cl_doc_s01_page4" text="權限設定" lstr=""/>
+    <sfield name="group_read" text="讀取權限" lstr=""/>
+    <sfield name="group_modify" text="修改權限" lstr=""/>
+    <sfield name="page_cl_doc_s01_page3" text="異動資訊" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="btn_doccancel" text="放棄修改" lstr=""/>
+    <sfield name="btn_docmodify" text="資料存檔" lstr=""/>
+    <sfield name="lbl_gzxp007_1" text="選擇分類" lstr=""/>
+    <sfield name="add_catalog" text="" lstr=""/>
+    <sfield name="lbl_gzxp007_2" text="自訂分類" lstr=""/>
+    <sfield name="lbl_gzxp008" text="追蹤說明" lstr=""/>
+    <sfield name="accept" text="確定" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="follow_list" text="待追蹤" lstr=""/>
+    <sfield name="signature_list" text="待簽核" lstr=""/>
+    <sfield name="announcement" text="作業公告" lstr=""/>
+    <sfield name="cancelfollow" text="取消追蹤" lstr=""/>
+    <sfield name="assigncatalog" text="指定分類" lstr=""/>
+    <sfield name="cl_user_overview_s01.lbl_name" text="" lstr=""/>
+    <sfield name="lbl_gzxp002" text="作業名稱" lstr=""/>
+    <sfield name="lbl_gzxp006" text="單據日期" lstr=""/>
+    <sfield name="add_favorite_catalog" text="新增目錄" lstr=""/>
+    <sfield name="modify_favorite_desc" text="修改" lstr=""/>
+    <sfield name="favorite_del" text="移除" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_oocq002" text="應用分類碼" lstr=""/>
+    <sfield name="lbl_ooai001" text="幣別編號" lstr=""/>
+    <sfield name="lbl_ooail003" text="說明" lstr=""/>
+    <sfield name="lbl_ooag001" text="員工編號" lstr=""/>
+    <sfield name="lbl_ooea001" text="組織編號" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_ooial001" text="款別編號" lstr=""/>
+    <sfield name="lbl_ooial002" text="語言別" lstr=""/>
+    <sfield name="lbl_ooial004" text="助記碼" lstr=""/>
+    <sfield name="cl_ask_s04_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s03_Test" text="測試" lstr=""/>
+    <sfield name="cl_ask_s03_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s01_Choice" text="選擇" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="cl_progress_bar_Current" text="目前進度" lstr=""/>
+    <sfield name="cl_progress_bar_Total" text="全部" lstr=""/>
+    <sfield name="cl_progress_bar_%" text="%" lstr=""/>
+    <sfield name="condition_page" text="樣板清單" lstr=""/>
+    <sfield name="lbl_select" text="選擇" lstr=""/>
+    <sfield name="lbl_gzgdl002" text="樣板說明" lstr=""/>
+    <sfield name="lbl_gzgd003" text="客製否" lstr=""/>
+    <sfield name="lbl_gzgd007" text="樣板名稱(4rp)" lstr=""/>
+    <sfield name="lbl_outputformat" text="輸出格式" lstr=""/>
+    <sfield name="lbl_outputformat_1" text="預覽與列印(SVG)" lstr=""/>
+    <sfield name="lbl_outputformat_2" text="Adobe Acrobat (PDF)" lstr=""/>
+    <sfield name="lbl_outputformat_3" text="Microsoft Excel (XLS)" lstr=""/>
+    <sfield name="lbl_outputformat_4" text="Microsoft Excel (XLS) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_5" text="Microsoft Excel (XLSX)" lstr=""/>
+    <sfield name="lbl_outputformat_6" text="Microsoft Excel (XLSX) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_7" text="Microsoft Word (RTF)" lstr=""/>
+    <sfield name="lbl_outputformat_8" text="網頁 (HTML)" lstr=""/>
+    <sfield name="lbl_outputformat_9" text="郵件 (Mail)" lstr=""/>
+    <sfield name="lbl_set_default" text="設為預設樣版" lstr=""/>
+    <sfield name="lbl_btn_accept" text="確定" lstr=""/>
+    <sfield name="lbl_btn_cancel" text="放棄" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_gzza003" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzza001" text="程式編號" lstr=""/>
+    <sfield name="lbl_gzza002" text="程式類別" lstr=""/>
+    <sfield name="lbl_gzde002" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzde001" text="規格編號" lstr=""/>
+    <sfield name="lbl_gzdel003" text="說明" lstr=""/>
+    <sfield name="lbl_gzdf002" text="子畫面規格編號" lstr=""/>
+    <sfield name="lbl_gzdfl003" text="子畫面檔案名稱" lstr=""/>
+    <sfield name="lbl_gzcbl004" text="說明" lstr=""/>
+    <sfield name="lbl_gzde003" text="規格類別" lstr=""/>
+    <sfield name="lbl_dzfv004" text="畫面代號" lstr=""/>
+    <sfield name="lbl_dzfv005" text="主/子程式" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

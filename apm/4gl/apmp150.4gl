@@ -1,0 +1,1234 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="apmp150.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2014-10-06 09:49:22), PR版次:0004(2016-09-13 14:47:00)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000066
+#+ Filename...: apmp150
+#+ Description: 供應商績效評核計算作業
+#+ Creator....: 04441(2014-10-02 13:45:31)
+#+ Modifier...: 04441 -SD/PR- 01258
+ 
+{</section>}
+ 
+{<section id="apmp150.global" >}
+#應用 p01 樣板自動產生(Version:19)
+#add-point:填寫註解說明 name="global.memo" name="global.memo"
+#Memos
+#160905-00001#1    2016/09/05   By Ann_Huang   修正評核時間起迄邏輯應該是包含由畫面上設定條件評核月份開始往前推算
+#160908-00008#1    2016/09/08   By Ann_Huang   修正交期(收貨單)的期望交期和承諾交期達成率SQL,單身的pmds006可允許不輸入,
+#                                              故應改由單身pmdt作串連
+#160902-00043#1    2016/09/13   By wuxja       apmi140里供应商分类设置为ALL时应抓所有分类的供应商资料
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       pmbk001 LIKE type_t.chr10, 
+   pmbr001 LIKE type_t.num5, 
+   pmbr002 LIKE type_t.num5, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+DEFINE g_master_o type_master
+
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apmp150.main" >}
+MAIN
+   #add-point:main段define (客製用) name="main.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define name="main.define"
+   
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("apm","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+      CALL apmp150_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apmp150 WITH FORM cl_ap_formpath("apm",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL apmp150_init()
+ 
+      #進入選單 Menu (="N")
+      CALL apmp150_ui_dialog()
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_apmp150
+   END IF
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="apmp150.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION apmp150_init()
+ 
+   #add-point:init段define (客製用) name="init.define_customerization"
+   
+   #end add-point
+   #add-point:ui_dialog段define name="init.define"
+   
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化 name="init.init"
+ 
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp150.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION apmp150_ui_dialog()
+ 
+   #add-point:ui_dialog段define (客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define name="ui_dialog.define"
+   DEFINE l_pmbk003 LIKE pmbk_t.pmbk003  #評核週期(月)
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2 name="ui_dialog.before_dialog2"
+      
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #應用 a57 樣板自動產生(Version:3)
+         INPUT BY NAME g_master.pmbk001,g_master.pmbr001,g_master.pmbr002 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前 name="input.m.before_input"
+               LET g_master.pmbr001 = YEAR(g_today)
+               LET g_master.pmbr002 = MONTH(g_today)
+               LET g_master_o.* = g_master.*
+               #end add-point
+         
+                     #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmbk001
+            
+            #add-point:AFTER FIELD pmbk001 name="input.a.pmbk001"
+            IF NOT cl_null(g_master.pmbk001) THEN
+               IF g_master.pmbk001 != g_master_o.pmbk001 OR g_master.pmbk001 IS NULL THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_master.pmbk001
+                  LET g_chkparam.arg2 = g_today
+                  IF cl_chk_exist("v_pmbk001") THEN
+                     #依據pmbk_t中紀錄的評核週期、上次評核年度和月份自動推算本次的評核年度與月分
+                     LET l_pmbk003 = ''
+                     LET g_master.pmbr001 = ''
+                     LET g_master.pmbr002 = ''
+                     SELECT pmbk003,pmbk004,pmbk005 INTO l_pmbk003,g_master.pmbr001,g_master.pmbr002 FROM pmbk_t
+                      WHERE pmbkent = g_enterprise AND pmbksite = g_site AND pmbk001 = g_master.pmbk001
+                     LET g_master.pmbr002 = g_master.pmbr002 + l_pmbk003
+                     IF g_master.pmbr002 > 12 THEN
+                        LET g_master.pmbr002 = g_master.pmbr002 - 12
+                        LET g_master.pmbr001 = g_master.pmbr001 + 1
+                     END IF
+                     DISPLAY BY NAME g_master.pmbr001,g_master.pmbr002
+                  ELSE
+                     LET g_master.pmbk001 = g_master_o.pmbk001
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF 
+            LET g_master_o.pmbk001 = g_master.pmbk001
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmbk001
+            #add-point:BEFORE FIELD pmbk001 name="input.b.pmbk001"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmbk001
+            #add-point:ON CHANGE pmbk001 name="input.g.pmbk001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmbr001
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_master.pmbr001,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD pmbr001
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pmbr001 name="input.a.pmbr001"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmbr001
+            #add-point:BEFORE FIELD pmbr001 name="input.b.pmbr001"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmbr001
+            #add-point:ON CHANGE pmbr001 name="input.g.pmbr001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmbr002
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_master.pmbr002,"1","1","12","1","azz-00087",1) THEN
+               NEXT FIELD pmbr002
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pmbr002 name="input.a.pmbr002"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmbr002
+            #add-point:BEFORE FIELD pmbr002 name="input.b.pmbr002"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmbr002
+            #add-point:ON CHANGE pmbr002 name="input.g.pmbr002"
+            
+            #END add-point 
+ 
+ 
+ 
+                     #Ctrlp:input.c.pmbk001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmbk001
+            #add-point:ON ACTION controlp INFIELD pmbk001 name="input.c.pmbk001"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_master.pmbk001
+            LET g_qryparam.arg1 = g_today
+            CALL q_pmbk001_1()
+            LET g_master.pmbk001 = g_qryparam.return1              
+            DISPLAY g_master.pmbk001 TO pmbk001
+            NEXT FIELD pmbk001
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmbr001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmbr001
+            #add-point:ON ACTION controlp INFIELD pmbr001 name="input.c.pmbr001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmbr002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmbr002
+            #add-point:ON ACTION controlp INFIELD pmbr002 name="input.c.pmbr002"
+            
+            #END add-point
+ 
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後 name="input.m.after_input"
+               
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...) name="input.other"
+            
+            #end add-point
+         END INPUT
+ 
+ 
+ 
+         
+         
+      
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL apmp150_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog3"
+            
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear name="ui_dialog.before_qbeclear"
+         
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL apmp150_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog name="process.exit_dialog"
+      
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL apmp150_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = apmp150_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule name="process.after_schedule"
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp150.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION apmp150_transfer_argv(ls_js)
+ 
+   #add-point:transfer_agrv段define (客製用) name="transfer_agrv.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define name="transfer_agrv.define"
+   
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容 name="transfer.argv.define"
+   
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp150.process" >}
+#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION apmp150_process(ls_js)
+ 
+   #add-point:process段define (客製用) name="process.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define name="process.define"
+   DEFINE l_tot_success  LIKE type_t.num5
+   DEFINE l_success      LIKE type_t.num5
+   DEFINE l_year1        LIKE type_t.num5     #起始年度
+   DEFINE l_year2        LIKE type_t.num5     #結束年度
+   DEFINE l_month1       LIKE type_t.num5     #起始月份
+   DEFINE l_month2       LIKE type_t.num5     #結束月份
+   DEFINE l_bdate        LIKE type_t.dat      #起始日期
+   DEFINE l_edate        LIKE type_t.dat      #結束日期
+   DEFINE l_pmbl002      LIKE pmbl_t.pmbl002  #供應商分類
+   DEFINE l_pmaa001      LIKE pmaa_t.pmaa001  #交易對象編號
+   DEFINE l_num1         LIKE type_t.num20_6
+   DEFINE l_num2         LIKE type_t.num20_6
+   DEFINE l_cnt          LIKE type_t.num5
+   DEFINE l_pmbk  RECORD                      #供應商評核公式基本資料檔
+       pmbk003      LIKE pmbk_t.pmbk003,      #評核週期(月)
+       pmbk008      LIKE pmbk_t.pmbk008,      #定量評核整體權重
+       pmbk009      LIKE pmbk_t.pmbk009       #定性評核整體權重
+              END RECORD
+   DEFINE l_pmbm  RECORD                      #供應商評核公式定量評核項目檔
+       pmbm002      LIKE pmbm_t.pmbm002,      #項目編號
+       pmbm003      LIKE pmbm_t.pmbm003,      #權重
+       pmbm004      LIKE pmbm_t.pmbm004,      #評分公式
+       pmbm005      LIKE pmbm_t.pmbm005,      #交期容許差異天數
+       pmbm006      LIKE pmbm_t.pmbm006       #目標價格類型
+              END RECORD
+   DEFINE l_pmbn  RECORD                      #供應商評核公式定性評核項目檔
+       pmbn002      LIKE pmbn_t.pmbn002,      #項目編號
+       pmbn003      LIKE pmbn_t.pmbn003       #權重
+              END RECORD
+   DEFINE l_pmbr  RECORD                      #供應商評核項目得分檔
+       pmbrent      LIKE pmbr_t.pmbrent,      #企業編號	
+       pmbrsite     LIKE pmbr_t.pmbrsite,     #營運據點	
+       pmbr001      LIKE pmbr_t.pmbr001,      #評核年度	
+       pmbr002      LIKE pmbr_t.pmbr002,      #評核月份	
+       pmbr003      LIKE pmbr_t.pmbr003,      #評公式編號
+       pmbr004      LIKE pmbr_t.pmbr004,      #供應商編號
+       pmbr005      LIKE pmbr_t.pmbr005,      #項目類型	
+       pmbr006      LIKE pmbr_t.pmbr006,      #項目編號	
+       pmbr007      LIKE pmbr_t.pmbr007,      #系統得分	
+       pmbr008      LIKE pmbr_t.pmbr008,      #調整後得分
+       pmbr009      LIKE pmbr_t.pmbr009,      #調整次數	
+       pmbr010      LIKE pmbr_t.pmbr010       #調整理由	
+                END RECORD
+   DEFINE l_pmbq  RECORD                      #供應商評核綜合總得分檔
+	    pmbqent	     LIKE pmbq_t.pmbqent,	    #企業編號
+	    pmbqsite     LIKE pmbq_t.pmbqsite,     #營運據點
+	    pmbq001	     LIKE pmbq_t.pmbq001,	    #評核年度
+	    pmbq002	     LIKE pmbq_t.pmbq002,	    #評核月份
+	    pmbq003	     LIKE pmbq_t.pmbq003,	    #評公式編號
+	    pmbq004	     LIKE pmbq_t.pmbq004,	    #供應商編號
+	    pmbq005	     LIKE pmbq_t.pmbq005,	    #系統得分
+	    pmbq006	     LIKE pmbq_t.pmbq006,	    #調整後得分
+	    pmbq007	     LIKE pmbq_t.pmbq007,	    #評核等級
+	    pmbq008	     LIKE pmbq_t.pmbq008,	    #建議處理方案
+	    pmbq009	     LIKE pmbq_t.pmbq009 	    #調整次數
+                END RECORD
+DEFINE l_tot_pmbm   LIKE pmbq_t.pmbq005       #量性得分乘上權重
+DEFINE l_tot_pmbn   LIKE pmbq_t.pmbq005       #定性得分乘上權重
+DEFINE l_pmdn001    LIKE pmdn_t.pmdn001
+DEFINE l_pmdn015    LIKE pmdn_t.pmdn015
+DEFINE l_pmdn015_o  LIKE pmdn_t.pmdn015
+
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+   LET li_p01_status = 1
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理 name="process.pre_process"
+   IF cl_null(g_master.pmbk001) OR cl_null(g_master.pmbr001) OR cl_null(g_master.pmbr002) THEN
+      RETURN
+   END IF
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress name="process.count_progress"
+      
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE apmp150_process_cs CURSOR FROM ls_sql
+#  FOREACH apmp150_process_cs INTO
+   #add-point:process段process name="process.process"
+
+   CALL s_transaction_begin()
+   CALL cl_err_collect_init()
+   LET l_tot_success = TRUE
+   LET l_success = TRUE
+                           
+   #依據供應商評核類別編號所設置的評核週期與畫面上維護的評核年度月份推算計算資料的起訖日期   
+   #160905-00001#1 add Start -----------------------------------
+   #  修正起迄時間邏輯 : 取用apmi140設定的評核週期, 用apmp150 畫面上評核時間往前推算區間, 因此起迄月份數量 = 評核週期
+   #  範例: apmi140 :評核週期 = 2
+   #        apmp150 :評核年月 =2016/9      
+   #          起始時間 = 2016/8  
+   #          截止時間 = 2016/9
+   #160905-00001#1 add End -----------------------------------
+   
+   #依據供應商評核類別編號所設置的評核週期與畫面上維護的評核年度月份推算計算資料的起訖日期
+   INITIALIZE l_pmbk.* TO NULL
+   SELECT pmbk003,pmbk008,pmbk009 INTO l_pmbk.pmbk003,l_pmbk.pmbk008,l_pmbk.pmbk009 FROM pmbk_t
+    WHERE pmbkent = g_enterprise AND pmbksite = g_site AND pmbk001 = g_master.pmbk001
+   LET l_year1 = g_master.pmbr001
+  #LET l_month1 = g_master.pmbr002 - l_pmbk.pmbk003      #160905-00001#1 mark
+   LET l_month1 = g_master.pmbr002 - l_pmbk.pmbk003 + 1  #160905-00001#1 add
+   IF l_month1 < 1 THEN
+      IF l_month1 = 0 THEN
+         LET l_month1 = 12
+      ELSE
+         LET l_month1 = l_month1 + 12
+      END IF
+      LET l_year1 = l_year1 - 1
+   END IF
+   LET l_year2 = g_master.pmbr001
+  #LET l_month2 = g_master.pmbr002 - 1   #160905-00001#1 mark
+   LET l_month2 = g_master.pmbr002       #160905-00001#1 add
+   IF l_month2 < 1 THEN
+      IF l_month2 = 0 THEN
+         LET l_month2 = 12
+      ELSE
+         LET l_month2 = l_month2 + 12
+      END IF
+      LET l_year2 = l_year2 - 1
+   END IF
+   CALL s_date_get_ymtodate(l_year1,l_month1,l_year2,l_month2) RETURNING l_bdate,l_edate
+
+   LET l_cnt = 0
+   SELECT COUNT(*) INTO l_cnt FROM pmbq_t
+    WHERE pmbqent = g_enterprise AND pmbqsite = g_site
+      AND pmbq001 = g_master.pmbr001 AND pmbq002 = g_master.pmbr002 AND pmbq003 = g_master.pmbk001
+   IF l_cnt <> 0 THEN
+      DELETE FROM pmbq_t
+       WHERE pmbqent = g_enterprise AND pmbqsite = g_site
+         AND pmbq001 = g_master.pmbr001 AND pmbq002 = g_master.pmbr002 AND pmbq003 = g_master.pmbk001
+   END IF
+   LET l_cnt = 0
+   SELECT COUNT(*) INTO l_cnt FROM pmbr_t
+    WHERE pmbrent = g_enterprise AND pmbrsite = g_site
+      AND pmbr001 = g_master.pmbr001 AND pmbr002 = g_master.pmbr002 AND pmbr003 = g_master.pmbk001
+   IF l_cnt <> 0 THEN
+      DELETE FROM pmbr_t
+       WHERE pmbrent = g_enterprise AND pmbrsite = g_site
+         AND pmbr001 = g_master.pmbr001 AND pmbr002 = g_master.pmbr002 AND pmbr003 = g_master.pmbk001
+   END IF
+
+   INITIALIZE l_pmbq.* TO NULL
+	LET l_pmbq.pmbqent  = g_enterprise
+	LET l_pmbq.pmbqsite = g_site
+	LET l_pmbq.pmbq001  = g_master.pmbr001
+	LET l_pmbq.pmbq002  = g_master.pmbr002
+	LET l_pmbq.pmbq003  = g_master.pmbk001
+	LET l_pmbq.pmbq009  = 0
+
+   INITIALIZE l_pmbr.* TO NULL
+   LET l_pmbr.pmbrent  = g_enterprise
+   LET l_pmbr.pmbrsite = g_site
+   LET l_pmbr.pmbr001  = g_master.pmbr001
+   LET l_pmbr.pmbr002  = g_master.pmbr002
+   LET l_pmbr.pmbr003  = g_master.pmbk001
+   LET l_pmbr.pmbr009  = 0
+   LET l_pmbr.pmbr010  = ''
+
+   #依據供應商評核類別編號抓取所設置的供應商分類
+   LET g_sql = " SELECT pmbl002 FROM pmbl_t ",
+               "  WHERE pmblent = '",g_enterprise,"' AND pmblsite = '",g_site,"' AND pmbl001 = '",g_master.pmbk001,"' "
+   PREPARE pmbl002_pb FROM g_sql
+   DECLARE pmbl002_cs CURSOR FOR pmbl002_pb
+
+   ##160902-00043#1 mark  --begin--
+   #依據供應商分類抓取要計算的供應商清單
+  #LET g_sql = " SELECT pmaa001 FROM pmaa_t ",
+  #            "  WHERE pmaaent = '",g_enterprise,"' AND pmaa080 = ? "
+  #PREPARE pmaa001_pb FROM g_sql
+  #DECLARE pmaa001_cs CURSOR FOR pmaa001_pb
+   ##160902-00043#1 mark  --end--
+
+   #依據供應商評核類別編號所設置的定量評核項目的公式抓去資料計算每個供應商在該”定量”評核項目的得分
+   LET g_sql = " SELECT pmbm002,pmbm003,pmbm004,pmbm005,pmbm006 FROM pmbm_t ",
+               "  WHERE pmbment = '",g_enterprise,"' AND pmbmsite = '",g_site,"' AND pmbm001 = '",g_master.pmbk001,"' "
+   PREPARE pmbm_pb FROM g_sql
+   DECLARE pmbm_cs CURSOR FOR pmbm_pb
+
+   #該期該供應商檢驗某顆料的合格量和總送驗量
+   LET g_sql = " SELECT (SUM(qcba023)/SUM(qcba017)) FROM qcba_t ",
+               "  WHERE qcbaent = '",g_enterprise,"' AND qcbasite = '",g_site,"' AND qcbastus = 'Y' ",
+               "    AND qcba005 = ? AND qcbadocdt BETWEEN '",l_bdate,"' AND '",l_edate,"' ",
+               "  GROUP BY qcba010 "
+   PREPARE qcba_pb FROM g_sql
+   DECLARE qcba_cs CURSOR FOR qcba_pb
+
+   #抓取每一個供應商的採購單資訊依據apmi140設置的目標價格類型推算價格評核項目的分數
+#   LET g_sql = " SELECT ((pmdn015-imai022)/imai022) FROM pmdl_t,pmdn_t,imai_t ",
+#               "  WHERE pmdlent = '",g_enterprise,"' AND pmdlsite = '",g_site,"' AND pmdlstus = 'Y' ",
+#               "    AND pmdl004 = ? AND pmdldocdt BETWEEN '",l_bdate,"' AND '",l_edate,"' ",
+#               "    AND pmdnent = pmdlent AND pmdnsite = pmdlsite AND pmdndocno = pmdldocno ",
+#               "    AND imaient = pmdlent AND imaisite = pmdlsite AND imai001 = pmdn001 "
+#   PREPARE pmdl_1_pb FROM g_sql
+#   DECLARE pmdl_1_cs CURSOR FOR pmdl_1_pb
+#
+#   LET g_sql = " SELECT ((pmdn015-imai023)/imai023) FROM pmdl_t,pmdn_t,imai_t ",
+#               "  WHERE pmdlent = '",g_enterprise,"' AND pmdlsite = '",g_site,"' AND pmdlstus = 'Y' ",
+#               "    AND pmdl004 = ? AND pmdldocdt BETWEEN '",l_bdate,"' AND '",l_edate,"' ",
+#               "    AND pmdnent = pmdlent AND pmdnsite = pmdlsite AND pmdndocno = pmdldocno ",
+#               "    AND imaient = pmdlent AND imaisite = pmdlsite AND imai001 = pmdn001 "
+#   PREPARE pmdl_2_pb FROM g_sql
+#   DECLARE pmdl_2_cs CURSOR FOR pmdl_2_pb
+   LET g_sql = " SELECT pmdn001,pmdn015 FROM pmdl_t,pmdn_t ",
+               "  WHERE pmdlent = '",g_enterprise,"' AND pmdlsite = '",g_site,"' AND pmdlstus = 'Y' ",
+               "    AND pmdl004 = ? AND pmdldocdt BETWEEN '",l_bdate,"' AND '",l_edate,"' ",
+               "    AND pmdnent = pmdlent AND pmdnsite = pmdlsite AND pmdndocno = pmdldocno "
+   PREPARE pmdl_pb FROM g_sql
+   DECLARE pmdl_cs CURSOR FOR pmdl_pb
+
+   #依據供應商類別編號、評核年度月分、定性項目抓取apmt300供應商定性評核資料且須以確認
+   LET g_sql = " SELECT pmbn002,pmbn003 FROM pmbn_t ",
+               "  WHERE pmbnent = '",g_enterprise,"' AND pmbnsite = '",g_site,"' AND pmbn001 = '",g_master.pmbk001,"' "
+   PREPARE pmbn_pb FROM g_sql
+   DECLARE pmbn_cs CURSOR FOR pmbn_pb
+
+   LET l_pmbl002 = ''
+   FOREACH pmbl002_cs INTO l_pmbl002
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         LET l_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      IF NOT l_success THEN
+         LET l_tot_success = FALSE
+         LET l_success = TRUE
+      END IF
+      
+      LET l_pmaa001 = ''
+      #160902-00043#1 add  --begin--
+      #当分类设置是ALL的时候应该抓所有分类的供应商资料
+      LET g_sql = " SELECT pmaa001 FROM pmaa_t ",
+               "  WHERE pmaaent = ",g_enterprise
+      IF l_pmbl002 != 'ALL' THEN
+         LET g_sql = g_sql," AND pmaa080 = '",l_pmbl002,"' "
+      ELSE
+         LET g_sql = g_sql,"' AND pmaa080 IN (",
+                  " SELECT oocq002 FROM oocq_t WHERE oocqent = ",g_enterprise,
+                  "    AND oocq001 = '251' AND oocqstus = 'Y')"
+      END IF
+      PREPARE pmaa001_pb FROM g_sql
+      DECLARE pmaa001_cs CURSOR FOR pmaa001_pb
+      #160902-00043#1 add  --end--
+       
+     #OPEN pmaa001_cs USING l_pmbl002    #160902-00043#1 mark
+      FOREACH pmaa001_cs INTO l_pmaa001
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            LET l_success = FALSE
+            EXIT FOREACH
+         END IF   
+      
+         IF NOT l_success THEN
+            LET l_tot_success = FALSE
+            LET l_success = TRUE
+         END IF
+
+         LET l_tot_pmbm = 0
+         LET l_tot_pmbn = 0
+
+         LET l_pmbr.pmbr004  = l_pmaa001
+
+         INITIALIZE l_pmbm.* TO NULL
+         FOREACH pmbm_cs INTO l_pmbm.*
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "FOREACH:" 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET l_success = FALSE
+               EXIT FOREACH
+            END IF
+      
+            IF NOT l_success THEN
+               LET l_tot_success = FALSE
+               LET l_success = TRUE
+            END IF
+            
+            IF cl_null(l_pmbm.pmbm005) THEN
+               LET l_pmbm.pmbm005 = 0
+            END IF
+            
+            LET l_pmbr.pmbr005 = '1'
+            #項目
+            CASE l_pmbm.pmbm002
+               #品質(IQC檢驗)
+               WHEN '1'
+                  LET l_pmbr.pmbr006 = '1'
+                  #公式
+                  CASE l_pmbm.pmbm004
+                     #合格批率
+                     WHEN '1'
+                        #該供應商該期總有效的IQC筆數
+                        LET l_num1 = 0
+                        SELECT COUNT(*) INTO l_num1 FROM qcba_t
+                         WHERE qcbaent = g_enterprise AND qcbasite = g_site AND qcbastus = 'Y'
+                           AND qcba005 = l_pmaa001 AND qcbadocdt BETWEEN l_bdate AND l_edate
+                        #該供應商該期合格筆數
+                        LET l_num2 = 0
+                        SELECT COUNT(*) INTO l_num2 FROM qcba_t
+                         WHERE qcbaent = g_enterprise AND qcbasite = g_site AND qcbastus = 'Y'
+                           AND qcba005 = l_pmaa001 AND qcbadocdt BETWEEN l_bdate AND l_edate AND qcba022 = '1'
+                        #品質項目得分=(該供應商該期合格批數/該供應商該期總送驗批數)*100
+                        LET l_pmbr.pmbr007 = l_num2 / l_num1 * 100
+                     #合格量比率
+                     WHEN '2'
+                        #品質項目得分=平均((該期該供應商檢驗某顆料的合格量)/該期該供應商檢驗某顆料的總送驗量) *100))  
+                        LET l_cnt = 0
+                        LET l_num1 = 0
+                        LET l_num2 = 0
+                        OPEN qcba_cs USING l_pmaa001
+                        FOREACH qcba_cs INTO l_num1
+                           LET l_cnt = l_cnt + 1
+                           LET l_num2 = l_num2 + l_num1
+                           LET l_num1 = 0
+                        END FOREACH
+                        LET l_pmbr.pmbr007 = l_num2 / l_cnt * 100
+                     OTHERWISE EXIT CASE
+                  END CASE
+               #交期(收貨單)
+               WHEN '2'
+                  LET l_pmbr.pmbr006 = '2'
+                  #公式
+                  CASE l_pmbm.pmbm004
+                     #期望交期達成率
+                     WHEN '1'
+                        #交期項目得分=(收貨單對應的採購單交期明細的到廠日期(pmdo012)且交期類型(pmdo009)為'1:約定交期'
+                        #             介於收貨單日期加減允許的差異天數(pmbm005)內的筆數/該期所有的收貨單筆數)*100
+                        
+                        #160908-00008#1-(S)--mark
+                        #LET l_num1 = 0
+                        #SELECT COUNT(*) INTO l_num1 from pmds_t,pmdl_t,pmdo_t
+                        # WHERE pmdlent = g_enterprise AND pmdlsite = g_site AND pmdl004 = l_pmaa001
+                        #   AND pmdoent = pmdlent AND pmdosite = pmdlsite AND pmdodocno = pmdldocno
+                        #   AND pmdo009 = '1'
+                        #   AND pmdsent = pmdlent AND pmdssite = pmdlsite AND pmds006 = pmdldocno
+                        #   AND pmds000 = '1' AND pmdsdocdt BETWEEN l_bdate AND l_edate
+                        #LET l_num2 = 0
+                        #SELECT COUNT(*) INTO l_num2 from pmds_t,pmdl_t,pmdo_t
+                        # WHERE pmdlent = g_enterprise AND pmdlsite = g_site AND pmdl004 = l_pmaa001
+                        #   AND pmdoent = pmdlent AND pmdosite = pmdlsite AND pmdodocno = pmdldocno
+                        #   AND pmdo009 = '1' AND pmdo012 <= (pmdsdocdt+l_pmbm.pmbm005)
+                        #   AND pmdsent = pmdlent AND pmdssite = pmdlsite AND pmds006 = pmdldocno
+                        #   AND pmds000 = '1' AND pmdsdocdt BETWEEN l_bdate AND l_edate
+                        #160908-00008#1-(E)--mark                        
+                        #160908-00008#1-(S)--add
+                        LET l_num1 = 0
+                        SELECT COUNT(*) INTO l_num1
+                        FROM  (SELECT pmds_t.*, pmdt_t.pmdt001 from pmds_t, pmdt_t
+                                where pmdsent = pmdtent and pmdsdocno = pmdtdocno
+                                  and pmds000 = '1'     and pmdsdocdt  BETWEEN l_bdate AND l_edate
+                              )A    ,pmdl_t,pmdo_t
+                         WHERE pmdlent = g_enterprise AND pmdlsite = g_site   AND pmdl004 = l_pmaa001
+                           AND pmdoent = pmdlent      AND pmdosite = pmdlsite AND pmdodocno = pmdldocno
+                           AND pmdo009 = '1'
+                           AND A.pmdsent = pmdlent    AND A.pmdssite = pmdlsite
+                           AND A.pmdt001 = pmdldocno
+
+                        LET l_num2 = 0
+                        SELECT COUNT(*) INTO l_num2
+                        FROM (SELECT pmds_t.*, pmdt_t.pmdt001 from pmds_t, pmdt_t
+                               where pmdsent = pmdtent and pmdsdocno = pmdtdocno
+                                 and pmds000 = '1'     and pmdsdocdt  BETWEEN l_bdate AND l_edate
+                              )A ,pmdl_t,pmdo_t
+                         WHERE pmdlent = g_enterprise AND pmdlsite = g_site   AND pmdl004 = l_pmaa001
+                           AND pmdoent = pmdlent      AND pmdosite = pmdlsite AND pmdodocno = pmdldocno
+                           AND pmdo009 = '1'          AND pmdo012 <= (A.pmdsdocdt+l_pmbm.pmbm005)
+                           AND A.pmdsent = pmdlent    AND A.pmdssite = pmdlsite
+                           AND A.pmdt001 = pmdldocno
+                        #160908-00008#1-(E)--add
+                        LET l_pmbr.pmbr007 = l_num2 / l_num1 * 100
+                        
+                     #承諾交期達成率
+                     WHEN '2'
+                        #交期項目得分=(收貨單對應的採購單交期明細的到廠日期(pmdo012)且交期類型(pmdo009)為'1:約定交期'OR '2:答覆交期'
+                        #             介於收貨單日期加減允許的差異天數(pmbm005)內的筆數/該期所有的收貨單筆數)*100
+                        
+                        #160908-00008#1-(S)--mark
+                        #LET l_num1 = 0
+                        #SELECT COUNT(*) INTO l_num1 from pmds_t,pmdl_t,pmdo_t
+                        # WHERE pmdlent = g_enterprise AND pmdlsite = g_site AND pmdl004 = l_pmaa001
+                        #   AND pmdoent = pmdlent AND pmdosite = pmdlsite AND pmdodocno = pmdldocno
+                        #   AND (pmdo009 = '1' OR pmdo009 = '2')
+                        #   AND pmdsent = pmdlent AND pmdssite = pmdlsite AND pmds006 = pmdldocno
+                        #   AND pmds000 = '1' AND pmdsdocdt BETWEEN l_bdate AND l_edate
+                        #LET l_num2 = 0
+                        #SELECT COUNT(*) INTO l_num2 from pmds_t,pmdl_t,pmdo_t
+                        # WHERE pmdlent = g_enterprise AND pmdlsite = g_site AND pmdl004 = l_pmaa001
+                        #   AND pmdoent = pmdlent AND pmdosite = pmdlsite AND pmdodocno = pmdldocno
+                        #   AND (pmdo009 = '1' OR pmdo009 = '2') AND pmdo012 <= (pmdsdocdt+l_pmbm.pmbm005)
+                        #   AND pmdsent = pmdlent AND pmdssite = pmdlsite AND pmds006 = pmdldocno
+                        #   AND pmds000 = '1' AND pmdsdocdt BETWEEN l_bdate AND l_edate
+                        #160908-00008#1-(E)--mark   
+                        #160908-00008#1-(S)--add
+                        LET l_num1 = 0
+                        SELECT COUNT(*) INTO l_num1
+                         FROM (SELECT pmds_t.*, pmdt_t.pmdt001 from pmds_t, pmdt_t
+                               where pmdsent = pmdtent and pmdsdocno = pmdtdocno
+                                 and pmds000 = '1'     and pmdsdocdt  BETWEEN l_bdate AND l_edate
+                              )A ,pmdl_t,pmdo_t
+                         WHERE pmdlent = g_enterprise AND pmdlsite = g_site   AND pmdl004 = l_pmaa001
+                           AND pmdoent = pmdlent      AND pmdosite = pmdlsite AND pmdodocno = pmdldocno
+                           AND (pmdo009 = '1' OR pmdo009 = '2')
+                           AND A.pmdsent = pmdlent      AND A.pmdssite = pmdlsite
+                           AND A.pmdt001 = pmdldocno
+
+                        LET l_num2 = 0
+                        SELECT COUNT(*) INTO l_num2
+                        FROM (SELECT pmds_t.*, pmdt_t.pmdt001 from pmds_t, pmdt_t
+                               where pmdsent = pmdtent and pmdsdocno = pmdtdocno
+                                 and pmds000 = '1'     and pmdsdocdt  BETWEEN l_bdate AND l_edate
+                              )A ,pmdl_t,pmdo_t
+                         WHERE pmdlent = g_enterprise           AND pmdlsite = g_site   AND pmdl004 = l_pmaa001
+                           AND pmdoent = pmdlent                AND pmdosite = pmdlsite AND pmdodocno = pmdldocno
+                           AND (pmdo009 = '1' OR pmdo009 = '2') AND pmdo012 <= (A.pmdsdocdt+l_pmbm.pmbm005)
+                           AND A.pmdsent = pmdlent              AND A.pmdssite = pmdlsite
+                           AND A.pmdt001 = pmdldocno
+                        #160908-00008#1-(E)--add                           
+                        LET l_pmbr.pmbr007 = l_num2 / l_num1 * 100
+                        
+                     OTHERWISE EXIT CASE
+                  END CASE
+              #價格(採購單)
+               WHEN '3'
+                  LET l_pmbr.pmbr006 = '3'
+                  LET l_cnt = 0
+                  LET l_num1 = 0
+                  LET l_num2 = 0
+                  LET l_pmdn001 = ''
+                  LET l_pmdn015 = 0
+                  LET l_pmdn015_o = 0
+                  OPEN pmdl_cs USING l_pmaa001
+                  FOREACH pmdl_cs INTO l_pmdn001,l_pmdn015
+                     #目標價格類型
+                     CASE l_pmbm.pmbm006
+                        #平均採購單價imai022
+                        WHEN '1'
+                           SELECT imai022 INTO l_pmdn015_o FROM imai_t
+                            WHERE imaient = g_enterprise AND imaisite = g_site AND imai001 = l_pmdn001
+                        #採購市價imai023
+                        WHEN '2'
+                           SELECT imai023 INTO l_pmdn015_o FROM imai_t
+                            WHERE imaient = g_enterprise AND imaisite = g_site AND imai001 = l_pmdn001
+                        OTHERWISE EXIT CASE
+                     END CASE
+                     LET l_num1 = (l_pmdn015-l_pmdn015_o)/l_pmdn015_o
+                     LET l_cnt = l_cnt + 1
+                     LET l_num2 = l_num2 + l_num1
+                     LET l_num1 = 0
+                  END FOREACH
+                  #目標價格類型
+#                  CASE l_pmbm.pmbm006
+#                     #平均採購單價imai022
+#                     WHEN '1'
+#                        OPEN pmdl_1_cs USING l_pmaa001
+#                        FOREACH pmdl_1_cs INTO l_num1
+#                           LET l_cnt = l_cnt + 1
+#                           LET l_num2 = l_num2 + l_num1
+#                           LET l_num1 = 0
+#                        END FOREACH
+#                     #採購市價imai023
+#                     WHEN '2'
+#                        OPEN pmdl_2_cs USING l_pmaa001
+#                        FOREACH pmdl_2_cs INTO l_num1
+#                           LET l_cnt = l_cnt + 1
+#                           LET l_num2 = l_num2 + l_num1
+#                           LET l_num1 = 0
+#                        END FOREACH
+#                     OTHERWISE EXIT CASE
+#                  END CASE
+                  #價格項目得分 = AVG(1-(採購單價格(換算成基礎單位價格) - 目標價格) / 目標價格)*100)
+                  LET l_pmbr.pmbr007 = (1 - l_num2 / l_cnt) * 100
+               OTHERWISE EXIT CASE
+            END CASE
+            
+            #寫入供應商評核項目得分檔
+            LET l_pmbr.pmbr008 = l_pmbr.pmbr007
+            INSERT INTO pmbr_t(pmbrent,pmbrsite,pmbr001,pmbr002,pmbr003,pmbr004,pmbr005,pmbr006,pmbr007,pmbr008,pmbr009,pmbr010)
+                        VALUES(l_pmbr.pmbrent,l_pmbr.pmbrsite,l_pmbr.pmbr001,l_pmbr.pmbr002,l_pmbr.pmbr003,l_pmbr.pmbr004,
+                               l_pmbr.pmbr005,l_pmbr.pmbr006,l_pmbr.pmbr007,l_pmbr.pmbr008,l_pmbr.pmbr009,l_pmbr.pmbr010)
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam.* TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = 'ins pmbr_t'
+               CALL cl_err()
+               LET l_success = FALSE
+            END IF
+
+            LET l_tot_pmbm = l_tot_pmbm + (l_pmbr.pmbr007 * l_pmbm.pmbm003 / 100)
+
+            INITIALIZE l_pmbm.* TO NULL
+         END FOREACH
+         
+         LET l_pmbr.pmbr005 = '2'
+         INITIALIZE l_pmbn.* TO NULL
+         FOREACH pmbn_cs INTO l_pmbn.*
+            
+            LET l_pmbr.pmbr006 = l_pmbn.pmbn002
+            
+            #若同一個定性評核項目有多個評分部門評分時，則取平均分數
+            LET l_pmbr.pmbr007 = ''
+            SELECT (SUM(pmbs003)/COUNT(*)) INTO l_pmbr.pmbr007 FROM pmbp_t,pmbs_t
+             WHERE pmbpent = g_enterprise AND pmbpsite = g_site AND pmbpstus = 'Y'
+               AND pmbp004 = g_master.pmbr001 AND pmbp005 = g_master.pmbr002
+               AND pmbsent = pmbpent AND pmbssite = pmbpsite AND pmbpdocno = pmbsdocno
+               AND pmbs001 = l_pmaa001 AND pmbs002 = l_pmbr.pmbr006
+            IF cl_null(l_pmbr.pmbr007) THEN
+               LET l_pmbr.pmbr007 = 0
+            END IF
+            #寫入供應商評核項目得分檔
+            LET l_pmbr.pmbr008 = l_pmbr.pmbr007
+            INSERT INTO pmbr_t(pmbrent,pmbrsite,pmbr001,pmbr002,pmbr003,pmbr004,pmbr005,pmbr006,pmbr007,pmbr008,pmbr009,pmbr010)
+                        VALUES(l_pmbr.pmbrent,l_pmbr.pmbrsite,l_pmbr.pmbr001,l_pmbr.pmbr002,l_pmbr.pmbr003,l_pmbr.pmbr004,
+                               l_pmbr.pmbr005,l_pmbr.pmbr006,l_pmbr.pmbr007,l_pmbr.pmbr008,l_pmbr.pmbr009,l_pmbr.pmbr010)
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam.* TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = 'ins pmbr_t'
+               CALL cl_err()
+               LET l_success = FALSE
+            END IF
+
+            LET l_tot_pmbn = l_tot_pmbn + (l_pmbr.pmbr007 * l_pmbn.pmbn003 / 100)
+
+            INITIALIZE l_pmbn.* TO NULL
+         END FOREACH
+
+         #該供應商個評核項目的得分乘上權重計算出最後得分將結果寫入到供應商評核綜合總得分檔
+	      LET l_pmbq.pmbq004 = l_pmaa001
+	      LET l_pmbq.pmbq005 = (l_tot_pmbm * l_pmbk.pmbk008 + l_tot_pmbn * l_pmbk.pmbk009)/100
+	      LET l_pmbq.pmbq006 = l_pmbq.pmbq005
+	      #供應商評核類別所定義的得分對應等級
+	      SELECT pmbo002 INTO l_pmbq.pmbq007 FROM pmbo_t
+	       WHERE pmboent = g_enterprise AND pmbosite = g_site AND pmbo001 = g_master.pmbk001
+	         AND pmbo003 <= l_pmbq.pmbq005 AND pmbo004 >= l_pmbq.pmbq005
+	      #依據評核等級所對應的設置的建議處理方式(apmi050的設置)
+	      SELECT oocq004 INTO l_pmbq.pmbq008 FROM oocq_t
+  	       WHERE oocqent = g_enterprise AND oocq001 = '2053' AND oocq002 = l_pmbq.pmbq007
+         INSERT INTO pmbq_t(pmbqent,pmbqsite,pmbq001,pmbq002,pmbq003,pmbq004,pmbq005,pmbq006,pmbq007,pmbq008,pmbq009)
+                     VALUES(l_pmbq.pmbqent,l_pmbq.pmbqsite,l_pmbq.pmbq001,l_pmbq.pmbq002,l_pmbq.pmbq003,l_pmbq.pmbq004,
+                            l_pmbq.pmbq005,l_pmbq.pmbq006,l_pmbq.pmbq007,l_pmbq.pmbq008,l_pmbq.pmbq009)
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam.* TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'ins pmbq_t'
+            CALL cl_err()
+            LET l_success = FALSE
+         END IF
+
+         LET l_pmaa001 = ''
+      END FOREACH
+      
+      LET l_pmbl002 = ''
+   END FOREACH
+
+   IF NOT l_success OR NOT l_tot_success THEN
+      CALL s_transaction_end('N','0')
+   ELSE
+      UPDATE pmbk_t
+         SET pmbk004 = g_master.pmbr001,
+             pmbk005 = g_master.pmbr002
+       WHERE pmbkent = g_enterprise
+         AND pmbksite = g_site
+         AND pmbk001 = g_master.pmbk001
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam.* TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'upd pmbk_t'
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+      END IF
+   END IF
+
+   CALL cl_err_collect_show()
+   CALL s_transaction_end('Y','0')
+
+
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理 name="process.foreground_finish"
+      
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理 name="process.background_finish"
+      
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL apmp150_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp150.get_buffer" >}
+PRIVATE FUNCTION apmp150_get_buffer(p_dialog)
+ 
+   #add-point:process段define (客製用) name="get_buffer.define_customerization"
+   
+   #end add-point
+   DEFINE p_dialog   ui.DIALOG
+   #add-point:process段define name="get_buffer.define"
+   
+   #end add-point
+ 
+   
+   LET g_master.pmbk001 = p_dialog.getFieldBuffer('pmbk001')
+   LET g_master.pmbr001 = p_dialog.getFieldBuffer('pmbr001')
+   LET g_master.pmbr002 = p_dialog.getFieldBuffer('pmbr002')
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理 name="get_buffer.others"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp150.msgcentre_notify" >}
+PRIVATE FUNCTION apmp150_msgcentre_notify()
+ 
+   #add-point:process段define (客製用) name="msgcentre_notify.define_customerization"
+   
+   #end add-point
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:process段define name="msgcentre_notify.define"
+   
+   #end add-point
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知 name="msg_centre.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp150.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+#end add-point
+ 
+{</section>}
+ 

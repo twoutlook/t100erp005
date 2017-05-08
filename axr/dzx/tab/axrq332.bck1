@@ -1,0 +1,83 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrq332" module="axr" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="02114" crtdt="2014-04-15 14:06:29" modid="02599" moddt="2015-12-04 10:48:15" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="發票應收查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),isaf002,isaf002_desc(chr500),isaf008,isaf008_desc(chr500),isaf010,isaf011,isaf014,isaf016,isaf016_desc(chr500),isaf018,isaf103,isaf104,isaf105,isaf036,isafdocno,isafcomp,isaf001"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),isaf002(b_isaf002),isaf002_desc(b_isaf002_desc),isaf008(b_isaf008),isaf008_desc(b_isaf008_desc),isaf010(b_isaf010),isaf011(b_isaf011),isaf014(b_isaf014),isaf016(b_isaf016),isaf016_desc(b_isaf016_desc),isaf018(b_isaf018),isaf103(b_isaf103),isaf104(b_isaf104),isaf105(b_isaf105),isaf036(b_isaf036),isafdocno(b_isafdocno),isafcomp(b_isafcomp),isaf001(b_isaf001)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axrq332" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="isaf002,isaf008,isaf010,isaf011,isaf014,isaf016,isaf018,isaf103,isaf104,isaf105,isaf036,isafdocno,isafcomp,isaf001" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="isaf002(b_isaf002),isaf008(b_isaf008),isaf010(b_isaf010),isaf011(b_isaf011),isaf014(b_isaf014),isaf016(b_isaf016),isaf018(b_isaf018),isaf103(b_isaf103),isaf104(b_isaf104),isaf105(b_isaf105),isaf036(b_isaf036),isafdocno(b_isafdocno),isafcomp(b_isafcomp),isaf001(b_isaf001)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="isaf002">
+        <after>
+          <check chkid="v_pmaa001_2" id="isExist"/>
+          <reference field="isaf002_desc" ref_field="isaf002" map_field="isafent,isaf002" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001" state="i"/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="isaf002_desc"/>
+      <column id="isaf008">
+        <after>
+          <check chkid="v_isac002_2" id="isExist"/>
+        </after>
+        <controlp form="q_isac002" state="i"/>
+        <controlp form="q_isac002" state="c"/>
+      </column>
+      <column id="isaf008_desc"/>
+      <column id="isaf010"/>
+      <column id="isaf011"/>
+      <column id="isaf014"/>
+      <column id="isaf016">
+        <after>
+          <check chkid="v_oodb002_2" id="isExist"/>
+        </after>
+        <controlp form="q_oodb002_6" state="i"/>
+        <controlp form="q_oodb002_6" state="c"/>
+      </column>
+      <column id="isaf016_desc"/>
+      <column id="isaf018"/>
+      <column id="isaf103"/>
+      <column id="isaf104"/>
+      <column id="isaf105"/>
+      <column id="isaf036" type="S" default="N"/>
+      <column id="isafdocno">
+        <after>
+          <check chkid="v_ooba002" id="isExist"/>
+        </after>
+        <controlp form="q_ooba002" state="i"/>
+        <controlp form="q_isafdocno" state="c"/>
+      </column>
+      <column id="isafcomp"/>
+      <column id="isaf001" type="S" default="1" def_scc="9715"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="isaf_t" page="1" linked="" pk="isafcomp,isafdocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,isaf002,&apos;&apos;,isaf008,&apos;&apos;,isaf010,isaf011,isaf014,isaf016,&apos;&apos;,isaf018,isaf103,isaf104,isaf105,isaf036,isafdocno,isafcomp,isaf001 FROM isaf_t WHERE isafent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

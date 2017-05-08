@@ -1,0 +1,106 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axri201" module="axr" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="01727" crtdt="2015-05-05 09:18:39" modid="01727" moddt="2015-05-11 14:22:27" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="零售差異科目依帳套設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glabld,glabld_desc(chr80),glaacomp_desc(chr80),glab001,glab004,glab004_desc(chr80),glab002"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glab003,glab003_desc(chr500),glab005,glab005_desc(chr500),glab011,glab006,glab007,glab008,glab009,glab010"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axri201" method="dialog">
+    <section id="input">
+      <input id="head" field="glabld,glab001,glab004,glab002"/>
+      <input id="body" page="1" field="glab003,glab005,glab011,glab006,glab007,glab008,glab009,glab010" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="glabld,glaacomp_desc,glab001,glab004,glab004_desc,glab002"/>
+      <construct id="body" page="1" field="glab003,glab005,glab011,glab006,glab007,glab008,glab009,glab010"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="glabld,glab001,glab002"/>
+      <set id="head" type="no_entry" field="glabld,glab001,glab002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="glabld">
+        <after>
+          <check chkid="v_glaald_2" id="isExist"/>
+          <reference field="glabld_desc" ref_field="glab_t.glabld" map_field="glabent,glabld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_glaald_03" state="i"/>
+        <controlp form="q_glaald_03" state="c"/>
+      </column>
+      <column id="glabld_desc"/>
+      <column id="glaacomp_desc"/>
+      <column id="glab001" type="S" default="13"/>
+      <column id="glab004">
+        <after/>
+      </column>
+      <column id="glab004_desc"/>
+      <column id="glab002" type="S" default="6736"/>
+    </init>
+    <init id="body" page="1">
+      <column id="glab003">
+        <after>
+          <reference field="glab003_desc" ref_field="glab002,glab003" map_field="glab002,glab003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=? AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmaj001" state="i"/>
+        <controlp form="q_nmaj001" state="c"/>
+      </column>
+      <column id="glab003_desc"/>
+      <column id="glab005">
+        <after>
+          <check chkid="v_glac002_3" id="isExist"/>
+          <reference field="glab005_desc" ref_field="glab004,glab005" map_field="glab004,glab005" ref_sql="SELECT glacl004 FROM glacl_t WHERE glaclent=$varg_enterprise$var AND glacl001=? AND glacl002=? AND glacl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_glac002" state="i"/>
+        <controlp form="q_glac002" state="c"/>
+      </column>
+      <column id="glab005_desc"/>
+      <column id="glab011" type="S" default="1" def_scc="8315"/>
+      <column id="glab006">
+        <controlp form="q_glac002_4" state="i"/>
+        <controlp form="q_glac002_4" state="c"/>
+      </column>
+      <column id="glab007">
+        <controlp form="q_glac002_4" state="i"/>
+        <controlp form="q_glac002_4" state="c"/>
+      </column>
+      <column id="glab008">
+        <controlp form="q_glac002_4" state="i"/>
+        <controlp form="q_glac002_4" state="c"/>
+      </column>
+      <column id="glab009">
+        <controlp form="q_glac002_4" state="i"/>
+        <controlp form="q_glac002_4" state="c"/>
+      </column>
+      <column id="glab010">
+        <controlp form="q_nmad002" state="i"/>
+        <controlp form="q_nmad002" state="c"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="glab_t" pk="glabld,glab001,glab002">
+      <sql id="forupd_sql" type="sql" query="SELECT glabld,&apos;&apos;,&apos;&apos;,glab001,glab004,&apos;&apos;,glab002 FROM glab_t WHERE glabent= ? AND glabld=? AND glab001=? AND glab002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT glabld,&apos;&apos;,&apos;&apos;,glab001,glab004,&apos;&apos;,glab002 FROM glab_t" order="glabld,glab001,glab002"/>
+    </head>
+    <body id="glab_t" page="1" linked="" pk="glab003" fk="glabld,glab001,glab002">
+      <sql id="forupd_sql_detail" query="SELECT glab003,&apos;&apos;,glab005,&apos;&apos;,glab011,glab006,glab007,glab008,glab009,glab010 FROM glab_t WHERE glabent=? AND glabld=? AND glab001=? AND glab002=? AND glab003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glab003,&apos;&apos;,glab005,&apos;&apos;,glab011,glab006,glab007,glab008,glab009,glab010 FROM glab_t WHERE glabent= ? AND glabld=? AND glab001=? AND glab002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

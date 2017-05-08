@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asrr801_g01" module="asr" jobmode="N" type="g01" industry="std" crtid="05423" crtdt="2015-01-20 16:40:41" modid="05384" moddt="2016-10-20 16:08:38" sdver="4" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.pr(chr2|pr)">
+    <var seq="1" value="srca001,l_srca001_desc(srza002|NULL),srca004,imaal_t_imaal003(imaal003|imaal_t.imaal003),imaal_t_imaal004(imaal004|imaal_t.imaal004),srca906,srca005,srca006,srca002,srca900,srca902,srca905,l_srca905_desc(oocql004|NULL),srcaent,srcc007,l_show(chr2|NULL),srcc901,l_srcc901_desc(chr50|NULL),srcc906,l_srcc906_show(chr2|NULL),srcc008,srcc009,l_srcc008_srcc009(chr80|trim(srcc008)||&apos;/&apos;||trim(srcc009)),l_srcc008_desc(chr50|NULL),srcc010,l_srcc010_desc(chr50|NULL),srcc011,srcc012,srcc013,l_srcc012_srcc013(chr80|trim(srcc012)||&apos;/&apos;||trim(srcc013)),l_srcc012_desc(chr50|NULL),srcc905,l_srcc905_desc(chr80|NULL),srcc014,srcc015,l_srcc014_srcc015(chr80|trim(srcc014)||&apos;/&apos;||trim(srcc015)),l_srcc014_desc(chr50|NULL),srcc016,l_srcc016_desc(chr30|NULL),srcc017,srcc018,srcc019,srcc020,srcc036,srcc037,l_srcc036_srcc037(chr50|trim(srcc036)||&apos;/&apos;||trim(srcc037)),l_srcc037_desc(chr80|NULL),srcc021,srcc022,srcc023,srcc024,srcc026,srcc025,srcc046,srcc027,srcc047,srcc048,l_srcc047_srcc048(chr50|trim(srcc047)||&apos;/&apos;||trim(srcc048)),srcc028,srcc029,l_srcc028_srcc029(chr50|trim(srcc028)||&apos;/&apos;||trim(srcc029)),l_srcc047(srcc047|NULL),srca000,srcasite,l_srca002_desc(ecba003|NULL),l_key(chr100|NULL)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="srca001,l_srca001_desc(srza002|NULL),srca004,imaal_t_imaal003(imaal003|imaal_t.imaal003),imaal_t_imaal004(imaal004|imaal_t.imaal004),srca906,srca005,srca006,srca002,srca900,srca902,srca905,l_srca905_desc(oocql004|NULL),srcaent,srcc007,l_show(chr2|NULL),srcc901,l_srcc901_desc(chr50|NULL),srcc906,l_srcc906_show(chr2|NULL),srcc008,srcc009,l_srcc008_srcc009(chr80|trim(srcc008)||&apos;/&apos;||trim(srcc009)),l_srcc008_desc(chr50|NULL),srcc010,l_srcc010_desc(chr50|NULL),srcc011,srcc012,srcc013,l_srcc012_srcc013(chr80|trim(srcc012)||&apos;/&apos;||trim(srcc013)),l_srcc012_desc(chr50|NULL),srcc905,l_srcc905_desc(chr80|NULL),srcc014,srcc015,l_srcc014_srcc015(chr80|trim(srcc014)||&apos;/&apos;||trim(srcc015)),l_srcc014_desc(chr50|NULL),srcc016,l_srcc016_desc(chr30|NULL),srcc017,srcc018,srcc019,srcc020,srcc036,srcc037,l_srcc036_srcc037(chr50|trim(srcc036)||&apos;/&apos;||trim(srcc037)),l_srcc037_desc(chr80|NULL),srcc021,srcc022,srcc023,srcc024,srcc026,srcc025,srcc046,srcc027,srcc047,srcc048,l_srcc047_srcc048(chr50|trim(srcc047)||&apos;/&apos;||trim(srcc048)),srcc028,srcc029,l_srcc028_srcc029(chr50|trim(srcc028)||&apos;/&apos;||trim(srcc029)),l_srcc047(srcc047|NULL),srca000,srcasite,l_srca002_desc(ecba003|NULL),l_key(chr100|NULL)"/>
+    <sql id="g_from" query="srca_t,srcc_t,imaal_t"/>
+    <sql id="g_where" query="" maintable="srca_t"/>
+    <sql id="g_order" query="srca001,srca002,srcc007"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="l_key,srcc007"/>
+    <section id="b_group" reptype="d01">
+      <rep type="l_key" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="srcaent,l_key"/>
+      <rep type="srcc007"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="srcaent,l_key,srcc007"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="srcaent,l_key,srcc007"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="l_key" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="srcaent,l_key"/>
+      <rep type="srcc007"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

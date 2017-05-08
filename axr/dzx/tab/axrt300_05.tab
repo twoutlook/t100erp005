@@ -1,0 +1,153 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrt300_05" module="axr" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="02599" crtdt="2015-12-07 10:21:38" modid="02291" moddt="2016-03-04 14:54:43" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="直接收款">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xrde001,xrdesite,xrdeld,xrdedocno,xrdeseq,xrdeorga,xrdeorga_desc(chr500),xrde002,xrde006,xrde003,xrde004,xrde008,lc_xrde008(chr20),xrde032,xrde015,xrde100,xrde101,xrde109,xrde119,xrde010,xrde016,xrde016_desc(chr500),xrde011,xrde011_desc(chr500),xrde012,xrde012_desc(chr500),xrde028,xrdecomp"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xrdedocno,xrdeld,xrdeseq,xrdeorga,xrdeorga_2_desc(chr500),xrde002,xrde006,xrde008,xrde100,xrde101,xrde109,xrde119,xrde120,xrde121,xrde129,xrde130,xrde131,xrde139"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="xrdedocno,xrdeld,xrdeseq,xrde010,xrde016,xrde016_3_desc(chr500),xrde017,xrde017_desc(chr500),xrde018,xrde018_desc(chr500),xrde019,xrde019_desc(chr500),xrde020,xrde020_desc(chr500),xrde022,xrde023"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axrt300_05" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="xrde001,xrdesite,xrdeld,xrdedocno,xrdeseq,xrdeorga,xrde002,xrde006,xrde003,xrde004,xrde008,lc_xrde008,xrde032,xrde015,xrde100,xrde101,xrde109,xrde119,xrde010,xrde016,xrde011,xrde012,xrdecomp" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="xrde120,xrde121,xrde129,xrde130,xrde131,xrde139" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="xrde017,xrde018,xrde019,xrde020,xrde022,xrde023" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="xrde001,xrdesite,xrdeld,xrdedocno,xrdeseq,xrdeorga,xrde002,xrde006,xrde003,xrde004,xrde008,lc_xrde008,xrde032,xrde015,xrde100,xrde101,xrde109,xrde119,xrde010,xrde016,xrde016_desc,xrde011,xrde011_desc,xrde012,xrde012_desc,xrdecomp"/>
+      <construct id="body" page="2" field="xrde120,xrde121,xrde129,xrde130,xrde131,xrde139"/>
+      <construct id="body" page="3" field="xrde016_3_desc,xrde017,xrde018,xrde019,xrde020,xrde022,xrde023"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="xrde001"/>
+      <column id="xrdesite"/>
+      <column id="xrdeld"/>
+      <column id="xrdedocno"/>
+      <column id="xrdeseq"/>
+      <column id="xrdeorga">
+        <after>
+          <reference field="xrdeorga_desc" ref_field="xrde_t.xrdeorga" map_field="xrdeorga" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="xrdeorga_desc"/>
+      <column id="xrde002" type="S" default="10"/>
+      <column id="xrde006" type="S" default="10"/>
+      <column id="xrde003"/>
+      <column id="xrde004"/>
+      <column id="xrde008">
+        <controlp form="q_nmas_01" state="i"/>
+        <controlp form="q_nmas_01" state="c"/>
+      </column>
+      <column id="lc_xrde008">
+        <controlp form="q_nmas_01" state="i"/>
+        <controlp form="q_nmas_01" state="c"/>
+      </column>
+      <column id="xrde032"/>
+      <column id="xrde015"/>
+      <column id="xrde100">
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="xrde101"/>
+      <column id="xrde109" type="S" default="0"/>
+      <column id="xrde119" type="S" default="0"/>
+      <column id="xrde010"/>
+      <column id="xrde016">
+        <after/>
+        <controlp form="aglt310_04" state="i"/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="xrde016_desc"/>
+      <column id="xrde011">
+        <after/>
+        <controlp form="q_nmaj001" state="i"/>
+        <controlp form="q_nmaj001" state="c"/>
+      </column>
+      <column id="xrde011_desc"/>
+      <column id="xrde012">
+        <after/>
+        <controlp form="q_nmai002" state="i"/>
+        <controlp form="q_nmai002" state="c"/>
+      </column>
+      <column id="xrde012_desc"/>
+      <column id="xrde028"/>
+      <column id="xrdecomp"/>
+    </init>
+    <init id="body" page="2">
+      <column id="xrdeorga_2_desc"/>
+      <column id="xrde120"/>
+      <column id="xrde121"/>
+      <column id="xrde129" type="S" default="0"/>
+      <column id="xrde130"/>
+      <column id="xrde131"/>
+      <column id="xrde139" type="S" default="0"/>
+    </init>
+    <init id="body" page="3">
+      <column id="xrde016_3_desc"/>
+      <column id="xrde017">
+        <after>
+          <reference field="xrde017_desc" ref_field="xrde_t.xrde017" map_field="xrde017" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_8" state="i"/>
+        <controlp form="q_ooag001_8" state="c"/>
+      </column>
+      <column id="xrde017_desc"/>
+      <column id="xrde018">
+        <after>
+          <reference field="xrde018_desc" ref_field="xrde_t.xrde018" map_field="xrde018" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_4" state="i"/>
+        <controlp form="q_ooeg001_4" state="c"/>
+      </column>
+      <column id="xrde018_desc"/>
+      <column id="xrde019">
+        <after>
+          <reference field="xrde019_desc" ref_field="xrde_t.xrde019" map_field="xrde019" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_5" state="i"/>
+      </column>
+      <column id="xrde019_desc"/>
+      <column id="xrde020">
+        <after>
+          <reference field="xrde020_desc" ref_field="xrde_t.xrde020" map_field="xrde020" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001" state="i"/>
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="xrde020_desc"/>
+      <column id="xrde022">
+        <controlp form="q_pjba001" state="i"/>
+        <controlp form="q_pjba001" state="c"/>
+      </column>
+      <column id="xrde023">
+        <controlp form="q_pjbb002" state="i"/>
+        <controlp form="q_pjbb002" state="c"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <body id="xrde_t" page="1,2,3" linked="" pk="xrdeld,xrdedocno,xrdeseq">
+      <sql id="forupd_sql_detail" query="SELECT xrde001,xrdesite,xrdeld,xrdedocno,xrdeseq,xrdeorga,&apos;&apos;,xrde002,xrde006,xrde003,xrde004,xrde008,&apos;&apos;,xrde032,xrde015,xrde100,xrde101,xrde109,xrde119,xrde010,xrde016,&apos;&apos;,xrde011,&apos;&apos;,xrde012,&apos;&apos;,xrde028,xrdecomp,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xrde120,xrde121,xrde129,xrde130,xrde131,xrde139,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xrde017,&apos;&apos;,xrde018,&apos;&apos;,xrde019,&apos;&apos;,xrde020,&apos;&apos;,xrde022,xrde023 FROM xrde_t WHERE xrdeent=? AND xrdeld=? AND xrdedocno=? AND xrdeseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xrde001,xrdesite,xrdeld,xrdedocno,xrdeseq,xrdeorga,&apos;&apos;,xrde002,xrde006,xrde003,xrde004,xrde008,&apos;&apos;,xrde032,xrde015,xrde100,xrde101,xrde109,xrde119,xrde010,xrde016,&apos;&apos;,xrde011,&apos;&apos;,xrde012,&apos;&apos;,xrde028,xrdecomp,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xrde120,xrde121,xrde129,xrde130,xrde131,xrde139,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xrde017,&apos;&apos;,xrde018,&apos;&apos;,xrde019,&apos;&apos;,xrde020,&apos;&apos;,xrde022,xrde023 FROM xrde_t WHERE xrdeent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

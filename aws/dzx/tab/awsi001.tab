@@ -1,0 +1,92 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="awsi001" module="aws" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="07391" crtdt="2015-08-20 17:45:04" modid="07391" moddt="2015-08-20 17:45:04" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="整合產品維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="wsecstus,wsec001,wsecl003"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="wsec001,wsecownid,wsecownid_desc(chr500),wsecowndp,wsecowndp_desc(chr500),wseccrtid,wseccrtid_desc(chr500),wseccrtdp,wseccrtdp_desc(chr500),wseccrtdt,wsecmodid,wsecmodid_desc(chr500),wsecmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="aws" filename="awsi001" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="wsecstus,wsec001,wsecl003" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="wsecstus,wsec001,wsecl003"/>
+      <construct id="body" page="2" field="wsecownid,wsecowndp,wseccrtid,wseccrtdp,wseccrtdt,wsecmodid,wsecmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="wsecstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="wsec001"/>
+      <column id="wsecl003"/>
+    </init>
+    <init id="body" page="2">
+      <column id="wsecownid">
+        <after>
+          <reference field="wsecownid_desc" ref_field="wsec_t.wsecownid" map_field="wsecownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="wsecownid_desc"/>
+      <column id="wsecowndp">
+        <after>
+          <reference field="wsecowndp_desc" ref_field="wsec_t.wsecowndp" map_field="wsecowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="wsecowndp_desc"/>
+      <column id="wseccrtid">
+        <after>
+          <reference field="wseccrtid_desc" ref_field="wsec_t.wseccrtid" map_field="wseccrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="wseccrtid_desc"/>
+      <column id="wseccrtdp">
+        <after>
+          <reference field="wseccrtdp_desc" ref_field="wsec_t.wseccrtdp" map_field="wseccrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="wseccrtdp_desc"/>
+      <column id="wseccrtdt"/>
+      <column id="wsecmodid">
+        <after>
+          <reference field="wsecmodid_desc" ref_field="wsec_t.wsecmodid" map_field="wsecmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="wsecmodid_desc"/>
+      <column id="wsecmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="wsec_t" page="1,2" linked="" pk="wsec001">
+      <sql id="forupd_sql_detail" query="SELECT wsecstus,wsec001,&apos;&apos;,&apos;&apos;,wsecownid,&apos;&apos;,wsecowndp,&apos;&apos;,wseccrtid,&apos;&apos;,wseccrtdp,&apos;&apos;,wseccrtdt,wsecmodid,&apos;&apos;,wsecmoddt FROM wsec_t WHERE wsec001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT wsecstus,wsec001,&apos;&apos;,&apos;&apos;,wsecownid,&apos;&apos;,wsecowndp,&apos;&apos;,wseccrtid,&apos;&apos;,wseccrtdp,&apos;&apos;,wseccrtdt,wsecmodid,&apos;&apos;,wsecmoddt FROM wsec_t WHERE 1=1 "/>
+      <sql id="detail_append" type="lang" target="wsecl_t.wsecl003" table="wsecl_t" fk="wsec001" pk="wsecl001,wsecl002" field="wsecl003"/>
+    </body>
+  </dataset>
+</assembly>
+

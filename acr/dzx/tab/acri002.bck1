@@ -1,0 +1,137 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="acri002" module="acr" jobmode="N" type="t02" industry="std" fix_arg="0" crtid="04226" crtdt="2014-04-25 11:34:52" modid="06189" moddt="2015-01-15 10:53:59" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="潛在客戶等級資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="oocqstus,oocq001,oocq001_desc(chr500),oocq002,oocql004(chr500),oocql005(chr500),oocq014,oocq011,oocq012,oocq013"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="oocq001,oocq002,oocqownid,oocqownid_desc(chr500),oocqowndp,oocqowndp_desc(chr500),oocqcrtid,oocqcrtid_desc(chr500),oocqcrtdp,oocqcrtdp_desc(chr500),oocqcrtdt,oocqmodid,oocqmodid_desc(chr500),oocqmoddt"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="crae003,crae003_desc(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="3">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="acr" filename="acri002" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="oocqstus,oocq001,oocq002,oocql004,oocql005,oocq014,oocq011,oocq012,oocq013" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="crae003" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="oocqstus,oocq001,oocq002,oocql004,oocql005,oocq014,oocq011,oocq012,oocq013"/>
+      <construct id="body" page="2" field="oocqownid,oocqowndp,oocqcrtid,oocqcrtdp,oocqcrtdt,oocqmodid,oocqmoddt"/>
+      <construct id="body" page="3" field="crae003"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="oocqstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="oocq001" type="S" default="3114">
+        <after>
+          <check id="range" st="30000.000" st_type="0" errno="azz-00087" bt="1.000" bt_type="0" ow="1"/>
+          <reference field="oocq001_desc" ref_field="oocq_t.oocq001" map_field="oocq001" ref_sql="SELECT gzaal003 FROM gzaal_t WHERE gzaal001=? AND gzaal002=$varg_lang$var"/>
+        </after>
+      </column>
+      <column id="oocq001_desc"/>
+      <column id="oocq002">
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="oocql004"/>
+      <column id="oocql005"/>
+      <column id="oocq014" type="S" default="N"/>
+      <column id="oocq011">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="oocq012">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="oocq013">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="oocqownid">
+        <after>
+          <reference field="oocqownid_desc" ref_field="oocq_t.oocqownid" map_field="oocqownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oocqownid_desc"/>
+      <column id="oocqowndp">
+        <after>
+          <reference field="oocqowndp_desc" ref_field="oocq_t.oocqowndp" map_field="oocqowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oocqowndp_desc"/>
+      <column id="oocqcrtid">
+        <after>
+          <reference field="oocqcrtid_desc" ref_field="oocq_t.oocqcrtid" map_field="oocqcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oocqcrtid_desc"/>
+      <column id="oocqcrtdp">
+        <after>
+          <reference field="oocqcrtdp_desc" ref_field="oocq_t.oocqcrtdp" map_field="oocqcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oocqcrtdp_desc"/>
+      <column id="oocqcrtdt"/>
+      <column id="oocqmodid">
+        <after>
+          <reference field="oocqmodid_desc" ref_field="oocq_t.oocqmodid" map_field="oocqmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oocqmodid_desc"/>
+      <column id="oocqmoddt"/>
+    </init>
+    <init id="body" page="3">
+      <column id="crae003">
+        <after>
+          <reference field="crae003_desc" ref_field="crae003" map_field="crae003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2057&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="crae003_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="oocq_t" page="1,2" linked="" pk="oocq001,oocq002">
+      <sql id="forupd_sql_detail" query="SELECT oocqstus,oocq001,&apos;&apos;,oocq002,&apos;&apos;,&apos;&apos;,oocq014,oocq011,oocq012,oocq013,&apos;&apos;,&apos;&apos;,oocqownid,&apos;&apos;,oocqowndp,&apos;&apos;,oocqcrtid,&apos;&apos;,oocqcrtdp,&apos;&apos;,oocqcrtdt,oocqmodid,&apos;&apos;,oocqmoddt FROM oocq_t WHERE oocqent=? AND oocq001=? AND oocq002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT oocqstus,oocq001,&apos;&apos;,oocq002,&apos;&apos;,&apos;&apos;,oocq014,oocq011,oocq012,oocq013,&apos;&apos;,&apos;&apos;,oocqownid,&apos;&apos;,oocqowndp,&apos;&apos;,oocqcrtid,&apos;&apos;,oocqcrtdp,&apos;&apos;,oocqcrtdt,oocqmodid,&apos;&apos;,oocqmoddt FROM oocq_t WHERE oocqent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="oocql004,oocql005" table="oocql_t" fk="&apos;2105&apos;,oocq002" pk="oocql001,oocql002,oocql003" field="oocql004,oocql005"/>
+    </body>
+    <body id="crae_t" page="3" linked="" pk="crae003" fk="crae001,crae002" detail="Y">
+      <sql id="forupd_sql_detail" query="SELECT crae003,&apos;&apos; FROM crae_t WHERE craeent=? AND crae001=? AND crae002=? AND crae003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT crae003,&apos;&apos; FROM crae_t WHERE craeent=? AND crae001=? AND crae002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

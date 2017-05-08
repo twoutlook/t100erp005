@@ -1,0 +1,543 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="afat420" std_prog="afat420" erpver="1.0" ver="5" module="AFA" type="M" booking="Y" designer_ver="1.0" class="t" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="fabe_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status=""/>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 资产变更维护作业
+作業功能：新增/修改/刪除/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：基础资料維護作業
+輸入模式：单檔（）F001_00
+作業資料來源(Master)
+ 資料來源表
+
+财产编号资产状态排除已销帐,出售，取得，停用，类型的已审核的
+1.新增
+  (1)錄入,卡片编号或财产编号后自動帶出該财产编号全部資料顯示在畫面,写入fabe_t
+  (2)錄入完畢點確定時，將資料保存至资产變更相關檔案，写入fabe_t
+        
+  (3)錄入完畢點確定時，若畫面欄位值與资产faah_T對應檔案欄位值不一樣，需更新【T:资产變更歷程檔】
+    
+2.修改
+  (1)錄入完畢點確定時，將資料保存至资产變更相關檔案：
+  (2)錄入完畢點確定時，若畫面欄位值與财产對應檔案欄位值不一樣，需更新【T:资产變更歷程檔】
+  (3)錄入完畢點確定時，若畫面欄位值與财产對應檔案欄位值相同但資料存在于【T:资产變更歷程檔】，需將【T:资产變更歷程檔】資料清除
+     例：新增變更單時，將數量由100調整為200，【T:资产變更歷程檔】會記錄一筆異動記錄
+         修改這張變更單，將數量由200再調整為100，此時仍需要與原财产编号比對，數量與原工單一致，所以【T:财产變更歷程檔】中的異動記錄應刪除
+
+3.刪除
+  刪除時按卡片编号+财产编号+附号+變更序刪除财产變更相關檔案及變更歷程檔：
+4.確認
+  單據確認時將有發生變更的欄位更新至财产主档相關檔案：
+   
+5.取消確認
+
+6.顯示
+   (1)透過[T:變更歷程檔]判斷哪些欄位有變更過，將變更過欄位內容值用紅色顯示
+   (2)滑鼠停在變更過的欄位上，會浮出comment顯示變更前的值（调用函数s_show_hint）
+
+
+1，存檔前需以財編號碼去資料庫找是否已存在,若是則需再重編財編號碼
+
+after field :財編+附號是否重複
+
+]]>
+  </all>
+  <field cite_std="N" name="fabe_t.fabe000" ver="1" src="s" column="fabe000" table="fabe_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe001" ver="1" src="s" column="fabe001" table="fabe_t" attribute="" type="" req="Y" i_zoom="q_faah001" c_zoom="q_faah001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：卡片編號
+   ●欄位控管：
+     資料欄位:[T:資產變更資料檔].[C:卡片編號]/可input及Display
+     預設值:無
+     校驗: 1.不允許空白
+           2.輸入的資料需存在于[固定資產維護作業afai100]中,若不存在,則報資料不存在的錯
+           3.輸入的資料需存[固定資產維護作業afai100]中已確認,若未確認,則報資料未確認的錯
+           4.财产编号资产状态排除已销帐,出售，取得，停用，类型的已审核的]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe002" ver="1" src="s" column="fabe002" table="fabe_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：類型
+   ●欄位控管：
+     資料欄位:[T:資產變更資料檔].[C:類型]/可input及Display
+     預設值:1
+     校驗: 1.不允許空白
+     下接選項：SCC = 9911]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe003" ver="1" src="s" column="fabe003" table="fabe_t" attribute="" type="" req="Y" i_zoom="q_faah003" c_zoom="q_faah003" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：財產編號
+   ●欄位控管：
+     資料欄位:[T:資產變更資料檔].[C:財產編號]/可input及Display
+     預設值:無
+     校驗: 1.不允許空白
+           2.輸入的資料需存在于[固定資產維護作業afai100]中,若不存在,則報資料不存在的錯
+           3.輸入的資料需存[固定資產維護作業afai100]中已確認,若未確認,則報資料未確認的錯
+           4.财产编号资产状态排除已销帐,出售，取得，停用，类型的已审核的]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe004" ver="2" src="s" column="fabe004" table="fabe_t" attribute="" type="" req="N" i_zoom="q_faah004" c_zoom="q_faah004" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：附號
+   ●欄位控管：
+     資料欄位:[T:資產變更資料檔].[C:附號]/可input及Display
+     預設值:無
+     校驗: 1.不允許空白
+           2.輸入的資料需存在于[固定資產維護作業afai100]中,若不存在,則報資料不存在的錯
+           3.輸入的資料需存[固定資產維護作業afai100]中已確認,若未確認,則報資料未確認的錯
+           4.财产编号资产状态排除已销帐,出售，取得，停用，类型的已审核的]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe005" ver="1" src="s" column="fabe005" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：資產性質
+   ●欄位控管：
+     資料欄位:[T:資產變更資料檔].[C:資產性質]/可input及Display
+     預設值:1
+     校驗: 1.不允許空白
+     下接選項：SCC = 9903]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe006" ver="1" src="s" column="fabe006" table="fabe_t" attribute="" type="" req="Y" i_zoom="q_faac001" c_zoom="q_faac001" chk_ref="v_faac001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：主要類型
+   ●欄位控管：
+     資料欄位:[T:資產變更資料檔].[C:主要類型]/可input及Display
+     預設值:無
+     校驗: 1.不允許空白
+           2.輸入資料需存在于固定資產主要類型維護作業[afai020]中,若不存在,則報資料不存在的錯
+           3.輸入的資料必須在固定資產主要類型維護作業[afai020]中有效,若無效,則報資料無效的錯
+     帶值:輸入資產類別後,自動帶出該類別之相關欄位]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe007" ver="3" src="s" column="fabe007" table="fabe_t" attribute="" type="" req="N" i_zoom="q_faad001" c_zoom="q_faad001" chk_ref="v_faad001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：次要類型
+   ●欄位控管：
+     資料欄位:[T:資產變更資料檔].[C:次要類型]/可input及Display
+     預設值:無
+     校驗: 1.不允許空白
+           2.輸入資料需存在于固定資產次要類型維護作業[afai030]中,若不存在,則報資料不存在的錯
+           3.輸入的資料必須在固定資產次要類型維護作業[afai030]中有效,若無效,則報資料無效的錯]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe008" ver="1" src="s" column="fabe008" table="fabe_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="v_oocq002_3903" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：資產組
+   ●欄位控管：
+     資料欄位:[T:資產變更資料檔].[C:資產組]/可input及Display
+     預設值:無
+     校驗: 1.允許空白
+           2.輸入資料需存在于資產組維護作業[afai110]中,若不存在,則報資料不存在的錯
+           3.輸入的資料必須在資產組維護作業[afai110]中有效,若無效,則報資料無效的錯]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe009" ver="2" src="s" column="fabe009" table="fabe_t" attribute="" type="" req="N" i_zoom="q_pmaa001_10" c_zoom="q_pmaa001_10" chk_ref="v_pmaa001_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：供應廠商
+   ●欄位控管：
+     資料欄位:[T:資產變更資料檔].[C:供應廠商]/可input及Display
+     預設值:無
+     校驗: 1.不允許空白
+           2.输入的资料必須存在交易對象維護作業[apmm100]中,若不存在,則報資料不存在的錯
+           3.輸入的資料必須在交易對象維護作業[apmm100]中有效,若無效,則報資料無效的錯]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe010" ver="2" src="s" column="fabe010" table="fabe_t" attribute="" type="" req="N" i_zoom="q_pmaa001_5" c_zoom="q_pmaa001_5" chk_ref="v_pmaa001_2" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：製造廠商
+   ●欄位控管：
+     資料欄位:[T:資產變更資料檔].[C:製造廠商]/可input及Display
+     預設值:無
+     校驗: 1.不允許空白
+           2.输入的资料必須存在交易對象維護作業[apmm100]中,若不存在,則報資料不存在的錯
+           3.輸入的資料必須在交易對象維護作業[apmm100]中有效,若無效,則報資料無效的錯]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe011" ver="1" src="s" column="fabe011" table="fabe_t" attribute="" type="" req="N" i_zoom="q_oocg001" c_zoom="q_oocg001" chk_ref="v_oocg001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：產地
+   ●欄位控管：
+     資料欄位:[T:資產變更資料檔].[C:產地]/可input及Display
+     預設值:無
+     校驗: 1.不允許空白
+           2.输入的资料必須存在國家地區維護作業[aooi020]中,若不存在,則報資料不存在的錯
+           3.輸入的資料必須在國家地區維護作業[aooi020]中有效,若無效,則報資料無效的錯]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe012" ver="1" src="s" column="fabe012" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe013" ver="1" src="s" column="fabe013" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe014" ver="1" src="s" column="fabe014" table="fabe_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[欄位名稱：取得日期
+   ●欄位控管：
+     資料欄位:[T:資產變更資料檔].[C:取得日期]/可Display
+     預設值:無
+     校驗: 1.不允許空白]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe015" ver="1" src="s" column="fabe015" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[下接選項：SCC = 9914]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe016" ver="1" src="s" column="fabe016" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[下接選項：SCC = 9913]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe017" ver="1" src="s" column="fabe017" table="fabe_t" attribute="" type="" req="N" i_zoom="q_ooca001_1" c_zoom="q_ooca001_1" chk_ref="v_ooca001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe018" ver="1" src="s" column="fabe018" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe019" ver="1" src="s" column="fabe019" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe020" ver="1" src="s" column="fabe020" table="fabe_t" attribute="" type="" req="N" i_zoom="q_aooi001_1" c_zoom="q_aooi001_1" chk_ref="v_ooai001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe021" ver="1" src="s" column="fabe021" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe022" ver="1" src="s" column="fabe022" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe023" ver="1" src="s" column="fabe023" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe024" ver="1" src="s" column="fabe024" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe025" ver="5" src="s" column="fabe025" table="fabe_t" attribute="" type="" req="Y" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="u">
+    <![CDATA[欄位名稱：保管人員
+   ●欄位控管：
+     資料欄位:[T:資產變更資料檔].[C:保管人員]/可input及Display
+     預設值:無
+     校驗: 1.不允許空白
+           2.输入的资料必須存在于員工資料維護作業[aooi130]中,若不存在,則報資料不存在的錯
+           3.輸入的資料必須在員工資料維護作業[aooi130]中有效,若無效,則報資料無效的錯]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe026" ver="1" src="s" column="fabe026" table="fabe_t" attribute="" type="" req="Y" i_zoom="q_ooeg001_4" c_zoom="q_ooeg001_4" chk_ref="v_ooeg001_3" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：保管部門
+   ●欄位控管：
+     資料欄位:[T:資產變更資料檔].[C:保管部門]/可input及Display
+     預設值:無
+     校驗: 1.不允許空白
+           2.输入的资料必須存在于部門維護作業[aooi125]中,若不存在,則報資料不存在的錯
+           3.輸入的資料必須在部門維護作業[aooi125]中有效,若無效,則報資料無效的錯]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe027" ver="1" src="s" column="fabe027" table="fabe_t" attribute="" type="" req="Y" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="v_oocq002_3900" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：存放位置
+   ●欄位控管：
+     資料欄位:[T:資產變更資料檔].[C:存放位置]/可input及Display
+     預設值:無
+     校驗: 1.不允許空白
+           2.输入的资料必須存在于資產存放位置維護作業[afai040]中,若不存在,則報資料不存在的錯
+           3.輸入的資料必須在資產存放位置維護作業[afai040]中有效,若無效,則報資料無效的錯]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe028" ver="1" src="s" column="fabe028" table="fabe_t" attribute="" type="" req="N" i_zoom="q_faab001" c_zoom="q_faab001" chk_ref="v_faab002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe029" ver="5" src="s" column="fabe029" table="fabe_t" attribute="" type="" req="Y" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="u">
+    <![CDATA[欄位名稱：負責人員
+   ●欄位控管：
+     資料欄位:[T:資產變更資料檔].[C:負責人員]/可input及Display
+     預設值:無
+     校驗: 1.不允許空白
+           2.输入的资料必須存在于員工資料維護作業[aooi130]中,若不存在,則報資料不存在的錯
+           3.輸入的資料必須在員工資料維護作業[aooi130]中有效,若無效,則報資料無效的錯]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe030" ver="1" src="s" column="fabe030" table="fabe_t" attribute="" type="" req="N" i_zoom="q_ooef001" c_zoom="q_ooef001" chk_ref="v_ooef001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe031" ver="1" src="s" column="fabe031" table="fabe_t" attribute="" type="" req="N" i_zoom="q_ooef001_04" c_zoom="q_ooef001_04" chk_ref="v_ooef001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe032" ver="1" src="s" column="fabe032" table="fabe_t" attribute="" type="" req="N" i_zoom="q_ooef001" c_zoom="q_ooef001" chk_ref="v_ooef001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe033" ver="1" src="s" column="fabe033" table="fabe_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[欄位名稱：直接資本化
+   ●欄位控管：
+     資料欄位:[T:資產變更資料檔].[C:直接資本化]/可input及Display
+     預設值:Y
+     校驗: 1.不允許空白]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe034" ver="1" src="s" column="fabe034" table="fabe_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：保稅
+   ●欄位控管：
+     資料欄位:[T:資產變更資料檔].[C:保稅]/可input及Display
+     預設值:0
+     校驗: 1.不允許空白
+     新增时，可由固定资产主要类型档的值带入
+     SCC-9905]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe035" ver="1" src="s" column="fabe035" table="fabe_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：保險
+   ●欄位控管：
+     資料欄位:[T:資產變更資料檔].[C:保險]/可input及Display
+     預設值:0
+     校驗: 1.不允許空白
+     新增时，可由固定资产主要类型档的值带入
+     SCC-9906]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe036" ver="1" src="s" column="fabe036" table="fabe_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：免税
+   ●欄位控管：
+     資料欄位:[T:資產變更資料檔].[C:免税]/可input及Display
+     預設值:0
+     校驗: 1.不允許空白
+     新增时，可由固定资产主要类型档的值带入
+     SCC-9907]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe037" ver="1" src="s" column="fabe037" table="fabe_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：抵押
+   ●欄位控管：
+     資料欄位:[T:資產變更資料檔].[C:抵押]/可input及Display
+     預設值:0
+     校驗: 1.不允許空白
+     新增时，可由固定资产主要类型档的值带入
+     SCC-9908]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe038" ver="5" src="s" column="fabe038" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe039" ver="5" src="s" column="fabe039" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe040" ver="5" src="s" column="fabe040" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe041" ver="1" src="s" column="fabe041" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe042" ver="1" src="s" column="fabe042" table="fabe_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：資產屬性
+   ●欄位控管：
+     資料欄位:[T:資產變更資料檔].[C:資產屬性]/可input及Display
+     預設值:1:自由
+     校驗: 1.不允許空白
+     下接選項：SCC = 9917]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe043" ver="1" src="s" column="fabe043" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe044" ver="1" src="s" column="fabe044" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabe045" ver="1" src="s" column="fabe045" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabecrtdp" ver="1" src="s" column="fabecrtdp" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabecrtdt" ver="1" src="s" column="fabecrtdt" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabecrtid" ver="1" src="s" column="fabecrtid" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabemoddt" ver="1" src="s" column="fabemoddt" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabemodid" ver="1" src="s" column="fabemodid" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabeowndp" ver="1" src="s" column="fabeowndp" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabeownid" ver="1" src="s" column="fabeownid" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="fabe_t.fabestus" ver="1" src="s" column="fabestus" table="fabe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="5" name="prog_fabe025" depend_field="fabe_t.fabe025" src="s" status="">
+      <program order="1" type="1" name="cl_user_contact(&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;)"/>
+    </pfield>
+    <pfield cite_std="N" ver="5" name="prog_fabe029" depend_field="fabe_t.fabe029" src="s" status="">
+      <program order="1" type="1" name="cl_user_contact(&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;)"/>
+    </pfield>
+    <pfield cite_std="N" ver="5" name="prog_fabe038" depend_field="fabe_t.fabe038" src="s" status="">
+      <program order="1" type="1" name="apmt500"/>
+    </pfield>
+    <pfield cite_std="N" ver="5" name="prog_fabe039" depend_field="fabe_t.fabe039" src="s" status="">
+      <program order="1" type="1" name="apmt570"/>
+    </pfield>
+    <pfield cite_std="N" ver="5" name="prog_fabe040" depend_field="fabe_t.fabe040" src="s" status="">
+      <program order="1" type="1" name="aapt300"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="fabe006_desc" src="s" depend_field="fabe_t.fabe006" correspon_key="fabeent,fabe006" ref_table="faacl_t" ref_fk="faaclent,faacl001" ref_dlang="faacl002" ref_rtn="faacl003" status=""/>
+    <rfield cite_std="N" ver="1" name="fabe007_desc" src="s" depend_field="fabe_t.fabe007" correspon_key="fabeent,fabe007" ref_table="faadl_t" ref_fk="faadlent,faadl001" ref_dlang="faadl002" ref_rtn="faadl003" status=""/>
+    <rfield cite_std="N" ver="1" name="fabe008_desc" src="s" depend_field="fabe_t.fabe008" correspon_key="fabeent,&apos;3903&apos;,fabe008" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="fabe009_desc" src="s" depend_field="fabe_t.fabe009" correspon_key="fabeent,fabe009" ref_table="pmaal_t" ref_fk="pmaalent,pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="fabe010_desc" src="s" depend_field="fabe_t.fabe010" correspon_key="fabeent,fabe010" ref_table="pmaal_t" ref_fk="pmaalent,pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="fabe011_desc" src="s" depend_field="fabe_t.fabe011" correspon_key="fabeent,fabe011" ref_table="oocgl_t" ref_fk="oocglent,oocgl001" ref_dlang="oocgl002" ref_rtn="oocgl003" status=""/>
+    <rfield cite_std="N" ver="1" name="fabe017_desc" src="s" depend_field="fabe_t.fabe017" correspon_key="fabeent,fabe017" ref_table="oocal_t" ref_fk="oocalent,oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="fabe020_desc" src="s" depend_field="fabe_t.fabe020" correspon_key="fabeent,fabe020" ref_table="ooail_t" ref_fk="ooailent,ooail001" ref_dlang="ooail002" ref_rtn="ooail003" status=""/>
+    <rfield cite_std="N" ver="1" name="fabe025_desc" src="s" depend_field="fabe_t.fabe025" correspon_key="fabe025" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="fabe026_desc" src="s" depend_field="fabe_t.fabe026" correspon_key="fabeent,fabe026" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="fabe027_desc" src="s" depend_field="fabe_t.fabe027" correspon_key="fabeent,&apos;3900&apos;,fabe027" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="fabe028_desc" src="s" depend_field="fabe_t.fabe028" correspon_key="fabeent,fabe028" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="fabe029_desc" src="s" depend_field="fabe_t.fabe029" correspon_key="fabe029" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="fabe030_desc" src="s" depend_field="fabe_t.fabe030" correspon_key="fabeent,fabe030" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="fabe031_desc" src="s" depend_field="fabe_t.fabe031" correspon_key="fabeent,fabe031" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="fabe032_desc" src="s" depend_field="fabe_t.fabe032" correspon_key="fabeent,fabe032" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="fabecrtdp_desc" src="s" depend_field="fabe_t.fabecrtdp" correspon_key="fabecrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="fabecrtid_desc" src="s" depend_field="fabe_t.fabecrtid" correspon_key="fabecrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="fabemodid_desc" src="s" depend_field="fabe_t.fabemodid" correspon_key="fabemodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="fabeowndp_desc" src="s" depend_field="fabe_t.fabeowndp" correspon_key="fabeowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="fabeownid_desc" src="s" depend_field="fabe_t.fabeownid" correspon_key="fabeownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe000" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="fabe_t.fabe004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="fabe_t.fabe007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="fabe_t.fabe009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="fabe_t.fabe010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe023" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe024" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="fabe_t.fabe025" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe026" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe027" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe028" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="fabe_t.fabe029" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe030" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe031" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe032" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe033" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe034" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe035" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe036" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe037" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="fabe_t.fabe038" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="5" name="fabe_t.fabe039" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="5" name="fabe_t.fabe040" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe041" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe042" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe043" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe044" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabe045" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabecrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabecrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabecrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabemoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabemodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabeowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabeownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="fabe_t.fabestus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_fabe001" text="卡片編號" lstr=""/>
+    <sfield name="lbl_fabe002" text="類型" lstr=""/>
+    <sfield name="lbl_fabe000" text="生成批號" lstr=""/>
+    <sfield name="lbl_fabe003" text="財產編號" lstr=""/>
+    <sfield name="lbl_fabe004" text="附號" lstr=""/>
+    <sfield name="lbl_fabe045" text="版次" lstr=""/>
+    <sfield name="lbl_fabe006" text="主要類型" lstr=""/>
+    <sfield name="lbl_faacl003" text="說明" lstr=""/>
+    <sfield name="lbl_fabe007" text="次要類型" lstr=""/>
+    <sfield name="lbl_faadl003" text="說明" lstr=""/>
+    <sfield name="lbl_fabe005" text="資產性質" lstr=""/>
+    <sfield name="lbl_fabe008" text="資產組" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_fabe014" text="取得日期" lstr=""/>
+    <sfield name="lbl_fabe015" text="資產狀態" lstr=""/>
+    <sfield name="lbl_fabe016" text="取得方式" lstr=""/>
+    <sfield name="lbl_fabe042" text="資產屬性" lstr=""/>
+    <sfield name="lbl_fabe017" text="單位" lstr=""/>
+    <sfield name="lbl_oocal003" text="說明" lstr=""/>
+    <sfield name="lbl_fabe018" text="數量" lstr=""/>
+    <sfield name="lbl_fabe019" text="在外數量" lstr=""/>
+    <sfield name="lbl_fabe020" text="幣別" lstr=""/>
+    <sfield name="lbl_ooail003" text="說明" lstr=""/>
+    <sfield name="lbl_fabe021" text="原幣單價" lstr=""/>
+    <sfield name="lbl_fabe022" text="原幣金額" lstr=""/>
+    <sfield name="lbl_fabe023" text="本幣單價" lstr=""/>
+    <sfield name="lbl_fabe024" text="本幣金額" lstr=""/>
+    <sfield name="lbl_fabe025" text="保管人員" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_fabe026" text="保管部門" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_fabe027" text="存放位置" lstr=""/>
+    <sfield name="lbl_fabe028" text="存放組織" lstr=""/>
+    <sfield name="lbl_fabe029" text="負責人員" lstr=""/>
+    <sfield name="lbl_fabe030" text="管理組織" lstr=""/>
+    <sfield name="lbl_fabe031" text="核算組織" lstr=""/>
+    <sfield name="lbl_fabe032" text="歸屬法人" lstr=""/>
+    <sfield name="lbl_page_2" text="其它信息" lstr=""/>
+    <sfield name="lbl_fabe033" text="直接資本化" lstr=""/>
+    <sfield name="lbl_fabe009" text="供應廠商" lstr=""/>
+    <sfield name="lbl_pmaal004" text="交易對象簡稱" lstr=""/>
+    <sfield name="lbl_fabe010" text="製造廠商" lstr=""/>
+    <sfield name="lbl_fabe011" text="產地" lstr=""/>
+    <sfield name="lbl_oocgl003" text="說明" lstr=""/>
+    <sfield name="lbl_fabe012" text="名稱" lstr=""/>
+    <sfield name="lbl_fabe013" text="規格型號" lstr=""/>
+    <sfield name="lbl_fabe034" text="保稅" lstr=""/>
+    <sfield name="lbl_fabe035" text="保險" lstr=""/>
+    <sfield name="lbl_fabe036" text="免稅" lstr=""/>
+    <sfield name="lbl_fabe037" text="抵押" lstr=""/>
+    <sfield name="lbl_fabe043" text="預計總工作量" lstr=""/>
+    <sfield name="lbl_fabe044" text="已使用工作量" lstr=""/>
+    <sfield name="lbl_fabe041" text="來源營運中心" lstr=""/>
+    <sfield name="lbl_fabe038" text="採購單號" lstr=""/>
+    <sfield name="lbl_fabe039" text="收貨單號" lstr=""/>
+    <sfield name="lbl_fabe040" text="賬款單號" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

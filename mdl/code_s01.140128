@@ -1,0 +1,366 @@
+#+ Version..: T100-12.01.21(00000)'
+#
+# Program name...: ${prog}.4gl
+# Descriptions...: 參數作業-參數維護模式
+# Date & Author..: 
+
+IMPORT os
+SCHEMA ds
+
+GLOBALS "../../cfg/top_global.inc"
+
+#單身 type 宣告
+PRIVATE TYPE type_${detail_var_title} RECORD
+${detail_fields_define}
+       END RECORD
+
+DEFINE ${detail_var_title}    DYNAMIC ARRAY OF type_${detail_var_title}
+DEFINE ${detail_var_title}_t  DYNAMIC ARRAY OF type_${detail_var_title}
+
+${define_field_ooea_variable}
+
+DEFINE g_chr                 LIKE type_t.chr1  
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_i                   LIKE type_t.num5
+DEFINE g_msg                 STRING
+DEFINE g_before_input_done   LIKE type_t.num5 
+DEFINE g_forupd_sql          STRING
+DEFINE g_wc                  STRING
+DEFINE g_sql                 STRING
+DEFINE g_curr_diag           ui.Dialog        #Current Dialog
+DEFINE g_idx                 LIKE type_t.num5	
+DEFINE label_parametergroup  STRING 
+
+DEFINE l_ac LIKE type_t.num5  
+
+# 畫面處理 -- Saki start
+DEFINE g_argv1             STRING                    # 參數多版未確認 
+DEFINE g_form              STRING                    # 畫面檔名
+DEFINE gwin_curr           ui.Window
+DEFINE gfrm_curr           ui.Form
+DEFINE g_infobox_hidden    LIKE type_t.num5
+DEFINE g_parameter         DYNAMIC ARRAY OF RECORD
+         id                LIKE type_t.chr50,   #參數ID ( Action ID )
+         name              LIKE type_t.chr100,  #參數名稱多語言代碼
+         comp              LIKE type_t.chr50,   #對應畫面檔元件(參數群組包起來的container)
+         img               LIKE type_t.chr200   #圖片路徑 (主要給pictureFlow用)
+                           END RECORD
+DEFINE g_helptitle         STRING                    # 說明Title
+DEFINE g_helpdesc          STRING                    # 說明內容
+
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("${general_module}","")
+
+   #add-point:作業初始化
+   CALL ${prog}_fill_data()   # 整體參數
+   #end add-point
+
+   IF g_bgjob = "Y" THEN
+
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_${prog} WITH FORM cl_ap_formpath("${general_module}",g_code)
+
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+
+      #程式初始化
+      CALL ${prog}_init()
+
+      #進入選單 Menu (="N")
+      CALL ${prog}_show()
+      CALL ${prog}_ui_dialog()
+
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+
+      #畫面關閉
+      CLOSE WINDOW w_${prog}
+
+   END IF
+
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+
+END MAIN
+
+
+PRIVATE FUNCTION ${prog}_init()
+   DEFINE lnode_frm   om.DomNode
+
+   # 是否進入共用函式, 共用變數
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+   
+   ${variable_ooea_list_init} 
+   
+   ${general_define_combo}   
+   CALL ${prog}_area_information()
+   CALL ${prog}_parameter_switch("${first_page}") 
+   CALL ${prog}_show_field_help("")
+
+END FUNCTION
+
+# 指定各參數區塊資料 ( 方便切換參數內容 )
+PRIVATE FUNCTION ${prog}_area_information()
+
+   ${area_information}
+
+END FUNCTION
+
+# 切換參數區塊 & 更換參數Title圖示文字
+PRIVATE FUNCTION ${prog}_parameter_switch(ps_paramid)
+   DEFINE ps_paramid   STRING
+   DEFINE li_cnt       LIKE type_t.num5
+   DEFINE lnode_item   om.DomNode
+   DEFINE llst_items   om.NodeList
+
+   FOR li_cnt = 1 TO g_parameter.getLength()
+       # 傳入的id代表開啟, 其他都隱藏
+       IF ps_paramid != g_parameter[li_cnt].id THEN
+          CALL gfrm_curr.setElementHidden(g_parameter[li_cnt].comp, TRUE)
+          # 設定參數按鈕格式
+          CALL gfrm_curr.setElementStyle(g_parameter[li_cnt].id, "menuitem")
+       ELSE
+          CALL gfrm_curr.setElementHidden(g_parameter[li_cnt].comp, FALSE)
+          # 設定參數主欄的icon & Label
+          CALL gfrm_curr.setElementImage("page_parameterbox",g_parameter[li_cnt].img)   
+          CALL gfrm_curr.setElementText("page_parameterbox",${prog}_show_page_title(ps_paramid))   
+          # 設定參數按鈕格式
+          CALL gfrm_curr.setElementStyle(g_parameter[li_cnt].id, "menuitemfocus")
+       END IF
+   END FOR
+
+END FUNCTION
+
+
+# 子參數區塊開關
+PRIVATE FUNCTION ${prog}_parameter_group_switch(ps_paramgroup)
+   DEFINE ps_paramgroup   STRING
+   DEFINE lnode_item      om.DomNode
+   DEFINE li_hidden       LIKE type_t.num5
+
+   LET lnode_item = gfrm_curr.findNode("Group", ps_paramgroup)
+   IF lnode_item IS NOT NULL THEN
+      LET li_hidden = lnode_item.getAttribute("hidden")
+      IF li_hidden THEN
+         CALL lnode_item.setAttribute("hidden", 0)
+      ELSE
+         CALL lnode_item.setAttribute("hidden", 1)
+      END IF
+   END IF
+
+END FUNCTION
+
+PRIVATE FUNCTION ${prog}_ui_dialog()
+   MENU ""
+      BEFORE MENU
+#       CALL ${prog}_modify()   #預設進入修改狀態
+         
+      ON ACTION modify
+         CALL ${prog}_modify()
+
+      ${btn_page}
+
+      ${btn_paramsubgp}
+
+      # 以下為每一個欄位的說明功能鍵
+      ${on_action_help}
+
+      ON ACTION exit
+         LET g_action_choice = "exit"
+         EXIT MENU
+      ON ACTION close
+         LET g_action_choice = "exit"
+         EXIT MENU
+
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE MENU
+   END MENU
+
+END FUNCTION
+
+# 從DB取得要設定的資料
+# 不清楚最後參數Schema規則, 先用舊參數取代, 未存在參數情況由Pattern考慮
+PRIVATE FUNCTION ${prog}_fill_data()
+   DEFINE ls_sql  STRING
+   DEFINE li_cnt  LIKE type_t.num5
+
+   LET ls_sql = "SELECT  ${detail_fields} ",
+                 " FROM ${tab_id},gzsz_t,gzsx_t ",
+                " WHERE ",
+                  ${detail_var_ent_append} ${detail_var_site_append}  
+                   
+                  " ${field_pk} = gzsz002 ",
+                  " AND gzsz001 = '${tab_id}' ",
+                  " AND gzsx001 = gzsz004 ",   #作業名稱
+                  " AND gzsx002 = gzsz006 ",   #分頁編號
+                  " AND gzsx003 = gzsz007 ",   #分項編號
+                " ORDER BY gzsx004,gzsx005,gzsz005"
+
+   DECLARE ${prog}_fill_data_cs CURSOR FROM ls_sql
+   LET li_cnt = 1
+   FOREACH ${prog}_fill_data_cs INTO ${detail_var_title}[li_cnt].*
+      LET li_cnt = li_cnt + 1
+   END FOREACH
+   CALL ${detail_var_title}.deleteElement(li_cnt)
+
+   CLOSE ${prog}_fill_data_cs 
+   FREE ${prog}_fill_data_cs 
+
+   #進行備份陣列抄寫
+   FOR li_cnt = 1 TO ${detail_var_title}.getLength()
+      LET ${detail_var_title}_t[li_cnt].* = ${detail_var_title}[li_cnt].*
+   END FOR
+
+END FUNCTION
+
+
+#+ 顯示畫面
+PRIVATE FUNCTION ${prog}_show()
+
+   DISPLAY ${variable_list}${variable_ooea_list}
+      
+   TO ${field_list}${field_ooea_list}
+      
+   ${show_ref}
+END FUNCTION
+
+#資料修改
+PRIVATE FUNCTION ${prog}_modify()
+
+   DEFINE li_exit LIKE type_t.num5
+   DEFINE ls_tmp STRING 
+   
+   # 跨Table維護資料, 在修改階段除修改歷程外, 其他區塊都可直接切換
+   DIALOG ATTRIBUTES(UNBUFFERED)
+      INPUT ${variable_list}${variable_ooea_list}
+        FROM ${field_list}${field_ooea_list}
+        ATTRIBUTE(WITHOUT DEFAULTS)
+
+         ${before_field}
+      
+          ${btn_controlp}
+      END INPUT
+
+      ${btn_page2}
+
+      ${btn_paramsubgp}
+      
+     
+
+      # 以下為每一個欄位的說明功能鍵
+      ${on_action_help}
+
+      ON ACTION accept
+         # 做存檔動作
+         LET li_exit = FALSE
+         ACCEPT DIALOG
+
+      ON ACTION cancel
+         # 返回舊值, 並顯示
+         LET li_exit = TRUE
+         CALL ${prog}_fill_data()   # 整體參數
+         CALL ${prog}_show()
+         EXIT DIALOG
+   END DIALOG
+
+   IF NOT li_exit THEN
+      CALL ${prog}_update()
+   END IF
+
+END FUNCTION 
+
+#+ 更新參數資料
+PRIVATE FUNCTION ${prog}_update()
+
+   DEFINE li_cnt  LIKE type_t.num5
+
+   FOR li_cnt = 1 TO ${detail_var_title}.getLength()
+      #若新值與舊值不同,進行更新 #更新參數資料 
+      IF (${detail_var_title}[li_cnt].${field_fk} IS NULL AND ${detail_var_title}_t[li_cnt].${field_fk} IS NOT NULL) OR
+         (${detail_var_title}[li_cnt].${field_fk} IS NOT NULL AND ${detail_var_title}_t[li_cnt].${field_fk} IS NULL) OR
+         (${detail_var_title}[li_cnt].${field_fk} IS NOT NULL AND ${detail_var_title}_t[li_cnt].${field_fk} IS NOT NULL AND
+          ${detail_var_title}[li_cnt].${field_fk} <> ${detail_var_title}_t[li_cnt].${field_fk} ) THEN
+         
+         LET ${detail_var_title}[li_cnt].${field_moddt} = cl_get_current()
+         UPDATE ${tab_id} SET ${field_fk} = ${detail_var_title}[li_cnt].${field_fk},
+                           ${field_modid} = g_user,
+                           ${field_moddt}  = ${detail_var_title}[li_cnt].${field_moddt}
+          WHERE  ${detail_append_ent_wc} ${detail_append_site_wc}
+          ${field_pk} = ${detail_var_title}[li_cnt].${field_pk}
+      END IF
+   END FOR
+
+END FUNCTION
+
+
+PRIVATE FUNCTION ${prog}_show_field_help(ps_field)
+   DEFINE ps_field       STRING
+   DEFINE ls_html        STRING
+   DEFINE ls_title       STRING
+   DEFINE ls_span_style  STRING 
+
+   # fake
+   #CALL cl_get_field_help("${prog}", ps_field, g_lang) RETURNING g_helptitle, g_helpdesc
+   CALL cl_help_param_field(g_code,ps_field) RETURNING g_helptitle, g_helpdesc
+
+   IF FGL_GETENV("GWC") THEN                                
+      LET ls_span_style = "style=\"color: #027E88;line-height:20px; font-size: small;\""      
+   ELSE
+      LET ls_span_style = "style=\"color: #027E88;\""
+   END IF                                                   
+
+   LET ls_html = "<div><span ",ls_span_style CLIPPED,">"
+   LET ls_html = ls_html, g_helpdesc
+   LET ls_html = ls_html, "</span></div>"
+   DISPLAY g_helptitle, ls_html TO helptitle,helpdesc
+
+   LET ls_title = "參數說明"
+   IF NOT cl_null(ps_field) AND NOT cl_null(g_helptitle) THEN    
+      LET ls_title = ls_title CLIPPED," - ",g_helptitle
+   END IF
+   CALL gfrm_curr.setElementText("page_helptitle",ls_title)   
+
+END FUNCTION
+
+
+PRIVATE FUNCTION ${prog}_show_page_title(ps_paramid)
+   DEFINE ps_paramid   STRING 
+   DEFINE pc_gzswl004  LIKE gzswl_t.gzswl004
+   DEFINE ls_sql       STRING 
+
+   LET ls_sql = "SELECT gzswl004 FROM gzswl_t", 
+                "    WHERE gzswl001 = '", g_code ,"'" ,
+                "    AND  gzswl002 = '",ps_paramid,"'",
+                "    AND  gzswl003 ='",g_lang ,"'"
+   PREPARE  ${prog}_show_page_title_pre FROM ls_sql  
+
+   EXECUTE ${prog}_show_page_title_pre  INTO pc_gzswl004 
+   FREE ${prog}_show_page_title_pre
+   RETURN pc_gzswl004 
+END FUNCTION 

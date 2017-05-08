@@ -1,0 +1,131 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axci010" module="axc" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="03297" crtdt="2015-04-27 10:50:36" modid="03297" moddt="2015-04-27 16:50:37" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="成本差異分攤依據和目的設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcaold,xcaold_desc(chr80),xcao001,xcaol003,xcaostus,xcao002,xcaoownid,xcaoownid_desc(chr80),xcaoowndp,xcaoowndp_desc(chr80),xcaocrtid,xcaocrtid_desc(chr80),xcaocrtdp,xcaocrtdp_desc(chr80),xcaocrtdt,xcaomodid,xcaomodid_desc(chr80),xcaomoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcapseq,xcap002,xcap002_desc(chr500),xcap003,xcap004,xcap005"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="statechange1"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="axci010_01"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="axci010_01"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axci010" method="dialog">
+    <section id="input">
+      <input id="head" field="xcaold,xcao001,xcaol003,xcaostus,xcao002"/>
+      <input id="body" page="1" field="xcapseq,xcap002,xcap003,xcap004,xcap005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcaold,xcao001,xcaol003,xcaostus,xcao002,xcaoownid,xcaoowndp,xcaocrtid,xcaocrtdp,xcaocrtdt,xcaomodid,xcaomoddt"/>
+      <construct id="body" page="1" field="xcapseq,xcap002,xcap003,xcap004,xcap005"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcaold,xcao001"/>
+      <set id="head" type="no_entry" field="xcaold,xcao001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcaold">
+        <after>
+          <reference field="xcaold_desc" ref_field="xcao_t.xcaold" map_field="xcaoent,xcaold" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xcaold_desc"/>
+      <column id="xcao001">
+        <controlp form="q_xcao001" state="i"/>
+        <controlp form="q_xcao001" state="c"/>
+      </column>
+      <column id="xcaol003"/>
+      <column id="xcaostus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="xcao002" type="S" default="1" def_scc="8927"/>
+      <column id="xcaoownid">
+        <after>
+          <reference field="xcaoownid_desc" ref_field="xcao_t.xcaoownid" map_field="xcaoownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcaoownid_desc"/>
+      <column id="xcaoowndp">
+        <after>
+          <reference field="xcaoowndp_desc" ref_field="xcao_t.xcaoowndp" map_field="xcaoowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcaoowndp_desc"/>
+      <column id="xcaocrtid">
+        <after>
+          <reference field="xcaocrtid_desc" ref_field="xcao_t.xcaocrtid" map_field="xcaocrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcaocrtid_desc"/>
+      <column id="xcaocrtdp">
+        <after>
+          <reference field="xcaocrtdp_desc" ref_field="xcao_t.xcaocrtdp" map_field="xcaocrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcaocrtdp_desc"/>
+      <column id="xcaocrtdt"/>
+      <column id="xcaomodid">
+        <after>
+          <reference field="xcaomodid_desc" ref_field="xcao_t.xcaomodid" map_field="xcaomodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcaomodid_desc"/>
+      <column id="xcaomoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcapseq"/>
+      <column id="xcap002">
+        <after>
+          <check chkid="v_xcar001" id="isExist"/>
+          <reference field="xcap002_desc" ref_field="xcapld,xcap002" map_field="xcapld,xcap002" ref_sql="SELECT xcarl003 FROM xcarl_t WHERE xcarlent=$varg_enterprise$var AND xcarlld=? AND xcarl001=? AND xcarl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcar001" state="i"/>
+        <controlp form="q_xcar001" state="c"/>
+      </column>
+      <column id="xcap002_desc"/>
+      <column id="xcap003" type="S" default="3" def_scc="8928"/>
+      <column id="xcap004" type="S" default="100"/>
+      <column id="xcap005" type="S" default="1" def_scc="9933"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcao_t" pk="xcaold,xcao001">
+      <sql id="forupd_sql" type="sql" query="SELECT xcaold,&apos;&apos;,xcao001,&apos;&apos;,xcaostus,xcao002,xcaoownid,&apos;&apos;,xcaoowndp,&apos;&apos;,xcaocrtid,&apos;&apos;,xcaocrtdp,&apos;&apos;,xcaocrtdt,xcaomodid,&apos;&apos;,xcaomoddt FROM xcao_t WHERE xcaoent= ? AND xcaold=? AND xcao001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcaold,&apos;&apos;,xcao001,&apos;&apos;,xcaostus,xcao002,xcaoownid,&apos;&apos;,xcaoowndp,&apos;&apos;,xcaocrtid,&apos;&apos;,xcaocrtdp,&apos;&apos;,xcaocrtdt,xcaomodid,&apos;&apos;,xcaomoddt FROM xcao_t" order="xcaold,xcao001"/>
+      <sql id="append" type="lang" target="xcaol_t.xcaol003" table="xcaol_t" fk="xcaold,xcao001" pk="xcaolld,xcaol001,xcaol002" field="xcaol003"/>
+    </head>
+    <body id="xcap_t" page="1" linked="" pk="xcapseq" fk="xcapld,xcap001">
+      <sql id="forupd_sql_detail" query="SELECT xcapseq,xcap002,&apos;&apos;,xcap003,xcap004,xcap005 FROM xcap_t WHERE xcapent=? AND xcapld=? AND xcap001=? AND xcapseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcapseq,xcap002,&apos;&apos;,xcap003,xcap004,xcap005 FROM xcap_t WHERE xcapent=? AND xcapld=? AND xcap001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

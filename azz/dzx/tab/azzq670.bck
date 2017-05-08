@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzq670" module="azz" jobmode="N" type="i05" industry="std" fix_arg="0" crtid="05423" crtdt="2016-12-29 16:05:41" modid="05423" moddt="2016-12-29 17:22:40" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="異常管理查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzas001,gzas002"/>
+      <var id="bs_field" value="gzas001,gzas001_desc(chr80),gzas002,gzas002_desc(chr80),exc_qty_1(chr80),war_qty_1(chr80)" pk="gzas001,gzas002" order=""/>
+      <bs_reference field="gzas001_desc" ref_field="gzas001" ref_sql="SELECT gzasl004 FROM gzasl_t WHERE gzaslent=$varg_enterprise$var AND gzasl002=? AND gzasl003=$varg_lang$var"/>
+      <bs_reference field="gzas002_desc" ref_field="gzas002" ref_sql="SELECT gzarl004 FROM gzarl_t WHERE gzarlent=$varg_enterprise$var AND gzarl001=? AND gzarl002=$varg_lang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="war_detail"/>
+      <action id="exc_detail"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzq670" method="dialog">
+    <section id="input">
+      <input id="head" field="gzas001,gzas002"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzas001,gzas002"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzas001,gzas002"/>
+      <set id="head" type="no_entry" field="gzas001,gzas002"/>
+    </init>
+    <init id="head">
+      <column id="gzas001"/>
+      <column id="gzas002"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzas_t" lid="gzas002" pid="gzas001" type=" " desc=" " speed="gzass_t" stype=" " slid="gzass002" spid="gzass001" pk="gzas001,gzas002">
+      <sql id="forupd_sql" type="sql" query="SELECT gzas001,gzas002 FROM gzas_t WHERE gzasent= ? AND gzas001=? AND gzas002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzas001,gzas002 FROM gzas_t" order="gzas001,gzas002"/>
+    </head>
+  </dataset>
+</assembly>
+

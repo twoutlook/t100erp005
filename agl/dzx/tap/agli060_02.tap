@@ -1,0 +1,213 @@
+<add_points prog="agli060_02" std_prog="agli060_02" erpver="1.0" module="AGL" ver="1" env="s" zone="t10dev" normal_style="Y" booking="Y">
+  <point name="input.c.glah001" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glak_m.glah001             #給予default值
+
+            #給予arg
+
+            CALL q_glac002()                                #呼叫開窗
+
+            LET g_glak_m.glah001 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_glak_m.glah001 TO glah001              #顯示到畫面上
+
+            NEXT FIELD glah001                          #返回原欄位
+
+]]>
+</point>
+  <point name="input.c.glahld" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glak_m.glahld             #給予default值
+
+            #給予arg
+
+            CALL q_glaa()                                #呼叫開窗
+
+            LET g_glak_m.glahld = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_glak_m.glahld TO glahld              #顯示到畫面上
+
+            NEXT FIELD glahld                          #返回原欄位
+
+]]>
+</point>
+  <point name="input.a.glah001" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[
+]]>
+</point>
+  <point name="input.a.glahld" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[
+]]>
+</point>
+  <point name="function.agli060_02_del" cite_std="N" status="" ver="1" src="s" new="Y" order="1" cite_ver="" mark_hard="N">
+<![CDATA[#+ 整批刪除glak_t資料
+PRIVATE FUNCTION agli060_02_del()
+DEFINE l_sql   STRING 
+
+   CALL s_transaction_begin()
+   LET l_sql = "DELETE FROM glak_t WHERE ",g_wc
+   PREPARE glak_del FROM l_sql 
+   EXECUTE glak_del
+   IF SQLCA.SQLcode  THEN
+      CALL cl_err("glak_t",SQLCA.sqlcode,1)  
+      CALL s_transaction_end('N','0')                    
+   ELSE
+      CALL s_transaction_end('Y','0')    
+   END IF   
+
+END FUNCTION]]>
+</point>
+  <point name="input.c.glak003" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glak_m.glak003             #給予default值
+
+            #給予arg
+
+            CALL q_glac002()                                #呼叫開窗
+
+            LET g_glak_m.glak003 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_glak_m.glak003 TO glak003              #顯示到畫面上
+
+            NEXT FIELD glak003                          #返回原欄位
+
+]]>
+</point>
+  <point name="input.a.glak004" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_glak_m.glak001) AND NOT cl_null(g_glak_m.glak003) AND NOT cl_null(g_glak_m.glak004) AND NOT cl_null(g_glak_m.glakld) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_glak_m.glak001 != g_glak001_t  OR g_glak_m.glak003 != g_glak003_t  OR g_glak_m.glak004 != g_glak004_t  OR g_glak_m.glakld != g_glakld_t ))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glak_t WHERE "||"glakent = '" ||g_enterprise|| "' AND "||"glak001 = '"||g_glak_m.glak001 ||"' AND "|| "glak003 = '"||g_glak_m.glak003 ||"' AND "|| "glak004 = '"||g_glak_m.glak004 ||"' AND "|| "glakld = '"||g_glak_m.glakld ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_glak_m.glak004
+            CALL ap_ref_array2(g_ref_fields,"SELECT glafl004 FROM glafl_t WHERE glaflent='"||g_enterprise||"' AND glafl001='' AND glafl002=? AND glafl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_glak_m.glak004_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_glak_m.glak004_desc
+]]>
+</point>
+  <point name="show.head.reference" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_glak_m.glak003
+            CALL ap_ref_array2(g_ref_fields,"SELECT glacl004 FROM glacl_t WHERE glaclent='"||g_enterprise||"' AND glacl001='' AND glacl002=? AND glacl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_glak_m.glak003_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_glak_m.glak003_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_glak_m.glak004
+            CALL ap_ref_array2(g_ref_fields,"SELECT glafl004 FROM glafl_t WHERE glaflent='"||g_enterprise||"' AND glafl001='' AND glafl002=? AND glafl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_glak_m.glak004_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_glak_m.glak004_desc
+]]>
+</point>
+  <point name="input.c.glak004" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glak_m.glak004             #給予default值
+
+            #給予arg
+
+            CALL q_ooea001_1()                                #呼叫開窗
+
+            LET g_glak_m.glak004 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_glak_m.glak004 TO glak004              #顯示到畫面上
+
+            NEXT FIELD glak004                          #返回原欄位
+
+]]>
+</point>
+  <point name="input.a.glak003" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_glak_m.glak001) AND NOT cl_null(g_glak_m.glak003) AND NOT cl_null(g_glak_m.glak004) AND NOT cl_null(g_glak_m.glakld) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_glak_m.glak001 != g_glak001_t  OR g_glak_m.glak003 != g_glak003_t  OR g_glak_m.glak004 != g_glak004_t  OR g_glak_m.glakld != g_glakld_t ))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glak_t WHERE "||"glakent = '" ||g_enterprise|| "' AND "||"glak001 = '"||g_glak_m.glak001 ||"' AND "|| "glak003 = '"||g_glak_m.glak003 ||"' AND "|| "glak004 = '"||g_glak_m.glak004 ||"' AND "|| "glakld = '"||g_glak_m.glakld ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_glak_m.glak003
+            CALL ap_ref_array2(g_ref_fields,"SELECT glacl004 FROM glacl_t WHERE glaclent='"||g_enterprise||"' AND glacl001='' AND glacl002=? AND glacl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_glak_m.glak003_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_glak_m.glak003_desc
+]]>
+</point>
+  <point name="construct.c.glak004" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.glak003" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="construct.post_construct" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   IF NOT INT_FLAG THEN 
+      CALL agli060_02_del()
+   END IF]]>
+</point>
+  <point name="construct.more_construct" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[      ON ACTION controlp 
+         CASE
+            WHEN INFIELD(glakld)
+               LET g_qryparam.reqry = FALSE
+               CALL q_glakld()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO glakld  #顯示到畫面上
+               NEXT FIELD glakld                     #返回原欄位
+            WHEN INFIELD(glak003)
+               LET g_qryparam.reqry = FALSE
+               CALL q_glak003()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO glak003  #顯示到畫面上
+               NEXT FIELD glak003                     #返回原欄位            
+            WHEN INFIELD(glak004) 
+               LET g_qryparam.reqry = FALSE
+               CALL q_glak004()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO glak004  #顯示到畫面上
+               NEXT FIELD glak004                     #返回原欄位            
+         END CASE      ]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.get_var" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.pre_construct" cite_std="N" status="u" ver="" src="" new="Y" order="">
+<![CDATA[   LET g_qryparam.state = "c"]]>
+</point>
+  <point name="construct.before_construct" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.after_construct" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.before_close" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+</add_points>

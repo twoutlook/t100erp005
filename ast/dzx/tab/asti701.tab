@@ -1,0 +1,137 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asti701" module="ast" jobmode="N" type="t02" industry="std" fix_arg="0" crtid="02003" crtdt="2014-07-23 15:39:46" modid="06189" moddt="2015-12-17 16:03:18" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="內部結算參數設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="stdbstus(chr10),stdb001,stdb002,stdb002_desc(chr500),stdb003,stdb004,stdb005,stdb005_desc(chr500),stdb006,stdb006_desc(chr500),stdb007,stdb008,stdb009,stdb010"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="stdb001,stdbownid,stdbownid_desc(chr500),stdbowndp,stdbowndp_desc(chr500),stdbcrtid,stdbcrtid_desc(chr500),stdbcrtdp,stdbcrtdp_desc(chr500),stdbcrtdt,stdbmodid,stdbmodid_desc(chr500),stdbmoddt"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="stdc002,stdc003,stdc003_desc(chr500),stdc004,stdc005"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="asti701" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="stdbstus,stdb001,stdb002,stdb003,stdb004,stdb005,stdb006,stdb007,stdb008,stdb009,stdb010" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="stdc002,stdc003,stdc004,stdc005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="stdbstus,stdb001,stdb002,stdb003,stdb004,stdb005,stdb006,stdb007,stdb008,stdb009,stdb010"/>
+      <construct id="body" page="2" field="stdbownid,stdbowndp,stdbcrtid,stdbcrtdp,stdbcrtdt,stdbmodid,stdbmoddt"/>
+      <construct id="body" page="3" field="stdc002,stdc003,stdc004,stdc005"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="stdbstus" scc="17" type="S" default="N">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="stdb001"/>
+      <column id="stdb002">
+        <after>
+          <reference field="stdb002_desc" ref_field="stdb_t.stdb002" map_field="stdb002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_3" state="i"/>
+        <controlp form="q_ooef001_3" state="c"/>
+      </column>
+      <column id="stdb002_desc"/>
+      <column id="stdb003" def_scc="6082"/>
+      <column id="stdb004" type="S" default="1" def_scc="6085"/>
+      <column id="stdb005">
+        <after>
+          <reference field="stdb005_desc" ref_field="stdb_t.stdb005" map_field="stdb005" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_4" state="i"/>
+        <controlp form="q_ooef001_4" state="c"/>
+      </column>
+      <column id="stdb005_desc"/>
+      <column id="stdb006">
+        <after>
+          <reference field="stdb006_desc" ref_field="stdb_t.stdb006" map_field="stdb006" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_4" state="i"/>
+        <controlp form="q_ooef001_4" state="c"/>
+      </column>
+      <column id="stdb006_desc"/>
+      <column id="stdb007" type="S" default="1" def_scc="6086"/>
+      <column id="stdb008" type="S" default="2" def_scc="6087"/>
+      <column id="stdb009" type="S" default="N"/>
+      <column id="stdb010"/>
+    </init>
+    <init id="body" page="2">
+      <column id="stdbownid">
+        <after>
+          <reference field="stdbownid_desc" ref_field="stdb_t.stdbownid" map_field="stdbownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stdbownid_desc"/>
+      <column id="stdbowndp">
+        <after>
+          <reference field="stdbowndp_desc" ref_field="stdb_t.stdbowndp" map_field="stdbowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="stdbowndp_desc"/>
+      <column id="stdbcrtid">
+        <after>
+          <reference field="stdbcrtid_desc" ref_field="stdb_t.stdbcrtid" map_field="stdbcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stdbcrtid_desc"/>
+      <column id="stdbcrtdp">
+        <after>
+          <reference field="stdbcrtdp_desc" ref_field="stdb_t.stdbcrtdp" map_field="stdbcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="stdbcrtdp_desc"/>
+      <column id="stdbcrtdt"/>
+      <column id="stdbmodid">
+        <after>
+          <reference field="stdbmodid_desc" ref_field="stdb_t.stdbmodid" map_field="stdbmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stdbmodid_desc"/>
+      <column id="stdbmoddt"/>
+    </init>
+    <init id="body" page="3">
+      <column id="stdc002"/>
+      <column id="stdc003">
+        <after>
+          <reference field="stdc003_desc" ref_field="stdc_t.stdc003" map_field="stdc003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_4" state="i"/>
+        <controlp form="q_ooef001_4" state="c"/>
+      </column>
+      <column id="stdc003_desc"/>
+      <column id="stdc004" type="S" default="2" def_scc="6088"/>
+      <column id="stdc005"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="stdb_t" page="1,2" linked="" pk="stdb001">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,stdb001,stdb002,&apos;&apos;,stdb003,stdb004,stdb005,&apos;&apos;,stdb006,&apos;&apos;,stdb007,stdb008,stdb009,stdb010,&apos;&apos;,stdbownid,&apos;&apos;,stdbowndp,&apos;&apos;,stdbcrtid,&apos;&apos;,stdbcrtdp,&apos;&apos;,stdbcrtdt,stdbmodid,&apos;&apos;,stdbmoddt FROM stdb_t WHERE stdbent=? AND stdb001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,stdb001,stdb002,&apos;&apos;,stdb003,stdb004,stdb005,&apos;&apos;,stdb006,&apos;&apos;,stdb007,stdb008,stdb009,stdb010,&apos;&apos;,stdbownid,&apos;&apos;,stdbowndp,&apos;&apos;,stdbcrtid,&apos;&apos;,stdbcrtdp,&apos;&apos;,stdbcrtdt,stdbmodid,&apos;&apos;,stdbmoddt FROM stdb_t WHERE stdbent= ? AND 1=1 "/>
+    </body>
+    <body id="stdc_t" page="3" linked="" pk="stdc002" fk="stdc001" detail="Y">
+      <sql id="forupd_sql_detail" query="SELECT stdc002,stdc003,&apos;&apos;,stdc004,stdc005 FROM stdc_t WHERE stdcent=? AND stdc001=? AND stdc002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT stdc002,stdc003,&apos;&apos;,stdc004,stdc005 FROM stdc_t WHERE stdcent=? AND stdc001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

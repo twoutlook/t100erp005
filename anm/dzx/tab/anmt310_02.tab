@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmt310_02" module="anm" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="01531" crtdt="2016-09-29 14:54:53" modid="01531" moddt="2016-09-29 14:55:43" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="零用金撥補申請單處理">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="nmbasite,nmbasite_desc(chr80),nmbacomp,nmba002,nmba002_desc(chr80),nmbadocno,nmbadocdt,nmbb003,nmbb003_desc(chr80),nmbb002,nmbb002_desc(chr80),nmbb010,nmbb010_desc(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmt310_02" method="dialog">
+    <section id="input">
+      <input id="head" field="nmbasite,nmbacomp,nmba002,nmbadocno,nmbadocdt,nmbb003,nmbb002,nmbb010"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="nmbasite">
+        <after>
+          <reference field="nmbasite_desc" ref_field="nmba_t.nmbasite" map_field="nmbaent,nmbasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="nmbasite_desc"/>
+      <column id="nmbacomp">
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="nmba002">
+        <after/>
+        <controlp form="q_ooag001_2" state="i"/>
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="nmba002_desc"/>
+      <column id="nmbadocno">
+        <controlp form="q_ooba002_4" state="i"/>
+        <controlp form="q_nmbadocno" state="c"/>
+      </column>
+      <column id="nmbadocdt"/>
+      <column id="nmbb003">
+        <after>
+          <reference field="nmbb003_desc" ref_field="nmbb_t.nmbb003" map_field="nmbbent,nmbb003" ref_sql="SELECT nmabl003 FROM nmabl_t WHERE nmablent=$varg_enterprise$var AND nmabl001=? AND nmabl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmas_01" state="i"/>
+        <controlp form="q_nmas_01" state="c"/>
+      </column>
+      <column id="nmbb003_desc"/>
+      <column id="nmbb002">
+        <after>
+          <reference field="nmbb002_desc" ref_field="nmbb_t.nmbb002" map_field="nmbbent,nmbb002" ref_sql="SELECT nmajl003 FROM nmajl_t WHERE nmajlent=$varg_enterprise$var AND nmajl001=? AND nmajl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmaj001" state="i"/>
+        <controlp form="q_nmaj001" state="c"/>
+      </column>
+      <column id="nmbb002_desc"/>
+      <column id="nmbb010">
+        <after>
+          <reference field="nmbb010_desc" ref_field="nmbb_t.nmbb010" map_field="nmbbent,nmbb010" ref_sql="SELECT nmail004 FROM nmail_t WHERE nmailent=$varg_enterprise$var AND nmail002=? AND nmail003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmai002" state="i"/>
+        <controlp form="q_nmai002" state="c"/>
+      </column>
+      <column id="nmbb010_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="nmba_t" pk="nmbacomp,nmbadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT nmbasite,&apos;&apos;,nmbacomp,nmba002,&apos;&apos;,nmbadocno,nmbadocdt,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM nmba_t WHERE nmbaent= ? AND nmbacomp=? AND nmbadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="nmbacomp,nmbadocno"/>
+    </head>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,1257 @@
+{<section id="asrt300_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2013-12-21 22:38:13), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000160
+#+ Filename...: asrt300_02
+#+ Description: 重覆性生產製程資訊
+#+ Creator....: 02482(2013-12-13 09:32:18)
+#+ Modifier...: 02482 -SD/PR-
+{</section>}
+
+
+
+{<section id="asrt300_02.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_srac_d        RECORD
+       srac001 LIKE srac_t.srac001, 
+   srac002 LIKE srac_t.srac002, 
+   srac004 LIKE srac_t.srac004, 
+   srac005 LIKE srac_t.srac005, 
+   srac006 LIKE srac_t.srac006, 
+   srac007 LIKE srac_t.srac007, 
+   srac008 LIKE srac_t.srac008, 
+   srac008_desc LIKE type_t.chr500, 
+   srac009 LIKE srac_t.srac009, 
+   srac010 LIKE srac_t.srac010, 
+   srac011 LIKE srac_t.srac011, 
+   srac012 LIKE srac_t.srac012, 
+   srac012_desc LIKE type_t.chr500, 
+   srac013 LIKE srac_t.srac013, 
+   srac014 LIKE srac_t.srac014, 
+   srac014_desc LIKE type_t.chr500, 
+   srac015 LIKE srac_t.srac015, 
+   srac016 LIKE srac_t.srac016, 
+   srac016_desc LIKE type_t.chr500, 
+   srac017 LIKE srac_t.srac017, 
+   srac018 LIKE srac_t.srac018, 
+   srac019 LIKE srac_t.srac019, 
+   srac020 LIKE srac_t.srac020, 
+   srac036 LIKE srac_t.srac036, 
+   srac037 LIKE srac_t.srac037, 
+   srac021 LIKE srac_t.srac021, 
+   srac022 LIKE srac_t.srac022, 
+   srac023 LIKE srac_t.srac023, 
+   srac024 LIKE srac_t.srac024, 
+   srac025 LIKE srac_t.srac025, 
+   srac026 LIKE srac_t.srac026, 
+   srac046 LIKE srac_t.srac046, 
+   srac047 LIKE srac_t.srac047, 
+   srac048 LIKE srac_t.srac048, 
+   srac027 LIKE srac_t.srac027, 
+   srac028 LIKE srac_t.srac028, 
+   srac029 LIKE srac_t.srac029
+       END RECORD
+
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_srac_d          DYNAMIC ARRAY OF type_g_srac_d
+DEFINE g_srac_d_t        type_g_srac_d
+
+ 
+DEFINE g_srac001_t   LIKE srac_t.srac001    #Key值備份
+DEFINE g_srac002_t      LIKE srac_t.srac002    #Key值備份
+DEFINE g_srac004_t      LIKE srac_t.srac004    #Key值備份
+DEFINE g_srac005_t      LIKE srac_t.srac005    #Key值備份
+DEFINE g_srac006_t      LIKE srac_t.srac006    #Key值備份
+DEFINE g_srac007_t      LIKE srac_t.srac007    #Key值備份
+
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point    
+{</section>}
+ 
+{<section id="asrt300_02.input" >}    
+#+ 資料輸入
+PUBLIC FUNCTION asrt300_02(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_asrt300_02 WITH FORM cl_ap_formpath("asr","asrt300_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_srac_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac001
+            #add-point:BEFORE FIELD srac001 name="input.b.page1.srac001"
+            {<point name="input.b.page1.srac001" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac001
+            
+            #add-point:AFTER FIELD srac001 name="input.a.page1.srac001"
+            {<point name="input.a.page1.srac001" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac001
+            #add-point:ON CHANGE srac001 name="input.g.page1.srac001"
+            {<point name="input.g.page1.srac001" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac002
+            #add-point:BEFORE FIELD srac002 name="input.b.page1.srac002"
+            {<point name="input.b.page1.srac002" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac002
+            
+            #add-point:AFTER FIELD srac002 name="input.a.page1.srac002"
+            {<point name="input.a.page1.srac002" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac002
+            #add-point:ON CHANGE srac002 name="input.g.page1.srac002"
+            {<point name="input.g.page1.srac002" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac004
+            #add-point:BEFORE FIELD srac004 name="input.b.page1.srac004"
+            {<point name="input.b.page1.srac004" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac004
+            
+            #add-point:AFTER FIELD srac004 name="input.a.page1.srac004"
+            {<point name="input.a.page1.srac004" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac004
+            #add-point:ON CHANGE srac004 name="input.g.page1.srac004"
+            {<point name="input.g.page1.srac004" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac005
+            #add-point:BEFORE FIELD srac005 name="input.b.page1.srac005"
+            {<point name="input.b.page1.srac005" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac005
+            
+            #add-point:AFTER FIELD srac005 name="input.a.page1.srac005"
+            {<point name="input.a.page1.srac005" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac005
+            #add-point:ON CHANGE srac005 name="input.g.page1.srac005"
+            {<point name="input.g.page1.srac005" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac006
+            #add-point:BEFORE FIELD srac006 name="input.b.page1.srac006"
+            {<point name="input.b.page1.srac006" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac006
+            
+            #add-point:AFTER FIELD srac006 name="input.a.page1.srac006"
+            {<point name="input.a.page1.srac006" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac006
+            #add-point:ON CHANGE srac006 name="input.g.page1.srac006"
+            {<point name="input.g.page1.srac006" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac007
+            #add-point:BEFORE FIELD srac007 name="input.b.page1.srac007"
+            {<point name="input.b.page1.srac007" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac007
+            
+            #add-point:AFTER FIELD srac007 name="input.a.page1.srac007"
+            {<point name="input.a.page1.srac007" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac007
+            #add-point:ON CHANGE srac007 name="input.g.page1.srac007"
+            {<point name="input.g.page1.srac007" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac008
+            
+            #add-point:AFTER FIELD srac008 name="input.a.page1.srac008"
+            {<point name="input.a.page1.srac008" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac008
+            #add-point:BEFORE FIELD srac008 name="input.b.page1.srac008"
+            {<point name="input.b.page1.srac008" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac008
+            #add-point:ON CHANGE srac008 name="input.g.page1.srac008"
+            {<point name="input.g.page1.srac008" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac009
+            #add-point:BEFORE FIELD srac009 name="input.b.page1.srac009"
+            {<point name="input.b.page1.srac009" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac009
+            
+            #add-point:AFTER FIELD srac009 name="input.a.page1.srac009"
+            {<point name="input.a.page1.srac009" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac009
+            #add-point:ON CHANGE srac009 name="input.g.page1.srac009"
+            {<point name="input.g.page1.srac009" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac010
+            #add-point:BEFORE FIELD srac010 name="input.b.page1.srac010"
+            {<point name="input.b.page1.srac010" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac010
+            
+            #add-point:AFTER FIELD srac010 name="input.a.page1.srac010"
+            {<point name="input.a.page1.srac010" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac010
+            #add-point:ON CHANGE srac010 name="input.g.page1.srac010"
+            {<point name="input.g.page1.srac010" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac011
+            #add-point:BEFORE FIELD srac011 name="input.b.page1.srac011"
+            {<point name="input.b.page1.srac011" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac011
+            
+            #add-point:AFTER FIELD srac011 name="input.a.page1.srac011"
+            {<point name="input.a.page1.srac011" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac011
+            #add-point:ON CHANGE srac011 name="input.g.page1.srac011"
+            {<point name="input.g.page1.srac011" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac012
+            
+            #add-point:AFTER FIELD srac012 name="input.a.page1.srac012"
+            {<point name="input.a.page1.srac012" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac012
+            #add-point:BEFORE FIELD srac012 name="input.b.page1.srac012"
+            {<point name="input.b.page1.srac012" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac012
+            #add-point:ON CHANGE srac012 name="input.g.page1.srac012"
+            {<point name="input.g.page1.srac012" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac013
+            #add-point:BEFORE FIELD srac013 name="input.b.page1.srac013"
+            {<point name="input.b.page1.srac013" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac013
+            
+            #add-point:AFTER FIELD srac013 name="input.a.page1.srac013"
+            {<point name="input.a.page1.srac013" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac013
+            #add-point:ON CHANGE srac013 name="input.g.page1.srac013"
+            {<point name="input.g.page1.srac013" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac014
+            
+            #add-point:AFTER FIELD srac014 name="input.a.page1.srac014"
+            {<point name="input.a.page1.srac014" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac014
+            #add-point:BEFORE FIELD srac014 name="input.b.page1.srac014"
+            {<point name="input.b.page1.srac014" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac014
+            #add-point:ON CHANGE srac014 name="input.g.page1.srac014"
+            {<point name="input.g.page1.srac014" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac015
+            #add-point:BEFORE FIELD srac015 name="input.b.page1.srac015"
+            {<point name="input.b.page1.srac015" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac015
+            
+            #add-point:AFTER FIELD srac015 name="input.a.page1.srac015"
+            {<point name="input.a.page1.srac015" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac015
+            #add-point:ON CHANGE srac015 name="input.g.page1.srac015"
+            {<point name="input.g.page1.srac015" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac016
+            
+            #add-point:AFTER FIELD srac016 name="input.a.page1.srac016"
+            {<point name="input.a.page1.srac016" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac016
+            #add-point:BEFORE FIELD srac016 name="input.b.page1.srac016"
+            {<point name="input.b.page1.srac016" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac016
+            #add-point:ON CHANGE srac016 name="input.g.page1.srac016"
+            {<point name="input.g.page1.srac016" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac017
+            #add-point:BEFORE FIELD srac017 name="input.b.page1.srac017"
+            {<point name="input.b.page1.srac017" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac017
+            
+            #add-point:AFTER FIELD srac017 name="input.a.page1.srac017"
+            {<point name="input.a.page1.srac017" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac017
+            #add-point:ON CHANGE srac017 name="input.g.page1.srac017"
+            {<point name="input.g.page1.srac017" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac018
+            #add-point:BEFORE FIELD srac018 name="input.b.page1.srac018"
+            {<point name="input.b.page1.srac018" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac018
+            
+            #add-point:AFTER FIELD srac018 name="input.a.page1.srac018"
+            {<point name="input.a.page1.srac018" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac018
+            #add-point:ON CHANGE srac018 name="input.g.page1.srac018"
+            {<point name="input.g.page1.srac018" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac019
+            #add-point:BEFORE FIELD srac019 name="input.b.page1.srac019"
+            {<point name="input.b.page1.srac019" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac019
+            
+            #add-point:AFTER FIELD srac019 name="input.a.page1.srac019"
+            {<point name="input.a.page1.srac019" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac019
+            #add-point:ON CHANGE srac019 name="input.g.page1.srac019"
+            {<point name="input.g.page1.srac019" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac020
+            #add-point:BEFORE FIELD srac020 name="input.b.page1.srac020"
+            {<point name="input.b.page1.srac020" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac020
+            
+            #add-point:AFTER FIELD srac020 name="input.a.page1.srac020"
+            {<point name="input.a.page1.srac020" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac020
+            #add-point:ON CHANGE srac020 name="input.g.page1.srac020"
+            {<point name="input.g.page1.srac020" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac036
+            #add-point:BEFORE FIELD srac036 name="input.b.page1.srac036"
+            {<point name="input.b.page1.srac036" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac036
+            
+            #add-point:AFTER FIELD srac036 name="input.a.page1.srac036"
+            {<point name="input.a.page1.srac036" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac036
+            #add-point:ON CHANGE srac036 name="input.g.page1.srac036"
+            {<point name="input.g.page1.srac036" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac037
+            #add-point:BEFORE FIELD srac037 name="input.b.page1.srac037"
+            {<point name="input.b.page1.srac037" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac037
+            
+            #add-point:AFTER FIELD srac037 name="input.a.page1.srac037"
+            {<point name="input.a.page1.srac037" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac037
+            #add-point:ON CHANGE srac037 name="input.g.page1.srac037"
+            {<point name="input.g.page1.srac037" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac021
+            #add-point:BEFORE FIELD srac021 name="input.b.page1.srac021"
+            {<point name="input.b.page1.srac021" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac021
+            
+            #add-point:AFTER FIELD srac021 name="input.a.page1.srac021"
+            {<point name="input.a.page1.srac021" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac021
+            #add-point:ON CHANGE srac021 name="input.g.page1.srac021"
+            {<point name="input.g.page1.srac021" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac022
+            #add-point:BEFORE FIELD srac022 name="input.b.page1.srac022"
+            {<point name="input.b.page1.srac022" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac022
+            
+            #add-point:AFTER FIELD srac022 name="input.a.page1.srac022"
+            {<point name="input.a.page1.srac022" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac022
+            #add-point:ON CHANGE srac022 name="input.g.page1.srac022"
+            {<point name="input.g.page1.srac022" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac023
+            #add-point:BEFORE FIELD srac023 name="input.b.page1.srac023"
+            {<point name="input.b.page1.srac023" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac023
+            
+            #add-point:AFTER FIELD srac023 name="input.a.page1.srac023"
+            {<point name="input.a.page1.srac023" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac023
+            #add-point:ON CHANGE srac023 name="input.g.page1.srac023"
+            {<point name="input.g.page1.srac023" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac024
+            #add-point:BEFORE FIELD srac024 name="input.b.page1.srac024"
+            {<point name="input.b.page1.srac024" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac024
+            
+            #add-point:AFTER FIELD srac024 name="input.a.page1.srac024"
+            {<point name="input.a.page1.srac024" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac024
+            #add-point:ON CHANGE srac024 name="input.g.page1.srac024"
+            {<point name="input.g.page1.srac024" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac025
+            #add-point:BEFORE FIELD srac025 name="input.b.page1.srac025"
+            {<point name="input.b.page1.srac025" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac025
+            
+            #add-point:AFTER FIELD srac025 name="input.a.page1.srac025"
+            {<point name="input.a.page1.srac025" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac025
+            #add-point:ON CHANGE srac025 name="input.g.page1.srac025"
+            {<point name="input.g.page1.srac025" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac026
+            #add-point:BEFORE FIELD srac026 name="input.b.page1.srac026"
+            {<point name="input.b.page1.srac026" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac026
+            
+            #add-point:AFTER FIELD srac026 name="input.a.page1.srac026"
+            {<point name="input.a.page1.srac026" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac026
+            #add-point:ON CHANGE srac026 name="input.g.page1.srac026"
+            {<point name="input.g.page1.srac026" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac046
+            #add-point:BEFORE FIELD srac046 name="input.b.page1.srac046"
+            {<point name="input.b.page1.srac046" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac046
+            
+            #add-point:AFTER FIELD srac046 name="input.a.page1.srac046"
+            {<point name="input.a.page1.srac046" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac046
+            #add-point:ON CHANGE srac046 name="input.g.page1.srac046"
+            {<point name="input.g.page1.srac046" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac047
+            #add-point:BEFORE FIELD srac047 name="input.b.page1.srac047"
+            {<point name="input.b.page1.srac047" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac047
+            
+            #add-point:AFTER FIELD srac047 name="input.a.page1.srac047"
+            {<point name="input.a.page1.srac047" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac047
+            #add-point:ON CHANGE srac047 name="input.g.page1.srac047"
+            {<point name="input.g.page1.srac047" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac048
+            #add-point:BEFORE FIELD srac048 name="input.b.page1.srac048"
+            {<point name="input.b.page1.srac048" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac048
+            
+            #add-point:AFTER FIELD srac048 name="input.a.page1.srac048"
+            {<point name="input.a.page1.srac048" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac048
+            #add-point:ON CHANGE srac048 name="input.g.page1.srac048"
+            {<point name="input.g.page1.srac048" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac027
+            #add-point:BEFORE FIELD srac027 name="input.b.page1.srac027"
+            {<point name="input.b.page1.srac027" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac027
+            
+            #add-point:AFTER FIELD srac027 name="input.a.page1.srac027"
+            {<point name="input.a.page1.srac027" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac027
+            #add-point:ON CHANGE srac027 name="input.g.page1.srac027"
+            {<point name="input.g.page1.srac027" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac028
+            #add-point:BEFORE FIELD srac028 name="input.b.page1.srac028"
+            {<point name="input.b.page1.srac028" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac028
+            
+            #add-point:AFTER FIELD srac028 name="input.a.page1.srac028"
+            {<point name="input.a.page1.srac028" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac028
+            #add-point:ON CHANGE srac028 name="input.g.page1.srac028"
+            {<point name="input.g.page1.srac028" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD srac029
+            #add-point:BEFORE FIELD srac029 name="input.b.page1.srac029"
+            {<point name="input.b.page1.srac029" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD srac029
+            
+            #add-point:AFTER FIELD srac029 name="input.a.page1.srac029"
+            {<point name="input.a.page1.srac029" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE srac029
+            #add-point:ON CHANGE srac029 name="input.g.page1.srac029"
+            {<point name="input.g.page1.srac029" />}
+            #END add-point 
+
+
+ 
+                  #Ctrlp:input.c.page1.srac001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac001
+            #add-point:ON ACTION controlp INFIELD srac001 name="input.c.page1.srac001"
+            {<point name="input.c.page1.srac001" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac002
+            #add-point:ON ACTION controlp INFIELD srac002 name="input.c.page1.srac002"
+            {<point name="input.c.page1.srac002" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac004
+            #add-point:ON ACTION controlp INFIELD srac004 name="input.c.page1.srac004"
+            {<point name="input.c.page1.srac004" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac005
+            #add-point:ON ACTION controlp INFIELD srac005 name="input.c.page1.srac005"
+            {<point name="input.c.page1.srac005" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac006
+            #add-point:ON ACTION controlp INFIELD srac006 name="input.c.page1.srac006"
+            {<point name="input.c.page1.srac006" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac007
+            #add-point:ON ACTION controlp INFIELD srac007 name="input.c.page1.srac007"
+            {<point name="input.c.page1.srac007" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac008
+            #add-point:ON ACTION controlp INFIELD srac008 name="input.c.page1.srac008"
+            {<point name="input.c.page1.srac008" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac009
+            #add-point:ON ACTION controlp INFIELD srac009 name="input.c.page1.srac009"
+            {<point name="input.c.page1.srac009" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac010
+            #add-point:ON ACTION controlp INFIELD srac010 name="input.c.page1.srac010"
+            {<point name="input.c.page1.srac010" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac011
+            #add-point:ON ACTION controlp INFIELD srac011 name="input.c.page1.srac011"
+            {<point name="input.c.page1.srac011" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac012
+            #add-point:ON ACTION controlp INFIELD srac012 name="input.c.page1.srac012"
+            {<point name="input.c.page1.srac012" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac013
+            #add-point:ON ACTION controlp INFIELD srac013 name="input.c.page1.srac013"
+            {<point name="input.c.page1.srac013" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac014
+            #add-point:ON ACTION controlp INFIELD srac014 name="input.c.page1.srac014"
+            {<point name="input.c.page1.srac014" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac015
+            #add-point:ON ACTION controlp INFIELD srac015 name="input.c.page1.srac015"
+            {<point name="input.c.page1.srac015" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac016
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac016
+            #add-point:ON ACTION controlp INFIELD srac016 name="input.c.page1.srac016"
+            {<point name="input.c.page1.srac016" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac017
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac017
+            #add-point:ON ACTION controlp INFIELD srac017 name="input.c.page1.srac017"
+            {<point name="input.c.page1.srac017" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac018
+            #add-point:ON ACTION controlp INFIELD srac018 name="input.c.page1.srac018"
+            {<point name="input.c.page1.srac018" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac019
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac019
+            #add-point:ON ACTION controlp INFIELD srac019 name="input.c.page1.srac019"
+            {<point name="input.c.page1.srac019" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac020
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac020
+            #add-point:ON ACTION controlp INFIELD srac020 name="input.c.page1.srac020"
+            {<point name="input.c.page1.srac020" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac036
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac036
+            #add-point:ON ACTION controlp INFIELD srac036 name="input.c.page1.srac036"
+            {<point name="input.c.page1.srac036" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac037
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac037
+            #add-point:ON ACTION controlp INFIELD srac037 name="input.c.page1.srac037"
+            {<point name="input.c.page1.srac037" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac021
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac021
+            #add-point:ON ACTION controlp INFIELD srac021 name="input.c.page1.srac021"
+            {<point name="input.c.page1.srac021" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac022
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac022
+            #add-point:ON ACTION controlp INFIELD srac022 name="input.c.page1.srac022"
+            {<point name="input.c.page1.srac022" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac023
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac023
+            #add-point:ON ACTION controlp INFIELD srac023 name="input.c.page1.srac023"
+            {<point name="input.c.page1.srac023" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac024
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac024
+            #add-point:ON ACTION controlp INFIELD srac024 name="input.c.page1.srac024"
+            {<point name="input.c.page1.srac024" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac025
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac025
+            #add-point:ON ACTION controlp INFIELD srac025 name="input.c.page1.srac025"
+            {<point name="input.c.page1.srac025" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac026
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac026
+            #add-point:ON ACTION controlp INFIELD srac026 name="input.c.page1.srac026"
+            {<point name="input.c.page1.srac026" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac046
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac046
+            #add-point:ON ACTION controlp INFIELD srac046 name="input.c.page1.srac046"
+            {<point name="input.c.page1.srac046" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac047
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac047
+            #add-point:ON ACTION controlp INFIELD srac047 name="input.c.page1.srac047"
+            {<point name="input.c.page1.srac047" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac048
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac048
+            #add-point:ON ACTION controlp INFIELD srac048 name="input.c.page1.srac048"
+            {<point name="input.c.page1.srac048" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac027
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac027
+            #add-point:ON ACTION controlp INFIELD srac027 name="input.c.page1.srac027"
+            {<point name="input.c.page1.srac027" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac028
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac028
+            #add-point:ON ACTION controlp INFIELD srac028 name="input.c.page1.srac028"
+            {<point name="input.c.page1.srac028" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.srac029
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD srac029
+            #add-point:ON ACTION controlp INFIELD srac029 name="input.c.page1.srac029"
+            {<point name="input.c.page1.srac029" />}
+            #END add-point
+
+
+
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+
+      
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         {<point name="input.cancel"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_asrt300_02 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="asrt300_02.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+{</section>}
+{<section id="asrt300_02.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+

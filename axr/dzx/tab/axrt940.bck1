@@ -1,0 +1,259 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrt940" module="axr" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="02599" crtdt="2014-10-30 09:35:46" modid="02599" moddt="2014-11-20 14:48:02" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="4" tabver="10001" description="帳齡及壞帳提列維護">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xrejsite,xrejsite_desc(chr80),xrejld,xrejld_desc(chr80),xrej004,xrej004_desc(chr80),xrejcomp,xrejdocno,xrejdocdt,xrej001,xrej002,xrej005,xrejstus,xrejownid,xrejownid_desc(chr80),xrejowndp,xrejowndp_desc(chr80),xrejcrtid,xrejcrtid_desc(chr80),xrejcrtdp,xrejcrtdp_desc(chr80),xrejcrtdt,xrejmodid,xrejmodid_desc(chr80),xrejmoddt,xrejcnfid,xrejcnfid_desc(chr80),xrejcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xrekseq,xrek005,xrek006,xrek007,xrek100,xrek103,xrek113,xrek037,xrek039,xrek105,xrek115,xrek104,xrek114,xrek038,xrek040,xrek106,xrek116,xrek107,xrek117"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xrekseq,xrek033,xrek019,xrek019_desc(chr500),xrek041,xrek041_desc(chr500),xrekorga,xrekorga_desc(chr500),xrek009,xrek009_desc(chr500),xrek010,xrek010_desc(chr500),xrek016,xrek016_desc(chr500),xrek011,xrek011_desc(chr500),xrek012,xrek012_desc(chr500),xrek013,xrek013_desc(chr500),xrek014,xrek014_desc(chr500),xrek015,xrek015_desc(chr500),xrek017,xrek018,xrek020,xrek021,xrek021_desc(chr500),xrek022,xrek022_desc(chr500),xrek023,xrek024,xrek025,xrek026,xrek027,xrek028,xrek029,xrek030,xrek031,xrek032"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="xrekseq,xrek005,xrek006,xrek007,xrek100,xrek103,xrek113,xrek037,xrek039,xrek105,xrek115"/>
+      <var id="body" page="4" record="s_detail4" page_id="4" value="xrekseq,xrek005,xrek006,xrek007,xrek100,xrek104,xrek114,xrek038,xrek040,xrek106,xrek116"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="open_pre"/>
+      <action id="open_axrt940_02"/>
+      <action id="delete" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="open_axrt940_01"/>
+      <action id="un_voucher"/>
+      <action id="open_axrt300_13"/>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axrt940" method="dialog">
+    <section id="input">
+      <input id="head" field="xrejsite,xrejld,xrej004,xrejcomp,xrejdocno,xrejdocdt,xrej001,xrej002,xrej005,xrejstus"/>
+      <input id="body" page="1" field="xrekseq,xrek005,xrek006,xrek007,xrek100,xrek103,xrek113,xrek037,xrek039,xrek105,xrek115,xrek104,xrek114,xrek038,xrek040,xrek106,xrek116,xrek107,xrek117" insert="N" append="N" delete="N"/>
+      <input id="body" page="2" field="xrek033,xrek019,xrek019_desc,xrek041,xrek041_desc,xrekorga,xrekorga_desc,xrek009,xrek009_desc,xrek010,xrek010_desc,xrek016,xrek016_desc,xrek011,xrek011_desc,xrek012,xrek012_desc,xrek013,xrek013_desc,xrek014,xrek014_desc,xrek015,xrek015_desc,xrek017,xrek018,xrek020,xrek021,xrek021_desc,xrek022,xrek022_desc,xrek023,xrek024,xrek025,xrek026,xrek027,xrek028,xrek029,xrek030,xrek031,xrek032" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xrejsite,xrejld,xrej004,xrejcomp,xrejdocno,xrejdocdt,xrej001,xrej002,xrej005,xrejstus,xrejownid,xrejowndp,xrejcrtid,xrejcrtdp,xrejcrtdt,xrejmodid,xrejmoddt,xrejcnfid,xrejcnfdt"/>
+      <construct id="body" page="1" field="xrekseq,xrek005,xrek006,xrek007,xrek100,xrek103,xrek113,xrek037,xrek039,xrek105,xrek115,xrek104,xrek114,xrek038,xrek040,xrek106,xrek116,xrek107,xrek117"/>
+      <construct id="body" page="2" field="xrek033,xrek019,xrek019_desc,xrek041,xrek041_desc,xrekorga,xrekorga_desc,xrek009,xrek009_desc,xrek010,xrek010_desc,xrek016,xrek016_desc,xrek011,xrek011_desc,xrek012,xrek012_desc,xrek013,xrek013_desc,xrek014,xrek014_desc,xrek015,xrek015_desc,xrek017,xrek018,xrek020,xrek021,xrek021_desc,xrek022,xrek022_desc,xrek023,xrek024,xrek025,xrek026,xrek027,xrek028,xrek029,xrek030,xrek031,xrek032"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xrejdocno"/>
+      <set id="head" type="no_entry" field="xrejdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xrejsite">
+        <after>
+          <reference field="xrejsite_desc" ref_field="xrej_t.xrejsite" map_field="xrejent,xrejsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xrejsite_desc"/>
+      <column id="xrejld">
+        <after>
+          <reference field="xrejld_desc" ref_field="xrej_t.xrejld" map_field="xrejent,xrejld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xrejld_desc"/>
+      <column id="xrej004">
+        <after>
+          <reference field="xrej004_desc" ref_field="xrej_t.xrej004" map_field="xrejent,xrej004" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="xrej004_desc"/>
+      <column id="xrejcomp"/>
+      <column id="xrejdocno">
+        <controlp form="q_ooba002_3" state="i"/>
+        <controlp form="q_xrejdocno" state="c"/>
+      </column>
+      <column id="xrejdocdt"/>
+      <column id="xrej001"/>
+      <column id="xrej002"/>
+      <column id="xrej005"/>
+      <column id="xrejstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="xrejownid">
+        <after>
+          <reference field="xrejownid_desc" ref_field="xrej_t.xrejownid" map_field="xrejownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xrejownid_desc"/>
+      <column id="xrejowndp">
+        <after>
+          <reference field="xrejowndp_desc" ref_field="xrej_t.xrejowndp" map_field="xrejowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xrejowndp_desc"/>
+      <column id="xrejcrtid">
+        <after>
+          <reference field="xrejcrtid_desc" ref_field="xrej_t.xrejcrtid" map_field="xrejcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xrejcrtid_desc"/>
+      <column id="xrejcrtdp">
+        <after>
+          <reference field="xrejcrtdp_desc" ref_field="xrej_t.xrejcrtdp" map_field="xrejcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xrejcrtdp_desc"/>
+      <column id="xrejcrtdt"/>
+      <column id="xrejmodid">
+        <after>
+          <reference field="xrejmodid_desc" ref_field="xrej_t.xrejmodid" map_field="xrejmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xrejmodid_desc"/>
+      <column id="xrejmoddt"/>
+      <column id="xrejcnfid">
+        <after>
+          <reference field="xrejcnfid_desc" ref_field="xrej_t.xrejcnfid" map_field="xrejcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xrejcnfid_desc"/>
+      <column id="xrejcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xrekseq"/>
+      <column id="xrek005">
+        <controlp form="q_xrcadocno" state="c"/>
+      </column>
+      <column id="xrek006"/>
+      <column id="xrek007"/>
+      <column id="xrek100">
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="xrek103" type="S" default="0"/>
+      <column id="xrek113" type="S" default="0"/>
+      <column id="xrek037"/>
+      <column id="xrek039"/>
+      <column id="xrek105" type="S" default="0"/>
+      <column id="xrek115" type="S" default="0"/>
+      <column id="xrek104" type="S" default="0"/>
+      <column id="xrek114" type="S" default="0"/>
+      <column id="xrek038"/>
+      <column id="xrek040"/>
+      <column id="xrek106" type="S" default="0"/>
+      <column id="xrek116" type="S" default="0"/>
+      <column id="xrek107" type="S" default="0"/>
+      <column id="xrek117" type="S" default="0"/>
+    </init>
+    <init id="body" page="2">
+      <column id="xrek033"/>
+      <column id="xrek019">
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="xrek019_desc">
+        <controlp form="aglt310_04" state="i"/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="xrek041">
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="xrek041_desc">
+        <controlp form="aglt310_04" state="i"/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="xrekorga">
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="xrekorga_desc">
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="xrek009">
+        <controlp form="q_pmaa001" state="i"/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="xrek009_desc">
+        <controlp form="q_pmaa001" state="i"/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="xrek010">
+        <controlp form="q_pmaa001" state="i"/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="xrek010_desc">
+        <controlp form="q_pmaa001" state="i"/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="xrek016"/>
+      <column id="xrek016_desc">
+        <controlp form="q_ooag001_2" state="i"/>
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="xrek011"/>
+      <column id="xrek011_desc">
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="xrek012"/>
+      <column id="xrek012_desc">
+        <controlp form="q_ooed004_1" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="xrek013"/>
+      <column id="xrek013_desc">
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="xrek014"/>
+      <column id="xrek014_desc">
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="xrek015"/>
+      <column id="xrek015_desc">
+        <controlp form="q_rtax001_1" state="i"/>
+        <controlp form="q_rtax001_1" state="c"/>
+      </column>
+      <column id="xrek017"/>
+      <column id="xrek018"/>
+      <column id="xrek020"/>
+      <column id="xrek021"/>
+      <column id="xrek021_desc">
+        <controlp form="q_oojd001_2" state="i"/>
+        <controlp form="q_oojd001_2" state="c"/>
+      </column>
+      <column id="xrek022"/>
+      <column id="xrek022_desc">
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="xrek023"/>
+      <column id="xrek024"/>
+      <column id="xrek025"/>
+      <column id="xrek026"/>
+      <column id="xrek027"/>
+      <column id="xrek028"/>
+      <column id="xrek029"/>
+      <column id="xrek030"/>
+      <column id="xrek031"/>
+      <column id="xrek032"/>
+    </init>
+    <init id="body" page="3"/>
+    <init id="body" page="4"/>
+  </form>
+  <dataset>
+    <head id="xrej_t" pk="xrejdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT xrejsite,&apos;&apos;,xrejld,&apos;&apos;,xrej004,&apos;&apos;,xrejcomp,xrejdocno,xrejdocdt,xrej001,xrej002,xrej005,xrejstus,xrejownid,&apos;&apos;,xrejowndp,&apos;&apos;,xrejcrtid,&apos;&apos;,xrejcrtdp,&apos;&apos;,xrejcrtdt,xrejmodid,&apos;&apos;,xrejmoddt,xrejcnfid,&apos;&apos;,xrejcnfdt FROM xrej_t WHERE xrejent= ? AND xrejdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xrejsite,&apos;&apos;,xrejld,&apos;&apos;,xrej004,&apos;&apos;,xrejcomp,xrejdocno,xrejdocdt,xrej001,xrej002,xrej005,xrejstus,xrejownid,&apos;&apos;,xrejowndp,&apos;&apos;,xrejcrtid,&apos;&apos;,xrejcrtdp,&apos;&apos;,xrejcrtdt,xrejmodid,&apos;&apos;,xrejmoddt,xrejcnfid,&apos;&apos;,xrejcnfdt FROM xrej_t" order="xrejdocno"/>
+    </head>
+    <body id="xrek_t" page="1,2,3,4" linked="" pk="xrekseq" fk="xrekdocno">
+      <sql id="forupd_sql_detail" query="SELECT xrekseq,xrek005,xrek006,xrek007,xrek100,xrek103,xrek113,xrek037,xrek039,xrek105,xrek115,xrek104,xrek114,xrek038,xrek040,xrek106,xrek116,xrek107,xrek117,&apos;&apos;,xrek033,xrek019,&apos;&apos;,xrek041,&apos;&apos;,xrekorga,&apos;&apos;,xrek009,&apos;&apos;,xrek010,&apos;&apos;,xrek016,&apos;&apos;,xrek011,&apos;&apos;,xrek012,&apos;&apos;,xrek013,&apos;&apos;,xrek014,&apos;&apos;,xrek015,&apos;&apos;,xrek017,xrek018,xrek020,xrek021,&apos;&apos;,xrek022,&apos;&apos;,xrek023,xrek024,xrek025,xrek026,xrek027,xrek028,xrek029,xrek030,xrek031,xrek032,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xrek_t WHERE xrekent=? AND xrekdocno=? AND xrekseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xrekseq,xrek005,xrek006,xrek007,xrek100,xrek103,xrek113,xrek037,xrek039,xrek105,xrek115,xrek104,xrek114,xrek038,xrek040,xrek106,xrek116,xrek107,xrek117,&apos;&apos;,xrek033,xrek019,&apos;&apos;,xrek041,&apos;&apos;,xrekorga,&apos;&apos;,xrek009,&apos;&apos;,xrek010,&apos;&apos;,xrek016,&apos;&apos;,xrek011,&apos;&apos;,xrek012,&apos;&apos;,xrek013,&apos;&apos;,xrek014,&apos;&apos;,xrek015,&apos;&apos;,xrek017,xrek018,xrek020,xrek021,&apos;&apos;,xrek022,&apos;&apos;,xrek023,xrek024,xrek025,xrek026,xrek027,xrek028,xrek029,xrek030,xrek031,xrek032,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xrek_t WHERE xrekent=? AND xrekdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

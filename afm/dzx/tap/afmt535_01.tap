@@ -1,0 +1,608 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="afmt535_01" std_prog="afmt535_01" erpver="1.0" module="AFM" ver="1" env="s" zone="t10prd" booking="Y" type="S" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="2" status=""/>
+  </other>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE g_wc_t535_01     STRING
+DEFINE g_glaa003        LIKE glaa_t.glaa003
+DEFINE g_glaa024        LIKE glaa_t.glaa024
+DEFINE g_glaacomp       LIKE glaa_t.glaacomp
+DEFINE g_fmml005        LIKE fmml_t.fmml005
+DEFINE g_fmml006        LIKE fmml_t.fmml006
+DEFINE g_wc_fmml001     STRING
+DEFINE g_wc_fmml003     STRING   #帳套範圍
+
+]]>
+  </point>
+  <point name="input.a.fmml001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_fmml_m.fmml001) THEN           
+               CALL s_fin_account_center_with_ld_chk(g_fmml_m.fmml001,g_fmml_m.fmml003,g_user,'3','N','',g_fmml_m.fmmldocdt) RETURNING g_sub_success,g_errno
+               IF NOT g_sub_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_fmml_m.fmml001 = ''
+                  LET g_fmml_m.fmml003  = ''
+                  DISPLAY BY NAME g_fmml_m.fmml001
+                  NEXT FIELD CURRENT
+               END IF
+            END IF               
+            CALL s_fin_account_center_sons_query('3',g_fmml_m.fmml001,g_fmml_m.fmmldocdt,'1')  
+            CALL s_fin_account_center_sons_str() RETURNING g_wc_fmml001
+            CALL s_fin_get_wc_str(g_wc_fmml001) RETURNING g_wc_fmml001
+            CALL s_fin_account_center_ld_str() RETURNING g_wc_fmml003
+            CALL s_fin_get_wc_str(g_wc_fmml003) RETURNING g_wc_fmml003]]>
+  </point>
+  <point name="input.a.fmml002" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_fmml_m.fmml002) THEN
+               IF NOT s_aooi200_fin_chk_docno(g_fmml_m.fmml003,'','',g_fmml_m.fmml002,g_fmml_m.fmmldocdt,g_prog) THEN
+                  LET g_fmml_m.fmml002 = ''
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            
+
+]]>
+  </point>
+  <point name="input.a.fmml003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_fmml_m.fmml003) THEN 
+               CALL s_fin_account_center_with_ld_chk(g_fmml_m.fmml001,g_fmml_m.fmml003,g_user,'3','N',g_wc_fmml003,g_fmml_m.fmmldocdt) RETURNING g_sub_success,g_errno
+               IF NOT g_sub_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_fmml_m.fmml003 = ''
+                  NEXT FIELD CURRENT       
+               END IF
+            END IF
+            CALL s_ld_sel_glaa(g_fmml_m.fmml003,'glaa003|glaa024|glaacomp')
+               RETURNING g_sub_success,g_glaa003,g_glaa024,g_glaacomp
+            #取得年月
+            CALL s_fin_date_get_period_value(g_glaa003,g_fmml_m.fmml003,g_fmml_m.fmmldocdt)
+               RETURNING g_sub_success,g_fmml005,g_fmml006
+            #取得日期
+            CALL s_fin_date_get_period_range(g_glaa003,g_fmml005,g_fmml006)
+               RETURNING l_strdat,l_enddat            
+     ]]>
+  </point>
+  <point name="input.a.fmmldocdt" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #取得年月
+            CALL s_fin_date_get_period_value(g_glaa003,g_fmml_m.fmml003,g_fmml_m.fmmldocdt)
+               RETURNING g_sub_success,g_fmml005,g_fmml006
+            #取得日期
+            CALL s_fin_date_get_period_range(g_glaa003,g_fmml005,g_fmml006)
+               RETURNING l_strdat,l_enddat                  ]]>
+  </point>
+  <point name="input.a.fmmldocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  NOT cl_null(g_fmml_m.fmmldocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_fmml_m.fmmldocno != g_fmmldocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM fmml_t WHERE "||"fmmlent = '" ||g_enterprise|| "' AND "||"fmmldocno = '"||g_fmml_m.fmmldocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            IF NOT cl_null(g_fmml_m.fmmldocno) THEN
+               IF NOT s_aooi200_fin_chk_docno(g_fmml_m.fmml003,'','',g_fmml_m.fmmldocno,g_fmml_m.fmmldocdt,g_prog) THEN
+                  LET g_fmml_m.fmmldocno = ''
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.before_close" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL cl_set_comp_visible('group_1',TRUE)]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            ]]>
+  </point>
+  <point name="input.c.fmml001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_fmml_m.fmml001       #給予default值
+            LET g_qryparam.where = " ooef204 = 'Y' "
+            CALL q_ooef001()                                #呼叫開窗
+            LET g_fmml_m.fmml001 = g_qryparam.return1        #將開窗取得的值回傳到變數
+            DISPLAY BY NAME g_fmml_m.fmml001
+            NEXT FIELD fmml001]]>
+  </point>
+  <point name="input.c.fmml002" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_fmml_m.fmml002
+            LET g_qryparam.arg1 = g_glaa024
+            LET g_qryparam.arg2 = 'afmt535'
+            CALL q_ooba002_1()
+            LET g_fmml_m.fmml002 = g_qryparam.return1
+            DISPLAY BY NAME g_fmml_m.fmml002
+            NEXT FIELD fmml002]]>
+  </point>
+  <point name="input.c.fmml003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_fmml_m.fmml003
+            LET g_qryparam.where = "  glaald IN ",g_wc_fmml003
+            LET g_qryparam.arg1 = g_user                                 #人員權限
+            LET g_qryparam.arg2 = g_dept                                 #部門權限
+            CALL q_authorised_ld()
+            LET g_fmml_m.fmml003 = g_qryparam.return1
+            DISPLAY BY NAME g_fmml_m.fmml003
+            NEXT FIELD fmml003]]>
+  </point>
+  <point name="input.c.fmmldocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_fmml_m.fmmldocno
+            LET g_qryparam.arg1 = g_glaa024
+            LET g_qryparam.arg2 = 'afmt535'
+            CALL q_ooba002_1()
+            LET g_fmml_m.fmmldocno = g_qryparam.return1
+            DISPLAY BY NAME g_fmml_m.fmmldocno
+            NEXT FIELD fmmldocno]]>
+  </point>
+  <point name="input.c.fmmp004" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_fmml_m.fmmp004             #給予default值
+#            LET g_qryparam.where    = " fmmpsite ='",g_fmmr_d[l_ac].fmmr001,"' AND fmmpld = '",g_fmml_m.fmml003,"' ",
+#                                      " AND fmmp001 = '",g_fmml_m.fmml005,"' AND fmmp002 = '",g_fmml_m.fmml006,"'  ",
+#                                      " AND fmmpstus = 'Y' "
+            CALL q_fmmp004()                                #呼叫開窗
+            LET g_fmml_m.fmmp004 = g_qryparam.return1
+            DISPLAY g_fmml_m.fmmp004 TO fmmp004
+            NEXT FIELD fmmp004                         #返回原欄位]]>
+  </point>
+  <point name="input.c.fmmpsite" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_fmml_m.fmmpsite
+            LET g_qryparam.where    = "  AND ooef001 IN ",g_wc_fmml001," AND ooef206='Y' "
+            CALL q_ooef001()
+            LET g_fmml_m.fmmpsite = g_qryparam.return1
+            DISPLAY BY NAME g_fmml_m.fmmpsite]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE p_fmmldocno   LIKE fmml_t.fmmldocno
+   DEFINE p_type        LIKE type_t.chr1
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE r_docno       LIKE fmml_t.fmmldocno
+   DEFINE l_array       DYNAMIC ARRAY OF RECORD
+                        chr  LIKE type_t.chr1000,
+                        dat  LIKE type_t.dat
+                        END RECORD  
+   DEFINE l_glaa        RECORD
+                        glaacomp        LIKE glaa_t.glaacomp,
+                        glaa024         LIKE glaa_t.glaa024,
+                        glaa026         LIKE glaa_t.glaa026
+                        END RECORD
+   DEFINE l_strdat      LIKE type_t.dat                        
+   DEFINE l_enddat      LIKE type_t.dat         
+   
+   WHENEVER ERROR CONTINUE]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   p_fmmldocno,p_type]]>
+  </point>
+  <point name="input.more_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      CONSTRUCT g_wc_t535_01 ON fmmjsite,fmmjdocno
+           FROM fmmjsite,fmmjdocno
+          
+         ON ACTION controlp INFIELD fmmjsite
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where    = " ooef017 = '",g_glaacomp,"' AND ooef001 IN ",g_wc_fmml001," AND ooef206='Y' "
+            CALL q_ooef001()
+            DISPLAY g_qryparam.return1 TO fmmjsite
+            NEXT FIELD fmmjsite 
+         
+          ON ACTION controlp INFIELD fmmjdocno
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE          
+            LET g_qryparam.where    = "     fmmjsite IN ",g_wc_fmml001,
+                                      " AND fmmjstus = 'Y' ",
+                                      " AND fmmjdocdt BETWEEN '",l_strdat,"' AND '",g_fmml_m.fmmldocdt,"' "
+            CALL q_fmmjdocno()                              
+            DISPLAY g_qryparam.return1 TO fmmjdocno
+            NEXT FIELD fmmjdocno                         
+
+      END CONSTRUCT]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL cl_err_collect_init()
+   IF INT_FLAG THEN
+      LET r_success= FALSE
+      LET INT_FLAG = 0
+   ELSE
+      IF cl_null(p_fmmldocno)THEN
+         #產生單頭+單身
+         #p_array
+         CALL l_array.clear()
+         #取得會計參照表號    
+         CALL s_ld_sel_glaa(g_fmml_m.fmml003,'glaa003|glaa024|glaacomp') 
+         RETURNING g_sub_success,g_glaa003,g_glaa024,g_glaacomp
+         #取得年月
+         CALL s_fin_date_get_period_value(g_glaa003,g_fmml_m.fmml003,g_fmml_m.fmmldocdt)
+            RETURNING g_sub_success,g_fmml005,g_fmml006
+         #取得日期
+         CALL s_fin_date_get_period_range(g_glaa003,g_fmml005,g_fmml006)
+            RETURNING l_strdat,l_enddat               
+         LET l_array[1].chr = g_fmml_m.fmml001    #帳務中心
+         LET l_array[2].chr = g_fmml_m.fmml003    #帳別
+         LET l_array[3].chr = g_fmml_m.fmmldocno  #單別
+         LET l_array[4].chr = g_fmml005           #年度
+         LET l_array[5].chr = g_fmml006           #期別
+         LET l_array[6].dat = g_fmml_m.fmmldocdt  #日期     
+         LET g_wc_t535_01 = g_wc_t535_01 CLIPPED, 
+                            " AND fmmjsite IN ",g_wc_fmml001,
+                            " AND fmmjdocdt BETWEEN '",l_strdat,"' AND '",g_fmml_m.fmmldocdt,"' "         
+         CALL s_afmt535_ins_fmml(l_array,g_wc_t535_01)RETURNING g_sub_success,r_docno 
+      ELSE
+          #產生單身
+          #l_array 
+          #1.fmmldocno 帳務單單號
+          #2.fmml001   帳務中心
+          #3.fmml003   帳套
+          #4.gmml004   歸屬法人
+          #5.fmml004   日期
+          #6.fmml005   年度
+          #7.fmml006   期別
+          CALL l_array.clear()
+          SELECT fmmldocno,fmml001,fmml003,fmml004,fmmldocdt,
+                 fmml005,fmml006 
+            INTO l_array[1].chr,l_array[2].chr,l_array[3].chr,l_array[4].chr,l_array[5].dat,
+                 l_array[6].chr,l_array[7].chr
+            FROM fmml_t
+           WHERE fmmlent = g_enterprise
+             AND fmmldocno = p_fmmldocno
+          LET g_wc_t535_01 = g_wc_t535_01 CLIPPED, 
+                             " AND fmmjsite IN ",g_wc_fmml001,
+                             " AND fmmjdocdt BETWEEN '",l_strdat,"' AND '",g_fmml_m.fmmldocdt,"' "   
+          CALL s_afmt535_ins_fmmm(l_array,g_wc_t535_01,'2')RETURNING g_sub_success
+          LET r_docno = p_fmmldocno          
+      END IF
+      IF NOT g_sub_success THEN
+         LET r_success = FALSE        
+      END IF
+  
+   END IF
+   CALL cl_err_collect_show()
+   
+   RETURN r_success,r_docno ]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL cl_set_comp_visible('group_1',TRUE)
+   IF p_type = '2' THEN
+      CALL cl_set_comp_visible('group_1',FALSE)
+   END IF
+   LET r_success = TRUE   
+   IF NOT cl_null(p_fmmldocno) THEN
+      SELECT fmml001,fmml003,fmmldocdt
+        INTO g_fmml_m.fmml001,g_fmml_m.fmml003,g_fmml_m.fmmldocdt
+        FROM fmml_t
+       WHERE fmmlent =g_enterprise AND fmmldocno = p_fmmldocno
+       
+      CALL s_ld_sel_glaa(g_fmml_m.fmml003,'glaa003|glaa024|glaacomp') 
+        RETURNING g_sub_success,g_glaa003,g_glaa024,g_glaacomp       
+      #取得年月
+      CALL s_fin_date_get_period_value(g_glaa003,g_fmml_m.fmml003,g_fmml_m.fmmldocdt)
+         RETURNING g_sub_success,g_fmml005,g_fmml006
+      #取得日期
+      CALL s_fin_date_get_period_range(g_glaa003,g_fmml005,g_fmml006)
+         RETURNING l_strdat,l_enddat          
+      
+      CALL s_fin_account_center_sons_query('3',g_fmml_m.fmml001,g_fmml_m.fmmldocdt,'1')  
+      CALL s_fin_account_center_sons_str() RETURNING g_wc_fmml001
+      CALL s_fin_get_wc_str(g_wc_fmml001) RETURNING g_wc_fmml001
+      CALL s_fin_account_center_ld_str() RETURNING g_wc_fmml003
+      CALL s_fin_get_wc_str(g_wc_fmml003) RETURNING g_wc_fmml003 
+
+   ELSE
+      #帳務組織/帳套/法人預設
+      LET g_fmml_m.fmmldocdt = g_today
+      CALL s_aap_get_default_apcasite('','','')RETURNING g_sub_success,g_errno,g_fmml_m.fmml001,
+                                                      g_fmml_m.fmml003,g_glaacomp 
+      CALL s_ld_sel_glaa(g_fmml_m.fmml003,'glaa003|glaa024|glaacomp') 
+            RETURNING g_sub_success,g_glaa003,g_glaa024,g_glaacomp
+      #取得年月
+      CALL s_fin_date_get_period_value(g_glaa003,g_fmml_m.fmml003,g_fmml_m.fmmldocdt)
+         RETURNING g_sub_success,g_fmml005,g_fmml006
+      #取得日期
+      CALL s_fin_date_get_period_range(g_glaa003,g_fmml005,g_fmml006)
+         RETURNING l_strdat,l_enddat               
+      LET g_fmml_m.fmmldocno = ''                                                        
+   END IF       
+   ]]>
+  </point>
+  <section id="afmt535_01.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000004
+#+ 
+#+ Filename...: afmt535_01
+#+ Description: 產生帳務資料
+#+ Creator....: 03538(2015-05-22 09:31:53)
+#+ Modifier...: 03538(2015-05-29 16:25:52) -SD/PR-
+]]>
+  </section>
+  <section id="afmt535_01.global" ver="4" status="" src="s" readonly="">
+    <![CDATA[#應用 c01b 樣板自動產生(Version:5)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_fmml_m        RECORD
+       fmml001 LIKE fmml_t.fmml001, 
+   fmml003 LIKE fmml_t.fmml003, 
+   fmmldocno LIKE fmml_t.fmmldocno, 
+   fmmldocdt LIKE fmml_t.fmmldocdt
+       END RECORD
+DEFINE g_fmml_m        type_g_fmml_m
+ 
+   DEFINE g_fmmldocno_t LIKE fmml_t.fmmldocno
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="afmt535_01.input" ver="5" status="" src="s" readonly="">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION afmt535_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define" edit="s"/>}
+   #end add-point
+   #add-point:input段define
+   {<point name="input.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_afmt535_01 WITH FORM cl_ap_formpath("afm","afmt535_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_fmml_m.fmml001,g_fmml_m.fmml003,g_fmml_m.fmmldocno,g_fmml_m.fmmldocdt ATTRIBUTE(WITHOUT  
+          DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD fmml001
+            #add-point:BEFORE FIELD fmml001
+            {<point name="input.b.fmml001" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD fmml001
+            
+            #add-point:AFTER FIELD fmml001
+            {<point name="input.a.fmml001" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE fmml001
+            #add-point:ON CHANGE fmml001
+            {<point name="input.g.fmml001" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD fmml003
+            #add-point:BEFORE FIELD fmml003
+            {<point name="input.b.fmml003" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD fmml003
+            
+            #add-point:AFTER FIELD fmml003
+            {<point name="input.a.fmml003" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE fmml003
+            #add-point:ON CHANGE fmml003
+            {<point name="input.g.fmml003" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD fmmldocno
+            #add-point:BEFORE FIELD fmmldocno
+            {<point name="input.b.fmmldocno" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD fmmldocno
+            
+            #add-point:AFTER FIELD fmmldocno
+            {<point name="input.a.fmmldocno" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE fmmldocno
+            #add-point:ON CHANGE fmmldocno
+            {<point name="input.g.fmmldocno" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD fmmldocdt
+            #add-point:BEFORE FIELD fmmldocdt
+            {<point name="input.b.fmmldocdt" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD fmmldocdt
+            
+            #add-point:AFTER FIELD fmmldocdt
+            {<point name="input.a.fmmldocdt" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE fmmldocdt
+            #add-point:ON CHANGE fmmldocdt
+            {<point name="input.g.fmmldocdt" />}
+            #END add-point 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.fmml001
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD fmml001
+            #add-point:ON ACTION controlp INFIELD fmml001
+            {<point name="input.c.fmml001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.fmml003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD fmml003
+            #add-point:ON ACTION controlp INFIELD fmml003
+            {<point name="input.c.fmml003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.fmmldocno
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD fmmldocno
+            #add-point:ON ACTION controlp INFIELD fmmldocno
+            {<point name="input.c.fmmldocno" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.fmmldocdt
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD fmmldocdt
+            #add-point:ON ACTION controlp INFIELD fmmldocdt
+            {<point name="input.c.fmmldocdt" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_afmt535_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="afmt535_01.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="afmt535_01.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

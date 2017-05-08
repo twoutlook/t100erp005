@@ -1,0 +1,114 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axri012" module="axr" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="02299" crtdt="2013-07-22 14:42:31" modid="02299" moddt="2013-07-29 09:25:25" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="多帳期設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="oocq002,oocq001,oocq003,oocql004,oocq004,oocqstus,oocqownid,oocqownid_desc(chr80),oocqowndp,oocqowndp_desc(chr80),oocqcrtid,oocqcrtid_desc(chr80),oocqcrtdp,oocqcrtdp_desc(chr80),oocqcrtdt,oocqmodid,oocqmodid_desc(chr80),oocqmoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xrac003,xrac004,xrac005,xrac006,xrac007,xrac008"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="open_aooi300"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="open_axri012_1"/>
+      <action id="prog_oocq002" prog="aooi300" parameter="oocq002"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="detail_qrystr" mode="popup">
+        <action id="prog_azzi600" prog="azzi600" parameter="xrac007"/>
+      </action>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="open_axri012_1"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+      <action id="open_axri012_1"/>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axri012" method="dialog">
+    <section id="input">
+      <input id="head" field="oocq002,oocql004,oocq004,oocqstus,oocqownid,oocqowndp,oocqcrtid,oocqcrtdp,oocqcrtdt,oocqmodid,oocqmoddt"/>
+      <input id="body" page="1" field="xrac003,xrac004,xrac005,xrac006,xrac007,xrac008" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="oocq002,oocq001,oocq003,oocql004,oocq004,oocqstus,oocqownid,oocqowndp,oocqcrtid,oocqcrtdp,oocqcrtdt,oocqmodid,oocqmoddt"/>
+      <construct id="body" page="1" field="xrac003,xrac004,xrac005,xrac006,xrac007,xrac008"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="oocq001,oocq002"/>
+      <set id="head" type="no_entry" field="oocq001,oocq002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="oocq002">
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="oocq001" type="S" default="3114"/>
+      <column id="oocq003" type="S" default="3114"/>
+      <column id="oocql004"/>
+      <column id="oocq004"/>
+      <column id="oocqstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="oocqownid">
+        <after/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oocqownid_desc"/>
+      <column id="oocqowndp">
+        <after/>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oocqowndp_desc"/>
+      <column id="oocqcrtid">
+        <after/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oocqcrtid_desc"/>
+      <column id="oocqcrtdp">
+        <after/>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oocqcrtdp_desc"/>
+      <column id="oocqcrtdt"/>
+      <column id="oocqmodid">
+        <after>
+          <reference field="oocqmodid_desc" ref_field="oocq_t.oocqmodid" map_field="oocqmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oocqmodid_desc"/>
+      <column id="oocqmoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xrac003"/>
+      <column id="xrac004" type="S" default="0"/>
+      <column id="xrac005" type="S" default="0"/>
+      <column id="xrac006" type="S" default="0"/>
+      <column id="xrac007" type="S" default="10" def_scc="8310"/>
+      <column id="xrac008"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="oocq_t" pk="oocq001,oocq002">
+      <sql id="forupd_sql" type="sql" query="SELECT oocq002,oocq001,oocq003,&apos;&apos;,oocq004,oocqstus,oocqownid,&apos;&apos;,oocqowndp,&apos;&apos;,oocqcrtid,&apos;&apos;,oocqcrtdp,&apos;&apos;,oocqcrtdt,oocqmodid,&apos;&apos;,oocqmoddt FROM oocq_t WHERE oocqent= ? AND oocq001=? AND oocq002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT oocq002,oocq001,oocq003,&apos;&apos;,oocq004,oocqstus,oocqownid,&apos;&apos;,oocqowndp,&apos;&apos;,oocqcrtid,&apos;&apos;,oocqcrtdp,&apos;&apos;,oocqcrtdt,oocqmodid,&apos;&apos;,oocqmoddt FROM oocq_t" order="oocq001,oocq002"/>
+      <sql id="append" type="lang" target="oocql_t.oocql004" table="oocql_t" fk="oocq001,oocq002" pk="oocql001,oocql002,oocql003" field="oocql004"/>
+    </head>
+    <body id="xrac_t" page="1" linked="" pk="xrac003" fk="xrac001,xrac002">
+      <sql id="forupd_sql_detail" query="SELECT xrac003,xrac004,xrac005,xrac006,xrac007,xrac008 FROM xrac_t WHERE xracent=? AND xrac001=? AND xrac002=? AND xrac003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xrac003,xrac004,xrac005,xrac006,xrac007,xrac008 FROM xrac_t WHERE xracent=? AND xrac001=? AND xrac002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="aooi717" std_prog="aooi717" erpver="1.0" module="AOO" ver="1" env="s" zone="t10dev" normal_style="Y" booking="Y">
+  <point name="detail_show.reference" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+   INITIALIZE g_ref_fields TO NULL 
+   LET g_ref_fields[1] = g_ooid_d[l_ac].ooid001
+   CALL ap_ref_array2(g_ref_fields," SELECT ooidl003 FROM ooidl_t WHERE ooidlent = '"||g_enterprise||"' AND ooidl001 = ? AND ooidl002 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_ooid_d[l_ac].ooidl003 = g_rtn_fields[1] 
+   DISPLAY BY NAME g_ooid_d[l_ac].ooidl003]]>
+  </point>
+  <point name="function.aooi717_days_chk" order="1" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+ 提前天數大小比較檢查
+PRIVATE FUNCTION aooi717_days_chk()
+DEFINE r_erro STRING
+
+   LET r_erro = ' '
+   IF g_ooid_d[l_ac].ooid011 != 0 AND g_ooid_d[l_ac].ooid021 != 0 THEN 
+      IF g_ooid_d[l_ac].ooid011 > = g_ooid_d[l_ac].ooid021 THEN 
+         LET r_erro = 'aoo-00181'
+         RETURN r_erro         
+      END IF
+   END IF
+   IF g_ooid_d[l_ac].ooid011 != 0 AND g_ooid_d[l_ac].ooid031 != 0 THEN 
+      IF g_ooid_d[l_ac].ooid011 > = g_ooid_d[l_ac].ooid031 THEN 
+         LET r_erro = 'aoo-00182'
+         RETURN r_erro         
+      END IF
+   END IF
+   IF g_ooid_d[l_ac].ooid021 != 0 AND g_ooid_d[l_ac].ooid031 != 0 THEN 
+      IF g_ooid_d[l_ac].ooid021 > = g_ooid_d[l_ac].ooid031 THEN 
+         LET r_erro = 'aoo-00183'
+         RETURN r_erro         
+      END IF
+   END IF
+   RETURN r_erro  
+END FUNCTION]]>
+  </point>
+  <point name="function.aooi717_ooid021" order="2" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+ 控管提前天數(3)的輸入
+PRIVATE FUNCTION aooi717_ooid021()
+   IF g_ooid_d[l_ac].ooid021 = 0 THEN 
+      LET g_ooid_d[l_ac].ooid031 = 0
+      LET g_ooid_d[l_ac].ooid032 = 0
+      CALL cl_set_comp_entry("ooid031,ooid032",FALSE)
+   ELSE
+       CALL cl_set_comp_entry("ooid031,ooid032",TRUE)
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.aooi717_ooid011" order="3" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+ 控管提前天數2和3的輸入
+PRIVATE FUNCTION aooi717_ooid011()
+   IF g_ooid_d[l_ac].ooid011 = 0 THEN 
+      LET g_ooid_d[l_ac].ooid021 = 0
+      LET g_ooid_d[l_ac].ooid022 = 0
+      LET g_ooid_d[l_ac].ooid031 = 0
+      LET g_ooid_d[l_ac].ooid032 = 0
+      CALL cl_set_comp_entry("ooid021,ooid022,ooid031,ooid032",FALSE)
+   ELSE
+       CALL cl_set_comp_entry("ooid021,ooid022,ooid031,ooid032",TRUE)
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.aooi717_set_format" order="4" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+ 百分號格式轉換
+PRIVATE FUNCTION aooi717_set_format(ps_fields,ps_format)
+   DEFINE   ps_fields           STRING,
+            ps_format           STRING
+   DEFINE   lst_fields          base.StringTokenizer,
+            ls_field_name       STRING
+   DEFINE   lnode_root          om.DomNode,
+            llst_items          om.NodeList,
+            li_i                LIKE type_t.num5,
+            lnode_item          om.DomNode,
+            ls_item_name        STRING,
+            lnode_item_child    om.DomNode,
+            ls_item_child_tag   STRING
+   DEFINE   lwin_curr           ui.Window
+
+   IF (ps_fields IS NULL) THEN
+      RETURN
+   ELSE
+      LET ps_fields = ps_fields.toLowerCase()
+   END IF
+
+   LET lwin_curr = ui.Window.getCurrent()
+   LET lnode_root = lwin_curr.getNode()
+
+   LET llst_items = lnode_root.selectByPath("//Form//*")
+   LET lst_fields = base.StringTokenizer.create(ps_fields, ",")
+   WHILE lst_fields.hasMoreTokens()
+      LET ls_field_name = lst_fields.nextToken()
+      LET ls_field_name = ls_field_name.trim()
+
+      FOR li_i = 1 TO llst_items.getLength()
+         LET lnode_item = llst_items.item(li_i)
+         LET ls_item_name = lnode_item.getAttribute("colName")
+
+         IF (ls_item_name IS NULL) THEN
+            LET ls_item_name = lnode_item.getAttribute("name")
+
+            IF (ls_item_name IS NULL) THEN
+               CONTINUE FOR
+            END IF
+         END IF
+
+         IF (ls_item_name.equals(ls_field_name)) THEN
+            LET lnode_item_child = lnode_item.getFirstChild()
+            LET ls_item_child_tag = lnode_item_child.getTagName()
+            IF (ls_item_child_tag.equals("Edit") OR
+                ls_item_child_tag.equals("ButtonEdit") OR
+                ls_item_child_tag.equals("Label") OR
+                ls_item_child_tag.equals("DateEdit")) THEN
+
+               CALL lnode_item_child.setAttribute("format", "")
+               CALL lnode_item_child.setAttribute("format", ps_format)
+            END IF
+
+            EXIT FOR
+         END IF
+      END FOR
+   END WHILE
+END FUNCTION]]>
+  </point>
+  <point name="construct.c.page2.ooidcrtdp" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooidcrtdp  #顯示到畫面上
+
+            NEXT FIELD ooidcrtdp                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page2.ooidcrtid" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooidcrtid  #顯示到畫面上
+
+            NEXT FIELD ooidcrtid                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page2.ooidmodid" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooidmodid  #顯示到畫面上
+
+            NEXT FIELD ooidmodid                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page2.ooidowndp" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooidowndp  #顯示到畫面上
+
+            NEXT FIELD ooidowndp                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page2.ooidownid" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooidownid  #顯示到畫面上
+
+            NEXT FIELD ooidownid                     #返回原欄位
+
+]]>
+  </point>
+  <point name="detail_show.before" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="detail_show.body.reference" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   INITIALIZE g_ref_fields TO NULL 
+   LET g_ref_fields[1] = g_ooid_d[l_ac].ooid001
+   CALL ap_ref_array2(g_ref_fields," SELECT ooidl003 FROM ooidl_t WHERE ooidlent = '"||g_enterprise||"' AND ooidl001 = ? AND ooidl002 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_ooid_d[l_ac].ooidl003 = g_rtn_fields[1] 
+   DISPLAY BY NAME g_ooid_d[l_ac].ooidl003]]>
+  </point>
+  <point name="detail_show.body2.reference" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooid2_d[l_ac].ooidmodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_ooid2_d[l_ac].ooidmodid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_ooid2_d[l_ac].ooidmodid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooid2_d[l_ac].ooidownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_ooid2_d[l_ac].ooidownid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_ooid2_d[l_ac].ooidownid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooid2_d[l_ac].ooidowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_ooid2_d[l_ac].ooidowndp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_ooid2_d[l_ac].ooidowndp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooid2_d[l_ac].ooidcrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_ooid2_d[l_ac].ooidcrtid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_ooid2_d[l_ac].ooidcrtid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooid2_d[l_ac].ooidcrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_ooid2_d[l_ac].ooidcrtdp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_ooid2_d[l_ac].ooidcrtdp_desc
+]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.a.page1.ooid001" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_ooid_d[l_ac].ooid001) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_ooid_d[l_ac].ooid001 != g_ooid_d_t.ooid001))) THEN 
+                  IF NOT ap_chk_notDup(g_ooid_d[l_ac].ooid001,"SELECT COUNT(*) FROM ooid_t WHERE "||"ooident = '" ||g_enterprise|| "' AND "||"ooid001 = '"||g_ooid_d[l_ac].ooid001 ||"'",'std-00004',0) THEN 
+                     LET g_ooid_d[l_ac].ooid001 = g_ooid_d_t.ooid001
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.ooid011" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_ooid_d[l_ac].ooid011) THEN 
+               CALL aooi717_ooid011()
+               CALL aooi717_days_chk() RETURNING r_erro
+               IF NOT cl_null(r_erro) THEN 
+                  CALL cl_err(g_ooid_d[l_ac].ooid011,r_erro,0)
+                  LET g_ooid_d[l_ac].ooid011 = g_ooid_d_t.ooid011
+                  NEXT FIELD CURRENT 
+               END IF
+            END IF 
+]]>
+  </point>
+  <point name="input.a.page1.ooid012" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL aooi717_set_format('ooid012',"##########&.##%")]]>
+  </point>
+  <point name="input.a.page1.ooid021" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_ooid_d[l_ac].ooid021) THEN 
+               CALL aooi717_ooid021() 
+               CALL aooi717_days_chk() RETURNING r_erro
+               IF NOT cl_null(r_erro) THEN 
+                  CALL cl_err(g_ooid_d[l_ac].ooid021,r_erro,0)
+                  LET g_ooid_d[l_ac].ooid021 = g_ooid_d_t.ooid021
+                  NEXT FIELD CURRENT
+               END IF
+               IF g_ooid_d[l_ac].ooid021 = 0 THEN 
+                  LET g_ooid_d[l_ac].ooid022 = 0
+                  DISPLAY BY NAME g_ooid_d[l_ac].ooid022
+               END IF
+            END IF 
+]]>
+  </point>
+  <point name="input.a.page1.ooid022" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF g_ooid_d[l_ac].ooid021 = 0 AND g_ooid_d[l_ac].ooid022 != 0 THEN 
+               CALL cl_err(g_ooid_d[l_ac].ooid022,'aoo-00184',0)
+               LET g_ooid_d[l_ac].ooid022 = g_ooid_d_t.ooid022
+               NEXT FIELD CURRENT
+            END IF
+            CALL aooi717_set_format('ooid022',"##########&.##%")            ]]>
+  </point>
+  <point name="input.a.page1.ooid031" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_ooid_d[l_ac].ooid031) THEN 
+               CALL aooi717_days_chk() RETURNING r_erro
+               IF NOT cl_null(r_erro) THEN 
+                  CALL cl_err(g_ooid_d[l_ac].ooid031,r_erro,0)
+                  LET g_ooid_d[l_ac].ooid031 = g_ooid_d_t.ooid031
+                  NEXT FIELD CURRENT
+               END IF 
+               IF g_ooid_d[l_ac].ooid031 = 0 THEN 
+                  LET g_ooid_d[l_ac].ooid032 = 0
+                  DISPLAY BY NAME g_ooid_d[l_ac].ooid032
+               END IF               
+            END IF 
+]]>
+  </point>
+  <point name="input.a.page1.ooid032" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF g_ooid_d[l_ac].ooid031 = 0 AND g_ooid_d[l_ac].ooid032 != 0 THEN 
+               CALL cl_err(g_ooid_d[l_ac].ooid032,'aoo-00185',0)
+               LET g_ooid_d[l_ac].ooid032 = g_ooid_d_t.ooid032
+               NEXT FIELD CURRENT
+            END IF
+            CALL aooi717_set_format('ooid032',"##########&.##%")            ]]>
+  </point>
+  <point name="input.a.page2.ooid001_2" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_ooid2_d[l_ac].ooid001) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_ooid2_d[l_ac].ooid001 != g_ooid2_d_t.ooid001))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM ooid_t WHERE "||"ooident = '" ||g_enterprise|| "' AND "||"ooid001 = '"||g_ooid2_d[l_ac].ooid001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.ooidcrtdp" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooid2_d[l_ac].ooidcrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_ooid2_d[l_ac].ooidcrtdp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_ooid2_d[l_ac].ooidcrtdp_desc
+]]>
+  </point>
+  <point name="input.a.page2.ooidcrtid" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooid2_d[l_ac].ooidcrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_ooid2_d[l_ac].ooidcrtid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_ooid2_d[l_ac].ooidcrtid_desc
+]]>
+  </point>
+  <point name="input.a.page2.ooidmodid" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooid2_d[l_ac].ooidmodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_ooid2_d[l_ac].ooidmodid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_ooid2_d[l_ac].ooidmodid_desc
+]]>
+  </point>
+  <point name="input.a.page2.ooidowndp" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooid2_d[l_ac].ooidowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_ooid2_d[l_ac].ooidowndp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_ooid2_d[l_ac].ooidowndp_desc
+]]>
+  </point>
+  <point name="input.a.page2.ooidownid" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooid2_d[l_ac].ooidownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_ooid2_d[l_ac].ooidownid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_ooid2_d[l_ac].ooidownid_desc
+]]>
+  </point>
+  <point name="input.b.page1.ooid012" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL aooi717_set_format('ooid012',"##########&.##")
+            DISPLAY g_ooid_d[l_ac].ooid012 TO ooid012]]>
+  </point>
+  <point name="input.b.page1.ooid022" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL aooi717_set_format('ooid022',"##########&.##")
+            DISPLAY BY NAME g_ooid_d[l_ac].ooid022]]>
+  </point>
+  <point name="input.b.page1.ooid032" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL aooi717_set_format('ooid032',"##########&.##")
+            DISPLAY BY NAME g_ooid_d[l_ac].ooid032]]>
+  </point>
+  <point name="input.body.a_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.body.b_delete" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               IF g_ooid_d[l_ac].ooidstus = 'Y' THEN
+                  CALL cl_err(g_ooid_d[l_ac].ooidstus,'aoo-00186',0)
+                  CANCEL DELETE
+               END IF ]]>
+  </point>
+  <point name="input.body.before_row" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL aooi717_set_entry_b(l_cmd)                                             
+            CALL aooi717_set_no_entry_b(l_cmd) ]]>
+  </point>
+  <point name="input.detail_input.page1.update_item" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               IF NOT cl_null(g_ooid_d[l_ac].ooid001) THEN
+                  CALL n_ooidl(g_ooid_d[l_ac].ooid001)
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_ooid_d[l_ac].ooid001
+                  CALL ap_ref_array2(g_ref_fields," SELECT ooidl003 FROM ooidl_t WHERE "
+                      ||"ooidlent = '"||g_enterprise||"' AND ooidl001 = ?  AND ooidl002 = '"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_ooid_d[l_ac].ooidl003 = g_rtn_fields[1]
+                  DISPLAY BY NAME g_ooid_d[l_ac].ooidl003
+               END IF]]>
+  </point>
+  <point name="modify.after_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL aooi717_set_format('ooid012',"##########&.##%")
+   CALL aooi717_set_format('ooid022',"##########&.##%")
+   CALL aooi717_set_format('ooid032',"##########&.##%")]]>
+  </point>
+  <point name="modify.define" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE  r_erro          STRING]]>
+  </point>
+  <point name="set_entry_b.define" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL cl_set_comp_entry("ooid021,ooid022,ooid031,ooid032",TRUE)]]>
+  </point>
+  <point name="set_no_entry_b.define" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF g_ooid_d[l_ac].ooid021 = 0 AND p_cmd ='u' THEN 
+      CALL cl_set_comp_entry("ooid031,ooid032",FALSE)
+   END IF
+   IF g_ooid_d[l_ac].ooid011 = 0 AND p_cmd ='u' THEN 
+      CALL cl_set_comp_entry("ooid021,ooid022,ooid031,ooid032",FALSE)
+   END IF  ]]>
+  </point>
+  <point name="ui_dialog.before_dialog" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+</add_points>

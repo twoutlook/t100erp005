@@ -1,0 +1,558 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="arti701_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2015-01-15 15:41:17), PR版次:0002(2015-01-15 17:05:38)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000125
+#+ Filename...: arti701_01
+#+ Description: 採購出單日
+#+ Creator....: 02749(2014-03-27 15:55:57)
+#+ Modifier...: 06137 -SD/PR- 06137
+ 
+{</section>}
+ 
+{<section id="arti701_01.global" >}
+#應用 p00 樣板自動產生(Version:4)
+#add-point:填寫註解說明
+
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="arti701_01.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable)
+   DEFINE g_day RECORD
+        day01   LIKE type_t.chr5,
+        day02   LIKE type_t.chr5,
+        day03   LIKE type_t.chr5,
+        day04   LIKE type_t.chr5,
+        day05   LIKE type_t.chr5,
+        day06   LIKE type_t.chr5,
+        day07   LIKE type_t.chr5,
+        day08   LIKE type_t.chr5,
+        day09   LIKE type_t.chr5,
+        day10   LIKE type_t.chr5,
+        day11   LIKE type_t.chr5,
+        day12   LIKE type_t.chr5,
+        day13   LIKE type_t.chr5,
+        day14   LIKE type_t.chr5,
+        day15   LIKE type_t.chr5,
+        day16   LIKE type_t.chr5,
+        day17   LIKE type_t.chr5,
+        day18   LIKE type_t.chr5,
+        day19   LIKE type_t.chr5,
+        day20   LIKE type_t.chr5,
+        day21   LIKE type_t.chr5,
+        day22   LIKE type_t.chr5,
+        day23   LIKE type_t.chr5,
+        day24   LIKE type_t.chr5,
+        day25   LIKE type_t.chr5,
+        day26   LIKE type_t.chr5,
+        day27   LIKE type_t.chr5,
+        day28   LIKE type_t.chr5,
+        day29   LIKE type_t.chr5,
+        day30   LIKE type_t.chr5,
+        day31   LIKE type_t.chr5
+              END RECORD 
+   DEFINE g_day_t RECORD
+        day01   LIKE type_t.chr5,
+        day02   LIKE type_t.chr5,
+        day03   LIKE type_t.chr5,
+        day04   LIKE type_t.chr5,
+        day05   LIKE type_t.chr5,
+        day06   LIKE type_t.chr5,
+        day07   LIKE type_t.chr5,
+        day08   LIKE type_t.chr5,
+        day09   LIKE type_t.chr5,
+        day10   LIKE type_t.chr5,
+        day11   LIKE type_t.chr5,
+        day12   LIKE type_t.chr5,
+        day13   LIKE type_t.chr5,
+        day14   LIKE type_t.chr5,
+        day15   LIKE type_t.chr5,
+        day16   LIKE type_t.chr5,
+        day17   LIKE type_t.chr5,
+        day18   LIKE type_t.chr5,
+        day19   LIKE type_t.chr5,
+        day20   LIKE type_t.chr5,
+        day21   LIKE type_t.chr5,
+        day22   LIKE type_t.chr5,
+        day23   LIKE type_t.chr5,
+        day24   LIKE type_t.chr5,
+        day25   LIKE type_t.chr5,
+        day26   LIKE type_t.chr5,
+        day27   LIKE type_t.chr5,
+        day28   LIKE type_t.chr5,
+        day29   LIKE type_t.chr5,
+        day30   LIKE type_t.chr5,
+        day31   LIKE type_t.chr5
+              END RECORD               
+   DEFINE g_rtka005 STRING              
+#end add-point
+ 
+{</section>}
+ 
+{<section id="arti701_01.global_variable" >}
+#add-point:自定義模組變數(Module Variable)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="arti701_01.other_dialog" >}
+
+ 
+{</section>}
+ 
+{<section id="arti701_01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 將出單日組成字串
+# Memo...........:
+# Usage..........: CALL arti701_01_append_day(p_day)
+# Input parameter: p_day        出單日
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION arti701_01_append_day(p_day)
+   DEFINE p_day   STRING
+
+   #IF arti701_01_chk_exists(p_day) THEN
+   IF p_day <> 'N' THEN 
+      IF cl_null(g_rtka005) THEN
+         LET g_rtka005 = p_day
+      ELSE
+         LET g_rtka005 = g_rtka005,',',p_day
+      END IF
+   END IF
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 確認出單日是否已存在
+# Memo...........:
+# Usage..........: CALL arti701_01_chk_exists(p_day) RETURN r_success
+# Input parameter: p_day  出單日
+# Return code....: r_success   確認結果
+# Date & Author..: 2014/03/29 By Lori
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION arti701_01_chk_exists(p_day)
+   DEFINE p_day      STRING
+   DEFINE r_success  LIKE type_t.num5
+   DEFINE l_flag     LIKE type_t.num5
+   
+   LET l_flag = 0
+   LET l_flag = g_rtka005.getIndexOf(p_day,1)
+   
+   IF l_flag > 0 THEN
+      LET r_success = TRUE
+   ELSE
+      LET r_success = FALSE
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 採購出單日
+# Memo...........:
+# Usage..........: CALL arti701_01(p_rtka005)
+#                  RETURNING r_success,r_rtka005
+# Input parameter: p_rtka005   採購出單日
+# Return code....: r_success   處理狀態
+#                : r_rtka005   採購出單日
+# Date & Author..: 2014/03/29 By Lori
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION arti701_01(p_rtka005)
+   DEFINE p_rtka005   STRING
+   DEFINE r_success   LIKE type_t.num5
+   DEFINE r_rtka005   STRING
+   DEFINE l_success   LIKE type_t.num5   
+   
+   LET r_success = TRUE
+   LET r_rtka005 = NULL
+   LET l_success = TRUE
+   LET g_rtka005 = NULL
+   INITIALIZE g_day.* TO NULL
+   INITIALIZE g_day_t.* TO NULL
+   
+   OPEN WINDOW w_arti701_01 WITH FORM cl_ap_formpath("art","arti701_01")   
+   CALL cl_ui_init()
+   
+   LET g_day.day01 = 'N'
+   LET g_day.day02 = 'N'
+   LET g_day.day03 = 'N'
+   LET g_day.day04 = 'N'
+   LET g_day.day05 = 'N'
+   LET g_day.day06 = 'N'
+   LET g_day.day07 = 'N'
+   LET g_day.day08 = 'N'
+   LET g_day.day09 = 'N'
+   LET g_day.day10 = 'N'
+   LET g_day.day11 = 'N'
+   LET g_day.day12 = 'N'
+   LET g_day.day13 = 'N'
+   LET g_day.day14 = 'N'
+   LET g_day.day15 = 'N'
+   LET g_day.day16 = 'N'
+   LET g_day.day17 = 'N'
+   LET g_day.day18 = 'N'
+   LET g_day.day19 = 'N'
+   LET g_day.day20 = 'N'
+   LET g_day.day21 = 'N'
+   LET g_day.day22 = 'N'
+   LET g_day.day23 = 'N'
+   LET g_day.day24 = 'N'
+   LET g_day.day25 = 'N'
+   LET g_day.day26 = 'N'
+   LET g_day.day27 = 'N'
+   LET g_day.day28 = 'N'
+   LET g_day.day29 = 'N'
+   LET g_day.day30 = 'N'
+   LET g_day.day31 = 'N'
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      INPUT BY NAME g_day.* ATTRIBUTE(WITHOUT DEFAULTS)
+         BEFORE INPUT 
+            DISPLAY BY NAME g_day.*
+            IF p_rtka005 IS NOT NULL THEN
+               CALL arti701_01_show_day('1',p_rtka005) RETURNING l_success
+               LET g_day_t.* = g_day.*
+            END IF
+            
+         AFTER INPUT
+            CALL  arti701_01_append_day(g_day.day01)
+            CALL  arti701_01_append_day(g_day.day02)
+            CALL  arti701_01_append_day(g_day.day03)
+            CALL  arti701_01_append_day(g_day.day04)
+            CALL  arti701_01_append_day(g_day.day05)
+            CALL  arti701_01_append_day(g_day.day06)
+            CALL  arti701_01_append_day(g_day.day07)
+            CALL  arti701_01_append_day(g_day.day08)
+            CALL  arti701_01_append_day(g_day.day09)
+            CALL  arti701_01_append_day(g_day.day10)
+            CALL  arti701_01_append_day(g_day.day11)
+            CALL  arti701_01_append_day(g_day.day12)
+            CALL  arti701_01_append_day(g_day.day13)
+            CALL  arti701_01_append_day(g_day.day14)
+            CALL  arti701_01_append_day(g_day.day15)
+            CALL  arti701_01_append_day(g_day.day16)
+            CALL  arti701_01_append_day(g_day.day17)
+            CALL  arti701_01_append_day(g_day.day18)
+            CALL  arti701_01_append_day(g_day.day19)
+            CALL  arti701_01_append_day(g_day.day20)
+            CALL  arti701_01_append_day(g_day.day21)
+            CALL  arti701_01_append_day(g_day.day22)
+            CALL  arti701_01_append_day(g_day.day23)
+            CALL  arti701_01_append_day(g_day.day24)
+            CALL  arti701_01_append_day(g_day.day25)
+            CALL  arti701_01_append_day(g_day.day26)
+            CALL  arti701_01_append_day(g_day.day27)
+            CALL  arti701_01_append_day(g_day.day28)
+            CALL  arti701_01_append_day(g_day.day29)
+            CALL  arti701_01_append_day(g_day.day30)
+            CALL  arti701_01_append_day(g_day.day31)
+            
+         ON ACTION accept
+            ACCEPT DIALOG
+	      
+         ON ACTION cancel      #在dialog button (放棄)
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+	      
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+	      
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+      END INPUT
+   END DIALOG
+   
+   LET r_rtka005 = g_rtka005
+   
+   IF INT_FLAG THEN
+      LET INT_FLAG = FALSE
+      LET r_success = FALSE
+      CLOSE WINDOW w_arti701_01
+      RETURN r_success,r_rtka005
+   END IF
+   
+   CLOSE WINDOW w_arti701_01   
+   RETURN r_success,r_rtka005  
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢查輸入值,將採購出單日顯示成畫面的FLAG
+# Memo...........:
+# Usage..........: CALL arti701_01_show_day(p_type,p_rtka005)
+#                  RETURNING r_success
+# Input parameter: p_type      處理情境:1.開窗show資料,2.手動輸入檢查輸入值
+#                : p_rtka005   採購出單日
+# Return code....: r_success   判斷結果          
+# Date & Author..: 2014/03/29 By Lori
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION arti701_01_show_day(p_type,p_rtka005)
+   DEFINE p_type      LIKE type_t.chr5
+   DEFINE p_rtka005   STRING
+   DEFINE r_success   LIKE type_t.num5
+   DEFINE l_rtka005   STRING
+   DEFINE l_day       STRING
+   DEFINE l_i         LIKE type_t.num5
+   DEFINE l_comma     LIKE type_t.num5
+   
+   
+   LET r_success = TRUE
+   LET l_rtka005 = p_rtka005
+   LET l_comma = 0 
+   
+   #ken---add---s 需求單號：150107-00019 項次：1
+   IF p_type = 2 THEN
+      LET g_rtka005 = NULL
+      INITIALIZE g_day.* TO NULL
+   END IF
+   #ken---add---e
+   
+   FOR l_i = 1 TO p_rtka005.getLength()
+      LET l_comma = l_rtka005.getIndexOf(',',1)
+      IF l_comma <= 0 THEN
+         LET l_day = l_rtka005
+      ELSE   
+         LET l_day = l_rtka005.subString(1,l_comma-1) 
+      END IF      
+      CASE 
+         WHEN l_day='01' OR l_day='1'
+            LET g_day.day01 = '01'              
+         WHEN l_day='02' OR l_day='2'
+            LET g_day.day02 = '02'                         
+         WHEN l_day='03' OR l_day='3'
+            LET g_day.day03 = '03'                       
+         WHEN l_day='04' OR l_day='4'
+            LET g_day.day04 = '04'                     
+         WHEN l_day='05' OR l_day='5'
+            LET g_day.day05 = '05'            
+         WHEN l_day='06' OR l_day='6'
+            LET g_day.day06 = '06'                        
+         WHEN l_day='07' OR l_day='7'
+            LET g_day.day07 = '07'                     
+         WHEN l_day='08' OR l_day='8'
+            LET g_day.day08 = '08'                        
+         WHEN l_day='09' OR l_day='9'
+            LET g_day.day09 = '09'                       
+         WHEN l_day='10'
+            LET g_day.day10 = l_day                        
+         WHEN l_day='11'
+            LET g_day.day11 = l_day           
+         WHEN l_day='12'
+            LET g_day.day12 = l_day            
+         WHEN l_day='13'
+            LET g_day.day13 = l_day            
+         WHEN l_day='14'
+            LET g_day.day14 = l_day            
+         WHEN l_day='15'
+            LET g_day.day15 = l_day           
+         WHEN l_day='16'
+            LET g_day.day16 = l_day           
+         WHEN l_day='17'
+            LET g_day.day17 = l_day           
+         WHEN l_day='18'
+            LET g_day.day18 = l_day           
+         WHEN l_day='19'
+            LET g_day.day19 = l_day           
+         WHEN l_day='20'
+            LET g_day.day20 = l_day          
+         WHEN l_day='21'
+            LET g_day.day21 = l_day          
+         WHEN l_day='22'
+            LET g_day.day22 = l_day           
+         WHEN l_day='23'
+            LET g_day.day23 = l_day            
+         WHEN l_day='24'
+            LET g_day.day24 = l_day            
+         WHEN l_day='25'
+            LET g_day.day25 = l_day           
+         WHEN l_day='26'
+            LET g_day.day26 = l_day           
+         WHEN l_day='27'
+            LET g_day.day27 = l_day            
+         WHEN l_day='28'
+            LET g_day.day28 = l_day           
+         WHEN l_day='29'
+            LET g_day.day29 = l_day           
+         WHEN l_day='30'
+            LET g_day.day30 = l_day           
+         WHEN l_day='31'
+            LET g_day.day31 = l_day
+         OTHERWISE
+            IF p_type = '2' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'aoo-00256'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET r_success = FALSE
+               EXIT FOR
+            END IF
+      END CASE  
+      
+      IF p_type = '1' THEN
+         DISPLAY g_day.day01 TO FORMONLY.day01
+         DISPLAY g_day.day02 TO FORMONLY.day02 
+         DISPLAY g_day.day03 TO FORMONLY.day03  
+         DISPLAY g_day.day04 TO FORMONLY.day04  
+         DISPLAY g_day.day05 TO FORMONLY.day05
+         DISPLAY g_day.day06 TO FORMONLY.day06    
+         DISPLAY g_day.day07 TO FORMONLY.day07
+         DISPLAY g_day.day08 TO FORMONLY.day08 
+         DISPLAY g_day.day09 TO FORMONLY.day09 
+         DISPLAY g_day.day10 TO FORMONLY.day10
+         DISPLAY g_day.day11 TO FORMONLY.day11
+         DISPLAY g_day.day12 TO FORMONLY.day12 
+         DISPLAY g_day.day13 TO FORMONLY.day13  
+         DISPLAY g_day.day14 TO FORMONLY.day14  
+         DISPLAY g_day.day15 TO FORMONLY.day15
+         DISPLAY g_day.day16 TO FORMONLY.day16    
+         DISPLAY g_day.day17 TO FORMONLY.day17
+         DISPLAY g_day.day18 TO FORMONLY.day18 
+         DISPLAY g_day.day19 TO FORMONLY.day19 
+         DISPLAY g_day.day20 TO FORMONLY.day20
+         DISPLAY g_day.day21 TO FORMONLY.day21
+         DISPLAY g_day.day22 TO FORMONLY.day22
+         DISPLAY g_day.day23 TO FORMONLY.day23
+         DISPLAY g_day.day24 TO FORMONLY.day24
+         DISPLAY g_day.day25 TO FORMONLY.day25
+         DISPLAY g_day.day26 TO FORMONLY.day26
+         DISPLAY g_day.day27 TO FORMONLY.day27
+         DISPLAY g_day.day28 TO FORMONLY.day28
+         DISPLAY g_day.day29 TO FORMONLY.day29
+         DISPLAY g_day.day30 TO FORMONLY.day30
+         DISPLAY g_day.day31 TO FORMONLY.day31
+      END IF  
+
+      
+            
+      LET l_i = l_i + l_day.getLength()      
+      IF  l_i > p_rtka005.getLength() THEN
+         EXIT FOR
+      ELSE
+         LET l_rtka005 = l_rtka005.subString(l_comma+1,l_rtka005.getLength())      
+      END IF
+   END FOR
+
+   RETURN r_success
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取消出單日
+# Memo...........:
+# Usage..........: CALL arti701_01_cancel_day(p_day)
+# Input parameter: p_day   出單日
+# Return code....: 
+# Date & Author..: 2014/03/29 By Lori
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION arti701_01_cancel_day(p_day)
+   DEFINE p_day       STRING
+   DEFINE l_flag1     LIKE type_t.num5
+   DEFINE l_flag2     LIKE type_t.num5
+   DEFINE l_flag3     LIKE type_t.num5
+   
+   LET l_flag1 = 0
+   LET l_flag2 = 0
+   LET l_flag3 = 0
+   
+   IF arti701_01_chk_exists(p_day)THEN      
+      IF g_rtka005.trim() = p_day.trim() THEN
+         LET g_rtka005 = NULL
+      ELSE  
+         LET l_flag1 = g_rtka005.getIndexOf(p_day||",",1)        #ex: 01,
+         LET l_flag2 = g_rtka005.getIndexOf(","||p_day||",",1)   #ex: ,01,
+         LET l_flag2 = g_rtka005.getIndexOf(","||p_day,1)        #ex: ,01
+
+         IF l_flag1 <> -1 THEN
+            LET g_rtka005 = g_rtka005.subString(l_flag1+1,g_rtka005.getLength())
+         END IF
+         
+         IF l_flag2 <> -1 THEN
+            LET g_rtka005 = g_rtka005.subString(g_rtka005.getLength(),l_flag2),g_rtka005.subString(l_flag2+1,g_rtka005.getLength())
+         END IF
+         
+         IF l_flag3 <> -1 THEN
+            LET g_rtka005 = g_rtka005.subString(1,g_rtka005.getLength()-l_flag3-1)
+         END IF         
+      END IF   
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 針對手動輸入時  自動去除重複資料，自動轉換成2位標準格式
+# Memo...........:
+# Usage..........: CALL arti701_01_day_chk()
+# Return code....: r_rtka005      採購出單日
+# Date & Author..: 2015-01-15 By Ken
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION arti701_01_day_chk()
+DEFINE r_rtka005   STRING 
+
+   LET r_rtka005 = NULL
+
+   CALL  arti701_01_append_day(g_day.day01)
+   CALL  arti701_01_append_day(g_day.day02)
+   CALL  arti701_01_append_day(g_day.day03)
+   CALL  arti701_01_append_day(g_day.day04)
+   CALL  arti701_01_append_day(g_day.day05)
+   CALL  arti701_01_append_day(g_day.day06)
+   CALL  arti701_01_append_day(g_day.day07)
+   CALL  arti701_01_append_day(g_day.day08)
+   CALL  arti701_01_append_day(g_day.day09)
+   CALL  arti701_01_append_day(g_day.day10)
+   CALL  arti701_01_append_day(g_day.day11)
+   CALL  arti701_01_append_day(g_day.day12)
+   CALL  arti701_01_append_day(g_day.day13)
+   CALL  arti701_01_append_day(g_day.day14)
+   CALL  arti701_01_append_day(g_day.day15)
+   CALL  arti701_01_append_day(g_day.day16)
+   CALL  arti701_01_append_day(g_day.day17)
+   CALL  arti701_01_append_day(g_day.day18)
+   CALL  arti701_01_append_day(g_day.day19)
+   CALL  arti701_01_append_day(g_day.day20)
+   CALL  arti701_01_append_day(g_day.day21)
+   CALL  arti701_01_append_day(g_day.day22)
+   CALL  arti701_01_append_day(g_day.day23)
+   CALL  arti701_01_append_day(g_day.day24)
+   CALL  arti701_01_append_day(g_day.day25)
+   CALL  arti701_01_append_day(g_day.day26)
+   CALL  arti701_01_append_day(g_day.day27)
+   CALL  arti701_01_append_day(g_day.day28)
+   CALL  arti701_01_append_day(g_day.day29)
+   CALL  arti701_01_append_day(g_day.day30)
+   CALL  arti701_01_append_day(g_day.day31)
+  
+   LET r_rtka005 = g_rtka005 
+   RETURN r_rtka005
+END FUNCTION
+
+ 
+{</section>}
+ 

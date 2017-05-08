@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ FOURJS_START_COPYRIGHT(D,2011)
+ Property of Four Js*
+ (c) Copyright Four Js 2011, 2014. All Rights Reserved.
+ * Trademark of Four Js Development Tools Europe Ltd
+   in the United States and elsewhere
+ 
+ This file can be modified by licensees according to the
+ product manual.
+ FOURJS_END_COPYRIGHT
+ -->
+<!-- 
+Modify.........: No:FUN-T100 2014/06/12 by tsai_yen
+Modify.........: No:FUN-T100 2014/08/11 by tsai_yen GAS 2.50.29
+-->
+<html
+	xmlns='http://www.w3.org/1999/xhtml'
+	xmlns:gwc='http://www.4js.com/GWC'
+>
+	<head>
+		<meta
+			content='text/html; charset=utf-8'
+			http-equiv='Content-Type'
+		/>
+	</head>
+
+	<body>
+
+<gwc:snippet-root>
+	<div
+		gwc:condition='renderForDisplay'
+		gwc:content='valuetext'
+
+		class='gTableValue gWid g{type} gSStar gS{type} {prefix("gc", class)} {isNumeric ? "gNumeric" : ""} {justify ? "gJustify_" + justify : ""}'
+		style='{ttycolor ? "color: " + ttycolor + ";" : null}{ttybackgroundcolor ? "background-color: " + ttybackgroundcolor + ";" : null}{ttyfontfamily ? "font-family: " + ttyfontfamily + ";" : null}{ttytextdecoration ? "text-decoration: " + ttytextdecoration + ";" : null}{ttyfontweight ? "font-weight: " + ttyfontweight + ";" : null}'
+		title='{comment || null}'
+
+		data-g-active='{isSelectable}'
+		data-g-selectable='{isSelectable || null}'
+    data-g-value='{value}'
+	/>
+
+	<div
+		gwc:define='
+			widthPolicy switch(sizePolicy, ["initial", "fixed", "dynamic"], ["\"CanGrowInitial\"", "\"Fixed\"", "\"CanGrow\""]);
+			queryAndEditable isQuery &amp;&amp; queryeditable;
+		'
+		gwc:condition='!renderForDisplay'
+		gwc:omit-tag='renderNoLayout'
+
+		class='gFieldContainer'
+	>
+		<div
+			class='gWid g{type} gSStar gS{type} {prefix("gc", class)} {shift ? "gShift_" + shift : ""} {isNumeric ? "gNumeric" : ""} {justify ? "gJustify_" + justify : ""} widget widget-style widget-style-focus'
+			list='g{id}'
+			readonly='{isModifiable ? null : ""}'
+			size='{width}'
+			style='{ttycolor ? "color: " + ttycolor + ";" : null}{ttybackgroundcolor ? "background-color: " + ttybackgroundcolor + ";" : null}{ttyfontfamily ? "font-family: " + ttyfontfamily + ";" : null}{ttytextdecoration ? "text-decoration: " + ttytextdecoration + ";" : null}{ttyfontweight ? "font-weight: " + ttyfontweight + ";" : null}'
+			tabindex='{isModifiable &amp;&amp; tabIndex ? tabIndex : null}'
+			title='{valuetext || comment || null}'
+
+			data-g-disabled='{(!isModifiable &amp;&amp; !isselectable) || null}'
+			data-g-qa-name='{type},{name || ""}'
+			data-g-focus='{hasFocus || null}'
+			data-g-id='{type},{xdid}'
+			data-g-layout-policy='{renderNoLayout ? null : ("\"widthHint\": " + (number(width) + 2) + ", \"widthPolicy\": " + widthPolicy + ", \"horizontalStretching\": 1")}'
+			data-g-modif='{isModifiable || null}'
+			data-g-query='{isQuery || null}'
+			data-g-selectable='{isSelectable || null}'
+			data-g-selected='{ignoreSelection ? null : ((isSelectable &amp;&amp; check(isSelected)) || null)}'
+			data-g-state='{hasOnChange ? "1" : ""},{queryAndEditable ? "1" : ""}'
+			data-g-on-change='{hasOnChange || null}'
+			data-g-subtabindex='{isModifiable &amp;&amp; subtabindex ? subtabindex : null}'
+			data-g-value='{value}'
+			data-g-not-null='{notNull || null}'
+		/><!-- FUN-T100 title -->
+		<datalist
+			style='display:none;'
+		>
+			<option
+				gwc:repeat='cb_item items'
+				gwc:content='cb_item/text'
+				value='{cb_item/name}'
+			/>
+			<option
+				gwc:condition='isModifiable &amp;&amp; !notNull'
+				value=''
+			/>
+		</datalist>
+
+		<gwc:dummy
+			gwc:replace='includeSnippet("UIError")'
+		/>
+
+	</div>
+
+
+</gwc:snippet-root>
+
+	</body>
+</html>

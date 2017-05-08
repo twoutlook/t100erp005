@@ -1,0 +1,78 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglq760" module="agl" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="02599" crtdt="2014-03-27 16:34:40" modid="02599" moddt="2015-09-11 11:54:01" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="明細分類帳查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),glaq002,glaq002_desc(chr500),glaqdocno(chr500),glapdocdt(chr500),glap004(chr500),glaq001(chr500),style(chr500),glaq005(chr500),glaq006(chr500),glaq010d(chr500),glaq010c(chr500),glaq003(chr500),glaq004(chr500),glaq039(chr500),glaq040(chr500),glaq041(chr500),glaq042(chr500),glaq043(chr500),glaq044(chr500),state(chr500),amt(chr500),amt1(chr500),amt2(chr500),amt3(chr500)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),glaq002(b_glaq002),glaq002_desc(b_glaq002_desc),glaqdocno(glaqdocno),glapdocdt(glapdocdt),glap004(glap004),glaq001(glaq001),style(style),glaq005(glaq005),glaq006(glaq006),glaq010d(glaq010d),glaq010c(glaq010c),glaq003(glaq003),glaq004(glaq004),glaq039(glaq039),glaq040(glaq040),glaq041(glaq041),glaq042(glaq042),glaq043(glaq043),glaq044(glaq044),state(state),amt(amt),amt1(amt1),amt2(amt2),amt3(amt3)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+      <action id="exchange_ld"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="aglq760" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="glaq002,glaq040,glaq041,glaq043,glaq044" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="glaq002(b_glaq002)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="glaq002">
+        <after>
+          <reference field="glaq002_desc" ref_field="glaq002" map_field="glaqent,glaq002" ref_sql="SELECT glacl004 FROM glacl_t WHERE glaclent=$varg_enterprise$var AND glacl002=? AND glacl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="glaq002_desc"/>
+      <column id="glaqdocno"/>
+      <column id="glapdocdt"/>
+      <column id="glap004"/>
+      <column id="glaq001"/>
+      <column id="style"/>
+      <column id="glaq005"/>
+      <column id="glaq006"/>
+      <column id="glaq010d"/>
+      <column id="glaq010c"/>
+      <column id="glaq003"/>
+      <column id="glaq004"/>
+      <column id="glaq039"/>
+      <column id="glaq040">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="glaq041"/>
+      <column id="glaq042"/>
+      <column id="glaq043"/>
+      <column id="glaq044">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="state"/>
+      <column id="amt"/>
+      <column id="amt1"/>
+      <column id="amt2"/>
+      <column id="amt3"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="glaq_t" page="1" linked="" pk="glaqld,glaqdocno,glaqseq">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,glaq002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM glaq_t WHERE glaqent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

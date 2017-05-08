@@ -1,0 +1,145 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="azzi900_03.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2014-03-24 00:00:00), PR版次:0001(2014-03-24 18:44:50)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000070
+#+ Filename...: azzi900_03
+#+ Description: 查詢函式所在4gl
+#+ Creator....: 00845(2014-03-24 15:38:54)
+#+ Modifier...: 00845 -SD/PR- 00845
+ 
+{</section>}
+ 
+{<section id="azzi900_03.global" >}
+#應用 p00 樣板自動產生(Version:4)
+#add-point:填寫註解說明
+
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzi900_03.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable)
+ 
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzi900_03.global_variable" >}
+#add-point:自定義模組變數(Module Variable)
+DEFINE g_program  LIKE gzza_t.gzza001
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzi900_03.other_dialog" >}
+
+ 
+{</section>}
+ 
+{<section id="azzi900_03.other_function" readonly="Y" >}
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi900_03(pc_prog)
+   DEFINE pc_prog LIKE gzza_t.gzza001
+
+   LET g_program = pc_prog
+
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_azzi900_03 WITH FORM cl_ap_formpath("azz","azzi900_03")
+   CALL cl_ui_init()
+
+   #進入選單 Menu (="N")
+   CALL azzi900_03_ui_dialog()
+
+   CLOSE WINDOW w_azzi900_03
+
+END FUNCTION
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi900_03_ui_dialog()
+   DEFINE ls_wc    STRING
+   DEFINE ls_sql   STRING
+   DEFINE li_cnt   LIKE type_t.num5
+   DEFINE la_gzzl  DYNAMIC ARRAY OF RECORD
+             gzzo001 LIKE gzzo_t.gzzo001,
+             gzzl002 LIKE gzzl_t.gzzl002
+                     END RECORD
+   DEFINE ls_path  STRING
+   DEFINE ls_cmd   STRING
+   DEFINE lch_pipe       base.channel
+   DEFINE ls_result STRING
+
+   INPUT ls_wc FROM gzwb002
+
+   LET ls_sql = "SELECT gzzl002 FROM gzzl_t WHERE gzzl001 = '",g_program CLIPPED,"'",
+                " ORDER BY gzzl002 "
+
+   LET li_cnt = 1
+   LET lch_pipe = base.Channel.create()
+   DECLARE azzi900_03_cs CURSOR FROM ls_sql
+   FOREACH azzi900_03_cs INTO la_gzzl[li_cnt].gzzl002
+      IF SQLCA.SQLCODE THEN
+         EXIT FOREACH
+      END IF
+      LET la_gzzl[li_cnt].gzzo001 = cl_get_module_by_4gl(la_gzzl[li_cnt].gzzl002,"S")
+      LET ls_path = os.PAth.join(FGL_GETENV(la_gzzl[li_cnt].gzzo001),"4gl")
+      LET ls_cmd = "cd ",ls_path.trim(),"; grep '",ls_wc.trim(),"' ",la_gzzl[li_cnt].gzzl002 CLIPPED,".4gl"
+      CALL lch_pipe.openPipe(ls_cmd,"r")
+      LET ls_result = ""
+      WHILE lch_pipe.read(ls_result)
+         EXIT WHILE
+      END WHILE
+      IF ls_result.getLength() > 0 THEN
+         LET li_cnt = li_cnt + 1
+      ELSE
+         CALL la_gzzl.deleteElement(li_cnt)
+      END IF
+      CALL lch_pipe.close()
+   END FOREACH
+
+   DISPLAY ARRAY la_gzzl TO s_azzi900_03.*
+      ON ACTION exit
+         EXIT DISPLAY
+   END DISPLAY
+END FUNCTION
+
+ 
+{</section>}
+ 

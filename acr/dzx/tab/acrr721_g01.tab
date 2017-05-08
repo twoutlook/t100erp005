@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="acrr721_g01" module="acr" jobmode="N" type="g01" industry="std" crtid="03247" crtdt="2016-05-04 13:44:52" modid="03247" moddt="2016-05-05 09:57:13" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.oocq(oocq002|oocq002),tm.type1(chr1|type1),tm.type2(chr1|type2)">
+    <var seq="1" value="mmagent,mmag004,oocql_t_oocql004(oocql004|oocql_t.oocql004),l_cnt1(deca027|NULL),l_cnt2(deca027|NULL),l_cnt3(deca027|NULL),l_cnt4(deca027|NULL),l_cnt5(deca027|NULL)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="mmagent,mmag004,oocql_t_oocql004(oocql004|oocql_t.oocql004),l_cnt1(deca027|NULL),l_cnt2(deca027|NULL),l_cnt3(deca027|NULL),l_cnt4(deca027|NULL),l_cnt5(deca027|NULL)"/>
+    <sql id="g_from" query="mmag_t,mmaf_t,deca_t,oocq_t,oocql_t"/>
+    <sql id="g_where" query="" maintable="mmag_t"/>
+    <sql id="g_order" query="mmagent"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="mmagent"/>
+    <section id="b_group" reptype="d01">
+      <rep type="mmagent" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="mmagent,mmagent"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="mmagent,mmagent"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="mmagent,mmagent"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="mmagent" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="mmagent,mmagent"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

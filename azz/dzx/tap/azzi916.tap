@@ -1,0 +1,3791 @@
+<add_points prog="azzi916" std_prog="azzi916" erpver="1.0" module="AZZ" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.azzi916_notice_preview" cite_std="N" status="" ver="1" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 檢視公告預覽
+# Memo...........: 
+# Usage..........: CALL azzi916_notice_preview(g_gzzv_m.gzzv001,FALSE)
+# Input parameter: ps_prog    要顯示的系統/作業公告
+# ...............: pi_cache   畫面上尚未新增的公告是否要顯示
+# Return code....: None
+# Date & Author..: 2014/05/12 By Saki
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi916_notice_preview(ps_prog,pi_cache)
+   DEFINE ps_prog      STRING
+   DEFINE pi_cache     LIKE type_t.num5
+   DEFINE ls_js        STRING
+   DEFINE ls_html      STRING
+   DEFINE lr_notices   DYNAMIC ARRAY OF RECORD
+             content   STRING,
+             date      DATETIME YEAR TO DAY,
+             employee  LIKE gzzv_t.gzzv005
+                       END RECORD
+   DEFINE li_i         LIKE type_t.num5
+
+   #先取得此作業已存入的公告
+   CALL cl_notice_getlist(ps_prog) RETURNING ls_js
+   #增加預覽未存入, 但在畫面上的公告內容
+   IF pi_cache THEN
+      CALL lr_notices.clear()
+      CALL util.JSON.parse(ls_js, lr_notices)
+      LET li_i = lr_notices.getLength() + 1
+      LET lr_notices[li_i].content = g_gzzv_m.gzzv004
+      LET lr_notices[li_i].date = g_gzzv_m.gzzv006
+      LET lr_notices[li_i].employee = g_gzzv_m.gzzv005
+      LET ls_js = util.JSON.stringify(lr_notices)
+   END IF
+   IF ps_prog = "SYSTEM" THEN
+      CALL azzi916_system_notice_preview(ls_js) RETURNING ls_html
+   ELSE
+      CALL cl_notice_gen_htmlformat(ls_js) RETURNING ls_html
+   END IF
+   DISPLAY ls_html TO FORMONLY.te_preview
+END FUNCTION]]>
+</point>
+  <point name="function.azzi916_system_notice_preview" cite_std="N" status="" ver="1" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 系統公告格式顯示
+# Memo...........: 
+# Usage..........: CALL azzi916_system_notice_preview(ls_js)
+# Input parameter: ps_js    公告資料列表
+# Return code....: ls_html  公告html文字
+# Date & Author..: 2014/05/12 By Saki
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi916_system_notice_preview(ps_js)
+   DEFINE ps_js           STRING
+   DEFINE lr_notices      DYNAMIC ARRAY OF RECORD
+             content      STRING,
+             date         DATETIME YEAR TO DAY,
+             employee     LIKE gzzv_t.gzzv005
+                          END RECORD
+   DEFINE li_i            LIKE type_t.num5
+   DEFINE ls_html         STRING
+
+   CALL lr_notices.clear()
+   CALL util.JSON.parse(ps_js, lr_notices)
+
+   FOR li_i = 1 TO lr_notices.getLength()
+       LET ls_html = ls_html,
+           "<div style=\"width:457px; background-color:#01A6AC; color:#FFFFFF;\">", lr_notices[li_i].content,"</div>"
+   END FOR
+
+   RETURN ls_html
+END FUNCTION]]>
+</point>
+  <point name="construct.c.gzzv001" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_gzzz001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO gzzv001  #顯示到畫面上
+
+            NEXT FIELD gzzv001                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.gzzv005" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO gzzv005  #顯示到畫面上
+            NEXT FIELD gzzv005                     #返回原欄位
+    
+
+]]>
+</point>
+  <point name="delete.head.a_delete" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="desc_show.define" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   DEFINE lc_gzzv004 LIKE gzzv_t.gzzv004]]>
+</point>
+  <point name="desc_show.show" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   CASE g_browser[pi_ac].b_expcode
+      WHEN 1   #第一層系統/作業
+         IF g_browser[pi_ac].b_gzzv001 = "SYSTEM" THEN
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = "74"
+            LET g_ref_fields[2] = "0"
+            CALL ap_ref_array2(g_ref_fields,"SELECT gzcbl004 FROM gzcbl_t WHERE gzcbl001=? AND gzcbl002=? AND gzcbl003='"||g_lang||"'","") RETURNING g_rtn_fields
+            LET g_browser[pi_ac].b_show = g_rtn_fields[1]
+         ELSE
+            LET g_browser[pi_ac].b_show = cl_get_progname(g_browser[pi_ac].b_gzzv001, g_lang, "2")
+         END IF
+      WHEN 2   #第二層公告
+         LOCATE lc_gzzv004 IN FILE
+         SELECT gzzv004 INTO lc_gzzv004 FROM gzzv_t WHERE gzzv001 = g_browser[pi_ac].b_gzzv001 AND gzzv002 = g_browser[pi_ac].b_gzzv002
+         LET g_browser[pi_ac].b_b_gzzv004 = lc_gzzv004
+   END CASE]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="init.init" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   LOCATE g_gzzv_m.gzzv004 IN FILE]]>
+</point>
+  <point name="input.a.gzzv001" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_gzzv_m.gzzv001) AND NOT cl_null(g_gzzv_m.gzzv002) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_gzzv_m.gzzv001 != g_gzzv001_t  OR g_gzzv_m.gzzv002 != g_gzzv002_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzzv_t WHERE "||"gzzvent = '" ||g_enterprise|| "' AND "||"gzzv001 = '"||g_gzzv_m.gzzv001 ||"' AND "|| "gzzv002 = '"||g_gzzv_m.gzzv002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            IF NOT cl_null(g_gzzv_m.gzzv001) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_gzzv_m.gzzv001
+               #設定g_chkparam.*的參數
+
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_gzzz001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_gzzv_m.gzzv001
+            CALL ap_ref_array2(g_ref_fields,"SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002='"||g_lang||"'","") RETURNING g_rtn_fields
+            LET g_gzzv_m.gzzv001_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_gzzv_m.gzzv001_desc
+]]>
+</point>
+  <point name="input.a.gzzv002" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_gzzv_m.gzzv001) AND NOT cl_null(g_gzzv_m.gzzv002) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_gzzv_m.gzzv001 != g_gzzv001_t  OR g_gzzv_m.gzzv002 != g_gzzv002_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzzv_t WHERE "||"gzzvent = '" ||g_enterprise|| "' AND "||"gzzv001 = '"||g_gzzv_m.gzzv001 ||"' AND "|| "gzzv002 = '"||g_gzzv_m.gzzv002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.gzzv005" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_gzzv_m.gzzv005) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_gzzv_m.gzzv005
+
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooag001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_gzzv_m.gzzv005
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_gzzv_m.gzzv005_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_gzzv_m.gzzv005_desc
+
+]]>
+</point>
+  <point name="input.b.gzzv003" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            CALL azzi916_set_entry(p_cmd)]]>
+</point>
+  <point name="input.c.gzzv001" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_gzzv_m.gzzv001             #給予default值
+
+            #給予arg
+
+            CALL q_gzzz001_1()                                #呼叫開窗
+
+            LET g_gzzv_m.gzzv001 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_gzzv_m.gzzv001 TO gzzv001              #顯示到畫面上
+
+            NEXT FIELD gzzv001                          #返回原欄位
+
+]]>
+</point>
+  <point name="input.c.gzzv005" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_gzzv_m.gzzv005             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ooag001()                                #呼叫開窗
+
+            LET g_gzzv_m.gzzv005 = g_qryparam.return1              
+
+            DISPLAY g_gzzv_m.gzzv005 TO gzzv005              #
+
+            NEXT FIELD gzzv005                          #返回原欄位
+
+]]>
+</point>
+  <point name="input.define" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   DEFINE ls_date         STRING
+   DEFINE ld_date         DATETIME YEAR TO DAY
+   DEFINE ld_gzzv006      DATETIME YEAR TO SECOND
+   DEFINE ld_gzzv007      DATETIME YEAR TO SECOND]]>
+</point>
+  <point name="input.g.gzzv003" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_gzzv_m.gzzv003) THEN 
+               IF g_gzzv_m.gzzv003 = "0" THEN
+                  LET g_gzzv_m.gzzv001 = "SYSTEM"
+               END IF
+               CALL azzi916_set_no_entry(p_cmd)
+            END IF]]>
+</point>
+  <point name="input.head.b_insert" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="Y">
+<![CDATA[                  IF cl_null(g_gzzv_m.gzzv002) THEN
+                     SELECT MAX(gzzv002)+1 INTO g_gzzv_m.gzzv002 FROM gzzv_t WHERE gzzv001=g_gzzv_m.gzzv001
+                     IF cl_null(g_gzzv_m.gzzv002) THEN
+                        LET g_gzzv_m.gzzv002 = 1
+                     END IF
+                  END IF
+                  LET ld_date = g_gzzv_m.gzzv006
+                  LET ls_date = ld_date, " ", g_gzzv_m.gzzv006_time
+                  LET ld_gzzv006 = ls_date
+                  LET ld_date = g_gzzv_m.gzzv007
+                  LET ls_date = ld_date, " ", g_gzzv_m.gzzv007_time
+                  LET ld_gzzv007 = ls_date
+                  INSERT INTO gzzv_t (gzzvent,gzzv003,gzzv002,gzzv001,gzzv005,gzzv006,gzzv007,gzzv004, gzzvstus)
+                              VALUES (g_enterprise,g_gzzv_m.gzzv003,g_gzzv_m.gzzv002,g_gzzv_m.gzzv001,g_gzzv_m.gzzv005, 
+                                      ld_gzzv006,ld_gzzv007,g_gzzv_m.gzzv004,g_gzzv_m.gzzvstus) ]]>
+</point>
+  <point name="input.head.b_update" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="Y">
+<![CDATA[               LET ld_date = g_gzzv_m.gzzv006
+               LET ls_date = ld_date, " ", g_gzzv_m.gzzv006_time
+               LET ld_gzzv006 = ls_date
+               LET ld_date = g_gzzv_m.gzzv007
+               LET ls_date = ld_date, " ", g_gzzv_m.gzzv007_time
+               LET ld_gzzv007 = ls_date
+               UPDATE gzzv_t SET (gzzv003,gzzv002,gzzv001,gzzv005,gzzv006,gzzv007,gzzv004,gzzvstus) = (g_gzzv_m.gzzv003, 
+                                  g_gzzv_m.gzzv002,g_gzzv_m.gzzv001,g_gzzv_m.gzzv005,ld_gzzv006,ld_gzzv007, 
+                                  g_gzzv_m.gzzv004,g_gzzv_m.gzzvstus)
+                WHERE gzzvent = g_enterprise AND gzzv001 = g_gzzv001_t
+                  AND gzzv002 = g_gzzv002_t]]>
+</point>
+  <point name="input.master_input.preview" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_gzzv_m.gzzv001) AND p_cmd = "a" THEN
+               LET g_gzzv_m.gzzv004 = GET_FLDBUF(gzzv004)
+               LET g_gzzv_m.gzzv005 = GET_FLDBUF(gzzv005)
+               LET g_gzzv_m.gzzv006 = GET_FLDBUF(gzzv006)
+               CALL azzi916_notice_preview(g_gzzv_m.gzzv001, TRUE)
+            END IF]]>
+</point>
+  <point name="insert.default" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[      LET g_gzzv_m.gzzvstus = "Y"
+      LET g_gzzv_m.gzzv003 = "1"
+      LET g_gzzv_m.gzzv001 = ""
+      LET g_gzzv_m.gzzv005 = g_user
+      LET g_gzzv_m.gzzv006 = cl_get_today()
+      LET g_gzzv_m.gzzv006_time = cl_get_time()
+      LET g_gzzv_m.gzzv007 = cl_get_today()
+      LET g_gzzv_m.gzzv007_time = cl_get_time()]]>
+</point>
+  <point name="menu.output" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="menu.preview" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_gzzv_m.gzzv001) THEN
+               CALL azzi916_notice_preview(g_gzzv_m.gzzv001, FALSE)
+            ELSE
+               IF g_curr_diag.getCurrentRow("s_browse") > 0 THEN
+                  IF NOT cl_null(g_browser[g_curr_diag.getCurrentRow("s_browse")].b_gzzv001) THEN
+                     CALL azzi916_notice_preview(g_browser[g_curr_diag.getCurrentRow("s_browse")].b_gzzv001, FALSE)
+                  END IF
+               END IF
+            END IF]]>
+</point>
+  <point name="menu2.preview" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_gzzv_m.gzzv001) THEN
+               CALL azzi916_notice_preview(g_gzzv_m.gzzv001, FALSE)
+            ELSE
+               IF g_curr_diag.getCurrentRow("s_browse") > 0 THEN
+                  IF NOT cl_null(g_browser[g_curr_diag.getCurrentRow("s_browse")].b_gzzv001) THEN
+                     CALL azzi916_notice_preview(g_browser[g_curr_diag.getCurrentRow("s_browse")].b_gzzv001, FALSE)
+                  END IF
+               END IF
+            END IF]]>
+</point>
+  <point name="set_entry.after_control" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.field_control" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.after_control" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   IF INFIELD(gzzv003) THEN
+      IF g_gzzv_m.gzzv003 = "0" THEN
+         CALL cl_set_comp_entry("gzzv001", FALSE)
+      END IF
+   END IF]]>
+</point>
+  <point name="show.after" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   SELECT gzzv006 INTO ld_gzzv006 FROM gzzv_t WHERE gzzv001 = g_gzzv_m.gzzv001 AND gzzv002 = g_gzzv_m.gzzv002
+   LET ls_str = ld_gzzv006
+   LET ls_str = ls_str.subString(ls_str.getIndexOf(" ",1)+1, ls_str.getLength())
+   LET g_gzzv_m.gzzv006_time = ls_str
+   DISPLAY BY NAME g_gzzv_m.gzzv006_time
+   SELECT gzzv007 INTO ld_gzzv007 FROM gzzv_t WHERE gzzv001 = g_gzzv_m.gzzv001 AND gzzv002 = g_gzzv_m.gzzv002
+   LET ls_str = ld_gzzv007
+   LET ls_str = ls_str.subString(ls_str.getIndexOf(" ",1)+1, ls_str.getLength())
+   LET g_gzzv_m.gzzv007_time = ls_str
+   DISPLAY BY NAME g_gzzv_m.gzzv007_time]]>
+</point>
+  <point name="show.define" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   DEFINE ld_gzzv006 DATETIME YEAR TO SECOND
+   DEFINE ld_gzzv007 DATETIME YEAR TO SECOND
+   DEFINE ls_str     STRING]]>
+</point>
+  <point name="show.head.reference" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_gzzv_m.gzzv001
+            CALL ap_ref_array2(g_ref_fields,"SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002='"||g_lang||"'","") RETURNING g_rtn_fields
+            LET g_gzzv_m.gzzv001_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_gzzv_m.gzzv001_desc
+]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.init" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.define_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.after_define_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.after_refresh_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.before_close" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="init.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.default.insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.action_default" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu2.modify" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu2.delete" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu2.insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu2.output" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu2.reproduce" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu2.query" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu2.prog_gzzv001" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.menu.related_document" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.menu.agendum" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.menu.followup" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.after_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.modify" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.delete" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.reproduce" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.query" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.prog_gzzv001" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.dialog.related_document" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.dialog.agendum" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.dialog.followup" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="browser_expand.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="browser_expand.before_prepare" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="browser_expand_leaf.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="browser_expand_leaf.before_prepare" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="browser_search.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="cs.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="cs.before_construct" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.gzzv003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.gzzv003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.gzzv003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.gzzv002" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.gzzv002" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.gzzv002" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.gzzv001" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.gzzv001" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.gzzv005" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.gzzv005" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.gzzv006" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.gzzv006" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.gzzv006" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.gzzv006_time" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.gzzv006_time" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.gzzv006_time" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.gzzv007" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.gzzv007" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.gzzv007" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.gzzv007_time" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.gzzv007_time" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.gzzv007_time" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.gzzv004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.gzzv004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.gzzv004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.gzzvstus" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.gzzvstus" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.gzzvstus" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="cs.more_construct" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="cs.b_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="cs.after_construct" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="query.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="fetch.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="fetch.action_control" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="insert.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="insert.after_insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="modify.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="modify.before_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="modify.after_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.after_set_entry" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.before_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.before.input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.gzzv003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.gzzv001" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.gzzv001" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.gzzv005" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.gzzv005" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.gzzv006" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.gzzv006" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.gzzv006" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.gzzv006_time" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.gzzv006_time" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.gzzv006_time" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.gzzv007" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.gzzv007" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.gzzv007" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.gzzv007_time" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.gzzv007_time" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.gzzv007_time" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.gzzv004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.gzzv004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.gzzv004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.gzzvstus" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.gzzvstus" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.gzzvstus" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.gzzv003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.gzzv006" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.gzzv006_time" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.gzzv007" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.gzzv007_time" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.gzzv004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.gzzvstus" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.head.m_insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.head.a_insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.head.m_update" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.head.a_update" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.more_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.after_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.head.b_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.head.b_insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.head.m_insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.head.a_insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.after_reproduce" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="show.before" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="show.follow_pic" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.head.b_delete" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.befroe.related_document_remove" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="delete.head.m_delete" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_browser_refresh.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.field_control" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="default_search.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="default_search.before" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="default_search.after" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="statechange.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="statechange.before" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="statechange.before_menu" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="statechange.inactive" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="statechange.active" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="statechange.more_control" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="statechange.b_update" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="statechange.a_update" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="statechange.after" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_pk_array.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_pk_array.before" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="set_pk_array.after" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <section id="azzi916.browser_fill" ver="9" status="" src="s">
+<![CDATA[#+ 此段落由子樣板a30產生
+#+ 瀏覽頁簽資料填充(六階樹狀)
+PRIVATE FUNCTION azzi916_browser_fill(ps_wc,ps_page_action) 
+   DEFINE ps_wc              STRING
+   DEFINE ps_page_action     STRING
+   DEFINE ls_sql             STRING
+   DEFINE li_idx             LIKE type_t.num5
+   #add-point:browser_fill段define
+   {<point name="browser_fill.define"/>}
+   #end add-point
+   
+   CLEAR FORM
+   INITIALIZE g_gzzv_m.* TO NULL
+   CALL g_browser.clear()
+   
+   LET ls_sql = " SELECT UNIQUE gzzv001 ",
+                " FROM gzzv_t ",
+                "  ",
+                "  ",
+                " WHERE gzzvent = '" ||g_enterprise|| "' AND ", g_wc #,cl_get_extra_cond('zzuser', 'zzgrup')
+                
+   PREPARE browse_pre FROM ls_sql
+   DECLARE browse_cur CURSOR FOR browse_pre
+   
+   LET li_idx = 1 
+   FOREACH browse_cur INTO g_browser[li_idx].b_gzzv001
+      
+      LET g_browser[li_idx].b_pid     = 0
+      LET g_browser[li_idx].b_id      = 0, ".", li_idx USING "<<<"
+      LET g_browser[li_idx].b_exp     = FALSE
+      LET g_browser[li_idx].b_expcode = 1
+      LET g_browser[li_idx].b_hasC    = TRUE
+      LET g_browser[li_idx].b_show    = g_browser[li_idx].b_gzzv001
+      CALL azzi916_desc_show(li_idx)
+      LET li_idx = li_idx + 1
+      
+      IF li_idx > g_max_rec AND g_error_show = 1 THEN
+         CALL cl_err( '', 9035, 1)
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   CALL g_browser.deleteElement(g_browser.getLength())
+   
+   LET g_browser_cnt = g_browser.getLength()
+ 
+   #瀏覽頁筆數顯示
+   DISPLAY g_browser_cnt TO FORMONLY.b_count        #總筆數
+   DISPLAY g_browser_cnt TO FORMONLY.h_count        #總筆數
+   
+   #CALL azzi916_fetch("") 
+   
+   FREE browse_pre
+   
+END FUNCTION
+ 
+#+ Tree子節點展開
+PRIVATE FUNCTION azzi916_browser_expand(pi_id)
+   DEFINE pi_id            LIKE type_t.num10
+   DEFINE li_lv            LIKE type_t.num10
+   DEFINE li_idx           LIKE type_t.num10
+   DEFINE ls_wc            STRING
+   DEFINE ls_type_list     STRING
+   DEFINE ls_sql           STRING
+   #add-point:browser_expand段define
+   {<point name="browser_expand.define"/>}
+   #end add-point
+   
+   #已經展開過
+   IF g_browser[pi_id].b_isExp = TRUE THEN
+      RETURN
+   END IF
+   
+   #leaf展開
+   IF g_browser[pi_id].b_expcode = (2-1) THEN
+      CALL azzi916_browser_expand_leaf(pi_id)
+      RETURN
+   END IF
+   
+   LET li_lv = g_browser[pi_id].b_expcode
+   LET g_browser[pi_id].b_isExp = TRUE
+   
+   CASE li_lv
+      WHEN 1
+         LET ls_wc = " AND gzzv001 = '",g_browser[pi_id].b_gzzv001,"' "
+         LET ls_type_list = "gzzv001"
+                            #,","
+                            
+      WHEN 2               
+         LET ls_wc = " AND gzzv001 = '", g_browser[pi_id].b_gzzv001, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+         LET ls_type_list = "gzzv001"
+                            #,","
+                            #,","
+                            
+      WHEN 3
+         LET ls_wc = " AND gzzv001 = '", g_browser[pi_id].b_gzzv001, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+         LET ls_type_list = "gzzv001"
+                            #,","
+                            #,","
+                            #,","
+                            
+      WHEN 4                
+         LET ls_wc = " AND gzzv001 = '", g_browser[pi_id].b_gzzv001, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+         LET ls_type_list = "gzzv001"
+                            #,","
+                            #,","
+                            #,","
+                            #,","
+ 
+      WHEN 5
+         LET ls_wc = " AND gzzv001 = '", g_browser[pi_id].b_gzzv001, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+         LET ls_type_list = "gzzv001"
+                            #,","
+                            #,","
+                            #,","
+                            #,","
+                            #,","
+   END CASE
+   
+   LET ls_sql = " SELECT UNIQUE   ", ls_type_list, 
+                " FROM gzzv_t ",
+                "  ",
+                "  ",
+                " WHERE gzzvent = '" ||g_enterprise|| "' AND ", g_wc, ls_wc #,cl_get_extra_cond('zzuser', 'zzgrup')
+ 
+   LET li_lv = g_browser[pi_id].b_expcode 
+    
+   #add-point:browser_expand段before prepare
+   {<point name="browser_expand.before_prepare"/>}
+   #end add-point
+                
+   PREPARE expand_pre FROM ls_sql
+   DECLARE expand_cur CURSOR FOR expand_pre
+   
+   LET li_idx = pi_id + 1
+   CALL g_browser.insertElement(li_idx)
+   FOREACH expand_cur INTO g_browser[li_idx].b_gzzv001
+      LET g_browser[li_idx].b_pid     = g_browser[pi_id].b_id 
+      LET g_browser[li_idx].b_id      = g_browser[pi_id].b_id , ".", li_idx USING "<<<"
+      LET g_browser[li_idx].b_exp     = FALSE
+      LET g_browser[li_idx].b_expcode = li_lv + 1
+      LET g_browser[li_idx].b_hasC    = TRUE
+      CASE li_lv
+         WHEN 1
+            #LET g_browser[li_idx].b_show = g_browser[li_idx].b_
+         WHEN 2
+            #LET g_browser[li_idx].b_show = g_browser[li_idx].b_
+         WHEN 3
+            #LET g_browser[li_idx].b_show = g_browser[li_idx].b_
+         WHEN 4
+            #LET g_browser[li_idx].b_show = g_browser[li_idx].b_
+         WHEN 5
+            #LET g_browser[li_idx].b_show = g_browser[li_idx].b_
+      END CASE
+      CALL azzi916_desc_show(li_idx)
+      LET li_idx = li_idx + 1
+      CALL g_browser.insertElement(li_idx)
+   END FOREACH
+   
+   CALL g_browser.deleteElement(li_idx)
+   
+   LET g_browser_cnt = g_browser.getLength()
+ 
+   #瀏覽頁筆數顯示
+   DISPLAY g_browser_cnt TO FORMONLY.b_count        #總筆數
+   DISPLAY g_browser_cnt TO FORMONLY.h_count        #總筆數
+ 
+END FUNCTION
+ 
+#+ Tree leaf節點展開
+PRIVATE FUNCTION azzi916_browser_expand_leaf(pi_id)
+   DEFINE pi_id            LIKE type_t.num10
+   DEFINE li_lv            LIKE type_t.num10
+   DEFINE li_idx           LIKE type_t.num10
+   DEFINE ls_wc            STRING
+   DEFINE ls_sql           STRING
+   DEFINE ls_type_list     STRING
+   #add-point:browser_expand_leaf段define
+   {<point name="browser_expand_leaf.define"/>}
+   #end add-point
+   
+   LET ls_wc = " AND gzzv001 = '", g_browser[pi_id].b_gzzv001, "'"
+               #," AND  = '", g_browser[pi_id].b_, "'"
+               #," AND  = '", g_browser[pi_id].b_, "'"
+               #," AND  = '", g_browser[pi_id].b_, "'"
+               #," AND  = '", g_browser[pi_id].b_, "'"
+               #," AND  = '", g_browser[pi_id].b_, "'"
+ 
+   LET ls_sql = " SELECT UNIQUE '',gzzv006,gzzv007,gzzv001,gzzv002,gzzv003 ",
+                " FROM gzzv_t ",
+                "  ",
+                "  ",
+                " WHERE gzzvent = '" ||g_enterprise|| "' AND ", g_wc, ls_wc #,cl_get_extra_cond('zzuser', 'zzgrup')
+ 
+   LET li_lv = g_browser[pi_id].b_expcode 
+          
+   LET ls_sql = ls_sql, " ORDER BY gzzv002"
+          
+   #add-point:browser_expand_leaf段before prepare
+   {<point name="browser_expand_leaf.before_prepare"/>}
+   #end add-point 
+          
+   PREPARE leaf_pre FROM ls_sql
+   DECLARE leaf_cur CURSOR FOR leaf_pre
+   
+   LET g_cnt = pi_id + 1
+   CALL g_browser.insertElement(g_cnt)
+   FOREACH leaf_cur INTO g_browser[g_cnt].b_b_gzzv004,g_browser[g_cnt].b_gzzv006,g_browser[g_cnt].b_gzzv007, 
+       g_browser[g_cnt].b_gzzv001,g_browser[g_cnt].b_gzzv002,g_browser[g_cnt].b_gzzv003
+      LET g_browser[g_cnt].b_pid     = g_browser[pi_id].b_id 
+      LET g_browser[g_cnt].b_id      = g_browser[pi_id].b_id , ".", g_cnt USING "<<<"
+      LET g_browser[g_cnt].b_exp     = FALSE
+      LET g_browser[g_cnt].b_expcode = li_lv + 1
+      LET g_browser[g_cnt].b_hasC    = FALSE
+      LET g_browser[g_cnt].b_show = g_browser[g_cnt].b_gzzv002
+      CALL azzi916_desc_show(g_cnt)
+      LET g_cnt = g_cnt + 1
+      CALL g_browser.insertElement(g_cnt)
+   END FOREACH
+   
+   CALL g_browser.deleteElement(g_cnt)
+   
+   LET g_browser_cnt = g_browser.getLength()
+ 
+   #瀏覽頁筆數顯示
+   DISPLAY g_browser_cnt TO FORMONLY.b_count        #總筆數
+   DISPLAY g_browser_cnt TO FORMONLY.h_count        #總筆數
+                      
+END FUNCTION
+ 
+ 
+#+ 組合顯示在畫面上的資訊
+PRIVATE FUNCTION azzi916_desc_show(pi_ac)
+   DEFINE pi_ac   LIKE type_t.num5
+   DEFINE li_tmp  LIKE type_t.num5
+   #add-point:desc_show段define 
+   {<point name="desc_show.define"/>}
+   #end add-point
+   
+   LET li_tmp = g_cnt
+   LET g_cnt = pi_ac
+   
+   #add-point:desc_show段desc處理
+   {<point name="desc_show.show"/>} 
+   #end add-point
+   LET g_cnt = li_tmp
+   
+END FUNCTION
+ 
+#+ 簡易快速查詢
+PRIVATE FUNCTION azzi916_browser_search()
+   DEFINE ls_wc       STRING   #若有輸入g_searchstr時用來代換g_wc的暫存變數
+   #add-point:browser_search段define
+   {<point name="browser_search.define"/>}
+   #END add-point
+ 
+   IF NOT cl_null(g_searchstr) THEN
+      LET ls_wc = " lower(", g_searchcol, ") LIKE '", g_searchstr, "%'"
+      LET ls_wc = ls_wc.toLowerCase()
+   ELSE
+      LET ls_wc = " 1=1 "
+   END IF
+ 
+   LET g_wc = ls_wc
+ 
+END FUNCTION
+ 
+ 
+]]>
+</section>
+  <section id="azzi916.construct" ver="13" status="" src="s">
+<![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION azzi916_construct()
+   DEFINE ls_return      STRING
+   DEFINE ls_result      STRING 
+   DEFINE ls_wc          STRING 
+   #add-point:cs段define
+   {<point name="cs.define"/>}
+   #end add-point
+   
+   CLEAR FORM
+   INITIALIZE g_gzzv_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   LET g_current_row = 1
+ 
+   LET g_qryparam.state = "c"
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #螢幕上取條件
+      CONSTRUCT BY NAME g_wc ON gzzv003,gzzv002,gzzv001,gzzv005,gzzv006,gzzv006_time,gzzv007,gzzv007_time, 
+          gzzv004,gzzvstus
+      
+         BEFORE CONSTRUCT                                    
+            #add-point:cs段more_construct
+            {<point name="cs.before_construct"/>}
+            #end add-point             
+      
+         #公用欄位開窗相關處理
+         #此段落由子樣板a11產生
+         ##----<<gzzvownid>>----
+         ##ON ACTION controlp INFIELD gzzvownid
+         ##   CALL q_common('gzzv_t','gzzvownid',TRUE,FALSE,g_gzzv_m.gzzvownid) RETURNING ls_return
+         ##   DISPLAY ls_return TO gzzvownid
+         ##   NEXT FIELD gzzvownid  
+         #
+         ##----<<gzzvowndp>>----
+         ##ON ACTION controlp INFIELD gzzvowndp
+         ##   CALL q_common('gzzv_t','gzzvowndp',TRUE,FALSE,g_gzzv_m.gzzvowndp) RETURNING ls_return
+         ##   DISPLAY ls_return TO gzzvowndp
+         ##   NEXT FIELD gzzvowndp
+         #
+         ##----<<gzzvcrtid>>----
+         ##ON ACTION controlp INFIELD gzzvcrtid
+         ##   CALL q_common('gzzv_t','gzzvcrtid',TRUE,FALSE,g_gzzv_m.gzzvcrtid) RETURNING ls_return
+         ##   DISPLAY ls_return TO gzzvcrtid
+         ##   NEXT FIELD gzzvcrtid
+         #
+         ##----<<gzzvcrtdp>>----
+         ##ON ACTION controlp INFIELD gzzvcrtdp
+         ##   CALL q_common('gzzv_t','gzzvcrtdp',TRUE,FALSE,g_gzzv_m.gzzvcrtdp) RETURNING ls_return
+         ##   DISPLAY ls_return TO gzzvcrtdp
+         ##   NEXT FIELD gzzvcrtdp
+         #
+         ##----<<gzzvmodid>>----
+         ##ON ACTION controlp INFIELD gzzvmodid
+         ##   CALL q_common('gzzv_t','gzzvmodid',TRUE,FALSE,g_gzzv_m.gzzvmodid) RETURNING ls_return
+         ##   DISPLAY ls_return TO gzzvmodid
+         ##   NEXT FIELD gzzvmodid
+         #
+         ##----<<gzzvcnfid>>----
+         ##ON ACTION controlp INFIELD gzzvcnfid
+         ##   CALL q_common('gzzv_t','gzzvcnfid',TRUE,FALSE,g_gzzv_m.gzzvcnfid) RETURNING ls_return
+         ##   DISPLAY ls_return TO gzzvcnfid
+         ##   NEXT FIELD gzzvcnfid
+         #
+         ##----<<gzzvpstid>>----
+         ##ON ACTION controlp INFIELD gzzvpstid
+         ##   CALL q_common('gzzv_t','gzzvpstid',TRUE,FALSE,g_gzzv_m.gzzvpstid) RETURNING ls_return
+         ##   DISPLAY ls_return TO gzzvpstid
+         ##   NEXT FIELD gzzvpstid
+         
+         ##----<<gzzvcrtdt>>----
+         #AFTER FIELD gzzvcrtdt
+         #   CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+         #   IF NOT cl_null(ls_result) THEN
+         #      IF NOT cl_chk_date_symbol(ls_result) THEN
+         #         LET ls_result = cl_add_date_extra_cond(ls_result)
+         #      END IF
+         #   END IF
+         #   CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<gzzvmoddt>>----
+         #AFTER FIELD gzzvmoddt
+         #   CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+         #   IF NOT cl_null(ls_result) THEN
+         #      IF NOT cl_chk_date_symbol(ls_result) THEN
+         #         LET ls_result = cl_add_date_extra_cond(ls_result)
+         #      END IF
+         #   END IF
+         #   CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<gzzvcnfdt>>----
+         #AFTER FIELD gzzvcnfdt
+         #   CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+         #   IF NOT cl_null(ls_result) THEN
+         #      IF NOT cl_chk_date_symbol(ls_result) THEN
+         #         LET ls_result = cl_add_date_extra_cond(ls_result)
+         #      END IF
+         #   END IF
+         #   CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<gzzvpstdt>>----
+         #AFTER FIELD gzzvpstdt
+         #   CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+         #   IF NOT cl_null(ls_result) THEN
+         #      IF NOT cl_chk_date_symbol(ls_result) THEN
+         #         LET ls_result = cl_add_date_extra_cond(ls_result)
+         #      END IF
+         #   END IF
+         #   CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+ 
+      
+         #一般欄位
+         #---------------------------<  Master  >---------------------------
+         #----<<gzzv003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzzv003
+            #add-point:BEFORE FIELD gzzv003
+            {<point name="construct.b.gzzv003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzzv003
+            
+            #add-point:AFTER FIELD gzzv003
+            {<point name="construct.a.gzzv003" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.gzzv003
+         ON ACTION controlp INFIELD gzzv003
+            #add-point:ON ACTION controlp INFIELD gzzv003
+            {<point name="construct.c.gzzv003" />}
+            #END add-point
+ 
+         #----<<gzzv002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzzv002
+            #add-point:BEFORE FIELD gzzv002
+            {<point name="construct.b.gzzv002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzzv002
+            
+            #add-point:AFTER FIELD gzzv002
+            {<point name="construct.a.gzzv002" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.gzzv002
+         ON ACTION controlp INFIELD gzzv002
+            #add-point:ON ACTION controlp INFIELD gzzv002
+            {<point name="construct.c.gzzv002" />}
+            #END add-point
+ 
+         #----<<gzzv001>>----
+         #Ctrlp:construct.c.gzzv001
+         ON ACTION controlp INFIELD gzzv001
+            #add-point:ON ACTION controlp INFIELD gzzv001
+            {<point name="construct.c.gzzv001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzzv001
+            #add-point:BEFORE FIELD gzzv001
+            {<point name="construct.b.gzzv001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzzv001
+            
+            #add-point:AFTER FIELD gzzv001
+            {<point name="construct.a.gzzv001" />}
+            #END add-point
+            
+ 
+         #----<<gzzv001_desc>>----
+         #----<<gzzv005>>----
+         #Ctrlp:construct.c.gzzv005
+         ON ACTION controlp INFIELD gzzv005
+            #add-point:ON ACTION controlp INFIELD gzzv005
+            {<point name="construct.c.gzzv005" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzzv005
+            #add-point:BEFORE FIELD gzzv005
+            {<point name="construct.b.gzzv005" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzzv005
+            
+            #add-point:AFTER FIELD gzzv005
+            {<point name="construct.a.gzzv005" />}
+            #END add-point
+            
+ 
+         #----<<gzzv005_desc>>----
+         #----<<gzzv006>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzzv006
+            #add-point:BEFORE FIELD gzzv006
+            {<point name="construct.b.gzzv006" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzzv006
+            
+            #add-point:AFTER FIELD gzzv006
+            {<point name="construct.a.gzzv006" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.gzzv006
+         ON ACTION controlp INFIELD gzzv006
+            #add-point:ON ACTION controlp INFIELD gzzv006
+            {<point name="construct.c.gzzv006" />}
+            #END add-point
+ 
+         #----<<gzzv006_time>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzzv006_time
+            #add-point:BEFORE FIELD gzzv006_time
+            {<point name="construct.b.gzzv006_time" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzzv006_time
+            
+            #add-point:AFTER FIELD gzzv006_time
+            {<point name="construct.a.gzzv006_time" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.gzzv006_time
+         ON ACTION controlp INFIELD gzzv006_time
+            #add-point:ON ACTION controlp INFIELD gzzv006_time
+            {<point name="construct.c.gzzv006_time" />}
+            #END add-point
+ 
+         #----<<gzzv007>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzzv007
+            #add-point:BEFORE FIELD gzzv007
+            {<point name="construct.b.gzzv007" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzzv007
+            
+            #add-point:AFTER FIELD gzzv007
+            {<point name="construct.a.gzzv007" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.gzzv007
+         ON ACTION controlp INFIELD gzzv007
+            #add-point:ON ACTION controlp INFIELD gzzv007
+            {<point name="construct.c.gzzv007" />}
+            #END add-point
+ 
+         #----<<gzzv007_time>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzzv007_time
+            #add-point:BEFORE FIELD gzzv007_time
+            {<point name="construct.b.gzzv007_time" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzzv007_time
+            
+            #add-point:AFTER FIELD gzzv007_time
+            {<point name="construct.a.gzzv007_time" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.gzzv007_time
+         ON ACTION controlp INFIELD gzzv007_time
+            #add-point:ON ACTION controlp INFIELD gzzv007_time
+            {<point name="construct.c.gzzv007_time" />}
+            #END add-point
+ 
+         #----<<gzzv004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzzv004
+            #add-point:BEFORE FIELD gzzv004
+            {<point name="construct.b.gzzv004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzzv004
+            
+            #add-point:AFTER FIELD gzzv004
+            {<point name="construct.a.gzzv004" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.gzzv004
+         ON ACTION controlp INFIELD gzzv004
+            #add-point:ON ACTION controlp INFIELD gzzv004
+            {<point name="construct.c.gzzv004" />}
+            #END add-point
+ 
+         #----<<te_preview>>----
+         #----<<gzzvstus>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzzvstus
+            #add-point:BEFORE FIELD gzzvstus
+            {<point name="construct.b.gzzvstus" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzzvstus
+            
+            #add-point:AFTER FIELD gzzvstus
+            {<point name="construct.a.gzzvstus" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.gzzvstus
+         ON ACTION controlp INFIELD gzzvstus
+            #add-point:ON ACTION controlp INFIELD gzzvstus
+            {<point name="construct.c.gzzvstus" />}
+            #END add-point
+ 
+ 
+           
+      END CONSTRUCT
+      
+      #add-point:cs段more_construct
+      {<point name="cs.more_construct"/>}
+      #end add-point   
+      
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog
+         {<point name="cs.b_dialog"/>}
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+  
+   #add-point:cs段after_construct
+   {<point name="cs.after_construct"/>}
+   #end add-point
+  
+END FUNCTION
+]]>
+</section>
+  <section id="azzi916.default_search" ver="4" status="" src="s">
+<![CDATA[#+ 外部參數搜尋
+PRIVATE FUNCTION azzi916_default_search()
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define
+   {<point name="default_search.define"/>}
+   #end add-point  
+   
+   #add-point:default_search段開始前
+   {<point name="default_search.before"/>}
+   #end add-point  
+   
+   LET g_pagestart = 1
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   IF NOT cl_null(g_argv[1]) THEN
+      LET ls_wc = ls_wc, " gzzv001 = '", g_argv[1], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " gzzv002 = '", g_argv[02], "' AND "
+   END IF
+ 
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      LET g_default = FALSE
+      #預設查詢條件
+      LET g_wc = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=1"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前
+   {<point name="default_search.after"/>}
+   #end add-point  
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="azzi916.delete" ver="8" status="" src="s">
+<![CDATA[#+ 資料刪除 
+PRIVATE FUNCTION azzi916_delete()
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define
+   {<point name="delete.define"/>}
+   #end add-point  
+   
+   IF g_gzzv_m.gzzv001 IS NULL
+   OR g_gzzv_m.gzzv002 IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+ 
+   CALL azzi916_show()
+   
+   CALL s_transaction_begin()
+    
+   LET g_gzzv001_t = g_gzzv_m.gzzv001
+   LET g_gzzv002_t = g_gzzv_m.gzzv002
+ 
+   
+   
+ 
+   OPEN azzi916_cl USING g_enterprise,
+                           g_gzzv_m.gzzv001
+                           ,g_gzzv_m.gzzv002
+ 
+   IF STATUS THEN
+      CALL cl_err("OPEN azzi916_cl:", STATUS, 0)
+      CLOSE azzi916_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   FETCH azzi916_cl INTO g_gzzv_m.gzzv003,g_gzzv_m.gzzv002,g_gzzv_m.gzzv001,g_gzzv_m.gzzv001_desc,g_gzzv_m.gzzv005, 
+       g_gzzv_m.gzzv005_desc,g_gzzv_m.gzzv006,g_gzzv_m.gzzv006_time,g_gzzv_m.gzzv007,g_gzzv_m.gzzv007_time, 
+       g_gzzv_m.gzzv004,g_gzzv_m.te_preview,g_gzzv_m.gzzvstus
+   IF SQLCA.sqlcode THEN
+      CALL cl_err(g_gzzv_m.gzzv001,SQLCA.sqlcode,0)
+      RETURN
+   END IF
+   
+   IF cl_ask_delete() THEN
+ 
+      #add-point:單頭刪除前
+      {<point name="delete.head.b_delete" mark="Y"/>}
+      #end add-point
+ 
+      #+ 此段落由子樣板a47產生
+      #刪除相關文件
+      CALL azzi916_set_pk_array()
+      #add-point:相關文件刪除前
+      {<point name="delete.befroe.related_document_remove"/>}
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+      DELETE FROM gzzv_t 
+       WHERE gzzvent = g_enterprise AND gzzv001 = g_gzzv_m.gzzv001 
+         AND gzzv002 = g_gzzv_m.gzzv002 
+ 
+ 
+      #add-point:單頭刪除中
+      {<point name="delete.head.m_delete"/>}
+      #end add-point
+         
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("gzzv_t",SQLCA.sqlcode,0)
+         CALL s_transaction_end('N','0')
+      END IF
+  
+      
+      
+      #add-point:單頭刪除後
+      {<point name="delete.head.a_delete"/>}
+      #end add-point
+      
+          
+      
+      CLEAR FORM
+      CALL azzi916_ui_browser_refresh()
+      IF g_browser_cnt > 0 THEN
+         CALL azzi916_fetch("P")
+      ELSE
+         CALL azzi916_browser_fill(" 1=1 ","F")
+      END IF
+      
+   END IF
+ 
+   CLOSE azzi916_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-D
+   CALL cl_flow_notify(g_gzzv_m.gzzv001,"D")
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="azzi916.description" ver="135" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000139
+#+ 
+#+ Filename...: azzi916
+#+ Description: 系統與作業公告設定作業
+#+ Creator....: 00413(2014/03/10)
+#+ Modifier...: 00413(2014/05/12)
+#+ Buildtype..: 應用 i01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="azzi916.fetch" ver="5" status="" src="s">
+<![CDATA[#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION azzi916_fetch(p_fl)
+   DEFINE p_fl       LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point  
+   
+   CASE p_fl
+      WHEN "F" LET g_current_idx = 1
+      WHEN "P"
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN "N"
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN "L" 
+         LET g_current_idx = g_header_cnt        
+      WHEN "/"
+         IF (NOT g_no_ask) THEN      
+            CALL cl_getmsg("fetch", g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,": " FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl"
+            END PROMPT
+            
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT CASE  
+            END IF           
+         END IF
+         IF g_jump > 0 THEN
+            LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE     
+   END CASE
+   
+   LET g_browser_cnt = g_browser.getLength()
+ 
+   #瀏覽頁筆數顯示
+   LET g_browser_idx = g_pagestart+g_current_idx-1
+   DISPLAY g_browser_idx TO FORMONLY.b_index        #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.b_count        #總筆數
+   DISPLAY g_browser_idx TO FORMONLY.h_index        #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.h_count        #總筆數
+   CALL ui.Interface.refresh()
+   
+   #單頭筆數顯示
+   #DISPLAY g_browser_idx TO FORMONLY.idx            #當下筆數
+   #DISPLAY g_browser_cnt TO FORMONLY.cnt            #總筆數
+   
+   IF g_browser[g_current_idx].b_expcode <> "2" THEN
+      INITIALIZE g_gzzv_m.* TO NULL
+      DISPLAY BY NAME g_gzzv_m.*
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+      RETURN
+   ELSE
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   END IF
+   
+   
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   # 設定browse索引
+   CALL g_curr_diag.setCurrentRow("s_browse", g_current_idx)
+ 
+   CALL cl_navigator_setting(g_browser_idx, g_current_cnt) 
+   CALL cl_navigator_setting(g_browser_idx, g_browser_cnt )
+ 
+   #代表沒有資料, 無需做後續資料撈取之動作
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+ 
+   LET g_gzzv_m.gzzv001 = g_browser[g_current_idx].b_gzzv001
+   LET g_gzzv_m.gzzv002 = g_browser[g_current_idx].b_gzzv002
+ 
+                       
+   #重讀DB,因TEMP有不被更新特性
+   EXECUTE azzi916_master_referesh USING g_gzzv_m.gzzv001,g_gzzv_m.gzzv002 INTO g_gzzv_m.gzzv003,g_gzzv_m.gzzv002, 
+       g_gzzv_m.gzzv001,g_gzzv_m.gzzv005,g_gzzv_m.gzzv006,g_gzzv_m.gzzv007,g_gzzv_m.gzzv004,g_gzzv_m.gzzvstus 
+
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("gzzv_t",SQLCA.sqlcode,0)
+      INITIALIZE g_gzzv_m.* TO NULL
+      RETURN
+   END IF
+   
+   #add-point:fetch段action控制
+   {<point name="fetch.action_control"/>}
+   #end add-point  
+   
+   
+   
+   #重新顯示
+   CALL azzi916_show()
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="azzi916.filter" ver="1" status="" src="s">
+<![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION azzi916_filter()
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+      #add-point:filter段add_cs
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+         #add-point:filter段b_dialog
+         {<point name="filter.b_dialog"/>}
+         #end add-point  
+ 
+ 
+ 
+ 
+ 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="azzi916.filter_parser" ver="1" status="" src="s">
+<![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION azzi916_filter_parser(ps_field)
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+ 
+ 
+ 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="azzi916.global" ver="18" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE TYPE type_g_gzzv_m RECORD
+       gzzv003 LIKE gzzv_t.gzzv003, 
+   gzzv002 LIKE gzzv_t.gzzv002, 
+   gzzv001 LIKE gzzv_t.gzzv001, 
+   gzzv001_desc LIKE type_t.chr80, 
+   gzzv005 LIKE gzzv_t.gzzv005, 
+   gzzv005_desc LIKE type_t.chr80, 
+   gzzv006 LIKE gzzv_t.gzzv006, 
+   gzzv006_time LIKE type_t.chr80, 
+   gzzv007 LIKE gzzv_t.gzzv007, 
+   gzzv007_time LIKE type_t.chr80, 
+   gzzv004 LIKE gzzv_t.gzzv004, 
+   te_preview LIKE type_t.chr80, 
+   gzzvstus LIKE gzzv_t.gzzvstus
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_gzzv_m        type_g_gzzv_m
+DEFINE g_gzzv_m_t      type_g_gzzv_m                #備份舊值
+   DEFINE g_gzzv002_t LIKE gzzv_t.gzzv002
+DEFINE g_gzzv001_t LIKE gzzv_t.gzzv001
+ 
+ 
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD                   #資料瀏覽之欄位  
+                #外顯欄位
+       b_show          LIKE type_t.chr100,
+       #父節點id
+       b_pid           LIKE type_t.chr100,
+       #本身節點id
+       b_id            LIKE type_t.chr100,
+       #是否展開
+       b_exp           LIKE type_t.chr100,
+       #是否有子節點
+       b_hasC          LIKE type_t.num5,
+       #是否已展開
+       b_isExp         LIKE type_t.num5,
+       #展開值
+       b_expcode       LIKE type_t.num5,
+       #tree自定義欄位
+         b_b_gzzv004 LIKE type_t.chr500,
+      b_gzzv006 LIKE gzzv_t.gzzv006,
+      b_gzzv007 LIKE gzzv_t.gzzv007,
+      b_gzzv001 LIKE gzzv_t.gzzv001,
+      b_gzzv002 LIKE gzzv_t.gzzv002,
+      b_gzzv003 LIKE gzzv_t.gzzv003
+         #,rank           LIKE type_t.num10
+      END RECORD 
+          
+#無單頭append欄位定義
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+  
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE g_jump                LIKE type_t.num10             #查詢指定的筆數 
+DEFINE g_no_ask              LIKE type_t.num5              #是否開啟指定筆視窗 
+DEFINE g_rec_b               LIKE type_t.num5              #單身筆數                         
+DEFINE l_ac                  LIKE type_t.num5              #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_pagestart           LIKE type_t.num5              #page起始筆數
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_state               STRING
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_aw                  STRING             #確定當下點擊的單身
+ 
+#快速搜尋用
+DEFINE g_searchcol           STRING             #查詢欄位代碼
+DEFINE g_searchstr           STRING             #查詢欄位字串
+DEFINE g_order               STRING             #查詢排序模式
+ 
+#Browser用
+DEFINE g_current_idx         LIKE type_t.num5   #Browser 所在筆數(當下page)
+DEFINE g_current_row         LIKE type_t.num5   #Browser 所在筆數(暫存用)
+DEFINE g_current_cnt         LIKE type_t.num10  #Browser 總筆數(當下page)
+DEFINE g_browser_idx         LIKE type_t.num5   #Browser 所在筆數(所有資料)
+DEFINE g_browser_cnt         LIKE type_t.num5   #Browser 總筆數(所有資料)
+DEFINE g_tmp_page            LIKE type_t.num5   
+DEFINE g_row_index           LIKE type_t.num5
+DEFINE g_chk                 BOOLEAN
+DEFINE g_default             BOOLEAN            #是否有外部參數查詢
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="azzi916.init" ver="2" status="" src="s">
+<![CDATA[#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION azzi916_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_main_hidden = 0
+      CALL cl_set_combo_scc_part('gzzvstus','17','N,Y')
+ 
+      CALL cl_set_combo_scc('gzzv003','74') 
+ 
+   LET g_error_show = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+   CALL azzi916_default_search()
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="azzi916.input" ver="15" status="" src="s">
+<![CDATA[#+ 資料輸入
+PRIVATE FUNCTION azzi916_input(p_cmd)
+   DEFINE p_cmd           LIKE type_t.chr1
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_n             LIKE type_t.num5        #檢查重複用  
+   DEFINE l_cnt           LIKE type_t.num5        #檢查重複用  
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否  
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #切換畫面
+   CALL gfrm_curr.setElementHidden("mainlayout",0)
+   CALL gfrm_curr.setElementImage("mainhidden","small/arr-u.png")
+   LET g_main_hidden = 1
+   
+   CALL cl_set_head_visible("","YES")  
+   
+   IF p_cmd = 'r' THEN
+      #此段落的r動作等同於a
+      LET p_cmd = 'a'
+   END IF
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   LET g_qryparam.state = "i"
+   
+   #控制key欄位可否輸入
+   CALL azzi916_set_entry(p_cmd)
+   #add-point:set_entry後
+   {<point name="input.after_set_entry"/>}
+   #end add-point
+   CALL azzi916_set_no_entry(p_cmd)
+   #add-point:資料輸入前
+   {<point name="input.before_input"/>}
+   #end add-point
+   
+   DISPLAY BY NAME g_gzzv_m.gzzv003,g_gzzv_m.gzzv001,g_gzzv_m.gzzv005,g_gzzv_m.gzzv006,g_gzzv_m.gzzv006_time, 
+       g_gzzv_m.gzzv007,g_gzzv_m.gzzv007_time,g_gzzv_m.gzzv004,g_gzzv_m.gzzvstus
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #單頭段
+      INPUT BY NAME g_gzzv_m.gzzv003,g_gzzv_m.gzzv001,g_gzzv_m.gzzv005,g_gzzv_m.gzzv006,g_gzzv_m.gzzv006_time, 
+          g_gzzv_m.gzzv007,g_gzzv_m.gzzv007_time,g_gzzv_m.gzzv004,g_gzzv_m.gzzvstus 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+         #+ 此段落由子樣板a43產生
+         ON ACTION preview
+            LET g_action_choice="preview"
+               
+               #add-point:ON ACTION preview
+               {<point name="input.master_input.preview" />}
+               #END add-point
+ 
+ 
+         
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            #其他table資料備份(確定是否更改用)
+            
+            #add-point:input開始前
+            {<point name="input.before.input"/>}
+            #end add-point
+   
+         #---------------------------<  Master  >---------------------------
+         #----<<gzzv003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzzv003
+            #add-point:BEFORE FIELD gzzv003
+            {<point name="input.b.gzzv003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzzv003
+            
+            #add-point:AFTER FIELD gzzv003
+            {<point name="input.a.gzzv003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gzzv003
+            #add-point:ON CHANGE gzzv003
+            {<point name="input.g.gzzv003" />}
+            #END add-point
+ 
+         #----<<gzzv002>>----
+         #----<<gzzv001>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD gzzv001
+            
+            #add-point:AFTER FIELD gzzv001
+            {<point name="input.a.gzzv001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzzv001
+            #add-point:BEFORE FIELD gzzv001
+            {<point name="input.b.gzzv001" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gzzv001
+            #add-point:ON CHANGE gzzv001
+            {<point name="input.g.gzzv001" />}
+            #END add-point
+ 
+         #----<<gzzv001_desc>>----
+         #----<<gzzv005>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD gzzv005
+            
+            #add-point:AFTER FIELD gzzv005
+            {<point name="input.a.gzzv005" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzzv005
+            #add-point:BEFORE FIELD gzzv005
+            {<point name="input.b.gzzv005" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gzzv005
+            #add-point:ON CHANGE gzzv005
+            {<point name="input.g.gzzv005" />}
+            #END add-point
+ 
+         #----<<gzzv005_desc>>----
+         #----<<gzzv006>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzzv006
+            #add-point:BEFORE FIELD gzzv006
+            {<point name="input.b.gzzv006" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzzv006
+            
+            #add-point:AFTER FIELD gzzv006
+            {<point name="input.a.gzzv006" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gzzv006
+            #add-point:ON CHANGE gzzv006
+            {<point name="input.g.gzzv006" />}
+            #END add-point
+ 
+         #----<<gzzv006_time>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzzv006_time
+            #add-point:BEFORE FIELD gzzv006_time
+            {<point name="input.b.gzzv006_time" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzzv006_time
+            
+            #add-point:AFTER FIELD gzzv006_time
+            {<point name="input.a.gzzv006_time" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gzzv006_time
+            #add-point:ON CHANGE gzzv006_time
+            {<point name="input.g.gzzv006_time" />}
+            #END add-point
+ 
+         #----<<gzzv007>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzzv007
+            #add-point:BEFORE FIELD gzzv007
+            {<point name="input.b.gzzv007" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzzv007
+            
+            #add-point:AFTER FIELD gzzv007
+            {<point name="input.a.gzzv007" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gzzv007
+            #add-point:ON CHANGE gzzv007
+            {<point name="input.g.gzzv007" />}
+            #END add-point
+ 
+         #----<<gzzv007_time>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzzv007_time
+            #add-point:BEFORE FIELD gzzv007_time
+            {<point name="input.b.gzzv007_time" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzzv007_time
+            
+            #add-point:AFTER FIELD gzzv007_time
+            {<point name="input.a.gzzv007_time" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gzzv007_time
+            #add-point:ON CHANGE gzzv007_time
+            {<point name="input.g.gzzv007_time" />}
+            #END add-point
+ 
+         #----<<gzzv004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzzv004
+            #add-point:BEFORE FIELD gzzv004
+            {<point name="input.b.gzzv004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzzv004
+            
+            #add-point:AFTER FIELD gzzv004
+            {<point name="input.a.gzzv004" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gzzv004
+            #add-point:ON CHANGE gzzv004
+            {<point name="input.g.gzzv004" />}
+            #END add-point
+ 
+         #----<<te_preview>>----
+         #----<<gzzvstus>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzzvstus
+            #add-point:BEFORE FIELD gzzvstus
+            {<point name="input.b.gzzvstus" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzzvstus
+            
+            #add-point:AFTER FIELD gzzvstus
+            {<point name="input.a.gzzvstus" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gzzvstus
+            #add-point:ON CHANGE gzzvstus
+            {<point name="input.g.gzzvstus" />}
+            #END add-point
+ 
+ #欄位檢查
+         #---------------------------<  Master  >---------------------------
+         #----<<gzzv003>>----
+         #Ctrlp:input.c.gzzv003
+         ON ACTION controlp INFIELD gzzv003
+            #add-point:ON ACTION controlp INFIELD gzzv003
+            {<point name="input.c.gzzv003" />}
+            #END add-point
+ 
+         #----<<gzzv002>>----
+         #----<<gzzv001>>----
+         #Ctrlp:input.c.gzzv001
+         ON ACTION controlp INFIELD gzzv001
+            #add-point:ON ACTION controlp INFIELD gzzv001
+            {<point name="input.c.gzzv001" />}
+            #END add-point
+ 
+         #----<<gzzv001_desc>>----
+         #----<<gzzv005>>----
+         #Ctrlp:input.c.gzzv005
+         ON ACTION controlp INFIELD gzzv005
+            #add-point:ON ACTION controlp INFIELD gzzv005
+            {<point name="input.c.gzzv005" />}
+            #END add-point
+ 
+         #----<<gzzv005_desc>>----
+         #----<<gzzv006>>----
+         #Ctrlp:input.c.gzzv006
+         ON ACTION controlp INFIELD gzzv006
+            #add-point:ON ACTION controlp INFIELD gzzv006
+            {<point name="input.c.gzzv006" />}
+            #END add-point
+ 
+         #----<<gzzv006_time>>----
+         #Ctrlp:input.c.gzzv006_time
+         ON ACTION controlp INFIELD gzzv006_time
+            #add-point:ON ACTION controlp INFIELD gzzv006_time
+            {<point name="input.c.gzzv006_time" />}
+            #END add-point
+ 
+         #----<<gzzv007>>----
+         #Ctrlp:input.c.gzzv007
+         ON ACTION controlp INFIELD gzzv007
+            #add-point:ON ACTION controlp INFIELD gzzv007
+            {<point name="input.c.gzzv007" />}
+            #END add-point
+ 
+         #----<<gzzv007_time>>----
+         #Ctrlp:input.c.gzzv007_time
+         ON ACTION controlp INFIELD gzzv007_time
+            #add-point:ON ACTION controlp INFIELD gzzv007_time
+            {<point name="input.c.gzzv007_time" />}
+            #END add-point
+ 
+         #----<<gzzv004>>----
+         #Ctrlp:input.c.gzzv004
+         ON ACTION controlp INFIELD gzzv004
+            #add-point:ON ACTION controlp INFIELD gzzv004
+            {<point name="input.c.gzzv004" />}
+            #END add-point
+ 
+         #----<<te_preview>>----
+         #----<<gzzvstus>>----
+         #Ctrlp:input.c.gzzvstus
+         ON ACTION controlp INFIELD gzzvstus
+            #add-point:ON ACTION controlp INFIELD gzzvstus
+            {<point name="input.c.gzzvstus" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+                
+            CALL cl_showmsg()   #錯誤訊息統整顯示
+ 
+            IF p_cmd <> "u" THEN
+               LET l_count = 1  
+ 
+               SELECT COUNT(*) INTO l_count FROM gzzv_t
+                WHERE gzzvent = g_enterprise AND gzzv001 = g_gzzv_m.gzzv001
+                  AND gzzv002 = g_gzzv_m.gzzv002
+ 
+               IF l_count = 0 THEN
+               
+                  #add-point:單頭新增前
+                  {<point name="input.head.b_insert" mark="Y"/>}
+                  #end add-point
+               
+                  INSERT INTO gzzv_t (gzzvent,gzzv003,gzzv002,gzzv001,gzzv005,gzzv006,gzzv007,gzzv004, 
+                      gzzvstus)
+                  VALUES (g_enterprise,g_gzzv_m.gzzv003,g_gzzv_m.gzzv002,g_gzzv_m.gzzv001,g_gzzv_m.gzzv005, 
+                      g_gzzv_m.gzzv006,g_gzzv_m.gzzv007,g_gzzv_m.gzzv004,g_gzzv_m.gzzvstus) 
+                  
+                  #add-point:單頭新增中
+                  {<point name="input.head.m_insert"/>}
+                  #end add-point
+                  
+                  IF SQLCA.sqlcode THEN
+                     CALL cl_err("gzzv_t",SQLCA.sqlcode,1)  
+                     CONTINUE DIALOG
+                  END IF
+                  
+                  
+                  
+                  #資料多語言用-增/改
+                  
+                  
+                  #add-point:單頭新增後
+                  {<point name="input.head.a_insert"/>}
+                  #end add-point
+                  
+                  CALL s_transaction_end('Y','0')
+               ELSE
+                  CALL cl_err( "g_gzzv_m.gzzv001", "std-00006", 0 )
+                  CALL s_transaction_end('N','0')
+               END IF 
+            ELSE
+               #add-point:單頭修改前
+               {<point name="input.head.b_update" mark="Y"/>}
+               #end add-point
+               UPDATE gzzv_t SET (gzzv003,gzzv002,gzzv001,gzzv005,gzzv006,gzzv007,gzzv004,gzzvstus) = (g_gzzv_m.gzzv003, 
+                   g_gzzv_m.gzzv002,g_gzzv_m.gzzv001,g_gzzv_m.gzzv005,g_gzzv_m.gzzv006,g_gzzv_m.gzzv007, 
+                   g_gzzv_m.gzzv004,g_gzzv_m.gzzvstus)
+                WHERE gzzvent = g_enterprise AND gzzv001 = g_gzzv001_t #
+                  AND gzzv002 = g_gzzv002_t
+ 
+               #add-point:單頭修改中
+               {<point name="input.head.m_update"/>}
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL cl_err("gzzv_t","std-00009",1)
+                     CALL s_transaction_end('N','0')
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     CALL cl_err("gzzv_t",SQLCA.sqlcode,1)  
+                     CALL s_transaction_end('N','0')
+                  OTHERWISE
+                     
+                     #資料多語言用-增/改
+                     
+                     #add-point:單頭修改後
+                     {<point name="input.head.a_update"/>}
+                     #end add-point
+                     CALL s_transaction_end('Y','0')
+               END CASE
+            END IF
+           #controlp
+      END INPUT
+          
+      #add-point:input段more input 
+      {<point name="input.more_input"/>}
+      #end add-point
+          
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input 
+   {<point name="input.after_input"/>}
+   #end add-point    
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="azzi916.insert" ver="4" status="" src="s">
+<![CDATA[#+ 資料新增
+PRIVATE FUNCTION azzi916_insert()
+   #add-point:insert段define
+   {<point name="insert.define"/>}
+   #end add-point    
+   
+   CLEAR FORM #清畫面欄位內容
+ 
+   INITIALIZE g_gzzv_m.* LIKE gzzv_t.*             #DEFAULT 設定
+   LET g_gzzv001_t = NULL
+   LET g_gzzv002_t = NULL
+ 
+   
+   CALL s_transaction_begin()
+   
+   WHILE TRUE
+      #六階樹狀給值
+ 
+      LET g_current_idx = g_curr_diag.getCurrentRow("s_browse")
+      IF g_current_idx > 0 THEN
+         IF NOT cl_null(g_browser[g_current_idx].b_show) THEN
+            LET g_gzzv_m.gzzv001 = g_browser[g_current_idx].b_gzzv001
+            #LET  = g_browser[g_current_idx].b_
+            #LET  = g_browser[g_current_idx].b_
+            #LET  = g_browser[g_current_idx].b_
+            #LET  = g_browser[g_current_idx].b_
+            #LET  = g_browser[g_current_idx].b_
+         END IF
+      END IF
+      
+      #公用欄位給值
+      #此段落由子樣板a14產生    
+      #LET g_gzzv_m.gzzvownid = g_user
+      #LET g_gzzv_m.gzzvowndp = g_dept
+      #LET g_gzzv_m.gzzvcrtid = g_user
+      #LET g_gzzv_m.gzzvcrtdp = g_dept 
+      #LET g_gzzv_m.gzzvcrtdt = cl_get_current()
+      #LET g_gzzv_m.gzzvmodid = ""
+      #LET g_gzzv_m.gzzvmoddt = ""
+      LET g_gzzv_m.gzzvstus = "N"
+ 
+ 
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+      
+ 
+      #add-point:單頭預設值
+      {<point name="insert.default"/>}
+      #end add-point   
+     
+      CALL azzi916_input("a")
+      
+      #add-point:單頭輸入後
+      {<point name="insert.after_insert"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_gzzv_m.* = g_gzzv_m_t.*
+         CALL azzi916_show()
+         CALL cl_err("",9001,0)
+         EXIT WHILE
+      END IF
+ 
+      LET g_rec_b = 0
+      EXIT WHILE
+   END WHILE
+   
+   LET g_gzzv001_t = g_gzzv_m.gzzv001
+   LET g_gzzv002_t = g_gzzv_m.gzzv002
+ 
+   
+   LET g_state = "Y"
+ 
+ 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="azzi916.main" ver="7" status="" src="s">
+<![CDATA[#+ 此段落由子樣板a26產生
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("azz","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = "SELECT gzzv003,gzzv002,gzzv001,'',gzzv005,'',gzzv006,'',gzzv007,'',gzzv004,'', 
+       gzzvstus FROM gzzv_t WHERE gzzvent= ? AND gzzv001=? AND gzzv002=? FOR UPDATE"
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   DECLARE azzi916_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT UNIQUE gzzv003,gzzv002,gzzv001,gzzv005,gzzv006,gzzv007,gzzv004,gzzvstus",
+               " FROM gzzv_t",
+               " WHERE gzzvent = '" ||g_enterprise|| "' AND gzzv001 = ? AND gzzv002 = ?"
+   #add-point:SQL_define
+   {<point name="main.after_refresh_sql"/>}
+   #end add-point
+   PREPARE azzi916_master_referesh FROM g_sql
+ 
+ 
+ 
+ 
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+ 
+   ELSE
+      
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_azzi916 WITH FORM cl_ap_formpath("azz",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL azzi916_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL azzi916_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_azzi916
+      
+   END IF 
+   
+   CLOSE azzi916_cl
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+]]>
+</section>
+  <section id="azzi916.modify" ver="6" status="" src="s">
+<![CDATA[#+ 資料修改
+PRIVATE FUNCTION azzi916_modify()
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point
+   
+   IF g_gzzv_m.gzzv001 IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF 
+   
+   EXECUTE azzi916_master_referesh USING g_gzzv_m.gzzv001,g_gzzv_m.gzzv002 INTO g_gzzv_m.gzzv003,g_gzzv_m.gzzv002, 
+       g_gzzv_m.gzzv001,g_gzzv_m.gzzv005,g_gzzv_m.gzzv006,g_gzzv_m.gzzv007,g_gzzv_m.gzzv004,g_gzzv_m.gzzvstus 
+
+ 
+   ERROR ""
+  
+   LET g_gzzv001_t = g_gzzv_m.gzzv001
+   LET g_gzzv002_t = g_gzzv_m.gzzv002
+ 
+   
+   CALL s_transaction_begin()
+   
+   OPEN azzi916_cl USING g_enterprise,g_gzzv_m.gzzv001,g_gzzv_m.gzzv002
+   IF STATUS THEN
+      CALL cl_err("OPEN azzi916_cl:", STATUS, 1)
+      CLOSE azzi916_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #鎖住將被更改或取消的資料
+   FETCH azzi916_cl INTO g_gzzv_m.gzzv003,g_gzzv_m.gzzv002,g_gzzv_m.gzzv001,g_gzzv_m.gzzv001_desc,g_gzzv_m.gzzv005, 
+       g_gzzv_m.gzzv005_desc,g_gzzv_m.gzzv006,g_gzzv_m.gzzv006_time,g_gzzv_m.gzzv007,g_gzzv_m.gzzv007_time, 
+       g_gzzv_m.gzzv004,g_gzzv_m.te_preview,g_gzzv_m.gzzvstus
+ 
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("gzzv_t",SQLCA.sqlcode,0)
+      CLOSE azzi916_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   
+ 
+   CALL azzi916_show()
+   
+   WHILE TRUE
+      LET g_gzzv_m.gzzv001 = g_gzzv001_t
+      LET g_gzzv_m.gzzv002 = g_gzzv002_t
+ 
+      
+      #寫入修改者/修改日期資訊
+      #LET g_gzzv_m.gzzvmodid = g_user 
+#LET g_gzzv_m.gzzvmoddt = cl_get_current()
+ 
+      
+      #add-point:modify段修改前
+      {<point name="modify.before_input"/>}
+      #end add-point
+ 
+      CALL azzi916_input("u")     #欄位更改
+ 
+      #add-point:modify段修改後
+      {<point name="modify.after_input"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_gzzv_m.* = g_gzzv_m_t.*
+         CALL azzi916_show()
+         CALL cl_err("",9001,0)
+         EXIT WHILE
+      END IF
+ 
+      #若有modid跟moddt則進行update
+ 
+ 
+      EXIT WHILE
+      
+   END WHILE
+ 
+   #修改歷程記錄
+   IF NOT cl_log_modified_record(g_gzzv_m.gzzv001,g_site) THEN 
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE azzi916_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-U
+   CALL cl_flow_notify(g_gzzv_m.gzzv001,"U")
+   
+   LET g_worksheet_hidden = 0
+   
+END FUNCTION   
+]]>
+</section>
+  <section id="azzi916.other_dialog" ver="1" status="" src="s">
+<![CDATA[ 
+]]>
+</section>
+  <section id="azzi916.other_function" ver="2" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+  <section id="azzi916.query" ver="4" status="" src="s">
+<![CDATA[#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION azzi916_query()
+   DEFINE ls_wc STRING
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point
+   
+   LET INT_FLAG = 0
+   LET ls_wc = g_wc
+   
+   #切換畫面
+ 
+   CALL g_browser.clear() 
+ 
+   IF g_worksheet_hidden THEN  #browser panel折疊
+      CALL gfrm_curr.setElementHidden("worksheet_vbox",0)
+      CALL gfrm_curr.setElementImage("worksheethidden","worksheethidden-24.png")
+      LET g_worksheet_hidden = 0
+   END IF
+   IF g_header_hidden THEN    #單頭折疊
+      CALL gfrm_curr.setElementHidden("vb_master",0)
+      CALL gfrm_curr.setElementImage("controls","headerhidden-24")
+      LET g_header_hidden = 0
+   END IF
+ 
+   INITIALIZE g_gzzv_m.* TO NULL
+   ERROR ""
+ 
+   DISPLAY " " TO FORMONLY.b_count
+   DISPLAY " " TO FORMONLY.h_count
+   CALL azzi916_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      LET g_wc = ls_wc
+      CALL azzi916_browser_fill(g_wc,"F")
+      CALL azzi916_fetch("")
+      RETURN
+   ELSE
+      LET g_current_row = 1
+      LET g_current_cnt = 0
+   END IF
+   
+   LET g_error_show = 1
+   CALL azzi916_browser_fill(g_wc,"F")   # 移到第一頁
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||")")
+   
+   #備份搜尋條件
+   LET ls_wc = g_wc
+   
+   IF g_browser.getLength() = 0 THEN
+      CALL cl_err("","-100",1)
+   ELSE
+      CALL azzi916_fetch("F") 
+   END IF
+   
+   LET g_wc_filter = ""
+   
+END FUNCTION
+]]>
+</section>
+  <section id="azzi916.reproduce" ver="5" status="" src="s">
+<![CDATA[#+ 資料複製
+PRIVATE FUNCTION azzi916_reproduce()
+   DEFINE l_newno     LIKE gzzv_t.gzzv001 
+   DEFINE l_oldno     LIKE gzzv_t.gzzv001 
+   DEFINE l_newno02     LIKE gzzv_t.gzzv002 
+   DEFINE l_oldno02     LIKE gzzv_t.gzzv002 
+ 
+   DEFINE l_master    RECORD LIKE gzzv_t.*
+   DEFINE l_cnt       LIKE type_t.num5
+   #add-point:reproduce段define
+   {<point name="reproduce.define"/>}
+   #end add-point   
+   
+   #切換畫面
+   
+   IF g_gzzv_m.gzzv001 IS NULL
+      OR g_gzzv_m.gzzv002 IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+   
+   LET g_gzzv001_t = g_gzzv_m.gzzv001
+   LET g_gzzv002_t = g_gzzv_m.gzzv002
+ 
+   
+   LET g_gzzv_m.gzzv001 = ""
+   LET g_gzzv_m.gzzv002 = ""
+ 
+    
+   CALL azzi916_set_entry("a")
+   CALL azzi916_set_no_entry("a")
+   
+   #公用欄位給予預設值
+   #此段落由子樣板a14產生    
+      #LET g_gzzv_m.gzzvownid = g_user
+      #LET g_gzzv_m.gzzvowndp = g_dept
+      #LET g_gzzv_m.gzzvcrtid = g_user
+      #LET g_gzzv_m.gzzvcrtdp = g_dept 
+      #LET g_gzzv_m.gzzvcrtdt = cl_get_current()
+      #LET g_gzzv_m.gzzvmodid = ""
+      #LET g_gzzv_m.gzzvmoddt = ""
+      LET g_gzzv_m.gzzvstus = "N"
+ 
+ 
+ 
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前
+   {<point name="reproduce.head.b_input"/>}
+   #end add-point
+   
+   CALL azzi916_input("r")
+ 
+      LET g_gzzv_m.gzzv001_desc = ''
+   DISPLAY BY NAME g_gzzv_m.gzzv001_desc
+ 
+   
+   IF INT_FLAG  THEN
+      LET INT_FLAG = 0
+      RETURN
+   END IF
+   
+   CALL s_transaction_begin()
+   
+   #add-point:單頭複製前
+   {<point name="reproduce.head.b_insert" mark="Y"/>}
+   #end add-point
+   
+   #add-point:單頭複製中
+   {<point name="reproduce.head.m_insert"/>}
+   #end add-point
+   
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("gzzv_t",SQLCA.sqlcode,1)
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:單頭複製後
+   {<point name="reproduce.head.a_insert"/>}
+   #end add-point
+   
+   CALL s_transaction_end('Y','0')
+   
+   
+ 
+   
+   LET g_gzzv001_t = g_gzzv_m.gzzv001
+   LET g_gzzv002_t = g_gzzv_m.gzzv002
+ 
+   
+   #add-point:完成複製段落後
+   {<point name="reproduce.after_reproduce" />}
+   #end add-point
+                   
+END FUNCTION
+]]>
+</section>
+  <section id="azzi916.set_entry" ver="2" status="" src="s">
+<![CDATA[#+ 單頭欄位開啟設定
+PRIVATE FUNCTION azzi916_set_entry(p_cmd)
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_entry段define
+   {<point name="set_entry.define"/>}
+   #end add-point     
+ 
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("gzzv001,gzzv002",TRUE)
+      #add-point:set_entry段欄位控制
+      {<point name="set_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry段欄位控制後
+   {<point name="set_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="azzi916.set_no_entry" ver="3" status="" src="s">
+<![CDATA[#+ 單頭欄位關閉設定
+PRIVATE FUNCTION azzi916_set_no_entry(p_cmd)
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_no_entry段define
+   {<point name="set_no_entry.define"/>}
+   #end add-point     
+ 
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("gzzv001,gzzv002",FALSE)
+      #add-point:set_no_entry段欄位控制
+      {<point name="set_no_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry段欄位控制後
+   {<point name="set_no_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="azzi916.set_pk_array" ver="1" status="" src="s">
+<![CDATA[   #+ 此段落由子樣板a51產生
+#+ 給予pk_array內容
+PRIVATE FUNCTION azzi916_set_pk_array()
+   #add-point:set_pk_array段define
+   {<point name="set_pk_array.define"/>}
+   #end add-point
+   
+   #add-point:set_pk_array段之前
+   {<point name="set_pk_array.before"/>}
+   #end add-point  
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_gzzv_m.gzzv001
+   LET g_pk_array[1].column = 'gzzv001'
+   LET g_pk_array[2].values = g_gzzv_m.gzzv002
+   LET g_pk_array[2].column = 'gzzv002'
+   
+   #add-point:set_pk_array段之後
+   {<point name="set_pk_array.after"/>}
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+]]>
+</section>
+  <section id="azzi916.show" ver="5" status="" src="s">
+<![CDATA[#+ 單頭資料重新顯示 
+PRIVATE FUNCTION azzi916_show()
+   #add-point:show段define
+   {<point name="show.define"/>}
+   #end add-point  
+   
+   #add-point:show段之前
+   {<point name="show.before"/>}
+   #end add-point
+   
+   
+   
+   LET g_gzzv_m_t.* = g_gzzv_m.*      #保存單頭舊值
+   
+   #在browser 移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()
+   
+   #帶出公用欄位reference值
+   #此段落由子樣板a12產生
+      ##LET g_gzzv_m.gzzvownid_desc = cl_get_username(g_gzzv_m.gzzvownid)
+      ##LET g_gzzv_m.gzzvowndp_desc = cl_get_deptname(g_gzzv_m.gzzvowndp)
+      ##LET g_gzzv_m.gzzvcrtid_desc = cl_get_username(g_gzzv_m.gzzvcrtid)
+      ##LET g_gzzv_m.gzzvcrtdp_desc = cl_get_deptname(g_gzzv_m.gzzvcrtdp)
+      ##LET g_gzzv_m.gzzvmodid_desc = cl_get_username(g_gzzv_m.gzzvmodid)
+      ##LET g_gzzv_m.gzzvcnfid_desc = cl_get_deptname(g_gzzv_m.gzzvcnfid)
+      ##LET g_gzzv_m.gzzvpstid_desc = cl_get_deptname(g_gzzv_m.gzzvpstid)
+      
+ 
+ 
+    
+   #顯示followup圖示
+   #+ 此段落由子樣板a48產生
+   CALL azzi916_set_pk_array()
+   #add-point:ON ACTION agendum
+   {<point name="show.follow_pic"/>}
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+ 
+ 
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference
+   {<point name="show.head.reference"/>}
+   #end add-point
+ 
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_gzzv_m.gzzv003,g_gzzv_m.gzzv002,g_gzzv_m.gzzv001,g_gzzv_m.gzzv001_desc,g_gzzv_m.gzzv005, 
+       g_gzzv_m.gzzv005_desc,g_gzzv_m.gzzv006,g_gzzv_m.gzzv006_time,g_gzzv_m.gzzv007,g_gzzv_m.gzzv007_time, 
+       g_gzzv_m.gzzv004,g_gzzv_m.te_preview,g_gzzv_m.gzzvstus
+   
+   #顯示狀態(stus)圖片
+         #此段落由子樣板a21產生
+      CASE g_gzzv_m.gzzvstus
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/inactive.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/active.png")
+         
+      END CASE
+ 
+ 
+ 
+   #add-point:show段之後
+   {<point name="show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="azzi916.signature" ver="1" status="" src="s">
+<![CDATA[   
+]]>
+</section>
+  <section id="azzi916.state_change" ver="3" status="" src="s">
+<![CDATA[   #+ 此段落由子樣板a09產生
+#+ 確認碼變更
+PRIVATE FUNCTION azzi916_statechange()
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:statechange段define
+   {<point name="statechange.define"/>}
+   #end add-point  
+   
+   #add-point:statechange段開始前
+   {<point name="statechange.before"/>}
+   #end add-point  
+   
+   ERROR ""     #清空畫面右下側ERROR區塊
+ 
+   IF g_gzzv_m.gzzv001 IS NULL
+      OR g_gzzv_m.gzzv002 IS NULL
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+ 
+   MENU "" ATTRIBUTES (STYLE="popup")
+      BEFORE MENU
+         HIDE OPTION "approved"
+         HIDE OPTION "rejection"
+         CASE g_gzzv_m.gzzvstus
+            WHEN "N"
+               HIDE OPTION "inactive"
+            WHEN "Y"
+               HIDE OPTION "active"
+            
+         END CASE
+     
+      #add-point:menu前
+      {<point name="statechange.before_menu"/>}
+      #end add-point
+      
+      ON ACTION inactive
+         LET lc_state = "N"
+         #add-point:action控制
+         {<point name="statechange.inactive"/>}
+         #end add-point
+         EXIT MENU
+      ON ACTION active
+         LET lc_state = "Y"
+         #add-point:action控制
+         {<point name="statechange.active"/>}
+         #end add-point
+         EXIT MENU
+      
+      
+      
+      #add-point:stus控制
+      {<point name="statechange.more_control"/>}
+      #end add-point
+      
+   END MENU
+   
+   IF (lc_state <> "N" 
+      AND lc_state <> "Y"
+      ) OR 
+      cl_null(lc_state) THEN
+      RETURN
+   END IF
+   
+   #add-point:stus修改前
+   {<point name="statechange.b_update"/>}
+   #end add-point
+      
+   UPDATE gzzv_t SET gzzvstus = lc_state 
+    WHERE gzzvent = g_enterprise AND gzzv001 = g_gzzv_m.gzzv001
+      AND gzzv002 = g_gzzv_m.gzzv002
+  
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("",SQLCA.sqlcode,0)
+   ELSE
+      CASE lc_state
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/inactive.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/active.png")
+         
+      END CASE
+      LET g_gzzv_m.gzzvstus = lc_state
+      DISPLAY BY NAME g_gzzv_m.gzzvstus
+   END IF
+ 
+   #add-point:stus修改後
+   {<point name="statechange.a_update"/>}
+   #end add-point
+ 
+   #add-point:statechange段結束前
+   {<point name="statechange.after"/>}
+   #end add-point  
+ 
+END FUNCTION
+ 
+ 
+]]>
+</section>
+  <section id="azzi916.ui_browser_refresh" ver="3" status="" src="s">
+<![CDATA[#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION azzi916_ui_browser_refresh()
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define
+   {<point name="ui_browser_refresh.define"/>}
+   #end add-point     
+ 
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_gzzv001 = g_gzzv_m.gzzv001 
+         AND g_browser[l_i].b_gzzv002 = g_gzzv_m.gzzv002
+ 
+	 THEN  
+         CALL g_browser.deleteElement(l_i)
+         LET g_header_cnt = g_header_cnt - 1
+       END IF
+   END FOR
+   
+   DISPLAY g_header_cnt TO FORMONLY.b_count     #page count
+   DISPLAY g_header_cnt TO FORMONLY.h_count     #page count
+   LET g_browser_cnt = g_browser_cnt-1
+   IF g_current_idx > g_browser_cnt THEN        #確定browse 筆數指在同一筆
+      LET g_current_idx = g_browser_cnt
+   END IF
+  
+END FUNCTION
+]]>
+</section>
+  <section id="azzi916.ui_dialog" ver="20" status="" src="s">
+<![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION azzi916_ui_dialog() 
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num5
+   DEFINE ls_wc     STRING
+   DEFINE la_param  RECORD
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+   
+   LET li_exit = FALSE
+   LET g_current_row = 0
+   LET g_current_idx = 1
+   
+   
+   #action default動作
+   #+ 此段落由子樣板a42產生
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice="insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL azzi916_insert()
+            #add-point:ON ACTION insert
+            {<point name="menu.default.insert" />}
+            #END add-point
+         END IF
+ 
+      #add-point:action default自訂
+      {<point name="ui_dialog.action_default"/>}
+      #end add-point
+      OTHERWISE
+         
+   END CASE
+ 
+ 
+   
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE li_exit = FALSE
+      
+      CALL azzi916_browser_fill(g_wc,"")
+      
+      #判斷前一個動作是否為新增, 若是的話切換到新增的筆數
+      IF g_state = "Y" THEN
+         FOR li_idx = 1 TO g_browser.getLength()
+            IF g_browser[li_idx].b_gzzv001 = g_gzzv001_t
+               AND g_browser[li_idx].b_gzzv002 = g_gzzv002_t
+ 
+               THEN
+               LET g_current_row = li_idx
+               EXIT FOR
+            END IF
+         END FOR
+         LET g_state = ""
+      END IF
+    
+      IF g_worksheet_hidden = 1 THEN
+         MENU
+            BEFORE MENU 
+                  
+               CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               
+               #還原為原本指定筆數
+               IF g_current_row > 0 THEN
+                  LET g_current_idx = g_current_row
+               END IF
+               
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL azzi916_fetch("")   
+               END IF               
+         
+            ON ACTION statechange
+               CALL azzi916_statechange()
+               LET g_action_choice="statechange"
+               
+            ON ACTION first
+               CALL azzi916_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            ON ACTION next
+               CALL azzi916_fetch("N")
+               LET g_current_row = g_current_idx
+            
+            ON ACTION jump
+               CALL azzi916_fetch("/")
+               LET g_current_row = g_current_idx
+            
+            ON ACTION previous
+               CALL azzi916_fetch("P")
+               LET g_current_row = g_current_idx
+            
+            ON ACTION last 
+               CALL azzi916_fetch("L")  
+               #CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               #CALL fgl_set_arr_curr(g_current_idx)
+               LET g_current_row = g_current_idx
+            
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU 
+            
+            ON ACTION close
+               LET li_exit = TRUE
+               EXIT MENU
+            
+            ON ACTION mainhidden       #主頁摺疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementImage("mainhidden","16/worksheethidden.png")
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementImage("mainhidden","16/worksheethidden.png")
+                  LET g_main_hidden = 1
+               END IF
+               EXIT MENU
+               
+            ON ACTION worksheethidden   #瀏覽頁折疊
+               IF g_worksheet_hidden THEN
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  CALL gfrm_curr.setElementImage("worksheethidden","16/mainhidden.png")
+                  LET g_worksheet_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  CALL gfrm_curr.setElementImage("worksheethidden","16/mainhidden.png")
+                  LET g_worksheet_hidden = 1
+               END IF
+               EXIT MENU
+            
+            #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+          
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL azzi916_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL azzi916_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     CALL cl_err("","-100",1)
+                     CLEAR FORM
+                  ELSE
+                     CALL azzi916_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+            
+            
+         #+ 此段落由子樣板a43產生
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL azzi916_modify()
+               #add-point:ON ACTION modify
+               {<point name="menu2.modify" />}
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL azzi916_delete()
+               #add-point:ON ACTION delete
+               {<point name="menu2.delete" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL azzi916_insert()
+               #add-point:ON ACTION insert
+               {<point name="menu2.insert" />}
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+               {<point name="menu2.output" />}
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION preview
+            LET g_action_choice="preview"
+               
+               #add-point:ON ACTION preview
+               {<point name="menu2.preview" />}
+               #END add-point
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL azzi916_reproduce()
+               #add-point:ON ACTION reproduce
+               {<point name="menu2.reproduce" />}
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL azzi916_query()
+               #add-point:ON ACTION query
+               {<point name="menu2.query" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION prog_gzzv001
+            LET g_action_choice="prog_gzzv001"
+            IF cl_auth_chk_act("prog_gzzv001") THEN
+               
+               #add-point:ON ACTION prog_gzzv001
+               {<point name="menu2.prog_gzzv001" />}
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+ 
+            
+            
+            #+ 此段落由子樣板a46產生
+         #新增相關文件
+         ON ACTION related_document
+            CALL azzi916_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document
+               {<point name="ui_dialog.menu.related_document"/>}
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL azzi916_set_pk_array()
+            #add-point:ON ACTION agendum
+            {<point name="ui_dialog.menu.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL azzi916_set_pk_array()
+            #add-point:ON ACTION followup
+            {<point name="ui_dialog.menu.followup"/>}
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+            
+            #主選單用ACTION
+            &include "main_menu.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END MENU
+      
+      ELSE
+      
+         DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+           
+            INPUT g_searchstr,g_searchcol FROM formonly.searchstr,formonly.cbo_searchcol
+               BEFORE INPUT
+            
+            END INPUT
+      
+            #左側瀏覽頁簽
+            DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTE(COUNT=g_rec_b)
+            
+               BEFORE ROW
+                  #回歸舊筆數位置 (回到當時異動的筆數)
+                  LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+                  IF g_current_idx = 0 THEN
+                     LET g_current_idx = 1
+                  END IF
+                  LET g_current_row = g_current_idx  #目前指標
+                  LET g_current_sw = TRUE
+                  CALL cl_show_fld_cont()     
+                  
+                  #當每次點任一筆資料都會需要用到               
+                  CALL azzi916_fetch("")      
+                  
+               ON EXPAND (g_row_index)
+                  #樹展開
+                  CALL azzi916_browser_expand(g_row_index)
+                  LET g_browser[g_row_index].b_isExp = 1
+               
+               ON COLLAPSE (g_row_index)
+                  #樹關閉
+            
+            END DISPLAY
+ 
+            #add-point:ui_dialog段自定義display array
+            {<point name="ui_dialog.more_displayarray"/>}
+            #end add-point
+ 
+         
+            BEFORE DIALOG
+               CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               #LET g_page = "first" 
+               #還原為原本指定筆數
+               IF g_current_row > 1 THEN
+                  #當刪除最後一筆資料時可能產生錯誤, 進行額外判斷
+                  IF g_current_row > g_browser.getLength() THEN
+                     LET g_current_row = g_browser.getLength()
+                  END IF 
+                  LET g_current_idx = g_current_row
+                  CALL DIALOG.setCurrentRow("s_browse",g_current_idx)
+               END IF
+               
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL azzi916_fetch("")   
+               END IF               
+               
+            AFTER DIALOG
+               #add-point:ui_dialog段 after dialog
+               {<point name="ui_dialog.after_dialog"/>}
+               #end add-point
+            
+            ON ACTION statechange
+               CALL azzi916_statechange()
+               LET g_action_choice="statechange"
+               EXIT DIALOG
+         
+            
+            
+            ON ACTION first
+               CALL azzi916_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            ON ACTION next
+               CALL azzi916_fetch("N")
+               LET g_current_row = g_current_idx
+         
+            ON ACTION jump
+               CALL azzi916_fetch("/")
+               LET g_current_row = g_current_idx
+         
+            ON ACTION previous
+               CALL azzi916_fetch("P")
+               LET g_current_row = g_current_idx
+         
+            ON ACTION last 
+               CALL azzi916_fetch("L")  
+               LET g_current_row = g_current_idx
+         
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+         
+            ON ACTION close
+               LET li_exit = TRUE
+               EXIT DIALOG
+         
+            ON ACTION mainhidden       #主頁摺疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementImage("mainhidden","16/worksheethidden.png")
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementImage("mainhidden","16/mainhidden.png")
+                  LET g_main_hidden = 1
+               END IF
+               
+            ON ACTION worksheethidden   #瀏覽頁折疊
+               IF g_worksheet_hidden THEN
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  CALL gfrm_curr.setElementImage("worksheethidden","16/mainhidden.png")
+                  LET g_worksheet_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  CALL gfrm_curr.setElementImage("worksheethidden","16/worksheethidden.png")
+                  LET g_worksheet_hidden = 1
+               END IF
+         
+            #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+ 
+            #快速搜尋
+            ON ACTION searchdata
+               LET g_current_idx = 1
+               LET g_searchstr = GET_FLDBUF(searchstr)
+               CALL azzi916_browser_search()
+               EXIT DIALOG
+               
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL azzi916_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL azzi916_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     CALL cl_err("","-100",1)
+                     CLEAR FORM
+                  ELSE
+                     CALL azzi916_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+               
+            
+         #+ 此段落由子樣板a43產生
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL azzi916_modify()
+               #add-point:ON ACTION modify
+               {<point name="menu.modify" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL azzi916_delete()
+               #add-point:ON ACTION delete
+               {<point name="menu.delete" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL azzi916_insert()
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION preview
+            LET g_action_choice="preview"
+               
+               #add-point:ON ACTION preview
+               {<point name="menu.preview" />}
+               #END add-point
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL azzi916_reproduce()
+               #add-point:ON ACTION reproduce
+               {<point name="menu.reproduce" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL azzi916_query()
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION prog_gzzv001
+            LET g_action_choice="prog_gzzv001"
+            IF cl_auth_chk_act("prog_gzzv001") THEN
+               
+               #add-point:ON ACTION prog_gzzv001
+               {<point name="menu.prog_gzzv001" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+            
+            
+ 
+            #+ 此段落由子樣板a46產生
+         #新增相關文件
+         ON ACTION related_document
+            CALL azzi916_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document
+               {<point name="ui_dialog.dialog.related_document"/>}
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL azzi916_set_pk_array()
+            #add-point:ON ACTION agendum
+            {<point name="ui_dialog.dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL azzi916_set_pk_array()
+            #add-point:ON ACTION followup
+            {<point name="ui_dialog.dialog.followup"/>}
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+ 
+            #主選單用ACTION
+            &include "main_menu.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END DIALOG 
+      
+      END IF
+      
+   END WHILE
+ 
+END FUNCTION
+]]>
+</section>
+</add_points>

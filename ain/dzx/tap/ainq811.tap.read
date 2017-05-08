@@ -1,0 +1,5290 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="ainq811" std_prog="ainq811" erpver="1.0" module="AIN" ver="1" env="s" zone="t10prd" booking="N" type="M" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="function.ainq811_b2_fill" order="1" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 復盤資料
+# Memo...........:
+# Usage..........: CALL ainq811_b2_fill()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 20150508 By huangrh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ainq811_b2_fill()
+DEFINE l_sql      STRING   
+DEFINE l_shina        LIKE type_t.chr500  #商品品類
+DEFINE l_shina_desc   LIKE type_t.chr500  #品類說明
+DEFINE l_ineh009      LIKE ineh_t.ineh009 #盤點數量 
+DEFINE l_ineh010      LIKE ineh_t.ineh010 #賬面數量
+DEFINE l_amount       LIKE type_t.num20_6 #差異數量
+DEFINE l_price        LIKE type_t.num20_6  #差異金額
+   
+   CALL g_ineh2_d.clear()
+
+   #盤點流程不使用批號---huangrh 20150618--modify
+   LET l_sql=" SELECT SUM(inef010) ",
+             "   FROM inef_t,",          
+#             "(SELECT DISTINCT inehsite,ineh001,ineh003,ineh004,ineh005,ineh006,ineh007,ineh008 ",
+             "(SELECT DISTINCT inehsite,ineh001,ineh003,ineh004,ineh005,ineh007,ineh008 ",
+             "                  FROM ineh_t,ineg_t,imaa_t",
+             "                 WHERE inehent=inegent",
+             "                   AND inehsite=inegsite",
+             "                   AND inehdocno=inegdocno",
+             "                   AND inehent=imaaent ",
+             "                   AND ineh001=imaa001",
+             "                   AND inehent=",g_enterprise,
+             "                   AND inehsite='",g_ineg_m.inegsite,"'",
+             "                   AND ineg002='",g_ineg_m.ineg002,"'",            
+             "                   AND ineg001='2'", 
+             "                   AND inegstus<>'X'", 
+             "                   AND imaa009=?",
+             "                ) a",
+             "   WHERE inefent=",g_enterprise,
+             "     AND inefsite=a.inehsite",
+             "     AND inefsite='",g_ineg_m.inegsite,"'",
+             "     AND inef001='",g_ineg_m.ineg002,"'",
+             "     AND inef002=ineh001",
+             "     AND inef003=ineh003",
+             "     AND inef005=ineh004",
+             "     AND inef006=ineh005",
+#             "     AND inef007=ineh006",
+             "     AND inef008=ineh007",
+             "     AND inef009=ineh008 "
+          
+   PREPARE ainq811_selpb2 FROM l_sql 
+
+   LET g_sql = "SELECT imaa009 a,SUM(ineh009) b,SUM((ineh009-ineh010)*inee003) c ",
+               "  FROM ineh_t,imaa_t,ineg_t,inee_t",                    
+               " WHERE inehent=inegent AND inehsite=inegsite AND inehdocno=inegdocno ",
+               "   AND inehent=imaaent AND ineh001=imaa001 ",
+               "   AND inehent=ineeent AND inehsite=ineesite AND inee001=ineg002 AND inee002=ineh001",
+               "   AND ineg001='2' AND inegstus<>'X' ",
+               "   AND inehent=? AND inegsite=? AND ineg002=?",
+               " GROUP BY imaa009"
+            
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE ainq811_pb2 FROM g_sql
+   DECLARE b_fill_cs2 CURSOR FOR ainq811_pb2
+
+   
+   OPEN b_fill_cs2 USING g_enterprise,g_ineg_m.inegsite,g_ineg_m.ineg002
+      
+   DELETE FROM ainq811_tmp      
+   FOREACH b_fill_cs2 INTO l_shina,l_ineh009,l_price      
+      SELECT rtaxl003 INTO l_shina_desc
+        FROM rtaxl_t
+       WHERE rtaxlent=g_enterprise
+         AND rtaxl001=l_shina
+         AND rtaxl002=g_dlang
+        
+      EXECUTE ainq811_selpb2 INTO l_ineh010 USING l_shina
+      LET l_amount=l_ineh009-l_ineh010
+      
+      INSERT INTO ainq811_tmp(shina,shina_desc,ineh009,ineh010,amount,price) 
+                       VALUES(l_shina,l_shina_desc,l_ineh009,l_ineh010,l_amount,l_price)
+  
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF 
+
+   END FOREACH
+   
+   FREE ainq811_pb2
+   FREE ainq811_selpb2
+ 
+#提取數據
+   LET g_sql = "SELECT * ",
+               "  FROM ainq811_tmp",
+               " ORDER BY ABS(amount) DESC"
+   PREPARE ainq811_tmp_pb2 FROM g_sql
+   DECLARE b_fill_tmp_cs2 CURSOR FOR ainq811_tmp_pb2
+   
+   LET l_ac=1
+   FOREACH b_fill_tmp_cs2 INTO g_ineh2_d[l_ac].shina_2,g_ineh2_d[l_ac].shina_2_desc,g_ineh2_d[l_ac].ineh009_2,g_ineh2_d[l_ac].ineh010_2,g_ineh2_d[l_ac].amount_2,g_ineh2_d[l_ac].price_2
+   
+      LET g_ineh2_d[l_ac].sequ_2=l_ac
+      
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code   = 9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+      
+      LET l_ac = l_ac + 1
+   END FOREACH
+   CALL g_ineh2_d.deleteElement(g_ineh2_d.getLength())
+   FREE ainq811_tmp_pb2
+
+END FUNCTION]]>
+  </point>
+  <point name="function.ainq811_b3_fill" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 復盤資料
+# Memo...........:
+# Usage..........: CALL ainq811_b3_fill()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 20150508 By huangrh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ainq811_b3_fill()
+DEFINE l_sql      STRING
+DEFINE l_shina        LIKE type_t.chr500  #商品品類
+DEFINE l_shina_desc   LIKE type_t.chr500  #品類說明
+DEFINE l_ineh009      LIKE ineh_t.ineh009 #盤點數量 
+DEFINE l_ineh010      LIKE ineh_t.ineh010 #賬面數量
+DEFINE l_amount       LIKE type_t.num20_6 #差異數量
+DEFINE l_price        LIKE type_t.num20_6  #差異金額
+
+
+   CALL g_ineh3_d.clear()
+   
+   #盤點流程不使用批號---huangrh 20150618--modify
+   LET l_sql=" SELECT SUM(inef010) ",
+             "   FROM inef_t,",          
+#             "(SELECT DISTINCT inehsite,ineh001,ineh003,ineh004,ineh005,ineh006,ineh007,ineh008 ",
+             "(SELECT DISTINCT inehsite,ineh001,ineh003,ineh004,ineh005,ineh007,ineh008 ",
+             "                  FROM ineh_t,ineg_t,imaa_t",
+             "                 WHERE inehent=inegent",
+             "                   AND inehsite=inegsite",
+             "                   AND inehdocno=inegdocno",
+             "                   AND inehent=imaaent ",
+             "                   AND ineh001=imaa001",
+             "                   AND inehent=",g_enterprise,
+             "                   AND inehsite='",g_ineg_m.inegsite,"'",
+             "                   AND ineg002='",g_ineg_m.ineg002,"'",            
+             "                   AND ineg001='3'", 
+             "                   AND inegstus<>'X'", 
+             "                   AND imaa009=?",
+             "                ) a",
+             "   WHERE inefent=",g_enterprise,
+             "     AND inefsite=a.inehsite",
+             "     AND inefsite='",g_ineg_m.inegsite,"'",
+             "     AND inef001='",g_ineg_m.ineg002,"'",
+             "     AND inef002=ineh001",
+             "     AND inef003=ineh003",
+             "     AND inef005=ineh004",
+             "     AND inef006=ineh005",
+#             "     AND inef007=ineh006",
+             "     AND inef008=ineh007",
+             "     AND inef009=ineh008 "
+          
+   PREPARE ainq811_selpb3 FROM l_sql 
+
+   LET g_sql = "SELECT imaa009 a,SUM(ineh009) b,SUM((ineh009-ineh010)*inee003) c ",
+               "  FROM ineh_t,imaa_t,ineg_t,inee_t",                    
+               " WHERE inehent=inegent AND inehsite=inegsite AND inehdocno=inegdocno ",
+               "   AND inehent=imaaent AND ineh001=imaa001 ",
+               "   AND inehent=ineeent AND inehsite=ineesite AND inee001=ineg002 AND inee002=ineh001",
+               "   AND ineg001='3' AND inegstus<>'X' ",
+               "   AND inehent=? AND inegsite=? AND ineg002=?",
+               " GROUP BY imaa009"
+            
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE ainq811_pb3 FROM g_sql
+   DECLARE b_fill_cs3 CURSOR FOR ainq811_pb3
+
+   
+   OPEN b_fill_cs3 USING g_enterprise,g_ineg_m.inegsite,g_ineg_m.ineg002
+   
+   DELETE FROM ainq811_tmp   
+   FOREACH b_fill_cs3 INTO l_shina,l_ineh009,l_price
+      SELECT rtaxl003 INTO l_shina_desc
+        FROM rtaxl_t
+       WHERE rtaxlent=g_enterprise
+         AND rtaxl001=l_shina
+         AND rtaxl002=g_dlang
+        
+      EXECUTE ainq811_selpb3 INTO l_ineh010 USING l_shina
+      LET l_amount=l_ineh009-l_ineh010
+      
+      INSERT INTO ainq811_tmp(shina,shina_desc,ineh009,ineh010,amount,price) 
+                       VALUES(l_shina,l_shina_desc,l_ineh009,l_ineh010,l_amount,l_price)
+  
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF      
+
+   END FOREACH
+   CALL g_ineh3_d.deleteElement(g_ineh3_d.getLength())
+   FREE ainq811_pb3
+ 
+
+#提取數據
+   LET g_sql = "SELECT * ",
+               "  FROM ainq811_tmp",
+               " ORDER BY ABS(amount) DESC"
+   PREPARE ainq811_tmp_pb3 FROM g_sql
+   DECLARE b_fill_tmp_cs3 CURSOR FOR ainq811_tmp_pb3
+   
+   LET l_ac=1
+   FOREACH b_fill_tmp_cs3 INTO g_ineh3_d[l_ac].shina_3,g_ineh3_d[l_ac].shina_3_desc,g_ineh3_d[l_ac].ineh009_3,g_ineh3_d[l_ac].ineh010_3,g_ineh3_d[l_ac].amount_3,g_ineh3_d[l_ac].price_3
+   
+      LET g_ineh3_d[l_ac].sequ_3=l_ac
+      
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code   = 9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+      
+      LET l_ac = l_ac + 1
+   END FOREACH
+   CALL g_ineh3_d.deleteElement(g_ineh3_d.getLength())
+   FREE ainq811_tmp_pb3
+
+END FUNCTION]]>
+  </point>
+  <point name="function.ainq811_b4_fill" order="3" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 復盤資料
+# Memo...........:
+# Usage..........: CALL ainq811_b4_fill()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 20150508 By huangrh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ainq811_b4_fill()
+DEFINE l_sql      STRING
+
+   
+   CALL g_ineh4_d.clear()
+          
+   PREPARE ainq811_selpb4 FROM l_sql 
+
+   LET g_sql = "SELECT imaa009 a,SUM(ineh009-ineh010) b,SUM(ineh009) c,SUM((ineh009-ineh010)*inee003) d,SUM(NVL(ineh010,0)) ",
+               "  FROM ineh_t,imaa_t,ineg_t,inee_t",                    
+               " WHERE inehent=inegent AND inehsite=inegsite AND inehdocno=inegdocno ",
+               "   AND inehent=imaaent AND ineh001=imaa001 ",
+               "   AND inehent=ineeent AND inehsite=ineesite AND inee001=ineg002 AND inee002=ineh001",
+               "   AND ineg001='4' AND inegstus<>'X' ",
+               "   AND inehent=? AND inegsite=? AND ineg002=?",
+               " GROUP BY imaa009",
+               " ORDER BY ABS(b) DESC"
+            
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE ainq811_pb4 FROM g_sql
+   DECLARE b_fill_cs4 CURSOR FOR ainq811_pb4
+
+   LET l_ac = 1
+   
+   OPEN b_fill_cs4 USING g_enterprise,g_ineg_m.inegsite,g_ineg_m.ineg002
+                                            
+   FOREACH b_fill_cs4 INTO g_ineh4_d[l_ac].shina_4,g_ineh4_d[l_ac].amount_4,g_ineh4_d[l_ac].ineh009_4,g_ineh4_d[l_ac].price_4,g_ineh4_d[l_ac].ineh010_4
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+      
+      LET g_ineh4_d[l_ac].sequ_4=l_ac
+      SELECT rtaxl003 INTO g_ineh4_d[l_ac].shina_4_desc
+        FROM rtaxl_t
+       WHERE rtaxlent=g_enterprise
+         AND rtaxl001=g_ineh4_d[l_ac].shina_4
+         AND rtaxl002=g_dlang
+        
+      
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code   = 9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+      
+      LET l_ac = l_ac + 1
+   END FOREACH
+   CALL g_ineh4_d.deleteElement(g_ineh4_d.getLength())
+   FREE ainq811_pb4
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.ainq811_create_temp" order="4" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 創建臨時表
+# Memo...........:
+# Usage..........: CALL ainq811_create_temp()
+# Input parameter: 
+# Return code....:
+# Date & Author..: 20150618 By huangrh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ainq811_create_temp()
+
+   #先刪除一次臨時表(怕有殘留)
+   DROP TABLE ainq811_tmp;
+
+   #建立臨時表
+   CREATE TEMP TABLE ainq811_tmp(
+     shina        LIKE type_t.chr500,  #商品品類
+     shina_desc   LIKE type_t.chr500,  #品類說明
+     ineh009      LIKE ineh_t.ineh009, #盤點數量 
+     ineh010      LIKE ineh_t.ineh010, #賬面數量
+     amount       LIKE type_t.num20_6, #差異數量
+     price        LIKE type_t.num20_6  #差異金額
+    );
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'ainq811_tmp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+   END IF
+
+
+END FUNCTION]]>
+  </point>
+  <point name="function.ainq811_drop_temp" order="5" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 創建臨時表
+# Memo...........:
+# Usage..........: CALL ainq811_drop_temp()
+# Input parameter: 
+# Return code....:
+# Date & Author..: 20150618 By huangrh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ainq811_drop_temp()
+
+
+  DROP TABLE ainq811_tmp;
+     
+END FUNCTION]]>
+  </point>
+  <point name="b_fill.body.fill_sql" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="b_fill.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_sql      STRING
+   DEFINE l_shina        LIKE type_t.chr500 #商品品類
+   DEFINE l_shina_desc   LIKE type_t.chr500  #品類說明
+   DEFINE l_ineh009      LIKE ineh_t.ineh009 #盤點數量 
+   DEFINE l_ineh010      LIKE ineh_t.ineh010 #賬面數量
+   DEFINE l_amount       LIKE type_t.num20_6 #差異數量
+   DEFINE l_price        LIKE type_t.num20_6  #差異金額]]>
+  </point>
+  <point name="browser_fill.add_browse.other" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      CALL g_ineh2_d.clear()
+      CALL g_ineh3_d.clear()
+      CALL g_ineh4_d.clear()]]>
+  </point>
+  <point name="browser_fill.before_foreach" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET l_wc  = g_wc.trim() 
+   LET l_wc2 = g_wc2.trim()  
+   CALL s_aooi500_sql_where(g_prog,'inegsite') RETURNING l_where
+   LET g_wc = g_wc," AND ",l_where
+   LET l_wc  = g_wc.trim()   ]]>
+  </point>
+  <point name="browser_fill.before_prepare" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_sql = " SELECT DISTINCT 'Y',t0.inegsite,t0.ineg002 ",
+               " FROM ineg_t t0",
+               "  ",
+               "  LEFT JOIN ineh_t ON inehent = inegent AND inegsite = inehsite AND inegdocno = inehdocno ", "  ", 
+               "  ",
+               
+               " WHERE t0.inegent = '" ||g_enterprise|| "' AND ",l_wc," AND ",l_wc2, cl_sql_add_filter("ineg_t"),
+               "   AND inegstus<>'X' AND inegstus<>'N'"
+   LET g_sql = g_sql, " ORDER BY inegsite,ineg002 ",g_order            ]]>
+  </point>
+  <point name="browser_fill.cnt_sqlwc" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件                      
+      LET l_sub_sql = " SELECT UNIQUE inegsite,ineg002 ",
+                      " FROM ineg_t ",
+                      " ",
+                      " LEFT JOIN ineh_t ON inehent = inegent AND inegsite = inehsite AND inegdocno = inehdocno ", "  ", 
+                      " ", 
+                      " ", 
+                      " WHERE inegent = '" ||g_enterprise|| "' AND inehent = '" ||g_enterprise|| "' AND ",l_wc, " AND ", l_wc2, cl_sql_add_filter("ineg_t")
+   ELSE
+      #單身未輸入搜尋條件
+      LET l_sub_sql = " SELECT UNIQUE inegsite,ineg002 ",
+                      " FROM ineg_t ", 
+                      "  ",
+                      "  ",
+                      " WHERE inegent = '" ||g_enterprise|| "' AND ",l_wc CLIPPED, cl_sql_add_filter("ineg_t")
+   END IF]]>
+  </point>
+  <point name="browser_fill.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_where           STRING]]>
+  </point>
+  <point name="browser_fill.fill_sqlwc" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="browser_fill.other_fill" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+   CALL g_ineh_d.clear()
+   
+   #帳面數量
+   #盤點流程不使用批號---huangrh 20150618--modify
+   LET l_sql=" SELECT SUM(inef010) ",
+             "   FROM inef_t,",          
+#             "(SELECT DISTINCT inehsite,ineh001,ineh003,ineh004,ineh005,ineh006,ineh007,ineh008 ",
+             "(SELECT DISTINCT inehsite,ineh001,ineh003,ineh004,ineh005,ineh007,ineh008 ",             
+             "                  FROM ineh_t,ineg_t,imaa_t",
+             "                 WHERE inehent=inegent",
+             "                   AND inehsite=inegsite",
+             "                   AND inehdocno=inegdocno",
+             "                   AND inehent=imaaent ",
+             "                   AND ineh001=imaa001",
+             "                   AND inehent=",g_enterprise,
+             "                   AND inehsite='",g_ineg_m.inegsite,"'",
+             "                   AND ineg002='",g_ineg_m.ineg002,"'",            
+             "                   AND ineg001='1'", 
+             "                   AND inegstus<>'X'", 
+             "                   AND imaa009=?",
+             "                ) a",
+             "   WHERE inefent=",g_enterprise,
+             "     AND inefsite=a.inehsite",
+             "     AND inefsite='",g_ineg_m.inegsite,"'",
+             "     AND inef001='",g_ineg_m.ineg002,"'",
+             "     AND inef002=ineh001",
+             "     AND inef003=ineh003",
+             "     AND inef005=ineh004",
+             "     AND inef006=ineh005",
+#             "     AND inef007=ineh006",
+             "     AND inef008=ineh007",
+             "     AND inef009=ineh008 "
+          
+   PREPARE ainq811_selpb1 FROM l_sql 
+
+   LET g_sql = "SELECT imaa009 a,SUM(ineh009) b,SUM((ineh009-ineh010)*inee003) c ",
+               "  FROM ineh_t,imaa_t,ineg_t,inee_t",                    
+               " WHERE inehent=inegent AND inehsite=inegsite AND inehdocno=inegdocno ",
+               "   AND inehent=imaaent AND ineh001=imaa001 ",
+               "   AND inehent=ineeent AND inehsite=ineesite AND inee001=ineg002 AND inee002=ineh001",
+               "   AND ineg001='1' AND inegstus<>'X' ",
+               "   AND inehent=? AND inegsite=? AND ineg002=?",
+               " GROUP BY imaa009"
+
+
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE ainq811_pb1 FROM g_sql
+   DECLARE b_fill_cs1 CURSOR FOR ainq811_pb1
+      
+   OPEN b_fill_cs1 USING g_enterprise,g_ineg_m.inegsite,g_ineg_m.ineg002
+  
+   #清空臨時表
+   DELETE FROM ainq811_tmp
+   
+   FOREACH b_fill_cs1 INTO l_shina,l_ineh009,l_price      
+      SELECT rtaxl003 INTO l_shina_desc
+        FROM rtaxl_t
+       WHERE rtaxlent=g_enterprise
+         AND rtaxl001=l_shina
+         AND rtaxl002=g_dlang
+      
+      EXECUTE ainq811_selpb1 INTO l_ineh010 USING l_shina
+      
+      LET l_amount=l_ineh009-l_ineh010
+      
+      INSERT INTO ainq811_tmp(shina,shina_desc,ineh009,ineh010,amount,price) 
+                       VALUES(l_shina,l_shina_desc,l_ineh009,l_ineh010,l_amount,l_price)
+  
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF      
+   END FOREACH
+   FREE ainq811_pb1
+
+#提取數據
+   LET g_sql = "SELECT * ",
+               "  FROM ainq811_tmp",
+               " ORDER BY ABS(amount) DESC"
+   PREPARE ainq811_tmp_pb1 FROM g_sql
+   DECLARE b_fill_tmp_cs1 CURSOR FOR ainq811_tmp_pb1
+   
+   LET l_ac=1
+   FOREACH b_fill_tmp_cs1  INTO g_ineh_d[l_ac].shina,g_ineh_d[l_ac].shina_desc,g_ineh_d[l_ac].ineh009,g_ineh_d[l_ac].ineh010,g_ineh_d[l_ac].amount,g_ineh_d[l_ac].price
+   
+      LET g_ineh_d[l_ac].sequ=l_ac
+      
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code   = 9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+      
+      LET l_ac = l_ac + 1
+   END FOREACH
+   FREE ainq811_tmp_pb1
+   
+   LET g_error_show = 0
+   
+   CALL ainq811_b2_fill()
+   CALL ainq811_b3_fill()
+   CALL ainq811_b4_fill()]]>
+  </point>
+  <point name="construct.c.ineg002" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ineadocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ineg002  #顯示到畫面上
+            NEXT FIELD ineg002                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.inegdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_inegdocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inegdocno  #顯示到畫面上
+            NEXT FIELD inegdocno                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.inegsite" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = s_aooi500_q_where(g_prog,'inegsite',g_site,'c') 
+            CALL q_ooef001_24()
+            DISPLAY g_qryparam.return1 TO inegsite  #顯示到畫面上
+
+            NEXT FIELD inegsite                     #返回原欄位    
+
+]]>
+  </point>
+  <point name="fetch.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+   IF g_browser_cnt = 0 THEN
+      RETURN
+   END IF
+ 
+   CALL cl_ap_performance_next_start()
+   CASE p_flag
+      WHEN 'F' 
+         LET g_current_idx = 1
+      WHEN 'L'  
+         LET g_current_idx = g_browser.getLength()              
+      WHEN 'P'
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN 'N'
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN '/'
+         IF (NOT g_no_ask) THEN    
+            CALL cl_set_act_visible("accept,cancel", TRUE)    
+            CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,':' FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl" 
+            END PROMPT
+ 
+            CALL cl_set_act_visible("accept,cancel", FALSE)    
+            IF INT_FLAG THEN
+                LET INT_FLAG = 0
+                EXIT CASE  
+            END IF           
+         END IF
+         
+         IF g_jump > 0 AND g_jump <= g_browser.getLength() THEN
+             LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE  
+   END CASE 
+ 
+   
+   LET g_current_row = g_current_idx
+   LET g_detail_cnt = g_header_cnt                  
+   
+   #單身總筆數顯示
+   IF g_detail_cnt > 0 THEN
+      #若單身有資料時, idx至少為1
+      IF g_detail_idx <= 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx  
+   ELSE
+      LET g_detail_idx = 0
+      DISPLAY '' TO FORMONLY.idx    
+   END IF
+   
+   #瀏覽頁筆數顯示
+   LET g_pagestart = g_current_idx
+   DISPLAY g_pagestart TO FORMONLY.b_index   #當下筆數
+   DISPLAY g_pagestart TO FORMONLY.h_index   #當下筆數
+   
+   CALL cl_navigator_setting( g_pagestart, g_browser_cnt )
+ 
+   #代表沒有資料
+   IF g_current_idx = 0 OR g_browser.getLength() = 0 THEN
+      RETURN
+   END IF
+   
+   #超出範圍
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   LET g_ineg_m.inegsite = g_browser[g_current_idx].b_inegsite
+   LET g_ineg_m.ineg002 = g_browser[g_current_idx].b_inegdocno
+ 
+   
+   #重讀DB,因TEMP有不被更新特性
+   SELECT inea001,inea002 INTO g_ineg_m.ineg002_desc,g_ineg_m.ineg003
+     FROM inea_t
+    WHERE ineaent=g_enterprise
+      AND ineadocno=g_ineg_m.ineg002
+   SELECT ooefl003 INTO g_ineg_m.inegsite_desc
+     FROM ooefl_t
+    WHERE ooeflent=g_enterprise
+      AND ooefl001=g_ineg_m.inegsite
+      AND ooefl002=g_dlang
+         
+   #遮罩相關處理
+   LET g_ineg_m_mask_o.* =  g_ineg_m.*
+   CALL ainq811_ineg_t_mask()
+   LET g_ineg_m_mask_n.* =  g_ineg_m.*
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL ainq811_set_act_visible()   
+   CALL ainq811_set_act_no_visible()
+   
+   #保存單頭舊值
+   LET g_ineg_m_t.* = g_ineg_m.*
+   LET g_ineg_m_o.* = g_ineg_m.*
+   
+   
+   #重新顯示   
+   CALL ainq811_show()
+
+   RETURN
+]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[ TYPE type_g_ineh2_d        RECORD
+   sequ_2       LIKE type_t.num10, 
+   shina_2      LIKE type_t.chr500, 
+   shina_2_desc LIKE type_t.chr500, 
+   ineh009_2    LIKE ineh_t.ineh009, 
+   ineh010_2    LIKE ineh_t.ineh010, 
+   amount_2     LIKE type_t.num20_6, 
+   price_2      LIKE type_t.num20_6
+       END RECORD
+ TYPE type_g_ineh3_d        RECORD
+   sequ_3       LIKE type_t.num10, 
+   shina_3      LIKE type_t.chr500, 
+   shina_3_desc LIKE type_t.chr500, 
+   ineh009_3    LIKE ineh_t.ineh009, 
+   ineh010_3    LIKE ineh_t.ineh010, 
+   amount_3     LIKE type_t.num20_6, 
+   price_3      LIKE type_t.num20_6
+       END RECORD  
+ TYPE type_g_ineh4_d        RECORD
+   sequ_4       LIKE type_t.num10, 
+   shina_4      LIKE type_t.chr500, 
+   shina_4_desc LIKE type_t.chr500, 
+   ineh009_4    LIKE ineh_t.ineh009, 
+   ineh010_4    LIKE ineh_t.ineh010, 
+   amount_4     LIKE type_t.num20_6, 
+   price_4      LIKE type_t.num20_6
+       END RECORD       
+DEFINE g_ineh2_d          DYNAMIC ARRAY OF type_g_ineh2_d    
+DEFINE g_ineh3_d          DYNAMIC ARRAY OF type_g_ineh3_d  
+DEFINE g_ineh4_d          DYNAMIC ARRAY OF type_g_ineh4_d]]>
+  </point>
+  <point name="idx_chk.other" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   IF g_current_page = 2 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail2")
+      IF g_detail_idx > g_ineh2_d.getLength() THEN
+         LET g_detail_idx = g_ineh2_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_ineh2_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_ineh2_d.getLength() TO FORMONLY.cnt
+   END IF
+   IF g_current_page = 3 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail3")
+      IF g_detail_idx > g_ineh3_d.getLength() THEN
+         LET g_detail_idx = g_ineh3_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_ineh3_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_ineh3_d.getLength() TO FORMONLY.cnt
+   END IF   
+   IF g_current_page = 4 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail4")
+      IF g_detail_idx > g_ineh4_d.getLength() THEN
+         LET g_detail_idx = g_ineh4_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_ineh4_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_ineh4_d.getLength() TO FORMONLY.cnt
+   END IF   ]]>
+  </point>
+  <point name="init.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_success LIKE type_t.num5]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL s_aooi500_create_temp() RETURNING l_success
+   CALL ainq811_create_temp()]]>
+  </point>
+  <point name="input.a.ineg002" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ineg_m.ineg002
+            CALL ap_ref_array2(g_ref_fields,"SELECT inea001 FROM inea_t WHERE ineaent='"||g_enterprise||"' AND ineadocno=? ","") RETURNING g_rtn_fields
+            LET g_ineg_m.ineg002_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_ineg_m.ineg002_desc
+
+]]>
+  </point>
+  <point name="input.a.inegdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  NOT cl_null(g_ineg_m.inegsite) AND NOT cl_null(g_ineg_m.inegdocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_ineg_m.inegsite != g_inegsite_t  OR g_ineg_m.inegdocno != g_inegdocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM ineg_t WHERE "||"inegent = '" ||g_enterprise|| "' AND "||"inegsite = '"||g_ineg_m.inegsite ||"' AND "|| "inegdocno = '"||g_ineg_m.inegdocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.a.inegsite" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ineg_m.inegsite
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_ineg_m.inegsite_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_ineg_m.inegsite_desc
+
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  NOT cl_null(g_ineg_m.inegsite) AND NOT cl_null(g_ineg_m.inegdocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_ineg_m.inegsite != g_inegsite_t  OR g_ineg_m.inegdocno != g_inegdocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM ineg_t WHERE "||"inegent = '" ||g_enterprise|| "' AND "||"inegsite = '"||g_ineg_m.inegsite ||"' AND "|| "inegdocno = '"||g_ineg_m.inegdocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.ineh009" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_ineh_d[l_ac].ineh009) THEN 
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1.inehseq" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_ineg_m.inegsite IS NOT NULL AND g_ineg_m.inegdocno IS NOT NULL AND g_ineh_d[g_detail_idx].inehseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_ineg_m.inegsite != g_inegsite_t OR g_ineg_m.inegdocno != g_inegdocno_t OR g_ineh_d[g_detail_idx].inehseq != g_ineh_d_t.inehseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM ineh_t WHERE "||"inehent = '" ||g_enterprise|| "' AND "||"inehsite = '"||g_ineg_m.inegsite ||"' AND "|| "inehdocno = '"||g_ineg_m.inegdocno ||"' AND "|| "inehseq = '"||g_ineh_d[g_detail_idx].inehseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.shina" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ineh_d[l_ac].shina
+            CALL ap_ref_array2(g_ref_fields,"SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent='"||g_enterprise||"' AND rtaxl001=? AND rtaxl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_ineh_d[l_ac].shina_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_ineh_d[l_ac].shina_desc
+
+]]>
+  </point>
+  <point name="input.c.ineg002" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_ineg_m.ineg002             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+
+
+            CALL q_ineadocno()                                #呼叫開窗
+
+            LET g_ineg_m.ineg002 = g_qryparam.return1              
+
+            DISPLAY g_ineg_m.ineg002 TO ineg002              #
+
+            NEXT FIELD ineg002                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.inegdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_ineg_m.inegdocno             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+            LET g_qryparam.arg2 = "" #s
+
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_ineg_m.inegdocno = g_qryparam.return1              
+
+            DISPLAY g_ineg_m.inegdocno TO inegdocno              #
+
+            NEXT FIELD inegdocno                          #返回原欄位
+
+]]>
+  </point>
+  <point name="main.after_refresh_sql" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="main.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_success LIKE type_t.num5]]>
+  </point>
+  <point name="main.exit" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL s_aooi500_drop_temp() RETURNING l_success
+   CALL ainq811_drop_temp()]]>
+  </point>
+  <point name="query.other" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL g_ineh2_d.clear()
+   CALL g_ineh3_d.clear()
+   CALL g_ineh4_d.clear()]]>
+  </point>
+  <point name="ui_dialog.more_displayarray" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[         DISPLAY ARRAY g_ineh2_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b)   
+    
+            BEFORE ROW
+
+               CALL ainq811_idx_chk()
+               #確定當下選擇的筆數
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_detail_idx = l_ac
+
+               
+            BEFORE DISPLAY
+               #如果一直都在單身1則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_detail_idx)
+               END IF
+               LET g_loc = 'm'
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_current_page = 2
+               #顯示單身筆數
+               CALL ainq811_idx_chk()
+               
+         END DISPLAY
+         
+         DISPLAY ARRAY g_ineh3_d TO s_detail3.* ATTRIBUTES(COUNT=g_rec_b)   
+    
+            BEFORE ROW
+
+               CALL ainq811_idx_chk()
+               #確定當下選擇的筆數
+               LET l_ac = DIALOG.getCurrentRow("s_detail3")
+               LET g_detail_idx = l_ac
+
+               
+            BEFORE DISPLAY
+               #如果一直都在單身1則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_detail_idx)
+               END IF
+               LET g_loc = 'm'
+               LET l_ac = DIALOG.getCurrentRow("s_detail3")
+               LET g_current_page = 3
+               #顯示單身筆數
+               CALL ainq811_idx_chk()
+               
+         END DISPLAY         
+
+         DISPLAY ARRAY g_ineh4_d TO s_detail4.* ATTRIBUTES(COUNT=g_rec_b)   
+    
+            BEFORE ROW
+
+               CALL ainq811_idx_chk()
+               #確定當下選擇的筆數
+               LET l_ac = DIALOG.getCurrentRow("s_detail4")
+               LET g_detail_idx = l_ac
+
+               
+            BEFORE DISPLAY
+               #如果一直都在單身1則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_detail_idx)
+               END IF
+               LET g_loc = 'm'
+               LET l_ac = DIALOG.getCurrentRow("s_detail4")
+               LET g_current_page = 4
+               #顯示單身筆數
+               CALL ainq811_idx_chk()
+               
+         END DISPLAY ]]>
+  </point>
+  <section id="ainq811.action_chk" ver="1" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION ainq811_action_chk()
+   #add-point:action_chk段define
+   {<point name="action_chk.define" edit="s"/>}
+   #end add-point
+   #add-point:action_chk段define(客製用)
+   {<point name="action_chk.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:action_chk段action_chk
+   {<point name="action_chk.action_chk"/>}
+   #end add-point
+   
+   RETURN TRUE
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.b_fill" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION ainq811_b_fill()
+   DEFINE p_wc2      STRING
+   DEFINE li_idx     LIKE type_t.num10
+   #add-point:b_fill段define
+   {<point name="b_fill.define" edit="s"/>}
+   #end add-point     
+   #add-point:b_fill段define(客製用)
+   {<point name="b_fill.define_customerization" edit="c"/>}
+   #end add-point     
+ 
+   CALL g_ineh_d.clear()    #g_ineh_d 單頭及單身 
+ 
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+   
+   #判斷是否填充
+   IF ainq811_fill_chk(1) THEN
+      #切換上下筆時不重組SQL
+      IF g_action_choice <> 'fetch' OR cl_null(g_action_choice) THEN
+         LET g_sql = "SELECT  UNIQUE inehseq,ineh009,ineh010  FROM ineh_t",   
+                     " INNER JOIN ineg_t ON inegsite = inehsite ",
+                     " AND inegdocno = inehdocno ",
+ 
+                     #"",
+                     
+                     "",
+                     
+                     " WHERE inehent=? AND inehsite=? AND inehdocno=?"
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         #add-point:b_fill段sql_before
+         {<point name="b_fill.body.fill_sql"/>}
+         #end add-point
+         IF NOT cl_null(g_wc2_table1) THEN
+            LET g_sql = g_sql CLIPPED, " AND ", g_wc2_table1 CLIPPED
+         END IF
+         
+         #子單身的WC
+         
+         
+         LET g_sql = g_sql, " ORDER BY ineh_t.inehseq"
+         
+         #add-point:單身填充控制
+         {<point name="b_fill.sql"/>}
+         #end add-point
+         
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         PREPARE ainq811_pb FROM g_sql
+         DECLARE b_fill_cs CURSOR FOR ainq811_pb
+      END IF
+      
+      LET g_cnt = l_ac
+      LET l_ac = 1
+      
+      OPEN b_fill_cs USING g_enterprise,g_ineg_m.inegsite,g_ineg_m.inegdocno
+                                               
+      FOREACH b_fill_cs INTO g_ineh_d[l_ac].inehseq,g_ineh_d[l_ac].ineh009,g_ineh_d[l_ac].ineh010
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充
+         {<point name="b_fill.fill"/>}
+         #end add-point
+      
+         IF l_ac > g_max_rec THEN
+            IF g_error_show = 1 THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = l_ac
+               LET g_errparam.code   = 9035 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+            END IF
+            EXIT FOREACH
+         END IF
+         
+         LET l_ac = l_ac + 1
+      END FOREACH
+      LET g_error_show = 0
+   
+   END IF
+   
+ 
+   
+   #add-point:browser_fill段其他table處理
+   {<point name="browser_fill.other_fill"/>}
+   #end add-point
+   
+   CALL g_ineh_d.deleteElement(g_ineh_d.getLength())
+ 
+   
+ 
+   LET l_ac = g_cnt
+   LET g_cnt = 0  
+   
+   FREE ainq811_pb
+ 
+   
+   LET li_idx = l_ac
+   
+   #遮罩相關處理
+   FOR l_ac = 1 TO g_ineh_d.getLength()
+      LET g_ineh_d_mask_o[l_ac].* =  g_ineh_d[l_ac].*
+      CALL ainq811_ineh_t_mask()
+      LET g_ineh_d_mask_n[l_ac].* =  g_ineh_d[l_ac].*
+   END FOR
+   
+ 
+   
+   LET l_ac = li_idx
+   
+   CALL cl_ap_performance_next_end()
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.b_fill2" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION ainq811_b_fill2(pi_idx)
+   DEFINE pi_idx          LIKE type_t.num10
+   DEFINE li_ac           LIKE type_t.num10
+   DEFINE ls_chk          LIKE type_t.chr1
+   #add-point:b_fill2段define
+   {<point name="b_fill2.define" edit="s"/>}
+   #end add-point
+   #add-point:b_fill2段define(客製用)
+   {<point name="b_fill2.define_customerization" edit="c"/>}
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   IF g_detail_idx <= 0 THEN
+      RETURN
+   END IF
+   
+ 
+      
+ 
+      
+   #add-point:單身填充後
+   {<point name="b_fill2.after_fill" />}
+   #end add-point
+    
+   LET l_ac = li_ac
+   
+   CALL ainq811_detail_show()
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.browser_fill" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 瀏覽頁簽資料填充
+PRIVATE FUNCTION ainq811_browser_fill(ps_page_action)
+   DEFINE ps_page_action    STRING
+   DEFINE l_wc              STRING
+   DEFINE l_wc2             STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sub_sql         STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define
+   {<point name="browser_fill.define" edit="s"/>}
+   #end add-point   
+   #add-point:browser_fill段define(客製用)
+   {<point name="browser_fill.define_customerization" edit="c"/>}
+   #end add-point   
+   
+   #add-point:browser_fill段動作開始前
+   {<point name="browser_fill.before_browser_fill"/>}
+   #end add-point
+   
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   LET l_wc  = g_wc.trim() 
+   LET l_wc2 = g_wc2.trim()
+ 
+   #add-point:browser_fill,foreach前
+   {<point name="browser_fill.before_foreach"/>}
+   #end add-point
+   
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件                      
+      LET l_sub_sql = " SELECT UNIQUE inegsite,inegdocno ",
+                      " FROM ineg_t ",
+                      " ",
+                      " LEFT JOIN ineh_t ON inehent = inegent AND inegsite = inehsite AND inegdocno = inehdocno ", "  ",
+                      #add-point:browser_fill段sql(ineh_t1)
+                      {<point name="browser_fill.cnt.join.}"/>}
+                      #end add-point
+ 
+ 
+                      " ", 
+                      " ", 
+                      " WHERE inegent = '" ||g_enterprise|| "' AND inehent = '" ||g_enterprise|| "' AND ",l_wc, " AND ", l_wc2, cl_sql_add_filter("ineg_t")
+   ELSE
+      #單身未輸入搜尋條件
+      LET l_sub_sql = " SELECT UNIQUE inegsite,inegdocno ",
+                      " FROM ineg_t ", 
+                      "  ",
+                      "  ",
+                      " WHERE inegent = '" ||g_enterprise|| "' AND ",l_wc CLIPPED, cl_sql_add_filter("ineg_t")
+   END IF
+   
+   #add-point:browser_fill,cnt wc
+   {<point name="browser_fill.cnt_sqlwc"/>}
+   #end add-point
+   
+   LET g_sql = " SELECT COUNT(*) FROM (",l_sub_sql,")"
+   
+   #add-point:browser_fill,count前
+   {<point name="browser_fill.before_count"/>}
+   #end add-point
+   
+   PREPARE header_cnt_pre FROM g_sql
+   EXECUTE header_cnt_pre INTO g_browser_cnt   #總筆數
+   FREE header_cnt_pre
+    
+   IF g_browser_cnt > g_max_browse THEN
+      IF g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_browser_cnt
+         LET g_errparam.code   = 9035 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+      END IF
+      LET g_browser_cnt = g_max_browse
+   END IF
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+ 
+   #根據行為確定資料填充位置及WC
+   IF cl_null(g_add_browse) THEN
+      #清除畫面
+      CLEAR FORM                
+      INITIALIZE g_ineg_m.* TO NULL
+      CALL g_ineh_d.clear()        
+ 
+      #add-point:browser_fill g_add_browse段額外處理
+      {<point name="browser_fill.add_browse.other"/>}
+      #end add-point   
+      CALL g_browser.clear()
+      LET g_cnt = 1
+   ELSE
+      LET l_wc  = g_add_browse
+      LET l_wc2 = " 1=1" 
+      LET g_cnt = g_current_idx
+   END IF
+ 
+   #依照t0.inegsite,t0.inegdocno Browser欄位定義(取代原本bs_sql功能)
+   #考量到單身可能下條件, 所以此處需join單身所有table
+   #DISTINCT是為了避免在join時出現重複的資料(如果不加DISTINCT則須在程式中過濾)
+   LET g_sql = " SELECT DISTINCT t0.inegstus,t0.inegsite,t0.inegdocno ",
+               " FROM ineg_t t0",
+               "  ",
+               "  LEFT JOIN ineh_t ON inehent = inegent AND inegsite = inehsite AND inegdocno = inehdocno ", "  ", 
+               #add-point:browser_fill段sql(ineh_t1)
+               {<point name="browser_fill.join.ineh_t1"/>}
+               #end add-point
+ 
+ 
+               "  ",
+               
+               " WHERE t0.inegent = '" ||g_enterprise|| "' AND ",l_wc," AND ",l_wc2, cl_sql_add_filter("ineg_t")
+   #add-point:browser_fill,sql wc
+   {<point name="browser_fill.fill_sqlwc"/>}
+   #end add-point
+   LET g_sql = g_sql, " ORDER BY inegsite,inegdocno ",g_order
+ 
+   #add-point:browser_fill,before_prepare
+   {<point name="browser_fill.before_prepare"/>}
+   #end add-point
+        
+   #LET g_sql = cl_sql_add_tabid(g_sql,"ineg_t") #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql) #遮蔽特定資料
+   PREPARE browse_pre FROM g_sql
+   DECLARE browse_cur CURSOR FOR browse_pre
+   
+   #add-point:browser_fill段open cursor
+   {<point name="browser_fill.open"/>}
+   #end add-point
+   
+   FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_inegsite,g_browser[g_cnt].b_inegdocno 
+
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = 'foreach:' 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+  
+      #add-point:browser_fill段reference
+      {<point name="browser_fill.reference"/>}
+      #end add-point
+  
+  
+      
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_browse THEN
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   
+   #清空g_add_browse, 並指定指標位置
+   IF NOT cl_null(g_add_browse) THEN
+      LET g_add_browse = ""
+      CALL g_curr_diag.setCurrentRow("s_browse",g_current_idx)
+   END IF
+   
+   IF cl_null(g_browser[g_cnt].b_inegsite) THEN
+      CALL g_browser.deleteElement(g_cnt)
+   END IF
+   
+   LET g_header_cnt  = g_browser.getLength()
+   LET g_browser_cnt = g_browser.getLength()
+   
+   #筆數顯示
+   IF g_browser_cnt > 0 THEN
+      DISPLAY g_browser_idx TO FORMONLY.b_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.b_count #總筆數
+      DISPLAY g_browser_idx TO FORMONLY.h_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.h_count #總筆數
+      DISPLAY g_detail_idx  TO FORMONLY.idx     #單身當下筆數
+      DISPLAY g_detail_cnt  TO FORMONLY.cnt     #單身總筆數
+   ELSE
+      DISPLAY '' TO FORMONLY.b_index #當下筆數
+      DISPLAY '' TO FORMONLY.b_count #總筆數
+      DISPLAY '' TO FORMONLY.h_index #當下筆數
+      DISPLAY '' TO FORMONLY.h_count #總筆數
+      DISPLAY '' TO FORMONLY.idx     #單身當下筆數
+      DISPLAY '' TO FORMONLY.cnt     #單身總筆數
+   END IF
+ 
+   LET g_rec_b = g_cnt - 1
+   LET g_detail_cnt = g_rec_b
+   LET g_cnt = 0
+   
+   FREE browse_pre
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+                  
+   
+   #add-point:browser_fill段結束前
+   {<point name="browser_fill.after"/>}
+   #end add-point   
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.construct" ver="2" status="" src="s" readonly="">
+    <![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION ainq811_construct()
+   DEFINE ls_return   STRING
+   DEFINE ls_result   STRING 
+   DEFINE ls_wc       STRING 
+   DEFINE la_wc       DYNAMIC ARRAY OF RECORD
+          tableid     STRING,
+          wc          STRING
+          END RECORD
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:cs段define
+   {<point name="cs.define" edit="s"/>}
+   #end add-point    
+   #add-point:cs段define(客製用)
+   {<point name="cs.define_customerization" edit="c"/>}
+   #end add-point    
+    
+   #清除畫面
+   CLEAR FORM                
+   INITIALIZE g_ineg_m.* TO NULL
+   CALL g_ineh_d.clear()        
+ 
+   
+   LET g_action_choice = ""
+    
+   INITIALIZE g_wc TO NULL
+   INITIALIZE g_wc2 TO NULL
+   
+   INITIALIZE g_wc2_table1 TO NULL
+ 
+    
+   LET g_qryparam.state = 'c'
+   
+   #add-point:cs段開始前
+   {<point name="cs.before_construct"/>}
+   #end add-point 
+   
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+      #單頭
+      CONSTRUCT BY NAME g_wc ON inegdocno,ineg002,ineg003,inegsite
+ 
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct
+            {<point name="cs.head.before_construct"/>}
+            #end add-point 
+            
+         #公用欄位開窗相關處理
+         
+            
+         #一般欄位開窗相關處理    
+                  #Ctrlp:construct.c.inegdocno
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD inegdocno
+            #add-point:ON ACTION controlp INFIELD inegdocno
+            {<point name="construct.c.inegdocno" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD inegdocno
+            #add-point:BEFORE FIELD inegdocno
+            {<point name="construct.b.inegdocno" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD inegdocno
+            
+            #add-point:AFTER FIELD inegdocno
+            {<point name="construct.a.inegdocno" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.ineg002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD ineg002
+            #add-point:ON ACTION controlp INFIELD ineg002
+            {<point name="construct.c.ineg002" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD ineg002
+            #add-point:BEFORE FIELD ineg002
+            {<point name="construct.b.ineg002" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD ineg002
+            
+            #add-point:AFTER FIELD ineg002
+            {<point name="construct.a.ineg002" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD ineg003
+            #add-point:BEFORE FIELD ineg003
+            {<point name="construct.b.ineg003" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD ineg003
+            
+            #add-point:AFTER FIELD ineg003
+            {<point name="construct.a.ineg003" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.ineg003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD ineg003
+            #add-point:ON ACTION controlp INFIELD ineg003
+            {<point name="construct.c.ineg003" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.inegsite
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD inegsite
+            #add-point:ON ACTION controlp INFIELD inegsite
+            {<point name="construct.c.inegsite" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD inegsite
+            #add-point:BEFORE FIELD inegsite
+            {<point name="construct.b.inegsite" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD inegsite
+            
+            #add-point:AFTER FIELD inegsite
+            {<point name="construct.a.inegsite" />}
+            #END add-point
+            
+ 
+ 
+         
+      END CONSTRUCT
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc2_table1 ON NULL
+           FROM NULL
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct
+            {<point name="cs.body.before_construct"/>}
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+          
+       
+      END CONSTRUCT
+      
+ 
+      
+ 
+      
+      #add-point:cs段add_cs(本段內只能出現新的CONSTRUCT指令)
+      {<point name="cs.add_cs"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog
+         {<point name="cs.b_dialog"/>}
+         #end add-point  
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+         IF NOT cl_null(ls_wc) THEN
+            CALL util.JSON.parse(ls_wc, la_wc)
+            INITIALIZE g_wc, g_wc2, g_wc2_table1, g_wc2_extend TO NULL
+ 
+            FOR li_idx = 1 TO la_wc.getLength()
+               CASE
+                  WHEN la_wc[li_idx].tableid = "ineg_t" 
+                     LET g_wc = la_wc[li_idx].wc
+                  WHEN la_wc[li_idx].tableid = "ineh_t" 
+                     LET g_wc2_table1 = la_wc[li_idx].wc
+ 
+               END CASE
+            END FOR
+         END IF
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   END DIALOG
+   
+   #組合g_wc2
+   LET g_wc2 = g_wc2_table1
+ 
+ 
+ 
+   
+   #add-point:cs段結束前
+   {<point name="cs.after_construct"/>}
+   #end add-point    
+ 
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.default_search" ver="2" status="" src="s" readonly="">
+    <![CDATA[#+ 外部參數搜尋
+PRIVATE FUNCTION ainq811_default_search()
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE li_cnt     LIKE type_t.num10
+   DEFINE ls_wc      STRING
+   DEFINE la_wc      DYNAMIC ARRAY OF RECORD
+          tableid    STRING,
+          wc         STRING
+          END RECORD
+   DEFINE ls_where   STRING
+   #add-point:default_search段define
+   {<point name="default_search.define" edit="s"/>}
+   #end add-point  
+   #add-point:default_search段define(客製用)
+   {<point name="default_search.define_customerization" edit="c"/>}
+   #end add-point  
+   
+   #add-point:default_search段開始前
+   {<point name="default_search.before"/>}
+   #end add-point  
+   
+   LET g_pagestart = 1
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " inegsite = '", g_argv[01], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " inegdocno = '", g_argv[02], "' AND "
+   END IF
+ 
+   
+   #add-point:default_search段after sql
+   {<point name="default_search.after_sql"/>}
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      #若無外部參數則預設為1=2
+      LET g_default = FALSE
+      
+      #預設查詢條件
+      CALL cl_qbe_get_default_qryplan() RETURNING ls_where
+      IF NOT cl_null(ls_where) THEN
+         CALL util.JSON.parse(ls_where, la_wc)
+         INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+ 
+         FOR li_idx = 1 TO la_wc.getLength()
+            CASE
+               WHEN la_wc[li_idx].tableid = "ineg_t" 
+                  LET g_wc = la_wc[li_idx].wc
+               WHEN la_wc[li_idx].tableid = "ineh_t" 
+                  LET g_wc2_table1 = la_wc[li_idx].wc
+ 
+               WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                  LET g_wc2_extend = la_wc[li_idx].wc
+            END CASE
+         END FOR
+         IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1) 
+ 
+            OR NOT cl_null(g_wc2_extend)
+            THEN
+            #組合g_wc2
+            IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+               LET g_wc2 = g_wc2_table1
+            END IF
+ 
+            IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+               LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+            END IF
+         
+            IF g_wc2.subString(1,5) = " AND " THEN
+               LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+            END IF
+         END IF
+      END IF
+    
+      IF cl_null(g_wc) AND cl_null(g_wc2) THEN
+         LET g_wc = " 1=2"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前
+   {<point name="default_search.after"/>}
+   #end add-point  
+ 
+   IF g_wc.getIndexOf(" 1=2", 1) THEN
+      LET g_default = TRUE
+   END IF
+ 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.delete" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 資料刪除
+PRIVATE FUNCTION ainq811_delete()
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define
+   {<point name="delete.define" edit="s"/>}
+   #end add-point     
+   #add-point:delete段define(客製用)
+   {<point name="delete.define_customerization" edit="c"/>}
+   #end add-point     
+   
+   IF g_ineg_m.inegsite IS NULL
+   OR g_ineg_m.inegdocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   
+   
+   CALL s_transaction_begin()
+ 
+   OPEN ainq811_cl USING g_enterprise,g_ineg_m.inegsite,g_ineg_m.inegdocno
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN ainq811_cl:" 
+      LET g_errparam.code   = STATUS 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      CLOSE ainq811_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE ainq811_master_referesh USING g_ineg_m.inegsite,g_ineg_m.inegdocno INTO g_ineg_m.inegdocno, 
+       g_ineg_m.ineg002,g_ineg_m.ineg003,g_ineg_m.inegsite,g_ineg_m.ineg002_desc,g_ineg_m.inegsite_desc 
+
+   
+   #檢查是否允許此動作
+   IF NOT ainq811_action_chk() THEN
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_ineg_m_mask_o.* =  g_ineg_m.*
+   CALL ainq811_ineg_t_mask()
+   LET g_ineg_m_mask_n.* =  g_ineg_m.*
+   
+   CALL ainq811_show()
+   
+   #add-point:delete段before ask
+   {<point name="delete.before_ask"/>}
+   #end add-point 
+ 
+   IF cl_ask_del_master() THEN              #確認一下
+   
+      #add-point:單頭刪除前
+      {<point name="delete.head.b_delete" mark="Y"/>}
+      #end add-point   
+      
+      #應用 a47 樣板自動產生(Version:2)
+      #刪除相關文件
+      CALL ainq811_set_pk_array()
+      #add-point:相關文件刪除前
+      {<point name="delete.befroe.related_document_remove"/>}
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+  
+  
+      #資料備份
+      LET g_inegsite_t = g_ineg_m.inegsite
+      LET g_inegdocno_t = g_ineg_m.inegdocno
+ 
+ 
+      DELETE FROM ineg_t
+       WHERE inegent = g_enterprise AND inegsite = g_ineg_m.inegsite
+         AND inegdocno = g_ineg_m.inegdocno
+ 
+       
+      #add-point:單頭刪除中
+      {<point name="delete.head.m_delete"/>}
+      #end add-point
+       
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_ineg_m.inegsite 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      
+      #add-point:單頭刪除後
+      {<point name="delete.head.a_delete"/>}
+      #end add-point
+  
+      #add-point:單身刪除前
+      {<point name="delete.body.b_delete" mark="Y"/>}
+      #end add-point
+      
+      DELETE FROM ineh_t
+       WHERE inehent = g_enterprise AND inehsite = g_ineg_m.inegsite
+         AND inehdocno = g_ineg_m.inegdocno
+ 
+ 
+      #add-point:單身刪除中
+      {<point name="delete.body.m_delete"/>}
+      #end add-point
+         
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "ineh_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF    
+ 
+      #add-point:單身刪除後
+      {<point name="delete.body.a_delete"/>}
+      #end add-point
+      
+            
+                                                               
+ 
+ 
+ 
+      
+      #修改歷程記錄(刪除)
+      IF NOT cl_log_modified_record('','') THEN 
+         CLOSE ainq811_cl
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+             
+      CLEAR FORM
+      CALL g_ineh_d.clear() 
+ 
+     
+      CALL ainq811_ui_browser_refresh()  
+      #CALL ainq811_ui_headershow()  
+      #CALL ainq811_ui_detailshow()
+      
+      IF g_browser_cnt > 0 THEN 
+         #CALL ainq811_browser_fill("")
+         CALL ainq811_fetch('P')
+         DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+         DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+      ELSE
+         CLEAR FORM
+      END IF
+ 
+      #add-point:多語言刪除
+      {<point name="delete.lang.before_delete"/>}
+      #end add-point
+      
+      #單頭多語言刪除
+      
+      
+      #單身多語言刪除
+      
+ 
+ 
+   
+      #add-point:多語言刪除
+      {<point name="delete.lang.delete"/>}
+      #end add-point
+   
+   END IF
+ 
+   CALL s_transaction_end('Y','0')
+   CLOSE ainq811_cl
+ 
+   #功能已完成,通報訊息中心
+   CALL ainq811_msgcentre_notify('')
+    
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.delete_b" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 刪除單身後其他table連動
+PRIVATE FUNCTION ainq811_delete_b(ps_table,ps_keys_bak,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:delete_b段define
+   {<point name="delete_b.define" edit="s"/>}
+   #end add-point     
+   #add-point:delete_b段define(客製用)
+   {<point name="delete_b.define_customerization" edit="c"/>}
+   #end add-point     
+ 
+   LET g_update = TRUE  
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前
+      {<point name="delete_b.b_delete" mark="Y"/>}
+      #end add-point    
+      DELETE FROM ineh_t
+       WHERE inehent = g_enterprise AND
+         inehsite = ps_keys_bak[1] AND inehdocno = ps_keys_bak[2] AND inehseq = ps_keys_bak[3]
+      #add-point:delete_b段刪除中
+      {<point name="delete_b.m_delete"/>}
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_ineh_d.deleteElement(li_idx) 
+      END IF 
+ 
+   END IF
+   
+ 
+   
+ 
+   
+   #add-point:delete_b段other
+   {<point name="delete_b.other"/>}
+   #end add-point  
+   
+   RETURN TRUE
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000008
+#+ 
+#+ Filename...: ainq811
+#+ Description: 庫存盤點品類差異排名
+#+ Creator....: 01251(2015-05-08 15:01:04)
+#+ Modifier...: 01251(2015-05-08 18:25:58) -SD/PR-
+]]>
+  </section>
+  <section id="ainq811.detail_reproduce" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 單身自動複製
+PRIVATE FUNCTION ainq811_detail_reproduce()
+   DEFINE ls_sql      STRING
+   DEFINE ld_date     DATETIME YEAR TO SECOND
+   DEFINE l_detail    RECORD LIKE ineh_t.*
+ 
+ 
+   #add-point:delete段define
+   {<point name="detail_reproduce.define" edit="s"/>}
+   #end add-point    
+   #add-point:delete段define(客製用)
+   {<point name="detail_reproduce.define_customerization" edit="c"/>}
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   
+   LET ld_date = cl_get_current()
+   
+   DROP TABLE ainq811_detail
+   
+   #add-point:單身複製前1
+   {<point name="detail_reproduce.body.table1.b_insert" mark="Y"/>}
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   LET ls_sql = "CREATE GLOBAL TEMPORARY TABLE ainq811_detail AS ",
+                "SELECT * FROM ineh_t "
+   PREPARE repro_tbl FROM ls_sql
+   EXECUTE repro_tbl
+   FREE repro_tbl
+                
+   #將符合條件的資料丟入TEMP TABLE
+   INSERT INTO ainq811_detail SELECT * FROM ineh_t 
+                                         WHERE inehent = g_enterprise AND inehsite = g_inegsite_t
+                                         AND inehdocno = g_inegdocno_t
+ 
+   
+   #將key修正為調整後   
+   UPDATE ainq811_detail 
+      #更新key欄位
+      SET inehsite = g_ineg_m.inegsite
+          , inehdocno = g_ineg_m.inegdocno
+ 
+      #更新共用欄位
+      
+ 
+   #add-point:單身修改前
+   {<point name="detail_reproduce.body.table1.b_update"/>}
+   #end add-point                                       
+  
+   #將資料塞回原table   
+   INSERT INTO ineh_t SELECT * FROM ainq811_detail
+   
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "reproduce" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #add-point:單身複製中1
+   {<point name="detail_reproduce.body.table1.m_insert"/>}
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE ainq811_detail
+   
+   #add-point:單身複製後1
+   {<point name="detail_reproduce.body.table1.a_insert"/>}
+   #end add-point
+ 
+ 
+   
+ 
+   
+   #多語言複製段落
+   
+   
+   CALL s_transaction_end('Y','0')
+   
+   #已新增完, 調整資料內容(修改時使用)
+   LET g_inegsite_t = g_ineg_m.inegsite
+   LET g_inegdocno_t = g_ineg_m.inegdocno
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.detail_show" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 第二階單身reference
+PRIVATE FUNCTION ainq811_detail_show()
+   #add-point:detail_show段define
+   {<point name="detail_show.define" edit="s"/>}
+   #end add-point  
+   #add-point:detail_show段define(客製用)
+   {<point name="detail_show.define_customerization" edit="c"/>}
+   #end add-point  
+   
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+   
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.fetch" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION ainq811_fetch(p_flag)
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define
+   {<point name="fetch.define" edit="s"/>}
+   #end add-point    
+   #add-point:fetch段define(客製用)
+   {<point name="fetch.define_customerization" edit="c"/>}
+   #end add-point    
+   
+   IF g_browser_cnt = 0 THEN
+      RETURN
+   END IF
+ 
+   CALL cl_ap_performance_next_start()
+   CASE p_flag
+      WHEN 'F' 
+         LET g_current_idx = 1
+      WHEN 'L'  
+         LET g_current_idx = g_browser.getLength()              
+      WHEN 'P'
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN 'N'
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN '/'
+         IF (NOT g_no_ask) THEN    
+            CALL cl_set_act_visible("accept,cancel", TRUE)    
+            CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,':' FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl" 
+            END PROMPT
+ 
+            CALL cl_set_act_visible("accept,cancel", FALSE)    
+            IF INT_FLAG THEN
+                LET INT_FLAG = 0
+                EXIT CASE  
+            END IF           
+         END IF
+         
+         IF g_jump > 0 AND g_jump <= g_browser.getLength() THEN
+             LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE  
+   END CASE 
+ 
+   
+   LET g_current_row = g_current_idx
+   LET g_detail_cnt = g_header_cnt                  
+   
+   #單身總筆數顯示
+   IF g_detail_cnt > 0 THEN
+      #若單身有資料時, idx至少為1
+      IF g_detail_idx <= 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx  
+   ELSE
+      LET g_detail_idx = 0
+      DISPLAY '' TO FORMONLY.idx    
+   END IF
+   
+   #瀏覽頁筆數顯示
+   LET g_pagestart = g_current_idx
+   DISPLAY g_pagestart TO FORMONLY.b_index   #當下筆數
+   DISPLAY g_pagestart TO FORMONLY.h_index   #當下筆數
+   
+   CALL cl_navigator_setting( g_pagestart, g_browser_cnt )
+ 
+   #代表沒有資料
+   IF g_current_idx = 0 OR g_browser.getLength() = 0 THEN
+      RETURN
+   END IF
+   
+   #超出範圍
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   LET g_ineg_m.inegsite = g_browser[g_current_idx].b_inegsite
+   LET g_ineg_m.inegdocno = g_browser[g_current_idx].b_inegdocno
+ 
+   
+   #重讀DB,因TEMP有不被更新特性
+   EXECUTE ainq811_master_referesh USING g_ineg_m.inegsite,g_ineg_m.inegdocno INTO g_ineg_m.inegdocno, 
+       g_ineg_m.ineg002,g_ineg_m.ineg003,g_ineg_m.inegsite,g_ineg_m.ineg002_desc,g_ineg_m.inegsite_desc 
+
+   
+   #遮罩相關處理
+   LET g_ineg_m_mask_o.* =  g_ineg_m.*
+   CALL ainq811_ineg_t_mask()
+   LET g_ineg_m_mask_n.* =  g_ineg_m.*
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL ainq811_set_act_visible()   
+   CALL ainq811_set_act_no_visible()
+   
+   #add-point:fetch段action控制
+   {<point name="fetch.action_control"/>}
+   #end add-point  
+   
+   
+   
+   #add-point:fetch結束前
+   {<point name="fetch.after" />}
+   #end add-point
+   
+   #保存單頭舊值
+   LET g_ineg_m_t.* = g_ineg_m.*
+   LET g_ineg_m_o.* = g_ineg_m.*
+   
+   
+   #重新顯示   
+   CALL ainq811_show()
+ 
+   
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.fill_chk" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 單身填充確認
+PRIVATE FUNCTION ainq811_fill_chk(ps_idx)
+   DEFINE ps_idx        LIKE type_t.chr10
+   #add-point:fill_chk段define
+   {<point name="fill_chk.define" edit="s"/>}
+   #end add-point
+   #add-point:fill_chk段define(客製用)
+   {<point name="fill_chk.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:fill_chk段before_chk
+   {<point name="fill_chk.before_chk"/>}
+   #end add-point
+   
+   #此funtion功能暫時停用(2015/1/12)
+   #無論傳入值為何皆回傳true(代表要填充該單身)
+ 
+   #全部為1=1 or null時回傳true
+   IF (cl_null(g_wc2_table1) OR g_wc2_table1.trim() = '1=1') THEN
+      #add-point:fill_chk段other_chk
+      {<point name="fill_chk.other_chk"/>}
+      #end add-point
+      RETURN TRUE
+   END IF
+   
+   #add-point:fill_chk段after_chk
+   {<point name="fill_chk.after_chk"/>}
+   #end add-point
+   
+   RETURN TRUE
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.global" ver="3" status="" src="s" readonly="">
+    <![CDATA[#應用 t01 樣板自動產生(Version:37)
+{<point name="global.memo" />}
+        
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds 
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_ineg_m        RECORD
+       inegdocno LIKE ineg_t.inegdocno, 
+   ineg002 LIKE ineg_t.ineg002, 
+   ineg002_desc LIKE type_t.chr80, 
+   ineg003 LIKE ineg_t.ineg003, 
+   inegsite LIKE ineg_t.inegsite, 
+   inegsite_desc LIKE type_t.chr80
+       END RECORD
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_ineh_d        RECORD
+       inehseq LIKE ineh_t.inehseq, 
+   sequ LIKE type_t.num10, 
+   shina LIKE type_t.chr500, 
+   shina_desc LIKE type_t.chr500, 
+   ineh009 LIKE ineh_t.ineh009, 
+   ineh010 LIKE ineh_t.ineh010, 
+   amount LIKE type_t.num20_6, 
+   price LIKE type_t.num20_6
+       END RECORD
+ 
+ 
+PRIVATE TYPE type_browser RECORD
+         b_statepic     LIKE type_t.chr50,
+            b_inegsite LIKE ineg_t.inegsite,
+      b_inegdocno LIKE ineg_t.inegdocno
+       END RECORD
+       
+#模組變數(Module Variables)
+DEFINE g_ineg_m          type_g_ineg_m
+DEFINE g_ineg_m_t        type_g_ineg_m
+DEFINE g_ineg_m_o        type_g_ineg_m
+DEFINE g_ineg_m_mask_o   type_g_ineg_m #轉換遮罩前資料
+DEFINE g_ineg_m_mask_n   type_g_ineg_m #轉換遮罩後資料
+ 
+   DEFINE g_inegdocno_t LIKE ineg_t.inegdocno
+DEFINE g_inegsite_t LIKE ineg_t.inegsite
+ 
+ 
+DEFINE g_ineh_d          DYNAMIC ARRAY OF type_g_ineh_d
+DEFINE g_ineh_d_t        type_g_ineh_d
+DEFINE g_ineh_d_o        type_g_ineh_d
+DEFINE g_ineh_d_mask_o   DYNAMIC ARRAY OF type_g_ineh_d #轉換遮罩前資料
+DEFINE g_ineh_d_mask_n   DYNAMIC ARRAY OF type_g_ineh_d #轉換遮罩後資料
+ 
+ 
+DEFINE g_browser         DYNAMIC ARRAY OF type_browser
+DEFINE g_browser_f       DYNAMIC ARRAY OF type_browser
+ 
+ 
+DEFINE g_wc                  STRING
+DEFINE g_wc_t                STRING
+DEFINE g_wc2                 STRING                          #單身CONSTRUCT結果
+DEFINE g_wc2_table1          STRING
+ 
+ 
+DEFINE g_wc2_extend          STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+ 
+DEFINE g_sql                 STRING
+DEFINE g_forupd_sql          STRING
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_current_idx         LIKE type_t.num10     
+DEFINE g_jump                LIKE type_t.num10        
+DEFINE g_no_ask              LIKE type_t.num5        
+DEFINE g_rec_b               LIKE type_t.num10           
+DEFINE l_ac                  LIKE type_t.num10    
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog
+    
+DEFINE g_pagestart           LIKE type_t.num10           
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_state               STRING       
+DEFINE g_header_cnt          LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10              #單身總筆數
+DEFINE g_detail_idx          LIKE type_t.num10              #單身目前所在筆數
+DEFINE g_detail_idx2         LIKE type_t.num10              #單身2目前所在筆數
+DEFINE g_browser_cnt         LIKE type_t.num10              #Browser總筆數
+DEFINE g_browser_idx         LIKE type_t.num10              #Browser目前所在筆數
+DEFINE g_temp_idx            LIKE type_t.num10              #Browser目前所在筆數(暫存用)
+DEFINE g_order               STRING                        #查詢排序欄位
+                                                        
+DEFINE g_current_row         LIKE type_t.num10              #Browser所在筆數
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_current_page        LIKE type_t.num10              #目前所在頁數
+DEFINE g_insert              LIKE type_t.chr5              #是否導到其他page
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys               DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak           DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_bfill               LIKE type_t.chr5              #是否刷新單身
+DEFINE g_error_show          LIKE type_t.num5              #是否顯示筆數提示訊息
+DEFINE g_master_insert       BOOLEAN                       #確認單頭資料是否寫入
+ 
+DEFINE g_wc_frozen           STRING                        #凍結欄位使用
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_aw                  STRING                        #確定當下點擊的單身
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+DEFINE g_log1                STRING                        #log用
+DEFINE g_log2                STRING                        #log用
+DEFINE g_loc                 LIKE type_t.chr5              #判斷游標所在位置
+DEFINE g_add_browse          STRING                        #新增填充用WC
+DEFINE g_update              BOOLEAN                       #確定單頭/身是否異動過
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="ainq811.idx_chk" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 顯示正確的單身資料筆數
+PRIVATE FUNCTION ainq811_idx_chk()
+   #add-point:idx_chk段define
+   {<point name="idx_chk.define" edit="s"/>}
+   #end add-point  
+   #add-point:idx_chk段define(客製用)
+   {<point name="idx_chk.define_customerization" edit="c"/>}
+   #end add-point  
+   
+   IF g_current_page = 1 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail1")
+      IF g_detail_idx > g_ineh_d.getLength() THEN
+         LET g_detail_idx = g_ineh_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_ineh_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_ineh_d.getLength() TO FORMONLY.cnt
+   END IF
+   
+ 
+   
+   #add-point:idx_chk段other
+   {<point name="idx_chk.other"/>}
+   #end add-point  
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.init" ver="2" status="" src="s" readonly="">
+    <![CDATA[#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION ainq811_init()
+   #add-point:init段define
+   {<point name="init.define" edit="s"/>}
+   #end add-point    
+   #add-point:init段define(客製用)
+   {<point name="init.define_customerization" edit="c"/>}
+   #end add-point    
+ 
+   LET g_bfill       = "Y"
+   LET g_detail_idx  = 1 #第一層單身指標
+   LET g_detail_idx2 = 1 #第二層單身指標
+   LET g_error_show  = 1
+   LET l_ac = 1 #單身指標
+   
+   
+   LET gwin_curr = ui.Window.getCurrent()  #取得現行畫面
+   LET gfrm_curr = gwin_curr.getForm()     #取出物件化後的畫面物件
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init"/>}
+   #end add-point
+   
+   #初始化搜尋條件
+   CALL ainq811_default_search()
+    
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.input" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 資料輸入
+PRIVATE FUNCTION ainq811_input(p_cmd)
+   DEFINE  p_cmd                 LIKE type_t.chr1
+   DEFINE  l_cmd_t               LIKE type_t.chr1
+   DEFINE  l_cmd                 LIKE type_t.chr1
+   DEFINE  l_n                   LIKE type_t.num10                #檢查重複用  
+   DEFINE  l_cnt                 LIKE type_t.num10                #檢查重複用  
+   DEFINE  l_lock_sw             LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert        LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete        LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count               LIKE type_t.num10
+   DEFINE  l_i                   LIKE type_t.num10
+   DEFINE  l_insert              BOOLEAN
+   DEFINE  ls_return             STRING
+   DEFINE  l_var_keys            DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys          DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields              DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak        DYNAMIC ARRAY OF STRING
+   DEFINE  lb_reproduce          BOOLEAN
+   DEFINE  li_reproduce          LIKE type_t.num10
+   DEFINE  li_reproduce_target   LIKE type_t.num10
+   DEFINE  ls_keys               DYNAMIC ARRAY OF VARCHAR(500)
+   #add-point:input段define
+   {<point name="input.define" edit="s"/>}
+   #end add-point  
+   #add-point:input段define(客製用)
+   {<point name="input.define_customerization" edit="c"/>}
+   #end add-point  
+   
+   #先做狀態判定
+   IF p_cmd = 'r' THEN
+      LET l_cmd_t = 'r'
+      LET p_cmd   = 'a'
+   ELSE
+      LET l_cmd_t = p_cmd
+   END IF   
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_ineg_m.inegdocno,g_ineg_m.ineg002,g_ineg_m.ineg002_desc,g_ineg_m.ineg003,g_ineg_m.inegsite, 
+       g_ineg_m.inegsite_desc
+   
+   #切換畫面
+ 
+   CALL cl_set_head_visible("","YES")  
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   #add-point:input段define_sql
+   {<point name="input.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = "SELECT inehseq,ineh009,ineh010 FROM ineh_t WHERE inehent=? AND inehsite=? AND  
+       inehdocno=? AND inehseq=? FOR UPDATE"
+   #add-point:input段define_sql
+   {<point name="input.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE ainq811_bcl CURSOR FROM g_forupd_sql
+   
+ 
+   
+ 
+ 
+   #add-point:input段define_sql
+   {<point name="input.other_sql"/>}
+   #end add-point 
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   LET g_qryparam.state = 'i'
+   
+   #控制key欄位可否輸入
+   CALL ainq811_set_entry(p_cmd)
+   #add-point:set_entry後
+   {<point name="input.after_set_entry"/>}
+   #end add-point
+   CALL ainq811_set_no_entry(p_cmd)
+ 
+   DISPLAY BY NAME g_ineg_m.inegdocno,g_ineg_m.ineg002,g_ineg_m.ineg003,g_ineg_m.inegsite
+   
+   LET lb_reproduce = FALSE
+   
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+   
+   #add-point:資料輸入前
+   {<point name="input.before_input"/>}
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+]]>
+  </section>
+  <section id="ainq811.input.body" ver="1" status="" src="s" readonly="">
+    <![CDATA[   
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_ineh_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            #add-point:資料輸入前
+            {<point name="input.body.before_input2"/>}
+            #end add-point
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_ineh_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL ainq811_b_fill()
+            #如果一直都在單身1則控制筆數位置
+            IF g_loc = 'm' AND g_rec_b != 0 THEN
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+            END IF
+            LET g_loc = 'm'
+            LET g_rec_b = g_ineh_d.getLength()
+            #add-point:資料輸入前
+            {<point name="input.d.before_input"/>}
+            #end add-point
+         
+         BEFORE ROW
+            #add-point:modify段before row2
+            {<point name="input.body.before_row2"/>}
+            #end add-point  
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET g_current_page = 1
+            
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN ainq811_cl USING g_enterprise,g_ineg_m.inegsite,g_ineg_m.inegdocno
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN ainq811_cl:" 
+               LET g_errparam.code   = STATUS 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CLOSE ainq811_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_ineh_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND g_ineh_d[l_ac].inehseq IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_ineh_d_t.* = g_ineh_d[l_ac].*  #BACKUP
+               LET g_ineh_d_o.* = g_ineh_d[l_ac].*  #BACKUP
+               CALL ainq811_set_entry_b(l_cmd)
+               #add-point:modify段after_set_entry_b
+               {<point name="input.body.after_set_entry_b"/>}
+               #end add-point  
+               CALL ainq811_set_no_entry_b(l_cmd)
+               IF NOT ainq811_lock_b("ineh_t","'1'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH ainq811_bcl INTO g_ineh_d[l_ac].inehseq,g_ineh_d[l_ac].ineh009,g_ineh_d[l_ac].ineh010 
+
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = g_ineh_d_t.inehseq 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_ineh_d_mask_o[l_ac].* =  g_ineh_d[l_ac].*
+                  CALL ainq811_ineh_t_mask()
+                  LET g_ineh_d_mask_n[l_ac].* =  g_ineh_d[l_ac].*
+                  
+                  LET g_bfill = "N"
+                  CALL ainq811_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row
+            {<point name="input.body.before_row"/>}
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+        
+         BEFORE INSERT
+            
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_ineh_d[l_ac].* TO NULL 
+            INITIALIZE g_ineh_d_t.* TO NULL 
+            INITIALIZE g_ineh_d_o.* TO NULL 
+            #公用欄位給值(單身)
+            
+            #自定義預設值
+                  LET g_ineh_d[l_ac].ineh009 = "0"
+      LET g_ineh_d[l_ac].ineh010 = "0"
+ 
+            #add-point:modify段before備份
+            {<point name="input.body.insert.before_bak"/>}
+            #end add-point
+            LET g_ineh_d_t.* = g_ineh_d[l_ac].*     #新輸入資料
+            LET g_ineh_d_o.* = g_ineh_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL ainq811_set_entry_b(l_cmd)
+            #add-point:modify段after_set_entry_b
+            {<point name="input.body.insert.after_set_entry_b"/>}
+            #end add-point
+            CALL ainq811_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_ineh_d[li_reproduce_target].* = g_ineh_d[li_reproduce].*
+ 
+               LET g_ineh_d[li_reproduce_target].inehseq = NULL
+ 
+            END IF
+            
+            #add-point:modify段before insert
+            {<point name="input.body.before_insert"/>}
+            #end add-point  
+  
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            #add-point:單身新增
+            {<point name="input.body.b_a_insert"/>}
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM ineh_t 
+             WHERE inehent = g_enterprise AND inehsite = g_ineg_m.inegsite
+               AND inehdocno = g_ineg_m.inegdocno
+ 
+               AND inehseq = g_ineh_d[l_ac].inehseq
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前
+               {<point name="input.body.b_insert"/>}
+               #end add-point
+            
+               #同步新增到同層的table
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_ineg_m.inegsite
+               LET gs_keys[2] = g_ineg_m.inegdocno
+               LET gs_keys[3] = g_ineh_d[g_detail_idx].inehseq
+               CALL ainq811_insert_b('ineh_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後
+               {<point name="input.body.a_insert"/>}
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code   = "std-00006" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               INITIALIZE g_ineh_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "ineh_t" 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL ainq811_b_fill()
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert
+               {<point name="input.body.a_insert2"/>}
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               #ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+               #add-point:單身刪除後(=d)
+               {<point name="input.body.after_delete_d"/>}
+               #end add-point
+            ELSE
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   = -263 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前
+               {<point name="input.body.b_delete" mark="Y"/>}
+               #end add-point 
+               
+               #取得該筆資料key值
+               INITIALIZE gs_keys TO NULL
+               LET gs_keys[01] = g_ineg_m.inegsite
+               LET gs_keys[gs_keys.getLength()+1] = g_ineg_m.inegdocno
+ 
+               LET gs_keys[gs_keys.getLength()+1] = g_ineh_d_t.inehseq
+ 
+            
+               #刪除同層單身
+               IF NOT ainq811_delete_b('ineh_t',gs_keys,"'1'") THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE ainq811_bcl
+                  CANCEL DELETE
+               END IF
+    
+               #刪除下層單身
+               IF NOT ainq811_key_delete_b(gs_keys,'ineh_t') THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE ainq811_bcl
+                  CANCEL DELETE
+               END IF
+               
+               #刪除多語言
+               
+               
+               #add-point:單身刪除中
+               {<point name="input.body.m_delete"/>}
+               #end add-point 
+               
+               CALL s_transaction_end('Y','0')
+               CLOSE ainq811_bcl
+            
+               LET g_rec_b = g_rec_b-1
+               #add-point:單身刪除後
+               {<point name="input.body.a_delete"/>}
+               #end add-point
+               LET l_count = g_ineh_d.getLength()
+               
+               #add-point:單身刪除後(<>d)
+               {<point name="input.body.after_delete"/>}
+               #end add-point
+            END IF
+ 
+         AFTER DELETE
+            #如果是最後一筆
+            IF l_ac = (g_ineh_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD inehseq
+            #add-point:BEFORE FIELD inehseq
+            {<point name="input.b.page1.inehseq" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD inehseq
+            
+            #add-point:AFTER FIELD inehseq
+            {<point name="input.a.page1.inehseq" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE inehseq
+            #add-point:ON CHANGE inehseq
+            {<point name="input.g.page1.inehseq" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD shina
+            
+            #add-point:AFTER FIELD shina
+            {<point name="input.a.page1.shina" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD shina
+            #add-point:BEFORE FIELD shina
+            {<point name="input.b.page1.shina" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE shina
+            #add-point:ON CHANGE shina
+            {<point name="input.g.page1.shina" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD ineh009
+            #應用 a15 樣板自動產生(Version:2)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_ineh_d[l_ac].ineh009,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD ineh009
+            END IF 
+ 
+ 
+            #add-point:AFTER FIELD ineh009
+            {<point name="input.a.page1.ineh009" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD ineh009
+            #add-point:BEFORE FIELD ineh009
+            {<point name="input.b.page1.ineh009" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE ineh009
+            #add-point:ON CHANGE ineh009
+            {<point name="input.g.page1.ineh009" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD ineh010
+            #add-point:BEFORE FIELD ineh010
+            {<point name="input.b.page1.ineh010" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD ineh010
+            
+            #add-point:AFTER FIELD ineh010
+            {<point name="input.a.page1.ineh010" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE ineh010
+            #add-point:ON CHANGE ineh010
+            {<point name="input.g.page1.ineh010" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD amount
+            #add-point:BEFORE FIELD amount
+            {<point name="input.b.page1.amount" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD amount
+            
+            #add-point:AFTER FIELD amount
+            {<point name="input.a.page1.amount" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE amount
+            #add-point:ON CHANGE amount
+            {<point name="input.g.page1.amount" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD price
+            #add-point:BEFORE FIELD price
+            {<point name="input.b.page1.price" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD price
+            
+            #add-point:AFTER FIELD price
+            {<point name="input.a.page1.price" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE price
+            #add-point:ON CHANGE price
+            {<point name="input.g.page1.price" />}
+            #END add-point 
+ 
+ 
+                  #Ctrlp:input.c.page1.inehseq
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD inehseq
+            #add-point:ON ACTION controlp INFIELD inehseq
+            {<point name="input.c.page1.inehseq" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.shina
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD shina
+            #add-point:ON ACTION controlp INFIELD shina
+            {<point name="input.c.page1.shina" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.ineh009
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD ineh009
+            #add-point:ON ACTION controlp INFIELD ineh009
+            {<point name="input.c.page1.ineh009" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.ineh010
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD ineh010
+            #add-point:ON ACTION controlp INFIELD ineh010
+            {<point name="input.c.page1.ineh010" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.amount
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD amount
+            #add-point:ON ACTION controlp INFIELD amount
+            {<point name="input.c.page1.amount" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.price
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD price
+            #add-point:ON ACTION controlp INFIELD price
+            {<point name="input.c.page1.price" />}
+            #END add-point
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               LET g_ineh_d[l_ac].* = g_ineh_d_t.*
+               CLOSE ainq811_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = g_ineh_d[l_ac].inehseq 
+               LET g_errparam.code   = -263 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET g_ineh_d[l_ac].* = g_ineh_d_t.*
+            ELSE
+            
+               #add-point:單身修改前
+               {<point name="input.body.b_update" mark="Y"/>}
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身)
+               
+      
+               #將遮罩欄位還原
+               CALL ainq811_ineh_t_mask_restore('restore_mask_o')
+      
+               UPDATE ineh_t SET (inehsite,inehdocno,inehseq,ineh009,ineh010) = (g_ineg_m.inegsite,g_ineg_m.inegdocno, 
+                   g_ineh_d[l_ac].inehseq,g_ineh_d[l_ac].ineh009,g_ineh_d[l_ac].ineh010)
+                WHERE inehent = g_enterprise AND inehsite = g_ineg_m.inegsite 
+                  AND inehdocno = g_ineg_m.inegdocno 
+ 
+                  AND inehseq = g_ineh_d_t.inehseq #項次   
+ 
+                  
+               #add-point:單身修改中
+               {<point name="input.body.m_update"/>}
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "ineh_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                     LET g_ineh_d[l_ac].* = g_ineh_d_t.*
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "ineh_t" 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()                   
+                     CALL s_transaction_end('N','0')
+                     LET g_ineh_d[l_ac].* = g_ineh_d_t.*  
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_ineg_m.inegsite
+               LET gs_keys_bak[1] = g_inegsite_t
+               LET gs_keys[2] = g_ineg_m.inegdocno
+               LET gs_keys_bak[2] = g_inegdocno_t
+               LET gs_keys[3] = g_ineh_d[g_detail_idx].inehseq
+               LET gs_keys_bak[3] = g_ineh_d_t.inehseq
+               CALL ainq811_update_b('ineh_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                     
+               END CASE
+ 
+               #將遮罩欄位進行遮蔽
+               CALL ainq811_ineh_t_mask_restore('restore_mask_n')
+               
+               #判斷key是否有改變
+               INITIALIZE gs_keys TO NULL
+               IF NOT(g_ineh_d[g_detail_idx].inehseq = g_ineh_d_t.inehseq 
+ 
+                  ) THEN
+                  LET gs_keys[01] = g_ineg_m.inegsite
+                  LET gs_keys[gs_keys.getLength()+1] = g_ineg_m.inegdocno
+ 
+                  LET gs_keys[gs_keys.getLength()+1] = g_ineh_d_t.inehseq
+ 
+                  CALL ainq811_key_update_b(gs_keys,'ineh_t')
+               END IF
+               
+               #修改歷程記錄(單身修改)
+               LET g_log1 = util.JSON.stringify(g_ineg_m),util.JSON.stringify(g_ineh_d_t)
+               LET g_log2 = util.JSON.stringify(g_ineg_m),util.JSON.stringify(g_ineh_d[l_ac])
+               IF NOT cl_log_modified_record_d(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               END IF
+               
+               #add-point:單身修改後
+               {<point name="input.body.a_update"/>}
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            #add-point:單身after_row
+            {<point name="input.body.after_row"/>}
+            #end add-point
+            CALL ainq811_unlock_b("ineh_t","'1'")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            #add-point:單身after_row2
+            {<point name="input.body.after_row2"/>}
+            #end add-point
+              
+         AFTER INPUT
+            #add-point:input段after input 
+            {<point name="input.body.after_input"/>}
+            #end add-point 
+ 
+         ON ACTION controlo    
+            CALL FGL_SET_ARR_CURR(g_ineh_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_ineh_d.getLength()+1
+            
+         #ON ACTION cancel
+         #   LET INT_FLAG = 1
+         #   LET g_detail_idx = 1
+         #   EXIT DIALOG 
+ 
+      END INPUT
+      
+ 
+      
+ 
+ 
+ 
+]]>
+  </section>
+  <section id="ainq811.input.head" ver="1" status="" src="s" readonly="">
+    <![CDATA[      #單頭段
+      INPUT BY NAME g_ineg_m.inegdocno,g_ineg_m.ineg002,g_ineg_m.ineg003,g_ineg_m.inegsite 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+     
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            OPEN ainq811_cl USING g_enterprise,g_ineg_m.inegsite,g_ineg_m.inegdocno
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN ainq811_cl:" 
+               LET g_errparam.code   = STATUS 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CLOSE ainq811_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            
+            IF l_cmd_t = 'r' THEN
+               
+            END IF
+            #因應離開單頭後已寫入資料庫, 若重新回到單頭則視為修改
+            #因此需於此處開啟/關閉欄位
+            CALL ainq811_set_entry(p_cmd)
+            #add-point:資料輸入前
+            {<point name="input.m.before_input"/>}
+            #end add-point
+            CALL ainq811_set_no_entry(p_cmd)
+    
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD inegdocno
+            #add-point:BEFORE FIELD inegdocno
+            {<point name="input.b.inegdocno" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD inegdocno
+            
+            #add-point:AFTER FIELD inegdocno
+            {<point name="input.a.inegdocno" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE inegdocno
+            #add-point:ON CHANGE inegdocno
+            {<point name="input.g.inegdocno" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD ineg002
+            
+            #add-point:AFTER FIELD ineg002
+            {<point name="input.a.ineg002" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD ineg002
+            #add-point:BEFORE FIELD ineg002
+            {<point name="input.b.ineg002" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE ineg002
+            #add-point:ON CHANGE ineg002
+            {<point name="input.g.ineg002" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD ineg003
+            #add-point:BEFORE FIELD ineg003
+            {<point name="input.b.ineg003" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD ineg003
+            
+            #add-point:AFTER FIELD ineg003
+            {<point name="input.a.ineg003" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE ineg003
+            #add-point:ON CHANGE ineg003
+            {<point name="input.g.ineg003" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD inegsite
+            
+            #add-point:AFTER FIELD inegsite
+            {<point name="input.a.inegsite" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD inegsite
+            #add-point:BEFORE FIELD inegsite
+            {<point name="input.b.inegsite" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE inegsite
+            #add-point:ON CHANGE inegsite
+            {<point name="input.g.inegsite" />}
+            #END add-point 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.inegdocno
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD inegdocno
+            #add-point:ON ACTION controlp INFIELD inegdocno
+            {<point name="input.c.inegdocno" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.ineg002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD ineg002
+            #add-point:ON ACTION controlp INFIELD ineg002
+            {<point name="input.c.ineg002" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.ineg003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD ineg003
+            #add-point:ON ACTION controlp INFIELD ineg003
+            {<point name="input.c.ineg003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.inegsite
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD inegsite
+            #add-point:ON ACTION controlp INFIELD inegsite
+            {<point name="input.c.inegsite" />}
+            #END add-point
+ 
+ #欄位開窗
+            
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+ 
+            #CALL cl_err_collect_show()      #錯誤訊息統整顯示
+            #CALL cl_showmsg()
+            DISPLAY BY NAME g_ineg_m.inegsite,g_ineg_m.inegdocno
+                        
+            #add-point:單頭INPUT後
+            {<point name="input.head.after_input"/>}
+            #end add-point
+                        
+            IF p_cmd <> 'u' THEN
+    
+               CALL s_transaction_begin()
+               
+               #add-point:單頭新增前
+               {<point name="input.head.b_insert" mark="Y"/>}
+               #end add-point
+               
+               INSERT INTO ineg_t (inegent,inegdocno,ineg002,ineg003,inegsite)
+               VALUES (g_enterprise,g_ineg_m.inegdocno,g_ineg_m.ineg002,g_ineg_m.ineg003,g_ineg_m.inegsite)  
+
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "g_ineg_m" 
+                  LET g_errparam.code   = SQLCA.sqlcode 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CALL s_transaction_end('N','0')
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #add-point:單頭新增中
+               {<point name="input.head.m_insert"/>}
+               #end add-point
+               
+               
+               
+               
+               #add-point:單頭新增後
+               {<point name="input.head.a_insert"/>}
+               #end add-point
+               CALL s_transaction_end('Y','0') 
+               
+               IF l_cmd_t = 'r' AND p_cmd = 'a' THEN
+                  CALL ainq811_detail_reproduce()
+                  #因應特定程式需求, 重新刷新單身資料
+                  CALL ainq811_b_fill()
+               END IF
+               
+               #add-point:單頭新增後
+               {<point name="input.head.a_insert2"/>}
+               #end add-point
+               
+               LET g_master_insert = TRUE
+               
+               LET p_cmd = 'u'
+            ELSE
+               CALL s_transaction_begin()
+            
+               #add-point:單頭修改前
+               {<point name="input.head.b_update" mark="Y"/>}
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL ainq811_ineg_t_mask_restore('restore_mask_o')
+               
+               UPDATE ineg_t SET (inegdocno,ineg002,ineg003,inegsite) = (g_ineg_m.inegdocno,g_ineg_m.ineg002, 
+                   g_ineg_m.ineg003,g_ineg_m.inegsite)
+                WHERE inegent = g_enterprise AND inegsite = g_inegsite_t
+                  AND inegdocno = g_inegdocno_t
+ 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "ineg_t" 
+                  LET g_errparam.code   = SQLCA.sqlcode 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CALL s_transaction_end('N','0')
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #add-point:單頭修改中
+               {<point name="input.head.m_update"/>}
+               #end add-point
+               
+               
+               
+               
+               #將遮罩欄位進行遮蔽
+               CALL ainq811_ineg_t_mask_restore('restore_mask_n')
+               
+               #修改歷程記錄(單頭修改)
+               LET g_log1 = util.JSON.stringify(g_ineg_m_t)
+               LET g_log2 = util.JSON.stringify(g_ineg_m)
+               IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF
+               
+               #add-point:單頭修改後
+               {<point name="input.head.a_update"/>}
+               #end add-point
+            END IF
+            
+            LET g_inegsite_t = g_ineg_m.inegsite
+            LET g_inegdocno_t = g_ineg_m.inegdocno
+ 
+            
+      END INPUT
+   
+]]>
+  </section>
+  <section id="ainq811.input.other" ver="2" status="" src="s" readonly="">
+    <![CDATA[      
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      BEFORE DIALOG 
+         #CALL cl_err_collect_init()    
+         #add-point:input段before dialog
+         {<point name="input.before_dialog"/>}
+         #end add-point    
+         #重新導回資料到正確位置上
+         CALL DIALOG.setCurrentRow("s_detail1",g_detail_idx)      
+ 
+         #新增時強制從單頭開始填
+         IF p_cmd = 'a' THEN
+            #add-point:input段next_field
+            {<point name="input.next_field"/>}
+            #end add-point  
+            NEXT FIELD inegsite
+         ELSE
+            CASE g_aw
+               WHEN "s_detail1"
+                  NEXT FIELD inehseq
+ 
+               #add-point:input段modify_detail 
+               {<point name="input.modify_detail.other"/>}
+               #end add-point  
+            END CASE
+         END IF
+      
+      AFTER DIALOG
+         #add-point:input段after_dialog
+         {<point name="input.after_dialog"/>}
+         #end add-point    
+         
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         #add-point:input段accept 
+         {<point name="input.accept"/>}
+         #end add-point    
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         #add-point:input段cancel
+         {<point name="input.cancel"/>}
+         #end add-point  
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         #add-point:input段close
+         {<point name="input.close"/>}
+         #end add-point  
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         #add-point:input段exit
+         {<point name="input.exit"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input 
+   {<point name="input.after_input"/>}
+   #end add-point    
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.insert" ver="2" status="" src="s" readonly="">
+    <![CDATA[#+ 資料新增
+PRIVATE FUNCTION ainq811_insert()
+   #add-point:insert段define
+   {<point name="insert.define" edit="s"/>}
+   #end add-point    
+   #add-point:insert段define(客製用)
+   {<point name="insert.define_customerization" edit="c"/>}
+   #end add-point    
+   
+   #清畫面欄位內容
+   CLEAR FORM                    
+   CALL g_ineh_d.clear()   
+ 
+ 
+   INITIALIZE g_ineg_m.* LIKE ineg_t.*             #DEFAULT 設定
+   
+   LET g_inegsite_t = NULL
+   LET g_inegdocno_t = NULL
+ 
+   
+   LET g_master_insert = FALSE
+   
+   #add-point:insert段before
+   {<point name="insert.before"/>}
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   WHILE TRUE
+      #公用欄位給值(單頭)
+      
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+      
+  
+      #add-point:單頭預設值
+      {<point name="insert.default"/>}
+      #end add-point 
+      
+      #保存單頭舊值(用於資料輸入錯誤還原預設值時使用)
+      LET g_ineg_m_t.* = g_ineg_m.*
+      LET g_ineg_m_o.* = g_ineg_m.*
+      
+      #顯示狀態(stus)圖片
+      
+    
+      CALL ainq811_input("a")
+      
+      #add-point:單頭輸入後
+      {<point name="insert.after_insert"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         LET INT_FLAG = 0
+      END IF
+      
+      IF NOT g_master_insert THEN
+         DISPLAY g_detail_cnt  TO FORMONLY.h_count    #總筆數
+         DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+         INITIALIZE g_ineg_m.* TO NULL
+         INITIALIZE g_ineh_d TO NULL
+ 
+         #add-point:取消新增後
+         {<point name="insert.cancel"/>}
+         #end add-point 
+         CALL ainq811_show()
+         RETURN
+      END IF
+      
+      LET INT_FLAG = 0
+      #CALL g_ineh_d.clear()
+ 
+ 
+      LET g_rec_b = 0
+      CALL s_transaction_end('Y','0')
+      EXIT WHILE
+        
+   END WHILE
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL ainq811_set_act_visible()   
+   CALL ainq811_set_act_no_visible()
+   
+   #將新增的資料併入搜尋條件中
+   LET g_inegsite_t = g_ineg_m.inegsite
+   LET g_inegdocno_t = g_ineg_m.inegdocno
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " inegent = '" ||g_enterprise|| "' AND",
+                      " inegsite = '", g_ineg_m.inegsite, "' "
+                      ," AND inegdocno = '", g_ineg_m.inegdocno, "' "
+ 
+                      
+   #add-point:組合新增資料的條件後
+   {<point name="insert.after.add_browse"/>}
+   #end add-point
+      
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL ainq811_browser_fill("")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   CLOSE ainq811_cl
+   
+   CALL ainq811_idx_chk()
+   
+   #撈取異動後的資料(主要是帶出reference)
+   EXECUTE ainq811_master_referesh USING g_ineg_m.inegsite,g_ineg_m.inegdocno INTO g_ineg_m.inegdocno, 
+       g_ineg_m.ineg002,g_ineg_m.ineg003,g_ineg_m.inegsite,g_ineg_m.ineg002_desc,g_ineg_m.inegsite_desc 
+
+   
+   #遮罩相關處理
+   LET g_ineg_m_mask_o.* =  g_ineg_m.*
+   CALL ainq811_ineg_t_mask()
+   LET g_ineg_m_mask_n.* =  g_ineg_m.*
+   
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_ineg_m.inegdocno,g_ineg_m.ineg002,g_ineg_m.ineg002_desc,g_ineg_m.ineg003,g_ineg_m.inegsite, 
+       g_ineg_m.inegsite_desc
+   
+   #add-point:新增結束後
+   {<point name="insert.after"/>}
+   #end add-point 
+   
+   #功能已完成,通報訊息中心
+   CALL ainq811_msgcentre_notify('')
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.insert_b" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 新增單身後其他table連動
+PRIVATE FUNCTION ainq811_insert_b(ps_table,ps_keys,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE ls_page     STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:insert_b段define
+   {<point name="insert_b.define" edit="s"/>}
+   #end add-point     
+   #add-point:insert_b段define(客製用)
+   {<point name="insert_b.define_customerization" edit="c"/>}
+   #end add-point     
+   
+   LET g_update = TRUE  
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前
+      {<point name="insert_b.before_insert" mark="Y"/>}
+      #end add-point 
+      INSERT INTO ineh_t
+                  (inehent,
+                   inehsite,inehdocno,
+                   inehseq
+                   ,ineh009,ineh010) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2],ps_keys[3]
+                   ,g_ineh_d[g_detail_idx].ineh009,g_ineh_d[g_detail_idx].ineh010)
+      #add-point:insert_b段資料新增中
+      {<point name="insert_b.m_insert"/>}
+      #end add-point 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "ineh_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_ineh_d.insertElement(li_idx) 
+      END IF 
+ 
+      #add-point:insert_b段資料新增後
+      {<point name="insert_b.after_insert"/>}
+      #end add-point 
+   END IF
+   
+ 
+   
+ 
+   
+   #add-point:insert_b段other
+   {<point name="insert_b.other"/>}
+   #end add-point     
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.key_delete_b" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 上層單身刪除後, 連帶刪除下層單身key欄位
+PRIVATE FUNCTION ainq811_key_delete_b(ps_keys_bak,ps_table)
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_table    STRING
+   #add-point:delete_b段define
+   {<point name="key_delete_b.define" edit="s"/>}
+   #end add-point
+   #add-point:delete_b段define(客製用)
+   {<point name="key_delete_b.define_customerization" edit="c"/>}
+   #end add-point
+   
+ 
+   
+   RETURN TRUE
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.key_update_b" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 上層單身key欄位變動後, 連帶修正下層單身key欄位
+PRIVATE FUNCTION ainq811_key_update_b(ps_keys_bak,ps_table)
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_table    STRING
+   #add-point:update_b段define
+   {<point name="key_update_b.define" edit="s"/>}
+   #end add-point
+   #add-point:update_b段define(客製用)
+   {<point name="key_update_b.define_customerization" edit="c"/>}
+   #end add-point
+   
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.lock_b" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 連動lock其他單身table資料
+PRIVATE FUNCTION ainq811_lock_b(ps_table,ps_page)
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:lock_b段define
+   {<point name="lock_b.define" edit="s"/>}
+   #end add-point   
+   #add-point:lock_b段define(客製用)
+   {<point name="lock_b.define_customerization" edit="c"/>}
+   #end add-point   
+    
+   #先刷新資料
+   #CALL ainq811_b_fill()
+   
+   #鎖定整組table
+   #LET ls_group = "'1',"
+   #僅鎖定自身table
+   LET ls_group = "ineh_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      OPEN ainq811_bcl USING g_enterprise,
+                                       g_ineg_m.inegsite,g_ineg_m.inegdocno,g_ineh_d[g_detail_idx].inehseq  
+                                               
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "ainq811_bcl" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+                                    
+ 
+   
+ 
+   
+   #add-point:lock_b段other
+   {<point name="lock_b.other"/>}
+   #end add-point  
+   
+   RETURN TRUE
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.main" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a26 樣板自動產生(Version:4)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define
+   {<point name="main.define" edit="s"/>}
+   #end add-point   
+   #add-point:main段define(客製用)
+   {<point name="main.define_customerization" edit="c"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("ain","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = " SELECT inegdocno,ineg002,'',ineg003,inegsite,''", 
+                      " FROM ineg_t",
+                      " WHERE inegent= ? AND inegsite=? AND inegdocno=? FOR UPDATE"
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE ainq811_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT UNIQUE t0.inegdocno,t0.ineg002,t0.ineg003,t0.inegsite,t1.inea001 ,t2.ooefl003", 
+
+               " FROM ineg_t t0",
+                              " LEFT JOIN inea_t t1 ON t1.ineaent='"||g_enterprise||"' AND t1.ineadocno=t0.ineg002  ",
+               " LEFT JOIN ooefl_t t2 ON t2.ooeflent='"||g_enterprise||"' AND t2.ooefl001=t0.inegsite AND t2.ooefl002='"||g_dlang||"' ",
+ 
+               " WHERE t0.inegent = '" ||g_enterprise|| "' AND t0.inegsite = ? AND t0.inegdocno = ?"
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define
+   {<point name="main.after_refresh_sql"/>}
+   #end add-point
+   PREPARE ainq811_master_referesh FROM g_sql
+ 
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_ainq811 WITH FORM cl_ap_formpath("ain",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL ainq811_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL ainq811_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_ainq811
+      
+   END IF 
+   
+   CLOSE ainq811_cl
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+]]>
+  </section>
+  <section id="ainq811.mask_functions" ver="1" status="" src="s" readonly="">
+    <![CDATA[&include "erp/ain/ainq811_mask.4gl"
+]]>
+  </section>
+  <section id="ainq811.modify" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 資料修改
+PRIVATE FUNCTION ainq811_modify()
+   DEFINE l_new_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key  DYNAMIC ARRAY OF STRING
+   DEFINE l_wc2_table1          STRING
+ 
+ 
+   #add-point:modify段define
+   {<point name="modify.define" edit="s"/>}
+   #end add-point    
+   #add-point:modify段define(客製用)
+   {<point name="modify.define_customerization" edit="c"/>}
+   #end add-point    
+   
+   #保存單頭舊值
+   LET g_ineg_m_t.* = g_ineg_m.*
+   LET g_ineg_m_o.* = g_ineg_m.*
+   
+   IF g_ineg_m.inegsite IS NULL
+   OR g_ineg_m.inegdocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   ERROR ""
+  
+   LET g_inegsite_t = g_ineg_m.inegsite
+   LET g_inegdocno_t = g_ineg_m.inegdocno
+ 
+   CALL s_transaction_begin()
+   
+   OPEN ainq811_cl USING g_enterprise,g_ineg_m.inegsite,g_ineg_m.inegdocno
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN ainq811_cl:" 
+      LET g_errparam.code   = STATUS 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      CLOSE ainq811_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE ainq811_master_referesh USING g_ineg_m.inegsite,g_ineg_m.inegdocno INTO g_ineg_m.inegdocno, 
+       g_ineg_m.ineg002,g_ineg_m.ineg003,g_ineg_m.inegsite,g_ineg_m.ineg002_desc,g_ineg_m.inegsite_desc 
+
+   
+   #檢查是否允許此動作
+   IF NOT ainq811_action_chk() THEN
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_ineg_m_mask_o.* =  g_ineg_m.*
+   CALL ainq811_ineg_t_mask()
+   LET g_ineg_m_mask_n.* =  g_ineg_m.*
+   
+   
+   
+   #add-point:modify段show之前
+   {<point name="modify.before_show"/>}
+   #end add-point  
+   
+   #LET l_wc2_table1 = g_wc2_table1
+   #LET g_wc2_table1 = " 1=1"
+ 
+ 
+   
+   CALL ainq811_show()
+   #add-point:modify段show之後
+   {<point name="modify.after_show"/>}
+   #end add-point
+   
+   #LET g_wc2_table1 = l_wc2_table1
+ 
+ 
+    
+   WHILE TRUE
+      LET g_inegsite_t = g_ineg_m.inegsite
+      LET g_inegdocno_t = g_ineg_m.inegdocno
+ 
+      
+      #寫入修改者/修改日期資訊(單頭)
+      
+      
+      #add-point:modify段修改前
+      {<point name="modify.before_input"/>}
+      #end add-point
+      
+      #欄位更改
+      LET g_loc = 'n'
+      LET g_update = FALSE
+      CALL ainq811_input("u")
+      LET g_loc = 'n'
+ 
+      #add-point:modify段修改後
+      {<point name="modify.after_input"/>}
+      #end add-point
+      
+ 
+    
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_ineg_m.* = g_ineg_m_t.*
+         CALL ainq811_show()
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF 
+                  
+      #若單頭key欄位有變更
+      IF g_ineg_m.inegsite != g_inegsite_t 
+      OR g_ineg_m.inegdocno != g_inegdocno_t 
+ 
+      THEN
+         CALL s_transaction_begin()
+         
+         #add-point:單身fk修改前
+         {<point name="modify.body.b_fk_update" mark="Y"/>}
+         #end add-point
+         
+         #更新單身key值
+         UPDATE ineh_t SET inehsite = g_ineg_m.inegsite
+                                       ,inehdocno = g_ineg_m.inegdocno
+ 
+          WHERE inehent = g_enterprise AND inehsite = g_inegsite_t
+            AND inehdocno = g_inegdocno_t
+ 
+            
+         #add-point:單身fk修改中
+         {<point name="modify.body.m_fk_update"/>}
+         #end add-point
+ 
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "ineh_t" 
+               LET g_errparam.code   = "std-00009" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+            WHEN SQLCA.sqlcode #其他錯誤
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "ineh_t" 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+         END CASE
+         
+         #add-point:單身fk修改後
+         {<point name="modify.body.a_fk_update"/>}
+         #end add-point
+         
+ 
+         
+ 
+         
+         #UPDATE 多語言table key值
+         
+ 
+         CALL s_transaction_end('Y','0')
+      END IF
+    
+      EXIT WHILE
+   END WHILE
+ 
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL ainq811_set_act_visible()   
+   CALL ainq811_set_act_no_visible()
+ 
+   #組合新增資料的條件
+   LET g_add_browse = " inegent = '" ||g_enterprise|| "' AND",
+                      " inegsite = '", g_ineg_m.inegsite, "' "
+                      ," AND inegdocno = '", g_ineg_m.inegdocno, "' "
+ 
+   #填到對應位置
+   CALL ainq811_browser_fill("")
+ 
+   CLOSE ainq811_cl
+   
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL ainq811_msgcentre_notify('')
+ 
+END FUNCTION   
+]]>
+  </section>
+  <section id="ainq811.msgcentre_notify" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a66 樣板自動產生(Version:2)
+PRIVATE FUNCTION ainq811_msgcentre_notify(lc_state)
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:msgcentre_notify段define
+   {<point name="msgcentre_notify.define" edit="s"/>}
+   #end add-point
+   #add-point:msgcentre_notify段define
+   {<point name="msgcentre_notify.define_customerization" edit="c"/>}
+   #end add-point   
+   
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   IF g_action_choice = "statechange" THEN
+      LET g_msgparam.state = g_action_choice,":",lc_state
+   ELSE
+      LET g_msgparam.state = g_action_choice
+   END IF
+ 
+   #PK資料填寫
+   CALL ainq811_set_pk_array()
+   #單頭資料填寫
+   LET g_msgparam.data[1] = util.JSON.stringify(g_ineg_m)
+ 
+   #add-point:msgcentre其他通知
+   {<point name="msgcentre_notify.process"/>}
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+ 
+]]>
+  </section>
+  <section id="ainq811.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[   
+]]>
+  </section>
+  <section id="ainq811.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="ainq811.query" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION ainq811_query()
+   DEFINE ls_wc STRING
+   #add-point:query段define
+   {<point name="query.define" edit="s"/>}
+   #end add-point   
+   #add-point:query段define(客製用)
+   {<point name="query.define_customerization" edit="c"/>}
+   #end add-point   
+   
+   #切換畫面
+   
+   LET ls_wc = g_wc
+   
+   LET INT_FLAG = 0
+   CALL cl_navigator_setting( g_current_idx, g_detail_cnt )
+   ERROR ""
+   
+   #清除畫面及相關資料
+   CLEAR FORM
+   CALL g_browser.clear()       
+   CALL g_ineh_d.clear()
+ 
+   
+   #add-point:query段other
+   {<point name="query.other"/>}
+   #end add-point   
+   
+   DISPLAY '' TO FORMONLY.idx
+   DISPLAY '' TO FORMONLY.cnt
+   DISPLAY '' TO FORMONLY.b_index
+   DISPLAY '' TO FORMONLY.b_count
+   DISPLAY '' TO FORMONLY.h_index
+   DISPLAY '' TO FORMONLY.h_count
+   
+   CALL ainq811_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      LET g_wc = ls_wc
+      CALL ainq811_browser_fill("")
+      CALL ainq811_fetch("")
+      RETURN
+   END IF
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||") AND ("||g_wc2||")")
+   
+   #搜尋後資料初始化 
+   LET g_detail_cnt  = 0
+   LET g_current_idx = 1
+   LET g_current_row = 0
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_error_show  = 1
+   LET g_wc_filter   = ""
+   LET l_ac = 1
+   CALL FGL_SET_ARR_CURR(1)
+   CALL ainq811_browser_fill("F")
+         
+   IF g_browser_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "-100" 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   ELSE
+      CALL ainq811_fetch("F") 
+      #顯示單身筆數
+      CALL ainq811_idx_chk()
+   END IF
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.reproduce" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 資料複製
+PRIVATE FUNCTION ainq811_reproduce()
+   DEFINE l_newno     LIKE ineg_t.inegsite 
+   DEFINE l_oldno     LIKE ineg_t.inegsite 
+   DEFINE l_newno02     LIKE ineg_t.inegdocno 
+   DEFINE l_oldno02     LIKE ineg_t.inegdocno 
+ 
+   DEFINE l_master    RECORD LIKE ineg_t.*
+   DEFINE l_detail    RECORD LIKE ineh_t.*
+ 
+ 
+   DEFINE l_cnt       LIKE type_t.num10
+   #add-point:reproduce段define
+   {<point name="reproduce.define" edit="s"/>}
+   #end add-point   
+   #add-point:reproduce段define(客製用)
+   {<point name="reproduce.define_customerization" edit="c"/>}
+   #end add-point   
+   
+   #切換畫面
+   
+   LET g_master_insert = FALSE
+   
+   IF g_ineg_m.inegsite IS NULL
+   OR g_ineg_m.inegdocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+    
+   LET g_inegsite_t = g_ineg_m.inegsite
+   LET g_inegdocno_t = g_ineg_m.inegdocno
+ 
+    
+   LET g_ineg_m.inegsite = ""
+   LET g_ineg_m.inegdocno = ""
+ 
+ 
+   CALL cl_set_head_visible("","YES")
+ 
+   #公用欄位給予預設值
+   
+   
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前
+   {<point name="reproduce.head.b_input"/>}
+   #end add-point
+   
+   #顯示狀態(stus)圖片
+   
+   
+   #清空key欄位的desc
+      LET g_ineg_m.inegsite_desc = ''
+   DISPLAY BY NAME g_ineg_m.inegsite_desc
+ 
+   
+   CALL ainq811_input("r")
+   
+   IF INT_FLAG AND NOT g_master_insert THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = '' 
+      LET g_errparam.code   = 9001 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      CALL s_transaction_end('N','0')
+      LET INT_FLAG = 0
+      DISPLAY g_detail_cnt  TO FORMONLY.h_count    #總筆數
+      DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+      LET INT_FLAG = 0
+      INITIALIZE g_ineg_m.* TO NULL
+      INITIALIZE g_ineh_d TO NULL
+ 
+      #add-point:複製取消後
+      {<point name="reproduce.cancel" />}
+      #end add-point
+      CALL ainq811_show()
+      RETURN
+   END IF
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL ainq811_set_act_visible()   
+   CALL ainq811_set_act_no_visible()
+   
+   #將新增的資料併入搜尋條件中
+   LET g_inegsite_t = g_ineg_m.inegsite
+   LET g_inegdocno_t = g_ineg_m.inegdocno
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " inegent = '" ||g_enterprise|| "' AND",
+                      " inegsite = '", g_ineg_m.inegsite, "' "
+                      ," AND inegdocno = '", g_ineg_m.inegdocno, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL ainq811_browser_fill("")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   #add-point:完成複製段落後
+   {<point name="reproduce.after_reproduce" />}
+   #end add-point
+   
+   CALL ainq811_idx_chk()
+   
+   #功能已完成,通報訊息中心
+   CALL ainq811_msgcentre_notify('')
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.set_act_no_visible" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 單頭權限關閉
+PRIVATE FUNCTION ainq811_set_act_no_visible()
+   #add-point:set_act_no_visible段define
+   {<point name="set_act_no_visible.define" edit="s"/>}
+   #end add-point   
+   #add-point:set_act_no_visible段define(客製用)
+   {<point name="set_act_no_visible.define_customerization" edit="c"/>}
+   #end add-point   
+   #add-point:set_act_no_visible段
+   {<point name="set_act_no_visible.set_act_no_visible"/>}
+   #end add-point   
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.set_act_no_visible_b" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 單身權限關閉
+PRIVATE FUNCTION ainq811_set_act_no_visible_b()
+   #add-point:set_act_no_visible_b段define
+   {<point name="set_act_no_visible_b.define" edit="s"/>}
+   #end add-point   
+   #add-point:set_act_no_visible_b段define(客製用)
+   {<point name="set_act_no_visible_b.define_customerization" edit="c"/>}
+   #end add-point   
+   #add-point:set_act_no_visible_b段
+   {<point name="set_act_no_visible_b.set_act_no_visible_b"/>}
+   #end add-point   
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.set_act_visible" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 單頭權限開啟
+PRIVATE FUNCTION ainq811_set_act_visible()
+   #add-point:set_act_visible段define
+   {<point name="set_act_visible.define" edit="s"/>}
+   #end add-point   
+   #add-point:set_act_visible段define(客製用)
+   {<point name="set_act_visible.define_customerization" edit="c"/>}
+   #end add-point   
+   #add-point:set_act_visible段
+   {<point name="set_act_visible.set_act_visible"/>}
+   #end add-point   
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.set_act_visible_b" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 單身權限開啟
+PRIVATE FUNCTION ainq811_set_act_visible_b()
+   #add-point:set_act_visible_b段define
+   {<point name="set_act_visible_b.define" edit="s"/>}
+   #end add-point   
+   #add-point:set_act_visible_b段define(客製用)
+   {<point name="set_act_visible_b.define_customerization" edit="c"/>}
+   #end add-point   
+   #add-point:set_act_visible_b段
+   {<point name="set_act_visible_b.set_act_visible_b"/>}
+   #end add-point   
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.set_entry" ver="2" status="" src="s" readonly="">
+    <![CDATA[#+ 單頭欄位開啟設定
+PRIVATE FUNCTION ainq811_set_entry(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1  
+   #add-point:set_entry段define
+   {<point name="set_entry.define" edit="s"/>}
+   #end add-point       
+   #add-point:set_entry段define(客製用)
+   {<point name="set_entry.define_customerization" edit="c"/>}
+   #end add-point       
+   
+   CALL cl_set_comp_entry("inegdocno",TRUE)
+   
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("inegsite,inegdocno",TRUE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry段欄位控制
+      {<point name="set_entry.field_control"/>}
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry段欄位控制後
+   {<point name="set_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.set_entry_b" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 單身欄位開啟設定
+PRIVATE FUNCTION ainq811_set_entry_b(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_entry_b段define
+   {<point name="set_entry_b.define" edit="s"/>}
+   #end add-point     
+   #add-point:set_entry_b段define(客製用)
+   {<point name="set_entry_b.define_customerization" edit="c"/>}
+   #end add-point     
+    
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("",TRUE)
+      #add-point:set_entry段欄位控制
+      {<point name="set_entry_b.field_control"/>}
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry_b段
+   {<point name="set_entry_b.set_entry_b"/>}
+   #end add-point  
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.set_no_entry" ver="2" status="" src="s" readonly="">
+    <![CDATA[#+ 單頭欄位關閉設定
+PRIVATE FUNCTION ainq811_set_no_entry(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry段define
+   {<point name="set_no_entry.define" edit="s"/>}
+   #end add-point     
+   #add-point:set_no_entry段define(客製用)
+   {<point name="set_no_entry.define_customerization" edit="c"/>}
+   #end add-point     
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("inegsite,inegdocno",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry段欄位控制
+      {<point name="set_no_entry.field_control"/>}
+      #end add-point 
+   END IF 
+   
+   IF p_cmd = 'u' THEN
+      CALL cl_set_comp_entry("inegdocno",FALSE)
+   END IF 
+   
+   #add-point:set_no_entry段欄位控制後
+   {<point name="set_no_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.set_no_entry_b" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 單身欄位關閉設定
+PRIVATE FUNCTION ainq811_set_no_entry_b(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry_b段define
+   {<point name="set_no_entry_b.define" edit="s"/>}
+   #end add-point    
+   #add-point:set_no_entry_b段define(客製用)
+   {<point name="set_no_entry_b.define_customerization" edit="c"/>}
+   #end add-point    
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("",FALSE)
+      #add-point:set_no_entry_b段欄位控制
+      {<point name="set_no_entry_b.field_control"/>}
+      #end add-point 
+   END IF 
+   
+   #add-point:set_no_entry_b段
+   {<point name="set_no_entry_b.set_no_entry_b"/>}
+   #end add-point     
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.set_pk_array" ver="1" status="" src="s" readonly="">
+    <![CDATA[   #應用 a51 樣板自動產生(Version:5)
+#+ 給予pk_array內容
+PRIVATE FUNCTION ainq811_set_pk_array()
+   #add-point:set_pk_array段define
+   {<point name="set_pk_array.define" edit="s"/>}
+   #end add-point
+   #add-point:set_pk_array段define
+   {<point name="set_pk_array.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:set_pk_array段之前
+   {<point name="set_pk_array.before"/>}
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_ineg_m.inegsite
+   LET g_pk_array[1].column = 'inegsite'
+   LET g_pk_array[2].values = g_ineg_m.inegdocno
+   LET g_pk_array[2].column = 'inegdocno'
+   
+   #add-point:set_pk_array段之後
+   {<point name="set_pk_array.after"/>}
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+]]>
+  </section>
+  <section id="ainq811.show" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 單頭資料重新顯示及單身資料重抓
+PRIVATE FUNCTION ainq811_show()
+   DEFINE l_ac_t    LIKE type_t.num10
+   #add-point:show段define
+   {<point name="show.define" edit="s"/>}
+   #end add-point  
+   #add-point:show段define(客製用)
+   {<point name="show.define_customerization" edit="c"/>}
+   #end add-point  
+   
+   #add-point:show段之前
+   {<point name="show.before"/>}
+   #end add-point
+   
+   
+   
+   IF g_bfill = "Y" THEN
+      CALL ainq811_b_fill() #單身填充
+      CALL ainq811_b_fill2('0') #單身填充
+   END IF
+     
+   #帶出公用欄位reference值
+   
+   
+   #顯示followup圖示
+   #應用 a48 樣板自動產生(Version:2)
+   CALL ainq811_set_pk_array()
+   #add-point:ON ACTION agendum
+   {<point name="show.follow_pic"/>}
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+   
+   LET l_ac_t = l_ac
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference
+   {<point name="show.head.reference"/>}
+   #end add-point
+   
+   #遮罩相關處理
+   LET g_ineg_m_mask_o.* =  g_ineg_m.*
+   CALL ainq811_ineg_t_mask()
+   LET g_ineg_m_mask_n.* =  g_ineg_m.*
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_ineg_m.inegdocno,g_ineg_m.ineg002,g_ineg_m.ineg002_desc,g_ineg_m.ineg003,g_ineg_m.inegsite, 
+       g_ineg_m.inegsite_desc
+   
+   #顯示狀態(stus)圖片
+   
+   
+   #讀入ref值(單身)
+   FOR l_ac = 1 TO g_ineh_d.getLength()
+      #add-point:show段單身reference
+      {<point name="show.body.reference"/>}
+      #end add-point
+   END FOR
+   
+ 
+   
+    
+   
+   #add-point:show段other
+   {<point name="show.other"/>}
+   #end add-point  
+   
+   LET l_ac = l_ac_t
+   
+   #移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()     
+ 
+   CALL ainq811_detail_show()
+ 
+   #add-point:show段之後
+   {<point name="show.after"/>}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.signature" ver="1" status="" src="s" readonly="">
+    <![CDATA[   
+]]>
+  </section>
+  <section id="ainq811.state_change" ver="1" status="" src="s" readonly="">
+    <![CDATA[   
+]]>
+  </section>
+  <section id="ainq811.status_show" ver="1" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION ainq811_status_show()
+   #add-point:status_show段define
+   {<point name="status_show.define" edit="s"/>}
+   #end add-point
+   #add-point:status_show段define(客製用)
+   {<point name="status_show.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:status_show段status_show
+   {<point name="status_show.status_show"/>}
+   #end add-point
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.ui_browser_refresh" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION ainq811_ui_browser_refresh()
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define
+   {<point name="ui_browser_refresh.define" edit="s"/>}
+   #end add-point    
+   #add-point:ui_browser_refresh段define(客製用)
+   {<point name="ui_browser_refresh.define_customerization" edit="c"/>}
+   #end add-point    
+   
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_header_cnt  = g_browser.getLength()
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_inegsite = g_ineg_m.inegsite 
+         AND g_browser[l_i].b_inegdocno = g_ineg_m.inegdocno 
+ 
+         THEN
+         CALL g_browser.deleteElement(l_i)
+         EXIT FOR
+      END IF
+   END FOR
+   LET g_browser_cnt = g_browser_cnt - 1
+   LET g_header_cnt = g_header_cnt - 1
+    
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+      CLEAR FORM
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+   
+   #add-point:ui_browser_refresh段after
+   {<point name="ui_browser_refresh.after"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.ui_detailshow" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 單身資料重新顯示
+PRIVATE FUNCTION ainq811_ui_detailshow()
+   #add-point:ui_detailshow段define
+   {<point name="ui_detailshow.define" edit="s"/>}
+   #end add-point    
+   #add-point:ui_detailshow段define(客製用)
+   {<point name="ui_detailshow.define_customerization" edit="c"/>}
+   #end add-point    
+   
+   #add-point:ui_detailshow段before
+   {<point name="ui_detailshow.before"/>}
+   #end add-point    
+   
+   IF g_curr_diag IS NOT NULL THEN
+      CALL g_curr_diag.setCurrentRow("s_detail1",g_detail_idx)      
+ 
+   END IF
+   
+   #add-point:ui_detailshow段after
+   {<point name="ui_detailshow.after"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.ui_dialog" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 功能選單
+PRIVATE FUNCTION ainq811_ui_dialog()
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE ls_wc      STRING
+   DEFINE lb_first   BOOLEAN
+   DEFINE la_wc      DYNAMIC ARRAY OF RECORD
+          tableid    STRING,
+          wc         STRING
+          END RECORD
+   DEFINE la_param   RECORD
+          prog       STRING,
+          actionid   STRING,
+          background LIKE type_t.chr1,
+          param      DYNAMIC ARRAY OF STRING
+          END RECORD
+   DEFINE ls_js      STRING
+   DEFINE la_output  DYNAMIC ARRAY OF STRING   #報表元件鬆耦合使用
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define" edit="s"/>}
+   #end add-point
+   #add-point:ui_dialog段define(客製用)
+   {<point name="ui_dialog.define_customerization" edit="c"/>}
+   #end add-point
+   
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+ 
+   
+   #action default動作
+   
+   
+   LET lb_first = TRUE
+   
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE 
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_browser.clear()       
+         INITIALIZE g_ineg_m.* TO NULL
+         CALL g_ineh_d.clear()
+ 
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL ainq811_init()
+      END IF
+   
+            
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+    
+         DISPLAY ARRAY g_ineh_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+    
+            BEFORE ROW
+               #顯示單身筆數
+               CALL ainq811_idx_chk()
+               #確定當下選擇的筆數
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_detail_idx = l_ac
+               
+               #add-point:page1, before row動作
+               {<point name="ui_dialog.page1.before_row"/>}
+               #end add-point
+               
+            BEFORE DISPLAY
+               #如果一直都在單身1則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_detail_idx)
+               END IF
+               LET g_loc = 'm'
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_current_page = 1
+               #顯示單身筆數
+               CALL ainq811_idx_chk()
+               #add-point:page1自定義行為
+               {<point name="ui_dialog.page1.before_display"/>}
+               #end add-point
+               
+            #自訂ACTION(detail_show,page_1)
+            
+               
+            #add-point:page1自定義行為
+            {<point name="ui_dialog.page1.action"/>}
+            #end add-point
+               
+         END DISPLAY
+        
+ 
+         
+ 
+         
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         
+      
+         BEFORE DIALOG
+            #先填充browser資料
+            CALL ainq811_browser_fill("")
+            CALL cl_notice()
+            CALL cl_navigator_setting(g_current_idx, g_detail_cnt)
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            LET g_current_sw = FALSE
+            #回歸舊筆數位置 (回到當時異動的筆數)
+            
+            #確保g_current_idx位於正常區間內
+            #小於,等於0則指到第1筆
+            IF g_current_idx <= 0 THEN
+               LET g_current_idx = 1
+            END IF
+            #超過最大筆數則指到最後1筆
+            IF g_current_idx > g_browser.getLength() THEN
+               LEt g_current_idx = g_browser.getLength()
+            END IF 
+            
+            LET g_current_sw = TRUE
+            LET g_current_row = g_current_idx #目前指標
+            
+            #有資料才進行fetch
+            IF g_current_idx <> 0 THEN
+               CALL ainq811_fetch('') # reload data
+            END IF
+            #LET g_detail_idx = 1
+            CALL ainq811_ui_detailshow() #Setting the current row 
+            
+            #筆數顯示
+            LET g_current_page = 1
+            CALL ainq811_idx_chk()
+            CALL cl_ap_performance_cal()
+            #add-point:ui_dialog段before_dialog2
+            {<point name="ui_dialog.before_dialog2"/>}
+            #end add-point
+ 
+ 
+ 
+         
+          
+         #查詢方案選擇 
+         ON ACTION queryplansel
+            CALL cl_dlg_qryplan_select() RETURNING ls_wc
+            #不是空條件才寫入g_wc跟重新找資料
+            IF NOT cl_null(ls_wc) THEN
+               CALL util.JSON.parse(ls_wc, la_wc)
+               INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+ 
+               FOR li_idx = 1 TO la_wc.getLength()
+                  CASE
+                     WHEN la_wc[li_idx].tableid = "ineg_t" 
+                        LET g_wc = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "ineh_t" 
+                        LET g_wc2_table1 = la_wc[li_idx].wc
+ 
+                     WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                        LET g_wc2_extend = la_wc[li_idx].wc
+                  END CASE
+               END FOR
+               IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1) 
+ 
+                  OR NOT cl_null(g_wc2_extend)
+                  THEN
+                  #組合g_wc2
+                  IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+                     LET g_wc2 = g_wc2_table1
+                  END IF
+ 
+                  IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+                  END IF
+ 
+                  IF g_wc2.subString(1,5) = " AND " THEN
+                     LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+                  END IF
+               END IF
+               CALL ainq811_browser_fill("F")   #browser_fill()會將notice區塊清空
+            END IF
+         
+         #查詢方案選擇
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               CALL util.JSON.parse(ls_wc, la_wc)
+               INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+ 
+               FOR li_idx = 1 TO la_wc.getLength()
+                  CASE
+                     WHEN la_wc[li_idx].tableid = "ineg_t" 
+                        LET g_wc = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "ineh_t" 
+                        LET g_wc2_table1 = la_wc[li_idx].wc
+ 
+                     WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                        LET g_wc2_extend = la_wc[li_idx].wc
+                  END CASE
+               END FOR
+               IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1)
+ 
+                  OR NOT cl_null(g_wc2_extend)
+                  THEN
+                  IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+                     LET g_wc2 = g_wc2_table1
+                  END IF
+ 
+                  IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+                  END IF
+                  IF g_wc2.subString(1,5) = " AND " THEN
+                     LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+                  END IF
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL ainq811_browser_fill("F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "-100" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL ainq811_fetch("F")
+                  END IF
+               END IF
+            END IF
+            #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+          
+         
+         
+         ON ACTION first
+            LET g_action_choice = "fetch"
+            CALL ainq811_fetch('F')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL ainq811_idx_chk()
+            
+         ON ACTION previous
+            LET g_action_choice = "fetch"
+            CALL ainq811_fetch('P')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL ainq811_idx_chk()
+            
+         ON ACTION jump
+            LET g_action_choice = "fetch"
+            CALL ainq811_fetch('/')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL ainq811_idx_chk()
+            
+         ON ACTION next
+            LET g_action_choice = "fetch"
+            CALL ainq811_fetch('N')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL ainq811_idx_chk()
+            
+         ON ACTION last
+            LET g_action_choice = "fetch"
+            CALL ainq811_fetch('L')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL ainq811_idx_chk()
+          
+         #excel匯出功能          
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               #browser
+               CALL g_export_node.clear()
+               IF g_main_hidden = 1 THEN
+                  LET g_export_node[1] = base.typeInfo.create(g_browser)
+                  LET g_export_id[1]   = "s_browse"
+                  CALL cl_export_to_excel()
+               #非browser
+               ELSE
+                  LET g_export_node[1] = base.typeInfo.create(g_ineh_d)
+                  LET g_export_id[1]   = "s_detail1"
+ 
+                  #add-point:ON ACTION exporttoexcel
+                  {<point name="menu.exporttoexcel" />}
+                  #END add-point
+                  CALL cl_export_to_excel_getpage()
+                  CALL cl_export_to_excel()
+               END IF
+            END IF
+        
+         ON ACTION close
+            LET INT_FLAG = FALSE
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+          
+         ON ACTION exit
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+    
+         #主頁摺疊
+         ON ACTION mainhidden       
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+               CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+               CALL cl_notice()
+            END IF
+            
+       
+         #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+         ON ACTION controls     
+            IF g_header_hidden THEN
+               CALL gfrm_curr.setElementHidden("vb_master",0)
+               CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+               LET g_header_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("vb_master",1)
+               CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+               LET g_header_hidden = 1     #hidden     
+            END IF
+    
+         
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL ainq811_query()
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+               #應用 a59 樣板自動產生(Version:2)  
+               CALL g_curr_diag.setCurrentRow("s_detail1",1)
+ 
+ 
+ 
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo
+               {<point name="menu.datainfo" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         
+         #應用 a46 樣板自動產生(Version:2)
+         #新增相關文件
+         ON ACTION related_document
+            CALL ainq811_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document
+               {<point name="ui_dialog.dialog.related_document"/>}
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL ainq811_set_pk_array()
+            #add-point:ON ACTION agendum
+            {<point name="ui_dialog.dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL ainq811_set_pk_array()
+            #add-point:ON ACTION followup
+            {<point name="ui_dialog.dialog.followup"/>}
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+         
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+    
+         #交談指令共用ACTION
+         &include "common_action.4gl" 
+            CONTINUE DIALOG
+      END DIALOG
+    
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #add-point:ui_dialog段離開dialog前
+         {<point name="ui_dialog.b_exit"/>}
+         #end add-point
+         EXIT WHILE
+      END IF
+    
+   END WHILE    
+      
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+    
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.ui_headershow" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 單頭資料重新顯示
+PRIVATE FUNCTION ainq811_ui_headershow()
+   #add-point:ui_headershow段define
+   {<point name="ui_headershow.define" edit="s"/>}
+   #end add-point    
+   #add-point:ui_headershow段define(客製用)
+   {<point name="ui_headershow.define_customerization" edit="c"/>}
+   #end add-point    
+   
+   LET g_ineg_m.inegsite = g_browser[g_current_idx].b_inegsite   
+   LET g_ineg_m.inegdocno = g_browser[g_current_idx].b_inegdocno   
+ 
+   EXECUTE ainq811_master_referesh USING g_ineg_m.inegsite,g_ineg_m.inegdocno INTO g_ineg_m.inegdocno, 
+       g_ineg_m.ineg002,g_ineg_m.ineg003,g_ineg_m.inegsite,g_ineg_m.ineg002_desc,g_ineg_m.inegsite_desc 
+
+   CALL ainq811_ineg_t_mask()
+   CALL ainq811_show()
+      
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.unlock_b" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION ainq811_unlock_b(ps_table,ps_page)
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:unlock_b段define
+   {<point name="unlock_b.define" edit="s"/>}
+   #end add-point  
+   #add-point:unlock_b段define(客製用)
+   {<point name="unlock_b.define_customerization" edit="c"/>}
+   #end add-point  
+    
+   LET ls_group = "'1',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE ainq811_bcl
+   END IF
+   
+ 
+   
+ 
+ 
+   #add-point:unlock_b段other
+   {<point name="unlock_b.other"/>}
+   #end add-point  
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ainq811.update_b" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 修改單身後其他table連動
+PRIVATE FUNCTION ainq811_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   DEFINE ps_table         STRING
+   DEFINE ps_page          STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num10 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define
+   {<point name="update_b.define" edit="s"/>}
+   #end add-point   
+   #add-point:update_b段define(客製用)
+   {<point name="update_b.define_customerization" edit="c"/>}
+   #end add-point   
+   
+   LET g_update = TRUE   
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "ineh_t" THEN
+      #add-point:update_b段修改前
+      {<point name="update_b.before_update" mark="Y"/>}
+      #end add-point 
+      
+      #將遮罩欄位還原
+      CALL ainq811_ineh_t_mask_restore('restore_mask_o')
+               
+      UPDATE ineh_t 
+         SET (inehsite,inehdocno,
+              inehseq
+              ,ineh009,ineh010) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3]
+              ,g_ineh_d[g_detail_idx].ineh009,g_ineh_d[g_detail_idx].ineh010) 
+         WHERE inehent = g_enterprise AND inehsite = ps_keys_bak[1] AND inehdocno = ps_keys_bak[2] AND inehseq = ps_keys_bak[3]
+      #add-point:update_b段修改中
+      {<point name="update_b.m_update"/>}
+      #end add-point   
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "ineh_t" 
+            LET g_errparam.code   = "std-00009" 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "ineh_t" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      
+      #將遮罩欄位進行遮蔽
+      CALL ainq811_ineh_t_mask_restore('restore_mask_n')
+               
+      #add-point:update_b段修改後
+      {<point name="update_b.after_update"/>}
+      #end add-point  
+   END IF
+   
+ 
+   
+ 
+   
+   #add-point:update_b段other
+   {<point name="update_b.other"/>}
+   #end add-point  
+   
+END FUNCTION
+]]>
+  </section>
+</add_points>

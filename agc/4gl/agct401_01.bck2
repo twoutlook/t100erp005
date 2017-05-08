@@ -1,0 +1,743 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="agct401_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2016-08-26 14:50:27), PR版次:0003(2016-09-05 15:23:45)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000013
+#+ Filename...: agct401_01
+#+ Description: 批量產生不規則券號
+#+ Creator....: 05948(2016-08-04 14:39:49)
+#+ Modifier...: 05948 -SD/PR- 05423
+ 
+{</section>}
+ 
+{<section id="agct401_01.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#Memos
+#160905-00007#3   2016/09/02 By zhujing 调整系统中无ENT的SQL条件增加ent
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+ 
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_gcal_m        RECORD
+       gcalsite LIKE gcal_t.gcalsite, 
+   gcalsite_desc LIKE type_t.chr80, 
+   gcal001 LIKE gcal_t.gcal001, 
+   gcal001_desc LIKE type_t.chr80, 
+   gcal007 LIKE gcal_t.gcal007, 
+   gcal011 LIKE gcal_t.gcal011, 
+   gcal011_desc LIKE type_t.chr80, 
+   gcal012 LIKE gcal_t.gcal012, 
+   gcal012_desc LIKE type_t.chr80
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_docno   LIKE gcak_t.gcakdocno,
+       g_site    LIKE gcak_t.gcaksite
+#end add-point
+ 
+DEFINE g_gcal_m        type_g_gcal_m
+ 
+   
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="agct401_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION agct401_01(--)
+   #add-point:input段變數傳入
+   p_site,p_docno
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE  l_success             LIKE type_t.num5
+   DEFINE  l_errno               LIKE type_t.chr10
+   DEFINE l_gcaksite             LIKE gcak_t.gcaksite
+   DEFINE p_site                 LIKE gcak_t.gcaksite,
+          p_docno                LIKE gcak_t.gcakdocno        
+   DEFINE l_cnt          LIKE type_t.num5
+   DEFINE l_cnt1         LIKE type_t.num5
+   
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_agct401_01 WITH FORM cl_ap_formpath("agc","agct401_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   CALL s_aooi500_create_temp() RETURNING l_success 
+   
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_gcal_m.gcalsite,g_gcal_m.gcal001,g_gcal_m.gcal007,g_gcal_m.gcal011,g_gcal_m.gcal012  
+          ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            CALL s_aooi500_default(g_prog,'gcaksite',l_gcaksite)
+            RETURNING l_insert,l_gcaksite
+            LET g_docno=p_docno
+            LET g_site=p_site
+            LET g_gcal_m.gcalsite=g_site
+            CALL s_artt220_default(g_site,'5')  RETURNING  l_success,g_gcal_m.gcal011
+            CALL s_artt220_default(g_site,'6')  RETURNING  l_success,g_gcal_m.gcal012 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_gcal_m.gcalsite
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_gcal_m.gcalsite_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_gcal_m.gcalsite_desc
+            
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_gcal_m.gcal011
+            CALL ap_ref_array2(g_ref_fields,"SELECT inayl003 FROM inayl_t WHERE inaylent='"||g_enterprise||"' AND inayl001=? AND inayl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_gcal_m.gcal011_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_gcal_m.gcal011_desc
+            
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_gcal_m.gcal012
+            CALL ap_ref_array2(g_ref_fields,"SELECT inayl003 FROM inayl_t WHERE inaylent='"||g_enterprise||"' AND inayl001=? AND inayl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_gcal_m.gcal012_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_gcal_m.gcal012_desc
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcalsite
+            
+            #add-point:AFTER FIELD gcalsite name="input.a.gcalsite"
+            IF NOT cl_null(g_gcal_m.gcalsite) THEN 
+               CALL s_aooi500_chk(g_prog,'gcalsite',g_gcal_m.gcalsite,g_site) RETURNING l_success,l_errno
+               IF NOT l_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = g_gcal_m.gcalsite
+                  LET g_errparam.code   = l_errno
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()              
+                  NEXT FIELD CURRENT
+               END IF
+            END IF                     
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_gcal_m.gcalsite
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_gcal_m.gcalsite_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_gcal_m.gcalsite_desc
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcalsite
+            #add-point:BEFORE FIELD gcalsite name="input.b.gcalsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcalsite
+            #add-point:ON CHANGE gcalsite name="input.g.gcalsite"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcal001
+            
+            #add-point:AFTER FIELD gcal001 name="input.a.gcal001"
+            IF NOT cl_null(g_gcal_m.gcal001) THEN 
+               CALL agct401_01_gcal001_chk()
+               IF NOT cl_null(g_errno) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = g_gcal_m.gcal001
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()              
+                  NEXT FIELD gcal001
+               END IF
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_gcal_m.gcal001
+            CALL ap_ref_array2(g_ref_fields,"SELECT gcafl003 FROM gcafl_t WHERE gcaflent='"||g_enterprise||"' AND gcafl001=? "," and gcafl002='"||g_lang||"'") RETURNING g_rtn_fields
+            LET g_gcal_m.gcal001_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_gcal_m.gcal001_desc
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcal001
+            #add-point:BEFORE FIELD gcal001 name="input.b.gcal001"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcal001
+            #add-point:ON CHANGE gcal001 name="input.g.gcal001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcal007
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_gcal_m.gcal007,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD gcal007
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD gcal007 name="input.a.gcal007"
+            IF NOT cl_null(g_gcal_m.gcal007) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcal007
+            #add-point:BEFORE FIELD gcal007 name="input.b.gcal007"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcal007
+            #add-point:ON CHANGE gcal007 name="input.g.gcal007"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcal011
+            
+            #add-point:AFTER FIELD gcal011 name="input.a.gcal011"
+            LET g_gcal_m.gcal011_desc = null
+            DISPLAY  g_gcal_m.gcal011_desc to gcal011_desc
+            IF NOT cl_null(g_gcal_m.gcal011) THEN 
+               LET l_cnt = 0
+               LET l_cnt1 = 0
+               LET g_errno = NULL
+               SELECT count(*) INTO l_cnt FROM inaa_t WHERE inaa001 = g_gcal_m.gcal011
+                  AND inaaent = g_enterprise AND inaasite = p_site
+               IF l_cnt<=0 THEN
+                  LET g_errno = 'agc-00128'    #160329-00015#1  add by yangxf 20160330
+               ELSE
+                  SELECT count(*) INTO l_cnt1 FROM inaa_t WHERE inaa001 = g_gcal_m.gcal011
+                     AND inaaent = g_enterprise AND inaasite = p_site
+                     AND inaastus = 'Y'
+                  IF l_cnt1<=0 THEN
+                     LET g_errno = 'sub-01302'  #"amm-00018" #160318-00005#12 mod  
+                  END IF   
+               END IF 
+               IF NOT cl_null(g_errno) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = g_gcal_m.gcal011
+                  LET g_errparam.replace[1] ='aini001'
+                  LET g_errparam.replace[2] = cl_get_progname('aini001',g_lang,"2")
+                  LET g_errparam.exeprog    ='aini001'
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  NEXT FIELD gcal011
+               END IF
+            END IF
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_gcal_m.gcal011
+            CALL ap_ref_array2(g_ref_fields,"SELECT inayl003 FROM inayl_t WHERE inaylent='"||g_enterprise||"' AND inayl001=? AND inayl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_gcal_m.gcal011_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_gcal_m.gcal011_desc
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcal011
+            #add-point:BEFORE FIELD gcal011 name="input.b.gcal011"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcal011
+            #add-point:ON CHANGE gcal011 name="input.g.gcal011"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcal012
+            
+            #add-point:AFTER FIELD gcal012 name="input.a.gcal012"
+            LET g_gcal_m.gcal012_desc = null
+            DISPLAY  g_gcal_m.gcal012_desc to gcal012_desc
+            IF NOT cl_null(g_gcal_m.gcal012) THEN 
+               LET l_cnt = 0
+               LET l_cnt1 = 0
+               LET g_errno = NULL
+               SELECT count(*) INTO l_cnt FROM inaa_t WHERE inaa001 = g_gcal_m.gcal012
+                  AND inaaent = g_enterprise AND inaasite = p_site
+               IF l_cnt<=0 THEN
+                  LET g_errno = 'agc-00128'    #160329-00015#1  add by yangxf 20160330
+               ELSE
+                  SELECT count(*) INTO l_cnt1 FROM inaa_t WHERE inaa001 = g_gcal_m.gcal012
+                     AND inaaent = g_enterprise AND inaasite = p_site
+                     AND inaastus = 'Y'
+                  IF l_cnt1<=0 THEN
+                     LET g_errno = 'sub-01302'  #"amm-00018" #160318-00005#12 mod  
+                  END IF   
+               END IF 
+               IF NOT cl_null(g_errno) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = g_gcal_m.gcal012
+                  LET g_errparam.replace[1] ='aini001'
+                  LET g_errparam.replace[2] = cl_get_progname('aini001',g_lang,"2")
+                  LET g_errparam.exeprog    ='aini001'
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()                
+                  NEXT FIELD gcal012
+               END IF
+            END IF
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_gcal_m.gcal012
+            CALL ap_ref_array2(g_ref_fields,"SELECT inayl003 FROM inayl_t WHERE inaylent='"||g_enterprise||"' AND inayl001=? AND inayl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_gcal_m.gcal012_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_gcal_m.gcal012_desc
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcal012
+            #add-point:BEFORE FIELD gcal012 name="input.b.gcal012"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcal012
+            #add-point:ON CHANGE gcal012 name="input.g.gcal012"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.gcalsite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcalsite
+            #add-point:ON ACTION controlp INFIELD gcalsite name="input.c.gcalsite"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_gcal_m.gcalsite             #給予default值
+                            #呼叫開窗
+            LET g_qryparam.where = s_aooi500_q_where(g_prog,'gcalsite',g_site,'i') #150308-00001#2  By sakura add 'i'
+            CALL q_ooef001_24()
+
+            LET g_gcal_m.gcalsite = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_gcal_m.gcalsite TO gcalsite              #顯示到畫面上
+            NEXT FIELD gcalsite                         #返回原欄位
+
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.gcal001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcal001
+            #add-point:ON ACTION controlp INFIELD gcal001 name="input.c.gcal001"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+ 
+            LET g_qryparam.default1 = g_gcal_m.gcal001             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            LET g_qryparam.where = " gcaf043='Y'"
+            CALL q_gcaf001()                                #呼叫開窗
+ 
+            LET g_gcal_m.gcal001 = g_qryparam.return1              
+
+            DISPLAY g_gcal_m.gcal001 TO gcal001              #
+
+            NEXT FIELD gcal001                          #返回原欄位
+
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.gcal007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcal007
+            #add-point:ON ACTION controlp INFIELD gcal007 name="input.c.gcal007"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.gcal011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcal011
+            #add-point:ON ACTION controlp INFIELD gcal011 name="input.c.gcal011"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_gcal_m.gcal011             #給予default值
+
+            #給予arg
+            LET g_qryparam.where = "inaasite='",g_gcal_m.gcalsite,"' "
+            CALL q_inaa001_5()                                #呼叫開窗
+            LET g_qryparam.where = null
+            LET g_gcal_m.gcal011 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_gcal_m.gcal011 TO gcal011              #顯示到畫面上
+            NEXT FIELD gcal011                          #返回原欄位                         #返回原欄位
+
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.gcal012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcal012
+            #add-point:ON ACTION controlp INFIELD gcal012 name="input.c.gcal012"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_gcal_m.gcal012             #給予default值
+
+            #給予arg
+            
+            LET g_qryparam.where = "inaasite='",p_site,"' "
+            CALL q_inaa001_5()                                #呼叫開窗
+            LET g_qryparam.where = null
+            LET g_gcal_m.gcal012 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            DISPLAY g_gcal_m.gcal012 TO gcal012              #顯示到畫面上
+            NEXT FIELD gcal012                          #返回原欄位
+
+
+
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   IF NOT INT_FLAG THEN
+      CALL agct401_01_ins()
+   END IF 
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_agct401_01 
+   
+   #add-point:input段after input 
+   CALL s_aooi500_drop_temp() RETURNING l_success
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="agct401_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="agct401_01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION agct401_01_gcal001_chk()
+DEFINE l_cnt  LIKE type_t.num5
+   DEFINE l_cnt1 LIKE type_t.num5
+   DEFINE l_gcaf015  LIKE gcaf_t.gcaf015
+   
+   LET l_cnt = 0
+   LET l_cnt1 = 0
+   LET g_errno = NULL
+   SELECT count(*) INTO l_cnt FROM gcaf_t WHERE gcaf001 = g_gcal_m.gcal001
+      AND gcafent = g_enterprise AND gcaf043='Y'
+   IF l_cnt<=0 THEN
+      LET g_errno = "agc-00221"
+      RETURN 
+   ELSE
+      SELECT count(*) INTO l_cnt1 FROM gcaf_t WHERE gcaf001 = g_gcal_m.gcal001
+         AND gcafent = g_enterprise AND gcaf043='Y' AND gcafstus = 'Y'
+      IF l_cnt1<=0 THEN
+         LET g_errno = "agc-00042"
+         RETURN
+      END IF      
+   END IF   
+   
+   ##########################150519-00023#1
+   #勾选不产生券明细，不做发行
+   SELECT gcaf015 INTO l_gcaf015 FROM gcaf_t WHERE gcafent = g_enterprise AND gcaf001 = g_gcal_m.gcal001 AND gcaf043='Y'
+   IF l_gcaf015 = 'N' THEN
+      LET g_errno = "agc-00107"
+      RETURN   
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION agct401_01_ins()
+DEFINE l_gcak RECORD LIKE gcak_t.*
+DEFINE l_gcal RECORD LIKE gcal_t.*     
+DEFINE l_cnt,l_n,l_m  LIKE type_t.num5  
+DEFINE l_sql   STRING
+DEFINE l_success LIKE type_t.num5 
+DEFINE l_doctype     LIKE rtai_t.rtai004  
+DEFINE l_insert    LIKE type_t.num5
+DEFINE l_n2       LIKE type_t.num5
+DEFINE l_max      LIKE type_t.chr10
+   
+   CALL s_transaction_begin()
+   LET l_n=0            
+   LET l_cnt = 0
+   LET l_gcal.gcal001=g_gcal_m.gcal001
+   LET l_gcal.gcal007='1'
+   LET l_gcal.gcalent=g_enterprise
+   LET l_gcal.gcaldocno=g_docno
+   LET l_gcal.gcalsite=g_gcal_m.gcalsite
+   LET l_gcal.gcalunit=g_site
+   LET l_gcal.gcal012=g_gcal_m.gcal012
+   LET l_gcal.gcal011=g_gcal_m.gcal011
+   
+   SELECT gcaf006,gcaf007,gcaf008,gcaf009,gcaf015
+     INTO l_gcal.gcal002,l_gcal.gcal003,l_gcal.gcal004,l_gcal.gcal005,l_gcal.gcal006
+     FROM gcaf_t
+    WHERE gcaf001 = l_gcal.gcal001 AND gcafent = g_enterprise
+    
+   SELECT count(*) INTO l_cnt FROM gcar_t WHERE gcar001 = l_gcal.gcal001
+      AND gcarent = g_enterprise
+   IF l_cnt = 1 THEN
+      SELECT gcar002 INTO l_gcal.gcal013 FROM gcar_t
+       WHERE gcarent = g_enterprise AND gcar001 = l_gcal.gcal001
+      SELECT gcar005 INTO l_gcal.gcal014 FROM gcar_t
+       WHERE gcarent = g_enterprise AND gcar001 = l_gcal.gcal001
+         AND gcar002 = l_gcal.gcal013 
+      let l_cnt = 0
+      SELECT count(*) INTO l_cnt FROM gcas_t,gcaf_t 
+       WHERE gcas001=gcaf001 AND gcasent=gcafent AND gcas001 = l_gcal.gcal001
+         and gcas002 = l_gcal.gcal013 
+         AND gcaf003='3'
+         AND gcasent = g_enterprise
+      IF l_cnt = 1 THEN
+         SELECT gcas003 INTO l_gcal.gcal008 FROM gcas_t
+          WHERE gcasent = g_enterprise AND gcas001 = l_gcal.gcal001
+            and gcas002 = l_gcal.gcal013
+      END IF
+   END IF
+   
+   IF NOT cl_null(l_gcal.gcal005) AND l_gcal.gcal005>0 THEN 
+      LET l_n2=0
+      FOR l_n2=1 TO l_gcal.gcal005
+         LET l_max=l_max,'9'
+      END FOR
+      LET l_max=l_max+1
+   END IF 
+   
+   WHILE TRUE
+      LET l_sql=" SELECT substr(cast(dbms_random.value AS varchar2(38)),3,'",l_gcal.gcal005,"') FROM dual "
+      PREPARE gcal009_pre FROM l_sql
+      EXECUTE gcal009_pre INTO l_gcal.gcal009
+      LET l_gcal.gcal009=l_gcal.gcal004,l_gcal.gcal009
+      LET l_m=0
+      SELECT count(*) INTO l_m
+        FROM gcao_t
+       WHERE gcaoent=g_enterprise
+         AND gcao002=l_gcal.gcal001
+      IF l_m=l_max THEN 
+         EXIT WHILE 
+      END IF
+      LET l_m=0
+      SELECT count(*) INTO l_m
+        FROM gcal_t
+       WHERE gcalent=g_enterprise
+         AND gcal001=l_gcal.gcal001
+         AND gcaldocno=g_docno
+      IF l_m>=l_max THEN 
+         EXIT WHILE 
+      END IF
+      LET l_m=0
+      SELECT count(*) INTO l_m
+        FROM gcal_t
+       WHERE gcalent=g_enterprise
+         AND gcal009=l_gcal.gcal009
+         AND gcaldocno=g_docno
+      IF l_m>0 THEN 
+         CONTINUE WHILE 
+      END IF
+      LET l_m=0
+      SELECT count(*) INTO l_m
+        FROM gcao_t
+       WHERE gcaoent=g_enterprise
+         AND gcao001=l_gcal.gcal009
+      IF l_m>0 THEN 
+         CONTINUE WHILE 
+      END IF 
+      SELECT max(gcalseq) INTO l_gcal.gcalseq
+        FROM gcal_t
+       WHERE gcaldocno=g_docno
+         AND gcalent = g_enterprise    #160905-00007#3 add
+      IF cl_null(l_gcal.gcalseq) THEN 
+         LET l_gcal.gcalseq=1
+      ELSE
+         LET l_gcal.gcalseq=l_gcal.gcalseq+1
+      END IF 
+      LET l_n=l_n+1
+      IF l_n>g_gcal_m.gcal007 THEN 
+         EXIT WHILE
+      END IF 
+      LET l_gcal.gcal010=l_gcal.gcal009
+      INSERT INTO gcal_t values(l_gcal.*)
+      IF SQLCA.sqlcode THEN
+         CALL s_transaction_end('N','0')
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "l_gcal:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+   END WHILE
+   CALL s_transaction_end('Y','0')
+END FUNCTION
+
+ 
+{</section>}
+ 

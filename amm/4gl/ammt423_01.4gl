@@ -1,0 +1,628 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="ammt423_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0008(2015-01-23 17:59:19), PR版次:0008(2016-11-11 17:07:49)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000271
+#+ Filename...: ammt423_01
+#+ Description: 會員卡續期批次產生
+#+ Creator....: 02331(2013-09-10 14:16:51)
+#+ Modifier...: 01726 -SD/PR- 02481
+ 
+{</section>}
+ 
+{<section id="ammt423_01.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#160318-00005#25  2016/03/30 by 07675   將重複內容的錯誤訊息置換為公用錯誤訊息
+#160905-00007#6   2016/09/05 By 02599   SQL条件增加ent
+#161111-00028#1   2016/11/11 BY 02481   标准程式定义采用宣告模式,弃用.*写法
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_mmbn_m        RECORD
+       mmbnsite LIKE mmbn_t.mmbnsite, 
+   mmbnsite_desc LIKE type_t.chr80, 
+   mman001 LIKE mman_t.mman001, 
+   mman001_desc LIKE type_t.chr80, 
+   mmbn004 LIKE mmbn_t.mmbn004, 
+   mmbn001 LIKE mmbn_t.mmbn001, 
+   mman005 LIKE type_t.chr80, 
+   mman007 LIKE type_t.chr80, 
+   mman008 LIKE type_t.chr80
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE  g_wc    STRING
+DEFINE  g_errmsg  STRING
+#end add-point
+ 
+DEFINE g_mmbn_m        type_g_mmbn_m
+ 
+   
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="ammt423_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION ammt423_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   p_mmbment,p_mmbmdocno,p_flag
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE p_mmbment       LIKE mmbm_t.mmbment
+   DEFINE p_mmbmdocno     LIKE mmbm_t.mmbmdocno
+   DEFINE p_flag          LIKE type_t.num5  #1.單身編輯狀態，0.瀏覽狀態
+   DEFINE l_sql           STRING
+   DEFINE l_cnt           LIKE type_t.num5
+   DEFINE l_mmbn001       STRING
+#  DEFINE l_mmbm          RECORD LIKE mmbm_t.*  #161111-00028#1--mark
+   #161111-00028#1--add-----begin------------
+   DEFINE l_mmbm RECORD  #會員卡續期異動單頭檔
+       mmbment LIKE mmbm_t.mmbment, #企業編號
+       mmbmsite LIKE mmbm_t.mmbmsite, #營運據點
+       mmbmunit LIKE mmbm_t.mmbmunit, #應用組織
+       mmbmdocno LIKE mmbm_t.mmbmdocno, #單號
+       mmbmdocdt LIKE mmbm_t.mmbmdocdt, #單據日期
+       mmbm001 LIKE mmbm_t.mmbm001, #異動來源
+       mmbm002 LIKE mmbm_t.mmbm002, #理由碼
+       mmbm003 LIKE mmbm_t.mmbm003, #自動續期
+       mmbm004 LIKE mmbm_t.mmbm004, #申請組織
+       mmbmstus LIKE mmbm_t.mmbmstus, #狀態碼
+       mmbmownid LIKE mmbm_t.mmbmownid, #資料所有者
+       mmbmowndp LIKE mmbm_t.mmbmowndp, #資料所屬部門
+       mmbmcrtid LIKE mmbm_t.mmbmcrtid, #資料建立者
+       mmbmcrtdp LIKE mmbm_t.mmbmcrtdp, #資料建立部門
+       mmbmcrtdt LIKE mmbm_t.mmbmcrtdt, #資料創建日
+       mmbmmodid LIKE mmbm_t.mmbmmodid, #資料修改者
+       mmbmmoddt LIKE mmbm_t.mmbmmoddt, #最近修改日
+       mmbmcnfid LIKE mmbm_t.mmbmcnfid, #資料確認者
+       mmbmcnfdt LIKE mmbm_t.mmbmcnfdt   #資料確認日
+      END RECORD
+   #161111-00028#1--add-----end------------
+   DEFINE l_mmaq001       LIKE mmaq_t.mmaq001
+   DEFINE l_mmaq003       LIKE mmaq_t.mmaq003
+   DEFINE l_mmaq005       LIKE mmaq_t.mmaq005
+   DEFINE l_mmbnseq       LIKE mmbn_t.mmbnseq
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_msg           STRING
+   DEFINE l_flag          LIKE type_t.num5
+   DEFINE l_wc            STRING
+   DEFINE l_errno         LIKE type_t.chr10
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_ammt423_01 WITH FORM cl_ap_formpath("amm","ammt423_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+  #SELECT * INTO l_mmbm.* FROM mmbm_t   #161111-00028#1--MARK
+   #161111-00028#1--add--begin-------------
+   SELECT mmbment,mmbmsite,mmbmunit,mmbmdocno,mmbmdocdt,mmbm001,mmbm002,mmbm003,mmbm004,mmbmstus,
+          mmbmownid,mmbmowndp,mmbmcrtid,mmbmcrtdp,mmbmcrtdt,mmbmmodid,mmbmmoddt,mmbmcnfid,mmbmcnfdt 
+     INTO l_mmbm.mmbment,l_mmbm.mmbmsite,l_mmbm.mmbmunit,l_mmbm.mmbmdocno,l_mmbm.mmbmdocdt,l_mmbm.mmbm001,
+          l_mmbm.mmbm002,l_mmbm.mmbm003,l_mmbm.mmbm004,l_mmbm.mmbmstus,l_mmbm.mmbmownid,l_mmbm.mmbmowndp,
+          l_mmbm.mmbmcrtid,l_mmbm.mmbmcrtdp,l_mmbm.mmbmcrtdt,l_mmbm.mmbmmodid,l_mmbm.mmbmmoddt,
+          l_mmbm.mmbmcnfid,l_mmbm.mmbmcnfdt
+     FROM mmbm_t
+   #161111-00028#1--add---end-------------
+    WHERE mmbment = p_mmbment AND mmbmdocno = p_mmbmdocno
+   INITIALIZE g_mmbn_m.* TO NULL
+   LET l_success = TRUE
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_mmbn_m.mmbnsite,g_mmbn_m.mman001,g_mmbn_m.mmbn004 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            IF cl_null(g_mmbn_m.mmbnsite) THEN 
+               LET g_mmbn_m.mmbnsite = l_mmbm.mmbmsite
+            END IF   
+            DISPLAY BY NAME g_mmbn_m.mmbnsite 
+            CALL ammt423_01_mmbnsite_desc(g_mmbn_m.mmbnsite)             
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmbnsite
+            
+            #add-point:AFTER FIELD mmbnsite name="input.a.mmbnsite"
+            #此段落由子樣板a05產生
+            CALL ammt423_01_mmbnsite_desc('')
+            IF NOT cl_null(g_mmbn_m.mmbnsite) THEN
+               CALL s_aooi500_chk(g_prog,'mmbnsite',g_mmbn_m.mmbnsite,l_mmbm.mmbmsite)
+                  RETURNING l_success,l_errno
+               IF NOT l_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = ""
+                  LET g_errparam.code   = l_errno
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()
+                  LET g_mmbn_m.mmbnsite = l_mmbm.mmbmsite
+                  CALL ammt423_01_mmbnsite_desc(g_mmbn_m.mmbnsite) 
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            CALL ammt423_01_mmbnsite_desc(g_mmbn_m.mmbnsite) 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmbnsite
+            #add-point:BEFORE FIELD mmbnsite name="input.b.mmbnsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mmbnsite
+            #add-point:ON CHANGE mmbnsite name="input.g.mmbnsite"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mman001
+            
+            #add-point:AFTER FIELD mman001 name="input.a.mman001"
+            CALL ammt423_01_mman001_desc('')
+            IF NOT cl_null(g_mmbn_m.mman001) THEN
+               CALL ammt423_01_mman001_chk(g_mmbn_m.mman001)
+               IF NOT cl_null(g_errno) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = g_mmbn_m.mman001
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_mmbn_m.mman001 = ''
+                  NEXT FIELD CURRENT                   
+               END IF
+            END IF 
+            CALL ammt423_01_mman001_desc(g_mmbn_m.mman001)
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mman001
+            #add-point:BEFORE FIELD mman001 name="input.b.mman001"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mman001
+            #add-point:ON CHANGE mman001 name="input.g.mman001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mmbn004
+            #add-point:BEFORE FIELD mmbn004 name="input.b.mmbn004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mmbn004
+            
+            #add-point:AFTER FIELD mmbn004 name="input.a.mmbn004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mmbn004
+            #add-point:ON CHANGE mmbn004 name="input.g.mmbn004"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.mmbnsite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmbnsite
+            #add-point:ON ACTION controlp INFIELD mmbnsite name="input.c.mmbnsite"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = "i"
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_mmbn_m.mmbnsite        #給予default值
+            LET g_qryparam.where = s_aooi500_q_where(g_prog,'mmbnsite',l_mmbm.mmbmsite,'i') #150308-00001#3 150309 pomelo add 'i'
+            CALL q_ooef001_24()
+            LET g_mmbn_m.mmbnsite = g_qryparam.return1         #將開窗取得的值回傳到變數
+            DISPLAY g_mmbn_m.mmbnsite TO mmbnsite              #顯示到畫面上
+            CALL ammt423_01_mmbnsite_desc(g_mmbn_m.mmbnsite)
+            NEXT FIELD mmbnsite                                #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mman001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mman001
+            #add-point:ON ACTION controlp INFIELD mman001 name="input.c.mman001"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = "i"
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_mmbn_m.mman001         #給予default值
+            CALL q_mman001_1()                                 #呼叫開窗
+            LET g_mmbn_m.mman001 = g_qryparam.return1          #將開窗取得的值回傳到變數
+            DISPLAY g_mmbn_m.mman001 TO mman001                #顯示到畫面上
+            CALL ammt423_01_mman001_desc(g_mmbn_m.mman001)
+            NEXT FIELD mman001                                 #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mmbn004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mmbn004
+            #add-point:ON ACTION controlp INFIELD mmbn004 name="input.c.mmbn004"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      CONSTRUCT g_wc ON mmaq001 FROM mmbn001
+         BEFORE CONSTRUCT
+            CALL cl_qbe_init()     
+         ON ACTION controlp INFIELD mmbn001
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = "c"
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = g_mmbn_m.mman001
+            CALL q_mmaq001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mmbn001  #顯示到畫面上
+            NEXT FIELD mmbn001                     #返回原欄位            
+      END CONSTRUCT
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_ammt423_01 
+   
+   #add-point:input段after input name="input.post_input"
+   IF INT_FLAG THEN
+      LET INT_FLAG = FALSE
+      RETURN FALSE
+   END IF   
+   LET l_sql = "SELECT mmaq001,mmaq003,mmaq005 FROM mmaq_t,mman_t ",
+               " WHERE mmaqent = mmanent AND mmaq002 = mman001 ",
+               "   AND (mmaq006 = '2' OR mmaq006 = '3') ",
+               "   AND mman001 = '",g_mmbn_m.mman001,"' ",
+               "   AND mman023 = 'Y' AND ",g_wc CLIPPED
+   PREPARE sel_pre FROM l_sql
+   DECLARE sel_cur CURSOR FOR sel_pre 
+
+   LET l_msg = ''
+   LET g_errmsg = ''
+   FOREACH sel_cur INTO l_mmaq001,l_mmaq003,l_mmaq005
+      IF SQLCA.sqlcode THEN
+         #CALL cl_err('foreach:',SQLCA.sqlcode,1)
+         CALL ammt423_01_batch_err(SQLCA.sqlcode,'') RETURNING l_msg            
+         LET g_errmsg = g_errmsg CLIPPED,l_msg
+         LET l_success = FALSE
+         EXIT FOREACH
+      END IF
+      IF l_mmaq005 >= g_mmbn_m.mmbn004 THEN
+         #CALL cl_errmsg('mmbn001','',l_mmaq001,'amm-00055',1)
+         CALL ammt423_01_batch_err('amm-00055',l_mmaq001) RETURNING l_msg            
+         LET g_errmsg = g_errmsg CLIPPED,l_msg
+         LET l_success = FALSE
+         CONTINUE FOREACH
+      END IF
+      SELECT COUNT(*) INTO l_cnt FROM mmbm_t,mmbn_t 
+       WHERE mmbment = mmbnent 
+         AND mmbmdocno = mmbndocno AND mmbmstus = 'N'
+         AND mmbn001 = l_mmaq001
+         AND mmbmdocno <> l_mmbm.mmbmdocno 
+      IF l_cnt > 0 THEN
+         #CALL cl_errmsg('mmbn001','',l_mmaq001,'amm-00035',1)
+         CALL ammt423_01_batch_err('amm-00035',l_mmaq001) RETURNING l_msg            
+         LET g_errmsg = g_errmsg CLIPPED,l_msg
+         LET l_success = FALSE
+         CONTINUE FOREACH
+      END IF
+   END FOREACH
+   IF l_success THEN
+      LET l_wc = g_wc.substring(g_wc.getIndexOf("mmaq001",1) + 7,g_wc.getLength())
+      LET l_sql = "SELECT COUNT(mmbn001) FROM mmbn_t ",
+                  " WHERE mmbnent = '",l_mmbm.mmbment,"'", 
+                  "   AND mmbndocno = '",l_mmbm.mmbmdocno ,"'"
+      IF NOT g_wc = " 1=1" THEN
+         LET l_sql = l_sql CLIPPED," ",
+                  "   AND mmbn001 ",l_wc CLIPPED
+      END IF
+      PREPARE mmbn001_pre FROM l_sql
+      EXECUTE mmbn001_pre INTO l_cnt
+      IF l_cnt > 0 THEN
+         IF cl_ask_confirm('amm-00057') THEN    
+            LET l_sql = " DELETE FROM mmbn_t WHERE mmbnent = '",l_mmbm.mmbment ,"'",
+                        "         AND mmbndocno = '",l_mmbm.mmbmdocno,"'"
+            PREPARE mmbn001_del FROM l_sql
+            EXECUTE mmbn001_del 
+            IF SQLCA.sqlcode THEN
+               CALL ammt423_01_batch_err(SQLCA.sqlcode,'mmbn_t') RETURNING l_msg            
+               LET g_errmsg = g_errmsg CLIPPED,l_msg
+               LET l_success = FALSE
+            END IF
+         END IF
+      END IF
+      IF l_success THEN
+         LET l_sql = "SELECT mmaq001,mmaq003,mmaq005 FROM mmaq_t,mman_t ",
+                     " WHERE mmaqent = mmanent AND mmaq002 = mman001 ",
+                     "   AND (mmaq006 = '2' OR mmaq006 = '3') ",
+                     "   AND mman023 = 'Y' AND ",g_wc CLIPPED
+         PREPARE sel_pre1 FROM l_sql
+         DECLARE sel_cur1 CURSOR FOR sel_pre1 
+         SELECT MAX(mmbnseq)+1 INTO l_mmbnseq FROM mmbn_t
+          WHERE mmbnent = l_mmbm.mmbment
+            AND mmbndocno = l_mmbm.mmbmdocno  
+         IF cl_null(l_mmbnseq) THEN 
+            LET l_mmbnseq = 1
+         END IF 
+         FOREACH sel_cur INTO l_mmaq001,l_mmaq003,l_mmaq005
+            IF SQLCA.sqlcode THEN
+               CALL ammt423_01_batch_err(SQLCA.sqlcode,'') RETURNING l_msg            
+               LET g_errmsg = g_errmsg CLIPPED,l_msg
+               LET l_success = FALSE
+               EXIT FOREACH
+            END IF   
+         
+            SELECT COUNT(mmbn001) INTO l_cnt FROM mmbn_t 
+             WHERE mmbnent = l_mmbm.mmbment 
+               AND mmbndocno = l_mmbm.mmbmdocno 
+               AND mmbn001 = l_mmaq001    
+            IF l_cnt > 0 THEN    
+               #若当前资料已存在则做更新            
+               UPDATE mmbn_t SET mmbn002 = l_mmaq003,
+                                 mmbn003 = l_mmaq005,
+                                 mmbn004 = g_mmbn_m.mmbn004,
+                                 mmbn005 = l_mmbm.mmbm002,
+                                 mmbnsite = g_mmbn_m.mmbnsite
+                WHERE mmbnent = l_mmbm.mmbment AND mmbndocno = l_mmbm.mmbmdocno AND mmbn001 = l_mmaq001
+               IF SQLCA.sqlcode THEN
+                  CALL ammt423_01_batch_err(SQLCA.sqlcode,'mmbn_t') RETURNING l_msg            
+                  LET g_errmsg = g_errmsg CLIPPED,l_msg
+                  LET l_success = FALSE
+                  EXIT FOREACH
+               END IF
+               CONTINUE FOREACH
+            END IF 
+            
+            #若当前资料不存在则做新增
+            INSERT INTO mmbn_t(mmbnent,mmbndocno,mmbnseq,mmbn001,mmbn002,mmbn003,mmbn004,mmbn005,mmbnsite,mmbnunit)
+            VALUES(l_mmbm.mmbment,l_mmbm.mmbmdocno,l_mmbnseq,l_mmaq001,l_mmaq003,l_mmaq005,g_mmbn_m.mmbn004,l_mmbm.mmbm002,g_mmbn_m.mmbnsite,g_mmbn_m.mmbnsite)
+            IF SQLCA.sqlcode THEN
+               CALL ammt423_01_batch_err(SQLCA.sqlcode,'mmbn_t') RETURNING l_msg            
+               LET g_errmsg = g_errmsg CLIPPED,l_msg
+               LET l_success = FALSE
+               EXIT FOREACH
+            END IF 
+            LET l_mmbnseq = l_mmbnseq + 1       
+          
+         END FOREACH
+      END IF   
+   END IF   
+   IF l_success = FALSE THEN
+      
+      LET g_errmsg = "錯誤訊息:",g_errmsg
+      CALL FGL_WINMESSAGE("Info", g_errmsg, "information")
+   END IF    
+   
+   RETURN l_success
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ammt423_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="ammt423_01.other_function" readonly="Y" >}
+#顯示卡種說明
+PRIVATE FUNCTION ammt423_01_mman001_desc(p_mman001)
+DEFINE p_mman001  LIKE mman_t.mman001
+
+
+   IF cl_null(p_mman001) THEN
+      LET g_mmbn_m.mman001_desc = ''
+      LET g_mmbn_m.mman005 = ''
+      LET g_mmbn_m.mman007 = ''
+      LET g_mmbn_m.mman008 = ''
+   ELSE    
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = p_mman001
+      CALL ap_ref_array2(g_ref_fields,"SELECT mmanl003 FROM mmanl_t WHERE mmanlent='"||g_enterprise||"' AND mmanl001=? AND mmanl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_mmbn_m.mman001_desc = '', g_rtn_fields[1] , ''
+      SELECT mman005,mman007,mman008 INTO g_mmbn_m.mman005,g_mmbn_m.mman007,g_mmbn_m.mman008 
+        FROM mman_t
+       WHERE mmanent = g_enterprise AND mman001 = p_mman001
+             
+   END IF   
+   DISPLAY BY NAME g_mmbn_m.mman001_desc
+   DISPLAY BY NAME g_mmbn_m.mman005
+   DISPLAY BY NAME g_mmbn_m.mman007
+   DISPLAY BY NAME g_mmbn_m.mman008
+  
+END FUNCTION
+#卡種檢查存在、有效
+PRIVATE FUNCTION ammt423_01_mman001_chk(p_mman001)
+DEFINE p_mman001   LIKE mman_t.mman001
+DEFINE l_mman023   LIKE mman_t.mman023
+DEFINE l_mmanstus  LIKE mman_t.mmanstus
+   LET g_errno = ''
+   SELECT mman023,mmanstus INTO l_mman023,l_mmanstus FROM mman_t
+    WHERE mmanent = g_enterprise AND mman001 = p_mman001
+   IF cl_null(l_mmanstus) THEN
+      LET g_errno = 'amm-00003'
+      RETURN
+   END IF
+   IF l_mmanstus <> 'Y' THEN
+      LET g_errno = 'amm-00004'
+      RETURN
+   END IF
+   IF l_mman023 = 'N' THEN
+      LET g_errno = 'amm-00060'
+      RETURN
+   END IF      
+END FUNCTION
+#顯示需求營運組織名稱
+PRIVATE FUNCTION ammt423_01_mmbnsite_desc(p_mmbnsite)
+DEFINE p_mmbnsite  LIKE mmbn_t.mmbnsite
+   IF cl_null(p_mmbnsite) THEN
+      LET g_mmbn_m.mmbnsite_desc = ''
+   ELSE   
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = p_mmbnsite
+      CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_mmbn_m.mmbnsite_desc = '', g_rtn_fields[1] , ''
+   END IF   
+   DISPLAY BY NAME g_mmbn_m.mmbnsite_desc
+  
+END FUNCTION
+#檢查需求營運組織
+PRIVATE FUNCTION ammt423_01_mmbnsite_chk(p_mmbmsite,p_mmbnsite)
+DEFINE   l_cnt       LIKE type_t.num5
+DEFINE   p_mmbnsite  LIKE mmbn_t.mmbnsite
+DEFINE   p_mmbmsite  LIKE mmbm_t.mmbmsite
+DEFINE   l_sql       STRING
+   LET g_errno = NULL
+   LET l_cnt = 0
+   SELECT COUNT(*) INTO l_cnt  FROM ooea_t WHERE ooea001 = p_mmbnsite AND ooeaent = g_enterprise
+   IF l_cnt <= 0 THEN
+      LET g_errno = "aim-00060"
+      RETURN
+   END IF
+   SELECT COUNT(*) INTO l_cnt  FROM ooea_t WHERE ooea001 = p_mmbnsite AND ooeaent = g_enterprise
+   AND ooea004 = 'Y'   AND ooeastus='Y'
+   IF l_cnt <= 0 THEN
+      LET g_errno ='sub-01302'  #160318-00005#25 mod #"amm-00007"
+      RETURN
+   END IF 
+   LET l_sql = " SELECT COUNT(ooed004) FROM ooed_t where ooed004 = '",p_mmbnsite ,"'",
+               "  AND ooedent=",g_enterprise, #160905-00007#6 add
+               "  START WITH ooed004 = '",p_mmbmsite ,"'",
+               "  CONNECT BY NOCYCLE PRIOR ooed004 = ooed005  " 
+   PREPARE ooed_pre FROM l_sql
+   EXECUTE ooed_pre INTO l_cnt   
+   IF l_cnt = 0 THEN
+      LET g_errno = "amm-00089"
+      RETURN
+   END IF        
+   
+END FUNCTION
+#批量报错
+PRIVATE FUNCTION ammt423_01_batch_err(p_err,p_msg)
+   DEFINE p_err   LIKE type_t.chr20
+   DEFINE p_msg   STRING
+   DEFINE l_msg   STRING 
+   LET g_errmsg = g_errmsg, ASCII 10
+   IF NOT cl_null(p_msg) THEN
+      LET l_msg = p_msg CLIPPED,cl_getmsg(p_err,g_lang)
+   ELSE
+      LET l_msg = 12 SPACE,cl_getmsg(p_err,g_lang)
+   END IF
+
+   RETURN l_msg
+END FUNCTION
+
+ 
+{</section>}
+ 

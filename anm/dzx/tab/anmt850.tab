@@ -1,0 +1,186 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmt850" module="anm" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="01251" crtdt="2014-11-10 15:28:26" modid="01531" moddt="2016-10-09 16:00:22" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="對帳作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="nmdjsite,nmdjsite_desc(chr80),nmdjcomp,nmdjcomp_desc(chr80),nmdj005,nmdj005_desc(chr80),nmdjdocno,nmdj004,nmdj002,nmdj003,nmdj001,nmas003(chr10),nmdjstus,nmdjownid,nmdjownid_desc(chr80),nmdjowndp,nmdjowndp_desc(chr80),nmdjcrtid,nmdjcrtid_desc(chr80),nmdjcrtdp,nmdjcrtdp_desc(chr80),nmdjcrtdt,nmdjmodid,nmdjmodid_desc(chr80),nmdjmoddt,nmdjcnfid,nmdjcnfid_desc(chr80),nmdjcnfdt,amount1(num20_6),amount2(num20_6),amount3(num20_6),amount4(num20_6),amount5(num20_6),amount6(num20_6)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmdk004,nmdk005,nmdg003_2(dat),nmdg013(chr500),nmdk006,nmdk007,nmdg014(chr20),nmdg015(chr10),nmdk003,nmdkseq,nmdk002"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="nmdl004,nmdl005,nmbc005,nmdl002,nmdl003,nmdl006,nmdl007,nmbc003(chr10),nmbc003_desc(chr500),nmbc012(chr20),nmbc014(dat),nmdlseq,nmdl001"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="balance"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmt850" method="dialog">
+    <section id="input">
+      <input id="head" field="nmdjsite,nmdjcomp,nmdj005,nmdjdocno,nmdj004,nmdj002,nmdj003,nmdj001,nmdjstus"/>
+      <input id="body" page="1" field="nmdk004,nmdk005,nmdk006,nmdk007,nmdk003,nmdk002" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="nmdl004,nmdl005,nmdl002,nmdl003,nmdl006,nmdl007,nmbc003_desc,nmbc012,nmbc014" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="nmdjsite,nmdjcomp,nmdj005,nmdjdocno,nmdj004,nmdj002,nmdj003,nmdj001,nmdjstus,nmdjownid,nmdjowndp,nmdjcrtid,nmdjcrtdp,nmdjcrtdt,nmdjmodid,nmdjmoddt,nmdjcnfid,nmdjcnfdt"/>
+      <construct id="body" page="1" field="nmdk004,nmdk005,nmdk006,nmdk007,nmdk003,nmdk002"/>
+      <construct id="body" page="2" field="nmdl004,nmdl005,nmdl002,nmdl003,nmdl006,nmdl007,nmbc003_desc,nmbc012,nmbc014"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="nmdjdocno"/>
+      <set id="head" type="no_entry" field="nmdjdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="nmdjsite">
+        <after>
+          <check chkid="v_fmac002" id="chkandReturn"/>
+          <reference field="nmdjsite_desc" ref_field="nmdj_t.nmdjsite" map_field="nmdjent,nmdjsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_33" state="i"/>
+        <controlp form="q_ooef001_33" state="c"/>
+      </column>
+      <column id="nmdjsite_desc"/>
+      <column id="nmdjcomp">
+        <after>
+          <reference field="nmdjcomp_desc" ref_field="nmdj_t.nmdjcomp" map_field="nmdjent,nmdjcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="nmdjcomp_desc"/>
+      <column id="nmdj005">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="nmdj005_desc" ref_field="nmdj_t.nmdj005" map_field="nmdjent,nmdj005" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmdj005_desc"/>
+      <column id="nmdjdocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_nmdjdocno" state="c"/>
+      </column>
+      <column id="nmdj004"/>
+      <column id="nmdj002">
+        <controlp form="q_glav001_1" state="i"/>
+        <controlp form="q_glav001_1" state="c"/>
+      </column>
+      <column id="nmdj003">
+        <controlp form="q_glav001_2" state="i"/>
+        <controlp form="q_glav001_2" state="c"/>
+      </column>
+      <column id="nmdj001">
+        <controlp form="q_nmas002_5" state="c"/>
+      </column>
+      <column id="nmas003"/>
+      <column id="nmdjstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+      </column>
+      <column id="nmdjownid">
+        <after>
+          <reference field="nmdjownid_desc" ref_field="nmdj_t.nmdjownid" map_field="nmdjownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmdjownid_desc"/>
+      <column id="nmdjowndp">
+        <after>
+          <reference field="nmdjowndp_desc" ref_field="nmdj_t.nmdjowndp" map_field="nmdjowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmdjowndp_desc"/>
+      <column id="nmdjcrtid">
+        <after>
+          <reference field="nmdjcrtid_desc" ref_field="nmdj_t.nmdjcrtid" map_field="nmdjcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmdjcrtid_desc"/>
+      <column id="nmdjcrtdp">
+        <after>
+          <reference field="nmdjcrtdp_desc" ref_field="nmdj_t.nmdjcrtdp" map_field="nmdjcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmdjcrtdp_desc"/>
+      <column id="nmdjcrtdt"/>
+      <column id="nmdjmodid">
+        <after>
+          <reference field="nmdjmodid_desc" ref_field="nmdj_t.nmdjmodid" map_field="nmdjmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmdjmodid_desc"/>
+      <column id="nmdjmoddt"/>
+      <column id="nmdjcnfid">
+        <after>
+          <reference field="nmdjcnfid_desc" ref_field="nmdj_t.nmdjcnfid" map_field="nmdjcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmdjcnfid_desc"/>
+      <column id="nmdjcnfdt"/>
+      <column id="amount1"/>
+      <column id="amount2"/>
+      <column id="amount3"/>
+      <column id="amount4"/>
+      <column id="amount5"/>
+      <column id="amount6"/>
+    </init>
+    <init id="body" page="1">
+      <column id="nmdk004" type="S" default="N"/>
+      <column id="nmdk005"/>
+      <column id="nmdg003_2"/>
+      <column id="nmdg013"/>
+      <column id="nmdk006"/>
+      <column id="nmdk007"/>
+      <column id="nmdg014"/>
+      <column id="nmdg015"/>
+      <column id="nmdk003"/>
+      <column id="nmdkseq"/>
+      <column id="nmdk002"/>
+    </init>
+    <init id="body" page="2">
+      <column id="nmdl004" type="S" default="N"/>
+      <column id="nmdl005"/>
+      <column id="nmdl002"/>
+      <column id="nmdl003"/>
+      <column id="nmdl006"/>
+      <column id="nmdl007"/>
+      <column id="nmbc003">
+        <after/>
+      </column>
+      <column id="nmbc003_desc"/>
+      <column id="nmbc012"/>
+      <column id="nmbc014"/>
+      <column id="nmdlseq"/>
+      <column id="nmdl001"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="nmdj_t" pk="nmdjdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT nmdjsite,&apos;&apos;,nmdjcomp,&apos;&apos;,nmdj005,&apos;&apos;,nmdjdocno,nmdj004,nmdj002,nmdj003,nmdj001,&apos;&apos;,nmdjstus,nmdjownid,&apos;&apos;,nmdjowndp,&apos;&apos;,nmdjcrtid,&apos;&apos;,nmdjcrtdp,&apos;&apos;,nmdjcrtdt,nmdjmodid,&apos;&apos;,nmdjmoddt,nmdjcnfid,&apos;&apos;,nmdjcnfdt,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM nmdj_t WHERE nmdjent= ? AND nmdjdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT nmdjsite,&apos;&apos;,nmdjcomp,&apos;&apos;,nmdj005,&apos;&apos;,nmdjdocno,nmdj004,nmdj002,nmdj003,nmdj001,&apos;&apos;,nmdjstus,nmdjownid,&apos;&apos;,nmdjowndp,&apos;&apos;,nmdjcrtid,&apos;&apos;,nmdjcrtdp,&apos;&apos;,nmdjcrtdt,nmdjmodid,&apos;&apos;,nmdjmoddt,nmdjcnfid,&apos;&apos;,nmdjcnfdt,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM nmdj_t" order="nmdjdocno"/>
+    </head>
+    <body id="nmdk_t" page="1" linked="" pk="nmdkseq" fk="nmdk001">
+      <sql id="forupd_sql_detail" query="SELECT nmdk004,nmdk005,&apos;&apos;,&apos;&apos;,nmdk006,nmdk007,&apos;&apos;,&apos;&apos;,nmdk003,nmdkseq,nmdk002 FROM nmdk_t WHERE nmdkent=? AND nmdk001=? AND nmdkseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmdk004,nmdk005,&apos;&apos;,&apos;&apos;,nmdk006,nmdk007,&apos;&apos;,&apos;&apos;,nmdk003,nmdkseq,nmdk002 FROM nmdk_t WHERE nmdkent=? AND nmdk001=?"/>
+    </body>
+    <body id="nmdl_t" page="2" linked="" pk="nmdlseq" fk="nmdldocno">
+      <sql id="forupd_sql_detail" query="SELECT nmdl004,nmdl005,&apos;&apos;,nmdl002,nmdl003,nmdl006,nmdl007,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,nmdlseq,nmdl001 FROM nmdl_t WHERE nmdlent=? AND nmdldocno=? AND nmdlseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmdl004,nmdl005,&apos;&apos;,nmdl002,nmdl003,nmdl006,nmdl007,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,nmdlseq,nmdl001 FROM nmdl_t WHERE nmdlent=? AND nmdldocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

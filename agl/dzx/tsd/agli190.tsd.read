@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="agli190" std_prog="agli190" erpver="1.0" ver="1" module="AGL" type="M" booking="N" designer_ver="1.0" class="i" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="Y" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="glab_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Tree" status=""/>
+    </tbl>
+  </table>
+  <tree name="s_browse" ver="1" src="s" kind="type_01" att="type,type2,type3,type4,type5,type6,id,desc" cite_std="N" status="">
+    <type no="1" table="glab_t" col="glab001"/>
+    <type2 no="2" table="glab_t" col="glab002"/>
+    <type3 no="3" table="" col=""/>
+    <type4 no="4" table="" col=""/>
+    <type5 no="5" table="" col=""/>
+    <type6 no="6" table="" col=""/>
+    <id no="7" table="glab_t" col="glab003"/>
+    <desc no="9" table="" col=""/>
+    <pid no="" table="" col=""/>
+    <speed no="" table="" col=""/>
+    <stype no="" table="" col=""/>
+    <sid no="" table="" col=""/>
+    <spid no="" table="" col=""/>
+  </tree>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 
+ 1.此作業是針對系統內所有設定的款別項目，設定對應的預設會計科目作業，故為基本設定檔。
+ 2.依交易所收付的款別設定其預設（默認）的收受會計科目及支付時的會計科目；例如票據類支付時使用＂應付匯款＂科目，收受時使用＂應收票據＂。
+ 3.依帳套設置應用科目，便於自動產生交易分錄及傳票。
+ 
+作業功能：新增/修改/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+ 取消　刪除
+作業類型：基本資料維護作業
+輸入模式：單檔 + 樹　F003_00
+ ●調整應用: 同＂假雙檔＂應用，第一段單頭為帳套別之輸入及顯示；第二段為單檔TREE多欄表達。
+  維護時開子作業處理。
+
+作業資料來源(Master)：
+ 資料來源表：
+  帳套應用會計科目設定檔(glab_t)(資料檔)
+   設定類型　＝’21’ 款別設定科目
+
+ 關聯資料表：
+  帳套基本資料(glab_t) 
+  SCC系統應用類碼(gzcb_t)
+   款別主檔(ooia_t)
+
+補充說明：
+1.此作業是針對系統內所有的款別項目，作會計科目對應預設作業，故為基本設定檔。
+2.其設定項目之內容來源為＂款別主檔(ooia_t)＂。
+3.資料對比
+   1.刪除
+      依款別分類為主，若款別分類已經刪除，那麼則在(glab_t)刪除對應資料，且回到主畫面
+      依款別編號為主，若款別編號已經刪除，那麼則在(glab_t)刪除對應資料，且回到主畫面
+   2.新增
+     依款別分類為主，若款別分類有新增，那麼則在(glab_t)新增對應資料
+     依款別編號為主，若款別編號有新增，那麼則在(glab_t)新增對應資料
+4.複製處理：
+ １.目的帳套所用的科目參照表相同者，方可複製。
+
+
+TOPMENU：
+  明細操作： 款別科目設定(agli190_01)
+  相關資料：帳別資料設定作業（agli010)
+  相關作業：會計科目設定作業（agli020)
+  相關查詢：異動記錄查詢
+                   理由碼依帳套設置作業(agli180 )
+                   常用科目依帳套設置作業(agli160 )
+                   重評價及帳齡依帳套設置作業(agli170 )]]>
+  </all>
+  <db_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[1.如果 帳套狀態＝無效 報錯 "該帳套已設定為＂無效＂，不可維護該筆資料。"
+2.如果 款別狀態=無效 報錯  "該款別編號已設定為＂無效＂，不可維護該筆資料。
+　　
+]]>
+  </db_all>
+  <field cite_std="N" name="b_glab001" ver="1" src="s" column="glab001" table="glab_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;90&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_glab002" ver="1" src="s" column="glab002" table="glab_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;30&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_glab003" ver="1" src="s" column="glab003" table="glab_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_glab005" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_glab006" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_glab007" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_glab011" ver="1" src="s" column="glab011" table="glab_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="8315" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_glabld" ver="1" src="s" column="glabld" table="glab_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_ooiastus" ver="1" src="s" column="ooiastus" table="ooia_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaa004" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[display only
+帳套基本資料glaa_t. 科目參照表]]>
+  </field>
+  <field cite_std="N" name="glaacomp" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[display only
+帳別歸屬法人
+]]>
+  </field>
+  <field cite_std="N" name="glab_t.glab001" ver="1" src="s" column="glab001" table="glab_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;90&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glab_t.glab002" ver="1" src="s" column="glab002" table="glab_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;30&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glab_t.glab003" ver="1" src="s" column="glab003" table="glab_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glab_t.glabld" ver="1" src="s" column="glabld" table="glab_t" attribute="" type="" req="Y" i_zoom="q_glaald_01" c_zoom="q_glaald_01" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：
+   ●欄位控管：
+     資料欄位:glab_t.glabLD可Display可Input
+     預設值: 無 
+     校驗:1.不允許空白
+            2.輸入值須存在glaa_t.glaaLD 且為有效資料
+               若不存在，報錯；
+               若無效，報錯
+            3.新增時，若重複，報錯
+     帶值:1.自動帶出單頭對應資料及單身區段資料。
+     計算或處理:1.新增時，自動依系統內容產生單身區段設定項目。　]]>
+  </field>
+  <field cite_std="N" name="name" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[資料來源表：
+ 帳套應用會計科目設定檔(glab_t)(資料檔)
+  設定類型　＝’21’ 款別設定科目
+   分類碼　　＝ 款別主檔(ooia_t).款別分類
+   分類碼值　＝ 款別主檔(ooia_t).款別編號
+ 關聯資料表：
+  帳套基本資料(glab_t) 
+  SCC系統應用類碼(gzcb_t)
+   款別主檔(ooia_t)
+   款別多語言檔(ooial_t)
+  會計科目檔（glac_t）
+
+樹狀瀏覽設定：
+ (1)樹狀設定：
+    父節點：glab_t.分類碼　 ；對應名稱取’SCC_8310款別類型’
+    子節點：glab_t.分類碼值 ；對應名稱取 款別多語言檔(ooial_t)
+ (2)樹狀顯示欄位：
+    欄位1：款別編號　＝＞ＴＲＥＥ　；分類碼(名稱)、分類碼值(名稱)
+    欄位2：收款時預設科目　＝＞[F.會計科目一]；科目編號(科目名稱)
+    欄位3：支付時預設科目  ＝＞[F.會計科目二]；科目編號(科目名稱)
+    欄位4：科目彙總方式  ＝＞[F.科目彙總方式]；說明; 取SCC_8315　科目彙整方式
+    欄位5：款別狀態　  ＝＞[F.ooiastus]；check box OR Y/N]]>
+  </field>
+  <field cite_std="N" name="stus1" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[資料狀態碼：
+   ●欄位控管：
+     資料欄位: glaa_t.有效碼
+         display only
+     計算或處理:無]]>
+  </field>
+  <field cite_std="N" name="ooia_t.ooiastus" ver="1" src="s" column="ooiastus" table="ooia_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ComboBox" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooiastus" ver="1" src="s" column="ooiastus" table="ooia_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ComboBox" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="glabld_desc" src="s" depend_field="glab_t.glabld" correspon_key="glabent,glabld" ref_table="glaa_t" ref_fk="glaalent,glaalld" ref_dlang="glaa001" ref_rtn="glaa002" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_glab001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_glab002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_glab003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_glab005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_glab006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_glab007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_glab011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_glabld" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_ooiastus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaacomp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glab_t.glab001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glab_t.glab002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glab_t.glab003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glab_t.glabld" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="name" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooia_t.ooiastus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="ooiastus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="stus1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="open_agli190_01" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="open_del" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="page_1" text="帳套" lstr=""/>
+    <sfield name="lbl_glabld_1" text="帳套編號" lstr=""/>
+    <sfield name="lbl_glabld" text="帳別編號" lstr=""/>
+    <sfield name="lbl_glaa002" text="匯率參照表號" lstr=""/>
+    <sfield name="lbl_glaacomp" text="歸屬法人" lstr=""/>
+    <sfield name="lbl_glab001" text="設定類型" lstr=""/>
+    <sfield name="lbl_glab002" text="分類碼" lstr=""/>
+    <sfield name="lbl_stus1" text="狀態碼" lstr=""/>
+    <sfield name="lbl_glaa004" text="科目參照表" lstr=""/>
+    <sfield name="lbl_glab003" text="分類碼值" lstr=""/>
+    <sfield name="cbo_searchcol.0" text="選擇查詢欄位" lstr=""/>
+    <sfield name="lbl_glab005" text="收款時預設科目" lstr=""/>
+    <sfield name="lbl_glab006" text="支付時預設科目" lstr=""/>
+    <sfield name="lbl_glab011" text="科目彙總方式" lstr=""/>
+    <sfield name="rdo_expand.1" text="上推" lstr=""/>
+    <sfield name="rdo_expand.2" text="下展" lstr=""/>
+    <sfield name="rdo_expand.3" text="全部" lstr=""/>
+    <sfield name="lbl_name" text="樹狀節點說明" lstr=""/>
+    <sfield name="lbl_glab007" text="在途存款預設科目" lstr=""/>
+    <sfield name="lbl_ooiastus" text="款別狀態" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dsep" text="(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="cmt_master" text="款別編號科目設定" lstr=""/>
+    <sfield name="lbl_glab003_1" text="款別編號" lstr=""/>
+    <sfield name="lbl_ooial003" text="說明" lstr=""/>
+    <sfield name="cmt_group1" text="預設科目編號" lstr=""/>
+    <sfield name="lbl_glab005_1" text="收款時預設科目編號" lstr=""/>
+    <sfield name="lbl_glaclent" text="企業編號" lstr=""/>
+    <sfield name="lbl_glab006_1" text="支出時預設科目編號" lstr=""/>
+    <sfield name="lbl_glab007_1" text="在途存款預設科目編號" lstr=""/>
+    <sfield name="lbl_glacl004" text="說明" lstr=""/>
+    <sfield name="lbl_page_1" text="資產類" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_glac002" text="會計科目編號" lstr=""/>
+    <sfield name="lbl_glac003" text="統制/明細別" lstr=""/>
+    <sfield name="lbl_glac009" text="內部管理科目" lstr=""/>
+    <sfield name="lbl_page_2" text="負債類" lstr=""/>
+    <sfield name="lbl_page_3" text="公用類" lstr=""/>
+    <sfield name="lbl_page_4" text="股東權益類" lstr=""/>
+    <sfield name="lbl_page_5" text="成本類" lstr=""/>
+    <sfield name="lbl_page_6" text="損益類" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="open_agli190_01" text="款別科目設定" lstr=""/>
+    <sact name="open_del" text="刪除帳套所屬科目設定" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

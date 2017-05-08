@@ -1,0 +1,126 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi717" module="aoo" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02295" crtdt="2013-09-02 15:19:12" modid="02295" moddt="2013-09-02 00:00:00" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="繳款優惠條件維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="ooidstus,ooid001,ooidl003,ooid002,ooid011,ooid012,ooid021,ooid022,ooid031,ooid032,ooid003"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="ooid001,ooidmodid,ooidmodid_desc(chr500),ooidmoddt,ooidownid,ooidownid_desc(chr500),ooidowndp,ooidowndp_desc(chr500),ooidcrtid,ooidcrtid_desc(chr500),ooidcrtdp,ooidcrtdp_desc(chr500),ooidcrtdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi717" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="ooidstus,ooid001,ooidl003,ooid002,ooid011,ooid012,ooid021,ooid022,ooid031,ooid032,ooid003" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="ooidstus,ooid001,ooidl003,ooid002,ooid011,ooid012,ooid021,ooid022,ooid031,ooid032,ooid003"/>
+      <construct id="body" page="2" field="ooidmodid,ooidmoddt,ooidownid,ooidowndp,ooidcrtid,ooidcrtdp,ooidcrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="ooidstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="ooid001"/>
+      <column id="ooidl003"/>
+      <column id="ooid002" type="S" default="0" def_scc="46"/>
+      <column id="ooid011">
+        <after>
+          <check id="range" st="999" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="ooid012" type="S" default="0">
+        <after>
+          <check id="range" st="100" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="ooid021">
+        <after>
+          <check id="range" st="999" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="ooid022" type="S" default="0">
+        <after>
+          <check id="range" st="100" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="ooid031">
+        <after>
+          <check id="range" st="999" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="ooid032" type="S" default="0">
+        <after>
+          <check id="range" st="100" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="ooid003"/>
+    </init>
+    <init id="body" page="2">
+      <column id="ooidmodid">
+        <after>
+          <reference field="ooidmodid_desc" ref_field="ooid_t.ooidmodid" map_field="ooidmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ooidmodid_desc"/>
+      <column id="ooidmoddt"/>
+      <column id="ooidownid">
+        <after>
+          <reference field="ooidownid_desc" ref_field="ooid_t.ooidownid" map_field="ooidownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ooidownid_desc"/>
+      <column id="ooidowndp">
+        <after>
+          <reference field="ooidowndp_desc" ref_field="ooid_t.ooidowndp" map_field="ooidowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="ooidowndp_desc"/>
+      <column id="ooidcrtid">
+        <after>
+          <reference field="ooidcrtid_desc" ref_field="ooid_t.ooidcrtid" map_field="ooidcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ooidcrtid_desc"/>
+      <column id="ooidcrtdp">
+        <after>
+          <reference field="ooidcrtdp_desc" ref_field="ooid_t.ooidcrtdp" map_field="ooidcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="ooidcrtdp_desc"/>
+      <column id="ooidcrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="ooid_t" page="1,2" linked="" pk="ooid001">
+      <sql id="forupd_sql_detail" query="SELECT ooidstus,ooid001,&apos;&apos;,ooid002,ooid011,ooid012,ooid021,ooid022,ooid031,ooid032,ooid003,&apos;&apos;,ooidmodid,&apos;&apos;,ooidmoddt,ooidownid,&apos;&apos;,ooidowndp,&apos;&apos;,ooidcrtid,&apos;&apos;,ooidcrtdp,&apos;&apos;,ooidcrtdt FROM ooid_t WHERE ooident=? AND ooid001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT ooidstus,ooid001,&apos;&apos;,ooid002,ooid011,ooid012,ooid021,ooid022,ooid031,ooid032,ooid003,&apos;&apos;,ooidmodid,&apos;&apos;,ooidmoddt,ooidownid,&apos;&apos;,ooidowndp,&apos;&apos;,ooidcrtid,&apos;&apos;,ooidcrtdp,&apos;&apos;,ooidcrtdt FROM ooid_t WHERE ooident= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="ooidl_t.ooidl003" table="ooidl_t" fk="ooid001" pk="ooidl001,ooidl002" field="ooidl003"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisq450" module="ais" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="06816" crtdt="2015-06-26 14:30:51" modid="06821" moddt="2015-10-08 09:31:32" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="銷項明細查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isaj018,isaj031,isaj009,isaj006(chr500),isaj015,isaj012,isaj103,isaj104,isaj105,isaj017,isaj024,isaj038,isaj001,isaj003,isaj003_desc(chr500),isaj005,isaj007,isaj019,isaj020,isajcomp"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isaj018(b_isaj018),isaj031(b_isaj031),isaj009(b_isaj009),isaj006(b_isaj006),isaj015(b_isaj015),isaj012(b_isaj012),isaj103(b_isaj103),isaj104(b_isaj104),isaj105(b_isaj105),isaj017(b_isaj017),isaj024(b_isaj024),isaj038(b_isaj038),isaj001(b_isaj001),isaj003(b_isaj003),isaj003_desc(b_isaj003_desc),isaj005(b_isaj005),isaj007(b_isaj007),isaj019(b_isaj019),isaj020(b_isaj020),isajcomp(b_isajcomp)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ais" filename="aisq450" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="isaj018,isaj031,isaj009,isaj006,isaj015,isaj012,isaj103,isaj104,isaj105,isaj017,isaj024,isaj038,isaj001,isaj003,isaj005,isaj007,isaj019,isaj020,isajcomp" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="isaj018(b_isaj018),isaj031(b_isaj031),isaj009(b_isaj009),isaj015(b_isaj015),isaj012(b_isaj012),isaj103(b_isaj103),isaj104(b_isaj104),isaj105(b_isaj105),isaj017(b_isaj017),isaj024(b_isaj024),isaj038(b_isaj038),isaj001(b_isaj001),isaj003(b_isaj003),isaj005(b_isaj005),isaj007(b_isaj007),isaj019(b_isaj019),isaj020(b_isaj020),isajcomp(b_isajcomp)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="isaj018">
+        <after>
+          <check chkid="v_isap002" id="isExist"/>
+        </after>
+        <controlp form="q_isap002" state="c"/>
+      </column>
+      <column id="isaj031"/>
+      <column id="isaj009"/>
+      <column id="isaj006"/>
+      <column id="isaj015" def_scc="9708"/>
+      <column id="isaj012"/>
+      <column id="isaj103"/>
+      <column id="isaj104" type="S" default="0"/>
+      <column id="isaj105" type="S" default="0"/>
+      <column id="isaj017"/>
+      <column id="isaj024" def_scc="9736"/>
+      <column id="isaj038" type="S" default="0"/>
+      <column id="isaj001" def_scc="9720"/>
+      <column id="isaj003">
+        <after>
+          <check chkid="v_isaa001" id="isExist"/>
+          <reference field="isaj003_desc" ref_field="isaj003" map_field="isajent,isaj003" ref_sql="SELECT ooefl004 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_isaj003" state="c"/>
+      </column>
+      <column id="isaj003_desc"/>
+      <column id="isaj005"/>
+      <column id="isaj007"/>
+      <column id="isaj019"/>
+      <column id="isaj020">
+        <after>
+          <check id="range" st="12.000" st_type="1" errno="azz-00087" bt="1.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="isajcomp"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="isaj_t" page="1" linked="" pk="isajcomp,isaj001,isaj003,isaj005,isaj006,isaj007,isaj019,isaj020">
+      <sql id="b_fill_sql" query="SELECT isaj018,isaj031,isaj009,&apos;&apos;,isaj015,isaj012,isaj103,isaj104,isaj105,isaj017,isaj024,isaj038,isaj001,isaj003,&apos;&apos;,isaj005,isaj007,isaj019,isaj020,isajcomp FROM isaj_t WHERE isajent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

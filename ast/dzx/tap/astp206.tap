@@ -1,0 +1,1091 @@
+<add_points prog="astp206" std_prog="astp206" erpver="1.0" module="AST" ver="2" env="s" zone="t10dev" booking="Y" type="M" identity="s">
+  <other>
+    <code_template value="P" status="" />
+    <free_style value="N" status="" />
+  </other>
+  <point name="function.astp206_ins_stau" cite_std="N" status="" ver="2" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 更新結算會計資料
+# Memo...........:
+# Usage..........: CALL astp206_ins_stau(ls_js)
+# Date & Author..: 20140626 By dongsz
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION astp206_ins_stau(ls_js)
+DEFINE lc_param       type_parameter
+DEFINE ls_js          STRING
+DEFINE tok            base.stringtokenizer
+DEFINE l_tok          STRING
+DEFINE l_sql          STRING
+DEFINE l_staucrtdt    DATETIME YEAR TO SECOND
+DEFINE l_gzcb002      LIKE gzcb_t.gzcb002
+
+   CALL util.JSON.parse(ls_js,lc_param)
+   LET g_errno = ""
+   
+#   LET g_master.stausite = cl_replace_str(g_master.stausite,"|","','")
+   
+#   LET tok = base.StringTokenizer.create(g_master.stau001,"|")
+#   WHILE tok.hasMoreTokens()
+   LET l_sql = " SELECT gzcb002 FROM gzcb_t ",
+               "  WHERE gzcb001 = '6072' ",
+               "    AND ",lc_param.wc CLIPPED
+   PREPARE sel_gzcb_pre FROM l_sql
+   DECLARE sel_gzcb_cs  CURSOR FOR sel_gzcb_pre
+   FOREACH sel_gzcb_cs  INTO l_gzcb002
+#      LET l_tok=tok.nextToken()
+      LET l_staucrtdt = cl_get_current()
+      LET l_sql = " MERGE INTO stau_t ",
+                  " USING (SELECT ooef001 FROM ooef_t,ooee_t ",
+                  "         WHERE ooefent = ooeeent AND ooef001 = ooee001 ",
+                  "           AND ooefent = '",g_enterprise,"' ",
+                  "           AND ooee002 = '2' ",
+                  "           AND ooee003 = 'A' ",
+                  "           AND ",g_master.wc,
+                  "           AND ooefstus = 'Y') ",
+                  "    ON (stausite = ooef001 AND stau001 = '",l_gzcb002,"') ",
+                  "  WHEN MATCHED THEN ",
+                  "       UPDATE SET stau003 = '",g_master.stau003,"',stau004 = '",g_master.stau004,"', ",
+                  "                  staumodid = '",g_user,"',staumoddt = to_date('",l_staucrtdt,"','YYYY-MM-DD hh24:mi:ss') ",
+                  "  WHEN NOT MATCHED THEN ",
+                  "       INSERT(stauent,stausite,stau001,stau002,stau003,stau004,stauownid,stauowndp,staucrtid,staucrtdp,staucrtdt) ",
+                  "       VALUES('",g_enterprise,"',ooef001,'",l_gzcb002,"','1','",g_master.stau003,"','",g_master.stau004,"', ",
+                  "              '",g_user,"','",g_dept,"','",g_user,"','",g_dept,"',to_date('",l_staucrtdt,"','YYYY-MM-DD hh24:mi:ss')) "
+      PREPARE sel_stau_pre FROM l_sql
+      EXECUTE sel_stau_pre
+      IF SQLCA.sqlcode THEN
+         LET g_errno = SQLCA.sqlcode
+         RETURN
+      END IF
+   END FOREACH
+#   END WHILE
+
+END FUNCTION]]>
+</point>
+  <point name="function.astp206_stau004_default" cite_std="N" status="" ver="1" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 計算結算會計期
+# Memo...........:
+# Usage..........: CALL astp206_stau004_default(p_stau003)
+# Date & Author..: 20140626 By dongsz
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION astp206_stau004_default(p_stau003)
+DEFINE p_stau003      LIKE stau_t.stau003
+DEFINE l_year   LIKE type_t.chr5
+DEFINE l_month  LIKE type_t.chr5
+DEFINE l_str    LIKE type_t.chr5
+DEFINE l_stau004 LIKE type_t.chr10
+   
+   LET l_month = MONTH(p_stau003)
+   LET l_year = YEAR(p_stau003)
+   LET l_str = l_month+1 USING '&&'
+   IF l_month = 12 THEN
+      LET l_year = l_year + 1
+      LET l_str = '01'
+   END IF
+   LET l_stau004 = l_year,l_str
+   RETURN l_stau004
+
+END FUNCTION]]>
+</point>
+  <point name="construct.c.ooef001" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = 'A'
+            CALL q_ooef001_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooef001  #顯示到畫面上
+            NEXT FIELD ooef001                     #返回原欄位
+    
+
+]]>
+</point>
+  <point name="construct.c.stau001" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '6072'
+            CALL q_gzcb002_01()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO stau001  #顯示到畫面上
+            NEXT FIELD stau001                     #返回原欄位
+    
+
+]]>
+</point>
+  <point name="construct.c.stausite" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = 'A'
+            CALL q_ooef001_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO stausite  #顯示到畫面上
+            NEXT FIELD stausite                     #返回原欄位
+    
+
+]]>
+</point>
+  <point name="global.parameter" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[#        stausite         STRING,
+#        stau001          STRING,
+#        stau003          LIKE stau_t.stau003,
+#        stau004          LIKE stau_t.stau004,]]>
+</point>
+  <point name="input.a.stau001" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[#            IF NOT cl_null(g_master.stau001) THEN 
+#此段落由子樣板a19產生
+#               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+#               INITIALIZE g_chkparam.* TO NULL
+#               
+#               #設定g_chkparam.*的參數
+#               LET g_chkparam.arg2 = '參數2'
+#                  
+#               #呼叫檢查存在並帶值的library
+#               IF cl_chk_exist_and_ref_val("v_gzcb002") THEN
+#                  #檢查成功時後續處理
+#                  #LET  = g_chkparam.return1
+#                  #DISPLAY BY NAME 
+#               ELSE
+#                  #檢查失敗時後續處理
+#                  NEXT FIELD CURRENT
+#               END IF
+#            
+#
+#            END IF 
+#               LET tok = base.StringTokenizer.create(g_master.stau001,"|")
+#               WHILE tok.hasMoreTokens()
+#                  LET l_tok=tok.nextToken()
+#                  LET l_stau001 = l_tok
+#                  SELECT COUNT(*) INTO l_n
+#                    FROM gzcb_t
+#                   WHERE gzcb001 = '6072' 
+#                     AND gzcb002 = l_stau001
+#                  IF l_n < 1 THEN
+#                     CALL cl_err(l_stau001,'ast-00099',1)
+#                     LET g_master.stau001 = ""
+#                     DISPLAY g_master.stau001 TO stau001
+#                     NEXT FIELD stau001
+#                     EXIT WHILE
+#                  END IF
+#               END WHILE
+#            END IF
+]]>
+</point>
+  <point name="input.a.stau003" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_master.stau003) THEN
+               CALL astp206_stau004_default(g_master.stau003)
+               RETURNING g_master.stau004
+            END IF
+                 ]]>
+</point>
+  <point name="input.a.stau004" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_master.stau004) THEN
+               LET l_stau004 = g_master.stau004
+               LET l_len = l_stau004.getLength()
+               IF l_len <> 6 THEN
+                  CALL cl_err('','ast-00098',1)
+                  NEXT FIELD stau004
+               END IF
+               FOR l_n=1 TO l_len
+                  LET l_str = l_stau004.subString(l_n,l_n)
+                  IF l_str NOT MATCHES '[0123456789]' THEN
+                     CALL cl_err('','ast-00098',1)
+                     NEXT FIELD stau004
+                     EXIT FOR
+                  END IF
+               END FOR
+               LET l_month = l_stau004.subString(5,6) USING '<<'
+               IF cl_null(l_month) OR l_month < 1 OR l_month > 12 THEN
+                  CALL cl_err('','ast-00098',1)
+                  NEXT FIELD stau004
+               END IF
+            END IF 
+
+]]>
+</point>
+  <point name="input.a.stausite" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[#            IF NOT cl_null(g_master.stausite) THEN
+#此段落由子樣板a19產生
+#               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+#               INITIALIZE g_chkparam.* TO NULL
+#               
+#               #設定g_chkparam.*的參數
+#               LET g_chkparam.arg2 = '參數2'
+#                  
+#               #呼叫檢查存在並帶值的library
+#               IF cl_chk_exist_and_ref_val("v_ooef001_2") THEN
+#                  #檢查成功時後續處理
+#                  #LET  = g_chkparam.return1
+#                  #DISPLAY BY NAME 
+#               ELSE
+#                  #檢查失敗時後續處理
+#                  NEXT FIELD CURRENT
+#               END IF
+#            
+#
+#            END IF
+#               LET tok = base.StringTokenizer.create(g_master.stausite,"|")
+#               WHILE tok.hasMoreTokens()
+#                  LET l_tok=tok.nextToken()
+#                  LET l_stausite = l_tok
+#                  SELECT COUNT(*) INTO l_n
+#                    FROM ooef_t
+#                   WHERE ooef001 = l_stausite
+#                     AND ooefent = g_enterprise
+#                  IF l_n < 1 THEN
+#                     CALL cl_err(l_stausite,'apm-00248',1)
+#                     LET g_master.stausite = ""
+#                     DISPLAY g_master.stausite TO stausite
+#                     NEXT FIELD stausite
+#                     EXIT WHILE
+#                  END IF
+#                  SELECT ooefstus INTO l_ooefstus
+#                    FROM ooef_t
+#                   WHERE ooef001 = l_stausite
+#                     AND ooefent = g_enterprise
+#                  IF l_ooefstus <> 'Y' THEN
+#                     CALL cl_err(l_stausite,'apm-00249',1)
+#                     LET g_master.stausite = ""
+#                     DISPLAY g_master.stausite TO stausite
+#                     NEXT FIELD stausite
+#                     EXIT WHILE
+#                  END IF
+#                  SELECT COUNT(*) INTO l_n FROM ooee_t,ooef_t
+#                   WHERE ooee001 = ooef001 AND ooefent = ooeeent
+#                     AND ooee002 = '2'  
+#                     AND ooee003 = 'A' 
+#                     AND ooefent = g_enterprise
+#                     AND ooef001 = l_stausite
+#                  IF l_n < 1 THEN
+#                     CALL cl_err(l_stausite,'art-00218',1)
+#                     LET g_master.stausite = ""
+#                     DISPLAY g_master.stausite TO stausite
+#                     NEXT FIELD stausite
+#                     EXIT WHILE
+#                  END IF
+#               END WHILE
+#            END IF
+]]>
+</point>
+  <point name="input.c.stau001" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[#            #此段落由子樣板a07產生            
+#            #開窗i段
+#            INITIALIZE g_qryparam.* TO NULL
+#            LET g_qryparam.state = 'i'
+#            LET g_qryparam.reqry = FALSE
+#
+#            LET g_qryparam.default1 = g__m.stau001             #給予default值
+#            LET g_qryparam.default2 = "" #g__m.gzcbl004 #說明
+#            #給予arg
+#            LET g_qryparam.arg1 = "" #
+#
+#            
+#            CALL q_gzcb002_01()                                #呼叫開窗
+#
+#            LET g__m.stau001 = g_qryparam.return1              
+#            #LET g__m.gzcbl004 = g_qryparam.return2 
+#            DISPLAY g__m.stau001 TO stau001              #
+#            #DISPLAY g__m.gzcbl004 TO gzcbl004 #說明
+#            NEXT FIELD stau001                          #返回原欄位
+            #開窗c段
+#            INITIALIZE g_qryparam.* TO NULL
+#            LET g_qryparam.state = "c"
+#            LET g_qryparam.reqry = FALSE
+#            LET g_qryparam.arg1 = '6072'
+#            CALL q_gzcb002_01()                      #呼叫開窗
+#            LET g_master.stau001 = g_qryparam.return1
+#            DISPLAY g_master.stau001 TO stau001      #顯示到畫面上
+#            LET g_qryparam.where = ""
+#            NEXT FIELD stau001                       #返回原欄位
+
+]]>
+</point>
+  <point name="input.c.stausite" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[#            #此段落由子樣板a07產生            
+#            #開窗i段
+#            INITIALIZE g_qryparam.* TO NULL
+#            LET g_qryparam.state = 'i'
+#            LET g_qryparam.reqry = FALSE
+#
+#            LET g_qryparam.default1 = g__m.stausite             #給予default值
+#            LET g_qryparam.default2 = "" #g__m.ooefl003 #說明(簡稱)
+#            #給予arg
+#            LET g_qryparam.arg1 = "" #
+#
+#            
+#            CALL q_ooef001_3()                                #呼叫開窗
+#
+#            LET g__m.stausite = g_qryparam.return1              
+#            #LET g__m.ooefl003 = g_qryparam.return2 
+#            DISPLAY g__m.stausite TO stausite              #
+#            #DISPLAY g__m.ooefl003 TO ooefl003 #說明(簡稱)
+#            NEXT FIELD stausite                          #返回原欄位
+#            #開窗c段
+#            INITIALIZE g_qryparam.* TO NULL
+#            LET g_qryparam.state = "c"
+#            LET g_qryparam.reqry = FALSE
+#            LET g_qryparam.arg1 = 'A'
+#            CALL q_ooef001_3()                       #呼叫開窗
+#            LET g_master.stausite = g_qryparam.return1
+#            DISPLAY g_master.stausite TO stausite   #顯示到畫面上
+#            LET g_qryparam.where = ""
+#            NEXT FIELD stausite                       #返回原欄位
+
+]]>
+</point>
+  <point name="process.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="process.pre_process" cite_std="N" status="u" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   IF cl_null(g_master.wc) OR g_master.wc = " 1=1" OR
+      cl_null(lc_param.wc) OR lc_param.wc = " 1=1" THEN
+      CALL cl_err('','ast-00101',1)
+      RETURN
+   END IF
+   IF NOT cl_ask_confirm("lib-012") THEN
+      RETURN
+   END IF]]>
+</point>
+  <point name="process.process" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[   CALL s_transaction_begin()
+   CALL cl_showmsg_init()
+   CALL astp206_ins_stau(ls_js)
+   IF NOT cl_null(g_errno) THEN
+      CALL cl_err('',g_errno,1)
+      CALL s_transaction_end("N","0")
+   ELSE
+      CALL s_transaction_end("Y","0")
+   END IF
+   INITIALIZE g_master.* TO NULL]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[   DEFINE tok        base.stringtokenizer
+   DEFINE l_stausite LIKE stau_t.stausite
+   DEFINE l_tok      STRING
+   DEFINE l_stau001  LIKE stau_t.stau001
+   DEFINE l_stau004  STRING
+   DEFINE l_ooefstus LIKE ooef_t.ooefstus
+   DEFINE l_len      LIKE type_t.num5
+   DEFINE l_n        LIKE type_t.num5
+   DEFINE l_str      LIKE type_t.chr1
+   DEFINE l_month    LIKE type_t.num5]]>
+</point>
+  <point name="ui_dialog.more_action" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[         BEFORE DIALOG
+            LET g_master.stau003 = g_today
+            CALL astp206_stau004_default(g_master.stau003)
+                RETURNING g_master.stau004           ]]>
+</point>
+  <point name="ui_dialog.more_construct" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[         CONSTRUCT BY NAME lc_param.wc ON gzcb002
+            BEFORE CONSTRUCT
+               CALL cl_qbe_init()
+               #DISPLAY g_today TO prbk006
+               
+            ON ACTION controlp INFIELD gzcb002
+               #開窗c段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = "c"
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = '6072'
+               CALL q_gzcb002_01()                      #呼叫開窗
+               DISPLAY g_qryparam.return1 TO gzcb002    #顯示到畫面上
+               NEXT FIELD gzcb002                       #返回原欄位
+               
+            AFTER FIELD gzcb002
+
+               
+            
+               
+         END CONSTRUCT           ]]>
+</point>
+  <point name="ui_dialog.more_input" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[#         INPUT lc_param.stausite,lc_param.stau001,lc_param.stau003,lc_param.stau004 
+#            FROM stausite,stau001,stau003,stau004 ATTRIBUTE(WITHOUT DEFAULTS)
+#            
+#            BEFORE INPUT
+#            
+#            AFTER FIELD stausite
+#               LET tok = base.StringTokenizer.create(lc_param.stausite,"|")
+#               WHILE tok.hasMoreTokens()
+#                  LET l_tok=tok.nextToken()
+#                  LET l_stausite = l_tok
+#                  SELECT COUNT(*) INTO l_n
+#                    FROM ooef_t
+#                   WHERE ooef001 = l_stausite
+#                     AND ooefent = g_enterprise
+#                  IF l_n < 1 THEN
+#                     CALL cl_err(l_stausite,'apm-00248',1)
+#                     LET lc_param.stausite = ""
+#                     DISPLAY lc_param.stausite TO stausite
+#                     NEXT FIELD stausite
+#                     EXIT WHILE
+#                  END IF
+#                  SELECT ooefstus INTO l_ooefstus
+#                    FROM ooef_t
+#                   WHERE ooef001 = l_stausite
+#                     AND ooefent = g_enterprise
+#                  IF l_ooefstus <> 'Y' THEN
+#                     CALL cl_err(l_stausite,'apm-00249',1)
+#                     LET lc_param.stausite = ""
+#                     DISPLAY lc_param.stausite TO stausite
+#                     NEXT FIELD stausite
+#                     EXIT WHILE
+#                  END IF
+#                  SELECT COUNT(*) INTO l_n FROM ooee_t,ooef_t
+#                   WHERE ooee001 = ooef001 AND ooefent = ooeeent
+#                     AND ooee002 = '2'  
+#                     AND ooee003 = 'A' 
+#                     AND ooefent = g_enterprise
+#                     AND ooef001 = l_stausite
+#                  IF l_n < 1 THEN
+#                     CALL cl_err(l_stausite,'art-00218',1)
+#                     LET lc_param.stausite = ""
+#                     DISPLAY lc_param.stausite TO stausite
+#                     NEXT FIELD stausite
+#                     EXIT WHILE
+#                  END IF
+#               END WHILE
+#            
+#            AFTER FIELD stau001
+#               LET tok = base.StringTokenizer.create(lc_param.stau001,"|")
+#               WHILE tok.hasMoreTokens()
+#                  LET l_tok=tok.nextToken()
+#                  LET l_stau001 = l_tok
+#                  SELECT COUNT(*) INTO l_n
+#                    FROM gzcb_t
+#                   WHERE gzcb001 = '6072' 
+#                     AND gzcb002 = l_stau001
+#                  IF l_n < 1 THEN
+#                     CALL cl_err(l_stau001,'ast-00099',1)
+#                     LET lc_param.stau001 = ""
+#                     DISPLAY lc_param.stau001 TO stau001
+#                     NEXT FIELD stau001
+#                     EXIT WHILE
+#                  END IF
+#               END WHILE
+#
+#               AFTER FIELD stau003
+#                  IF NOT cl_null(lc_param.stau003) THEN
+#                     CALL astp206_stau004_default(lc_param.stau003)
+#                        RETURNING lc_param.stau004
+#                  END IF
+#                  
+#               AFTER FIELD stau004
+#                  IF NOT cl_null(lc_param.stau004) THEN
+#                     LET l_stau004 = lc_param.stau004
+#                     LET l_len = l_stau004.getLength()
+#                     IF l_len <> 6 THEN
+#                        CALL cl_err('','ast-00098',1)
+#                        NEXT FIELD stau004
+#                     END IF
+#                     FOR l_n=1 TO l_len
+#                        LET l_str = l_stau004.subString(l_n,l_n)
+#                        IF l_str NOT MATCHES '[0123456789]' THEN
+#                           CALL cl_err('','ast-00098',1)
+#                           NEXT FIELD stau004
+#                           EXIT FOR
+#                        END IF
+#                     END FOR
+#                     LET l_month = l_stau004.subString(5,6) USING '<<'
+#                     IF cl_null(l_month) OR l_month < 1 OR l_month > 12 THEN
+#                        CALL cl_err('','ast-00098',1)
+#                        NEXT FIELD stau004
+#                     END IF
+#                  END IF
+#            
+#            ON ACTION controlp INFIELD stausite
+#               #開窗c段
+#               INITIALIZE g_qryparam.* TO NULL
+#               LET g_qryparam.state = "c"
+#               LET g_qryparam.reqry = FALSE
+#               LET g_qryparam.arg1 = 'A'
+#               CALL q_ooef001_3()                       #呼叫開窗
+#               LET lc_param.stausite = g_qryparam.return1
+#               DISPLAY lc_param.stausite TO stausite   #顯示到畫面上
+#               LET g_qryparam.where = ""
+#               NEXT FIELD stausite                       #返回原欄位
+#            
+#            ON ACTION controlp INFIELD stau001
+#               #開窗c段
+#               INITIALIZE g_qryparam.* TO NULL
+#               LET g_qryparam.state = "c"
+#               LET g_qryparam.reqry = FALSE
+#               LET g_qryparam.arg1 = '6072'
+#               CALL q_gzcb002_01()                      #呼叫開窗
+#               LET lc_param.stau001 = g_qryparam.return1
+#               DISPLAY lc_param.stau001 TO stau001      #顯示到畫面上
+#               LET g_qryparam.where = ""
+#               NEXT FIELD stau001                       #返回原欄位
+#               
+#         END INPUT]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.background" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.before_close" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="init.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="init.init" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.m.before_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.stau003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.stau003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.stau004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.stau004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.stau003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.stau004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.m.after_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.other" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="cs.head.before_construct" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.ooef001" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.ooef001" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="cs.other" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.qbe_select" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.qbeclear" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.exit_dialog" cite_std="N" status="u" ver="" src="s" new="Y">
+<![CDATA[      ]]>
+</point>
+  <point name="transfer.argv.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.count_progress" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.foreground_finish" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.background_finish" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <section id="astp206.description" ver="1" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000068
+#+ 
+#+ Filename...: astp206
+#+ Description: 結算會計期關帳批處理
+#+ Creator....: 03247(2014/06/25)
+#+ Modifier...: 03247(2014/07/04)
+#+ Buildtype..: 應用 p01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="astp206.global" ver="6" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       ooef001 LIKE type_t.chr80, 
+   gzcb002 LIKE type_t.chr80, 
+   stau003 LIKE type_t.dat, 
+   stau004 LIKE type_t.num10, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="astp206.init" ver="1" status="" src="s">
+<![CDATA[#+ 初始化作業
+PRIVATE FUNCTION astp206_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+</section>
+  <section id="astp206.main" ver="1" status="" src="s">
+<![CDATA[MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("ast","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+      CALL astp206_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_astp206 WITH FORM cl_ap_formpath("ast",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL astp206_init()
+ 
+      #進入選單 Menu (="N")
+      CALL astp206_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_astp206
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+</section>
+  <section id="astp206.other_function" ver="1" status="" src="s">
+<![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+</section>
+  <section id="astp206.process" ver="1" status="" src="s">
+<![CDATA[#+ 資料處理
+PRIVATE FUNCTION astp206_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   {<point name="process.define"/>}
+   #end add-point
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE astp206_process_cs CURSOR FROM ls_sql
+#  FOREACH astp206_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+   END IF
+END FUNCTION
+]]>
+</section>
+  <section id="astp206.transfer_argv" ver="1" status="" src="s">
+<![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION astp206_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+ 
+   CALL util.JSON.parse(ls_js,la_param)
+ 
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+</section>
+  <section id="astp206.ui_dialog" ver="6" status="" src="s">
+<![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION astp206_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+ 
+   #add-point:ui_dialog段before dialog
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #+ 此段落由子樣板a57產生
+         INPUT BY NAME g_master.stau003,g_master.stau004 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前
+               {<point name="input.m.before_input"/>}
+               #end add-point
+         
+                     #此段落由子樣板a01產生
+         BEFORE FIELD stau003
+            #add-point:BEFORE FIELD stau003
+            {<point name="input.b.stau003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD stau003
+            
+            #add-point:AFTER FIELD stau003
+            {<point name="input.a.stau003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE stau003
+            #add-point:ON CHANGE stau003
+            {<point name="input.g.stau003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD stau004
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_master.stau004,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD stau004
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD stau004
+            {<point name="input.a.stau004" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD stau004
+            #add-point:BEFORE FIELD stau004
+            {<point name="input.b.stau004" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE stau004
+            #add-point:ON CHANGE stau004
+            {<point name="input.g.stau004" />}
+            #END add-point
+ 
+ 
+                     #Ctrlp:input.c.stau003
+         ON ACTION controlp INFIELD stau003
+            #add-point:ON ACTION controlp INFIELD stau003
+            {<point name="input.c.stau003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.stau004
+         ON ACTION controlp INFIELD stau004
+            #add-point:ON ACTION controlp INFIELD stau004
+            {<point name="input.c.stau004" />}
+            #END add-point
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後
+               {<point name="input.m.after_input"/>}
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...)
+            {<point name="input.other"/>}
+            #end add-point
+               
+         END INPUT
+ 
+ 
+         
+         #+ 此段落由子樣板a57產生
+         CONSTRUCT BY NAME g_master.wc ON ooef001
+         
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct
+               {<point name="cs.head.before_construct"/>}
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #Ctrlp:construct.c.ooef001
+         ON ACTION controlp INFIELD ooef001
+            #add-point:ON ACTION controlp INFIELD ooef001
+            {<point name="construct.c.ooef001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD ooef001
+            #add-point:BEFORE FIELD ooef001
+            {<point name="construct.b.ooef001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD ooef001
+            
+            #add-point:AFTER FIELD ooef001
+            {<point name="construct.a.ooef001" />}
+            #END add-point
+            
+ 
+ 
+            
+            #add-point:其他管控
+            {<point name="cs.other"/>}
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+      
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               LET lc_param.wc = ls_wc
+               #取得條件後需要執行項目,應新增於下方adp
+               #add-point:ui_dialog段qbe_select後
+               {<point name="ui_dialog.qbe_select"/>}
+               #end add-point
+            END IF
+ 
+         ON ACTION qbe_save
+            CALL cl_qbe_save()
+ 
+         ON ACTION batch_execute
+            ACCEPT DIALOG
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE lc_param.* TO NULL
+            #add-point:ui_dialog段qbeclear
+            {<point name="ui_dialog.qbeclear"/>}
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         LET g_jobid = cl_schedule_get_jobid(g_prog)
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL astp206_process(ls_js)
+            WHEN g_schedule.gzpa003 = "1"
+            #    CALL cl_schedule_update_data(g_jobid,ls_js)
+                 LET ls_js = astp206_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+         INITIALIZE lc_param.*  TO NULL 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+</section>
+</add_points>

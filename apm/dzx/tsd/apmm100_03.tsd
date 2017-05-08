@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="apmm100_03" std_prog="apmm100_03" erpver="1.0" ver="2" module="APM" type="S" booking="Y" designer_ver="1.0" class="I" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items=""/>
+  <table ver="2" cite_std="N">
+    <tbl name="pmad_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="u">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status="u"/>
+      <sr name="s_detail1_apmm100_03" src="s" insert="N" delete="Y" append="Y" cascade="Y" kind="Table" status="u"/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：維護交易對象允許收付款條件的子作業，完成後將子作業嵌入相關維護作業的畫面中。
+作業功能：新增/修改/刪除/複製/匯出Excel/查詢/說明/離開
+作業類型：子作業
+輸入模式：單檔多欄模式F002_00
+作業資料來源(Detail)：pmad_t(交易對象允許收付款條件檔)
+資料處理：
+1.執行此子作業時需傳入2個參數如下:
+ 1-1.p_pmad001(交易對象編號):
+ 1-2.p_pmad003(交易類型): 1:(付款條件)、2:(收款條件)
+
+2.當傳入參數為p_pmad003 ='1'時，代表是維護允許的付款條件。
+   2-1.新增時[C:交易類型] = p_pmad003
+   2-2.只能查出該交易對象編號且交易類型='1'的資料，顯示在畫面上供維護
+   2-3.畫面上"收/付款條件"欄位的顯示改成"付款條件"
+  
+3.當傳入參數為p_pmad003 ='2'時，代表是維護允許的收款條件。
+   3-1.新增時[C:交易類型] = p_pmad003
+   3-2.只能查出該交易對象編號且交易類型='2'的資料，顯示在畫面上供維護
+   3-3.畫面上"收/付款條件"欄位的顯示改成"收款條件"]]>
+  </all>
+  <field cite_std="N" name="pmad001_2" ver="2" src="s" column="pmad001" table="pmad_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="u">
+    <![CDATA[pmad001的值等於傳入參數p_pmaa001的值]]>
+  </field>
+  <field cite_std="N" name="pmad_t.pmad002" ver="1" src="s" column="pmad002" table="pmad_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗1.輸入的值必須存在[T:收/付款條件檔(ooib_t)].[C:收付款條件編號]，且[C:狀態] =有效，
+           且ooib001 = p_pmad003
+     帶值:[C:說明]=[T:收/付款條件多語言檔(ooibl_t)].[C:說明]
+
+開窗處理：
+            IF g_pmad_d[l_ac].pmad003 = '1' THEN  #付款
+               CALL q_ooib001_2()                                #呼叫開窗
+            END IF
+            IF g_pmad_d[l_ac].pmad003 = '2' THEN  #收款
+               CALL q_ooib001_1()                                #呼叫開窗
+            END IF]]>
+  </field>
+  <field cite_std="N" name="pmad_t.pmad003" ver="1" src="s" column="pmad003" table="pmad_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[pmad003的值等於傳入參數p_pmaa002]]>
+  </field>
+  <field cite_std="N" name="pmad_t.pmad004" ver="1" src="s" column="pmad004" table="pmad_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[校驗:1.同一個交易對象編號只能有一筆收/付款條件資料可以勾選為主要的]]>
+  </field>
+  <field cite_std="N" name="pmad_t.pmadstus" ver="1" src="s" column="pmadstus" table="pmad_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmad_t.pmad001" ver="2" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="pmad002_desc" src="s" depend_field="pmad_t.pmad002" correspon_key="pmad002" ref_table="ooibl_t" ref_fk="ooibl002" ref_dlang="ooibl003" ref_rtn="ooibl004" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="2" name="pmad001_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="2" name="pmad_t.pmad001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="pmad_t.pmad002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmad_t.pmad003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmad_t.pmad004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmad_t.pmadstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <strings>
+    <sfield name="lbl_pmadstus" text="狀態碼" lstr=""/>
+    <sfield name="lbl_pmad001" text="交易對象編號" lstr=""/>
+    <sfield name="lbl_pmad002" text="交易條件編號" lstr=""/>
+    <sfield name="lbl_ooibl004" text="說明" lstr=""/>
+    <sfield name="lbl_pmad003" text="交易類型" lstr=""/>
+    <sfield name="lbl_pmad004" text="主要否" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

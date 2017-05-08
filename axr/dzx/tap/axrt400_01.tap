@@ -1,0 +1,1654 @@
+<add_points prog="axrt400_01" std_prog="axrt400_01" erpver="1.0" module="AXR" ver="1" env="s" zone="t10dev" normal_style="Y" booking="Y">
+  <point name="input.a.xrdadocno" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_xrda_m.xrdald) AND NOT cl_null(g_xrda_m.xrdadocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_xrda_m.xrdald != g_xrdald_t  OR g_xrda_m.xrdadocno != g_xrdadocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xrda_t WHERE "||"xrdaent = '" ||g_enterprise|| "' AND "||"xrdald = '"||g_xrda_m.xrdald ||"' AND "|| "xrdadocno = '"||g_xrda_m.xrdadocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.xrdald" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_xrda_m.xrdald) AND NOT cl_null(g_xrda_m.xrdadocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_xrda_m.xrdald != g_xrdald_t  OR g_xrda_m.xrdadocno != g_xrdadocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xrda_t WHERE "||"xrdaent = '" ||g_enterprise|| "' AND "||"xrdald = '"||g_xrda_m.xrdald ||"' AND "|| "xrdadocno = '"||g_xrda_m.xrdadocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="function.axrt400_01_1" cite_std="N" status="" ver="1" src="s" new="Y" order="1" cite_ver="" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 全部未沖帳款自動產生
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt400_01_1()
+   DEFINE l_gzcb003      LIKE gzcb_t.gzcb003
+   
+   LET g_wc = " 1=1"
+   
+   INITIALIZE g_xrce_t.* To Null
+   
+   SELECT gzcb003 INTO l_gzcb003 FROM gzcb_t
+    WHERE gzcb002 = '10'
+      AND gzcb001 = '8306'
+   LET g_xrce_t.xrceent = g_enterprise
+   LET g_xrce_t.xrceld = g_ld
+   LET g_xrce_t.xrcedocno = g_docno
+   LET g_xrce_t.xrcesite  = g_site
+   LET g_xrce_t.xrce001   = 'anmt310'
+   LET g_xrce_t.xrce002   = '10'
+   LET g_xrce_t.xrce005   = 0
+   LET g_xrce_t.xrce006   = '20'
+   LET g_xrce_t.xrce009   = 'N'
+   LET g_xrce_t.xrce010   = ''
+   LET g_xrce_t.xrce013   = ''
+   LET g_xrce_t.xrce014   = ''
+   IF l_gzcb003 = 'D' THEN
+      LET g_xrce_t.xrce015   =  1
+   ELSE
+      LET g_xrce_t.xrce015   =  -1
+   END IF
+   LET g_xrce_t.xrce017   = ''
+   LET g_xrce_t.xrce018   = ''
+   LET g_xrce_t.xrce019   = ''
+   LET g_xrce_t.xrce020   = ''
+   LET g_xrce_t.xrce021   = ''
+   LET g_xrce_t.xrce022   = ''
+   LET g_xrce_t.xrce023   = ''
+   
+   #產生收款資料
+   CALL axrt400_01_ins_xrce_dr()
+   
+   INITIALIZE g_xrce_t.* To Null
+    
+   SELECT gzcb003 INTO l_gzcb003 FROM gzcb_t
+    WHERE gzcb002 = '30'
+      AND gzcb001 = '8306'
+   LET g_xrce_t.xrceent = g_enterprise
+   LET g_xrce_t.xrceld = g_ld
+   LET g_xrce_t.xrcedocno = g_docno
+   LET g_xrce_t.xrcesite  = g_site
+   LET g_xrce_t.xrce002   = '30'
+   LET g_xrce_t.xrce006   = ''
+   LET g_xrce_t.xrce009   = 'N'
+   LET g_xrce_t.xrce010   = ''
+   LET g_xrce_t.xrce011   = ''
+   LET g_xrce_t.xrce012   = ''
+   LET g_xrce_t.xrce013   = ''
+   LET g_xrce_t.xrce014   = ''
+   IF l_gzcb003 = 'D' THEN
+      LET g_xrce_t.xrce015   =  1
+   ELSE
+      LET g_xrce_t.xrce015   =  -1
+   END IF
+   
+   #產生帳款資料
+   CALL axrt400_01_ins_xrce_cr()
+   
+   LET g_flag = 'Y'
+   
+   #產生溢收資料
+   CALL axrt400_01_ins_xrce_or()
+   IF g_flag = 'Y' THEN
+      #產生匯兌損益資料
+      CALL axrt400_01_ins_xrce_diff()
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.axrt400_01_2" cite_std="N" status="" ver="1" src="s" new="Y" order="2" cite_ver="" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 僅沖帳至帳款與收入相符
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt400_01_2()
+   DEFINE l_gzcb003      LIKE gzcb_t.gzcb003
+   DEFINE l_sql          STRING
+   DEFINE ls_sql1        STRING
+   DEFINE l_sql2         STRING
+   DEFINE l_count        LIKE type_t.num5
+   DEFINE l_nmbb004      LIKE nmbb_t.nmbb004
+   DEFINE l_nmbb007      LIKE nmbb_t.nmbb007
+   DEFINE l_nmbb008      LIKE nmbb_t.nmbb008
+   DEFINE l_xrcc108      LIKE xrcc_t.xrcc108
+   DEFINE l_xrcc109      LIKE xrcc_t.xrcc109
+   DEFINE l_ld_s         LIKE type_t.num5
+   DEFINE l_xrce109_10   LIKE xrce_t.xrce109
+   DEFINE l_xrce109_30   LIKE xrce_t.xrce109
+
+   #檢查是否是主帳套
+   SELECT COUNT(*) INTO l_count FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald  = g_ld
+      AND glaa014 = 'Y'
+   IF l_count < 1 THEN
+      #次帳套一
+      LET l_count = 0
+      SELECT COUNT(*) INTO l_count FROM ooab_t WHERE ooab001 = 'S-FIN-0001' AND ooab002 = g_ld
+      IF l_count > 0 THEN
+         LET ls_sql1 = "nmbb006-nmbb020 nmbb006,nmbb007-nmbb021 nmbb007"
+      END IF
+      #次帳套二
+      LET l_count = 0
+      SELECT COUNT(*) INTO l_count FROM ooab_t WHERE ooab001 = 'S-FIN-0002' AND ooab002 = g_ld
+      IF l_count > 0 THEN
+         LET ls_sql1 = "nmbb006-nmbb023 nmbb006,nmbb007-nmbb024 nmbb007"
+      END IF
+   ELSE
+      LET ls_sql1 = "nmbb006-nmbb008 nmbb006,nmbb007-nmbb009 nmbb007"
+   END IF
+   
+   IF NOT cl_null(g_wc1) THEN
+      LET g_wc = g_wc1
+   END IF
+   
+   IF cl_null(g_wc1) THEN LET g_wc1 = " 1=1" END IF
+   IF cl_null(g_wc2) THEN LET g_wc2 = " 1=1" END IF
+
+   #本位幣二:nmbb013-nmbb014      本位幣三: nmbb017-nmbb018
+   LET l_sql = "SELECT nmbb004,SUM(nmbb006),SUM(nmbb007),SUM(xrcc108),SUM(xrcc109) FROM (",
+                "SELECT nmbb004 nmbb004,SUM(nmbb006 - nmbb008) nmbb006,SUM(nmbb007 - nmbb009) nmbb007,0 xrcc108,0 xrcc109 FROM nmba_t,nmbb_t",
+                " WHERE nmbbent    = nmbaent",
+                "   AND nmbbcomp   = nmbacomp",
+                "   AND nmbbdocno  = nmbadocno",
+                "   AND nmbaent    = '",g_enterprise,"'",
+                "   AND nmbastus   = 'Y'",
+                "   AND nmbb001    = '1'",
+                "   AND nmbadocdt <= '",g_docdt,"'",
+                "   AND nmba004 IN ('",g_xrda004,"','",g_xrda005,"')",
+                "   AND",g_wc CLIPPED,
+                " GROUP BY nmbb004 ",
+                " UNION ",
+                "SELECT xrcc100 nmbb004,0 nmbb006,0 nmbb007,SUM(xrcc108 - xrcc109) xrcc108,SUM(xrcc118 - xrcc119) xrce119 FROM xrcc_t,xrcb_t,xrca_t,gzcb_t",
+                " WHERE xrccld = xrcbld",
+                "   AND xrccdocno = xrcbdocno",
+                "   AND xrccseq = xrcbseq",
+                "   AND xrccld = xrcald",
+                "   AND xrccld = '",g_ld,"'",
+                "   AND xrccdocno = xrcadocno",
+                "   AND xrcastus = 'Y'",
+                "   AND xrca001 = gzcb002",
+                "   AND gzcb003 = '1'",
+                "   AND gzcb001 = '8302'",
+                "   AND xrcc108 - xrcc109 > 0",
+                "   AND xrcadocdt <= '",g_docdt,"'",
+                "   AND xrca004 IN ('",g_xrda004,"','",g_xrda005,"')",
+                "   AND ",g_wc2 CLIPPED,
+                " GROUP BY xrcc100 ",
+                " )",
+                " GROUP BY nmbb004"
+                
+   PREPARE axrt400_01_prep4 FROM l_sql
+   DECLARE axrt400_01_amt CURSOR FOR axrt400_01_prep4
+
+   LET l_sql = "SELECT SUM(xrce109) FROM xrce_t,xrda_t WHERE xrceent = '",g_enterprise,"'",
+               "   AND xrceld = '",g_ld,"'",
+               "   AND xrce100 = ?",
+               "   AND xrce002 = ?",
+               "   AND xrceld = xrdald",
+               "   AND xrceent = xrdaent",
+               "   AND xrcedocno = xrdadocno",
+               "   AND xrda004 IN ('",g_xrda004,"','",g_xrda005,"')",
+               "   AND xrdastus = 'N'"
+               
+   PREPARE axrt400_01_prep5 FROM l_sql
+
+   FOREACH axrt400_01_amt INTO l_nmbb004,l_nmbb007,l_nmbb008,l_xrcc108,l_xrcc109
+      IF l_nmbb007 = 0 OR l_xrcc108 = 0 THEN CONTINUE FOREACH END IF
+      
+      EXECUTE axrt400_01_prep5 USING l_nmbb004,'10' INTO l_xrce109_10
+      EXECUTE axrt400_01_prep5 USING l_nmbb004,'30' INTO l_xrce109_30
+      
+      IF cl_null(l_xrce109_10) THEN LET l_xrce109_10 = 0 END IF
+      IF cl_null(l_xrce109_30) THEN LET l_xrce109_30 = 0 END IF
+      
+      LET l_nmbb007 = l_nmbb007 - l_xrce109_10
+      LET l_xrcc108 = l_xrcc108 - l_xrce109_30
+      
+      IF l_nmbb007 > l_xrcc108 THEN LET p_vef_amount = l_xrcc108 ELSE LET p_vef_amount = l_nmbb007 END IF
+      IF NOT cl_null(g_wc1) THEN
+         LET g_wc = g_wc1 CLIPPED," AND nmbb004 = '",l_nmbb004,"'"
+      ELSE
+         LET g_wc = g_wc," AND nmbb004 = '",l_nmbb004,"'"
+      END IF
+      
+      INITIALIZE g_xrce_t.* To Null
+      
+      SELECT gzcb003 INTO l_gzcb003 FROM gzcb_t
+       WHERE gzcb002 = '10'
+         AND gzcb001 = '8306'
+      LET g_xrce_t.xrceent = g_enterprise
+      LET g_xrce_t.xrceld = g_ld
+      LET g_xrce_t.xrcedocno = g_docno
+      LET g_xrce_t.xrcesite  = g_site
+      LET g_xrce_t.xrce001   = 'anmt310'
+      LET g_xrce_t.xrce002   = '10'
+      LET g_xrce_t.xrce005   = 0
+      LET g_xrce_t.xrce006   = '20'
+      LET g_xrce_t.xrce009   = 'N'
+      LET g_xrce_t.xrce010   = ''
+      LET g_xrce_t.xrce013   = ''
+      LET g_xrce_t.xrce014   = ''
+      IF l_gzcb003 = 'D' THEN
+         LET g_xrce_t.xrce015   =  1
+      ELSE
+         LET g_xrce_t.xrce015   =  -1
+      END IF
+      LET g_xrce_t.xrce017   = ''
+      LET g_xrce_t.xrce018   = ''
+      LET g_xrce_t.xrce019   = ''
+      LET g_xrce_t.xrce020   = ''
+      LET g_xrce_t.xrce021   = ''
+      LET g_xrce_t.xrce022   = ''
+      LET g_xrce_t.xrce023   = ''
+   
+      #產生收款資料
+      CALL axrt400_01_ins_xrce_dr()
+      
+      IF NOT cl_null(g_wc2) THEN
+         LET g_wc = g_wc2 CLIPPED," AND xrcc100 = '",l_nmbb004,"'"
+      ELSE
+         LET g_wc = g_wc," AND xrcc100 = '",l_nmbb004,"'"
+      END IF
+      
+      INITIALIZE g_xrce_t.* To Null
+       
+      SELECT gzcb003 INTO l_gzcb003 FROM gzcb_t
+       WHERE gzcb002 = '30'
+         AND gzcb001 = '8306'
+      LET g_xrce_t.xrceent = g_enterprise
+      LET g_xrce_t.xrceld = g_ld
+      LET g_xrce_t.xrcedocno = g_docno
+      LET g_xrce_t.xrcesite  = g_site
+      LET g_xrce_t.xrce002   = '30'
+      LET g_xrce_t.xrce006   = ''
+      LET g_xrce_t.xrce009   = 'N'
+      LET g_xrce_t.xrce010   = ''
+      LET g_xrce_t.xrce011   = ''
+      LET g_xrce_t.xrce012   = ''
+      LET g_xrce_t.xrce013   = ''
+      LET g_xrce_t.xrce014   = ''
+      IF l_gzcb003 = 'D' THEN
+         LET g_xrce_t.xrce015   =  1
+      ELSE
+         LET g_xrce_t.xrce015   =  -1
+      END IF
+      
+      #產生帳款資料
+      CALL axrt400_01_ins_xrce_cr()
+      
+   END FOREACH
+   
+   #產生匯兌損益資料
+   CALL axrt400_01_ins_xrce_diff()
+END FUNCTION]]>
+</point>
+  <point name="function.axrt400_01_3" cite_std="N" status="" ver="1" src="s" new="Y" order="3" cite_ver="" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 依指定範圍產生
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt400_01_3()
+   DEFINE l_gzcb003      LIKE gzcb_t.gzcb003
+   
+   LET g_wc = " 1=1"
+
+   IF NOT cl_null(g_wc1) THEN
+      LET g_wc = g_wc1
+   END IF
+
+   INITIALIZE g_xrce_t.* To Null
+   
+   SELECT gzcb003 INTO l_gzcb003 FROM gzcb_t
+    WHERE gzcb002 = '10'
+      AND gzcb001 = '8306'
+   LET g_xrce_t.xrceent = g_enterprise
+   LET g_xrce_t.xrceld = g_ld
+   LET g_xrce_t.xrcedocno = g_docno
+   LET g_xrce_t.xrcesite  = g_site
+   LET g_xrce_t.xrce001   = 'anmt310'
+   LET g_xrce_t.xrce002   = '10'
+   LET g_xrce_t.xrce005   = 0
+   LET g_xrce_t.xrce006   = '20'
+   LET g_xrce_t.xrce009   = 'N'
+   LET g_xrce_t.xrce010   = ''
+   LET g_xrce_t.xrce013   = ''
+   LET g_xrce_t.xrce014   = ''
+   IF l_gzcb003 = 'D' THEN
+      LET g_xrce_t.xrce015   =  1
+   ELSE
+      LET g_xrce_t.xrce015   =  -1
+   END IF
+   LET g_xrce_t.xrce017   = ''
+   LET g_xrce_t.xrce018   = ''
+   LET g_xrce_t.xrce019   = ''
+   LET g_xrce_t.xrce020   = ''
+   LET g_xrce_t.xrce021   = ''
+   LET g_xrce_t.xrce022   = ''
+   LET g_xrce_t.xrce023   = ''
+   
+   #產生收款資料
+   CALL axrt400_01_ins_xrce_dr()
+
+   IF NOT cl_null(g_wc2) THEN
+      LET g_wc = g_wc2
+   END IF
+
+   INITIALIZE g_xrce_t.* To Null
+    
+   SELECT gzcb003 INTO l_gzcb003 FROM gzcb_t
+    WHERE gzcb002 = '30'
+      AND gzcb001 = '8306'
+   LET g_xrce_t.xrceent = g_enterprise
+   LET g_xrce_t.xrceld = g_ld
+   LET g_xrce_t.xrcedocno = g_docno
+   LET g_xrce_t.xrcesite  = g_site
+   LET g_xrce_t.xrce002   = '30'
+   LET g_xrce_t.xrce006   = ''
+   LET g_xrce_t.xrce009   = 'N'
+   LET g_xrce_t.xrce010   = ''
+   LET g_xrce_t.xrce011   = ''
+   LET g_xrce_t.xrce012   = ''
+   LET g_xrce_t.xrce013   = ''
+   LET g_xrce_t.xrce014   = ''
+   IF l_gzcb003 = 'D' THEN
+      LET g_xrce_t.xrce015   =  1
+   ELSE
+      LET g_xrce_t.xrce015   =  -1
+   END IF
+   
+   #產生帳款資料
+   CALL axrt400_01_ins_xrce_cr()
+END FUNCTION]]>
+</point>
+  <point name="function.axrt400_01_ins_xrce_dr" cite_std="N" status="" ver="1" src="s" new="Y" order="4" cite_ver="" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: xrce_t收款資料新增
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt400_01_ins_xrce_dr()
+   DEFINE l_xrce109      LIKE xrce_t.xrce109
+   DEFINE l_xrce119      LIKE xrce_t.xrce119
+   DEFINE l_xrce129      LIKE xrce_t.xrce129
+   DEFINE l_xrce139      LIKE xrce_t.xrce139
+   DEFINE l_count        LIKE type_t.num5
+   DEFINE l_ls_s         LIKE type_t.num5
+   DEFINE l_sql          STRING
+   DEFINE l_nmba_t       RECORD LIKE nmba_t.*
+   DEFINE l_nmbb_t       RECORD LIKE nmbb_t.*
+   
+   #檢查是否是主帳套
+   SELECT COUNT(*) INTO l_count FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald  = g_ld
+      AND glaa014 = 'Y'
+   IF l_count < 1 THEN
+      #次帳套一
+      LET l_count = 0
+      SELECT COUNT(*) INTO l_count FROM ooab_t WHERE ooab001 = 'S-FIN-0001' AND ooab002 = g_ld
+      IF l_count > 0 THEN
+         LET l_ls_s = 2
+      END IF
+      #次帳套二
+      LET l_count = 0
+      SELECT COUNT(*) INTO l_count FROM ooab_t WHERE ooab001 = 'S-FIN-0002' AND ooab002 = g_ld
+      IF l_count > 0 THEN
+         LET l_ls_s = 3
+      END IF
+   ELSE
+      LET l_ls_s = 1
+   END IF
+   
+   #計算收款部分
+   #銀存收支單據
+   LET l_sql = "SELECT * FROM nmba_t,nmbb_t",
+               " WHERE nmbbent    = nmbaent",
+               "   AND nmbbcomp   = nmbacomp",
+               "   AND nmbbdocno  = nmbadocno",
+               "   AND nmbaent    = '",g_enterprise,"'",
+               "   AND nmbastus   = 'Y'",
+               "   AND nmbb001    = '1'",
+               "   AND nmbadocdt <= '",g_docdt,"'",
+               "   AND nmba004 IN ('",g_xrda004,"','",g_xrda005,"')",
+               "   AND",g_wc
+   CASE
+      WHEN l_ls_s = '1'
+         LET l_sql = l_sql," AND nmbb006-nmbb008 > 0"
+      WHEN l_ls_s = '1'
+         LET l_sql = l_sql," AND nmbb006-nmbb020 > 0"
+      WHEN l_ls_s = '1'
+         LET l_sql = l_sql," AND nmbb006-nmbb023 > 0"
+   END CASE
+   
+   PREPARE axrt400_01_prep1 FROM l_sql
+   DECLARE axrt400_01_nmbb CURSOR FOR axrt400_01_prep1
+   
+   LET g_xrce_t.xrceseq = g_xrceseq
+   LET p_rec_total = 0
+   FOREACH axrt400_01_nmbb INTO l_nmba_t.*,l_nmbb_t.*
+      #計算預沖金額
+      LET l_xrce109 = 0   LET l_xrce119 = 0
+      LET l_xrce129 = 0   LET l_xrce139 = 0
+      SELECT SUM(xrce109),SUM(xrce119),SUM(xrce129),SUM(xrce139) INTO l_xrce109,l_xrce129,l_xrce129,l_xrce139 FROM xrce_t,xrda_t
+       WHERE xrdaent   = xrceent
+         AND xrdald    = xrceld
+         AND xrdadocno = xrcedocno
+         AND xrce003   = l_nmbb_t.nmbbdocno
+         AND xrce004   = l_nmbb_t.nmbbseq
+         AND xrdastus  = 'N'
+      IF cl_null(l_xrce109) THEN LET l_xrce109 = 0 END IF
+      IF cl_null(l_xrce119) THEN LET l_xrce119 = 0 END IF
+      IF cl_null(l_xrce129) THEN LET l_xrce129 = 0 END IF
+      IF cl_null(l_xrce139) THEN LET l_xrce139 = 0 END IF
+       
+      LET g_xrce_t.xrcecomp = l_nmbb_t.nmbbcomp
+      LET g_xrce_t.xrcelegl = l_nmbb_t.nmbblegl
+      LET g_xrce_t.xrceorga = l_nmbb_t.nmbborga
+      LET g_xrce_t.xrce003  = l_nmbb_t.nmbbdocno
+      LET g_xrce_t.xrce004  = l_nmbb_t.nmbbseq
+      LET g_xrce_t.xrce007  = l_nmbb_t.nmbb006
+      LET g_xrce_t.xrce008  = l_nmbb_t.nmbb003
+      LET g_xrce_t.xrce011  = l_nmbb_t.nmbb002
+      LET g_xrce_t.xrce012  = l_nmbb_t.nmbb010
+      LET g_xrce_t.xrce024  = l_nmbb_t.nmbbdocno
+      LET g_xrce_t.xrce025  = l_nmbb_t.nmbbseq
+      LET g_xrce_t.xrce100  = l_nmbb_t.nmbb004
+      LET g_xrce_t.xrce101  = l_nmbb_t.nmbb005
+      IF g_glaa_t.glaa015 = 'Y' THEN
+         LET g_xrce_t.xrce120  = l_nmbb_t.nmbb011
+         LET g_xrce_t.xrce121  = l_nmbb_t.nmbb012
+      ELSE
+         LET g_xrce_t.xrce120  = ''
+         LET g_xrce_t.xrce121  = 0
+         LET g_xrce_t.xrce129  = 0
+      END IF
+      IF g_glaa_t.glaa019 = 'Y' THEN
+         LET g_xrce_t.xrce130  = l_nmbb_t.nmbb015
+         LET g_xrce_t.xrce131  = l_nmbb_t.nmbb016
+      ELSE
+         LET g_xrce_t.xrce130  = ''
+         LET g_xrce_t.xrce131  = 0
+         LET g_xrce_t.xrce139  = 0
+      END IF
+      CASE
+         WHEN l_ls_s = 1
+            LET g_xrce_t.xrce109  = l_nmbb_t.nmbb006 - l_nmbb_t.nmbb008 - l_xrce109
+            LET g_xrce_t.xrce119  = l_nmbb_t.nmbb007 - l_nmbb_t.nmbb009 - l_xrce119
+         WHEN l_ls_s = 2
+            LET g_xrce_t.xrce109  = l_nmbb_t.nmbb006 - l_nmbb_t.nmbb020 - l_xrce109
+            LET g_xrce_t.xrce119  = l_nmbb_t.nmbb007 - l_nmbb_t.nmbb021 - l_xrce119
+         WHEN l_ls_s = 3
+            LET g_xrce_t.xrce109  = l_nmbb_t.nmbb006 - l_nmbb_t.nmbb023 - l_xrce109
+            LET g_xrce_t.xrce119  = l_nmbb_t.nmbb007 - l_nmbb_t.nmbb024 - l_xrce119
+      END CASE
+      IF p_rec_total + g_xrce_t.xrce109 > p_vef_amount AND g_xrda_m.lbl_a = '2' THEN
+         IF p_rec_total >= p_vef_amount THEN
+            EXIT FOREACH
+         ELSE
+            LET g_xrce_t.xrce109 = p_vef_amount - p_rec_total
+            IF g_xrce_t.xrce109 <= 0 THEN CONTINUE FOREACH END IF
+            LET g_xrce_t.xrce119 = g_xrce_t.xrce109 * g_xrce_t.xrce101
+            IF g_glaa_t.glaa015 = 'Y' THEN
+               IF g_glaa_t.glaa017 = '1' THEN
+                  LET g_xrce_t.xrce129  = g_xrce_t.xrce109 * g_xrce_t.xrce121
+               ELSE
+                  LET g_xrce_t.xrce129  = g_xrce_t.xrce119 * g_xrce_t.xrce121
+               END IF
+            END IF
+            IF g_glaa_t.glaa019 = 'Y' THEN
+               IF g_glaa_t.glaa021 = '1' THEN
+                  LET g_xrce_t.xrce139  = g_xrce_t.xrce109 * g_xrce_t.xrce131
+               ELSE
+                  LET g_xrce_t.xrce139  = g_xrce_t.xrce119 * g_xrce_t.xrce131
+               END IF
+            END IF
+         END IF
+      ELSE
+         IF g_xrce_t.xrce109 <= 0 THEN CONTINUE FOREACH END IF
+         LET g_xrce_t.xrce129  = l_nmbb_t.nmbb013 - l_nmbb_t.nmbb014 - l_xrce129
+         LET g_xrce_t.xrce139  = l_nmbb_t.nmbb017 - l_nmbb_t.nmbb018 - l_xrce139
+      END IF
+
+      INSERT INTO xrce_t VALUES(g_xrce_t.*)
+      IF SQLCA.sqlcode THEN
+         LET g_success = 'N' RETURN
+      END IF
+         
+      LET p_rec_total = p_rec_total + g_xrce_t.xrce109
+      
+      LET g_xrce_t.xrceseq = g_xrce_t.xrceseq + 1
+
+   END FOREACH
+   
+   LET g_xrceseq = g_xrce_t.xrceseq
+   
+END FUNCTION]]>
+</point>
+  <point name="function.axrt400_01_ins_xrce_cr" cite_std="N" status="u" ver="1" src="s" new="Y" order="5" cite_ver="" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: xrce_t帳款資料新增
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt400_01_ins_xrce_cr()
+   DEFINE l_xrce109      LIKE xrce_t.xrce109
+   DEFINE l_xrce119      LIKE xrce_t.xrce119
+   DEFINE l_xrce129      LIKE xrce_t.xrce129
+   DEFINE l_xrce139      LIKE xrce_t.xrce139
+   DEFINE l_count        LIKE type_t.num5
+   DEFINE l_ld_s         LIKE type_t.num5
+   DEFINE l_ac           LIKE type_t.num5
+   DEFINE l_sql          STRING
+   DEFINE l_xrca_t       RECORD LIKE xrca_t.*
+   DEFINE l_xrcb_t       RECORD LIKE xrcb_t.*
+   DEFINE l_xrcc_t       RECORD LIKE xrcc_t.*
+   DEFINE l_xrcb_d       DYNAMIC ARRAY OF type_g_xrcb_d
+   DEFINE ls_sql1        STRING
+   DEFINE l_ooab002      LIKE ooab_t.ooab002
+   DEFINE l_xrcb002      LIKE xrcb_t.xrcb002
+   DEFINE l_xrcb003      LIKE xrcb_t.xrcb003
+   DEFINE l_xrcc001      LIKE xrcc_t.xrcc001
+   DEFINE li_i,i         LIKE type_t.num10
+   DEFINE l_ar_amt       LIKE type_t.num20_6
+   DEFINE l_br_amt       LIKE type_t.num20_6
+   DEFINE l_xrcc101_o    LIKE xrcc_t.xrcc101
+   DEFINE l_xrcc121_o    LIKE xrcc_t.xrcc121
+   DEFINE l_xrcc131_o    LIKE xrcc_t.xrcc131
+   DEFINE l_xrcc1081     LIKE xrcc_t.xrcc108
+   DEFINE l_isag105      LIKE isag_t.isag105
+   DEFINE l_xrcc101      LIKE xrcc_t.xrcc101
+   DEFINE l_xrcc121      LIKE xrcc_t.xrcc121
+   DEFINE l_xrcc131      LIKE xrcc_t.xrcc131
+
+   #檢查帳套
+   LET l_count = 0
+   SELECT COUNT(*) INTO l_count FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald  = g_ld
+      AND glaa014 = 'Y'
+   IF l_count > 0 THEN
+     LET l_ld_s = 1
+   ELSE
+      #次帳套一
+      LET l_count = 0
+      SELECT COUNT(*) INTO l_count FROM ooab_t WHERE ooab001 = 'S-FIN-0001' AND ooab002 = g_ld 
+         AND ooabsite= l_ld
+      IF l_count > 0 THEN
+         LET l_ld_s = 2
+      END IF
+      #次帳套二
+      LET l_count = 0
+      SELECT COUNT(*) INTO l_count FROM ooab_t WHERE ooab001 = 'S-FIN-0002' AND ooab002 = g_ld
+         AND ooabsite= l_ld
+      IF l_count > 0 THEN
+         LET l_ld_s = 3
+      END IF
+   END IF
+
+   LET l_sql = "SELECT ooab002 FROM ooab_t ",
+                " WHERE ooabent = '",g_enterprise,"'",
+                "   AND ooabsite= '",g_site,"'",
+                "   AND ooab001 = 'S-FIN-1002'"
+   PREPARE axrt400_ooab_prep FROM l_sql
+   EXECUTE axrt400_ooab_prep INTO l_ooab002
+
+   CASE
+      WHEN l_ld_s = '1'
+         LET ls_sql1 = "isag116"
+      WHEN l_ld_s = '2'
+         LET ls_sql1 = "isag126"
+      WHEN l_ld_s = '3'
+         LET ls_sql1 = "isag136"
+   END CASE
+
+   #計算帳款部分
+   lET l_sql = "  SELECT  xrcborga,xrcb001,xrcb002,xrcb003,isaf010,xrcc001,xrcc004,xrcc100,xrcc108,xrcc118,xrcc128,xrcc138, ",
+               "          xrca001,xrccdocno,xrccseq,xrca004,isag105, ",
+               "          (sum_xrcc108 - xrcc108) sum_xrcc1081,xrcc101,xrcc121,xrcc131 ",
+               "     FROM (SELECT xrcborga,xrcb001,xrccseq,xrcc004,xrcc100,xrcc128,xrcc138,xrca001,xrca004,xrccdocno, ",
+               "                  xrcc101,xrcc121,xrcc131,xrcb002,xrcb003,xrcc001, ",
+               "                  xrcc108,xrcc118,SUM (xrcc108) OVER (PARTITION BY xrcb002, xrcb003 ORDER BY xrcc001) sum_xrcc108, ",
+               "                  xrcald,xrcasite,xrca005,xrcadocdt",
+               "             FROM xrcb_t, xrcc_t, xrca_t,gzcb_t ",
+               "            WHERE     xrcbdocno = xrccdocno ",
+               "                  AND xrccseq = xrcbseq ",
+               "                  AND xrcastus = 'Y' ",
+               "                  AND xrca001 = gzcb002 ",
+               "                  AND gzcb003 = '1' ",
+               "                  AND gzcb001 = '8302'",
+               "                  AND xrccld  = '",g_ld,"'",
+               "                  AND xrccent = xrcbent",
+               "                  AND xrcaent = xrcbent",
+               "                  AND xrcbdocno = xrcadocno",
+               "                  AND xrcc118 - xrcc119 > 0) LEFT JOIN ",
+               "          (  SELECT isaf010,isag002,isag003,isag105 - ",ls_sql1," isag105",
+               "               FROM isag_t, isaf_t",
+               "              WHERE isagcomp = '",g_site,"' AND isafdocno = isagdocno",
+               "           ORDER BY isaf010) ON xrcb002 = isag002 AND xrcb003 = isag003",
+               "    WHERE ",g_wc,
+               "    ORDER BY xrcb002, xrcb003, xrcc001,isag105 DESC"
+   
+   PREPARE axrt400_01_prep2 FROM l_sql
+   DECLARE axrt400_01_xrcb CURSOR FOR axrt400_01_prep2
+   
+   LET g_xrce_t.xrceseq = g_xrceseq
+   LET p_doc_total = 0
+   LET l_ac = 1
+   FOREACH axrt400_01_xrcb INTO l_xrcb_d[l_ac].*,l_isag105,l_xrcc1081,l_xrcc101,l_xrcc121,l_xrcc131
+      #若上一筆來源單據+多帳期對應的發票金額已經沖完,但還存在為開發票的金額，則自動產生一筆無發票號碼的多帳期金額
+      IF (l_xrcb002 != l_xrcb_d[l_ac].xrcb002 OR l_xrcb003 != l_xrcb_d[l_ac].xrcb003 OR l_xrcc001 != l_xrcb_d[l_ac].xrcc001) AND l_ar_amt > 0 THEN
+         LET l_xrcb_d[l_ac + 1].* = l_xrcb_d[l_ac].*
+         LET l_xrcb_d[l_ac].isaf010 = ''
+         LET l_xrcb_d[l_ac].xrcc108 = l_ar_amt
+         LET l_xrcb_d[l_ac].xrcc001 = l_xrcc001
+         LET l_xrcb_d[l_ac].xrcc118 = l_xrcb_d[l_ac].xrcc108 * l_xrcc101_o
+         LET l_xrcb_d[l_ac].xrcc128 = l_xrcb_d[l_ac].xrcc108 * l_xrcc121_o
+         LET l_xrcb_d[l_ac].xrcc138 = l_xrcb_d[l_ac].xrcc108 * l_xrcc131_o
+         LET l_ac = l_ac + 1
+         LET l_ar_amt = 0
+      END IF
+      
+      #重新計算需冲多帳期金額
+      IF l_xrcb002 = l_xrcb_d[l_ac].xrcb002 AND l_xrcb003 = l_xrcb_d[l_ac].xrcb003 AND l_xrcc001 = l_xrcb_d[l_ac].xrcc001 THEN
+         LET l_xrcb_d[l_ac].xrcc108 = l_ar_amt#重新計算需冲多帳期金額  
+      END IF
+      IF l_xrcb_d[l_ac].xrcc108 = 0 THEN CONTINUE FOREACH END IF       #需冲多帳期金額小於0，則繼續FOREACH
+      
+      #重新計算已冲發票金額
+      IF l_xrcb002 != l_xrcb_d[l_ac].xrcb002 OR l_xrcb003 != l_xrcb_d[l_ac].xrcb003 OR l_xrcc001 != l_xrcb_d[l_ac].xrcc001 THEN
+         LET l_br_amt = l_xrcc1081
+      END IF
+      
+      #抓取預冲未確認金額
+      LET l_xrce109 = 0   LET l_xrce119 = 0
+      LET l_xrce129 = 0   LET l_xrce139 = 0
+      SELECT SUM(xrce109),SUM(xrce119),SUM(xrce129),SUM(xrce139) INTO l_xrce109,l_xrce119,l_xrce129,l_xrce139 FROM xrce_t,xrda_t
+       WHERE xrdaent   = g_enterprise
+         AND xrdald    = xrceld
+         AND xrdadocno = xrcedocno
+         AND xrce003   = l_xrcb_d[l_ac].xrccdocno
+         AND xrce004   = l_xrcb_d[l_ac].xrccseq
+         AND xrce005   = l_xrcb_d[l_ac].xrcc001
+         AND xrdastus  = 'N'
+      IF cl_null(l_xrce109) THEN LET l_xrce109 = 0 END IF
+      IF cl_null(l_xrce119) THEN LET l_xrce119 = 0 END IF
+      IF cl_null(l_xrce129) THEN LET l_xrce129 = 0 END IF
+      IF cl_null(l_xrce139) THEN LET l_xrce139 = 0 END IF
+      
+      LET l_xrcb_d[l_ac].xrcc108 = l_xrcb_d[l_ac].xrcc108 - l_xrce109
+      IF l_xrcb_d[l_ac].xrcc108 = 0 THEN CONTINUE FOREACH END IF
+      
+      LET l_xrcb_d[l_ac].xrcc118 = l_xrcb_d[l_ac].xrcc118 - l_xrce119
+      LET l_xrcb_d[l_ac].xrcc128 = l_xrcb_d[l_ac].xrcc128 - l_xrce129
+      LET l_xrcb_d[l_ac].xrcc138 = l_xrcb_d[l_ac].xrcc138 - l_xrce139
+      
+      #發票可沖金額小於多帳期金額
+      IF NOT cl_null(l_isag105) AND (l_isag105 - l_br_amt > 0) THEN
+         IF l_xrcb_d[l_ac].xrcc108 > l_isag105 - l_br_amt THEN
+            LET l_ar_amt = l_xrcb_d[l_ac].xrcc108
+            LET l_xrcb_d[l_ac].xrcc108 = l_isag105 - l_br_amt
+            LET l_br_amt = 0
+            LET l_ar_amt = l_ar_amt - l_xrcb_d[l_ac].xrcc108
+            LET l_xrcb_d[l_ac].xrcc118 = l_xrcb_d[l_ac].xrcc108 * l_xrcc101
+            LET l_xrcb_d[l_ac].xrcc128 = l_xrcb_d[l_ac].xrcc108 * l_xrcc121
+            LET l_xrcb_d[l_ac].xrcc138 = l_xrcb_d[l_ac].xrcc108 * l_xrcc131
+         ELSE
+            LET l_br_amt = l_br_amt + l_xrcb_d[l_ac].xrcc108
+            LET l_ar_amt = 0
+         END IF
+      ELSE
+         LET l_xrcb_d[l_ac].isaf010 = ''
+         LET l_ar_amt = 0
+      END IF
+
+      LET l_xrcb002 = l_xrcb_d[l_ac].xrcb002
+      LET l_xrcb003 = l_xrcb_d[l_ac].xrcb003
+      LET l_xrcc001 = l_xrcb_d[l_ac].xrcc001
+      LET l_xrcc101_o = l_xrcc101
+      LET l_xrcc121_o = l_xrcc121
+      LET l_xrcc131_o = l_xrcc131
+      LET l_ac = l_ac + 1
+   END FOREACH
+   IF l_ar_amt > 0 THEN
+      LET l_xrcb_d[l_ac].* = l_xrcb_d[l_ac - 1].*
+      LET l_xrcb_d[l_ac].isaf010 = ''
+      LET l_xrcb_d[l_ac].xrcc108 = l_ar_amt
+      LET l_xrcb_d[l_ac].xrcc118 = l_xrcb_d[l_ac].xrcc108 * l_xrcc101_o
+      LET l_xrcb_d[l_ac].xrcc128 = l_xrcb_d[l_ac].xrcc108 * l_xrcc121_o
+      LET l_xrcb_d[l_ac].xrcc138 = l_xrcb_d[l_ac].xrcc108 * l_xrcc131_o
+   ELSE
+      CALL l_xrcb_d.deleteElement(l_ac)
+      LET l_ac = l_ac - 1
+   END IF
+
+   FOR i = 1 TO l_ac
+      SELECT * INTO l_xrcc_t.* FROM xrcc_t WHERE xrccdocno = l_xrcb_d[i].xrccdocno
+         AND xrccseq = l_xrcb_d[l_ac].xrccseq
+         AND xrcc001 = l_xrcb_d[l_ac].xrcc001
+         
+      SELECT * INTO l_xrcb_t.* FROM xrcb_t WHERE xrcbdocno = l_xrcb_d[i].xrccdocno
+         AND xrcbseq = l_xrcb_d[l_ac].xrccseq
+         
+      SELECT * INTO l_xrca_t.* FROM xrca_t WHERE xrcadocno = l_xrcb_d[i].xrccdocno
+   #l_xrcc_t.*,l_xrcb_t.*,l_xrca_t.*
+      
+      LET g_xrce_t.xrcecomp = l_xrcc_t.xrcccomp
+      LET g_xrce_t.xrcelegl = l_xrcc_t.xrcclegl
+      LET g_xrce_t.xrceorga = l_xrcc_t.xrcclegl
+      LET g_xrce_t.xrce001  = l_xrcb_d[i].xrcb001
+      LET g_xrce_t.xrce003  = l_xrcb_d[i].xrccdocno
+      LET g_xrce_t.xrce004  = l_xrcb_d[i].xrccseq
+      LET g_xrce_t.xrce005  = l_xrcb_d[i].xrcc001
+      LET g_xrce_t.xrce007  = l_xrcc_t.xrcc108 - l_xrcc_t.xrcc109
+      LET g_xrce_t.xrce008  = l_xrcb_d[i].isaf010
+      LET g_xrce_t.xrce016  = l_xrca_t.xrca035
+      LET g_xrce_t.xrce017  = l_xrca_t.xrca014
+      LET g_xrce_t.xrce018  = l_xrcb_t.xrcb010
+      LET g_xrce_t.xrce019  = l_xrcb_t.xrcb011
+      LET g_xrce_t.xrce020  = l_xrcb_t.xrcb012
+      LET g_xrce_t.xrce021  = l_xrcb_t.xrcb017
+      LET g_xrce_t.xrce022  = l_xrcb_t.xrcb015
+      LET g_xrce_t.xrce023  = l_xrcb_t.xrcb016
+      LET g_xrce_t.xrce024  = l_xrcb_d[i].xrcb002
+      LET g_xrce_t.xrce025  = l_xrcb_d[i].xrcb003
+      LET g_xrce_t.xrce100  = l_xrcb_d[i].xrcc100
+      LET g_xrce_t.xrce101  = l_xrcc_t.xrcc102
+      LET g_xrce_t.xrce120  = l_xrcc_t.xrcc120
+      LET g_xrce_t.xrce121  = l_xrcc_t.xrcc122
+      LET g_xrce_t.xrce130  = l_xrcc_t.xrcc130
+      LET g_xrce_t.xrce131  = l_xrcc_t.xrcc132
+      
+      LET g_xrce_t.xrce109  = l_xrcb_d[i].xrcc108
+      LET g_xrce_t.xrce119  = l_xrcb_d[i].xrcc118
+      IF p_doc_total + g_xrce_t.xrce109 > p_vef_amount AND g_xrda_m.lbl_a = '2' THEN
+         IF p_doc_total >= p_vef_amount THEN
+            EXIT FOR
+         ELSE
+            LET g_xrce_t.xrce109 = p_vef_amount - p_doc_total
+            LET p_doc_total = p_vef_amount
+            IF g_xrce_t.xrce109 <= 0 THEN CONTINUE FOR END IF
+            LET g_xrce_t.xrce119 = g_xrce_t.xrce109 * g_xrce_t.xrce101
+            IF g_glaa_t.glaa015 = 'Y' THEN
+               IF g_glaa_t.glaa017 = '1' THEN
+                  LET g_xrce_t.xrce129  = g_xrce_t.xrce109 * g_xrce_t.xrce121
+               ELSE
+                  LET g_xrce_t.xrce129  = g_xrce_t.xrce119 * g_xrce_t.xrce121
+               END IF
+            END IF
+            IF g_glaa_t.glaa019 = 'Y' THEN
+               IF g_glaa_t.glaa021 = '1' THEN
+                  LET g_xrce_t.xrce139  = g_xrce_t.xrce109 * g_xrce_t.xrce131
+               ELSE
+                  LET g_xrce_t.xrce139  = g_xrce_t.xrce119 * g_xrce_t.xrce131
+               END IF
+            END IF
+         END IF
+      ELSE
+         LET p_doc_total = p_doc_total + g_xrce_t.xrce109
+         IF g_xrce_t.xrce109 <= 0 THEN CONTINUE FOR END IF
+         LET g_xrce_t.xrce129  = l_xrcb_d[i].xrcc128
+         LET g_xrce_t.xrce139  = l_xrcb_d[i].xrcc138
+      END IF
+      
+      
+      
+      IF g_glaa_t.glaa015 = 'N' THEN
+         LET g_xrce_t.xrce120 = ''
+         LET g_xrce_t.xrce121 = 0
+         LET g_xrce_t.xrce129 = 0
+      END IF
+      
+      IF g_glaa_t.glaa019 = 'N' THEN
+         LET g_xrce_t.xrce130 = ''
+         LET g_xrce_t.xrce131 = 0
+         LET g_xrce_t.xrce139 = 0
+      END IF
+
+      IF g_ooab002 = 'Y' THEN
+         INSERT INTO xrce_t VALUES(g_xrce_t.*)
+         IF SQLCA.sqlcode THEN
+            LET g_success = 'N' RETURN
+         END IF
+      ELSE
+         UPDATE xrce_t SET xrce109 = xrce109 + g_xrce_t.xrce109,
+                           xrce119 = xrce119 + g_xrce_t.xrce119,
+                           xrce129 = xrce129 + g_xrce_t.xrce129,
+                           xrce139 = xrce139 + g_xrce_t.xrce139,
+                           xrce025 = 0,
+                           xrce004 = 0
+          WHERE xrceent = g_enterprise
+            AND xrcedocno = g_docno
+            AND xrce024 = g_xrce_t.xrce024
+            AND xrce003 = g_xrce_t.xrce003
+            AND xrce005 = g_xrce_t.xrce005
+         IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] != 1 THEN
+            LET g_xrce_t.xrce025 = 0
+            LET g_xrce_t.xrce004 = 0
+            INSERT INTO xrce_t VALUES(g_xrce_t.*)
+            IF SQLCA.sqlcode THEN
+               LET g_success = 'N' RETURN
+            END IF
+         ELSE
+            LET g_xrce_t.xrceseq = g_xrce_t.xrceseq - 1
+         END IF
+      END IF
+      
+      LET g_xrce_t.xrceseq = g_xrce_t.xrceseq + 1
+
+   END FOR
+
+   LET g_xrceseq = g_xrce_t.xrceseq
+   
+END FUNCTION]]>
+</point>
+  <point name="function.axrt400_01_ins_xrce_or" cite_std="N" status="" ver="1" src="s" new="Y" order="6" cite_ver="" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: rce_t產生溢收資料
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt400_01_ins_xrce_or()
+   DEFINE l_xrce_t      RECORD LIKE xrce_t.*
+   DEFINE l_sql         STRING
+   DEFINE l_xrce100     LIKE xrce_t.xrce100
+   DEFINE l_xrce101     LIKE xrce_t.xrce101
+   DEFINE l_xrce109     LIKE xrce_t.xrce109
+   DEFINE l_xrce119     LIKE xrce_t.xrce119
+   DEFINE l_xrce109_1   LIKE xrce_t.xrce109
+   DEFINE l_xrce119_1   LIKE xrce_t.xrce119
+   DEFINE l_ooab002     LIKE ooab_t.ooab002
+   
+   #計算差異
+   LET l_sql ="SELECT xrce100,SUM(xrce109),SUM(xrce119),SUM(xrce109_1),SUM(xrce119_1)",
+              "  FROM(",
+              "       SELECT xrce100,SUM(xrce109) xrce109,SUM(xrce119) xrce119,0 xrce109_1,0 xrce119_1 FROM xrce_t",
+              "        WHERE xrce002 < 30",
+              "          AND xrceent = '",g_enterprise,"'",
+              "          AND xrcedocno = '",g_docno,"'",
+              "          AND xrceld = '",g_ld,"'",
+              "        GROUP BY xrce100",
+              "        UNION ",
+              "       SELECT xrce100,0,0,SUM(xrce109) xrce109_1,SUM(xrce119) xrce119_1 FROM xrce_t",
+              "        WHERE xrce002 >= 30",
+              "          AND xrceent = '",g_enterprise,"'",
+              "          AND xrcedocno = '",g_docno,"'",
+              "          AND xrceld = '",g_ld,"'",
+              "        GROUP BY xrce100",
+              "      )",
+              " GROUP BY xrce100"
+   PREPARE axrt400_01_prep3 FROM l_sql
+   DECLARE axrt400_01_xrce CURSOR FOR axrt400_01_prep3
+   
+   LET l_xrce_t.xrceseq = g_xrceseq
+   FOREACH axrt400_01_xrce INTO l_xrce100,l_xrce109,l_xrce119,l_xrce109_1,l_xrce119_1
+      #原幣收款金額＞可沖帳款原幣:列為　20.溢收
+      IF l_xrce109 > l_xrce109_1 THEN
+         LET l_xrce_t.xrceent  = g_enterprise
+         LET l_xrce_t.xrceld   = g_ld
+         LET l_xrce_t.xrcedocno= g_docno
+         LET l_xrce_t.xrce002  = '20'
+         LET l_xrce_t.xrce006  = ''
+         LET l_xrce_t.xrce001  = 'axrt400'
+         LET l_xrce_t.xrce003  = ''
+         LET l_xrce_t.xrce004  = 0
+         LET l_xrce_t.xrce005  = 0
+         LET l_xrce_t.xrce024  = ''
+         LET l_xrce_t.xrce025  = ''
+         LET l_xrce_t.xrce007  = ''
+         LET l_xrce_t.xrce008  = ''
+         LET l_xrce_t.xrce009  = 'N'
+         LET l_xrce_t.xrce010  = ''
+         LET l_xrce_t.xrce013  = g_xrda004
+      #  LET l_xrce_t.xrce014  = 
+         LET l_xrce_t.xrce100  = g_glaa_t.glaa001
+         LET l_xrce_t.xrce101  = 1
+         LET l_xrce_t.xrce120  = g_glaa_t.glaa016
+         LET l_xrce_t.xrce130  = g_glaa_t.glaa020
+         LET l_xrce_t.xrce131  = 1
+         LET l_xrce_t.xrce017  = g_xrda003
+         LET l_xrce_t.xrce019  = l_xrce_t.xrceorga
+         LET l_xrce_t.xrce020  = ''
+         LET l_xrce_t.xrce021  = ''
+         LET l_xrce_t.xrce022  = ''
+         LET l_xrce_t.xrce023  = ''
+         SELECT ooag003,ooag004 INTO l_xrce_t.xrce018,l_xrce_t.xrceorga FROM ooag_t
+          WHERE ooagent = g_enterprise
+            AND ooag001 = g_xrda003
+            
+         SELECT glab005,glab010 INTO l_xrce_t.xrce016,l_xrce_t.xrce011 FROM glab_t
+          WHERE glabent = g_enterprise
+            AND glabld = g_ld
+            AND glab003 = '9711_24'
+         
+         SELECT nmad003 INTO l_xrce_t.xrce012 FROM nmad_t
+          WHERE nmadent = g_enterprise
+            AND nmad001 = g_glaa_t.glaa005
+            AND nmad002 = l_xrce_t.xrce011
+           
+         SELECT CASE WHEN gzcb003 = 'D' THEN 1 ELSE -1 END CASE INTO l_xrce_t.xrce015 FROM gzcb_t
+          WHERE gzcb002 = '20'
+            AND gzcb001 = '8306'
+
+         SELECT ooab002 INTO l_ooab002 FROM ooab_t
+          WHERE ooabent = g_enterprise
+            AND ooabsite= g_site
+            AND ooab001 = 'S-BAS-0010'
+
+                                  #類型;帳套;日期;來源幣別
+         CALL s_aooi160_get_exrate('2',g_ld,g_docdt,l_xrce100,
+                                  #目的幣別;         交易金額;               匯類類型
+                                   g_glaa_t.glaa001,0,l_ooab002)
+             RETURNING l_xrce101
+
+         LET l_xrce_t.xrce109 = l_xrce101 *(l_xrce109 - l_xrce109_1)
+         LET l_xrce_t.xrce119 = l_xrce_t.xrce109
+         IF g_glaa_t.glaa015 = 'Y' THEN
+                                     #類型;帳套;日期;來源幣別
+            CALL s_aooi160_get_exrate('2',g_ld,g_docdt,g_glaa_t.glaa001,
+                                     #目的幣別;         交易金額;               匯類類型
+                                      g_glaa_t.glaa016,0,g_glaa_t.glaa018)
+               RETURNING l_xrce_t.xrce121
+            LET l_xrce_t.xrce129  = l_xrce_t.xrce109 * l_xrce_t.xrce121
+         END IF
+         IF g_glaa_t.glaa019 = 'Y' THEN
+                                     #類型;帳套;日期;來源幣別
+            CALL s_aooi160_get_exrate('2',g_ld,g_docdt,g_glaa_t.glaa001,
+                                     #目的幣別;         交易金額;               匯類類型
+                                      g_glaa_t.glaa020,0,g_glaa_t.glaa022)
+               RETURNING l_xrce_t.xrce131
+            LET l_xrce_t.xrce139  = l_xrce_t.xrce109 * l_xrce_t.xrce131
+         END IF
+
+         IF g_glaa_t.glaa015 = 'N' THEN
+            LET l_xrce_t.xrce120 = ''
+            LET l_xrce_t.xrce121 = 0
+            LET l_xrce_t.xrce129 = 0
+         END IF
+         
+         IF g_glaa_t.glaa019 = 'N' THEN
+            LET l_xrce_t.xrce130 = ''
+            LET l_xrce_t.xrce131 = 0
+            LET l_xrce_t.xrce139 = 0
+         END IF
+
+         INSERT INTO xrce_t VALUES(l_xrce_t.*)
+         IF SQLCA.sqlcode THEN
+            LET g_success = 'N' RETURN
+         ELSE
+            LET g_flag = 'N'
+         END IF
+         
+         LET l_xrce_t.xrceseq = l_xrce_t.xrceseq + 1
+
+      END IF
+   END FOREACH
+      
+   LET g_xrceseq = l_xrce_t.xrceseq
+END FUNCTION]]>
+</point>
+  <point name="function.axrt400_01_ins_xrce_diff" cite_std="N" status="" ver="1" src="s" new="Y" order="7" cite_ver="" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: xrce_t產生匯兌損益
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt400_01_ins_xrce_diff()
+   DEFINE l_glab003      LIKE glab_t.glab003
+   DEFINE l_xrce_t      RECORD LIKE xrce_t.*
+   DEFINE l_sql         STRING
+   DEFINE l_xrce100     LIKE xrce_t.xrce100
+   DEFINE l_xrce109     LIKE xrce_t.xrce109
+   DEFINE l_xrce119     LIKE xrce_t.xrce119
+   DEFINE l_xrce109_1   LIKE xrce_t.xrce109
+   DEFINE l_xrce119_1   LIKE xrce_t.xrce119
+   DEFINE l_xrce109_2   LIKE xrce_t.xrce109
+   DEFINE l_xrce119_2   LIKE xrce_t.xrce119
+   DEFINE l_ooab002     LIKE ooab_t.ooab002
+   DEFINE l_amt         LIKE xrce_t.xrce119   #匯差
+
+   
+   LET l_xrce_t.xrceseq = g_xrceseq
+   LET l_xrce_t.xrceent = g_enterprise
+   LET l_xrce_t.xrceld = g_ld
+   LET l_xrce_t.xrcedocno = g_docno
+
+   #計算差異
+   #依次計算本位幣三、本位幣二、本位幣
+   
+   #本位幣三
+   IF g_glaa_t.glaa019 = 'Y' THEN
+      LET l_sql ="SELECT xrce100,SUM(xrce139),SUM(xrce139_1)",
+                 "  FROM(",
+                 "       SELECT xrce100,SUM(xrce139) xrce139,0 xrce139_1 FROM xrce_t,gzcb_t",
+                 "        WHERE xrce002 = gzcb002",
+                 "          AND gzcb001 = '8306'",
+                 "          AND gzcb004 = '1'",
+                 "          AND xrceent = '",g_enterprise,"'",
+                 "          AND xrcedocno = '",g_docno,"'",
+                 "          AND xrceld = '",g_ld,"'",
+                 "        GROUP BY xrce100",
+                 "        UNION ",
+                 "       SELECT xrce100,0 xrce139,SUM(xrce139) xrce139_1 FROM xrce_t,gzcb_t",
+                 "        WHERE xrce002 = gzcb002",
+                 "          AND gzcb001 = '8306'",
+                 "          AND gzcb004 = '2'",
+                 "          AND xrceent = '",g_enterprise,"'",
+                 "          AND xrcedocno = '",g_docno,"'",
+                 "          AND xrceld = '",g_ld,"'",
+                 "        GROUP BY xrce100",
+                 "      )",
+                 " GROUP BY xrce100"
+      PREPARE axrt400_01_prep313 FROM l_sql
+      DECLARE axrt400_01_xrce13 CURSOR FOR axrt400_01_prep313
+   
+      #產生本位幣三匯兌損益
+      FOREACH axrt400_01_xrce13 INTO l_xrce100,l_xrce119,l_xrce119_1
+         #本幣帳款 < 收款:12.匯兌收益;　反之 11.匯兌損失.
+         IF l_xrce119 != l_xrce119_1 THEN
+            IF l_xrce119 < l_xrce119_1 THEN
+               LET l_xrce_t.xrce002  = '11'
+               LET l_glab003 = '9711_12'
+               LET l_amt = l_xrce119_1 - l_xrce119
+            ELSE
+               LET l_xrce_t.xrce002  = '12'
+               LET l_glab003 = '9711_11'
+               LET l_amt = l_xrce119 - l_xrce119_1
+            END IF
+            SELECT gzcb003 INTO l_xrce_t.xrce015 FROM gzcb_t
+             WHERE gzcb002 = l_xrce_t.xrce002
+               AND gzcb001 = '8306'
+            LET l_xrce_t.xrce006  = ''
+            LET l_xrce_t.xrce001  = 'axrt400'
+            LET l_xrce_t.xrce003  = ''
+            LET l_xrce_t.xrce004  = ''
+            LET l_xrce_t.xrce005  = ''
+            LET l_xrce_t.xrce024  = ''
+            LET l_xrce_t.xrce025  = ''
+            LET l_xrce_t.xrce007  = ''
+            LET l_xrce_t.xrce008  = ''
+            LET l_xrce_t.xrce009  = 'N'
+            LET l_xrce_t.xrce010  = ''
+            LET l_xrce_t.xrce013  = ''
+            LET l_xrce_t.xrce014  = ''
+            LET l_xrce_t.xrce020  = ''
+            LET l_xrce_t.xrce021  = ''
+            LET l_xrce_t.xrce022  = ''
+            LET l_xrce_t.xrce023  = ''
+            LET l_xrce_t.xrce017  = g_xrda003
+            SELECT ooag003,ooag004 INTO l_xrce_t.xrce018,l_xrce_t.xrceorga FROM ooag_t
+             WHERE ooagent = g_enterprise
+               AND ooag001 = g_xrda003
+            LET l_xrce_t.xrce019  = l_xrce_t.xrceorga
+               
+            SELECT glab005,glab010 INTO l_xrce_t.xrce016,l_xrce_t.xrce011 FROM glab_t
+             WHERE glabent = g_enterprise
+               AND glabld = g_ld
+               AND glab003 = l_glab003
+            
+            SELECT nmad003 INTO l_xrce_t.xrce012 FROM nmad_t
+             WHERE nmadent = g_enterprise
+               AND nmad001 = g_glaa_t.glaa005
+               AND nmad002 = l_xrce_t.xrce011
+              
+            SELECT gzcb003 INTO l_xrce_t.xrce015 FROM gzcb_t
+             WHERE gzcb002 = '20'
+               AND gzcb001 = '8306'
+
+            SELECT ooab002 INTO l_ooab002 FROM ooab_t
+             WHERE ooabent = g_enterprise
+               AND ooabsite= g_site
+               AND ooab001 = 'S-BAS-0010'
+   
+                                     #類型;帳套;日期;來源幣別
+            CALL s_aooi160_get_exrate('2',g_ld,g_docdt,g_glaa_t.glaa020,
+                                     #目的幣別;         交易金額;               匯類類型
+                                      g_glaa_t.glaa001,l_amt,g_glaa_t.glaa016)
+                RETURNING l_xrce_t.xrce109
+
+                                     #類型;帳套;日期;來源幣別
+            CALL s_aooi160_get_exrate('2',g_ld,g_docdt,g_glaa_t.glaa001,
+                                     #目的幣別;         交易金額;               匯類類型
+                                      g_glaa_t.glaa020,0,g_glaa_t.glaa016)
+                RETURNING l_xrce_t.xrce131
+
+            LET l_xrce_t.xrce100  = g_glaa_t.glaa001
+            LET l_xrce_t.xrce101  = 1
+            LET l_xrce_t.xrce119  = l_xrce_t.xrce109
+            LET l_xrce_t.xrce120  = ''
+            LET l_xrce_t.xrce121  = 0
+            LET l_xrce_t.xrce129  = 0
+            LET l_xrce_t.xrce130  = g_glaa_t.glaa020
+            LET l_xrce_t.xrce139  = l_amt
+
+            INSERT INTO xrce_t VALUES(l_xrce_t.*)
+            IF SQLCA.sqlcode THEN
+               LET g_success = 'N' RETURN
+            END IF
+            
+            LET l_xrce_t.xrceseq = l_xrce_t.xrceseq + 1
+            
+         END IF
+
+      END FOREACH
+   END IF
+
+
+   #本位幣二
+   IF g_glaa_t.glaa015 = 'Y' THEN
+      LET l_sql ="SELECT xrce100,SUM(xrce129),SUM(xrce129_1)",
+                 "  FROM(",
+                 "       SELECT xrce100,SUM(xrce129) xrce129,0 xrce129_1 FROM xrce_t,gzcb_t",
+                 "        WHERE xrce002 = gzcb002",
+                 "          AND gzcb001 = '8306'",
+                 "          AND gzcb004 = '1'",
+                 "          AND xrceent = '",g_enterprise,"'",
+                 "          AND xrcedocno = '",g_docno,"'",
+                 "          AND xrceld = '",g_ld,"'",
+                 "        GROUP BY xrce100",
+                 "        UNION ",
+                 "       SELECT xrce100,0 xrce129,SUM(xrce129) xrce129_1 FROM xrce_t,gzcb_t",
+                 "        WHERE xrce002 = gzcb002",
+                 "          AND gzcb001 = '8306'",
+                 "          AND gzcb004 = '2'",
+                 "          AND xrceent = '",g_enterprise,"'",
+                 "          AND xrcedocno = '",g_docno,"'",
+                 "          AND xrceld = '",g_ld,"'",
+                 "        GROUP BY xrce100",
+                 "      )",
+                 " GROUP BY xrce100"
+      PREPARE axrt400_01_prep312 FROM l_sql
+      DECLARE axrt400_01_xrce12 CURSOR FOR axrt400_01_prep312
+   
+      #產生本位幣二匯兌損益
+      FOREACH axrt400_01_xrce12 INTO l_xrce100,l_xrce119,l_xrce119_1
+         #本幣帳款 < 收款:12.匯兌收益;　反之 11.匯兌損失.
+         IF l_xrce119 != l_xrce119_1 THEN
+            IF l_xrce119 < l_xrce119_1 THEN
+               LET l_xrce_t.xrce002  = '11'
+               LET l_glab003 = '9711_12'
+               LET l_amt = l_xrce119_1 - l_xrce119
+            ELSE
+               LET l_xrce_t.xrce002  = '12'
+               LET l_glab003 = '9711_11'
+               LET l_amt = l_xrce119 - l_xrce119_1
+            END IF
+            SELECT gzcb003 INTO l_xrce_t.xrce015 FROM gzcb_t
+             WHERE gzcb002 = l_xrce_t.xrce002
+               AND gzcb001 = '8306'
+            LET l_xrce_t.xrce006  = ''
+            LET l_xrce_t.xrce001  = 'axrt400'
+            LET l_xrce_t.xrce003  = ''
+            LET l_xrce_t.xrce004  = ''
+            LET l_xrce_t.xrce005  = ''
+            LET l_xrce_t.xrce024  = ''
+            LET l_xrce_t.xrce025  = ''
+            LET l_xrce_t.xrce007  = ''
+            LET l_xrce_t.xrce008  = ''
+            LET l_xrce_t.xrce009  = 'N'
+            LET l_xrce_t.xrce010  = ''
+            LET l_xrce_t.xrce013  = ''
+            LET l_xrce_t.xrce014  = ''
+            LET l_xrce_t.xrce020  = ''
+            LET l_xrce_t.xrce021  = ''
+            LET l_xrce_t.xrce022  = ''
+            LET l_xrce_t.xrce023  = ''
+            LET l_xrce_t.xrce017  = g_xrda003
+            SELECT ooag003,ooag004 INTO l_xrce_t.xrce018,l_xrce_t.xrceorga FROM ooag_t
+             WHERE ooagent = g_enterprise
+               AND ooag001 = g_xrda003
+            LET l_xrce_t.xrce019  = l_xrce_t.xrceorga
+               
+            SELECT glab005,glab010 INTO l_xrce_t.xrce016,l_xrce_t.xrce011 FROM glab_t
+             WHERE glabent = g_enterprise
+               AND glabld = g_ld
+               AND glab003 = l_glab003
+            
+            SELECT nmad003 INTO l_xrce_t.xrce012 FROM nmad_t
+             WHERE nmadent = g_enterprise
+               AND nmad001 = g_glaa_t.glaa005
+               AND nmad002 = l_xrce_t.xrce011
+              
+            SELECT gzcb003 INTO l_xrce_t.xrce015 FROM gzcb_t
+             WHERE gzcb002 = '20'
+               AND gzcb001 = '8306'
+
+                                     #類型;帳套;日期;來源幣別
+            CALL s_aooi160_get_exrate('2',g_ld,g_docdt,g_glaa_t.glaa016,
+                                     #目的幣別;         交易金額;               匯類類型
+                                      g_glaa_t.glaa001,l_amt,g_glaa_t.glaa018)
+                RETURNING l_xrce_t.xrce109
+                
+            IF l_xrce_t.xrce109 = 1 THEN LET l_xrce_t.xrce109 = l_amt END IF
+
+                                     #類型;帳套;日期;來源幣別
+            CALL s_aooi160_get_exrate('2',g_ld,g_docdt,g_glaa_t.glaa001,
+                                     #目的幣別;         交易金額;               匯類類型
+                                      g_glaa_t.glaa016,0,g_glaa_t.glaa018)
+                RETURNING l_xrce_t.xrce121
+
+            LET l_xrce_t.xrce100  = g_glaa_t.glaa001
+            LET l_xrce_t.xrce101  = 1
+            LET l_xrce_t.xrce119  = l_xrce_t.xrce109
+            LET l_xrce_t.xrce120  = g_glaa_t.glaa016
+            LET l_xrce_t.xrce129  = l_amt
+            LET l_xrce_t.xrce130  = ''
+            LET l_xrce_t.xrce131  = 0
+            LET l_xrce_t.xrce139  = 0
+
+            INSERT INTO xrce_t VALUES(l_xrce_t.*)
+            IF SQLCA.sqlcode THEN
+               LET g_success = 'N' RETURN
+            END IF
+            
+            LET l_xrce_t.xrceseq = l_xrce_t.xrceseq + 1
+            
+         END IF
+
+      END FOREACH
+   END IF
+
+   #本幣
+   LET l_sql ="SELECT SUM(xrce109),SUM(xrce119),SUM(xrce109_1),SUM(xrce119_1),SUM(xrce109_2),SUM(xrce119_2)",
+              "  FROM(",
+              "       SELECT SUM(xrce109) xrce109,SUM(xrce119) xrce119,0 xrce109_1,0 xrce119_1,0 xrce109_2,0 xrce119_2 FROM xrce_t",       #收款金額
+              "        WHERE xrce002 = 10",
+              "          AND xrceent = '",g_enterprise,"'",
+              "          AND xrcedocno = '",g_docno,"'",
+              "          AND xrceld = '",g_ld,"'",
+              "        UNION ",
+              "       SELECT 0 xrce109,0 xrce119,SUM(xrce109) xrce109_1,SUM(xrce119) xrce119_1,0 xrce109_2,0 xrce119_2 FROM xrce_t,gzcb_t",#帳款金額
+              "        WHERE xrce002 = gzcb002",
+              "          AND gzcb001 = '8306'",
+              "          AND gzcb004 = '2'",
+              "          AND xrceent = '",g_enterprise,"'",
+              "          AND xrcedocno = '",g_docno,"'",
+              "          AND xrceld = '",g_ld,"'",
+              "        UNION ",
+              "       SELECT 0 xrce109,0 xrce119,0 xrce109_1,0 xrce119_1,SUM(xrce109 * CASE WHEN gzcb003 = 'D' THEN -1 ELSE 1 END) xrce109_2,SUM(xrce119 * CASE WHEN gzcb003 = 'D' THEN -1 ELSE 1 END) xrce119_2 FROM xrce_t,gzcb_t",#帳款金額
+              "        WHERE xrce002 = gzcb002",
+              "          AND gzcb001 = '8306'",
+              "          AND gzcb004 = '1'",
+              "          AND xrce002 <> 10",
+              "          AND xrceent = '",g_enterprise,"'",
+              "          AND xrcedocno = '",g_docno,"'",
+              "          AND xrceld = '",g_ld,"'",
+              "      )"
+   PREPARE axrt400_01_prep31 FROM l_sql
+   DECLARE axrt400_01_xrce1 CURSOR FOR axrt400_01_prep31
+
+   FOREACH axrt400_01_xrce1 INTO l_xrce109,l_xrce119,l_xrce109_1,l_xrce119_1,l_xrce109_2,l_xrce119_2
+      IF cl_null(l_xrce109)   THEN LET l_xrce109   = 0 END IF
+      IF cl_null(l_xrce119)   THEN LET l_xrce119   = 0 END IF
+      IF cl_null(l_xrce109_1) THEN LET l_xrce109_1 = 0 END IF
+      IF cl_null(l_xrce119_1) THEN LET l_xrce119_1 = 0 END IF
+      IF cl_null(l_xrce109_2) THEN LET l_xrce109_2 = 0 END IF
+      IF cl_null(l_xrce119_2) THEN LET l_xrce119_2 = 0 END IF
+      #本幣帳款 < 收款:12.匯兌收益;　反之(11.匯損).
+      #需要考慮本位幣二、三產生的匯兌損益
+      IF l_xrce119 - l_xrce119_2 != l_xrce119_1 THEN
+         LET l_amt = l_xrce119 - l_xrce119_2 - l_xrce119_1
+         IF l_amt < 0 THEN
+            LET l_xrce_t.xrce002  = '11'
+            LET l_glab003 = '9711_12'
+            LET l_amt = l_amt * -1
+         ELSE
+            LET l_xrce_t.xrce002  = '12'
+            LET l_glab003 = '9711_11'
+         END IF
+         SELECT gzcb003 INTO l_xrce_t.xrce015 FROM gzcb_t
+          WHERE gzcb002 = l_xrce_t.xrce002
+            AND gzcb001 = '8306'
+         LET l_xrce_t.xrce006  = ''
+         LET l_xrce_t.xrce001  = 'axrt400'
+         LET l_xrce_t.xrce003  = ''
+         LET l_xrce_t.xrce004  = ''
+         LET l_xrce_t.xrce005  = ''
+         LET l_xrce_t.xrce024  = ''
+         LET l_xrce_t.xrce025  = ''
+         LET l_xrce_t.xrce007  = ''
+         LET l_xrce_t.xrce008  = ''
+         LET l_xrce_t.xrce009  = 'N'
+         LET l_xrce_t.xrce010  = ''
+         LET l_xrce_t.xrce013  = ''
+         LET l_xrce_t.xrce014  = ''
+         LET l_xrce_t.xrce100  = g_glaa_t.glaa001
+         LET l_xrce_t.xrce101  = 1
+         LET l_xrce_t.xrce109  = l_amt
+         LET l_xrce_t.xrce119  = l_amt
+         LET l_xrce_t.xrce120 = ''
+         LET l_xrce_t.xrce121 = 0
+         LET l_xrce_t.xrce129 = 0
+         LET l_xrce_t.xrce130 = ''
+         LET l_xrce_t.xrce131 = 0
+         LET l_xrce_t.xrce139 = 0
+         LET l_xrce_t.xrce017  = g_xrda003
+         LET l_xrce_t.xrce019  = l_xrce_t.xrceorga
+         LET l_xrce_t.xrce020  = ''
+         LET l_xrce_t.xrce021  = ''
+         LET l_xrce_t.xrce022  = ''
+         LET l_xrce_t.xrce023  = ''
+         SELECT ooag003,ooag004 INTO l_xrce_t.xrce018,l_xrce_t.xrceorga FROM ooag_t
+          WHERE ooagent = g_enterprise
+            AND ooag001 = g_xrda003
+            
+         SELECT glab005,glab010 INTO l_xrce_t.xrce016,l_xrce_t.xrce011 FROM glab_t
+          WHERE glabent = g_enterprise
+            AND glabld = g_ld
+            AND glab003 = l_glab003
+         
+         SELECT nmad003 INTO l_xrce_t.xrce012 FROM nmad_t
+          WHERE nmadent = g_enterprise
+            AND nmad001 = g_glaa_t.glaa005
+            AND nmad002 = l_xrce_t.xrce011
+           
+         SELECT gzcb003 INTO l_xrce_t.xrce015 FROM gzcb_t
+          WHERE gzcb002 = '20'
+            AND gzcb001 = '8306'
+
+         INSERT INTO xrce_t VALUES(l_xrce_t.*)
+         IF SQLCA.sqlcode THEN
+            LET g_success = 'N' RETURN
+         END IF
+         
+         LET l_xrce_t.xrceseq = l_xrce_t.xrceseq + 1
+         
+      END IF
+
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[ TYPE type_g_xrcb_d        RECORD
+       xrcborga     LIKE xrcb_t.xrcborga,
+       xrcb001      LIKE xrcb_t.xrcb001,
+       xrcb002      LIKE xrcb_t.xrcb002,
+       xrcb003      LIKE xrcb_t.xrcb003,
+       isaf010      LIKE isaf_t.isaf010,
+       xrcc001      LIKE xrcc_t.xrcc001,
+       xrcc004      LIKE xrcc_t.xrcc004,
+       xrcc100      LIKE xrcc_t.xrcc100,
+       xrcc108      LIKE xrcc_t.xrcc108,
+       xrcc118      LIKE xrcc_t.xrcc118,
+       xrcc128      LIKE xrcc_t.xrcc128,
+       xrcc138      LIKE xrcc_t.xrcc138,
+       xrca001      LIKE xrca_t.xrca001,
+       xrccdocno    LIKE xrcc_t.xrccdocno,
+       xrccseq      LIKE xrcc_t.xrccseq,
+       xrca004      LIKE xrca_t.xrca004
+       END RECORD
+DEFINE g_ld       LIKE xrda_t.xrdald
+DEFINE g_site     LIKE xrda_t.xrdasite
+DEFINE g_xrda003  LIKE xrda_t.xrda003
+DEFINE g_xrda004  LIKE xrda_t.xrda004
+DEFINE g_xrda005  LIKE xrda_t.xrda005
+DEFINE g_docdt    LIKE xrda_t.xrdadocdt
+DEFINE g_docno    LIKE xrda_t.xrdadocno
+DEFINE g_wc       STRING
+DEFINE g_wc1      STRING
+DEFINE g_wc1_d    STRING
+DEFINE g_wc2      STRING
+DEFINE g_wc2_d    STRING
+DEFINE g_wc3      STRING
+DEFINE p_rec_total    LIKE xrce_t.xrce109
+DEFINE p_doc_total    LIKE xrce_t.xrce109
+DEFINE p_vef_amount   LIKE xrce_t.xrce109
+DEFINE g_xrceseq      LIKE xrce_t.xrceseq
+DEFINE g_xrce_t       RECORD LIKE xrce_t.*
+DEFINE g_glaa_t       RECORD LIKE glaa_t.*
+DEFINE g_flag         LIKE type_t.chr1      #記錄是否有產生溢收
+DEFINE g_ooab002      LIKE ooab_t.ooab002]]>
+</point>
+  <point name="input.before_close" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   ]]>
+</point>
+  <point name="input.before_input" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            IF cl_null(g_xrda_m.lbl_a) THEN
+               LET g_xrda_m.lbl_a = '1'
+               LET g_xrda_m.check = 'N'
+               CALL cl_set_comp_entry('check',FALSE)
+            END IF
+            LET p_rec_total = 0
+            LET p_doc_total = 0
+            LET p_vef_amount= 0]]>
+</point>
+  <point name="input.define" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   DEFINE p_ld       LIKE xrda_t.xrdald
+   DEFINE p_site     LIKE xrda_t.xrdasite
+   DEFINE p_xrda003  LIKE xrda_t.xrda003
+   DEFINE p_xrda004  LIKE xrda_t.xrda004
+   DEFINE p_xrda005  LIKE xrda_t.xrda005
+   DEFINE p_docdt    LIKE xrda_t.xrdadocdt
+   DEFINE p_docno    LIKE xrda_t.xrdadocno
+   DEFINE l_wc1      STRING
+   DEFINE l_wc2      STRING]]>
+</point>
+  <point name="input.g.lbl_a" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_xrda_m.lbl_a) AND g_xrda_m.lbl_a = '3' THEN
+               CALL cl_set_comp_entry('check',TRUE)
+            ELSE
+               CALL cl_set_comp_entry('check',FALSE)
+            END IF]]>
+</point>
+  <point name="input.get_var" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   p_ld,p_site,p_xrda004,p_xrda005,p_xrda003,p_docdt,p_docno]]>
+</point>
+  <point name="input.more_input" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[      CONSTRUCT BY NAME g_wc1 ON lbl_docno1
+         BEFORE CONSTRUCT
+            IF g_xrda_m.lbl_a != 3 THEN NEXT FIELD lbl_a END IF
+            
+          ON ACTION controlp INFIELD lbl_docno1
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+         #  #給予arg
+            LET g_qryparam.arg1 = 'C3'     #帳套
+         #  LET g_qryparam.arg2 = g_xrda_m.xrdasite   #帳務中心
+         #  LET g_qryparam.arg3 = g_xrda_m.xrda004    #核銷客戶
+         #  LET g_qryparam.arg4 = g_xrda_m.xrda005    #收款客戶
+         # #LET g_qryparam.arg5 = g_xrda_m.xrdacomp   #來源組織
+         # #LET g_qryparam.arg6 =                     #來源類型
+         # #LET g_qryparam.arg7 =                     #表單性質
+            
+         #  LET g_qryparam.where= "xrcadocdt <= '",g_xrda_m.xrdadocdt,"'"
+            #呼叫開窗
+            CALL axrt400_02()
+            
+            
+            LET l_wc1 = g_qryparam.return1
+            LET l_wc1 = cl_replace_str(l_wc1,'nmbbdocno = ','')
+            LET l_wc1 = cl_replace_str(l_wc1,'nmbbseq = ','')
+            LET l_wc1 = cl_replace_str(l_wc1,' OR ','/')
+            LET l_wc1 = cl_replace_str(l_wc1,' AND ',',')
+            DISPLAY l_wc1 TO lbl_docno1               #顯示到畫面上
+            LET g_wc1_d = g_qryparam.return1
+            NEXT FIELD lbl_docno1                     #返回原欄位
+ 
+            
+      END CONSTRUCT
+      
+      CONSTRUCT BY NAME g_wc2 ON lbl_docno2
+         BEFORE CONSTRUCT
+            IF g_xrda_m.lbl_a != 3 THEN NEXT FIELD lbl_a END IF
+            
+          ON ACTION controlp INFIELD lbl_docno2
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+         #  #給予arg
+            LET g_qryparam.arg1 = 'C3'     #帳套
+         #  LET g_qryparam.arg2 = g_xrda_m.xrdasite   #帳務中心
+         #  LET g_qryparam.arg3 = g_xrda_m.xrda004    #核銷客戶
+         #  LET g_qryparam.arg4 = g_xrda_m.xrda005    #收款客戶
+         # #LET g_qryparam.arg5 = g_xrda_m.xrdacomp   #來源組織
+         # #LET g_qryparam.arg6 =                     #來源類型
+         # #LET g_qryparam.arg7 =                     #表單性質
+            LET g_qryparam.arg8 = g_ooab002           #表單性質
+            
+         #  LET g_qryparam.where= "xrcadocdt <= '",g_xrda_m.xrdadocdt,"'"
+            #呼叫開窗
+            CALL axrt400_04()
+            
+            LET l_wc2 = g_qryparam.return1
+            LET l_wc2 = cl_replace_str(l_wc2,'xrcb002 = ','')
+            LET l_wc2 = cl_replace_str(l_wc2,'xrccseq = ','')
+            LET l_wc2 = cl_replace_str(l_wc2,'xrcc001 = ','')
+            LET l_wc2 = cl_replace_str(l_wc2,' AND ',',')
+            LET l_wc2 = cl_replace_str(l_wc2,' OR ','/')
+            DISPLAY l_wc2 TO lbl_docno2               #顯示到畫面上
+            LET g_wc2_d = g_qryparam.return1
+
+            NEXT FIELD lbl_docno2                     #返回原欄位
+            
+      END CONSTRUCT
+      
+      CONSTRUCT BY NAME g_wc3 ON lbl_docno3
+         BEFORE CONSTRUCT
+            IF g_xrda_m.lbl_a != 3 THEN NEXT FIELD lbl_a END IF
+            IF g_xrda_m.check = 'N'  THEN NEXT FIELD check END IF
+      END CONSTRUCT]]>
+</point>
+  <point name="input.post_input" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   IF INT_FLAG THEN
+      RETURN
+   END IF
+   LET g_wc1 = g_wc1_d
+   LET g_wc2 = g_wc2_d
+  #LET g_wc3 = cl_replace_str(g_wc3,'lbl_docno3','   ')
+   CALL s_transaction_begin()
+   LET g_success = 'Y'
+   CASE
+      WHEN g_xrda_m.lbl_a = '1'
+         CALL axrt400_01_1()
+      WHEN g_xrda_m.lbl_a = '2'
+         CALL axrt400_01_2()
+      WHEN g_xrda_m.lbl_a = '3'
+         CALL axrt400_01_3()
+   END CASE
+   
+   IF g_success = 'Y' THEN
+      CALL s_transaction_end('Y','0')
+   ELSE
+      CALL s_transaction_end('N','0')
+   END IF]]>
+</point>
+  <point name="input.pre_input" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   WHENEVER ERROR CONTINUE
+   LET g_ld = p_ld
+   LET g_docno = p_docno
+   LET g_site = p_site
+   LET g_xrda003 = p_xrda003
+   LET g_xrda004 = p_xrda004
+   LET g_xrda005 = p_xrda005
+   LET g_docdt   = p_docdt
+   LET g_xrceseq = 1
+   LET g_wc = " 1=1"
+   SELECT * INTO g_glaa_t.* FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald  = g_ld
+   LET g_ooab002 = ''
+   SELECT ooab002 INTO g_ooab002 FROM ooab_t
+    WHERE ooabent = g_enterprise
+      AND ooabsite= g_site
+      AND ooab001 = 'S-FIN-1002']]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.action" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.lbl_a" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.lbl_a" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.check" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.check" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.check" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.lbl_a" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.check" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.after_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+</add_points>

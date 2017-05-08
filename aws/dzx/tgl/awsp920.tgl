@@ -1,0 +1,111 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="awsp920.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0005(2016-08-04 16:57:53), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000018
+#+ Filename...: awsp920
+#+ Description: 整合服務端Restful + JSON
+#+ Creator....: 00544(2016-08-04 16:57:53)
+#+ Modifier...: 00544 -SD/PR-
+
+{</section>}
+
+{<section id="awsp920.global" >}
+#應用 i00 樣板自動產生(Version:7)
+#add-point:填寫註解說明
+{<point name="global.memo" />}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+IMPORT com
+IMPORT xml
+IMPORT util
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_ws.inc"
+ 
+#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable" mark="Y"/>}
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" />}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+MAIN
+   DEFINE l_port          STRING
+   DEFINE l_argv01        STRING
+   DEFINE l_master        util.JSONObject
+   DEFINE l_detail        util.JSONArray
+   
+   CALL cl_db_connect("ds", FALSE) 
+   
+   DISPLAY "ARGS:", NUM_ARGS()
+
+   CASE        #根据传入的参数数量决定相应的动作
+      WHEN NUM_ARGS()= 1
+         LET l_master = util.JSONObject.parse(ARG_VAL(1)) #parse json
+         LET l_detail = l_master.get("param")
+         LET l_argv01 = l_detail.get(1)
+
+         IF l_argv01 = "-S" THEN
+            LET l_port = l_detail.get(2)
+         END IF
+         
+      WHEN NUM_ARGS()=7
+         LET l_port = ARG_VAL(7)
+         display "port:", l_port   
+         
+   END CASE
+
+   IF NOT cl_null(l_port) THEN
+      CALL fgl_setenv("FGLAPPSERVER", l_port)
+   END IF
+      
+   CALL awsp920_startServer()
+    
+END MAIN
+{</section>}
+
+{<section id="awsp920.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+{<point name="other.function"/>}
+#end add-point
+
+{</section>}
+
+{<section id="awsp920.msgcentre_notify" >}
+ 
+   #add-point:process段define (客製用)
+{<point name="msgcentre_notify.define_customerization" edit="c"/>}
+   #end add-point
+  
+   #add-point:process段define
+{<point name="msgcentre_notify.define"/>}
+   #end add-point
+ 
+ 
+   #action-id與狀態填寫
+ 
+ 
+   #add-point:msgcentre其他通知
+{<point name="msg_centre.process"/>}
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+  
+ 
+
+
+{</section>}
+

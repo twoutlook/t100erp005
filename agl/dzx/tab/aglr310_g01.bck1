@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglr310_g01" module="agl" jobmode="N" type="g01" industry="std" crtid="05416" crtdt="2014-07-14 10:27:34" modid="02599" moddt="2016-05-27 11:34:57" sdver="8" tabver="10001" description="傳票">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="glap012,glap014,glap015,glaq009,glaq007,glaq021,glapdocno,glapld,glap004,glap006,glaq006,glaq013,glaq004,glaq025,glaq018,glapdocdt,glaq011,glaq012,glaq015,glaq016,glaq027,glaq044,glap007,glap013,glaq003,glaq014,glaq017,glaq020,glaq022,glaq040,glap009,glaq039,glaq042,glapcomp,glapstus,glaq010,glaq043,glaqseq,glaq024,glap001,glap002,glaq001,glaq019,glaq028,glaq023,glap008,glap010,glap011,glaq005,glaq008,glaq041,glaq002,glaqcomp,ooefl_t_ooefl003(ooefl003|ooefl_t.ooefl003),glaal_t_glaal002(glaal002|glaal_t.glaal002),l_glapcomp_ooefl003(chr1000|trim(glapcomp)||&apos;.&apos;||trim((SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooeflent = glap_t.glapent AND ooefl_t.ooefl001 = glap_t.glapcomp AND ooefl_t.ooefl002 = g_dlang))),glaq002_1(chr500|NULL),glacl004(chr30|NULL),l_glaq017_1(chr1000|NULL),glapent,glapcnfid,glappstid,glapcrtid,glaq051,glaq052,glaq053"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="glap012,glap014,glap015,glaq009,glaq007,glaq021,glapdocno,glapld,glap004,glap006,glaq006,glaq013,glaq004,glaq025,glaq018,glapdocdt,glaq011,glaq012,glaq015,glaq016,glaq027,glaq044,glap007,glap013,glaq003,glaq014,glaq017,glaq020,glaq022,glaq040,glap009,glaq039,glaq042,glapcomp,glapstus,glaq010,glaq043,glaqseq,glaq024,glap001,glap002,glaq001,glaq019,glaq028,glaq023,glap008,glap010,glap011,glaq005,glaq008,glaq041,glaq002,glaqcomp,ooefl_t_ooefl003(ooefl003|( SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooeflent = glap_t.glapent AND ooefl_t.ooefl001 = glap_t.glapcomp AND ooefl_t.ooefl002 = g_dlang)),glaal_t_glaal002(glaal002|( SELECT glaal002 FROM glaal_t WHERE glaal_t.glaalent = glap_t.glapent AND glaal_t.glaalld = glap_t.glapld AND glaal_t.glaal001 = g_dlang)),l_glapcomp_ooefl003(chr1000|trim(glapcomp)||&apos;.&apos;||trim((SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooeflent = glap_t.glapent AND ooefl_t.ooefl001 = glap_t.glapcomp AND ooefl_t.ooefl002 = g_dlang))),glaq002_1(chr500|NULL),glacl004(chr30|NULL),l_glaq017_1(chr1000|NULL),glapent,glapcnfid,glappstid,glapcrtid,glaq051,glaq052,glaq053"/>
+    <sql id="g_from" query="glap_t LEFT OUTER JOIN ( SELECT glaq_t.* FROM glaq_t  ) x  ON glap_t.glapent = x.glaqent AND glap_t.glapld = x.glaqld AND glap_t.glapdocno = x.glaqdocno"/>
+    <sql id="g_where" query="glap_t.glapstus = &apos;Y&apos; AND " maintable="glap_t"/>
+    <sql id="g_order" query="glapdocno,glaqseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="glapdocno,glaqseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="glapdocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff002" where="glapent,glapdocno"/>
+      <rep type="glaqseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff002,ooff003" where="glapent,glapdocno,glaqseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff002,ooff003" where="glapent,glapdocno,glaqseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="glapdocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff002" where="glapent,glapdocno"/>
+      <rep type="glaqseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

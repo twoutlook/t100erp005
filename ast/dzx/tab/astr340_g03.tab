@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astr340_g03" module="ast" jobmode="N" type="g01" industry="std" crtid="06540" crtdt="2016-06-30 16:22:54" modid="06540" moddt="2016-07-11 12:56:43" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="stbe016,stbe011,stbe017,stbdsite,stbdent,stbd002,stbe032,stbe025,stbe024,stbe012,l_kxname(chr100|NULL),stbe005,stbe019,stbesite,stbdcnfid,stbddocdt,stbd038,stbd006,stbd005,stbd026,stbd025,stbd015,stbd033,stbddocno,l_idnum(chr100|NULL),l_jsname(chr30|NULL),l_name(chr30|NULL),l_js(chr100|NULL),l_pmaal003(chr100|NULL),l_ooefl003(chr100|NULL)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="stbe016(stbe016|stbe016),stbe011(stbe011|stbe011),stbe017(stbe017|stbe017),stbdsite(stbdsite|stbdsite),stbdent(stbdent|stbdent),stbd002(stbd002|stbd002),stbe032(stbe032|stbe032),stbe025(stbe025|stbe025),stbe024(stbe024|stbe024),stbe012(stbe012|stbe012),l_kxname(chr100|NULL),stbe005(stbe005|stbe005),stbe019(stbe019|stbe019),stbesite(stbesite|stbesite),stbdcnfid(stbdcnfid|stbdcnfid),stbddocdt(stbddocdt|stbddocdt),stbd038(stbd038|stbd038),stbd006(stbd006|stbd006),stbd005(stbd005|stbd005),stbd026(stbd026|stbd026),stbd025(stbd025|stbd025),stbd015(stbd015|stbd015),stbd033(stbd033|stbd033),stbddocno(stbddocno|stbddocno),l_idnum(chr100|NULL),l_jsname(chr30|NULL),l_name(chr30|NULL),l_js(chr100|NULL),l_pmaal003(chr100|NULL),l_ooefl003(chr100|NULL)"/>
+    <sql id="g_from" query="stbd_t,stbe_t"/>
+    <sql id="g_where" query="" maintable="stbd_t"/>
+    <sql id="g_order" query="stbddocno,stbesite,stbe005"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="stbddocno,stbesite,stbe005"/>
+    <section id="b_group" reptype="d01">
+      <rep type="stbddocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="stbdent,stbddocno"/>
+      <rep type="stbesite"/>
+      <rep type="stbe005"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="stbdent,stbddocno,stbesite,stbe005"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="stbdent,stbddocno,stbesite,stbe005"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="stbddocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="stbdent,stbddocno"/>
+      <rep type="stbesite"/>
+      <rep type="stbe005"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

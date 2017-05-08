@@ -1,0 +1,121 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axci130" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02291" crtdt="2014-03-11 00:00:00" modid="02291" moddt="2014-03-11 21:10:57" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="聯產品預設分配比例設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcbosite,xcbosite_desc(chr80),xcbo001,imag014(chr500),imaal003(chr500)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcbo002,xcbo002_desc(chr500),xcbo003,xcbo004"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcbo002,xcboownid,xcboownid_desc(chr500),xcboowndp,xcboowndp_desc(chr500),xcbocrtid,xcbocrtid_desc(chr500),xcbocrtdp,xcbocrtdp_desc(chr500),xcbocrtdt,xcbomodid,xcbomodid_desc(chr500),xcbomoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axci130" method="dialog">
+    <section id="input">
+      <input id="head" field="xcbosite,xcbo001"/>
+      <input id="body" page="1" field="xcbo002,xcbo002_desc,xcbo003,xcbo004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcbosite,xcbo001"/>
+      <construct id="body" page="1" field="xcbo002,xcbo002_desc,xcbo003,xcbo004"/>
+      <construct id="body" page="2" field="xcboownid,xcboowndp,xcbocrtid,xcbocrtdp,xcbocrtdt,xcbomodid,xcbomoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcbosite,xcbo001"/>
+      <set id="head" type="no_entry" field="xcbosite,xcbo001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcbosite">
+        <after>
+          <reference field="xcbosite_desc" ref_field="xcbo_t.xcbosite" map_field="xcbosite,xcboent" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_10" state="i"/>
+        <controlp form="q_ooef001_10" state="c"/>
+      </column>
+      <column id="xcbosite_desc"/>
+      <column id="xcbo001">
+        <controlp form="q_imag001_1" state="i"/>
+        <controlp form="q_imag001_1" state="c"/>
+      </column>
+      <column id="imag014"/>
+      <column id="imaal003"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcbo002">
+        <after/>
+        <controlp form="q_imag001_1" state="i"/>
+        <controlp form="q_imag001_1" state="c"/>
+      </column>
+      <column id="xcbo002_desc"/>
+      <column id="xcbo003">
+        <controlp form="q_imaa006" state="c"/>
+      </column>
+      <column id="xcbo004">
+        <after>
+          <check id="range" st="100" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="xcboownid">
+        <after>
+          <reference field="xcboownid_desc" ref_field="xcbo_t.xcboownid" map_field="xcboownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcboownid_desc"/>
+      <column id="xcboowndp">
+        <after>
+          <reference field="xcboowndp_desc" ref_field="xcbo_t.xcboowndp" map_field="xcboowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcboowndp_desc"/>
+      <column id="xcbocrtid">
+        <after>
+          <reference field="xcbocrtid_desc" ref_field="xcbo_t.xcbocrtid" map_field="xcbocrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcbocrtid_desc"/>
+      <column id="xcbocrtdp">
+        <after>
+          <reference field="xcbocrtdp_desc" ref_field="xcbo_t.xcbocrtdp" map_field="xcbocrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcbocrtdp_desc"/>
+      <column id="xcbocrtdt"/>
+      <column id="xcbomodid">
+        <after>
+          <reference field="xcbomodid_desc" ref_field="xcbo_t.xcbomodid" map_field="xcbomodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcbomodid_desc"/>
+      <column id="xcbomoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcbo_t" pk="xcbosite,xcbo001">
+      <sql id="forupd_sql" type="sql" query="SELECT xcbosite,&apos;&apos;,xcbo001,&apos;&apos;,&apos;&apos; FROM xcbo_t WHERE xcboent= ? AND xcbosite=? AND xcbo001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcbosite,&apos;&apos;,xcbo001,&apos;&apos;,&apos;&apos; FROM xcbo_t" order="xcbosite,xcbo001"/>
+    </head>
+    <body id="xcbo_t" page="1,2" linked="" pk="xcbo002" fk="xcbosite,xcbo001">
+      <sql id="forupd_sql_detail" query="SELECT xcbo002,&apos;&apos;,xcbo003,xcbo004,&apos;&apos;,xcboownid,&apos;&apos;,xcboowndp,&apos;&apos;,xcbocrtid,&apos;&apos;,xcbocrtdp,&apos;&apos;,xcbocrtdt,xcbomodid,&apos;&apos;,xcbomoddt FROM xcbo_t WHERE xcboent=? AND xcbosite=? AND xcbo001=? AND xcbo002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcbo002,&apos;&apos;,xcbo003,xcbo004,&apos;&apos;,xcboownid,&apos;&apos;,xcboowndp,&apos;&apos;,xcbocrtid,&apos;&apos;,xcbocrtdp,&apos;&apos;,xcbocrtdt,xcbomodid,&apos;&apos;,xcbomoddt FROM xcbo_t WHERE xcboent= ? AND xcbosite=? AND xcbo001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

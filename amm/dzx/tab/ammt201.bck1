@@ -1,0 +1,172 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammt201" module="amm" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="01533" crtdt="2013-11-28 16:27:55" modid="02159" moddt="2014-12-29 09:51:16" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="會員等級升降策略申請作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mmcrsite,mmcrsite_desc(chr80),mmcrdocdt,mmcrdocno,mmcr000,mmcrunit,mmcr001,mmcr002,mmcrl002(chr500),mmcrl003(chr500),mmcr004,mmcr005,mmcracti,mmcrstus,mmcrownid,mmcrownid_desc(chr80),mmcrowndp,mmcrowndp_desc(chr80),mmcrcrtid,mmcrcrtid_desc(chr80),mmcrcrtdp,mmcrcrtdp_desc(chr80),mmcrcrtdt,mmcrmodid,mmcrmodid_desc(chr80),mmcrmoddt,mmcrcnfid,mmcrcnfid_desc(chr80),mmcrcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mmcs001,mmcs002,mmcs002_desc(chr500),mmcs003,mmcs004,mmcs005,mmcs006,mmcs007,mmcs008,mmcsacti,mmcsunit,mmcssite"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="mmct001,mmct002,mmct002_desc(chr500),mmctacti,mmctunit,mmctsite"/>
+      <var id="bs_field" value="mmcrsite,mmcrsite_desc(chr80),mmcrdocdt,mmcrdocno,mmcr000,mmcr001,mmcr002,mmcr001_desc(chr80),mmcr004,mmcr005,mmcracti,mmcrunit" pk="mmcrdocno" order=""/>
+      <bs_reference field="mmcrsite_desc" ref_field="mmcrsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="mmcr001_desc" ref_field="mmcr001" ref_sql="SELECT mmcrl002 FROM mmcrl_t WHERE mmcrlent=$varg_enterprise$var AND mmcrldocno=? AND mmcrl001=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="amm" filename="ammt201" method="dialog">
+    <section id="input">
+      <input id="head" field="mmcrsite,mmcrdocdt,mmcrdocno,mmcr000,mmcrunit,mmcr001,mmcr002,mmcrl002,mmcrl003,mmcr004,mmcr005,mmcracti,mmcrstus"/>
+      <input id="body" page="1" field="mmcs001,mmcs002,mmcs003,mmcs004,mmcs005,mmcs006,mmcs007,mmcs008,mmcsacti" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="mmct001,mmct002,mmctacti,mmctunit" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mmcrsite,mmcrdocdt,mmcrdocno,mmcr000,mmcrunit,mmcr001,mmcr002,mmcrl002,mmcrl003,mmcr004,mmcr005,mmcracti,mmcrstus,mmcrownid,mmcrowndp,mmcrcrtid,mmcrcrtdp,mmcrcrtdt,mmcrmodid,mmcrmoddt,mmcrcnfid,mmcrcnfdt"/>
+      <construct id="body" page="1" field="mmcs001,mmcs002,mmcs003,mmcs004,mmcs005,mmcs006,mmcs007,mmcs008,mmcsacti"/>
+      <construct id="body" page="2" field="mmct001,mmct002,mmctacti,mmctunit"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mmcrdocno"/>
+      <set id="head" type="no_entry" field="mmcrdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="mmcrsite">
+        <after>
+          <reference field="mmcrsite_desc" ref_field="mmcr_t.mmcrsite" map_field="mmcrent,mmcrsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="mmcrsite_desc"/>
+      <column id="mmcrdocdt"/>
+      <column id="mmcrdocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_mmcrdocno" state="c"/>
+      </column>
+      <column id="mmcr000" type="S" default="I" def_scc="32"/>
+      <column id="mmcrunit"/>
+      <column id="mmcr001">
+        <controlp form="q_mmcu001_1" state="i"/>
+        <controlp form="q_mmcu001" state="c"/>
+      </column>
+      <column id="mmcr002" type="S" default="0"/>
+      <column id="mmcrl002"/>
+      <column id="mmcrl003"/>
+      <column id="mmcr004" type="S" default="N"/>
+      <column id="mmcr005" type="S" default="N"/>
+      <column id="mmcracti" type="S" default="Y"/>
+      <column id="mmcrstus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="mmcrownid">
+        <after>
+          <reference field="mmcrownid_desc" ref_field="mmcr_t.mmcrownid" map_field="mmcrownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmcrownid_desc"/>
+      <column id="mmcrowndp">
+        <after>
+          <reference field="mmcrowndp_desc" ref_field="mmcr_t.mmcrowndp" map_field="mmcrowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mmcrowndp_desc"/>
+      <column id="mmcrcrtid">
+        <after>
+          <reference field="mmcrcrtid_desc" ref_field="mmcr_t.mmcrcrtid" map_field="mmcrcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmcrcrtid_desc"/>
+      <column id="mmcrcrtdp">
+        <after>
+          <reference field="mmcrcrtdp_desc" ref_field="mmcr_t.mmcrcrtdp" map_field="mmcrcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mmcrcrtdp_desc"/>
+      <column id="mmcrcrtdt"/>
+      <column id="mmcrmodid">
+        <after>
+          <reference field="mmcrmodid_desc" ref_field="mmcr_t.mmcrmodid" map_field="mmcrmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmcrmodid_desc"/>
+      <column id="mmcrmoddt"/>
+      <column id="mmcrcnfid">
+        <after>
+          <reference field="mmcrcnfid_desc" ref_field="mmcr_t.mmcrcnfid" map_field="mmcrcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmcrcnfid_desc"/>
+      <column id="mmcrcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="mmcs001"/>
+      <column id="mmcs002">
+        <after>
+          <reference field="mmcs002_desc" ref_field="mmcs002" map_field="mmcs002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2024&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmcs002_desc"/>
+      <column id="mmcs003"/>
+      <column id="mmcs004"/>
+      <column id="mmcs005" type="S" default="1" def_scc="6532"/>
+      <column id="mmcs006"/>
+      <column id="mmcs007" type="S" default="0"/>
+      <column id="mmcs008" type="S" default="0"/>
+      <column id="mmcsacti" type="S" default="Y"/>
+      <column id="mmcsunit"/>
+      <column id="mmcssite"/>
+    </init>
+    <init id="body" page="2">
+      <column id="mmct001"/>
+      <column id="mmct002">
+        <after>
+          <reference field="mmct002_desc" ref_field="mmct_t.mmct002" map_field="mmctent,mmct002" ref_sql="SELECT mmanl003 FROM mmanl_t WHERE mmanlent=$varg_enterprise$var AND mmanl001=? AND mmanl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mman001" state="i"/>
+        <controlp form="q_mman001" state="c"/>
+      </column>
+      <column id="mmct002_desc"/>
+      <column id="mmctacti" type="S" default="Y"/>
+      <column id="mmctunit"/>
+      <column id="mmctsite"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="mmcr_t" pk="mmcrdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT mmcrsite,&apos;&apos;,mmcrdocdt,mmcrdocno,mmcr000,mmcrunit,mmcr001,mmcr002,&apos;&apos;,&apos;&apos;,mmcr004,mmcr005,mmcracti,mmcrstus,mmcrownid,&apos;&apos;,mmcrowndp,&apos;&apos;,mmcrcrtid,&apos;&apos;,mmcrcrtdp,&apos;&apos;,mmcrcrtdt,mmcrmodid,&apos;&apos;,mmcrmoddt,mmcrcnfid,&apos;&apos;,mmcrcnfdt FROM mmcr_t WHERE mmcrent= ? AND mmcrdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mmcrsite,&apos;&apos;,mmcrdocdt,mmcrdocno,mmcr000,mmcrunit,mmcr001,mmcr002,&apos;&apos;,&apos;&apos;,mmcr004,mmcr005,mmcracti,mmcrstus,mmcrownid,&apos;&apos;,mmcrowndp,&apos;&apos;,mmcrcrtid,&apos;&apos;,mmcrcrtdp,&apos;&apos;,mmcrcrtdt,mmcrmodid,&apos;&apos;,mmcrmoddt,mmcrcnfid,&apos;&apos;,mmcrcnfdt FROM mmcr_t" order="mmcrdocno"/>
+      <sql id="append" type="lang" target="mmcrl002,mmcrl003" table="mmcrl_t" fk="mmcrdocno" pk="mmcrldocno,mmcrl001" field="mmcrl002,mmcrl003"/>
+    </head>
+    <body id="mmcs_t" page="1" linked="" pk="mmcs002,mmcs003,mmcs004" fk="mmcsdocno">
+      <sql id="forupd_sql_detail" query="SELECT mmcs001,mmcs002,&apos;&apos;,mmcs003,mmcs004,mmcs005,mmcs006,mmcs007,mmcs008,mmcsacti,mmcsunit,mmcssite FROM mmcs_t WHERE mmcsent=? AND mmcsdocno=? AND mmcs002=? AND mmcs003=? AND mmcs004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mmcs001,mmcs002,&apos;&apos;,mmcs003,mmcs004,mmcs005,mmcs006,mmcs007,mmcs008,mmcsacti,mmcsunit,mmcssite FROM mmcs_t WHERE mmcsent=? AND mmcsdocno=?"/>
+    </body>
+    <body id="mmct_t" page="2" linked="" pk="mmct002" fk="mmctdocno">
+      <sql id="forupd_sql_detail" query="SELECT mmct001,mmct002,&apos;&apos;,mmctacti,mmctunit,mmctsite FROM mmct_t WHERE mmctent=? AND mmctdocno=? AND mmct002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mmct001,mmct002,&apos;&apos;,mmctacti,mmctunit,mmctsite FROM mmct_t WHERE mmctent=? AND mmctdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

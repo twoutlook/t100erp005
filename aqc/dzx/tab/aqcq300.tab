@@ -1,0 +1,72 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aqcq300" module="aqc" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="01996" crtdt="2014-07-28 11:07:28" modid="01996" moddt="2016-04-22 14:19:45" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="品質檢驗記錄查詢">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="qcba005,qcba010,qcba014,qcba024,qcbadocno,qcba001,qcba022,qcba005_sel,qcbadocno_sel,qcba010_sel,qcba001_sel,qcba014_sel,qcba024_sel,qcba000_sel,qcba022_sel"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="qcba005,qcba005_desc(chr500),qcba010,qcba010_desc(chr500),qcba010_desc_desc(chr500),qcba014,qcba000,qcba024,qcba024_desc(chr500),qcba022,qcbadocno,qcba001"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="qcba005(b_qcba005),qcba005_desc(b_qcba005_desc),qcba010(b_qcba010),qcba010_desc(b_qcba010_desc),qcba010_desc_desc(b_qcba010_desc_desc),qcba014(b_qcba014),qcba000(b_qcba000),qcba024(b_qcba024),qcba024_desc(b_qcba024_desc),qcba022(b_qcba022),qcbadocno(b_qcbadocno),qcba001(b_qcba001)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="aqc" filename="aqcq300" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="qcba005,qcba010,qcba014,qcba000,qcba024,qcba022,qcba001" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="qcba005(b_qcba005),qcba010(b_qcba010),qcba014(b_qcba014),qcba000(b_qcba000),qcba024(b_qcba024),qcba022(b_qcba022),qcbadocno(b_qcbadocno),qcba001(b_qcba001)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="qcba005">
+        <after>
+          <check chkid="v_pmaa001_2" id="isExist"/>
+          <reference field="qcba005_desc" ref_field="qcba005" map_field="qcba005" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_1" state="c"/>
+      </column>
+      <column id="qcba005_desc"/>
+      <column id="qcba010">
+        <after/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="qcba010_desc">
+        <after/>
+      </column>
+      <column id="qcba010_desc_desc"/>
+      <column id="qcba014"/>
+      <column id="qcba000" type="S" default="1" def_scc="5056"/>
+      <column id="qcba024">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="qcba024_desc" ref_field="qcba024" map_field="qcba024" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="qcba024_desc"/>
+      <column id="qcba022" type="S" default="0" def_scc="5072"/>
+      <column id="qcbadocno">
+        <controlp form="q_ooba002_1" state="c"/>
+      </column>
+      <column id="qcba001">
+        <controlp form="q_qcba001" state="c"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <body id="qcba_t" page="1" linked="" pk="qcbadocno">
+      <sql id="b_fill_sql" query="SELECT qcba005,&apos;&apos;,qcba010,&apos;&apos;,&apos;&apos;,qcba014,qcba000,qcba024,&apos;&apos;,qcba022,qcbadocno,qcba001 FROM qcba_t WHERE qcbaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

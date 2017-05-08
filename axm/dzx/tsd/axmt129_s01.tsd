@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axmt129_s01" std_prog="axmt129_s01" erpver="1.0" ver="1" module="AXM" booking="Y" class="" template="F001_00" env="s" zone="t10dev">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <table ver="1" cite_std="N">
+    <tbl name="imaa_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status=""/>
+  </table>
+  <field cite_std="N" name="chk1" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[未取到成本則不產生資料：
+  1.資料欄位:Formonly/Input
+  4.當值為'Y'時,若這個料號依據標準成本取得來源抓不到單價,則不在xmbw_t產生這個料號的資料;
+    當值為'N'時,若這個料號依據標準成本取得來源抓不到單價,則單價=0
+]]>
+  </field>
+  <field cite_std="N" name="e_imaa001" ver="1" src="s" column="imaa001" table="imaa_t" attribute="C301" type="varchar2(40)" req="N" i_zoom="" c_zoom="q_imaa001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaa_t.imaa003" ver="1" src="s" column="imaa003" table="imaa_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="q_imck001" c_zoom="q_imck001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[料號主分群：
+  1.資料欄位:imaa003/QBE
+  2.輸入要整批產生的料號主分群,與料號起迄範圍、料號銷售分群等條件組成SQL後過濾取得所有
+    要寫入xmbw011的料件編號(只抓已確認的料號)
+  3.開窗代號:參照aimm200料件主分群的開窗]]>
+  </field>
+  <field cite_std="N" name="s_imaa001" ver="1" src="s" column="imaa001" table="imaa_t" attribute="C301" type="varchar2(40)" req="N" i_zoom="" c_zoom="q_imaa001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[產生料號範圍：
+  1.資料欄位:s_imaa001~e_imaa001/QBE
+  2.輸入要整批產生的料號起迄範圍,與料號主分群、料號銷售分群等條件組成SQL後過濾取得所有
+    要寫入xmbw011的料件編號(只抓已確認的料號)
+  3.開窗代號:標準料號開窗
+]]>
+  </field>
+  <field cite_std="N" name="xmbv_t.xmbv001" ver="1" src="s" column="xmbv001" table="xmbv_t" attribute="C812" type="varchar2(5)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[銷售價格參照表：
+  1.資料欄位:xmbv001/Display Only
+  2.將主畫面的xmbv001顯示在這邊
+]]>
+  </field>
+  <field cite_std="N" name="xmbv_t.xmbv002" ver="1" src="s" column="xmbv002" table="xmbv_t" attribute="C008" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[基礎幣別：
+  1.資料欄位:xmbv002/Display Only
+  2.將主畫面的xmbv002顯示在這邊
+]]>
+  </field>
+  <field cite_std="N" name="xmbw019_1" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[標準成本取得來源：
+  1.資料欄位:Formonly/Input
+  2.資料選項來源:SCC2075
+                 1.產品標準成本檔
+                 2.上期成本單價
+                 3.最近採購價
+]]>
+  </field>
+  <field cite_std="N" name="xmbw019_r" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="&lt;=,9" min="&gt;=,0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmbw019_rate" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;=,0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[成本加乘百分比：
+  1.資料欄位:Formonly/Input
+  2.若輸入10,則標準成本=依標準成本取得來源取得單價*(1+10%),再依據取位與捨、入的設定來得到
+  3.舉例取得的標準成本為145,加乘百分比為5%,取位0.1.捨5入6
+    ->145*(1+5%)=152.25,取為0.1表示要抓小數第二位來判斷,會抓到5,這邊設定小於等於5要捨去,
+      所以會變成152.20
+]]>
+  </field>
+  <field cite_std="N" name="xmbw019_s" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="&lt;=,9" min="&gt;=,0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[捨、入：
+  1.資料欄位:Formonly/Input
+  2.這兩個欄位不卡必輸
+  4.捨與入兩個值都有輸入的話,不可相同,例如捨3入3,這樣會無法決定到底要捨還是入
+  5.a.舉例依照來源取得的單價為145,取位為100,捨4入5，則得到的標準定價會是100
+      ->取位為100,所以抓10位數來判斷要捨還是要入,抓到的10位數是4,這邊設定小於等於4是要捨去的,
+        也就是把10位數之後的數值都捨掉,所以會變成100;若原始單價為152,就會進位變成200
+    b.舉例依照來源取得的單價為188,取位為10,捨9入 (空白)，則得到的標準定價會是180
+      ->取位為10,所以抓個位數來判斷要捨還是要入,抓到的個位數是8,這邊設定小於等於9是要捨去的,
+        也就是把個位數的數值捨掉,所以會變成180
+    c.舉例依照來源取得的單價為35.3,取位為1,捨 (空白)入0，則得到的標準定價會是35.3
+      ->取位為1,所以抓小數第一位來判斷要捨還是要入,抓到的小數第一位是3,這邊設定大於等於0就要進位,
+        所以會變成36.0
+    d.若捨與入都是空白,表示不做任何處理,值會等於原始值
+    e.若捨有輸入值,自動推算入=捨+1;若推算出入=10時,則清空
+    f.若入有輸入值,自動推算捨=入-1;若推算出捨=-1時,則清空]]>
+  </field>
+  <field cite_std="N" name="xmbw019_w" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[取位：
+  1.資料欄位:Formonly/Input
+  2.資料來源：SCC2078
+  3.若輸入100,表示取位完後的定價會是100,200,300....這種100的倍數]]>
+  </field>
+  <field cite_std="N" name="xmbw020_r" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="&lt;=,9" min="&gt;=,0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmbw020_rate" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;=,0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[銷售底價加乘百分比：
+  1.資料欄位:Formonly/Input
+  4.若輸入10,則銷售底價=標準成本*(1+10%),再依據取位與捨、入的設定來得到
+]]>
+  </field>
+  <field cite_std="N" name="xmbw020_s" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="&lt;=,9" min="&gt;=,0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmbw020_w" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmbw021_1" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="2" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[業務底價計算來源：
+  1.資料欄位:Formonly/Input
+  4.資料選項來源:SCC2076
+                 1.標準成本
+                 2.銷售底價]]>
+  </field>
+  <field cite_std="N" name="xmbw021_r" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="&lt;=,9" min="&gt;=,0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmbw021_rate" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;=,0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmbw021_s" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="&lt;=,9" min="&gt;=,0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmbw021_w" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmbw022_1" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="3" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[一般售價取得來源：
+  1.資料欄位:Formonly/Input
+  4.資料選項來源:SCC2076
+                 1.標準成本
+                 2.銷售底價
+                 3.業務底價]]>
+  </field>
+  <field cite_std="N" name="xmbw022_r" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="&lt;=,9" min="&gt;=,0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmbw022_rate" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;=,0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmbw022_s" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="&lt;=,9" min="&gt;=,0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmbw022_w" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmbw023_1" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="4" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[標準定價取得來源：
+  1.資料欄位:Formonly/Input
+  4.資料選項來源:SCC2076
+                 1.標準成本
+                 2.銷售底價
+                 3.業務底價
+                 4.一般售價]]>
+  </field>
+  <field cite_std="N" name="xmbw023_r" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="&lt;=,9" min="&gt;=,0" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmbw023_rate" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;=,0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmbw023_s" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="&lt;=,9" min="&gt;=,0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmbw023_w" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="1" name="prog_imaa003" depend_field="imaa_t.imaa003" src="s" status="">
+      <program order="1" type="1" name="aimi100"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="" ver="1" name="xmbv001_desc" src="s" depend_field="xmbv_t.xmbv001" correspon_key="xmbvent.xmbv001" ref_table="ooall_t" ref_fk="ooallent,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield cite_std="" ver="1" name="xmbv002_desc" src="s" depend_field="xmbv_t.xmbv002" correspon_key="xmbvent,xmbv002" ref_table="ooail_t" ref_fk="ooailent,ooail001" ref_dlang="ooail002" ref_rtn="ooail003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code/>
+  <act cite_std="N" id="accept" ver="1" src="s" type="all" status="">
+    <![CDATA[當執行"確認"時,
+(1)先抓取符合產生料號範圍、料號主分群、主畫面的銷售分群(值<>'ALL')的料號資料
+(2)用這些料號到標準定價取得來源表抓取單價資料,再依據取位、捨、入的設定處理單價,
+   若"未取到成本則不產生資料"有勾選,則沒有單價的料號就略過
+(3)xmbwdocno=畫面上輸入的xmbwdocno
+   xmbw010=檢查是否已存在xmaw_t，若有xmbw010 = 'U.修改'，若不存在，則給'I.新增'
+   xmbw011=(1)步驟抓到的料號
+   xmbw012=' '
+   xmbw013=參考料號的計價單位(imaf113,where imafsite='ALL')
+   xmbw014='N'
+   xmbw015=(1)步驟抓到的料號
+   xmbw016=' '
+   xmbw017=''
+   xmbw018=''
+   xmbw019=(2)步驟抓到的單價
+   xmbw020=銷售底價
+   xmbw021=業務底價
+   xmbw022=一般銷售
+   xmbw023=標準定價
+(4)若產生成功,則顯示"產生完成"訊息;
+   若產生失敗,則顯示"產生失敗"訊息]]>
+  </act>
+  <act cite_std="N" id="cancel" ver="1" src="s" type="all" status="">
+    <![CDATA[當執行"放棄"後,不做任何更新,直接離開]]>
+  </act>
+  <strings>
+    <sfield name="lbl_qbe" text="QBE" comment="" lstr=""/>
+    <sfield name="lbl_imaa001" text="產生料件範圍" comment="" lstr=""/>
+    <sfield name="lbl_str" text="~" comment="" lstr=""/>
+    <sfield name="lbl_imaa003" text="料件主分群" comment="" lstr=""/>
+    <sfield name="lbl_input" text="INPUT" comment="" lstr=""/>
+    <sfield name="lbl_xmbv001" text="銷售價格參照表號" comment="" lstr=""/>
+    <sfield name="lbl_ooall004" text="說明" comment="" lstr=""/>
+    <sfield name="lbl_xmbv002" text="基礎幣別" comment="" lstr=""/>
+    <sfield name="lbl_ooail003" text="說明" comment="" lstr=""/>
+    <sfield name="lbl_xmbw019_1" text="標準成本取得來源" comment="" lstr=""/>
+    <sfield name="lbl_xmbw019_rate" text="成本加成百分比" comment="" lstr=""/>
+    <sfield name="lbl_str1" text="%" comment="" lstr=""/>
+    <sfield name="lbl_xmbw019_w" text="進位方法：取位" comment="" lstr=""/>
+    <sfield name="lbl_xmbw019_s" text="舍" comment="" lstr=""/>
+    <sfield name="lbl_xmbw019_r" text="入" comment="" lstr=""/>
+    <sfield name="lbl_chk1" text="未取到成本則不產生資料" comment="" lstr=""/>
+    <sfield name="lbl_xmbw020_rate" text="銷售底價加乘百分比" comment="" lstr=""/>
+    <sfield name="lbl_str2" text="%" comment="" lstr=""/>
+    <sfield name="lbl_xmbw020_w" text="進位方法：取位" comment="" lstr=""/>
+    <sfield name="lbl_xmbw020_s" text="舍" comment="" lstr=""/>
+    <sfield name="lbl_xmbw020_r" text="入" comment="" lstr=""/>
+    <sfield name="lbl_xmbw021_1" text="業務底價計算來源" comment="" lstr=""/>
+    <sfield name="lbl_xmbw021_rate" text="業務底價加乘百分比" comment="" lstr=""/>
+    <sfield name="lbl_str3" text="%" comment="" lstr=""/>
+    <sfield name="lbl_xmbw021_w" text="進位方法：取位" comment="" lstr=""/>
+    <sfield name="lbl_xmbw021_s" text="舍" comment="" lstr=""/>
+    <sfield name="lbl_xmbw021_r" text="入" comment="" lstr=""/>
+    <sfield name="lbl_xmbw022_1" text="一般售價計算來源" comment="" lstr=""/>
+    <sfield name="lbl_xmbw022_rate" text="一般售價加乘百分比" comment="" lstr=""/>
+    <sfield name="lbl_str4" text="%" comment="" lstr=""/>
+    <sfield name="lbl_xmbw022_w" text="進位方法：取位" comment="" lstr=""/>
+    <sfield name="lbl_xmbw022_s" text="舍" comment="" lstr=""/>
+    <sfield name="lbl_xmbw022_r" text="入" comment="" lstr=""/>
+    <sfield name="lbl_xmbw023_1" text="標準定價計算來源" comment="" lstr=""/>
+    <sfield name="lbl_xmbw023_rate" text="標準定價加乘百分比" comment="" lstr=""/>
+    <sfield name="lbl_str5" text="%" comment="" lstr=""/>
+    <sfield name="lbl_xmbw023_w" text="進位方法：取位" comment="" lstr=""/>
+    <sfield name="lbl_xmbw023_s" text="舍" comment="" lstr=""/>
+    <sfield name="lbl_xmbw023_r" text="入" comment="" lstr=""/>
+    <sfield name="accept" text="確定" comment="" lstr=""/>
+    <sfield name="cancel" text="取消" comment="" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" comment="" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" comment="" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" comment="" lstr=""/>
+    <sact name="accept" text="確定" comment="" lstr=""/>
+    <sact name="cancel" text="取消" comment="" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

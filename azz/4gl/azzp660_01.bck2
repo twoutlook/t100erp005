@@ -1,0 +1,1672 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="azzp660_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0008(2016-08-29 17:06:44), PR版次:0008(2016-11-02 14:22:10)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000034
+#+ Filename...: azzp660_01
+#+ Description: 輸入作業資訊
+#+ Creator....: 03079(2016-02-17 11:22:05)
+#+ Modifier...: 04441 -SD/PR- 04441
+ 
+{</section>}
+ 
+{<section id="azzp660_01.global" >}
+#應用 p00 樣板自動產生(Version:4)
+#add-point:填寫註解說明
+#160615-00006#1  2016/06/16  By ming     gzan_t增加欄位
+#161014-00029#1  2016/10/27  By fionchen 增加gzap008,gzap009欄位
+#161024-00005#2  2016/10/28  By Whitney  add gzam008 不匯出，同上表格資料一併新增
+#161026-00020#1  2016/11/02  By Whitney  格式開窗&複製標準設計資料要加入客製欄位
+#161102-00033#1  2016/11/02  By Whitney  抓取規格與內容版本對應表的資料時要過濾客製或標準
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+GLOBALS "../../azz/4gl/azzp660.inc"
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzp660_01.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable)
+                  
+                  
+DEFINE g_wc                  STRING                        #儲存查詢條件
+DEFINE g_wc_t                STRING                        #備份查詢條件
+DEFINE g_wc_filter           STRING                        #儲存過濾查詢條件
+DEFINE g_wc_filter_t         STRING                        #備份過濾查詢條件
+DEFINE g_sql                 STRING                        #資料撈取用SQL(含reference)
+DEFINE g_forupd_sql          STRING                        #資料鎖定用SQL
+DEFINE g_cnt                 LIKE type_t.num10             #指標/統計用變數
+DEFINE g_jump                LIKE type_t.num10             #查詢指定的筆數 
+DEFINE g_no_ask              LIKE type_t.num5              #是否開啟指定筆視窗 
+DEFINE g_rec_b               LIKE type_t.num10             #單身筆數                         
+DEFINE l_ac                  LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_pagestart           LIKE type_t.num10             #page起始筆數
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_state               STRING                        #確認前一個動作是否為新增/複製
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_error_show          LIKE type_t.num5              #是否顯示資料過多的錯誤訊息
+DEFINE g_aw                  STRING                        #確定當下點擊的單身(modify_detail用)
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+DEFINE g_log1                STRING                        #cl_log_modified_record用(舊值)
+DEFINE g_log2                STRING                        #cl_log_modified_record用(新值)
+ 
+#快速搜尋用
+DEFINE g_searchcol           STRING                        #查詢欄位代碼
+DEFINE g_searchstr           STRING                        #查詢欄位字串
+DEFINE g_order               STRING                        #查詢排序模式
+ 
+#Browser用
+DEFINE g_current_idx         LIKE type_t.num10             #Browser 所在筆數(當下page)
+DEFINE g_current_row         LIKE type_t.num10             #Browser 所在筆數(暫存用)
+DEFINE g_current_cnt         LIKE type_t.num10             #Browser 總筆數(當下page)
+DEFINE g_browser_idx         LIKE type_t.num10             #Browser 所在筆數(所有資料)
+DEFINE g_browser_cnt         LIKE type_t.num10             #Browser 總筆數(所有資料)
+DEFINE g_row_index           LIKE type_t.num10             #階層樹狀用指標
+DEFINE g_add_browse          STRING                        #新增填充用WC
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzp660_01.global_variable" >}
+#add-point:自定義模組變數(Module Variable)
+DEFINE g_dzag_tree     DYNAMIC ARRAY OF RECORD
+                          table_id      LIKE dzag_t.dzag002,
+                          table_name    LIKE dzebl_t.dzebl003,
+                          expanded      LIKE type_t.chr1,
+                          parent_id     LIKE type_t.chr10,
+                          current_id    LIKE type_t.chr10,
+                          dzed003       LIKE dzed_t.dzed003,     #鍵值型式 P/F  
+                          dzed005       LIKE dzed_t.dzed005,     #外來鍵表格 
+                          gzam005       LIKE gzam_t.gzam005,     #主鍵 
+                          gzam006       LIKE gzam_t.gzam006,     #鍵值 
+                          gzam007       LIKE gzam_t.gzam007
+                       END RECORD
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzp660_01.other_dialog" >}
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+DIALOG azzp660_01_input01()
+   DEFINE l_errno     LIKE type_t.chr10
+   DEFINE l_cnt       LIKE type_t.num5 
+   
+   INPUT BY NAME g_gzal.gzal001,g_gzal.gzal002,g_gzal.gzal003
+                 ATTRIBUTE(WITHOUT DEFAULTS)
+      BEFORE INPUT
+         #如果是標準環境的話，預設值為standard 
+         IF cl_null(g_gzal.gzal002) THEN
+            #IF FGL_GETENV("DGENV") = 's' THEN  #161026-00020#1
+               LET g_gzal.gzal002 = 'standard'
+               DISPLAY BY NAME g_gzal.gzal002 
+               
+               #預設筆數為1000 
+               LET g_gzal.gzal003 = '1000'
+               DISPLAY BY NAME g_gzal.gzal003
+            #END IF  #161026-00020#1
+         END IF 
+      AFTER INPUT
+
+      AFTER FIELD gzal001 
+         CALL s_desc_get_prog_desc(g_gzal.gzal001)
+              RETURNING g_gzal.gzal001_desc
+         DISPLAY BY NAME g_gzal.gzal001_desc
+         
+         IF NOT cl_null(g_gzal.gzal001) THEN
+            #檢查作業編號是否存在gzzz_t中 
+            CALL azzp660_01_chk_gzal001(g_gzal.gzal001)
+                 RETURNING l_errno
+            IF NOT cl_null(l_errno) THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ''
+               LET g_errparam.code   = l_errno 
+               
+               CASE l_errno
+                  WHEN 'sub-01302'
+                     LET g_errparam.replace[1] = 'azzi910'
+                     LET g_errparam.replace[2] = cl_get_progname('azzi910',g_lang,'2')
+                     LET g_errparam.exeprog    = 'azzi910'
+               END CASE
+               
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+
+               NEXT FIELD CURRENT
+            END IF
+
+            IF NOT cl_null(g_gzal.gzal002) THEN
+               IF FGL_GETENV("DGENV") = 's' THEN
+                  #如果是標準環境的話，可以用standard 
+                  DISPLAY "這是標準環境"
+               ELSE
+                  #如果是客製環境的話，不可使用standard 
+                  DISPLAY "這是客製環境"
+               END IF
+
+               #取得gzal_t的資料 
+               LET l_cnt = 0 
+               SELECT COUNT(1) INTO l_cnt
+                 FROM gzal_t
+                WHERE gzal001 = g_gzal.gzal001
+                  AND gzal002 = g_gzal.gzal002
+               IF l_cnt > 0 THEN
+                  SELECT gzal003,gzal004,gzal005,gzal006
+                    INTO g_gzal.gzal003,g_gzal.gzal004,g_gzal.gzal005,g_gzal.gzal006
+                    FROM gzal_t
+                   WHERE gzal001 = g_gzal.gzal001
+                     AND gzal002 = g_gzal.gzal002
+                  DISPLAY BY NAME g_gzal.gzal003,g_gzal.gzal004,g_gzal.gzal005,g_gzal.gzal006
+                  #160711-00015#1-s
+                  #取得最後匯入者的多語言資料 
+                  LET g_gzal.gzal004_desc = s_desc_get_person_desc(g_gzal.gzal004)
+                  DISPLAY BY NAME g_gzal.gzal004_desc
+                  #160711-00015#1-e
+               END IF
+            END IF
+            CALL azzp660_01_fflabel_1_ref()
+         END IF
+
+      AFTER FIELD gzal002 
+         IF NOT cl_null(g_gzal.gzal002) THEN
+            CALL cl_set_comp_entry("gzal003",TRUE) 
+            IF FGL_GETENV("DGENV") = 's' THEN 
+               IF g_gzal.gzal002 <> 'standard' THEN 
+                  CALL cl_set_comp_entry("gzal003",FALSE) 
+               END IF 
+            ELSE 
+               IF g_gzal.gzal002 = 'standard' THEN 
+                  CALL cl_set_comp_entry("gzal003",FALSE) 
+               END IF 
+            END IF 
+
+            IF NOT cl_null(g_gzal.gzal001) THEN 
+               #因為格式代號有可能被換掉，所以要先做資料的清除 
+               LET g_gzal.gzal004 = ''
+               LET g_gzal.gzal005 = ''
+               LET g_gzal.gzal006 = ''
+            
+               LET l_cnt = 0 
+               SELECT COUNT(1) INTO l_cnt 
+                 FROM gzal_t 
+                WHERE gzal001 = g_gzal.gzal001 
+                  AND gzal002 = g_gzal.gzal002  
+               #ming 目前在考慮，是否要在這裡檢查完之後，如果沒有數量，直接把刪除的action鎖住    
+                  
+               IF l_cnt > 0 THEN 
+                  SELECT gzal003,gzal004,gzal005,gzal006
+                    INTO g_gzal.gzal003,g_gzal.gzal004,g_gzal.gzal005,g_gzal.gzal006
+                    FROM gzal_t
+                   WHERE gzal001 = g_gzal.gzal001
+                     AND gzal002 = g_gzal.gzal002
+                  #160711-00015#1-s
+                  #取得最後匯入者的多語言資料 
+                  LET g_gzal.gzal004_desc = s_desc_get_person_desc(g_gzal.gzal004)
+                  DISPLAY BY NAME g_gzal.gzal004_desc
+                  #160711-00015#1-e
+                  CALL cl_set_comp_entry("copy_setting_data",FALSE) 
+               END IF 
+               DISPLAY BY NAME g_gzal.gzal003,g_gzal.gzal004,g_gzal.gzal005,g_gzal.gzal006
+            END IF
+            CALL azzp660_01_fflabel_1_ref()
+         END IF
+
+      AFTER FIELD gzal003
+         IF NOT cl_null(g_gzal.gzal003) THEN
+            #如果有輸入值的話，最小不可小於0，最大無限制 
+            IF g_gzal.gzal003 < 0 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ''
+               LET g_errparam.code   = 'agl-00041'     #數量不可小於0 
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+
+               NEXT FIELD CURRENT
+            END IF
+         END IF 
+         
+      ON ACTION controlp INFIELD gzal001
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'i'
+         LET g_qryparam.reqry = FALSE
+         LET g_qryparam.default1 = g_gzal.gzal001
+         CALL q_gzzz001_1()
+         LET g_gzal.gzal001 = g_qryparam.return1
+         DISPLAY BY NAME g_gzal.gzal001 
+         
+         #顯示多語言 
+         CALL s_desc_get_prog_desc(g_gzal.gzal001)
+              RETURNING g_gzal.gzal001_desc
+         DISPLAY BY NAME g_gzal.gzal001_desc
+         
+         NEXT FIELD gzal001
+      
+      #161026-00020#1-s
+      ON ACTION controlp INFIELD gzal002
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'i'
+         LET g_qryparam.reqry = FALSE
+         LET g_qryparam.default1 = g_gzal.gzal001
+         LET g_qryparam.default2 = g_gzal.gzal002
+         CALL q_gzal001_1()
+         LET g_gzal.gzal001 = g_qryparam.return1
+         LET g_gzal.gzal002 = g_qryparam.return2
+         CALL s_desc_get_prog_desc(g_gzal.gzal001) RETURNING g_gzal.gzal001_desc
+         DISPLAY BY NAME g_gzal.gzal001,g_gzal.gzal002,g_gzal.gzal001_desc
+         NEXT FIELD gzal002
+      #161026-00020#1-e
+
+   END INPUT
+END DIALOG
+
+ 
+{</section>}
+ 
+{<section id="azzp660_01.other_function" readonly="Y" >}
+
+PRIVATE FUNCTION azzp660_01_init()
+   #add-point:init段define(客製用)
+
+   #end add-point
+   #add-point:init段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+
+   #end add-point
+
+   #add-point:Function前置處理
+
+   #end add-point
+
+   #定義combobox狀態
+
+
+   LET g_error_show = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+
+   #add-point:畫面資料初始化
+
+   #end add-point
+
+   
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢查作業編號是否存在gzzz_t中
+# Memo...........:
+# Usage..........: CALL azzp660_01_chk_gzal001(p_gzzz001)
+#                  RETURNING r_errno
+# Input parameter: p_gzzz001:作業編號
+# Return code....: r_errno:錯誤訊息代碼
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzp660_01_chk_gzal001(p_gzzz001)
+   DEFINE p_gzzz001     LIKE gzzz_t.gzzz001
+   DEFINE r_errno       LIKE type_t.chr10
+   DEFINE l_gzzzstus    LIKE gzzz_t.gzzzstus
+
+   LET l_gzzzstus = ''
+   SELECT gzzzstus INTO l_gzzzstus
+     FROM gzzz_t
+    WHERE gzzz001 = p_gzzz001
+
+   LET r_errno = ''
+
+   CASE
+      WHEN SQLCA.sqlcode = 100
+         LET r_errno = SQLCA.sqlcode
+      WHEN l_gzzzstus != 'Y'
+         LET r_errno = 'sub-01302'     #輸入的資料無效 
+      OTHERWISE
+         LET r_errno = ''
+   END CASE
+
+   RETURN r_errno
+END FUNCTION
+
+################################################################################
+# Descriptions...: 刪除開帳資料 
+# Memo...........:
+# Usage..........: CALL azzp660_01_del_all_data()
+# Date & Author..: 2016/03/16 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzp660_01_del_all_data()
+   DEFINE l_cnt     LIKE type_t.num5
+
+   LET l_cnt = 0
+   SELECT COUNT(1) INTO l_cnt
+     FROM gzal_t
+    WHERE gzal001 = g_gzal.gzal001
+      AND gzal002 = g_gzal.gzal002
+
+   IF cl_null(l_cnt) OR l_cnt = 0 THEN
+      RETURN
+   END IF
+   
+   IF FGL_GETENV("DGENV") = 's' THEN 
+      IF g_gzal.gzal002 <> 'standard' THEN 
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code   = 'azz-00989'     #標準環境只能刪除standard的資料  
+         LET g_errparam.popup  = TRUE
+         CALL cl_err() 
+
+         RETURN  
+      END IF  
+   ELSE 
+      IF g_gzal.gzal002 = 'standard' THEN 
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code   = 'azz-00990'     #非標準環境不可刪除standard的資料
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+
+         RETURN
+      END IF  
+   END IF  
+
+   IF cl_ask_confirm_parm("adz-00064","") THEN
+      DELETE FROM gzal_t
+       WHERE gzal001 = g_gzal.gzal001
+         AND gzal002 = g_gzal.gzal002
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'del gzal_t'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+
+         RETURN
+      END IF 
+      
+      DELETE FROM gzam_t
+       WHERE gzam001 = g_gzal.gzal001
+         AND gzam002 = g_gzal.gzal002
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'del gzam_t'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+
+         RETURN
+      END IF
+
+      DELETE FROM gzan_t
+       WHERE gzan001 = g_gzal.gzal001
+         AND gzan002 = g_gzal.gzal002
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'del gzan_t'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+
+         RETURN
+      END IF
+
+      DELETE FROM gzao_t
+       WHERE gzao001 = g_gzal.gzal001
+         AND gzao002 = g_gzal.gzal002
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'del gzao_t'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+
+         RETURN
+      END IF
+
+      DELETE FROM gzap_t
+       WHERE gzap001 = g_gzal.gzal001
+         AND gzap002 = g_gzal.gzal002
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'del gzap_t'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+
+         RETURN
+      END IF 
+      
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 建立Temp Table 
+# Memo...........:
+# Usage..........: CALL azzp660_01_create_temp_table()
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzp660_01_create_temp_table()
+   CREATE TEMP TABLE p660_01_gzal_t( 
+      gzal001        LIKE gzal_t.gzal001,     #作業編號 
+      gzal002        LIKE gzal_t.gzal002,     #格式代號  
+      gzal003        LIKE gzal_t.gzal003,     #允許錯誤筆數 
+      gzal004        LIKE gzal_t.gzal004,     #最後匯入者 
+      gzal005        LIKE gzal_t.gzal005,     #最後匯入日期 
+      gzal006        LIKE gzal_t.gzal006      #匯入筆數 
+   );  
+
+   CREATE TEMP TABLE p660_01_gzam_t( 
+      gzam001        LIKE gzam_t.gzam001,     #作業編號 
+      gzam002        LIKE gzam_t.gzam002,     #格式代號 
+      gzam003        LIKE gzam_t.gzam003,     #表格編號 
+      gzam004        LIKE gzam_t.gzam004,     #上層表格編號  
+      gzam005        LIKE gzam_t.gzam005,     #主鍵設定 
+      gzam006        LIKE gzam_t.gzam006,     #鍵值設定 
+      gzam007        LIKE gzam_t.gzam007      #外來鍵設定 
+   ) 
+
+   CREATE TEMP TABLE p660_01_gzan_t( 
+      gzan001        LIKE gzan_t.gzan001,     #作業編號 
+      gzan002        LIKE gzan_t.gzan002,     #格式代號 
+      gzan003        LIKE gzan_t.gzan003,     #表格編號 
+      gzan004        LIKE gzan_t.gzan004,     #欄位代號 
+      gzan005        LIKE gzan_t.gzan005,     #匯出 
+      gzan006        LIKE gzan_t.gzan006,     #sheet頁籤 
+      gzan007        LIKE gzan_t.gzan007,     #欄位順序 
+      gzan008        LIKE gzan_t.gzan008,     #資料類型 
+      gzan009        LIKE gzan_t.gzan009,     #必要  
+      gzan010        LIKE gzan_t.gzan010,     #預設值 
+      gzan011        LIKE gzan_t.gzan011,     #條件給值 
+      gzan012        LIKE gzan_t.gzan012,     #關聯欄位給值 
+      gzan013        LIKE gzan_t.gzan013,     #應用元件/校驗  
+      gzan014        LIKE gzan_t.gzan014,     #回傳值數量  
+      gzan015        LIKE gzan_t.gzan015,     #回傳值檢查 
+      gzan016        LIKE gzan_t.gzan016,     #回傳值給值 
+      gzan017        LIKE gzan_t.gzan017,     #限制SCC選項     #160615-00006#1 20160616 add 
+      gzan018        LIKE gzan_t.gzan018,     #由下單身回寫    #160615-00006#1 20160616 add
+      gzan019        LIKE gzan_t.gzan019      #產生否         #160615-00006#1 20160616 add 
+   ); 
+
+   CREATE TEMP TABLE p660_01_gzao_t( 
+      gzao001        LIKE gzao_t.gzao001,     #作業編號 
+      gzao002        LIKE gzao_t.gzao002,     #格式代號 
+      gzao003        LIKE gzao_t.gzao003,     #表格編號 
+      gzao004        LIKE gzao_t.gzao004,     #欄位代號 
+      gzao005        LIKE gzao_t.gzao005,     #順序 
+      gzao006        LIKE gzao_t.gzao006,     #滿足條件 
+      gzao007        LIKE gzao_t.gzao007,     #給值 
+      gzao008        LIKE gzao_t.gzao008      #備註 
+   );  
+
+   CREATE TEMP TABLE p660_01_gzap_t( 
+      gzap001        LIKE gzap_t.gzap001,     #作業編號 
+      gzap002        LIKE gzap_t.gzap002,     #格式代號 
+      gzap003        LIKE gzap_t.gzap003,     #表格編號 
+      gzap004        LIKE gzap_t.gzap004,     #欄位代號 
+      gzap005        LIKE gzap_t.gzap005,     #順序 
+      gzap006        LIKE gzap_t.gzap006,     #傳入值 
+      gzap007        LIKE gzap_t.gzap007,     #備註       #161014-00029#1 add ,
+      gzap008        LIKE gzap_t.gzap008,     #為JSON     #161014-00029#1 add
+      gzap009        LIKE gzap_t.gzap009      #為動態欄位  #161014-00029#1 add      
+   ); 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 移除Temp Table 
+# Memo...........:
+# Usage..........: CALL azzp660_01_drop_temp_table()
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzp660_01_drop_temp_table()
+   DROP TABLE p660_01_gzal_t; 
+   DROP TABLE p660_01_gzam_t; 
+   DROP TABLE p660_01_gzan_t; 
+   DROP TABLE p660_01_gzao_t; 
+   DROP TABLE p660_01_gzap_t; 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 複製其他開帳資料時，先放入temp table，進入下一步時才寫入實體db
+# Memo...........:
+# Usage..........: CALL azzp660_01_read_data_write_temp(p_gzal001,p_gzal002)
+# Input parameter: p_gzal001：作業編號
+#                : p_gzal002：格式代號 
+# Date & Author..: 2016/03/16 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzp660_01_read_data_write_temp(p_gzal001,p_gzal002)
+   DEFINE p_gzal001     LIKE gzal_t.gzal001
+   DEFINE p_gzal002     LIKE gzal_t.gzal002
+   DEFINE l_cnt     LIKE type_t.num10
+   DEFINE l_sql     STRING
+   DEFINE l_gzam    RECORD
+                       gzam001     LIKE gzam_t.gzam001,
+                       gzam002     LIKE gzam_t.gzam002,
+                       gzam003     LIKE gzam_t.gzam003,
+                       gzam004     LIKE gzam_t.gzam004,
+                       gzam005     LIKE gzam_t.gzam005,
+                       gzam006     LIKE gzam_t.gzam006,
+                       gzam007     LIKE gzam_t.gzam007
+                    END RECORD
+   DEFINE l_gzan    RECORD
+                       gzan001     LIKE gzan_t.gzan001,
+                       gzan002     LIKE gzan_t.gzan002,
+                       gzan003     LIKE gzan_t.gzan003,
+                       gzan004     LIKE gzan_t.gzan004,
+                       gzan005     LIKE gzan_t.gzan005,
+                       gzan006     LIKE gzan_t.gzan006,
+                       gzan007     LIKE gzan_t.gzan007,
+                       gzan008     LIKE gzan_t.gzan008,
+                       gzan009     LIKE gzan_t.gzan009,
+                       gzan010     LIKE gzan_t.gzan010,
+                       gzan011     LIKE gzan_t.gzan011,
+                       gzan012     LIKE gzan_t.gzan012,
+                       gzan013     LIKE gzan_t.gzan013,
+                       gzan014     LIKE gzan_t.gzan014,
+                       gzan015     LIKE gzan_t.gzan015,
+                       gzan016     LIKE gzan_t.gzan016, 
+                       gzan017     LIKE gzan_t.gzan017,     #160615-00006#1 20160616 add 
+                       gzan018     LIKE gzan_t.gzan018,     #160615-00006#1 20160616 add 
+                       gzan019     LIKE gzan_t.gzan019      #160615-00006#1 20160616 add 
+                    END RECORD
+   DEFINE l_gzao    RECORD
+                       gzao001     LIKE gzao_t.gzao001,
+                       gzao002     LIKE gzao_t.gzao002,
+                       gzao003     LIKE gzao_t.gzao003,
+                       gzao004     LIKE gzao_t.gzao004,
+                       gzao005     LIKE gzao_t.gzao005,
+                       gzao006     LIKE gzao_t.gzao006,
+                       gzao007     LIKE gzao_t.gzao007,
+                       gzao008     LIKE gzao_t.gzao008
+                    END RECORD
+   DEFINE l_gzap    RECORD
+                       gzap001     LIKE gzap_t.gzap001,
+                       gzap002     LIKE gzap_t.gzap002,
+                       gzap003     LIKE gzap_t.gzap003,
+                       gzap004     LIKE gzap_t.gzap004, 
+                       gzap005     LIKE gzap_t.gzap005,
+                       gzap006     LIKE gzap_t.gzap006,
+                       gzap007     LIKE gzap_t.gzap007
+                      ,gzap008     LIKE gzap_t.gzap008,   #161014-00029#1 add
+                       gzap009     LIKE gzap_t.gzap009    #161014-00029#1 add                      
+                    END RECORD
+   #161026-00020#1-s
+   DEFINE l_dzeb001    LIKE dzeb_t.dzeb001
+   DEFINE l_dzeb002    LIKE dzeb_t.dzeb002
+   DEFINE l_dzeb005    LIKE dzeb_t.dzeb005
+   #161026-00020#1-e
+   
+   LET l_sql = "SELECT gzam001,gzam002,gzam003,gzam004,gzam005, ",
+               "       gzam006,gzam007 ",
+               "  FROM gzam_t ",
+               " WHERE gzam001 = '",p_gzal001,"' ",
+               "   AND gzam002 = '",p_gzal002,"' "
+   PREPARE azzp660_01_read_gzam_prep FROM l_sql
+   DECLARE azzp660_01_read_gzam_curs CURSOR FOR azzp660_01_read_gzam_prep
+
+   INITIALIZE l_gzam.* TO NULL
+   FOREACH azzp660_01_read_gzam_curs INTO l_gzam.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'foreach'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      INSERT INTO p660_01_gzam_t VALUES(l_gzam.*)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'ins tmp gzam_t'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+
+      END IF
+
+      INITIALIZE l_gzam.* TO NULL 
+   END FOREACH
+
+   #160615-00006#1 20160616 modify by ming -----(S) 
+   #LET l_sql = "SELECT gzan001,gzan002,gzan003,gzan004,gzan005, ",
+   #            "       gzan006,gzan007,gzan008,gzan009,gzan010, ",
+   #            "       gzan011,gzan012,gzan013,gzan014,gzan015, ",
+   #            "       gzan016 ", 
+   LET l_sql = "SELECT gzan001,gzan002,gzan003,gzan004,gzan005, ",
+               "       gzan006,gzan007,gzan008,gzan009,gzan010, ",
+               "       gzan011,gzan012,gzan013,gzan014,gzan015, ",
+               "       gzan016,gzan017,gzan018,gzan019  ",
+   #160615-00006#1 20160616 modify by ming -----(E) 
+               "  FROM gzan_t ",
+               " WHERE gzan001 = '",p_gzal001,"' ",
+               "   AND gzan002 = '",p_gzal002,"' "
+   PREPARE azzp660_01_read_gzan_prep FROM l_sql
+   DECLARE azzp660_01_read_gzan_curs CURSOR FOR azzp660_01_read_gzan_prep
+
+   INITIALIZE l_gzan.* TO NULL
+   FOREACH azzp660_01_read_gzan_curs INTO l_gzan.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'foreach'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      INSERT INTO p660_01_gzan_t VALUES(l_gzan.*)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'ins tmp gzan_t'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+      END IF
+
+      INITIALIZE l_gzan.* TO NULL
+   END FOREACH
+
+   #161026-00020#1-s
+   LET l_sql = "SELECT dzeb001,dzeb002,dzeb005 ",
+               "  FROM dzeb_t ",
+               " WHERE EXISTS (SELECT 1 FROM gzan_t WHERE gzan001 = '",p_gzal001,"' AND gzan002 = '",p_gzal002,"' AND gzan003=dzeb001 ) ",
+               "   AND NOT EXISTS (SELECT 1 FROM gzan_t WHERE gzan001 = '",p_gzal001,"' AND gzan002 = '",p_gzal002,"' AND gzan003=dzeb001 AND gzan004=dzeb002) "
+   PREPARE azzp660_01_get_161026_prep FROM l_sql
+   DECLARE azzp660_01_get_161026_curs CURSOR FOR azzp660_01_get_161026_prep
+   FOREACH azzp660_01_get_161026_curs INTO l_dzeb001,l_dzeb002,l_dzeb005
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'azzp660_01_get_dzeb_curs'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+      INSERT INTO p660_01_gzan_t
+           VALUES(p_gzal001,p_gzal002,l_dzeb001,l_dzeb002,
+                  'N','','','',l_dzeb005,'','','','','','','','','N','N')
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'ins tmp gzan_t'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+      END IF
+   END FOREACH
+   #161026-00020#1-e
+
+   LET l_sql = "SELECT gzao001,gzao002,gzao003,gzao004,gzao005, ",
+               "       gzao006,gzao007,gzao008 ",
+               "  FROM gzao_t ",
+               " WHERE gzao001 = '",p_gzal001,"' ",
+               "   AND gzao002 = '",p_gzal002,"' "
+   PREPARE azzp660_01_read_gzao_prep FROM l_sql
+   DECLARE azzp660_01_read_gzao_curs CURSOR FOR azzp660_01_read_gzao_prep
+
+   INITIALIZE l_gzao.* TO NULL
+   FOREACH azzp660_01_read_gzao_curs INTO l_gzao.* 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'foreach'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      INSERT INTO p660_01_gzao_t VALUES(l_gzao.*)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'ins tmp gzao_t'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+
+      END IF
+
+      INITIALIZE l_gzao.* TO NULL
+   END FOREACH
+
+   LET l_sql = "SELECT gzap001,gzap002,gzap003,gzap004,gzap005, ",
+               "       gzap006,gzap007,gzap008,gzap009 ",     #161014-00029#1 add gzap008,gzap009
+               "  FROM gzap_t ",
+               " WHERE gzap001 = '",p_gzal001,"' ",
+               "   AND gzap002 = '",p_gzal002,"' "
+   PREPARE azzp660_01_read_gzap_prep FROM l_sql
+   DECLARE azzp660_01_read_gzap_curs CURSOR FOR azzp660_01_read_gzap_prep
+
+   INITIALIZE l_gzap.* TO NULL
+   FOREACH azzp660_01_read_gzap_curs INTO l_gzap.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'foreach'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      INSERT INTO p660_01_gzap_t VALUES(l_gzap.*)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = 'ins temp gzap_t'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+      END IF
+
+      INITIALIZE l_gzap.* TO NULL
+
+   END FOREACH
+      
+END FUNCTION
+
+################################################################################
+# Descriptions...: 新增或更新開帳資料(gzal)
+# Memo...........:
+# Usage..........: CALL azzp660_01_ins_upd_gzal()
+# Date & Author..: 2016/03/16 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzp660_01_ins_upd_gzal()
+   DEFINE l_cnt     LIKE type_t.num5
+
+   #檢查gzal_t是否已存在db 
+   #不存在的話就新增，已存在的話就更新 
+
+   LET l_cnt = 0
+   SELECT COUNT(1) INTO l_cnt
+     FROM gzal_t
+    WHERE gzal001 = g_gzal.gzal001
+      AND gzal002 = g_gzal.gzal002
+
+   IF cl_null(l_cnt) OR l_cnt <= 0 THEN
+      INSERT INTO gzal_t(gzal001,gzal002,gzal003)
+           VALUES(g_gzal.gzal001,g_gzal.gzal002,g_gzal.gzal003)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.EXTEND = 'ins gzal_t'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+      END IF
+   ELSE
+      UPDATE gzal_t SET gzal003 = g_gzal.gzal003
+       WHERE gzal001 = g_gzal.gzal001
+         AND gzal002 = g_gzal.gzal002
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.EXTEND = 'upd gzal_t'
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+      END IF
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 把temp table的資料寫入實體db 
+# Memo...........:
+# Usage..........: CALL azzp660_01_insert_data_to_db(p_gzal001,p_gzal002)
+# Input parameter: p_gzal001：作業編號
+#                : p_gzal002：格式代號
+# Date & Author..: 2016/03/16 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzp660_01_insert_data_to_db(p_gzal001,p_gzal002)
+   DEFINE p_gzal001 LIKE gzal_t.gzal001
+   DEFINE p_gzal002 LIKE gzal_t.gzal002
+   DEFINE l_cnt     LIKE type_t.num10
+   DEFINE l_sql     STRING
+   DEFINE l_gzam    RECORD
+                       gzam001     LIKE gzam_t.gzam001,
+                       gzam002     LIKE gzam_t.gzam002,
+                       gzam003     LIKE gzam_t.gzam003,
+                       gzam004     LIKE gzam_t.gzam004,
+                       gzam005     LIKE gzam_t.gzam005,
+                       gzam006     LIKE gzam_t.gzam006,
+                       gzam007     LIKE gzam_t.gzam007
+                    END RECORD
+   DEFINE l_gzan    RECORD
+                       gzan001     LIKE gzan_t.gzan001,
+                       gzan002     LIKE gzan_t.gzan002,
+                       gzan003     LIKE gzan_t.gzan003,
+                       gzan004     LIKE gzan_t.gzan004,
+                       gzan005     LIKE gzan_t.gzan005,
+                       gzan006     LIKE gzan_t.gzan006,
+                       gzan007     LIKE gzan_t.gzan007,
+                       gzan008     LIKE gzan_t.gzan008,
+                       gzan009     LIKE gzan_t.gzan009,
+                       gzan010     LIKE gzan_t.gzan010,
+                       gzan011     LIKE gzan_t.gzan011,
+                       gzan012     LIKE gzan_t.gzan012,
+                       gzan013     LIKE gzan_t.gzan013,
+                       gzan014     LIKE gzan_t.gzan014,
+                       gzan015     LIKE gzan_t.gzan015, 
+                       gzan016     LIKE gzan_t.gzan016, 
+                       gzan017     LIKE gzan_t.gzan017,     #160615-00006#1 20160616 add 
+                       gzan018     LIKE gzan_t.gzan018,     #160615-00006#1 20160616 add 
+                       gzan019     LIKE gzan_t.gzan019      #160615-00006#1 20160616 add 
+                    END RECORD
+   DEFINE l_gzao    RECORD
+                       gzao001     LIKE gzao_t.gzao001,
+                       gzao002     LIKE gzao_t.gzao002,
+                       gzao003     LIKE gzao_t.gzao003,
+                       gzao004     LIKE gzao_t.gzao004,
+                       gzao005     LIKE gzao_t.gzao005,
+                       gzao006     LIKE gzao_t.gzao006,
+                       gzao007     LIKE gzao_t.gzao007,
+                       gzao008     LIKE gzao_t.gzao008
+                    END RECORD
+   DEFINE l_gzap    RECORD
+                       gzap001     LIKE gzap_t.gzap001,
+                       gzap002     LIKE gzap_t.gzap002,
+                       gzap003     LIKE gzap_t.gzap003,
+                       gzap004     LIKE gzap_t.gzap004,
+                       gzap005     LIKE gzap_t.gzap005,
+                       gzap006     LIKE gzap_t.gzap006,
+                       gzap007     LIKE gzap_t.gzap007
+                      ,gzap008     LIKE gzap_t.gzap008,    #161014-00029#1 add
+                       gzap009     LIKE gzap_t.gzap009     #161014-00029#1 add                       
+                    END RECORD
+
+   #檢查temp table中是否有資料，如果沒有的話就不用把資料寫入db  
+   LET l_cnt = 0
+   SELECT COUNT(1) INTO l_cnt
+     FROM p660_01_gzam_t
+    WHERE gzam001 = p_gzal001
+      AND gzam002 = p_gzal002
+   IF cl_null(l_cnt) OR l_cnt <= 0 THEN
+      RETURN
+   END IF
+
+   #不論如何先刪除db的資料 
+   DELETE FROM gzam_t WHERE gzam001 = g_gzal.gzal001
+                        AND gzam002 = g_gzal.gzal002
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'del gzam_t'
+      LET g_errparam.code   = SQLCA.sqlcode
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+   END IF
+
+   LET l_sql = "SELECT gzam001,gzam002,gzam003,gzam004, ",
+               "       gzam005,gzam006,gzam007 ",
+               "  FROM p660_01_gzam_t ",
+               " WHERE gzam001 = '",p_gzal001,"' ",
+               "   and gzam002 = '",p_gzal002,"' "
+   PREPARE azzp660_04_ins_gzam_prep FROM l_sql
+   DECLARE azzp660_04_ins_gzam_curs CURSOR FOR azzp660_04_ins_gzam_prep
+
+   INITIALIZE l_gzam.* TO NULL 
+   FOREACH azzp660_04_ins_gzam_curs INTO l_gzam.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.EXTEND = 'FOREACH'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      LET l_gzam.gzam001 = g_gzal.gzal001
+      LET l_gzam.gzam002 = g_gzal.gzal002
+
+      INSERT INTO gzam_t(gzam001,gzam002,gzam003,gzam004,gzam005,
+                         gzam006,gzam007,gzam008)  #161024-00005#2
+                  VALUES(l_gzam.gzam001,l_gzam.gzam002,l_gzam.gzam003,
+                         l_gzam.gzam004,l_gzam.gzam005,l_gzam.gzam006,
+                         l_gzam.gzam007,'N')  #161024-00005#2
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.EXTEND = 'ins gzam_t'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+
+      END IF
+
+      INITIALIZE l_gzam.* TO NULL
+   END FOREACH 
+   
+   #----------------------------------------
+
+   DELETE FROM gzan_t WHERE gzan001 = g_gzal.gzal001
+                        AND gzan002 = g_gzal.gzal002
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.EXTEND = 'del gzan_t'
+      LET g_errparam.code   = SQLCA.sqlcode
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+   END IF
+
+   #160615-00006#1 20160616 modify by ming -----(S) 
+   #LET l_sql = "SELECT gzan001,gzan002,gzan003,gzan004,gzan005, ",
+   #            "       gzan006,gzan007,gzan008,gzan009,gzan010, ",
+   #            "       gzan011,gzan012,gzan013,gzan014,gzan015, ",
+   #            "       gzan016 ",  
+   LET l_sql = "SELECT gzan001,gzan002,gzan003,gzan004,gzan005, ",
+               "       gzan006,gzan007,gzan008,gzan009,gzan010, ",
+               "       gzan011,gzan012,gzan013,gzan014,gzan015, ",
+               "       gzan016,gzan017,gzan018,gzan019 ", 
+   #160615-00006#1 20160616 modify by ming -----(E) 
+               "  FROM p660_01_gzan_t ",
+               " WHERE gzan001 = '",p_gzal001,"' ",
+               "   AND gzan002 = '",p_gzal002,"' "
+   PREPARE azzp660_04_ins_gzan_prep FROM l_sql
+   DECLARE azzp660_04_ins_gzan_curs CURSOR FOR azzp660_04_ins_gzan_prep
+
+   INITIALIZE l_gzan.* TO NULL
+   FOREACH azzp660_04_ins_gzan_curs INTO l_gzan.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.EXTEND = 'FOREACH'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      LET l_gzan.gzan001 = g_gzal.gzal001
+      LET l_gzan.gzan002 = g_gzal.gzal002
+
+      #160615-00006#1 20160616 modify by ming -----(S) 
+      #INSERT INTO gzan_t(gzan001,gzan002,gzan003,gzan004,gzan005,gzan006,
+      #                   gzan007,gzan008,gzan009,gzan010,gzan011,gzan012,
+      #                   gzan013,gzan014,gzan015,gzan016)
+      #            VALUES(l_gzan.gzan001,l_gzan.gzan002,l_gzan.gzan003,l_gzan.gzan004,
+      #                   l_gzan.gzan005,l_gzan.gzan006,l_gzan.gzan007,l_gzan.gzan008,
+      #                   l_gzan.gzan009,l_gzan.gzan010,l_gzan.gzan011,l_gzan.gzan012,
+      #                   l_gzan.gzan013,l_gzan.gzan014,l_gzan.gzan015,l_gzan.gzan016)
+      INSERT INTO gzan_t(gzan001,gzan002,gzan003,gzan004,gzan005,gzan006,
+                         gzan007,gzan008,gzan009,gzan010,gzan011,gzan012,
+                         gzan013,gzan014,gzan015,gzan016,gzan017,gzan018, 
+                         gzan019)
+                  VALUES(l_gzan.gzan001,l_gzan.gzan002,l_gzan.gzan003,l_gzan.gzan004,
+                         l_gzan.gzan005,l_gzan.gzan006,l_gzan.gzan007,l_gzan.gzan008,
+                         l_gzan.gzan009,l_gzan.gzan010,l_gzan.gzan011,l_gzan.gzan012,
+                         l_gzan.gzan013,l_gzan.gzan014,l_gzan.gzan015,l_gzan.gzan016, 
+                         l_gzan.gzan017,l_gzan.gzan018,l_gzan.gzan019)
+      #160615-00006#1 20160616 modify by ming -----(E) 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.EXTEND = 'ins gzan_t'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+      END IF
+
+      INITIALIZE l_gzan.* TO NULL
+   END FOREACH
+
+   #---------------------------------------- 
+   
+   DELETE FROM gzao_t WHERE gzao001 = g_gzal.gzal001
+                        AND gzao002 = g_gzal.gzal002
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.EXTEND = 'del gzao_t'
+      LET g_errparam.code   = SQLCA.sqlcode
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+   END IF
+
+   LET l_sql = "SELECT gzao001,gzao002,gzao003,gzao004,gzao005, ",
+               "       gzao006,gzao007,gzao008 ",
+               "  FROM p660_01_gzao_t ",
+               " WHERE gzao001 = '",p_gzal001,"' ",
+               "   AND gzao002 = '",p_gzal002,"' "
+   PREPARE azzp660_04_ins_gzao_prep FROM l_sql
+   DECLARE azzp660_04_ins_gzao_curs CURSOR FOR azzp660_04_ins_gzao_prep
+
+   INITIALIZE l_gzao.* TO NULL
+   FOREACH azzp660_04_ins_gzao_curs INTO l_gzao.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.EXTEND = 'FOREACH'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF 
+      
+      LET l_gzao.gzao001 = g_gzal.gzal001
+      LET l_gzao.gzao002 = g_gzal.gzal002
+
+      INSERT INTO gzao_t(gzao001,gzao002,gzao003,gzao004,gzao005,
+                         gzao006,gzao007,gzao008)
+                  VALUES(l_gzao.gzao001,l_gzao.gzao002,l_gzao.gzao003,
+                         l_gzao.gzao004,l_gzao.gzao005,l_gzao.gzao006,
+                         l_gzao.gzao007,l_gzao.gzao008)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.EXTEND = 'ins gzao_t'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+      END IF
+
+      INITIALIZE l_gzao.* TO NULL
+   END FOREACH
+
+   #----------------------------------------
+
+   DELETE FROM gzap_t WHERE gzap001 = g_gzal.gzal001
+                        AND gzap002 = g_gzal.gzal002
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.EXTEND = 'del gzap_t'
+      LET g_errparam.code   = SQLCA.sqlcode
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+   END IF 
+   
+   LET l_sql = "SELECT gzap001,gzap002,gzap003,gzap004,gzap005, ",
+               "       gzap006,gzap007,gzap008,gzap009 ",         #161014-00029#1 add gzap008,gzap009
+               "  FROM p660_01_gzap_t ",
+               " WHERE gzap001 = '",p_gzal001,"' ",
+               "   AND gzap002 = '",p_gzal002,"' "
+   PREPARE azzp660_04_ins_gzap_prep FROM l_sql
+   DECLARE azzp660_04_ins_gzap_curs CURSOR FOR azzp660_04_ins_gzap_prep
+
+   INITIALIZE l_gzap.* TO NULL
+   FOREACH azzp660_04_ins_gzap_curs INTO l_gzap.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.EXTEND = 'FOREACH'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      LET l_gzap.gzap001 = g_gzal.gzal001
+      LET l_gzap.gzap002 = g_gzal.gzal002
+
+      INSERT INTO gzap_t(gzap001,gzap002,gzap003,gzap004,gzap005,
+                         gzap006,gzap007,gzap008,gzap009)                #161014-00029#1 add gzap008,gzap009
+                  VALUES(l_gzap.gzap001,l_gzap.gzap002,l_gzap.gzap003,
+                         l_gzap.gzap004,l_gzap.gzap005,l_gzap.gzap006,
+                         l_gzap.gzap007,l_gzap.gzap008,l_gzap.gzap009)   #161014-00029#1 add gzap008,gzap009
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.EXTEND = 'ins gzap_t'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+      END IF
+
+      INITIALIZE l_gzap.* TO NULL
+   END FOREACH
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取得程式的設計資料當預設值
+# Memo...........:
+# Usage..........: CALL azzp660_01_get_default(p_gzal001,p_gzal002)
+#                  RETURNING 回传参数
+# Input parameter: p_gzal001:作業編號
+#                : p_gzal002:格式代號
+# Date & Author..: 2016/04/11 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzp660_01_get_default(p_gzal001,p_gzal002)
+   DEFINE p_gzal001         LIKE gzal_t.gzal001
+   DEFINE p_gzal002         LIKE gzal_t.gzal002
+   DEFINE l_cnt             LIKE type_t.num5
+   DEFINE l_module          LIKE gzzo_t.gzzo001     #模組代號 
+   DEFINE l_dzaf            RECORD
+                               dzaf001     LIKE dzaf_t.dzaf001,   #建構代號  
+                               dzaf002     LIKE dzaf_t.dzaf002,   #建構版號  
+                               dzaf003     LIKE dzaf_t.dzaf003,   #規格版號  
+                               dzaf004     LIKE dzaf_t.dzaf004,   #代碼版號  
+                               dzaf005     LIKE dzaf_t.dzaf005,   #建構類型  
+                               dzaf006     LIKE dzaf_t.dzaf006,   #模組  
+                               dzaf007     LIKE dzaf_t.dzaf007,   #產品代號  
+                               dzaf008     LIKE dzaf_t.dzaf008,   #產品版本  
+                               dzaf009     LIKE dzaf_t.dzaf009,   #客戶代碼  
+                               dzaf010     LIKE dzaf_t.dzaf010    #識別標示  
+                            END RECORD
+   DEFINE l_err_msg         STRING
+   DEFINE l_source_spec_ver STRING
+   DEFINE l_i               LIKE type_t.num10
+   DEFINE l_gzam            RECORD
+                               gzam001     LIKE gzam_t.gzam001,
+                               gzam002     LIKE gzam_t.gzam002,
+                               gzam003     LIKE gzam_t.gzam003,
+                               gzam004     LIKE gzam_t.gzam004,
+                               gzam005     LIKE gzam_t.gzam005,
+                               gzam006     LIKE gzam_t.gzam006, 
+                               gzam007     LIKE gzam_t.gzam007
+                            END RECORD
+   DEFINE l_gzan            RECORD
+                               gzan001     LIKE gzan_t.gzan001,
+                               gzan002     LIKE gzan_t.gzan002,
+                               gzan003     LIKE gzan_t.gzan003,
+                               gzan004     LIKE gzan_t.gzan004,
+                               gzan005     LIKE gzan_t.gzan005,
+                               gzan006     LIKE gzan_t.gzan006,
+                               gzan007     LIKE gzan_t.gzan007,
+                               gzan008     LIKE gzan_t.gzan008,
+                               gzan009     LIKE gzan_t.gzan009,
+                               gzan010     LIKE gzan_t.gzan010,
+                               gzan011     LIKE gzan_t.gzan011,
+                               gzan012     LIKE gzan_t.gzan012,
+                               gzan013     LIKE gzan_t.gzan013,
+                               gzan014     LIKE gzan_t.gzan014,
+                               gzan015     LIKE gzan_t.gzan015,
+                               gzan016     LIKE gzan_t.gzan016, 
+                               gzan017     LIKE gzan_t.gzan017,   #160615-00006#1 20160616 add 
+                               gzan018     LIKE gzan_t.gzan018,   #160615-00006#1 20160616 add 
+                               gzan019     LIKE gzan_t.gzan019    #160615-00006#1 20160616 add 
+                            END RECORD 
+   DEFINE l_sql             STRING 
+   DEFINE l_dzeb002         LIKE dzeb_t.dzeb002 
+   DEFINE l_dzeb004         LIKE dzeb_t.dzeb004    #是否為主鍵 
+   DEFINE l_dzeb005         LIKE dzeb_t.dzeb005 
+   DEFINE l_dzeb022         LIKE dzeb_t.dzeb022    #欄位的類別 
+   DEFINE l_dzac            RECORD
+                               dzac003     LIKE dzac_t.dzac003,
+                               dzac005     LIKE dzac_t.dzac005,
+                               dzac008     LIKE dzac_t.dzac008,
+                               dzac009     LIKE dzac_t.dzac009,
+                               dzac010     LIKE dzac_t.dzac010,
+                               dzac011     LIKE dzac_t.dzac011,
+                               dzac014     LIKE dzac_t.dzac014,
+                               dzac015     LIKE dzac_t.dzac015,
+                               dzac016     LIKE dzac_t.dzac016,
+                               dzac017     LIKE dzac_t.dzac017,
+                               dzac018     LIKE dzac_t.dzac018,
+                               dzac020     LIKE dzac_t.dzac020,
+                               dzac021     LIKE dzac_t.dzac021
+                            END RECORD 
+   DEFINE l_gzzz002         LIKE gzzz_t.gzzz002 
+
+   LET l_cnt = 0
+   SELECT COUNT(1) INTO l_cnt
+     FROM gzam_t
+    WHERE gzam001 = p_gzal001
+      AND gzam002 = p_gzal002
+   IF l_cnt > 0 THEN
+      #如果已經存在開帳的table資料，就不必再預設規格的設計資料 
+      RETURN
+   END IF  
+   
+   #要先取得作業的程式編號 
+   LET l_gzzz002 = ''
+   CALL s_azzp660_get_prog_code(p_gzal001) RETURNING l_gzzz002
+   
+   LET l_module = s_azzp660_find_module(l_gzzz002,"M")
+
+   #取得建構版次 
+   CALL s_azzp660_get_curr_ver_info(l_gzzz002,"M",l_module)
+        RETURNING l_dzaf.*,l_err_msg
+   IF cl_null(l_err_msg) THEN
+      LET l_source_spec_ver = l_dzaf.dzaf003
+
+      LET l_source_spec_ver = l_source_spec_ver.trim()
+   END IF
+
+   CALL azzp660_01_gen_table_relation(l_gzzz002,l_source_spec_ver,l_dzaf.dzaf010)  #161102-00033#1
+   
+   LET l_sql = "SELECT dzeb002,dzeb004,dzeb005,dzeb022 ",
+               "  FROM dzeb_t ",
+               " WHERE dzeb001 = ? ",
+               " ORDER BY dzeb021 "
+   PREPARE azzp660_01_get_dzeb_prep FROM l_sql
+   DECLARE azzp660_01_get_dzeb_curs CURSOR FOR azzp660_01_get_dzeb_prep 
+   
+   LET l_sql = "SELECT dzac003,dzac005,dzac008,dzac009,dzac010, ",
+               "       dzac011,dzac014,dzac015,dzac016,dzac017,dzac018, ",
+               "       dzac020,dzac021 ",
+               "  FROM dzac_t INNER JOIN dzaa_t ON dzaa001 = dzac001 ",
+               "                               AND dzaa003 = dzac003 ",
+               "                               AND dzaa004 = dzac004 ",
+               "                               AND dzaa006 = dzac012 ",
+               " WHERE dzaa001  = '",l_gzzz002,"' ",
+               "   AND dzaa002  = '",l_source_spec_ver,"' ",
+               "   AND dzaa005  = '1' ",
+               "   AND dzaa009  = '",l_dzaf.dzaf010,"' ",     #標準s or 客製c  
+               "   AND dzaastus = 'Y' ",
+               "   AND dzac002  = ? "
+   PREPARE azzp660_01_get_dzac_prep FROM l_sql
+   DECLARE azzp660_01_get_dzac_curs CURSOR FOR azzp660_01_get_dzac_prep
+
+   FOR l_i = 1 TO g_dzag_tree.getLength()
+      IF g_dzag_tree[l_i].table_id = 'root' THEN
+         CONTINUE FOR
+      END IF
+
+      INITIALIZE l_gzam.* TO NULL
+      LET l_gzam.gzam001 = p_gzal001
+      LET l_gzam.gzam002 = p_gzal002
+      LET l_gzam.gzam003 = g_dzag_tree[l_i].table_id
+      LET l_gzam.gzam004 = g_dzag_tree[l_i].dzed005
+      LET l_gzam.gzam005 = g_dzag_tree[l_i].gzam005
+      LET l_gzam.gzam006 = g_dzag_tree[l_i].gzam006
+      LET l_gzam.gzam007 = g_dzag_tree[l_i].gzam007 
+      
+      INSERT INTO gzam_t(gzam001,gzam002,gzam003,gzam004,
+                         gzam005,gzam006,gzam007,gzam008)  #161024-00005#2
+                  VALUES(l_gzam.gzam001,l_gzam.gzam002,l_gzam.gzam003,
+                         l_gzam.gzam004,l_gzam.gzam005,l_gzam.gzam006,
+                         l_gzam.gzam007,'N')  #161024-00005#2
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'ins gzam_t'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+      END IF
+
+      FOREACH azzp660_01_get_dzeb_curs USING l_gzam.gzam003 
+                                        INTO l_dzeb002,l_dzeb004,l_dzeb005,l_dzeb022 
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = 'foreach'
+            LET g_errparam.code   = SQLCA.sqlcode
+            LET g_errparam.popup  = TRUE
+            CALL cl_err() 
+            
+            EXIT FOREACH
+         END IF 
+         
+         INITIALIZE l_dzac.* TO NULL
+         FOREACH azzp660_01_get_dzac_curs USING l_dzeb002
+                                           INTO l_dzac.dzac003,l_dzac.dzac005,l_dzac.dzac008,
+                                                l_dzac.dzac009,l_dzac.dzac010,l_dzac.dzac011,
+                                                l_dzac.dzac014,l_dzac.dzac015,l_dzac.dzac016,
+                                                l_dzac.dzac017,l_dzac.dzac018,l_dzac.dzac020,
+                                                l_dzac.dzac021
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = 'foreach'
+               LET g_errparam.code   = SQLCA.sqlcode
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+               EXIT FOREACH
+            END IF
+
+            EXIT FOREACH
+         END FOREACH
+
+         INITIALIZE l_gzan.* TO NULL
+         LET l_gzan.gzan001 = p_gzal001
+         LET l_gzan.gzan002 = p_gzal002
+         LET l_gzan.gzan003 = l_gzam.gzam003
+         LET l_gzan.gzan004 = l_dzeb002
+         LET l_gzan.gzan005 = 'N'
+         LET l_gzan.gzan009 = l_dzac.dzac008
+         IF cl_null(l_gzan.gzan009) THEN
+            LET l_gzan.gzan009 = 'N'
+         END IF
+         IF l_gzan.gzan009 = 'N' THEN
+            #如果是key的，就是必須輸入的欄位  
+            IF l_dzeb004 = 'Y' THEN
+               LET l_gzan.gzan009 = 'Y'
+            END IF
+         END IF
+
+         LET l_gzan.gzan010 = l_dzac.dzac014     #預設值 
+
+         IF NOT cl_null(l_dzac.dzac011) THEN
+            LET l_gzan.gzan013 = l_dzac.dzac011
+            LET l_gzan.gzan008 = '7'        #7.應用元件/校驗  
+         END IF 
+         
+         CASE
+            WHEN l_dzeb022 = 'cdfEnterprise'   #企業編號  
+               LET l_gzan.gzan008 = '2'        #2.全域變數  
+               LET l_gzan.gzan010 = 'g_enterprise'
+            WHEN l_dzeb022 = 'cdfSite'         #據點  
+               LET l_gzan.gzan008 = '2'        #2.全域變數   
+               LET l_gzan.gzan010 = 'g_site'
+            WHEN l_dzeb022 = 'cdfSequenceNo'   #項次  
+               LET l_gzan.gzan008 = '3'        #流水號  
+               LET l_gzan.gzan010 = '1'
+            WHEN l_dzeb022 = 'cdfOwnerID'      #資料所有者  
+               LET l_gzan.gzan008 = '2'        #2.全域變數 
+               LET l_gzan.gzan010 = 'g_user'
+            WHEN l_dzeb022 = 'cdfOwnerDept'    #資料所屬部門 
+               LET l_gzan.gzan008 = '2'        #2.全域變數  
+               LET l_gzan.gzan010 = 'g_dept'
+            WHEN l_dzeb022 = 'cdfCreateID'     #資料建立者 
+               LET l_gzan.gzan008 = '2'        #2.全域數 
+               LET l_gzan.gzan010 = 'g_user'
+            WHEN l_dzeb022 = 'cdfCreateDept'   #資料建立部門 
+               LET l_gzan.gzan008 = '2'        #2.全域變數 
+               LET l_gzan.gzan010 = 'g_dept'
+            WHEN l_dzeb022 = 'cdfCreateDate'   #資料創建日 
+               LET l_gzan.gzan008 = '7'        #7.應用元件/校驗 
+               LET l_gzan.gzan013 = 'cl_get_current'
+               LET l_gzan.gzan014 = '1'        #回傳值數量  
+               LET l_gzan.gzan015 = ''
+               LET l_gzan.gzan016 = '1'        #回傳值給值  
+         END CASE
+         
+         #160615-00006#1 20160616 add by ming -----(S) 
+         LET l_gzan.gzan017 = '' 
+         LET l_gzan.gzan018 = 'N' 
+         LET l_gzan.gzan019 = 'N' 
+         #160615-00006#1 20160616 add by ming -----(E) 
+
+         #160615-00006#1 20160616 modify by ming -----(S) 
+         #INSERT INTO gzan_t(gzan001,gzan002,gzan003,gzan004,gzan005,
+         #                   gzan006,gzan007,gzan008,gzan009,gzan010,
+         #                   gzan011,gzan012,gzan013,gzan014,gzan015,
+         #                   gzan016)
+         #            VALUES(l_gzan.gzan001,l_gzan.gzan002,l_gzan.gzan003,
+         #                   l_gzan.gzan004,l_gzan.gzan005,l_gzan.gzan006,
+         #                   l_gzan.gzan007,l_gzan.gzan008,l_gzan.gzan009,
+         #                   l_gzan.gzan010,l_gzan.gzan011,l_gzan.gzan012,
+         #                   l_gzan.gzan013,l_gzan.gzan014,l_gzan.gzan015,
+         #                   l_gzan.gzan016)
+         INSERT INTO gzan_t(gzan001,gzan002,gzan003,gzan004,gzan005,
+                            gzan006,gzan007,gzan008,gzan009,gzan010,
+                            gzan011,gzan012,gzan013,gzan014,gzan015,
+                            gzan016,gzan017,gzan018,gzan019)
+                     VALUES(l_gzan.gzan001,l_gzan.gzan002,l_gzan.gzan003,
+                            l_gzan.gzan004,l_gzan.gzan005,l_gzan.gzan006,
+                            l_gzan.gzan007,l_gzan.gzan008,l_gzan.gzan009,
+                            l_gzan.gzan010,l_gzan.gzan011,l_gzan.gzan012,
+                            l_gzan.gzan013,l_gzan.gzan014,l_gzan.gzan015,
+                            l_gzan.gzan016,l_gzan.gzan017,l_gzan.gzan018, 
+                            l_gzan.gzan019)
+         #160615-00006#1 20160616 modify by ming -----(E) 
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = 'ins gzan_t'
+            LET g_errparam.code   = SQLCA.sqlcode
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+
+         END IF
+
+      END FOREACH
+
+   END FOR
+            
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取得設計資料的Table Tree
+# Memo...........:
+# Usage..........: CALL azzp660_01_gen_table_relation(p_prog,p_source_spec_ver,p_dzaf010)
+#                  RETURNING 回传参数
+# Input parameter: p_prog:程式代號
+#                : p_source_spec_ver:規格版次
+# Date & Author..: 2016/04/11 By ming
+# Modify.........: #161102-00033#1  add p_dzaf010
+################################################################################
+PRIVATE FUNCTION azzp660_01_gen_table_relation(p_prog,p_source_spec_ver,p_dzaf010)
+   DEFINE p_prog                LIKE gzzz_t.gzzz002
+   DEFINE p_source_spec_ver     STRING
+   DEFINE p_dzaf010             LIKE dzaf_t.dzaf010  #161102-00033#1
+   DEFINE l_trigger             STRING
+   DEFINE l_sql                 STRING
+   DEFINE l_cnt                 LIKE type_t.num5
+   DEFINE l_i                   LIKE type_t.num10
+   DEFINE l_j                   LIKE type_t.num10
+   DEFINE l_dzag                DYNAMIC ARRAY OF RECORD LIKE dzag_t.*
+
+   TRY
+      LET l_sql = "SELECT dzag_t.* ",
+                  "  FROM dzaa_t INNER JOIN dzag_t ON dzag001 = dzaa001 ",
+                  "                               AND dzag003 = dzaa004 ",
+                  "                               AND dzagstus = 'Y' ",
+                  " WHERE dzaa001 = '",p_prog,"' ",
+                  "   AND dzaa002 = '",p_source_spec_ver,"' ",
+                  "   AND dzaa003 = 'TABLE' ",
+                  "   AND dzaa005 = '4' ",
+                  "   AND dzaa006 = '",p_dzaf010,"' ",
+                  "   AND dzaastus = 'Y' "
+      PREPARE azzp660_01_dzag_prep FROM l_sql
+      DECLARE azzp660_01_dzag_curs CURSOR FOR azzp660_01_dzag_prep
+
+      CALL g_dzag_tree.clear()
+
+      LET l_cnt = 1
+      FOREACH azzp660_01_dzag_curs INTO l_dzag[l_cnt].*
+         LET l_cnt = l_cnt + 1
+      END FOREACH
+      CALL l_dzag.deleteElement(l_cnt)
+      LET l_cnt = l_cnt - 1 
+      
+      #建立tree的根節點 
+      CALL g_dzag_tree.appendElement()
+      LET g_dzag_tree[g_dzag_tree.getLength()].table_id = "root"
+      LET g_dzag_tree[g_dzag_tree.getLength()].parent_id = NULL
+      LET g_dzag_tree[g_dzag_tree.getLength()].current_id = "1"
+      LET g_dzag_tree[g_dzag_tree.getLength()].expanded = '1'
+
+      #呼叫遞迴建立tree 
+      CALL azzp660_01_gen_tree_view(l_dzag,
+                                    g_dzag_tree[g_dzag_tree.getLength()].table_id,
+                                    g_dzag_tree[g_dzag_tree.getLength()].current_id)
+
+   CATCH
+
+   END TRY 
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取得設計資料Table Tree的子Table
+# Memo...........:
+# Usage..........: CALL azzp660_01_gen_tree_view(p_dzag,p_parent_table,p_parent_id)
+#                  RETURNING 回传参数
+# Input parameter: p_dzag:整個規格table設定表的資料
+#                : p_parent_table:上層table
+#                : p_parent_id:上層的id
+# Date & Author..: 2016/04/11 Byming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp660_01_gen_tree_view(p_dzag,p_parent_table,p_parent_id)
+   DEFINE p_dzag         DYNAMIC ARRAY OF RECORD LIKE dzag_t.*
+   DEFINE p_parent_table STRING
+   DEFINE p_parent_id    STRING
+   DEFINE l_i            LIKE type_t.num5
+   DEFINE l_index        LIKE type_t.num5
+   DEFINE l_cnt          LIKE type_t.num5
+   DEFINE l_parent_id    STRING
+   DEFINE l_parent_table STRING
+   DEFINE l_cnt_str      STRING
+
+   IF p_parent_table = "root" THEN
+      FOR l_i = 1 TO p_dzag.getLength()
+         #找主資料格 
+         IF p_dzag[l_i].dzag005 = 'Y' THEN
+            CALL g_dzag_tree.appendElement()
+            LET l_index = g_dzag_tree.getLength()
+            LET g_dzag_tree[l_index].table_id = p_dzag[l_i].dzag002
+
+            LET g_dzag_tree[l_index].parent_id = p_parent_id
+            LET g_dzag_tree[l_index].current_id = p_parent_id,".1"
+            LET g_dzag_tree[l_index].expanded = '1'
+            LET l_parent_table = g_dzag_tree[l_index].table_id
+            LET l_parent_id = g_dzag_tree[l_index].current_id 
+            
+            #主鍵為P 
+            LET g_dzag_tree[l_index].dzed003 = 'P'
+            SELECT dzed004 INTO g_dzag_tree[l_index].gzam005
+              FROM dzed_t
+             WHERE dzed001 = g_dzag_tree[l_index].table_id
+               AND dzed003 = 'P'
+
+            #已經存入g_dzag_tree的，要刪掉 
+            CALL p_dzag.deleteElement(l_i)
+            LET l_i = l_i - 1
+         END IF
+      END FOR
+
+      #使用遞迴找主資料表的子table 
+      CALL azzp660_01_gen_tree_view(p_dzag,l_parent_table,l_parent_id)
+
+      #找副資料表 
+      LET l_cnt = 1
+      FOR l_i = 1 TO p_dzag.getLength()
+         IF p_dzag[l_i].dzag005 = 'N' AND p_dzag[l_i].dzag004 IS NULL THEN
+            LET l_cnt = l_cnt + 1
+            LET l_cnt_str = l_cnt + 1
+            LET l_cnt_str = l_cnt_str.trim()
+            CALL g_dzag_tree.appendElement()
+            LET l_index = g_dzag_tree.getLength()
+            LET g_dzag_tree[l_index].table_id = p_dzag[l_i].dzag002 
+
+            LET g_dzag_tree[l_index].parent_id = p_parent_id
+            LET g_dzag_tree[l_index].current_id = p_parent_id,".",l_cnt_str
+            LET g_dzag_tree[l_index].expanded = '1'
+
+            #主鍵為P 
+            LET g_dzag_tree[l_index].dzed003 = 'P'
+            SELECT dzed004 INTO g_dzag_tree[l_index].gzam005
+              FROM dzed_t
+             WHERE dzed001 = g_dzag_tree[l_index].table_id
+               AND dzed003 = 'P'
+
+            CALL p_dzag.deleteElement(l_i)
+            LET l_i = l_i - 1
+         END IF
+      END FOR
+
+   ELSE
+      #尋找主資料表下的子table 
+
+      LET l_cnt = 0
+
+      FOR l_i = 1 TO p_dzag.getLength()
+         IF p_dzag[l_i].dzag004 = p_parent_table THEN
+            LET l_cnt = l_cnt + 1 
+            LET l_cnt_str = l_cnt
+            LET l_cnt_str = l_cnt_str.trim()
+            CALL g_dzag_tree.appendElement()
+            LET l_index = g_dzag_tree.getLength()
+            LET g_dzag_tree[l_index].table_id = p_dzag[l_i].dzag002
+
+            LET g_dzag_tree[l_index].parent_id = p_parent_id
+            LET g_dzag_tree[l_index].current_id = p_parent_id,".",l_cnt_str
+            LET g_dzag_tree[l_index].expanded = '1'
+            CALL p_dzag.deleteElement(l_i)
+            LET l_i = l_i - 1
+            LET l_parent_table = g_dzag_tree[l_index].table_id
+            LET l_parent_id = g_dzag_tree[l_index].current_id
+
+            #主鍵為P 
+            LET g_dzag_tree[l_index].dzed003 = 'P'
+            SELECT dzed004 INTO g_dzag_tree[l_index].gzam005
+              FROM dzed_t
+             WHERE dzed001 = g_dzag_tree[l_index].table_id
+               AND dzed003 = 'P'
+
+            #子table為FK 
+            LET g_dzag_tree[l_index].dzed003 = 'F'
+            LET g_dzag_tree[l_index].dzed005 = p_parent_table 
+            SELECT dzed004,dzed006 INTO g_dzag_tree[l_index].gzam006,
+                                        g_dzag_tree[l_index].gzam007
+              FROM dzed_t
+             WHERE dzed001 = g_dzag_tree[l_index].table_id
+               AND dzed003 = 'F'
+               AND dzed005 = g_dzag_tree[l_index].dzed005
+
+            #利用遞迴搜尋子table 
+            CALL azzp660_01_gen_tree_view(p_dzag,l_parent_table,l_parent_id)
+         END IF
+      END FOR
+
+      #遞迴的終止條件 
+      IF l_cnt = 0 THEN
+         RETURN
+      END IF
+
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 
+# Memo...........:
+# Usage..........: CALL azzp660_01_fflabel_1_ref()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 160204-00005#1 By whitney
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp660_01_fflabel_1_ref()
+DEFINE l_n          LIKE type_t.num5
+DEFINE l_str        STRING
+
+   DISPLAY '' TO azzp660_01_fflabel_1
+
+   IF cl_null(g_gzal.gzal001) OR cl_null(g_gzal.gzal002) THEN
+      RETURN
+   END IF
+
+   LET l_str = g_gzal.gzal001," + ",g_gzal.gzal002
+
+   LET l_n = 0
+   SELECT COUNT(1) INTO l_n
+     FROM gzan_t
+    WHERE gzan001 = g_gzal.gzal001
+      AND gzan002 = g_gzal.gzal002
+   #尚未設定資料
+   IF l_n = 0 THEN
+      LET l_str = l_str," ",cl_getmsg("azz-01136",g_lang)
+      DISPLAY l_str TO azzp660_01_fflabel_1
+      CALL cl_set_comp_font_color("azzp660_01_fflabel_1", "red")
+   #已有設定資料
+   ELSE
+      LET l_str = l_str," ",cl_getmsg("azz-01135",g_lang)
+      DISPLAY l_str TO azzp660_01_fflabel_1
+      CALL cl_set_comp_font_color("azzp660_01_fflabel_1", "black")
+   END IF
+
+END FUNCTION
+
+ 
+{</section>}
+ 

@@ -1,0 +1,369 @@
+{<section id="axct201_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0009(2016-08-01 10:55:47), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000115
+#+ Filename...: axct201_02
+#+ Description: 整批產生
+#+ Creator....: 02114(2014-05-13 10:48:12)
+#+ Modifier...: 02295 -SD/PR-
+{</section>}
+ 
+ 
+ 
+{<section id="axct201_02.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_xcbl_m        RECORD
+       xcbl001 LIKE xcbl_t.xcbl001, 
+   xcblld LIKE xcbl_t.xcblld, 
+   xcblld_desc LIKE type_t.chr80, 
+   xcbl002 LIKE xcbl_t.xcbl002, 
+   xcbl003 LIKE xcbl_t.xcbl003, 
+   xcbl004 LIKE xcbl_t.xcbl004, 
+   xcbl004_desc LIKE type_t.chr80, 
+   xcbl005 LIKE xcbl_t.xcbl005
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_xcbl_m        type_g_xcbl_m
+ 
+   DEFINE g_xcbl001_t LIKE xcbl_t.xcbl001
+DEFINE g_xcblld_t LIKE xcbl_t.xcblld
+DEFINE g_xcbl002_t LIKE xcbl_t.xcbl002
+DEFINE g_xcbl003_t LIKE xcbl_t.xcbl003
+DEFINE g_xcbl004_t LIKE xcbl_t.xcbl004
+DEFINE g_xcbl005_t LIKE xcbl_t.xcbl005
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+{</section>}
+ 
+{<section id="axct201_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axct201_02(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axct201_02 WITH FORM cl_ap_formpath("axc","axct201_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_xcbl_m.xcbl001,g_xcbl_m.xcblld,g_xcbl_m.xcbl002,g_xcbl_m.xcbl003,g_xcbl_m.xcbl004, 
+          g_xcbl_m.xcbl005 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcbl001
+            #add-point:BEFORE FIELD xcbl001 name="input.b.xcbl001"
+            {<point name="input.b.xcbl001" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcbl001
+            
+            #add-point:AFTER FIELD xcbl001 name="input.a.xcbl001"
+            {<point name="input.a.xcbl001" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcbl001
+            #add-point:ON CHANGE xcbl001 name="input.g.xcbl001"
+            {<point name="input.g.xcbl001" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcblld
+            
+            #add-point:AFTER FIELD xcblld name="input.a.xcblld"
+            {<point name="input.a.xcblld" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcblld
+            #add-point:BEFORE FIELD xcblld name="input.b.xcblld"
+            {<point name="input.b.xcblld" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcblld
+            #add-point:ON CHANGE xcblld name="input.g.xcblld"
+            {<point name="input.g.xcblld" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcbl002
+            #add-point:BEFORE FIELD xcbl002 name="input.b.xcbl002"
+            {<point name="input.b.xcbl002" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcbl002
+            
+            #add-point:AFTER FIELD xcbl002 name="input.a.xcbl002"
+            {<point name="input.a.xcbl002" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcbl002
+            #add-point:ON CHANGE xcbl002 name="input.g.xcbl002"
+            {<point name="input.g.xcbl002" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcbl003
+            #add-point:BEFORE FIELD xcbl003 name="input.b.xcbl003"
+            {<point name="input.b.xcbl003" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcbl003
+            
+            #add-point:AFTER FIELD xcbl003 name="input.a.xcbl003"
+            {<point name="input.a.xcbl003" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcbl003
+            #add-point:ON CHANGE xcbl003 name="input.g.xcbl003"
+            {<point name="input.g.xcbl003" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcbl004
+            
+            #add-point:AFTER FIELD xcbl004 name="input.a.xcbl004"
+            {<point name="input.a.xcbl004" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcbl004
+            #add-point:BEFORE FIELD xcbl004 name="input.b.xcbl004"
+            {<point name="input.b.xcbl004" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcbl004
+            #add-point:ON CHANGE xcbl004 name="input.g.xcbl004"
+            {<point name="input.g.xcbl004" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcbl005
+            #add-point:BEFORE FIELD xcbl005 name="input.b.xcbl005"
+            {<point name="input.b.xcbl005" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcbl005
+            
+            #add-point:AFTER FIELD xcbl005 name="input.a.xcbl005"
+            {<point name="input.a.xcbl005" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcbl005
+            #add-point:ON CHANGE xcbl005 name="input.g.xcbl005"
+            {<point name="input.g.xcbl005" />}
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.xcbl001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcbl001
+            #add-point:ON ACTION controlp INFIELD xcbl001 name="input.c.xcbl001"
+            {<point name="input.c.xcbl001" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xcblld
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcblld
+            #add-point:ON ACTION controlp INFIELD xcblld name="input.c.xcblld"
+            {<point name="input.c.xcblld" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xcbl002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcbl002
+            #add-point:ON ACTION controlp INFIELD xcbl002 name="input.c.xcbl002"
+            {<point name="input.c.xcbl002" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xcbl003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcbl003
+            #add-point:ON ACTION controlp INFIELD xcbl003 name="input.c.xcbl003"
+            {<point name="input.c.xcbl003" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xcbl004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcbl004
+            #add-point:ON ACTION controlp INFIELD xcbl004 name="input.c.xcbl004"
+            {<point name="input.c.xcbl004" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xcbl005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcbl005
+            #add-point:ON ACTION controlp INFIELD xcbl005 name="input.c.xcbl005"
+            {<point name="input.c.xcbl005" />}
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axct201_02 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="axct201_02.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+{</section>}
+{<section id="axct201_02.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+ 

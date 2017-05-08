@@ -1,0 +1,337 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axct300_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2014-04-08 00:00:00), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000149
+#+ Filename...: axct300_02
+#+ Description: 整批導入
+#+ Creator....: 02291(2014-04-08 16:39:04)
+#+ Modifier...: 02291 -SD/PR-
+
+{</section>}
+
+{<section id="axct300_02.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+{<point name="global.memo" />}
+#end add-point
+#add-point:填寫註解說明(客製用)
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_xcca_m        RECORD
+       xccacomp LIKE xcca_t.xccacomp, 
+   xccacomp_desc LIKE type_t.chr80, 
+   xccald LIKE xcca_t.xccald, 
+   xccald_desc LIKE type_t.chr80, 
+   format LIKE type_t.chr500, 
+   mold LIKE type_t.chr2, 
+   way LIKE type_t.chr500
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_xcca_m        type_g_xcca_m
+ 
+   DEFINE g_xccald_t LIKE xcca_t.xccald
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="axct300_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axct300_02(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axct300_02 WITH FORM cl_ap_formpath("axc","axct300_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_xcca_m.xccacomp,g_xcca_m.xccald,g_xcca_m.format,g_xcca_m.mold,g_xcca_m.way ATTRIBUTE(WITHOUT  
+          DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xccacomp
+            
+            #add-point:AFTER FIELD xccacomp name="input.a.xccacomp"
+            {<point name="input.a.xccacomp" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xccacomp
+            #add-point:BEFORE FIELD xccacomp name="input.b.xccacomp"
+            {<point name="input.b.xccacomp" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xccacomp
+            #add-point:ON CHANGE xccacomp name="input.g.xccacomp"
+            {<point name="input.g.xccacomp" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xccald
+            
+            #add-point:AFTER FIELD xccald name="input.a.xccald"
+            {<point name="input.a.xccald" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xccald
+            #add-point:BEFORE FIELD xccald name="input.b.xccald"
+            {<point name="input.b.xccald" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xccald
+            #add-point:ON CHANGE xccald name="input.g.xccald"
+            {<point name="input.g.xccald" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD format
+            #add-point:BEFORE FIELD format name="input.b.format"
+            {<point name="input.b.format" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD format
+            
+            #add-point:AFTER FIELD format name="input.a.format"
+            {<point name="input.a.format" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE format
+            #add-point:ON CHANGE format name="input.g.format"
+            {<point name="input.g.format" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mold
+            #add-point:BEFORE FIELD mold name="input.b.mold"
+            {<point name="input.b.mold" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mold
+            
+            #add-point:AFTER FIELD mold name="input.a.mold"
+            {<point name="input.a.mold" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mold
+            #add-point:ON CHANGE mold name="input.g.mold"
+            {<point name="input.g.mold" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD way
+            #add-point:BEFORE FIELD way name="input.b.way"
+            {<point name="input.b.way" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD way
+            
+            #add-point:AFTER FIELD way name="input.a.way"
+            {<point name="input.a.way" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE way
+            #add-point:ON CHANGE way name="input.g.way"
+            {<point name="input.g.way" />}
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.xccacomp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xccacomp
+            #add-point:ON ACTION controlp INFIELD xccacomp name="input.c.xccacomp"
+            {<point name="input.c.xccacomp" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xccald
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xccald
+            #add-point:ON ACTION controlp INFIELD xccald name="input.c.xccald"
+            {<point name="input.c.xccald" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.format
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD format
+            #add-point:ON ACTION controlp INFIELD format name="input.c.format"
+            {<point name="input.c.format" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mold
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mold
+            #add-point:ON ACTION controlp INFIELD mold name="input.c.mold"
+            {<point name="input.c.mold" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.way
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD way
+            #add-point:ON ACTION controlp INFIELD way name="input.c.way"
+            {<point name="input.c.way" />}
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axct300_02 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="axct300_02.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+
+{</section>}
+
+{<section id="axct300_02.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

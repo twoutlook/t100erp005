@@ -1,0 +1,2115 @@
+{<section id="${app_id}.global" >}
+#應用 i01 樣板自動產生(Version:50)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"  
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE TYPE type_${master_var_title} RECORD
+       ${master_fields_define}
+       END RECORD
+ 
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD  #查詢方案用陣列 
+         ${general_browser_define}
+         ${browser_fields_define}
+      END RECORD 
+ 
+#add-point:自定義模組變數(Module Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE ${master_var_title}        type_${master_var_title}  #單頭變數宣告
+DEFINE ${master_var_title}_t      type_${master_var_title}  #單頭舊值宣告(系統還原用)
+DEFINE ${master_var_title}_o      type_${master_var_title}  #單頭舊值宣告(其他用途)
+DEFINE ${master_var_title}_mask_o type_${master_var_title}  #轉換遮罩前資料
+DEFINE ${master_var_title}_mask_n type_${master_var_title}  #轉換遮罩後資料
+ 
+   ${master_key_t_define}
+   
+${general_tree_expand_define}
+   
+${master_multi_table_define}
+ 
+DEFINE g_wc                  STRING                        #儲存查詢條件
+DEFINE g_wc_t                STRING                        #備份查詢條件
+DEFINE g_wc_filter           STRING                        #儲存過濾查詢條件
+DEFINE g_wc_filter_t         STRING                        #備份過濾查詢條件
+DEFINE g_sql                 STRING                        #資料撈取用SQL(含reference)
+DEFINE g_forupd_sql          STRING                        #資料鎖定用SQL
+DEFINE g_cnt                 LIKE type_t.num10             #指標/統計用變數
+DEFINE g_jump                LIKE type_t.num10             #查詢指定的筆數 
+DEFINE g_no_ask              LIKE type_t.num5              #是否開啟指定筆視窗 
+DEFINE g_rec_b               LIKE type_t.num10             #單身筆數                         
+DEFINE l_ac                  LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_pagestart           LIKE type_t.num10             #page起始筆數
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_state               STRING                        #確認前一個動作是否為新增/複製
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_error_show          LIKE type_t.num5              #是否顯示資料過多的錯誤訊息
+DEFINE g_aw                  STRING                        #確定當下點擊的單身(modify_detail用)
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+DEFINE g_log1                STRING                        #cl_log_modified_record用(舊值)
+DEFINE g_log2                STRING                        #cl_log_modified_record用(新值)
+ 
+#快速搜尋用
+DEFINE g_searchcol           STRING                        #查詢欄位代碼
+DEFINE g_searchstr           STRING                        #查詢欄位字串
+DEFINE g_order               STRING                        #查詢排序模式
+ 
+#Browser用
+DEFINE g_current_idx         LIKE type_t.num10             #Browser 所在筆數(當下page)
+DEFINE g_current_row         LIKE type_t.num10             #Browser 所在筆數(暫存用)
+DEFINE g_current_cnt         LIKE type_t.num10             #Browser 總筆數(當下page)
+DEFINE g_browser_idx         LIKE type_t.num10             #Browser 所在筆數(所有資料)
+DEFINE g_browser_cnt         LIKE type_t.num10             #Browser 總筆數(所有資料)
+DEFINE g_row_index           LIKE type_t.num10             #階層樹狀用指標
+DEFINE g_add_browse          STRING                        #新增填充用WC
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization" 
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+{</section>}
+ 
+{<section id="${app_id}.main" >}
+${general_main_function}
+{</section>}
+ 
+{<section id="${app_id}.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION ${general_prefix}_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   {<point name="init.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:init段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   {<point name="init.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="init.pre_function"
+   {<point name="init.pre_function"/>}
+   #end add-point
+   
+   ${general_i01_mark}${general_i10_mark}${general_c01a_mark}LET g_main_hidden = 0
+   #定義combobox狀態
+   ${general_define_combo_stus}
+   ${general_define_combo}
+   LET g_error_show = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   #add-point:畫面資料初始化 name="init.init"
+   {<point name="init.init" />}
+   #end add-point
+   
+   #根據外部參數進行搜尋
+   CALL ${general_prefix}_default_search()
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION ${general_prefix}_ui_dialog() 
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   {<point name="ui_dialog.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE li_exit   LIKE type_t.num10       #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num10       #指標變數
+   DEFINE ls_wc     STRING                  #wc用
+   DEFINE la_param  RECORD                  #程式串查用變數
+          prog       STRING,
+          actionid   STRING,
+          background LIKE type_t.chr1,
+          param      DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING                  #轉換後的json字串
+   DEFINE l_cmd_token           base.StringTokenizer   #報表作業cmdrun使用 
+   DEFINE l_cmd_next            STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_cnt             LIKE type_t.num5       #報表作業cmdrun使用
+   DEFINE l_cmd_prog_arg        STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_arg             STRING                 #報表作業cmdrun使用
+   #add-point:ui_dialog段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="ui_dialog.pre_function"
+   {<point name="ui_dialog.pre_function"/>}
+   #end add-point
+   
+   LET li_exit = FALSE
+   LET g_current_row = 0
+   LET g_current_idx = 0
+ 
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}#若有外部參數查詢, 則直接顯示資料(隱藏查詢方案)
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}IF g_default THEN
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}   CALL gfrm_curr.setElementHidden("mainlayout",0)
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}   CALL gfrm_curr.setElementHidden("worksheet",1)
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}   LET g_main_hidden = 0
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}ELSE
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}   CALL gfrm_curr.setElementHidden("mainlayout",1)
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}   CALL gfrm_curr.setElementHidden("worksheet",0)
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}   LET g_main_hidden = 1
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}END IF
+   
+   #action default動作
+   ${general_action_default}
+   
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE li_exit = FALSE
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_browser.clear()       
+         INITIALIZE ${master_var_title}.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL ${general_prefix}_init()
+      END IF
+      
+      ${general_i10_mark}${general_c01a_mark}${general_i13_mark}CALL lib_cl_dlg.cl_dlg_before_display()
+      ${general_i10_mark}${general_c01a_mark}${general_i13_mark}CALL cl_notice()
+    
+      #確保g_current_idx位於正常區間內
+      #小於,等於0則指到第1筆
+      IF g_current_idx <= 0 THEN
+         LET g_current_idx = 1
+      END IF
+               
+      ${general_i01_mark}${general_i10_mark}${general_c01a_mark}IF g_worksheet_hidden = 1 THEN
+      ${general_i13_mark}IF g_main_hidden = 0 THEN
+         MENU
+            BEFORE MENU 
+               #先填充browser資料
+               CALL ${general_prefix}_browser_fill(g_wc,"")
+               CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               
+               #還原為原本指定筆數
+               IF g_current_row > 0 THEN
+                  LET g_current_idx = g_current_row
+               END IF
+ 
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL ${general_prefix}_fetch("")   
+               END IF               
+               #add-point:ui_dialog段 before menu name="ui_dialog.before_menu"
+               {<point name="ui_dialog.before_menu"/>}
+               #end add-point
+            
+            ${general_mark_stus}#狀態碼切換
+            ${general_mark_stus}ON ACTION statechange
+            ${general_mark_stus}   CALL ${general_prefix}_statechange()
+            ${general_mark_stus}   LET g_action_choice="statechange"
+            ${general_mark_stus}   #根據資料狀態切換action狀態
+            ${general_mark_stus}   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+            ${general_mark_stus}   CALL ${general_prefix}_set_act_visible()
+            ${general_mark_stus}   CALL ${general_prefix}_set_act_no_visible()
+            ${general_mark_stus}   IF NOT (${master_var_pk01} IS NULL
+            ${general_mark_stus}     #master_keys - Start -
+            ${general_mark_stus}     OR ${master_var_pk${key}} IS NULL
+            ${general_mark_stus}     #keys -  End  -
+            ${general_mark_stus}     ) THEN
+            ${general_mark_stus}      #組合條件
+            ${general_mark_stus}      LET g_add_browse = " ${master_append_wc_s}",
+            ${general_mark_stus}                         " ${master_field_pk01} = '", ${master_var_pk01}, "' "
+            ${general_mark_stus}                         #master_keys - Start -
+            ${general_mark_stus}                         ," AND ${master_field_pk${key}} = '", ${master_var_pk${key}}, "' "
+            ${general_mark_stus}                         #keys -  End  -
+            ${general_mark_stus}      #填到對應位置
+            ${general_mark_stus}      CALL ${general_prefix}_browser_fill(g_wc,"")
+            ${general_mark_stus}   END IF
+               
+            #第一筆資料
+            ON ACTION first
+               CALL ${general_prefix}_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            #下一筆資料
+            ON ACTION next
+               CALL ${general_prefix}_fetch("N")
+               LET g_current_row = g_current_idx
+            
+            #指定筆資料
+            ON ACTION jump
+               CALL ${general_prefix}_fetch("/")
+               LET g_current_row = g_current_idx
+            
+            #上一筆資料
+            ON ACTION previous
+               CALL ${general_prefix}_fetch("P")
+               LET g_current_row = g_current_idx
+            
+            #最後筆資料
+            ON ACTION last 
+               CALL ${general_prefix}_fetch("L")  
+               LET g_current_row = g_current_idx
+            
+            #離開程式
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU 
+            
+            #離開程式
+            ON ACTION close
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU
+            
+            #主頁摺疊
+            ON ACTION mainhidden   
+               LET g_action_choice = "mainhidden"            
+               ${general_i01_mark}${general_i10_mark}${general_c01a_mark}IF g_main_hidden THEN
+               ${general_i01_mark}${general_i10_mark}${general_c01a_mark}   CALL gfrm_curr.setElementHidden("mainlayout",0)
+               ${general_i01_mark}${general_i10_mark}${general_c01a_mark}   CALL gfrm_curr.setElementImage("mainhidden","16/worksheethidden.png")
+               ${general_i01_mark}${general_i10_mark}${general_c01a_mark}   LET g_main_hidden = 0
+               ${general_i01_mark}${general_i10_mark}${general_c01a_mark}ELSE
+               ${general_i01_mark}${general_i10_mark}${general_c01a_mark}   CALL gfrm_curr.setElementHidden("mainlayout",1)
+               ${general_i01_mark}${general_i10_mark}${general_c01a_mark}   CALL gfrm_curr.setElementImage("mainhidden","16/worksheethidden.png")
+               ${general_i01_mark}${general_i10_mark}${general_c01a_mark}   LET g_main_hidden = 1
+               ${general_i01_mark}${general_i10_mark}${general_c01a_mark}END IF
+               ${general_i13_mark}IF g_main_hidden THEN
+               ${general_i13_mark}   CALL gfrm_curr.setElementHidden("mainlayout",0)
+               ${general_i13_mark}   CALL gfrm_curr.setElementHidden("worksheet",1)
+               ${general_i13_mark}   LET g_main_hidden = 0
+               ${general_i13_mark}ELSE
+               ${general_i13_mark}   CALL gfrm_curr.setElementHidden("mainlayout",1)
+               ${general_i13_mark}   CALL gfrm_curr.setElementHidden("worksheet",0)
+               ${general_i13_mark}   LET g_main_hidden = 1
+               ${general_i13_mark}   CALL cl_notice()
+               ${general_i13_mark}END IF
+               EXIT MENU
+               
+            ON ACTION worksheethidden   #瀏覽頁折疊
+            ${general_i10_mark}${general_c01a_mark}${general_i01_mark}   IF g_worksheet_hidden THEN
+            ${general_i10_mark}${general_c01a_mark}${general_i01_mark}      CALL gfrm_curr.setElementHidden("worksheet",0)
+            ${general_i10_mark}${general_c01a_mark}${general_i01_mark}      CALL gfrm_curr.setElementImage("worksheethidden","16/mainhidden.png")
+            ${general_i10_mark}${general_c01a_mark}${general_i01_mark}      LET g_worksheet_hidden = 0
+            ${general_i10_mark}${general_c01a_mark}${general_i01_mark}   ELSE
+            ${general_i10_mark}${general_c01a_mark}${general_i01_mark}      CALL gfrm_curr.setElementHidden("worksheet",1)
+            ${general_i10_mark}${general_c01a_mark}${general_i01_mark}      CALL gfrm_curr.setElementImage("worksheethidden","16/mainhidden.png")
+            ${general_i10_mark}${general_c01a_mark}${general_i01_mark}      LET g_worksheet_hidden = 1
+            ${general_i10_mark}${general_c01a_mark}${general_i01_mark}   END IF
+            ${general_i10_mark}${general_c01a_mark}${general_i13_mark}   IF g_main_hidden THEN
+            ${general_i10_mark}${general_c01a_mark}${general_i13_mark}      CALL gfrm_curr.setElementHidden("mainlayout",0)
+            ${general_i10_mark}${general_c01a_mark}${general_i13_mark}      CALL gfrm_curr.setElementHidden("worksheet",1)
+            ${general_i10_mark}${general_c01a_mark}${general_i13_mark}      LET g_main_hidden = 0
+            ${general_i10_mark}${general_c01a_mark}${general_i13_mark}   ELSE
+            ${general_i10_mark}${general_c01a_mark}${general_i13_mark}      CALL gfrm_curr.setElementHidden("mainlayout",1)
+            ${general_i10_mark}${general_c01a_mark}${general_i13_mark}      CALL gfrm_curr.setElementHidden("worksheet",0)
+            ${general_i10_mark}${general_c01a_mark}${general_i13_mark}      LET g_main_hidden = 1
+            ${general_i10_mark}${general_c01a_mark}${general_i13_mark}   END IF
+            ${general_i10_mark}${general_c01a_mark}   EXIT MENU
+            
+            #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+          
+            #查詢方案用
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL ${general_prefix}_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            #查詢方案用
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL ${general_prefix}_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "-100" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL ${general_prefix}_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+            
+            ${general_action_call_in_menu}
+            
+            ${general_menu_signature2}
+            
+            ${master_related_document_menu}
+            
+            #主選單用ACTION
+            &include "main_menu_exit_menu.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END MENU
+      
+      ELSE
+      
+         DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+           
+            ${general_i01_mark}${general_i10_mark}${general_c01a_mark}#快速搜尋(樹狀專用)
+            ${general_i01_mark}${general_i10_mark}${general_c01a_mark}INPUT g_searchstr,g_searchcol FROM formonly.searchstr,formonly.cbo_searchcol
+            ${general_i01_mark}${general_i10_mark}${general_c01a_mark}   BEFORE INPUT
+            ${general_i01_mark}${general_i10_mark}${general_c01a_mark}
+            ${general_i01_mark}${general_i10_mark}${general_c01a_mark}END INPUT
+      
+            #左側瀏覽頁簽
+            DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTE(COUNT=g_rec_b)
+            
+               BEFORE ROW
+                  #回歸舊筆數位置 (回到當時異動的筆數)
+                  LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+                  IF g_current_idx = 0 THEN
+                     LET g_current_idx = 1
+                  END IF
+                  LET g_current_row = g_current_idx  #目前指標
+                  LET g_current_sw = TRUE
+                  CALL cl_show_fld_cont()     
+                  
+                  #當每次點任一筆資料都會需要用到               
+                  CALL ${general_prefix}_fetch("")
+ 
+               ON ACTION qbefield_user   #欄位隱藏設定 
+                  LET g_action_choice="qbefield_user"
+                  CALL cl_ui_qbefield_user()
+    
+               ${general_tree_expand}
+            
+            END DISPLAY
+ 
+            #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+            {<point name="ui_dialog.more_displayarray"/>}
+            #end add-point
+ 
+            ${general_i10_mark}${general_c01a_mark}${general_i13_mark}#查詢方案用
+            ${general_i10_mark}${general_c01a_mark}${general_i13_mark}SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+            ${general_i10_mark}${general_c01a_mark}${general_i13_mark}SUBDIALOG lib_cl_dlg.cl_dlg_relateapps
+         
+            BEFORE DIALOG
+               #先填充browser資料
+               IF g_action_choice <> "mainhidden" THEN
+                  CALL ${general_prefix}_browser_fill(g_wc,"")
+               END IF
+               ${general_i10_mark}${general_c01a_mark}CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               ${general_i10_mark}${general_c01a_mark}LET g_curr_diag = ui.DIALOG.getCurrent()
+               ${general_i10_mark}${general_c01a_mark}#還原為原本指定筆數
+               ${general_i10_mark}${general_c01a_mark}IF g_current_row > 1 THEN
+               ${general_i10_mark}${general_c01a_mark}   #當刪除最後一筆資料時可能產生錯誤, 進行額外判斷
+               ${general_i10_mark}${general_c01a_mark}   IF g_current_row > g_browser.getLength() THEN
+               ${general_i10_mark}${general_c01a_mark}      LET g_current_row = g_browser.getLength()
+               ${general_i10_mark}${general_c01a_mark}   END IF 
+               ${general_i10_mark}${general_c01a_mark}   LET g_current_idx = g_current_row
+               ${general_i10_mark}${general_c01a_mark}   CALL DIALOG.setCurrentRow("s_browse",g_current_idx)
+               ${general_i10_mark}${general_c01a_mark}END IF
+ 
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL ${general_prefix}_fetch("")   
+               END IF          
+               CALL cl_notice()
+               
+               #add-point:ui_dialog段before name="ui_dialog.b_dialog"
+               {<point name="ui_dialog.b_dialog"/>}
+               #end add-point  
+            
+            AFTER DIALOG
+               #add-point:ui_dialog段 after dialog name="ui_dialog.after_dialog"
+               {<point name="ui_dialog.after_dialog"/>}
+               #end add-point
+            
+            ${general_mark_stus}#狀態碼切換
+            ${general_mark_stus}ON ACTION statechange
+            ${general_mark_stus}   CALL ${general_prefix}_statechange()
+            ${general_mark_stus}   LET g_action_choice="statechange"
+            ${general_mark_stus}   #根據資料狀態切換action狀態
+            ${general_mark_stus}   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+            ${general_mark_stus}   CALL ${general_prefix}_set_act_visible()
+            ${general_mark_stus}   CALL ${general_prefix}_set_act_no_visible()
+            ${general_mark_stus}   IF NOT (${master_var_pk01} IS NULL
+            ${general_mark_stus}     #master_keys - Start -
+            ${general_mark_stus}     OR ${master_var_pk${key}} IS NULL
+            ${general_mark_stus}     #keys -  End  -
+            ${general_mark_stus}     ) THEN
+            ${general_mark_stus}      #組合條件
+            ${general_mark_stus}      LET g_add_browse = " ${master_append_wc_s}",
+            ${general_mark_stus}                         " ${master_field_pk01} = '", ${master_var_pk01}, "' "
+            ${general_mark_stus}                         #master_keys - Start -
+            ${general_mark_stus}                         ," AND ${master_field_pk${key}} = '", ${master_var_pk${key}}, "' "
+            ${general_mark_stus}                         #keys -  End  -
+            ${general_mark_stus}      #填到對應位置
+            ${general_mark_stus}      CALL ${general_prefix}_browser_fill(g_wc,"")
+            ${general_mark_stus}   END IF
+         
+            ${browser_filter_action}
+            
+            #第一筆資料
+            ON ACTION first
+               CALL ${general_prefix}_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            #下一筆資料
+            ON ACTION next
+               CALL ${general_prefix}_fetch("N")
+               LET g_current_row = g_current_idx
+         
+            #指定筆資料
+            ON ACTION jump
+               CALL ${general_prefix}_fetch("/")
+               LET g_current_row = g_current_idx
+         
+            #上一筆資料
+            ON ACTION previous
+               CALL ${general_prefix}_fetch("P")
+               LET g_current_row = g_current_idx
+          
+            #最後筆資料
+            ON ACTION last 
+               CALL ${general_prefix}_fetch("L")  
+               LET g_current_row = g_current_idx
+         
+            #離開程式
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+         
+            #離開程式
+            ON ACTION close
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+    
+            #主頁摺疊
+            ON ACTION mainhidden 
+               LET g_action_choice = "mainhidden"                
+               ${general_i01_mark}${general_i10_mark}${general_c01a_mark}IF g_main_hidden THEN
+               ${general_i01_mark}${general_i10_mark}${general_c01a_mark}   CALL gfrm_curr.setElementHidden("mainlayout",0)
+               ${general_i01_mark}${general_i10_mark}${general_c01a_mark}   CALL gfrm_curr.setElementImage("mainhidden","16/worksheethidden.png")
+               ${general_i01_mark}${general_i10_mark}${general_c01a_mark}   LET g_main_hidden = 0
+               ${general_i01_mark}${general_i10_mark}${general_c01a_mark}ELSE
+               ${general_i01_mark}${general_i10_mark}${general_c01a_mark}   CALL gfrm_curr.setElementHidden("mainlayout",1)
+               ${general_i01_mark}${general_i10_mark}${general_c01a_mark}   CALL gfrm_curr.setElementImage("mainhidden","16/mainhidden.png")
+               ${general_i01_mark}${general_i10_mark}${general_c01a_mark}   LET g_main_hidden = 1
+               ${general_i01_mark}${general_i10_mark}${general_c01a_mark}END IF
+               ${general_i13_mark}IF g_main_hidden THEN
+               ${general_i13_mark}   CALL gfrm_curr.setElementHidden("mainlayout",0)
+               ${general_i13_mark}   CALL gfrm_curr.setElementHidden("worksheet",1)
+               ${general_i13_mark}   LET g_main_hidden = 0
+               ${general_i13_mark}ELSE
+               ${general_i13_mark}   CALL gfrm_curr.setElementHidden("mainlayout",1)
+               ${general_i13_mark}   CALL gfrm_curr.setElementHidden("worksheet",0)
+               ${general_i13_mark}   LET g_main_hidden = 1
+               ${general_i13_mark}   CALL cl_notice()
+               ${general_i13_mark}END IF
+               ${general_i13_mark}#EXIT DIALOG
+               
+            ${general_i10_mark}${general_c01a_mark}ON ACTION worksheethidden   #瀏覽頁折疊
+            ${general_i10_mark}${general_c01a_mark}${general_i01_mark}   IF g_worksheet_hidden THEN
+            ${general_i10_mark}${general_c01a_mark}${general_i01_mark}      CALL gfrm_curr.setElementHidden("worksheet",0)
+            ${general_i10_mark}${general_c01a_mark}${general_i01_mark}      CALL gfrm_curr.setElementImage("worksheethidden","16/mainhidden.png")
+            ${general_i10_mark}${general_c01a_mark}${general_i01_mark}      LET g_worksheet_hidden = 0
+            ${general_i10_mark}${general_c01a_mark}${general_i01_mark}   ELSE
+            ${general_i10_mark}${general_c01a_mark}${general_i01_mark}      CALL gfrm_curr.setElementHidden("worksheet",1)
+            ${general_i10_mark}${general_c01a_mark}${general_i01_mark}      CALL gfrm_curr.setElementImage("worksheethidden","16/worksheethidden.png")
+            ${general_i10_mark}${general_c01a_mark}${general_i01_mark}      LET g_worksheet_hidden = 1
+            ${general_i10_mark}${general_c01a_mark}${general_i01_mark}   END IF
+            ${general_i10_mark}${general_c01a_mark}${general_i13_mark}   IF g_main_hidden THEN
+            ${general_i10_mark}${general_c01a_mark}${general_i13_mark}      CALL gfrm_curr.setElementHidden("mainlayout",0)
+            ${general_i10_mark}${general_c01a_mark}${general_i13_mark}      CALL gfrm_curr.setElementHidden("worksheet",1)
+            ${general_i10_mark}${general_c01a_mark}${general_i13_mark}      LET g_main_hidden = 0
+            ${general_i10_mark}${general_c01a_mark}${general_i13_mark}   ELSE
+            ${general_i10_mark}${general_c01a_mark}${general_i13_mark}      CALL gfrm_curr.setElementHidden("mainlayout",1)
+            ${general_i10_mark}${general_c01a_mark}${general_i13_mark}      CALL gfrm_curr.setElementHidden("worksheet",0)
+            ${general_i10_mark}${general_c01a_mark}${general_i13_mark}      LET g_main_hidden = 1
+            ${general_i10_mark}${general_c01a_mark}${general_i13_mark}   END IF
+            ${general_i10_mark}${general_c01a_mark}${general_i13_mark}   #EXIT DIALOG
+         
+            ON ACTION exporttoexcel
+               LET g_action_choice="exporttoexcel"
+               IF cl_auth_chk_act("exporttoexcel") THEN
+                  #browser
+                  CALL g_export_node.clear()
+                  LET g_export_node[1] = base.typeInfo.create(g_browser)
+                  LET g_export_id[1]   = "s_browse"
+                  CALL cl_export_to_excel()
+               END IF
+         
+            #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+ 
+            ${general_i01_mark}${general_i10_mark}${general_c01a_mark}#快速搜尋(樹狀專用)
+            ${general_i01_mark}${general_i10_mark}${general_c01a_mark}ON ACTION searchdata
+            ${general_i01_mark}${general_i10_mark}${general_c01a_mark}   LET g_current_idx = 1
+            ${general_i01_mark}${general_i10_mark}${general_c01a_mark}   LET g_searchstr = GET_FLDBUF(searchstr)
+            ${general_i01_mark}${general_i10_mark}${general_c01a_mark}   CALL ${general_prefix}_browser_search()
+            ${general_i01_mark}${general_i10_mark}${general_c01a_mark}   EXIT DIALOG
+            
+            #查詢方案用
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL ${general_prefix}_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            #查詢方案用
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL ${general_prefix}_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "-100" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL ${general_prefix}_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+               
+            ${general_action_call}
+            
+            ${general_menu_signature}
+ 
+            ${master_related_document}
+ 
+            #主選單用ACTION
+            &include "main_menu_exit_dialog.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END DIALOG 
+      
+      END IF
+      
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      {<point name="ui_dialog.exit_dialog"/>}
+      #end add-point
+      
+      #(ver:50) ---start---
+      IF li_exit THEN
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         {<point name="ui_dialog.b_exit"/>}
+         #end add-point
+         EXIT WHILE
+      END IF
+      #(ver:50) --- end ---
+
+   END WHILE
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.browser_fill" >}
+${general_browser_fill}
+{</section>}
+ 
+{<section id="${app_id}.construct" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION ${general_prefix}_construct()
+   #add-point:cs段define(客製用) name="cs.define_customerization"
+   {<point name="cs.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ls_return      STRING
+   DEFINE ls_result      STRING 
+   DEFINE ls_wc          STRING 
+   #add-point:cs段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="cs.define"
+   {<point name="cs.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="cs.pre_function"
+   {<point name="cs.pre_function"/>}
+   #end add-point
+   
+   #清空畫面&資料初始化
+   CLEAR FORM
+   INITIALIZE ${master_var_title}.* TO NULL
+   INITIALIZE g_wc TO NULL
+   LET g_current_row = 1
+ 
+   LET g_qryparam.state = "c"
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #螢幕上取條件
+      CONSTRUCT BY NAME g_wc ON ${master_fields_qbe}
+      
+         BEFORE CONSTRUCT                                    
+            #add-point:cs段more_construct name="cs.before_construct"
+            {<point name="cs.before_construct"/>}
+            #end add-point             
+      
+         #公用欄位開窗相關處理
+         ${master_commons_ctrlp}
+      
+         #一般欄位
+         ${master_fields_ctrlp}
+           
+      END CONSTRUCT
+      
+      #add-point:cs段more_construct name="cs.more_construct"
+      {<point name="cs.more_construct"/>}
+      #end add-point   
+      
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog name="cs.b_dialog"
+         {<point name="cs.b_dialog"/>}
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+  
+   #add-point:cs段after_construct name="cs.after_construct"
+   {<point name="cs.after_construct"/>}
+   #end add-point
+  
+END FUNCTION
+{</section>}
+ 
+${browser_filter_funcs}
+ 
+{<section id="${app_id}.query" >}
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION ${general_prefix}_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   {<point name="query.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ls_wc STRING
+   #add-point:query段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   {<point name="query.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="query.pre_function"
+   {<point name="query.pre_function"/>}
+   #end add-point
+   
+   LET INT_FLAG = 0
+   LET ls_wc = g_wc
+   
+   #切換畫面
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}IF g_main_hidden THEN
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}   CALL gfrm_curr.setElementHidden("mainlayout",0)
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}   CALL gfrm_curr.setElementHidden("worksheet",1)
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}   LET g_main_hidden = 0
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}END IF
+ 
+   CALL g_browser.clear() 
+ 
+   #browser panel折疊
+   IF g_worksheet_hidden THEN
+      CALL gfrm_curr.setElementHidden("worksheet_vbox",0)
+      CALL gfrm_curr.setElementImage("worksheethidden","worksheethidden-24.png")
+      LET g_worksheet_hidden = 0
+   END IF
+   
+   #單頭折疊
+   IF g_header_hidden THEN
+      CALL gfrm_curr.setElementHidden("vb_master",0)
+      CALL gfrm_curr.setElementImage("controls","headerhidden-24")
+      LET g_header_hidden = 0
+   END IF
+ 
+   INITIALIZE ${master_var_title}.* TO NULL
+   ERROR ""
+ 
+   DISPLAY " " TO FORMONLY.b_count
+   DISPLAY " " TO FORMONLY.h_count
+   CALL ${general_prefix}_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      #LET g_wc = ls_wc
+      LET g_wc = " 1=2"
+      CALL ${general_prefix}_browser_fill(g_wc,"F")
+      CALL ${general_prefix}_fetch("")
+      RETURN
+   ELSE
+      LET g_current_row = 1
+      LET g_current_cnt = 0
+      ${general_i01_mark}${general_i10_mark}${general_c01a_mark}CALL g_browser_expand.clear()
+   END IF
+   
+   #根據條件從新抓取資料
+   LET g_error_show = 1
+   CALL ${general_prefix}_browser_fill(g_wc,"F")   # 移到第一頁
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||")")
+   
+   #備份搜尋條件
+   LET ls_wc = g_wc
+   
+   IF g_browser.getLength() = 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "-100" 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   ELSE
+      CALL ${general_prefix}_fetch("F") 
+   END IF
+   
+   LET g_wc_filter = ""
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.fetch" >}
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION ${general_prefix}_fetch(p_fl)
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   {<point name="fetch.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_fl       LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   {<point name="fetch.define"/>}
+   #end add-point  
+   
+   #add-point:Function前置處理  name="fetch.pre_function"
+   {<point name="fetch.pre_function"/>}
+   #end add-point
+   
+   #根據傳入的條件決定抓取的資料
+   CASE p_fl
+      WHEN "F" 
+         LET g_current_idx = 1
+      WHEN "P"
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN "N"
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN "L" 
+         #LET g_current_idx = g_header_cnt        
+         LET g_current_idx = g_browser.getLength()    
+      WHEN "/"
+         #詢問要指定的筆數
+         IF (NOT g_no_ask) THEN      
+            CALL cl_getmsg("fetch", g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,": " FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl"
+            END PROMPT
+            
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT CASE  
+            END IF           
+         END IF
+         IF g_jump > 0 THEN
+            LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE     
+   END CASE
+ 
+   #筆數顯示
+   LET g_browser_idx = g_current_idx 
+   IF g_browser_cnt > 0 THEN
+      DISPLAY g_browser_idx TO FORMONLY.b_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.b_count #總筆數
+      DISPLAY g_browser_idx TO FORMONLY.h_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.h_count #總筆數
+   ELSE
+      DISPLAY '' TO FORMONLY.b_index #當下筆數
+      DISPLAY '' TO FORMONLY.b_count #總筆數
+      DISPLAY '' TO FORMONLY.h_index #當下筆數
+      DISPLAY '' TO FORMONLY.h_count #總筆數
+   END IF
+   
+   ${general_i01_mark}${general_i10_mark}${general_c01a_mark}#樹狀管控(action)
+   ${general_i01_mark}${general_i10_mark}${general_c01a_mark}IF g_browser[g_current_idx].b_expcode <> "${browser_max_lv}" THEN
+   ${general_i01_mark}${general_i10_mark}${general_c01a_mark}   INITIALIZE ${master_var_title}.* TO NULL
+   ${general_i01_mark}${general_i10_mark}${general_c01a_mark}   DISPLAY BY NAME ${master_var_title}.*
+   ${general_i01_mark}${general_i10_mark}${general_c01a_mark}   CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+   ${general_i01_mark}${general_i10_mark}${general_c01a_mark}   RETURN
+   ${general_i01_mark}${general_i10_mark}${general_c01a_mark}ELSE
+   ${general_i01_mark}${general_i10_mark}${general_c01a_mark}   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   ${general_i01_mark}${general_i10_mark}${general_c01a_mark}END IF
+   
+   ${general_i01_mark}${general_i10_mark}${general_i13_mark}CALL ${general_prefix}_browser_fill(g_wc,p_fl)
+   
+   #避免超出browser資料筆數上限
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_browser_idx = g_browser.getLength()
+      LET g_current_idx = g_browser.getLength() 
+   END IF
+   
+   # 設定browse索引
+   ${general_i10_mark}${general_c01a_mark}CALL g_curr_diag.setCurrentRow("s_browse", g_current_idx)
+   CALL cl_navigator_setting(g_browser_idx, g_browser_cnt) 
+ 
+   #代表沒有資料, 無需做後續資料撈取之動作
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+ 
+   #根據選定的筆數給予key欄位值
+   LET ${master_var_pk01} = g_browser[g_current_idx].b_${master_field_pk01}
+   #master_keys - Start -
+   LET ${master_var_pk${key}} = g_browser[g_current_idx].b_${master_field_pk${key}}
+   #keys -  End  -
+                       
+   #讀取單頭所有欄位資料
+   ${master_refresh}
+   
+   #遮罩相關處理
+   LET ${master_var_title}_mask_o.* =  ${master_var_title}.*
+   CALL ${general_prefix}_${master_tbl_name}_mask()
+   LET ${master_var_title}_mask_n.* =  ${master_var_title}.*
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL ${general_prefix}_set_act_visible()
+   CALL ${general_prefix}_set_act_no_visible()
+ 
+   #add-point:fetch段action控制 name="fetch.action_control"
+   {<point name="fetch.action_control"/>}
+   #end add-point  
+   
+   ${master_append_select}
+   
+   #保存單頭舊值
+   LET ${master_var_title}_t.* = ${master_var_title}.*
+   LET ${master_var_title}_o.* = ${master_var_title}.*
+   
+   ${master_mark_ownid}LET g_data_owner = ${master_var_ownid}      
+   ${master_mark_owndp}LET g_data_dept  = ${master_var_owndp}
+   
+   #重新顯示
+   CALL ${general_prefix}_show()
+   ${general_signature_chk}
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION ${general_prefix}_insert()
+   #add-point:insert段define(客製用) name="insert.define_customerization"
+   {<point name="insert.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:insert段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   {<point name="insert.define"/>}
+   #end add-point    
+   
+   #add-point:Function前置處理  name="insert.pre_function"
+   {<point name="insert.pre_function"/>}
+   #end add-point
+   
+   CLEAR FORM #清畫面欄位內容
+   INITIALIZE ${master_var_title}.* TO NULL             #DEFAULT 設定
+   LET g_${master_field_pk01}_t = NULL
+   #master_keys - Start -
+   LET g_${master_field_pk${key}}_t = NULL
+   #keys -  End  -
+   
+   #add-point:insert段before name="insert.before"
+   {<point name="insert.before"/>}
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   
+   WHILE TRUE
+      ${general_tree_default}
+      #公用欄位給值
+      ${master_insert_define}
+ 
+      #append欄位給值
+      ${master_define_append}
+     
+      #一般欄位給值
+      ${master_fields_default}
+ 
+      #add-point:單頭預設值 name="insert.default"
+      {<point name="insert.default"/>}
+      #end add-point   
+     
+      #顯示狀態(stus)圖片
+      ${general_state_show}
+     
+      #資料輸入
+      CALL ${general_prefix}_input("a")
+      
+      #add-point:單頭輸入後 name="insert.after_insert"
+      {<point name="insert.after_insert"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         #取消
+         LET INT_FLAG = 0
+         DISPLAY g_current_cnt TO FORMONLY.h_count     #總筆數
+         DISPLAY g_current_idx TO FORMONLY.h_index     #當下筆數
+         INITIALIZE ${master_var_title}.* TO NULL
+         CALL ${general_prefix}_show()
+         ${general_c01a_mark}CALL s_transaction_end('N','0')
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         RETURN
+      END IF
+ 
+      LET g_rec_b = 0
+      EXIT WHILE
+   END WHILE
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL ${general_prefix}_set_act_visible()
+   CALL ${general_prefix}_set_act_no_visible()
+ 
+   #將新增的資料併入搜尋條件中
+   LET g_state = "insert"
+   
+   LET g_${master_field_pk01}_t = ${master_var_pk01}
+   #master_keys - Start -
+   LET g_${master_field_pk${key}}_t = ${master_var_pk${key}}
+   #keys -  End  -
+   
+   #組合新增資料的條件
+   LET g_add_browse = " ${master_append_wc_s}",
+                      " ${master_field_pk01} = '", ${master_var_pk01}, "' "
+                      #master_keys - Start -
+                      ," AND ${master_field_pk${key}} = '", ${master_var_pk${key}}, "' "
+                      #keys -  End  -
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   ${general_i13_mark}CALL ${general_prefix}_browser_fill("","")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+ 
+   #撈取異動後的資料(主要是帶出reference)
+   ${master_refresh}
+   ${master_append_select}
+   
+   #遮罩相關處理
+   LET ${master_var_title}_mask_o.* =  ${master_var_title}.*
+   CALL ${general_prefix}_${master_tbl_name}_mask()
+   LET ${master_var_title}_mask_n.* =  ${master_var_title}.*
+   
+   #將資料顯示到畫面上
+   DISPLAY BY NAME ${master_vars_all}
+ 
+   #add-point:新增結束後 name="insert.after"
+   {<point name="insert.after"/>}
+   #end add-point 
+ 
+   ${master_mark_ownid}LET g_data_owner = ${master_var_ownid}      
+   ${master_mark_owndp}LET g_data_dept  = ${master_var_owndp}
+ 
+   #功能已完成,通報訊息中心
+   CALL ${general_prefix}_msgcentre_notify('insert')
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION ${general_prefix}_modify()
+   #add-point:modify段define(客製用) name="modify.define_customerization"
+   {<point name="modify.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:modify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   {<point name="modify.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理 name="modify.pre_function"
+   {<point name="modify.pre_function"/>}
+   #end add-point
+   
+   #先確定key值無遺漏
+   IF ${master_var_pk01} IS NULL
+      #detail_keys - Start -
+   OR ${master_var_pk${key}} IS NULL
+      #keys -  End  -
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF 
+ 
+   ERROR ""
+  
+   #備份key值
+   LET g_${master_field_pk01}_t = ${master_var_pk01}
+   #master_keys - Start -
+   LET g_${master_field_pk${key}}_t = ${master_var_pk${key}}
+   #keys -  End  -
+   
+   CALL s_transaction_begin()
+   
+   #先lock資料
+   OPEN ${general_prefix}_cl USING ${master_var_append}${master_var_allkeys}
+   IF SQLCA.SQLCODE THEN    #(ver:49)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN ${general_prefix}_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.popup = TRUE 
+      CLOSE ${general_prefix}_cl
+      ${general_c01a_mark}CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   ${master_refresh}
+ 
+   #檢查是否允許此動作
+   IF NOT ${general_prefix}_action_chk() THEN
+      ${general_c01a_mark}CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #遮罩相關處理
+   LET ${master_var_title}_mask_o.* =  ${master_var_title}.*
+   CALL ${general_prefix}_${master_tbl_name}_mask()
+   LET ${master_var_title}_mask_n.* =  ${master_var_title}.*
+   
+   ${master_append_select}
+ 
+   #顯示資料
+   CALL ${general_prefix}_show()
+   
+   WHILE TRUE
+      LET ${master_var_pk01} = g_${master_field_pk01}_t
+      #master_keys - Start -
+      LET ${master_var_pk${key}} = g_${master_field_pk${key}}_t
+      #keys -  End  -
+      
+      #寫入修改者/修改日期資訊
+      ${master_upder_define}
+      
+      #add-point:modify段修改前 name="modify.before_input"
+      {<point name="modify.before_input"/>}
+      #end add-point
+ 
+      #資料輸入
+      CALL ${general_prefix}_input("u")     
+ 
+      #add-point:modify段修改後 name="modify.after_input"
+      {<point name="modify.after_input"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         ${general_c01a_mark}CALL s_transaction_end('N','0')
+         LET INT_FLAG = 0
+         LET ${master_var_title}.* = ${master_var_title}_t.*
+         CALL ${general_prefix}_show()
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         EXIT WHILE
+      END IF
+ 
+      #若有modid跟moddt則進行update
+      ${general_modify_mark}UPDATE ${master_tbl_name} SET (${master_modify_fields_update}) = (${master_modify_vars_update})
+      ${general_modify_mark} WHERE ${master_append_wc} ${master_field_pk01} = g_${master_field_pk01}_t
+         #master_keys - Start -
+         ${general_modify_mark}AND ${master_field_pk${key}} = g_${master_field_pk${key}}_t
+         #keys -  End  -
+ 
+      EXIT WHILE
+      
+   END WHILE
+ 
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL ${general_prefix}_set_act_visible()
+   CALL ${general_prefix}_set_act_no_visible()
+ 
+   #組合新增資料的條件
+   LET g_add_browse = " ${master_append_wc_s}",
+                      " ${master_field_pk01} = '", ${master_var_pk01}, "' "
+                      #master_keys - Start -
+                      ," AND ${master_field_pk${key}} = '", ${master_var_pk${key}}, "' "
+                      #keys -  End  -
+   #填到對應位置
+   CALL ${general_prefix}_browser_fill(g_wc,"")
+ 
+   CLOSE ${general_prefix}_cl
+   ${general_c01a_mark}CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL ${general_prefix}_msgcentre_notify('modify')
+   
+   LET g_worksheet_hidden = 0
+   
+END FUNCTION   
+{</section>}
+ 
+{<section id="${app_id}.input" >}
+#+ 資料輸入
+PRIVATE FUNCTION ${general_prefix}_input(p_cmd)
+   #add-point:input段define(客製用) name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_cmd           LIKE type_t.chr1
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_n             LIKE type_t.num10       #檢查重複用  
+   DEFINE l_cnt           LIKE type_t.num10       #檢查重複用  
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否  
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_i             LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num10
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="input.pre_function"
+   {<point name="input.pre_function"/>}
+   #end add-point
+   
+   #切換至輸入畫面
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}IF g_main_hidden THEN
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}   CALL gfrm_curr.setElementHidden("mainlayout",0)
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}   CALL gfrm_curr.setElementHidden("worksheet",1)
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}   LET g_main_hidden = 0
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}END IF
+   ${general_i01_mark}${general_i10_mark}${general_c01a_mark}CALL gfrm_curr.setElementHidden("mainlayout",0)
+   ${general_i01_mark}${general_i10_mark}${general_c01a_mark}CALL gfrm_curr.setElementImage("mainhidden","small/arr-u.png")
+   ${general_i01_mark}${general_i10_mark}${general_c01a_mark}LET g_main_hidden = 1
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME ${master_vars_all}
+   
+   CALL cl_set_head_visible("","YES")  
+   
+   #a-新增,r-複製,u-修改
+   IF p_cmd = 'r' THEN
+      #此段落的r動作等同於a
+      LET p_cmd = 'a'
+   END IF
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   LET g_qryparam.state = "i"
+   
+   #控制key欄位可否輸入
+   CALL ${general_prefix}_set_entry(p_cmd)
+   #add-point:set_entry後 name="input.after_set_entry"
+   {<point name="input.after_set_entry"/>}
+   #end add-point
+   CALL ${general_prefix}_set_no_entry(p_cmd)
+   
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+   #add-point:資料輸入前 name="input.before_input"
+   {<point name="input.before_input"/>}
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #單頭段
+      INPUT BY NAME ${master_input_fields} 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         ${master_iaction_call}
+         
+         BEFORE INPUT
+            ${general_c01a_mark}IF s_transaction_chk("N",0) THEN
+            ${general_c01a_mark}   CALL s_transaction_begin()
+            ${general_c01a_mark}END IF
+            #其他table資料備份(確定是否更改用)
+            ${master_multi_table_bak}
+            #add-point:input開始前 name="input.before.input"
+            {<point name="input.before.input"/>}
+            #end add-point
+   
+         ${master_fields_check} #欄位檢查
+         ${master_fields_ctrlp_i} #欄位開窗
+ 
+         AFTER INPUT
+            #若點選cancel則離開dialog
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            
+            #錯誤訊息統整顯示
+            #CALL cl_err_collect_show()
+            #CALL cl_showmsg()
+  
+            IF p_cmd <> "u" THEN
+               #當p_cmd不為u代表為新增/複製
+               LET l_count = 1  
+ 
+               #確定新增的資料不存在(不重複)
+               SELECT COUNT(1) INTO l_count FROM ${master_tbl_name}
+                WHERE ${master_append_wc} ${master_field_pk01} = ${master_var_pk01}
+                  #master_keys - Start -
+                  AND ${master_field_pk${key}} = ${master_var_pk${key}}
+                  #keys -  End  -
+               IF l_count = 0 THEN
+               
+                  #add-point:單頭新增前 name="input.head.b_insert"
+                  {<point name="input.head.b_insert" mark="Y"/>}
+                  #end add-point
+               
+                  #將新增的單頭資料寫入資料庫
+                  INSERT INTO ${master_tbl_name} (${master_field_append}${master_fields_update})
+                  VALUES (${master_var_append}${master_vars_update}) 
+                  
+                  #add-point:單頭新增中 name="input.head.m_insert"
+                  {<point name="input.head.m_insert"/>}
+                  #end add-point
+                  
+                  #若寫入錯誤則提示錯誤訊息並返回輸入頁面
+                  IF SQLCA.SQLCODE THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "${master_tbl_name}:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  ${master_append_insert}
+                  
+                  #資料多語言用-增/改
+                  ${master_multi_language}
+                  
+                  #add-point:單頭新增後 name="input.head.a_insert"
+                  {<point name="input.head.a_insert"/>}
+                  #end add-point
+                  
+                  ${general_c01a_mark}CALL s_transaction_end('Y','0')
+               ELSE
+                  ${general_c01a_mark}CALL s_transaction_end('N','0')
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = ${master_var_pk01}
+                  LET g_errparam.code   = "std-00006" 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+               END IF 
+            ELSE
+               #add-point:單頭修改前 name="input.head.b_update"
+               {<point name="input.head.b_update" mark="Y"/>}
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL ${general_prefix}_${master_tbl_name}_mask_restore('restore_mask_o')
+               
+               UPDATE ${master_tbl_name} SET (${master_fields_update}) = (${master_vars_update})
+                WHERE ${master_append_wc} ${master_field_pk01} = g_${master_field_pk01}_t #${pk_list}
+                  #master_keys - Start -
+                  AND ${master_field_pk${key}} = g_${master_field_pk${key}}_t
+                  #keys -  End  -
+               #add-point:單頭修改中 name="input.head.m_update"
+               {<point name="input.head.m_update"/>}
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     ${general_c01a_mark}CALL s_transaction_end('N','0')
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "${master_tbl_name}" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  WHEN SQLCA.SQLCODE #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "${master_tbl_name}:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     ${general_c01a_mark}CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  OTHERWISE
+                     ${master_append_update}
+                     #資料多語言用-增/改
+                     ${master_multi_language}
+                     
+                     #將遮罩欄位進行遮蔽
+                     CALL ${general_prefix}_${master_tbl_name}_mask_restore('restore_mask_n')
+                     
+                     #add-point:單頭修改後 name="input.head.a_update"
+                     {<point name="input.head.a_update"/>}
+                     #end add-point
+                     #修改歷程記錄(單頭修改)
+                     LET g_log1 = util.JSON.stringify(${master_var_title}_t)
+                     LET g_log2 = util.JSON.stringify(${master_var_title})
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                        ${general_c01a_mark}CALL s_transaction_end('N','0')
+                     ELSE
+                        ${general_c01a_mark}CALL s_transaction_end('Y','0')
+                     END IF
+               END CASE
+               
+            END IF
+           #controlp
+      END INPUT
+      
+      #add-point:input段more input  name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      BEFORE DIALOG
+         #CALL cl_err_collect_init()
+         #add-point:input段before_dialog  name="input.before_dialog"
+         {<point name="input.before_dialog"/>}
+         #end add-point
+          
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      #放棄輸入
+      ON ACTION cancel
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      #在dialog 右上角 (X)
+      ON ACTION close 
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+    
+      #toolbar 離開
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input  name="input.after_input"
+   {<point name="input.after_input"/>}
+   #end add-point    
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.reproduce" >}
+#+ 資料複製
+PRIVATE FUNCTION ${general_prefix}_reproduce()
+   #add-point:reproduce段define(客製用) name="reproduce.define_customerization"
+   {<point name="reproduce.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_newno     LIKE ${master_tbl_name}.${master_field_pk01} 
+   DEFINE l_oldno     LIKE ${master_tbl_name}.${master_field_pk01} 
+   #master_keys - Start -
+   DEFINE l_newno${key}     LIKE ${master_tbl_name}.${master_field_pk${key}} 
+   DEFINE l_oldno${key}     LIKE ${master_tbl_name}.${master_field_pk${key}} 
+   #keys -  End  -
+   DEFINE l_master    RECORD LIKE ${master_tbl_name}.* #此變數樣板目前無使用
+   DEFINE l_cnt       LIKE type_t.num10
+   #add-point:reproduce段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="reproduce.define"
+   {<point name="reproduce.define"/>}
+   #end add-point   
+   
+   #add-point:Function前置處理  name="reproduce.pre_function"
+   {<point name="reproduce.pre_function"/>}
+   #end add-point
+   
+   #切換畫面
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}IF g_main_hidden THEN
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}   CALL gfrm_curr.setElementHidden("mainlayout",0)
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}   CALL gfrm_curr.setElementHidden("worksheet",1)
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}   LET g_main_hidden = 0
+   ${general_i10_mark}${general_c01a_mark}${general_i13_mark}END IF
+   
+   #先確定key值無遺漏
+   IF ${master_var_pk01} IS NULL
+      #master_keys - Start -
+      OR ${master_var_pk${key}} IS NULL
+      #keys -  End  -
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #備份key值
+   LET g_${master_field_pk01}_t = ${master_var_pk01}
+   #master_keys - Start -
+   LET g_${master_field_pk${key}}_t = ${master_var_pk${key}}
+   #keys -  End  -
+   
+   #清空key值
+   LET ${master_var_pk01} = ""
+   #master_keys - Start -
+   LET ${master_var_pk${key}} = ""
+   #keys -  End  -
+    
+   CALL ${general_prefix}_set_entry("a")
+   CALL ${general_prefix}_set_no_entry("a")
+   
+   #公用欄位給予預設值
+   ${master_insert_define}
+   
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前 name="reproduce.head.b_input"
+   {<point name="reproduce.head.b_input"/>}
+   #end add-point
+   
+   #顯示狀態(stus)圖片
+   ${general_state_show}
+   
+   #清空key欄位的desc
+   ${general_repro_reset}
+   
+   #資料輸入
+   CALL ${general_prefix}_input("r")
+   
+   IF INT_FLAG THEN
+      #取消
+      INITIALIZE ${master_var_title}.* TO NULL
+      CALL ${general_prefix}_show()
+      ${general_c01a_mark}CALL s_transaction_end('N','0')
+      LET INT_FLAG = 0
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = 9001 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   CALL s_transaction_begin()
+   
+   #add-point:單頭複製前 name="reproduce.head.b_insert"
+   {<point name="reproduce.head.b_insert" mark="Y"/>}
+   #end add-point
+   
+   #add-point:單頭複製中 name="reproduce.head.m_insert"
+   {<point name="reproduce.head.m_insert"/>}
+   #end add-point
+   
+   IF SQLCA.SQLCODE THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "${master_tbl_name}:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.popup = TRUE 
+      ${general_c01a_mark}CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #add-point:單頭複製後 name="reproduce.head.a_insert"
+   {<point name="reproduce.head.a_insert"/>}
+   #end add-point
+   
+   ${general_c01a_mark}CALL s_transaction_end('Y','0')
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL ${general_prefix}_set_act_visible()
+   CALL ${general_prefix}_set_act_no_visible()
+ 
+   #將新增的資料併入搜尋條件中
+   LET g_state = "insert"
+   
+   LET g_${master_field_pk01}_t = ${master_var_pk01}
+   #master_keys - Start -
+   LET g_${master_field_pk${key}}_t = ${master_var_pk${key}}
+   #keys -  End  -
+   
+   #組合新增資料的條件
+   LET g_add_browse = " ${master_append_wc_s}",
+                      " ${master_field_pk01} = '", ${master_var_pk01}, "' "
+                      #master_keys - Start -
+                      ," AND ${master_field_pk${key}} = '", ${master_var_pk${key}}, "' "
+                      #keys -  End  -
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   ${general_i13_mark}CALL ${general_prefix}_browser_fill("","")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   #add-point:完成複製段落後 name="reproduce.after_reproduce"
+   {<point name="reproduce.after_reproduce" />}
+   #end add-point
+              
+   ${master_mark_ownid}LET g_data_owner = ${master_var_ownid}      
+   ${master_mark_owndp}LET g_data_dept  = ${master_var_owndp}
+              
+   #功能已完成,通報訊息中心
+   CALL ${general_prefix}_msgcentre_notify('reproduce')
+                 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.show" >}
+#+ 資料顯示 
+PRIVATE FUNCTION ${general_prefix}_show()
+   #add-point:show段define(客製用) name="show.define_customerization"
+   {<point name="show.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:show段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show.define"
+   {<point name="show.define"/>}
+   #end add-point  
+   
+   #add-point:show段Function前置處理  name="show.before"
+   {<point name="show.before"/>}
+   #end add-point
+   
+   ${general_display_site}
+   
+   #帶出公用欄位reference值
+   ${master_commons_ref}
+    
+   #顯示followup圖示
+   ${master_related_document_show}
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference name="show.head.reference"
+   {<point name="show.head.reference"/>}
+   #end add-point
+ 
+   #將資料輸出到畫面上
+   DISPLAY BY NAME ${master_vars_all}
+   
+   #儲存PK
+   LET l_ac = g_current_idx
+   CALL ${general_prefix}_set_pk_array()
+   
+   #顯示狀態(stus)圖片
+   ${general_state_show}
+ 
+   #顯示有特殊格式設定的欄位或說明
+   CALL cl_show_fld_cont()
+ 
+   #add-point:show段之後 name="show.after"
+   {<point name="show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.delete" >}
+#+ 資料刪除 
+PRIVATE FUNCTION ${general_prefix}_delete()
+   #add-point:delete段define(客製用) name="delete.define_customerization"
+   {<point name="delete.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   {<point name="delete.define"/>}
+   #end add-point  
+   
+   #add-point:Function前置處理  name="delete.pre_function"
+   {<point name="delete.pre_function"/>}
+   #end add-point
+   
+   #先確定key值無遺漏
+   IF ${master_var_pk01} IS NULL
+   #master_keys - Start -
+   OR ${master_var_pk${key}} IS NULL
+   #keys -  End  -
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   CALL s_transaction_begin()
+    
+   LET g_${master_field_pk01}_t = ${master_var_pk01}
+   #master_keys - Start -
+   LET g_${master_field_pk${key}}_t = ${master_var_pk${key}}
+   #keys -  End  -
+   
+   ${master_multi_table_bak}
+ 
+   OPEN ${general_prefix}_cl USING ${master_var_append}${master_var_allkeys}
+   IF SQLCA.SQLCODE THEN    #(ver:49)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN ${general_prefix}_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.popup = TRUE 
+      CLOSE ${general_prefix}_cl
+      ${general_c01a_mark}CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   ${master_refresh}
+   ${master_append_select}
+   
+   #檢查是否允許此動作
+   IF NOT ${general_prefix}_action_chk() THEN
+      ${general_c01a_mark}CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET ${master_var_title}_mask_o.* =  ${master_var_title}.*
+   CALL ${general_prefix}_${master_tbl_name}_mask()
+   LET ${master_var_title}_mask_n.* =  ${master_var_title}.*
+   
+   #將最新資料顯示到畫面上
+   CALL ${general_prefix}_show()
+   
+   IF cl_ask_delete() THEN
+ 
+      #add-point:單頭刪除前 name="delete.head.b_delete"
+      {<point name="delete.head.b_delete" mark="Y"/>}
+      #end add-point
+ 
+      ${master_related_document_remove} 
+ 
+      DELETE FROM ${master_tbl_name} 
+       WHERE ${master_append_wc} ${master_field_pk01} = ${master_var_pk01} 
+         #master_keys - Start -
+         AND ${master_field_pk${key}} = ${master_var_pk${key}} 
+         #keys -  End  -
+ 
+      #add-point:單頭刪除中 name="delete.head.m_delete"
+      {<point name="delete.head.m_delete"/>}
+      #end add-point
+         
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "${master_tbl_name}:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.popup = FALSE 
+         ${general_c01a_mark}CALL s_transaction_end('N','0')
+         CALL cl_err()
+      END IF
+  
+      ${master_multi_table_delete}
+      
+      #add-point:單頭刪除後 name="delete.head.a_delete"
+      {<point name="delete.head.a_delete"/>}
+      #end add-point
+      
+      ${master_append_delete} 
+ 
+      #修改歷程記錄(刪除)
+      LET g_log1 = util.JSON.stringify(${master_var_title})   #(ver:49)
+      IF NOT cl_log_modified_record(g_log1,'') THEN    #(ver:49)
+         CLOSE ${general_prefix}_cl
+         ${general_c01a_mark}CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      
+      CLEAR FORM
+      CALL ${general_prefix}_ui_browser_refresh()
+      
+      #確保畫面上保有資料
+      IF g_browser_cnt > 0 THEN
+         #${general_i13_mark}CALL ${general_prefix}_browser_fill(g_wc,"")
+         CALL ${general_prefix}_fetch("P")
+      ELSE
+         CLEAR FORM
+      END IF
+      ${general_c01a_mark}CALL s_transaction_end('Y','0')
+   ELSE    
+      ${general_c01a_mark}CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE ${general_prefix}_cl
+ 
+   #功能已完成,通報訊息中心
+   CALL ${general_prefix}_msgcentre_notify('delete')
+ 
+   #add-point:單頭刪除完成後 name="delete.a_delete"
+   {<point name="delete.a_delete"/>}
+   #end add-point
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.ui_browser_refresh" >}
+#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION ${general_prefix}_ui_browser_refresh()
+   #add-point:ui_browser_refresh段define(客製用) name="ui_browser_refresh.define_customerization"
+   {<point name="ui_browser_refresh.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_browser_refresh.define"
+   {<point name="ui_browser_refresh.define"/>}
+   #end add-point    
+   
+   #add-point:Function前置處理  name="ui_browser_refresh.pre_function"
+   {<point name="ui_browser_refresh.pre_function"/>}
+   #end add-point
+   
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_header_cnt  = g_browser.getLength()
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_${master_field_pk01} = ${master_var_pk01}
+         #master_keys - Start -
+         AND g_browser[l_i].b_${master_field_pk${key}} = ${master_var_pk${key}}
+         #keys -  End  -
+         THEN
+         CALL g_browser.deleteElement(l_i)
+       END IF
+   END FOR
+   LET g_browser_cnt = g_browser_cnt - 1
+   LET g_header_cnt = g_header_cnt - 1
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count     #page count
+   DISPLAY g_header_cnt  TO FORMONLY.h_count     #page count
+  
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+      CLEAR FORM
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+  
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.set_entry" >}
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION ${general_prefix}_set_entry(p_cmd)
+   #add-point:set_entry段define(客製用) name="set_entry.define_customerization" 
+   {<point name="set_entry.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_entry段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry.define"
+   {<point name="set_entry.define"/>}
+   #end add-point     
+    
+   #add-point:Function前置處理 name="set_entry.pre_function"
+   {<point name="set_entry.pre_function"/>}
+   #end add-point
+   
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("${master_entry_fields}",TRUE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry段欄位控制 name="set_entry.field_control"
+      {<point name="set_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry段欄位控制後 name="set_entry.after_control"
+   {<point name="set_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.set_no_entry" >}
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION ${general_prefix}_set_no_entry(p_cmd)
+   #add-point:set_no_entry段define(客製用) name="set_no_entry.define_customerization"
+   {<point name="set_no_entry.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_no_entry段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry.define"
+   {<point name="set_no_entry.define"/>}
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_no_entry.pre_function"
+   {<point name="set_no_entry.pre_function"/>}
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("${master_no_entry_fields}",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry段欄位控制 name="set_no_entry.field_control"
+      {<point name="set_no_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry段欄位控制後 name="set_no_entry.after_control"
+   {<point name="set_no_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.set_act_visible" >}
+#+ 單頭權限開啟
+PRIVATE FUNCTION ${general_prefix}_set_act_visible()
+   #add-point:set_act_visible段define(客製用) name="set_act_visible.define_customerization" 
+   {<point name="set_act_visible.define_customerization" edit="c" mark="Y"/>}
+   #end add-point  
+   #add-point:set_act_visible段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible.define"
+   {<point name="set_act_visible.define"/>}
+   #end add-point
+   #add-point:set_act_visible段 name="set_act_visible.set_act_visible"
+   {<point name="set_act_visible.set_act_visible"/>}
+   #end add-point
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.set_act_no_visible" >}
+#+ 單頭權限關閉
+PRIVATE FUNCTION ${general_prefix}_set_act_no_visible()
+   #add-point:set_act_no_visible段define(客製用) name="set_act_no_visible.define_customerization"
+   {<point name="set_act_no_visible.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:set_act_no_visible段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible.define"
+   {<point name="set_act_no_visible.define"/>}
+   #end add-point
+   #add-point:set_act_no_visible段 name="set_act_no_visible.set_act_no_visible"
+   {<point name="set_act_no_visible.set_act_no_visible"/>}
+   #end add-point
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION ${general_prefix}_default_search()
+   #add-point:default_search段define(客製用) name="default_search.define_customerization" 
+   {<point name="default_search.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE li_idx  LIKE type_t.num10
+   DEFINE li_cnt  LIKE type_t.num10
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   {<point name="default_search.define"/>}
+   #end add-point  
+   
+   #add-point:Function前置處理  name="default_search.pre_function"
+   {<point name="default_search.pre_function"/>}
+   #end add-point
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   #add-point:default_search段開始前 name="default_search.before"
+   {<point name="default_search.before"/>}
+   #end add-point  
+   
+   #根據外部參數(g_argv)組合wc
+   IF NOT cl_null(g_argv[${general_para01}]) THEN
+      LET ls_wc = ls_wc, " ${master_field_pk01} = '", g_argv[${general_para01}], "' AND "
+   END IF
+   
+   #master_keys - Start -
+   IF NOT cl_null(g_argv[${general_para${key}}]) THEN
+      LET ls_wc = ls_wc, " ${master_field_pk${key}} = '", g_argv[${general_para${key}}], "' AND "
+   END IF
+   #keys -  End  -
+   
+   #add-point:default_search段after sql name="default_search.after_sql"
+   {<point name="default_search.after_sql"/>}
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      #若有外部參數則根據該參數組合
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      #若無外部參數則預設為1=2
+      LET g_default = FALSE
+      #預設查詢條件
+      LET g_wc = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=2"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前 name="default_search.after"
+   {<point name="default_search.after"/>}
+   #end add-point  
+ 
+   IF g_wc.getIndexOf(" 1=2", 1) THEN
+      LET g_default = TRUE
+   END IF
+ 
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.mask_functions" >}
+${general_mask_funcs}
+{</section>}
+ 
+{<section id="${app_id}.state_change" >}
+   ${general_state_change}
+{</section>}
+ 
+{<section id="${app_id}.signature" >}
+   ${general_func_signature}
+{</section>}
+ 
+{<section id="${app_id}.set_pk_array" >}
+   ${master_set_pk_array}
+{</section>}
+ 
+{<section id="${app_id}.other_dialog" readonly="Y" >}
+${general_other_dialog}
+{</section>}
+ 
+{<section id="${app_id}.msgcentre_notify" >}
+${general_msgcentre_notify}
+{</section>}
+ 
+{<section id="${app_id}.action_chk" >}
+#+ 修改/刪除前行為檢查(是否可允許此動作), 若有其他行為須管控也可透過此段落
+PRIVATE FUNCTION ${general_prefix}_action_chk()
+   #add-point:action_chk段define(客製用) name="action_chk.define_customerization" 
+   {<point name="action_chk.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:action_chk段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="action_chk.define"
+   {<point name="action_chk.define"/>}
+   #end add-point
+   
+   #add-point:action_chk段action_chk name="action_chk.action_chk"
+   {<point name="action_chk.action_chk"/>}
+   #end add-point
+   
+   RETURN TRUE
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+

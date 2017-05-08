@@ -1,0 +1,119 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi998" module="aoo" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="04010" crtdt="2015-08-26 18:32:38" modid="04010" moddt="2015-08-26 18:48:42" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="報表預設郵件清單設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="oojq001,oojq001_desc(chr80),oojq002,oojq002_desc(chr80),oojq003,oojq003_desc(chr80),oojq004,oojq005,oojqstus,oojqownid,oojqownid_desc(chr80),oojqowndp,oojqowndp_desc(chr80),oojqcrtid,oojqcrtid_desc(chr80),oojqcrtdp,oojqcrtdp_desc(chr80),oojqcrtdt,oojqmodid,oojqmodid_desc(chr80),oojqmoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="oojn002,oojn005,oojn011,oojn003,oojn004,oojn007,oojn008"/>
+      <var id="bs_field" value="oojq001,oojq001_desc(chr80),oojq002,oojq002_desc(chr80),oojq003,oojq003_desc(chr80)" pk="oojq001,oojq002,oojq003" order=""/>
+      <bs_reference field="oojq001_desc" ref_field="oojq001" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+      <bs_reference field="oojq002_desc" ref_field="oojq002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="oojq003_desc" ref_field="oojq003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="btn_view"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi998" method="dialog">
+    <section id="input">
+      <input id="head" field="oojq001,oojq002,oojq003,oojq004,oojq005,oojqstus"/>
+      <input id="body" page="1" field="oojn002,oojn005,oojn011,oojn003,oojn004,oojn007,oojn008" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="oojq001,oojq001_desc,oojq002,oojq002_desc,oojq003,oojq003_desc,oojq004,oojq005,oojqstus,oojqownid,oojqowndp,oojqcrtid,oojqcrtdp,oojqcrtdt,oojqmodid,oojqmoddt"/>
+      <construct id="body" page="1" field="oojn002,oojn005,oojn011,oojn003,oojn004,oojn007,oojn008"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="oojq001,oojq002,oojq003"/>
+      <set id="head" type="no_entry" field="oojq001,oojq002,oojq003"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="oojq001">
+        <after/>
+      </column>
+      <column id="oojq001_desc"/>
+      <column id="oojq002">
+        <after/>
+      </column>
+      <column id="oojq002_desc"/>
+      <column id="oojq003">
+        <after/>
+      </column>
+      <column id="oojq003_desc"/>
+      <column id="oojq004"/>
+      <column id="oojq005"/>
+      <column id="oojqstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="oojqownid">
+        <after>
+          <reference field="oojqownid_desc" ref_field="oojq_t.oojqownid" map_field="oojqownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oojqownid_desc"/>
+      <column id="oojqowndp">
+        <after>
+          <reference field="oojqowndp_desc" ref_field="oojq_t.oojqowndp" map_field="oojqowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oojqowndp_desc"/>
+      <column id="oojqcrtid">
+        <after>
+          <reference field="oojqcrtid_desc" ref_field="oojq_t.oojqcrtid" map_field="oojqcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oojqcrtid_desc"/>
+      <column id="oojqcrtdp">
+        <after>
+          <reference field="oojqcrtdp_desc" ref_field="oojq_t.oojqcrtdp" map_field="oojqcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oojqcrtdp_desc"/>
+      <column id="oojqcrtdt"/>
+      <column id="oojqmodid">
+        <after>
+          <reference field="oojqmodid_desc" ref_field="oojq_t.oojqmodid" map_field="oojqmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oojqmodid_desc"/>
+      <column id="oojqmoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="oojn002"/>
+      <column id="oojn005" def_scc="157"/>
+      <column id="oojn011" def_scc="1"/>
+      <column id="oojn003"/>
+      <column id="oojn004"/>
+      <column id="oojn007" def_scc="158"/>
+      <column id="oojn008"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="oojq_t" pk="oojq001,oojq002,oojq003">
+      <sql id="forupd_sql" type="sql" query="SELECT oojq001,&apos;&apos;,oojq002,&apos;&apos;,oojq003,&apos;&apos;,oojq004,oojq005,oojqstus,oojqownid,&apos;&apos;,oojqowndp,&apos;&apos;,oojqcrtid,&apos;&apos;,oojqcrtdp,&apos;&apos;,oojqcrtdt,oojqmodid,&apos;&apos;,oojqmoddt FROM oojq_t WHERE oojqent= ? AND oojq001=? AND oojq002=? AND oojq003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT oojq001,&apos;&apos;,oojq002,&apos;&apos;,oojq003,&apos;&apos;,oojq004,oojq005,oojqstus,oojqownid,&apos;&apos;,oojqowndp,&apos;&apos;,oojqcrtid,&apos;&apos;,oojqcrtdp,&apos;&apos;,oojqcrtdt,oojqmodid,&apos;&apos;,oojqmoddt FROM oojq_t" order="oojq001,oojq002,oojq003"/>
+    </head>
+    <body id="oojn_t" page="1" linked="" pk="oojn002" fk="oojn001,oojn009,oojn010">
+      <sql id="forupd_sql_detail" query="SELECT oojn002,oojn005,oojn011,oojn003,oojn004,oojn007,oojn008 FROM oojn_t WHERE oojnent=? AND oojn001=? AND oojn009=? AND oojn010=? AND oojn002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT oojn002,oojn005,oojn011,oojn003,oojn004,oojn007,oojn008 FROM oojn_t WHERE oojnent=? AND oojn001=? AND oojn009=? AND oojn010=?"/>
+    </body>
+  </dataset>
+</assembly>
+

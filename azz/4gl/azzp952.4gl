@@ -1,0 +1,514 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="azzp952.description" >}
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000002
+#+ 
+#+ Filename...: azzp952
+#+ Description: 排程執行工具檢查
+#+ Creator....: 01856(2014/07/31)
+#+ Modifier...: 00000(2013/01/01) -SD/PR- 01856
+#+ Buildtype..: 應用 p01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+ 
+{</section>}
+ 
+{<section id="azzp952.global" >}
+#160426-00026 #1 2016/04/26 by jrg542 增加取得fglrun -V 版本 
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable)
+DEFINE g_gen_ch  base.Channel
+#end add-point
+ 
+#add-point:傳入參數說明
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzp952.main" >}
+MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define
+   DEFINE ls_cmd      STRING
+   DEFINE l_ch        base.Channel
+   DEFINE ls_buf      STRING
+   DEFINE li_exis950  LIKE type_t.num5
+   DEFINE li_exis951  LIKE type_t.num5
+   DEFINE ls_ver      STRING  #fglrun -V 的版本   
+
+
+   CALL azzp952_channel()
+   LET g_bgjob = "Y"
+   LET l_ch = base.Channel.create()
+   CALL l_ch.setDelimiter("")
+   LET ls_cmd = "ps -ef | grep azzp95 | grep $ZONE | grep -v 'sh -c' "
+   CALL l_ch.openPipe(ls_cmd,"r")   #執行指令
+   LET li_exis950 = FALSE
+   LET li_exis951 = FALSE
+   LET ls_ver = cl_get_fglrun_ver()
+   IF ls_ver.subString(1,1)>2 THEN 
+      LET ls_cmd = "fglrun" 
+   ELSE 
+      LET ls_cmd = "fglrun-bin"
+   END IF 
+   
+   WHILE TRUE
+      CALL l_ch.readLine() RETURNING ls_buf
+      IF ls_buf IS NULL THEN EXIT WHILE END IF
+      
+      #IF ls_buf.getIndexOf("fglrun-bin",1) AND ls_buf.getIndexOf("azzp950",1) THEN #160426-00026 #1 mark
+      IF ls_buf.getIndexOf(ls_cmd,1) AND ls_buf.getIndexOf("azzp950",1) THEN #160426-00026 #1 add
+         LET li_exis950 = TRUE
+      END IF
+      #IF ls_buf.getIndexOf("fglrun-bin",1) AND ls_buf.getIndexOf("azzp951",1) THEN #160426-00026 #1 mark
+      IF ls_buf.getIndexOf(ls_cmd,1) AND ls_buf.getIndexOf("azzp951",1) THEN #160426-00026 #1 add
+         LET li_exis951 = TRUE
+      END IF
+   END WHILE
+
+   CALL l_ch.close()
+   CALL azzp952_output_log("--------------Start----------------")
+   CALL azzp952_output_log("目前時間:" || cl_get_current() || " fglrun version:"|| ls_ver || " fglrun:"||ls_cmd )
+   CALL azzp952_output_log("沒啟動azzp950:"|| li_exis950 || "(1:已啟動;0:沒啟動)")
+   CALL azzp952_output_log("沒啟動azzp951:"|| li_exis951 || "(1:已啟動;0:沒啟動)")
+   IF NOT li_exis950 THEN
+      LET ls_cmd = "r.r azzp950"
+      CALL azzp952_output_log("啟動azzp950:" || ls_cmd )
+      RUN ls_cmd
+   END IF
+   IF NOT li_exis951 THEN
+      LET ls_cmd = "r.r azzp951 "
+      CALL azzp952_output_log("啟動azzp951:" || ls_cmd )
+      RUN ls_cmd
+   END IF
+   CALL azzp952_output_log("--------------End-----------------")
+
+   
+   
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+#   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+#   CALL cl_ap_init("azz","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+
+   #end add-point
+ 
+#   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+
+      #end add-point
+#      CALL azzp952_process(ls_js)
+#   ELSE
+#      #畫面開啟 (identifier)
+#      OPEN WINDOW w_azzp952 WITH FORM cl_ap_formpath("azz",g_code)
+# 
+#      #瀏覽頁簽資料初始化
+#      CALL cl_ui_init()
+# 
+#      #程式初始化
+#      CALL azzp952_init()
+# 
+#      #進入選單 Menu (="N")
+#      CALL azzp952_ui_dialog()
+ 
+      #add-point:畫面關閉前
+
+      #end add-point
+      #畫面關閉
+#      CLOSE WINDOW w_azzp952
+#   END IF
+ 
+   #add-point:作業離開前
+
+   #end add-point
+ 
+   #離開作業
+#   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="azzp952.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION azzp952_init()
+   #add-point:init段define
+   
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+  
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="azzp952.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION azzp952_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define
+   
+   #end add-point
+ 
+   #add-point:ui_dialog段before dialog
+   
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2
+      
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         
+         
+         
+      
+         #add-point:ui_dialog段construct
+         
+         #end add-point
+         #add-point:ui_dialog段input
+         
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL cl_qbe_display_condition(FGL_GETENV("QUERYPLANID"), g_user)
+            CALL azzp952_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog
+            
+            #end add-point
+ 
+         ON ACTION qbe_select
+            LET ls_wc = ""
+            #需要用ITM類程式查詢方案在CONSTRUCT的功能，將值set到畫面上
+            CALL cl_qbe_list("c") RETURNING ls_wc
+            CALL azzp952_get_buffer(l_dialog)
+            IF NOT cl_null(ls_wc) THEN
+               LET lc_param.wc = ls_wc
+               #取得條件後需要執行項目,應新增於下方adp
+               #add-point:ui_dialog段qbe_select後
+               
+               #end add-point
+            END IF
+ 
+         ON ACTION qbe_save
+            CALL cl_qbe_save()
+ 
+         ON ACTION batch_execute
+            ACCEPT DIALOG
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE lc_param.* TO NULL
+            #add-point:ui_dialog段qbeclear
+            
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #add-point:ui_dialog段exit dialog
+      
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         #LET g_jobid = cl_schedule_get_jobid(g_prog)
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL azzp952_process(ls_js)
+            WHEN g_schedule.gzpa003 = "1"
+            #    CALL cl_schedule_update_data(g_jobid,ls_js)
+                 LET ls_js = azzp952_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="azzp952.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION azzp952_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+ 
+   CALL util.JSON.parse(ls_js,la_param)
+ 
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="azzp952.process" >}
+#+ 資料處理
+PRIVATE FUNCTION azzp952_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   
+   #end add-point
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #add-point:process段前處理
+   
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE azzp952_process_cs CURSOR FROM ls_sql
+#  FOREACH azzp952_process_cs INTO
+   #add-point:process段process
+   
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      
+      #end add-point
+   END IF
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="azzp952.get_buffer" >}
+PRIVATE FUNCTION azzp952_get_buffer(p_dialog)
+   DEFINE p_dialog   ui.DIALOG
+   
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="azzp952.other_function" >}
+#add-point:自定義元件(Function)
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp952_output_log(p_msg)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+# Return code....: 回传参数变量1   回传参数变量说明1
+# Date & Author..: 2015/05/11 By jrg542
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp952_output_log(p_msg)
+   DEFINE p_msg   STRING
+   CALL g_gen_ch.writeLine(p_msg)
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp952_channel()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+# Return code....: 回传参数变量1   回传参数变量说明1
+# Date & Author..: 2015/05/11 By jrg542
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp952_channel()
+   DEFINE ls_log_file STRING 
+   DEFINE ls_begin    STRING 
+   DEFINE lt_time     INTERVAL HOUR TO MINUTE 
+
+   LET ls_begin = azzp952_token_str(cl_get_today()) 
+   LET g_gen_ch = base.Channel.create()
+   #LET ls_log_file = "azzp950_",ls_begin CLIPPED ,"_",g_enterprise USING "<<<<<",".log"
+   LET ls_log_file = "azzp952_",ls_begin,"_",FGL_GETENV("TOPENT") USING "<<<<<",".log"
+   LET ls_log_file = os.Path.join(FGL_GETENV("LOGDIR"),ls_log_file) 
+   
+   IF NOT os.Path.exists(ls_log_file) THEN
+      CALL g_gen_ch.openFile(ls_log_file, "w")
+   ELSE
+      #IF os.Path.delete(ls_log_file) THEN
+         CALL g_gen_ch.openFile(ls_log_file, "a")
+      #END IF
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 擷取-
+# Memo...........:
+# Usage..........: CALL azzp952_token_str(ls_today)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+# Return code....: 回传参数变量1   回传参数变量说明1
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp952_token_str(ls_today)
+   DEFINE ls_today    STRING 
+   DEFINE l_token    base.StringTokenizer
+   DEFINE ls_token   STRING
+   DEFINE ls_str   STRING
+   
+   LET ls_today = ls_today.trim() #ex:2015-05-12
+
+   #針對參數組進行token
+   LET l_token = base.StringTokenizer.create(ls_today,"-")
+
+   WHILE l_token.hasMoreTokens()
+      LET ls_token = l_token.nextToken()
+      LET ls_str = ls_str,ls_token
+   END WHILE
+   RETURN ls_str
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

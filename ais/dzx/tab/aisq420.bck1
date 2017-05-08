@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisq420" module="ais" jobmode="N" type="q02" industry="std" fix_arg="2" crtid="05016" crtdt="2014-12-22 16:03:32" modid="05016" moddt="2014-12-29 13:56:38" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="出貨發票查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),isagcomp,isagdocno,isagseq,isagorga,isagorga_desc(chr500),isaf002,isaf002_desc(chr500),isag002,isag003,isag009,imaal003,imaal004,isafdocno,isafdocdt,isaf018,isaf100,isat003,isat004(chr500),isaf101,isag103,isag104,isag105,isag113,isag114,isag115"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),isagcomp(b_isagcomp),isagdocno(b_isagdocno),isagseq(b_isagseq),isagorga(b_isagorga),isagorga_desc(b_isagorga_desc),isaf002(b_isaf002),isaf002_desc(isaf002_desc),isag002(b_isag002),isag003(b_isag003),isag009(b_isag009),imaal003(b_imaal003),imaal004(b_imaal004),isafdocno(b_isafdocno),isafdocdt(b_isafdocdt),isaf018(b_isaf018),isaf100(b_isaf100),isat003(b_isat003),isat004(b_isat004),isaf101(b_isaf101),isag103(b_isag103),isag104(b_isag104),isag105(b_isag105),isag113(b_isag113),isag114(b_isag114),isag115(b_isag115)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ais" filename="aisq420" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="isagcomp,isagdocno,isagseq,isagorga,isaf002,isag002,isag003,isag009,imaal003,imaal004,isafdocno,isafdocdt,isaf018,isaf100,isat003,isat004,isaf101,isag103,isag104,isag105,isag113,isag114,isag115" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="isagcomp(b_isagcomp),isagdocno(b_isagdocno),isagseq(b_isagseq),isagorga(b_isagorga),isaf002(b_isaf002),isag002(b_isag002),isag003(b_isag003),isag009(b_isag009),imaal003(b_imaal003),imaal004(b_imaal004),isafdocno(b_isafdocno),isafdocdt(b_isafdocdt),isaf018(b_isaf018),isaf100(b_isaf100),isat003(b_isat003),isaf101(b_isaf101),isag103(b_isag103),isag104(b_isag104),isag105(b_isag105),isag113(b_isag113),isag114(b_isag114),isag115(b_isag115)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="isagcomp"/>
+      <column id="isagdocno"/>
+      <column id="isagseq"/>
+      <column id="isagorga">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+          <reference field="isagorga_desc" ref_field="isagorga" map_field="isagent,isagorga" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="isagorga_desc"/>
+      <column id="isaf002">
+        <after/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="isaf002_desc"/>
+      <column id="isag002">
+        <after>
+          <check chkid="v_xrcadocno" id="isExist"/>
+        </after>
+        <controlp form="q_xrcadocno_2" state="c"/>
+      </column>
+      <column id="isag003">
+        <controlp form="q_xrcadocno_2" state="c"/>
+      </column>
+      <column id="isag009">
+        <controlp form="q_imaf001_7" state="c"/>
+      </column>
+      <column id="imaal003"/>
+      <column id="imaal004"/>
+      <column id="isafdocno">
+        <controlp form="q_isafdocno" state="c"/>
+      </column>
+      <column id="isafdocdt"/>
+      <column id="isaf018"/>
+      <column id="isaf100">
+        <controlp form="q_aooi001_1" state="c"/>
+      </column>
+      <column id="isat003"/>
+      <column id="isat004"/>
+      <column id="isaf101"/>
+      <column id="isag103"/>
+      <column id="isag104"/>
+      <column id="isag105"/>
+      <column id="isag113"/>
+      <column id="isag114"/>
+      <column id="isag115"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="isag_t" page="1" linked="" pk="isagcomp,isagdocno,isagseq">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,isagcomp,isagdocno,isagseq,isagorga,&apos;&apos;,&apos;&apos;,&apos;&apos;,isag002,isag003,isag009,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,isag103,isag104,isag105,isag113,isag114,isag115 FROM isag_t WHERE isagent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

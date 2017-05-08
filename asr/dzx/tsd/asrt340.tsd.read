@@ -1,0 +1,1075 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="asrt340" std_prog="asrt340" erpver="1.0" ver="2" module="ASR" type="M" booking="N" class="t" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items="delete,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="inao_t" main="N" head="N" pk="" fk_detail="" parent="sfea_t" fk_master="" src="s" status="">
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail4" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="inaz_t" main="N" head="N" pk="" fk_detail="" parent="sfea_t" fk_master="" src="s" status=""/>
+    <tbl name="sfea_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+    <tbl name="sfeb_t" main="N" head="N" pk="" fk_detail="" parent="sfea_t" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="sfec_t" main="N" head="N" pk="" fk_detail="" parent="sfea_t" fk_master="" src="s" status="">
+      <sr name="s_detail3" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程序说明及目的： 工单完工入库申请及入库作业
+标准作业功能：新增/修改/删除/打印/汇出Excel/查询/条件查询/条件储存/相关文件/说明/离开
+状态功能：[确认/取消确认/作废/过账/取消过账] 
+作业类型：(交易单据)维护作业
+输入模式：双文件搭配查询方案模式F003_sc
+作业数据源(Master)：
+ 数据源表：sfea_t(完工入库单头档)
+
+作业数据源(Detail)：
+ 数据源表：sfeb_t(完工入库申请档)
+                  sfec_t(完工入库明细档)
+                  inao_t(制造批序号库存异动明细档)
+
+]]>
+  </all>
+  <di_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[1.当申数据不需FQC时，新增申请数据后，自动写一笔数据到入库明细
+2.当申请数据删除时，自动将入库明细也删除
+3.当申请数据修改到工单单号、料件编号、特征、数量、指定库位、指定储位、指定批号时，将入库明细删除再重写入一笔
+]]>
+  </di_all>
+  <field cite_std="N" name="b_sfea001" ver="1" src="s" column="sfea001" table="sfea_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_sfea002" ver="1" src="s" column="sfea002" table="sfea_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="q_ooag001_4" c_zoom="q_ooag001_4" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_sfea003" ver="1" src="s" column="sfea003" table="sfea_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="q_ooea001_3" c_zoom="q_ooea001_3" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_sfea005" ver="1" src="s" column="sfea005" table="sfea_t" attribute="C203" type="varchar2(20)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_sfea006" ver="1" src="s" column="sfea006" table="sfea_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_sfeadocdt" ver="1" src="s" column="sfeadocdt" table="sfea_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_sfeadocno" ver="1" src="s" column="sfeadocno" table="sfea_t" attribute="C203" type="varchar2(20)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inao001_1" ver="1" src="s" column="inao001" table="inao_t" attribute="C301" type="varchar2(40)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inao008_1" ver="1" src="s" column="inao008" table="inao_t" attribute="C304" type="varchar2(30)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inao009_1" ver="1" src="s" column="inao009" table="inao_t" attribute="C304" type="varchar2(30)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inao010_1" ver="1" src="s" column="inao010" table="inao_t" attribute="D001" type="date()" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inao012_1" ver="1" src="s" column="inao012" table="inao_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inao_t.inao001" ver="1" src="s" column="inao001" table="inao_t" attribute="C301" type="varchar2(40)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inao_t.inao008" ver="1" src="s" column="inao008" table="inao_t" attribute="C304" type="varchar2(30)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inao_t.inao009" ver="1" src="s" column="inao009" table="inao_t" attribute="C304" type="varchar2(30)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inao_t.inao010" ver="1" src="s" column="inao010" table="inao_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inao_t.inao012" ver="1" src="s" column="inao012" table="inao_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inao_t.inaoseq" ver="1" src="s" column="inaoseq" table="inao_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inao_t.inaoseq1" ver="1" src="s" column="inaoseq1" table="inao_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inao_t.inaoseq2" ver="1" src="s" column="inaoseq2" table="inao_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inaoseq1_1" ver="1" src="s" column="inaoseq1" table="inao_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inaoseq2_1" ver="1" src="s" column="inaoseq2" table="inao_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inaoseq_1" ver="1" src="s" column="inaoseq" table="inao_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooff013" ver="1" src="s" column="ooff013" table="ooff_t" attribute="C106" type="varchar2(4000)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[单头备注:使用共享的备注table
+]]>
+  </field>
+  <field cite_std="N" name="ooff013_1" ver="1" src="s" column="ooff013" table="ooff_t" attribute="C106" type="varchar2(4000)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfea_t.sfea001" ver="1" src="s" column="sfea001" table="sfea_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[过账日期：
+   ●字段控管：
+     数据字段:sfea001
+     正常操作时:不可INPUT
+            默认值:NULL
+
+     过帐操作时:此字段开放输入
+           默认值:TODAY
+           管控不可小于关帐日期
+]]>
+  </field>
+  <field cite_std="N" name="sfea_t.sfea002" ver="1" src="s" column="sfea002" table="sfea_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="q_ooag001_4" c_zoom="q_ooag001_4" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[申请人员：
+   ●字段控管：
+     数据字段:sfea002/可Display可Input
+     默认值:g_user
+     校验:1.不允许空白
+            2.输入值须存在人员文件里且为有效数据
+     带值:人员全名
+
+   ●开窗处理：
+     1.查询时：q_sfea002
+     2.新增/修改时：q_ooag001_4
+]]>
+  </field>
+  <field cite_std="N" name="sfea_t.sfea003" ver="1" src="s" column="sfea003" table="sfea_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="q_ooeg001" c_zoom="q_sfea003" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[部门：
+   ●字段控管：
+     数据字段:sfea003/可Display可Input
+     默认值:输入人员部门
+     校验:1.不允许空白
+          2.输入值须存在部门数据且为有效数据
+     带值:部门名称
+
+   ●开窗处理：
+     1.查询时：q_sfea003
+     2.新增/修改时：q_ooea001_3
+]]>
+  </field>
+  <field cite_std="N" name="sfea_t.sfea005" ver="1" src="s" column="sfea005" table="sfea_t" attribute="C203" type="varchar2(20)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[倒扣领料单号：
+   ●字段控管：
+     数据字段:sfea005/Display Only
+     默认值:无
+     计算或处理:不可输入，在过账后自动产生倒扣领料单后回写
+
+   ●开窗处理：
+     1.查询时：q_sfea005
+]]>
+  </field>
+  <field cite_std="N" name="sfea_t.sfea006" ver="1" src="s" column="sfea006" table="sfea_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfea_t.sfeacnfdt" ver="1" src="s" column="sfeacnfdt" table="sfea_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfea_t.sfeacnfid" ver="1" src="s" column="sfeacnfid" table="sfea_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfea_t.sfeacrtdp" ver="1" src="s" column="sfeacrtdp" table="sfea_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfea_t.sfeacrtdt" ver="1" src="s" column="sfeacrtdt" table="sfea_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfea_t.sfeacrtid" ver="1" src="s" column="sfeacrtid" table="sfea_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfea_t.sfeadocdt" ver="1" src="s" column="sfeadocdt" table="sfea_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[单据日期：
+   ●字段控管：
+     数据字段:sfeadocdt/可Display可Input
+     默认值:当天日期
+     校验:1.不允许空白
+             2.不可小于关帐日期
+]]>
+  </field>
+  <field cite_std="N" name="sfea_t.sfeadocno" ver="1" src="s" column="sfeadocno" table="sfea_t" attribute="C203" type="varchar2(20)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[完工入库单号：
+   ●字段控管：
+     数据字段:sfeadocno/可Display可Input
+     默认值:无
+     校验:1.依标准单号处理方式
+     带值:用单别带出单据名称
+
+   ●开窗处理：
+     1.查询开窗代号：q_sfeadocno
+     2.新增/修改开窗代号：q_ooba002_6()
+]]>
+  </field>
+  <field cite_std="N" name="sfea_t.sfeamoddt" ver="1" src="s" column="sfeamoddt" table="sfea_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfea_t.sfeamodid" ver="1" src="s" column="sfeamodid" table="sfea_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfea_t.sfeaowndp" ver="1" src="s" column="sfeaowndp" table="sfea_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfea_t.sfeaownid" ver="1" src="s" column="sfeaownid" table="sfea_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfea_t.sfeapstdt" ver="1" src="s" column="sfeapstdt" table="sfea_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfea_t.sfeapstid" ver="1" src="s" column="sfeapstid" table="sfea_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfea_t.sfeasite" ver="1" src="s" column="sfeasite" table="sfea_t" attribute="C007" type="varchar2(10)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfea_t.sfeastus" ver="1" src="s" column="sfeastus" table="sfea_t" attribute="C822" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfeadocno_desc" ver="1" src="s" column="oobal004" table="oobal_t" attribute="C101" type="varchar2(80)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfeb002_1" ver="1" src="s" column="sfeb002" table="sfeb_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="N" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfeb020_desc" ver="1" src="s" column="oocql004" table="oocql_t" attribute="C817" type="varchar2(500)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfeb_t.sfeb002" ver="1" src="s" column="sfeb002" table="sfeb_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[FQC:sfeb002,Display only
+预设由生产计划参数"FQC"(srza005)带出
+]]>
+  </field>
+  <field cite_std="N" name="sfeb_t.sfeb003" ver="1" src="s" column="sfeb003" table="sfeb_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[入库类型：
+   ●字段控管：
+     数据字段:sfeb003
+     允许空白:No
+     默认值:1.一般
+     数据选项来源: SCC=4019
+       常数型态: 1.一般、2.联产品、5.副产品/回收料(3、4控制不能使用)
+       
+]]>
+  </field>
+  <field cite_std="N" name="sfeb_t.sfeb004" ver="1" src="s" column="sfeb004" table="sfeb_t" attribute="C301" type="varchar2(40)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[料件编号：
+   ●字段控管：
+     数据字段:sfeb004/可Display可Input
+     默认值: CASE 入库类型
+               WHEN 1.一般:预设生产料号
+               WHEN 2.联产品:如果BOM联产品只有一笔，则默认联产品料号，如果有多笔不预设
+               WHEN 5.副产品/回收料:BOM如果副产品/回收料只有一笔，则预设副产品/回收料料号，如果有多笔不预设                           
+     校验:1.不允许空白
+          2.输入值须存在料件基本数据且为有效数据
+          3.CASE 入库类型
+               WHEN 1.一般:不可修改
+               WHEN 2.联产品:只允许在BOM的联产品料号内
+               WHEN 5.副产品/回收料:只允许在BOM的副产品/回收料料号内  
+     带值:品名、规格
+
+   ●开窗处理：
+     1.查询时：
+       参考函式：依标准查询窗口
+       查询字段：料号、品名、规格、产品分类、生命周期
+       回值类型：多重回值
+     2.新增/修改时：
+       CASE 入库类型
+               WHEN 1.一般:不须开窗
+               WHEN 2.联产品:只允许在BOM的联产品料号内，显示字段料件编号、品名、规格
+               WHEN 5.副产品/回收料:只允许在BOM的副产品/回收料料号内， 显示字段料件编号、品名、规格
+]]>
+  </field>
+  <field cite_std="N" name="sfeb_t.sfeb005" ver="1" src="s" column="sfeb005" table="sfeb_t" attribute="C305" type="varchar2(30)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[特征：
+   ●字段控管：
+     数据字段:sfeb005/可Display可Input
+     默认值:CASE 入库类型
+              WHEN 1.一般、2.联产品，默认生产料号的特征此特征
+              WHEN 5.回收料/副产品:不预设
+     校验:1.CASE 入库类型
+              WHEN 1.一般:不允许修改
+              WHEN 2.联产品:需存在料件本身的特征内(请参考杂收单的作法)
+              WHEN 5.回收料/副产品:需存在料件本身的特征内(请参考杂收单的作法)
+     计算或处理:颜色、尺寸等字段为特征
+                特征值需依料号上的控制可输入的范围，控制方式参考库存模块处理方式
+                要能开窗选
+]]>
+  </field>
+  <field cite_std="N" name="sfeb_t.sfeb006" ver="1" src="s" column="sfeb006" table="sfeb_t" attribute="C009" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[包装容器:
+ ●数据字段: sfeb006/可Display可Input
+ ●默认值:   无
+ ●校验:
+     1.允许空白: Yes
+     2.输入值须存在[T:料件包装数据文件].[C:包装容器编号]，错误讯息「此料没有这种包装方式，请重新输入」
+
+ ●开窗处理：
+     1.查询时：
+       参考函式：q_sfeb006
+     2.新增/修改时：
+       参考函式：q_imaf001_5
+]]>
+  </field>
+  <field cite_std="N" name="sfeb_t.sfeb007" ver="1" src="s" column="sfeb007" table="sfeb_t" attribute="C009" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[单位：
+   ●字段控管：
+     数据字段:sfeb007/可Display可Input
+     默认值:料件编号在料件基本数据的生产单位
+     校验:需与料号基础单位有转换率
+
+   ●开窗处理：
+     1.查询时：
+       参考函式：q_sfeb007
+     2.新增/修改时：
+       参考函式：q_ooca001_1
+]]>
+  </field>
+  <field cite_std="N" name="sfeb_t.sfeb008" ver="1" src="s" column="sfeb008" table="sfeb_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[申请数量：
+   ●字段控管：
+     数据字段:sfeb008/可Display可Input
+     默认值:无       
+     校验:1.不允许空白
+          2.不可小于等于0
+]]>
+  </field>
+  <field cite_std="N" name="sfeb_t.sfeb009" ver="1" src="s" column="sfeb009" table="sfeb_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[实际数量:sfeb009,display only，由入库明细数量回写]]>
+  </field>
+  <field cite_std="N" name="sfeb_t.sfeb010" ver="1" src="s" column="sfeb010" table="sfeb_t" attribute="C009" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[参考单位：
+   ●字段控管：
+     数据字段:sfeb010/可Display不可Input
+     默认值:料号的参考单位
+
+   ●开窗处理：
+     1.查询时：
+       参考函式： q_sfeb010
+
+     2.新增/修改时：无
+       参考函式：
+
+]]>
+  </field>
+  <field cite_std="N" name="sfeb_t.sfeb011" ver="1" src="s" column="sfeb011" table="sfeb_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[申请参考数量：
+   ●字段控管：
+     数据字段:sfeb011/可Display可Input
+     默认值:数量*单位转换率
+     校验:1.如果类号有做参考数量控管时才可输入，且不允许空白，反之则空白则不可输入
+          2.不可小于0
+     处理说明:参数不使用参考单位时不显示
+]]>
+  </field>
+  <field cite_std="N" name="sfeb_t.sfeb012" ver="1" src="s" column="sfeb012" table="sfeb_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[实际参考数量：sfeb012,display only，由入库明细回写]]>
+  </field>
+  <field cite_std="N" name="sfeb_t.sfeb013" ver="1" src="s" column="sfeb013" table="sfeb_t" attribute="C303" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[指定库位：
+   ●字段控管：
+     数据字段:sfeb013/可Display可Input
+     默认值:料件的预设库位
+     校验:1.不允许空白
+          2.输入值需存在库位基本数据
+          3.受单别可输入库位控制
+     带值:库位名称
+ 
+●开窗处理：
+查询开窗代号：q_sfeb013
+输入开窗代号：q_inaa001_2
+]]>
+  </field>
+  <field cite_std="N" name="sfeb_t.sfeb014" ver="1" src="s" column="sfeb014" table="sfeb_t" attribute="C303" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[指定储位：
+   ●字段控管：
+     数据字段:sfeb014/可Display可Input
+     默认值: 设料件的预设储位
+     校验:1.允许空白
+          2.输入值需存在储位数据
+     带值:储位名称
+
+   ●开窗处理：
+ 查询开窗代号：q_sfeb014
+ 输入开窗代号：q_inab002_3
+]]>
+  </field>
+  <field cite_std="N" name="sfeb_t.sfeb015" ver="1" src="s" column="sfeb015" table="sfeb_t" attribute="C304" type="varchar2(30)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[批号：
+   ●字段控管：
+     数据字段:sfeb015/可Display可Input
+     默认值:无
+     校验:1.依料件的批号控管方式判断是否一定要输入
+
+   ●开窗处理：
+ 查询开窗代号：q_sfeb015
+]]>
+  </field>
+  <field cite_std="N" name="sfeb_t.sfeb016" ver="1" src="s" column="sfeb016" table="sfeb_t" attribute="C090" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[库存管理特征：
+   ●字段控管：
+     暂无
+
+   ●开窗处理：
+ 查询开窗代号：q_sfeb016
+]]>
+  </field>
+  <field cite_std="N" name="sfeb_t.sfeb020" ver="1" src="s" column="sfeb020" table="sfeb_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[理由码：
+   ●字段控管：
+     数据字段:sfeb020/可Display可Input
+     默认值:无
+     校验:1.允许空白
+          2.需存在生产理由码，ACC=225
+     带值:理由码说明
+
+
+   ●开窗处理：
+     1.查询时：
+       参考函式：q_sfeb020 
+     2.新增/修改时：
+       参考函式：q_oocq002
+]]>
+  </field>
+  <field cite_std="N" name="sfeb_t.sfeb021" ver="1" src="s" column="sfeb021" table="sfeb_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[有效日期：
+   ●欄位控管：
+     資料欄位:sfeb021/可Display可Input
+     預設值:料件有做批號管理時才預設
+            依料件設定的有效天數自動推算
+     校驗:1.允許空白
+     處理說明:1.修改有效日期後，若入庫明細內的有效日期與修改後的不同時，詢問是否更新，
+                  如選是，則將入庫明細的有效日期更新為一樣
+]]>
+  </field>
+  <field cite_std="N" name="sfeb_t.sfeb022" ver="1" src="s" column="sfeb022" table="sfeb_t" attribute="C106" type="varchar2(4000)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[存貨備註：
+   ●欄位控管：
+     資料欄位:sfeb022/可Display可Input
+     預設值:無
+     校驗:1.允許空白
+     計算或處理:1.修改存貨備註後，若入庫明細內的存貨備註與修改後的不同時，詢問是否更新，
+                  如選是，則將入庫明細的存貨備註更新為一樣
+]]>
+  </field>
+  <field cite_std="N" name="sfeb_t.sfeb023" ver="1" src="s" column="sfeb023" table="sfeb_t" attribute="C301" type="varchar2(40)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[生产料号：
+   ●字段控管：
+     数据字段:sfeb023/可Display可Input
+     默认值:如果重复性生产计划(asrt300)在单据日期的年月只有一笔生产料号，自动带出
+     校验:1.不允许空白
+         3.生产计划+生产料号+BOM特性+特征需存在单据日期的年月的asrt300内
+     带值:品名、规格
+          如果asrt300内只有一笔该料号数据，自动带出BOM特性、特征
+
+   ●开窗处理：依标准查询窗口
+]]>
+  </field>
+  <field cite_std="N" name="sfeb_t.sfeb024" ver="1" src="s" column="sfeb024" table="sfeb_t" attribute="C305" type="varchar2(30)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[BOM特性：
+   ●字段控管：
+     数据字段:sfeb024/可Display可Input
+     默认值:若asrt300内的生产料号只有一个BOM特性则自动带出(可能会是一个空白)
+     校验:1.允许空白
+          2.生产料号+BOM特性存在存同年月的asrt300内
+
+   ●开窗处理：依标准查询窗口
+]]>
+  </field>
+  <field cite_std="N" name="sfeb_t.sfeb025" ver="1" src="s" column="sfeb025" table="sfeb_t" attribute="C305" type="varchar2(30)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[产品特征：
+   ●字段控管：
+     数据字段:sfeb025/可Display可Input
+     默认值:若asrt300内的生产料号只有一个产品特征则自动带出(可能会是一个空白)
+     校验:1.允许空白
+          2.生产料号+BOM特性+产品特征需存在存同年月的asrt300内
+
+   ●开窗处理：依标准查询窗口
+]]>
+  </field>
+  <field cite_std="N" name="sfeb_t.sfebseq" ver="1" src="s" column="sfebseq" table="sfeb_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[项次:sfebseq
+        KEY值,不可重复
+        自动流水号
+]]>
+  </field>
+  <field cite_std="N" name="sfeb_t.sfebsite" ver="1" src="s" column="sfebsite" table="sfeb_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfec_t.sfec002" ver="1" src="s" column="sfec002" table="sfec_t" attribute="C203" type="varchar2(20)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfec_t.sfec003" ver="1" src="s" column="sfec003" table="sfec_t" attribute="N004" type="number(10,0)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfec_t.sfec004" ver="1" src="s" column="sfec004" table="sfec_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfec_t.sfec005" ver="1" src="s" column="sfec005" table="sfec_t" attribute="C301" type="varchar2(40)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfec_t.sfec006" ver="1" src="s" column="sfec006" table="sfec_t" attribute="C305" type="varchar2(30)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfec_t.sfec007" ver="1" src="s" column="sfec007" table="sfec_t" attribute="C301" type="varchar2(40)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfec_t.sfec008" ver="1" src="s" column="sfec008" table="sfec_t" attribute="C009" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfec_t.sfec009" ver="1" src="s" column="sfec009" table="sfec_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfec_t.sfec010" ver="1" src="s" column="sfec010" table="sfec_t" attribute="C009" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfec_t.sfec011" ver="1" src="s" column="sfec011" table="sfec_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfec_t.sfec012" ver="1" src="s" column="sfec012" table="sfec_t" attribute="C303" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfec_t.sfec013" ver="1" src="s" column="sfec013" table="sfec_t" attribute="C303" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfec_t.sfec014" ver="1" src="s" column="sfec014" table="sfec_t" attribute="C304" type="varchar2(30)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfec_t.sfec015" ver="1" src="s" column="sfec015" table="sfec_t" attribute="C305" type="varchar2(30)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfec_t.sfec016" ver="1" src="s" column="sfec016" table="sfec_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfec_t.sfec017" ver="1" src="s" column="sfec017" table="sfec_t" attribute="C106" type="varchar2(4000)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfec_t.sfec018" ver="1" src="s" column="sfec018" table="sfec_t" attribute="C301" type="varchar2(40)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfec_t.sfec019" ver="1" src="s" column="sfec019" table="sfec_t" attribute="C305" type="varchar2(30)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfec_t.sfec020" ver="1" src="s" column="sfec020" table="sfec_t" attribute="C305" type="varchar2(30)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfec_t.sfecseq" ver="1" src="s" column="sfecseq" table="sfec_t" attribute="N004" type="number(10,0)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfec_t.sfecseq1" ver="1" src="s" column="sfecseq1" table="sfec_t" attribute="N004" type="number(10,0)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfec_t.sfecsite" ver="1" src="s" column="sfecsite" table="sfec_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="inao001_desc1" src="s" depend_field="inao_t.inao001" correspon_key="inao001" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="inao001_desc2" src="s" depend_field="inao_t.inao001" correspon_key="inao001" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="inao001_desc3" src="s" depend_field="inao_t.inao001" correspon_key="inao001" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="inao001_desc4" src="s" depend_field="inao_t.inao001" correspon_key="inao001" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="sfea002_desc" src="s" depend_field="sfea002" correspon_key="sfea002" ref_table="oofa_t" ref_fk="oofa002" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="sfea003_desc" src="s" depend_field="sfea003" correspon_key="sfea003" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="sfeb004_desc1" src="s" depend_field="sfeb_t.sfeb004" correspon_key="sfeb004" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="sfeb023_desc1" src="s" depend_field="sfeb_t.sfeb023" correspon_key="sfeb023" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="sfeb023_desc2" src="s" depend_field="sfeb_t.sfeb023" correspon_key="sfeb023" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="sfec003_desc1" src="s" depend_field="sfec_t.sfec003" correspon_key="sfec002,sfec003" ref_table="qcbc_t" ref_fk="qcbcdocno,qcbcseq" ref_dlang="" ref_rtn="qcbc002" status=""/>
+    <rfield cite_std="N" ver="1" name="sfec003_desc2" src="s" depend_field="sfec_t.sfec003" correspon_key="sfec003_desc1" ref_table="qcaol_t" ref_fk="qcaol002" ref_dlang="qcaol003" ref_rtn="qcaol004" status=""/>
+    <rfield cite_std="N" ver="1" name="sfec005_desc1" src="s" depend_field="sfec_t.sfec005" correspon_key="sfec005" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="sfec005_desc2" src="s" depend_field="sfec_t.sfec005" correspon_key="sfec005" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="sfec012_desc" src="s" depend_field="sfec_t.sfec012" correspon_key="sfec012" ref_table="inaa_t" ref_fk="inaa001" ref_dlang="" ref_rtn="inaa002" status=""/>
+    <rfield cite_std="N" ver="1" name="sfec013_desc" src="s" depend_field="sfec_t.sfec013" correspon_key="sfec013" ref_table="inab_t" ref_fk="inab001,inab002" ref_dlang="" ref_rtn="inab001" status=""/>
+    <rfield cite_std="" ver="1" name="sfec018_desc1" src="s" depend_field="sfec_t.sfec018" correspon_key="sfec018" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="" ver="1" name="sfec018_desc2" src="s" depend_field="sfec_t.sfec018" correspon_key="sfec018" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal004" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_sfea001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_sfea002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_sfea003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_sfea005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_sfea006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_sfeadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_sfeadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inao001_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inao008_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inao009_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inao010_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inao012_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inao_t.inao001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inao_t.inao008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inao_t.inao009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inao_t.inao010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inao_t.inao012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inao_t.inaoseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inao_t.inaoseq1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inao_t.inaoseq2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inaoseq1_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inaoseq2_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inaoseq_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooff013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooff013_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfea_t.sfea001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfea_t.sfea002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfea_t.sfea003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfea_t.sfea005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfea_t.sfea006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfea_t.sfeacnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfea_t.sfeacnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfea_t.sfeacrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfea_t.sfeacrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfea_t.sfeacrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfea_t.sfeadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfea_t.sfeadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfea_t.sfeamoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfea_t.sfeamodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfea_t.sfeaowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfea_t.sfeaownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfea_t.sfeapstdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfea_t.sfeapstid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfea_t.sfeasite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfea_t.sfeastus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeadocno_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb002_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb020_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb_t.sfeb002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb_t.sfeb003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb_t.sfeb004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb_t.sfeb005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb_t.sfeb006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb_t.sfeb007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb_t.sfeb008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb_t.sfeb009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb_t.sfeb010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb_t.sfeb011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb_t.sfeb012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb_t.sfeb013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb_t.sfeb014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb_t.sfeb015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb_t.sfeb016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb_t.sfeb020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb_t.sfeb021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb_t.sfeb022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb_t.sfeb023" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb_t.sfeb024" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb_t.sfeb025" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb_t.sfebseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfeb_t.sfebsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfec_t.sfec002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfec_t.sfec003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfec_t.sfec004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfec_t.sfec005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfec_t.sfec006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfec_t.sfec007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfec_t.sfec008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfec_t.sfec009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfec_t.sfec010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfec_t.sfec011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfec_t.sfec012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfec_t.sfec013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfec_t.sfec014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfec_t.sfec015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfec_t.sfec016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfec_t.sfec017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfec_t.sfec018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfec_t.sfec019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfec_t.sfec020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfec_t.sfecseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfec_t.sfecseq1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfec_t.sfecsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="gen_fqc" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[產生FQC單:
+1.可在已確認的狀態下，且申請資料內有需FQC的項次才可執行
+2.將需FQC的項次，且還有餘量未轉FQC的項次，產生FQC單(先跳出視窗選擇FQC單別)
+]]>
+  </act>
+  <act cite_std="N" id="gen_issue_no" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[倒扣領料產生:
+1.已過帳的狀態下可維護
+2.若單頭的倒扣領料單號已有資料不可再重覆產生
+3.檢查入庫明細內的料件編號在料件基本資料的領發料機制設為事後發料制(aimm215的imae014)，有才允許執行
+4.開啟子畫面輸入倒扣領料單別(不允許空白)
+5.生產倒扣領料單後，將單號寫入單頭sfea005
+]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="mn_stock_in" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[入庫明細維護:
+1.在已確認的狀態下可使用
+2.開啟入庫明細維護的畫面
+]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="open_aqct300" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="qry_issue" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="store_in_by_qc" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[依FQC結果產生入庫明細:
+1.可在已確認的狀態下執行
+2.需檢查所有需FQC的項次都已做完FQC才允許產生
+3.若已有入庫明細資料，詢問是否依FQC結果重新產生，如選是，則把原資料刪除再重新產生
+4.產生時，將需FQC的項次明細刪除，再依FQC的判定項次產生入庫明細資料
+5.不需FQC的項次的明細資料在產生時不要刪除
+]]>
+  </act>
+  <strings>
+    <sfield name="lbl_sfeadocno" text="單號" lstr=""/>
+    <sfield name="lbl_oobal004" text="說明" lstr=""/>
+    <sfield name="lbl_sfeadocdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_sfea002" text="申請人" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_sfea003" text="部門" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_sfea001" text="過帳日期" lstr=""/>
+    <sfield name="lbl_sfea006" text="生產計畫" lstr=""/>
+    <sfield name="lbl_sfea005" text="倒扣領料單號" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_sfeasite" text="營運據點" lstr=""/>
+    <sfield name="lbl_sfea004" text="PBI編號" lstr=""/>
+    <sfield name="lbl_ooff013" text="備註說明" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="lbl_pstid" text="資料過帳者" lstr=""/>
+    <sfield name="lbl_pstdt" text="過帳日期" lstr=""/>
+    <sfield name="bpage_1" text="入庫申請" lstr=""/>
+    <sfield name="lbl_sfebseq" text="項次" lstr=""/>
+    <sfield name="lbl_sfeb023" text="生產料號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="lbl_sfeb024" text="生產料號BOM特性" lstr=""/>
+    <sfield name="lbl_sfeb025" text="生產料號產品特徵" lstr=""/>
+    <sfield name="lbl_sfeb002" text="FQC" lstr=""/>
+    <sfield name="lbl_sfeb003" text="入庫類型" lstr=""/>
+    <sfield name="lbl_sfeb004" text="料件編號" lstr=""/>
+    <sfield name="lbl_sfeb005" text="產品特徵" lstr=""/>
+    <sfield name="lbl_sfeb006" text="包裝容器" lstr=""/>
+    <sfield name="lbl_sfeb007" text="單位" lstr=""/>
+    <sfield name="lbl_sfeb008" text="申請數量" lstr=""/>
+    <sfield name="lbl_sfeb009" text="實際數量" lstr=""/>
+    <sfield name="lbl_sfeb010" text="參考單位" lstr=""/>
+    <sfield name="lbl_sfeb011" text="申請參考數量" lstr=""/>
+    <sfield name="lbl_sfeb012" text="實際參考數量" lstr=""/>
+    <sfield name="lbl_sfeb013" text="指定庫位" lstr=""/>
+    <sfield name="lbl_inaa002" text="庫位名稱" lstr=""/>
+    <sfield name="lbl_sfeb014" text="指定儲位" lstr=""/>
+    <sfield name="lbl_inab003" text="儲位名稱" lstr=""/>
+    <sfield name="lbl_sfeb015" text="指定批號" lstr=""/>
+    <sfield name="lbl_sfeb016" text="庫存管理特徵" lstr=""/>
+    <sfield name="lbl_sfeb020" text="理由碼" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_sfeb021" text="庫存有效日期" lstr=""/>
+    <sfield name="lbl_sfeb022" text="庫存備註" lstr=""/>
+    <sfield name="lbl_sfebsite" text="營運據點" lstr=""/>
+    <sfield name="page_4" text="申請製造批序號" lstr=""/>
+    <sfield name="lbl_inaoseq" text="項次" lstr=""/>
+    <sfield name="lbl_inaoseq1" text="項序" lstr=""/>
+    <sfield name="lbl_inaoseq2" text="序號" lstr=""/>
+    <sfield name="lbl_inao001" text="料件編號" lstr=""/>
+    <sfield name="lbl_inao008" text="製造批號" lstr=""/>
+    <sfield name="lbl_inao009" text="製造序號" lstr=""/>
+    <sfield name="lbl_inao010" text="製造日期" lstr=""/>
+    <sfield name="lbl_inao012" text="數量" lstr=""/>
+    <sfield name="page_5" text="入庫明細" lstr=""/>
+    <sfield name="lbl_sfecseq" text="項次" lstr=""/>
+    <sfield name="lbl_sfecseq1" text="項次1" lstr=""/>
+    <sfield name="lbl_sfec018" text="生產料號" lstr=""/>
+    <sfield name="lbl_sfec019" text="生產料號BOM特性" lstr=""/>
+    <sfield name="lbl_sfec020" text="生產料號特徵" lstr=""/>
+    <sfield name="lbl_sfec002" text="FQC單號" lstr=""/>
+    <sfield name="lbl_sfec003" text="判定項次" lstr=""/>
+    <sfield name="lbl_qcbc002" text="判定結果編號" lstr=""/>
+    <sfield name="lbl_qcaol004" text="說明" lstr=""/>
+    <sfield name="lbl_sfec004" text="入庫類型" lstr=""/>
+    <sfield name="lbl_sfec005" text="料件編號" lstr=""/>
+    <sfield name="lbl_sfec006" text="特徵" lstr=""/>
+    <sfield name="lbl_sfec007" text="包裝容器" lstr=""/>
+    <sfield name="lbl_sfec008" text="單位" lstr=""/>
+    <sfield name="lbl_sfec009" text="數量" lstr=""/>
+    <sfield name="lbl_sfec010" text="參考單位" lstr=""/>
+    <sfield name="lbl_sfec011" text="參考數量" lstr=""/>
+    <sfield name="lbl_sfec012" text="庫位" lstr=""/>
+    <sfield name="lbl_sfec013" text="儲位" lstr=""/>
+    <sfield name="lbl_sfec014" text="批號" lstr=""/>
+    <sfield name="lbl_sfec015" text="庫存管理特徵" lstr=""/>
+    <sfield name="lbl_sfec016" text="有效日期" lstr=""/>
+    <sfield name="lbl_sfec017" text="庫存備註" lstr=""/>
+    <sfield name="lbl_sfecsite" text="營運據點" lstr=""/>
+    <sfield name="bpage_4" text="入庫製造批序號" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_collect_gzze001" text="訊息代碼" lstr=""/>
+    <sfield name="lbl_collect_gzze003" text="訊息內容" lstr=""/>
+    <sfield name="lbl_collect_gzze006" text="進階訊息" lstr=""/>
+    <sfield name="lbl_cl_err_s02_accept" text="確定" lstr=""/>
+    <sfield name="lbl_err_detail" text="進階訊息" lstr=""/>
+    <sfield name="lbl_suggest_exe" text="建議執行" lstr=""/>
+    <sfield name="lbl_err_contact" text="反應問題" lstr=""/>
+    <sfield name="lbl_cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="lbl_group_cl_err_s01" text="進階訊息" lstr=""/>
+    <sfield name="lbl_gzze001" text="訊息代碼:" lstr=""/>
+    <sfield name="lbl_gzze006" text="訊息內容:" lstr=""/>
+    <sfield name="lbl_sqlerrd2" text="SQL錯誤碼:" lstr=""/>
+    <sfield name="lbl_gzxm001" text="QBE編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm005" text="設為首頁-自動查詢方案" lstr=""/>
+    <sfield name="lbl_gzxm002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxm003" text="員工編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm004" text="設為預設查詢條件" lstr=""/>
+    <sfield name="cl_qbe_s02.bpage_1" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn005" text="欄位說明" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="cl_qbe_s02_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s02_Cancel" text="取消" lstr=""/>
+    <sfield name="lbl_funid" text="函式代碼" lstr=""/>
+    <sfield name="lbl_fundesc" text="函式說明" lstr=""/>
+    <sfield name="cl_qbe_s01_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s01_Cancel" text="取消" lstr=""/>
+    <sfield name="cl_qbe_s03.bpage_1" text="查詢方案列表" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxmstus" text="有效" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm004" text="預設" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm005" text="顯示於首頁" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm009" text="順序" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxml005" text="查詢方案說明" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm007" text="自設SQL條件" lstr=""/>
+    <sfield name="cl_qbe_s03.page_2" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn004" text="序號" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn005" text="條件欄位" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="lbl_sfedsite" text="營運據點" lstr=""/>
+    <sfield name="lbl_sfeddocno" text="單號" lstr=""/>
+    <sfield name="lbl_sfed004" text="倒扣領料單號" lstr=""/>
+    <sfield name="lbl_sfed001" text="生產料號" lstr=""/>
+    <sfield name="lbl_sfed002" text="生產料號BOM特性" lstr=""/>
+    <sfield name="lbl_sfed003" text="生產料號特徵" lstr=""/>
+    <sfield name="lbl_qcbadocno" text="單號" lstr=""/>
+    <sfield name="lbl_qcbadocdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_sfebdocno" text="完工入庫單號" lstr=""/>
+    <sfield name="lbl_sfeb017" text="專案代號" lstr=""/>
+    <sfield name="lbl_sfeb018" text="WBS" lstr=""/>
+    <sfield name="lbl_sfeb019" text="活動代號" lstr=""/>
+    <sfield name="lbl_sfec001" text="工單單號" lstr=""/>
+    <sfield name="lbl_sfdadocno" text="發退料單號" lstr=""/>
+    <sfield name="lbl_sfdadocdt" text="單據日期" lstr=""/>
+    <sfield name="page_cl_doc_s01_page1" text="相關文件清單" lstr=""/>
+    <sfield name="lbl_loaa006" text="文件版本" lstr=""/>
+    <sfield name="lbl_loaa007" text="文件序號" lstr=""/>
+    <sfield name="lbl_loaa011" text="文件型態" lstr=""/>
+    <sfield name="lbl_loaa013" text="文件說明" lstr=""/>
+    <sfield name="lbl_loaa010" text="文件原始檔名" lstr=""/>
+    <sfield name="btn_upload" text="本地文件上傳" lstr=""/>
+    <sfield name="btn_crt_text" text="新建純文字紀錄" lstr=""/>
+    <sfield name="btn_doccrt_url" text="新建URL" lstr=""/>
+    <sfield name="btn_docopen" text="文件下載" lstr=""/>
+    <sfield name="btn_docupdate" text="文件資料修改" lstr=""/>
+    <sfield name="btn_docremove" text="文件刪除" lstr=""/>
+    <sfield name="btn_exit" text="關閉功能" lstr=""/>
+    <sfield name="page_cl_doc_s01_page2" text="文件基本資料" lstr=""/>
+    <sfield name="lbl_loaa004" text="用途類別" lstr=""/>
+    <sfield name="lbl_loaa005" text="預設顯示圖片" lstr=""/>
+    <sfield name="lbl_loaa012" text="文件位置(URL)" lstr=""/>
+    <sfield name="page_cl_doc_s01_page4" text="權限設定" lstr=""/>
+    <sfield name="group_read" text="讀取權限" lstr=""/>
+    <sfield name="group_modify" text="修改權限" lstr=""/>
+    <sfield name="page_cl_doc_s01_page3" text="異動資訊" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="btn_doccancel" text="放棄修改" lstr=""/>
+    <sfield name="btn_docmodify" text="資料存檔" lstr=""/>
+    <sfield name="lbl_gzxp007_1" text="選擇分類" lstr=""/>
+    <sfield name="add_catalog" text="" lstr=""/>
+    <sfield name="lbl_gzxp007_2" text="自訂分類" lstr=""/>
+    <sfield name="lbl_gzxp008" text="追蹤說明" lstr=""/>
+    <sfield name="accept" text="確定" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="follow_list" text="待追蹤" lstr=""/>
+    <sfield name="signature_list" text="待簽核" lstr=""/>
+    <sfield name="announcement" text="作業公告" lstr=""/>
+    <sfield name="cancelfollow" text="取消追蹤" lstr=""/>
+    <sfield name="assigncatalog" text="指定分類" lstr=""/>
+    <sfield name="cl_user_overview_s01.lbl_name" text="" lstr=""/>
+    <sfield name="lbl_gzxp002" text="作業名稱" lstr=""/>
+    <sfield name="lbl_gzxp006" text="單據日期" lstr=""/>
+    <sfield name="add_favorite_catalog" text="新增目錄" lstr=""/>
+    <sfield name="modify_favorite_desc" text="修改" lstr=""/>
+    <sfield name="favorite_del" text="移除" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_sfeastus" text="狀態碼" lstr=""/>
+    <sfield name="lbl_ooag001" text="員工編號" lstr=""/>
+    <sfield name="lbl_ooea001" text="組織編號" lstr=""/>
+    <sfield name="lbl_ooba002" text="單據別編號" lstr=""/>
+    <sfield name="lbl_oobxl003" text="說明" lstr=""/>
+    <sfield name="lbl_oobxl004" text="助記碼" lstr=""/>
+    <sfield name="lbl_ooeg001" text="部門編號" lstr=""/>
+    <sfield name="lbl_srza001" text="生產計畫編號" lstr=""/>
+    <sfield name="lbl_srza002" text="說明" lstr=""/>
+    <sfield name="lbl_ooff001" text="備註類型" lstr=""/>
+    <sfield name="lbl_ooff002" text="第一KEY值" lstr=""/>
+    <sfield name="lbl_ooff003" text="第二KEY值" lstr=""/>
+    <sfield name="lbl_ooff004" text="第三KEY值" lstr=""/>
+    <sfield name="lbl_ooff005" text="第四KEY值" lstr=""/>
+    <sfield name="lbl_ooff006" text="第五KEY值" lstr=""/>
+    <sfield name="lbl_ooff007" text="第六KEY值" lstr=""/>
+    <sfield name="lbl_ooff008" text="第七KEY值" lstr=""/>
+    <sfield name="lbl_ooff009" text="第八KEY值" lstr=""/>
+    <sfield name="lbl_ooff010" text="第九KEY值" lstr=""/>
+    <sfield name="lbl_ooff011" text="第十KEY值" lstr=""/>
+    <sfield name="lbl_ooff012" text="控制類型" lstr=""/>
+    <sfield name="cl_ask_s04_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s03_Test" text="測試" lstr=""/>
+    <sfield name="cl_ask_s03_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s01_Choice" text="選擇" lstr=""/>
+    <sfield name="lbl_srab004" text="料件編號" lstr=""/>
+    <sfield name="lbl_srab005" text="BOM特性" lstr=""/>
+    <sfield name="lbl_srab006" text="產品特徵" lstr=""/>
+    <sfield name="lbl_bmab003" text="聯產品料號" lstr=""/>
+    <sfield name="lbl_imaa004" text="料件類別" lstr=""/>
+    <sfield name="lbl_imaa009" text="產品分類" lstr=""/>
+    <sfield name="lbl_rtaxl003" text="說明" lstr=""/>
+    <sfield name="lbl_imaa010" text="生命週期狀態" lstr=""/>
+    <sfield name="lbl_bmac003" text="副產品料號" lstr=""/>
+    <sfield name="lbl_imea001" text="特徵群組代碼" lstr=""/>
+    <sfield name="lbl_imeb004" text="類型" lstr=""/>
+    <sfield name="lbl_imec003" text="特徵值" lstr=""/>
+    <sfield name="lbl_imecl005" text="說明" lstr=""/>
+    <sfield name="lbl_imaf001" text="料件編號" lstr=""/>
+    <sfield name="lbl_ooca001" text="單位編號" lstr=""/>
+    <sfield name="lbl_oocal003" text="說明" lstr=""/>
+    <sfield name="lbl_inaa001" text="庫位編號" lstr=""/>
+    <sfield name="lbl_inab001" text="庫位編號" lstr=""/>
+    <sfield name="lbl_inab002" text="儲位編號" lstr=""/>
+    <sfield name="lbl_oocq002" text="應用分類碼" lstr=""/>
+    <sfield name="s_feature_s01.page1" text="基本資料" lstr=""/>
+    <sfield name="lbl_inam012" text="特徵一值" lstr=""/>
+    <sfield name="lbl_inam014" text="特徵二值" lstr=""/>
+    <sfield name="lbl_inam016" text="特徵三值" lstr=""/>
+    <sfield name="lbl_inam018" text="特徵四值" lstr=""/>
+    <sfield name="lbl_inam020" text="特徵五值" lstr=""/>
+    <sfield name="lbl_inam022" text="特徵六值" lstr=""/>
+    <sfield name="lbl_inam024" text="特徵七值" lstr=""/>
+    <sfield name="lbl_inam026" text="特徵八值" lstr=""/>
+    <sfield name="lbl_inam028" text="特徵九值" lstr=""/>
+    <sfield name="lbl_inam030" text="特徵十值" lstr=""/>
+    <sfield name="lbl_inam032" text="特徵十一值" lstr=""/>
+    <sfield name="lbl_inam034" text="特徵十二值" lstr=""/>
+    <sfield name="lbl_inam036" text="特徵十三值" lstr=""/>
+    <sfield name="lbl_inam038" text="特徵十四值" lstr=""/>
+    <sfield name="lbl_inam040" text="特徵十五值" lstr=""/>
+    <sfield name="lbl_inam042" text="特徵十六值" lstr=""/>
+    <sfield name="lbl_inam044" text="特徵十七值" lstr=""/>
+    <sfield name="lbl_inam046" text="特徵十八值" lstr=""/>
+    <sfield name="lbl_inam048" text="特徵十九值" lstr=""/>
+    <sfield name="lbl_inam050" text="特徵二十值" lstr=""/>
+    <sfield name="lbl_imak001" text="料件編號" lstr=""/>
+    <sfield name="lbl_imeb003" text="歸屬層級" lstr=""/>
+    <sfield name="lbl_imak002" text="特徵類型" lstr=""/>
+    <sfield name="lbl_imak003" text="特徵值" lstr=""/>
+    <sfield name="lbl_inag001" text="料件編號" lstr=""/>
+    <sfield name="lbl_inag002" text="產品特徵" lstr=""/>
+    <sfield name="lbl_inag003" text="庫存管理特徵" lstr=""/>
+    <sfield name="lbl_inag004" text="庫位" lstr=""/>
+    <sfield name="lbl_inag005" text="儲位" lstr=""/>
+    <sfield name="lbl_inag006" text="批號" lstr=""/>
+    <sfield name="lbl_inag007" text="單位" lstr=""/>
+    <sfield name="lbl_inag018" text="有效日期" lstr=""/>
+    <sfield name="lbl_inag022" text="備註" lstr=""/>
+    <sfield name="lbl_inag017" text="第一次入庫日期" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" lstr=""/>
+    <sfield name="lbl_qcbcdocno" text="單號" lstr=""/>
+    <sfield name="lbl_qcbcseq" text="行序" lstr=""/>
+    <sfield name="lbl_qcbc009" text="判定數量" lstr=""/>
+    <sfield name="lbl_qcbc012" text="判定區分" lstr=""/>
+    <sfield name="lbl_qcbc003" text="料件編號" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="cl_progress_bar_Current" text="目前進度" lstr=""/>
+    <sfield name="cl_progress_bar_Total" text="全部" lstr=""/>
+    <sfield name="cl_progress_bar_%" text="%" lstr=""/>
+    <sfield name="lbl_select" text="選擇" lstr=""/>
+    <sfield name="lbl_gzgdl002" text="樣版說明" lstr=""/>
+    <sfield name="lbl_gzgd003" text="客製否" lstr=""/>
+    <sfield name="lbl_gzgd007" text="樣版名稱(4rp)" lstr=""/>
+    <sfield name="lbl_rep_fmt" text="輸出格式" lstr=""/>
+    <sfield name="lbl_outputformat_1" text="預覽與列印(SVG)" lstr=""/>
+    <sfield name="lbl_outputformat_2" text="Adobe Acrobat (PDF)" lstr=""/>
+    <sfield name="lbl_outputformat_3" text="Microsoft Excel (XLS)" lstr=""/>
+    <sfield name="lbl_outputformat_4" text="Microsoft Excel (XLS) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_5" text="Microsoft Excel (XLSX)" lstr=""/>
+    <sfield name="lbl_outputformat_6" text="Microsoft Excel (XLSX) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_7" text="Microsoft Word (RTF)" lstr=""/>
+    <sfield name="lbl_outputformat_8" text="網頁 (HTML)" lstr=""/>
+    <sfield name="lbl_outputformat_9" text="郵件 (Mail)" lstr=""/>
+    <sfield name="lbl_set_default" text="設為預設樣版" lstr=""/>
+    <sfield name="lbl_btn_accept" text="確定" lstr=""/>
+    <sfield name="lbl_btn_cancel" text="放棄" lstr=""/>
+    <sfield name="lbl_gzza003" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzza001" text="程式編號" lstr=""/>
+    <sfield name="lbl_gzza002" text="程式類別" lstr=""/>
+    <sfield name="lbl_gzde002" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzde001" text="規格編號" lstr=""/>
+    <sfield name="lbl_gzdel003" text="說明" lstr=""/>
+    <sfield name="lbl_gzdf002" text="子畫面規格編號" lstr=""/>
+    <sfield name="lbl_gzdfl003" text="子畫面檔案名稱" lstr=""/>
+    <sfield name="lbl_gzcbl004" text="說明" lstr=""/>
+    <sfield name="lbl_gzde003" text="規格類別" lstr=""/>
+    <sfield name="lbl_dzfv004" text="畫面代號" lstr=""/>
+    <sfield name="lbl_dzfv005" text="主/子程式" lstr=""/>
+    <sact name="gen_fqc" text="產生FQC單" lstr=""/>
+    <sact name="gen_issue_no" text="倒扣領料產生" lstr=""/>
+    <sact name="mn_stock_in" text="入庫明細維護" lstr=""/>
+    <sact name="open_aqct300" text="查詢FQC單" lstr=""/>
+    <sact name="qry_issue" text="查詢倒扣領料單" lstr=""/>
+    <sact name="store_in_by_qc" text="依FQC結果產生入庫明細" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="1" cite_std="N" src="s">
+    <widget name="ooff013" status=""/>
+    <widget name="s_detail2" status=""/>
+    <widget name="s_detail4" status=""/>
+  </exclude>
+</spec>

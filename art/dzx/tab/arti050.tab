@@ -1,0 +1,160 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="arti050" module="art" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02003" crtdt="2015-07-07 10:12:00" modid="02003" moddt="2015-07-07 16:59:00" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="門店資源資訊維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="rtalunit,rtalunit_desc(chr80),rtalsite,rtalsite_desc(chr80),rtal002,rtal002_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="rtalstus,rtal001,rtall003(chr500),rtal015,rtal003,rtal004,rtal005,rtal006,rtal007,rtal008,rtal009,rtal010,rtal011,rtal011_desc(chr500),rtal012,rtal013,rtal014"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="rtal001,rtalownid,rtalownid_desc(chr500),rtalowndp,rtalowndp_desc(chr500),rtalcrtid,rtalcrtid_desc(chr500),rtalcrtdp,rtalcrtdp_desc(chr500),rtalcrtdt,rtalmodid,rtalmodid_desc(chr500),rtalmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="art" filename="arti050" method="dialog">
+    <section id="input">
+      <input id="head" field="rtalsite,rtal002"/>
+      <input id="body" page="1" field="rtalstus,rtal001,rtall003,rtal015,rtal003,rtal004,rtal005,rtal006,rtal007,rtal009,rtal010,rtal011,rtal014" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="rtalunit,rtalsite,rtal002"/>
+      <construct id="body" page="1" field="rtalstus,rtal001,rtall003,rtal015,rtal003,rtal004,rtal005,rtal006,rtal007,rtal008,rtal009,rtal010,rtal011,rtal012,rtal013,rtal014"/>
+      <construct id="body" page="2" field="rtalownid,rtalowndp,rtalcrtid,rtalcrtdp,rtalcrtdt,rtalmodid,rtalmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="rtalsite,rtal002"/>
+      <set id="head" type="no_entry" field="rtalsite,rtal002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="rtalunit">
+        <after>
+          <reference field="rtalunit_desc" ref_field="rtal_t.rtalunit" map_field="rtalunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="rtalunit_desc"/>
+      <column id="rtalsite">
+        <after>
+          <reference field="rtalsite_desc" ref_field="rtal_t.rtalsite" map_field="rtalent,rtalsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="rtalsite_desc"/>
+      <column id="rtal002">
+        <after>
+          <reference field="rtal002_desc" ref_field="rtal002" map_field="rtal002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2139&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="rtal002_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="rtalstus" scc="50" type="S" default="Y">
+        <stus id="N" pic="open"/>
+        <stus id="X" pic="void"/>
+        <stus id="Y" pic="valid"/>
+      </column>
+      <column id="rtal001">
+        <controlp form="q_rtal001" state="c"/>
+      </column>
+      <column id="rtall003"/>
+      <column id="rtal015"/>
+      <column id="rtal003" type="S" default="1" def_scc="6840"/>
+      <column id="rtal004" type="S" default="2" def_scc="6836"/>
+      <column id="rtal005">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtal006" type="S" default="N"/>
+      <column id="rtal007" type="S" default="1">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtal008" type="S" default="0"/>
+      <column id="rtal009" type="S" default="1" def_scc="6837"/>
+      <column id="rtal010" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtal011">
+        <after>
+          <reference field="rtal011_desc" ref_field="rtal_t.rtal011" map_field="stal011" ref_sql="SELECT stael003 FROM stael_t WHERE staelent=$varg_enterprise$var AND stael001=? AND stael002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_stae001" state="i"/>
+        <controlp form="q_stae001" state="c"/>
+      </column>
+      <column id="rtal011_desc"/>
+      <column id="rtal012" type="S" default="1" def_scc="6838"/>
+      <column id="rtal013"/>
+      <column id="rtal014"/>
+    </init>
+    <init id="body" page="2">
+      <column id="rtalownid">
+        <after>
+          <reference field="rtalownid_desc" ref_field="rtal_t.rtalownid" map_field="rtalownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtalownid_desc"/>
+      <column id="rtalowndp">
+        <after>
+          <reference field="rtalowndp_desc" ref_field="rtal_t.rtalowndp" map_field="rtalowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtalowndp_desc"/>
+      <column id="rtalcrtid">
+        <after>
+          <reference field="rtalcrtid_desc" ref_field="rtal_t.rtalcrtid" map_field="rtalcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtalcrtid_desc"/>
+      <column id="rtalcrtdp">
+        <after>
+          <reference field="rtalcrtdp_desc" ref_field="rtal_t.rtalcrtdp" map_field="rtalcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtalcrtdp_desc"/>
+      <column id="rtalcrtdt"/>
+      <column id="rtalmodid">
+        <after>
+          <reference field="rtalmodid_desc" ref_field="rtal_t.rtalmodid" map_field="rtalmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtalmodid_desc"/>
+      <column id="rtalmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="rtal_t" pk="rtalsite,rtal002">
+      <sql id="forupd_sql" type="sql" query="SELECT rtalunit,&apos;&apos;,rtalsite,&apos;&apos;,rtal002,&apos;&apos; FROM rtal_t WHERE rtalent= ? AND rtalsite=? AND rtal002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT rtalunit,&apos;&apos;,rtalsite,&apos;&apos;,rtal002,&apos;&apos; FROM rtal_t" order="rtalsite,rtal002"/>
+    </head>
+    <body id="rtal_t" page="1,2" linked="" pk="rtal001" fk="rtalsite,rtal002">
+      <sql id="forupd_sql_detail" query="SELECT rtalstus,rtal001,&apos;&apos;,rtal015,rtal003,rtal004,rtal005,rtal006,rtal007,rtal008,rtal009,rtal010,rtal011,&apos;&apos;,rtal012,rtal013,rtal014,&apos;&apos;,rtalownid,&apos;&apos;,rtalowndp,&apos;&apos;,rtalcrtid,&apos;&apos;,rtalcrtdp,&apos;&apos;,rtalcrtdt,rtalmodid,&apos;&apos;,rtalmoddt FROM rtal_t WHERE rtalent=? AND rtalsite=? AND rtal002=? AND rtal001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rtalstus,rtal001,&apos;&apos;,rtal015,rtal003,rtal004,rtal005,rtal006,rtal007,rtal008,rtal009,rtal010,rtal011,&apos;&apos;,rtal012,rtal013,rtal014,&apos;&apos;,rtalownid,&apos;&apos;,rtalowndp,&apos;&apos;,rtalcrtid,&apos;&apos;,rtalcrtdp,&apos;&apos;,rtalcrtdt,rtalmodid,&apos;&apos;,rtalmoddt FROM rtal_t WHERE rtalent= ? AND rtalsite=? AND rtal002=?"/>
+      <sql id="detail_append" type="lang" target="rtall003" table="rtall_t" fk="rtal001" pk="rtall001,rtall002" field="rtall003"/>
+    </body>
+  </dataset>
+</assembly>
+

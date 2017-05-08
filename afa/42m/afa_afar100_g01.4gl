@@ -1,0 +1,1415 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="afar100_g01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:1(2015-04-09 11:44:52), PR版次:0001(2015-04-09 11:08:16)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000056
+#+ Filename...: afar100_g01
+#+ Description: ...
+#+ Creator....: 02003(2015-01-27 16:57:52)
+#+ Modifier...: 02003 -SD/PR- 02003
+ 
+{</section>}
+ 
+{<section id="afar100_g01.global" readonly="Y" >}
+#報表 g01 樣板自動產生(Version:13)
+#add-point:填寫註解說明 name="global.memo"
+
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+PRIVATE TYPE sr1_r RECORD
+   faah000 LIKE faah_t.faah000, 
+   faah001 LIKE faah_t.faah001, 
+   faah002 LIKE faah_t.faah002, 
+   faah003 LIKE faah_t.faah003, 
+   faah004 LIKE faah_t.faah004, 
+   faah005 LIKE faah_t.faah005, 
+   faah006 LIKE faah_t.faah006, 
+   faah007 LIKE faah_t.faah007, 
+   faah008 LIKE faah_t.faah008, 
+   faah009 LIKE faah_t.faah009, 
+   faah010 LIKE faah_t.faah010, 
+   faah011 LIKE faah_t.faah011, 
+   faah012 LIKE faah_t.faah012, 
+   faah013 LIKE faah_t.faah013, 
+   faah014 LIKE faah_t.faah014, 
+   faah015 LIKE faah_t.faah015, 
+   faah016 LIKE faah_t.faah016, 
+   faah017 LIKE faah_t.faah017, 
+   faah018 LIKE faah_t.faah018, 
+   faah019 LIKE faah_t.faah019, 
+   faah020 LIKE faah_t.faah020, 
+   faah021 LIKE faah_t.faah021, 
+   faah022 LIKE faah_t.faah022, 
+   faah023 LIKE faah_t.faah023, 
+   faah024 LIKE faah_t.faah024, 
+   faah025 LIKE faah_t.faah025, 
+   faah026 LIKE faah_t.faah026, 
+   faah027 LIKE faah_t.faah027, 
+   faah028 LIKE faah_t.faah028, 
+   faah029 LIKE faah_t.faah029, 
+   faah030 LIKE faah_t.faah030, 
+   faah031 LIKE faah_t.faah031, 
+   faah032 LIKE faah_t.faah032, 
+   faah033 LIKE faah_t.faah033, 
+   faah034 LIKE faah_t.faah034, 
+   faah035 LIKE faah_t.faah035, 
+   faah036 LIKE faah_t.faah036, 
+   faah037 LIKE faah_t.faah037, 
+   faah038 LIKE faah_t.faah038, 
+   faah039 LIKE faah_t.faah039, 
+   faah040 LIKE faah_t.faah040, 
+   faah041 LIKE faah_t.faah041, 
+   faah042 LIKE faah_t.faah042, 
+   faah043 LIKE faah_t.faah043, 
+   faah044 LIKE faah_t.faah044, 
+   faah045 LIKE faah_t.faah045, 
+   faahcrtdp LIKE faah_t.faahcrtdp, 
+   faahcrtdt DATETIME YEAR TO SECOND, 
+   faahcrtid LIKE faah_t.faahcrtid, 
+   faahent LIKE faah_t.faahent, 
+   faahmoddt DATETIME YEAR TO SECOND, 
+   faahmodid LIKE faah_t.faahmodid, 
+   faahowndp LIKE faah_t.faahowndp, 
+   faahownid LIKE faah_t.faahownid, 
+   faahstus LIKE faah_t.faahstus, 
+   faaj000 LIKE faaj_t.faaj000, 
+   faaj001 LIKE faaj_t.faaj001, 
+   faaj002 LIKE faaj_t.faaj002, 
+   faaj003 LIKE faaj_t.faaj003, 
+   faaj004 LIKE faaj_t.faaj004, 
+   faaj005 LIKE faaj_t.faaj005, 
+   faaj006 LIKE faaj_t.faaj006, 
+   faaj007 LIKE faaj_t.faaj007, 
+   faaj008 LIKE faaj_t.faaj008, 
+   faaj009 LIKE faaj_t.faaj009, 
+   faaj010 LIKE faaj_t.faaj010, 
+   faaj011 LIKE faaj_t.faaj011, 
+   faaj012 LIKE faaj_t.faaj012, 
+   faaj013 LIKE faaj_t.faaj013, 
+   faaj014 LIKE faaj_t.faaj014, 
+   faaj015 LIKE faaj_t.faaj015, 
+   faaj016 LIKE faaj_t.faaj016, 
+   faaj017 LIKE faaj_t.faaj017, 
+   faaj018 LIKE faaj_t.faaj018, 
+   faaj019 LIKE faaj_t.faaj019, 
+   faaj020 LIKE faaj_t.faaj020, 
+   faaj021 LIKE faaj_t.faaj021, 
+   faaj022 LIKE faaj_t.faaj022, 
+   faaj023 LIKE faaj_t.faaj023, 
+   faaj024 LIKE faaj_t.faaj024, 
+   faaj025 LIKE faaj_t.faaj025, 
+   faaj026 LIKE faaj_t.faaj026, 
+   faaj027 LIKE faaj_t.faaj027, 
+   faaj028 LIKE faaj_t.faaj028, 
+   faaj029 LIKE faaj_t.faaj029, 
+   faaj030 LIKE faaj_t.faaj030, 
+   faaj031 LIKE faaj_t.faaj031, 
+   faaj032 LIKE faaj_t.faaj032, 
+   faaj033 LIKE faaj_t.faaj033, 
+   faaj034 LIKE faaj_t.faaj034, 
+   faaj035 LIKE faaj_t.faaj035, 
+   faaj036 LIKE faaj_t.faaj036, 
+   faaj037 LIKE faaj_t.faaj037, 
+   faaj038 LIKE faaj_t.faaj038, 
+   faaj039 LIKE faaj_t.faaj039, 
+   faaj040 LIKE faaj_t.faaj040, 
+   faaj041 LIKE faaj_t.faaj041, 
+   faaj042 LIKE faaj_t.faaj042, 
+   faaj043 LIKE faaj_t.faaj043, 
+   faaj044 LIKE faaj_t.faaj044, 
+   faaj045 LIKE faaj_t.faaj045, 
+   faaj046 LIKE faaj_t.faaj046, 
+   faaj047 LIKE faaj_t.faaj047, 
+   faaj101 LIKE faaj_t.faaj101, 
+   faaj102 LIKE faaj_t.faaj102, 
+   faaj103 LIKE faaj_t.faaj103, 
+   faaj104 LIKE faaj_t.faaj104, 
+   faaj105 LIKE faaj_t.faaj105, 
+   faaj106 LIKE faaj_t.faaj106, 
+   faaj107 LIKE faaj_t.faaj107, 
+   faaj108 LIKE faaj_t.faaj108, 
+   faaj109 LIKE faaj_t.faaj109, 
+   faaj110 LIKE faaj_t.faaj110, 
+   faaj111 LIKE faaj_t.faaj111, 
+   faaj112 LIKE faaj_t.faaj112, 
+   faaj113 LIKE faaj_t.faaj113, 
+   faaj114 LIKE faaj_t.faaj114, 
+   faaj115 LIKE faaj_t.faaj115, 
+   faaj116 LIKE faaj_t.faaj116, 
+   faaj117 LIKE faaj_t.faaj117, 
+   faaj151 LIKE faaj_t.faaj151, 
+   faaj152 LIKE faaj_t.faaj152, 
+   faaj153 LIKE faaj_t.faaj153, 
+   faaj154 LIKE faaj_t.faaj154, 
+   faaj155 LIKE faaj_t.faaj155, 
+   faaj156 LIKE faaj_t.faaj156, 
+   faaj157 LIKE faaj_t.faaj157, 
+   faaj158 LIKE faaj_t.faaj158, 
+   faaj159 LIKE faaj_t.faaj159, 
+   faaj160 LIKE faaj_t.faaj160, 
+   faaj161 LIKE faaj_t.faaj161, 
+   faaj162 LIKE faaj_t.faaj162, 
+   faaj163 LIKE faaj_t.faaj163, 
+   faaj164 LIKE faaj_t.faaj164, 
+   faaj165 LIKE faaj_t.faaj165, 
+   faaj166 LIKE faaj_t.faaj166, 
+   faaj167 LIKE faaj_t.faaj167, 
+   faajcrtdp LIKE faaj_t.faajcrtdp, 
+   faajcrtdt DATETIME YEAR TO SECOND, 
+   faajcrtid LIKE faaj_t.faajcrtid, 
+   faajent LIKE faaj_t.faajent, 
+   faajld LIKE faaj_t.faajld, 
+   faajmoddt DATETIME YEAR TO SECOND, 
+   faajmodid LIKE faaj_t.faajmodid, 
+   faajowndp LIKE faaj_t.faajowndp, 
+   faajownid LIKE faaj_t.faajownid, 
+   faajsite LIKE faaj_t.faajsite, 
+   faajstus LIKE faaj_t.faajstus, 
+   l_faah009_desc LIKE type_t.chr50, 
+   l_faah002_desc LIKE type_t.chr30, 
+   l_faah015_desc LIKE type_t.chr30, 
+   l_faah016_desc LIKE type_t.chr30, 
+   l_faah025_desc LIKE type_t.chr30, 
+   l_faah026_desc LIKE type_t.chr30, 
+   l_faah027_desc LIKE type_t.chr30, 
+   l_faah028_desc LIKE type_t.chr30, 
+   l_faaj006_desc LIKE type_t.chr30, 
+   l_faaj003_desc LIKE type_t.chr30, 
+   l_faah041_desc LIKE type_t.chr30, 
+   l_faah005_desc LIKE type_t.chr30, 
+   faaj007_desc LIKE type_t.chr50, 
+   faah006_desc LIKE type_t.chr30, 
+   faah007_desc LIKE type_t.chr30, 
+   faah017_desc LIKE type_t.chr30, 
+   faah020_desc LIKE type_t.chr30, 
+   faaj011_desc LIKE type_t.chr10
+END RECORD
+ 
+PRIVATE TYPE sr2_r RECORD
+   ooff013 LIKE ooff_t.ooff013
+END RECORD
+ 
+ 
+DEFINE tm RECORD
+       wc STRING,                  #查詢條件 
+       a1 LIKE type_t.chr10,         #財產編號 
+       a2 LIKE type_t.chr4,         #附號 
+       a3 LIKE type_t.chr10          #卡片編號
+       END RECORD
+DEFINE sr DYNAMIC ARRAY OF sr1_r                   #宣告sr為sr1_t資料結構的動態陣列
+DEFINE g_select        STRING
+DEFINE g_from          STRING
+DEFINE g_where         STRING
+DEFINE g_order         STRING
+DEFINE g_sql           STRING                         #report_select_prep,REPORT段使用
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+#end add-point
+ 
+{</section>}
+ 
+{<section id="afar100_g01.main" readonly="Y" >}
+PUBLIC FUNCTION afar100_g01(p_arg1,p_arg2,p_arg3,p_arg4)
+DEFINE  p_arg1 STRING                  #tm.wc  查詢條件 
+DEFINE  p_arg2 LIKE type_t.chr10         #tm.a1  財產編號 
+DEFINE  p_arg3 LIKE type_t.chr4         #tm.a2  附號 
+DEFINE  p_arg4 LIKE type_t.chr10         #tm.a3  卡片編號
+#add-point:init段define (客製用) name="component_name.define_customerization"
+
+#end add-point
+#add-point:init段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component_name.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.a1 = p_arg2
+   LET tm.a2 = p_arg3
+   LET tm.a3 = p_arg4
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   #報表元件代號
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'   
+   
+   LET g_rep_code = "afar100_g01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #主報表select子句準備
+   CALL afar100_g01_sel_prep()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料存入array
+   CALL afar100_g01_ins_data()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料印出
+   CALL afar100_g01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afar100_g01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION afar100_g01_sel_prep()
+   #add-point:sel_prep段define (客製用) name="sel_prep.define_customerization"
+   
+   #end add-point
+   #add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+   
+   #end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+   
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   
+   #end add-point
+   LET g_select = " SELECT faah000,faah001,faah002,faah003,faah004,faah005,faah006,faah007,faah008,faah009, 
+       faah010,faah011,faah012,faah013,faah014,faah015,faah016,faah017,faah018,faah019,faah020,faah021, 
+       faah022,faah023,faah024,faah025,faah026,faah027,faah028,faah029,faah030,faah031,faah032,faah033, 
+       faah034,faah035,faah036,faah037,faah038,faah039,faah040,faah041,faah042,faah043,faah044,faah045, 
+       faahcrtdp,faahcrtdt,faahcrtid,faahent,faahmoddt,faahmodid,faahowndp,faahownid,faahstus,faaj000, 
+       faaj001,faaj002,faaj003,faaj004,faaj005,faaj006,faaj007,faaj008,faaj009,faaj010,faaj011,faaj012, 
+       faaj013,faaj014,faaj015,faaj016,faaj017,faaj018,faaj019,faaj020,faaj021,faaj022,faaj023,faaj024, 
+       faaj025,faaj026,faaj027,faaj028,faaj029,faaj030,faaj031,faaj032,faaj033,faaj034,faaj035,faaj036, 
+       faaj037,faaj038,faaj039,faaj040,faaj041,faaj042,faaj043,faaj044,faaj045,faaj046,faaj047,faaj101, 
+       faaj102,faaj103,faaj104,faaj105,faaj106,faaj107,faaj108,faaj109,faaj110,faaj111,faaj112,faaj113, 
+       faaj114,faaj115,faaj116,faaj117,faaj151,faaj152,faaj153,faaj154,faaj155,faaj156,faaj157,faaj158, 
+       faaj159,faaj160,faaj161,faaj162,faaj163,faaj164,faaj165,faaj166,faaj167,faajcrtdp,faajcrtdt,faajcrtid, 
+       faajent,faajld,faajmoddt,faajmodid,faajowndp,faajownid,faajsite,faajstus,NULL,NULL,NULL,NULL, 
+       NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL"
+ 
+   #add-point:sel_prep g_from name="sel_prep.g_from"
+   
+   #end add-point
+    LET g_from = " FROM faah_t,faaj_t"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+   LET g_select = " SELECT DISTINCT faah000,faah001,faah002,faah003,faah004,faah005,faah006,faah007,faah008,faah009, 
+    faah010,faah011,faah012,faah013,faah014,faah015,faah016,faah017,faah018,faah019,faah020,faah021, 
+    faah022,faah023,faah024,faah025,faah026,faah027,faah028,faah029,faah030,faah031,faah032,faah033, 
+    faah034,faah035,faah036,faah037,faah038,faah039,faah040,faah041,faah042,faah043,faah044,faah045, 
+    faahcrtdp,faahcrtdt,faahcrtid,faahent,faahmoddt,faahmodid,faahowndp,faahownid,faahstus,faaj000, 
+    faaj001,faaj002,faaj003,faaj004,faaj005,faaj006,faaj007,faaj008,faaj009,faaj010,faaj011,faaj012, 
+    faaj013,faaj014,faaj015,faaj016,faaj017,faaj018,faaj019,faaj020,faaj021,faaj022,faaj023,faaj024, 
+    faaj025,faaj026,faaj027,faaj028,faaj029,faaj030,faaj031,faaj032,faaj033,faaj034,faaj035,faaj036, 
+    faaj037,faaj038,faaj039,faaj040,faaj041,faaj042,faaj043,faaj044,faaj045,faaj046,faaj047,faaj101, 
+    faaj102,faaj103,faaj104,faaj105,faaj106,faaj107,faaj108,faaj109,faaj110,faaj111,faaj112,faaj113, 
+    faaj114,faaj115,faaj116,faaj117,faaj151,faaj152,faaj153,faaj154,faaj155,faaj156,faaj157,faaj158, 
+    faaj159,faaj160,faaj161,faaj162,faaj163,faaj164,faaj165,faaj166,faaj167,faajcrtdp,faajcrtdt,faajcrtid, 
+    faajent,faajld,faajmoddt,faajmodid,faajowndp,faajownid,faajsite,faajstus,NULL,NULL,NULL,NULL, 
+    NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL"
+   LET g_from = " FROM faah_t LEFT JOIN faaj_t ON faajent = faahent AND faaj000 = faah000 AND faaj001 = faah003 AND faaj002 = faah004 AND faaj037 = faah001 "
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED 
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   LET g_where = g_where," AND faahstus  <> 'X' AND faahent = '",g_enterprise,"' AND (faajld IN(SELECT glaald FROM glaa_t WHERE glaaent = faahent AND glaacomp = faah032 AND glaa014 ='Y') OR faajld IS NULL)"
+   IF NOT cl_null(tm.a1) THEN 
+      LET g_where = g_where," AND faah003 = '",tm.a1,"'"
+   END IF 
+   IF NOT cl_null(tm.a2) THEN 
+      LET g_where = g_where," AND faah004 = '",tm.a2,"'"
+   END IF 
+   IF NOT cl_null(tm.a3) THEN 
+      LET g_where = g_where," AND faah001 = '",tm.a3,"'"
+   END IF 
+   #end add-point
+    LET g_order = " ORDER BY faah001,faah003,faah004"
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+ 
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("faah_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED ," ",g_order CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段 
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+ 
+   #end add-point
+   PREPARE afar100_g01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()   
+      LET g_rep_success = 'N'    
+   END IF
+   DECLARE afar100_g01_curs CURSOR FOR afar100_g01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afar100_g01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION afar100_g01_ins_data()
+#主報表record(用於select子句)
+   DEFINE sr_s RECORD 
+   faah000 LIKE faah_t.faah000, 
+   faah001 LIKE faah_t.faah001, 
+   faah002 LIKE faah_t.faah002, 
+   faah003 LIKE faah_t.faah003, 
+   faah004 LIKE faah_t.faah004, 
+   faah005 LIKE faah_t.faah005, 
+   faah006 LIKE faah_t.faah006, 
+   faah007 LIKE faah_t.faah007, 
+   faah008 LIKE faah_t.faah008, 
+   faah009 LIKE faah_t.faah009, 
+   faah010 LIKE faah_t.faah010, 
+   faah011 LIKE faah_t.faah011, 
+   faah012 LIKE faah_t.faah012, 
+   faah013 LIKE faah_t.faah013, 
+   faah014 LIKE faah_t.faah014, 
+   faah015 LIKE faah_t.faah015, 
+   faah016 LIKE faah_t.faah016, 
+   faah017 LIKE faah_t.faah017, 
+   faah018 LIKE faah_t.faah018, 
+   faah019 LIKE faah_t.faah019, 
+   faah020 LIKE faah_t.faah020, 
+   faah021 LIKE faah_t.faah021, 
+   faah022 LIKE faah_t.faah022, 
+   faah023 LIKE faah_t.faah023, 
+   faah024 LIKE faah_t.faah024, 
+   faah025 LIKE faah_t.faah025, 
+   faah026 LIKE faah_t.faah026, 
+   faah027 LIKE faah_t.faah027, 
+   faah028 LIKE faah_t.faah028, 
+   faah029 LIKE faah_t.faah029, 
+   faah030 LIKE faah_t.faah030, 
+   faah031 LIKE faah_t.faah031, 
+   faah032 LIKE faah_t.faah032, 
+   faah033 LIKE faah_t.faah033, 
+   faah034 LIKE faah_t.faah034, 
+   faah035 LIKE faah_t.faah035, 
+   faah036 LIKE faah_t.faah036, 
+   faah037 LIKE faah_t.faah037, 
+   faah038 LIKE faah_t.faah038, 
+   faah039 LIKE faah_t.faah039, 
+   faah040 LIKE faah_t.faah040, 
+   faah041 LIKE faah_t.faah041, 
+   faah042 LIKE faah_t.faah042, 
+   faah043 LIKE faah_t.faah043, 
+   faah044 LIKE faah_t.faah044, 
+   faah045 LIKE faah_t.faah045, 
+   faahcrtdp LIKE faah_t.faahcrtdp, 
+   faahcrtdt LIKE faah_t.faahcrtdt, 
+   faahcrtid LIKE faah_t.faahcrtid, 
+   faahent LIKE faah_t.faahent, 
+   faahmoddt LIKE faah_t.faahmoddt, 
+   faahmodid LIKE faah_t.faahmodid, 
+   faahowndp LIKE faah_t.faahowndp, 
+   faahownid LIKE faah_t.faahownid, 
+   faahstus LIKE faah_t.faahstus, 
+   faaj000 LIKE faaj_t.faaj000, 
+   faaj001 LIKE faaj_t.faaj001, 
+   faaj002 LIKE faaj_t.faaj002, 
+   faaj003 LIKE faaj_t.faaj003, 
+   faaj004 LIKE faaj_t.faaj004, 
+   faaj005 LIKE faaj_t.faaj005, 
+   faaj006 LIKE faaj_t.faaj006, 
+   faaj007 LIKE faaj_t.faaj007, 
+   faaj008 LIKE faaj_t.faaj008, 
+   faaj009 LIKE faaj_t.faaj009, 
+   faaj010 LIKE faaj_t.faaj010, 
+   faaj011 LIKE faaj_t.faaj011, 
+   faaj012 LIKE faaj_t.faaj012, 
+   faaj013 LIKE faaj_t.faaj013, 
+   faaj014 LIKE faaj_t.faaj014, 
+   faaj015 LIKE faaj_t.faaj015, 
+   faaj016 LIKE faaj_t.faaj016, 
+   faaj017 LIKE faaj_t.faaj017, 
+   faaj018 LIKE faaj_t.faaj018, 
+   faaj019 LIKE faaj_t.faaj019, 
+   faaj020 LIKE faaj_t.faaj020, 
+   faaj021 LIKE faaj_t.faaj021, 
+   faaj022 LIKE faaj_t.faaj022, 
+   faaj023 LIKE faaj_t.faaj023, 
+   faaj024 LIKE faaj_t.faaj024, 
+   faaj025 LIKE faaj_t.faaj025, 
+   faaj026 LIKE faaj_t.faaj026, 
+   faaj027 LIKE faaj_t.faaj027, 
+   faaj028 LIKE faaj_t.faaj028, 
+   faaj029 LIKE faaj_t.faaj029, 
+   faaj030 LIKE faaj_t.faaj030, 
+   faaj031 LIKE faaj_t.faaj031, 
+   faaj032 LIKE faaj_t.faaj032, 
+   faaj033 LIKE faaj_t.faaj033, 
+   faaj034 LIKE faaj_t.faaj034, 
+   faaj035 LIKE faaj_t.faaj035, 
+   faaj036 LIKE faaj_t.faaj036, 
+   faaj037 LIKE faaj_t.faaj037, 
+   faaj038 LIKE faaj_t.faaj038, 
+   faaj039 LIKE faaj_t.faaj039, 
+   faaj040 LIKE faaj_t.faaj040, 
+   faaj041 LIKE faaj_t.faaj041, 
+   faaj042 LIKE faaj_t.faaj042, 
+   faaj043 LIKE faaj_t.faaj043, 
+   faaj044 LIKE faaj_t.faaj044, 
+   faaj045 LIKE faaj_t.faaj045, 
+   faaj046 LIKE faaj_t.faaj046, 
+   faaj047 LIKE faaj_t.faaj047, 
+   faaj101 LIKE faaj_t.faaj101, 
+   faaj102 LIKE faaj_t.faaj102, 
+   faaj103 LIKE faaj_t.faaj103, 
+   faaj104 LIKE faaj_t.faaj104, 
+   faaj105 LIKE faaj_t.faaj105, 
+   faaj106 LIKE faaj_t.faaj106, 
+   faaj107 LIKE faaj_t.faaj107, 
+   faaj108 LIKE faaj_t.faaj108, 
+   faaj109 LIKE faaj_t.faaj109, 
+   faaj110 LIKE faaj_t.faaj110, 
+   faaj111 LIKE faaj_t.faaj111, 
+   faaj112 LIKE faaj_t.faaj112, 
+   faaj113 LIKE faaj_t.faaj113, 
+   faaj114 LIKE faaj_t.faaj114, 
+   faaj115 LIKE faaj_t.faaj115, 
+   faaj116 LIKE faaj_t.faaj116, 
+   faaj117 LIKE faaj_t.faaj117, 
+   faaj151 LIKE faaj_t.faaj151, 
+   faaj152 LIKE faaj_t.faaj152, 
+   faaj153 LIKE faaj_t.faaj153, 
+   faaj154 LIKE faaj_t.faaj154, 
+   faaj155 LIKE faaj_t.faaj155, 
+   faaj156 LIKE faaj_t.faaj156, 
+   faaj157 LIKE faaj_t.faaj157, 
+   faaj158 LIKE faaj_t.faaj158, 
+   faaj159 LIKE faaj_t.faaj159, 
+   faaj160 LIKE faaj_t.faaj160, 
+   faaj161 LIKE faaj_t.faaj161, 
+   faaj162 LIKE faaj_t.faaj162, 
+   faaj163 LIKE faaj_t.faaj163, 
+   faaj164 LIKE faaj_t.faaj164, 
+   faaj165 LIKE faaj_t.faaj165, 
+   faaj166 LIKE faaj_t.faaj166, 
+   faaj167 LIKE faaj_t.faaj167, 
+   faajcrtdp LIKE faaj_t.faajcrtdp, 
+   faajcrtdt LIKE faaj_t.faajcrtdt, 
+   faajcrtid LIKE faaj_t.faajcrtid, 
+   faajent LIKE faaj_t.faajent, 
+   faajld LIKE faaj_t.faajld, 
+   faajmoddt LIKE faaj_t.faajmoddt, 
+   faajmodid LIKE faaj_t.faajmodid, 
+   faajowndp LIKE faaj_t.faajowndp, 
+   faajownid LIKE faaj_t.faajownid, 
+   faajsite LIKE faaj_t.faajsite, 
+   faajstus LIKE faaj_t.faajstus, 
+   l_faah009_desc LIKE type_t.chr50, 
+   l_faah002_desc LIKE type_t.chr30, 
+   l_faah015_desc LIKE type_t.chr30, 
+   l_faah016_desc LIKE type_t.chr30, 
+   l_faah025_desc LIKE type_t.chr30, 
+   l_faah026_desc LIKE type_t.chr30, 
+   l_faah027_desc LIKE type_t.chr30, 
+   l_faah028_desc LIKE type_t.chr30, 
+   l_faaj006_desc LIKE type_t.chr30, 
+   l_faaj003_desc LIKE type_t.chr30, 
+   l_faah041_desc LIKE type_t.chr30, 
+   l_faah005_desc LIKE type_t.chr30, 
+   faaj007_desc LIKE type_t.chr50, 
+   faah006_desc LIKE type_t.chr30, 
+   faah007_desc LIKE type_t.chr30, 
+   faah017_desc LIKE type_t.chr30, 
+   faah020_desc LIKE type_t.chr30, 
+   faaj011_desc LIKE type_t.chr10
+ END RECORD
+   DEFINE l_cnt           LIKE type_t.num10
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point   
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    
+    #end add-point
+ 
+    CALL sr.clear()                                  #rep sr
+    LET l_cnt = 1
+    FOREACH afar100_g01_curs INTO sr_s.*
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()       
+          LET g_rep_success = 'N'    
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       
+       #end add-point
+ 
+       #add-point:ins_data段before_arr name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #set rep array value
+       LET sr[l_cnt].faah000 = sr_s.faah000
+       LET sr[l_cnt].faah001 = sr_s.faah001
+       LET sr[l_cnt].faah002 = sr_s.faah002
+       LET sr[l_cnt].faah003 = sr_s.faah003
+       LET sr[l_cnt].faah004 = sr_s.faah004
+       LET sr[l_cnt].faah005 = sr_s.faah005
+       LET sr[l_cnt].faah006 = sr_s.faah006
+       LET sr[l_cnt].faah007 = sr_s.faah007
+       LET sr[l_cnt].faah008 = sr_s.faah008
+       LET sr[l_cnt].faah009 = sr_s.faah009
+       LET sr[l_cnt].faah010 = sr_s.faah010
+       LET sr[l_cnt].faah011 = sr_s.faah011
+       LET sr[l_cnt].faah012 = sr_s.faah012
+       LET sr[l_cnt].faah013 = sr_s.faah013
+       LET sr[l_cnt].faah014 = sr_s.faah014
+       LET sr[l_cnt].faah015 = sr_s.faah015
+       LET sr[l_cnt].faah016 = sr_s.faah016
+       LET sr[l_cnt].faah017 = sr_s.faah017
+       LET sr[l_cnt].faah018 = sr_s.faah018
+       LET sr[l_cnt].faah019 = sr_s.faah019
+       LET sr[l_cnt].faah020 = sr_s.faah020
+       LET sr[l_cnt].faah021 = sr_s.faah021
+       LET sr[l_cnt].faah022 = sr_s.faah022
+       LET sr[l_cnt].faah023 = sr_s.faah023
+       LET sr[l_cnt].faah024 = sr_s.faah024
+       LET sr[l_cnt].faah025 = sr_s.faah025
+       LET sr[l_cnt].faah026 = sr_s.faah026
+       LET sr[l_cnt].faah027 = sr_s.faah027
+       LET sr[l_cnt].faah028 = sr_s.faah028
+       LET sr[l_cnt].faah029 = sr_s.faah029
+       LET sr[l_cnt].faah030 = sr_s.faah030
+       LET sr[l_cnt].faah031 = sr_s.faah031
+       LET sr[l_cnt].faah032 = sr_s.faah032
+       LET sr[l_cnt].faah033 = sr_s.faah033
+       LET sr[l_cnt].faah034 = sr_s.faah034
+       LET sr[l_cnt].faah035 = sr_s.faah035
+       LET sr[l_cnt].faah036 = sr_s.faah036
+       LET sr[l_cnt].faah037 = sr_s.faah037
+       LET sr[l_cnt].faah038 = sr_s.faah038
+       LET sr[l_cnt].faah039 = sr_s.faah039
+       LET sr[l_cnt].faah040 = sr_s.faah040
+       LET sr[l_cnt].faah041 = sr_s.faah041
+       LET sr[l_cnt].faah042 = sr_s.faah042
+       LET sr[l_cnt].faah043 = sr_s.faah043
+       LET sr[l_cnt].faah044 = sr_s.faah044
+       LET sr[l_cnt].faah045 = sr_s.faah045
+       LET sr[l_cnt].faahcrtdp = sr_s.faahcrtdp
+       LET sr[l_cnt].faahcrtdt = sr_s.faahcrtdt
+       LET sr[l_cnt].faahcrtid = sr_s.faahcrtid
+       LET sr[l_cnt].faahent = sr_s.faahent
+       LET sr[l_cnt].faahmoddt = sr_s.faahmoddt
+       LET sr[l_cnt].faahmodid = sr_s.faahmodid
+       LET sr[l_cnt].faahowndp = sr_s.faahowndp
+       LET sr[l_cnt].faahownid = sr_s.faahownid
+       LET sr[l_cnt].faahstus = sr_s.faahstus
+       LET sr[l_cnt].faaj000 = sr_s.faaj000
+       LET sr[l_cnt].faaj001 = sr_s.faaj001
+       LET sr[l_cnt].faaj002 = sr_s.faaj002
+       LET sr[l_cnt].faaj003 = sr_s.faaj003
+       LET sr[l_cnt].faaj004 = sr_s.faaj004
+       LET sr[l_cnt].faaj005 = sr_s.faaj005
+       LET sr[l_cnt].faaj006 = sr_s.faaj006
+       LET sr[l_cnt].faaj007 = sr_s.faaj007
+       LET sr[l_cnt].faaj008 = sr_s.faaj008
+       LET sr[l_cnt].faaj009 = sr_s.faaj009
+       LET sr[l_cnt].faaj010 = sr_s.faaj010
+       LET sr[l_cnt].faaj011 = sr_s.faaj011
+       LET sr[l_cnt].faaj012 = sr_s.faaj012
+       LET sr[l_cnt].faaj013 = sr_s.faaj013
+       LET sr[l_cnt].faaj014 = sr_s.faaj014
+       LET sr[l_cnt].faaj015 = sr_s.faaj015
+       LET sr[l_cnt].faaj016 = sr_s.faaj016
+       LET sr[l_cnt].faaj017 = sr_s.faaj017
+       LET sr[l_cnt].faaj018 = sr_s.faaj018
+       LET sr[l_cnt].faaj019 = sr_s.faaj019
+       LET sr[l_cnt].faaj020 = sr_s.faaj020
+       LET sr[l_cnt].faaj021 = sr_s.faaj021
+       LET sr[l_cnt].faaj022 = sr_s.faaj022
+       LET sr[l_cnt].faaj023 = sr_s.faaj023
+       LET sr[l_cnt].faaj024 = sr_s.faaj024
+       LET sr[l_cnt].faaj025 = sr_s.faaj025
+       LET sr[l_cnt].faaj026 = sr_s.faaj026
+       LET sr[l_cnt].faaj027 = sr_s.faaj027
+       LET sr[l_cnt].faaj028 = sr_s.faaj028
+       LET sr[l_cnt].faaj029 = sr_s.faaj029
+       LET sr[l_cnt].faaj030 = sr_s.faaj030
+       LET sr[l_cnt].faaj031 = sr_s.faaj031
+       LET sr[l_cnt].faaj032 = sr_s.faaj032
+       LET sr[l_cnt].faaj033 = sr_s.faaj033
+       LET sr[l_cnt].faaj034 = sr_s.faaj034
+       LET sr[l_cnt].faaj035 = sr_s.faaj035
+       LET sr[l_cnt].faaj036 = sr_s.faaj036
+       LET sr[l_cnt].faaj037 = sr_s.faaj037
+       LET sr[l_cnt].faaj038 = sr_s.faaj038
+       LET sr[l_cnt].faaj039 = sr_s.faaj039
+       LET sr[l_cnt].faaj040 = sr_s.faaj040
+       LET sr[l_cnt].faaj041 = sr_s.faaj041
+       LET sr[l_cnt].faaj042 = sr_s.faaj042
+       LET sr[l_cnt].faaj043 = sr_s.faaj043
+       LET sr[l_cnt].faaj044 = sr_s.faaj044
+       LET sr[l_cnt].faaj045 = sr_s.faaj045
+       LET sr[l_cnt].faaj046 = sr_s.faaj046
+       LET sr[l_cnt].faaj047 = sr_s.faaj047
+       LET sr[l_cnt].faaj101 = sr_s.faaj101
+       LET sr[l_cnt].faaj102 = sr_s.faaj102
+       LET sr[l_cnt].faaj103 = sr_s.faaj103
+       LET sr[l_cnt].faaj104 = sr_s.faaj104
+       LET sr[l_cnt].faaj105 = sr_s.faaj105
+       LET sr[l_cnt].faaj106 = sr_s.faaj106
+       LET sr[l_cnt].faaj107 = sr_s.faaj107
+       LET sr[l_cnt].faaj108 = sr_s.faaj108
+       LET sr[l_cnt].faaj109 = sr_s.faaj109
+       LET sr[l_cnt].faaj110 = sr_s.faaj110
+       LET sr[l_cnt].faaj111 = sr_s.faaj111
+       LET sr[l_cnt].faaj112 = sr_s.faaj112
+       LET sr[l_cnt].faaj113 = sr_s.faaj113
+       LET sr[l_cnt].faaj114 = sr_s.faaj114
+       LET sr[l_cnt].faaj115 = sr_s.faaj115
+       LET sr[l_cnt].faaj116 = sr_s.faaj116
+       LET sr[l_cnt].faaj117 = sr_s.faaj117
+       LET sr[l_cnt].faaj151 = sr_s.faaj151
+       LET sr[l_cnt].faaj152 = sr_s.faaj152
+       LET sr[l_cnt].faaj153 = sr_s.faaj153
+       LET sr[l_cnt].faaj154 = sr_s.faaj154
+       LET sr[l_cnt].faaj155 = sr_s.faaj155
+       LET sr[l_cnt].faaj156 = sr_s.faaj156
+       LET sr[l_cnt].faaj157 = sr_s.faaj157
+       LET sr[l_cnt].faaj158 = sr_s.faaj158
+       LET sr[l_cnt].faaj159 = sr_s.faaj159
+       LET sr[l_cnt].faaj160 = sr_s.faaj160
+       LET sr[l_cnt].faaj161 = sr_s.faaj161
+       LET sr[l_cnt].faaj162 = sr_s.faaj162
+       LET sr[l_cnt].faaj163 = sr_s.faaj163
+       LET sr[l_cnt].faaj164 = sr_s.faaj164
+       LET sr[l_cnt].faaj165 = sr_s.faaj165
+       LET sr[l_cnt].faaj166 = sr_s.faaj166
+       LET sr[l_cnt].faaj167 = sr_s.faaj167
+       LET sr[l_cnt].faajcrtdp = sr_s.faajcrtdp
+       LET sr[l_cnt].faajcrtdt = sr_s.faajcrtdt
+       LET sr[l_cnt].faajcrtid = sr_s.faajcrtid
+       LET sr[l_cnt].faajent = sr_s.faajent
+       LET sr[l_cnt].faajld = sr_s.faajld
+       LET sr[l_cnt].faajmoddt = sr_s.faajmoddt
+       LET sr[l_cnt].faajmodid = sr_s.faajmodid
+       LET sr[l_cnt].faajowndp = sr_s.faajowndp
+       LET sr[l_cnt].faajownid = sr_s.faajownid
+       LET sr[l_cnt].faajsite = sr_s.faajsite
+       LET sr[l_cnt].faajstus = sr_s.faajstus
+       LET sr[l_cnt].l_faah009_desc = sr_s.l_faah009_desc
+       LET sr[l_cnt].l_faah002_desc = sr_s.l_faah002_desc
+       LET sr[l_cnt].l_faah015_desc = sr_s.l_faah015_desc
+       LET sr[l_cnt].l_faah016_desc = sr_s.l_faah016_desc
+       LET sr[l_cnt].l_faah025_desc = sr_s.l_faah025_desc
+       LET sr[l_cnt].l_faah026_desc = sr_s.l_faah026_desc
+       LET sr[l_cnt].l_faah027_desc = sr_s.l_faah027_desc
+       LET sr[l_cnt].l_faah028_desc = sr_s.l_faah028_desc
+       LET sr[l_cnt].l_faaj006_desc = sr_s.l_faaj006_desc
+       LET sr[l_cnt].l_faaj003_desc = sr_s.l_faaj003_desc
+       LET sr[l_cnt].l_faah041_desc = sr_s.l_faah041_desc
+       LET sr[l_cnt].l_faah005_desc = sr_s.l_faah005_desc
+       LET sr[l_cnt].faaj007_desc = sr_s.faaj007_desc
+       LET sr[l_cnt].faah006_desc = sr_s.faah006_desc
+       LET sr[l_cnt].faah007_desc = sr_s.faah007_desc
+       LET sr[l_cnt].faah017_desc = sr_s.faah017_desc
+       LET sr[l_cnt].faah020_desc = sr_s.faah020_desc
+       LET sr[l_cnt].faaj011_desc = sr_s.faaj011_desc
+ 
+ 
+       #add-point:ins_data段after_arr name="ins_data.after.save"
+       LET sr[l_cnt].l_faah005_desc = s_desc_gzcbl004_desc('9903',sr_s.faah005)
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = sr_s.faah009
+       CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+       LET sr[l_cnt].l_faah009_desc = '', g_rtn_fields[1] , ''
+       LET sr[l_cnt].l_faah002_desc = s_desc_gzcbl004_desc('9911',sr_s.faah002)
+       LET sr[l_cnt].l_faah015_desc = s_desc_gzcbl004_desc('9914',sr_s.faah015)
+       LET sr[l_cnt].l_faah016_desc = s_desc_gzcbl004_desc('9913',sr_s.faah016)
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = sr_s.faah025
+       CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+       LET sr[l_cnt].l_faah025_desc = '', g_rtn_fields[1] , ''
+       
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = sr_s.faah026
+       CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+       LET sr[l_cnt].l_faah026_desc = '', g_rtn_fields[1] , ''
+       
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = sr_s.faah027
+       CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='3900' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+       LET sr[l_cnt].l_faah027_desc = '', g_rtn_fields[1] , ''
+       
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = sr_s.faah028
+       CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+       LET sr[l_cnt].l_faah028_desc = '', g_rtn_fields[1] , ''
+       
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = sr_s.faah041
+       CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+       LET sr[l_cnt].l_faah041_desc = '', g_rtn_fields[1] , ''
+   
+       LET sr[l_cnt].l_faaj006_desc = s_desc_gzcbl004_desc('9912',sr_s.faaj006)
+       
+       LET sr[l_cnt].l_faaj003_desc = s_desc_gzcbl004_desc('9904',sr_s.faaj003)
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = sr_s.faaj007
+       CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+       LET sr[l_cnt].faaj007_desc = '', g_rtn_fields[1] , ''
+       
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = sr_s.faah006
+       CALL ap_ref_array2(g_ref_fields,"SELECT faacl003 FROM faacl_t WHERE faaclent='"||g_enterprise||"' AND faacl001=? AND faacl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+       LET sr[l_cnt].faah006_desc = '', g_rtn_fields[1] , ''
+       IF cl_null(sr[l_cnt].faah006_desc) THEN 
+          LET sr[l_cnt].faah006_desc = sr_s.faah006
+       END IF
+       
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = sr_s.faah007
+       CALL ap_ref_array2(g_ref_fields,"SELECT faadl003 FROM faadl_t WHERE faadlent='"||g_enterprise||"' AND faadl001=? AND faadl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+       LET sr[l_cnt].faah007_desc = '', g_rtn_fields[1] , ''
+       IF cl_null(sr[l_cnt].faah007_desc) THEN 
+          LET sr[l_cnt].faah007_desc = sr_s.faah007
+       END IF
+       
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = sr_s.faah017
+       CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+       LET sr[l_cnt].faah017_desc = '', g_rtn_fields[1] , ''
+       IF cl_null(sr[l_cnt].faah017_desc) THEN 
+          LET sr[l_cnt].faah017_desc = sr_s.faah017
+       END IF
+       
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = sr_s.faah020
+       CALL ap_ref_array2(g_ref_fields,"SELECT ooail003 FROM ooail_t WHERE ooailent='"||g_enterprise||"' AND ooail001=? AND ooail002='"||g_dlang||"'","") RETURNING g_rtn_fields
+       LET sr[l_cnt].faah020_desc = '', g_rtn_fields[1] , ''
+       IF cl_null(sr[l_cnt].faah020_desc) THEN 
+          LET sr[l_cnt].faah020_desc = sr_s.faah020
+       END IF
+       IF sr[l_cnt].faaj011 = 'Y' AND NOT cl_null(sr[l_cnt].faaj011) THEN 
+          LET sr[l_cnt].faaj011_desc = cl_getmsg("asf-00416", g_lang)
+       ELSE
+          LET sr[l_cnt].faaj011_desc = cl_getmsg("asf-00417", g_lang)
+       END IF 
+       #end add-point
+       LET l_cnt = l_cnt + 1
+    END FOREACH
+    CALL sr.deleteElement(l_cnt)
+ 
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afar100_g01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION afar100_g01_rep_data()
+   DEFINE HANDLER         om.SaxDocumentHandler
+   DEFINE l_i             INTEGER
+ 
+    #判斷是否有報表資料，若回彈出訊息視窗
+    IF sr.getLength() = 0 THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = "adz-00285"
+       LET g_errparam.extend = NULL
+       LET g_errparam.popup  = FALSE
+       LET g_errparam.replace[1] = ''
+       CALL cl_err()  
+       RETURN 
+    END IF
+    WHILE TRUE   
+       #add-point:rep_data段印前 name="rep_data.before"
+       
+       #end add-point     
+       LET handler = cl_gr_handler()
+       IF handler IS NOT NULL THEN
+          START REPORT afar100_g01_rep TO XML HANDLER handler
+          FOR l_i = 1 TO sr.getLength()
+             OUTPUT TO REPORT afar100_g01_rep(sr[l_i].*)
+             #報表中斷列印時，顯示錯誤訊息
+             IF fgl_report_getErrorStatus() THEN
+                DISPLAY "FGL: STOPPING REPORT msg=\"",fgl_report_getErrorString(),"\""
+                EXIT FOR
+             END IF                  
+          END FOR
+          FINISH REPORT afar100_g01_rep
+       END IF
+       #add-point:rep_data段印完 name="rep_data.after"
+       
+       #end add-point       
+       IF g_rep_flag = TRUE THEN
+          LET g_rep_flag = FALSE
+          EXIT WHILE
+       END IF
+    END WHILE
+    #add-point:rep_data段離開while印完前 name="rep_data.end.before"
+    
+    #end add-point
+    CALL cl_gr_close_report()
+    #add-point:rep_data段離開while印完後 name="rep_data.end.after"
+    
+    #end add-point    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afar100_g01.rep" readonly="Y" >}
+PRIVATE REPORT afar100_g01_rep(sr1)
+DEFINE sr1 sr1_r
+DEFINE sr2 sr2_r
+DEFINE l_subrep01_show  LIKE type_t.chr1,
+       l_subrep02_show  LIKE type_t.chr1,
+       l_subrep03_show  LIKE type_t.chr1,
+       l_subrep04_show  LIKE type_t.chr1
+DEFINE l_cnt           LIKE type_t.num10
+DEFINE l_sub_sql       STRING
+#add-point:rep段define  (客製用) name="rep.define_customerization"
+
+#end add-point
+#add-point:rep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep.define"
+DEFINE l_glaacomp      LIKE glaa_t.glaacomp
+DEFINE l_ooefl003      LIKE ooefl_t.ooefl003
+#end add-point
+ 
+    #add-point:rep段ORDER_before name="rep.order.before"
+    
+    #end add-point
+    ORDER EXTERNAL BY sr1.faah001,sr1.faah003,sr1.faah004
+    #add-point:rep段ORDER_after name="rep.order.after"
+    
+    #end add-point
+    
+    FORMAT
+       FIRST PAGE HEADER          
+          PRINTX g_user,g_pdate,g_rep_code,g_company,g_ptime,g_user_name,g_date_fmt
+          PRINTX tm.*
+          PRINTX g_grNumFmt.*
+          PRINTX g_rep_wcchp
+ 
+          #讀取beforeGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.faah001
+            #報表 d05 樣板自動產生(Version:6)
+            CALL cl_gr_title_clear()  #清除title變數值 
+            #add-point:rep.header  #公司資訊(不在公用變數內) name="rep.header"
+            SELECT glaacomp INTO l_glaacomp
+              FROM glaa_t
+             WHERE glaaent = g_enterprise
+               AND glaald = sr1.faajld
+            SELECT ooefl003 INTO l_ooefl003
+              FROM ooefl_t
+             WHERE ooeflent=g_enterprise
+               AND ooefl001=l_glaacomp
+               AND ooefl002=g_dlang
+            LET g_grPageHeader.title0101 = l_ooefl003
+            #end add-point:rep.header 
+            LET g_rep_docno = sr1.faah001
+            CALL cl_gr_init_pageheader() #表頭資訊
+            PRINTX g_grPageHeader.*
+            PRINTX g_grPageFooter.*
+            #add-point:rep.apr.signstr.before name="rep.apr.signstr.before"
+                          
+            #end add-point:rep.apr.signstr.before   
+            LET g_doc_key = 'faahent=' ,sr1.faahent,'{+}faah000=' ,sr1.faah000,'{+}faah001=' ,sr1.faah001,'{+}faah003=' ,sr1.faah003,'{+}faah004=' ,sr1.faah004         
+            CALL cl_gr_init_apr(sr1.faah001)
+            #add-point:rep.apr.signstr name="rep.apr.signstr"
+                          
+            #end add-point:rep.apr.signstr
+            PRINTX g_grSign.*
+ 
+ 
+ 
+           #add-point:rep.b_group.faah001.before name="rep.b_group.faah001.before"
+           
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub01.before name="rep.sub01.before"
+           
+           #end add-point:rep.sub01.before
+ 
+           #add-point:rep.sub01.sql name="rep.sub01.sql"
+           
+           #end add-point:rep.sub01.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='2' AND ooff004=0 AND ooffent = '", 
+                sr1.faahent CLIPPED ,"'", " AND  ooff003 = '", sr1.faah001 CLIPPED ,"'"
+ 
+           #add-point:rep.sub01.afsql name="rep.sub01.afsql"
+           
+           #end add-point:rep.sub01.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep01_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE afar100_g01_repcur01_cnt_pre FROM l_sub_sql
+           EXECUTE afar100_g01_repcur01_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep01_show ="Y"
+           END IF
+           PRINTX l_subrep01_show
+           START REPORT afar100_g01_subrep01
+           DECLARE afar100_g01_repcur01 CURSOR FROM g_sql
+           FOREACH afar100_g01_repcur01 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "afar100_g01_repcur01:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub01.foreach name="rep.sub01.foreach"
+              
+              #end add-point:rep.sub01.foreach
+              OUTPUT TO REPORT afar100_g01_subrep01(sr2.*)
+           END FOREACH
+           FINISH REPORT afar100_g01_subrep01
+           #add-point:rep.sub01.after name="rep.sub01.after"
+           
+           #end add-point:rep.sub01.after
+ 
+ 
+ 
+           #add-point:rep.b_group.faah001.after name="rep.b_group.faah001.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.faah003
+ 
+           #add-point:rep.b_group.faah003.before name="rep.b_group.faah003.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.b_group.faah003.after name="rep.b_group.faah003.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.faah004
+ 
+           #add-point:rep.b_group.faah004.before name="rep.b_group.faah004.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.b_group.faah004.after name="rep.b_group.faah004.after"
+           
+           #end add-point:
+ 
+ 
+ 
+ 
+       ON EVERY ROW
+          #add-point:rep.everyrow.before name="rep.everyrow.before"
+          
+          #end add-point:rep.everyrow.before
+ 
+          #單身前備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub02.before name="rep.sub02.before"
+           
+           #end add-point:rep.sub02.before
+ 
+           #add-point:rep.sub02.sql name="rep.sub02.sql"
+           
+           #end add-point:rep.sub02.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='2' AND ooffent = '", 
+                sr1.faahent CLIPPED ,"'", " AND  ooff003 = '", sr1.faah001 CLIPPED ,"'"
+ 
+           #add-point:rep.sub02.afsql name="rep.sub02.afsql"
+           
+           #end add-point:rep.sub02.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep02_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE afar100_g01_repcur02_cnt_pre FROM l_sub_sql
+           EXECUTE afar100_g01_repcur02_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep02_show ="Y"
+           END IF
+           PRINTX l_subrep02_show
+           START REPORT afar100_g01_subrep02
+           DECLARE afar100_g01_repcur02 CURSOR FROM g_sql
+           FOREACH afar100_g01_repcur02 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "afar100_g01_repcur02:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub02.foreach name="rep.sub02.foreach"
+              
+              #end add-point:rep.sub02.foreach
+              OUTPUT TO REPORT afar100_g01_subrep02(sr2.*)
+           END FOREACH
+           FINISH REPORT afar100_g01_subrep02
+           #add-point:rep.sub02.after name="rep.sub02.after"
+           
+           #end add-point:rep.sub02.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.beforerow name="rep.everyrow.beforerow"
+          
+          #end add-point:rep.everyrow.beforerow
+            
+          PRINTX sr1.*
+ 
+          #add-point:rep.everyrow.afterrow name="rep.everyrow.afterrow"
+          
+          #end add-point:rep.everyrow.afterrow
+ 
+          #單身後備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub03.before name="rep.sub03.before"
+           
+           #end add-point:rep.sub03.before
+ 
+           #add-point:rep.sub03.sql name="rep.sub03.sql"
+           
+           #end add-point:rep.sub03.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='1' AND ooff003 = '", 
+                sr1.faahent CLIPPED ,"'"
+ 
+           #add-point:rep.sub03.afsql name="rep.sub03.afsql"
+           
+           #end add-point:rep.sub03.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep03_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE afar100_g01_repcur03_cnt_pre FROM l_sub_sql
+           EXECUTE afar100_g01_repcur03_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep03_show ="Y"
+           END IF
+           PRINTX l_subrep03_show
+           START REPORT afar100_g01_subrep03
+           DECLARE afar100_g01_repcur03 CURSOR FROM g_sql
+           FOREACH afar100_g01_repcur03 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "afar100_g01_repcur03:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub03.foreach name="rep.sub03.foreach"
+              
+              #end add-point:rep.sub03.foreach
+              OUTPUT TO REPORT afar100_g01_subrep03(sr2.*)
+           END FOREACH
+           FINISH REPORT afar100_g01_subrep03
+           #add-point:rep.sub03.after name="rep.sub03.after"
+           
+           #end add-point:rep.sub03.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.after name="rep.everyrow.after"
+          
+          #end add-point:rep.everyrow.after        
+ 
+          #讀取afterGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.faah001
+ 
+           #add-point:rep.a_group.faah001.before name="rep.a_group.faah001.before"
+           
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub04.before name="rep.sub04.before"
+           
+           #end add-point:rep.sub04.before
+ 
+           #add-point:rep.sub04.sql name="rep.sub04.sql"
+           
+           #end add-point:rep.sub04.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='1' AND ooff004=0 AND ooffent = '", 
+                sr1.faahent CLIPPED ,"'", " AND  ooff003 = '", sr1.faah001 CLIPPED ,"'"
+ 
+           #add-point:rep.sub04.afsql name="rep.sub04.afsql"
+           
+           #end add-point:rep.sub04.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep04_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE afar100_g01_repcur04_cnt_pre FROM l_sub_sql
+           EXECUTE afar100_g01_repcur04_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep04_show ="Y"
+           END IF
+           PRINTX l_subrep04_show
+           START REPORT afar100_g01_subrep04
+           DECLARE afar100_g01_repcur04 CURSOR FROM g_sql
+           FOREACH afar100_g01_repcur04 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "afar100_g01_repcur04:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub04.foreach name="rep.sub04.foreach"
+              
+              #end add-point:rep.sub04.foreach
+              OUTPUT TO REPORT afar100_g01_subrep04(sr2.*)
+           END FOREACH
+           FINISH REPORT afar100_g01_subrep04
+           #add-point:rep.sub04.after name="rep.sub04.after"
+           
+           #end add-point:rep.sub04.after
+ 
+ 
+ 
+           #add-point:rep.a_group.faah001.after name="rep.a_group.faah001.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.faah003
+ 
+           #add-point:rep.a_group.faah003.before name="rep.a_group.faah003.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.a_group.faah003.after name="rep.a_group.faah003.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.faah004
+ 
+           #add-point:rep.a_group.faah004.before name="rep.a_group.faah004.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.a_group.faah004.after name="rep.a_group.faah004.after"
+           
+           #end add-point:
+ 
+ 
+ 
+       ON LAST ROW
+            #add-point:rep.lastrow.before name="rep.lastrow.before"  
+                    
+            #end add-point :rep.lastrow.before
+ 
+            #add-point:rep.lastrow.after name="rep.lastrow.after"
+            
+            #end add-point :rep.lastrow.after
+END REPORT
+ 
+{</section>}
+ 
+{<section id="afar100_g01.subrep_str" readonly="Y" >}
+#讀取子報表樣板
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT afar100_g01_subrep01(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub01.define_customerization" 
+
+#end add-point
+#add-point:sub01.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub01.define" 
+
+#end add-point:sub01.define
+ 
+    #add-point:sub01.order.before name="sub01.order.before" 
+    
+    #end add-point:sub01.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub01.everyrow.before name="sub01.everyrow.before" 
+                          
+            #end add-point:sub01.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub01.everyrow.after name="sub01.everyrow.after" 
+            
+            #end add-point:sub01.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT afar100_g01_subrep02(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub02.define_customerization" 
+
+#end add-point
+#add-point:sub02.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub02.define" 
+
+#end add-point:sub02.define
+ 
+    #add-point:sub02.order.before name="sub02.order.before" 
+    
+    #end add-point:sub02.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub02.everyrow.before name="sub02.everyrow.before" 
+                          
+            #end add-point:sub02.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub02.everyrow.after name="sub02.everyrow.after" 
+            
+            #end add-point:sub02.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT afar100_g01_subrep03(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub03.define_customerization" 
+
+#end add-point
+#add-point:sub03.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub03.define" 
+
+#end add-point:sub03.define
+ 
+    #add-point:sub03.order.before name="sub03.order.before" 
+    
+    #end add-point:sub03.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub03.everyrow.before name="sub03.everyrow.before" 
+                          
+            #end add-point:sub03.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub03.everyrow.after name="sub03.everyrow.after" 
+            
+            #end add-point:sub03.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT afar100_g01_subrep04(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub04.define_customerization" 
+
+#end add-point
+#add-point:sub04.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub04.define" 
+
+#end add-point:sub04.define
+ 
+    #add-point:sub04.order.before name="sub04.order.before" 
+    
+    #end add-point:sub04.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub04.everyrow.before name="sub04.everyrow.before" 
+                          
+            #end add-point:sub04.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub04.everyrow.after name="sub04.everyrow.after" 
+            
+            #end add-point:sub04.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="afar100_g01.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="afar100_g01.other_report" readonly="Y" >}
+
+ 
+{</section>}
+ 

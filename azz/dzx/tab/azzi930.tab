@@ -1,0 +1,131 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi930" module="azz" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="01101" crtdt="2014-07-03 11:43:20" modid="01101" moddt="2014-10-09 13:44:09" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="客服人員設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzwg001,gzwg001_desc(chr80),gzwg003,gzwg004,oofa011,gzwgl004,gzwg002,gzwg004_desc(chr80),gzwgstus,gzwgownid,gzwgownid_desc(chr80),gzwgowndp,gzwgowndp_desc(chr80),gzwgcrtid,gzwgcrtid_desc(chr80),gzwgcrtdp,gzwgcrtdp_desc(chr80),gzwgcrtdt,gzwgmodid,gzwgmodid_desc(chr80),gzwgmoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzwh003,gzwh003_desc(chr500),gzwh004"/>
+      <var id="bs_field" value="gzwg001,gzwg001_desc(chr80),gzwg003,gzwg004,oofa011(oofa_t.oofa011),gzwg004_desc(chr80),gzwg002" pk="gzwg001,gzwg002" order=""/>
+      <bs_reference field="gzwg001_desc" ref_field="gzwg001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="gzwg004_desc" ref_field="gzwg004" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="open_txfs"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi930" method="dialog">
+    <section id="input">
+      <input id="head" field="gzwg001,gzwg003,gzwg004,oofa011,gzwgl004,gzwgstus"/>
+      <input id="body" page="1" field="gzwh003,gzwh004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzwg001,gzwg003,gzwg004,gzwgl004,gzwgstus,gzwgownid,gzwgowndp,gzwgcrtid,gzwgcrtdp,gzwgcrtdt,gzwgmodid,gzwgmoddt"/>
+      <construct id="body" page="1" field="gzwh003,gzwh004"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzwg001,gzwg002"/>
+      <set id="head" type="no_entry" field="gzwg001,gzwg002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gzwg001">
+        <after>
+          <reference field="gzwg001_desc" ref_field="gzwg_t.gzwg001" map_field="gzwg001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="gzwg001_desc"/>
+      <column id="gzwg003" def_scc="1"/>
+      <column id="gzwg004">
+        <after>
+          <reference field="gzwg004_desc" ref_field="gzwg_t.gzwg004" map_field="gzwgent,gzwg004" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oofa011"/>
+      <column id="gzwgl004"/>
+      <column id="gzwg002"/>
+      <column id="gzwg004_desc"/>
+      <column id="gzwgstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="gzwgownid">
+        <after>
+          <reference field="gzwgownid_desc" ref_field="gzwg_t.gzwgownid" map_field="gzwgownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzwgownid_desc"/>
+      <column id="gzwgowndp">
+        <after>
+          <reference field="gzwgowndp_desc" ref_field="gzwg_t.gzwgowndp" map_field="gzwgowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzwgowndp_desc"/>
+      <column id="gzwgcrtid">
+        <after>
+          <reference field="gzwgcrtid_desc" ref_field="gzwg_t.gzwgcrtid" map_field="gzwgcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzwgcrtid_desc"/>
+      <column id="gzwgcrtdp">
+        <after>
+          <reference field="gzwgcrtdp_desc" ref_field="gzwg_t.gzwgcrtdp" map_field="gzwgcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzwgcrtdp_desc"/>
+      <column id="gzwgcrtdt"/>
+      <column id="gzwgmodid">
+        <after>
+          <reference field="gzwgmodid_desc" ref_field="gzwg_t.gzwgmodid" map_field="gzwgmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzwgmodid_desc"/>
+      <column id="gzwgmoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzwh003">
+        <after>
+          <check chkid="v_gzzo001_1" id="isExist"/>
+          <reference field="gzwh003_desc" ref_field="gzwh_t.gzwh003" map_field="gzwh003" ref_sql="SELECT gzzol003 FROM gzzol_t WHERE gzzol001=? AND gzzol002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzzo001" state="i"/>
+        <controlp form="q_gzzo001" state="c"/>
+      </column>
+      <column id="gzwh003_desc"/>
+      <column id="gzwh004" type="S" default="N"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzwg_t" pk="gzwg001,gzwg002">
+      <sql id="forupd_sql" type="sql" query="SELECT gzwg001,&apos;&apos;,gzwg003,gzwg004,&apos;&apos;,&apos;&apos;,gzwg002,&apos;&apos;,gzwgstus,gzwgownid,&apos;&apos;,gzwgowndp,&apos;&apos;,gzwgcrtid,&apos;&apos;,gzwgcrtdp,&apos;&apos;,gzwgcrtdt,gzwgmodid,&apos;&apos;,gzwgmoddt FROM gzwg_t WHERE gzwgent= ? AND gzwg001=? AND gzwg002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzwg001,&apos;&apos;,gzwg003,gzwg004,&apos;&apos;,&apos;&apos;,gzwg002,&apos;&apos;,gzwgstus,gzwgownid,&apos;&apos;,gzwgowndp,&apos;&apos;,gzwgcrtid,&apos;&apos;,gzwgcrtdp,&apos;&apos;,gzwgcrtdt,gzwgmodid,&apos;&apos;,gzwgmoddt FROM gzwg_t" order="gzwg001,gzwg002"/>
+      <sql id="append" type="lang" target="gzwgl_t.gzwgl004" table="gzwgl_t" fk="gzwg001,gzwg002" pk="gzwgl001,gzwgl002,gzwgl003" field="gzwgl004"/>
+    </head>
+    <body id="gzwh_t" page="1" linked="" pk="gzwh003" fk="gzwh001,gzwh002">
+      <sql id="forupd_sql_detail" query="SELECT gzwh003,&apos;&apos;,gzwh004 FROM gzwh_t WHERE gzwhent=? AND gzwh001=? AND gzwh002=? AND gzwh003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzwh003,&apos;&apos;,gzwh004 FROM gzwh_t WHERE gzwhent=? AND gzwh001=? AND gzwh002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

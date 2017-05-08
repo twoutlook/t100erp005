@@ -1,0 +1,65 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astq517" module="ast" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="06541" crtdt="2015-09-06 15:45:51" modid="08742" moddt="2016-09-14 13:48:52" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="專櫃合約水電費條款查詢清單">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="stflent,stflsite,stflsite_desc(chr500),stfa001,stfa002,stfa010,pmaal004,stfa005,stfal004,stflseq,stfl002,stael003,stfl003,stfl005,stfl006,stfl007,stfl008,stfl009"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="stflent(b_stflent),stflsite(b_stflsite),stflsite_desc(b_stflsite_desc),stfa001(b_stfa001),stfa002(b_stfa002),stfa010(b_stfa010),pmaal004(b_pmaal004),stfa005(b_stfa005),stfal004(b_stfal004),stflseq(b_stflseq),stfl002(b_stfl002),stael003(b_stael003),stfl003(b_stfl003),stfl005(b_stfl005),stfl006(b_stfl006),stfl007(b_stfl007),stfl008(b_stfl008),stfl009(b_stfl009)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="astq517" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="stflent" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="stflent(b_stflent)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="stflent"/>
+      <column id="stflsite">
+        <after>
+          <reference field="stflsite_desc" ref_field="stflsite" map_field="stflsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stflsite_desc"/>
+      <column id="stfa001"/>
+      <column id="stfa002"/>
+      <column id="stfa010"/>
+      <column id="pmaal004">
+        <controlp form="q_pmaa001_23" state="c"/>
+      </column>
+      <column id="stfa005"/>
+      <column id="stfal004"/>
+      <column id="stflseq"/>
+      <column id="stfl002"/>
+      <column id="stael003"/>
+      <column id="stfl003"/>
+      <column id="stfl005"/>
+      <column id="stfl006"/>
+      <column id="stfl007" type="S" default="0"/>
+      <column id="stfl008"/>
+      <column id="stfl009" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="stfl_t" page="1" linked="" pk="stflseq,stfl001">
+      <sql id="b_fill_sql" query="SELECT stflent,stflsite,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,stflseq,stfl002,&apos;&apos;,stfl003,stfl005,stfl006,stfl007,stfl008,stfl009 FROM stfl_t WHERE stflent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

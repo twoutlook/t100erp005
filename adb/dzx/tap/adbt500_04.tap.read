@@ -1,0 +1,1023 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="adbt500_04" std_prog="adbt500_04" erpver="1.0" module="ADB" ver="1" env="s" zone="t10dev" booking="N" type="S" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="function.adbt500_04_xmdcdocno_ref" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#帶值
+PRIVATE FUNCTION adbt500_04_xmdcdocno_ref()
+      SELECT xmdcdocno,xmdcseq,xmdc027,xmdc031,xmdc032,
+             xmdc003,xmdc033,xmdc034,xmdc036,xmdc037,
+             xmdc038,xmdc039 
+         INTO g_xmdc_m.xmdcdocno,g_xmdc_m.xmdcseq,g_xmdc_m.xmdc027,g_xmdc_m.xmdc031,g_xmdc_m.xmdc032,
+              g_xmdc_m.xmdc003,g_xmdc_m.xmdc033,g_xmdc_m.xmdc034,g_xmdc_m.xmdc036,g_xmdc_m.xmdc037,
+              g_xmdc_m.xmdc038,g_xmdc_m.xmdc039
+         FROM xmdc_t 
+         WHERE xmdcent = g_enterprise AND xmdcdocno = g_xmdcdocno AND xmdcseq = g_xmdcseq
+       
+       CALL adbt500_04_xmdc031_ref()
+       CALL adbt500_04_xmdc003_ref()
+       
+       DISPLAY BY NAME g_xmdc_m.xmdcdocno,g_xmdc_m.xmdcseq,g_xmdc_m.xmdc027,g_xmdc_m.xmdc031,
+                       g_xmdc_m.xmdc031_desc,g_xmdc_m.xmdc032,g_xmdc_m.xmdc003,g_xmdc_m.xmdc003_desc,g_xmdc_m.xmdc033,g_xmdc_m.xmdc034,
+                       g_xmdc_m.xmdc036,g_xmdc_m.xmdc037,g_xmdc_m.xmdc038,g_xmdc_m.xmdc039
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt500_04_xmdc031_ref" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adbt500_04_xmdc031_ref()
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = g_xmdc_m.xmdc031
+       CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='263' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+       LET g_xmdc_m.xmdc031_desc = '', g_rtn_fields[1] , ''
+       DISPLAY BY NAME g_xmdc_m.xmdc031_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt500_04_xmdc003_ref" order="3" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adbt500_04_xmdc003_ref()
+        INITIALIZE g_ref_fields TO NULL
+        LET g_ref_fields[1] = g_xmdc_m.xmdc003
+        CALL ap_ref_array2(g_ref_fields,"SELECT imaal003 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+        LET g_xmdc_m.xmdc003_desc = '', g_rtn_fields[1] , ''
+        DISPLAY BY NAME g_xmdc_m.xmdc003_desc
+END FUNCTION]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_xmdcdocno     LIKE xmdc_t.xmdcdocno
+DEFINE g_xmdcseq       LIKE xmdc_t.xmdcseq
+DEFINE g_xmdcsite      LIKE xmdc_t.xmdcsite
+DEFINE g_xmdc_m_t      type_g_xmdc_m
+DEFINE g_bgjob         LIKE type_t.chr1
+DEFINE g_oofa001       LIKE oofa_t.oofa001]]>
+  </point>
+  <point name="input.a.xmdc003" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL adbt500_04_xmdc003_ref()
+            IF NOT cl_null(g_xmdc_m.xmdc003) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_xmdc_m.xmdc003
+ 
+               #呼叫檢查存在並帶值的library
+               IF NOT cl_chk_exist("v_imaf001_2") THEN
+                  LET g_xmdc_m.xmdc003 = g_xmdc_m_t.xmdc003
+                  CALL adbt500_04_xmdc003_ref()
+                  NEXT FIELD CURRENT
+               END IF 
+            END IF ]]>
+  </point>
+  <point name="input.a.xmdc025" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xmdc_m.xmdc025) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_oofa001
+               LET g_chkparam.arg2 = g_xmdc_m.xmdc025
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_oofb019_4") THEN
+                  #檢查成功時後續處理
+                  #呼叫地址組合應用元件，將組合好的聯絡地址顯示在下方
+
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_xmdc_m.xmdc025 = g_xmdc_m_t.xmdc025
+                   CALL adbt500_04_xmdc025_ref()
+                  NEXT FIELD CURRENT
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.a.xmdc026" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL adbt500_04_xmdc026_ref() 
+            
+            IF NOT cl_null(g_xmdc_m.xmdc026) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_oofa001
+               LET g_chkparam.arg2 = g_xmdc_m.xmdc026
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_oofb019_4") THEN
+                  #檢查成功時後續處理
+                  #呼叫地址組合應用元件，將組合好的聯絡地址顯示在下方
+
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_xmdc_m.xmdc026 = g_xmdc_m_t.xmdc026
+                  CALL adbt500_04_xmdc026_ref()
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+]]>
+  </point>
+  <point name="input.a.xmdc027" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xmdc_m.xmdc027) THEN 
+               
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = l_xmda004
+               LET g_chkparam.arg2 = l_xmdc001
+               LET g_chkparam.arg3 = l_xmdc002
+               LET g_chkparam.arg4 = g_xmdc_m.xmdc027                
+               #呼叫檢查存在並帶值的library
+               IF NOT cl_chk_exist("v_pmao004") THEN
+                  LET g_xmdc_m.xmdc027 = g_xmdc_m_t.xmdc027
+                  DISPLAY BY NAME g_xmdc_m.xmdc027
+                  NEXT FIELD CURRENT
+               END IF
+            END IF ]]>
+  </point>
+  <point name="input.a.xmdc028" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL adbt500_04_xmdc028_ref()
+            IF NOT cl_null(g_xmdc_m.xmdc028) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = l_xmdcunit
+               LET g_chkparam.arg2 = g_xmdc_m.xmdc028                  
+               #呼叫檢查存在並帶值的library
+               IF NOT cl_chk_exist("v_inaa001_1") THEN
+                  LET g_xmdc_m.xmdc028 = g_xmdc_m_t.xmdc028
+                  DISPLAY BY NAME g_xmdc_m.xmdc028
+                  CALL adbt500_04_xmdc028_ref()
+                  NEXT FIELD CURRENT
+               ELSE
+                  IF NOT adbt500_04_xmdc029_chk() THEN
+                     LET g_xmdc_m.xmdc028 = g_xmdc_m_t.xmdc028
+                     DISPLAY BY NAME g_xmdc_m.xmdc028
+                     CALL adbt500_04_xmdc028_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            
+
+            END IF ]]>
+  </point>
+  <point name="input.a.xmdc029" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL adbt500_04_xmdc028_ref()
+            IF NOT cl_null(g_xmdc_m.xmdc029) THEN 
+               IF NOT adbt500_04_xmdc029_chk() THEN
+                  LET g_xmdc_m.xmdc029 = g_xmdc_m_t.xmdc029
+                  DISPLAY BY NAME g_xmdc_m.xmdc028
+                  CALL adbt500_04_xmdc029_ref()
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+]]>
+  </point>
+  <point name="input.a.xmdc030" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            LET l_imaf062 = ''
+            SELECT imaf062 INTO l_imaf062 FROM imaf_t 
+             WHERE imafent = g_enterprise 
+               AND imafsite = g_site 
+               AND imaf001 = l_xmdc001
+            
+            #判斷[T:料件據點進銷存檔].[C:批號自動編碼]是否有勾選，若勾選自動編碼時需,呼叫命名規則產生的應用元件產生批號
+            IF l_imaf062 = 'Y' THEN
+            END IF
+            #若輸入的料件+批號不存在[T:料件批號資料檔]時，則呼叫應用元件新增料件批號基本資料]]>
+  </point>
+  <point name="input.a.xmdc031" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL adbt500_04_xmdc031_ref()
+            IF NOT cl_null(g_xmdc_m.xmdc031) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_xmdc_m.xmdc031
+
+               #呼叫檢查存在並帶值的library
+               IF NOT cl_chk_exist("v_oocq002_263") THEN
+                  LET g_xmdc_m.xmdc031 = g_xmdc_m_t.xmdc031
+                  CALL adbt500_04_xmdc031_ref()
+                  NEXT FIELD CURRENT
+               END IF
+            END IF ]]>
+  </point>
+  <point name="input.a.xmdc033" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xmdc_m.xmdc033) THEN 
+            END IF 
+]]>
+  </point>
+  <point name="input.a.xmdc034" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xmdc_m.xmdc034) THEN 
+            END IF 
+]]>
+  </point>
+  <point name="input.a.xmdc036" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.a.xmdc037" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.a.xmdc038" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.a.xmdcdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+]]>
+  </point>
+  <point name="input.a.xmdcseq" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+]]>
+  </point>
+  <point name="input.action" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.after_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+                
+            CALL cl_showmsg()   #錯誤訊息統整顯示
+ 
+            #單頭修改
+            UPDATE xmdc_t SET (xmdc027,xmdc031,xmdc032,xmdc003,xmdc033,xmdc036,xmdc037,xmdc038,xmdc039) = 
+              (g_xmdc_m.xmdc027,g_xmdc_m.xmdc031,g_xmdc_m.xmdc032,g_xmdc_m.xmdc003,g_xmdc_m.xmdc033,g_xmdc_m.xmdc036,g_xmdc_m.xmdc037,g_xmdc_m.xmdc038,g_xmdc_m.xmdc039)
+             WHERE xmdcent = g_enterprise AND xmdcdocno = g_xmdcdocno AND xmdcseq = g_xmdcseq
+            IF SQLCA.sqlcode THEN
+               CALL cl_err("xmdc_t",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')
+            ELSE
+               UPDATE xmja_t SET xmja033 = g_xmdc_m.xmdc027
+                WHERE xmjaent = g_enterprise AND xmjadocno = g_xmdcdocno AND xmjaseq = g_xmdcseq
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("xmdc_t",SQLCA.sqlcode,1)  
+                  CALL s_transaction_end('N','0')
+               END IF
+               CALL s_transaction_end('Y','0')
+            END IF]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF p_cmd ='u' THEN
+               
+               CALL s_transaction_begin()
+               
+               OPEN adbt500_04_cl USING g_enterprise,g_xmdcdocno,g_xmdcseq
+               IF STATUS THEN
+                  CALL cl_err("OPEN adbt500_04_cl:", STATUS, 1)
+                  CLOSE adbt500_04_cl
+                  CALL s_transaction_end('N','0')
+                  RETURN
+               END IF
+    
+               #鎖住將被更改或取消的資料
+               FETCH adbt500_04_cl INTO g_xmdc_m.xmdcdocno,g_xmdc_m.xmdcseq,g_xmdc_m.xmdc027,g_xmdc_m.xmdc031,
+                                        g_xmdc_m.xmdc031_desc,g_xmdc_m.xmdc032,g_xmdc_m.xmdc003,g_xmdc_m.xmdc003_desc,
+                                        g_xmdc_m.xmdc033,g_xmdc_m.xmdc034,
+                                        g_xmdc_m.xmdc036,g_xmdc_m.xmdc037,g_xmdc_m.xmdc038,g_xmdc_m.xmdc039
+            
+               #資料被他人LOCK, 或是sql執行時出現錯誤
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("xmdc_t",SQLCA.sqlcode,0)
+                  CLOSE adbt500_04_cl
+                  CALL s_transaction_end('N','0')
+                  RETURN
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.c.xmdc003" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdc_m.xmdc003             #給予default值
+            LET g_qryparam.default2 = "" #g_xmdc_m.imaal003 #品名
+
+            #給予arg
+
+            CALL q_imaa001_3()                                #呼叫開窗
+
+            LET g_xmdc_m.xmdc003 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xmdc_m.xmdc003 TO xmdc003              #顯示到畫面上
+            CALL adbt500_04_xmdc003_ref()
+
+            NEXT FIELD xmdc003                          #返回原欄位]]>
+  </point>
+  <point name="input.c.xmdc025" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdc_m.xmdc025             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_oofa001 #
+            LET g_qryparam.where = " oofb008 = '2' " 
+            CALL q_oofb019_1()                                #呼叫開窗
+
+            LET g_xmdc_m.xmdc025 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xmdc_m.xmdc025 TO xmdc025              #顯示到畫面上
+            CALL adbt500_04_xmdc025_ref()
+            NEXT FIELD xmdc025                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.xmdc026" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdc_m.xmdc026             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_oofa001 #
+            LET g_qryparam.where = " oofb008 = '2' "          #發票地址
+
+            CALL q_oofb019_1()                                #呼叫開窗
+
+            LET g_xmdc_m.xmdc026 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xmdc_m.xmdc026 TO xmdc026              #顯示到畫面上
+            CALL adbt500_04_xmdc026_ref()
+            NEXT FIELD xmdc026                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.xmdc027" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdc_m.xmdc027             #給予default值
+
+            #給予arg
+
+            IF cl_null(l_xmdc001) OR cl_null(l_xmdc002) THEN
+               #給予arg
+               LET g_qryparam.arg1 = l_xmda004 
+               CALL q_pmao004_2()                                #呼叫開窗
+            ELSE            
+               #給予arg
+               LET g_qryparam.arg1 = l_xmda004
+               LET g_qryparam.arg2 = l_xmdc001
+               LET g_qryparam.arg3 = l_xmdc002
+               CALL q_pmao004_1()                                #呼叫開窗
+            END IF
+
+            LET g_xmdc_m.xmdc027 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xmdc_m.xmdc027 TO xmdc027              #顯示到畫面上
+
+            NEXT FIELD xmdc027                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.xmdc028" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdc_m.xmdc028             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_site #
+
+            CALL q_inaa001_6()                                #呼叫開窗
+
+            LET g_xmdc_m.xmdc028 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xmdc_m.xmdc028 TO xmdc028              #顯示到畫面上
+
+            NEXT FIELD xmdc028                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.xmdc029" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdc_m.xmdc029             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_site #
+            LET g_qryparam.arg2 = g_xmdc_m.xmdc028 #
+
+            CALL q_inab002_6()                                #呼叫開窗
+
+            LET g_xmdc_m.xmdc029 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xmdc_m.xmdc029 TO xmdc029              #顯示到畫面上
+
+            NEXT FIELD xmdc029                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.xmdc031" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdc_m.xmdc031             #給予default值
+            LET g_qryparam.default2 = "" #g_xmdc_m.oocq010 #參考欄位七
+
+            #給予arg
+            LET g_qryparam.arg1 = "263" #
+
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_xmdc_m.xmdc031 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xmdc_m.xmdc031 TO xmdc031              #顯示到畫面上
+            CALL adbt500_04_xmdc031_ref()
+
+            NEXT FIELD xmdc031                          #返回原欄位
+]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE p_xmdcdocno     LIKE xmdc_t.xmdcdocno
+   DEFINE p_xmdcseq       LIKE xmdc_t.xmdcseq
+   DEFINE p_xmdcsite      LIKE xmdc_t.xmdcsite
+   DEFINE l_forupd_sql    STRING
+   DEFINE l_xmda004       LIKE xmda_t.xmda004
+   DEFINE l_xmdc001       LIKE xmdc_t.xmdc001
+   DEFINE l_xmdc002       LIKE xmdc_t.xmdc002
+   DEFINE l_imaf062       LIKE imaf_t.imaf062
+   DEFINE l_xmdcunit      LIKE xmdc_t.xmdcunit
+   DEFINE l_ooef012       LIKE ooef_t.ooef012
+   DEFINE l_xmdcorga      LIKE xmdc_t.xmdcorga ]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   p_xmdcdocno,p_xmdcseq,p_xmdcsite]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL cl_set_combo_scc_part('xmdc032','2056','1,2,3,4')
+   LET g_xmdcdocno = p_xmdcdocno
+   LET g_xmdcseq = p_xmdcseq
+   INITIALIZE g_xmdc_m.* LIKE xmdc_t.*
+   
+   CALL adbt500_04_xmdcdocno_ref()  #帶值
+   
+   INITIALIZE g_xmdc_m_t.* TO NULL
+   LET g_xmdc_m_t.* = g_xmdc_m.*
+   
+   LET p_cmd = 'u'
+   LET l_forupd_sql = "SELECT xmdcdocno,xmdcseq,xmdc027,xmdc031,'',xmdc032,xmdc003,'',xmdc033,xmdc034,xmdc036,xmdc037,xmdc038,xmdc039 FROM xmdc_t WHERE xmdcent= ? AND xmdcdocno=? AND xmdcseq = ? FOR UPDATE"
+   LET l_forupd_sql = cl_sql_forupd(l_forupd_sql)                #轉換不同資料庫語法
+   DECLARE adbt500_04_cl CURSOR FROM l_forupd_sql
+  
+   DISPLAY BY NAME g_xmdc_m.xmdcdocno,g_xmdc_m.xmdcseq,g_xmdc_m.xmdc027,g_xmdc_m.xmdc031,
+                   g_xmdc_m.xmdc031_desc,g_xmdc_m.xmdc032,g_xmdc_m.xmdc003,g_xmdc_m.xmdc003_desc,
+                   g_xmdc_m.xmdc033,g_xmdc_m.xmdc034,
+                   g_xmdc_m.xmdc036,g_xmdc_m.xmdc037,g_xmdc_m.xmdc038,g_xmdc_m.xmdc039
+    
+   #獲取當前營運據點的聯絡對象識別碼
+   LET g_oofa001 = ''
+   SELECT oofa001 INTO g_oofa001 FROM oofa_t 
+    WHERE oofaent = g_enterprise AND oofa002 = '1' AND oofa003 = g_xmdcsite
+   
+   LET l_xmda004 = ''
+   LET l_xmdc001 = ''
+   LET l_xmdc002 = ''
+   #獲得供應商編號、料件編號、產品特徵
+   SELECT xmda004 INTO l_xmda004 FROM xmda_t 
+    WHERE xmdaent = g_enterprise AND xmdadocno = g_xmdcdocno
+   
+   SELECT xmdc001,xmdc002 INTO l_xmdc001,l_xmdc002 FROM xmdc_t 
+    WHERE xmdcent = g_enterprise AND xmdcdocno = g_xmdcdocno AND xmdcseq = g_xmdcseq
+               
+   
+   LET l_xmdcunit = ''
+   #獲得收貨據點
+   SELECT xmdcunit,xmdcorga INTO l_xmdcunit,l_xmdcorga FROM xmdc_t 
+    WHERE xmdcent = g_enterprise AND xmdcdocno = g_xmdcdocno AND xmdcseq = g_xmdcseq
+   IF cl_null(l_xmdcunit) THEN
+      LET l_xmdcunit = g_xmdcsite
+   END IF
+          ]]>
+  </point>
+  <point name="show.head.reference" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xmdc_m.xmdc028
+            CALL ap_ref_array2(g_ref_fields,"SELECT inaa002 FROM inaa_t WHERE inaaent='"||g_enterprise||"' AND inaa001=? ","") RETURNING g_rtn_fields
+            LET g_xmdc_m.xmdc028_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xmdc_m.xmdc028_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xmdc_m.xmdc029
+            CALL ap_ref_array2(g_ref_fields,"SELECT inab003 FROM inab_t WHERE inabent='"||g_enterprise||"' AND inab001=? AND inab002=? ","") RETURNING g_rtn_fields
+            LET g_xmdc_m.xmdc029_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xmdc_m.xmdc029_desc
+]]>
+  </point>
+  <section id="adbt500_04.description" ver="42" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000012
+#+ 
+#+ Filename...: adbt500_04
+#+ Description: ...
+#+ Creator....: 02748(2014/06/16)
+#+ Modifier...: 02748(2014/06/17)
+#+ Buildtype..: 應用 c01b 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="adbt500_04.global" ver="6" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_xmdc_m        RECORD
+       xmdcdocno LIKE xmdc_t.xmdcdocno, 
+   xmdcseq LIKE xmdc_t.xmdcseq, 
+   xmdc027 LIKE xmdc_t.xmdc027, 
+   xmdc031 LIKE xmdc_t.xmdc031, 
+   xmdc031_desc LIKE type_t.chr80, 
+   xmdc032 LIKE xmdc_t.xmdc032, 
+   xmdc003 LIKE xmdc_t.xmdc003, 
+   xmdc003_desc LIKE type_t.chr80, 
+   xmdc033 LIKE xmdc_t.xmdc033, 
+   xmdc034 LIKE xmdc_t.xmdc034, 
+   xmdc036 LIKE xmdc_t.xmdc036, 
+   xmdc037 LIKE xmdc_t.xmdc037, 
+   xmdc038 LIKE xmdc_t.xmdc038, 
+   xmdc039 LIKE xmdc_t.xmdc039
+       END RECORD
+DEFINE g_xmdc_m        type_g_xmdc_m
+ 
+   DEFINE g_xmdcdocno_t LIKE xmdc_t.xmdcdocno
+DEFINE g_xmdcseq_t LIKE xmdc_t.xmdcseq
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="adbt500_04.input" ver="9" status="" src="s">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION adbt500_04(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_adbt500_04 WITH FORM cl_ap_formpath("adb","adbt500_04")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_xmdc_m.xmdcdocno,g_xmdc_m.xmdcseq,g_xmdc_m.xmdc027,g_xmdc_m.xmdc031,g_xmdc_m.xmdc032, 
+          g_xmdc_m.xmdc003,g_xmdc_m.xmdc033,g_xmdc_m.xmdc034,g_xmdc_m.xmdc036,g_xmdc_m.xmdc037,g_xmdc_m.xmdc038, 
+          g_xmdc_m.xmdc039 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #此段落由子樣板a01產生
+         BEFORE FIELD xmdcdocno
+            #add-point:BEFORE FIELD xmdcdocno
+            {<point name="input.b.xmdcdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdcdocno
+            
+            #add-point:AFTER FIELD xmdcdocno
+            {<point name="input.a.xmdcdocno" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdcdocno
+            #add-point:ON CHANGE xmdcdocno
+            {<point name="input.g.xmdcdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdcseq
+            #add-point:BEFORE FIELD xmdcseq
+            {<point name="input.b.xmdcseq" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdcseq
+            
+            #add-point:AFTER FIELD xmdcseq
+            {<point name="input.a.xmdcseq" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdcseq
+            #add-point:ON CHANGE xmdcseq
+            {<point name="input.g.xmdcseq" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdc027
+            
+            #add-point:AFTER FIELD xmdc027
+            {<point name="input.a.xmdc027" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdc027
+            #add-point:BEFORE FIELD xmdc027
+            {<point name="input.b.xmdc027" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdc027
+            #add-point:ON CHANGE xmdc027
+            {<point name="input.g.xmdc027" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdc031
+            
+            #add-point:AFTER FIELD xmdc031
+            {<point name="input.a.xmdc031" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdc031
+            #add-point:BEFORE FIELD xmdc031
+            {<point name="input.b.xmdc031" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdc031
+            #add-point:ON CHANGE xmdc031
+            {<point name="input.g.xmdc031" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdc032
+            #add-point:BEFORE FIELD xmdc032
+            {<point name="input.b.xmdc032" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdc032
+            
+            #add-point:AFTER FIELD xmdc032
+            {<point name="input.a.xmdc032" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdc032
+            #add-point:ON CHANGE xmdc032
+            {<point name="input.g.xmdc032" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdc003
+            
+            #add-point:AFTER FIELD xmdc003
+            {<point name="input.a.xmdc003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdc003
+            #add-point:BEFORE FIELD xmdc003
+            {<point name="input.b.xmdc003" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdc003
+            #add-point:ON CHANGE xmdc003
+            {<point name="input.g.xmdc003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdc033
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_xmdc_m.xmdc033,"0.000","1","100.000","1","azz-00087",1) THEN
+               NEXT FIELD xmdc033
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmdc033
+            {<point name="input.a.xmdc033" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdc033
+            #add-point:BEFORE FIELD xmdc033
+            {<point name="input.b.xmdc033" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdc033
+            #add-point:ON CHANGE xmdc033
+            {<point name="input.g.xmdc033" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdc034
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_xmdc_m.xmdc034,"0.000","1","100.000","1","azz-00087",1) THEN
+               NEXT FIELD xmdc034
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmdc034
+            {<point name="input.a.xmdc034" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdc034
+            #add-point:BEFORE FIELD xmdc034
+            {<point name="input.b.xmdc034" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdc034
+            #add-point:ON CHANGE xmdc034
+            {<point name="input.g.xmdc034" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdc036
+            #add-point:BEFORE FIELD xmdc036
+            {<point name="input.b.xmdc036" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdc036
+            
+            #add-point:AFTER FIELD xmdc036
+            {<point name="input.a.xmdc036" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdc036
+            #add-point:ON CHANGE xmdc036
+            {<point name="input.g.xmdc036" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdc037
+            #add-point:BEFORE FIELD xmdc037
+            {<point name="input.b.xmdc037" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdc037
+            
+            #add-point:AFTER FIELD xmdc037
+            {<point name="input.a.xmdc037" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdc037
+            #add-point:ON CHANGE xmdc037
+            {<point name="input.g.xmdc037" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdc038
+            #add-point:BEFORE FIELD xmdc038
+            {<point name="input.b.xmdc038" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdc038
+            
+            #add-point:AFTER FIELD xmdc038
+            {<point name="input.a.xmdc038" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdc038
+            #add-point:ON CHANGE xmdc038
+            {<point name="input.g.xmdc038" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdc039
+            #add-point:BEFORE FIELD xmdc039
+            {<point name="input.b.xmdc039" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdc039
+            
+            #add-point:AFTER FIELD xmdc039
+            {<point name="input.a.xmdc039" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdc039
+            #add-point:ON CHANGE xmdc039
+            {<point name="input.g.xmdc039" />}
+            #END add-point
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.xmdcdocno
+         ON ACTION controlp INFIELD xmdcdocno
+            #add-point:ON ACTION controlp INFIELD xmdcdocno
+            {<point name="input.c.xmdcdocno" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xmdcseq
+         ON ACTION controlp INFIELD xmdcseq
+            #add-point:ON ACTION controlp INFIELD xmdcseq
+            {<point name="input.c.xmdcseq" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xmdc027
+         ON ACTION controlp INFIELD xmdc027
+            #add-point:ON ACTION controlp INFIELD xmdc027
+            {<point name="input.c.xmdc027" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xmdc031
+         ON ACTION controlp INFIELD xmdc031
+            #add-point:ON ACTION controlp INFIELD xmdc031
+            {<point name="input.c.xmdc031" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xmdc032
+         ON ACTION controlp INFIELD xmdc032
+            #add-point:ON ACTION controlp INFIELD xmdc032
+            {<point name="input.c.xmdc032" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xmdc003
+         ON ACTION controlp INFIELD xmdc003
+            #add-point:ON ACTION controlp INFIELD xmdc003
+            {<point name="input.c.xmdc003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xmdc033
+         ON ACTION controlp INFIELD xmdc033
+            #add-point:ON ACTION controlp INFIELD xmdc033
+            {<point name="input.c.xmdc033" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xmdc034
+         ON ACTION controlp INFIELD xmdc034
+            #add-point:ON ACTION controlp INFIELD xmdc034
+            {<point name="input.c.xmdc034" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xmdc036
+         ON ACTION controlp INFIELD xmdc036
+            #add-point:ON ACTION controlp INFIELD xmdc036
+            {<point name="input.c.xmdc036" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xmdc037
+         ON ACTION controlp INFIELD xmdc037
+            #add-point:ON ACTION controlp INFIELD xmdc037
+            {<point name="input.c.xmdc037" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xmdc038
+         ON ACTION controlp INFIELD xmdc038
+            #add-point:ON ACTION controlp INFIELD xmdc038
+            {<point name="input.c.xmdc038" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xmdc039
+         ON ACTION controlp INFIELD xmdc039
+            #add-point:ON ACTION controlp INFIELD xmdc039
+            {<point name="input.c.xmdc039" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_adbt500_04 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="adbt500_04.other_dialog" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="adbt500_04.other_function" ver="2" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

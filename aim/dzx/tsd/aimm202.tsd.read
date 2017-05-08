@@ -1,0 +1,651 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aimm202" std_prog="aimm202" erpver="1.0" ver="7" module="AIM" type="M" booking="N" designer_ver="1.0" class="m" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="imaf_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：當參數設定不使用料件申請功能時，可透過本作業維護料件的據點庫存資料。
+作業功能：修改/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：(基本資料/交易單據)維護作業
+輸入模式：單檔搭配查詢方案模式F001_sc
+作業資料來源(Master)：imaa_t(商品/料件主檔)
+                      imaal_t(商品/料件品名規格檔)
+                      imaf_t(料號據點進銷存檔)
+                      imai_t(料件據點資訊檔)
+查詢方案設定：
+ (1)系統預設查詢方案：
+    未確認料件 stus='N'
+    已確認料件 stus='Y'
+    作廢料件 stus='X'
+ (2)系統預設相關作業：
+    aimm200料件主檔維護作業
+ (3)瀏覽Browse顯示欄位及型態：
+    imaa001(料件編號)：ButtonEdit
+    imaal003(品名)：Edit
+    imaal004(規格)：Edit
+    imaa009(產品分類碼)：ButtonEdit -> 顯示說明(rtaxl003)
+    imaa003(主分群碼)：ButtonEdit -> 顯示說明(imcal003)
+    imaf051(庫存分群)：ButtonEdit
+    oocql004(說明)：Edit
+ (4)傳入參數：
+    g_argv[1]：營運據點'ALL'，若g_argv[1]不為null，則 g_site = g_argv[1]
+    (註：營運據點為'ALL'和其他營運據點的會拆成兩支作業)
+單頭串查：
+    單頭欄位：產品分類碼  串查程式：aimi010 產品分類碼維護作業
+    單頭欄位：主分群碼    串查程式：aimi100 料件主分群維護作業
+特別說明：
+    1.畫面上的狀態碼為料件申請主檔的狀態碼，所以該作業不能做狀態碼的變更
+    2.在set_no_entry的function最後，若g_site<>'ALL'，則呼叫s_aooi090_set_no_entry，設定為集團一致的欄位不可輸入
+1.[T:商品/料件主檔].[C:資料狀態碼]='N'時，才可異動資料
+2.異動資料後，一併更新[T:料號據點資訊檔].[C:庫存檢核型態]='1.已檢查',
+                      [T:料號據點資訊檔].[C:庫存最後修改者]=g_user,
+                      [T:料號據點資訊檔].[C:庫存最後修改日期]=cl_get_current()
+2.1更新[T:料號據點資訊檔]時，一併呼叫s_aimm200_upd_item_site_stus更新據點狀態碼
+3.當資料有變更時，若g_site='ALL'，則呼叫s_aooi090_upd_fields，將有設定為集團一致的欄位資料一併更新
+]]>
+  </all>
+  <mi_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[
+]]>
+  </mi_all>
+  <field cite_std="N" name="b_imaa003" ver="4" src="s" column="imaa003" table="imaa_t" attribute="" type="" req="N" i_zoom="q_imck001" c_zoom="q_imck001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_imaa009" ver="4" src="s" column="imaa009" table="imaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_rtax001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_imaal003" ver="1" src="s" column="imaal003" table="imaal_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_imaal004" ver="1" src="s" column="imaal004" table="imaal_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_imaf001" ver="1" src="s" column="imaf001" table="imaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_imaf051" ver="1" src="s" column="imaf051" table="imaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_imck001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_oocql004" ver="1" src="s" column="oocql004" table="oocql_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaa003_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaa003_desc1" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaa005_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaa006_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaa009_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaa009_desc1" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaa010_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaa_t.imaa002" ver="1" src="s" column="imaa002" table="imaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaa_t.imaa003" ver="1" src="s" column="imaa003" table="imaa_t" attribute="" type="" req="N" i_zoom="q_imck001" c_zoom="q_imck001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaa_t.imaa004" ver="1" src="s" column="imaa004" table="imaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="1001" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaa_t.imaa005" ver="1" src="s" column="imaa005" table="imaa_t" attribute="" type="" req="N" i_zoom="q_imea001" c_zoom="q_imea001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaa_t.imaa006" ver="1" src="s" column="imaa006" table="imaa_t" attribute="" type="" req="N" i_zoom="q_ooca001_1" c_zoom="q_ooca001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaa_t.imaa009" ver="1" src="s" column="imaa009" table="imaa_t" attribute="" type="" req="N" i_zoom="q_rtax001" c_zoom="q_rtax001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaa_t.imaa010" ver="1" src="s" column="imaa010" table="imaa_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf091_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf092_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf001" ver="1" src="s" column="imaf001" table="imaf_t" attribute="" type="" req="Y" i_zoom="q_imaa001" c_zoom="q_imaa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf051" ver="1" src="s" column="imaf051" table="imaf_t" attribute="" type="" req="Y" i_zoom="q_imcc051" c_zoom="q_imcc051" chk_ref="v_imcc051" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.傳入參數arg1=imaf051
+帶值:自動帶出[T:應用分類碼多語言檔].[C:說明]
+             WHERE [T:應用分類碼多語言檔].[C:應用分類]=201
+                 AND [T:應用分類碼多語言檔].[C:應用分類瑪]=[C:庫存分群]
+          到本欄位後面顯示
+計算或處理:1.若有修改，跳出詢問視窗是否重帶料件分群資料，選擇是，則依此分群重帶aimi102或aimi112(依營運據點)的資料
+                  ami212需要考虑(aooi090有設定到的欄位就不用重帶)]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf052" ver="1" src="s" column="imaf052" table="imaf_t" attribute="" type="" req="N" i_zoom="q_ooag001_2" c_zoom="q_ooag001_2" chk_ref="v_ooag001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設值:由aimm200(料件主檔)輸入完[C:主分群碼],然後抓取[P:主分群維護作業]
+            對應的[C:庫存分群]的值,再以[C:庫存分群]到[T:料件據點庫存分群檔]抓
+            取[C:倉管員]寫入[T:料號據點進銷存檔].[C:倉管員]
+校驗:1.傳入參數arg1 = imaf052
+帶值:以[C:倉管員]值到[T:員工檔]抓取[C:聯絡對象識別碼],再以[C:聯絡對象識別碼]
+             到[T:聯絡對象檔]中抓取[C:全名]到本欄位後面顯示
+開窗處理：
+     參考函式：q_ooag001_2
+     查詢欄位：[T:員工檔].[C:員工編號],[T:聯絡對象檔].[C:全名]
+     新增或修改時過濾條件：[T:員工檔].[C:聯絡對象識別碼]=[T:聯絡對象檔].[C:聯絡對象識別碼]且為有效資料
+     回值類型：查詢時多重回值;新增或修改時單一回值
+]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf053" ver="1" src="s" column="imaf053" table="imaf_t" attribute="" type="" req="Y" i_zoom="q_ooca001_1" c_zoom="q_ooca001_1" chk_ref="v_ooca001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.傳入參數arg1 = imaf053
+        2.檢查[C:庫存單位]與[T:商品/料件主檔].[C:基礎單位]間有沒有轉換率,
+            請呼叫s_get_unit_convrate應用元件
+帶值:1.顯示時顯示單位的多語言說明
+
+]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf054" ver="1" src="s" column="imaf054" table="imaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[其他說明:勾選表示允許多庫存單位，未勾選則表示只會有單一庫存單位]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf055" ver="4" src="s" column="imaf055" table="imaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="1019" default="3" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf057" ver="1" src="s" column="imaf057" table="imaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="36" default="A" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf058" ver="1" src="s" column="imaf058" table="imaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="1010" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf059" ver="1" src="s" column="imaf059" table="imaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="1011" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf061" ver="1" src="s" column="imaf061" table="imaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="1012" default="3" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf062" ver="1" src="s" column="imaf062" table="imaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf063" ver="1" src="s" column="imaf063" table="imaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf064" ver="1" src="s" column="imaf064" table="imaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="1014" default="3" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf071" ver="1" src="s" column="imaf071" table="imaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="1012" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf072" ver="1" src="s" column="imaf072" table="imaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf073" ver="1" src="s" column="imaf073" table="imaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf074" ver="1" src="s" column="imaf074" table="imaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="1014" default="2" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf081" ver="1" src="s" column="imaf081" table="imaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="1013" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf082" ver="1" src="s" column="imaf082" table="imaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf083" ver="1" src="s" column="imaf083" table="imaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf084" ver="1" src="s" column="imaf084" table="imaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="1014" default="2" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf091" ver="1" src="s" column="imaf091" table="imaf_t" attribute="" type="" req="N" i_zoom="q_inaa001_4" c_zoom="q_inaa001_4" chk_ref="v_inaa001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.傳入參數arg1 = 當前營運據點 arg2=imaf091
+帶值:自動帶出[T:庫位基本資料檔].[C:庫位名稱]到本欄位後面顯示
+開窗處理：
+     參考函式：q_inaa001_4
+     傳入參數arg1 = 當前營運據點]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf092" ver="1" src="s" column="imaf092" table="imaf_t" attribute="" type="" req="N" i_zoom="q_inab002_8" c_zoom="q_inab002_8" chk_ref="v_inab002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.傳入參數arg1 = 當前營運據點 arg2 =  imaf091 arg3 = imaf092
+帶值:自動帶出[T:儲位基本資料檔].[C:儲位名稱]到本欄位後面顯示
+開窗處理：
+     參考函式：q_inab002_8
+     傳入參數：arg1 = 當前營運據點 arg2 =  imaf091
+    ]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf093" ver="1" src="s" column="imaf093" table="imaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[其他說明:勾選表示要使用箱盒號條碼管理功能
+
+]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf094" ver="1" src="s" column="imaf094" table="imaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[校驗:1.若有輸入值不可<0
+        2.本欄位與[C:盤點容差率]一定要擇一輸入,不可均為null]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf095" ver="1" src="s" column="imaf095" table="imaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="&lt;=" max="100.000" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設值:0(輸入值範圍0~100)     
+校驗:1.若有輸入值需介於0~100(含邊界值)
+        2.本欄位與[C:盤點容差數]一定要擇一輸入,不可均為null
+]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf096" ver="1" src="s" column="imaf096" table="imaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf101" ver="1" src="s" column="imaf101" table="imaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imaf102" ver="1" src="s" column="imaf102" table="imaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imafcnfdt" ver="1" src="s" column="imafcnfdt" table="imaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imafcnfid" ver="1" src="s" column="imafcnfid" table="imaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imafcrtdp" ver="1" src="s" column="imafcrtdp" table="imaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imafcrtdt" ver="1" src="s" column="imafcrtdt" table="imaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imafcrtid" ver="1" src="s" column="imafcrtid" table="imaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imafmoddt" ver="1" src="s" column="imafmoddt" table="imaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imafmodid" ver="1" src="s" column="imafmodid" table="imaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imafowndp" ver="1" src="s" column="imafowndp" table="imaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaf_t.imafownid" ver="1" src="s" column="imafownid" table="imaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imai_t.imai031" ver="1" src="s" column="imai031" table="imai_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imai_t.imai032" ver="1" src="s" column="imai032" table="imai_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imai_t.imai033" ver="1" src="s" column="imai033" table="imai_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imai_t.imai034" ver="1" src="s" column="imai034" table="imai_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imai_t.imai035" ver="1" src="s" column="imai035" table="imai_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imai_t.imai036" ver="1" src="s" column="imai036" table="imai_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imai_t.imai037" ver="1" src="s" column="imai037" table="imai_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_imaa002" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_imaa004" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_imaa005" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_imaa006" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_imaa010" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_imaal003" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_imaal004" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_imaal005" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_imaf057" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_imaf095_desc" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_imaf096" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_imai031" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_imai032" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_imai033" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_imai034" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_imai035" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_imai036" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_imai037" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="s1" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ComboBox" status="">
+    <![CDATA[資料狀態碼：
+   ●欄位控管：
+     資料欄位:[T:商品/料件主檔].[C:資料狀態碼]
+     允許空白:No
+     預設值:N(未確認)
+     資料選項來源:
+       資料庫: 抓取[T:系統分類值檔].[C:系統分類碼]=50的資料,
+　　     　　　　[T:系統分類值檔].[C:系統分類值]為下拉選項代號,
+                         [T:系統分類值多語言檔].[C:說明]為下拉選項說明
+               下拉選項內容有:
+               N.未確認
+               Y.已確認
+               X.無效
+     校驗:1.不允許空白
+     帶值:無
+     計算或處理:本欄位NoEntry
+]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="1" name="prog_imaa003" depend_field="imaa_t.imaa003" src="s" status="">
+      <program order="1" type="2" name="cl_user_contact(&quot;aimi100&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;)"/>
+    </pfield>
+    <pfield cite_std="N" ver="1" name="prog_imaa009" depend_field="imaa_t.imaa009" src="s" status="">
+      <program order="1" type="2" name="cl_user_contact(&quot;aimi010&quot;,&quot;&quot;,&quot;&quot;,&quot;&quot;)"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="7" name="imaf051_desc" src="s" depend_field="imaf_t.imaf051" correspon_key="&apos;201&apos;,imaf051" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status="u"/>
+    <rfield cite_std="N" ver="2" name="imaf052_desc" src="s" depend_field="imaf_t.imaf052" correspon_key="imaf052" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="imaf053_desc" src="s" depend_field="imaf_t.imaf053" correspon_key="imaf053" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="imafcnfid_desc" src="s" depend_field="imaf_t.imafcnfid" correspon_key="imafcnfid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="imafcrtdp_desc" src="s" depend_field="imaf_t.imafcrtdp" correspon_key="imafcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="imafcrtid_desc" src="s" depend_field="imaf_t.imafcrtid" correspon_key="imafcrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="imafmodid_desc" src="s" depend_field="imaf_t.imafmodid" correspon_key="imafmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="imafowndp_desc" src="s" depend_field="imaf_t.imafowndp" correspon_key="imafowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="imafownid_desc" src="s" depend_field="imaf_t.imafownid" correspon_key="imafownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+  </ref_field>
+  <multi_lang>
+    <mfield cite_std="N" ver="1" name="imaal_t.imaal003" src="s" depend_field="imaf_t.imaf001" correspon_key="imaf001" lang_table="imaal_t" lang_fk="imaal001" lang_dlang="imaal002" lang_rtn="imaal003" status="">
+      <![CDATA[]]>
+    </mfield>
+    <mfield cite_std="N" ver="1" name="imaal_t.imaal004" src="s" depend_field="imaf_t.imaf001" correspon_key="imaf001" lang_table="imaal_t" lang_fk="imaal001" lang_dlang="imaal002" lang_rtn="imaal004" status="">
+      <![CDATA[]]>
+    </mfield>
+    <mfield cite_std="N" ver="1" name="imaal_t.imaal005" src="s" depend_field="imaf_t.imaf001" correspon_key="imaf001" lang_table="imaal_t" lang_fk="imaal001" lang_dlang="imaal002" lang_rtn="imaal005" status="">
+      <![CDATA[]]>
+    </mfield>
+  </multi_lang>
+  <help_code>
+    <hfield cite_std="N" ver="4" name="b_imaa003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="b_imaa009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_imaal003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_imaal004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_imaf001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_imaf051" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_oocql004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imaa003_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imaa003_desc1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imaa005_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imaa006_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imaa009_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imaa009_desc1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imaa010_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaa_t.imaa002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaa_t.imaa003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaa_t.imaa004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaa_t.imaa005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaa_t.imaa006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaa_t.imaa009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaa_t.imaa010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imaf091_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imaf092_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf051" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf052" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf053" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf054" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="imaf_t.imaf055" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf057" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf058" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf059" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf061" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf062" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf063" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf064" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf071" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf072" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf073" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf074" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf081" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf082" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf083" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf084" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf091" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf092" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf093" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf094" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf095" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf096" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf101" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imaf102" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imafcnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imafcnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imafcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imafcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imafcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imafmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imafmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imafowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaf_t.imafownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imai_t.imai031" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imai_t.imai032" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imai_t.imai033" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imai_t.imai034" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imai_t.imai035" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imai_t.imai036" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imai_t.imai037" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_imaa002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_imaa004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_imaa005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_imaa006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_imaa010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_imaal003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_imaal004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_imaal005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_imaf057" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_imaf095_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_imaf096" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_imai031" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_imai032" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_imai033" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_imai034" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_imai035" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_imai036" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_imai037" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="s1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="action_1" ver="7" src="s" type="" gen_code="" status="d">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="aimm201_01" ver="7" src="s" type="all" gen_code="Y" status="u">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="cg" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[校驗:1.檢查畫面上有沒有[C:料件編號],沒有則不執行
+處理:開啟畫面:有，[P:據點採購資料維護作業]，
+     串出同一[C:料件編號]的資料供修改維護
+位置：TOPMENU相關作業下方]]>
+  </act>
+  <act cite_std="N" id="chb" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="chp" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[校驗:1.檢查畫面上有沒有[C:料件編號],沒有則不執行
+處理:開啟畫面:有，[P:據點產品資料維護作業]，
+     串出同一[C:料件編號]的資料供修改維護
+位置：TOPMENU相關作業下方
+]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="pg" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[校驗:1.檢查畫面上有沒有[C:料件編號],沒有則不執行
+處理:開啟畫面:有，[P:據點品管資料維護作業]，
+     串出同一[C:料件編號]的資料供修改維護
+位置：TOPMENU相關作業下方]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="shg" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[校驗:1.檢查畫面上有沒有[C:料件編號],沒有則不執行
+處理:開啟畫面:有，[P:據點生管資料維護作業]，
+     串出同一[C:料件編號]的資料供修改維護
+位置：TOPMENU相關作業下方
+]]>
+  </act>
+  <act cite_std="N" id="xsh" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[校驗:1.檢查畫面上有沒有[C:料件編號],沒有則不執行
+處理:開啟畫面:有，[P:據點銷售資料維護作業]，
+     串出同一[C:料件編號]的資料供修改維護
+位置：TOPMENU相關作業下方
+]]>
+  </act>
+  <strings>
+    <sfield name="lbl_imaf001" text="料件編號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="lbl_imaa009" text="產品分類碼" lstr=""/>
+    <sfield name="imaa009_desc1" text="說明" lstr=""/>
+    <sfield name="lbl_imaa003" text="主分群碼" lstr=""/>
+    <sfield name="imaa003_desc1" text="說明" lstr=""/>
+    <sfield name="lbl_imaf051" text="庫存分群" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_imaa002" text="版本" lstr=""/>
+    <sfield name="lbl_imaal005" text="助記碼" lstr=""/>
+    <sfield name="lbl_imaa004" text="料件類別" lstr=""/>
+    <sfield name="lbl_imaa005" text="產品特徵組別" lstr=""/>
+    <sfield name="lbl_imaa006" text="基礎單位" lstr=""/>
+    <sfield name="lbl_imaa010" text="生命週期" lstr=""/>
+    <sfield name="lbl_imaf052" text="倉管員" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_imaf053" text="庫存單位" lstr=""/>
+    <sfield name="lbl_oocal003" text="說明" lstr=""/>
+    <sfield name="lbl_imaf054" text="庫存多單位" lstr=""/>
+    <sfield name="lbl_imaf055" text="庫存管理特微" lstr=""/>
+    <sfield name="lbl_imaf057" text="ABC碼" lstr=""/>
+    <sfield name="lbl_imaf058" text="存貨備置策略" lstr=""/>
+    <sfield name="lbl_imaf059" text="撿貨策略" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="bpage_2" text="批序號控管" lstr=""/>
+    <sfield name="lbl_imaf061" text="批號控管方式" lstr=""/>
+    <sfield name="lbl_imaf062" text="批號自動編碼" lstr=""/>
+    <sfield name="lbl_imaf063" text="批號編碼方式" lstr=""/>
+    <sfield name="lbl_imaf064" text="唯一性檢查控管" lstr=""/>
+    <sfield name="lbl_imaf071" text="製造批號控管方式" lstr=""/>
+    <sfield name="lbl_imaf072" text="批號自動編碼" lstr=""/>
+    <sfield name="lbl_imaf073" text="製造批號編碼方式" lstr=""/>
+    <sfield name="lbl_imaf074" text="唯一性檢查控管" lstr=""/>
+    <sfield name="lbl_imaf081" text="序號控管方式" lstr=""/>
+    <sfield name="lbl_imaf082" text="序號自動編碼" lstr=""/>
+    <sfield name="lbl_imaf083" text="序號編碼方式" lstr=""/>
+    <sfield name="lbl_imaf084" text="唯一性檢查控管" lstr=""/>
+    <sfield name="bpage_3" text="相關資料" lstr=""/>
+    <sfield name="lbl_imaf091" text="預設庫位" lstr=""/>
+    <sfield name="lbl_imaf092" text="預設儲位" lstr=""/>
+    <sfield name="lbl_imaf093" text="箱盒號條碼管理" lstr=""/>
+    <sfield name="lbl_imaf094" text="盤點容差數" lstr=""/>
+    <sfield name="lbl_imaf095" text="盤點容差率" lstr=""/>
+    <sfield name="lbl_imaf095_desc" text="%" lstr=""/>
+    <sfield name="lbl_imaf101" text="調撥批量" lstr=""/>
+    <sfield name="lbl_imaf102" text="最小調撥數量" lstr=""/>
+    <sfield name="bpage_4" text="庫存狀況" lstr=""/>
+    <sfield name="lbl_imai031" text="首次出庫日" lstr=""/>
+    <sfield name="lbl_imai032" text="首次入庫日" lstr=""/>
+    <sfield name="lbl_imai033" text="最近出庫日" lstr=""/>
+    <sfield name="lbl_imai034" text="最近入庫日" lstr=""/>
+    <sfield name="lbl_imai035" text="最近採購日" lstr=""/>
+    <sfield name="lbl_imai036" text="最近異動日" lstr=""/>
+    <sfield name="lbl_imai037" text="最近呆滯日" lstr=""/>
+    <sfield name="lbl_imaf096" text="開帳呆滯日期" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dzeb002" text="欄位代號" lstr=""/>
+    <sfield name="lbl_dzebl003" text="欄位名稱" lstr=""/>
+    <sfield name="lbl_value" text="新值賦予" lstr=""/>
+    <sfield name="lbl_cond" text="條件欄位" lstr=""/>
+    <sfield name="lbl_cond_desc" text="條件欄位名稱" lstr=""/>
+    <sfield name="lbl_lim" text="限定內容" lstr=""/>
+    <sfield name="lbl_val" text="條件值" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_sel" text="選擇" lstr=""/>
+    <sfield name="lbl_imda001" text="營運據點" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_yes" text="確定" lstr=""/>
+    <sfield name="lbl_no" text="取消" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="aimm201_01" text="批次調整" lstr=""/>
+    <sact name="cg" text="採購據點資料" lstr=""/>
+    <sact name="chb" text="成本據點資料" lstr=""/>
+    <sact name="chp" text="產品據點資料" lstr=""/>
+    <sact name="pg" text="品管據點資料" lstr=""/>
+    <sact name="shg" text="生管據點資料" lstr=""/>
+    <sact name="xsh" text="銷售據點資料" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

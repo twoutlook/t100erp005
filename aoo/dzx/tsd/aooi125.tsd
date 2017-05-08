@@ -1,0 +1,269 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aooi125" std_prog="aooi125" erpver="1.0" ver="3" module="AOO" type="M" booking="Y" designer_ver="1.0" class="i" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="ooeg_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：維護企業底下所有部門資料
+標準作業功能取消：無
+狀態功能：有效/無效
+作業類型：基本資料維護作業
+輸入模式：單檔多欄模式F002_00
+作業資料來源(Detail)：ooeg_t(部門資料檔)
+                                   ooefl_t(組織基本資料多語言檔)
+               關聯資料表：ooef_t(組織基本資料檔)
+
+
+特別說明：
+本作業新增後要同步寫一筆資料到aooi100(組織基本資料維護作業)
+  ooef_t:
+     ooefent=ooegent
+     ooef001=ooeg001
+     ooefstus=ooegstus
+  ooefl_t:
+     ooeflent=ooegent
+     ooefl001=ooeg001
+     ooefl002=g_dlang
+     ooefl003=畫面上簡稱欄位輸入值
+     ooefl004=畫面上全稱欄位輸入值
+     ooefl005=畫面上助記碼欄位輸入值
+  ooee_t:(要寫入兩筆資料)
+     第一筆資料--
+     ooeeent=ooegent
+     ooee001=ooeg001
+     ooee002='1'  ->表示是aooi100下面第一頁籤左邊的資料
+     ooee003='6'  ->6表示是行政組織(SCC100)
+     第二筆資料--
+     ooeeent=ooegent
+     ooee001=ooeg001
+     ooee002='2'  ->表示是aooi100下面第一頁籤右邊的資料
+     ooee003='H'  ->H表示是部門(SCC104)
+2.部門的狀態碼改變時,須同步更新ooefstus
+3.部門刪除時,須同步將ooef_t、ooefl_t、ooee_t的資料一併刪除
+4.若部門代號已存在組織樹中,則不可刪除]]>
+  </all>
+  <field cite_std="N" name="ooeg001_2" ver="1" src="s" column="ooeg001" table="ooeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeg_t.ooeg001" ver="1" src="s" column="ooeg001" table="ooeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_ooeg001_4" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[处理逻辑：新增時檢查編號不可以存在ooef001
+
+]]>
+  </field>
+  <field cite_std="N" name="ooeg_t.ooeg002" ver="1" src="s" column="ooeg002" table="ooeg_t" attribute="" type="" req="Y" i_zoom="q_ooeg001_4" c_zoom="q_ooeg001_4" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.輸入時可先輸入不存在部門資料檔中的部門編號，等後續要產生組織樹時再檢查即可
+帶值:帶出上層部門的簡稱到後面顯示
+
+開窗處理：
+     參考函式：q_ooeg001_4
+     新增/修改時過濾：生效的部門
+     新增/修改時傳值：arg1 = g_today]]>
+  </field>
+  <field cite_std="N" name="ooeg_t.ooeg003" ver="1" src="s" column="ooeg003" table="ooeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="47" default="&apos;0&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeg_t.ooeg004" ver="1" src="s" column="ooeg004" table="ooeg_t" attribute="" type="" req="N" i_zoom="q_ooeg001_4" c_zoom="q_ooeg001_4" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.輸入時可先輸入不存在部門資料檔中的部門編號，等後續要產生組織樹時再檢查即可
+帶值:帶出責任中心的簡稱到後面顯示
+計算或處理:當ooeg003=1.責任中心子部門時本欄位為Entry,其他情況都為NoEntry
+
+開窗處理：
+     參考函式：q_ooeg001_4
+     條件過濾：生效的部門、ooeg003=2/3/4/5
+                     g_qryparam.where = " (ooeg003 = '2' OR ooeg003 = '3' OR ooeg003 = '4' OR ooeg003 = '5') " 
+     新增/修改時傳值：arg1 = g_today
+]]>
+  </field>
+  <field cite_std="N" name="ooeg_t.ooeg005" ver="1" src="s" column="ooeg005" table="ooeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeg_t.ooeg006" ver="1" src="s" column="ooeg006" table="ooeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[預設值:當單身為空,新增第一筆時,預設值為g_today;
+           當單身已有資料,新增時預設值為上一筆
+]]>
+  </field>
+  <field cite_std="N" name="ooeg_t.ooeg007" ver="1" src="s" column="ooeg007" table="ooeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[校驗:失效日期必須大於生效日期]]>
+  </field>
+  <field cite_std="N" name="ooeg_t.ooeg008" ver="1" src="s" column="ooeg008" table="ooeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="22" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeg_t.ooeg009" ver="1" src="s" column="ooeg009" table="ooeg_t" attribute="" type="" req="Y" i_zoom="q_ooef001_2" c_zoom="q_ooef001_2" chk_ref="v_ooef001_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeg_t.ooeg011" ver="3" src="s" column="ooeg011" table="ooeg_t" attribute="" type="" req="N" i_zoom="q_ooag001" c_zoom="q_ooeg011" chk_ref="v_ooag001" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeg_t.ooegcrtdp" ver="1" src="s" column="ooegcrtdp" table="ooeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeg_t.ooegcrtdt" ver="1" src="s" column="ooegcrtdt" table="ooeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeg_t.ooegcrtid" ver="1" src="s" column="ooegcrtid" table="ooeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeg_t.ooegmoddt" ver="1" src="s" column="ooegmoddt" table="ooeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeg_t.ooegmodid" ver="1" src="s" column="ooegmodid" table="ooeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeg_t.ooegowndp" ver="1" src="s" column="ooegowndp" table="ooeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeg_t.ooegownid" ver="1" src="s" column="ooegownid" table="ooeg_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooeg_t.ooegstus" ver="1" src="s" column="ooegstus" table="ooeg_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[处理逻辑：狀態碼的改變須同步更新ooefstus,
+                這邊改為有效,ooefstus也更新為'Y'; 
+                這邊改為無效,ooefstus也更新為'N']]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="2" name="ooeg002_desc" src="s" depend_field="ooeg_t.ooeg002" correspon_key="ooeg002" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="2" name="ooeg004_desc" src="s" depend_field="ooeg_t.ooeg004" correspon_key="ooeg004" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="ooeg009_desc" src="s" depend_field="ooeg_t.ooeg009" correspon_key="ooeg009" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="3" name="ooeg011_desc" src="s" depend_field="ooeg_t.ooeg011" correspon_key="ooeg011" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status="u"/>
+    <rfield cite_std="N" ver="1" name="ooegcrtdp_desc" src="s" depend_field="ooeg_t.ooegcrtdp" correspon_key="ooegcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="ooegcrtid_desc" src="s" depend_field="ooeg_t.ooegcrtid" correspon_key="ooegcrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="ooegmodid_desc" src="s" depend_field="ooeg_t.ooegmodid" correspon_key="ooegmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="ooegowndp_desc" src="s" depend_field="ooeg_t.ooegowndp" correspon_key="ooegowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="ooegownid_desc" src="s" depend_field="ooeg_t.ooegownid" correspon_key="ooegownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+  </ref_field>
+  <multi_lang>
+    <mfield cite_std="N" ver="2" name="ooefl_t.ooefl003" src="s" depend_field="ooeg_t.ooeg001" correspon_key="ooeg001" lang_table="ooefl_t" lang_fk="ooefl001" lang_dlang="ooefl002" lang_rtn="ooefl003" status="">
+      <![CDATA[]]>
+    </mfield>
+    <mfield cite_std="N" ver="3" name="ooefl_t.ooefl004" src="s" depend_field="ooeg_t.ooeg001" correspon_key="ooeg001" lang_table="ooefl_t" lang_fk="ooefl001" lang_dlang="ooefl002" lang_rtn="ooefl004" status="u">
+      <![CDATA[]]>
+    </mfield>
+    <mfield cite_std="N" ver="2" name="ooefl_t.ooefl005" src="s" depend_field="ooeg_t.ooeg001" correspon_key="ooeg001" lang_table="ooefl_t" lang_fk="ooefl001" lang_dlang="ooefl002" lang_rtn="ooefl005" status="">
+      <![CDATA[]]>
+    </mfield>
+  </multi_lang>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="ooeg001_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeg_t.ooeg001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeg_t.ooeg002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeg_t.ooeg003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeg_t.ooeg004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeg_t.ooeg005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeg_t.ooeg006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeg_t.ooeg007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeg_t.ooeg008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeg_t.ooeg009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="ooeg_t.ooeg011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="ooeg_t.ooegcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeg_t.ooegcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeg_t.ooegcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeg_t.ooegmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeg_t.ooegmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeg_t.ooegowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeg_t.ooegownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooeg_t.ooegstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="batch" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[處理:1.開啟畫面: 無
+　　 2.整批針對不存在ooef_t中的部門代號,做整批新增的動作。
+　    3.通常用於客戶上線前將部門資料使用Excel匯入ooeg_t,
+          這邊需要整批將ooeg001不存在ooef001的資料寫入ooef_t、ooefl_t、ooee_t中
+          ooef_t:
+             ooefent=ooegent
+             ooef001=ooeg001
+             ooefstus=ooegstus
+          ooee_t:(要寫入兩筆資料)
+             第一筆資料--
+             ooeeent=ooegent
+             ooee001=ooeg001
+             ooee002='1'  ->表示是aooi100下面第一頁籤左邊的資料
+             ooee003='6'  ->6表示是行政組織(SCC100)
+             第二筆資料--
+             ooeeent=ooegent
+             ooee001=ooeg001
+             ooee002='2'  ->表示是aooi100下面第一頁籤右邊的資料
+             ooee003='H'  ->H表示是部門(SCC104)
+　　4.整批更新完畢後,若沒有錯誤需顯示"更新成功"訊息;
+                                  若有錯誤則需顯示錯誤清單]]>
+  </act>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="bpage_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_ooegstus" text="有效" lstr=""/>
+    <sfield name="lbl_ooeg001" text="部門編號" lstr=""/>
+    <sfield name="lbl_ooefl003_1" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_ooefl004" text="說明(對內全稱)" lstr=""/>
+    <sfield name="lbl_ooefl005" text="助記碼" lstr=""/>
+    <sfield name="lbl_ooeg009" text="歸屬法人" lstr=""/>
+    <sfield name="lbl_ooeg009_desc" text="法人簡稱" lstr=""/>
+    <sfield name="lbl_ooeg002" text="上層部門" lstr=""/>
+    <sfield name="lbl_ooeg002_desc" text="上層部門名稱" lstr=""/>
+    <sfield name="lbl_ooeg003" text="責任中心類型" lstr=""/>
+    <sfield name="lbl_ooeg004" text="所屬責任中心" lstr=""/>
+    <sfield name="lbl_ooeg004_desc" text="責任中心名稱" lstr=""/>
+    <sfield name="lbl_ooeg005" text="會計部門" lstr=""/>
+    <sfield name="lbl_ooeg006" text="生效日期" lstr=""/>
+    <sfield name="lbl_ooeg007" text="失效日期" lstr=""/>
+    <sfield name="lbl_ooeg008" text="費用類別" lstr=""/>
+    <sfield name="lbl_ooeg011" text="部門主管員工編號" lstr=""/>
+    <sfield name="lbl_ooag011" text="全名" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="modid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="ownid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="owndp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="crtid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="crtdp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_ooefl001" text="組織編號" lstr=""/>
+    <sfield name="lbl_ooefl002" text="語言別" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_ooefl006" text="說明(對外全稱)" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="batch" text="組織編號整批更新" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

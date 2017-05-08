@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="adeq415_01" std_prog="adeq415_01" erpver="1.0" ver="1" module="ADE" booking="Y" class="Q" template="F001_00" env="s" zone="t10dev">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="Y" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 提供卡續期批次產生至會員卡續期維護作業,不參考卡種設定規則,給予範圍固定的效期
+作業功能：說明/離開
+作業類型：QBE批次資料產生作業
+輸入模式：單檔（子作業）F002_00
+作業資料來源：
+ 資料來源表：rtjf_t
+
+1.程式依QBE 選項抓取對應繳款單號上的對應資料(營運組織/繳款日期/專櫃編號/班別/收銀機編號/收銀員編號)
+2.若同一張繳款單資料存在[T:券核銷審核明細資料檔]一筆以上且審核狀態=2.審核-核銷 OR 3.審核-缺單 則不重新產生.
+3.若已存在全部為未審核明細資料則依條件選項判別是否需刪除後重新產生
+4.再依此資料抓取銷售交易收款明細檔(rtjf_t),其款別類型=40 且券種對應的券核銷方式(gcaf025)<>'4.不核銷',
+　並依起始券號/結束券號逐筆資料寫入券核銷審核明細資料檔(gcbj_t)
+  序號        = 同繳款單號依序加1
+　原始狀態    = 取券狀態資料檔對應券流轉狀態(gcao005)
+  售券實收金額= 取券狀態資料檔售券實收金額
+  折扣率      = 取券狀態資料檔折扣率
+  審核狀態    = 1.未審核　]]>
+  </all>
+  <field cite_std="N" name="deagdocdt" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deagdocno" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="q_deagdocno" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="deagsite" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooed004_3" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="regen" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="deagdocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deagdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="deagsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="regen" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <strings>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="group01" text="QBE選項" lstr=""/>
+    <sfield name="lbl_rtjfsite" text="營運組織" lstr=""/>
+    <sfield name="lbl_rtjfdocno" text="繳款單號" lstr=""/>
+    <sfield name="lbl_rtjf025" text="繳款日期" lstr=""/>
+    <sfield name="group02" text="條件選項" lstr=""/>
+    <sfield name="lbl_regen" text="未審核明細資料已存在是否重新產生(Y/N)?" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

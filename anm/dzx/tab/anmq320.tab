@@ -1,0 +1,83 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmq320" module="anm" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="06816" crtdt="2015-08-05 17:00:40" modid="06816" moddt="2015-08-14 09:45:33" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="資金日報表">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmbc002,nmbc002_desc(chr500),nmbc100,l_amtbefore(num20_6),l_nmbc103d(num20_6),l_nmbc103c(num20_6),l_amt(num20_6),l_amt1before(num20_6),l_nmbc113d(num20_6),l_nmbc113c(num20_6),l_amt1(num20_6),glab005(chr500),glab005_desc(chr500),nmbccomp,nmbcdocno,nmbcseq"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="nmbc002,nmbc002_2_desc(chr500),nmbc100,l_amt2before(num20_6),l_nmbc123d(num20_6),l_nmbc123c(num20_6),l_amt2(num20_6),nmbcseq,nmbcdocno,nmbccomp"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="nmbc002,nmbc002_3_desc(chr500),nmbc100,l_amt3before(num20_6),l_nmbc133d(num20_6),l_nmbc133c(num20_6),l_amt3(num20_6),nmbccomp,nmbcseq,nmbcdocno"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmbc002(b_nmbc002),nmbc002_desc(b_nmbc002_desc),nmbc100(b_nmbc100),l_amtbefore(l_amtbefore),l_nmbc103d(l_nmbc103d),l_nmbc103c(l_nmbc103c),l_amt(l_amt),l_amt1before(l_amt1before),l_nmbc113d(l_nmbc113d),l_nmbc113c(l_nmbc113c),l_amt1(l_amt1),glab005(glab005),glab005_desc(glab005_desc),nmbccomp(b_nmbccomp),nmbcdocno(b_nmbcdocno),nmbcseq(b_nmbcseq)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="nmbc002_2(nmbc002_2),nmbc002_2_desc(nmbc002_2_desc),nmbc100_2(b_nmbc100_2),l_amt2before(l_amt2before),l_nmbc123d(l_nmbc123d),l_nmbc123c(l_nmbc123c),l_amt2(l_amt2),nmbcseq_2(nmbcseq_2),nmbcdocno_2(nmbcdocno_2),nmbccomp_2(nmbccomp_2)"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="nmbc002_3(nmbc002_3),nmbc002_3_desc(nmbc002_3_desc),nmbc100_3(b_nmbc100_3),l_amt3before(l_amt3before),l_nmbc133d(l_nmbc133d),l_nmbc133c(l_nmbc133c),l_amt3(l_amt3),nmbccomp_3(nmbccomp_3),nmbcseq_3(nmbcseq_3),nmbcdocno_3(nmbcdocno_3)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmq320" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="nmbc002,nmbc100,nmbccomp,nmbcdocno,nmbcseq" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="nmbc002(b_nmbc002),nmbc100(b_nmbc100),nmbccomp(b_nmbccomp),nmbcdocno(b_nmbcdocno),nmbcseq(b_nmbcseq)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="nmbc002">
+        <after>
+          <reference field="nmbc002_desc" ref_field="nmbc002" map_field="nmbcent,nmbc002" ref_sql="SELECT nmaal003 FROM nmaal_t WHERE nmaalent=$varg_enterprise$var AND nmal001=? AND nmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmas_01" state="c"/>
+      </column>
+      <column id="nmbc002_desc"/>
+      <column id="nmbc100">
+        <controlp form="q_aooi001_1" state="c"/>
+      </column>
+      <column id="l_amtbefore"/>
+      <column id="l_nmbc103d"/>
+      <column id="l_nmbc103c"/>
+      <column id="l_amt"/>
+      <column id="l_amt1before"/>
+      <column id="l_nmbc113d"/>
+      <column id="l_nmbc113c"/>
+      <column id="l_amt1"/>
+      <column id="glab005">
+        <after/>
+      </column>
+      <column id="glab005_desc"/>
+      <column id="nmbccomp">
+        <controlp form="q_ooef001_01" state="c"/>
+      </column>
+      <column id="nmbcdocno"/>
+      <column id="nmbcseq"/>
+    </init>
+    <init id="body" page="2">
+      <column id="nmbc002_2_desc"/>
+      <column id="l_amt2before"/>
+      <column id="l_nmbc123d"/>
+      <column id="l_nmbc123c"/>
+      <column id="l_amt2"/>
+    </init>
+    <init id="body" page="3">
+      <column id="nmbc002_3_desc"/>
+      <column id="l_amt3before"/>
+      <column id="l_nmbc133d"/>
+      <column id="l_nmbc133c"/>
+      <column id="l_amt3"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="nmbc_t" page="1,2,3" linked="" pk="nmbccomp,nmbcdocno,nmbcseq,nmbc002">
+      <sql id="b_fill_sql" query="SELECT nmbc002,&apos;&apos;,nmbc100,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,nmbccomp,nmbcdocno,nmbcseq,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM nmbc_t WHERE nmbcent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

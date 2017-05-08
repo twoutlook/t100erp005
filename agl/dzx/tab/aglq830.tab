@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglq830" module="agl" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="05416" crtdt="2014-08-08 16:48:25" modid="02599" moddt="2015-09-16 10:55:59" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="現金流量表查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),glfb002,glfbl004,nmai004,amt1(num20_6),amt2(num20_6)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),glfb002(b_glfb002),glfbl004(b_glfbl004),nmai004(b_nmai004),amt1(amt1),amt2(amt2)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="aglq830" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="glfb002,glfbl004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="glfb002(b_glfb002)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="glfb002">
+        <controlp form="q_glfc001" state="c"/>
+      </column>
+      <column id="glfbl004"/>
+      <column id="nmai004"/>
+      <column id="amt1"/>
+      <column id="amt2"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="glfb_t" page="1" linked="" pk="glfbseq,glfbseq1" fk="glfb001" detail="Y">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,glfb002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM glfb_t WHERE glfbent=? AND glfb001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

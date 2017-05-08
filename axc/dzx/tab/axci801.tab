@@ -1,0 +1,153 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axci801" module="axc" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="03297" crtdt="2014-09-17 16:42:58" modid="02040" moddt="2016-12-27 16:37:46" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description=" LCM計算基礎設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcfacomp,xcfacomp_desc(chr80),xcfa001,xcfald,xcfald_desc(chr80),xcfa002,xcfa003,xcfa004,xcfa005,xcfa006,xcfa007,xcfa008,xcfa009,xcfa011,xcfa012,xcfa013_1(chr10),xcfa013_2(chr10),xcfa013_3(chr10),xcfa013,xcfa014"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcfbseq,xcfb010,xcfb010_desc(chr500),xcfb011,xcfb012,xcfb014,xcfb013,xcfbcomp"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcfcseq,xcfc013,xcfc013_desc(chr500),xcfc010,xcfc011,xcfc012,xcfccomp"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="xcfdseq,xcfd010,xcfd010_desc(chr500),xcfdcomp"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axci801" method="dialog">
+    <section id="input">
+      <input id="head" field="xcfacomp,xcfa001,xcfald,xcfa002,xcfa003,xcfa004,xcfa005,xcfa006,xcfa007,xcfa008,xcfa009,xcfa011,xcfa012,xcfa013_1,xcfa013_2,xcfa013_3,xcfa013,xcfa014"/>
+      <input id="body" page="1" field="xcfbseq,xcfb010,xcfb011,xcfb012,xcfb014,xcfb013,xcfbcomp" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="xcfcseq,xcfc013,xcfc010,xcfc011,xcfc012,xcfccomp" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="xcfdseq,xcfd010,xcfdcomp" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcfacomp,xcfa001,xcfald,xcfa002,xcfa003,xcfa004,xcfa005,xcfa006,xcfa007,xcfa008,xcfa009,xcfa011,xcfa012,xcfa013_1,xcfa013_2,xcfa013_3,xcfa013,xcfa014"/>
+      <construct id="body" page="1" field="xcfbseq,xcfb010,xcfb011,xcfb012,xcfb014,xcfb013,xcfbcomp"/>
+      <construct id="body" page="2" field="xcfcseq,xcfc013,xcfc010,xcfc011,xcfc012,xcfccomp"/>
+      <construct id="body" page="3" field="xcfdseq,xcfd010,xcfdcomp"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcfald,xcfa001,xcfa002"/>
+      <set id="head" type="no_entry" field="xcfald,xcfa001,xcfa002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcfacomp">
+        <after>
+          <reference field="xcfacomp_desc" ref_field="xcfa_t.xcfacomp" map_field="xcfaent,xcfacomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="xcfacomp_desc"/>
+      <column id="xcfa001"/>
+      <column id="xcfald">
+        <after>
+          <check chkid="v_glaald" id="isExist"/>
+          <reference field="xcfald_desc" ref_field="xcfa_t.xcfald" map_field="xcfaent,xcfald" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xcfald_desc"/>
+      <column id="xcfa002"/>
+      <column id="xcfa003" type="S" default="1" def_scc="8042"/>
+      <column id="xcfa004" type="S" default="1" def_scc="8043"/>
+      <column id="xcfa005" type="S" default="Y"/>
+      <column id="xcfa006" type="S" default="1" def_scc="8038"/>
+      <column id="xcfa007" type="S" default="1" def_scc="8039"/>
+      <column id="xcfa008" type="S" default="3" def_scc="8040"/>
+      <column id="xcfa009" type="S" default="1" def_scc="8038"/>
+      <column id="xcfa011" type="S" default="Y"/>
+      <column id="xcfa012" type="S" default="1" def_scc="8044"/>
+      <column id="xcfa013_1" type="S" default="1"/>
+      <column id="xcfa013_2" type="S" default="2"/>
+      <column id="xcfa013_3" type="S" default="3"/>
+      <column id="xcfa013"/>
+      <column id="xcfa014" type="S" default="1"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcfbseq"/>
+      <column id="xcfb010">
+        <after>
+          <check chkid="v_oocq002_1" id="isExist"/>
+          <reference field="xcfb010_desc" ref_field="xcfb010" map_field="xcfb010" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;201&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002_02" state="i"/>
+        <controlp form="q_oocq002_02" state="c"/>
+      </column>
+      <column id="xcfb010_desc"/>
+      <column id="xcfb011">
+        <after>
+          <check chkid="v_ooai001" id="isExist"/>
+        </after>
+        <controlp form="q_ooai001_1" state="i"/>
+        <controlp form="q_ooai001_1" state="c"/>
+      </column>
+      <column id="xcfb012">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcfb014">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xcfb013" type="S" default="0"/>
+      <column id="xcfbcomp"/>
+    </init>
+    <init id="body" page="2">
+      <column id="xcfcseq"/>
+      <column id="xcfc013">
+        <after>
+          <reference field="xcfc013_desc" ref_field="xcfc013" map_field="xcfc013" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;201&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcfc013_desc"/>
+      <column id="xcfc010"/>
+      <column id="xcfc011"/>
+      <column id="xcfc012" type="S" default="0"/>
+      <column id="xcfccomp"/>
+    </init>
+    <init id="body" page="3">
+      <column id="xcfdseq"/>
+      <column id="xcfd010">
+        <after>
+          <check chkid="v_inaa001_21" id="isExist"/>
+        </after>
+        <controlp form="q_inaa001_33" state="i"/>
+        <controlp form="q_inaa001_33" state="c"/>
+      </column>
+      <column id="xcfd010_desc"/>
+      <column id="xcfdcomp"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcfa_t" pk="xcfald,xcfa001,xcfa002">
+      <sql id="forupd_sql" type="sql" query="SELECT xcfacomp,&apos;&apos;,xcfa001,xcfald,&apos;&apos;,xcfa002,xcfa003,xcfa004,xcfa005,xcfa006,xcfa007,xcfa008,xcfa009,xcfa011,xcfa012,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcfa013,xcfa014 FROM xcfa_t WHERE xcfaent= ? AND xcfald=? AND xcfa001=? AND xcfa002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcfacomp,&apos;&apos;,xcfa001,xcfald,&apos;&apos;,xcfa002,xcfa003,xcfa004,xcfa005,xcfa006,xcfa007,xcfa008,xcfa009,xcfa011,xcfa012,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcfa013,xcfa014 FROM xcfa_t" order="xcfald,xcfa001,xcfa002"/>
+    </head>
+    <body id="xcfb_t" page="1" linked="" pk="xcfbseq" fk="xcfbld,xcfb001,xcfb002">
+      <sql id="forupd_sql_detail" query="SELECT xcfbseq,xcfb010,&apos;&apos;,xcfb011,xcfb012,xcfb014,xcfb013,xcfbcomp FROM xcfb_t WHERE xcfbent=? AND xcfbld=? AND xcfb001=? AND xcfb002=? AND xcfbseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcfbseq,xcfb010,&apos;&apos;,xcfb011,xcfb012,xcfb014,xcfb013,xcfbcomp FROM xcfb_t WHERE xcfbent=? AND xcfbld=? AND xcfb001=? AND xcfb002=?"/>
+    </body>
+    <body id="xcfc_t" page="2" linked="" pk="xcfcseq" fk="xcfcld,xcfc001,xcfc002">
+      <sql id="forupd_sql_detail" query="SELECT xcfcseq,xcfc013,&apos;&apos;,xcfc010,xcfc011,xcfc012,xcfccomp FROM xcfc_t WHERE xcfcent=? AND xcfcld=? AND xcfc001=? AND xcfc002=? AND xcfcseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcfcseq,xcfc013,&apos;&apos;,xcfc010,xcfc011,xcfc012,xcfccomp FROM xcfc_t WHERE xcfcent=? AND xcfcld=? AND xcfc001=? AND xcfc002=?"/>
+    </body>
+    <body id="xcfd_t" page="3" linked="" pk="xcfdseq" fk="xcfdld,xcfd001,xcfd002">
+      <sql id="forupd_sql_detail" query="SELECT xcfdseq,xcfd010,&apos;&apos;,xcfdcomp FROM xcfd_t WHERE xcfdent=? AND xcfdld=? AND xcfd001=? AND xcfd002=? AND xcfdseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcfdseq,xcfd010,&apos;&apos;,xcfdcomp FROM xcfd_t WHERE xcfdent=? AND xcfdld=? AND xcfd001=? AND xcfd002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

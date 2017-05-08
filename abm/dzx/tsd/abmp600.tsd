@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="abmp600" std_prog="abmp600" erpver="1.0" ver="1" module="ABM" booking="Y" class="p" template="P001_00" env="s" zone="t10dev">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 低階碼計算作業
+作業功能：說明/離開
+作業類型：批次處理作業
+輸入模式：批次 P003_00
+作業資料來源(Master)：
+備註說明:此程式的核心部分請與apsp500共用
+
+執行步驟：
+1. 呼叫s_apsp500_gen_xml，產生要送給APS的XML
+2. 啟動APS的java元件
+3. 固定?秒偵測APS執行階段table
+    (依參數設定時間讀取psea_t，直至訊息為APS歸劃完成或是異常的訊息代碼為止)
+4. 執行階段至APS歸劃完成後，則顯示執行成功，結束此次歸劃
+5. 若時間超過參數設定的timeout時間，階段訊息未更新，則顯示"APS引擎超過延遲時間未回應"，
+    非背景執行詢問是否強制中止
+    背景執行則強制中止
+    並把aps引擎計算process kill
+    在psea_t寫入aps-00038
+    強制結束]]>
+  </all>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code/>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="cl_err_s01_Detail" text="詳細資訊" lstr=""/>
+    <sfield name="cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="cl_err_s01_Detail" text="詳細資訊" lstr=""/>
+    <sfield name="cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="lbl_gzpd001" text="背景排程作業執行序號" lstr=""/>
+    <sfield name="lbl_gzpd002" text="排程編號" lstr=""/>
+    <sfield name="lbl_gzpd003" text="執行序號" lstr=""/>
+    <sfield name="lbl_gzpd004" text="執行作業" lstr=""/>
+    <sfield name="lbl_gzpd005" text="傳入參數" lstr=""/>
+    <sfield name="lbl_gzpc006" text="執行結束時間" lstr=""/>
+    <sfield name="lbl_gzpd007" text="作業執行狀態" lstr=""/>
+    <sfield name="lbl_gzpd008" text="作業執行時間" lstr=""/>
+    <sfield name="lbl_gzpd009" text="執行員工編號" lstr=""/>
+    <sfield name="lbl_gzpd010" text="作業完成時間" lstr=""/>
+    <sfield name="btn_schedule_reexec" text="重新執行" lstr=""/>
+    <sfield name="btn_view" text="重新查看" lstr=""/>
+    <sfield name="btn_schedule_adv" text="進階查詢" lstr=""/>
+    <sfield name="lbl_gzpa003" text="執行類型" lstr=""/>
+    <sfield name="lbl_gzpa002" text="排程說明" lstr=""/>
+    <sfield name="lbl_asign" text="指定時間執行" lstr=""/>
+    <sfield name="lbl_gzpa007" text="預定執行時間" lstr=""/>
+    <sfield name="lbl_exec" text="執行時間設定" lstr=""/>
+    <sfield name="lbl_wk1" text="第一週" lstr=""/>
+    <sfield name="lbl_wk2" text="第二週" lstr=""/>
+    <sfield name="lbl_wk3" text="第三週" lstr=""/>
+    <sfield name="lbl_wk4" text="第四週" lstr=""/>
+    <sfield name="lbl_wk5" text="第五週" lstr=""/>
+    <sfield name="lbl_wd0" text="週日" lstr=""/>
+    <sfield name="lbl_wd1" text="週一" lstr=""/>
+    <sfield name="lbl_wd2" text="週二" lstr=""/>
+    <sfield name="lbl_wd3" text="週三" lstr=""/>
+    <sfield name="lbl_wd4" text="週四" lstr=""/>
+    <sfield name="lbl_wd5" text="週五" lstr=""/>
+    <sfield name="lbl_wd6" text="週六" lstr=""/>
+    <sfield name="lbl_dayend" text="月底" lstr=""/>
+    <sfield name="lbl_sc1" text="時段一" lstr=""/>
+    <sfield name="lbl_to" text="至" lstr=""/>
+    <sfield name="lbl_per" text="每" lstr=""/>
+    <sfield name="lbl_times" text="執行一次" lstr=""/>
+    <sfield name="lbl_sc2" text="時段二" lstr=""/>
+    <sfield name="lbl_to" text="至" lstr=""/>
+    <sfield name="lbl_per" text="每" lstr=""/>
+    <sfield name="lbl_times" text="執行一次" lstr=""/>
+    <sfield name="lbl_sc3" text="時段三" lstr=""/>
+    <sfield name="lbl_to" text="至" lstr=""/>
+    <sfield name="lbl_per" text="每" lstr=""/>
+    <sfield name="lbl_times" text="執行一次" lstr=""/>
+    <sfield name="lbl_spec" text="特殊指定" lstr=""/>
+    <sfield name="lbl_gzpa029" text="執行日遇到假日" lstr=""/>
+    <sfield name="lbl_gzpa031" text="前一程序未完成時不執行新程序" lstr=""/>
+    <sfield name="lbl_end_call" text="執行結束通知人員" lstr=""/>
+    <sfield name="lbl_gzpe003" text="執行狀況" lstr=""/>
+    <sfield name="lbl_gzpe004" text="收件人員工編號" lstr=""/>
+    <sfield name="lbl_gzpe004_desc" text="員工姓名" lstr=""/>
+    <sfield name="lbl_addr" text="收件人信件位址" lstr=""/>
+    <sfield name="lbl_gzpe005" text="信件主旨" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" lstr=""/>
+    <sfield name="cl_ask_s04_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s03_Test" text="測試" lstr=""/>
+    <sfield name="cl_ask_s03_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s01_Choice" text="選擇" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_ooag001" text="員工編號" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

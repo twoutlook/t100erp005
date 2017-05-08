@@ -1,0 +1,106 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmt500_04" module="apm" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02294" crtdt="2013-12-23 11:26:59" modid="02294" moddt="2014-08-29 11:19:27" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="維護採購其他資訊作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pmdndocno,pmdnseq,pmdn027,pmdn028,pmdn028_desc(chr80),pmdn029,pmdn029_desc(chr80),pmdn030,pmdn025,pmdn025_desc(chr80),oofb017(chr500),pmdn026,pmdn026_desc(chr80),oofb017_1(chr500),pmdn031,pmdn031_desc(chr80),pmdn032,pmdn003,pmdn003_desc(chr80),pmdn033,pmdn036,pmdn037,pmdn038,pmdn039"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmt500_04" method="dialog">
+    <section id="input">
+      <input id="head" field="pmdndocno,pmdnseq,pmdn027,pmdn028,pmdn029,pmdn030,pmdn025,oofb017,pmdn026,oofb017_1,pmdn031,pmdn032,pmdn003,pmdn033,pmdn036,pmdn037,pmdn038,pmdn039"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="pmdndocno"/>
+      <column id="pmdnseq"/>
+      <column id="pmdn027">
+        <after>
+          <check chkid="v_pmao004" id="isExist"/>
+        </after>
+        <controlp form="q_pmao004_1" state="i"/>
+        <controlp form="q_pmao004_1" state="c"/>
+      </column>
+      <column id="pmdn028">
+        <after>
+          <check chkid="v_inaa001_1" id="isExist"/>
+          <reference field="pmdn028_desc" ref_field="pmdn_t.pmdn028" map_field="pmdn028" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaa001=? "/>
+        </after>
+        <controlp form="q_inaa001_6" state="i"/>
+        <controlp form="q_inaa001_6" state="c"/>
+      </column>
+      <column id="pmdn028_desc"/>
+      <column id="pmdn029">
+        <after>
+          <check chkid="v_inab002_1" id="isExist"/>
+          <reference field="pmdn029_desc" ref_field="pmdn028,pmdn029" map_field="pmdn028,pmdn029" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inab002_6" state="i"/>
+        <controlp form="q_inab002_6" state="c"/>
+      </column>
+      <column id="pmdn029_desc"/>
+      <column id="pmdn030"/>
+      <column id="pmdn025">
+        <after/>
+        <controlp form="q_oofb019_1" state="i"/>
+        <controlp form="q_oofb019_1" state="c"/>
+      </column>
+      <column id="pmdn025_desc"/>
+      <column id="oofb017"/>
+      <column id="pmdn026">
+        <after/>
+        <controlp form="q_oofb019_1" state="i"/>
+        <controlp form="q_oofb019_1" state="c"/>
+      </column>
+      <column id="pmdn026_desc"/>
+      <column id="oofb017_1"/>
+      <column id="pmdn031">
+        <after>
+          <check chkid="v_oocq002_263" id="isExist"/>
+          <reference field="pmdn031_desc" ref_field="pmdn031" map_field="pmdn031" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;263&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pmdn031_desc"/>
+      <column id="pmdn032" type="S" default="1" def_scc="2056"/>
+      <column id="pmdn003">
+        <after>
+          <check chkid="v_imaa001_3" id="isExist"/>
+          <reference field="pmdn003_desc" ref_field="pmdn_t.pmdn003" map_field="pmdn003" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001_3" state="i"/>
+        <controlp form="q_imaa001_3" state="c"/>
+      </column>
+      <column id="pmdn003_desc"/>
+      <column id="pmdn033">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="pmdn036"/>
+      <column id="pmdn037"/>
+      <column id="pmdn038"/>
+      <column id="pmdn039"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pmdn_t" pk="pmdndocno,pmdnseq">
+      <sql id="forupd_sql" type="sql" query="SELECT pmdndocno,pmdnseq,pmdn027,pmdn028,&apos;&apos;,pmdn029,&apos;&apos;,pmdn030,pmdn025,&apos;&apos;,&apos;&apos;,pmdn026,&apos;&apos;,&apos;&apos;,pmdn031,&apos;&apos;,pmdn032,pmdn003,&apos;&apos;,pmdn033,pmdn036,pmdn037,pmdn038,pmdn039 FROM pmdn_t WHERE pmdnent= ? AND pmdndocno=? AND pmdnseq=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="pmdndocno,pmdnseq"/>
+    </head>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,616 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="azzi800_role" std_prog="azzi800_role" erpver="1.0" module="AZZ" ver="1" env="s" zone="t10dev" normal_style="">
+  <point name="function.azzi800_role_b_fill" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION azzi800_role_b_fill(pc_gzxw001)
+ DEFINE pc_gzxw001    LIKE gzxw_t.gzxw001
+   DEFINE ls_sql           STRING
+         
+   LET ls_sql = " SELECT gzxwstus,gzxw002,gzxw003,",
+                " gzxw004,gzxw005, " ,
+                " gzxw002 ,gzxw003, "  ,
+                " gzxwownid, ", 
+                " gzxwowndp, ",
+                " gzxwcrtid, ",
+                " gzxwcrtdp, ",
+                " gzxwcrtdt,", 
+                " gzxwmodid, ",
+                " gzxwmoddt ",
+                " FROM gzxw_t ", 
+                " WHERE gzxwent=",g_enterprise," AND gzxw001 = '", pc_gzxw001,"'" 
+    
+   LET ls_sql = ls_sql, " ORDER BY gzxw_t.gzxw001"
+
+   #DISPLAY "ls_sql:",ls_sql
+   PREPARE azzi800_role_pb FROM ls_sql
+   DECLARE b_fill_curs CURSOR FOR azzi800_role_pb
+   
+   CALL g_gzxw_d.clear()
+   CALL g_gzxw2_d.clear()
+   
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+
+   FOREACH b_fill_curs INTO g_gzxw_d[l_ac].gzxwstus,g_gzxw_d[l_ac].gzxw002,g_gzxw_d[l_ac].gzxw003,
+           g_gzxw_d[l_ac].gzxw004,g_gzxw_d[l_ac].gzxw005,
+           g_gzxw2_d[l_ac].gzxw002,
+           g_gzxw2_d[l_ac].gzxw003,
+           g_gzxw2_d[l_ac].gzxwownid,
+           g_gzxw2_d[l_ac].gzxwowndp,
+           g_gzxw2_d[l_ac].gzxwcrtid,
+           g_gzxw2_d[l_ac].gzxwcrtdp,
+           g_gzxw2_d[l_ac].gzxwcrtdt,
+           g_gzxw2_d[l_ac].gzxwmodid,
+           g_gzxw2_d[l_ac].gzxwmoddt
+
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+
+      #CALL azzi800_role_detail_show()      
+      LET l_ac = l_ac + 1
+      IF g_cnt > g_max_rec THEN
+         CALL cl_err( "", 9035, 0 )
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   CALL g_gzxw_d.deleteElement(g_gzxw_d.getLength())   
+   CALL g_gzxw2_d.deleteElement(g_gzxw2_d.getLength())  
+ 
+   LET g_detail_cnt = l_ac - 1
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   DISPLAY g_detail_cnt TO FORMONLY.idx
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   CALL azzi800_role_show()
+   CLOSE b_fill_curs
+   FREE azzi800_role_pb
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi800_role_check_gzxw002" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s">
+    <![CDATA[
+PRIVATE FUNCTION azzi800_role_check_gzxw002()
+   DEFINE ls_sql STRING
+   DEFINE li_cnt LIKE  type_t.num5
+
+   LET g_errno = NULL
+   SELECT COUNT(*) INTO  li_cnt 
+      FROM gzya_t WHERE gzya001 = g_gzxw_d[l_ac].gzxw002  
+   IF li_cnt > 0 THEN 
+      RETURN 
+   END IF 
+   LET g_errno = "azz-00056"
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi800_role_lock_b" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s">
+    <![CDATA[
+PRIVATE FUNCTION azzi800_role_lock_b()
+DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   
+   #先刷新資料
+   #CALL azzi960_b_fill(g_wc2)
+   
+      OPEN azzi800_role_bcl USING 
+            g_enterprise,gc_gzxw001,
+            g_gzxw_d[l_ac].gzxw002,g_gzxw_d[l_ac].gzxw003
+                                       
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("azzi960_bcl",SQLCA.sqlcode,1)
+         RETURN FALSE
+      END IF
+   RETURN TRUE
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi800_role_set_entry_b" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s">
+    <![CDATA[
+PUBLIC FUNCTION azzi800_role_set_entry_b(p_cmd)
+ DEFINE p_cmd   LIKE type_t.chr1
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi800_role_set_no_entry_b" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s">
+    <![CDATA[
+PRIVATE FUNCTION azzi800_role_set_no_entry_b(p_cmd)
+  DEFINE p_cmd   LIKE type_t.chr1
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi800_role_show" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s">
+    <![CDATA[
+PRIVATE FUNCTION azzi800_role_show()
+ DISPLAY ARRAY g_gzxw_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+      BEFORE DISPLAY 
+         #CALL FGL_SET_ARR_CURR(g_detail_idx)
+         EXIT DISPLAY    
+      BEFORE ROW
+      END DISPLAY
+      
+    DISPLAY ARRAY g_gzxw2_d TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               #CALL FGL_SET_ARR_CURR(g_detail_idx)
+                EXIT DISPLAY         
+            BEFORE ROW
+
+         END DISPLAY
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi800_role_unlock_b" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s">
+    <![CDATA[
+PRIVATE FUNCTION azzi800_role_unlock_b()
+ DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   LET ls_group = ""
+   CLOSE azzi800_role_bcl
+END FUNCTION]]>
+  </point>
+  <point name="global.variable" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s">
+    <![CDATA[DEFINE g_cnt   LIKE type_t.num5
+DEFINE g_detail_cnt LIKE type_t.num5
+
+PRIVATE TYPE type_g_gzxw2_d RECORD
+   gzxw002        LIKE gzxw_t.gzxw002, 
+   gzxw003        LIKE gzxw_t.gzxw003,
+   gzxwownid      LIKE gzxw_t.gzxwownid, 
+   gzxwownid_desc LIKE type_t.chr80, 
+   gzxwowndp      LIKE gzxw_t.gzxwowndp,
+   gzxwowndp_desc LIKE type_t.chr80,
+   gzxwcrtid      LIKE gzxw_t.gzxwcrtid, 
+   gzxwcrtid_desc LIKE type_t.chr80, 
+   gzxwcrtdp      LIKE gzxw_t.gzxwcrtdp,
+   gzxwcrtdp_desc LIKE type_t.chr80,
+   gzxwcrtdt      LIKE gzxw_t.gzxwcrtdt, 
+   gzxwmodid      LIKE gzxw_t.gzxwmodid, 
+   gzxwmodid_desc LIKE type_t.chr80, 
+   gzxwmoddt      LIKE gzxw_t.gzxwmoddt
+   
+       END RECORD
+
+DEFINE g_gzxw2_d      DYNAMIC ARRAY OF type_g_gzxw2_d    
+DEFINE l_ac           LIKE type_t.num5              #目前處理的ARRAY CNT   
+DEFINE g_gzxw_d_t     type_g_gzxw_d
+DEFINE g_gzxw2_d_t    type_g_gzxw2_d
+DEFINE g_forupd_sql   STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE gc_gzxw001      LIKE gzxw_t.gzxw001  #員工編號
+]]>
+  </point>
+  <point name="input.a.page1.gzxw001" ver="1" cite_std="" cite_ver="" new="N" status="" src="s">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_gzxw_d[l_ac].gzxw001) AND NOT cl_null(g_gzxw_d[l_ac].gzxw002) AND NOT cl_null(g_gzxw_d[l_ac].gzxw003) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_gzxw_d[l_ac].gzxw001 != g_gzxw_d_t.gzxw001 OR g_gzxw_d[l_ac].gzxw002 != g_gzxw_d_t.gzxw002 OR g_gzxw_d[l_ac].gzxw003 != g_gzxw_d_t.gzxw003))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzxw_t WHERE "||"gzxwent = '" ||g_enterprise|| "' AND "||"gzxw001 = '"||g_gzxw_d[l_ac].gzxw001 ||"' AND "|| "gzxw002 = '"||g_gzxw_d[l_ac].gzxw002 ||"' AND "|| "gzxw003 = '"||g_gzxw_d[l_ac].gzxw003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.gzxw002" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_gzxw_d[l_ac].gzxw002) AND cl_null(g_gzxw_d[l_ac].gzxw003)   THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_gzxw_d[l_ac].gzxw002 != g_gzxw_d_t.gzxw002 ))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzxw_t WHERE gzxwent="||g_enterprise||" AND gzxw001 = '"||pc_gzxw001 
+                    ||"' AND gzxw002='"||g_gzxw_d[l_ac].gzxw002||"' AND gzxw003='"
+                    ||g_gzxw_d[l_ac].gzxw002||"'" ,'std-00004',0) THEN 
+
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL azzi800_role_check_gzxw002()
+                  IF NOT cl_null(g_errno) THEN
+                     CALL cl_err('',g_errno,1)
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+
+            END IF
+]]>
+  </point>
+  <point name="input.a.page1.gzxw003" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s">
+    <![CDATA[            #此段落由子樣板a05產生
+             IF  NOT cl_null(g_gzxw_d[l_ac].gzxw002) AND cl_null(g_gzxw_d[l_ac].gzxw003)   THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_gzxw_d[l_ac].gzxw003 != g_gzxw_d_t.gzxw003 ))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzxw_t WHERE gzxwent="||g_enterprise||" AND gzxw001 = '"||pc_gzxw001 
+                    ||"' AND gzxw002='"||g_gzxw_d[l_ac].gzxw002||"' AND gzxw003='"
+                    ||g_gzxw_d[l_ac].gzxw002||"'" ,'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+
+            END IF
+]]>
+  </point>
+  <point name="input.a.page2.gzxw001_2" ver="1" cite_std="" cite_ver="" new="N" status="" src="s">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_gzxw2_d[l_ac].gzxw001) AND NOT cl_null(g_gzxw2_d[l_ac].gzxw002) AND NOT cl_null(g_gzxw2_d[l_ac].gzxw003) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_gzxw2_d[l_ac].gzxw001 != g_gzxw2_d_t.gzxw001 OR g_gzxw2_d[l_ac].gzxw002 != g_gzxw2_d_t.gzxw002 OR g_gzxw2_d[l_ac].gzxw003 != g_gzxw2_d_t.gzxw003))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzxw_t WHERE "||"gzxwent = '" ||g_enterprise|| "' AND "||"gzxw001 = '"||g_gzxw2_d[l_ac].gzxw001 ||"' AND "|| "gzxw002 = '"||g_gzxw2_d[l_ac].gzxw002 ||"' AND "|| "gzxw003 = '"||g_gzxw2_d[l_ac].gzxw003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.gzxw002_2" ver="1" cite_std="" cite_ver="" new="N" status="" src="s">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_gzxw2_d[l_ac].gzxw001) AND NOT cl_null(g_gzxw2_d[l_ac].gzxw002) AND NOT cl_null(g_gzxw2_d[l_ac].gzxw003) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_gzxw2_d[l_ac].gzxw001 != g_gzxw2_d_t.gzxw001 OR g_gzxw2_d[l_ac].gzxw002 != g_gzxw2_d_t.gzxw002 OR g_gzxw2_d[l_ac].gzxw003 != g_gzxw2_d_t.gzxw003))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzxw_t WHERE "||"gzxwent = '" ||g_enterprise|| "' AND "||"gzxw001 = '"||g_gzxw2_d[l_ac].gzxw001 ||"' AND "|| "gzxw002 = '"||g_gzxw2_d[l_ac].gzxw002 ||"' AND "|| "gzxw003 = '"||g_gzxw2_d[l_ac].gzxw003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.gzxw003_2" ver="1" cite_std="" cite_ver="" new="N" status="" src="s">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_gzxw2_d[l_ac].gzxw001) AND NOT cl_null(g_gzxw2_d[l_ac].gzxw002) AND NOT cl_null(g_gzxw2_d[l_ac].gzxw003) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_gzxw2_d[l_ac].gzxw001 != g_gzxw2_d_t.gzxw001 OR g_gzxw2_d[l_ac].gzxw002 != g_gzxw2_d_t.gzxw002 OR g_gzxw2_d[l_ac].gzxw003 != g_gzxw2_d_t.gzxw003))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzxw_t WHERE "||"gzxwent = '" ||g_enterprise|| "' AND "||"gzxw001 = '"||g_gzxw2_d[l_ac].gzxw001 ||"' AND "|| "gzxw002 = '"||g_gzxw2_d[l_ac].gzxw002 ||"' AND "|| "gzxw003 = '"||g_gzxw2_d[l_ac].gzxw003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.gzxwcrtdp" ver="1" cite_std="" cite_ver="" new="N" status="" src="s">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_gzxw2_d[l_ac].gzxwcrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_gzxw2_d[l_ac].gzxwcrtdp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_gzxw2_d[l_ac].gzxwcrtdp_desc
+]]>
+  </point>
+  <point name="input.a.page2.gzxwcrtid" ver="1" cite_std="" cite_ver="" new="N" status="" src="s">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_gzxw2_d[l_ac].gzxwcrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_gzxw2_d[l_ac].gzxwcrtid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_gzxw2_d[l_ac].gzxwcrtid_desc
+]]>
+  </point>
+  <point name="input.a.page2.gzxwmodid" ver="1" cite_std="" cite_ver="" new="N" status="" src="s">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_gzxw2_d[l_ac].gzxwmodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_gzxw2_d[l_ac].gzxwmodid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_gzxw2_d[l_ac].gzxwmodid_desc
+]]>
+  </point>
+  <point name="input.a.page2.gzxwowndp" ver="1" cite_std="" cite_ver="" new="N" status="" src="s">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_gzxw2_d[l_ac].gzxwowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_gzxw2_d[l_ac].gzxwowndp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_gzxw2_d[l_ac].gzxwowndp_desc
+]]>
+  </point>
+  <point name="input.action" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s">
+    <![CDATA[         ]]>
+  </point>
+  <point name="input.before_input" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s">
+    <![CDATA[
+          #欄位檢查
+          #欄位開窗
+         BEFORE ROW
+
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_n TO FORMONLY.cnt    #共幾項
+            #BEGIN WORK
+            LET g_detail_cnt = g_gzxw_d.getLength()
+            DISPLAY g_detail_cnt TO FORMONLY.idx
+    
+            #DISPLAY "l_ac:",l_ac ,"g_detail_cnt:",g_detail_cnt
+            IF g_detail_cnt >= l_ac  AND NOT cl_null(g_gzxw_d[l_ac].gzxw002) 
+               AND NOT cl_null(g_gzxw_d[l_ac].gzxw003) 
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_gzxw_d_t.* = g_gzxw_d[l_ac].*  #BACKUP
+               IF NOT azzi800_role_lock_b() THEN
+                  LET l_lock_sw='Y'
+               ELSE
+   
+                  FETCH azzi800_role_bcl INTO 
+                  g_gzxw_d[l_ac].gzxwstus,g_gzxw_d[l_ac].gzxw002,g_gzxw_d[l_ac].gzxw003,g_gzxw_d[l_ac].gzxw004,g_gzxw_d[l_ac].gzxw005,
+                  g_gzxw2_d[l_ac].gzxwmodid,g_gzxw2_d[l_ac].gzxwmoddt,g_gzxw2_d[l_ac].gzxwownid,g_gzxw2_d[l_ac].gzxwowndp,g_gzxw2_d[l_ac].gzxwcrtid,
+                  g_gzxw2_d[l_ac].gzxwcrtdp,g_gzxw2_d[l_ac].gzxwcrtdt
+                  IF SQLCA.sqlcode THEN
+                     CALL cl_err(g_gzxw_d_t.gzxw002,SQLCA.sqlcode,1)
+                     LET l_lock_sw = "Y"
+                  END IF
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+
+
+         BEFORE INSERT
+            #BEGIN WORK
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_gzxw_d_t.* TO NULL
+            INITIALIZE g_gzxw_d[l_ac].* TO NULL 
+            
+            LET g_gzxw_d_t.* = g_gzxw_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL azzi800_role_set_entry_b("a")
+            CALL azzi800_role_set_no_entry_b("a")
+            #公用欄位給值(單身)
+            LET g_gzxw_d[l_ac].gzxwstus = "Y"
+            LET g_gzxw2_d[l_ac].gzxwownid = g_user
+            LET g_gzxw2_d[l_ac].gzxwowndp = g_dept
+            LET g_gzxw2_d[l_ac].gzxwcrtid = g_user
+            LET g_gzxw2_d[l_ac].gzxwcrtdp = g_dept 
+            LET g_gzxw2_d[l_ac].gzxwcrtdt = cl_get_current()
+            LET g_gzxw2_d[l_ac].gzxwmodid = g_user
+            LET g_gzxw2_d[l_ac].gzxwmoddt = cl_get_current()
+
+         AFTER INSERT
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1 
+
+            SELECT COUNT(*) INTO l_count FROM gzxw_t 
+             WHERE  gzxwent = g_enterprise AND gzxw001 = pc_gzxw001
+             AND gzxw002 = g_gzxw_d[l_ac].gzxw002 AND gzxw003 =g_gzxw_d[l_ac].gzxw003
+      
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前
+               {<point name="input.body.b_insert"/>}
+               #end add-point
+            
+               #INITIALIZE gs_keys TO NULL 
+               #LET gs_keys[1] = g_gzxw_d[l_ac].gzxw001
+               INSERT INTO gzxw_t
+                  (
+                   gzxwent,
+                   gzxw001,gzxwstus,
+                   gzxw002,gzxw003,
+                   gzxw004,gzxw005,
+                   gzxwownid,gzxwowndp,
+                   gzxwcrtid,gzxwcrtdp,gzxwcrtdt,
+                   gzxwmodid,gzxwmoddt
+                   
+                   ) 
+            VALUES(
+                   g_enterprise, 
+                   gc_gzxw001,g_gzxw_d[l_ac].gzxwstus,
+                   g_gzxw_d[l_ac].gzxw002,g_gzxw_d[l_ac].gzxw003,
+                   g_gzxw_d[l_ac].gzxw004,g_gzxw_d[l_ac].gzxw005,
+                   g_gzxw2_d[l_ac].gzxwownid,g_gzxw2_d[l_ac].gzxwowndp,
+                   g_gzxw2_d[l_ac].gzxwcrtid,g_gzxw2_d[l_ac].gzxwcrtdp,g_gzxw2_d[l_ac].gzxwcrtdt,
+                   g_gzxw2_d[l_ac].gzxwmodid,g_gzxw2_d[l_ac].gzxwmoddt
+                    )
+                   DISPLAY "11 SQLCA.sqlcode:",SQLCA.sqlcode
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("gzxw_t",SQLCA.sqlcode,0)
+               END IF 
+               #CALL azzi800_role_insert_b()
+                           
+            ELSE    
+               CALL cl_err('INSERT',"std-00006",1)
+               INITIALIZE g_gzxw_d[l_ac].* TO NULL
+               #ROLLBACK WORK
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("gzxw_t",SQLCA.sqlcode,1)  
+               #ROLLBACK WORK                    
+               CANCEL INSERT
+            ELSE
+
+               #COMMIT WORK
+               ERROR 'INSERT O.K'
+               LET g_detail_cnt = g_detail_cnt + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF NOT cl_null(pc_gzxw001) THEN
+                          
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               #DISPLAY "l_lock_sw=",l_lock_sw
+               IF l_lock_sw = "Y" THEN
+                  CALL cl_err("", -263, 1)
+                  CANCEL DELETE
+               END IF
+               DELETE FROM gzxw_t
+                  WHERE gzxwent = g_enterprise
+                      AND gzxw001 = pc_gzxw001
+                      AND gzxw002 = g_gzxw_d_t.gzxw002 
+                      AND gzxw003 = g_gzxw_d_t.gzxw003 
+                      
+
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("gzxw_t",SQLCA.sqlcode,1)
+                  ROLLBACK WORK
+                  CANCEL DELETE   
+               ELSE
+                  LET g_detail_cnt = g_detail_cnt-1
+                  
+                  #COMMIT WORK
+               END IF 
+               CLOSE azzi800_role_bcl
+               LET l_count = g_gzxw_d.getLength()
+            END IF 
+              
+         AFTER DELETE 
+
+ 
+         #---------------------<  Detail: page1  >-------------------
+
+
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               LET g_gzxw_d[l_ac].* = g_gzxw_d_t.*
+               CLOSE azzi800_role_bcl
+               ROLLBACK WORK
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               CALL cl_err(pc_gzxw001,-263,1)
+               LET g_gzxw_d[l_ac].* = g_gzxw_d_t.*
+            ELSE
+
+               
+               #寫入修改者/修改日期資訊(單身)
+               LET g_gzxw2_d[l_ac].gzxwmodid = g_user
+               LET g_gzxw2_d[l_ac].gzxwowndp = g_dept
+               LET g_gzxw2_d[l_ac].gzxwcrtid = g_user
+               LET g_gzxw2_d[l_ac].gzxwcrtdp = g_dept 
+               LET g_gzxw2_d[l_ac].gzxwcrtdt = cl_get_current()
+               LET g_gzxw2_d[l_ac].gzxwmodid = g_user
+               LET g_gzxw2_d[l_ac].gzxwmoddt = cl_get_current()
+
+      
+               UPDATE gzxw_t SET (gzxwstus,gzxw001,gzxw002,gzxw003,gzxwmodid,gzxwmoddt,gzxwownid,gzxwowndp,gzxwcrtid,gzxwcrtdp,gzxwcrtdt) = (g_gzxw_d[l_ac].gzxwstus,pc_gzxw001,g_gzxw_d[l_ac].gzxw002,g_gzxw_d[l_ac].gzxw003,g_gzxw2_d[l_ac].gzxwmodid,g_gzxw2_d[l_ac].gzxwmoddt,g_gzxw2_d[l_ac].gzxwownid,g_gzxw2_d[l_ac].gzxwowndp,g_gzxw2_d[l_ac].gzxwcrtid,g_gzxw2_d[l_ac].gzxwcrtdp,g_gzxw2_d[l_ac].gzxwcrtdt)
+                WHERE 
+                      gzxwent = g_enterprise
+                      AND gzxw001 = pc_gzxw001
+                      AND gzxw002 = g_gzxw_d_t.gzxw002 
+                      AND gzxw003 = g_gzxw_d_t.gzxw003
+ 
+ 
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("gzxw_t",SQLCA.sqlcode,1)   
+                  LET g_gzxw_d[l_ac].* = g_gzxw_d_t.*
+
+
+                  
+               END IF
+
+            END IF
+            
+         AFTER ROW
+            CALL azzi800_role_b_fill(pc_gzxw001)
+            CALL azzi800_role_unlock_b()
+            #COMMIT WORK
+            #其他table進行unlock]]>
+  </point>
+  <point name="input.c.page1.gzxw002" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL 
+            LET g_qryparam.state = "i"
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = ""
+            LET g_qryparam.where = "1=1"
+            #LET g_qryparam.arg1 = "111"
+            CALL q_gzya001( )
+            LET g_gzxw_d[l_ac].gzxw002 = g_qryparam.return1
+            DISPLAY g_gzxw_d[l_ac].gzxw002 TO gzxw002         #顯示到畫面上
+            NEXT FIELD gzxw002                                #返回原欄位
+            #LET g_qryparam.reqry = FALSE
+
+            #LET g_qryparam.default1 = g_gzxw_d[l_ac].gzxw002 #給予default值
+
+            #給予arg
+
+            #CALL q_gzya001()                                #呼叫開窗
+
+            #LET g_gzxw_d[l_ac].gzxw002 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            #DISPLAY g_gzxw_d[l_ac].gzxw002 TO gzxw002              #顯示到畫面上
+
+            NEXT FIELD gzxw002                          #返回原欄位
+]]>
+  </point>
+  <point name="input.define" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s">
+    <![CDATA[   DEFINE pc_gzxw001     LIKE gzxw_t.gzxw001
+   DEFINE  l_cmd           LIKE type_t.chr1
+   DEFINE  l_n             LIKE type_t.num5    #檢查重複用  
+   DEFINE  l_cnt           LIKE type_t.num5    #檢查重複用  
+   DEFINE  l_lock_sw       LIKE type_t.chr1    #單身鎖住否  
+   DEFINE  l_i             LIKE type_t.num5
+   DEFINE  ls_return       STRING
+ ]]>
+  </point>
+  <point name="input.get_var" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s">
+    <![CDATA[   pc_gzxw001]]>
+  </point>
+  <point name="input.pre_input" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s">
+    <![CDATA[    LET g_forupd_sql = "SELECT gzxwstus,gzxw002,gzxw003,gzxw004,gzxw005
+                      ,gzxwmodid,gzxwmoddt,gzxwownid,gzxwowndp,gzxwcrtid 
+                      gzxwcrtdp,gzxwcrtdt 
+                      FROM gzxw_t WHERE gzxwent=? AND gzxw001=? 
+                      AND gzxw002=? AND gzxw003=? FOR UPDATE"
+   LET g_forupd_sql = cl_forupd_sql(g_forupd_sql)
+   DECLARE azzi800_role_bcl CURSOR FROM g_forupd_sql      # LOCK CURSOR
+   
+   LET gc_gzxw001 = pc_gzxw001
+   CALL azzi800_role_b_fill(pc_gzxw001)
+   DISPLAY pc_gzxw001 TO gzxw001
+    ]]>
+  </point>
+  <point name="show.body.reference2" ver="1" cite_std="" cite_ver="" new="N" status="" src="s">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_gzxw2_d[l_ac].gzxwownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_gzxw2_d[l_ac].gzxwownid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_gzxw2_d[l_ac].gzxwownid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_gzxw2_d[l_ac].gzxwowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_gzxw2_d[l_ac].gzxwowndp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_gzxw2_d[l_ac].gzxwowndp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_gzxw2_d[l_ac].gzxwcrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_gzxw2_d[l_ac].gzxwcrtid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_gzxw2_d[l_ac].gzxwcrtid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_gzxw2_d[l_ac].gzxwcrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_gzxw2_d[l_ac].gzxwcrtdp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_gzxw2_d[l_ac].gzxwcrtdp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_gzxw2_d[l_ac].gzxwmodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_gzxw2_d[l_ac].gzxwmodid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_gzxw2_d[l_ac].gzxwmodid_desc
+]]>
+  </point>
+  <point name="input.c.page1.gzxwstus" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s">
+    <![CDATA[]]>
+  </point>
+  <point name="input.a.page2.gzxwownid" ver="1" cite_std="" cite_ver="" new="N" status="" src="s">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_gzxw2_d[l_ac].gzxwownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_gzxw2_d[l_ac].gzxwownid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_gzxw2_d[l_ac].gzxwownid_desc
+]]>
+  </point>
+</add_points>

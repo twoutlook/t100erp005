@@ -1,0 +1,140 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmt580" module="afm" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="05016" crtdt="2015-04-29 13:37:57" modid="05016" moddt="2015-11-24 16:56:59" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="收息作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="fmmvsite,fmmvsite_desc(chr80),fmmv001,fmmv002,fmmvdocdt,b_fmmv0012(chr500),fmmv003,fmmvdocno,fmmv015,fmmv004,fmmv013,fmmv013_desc(chr80),fmmv007,fmmv012,fmmv012_desc(chr80),fmmv005,fmmv011,fmmv011_desc(chr80),fmmv006,fmmv014,fmmv010,fmmv016,fmmv017,fmmv018,fmmv019,fmmv020,fmmvstus,fmmvownid,fmmvownid_desc(chr80),fmmvowndp,fmmvowndp_desc(chr80),fmmvcrtid,fmmvcrtid_desc(chr80),fmmvcrtdp,fmmvcrtdp_desc(chr80),fmmvcrtdt,fmmvmodid,fmmvmodid_desc(chr80),fmmvmoddt,fmmvcnfid,fmmvcnfid_desc(chr80),fmmvcnfdt"/>
+      <var id="bs_field" value="fmmvdocno" pk="fmmvdocno" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="open_apmt580_01"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="touch_page1"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmt580" method="dialog">
+    <section id="input">
+      <input id="head" field="fmmvsite,fmmv001,fmmv002,fmmvdocdt,b_fmmv0012,fmmv003,fmmvdocno,fmmv015,fmmv004,fmmv013,fmmv007,fmmv012,fmmv005,fmmv011,fmmv006,fmmv014,fmmv010,fmmv016,fmmv017,fmmv018,fmmv019,fmmv020,fmmvstus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="fmmvsite,fmmv001,fmmv002,fmmvdocdt,b_fmmv0012,fmmv003,fmmvdocno,fmmv015,fmmv004,fmmv013,fmmv007,fmmv012,fmmv005,fmmv011,fmmv006,fmmv014,fmmv010,fmmv016,fmmv017,fmmv018,fmmv019,fmmv020,fmmvstus,fmmvownid,fmmvowndp,fmmvcrtid,fmmvcrtdp,fmmvcrtdt,fmmvmodid,fmmvmoddt,fmmvcnfid,fmmvcnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="fmmvdocno"/>
+      <set id="head" type="no_entry" field="fmmvdocno"/>
+    </init>
+    <init id="head">
+      <column id="fmmvsite">
+        <after/>
+      </column>
+      <column id="fmmvsite_desc"/>
+      <column id="fmmv001"/>
+      <column id="fmmv002"/>
+      <column id="fmmvdocdt"/>
+      <column id="b_fmmv0012"/>
+      <column id="fmmv003"/>
+      <column id="fmmvdocno"/>
+      <column id="fmmv015" def_scc="8807"/>
+      <column id="fmmv004"/>
+      <column id="fmmv013">
+        <after/>
+      </column>
+      <column id="fmmv013_desc"/>
+      <column id="fmmv007" def_scc="8806"/>
+      <column id="fmmv012">
+        <after/>
+      </column>
+      <column id="fmmv012_desc"/>
+      <column id="fmmv005" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmmv011">
+        <after/>
+      </column>
+      <column id="fmmv011_desc"/>
+      <column id="fmmv006" type="S" default="1">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmmv014" type="S" default="0"/>
+      <column id="fmmv010"/>
+      <column id="fmmv016"/>
+      <column id="fmmv017"/>
+      <column id="fmmv018"/>
+      <column id="fmmv019"/>
+      <column id="fmmv020"/>
+      <column id="fmmvstus" scc="13">
+        <stus id="Y" pic="confirmed"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="X" pic="invalid"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+      </column>
+      <column id="fmmvownid">
+        <after>
+          <reference field="fmmvownid_desc" ref_field="fmmv_t.fmmvownid" map_field="fmmvownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmmvownid_desc"/>
+      <column id="fmmvowndp">
+        <after>
+          <reference field="fmmvowndp_desc" ref_field="fmmv_t.fmmvowndp" map_field="fmmvowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmmvowndp_desc"/>
+      <column id="fmmvcrtid">
+        <after>
+          <reference field="fmmvcrtid_desc" ref_field="fmmv_t.fmmvcrtid" map_field="fmmvcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmmvcrtid_desc"/>
+      <column id="fmmvcrtdp">
+        <after>
+          <reference field="fmmvcrtdp_desc" ref_field="fmmv_t.fmmvcrtdp" map_field="fmmvcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmmvcrtdp_desc"/>
+      <column id="fmmvcrtdt"/>
+      <column id="fmmvmodid">
+        <after>
+          <reference field="fmmvmodid_desc" ref_field="fmmv_t.fmmvmodid" map_field="fmmvmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmmvmodid_desc"/>
+      <column id="fmmvmoddt"/>
+      <column id="fmmvcnfid">
+        <after>
+          <reference field="fmmvcnfid_desc" ref_field="fmmv_t.fmmvcnfid" map_field="fmmvcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmmvcnfid_desc"/>
+      <column id="fmmvcnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="fmmv_t" pk="fmmvdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT fmmvsite,&apos;&apos;,fmmv001,fmmv002,fmmvdocdt,&apos;&apos;,fmmv003,fmmvdocno,fmmv015,fmmv004,fmmv013,&apos;&apos;,fmmv007,fmmv012,&apos;&apos;,fmmv005,fmmv011,&apos;&apos;,fmmv006,fmmv014,fmmv010,fmmv016,fmmv017,fmmv018,fmmv019,fmmv020,fmmvstus,fmmvownid,&apos;&apos;,fmmvowndp,&apos;&apos;,fmmvcrtid,&apos;&apos;,fmmvcrtdp,&apos;&apos;,fmmvcrtdt,fmmvmodid,&apos;&apos;,fmmvmoddt,fmmvcnfid,&apos;&apos;,fmmvcnfdt FROM fmmv_t WHERE fmmvent= ? AND fmmvdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT fmmvdocno FROM fmmv_t" order="fmmvdocno"/>
+    </head>
+  </dataset>
+</assembly>
+

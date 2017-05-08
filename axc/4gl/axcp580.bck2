@@ -1,0 +1,949 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axcp580.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2014-11-26 14:52:31), PR版次:0001(2016-04-28 11:48:33)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000044
+#+ Filename...: axcp580
+#+ Description: (取消)成本差異分攤作業
+#+ Creator....: 00768(2014-11-26 10:38:08)
+#+ Modifier...: 00768 -SD/PR- 06815
+ 
+{</section>}
+ 
+{<section id="axcp580.global" >}
+#應用 p01 樣板自動產生(Version:18)
+#add-point:填寫註解說明
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       glaald LIKE type_t.chr5, 
+   glaald_desc LIKE type_t.chr80, 
+   yy LIKE type_t.num5, 
+   pp LIKE type_t.num5, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axcp580.main" >}
+MAIN
+   #add-point:main段define (客製用)
+   
+   #end add-point 
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define 
+   
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("axc","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call
+      
+      #end add-point
+      CALL axcp580_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_axcp580 WITH FORM cl_ap_formpath("axc",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL axcp580_init()
+ 
+      #進入選單 Menu (="N")
+      CALL axcp580_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_axcp580
+   END IF
+ 
+   #add-point:作業離開前
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="axcp580.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION axcp580_init()
+ 
+   #add-point:init段define (客製用)
+   
+   #end add-point
+   #add-point:ui_dialog段define 
+   
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+ 
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcp580.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION axcp580_ui_dialog()
+ 
+   #add-point:ui_dialog段define (客製用)
+   
+   #end add-point
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define 
+   DEFINE l_comp          LIKE ooef_t.ooef017       #法人
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_errno         LIKE gzze_t.gzze001
+   DEFINE l_glaa003       LIKE glaa_t.glaa003
+   DEFINE l_date          LIKE type_t.dat
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog
+   LET l_date = cl_get_today()
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2
+      IF cl_null(g_master.glaald) THEN
+         #1.取法人编号
+         SELECT ooef017 INTO l_comp FROM ooef_t
+          WHERE ooefent = g_enterprise
+            AND ooef001 = g_site
+         #2.取法人所属的主帐套值
+         CALL s_axcp500_get_ld(l_comp) RETURNING l_success,g_master.glaald
+         #說明
+         CALL s_desc_get_ld_desc(g_master.glaald) RETURNING g_master.glaald_desc #帳別編號
+      END IF
+      
+      #IF NOT cl_null(g_master.glaald) THEN
+      #   #3.取账套的现行年度、期别
+      #   SELECT glaa010,glaa011
+      #     INTO g_master.yy,g_master.pp
+      #     FROM glaa_t
+      #    WHERE glaaent = g_enterprise
+      #      AND glaald  = g_master.glaald
+      #    
+      #   #5.取当期的年度/期别及日期范围
+      #   IF cl_null(g_master.yy) AND cl_null(g_master.pp) THEN
+      #      CALL s_fin_date_get_period_value('',g_master.glaald,l_date)
+      #           RETURNING l_success,g_master.yy,g_master.pp
+      #   END IF
+      #END IF
+      #按现行成本计算年度、期别取，不是按账套的现行年度、期别。
+      IF (cl_null(g_master.yy) AND cl_null(g_master.pp)) OR (g_master.yy=0 AND g_master.pp=0) THEN
+         CALL cl_get_para(g_enterprise,g_site,'S-FIN-6010') RETURNING g_master.yy
+         CALL cl_get_para(g_enterprise,g_site,'S-FIN-6011') RETURNING g_master.pp
+      END IF
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #應用 a57 樣板自動產生(Version:3)
+         INPUT BY NAME g_master.glaald,g_master.yy,g_master.pp 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前 name="input.m.before_input"
+               DISPLAY g_master.glaald_desc TO glaald_desc
+               #end add-point
+         
+                     #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glaald
+            
+            #add-point:AFTER FIELD glaald name="input.a.glaald"
+            CALL axcp580_chk_column('glaald') RETURNING l_success
+            IF NOT l_success THEN
+               NEXT FIELD CURRENT
+            END IF
+            #說明
+            CALL s_desc_get_ld_desc(g_master.glaald) RETURNING g_master.glaald_desc #帳別編號
+            DISPLAY g_master.glaald_desc TO glaald_desc
+            
+            #年度期別預設嗎？
+               #CALL s_axcp500_get_input_default(g_site,l_date,g_master.glaald,'')
+               #     RETURNING g_master.glaald,g_master.xcat001,g_master.field_flag,g_master.yy,g_master.pp
+               #DISPLAY BY NAME g_master.glaald,g_master.xcat001,g_master.field_flag,g_master.yy,g_master.pp
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glaald
+            #add-point:BEFORE FIELD glaald name="input.b.glaald"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glaald
+            #add-point:ON CHANGE glaald name="input.g.glaald"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD yy
+            #add-point:BEFORE FIELD yy name="input.b.yy"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD yy
+            
+            #add-point:AFTER FIELD yy name="input.a.yy"
+            CALL axcp580_chk_column('yy') RETURNING l_success
+            IF NOT l_success THEN
+               NEXT FIELD CURRENT
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE yy
+            #add-point:ON CHANGE yy name="input.g.yy"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pp
+            #add-point:BEFORE FIELD pp name="input.b.pp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pp
+            
+            #add-point:AFTER FIELD pp name="input.a.pp"
+            CALL axcp580_chk_column('pp') RETURNING l_success
+            IF NOT l_success THEN
+               NEXT FIELD CURRENT
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pp
+            #add-point:ON CHANGE pp name="input.g.pp"
+            
+            #END add-point 
+ 
+ 
+ 
+                     #Ctrlp:input.c.glaald
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glaald
+            #add-point:ON ACTION controlp INFIELD glaald name="input.c.glaald"
+            #應用 a07 樣板自動產生(Version:1)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_master.glaald             #給予default值
+            #給予arg
+            LET g_qryparam.arg1 = g_user
+            LET g_qryparam.arg2 = g_dept
+            CALL q_authorised_ld()                                #呼叫開窗
+            LET g_master.glaald = g_qryparam.return1              
+            DISPLAY g_master.glaald TO glaald              #
+            
+            #說明
+            CALL s_desc_get_ld_desc(g_master.glaald) RETURNING g_master.glaald_desc #帳別編號
+            DISPLAY g_master.glaald_desc TO glaald_desc
+            
+            NEXT FIELD glaald                          #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.yy
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD yy
+            #add-point:ON ACTION controlp INFIELD yy name="input.c.yy"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pp
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pp
+            #add-point:ON ACTION controlp INFIELD pp name="input.c.pp"
+            
+            #END add-point
+ 
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後 name="input.m.after_input"
+               IF cl_null(g_master.glaald) THEN
+                  NEXT FIELD glaald
+               ELSE
+                  CALL s_fin_ld_chk(g_master.glaald,g_user,'N')
+                       RETURNING l_success,l_errno
+                  IF NOT l_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code   = l_errno
+                     LET g_errparam.extend = g_master.glaald
+                     #160321-00016#41 s983961--add(s)
+                     LET g_errparam.replace[1] ='agli010'
+                     LET g_errparam.replace[2] = cl_get_progname('agli010',g_lang,"2")
+                     LET g_errparam.exeprog ='agli010'
+                     #160321-00016#41 s983961--add(e)
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+                     NEXT FIELD glaald
+                  END IF
+               END IF
+               
+               IF cl_null(g_master.yy) THEN
+                  NEXT FIELD yy
+               END IF
+               
+               IF cl_null(g_master.pp) THEN
+                  NEXT FIELD pp
+               END IF
+               
+               #检查期别资料是否合格
+               SELECT glaa003 INTO l_glaa003 FROM glaa_t #會計週期參照表號
+                WHERE glaaent = g_enterprise
+                  AND glaald  = g_master.glaald
+               IF NOT s_fin_date_chk_period(l_glaa003,g_master.yy,g_master.pp) THEN
+                  LET g_master.pp = ''
+                  DISPLAY BY NAME g_master.pp
+                  NEXT FIELD yy
+               END IF
+               
+               ##檢查是否可以進行分攤計算--账套＋年度＋期别产生数据，如果有的就要提醒删除重新产生。 zll
+               #CALL s_axcp580_chk_cal(g_master.glaald,g_master.xcat001,g_master.yy,g_master.pp)
+               #     RETURNING l_success
+               #IF NOT l_success THEN
+               #   CONTINUE DIALOG
+               #END IF
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...) name="input.other"
+            
+            #end add-point
+         END INPUT
+ 
+ 
+ 
+         
+         
+      
+         #add-point:ui_dialog段construct
+         
+         #end add-point
+         #add-point:ui_dialog段input
+         
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL axcp580_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog
+            
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear
+         
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear
+            INITIALIZE g_master.* TO NULL
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL axcp580_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog
+      
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL axcp580_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = axcp580_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcp580.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION axcp580_transfer_argv(ls_js)
+ 
+   #add-point:transfer_agrv段define (客製用)
+   
+   #end add-point
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define 
+   
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容
+   
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcp580.process" >}
+#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION axcp580_process(ls_js)
+ 
+   #add-point:process段define (客製用)
+   
+   #end add-point
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define 
+   DEFINE l_hascnt    LIKE type_t.num5
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+   LET li_p01_status = 1
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理
+   
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      LET li_count = 3
+      CALL cl_progress_bar_no_window(li_count)
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE axcp580_process_cs CURSOR FROM ls_sql
+#  FOREACH axcp580_process_cs INTO
+   #add-point:process段process
+   
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      SELECT COUNT(*) INTO l_hascnt FROM xcas_t
+       WHERE xcasent = g_enterprise
+         #AND xcassite IN ( SELECT ooef001 FROM ooef_t 
+         #                   WHERE ooefent = g_enterprise AND ooef201 = 'Y'   #据点
+         #                     AND ooef017 = g_master.glaacomp)  #法人归属
+         AND xcasld  = g_master.glaald #账别
+         AND xcas001 = g_master.yy  #年度
+         AND xcas002 = g_master.pp  #期別
+      IF l_hascnt > 0 THEN
+         #資料已存在是否重新處理?
+         IF NOT cl_ask_confirm("axc-00123") THEN
+            RETURN
+         END IF
+      ELSE
+         #是否确定执行本作业?
+         IF NOT cl_ask_confirm("lib-012") THEN
+            RETURN
+         END IF
+      END IF
+      
+      CALL s_transaction_begin()  #事务开始
+      CALL cl_err_collect_init()  #汇总错误讯息初始化
+      LET g_success = 'Y'
+      
+      CALL axcp580_execute()
+      
+      CALL cl_err_collect_show()  #显示错误讯息汇总
+      CALL s_transaction_end(g_success,0)  #事务结束
+      IF g_success = 'Y' THEN
+         #执行成功
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'adz-00217'
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+      ELSE
+         #执行失败
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'adz-00218'
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+      END IF
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      CALL s_transaction_begin()  #事务开始
+      CALL cl_err_collect_init()  #汇总错误讯息初始化
+      LET g_success = 'Y'
+      
+      CALL axcp580_execute()
+      
+      CALL cl_err_collect_show()  #显示错误讯息汇总
+      CALL s_transaction_end(g_success,0)  #事务结束
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL axcp580_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcp580.get_buffer" >}
+PRIVATE FUNCTION axcp580_get_buffer(p_dialog)
+ 
+   #add-point:process段define (客製用)
+   
+   #end add-point
+   DEFINE p_dialog   ui.DIALOG
+   #add-point:process段define
+   
+   #end add-point
+ 
+   
+   LET g_master.glaald = p_dialog.getFieldBuffer('glaald')
+   LET g_master.yy = p_dialog.getFieldBuffer('yy')
+   LET g_master.pp = p_dialog.getFieldBuffer('pp')
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcp580.msgcentre_notify" >}
+PRIVATE FUNCTION axcp580_msgcentre_notify()
+ 
+   #add-point:process段define (客製用)
+   
+   #end add-point
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:process段define
+   
+   #end add-point
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcp580.other_function" readonly="Y" >}
+#add-point:自定義元件(Function)
+
+PRIVATE FUNCTION axcp580_chk_column(p_column)
+   DEFINE p_column        LIKE type_t.chr20
+   DEFINE r_success       LIKE type_t.num5
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_errno         LIKE gzze_t.gzze001
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+
+   CASE p_column
+      WHEN 'glaald'  #帳別
+            IF NOT cl_null(g_master.glaald) THEN
+               CALL s_fin_ld_chk(g_master.glaald,g_user,'N')
+                    RETURNING l_success,l_errno
+               IF NOT l_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code   = l_errno
+                  LET g_errparam.extend = g_master.glaald
+                  #160321-00016#41 s983961--add(s)
+                  LET g_errparam.replace[1] ='agli010'
+                  LET g_errparam.replace[2] = cl_get_progname('agli010',g_lang,"2")
+                  LET g_errparam.exeprog ='agli010'
+                  #160321-00016#41 s983961--add(e)
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()
+                  LET r_success = FALSE
+                  RETURN r_success
+               END IF
+            END IF
+      WHEN 'yy'      #年度
+            IF g_master.yy < 1000 OR g_master.yy > 9999 THEN
+               #年度资料输入错误！年度:请输入4位数字
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code   = 'aoo-00113'
+               LET g_errparam.extend = g_master.yy
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+               LET r_success = FALSE
+               RETURN r_success
+            END IF
+      WHEN 'pp'      #期別
+            IF g_master.pp < 0 THEN
+               #期別資料不可小於0
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code   = 'sub-00426'
+               LET g_errparam.extend = g_master.pp
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+               LET r_success = FALSE
+               RETURN r_success
+            END IF
+   END CASE
+   RETURN r_success
+END FUNCTION
+
+#执行分摊
+PRIVATE FUNCTION axcp580_execute()
+   #DEFINE l_xcas    RECORD LIKE xcas_t.*
+   DEFINE l_sql     STRING
+   DEFINE l_msg     STRING
+
+   #刪除舊值
+   LET l_msg = cl_getmsg("axc-00499",g_dlang) #删除旧值
+   CALL cl_progress_no_window_ing(l_msg)
+   DELETE FROM xcas_t
+    WHERE xcasent = g_enterprise
+      #AND xcassite IN ( SELECT ooef001 FROM ooef_t 
+      #                   WHERE ooefent = g_enterprise AND ooef201 = 'Y'   #据点
+      #                     AND ooef017 = g_master.glaacomp)  #法人归属
+      AND xcasld  = g_master.glaald #账别
+      AND xcas001 = g_master.yy  #年度
+      AND xcas002 = g_master.pp  #期別
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'delete xcas_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET g_success = 'N'
+      RETURN
+   END IF
+   
+   ##賦初值
+   #INITIALIZE l_xcas.* TO NULL
+   #LET l_xcas.xcasent   = g_enterprise      #企業編號
+   #LET l_xcas.xcasld    = g_master.glaald   #企業編號
+   #LET l_xcas.xcas001   = g_master.yy       #年度
+   #LET l_xcas.xcas002   = g_master.pp       #期別
+   
+   ##從工單入庫資料抓取
+   #LET l_msg = cl_getmsg("axc-00498",g_dlang) #從工單入庫資料抓取
+   #CALL cl_progress_no_window_ing(l_msg)
+   #LET l_sql = " SELECT unique xcbosite,xcbo001,xcbo002,xcbo003,xcbo004 ",
+   #            "   FROM xcbo_t,sfea_t,sfec_t,sfaa_t ",
+   #            "  WHERE xcboent = sfeaent AND xcbosite = sfeasite ", #xcbo关联入库单头
+   #            "    AND sfeaent = sfecent AND sfeadocno = sfecdocno ", #入库单头关联入库单身
+   #            "    AND sfecent = sfaaent AND sfec001 = sfaadocno ", #入库单身关联工单
+   #            "    AND sfaa010 = xcbo001 AND sfec005 = xcbo002 ", #主件料号，联产品料号
+   #            "    AND xcboent = ",g_enterprise,
+   #            "    AND xcbosite IN ( SELECT ooef001 FROM ooef_t ", #归属于指定法人组织的所有据点
+   #            "                       WHERE ooefent = ",g_enterprise," AND ooef201 = 'Y' ",  #据点
+   #            "                         AND ooef017 = '",g_master.glaacomp,"')",  #法人归属
+   #            "    AND sfeastus = 'S' ",  #入库单已过帐
+   #            "    AND sfea001 BETWEEN '",g_bdate,"' AND '",g_edate,"' ", #在成本计算年期范围内
+   #            "  ORDER BY xcbosite,xcbo001,xcbo002,xcbo003,xcbo004 "
+   #PREPARE axcp130_execute_p1 FROM l_sql
+   #DECLARE axcp130_execute_c1 CURSOR FOR axcp130_execute_p1
+   #FOREACH axcp130_execute_c1 INTO l_xcbp.xcbpsite,l_xcbp.xcbp003,l_xcbp.xcbp004,l_xcbp.xcbp005,l_xcbp.xcbp006
+   #                                #營運據點          #主件料號      #聯產品料號      #聯產品單位     #分配率
+   #   IF SQLCA.sqlcode THEN
+   #      INITIALIZE g_errparam TO NULL
+   #      LET g_errparam.code = SQLCA.sqlcode
+   #      LET g_errparam.extend = 'axcp130_execute_c1:sel xcbo'
+   #      LET g_errparam.popup = TRUE
+   #      CALL cl_err()
+   #      LET g_success = 'N'
+   #      EXIT FOREACH
+   #   END IF
+   #   
+   #   INSERT INTO xcas_t VALUES (l_xcas.*)
+   #   #可能有重复的现象
+   #   IF (SQLCA.sqlcode OR SQLCA.SQLERRD[3] = 0) AND (NOT cl_err_sql_dup_value(SQLCA.sqlcode)) THEN
+   #      INITIALIZE g_errparam TO NULL
+   #      LET g_errparam.code = SQLCA.sqlcode
+   #      LET g_errparam.extend = 'insert xcas_t'
+   #      LET g_errparam.popup = TRUE
+   #      CALL cl_err()
+   #      LET g_success = 'N'
+   #      CONTINUE FOREACH
+   #   END IF
+   #END FOREACH
+   #
+   #
+   ##從委外入庫資料抓取
+   #LET l_msg = cl_getmsg("axc-00497",g_dlang) #从委外入库数据抓取
+   #CALL cl_progress_no_window_ing(l_msg)
+   #LET l_sql = " SELECT unique xcbosite,xcbo001,xcbo002,xcbo003,xcbo004 ",
+   #            "   FROM xcbo_t,pmds_t,pmdv_t,sfaa_t ",
+   #            "  WHERE xcboent = pmdsent AND xcbosite = pmdssite ", #xcbo关联委外入库单头
+   #            "    AND pmdsent = pmdvent AND pmdsdocno = pmdvdocno ", #委外入库单头关联委外入库单身
+   #            "    AND pmdvent = sfaaent AND pmdv014 = sfaadocno ", #委外入库单身关联工单
+   #            "    AND sfaa010 = xcbo001 AND pmdv001 = xcbo002 ", #主件料号，联产品料号
+   #            "    AND xcboent = ",g_enterprise,
+   #            "    AND xcbosite IN ( SELECT ooef001 FROM ooef_t ", #归属于指定法人组织的所有据点
+   #            "                       WHERE ooefent = ",g_enterprise," AND ooef201 = 'Y' ",  #据点
+   #            "                         AND ooef017 = '",g_master.glaacomp,"')",  #法人归属
+   #            "    AND pmdsstus = 'S' ",  #委外入库单已过帐
+   #            "    AND pmds001 BETWEEN '",g_bdate,"' AND '",g_edate,"' ",  #在成本计算年期范围内
+   #            "  ORDER BY xcbosite,xcbo001,xcbo002,xcbo003,xcbo004 "
+   #PREPARE axcp130_execute_p2 FROM l_sql
+   #DECLARE axcp130_execute_c2 CURSOR FOR axcp130_execute_p2
+   #FOREACH axcp130_execute_c2 INTO l_xcbp.xcbpsite,l_xcbp.xcbp003,l_xcbp.xcbp004,l_xcbp.xcbp005,l_xcbp.xcbp006
+   #                                #營運據點          #主件料號      #聯產品料號      #聯產品單位     #分配率
+   #   IF SQLCA.sqlcode THEN
+   #      INITIALIZE g_errparam TO NULL
+   #      LET g_errparam.code = SQLCA.sqlcode
+   #      LET g_errparam.extend = 'axcp130_execute_c2:sel xcbo'
+   #      LET g_errparam.popup = TRUE
+   #      CALL cl_err()
+   #      LET g_success = 'N'
+   #      EXIT FOREACH
+   #   END IF
+   #   
+   #   INSERT INTO xcas_t VALUES (l_xcas.*)
+   #   #可能有重复的现象
+   #   IF (SQLCA.sqlcode OR SQLCA.SQLERRD[3] = 0) AND (NOT cl_err_sql_dup_value(SQLCA.sqlcode)) THEN
+   #      INITIALIZE g_errparam TO NULL
+   #      LET g_errparam.code = SQLCA.sqlcode
+   #      LET g_errparam.extend = 'insert xcas_t'
+   #      LET g_errparam.popup = TRUE
+   #      CALL cl_err()
+   #      LET g_success = 'N'
+   #      CONTINUE FOREACH
+   #   END IF
+   #END FOREACH
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

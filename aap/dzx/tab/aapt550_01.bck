@@ -1,0 +1,65 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapt550_01" module="aap" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="05016" crtdt="2016-03-10 17:24:02" modid="05016" moddt="2016-03-11 13:22:14" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="到貨轉收貨入庫單">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pmdsdocno,pmdsdocno_desc(chr80),pmdsdocdt,pmds002,pmds002_desc(chr80),pmds003,pmds003_desc(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="prog_pmds002" lib="cl_user_contact" parameter="&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;,g_pmds_m.pmds002"/>
+    </section>
+  </structure>
+  <form id="0" module="aap" filename="aapt550_01" method="dialog">
+    <section id="input">
+      <input id="head" field="pmdsdocno,pmdsdocdt,pmds002,pmds003"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="pmdsdocno">
+        <after>
+          <reference field="pmdsdocno_desc" ref_field="pmds_t.pmdsdocno" map_field="pmdsdocno" ref_sql="SELECT oodbl003 FROM oodbl_t WHERE oodblent=$varg_enterprise$var AND oodbl001=? AND oodbl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_pmdsdocno" state="c"/>
+      </column>
+      <column id="pmdsdocno_desc"/>
+      <column id="pmdsdocdt"/>
+      <column id="pmds002">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="pmds002_desc" ref_field="pmds_t.pmds002" map_field="pmds002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmds002_desc"/>
+      <column id="pmds003">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="pmds003_desc" ref_field="pmds_t.pmds003" map_field="pmds003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="pmds003_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pmds_t" pk="pmdsdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT pmdsdocno,&apos;&apos;,pmdsdocdt,pmds002,&apos;&apos;,pmds003,&apos;&apos; FROM pmds_t WHERE pmdsent= ? AND pmdsdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="pmdsdocno"/>
+    </head>
+  </dataset>
+</assembly>
+

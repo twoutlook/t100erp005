@@ -1,0 +1,123 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi320" module="azz" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="00742" crtdt="2014-10-30 16:42:09" modid="00742" moddt="2015-02-14 11:18:15" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="報表直接送印設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzgn001,gzgn001_desc(chr80),gzgn002,gzgn002_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzgnstus,gzgn003,gzgn003_desc(chr500),gzgn004,gzgn004_desc(chr500),gzgn010,gzgn005,gzgn005_desc(chr500),gzgn006,gzgn007,gzgn008,gzgn009"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gzgn003,gzgn004,gzgn010,gzgnownid,gzgnownid_desc(chr500),gzgnowndp,gzgnowndp_desc(chr500),gzgncrtid,gzgncrtid_desc(chr500),gzgncrtdp,gzgncrtdp_desc(chr500),gzgncrtdt,gzgnmodid,gzgnmodid_desc(chr500),gzgnmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi320" method="dialog">
+    <section id="input">
+      <input id="head" field="gzgn001,gzgn002"/>
+      <input id="body" page="1" field="gzgnstus,gzgn003,gzgn004,gzgn010,gzgn005,gzgn006,gzgn007,gzgn009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzgn001,gzgn001_desc,gzgn002,gzgn002_desc"/>
+      <construct id="body" page="1" field="gzgnstus,gzgn003,gzgn004,gzgn010,gzgn005,gzgn006,gzgn007,gzgn009"/>
+      <construct id="body" page="2" field="gzgnownid,gzgnowndp,gzgncrtid,gzgncrtdp,gzgncrtdt,gzgnmodid,gzgnmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzgn001,gzgn002"/>
+      <set id="head" type="no_entry" field="gzgn001,gzgn002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gzgn001">
+        <after/>
+        <controlp form="q_gzxa003_2" state="i"/>
+      </column>
+      <column id="gzgn001_desc"/>
+      <column id="gzgn002">
+        <after/>
+        <controlp form="q_gzya001" state="i"/>
+      </column>
+      <column id="gzgn002_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzgnstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="gzgn003">
+        <after>
+          <reference field="gzgn003_desc" ref_field="gzgn_t.gzgn003" map_field="gzgn003" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzzz001_5" state="i"/>
+      </column>
+      <column id="gzgn003_desc"/>
+      <column id="gzgn004">
+        <after/>
+        <controlp form="q_gzgn004" state="i"/>
+      </column>
+      <column id="gzgn004_desc"/>
+      <column id="gzgn010"/>
+      <column id="gzgn005">
+        <after/>
+      </column>
+      <column id="gzgn005_desc"/>
+      <column id="gzgn006"/>
+      <column id="gzgn007"/>
+      <column id="gzgn008"/>
+      <column id="gzgn009"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gzgnownid">
+        <after>
+          <reference field="gzgnownid_desc" ref_field="gzgn_t.gzgnownid" map_field="gzgnownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="gzgnownid_desc"/>
+      <column id="gzgnowndp">
+        <after>
+          <reference field="gzgnowndp_desc" ref_field="gzgn_t.gzgnowndp" map_field="gzgnowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="gzgnowndp_desc"/>
+      <column id="gzgncrtid">
+        <after>
+          <reference field="gzgncrtid_desc" ref_field="gzgn_t.gzgncrtid" map_field="gzgncrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="gzgncrtid_desc"/>
+      <column id="gzgncrtdp">
+        <after>
+          <reference field="gzgncrtdp_desc" ref_field="gzgn_t.gzgncrtdp" map_field="gzgncrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="gzgncrtdp_desc"/>
+      <column id="gzgncrtdt"/>
+      <column id="gzgnmodid">
+        <after>
+          <reference field="gzgnmodid_desc" ref_field="gzgn_t.gzgnmodid" map_field="gzgnmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="gzgnmodid_desc"/>
+      <column id="gzgnmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzgn_t" pk="gzgn001,gzgn002">
+      <sql id="forupd_sql" type="sql" query="SELECT gzgn001,&apos;&apos;,gzgn002,&apos;&apos; FROM gzgn_t WHERE gzgn001=? AND gzgn002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzgn001,&apos;&apos;,gzgn002,&apos;&apos; FROM gzgn_t" order="gzgn001,gzgn002"/>
+    </head>
+    <body id="gzgn_t" page="1,2" linked="" pk="gzgn003,gzgn004,gzgn010" fk="gzgn001,gzgn002">
+      <sql id="forupd_sql_detail" query="SELECT gzgnstus,gzgn003,&apos;&apos;,gzgn004,&apos;&apos;,gzgn010,gzgn005,&apos;&apos;,gzgn006,gzgn007,gzgn008,gzgn009,&apos;&apos;,&apos;&apos;,&apos;&apos;,gzgnownid,&apos;&apos;,gzgnowndp,&apos;&apos;,gzgncrtid,&apos;&apos;,gzgncrtdp,&apos;&apos;,gzgncrtdt,gzgnmodid,&apos;&apos;,gzgnmoddt FROM gzgn_t WHERE gzgn001=? AND gzgn002=? AND gzgn003=? AND gzgn004=? AND gzgn010=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzgnstus,gzgn003,&apos;&apos;,gzgn004,&apos;&apos;,gzgn010,gzgn005,&apos;&apos;,gzgn006,gzgn007,gzgn008,gzgn009,&apos;&apos;,&apos;&apos;,&apos;&apos;,gzgnownid,&apos;&apos;,gzgnowndp,&apos;&apos;,gzgncrtid,&apos;&apos;,gzgncrtdp,&apos;&apos;,gzgncrtdt,gzgnmodid,&apos;&apos;,gzgnmoddt FROM gzgn_t WHERE gzgn001=? AND gzgn002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

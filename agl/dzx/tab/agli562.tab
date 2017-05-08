@@ -1,0 +1,129 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli562" module="agl" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="06821" crtdt="2016-02-02 09:07:12" modid="06821" moddt="2016-02-03 13:40:58" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="合併現金流量表間接法人工輸入金額設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glekld,glekld_desc(chr80),glek001,glek001_desc(chr80),glek002,glek003,glek004,glek004_desc(chr80),glek005,glek005_desc(chr80),glek007,glek010,glek013"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glekstus,glek006,glekl008,glek008,glek009,glek011,glek012,glek014,glek015"/>
+      <var id="body" page="2" record="s_detail3" page_id="3" value="glek006_1(num10),glekownid(chr20),glekownid_desc(chr500),glekowndp(chr10),glekowndp_desc(chr500),glekcrtid(chr20),glekcrtid_desc(chr500),glekcrtdp(chr10),glekcrtdp_desc(chr500),glekcrtdt(dat),glekmodid(chr20),glekmodid_desc(chr500),glekmoddt(dat)"/>
+      <var id="bs_field" value="glekld,glek001,glek002,glek003,glek004,glek005" pk="glekld,glek001,glek002,glek003,glek004,glek005" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="agli562" method="dialog">
+    <section id="input">
+      <input id="head" field="glekld,glek001,glek002,glek003,glek004,glek005,glek007,glek010,glek013"/>
+      <input id="body" page="1" field="glekstus,glek006,glekl008,glek008,glek009,glek011,glek012,glek014,glek015" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="glek006_1" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="glekld,glek001,glek002,glek003,glek004,glek005,glek007,glek010,glek013"/>
+      <construct id="body" page="1" field="glekstus,glek006,glekl008,glek008,glek009,glek011,glek012,glek014,glek015"/>
+      <construct id="body" page="2" field="glek006_1,glekownid,glekowndp,glekcrtid,glekcrtdp,glekcrtdt,glekmodid,glekmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="glekld,glek001,glek002,glek003,glek004,glek005"/>
+      <set id="head" type="no_entry" field="glekld,glek001,glek002,glek003,glek004,glek005"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="glekld">
+        <after/>
+      </column>
+      <column id="glekld_desc"/>
+      <column id="glek001">
+        <after/>
+      </column>
+      <column id="glek001_desc"/>
+      <column id="glek002"/>
+      <column id="glek003"/>
+      <column id="glek004">
+        <after/>
+      </column>
+      <column id="glek004_desc"/>
+      <column id="glek005">
+        <after/>
+      </column>
+      <column id="glek005_desc"/>
+      <column id="glek007"/>
+      <column id="glek010"/>
+      <column id="glek013"/>
+    </init>
+    <init id="body" page="1">
+      <column id="glekstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="glek006"/>
+      <column id="glekl008"/>
+      <column id="glek008" type="S" default="0"/>
+      <column id="glek009" type="S" default="0"/>
+      <column id="glek011" type="S" default="0"/>
+      <column id="glek012" type="S" default="0"/>
+      <column id="glek014" type="S" default="0"/>
+      <column id="glek015" type="S" default="0"/>
+    </init>
+    <init id="body" page="2">
+      <column id="glek006_1"/>
+      <column id="glekownid">
+        <after>
+          <reference field="glekownid_desc" ref_field="glekownid" map_field="glekownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="glekownid_desc"/>
+      <column id="glekowndp">
+        <after>
+          <reference field="glekowndp_desc" ref_field="glekowndp" map_field="glekowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="glekowndp_desc"/>
+      <column id="glekcrtid">
+        <after>
+          <reference field="glekcrtid_desc" ref_field="glekcrtid" map_field="glekcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="glekcrtid_desc"/>
+      <column id="glekcrtdp">
+        <after>
+          <reference field="glekcrtdp_desc" ref_field="glekcrtdp" map_field="glekcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="glekcrtdp_desc"/>
+      <column id="glekcrtdt"/>
+      <column id="glekmodid">
+        <after>
+          <reference field="glekmodid_desc" ref_field="glekmodid" map_field="glekmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="glekmodid_desc"/>
+      <column id="glekmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="glek_t" pk="glekld,glek001,glek002,glek003,glek004,glek005">
+      <sql id="forupd_sql" type="sql" query="SELECT glekld,&apos;&apos;,glek001,&apos;&apos;,glek002,glek003,glek004,&apos;&apos;,glek005,&apos;&apos;,glek007,glek010,glek013 FROM glek_t WHERE glekent= ? AND glekld=? AND glek001=? AND glek002=? AND glek003=? AND glek004=? AND glek005=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT glekld,&apos;&apos;,glek001,&apos;&apos;,glek002,glek003,glek004,&apos;&apos;,glek005,&apos;&apos;,glek007,glek010,glek013 FROM glek_t" order="glekld,glek001,glek002,glek003,glek004,glek005"/>
+    </head>
+    <body id="glek_t" page="1,2" linked="" pk="glek006" fk="glekld,glek001,glek002,glek003,glek004,glek005">
+      <sql id="forupd_sql_detail" query="SELECT glekstus,glek006,&apos;&apos;,glek008,glek009,glek011,glek012,glek014,glek015,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM glek_t WHERE glekent=? AND glekld=? AND glek001=? AND glek002=? AND glek003=? AND glek004=? AND glek005=? AND glek006=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glekstus,glek006,&apos;&apos;,glek008,glek009,glek011,glek012,glek014,glek015,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM glek_t WHERE glekent= ? AND glekld=? AND glek001=? AND glek002=? AND glek003=? AND glek004=? AND glek005=?"/>
+      <sql id="detail_append" type="lang" target="glekl_t.glekl008" table="glekl_t" fk="glekld,glek001,glek002,glek003,glek004,glek005,glek006" pk="gleklld,glekl001,glekl002,glekl003,glekl004,glekl005,glekl006,glekl007" field="glekl008"/>
+    </body>
+  </dataset>
+</assembly>
+

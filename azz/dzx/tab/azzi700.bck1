@@ -1,0 +1,111 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi700" module="azz" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="01375" crtdt="2014-04-09 16:24:29" modid="08163" moddt="2016-08-08 14:15:34" sdver="0007" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="整合服務基本資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzja001,gzjal003,gzja002,gzja002_desc(chr80),gzja005,gzja006,gzja006_desc(chr80),gzja004,gzja007,gzja008,gzja009,gzja011,gzja003,gzja010,gzjastus,gzjaownid,gzjaownid_desc(chr80),gzjaowndp,gzjaowndp_desc(chr80),gzjacrtid,gzjacrtid_desc(chr80),gzjacrtdp,gzjacrtdp_desc(chr80),gzjacrtdt,gzjamodid,gzjamodid_desc(chr80),gzjamoddt"/>
+      <var id="bs_field" value="gzja001,gzja001_desc(chr80),gzja002,gzja002_desc(chr80),gzja004,gzja007,gzja008" pk="gzja001" order=""/>
+      <bs_reference field="gzja001_desc" ref_field="gzja001" ref_sql="SELECT gzjal003 FROM gzjal_t WHERE gzjal001=? AND gzjal002=$varg_lang$var"/>
+      <bs_reference field="gzja002_desc" ref_field="gzja002" ref_sql="SELECT gzzol003 FROM gzzol_t WHERE gzzol001=? AND gzzol002=$varg_lang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="reregsrv"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi700" method="dialog">
+    <section id="input">
+      <input id="head" field="gzja001,gzjal003,gzja002,gzja005,gzja006,gzja004,gzja007,gzja008,gzja009,gzja011,gzja003,gzja010,gzjastus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzja001,gzjal003,gzja002,gzja005,gzja006,gzja004,gzja007,gzja008,gzja009,gzja011,gzja003,gzja010,gzjastus,gzjaownid,gzjaowndp,gzjacrtid,gzjacrtdp,gzjacrtdt,gzjamodid,gzjamoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzja001"/>
+      <set id="head" type="no_entry" field="gzja001"/>
+    </init>
+    <init id="head">
+      <column id="gzja001"/>
+      <column id="gzjal003"/>
+      <column id="gzja002">
+        <after>
+          <reference field="gzja002_desc" ref_field="gzja_t.gzja002" map_field="gzja002" ref_sql="SELECT gzzol003 FROM gzzol_t WHERE gzzol001=? AND gzzol002=$varg_lang$var"/>
+        </after>
+      </column>
+      <column id="gzja002_desc"/>
+      <column id="gzja005" type="S" default="N"/>
+      <column id="gzja006">
+        <after>
+          <reference field="gzja006_desc" ref_field="gzja_t.gzja006" map_field="gzja006" ref_sql="SELECT gzoi002 FROM gzoi_t WHERE gzoi001=? "/>
+        </after>
+      </column>
+      <column id="gzja006_desc"/>
+      <column id="gzja004"/>
+      <column id="gzja007" def_scc="225"/>
+      <column id="gzja008" def_scc="226"/>
+      <column id="gzja009" def_scc="234"/>
+      <column id="gzja011"/>
+      <column id="gzja003" type="S" default="Y"/>
+      <column id="gzja010"/>
+      <column id="gzjastus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="gzjaownid">
+        <after>
+          <reference field="gzjaownid_desc" ref_field="gzja_t.gzjaownid" map_field="gzjaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzjaownid_desc"/>
+      <column id="gzjaowndp">
+        <after>
+          <reference field="gzjaowndp_desc" ref_field="gzja_t.gzjaowndp" map_field="gzjaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzjaowndp_desc"/>
+      <column id="gzjacrtid">
+        <after>
+          <reference field="gzjacrtid_desc" ref_field="gzja_t.gzjacrtid" map_field="gzjacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzjacrtid_desc"/>
+      <column id="gzjacrtdp">
+        <after>
+          <reference field="gzjacrtdp_desc" ref_field="gzja_t.gzjacrtdp" map_field="gzjacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzjacrtdp_desc"/>
+      <column id="gzjacrtdt"/>
+      <column id="gzjamodid">
+        <after>
+          <reference field="gzjamodid_desc" ref_field="gzja_t.gzjamodid" map_field="gzjamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzjamodid_desc"/>
+      <column id="gzjamoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzja_t" pk="gzja001">
+      <sql id="forupd_sql" type="sql" query="SELECT gzja001,&apos;&apos;,gzja002,&apos;&apos;,gzja005,gzja006,&apos;&apos;,gzja004,gzja007,gzja008,gzja009,gzja011,gzja003,gzja010,gzjastus,gzjaownid,&apos;&apos;,gzjaowndp,&apos;&apos;,gzjacrtid,&apos;&apos;,gzjacrtdp,&apos;&apos;,gzjacrtdt,gzjamodid,&apos;&apos;,gzjamoddt FROM gzja_t WHERE gzja001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzja001 FROM gzja_t" order="gzja001"/>
+      <sql id="append" type="lang" target="gzjal_t.gzjal003" table="gzjal_t" fk="gzja001" pk="gzjal001,gzjal002" field="gzjal003"/>
+    </head>
+  </dataset>
+</assembly>
+

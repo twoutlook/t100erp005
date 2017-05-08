@@ -1,0 +1,100 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ainq913" module="ain" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="06540" crtdt="2015-11-06 09:45:25" modid="06189" moddt="2016-08-10 17:08:21" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="物料領用清單查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="inbasite,inba004,inbaud001,inba012,bdate,edate,printiterm,inbadocdt,inbastus,inba005,inba006,inba013,inbb016"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),inbcsite,ooefl003,inba004,l_ooefl003(chr500),inbcdocno,inbcseq,inbcseq1,imaa009,rtaxl003,inba012,inba013,pmaal004,inbadocdt,inbastus,inba007,inba007_desc(chr500),inba005,inba006,inbc001,imaal003,inbc200,inbc005,inayl003,inbc010,inbc206,inbc207,inbc204,inbc205,inba002"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),inbcsite(b_inbcsite),ooefl003(b_ooefl003),inba004(b_inba004),l_ooefl003(l_ooefl003),inbcdocno(b_inbcdocno),inbcseq(b_inbcseq),inbcseq1(b_inbcseq1),imaa009(b_imaa009),rtaxl003(b_rtaxl003),inba012(b_inba012),inba013(b_inba013),pmaal004(b_pmaal004),inbadocdt(b_inbadocdt),inbastus(b_inbastus),inba007(b_inba007),inba007_desc(b_inba007_desc),inba005(b_inba005),inba006(b_inba006),inbc001(b_inbc001),imaal003(b_imaal003),inbc200(b_inbc200),inbc005(b_inbc005),inayl003(b_inayl003),inbc010(b_inbc010),inbc206(b_inbc206),inbc207(b_inbc207),inbc204(b_inbc204),inbc205(b_inbc205),inba002(b_inba002)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="ainq913" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="inbcsite,ooefl003,inba004,inbcdocno,inbcseq,inbcseq1,imaa009,rtaxl003,inba012,inba013,pmaal004,inbadocdt,inbastus,inba007,inba005,inba006,inbc001,imaal003,inbc200,inbc005,inayl003,inbc010,inbc206,inbc207,inbc204,inbc205,inba002" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="inbcsite(b_inbcsite),ooefl003(b_ooefl003),inba004(b_inba004),inbcdocno(b_inbcdocno),inbcseq(b_inbcseq),inbcseq1(b_inbcseq1),imaa009(b_imaa009),rtaxl003(b_rtaxl003),inba012(b_inba012),inba013(b_inba013),pmaal004(b_pmaal004),inbadocdt(b_inbadocdt),inbastus(b_inbastus),inba007(b_inba007),inba005(b_inba005),inba006(b_inba006),inbc001(b_inbc001),imaal003(b_imaal003),inbc200(b_inbc200),inbc005(b_inbc005),inayl003(b_inayl003),inbc010(b_inbc010),inbc206(b_inbc206),inbc207(b_inbc207),inbc204(b_inbc204),inbc205(b_inbc205),inba002(b_inba002)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="inbcsite"/>
+      <column id="ooefl003"/>
+      <column id="inba004">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="l_ooefl003"/>
+      <column id="inbcdocno"/>
+      <column id="inbcseq"/>
+      <column id="inbcseq1"/>
+      <column id="imaa009">
+        <after>
+          <check chkid="v_rtax001" id="isExist"/>
+        </after>
+        <controlp form="q_rtax001" state="i"/>
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="rtaxl003"/>
+      <column id="inba012" def_scc="6834"/>
+      <column id="inba013"/>
+      <column id="pmaal004">
+        <controlp form="q_pmaa001_23" state="c"/>
+      </column>
+      <column id="inbadocdt"/>
+      <column id="inbastus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="S" pic="posted"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="Z" pic="unposted"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="inba007">
+        <after>
+          <reference field="inba007_desc" ref_field="inba007" map_field="inba007" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;216&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="inba007_desc"/>
+      <column id="inba005" def_scc="2051"/>
+      <column id="inba006"/>
+      <column id="inbc001"/>
+      <column id="imaal003"/>
+      <column id="inbc200"/>
+      <column id="inbc005"/>
+      <column id="inayl003"/>
+      <column id="inbc010" type="S" default="0"/>
+      <column id="inbc206" type="S" default="0"/>
+      <column id="inbc207" type="S" default="0"/>
+      <column id="inbc204" type="S" default="0"/>
+      <column id="inbc205" type="S" default="0"/>
+      <column id="inba002"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="inbc_t" page="1" linked="" pk="inbcdocno,inbcseq,inbcseq1">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,inbcsite,&apos;&apos;,&apos;&apos;,&apos;&apos;,inbcdocno,inbcseq,inbcseq1,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,inbc001,&apos;&apos;,inbc200,inbc005,&apos;&apos;,inbc010,inbc206,inbc207,inbc204,inbc205,&apos;&apos; FROM inbc_t WHERE inbcent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

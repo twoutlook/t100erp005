@@ -1,0 +1,298 @@
+{<section id="afmt555_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0005(2015-05-21 09:40:36), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000042
+#+ Filename...: afmt555_01
+#+ Description: 產生帳務資料
+#+ Creator....: 05016(2015-05-19 17:45:16)
+#+ Modifier...: 05016 -SD/PR-
+{</section>}
+ 
+ 
+ 
+{<section id="afmt555_01.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_fmmq_m        RECORD
+       fmmqsite LIKE fmmq_t.fmmqsite, 
+   fmmq001 LIKE fmmq_t.fmmq001, 
+   fmmqdocno LIKE fmmq_t.fmmqdocno, 
+   fmmqdocdt LIKE fmmq_t.fmmqdocdt
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_fmmq_m        type_g_fmmq_m
+ 
+   DEFINE g_fmmqdocno_t LIKE fmmq_t.fmmqdocno
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+{</section>}
+ 
+{<section id="afmt555_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION afmt555_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_afmt555_01 WITH FORM cl_ap_formpath("afm","afmt555_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_fmmq_m.fmmqsite,g_fmmq_m.fmmq001,g_fmmq_m.fmmqdocno,g_fmmq_m.fmmqdocdt ATTRIBUTE(WITHOUT  
+          DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmqsite
+            #add-point:BEFORE FIELD fmmqsite name="input.b.fmmqsite"
+            {<point name="input.b.fmmqsite" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmqsite
+            
+            #add-point:AFTER FIELD fmmqsite name="input.a.fmmqsite"
+            {<point name="input.a.fmmqsite" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmqsite
+            #add-point:ON CHANGE fmmqsite name="input.g.fmmqsite"
+            {<point name="input.g.fmmqsite" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmq001
+            #add-point:BEFORE FIELD fmmq001 name="input.b.fmmq001"
+            {<point name="input.b.fmmq001" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmq001
+            
+            #add-point:AFTER FIELD fmmq001 name="input.a.fmmq001"
+            {<point name="input.a.fmmq001" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmq001
+            #add-point:ON CHANGE fmmq001 name="input.g.fmmq001"
+            {<point name="input.g.fmmq001" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmqdocno
+            #add-point:BEFORE FIELD fmmqdocno name="input.b.fmmqdocno"
+            {<point name="input.b.fmmqdocno" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmqdocno
+            
+            #add-point:AFTER FIELD fmmqdocno name="input.a.fmmqdocno"
+            {<point name="input.a.fmmqdocno" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmqdocno
+            #add-point:ON CHANGE fmmqdocno name="input.g.fmmqdocno"
+            {<point name="input.g.fmmqdocno" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmqdocdt
+            #add-point:BEFORE FIELD fmmqdocdt name="input.b.fmmqdocdt"
+            {<point name="input.b.fmmqdocdt" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmqdocdt
+            
+            #add-point:AFTER FIELD fmmqdocdt name="input.a.fmmqdocdt"
+            {<point name="input.a.fmmqdocdt" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmqdocdt
+            #add-point:ON CHANGE fmmqdocdt name="input.g.fmmqdocdt"
+            {<point name="input.g.fmmqdocdt" />}
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.fmmqsite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmqsite
+            #add-point:ON ACTION controlp INFIELD fmmqsite name="input.c.fmmqsite"
+            {<point name="input.c.fmmqsite" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmq001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmq001
+            #add-point:ON ACTION controlp INFIELD fmmq001 name="input.c.fmmq001"
+            {<point name="input.c.fmmq001" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmqdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmqdocno
+            #add-point:ON ACTION controlp INFIELD fmmqdocno name="input.c.fmmqdocno"
+            {<point name="input.c.fmmqdocno" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmqdocdt
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmqdocdt
+            #add-point:ON ACTION controlp INFIELD fmmqdocdt name="input.c.fmmqdocdt"
+            {<point name="input.c.fmmqdocdt" />}
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_afmt555_01 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="afmt555_01.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+{</section>}
+{<section id="afmt555_01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+ 

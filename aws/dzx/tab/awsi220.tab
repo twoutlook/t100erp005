@@ -1,0 +1,94 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="awsi220" module="aws" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="04182" crtdt="2015-08-17 16:07:48" modid="04182" moddt="2015-09-08 17:07:43" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="中間庫SQL維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="wseb001,wseb002,wsebl004,wseb003,wseb004,wsebstus,wsebownid,wsebownid_desc(chr80),wsebowndp,wsebowndp_desc(chr80),wsebcrtid,wsebcrtid_desc(chr80),wsebcrtdp,wsebcrtdp_desc(chr80),wsebcrtdt,wsebmodid,wsebmodid_desc(chr80),wsebmoddt"/>
+      <var id="bs_field" value="wseb001,wseb001_desc(chr80),wseb002,wseb002_desc(chr80)" pk="wseb001,wseb002" order=""/>
+      <bs_reference field="wseb001_desc" ref_field="wseb001" ref_sql="SELECT wsecl003 FROM wsecl_t WHERE wsecl001=? AND wsecl002=$varg_dlang$var"/>
+      <bs_reference field="wseb002_desc" ref_field="wseb002" ref_sql="SELECT wsebl004 FROM wsebl_t WHERE wsebl001=? AND wsebl003=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="aws" filename="awsi220" method="dialog">
+    <section id="input">
+      <input id="head" field="wseb001,wseb002,wsebl004,wseb003,wseb004,wsebstus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="wseb001,wseb002,wsebl004,wseb003,wseb004,wsebstus,wsebownid,wsebowndp,wsebcrtid,wsebcrtdp,wsebcrtdt,wsebmodid,wsebmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="wseb001,wseb002"/>
+      <set id="head" type="no_entry" field="wseb001,wseb002"/>
+    </init>
+    <init id="head">
+      <column id="wseb001" type="S" default="POS" def_scc="208"/>
+      <column id="wseb002"/>
+      <column id="wsebl004"/>
+      <column id="wseb003"/>
+      <column id="wseb004"/>
+      <column id="wsebstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="wsebownid">
+        <after>
+          <reference field="wsebownid_desc" ref_field="wseb_t.wsebownid" map_field="wsebownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="wsebownid_desc"/>
+      <column id="wsebowndp">
+        <after>
+          <reference field="wsebowndp_desc" ref_field="wseb_t.wsebowndp" map_field="wsebowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="wsebowndp_desc"/>
+      <column id="wsebcrtid">
+        <after>
+          <reference field="wsebcrtid_desc" ref_field="wseb_t.wsebcrtid" map_field="wsebcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="wsebcrtid_desc"/>
+      <column id="wsebcrtdp">
+        <after>
+          <reference field="wsebcrtdp_desc" ref_field="wseb_t.wsebcrtdp" map_field="wsebcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="wsebcrtdp_desc"/>
+      <column id="wsebcrtdt"/>
+      <column id="wsebmodid">
+        <after>
+          <reference field="wsebmodid_desc" ref_field="wseb_t.wsebmodid" map_field="wsebmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="wsebmodid_desc"/>
+      <column id="wsebmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="wseb_t" pk="wseb001,wseb002">
+      <sql id="forupd_sql" type="sql" query="SELECT wseb001,wseb002,&apos;&apos;,wseb003,wseb004,wsebstus,wsebownid,&apos;&apos;,wsebowndp,&apos;&apos;,wsebcrtid,&apos;&apos;,wsebcrtdp,&apos;&apos;,wsebcrtdt,wsebmodid,&apos;&apos;,wsebmoddt FROM wseb_t WHERE wseb001=? AND wseb002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT wseb001,wseb002 FROM wseb_t" order="wseb001,wseb002"/>
+      <sql id="append" type="lang" target="wsebl_t.wsebl004" table="wsebl_t" fk="wseb001,wseb002" pk="wsebl001,wsebl002,wsebl003" field="wsebl004"/>
+    </head>
+  </dataset>
+</assembly>
+

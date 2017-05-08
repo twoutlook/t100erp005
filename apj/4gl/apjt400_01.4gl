@@ -1,0 +1,728 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="apjt400_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2017-01-06 15:43:07), PR版次:0001(2017-01-11 14:18:12)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000000
+#+ Filename...: apjt400_01
+#+ Description: 依分攤科目截取
+#+ Creator....: 01534(2017-01-05 17:52:23)
+#+ Modifier...: 01534 -SD/PR- 01534
+ 
+{</section>}
+ 
+{<section id="apjt400_01.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_pjeb_m        RECORD
+       pjeb002 LIKE pjeb_t.pjeb002, 
+   pjeb003 LIKE pjeb_t.pjeb003, 
+   pjebld LIKE pjeb_t.pjebld, 
+   pjebld_desc LIKE type_t.chr80
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_glaald    LIKE glaa_t.glaald
+DEFINE g_glaa003    LIKE glaa_t.glaa003
+DEFINE g_glaa004    LIKE glaa_t.glaa004
+DEFINE g_ooef017    LIKE ooef_t.ooef017
+DEFINE g_pjeb_m_t   type_g_pjeb_m
+#end add-point
+ 
+DEFINE g_pjeb_m        type_g_pjeb_m
+ 
+   DEFINE g_pjeb002_t LIKE pjeb_t.pjeb002
+DEFINE g_pjeb003_t LIKE pjeb_t.pjeb003
+DEFINE g_pjebld_t LIKE pjeb_t.pjebld
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apjt400_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION apjt400_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE l_success       LIKE type_t.num5    
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_apjt400_01 WITH FORM cl_ap_formpath("apj","apjt400_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_pjeb_m.pjeb002,g_pjeb_m.pjeb003,g_pjeb_m.pjebld ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            SELECT ooef017 INTO g_ooef017 FROM ooef_t
+             WHERE ooefent = g_enterprise
+               AND ooef001 = g_site 
+            #抓出会计周期参考表号  glaa003
+            SELECT glaald,glaa003,glaa004 INTO g_glaald,g_glaa003,g_glaa004
+              FROM glaa_t
+             WHERE glaaent  = g_enterprise
+               AND glaacomp = g_ooef017
+               AND glaa014  = 'Y'            
+            IF cl_null(g_pjeb_m.pjebld) THEN
+               LET g_pjeb_m.pjebld = g_glaald
+               CALL apjt400_01_pjebld_ref()
+            END IF   
+            IF g_pjeb_m.pjeb002 = 0 THEN LET g_pjeb_m.pjeb002 = '' END IF
+            IF g_pjeb_m.pjeb003 = 0 THEN LET g_pjeb_m.pjeb003 = '' END IF 
+            IF cl_null(g_pjeb_m.pjeb002) AND cl_null(g_pjeb_m.pjeb003) THEN            
+               CALL s_fin_date_get_period_value(g_glaa003,'',g_today) 
+                    RETURNING l_success,g_pjeb_m.pjeb002,g_pjeb_m.pjeb003
+            END IF       
+            DISPLAY g_pjeb_m.pjebld TO pjebld
+            DISPLAY g_pjeb_m.pjeb002 TO pjeb002
+            DISPLAY g_pjeb_m.pjeb003 TO pjeb003
+                            
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pjeb002
+            #add-point:BEFORE FIELD pjeb002 name="input.b.pjeb002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pjeb002
+            
+            #add-point:AFTER FIELD pjeb002 name="input.a.pjeb002"
+            #應用 a05 樣板自動產生(Version:3)
+            #確認資料無重複
+            IF  NOT cl_null(g_pjeb_m.pjebld) AND NOT cl_null(g_pjeb_m.pjeb002) AND NOT cl_null(g_pjeb_m.pjeb003)  THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_pjeb_m.pjebld != g_pjebld_t  OR g_pjeb_m.pjeb002 != g_pjeb002_t  OR g_pjeb_m.pjeb003 != g_pjeb003_t  )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pjeb_t WHERE "||"pjebent = " ||g_enterprise|| " AND "||"pjebld = '"||g_pjeb_m.pjebld ||"' AND "|| "pjeb002 = '"||g_pjeb_m.pjeb002 ||"' AND "|| "pjeb003 = '"||g_pjeb_m.pjeb003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            LET g_pjeb_m_t.pjeb002 = g_pjeb_m.pjeb002
+
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pjeb002
+            #add-point:ON CHANGE pjeb002 name="input.g.pjeb002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pjeb003
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pjeb_m.pjeb003,"1","1","","","azz-00079",1) THEN
+               NEXT FIELD pjeb003
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pjeb003 name="input.a.pjeb003"
+            #應用 a05 樣板自動產生(Version:3)
+            #確認資料無重複
+            IF  NOT cl_null(g_pjeb_m.pjebld) AND NOT cl_null(g_pjeb_m.pjeb002) AND NOT cl_null(g_pjeb_m.pjeb003) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_pjeb_m.pjebld != g_pjebld_t  OR g_pjeb_m.pjeb002 != g_pjeb002_t  OR g_pjeb_m.pjeb003 != g_pjeb003_t)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pjeb_t WHERE "||"pjebent = " ||g_enterprise|| " AND "||"pjebld = '"||g_pjeb_m.pjebld ||"' AND "|| "pjeb002 = '"||g_pjeb_m.pjeb002 ||"' AND "|| "pjeb003 = '"||g_pjeb_m.pjeb003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            LET g_pjeb_m_t.pjeb003 = g_pjeb_m.pjeb003
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pjeb003
+            #add-point:BEFORE FIELD pjeb003 name="input.b.pjeb003"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pjeb003
+            #add-point:ON CHANGE pjeb003 name="input.g.pjeb003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pjebld
+            
+            #add-point:AFTER FIELD pjebld name="input.a.pjebld"
+            CALL apjt400_01_pjebld_ref()
+            #應用 a05 樣板自動產生(Version:3)
+            #確認資料無重複
+            IF NOT cl_null(g_pjeb_m.pjebld) AND NOT cl_null(g_pjeb_m.pjeb002) AND NOT cl_null(g_pjeb_m.pjeb003) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_pjeb_m.pjebld != g_pjebld_t  OR g_pjeb_m.pjeb002 != g_pjeb002_t  OR g_pjeb_m.pjeb003 != g_pjeb003_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pjeb_t WHERE "||"pjebent = " ||g_enterprise|| " AND "||"pjebld = '"||g_pjeb_m.pjebld ||"' AND "|| "pjeb002 = '"||g_pjeb_m.pjeb002 ||"' AND "|| "pjeb003 = '"||g_pjeb_m.pjeb003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+ 
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_pjeb_m.pjebld
+               LET g_chkparam.arg2 = g_ooef017
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_glaald_5") THEN
+                  #檢查成功時後續處理
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_pjeb_m.pjebld = g_pjeb_m_t.pjebld
+                  CALL apjt400_01_pjebld_ref()
+                  NEXT FIELD CURRENT
+               END IF 
+               #抓出会计周期参考表号  glaa003
+               SELECT glaald,glaa003,glaa004 INTO g_glaald,g_glaa003,g_glaa004
+                 FROM glaa_t
+                WHERE glaaent = g_enterprise
+                  AND glaald = g_pjeb_m.pjebld               
+            END IF
+            CALL apjt400_01_pjebld_ref()
+            LET g_pjeb_m_t.pjebld = g_pjeb_m.pjebld
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pjebld
+            #add-point:BEFORE FIELD pjebld name="input.b.pjebld"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pjebld
+            #add-point:ON CHANGE pjebld name="input.g.pjebld"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.pjeb002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pjeb002
+            #add-point:ON ACTION controlp INFIELD pjeb002 name="input.c.pjeb002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pjeb003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pjeb003
+            #add-point:ON ACTION controlp INFIELD pjeb003 name="input.c.pjeb003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pjebld
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pjebld
+            #add-point:ON ACTION controlp INFIELD pjebld name="input.c.pjebld"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+ 
+            LET g_qryparam.default1 = g_pjeb_m.pjebld             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_ooef017
+
+ 
+            CALL q_glaald_04()                                #呼叫開窗
+ 
+            LET g_pjeb_m.pjebld = g_qryparam.return1              
+
+            DISPLAY g_pjeb_m.pjebld TO pjebld              #
+
+            NEXT FIELD pjebld                          #返回原欄位
+
+
+
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_apjt400_01 
+   
+   #add-point:input段after input name="input.post_input"
+   IF INT_FLAG THEN
+      LET INT_FLAG = FALSE
+   ELSE
+      CALL apjt400_01_ins_pjeb() 
+   END IF
+   RETURN g_pjeb_m.pjebld,g_pjeb_m.pjeb002,g_pjeb_m.pjeb003
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apjt400_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="apjt400_01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL apjt400_01_pjebld_ref()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By lixh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apjt400_01_pjebld_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_pjeb_m.pjebld
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent="||g_enterprise||" AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_pjeb_m.pjebld_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_pjeb_m.pjebld_desc
+END FUNCTION
+
+################################################################################
+# Descriptions...: 新增pjeb_t
+# Memo...........:
+# Usage..........: CALL apjt400_01_ins_pjeb()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By lixh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apjt400_01_ins_pjeb()
+DEFINE  l_sql        STRING
+DEFINE  l_pjea005    LIKE pjea_t.pjea005
+DEFINE  l_pjea006    LIKE pjea_t.pjea006
+DEFINE  l_time       DATETIME YEAR TO SECOND
+DEFINE  l_amt1       LIKE glar_t.glar005
+DEFINE  r_success    LIKE type_t.chr1
+DEFINE  l_flag       LIKE type_t.chr1
+DEFINE  l_glac008    LIKE glac_t.glac008
+DEFINE l_glar RECORD  #會計科目各期餘額檔
+       glarent LIKE glar_t.glarent, #企业编号
+       glarcomp LIKE glar_t.glarcomp, #法人
+       glarld LIKE glar_t.glarld, #账套
+       glar001 LIKE glar_t.glar001, #会计科目
+       glar002 LIKE glar_t.glar002, #年度
+       glar003 LIKE glar_t.glar003, #期别
+       glar004 LIKE glar_t.glar004, #组合要素(key)
+       glar005 LIKE glar_t.glar005, #借方金额
+       glar006 LIKE glar_t.glar006, #贷方金额
+       glar007 LIKE glar_t.glar007, #借方笔数
+       glar008 LIKE glar_t.glar008, #贷方笔数
+       glar009 LIKE glar_t.glar009, #交易币种
+       glar010 LIKE glar_t.glar010, #原币借方金额
+       glar011 LIKE glar_t.glar011, #原币贷方金额
+       glar012 LIKE glar_t.glar012, #营运据点
+       glar013 LIKE glar_t.glar013, #部门
+       glar014 LIKE glar_t.glar014, #利润/成本中心
+       glar015 LIKE glar_t.glar015, #区域
+       glar016 LIKE glar_t.glar016, #收付款客商
+       glar017 LIKE glar_t.glar017, #账款客商
+       glar018 LIKE glar_t.glar018, #客群
+       glar019 LIKE glar_t.glar019, #产品类别
+       glar020 LIKE glar_t.glar020, #人员
+       glar021 LIKE glar_t.glar021, #no use
+       glar022 LIKE glar_t.glar022, #项目编号
+       glar023 LIKE glar_t.glar023, #WBS
+       glar024 LIKE glar_t.glar024, #自由核算项一
+       glar025 LIKE glar_t.glar025, #自由核算项二
+       glar026 LIKE glar_t.glar026, #自由核算项三
+       glar027 LIKE glar_t.glar027, #自由核算项四
+       glar028 LIKE glar_t.glar028, #自由核算项五
+       glar029 LIKE glar_t.glar029, #自由核算项六
+       glar030 LIKE glar_t.glar030, #自由核算项七
+       glar031 LIKE glar_t.glar031, #自由核算项八
+       glar032 LIKE glar_t.glar032, #自由核算项九
+       glar033 LIKE glar_t.glar033, #自由核算项十
+       glar034 LIKE glar_t.glar034, #借方金额(本位币二)
+       glar035 LIKE glar_t.glar035, #贷方金额(本位币二)
+       glar036 LIKE glar_t.glar036, #借方金额(本位币三)
+       glar037 LIKE glar_t.glar037, #贷方金额(本位币三)
+       glar051 LIKE glar_t.glar051, #经营方式
+       glar052 LIKE glar_t.glar052, #渠道
+       glar053 LIKE glar_t.glar053  #品牌
+END RECORD
+DEFINE l_pjeb RECORD  #項目費用收集維護檔
+       pjebent LIKE pjeb_t.pjebent, #企业代码
+       pjebcomp LIKE pjeb_t.pjebcomp, #法人組織
+       pjebld LIKE pjeb_t.pjebld, #帳套
+       pjeb002 LIKE pjeb_t.pjeb002, #年度
+       pjeb003 LIKE pjeb_t.pjeb003, #期別
+       pjebseq LIKE pjeb_t.pjebseq, #項次
+       pjeb010 LIKE pjeb_t.pjeb010, #科目编号
+       pjeb011 LIKE pjeb_t.pjeb011, #营运组织
+       pjeb012 LIKE pjeb_t.pjeb012, #部門
+       pjeb013 LIKE pjeb_t.pjeb013, #交易對象
+       pjeb014 LIKE pjeb_t.pjeb014, #客群
+       pjeb015 LIKE pjeb_t.pjeb015, #區域
+       pjeb016 LIKE pjeb_t.pjeb016, #成本中心
+       pjeb017 LIKE pjeb_t.pjeb017, #經營類別
+       pjeb018 LIKE pjeb_t.pjeb018, #通路
+       pjeb019 LIKE pjeb_t.pjeb019, #品類
+       pjeb020 LIKE pjeb_t.pjeb020, #品牌
+       pjeb021 LIKE pjeb_t.pjeb021, #項目編號(核算項)
+       pjeb022 LIKE pjeb_t.pjeb022, #WBS(核算項)
+       pjeb100 LIKE pjeb_t.pjeb100, #分攤金額
+       pjeb110 LIKE pjeb_t.pjeb110, #分攤金額(本位幣二)
+       pjeb120 LIKE pjeb_t.pjeb120, #分攤金額(本位幣三)
+       pjeb200 LIKE pjeb_t.pjeb200, #分攤基數
+       pjeb300 LIKE pjeb_t.pjeb300, #分攤單價
+       pjeb310 LIKE pjeb_t.pjeb310, #分攤單價(本位幣二)
+       pjeb320 LIKE pjeb_t.pjeb320, #分攤單價(本位幣三)
+       pjebownid LIKE pjeb_t.pjebownid, #資料所屬者
+       pjebowndp LIKE pjeb_t.pjebowndp, #資料所屬部門
+       pjebcrtid LIKE pjeb_t.pjebcrtid, #資料建立者
+       pjebcrtdp LIKE pjeb_t.pjebcrtdp, #資料建立部門
+       pjebcrtdt LIKE pjeb_t.pjebcrtdt, #資料創建日
+       pjebmodid LIKE pjeb_t.pjebmodid, #資料修改者
+       pjebmoddt LIKE pjeb_t.pjebmoddt, #最近修改日
+       pjebstus LIKE pjeb_t.pjebstus, #狀態碼
+       pjebud001 LIKE pjeb_t.pjebud001, #自定義欄位(文字)001
+       pjebud002 LIKE pjeb_t.pjebud002, #自定義欄位(文字)002
+       pjebud003 LIKE pjeb_t.pjebud003, #自定義欄位(文字)003
+       pjebud004 LIKE pjeb_t.pjebud004, #自定義欄位(文字)004
+       pjebud005 LIKE pjeb_t.pjebud005, #自定義欄位(文字)005
+       pjebud006 LIKE pjeb_t.pjebud006, #自定義欄位(文字)006
+       pjebud007 LIKE pjeb_t.pjebud007, #自定義欄位(文字)007
+       pjebud008 LIKE pjeb_t.pjebud008, #自定義欄位(文字)008
+       pjebud009 LIKE pjeb_t.pjebud009, #自定義欄位(文字)009
+       pjebud010 LIKE pjeb_t.pjebud010, #自定義欄位(文字)010
+       pjebud011 LIKE pjeb_t.pjebud011, #自定義欄位(數字)011
+       pjebud012 LIKE pjeb_t.pjebud012, #自定義欄位(數字)012
+       pjebud013 LIKE pjeb_t.pjebud013, #自定義欄位(數字)013
+       pjebud014 LIKE pjeb_t.pjebud014, #自定義欄位(數字)014
+       pjebud015 LIKE pjeb_t.pjebud015, #自定義欄位(數字)015
+       pjebud016 LIKE pjeb_t.pjebud016, #自定義欄位(數字)016
+       pjebud017 LIKE pjeb_t.pjebud017, #自定義欄位(數字)017
+       pjebud018 LIKE pjeb_t.pjebud018, #自定義欄位(數字)018
+       pjebud019 LIKE pjeb_t.pjebud019, #自定義欄位(數字)019
+       pjebud020 LIKE pjeb_t.pjebud020, #自定義欄位(數字)020
+       pjebud021 LIKE pjeb_t.pjebud021, #自定義欄位(日期時間)021
+       pjebud022 LIKE pjeb_t.pjebud022, #自定義欄位(日期時間)022
+       pjebud023 LIKE pjeb_t.pjebud023, #自定義欄位(日期時間)023
+       pjebud024 LIKE pjeb_t.pjebud024, #自定義欄位(日期時間)024
+       pjebud025 LIKE pjeb_t.pjebud025, #自定義欄位(日期時間)025
+       pjebud026 LIKE pjeb_t.pjebud026, #自定義欄位(日期時間)026
+       pjebud027 LIKE pjeb_t.pjebud027, #自定義欄位(日期時間)027
+       pjebud028 LIKE pjeb_t.pjebud028, #自定義欄位(日期時間)028
+       pjebud029 LIKE pjeb_t.pjebud029, #自定義欄位(日期時間)029
+       pjebud030 LIKE pjeb_t.pjebud030  #自定義欄位(日期時間)030
+END RECORD
+   LET l_sql = " SELECT DISTINCT pjea005,pjea006 FROM pjea_t ",
+               "  WHERE pjeaent = ",g_enterprise,
+               "    AND pjeald = '",g_pjeb_m.pjebld,"'",
+               "    AND pjea002 = ",g_pjeb_m.pjeb002,
+               "    AND pjea003 = ",g_pjeb_m.pjeb003
+   PREPARE apjt400_01_pjea_pre FROM l_sql
+   DECLARE apjt400_01_pjea_cur CURSOR FOR apjt400_01_pjea_pre  
+   
+   LET l_sql ="SELECT glar001,glar012,glar013,glar016,glar018,glar015,glar014,glar051,glar052,glar019,glar053,glar022,glar023,",
+               " SUM(glar005),SUM(glar006)",
+               "  FROM glar_t ",
+               " WHERE glarent = ",g_enterprise,
+               "   AND glar012 = '",g_site,"'",
+               "   AND glarld = '",g_pjeb_m.pjebld,"'",
+               "   AND glar001 = ? ",
+               "   AND glar002 = ",g_pjeb_m.pjeb002,
+               "   AND glar003 = ",g_pjeb_m.pjeb003,
+               "   AND glar013 = ? ",
+               " GROUP BY glar001,glar012,glar013,glar016,glar018,glar015,glar014,glar051,glar052,glar019,glar053,glar022,glar023 "
+               
+   PREPARE apjt400_01_glar_pre FROM l_sql
+   DECLARE apjt400_01_glar_cur CURSOR FOR apjt400_01_glar_pre  
+   LET l_time = cl_get_current() 
+   CALL s_transaction_begin()
+   LET r_success = 'Y'
+   LET l_flag = 'N'
+   
+   CALL cl_err_collect_init()    
+   FOREACH apjt400_01_pjea_cur INTO l_pjea005,l_pjea006
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "apjt400_01_pjea_cur:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         LET r_success = 'N'
+         EXIT FOREACH
+      END IF 
+      
+      LET l_pjeb.pjebld = g_pjeb_m.pjebld
+      LET l_pjeb.pjeb002 = g_pjeb_m.pjeb002
+      LET l_pjeb.pjeb003 = g_pjeb_m.pjeb003
+      SELECT glaacomp INTO l_pjeb.pjebcomp FROM glaa_t 
+       WHERE glaaent = g_enterprise
+         AND glaald = g_pjeb_m.pjebld   
+      
+      FOREACH apjt400_01_glar_cur USING l_pjea005,l_pjea006 
+         INTO l_glar.glar001,l_glar.glar012,l_glar.glar013,l_glar.glar016,l_glar.glar018,l_glar.glar015,l_glar.glar014,l_glar.glar051,
+              l_glar.glar052,l_glar.glar019,l_glar.glar053,l_glar.glar022,l_glar.glar023,l_glar.glar005,l_glar.glar006
+              
+          IF SQLCA.sqlcode THEN
+             INITIALIZE g_errparam TO NULL 
+             LET g_errparam.extend = "apjt400_01_glar_cur:",SQLERRMESSAGE 
+             LET g_errparam.code   = SQLCA.sqlcode 
+             LET g_errparam.popup  = TRUE 
+             CALL cl_err()
+             LET r_success = 'N'
+             EXIT FOREACH
+          END IF 
+          SELECT SUM(pjebseq)+1 INTO l_pjeb.pjebseq FROM pjeb_t 
+           WHERE pjebent = g_enterprise
+             AND pjebld = l_pjeb.pjebld
+             AND pjeb002 = l_pjeb.pjeb002
+             AND pjeb003 = l_pjeb.pjeb003
+          IF cl_null(l_pjeb.pjebseq) THEN LET l_pjeb.pjebseq = 1 END IF             
+          LET l_pjeb.pjeb010 = l_glar.glar001
+          LET l_pjeb.pjeb011 = l_glar.glar012
+          LET l_pjeb.pjeb012 = l_glar.glar013
+          LET l_pjeb.pjeb013 = l_glar.glar016
+          LET l_pjeb.pjeb014 = l_glar.glar018
+          LET l_pjeb.pjeb015 = l_glar.glar015
+          LET l_pjeb.pjeb016 = l_glar.glar014
+          LET l_pjeb.pjeb017 = ' '
+          LET l_pjeb.pjeb018 = ' '
+          LET l_pjeb.pjeb019 = l_glar.glar019
+          LET l_pjeb.pjeb020 = ' '
+          LET l_pjeb.pjeb021 = l_glar.glar022
+          LET l_pjeb.pjeb022 = l_glar.glar023
+          IF cl_null(l_glar.glar005) THEN 
+             LET l_glar.glar005 = 0
+          END IF
+          
+          IF cl_null(l_glar.glar006) THEN 
+             LET l_glar.glar006 = 0
+          END IF     
+#     如果科目正常余额形态是借方
+#          根据该科目抓取结转类凭证的发生额(sum(贷方金额-借方金额)且分主本位币、功能币二、三)，如果抓不到给0。可以设计一个元件来实现。
+#          分摊成本(pjeb100)=(借方金额(glar005)-贷方金额(glar006)+结转类凭证发生额)*分摊权数(xcba009)
+#          分摊成本本位币二(pjeb110)=(借方金额(glar034)-贷方金额(glar035)+结转类凭证发生额)*分摊权数(xcba009)
+#          分摊成本本位币三(pjeb120)=(借方金额(glar036)-贷方金额(glar037)+结转类凭证发生额)*分摊权数(xcba009)
+#     如果科目正常余额形态是贷方
+#          根据该科目抓取结转类凭证的发生额(sum(借方金额-贷方金额)且分主本位币、功能币二、三)，如果抓不到给0。可以设计一个元件来实现。
+#          分摊成本(pjeb100)=(贷方金额(glar005)-借方金额(glar006)+结转类凭证发生额)*分摊权数(xcba009)
+#          分摊成本本位币二(pjeb110)=(贷方金额(glar034)-借方金额(glar035)+结转类凭证发生额)*分摊权数(xcba009)
+#          分摊成本本位币三(pjeb120)=(贷方金额(glar036)-借方金额(glar037)+结转类凭证发生额)*分摊权数(xcba009)
+          #科目正常余额形态
+          SELECT glac008 INTO l_glac008
+            FROM glac_t
+           WHERE glacent = g_enterprise
+             AND glac001 = g_glaa004
+             AND glac002 = l_pjea005
+          
+          LET l_amt1 = 0          
+          IF l_glac008 = '2' THEN
+             SELECT SUM(glaq004-glaq003)
+               INTO l_amt1        
+               FROM glaq_t INNER JOIN glap_t ON glapld = glaqld AND glapdocno = glaqdocno AND glapent = glaqent
+              WHERE glaqent = g_enterprise 
+                AND glaqld = l_pjeb.pjebld
+                AND glaq002 = l_pjea005 AND glap002 = l_pjeb.pjeb002
+                AND glap004 = l_pjeb.pjeb003 AND glapstus = 'S'
+                AND glap007 = 'XC'   #成本结转
+                 
+             IF cl_null(l_amt1) THEN 
+                LET l_amt1 = 0
+             END IF
+             LET l_pjeb.pjeb100 = l_glar.glar006 - l_glar.glar005 + l_amt1
+             LET l_pjeb.pjeb110 = l_glar.glar035 - l_glar.glar034 + l_amt1
+             LET l_pjeb.pjeb120 = l_glar.glar037 - l_glar.glar036 + l_amt1              
+          ELSE
+             SELECT SUM(glaq003-glaq004)
+               INTO l_amt1         
+               FROM glaq_t INNER JOIN glap_t ON glapld = glaqld AND glapdocno = glaqdocno AND glapent = glaqent
+              WHERE glaqent = g_enterprise 
+                AND glaqld = l_pjeb.pjebld
+                AND glaq002 =l_pjea005 AND glap002 = l_pjeb.pjeb002
+                AND glap004 =l_pjeb.pjeb003 AND glapstus = 'S'
+                AND glap007 = 'XC'   #成本结转
+              
+             
+             IF cl_null(l_amt1) THEN 
+                LET l_amt1 = 0
+             END IF
+             
+             # 分摊成本(pjeb100)=(借方金额(glar006)-贷方金额(glar005)+结转类凭证发生额)*分摊权数(pjbx009)
+                      
+             LET l_pjeb.pjeb100 = l_glar.glar005 - l_glar.glar006 + l_amt1
+             LET l_pjeb.pjeb110 = l_glar.glar034 - l_glar.glar035 + l_amt1
+             LET l_pjeb.pjeb120 = l_glar.glar006 - l_glar.glar037 + l_amt1
+          END IF
+          LET l_pjeb.pjebstus = 'Y'
+          LET l_pjeb.pjebownid = g_user
+          LET l_pjeb.pjebowndp = g_dept
+          LET l_pjeb.pjebcrtid = g_user
+          LET l_pjeb.pjebcrtdp = g_dept
+          LET l_pjeb.pjebcrtdt = l_time
+          LET l_pjeb.pjebmodid = g_user
+          LET l_pjeb.pjebmoddt = l_time
+          LET l_pjeb.pjeb017 = '1'
+          INSERT INTO pjeb_t (pjebent,pjebcomp,pjebld,pjeb002,pjeb003,pjebseq,pjeb010,
+                              pjeb011,pjeb012,pjeb013,pjeb014,pjeb015,pjeb016,pjeb017,
+                              pjeb018,pjeb019,pjeb020,pjeb021,pjeb022,pjeb100,pjeb110,
+                              pjeb120,pjeb200,pjeb300,pjeb310,pjeb320,pjebownid,pjebowndp,
+                              pjebcrtid,pjebcrtdp,pjebcrtdt,pjebmodid,pjebmoddt,pjebstus)
+                       VALUES(g_enterprise,l_pjeb.pjebcomp,l_pjeb.pjebld,l_pjeb.pjeb002,l_pjeb.pjeb003,l_pjeb.pjebseq,l_pjeb.pjeb010,
+                              l_pjeb.pjeb011,l_pjeb.pjeb012,l_pjeb.pjeb013,l_pjeb.pjeb014,l_pjeb.pjeb015,l_pjeb.pjeb016,l_pjeb.pjeb017,
+                              l_pjeb.pjeb018,l_pjeb.pjeb019,l_pjeb.pjeb020,l_pjeb.pjeb021,l_pjeb.pjeb022,l_pjeb.pjeb100,l_pjeb.pjeb110,
+                              l_pjeb.pjeb120,l_pjeb.pjeb200,l_pjeb.pjeb300,l_pjeb.pjeb310,l_pjeb.pjeb320,l_pjeb.pjebownid,l_pjeb.pjebowndp,
+                              l_pjeb.pjebcrtid,l_pjeb.pjebcrtdp,l_pjeb.pjebcrtdt,l_pjeb.pjebmodid,l_pjeb.pjebmoddt,l_pjeb.pjebstus)
+                              
+          IF SQLCA.sqlcode THEN
+             INITIALIZE g_errparam TO NULL 
+             LET g_errparam.extend = "ins pjeb_t:" 
+             LET g_errparam.code   = SQLCA.sqlcode 
+             LET g_errparam.popup  = TRUE 
+             CALL cl_err()
+             LET r_success = 'N'
+             EXIT FOREACH
+          END IF                               
+         LET l_flag = 'Y'     
+      END FOREACH
+   END FOREACH
+   CALL cl_err_collect_show()  
+   IF r_success = 'N' THEN
+      CALL s_transaction_end('N','1') 
+   ELSE
+      IF l_flag = 'N' THEN 
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.code = SQLCA.sqlcode
+        LET g_errparam.extend = ""
+        LET g_errparam.code   = 'axc-00530' 
+        LET g_errparam.popup = TRUE
+        CALL cl_err()
+        CALL s_transaction_end('N','0')  
+     ELSE
+        CALL s_transaction_end('Y','1')
+     END IF
+   END IF   
+END FUNCTION
+
+ 
+{</section>}
+ 

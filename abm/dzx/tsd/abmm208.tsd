@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="abmm208" std_prog="abmm208" erpver="1.0" ver="1" module="ABM" type="M" booking="Y" designer_ver="1.0" class="m" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="bmla_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+    <tbl name="bmlb_t" main="N" head="N" pk="" fk_detail="" parent="bmla_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="bmlc_t" main="N" head="N" pk="bmlcent,bmlc001,bmlc002,bmlc003,bmlc004" fk_detail="" parent="bmlb_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="bmld_t" main="N" head="N" pk="bmldent,bmld001,bmld002,bmld003,bmld004,bmld005,bmld006" fk_detail="" parent="bmlc_t" fk_master="bmldent,bmld001,bmld002,bmld003,bmld004" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail3" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 設定FAS的選擇後自動產生的料號編碼
+標準作業功能取消：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+狀態功能：無
+作業類型：(基本資料)維護作業
+輸入模式：雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)：
+ 資料來源表：bmla_t             
+作業資料來源(Detail)：
+ 資料來源表：bmlb_t、bmlc_t、bmld_t
+
+補充說明：FAS BOM設定完後，需維護此作業，否則訂單輸入時會無法選擇FAS的組合
+]]>
+  </all>
+  <di_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[元件料号bmlc單身對應FAS群組單身，此table對應bmlb_t
+
+现在FAS群组bmld_t用來維護兩個群組之間的關係，
+例如後變速器本來有A、B、C品牌可選，但如果前變速器選了A品牌後，後變速器就只能選A、B的
+此table對應bmlc_t
+
+
+]]>
+  </di_all>
+  <field cite_std="N" name="b_bmla001" ver="1" src="s" column="bmla001" table="bmla_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_bmla002" ver="1" src="s" column="bmla002" table="bmla_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bmla_t.bmla001" ver="1" src="s" column="bmla001" table="bmla_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[範本主件料號：
+   ●欄位控管：
+     資料欄位:bmla001/可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+          2.範本主件料號+特性需存在abmm200內
+          3.範本主件料號料件資料的料件類別(imaa004)需等於T.範本
+     帶值:品名、規格
+
+   ●開窗處理：依標準查詢視窗
+]]>
+  </field>
+  <field cite_std="N" name="bmla_t.bmla002" ver="1" src="s" column="bmla002" table="bmla_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[特性：
+   ●欄位控管：
+     資料欄位:bmla002/可Display可Input
+     預設值:無
+     校驗:1.主件料號+特性需存在BOM單頭
+     處理:輸入範本主件料號、特性後， 自動依BOM找出所有FAS群組代號，及元件料號，自動帶入bmlb_t、bmlc_t
+            自动带入FAS群组时对bom进一步检查：同一FAS群组不出现在不同阶
+
+   ●開窗處理：依標準查詢視窗
+]]>
+  </field>
+  <field cite_std="N" name="bmla_t.bmla003" ver="1" src="s" column="bmla003" table="bmla_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[料號分隔碼：
+   ●欄位控管：
+     資料欄位:bmla003/可Display可Input
+     預設值:無
+     校驗:1.允許空白
+]]>
+  </field>
+  <field cite_std="N" name="bmla_t.bmla004" ver="1" src="s" column="bmla004" table="bmla_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[品名分隔碼：
+   ●欄位控管：
+     資料欄位:bmla004/可Display可Input
+     預設值:無
+     校驗:1.允許空白
+]]>
+  </field>
+  <field cite_std="N" name="bmla_t.bmla005" ver="1" src="s" column="bmla005" table="bmla_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[規格分隔碼：
+   ●欄位控管：
+     資料欄位:bmla005/可Display可Input
+     預設值:無
+     校驗:1.允許空白
+]]>
+  </field>
+  <field cite_std="N" name="bmla_t.bmlacrtdp" ver="1" src="s" column="bmlacrtdp" table="bmla_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bmla_t.bmlacrtdt" ver="1" src="s" column="bmlacrtdt" table="bmla_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bmla_t.bmlacrtid" ver="1" src="s" column="bmlacrtid" table="bmla_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bmla_t.bmlamoddt" ver="1" src="s" column="bmlamoddt" table="bmla_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bmla_t.bmlamodid" ver="1" src="s" column="bmlamodid" table="bmla_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bmla_t.bmlaowndp" ver="1" src="s" column="bmlaowndp" table="bmla_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bmla_t.bmlaownid" ver="1" src="s" column="bmlaownid" table="bmla_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bmlb_t.bmlb003" ver="1" src="s" column="bmlb003" table="bmlb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[FAS群組：
+   ●欄位控管：
+     資料欄位:bmlb003/可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+          2.輸入值需存在abmi003
+          3.輸入值需存在範本主件+特性對應的BOM內，且可能跨階
+     帶值:FAS群組說明
+
+   ●開窗處理：依標準查詢視窗
+]]>
+  </field>
+  <field cite_std="N" name="bmlb_t.bmlb004" ver="1" src="s" column="bmlb004" table="bmlb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[順序:bmlb004，不可空白，預設最大順序加1，順序不可重覆
+]]>
+  </field>
+  <field cite_std="N" name="bmlb_t.bmlb005" ver="1" src="s" column="bmlb005" table="bmlb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[允許多選:bmlb005,Y/N,預設N
+當此欄位有勾選時，在選擇時可同時選多個選項
+]]>
+  </field>
+  <field cite_std="N" name="bmlb_t.bmlb006" ver="1" src="s" column="bmlb006" table="bmlb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[數量加總下限:bmlb006，預設1，當下限設為0時，代表可以不做任何選擇
+]]>
+  </field>
+  <field cite_std="N" name="bmlb_t.bmlb007" ver="1" src="s" column="bmlb007" table="bmlb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[數量加總上限:bmlb007，預設1，如果沒輸入代表不限制上限
+]]>
+  </field>
+  <field cite_std="N" name="bmlb_t.bmlb008" ver="1" src="s" column="bmlb008" table="bmlb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[帶入產品特徵:bmlb008，輸入時檢查是否存在料件的產品特徵內，且產品特徵的歸屬層級為2:库存
+（用範本主件料號的imaa005，找aimi092庫存層級的，如果库存层级的有两项，这边填一项，即選其中一個。
+  一個只能被選一次，即一个被选中了，其他fas群组就不能再选这个了，如果库存层级有两项，fas群组有大于2项的，那么会有fas群组不选的情况）
+
+當選擇完FAS的組合後，會產生出一個新的料號，此產品特徵的值會帶入新料號在料件層級的產品特徵內
+案例:單車的鍊條長度會根據變速系統的速別不同而有不同
+     鍊條用的料號是固定的，不會隨著變系統統不同而選擇，
+     但用量會隨所選的速別不同而有變化，因此利用公式用量的功能，配合主件的產品特徵，即可算出正確的鍊條用量
+]]>
+  </field>
+  <field cite_std="N" name="bmlc004" ver="1" src="s" column="bmlc004" table="bmlc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[元件料號：
+   ●欄位控管：
+     資料欄位:bmlc004/可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+          2.需存在範本主件料號BOM樹FAS群組內的元件料號
+     帶值:品名、規格
+
+   ●開窗處理：依標準查詢視窗
+]]>
+  </field>
+  <field cite_std="N" name="bmlc005" ver="1" src="s" column="bmlc005" table="bmlc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[料件編碼:bmlc005，不可空白，同一個FAS群組不同元件料號的料號編碼不可重覆
+]]>
+  </field>
+  <field cite_std="N" name="bmlc006" ver="1" src="s" column="bmlc006" table="bmlc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[品名編碼:bmlc006，可空白
+]]>
+  </field>
+  <field cite_std="N" name="bmlc007" ver="1" src="s" column="bmlc007" table="bmlc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[規格編碼:bmlc007，可空白
+]]>
+  </field>
+  <field cite_std="N" name="bmlc_t.bmlc008" ver="1" src="s" column="bmlc008" table="bmlc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[產品特徴值:bmlc008，當對應的FAS組有帶入產品特徵時才可輸入，且輸入的值受到產品特徵設定的規範
+]]>
+  </field>
+  <field cite_std="N" name="bmld005" ver="1" src="s" column="bmld005" table="bmld_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[限制FAS群組:bmld005，只可維護存在此BOM(包含下階)內的FAS群組
+]]>
+  </field>
+  <field cite_std="N" name="bmld006" ver="1" src="s" column="bmld006" table="bmld_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[可選擇元件料號:bmld006，只可維護存在受限群組內的元件料號
+]]>
+  </field>
+  <field cite_std="N" name="bmlc008" ver="1" src="s" column="bmlc008" table="bmlc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="d">
+    <![CDATA[產品特徴值:bmlc008，當對應的FAS組有帶入產品特徵時才可輸入，且輸入的值受到產品特徵設定的規範
+]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_bmla001_desc" src="s" depend_field="b_bmla001" correspon_key="bmla001" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_bmla001_desc_desc" src="s" depend_field="b_bmla001_desc" correspon_key="bmla001" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="bmla001_desc" src="s" depend_field="bmla_t.bmla001" correspon_key="bmla001" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="bmla001_desc_desc" src="s" depend_field="bmla001_desc" correspon_key="bmla001" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="bmlacrtdp_desc" src="s" depend_field="bmla_t.bmlacrtdp" correspon_key="bmlacrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="bmlacrtid_desc" src="s" depend_field="bmla_t.bmlacrtid" correspon_key="bmlacrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="bmlamodid_desc" src="s" depend_field="bmla_t.bmlamodid" correspon_key="bmlamodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="bmlaowndp_desc" src="s" depend_field="bmla_t.bmlaowndp" correspon_key="bmlaowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="bmlaownid_desc" src="s" depend_field="bmla_t.bmlaownid" correspon_key="bmlaownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="bmlb003_desc" src="s" depend_field="bmlb_t.bmlb003" correspon_key="bmlbent,&apos;1112&apos;,bmlb003" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="bmlb008_desc" src="s" depend_field="bmlb_t.bmlb008" correspon_key="bmlbent,&apos;273&apos;,bmlb008" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="bmlc004_desc" src="s" depend_field="bmlc004" correspon_key="bmlc004" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="bmlc004_desc_desc" src="s" depend_field="bmlc004_desc" correspon_key="bmlc004" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="bmld005_desc" src="s" depend_field="bmld005" correspon_key="bmldent,&apos;1112&apos;,bmld005" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="bmld006_desc" src="s" depend_field="bmld006" correspon_key="bmld006" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="bmld006_desc_desc" src="s" depend_field="bmld006_desc" correspon_key="bmld006" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal004" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_bmla001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_bmla002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmla_t.bmla001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmla_t.bmla002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmla_t.bmla003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmla_t.bmla004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmla_t.bmla005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmla_t.bmlacrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmla_t.bmlacrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmla_t.bmlacrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmla_t.bmlamoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmla_t.bmlamodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmla_t.bmlaowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmla_t.bmlaownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmlb_t.bmlb003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmlb_t.bmlb004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmlb_t.bmlb005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmlb_t.bmlb006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmlb_t.bmlb007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmlb_t.bmlb008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmlc004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmlc005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmlc006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmlc007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmlc008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="bmlc_t.bmlc008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmld005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bmld006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="action_1" ver="1" src="s" type="" gen_code="" status="d">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="action_2" ver="1" src="s" type="" gen_code="" status="d">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="gen_b" ver="1" src="s" type="mi,di3,di2,di1" gen_code="Y" status="">
+    <![CDATA[自動擷取:在維護的狀態下可執行，
+執行後自動找到主件料號+特性的BOM結構內(跨階)所有的FAS群組，及群組內的料號，
+不在目前已經護的資料內的，全部自動新增]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_bmla001" text="範本主件料號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="lbl_bmla002" text="特性" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_bmla003" text="料號分隔碼" lstr=""/>
+    <sfield name="lbl_bmla004" text="品名分隔碼" lstr=""/>
+    <sfield name="lbl_bmla005" text="規格分隔碼" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="bpage_1" text="項目" lstr=""/>
+    <sfield name="lbl_bmlb004" text="順序" lstr=""/>
+    <sfield name="lbl_bmlb003" text="FAS群組" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_bmlb005" text="允許多選" lstr=""/>
+    <sfield name="lbl_bmlb006" text="數量下限" lstr=""/>
+    <sfield name="lbl_bmlb007" text="數量上限" lstr=""/>
+    <sfield name="lbl_bmlb008" text="帶入主件產品特徴" lstr=""/>
+    <sfield name="lbl_bmlc004" text="元件料號" lstr=""/>
+    <sfield name="lbl_bmlc005" text="料件編碼" lstr=""/>
+    <sfield name="lbl_bmlc006" text="品名編碼" lstr=""/>
+    <sfield name="lbl_bmlc007" text="規格編碼" lstr=""/>
+    <sfield name="lbl_bmlc008" text="產品特徵值" lstr=""/>
+    <sfield name="lbl_bmld005" text="受限FAS群組" lstr=""/>
+    <sfield name="lbl_bmld006" text="受限元件料號" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="gen_b" text="自動擷取" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="1" cite_std="N" src="s">
+    <widget name="s_detail3" status=""/>
+  </exclude>
+</spec>

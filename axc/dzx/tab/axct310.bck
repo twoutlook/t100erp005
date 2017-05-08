@@ -1,0 +1,179 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axct310" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="01531" crtdt="2014-04-08 14:00:03" modid="05384" moddt="2016-12-05 14:25:49" sdver="0008" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="本期庫存成本調整作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xccocomp,xccocomp_desc(chr80),xcco004,xcco005,xccold,xccold_desc(chr80),xcco003,xcco003_desc(chr80),xcco009,xcco010"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcco001,xcco006,xcco007,xcco007_desc(chr500),xcco006_desc(chr500),xcco006_1_desc(chr500),imag014(chr500),xcco002,xcco002_desc(chr500),xcco008,xcco011,xcco102a,xcco102b,xcco102c,xcco102d,xcco102e,xcco102f,xcco102g,xcco102h,xcco102"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcco001,xcco006,xcco007,xcco002,xcco008,xccoownid,xccoownid_desc(chr500),xccoowndp,xccoowndp_desc(chr500),xccocrtid,xccocrtid_desc(chr500),xccocrtdp,xccocrtdp_desc(chr500),xccocrtdt,xccomodid,xccomodid_desc(chr500),xccomoddt,xccocnfid,xccocnfid_desc(chr500),xccocnfdt,xccopstid,xccopstid_desc(chr500),xccopstdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="open_axct310_s01"/>
+      <action id="axct320"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="open_axct310_s02"/>
+      <action id="open_axct310_01"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axct310" method="dialog">
+    <section id="input">
+      <input id="head" field="xccocomp,xcco004,xcco005,xccold,xcco003,xcco009,xcco010"/>
+      <input id="body" page="1" field="xcco001,xcco006,xcco007,xcco002,xcco008,xcco011,xcco102a,xcco102b,xcco102c,xcco102d,xcco102e,xcco102f,xcco102g,xcco102h,xcco102" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xccocomp,xcco004,xcco005,xccold,xcco003,xcco009,xcco010"/>
+      <construct id="body" page="1" field="xcco001,xcco006,xcco007,xcco002,xcco008,xcco011,xcco102a,xcco102b,xcco102c,xcco102d,xcco102e,xcco102f,xcco102g,xcco102h,xcco102"/>
+      <construct id="body" page="2" field="xccoownid,xccoowndp,xccocrtid,xccocrtdp,xccocrtdt,xccomodid,xccomoddt,xccocnfid,xccocnfdt,xccopstid,xccopstdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xccold,xcco003,xcco004,xcco005,xcco009"/>
+      <set id="head" type="no_entry" field="xccold,xcco003,xcco004,xcco005,xcco009"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xccocomp">
+        <after>
+          <reference field="xccocomp_desc" ref_field="xcco_t.xccocomp" map_field="xccoent,xccocomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_8" state="i"/>
+        <controlp form="q_ooef001_8" state="c"/>
+      </column>
+      <column id="xccocomp_desc"/>
+      <column id="xcco004"/>
+      <column id="xcco005"/>
+      <column id="xccold">
+        <after>
+          <reference field="xccold_desc" ref_field="xcco_t.xccold" map_field="xccoent,xccold" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xccold_desc"/>
+      <column id="xcco003">
+        <after>
+          <reference field="xcco003_desc" ref_field="xcco_t.xcco003" map_field="xccoent,xcco003" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcat001" state="i"/>
+        <controlp form="q_xcat001" state="c"/>
+      </column>
+      <column id="xcco003_desc"/>
+      <column id="xcco009"/>
+      <column id="xcco010" type="S" default="1"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcco001" type="S" default="1" def_scc="8914"/>
+      <column id="xcco006">
+        <after>
+          <reference field="xcco006_desc" ref_field="xcco_t.xcco006" map_field="xccoent,xcco006" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imag001_2" state="i"/>
+        <controlp form="q_imag001_2" state="c"/>
+      </column>
+      <column id="xcco007">
+        <after/>
+        <controlp form="q_xcco006" state="c"/>
+      </column>
+      <column id="xcco007_desc"/>
+      <column id="xcco006_desc"/>
+      <column id="xcco006_1_desc"/>
+      <column id="imag014"/>
+      <column id="xcco002">
+        <after>
+          <reference field="xcco002_desc" ref_field="xccocomp,xcco002" map_field="xccocomp,xcco002" ref_sql="SELECT xcbfl003 FROM xcbfl_t WHERE xcbflent=$varg_enterprise$var AND xcbflcomp=? AND xcbfl001=? AND xcbfl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcbf001" state="i"/>
+        <controlp form="q_xcbf001" state="c"/>
+      </column>
+      <column id="xcco002_desc"/>
+      <column id="xcco008">
+        <controlp form="q_inaj010" state="i"/>
+        <controlp form="q_inaj010" state="c"/>
+      </column>
+      <column id="xcco011"/>
+      <column id="xcco102a"/>
+      <column id="xcco102b"/>
+      <column id="xcco102c"/>
+      <column id="xcco102d"/>
+      <column id="xcco102e"/>
+      <column id="xcco102f"/>
+      <column id="xcco102g"/>
+      <column id="xcco102h"/>
+      <column id="xcco102"/>
+    </init>
+    <init id="body" page="2">
+      <column id="xccoownid">
+        <after>
+          <reference field="xccoownid_desc" ref_field="xcco_t.xccoownid" map_field="xccoownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xccoownid_desc"/>
+      <column id="xccoowndp">
+        <after>
+          <reference field="xccoowndp_desc" ref_field="xcco_t.xccoowndp" map_field="xccoowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xccoowndp_desc"/>
+      <column id="xccocrtid">
+        <after>
+          <reference field="xccocrtid_desc" ref_field="xcco_t.xccocrtid" map_field="xccocrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xccocrtid_desc"/>
+      <column id="xccocrtdp">
+        <after>
+          <reference field="xccocrtdp_desc" ref_field="xcco_t.xccocrtdp" map_field="xccocrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xccocrtdp_desc"/>
+      <column id="xccocrtdt"/>
+      <column id="xccomodid">
+        <after>
+          <reference field="xccomodid_desc" ref_field="xcco_t.xccomodid" map_field="xccomodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xccomodid_desc"/>
+      <column id="xccomoddt"/>
+      <column id="xccocnfid">
+        <after>
+          <reference field="xccocnfid_desc" ref_field="xcco_t.xccocnfid" map_field="xccocnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xccocnfid_desc"/>
+      <column id="xccocnfdt"/>
+      <column id="xccopstid">
+        <after>
+          <reference field="xccopstid_desc" ref_field="xcco_t.xccopstid" map_field="xccopstid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xccopstid_desc"/>
+      <column id="xccopstdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcco_t" pk="xccold,xcco003,xcco004,xcco005,xcco009">
+      <sql id="forupd_sql" type="sql" query="SELECT xccocomp,&apos;&apos;,xcco004,xcco005,xccold,&apos;&apos;,xcco003,&apos;&apos;,xcco009,xcco010 FROM xcco_t WHERE xccoent= ? AND xccold=? AND xcco003=? AND xcco004=? AND xcco005=? AND xcco009=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xccocomp,&apos;&apos;,xcco004,xcco005,xccold,&apos;&apos;,xcco003,&apos;&apos;,xcco009,xcco010 FROM xcco_t" order="xccold,xcco003,xcco004,xcco005,xcco009"/>
+    </head>
+    <body id="xcco_t" page="1,2" linked="" pk="xcco001,xcco002,xcco006,xcco007,xcco008" fk="xccold,xcco003,xcco004,xcco005,xcco009">
+      <sql id="forupd_sql_detail" query="SELECT xcco001,xcco006,xcco007,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcco002,&apos;&apos;,xcco008,xcco011,xcco102a,xcco102b,xcco102c,xcco102d,xcco102e,xcco102f,xcco102g,xcco102h,xcco102,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xccoownid,&apos;&apos;,xccoowndp,&apos;&apos;,xccocrtid,&apos;&apos;,xccocrtdp,&apos;&apos;,xccocrtdt,xccomodid,&apos;&apos;,xccomoddt,xccocnfid,&apos;&apos;,xccocnfdt,xccopstid,&apos;&apos;,xccopstdt FROM xcco_t WHERE xccoent=? AND xccold=? AND xcco003=? AND xcco004=? AND xcco005=? AND xcco009=? AND xcco001=? AND xcco002=? AND xcco006=? AND xcco007=? AND xcco008=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcco001,xcco006,xcco007,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcco002,&apos;&apos;,xcco008,xcco011,xcco102a,xcco102b,xcco102c,xcco102d,xcco102e,xcco102f,xcco102g,xcco102h,xcco102,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xccoownid,&apos;&apos;,xccoowndp,&apos;&apos;,xccocrtid,&apos;&apos;,xccocrtdp,&apos;&apos;,xccocrtdt,xccomodid,&apos;&apos;,xccomoddt,xccocnfid,&apos;&apos;,xccocnfdt,xccopstid,&apos;&apos;,xccopstdt FROM xcco_t WHERE xccoent= ? AND xccold=? AND xcco003=? AND xcco004=? AND xcco005=? AND xcco009=?"/>
+    </body>
+  </dataset>
+</assembly>
+

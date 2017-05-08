@@ -1,0 +1,68 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ainr131" module="ain" jobmode="N" type="r01" industry="std" fix_arg="0" crtid="05423" crtdt="2016-07-29 14:31:07" modid="05423" moddt="2016-07-29 14:58:19" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="料件進耗存含成本金額統計表">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="inag001,imaa009,inag004,inag005,inag006,imaf052,radiogroup1(chr1),year(num5),bmonth(num5),emonth(num5),l_bdate(chr500),l_edate(chr500),l_xccc003(chr500),l_xccc003_desc(chr80),check(chr1)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="ain" filename="ainr131" method="dialog">
+    <section id="input">
+      <input id="head" field="radiogroup1,year,bmonth,emonth,l_bdate,l_edate,l_xccc003,check"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="inag001,imaa009,inag004,inag005,inag006,imaf052"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="inag001">
+        <controlp form="q_imaf001_7" state="c"/>
+      </column>
+      <column id="imaa009">
+        <after>
+          <check chkid="v_rtax001" id="isExist"/>
+        </after>
+        <controlp form="q_rtax001" state="i"/>
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="inag004">
+        <controlp form="q_inag004_2" state="c"/>
+      </column>
+      <column id="inag005">
+        <controlp form="q_inag005_5" state="c"/>
+      </column>
+      <column id="inag006">
+        <controlp form="q_inag006_1" state="c"/>
+      </column>
+      <column id="imaf052">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="radiogroup1" type="S" default="N"/>
+      <column id="year"/>
+      <column id="bmonth"/>
+      <column id="emonth"/>
+      <column id="l_bdate"/>
+      <column id="l_edate"/>
+      <column id="l_xccc003">
+        <after>
+          <check chkid="v_xcat001" id="isExist"/>
+          <reference field="l_xccc003_desc" ref_field="l_xccc003" map_field="xccc003,xcccent" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcat001" state="i"/>
+      </column>
+      <column id="l_xccc003_desc"/>
+      <column id="check" type="S" default="N"/>
+    </init>
+  </form>
+</assembly>
+

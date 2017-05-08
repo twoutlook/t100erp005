@@ -1,0 +1,69 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afar500" module="afa" jobmode="N" type="r01" industry="std" fix_arg="0" crtid="02003" crtdt="2015-04-09 16:37:46" modid="06821" moddt="2016-05-25 17:47:44" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="資產異動憑證列印作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="fabgsite(chr10),fabgsite_desc(chr80),fabg005(num10),fabgld(chr5),fabgld_desc(chr80),fabgdocno(chr20),fabg002(chr20),fabgdocdt(dat),fabg003(chr10),fabg001(chr20),fabgstus(chr1)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="afa" filename="afar500" method="dialog">
+    <section id="input">
+      <input id="head" field="fabgsite,fabg005,fabgstus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="fabgdocno,fabg002,fabgdocdt,fabg003,fabg001"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="fabgsite">
+        <after>
+          <reference field="fabgsite_desc" ref_field="fabgsite" map_field="fabgent,fabgsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_faab001" state="i"/>
+        <controlp form="q_faab001" state="c"/>
+      </column>
+      <column id="fabgsite_desc"/>
+      <column id="fabg005" type="S" default="0"/>
+      <column id="fabgld">
+        <after>
+          <check chkid="v_fabgld" id="isExist"/>
+          <reference field="fabgld_desc" ref_field="fabgld" map_field="fabgent,fabgld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="fabgld_desc"/>
+      <column id="fabgdocno">
+        <controlp form="q_fabgdocno" state="c"/>
+      </column>
+      <column id="fabg002">
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fabgdocdt"/>
+      <column id="fabg003">
+        <controlp form="q_ooef001_9" state="c"/>
+      </column>
+      <column id="fabg001">
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fabgstus" scc="13" type="S" default="N">
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="Z" pic="unposted"/>
+        <stus id="S" pic="posted"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+    </init>
+  </form>
+</assembly>
+

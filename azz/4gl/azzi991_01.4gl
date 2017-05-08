@@ -1,0 +1,685 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="azzi991_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2013-12-06 09:57:35), PR版次:0002(2015-08-20 11:20:54)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000128
+#+ Filename...: azzi991_01
+#+ Description: 單據別參數產生子程式
+#+ Creator....: 02587(2013-11-26 17:06:42)
+#+ Modifier...: 01588 -SD/PR- 01588
+ 
+{</section>}
+ 
+{<section id="azzi991_01.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_gzsz_d        RECORD
+       choice LIKE type_t.chr500, 
+   gzsz001 LIKE gzsz_t.gzsz001, 
+   gzsz011 LIKE gzsz_t.gzsz011, 
+   gzsz002 LIKE gzsz_t.gzsz002, 
+   gzszl004 LIKE gzszl_t.gzszl004, 
+   gzsz003 LIKE gzsz_t.gzsz003, 
+   gzsz009 LIKE gzsz_t.gzsz009, 
+   gzsz008 LIKE gzsz_t.gzsz008, 
+   memo LIKE type_t.chr500
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+DEFINE g_gzsz_d          DYNAMIC ARRAY OF type_g_gzsz_d
+DEFINE g_gzsz_d_t        type_g_gzsz_d
+ 
+ 
+DEFINE g_gzsz001_t   LIKE gzsz_t.gzsz001    #Key值備份
+DEFINE g_gzsz002_t      LIKE gzsz_t.gzsz002    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point    
+ 
+{</section>}
+ 
+{<section id="azzi991_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION azzi991_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE l_choice        LIKE type_t.chr1
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_gzsy          RECORD LIKE gzsy_t.*
+   DEFINE l_cnt           LIKE type_t.num5
+   DEFINE l_msg           STRING
+   DEFINE l_msg1          STRING
+   DEFINE l_success       LIKE type_t.num5
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_azzi991_01 WITH FORM cl_ap_formpath("azz","azzi991_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   CALL cl_set_combo_scc('gzsz011','90')
+   CALL cl_set_combo_scc('gzsz003','89')
+   LET g_detail_idx = 1
+   
+   LET l_allow_insert = FALSE
+   LET l_allow_delete = FALSE
+   
+   #先抓取資料
+   CALL azzi991_01_b_fill()
+
+   #先檢查單身是否有資料可以勾選
+   LET l_choice = 'N'
+   FOR l_i=1 TO g_gzsz_d.getLength()
+      IF cl_null(g_gzsz_d[l_i].memo) THEN
+         LET l_choice = 'Y'
+         EXIT FOR
+      END IF
+   END FOR  
+   IF l_choice = 'N' THEN
+      CLOSE WINDOW w_azzi991_01 
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'azz-00129'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN
+   END IF
+   
+   WHILE TRUE
+      LET l_choice = 'Y'
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_gzsz_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+         BEFORE ROW
+            LET g_detail_idx = ARR_CURR()
+            #若備註有值，則不可勾選
+            IF NOT cl_null(g_gzsz_d[g_detail_idx].memo) THEN
+               IF g_detail_idx < g_rec_b THEN
+                  FOR l_i = g_detail_idx + 1 TO g_rec_b
+                     IF cl_null(g_gzsz_d[l_i].memo) THEN
+                        LET g_detail_idx = l_i
+                        LET l_choice = 'N'
+                        EXIT DIALOG
+                     END IF
+                  END FOR
+                  LET g_detail_idx = g_rec_b
+               END IF
+               IF g_detail_idx >= g_rec_b THEN
+                  FOR l_i = g_rec_b-1 TO 1 STEP -1
+                     IF cl_null(g_gzsz_d[l_i].memo) THEN
+                        LET g_detail_idx = l_i
+                        LET l_choice = 'N'
+                        EXIT DIALOG
+                     END IF
+                  END FOR
+               END IF
+            END IF
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION update_item
+            LET g_action_choice="update_item"
+            IF cl_auth_chk_act("update_item") THEN
+               
+               #add-point:ON ACTION update_item name="input.detail_input.page1.update_item"
+               
+               #END add-point
+            END IF
+ 
+ 
+ 
+ 
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+            
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD choice
+            #add-point:BEFORE FIELD choice name="input.b.page1.choice"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD choice
+            
+            #add-point:AFTER FIELD choice name="input.a.page1.choice"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE choice
+            #add-point:ON CHANGE choice name="input.g.page1.choice"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gzsz001
+            #add-point:BEFORE FIELD gzsz001 name="input.b.page1.gzsz001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gzsz001
+            
+            #add-point:AFTER FIELD gzsz001 name="input.a.page1.gzsz001"
+            #此段落由子樣板a05產生
+            IF  g_gzsz_d[g_detail_idx].gzsz001 IS NOT NULL AND g_gzsz_d[g_detail_idx].gzsz002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_gzsz_d[g_detail_idx].gzsz001 != g_gzsz_d_t.gzsz001 OR g_gzsz_d[g_detail_idx].gzsz002 != g_gzsz_d_t.gzsz002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzsz_t WHERE "||"gzsz001 = '"||g_gzsz_d[g_detail_idx].gzsz001 ||"' AND "|| "gzsz002 = '"||g_gzsz_d[g_detail_idx].gzsz002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gzsz001
+            #add-point:ON CHANGE gzsz001 name="input.g.page1.gzsz001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gzsz011
+            #add-point:BEFORE FIELD gzsz011 name="input.b.page1.gzsz011"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gzsz011
+            
+            #add-point:AFTER FIELD gzsz011 name="input.a.page1.gzsz011"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gzsz011
+            #add-point:ON CHANGE gzsz011 name="input.g.page1.gzsz011"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gzsz002
+            #add-point:BEFORE FIELD gzsz002 name="input.b.page1.gzsz002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gzsz002
+            
+            #add-point:AFTER FIELD gzsz002 name="input.a.page1.gzsz002"
+            #此段落由子樣板a05產生
+            IF  g_gzsz_d[g_detail_idx].gzsz001 IS NOT NULL AND g_gzsz_d[g_detail_idx].gzsz002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_gzsz_d[g_detail_idx].gzsz001 != g_gzsz_d_t.gzsz001 OR g_gzsz_d[g_detail_idx].gzsz002 != g_gzsz_d_t.gzsz002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzsz_t WHERE "||"gzsz001 = '"||g_gzsz_d[g_detail_idx].gzsz001 ||"' AND "|| "gzsz002 = '"||g_gzsz_d[g_detail_idx].gzsz002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gzsz002
+            #add-point:ON CHANGE gzsz002 name="input.g.page1.gzsz002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gzszl004
+            #add-point:BEFORE FIELD gzszl004 name="input.b.page1.gzszl004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gzszl004
+            
+            #add-point:AFTER FIELD gzszl004 name="input.a.page1.gzszl004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gzszl004
+            #add-point:ON CHANGE gzszl004 name="input.g.page1.gzszl004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gzsz003
+            #add-point:BEFORE FIELD gzsz003 name="input.b.page1.gzsz003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gzsz003
+            
+            #add-point:AFTER FIELD gzsz003 name="input.a.page1.gzsz003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gzsz003
+            #add-point:ON CHANGE gzsz003 name="input.g.page1.gzsz003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gzsz009
+            #add-point:BEFORE FIELD gzsz009 name="input.b.page1.gzsz009"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gzsz009
+            
+            #add-point:AFTER FIELD gzsz009 name="input.a.page1.gzsz009"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gzsz009
+            #add-point:ON CHANGE gzsz009 name="input.g.page1.gzsz009"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gzsz008
+            #add-point:BEFORE FIELD gzsz008 name="input.b.page1.gzsz008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gzsz008
+            
+            #add-point:AFTER FIELD gzsz008 name="input.a.page1.gzsz008"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gzsz008
+            #add-point:ON CHANGE gzsz008 name="input.g.page1.gzsz008"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD memo
+            #add-point:BEFORE FIELD memo name="input.b.page1.memo"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD memo
+            
+            #add-point:AFTER FIELD memo name="input.a.page1.memo"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE memo
+            #add-point:ON CHANGE memo name="input.g.page1.memo"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.choice
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD choice
+            #add-point:ON ACTION controlp INFIELD choice name="input.c.page1.choice"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.gzsz001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gzsz001
+            #add-point:ON ACTION controlp INFIELD gzsz001 name="input.c.page1.gzsz001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.gzsz011
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gzsz011
+            #add-point:ON ACTION controlp INFIELD gzsz011 name="input.c.page1.gzsz011"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.gzsz002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gzsz002
+            #add-point:ON ACTION controlp INFIELD gzsz002 name="input.c.page1.gzsz002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.gzszl004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gzszl004
+            #add-point:ON ACTION controlp INFIELD gzszl004 name="input.c.page1.gzszl004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.gzsz003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gzsz003
+            #add-point:ON ACTION controlp INFIELD gzsz003 name="input.c.page1.gzsz003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.gzsz009
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gzsz009
+            #add-point:ON ACTION controlp INFIELD gzsz009 name="input.c.page1.gzsz009"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.gzsz008
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gzsz008
+            #add-point:ON ACTION controlp INFIELD gzsz008 name="input.c.page1.gzsz008"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.memo
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD memo
+            #add-point:ON ACTION controlp INFIELD memo name="input.c.page1.memo"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input name="input.more_input"
+      BEFORE DIALOG
+         CALL DIALOG.setCurrentRow("s_detail1", g_detail_idx)
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+      IF INT_FLAG THEN
+         EXIT WHILE
+      END IF
+      
+      #此判斷是備註不為空時，不可勾選，跳到別筆資料
+      IF l_choice = 'N' THEN
+         CONTINUE WHILE
+      END IF
+      
+      #若都沒選擇，則顯示錯誤並CONTINUE WHILE
+      LET l_choice = 'N'
+      FOR l_i = 1 TO g_rec_b
+         IF g_gzsz_d[l_i].choice = 'Y' THEN
+            LET l_choice = 'Y'
+            EXIT FOR
+         END IF
+      END FOR
+      IF l_choice = 'N' THEN
+         CONTINUE WHILE
+      END IF
+      
+      EXIT WHILE
+   END WHILE
+   
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+   ELSE
+      #按下確定後，將資料新增到ooac_t
+      CALL s_transaction_begin()
+      LET l_success = TRUE
+      CALL cl_err_collect_init()
+   
+      FOR l_i = 1 TO g_rec_b
+         IF g_gzsz_d[l_i].choice = 'N' THEN
+            CONTINUE FOR
+         END IF
+      
+         CALL s_azzi991_carry('1',g_gzsz_d[l_i].gzsz002)
+              RETURNING l_success
+         IF NOT l_success THEN
+            EXIT FOR
+         END IF
+      END FOR
+      
+      IF l_success THEN
+         CALL s_transaction_end('Y',0)
+         CALL cl_err_collect_show()
+         CALL cl_ask_end1()
+      ELSE
+         CALL s_transaction_end('N',0)
+      END IF
+   END IF
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_azzi991_01 
+   
+   #add-point:input段after input name="input.post_input"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="azzi991_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="azzi991_01.other_function" readonly="Y" >}
+################################################################################
+# Descriptions...: 將需要產生到單據別參數檔的資料抓取出來
+# Date & Author..: 2013/12/06 by stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi991_01_b_fill()
+DEFINE l_sql     STRING
+DEFINE l_ac1     LIKE type_t.num5
+DEFINE l_cnt     LIKE type_t.num5
+
+   LET l_sql = "SELECT 'Y',gzsz001,gzsz011,gzsz002,gzszl004,gzsz003,gzsz009,gzsz008,'' ",
+               "  FROM gzsz_t ",
+               "  LEFT OUTER JOIN gzszl_t ON gzszl001 = gzsz001 ",
+               "   AND gzszl002 = gzsz002 AND gzszl003 = '",g_dlang,"' ",
+               " WHERE gzsz001 = 'ooac_t' ",
+               "   AND NOT EXISTS(SELECT * FROM ooac_t WHERE ooac003 = gzsz002) ",
+               " ORDER BY gzsz011,gzsz002 "
+               
+   PREPARE azzi991_01_pb FROM l_sql
+   DECLARE b_fill_curs CURSOR FOR azzi991_01_pb
+
+   CALL g_gzsz_d.clear()
+   LET l_ac1 = 1
+   FOREACH b_fill_curs INTO g_gzsz_d[l_ac1].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      #若gzsy_t沒有任何資料，備註就顯示"沒有設定單據性質！"
+      LET l_cnt = 0
+      SELECT COUNT(*) INTO l_cnt FROM gzsy_t
+       WHERE gzsy001 = g_gzsz_d[l_ac1].gzsz001
+         AND gzsy002 = g_gzsz_d[l_ac1].gzsz002
+      IF cl_null(l_cnt) OR l_cnt = 0 THEN
+         LET g_gzsz_d[l_ac1].choice = 'N'
+         LET g_gzsz_d[l_ac1].memo = cl_getmsg("azz-00128",g_lang)
+      END IF
+      
+      LET l_ac1 = l_ac1 + 1
+      IF l_ac1 > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+
+   END FOREACH
+   CALL g_gzsz_d.deleteElement(g_gzsz_d.getLength())
+   LET g_rec_b = l_ac1 - 1
+   DISPLAY g_rec_b TO FORMONLY.cnt
+   CLOSE b_fill_curs
+   FREE azzi991_01_pb
+END FUNCTION
+
+ 
+{</section>}
+ 

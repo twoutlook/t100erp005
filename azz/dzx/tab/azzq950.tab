@@ -1,0 +1,87 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzq950" module="azz" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="00824" crtdt="2014-05-02 14:20:00" modid="00824" moddt="2015-12-29 10:06:14" sdver="0011" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="背景排程查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),gzpc002,gzpc000,gzpc001,gzpa002(chr500),gzpc003,gzpc004,gzpc006,gzpc005,gzpc007"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gzpd003,gzpd011,gzpd004,gzpd004_desc(chr500),gzpd007,gzpd008,gzpd010,gzpd005,gzpd009,gzpd009_desc(chr500),gzpd006,gzpd012,gzpd013,gzpd014"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),gzpc002(b_gzpc002),gzpc000(b_gzpc000),gzpc001(b_gzpc001),gzpa002(b_gzpa002),gzpc003(b_gzpc003),gzpc004(b_gzpc004),gzpc006(b_gzpc006),gzpc005(b_gzpc005),gzpc007(b_gzpc007)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gzpd003(b_gzpd003),gzpd011(b_gzpd011),gzpd004(b_gzpd004),gzpd004_desc(b_gzpd004_desc),gzpd007(b_gzpd007),gzpd008(b_gzpd008),gzpd010(b_gzpd010),gzpd005(b_gzpd005),gzpd009(b_gzpd009),gzpd009_desc(b_gzpd009_desc),gzpd006(b_gzpd006),gzpd012(b_gzpd012),gzpd013(b_gzpd013),gzpd014(b_gzpd014)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="datainfo"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="restart"/>
+      <action id="detail" chk="N"/>
+      <action id="purge"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzq950" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="gzpc002,gzpc000,gzpc001,gzpa002,gzpc003,gzpc004,gzpc006,gzpc005,gzpc007" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="gzpd003,gzpd011,gzpd004,gzpd007,gzpd008,gzpd010,gzpd005,gzpd009,gzpd006,gzpd012,gzpd013,gzpd014" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="gzpc002(b_gzpc002),gzpc000(b_gzpc000),gzpc001(b_gzpc001),gzpc003(b_gzpc003),gzpc004(b_gzpc004),gzpc006(b_gzpc006),gzpc005(b_gzpc005),gzpc007(b_gzpc007)"/>
+      <construct id="body" page="2" field="gzpd003(b_gzpd003),gzpd011(b_gzpd011),gzpd004(b_gzpd004),gzpd007(b_gzpd007),gzpd008(b_gzpd008),gzpd010(b_gzpd010),gzpd005(b_gzpd005),gzpd009(b_gzpd009),gzpd006(b_gzpd006),gzpd012(b_gzpd012),gzpd013(b_gzpd013),gzpd014(b_gzpd014)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="gzpc002"/>
+      <column id="gzpc000"/>
+      <column id="gzpc001"/>
+      <column id="gzpa002"/>
+      <column id="gzpc003" def_scc="66"/>
+      <column id="gzpc004" def_scc="65"/>
+      <column id="gzpc006"/>
+      <column id="gzpc005"/>
+      <column id="gzpc007" type="S" default="0"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gzpd003"/>
+      <column id="gzpd011"/>
+      <column id="gzpd004">
+        <after>
+          <reference field="gzpd004_desc" ref_field="gzpd004" map_field="gzpd004" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzza001_1" state="c"/>
+      </column>
+      <column id="gzpd004_desc"/>
+      <column id="gzpd007" def_scc="64"/>
+      <column id="gzpd008"/>
+      <column id="gzpd010"/>
+      <column id="gzpd005"/>
+      <column id="gzpd009">
+        <after>
+          <reference field="gzpd009_desc" ref_field="gzpd009" map_field="gzpd009" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_gzxa001_2" state="c"/>
+      </column>
+      <column id="gzpd009_desc"/>
+      <column id="gzpd006"/>
+      <column id="gzpd012"/>
+      <column id="gzpd013"/>
+      <column id="gzpd014"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="gzpc_t" page="1" linked="" pk="gzpc000">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,gzpc002,gzpc000,gzpc001,&apos;&apos;,gzpc003,gzpc004,gzpc006,gzpc005,gzpc007 FROM gzpc_t WHERE gzpcent= ? AND 1=1 "/>
+    </body>
+    <body id="gzpd_t" page="2" linked="" pk="gzpd003" fk="gzpd001" detail="Y">
+      <sql id="b_fill_sql" query="SELECT gzpd003,gzpd011,gzpd004,&apos;&apos;,gzpd007,gzpd008,gzpd010,gzpd005,gzpd009,&apos;&apos;,gzpd006,gzpd012,gzpd013,gzpd014 FROM gzpd_t WHERE gzpdent=? AND gzpd001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

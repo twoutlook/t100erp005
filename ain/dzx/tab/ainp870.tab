@@ -1,0 +1,54 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ainp870" module="ain" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="01534" crtdt="2014-07-08 14:20:38" modid="01534" moddt="2015-07-31 10:59:33" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="空白標籤產生作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="inpadocno,inpa002,inpa002_desc(chr80),inpadocno_desc(chr80),blank1(chr1),number1(num10),blank2(chr1),number2(num10),stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="ain" filename="ainp870" method="dialog">
+    <section id="input">
+      <input id="head" field="inpadocno,blank1,number1,blank2,number2"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="inpadocno">
+        <after>
+          <check chkid="v_inpadocno" id="isExist"/>
+        </after>
+        <controlp form="q_inpadocno_3" state="i"/>
+        <controlp form="q_inpadocno" state="c"/>
+      </column>
+      <column id="inpa002">
+        <after>
+          <reference field="inpa002_desc" ref_field="inpa_t.inpa002" map_field="inpa002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="inpa002_desc"/>
+      <column id="inpadocno_desc"/>
+      <column id="blank1" type="S" default="Y"/>
+      <column id="number1">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="blank2" type="S" default="Y"/>
+      <column id="number2">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

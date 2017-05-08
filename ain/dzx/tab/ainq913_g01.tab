@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ainq913_g01" module="ain" jobmode="N" type="g01" industry="std" crtid="06540" crtdt="2015-11-09 13:48:42" modid="08734" moddt="2016-11-03 21:03:11" sdver="4" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.a1(dat|开始日期),tm.a2(dat|结束日期),tm.sql(STRING| )">
+    <var seq="1" value="inbcent,inbcsite,ooefl003,inba_t_inba013(inba013|inba_t.inba013),pmaal_t_pmaal004(pmaal004|pmaal_t.pmaal004),inbc005,inayl_t_inayl003(inayl003|inayl_t.inayl003),inbc010,inbc207,l_date(chr100|NULL),inbc001,imaal_t_imaal003(imaal003|imaal_t.imaal003),imaa_t_imaa009(imaa009|imaa_t.imaa009),rtaxl_t_rtaxl003(rtaxl003|rtaxl_t.rtaxl003)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="inbcent,inbcsite,ooefl003,inba_t_inba013(inba013|inba_t.inba013),pmaal_t_pmaal004(pmaal004|pmaal_t.pmaal004),inbc005,inayl_t_inayl003(inayl003|inayl_t.inayl003),inbc010,inbc207,l_date(chr100|NULL),inbc001,imaal_t_imaal003(imaal003|imaal_t.imaal003),imaa_t_imaa009(imaa009|imaa_t.imaa009),rtaxl_t_rtaxl003(rtaxl003|rtaxl_t.rtaxl003)"/>
+    <sql id="g_from" query="inbc_t,ooefl_t,rtaxl_t,imaa_t,imaal_t,inayl_t,pmaal_t,inba_t"/>
+    <sql id="g_where" query="" maintable="inbc_t"/>
+    <sql id="g_order" query="inbcsite"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="inbcsite"/>
+    <section id="b_group" reptype="d01">
+      <rep type="inbcsite" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="inbcent,inbcsite"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="inbcent,inbcsite"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="inbcent,inbcsite"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="inbcsite" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="inbcent,inbcsite"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

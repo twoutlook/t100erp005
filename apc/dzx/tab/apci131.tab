@@ -1,0 +1,146 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apci131" module="apc" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="03247" crtdt="2014-04-01 10:04:58" modid="06189" moddt="2015-06-10 15:01:22" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="POS款別維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pcalsite,pcalsite_desc(chr80),pcalunit"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pcalstus,pcal002,ooia002(chr500),pcal001,pcall003,pcall004,pcal003,pcal004,pcal005,pcal006,pcal007,pcal008,pcal009,pcal010,pcal011,pcal012,pcal013,pcal014,pcal015,pcal016,pcal017,pcal018,pcal019,pcal020,pcalstamp(timestamp),pcalpos(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="pcal001,pcalownid,pcalownid_desc(chr500),pcalowndp,pcalowndp_desc(chr500),pcalcrtid,pcalcrtid_desc(chr500),pcalcrtdp,pcalcrtdp_desc(chr500),pcalcrtdt,pcalmodid,pcalmodid_desc(chr500),pcalmoddt"/>
+      <var id="bs_field" value="pcalsite,pcalsite_desc(chr80)" pk="pcalsite" order=""/>
+      <bs_reference field="pcalsite_desc" ref_field="pcalsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="apc" filename="apci131" method="dialog">
+    <section id="input">
+      <input id="head" field="pcalsite,pcalunit"/>
+      <input id="body" page="1" field="pcalstus,pcal002,ooia002,pcal001,pcall003,pcall004,pcal003,pcal004,pcal005,pcal006,pcal007,pcal008,pcal009,pcal010,pcal011,pcal012,pcal013,pcal014,pcal015,pcal016,pcal017,pcal018,pcal019,pcal020,pcalstamp,pcalpos" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pcalsite,pcalunit"/>
+      <construct id="body" page="1" field="pcalstus,pcal002,ooia002,pcal001,pcall003,pcall004,pcal003,pcal004,pcal005,pcal006,pcal007,pcal008,pcal009,pcal010,pcal011,pcal012,pcal013,pcal014,pcal015,pcal016,pcal017,pcal018,pcal019,pcal020,pcalstamp,pcalpos"/>
+      <construct id="body" page="2" field="pcalownid,pcalowndp,pcalcrtid,pcalcrtdp,pcalcrtdt,pcalmodid,pcalmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pcalsite"/>
+      <set id="head" type="no_entry" field="pcalsite"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="pcalsite">
+        <after>
+          <reference field="pcalsite_desc" ref_field="pcal_t.pcalsite" map_field="pcalent,pcalsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_14" state="i"/>
+        <controlp form="q_ooef001_14" state="c"/>
+      </column>
+      <column id="pcalsite_desc"/>
+      <column id="pcalunit"/>
+    </init>
+    <init id="body" page="1">
+      <column id="pcalstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pcal002"/>
+      <column id="ooia002"/>
+      <column id="pcal001">
+        <controlp form="q_pcal001" state="c"/>
+      </column>
+      <column id="pcall003"/>
+      <column id="pcall004"/>
+      <column id="pcal003" type="S" default="N"/>
+      <column id="pcal004" type="S" default="N"/>
+      <column id="pcal005">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pcal006" type="S" default="N"/>
+      <column id="pcal007" type="S" default="N"/>
+      <column id="pcal008" type="S" default="N"/>
+      <column id="pcal009" type="S" default="N"/>
+      <column id="pcal010" type="S" default="N"/>
+      <column id="pcal011" type="S" default="N"/>
+      <column id="pcal012" type="S" default="N"/>
+      <column id="pcal013" type="S" default="N"/>
+      <column id="pcal014" type="S" default="N"/>
+      <column id="pcal015"/>
+      <column id="pcal016"/>
+      <column id="pcal017"/>
+      <column id="pcal018"/>
+      <column id="pcal019"/>
+      <column id="pcal020"/>
+      <column id="pcalstamp"/>
+      <column id="pcalpos" type="S" default="N"/>
+    </init>
+    <init id="body" page="2">
+      <column id="pcalownid">
+        <after>
+          <reference field="pcalownid_desc" ref_field="pcal_t.pcalownid" map_field="pcalownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcalownid_desc"/>
+      <column id="pcalowndp">
+        <after>
+          <reference field="pcalowndp_desc" ref_field="pcal_t.pcalowndp" map_field="pcalowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pcalowndp_desc"/>
+      <column id="pcalcrtid">
+        <after>
+          <reference field="pcalcrtid_desc" ref_field="pcal_t.pcalcrtid" map_field="pcalcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcalcrtid_desc"/>
+      <column id="pcalcrtdp">
+        <after>
+          <reference field="pcalcrtdp_desc" ref_field="pcal_t.pcalcrtdp" map_field="pcalcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pcalcrtdp_desc"/>
+      <column id="pcalcrtdt"/>
+      <column id="pcalmodid">
+        <after>
+          <reference field="pcalmodid_desc" ref_field="pcal_t.pcalmodid" map_field="pcalmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcalmodid_desc"/>
+      <column id="pcalmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pcal_t" pk="pcalsite">
+      <sql id="forupd_sql" type="sql" query="SELECT pcalsite,&apos;&apos;,pcalunit FROM pcal_t WHERE pcalent= ? AND pcalsite=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pcalsite,&apos;&apos;,pcalunit FROM pcal_t" order="pcalsite"/>
+    </head>
+    <body id="pcal_t" page="1,2" linked="" pk="pcal001" fk="pcalsite">
+      <sql id="forupd_sql_detail" query="SELECT pcalstus,pcal002,&apos;&apos;,pcal001,&apos;&apos;,&apos;&apos;,pcal003,pcal004,pcal005,pcal006,pcal007,pcal008,pcal009,pcal010,pcal011,pcal012,pcal013,pcal014,pcal015,pcal016,pcal017,pcal018,pcal019,pcal020,pcalstamp,&apos;&apos;,&apos;&apos;,pcalownid,&apos;&apos;,pcalowndp,&apos;&apos;,pcalcrtid,&apos;&apos;,pcalcrtdp,&apos;&apos;,pcalcrtdt,pcalmodid,&apos;&apos;,pcalmoddt FROM pcal_t WHERE pcalent=? AND pcalsite=? AND pcal001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pcalstus,pcal002,&apos;&apos;,pcal001,&apos;&apos;,&apos;&apos;,pcal003,pcal004,pcal005,pcal006,pcal007,pcal008,pcal009,pcal010,pcal011,pcal012,pcal013,pcal014,pcal015,pcal016,pcal017,pcal018,pcal019,pcal020,pcalstamp,&apos;&apos;,&apos;&apos;,pcalownid,&apos;&apos;,pcalowndp,&apos;&apos;,pcalcrtid,&apos;&apos;,pcalcrtdp,&apos;&apos;,pcalcrtdt,pcalmodid,&apos;&apos;,pcalmoddt FROM pcal_t WHERE pcalent= ? AND pcalsite=?"/>
+      <sql id="detail_append" type="lang" target="pcall_t.pcall003,pcall_t.pcall004" table="pcall_t" fk="pcalsite,pcal001" pk="pcallsite,pcall001,pcall002" field="pcall003,pcall004"/>
+    </body>
+  </dataset>
+</assembly>
+

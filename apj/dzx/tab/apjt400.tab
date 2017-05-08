@@ -1,0 +1,230 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apjt400" module="apj" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="01534" crtdt="2017-01-05 10:57:32" modid="01534" moddt="2017-01-09 17:06:08" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="項目費用收集維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pjebld,pjebld_desc(chr80),pjebcomp,pjebcomp_desc(chr80),pjeb002,pjeb003"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pjebseq,pjeb010,pjeb010_desc(chr500),pjeb011,pjeb011_desc(chr500),pjeb012,pjeb012_desc(chr500),pjeb013,pjeb013_desc(chr500),pjeb014,pjeb014_desc(chr500),pjeb015,pjeb015_desc(chr500),pjeb016,pjeb016_desc(chr500),pjeb017,pjeb018,pjeb018_desc(chr500),pjeb019,pjeb019_desc(chr500),pjeb020,pjeb020_desc(chr500),pjeb021,pjeb021_desc(chr500),pjeb022,pjeb022_desc(chr500),pjeb100,pjeb110,pjeb120"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="pjebseq,pjebownid,pjebownid_desc(chr500),pjebowndp,pjebowndp_desc(chr500),pjebcrtid,pjebcrtid_desc(chr500),pjebcrtdp,pjebcrtdp_desc(chr500),pjebcrtdt,pjebmodid,pjebmodid_desc(chr500),pjebmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="subject_cut"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apj" filename="apjt400" method="dialog">
+    <section id="input">
+      <input id="head" field="pjebld,pjebcomp,pjeb002,pjeb003"/>
+      <input id="body" page="1" field="pjebseq,pjeb010,pjeb011,pjeb012,pjeb013,pjeb014,pjeb015,pjeb016,pjeb017,pjeb018,pjeb019,pjeb020,pjeb021,pjeb022,pjeb100,pjeb110,pjeb120" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pjebld,pjebcomp,pjeb002,pjeb003"/>
+      <construct id="body" page="1" field="pjebseq,pjeb010,pjeb011,pjeb012,pjeb013,pjeb014,pjeb015,pjeb016,pjeb017,pjeb018,pjeb019,pjeb020,pjeb021,pjeb022,pjeb100,pjeb110,pjeb120"/>
+      <construct id="body" page="2" field="pjebownid,pjebowndp,pjebcrtid,pjebcrtdp,pjebcrtdt,pjebmodid,pjebmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pjebld,pjeb002,pjeb003"/>
+      <set id="head" type="no_entry" field="pjebld,pjeb002,pjeb003"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="pjebld">
+        <after>
+          <check chkid="v_glaald_5" id="isExist"/>
+          <reference field="pjebld_desc" ref_field="pjeb_t.pjebld" map_field="pjebld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_glaald_04" state="i"/>
+        <controlp form="q_glaald_04" state="c"/>
+      </column>
+      <column id="pjebld_desc"/>
+      <column id="pjebcomp">
+        <after>
+          <check chkid="v_ooef001_1" id="isExist"/>
+          <reference field="pjebcomp_desc" ref_field="pjeb_t.pjebcomp" map_field="pjebcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="pjebcomp_desc"/>
+      <column id="pjeb002"/>
+      <column id="pjeb003">
+        <after>
+          <check id="range" bt="1" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="1">
+      <column id="pjebseq"/>
+      <column id="pjeb010">
+        <after>
+          <check chkid="v_glac002_3" id="isExist"/>
+        </after>
+        <controlp form="aglt310_04" state="i"/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="pjeb010_desc"/>
+      <column id="pjeb011">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+          <reference field="pjeb011_desc" ref_field="pjeb_t.pjeb011" map_field="pjeb011" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="pjeb011_desc"/>
+      <column id="pjeb012">
+        <after>
+          <check chkid="v_ooeg001_3" id="isExist"/>
+          <reference field="pjeb012_desc" ref_field="pjeb_t.pjeb012" map_field="pjeb012" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_4" state="i"/>
+        <controlp form="q_ooeg001_4" state="c"/>
+      </column>
+      <column id="pjeb012_desc"/>
+      <column id="pjeb013">
+        <after>
+          <check chkid="v_pmaa001_6" id="isExist"/>
+          <reference field="pjeb013_desc" ref_field="pjeb_t.pjeb013" map_field="pjeb013" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_4" state="i"/>
+        <controlp form="q_pmaa001_4" state="c"/>
+      </column>
+      <column id="pjeb013_desc"/>
+      <column id="pjeb014">
+        <after>
+          <check chkid="v_oocq002_281" id="isExist"/>
+          <reference field="pjeb014_desc" ref_field="pjeb014" map_field="pjeb014" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;281&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pjeb014_desc"/>
+      <column id="pjeb015">
+        <after>
+          <check chkid="v_oocq002_287" id="isExist"/>
+          <reference field="pjeb015_desc" ref_field="pjeb015" map_field="pjeb015" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;287&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pjeb015_desc"/>
+      <column id="pjeb016">
+        <after>
+          <check chkid="v_ooeg001_4" id="isExist"/>
+          <reference field="pjeb016_desc" ref_field="pjeb_t.pjeb016" map_field="pjeb016" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_8" state="i"/>
+        <controlp form="q_ooeg001_8" state="c"/>
+      </column>
+      <column id="pjeb016_desc"/>
+      <column id="pjeb017" type="S" default="1"/>
+      <column id="pjeb018">
+        <after>
+          <check chkid="v_oocq002_275" id="isExist"/>
+          <reference field="pjeb018_desc" ref_field="pjeb018" map_field="pjeb018" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;275&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pjeb018_desc"/>
+      <column id="pjeb019">
+        <after>
+          <check chkid="v_rtax001" id="isExist"/>
+          <reference field="pjeb019_desc" ref_field="pjeb_t.pjeb019" map_field="pjeb019" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001_1" state="i"/>
+        <controlp form="q_rtax001_1" state="c"/>
+      </column>
+      <column id="pjeb019_desc"/>
+      <column id="pjeb020">
+        <after>
+          <check chkid="v_oocq002_2002" id="isExist"/>
+          <reference field="pjeb020_desc" ref_field="pjeb020" map_field="pjeb020" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2002&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pjeb020_desc"/>
+      <column id="pjeb021">
+        <after>
+          <check chkid="v_pjba001" id="isExist"/>
+          <reference field="pjeb021_desc" ref_field="pjeb_t.pjeb021" map_field="pjeb021" ref_sql="SELECT pjbal003 FROM pjbal_t WHERE pjbalent=$varg_enterprise$var AND pjbal001=? AND pjbal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pjba001" state="i"/>
+        <controlp form="q_pjba001" state="c"/>
+      </column>
+      <column id="pjeb021_desc"/>
+      <column id="pjeb022">
+        <after>
+          <check chkid="v_pjbb002" id="isExist"/>
+          <reference field="pjeb022_desc" ref_field="pjeb021,pjeb022" map_field="pjeb021,pjeb022" ref_sql="SELECT pjbbl004 FROM pjbbl_t WHERE pjbblent=$varg_enterprise$var AND pjbbl001=? AND pjbbl002=? AND pjbbl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pjbb002_1" state="i"/>
+        <controlp form="q_pjbb002_1" state="c"/>
+      </column>
+      <column id="pjeb022_desc"/>
+      <column id="pjeb100" type="S" default="0"/>
+      <column id="pjeb110" type="S" default="0"/>
+      <column id="pjeb120" type="S" default="0"/>
+    </init>
+    <init id="body" page="2">
+      <column id="pjebownid">
+        <after>
+          <reference field="pjebownid_desc" ref_field="pjeb_t.pjebownid" map_field="pjebownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pjebownid_desc"/>
+      <column id="pjebowndp">
+        <after>
+          <reference field="pjebowndp_desc" ref_field="pjeb_t.pjebowndp" map_field="pjebowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pjebowndp_desc"/>
+      <column id="pjebcrtid">
+        <after>
+          <reference field="pjebcrtid_desc" ref_field="pjeb_t.pjebcrtid" map_field="pjebcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pjebcrtid_desc"/>
+      <column id="pjebcrtdp">
+        <after>
+          <reference field="pjebcrtdp_desc" ref_field="pjeb_t.pjebcrtdp" map_field="pjebcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pjebcrtdp_desc"/>
+      <column id="pjebcrtdt"/>
+      <column id="pjebmodid">
+        <after>
+          <reference field="pjebmodid_desc" ref_field="pjeb_t.pjebmodid" map_field="pjebmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pjebmodid_desc"/>
+      <column id="pjebmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pjeb_t" pk="pjebld,pjeb002,pjeb003">
+      <sql id="forupd_sql" type="sql" query="SELECT pjebld,&apos;&apos;,pjebcomp,&apos;&apos;,pjeb002,pjeb003 FROM pjeb_t WHERE pjebent= ? AND pjebld=? AND pjeb002=? AND pjeb003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pjebld,&apos;&apos;,pjebcomp,&apos;&apos;,pjeb002,pjeb003 FROM pjeb_t" order="pjebld,pjeb002,pjeb003"/>
+    </head>
+    <body id="pjeb_t" page="1,2" linked="" pk="pjebseq" fk="pjebld,pjeb002,pjeb003">
+      <sql id="forupd_sql_detail" query="SELECT pjebseq,pjeb010,&apos;&apos;,pjeb011,&apos;&apos;,pjeb012,&apos;&apos;,pjeb013,&apos;&apos;,pjeb014,&apos;&apos;,pjeb015,&apos;&apos;,pjeb016,&apos;&apos;,pjeb017,pjeb018,&apos;&apos;,pjeb019,&apos;&apos;,pjeb020,&apos;&apos;,pjeb021,&apos;&apos;,pjeb022,&apos;&apos;,pjeb100,pjeb110,pjeb120,&apos;&apos;,pjebownid,&apos;&apos;,pjebowndp,&apos;&apos;,pjebcrtid,&apos;&apos;,pjebcrtdp,&apos;&apos;,pjebcrtdt,pjebmodid,&apos;&apos;,pjebmoddt FROM pjeb_t WHERE pjebent=? AND pjebld=? AND pjeb002=? AND pjeb003=? AND pjebseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pjebseq,pjeb010,&apos;&apos;,pjeb011,&apos;&apos;,pjeb012,&apos;&apos;,pjeb013,&apos;&apos;,pjeb014,&apos;&apos;,pjeb015,&apos;&apos;,pjeb016,&apos;&apos;,pjeb017,pjeb018,&apos;&apos;,pjeb019,&apos;&apos;,pjeb020,&apos;&apos;,pjeb021,&apos;&apos;,pjeb022,&apos;&apos;,pjeb100,pjeb110,pjeb120,&apos;&apos;,pjebownid,&apos;&apos;,pjebowndp,&apos;&apos;,pjebcrtid,&apos;&apos;,pjebcrtdp,&apos;&apos;,pjebcrtdt,pjebmodid,&apos;&apos;,pjebmoddt FROM pjeb_t WHERE pjebent= ? AND pjebld=? AND pjeb002=? AND pjeb003=?"/>
+    </body>
+  </dataset>
+</assembly>
+

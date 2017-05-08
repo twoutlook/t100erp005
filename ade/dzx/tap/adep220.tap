@@ -1,0 +1,1276 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="adep220" std_prog="adep220" erpver="1.0" module="ADE" ver="3" env="s" zone="t10prd" booking="Y" type="M" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="function.adep220_create_temp" order="1" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adep220_create_temp()
+   #組織資訊
+#150525 s983961 mark---s   
+#   DROP TABLE adep220_ooed004_tmp    
+
+#   CREATE TEMP TABLE adep220_ooed004_tmp
+#   (
+#      ooed004   VARCHAR(10)
+#   )
+#   CREATE INDEX adep220_ooed004_tmp_01 on adep220_ooed004_tmp(ooed004)
+#150525 s983961 mark---e
+   #暫存檔
+   DROP TABLE adep220_tmp
+   
+   #單頭  #150616-00044#1 15/06/17 s983961---add(rtjb032)   #150623-00021#1 15/06/24 s983961--add(rtjb010/rtjb022/rtjb008/rtjb020) 
+   CREATE TEMP TABLE adep220_tmp (  
+      rtjbent    LIKE rtjb_t.rtjbent,
+      rtjbsite   LIKE rtjb_t.rtjbsite,
+      rtjbunit   LIKE rtjb_t.rtjbunit,
+      rtjborga   LIKE rtjb_t.rtjborga,
+      rtjadocdt  LIKE rtja_t.rtjadocdt,
+      rtjb004    LIKE rtjb_t.rtjb004,
+      rtjb005    LIKE rtjb_t.rtjb005,
+      rtjb012    LIKE rtjb_t.rtjb012,
+      rtjb013    LIKE rtjb_t.rtjb013,
+      rtjb014    LIKE rtjb_t.rtjb014,
+      rtjb015    LIKE rtjb_t.rtjb015,
+      rtjb017    LIKE rtjb_t.rtjb017,
+      rtjb018    LIKE rtjb_t.rtjb018,
+      rtjb021    LIKE rtjb_t.rtjb021,
+      rtjb025    LIKE rtjb_t.rtjb025,
+      rtjb026    LIKE rtjb_t.rtjb026,
+      rtjb027    LIKE rtjb_t.rtjb027,
+      rtjb032    LIKE rtjb_t.rtjb032,
+      rtjb010    LIKE rtjb_t.rtjb010,
+      rtjb022    LIKE rtjb_t.rtjb022,
+      rtjb008    LIKE rtjb_t.rtjb008,
+      rtjb020    LIKE rtjb_t.rtjb020
+   );
+   
+   DROP TABLE adep220_tmp1
+   CREATE TEMP TABLE adep220_tmp1 (  
+      rtiadocno  LIKE rtia_t.rtiadocno
+   );
+END FUNCTION]]>
+  </point>
+  <point name="function.adep220_ins_table" order="2" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adep220_ins_table()
+   DEFINE l_rtjb_d   RECORD
+      rtjbent    LIKE rtjb_t.rtjbent,
+      rtjbsite   LIKE rtjb_t.rtjbsite,
+      rtjbunit   LIKE rtjb_t.rtjbunit,
+      rtjborga   LIKE rtjb_t.rtjborga,
+      rtjadocdt  LIKE rtja_t.rtjadocdt,
+      rtjb004    LIKE rtjb_t.rtjb004,
+      rtjb005    LIKE rtjb_t.rtjb005,
+      rtjb012    LIKE rtjb_t.rtjb012,
+      rtjb013    LIKE rtjb_t.rtjb013,
+      rtjb014    LIKE rtjb_t.rtjb014,
+      rtjb015    LIKE rtjb_t.rtjb015,
+      rtjb017    LIKE rtjb_t.rtjb017,
+      rtjb018    LIKE rtjb_t.rtjb018,
+      rtjb021    LIKE rtjb_t.rtjb021,
+      rtjb025    LIKE rtjb_t.rtjb025,
+      rtjb026    LIKE rtjb_t.rtjb026,
+      rtjb027    LIKE rtjb_t.rtjb027,
+      rtjb032    LIKE rtjb_t.rtjb032,  #150616-00021#1 150616 s983961---add INTO rtin_t語法錯誤 補
+      rtjb010    LIKE rtjb_t.rtjb010,  #150623-00021#1 15/06/24 s983961--add(s) 
+      rtjb022    LIKE rtjb_t.rtjb022,   
+      rtjb008    LIKE rtjb_t.rtjb008,
+      rtjb020    LIKE rtjb_t.rtjb020   #150623-00021#1 15/06/24 s983961--add(e)       
+      END RECORD  
+   DEFINE l_rtjadocdt   LIKE rtja_t.rtjadocdt
+   DEFINE l_rtjbsite    LIKE rtjb_t.rtjbsite
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_doctype     LIKE rtai_t.rtai004
+   DEFINE l_rtibdocno   LIKE rtib_t.rtibdocno
+   DEFINE l_rtia002     LIKE rtia_t.rtia002
+   DEFINE l_seq         LIKE rtib_t.rtibseq
+   DEFINE l_rtib016     LIKE rtib_t.rtib016
+   DEFINE l_rtib019     LIKE rtib_t.rtib019
+   DEFINE l_rtia035     LIKE rtia_t.rtia035
+   #150623-00021#1 15/06/24 s983961--add(s) 
+   DEFINE l_rtjb004     LIKE rtia_t.rtia004 
+   DEFINE l_ooef001     LIKE ooef_t.ooef001
+   DEFINE l_ermsg        STRING
+   DEFINE l_ermsg2       STRING
+   #150623-00021#1 15/06/24 s983961--add(e) 
+   
+   CALL s_transaction_begin()
+   CALL cl_showmsg_init()
+   LET l_rtjbsite = NULL
+   LET l_rtjadocdt = NULL
+      
+   FOREACH adep220_cl2 INTO l_rtjb_d.*
+   
+      #單頭
+      IF (cl_null(l_rtjbsite) AND cl_null(l_rtjadocdt))
+         OR l_rtjbsite <> l_rtjb_d.rtjbsite
+         OR l_rtjadocdt <> l_rtjb_d.rtjadocdt THEN
+         
+         #預設單據的單別
+         LET l_success = ''
+         LET l_doctype = ''
+         CALL s_arti200_get_def_doc_type(l_rtjb_d.rtjbsite,"artt610",'2') 
+            RETURNING l_success,l_doctype
+         IF NOT l_success THEN
+            CALL s_transaction_end('N','0')
+            RETURN  
+         END IF
+         LET l_rtibdocno = l_doctype
+         IF NOT s_aooi200_chk_slip(l_rtjb_d.rtjbsite,'',l_rtibdocno,"artt610") THEN
+            CALL s_transaction_end('N','0')
+            RETURN  
+         END IF
+         #單號
+         CALL s_aooi200_gen_docno(l_rtjb_d.rtjbsite,l_rtibdocno,l_rtjb_d.rtjadocdt,"artt610") RETURNING l_success,l_rtibdocno
+         IF NOT l_success THEN
+            CALL s_transaction_end('N','0')
+            RETURN  
+         END IF
+         #散客編號
+         LET l_rtia002 = ''
+         SELECT ooef108 INTO l_rtia002
+           FROM ooef_t
+          WHERE ooefent = g_enterprise
+            AND ooef001 = l_rtjb_d.rtjbsite
+         IF cl_null(l_rtia002) THEN
+            CALL cl_errmsg(l_rtjb_d.rtjbsite,'','','ade-00058',1) 
+            CONTINUE FOREACH            
+         END IF
+         LET l_rtia035 = cl_get_time()
+         INSERT INTO rtia_t(rtiaent,rtiasite,rtiadocno,rtiadocdt,rtiastus,
+                            rtiaunit,rtia000,rtia002,rtia032,rtia034,rtia035,
+                            rtiaownid,rtiaowndp,rtiacrtid,rtiacrtdp,rtiacrtdt,rtia017)    #150603 s983961 add---rtia017 
+              VALUES (l_rtjb_d.rtjbent,l_rtjb_d.rtjbsite,l_rtibdocno,l_rtjb_d.rtjadocdt,'N',
+                      l_rtjb_d.rtjbunit,'artt610',l_rtia002,'4',g_today,l_rtia035,
+                      g_user,g_dept,g_user,g_dept,g_datetime,'1')    #150603 s983961 add---rtia017 '1'
+         IF SQLCA.SQLcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "ins rtia_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+  
+            CALL s_transaction_end('N','0')
+            RETURN            
+         END IF
+         
+         INSERT INTO adep220_tmp1(rtiadocno) VALUES (l_rtibdocno)
+         IF SQLCA.SQLcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "ins tmp1"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+  
+            CALL s_transaction_end('N','0')
+            RETURN            
+         END IF
+         
+         LET l_rtjbsite = l_rtjb_d.rtjbsite
+         LET l_rtjadocdt = l_rtjb_d.rtjadocdt
+         LET l_seq = 1
+      END IF
+      #單身
+      #單位換算
+      LET l_success = NULL
+      LET l_rtib016 = NULL
+      LET l_rtib019 = NULL
+      CALL s_aimi190_get_convert(l_rtjb_d.rtjb004,l_rtjb_d.rtjb013,l_rtjb_d.rtjb015) RETURNING l_success,l_rtib016
+      CALL s_aimi190_get_convert(l_rtjb_d.rtjb004,l_rtjb_d.rtjb013,l_rtjb_d.rtjb018) RETURNING l_success,l_rtib019
+      
+      #150525  s983961 add---s  
+      #先抓門店清單上的庫位(rtdx044), 抓不到或沒有值時，進一步抓大店出貨庫位ooef124
+      
+      SELECT rtdx044,rtdx001 INTO l_rtjb_d.rtjb025,l_rtjb004
+        FROM rtdx_t
+       WHERE rtdxent=l_rtjb_d.rtjbent 
+         AND rtdxsite=l_rtjb_d.rtjbsite 
+         AND rtdx001=l_rtjb_d.rtjb004
+      
+      IF cl_null(l_rtjb_d.rtjb025) THEN    
+      SELECT ooef124,ooef001 INTO l_rtjb_d.rtjb025,l_ooef001
+        FROM ooef_t
+       WHERE ooefent = l_rtjb_d.rtjbent
+         AND ooef001 = l_rtjb_d.rtjbsite
+      IF cl_null(l_rtjb_d.rtjb026) THEN LET l_rtjb_d.rtjb026 = ' ' END IF
+      IF cl_null(l_rtjb_d.rtjb027) THEN LET l_rtjb_d.rtjb027 = ' ' END IF
+      END IF
+      
+      #150623-00021#1 15/06/24 s983961--add(s)  錯誤訊息 如果取不到就擋住   
+      IF cl_null(l_rtjb_d.rtjb025) THEN
+         LET l_ermsg = '[',l_rtjb004,']'
+         LET l_ermsg2 = '[',l_ooef001,']'
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code   = 'ade-00115' 
+         LET g_errparam.popup  = TRUE 
+         LET g_errparam.replace[1] = l_ermsg
+         LET g_errparam.replace[2] = l_ermsg2 
+         CALL cl_err()               
+         CALL s_transaction_end('N','0')
+         RETURN      
+      END IF   
+      #150623-00021#1 15/06/24 s983961--add(e)            
+      #150525 s983961 add---e 
+      
+      INSERT INTO rtib_t(rtibent,rtibsite,rtibunit,rtiborga,rtibdocno,rtibseq,
+                         rtib004,rtib005,rtib012,rtib013,rtib014,rtib015,
+                         rtib016,rtib017,rtib018,rtib019,rtib021,rtib025,rtib026,rtib027,rtib010,rtib022,rtib008,rtib020)   #150623-00021#1 15/06/24 s983961--add rtib010,rtib022,rtib008,rtib020 
+            VALUES (l_rtjb_d.rtjbent,l_rtjb_d.rtjbsite,l_rtjb_d.rtjbunit,l_rtjb_d.rtjborga,l_rtibdocno,l_seq,
+                    l_rtjb_d.rtjb004,l_rtjb_d.rtjb005,l_rtjb_d.rtjb012,l_rtjb_d.rtjb013,l_rtjb_d.rtjb014,l_rtjb_d.rtjb015,
+                    l_rtib016,l_rtjb_d.rtjb017,l_rtjb_d.rtjb018,l_rtib019,l_rtjb_d.rtjb021,l_rtjb_d.rtjb025,l_rtjb_d.rtjb026,l_rtjb_d.rtjb027,
+                    l_rtjb_d.rtjb010,l_rtjb_d.rtjb022,l_rtjb_d.rtjb008,l_rtjb_d.rtjb020)   #150623-00021#1 15/06/24 s983961--add 
+      IF SQLCA.SQLcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "ins rtib_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN            
+      END IF
+      #150603 s983961---add(s)    
+         INSERT INTO rtin_t(rtinent,rtinsite,rtindocno,rtinseq,rtinseq1,rtin001,rtin002,
+                    rtin003,rtin004,rtin005,rtin006,rtin007,rtin008,rtin009,rtin010)
+              VALUES (l_rtjb_d.rtjbent,l_rtjb_d.rtjbsite,l_rtibdocno,l_seq,'1',l_rtjb_d.rtjb004,'',    #150616-00021#1 150616 s983961---add INTO rtin_t語法錯誤 補
+                   '','',l_rtjb_d.rtjb025,l_rtjb_d.rtjb026,l_rtjb_d.rtjb027,l_rtjb_d.rtjb015,
+                   l_rtjb_d.rtjb014,l_rtjb_d.rtjb032)  
+     
+      IF SQLCA.SQLcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "ins rtin_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN            
+      END IF
+      #150603 s983961---add(e)             
+      LET l_seq = l_seq + 1    
+   END FOREACH
+   
+   #庫存過帳
+#150601-00026#1 15/06/01  by s983961---mark(e)   
+ # IF NOT adep220_post() THEN               
+ #    CALL s_transaction_end('N','0')
+ #    RETURN
+ # END IF   
+#150601-00026#1 15/06/01  by s983961---mark(e) 
+#150601-00026#1 15/06/01  by s983961---add(s)
+ LET g_prog = 'artt610'       #150427-00001#9 150604 By pomelo add
+ IF NOT cl_null(l_rtibdocno) THEN
+   CALL s_artt600_conf_chk(l_rtibdocno,'N') RETURNING l_success,g_errno
+   IF l_success THEN 
+   CALL s_artt600_conf_upd(l_rtibdocno) RETURNING l_success
+        IF NOT l_success THEN
+           CALL s_transaction_end('N','0')  
+           LET g_prog = 'adep220'       #150427-00001#9 150604 By pomelo add
+           RETURN
+        ELSE  
+           CALL s_artt600_post_chk(l_rtibdocno,'Y') RETURNING l_success,g_errno
+           IF l_success THEN                          
+              CALL s_artt600_post_upd(l_rtibdocno) RETURNING l_success
+              IF NOT l_success THEN
+                 CALL s_transaction_end('N','0')
+                 LET g_prog = 'adep220'       #150427-00001#9 150604 By pomelo add
+                 RETURN       
+              END IF
+           ELSE
+              INITIALIZE g_errparam TO NULL
+              LET g_errparam.code = g_errno
+              LET g_errparam.extend = l_rtibdocno
+              LET g_errparam.popup = TRUE
+              CALL cl_err()
+              LET g_prog = 'adep220'       #150427-00001#9 150604 By pomelo add
+              RETURN 
+           END IF          
+        END IF
+   ELSE
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.code = g_errno
+        LET g_errparam.extend = l_rtibdocno
+        LET g_errparam.popup = TRUE
+        CALL cl_err()
+        LET g_prog = 'adep220'       #150427-00001#9 150604 By pomelo add
+        RETURN 
+   END IF 
+ END IF
+ LET g_prog = 'adep220'       #150427-00001#9 150604 By pomelo add
+#150601-00026#1 15/06/01  by s983961---add(e)    
+
+
+   EXECUTE adep220_p USING g_datetime
+   IF SQLCA.SQLcode  THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "upd rtja_t"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+  
+      CALL s_transaction_end('N','0')
+      RETURN      
+   ELSE
+      CALL s_transaction_end('Y','0') 
+   END IF
+   CALL cl_showmsg()
+END FUNCTION]]>
+  </point>
+  <point name="function.adep220_post" order="3" ver="2" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adep220_post()
+   DEFINE l_rtiadocno    LIKE rtia_t.rtiadocno
+   DEFINE r_success       LIKE type_t.num5
+   
+   LET r_success = TRUE
+   
+   DECLARE adep2200_post_cs CURSOR FOR
+      SELECT rtiadocno FROM adep220_tmp1
+   
+   FOREACH adep2200_post_cs INTO l_rtiadocno
+      IF NOT adep220_inag_upd(l_rtiadocno) THEN
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.adep220_inag_upd" order="4" ver="2" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adep220_inag_upd(p_rtiadocno)
+   DEFINE p_rtiadocno   LIKE rtia_t.rtiadocno
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_rtib        RECORD LIKE rtib_t.*
+   DEFINE l_rtia        RECORD LIKE rtia_t.*
+   DEFINE l_sql         STRING
+   
+   LET r_success = TRUE
+   
+   SELECT rtia000,rtia002
+     INTO l_rtia.rtia000,l_rtia.rtia002
+     FROM rtia_t
+    WHERE rtiaent = g_enterprise
+      AND rtiadocno = p_rtiadocno
+   
+   
+   LET l_sql = "SELECT rtibsite,rtibseq,rtib004,rtib005,rtib025, ",
+               "       rtib026,rtib027,rtib012,rtib013",
+               "  FROM rtib_t",
+               " WHERE rtibent = '",g_enterprise,"'",
+               "   AND rtibdocno = '",p_rtiadocno,"'",
+               " ORDER BY rtibseq"
+   PREPARE s_adep220_pre11 FROM l_sql
+   DECLARE s_adep220_cs11 CURSOR FOR s_adep220_pre11
+   
+   FOREACH s_adep220_cs11 INTO l_rtib.rtibsite,l_rtib.rtibseq,l_rtib.rtib004,l_rtib.rtib005,l_rtib.rtib025,
+                               l_rtib.rtib026,l_rtib.rtib027,l_rtib.rtib012,l_rtib.rtib013
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'FOREACH:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      
+      #蒐集不存在inag_t的資料
+      #料件編號,產品特徵,庫存管理特徵,庫位,儲位,批號,有效日期,備註,第一次入庫日期,單位
+      CALL s_inventory_ins_inag_collect(l_rtib.rtib004,l_rtib.rtib005,' ',l_rtib.rtib025,l_rtib.rtib026,l_rtib.rtib027,'','',g_today,l_rtib.rtib013,'ALL')      
+   END FOREACH
+
+   #INSERT庫儲批資料
+   CALL s_inventory_ins_inag('ALL') RETURNING r_success
+
+   IF NOT r_success THEN
+      RETURN r_success
+   END IF
+             
+   FOREACH s_adep220_cs11 INTO l_rtib.rtibsite,l_rtib.rtibseq,l_rtib.rtib004,l_rtib.rtib005,l_rtib.rtib025,
+                               l_rtib.rtib026,l_rtib.rtib027,l_rtib.rtib012,l_rtib.rtib013  
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'FOREACH:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+      IF l_rtib.rtib012 >= 0 THEN 
+         #更新庫存明細檔      
+          #CALL s_inventory_upd_inag(l_rtib.rtib004,' ',' ',l_rtib.rtib025,l_rtib.rtib026,          ##150525 s83961 add---s
+         CALL s_inventory_upd_inag(l_rtib.rtib004,l_rtib.rtib005,' ',l_rtib.rtib025,l_rtib.rtib026, 
+                                  # l_rtib.rtib027,'-1',l_rtib.rtib012,g_today,l_rtib.rtibdocno,       
+                                   l_rtib.rtib027,'-1',l_rtib.rtib012,g_today,p_rtiadocno,          ##150525 s83961 add---e
+                                   l_rtib.rtibseq,'0',l_rtib.rtib013,l_rtib.rtib012,'1','ALL') RETURNING r_success
+      ELSE
+         #更新庫存明細檔      
+  #CALL s_inventory_upd_inag(l_rtib.rtib004,' ',' ',l_rtib.rtib025,l_rtib.rtib026,                  ##150525 s83961 add---s
+         CALL s_inventory_upd_inag(l_rtib.rtib004,l_rtib.rtib005,' ',l_rtib.rtib025,l_rtib.rtib026,  
+                                   #l_rtib.rtib027, '1',l_rtib.rtib012*(-1),g_today,l_rtib.rtibdocno,  
+                                   l_rtib.rtib027, '1',l_rtib.rtib012*(-1),g_today,p_rtiadocno,     ##150525 s83961 add---e
+                                   l_rtib.rtibseq,'0',l_rtib.rtib013,l_rtib.rtib012,'2','ALL') RETURNING r_success
+      END IF
+      IF NOT r_success THEN
+         EXIT FOREACH
+      END IF
+      
+      INITIALIZE g_inaj.* TO NULL
+      LET g_inaj.inajent   = g_enterprise      #企業代碼                    
+      LET g_inaj.inajsite  = l_rtib.rtibsite   #營運據點                    
+      LET g_inaj.inaj001   = p_rtiadocno       #單據編號                    
+      LET g_inaj.inaj002   = l_rtib.rtibseq    #項次                        
+      LET g_inaj.inaj003   = '0'               #項序       
+      IF l_rtib.rtib012 >= 0 THEN
+         LET g_inaj.inaj004   = '-1'              #出入庫碼 
+      ELSE
+         LET g_inaj.inaj004   = '1'
+      END IF 
+      LET g_inaj.inaj005   = l_rtib.rtib004    #料件編號                    
+      LET g_inaj.inaj006   = l_rtib.rtib005    #產品特徵                    
+      LET g_inaj.inaj007   = ' '               #庫存管理特徵                
+      LET g_inaj.inaj008   = l_rtib.rtib025    #庫位編號                    
+      LET g_inaj.inaj009   = l_rtib.rtib026    #儲位編號                    
+      LET g_inaj.inaj010   = l_rtib.rtib027    #批號     
+      IF l_rtib.rtib012 < 0 THEN 
+         LET g_inaj.inaj011   = l_rtib.rtib012*(-1)
+      ELSE          
+         LET g_inaj.inaj011   = l_rtib.rtib012    #交易數量
+      END IF             
+      LET g_inaj.inaj012   = l_rtib.rtib013    #交易單位 
+#      #inaj的KEY已经到单位了，所以库存单位就是异动单位
+#      LET g_inaj.inaj013   = 1                 #交易單位與庫存單位換算率  
+#      SELECT imaa006 INTO l_imaa006 FROM imaa_t
+#       WHERE imaaent = g_enterprise
+#         AND imaa001 = g_inaj.inaj005
+#      IF l_imaa006 = g_inaj.inaj012 THEN
+#         LET l_rate = 1
+#      ELSE
+#         CALL s_aimi190_get_convert(g_inaj.inaj005,g_inaj.inaj012,l_imaa006)
+#              RETURNING r_success,l_rate
+#         IF NOT r_success THEN
+#            RETURN r_success
+#         END IF
+#      END IF
+#      LET g_inaj.inaj014   = l_rate            #交易單位與料件基本單位換算率
+      LET g_inaj.inaj015   = l_rtia.rtia000    #異動命令代號      
+#      LET g_inaj.inaj016   = l_rtib.rtib024    #理由碼      
+      LET g_inaj.inaj017   = g_dept            #異動部門編號                
+      LET g_inaj.inaj018   = l_rtia.rtia002    #異動廠商/客戶編號           
+#      LET g_inaj.inaj019   = l_rtia.rtia041    #備註                        
+#      LET g_inaj.inaj020   = ''                #工單單號/料號               
+#      LET g_inaj.inaj021   = ''                #多角序號                                         
+      LET g_inaj.inaj022   = cl_get_current()  #單據扣帳日期
+      LET g_inaj.inaj023   = cl_get_today()    #實際執行扣帳日期
+      LET g_inaj.inaj024   = cl_get_time()     #資料產生時間
+      LET g_inaj.inaj025   = g_user            #異動資料產生者
+       
+      CALL s_inventory_ins_inaj('ALL') RETURNING r_success
+      IF NOT r_success THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+             
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="construct.c.rtjasite" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE 
+#	     	   LET g_qryparam.arg1 = g_site
+#	     	   LET g_qryparam.arg2 = '2'
+#            CALL q_ooed004_3()                           #呼叫開窗
+            LET g_qryparam.where = s_aooi500_q_where(g_prog,'rtjasite',g_site,'c') #150308-00001#1  By Ken add 'c' 150309
+            CALL q_ooef001_24()
+            DISPLAY g_qryparam.return1 TO rtjasite   #顯示到畫面上
+	     
+            NEXT FIELD rtjasite                        #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="cs.head.before_construct" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="global.parameter" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[        rtjadocdt        LIKE rtja_t.rtjadocdt,]]>
+  </point>
+  <point name="global.variable" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE g_datetime           DATETIME YEAR TO SECOND
+DEFINE g_errno              LIKE type_t.chr50   #150601-00026#1 15/06/01  by s983961---add]]>
+  </point>
+  <point name="init.define" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_success LIKE type_t.num5 #150308-00001#1  By Ken 150309]]>
+  </point>
+  <point name="init.init" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL s_aooi500_create_temp() RETURNING l_success #150308-00001#1  By Ken 150309
+   #150427-00001#9 150604 By pomelo add(S)
+   LET l_success = ''
+   CALL s_lot_auto_create_tmp('artt610') RETURNING l_success
+
+   LET l_success = ''
+   CALL s_aooi390_cre_tmp_table() RETURNING l_success
+   #150427-00001#9 150604 By pomelo add(E)]]>
+  </point>
+  <point name="input.c.rtjasite" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_master.rtjasite             #給予default值
+            LET g_qryparam.default2 = "" #
+            #給予arg
+	     	   LET g_qryparam.arg1 = g_site
+	     	   LET g_qryparam.arg2 = '2'
+            CALL q_ooed004_3()                                #呼叫開窗
+
+            LET g_master.rtjasite = g_qryparam.return1              
+
+            DISPLAY g_master.rtjasite TO rtjasite          
+
+            NEXT FIELD rtjasite                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.m.before_input" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[               IF cl_null(g_master.rtjadocdt) THEN
+                  LET g_master.rtjadocdt = g_today
+               END IF
+               DISPLAY BY NAME g_master.rtjadocdt]]>
+  </point>
+  <point name="main.background" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_datetime = cl_get_current()
+   LET lc_param.wc = g_argv[1]
+   LET lc_param.rtjadocdt = DATE(g_argv[2])
+   LET ls_js = util.JSON.stringify(lc_param)
+
+   IF lc_param.rtjadocdt IS NOT NULL THEN
+      LET g_bgjob = "Y"
+   ELSE
+      LET g_bgjob = "N"
+   END IF]]>
+  </point>
+  <point name="main.define" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_success LIKE type_t.num5 #150308-00001#1  By Ken 150309]]>
+  </point>
+  <point name="main.exit" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL s_aooi500_drop_temp() RETURNING l_success #150308-00001#1  By Ken 150309
+   ##150427-00001#9 150604s By pomelo add(S)
+   CALL s_lot_auto_drop_tmp('artt610')
+   CALL s_aooi390_drop_tmp_table()
+   ##150427-00001#9 150604 By pomelo add(E)]]>
+  </point>
+  <point name="process.count_progress" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      LET li_count = 0
+      SELECT COUNT(rtjbsite) INTO li_count
+        FROM adep220_tmp ]]>
+  </point>
+  <point name="process.define" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_sql         STRING
+   DEFINE l_ooef001     LIKE ooef_t.ooef001
+   DEFINE l_str         STRING
+   DEFINE l_where       STRING]]>
+  </point>
+  <point name="process.exit_dialog" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      LET lc_param.rtjadocdt = g_master.rtjadocdt
+      LET lc_param.wc = g_master.wc]]>
+  </point>
+  <point name="process.pre_process" order="" ver="3" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   #建temp table
+   
+   ##################################### 筛选出符合关帐日期的营运组织
+   IF NOT cl_null(lc_param.wc) THEN
+      LET l_str = cl_replace_str(lc_param.wc,"rtjasite","ooef001")
+   END IF
+   
+   CALL s_aooi500_sql_where(g_prog,'rtjasite') RETURNING l_where #150526
+   
+   LET l_sql  = "SELECT ooef001 FROM ooef_t WHERE ooefent = '",g_enterprise,"' AND ",l_str
+   PREPARE sel_ooef FROM l_sql
+   DECLARE cur_ooef CURSOR FOR sel_ooef
+   LET l_str = ''
+   CALL cl_err_collect_init()
+   FOREACH cur_ooef INTO l_ooef001
+      IF NOT s_settledate_chk(l_ooef001,lc_param.rtjadocdt) THEN
+         CONTINUE FOREACH
+      END IF
+      IF cl_null(l_str) THEN
+         LET l_str = "'",l_ooef001,"'"
+      ELSE
+         LET l_str = l_str,",'",l_ooef001,"'"
+      END IF     
+   END FOREACH
+   CALL cl_err_collect_show()  
+   IF NOT cl_null(l_str) THEN
+      LET lc_param.wc = " rtjasite IN (",l_str,")" 
+   END IF    
+   #####################################
+   
+   
+   CALL adep220_create_temp()
+   #塞入組織
+ #150525 s983961 mark---s
+ # LET g_sql = "INSERT INTO adep220_ooed004_tmp ",
+ #             "SELECT DISTINCT ooed004 ",
+ #             "  FROM ooed_t ",
+ #             " WHERE     ooedent = '",g_enterprise,"'",
+ #             "       AND ooed001 = '2' ",
+ #             "       AND ooed006 <= '",g_today,"'",
+ #             "       AND (ooed007 >= '",g_today,"' OR ooed007 IS NULL) ",
+ #             "       AND ooed004 IN ",
+ #             "              (    SELECT ooed004 ",
+ #             "                     FROM ooed_t ",
+ #             "               START WITH     ooed005 = '",g_site,"'",
+ #             "                          AND ooed001 = '2' ",
+ #             "                          AND ooed006 <= '",g_today,"'",
+ #             "                          AND (ooed007 >= '",g_today,"' OR ooed007 IS NULL) ",
+ #             "               CONNECT BY NOCYCLE     PRIOR ooed004 = ooed005 ",
+ #             "                                  AND ooed001 = '2' ",
+ #             "                                  AND ooed006 <= '",g_today,"'",
+ #             "                                  AND (ooed007 >= '",g_today,"' OR ooed007 IS NULL) ",
+ #             "               UNION ",
+ #             "               SELECT ooed004 ",
+ #             "                 FROM ooed_t ",
+ #             "                WHERE ooed004 = '",g_site,"') "
+ #PREPARE adep220_p2 FROM g_sql           
+ #EXECUTE adep220_p2
+ #150525 s983961 mark---e  
+   #塞資料
+   LET g_sql = "INSERT INTO adep220_tmp ",
+               "SELECT rtjbent,rtjbsite,rtjbunit,rtjborga,rtjadocdt,",
+               #ken---modify---S 150108-00008#1 rtjb005改為COALESCE(rtjb005,' ')
+               #"       rtjb004,rtjb005,rtjb012,rtjb013,rtjb014,rtjb015,",
+               "       rtjb004,COALESCE(rtjb005,' '),rtjb012,rtjb013,rtjb014,rtjb015,",               
+               #ken---modify---E
+               "       rtjb017,rtjb018,rtjb021,rtjb025,rtjb026,rtjb027,rtjb032,",   #150616-00044#1 15/06/17 s983961---add(rtjb032)
+               "       rtjb010,rtjb022,rtjb008,rtjb020",   #150623-00021#1 15/06/24 s983961--add 沒有標準售價rtjb008 所以帶不出 總銷貨金額
+               "  FROM rtjb_t, rtja_t ",
+               " WHERE rtjbent = rtjaent ",
+               "   AND rtjbdocno = rtjadocno ",
+               "   AND rtjastus <> 'X' ",
+               "   AND rtja032 <> '1' ",
+               "   AND rtja006 IS NULL ",
+#150525 s983961 mark               "   AND EXISTS (SELECT ooed004 ",
+#150525 s983961 mark               "                 FROM adep220_ooed004_tmp ",
+#150525 s983961 mark               "                WHERE ooed004 = rtjasite) ",
+               "   AND rtjadocdt = '",lc_param.rtjadocdt,"'",
+               "   AND rtjaent = '",g_enterprise,"'",
+               "   AND ",lc_param.wc
+               ,"  AND ",l_where   #150525 s983961 add
+
+   PREPARE adep220_p1 FROM g_sql           
+   EXECUTE adep220_p1
+   
+   IF SQLCA.SQLcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "ins temp"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+  
+      RETURN            
+   END IF
+   CREATE INDEX adep220_tmp_01 on adep220_tmp(rtjadocdt,rtjbsite)            
+               
+   LET g_sql = "SELECT rtjbent,rtjbsite,rtjbunit,rtjborga,rtjadocdt,",
+               "       rtjb004,rtjb005,SUM(rtjb012),rtjb013,SUM(rtjb014),rtjb015,",
+               "       SUM(rtjb017),rtjb018,SUM(rtjb021),rtjb025,rtjb026,rtjb027,rtjb032,",   #150616-00021#1 150616 s983961---add INTO rtin_t語法錯誤 補 rtjb032
+               "       rtjb010,SUM(rtjb022),rtjb008,SUM(rtjb020)", #150623-00021#1 15/06/24 s983961--add  
+               "  FROM adep220_tmp ",
+               " GROUP BY rtjbent,rtjbsite,rtjbunit,rtjborga,rtjadocdt,",
+               "          rtjb004,rtjb005,rtjb013,rtjb015,",  
+               "          rtjb018,rtjb025,rtjb026,rtjb027,rtjb032,",  #150616-00021#1 150616 s983961---add INTO rtin_t語法錯誤 補 rtjb032
+               "          rtjb010,rtjb008", #150623-00021#1 15/06/24 s983961--add 
+               " ORDER BY rtjadocdt,rtjbsite"
+               
+   DECLARE adep220_cl2 CURSOR FROM g_sql   
+   #回填過帳日
+   LET g_sql = "UPDATE rtja_t ",
+               "   SET rtja006 = ? ",
+               " WHERE rtjastus <> 'X' ",
+               "   AND rtja032 <> '1' ",
+               "   AND rtja006 IS NULL ",
+#150525 s983961 mark    "   AND EXISTS (SELECT ooed004 ",
+#150525 s983961 mark    "                 FROM adep220_ooed004_tmp ",
+#150525 s983961 mark    "                WHERE ooed004 = rtjasite) ",
+               "   AND rtjadocdt = '",lc_param.rtjadocdt,"'",
+               "   AND rtjaent = '",g_enterprise,"'",
+               "   AND ",lc_param.wc
+               ,"  AND ",l_where   #150525 s983961 add
+   PREPARE adep220_p FROM g_sql]]>
+  </point>
+  <point name="process.process" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL adep220_ins_table()]]>
+  </point>
+  <point name="transfer.argv.define" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET la_cmdrun.param[1] = la_param.wc
+   LET la_cmdrun.param[2] = la_param.rtjadocdt]]>
+  </point>
+  <point name="ui_dialog.before_dialog3" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            DISPLAY g_site TO rtjasite
+            LET g_master.rtjadocdt = g_today]]>
+  </point>
+  <point name="ui_dialog.define" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_success LIKE type_t.num5]]>
+  </point>
+  <point name="ui_dialog.more_construct" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="ui_dialog.more_displayarray" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="ui_dialog.more_input" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <section id="adep220.description" ver="75" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:3,PR版次:3) Build-000339
+#+ 
+#+ Filename...: adep220
+#+ Description: 門店庫存日結批次處理作業
+#+ Creator....: 02748(2014-03-24 09:13:06)
+#+ Modifier...: 06137(2015-03-04 09:34:14) -SD/PR-
+]]>
+  </section>
+  <section id="adep220.get_buffer" ver="6" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION adep220_get_buffer(p_dialog)
+   DEFINE p_dialog   ui.DIALOG
+   
+   LET g_master.rtjadocdt = p_dialog.getFieldBuffer('rtjadocdt')
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理
+   {<point name="get_buffer.others"/>}
+   #end add-point
+END FUNCTION
+]]>
+  </section>
+  <section id="adep220.global" ver="16" status="" src="s" readonly="">
+    <![CDATA[#應用 p01 樣板自動產生(Version:10)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       rtjasite LIKE type_t.chr10, 
+   rtjadocdt LIKE type_t.dat, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="adep220.init" ver="8" status="" src="s" readonly="">
+    <![CDATA[#+ 初始化作業
+PRIVATE FUNCTION adep220_init()
+   #add-point:init段define 
+   {<point name="init.define" edit="s"/>}
+   #end add-point
+   #add-point:init段define (客製用)
+   {<point name="init.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="adep220.main" ver="7" status="" src="s" readonly="">
+    <![CDATA[MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define 
+   {<point name="main.define" edit="s"/>}
+   #end add-point 
+   #add-point:main段define (客製用)
+   {<point name="main.define_customerization" edit="c"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("ade","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+      CALL adep220_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_adep220 WITH FORM cl_ap_formpath("ade",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL adep220_init()
+ 
+      #進入選單 Menu (="N")
+      CALL adep220_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_adep220
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+  </section>
+  <section id="adep220.msgcentre_notify" ver="1" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION adep220_msgcentre_notify()
+ 
+   DEFINE lc_state LIKE type_t.chr5
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知
+   {<point name="msg_centre.process"/>}
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="adep220.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="adep220.process" ver="6" status="" src="s" readonly="">
+    <![CDATA[#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION adep220_process(ls_js)
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define 
+   {<point name="process.define" edit="s"/>}
+   #end add-point
+   #add-point:process段define (客製用)
+   {<point name="process.define_customerization" edit="c"/>}
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE adep220_process_cs CURSOR FROM ls_sql
+#  FOREACH adep220_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL adep220_msgcentre_notify()
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="adep220.transfer_argv" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION adep220_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define 
+   {<point name="transfer_agrv.define" edit="s"/>}
+   #end add-point
+   #add-point:transfer_agrv段define (客製用)
+   {<point name="transfer_agrv.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+  </section>
+  <section id="adep220.ui_dialog" ver="28" status="" src="s" readonly="">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION adep220_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define 
+   {<point name="ui_dialog.define" edit="s"/>}
+   #end add-point
+   #add-point:ui_dialog段define (客製用)
+   {<point name="ui_dialog.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2
+      {<point name="ui_dialog.before_dialog2"/>}
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #應用 a57 樣板自動產生(Version:2)
+         INPUT BY NAME g_master.rtjadocdt 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前
+               {<point name="input.m.before_input"/>}
+               #end add-point
+         
+                     #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtjadocdt
+            #add-point:BEFORE FIELD rtjadocdt
+            {<point name="input.b.rtjadocdt" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtjadocdt
+            
+            #add-point:AFTER FIELD rtjadocdt
+            {<point name="input.a.rtjadocdt" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtjadocdt
+            #add-point:ON CHANGE rtjadocdt
+            {<point name="input.g.rtjadocdt" />}
+            #END add-point 
+ 
+ 
+                     #Ctrlp:input.c.rtjadocdt
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtjadocdt
+            #add-point:ON ACTION controlp INFIELD rtjadocdt
+            {<point name="input.c.rtjadocdt" />}
+            #END add-point
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後
+               {<point name="input.m.after_input"/>}
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...)
+            {<point name="input.other"/>}
+            #end add-point
+         END INPUT
+ 
+ 
+         
+         #應用 a58 樣板自動產生(Version:2)
+         CONSTRUCT BY NAME g_master.wc ON rtjasite
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct
+               {<point name="cs.head.before_construct"/>}
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #Ctrlp:construct.c.rtjasite
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtjasite
+            #add-point:ON ACTION controlp INFIELD rtjasite
+            {<point name="construct.c.rtjasite" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtjasite
+            #add-point:BEFORE FIELD rtjasite
+            {<point name="construct.b.rtjasite" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtjasite
+            
+            #add-point:AFTER FIELD rtjasite
+            {<point name="construct.a.rtjasite" />}
+            #END add-point
+            
+ 
+ 
+            
+            #add-point:其他管控
+            {<point name="cs.other"/>}
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+      
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL adep220_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog
+            {<point name="ui_dialog.before_dialog3"/>}
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear
+         {<point name="ui_dialog.before_qbeclear" mark="Y"/>}
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear
+            {<point name="ui_dialog.qbeclear"/>}
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL adep220_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL adep220_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = adep220_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule
+         {<point name="process.after_schedule"/>}
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axrq332" std_prog="axrq332" erpver="1.0" ver="1" module="AXR" type="M" booking="Y" designer_ver="1.0" class="q" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="Q" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="datainfo,insert,output,query"/>
+  <table ver="1" cite_std="N">
+    <tbl name="isaf_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="xrca_t" main="N" head="N" pk="xrcaent,xrcald,xrcadocno" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 發票應收查詢作業 
+標準作業功能：單選/單選取消/多選/多選取消/新增/報表/詳細資料/查詢/篩選/條件查詢/條件儲存/說明/離開/重新整理
+作業類型：查詢作業
+輸入模式：列表模式-Q001_00
+作業資料來源(Detail)：
+ 資料來源表：isaf_t(發票主檔) 
+
+補充說明：應收單對應發票檔型態會有 一對多, 多對一 , 多對多
+
+
+1. QBE 條件加上 isafstus ='Y' 
+
+2.取出發票資料後, 串對應的ＡＸＲ　資料
+  第二單身跟第一單身所在資料連動去串取
+　＃應收單只取法人主帳套
+　發票檔記錄的應收單號有的在單身有的在單頭
+
+　if 發票資料若為雜項發票時,應收單號記錄在 isaf035,因為沒有發票來源 isag_t 
+  else 
+     則以 isag009 為單號 key 值
+  end if 
+　且計算出未開立發票未稅額
+  因為有一對多, 多對一, 多對多的情況,
+  故必須計算出本張發票有多少金額是開在該應收單上的,
+  及以應收單的角度來看還有多少已立帳未開發票]]>
+  </all>
+  <field cite_std="N" name="b_isaf001" ver="1" src="s" column="isaf001" table="isaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="9715" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_isaf002" ver="1" src="s" column="isaf002" table="isaf_t" attribute="" type="" req="N" i_zoom="q_pmaa001" c_zoom="q_pmaa001" chk_ref="v_pmaa001_2" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_isaf008" ver="1" src="s" column="isaf008" table="isaf_t" attribute="" type="" req="N" i_zoom="q_isac002" c_zoom="q_isac002" chk_ref="v_isac002_2" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_isaf010" ver="1" src="s" column="isaf010" table="isaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_isaf011" ver="1" src="s" column="isaf011" table="isaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_isaf014" ver="1" src="s" column="isaf014" table="isaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_isaf016" ver="1" src="s" column="isaf016" table="isaf_t" attribute="" type="" req="N" i_zoom="q_oodb002_6" c_zoom="q_oodb002_6" chk_ref="v_oodb002_2" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_isaf018" ver="1" src="s" column="isaf018" table="isaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_isaf036" ver="1" src="s" column="isaf036" table="isaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_isaf103" ver="1" src="s" column="isaf103" table="isaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_isaf104" ver="1" src="s" column="isaf104" table="isaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_isaf105" ver="1" src="s" column="isaf105" table="isaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_isafcomp" ver="1" src="s" column="isafcomp" table="isaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_isafdocno" ver="1" src="s" column="isafdocno" table="isaf_t" attribute="" type="" req="Y" i_zoom="q_ooba002" c_zoom="q_isafdocno" chk_ref="v_ooba002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[超連結到該張發票 ]]>
+  </field>
+  <field cite_std="N" name="isaf_t.isaf001" ver="1" src="s" column="isaf001" table="isaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="9715" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isaf_t.isaf002" ver="1" src="s" column="isaf002" table="isaf_t" attribute="" type="" req="N" i_zoom="q_pmaa001" c_zoom="q_pmaa001" chk_ref="v_pmaa001_2" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isaf_t.isaf004" ver="1" src="s" column="isaf004" table="isaf_t" attribute="" type="" req="N" i_zoom="q_ooef001" c_zoom="q_ooef001" chk_ref="v_ooef001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isaf_t.isaf005" ver="1" src="s" column="isaf005" table="isaf_t" attribute="" type="" req="N" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isaf_t.isaf008" ver="1" src="s" column="isaf008" table="isaf_t" attribute="" type="" req="N" i_zoom="q_isac002" c_zoom="q_isac002" chk_ref="v_isac002_2" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isaf_t.isaf010" ver="1" src="s" column="isaf010" table="isaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isaf_t.isaf011" ver="1" src="s" column="isaf011" table="isaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isaf_t.isaf014" ver="1" src="s" column="isaf014" table="isaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isaf_t.isafdocno" ver="1" src="s" column="isafdocno" table="isaf_t" attribute="" type="" req="N" i_zoom="q_ooba002" c_zoom="q_isafdocno" chk_ref="v_ooba002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isag_t.isag103" ver="1" src="s" column="isag103" table="isag_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sel" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[選擇發票資料後連動帶出應收資料]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrca004" ver="1" src="s" column="xrca004" table="xrca_t" attribute="" type="" req="N" i_zoom="q_pmaa001" c_zoom="q_pmaa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrca030" ver="1" src="s" column="xrca030" table="xrca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrca031" ver="1" src="s" column="xrca031" table="xrca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrca032" ver="1" src="s" column="xrca032" table="xrca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrca100" ver="1" src="s" column="xrca100" table="xrca_t" attribute="" type="" req="N" i_zoom="q_ooai001" c_zoom="q_ooai001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrcadocdt" ver="1" src="s" column="xrcadocdt" table="xrca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrcadocno" ver="1" src="s" column="xrcadocno" table="xrca_t" attribute="" type="" req="Y" i_zoom="q_ooba002_3" c_zoom="q_xrcadocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[超連結串到該單號所屬程式
+以單別串到 oobx004 取出對應的作業編號 
+以查詢方式傳入參數，　xrcald 帳套 , xrcadocno 應收帳款單編號]]>
+  </field>
+  <field cite_std="N" name="xrcald" ver="1" src="s" column="xrcald" table="xrca_t" attribute="" type="" req="Y" i_zoom="q_authorised_ld" c_zoom="q_authorised_ld" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcb_t.xrcb117" ver="1" src="s" column="xrcb117" table="xrcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcb_t.xrcb118" ver="1" src="s" column="xrcb118" table="xrcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_isaf002_desc" src="s" depend_field="b_isaf002" correspon_key="isafent,isaf002" ref_table="pmaal_t" ref_fk="pmaalent,pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="b_isaf008_desc" src="s" depend_field="b_isaf008" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status=""/>
+    <rfield cite_std="N" ver="1" name="b_isaf016_desc" src="s" depend_field="b_isaf016" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status=""/>
+    <rfield cite_std="N" ver="1" name="xrca004_desc" src="s" depend_field="xrca_t.xrca004" correspon_key="xrcaent,xrca004" ref_table="pmaal_t" ref_fk="pmaalent,pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_isaf001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_isaf002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_isaf008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_isaf010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_isaf011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_isaf014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_isaf016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_isaf018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_isaf036" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_isaf103" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_isaf104" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_isaf105" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_isafcomp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_isafdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isaf_t.isaf001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isaf_t.isaf002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isaf_t.isaf004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isaf_t.isaf005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isaf_t.isaf008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isaf_t.isaf010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isaf_t.isaf011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isaf_t.isaf014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isaf_t.isafdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isag_t.isag103" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sel" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrca004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrca030" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrca031" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrca032" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrca100" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrcadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrcadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcald" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcb_t.xrcb117" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcb_t.xrcb118" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="datainfo" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_group" text="發票QBE 條件範圍" lstr=""/>
+    <sfield name="lbl_isaf004" text="業務組織" lstr=""/>
+    <sfield name="lbl_isaf005" text="開票人員" lstr=""/>
+    <sfield name="lbl_isafdocno" text="開票單號" lstr=""/>
+    <sfield name="lbl_isaf001" text="發票來源" lstr=""/>
+    <sfield name="lbl_isaf002" text="發票客戶" lstr=""/>
+    <sfield name="lbl_isaf014" text="發票日期" lstr=""/>
+    <sfield name="lbl_isaf008" text="發票類型" lstr=""/>
+    <sfield name="lbl_isaf010" text="發票代碼" lstr=""/>
+    <sfield name="lbl_isaf011" text="發票號碼" lstr=""/>
+    <sfield name="lbl_page" text="發票資料" lstr=""/>
+    <sfield name="lbl_sel" text="選取項目" lstr=""/>
+    <sfield name="lbl_pmaal004" text="發票客戶" lstr=""/>
+    <sfield name="lbl_b_isaf008_desc" text="發票類型" lstr=""/>
+    <sfield name="lbl_isaf016" text="稅別" lstr=""/>
+    <sfield name="lbl_b_isaf016_desc" text="稅別" lstr=""/>
+    <sfield name="lbl_isaf018" text="稅率" lstr=""/>
+    <sfield name="lbl_isaf103" text="發票原幣未稅金額" lstr=""/>
+    <sfield name="lbl_isaf104" text="發票原幣稅額" lstr=""/>
+    <sfield name="lbl_isaf105" text="發票原幣含稅金額" lstr=""/>
+    <sfield name="lbl_isaf036" text="異動狀態" lstr=""/>
+    <sfield name="lbl_isafcomp" text="法人" lstr=""/>
+    <sfield name="lbl_page1" text="應收資料" lstr=""/>
+    <sfield name="lbl_xrcald" text="帳別" lstr=""/>
+    <sfield name="lbl_xrcadocno" text="應收單號" lstr=""/>
+    <sfield name="lbl_xrcadocdt" text="立帳日期" lstr=""/>
+    <sfield name="lbl_xrca004" text="帳款客戶" lstr=""/>
+    <sfield name="lbl_pmaal004_1" text="帳款客戶" lstr=""/>
+    <sfield name="lbl_xrca100" text="交易幣別" lstr=""/>
+    <sfield name="lbl_xrca030" text="應開發票未稅額" lstr=""/>
+    <sfield name="lbl_xrca031" text="應開發票稅額" lstr=""/>
+    <sfield name="lbl_xrca032" text="應開發票含稅金額" lstr=""/>
+    <sfield name="lbl_isag103" text="本張發票未稅額" lstr=""/>
+    <sfield name="lbl_xrcb117" text="已開發票未稅額" lstr=""/>
+    <sfield name="lbl_xrcb118" text="立帳未開發票未稅額" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="1" cite_std="N" src="s">
+    <widget name="s_detail2" status=""/>
+  </exclude>
+</spec>

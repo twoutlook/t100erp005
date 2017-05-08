@@ -1,0 +1,168 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apjt300" module="apj" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="05423" crtdt="2015-09-10 14:51:01" modid="05423" moddt="2015-10-10 14:43:28" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="專案報工維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pjbysite,pjbysite_desc(chr80),pjbycomp,pjbycomp_desc(chr80),pjby001,pjby002,pjby002_desc(chr80),pjby003,pjby003_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pjbyseq,pjby004,pjby004_desc(chr500),pjby005,pjby005_desc(chr500),pjby006,pjby006_desc(chr500),pjby201,pjbystus,pjby009"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="pjbyseq,pjbyownid,pjbyownid_desc(chr500),pjbyowndp,pjbyowndp_desc(chr500),pjbycrtid,pjbycrtid_desc(chr500),pjbycrtdp,pjbycrtdp_desc(chr500),pjbycrtdt,pjbymodid,pjbymodid_desc(chr500),pjbymoddt"/>
+      <var id="bs_field" value="pjby001,pjby002,pjby002_desc(chr80)" pk="pjby001,pjby002" order=""/>
+      <bs_reference field="pjby002_desc" ref_field="pjby002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apj" filename="apjt300" method="dialog">
+    <section id="input">
+      <input id="head" field="pjbysite,pjbycomp,pjby001,pjby002,pjby003"/>
+      <input id="body" page="1" field="pjbyseq,pjby004,pjby005,pjby006,pjby201,pjbystus,pjby009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pjbysite,pjbycomp,pjby001,pjby002,pjby003"/>
+      <construct id="body" page="1" field="pjbyseq,pjby004,pjby005,pjby006,pjby201,pjbystus,pjby009"/>
+      <construct id="body" page="2" field="pjbyownid,pjbyowndp,pjbycrtid,pjbycrtdp,pjbycrtdt,pjbymodid,pjbymoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pjby001,pjby002"/>
+      <set id="head" type="no_entry" field="pjby001,pjby002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="pjbysite">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+          <reference field="pjbysite_desc" ref_field="pjby_t.pjbysite" map_field="pjbyent,pjbysite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001_14" state="c"/>
+      </column>
+      <column id="pjbysite_desc"/>
+      <column id="pjbycomp">
+        <after>
+          <check chkid="v_ooef001_1" id="isExist"/>
+          <reference field="pjbycomp_desc" ref_field="pjby_t.pjbycomp" map_field="pjbyent,pjbycomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="pjbycomp_desc"/>
+      <column id="pjby001"/>
+      <column id="pjby002">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="pjby002_desc" ref_field="pjby_t.pjby002" map_field="pjby002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pjby002_desc"/>
+      <column id="pjby003">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+          <reference field="pjby003_desc" ref_field="pjby_t.pjby003" map_field="pjbyent,pjby003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="pjby003_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="pjbyseq"/>
+      <column id="pjby004">
+        <after>
+          <check chkid="v_pjba001" id="isExist"/>
+          <reference field="pjby004_desc" ref_field="pjby_t.pjby004" map_field="pjby004" ref_sql="SELECT pjbal003 FROM pjbal_t WHERE pjbalent=$varg_enterprise$var AND pjbal001=? AND pjbal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pjba001" state="i"/>
+        <controlp form="q_pjba001" state="c"/>
+      </column>
+      <column id="pjby004_desc"/>
+      <column id="pjby005">
+        <after>
+          <check chkid="v_pjbb002" id="isExist"/>
+          <reference field="pjby005_desc" ref_field="pjby004,pjby005" map_field="pjby004,pjby005" ref_sql="SELECT pjbbl004 FROM pjbbl_t WHERE pjbblent=$varg_enterprise$var AND pjbbl001=? AND pjbbl002=? AND pjbbl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pjbb002_1" state="i"/>
+        <controlp form="q_pjbb002_1" state="c"/>
+      </column>
+      <column id="pjby005_desc"/>
+      <column id="pjby006">
+        <after>
+          <check chkid="v_pjbm002" id="isExist"/>
+          <reference field="pjby006_desc" ref_field="pjby004,pjby006" map_field="pjby004,pjby006" ref_sql="SELECT pjbml004 FROM pjbml_t WHERE pjbmlent=$varg_enterprise$var AND pjbml001=? AND pjbml002=? AND pjbml003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pjbm002" state="i"/>
+        <controlp form="q_pjbm002" state="c"/>
+      </column>
+      <column id="pjby006_desc"/>
+      <column id="pjby201" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjbystus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pjby009"/>
+    </init>
+    <init id="body" page="2">
+      <column id="pjbyownid">
+        <after>
+          <reference field="pjbyownid_desc" ref_field="pjby_t.pjbyownid" map_field="pjbyownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pjbyownid_desc"/>
+      <column id="pjbyowndp">
+        <after>
+          <reference field="pjbyowndp_desc" ref_field="pjby_t.pjbyowndp" map_field="pjbyowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pjbyowndp_desc"/>
+      <column id="pjbycrtid">
+        <after>
+          <reference field="pjbycrtid_desc" ref_field="pjby_t.pjbycrtid" map_field="pjbycrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pjbycrtid_desc"/>
+      <column id="pjbycrtdp">
+        <after>
+          <reference field="pjbycrtdp_desc" ref_field="pjby_t.pjbycrtdp" map_field="pjbycrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pjbycrtdp_desc"/>
+      <column id="pjbycrtdt"/>
+      <column id="pjbymodid">
+        <after>
+          <reference field="pjbymodid_desc" ref_field="pjby_t.pjbymodid" map_field="pjbymodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pjbymodid_desc"/>
+      <column id="pjbymoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pjby_t" pk="pjby001,pjby002">
+      <sql id="forupd_sql" type="sql" query="SELECT pjbysite,&apos;&apos;,pjbycomp,&apos;&apos;,pjby001,pjby002,&apos;&apos;,pjby003,&apos;&apos; FROM pjby_t WHERE pjbyent= ? AND pjby001=? AND pjby002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pjbysite,&apos;&apos;,pjbycomp,&apos;&apos;,pjby001,pjby002,&apos;&apos;,pjby003,&apos;&apos; FROM pjby_t" order="pjby001,pjby002"/>
+    </head>
+    <body id="pjby_t" page="1,2" linked="" pk="pjbyseq" fk="pjby001,pjby002">
+      <sql id="forupd_sql_detail" query="SELECT pjbyseq,pjby004,&apos;&apos;,pjby005,&apos;&apos;,pjby006,&apos;&apos;,pjby201,pjbystus,pjby009,&apos;&apos;,pjbyownid,&apos;&apos;,pjbyowndp,&apos;&apos;,pjbycrtid,&apos;&apos;,pjbycrtdp,&apos;&apos;,pjbycrtdt,pjbymodid,&apos;&apos;,pjbymoddt FROM pjby_t WHERE pjbyent=? AND pjby001=? AND pjby002=? AND pjbyseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pjbyseq,pjby004,&apos;&apos;,pjby005,&apos;&apos;,pjby006,&apos;&apos;,pjby201,pjbystus,pjby009,&apos;&apos;,pjbyownid,&apos;&apos;,pjbyowndp,&apos;&apos;,pjbycrtid,&apos;&apos;,pjbycrtdp,&apos;&apos;,pjbycrtdt,pjbymodid,&apos;&apos;,pjbymoddt FROM pjby_t WHERE pjbyent= ? AND pjby001=? AND pjby002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,124 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmi110" module="anm" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02298" crtdt="2013-07-01 00:00:00" modid="06821" moddt="2015-07-15 15:05:35" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="銀行節假日表設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="nmac001,nmac001_desc(chr80),nmac005"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmacstus,nmac002,nmac002_desc(chr500),nmac003,nmac003_desc(chr500),nmac004"/>
+      <var id="body" page="2" record="s_detail1_info" page_id="1_info" value="nmac002_s_detail1_info(chr500),nmacmodid,nmacmodid_desc(chr500),nmacmoddt,nmacownid,nmacownid_desc(chr500),nmacowndp,nmacowndp_desc(chr500),nmaccrtid,nmaccrtid_desc(chr500),nmaccrtdp,nmaccrtdp_desc(chr500),nmaccrtdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="holiday_gen"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="holiday_gen"/>
+    </section>
+    <section id="master_input">
+      <action id="holiday_gen"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmi110" method="dialog">
+    <section id="input">
+      <input id="head" field="nmac001,nmac005"/>
+      <input id="body" page="1" field="nmacstus,nmac002,nmac003,nmac004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="nmac001,nmac005"/>
+      <construct id="body" page="1" field="nmacstus,nmac002,nmac003,nmac004"/>
+      <construct id="body" page="2" field="nmacmodid,nmacmoddt,nmacownid,nmacowndp,nmaccrtid,nmaccrtdp,nmaccrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="nmac001,nmac005"/>
+      <set id="head" type="no_entry" field="nmac001,nmac005"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="nmac001">
+        <after>
+          <reference field="nmac001_desc" ref_field="nmac001" map_field="nmac001" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;4&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooal002" state="i"/>
+        <controlp form="q_ooal002" state="c"/>
+      </column>
+      <column id="nmac001_desc"/>
+      <column id="nmac005"/>
+    </init>
+    <init id="body" page="1">
+      <column id="nmacstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="nmac002">
+        <after/>
+      </column>
+      <column id="nmac002_desc"/>
+      <column id="nmac003">
+        <after>
+          <reference field="nmac003_desc" ref_field="nmac003" map_field="nmac003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;6&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="nmac003_desc"/>
+      <column id="nmac004"/>
+    </init>
+    <init id="body" page="2">
+      <column id="nmac002_s_detail1_info"/>
+      <column id="nmacmodid">
+        <after>
+          <reference field="nmacmodid_desc" ref_field="nmac_t.nmacmodid" map_field="nmacmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmacmodid_desc"/>
+      <column id="nmacmoddt"/>
+      <column id="nmacownid">
+        <after>
+          <reference field="nmacownid_desc" ref_field="nmac_t.nmacownid" map_field="nmacownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmacownid_desc"/>
+      <column id="nmacowndp">
+        <after>
+          <reference field="nmacowndp_desc" ref_field="nmac_t.nmacowndp" map_field="nmacowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmacowndp_desc"/>
+      <column id="nmaccrtid">
+        <after>
+          <reference field="nmaccrtid_desc" ref_field="nmac_t.nmaccrtid" map_field="nmaccrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmaccrtid_desc"/>
+      <column id="nmaccrtdp">
+        <after>
+          <reference field="nmaccrtdp_desc" ref_field="nmac_t.nmaccrtdp" map_field="nmaccrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmaccrtdp_desc"/>
+      <column id="nmaccrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="nmac_t" pk="nmac001,nmac005">
+      <sql id="forupd_sql" type="sql" query="SELECT nmac001,&apos;&apos;,nmac005 FROM nmac_t WHERE nmacent= ? AND nmac001=? AND nmac005=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT nmac001,&apos;&apos;,nmac005 FROM nmac_t" order="nmac001,nmac005"/>
+    </head>
+    <body id="nmac_t" page="1,2" linked="" pk="nmac002" fk="nmac001,nmac005">
+      <sql id="forupd_sql_detail" query="SELECT nmacstus,nmac002,&apos;&apos;,nmac003,&apos;&apos;,nmac004,&apos;&apos;,nmacmodid,&apos;&apos;,nmacmoddt,nmacownid,&apos;&apos;,nmacowndp,&apos;&apos;,nmaccrtid,&apos;&apos;,nmaccrtdp,&apos;&apos;,nmaccrtdt FROM nmac_t WHERE nmacent=? AND nmac001=? AND nmac005=? AND nmac002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmacstus,nmac002,&apos;&apos;,nmac003,&apos;&apos;,nmac004,&apos;&apos;,nmacmodid,&apos;&apos;,nmacmoddt,nmacownid,&apos;&apos;,nmacowndp,&apos;&apos;,nmaccrtid,&apos;&apos;,nmaccrtdp,&apos;&apos;,nmaccrtdt FROM nmac_t WHERE nmacent= ? AND nmac001=? AND nmac005=?"/>
+    </body>
+  </dataset>
+</assembly>
+

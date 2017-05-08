@@ -1,0 +1,1072 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aapt510_03.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2016-03-04 10:37:31), PR版次:0002(2016-04-27 10:45:16)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000030
+#+ Filename...: aapt510_03
+#+ Description: 自備款轉預付購料
+#+ Creator....: 03080(2016-03-04 10:35:55)
+#+ Modifier...: 03080 -SD/PR- 07900
+ 
+{</section>}
+ 
+{<section id="aapt510_03.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#160321-00016#22   2016/03/24  By Jessy         修正azzi920重複定義之錯誤訊息
+#160318-00025#25   2016/04/27  BY 07900         校验代码重复错误讯息的修改
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+IMPORT util
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_apda_m        RECORD
+       apdadocno LIKE apda_t.apdadocno, 
+   apdadocdt LIKE type_t.dat, 
+   apda003 LIKE apda_t.apda003, 
+   apda003_desc LIKE type_t.chr80, 
+   l_apde008 LIKE type_t.chr20, 
+   l_apcadocno LIKE type_t.chr20, 
+   l_apde011 LIKE type_t.chr10, 
+   l_apde012 LIKE type_t.chr10, 
+   apdald LIKE apda_t.apdald
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_apgacomp   LIKE apga_t.apgacomp
+DEFINE g_apgadocno  LIKE apga_t.apgadocno
+DEFINE g_apga100    LIKE apga_t.apga100
+DEFINE g_apga101    LIKE apga_t.apga101
+DEFINE g_apga104    LIKE apga_t.apga104
+DEFINE g_apga003    LIKE apga_t.apga003
+DEFINE g_apga004    LIKE apga_t.apga004
+DEFINE g_apga005    LIKE apga_t.apga005
+DEFINE g_apga007    LIKE apga_t.apga007
+DEFINE g_apga108    LIKE apga_t.apga108
+#end add-point
+ 
+DEFINE g_apda_m        type_g_apda_m
+ 
+   DEFINE g_apdadocno_t LIKE apda_t.apdadocno
+DEFINE g_apdald_t LIKE apda_t.apdald
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aapt510_03.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aapt510_03(--)
+   #add-point:input段變數傳入
+   p_lsjs,p_comp,p_docno,p_apga004,p_apga100,p_apga101
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE p_comp          LIKE apga_t.apgacomp    #NO USE
+   DEFINE p_docno         LIKE apga_t.apgadocno   #NO USE
+   DEFINE p_apga004       LIKE apga_t.apga004     #NO USE
+   DEFINE p_apga100       LIKE apga_t.apga100     #NO USE
+   DEFINE p_apga101       LIKE apga_t.apga101     #NO USE
+   DEFINE p_apga104       LIKE apga_t.apga104     #NO USE
+   DEFINE p_apga003       LIKE apga_t.apga003     #NO USE
+   DEFINE p_apga005       LIKE apga_t.apga005     #NO USE
+   DEFINE p_apga007       LIKE apga_t.apga007     #NO USE
+   DEFINE p_lsjs          STRING                  #備用入口  
+   DEFINE lc_param        RECORD
+                          comp          LIKE apga_t.apgacomp,    
+                          docno         LIKE apga_t.apgadocno,   
+                          apga004       LIKE apga_t.apga004,   
+                          apga100       LIKE apga_t.apga100,     
+                          apga101       LIKE apga_t.apga101,     
+                          apga104       LIKE apga_t.apga104, 
+                          apga108       LIKE apga_t.apga108,                          
+                          apga003       LIKE apga_t.apga003,     
+                          apga005       LIKE apga_t.apga005,     
+                          apga007       LIKE apga_t.apga007                              
+                          END RECORD
+   DEFINE l_glaa024       LIKE glaa_t.glaa024
+   DEFINE r_success       LIKE type_t.num5
+   DEFINE l_glaa005       LIKE glaa_t.glaa005
+   DEFINE l_apdald        LIKE apda_t.apdald
+   DEFINE l_apdadocno     LIKE apda_t.apdadocno
+   DEFINE r_docnoself     LIKE apca_t.apcadocno    #自備款待扺
+   DEFINE r_docnobail     LIKE apca_t.apcadocno    #保證金待扺
+   DEFINE l_chr           LIKE type_t.chr1
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aapt510_03 WITH FORM cl_ap_formpath("aap","aapt510_03")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   LET r_success = TRUE
+   LET r_docnoself = ''
+   LET r_docnobail = ''
+   
+   CALL util.JSON.parse(p_lsjs,lc_param)
+   
+   LET g_apgacomp  = lc_param.comp
+   LET g_apgadocno = lc_param.docno
+   LET g_apga004   = lc_param.apga004
+   LET g_apga100   = lc_param.apga100
+   LET g_apga101   = lc_param.apga101
+   LET g_apga104   = lc_param.apga104
+   LET g_apga108   = lc_param.apga108
+   LET g_apga003   = lc_param.apga003
+   LET g_apga005   = lc_param.apga005
+   LET g_apga007   = lc_param.apga007
+   
+   SELECT glaald INTO g_apda_m.apdald FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaacomp = g_apgacomp
+      AND glaa014 = 'Y'
+      
+   LET g_apda_m.apdadocdt = g_today
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_apda_m.apdadocno,g_apda_m.apdadocdt,g_apda_m.apda003,g_apda_m.l_apde008,g_apda_m.l_apcadocno, 
+          g_apda_m.l_apde011,g_apda_m.l_apde012,g_apda_m.apdald ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apdadocno
+            #add-point:BEFORE FIELD apdadocno name="input.b.apdadocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apdadocno
+            
+            #add-point:AFTER FIELD apdadocno name="input.a.apdadocno"
+            #因系統允許登打缺號的完整單號故要檢查核理性
+            IF NOT cl_null(g_apda_m.apdald) AND NOT cl_null(g_apda_m.apdadocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_apda_m.apdald != g_apdald_t  OR g_apda_m.apdadocno != g_apdadocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM apda_t WHERE "||"apdaent = '" ||g_enterprise|| "' AND "||"apdald = '"||g_apda_m.apdald ||"' AND "|| "apdadocno = '"||g_apda_m.apdadocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            
+            IF NOT cl_null(g_apda_m.apdadocno)THEN
+               IF NOT s_aooi200_fin_chk_docno(g_apda_m.apdald,'','',g_apda_m.apdadocno,g_apda_m.apdadocdt,'aapt420') THEN
+                  LET g_apda_m.apdadocno = ''
+                  NEXT FIELD CURRENT
+               END IF
+               
+               CALL s_fin_get_doc_para(g_apda_m.apdald,p_comp,g_apda_m.apdadocno,'D-FIN-0030') RETURNING l_chr
+               IF l_chr = 'N' THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'aap-00532'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_apda_m.apdadocno = ''
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apdadocno
+            #add-point:ON CHANGE apdadocno name="input.g.apdadocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apdadocdt
+            #add-point:BEFORE FIELD apdadocdt name="input.b.apdadocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apdadocdt
+            
+            #add-point:AFTER FIELD apdadocdt name="input.a.apdadocdt"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apdadocdt
+            #add-point:ON CHANGE apdadocdt name="input.g.apdadocdt"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apda003
+            
+            #add-point:AFTER FIELD apda003 name="input.a.apda003"
+            IF NOT cl_null(g_apda_m.apda003)THEN
+               CALL s_voucher_glaq013_chk(g_apda_m.apda003)
+               IF NOT cl_null(g_errno)THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = ''
+                  #160321-00016#22 --s add
+                  LET g_errparam.replace[1] = 'aooi130'
+                  LET g_errparam.replace[2] = cl_get_progname('aooi130',g_lang,"2")
+                  LET g_errparam.exeprog = 'aooi130'
+                  #160321-00016#22 --e add
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                
+                  LET g_apda_m.apda003 = ''
+                  LET g_apda_m.apda003_desc =''
+                  DISPLAY BY NAME g_apda_m.apda003_desc
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apda003
+            #add-point:BEFORE FIELD apda003 name="input.b.apda003"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apda003
+            #add-point:ON CHANGE apda003 name="input.g.apda003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apde008
+            #add-point:BEFORE FIELD l_apde008 name="input.b.l_apde008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apde008
+            
+            #add-point:AFTER FIELD l_apde008 name="input.a.l_apde008"
+            IF NOT cl_null(g_apda_m.l_apde008) THEN
+               INITIALIZE g_chkparam.* TO NULL               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_apda_m.l_apde008
+               LET g_chkparam.arg2 = g_apgacomp
+               LET g_chkparam.arg3 = '5'
+               #160318-00025#25  by 07900 --add-str
+               LET g_errshow = TRUE #是否開窗                   
+               LET g_chkparam.err_str[1] ="ade-00010:sub-01302|anmi120|",cl_get_progname("anmi120",g_lang,"2"),"|:EXEPROGanmi120"
+               #160318-00025#25  by 07900 --add-end
+               IF cl_chk_exist("v_nmas002_4") THEN
+                  #檢查成功時後續處理
+                   IF NOT s_anmi120_nmll002_chk(g_apda_m.l_apde008,g_user) THEN
+                      INITIALIZE g_errparam TO NULL 
+                      LET g_errparam.extend = g_apda_m.l_apde008
+                      LET g_errparam.code   = 'anm-00574' 
+                      LET g_errparam.popup  = TRUE 
+                      CALL cl_err()
+                      LET g_apda_m.l_apde008 = ''
+                      DISPLAY BY NAME g_apda_m.l_apde008
+                      NEXT FIELD CURRENT
+                   END IF 
+               ELSE
+                  LET g_apda_m.l_apde008 = ''
+                  #檢查失敗時後續處理
+                  DISPLAY BY NAME g_apda_m.l_apde008
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apde008
+            #add-point:ON CHANGE l_apde008 name="input.g.l_apde008"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apcadocno
+            #add-point:BEFORE FIELD l_apcadocno name="input.b.l_apcadocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apcadocno
+            
+            #add-point:AFTER FIELD l_apcadocno name="input.a.l_apcadocno"
+            #因系統允許登打缺號的完整單號故要檢查核理性
+            IF NOT cl_null(g_apda_m.apdald) AND NOT cl_null(g_apda_m.l_apcadocno) THEN 
+               IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM apca_t WHERE "||"apcaent = '" ||g_enterprise|| "' AND "||"apcald = '"||g_apda_m.apdald ||"' AND "|| "apcadocno = '"||g_apda_m.l_apcadocno ||"'",'std-00004',0) THEN 
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            
+            IF NOT cl_null(g_apda_m.apdadocno)THEN
+               IF NOT s_aooi200_fin_chk_docno(g_apda_m.apdald,'','',g_apda_m.l_apcadocno,g_apda_m.apdadocdt,'aapq343') THEN
+                  LET g_apda_m.l_apcadocno = ''
+                  NEXT FIELD CURRENT
+               END IF
+            END IF            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apcadocno
+            #add-point:ON CHANGE l_apcadocno name="input.g.l_apcadocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apde011
+            #add-point:BEFORE FIELD l_apde011 name="input.b.l_apde011"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apde011
+            
+            #add-point:AFTER FIELD l_apde011 name="input.a.l_apde011"
+            IF NOT cl_null(g_apda_m.l_apde011) THEN
+              
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_apda_m.l_apde011
+               LET g_chkparam.arg2 = 2
+               LET g_errshow = TRUE
+                
+               IF NOT cl_chk_exist("v_nmaj001_1") THEN
+                  LET l_glaa005 = NULL
+                  SELECT glaa005 INTO l_glaa005 FROM glaa_t
+                   WHERE glaaent = g_enterprise
+                     AND glaacomp = g_apgacomp
+                     AND glaa014  = 'Y'
+                  #檢查失敗時後續處理
+                  LET g_apda_m.l_apde011 = ''
+                  LET g_apda_m.l_apde012 = ''
+                  DISPLAY BY NAME g_apda_m.l_apde011,g_apda_m.l_apde012
+                  NEXT FIELD CURRENT
+               END IF
+
+               LET l_glaa005 = NULL
+               SELECT glaa005 INTO l_glaa005 FROM glaa_t
+                WHERE glaaent = g_enterprise
+                  AND glaacomp = g_apgacomp
+                  AND glaa014 = 'Y'
+               LET g_apda_m.l_apde012 = s_anm_get_nmad003(l_glaa005,g_apda_m.l_apde011)
+               DISPLAY BY NAME g_apda_m.l_apde012
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apde011
+            #add-point:ON CHANGE l_apde011 name="input.g.l_apde011"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apde012
+            #add-point:BEFORE FIELD l_apde012 name="input.b.l_apde012"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apde012
+            
+            #add-point:AFTER FIELD l_apde012 name="input.a.l_apde012"
+            LET l_glaa005 = NULL
+            SELECT glaa005 INTO l_glaa005 FROM glaa_t
+             WHERE glaaent = g_enterprise
+               AND glaacomp = g_apgacomp
+               AND glaa014 = 'Y'
+            IF NOT cl_null(g_apda_m.l_apde012) THEN             
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_apda_m.l_apde012
+               LET g_chkparam.arg2 = l_glaa005
+               LET g_errshow = TRUE
+
+               IF NOT cl_chk_exist("v_nmai002") THEN
+                  LET g_apda_m.l_apde012 = ''
+                  NEXT FIELD CURRENT
+               END IF
+            END IF      
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apde012
+            #add-point:ON CHANGE l_apde012 name="input.g.l_apde012"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apdald
+            #add-point:BEFORE FIELD apdald name="input.b.apdald"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apdald
+            
+            #add-point:AFTER FIELD apdald name="input.a.apdald"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apdald
+            #add-point:ON CHANGE apdald name="input.g.apdald"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.apdadocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apdadocno
+            #add-point:ON ACTION controlp INFIELD apdadocno name="input.c.apdadocno"
+            SELECT glaa024 INTO l_glaa024 FROM glaa_t
+             WHERE glaaent = g_enterprise
+               AND glaacomp = g_apgacomp
+               AND glaa014 = 'Y'
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_apda_m.apdadocno            
+            LET g_qryparam.arg1 = l_glaa024
+            LET g_qryparam.arg2 = 'aapt420'
+            LET g_qryparam.where = "      EXISTS (SELECT 1 FROM ooac_t ",
+                                   "               WHERE ooacent = oobaent ",
+                                   "                 AND ooac001 = '",l_glaa024,"' ",
+                                   "                 AND ooac002 = ooba002 ",
+                                   "                 AND ooac003 = 'D-FIN-5001' ",
+                                   "                 AND ooac004 ='Y') ",
+                                   " AND EXISTS (SELECT 1 FROM ooac_t ",
+                                   "               WHERE ooacent = oobaent ",
+                                   "                 AND ooac001 = '",l_glaa024,"' ",
+                                   "                 AND ooac002 = ooba002 ",
+                                   "                 AND ooac003 = 'D-FIN-0030' ",
+                                   "                 AND ooac004 ='Y') "
+            CALL q_ooba002_1()                              
+            LET g_apda_m.apdadocno = g_qryparam.return1          
+            NEXT FIELD apdadocno                         
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.apdadocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apdadocdt
+            #add-point:ON ACTION controlp INFIELD apdadocdt name="input.c.apdadocdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.apda003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apda003
+            #add-point:ON ACTION controlp INFIELD apda003 name="input.c.apda003"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_apda_m.apda003      
+            CALL q_ooag001()                                
+            LET g_apda_m.apda003 = g_qryparam.return1       
+            DISPLAY BY NAME g_apda_m.apda003
+            NEXT FIELD apda003
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.l_apde008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apde008
+            #add-point:ON ACTION controlp INFIELD l_apde008 name="input.c.l_apde008"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE             
+            LET g_qryparam.default1 = g_apda_m.l_apde008             #給予default值
+            LET g_qryparam.where =  " nmaa002 IN (SELECT ooef001 FROM ooef_t WHERE ooefent = '",g_enterprise,"'",
+                                    "              AND ooef017 = '",g_apgacomp,"')",
+                                    " AND EXISTS(SELECT 1 FROM nmag_t WHERE nmag001 = nmaa003 ",
+                                    " AND nmag002 IN ('1','5'))",
+                                    " AND nmas002 IN (SELECT nmll001 FROM nmll_t WHERE nmllent=",g_enterprise, " AND nmll002 = '",g_user,"')",
+                                    " AND nmas003 = '",g_apga100,"' "
+            CALL q_nmas_01()                                #呼叫開窗
+            LET g_apda_m.l_apde008 = g_qryparam.return1
+            DISPLAY BY NAME g_apda_m.l_apde008
+            NEXT FIELD l_apde008
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.l_apcadocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apcadocno
+            #add-point:ON ACTION controlp INFIELD l_apcadocno name="input.c.l_apcadocno"
+            SELECT glaa024 INTO l_glaa024 FROM glaa_t
+             WHERE glaaent = g_enterprise
+               AND glaacomp = g_apgacomp
+               AND glaa014 = 'Y'
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_apda_m.l_apcadocno            
+            LET g_qryparam.arg1 = l_glaa024
+            LET g_qryparam.arg2 = 'aapq343'
+            CALL q_ooba002_1()                              
+            LET g_apda_m.l_apcadocno = g_qryparam.return1          
+            NEXT FIELD l_apcadocno              
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.l_apde011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apde011
+            #add-point:ON ACTION controlp INFIELD l_apde011 name="input.c.l_apde011"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " nmaj002 = '2' "   #提出
+            LET g_qryparam.default1 = g_apda_m.l_apde011
+            CALL q_nmaj001()                                       
+            LET g_apda_m.l_apde011  = g_qryparam.return1
+
+            LET l_glaa005 = NULL
+            SELECT glaa005 INTO l_glaa005 FROM glaa_t
+             WHERE glaaent  = g_enterprise
+               AND glaacomp = g_apgacomp
+               AND glaa014  = 'Y'
+            LET g_apda_m.l_apde012   = s_anm_get_nmad003(l_glaa005,g_apda_m.l_apde011)
+            DISPLAY BY NAME g_apda_m.l_apde011 ,g_apda_m.l_apde012
+            NEXT FIELD l_apde011
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.l_apde012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apde012
+            #add-point:ON ACTION controlp INFIELD l_apde012 name="input.c.l_apde012"
+            LET l_glaa005 = NULL
+            SELECT glaa005 INTO l_glaa005 FROM glaa_t
+             WHERE glaaent  = g_enterprise
+               AND glaacomp = g_apgacomp
+               AND glaa014  = 'Y'
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " nmai001 = '",l_glaa005,"' "
+            LET g_qryparam.default1 = g_apda_m.l_apde012
+            CALL q_nmai002()                                  #呼叫開窗
+            LET g_apda_m.l_apde012 = g_qryparam.return1
+            DISPLAY BY NAME g_apda_m.l_apde012
+            NEXT FIELD l_apde012
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.apdald
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apdald
+            #add-point:ON ACTION controlp INFIELD apdald name="input.c.apdald"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aapt510_03 
+   
+   #add-point:input段after input 
+   IF INT_FLAG THEN
+      LET r_success = FALSE
+   ELSE
+      CALL aapt510_03_ins_apda() RETURNING g_sub_success,l_apdald,l_apdadocno
+      IF NOT g_sub_success THEN
+         LET r_success = FALSE
+      END IF
+   END IF
+   
+   IF r_success THEN
+      SELECT apde014 INTO r_docnoself FROM apde_t
+       WHERE apdeent = g_enterprise
+         AND apdeld  = l_apdald
+         AND apdedocno = l_apdadocno
+         AND apdeseq = 2
+      SELECT apde014 INTO r_docnobail FROM apde_t
+       WHERE apdeent = g_enterprise
+         AND apdeld  = l_apdald
+         AND apdedocno = l_apdadocno
+         AND apdeseq = 3
+   END IF
+   RETURN r_success,r_docnoself,r_docnobail
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapt510_03.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aapt510_03.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aapt510_03_ins_apda()
+   DEFINE l_apda    RECORD LIKE apda_t.*
+   DEFINE l_prog_t  LIKE type_t.chr100
+   DEFINE l_dummy1  LIKE type_t.chr100
+   DEFINE l_pmab055 LIKE pmab_t.pmab055
+   DEFINE l_apde    RECORD LIKE apde_t.*
+   DEFINE r_success LIKE type_t.num5
+   DEFINE l_sfin3008 LIKE type_t.chr100
+   DEFINE r_apdald   LIKE apda_t.apdald
+   DEFINE r_apdadocno LIKE apda_t.apdadocno
+   DEFINE l_glaa121   LIKE glaa_t.glaa121
+   DEFINE l_glaa016   LIKE glaa_t.glaa016
+   DEFINE l_glaa020   LIKE glaa_t.glaa020
+   DEFINE l_glaa019   LIKE glaa_t.glaa019
+   DEFINE l_glaa015   LIKE glaa_t.glaa015
+   DEFINE l_glaa001   LIKE glaa_t.glaa001
+   DEFINE ls_js       STRING
+   DEFINE lc_param      RECORD
+         type           LIKE type_t.chr1,       #類型
+         apca004        LIKE apca_t.apca004,
+         sfin2009       LIKE type_t.chr1        #汇率基本    
+         END RECORD
+   DEFINE l_chr         LIKE type_t.chr1
+   DEFINE l_slip        LIKE apca_t.apcadocno
+   
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+   LET r_apdald  = ''
+   LET r_apdadocno = ''
+   
+   INITIALIZE l_apda.* TO NULL
+   LET l_apda.apdaent = g_enterprise
+   LET l_apda.apdald  = NULL
+   SELECT glaald INTO l_apda.apdald FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaacomp = g_apgacomp
+      AND glaa014 = 'Y'
+   LET l_apda.apdacomp = g_apgacomp
+   LET l_apda.apdadocdt = g_apda_m.apdadocdt
+   LET l_prog_t = g_prog
+   LET g_prog = 'aapt420'
+   CALL s_aooi200_fin_gen_docno(l_apda.apdald,'','',g_apda_m.apdadocno,l_apda.apdadocdt,g_prog)
+      RETURNING g_sub_success,l_apda.apdadocno
+   IF NOT g_sub_success THEN
+      LET r_success = FALSE
+   END IF
+   LET g_prog = l_prog_t
+   LET l_apda.apdasite = g_apgacomp
+   LET l_apda.apda001  = '45'
+   LET l_apda.apda003  = g_apda_m.apda003
+   LET l_apda.apda004  = g_apga004
+   LET l_apda.apda005  = g_apga004
+   LET l_apda.apda007  = '1'
+   LET l_apda.apda008  = g_apgadocno
+   LET l_apda.apdastus = 'N'
+   LET l_apda.apda104  = 0
+   LET l_apda.apda105  = 0
+   LET l_apda.apda114  = 0
+   LET l_apda.apda115  = 0
+   LET l_apda.apda124  = 0
+   LET l_apda.apda125  = 0
+   LET l_apda.apda134  = 0
+   LET l_apda.apda135  = 0
+   LET l_apda.apdaownid = g_user
+   LET l_apda.apdaowndp = g_dept
+   LET l_apda.apdacrtid = g_user
+   LET l_apda.apdacrtdp = g_dept
+   LET l_apda.apdacrtdt = cl_get_current()
+   LET l_apda.apdamodid = g_user
+   LET l_apda.apdamoddt = cl_get_current()
+   LET l_apda.apdastus = 'N'
+   INSERT INTO apda_t VALUES(l_apda.*)
+   
+   LET l_glaa121 = NULL LET l_glaa016 = NULL
+   LET l_glaa020 = NULL LET l_glaa019 = NULL
+   LET l_glaa015 = NULL
+   SELECT glaa121,glaa016,glaa020 ,
+          glaa015,glaa019
+     INTO l_glaa121,l_glaa016,l_glaa020,
+          l_glaa015,l_glaa019
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald = l_apda.apdald
+   
+   
+   INITIALIZE l_apde.* TO NULL
+   LET l_apde.apdeent   = g_enterprise
+   LET l_apde.apdecomp  = l_apda.apdacomp
+   LET l_apde.apdeld    = l_apda.apdald
+   LET l_apde.apdedocno = l_apda.apdadocno
+   LET l_apde.apdeseq   = 1
+   LET l_apde.apdesite  = l_apda.apdasite
+   LET l_apde.apdeorga  = l_apda.apdasite
+   LET l_apde.apde001   = 'aapt420'
+   LET l_apde.apde002   = '10'
+   LET l_apde.apde006   = '10'
+   LET l_apde.apde008   = g_apda_m.l_apde008
+   LET l_apde.apde009 = 'N'
+   LET l_apde.apde011 = g_apda_m.l_apde011
+   LET l_apde.apde012 = g_apda_m.l_apde012
+   LET l_apde.apde015 = s_fin_get_scc_value('8506',l_apde.apde002,'1')
+   LET l_apde.apde016 = NULL
+   SELECT glab005 INTO l_apde.apde016 FROM glab_t
+    WHERE glabent = g_enterprise
+      AND glabld = l_apde.apdeld
+      AND glab001 = '41'
+      AND glab002 = '8718'
+      AND glab003 = '2'
+   LET l_apde.apde017 = g_apga005
+   LET l_apde.apde018 = NULL
+   SELECT ooag003 INTO l_apde.apde018 FROM ooag_t
+    WHERE ooagent = g_enterprise
+      AND ooag001 = l_apde.apde017
+   #LET l_apde.apde019 =          
+   CALL s_department_get_respon_center(l_apde.apde018,l_apda.apdadocdt)
+              RETURNING g_sub_success,g_errno,l_apde.apde019,l_dummy1
+   LET l_apde.apde028 = '2'
+   LET l_apde.apde032 = g_apga003
+   LET l_apde.apde038 = l_apda.apda005
+   LET l_apde.apde039 = g_apga007
+   SELECT nmabl004 INTO l_apde.apde041 FROM nmabl_t
+    WHERE nmablent = g_enterprise
+      AND nmabl001 = l_apde.apde039
+   LET l_apde.apde100 = g_apga100
+   LET l_apde.apde101 = g_apga101
+   LET l_apde.apde104 = 0 
+   LET l_apde.apde109 = g_apga104 + g_apga108
+   LET l_apde.apde119 = l_apde.apde109 * l_apde.apde101
+   #s_curr_round
+   CALL s_curr_round_ld('1',l_apda.apdald,l_glaa001,l_apde.apde119,2) RETURNING g_sub_success,g_errno,l_apde.apde119
+   LET lc_param.apca004 = l_apda.apda005
+   LET ls_js = util.JSON.stringify(lc_param)
+   CALL s_fin_get_curr_rate(l_apda.apdacomp,l_apda.apdald,l_apda.apdadocdt,l_apde.apde100,ls_js)
+        RETURNING l_apde.apde101,l_apde.apde121,l_apde.apde131
+   #s_curr_round
+   LET l_apde.apde101 = g_apga101
+   LET l_apde.apde120 = l_glaa016
+   
+   IF l_glaa015 = 'Y' THEN
+      LET l_apde.apde129 = l_apde.apde109 * l_apde.apde121
+      CALL s_curr_round_ld('1',l_apda.apdald,l_apde.apde120,l_apde.apde129,2) RETURNING g_sub_success,g_errno,l_apde.apde129
+   END IF
+   
+   LET l_apde.apde130 = l_glaa020
+   IF l_glaa019 = 'Y' THEN
+      LET l_apde.apde139 = l_apde.apde109 * l_apde.apde131
+      CALL s_curr_round_ld('1',l_apda.apdald,l_apde.apde130,l_apde.apde139,2) RETURNING g_sub_success,g_errno,l_apde.apde139
+   END IF
+   INSERT INTO apde_t VALUES(l_apde.*)
+   
+   INITIALIZE l_apde.* TO NULL
+   LET l_apde.apdeent   = g_enterprise
+   LET l_apde.apdecomp  = l_apda.apdacomp
+   LET l_apde.apdeld    = l_apda.apdald
+   LET l_apde.apdedocno = l_apda.apdadocno
+   LET l_apde.apdeseq   = 2
+   LET l_apde.apdesite  = l_apda.apdasite
+   LET l_apde.apdeorga  = l_apda.apdasite
+   LET l_apde.apde001   = 'aapt420'
+   LET l_apde.apde002   = '20'
+   LET l_apde.apde006   = '10'
+   LET l_apde.apde008   = g_apda_m.l_apde008
+   LET l_apde.apde009 = 'N'
+   LET l_apde.apde013 = l_apda.apda005
+   LET l_apde.apde014 = g_apda_m.l_apcadocno
+   LET l_apde.apde015 = s_fin_get_scc_value('8506',l_apde.apde002,'1')
+   LET l_apde.apde016 = NULL
+   
+   LET l_pmab055 = NULL
+   SELECT pmab055 INTO l_pmab055 FROM pmab_t
+    WHERE pmabsite = l_apde.apdeorga
+      AND pmab001 = l_apda.apda004
+      AND pmabent = g_enterprise
+   
+   SELECT glab005 INTO l_apde.apde016 FROM glab_t
+    WHERE glabent = g_enterprise
+      AND glabld = l_apde.apdeld
+      AND glab001 = '13'
+      AND glab002 = l_pmab055
+      AND glab003 = '8504_13'
+   LET l_apde.apde017 = g_apga005
+   LET l_apde.apde018 = NULL
+   SELECT ooag003 INTO l_apde.apde018 FROM ooag_t
+    WHERE ooagent = g_enterprise
+      AND ooag001 = l_apde.apde017
+   #LET l_apde.apde019 =          
+   CALL s_department_get_respon_center(l_apde.apde018,l_apda.apdadocdt)
+              RETURNING g_sub_success,g_errno,l_apde.apde019,l_dummy1
+   LET l_apde.apde028 = '2'
+   LET l_apde.apde032 = g_apga003
+   LET l_apde.apde038 = l_apda.apda005
+   LET l_apde.apde039 = g_apga007
+   SELECT nmabl004 INTO l_apde.apde041 FROM nmabl_t
+    WHERE nmablent = g_enterprise
+      AND nmabl001 = l_apde.apde039
+   LET l_apde.apde100 = g_apga100
+   LET l_apde.apde101 = g_apga101
+   LET l_apde.apde104 = 0 
+   LET l_apde.apde109 = g_apga104
+   LET l_apde.apde119 = l_apde.apde109 * l_apde.apde101
+   #s_curr_round
+   CALL s_curr_round_ld('1',l_apda.apdald,l_glaa001,l_apde.apde119,2) RETURNING g_sub_success,g_errno,l_apde.apde119
+   LET lc_param.apca004 = l_apda.apda005
+   LET ls_js = util.JSON.stringify(lc_param)
+   CALL s_fin_get_curr_rate(l_apda.apdacomp,l_apda.apdald,l_apda.apdadocdt,l_apde.apde100,ls_js)
+        RETURNING l_apde.apde101,l_apde.apde121,l_apde.apde131
+   #s_curr_round
+   LET l_apde.apde101 = g_apga101
+   LET l_apde.apde120 = l_glaa016
+   
+   IF l_glaa015 = 'Y' THEN
+      LET l_apde.apde129 = l_apde.apde109 * l_apde.apde121
+      CALL s_curr_round_ld('1',l_apda.apdald,l_apde.apde120,l_apde.apde129,2) RETURNING g_sub_success,g_errno,l_apde.apde129
+   END IF
+   
+   LET l_apde.apde130 = l_glaa020
+   IF l_glaa019 = 'Y' THEN
+      LET l_apde.apde139 = l_apde.apde109 * l_apde.apde131
+      CALL s_curr_round_ld('1',l_apda.apdald,l_apde.apde130,l_apde.apde139,2) RETURNING g_sub_success,g_errno,l_apde.apde139
+   END IF
+   IF l_apde.apde109 > 0 THEN
+      INSERT INTO apde_t VALUES(l_apde.*)   
+   END IF
+   
+
+   
+   INITIALIZE l_apde.* TO NULL
+   LET l_apde.apdeent   = g_enterprise
+   LET l_apde.apdecomp  = l_apda.apdacomp
+   LET l_apde.apdeld    = l_apda.apdald
+   LET l_apde.apdedocno = l_apda.apdadocno
+   LET l_apde.apdeseq   = 3
+   LET l_apde.apdesite  = l_apda.apdasite
+   LET l_apde.apdeorga  = l_apda.apdasite
+   LET l_apde.apde001   = 'aapt420'
+   LET l_apde.apde002   = '20'
+   LET l_apde.apde006   = '10'
+   LET l_apde.apde008   = g_apda_m.l_apde008
+   LET l_apde.apde009 = 'N'
+   LET l_apde.apde013 = l_apda.apda005
+   LET l_apde.apde014 = g_apda_m.l_apcadocno
+   LET l_apde.apde015 = s_fin_get_scc_value('8506',l_apde.apde002,'1')
+   LET l_apde.apde016 = NULL
+   
+   LET l_pmab055 = NULL
+   SELECT pmab055 INTO l_pmab055  FROM pmab_t
+    WHERE pmabsite = l_apda.apdacomp
+      AND pmab001 = l_apda.apda004
+      AND pmabent = g_enterprise
+   
+   SELECT glab005 INTO l_apde.apde016 FROM glab_t
+    WHERE glabent = g_enterprise
+      AND glabld = l_apde.apdeld
+      AND glab001 = '13'
+      AND glab002 = l_pmab055
+      AND glab003 = '8504_31'
+   LET l_apde.apde017 = g_apga005
+   LET l_apde.apde018 = NULL
+   SELECT ooag003 INTO l_apde.apde018 FROM ooag_t
+    WHERE ooagent = g_enterprise
+      AND ooag001 = l_apde.apde017
+   #LET l_apde.apde019 =          
+   CALL s_department_get_respon_center(l_apde.apde018,l_apda.apdadocdt)
+              RETURNING g_sub_success,g_errno,l_apde.apde019,l_dummy1
+   LET l_apde.apde028 = '2'
+   LET l_apde.apde032 = g_apga003
+   LET l_apde.apde038 = l_apda.apda005
+   LET l_apde.apde039 = g_apga007
+   SELECT nmabl004 INTO l_apde.apde041 FROM nmabl_t
+    WHERE nmablent = g_enterprise
+      AND nmabl001 = l_apde.apde039
+   LET l_apde.apde100 = g_apga100
+   LET l_apde.apde101 = g_apga101
+   LET l_apde.apde104 = 0 
+   LET l_apde.apde109 = g_apga108
+   LET l_apde.apde119 = l_apde.apde109 * l_apde.apde101
+   CALL s_curr_round_ld('1',l_apda.apdald,l_glaa001,l_apde.apde119,2) RETURNING g_sub_success,g_errno,l_apde.apde119
+   LET lc_param.apca004 = l_apda.apda005
+   LET ls_js = util.JSON.stringify(lc_param)
+   CALL s_fin_get_curr_rate(l_apda.apdacomp,l_apda.apdald,l_apda.apdadocdt,l_apde.apde100,ls_js)
+        RETURNING l_apde.apde101,l_apde.apde121,l_apde.apde131
+   #s_curr_round
+   LET l_apde.apde101 = g_apga101
+   LET l_apde.apde120 = l_glaa016
+   
+   IF l_glaa015 = 'Y' THEN
+      LET l_apde.apde129 = l_apde.apde109 * l_apde.apde121
+      CALL s_curr_round_ld('1',l_apda.apdald,l_apde.apde120,l_apde.apde129,2) RETURNING g_sub_success,g_errno,l_apde.apde129
+   END IF
+   
+   LET l_apde.apde130 = l_glaa020
+   IF l_glaa019 = 'Y' THEN
+      LET l_apde.apde139 = l_apde.apde109 * l_apde.apde131
+      CALL s_curr_round_ld('1',l_apda.apdald,l_apde.apde130,l_apde.apde139,2) RETURNING g_sub_success,g_errno,l_apde.apde139
+   END IF
+    
+   
+   IF l_apde.apde109 > 0 THEN
+      INSERT INTO apde_t VALUES(l_apde.*)   
+   END IF 
+   
+   CALL s_aapt420_upd_dc_money(l_apda.apdald,l_apda.apdadocno) RETURNING g_sub_success
+   IF NOT g_sub_success THEN
+      LET r_success = FALSE
+   END IF
+   
+   CALL cl_get_para(g_enterprise,l_apda.apdacomp,'S-FIN-3008') RETURNING l_sfin3008
+   
+   CALL s_aooi200_fin_get_slip(l_apda.apdadocno) RETURNING g_sub_success,l_slip
+   CALL s_fin_get_doc_para(l_apda.apdald,l_apda.apdacomp,l_slip,'D-FIN-0030') RETURNING l_chr
+   IF l_glaa121 = 'Y' THEN
+      CALL s_pre_voucher_ins('AP','P20',l_apda.apdald,l_apda.apdadocno,l_apda.apdadocdt,'2')
+        RETURNING g_sub_success
+      IF NOT g_sub_success THEN
+         LET r_success = FALSE
+      END IF
+   END IF
+   
+   IF r_success THEN
+      IF NOT s_aapt420_conf_chk(l_apda.apdald,l_apda.apdadocno) THEN
+         LET r_success = FALSE
+      ELSE
+         IF NOT s_aapt420_conf_upd(l_apda.apdald,l_apda.apdadocno,l_sfin3008) THEN
+            LET r_success = FALSE
+         END IF
+      END IF
+   END IF
+   
+   IF r_success THEN
+      LET r_apdald = l_apda.apdald
+      LET r_apdadocno = l_apda.apdadocno
+   END IF
+   RETURN r_success,r_apdald,r_apdadocno
+END FUNCTION
+
+ 
+{</section>}
+ 

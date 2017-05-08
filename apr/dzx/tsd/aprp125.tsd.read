@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aprp125" std_prog="aprp125" erpver="1.0" ver="4" module="APR" type="M" booking="N" designer_ver="1.0" class="p" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="P" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 价格批处理调整
+標準作業功能取消：无
+作業類型：基批处理維護作業
+輸入模式：單檔多欄模式F002_00
+作業資料來源(Detail)：
+ 資料來源表：prbk_t(调价清单资料档)
+
+資料處理：
+函数参数（日期，单据类型，单据编号）
+1.QBE条件
+  根据QBE条件筛选要抓取的调价清单内容
+  资料来源：调价清单资料表
+  筛选条件：开始/执行日期 = ？ AND  单据类型 = ？ AND   单据编号 = ? AND 执行状态=‘1.未执行'
+            其中问号表示有值添加条件，无值则去掉对应的条件
+
+2.更新调价，更新调价状态:未执行->执行中
+依据单据类型分别处理价格信息
+  CASE 单据类型 
+           WHEN 1进价  则  更新采购协议价格        进项税别、进价 
+                           更新门店清单价格        进项税别、进价 销项税别、售价 、会员价1、会员价2、会员价3   
+
+           WHEN 2售价  则  更新门店清单价格        销项税别、售价 、会员价1、会员价2、会员价3 
+
+           WHEN 3促销  则  更新采购协议价格        进项税别、促销进价
+                           更新门店清单价格        进项税别、促销进价销项税别、促销售价、会员价1、会员价2、会员价3、促销开始日期,截止日期以及时间  
+         
+           WHEN 4生鲜  则  更新PLU对照表价格       进项税别、进价 销项税别、售价 、会员价1、会员价2、会员价3  
+   更新调价状态=2 执行中
+
+3.更新已执行结束的状态的调价清单内容，执行中->执行结束
+    CASE 单据类型 
+         WEHN [12]      更新条件   单据类型=[12]  AND  执行状态=2   AND (调价更新门店+商品编号 为此次更新的数据 的 其它笔执行中的数据)
+         WHEN [3]       更新条件   单据类型=[3]   AND  执行状态=2   AND 结束日期+时间 < 当前日期时间        
+         WHEN [4]       更新条件   单据类型=[4]   AND  执行状态=2   AND (调价更新门店+PLU 为此次更新的数据 的 其它笔执行中的数据)
+     符合上面条件的更新调价清单状态=3执行结束    
+4.提示执行状况，更新数据多少笔，例如价格调整成功，更新多少笔数据]]>
+  </all>
+  <field cite_std="N" name="prbk_t.prbk001" ver="2" src="s" column="prbk001" table="prbk_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_prbk001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[单据编号：
+   ●欄位控管：
+     資料欄位:可Display可Input
+   ●開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：单据编号，单据日期，单据类型
+     新增/修改過濾條件：未执行的调价清单  AND 单据类型=？]]>
+  </field>
+  <field cite_std="N" name="prbk_t.prbk006" ver="2" src="s" column="prbk006" table="prbk_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="DateEdit" status="">
+    <![CDATA[默认:g_today
+不可输入，仅仅DISPLAY]]>
+  </field>
+  <field cite_std="N" name="prbk_t.prbk025" ver="4" src="s" column="prbk025" table="prbk_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6779" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ComboBox" status="u">
+    <![CDATA[单据类型：
+   ●欄位控管：
+     資料欄位:可Display可Input
+     允許空白:Yes
+     資料選項來源:
+       常數型態:
+1.标准进价调整
+2.标准售价调整
+3.标准促销价调整
+4.生鲜价格调整
+       SCC: SCC號碼
+     校驗:1.輸入值須存在該SCC的單身項目中
+
+----------------20150429 dongsz----------
+調價類型 SCC 6779]]>
+  </field>
+  <field cite_std="N" name="prbk_t.prbk003" ver="4" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="6779" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="2" name="prbk_t.prbk001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="prbk_t.prbk003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="2" name="prbk_t.prbk006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="prbk_t.prbk025" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+  </help_code>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="group_qbe" text="QBE條件" lstr=""/>
+    <sfield name="lbl_prbk006" text="處理日期" lstr=""/>
+    <sfield name="lbl_prbk025" text="調價類型" lstr=""/>
+    <sfield name="lbl_prbk001" text="單據編號" lstr=""/>
+    <sfield name="group_input" text="其他條件" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

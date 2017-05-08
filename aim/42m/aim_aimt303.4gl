@@ -1,0 +1,6504 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aimt303.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0014(2016-07-11 17:13:11), PR版次:0014(2017-01-04 09:53:24)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000230
+#+ Filename...: aimt303
+#+ Description: 料件申請銷售資料維護作業
+#+ Creator....: 02587(2013-08-14 16:01:03)
+#+ Modifier...: 02294 -SD/PR- 06137
+ 
+{</section>}
+ 
+{<section id="aimt303.global" >}
+#應用 i01 樣板自動產生(Version:50)
+#add-point:填寫註解說明 name="global.memo"
+#160318-00005#21  2016/03/30 by 07675     將重複內容的錯誤訊息置換為公用錯誤訊息
+#160511-00040#5   2016/05/25 BY shiun     分銷與製造料件合併處理，imbf112回寫imba105，imbf113回寫imba106
+#160617-00004#3   2016/07/11 By lixiang   新增欄位「銷售時備品率」
+#160705-00042#11  2016/07/14 By sakura    程式中寫死g_prog部分改寫MATCHES方式
+#161124-00048#3   2016/12/08 By 08734     星号整批调整
+#160824-00007#269 2016/12/29 By 06137     修正舊值備份寫法
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"  
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE TYPE type_g_imbf_m RECORD
+       imbfdocno LIKE imbf_t.imbfdocno, 
+   imbadocdt LIKE imba_t.imbadocdt, 
+   imba900 LIKE imba_t.imba900, 
+   imba900_desc LIKE type_t.chr80, 
+   oobxl003 LIKE type_t.chr80, 
+   imba000 LIKE imba_t.imba000, 
+   imba901 LIKE imba_t.imba901, 
+   imba901_desc LIKE type_t.chr80, 
+   imba001 LIKE imba_t.imba001, 
+   imba002 LIKE imba_t.imba002, 
+   imbal002 LIKE imbal_t.imbal002, 
+   imbal003 LIKE imbal_t.imbal003, 
+   imbal004 LIKE imbal_t.imbal004, 
+   imba009 LIKE imba_t.imba009, 
+   imba009_desc LIKE type_t.chr80, 
+   imba003 LIKE imba_t.imba003, 
+   imba003_desc LIKE type_t.chr80, 
+   imba004 LIKE imba_t.imba004, 
+   imba005 LIKE imba_t.imba005, 
+   imba005_desc LIKE type_t.chr80, 
+   imba006 LIKE imba_t.imba006, 
+   imba006_desc LIKE type_t.chr80, 
+   imba010 LIKE imba_t.imba010, 
+   imba010_desc LIKE type_t.chr80, 
+   l_s1 LIKE type_t.chr500, 
+   imbf111 LIKE imbf_t.imbf111, 
+   imbf111_desc LIKE type_t.chr80, 
+   imbf112 LIKE imbf_t.imbf112, 
+   imbf112_desc LIKE type_t.chr80, 
+   imbf113 LIKE imbf_t.imbf113, 
+   imbf113_desc LIKE type_t.chr80, 
+   imbf114 LIKE imbf_t.imbf114, 
+   imbf115 LIKE imbf_t.imbf115, 
+   imbf116 LIKE imbf_t.imbf116, 
+   imbf117 LIKE imbf_t.imbf117, 
+   imbf118 LIKE imbf_t.imbf118, 
+   imbfownid LIKE imbf_t.imbfownid, 
+   imbfownid_desc LIKE type_t.chr80, 
+   imbfowndp LIKE imbf_t.imbfowndp, 
+   imbfowndp_desc LIKE type_t.chr80, 
+   imbfcrtid LIKE imbf_t.imbfcrtid, 
+   imbfcrtid_desc LIKE type_t.chr80, 
+   imbfcrtdp LIKE imbf_t.imbfcrtdp, 
+   imbfcrtdp_desc LIKE type_t.chr80, 
+   imbfcrtdt LIKE imbf_t.imbfcrtdt, 
+   imbfmodid LIKE imbf_t.imbfmodid, 
+   imbfmodid_desc LIKE type_t.chr80, 
+   imbfmoddt LIKE imbf_t.imbfmoddt, 
+   imbf121 LIKE imbf_t.imbf121, 
+   imbf122 LIKE imbf_t.imbf122, 
+   imbf123 LIKE imbf_t.imbf123, 
+   imbf123_desc LIKE type_t.chr80, 
+   imbf124 LIKE imbf_t.imbf124, 
+   imbf125 LIKE imbf_t.imbf125, 
+   imbf125_desc LIKE type_t.chr80, 
+   imbf126 LIKE imbf_t.imbf126, 
+   imbf127 LIKE imbf_t.imbf127, 
+   imbf130 LIKE imbf_t.imbf130, 
+   imbf128 LIKE imbf_t.imbf128
+       END RECORD
+ 
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD  #查詢方案用陣列 
+         b_statepic     LIKE type_t.chr50,
+         b_imba000 LIKE imba_t.imba000,
+      b_imbfdocno LIKE imbf_t.imbfdocno,
+   b_imbadocdt LIKE imba_t.imbadocdt,
+   b_imba001 LIKE imba_t.imba001,
+   b_imba001_desc LIKE type_t.chr80,
+   b_imba001_desc_desc LIKE type_t.chr80,
+   b_imba009 LIKE imba_t.imba009,
+   b_imba009_desc LIKE type_t.chr80,
+   b_imba003 LIKE imba_t.imba003,
+   b_imba003_desc LIKE type_t.chr80,
+      b_imbf111 LIKE imbf_t.imbf111,
+   b_imbf111_desc LIKE type_t.chr80
+      END RECORD 
+ 
+#add-point:自定義模組變數(Module Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_imbf111_o           LIKE imbf_t.imbf111
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_imbf_m        type_g_imbf_m  #單頭變數宣告
+DEFINE g_imbf_m_t      type_g_imbf_m  #單頭舊值宣告(系統還原用)
+DEFINE g_imbf_m_o      type_g_imbf_m  #單頭舊值宣告(其他用途)
+DEFINE g_imbf_m_mask_o type_g_imbf_m  #轉換遮罩前資料
+DEFINE g_imbf_m_mask_n type_g_imbf_m  #轉換遮罩後資料
+ 
+   DEFINE g_imbfdocno_t LIKE imbf_t.imbfdocno
+ 
+   
+ 
+   
+DEFINE g_master_multi_table_t    RECORD
+      imbaldocno LIKE imbal_t.imbaldocno,
+      imbal002 LIKE imbal_t.imbal002,
+      imbal003 LIKE imbal_t.imbal003,
+      imbal004 LIKE imbal_t.imbal004
+      END RECORD
+ 
+DEFINE g_wc                  STRING                        #儲存查詢條件
+DEFINE g_wc_t                STRING                        #備份查詢條件
+DEFINE g_wc_filter           STRING                        #儲存過濾查詢條件
+DEFINE g_wc_filter_t         STRING                        #備份過濾查詢條件
+DEFINE g_sql                 STRING                        #資料撈取用SQL(含reference)
+DEFINE g_forupd_sql          STRING                        #資料鎖定用SQL
+DEFINE g_cnt                 LIKE type_t.num10             #指標/統計用變數
+DEFINE g_jump                LIKE type_t.num10             #查詢指定的筆數 
+DEFINE g_no_ask              LIKE type_t.num5              #是否開啟指定筆視窗 
+DEFINE g_rec_b               LIKE type_t.num10             #單身筆數                         
+DEFINE l_ac                  LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_pagestart           LIKE type_t.num10             #page起始筆數
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_state               STRING                        #確認前一個動作是否為新增/複製
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_error_show          LIKE type_t.num5              #是否顯示資料過多的錯誤訊息
+DEFINE g_aw                  STRING                        #確定當下點擊的單身(modify_detail用)
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+DEFINE g_log1                STRING                        #cl_log_modified_record用(舊值)
+DEFINE g_log2                STRING                        #cl_log_modified_record用(新值)
+ 
+#快速搜尋用
+DEFINE g_searchcol           STRING                        #查詢欄位代碼
+DEFINE g_searchstr           STRING                        #查詢欄位字串
+DEFINE g_order               STRING                        #查詢排序模式
+ 
+#Browser用
+DEFINE g_current_idx         LIKE type_t.num10             #Browser 所在筆數(當下page)
+DEFINE g_current_row         LIKE type_t.num10             #Browser 所在筆數(暫存用)
+DEFINE g_current_cnt         LIKE type_t.num10             #Browser 總筆數(當下page)
+DEFINE g_browser_idx         LIKE type_t.num10             #Browser 所在筆數(所有資料)
+DEFINE g_browser_cnt         LIKE type_t.num10             #Browser 總筆數(所有資料)
+DEFINE g_row_index           LIKE type_t.num10             #階層樹狀用指標
+DEFINE g_add_browse          STRING                        #新增填充用WC
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization" 
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aimt303.main" >}
+#應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   DEFINE l_flag  LIKE type_t.chr1
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aim","")
+ 
+   #add-point:作業初始化 name="main.init"
+   IF NOT cl_null(g_argv[1]) THEN
+      LET g_site = g_argv[1]
+   END IF
+   IF NOT cl_null(g_argv[02]) THEN
+      LET g_imbf_m.imbfdocno = g_argv[02]
+   END IF 
+   
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = " SELECT imbfdocno,'','','','','','','','','','','','','','','','','','','','', 
+       '','','','',imbf111,'',imbf112,'',imbf113,'',imbf114,imbf115,imbf116,imbf117,imbf118,imbfownid, 
+       '',imbfowndp,'',imbfcrtid,'',imbfcrtdp,'',imbfcrtdt,imbfmodid,'',imbfmoddt,imbf121,imbf122,imbf123, 
+       '',imbf124,imbf125,'',imbf126,imbf127,imbf130,imbf128", 
+                      " FROM imbf_t",
+                      " WHERE imbfent= ? AND imbfsite= ? AND imbfdocno=? FOR UPDATE"
+   #add-point:SQL_define name="main.after_define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE aimt303_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT DISTINCT t0.imbfdocno,t0.imbf111,t0.imbf112,t0.imbf113,t0.imbf114,t0.imbf115, 
+       t0.imbf116,t0.imbf117,t0.imbf118,t0.imbfownid,t0.imbfowndp,t0.imbfcrtid,t0.imbfcrtdp,t0.imbfcrtdt, 
+       t0.imbfmodid,t0.imbfmoddt,t0.imbf121,t0.imbf122,t0.imbf123,t0.imbf124,t0.imbf125,t0.imbf126,t0.imbf127, 
+       t0.imbf130,t0.imbf128,t8.oocql004 ,t9.oocal003 ,t10.oocal003 ,t11.ooag011 ,t12.ooefl003 ,t13.ooag011 , 
+       t14.ooefl003 ,t15.ooag011 ,t16.imaal003 ,t17.imaal003",
+               " FROM imbf_t t0",
+                              " LEFT JOIN oocql_t t8 ON t8.oocqlent="||g_enterprise||" AND t8.oocql001='202' AND t8.oocql002=t0.imbf111 AND t8.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN oocal_t t9 ON t9.oocalent="||g_enterprise||" AND t9.oocal001=t0.imbf112 AND t9.oocal002='"||g_dlang||"' ",
+               " LEFT JOIN oocal_t t10 ON t10.oocalent="||g_enterprise||" AND t10.oocal001=t0.imbf113 AND t10.oocal002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t11 ON t11.ooagent="||g_enterprise||" AND t11.ooag001=t0.imbfownid  ",
+               " LEFT JOIN ooefl_t t12 ON t12.ooeflent="||g_enterprise||" AND t12.ooefl001=t0.imbfowndp AND t12.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t13 ON t13.ooagent="||g_enterprise||" AND t13.ooag001=t0.imbfcrtid  ",
+               " LEFT JOIN ooefl_t t14 ON t14.ooeflent="||g_enterprise||" AND t14.ooefl001=t0.imbfcrtdp AND t14.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t15 ON t15.ooagent="||g_enterprise||" AND t15.ooag001=t0.imbfmodid  ",
+               " LEFT JOIN imaal_t t16 ON t16.imaalent="||g_enterprise||" AND t16.imaal001=t0.imbf123 AND t16.imaal002='"||g_dlang||"' ",
+               " LEFT JOIN imaal_t t17 ON t17.imaalent="||g_enterprise||" AND t17.imaal001=t0.imbf125 AND t17.imaal002='"||g_dlang||"' ",
+ 
+               " WHERE t0.imbfent = " ||g_enterprise|| " AND t0.imbfsite = ? AND t0.imbfdocno = ?"
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   
+   #end add-point
+   PREPARE aimt303_master_referesh FROM g_sql
+ 
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aimt303 WITH FORM cl_ap_formpath("aim",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aimt303_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aimt303_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_aimt303
+      
+   END IF 
+   
+   CLOSE aimt303_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aimt303.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION aimt303_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point
+   #add-point:init段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="init.pre_function"
+   
+   #end add-point
+   
+   #定義combobox狀態
+   
+      CALL cl_set_combo_scc('imba000','32') 
+   CALL cl_set_combo_scc('imba004','1001') 
+   CALL cl_set_combo_scc('imbf116','2025') 
+   CALL cl_set_combo_scc('imbf121','2026') 
+   CALL cl_set_combo_scc('imbf122','2027') 
+ 
+   LET g_error_show = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   #add-point:畫面資料初始化 name="init.init"
+   CALL cl_set_combo_scc_part('l_s1','13','N,Y,T')
+   CALL cl_set_combo_scc('b_imba000','32')
+   #end add-point
+   
+   #根據外部參數進行搜尋
+   CALL aimt303_default_search()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimt303.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aimt303_ui_dialog() 
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit   LIKE type_t.num10       #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num10       #指標變數
+   DEFINE ls_wc     STRING                  #wc用
+   DEFINE la_param  RECORD                  #程式串查用變數
+          prog       STRING,
+          actionid   STRING,
+          background LIKE type_t.chr1,
+          param      DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING                  #轉換後的json字串
+   DEFINE l_cmd_token           base.StringTokenizer   #報表作業cmdrun使用 
+   DEFINE l_cmd_next            STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_cnt             LIKE type_t.num5       #報表作業cmdrun使用
+   DEFINE l_cmd_prog_arg        STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_arg             STRING                 #報表作業cmdrun使用
+   #add-point:ui_dialog段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="ui_dialog.pre_function"
+   
+   #end add-point
+   
+   LET li_exit = FALSE
+   LET g_current_row = 0
+   LET g_current_idx = 0
+ 
+   #若有外部參數查詢, 則直接顯示資料(隱藏查詢方案)
+   IF g_default THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   ELSE
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF
+   
+   #action default動作
+   
+   
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   
+   #end add-point
+ 
+   WHILE li_exit = FALSE
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_browser.clear()       
+         INITIALIZE g_imbf_m.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL aimt303_init()
+      END IF
+      
+      CALL lib_cl_dlg.cl_dlg_before_display()
+      CALL cl_notice()
+    
+      #確保g_current_idx位於正常區間內
+      #小於,等於0則指到第1筆
+      IF g_current_idx <= 0 THEN
+         LET g_current_idx = 1
+      END IF
+               
+      IF g_main_hidden = 0 THEN
+         MENU
+            BEFORE MENU 
+               #先填充browser資料
+               CALL aimt303_browser_fill(g_wc,"")
+               CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               
+               #還原為原本指定筆數
+               IF g_current_row > 0 THEN
+                  LET g_current_idx = g_current_row
+               END IF
+ 
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL aimt303_fetch("")   
+               END IF               
+               #add-point:ui_dialog段 before menu name="ui_dialog.before_menu"
+               #若執行集團級程式，則不開放切換營運中心的功能
+               #IF g_prog = 'aimt303' THEN        #160705-00042#11 160714 by sakura mark    
+               IF g_prog MATCHES 'aimt303' THEN   #160705-00042#11 160714 by sakura add
+                  CALL cl_set_act_visible("logistics", FALSE)
+               ELSE
+                  CALL cl_set_act_visible("logistics", TRUE)
+               END IF
+               #end add-point
+            
+ 
+ 
+               
+            #第一筆資料
+            ON ACTION first
+               CALL aimt303_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            #下一筆資料
+            ON ACTION next
+               CALL aimt303_fetch("N")
+               LET g_current_row = g_current_idx
+            
+            #指定筆資料
+            ON ACTION jump
+               CALL aimt303_fetch("/")
+               LET g_current_row = g_current_idx
+            
+            #上一筆資料
+            ON ACTION previous
+               CALL aimt303_fetch("P")
+               LET g_current_row = g_current_idx
+            
+            #最後筆資料
+            ON ACTION last 
+               CALL aimt303_fetch("L")  
+               LET g_current_row = g_current_idx
+            
+            #離開程式
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU 
+            
+            #離開程式
+            ON ACTION close
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU
+            
+            #主頁摺疊
+            ON ACTION mainhidden   
+               LET g_action_choice = "mainhidden"            
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+                  CALL cl_notice()
+               END IF
+               EXIT MENU
+               
+            ON ACTION worksheethidden   #瀏覽頁折疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               EXIT MENU
+            
+            #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+          
+            #查詢方案用
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL aimt303_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            #查詢方案用
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL aimt303_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "-100" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL aimt303_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+            
+            
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL aimt303_modify()
+               #add-point:ON ACTION modify name="menu2.modify"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_aimt306
+            LET g_action_choice="open_aimt306"
+            IF cl_auth_chk_act("open_aimt306") THEN
+               
+               #add-point:ON ACTION open_aimt306 name="menu2.open_aimt306"
+               IF NOT cl_null(g_imbf_m.imbfdocno) THEN
+                  CALL cl_cmdrun(" aimt306 '"||g_imbf_m.imbfdocno||"'")
+               END IF
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_aimt307
+            LET g_action_choice="open_aimt307"
+            IF cl_auth_chk_act("open_aimt307") THEN
+               
+               #add-point:ON ACTION open_aimt307 name="menu2.open_aimt307"
+               IF NOT cl_null(g_imbf_m.imbfdocno) THEN
+                  CALL cl_cmdrun(" aimt307 '"||g_imbf_m.imbfdocno||"'")
+               END IF
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_aimt308
+            LET g_action_choice="open_aimt308"
+            IF cl_auth_chk_act("open_aimt308") THEN
+               
+               #add-point:ON ACTION open_aimt308 name="menu2.open_aimt308"
+               IF NOT cl_null(g_imbf_m.imbfdocno) THEN
+                  CALL cl_cmdrun(" aimt308 '"||g_imbf_m.imbfdocno||"'")
+               END IF
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_aimt310
+            LET g_action_choice="open_aimt310"
+            IF cl_auth_chk_act("open_aimt310") THEN
+               
+               #add-point:ON ACTION open_aimt310 name="menu2.open_aimt310"
+               IF NOT cl_null(g_imbf_m.imbfdocno) THEN
+                  CALL cl_cmdrun(" aimt310 '"||g_imbf_m.imbfdocno||"'")
+               END IF
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu2.output"
+               
+               #END add-point
+               &include "erp/aim/aimt303_rep.4gl"
+               #add-point:ON ACTION output.after name="menu2.after_output"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu2.quickprint"
+               
+               #END add-point
+               &include "erp/aim/aimt303_rep.4gl"
+               #add-point:ON ACTION quickprint.after name="menu2.after_quickprint"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_aimt301
+            LET g_action_choice="open_aimt301"
+            IF cl_auth_chk_act("open_aimt301") THEN
+               
+               #add-point:ON ACTION open_aimt301 name="menu2.open_aimt301"
+               IF NOT cl_null(g_imbf_m.imbfdocno) THEN
+                  CALL cl_cmdrun(" aimt301 '"||g_imbf_m.imbfdocno||"'")
+               END IF
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL aimt303_query()
+               #add-point:ON ACTION query name="menu2.query"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_aimt302
+            LET g_action_choice="open_aimt302"
+            IF cl_auth_chk_act("open_aimt302") THEN
+               
+               #add-point:ON ACTION open_aimt302 name="menu2.open_aimt302"
+               IF NOT cl_null(g_imbf_m.imbfdocno) THEN
+                  CALL cl_cmdrun(" aimt302 '"||g_imbf_m.imbfdocno||"'")
+               END IF
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_aimt304
+            LET g_action_choice="open_aimt304"
+            IF cl_auth_chk_act("open_aimt304") THEN
+               
+               #add-point:ON ACTION open_aimt304 name="menu2.open_aimt304"
+               IF NOT cl_null(g_imbf_m.imbfdocno) THEN
+                  CALL cl_cmdrun(" aimt304 '"||g_imbf_m.imbfdocno||"'")
+               END IF
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_aimt305
+            LET g_action_choice="open_aimt305"
+            IF cl_auth_chk_act("open_aimt305") THEN
+               
+               #add-point:ON ACTION open_aimt305 name="menu2.open_aimt305"
+               IF NOT cl_null(g_imbf_m.imbfdocno) THEN
+                  CALL cl_cmdrun(" aimt305 '"||g_imbf_m.imbfdocno||"'")
+               END IF
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION prog_imba009
+            LET g_action_choice="prog_imba009"
+            IF cl_auth_chk_act("prog_imba009") THEN
+               
+               #add-point:ON ACTION prog_imba009 name="menu2.prog_imba009"
+               #+ 此段落由子樣板a45產生
+               CALL cl_user_contact("aimi010", "", "", "",'')
+
+
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION prog_imba003
+            LET g_action_choice="prog_imba003"
+            IF cl_auth_chk_act("prog_imba003") THEN
+               
+               #add-point:ON ACTION prog_imba003 name="menu2.prog_imba003"
+               #+ 此段落由子樣板a45產生
+               CALL cl_user_contact("aimi100", "", "", "",'')
+
+
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+            
+            
+            
+            #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL aimt303_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.menu.related_document"
+               
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL aimt303_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.menu.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL aimt303_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.menu.followup"
+            
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+ 
+            
+            #主選單用ACTION
+            &include "main_menu_exit_menu.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END MENU
+      
+      ELSE
+      
+         DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+           
+      
+            #左側瀏覽頁簽
+            DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTE(COUNT=g_rec_b)
+            
+               BEFORE ROW
+                  #回歸舊筆數位置 (回到當時異動的筆數)
+                  LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+                  IF g_current_idx = 0 THEN
+                     LET g_current_idx = 1
+                  END IF
+                  LET g_current_row = g_current_idx  #目前指標
+                  LET g_current_sw = TRUE
+                  CALL cl_show_fld_cont()     
+                  
+                  #當每次點任一筆資料都會需要用到               
+                  CALL aimt303_fetch("")
+ 
+               ON ACTION qbefield_user   #欄位隱藏設定 
+                  LET g_action_choice="qbefield_user"
+                  CALL cl_ui_qbefield_user()
+    
+               
+            
+            END DISPLAY
+ 
+            #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+            
+            #end add-point
+ 
+            #查詢方案用
+            SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+            SUBDIALOG lib_cl_dlg.cl_dlg_relateapps
+         
+            BEFORE DIALOG
+               #先填充browser資料
+               IF g_action_choice <> "mainhidden" THEN
+                  CALL aimt303_browser_fill(g_wc,"")
+               END IF
+               CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               #還原為原本指定筆數
+               IF g_current_row > 1 THEN
+                  #當刪除最後一筆資料時可能產生錯誤, 進行額外判斷
+                  IF g_current_row > g_browser.getLength() THEN
+                     LET g_current_row = g_browser.getLength()
+                  END IF 
+                  LET g_current_idx = g_current_row
+                  CALL DIALOG.setCurrentRow("s_browse",g_current_idx)
+               END IF
+ 
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL aimt303_fetch("")   
+               END IF          
+               CALL cl_notice()
+               
+               #add-point:ui_dialog段before name="ui_dialog.b_dialog"
+               #若執行集團級程式，則不開放切換營運中心的功能
+               #IF g_prog = 'aimt303' THEN        #160705-00042#11 160714 by sakura mark
+               IF g_prog MATCHES 'aimt303' THEN   #160705-00042#11 160714 by sakura add
+                  CALL cl_set_act_visible("logistics", FALSE)
+               ELSE
+                  CALL cl_set_act_visible("logistics", TRUE)
+               END IF
+               #end add-point  
+            
+            AFTER DIALOG
+               #add-point:ui_dialog段 after dialog name="ui_dialog.after_dialog"
+               
+               #end add-point
+            
+ 
+ 
+         
+            #應用 a49 樣板自動產生(Version:4)
+            #過濾瀏覽頁資料
+            ON ACTION filter
+               LET g_action_choice = "fetch"
+               #add-point:filter action name="ui_dialog.action.filter"
+               
+               #end add-point
+               CALL aimt303_filter()
+               EXIT DIALOG
+ 
+ 
+ 
+            
+            #第一筆資料
+            ON ACTION first
+               CALL aimt303_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            #下一筆資料
+            ON ACTION next
+               CALL aimt303_fetch("N")
+               LET g_current_row = g_current_idx
+         
+            #指定筆資料
+            ON ACTION jump
+               CALL aimt303_fetch("/")
+               LET g_current_row = g_current_idx
+         
+            #上一筆資料
+            ON ACTION previous
+               CALL aimt303_fetch("P")
+               LET g_current_row = g_current_idx
+          
+            #最後筆資料
+            ON ACTION last 
+               CALL aimt303_fetch("L")  
+               LET g_current_row = g_current_idx
+         
+            #離開程式
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+         
+            #離開程式
+            ON ACTION close
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+    
+            #主頁摺疊
+            ON ACTION mainhidden 
+               LET g_action_choice = "mainhidden"                
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+                  CALL cl_notice()
+               END IF
+               #EXIT DIALOG
+               
+            ON ACTION worksheethidden   #瀏覽頁折疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               #EXIT DIALOG
+         
+            ON ACTION exporttoexcel
+               LET g_action_choice="exporttoexcel"
+               IF cl_auth_chk_act("exporttoexcel") THEN
+                  #browser
+                  CALL g_export_node.clear()
+                  LET g_export_node[1] = base.typeInfo.create(g_browser)
+                  LET g_export_id[1]   = "s_browse"
+                  CALL cl_export_to_excel()
+               END IF
+         
+            #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+ 
+            
+            #查詢方案用
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL aimt303_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            #查詢方案用
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL aimt303_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "-100" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL aimt303_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+               
+            
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL aimt303_modify()
+               #add-point:ON ACTION modify name="menu.modify"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_aimt306
+            LET g_action_choice="open_aimt306"
+            IF cl_auth_chk_act("open_aimt306") THEN
+               
+               #add-point:ON ACTION open_aimt306 name="menu.open_aimt306"
+               IF NOT cl_null(g_imbf_m.imbfdocno) THEN
+                  CALL cl_cmdrun(" aimt306 '"||g_imbf_m.imbfdocno||"'")
+               END IF
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_aimt307
+            LET g_action_choice="open_aimt307"
+            IF cl_auth_chk_act("open_aimt307") THEN
+               
+               #add-point:ON ACTION open_aimt307 name="menu.open_aimt307"
+               IF NOT cl_null(g_imbf_m.imbfdocno) THEN
+                  CALL cl_cmdrun(" aimt307 '"||g_imbf_m.imbfdocno||"'")
+               END IF
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_aimt308
+            LET g_action_choice="open_aimt308"
+            IF cl_auth_chk_act("open_aimt308") THEN
+               
+               #add-point:ON ACTION open_aimt308 name="menu.open_aimt308"
+               IF NOT cl_null(g_imbf_m.imbfdocno) THEN
+                  CALL cl_cmdrun(" aimt308 '"||g_imbf_m.imbfdocno||"'")
+               END IF
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_aimt310
+            LET g_action_choice="open_aimt310"
+            IF cl_auth_chk_act("open_aimt310") THEN
+               
+               #add-point:ON ACTION open_aimt310 name="menu.open_aimt310"
+               IF NOT cl_null(g_imbf_m.imbfdocno) THEN
+                  CALL cl_cmdrun(" aimt310 '"||g_imbf_m.imbfdocno||"'")
+               END IF
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               
+               #END add-point
+               &include "erp/aim/aimt303_rep.4gl"
+               #add-point:ON ACTION output.after name="menu.after_output"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               
+               #END add-point
+               &include "erp/aim/aimt303_rep.4gl"
+               #add-point:ON ACTION quickprint.after name="menu.after_quickprint"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_aimt301
+            LET g_action_choice="open_aimt301"
+            IF cl_auth_chk_act("open_aimt301") THEN
+               
+               #add-point:ON ACTION open_aimt301 name="menu.open_aimt301"
+               IF NOT cl_null(g_imbf_m.imbfdocno) THEN
+                  CALL cl_cmdrun(" aimt301 '"||g_imbf_m.imbfdocno||"'")
+               END IF
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL aimt303_query()
+               #add-point:ON ACTION query name="menu.query"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_aimt302
+            LET g_action_choice="open_aimt302"
+            IF cl_auth_chk_act("open_aimt302") THEN
+               
+               #add-point:ON ACTION open_aimt302 name="menu.open_aimt302"
+               IF NOT cl_null(g_imbf_m.imbfdocno) THEN
+                  CALL cl_cmdrun(" aimt302 '"||g_imbf_m.imbfdocno||"'")
+               END IF
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_aimt304
+            LET g_action_choice="open_aimt304"
+            IF cl_auth_chk_act("open_aimt304") THEN
+               
+               #add-point:ON ACTION open_aimt304 name="menu.open_aimt304"
+               IF NOT cl_null(g_imbf_m.imbfdocno) THEN
+                  CALL cl_cmdrun(" aimt304 '"||g_imbf_m.imbfdocno||"'")
+               END IF
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_aimt305
+            LET g_action_choice="open_aimt305"
+            IF cl_auth_chk_act("open_aimt305") THEN
+               
+               #add-point:ON ACTION open_aimt305 name="menu.open_aimt305"
+               IF NOT cl_null(g_imbf_m.imbfdocno) THEN
+                  CALL cl_cmdrun(" aimt305 '"||g_imbf_m.imbfdocno||"'")
+               END IF
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION prog_imba009
+            LET g_action_choice="prog_imba009"
+            IF cl_auth_chk_act("prog_imba009") THEN
+               
+               #add-point:ON ACTION prog_imba009 name="menu.prog_imba009"
+               #+ 此段落由子樣板a45產生
+               CALL cl_user_contact("aimi010", "", "", "",'')
+
+
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION prog_imba003
+            LET g_action_choice="prog_imba003"
+            IF cl_auth_chk_act("prog_imba003") THEN
+               
+               #add-point:ON ACTION prog_imba003 name="menu.prog_imba003"
+               #+ 此段落由子樣板a45產生
+               CALL cl_user_contact("aimi100", "", "", "",'')
+
+
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+            
+            
+ 
+            #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL aimt303_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.dialog.related_document"
+               
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL aimt303_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.dialog.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL aimt303_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.dialog.followup"
+            
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+ 
+ 
+            #主選單用ACTION
+            &include "main_menu_exit_dialog.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END DIALOG 
+      
+      END IF
+      
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      
+      #end add-point
+      
+      #(ver:50) ---start---
+      IF li_exit THEN
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         EXIT WHILE
+      END IF
+      #(ver:50) --- end ---
+ 
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimt303.browser_fill" >}
+#應用 a29 樣板自動產生(Version:15)
+#+ 瀏覽頁簽資料填充(一般單檔)
+PRIVATE FUNCTION aimt303_browser_fill(p_wc,ps_page_action) 
+   #add-point:browser_fill段define name="browser_fill.define_customerization"
+   
+   #end add-point
+   DEFINE p_wc              STRING
+   DEFINE ls_wc             STRING
+   DEFINE ps_page_action    STRING
+   DEFINE l_searchcol       STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="browser_fill.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="browser_fill.pre_function"
+   
+   #end add-point
+   
+   LET l_searchcol = "imbfdocno"
+ 
+   LET p_wc = p_wc.trim() #當查詢按下Q時 按下放棄 g_wc = "  " 所以要清掉空白
+   IF cl_null(p_wc) THEN  #p_wc 查詢條件
+      LET p_wc = " 1=1 " 
+   END IF
+   #add-point:browser_fill段wc控制 name="browser_fill.wc"
+   
+   #end add-point
+ 
+   LET g_sql = " SELECT COUNT(1) FROM imbf_t ",
+               "  ",
+               "  LEFT JOIN imbal_t ON imbalent = "||g_enterprise||" AND imbfdocno = imbaldocno AND imbal001 = '",g_dlang,"' ",
+               " WHERE imbfent = " ||g_enterprise|| " AND imbfsite = '" ||g_site|| "' AND ", 
+               p_wc CLIPPED, cl_sql_add_filter("imbf_t")
+                
+   #add-point:browser_fill段cnt_sql name="browser_fill.cnt_sql"
+   LET g_sql = " SELECT COUNT(*) FROM imbf_t,imba_t ",
+               "  LEFT JOIN imbal_t ON imbaent = imbalent AND imbadocno = imbaldocno AND imbal001 = '",g_lang,"' ",
+               " WHERE imbfent = imbaent AND imbf001 = imba001 ",
+               "   AND imbfent = '" ||g_enterprise|| "' AND imbfsite = '" ||g_site|| "' AND ",
+               p_wc CLIPPED
+   #end add-point
+                
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE header_cnt_pre FROM g_sql
+      EXECUTE header_cnt_pre INTO g_browser_cnt
+      FREE header_cnt_pre 
+   END IF
+   
+   #若超過最大顯示筆數
+   IF g_browser_cnt > g_max_browse THEN
+      IF g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_browser_cnt 
+         LET g_errparam.code   = 9035
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+      END IF
+   END IF
+   
+   LET g_error_show = 0
+   
+   IF ps_page_action = "F" OR
+      ps_page_action = "P"  OR
+      ps_page_action = "N"  OR
+      ps_page_action = "L"  THEN
+      LET g_page_action = ps_page_action
+   END IF
+   
+   IF cl_null(g_add_browse) THEN
+      #清除畫面
+      CLEAR FORM
+      INITIALIZE g_imbf_m.* TO NULL
+      CALL g_browser.clear()
+      LET g_cnt = 1
+      LET ls_wc = p_wc
+   ELSE
+      LET ls_wc = g_add_browse
+      LET g_cnt = g_current_idx
+   END IF
+   
+   LET g_sql = " SELECT t0.imbfstus,t0.imbfdocno,t0.imbf111,t5.oocql004",
+               " FROM imbf_t t0 ",
+               "  ",
+                              " LEFT JOIN oocql_t t5 ON t5.oocqlent="||g_enterprise||" AND t5.oocql001='202' AND t5.oocql002=t0.imbf111 AND t5.oocql003='"||g_dlang||"' ",
+ 
+               " LEFT JOIN imbal_t ON imbalent = "||g_enterprise||" AND imbfdocno = imbaldocno AND imbal001 = '",g_dlang,"' ",
+               " WHERE t0.imbfent = " ||g_enterprise|| " AND t0.imbfsite = '" ||g_site|| "' AND ", ls_wc, cl_sql_add_filter("imbf_t")
+   #add-point:browser_fill段fill_wc name="browser_fill.fill_wc"
+   
+   #end add-point 
+   LET g_sql = g_sql, " ORDER BY ",l_searchcol," ",g_order
+   #add-point:browser_fill段before_pre name="browser_fill.before_pre"
+   #LET l_sql_rank = "SELECT imbfstus,'',imbfdocno,'','','','','','','','',imbf111,'',RANK() OVER(ORDER BY imbfdocno ", 
+   #
+   #
+   #                 g_order,
+   #                 ") AS RANK ",
+   #                 " FROM imbf_t ,imba_t ",
+   #                 "  LEFT JOIN imbal_t ON imbaent = imbalent AND imbadocno = imbaldocno AND imbal001 = '",g_lang,"' ",
+   #                 " WHERE imbfent = imbaent AND imbf001 = imba001 ",
+   #                 "   AND imbfent = '" ||g_enterprise|| "' AND imbfsite = '" ||g_site|| "' AND ", g_wc
+   
+   LET g_sql = " SELECT t0.imbfstus,t0.imbfdocno,t0.imbf111,t5.oocql004",
+               " FROM imbf_t t0 ",
+               "  ",
+               " LEFT JOIN oocql_t t5 ON t5.oocqlent='"||g_enterprise||"' AND t5.oocql001='202' AND t5.oocql002=t0.imbf111 AND t5.oocql003='"||g_lang||"' ",
+ 
+               " LEFT JOIN imbal_t ON imbalent = '"||g_enterprise||"' AND imbfdocno = imbaldocno AND imbal001 = '",g_dlang,"' ",
+               
+               "  , imba_t ",
+               " WHERE t0.imbfent = imbaent AND t0.imbfdocno = imbadocno ",
+               "   AND t0.imbfent = '" ||g_enterprise|| "' AND t0.imbfsite = '" ||g_site|| "' AND ", ls_wc, cl_sql_add_filter("imbf_t")
+               
+   LET g_sql = g_sql, " ORDER BY ",l_searchcol," ",g_order            
+   #end add-point                    
+ 
+   #LET g_sql = cl_sql_add_tabid(g_sql,"imbf_t")             #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE browse_pre FROM g_sql
+      DECLARE browse_cur CURSOR FOR browse_pre
+      
+      FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_imbfdocno,g_browser[g_cnt].b_imbf111, 
+          g_browser[g_cnt].b_imbf111_desc
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "foreach:" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+         
+         
+         
+         #add-point:browser_fill段reference name="browser_fill.reference"
+      SELECT imba001,imba009,imba003,imba000,imbadocdt
+        INTO g_browser[g_cnt].b_imba001,g_browser[g_cnt].b_imba009,g_browser[g_cnt].b_imba003,
+             g_browser[g_cnt].b_imba000,g_browser[g_cnt].b_imbadocdt
+        FROM imba_t
+       WHERE imbadocno = g_browser[g_cnt].b_imbfdocno
+         AND imbaent = g_enterprise
+         
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_browser[g_cnt].b_imbfdocno
+      CALL ap_ref_array2(g_ref_fields,"SELECT imbal002 FROM imbal_t WHERE imbalent='"||g_enterprise||"' AND imbaldocno=? AND imbal001='"||g_lang||"'","") RETURNING g_rtn_fields
+      LET g_browser[g_cnt].b_imba001_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_browser[g_cnt].b_imba001_desc
+
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_browser[g_cnt].b_imbfdocno
+      CALL ap_ref_array2(g_ref_fields,"SELECT imbal003 FROM imbal_t WHERE imbalent='"||g_enterprise||"' AND imbaldocno=? AND imbal001='"||g_lang||"'","") RETURNING g_rtn_fields
+      LET g_browser[g_cnt].b_imba001_desc_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_browser[g_cnt].b_imba001_desc_desc
+
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_browser[g_cnt].b_imba009
+      CALL ap_ref_array2(g_ref_fields,"SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent='"||g_enterprise||"' AND rtaxl001=? AND rtaxl002='"||g_lang||"'","") RETURNING g_rtn_fields
+      LET g_browser[g_cnt].b_imba009_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_browser[g_cnt].b_imba009_desc
+
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_browser[g_cnt].b_imba003
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='200' AND oocql002=? AND oocql003='"||g_lang||"'","") RETURNING g_rtn_fields
+      LET g_browser[g_cnt].b_imba003_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_browser[g_cnt].b_imba003_desc 
+         #end add-point
+         
+         #遮罩相關處理
+         CALL aimt303_browser_mask()
+         
+         
+         LET g_cnt = g_cnt + 1
+         IF g_cnt > g_max_rec THEN
+            EXIT FOREACH
+         END IF
+      END FOREACH
+ 
+      FREE browse_pre
+ 
+   END IF
+ 
+   #清空g_add_browse, 並指定指標位置
+   IF NOT cl_null(g_add_browse) THEN
+      LET g_add_browse = ""
+      CALL g_curr_diag.setCurrentRow("s_browse",g_current_idx)
+   END IF
+   
+   IF cl_null(g_browser[g_cnt].b_imbfdocno) THEN
+      CALL g_browser.deleteElement(g_cnt)
+   END IF
+   
+   LET g_header_cnt = g_browser.getLength()
+   LET g_current_cnt = g_browser.getLength()
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_rec_b = g_browser.getLength()
+   LET g_cnt = 0
+   DISPLAY g_browser_cnt TO FORMONLY.b_count
+   DISPLAY g_browser_cnt TO FORMONLY.h_count
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+   
+   #add-point:browser_fill段結束前 name="browser_fill.after"
+   
+   #end add-point   
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aimt303.construct" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION aimt303_construct()
+   #add-point:cs段define(客製用) name="cs.define_customerization"
+   
+   #end add-point
+   DEFINE ls_return      STRING
+   DEFINE ls_result      STRING 
+   DEFINE ls_wc          STRING 
+   #add-point:cs段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="cs.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="cs.pre_function"
+   
+   #end add-point
+   
+   #清空畫面&資料初始化
+   CLEAR FORM
+   INITIALIZE g_imbf_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   LET g_current_row = 1
+ 
+   LET g_qryparam.state = "c"
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #螢幕上取條件
+      CONSTRUCT BY NAME g_wc ON imbfdocno,imbadocdt,imba900,imba000,imba901,imba001,imba002,imbal002, 
+          imbal003,imbal004,imba009,imba003,imba004,imba005,imba006,imba010,imbf111,imbf112,imbf113, 
+          imbf114,imbf115,imbf116,imbf117,imbf118,imbfownid,imbfowndp,imbfcrtid,imbfcrtdp,imbfcrtdt, 
+          imbfmodid,imbfmoddt,imbf121,imbf122,imbf123,imbf124,imbf125,imbf126,imbf127,imbf130,imbf128 
+ 
+      
+         BEFORE CONSTRUCT                                    
+            #add-point:cs段more_construct name="cs.before_construct"
+            
+            #end add-point             
+      
+         #公用欄位開窗相關處理
+         #應用 a11 樣板自動產生(Version:3)
+         #共用欄位查詢處理  
+         ##----<<imbfcrtdt>>----
+         AFTER FIELD imbfcrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+         #----<<imbfmoddt>>----
+         AFTER FIELD imbfmoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<imbfcnfdt>>----
+         
+         #----<<imbfpstdt>>----
+ 
+ 
+ 
+      
+         #一般欄位
+                  #Ctrlp:construct.c.imbfdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbfdocno
+            #add-point:ON ACTION controlp INFIELD imbfdocno name="construct.c.imbfdocno"
+            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_imbadocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imbfdocno  #顯示到畫面上
+
+            NEXT FIELD imbfdocno                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbfdocno
+            #add-point:BEFORE FIELD imbfdocno name="construct.b.imbfdocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbfdocno
+            
+            #add-point:AFTER FIELD imbfdocno name="construct.a.imbfdocno"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbadocdt
+            #add-point:BEFORE FIELD imbadocdt name="construct.b.imbadocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbadocdt
+            
+            #add-point:AFTER FIELD imbadocdt name="construct.a.imbadocdt"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imbadocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbadocdt
+            #add-point:ON ACTION controlp INFIELD imbadocdt name="construct.c.imbadocdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.imba900
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imba900
+            #add-point:ON ACTION controlp INFIELD imba900 name="construct.c.imba900"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imba900  #顯示到畫面上
+
+            NEXT FIELD imba900                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imba900
+            #add-point:BEFORE FIELD imba900 name="construct.b.imba900"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imba900
+            
+            #add-point:AFTER FIELD imba900 name="construct.a.imba900"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imba000
+            #add-point:BEFORE FIELD imba000 name="construct.b.imba000"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imba000
+            
+            #add-point:AFTER FIELD imba000 name="construct.a.imba000"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imba000
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imba000
+            #add-point:ON ACTION controlp INFIELD imba000 name="construct.c.imba000"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.imba901
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imba901
+            #add-point:ON ACTION controlp INFIELD imba901 name="construct.c.imba901"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imba901  #顯示到畫面上
+
+            NEXT FIELD imba901                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imba901
+            #add-point:BEFORE FIELD imba901 name="construct.b.imba901"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imba901
+            
+            #add-point:AFTER FIELD imba901 name="construct.a.imba901"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imba001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imba001
+            #add-point:ON ACTION controlp INFIELD imba001 name="construct.c.imba001"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_imba001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imba001  #顯示到畫面上
+
+            NEXT FIELD imba001                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imba001
+            #add-point:BEFORE FIELD imba001 name="construct.b.imba001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imba001
+            
+            #add-point:AFTER FIELD imba001 name="construct.a.imba001"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imba002
+            #add-point:BEFORE FIELD imba002 name="construct.b.imba002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imba002
+            
+            #add-point:AFTER FIELD imba002 name="construct.a.imba002"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imba002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imba002
+            #add-point:ON ACTION controlp INFIELD imba002 name="construct.c.imba002"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbal002
+            #add-point:BEFORE FIELD imbal002 name="construct.b.imbal002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbal002
+            
+            #add-point:AFTER FIELD imbal002 name="construct.a.imbal002"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imbal002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbal002
+            #add-point:ON ACTION controlp INFIELD imbal002 name="construct.c.imbal002"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbal003
+            #add-point:BEFORE FIELD imbal003 name="construct.b.imbal003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbal003
+            
+            #add-point:AFTER FIELD imbal003 name="construct.a.imbal003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imbal003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbal003
+            #add-point:ON ACTION controlp INFIELD imbal003 name="construct.c.imbal003"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbal004
+            #add-point:BEFORE FIELD imbal004 name="construct.b.imbal004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbal004
+            
+            #add-point:AFTER FIELD imbal004 name="construct.a.imbal004"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imbal004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbal004
+            #add-point:ON ACTION controlp INFIELD imbal004 name="construct.c.imbal004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.imba009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imba009
+            #add-point:ON ACTION controlp INFIELD imba009 name="construct.c.imba009"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_rtax001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imba009  #顯示到畫面上
+
+            NEXT FIELD imba009                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imba009
+            #add-point:BEFORE FIELD imba009 name="construct.b.imba009"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imba009
+            
+            #add-point:AFTER FIELD imba009 name="construct.a.imba009"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imba003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imba003
+            #add-point:ON ACTION controlp INFIELD imba003 name="construct.c.imba003"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_imca001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imba003  #顯示到畫面上
+
+            NEXT FIELD imba003                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imba003
+            #add-point:BEFORE FIELD imba003 name="construct.b.imba003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imba003
+            
+            #add-point:AFTER FIELD imba003 name="construct.a.imba003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imba004
+            #add-point:BEFORE FIELD imba004 name="construct.b.imba004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imba004
+            
+            #add-point:AFTER FIELD imba004 name="construct.a.imba004"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imba004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imba004
+            #add-point:ON ACTION controlp INFIELD imba004 name="construct.c.imba004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.imba005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imba005
+            #add-point:ON ACTION controlp INFIELD imba005 name="construct.c.imba005"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_imea001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imba005  #顯示到畫面上
+
+            NEXT FIELD imba005                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imba005
+            #add-point:BEFORE FIELD imba005 name="construct.b.imba005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imba005
+            
+            #add-point:AFTER FIELD imba005 name="construct.a.imba005"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imba006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imba006
+            #add-point:ON ACTION controlp INFIELD imba006 name="construct.c.imba006"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooca001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imba006  #顯示到畫面上
+
+            NEXT FIELD imba006                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imba006
+            #add-point:BEFORE FIELD imba006 name="construct.b.imba006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imba006
+            
+            #add-point:AFTER FIELD imba006 name="construct.a.imba006"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imba010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imba010
+            #add-point:ON ACTION controlp INFIELD imba010 name="construct.c.imba010"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+			LET g_qryparam.arg1 = "210" #應用分類
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imba010  #顯示到畫面上
+
+            NEXT FIELD imba010                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imba010
+            #add-point:BEFORE FIELD imba010 name="construct.b.imba010"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imba010
+            
+            #add-point:AFTER FIELD imba010 name="construct.a.imba010"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imbf111
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf111
+            #add-point:ON ACTION controlp INFIELD imbf111 name="construct.c.imbf111"
+            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_imcd111()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imbf111  #顯示到畫面上
+
+            NEXT FIELD imbf111                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf111
+            #add-point:BEFORE FIELD imbf111 name="construct.b.imbf111"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf111
+            
+            #add-point:AFTER FIELD imbf111 name="construct.a.imbf111"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imbf112
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf112
+            #add-point:ON ACTION controlp INFIELD imbf112 name="construct.c.imbf112"
+            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooca001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imbf112  #顯示到畫面上
+
+            NEXT FIELD imbf112                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf112
+            #add-point:BEFORE FIELD imbf112 name="construct.b.imbf112"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf112
+            
+            #add-point:AFTER FIELD imbf112 name="construct.a.imbf112"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imbf113
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf113
+            #add-point:ON ACTION controlp INFIELD imbf113 name="construct.c.imbf113"
+            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooca001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imbf113  #顯示到畫面上
+
+            NEXT FIELD imbf113                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf113
+            #add-point:BEFORE FIELD imbf113 name="construct.b.imbf113"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf113
+            
+            #add-point:AFTER FIELD imbf113 name="construct.a.imbf113"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf114
+            #add-point:BEFORE FIELD imbf114 name="construct.b.imbf114"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf114
+            
+            #add-point:AFTER FIELD imbf114 name="construct.a.imbf114"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imbf114
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf114
+            #add-point:ON ACTION controlp INFIELD imbf114 name="construct.c.imbf114"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf115
+            #add-point:BEFORE FIELD imbf115 name="construct.b.imbf115"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf115
+            
+            #add-point:AFTER FIELD imbf115 name="construct.a.imbf115"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imbf115
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf115
+            #add-point:ON ACTION controlp INFIELD imbf115 name="construct.c.imbf115"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf116
+            #add-point:BEFORE FIELD imbf116 name="construct.b.imbf116"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf116
+            
+            #add-point:AFTER FIELD imbf116 name="construct.a.imbf116"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imbf116
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf116
+            #add-point:ON ACTION controlp INFIELD imbf116 name="construct.c.imbf116"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf117
+            #add-point:BEFORE FIELD imbf117 name="construct.b.imbf117"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf117
+            
+            #add-point:AFTER FIELD imbf117 name="construct.a.imbf117"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imbf117
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf117
+            #add-point:ON ACTION controlp INFIELD imbf117 name="construct.c.imbf117"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf118
+            #add-point:BEFORE FIELD imbf118 name="construct.b.imbf118"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf118
+            
+            #add-point:AFTER FIELD imbf118 name="construct.a.imbf118"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imbf118
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf118
+            #add-point:ON ACTION controlp INFIELD imbf118 name="construct.c.imbf118"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.imbfownid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbfownid
+            #add-point:ON ACTION controlp INFIELD imbfownid name="construct.c.imbfownid"
+            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imbfownid  #顯示到畫面上
+
+            NEXT FIELD imbfownid                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbfownid
+            #add-point:BEFORE FIELD imbfownid name="construct.b.imbfownid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbfownid
+            
+            #add-point:AFTER FIELD imbfownid name="construct.a.imbfownid"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imbfowndp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbfowndp
+            #add-point:ON ACTION controlp INFIELD imbfowndp name="construct.c.imbfowndp"
+            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imbfowndp  #顯示到畫面上
+
+            NEXT FIELD imbfowndp                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbfowndp
+            #add-point:BEFORE FIELD imbfowndp name="construct.b.imbfowndp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbfowndp
+            
+            #add-point:AFTER FIELD imbfowndp name="construct.a.imbfowndp"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imbfcrtid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbfcrtid
+            #add-point:ON ACTION controlp INFIELD imbfcrtid name="construct.c.imbfcrtid"
+            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imbfcrtid  #顯示到畫面上
+
+            NEXT FIELD imbfcrtid                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbfcrtid
+            #add-point:BEFORE FIELD imbfcrtid name="construct.b.imbfcrtid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbfcrtid
+            
+            #add-point:AFTER FIELD imbfcrtid name="construct.a.imbfcrtid"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imbfcrtdp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbfcrtdp
+            #add-point:ON ACTION controlp INFIELD imbfcrtdp name="construct.c.imbfcrtdp"
+            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imbfcrtdp  #顯示到畫面上
+
+            NEXT FIELD imbfcrtdp                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbfcrtdp
+            #add-point:BEFORE FIELD imbfcrtdp name="construct.b.imbfcrtdp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbfcrtdp
+            
+            #add-point:AFTER FIELD imbfcrtdp name="construct.a.imbfcrtdp"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbfcrtdt
+            #add-point:BEFORE FIELD imbfcrtdt name="construct.b.imbfcrtdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.imbfmodid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbfmodid
+            #add-point:ON ACTION controlp INFIELD imbfmodid name="construct.c.imbfmodid"
+            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imbfmodid  #顯示到畫面上
+
+            NEXT FIELD imbfmodid                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbfmodid
+            #add-point:BEFORE FIELD imbfmodid name="construct.b.imbfmodid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbfmodid
+            
+            #add-point:AFTER FIELD imbfmodid name="construct.a.imbfmodid"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbfmoddt
+            #add-point:BEFORE FIELD imbfmoddt name="construct.b.imbfmoddt"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf121
+            #add-point:BEFORE FIELD imbf121 name="construct.b.imbf121"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf121
+            
+            #add-point:AFTER FIELD imbf121 name="construct.a.imbf121"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imbf121
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf121
+            #add-point:ON ACTION controlp INFIELD imbf121 name="construct.c.imbf121"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf122
+            #add-point:BEFORE FIELD imbf122 name="construct.b.imbf122"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf122
+            
+            #add-point:AFTER FIELD imbf122 name="construct.a.imbf122"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imbf122
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf122
+            #add-point:ON ACTION controlp INFIELD imbf122 name="construct.c.imbf122"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.imbf123
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf123
+            #add-point:ON ACTION controlp INFIELD imbf123 name="construct.c.imbf123"
+            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaa001_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imbf123  #顯示到畫面上
+               #DISPLAY g_qryparam.return2 TO imaal003 #品名 
+
+            NEXT FIELD imbf123                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf123
+            #add-point:BEFORE FIELD imbf123 name="construct.b.imbf123"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf123
+            
+            #add-point:AFTER FIELD imbf123 name="construct.a.imbf123"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf124
+            #add-point:BEFORE FIELD imbf124 name="construct.b.imbf124"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf124
+            
+            #add-point:AFTER FIELD imbf124 name="construct.a.imbf124"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imbf124
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf124
+            #add-point:ON ACTION controlp INFIELD imbf124 name="construct.c.imbf124"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.imbf125
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf125
+            #add-point:ON ACTION controlp INFIELD imbf125 name="construct.c.imbf125"
+            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imbf125  #顯示到畫面上
+
+            NEXT FIELD imbf125                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf125
+            #add-point:BEFORE FIELD imbf125 name="construct.b.imbf125"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf125
+            
+            #add-point:AFTER FIELD imbf125 name="construct.a.imbf125"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf126
+            #add-point:BEFORE FIELD imbf126 name="construct.b.imbf126"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf126
+            
+            #add-point:AFTER FIELD imbf126 name="construct.a.imbf126"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imbf126
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf126
+            #add-point:ON ACTION controlp INFIELD imbf126 name="construct.c.imbf126"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf127
+            #add-point:BEFORE FIELD imbf127 name="construct.b.imbf127"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf127
+            
+            #add-point:AFTER FIELD imbf127 name="construct.a.imbf127"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imbf127
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf127
+            #add-point:ON ACTION controlp INFIELD imbf127 name="construct.c.imbf127"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf130
+            #add-point:BEFORE FIELD imbf130 name="construct.b.imbf130"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf130
+            
+            #add-point:AFTER FIELD imbf130 name="construct.a.imbf130"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imbf130
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf130
+            #add-point:ON ACTION controlp INFIELD imbf130 name="construct.c.imbf130"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf128
+            #add-point:BEFORE FIELD imbf128 name="construct.b.imbf128"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf128
+            
+            #add-point:AFTER FIELD imbf128 name="construct.a.imbf128"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imbf128
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf128
+            #add-point:ON ACTION controlp INFIELD imbf128 name="construct.c.imbf128"
+            
+            #END add-point
+ 
+ 
+ 
+           
+      END CONSTRUCT
+      
+      #add-point:cs段more_construct name="cs.more_construct"
+      
+      #end add-point   
+      
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog name="cs.b_dialog"
+         
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+  
+   #add-point:cs段after_construct name="cs.after_construct"
+   
+   #end add-point
+  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimt303.filter" >}
+#應用 a50 樣板自動產生(Version:8)
+#+ filter過濾功能
+PRIVATE FUNCTION aimt303_filter()
+   #add-point:filter段define name="filter.define_customerization"
+   
+   #end add-point   
+   #add-point:filter段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="filter.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   IF NOT g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF   
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter.trim()
+   LET g_wc_t = g_wc
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter_t, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON imbfdocno,imbf111
+                          FROM s_browse[1].b_imbfdocno,s_browse[1].b_imbf111
+ 
+         BEFORE CONSTRUCT
+               DISPLAY aimt303_filter_parser('imbfdocno') TO s_browse[1].b_imbfdocno
+            DISPLAY aimt303_filter_parser('imbf111') TO s_browse[1].b_imbf111
+      
+         #add-point:filter段cs_ctrl name="filter.cs_ctrl"
+         
+         #end add-point
+      
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs name="filter.add_cs"
+      
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog name="filter.b_dialog"
+         
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = "   AND   ", g_wc_filter, "   "
+      LET g_wc = g_wc , g_wc_filter
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+      LET g_wc = g_wc_t
+   END IF
+ 
+      CALL aimt303_filter_show('imbfdocno')
+   CALL aimt303_filter_show('imbf111')
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimt303.filter_parser" >}
+#+ filter過濾功能
+PRIVATE FUNCTION aimt303_filter_parser(ps_field)
+   #add-point:filter段define name="filter_parser.define_customerization"
+   
+   #end add-point    
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_parser.define"
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimt303.filter_show" >}
+#+ 顯示過濾條件
+PRIVATE FUNCTION aimt303_filter_show(ps_field)
+   DEFINE ps_field         STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.b_", ps_field
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = aimt303_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimt303.query" >}
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION aimt303_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc STRING
+   #add-point:query段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="query.pre_function"
+   
+   #end add-point
+   
+   LET INT_FLAG = 0
+   LET ls_wc = g_wc
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+ 
+   CALL g_browser.clear() 
+ 
+   #browser panel折疊
+   IF g_worksheet_hidden THEN
+      CALL gfrm_curr.setElementHidden("worksheet_vbox",0)
+      CALL gfrm_curr.setElementImage("worksheethidden","worksheethidden-24.png")
+      LET g_worksheet_hidden = 0
+   END IF
+   
+   #單頭折疊
+   IF g_header_hidden THEN
+      CALL gfrm_curr.setElementHidden("vb_master",0)
+      CALL gfrm_curr.setElementImage("controls","headerhidden-24")
+      LET g_header_hidden = 0
+   END IF
+ 
+   INITIALIZE g_imbf_m.* TO NULL
+   ERROR ""
+ 
+   DISPLAY " " TO FORMONLY.b_count
+   DISPLAY " " TO FORMONLY.h_count
+   CALL aimt303_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      #LET g_wc = ls_wc
+      LET g_wc = " 1=2"
+      CALL aimt303_browser_fill(g_wc,"F")
+      CALL aimt303_fetch("")
+      RETURN
+   ELSE
+      LET g_current_row = 1
+      LET g_current_cnt = 0
+   END IF
+   
+   #根據條件從新抓取資料
+   LET g_error_show = 1
+   CALL aimt303_browser_fill(g_wc,"F")   # 移到第一頁
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||")")
+   
+   #備份搜尋條件
+   LET ls_wc = g_wc
+   
+   IF g_browser.getLength() = 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "-100" 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   ELSE
+      CALL aimt303_fetch("F") 
+   END IF
+   
+   LET g_wc_filter = ""
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimt303.fetch" >}
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION aimt303_fetch(p_fl)
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point
+   DEFINE p_fl       LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="fetch.pre_function"
+   
+   #end add-point
+   
+   #根據傳入的條件決定抓取的資料
+   CASE p_fl
+      WHEN "F" 
+         LET g_current_idx = 1
+      WHEN "P"
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN "N"
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN "L" 
+         #LET g_current_idx = g_header_cnt        
+         LET g_current_idx = g_browser.getLength()    
+      WHEN "/"
+         #詢問要指定的筆數
+         IF (NOT g_no_ask) THEN      
+            CALL cl_getmsg("fetch", g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,": " FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl"
+            END PROMPT
+            
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT CASE  
+            END IF           
+         END IF
+         IF g_jump > 0 THEN
+            LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE     
+   END CASE
+ 
+   #筆數顯示
+   LET g_browser_idx = g_current_idx 
+   IF g_browser_cnt > 0 THEN
+      DISPLAY g_browser_idx TO FORMONLY.b_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.b_count #總筆數
+      DISPLAY g_browser_idx TO FORMONLY.h_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.h_count #總筆數
+   ELSE
+      DISPLAY '' TO FORMONLY.b_index #當下筆數
+      DISPLAY '' TO FORMONLY.b_count #總筆數
+      DISPLAY '' TO FORMONLY.h_index #當下筆數
+      DISPLAY '' TO FORMONLY.h_count #總筆數
+   END IF
+   
+   
+   
+   #避免超出browser資料筆數上限
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_browser_idx = g_browser.getLength()
+      LET g_current_idx = g_browser.getLength() 
+   END IF
+   
+   # 設定browse索引
+   CALL g_curr_diag.setCurrentRow("s_browse", g_current_idx)
+   CALL cl_navigator_setting(g_browser_idx, g_browser_cnt) 
+ 
+   #代表沒有資料, 無需做後續資料撈取之動作
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+ 
+   #根據選定的筆數給予key欄位值
+   LET g_imbf_m.imbfdocno = g_browser[g_current_idx].b_imbfdocno
+ 
+                       
+   #讀取單頭所有欄位資料
+   EXECUTE aimt303_master_referesh USING g_site,g_imbf_m.imbfdocno INTO g_imbf_m.imbfdocno,g_imbf_m.imbf111, 
+       g_imbf_m.imbf112,g_imbf_m.imbf113,g_imbf_m.imbf114,g_imbf_m.imbf115,g_imbf_m.imbf116,g_imbf_m.imbf117, 
+       g_imbf_m.imbf118,g_imbf_m.imbfownid,g_imbf_m.imbfowndp,g_imbf_m.imbfcrtid,g_imbf_m.imbfcrtdp, 
+       g_imbf_m.imbfcrtdt,g_imbf_m.imbfmodid,g_imbf_m.imbfmoddt,g_imbf_m.imbf121,g_imbf_m.imbf122,g_imbf_m.imbf123, 
+       g_imbf_m.imbf124,g_imbf_m.imbf125,g_imbf_m.imbf126,g_imbf_m.imbf127,g_imbf_m.imbf130,g_imbf_m.imbf128, 
+       g_imbf_m.imbf111_desc,g_imbf_m.imbf112_desc,g_imbf_m.imbf113_desc,g_imbf_m.imbfownid_desc,g_imbf_m.imbfowndp_desc, 
+       g_imbf_m.imbfcrtid_desc,g_imbf_m.imbfcrtdp_desc,g_imbf_m.imbfmodid_desc,g_imbf_m.imbf123_desc, 
+       g_imbf_m.imbf125_desc
+   
+   #遮罩相關處理
+   LET g_imbf_m_mask_o.* =  g_imbf_m.*
+   CALL aimt303_imbf_t_mask()
+   LET g_imbf_m_mask_n.* =  g_imbf_m.*
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL aimt303_set_act_visible()
+   CALL aimt303_set_act_no_visible()
+ 
+   #add-point:fetch段action控制 name="fetch.action_control"
+   SELECT imbastus INTO g_imbf_m.l_s1 FROM imba_t
+    WHERE imbaent = g_enterprise  AND imbadocno = g_imbf_m.imbfdocno
+ 
+   IF g_imbf_m.l_s1 != 'N' THEN
+      CALL cl_set_act_visible("modify", FALSE)
+   ELSE
+      CALL cl_set_act_visible("modify",  TRUE)
+   END IF
+   IF NOT cl_null(g_argv[02]) THEN
+      CALL cl_set_act_visible("query", FALSE)
+   END IF
+   #end add-point  
+   
+   
+   
+   #保存單頭舊值
+   LET g_imbf_m_t.* = g_imbf_m.*
+   LET g_imbf_m_o.* = g_imbf_m.*
+   
+   LET g_data_owner = g_imbf_m.imbfownid      
+   LET g_data_dept  = g_imbf_m.imbfowndp
+   
+   #重新顯示
+   CALL aimt303_show()
+   
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimt303.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION aimt303_insert()
+   #add-point:insert段define(客製用) name="insert.define_customerization"
+   
+   #end add-point
+   #add-point:insert段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="insert.pre_function"
+   
+   #end add-point
+   
+   CLEAR FORM #清畫面欄位內容
+   INITIALIZE g_imbf_m.* TO NULL             #DEFAULT 設定
+   LET g_imbfdocno_t = NULL
+ 
+   
+   #add-point:insert段before name="insert.before"
+   
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   
+   WHILE TRUE
+      
+      #公用欄位給值
+      #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_imbf_m.imbfownid = g_user
+      LET g_imbf_m.imbfowndp = g_dept
+      LET g_imbf_m.imbfcrtid = g_user
+      LET g_imbf_m.imbfcrtdp = g_dept 
+      LET g_imbf_m.imbfcrtdt = cl_get_current()
+      LET g_imbf_m.imbfmodid = g_user
+      LET g_imbf_m.imbfmoddt = cl_get_current()
+ 
+ 
+ 
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+            LET g_imbf_m.imba000 = "I"
+      LET g_imbf_m.imba004 = "M"
+      LET g_imbf_m.imbf114 = "0"
+      LET g_imbf_m.imbf115 = "0"
+      LET g_imbf_m.imbf116 = "1"
+      LET g_imbf_m.imbf117 = "0"
+      LET g_imbf_m.imbf118 = "0"
+      LET g_imbf_m.imbf121 = "0"
+      LET g_imbf_m.imbf122 = "0"
+      LET g_imbf_m.imbf124 = "0"
+      LET g_imbf_m.imbf126 = "N"
+      LET g_imbf_m.imbf127 = "N"
+      LET g_imbf_m.imbf130 = "0"
+      LET g_imbf_m.imbf128 = "0"
+ 
+ 
+      #add-point:單頭預設值 name="insert.default"
+      
+      #end add-point   
+     
+      #顯示狀態(stus)圖片
+      
+     
+      #資料輸入
+      CALL aimt303_input("a")
+      
+      #add-point:單頭輸入後 name="insert.after_insert"
+      
+      #end add-point
+      
+      IF INT_FLAG THEN
+         #取消
+         LET INT_FLAG = 0
+         DISPLAY g_current_cnt TO FORMONLY.h_count     #總筆數
+         DISPLAY g_current_idx TO FORMONLY.h_index     #當下筆數
+         INITIALIZE g_imbf_m.* TO NULL
+         CALL aimt303_show()
+         CALL s_transaction_end('N','0')
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         RETURN
+      END IF
+ 
+      LET g_rec_b = 0
+      EXIT WHILE
+   END WHILE
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL aimt303_set_act_visible()
+   CALL aimt303_set_act_no_visible()
+ 
+   #將新增的資料併入搜尋條件中
+   LET g_state = "insert"
+   
+   LET g_imbfdocno_t = g_imbf_m.imbfdocno
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " imbfent = " ||g_enterprise|| " AND imbfsite = '" ||g_site|| "' AND",
+                      " imbfdocno = '", g_imbf_m.imbfdocno, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL aimt303_browser_fill("","")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+ 
+   #撈取異動後的資料(主要是帶出reference)
+   EXECUTE aimt303_master_referesh USING g_site,g_imbf_m.imbfdocno INTO g_imbf_m.imbfdocno,g_imbf_m.imbf111, 
+       g_imbf_m.imbf112,g_imbf_m.imbf113,g_imbf_m.imbf114,g_imbf_m.imbf115,g_imbf_m.imbf116,g_imbf_m.imbf117, 
+       g_imbf_m.imbf118,g_imbf_m.imbfownid,g_imbf_m.imbfowndp,g_imbf_m.imbfcrtid,g_imbf_m.imbfcrtdp, 
+       g_imbf_m.imbfcrtdt,g_imbf_m.imbfmodid,g_imbf_m.imbfmoddt,g_imbf_m.imbf121,g_imbf_m.imbf122,g_imbf_m.imbf123, 
+       g_imbf_m.imbf124,g_imbf_m.imbf125,g_imbf_m.imbf126,g_imbf_m.imbf127,g_imbf_m.imbf130,g_imbf_m.imbf128, 
+       g_imbf_m.imbf111_desc,g_imbf_m.imbf112_desc,g_imbf_m.imbf113_desc,g_imbf_m.imbfownid_desc,g_imbf_m.imbfowndp_desc, 
+       g_imbf_m.imbfcrtid_desc,g_imbf_m.imbfcrtdp_desc,g_imbf_m.imbfmodid_desc,g_imbf_m.imbf123_desc, 
+       g_imbf_m.imbf125_desc
+   
+   
+   #遮罩相關處理
+   LET g_imbf_m_mask_o.* =  g_imbf_m.*
+   CALL aimt303_imbf_t_mask()
+   LET g_imbf_m_mask_n.* =  g_imbf_m.*
+   
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_imbf_m.imbfdocno,g_imbf_m.imbadocdt,g_imbf_m.imba900,g_imbf_m.imba900_desc,g_imbf_m.oobxl003, 
+       g_imbf_m.imba000,g_imbf_m.imba901,g_imbf_m.imba901_desc,g_imbf_m.imba001,g_imbf_m.imba002,g_imbf_m.imbal002, 
+       g_imbf_m.imbal003,g_imbf_m.imbal004,g_imbf_m.imba009,g_imbf_m.imba009_desc,g_imbf_m.imba003,g_imbf_m.imba003_desc, 
+       g_imbf_m.imba004,g_imbf_m.imba005,g_imbf_m.imba005_desc,g_imbf_m.imba006,g_imbf_m.imba006_desc, 
+       g_imbf_m.imba010,g_imbf_m.imba010_desc,g_imbf_m.l_s1,g_imbf_m.imbf111,g_imbf_m.imbf111_desc,g_imbf_m.imbf112, 
+       g_imbf_m.imbf112_desc,g_imbf_m.imbf113,g_imbf_m.imbf113_desc,g_imbf_m.imbf114,g_imbf_m.imbf115, 
+       g_imbf_m.imbf116,g_imbf_m.imbf117,g_imbf_m.imbf118,g_imbf_m.imbfownid,g_imbf_m.imbfownid_desc, 
+       g_imbf_m.imbfowndp,g_imbf_m.imbfowndp_desc,g_imbf_m.imbfcrtid,g_imbf_m.imbfcrtid_desc,g_imbf_m.imbfcrtdp, 
+       g_imbf_m.imbfcrtdp_desc,g_imbf_m.imbfcrtdt,g_imbf_m.imbfmodid,g_imbf_m.imbfmodid_desc,g_imbf_m.imbfmoddt, 
+       g_imbf_m.imbf121,g_imbf_m.imbf122,g_imbf_m.imbf123,g_imbf_m.imbf123_desc,g_imbf_m.imbf124,g_imbf_m.imbf125, 
+       g_imbf_m.imbf125_desc,g_imbf_m.imbf126,g_imbf_m.imbf127,g_imbf_m.imbf130,g_imbf_m.imbf128
+ 
+   #add-point:新增結束後 name="insert.after"
+   
+   #end add-point 
+ 
+   LET g_data_owner = g_imbf_m.imbfownid      
+   LET g_data_dept  = g_imbf_m.imbfowndp
+ 
+   #功能已完成,通報訊息中心
+   CALL aimt303_msgcentre_notify('insert')
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimt303.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION aimt303_modify()
+   #add-point:modify段define(客製用) name="modify.define_customerization"
+   
+   #end add-point
+   #add-point:modify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="modify.pre_function"
+   
+   #end add-point
+   
+   #先確定key值無遺漏
+   IF g_imbf_m.imbfdocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF 
+ 
+   ERROR ""
+  
+   #備份key值
+   LET g_imbfdocno_t = g_imbf_m.imbfdocno
+ 
+   
+   CALL s_transaction_begin()
+   
+   #先lock資料
+   OPEN aimt303_cl USING g_enterprise, g_site,g_imbf_m.imbfdocno
+   IF SQLCA.SQLCODE THEN    #(ver:49)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN aimt303_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.popup = TRUE 
+      CLOSE aimt303_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE aimt303_master_referesh USING g_site,g_imbf_m.imbfdocno INTO g_imbf_m.imbfdocno,g_imbf_m.imbf111, 
+       g_imbf_m.imbf112,g_imbf_m.imbf113,g_imbf_m.imbf114,g_imbf_m.imbf115,g_imbf_m.imbf116,g_imbf_m.imbf117, 
+       g_imbf_m.imbf118,g_imbf_m.imbfownid,g_imbf_m.imbfowndp,g_imbf_m.imbfcrtid,g_imbf_m.imbfcrtdp, 
+       g_imbf_m.imbfcrtdt,g_imbf_m.imbfmodid,g_imbf_m.imbfmoddt,g_imbf_m.imbf121,g_imbf_m.imbf122,g_imbf_m.imbf123, 
+       g_imbf_m.imbf124,g_imbf_m.imbf125,g_imbf_m.imbf126,g_imbf_m.imbf127,g_imbf_m.imbf130,g_imbf_m.imbf128, 
+       g_imbf_m.imbf111_desc,g_imbf_m.imbf112_desc,g_imbf_m.imbf113_desc,g_imbf_m.imbfownid_desc,g_imbf_m.imbfowndp_desc, 
+       g_imbf_m.imbfcrtid_desc,g_imbf_m.imbfcrtdp_desc,g_imbf_m.imbfmodid_desc,g_imbf_m.imbf123_desc, 
+       g_imbf_m.imbf125_desc
+ 
+   #檢查是否允許此動作
+   IF NOT aimt303_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #遮罩相關處理
+   LET g_imbf_m_mask_o.* =  g_imbf_m.*
+   CALL aimt303_imbf_t_mask()
+   LET g_imbf_m_mask_n.* =  g_imbf_m.*
+   
+   
+ 
+   #顯示資料
+   CALL aimt303_show()
+   
+   WHILE TRUE
+      LET g_imbf_m.imbfdocno = g_imbfdocno_t
+ 
+      
+      #寫入修改者/修改日期資訊
+      LET g_imbf_m.imbfmodid = g_user 
+LET g_imbf_m.imbfmoddt = cl_get_current()
+LET g_imbf_m.imbfmodid_desc = cl_get_username(g_imbf_m.imbfmodid)
+      
+      #add-point:modify段修改前 name="modify.before_input"
+      
+      #end add-point
+ 
+      #資料輸入
+      CALL aimt303_input("u")     
+ 
+      #add-point:modify段修改後 name="modify.after_input"
+      
+      #end add-point
+      
+      IF INT_FLAG THEN
+         CALL s_transaction_end('N','0')
+         LET INT_FLAG = 0
+         LET g_imbf_m.* = g_imbf_m_t.*
+         CALL aimt303_show()
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         EXIT WHILE
+      END IF
+ 
+      #若有modid跟moddt則進行update
+      UPDATE imbf_t SET (imbfmodid,imbfmoddt) = (g_imbf_m.imbfmodid,g_imbf_m.imbfmoddt)
+       WHERE imbfent = g_enterprise AND imbfsite = g_site AND imbfdocno = g_imbfdocno_t
+ 
+ 
+      EXIT WHILE
+      
+   END WHILE
+ 
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL aimt303_set_act_visible()
+   CALL aimt303_set_act_no_visible()
+ 
+   #組合新增資料的條件
+   LET g_add_browse = " imbfent = " ||g_enterprise|| " AND imbfsite = '" ||g_site|| "' AND",
+                      " imbfdocno = '", g_imbf_m.imbfdocno, "' "
+ 
+   #填到對應位置
+   CALL aimt303_browser_fill(g_wc,"")
+ 
+   CLOSE aimt303_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL aimt303_msgcentre_notify('modify')
+   
+   LET g_worksheet_hidden = 0
+   
+END FUNCTION   
+ 
+{</section>}
+ 
+{<section id="aimt303.input" >}
+#+ 資料輸入
+PRIVATE FUNCTION aimt303_input(p_cmd)
+   #add-point:input段define(客製用) name="input.define_customerization"
+   
+   #end add-point
+   DEFINE p_cmd           LIKE type_t.chr1
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_n             LIKE type_t.num10       #檢查重複用  
+   DEFINE l_cnt           LIKE type_t.num10       #檢查重複用  
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否  
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_i             LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num10
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE l_ooag001       LIKE ooag_t.ooag001
+   DEFINE l_ooagstus      LIKE ooag_t.ooagstus
+   DEFINE l_imaa001       LIKE imaa_t.imaa001
+   DEFINE l_imaastus      LIKE imaa_t.imaastus
+   DEFINE l_imaa027       LIKE imaa_t.imaa027
+   #add--160511-00040#5 By shiun--(S)
+   DEFINE l_imbamoddt     LIKE imba_t.imbamoddt 
+   #add--160511-00040#5 By shiun--(E)
+   #end add-point
+   
+   #add-point:Function前置處理  name="input.pre_function"
+   
+   #end add-point
+   
+   #切換至輸入畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_imbf_m.imbfdocno,g_imbf_m.imbadocdt,g_imbf_m.imba900,g_imbf_m.imba900_desc,g_imbf_m.oobxl003, 
+       g_imbf_m.imba000,g_imbf_m.imba901,g_imbf_m.imba901_desc,g_imbf_m.imba001,g_imbf_m.imba002,g_imbf_m.imbal002, 
+       g_imbf_m.imbal003,g_imbf_m.imbal004,g_imbf_m.imba009,g_imbf_m.imba009_desc,g_imbf_m.imba003,g_imbf_m.imba003_desc, 
+       g_imbf_m.imba004,g_imbf_m.imba005,g_imbf_m.imba005_desc,g_imbf_m.imba006,g_imbf_m.imba006_desc, 
+       g_imbf_m.imba010,g_imbf_m.imba010_desc,g_imbf_m.l_s1,g_imbf_m.imbf111,g_imbf_m.imbf111_desc,g_imbf_m.imbf112, 
+       g_imbf_m.imbf112_desc,g_imbf_m.imbf113,g_imbf_m.imbf113_desc,g_imbf_m.imbf114,g_imbf_m.imbf115, 
+       g_imbf_m.imbf116,g_imbf_m.imbf117,g_imbf_m.imbf118,g_imbf_m.imbfownid,g_imbf_m.imbfownid_desc, 
+       g_imbf_m.imbfowndp,g_imbf_m.imbfowndp_desc,g_imbf_m.imbfcrtid,g_imbf_m.imbfcrtid_desc,g_imbf_m.imbfcrtdp, 
+       g_imbf_m.imbfcrtdp_desc,g_imbf_m.imbfcrtdt,g_imbf_m.imbfmodid,g_imbf_m.imbfmodid_desc,g_imbf_m.imbfmoddt, 
+       g_imbf_m.imbf121,g_imbf_m.imbf122,g_imbf_m.imbf123,g_imbf_m.imbf123_desc,g_imbf_m.imbf124,g_imbf_m.imbf125, 
+       g_imbf_m.imbf125_desc,g_imbf_m.imbf126,g_imbf_m.imbf127,g_imbf_m.imbf130,g_imbf_m.imbf128
+   
+   CALL cl_set_head_visible("","YES")  
+   
+   #a-新增,r-複製,u-修改
+   IF p_cmd = 'r' THEN
+      #此段落的r動作等同於a
+      LET p_cmd = 'a'
+   END IF
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   LET g_qryparam.state = "i"
+   
+   #控制key欄位可否輸入
+   CALL aimt303_set_entry(p_cmd)
+   #add-point:set_entry後 name="input.after_set_entry"
+   
+   #end add-point
+   CALL aimt303_set_no_entry(p_cmd)
+   
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+   #add-point:資料輸入前 name="input.before_input"
+   
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #單頭段
+      INPUT BY NAME g_imbf_m.imbfdocno,g_imbf_m.imbadocdt,g_imbf_m.imba900,g_imbf_m.imba000,g_imbf_m.imba901, 
+          g_imbf_m.imba001,g_imbf_m.imba002,g_imbf_m.imbal002,g_imbf_m.imbal003,g_imbf_m.imbal004,g_imbf_m.imba009, 
+          g_imbf_m.imba003,g_imbf_m.imba004,g_imbf_m.imba005,g_imbf_m.imba006,g_imbf_m.imba010,g_imbf_m.l_s1, 
+          g_imbf_m.imbf111,g_imbf_m.imbf112,g_imbf_m.imbf113,g_imbf_m.imbf114,g_imbf_m.imbf115,g_imbf_m.imbf116, 
+          g_imbf_m.imbf117,g_imbf_m.imbf118,g_imbf_m.imbf121,g_imbf_m.imbf122,g_imbf_m.imbf123,g_imbf_m.imbf124, 
+          g_imbf_m.imbf125,g_imbf_m.imbf126,g_imbf_m.imbf127,g_imbf_m.imbf130,g_imbf_m.imbf128 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION update_item
+            LET g_action_choice="update_item"
+            IF cl_auth_chk_act("update_item") THEN
+               
+               #add-point:ON ACTION update_item name="input.master_input.update_item"
+               
+               #END add-point
+            END IF
+ 
+ 
+ 
+ 
+         
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            #其他table資料備份(確定是否更改用)
+            LET g_master_multi_table_t.imbaldocno = g_imbf_m.imbfdocno
+LET g_master_multi_table_t.imbal002 = g_imbf_m.imbal002
+LET g_master_multi_table_t.imbal003 = g_imbf_m.imbal003
+LET g_master_multi_table_t.imbal004 = g_imbf_m.imbal004
+ 
+            #add-point:input開始前 name="input.before.input"
+            
+            #end add-point
+   
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbfdocno
+            #add-point:BEFORE FIELD imbfdocno name="input.b.imbfdocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbfdocno
+            
+            #add-point:AFTER FIELD imbfdocno name="input.a.imbfdocno"
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_imbf_m.imbfdocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_imbf_m.imbfdocno != g_imbfdocno_t ))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM imbf_t WHERE "||"imbfent = '" ||g_enterprise|| "' AND imbfsite = '" ||g_site|| "' AND "||"imbfdocno = '"||g_imbf_m.imbfdocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbfdocno
+            #add-point:ON CHANGE imbfdocno name="input.g.imbfdocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbadocdt
+            #add-point:BEFORE FIELD imbadocdt name="input.b.imbadocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbadocdt
+            
+            #add-point:AFTER FIELD imbadocdt name="input.a.imbadocdt"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbadocdt
+            #add-point:ON CHANGE imbadocdt name="input.g.imbadocdt"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imba900
+            
+            #add-point:AFTER FIELD imba900 name="input.a.imba900"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_imbf_m.imba900
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_imbf_m.imba900_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_imbf_m.imba900_desc
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imba900
+            #add-point:BEFORE FIELD imba900 name="input.b.imba900"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imba900
+            #add-point:ON CHANGE imba900 name="input.g.imba900"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imba000
+            #add-point:BEFORE FIELD imba000 name="input.b.imba000"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imba000
+            
+            #add-point:AFTER FIELD imba000 name="input.a.imba000"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imba000
+            #add-point:ON CHANGE imba000 name="input.g.imba000"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imba901
+            
+            #add-point:AFTER FIELD imba901 name="input.a.imba901"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_imbf_m.imba901
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_imbf_m.imba901_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_imbf_m.imba901_desc
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imba901
+            #add-point:BEFORE FIELD imba901 name="input.b.imba901"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imba901
+            #add-point:ON CHANGE imba901 name="input.g.imba901"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imba001
+            #add-point:BEFORE FIELD imba001 name="input.b.imba001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imba001
+            
+            #add-point:AFTER FIELD imba001 name="input.a.imba001"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imba001
+            #add-point:ON CHANGE imba001 name="input.g.imba001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imba002
+            #add-point:BEFORE FIELD imba002 name="input.b.imba002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imba002
+            
+            #add-point:AFTER FIELD imba002 name="input.a.imba002"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imba002
+            #add-point:ON CHANGE imba002 name="input.g.imba002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbal002
+            #add-point:BEFORE FIELD imbal002 name="input.b.imbal002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbal002
+            
+            #add-point:AFTER FIELD imbal002 name="input.a.imbal002"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbal002
+            #add-point:ON CHANGE imbal002 name="input.g.imbal002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbal003
+            #add-point:BEFORE FIELD imbal003 name="input.b.imbal003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbal003
+            
+            #add-point:AFTER FIELD imbal003 name="input.a.imbal003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbal003
+            #add-point:ON CHANGE imbal003 name="input.g.imbal003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbal004
+            #add-point:BEFORE FIELD imbal004 name="input.b.imbal004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbal004
+            
+            #add-point:AFTER FIELD imbal004 name="input.a.imbal004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbal004
+            #add-point:ON CHANGE imbal004 name="input.g.imbal004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imba009
+            
+            #add-point:AFTER FIELD imba009 name="input.a.imba009"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_imbf_m.imba009
+            CALL ap_ref_array2(g_ref_fields,"SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent='"||g_enterprise||"' AND rtaxl001=? AND rtaxl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_imbf_m.imba009_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_imbf_m.imba009_desc
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imba009
+            #add-point:BEFORE FIELD imba009 name="input.b.imba009"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imba009
+            #add-point:ON CHANGE imba009 name="input.g.imba009"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imba003
+            
+            #add-point:AFTER FIELD imba003 name="input.a.imba003"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_imbf_m.imba003
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='200' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_imbf_m.imba003_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_imbf_m.imba003_desc
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imba003
+            #add-point:BEFORE FIELD imba003 name="input.b.imba003"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imba003
+            #add-point:ON CHANGE imba003 name="input.g.imba003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imba004
+            #add-point:BEFORE FIELD imba004 name="input.b.imba004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imba004
+            
+            #add-point:AFTER FIELD imba004 name="input.a.imba004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imba004
+            #add-point:ON CHANGE imba004 name="input.g.imba004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imba005
+            
+            #add-point:AFTER FIELD imba005 name="input.a.imba005"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imba005
+            #add-point:BEFORE FIELD imba005 name="input.b.imba005"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imba005
+            #add-point:ON CHANGE imba005 name="input.g.imba005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imba006
+            
+            #add-point:AFTER FIELD imba006 name="input.a.imba006"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_imbf_m.imba006
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_imbf_m.imba006_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_imbf_m.imba006_desc
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imba006
+            #add-point:BEFORE FIELD imba006 name="input.b.imba006"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imba006
+            #add-point:ON CHANGE imba006 name="input.g.imba006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imba010
+            
+            #add-point:AFTER FIELD imba010 name="input.a.imba010"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_imbf_m.imba010
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='210' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_imbf_m.imba010_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_imbf_m.imba010_desc
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imba010
+            #add-point:BEFORE FIELD imba010 name="input.b.imba010"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imba010
+            #add-point:ON CHANGE imba010 name="input.g.imba010"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_s1
+            #add-point:BEFORE FIELD l_s1 name="input.b.l_s1"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_s1
+            
+            #add-point:AFTER FIELD l_s1 name="input.a.l_s1"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_s1
+            #add-point:ON CHANGE l_s1 name="input.g.l_s1"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf111
+            
+            #add-point:AFTER FIELD imbf111 name="input.a.imbf111"
+            IF NOT cl_null(g_imbf_m.imbf111) THEN 
+               LET g_imbf_m.imbf111_desc = ' ' 
+               DISPLAY BY NAME g_imbf_m.imbf111_desc
+               #IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_imbf_m.imbf111 != g_imbf_m_t.imbf111 ))) THEN   #160824-00007#269 Mark By Ken 161229
+               IF g_imbf_m.imbf111 != g_imbf_m_o.imbf111 OR cl_null(g_imbf_m_o.imbf111) THEN    #160824-00007#269 Add By Ken 161229
+                  IF NOT ap_chk_isExist(g_imbf_m.imbf111,"SELECT COUNT(*) FROM oocq_t WHERE oocqent = '" ||g_enterprise||"' AND oocq001 = '202' AND oocq002 = ? ","sub-01303",'aimi003' ) THEN #160318-00005#21 mod  #"aim-00099",0 ) THEN
+                     #160824-00007#269 Mark By Ken 161229(S)
+                     #LET g_imbf_m.imbf111 = g_imbf_m_t.imbf111
+                     #LET g_imbf_m.imbf111_desc = g_imbf_m_t.imbf111_desc
+                     #160824-00007#269 Mark By Ken 161229(E)
+                     #160824-00007#269 Add By Ken 161229(S)
+                     LET g_imbf_m.imbf111 = g_imbf_m_o.imbf111
+                     LET g_imbf_m.imbf111_desc = g_imbf_m_o.imbf111_desc                     
+                     #160824-00007#269 Add By Ken 161229(E)
+                     DISPLAY BY NAME g_imbf_m.imbf111_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  IF NOT ap_chk_isExist(g_imbf_m.imbf111,"SELECT COUNT(*) FROM oocq_t WHERE oocqent = '" ||g_enterprise||"' AND oocq001 = '202' AND oocq002 = ? AND oocqstus = 'Y' ","sub-01302",'aimi003') THEN #160318-00005#21 mod #"aim-00100",0 ) THEN
+                     #160824-00007#269 Mark By Ken 161229(S)
+                     #LET g_imbf_m.imbf111 = g_imbf_m_t.imbf111
+                     #LET g_imbf_m.imbf111_desc = g_imbf_m_t.imbf111_desc
+                     #160824-00007#269 Mark By Ken 161229(E)
+                     #160824-00007#269 Add By Ken 161229(S)
+                     LET g_imbf_m.imbf111 = g_imbf_m_o.imbf111
+                     LET g_imbf_m.imbf111_desc = g_imbf_m_o.imbf111_desc                     
+                     #160824-00007#269 Add By Ken 161229(E)
+                     DISPLAY BY NAME g_imbf_m.imbf111_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               IF g_imbf_m.imbf111 <> g_imbf111_o OR cl_null(g_imbf111_o) THEN
+                  IF cl_ask_confirm('aim-00120') THEN
+                     CALL aimt303_get_imcd()
+                  END IF
+               END IF           
+            END IF
+           
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_imbf_m.imbf111
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='202' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_imbf_m.imbf111_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_imbf_m.imbf111_desc
+            LET g_imbf111_o = g_imbf_m.imbf111
+            LET g_imbf_m_o.* = g_imbf_m.*    #160824-00007#269 Add By Ken 161229
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf111
+            #add-point:BEFORE FIELD imbf111 name="input.b.imbf111"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbf111
+            #add-point:ON CHANGE imbf111 name="input.g.imbf111"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf112
+            
+            #add-point:AFTER FIELD imbf112 name="input.a.imbf112"
+            IF NOT aimt303_ooca_chk(g_imbf_m.imbf112) THEN
+               #160824-00007#269 Mark By Ken 161229(S)
+               #LET g_imbf_m.imbf112 = g_imbf_m_t.imbf112
+               #LET g_imbf_m.imbf112_desc = g_imbf_m_t.imbf112_desc
+               #160824-00007#269 Mark By Ken 161229(E)
+               #160824-00007#269 Add By Ken 161229(S)
+               LET g_imbf_m.imbf112 = g_imbf_m_o.imbf112
+               LET g_imbf_m.imbf112_desc = g_imbf_m_o.imbf112_desc               
+               #160824-00007#269 Add By Ken 161229(E)
+               DISPLAY BY NAME g_imbf_m.imbf112_desc
+               NEXT FIELD imbf112
+            END IF
+            
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_imbf_m.imbf112
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_imbf_m.imbf112_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_imbf_m.imbf112_desc
+            LET g_imbf_m_o.* = g_imbf_m.*    #160824-00007#269 Add By Ken 161229
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf112
+            #add-point:BEFORE FIELD imbf112 name="input.b.imbf112"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbf112
+            #add-point:ON CHANGE imbf112 name="input.g.imbf112"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf113
+            
+            #add-point:AFTER FIELD imbf113 name="input.a.imbf113"
+            IF NOT aimt303_ooca_chk(g_imbf_m.imbf113) THEN
+               #160824-00007#269 Mark By Ken 161229(S)
+               #LET g_imbf_m.imbf113 = g_imbf_m_t.imbf113
+               #LET g_imbf_m.imbf113_desc = g_imbf_m_t.imbf113_desc
+               #160824-00007#269 Mark By Ken 161229(E)
+               #160824-00007#269 Add By Ken 161229(S)
+               LET g_imbf_m.imbf113 = g_imbf_m_o.imbf113
+               LET g_imbf_m.imbf113_desc = g_imbf_m_o.imbf113_desc               
+               #160824-00007#269 Add By Ken 161229(E)
+               DISPLAY BY NAME g_imbf_m.imbf113_desc
+               NEXT FIELD imbf113
+            END IF
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_imbf_m.imbf113
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_imbf_m.imbf113_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_imbf_m.imbf113_desc
+            LET g_imbf_m_o.* = g_imbf_m.*    #160824-00007#269 Add By Ken 161229
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf113
+            #add-point:BEFORE FIELD imbf113 name="input.b.imbf113"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbf113
+            #add-point:ON CHANGE imbf113 name="input.g.imbf113"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf114
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_imbf_m.imbf114,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD imbf114
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD imbf114 name="input.a.imbf114"
+            IF NOT cl_null(g_imbf_m.imbf114) THEN 
+            END IF 
+         
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf114
+            #add-point:BEFORE FIELD imbf114 name="input.b.imbf114"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbf114
+            #add-point:ON CHANGE imbf114 name="input.g.imbf114"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf115
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_imbf_m.imbf115,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD imbf115
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD imbf115 name="input.a.imbf115"
+            IF NOT cl_null(g_imbf_m.imbf115) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf115
+            #add-point:BEFORE FIELD imbf115 name="input.b.imbf115"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbf115
+            #add-point:ON CHANGE imbf115 name="input.g.imbf115"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf116
+            #add-point:BEFORE FIELD imbf116 name="input.b.imbf116"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf116
+            
+            #add-point:AFTER FIELD imbf116 name="input.a.imbf116"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbf116
+            #add-point:ON CHANGE imbf116 name="input.g.imbf116"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf117
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_imbf_m.imbf117,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD imbf117
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD imbf117 name="input.a.imbf117"
+            IF NOT cl_null(g_imbf_m.imbf117) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf117
+            #add-point:BEFORE FIELD imbf117 name="input.b.imbf117"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbf117
+            #add-point:ON CHANGE imbf117 name="input.g.imbf117"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf118
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_imbf_m.imbf118,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD imbf118
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD imbf118 name="input.a.imbf118"
+            IF NOT cl_null(g_imbf_m.imbf118) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf118
+            #add-point:BEFORE FIELD imbf118 name="input.b.imbf118"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbf118
+            #add-point:ON CHANGE imbf118 name="input.g.imbf118"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf121
+            #add-point:BEFORE FIELD imbf121 name="input.b.imbf121"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf121
+            
+            #add-point:AFTER FIELD imbf121 name="input.a.imbf121"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbf121
+            #add-point:ON CHANGE imbf121 name="input.g.imbf121"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf122
+            #add-point:BEFORE FIELD imbf122 name="input.b.imbf122"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf122
+            
+            #add-point:AFTER FIELD imbf122 name="input.a.imbf122"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbf122
+            #add-point:ON CHANGE imbf122 name="input.g.imbf122"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf123
+            
+            #add-point:AFTER FIELD imbf123 name="input.a.imbf123"
+           LET l_imaa001 = NULL
+           LET l_imaastus = NULL
+           LET l_imaa027 = NULL
+           IF NOT cl_null(g_imbf_m.imbf123) THEN
+              SELECT imaa001,imaa027,imaastus INTO l_imaa001,l_imaa027,l_imaastus FROM imaa_t 
+               WHERE imaaent = g_enterprise
+                AND imaa001 = g_imbf_m.imbf123
+              IF cl_null(l_imaa001) THEN
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.code = "aim-00001"
+                 LET g_errparam.extend = g_imbf_m.imbf123
+                 LET g_errparam.popup = FALSE
+                 CALL cl_err()
+                 #160824-00007#269 Mark By Ken 161229(S)
+                 #LET g_imbf_m.imbf123 = g_imbf_m_t.imbf123
+                 #LET g_imbf_m.imbf123_desc = g_imbf_m_t.imbf123_desc
+                 #160824-00007#269 Mark By Ken 161229(E)
+                 #160824-00007#269 Add By Ken 161229(S)
+                 LET g_imbf_m.imbf123 = g_imbf_m_o.imbf123
+                 LET g_imbf_m.imbf123_desc = g_imbf_m_o.imbf123_desc  
+                 #160824-00007#269 Add By Ken 161229(E)                 
+                 DISPLAY BY NAME g_imbf_m.imbf123_desc
+                 NEXT FIELD imbf123
+               END IF
+               IF l_imaa027 != 'Y' THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = "aim-00094"
+                  LET g_errparam.extend = g_imbf_m.imbf123
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+ 
+                  #160824-00007#269 Mark By Ken 161229(S)
+                  #LET g_imbf_m.imbf123 = g_imbf_m_t.imbf123
+                  #LET g_imbf_m.imbf123_desc = g_imbf_m_t.imbf123_desc
+                  #160824-00007#269 Mark By Ken 161229(E)
+                  #160824-00007#269 Add By Ken 161229(S)
+                  LET g_imbf_m.imbf123 = g_imbf_m_o.imbf123
+                  LET g_imbf_m.imbf123_desc = g_imbf_m_o.imbf123_desc  
+                  #160824-00007#269 Add By Ken 161229(E)                  
+                  DISPLAY BY NAME g_imbf_m.imbf123_desc
+                  NEXT FIELD imbf123
+               END IF  
+               IF l_imaastus != 'Y' THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'sub-01302'  #160318-00005#21 mod"aim-00002"
+                  LET g_errparam.extend = g_imbf_m.imbf123
+                  #160318-00005#21  --add--str
+                  LET g_errparam.replace[1] ='aimm200'
+                  LET g_errparam.replace[2] = cl_get_progname('aimm200',g_lang,"2")
+                  LET g_errparam.exeprog    ='aimm200'
+                  #160318-00005#21 --add--end
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+ 
+                  #160824-00007#269 Mark By Ken 161229(S)
+                  #LET g_imbf_m.imbf123 = g_imbf_m_t.imbf123
+                  #LET g_imbf_m.imbf123_desc = g_imbf_m_t.imbf123_desc
+                  #160824-00007#269 Mark By Ken 161229(E)
+                  #160824-00007#269 Add By Ken 161229(S)
+                  LET g_imbf_m.imbf123 = g_imbf_m_o.imbf123
+                  LET g_imbf_m.imbf123_desc = g_imbf_m_o.imbf123_desc  
+                  #160824-00007#269 Add By Ken 161229(E)                  
+                  DISPLAY BY NAME g_imbf_m.imbf123_desc
+                  NEXT FIELD imbf123
+               END IF  
+            END IF   
+                       
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_imbf_m.imbf123
+            CALL ap_ref_array2(g_ref_fields,"SELECT imaal003 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_imbf_m.imbf123_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_imbf_m.imbf123_desc
+            LET g_imbf_m_o.* = g_imbf_m.*    #160824-00007#269 Add By Ken 161229
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf123
+            #add-point:BEFORE FIELD imbf123 name="input.b.imbf123"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbf123
+            #add-point:ON CHANGE imbf123 name="input.g.imbf123"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf124
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_imbf_m.imbf124,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD imbf124
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD imbf124 name="input.a.imbf124"
+            IF NOT cl_null(g_imbf_m.imbf124) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf124
+            #add-point:BEFORE FIELD imbf124 name="input.b.imbf124"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbf124
+            #add-point:ON CHANGE imbf124 name="input.g.imbf124"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf125
+            
+            #add-point:AFTER FIELD imbf125 name="input.a.imbf125"
+           LET l_imaa001 = NULL
+           LET l_imaastus = NULL
+
+           IF NOT cl_null(g_imbf_m.imbf125) THEN
+              SELECT imaa001,imaa027,imaastus INTO l_imaa001,l_imaa027,l_imaastus FROM imaa_t 
+               WHERE imaaent = g_enterprise
+                AND imaa001 = g_imbf_m.imbf125
+              IF cl_null(l_imaa001) THEN
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.code = "aim-00001"
+                 LET g_errparam.extend = g_imbf_m.imbf125
+                 LET g_errparam.popup = FALSE
+                 CALL cl_err()
+                 #160824-00007#269 Mark By Ken 161229(S)
+                 #LET g_imbf_m.imbf125 = g_imbf_m_t.imbf125
+                 #LET g_imbf_m.imbf125_desc = g_imbf_m_t.imbf125_desc
+                 #160824-00007#269 Mark By Ken 161229(E)
+                 #160824-00007#269 Add By Ken 161229(S)
+                 LET g_imbf_m.imbf125 = g_imbf_m_o.imbf125
+                 LET g_imbf_m.imbf125_desc = g_imbf_m_o.imbf125_desc 
+                 #160824-00007#269 Add By Ken 161229(E)                 
+                 DISPLAY BY NAME g_imbf_m.imbf125_desc
+                 NEXT FIELD imbf125
+               END IF
+ 
+               IF l_imaastus != 'Y' THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  'sub-01302'  #160318-00005#21 mod "aim-00002"
+                  LET g_errparam.extend = g_imbf_m.imbf125
+                  #160318-00005#21  --add--str
+                  LET g_errparam.replace[1] ='aimm200'
+                  LET g_errparam.replace[2] = cl_get_progname('aimm200',g_lang,"2")
+                  LET g_errparam.exeprog    ='aimm200'
+                  #160318-00005#21 --add--end
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+ 
+                  #160824-00007#269 Mark By Ken 161229(S)
+                  #LET g_imbf_m.imbf125 = g_imbf_m_t.imbf125
+                  #LET g_imbf_m.imbf125_desc = g_imbf_m_t.imbf125_desc
+                  #160824-00007#269 Mark By Ken 161229(E)
+                  #160824-00007#269 Add By Ken 161229(S)
+                  LET g_imbf_m.imbf125 = g_imbf_m_o.imbf125
+                  LET g_imbf_m.imbf125_desc = g_imbf_m_o.imbf125_desc 
+                  #160824-00007#269 Add By Ken 161229(E)                  
+                  DISPLAY BY NAME g_imbf_m.imbf125_desc
+                  NEXT FIELD imbf125
+               END IF  
+            END IF 
+            
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_imbf_m.imbf125
+            CALL ap_ref_array2(g_ref_fields,"SELECT imaal003 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_imbf_m.imbf125_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_imbf_m.imbf125_desc
+            LET g_imbf_m_o.* = g_imbf_m.*    #160824-00007#269 Add By Ken 161229
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf125
+            #add-point:BEFORE FIELD imbf125 name="input.b.imbf125"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbf125
+            #add-point:ON CHANGE imbf125 name="input.g.imbf125"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf126
+            #add-point:BEFORE FIELD imbf126 name="input.b.imbf126"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf126
+            
+            #add-point:AFTER FIELD imbf126 name="input.a.imbf126"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbf126
+            #add-point:ON CHANGE imbf126 name="input.g.imbf126"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf127
+            #add-point:BEFORE FIELD imbf127 name="input.b.imbf127"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf127
+            
+            #add-point:AFTER FIELD imbf127 name="input.a.imbf127"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbf127
+            #add-point:ON CHANGE imbf127 name="input.g.imbf127"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf130
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_imbf_m.imbf130,"0","1","100","1","azz-00087",1) THEN
+               NEXT FIELD imbf130
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD imbf130 name="input.a.imbf130"
+            IF NOT cl_null(g_imbf_m.imbf130) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf130
+            #add-point:BEFORE FIELD imbf130 name="input.b.imbf130"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbf130
+            #add-point:ON CHANGE imbf130 name="input.g.imbf130"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imbf128
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_imbf_m.imbf128,"0.000","1","100.000","1","azz-00087",1) THEN
+               NEXT FIELD imbf128
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD imbf128 name="input.a.imbf128"
+            IF NOT cl_null(g_imbf_m.imbf128) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imbf128
+            #add-point:BEFORE FIELD imbf128 name="input.b.imbf128"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imbf128
+            #add-point:ON CHANGE imbf128 name="input.g.imbf128"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.imbfdocno
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbfdocno
+            #add-point:ON ACTION controlp INFIELD imbfdocno name="input.c.imbfdocno"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imbadocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbadocdt
+            #add-point:ON ACTION controlp INFIELD imbadocdt name="input.c.imbadocdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imba900
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imba900
+            #add-point:ON ACTION controlp INFIELD imba900 name="input.c.imba900"
+#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_imbf_m.imba900             #給予default值
+
+            #給予arg
+
+            CALL q_ooag001()                                #呼叫開窗
+
+            LET g_imbf_m.imba900 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_imbf_m.imba900 TO imba900              #顯示到畫面上
+
+            NEXT FIELD imba900                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imba000
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imba000
+            #add-point:ON ACTION controlp INFIELD imba000 name="input.c.imba000"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imba901
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imba901
+            #add-point:ON ACTION controlp INFIELD imba901 name="input.c.imba901"
+#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_imbf_m.imba901             #給予default值
+
+            #給予arg
+
+            CALL q_ooeg001()                                #呼叫開窗
+
+            LET g_imbf_m.imba901 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_imbf_m.imba901 TO imba901              #顯示到畫面上
+
+            NEXT FIELD imba901                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imba001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imba001
+            #add-point:ON ACTION controlp INFIELD imba001 name="input.c.imba001"
+#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_imbf_m.imba001             #給予default值
+
+            #給予arg
+
+            CALL q_imaa001()                                #呼叫開窗
+
+            LET g_imbf_m.imba001 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_imbf_m.imba001 TO imba001              #顯示到畫面上
+
+            NEXT FIELD imba001                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imba002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imba002
+            #add-point:ON ACTION controlp INFIELD imba002 name="input.c.imba002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imbal002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbal002
+            #add-point:ON ACTION controlp INFIELD imbal002 name="input.c.imbal002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imbal003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbal003
+            #add-point:ON ACTION controlp INFIELD imbal003 name="input.c.imbal003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imbal004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbal004
+            #add-point:ON ACTION controlp INFIELD imbal004 name="input.c.imbal004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imba009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imba009
+            #add-point:ON ACTION controlp INFIELD imba009 name="input.c.imba009"
+#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_imbf_m.imba009             #給予default值
+
+            #給予arg
+
+            CALL q_rtax001()                                #呼叫開窗
+
+            LET g_imbf_m.imba009 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_imbf_m.imba009 TO imba009              #顯示到畫面上
+
+            NEXT FIELD imba009                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imba003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imba003
+            #add-point:ON ACTION controlp INFIELD imba003 name="input.c.imba003"
+#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_imbf_m.imba003             #給予default值
+
+            #給予arg
+
+            CALL q_imca001_1()                                #呼叫開窗
+
+            LET g_imbf_m.imba003 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_imbf_m.imba003 TO imba003              #顯示到畫面上
+
+            NEXT FIELD imba003                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imba004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imba004
+            #add-point:ON ACTION controlp INFIELD imba004 name="input.c.imba004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imba005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imba005
+            #add-point:ON ACTION controlp INFIELD imba005 name="input.c.imba005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imba006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imba006
+            #add-point:ON ACTION controlp INFIELD imba006 name="input.c.imba006"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imba010
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imba010
+            #add-point:ON ACTION controlp INFIELD imba010 name="input.c.imba010"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.l_s1
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_s1
+            #add-point:ON ACTION controlp INFIELD l_s1 name="input.c.l_s1"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imbf111
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf111
+            #add-point:ON ACTION controlp INFIELD imbf111 name="input.c.imbf111"
+#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_imbf_m.imbf111             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #應用分類
+
+            CALL q_imcd111()                                #呼叫開窗
+
+            LET g_imbf_m.imbf111 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_imbf_m.imbf111 TO imbf111              #顯示到畫面上
+
+            NEXT FIELD imbf111                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imbf112
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf112
+            #add-point:ON ACTION controlp INFIELD imbf112 name="input.c.imbf112"
+#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_imbf_m.imbf112             #給予default值
+
+            #給予arg
+
+            CALL q_ooca001_1()                                #呼叫開窗
+
+            LET g_imbf_m.imbf112 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_imbf_m.imbf112 TO imbf112              #顯示到畫面上
+
+            NEXT FIELD imbf112                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imbf113
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf113
+            #add-point:ON ACTION controlp INFIELD imbf113 name="input.c.imbf113"
+#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_imbf_m.imbf113             #給予default值
+
+            #給予arg
+
+            CALL q_ooca001_1()                                #呼叫開窗
+
+            LET g_imbf_m.imbf113 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_imbf_m.imbf113 TO imbf113              #顯示到畫面上
+
+            NEXT FIELD imbf113                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imbf114
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf114
+            #add-point:ON ACTION controlp INFIELD imbf114 name="input.c.imbf114"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imbf115
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf115
+            #add-point:ON ACTION controlp INFIELD imbf115 name="input.c.imbf115"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imbf116
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf116
+            #add-point:ON ACTION controlp INFIELD imbf116 name="input.c.imbf116"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imbf117
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf117
+            #add-point:ON ACTION controlp INFIELD imbf117 name="input.c.imbf117"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imbf118
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf118
+            #add-point:ON ACTION controlp INFIELD imbf118 name="input.c.imbf118"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imbf121
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf121
+            #add-point:ON ACTION controlp INFIELD imbf121 name="input.c.imbf121"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imbf122
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf122
+            #add-point:ON ACTION controlp INFIELD imbf122 name="input.c.imbf122"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imbf123
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf123
+            #add-point:ON ACTION controlp INFIELD imbf123 name="input.c.imbf123"
+#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_imbf_m.imbf123             #給予default值
+            LET g_qryparam.default2 = "" #g_imbf_m.imaal003 #品名
+
+            #給予arg
+
+            CALL q_imaa001_3()                                #呼叫開窗
+
+            LET g_imbf_m.imbf123 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            #LET g_imbf_m.imaal003 = g_qryparam.return2 #品名
+
+            DISPLAY g_imbf_m.imbf123 TO imbf123              #顯示到畫面上
+            #DISPLAY g_imbf_m.imaal003 TO imaal003 #品名
+
+            NEXT FIELD imbf123                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imbf124
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf124
+            #add-point:ON ACTION controlp INFIELD imbf124 name="input.c.imbf124"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imbf125
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf125
+            #add-point:ON ACTION controlp INFIELD imbf125 name="input.c.imbf125"
+#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_imbf_m.imbf125             #給予default值
+
+            #給予arg
+
+            CALL q_imaa001()                                #呼叫開窗
+
+            LET g_imbf_m.imbf125 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_imbf_m.imbf125 TO imbf125              #顯示到畫面上
+
+            NEXT FIELD imbf125                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imbf126
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf126
+            #add-point:ON ACTION controlp INFIELD imbf126 name="input.c.imbf126"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imbf127
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf127
+            #add-point:ON ACTION controlp INFIELD imbf127 name="input.c.imbf127"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imbf130
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf130
+            #add-point:ON ACTION controlp INFIELD imbf130 name="input.c.imbf130"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.imbf128
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imbf128
+            #add-point:ON ACTION controlp INFIELD imbf128 name="input.c.imbf128"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #若點選cancel則離開dialog
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            
+            #錯誤訊息統整顯示
+            #CALL cl_err_collect_show()
+            #CALL cl_showmsg()
+  
+            IF p_cmd <> "u" THEN
+               #當p_cmd不為u代表為新增/複製
+               LET l_count = 1  
+ 
+               #確定新增的資料不存在(不重複)
+               SELECT COUNT(1) INTO l_count FROM imbf_t
+                WHERE imbfent = g_enterprise AND imbfsite = g_site AND imbfdocno = g_imbf_m.imbfdocno
+ 
+               IF l_count = 0 THEN
+               
+                  #add-point:單頭新增前 name="input.head.b_insert"
+                  
+                  #end add-point
+               
+                  #將新增的單頭資料寫入資料庫
+                  INSERT INTO imbf_t (imbfent, imbfsite,imbfdocno,imbf111,imbf112,imbf113,imbf114,imbf115, 
+                      imbf116,imbf117,imbf118,imbfownid,imbfowndp,imbfcrtid,imbfcrtdp,imbfcrtdt,imbfmodid, 
+                      imbfmoddt,imbf121,imbf122,imbf123,imbf124,imbf125,imbf126,imbf127,imbf130,imbf128) 
+ 
+                  VALUES (g_enterprise, g_site,g_imbf_m.imbfdocno,g_imbf_m.imbf111,g_imbf_m.imbf112, 
+                      g_imbf_m.imbf113,g_imbf_m.imbf114,g_imbf_m.imbf115,g_imbf_m.imbf116,g_imbf_m.imbf117, 
+                      g_imbf_m.imbf118,g_imbf_m.imbfownid,g_imbf_m.imbfowndp,g_imbf_m.imbfcrtid,g_imbf_m.imbfcrtdp, 
+                      g_imbf_m.imbfcrtdt,g_imbf_m.imbfmodid,g_imbf_m.imbfmoddt,g_imbf_m.imbf121,g_imbf_m.imbf122, 
+                      g_imbf_m.imbf123,g_imbf_m.imbf124,g_imbf_m.imbf125,g_imbf_m.imbf126,g_imbf_m.imbf127, 
+                      g_imbf_m.imbf130,g_imbf_m.imbf128) 
+                  
+                  #add-point:單頭新增中 name="input.head.m_insert"
+                  
+                  #end add-point
+                  
+                  #若寫入錯誤則提示錯誤訊息並返回輸入頁面
+                  IF SQLCA.SQLCODE THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "imbf_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  
+                  
+                  #資料多語言用-增/改
+                           INITIALIZE l_var_keys TO NULL 
+         INITIALIZE l_field_keys TO NULL 
+         INITIALIZE l_vars TO NULL 
+         INITIALIZE l_fields TO NULL 
+         IF g_imbf_m.imbfdocno = g_master_multi_table_t.imbaldocno AND
+         g_imbf_m.imbal002 = g_master_multi_table_t.imbal002 AND 
+         g_imbf_m.imbal003 = g_master_multi_table_t.imbal003 AND 
+         g_imbf_m.imbal004 = g_master_multi_table_t.imbal004  THEN
+         ELSE 
+            LET l_var_keys[01] = g_enterprise
+            LET l_field_keys[01] = 'imbalent'
+            LET l_var_keys_bak[01] = g_enterprise
+            LET l_var_keys[02] = g_imbf_m.imbfdocno
+            LET l_field_keys[02] = 'imbaldocno'
+            LET l_var_keys_bak[02] = g_master_multi_table_t.imbaldocno
+            LET l_var_keys[03] = g_dlang
+            LET l_field_keys[03] = 'imbal001'
+            LET l_var_keys_bak[03] = g_dlang
+            LET l_vars[01] = g_imbf_m.imbal002
+            LET l_fields[01] = 'imbal002'
+            LET l_vars[02] = g_imbf_m.imbal003
+            LET l_fields[02] = 'imbal003'
+            LET l_vars[03] = g_imbf_m.imbal004
+            LET l_fields[03] = 'imbal004'
+            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'imbal_t')
+         END IF 
+ 
+                  
+                  #add-point:單頭新增後 name="input.head.a_insert"
+                  
+                  #end add-point
+                  
+                  CALL s_transaction_end('Y','0')
+               ELSE
+                  CALL s_transaction_end('N','0')
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = g_imbf_m.imbfdocno
+                  LET g_errparam.code   = "std-00006" 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+               END IF 
+            ELSE
+               #add-point:單頭修改前 name="input.head.b_update"
+               
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL aimt303_imbf_t_mask_restore('restore_mask_o')
+               
+               UPDATE imbf_t SET (imbfdocno,imbf111,imbf112,imbf113,imbf114,imbf115,imbf116,imbf117, 
+                   imbf118,imbfownid,imbfowndp,imbfcrtid,imbfcrtdp,imbfcrtdt,imbfmodid,imbfmoddt,imbf121, 
+                   imbf122,imbf123,imbf124,imbf125,imbf126,imbf127,imbf130,imbf128) = (g_imbf_m.imbfdocno, 
+                   g_imbf_m.imbf111,g_imbf_m.imbf112,g_imbf_m.imbf113,g_imbf_m.imbf114,g_imbf_m.imbf115, 
+                   g_imbf_m.imbf116,g_imbf_m.imbf117,g_imbf_m.imbf118,g_imbf_m.imbfownid,g_imbf_m.imbfowndp, 
+                   g_imbf_m.imbfcrtid,g_imbf_m.imbfcrtdp,g_imbf_m.imbfcrtdt,g_imbf_m.imbfmodid,g_imbf_m.imbfmoddt, 
+                   g_imbf_m.imbf121,g_imbf_m.imbf122,g_imbf_m.imbf123,g_imbf_m.imbf124,g_imbf_m.imbf125, 
+                   g_imbf_m.imbf126,g_imbf_m.imbf127,g_imbf_m.imbf130,g_imbf_m.imbf128)
+                WHERE imbfent = g_enterprise AND imbfsite = g_site AND imbfdocno = g_imbfdocno_t #
+ 
+               #add-point:單頭修改中 name="input.head.m_update"
+               
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL s_transaction_end('N','0')
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "imbf_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  WHEN SQLCA.SQLCODE #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "imbf_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  OTHERWISE
+                     
+                     #資料多語言用-增/改
+                              INITIALIZE l_var_keys TO NULL 
+         INITIALIZE l_field_keys TO NULL 
+         INITIALIZE l_vars TO NULL 
+         INITIALIZE l_fields TO NULL 
+         IF g_imbf_m.imbfdocno = g_master_multi_table_t.imbaldocno AND
+         g_imbf_m.imbal002 = g_master_multi_table_t.imbal002 AND 
+         g_imbf_m.imbal003 = g_master_multi_table_t.imbal003 AND 
+         g_imbf_m.imbal004 = g_master_multi_table_t.imbal004  THEN
+         ELSE 
+            LET l_var_keys[01] = g_enterprise
+            LET l_field_keys[01] = 'imbalent'
+            LET l_var_keys_bak[01] = g_enterprise
+            LET l_var_keys[02] = g_imbf_m.imbfdocno
+            LET l_field_keys[02] = 'imbaldocno'
+            LET l_var_keys_bak[02] = g_master_multi_table_t.imbaldocno
+            LET l_var_keys[03] = g_dlang
+            LET l_field_keys[03] = 'imbal001'
+            LET l_var_keys_bak[03] = g_dlang
+            LET l_vars[01] = g_imbf_m.imbal002
+            LET l_fields[01] = 'imbal002'
+            LET l_vars[02] = g_imbf_m.imbal003
+            LET l_fields[02] = 'imbal003'
+            LET l_vars[03] = g_imbf_m.imbal004
+            LET l_fields[03] = 'imbal004'
+            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'imbal_t')
+         END IF 
+ 
+                     
+                     #將遮罩欄位進行遮蔽
+                     CALL aimt303_imbf_t_mask_restore('restore_mask_n')
+                     
+                     #add-point:單頭修改後 name="input.head.a_update"
+                     #add--160511-00040#5 By shiun--(S)
+                     #如果g_site = 'ALL'，則回寫imaa_t
+                     LET l_imbamoddt = cl_get_current() 
+                     UPDATE imba_t SET imba105   = g_imbf_m.imbf112, 
+                                       imba106   = g_imbf_m.imbf113, 
+                                       imbamoddt = l_imbamoddt, 
+                                       imbamodid = g_user 
+                      WHERE imbaent = g_enterprise 
+                        AND imbadocno = g_imbfdocno_t 
+                     IF SQLCA.sqlcode THEN 
+                        INITIALIZE g_errparam TO NULL 
+                        LET g_errparam.extend = 'imba_t' 
+                        LET g_errparam.code   = SQLCA.sqlcode 
+                        LET g_errparam.popup  = TRUE 
+                        CALL cl_err() 
+                        
+                        CALL s_transaction_end('N','0') 
+                        NEXT FIELD CURRENT 
+                     END IF 
+                     #add--160511-00040#5 By shiun--(E)
+                     #end add-point
+                     #修改歷程記錄(單頭修改)
+                     LET g_log1 = util.JSON.stringify(g_imbf_m_t)
+                     LET g_log2 = util.JSON.stringify(g_imbf_m)
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                        CALL s_transaction_end('N','0')
+                     ELSE
+                        CALL s_transaction_end('Y','0')
+                     END IF
+               END CASE
+               
+            END IF
+           #controlp
+      END INPUT
+      
+      #add-point:input段more input  name="input.more_input"
+      
+      #end add-point
+    
+      BEFORE DIALOG
+         #CALL cl_err_collect_init()
+         #add-point:input段before_dialog  name="input.before_dialog"
+         
+         #end add-point
+          
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      #放棄輸入
+      ON ACTION cancel
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      #在dialog 右上角 (X)
+      ON ACTION close 
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+    
+      #toolbar 離開
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input  name="input.after_input"
+   
+   #end add-point    
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimt303.reproduce" >}
+#+ 資料複製
+PRIVATE FUNCTION aimt303_reproduce()
+   #add-point:reproduce段define(客製用) name="reproduce.define_customerization"
+   
+   #end add-point
+   DEFINE l_newno     LIKE imbf_t.imbfdocno 
+   DEFINE l_oldno     LIKE imbf_t.imbfdocno 
+ 
+   DEFINE l_master    RECORD LIKE imbf_t.* #此變數樣板目前無使用
+   DEFINE l_cnt       LIKE type_t.num10
+   #add-point:reproduce段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="reproduce.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="reproduce.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+   
+   #先確定key值無遺漏
+   IF g_imbf_m.imbfdocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #備份key值
+   LET g_imbfdocno_t = g_imbf_m.imbfdocno
+ 
+   
+   #清空key值
+   LET g_imbf_m.imbfdocno = ""
+ 
+    
+   CALL aimt303_set_entry("a")
+   CALL aimt303_set_no_entry("a")
+   
+   #公用欄位給予預設值
+   #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_imbf_m.imbfownid = g_user
+      LET g_imbf_m.imbfowndp = g_dept
+      LET g_imbf_m.imbfcrtid = g_user
+      LET g_imbf_m.imbfcrtdp = g_dept 
+      LET g_imbf_m.imbfcrtdt = cl_get_current()
+      LET g_imbf_m.imbfmodid = g_user
+      LET g_imbf_m.imbfmoddt = cl_get_current()
+ 
+ 
+ 
+   
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前 name="reproduce.head.b_input"
+   
+   #end add-point
+   
+   #顯示狀態(stus)圖片
+   
+   
+   #清空key欄位的desc
+   
+   
+   #資料輸入
+   CALL aimt303_input("r")
+   
+   IF INT_FLAG THEN
+      #取消
+      INITIALIZE g_imbf_m.* TO NULL
+      CALL aimt303_show()
+      CALL s_transaction_end('N','0')
+      LET INT_FLAG = 0
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = 9001 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   CALL s_transaction_begin()
+   
+   #add-point:單頭複製前 name="reproduce.head.b_insert"
+   
+   #end add-point
+   
+   #add-point:單頭複製中 name="reproduce.head.m_insert"
+   
+   #end add-point
+   
+   IF SQLCA.SQLCODE THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "imbf_t:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.popup = TRUE 
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #add-point:單頭複製後 name="reproduce.head.a_insert"
+   
+   #end add-point
+   
+   CALL s_transaction_end('Y','0')
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL aimt303_set_act_visible()
+   CALL aimt303_set_act_no_visible()
+ 
+   #將新增的資料併入搜尋條件中
+   LET g_state = "insert"
+   
+   LET g_imbfdocno_t = g_imbf_m.imbfdocno
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " imbfent = " ||g_enterprise|| " AND imbfsite = '" ||g_site|| "' AND",
+                      " imbfdocno = '", g_imbf_m.imbfdocno, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL aimt303_browser_fill("","")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   #add-point:完成複製段落後 name="reproduce.after_reproduce"
+   
+   #end add-point
+              
+   LET g_data_owner = g_imbf_m.imbfownid      
+   LET g_data_dept  = g_imbf_m.imbfowndp
+              
+   #功能已完成,通報訊息中心
+   CALL aimt303_msgcentre_notify('reproduce')
+                 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimt303.show" >}
+#+ 資料顯示 
+PRIVATE FUNCTION aimt303_show()
+   #add-point:show段define(客製用) name="show.define_customerization"
+   
+   #end add-point
+   #add-point:show段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show.define"
+DEFINE l_flag          LIKE type_t.num5          #标识符，TRUE/FALSE
+DEFINE l_flag1         LIKE type_t.num5          #标识符，TRUE/FALSE
+DEFINE l_ooba002       LIKE ooba_t.ooba002       #单据别
+DEFINE l_site          LIKE type_t.chr20
+   #end add-point  
+   
+   #add-point:show段Function前置處理  name="show.before"
+   
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值
+   #應用 a12 樣板自動產生(Version:4)
+ 
+ 
+ 
+    
+   #顯示followup圖示
+   #應用 a48 樣板自動產生(Version:3)
+   CALL aimt303_set_pk_array()
+   #add-point:ON ACTION agendum name="show.follow_pic"
+   
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+ 
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference name="show.head.reference"
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_imbf_m.imbf111
+#            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='202' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_imbf_m.imbf111_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_imbf_m.imbf111_desc   
+#            
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_imbf_m.imbf112
+#            CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_imbf_m.imbf112_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_imbf_m.imbf112_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_imbf_m.imbf113
+#            CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_imbf_m.imbf113_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_imbf_m.imbf113_desc
+#            
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_imbf_m.imbfownid
+#            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+#            LET g_imbf_m.imbfownid_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_imbf_m.imbfownid_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_imbf_m.imbfowndp
+#            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_imbf_m.imbfowndp_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_imbf_m.imbfowndp_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_imbf_m.imbfcrtid
+#            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+#            LET g_imbf_m.imbfcrtid_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_imbf_m.imbfcrtid_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_imbf_m.imbfcrtdp
+#            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_imbf_m.imbfcrtdp_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_imbf_m.imbfcrtdp_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_imbf_m.imbfmodid
+#            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+#            LET g_imbf_m.imbfmodid_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_imbf_m.imbfmodid_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_imbf_m.imbf123
+#            CALL ap_ref_array2(g_ref_fields,"SELECT imaal003 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_imbf_m.imbf123_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_imbf_m.imbf123_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_imbf_m.imbf125
+#            CALL ap_ref_array2(g_ref_fields,"SELECT imaal003 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_imbf_m.imbf125_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_imbf_m.imbf125_desc
+            
+            LET l_flag = TRUE
+            LET l_flag1 = TRUE
+            LET l_ooba002 = NULL
+            LET g_imbf_m.oobxl003 = ""
+            IF NOT cl_null(g_imbf_m.imbfdocno) THEN
+                CALL s_aooi200_get_slip_desc(g_imbf_m.imbfdocno) RETURNING g_imbf_m.oobxl003   #lixh
+#               CALL s_aooi200_get_slip(g_imbf_m.imbfdocno) RETURNING l_flag1,l_ooba002
+#               IF l_flag1 THEN
+#                  IF NOT cl_null(l_ooba002) THEN
+#                     SELECT oobxl003 INTO g_imbf_m.oobxl003
+#                       FROM oobxl_t
+#                      WHERE oobxl001 = l_ooba002
+#                        AND oobxl002 = g_dlang
+#                        AND oobxlent = g_enterprise
+#                  ELSE
+#                     LET g_imbf_m.oobxl003 = ""
+#                  END IF
+#               END IF
+            ELSE
+               LET g_imbf_m.oobxl003 = ""
+            END IF
+            DISPLAY BY NAME g_imbf_m.oobxl003  
+   #end add-point
+ 
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_imbf_m.imbfdocno,g_imbf_m.imbadocdt,g_imbf_m.imba900,g_imbf_m.imba900_desc,g_imbf_m.oobxl003, 
+       g_imbf_m.imba000,g_imbf_m.imba901,g_imbf_m.imba901_desc,g_imbf_m.imba001,g_imbf_m.imba002,g_imbf_m.imbal002, 
+       g_imbf_m.imbal003,g_imbf_m.imbal004,g_imbf_m.imba009,g_imbf_m.imba009_desc,g_imbf_m.imba003,g_imbf_m.imba003_desc, 
+       g_imbf_m.imba004,g_imbf_m.imba005,g_imbf_m.imba005_desc,g_imbf_m.imba006,g_imbf_m.imba006_desc, 
+       g_imbf_m.imba010,g_imbf_m.imba010_desc,g_imbf_m.l_s1,g_imbf_m.imbf111,g_imbf_m.imbf111_desc,g_imbf_m.imbf112, 
+       g_imbf_m.imbf112_desc,g_imbf_m.imbf113,g_imbf_m.imbf113_desc,g_imbf_m.imbf114,g_imbf_m.imbf115, 
+       g_imbf_m.imbf116,g_imbf_m.imbf117,g_imbf_m.imbf118,g_imbf_m.imbfownid,g_imbf_m.imbfownid_desc, 
+       g_imbf_m.imbfowndp,g_imbf_m.imbfowndp_desc,g_imbf_m.imbfcrtid,g_imbf_m.imbfcrtid_desc,g_imbf_m.imbfcrtdp, 
+       g_imbf_m.imbfcrtdp_desc,g_imbf_m.imbfcrtdt,g_imbf_m.imbfmodid,g_imbf_m.imbfmodid_desc,g_imbf_m.imbfmoddt, 
+       g_imbf_m.imbf121,g_imbf_m.imbf122,g_imbf_m.imbf123,g_imbf_m.imbf123_desc,g_imbf_m.imbf124,g_imbf_m.imbf125, 
+       g_imbf_m.imbf125_desc,g_imbf_m.imbf126,g_imbf_m.imbf127,g_imbf_m.imbf130,g_imbf_m.imbf128
+   
+   #儲存PK
+   LET l_ac = g_current_idx
+   CALL aimt303_set_pk_array()
+   
+   #顯示狀態(stus)圖片
+   
+ 
+   #顯示有特殊格式設定的欄位或說明
+   CALL cl_show_fld_cont()
+ 
+   #add-point:show段之後 name="show.after"
+   LET g_imbf111_o = g_imbf_m.imbf111
+   CALL aimt303_imba_desc()
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimt303.delete" >}
+#+ 資料刪除 
+PRIVATE FUNCTION aimt303_delete()
+   #add-point:delete段define(客製用) name="delete.define_customerization"
+   
+   #end add-point
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="delete.pre_function"
+   
+   #end add-point
+   
+   #先確定key值無遺漏
+   IF g_imbf_m.imbfdocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   CALL s_transaction_begin()
+    
+   LET g_imbfdocno_t = g_imbf_m.imbfdocno
+ 
+   
+   LET g_master_multi_table_t.imbaldocno = g_imbf_m.imbfdocno
+LET g_master_multi_table_t.imbal002 = g_imbf_m.imbal002
+LET g_master_multi_table_t.imbal003 = g_imbf_m.imbal003
+LET g_master_multi_table_t.imbal004 = g_imbf_m.imbal004
+ 
+ 
+   OPEN aimt303_cl USING g_enterprise, g_site,g_imbf_m.imbfdocno
+   IF SQLCA.SQLCODE THEN    #(ver:49)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN aimt303_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.popup = TRUE 
+      CLOSE aimt303_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE aimt303_master_referesh USING g_site,g_imbf_m.imbfdocno INTO g_imbf_m.imbfdocno,g_imbf_m.imbf111, 
+       g_imbf_m.imbf112,g_imbf_m.imbf113,g_imbf_m.imbf114,g_imbf_m.imbf115,g_imbf_m.imbf116,g_imbf_m.imbf117, 
+       g_imbf_m.imbf118,g_imbf_m.imbfownid,g_imbf_m.imbfowndp,g_imbf_m.imbfcrtid,g_imbf_m.imbfcrtdp, 
+       g_imbf_m.imbfcrtdt,g_imbf_m.imbfmodid,g_imbf_m.imbfmoddt,g_imbf_m.imbf121,g_imbf_m.imbf122,g_imbf_m.imbf123, 
+       g_imbf_m.imbf124,g_imbf_m.imbf125,g_imbf_m.imbf126,g_imbf_m.imbf127,g_imbf_m.imbf130,g_imbf_m.imbf128, 
+       g_imbf_m.imbf111_desc,g_imbf_m.imbf112_desc,g_imbf_m.imbf113_desc,g_imbf_m.imbfownid_desc,g_imbf_m.imbfowndp_desc, 
+       g_imbf_m.imbfcrtid_desc,g_imbf_m.imbfcrtdp_desc,g_imbf_m.imbfmodid_desc,g_imbf_m.imbf123_desc, 
+       g_imbf_m.imbf125_desc
+   
+   
+   #檢查是否允許此動作
+   IF NOT aimt303_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_imbf_m_mask_o.* =  g_imbf_m.*
+   CALL aimt303_imbf_t_mask()
+   LET g_imbf_m_mask_n.* =  g_imbf_m.*
+   
+   #將最新資料顯示到畫面上
+   CALL aimt303_show()
+   
+   IF cl_ask_delete() THEN
+ 
+      #add-point:單頭刪除前 name="delete.head.b_delete"
+      
+      #end add-point
+ 
+      #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL aimt303_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove"
+      
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+ 
+ 
+      DELETE FROM imbf_t 
+       WHERE imbfent = g_enterprise AND imbfsite = g_site AND imbfdocno = g_imbf_m.imbfdocno 
+ 
+ 
+      #add-point:單頭刪除中 name="delete.head.m_delete"
+      
+      #end add-point
+         
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "imbf_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+      END IF
+  
+      INITIALIZE l_var_keys_bak TO NULL 
+   INITIALIZE l_field_keys   TO NULL 
+   LET l_var_keys_bak[01] = g_enterprise
+   LET l_field_keys[01] = 'imbalent'
+   LET l_var_keys_bak[02] = g_master_multi_table_t.imbaldocno
+   LET l_field_keys[02] = 'imbaldocno'
+   CALL cl_multitable_delete(l_field_keys,l_var_keys_bak,'imbal_t')
+ 
+      
+      #add-point:單頭刪除後 name="delete.head.a_delete"
+      
+      #end add-point
+      
+       
+ 
+      #修改歷程記錄(刪除)
+      LET g_log1 = util.JSON.stringify(g_imbf_m)   #(ver:49)
+      IF NOT cl_log_modified_record(g_log1,'') THEN    #(ver:49)
+         CLOSE aimt303_cl
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      
+      CLEAR FORM
+      CALL aimt303_ui_browser_refresh()
+      
+      #確保畫面上保有資料
+      IF g_browser_cnt > 0 THEN
+         #CALL aimt303_browser_fill(g_wc,"")
+         CALL aimt303_fetch("P")
+      ELSE
+         CLEAR FORM
+      END IF
+      CALL s_transaction_end('Y','0')
+   ELSE    
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE aimt303_cl
+ 
+   #功能已完成,通報訊息中心
+   CALL aimt303_msgcentre_notify('delete')
+ 
+   #add-point:單頭刪除完成後 name="delete.a_delete"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimt303.ui_browser_refresh" >}
+#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION aimt303_ui_browser_refresh()
+   #add-point:ui_browser_refresh段define(客製用) name="ui_browser_refresh.define_customerization"
+   
+   #end add-point
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_browser_refresh.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="ui_browser_refresh.pre_function"
+   
+   #end add-point
+   
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_header_cnt  = g_browser.getLength()
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_imbfdocno = g_imbf_m.imbfdocno
+ 
+         THEN
+         CALL g_browser.deleteElement(l_i)
+       END IF
+   END FOR
+   LET g_browser_cnt = g_browser_cnt - 1
+   LET g_header_cnt = g_header_cnt - 1
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count     #page count
+   DISPLAY g_header_cnt  TO FORMONLY.h_count     #page count
+  
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+      CLEAR FORM
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimt303.set_entry" >}
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION aimt303_set_entry(p_cmd)
+   #add-point:set_entry段define(客製用) name="set_entry.define_customerization" 
+   
+   #end add-point
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_entry段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry.define"
+   
+   #end add-point     
+    
+   #add-point:Function前置處理 name="set_entry.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("imbfdocno",TRUE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry段欄位控制 name="set_entry.field_control"
+      
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry段欄位控制後 name="set_entry.after_control"
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimt303.set_no_entry" >}
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION aimt303_set_no_entry(p_cmd)
+   #add-point:set_no_entry段define(客製用) name="set_no_entry.define_customerization"
+   
+   #end add-point
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_no_entry段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_no_entry.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("imbfdocno",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry段欄位控制 name="set_no_entry.field_control"
+      
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry段欄位控制後 name="set_no_entry.after_control"
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimt303.set_act_visible" >}
+#+ 單頭權限開啟
+PRIVATE FUNCTION aimt303_set_act_visible()
+   #add-point:set_act_visible段define(客製用) name="set_act_visible.define_customerization" 
+   
+   #end add-point  
+   #add-point:set_act_visible段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible.define"
+   
+   #end add-point
+   #add-point:set_act_visible段 name="set_act_visible.set_act_visible"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimt303.set_act_no_visible" >}
+#+ 單頭權限關閉
+PRIVATE FUNCTION aimt303_set_act_no_visible()
+   #add-point:set_act_no_visible段define(客製用) name="set_act_no_visible.define_customerization"
+   
+   #end add-point
+   #add-point:set_act_no_visible段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible.define"
+   
+   #end add-point
+   #add-point:set_act_no_visible段 name="set_act_no_visible.set_act_no_visible"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimt303.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION aimt303_default_search()
+   #add-point:default_search段define(客製用) name="default_search.define_customerization" 
+   
+   #end add-point
+   DEFINE li_idx  LIKE type_t.num10
+   DEFINE li_cnt  LIKE type_t.num10
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   DEFINE l_wc    STRING
+   DEFINE l_wc1   STRING
+   #end add-point  
+   
+   #add-point:Function前置處理  name="default_search.pre_function"
+   
+   #end add-point
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   #add-point:default_search段開始前 name="default_search.before"
+   
+   #end add-point  
+   
+   #根據外部參數(g_argv)組合wc
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " imbfdocno = '", g_argv[01], "' AND "
+   END IF
+   
+ 
+   
+   #add-point:default_search段after sql name="default_search.after_sql"
+   
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      #若有外部參數則根據該參數組合
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      #若無外部參數則預設為1=2
+      LET g_default = FALSE
+      #預設查詢條件
+      LET g_wc = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=2"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前 name="default_search.after"
+   IF NOT cl_null(g_argv[1]) THEN
+      LET l_wc  = "imbfsite = '",g_argv[1],"' "
+   ELSE
+      LET l_wc = " 1=1"
+   END IF
+   IF NOT cl_null(g_argv[02]) THEN
+      LET l_wc1 = " imbfdocno = '",g_argv[02],"' "
+      LET g_default = TRUE
+   ELSE
+      LET g_default = FALSE
+      LET l_wc1 = " 1=1"
+   END IF
+   LET g_wc = l_wc," AND ",l_wc1   
+   #end add-point  
+ 
+   IF g_wc.getIndexOf(" 1=2", 1) THEN
+      LET g_default = TRUE
+   END IF
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimt303.mask_functions" >}
+&include "erp/aim/aimt303_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="aimt303.state_change" >}
+   
+ 
+{</section>}
+ 
+{<section id="aimt303.signature" >}
+   
+ 
+{</section>}
+ 
+{<section id="aimt303.set_pk_array" >}
+   #應用 a51 樣板自動產生(Version:8)
+#+ 給予pk_array內容
+PRIVATE FUNCTION aimt303_set_pk_array()
+   #add-point:set_pk_array段define name="set_pk_array.define_customerization"
+   
+   #end add-point
+   #add-point:set_pk_array段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_pk_array.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="set_pk_array.before"
+   
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_imbf_m.imbfdocno
+   LET g_pk_array[1].column = 'imbfdocno'
+ 
+   
+   #add-point:set_pk_array段之後 name="set_pk_array.after"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aimt303.other_dialog" readonly="Y" >}
+ 
+ 
+{</section>}
+ 
+{<section id="aimt303.msgcentre_notify" >}
+#應用 a66 樣板自動產生(Version:6)
+PRIVATE FUNCTION aimt303_msgcentre_notify(lc_state)
+   #add-point:msgcentre_notify段define name="msgcentre_notify.define_customerization"
+   
+   #end add-point   
+   DEFINE lc_state LIKE type_t.chr80
+   #add-point:msgcentre_notify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="msgcentre_notify.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="msgcentre_notify.pre_function"
+   
+   #end add-point
+   
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = lc_state
+ 
+   #PK資料填寫
+   CALL aimt303_set_pk_array()
+   #單頭資料填寫
+   LET g_msgparam.data[1] = util.JSON.stringify(g_imbf_m)
+ 
+   #add-point:msgcentre其他通知 name="msgcentre_notify.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aimt303.action_chk" >}
+#+ 修改/刪除前行為檢查(是否可允許此動作), 若有其他行為須管控也可透過此段落
+PRIVATE FUNCTION aimt303_action_chk()
+   #add-point:action_chk段define(客製用) name="action_chk.define_customerization" 
+   
+   #end add-point
+   #add-point:action_chk段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="action_chk.define"
+   
+   #end add-point
+   
+   #add-point:action_chk段action_chk name="action_chk.action_chk"
+   
+   #end add-point
+   
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aimt303.other_function" readonly="Y" >}
+#+ 單位欄位check
+PRIVATE FUNCTION aimt303_ooca_chk(p_imbf112)
+   DEFINE p_imbf112      LIKE imbf_t.imbf143
+   DEFINE l_ooca001       LIKE ooca_t.ooca001
+   DEFINE l_oocastus      LIKE ooca_t.oocastus
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_rate          LIKE inaj_t.inaj014 
+   
+   SELECT ooca001,oocastus INTO l_ooca001,l_oocastus FROM ooca_t
+    WHERE oocaent = g_enterprise
+      AND ooca001 = p_imbf112
+    IF cl_null(l_ooca001) THEN 
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = 'aim-00004'
+       LET g_errparam.extend = p_imbf112
+       LET g_errparam.popup = TRUE
+       CALL cl_err()
+
+       RETURN FALSE
+    END IF
+    IF l_oocastus != 'Y' THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code ='sub-01302'  #160318-00005#21 mod #'aim-00005'
+       LET g_errparam.extend = p_imbf112
+       #160318-00005#21  --add--str
+       LET g_errparam.replace[1] ='aooi250'
+       LET g_errparam.replace[2] = cl_get_progname('aooi250',g_lang,"2")
+       LET g_errparam.exeprog    ='aooi250'
+       #160318-00005#21 --add--end
+       LET g_errparam.popup = TRUE
+       CALL cl_err()
+
+       RETURN FALSE
+    END IF
+    CALL s_aimi190_get_convert(g_imbf_m.imba001,p_imbf112,g_imbf_m.imba006) RETURNING l_success,l_rate  
+    IF l_success = FALSE THEN
+       RETURN FALSE
+    END IF
+    RETURN TRUE   
+END FUNCTION
+################################################################################
+# Descriptions...: 檢查aooi090是否設置對應欄位
+# Memo...........:
+# Date & Author..: 2014/02/17 By chenjing
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aimt303_chk_ooeh(p_ooeh002)
+DEFINE p_ooeh002        LIKE ooeh_t.ooeh002
+DEFINE l_n              LIKE type_t.num5
+
+   LET l_n = 0
+   SELECT COUNT(*) INTO l_n
+     FROM ooeh_t
+    WHERE ooehent = g_enterprise
+      AND ooeh001 = '1'
+      AND ooeh002 = p_ooeh002
+   IF l_n = 0 THEN
+      RETURN FALSE
+   END IF
+   RETURN TRUE
+END FUNCTION
+#+ display only 欄位抓取資料
+PRIVATE FUNCTION aimt303_imba_desc()
+   IF cl_null(g_imbf_m.imbfdocno) THEN
+      LET g_imbf_m.imba001 = ""
+      LET g_imbf_m.imba002 = ""
+      LET g_imbf_m.imba003 = ""
+      LET g_imbf_m.imba004 = ""
+      LET g_imbf_m.imba005 = ""
+      LET g_imbf_m.imba006 = ""
+      LET g_imbf_m.imba009 = ""
+      LET g_imbf_m.imba010 = ""
+      LET g_imbf_m.imba003_desc = ""
+      LET g_imbf_m.imba006_desc = ""
+      LET g_imbf_m.imba005_desc = ""
+      LET g_imbf_m.imba009_desc = ""
+      LET g_imbf_m.imba010_desc = ""
+      LET g_imbf_m.l_s1 = ""
+      LET g_imbf_m.imbal002 = ""
+      LET g_imbf_m.imbal003 = ""
+      LET g_imbf_m.imbal004 = ""   
+      LET g_imbf_m.imba900 = ""  
+      LET g_imbf_m.imba901 = "" 
+      LET g_imbf_m.imba000 = ""
+      LET g_imbf_m.imbadocdt = ""      
+   ELSE
+      SELECT imba001,imba002,imba009,imba003,imba004,imba005,imba006,imba010,imbastus,imba900,imba901,
+             imba000,imbadocdt
+        INTO g_imbf_m.imba001,g_imbf_m.imba002,g_imbf_m.imba009,g_imbf_m.imba003,
+             g_imbf_m.imba004,g_imbf_m.imba005,g_imbf_m.imba006,
+             g_imbf_m.imba010,g_imbf_m.l_s1,g_imbf_m.imba900,g_imbf_m.imba901,
+             g_imbf_m.imba000,g_imbf_m.imbadocdt
+       FROM imba_t
+      WHERE imbadocno = g_imbf_m.imbfdocno
+        AND imbaent = g_enterprise
+   END IF
+      
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_imbf_m.imbfdocno
+   CALL ap_ref_array2(g_ref_fields," SELECT imbal002,imbal003,imbal004 FROM imbal_t WHERE imbalent = '"||g_enterprise||"' AND imbaldocno = ? AND imbal001 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_imbf_m.imbal002 = g_rtn_fields[1] 
+   LET g_imbf_m.imbal003 = g_rtn_fields[2] 
+   LET g_imbf_m.imbal004 = g_rtn_fields[3] 
+   DISPLAY BY NAME g_imbf_m.imbal002,g_imbf_m.imbal003,g_imbf_m.imbal004
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_imbf_m.imba009
+   CALL ap_ref_array2(g_ref_fields,"SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent='"||g_enterprise||"' AND rtaxl001=? AND rtaxl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_imbf_m.imba009_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_imbf_m.imba009_desc
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_imbf_m.imba003
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='200' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_imbf_m.imba003_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_imbf_m.imba003_desc
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_imbf_m.imba006
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_imbf_m.imba006_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_imbf_m.imba006_desc
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_imbf_m.imba010
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='210' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_imbf_m.imba010_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_imbf_m.imba010_desc
+  
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_imbf_m.imba900
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+   LET g_imbf_m.imba900_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_imbf_m.imba900_desc
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_imbf_m.imba901
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_imbf_m.imba901_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_imbf_m.imba901_desc
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_imbf_m.imba005
+   CALL ap_ref_array2(g_ref_fields,"SELECT imeal003 FROM imeal_t WHERE imealent='"||g_enterprise||"' AND imeal001=? AND imeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_imbf_m.imba005_desc =  g_rtn_fields[1] 
+   DISPLAY BY NAME g_imbf_m.imba005_desc 
+   
+   DISPLAY BY NAME g_imbf_m.imba001,g_imbf_m.imba002,g_imbf_m.imba009,g_imbf_m.imba003,g_imbf_m.imba004,
+                   g_imbf_m.imba005,g_imbf_m.imba006,g_imbf_m.imba010,g_imbf_m.l_s1,g_imbf_m.imba900,g_imbf_m.imba901,
+                   g_imbf_m.imba000,g_imbf_m.imbadocdt
+   DISPLAY BY NAME g_imbf_m.imbal002,g_imbf_m.imbal003,g_imbf_m.imbal004,
+                   g_imbf_m.imba009_desc,g_imbf_m.imba003_desc,g_imbf_m.imba006_desc,g_imbf_m.imba010_desc,
+                   g_imbf_m.imba900_desc,g_imbf_m.imba901_desc
+END FUNCTION
+################################################################################
+# Descriptions...: 料件分群碼重帶
+# Date & Author..: 2014/02/17 By chenjing
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aimt303_get_imcd()
+#DEFINE l_imcd    RECORD LIKE imcd_t.*  #161124-00048#3   2016/12/08 By 08734 mark
+#161124-00048#3   2016/12/08 By 08734 add(S)
+DEFINE l_imcd RECORD  #料件據點銷售分群檔
+       imcdent LIKE imcd_t.imcdent, #企业编号
+       imcdsite LIKE imcd_t.imcdsite, #营运据点
+       imcd111 LIKE imcd_t.imcd111, #销售分群
+       imcd112 LIKE imcd_t.imcd112, #销售单位
+       imcd113 LIKE imcd_t.imcd113, #销售计价单位
+       imcd114 LIKE imcd_t.imcd114, #销售批量
+       imcd115 LIKE imcd_t.imcd115, #最小销售数量
+       imcd116 LIKE imcd_t.imcd116, #销售批量控管方式
+       imcd117 LIKE imcd_t.imcd117, #保证(固)月数
+       imcd118 LIKE imcd_t.imcd118, #保证(固)天数
+       imcd121 LIKE imcd_t.imcd121, #默认内外销
+       imcd122 LIKE imcd_t.imcd122, #接单拆解方式
+       imcd123 LIKE imcd_t.imcd123, #惯用包装容器
+       imcd124 LIKE imcd_t.imcd124, #销售备货提前天数
+       imcd125 LIKE imcd_t.imcd125, #预测料号
+       imcd126 LIKE imcd_t.imcd126, #出货替代
+       imcd127 LIKE imcd_t.imcd127, #统计除外商品
+       imcdownid LIKE imcd_t.imcdownid, #资料所有者
+       imcdowndp LIKE imcd_t.imcdowndp, #资料所有部门
+       imcdcrtid LIKE imcd_t.imcdcrtid, #资料录入者
+       imcdcrtdp LIKE imcd_t.imcdcrtdp, #资料录入部门
+       imcdcrtdt LIKE imcd_t.imcdcrtdt, #资料创建日
+       imcdmodid LIKE imcd_t.imcdmodid, #资料更改者
+       imcdmoddt LIKE imcd_t.imcdmoddt, #最近更改日
+       imcdstus LIKE imcd_t.imcdstus, #状态码
+       imcd128 LIKE imcd_t.imcd128, #销售超交率
+       imcd130 LIKE imcd_t.imcd130 #销售时备品率
+END RECORD
+#161124-00048#3   2016/12/08 By 08734 add(E)
+
+   INITIALIZE l_imcd.* TO NULL
+   #SELECT * INTO l_imcd.* FROM imcd_t  #161124-00048#3   2016/12/08 By 08734 mark
+   SELECT imcdent,imcdsite,imcd111,imcd112,imcd113,imcd114,imcd115,imcd116,imcd117,imcd118,imcd121,imcd122,imcd123,imcd124,imcd125,imcd126,imcd127,imcdownid,imcdowndp,imcdcrtid,imcdcrtdp,imcdcrtdt,imcdmodid,imcdmoddt,imcdstus,imcd128,imcd130  #161124-00048#3   2016/12/08 By 08734 add 
+     INTO l_imcd.*
+     FROM imcd_t
+    WHERE imcdent = g_enterprise
+      AND imcdsite = g_site
+      AND imcd111 = g_imbf_m.imbf111
+   #集團層的不需要考慮aooi090,據點級的資料需aooi090設定的欄位   
+   IF g_site = 'ALL' THEN  
+      LET g_imbf_m.imbf112 = l_imcd.imcd112
+      LET g_imbf_m.imbf113 = l_imcd.imcd113
+      LET g_imbf_m.imbf114 = l_imcd.imcd114
+      LET g_imbf_m.imbf115 = l_imcd.imcd115
+      LET g_imbf_m.imbf116 = l_imcd.imcd116
+      LET g_imbf_m.imbf117 = l_imcd.imcd117
+      LET g_imbf_m.imbf118 = l_imcd.imcd118
+      LET g_imbf_m.imbf121 = l_imcd.imcd121
+      LET g_imbf_m.imbf122 = l_imcd.imcd122
+      LET g_imbf_m.imbf123 = l_imcd.imcd123
+      LET g_imbf_m.imbf124 = l_imcd.imcd124
+      LET g_imbf_m.imbf125 = l_imcd.imcd125
+      LET g_imbf_m.imbf126 = l_imcd.imcd126
+      LET g_imbf_m.imbf127 = l_imcd.imcd127
+      LET g_imbf_m.imbf128 = l_imcd.imcd128
+      LET g_imbf_m.imbf130 = l_imcd.imcd130  #160617-00004#3
+   ELSE
+      IF NOT aimt303_chk_ooeh('imbf112') THEN
+         LET g_imbf_m.imbf112 = l_imcd.imcd112
+      END IF
+      IF NOT aimt303_chk_ooeh('imbf113') THEN
+         LET g_imbf_m.imbf113 = l_imcd.imcd113
+      END IF
+      IF NOT aimt303_chk_ooeh('imbf114') THEN
+         LET g_imbf_m.imbf114 = l_imcd.imcd114
+      END IF
+      IF NOT aimt303_chk_ooeh('imbf115') THEN
+         LET g_imbf_m.imbf115 = l_imcd.imcd115
+      END IF
+      IF NOT aimt303_chk_ooeh('imbf116') THEN
+         LET g_imbf_m.imbf116 = l_imcd.imcd116
+      END IF
+      IF NOT aimt303_chk_ooeh('imbf117') THEN
+         LET g_imbf_m.imbf117 = l_imcd.imcd117
+      END IF
+      IF NOT aimt303_chk_ooeh('imbf118') THEN
+         LET g_imbf_m.imbf118 = l_imcd.imcd118
+      END IF
+      IF NOT aimt303_chk_ooeh('imbf121') THEN
+         LET g_imbf_m.imbf121 = l_imcd.imcd121
+      END IF
+      IF NOT aimt303_chk_ooeh('imbf122') THEN
+         LET g_imbf_m.imbf122 = l_imcd.imcd122
+      END IF
+      IF NOT aimt303_chk_ooeh('imbf123') THEN
+         LET g_imbf_m.imbf123 = l_imcd.imcd123
+      END IF
+      IF NOT aimt303_chk_ooeh('imbf124') THEN
+         LET g_imbf_m.imbf124 = l_imcd.imcd124
+      END IF
+      IF NOT aimt303_chk_ooeh('imbf125') THEN
+         LET g_imbf_m.imbf125 = l_imcd.imcd125
+      END IF
+      IF NOT aimt303_chk_ooeh('imbf126') THEN
+         LET g_imbf_m.imbf126 = l_imcd.imcd126
+      END IF
+      IF NOT aimt303_chk_ooeh('imbf127') THEN
+         LET g_imbf_m.imbf127 = l_imcd.imcd127
+      END IF
+      IF NOT aimt303_chk_ooeh('imbf128') THEN
+         LET g_imbf_m.imbf128 = l_imcd.imcd128
+      END IF
+      
+      #160617-00004#3--s
+      IF NOT aimt303_chk_ooeh('imbf130') THEN
+         LET g_imbf_m.imbf130 = l_imcd.imcd130
+      END IF
+      #160617-00004#3--e
+   END IF
+   
+   #預測料號若無值時(ex.分群那邊沒設這個欄位)，預設料件編號
+   IF cl_null(g_imbf_m.imbf125) THEN
+      LET g_imbf_m.imbf125 = g_imbf_m.imba001
+   END IF
+   IF cl_null(g_imbf_m.imbf112) THEN
+      LET g_imbf_m.imbf112 = g_imbf_m.imba006
+   END IF
+   IF cl_null(g_imbf_m.imbf113) THEN
+      LET g_imbf_m.imbf113 = g_imbf_m.imba006
+   END IF
+   
+   
+   DISPLAY BY NAME g_imbf_m.imbf111,g_imbf_m.imbf112,g_imbf_m.imbf113,g_imbf_m.imbf114,g_imbf_m.imbf115, 
+     g_imbf_m.imbf116,g_imbf_m.imbf117,g_imbf_m.imbf118,g_imbf_m.imbf121,g_imbf_m.imbf122, 
+     g_imbf_m.imbf123,g_imbf_m.imbf124,g_imbf_m.imbf125,g_imbf_m.imbf126,g_imbf_m.imbf127,g_imbf_m.imbf128,
+     g_imbf_m.imbf130  #160617-00004#3
+     
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_imbf_m.imbf111
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='202' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_imbf_m.imbf111_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_imbf_m.imbf111_desc   
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_imbf_m.imbf112
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_imbf_m.imbf112_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_imbf_m.imbf112_desc
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_imbf_m.imbf113
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_imbf_m.imbf113_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_imbf_m.imbf113_desc
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_imbf_m.imbf123
+   CALL ap_ref_array2(g_ref_fields,"SELECT imaal003 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_imbf_m.imbf123_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_imbf_m.imbf123_desc
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_imbf_m.imbf125
+   CALL ap_ref_array2(g_ref_fields,"SELECT imaal003 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_imbf_m.imbf125_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_imbf_m.imbf125_desc
+            
+END FUNCTION
+
+ 
+{</section>}
+ 

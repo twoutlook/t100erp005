@@ -1,0 +1,723 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axmt610" std_prog="axmt610" erpver="1.0" ver="7" module="AXM" type="M" booking="Y" designer_ver="1.0" class="t" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="xmel_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+    <tbl name="xmem_t" main="N" head="N" pk="" fk_detail="" parent="xmel_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： (大略描述一下)
+標準作業功能取消：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+狀態功能：[有效/無效] / [確認/取消確認/作廢/過帳/取消過帳] / [確認/取消確認/無效]
+作業類型：(基本資料/交易單據)維護作業
+輸入模式：雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)：
+ 資料來源表：xmel_t(資料檔)
+      
+
+作業資料來源(Detail)：
+ 資料來源表：xmem_t(單身檔)
+
+
+
+補充說明：(輸入此作的補充說明事項)
+]]>
+  </all>
+  <db_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[]]>
+  </db_all>
+  <di_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[1.新增狀態進入單身時，需要開啟[P:單身整批產生]的子程式axmt610_01
+2.單頭的來源單號有僅時，單身來源單號欄位預設為單頭來源單號，不可修改，亦不可新增其他單號資料
+]]>
+  </di_all>
+  <field cite_std="N" name="b_xmel001" ver="1" src="s" column="xmel001" table="xmel_t" attribute="" type="" req="Y" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_xmel002" ver="1" src="s" column="xmel002" table="xmel_t" attribute="" type="" req="Y" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="v_ooeg001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_xmeldocdt" ver="1" src="s" column="xmeldocdt" table="xmel_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_xmeldocno" ver="1" src="s" column="xmeldocno" table="xmel_t" attribute="" type="" req="Y" i_zoom="q_ooba002_1" c_zoom="q_xmeldocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_xmeldocno_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmel009_desc" ver="5" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmel010_desc" ver="5" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmel001" ver="1" src="s" column="xmel001" table="xmel_t" attribute="" type="" req="Y" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[人員：
+   ●欄位控管：
+     資料欄位: xmel001/可Display可Input
+     預設值:g_user
+     校驗:1.輸入值須存在[T:員工檔].[C:員工編號]且為有效資料
+     帶值:1.顯示時以xmel001值到[T:員工檔]抓取[C:聯絡對象識別碼],再以[C:聯絡對象識別碼]
+            到[T:聯絡對象檔]中抓取[C:全名]到本欄位後面顯示
+          2.依據xmel001的值到[T:員工檔]抓取[C:歸屬部門]的值，並預設到xmel002(部門)欄位上
+     計算或處理:無
+
+   ●開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：[T:員工檔].[C:員工編號],[T:聯絡對象檔].[C:全名]
+     新增或修改時過濾條件：[T:員工檔].[C:聯絡對象識別碼]=[T:聯絡對象檔].[C:聯絡對象識別碼]且為有效資料
+     回值類型：查詢時多重回值;新增或修改時單一回值
+  
+]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmel002" ver="1" src="s" column="xmel002" table="xmel_t" attribute="" type="" req="Y" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="v_ooeg001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[部門：
+   ●欄位控管：
+     資料欄位:xmel002/可Display可Input
+     預設值:g_grup
+     校驗:1.輸入值須存在[T:組織基本資料檔].[C:組織編號]WHERE [C:部門否]='Y' 且為有效資料
+     帶值:1.自動帶出[T:組織多語言檔].[C:說明(簡稱)]到[C:部門名稱]
+     計算或處理:無
+
+   ●開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：[T:組織基本資料檔].[C:組織編號],[T:組織多語言檔].[C:說明(簡稱)]
+     查詢時過濾條件：[T:組織基本資料檔].[C:部門否]='Y'
+     新增/修改時過濾條件：[T:組織基本資料檔].[C:部門否]='Y' 且有效資料
+     回值類型：查詢時多重回值，新增/修改時單一回值
+]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmel003" ver="1" src="s" column="xmel003" table="xmel_t" attribute="" type="" req="Y" i_zoom="q_pmaa001_6" c_zoom="q_pmaa001_6" chk_ref="v_pmaa001_3" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[客戶：
+   ●欄位控管：
+     資料欄位:xmel003 /可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+          2.輸入的值必須存在[T:交易對象主檔].[C:交易對象編號]，且[C:狀態] =確認，
+            且[C:交易對象類型] ='2' OR '3'   
+          3.呼叫s_doc_chk('2',xmeldocno,xmel003,'','','','')應用元件，檢核輸入的客戶是否在
+            單據別限制範圍內，若不在限制內則不允許輸入此客戶編號       
+     帶值:1.顯示時將[T:交易對象多語言檔].[C:簡稱]帶回欄位後面顯示
+     計算或處理:無
+
+   ●開窗處理：
+       1.新增狀態：
+         參考函式：交易對象夥伴關係資料
+         查詢欄位：[C:交易夥伴編號],[C:交易夥伴對象簡稱],[C:交易對象編號],[C:交易對象簡稱]
+         過濾條件：[T:交易對象主檔].[C:交易對象類型]='2' OR '3'
+         回值類型：單一回值
+
+       2.查詢狀態：
+         參考函式：依標準查詢視窗 
+         查詢欄位：[T:交易對象主檔].[C:交易對象編號],[T:交易對象多語言檔].[C:簡稱]
+         查詢條件：[T:交易對象主檔].[C:交易對象類型]='2' OR '3'
+         回值類型：多重回值
+]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmel004" ver="1" src="s" column="xmel004" table="xmel_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="2069" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[包裝單來源：
+   ●欄位控管：
+     資料欄位:xmel004/可Display可Input
+     預設值:(出貨通知單)
+       資料庫: 抓取[T:系統分類值檔].[C:系統分類碼]=2069的資料,
+     　　　　　　　[T:系統分類值檔].[C:系統分類值]為下拉選項代號,
+                   [T:系統分類值多語言檔].[C:說明]為下拉選項說明
+     校驗:1.必輸不允許空白
+          2.輸入值須存在[T:系統分類值檔].[C:系統分類值]且[C:系統分類碼]=2069
+     帶值:無
+     計算或處理:
+     備註:1.'6:自行輸入'代表是相關欄位由user自行輸入，來源單號也可以輸入但不做檢核
+
+
+
+]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmel005" ver="7" src="s" column="xmel005" table="xmel_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_xmel005" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="u">
+    <![CDATA[來源單號：
+   ●欄位控管：
+     資料欄位: xmel005/可Display可Input
+     預設值:無
+     校驗:1.允許空白
+          2.輸入的單號需依據xmel004(包裝單來源)做檢核，例如來源類型選擇'1:出貨通知單'時，
+            則輸入的來源單號需存在出貨通知單單頭檔中且是已確認的
+
+     帶值:1.將來源單號上的相關欄位例如額外品名規格、起運日期、運輸方式、船班/航班/車號、起運地、目的地等欄位值預設到包裝單單頭的相關欄位上
+     計算或處理:1.當xmel004不等於'6:自行輸入'且來源單號有值時，
+                  則單頭相關欄位如額外品名規格、起運日期、運輸方式、船班/航班/車號、起運地、目的地等欄位不可以維護
+
+   ●開窗處理:
+      1.查詢時：
+       參考函式：開窗查詢包裝單上的來源單號
+       查詢欄位：包裝單來源、來源單號
+       查詢條件：無
+       回值類型：多重回值
+      
+     2.新增/修改時： 
+           參考函式：依據包裝選擇的類型開相關單據的資料
+           查詢欄位：來源單號、單據日期、客戶/供應商、收貨客戶/供應商、收款客戶/付款供應商
+           查詢條件：已確認單據
+           回值類型：單一回值
+]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmel006" ver="1" src="s" column="xmel006" table="xmel_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[起運日：
+   ●欄位控管：
+     資料欄位:xmel006/可Display 可Input
+     預設值:g_today
+     校驗:1.不允許空白
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmel007" ver="1" src="s" column="xmel007" table="xmel_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[運輸方式：
+  ●欄位控制：
+     資料欄位: xmel007/可Display可Input
+     允許空白: Yes
+     預設值:無
+     校驗:1.輸入值須存在[T:應用分類碼檔].[C:應用分類碼]、[C:應用分類]=263 且為有效資料
+     帶值:1.顯示時將[T:應用分類碼多語言檔].[C:說明]帶回xmel007
+     計算或處理:無
+
+   ●開窗處理：
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+       過濾條件：[T:應用分類碼檔].[C:應用分類]=263
+       回值類型：查詢時(多重回值)，新增/修改時(單一回值)
+]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmel008" ver="1" src="s" column="xmel008" table="xmel_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[航次：
+   ●欄位控管：
+     資料欄位:xmel008 /可Display可Input
+     預設值:無
+     校驗:1.允許空白
+     帶值:1.無
+     計算或處理:無
+]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmel009" ver="1" src="s" column="xmel009" table="xmel_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[起運地：
+   ●欄位控管：
+     資料欄位:xmel009 /可Display可Input
+     預設值:無
+     校驗:1.允許空白
+          2.依據運輸方式所設置的運輸類型(ACC='263'對應的參考欄位16)檢核起運地的合理性
+            2-1.當運輸方式設置的運輸類型為'1:陸運'時，則輸入的起運地需存在縣市基本資料(oock_t)
+            2-2.當運輸方式設置的運輸類型為'2:海運'時，則輸入的起運地需存在港口基本資料(ACC='262')
+            2-3.當運輸方式設置的運輸類型為'3:空運'時，則輸入的起運地需存在機場基本資料(ACC='276')
+            2-4.當運輸方式設置的運輸類型為'4:其它'時，則輸入的起運地需存在縣市基本資料(oock_t)
+     帶值:1.將輸入的起運地對應的簡稱帶回xmel009顯示
+     計算或處理:無
+
+   ●開窗處理：
+     1.查詢時：
+       參考函式：查詢訂單單頭的起運地資料
+       查詢欄位：運輸方式、起運地
+       查詢條件：無
+       回值類型：多重回值
+      
+     2.新增/修改時： 
+           參考函式：1.依據運輸方式設置的運輸類型開不同來源的窗
+                       2-1.當運輸方式設置的運輸類型為'1:陸運'時，則輸查詢縣市基本資料(oock_t)
+                       2-2.當運輸方式設置的運輸類型為'2:海運'時，則查詢港口基本資料(ACC='262')
+                       2-3.當運輸方式設置的運輸類型為'3:空運'時，則查詢機場基本資料(ACC='276')
+                       2-4.當運輸方式設置的運輸類型為'4:其它'時，則查詢縣市基本資料(oock_t)
+           回值類型：單一回值
+]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmel010" ver="1" src="s" column="xmel010" table="xmel_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[卸貨地：
+   ●欄位控管：
+     資料欄位:xmel010 /可Display可Input
+     預設值:無
+     校驗:1.允許空白
+          2.依據運輸方式所設置的運輸類型(ACC='263'對應的參考欄位16)檢核起目的地的合理性
+            2-1.當運輸方式設置的運輸類型為'1:陸運'時，則輸入的目的地需存在縣市基本資料(oock_t)
+            2-2.當運輸方式設置的運輸類型為'2:海運'時，則輸入的目的地需存在港口基本資料(ACC='262')
+            2-3.當運輸方式設置的運輸類型為'3:空運'時，則輸入的目的地需存在機場基本資料(ACC='276')
+            2-4.當運輸方式設置的運輸類型為'4:其它'時，則輸入的目的地需存在縣市基本資料(oock_t)
+     帶值:1.將輸入的目的地對應的簡稱帶回xmel010顯示
+     計算或處理:無
+
+   ●開窗處理：
+     1.查詢時：
+       參考函式：查詢訂單單頭的目的地資料
+       查詢欄位：運輸方式、目的地
+       查詢條件：無
+       回值類型：多重回值
+      
+     2.新增/修改時： 
+           參考函式：1.依據運輸方式設置的運輸類型開不同來源的窗
+                       2-1.當運輸方式設置的運輸類型為'1:陸運'時，則輸查詢縣市基本資料(oock_t)
+                       2-2.當運輸方式設置的運輸類型為'2:海運'時，則查詢港口基本資料(ACC='262')
+                       2-3.當運輸方式設置的運輸類型為'3:空運'時，則查詢機場基本資料(ACC='276')
+                       2-4.當運輸方式設置的運輸類型為'4:其它'時，則查詢縣市基本資料(oock_t)
+           回值類型：單一回值
+]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmel011" ver="1" src="s" column="xmel011" table="xmel_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="62" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmel012" ver="1" src="s" column="xmel012" table="xmel_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="62" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmel013" ver="1" src="s" column="xmel013" table="xmel_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[額外品名規格：
+  ●欄位控制：
+     資料欄位: xmel013/可Display可Input
+     允許空白: Yes
+     預設值:無
+     校驗:1.輸入值須存在[T:應用分類碼檔].[C:應用分類碼]、[C:應用分類]=209 且為有效資料
+     帶值:1.顯示時將[T:應用分類碼多語言檔].[C:說明]帶回xmel013
+     計算或處理:無
+
+   ●開窗處理：
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+       過濾條件：[T:應用分類碼檔].[C:應用分類]=209
+       回值類型：查詢時(多重值回傳)，新增/修改時(單一值回傳)
+
+]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmel014" ver="1" src="s" column="xmel014" table="xmel_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmelcnfdt" ver="1" src="s" column="xmelcnfdt" table="xmel_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmelcnfid" ver="1" src="s" column="xmelcnfid" table="xmel_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmelcrtdp" ver="1" src="s" column="xmelcrtdp" table="xmel_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmelcrtdt" ver="1" src="s" column="xmelcrtdt" table="xmel_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmelcrtid" ver="1" src="s" column="xmelcrtid" table="xmel_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmeldocdt" ver="1" src="s" column="xmeldocdt" table="xmel_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmeldocno" ver="1" src="s" column="xmeldocno" table="xmel_t" attribute="" type="" req="Y" i_zoom="q_ooba002_1" c_zoom="q_xmeldocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[包裝單號：
+   ●欄位控管：
+     資料欄位:xmeldocno/可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+          2.呼叫s_control_doc_chk('1',xmeldocno,'','','','')應用元件，檢核輸入的單據別是否
+            可以被key單人員對應的控制組使用
+
+     帶值:1.抓取[T:單據別多語言檔][C:說明]的值顯示在下方[C:單別名稱]欄位
+     計算或處理:1.當新增時才可輸入單別，修改時此欄位為NoEntry
+                2.新增存檔時，呼叫應用元件s_aooi200_gen_docno自動編申請單號
+                3.呼叫應用元件取單據別有預設欄位的資料，將這些預設值預設到對應欄位上
+
+   ●開窗處理：
+        1.查詢時：
+          參考函式：依標準查詢視窗
+          查詢欄位：[T:包裝單單頭檔].[C:派車單單號],[T:包裝單單頭檔].[C:單據日期],
+                    [T:包裝單單頭檔].[C:狀態],[T:包裝單頭檔].[C:人員],
+                    [T:包裝單單頭檔].[C:部門]
+          回值類型：多重回值
+        2.新增：
+          參考函式：依標準查詢視窗
+          查詢欄位：[T:單據別檔].[C:單據別],[T:單據別檔].[C:說明]
+          查詢條件：[T:單據別檔].[C:參照表號] = 當前登入組織設定的單據別使用參照表
+                    AND [T:單據別檔].[C:對應程式代號] ='axmt610'
+                    AND [T:單據別檔].[C:資料狀態碼] = 'Y'
+          回值類型：單一傳回
+]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmelmoddt" ver="1" src="s" column="xmelmoddt" table="xmel_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmelmodid" ver="1" src="s" column="xmelmodid" table="xmel_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmelowndp" ver="1" src="s" column="xmelowndp" table="xmel_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmelownid" ver="1" src="s" column="xmelownid" table="xmel_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmelsite" ver="1" src="s" column="xmelsite" table="xmel_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmel_t.xmelstus" ver="1" src="s" column="xmelstus" table="xmel_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmeldocno_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem001" ver="7" src="s" column="xmem001" table="xmem_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_xmel005" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="u">
+    <![CDATA[來源單號：
+   ●欄位控管：
+     資料欄位: xmem001/可Display可Input
+     預設值:無
+     校驗:1.當包裝單來源不等於'6:自行輸入'時，來源單號不允許空白
+          2.輸入的單號需依據xmel004(包裝單來源)做檢核，例如來源類型選擇'1:出貨通知單'時，
+            則輸入的來源單號需存在出貨通知單單頭檔中且是已確認的
+
+     帶值:無
+     計算或處理:無
+
+   ●開窗處理:
+      1.查詢時：
+       參考函式：開窗查詢包裝單上的來源單號
+       查詢欄位：包裝單來源、來源單號
+       查詢條件：無
+       回值類型：多重回值
+      
+     2.新增/修改時： 
+           參考函式：依據包裝單來源開相關單據的資料
+           查詢欄位：來源單號、單據日期、客戶/供應商、收貨客戶/供應商、收款客戶/付款供應商
+           查詢條件：已確認單據
+           回值類型：單一回值
+]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem002" ver="1" src="s" column="xmem002" table="xmem_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[來源項次：
+   ●欄位控管：
+     資料欄位: xmem002/可Display可Input
+     預設值:
+     校驗:1.當包裝單來源不等於'6:自行輸入'時，來源單號不允許空白
+          2.輸入的單號需依據xmel004(包裝單來源)做檢核，例如來源類型選擇'1:出貨通知單'時，
+            則輸入的來源單號需存在出貨通知單單頭檔中且是已確認的
+          3.來源單號+來源項次不可已存在包裝單中  
+     帶值:1.輸入來源項次後需將來源單據上相關欄位值預設到包裝單單身對應欄位上
+
+]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem003" ver="1" src="s" column="xmem003" table="xmem_t" attribute="" type="" req="Y" i_zoom="q_imaf001" c_zoom="q_imaf001" chk_ref="v_imaf001_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[料件編號：
+   ●欄位控管：
+     資料欄位: xmem003/可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+          2.輸入值須存在[T:料件基本資料檔].[C:料件編號]，且[C:資料狀態]為確認
+          3.呼叫s_doc_chk('4',pmdadocno,xmdp006,'','','','')應用元件，檢核輸入的料件的生命週期是否在
+            單據別限制範圍內，若不在限制內則不允許輸入
+          4.呼叫s_doc_chk('5',pmdadocno,xmdp006,'','','','')應用元件，檢核輸入的料件的產品分類是否在
+            單據別限制範圍內，若不在限制內則不允許輸入
+
+     帶值:1.自動填入: [C:品名]=[T:料件基本資料多語言檔].[C:品名]
+                      [C:規格]=[T:料件基本資料多語言檔].[C:規格]
+     計算或處理:1.新增或是修改料號時，需呼叫應用元件s_pmao_get('1','xmdo007','xmdp008','xmdp009','')
+                  抓取交易對象對應的料號，若有設置則將抓取出的料號顯示在xmdp010
+               
+
+   ●開窗處理:
+     新增/修改狀態:
+       1.依料件標準開窗
+
+]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem004" ver="1" src="s" column="xmem004" table="xmem_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[包裝序：
+1.單身資料中相同的來源單號、來源項次的包裝序不可重覆
+   
+]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem005" ver="5" src="s" column="xmem005" table="xmem_t" attribute="" type="" req="Y" i_zoom="q_xman005" c_zoom="q_xman005" chk_ref="v_imaf001_2" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[1.包裝方式
+  預設依料件編號、產品分類、供應商、聯絡地址，抓取axmi240設定的包裝方式
+  料件編號先抓完全相符的，抓不到再抓"*"的
+  供應商有多筆資料時，再依聯絡地址抓取
+2.依包裝方式串至axmi230抓取包裝箱數…等相關資料
+  axmi230如"是否有內包裝"="Y"時，再依內包裝方式抓取內包裝資料
+  每箱裝數=包裝箱數*內包裝一箱數*內包裝二箱數
+   
+]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem006" ver="1" src="s" column="xmem006" table="xmem_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[每箱裝數：
+1.不可小於0
+2.變更時，截止包裝箱數、數量、單位淨重、總淨重、單位毛重、總毛重、單位材積、總材積需重新計算
+]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem007" ver="1" src="s" column="xmem007" table="xmem_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[箱數：
+1.不可小於0
+2.變更時，截止包裝箱數、數量、單位淨重、總淨重、單位毛重、總毛重、單位材積、總材積需重新計算
+]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem008" ver="1" src="s" column="xmem008" table="xmem_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem009" ver="1" src="s" column="xmem009" table="xmem_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem010" ver="1" src="s" column="xmem010" table="xmem_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem011" ver="1" src="s" column="xmem011" table="xmem_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem012" ver="1" src="s" column="xmem012" table="xmem_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem013" ver="1" src="s" column="xmem013" table="xmem_t" attribute="" type="" req="Y" i_zoom="q_ooca001_1" c_zoom="q_ooca001_1" chk_ref="v_ooca001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem014" ver="1" src="s" column="xmem014" table="xmem_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem015" ver="1" src="s" column="xmem015" table="xmem_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem016" ver="1" src="s" column="xmem016" table="xmem_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem017" ver="1" src="s" column="xmem017" table="xmem_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem018" ver="1" src="s" column="xmem018" table="xmem_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmem019" ver="1" src="s" column="xmem019" table="xmem_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmemseq" ver="1" src="s" column="xmemseq" table="xmem_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmem_t.xmemsite" ver="1" src="s" column="xmemsite" table="xmem_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="7" name="prog_xmel005" depend_field="xmel_t.xmel005" src="s" status="">
+      <program order="1" type="1" name="axmt520"/>
+    </pfield>
+    <pfield cite_std="N" ver="7" name="xmem_t.xmem001" depend_field="xmem_t.xmem001" src="s" status="">
+      <program order="1" type="1" name="axmt520"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_xmel001_desc" src="s" depend_field="b_xmel001" correspon_key="xmel001" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="b_xmel002_desc" src="s" depend_field="b_xmel002" correspon_key="xmel002" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xmel001_desc" src="s" depend_field="xmel_t.xmel001" correspon_key="xmel001" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="xmel002_desc" src="s" depend_field="xmel_t.xmel002" correspon_key="xmel002" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xmel003_desc" src="s" depend_field="xmel_t.xmel003" correspon_key="xmel003" ref_table="pmaal_t" ref_fk="pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="xmel007_desc" src="s" depend_field="xmel_t.xmel007" correspon_key="&apos;263&apos;,xmel007" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="xmel013_desc" src="s" depend_field="xmel_t.xmel013" correspon_key="&apos;209&apos;,xmel013" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="xmelcnfid_desc" src="s" depend_field="xmel_t.xmelcnfid" correspon_key="xmelcnfid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="xmelcrtdp_desc" src="s" depend_field="xmel_t.xmelcrtdp" correspon_key="xmelcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xmelcrtid_desc" src="s" depend_field="xmel_t.xmelcrtid" correspon_key="xmelcrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="xmelmodid_desc" src="s" depend_field="xmel_t.xmelmodid" correspon_key="xmelmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="xmelowndp_desc" src="s" depend_field="xmel_t.xmelowndp" correspon_key="xmelowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xmelownid_desc" src="s" depend_field="xmel_t.xmelownid" correspon_key="xmelownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="xmem003_desc" src="s" depend_field="xmem_t.xmem003" correspon_key="xmem003" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="2" name="xmem003_desc_desc" src="s" depend_field="xmem_t.xmem003" correspon_key="xmem003" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal004" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_xmel001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_xmel002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_xmeldocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_xmeldocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="b_xmeldocno_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="xmel009_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="xmel010_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmel001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmel002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmel003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmel004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="7" name="xmel_t.xmel005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmel006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmel007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmel008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmel009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmel010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmel011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmel012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmel013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmel014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmelcnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmelcnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmelcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmelcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmelcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmeldocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmeldocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmelmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmelmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmelowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmelownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmelsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmel_t.xmelstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="xmeldocno_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="7" name="xmem_t.xmem001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="xmem_t.xmem005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmem019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmemseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmem_t.xmemsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="make_detail" ver="5" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="xmel_memo" ver="4" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_xmeldocno" text="包裝單號" lstr=""/>
+    <sfield name="lbl_oobxl003" text="說明" lstr=""/>
+    <sfield name="lbl_xmeldocdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_xmel001" text="人員" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_xmel002" text="部門" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_xmel003" text="客戶" lstr=""/>
+    <sfield name="page_1" text="包裝資料" lstr=""/>
+    <sfield name="lbl_xmel004" text="包裝單來源" lstr=""/>
+    <sfield name="lbl_xmel005" text="來源單號" lstr=""/>
+    <sfield name="lbl_xmel006" text="起運日期" lstr=""/>
+    <sfield name="lbl_xmel007" text="運輸方式" lstr=""/>
+    <sfield name="lbl_xmel008" text="航次" lstr=""/>
+    <sfield name="lbl_xmel009" text="起運地" lstr=""/>
+    <sfield name="lbl_xmel011" text="重量計量制度" lstr=""/>
+    <sfield name="lbl_xmel012" text="材積計量制度" lstr=""/>
+    <sfield name="lbl_xmel010" text="卸貨地" lstr=""/>
+    <sfield name="lbl_xmel013" text="額外品名規格編號" lstr=""/>
+    <sfield name="lbl_xmel014" text="備註" lstr=""/>
+    <sfield name="lbl_xmelsite" text="營運據點" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="lbl_xmemseq" text="項次" lstr=""/>
+    <sfield name="lbl_xmem001" text="來源單號" lstr=""/>
+    <sfield name="lbl_xmem002" text="來源項次" lstr=""/>
+    <sfield name="lbl_xmem003" text="料件編號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="lbl_xmem004" text="包裝序" lstr=""/>
+    <sfield name="lbl_xmem005" text="包裝方式" lstr=""/>
+    <sfield name="lbl_xmem006" text="每箱裝數" lstr=""/>
+    <sfield name="lbl_xmem007" text="箱數" lstr=""/>
+    <sfield name="lbl_xmem008" text="字軌" lstr=""/>
+    <sfield name="lbl_xmem009" text="棧板號" lstr=""/>
+    <sfield name="lbl_xmem010" text="起始包裝箱號" lstr=""/>
+    <sfield name="lbl_xmem011" text="截止包裝箱號" lstr=""/>
+    <sfield name="lbl_xmem012" text="數量" lstr=""/>
+    <sfield name="lbl_xmem013" text="重量單位" lstr=""/>
+    <sfield name="lbl_xmem014" text="單位淨重" lstr=""/>
+    <sfield name="lbl_xmem015" text="總淨重" lstr=""/>
+    <sfield name="lbl_xmem016" text="單位毛重" lstr=""/>
+    <sfield name="lbl_xmem017" text="總毛重" lstr=""/>
+    <sfield name="lbl_xmem018" text="單位材積" lstr=""/>
+    <sfield name="lbl_xmem019" text="總材積" lstr=""/>
+    <sfield name="lbl_xmemsite" text="營運據點" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_ooff002" text="第一KEY值" lstr=""/>
+    <sfield name="lbl_ooff007" text="第六KEY值" lstr=""/>
+    <sfield name="lbl_ooff003" text="第二KEY值" lstr=""/>
+    <sfield name="lbl_ooff008" text="第七KEY值" lstr=""/>
+    <sfield name="lbl_ooff004" text="第三KEY值" lstr=""/>
+    <sfield name="lbl_ooff009" text="第八KEY值" lstr=""/>
+    <sfield name="lbl_ooff005" text="第四KEY值" lstr=""/>
+    <sfield name="lbl_ooff010" text="第九KEY值" lstr=""/>
+    <sfield name="lbl_ooff006" text="第五KEY值" lstr=""/>
+    <sfield name="lbl_ooff011" text="第十KEY值" lstr=""/>
+    <sfield name="lbl_ooff001" text="備註類型" lstr=""/>
+    <sfield name="lbl_ooff012" text="控制類型" lstr=""/>
+    <sfield name="lbl_ooff014" text="失效日期" lstr=""/>
+    <sfield name="define" text="預設備註" lstr=""/>
+    <sfield name="comme" text="個人常用備註" lstr=""/>
+    <sfield name="group3" text="來源明細" lstr=""/>
+    <sfield name="lbl_imaa001" text="料號" lstr=""/>
+    <sfield name="lbl_xmdh007" text="產品特徵" lstr=""/>
+    <sfield name="lbl_xmdh015" text="單位" lstr=""/>
+    <sfield name="lbl_xmdh016" text="數量" lstr=""/>
+    <sfield name="lbl_xman005" text="包装方式" lstr=""/>
+    <sfield name="lbl_every_num" text="每箱裝數" lstr=""/>
+    <sfield name="lbl_sel1" text="滿箱選取" lstr=""/>
+    <sfield name="lbl_full_num" text="滿箱數" lstr=""/>
+    <sfield name="lbl_sel2" text="剩餘選取" lstr=""/>
+    <sfield name="lbl_unfull_num" text="餘數" lstr=""/>
+    <sfield name="lbl_space" text="餘數所需空間" lstr=""/>
+    <sfield name="lbl_all_space" text="已選取之總空間" lstr=""/>
+    <sfield name="full_sel" text="滿箱選取" lstr=""/>
+    <sfield name="all_sel" text="全選" lstr=""/>
+    <sfield name="un_sel" text="取消選取" lstr=""/>
+    <sfield name="cancel_sel" text="反向選取" lstr=""/>
+    <sfield name="group2" text="箱號資料" lstr=""/>
+    <sfield name="lbl_xmem0081" text="字軌" lstr=""/>
+    <sfield name="lbl_xmem0101" text="起始箱號" lstr=""/>
+    <sfield name="lbl_xmem0091" text="棧板編號" lstr=""/>
+    <sfield name="make_paper" text="產生底稿" lstr=""/>
+    <sfield name="group1" text="包裝單底稿" lstr=""/>
+    <sfield name="make_detail" text="產生包裝單明細" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_ooff013" text="備註說明" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="make_detail" text="整批產生單身" lstr=""/>
+    <sact name="xmel_memo" text="備註" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

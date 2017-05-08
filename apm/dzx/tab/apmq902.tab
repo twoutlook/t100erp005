@@ -1,0 +1,81 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmq902" module="apm" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="02159" crtdt="2015-02-10 11:45:14" modid="02159" moddt="2015-07-14 18:39:17" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="預約收貨調度查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="ooef001,l_sdate,l_edate,l_cnd1"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),pmelsite,pmelsite_desc(chr500),pmel002,pmel003,pmel003_desc(chr500),l_pmel003_oocq009(chr500),l_pmel003_oocq010(chr500),l_def_time(chr500),pmel009,pmel009_desc(chr500),pmel006,pmel006_desc(chr500),pmeldocno,pmelstus,pmel010,pmel001"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),pmelsite(b_pmelsite),pmelsite_desc(b_pmelsite_desc),pmel002(b_pmel002),pmel003(b_pmel003),pmel003_desc(b_pmel003_desc),l_pmel003_oocq009(l_pmel003_oocq009),l_pmel003_oocq010(l_pmel003_oocq010),l_def_time(l_def_time),pmel009(b_pmel009),pmel009_desc(b_pmel009_desc),pmel006(b_pmel006),pmel006_desc(b_pmel006_desc),pmeldocno(b_pmeldocno),pmelstus(b_pmelstus),pmel010(b_pmel010),pmel001(b_pmel001)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmq902" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="pmelsite,pmel002,pmel003,pmel009,pmel006,pmeldocno,pmelstus,pmel010,pmel001" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="pmelsite(b_pmelsite),pmel002(b_pmel002),pmel003(b_pmel003),pmel009(b_pmel009),pmel006(b_pmel006),pmeldocno(b_pmeldocno),pmelstus(b_pmelstus),pmel010(b_pmel010),pmel001(b_pmel001)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="pmelsite">
+        <after>
+          <reference field="pmelsite_desc" ref_field="pmelsite" map_field="pmelent,pmelsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pmelsite_desc"/>
+      <column id="pmel002"/>
+      <column id="pmel003">
+        <after>
+          <reference field="pmel003_desc" ref_field="pmel003" map_field="pmel003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;274&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pmel003_desc"/>
+      <column id="l_pmel003_oocq009"/>
+      <column id="l_pmel003_oocq010"/>
+      <column id="l_def_time"/>
+      <column id="pmel009">
+        <after>
+          <reference field="pmel009_desc" ref_field="pmel009" map_field="pmel009" ref_sql="SELECT pmenl003 FROM pmenl_t WHERE pmenlent=$varg_enterprise$var AND pmenl001=? AND pmenl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pmel009_desc"/>
+      <column id="pmel006">
+        <after>
+          <reference field="pmel006_desc" ref_field="pmel006" map_field="pmel006" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pmel006_desc"/>
+      <column id="pmeldocno"/>
+      <column id="pmelstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="pmel010" type="S" default="0"/>
+      <column id="pmel001"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="pmel_t" page="1" linked="" pk="pmeldocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,pmelsite,&apos;&apos;,pmel002,pmel003,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,pmel009,&apos;&apos;,pmel006,&apos;&apos;,pmeldocno,pmelstus,pmel010,pmel001 FROM pmel_t WHERE pmelent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

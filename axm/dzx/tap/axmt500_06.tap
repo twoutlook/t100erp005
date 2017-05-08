@@ -1,0 +1,921 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="axmt500_06" std_prog="axmt500_06" erpver="1.0" module="AXM" ver="3" env="s" zone="t10prd" booking="Y" type="S" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <point name="function.axmt500_06_fill" order="1" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axmt500_06_fill()
+DEFINE l_sql      STRING
+DEFINE l_ac       LIKE type_t.num5
+DEFINE i          LIKE type_t.num5
+DEFINE l_cnt      LIKE type_t.num5
+DEFINE l_success  LIKE type_t.num5
+DEFINE l_inan010  LIKE inan_t.inan010
+
+
+
+
+   LET l_sql = "SELECT xmdr001,xmdr002,     '',     '',xmdr008, ",
+               "       xmdr009,     '',xmdr010,     '',xmdr004, ",
+               "            '',xmdr005,     '',xmdr003,xmdr006, ",
+               "            '',xmdr007,     '' ",
+               "  FROM xmdr_t ",
+               "  WHERE xmdrent = '",g_enterprise,"' ",
+               "    AND xmdrdocno = '",g_xmdddocno,"' ",
+               "    AND xmdrseq = '",g_xmddseq,"' ",
+               "    AND xmdrseq1 = '",g_xmddseq1,"' ",
+               "    AND xmdrseq2 = '",g_xmddseq2,"' "
+
+   PREPARE axmt500_06_sel FROM l_sql
+   DECLARE axmt500_06_per CURSOR FOR axmt500_06_sel 
+   
+   CALL g_xmdr_d.clear()
+   LET l_ac = 1
+   
+   #先抓取對應的xmdr_t資料
+   FOREACH axmt500_06_per INTO g_xmdr_d[l_ac].*
+        IF SQLCA.sqlcode THEN
+           INITIALIZE g_errparam TO NULL
+           LET g_errparam.code = SQLCA.sqlcode
+           LET g_errparam.extend = "FOREACH:"
+           LET g_errparam.popup = TRUE
+           CALL cl_err()
+
+           EXIT FOREACH
+        END IF
+        LET g_xmdr_d[l_ac].sel = 'Y'
+        
+        
+        #抓取對應inag_t資料的庫存量(inag008)
+        LET g_xmdr_d[l_ac].inag008 = 0
+        SELECT inag008 INTO g_xmdr_d[l_ac].inag008
+          FROM inag_t 
+         WHERE inagent = g_enterprise
+           AND inagsite = g_site
+           AND inag001 = g_xmdr_d[l_ac].xmdr001
+           AND inag002 = g_xmdr_d[l_ac].xmdr002       
+           AND inag003 = g_xmdr_d[l_ac].xmdr003
+           AND inag004 = g_xmdr_d[l_ac].xmdr004
+           AND inag005 = g_xmdr_d[l_ac].xmdr005
+           AND inag006 = g_xmdr_d[l_ac].xmdr006            
+           AND inag007 = g_xmdr_d[l_ac].xmdr007
+        IF cl_null(g_xmdr_d[l_ac].inag008) THEN LET g_xmdr_d[l_ac].inag008 = 0 END IF
+        #已在揀量inan010+已備置量inan010
+        LET l_inan010 = 0
+        SELECT SUM(inan010)  INTO l_inan010
+          FROM inan_t
+         WHERE inanent = g_enterprise
+           AND inansite = g_site
+           AND inan001 = g_xmdr_d[l_ac].xmdr001
+           AND inan002 = g_xmdr_d[l_ac].xmdr002       
+           AND inan003 = g_xmdr_d[l_ac].xmdr003
+           AND inan004 = g_xmdr_d[l_ac].xmdr004
+           AND inan005 = g_xmdr_d[l_ac].xmdr005
+           AND inan006 = g_xmdr_d[l_ac].xmdr006            
+           AND inan007 = g_xmdr_d[l_ac].xmdr007
+        IF cl_null(l_inan010) THEN LET l_inan010 = 0 END IF
+        #可備置量 = 庫存量(inag008)-已在揀量inan010-已備置量inan010        
+        LET g_xmdr_d[l_ac].yxmdr008 = g_xmdr_d[l_ac].inag008 - l_inan010
+        
+        #轉換備置單位的數量
+        IF NOT cl_null(g_xmdr_d[l_ac].xmdr007) THEN
+           CALL s_aooi250_convert_qty(g_xmdr_d[l_ac].xmdr001,g_xmdr_d[l_ac].xmdr007,g_xmdr_d[l_ac].xmdr010,g_xmdr_d[l_ac].yxmdr008)
+             RETURNING l_success,g_xmdr_d[l_ac].yxmdr008    
+        END IF  
+        #可備置量
+        IF g_xmdr_d[l_ac].yxmdr008 = 0 THEN
+           CONTINUE FOREACH
+        END IF         
+        CALL axmt500_06_xmdr004_ref(g_xmdr_d[l_ac].xmdr004) RETURNING g_xmdr_d[l_ac].xmdr004_desc 
+        CALL axmt500_06_xmdr005_ref(g_xmdr_d[l_ac].xmdr004,g_xmdr_d[l_ac].xmdr005) RETURNING g_xmdr_d[l_ac].xmdr005_desc 
+        CALL axmt500_06_unit_ref(g_xmdr_d[l_ac].xmdr007) RETURNING g_xmdr_d[l_ac].xmdr007_desc         
+        CALL axmt500_06_unit_ref(g_xmdr_d[l_ac].xmdr010) RETURNING g_xmdr_d[l_ac].xmdr010_desc      
+        CALL s_feature_description(g_xmdr_d[l_ac].xmdr001,g_xmdr_d[l_ac].xmdr002)
+             RETURNING l_success,g_xmdr_d[l_ac].xmdr002_desc
+       
+        LET l_ac = l_ac + 1
+        IF l_ac > g_max_rec THEN
+           INITIALIZE g_errparam TO NULL
+           LET g_errparam.code =  9035
+           LET g_errparam.extend =  ''
+           LET g_errparam.popup = FALSE
+           CALL cl_err()
+
+           EXIT FOREACH
+        END IF        
+   END FOREACH
+   #再抓取inag_t資料，排除已存在xmdr_t的資料，
+   LET l_sql = "SELECT inag001,inag002,'',     '',      0, ",
+               "             0,      0,'',     '',inag004, ",
+               "            '',inag005,'',inag003,inag006, ",
+               "       inag008,inag007,'' ",
+               "  FROM inag_t ",
+               "  WHERE inagent = '",g_enterprise,"' ",
+               "    AND inagsite = '",g_site,"' ",
+               "    AND inag001 = '",g_xmdd001,"' ",
+               "    AND inag002 = '",g_xmdd002,"' ",
+               "    AND inag001||inag002||inag003||inag004||inag005||inag006||inag007 NOT IN ",
+               "     (SELECT xmdr001||xmdr002||xmdr003||xmdr004||xmdr005||xmdr006||xmdr007 ",
+               "        FROM xmdr_t ",
+               "       WHERE xmdrent = '",g_enterprise,"' ",
+               "         AND xmdrdocno = '",g_xmdddocno,"' ",
+               "         AND xmdrseq = '",g_xmddseq,"' ",
+               "         AND xmdrseq1 = '",g_xmddseq1,"' ",
+               "         AND xmdrseq2 = '",g_xmddseq2,"') "        
+   PREPARE axmt500_inag_sel FROM l_sql
+   DECLARE axmt500_inag_per CURSOR FOR axmt500_inag_sel 
+   FOREACH axmt500_inag_per INTO g_xmdr_d[l_ac].*
+        IF SQLCA.sqlcode THEN
+           INITIALIZE g_errparam TO NULL
+           LET g_errparam.code = SQLCA.sqlcode
+           LET g_errparam.extend = "FOREACH:"
+           LET g_errparam.popup = TRUE
+           CALL cl_err()
+
+           EXIT FOREACH
+        END IF
+        #排除可備置量(庫存量-已在揀量-已備置量)小於等於0的資料
+        #已在揀量inan010+已備置量inan010
+        LET l_inan010 = 0
+        SELECT SUM(inan010)  INTO l_inan010
+          FROM inan_t
+         WHERE inanent = g_enterprise
+           AND inansite = g_site
+           AND inan001 = g_xmdr_d[l_ac].xmdr001
+           AND inan002 = g_xmdr_d[l_ac].xmdr002       
+           AND inan003 = g_xmdr_d[l_ac].xmdr003
+           AND inan004 = g_xmdr_d[l_ac].xmdr004
+           AND inan005 = g_xmdr_d[l_ac].xmdr005
+           AND inan006 = g_xmdr_d[l_ac].xmdr006            
+           AND inan007 = g_xmdr_d[l_ac].xmdr007
+        IF cl_null(l_inan010) THEN LET l_inan010 = 0 END IF  
+        IF g_xmdr_d[l_ac].inag008 - l_inan010 = 0 THEN
+           CONTINUE FOREACH
+        END IF        
+        LET g_xmdr_d[l_ac].sel = 'N'
+        
+        #備置量
+        LET g_xmdr_d[l_ac].xmdr008 = 0
+        #備置已沖銷量
+        LET g_xmdr_d[l_ac].xmdr009 = 0
+        #備置單位
+        LET g_xmdr_d[l_ac].xmdr010 = g_xmdd004
+        
+        #可備置量 = 庫存量(inag008)-已在揀量inan010-已備置量inan010
+        LET g_xmdr_d[l_ac].yxmdr008 = g_xmdr_d[l_ac].inag008 - l_inan010
+        
+        #轉換備置單位的數量
+        IF NOT cl_null(g_xmdr_d[l_ac].xmdr007) THEN
+           CALL s_aooi250_convert_qty(g_xmdr_d[l_ac].xmdr001,g_xmdr_d[l_ac].xmdr007,g_xmdr_d[l_ac].xmdr010,g_xmdr_d[l_ac].yxmdr008)
+             RETURNING l_success,g_xmdr_d[l_ac].yxmdr008 
+        END IF
+        #可備置量
+        IF g_xmdr_d[l_ac].yxmdr008 = 0 THEN
+           CONTINUE FOREACH
+        END IF        
+        CALL axmt500_06_xmdr004_ref(g_xmdr_d[l_ac].xmdr004) RETURNING g_xmdr_d[l_ac].xmdr004_desc 
+        CALL axmt500_06_xmdr005_ref(g_xmdr_d[l_ac].xmdr004,g_xmdr_d[l_ac].xmdr005) RETURNING g_xmdr_d[l_ac].xmdr005_desc 
+        CALL axmt500_06_unit_ref(g_xmdr_d[l_ac].xmdr007) RETURNING g_xmdr_d[l_ac].xmdr007_desc         
+        CALL axmt500_06_unit_ref(g_xmdr_d[l_ac].xmdr010) RETURNING g_xmdr_d[l_ac].xmdr010_desc
+        
+        LET l_ac = l_ac + 1
+        IF l_ac > g_max_rec THEN
+           INITIALIZE g_errparam TO NULL
+           LET g_errparam.code =  9035
+           LET g_errparam.extend =  ''
+           LET g_errparam.popup = FALSE
+           CALL cl_err()
+
+           EXIT FOREACH
+        END IF 
+    END FOREACH  
+   CALL g_xmdr_d.deleteElement(g_xmdr_d.getLength())
+   LET g_rec_b = l_ac - 1     
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt500_06_unit_ref" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#單位名稱顯示
+PRIVATE FUNCTION axmt500_06_unit_ref(p_xmdr007)
+DEFINE p_xmdr007      LIKE xmdr_t.xmdr007
+DEFINE r_xmdr007_desc LIKE oocal_t.oocal003
+
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = p_xmdr007
+       CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+       LET r_xmdr007_desc = '', g_rtn_fields[1] , ''
+       RETURN r_xmdr007_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt500_06_xmdr004_ref" order="3" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#庫位說明顯示
+PRIVATE FUNCTION axmt500_06_xmdr004_ref(p_xmdr004)
+DEFINE p_xmdr004      LIKE xmdr_t.xmdr004
+DEFINE r_inaa002      LIKE inaa_t.inaa002
+
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = p_xmdr004
+       CALL ap_ref_array2(g_ref_fields,"SELECT inaa002 FROM inaa_t WHERE inaaent='"||g_enterprise||"' AND inaa001=? ","") RETURNING g_rtn_fields
+       LET r_inaa002 = '', g_rtn_fields[1] , ''
+       RETURN r_inaa002
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt500_06_xmdr005_ref" order="4" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#儲位說明顯示
+PRIVATE FUNCTION axmt500_06_xmdr005_ref(p_xmdr004,p_xmdr005)
+DEFINE p_xmdr004      LIKE xmdr_t.xmdr004
+DEFINE p_xmdr005      LIKE xmdr_t.xmdr005
+DEFINE r_inab003      LIKE inab_t.inab003
+
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = p_xmdr005
+       CALL ap_ref_array2(g_ref_fields,"SELECT inab003 FROM inab_t WHERE inabent='"||g_enterprise||"' AND inab001='"||p_xmdr004||"' AND inab002=?  ","") RETURNING g_rtn_fields
+       LET r_inab003 = '', g_rtn_fields[1] , ''
+       RETURN r_inab003
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt500_06_set_entry" order="5" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axmt500_06_set_entry()
+     CALL cl_set_comp_entry("xmdr008",TRUE)
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt500_06_set_no_entry" order="6" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axmt500_06_set_no_entry()
+     IF g_xmdr_d[l_ac].sel = 'N' THEN
+        CALL cl_set_comp_entry("xmdr008",FALSE)
+     END IF
+     
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt500_06_qty_chk" order="7" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#檢查已勾選的備置量總合是否等於訂單總備置量
+PRIVATE FUNCTION axmt500_06_qty_chk()
+DEFINE i            LIKE type_t.num5
+DEFINE l_qty        LIKE xmdr_t.xmdr008
+DEFINE r_success    LIKE type_t.num5
+
+   LET l_qty = 0
+   LET r_success = TRUE
+   FOR i = 1 TO g_xmdr_d.getLength()
+       IF g_xmdr_d[i].sel = 'Y' THEN
+          LET l_qty = l_qty + g_xmdr_d[i].xmdr008
+       END IF
+   END FOR
+   IF cl_null(l_qty) THEN LET l_qty = 0 END IF
+   IF l_qty <> g_qty THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt500_06_gen_xmdr" order="8" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#產生訂單備置明細檔
+PRIVATE FUNCTION axmt500_06_gen_xmdr()
+
+DEFINE i            LIKE type_t.num5
+DEFINE j            LIKE type_t.num5
+DEFINE r_success    LIKE type_t.num5
+
+   LET r_success = TRUE
+   LET j = 1
+   CALL g_xmdr.clear()
+   FOR i = 1 TO g_xmdr_d.getLength()
+       IF g_xmdr_d[i].sel = 'Y' THEN
+          LET g_xmdr[j].xmdr008 = g_xmdr_d[i].xmdr008
+          LET g_xmdr[j].xmdr009 = g_xmdr_d[i].xmdr009
+          LET g_xmdr[j].xmdr010 = g_xmdr_d[i].xmdr010
+          LET g_xmdr[j].xmdr004 = g_xmdr_d[i].xmdr004
+          LET g_xmdr[j].xmdr005 = g_xmdr_d[i].xmdr005
+          LET g_xmdr[j].xmdr003 = g_xmdr_d[i].xmdr003
+          LET g_xmdr[j].xmdr006 = g_xmdr_d[i].xmdr006
+          LET g_xmdr[j].xmdr007 = g_xmdr_d[i].xmdr007
+          LET j = j + 1
+       END IF
+   END FOR  
+   CALL g_xmdr.deleteElement(j)
+
+END FUNCTION]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE g_xmdddocno     LIKE xmdd_t.xmdddocno
+DEFINE g_xmddseq       LIKE xmdd_t.xmddseq
+DEFINE g_xmddseq1      LIKE xmdd_t.xmddseq1
+DEFINE g_xmddseq2      LIKE xmdd_t.xmddseq2
+DEFINE g_qty           LIKE xmdd_t.xmdd032
+DEFINE g_xmdd001       LIKE xmdd_t.xmdd001
+DEFINE g_xmdd002       LIKE xmdd_t.xmdd002
+DEFINE g_xmdd004       LIKE xmdd_t.xmdd004       #備置單位
+DEFINE g_success       LIKE type_t.num5
+
+DEFINE g_xmdr        DYNAMIC ARRAY OF RECORD     #已勾選的備置
+       xmdr008          LIKE xmdr_t.xmdr008,
+       xmdr009          LIKE xmdr_t.xmdr009,
+       xmdr010          LIKE xmdr_t.xmdr010,
+       xmdr004          LIKE xmdr_t.xmdr004, 
+       xmdr005          LIKE xmdr_t.xmdr005,
+       xmdr003          LIKE xmdr_t.xmdr003,
+       xmdr006          LIKE xmdr_t.xmdr006,
+       xmdr007          LIKE xmdr_t.xmdr007
+                     END RECORD]]>
+  </point>
+  <point name="input.a.page1.xmdr001" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_xmdr_d[g_detail_idx].xmdrdocno IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq1 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq2 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr001 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr002 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr003 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr004 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr005 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr006 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr007 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdr_d[g_detail_idx].xmdrdocno != g_xmdr_d_t.xmdrdocno OR g_xmdr_d[g_detail_idx].xmdrseq != g_xmdr_d_t.xmdrseq OR g_xmdr_d[g_detail_idx].xmdrseq1 != g_xmdr_d_t.xmdrseq1 OR g_xmdr_d[g_detail_idx].xmdrseq2 != g_xmdr_d_t.xmdrseq2 OR g_xmdr_d[g_detail_idx].xmdr001 != g_xmdr_d_t.xmdr001 OR g_xmdr_d[g_detail_idx].xmdr002 != g_xmdr_d_t.xmdr002 OR g_xmdr_d[g_detail_idx].xmdr003 != g_xmdr_d_t.xmdr003 OR g_xmdr_d[g_detail_idx].xmdr004 != g_xmdr_d_t.xmdr004 OR g_xmdr_d[g_detail_idx].xmdr005 != g_xmdr_d_t.xmdr005 OR g_xmdr_d[g_detail_idx].xmdr006 != g_xmdr_d_t.xmdr006 OR g_xmdr_d[g_detail_idx].xmdr007 != g_xmdr_d_t.xmdr007)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdr_t WHERE "||"xmdrent = '" ||g_enterprise|| "' AND "||"xmdrdocno = '"||g_xmdr_d[g_detail_idx].xmdrdocno ||"' AND "|| "xmdrseq = '"||g_xmdr_d[g_detail_idx].xmdrseq ||"' AND "|| "xmdrseq1 = '"||g_xmdr_d[g_detail_idx].xmdrseq1 ||"' AND "|| "xmdrseq2 = '"||g_xmdr_d[g_detail_idx].xmdrseq2 ||"' AND "|| "xmdr001 = '"||g_xmdr_d[g_detail_idx].xmdr001 ||"' AND "|| "xmdr002 = '"||g_xmdr_d[g_detail_idx].xmdr002 ||"' AND "|| "xmdr003 = '"||g_xmdr_d[g_detail_idx].xmdr003 ||"' AND "|| "xmdr004 = '"||g_xmdr_d[g_detail_idx].xmdr004 ||"' AND "|| "xmdr005 = '"||g_xmdr_d[g_detail_idx].xmdr005 ||"' AND "|| "xmdr006 = '"||g_xmdr_d[g_detail_idx].xmdr006 ||"' AND "|| "xmdr007 = '"||g_xmdr_d[g_detail_idx].xmdr007 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.xmdr002" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_xmdr_d[g_detail_idx].xmdrdocno IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq1 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq2 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr001 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr002 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr003 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr004 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr005 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr006 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr007 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdr_d[g_detail_idx].xmdrdocno != g_xmdr_d_t.xmdrdocno OR g_xmdr_d[g_detail_idx].xmdrseq != g_xmdr_d_t.xmdrseq OR g_xmdr_d[g_detail_idx].xmdrseq1 != g_xmdr_d_t.xmdrseq1 OR g_xmdr_d[g_detail_idx].xmdrseq2 != g_xmdr_d_t.xmdrseq2 OR g_xmdr_d[g_detail_idx].xmdr001 != g_xmdr_d_t.xmdr001 OR g_xmdr_d[g_detail_idx].xmdr002 != g_xmdr_d_t.xmdr002 OR g_xmdr_d[g_detail_idx].xmdr003 != g_xmdr_d_t.xmdr003 OR g_xmdr_d[g_detail_idx].xmdr004 != g_xmdr_d_t.xmdr004 OR g_xmdr_d[g_detail_idx].xmdr005 != g_xmdr_d_t.xmdr005 OR g_xmdr_d[g_detail_idx].xmdr006 != g_xmdr_d_t.xmdr006 OR g_xmdr_d[g_detail_idx].xmdr007 != g_xmdr_d_t.xmdr007)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdr_t WHERE "||"xmdrent = '" ||g_enterprise|| "' AND "||"xmdrdocno = '"||g_xmdr_d[g_detail_idx].xmdrdocno ||"' AND "|| "xmdrseq = '"||g_xmdr_d[g_detail_idx].xmdrseq ||"' AND "|| "xmdrseq1 = '"||g_xmdr_d[g_detail_idx].xmdrseq1 ||"' AND "|| "xmdrseq2 = '"||g_xmdr_d[g_detail_idx].xmdrseq2 ||"' AND "|| "xmdr001 = '"||g_xmdr_d[g_detail_idx].xmdr001 ||"' AND "|| "xmdr002 = '"||g_xmdr_d[g_detail_idx].xmdr002 ||"' AND "|| "xmdr003 = '"||g_xmdr_d[g_detail_idx].xmdr003 ||"' AND "|| "xmdr004 = '"||g_xmdr_d[g_detail_idx].xmdr004 ||"' AND "|| "xmdr005 = '"||g_xmdr_d[g_detail_idx].xmdr005 ||"' AND "|| "xmdr006 = '"||g_xmdr_d[g_detail_idx].xmdr006 ||"' AND "|| "xmdr007 = '"||g_xmdr_d[g_detail_idx].xmdr007 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.xmdr003" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_xmdr_d[g_detail_idx].xmdrdocno IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq1 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq2 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr001 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr002 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr003 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr004 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr005 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr006 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr007 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdr_d[g_detail_idx].xmdrdocno != g_xmdr_d_t.xmdrdocno OR g_xmdr_d[g_detail_idx].xmdrseq != g_xmdr_d_t.xmdrseq OR g_xmdr_d[g_detail_idx].xmdrseq1 != g_xmdr_d_t.xmdrseq1 OR g_xmdr_d[g_detail_idx].xmdrseq2 != g_xmdr_d_t.xmdrseq2 OR g_xmdr_d[g_detail_idx].xmdr001 != g_xmdr_d_t.xmdr001 OR g_xmdr_d[g_detail_idx].xmdr002 != g_xmdr_d_t.xmdr002 OR g_xmdr_d[g_detail_idx].xmdr003 != g_xmdr_d_t.xmdr003 OR g_xmdr_d[g_detail_idx].xmdr004 != g_xmdr_d_t.xmdr004 OR g_xmdr_d[g_detail_idx].xmdr005 != g_xmdr_d_t.xmdr005 OR g_xmdr_d[g_detail_idx].xmdr006 != g_xmdr_d_t.xmdr006 OR g_xmdr_d[g_detail_idx].xmdr007 != g_xmdr_d_t.xmdr007)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdr_t WHERE "||"xmdrent = '" ||g_enterprise|| "' AND "||"xmdrdocno = '"||g_xmdr_d[g_detail_idx].xmdrdocno ||"' AND "|| "xmdrseq = '"||g_xmdr_d[g_detail_idx].xmdrseq ||"' AND "|| "xmdrseq1 = '"||g_xmdr_d[g_detail_idx].xmdrseq1 ||"' AND "|| "xmdrseq2 = '"||g_xmdr_d[g_detail_idx].xmdrseq2 ||"' AND "|| "xmdr001 = '"||g_xmdr_d[g_detail_idx].xmdr001 ||"' AND "|| "xmdr002 = '"||g_xmdr_d[g_detail_idx].xmdr002 ||"' AND "|| "xmdr003 = '"||g_xmdr_d[g_detail_idx].xmdr003 ||"' AND "|| "xmdr004 = '"||g_xmdr_d[g_detail_idx].xmdr004 ||"' AND "|| "xmdr005 = '"||g_xmdr_d[g_detail_idx].xmdr005 ||"' AND "|| "xmdr006 = '"||g_xmdr_d[g_detail_idx].xmdr006 ||"' AND "|| "xmdr007 = '"||g_xmdr_d[g_detail_idx].xmdr007 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.xmdr004" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_xmdr_d[g_detail_idx].xmdrdocno IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq1 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq2 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr001 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr002 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr003 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr004 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr005 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr006 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr007 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdr_d[g_detail_idx].xmdrdocno != g_xmdr_d_t.xmdrdocno OR g_xmdr_d[g_detail_idx].xmdrseq != g_xmdr_d_t.xmdrseq OR g_xmdr_d[g_detail_idx].xmdrseq1 != g_xmdr_d_t.xmdrseq1 OR g_xmdr_d[g_detail_idx].xmdrseq2 != g_xmdr_d_t.xmdrseq2 OR g_xmdr_d[g_detail_idx].xmdr001 != g_xmdr_d_t.xmdr001 OR g_xmdr_d[g_detail_idx].xmdr002 != g_xmdr_d_t.xmdr002 OR g_xmdr_d[g_detail_idx].xmdr003 != g_xmdr_d_t.xmdr003 OR g_xmdr_d[g_detail_idx].xmdr004 != g_xmdr_d_t.xmdr004 OR g_xmdr_d[g_detail_idx].xmdr005 != g_xmdr_d_t.xmdr005 OR g_xmdr_d[g_detail_idx].xmdr006 != g_xmdr_d_t.xmdr006 OR g_xmdr_d[g_detail_idx].xmdr007 != g_xmdr_d_t.xmdr007)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdr_t WHERE "||"xmdrent = '" ||g_enterprise|| "' AND "||"xmdrdocno = '"||g_xmdr_d[g_detail_idx].xmdrdocno ||"' AND "|| "xmdrseq = '"||g_xmdr_d[g_detail_idx].xmdrseq ||"' AND "|| "xmdrseq1 = '"||g_xmdr_d[g_detail_idx].xmdrseq1 ||"' AND "|| "xmdrseq2 = '"||g_xmdr_d[g_detail_idx].xmdrseq2 ||"' AND "|| "xmdr001 = '"||g_xmdr_d[g_detail_idx].xmdr001 ||"' AND "|| "xmdr002 = '"||g_xmdr_d[g_detail_idx].xmdr002 ||"' AND "|| "xmdr003 = '"||g_xmdr_d[g_detail_idx].xmdr003 ||"' AND "|| "xmdr004 = '"||g_xmdr_d[g_detail_idx].xmdr004 ||"' AND "|| "xmdr005 = '"||g_xmdr_d[g_detail_idx].xmdr005 ||"' AND "|| "xmdr006 = '"||g_xmdr_d[g_detail_idx].xmdr006 ||"' AND "|| "xmdr007 = '"||g_xmdr_d[g_detail_idx].xmdr007 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.xmdr005" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_xmdr_d[g_detail_idx].xmdrdocno IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq1 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq2 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr001 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr002 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr003 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr004 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr005 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr006 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr007 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdr_d[g_detail_idx].xmdrdocno != g_xmdr_d_t.xmdrdocno OR g_xmdr_d[g_detail_idx].xmdrseq != g_xmdr_d_t.xmdrseq OR g_xmdr_d[g_detail_idx].xmdrseq1 != g_xmdr_d_t.xmdrseq1 OR g_xmdr_d[g_detail_idx].xmdrseq2 != g_xmdr_d_t.xmdrseq2 OR g_xmdr_d[g_detail_idx].xmdr001 != g_xmdr_d_t.xmdr001 OR g_xmdr_d[g_detail_idx].xmdr002 != g_xmdr_d_t.xmdr002 OR g_xmdr_d[g_detail_idx].xmdr003 != g_xmdr_d_t.xmdr003 OR g_xmdr_d[g_detail_idx].xmdr004 != g_xmdr_d_t.xmdr004 OR g_xmdr_d[g_detail_idx].xmdr005 != g_xmdr_d_t.xmdr005 OR g_xmdr_d[g_detail_idx].xmdr006 != g_xmdr_d_t.xmdr006 OR g_xmdr_d[g_detail_idx].xmdr007 != g_xmdr_d_t.xmdr007)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdr_t WHERE "||"xmdrent = '" ||g_enterprise|| "' AND "||"xmdrdocno = '"||g_xmdr_d[g_detail_idx].xmdrdocno ||"' AND "|| "xmdrseq = '"||g_xmdr_d[g_detail_idx].xmdrseq ||"' AND "|| "xmdrseq1 = '"||g_xmdr_d[g_detail_idx].xmdrseq1 ||"' AND "|| "xmdrseq2 = '"||g_xmdr_d[g_detail_idx].xmdrseq2 ||"' AND "|| "xmdr001 = '"||g_xmdr_d[g_detail_idx].xmdr001 ||"' AND "|| "xmdr002 = '"||g_xmdr_d[g_detail_idx].xmdr002 ||"' AND "|| "xmdr003 = '"||g_xmdr_d[g_detail_idx].xmdr003 ||"' AND "|| "xmdr004 = '"||g_xmdr_d[g_detail_idx].xmdr004 ||"' AND "|| "xmdr005 = '"||g_xmdr_d[g_detail_idx].xmdr005 ||"' AND "|| "xmdr006 = '"||g_xmdr_d[g_detail_idx].xmdr006 ||"' AND "|| "xmdr007 = '"||g_xmdr_d[g_detail_idx].xmdr007 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.xmdr006" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_xmdr_d[g_detail_idx].xmdrdocno IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq1 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq2 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr001 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr002 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr003 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr004 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr005 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr006 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr007 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdr_d[g_detail_idx].xmdrdocno != g_xmdr_d_t.xmdrdocno OR g_xmdr_d[g_detail_idx].xmdrseq != g_xmdr_d_t.xmdrseq OR g_xmdr_d[g_detail_idx].xmdrseq1 != g_xmdr_d_t.xmdrseq1 OR g_xmdr_d[g_detail_idx].xmdrseq2 != g_xmdr_d_t.xmdrseq2 OR g_xmdr_d[g_detail_idx].xmdr001 != g_xmdr_d_t.xmdr001 OR g_xmdr_d[g_detail_idx].xmdr002 != g_xmdr_d_t.xmdr002 OR g_xmdr_d[g_detail_idx].xmdr003 != g_xmdr_d_t.xmdr003 OR g_xmdr_d[g_detail_idx].xmdr004 != g_xmdr_d_t.xmdr004 OR g_xmdr_d[g_detail_idx].xmdr005 != g_xmdr_d_t.xmdr005 OR g_xmdr_d[g_detail_idx].xmdr006 != g_xmdr_d_t.xmdr006 OR g_xmdr_d[g_detail_idx].xmdr007 != g_xmdr_d_t.xmdr007)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdr_t WHERE "||"xmdrent = '" ||g_enterprise|| "' AND "||"xmdrdocno = '"||g_xmdr_d[g_detail_idx].xmdrdocno ||"' AND "|| "xmdrseq = '"||g_xmdr_d[g_detail_idx].xmdrseq ||"' AND "|| "xmdrseq1 = '"||g_xmdr_d[g_detail_idx].xmdrseq1 ||"' AND "|| "xmdrseq2 = '"||g_xmdr_d[g_detail_idx].xmdrseq2 ||"' AND "|| "xmdr001 = '"||g_xmdr_d[g_detail_idx].xmdr001 ||"' AND "|| "xmdr002 = '"||g_xmdr_d[g_detail_idx].xmdr002 ||"' AND "|| "xmdr003 = '"||g_xmdr_d[g_detail_idx].xmdr003 ||"' AND "|| "xmdr004 = '"||g_xmdr_d[g_detail_idx].xmdr004 ||"' AND "|| "xmdr005 = '"||g_xmdr_d[g_detail_idx].xmdr005 ||"' AND "|| "xmdr006 = '"||g_xmdr_d[g_detail_idx].xmdr006 ||"' AND "|| "xmdr007 = '"||g_xmdr_d[g_detail_idx].xmdr007 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.xmdr007" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_xmdr_d[g_detail_idx].xmdrdocno IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq1 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq2 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr001 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr002 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr003 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr004 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr005 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr006 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr007 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdr_d[g_detail_idx].xmdrdocno != g_xmdr_d_t.xmdrdocno OR g_xmdr_d[g_detail_idx].xmdrseq != g_xmdr_d_t.xmdrseq OR g_xmdr_d[g_detail_idx].xmdrseq1 != g_xmdr_d_t.xmdrseq1 OR g_xmdr_d[g_detail_idx].xmdrseq2 != g_xmdr_d_t.xmdrseq2 OR g_xmdr_d[g_detail_idx].xmdr001 != g_xmdr_d_t.xmdr001 OR g_xmdr_d[g_detail_idx].xmdr002 != g_xmdr_d_t.xmdr002 OR g_xmdr_d[g_detail_idx].xmdr003 != g_xmdr_d_t.xmdr003 OR g_xmdr_d[g_detail_idx].xmdr004 != g_xmdr_d_t.xmdr004 OR g_xmdr_d[g_detail_idx].xmdr005 != g_xmdr_d_t.xmdr005 OR g_xmdr_d[g_detail_idx].xmdr006 != g_xmdr_d_t.xmdr006 OR g_xmdr_d[g_detail_idx].xmdr007 != g_xmdr_d_t.xmdr007)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdr_t WHERE "||"xmdrent = '" ||g_enterprise|| "' AND "||"xmdrdocno = '"||g_xmdr_d[g_detail_idx].xmdrdocno ||"' AND "|| "xmdrseq = '"||g_xmdr_d[g_detail_idx].xmdrseq ||"' AND "|| "xmdrseq1 = '"||g_xmdr_d[g_detail_idx].xmdrseq1 ||"' AND "|| "xmdrseq2 = '"||g_xmdr_d[g_detail_idx].xmdrseq2 ||"' AND "|| "xmdr001 = '"||g_xmdr_d[g_detail_idx].xmdr001 ||"' AND "|| "xmdr002 = '"||g_xmdr_d[g_detail_idx].xmdr002 ||"' AND "|| "xmdr003 = '"||g_xmdr_d[g_detail_idx].xmdr003 ||"' AND "|| "xmdr004 = '"||g_xmdr_d[g_detail_idx].xmdr004 ||"' AND "|| "xmdr005 = '"||g_xmdr_d[g_detail_idx].xmdr005 ||"' AND "|| "xmdr006 = '"||g_xmdr_d[g_detail_idx].xmdr006 ||"' AND "|| "xmdr007 = '"||g_xmdr_d[g_detail_idx].xmdr007 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.xmdr008" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xmdr_d[l_ac].xmdr008) THEN 
+               IF g_xmdr_d[l_ac].xmdr008 > 0 AND (g_xmdr_d[l_ac].xmdr008 <> g_xmdr_d_t.xmdr008) THEN
+                  #備置量不可小於備置沖銷量
+                  IF g_xmdr_d[l_ac].xmdr008 < g_xmdr_d[l_ac].xmdr009 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'axm-00296'
+                     LET g_errparam.extend = "xmdd032"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_xmdr_d[l_ac].xmdr008 = g_xmdr_d_t.xmdr008
+                     DISPLAY BY NAME g_xmdr_d[l_ac].xmdr008  
+                     NEXT FIELD xmdr008                     
+                  END IF
+                  #不可大於可備置量
+                  IF g_xmdr_d[l_ac].xmdr008 > g_xmdr_d[l_ac].yxmdr008 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'axm-00306'
+                     LET g_errparam.extend = "xmdd032"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_xmdr_d[l_ac].xmdr008 = g_xmdr_d_t.xmdr008
+                     DISPLAY BY NAME g_xmdr_d[l_ac].xmdr008 
+                     NEXT FIELD xmdr008 
+                  END IF
+                  #不可大於訂單總備置量p_qty
+                  IF g_xmdr_d[l_ac].xmdr008 > g_qty THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'axm-00307'
+                     LET g_errparam.extend = "xmdd032"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_xmdr_d[l_ac].xmdr008 = g_xmdr_d_t.xmdr008
+                     DISPLAY BY NAME g_xmdr_d[l_ac].xmdr008    
+                     NEXT FIELD xmdr008 
+                  END IF
+               END IF
+               LET g_xmdr_d_t.xmdr008 = g_xmdr_d[l_ac].xmdr008
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1.xmdrdocno" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_xmdr_d[g_detail_idx].xmdrdocno IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq1 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq2 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr001 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr002 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr003 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr004 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr005 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr006 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr007 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdr_d[g_detail_idx].xmdrdocno != g_xmdr_d_t.xmdrdocno OR g_xmdr_d[g_detail_idx].xmdrseq != g_xmdr_d_t.xmdrseq OR g_xmdr_d[g_detail_idx].xmdrseq1 != g_xmdr_d_t.xmdrseq1 OR g_xmdr_d[g_detail_idx].xmdrseq2 != g_xmdr_d_t.xmdrseq2 OR g_xmdr_d[g_detail_idx].xmdr001 != g_xmdr_d_t.xmdr001 OR g_xmdr_d[g_detail_idx].xmdr002 != g_xmdr_d_t.xmdr002 OR g_xmdr_d[g_detail_idx].xmdr003 != g_xmdr_d_t.xmdr003 OR g_xmdr_d[g_detail_idx].xmdr004 != g_xmdr_d_t.xmdr004 OR g_xmdr_d[g_detail_idx].xmdr005 != g_xmdr_d_t.xmdr005 OR g_xmdr_d[g_detail_idx].xmdr006 != g_xmdr_d_t.xmdr006 OR g_xmdr_d[g_detail_idx].xmdr007 != g_xmdr_d_t.xmdr007)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdr_t WHERE "||"xmdrent = '" ||g_enterprise|| "' AND "||"xmdrdocno = '"||g_xmdr_d[g_detail_idx].xmdrdocno ||"' AND "|| "xmdrseq = '"||g_xmdr_d[g_detail_idx].xmdrseq ||"' AND "|| "xmdrseq1 = '"||g_xmdr_d[g_detail_idx].xmdrseq1 ||"' AND "|| "xmdrseq2 = '"||g_xmdr_d[g_detail_idx].xmdrseq2 ||"' AND "|| "xmdr001 = '"||g_xmdr_d[g_detail_idx].xmdr001 ||"' AND "|| "xmdr002 = '"||g_xmdr_d[g_detail_idx].xmdr002 ||"' AND "|| "xmdr003 = '"||g_xmdr_d[g_detail_idx].xmdr003 ||"' AND "|| "xmdr004 = '"||g_xmdr_d[g_detail_idx].xmdr004 ||"' AND "|| "xmdr005 = '"||g_xmdr_d[g_detail_idx].xmdr005 ||"' AND "|| "xmdr006 = '"||g_xmdr_d[g_detail_idx].xmdr006 ||"' AND "|| "xmdr007 = '"||g_xmdr_d[g_detail_idx].xmdr007 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.xmdrseq" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_xmdr_d[g_detail_idx].xmdrdocno IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq1 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq2 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr001 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr002 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr003 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr004 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr005 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr006 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr007 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdr_d[g_detail_idx].xmdrdocno != g_xmdr_d_t.xmdrdocno OR g_xmdr_d[g_detail_idx].xmdrseq != g_xmdr_d_t.xmdrseq OR g_xmdr_d[g_detail_idx].xmdrseq1 != g_xmdr_d_t.xmdrseq1 OR g_xmdr_d[g_detail_idx].xmdrseq2 != g_xmdr_d_t.xmdrseq2 OR g_xmdr_d[g_detail_idx].xmdr001 != g_xmdr_d_t.xmdr001 OR g_xmdr_d[g_detail_idx].xmdr002 != g_xmdr_d_t.xmdr002 OR g_xmdr_d[g_detail_idx].xmdr003 != g_xmdr_d_t.xmdr003 OR g_xmdr_d[g_detail_idx].xmdr004 != g_xmdr_d_t.xmdr004 OR g_xmdr_d[g_detail_idx].xmdr005 != g_xmdr_d_t.xmdr005 OR g_xmdr_d[g_detail_idx].xmdr006 != g_xmdr_d_t.xmdr006 OR g_xmdr_d[g_detail_idx].xmdr007 != g_xmdr_d_t.xmdr007)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdr_t WHERE "||"xmdrent = '" ||g_enterprise|| "' AND "||"xmdrdocno = '"||g_xmdr_d[g_detail_idx].xmdrdocno ||"' AND "|| "xmdrseq = '"||g_xmdr_d[g_detail_idx].xmdrseq ||"' AND "|| "xmdrseq1 = '"||g_xmdr_d[g_detail_idx].xmdrseq1 ||"' AND "|| "xmdrseq2 = '"||g_xmdr_d[g_detail_idx].xmdrseq2 ||"' AND "|| "xmdr001 = '"||g_xmdr_d[g_detail_idx].xmdr001 ||"' AND "|| "xmdr002 = '"||g_xmdr_d[g_detail_idx].xmdr002 ||"' AND "|| "xmdr003 = '"||g_xmdr_d[g_detail_idx].xmdr003 ||"' AND "|| "xmdr004 = '"||g_xmdr_d[g_detail_idx].xmdr004 ||"' AND "|| "xmdr005 = '"||g_xmdr_d[g_detail_idx].xmdr005 ||"' AND "|| "xmdr006 = '"||g_xmdr_d[g_detail_idx].xmdr006 ||"' AND "|| "xmdr007 = '"||g_xmdr_d[g_detail_idx].xmdr007 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.xmdrseq1" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_xmdr_d[g_detail_idx].xmdrdocno IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq1 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq2 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr001 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr002 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr003 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr004 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr005 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr006 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr007 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdr_d[g_detail_idx].xmdrdocno != g_xmdr_d_t.xmdrdocno OR g_xmdr_d[g_detail_idx].xmdrseq != g_xmdr_d_t.xmdrseq OR g_xmdr_d[g_detail_idx].xmdrseq1 != g_xmdr_d_t.xmdrseq1 OR g_xmdr_d[g_detail_idx].xmdrseq2 != g_xmdr_d_t.xmdrseq2 OR g_xmdr_d[g_detail_idx].xmdr001 != g_xmdr_d_t.xmdr001 OR g_xmdr_d[g_detail_idx].xmdr002 != g_xmdr_d_t.xmdr002 OR g_xmdr_d[g_detail_idx].xmdr003 != g_xmdr_d_t.xmdr003 OR g_xmdr_d[g_detail_idx].xmdr004 != g_xmdr_d_t.xmdr004 OR g_xmdr_d[g_detail_idx].xmdr005 != g_xmdr_d_t.xmdr005 OR g_xmdr_d[g_detail_idx].xmdr006 != g_xmdr_d_t.xmdr006 OR g_xmdr_d[g_detail_idx].xmdr007 != g_xmdr_d_t.xmdr007)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdr_t WHERE "||"xmdrent = '" ||g_enterprise|| "' AND "||"xmdrdocno = '"||g_xmdr_d[g_detail_idx].xmdrdocno ||"' AND "|| "xmdrseq = '"||g_xmdr_d[g_detail_idx].xmdrseq ||"' AND "|| "xmdrseq1 = '"||g_xmdr_d[g_detail_idx].xmdrseq1 ||"' AND "|| "xmdrseq2 = '"||g_xmdr_d[g_detail_idx].xmdrseq2 ||"' AND "|| "xmdr001 = '"||g_xmdr_d[g_detail_idx].xmdr001 ||"' AND "|| "xmdr002 = '"||g_xmdr_d[g_detail_idx].xmdr002 ||"' AND "|| "xmdr003 = '"||g_xmdr_d[g_detail_idx].xmdr003 ||"' AND "|| "xmdr004 = '"||g_xmdr_d[g_detail_idx].xmdr004 ||"' AND "|| "xmdr005 = '"||g_xmdr_d[g_detail_idx].xmdr005 ||"' AND "|| "xmdr006 = '"||g_xmdr_d[g_detail_idx].xmdr006 ||"' AND "|| "xmdr007 = '"||g_xmdr_d[g_detail_idx].xmdr007 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.xmdrseq2" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_xmdr_d[g_detail_idx].xmdrdocno IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq1 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdrseq2 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr001 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr002 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr003 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr004 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr005 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr006 IS NOT NULL AND g_xmdr_d[g_detail_idx].xmdr007 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdr_d[g_detail_idx].xmdrdocno != g_xmdr_d_t.xmdrdocno OR g_xmdr_d[g_detail_idx].xmdrseq != g_xmdr_d_t.xmdrseq OR g_xmdr_d[g_detail_idx].xmdrseq1 != g_xmdr_d_t.xmdrseq1 OR g_xmdr_d[g_detail_idx].xmdrseq2 != g_xmdr_d_t.xmdrseq2 OR g_xmdr_d[g_detail_idx].xmdr001 != g_xmdr_d_t.xmdr001 OR g_xmdr_d[g_detail_idx].xmdr002 != g_xmdr_d_t.xmdr002 OR g_xmdr_d[g_detail_idx].xmdr003 != g_xmdr_d_t.xmdr003 OR g_xmdr_d[g_detail_idx].xmdr004 != g_xmdr_d_t.xmdr004 OR g_xmdr_d[g_detail_idx].xmdr005 != g_xmdr_d_t.xmdr005 OR g_xmdr_d[g_detail_idx].xmdr006 != g_xmdr_d_t.xmdr006 OR g_xmdr_d[g_detail_idx].xmdr007 != g_xmdr_d_t.xmdr007)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdr_t WHERE "||"xmdrent = '" ||g_enterprise|| "' AND "||"xmdrdocno = '"||g_xmdr_d[g_detail_idx].xmdrdocno ||"' AND "|| "xmdrseq = '"||g_xmdr_d[g_detail_idx].xmdrseq ||"' AND "|| "xmdrseq1 = '"||g_xmdr_d[g_detail_idx].xmdrseq1 ||"' AND "|| "xmdrseq2 = '"||g_xmdr_d[g_detail_idx].xmdrseq2 ||"' AND "|| "xmdr001 = '"||g_xmdr_d[g_detail_idx].xmdr001 ||"' AND "|| "xmdr002 = '"||g_xmdr_d[g_detail_idx].xmdr002 ||"' AND "|| "xmdr003 = '"||g_xmdr_d[g_detail_idx].xmdr003 ||"' AND "|| "xmdr004 = '"||g_xmdr_d[g_detail_idx].xmdr004 ||"' AND "|| "xmdr005 = '"||g_xmdr_d[g_detail_idx].xmdr005 ||"' AND "|| "xmdr006 = '"||g_xmdr_d[g_detail_idx].xmdr006 ||"' AND "|| "xmdr007 = '"||g_xmdr_d[g_detail_idx].xmdr007 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.action" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[         BEFORE ROW
+           LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+           LET l_ac = g_detail_idx         
+           LET g_xmdr_d_t.* = g_xmdr_d[l_ac].*          #BACKUP
+           CALL axmt500_06_set_entry()
+           CALL axmt500_06_set_no_entry()
+ 
+         AFTER ROW 
+           IF g_xmdr_d[l_ac].sel = 'Y' AND g_xmdr_d[l_ac].xmdr008 = 0 THEN
+              INITIALIZE g_errparam TO NULL
+              LET g_errparam.code = 'axm-00309'
+              LET g_errparam.extend = ""
+              LET g_errparam.popup = TRUE
+              CALL cl_err()
+
+              NEXT FIELD xmdr008              
+           END IF           ]]>
+  </point>
+  <point name="input.after_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT axmt500_06_qty_chk() THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'axm-00308'
+               LET g_errparam.extend = "xmdd032"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               NEXT FIELD xmdr008 
+            END IF
+            CALL axmt500_06_gen_xmdr()
+            #LET g_flag = TRUE]]>
+  </point>
+  <point name="input.before_close" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            ]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE p_xmdddocno     LIKE xmdd_t.xmdddocno
+   DEFINE p_xmddseq       LIKE xmdd_t.xmddseq
+   DEFINE p_xmddseq1      LIKE xmdd_t.xmddseq1
+   DEFINE p_xmddseq2      LIKE xmdd_t.xmddseq2
+   DEFINE p_qty           LIKE xmdd_t.xmdd032
+   DEFINE r_success       LIKE type_t.num5   
+   DEFINE l_forupd_sql    STRING   
+   DEFINE l_cnt           LIKE type_t.num5   ]]>
+  </point>
+  <point name="input.g.page1.sel" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #當備置已沖銷量不等於0時，則不可以取消選擇
+            IF g_xmdr_d_t.sel = 'Y' AND g_xmdr_d[l_ac].sel = 'N' THEN
+               IF g_xmdr_d[l_ac].xmdr009 > 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'axm-00304'
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_xmdr_d[l_ac].sel = g_xmdr_d_t.sel
+                  DISPLAY BY NAME g_xmdr_d[l_ac].sel
+                  NEXT FIELD sel                              
+               END IF
+            END IF
+            IF g_xmdr_d[l_ac].sel = 'N' THEN
+               LET g_xmdr_d[l_ac].xmdr008 = 0
+               DISPLAY BY NAME g_xmdr_d[l_ac].xmdr008
+            END IF            
+            LET g_xmdr_d_t.sel = g_xmdr_d[l_ac].sel  
+            CALL axmt500_06_set_entry()
+            CALL axmt500_06_set_no_entry()]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   p_xmdddocno,p_xmddseq,p_xmddseq1,p_xmddseq2,p_qty]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   IF INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 9001
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      LET INT_FLAG = 0 
+      LET g_success = FALSE           
+   END IF 
+   RETURN g_success,g_xmdr  ]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   WHENEVER ERROR CONTINUE
+   LET g_success = TRUE 
+   IF cl_null(p_xmdddocno) OR cl_null(p_xmddseq) OR cl_null(p_xmddseq1) 
+     OR cl_null(p_xmddseq2) OR cl_null(p_qty) THEN
+      LET g_success = FALSE
+      CLOSE WINDOW w_axmt500_06    #關閉視窗
+      RETURN g_success,g_xmdr
+   END IF
+   LET g_xmdddocno = p_xmdddocno
+   LET g_xmddseq   = p_xmddseq
+   LET g_xmddseq1  = p_xmddseq1
+   LET g_xmddseq2  = p_xmddseq2
+   LET g_qty = p_qty
+   
+   #抓取料件編號,產品特徵
+   SELECT xmdd001,xmdd002,xmdd004 
+     INTO g_xmdd001,g_xmdd002,g_xmdd004
+     FROM xmdd_t
+    WHERE xmddent = g_enterprise
+      AND xmddsite = g_site
+      AND xmdddocno = g_xmdddocno
+      AND xmddseq = g_xmddseq
+      AND xmddseq1 = g_xmddseq1
+      AND xmddseq2 = g_xmddseq2
+   
+   CALL axmt500_06_fill()]]>
+  </point>
+  <point name="show.body.reference" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xmdr_d[l_ac].xmdr010
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xmdr_d[l_ac].xmdr010_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xmdr_d[l_ac].xmdr010_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xmdr_d[l_ac].xmdr004
+            CALL ap_ref_array2(g_ref_fields,"SELECT inaa002 FROM inaa_t WHERE inaaent='"||g_enterprise||"' AND inaa001=? ","") RETURNING g_rtn_fields
+            LET g_xmdr_d[l_ac].xmdr004_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xmdr_d[l_ac].xmdr004_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xmdr_d[l_ac].xmdr004
+            LET g_ref_fields[2] = g_xmdr_d[l_ac].xmdr005
+            CALL ap_ref_array2(g_ref_fields,"SELECT inab003 FROM inab_t WHERE inabent='"||g_enterprise||"' AND inab001=? AND inab002=? ","") RETURNING g_rtn_fields
+            LET g_xmdr_d[l_ac].xmdr005_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xmdr_d[l_ac].xmdr005_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xmdr_d[l_ac].xmdr007
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xmdr_d[l_ac].xmdr007_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xmdr_d[l_ac].xmdr007_desc
+]]>
+  </point>
+  <section id="axmt500_06.description" ver="53" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:3,PR版次:3) Build-000190
+#+ 
+#+ Filename...: axmt500_06
+#+ Description: 維護訂單硬備置子作業
+#+ Creator....: 02040(2014-05-12 18:33:55)
+#+ Modifier...: 02040(2014-10-16 10:31:09) -SD/PR-
+]]>
+  </section>
+  <section id="axmt500_06.global" ver="9" status="" src="s" readonly="">
+    <![CDATA[#應用 c02b 樣板自動產生(Version:5)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_xmdr_d        RECORD
+       xmdr001 LIKE xmdr_t.xmdr001, 
+   xmdr002 LIKE xmdr_t.xmdr002, 
+   xmdr002_desc LIKE type_t.chr500, 
+   sel LIKE type_t.chr500, 
+   xmdr008 LIKE xmdr_t.xmdr008, 
+   xmdr009 LIKE xmdr_t.xmdr009, 
+   yxmdr008 LIKE type_t.chr500, 
+   xmdr010 LIKE xmdr_t.xmdr010, 
+   xmdr010_desc LIKE type_t.chr500, 
+   xmdr004 LIKE xmdr_t.xmdr004, 
+   xmdr004_desc LIKE type_t.chr500, 
+   xmdr005 LIKE xmdr_t.xmdr005, 
+   xmdr005_desc LIKE type_t.chr500, 
+   xmdr003 LIKE xmdr_t.xmdr003, 
+   xmdr006 LIKE xmdr_t.xmdr006, 
+   inag008 LIKE type_t.chr500, 
+   xmdr007 LIKE xmdr_t.xmdr007, 
+   xmdr007_desc LIKE type_t.chr500
+       END RECORD
+ 
+ 
+DEFINE g_xmdr_d          DYNAMIC ARRAY OF type_g_xmdr_d
+DEFINE g_xmdr_d_t        type_g_xmdr_d
+ 
+ 
+DEFINE g_xmdrdocno_t   LIKE xmdr_t.xmdrdocno    #Key值備份
+DEFINE g_xmdrseq_t      LIKE xmdr_t.xmdrseq    #Key值備份
+DEFINE g_xmdrseq1_t      LIKE xmdr_t.xmdrseq1    #Key值備份
+DEFINE g_xmdrseq2_t      LIKE xmdr_t.xmdrseq2    #Key值備份
+DEFINE g_xmdr001_t      LIKE xmdr_t.xmdr001    #Key值備份
+DEFINE g_xmdr002_t      LIKE xmdr_t.xmdr002    #Key值備份
+DEFINE g_xmdr003_t      LIKE xmdr_t.xmdr003    #Key值備份
+DEFINE g_xmdr004_t      LIKE xmdr_t.xmdr004    #Key值備份
+DEFINE g_xmdr005_t      LIKE xmdr_t.xmdr005    #Key值備份
+DEFINE g_xmdr006_t      LIKE xmdr_t.xmdr006    #Key值備份
+DEFINE g_xmdr007_t      LIKE xmdr_t.xmdr007    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+    
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point    
+]]>
+  </section>
+  <section id="axmt500_06.input" ver="10" status="" src="s" readonly="">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION axmt500_06(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define" edit="s"/>}
+   #end add-point
+   #add-point:input段define
+   {<point name="input.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axmt500_06 WITH FORM cl_ap_formpath("axm","axmt500_06")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_xmdr_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD sel
+            #add-point:BEFORE FIELD sel
+            {<point name="input.b.page1.sel" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD sel
+            
+            #add-point:AFTER FIELD sel
+            {<point name="input.a.page1.sel" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE sel
+            #add-point:ON CHANGE sel
+            {<point name="input.g.page1.sel" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xmdr008
+            #應用 a15 樣板自動產生(Version:2)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xmdr_d[l_ac].xmdr008,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD xmdr008
+            END IF 
+ 
+ 
+            #add-point:AFTER FIELD xmdr008
+            {<point name="input.a.page1.xmdr008" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xmdr008
+            #add-point:BEFORE FIELD xmdr008
+            {<point name="input.b.page1.xmdr008" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xmdr008
+            #add-point:ON CHANGE xmdr008
+            {<point name="input.g.page1.xmdr008" />}
+            #END add-point 
+ 
+ 
+                  #Ctrlp:input.c.page1.sel
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD sel
+            #add-point:ON ACTION controlp INFIELD sel
+            {<point name="input.c.page1.sel" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdr008
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xmdr008
+            #add-point:ON ACTION controlp INFIELD xmdr008
+            {<point name="input.c.page1.xmdr008" />}
+            #END add-point
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...)
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel
+         {<point name="input.cancel"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axmt500_06 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="axmt500_06.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="axmt500_06.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

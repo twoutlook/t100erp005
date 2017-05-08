@@ -1,0 +1,677 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="apsp300_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0007(2016-05-24 14:04:55), PR版次:0007(2017-01-19 15:25:55)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000053
+#+ Filename...: apsp300_01
+#+ Description: 獨立需求轉工單作業 – 待轉獨立需求資料
+#+ Creator....: 03079(2015-07-07 11:21:13)
+#+ Modifier...: 03079 -SD/PR- 07024
+ 
+{</section>}
+ 
+{<section id="apsp300_01.global" >}
+#應用 p00 樣板自動產生(Version:5)
+#add-point:填寫註解說明 name="main.memo"
+#160127-00021#1..........2016/03/30 By ming 修改b_fill的sql，當單別參數D-MFG-0065='N'時，不考慮aimm211的存貨管制 
+#160512-00016#1..........2016/05/24 By ming 增加欄位 保稅否 
+#160727-00019#14 2016/08/02 By 08742   系统中定义的临时表名称超过15码在执行时会出错,所以需要将系统中定义的临时表长度超过15码的全部改掉	 	
+#                                      Mod   p300_01_lock_b_t -->p300_tmp01
+#170104-00066#1  2017/01/04 By Rainy   筆數相關變數由num5放大至num10
+#170103-00052#1  2017/01/17 By 07024   修正步驟3-訂單調整的生產數量
+#end add-point
+#add-point:填寫註解說明(客製用) name="main.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="main.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔 name="global.inc"
+GLOBALS "../../aps/4gl/apsp300.inc"
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apsp300_01.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+TYPE type_psab     RECORD
+                      sel               LIKE type_t.chr1,          #選擇  
+                      psabdocno         LIKE psab_t.psabdocno,     #需求單號  
+                      psabseq           LIKE psab_t.psabseq,       #項次 
+                      psab001           LIKE psab_t.psab001,       #料件編號 
+                      psab012           LIKE psab_t.psab012,       #BOM特性 #160214-00005#5-add
+                      psab001_desc      LIKE imaal_t.imaal003,     #品名 
+                      psab001_desc_desc LIKE imaal_t.imaal004,     #規格 
+                      psab002           LIKE psab_t.psab002,       #產品特徵 
+                      psab002_desc      LIKE imefl_t.imefl005,     #產品特徵說明 
+                      #160512-00016#1 20160524 add by ming -----(S) 
+                      psab013           LIKE psab_t.psab013,       #保稅否 
+                      #160512-00016#1 20160524 add by ming -----(E) 
+                      qty               LIKE psab_t.psab005,       #數量 
+                      psab004           LIKE psab_t.psab004,       #單位 
+                      psab004_desc      LIKE oocal_t.oocal003,     #單位說明 
+                      psab003           LIKE psab_t.psab003,       #需求日期  
+                      psab005           LIKE psab_t.psab005,       #需求數量 
+                      psab006           LIKE psab_t.psab006        #已耗數量 
+                   END RECORD
+DEFINE g_psab_d           DYNAMIC ARRAY OF type_psab
+DEFINE g_psab_d_t         type_psab
+#170104-00066#1 (B)  17/01/05 modify by rainy 
+#DEFINE l_ac               LIKE type_t.num5
+#DEFINE g_idx              LIKE type_t.num5
+#DEFINE g_rec_b            LIKE type_t.num5
+DEFINE l_ac               LIKE type_t.num10
+DEFINE g_idx              LIKE type_t.num10
+DEFINE g_rec_b            LIKE type_t.num10
+#170104-00066#1 (E)  modify by rainy 
+DEFINE g_qty              LIKE xmdd_t.xmdd006
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apsp300_01.global_variable" >}
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apsp300_01.other_dialog" >}
+#逾期資料的INPUT
+DIALOG apsp300_01_input()
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_qty         LIKE xmdd_t.xmdd006 
+   DEFINE l_imae015     LIKE imae_t.imae015
+   DEFINE l_qty1        LIKE psab_t.psab005
+   DEFINE l_qty2        LIKE psab_t.psab005
+   DEFINE l_qty3        LIKE psab_t.psab005
+   
+   INPUT ARRAY g_psab_d FROM s_detail1_apsp300_01.*
+         ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                   INSERT ROW = FALSE,
+                   DELETE ROW = FALSE,
+                   APPEND ROW = FALSE)
+               
+       BEFORE INPUT
+       
+       BEFORE ROW
+          LET l_ac = ARR_CURR()
+          LET g_psab_d_t.* = g_psab_d[l_ac].*
+          CALL apsp300_01_set_entry_b()
+          CALL apsp300_01_set_no_entry_b()
+       
+       BEFORE FIELD sel_d1_01
+          LET l_ac = ARR_CURR()
+          LET g_psab_d_t.* = g_psab_d[l_ac].*
+          CALL apsp300_01_set_entry_b()
+          CALL apsp300_01_set_no_entry_b()       
+          CALL cl_set_comp_required('qty',FALSE)
+          CALL apsp300_01_set_entry_b()
+         
+       ON CHANGE sel_d1_01
+          IF g_psab_d[l_ac].sel = 'Y' THEN
+             IF cl_null(g_psab_d[l_ac].qty) OR g_psab_d[l_ac].qty > l_qty THEN
+                LET g_psab_d[l_ac].qty = l_qty
+             END IF
+          END IF
+               
+       AFTER FIELD sel_d1_01
+          IF g_psab_d[l_ac].sel NOT MATCHES '[YN]' THEN
+             NEXT FIELD sel_d1_01
+          END IF
+
+          IF g_psab_d[l_ac].sel = 'Y' THEN
+             CALL cl_set_comp_required('qty',TRUE)
+          END IF
+          CALL apsp300_01_set_no_entry_b()
+
+       AFTER FIELD qty_d1_01
+          IF NOT cl_null(g_psab_d[l_ac].qty) THEN
+             CALL apsp300_01_get_wo_qty('2',g_psab_d[l_ac].psabdocno,g_psab_d[l_ac].psabseq,
+                                        g_psab_d[l_ac].psab001,g_psab_d[l_ac].psab004)
+                  RETURNING l_success,l_qty1,l_qty2,l_qty3
+
+             IF g_psab_d[l_ac].qty > l_qty3 THEN
+                #数量 %1 超过此项订单项序的可转工单数量 %2
+                INITIALIZE g_errparam TO NULL
+                LET g_errparam.code = 'asf-00357'
+                LET g_errparam.extend = ''
+                LET g_errparam.popup = TRUE
+                LET g_errparam.replace[1] = g_psab_d[l_ac].qty
+                LET g_errparam.replace[2] =  l_qty
+                CALL cl_err()
+                NEXT FIELD qty_d1_01
+             END IF
+          END IF
+                             
+   END INPUT
+
+END DIALOG
+
+ 
+{</section>}
+ 
+{<section id="apsp300_01.other_function" readonly="Y" >}
+
+PUBLIC FUNCTION apsp300_01()
+
+END FUNCTION
+
+PUBLIC FUNCTION apsp300_01_create_temp_table()
+   DEFINE r_success         LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+
+   LET r_success = TRUE
+
+   IF NOT apsp300_01_drop_temp_table() THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   CREATE TEMP TABLE apsp300_01_temp(
+      psabdocno      LIKE psab_t.psabdocno,
+      psabseq        LIKE psab_t.psabseq,
+      psab001        LIKE psab_t.psab001,
+      psab012        LIKE psab_t.psab012, #160214-00005#5-add
+      psab002        LIKE psab_t.psab002, 
+      psab013        LIKE psab_t.psab013, #160512-00016#1 20160525 add by ming 
+      qty            LIKE psab_t.psab005,
+      psab004        LIKE psab_t.psab004,
+      psab003        LIKE psab_t.psab003,
+      psab005        LIKE psab_t.psab005,
+      psab006        LIKE psab_t.psab006
+   )
+
+   IF SQLCA.sqlcode != 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create apsp300_01_temp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   #160120-00002#1 s983961--add(s)
+   CREATE TEMP TABLE p300_tmp01(        #160727-00019#14 Mod   p300_01_lock_b_t -->p300_tmp01
+      psabdocno      LIKE psab_t.psabdocno,
+      psabseq        LIKE psab_t.psabseq
+   )
+  #160120-00002#1 s983961--add(e)
+
+   RETURN r_success
+END FUNCTION
+
+PUBLIC FUNCTION apsp300_01_drop_temp_table()
+   DEFINE r_success          LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+
+   LET r_success = TRUE
+
+   DROP TABLE apsp300_01_temp
+
+   IF NOT (SQLCA.sqlcode = 0 OR SQLCA.sqlcode = -206) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'drop apsp300_01_temp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #160120-00002#6 20160216 by s983961--add(s) 
+   DROP TABLE p300_tmp01          #160727-00019#14 Mod   p300_01_lock_b_t -->p300_tmp01
+   #160120-00002#6 20160216 by s983961--add(e)
+   
+   RETURN r_success
+      
+END FUNCTION
+# 畫面資料初始化
+PUBLIC FUNCTION apsp300_01_init()
+
+END FUNCTION
+#顯示對採購資料查詢的結果
+PUBLIC FUNCTION apsp300_01_b_fill()
+   DEFINE l_sql        STRING
+   DEFINE l_i          LIKE type_t.num10    #170104-00066#1 num5->num10  17/01/05 mod by rainy 
+   DEFINE l_success    LIKE type_t.num5
+   DEFINE l_where      STRING
+   DEFINE l_wc         STRING
+   DEFINE l_psab       type_psab 
+   DEFINE l_qty1       LIKE xmdd_t.xmdd006
+   DEFINE l_qty2       LIKE xmdd_t.xmdd006
+   DEFINE l_qty3       LIKE xmdd_t.xmdd006
+   DEFINE l_qty4       LIKE xmdd_t.xmdd006
+   DEFINE l_qty5       LIKE xmdd_t.xmdd006
+   DEFINE l_qty6       LIKE xmdd_t.xmdd006
+   DEFINE l_qty        LIKE xmdd_t.xmdd006
+   #160120-00002#6 s983961--add(s)
+   DEFINE l_psabdocno       LIKE psab_t.psabdocno #請購單號 
+   DEFINE l_psabseq         LIKE psab_t.psabseq   #請購項次
+   #160120-00002#6 s983961--add(e)
+   #160127-00021#1 20160330 add by ming -----(S) 
+   DEFINE l_mfg_0065        LIKE type_t.chr80     #是否受aimm211的存貨方式管制 
+   #160127-00021#1 20160330 add by ming -----(E) 
+   
+   IF cl_null(g_wc) THEN LET g_wc = ' 1=1' END IF
+   LET l_wc = g_wc
+
+   #用控制组相关信息过滤料件的WHERE子句
+   CALL s_control_get_item_sql('6',g_site,g_user,g_dept,g_sfaadocno)
+        RETURNING l_success,l_where
+   IF l_success THEN
+      LET l_wc = l_wc CLIPPED," AND ",l_where
+   END IF
+   #170103-00052#1-s-mod
+   ##160127-00021#1 20160330 modify by ming -----(S) 
+   ##LET l_sql = "SELECT UNIQUE 'N'    ,psabdocno,psabseq,psab001,psab012,'','', ", #160214-00005#5-add-'psab012'
+   ##            "              psab002,'',COALESCE(psab005,0)-COALESCE(psab006,0), ",
+   ##            "              imae016,'',psab003,COALESCE(psab005,0),COALESCE(psab006,0)  ",
+   ##            "  FROM psaa_t,psab_t,imaf_t,imaa_t,imae_t",
+   ##            " WHERE psaaent   = psabent  ",
+   ##            "   AND psaaent   = imafent  ",
+   ##            "   AND psaaent   = imaaent  ",
+   ##            "   AND psaaent   = imaeent  ",
+   ##            "   AND psaaent   = ",g_enterprise,
+   ##            "   AND psaasite  = psabsite ",
+   ##            "   AND psaasite  = imafsite ",
+   ##            "   AND psaasite  = imaesite ",
+   ##            "   AND psaasite  = '",g_site,"'",
+   ##            "   AND psaadocno = psabdocno ",
+   ##            "   AND psab001   = imaf001 ",
+   ##            "   AND psab001   = imaa001 ",
+   ##            "   AND psab001   = imae001",
+   ##            "   AND (imaf012 = '2' OR imaf012 = '5') ",     #獨立需求的存貨管制方式是2與5 
+   ##            "   AND (imaf013 = '2' OR imaf013 = '3') ",
+   ##            "   AND ",l_wc CLIPPED,
+   ##            "   AND psaastus = 'Y'",
+   ##            "   AND psab008  = 'N' ",    #未結案的資料才需要被取出  
+   ##            " ORDER BY psab001,psab002,psabdocno,psabseq" 
+   # 
+   #
+   ##160512-00016#1 20160524 modify by ming -----(S) 
+   ##增加欄位 psab013(保稅否)，順便處理效能問題 
+   ##LET l_sql = "SELECT UNIQUE 'N'    ,psabdocno,psabseq,psab001,psab012,'','', ",  
+   ##            "              psab002,'',COALESCE(psab005,0)-COALESCE(psab006,0), ", 
+   ##            "              imae016,'',psab003,COALESCE(psab005,0),COALESCE(psab006,0)  ",
+   #LET l_sql = "SELECT UNIQUE 'N'    ,psabdocno,psabseq,psab001,psab012, ", 
+   #            "              (SELECT imaal003 FROM imaal_t ", 
+   #            "                WHERE imaalent = '",g_enterprise,"' ", 
+   #            "                  AND imaal001 = psab001 ", 
+   #            "                  AND imaal002 = '",g_dlang,"'), ", 
+   #            "              (SELECT imaal004 FROM imaal_t ", 
+   #            "                WHERE imaalent = '",g_enterprise,"' ", 
+   #            "                  AND imaal001 = psab001 ", 
+   #            "                  AND imaal002 = '",g_dlang,"'), ",  
+   #            "              psab002,'',COALESCE(psab013,'N'), ", 
+   #            "              COALESCE(psab005,0)-COALESCE(psab006,0), ", 
+   #            "              imae016,(SELECT oocal003 FROM oocal_t ", 
+   #            "                        WHERE oocalent = '",g_enterprise,"' ", 
+   #            "                          AND oocal001 = imae016 ", 
+   #            "                          AND oocal002 = '",g_dlang,"'), ", 
+   #            "              psab003,COALESCE(psab005,0),COALESCE(psab006,0)  ",
+   ##160512-00016#1 20160524 modify by ming -----(E) 
+   LET l_sql = "SELECT UNIQUE 'N'    ,psabdocno,psabseq,psab001,psab012, ", 
+               "              (SELECT imaal003 FROM imaal_t ", 
+               "                WHERE imaalent = '",g_enterprise,"' ", 
+               "                  AND imaal001 = psab001 ", 
+               "                  AND imaal002 = '",g_dlang,"'), ", 
+               "              (SELECT imaal004 FROM imaal_t ", 
+               "                WHERE imaalent = '",g_enterprise,"' ", 
+               "                  AND imaal001 = psab001 ", 
+               "                  AND imaal002 = '",g_dlang,"'), ",  
+               "              psab002,'',COALESCE(psab013,'N'), ", 
+               "              COALESCE(psab005,0)-COALESCE(psab006,0), ", 
+               "              psab004,(SELECT oocal003 FROM oocal_t ", 
+               "                        WHERE oocalent = '",g_enterprise,"' ", 
+               "                          AND oocal001 = imae016 ", 
+               "                          AND oocal002 = '",g_dlang,"'), ", 
+               "              psab003,COALESCE(psab005,0),COALESCE(psab006,0)  ",
+   #170103-00052#1-e-mod
+               "  FROM psaa_t,psab_t,imaf_t,imaa_t,imae_t",
+               " WHERE psaaent   = psabent  ",
+               "   AND psaaent   = imafent  ",
+               "   AND psaaent   = imaaent  ",
+               "   AND psaaent   = imaeent  ",
+               "   AND psaaent   = ",g_enterprise,
+               "   AND psaasite  = psabsite ",
+               "   AND psaasite  = imafsite ",
+               "   AND psaasite  = imaesite ",
+               "   AND psaasite  = '",g_site,"'",
+               "   AND psaadocno = psabdocno ",
+               "   AND psab001   = imaf001 ",
+               "   AND psab001   = imaa001 ",
+               "   AND psab001   = imae001" 
+               
+   CALL cl_get_doc_para(g_enterprise,g_site,g_sfaadocdt,'D-MFG-0065') 
+        RETURNING l_mfg_0065    
+   IF l_mfg_0065 = 'Y' THEN 
+      LET l_sql = l_sql CLIPPED,
+                  "   AND (imaf012 = '2' OR imaf012 = '5') "     #獨立需求的存貨管制方式是2與5 
+   END IF 
+               
+   LET l_sql = l_sql CLIPPED,
+               "   AND (imaf013 = '2' OR imaf013 = '3') ",
+               "   AND ",l_wc CLIPPED,
+               "   AND psaastus = 'Y'",
+               "   AND psab008  = 'N' ",    #未結案的資料才需要被取出  
+               " ORDER BY psab001,psab002,psabdocno,psabseq"
+   #160127-00021#1 20160330 modify by ming -----(S) 
+   
+   PREPARE apsp300_01_sel_d1 FROM l_sql
+   DECLARE apsp300_01_b_fill_curs_d1 CURSOR FOR apsp300_01_sel_d1
+      
+   CALL g_psab_d.clear() 
+   LET l_i = 1  
+   ERROR "Searching!"
+   
+   FOREACH apsp300_01_b_fill_curs_d1 INTO l_psab.*       
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:apsp300_01_b_fill_curs_d1"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+       
+      #160120-00002#6 s983961--add(s)
+      #檢查請購單的資料是否已經被lock 
+      LET l_psabdocno = '' 
+      LET l_psabseq   = '' 
+      LET l_sql = "SELECT psabdocno,psabseq ", 
+                  "  FROM psab_t ", 
+                  " WHERE psabent   = '",g_enterprise,"' ", 
+                  "   AND psabdocno = '",l_psab.psabdocno,"' ", 
+                  "   AND psabseq   = '",l_psab.psabseq,"' ", 
+                  "   FOR UPDATE SKIP LOCKED " 
+      PREPARE apsp300_01_chk_locked_prep FROM l_sql 
+      EXECUTE apsp300_01_chk_locked_prep INTO l_psabdocno,l_psabseq 
+      IF cl_null(l_psabdocno) AND cl_null(l_psabseq) THEN 
+         CONTINUE FOREACH 
+      END IF 
+      #160120-00002#6 s983961--add(e)
+      
+      #計算獨立需求單的未轉工單數量 
+      #BY 订单+项次+料件的 总订单量 总已转工单量 总剩余数量
+      CALL apsp300_01_get_wo_qty('1',l_psab.psabdocno,l_psab.psabseq,
+                                 l_psab.psab001,l_psab.psab004)
+           RETURNING l_success,l_qty1,l_qty2,l_qty3
+      IF NOT l_success THEN
+         CONTINUE FOREACH
+      END IF
+
+      #总订单量(BY生产单位) = 0
+      IF l_qty1 <= 0 THEN
+         CONTINUE FOREACH
+      END IF
+
+      LET l_psab.qty = l_qty3 
+
+      LET g_psab_d[l_i].* = l_psab.*
+
+      CALL apsp300_01_detail_show(l_i)
+      
+      LET l_i = l_i + 1
+      IF l_i > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ""
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+
+   END FOREACH
+   
+   LET g_rec_b = l_i - 1
+   CALL g_psab_d.deleteElement(l_i)
+   CLOSE apsp300_01_b_fill_curs_d1
+   FREE apsp300_01_sel_d1
+
+
+END FUNCTION
+
+PRIVATE FUNCTION apsp300_01_detail_show(p_i)
+   DEFINE p_i           LIKE type_t.num10   #170104-00066#1 num5->num10  17/01/05 mod by rainy 
+   DEFINE l_success     LIKE type_t.num5
+   
+   #160512-00016#1 20160524 mark by ming -----(S)  
+   #順便處理效能問題，把多語言移到了b_fill的主sql中
+   #CALL s_desc_get_item_desc(g_psab_d[p_i].psab001)
+   #     RETURNING g_psab_d[p_i].psab001_desc,g_psab_d[p_i].psab001_desc_desc
+   #
+   #CALL s_desc_get_unit_desc(g_psab_d[p_i].psab004)
+   #     RETURNING g_psab_d[p_i].psab004_desc 
+   #160512-00016#1 20160524 mark by ming -----(E) 
+   
+   CALL s_feature_description(g_psab_d[p_i].psab001,g_psab_d[p_i].psab002)
+        RETURNING l_success,g_psab_d[p_i].psab002_desc
+   
+END FUNCTION
+
+PUBLIC FUNCTION apsp300_01_set_entry_b()
+   CALL cl_set_comp_entry("qty_d1_01",TRUE)
+END FUNCTION
+
+PUBLIC FUNCTION apsp300_01_set_no_entry_b()
+   IF g_psab_d[l_ac].sel = 'N' THEN
+      CALL cl_set_comp_entry("qty_d1_01",FALSE)
+   END IF
+END FUNCTION
+
+PUBLIC FUNCTION apsp300_01_delete_temp_table()
+   DELETE FROM apsp300_01_temp
+   #160120-00002#6 20160216 by s983961--add(s) 
+   DELETE FROM p300_tmp01          #160727-00019#14 Mod   p300_01_lock_b_t -->p300_tmp01
+   #160120-00002#6 20160216 by s983961--add(e)
+END FUNCTION
+
+################################################################################
+# Descriptions...: 全选
+# Memo...........:
+# Usage..........: CALL apsp300_01_sel_all(p_flag)
+#                       RETURNING NULL
+# Input parameter: p_flag         Y/N
+# Return code....: NULL
+# Date & Author..: 2014-07-09 By Carrier
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apsp300_01_sel_all(p_flag)
+   DEFINE p_flag         LIKE type_t.chr1
+   DEFINE l_i            LIKE type_t.num10      #170104-00066#1 num5->num10  17/01/05 mod by rainy 
+   DEFINE l_qty          LIKE xmdd_t.xmdd006
+   DEFINE l_success      LIKE type_t.num5
+
+   FOR l_i = 1 TO g_psab_d.getLength()
+      LET g_psab_d[l_i].sel = p_flag
+   END FOR
+END FUNCTION
+
+PUBLIC FUNCTION apsp300_01_save_data()
+   DEFINE l_i     LIKE type_t.num10      #170104-00066#1 num5->num10  17/01/05 mod by rainy 
+   DEFINE l_msg   STRING
+   #160120-00002#1 s983961--add(s)
+   DEFINE l_cnt       LIKE type_t.num10  #170104-00066#1 num5->num10  17/01/05 mod by rainy 
+   DEFINE l_sql       STRING
+   DEFINE l_psabdocno LIKE psab_t.psabdocno
+   DEFINE l_psabseq   LIKE psab_t.psabseq
+   DEFINE l_where     STRING
+   #160120-00002#1 s983961--add(e)
+  
+   CALL cl_showmsg_init()
+   CALL apsp300_01_delete_temp_table()
+
+   FOR l_i = 1 TO g_psab_d.getLength()
+      IF g_psab_d[l_i].sel = 'Y' THEN
+         IF g_psab_d[l_i].qty > 0 THEN 
+            #160512-00016#1 20160524 modify by ming -----(S) 
+            #增加欄位 psab013 (保稅否) 
+            #並且修正奇怪的地方 psab005原本使用l_ac ，應該會造成數量錯誤 
+            #INSERT INTO apsp300_01_temp (psabdocno,psabseq,psab001,psab012,psab002,qty, #160214-00005#5-add-'psab012'
+            #                             psab004, psab003,psab005,psab006)
+            #VALUES(g_psab_d[l_i].psabdocno,g_psab_d[l_i].psabseq,g_psab_d[l_i].psab001,g_psab_d[l_i].psab012, #160214-00005#5-add-'psab012'
+            #       g_psab_d[l_i].psab002,  g_psab_d[l_i].qty,    g_psab_d[l_i].psab004,
+            #       g_psab_d[l_i].psab003,  g_psab_d[l_ac].psab005,g_psab_d[l_i].psab006) 
+            INSERT INTO apsp300_01_temp (psabdocno,psabseq,psab001,psab012,psab002, 
+                                         psab013,qty, 
+                                         psab004, psab003,psab005,psab006)
+            VALUES(g_psab_d[l_i].psabdocno,g_psab_d[l_i].psabseq,g_psab_d[l_i].psab001,g_psab_d[l_i].psab012, 
+                   g_psab_d[l_i].psab002,  g_psab_d[l_i].psab013,  
+                   g_psab_d[l_i].qty    ,  g_psab_d[l_i].psab004,
+                   g_psab_d[l_i].psab003,  g_psab_d[l_i].psab005,g_psab_d[l_i].psab006) 
+            #160512-00016#1 20160524 modify by ming -----(E) 
+            #160120-00002#1 s983961--add(s)  
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt
+              FROM p300_tmp01         #160727-00019#14 Mod   p300_01_lock_b_t -->p300_tmp01
+             WHERE psabdocno = g_psab_d[l_i].psabdocno
+               AND psabseq   = g_psab_d[l_i].psabseq
+            IF cl_null(l_cnt) OR l_cnt = 0 THEN
+               INSERT INTO p300_tmp01 VALUES(g_psab_d[l_i].psabdocno,g_psab_d[l_i].psabseq)       #160727-00019#14 Mod   p300_01_lock_b_t -->p300_tmp01
+            END IF
+            #160120-00002#1 s983961--add(e)                
+         ELSE
+            CALL cl_getmsg_parm('axm-00219',g_dlang,g_psab_d[l_i].psabdocno ||'|'|| g_psab_d[l_i].psabseq)
+                 RETURNING l_msg
+            #待转数量 不可 小于等于零,不进行处理
+            CALL cl_errmsg('xmdddocno',g_psab_d[l_i].psabdocno,l_msg,'asf-00360',1)
+         END IF
+      END IF
+   END FOR
+
+   CALL cl_showmsg()
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取得獨立需求單可轉工單數量
+# Memo...........:
+# Usage..........: CALL apsp300_01_get_wo_qty(p_type,p_psabdocno,p_psabseq,p_psab001,p_psab004)
+#                       RETURNING r_success,r_qty1,r_qty2,r_qty3
+# Input parameter: p_type         類型：1.預設 2.檢查
+#                : p_psabdocno    獨立需求單號
+#                : p_psabseq      項次
+#                : p_psab001      生產料號
+#                : p_psab004      生產單位
+# Return code....: r_success      true/false
+#                : r_qty1         需求數量
+#                : r_qty2         已轉工單數量
+#                : r_qty3         可轉工單數量
+# Date & Author..: 2015/07/20 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp300_01_get_wo_qty(p_type,p_psabdocno,p_psabseq,p_psab001,p_psab004)
+   DEFINE p_type            LIKE type_t.chr1
+   DEFINE p_psabdocno       LIKE psab_t.psabdocno
+   DEFINE p_psabseq         LIKE psab_t.psabseq
+   DEFINE p_psab001         LIKE psab_t.psab001
+   DEFINE p_psab004         LIKE psab_t.psab004
+   DEFINE r_success         LIKE type_t.num5
+   DEFINE r_qty1            LIKE psab_t.psab005
+   DEFINE r_qty2            LIKE psab_t.psab005
+   DEFINE r_qty3            LIKE psab_t.psab005
+   DEFINE l_imae015         LIKE imae_t.imae015
+   DEFINE l_sfaa012         LIKE sfaa_t.sfaa012
+   DEFINE l_success         LIKE type_t.num5
+   DEFINE l_rate            LIKE inaj_t.inaj014 
+   DEFINE l_sfaa013         LIKE sfaa_t.sfaa013
+   DEFINE l_qty             LIKE xmdd_t.xmdd006
+   DEFINE l_psab005         LIKE psab_t.psab005
+   DEFINE l_psab006         LIKE psab_t.psab006
+
+   LET r_qty1 = 0
+   LET r_qty2 = 0
+   LET r_qty3 = 0
+   LET r_success = FALSE
+
+   #取得獨立需求單的需求數量 
+   SELECT psab005,psab006 INTO l_psab005,l_psab006
+     FROM psab_t
+    WHERE psabent   = g_enterprise
+      AND psabdocno = p_psabdocno
+      AND psabseq   = p_psabseq   
+   IF cl_null(l_psab005) THEN
+      LET l_psab005 = 0
+   END IF
+   IF cl_null(l_psab006) THEN
+      LET l_psab006 = 0
+   END IF 
+   
+   #取得獨立需求單的已轉工單數量 
+   SELECT sfaa013,SUM(sfab007) INTO l_sfaa013,l_sfaa012
+     FROM sfaa_t,sfab_t
+    WHERE sfaaent   = sfabent
+      AND sfaaent = g_enterprise
+      AND sfaadocno = sfabdocno
+      AND sfaastus  = 'N'       #只考慮未確認的工單  
+      AND sfab001   = '6'       #獨立需求單  
+      AND sfab002   = p_psabdocno
+      AND sfab003   = p_psabseq
+      AND sfaa010   = p_psab001
+    GROUP BY sfaa013
+
+    IF cl_null(l_sfaa012) THEN LET l_sfaa012 = 0 END IF
+
+    #总数量
+    LET l_qty = l_psab005
+
+    #订单单位与生产单位不一致时,数量转到生产单位
+    LET l_rate = 1
+    #170103-00052#1-s-mark  
+    #IF p_psab004 <> l_sfaa013 THEN
+    #   CALL s_aooi250_convert_qty(p_psab001,l_sfaa013,p_psab004,l_psab005)
+    #        RETURNING l_success,l_qty
+    #   IF NOT l_success THEN
+    #      RETURN r_success,r_qty1,r_qty2,r_qty3
+    #   END IF
+    #END IF 
+    #170103-00052#1-e-mark
+    
+    #取工单的损耗率
+    LET l_imae015 = 0
+    IF p_type = '2' THEN
+       SELECT imae015 INTO l_imae015
+         FROM imae_t
+        WHERE imaeent  = g_enterprise
+          AND imaesite = g_site
+          AND imae001  = p_psab001
+       IF cl_null(l_imae015) THEN LET l_imae015 = 0 END IF
+    END IF
+
+    #纳入损耗率的总数量
+    LET l_qty = l_qty * (1 + l_imae015 / 100) - l_psab006
+
+    LET r_qty1 = l_qty        #需求數量  
+    LET r_qty2 = l_sfaa012    #已轉工單數量
+    #订单可转工单数量 = 总订单数量(BY生产单位) - 已转工单数量(BY生产单位)
+    IF l_sfaa012 > l_qty THEN
+       LET r_qty3 = 0
+    ELSE
+       #170103-00052#1-s-mod 前面已經扣過了，這邊不用再扣
+       #LET r_qty3 = l_qty - l_sfaa012
+       LET r_qty3 = l_qty
+       #170103-00052#1-e-mod
+    END IF
+    
+    LET r_success = TRUE
+    RETURN r_success,r_qty1,r_qty2,r_qty3
+    
+END FUNCTION
+
+ 
+{</section>}
+ 

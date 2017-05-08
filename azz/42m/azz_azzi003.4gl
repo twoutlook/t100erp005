@@ -1,0 +1,1981 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="azzi003.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0008(2016-05-27 12:41:41), PR版次:0008(2017-02-06 17:24:31)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000039
+#+ Filename...: azzi003
+#+ Description: 服務中心首頁
+#+ Creator....: 01101(2015-06-30 10:24:53)
+#+ Modifier...: 01101 -SD/PR- 01101
+ 
+{</section>}
+ 
+{<section id="azzi003.global" >}
+#應用 i00 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#+ Modifier...: No.160523-00070#1 2016/05/24 By tsai_yen 服務首頁對應至有效的應用專題
+#+ Modifier...: No.160523-00070#2 2016/05/26 By tsai_yen 服務首頁-新手上路
+#+ Modifier...: No.160621-00009#1 2016/06/21 By tsai_yen 1-1.知識庫三階層目錄 1-2.知識庫沒有關聯圖主圖不可點選 1-3.模組欄位
+#+ Modifier...: No.160621-00009#2 2016/07/05 By tsai_yen 2-1.E-learning課程
+#+ Creator....: No.160726-00017#4 2016/07/29 By frank0521 共用函式改呼叫library
+#+ Modifier...: No.161201-00013#1 2016/12/01 By tsai_yen 1.相關檔案路徑改用絕對路徑FGLASIP。避免原廠WebComponentt架構改變，相對路徑階層會不同。
+#                                                        2.全系統重整作業操作說明。
+#                                                        3.全系統重整應用專題。
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+IMPORT util
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+ 
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+TYPE type_g_webc RECORD                       #WebComponent 參數
+     param_str   STRING,
+     param_arr   DYNAMIC ARRAY OF STRING
+     END RECORD
+TYPE type_webc_data RECORD
+     wc_reflash    LIKE type_t.num10,         #重新整理次數:data值相同不會觸發on Data,導致iframe不會重新顯示wc_href   #160523-00070#2
+     wc_cssstyle   STRING,
+     wc_body       STRING,
+     wc_argv       STRING,
+     wc_framsrc    STRING                     #160523-00070#2
+     END RECORD
+DEFINE g_wc_reflash     LIKE type_t.num10
+DEFINE gwin_curr        ui.Window             #Current Window
+DEFINE gfrm_curr        ui.Form               #Current Form
+DEFINE g_curr_diag      ui.Dialog             #Current Dialog
+DEFINE g_ref_fields     DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields     DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars       DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_nav_path DYNAMIC ARRAY OF RECORD     #流程圖引導路徑
+         pathact        STRING,               #路徑action
+         pathname       STRING,               #路徑名稱
+         gzth001        STRING,               #索引編號
+         gzth002        STRING,               #上層編號
+         gzth004        STRING                #節點類型
+         END RECORD
+DEFINE g_wc_data        STRING                #WebComponent data
+DEFINE g_wc_data_t      STRING                                                   #160523-00070#2
+DEFINE g_wc_data_set    BOOLEAN               #是否要從g_wc_data_t設定g_wc_data   #160523-00070#2
+DEFINE gs_json          STRING                #JSON字串
+DEFINE g_webc           type_g_webc           #WebComponent 參數
+DEFINE g_maintype       STRING                #主要內容類型: home:服務首頁,novice:新手上路,issue:聯絡客服,km:知識庫,elearning:E-learning課程   #160523-00070#2
+DEFINE g_index_cfg      DYNAMIC ARRAY OF RECORD     #服務首頁設定
+                        lang              STRING,   #語言別
+                        novice_title      STRING,   #新手上路
+                        novice_content    STRING,
+                        issue_title       STRING,   #聯絡客服
+                        issue_content1    STRING,
+                        issue_content2    STRING,
+                        km_title          STRING,   #T100 知識庫
+                        km_content        STRING,
+                        mykm_title        STRING,   #我的知識庫        #160803-00011
+                        mykm_content      STRING,                     #160803-00011
+                        elearn_title      STRING,   #E-learning課程   #160621-00009#2
+                        elearn_content    STRING,
+                        elearn_m_seq      STRING,   #學習順序
+                        elearn_m_course   STRING,   #單元課程名稱
+                        elearn_m_func     STRING,   #適合職能
+                        elearn_m_appdoc   STRING,   #應用專題
+                        elearn_m_course_1 STRING,   #員工費用報銷管理   #以後改動態資料
+                        elearn_m_func_1   STRING    #資訊,資材/倉管、採購、業務、生管、品管、製造/現場、行銷人員、廠務人員、財務、主管   #以後改動態資料
+                        END RECORD
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzi003.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define (標準程式用)
+   DEFINE l_wcpath            STRING
+   #end add-point    
+   #add-point:main段define (客製程式用)
+
+   #end add-point
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("azz","")
+ 
+   #add-point:作業初始化
+   IF cl_null(FGL_GETENV("GUIMODE")) OR FGL_GETENV("GUIMODE") = "GDC" THEN
+      # webComponent需在開啟視窗前設定路徑
+      LET l_wcpath = FGL_GETENV("FGLASIP"),"/components"
+      CALL ui.interface.frontCall("standard", "setwebcomponentpath",[l_wcpath],[])   #不支援GWC
+   END IF
+   #end add-point
+ 
+   #add-point:SQL_define
+ 
+   #end add-point
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_azzi003 WITH FORM cl_ap_formpath("azz",g_code)
+         #ATTRIBUTE(STYLE="layoutwin")
+ 
+      #程式初始化
+      CALL azzi003_init()   #位置提前
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #進入選單 Menu (='N')
+      CALL azzi003_ui_dialog()
+   
+      #畫面關閉
+      CLOSE WINDOW w_azzi003
+   END IF
+ 
+   #add-point:作業離開前
+
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+ 
+{</section>}
+ 
+{<section id="azzi003.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+PRIVATE FUNCTION azzi003_init()
+   DEFINE l_sql        STRING
+   DEFINE l_str        STRING
+
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+
+   LET g_hidden_4tm = TRUE     #是否不載入TopMenu TRUE:不載入, FALSE:載入
+   LET g_hidden_4tb = TRUE     #是否不載入ToolBar TRUE:不載入, FALSE:載入
+
+   LET g_maintype = "init"     #主要內容類型   #160523-00070#2
+   
+   CALL azzi003_set_comment("azzi003")
+   CALL azzi003_index_cfg()
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzi003_ui_dialog()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2016/05/24 By tsai_yen
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi003_ui_dialog()
+   DEFINE l_str               STRING
+   DEFINE g_current_gzth001   LIKE gzth_t.gzth001
+   DEFINE l_json              STRING
+   DEFINE l_sb                base.StringBuffer
+   DEFINE l_nav_path          STRING                  #流程圖引導路徑
+   DEFINE l_gzth001           LIKE gzth_t.gzth001     #索引編號
+   DEFINE l_gzth002           LIKE gzth_t.gzth002     #上層編號
+   DEFINE l_gzth004           LIKE gzth_t.gzth004     #節點類型
+   DEFINE l_roottype          STRING                  #根節點類型
+   DEFINE l_url               STRING
+   DEFINE l_param01           STRING                  #參數
+   #按到Enter或在最後一個webcomponent執行完會離開DIALOG
+   #重新進入DIALOG後因UNBUFFERED會讓g_wc_data回歸NULL,所以要從g_wc_data_t設定g_wc_data
+
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      #服務首頁索引
+      INPUT g_wc_data FROM wc_sitemap
+      END INPUT
+
+      #應用專題文件內容
+      INPUT g_wc_data FROM wc_appdoc
+      END INPUT
+
+      BEFORE DIALOG
+         IF g_wc_data_set THEN
+            LET g_wc_data = g_wc_data_t
+            LET g_wc_data_set = FALSE
+         END IF
+
+         CASE g_maintype   #主要內容類型: home:服務首頁,novice:新手上路,issue:聯絡客服,km:知識庫,elearning:E-learning課程   #160523-00070#2
+            WHEN "init"
+               LET g_maintype = "home"
+               CALL gfrm_curr.setElementHidden("formonly.wc_sitemap",0)
+               CALL gfrm_curr.setElementHidden("formonly.wc_appdoc",1)
+               CALL azzi003_index_init()
+            WHEN "km"
+               CALL gfrm_curr.setElementHidden("formonly.wc_sitemap",0)
+               CALL gfrm_curr.setElementHidden("formonly.wc_appdoc",1)
+         END CASE
+
+      #服務首頁ToolBar    #160523-00070#2
+      ON ACTION home      #服務首頁
+         LET g_maintype = "home"
+         CALL gfrm_curr.setElementHidden("formonly.wc_sitemap",0)
+         CALL gfrm_curr.setElementHidden("formonly.wc_appdoc",1)
+         CALL azzi003_index_init()
+
+      ON ACTION novice    #新手上路
+         LET g_maintype = "novice"
+         CALL gfrm_curr.setElementHidden("formonly.wc_sitemap",0)
+         CALL gfrm_curr.setElementHidden("formonly.wc_appdoc",1)
+         CALL azzi003_novice_init()
+
+      ON ACTION issue     #問題反映
+         CALL cl_help_prog_url()
+
+      ON ACTION support   #聯絡客服
+         CALL cl_help("3",NULL)
+
+      ON ACTION km        #知識庫
+         LET g_maintype = "km"
+         CALL gfrm_curr.setElementHidden("formonly.wc_sitemap",0)
+         CALL gfrm_curr.setElementHidden("formonly.wc_appdoc",1)
+         CALL azzi003_sitemap_init()
+      
+      ###160803-00011  start ###      
+      ON ACTION mykm        #我的知識庫
+         LET g_maintype = "mykm"
+         CALL gfrm_curr.setElementHidden("formonly.wc_sitemap",0)
+         CALL gfrm_curr.setElementHidden("formonly.wc_appdoc",1)
+         CALL azzi003_mykm_init()
+      ###160803-00011  end   ###
+
+      ON ACTION elearning          #E-learning選單   #160621-00009#2
+         LET g_maintype = "elearning"
+         CALL gfrm_curr.setElementHidden("formonly.wc_sitemap",0)
+         CALL gfrm_curr.setElementHidden("formonly.wc_appdoc",1)
+         CALL azzi003_elearn_init()
+
+      ON ACTION elearning_course   #E-learning課程   #160621-00009#2
+         LET g_maintype = "elearning"
+         INITIALIZE g_webc.param_str TO NULL
+         CALL g_webc.param_arr.clear()
+         CALL util.JSON.parse(g_wc_data,g_webc)
+         LET l_param01 = g_webc.param_arr[1]   #課程編號
+         CALL azzi003_elearn_course(l_param01)
+
+      ON ACTION elearning_appdoc   #E-learning應用專題   #160621-00009#2
+         LET g_maintype = "elearning"
+         INITIALIZE g_webc.param_str TO NULL
+         CALL g_webc.param_arr.clear()
+         CALL util.JSON.parse(g_wc_data,g_webc)
+         LET l_param01 = g_webc.param_arr[1]   #課程編號
+         CALL azzi003_elearn_appdoc(l_param01)
+         
+      ON ACTION wc_sitemap_exe
+         LET g_maintype = "km"    #160523-00070#2
+         INITIALIZE g_webc.param_str TO NULL
+         CALL g_webc.param_arr.clear()
+         CALL util.JSON.parse(g_wc_data,g_webc)
+         LET l_gzth001 = g_webc.param_arr[1]   #索引編號
+         LET l_gzth002 = g_webc.param_arr[2]   #上層編號
+         LET l_gzth004 = g_webc.param_arr[3]   #節點類型
+
+         LET l_roottype = g_webc.param_str
+         CASE 
+            WHEN l_gzth001 = l_gzth002
+               CALL azzi003_sitemap_init()
+            WHEN l_roottype = "ROOT_APP"
+               CASE l_gzth004   #REL:關聯圖 ARC:架構 APP:應用專題
+                  WHEN "REL"
+                     CALL gfrm_curr.setElementHidden("formonly.wc_sitemap",0)
+                     CALL gfrm_curr.setElementHidden("formonly.wc_appdoc",1)
+                     CALL azzi003_sitemap_rel(l_roottype,l_gzth001,l_gzth002)
+                  WHEN "ARC"
+                     CALL gfrm_curr.setElementHidden("formonly.wc_sitemap",0)
+                     CALL gfrm_curr.setElementHidden("formonly.wc_appdoc",1)
+                     CALL azzi003_sitemap_rel(l_roottype,l_gzth001,l_gzth002)
+                  WHEN "APP_LIST"
+                     CALL gfrm_curr.setElementHidden("formonly.wc_sitemap",0)
+                     CALL gfrm_curr.setElementHidden("formonly.wc_appdoc",1)
+                     CALL azzi003_sitemap_applist(l_roottype,l_gzth001,l_gzth002)
+                  WHEN "APP"
+                     CALL gfrm_curr.setElementHidden("formonly.wc_sitemap",1)
+                     CALL gfrm_curr.setElementHidden("formonly.wc_appdoc",0)
+                     CALL azzi003_appdoc_init(l_roottype,l_gzth001,l_gzth002)
+               END CASE
+         END CASE
+
+      ON ACTION wc_path_exe
+         INITIALIZE g_webc.param_str TO NULL
+         CALL g_webc.param_arr.clear()
+         CALL util.JSON.parse(g_wc_data,g_webc)
+         LET l_gzth001 = g_webc.param_arr[1]   #索引編號
+         LET l_gzth002 = g_webc.param_arr[2]   #上層編號
+         LET l_gzth004 = g_webc.param_arr[3]   #節點類型
+
+         LET l_roottype = g_webc.param_str
+         CASE 
+            WHEN l_gzth001 = l_gzth002
+               CALL gfrm_curr.setElementHidden("formonly.wc_sitemap",0)
+               CALL gfrm_curr.setElementHidden("formonly.wc_appdoc",1)
+               CALL azzi003_sitemap_init()
+            WHEN l_roottype = "ROOT_APP"
+               CASE l_gzth004   #REL:關聯圖 ARC:架構 APP:應用專題
+                  WHEN "REL"
+                     CALL gfrm_curr.setElementHidden("formonly.wc_sitemap",0)
+                     CALL gfrm_curr.setElementHidden("formonly.wc_appdoc",1)
+                     CALL azzi003_sitemap_rel(l_roottype,l_gzth001,l_gzth002)
+                  WHEN "ARC"
+                     CALL gfrm_curr.setElementHidden("formonly.wc_sitemap",0)
+                     CALL gfrm_curr.setElementHidden("formonly.wc_appdoc",1)
+                     CALL azzi003_sitemap_rel(l_roottype,l_gzth001,l_gzth002)
+                  WHEN "APP_LIST"
+                     CALL gfrm_curr.setElementHidden("formonly.wc_sitemap",0)
+                     CALL gfrm_curr.setElementHidden("formonly.wc_appdoc",1)
+                     CALL azzi003_sitemap_applist(l_roottype,l_gzth001,l_gzth002)
+                  WHEN "APP"
+                     CALL gfrm_curr.setElementHidden("formonly.wc_appdoc",0)
+                     CALL gfrm_curr.setElementHidden("formonly.wc_sitemap",1)
+                     CALL azzi003_appdoc_init(l_roottype,l_gzth001,l_gzth002)
+               END CASE
+         END CASE
+
+      ON ACTION wc_sop_openurl
+         CALL util.JSON.parse(g_wc_data,g_webc)
+         LET l_url = g_webc.param_arr[1]
+         IF NOT cl_null(l_url) THEN
+            ###161201-00013#1 mark START ###
+            #採用相對路徑
+            #IF l_url.getIndexOf("../../doc/erp/", 1) THEN
+            #   LET l_str = FGL_GETENV("FGLASIP"),"/doc/erp/"
+            #   LET l_url = cl_str_replace(l_url,"../../doc/erp/",l_str)
+            #END IF
+            ###161201-00013#1 mark END ###
+            CALL ui.interface.frontCall("standard","launchurl",[l_url],[])
+         END IF
+
+      ON ACTION close       #在dialog 右上角 (X)
+         LET INT_FLAG=TRUE
+         EXIT DIALOG
+
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG=TRUE
+         EXIT DIALOG
+   END DIALOG
+
+   IF NOT INT_FLAG THEN   #按到Enter,不要離開
+      LET g_wc_data_set = TRUE      #160523-00070#2
+      LET g_wc_data_t = g_wc_data   #160523-00070#2
+      CALL azzi003_ui_dialog()
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 知識庫
+# Memo...........:
+# Usage..........: CALL azzi003_sitemap_init()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2016/05/24 By tsai_yen
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi003_sitemap_init()
+   DEFINE l_sql               STRING
+   DEFINE l_i                 LIKE type_t.num5
+   DEFINE l_j                 LIKE type_t.num5
+   DEFINE l_cnt               LIKE type_t.num5
+   DEFINE l_cnt1              LIKE type_t.num5
+   DEFINE l_cnt2              LIKE type_t.num5
+   DEFINE l_cnt3              LIKE type_t.num5
+   DEFINE l_colcnt            LIKE type_t.num5        #欄位數
+   DEFINE l_colidx            LIKE type_t.num5
+   DEFINE l_colmax            LIKE type_t.num5
+   DEFINE l_rowcnt            LIKE type_t.num5        #列數
+   DEFINE l_mod               LIKE type_t.num5        #餘數
+   DEFINE l_cssstyle          STRING
+   DEFINE l_html              STRING
+   DEFINE l_imgdir            STRING
+   DEFINE l_gzth RECORD
+          gzth001   LIKE gzth_t.gzth001,
+          gzth002   LIKE gzth_t.gzth002,
+          gzth003   LIKE gzth_t.gzth003,
+          gzth004   LIKE gzth_t.gzth004,
+          gzth006   LIKE gzth_t.gzth006,
+          gzthl004  LIKE gzthl_t.gzthl004
+          END RECORD
+   DEFINE l_param_arr          DYNAMIC ARRAY OF STRING  #陣列參數
+   DEFINE l_roottype           STRING                   #根節點類型
+   DEFINE l_webc_data          type_webc_data
+   DEFINE l_docip              STRING                   #相關檔案路徑IP  #161201-00013#1
+
+   LET l_colcnt = 3
+
+   #icon圖片相對路徑
+   CALL cl_helps933_docip() RETURNING l_docip     #161201-00013#1
+   #LET l_imgdir = "../../doc/km/icon/"           #161201-00013#1 mark
+   LET l_imgdir = l_docip CLIPPED,"doc/km/icon/"  #161201-00013#1
+
+   #root節點,並計算有多語言名稱的子節點數量
+   LET l_sql = "SELECT t1.gzth001,t1.gzth002,t1.gzth003,t1.gzth004,t1.gzth006,t2.gzthl004,childern.cnt",
+               " FROM gzth_t t1",
+               " INNER JOIN gzthl_t t2 ON t2.gzthl001=t1.gzth001 AND t2.gzthl002=t1.gzth002 AND t2.gzthl003=? AND gzthl004 IS NOT NULL",
+               " LEFT JOIN",
+               " (SELECT gzth002,COUNT(gzth001) cnt FROM gzth_t,gzthl_t",
+               "  WHERE gzthl001=gzth001 AND gzthstus='Y' AND gzth001 <> gzth002",
+               "    AND gzthl003=? AND gzthl004 IS NOT NULL",
+               "  GROUP BY gzth002",
+               " ) childern",
+               " ON childern.gzth002=t1.gzth001",
+               " WHERE t1.gzthstus='Y' AND t1.gzth001 = t1.gzth002",
+               " ORDER BY t1.gzth005"
+   PREPARE azzi003_sitemap_init_root_pre01 FROM l_sql
+   DECLARE azzi003_sitemap_init_root_cur01 CURSOR FOR azzi003_sitemap_init_root_pre01
+
+   #第2階層節點,並計算子節點數量
+   LET l_sql = "SELECT t1.gzth001,t1.gzth002,t1.gzth003,t1.gzth004,t1.gzth006,t2.gzthl004,childern.cnt",
+               " FROM gzth_t t1",
+               " INNER JOIN gzthl_t t2 ON t2.gzthl001=t1.gzth001 AND t2.gzthl002=t1.gzth002 AND t2.gzthl003=? AND gzthl004 IS NOT NULL",
+               " LEFT JOIN",
+               " (SELECT gzth002,COUNT(gzth001) cnt FROM gzth_t,gzthl_t",
+               "  WHERE gzthl001=gzth001 AND gzthstus='Y' AND gzth001 <> gzth002",
+               "    AND gzthl003=? AND gzthl004 IS NOT NULL",
+               "  GROUP BY gzth002",
+               " ) childern",
+               " ON childern.gzth002=t1.gzth001",
+               " WHERE t1.gzthstus='Y' AND t1.gzth001 <> t1.gzth002",
+               " AND t1.gzth002 = ?",
+               " AND t1.gzth004 = 'NODE'",
+               " ORDER BY t1.gzth005"
+   PREPARE azzi003_sitemap_init_root_pre02 FROM l_sql
+   DECLARE azzi003_sitemap_init_root_cur02 CURSOR FOR azzi003_sitemap_init_root_pre02
+
+   #第3階層節點,並計算關聯圖主圖數量
+   LET l_sql = "SELECT t1.gzth001,t1.gzth002,t1.gzth003,t1.gzth004,t1.gzth006,t2.gzthl004,self.cnt",
+               " FROM gzth_t t1",
+               " INNER JOIN gzthl_t t2 ON t2.gzthl001=t1.gzth001 AND t2.gzthl002=t1.gzth002 AND t2.gzthl003=? AND gzthl004 IS NOT NULL",
+               " LEFT JOIN",
+               " (SELECT gzth001,COUNT(gzth001) cnt FROM gzth_t,gzti_t",
+               "  WHERE gzthstus='Y' AND gzth001 <> gzth002",
+                  " AND gztistus='Y'",
+                  " AND gzti001=gzth001",
+                  " AND gzti002=gzth002",
+                  " AND gzti005='mainimg'",   #知識庫沒有關聯圖主圖不可點選   #160621-00009#1
+                  " AND gzti004=?",
+               "  GROUP BY gzth001",
+               " ) self",
+               " ON self.gzth001=t1.gzth001",
+               " WHERE t1.gzthstus='Y' AND t1.gzth001 <> t1.gzth002 AND t1.gzth002=?",
+               " ORDER BY t1.gzth005"
+   PREPARE azzi003_sitemap_init_root_pre03 FROM l_sql
+   DECLARE azzi003_sitemap_init_root_cur03 SCROLL CURSOR FOR azzi003_sitemap_init_root_pre03
+
+   #第3階層節點資料筆數
+   LET l_sql = "SELECT COUNT(t1.gzth001)",
+               " FROM gzth_t t1",
+               " INNER JOIN gzthl_t t2 ON t2.gzthl001=t1.gzth001 AND t2.gzthl002=t1.gzth002 AND t2.gzthl003=? AND gzthl004 IS NOT NULL",
+               " LEFT JOIN",
+               " (SELECT gzth001,COUNT(gzth001) cnt FROM gzth_t,gzti_t",
+               "  WHERE gzthstus='Y' AND gzth001 <> gzth002",
+                  " AND gztistus='Y'",
+                  " AND gzti001=gzth001",
+                  " AND gzti002=gzth002",
+                  " AND gzti005='mainimg'",   #知識庫沒有關聯圖主圖不可點選   #160621-00009#1
+                  " AND gzti004=?",
+               "  GROUP BY gzth001",
+               " ) self",
+               " ON self.gzth001=t1.gzth001",
+               " WHERE t1.gzthstus='Y' AND t1.gzth001 <> t1.gzth002 AND t1.gzth002=?",
+               " ORDER BY t1.gzth005"
+   PREPARE azzi003_sitemap_init_root_pre03_cnt FROM l_sql
+
+   FOREACH azzi003_sitemap_init_root_cur01 USING g_lang,g_lang INTO l_gzth.gzth001,l_gzth.gzth002,l_gzth.gzth003,l_gzth.gzth004,l_gzth.gzth006,l_gzth.gzthl004,l_cnt1
+      LET l_roottype = l_gzth.gzth004
+
+      LET l_html = l_html CLIPPED,
+         '<div class="box">',
+         '  <div class="box-cont">'
+
+      IF cl_null(l_gzth.gzth006) THEN
+         LET l_gzth.gzth006 = "icon_def.png"
+      END IF
+      LET l_html = l_html CLIPPED,
+         '      <div class="iconbg01"><img src="',l_imgdir CLIPPED,l_gzth.gzth006 CLIPPED,'" class="icon01"/></div>',
+         '  </div>',
+         '  <div class="box-cont box-cont-r">',
+         '      <div class="title01">',l_gzth.gzthl004 CLIPPED,'</div>'
+      #標題2
+      FOREACH azzi003_sitemap_init_root_cur02 USING g_lang,g_lang,l_gzth.gzth001 INTO l_gzth.gzth001,l_gzth.gzth002,l_gzth.gzth003,l_gzth.gzth004,l_gzth.gzth006,l_gzth.gzthl004,l_cnt2
+         LET l_html = l_html CLIPPED,
+         '      <div class="title_lv2">',
+         '         <div class="title02">',l_gzth.gzthl004 CLIPPED,'</div>'
+
+         LET l_i = 0
+         #橫向排列
+         OPEN azzi003_sitemap_init_root_cur03 USING g_lang,g_lang,l_gzth.gzth001
+         IF STATUS THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = "OPEN sitemap_init_root_cur03:"
+            LET g_errparam.code   = STATUS
+            LET g_errparam.popup  = FALSE
+            CALL cl_err()
+            CLOSE azzi003_sitemap_init_root_cur03
+            EXIT FOREACH
+         END IF
+         EXECUTE azzi003_sitemap_init_root_pre03_cnt USING g_lang,g_lang,l_gzth.gzth001 INTO l_cnt
+         IF l_cnt > 0 THEN
+            LET l_colidx = 1
+            LET l_j = l_colidx
+            #欄位數
+            IF l_cnt < l_colcnt THEN
+               LET l_colmax = l_cnt
+            ELSE
+               LET l_colmax = l_colcnt
+            END IF
+
+            LET l_html = l_html CLIPPED,'<div class="title_lv3">'   #第一欄的開始
+            WHILE l_colidx <= l_colmax
+               FETCH ABSOLUTE l_j azzi003_sitemap_init_root_cur03 INTO l_gzth.gzth001,l_gzth.gzth002,l_gzth.gzth003,l_gzth.gzth004,l_gzth.gzth006,l_gzth.gzthl004,l_cnt3
+               #有流程圖內容才設超連結
+               LET l_html = l_html CLIPPED,'<div class="title03">'
+               IF l_cnt3 = 0 OR l_cnt3 IS NULL THEN
+                  LET l_html = l_html CLIPPED,l_gzth.gzthl004 CLIPPED
+               ELSE
+                  #參數
+                  CALL l_param_arr.clear()
+                  LET l_param_arr[1] = l_gzth.gzth001   #索引編號
+                  LET l_param_arr[2] = l_gzth.gzth002   #上層編號
+                  LET l_param_arr[3] = l_gzth.gzth004   #節點類型
+                  LET gs_json = cl_helps932_support_json(l_roottype,l_param_arr)
+
+                  LET l_html = l_html CLIPPED,'<span class="data_link" onClick=\'wc_act("wc_sitemap_exe","',gs_json CLIPPED,'")\'>',l_gzth.gzthl004 CLIPPED,'</span>'
+               END IF
+               LET l_html = l_html CLIPPED,'</div>'
+
+               #下一列
+               LET l_j = l_j + l_colcnt
+               IF l_j > l_cnt THEN   #超出資料範圍,處理下一欄
+                  LET l_colidx = l_colidx + 1
+                  LET l_j = l_colidx
+                  LET l_html = l_html CLIPPED,'</div>'   #結尾
+                  IF l_colidx <= l_colmax THEN
+                     LET l_html = l_html CLIPPED,'<div class="title_lv3">'   #下一欄的開始
+                  END IF
+               END IF
+            END WHILE
+         END IF
+         CLOSE azzi003_sitemap_init_root_cur03
+         LET l_html = l_html CLIPPED,
+         '      </div>'
+      END FOREACH
+
+      LET l_html = l_html CLIPPED,
+          '</div></div>'
+   END FOREACH
+
+   LET l_html = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">',
+      '<html xmlns="http://www.w3.org/1999/xhtml">',
+      '<head>',
+      '<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />',
+      '<title></title>',
+      '</head>',
+      '<body>',
+      '<div class="layoutcenter">',
+      '    <div class="outbox">',
+      l_html CLIPPED,
+      '    </div>',
+      '</div>',
+      '</body>',
+      '</html>'
+   LET l_cssstyle =
+      '.layoutcenter{',
+      '   height: 100%;',
+      '   margin:0 auto;',
+      '}',
+      '.outbox{',
+      '   position: absolute;',
+      '}',
+      '.box{',
+      '   width: 390px;',
+      '   position: relative;',
+      '   float: left;',
+      '   margin: 15px;',
+      '   min-height: 180px;',
+      '}',
+      '.box-cont{',
+      '   position: relative;',
+      '   float: left;',
+      '   padding-right: 5px;',
+      '}',
+      '.box-cont-r{',
+      '   width: 295px;',
+      '}',
+      '.title01{',
+      '   position: relative;',
+      '   margin-top: 15px;',
+      '   padding-left: 10px;',
+      '   padding-bottom: 5px;',
+      '   color: #AB121D;',
+      '   border-bottom: 1px solid #b7b7b7;',
+      '   font-size: 18px;',
+      '   font-weight: bold;',
+      '   font-family: "微軟正黑體";',
+      '}',
+      '.title02{',
+      '   position: relative;',
+      '   margin-top: 24px;',
+      '   margin-bottom: 6px;',
+      '   color: #191919;',
+      '   font-size: 16px;',
+      '   font-weight: bold;',
+      '   font-family: "微軟正黑體";',
+      '}',
+      '.title03{',
+      '   position: relative;',
+      '   margin-top: 5px;',
+      '   color: #5e5e5e;',
+      '   font-size: 14px;',
+      '   font-family: "微軟正黑體";',
+      '}',
+      '.title_lv2{',
+      '   position: relative;',
+      '   float: left;',
+      '   width: 100%;',
+      '   padding-left: 10px;',
+      '   padding-bottom: 15px;',
+      '}',
+      '.title_lv3{',
+      '   position: relative;',
+      '   float: left;',
+      '   padding-right: 10px;',
+      '}',
+      '.data_link{',
+      '   color: #5e5e5e;',
+      '   cursor: pointer;',
+      '}',
+      '.iconbg01{',
+      '   background-color: #EAEAEA;',
+      '   width: 77px;',
+      '   height: 77px;',
+      '   -webkit-border-radius: 99em;',
+      '   -moz-border-radius: 99em;',
+      '   border-radius: 99em;',
+      '}',
+      '.icon01{',
+      '   width: 77px;',
+      '}'
+
+   LET l_webc_data.wc_cssstyle = l_cssstyle
+   LET l_webc_data.wc_body = l_html
+   LET g_wc_data = util.JSON.stringify(l_webc_data)   #160523-00070#2
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzi003_property_comp(p_wcname,p_prop_name,p_prop_value)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2016/05/24 By tsai_yen
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi003_property_comp(p_wcname,p_prop_name,p_prop_value)
+   DEFINE p_wcname STRING
+   DEFINE p_prop_name STRING
+   DEFINE p_prop_value STRING
+   DEFINE win ui.Window
+   DEFINE l_ff    om.DomNode
+   DEFINE win_node      om.DomNode
+   DEFINE l_nl   om.NodeList
+   DEFINE l_wc  om.DomNode
+   DEFINE l_dict    om.DomNode
+   DEFINE l_prop    om.DomNode
+
+   LET win = ui.Window.getCurrent()
+   LET win_node = win.getNode()
+
+   LET l_nl = win_node.selectByPath("//FormField[@name=\"formonly."|| p_wcname ||"\"]")
+
+   IF l_nl.getLength() > 0 THEN
+      LET l_ff = l_nl.item(1)
+      LET l_wc = l_ff.getFirstChild()
+      LET l_dict = l_wc.getFirstChild()
+      IF l_dict IS NULL THEN
+        LET l_dict = l_wc.createChild("PropertyDict")
+        CALL l_dict.setAttribute("name", "properties")
+      END IF
+      LET l_nl = l_dict.selectByPath("//Property[@name=\"" || p_prop_name || "\"]")
+      LET l_prop = l_nl.item(1)
+      IF l_prop IS NULL THEN
+         LET l_prop = l_dict.createChild("Property")
+         CALL l_prop.setAttribute("name", p_prop_name)
+      END IF
+      CALL l_prop.setAttribute("value", p_prop_value)
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 知識庫關聯圖
+# Memo...........:
+# Usage..........: CALL azzi003_sitemap_rel(p_roottype,p_gzth001,p_gzth002)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2016/05/24 By tsai_yen
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi003_sitemap_rel(p_roottype,p_gzth001,p_gzth002)
+   DEFINE p_roottype          STRING                  #根節點類型
+   DEFINE p_gzth001           LIKE gzth_t.gzth001
+   DEFINE p_gzth002           LIKE gzth_t.gzth002
+   DEFINE l_gzti004           LIKE gzti_t.gzti004     #語言別
+   DEFINE l_gzti006           LIKE gzti_t.gzti006     #主圖
+   DEFINE l_gzti006_s         LIKE gzti_t.gzti006     #標準圖
+   DEFINE l_gzti006_c         LIKE gzti_t.gzti006     #客製圖
+   DEFINE l_sql               STRING
+   DEFINE l_cssstyle          STRING
+   DEFINE l_html              STRING
+   DEFINE l_imgdir            STRING
+   DEFINE l_param_arr         DYNAMIC ARRAY OF STRING      #陣列參數
+   DEFINE l_i                 LIKE type_t.num5
+   DEFINE l_nav_path          STRING
+   DEFINE l_cnt               LIKE type_t.num5
+   DEFINE l_next RECORD
+          gzth001   LIKE gzth_t.gzth001,
+          gzth002   LIKE gzth_t.gzth002,
+          gzth003   LIKE gzth_t.gzth003,
+          gzth004   LIKE gzth_t.gzth004,
+          gzth006   LIKE gzth_t.gzth006,
+          gzthl004  LIKE gzthl_t.gzthl004
+          END RECORD
+   DEFINE l_webc_data         type_webc_data
+   DEFINE l_docip             STRING                   #相關檔案路徑IP  #161201-00013#1
+
+   LET l_gzti004 = g_lang
+   #圖片相對路徑
+   #LET l_imgdir = "../../doc/km/" || l_gzti004 || "/"   #161201-00013#1 mark
+   CALL cl_helps933_docip() RETURNING l_docip                      #161201-00013#1
+   LET l_imgdir = l_docip CLIPPED,"/doc/km/" || l_gzti004 || "/"   #161201-00013#1
+
+   LET l_sql =
+      " SELECT s.gzti006 AS gzti006_s,c.gzti006 AS gzti006_c FROM",
+      " (",
+      "   SELECT gzti001,gzti002,gzti006 FROM gzti_t",
+      "   WHERE gztistus = 'Y' AND gzti003='s' AND",
+      "         gzti001=? AND gzti002=? AND gzti004=? AND gzti005='mainimg'",
+      " ) s",
+      " LEFT JOIN",
+      " (",
+      "    SELECT gzti001,gzti002,gzti006 FROM gzti_t",
+      "    WHERE gztistus = 'Y' AND gzti003='c'",
+      " ) c",
+      " ON s.gzti001 = c.gzti001 AND s.gzti002 = c.gzti002"
+   PREPARE azzi003_sitemap_mainimg FROM l_sql
+
+   LET l_gzti006 = ""
+   EXECUTE azzi003_sitemap_mainimg USING p_gzth001,p_gzth002,l_gzti004 INTO l_gzti006_s,l_gzti006_c
+   CASE
+      WHEN NOT cl_null(l_gzti006_c)
+         LET l_gzti006 = l_gzti006_c
+      WHEN NOT cl_null(l_gzti006_s)
+         LET l_gzti006 = l_gzti006_s
+   END CASE
+
+   LET l_sql =
+      "SELECT t1.gzth001,t1.gzth002,t1.gzth003,t1.gzth004,t1.gzth006,t2.gzthl004,childern.cnt", 
+      " FROM gzth_t t1",
+      " LEFT JOIN gzthl_t t2 ON t2.gzthl001=t1.gzth001 AND t2.gzthl002=t1.gzth002 AND t2.gzthl003=? AND gzthl004 IS NOT NULL",
+      " LEFT JOIN",
+      " (SELECT gzth002,COUNT(gzth001) cnt FROM gzth_t",
+      "  WHERE gzthstus='Y' AND gzth001 <> gzth002",
+      "  GROUP BY gzth002",
+      " ) childern",
+      " ON childern.gzth002=t1.gzth001",
+      " WHERE t1.gzthstus='Y' AND t1.gzth001 <> t1.gzth002 AND t1.gzth002=?",
+      " ORDER BY t1.gzth005"
+   PREPARE azzi003_sitemap_next FROM l_sql
+   DECLARE azzi003_sitemap_next_cur SCROLL CURSOR FOR azzi003_sitemap_next
+   OPEN azzi003_sitemap_next_cur USING g_lang,p_gzth001
+   FETCH FIRST azzi003_sitemap_next_cur INTO l_next.gzth001,l_next.gzth002,l_next.gzth003,l_next.gzth004,l_next.gzth006,l_next.gzthl004,l_cnt
+
+   IF NOT cl_null(l_gzti006) THEN
+      LET l_cssstyle =
+         '.nav_bar{',
+         '   padding: 8px;',
+         '   background-color: #f7f7f7;',
+         '   color: #376092;',
+         '}',
+         '.data_link{',
+         '   cursor: pointer;',
+         '}',
+         '.data_link:hover{',
+         '   text-decoration: underline;',
+         '}'
+
+      CALL azzi003_nav_path_html(p_roottype,p_gzth001,p_gzth002) RETURNING l_nav_path
+      IF cl_null(l_next.gzth001) THEN
+         LET l_html = l_nav_path CLIPPED,
+                      '<div align="middle">',
+                      '<img src="',l_imgdir CLIPPED,l_gzti006 CLIPPED,'"/></div>'
+      ELSE
+         #參數
+         CALL l_param_arr.clear()
+         LET l_param_arr[1] = l_next.gzth001   #索引編號
+         LET l_param_arr[2] = l_next.gzth002   #上層編號
+         LET l_param_arr[3] = l_next.gzth004   #節點類型
+         LET gs_json = cl_helps932_support_json(p_roottype,l_param_arr)
+         LET l_html = l_nav_path CLIPPED,
+                      '<div align="middle" class="data_link" onClick=\'wc_act("wc_sitemap_exe","',gs_json CLIPPED,'")\'>',
+                      '<img src="',l_imgdir CLIPPED,l_gzti006 CLIPPED,'"/></div>'
+      END IF
+
+      LET l_webc_data.wc_cssstyle = l_cssstyle
+      LET l_webc_data.wc_body = l_html
+      LET g_wc_data = util.JSON.stringify(l_webc_data)   #160523-00070#2
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 知識庫索引路徑
+# Memo...........: 往上逐層找路徑
+# Usage..........: CALL azzi003_nav_path(p_roottype,p_idx,p_gzth001,p_gzth002)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2016/03/05 By tsai_yen
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi003_nav_path(p_roottype,p_idx,p_gzth001,p_gzth002)
+   DEFINE p_roottype    STRING                #根節點類型
+   DEFINE p_idx         LIKE type_t.num5      #append:增加路徑
+   DEFINE p_gzth001     LIKE gzth_t.gzth001
+   DEFINE p_gzth002     LIKE gzth_t.gzth002
+   DEFINE l_gzth001     LIKE gzth_t.gzth001
+   DEFINE l_gzth002     LIKE gzth_t.gzth002
+   DEFINE l_gzth004     LIKE gzth_t.gzth004
+   DEFINE l_gzthl004    LIKE gzthl_t.gzthl004
+   DEFINE l_i           LIKE type_t.num5
+   DEFINE l_sql         STRING
+
+   #本節點
+   LET l_sql = "SELECT gzth001,gzth002,gzth004",   
+               " FROM gzth_t",
+               " WHERE gzthstus='Y' AND gzth001=? AND gzth002=?"
+   PREPARE azzi003_nav_path_01 FROM l_sql
+   #上層節點
+   LET l_sql = "SELECT gzth001,gzth002,gzth004",   
+               " FROM gzth_t",
+               " WHERE gzthstus='Y' AND gzth001=?"
+   PREPARE azzi003_nav_path_02 FROM l_sql
+   DECLARE azzi003_nav_path_02_cur SCROLL CURSOR FOR azzi003_nav_path_02
+
+   IF p_idx = 0 THEN
+      CALL g_nav_path.clear()
+      EXECUTE azzi003_nav_path_01 USING p_gzth001,p_gzth002 INTO l_gzth001,l_gzth002,l_gzth004
+   ELSE
+      OPEN azzi003_nav_path_02_cur USING p_gzth002
+      FETCH FIRST azzi003_nav_path_02_cur INTO l_gzth001,l_gzth002,l_gzth004
+      CLOSE azzi003_nav_path_02_cur
+      FREE azzi003_nav_path_02_cur
+   END IF
+
+   IF NOT cl_null(l_gzth002) THEN
+      LET l_i = p_idx + 1
+      LET g_nav_path[l_i].pathact = "wc_path_exe"
+      LET g_nav_path[l_i].gzth001 = l_gzth001 CLIPPED
+      LET g_nav_path[l_i].gzth002 = l_gzth002 CLIPPED
+      LET g_nav_path[l_i].gzth004 = l_gzth004 CLIPPED
+      CALL cl_helps551_gzth001_desc(l_gzth004,l_gzth001,l_gzth002) RETURNING g_nav_path[l_i].pathname
+      IF cl_null(g_nav_path[l_i].pathname) THEN
+         LET g_nav_path[l_i].pathname = " " #空格按超連結
+      END IF
+
+      IF l_gzth002 != l_gzth001 THEN   #不是root
+         CALL azzi003_nav_path(p_roottype,l_i,l_gzth001,l_gzth002)
+      END IF
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 知識庫索引路徑HTML
+# Memo...........:
+# Usage..........: CALL azzi003_nav_path_html(p_roottype,p_gzth001,p_gzth002)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2016/05/24 By tsai_yen
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi003_nav_path_html(p_roottype,p_gzth001,p_gzth002)
+   DEFINE p_roottype          STRING                       #根節點類型
+   DEFINE p_gzth001           LIKE gzth_t.gzth001
+   DEFINE p_gzth002           LIKE gzth_t.gzth002
+   DEFINE l_param_arr         DYNAMIC ARRAY OF STRING      #陣列參數
+   DEFINE l_i                 LIKE type_t.num5
+   DEFINE l_chk               BOOLEAN
+   DEFINE l_nav_path          STRING
+
+   CALL azzi003_nav_path(p_roottype,0,p_gzth001,p_gzth002)   #索引路徑
+   LET l_i = g_nav_path.getLength()
+   WHILE l_i > 0
+      LET l_chk = TRUE
+      IF p_roottype = "ROOT_APP" AND g_nav_path[l_i].gzth004 = "NODE" THEN
+         LET l_chk = FALSE
+      END IF
+
+      IF l_chk THEN
+         CALL l_param_arr.clear()
+         LET l_param_arr[1] = g_nav_path[l_i].gzth001   #索引編號
+         LET l_param_arr[2] = g_nav_path[l_i].gzth002   #上層編號
+         LET l_param_arr[3] = g_nav_path[l_i].gzth004   #節點類型
+         LET gs_json = cl_helps932_support_json(p_roottype,l_param_arr)
+         IF cl_null(l_nav_path) THEN
+            LET l_nav_path = '<span class="data_link" onClick=\'wc_act("',g_nav_path[l_i].pathact CLIPPED,'","',gs_json CLIPPED,'")\'>',g_nav_path[l_i].pathname,'</span>'
+         ELSE
+            IF l_i = 1 THEN
+               LET l_nav_path = l_nav_path CLIPPED,' / <span>',g_nav_path[l_i].pathname,'</span>'
+            ELSE
+               LET l_nav_path = l_nav_path CLIPPED,' / <span class="data_link" onClick=\'wc_act("',g_nav_path[l_i].pathact CLIPPED,'","',gs_json CLIPPED,'")\'>',g_nav_path[l_i].pathname,'</span>'
+            END IF
+         END IF
+      END IF
+
+      LET l_i = l_i - 1
+   END WHILE
+   LET l_nav_path = '<div class="nav_bar">',l_nav_path CLIPPED,'</div>'
+
+   RETURN l_nav_path
+END FUNCTION
+
+################################################################################
+# Descriptions...: 知識庫應用專題列表
+# Memo...........:
+# Usage..........: CALL azzi003_sitemap_applist(p_roottype,p_gzth001,p_gzth002)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2016/05/24 By tsai_yen
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi003_sitemap_applist(p_roottype,p_gzth001,p_gzth002)
+   DEFINE p_roottype          STRING                  #根節點類型
+   DEFINE p_gzth001           LIKE gzth_t.gzth001
+   DEFINE p_gzth002           LIKE gzth_t.gzth002
+   DEFINE l_i                 LIKE type_t.num5
+   DEFINE l_str               STRING
+   DEFINE l_nav_path          STRING
+   DEFINE l_sql               STRING
+   DEFINE l_cssstyle          STRING
+   DEFINE l_html              STRING
+   DEFINE l_param_arr         DYNAMIC ARRAY OF STRING      #陣列參數
+   DEFINE l_list RECORD
+          gzth001   LIKE gzth_t.gzth001,
+          gzth002   LIKE gzth_t.gzth002,
+          gzth003   LIKE gzth_t.gzth003,
+          gzth004   LIKE gzth_t.gzth004,
+          gztel003  LIKE gztel_t.gztel003
+          END RECORD
+   DEFINE l_cnt               LIKE type_t.num5
+   DEFINE l_colcnt            LIKE type_t.num5        #欄位數
+   DEFINE l_mod               LIKE type_t.num5        #餘數
+   DEFINE l_webc_data         type_webc_data
+
+   LET l_colcnt = 3
+   LET l_sql = "SELECT t1.gzth001,t1.gzth002,t1.gzth003,t1.gzth004,t2.gztel003,childern.cnt",
+               " FROM gzth_t t1",
+               " LEFT JOIN",
+               " (",
+               "    SELECT gzte004,gztel003 FROM gzte_t",
+               "    LEFT JOIN gztel_t ON gztel001=gzte001 AND gztel002=?",
+               " ) t2",
+               " ON gzte004= t1.gzth001",
+               " LEFT JOIN",
+               " (",
+               "    SELECT gztp001,COUNT(gztp001) AS cnt FROM gztp_t",
+               "    WHERE gztpstus='Y' AND gztp004=?",
+               "    GROUP BY gztp001",
+               " ) childern",
+               " ON gztp001 = t1.gzth001",
+               " WHERE t1.gzth004 = 'APP' AND t1.gzthstus='Y' AND t1.gzth002=?",
+               " ORDER BY t1.gzth005"
+
+   PREPARE azzi003_sitemap_applist FROM l_sql
+   DECLARE azzi003_sitemap_applist_cur SCROLL CURSOR FOR azzi003_sitemap_applist
+
+   LET l_cssstyle =
+      '.nav_bar{',
+      '   padding: 8px;',
+      '   background-color: #f7f7f7;',
+      '   color: #376092;',
+      '}',
+      '.data_link{',
+      '   cursor: pointer;',
+      '}',
+      '.data_link:hover{',
+      '   text-decoration: underline;',
+      '}',
+      'table {', 
+      '    width:100%;',
+      '}',
+      'table, th, td {',
+      '    border: 0px;',
+      '    border-collapse: collapse;',
+      '}',
+      'th, td {',
+      '    padding: 20px;',
+      '    text-align: left;',
+      '}',
+      'tr:nth-child(odd) {',
+      '   background-color: #f2dcdb;',
+      '}',
+      'tr:nth-child(even) {',
+      '    background-color: #fff;',
+      '}',
+      '.icon {',
+      '   color: red;',
+      '}'
+
+   CALL azzi003_nav_path_html(p_roottype,p_gzth001,p_gzth002) RETURNING l_nav_path
+
+   LET l_i = 0
+   LET l_mod = 0   #160523-00070#1
+   FOREACH azzi003_sitemap_applist_cur USING g_lang,g_lang,p_gzth001
+           INTO l_list.gzth001,l_list.gzth002,l_list.gzth003,l_list.gzth004,l_list.gztel003,l_cnt
+
+      IF cl_null(l_cnt) THEN   #160523-00070#1
+         LET l_cnt = 0
+      END IF
+      IF l_cnt > 0 THEN        #160523-00070#1
+         CALL l_param_arr.clear()
+         LET l_param_arr[1] = l_list.gzth001        #索引編號
+         LET l_param_arr[2] = l_list.gzth002        #上層編號
+         LET l_param_arr[3] = l_list.gzth004        #節點類型
+         LET gs_json = cl_helps932_support_json(p_roottype,l_param_arr)
+         LET l_str = '<td><span class="icon">※</span><span class="data_link" onClick=\'wc_act("wc_sitemap_exe","',gs_json CLIPPED,'")\'>',l_list.gztel003,'</span></td>'
+         LET l_i = l_i + 1
+         LET l_mod = l_i MOD l_colcnt
+         CASE l_mod
+            WHEN 1
+               LET l_html = l_html CLIPPED,'<tr>',l_str CLIPPED
+            WHEN 0
+               LET l_html = l_html CLIPPED,l_str CLIPPED,'</tr>'
+            OTHERWISE
+               LET l_html = l_html CLIPPED,l_str CLIPPED
+         END CASE
+      END IF
+   END FOREACH
+
+   IF l_mod > 0 THEN   #把一整列的欄位補齊
+      WHILE l_mod < l_colcnt
+         LET l_html = l_html CLIPPED,'<td></td>'
+         LEt l_mod = l_mod + 1
+      END WHILE
+      LET l_html = l_html CLIPPED,'</tr>'
+   END IF
+
+   IF cl_null(l_html) THEN
+      LET l_html = l_nav_path CLIPPED
+   ELSE
+      LET l_html = l_nav_path CLIPPED,'<table>',l_html CLIPPED,'</table>'
+   END IF
+
+   LET l_webc_data.wc_cssstyle = l_cssstyle
+   LET l_webc_data.wc_body = l_html
+   LET g_wc_data = util.JSON.stringify(l_webc_data)   #160523-00070#2
+END FUNCTION
+
+################################################################################
+# Descriptions...: 知識庫應用專題
+# Memo...........:
+# Usage..........: CALL azzi003_appdoc_init(p_roottype,p_gzth001,p_gzth002)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2016/05/24 By tsai_yen
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi003_appdoc_init(p_roottype,p_gzth001,p_gzth002)
+   DEFINE p_roottype     STRING               #根節點類型
+   DEFINE p_gzth001      LIKE gzth_t.gzth001
+   DEFINE p_gzth002      LIKE gzth_t.gzth002
+   DEFINE l_sql          STRING
+   DEFINE l_i            LIKE type_t.num5
+   DEFINE l_j            LIKE type_t.num5
+   DEFINE l_cnt          LIKE type_t.num5
+   DEFINE l_cssstyle     STRING
+   DEFINE l_html         STRING
+   DEFINE l_str          STRING
+   DEFINE l_fromurl      STRING               #HTML內容來自哪一個URL,以webcomponent開始算起的相對路徑
+   DEFINE l_progmodule   STRING               #模組
+   DEFINE ls_file        STRING
+   DEFINE l_separator    STRING   #separate path segments, ex."/"
+   DEFINE l_www_path     STRING   #$TOP/www完整路徑,ex. "/u1/t10dev/www"
+   DEFINE l_dir_doc      STRING   #doc目錄,ex."doc/erp"
+   DEFINE l_chk          BOOLEAN
+   DEFINE l_nav_path     STRING
+   
+   LET l_chk = TRUE
+   IF cl_null(p_gzth001) THEN
+      LET l_chk = FALSE
+   ELSE
+      #有效資料
+      LET l_sql = "SELECT COUNT(gztp001) FROM gztp_t WHERE gztpstus = 'Y' AND gztp001 = ? AND gztp004 = ?"
+      PREPARE azzi003_userguide_init_cnt_pre FROM l_sql
+      EXECUTE azzi003_userguide_init_cnt_pre USING p_gzth001,g_lang INTO l_cnt
+      IF l_cnt = 0 THEN
+         LET l_chk = FALSE
+      END IF
+   END IF
+
+   IF l_chk THEN
+      LET l_cssstyle =
+         '.nav_bar{',
+         '   padding: 8px;',
+         '   background-color: #f7f7f7;',
+         '   color: #376092;',
+         '}',
+         '.data_link{',
+         '   cursor: pointer;',
+         '}',
+         '.data_link:hover{',
+         '   text-decoration: underline;',
+         '}'
+      CALL azzi003_nav_path_html(p_roottype,p_gzth001,p_gzth002) RETURNING l_nav_path
+      LET l_html = cl_helps553_gen_html("APP",FALSE,p_gzth001,g_lang)   #應用專題
+      LET l_html = l_nav_path CLIPPED,l_html
+      CALL cl_marquee_property_comp("wc_appdoc", "wc_href", "")
+      CALL cl_marquee_property_comp("wc_appdoc", "wc_cssstyle",l_cssstyle)
+      CALL cl_marquee_property_comp("wc_appdoc", "wc_body", l_html)
+      CALL cl_marquee_property_comp("wc_appdoc", "wc_fromurl", "")
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取得服務首頁設定
+# Memo...........:
+# Usage..........: CALL azzi003_index_cfg()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: No.160523-00070#2 2016/06/03 By tsai_yen
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi003_index_cfg()
+   DEFINE lc_channel         base.Channel
+   DEFINE l_file             STRING
+   DEFINE l_index_cfg        STRING
+   DEFINE l_str              STRING
+   DEFINE l_i                LIKE type_t.num5
+
+   CALL g_index_cfg.clear()
+
+   TRY
+      LET l_index_cfg = ""
+      LET l_file = os.Path.join(FGL_GETENV("TOP"), "www")
+      LET l_file = os.Path.join(l_file, "components")
+      LET l_file = os.Path.join(l_file, "help_service")
+      LET l_file = os.Path.join(l_file, "cfg")
+      LET l_file = os.Path.join(l_file, "help_service.cfg")
+
+      IF os.Path.exists(l_file) THEN
+         LET lc_channel = base.Channel.create()
+         CALL lc_channel.openFile(l_file,"r")
+         LET l_str = ""
+         WHILE lc_channel.read(l_str)
+            LET l_index_cfg = l_index_cfg CLIPPED,l_str CLIPPED
+         END WHILE
+         CALL lc_channel.close()
+      END IF
+
+      CALL util.JSON.parse(l_index_cfg,g_index_cfg)
+
+      IF g_index_cfg.getLength() > 0 THEN
+         FOR l_i = 1 TO g_index_cfg.getLength()
+            IF g_index_cfg[l_i].lang != g_lang THEN
+               CALL g_index_cfg.deleteElement(l_i)
+            END IF
+         END FOR
+      END IF
+   CATCH
+      DISPLAY "azzi003_index_cfg STATUS=",STATUS
+   END TRY
+END FUNCTION
+
+################################################################################
+# Descriptions...: 服務首頁
+# Memo...........:
+# Usage..........: CALL azzi003_index_init()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: No.160523-00070#2 2016/06/03 By tsai_yen
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi003_index_init()
+   DEFINE l_webc_data         type_webc_data
+   DEFINE l_cssstyle          STRING
+   DEFINE l_html              STRING
+
+   IF g_index_cfg.getLength() = 1 THEN
+      LET l_html = 
+            '<div id="wrapper">',
+                '<div id="container">',
+                    '<div class="manu">',
+                        #'<a href="stepbystep/',g_index_cfg[1].lang,'/index.html">',
+                        '<a href="javascript: void(0)" onClick=\'wc_act("novice","")\'>',
+                            '<div class="pic">',
+                                '<img src="images/pic-novice.png" />',
+                            '</div>',
+                            '<h3>',g_index_cfg[1].novice_title,'</h3>',
+                            '<p>',g_index_cfg[1].novice_content,'</p>',
+                        '</a>',
+                    '</div>',
+                    '<div class="manu">',
+                        '<div class="pic">',
+                            '<img src="images/pic-service.png" />',
+                        '</div>',
+                        '<h3>',g_index_cfg[1].issue_title,'</h3>',
+                        '<ul>',
+                            '<li>',
+                                '<a href="javascript: void(0)" onClick=\'wc_act("issue","")\'>',g_index_cfg[1].issue_content1,'</a>',
+                            '</li>',
+                            '<li>',
+                                '<a href="javascript: void(0)" onClick=\'wc_act("support","")\'>',g_index_cfg[1].issue_content2,'</a>',
+                            '</li>',
+                        '</ul>',
+                    '</div>'
+#       ###160803-00011 MARK start ###
+#       LET l_html = l_html,
+#                    '<div class="manu">',
+#                        '<a href="javascript: void(0)" onClick=\'wc_act("mykm","")\'>',
+#                            '<div class="pic">',
+#                                '<img src="images/pic-myKnowledge.png" />',
+#                            '</div>',
+#                            '<h3>',g_index_cfg[1].mykm_title,'</h3>', 
+#                            '<p>',g_index_cfg[1].mykm_content,'</p>',
+#                        '</a>',
+#                    '</div>'
+#       ###160803-00011 MARK end   ###
+      LET l_html = l_html,
+                    '<div class="manu">',
+                        '<a href="javascript: void(0)" onClick=\'wc_act("km","")\'>',
+                            '<div class="pic">',
+                                '<img src="images/pic-knowledge.png" />',
+                            '</div>',
+                            '<h3>',g_index_cfg[1].km_title,'</h3>', 
+                            '<p>',g_index_cfg[1].km_content,'</p>',
+                        '</a>',
+                    '</div>'
+#     ###160803-00011  MARK start ###
+#      #E-learning課程   #160621-00009#2
+#      LET l_html = l_html,
+#                    '<div class="manu">',
+#                        '<a href="javascript: void(0)" onClick=\'wc_act("elearning","")\'>',
+#                            '<div class="pic">',
+#                                '<img src="images/pic-eLearning.png" />',
+#                            '</div>',
+#                            '<h3>',g_index_cfg[1].elearn_title,'</h3>', 
+#                            '<p>',g_index_cfg[1].elearn_content,'</p>',
+#                        '</a>',
+#                    '</div>'
+#     ###160803-00011  MARK end   ###
+      LET l_html = l_html,
+                '</div>',
+            '</div>'
+
+      LET l_cssstyle = 
+            'body {',
+            '    margin: 0px;',
+            '    padding:0px;',
+            '    font-family:Microsoft YaHei, Microsoft JhengHei, Arial, sans-serif;',
+            '    font-size: 14px;',
+            '    line-height: 24px;',
+            '    color:#000;',
+            '    background:url(images/body-bg.jpg) fixed no-repeat center 0px;',
+            '    background-size:cover;',
+            '}',
+            'h1, h2, h3, h4, h5, h6, p, ul, li {',
+            '    margin: 0;    padding: 0;',
+            '}',
+            'a img {border: none;}',
+            'a, a:hover, a:active, a:focus{',
+            '    text-decoration:none;',
+            '    color:#000;',
+            '}',
+            '#wrapper{',
+            '    margin:0px auto;',
+            '    width:1000px;',
+            '    display:block;',
+            '}',
+            '.header{',
+            '    background:#AB121D url(images/22.png) no-repeat right 0px;',
+            '}',
+            '.header ul{',
+            '    margin:14px 20px;',
+            '    float:right;',
+            '}',
+            '.header li{',
+            '    display: inline-block;',
+            '    margin:0 10px 0 0;',
+            '}',
+            '#container{',
+            '    text-align:center;',
+            '    margin: auto;',
+            '    width: 900px;',   #160621-00009#2
+            '}',
+            '.manu{',
+            '    background-color:rgba(255,255,255,0.8);',
+            '    border-radius:4px;',
+            '    overflow:hidden;',
+            '    width:250px;',
+            '    min-height:320px;',
+            '    margin:5% 2.8% 2.5% 2.5%;',   #160621-00009#2
+            '    padding:0;',
+            '    text-align:left;',
+            '    float:left;',
+            '}',
+            '.manu:hover{',
+            '    background-color:rgba(255,255,255,1);',
+            '    box-shadow:0 0 5px #333;',
+            '}',
+            '.pic{',
+            '    text-align:center;',
+            '    height:140px;',
+            '    margin-top:50px;',
+            '}',
+            '.manu .pic img{',
+            '    width:100%;',
+            '    max-width:140px;',
+            '}',
+            '.manu h3{',
+            '    text-align:center;',
+            '    color:#AB121D;',
+            '    font-size:150%;',
+            '    font-weight: 400;',
+            '    letter-spacing: 2px;',
+            '    padding:20px 0px;',
+            '}',
+            '.manu p, .manu ul{',
+            '    font-size:16px;',
+            '    padding:0 30px 20px;',
+            '    height:120px;',
+            '}',
+            '.manu ul{',
+            '    margin:0px;',
+            '    text-align:center;',
+            '    list-style:none;',
+            '}',
+            '.manu li{',
+            '    line-height:34px;',
+            '}',
+            '.manu li a{',
+            '    background-color:#377574;',
+            '    color:#fff;',
+            '    border-radius:20px;',
+            '    padding:2px 30px;',
+            '}',
+            '.manu li a:hover{',
+            '    background-color:#ccc;',
+            '    color:#377574;',
+            '}'
+   END IF
+
+   LET l_webc_data.wc_cssstyle = l_cssstyle
+   LET l_webc_data.wc_body = l_html
+   LET g_wc_data = util.JSON.stringify(l_webc_data)   #160523-00070#2
+END FUNCTION
+
+################################################################################
+# Descriptions...: 新手上路
+# Memo...........:
+# Usage..........: CALL azzi003_novice_init()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: No.160523-00070#2 2016/06/03 By tsai_yen
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi003_novice_init()
+   DEFINE l_webc_data         type_webc_data
+
+   LET g_wc_data = ""
+   LET g_wc_reflash = g_wc_reflash + 1
+   IF g_index_cfg.getLength() = 1 THEN
+      #LET l_webc_data.wc_cssstyle = 'html,body { width: 99%; height: 99%;}'
+      LET l_webc_data.wc_body = ""
+      LET l_webc_data.wc_framsrc = "stepbystep/",g_index_cfg[1].lang CLIPPED,"/index.html"
+      LET l_webc_data.wc_reflash = g_wc_reflash
+      LET g_wc_data = util.JSON.stringify(l_webc_data)
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: E-learning選單
+# Memo...........:
+# Usage..........: CALL azzi003_elearn_init()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: No.160621-00009#2 2016/06/23 By tsai_yen
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi003_elearn_init()
+   DEFINE l_webc_data         type_webc_data
+   DEFINE l_cssstyle          STRING
+   DEFINE l_html              STRING
+   DEFINE l_sql               STRING
+   DEFINE l_str               STRING
+   DEFINE l_i                 LIKE type_t.num10
+   DEFINE l_param_arr         DYNAMIC ARRAY OF STRING      #陣列參數
+   DEFINE l_rootapp   RECORD
+          gzthl001   LIKE gzthl_t.gzthl001,
+          gzthl002   LIKE gzthl_t.gzthl002,
+          gzthl004   LIKE gzthl_t.gzthl004
+          END RECORD
+   DEFINE l_rootnode   RECORD
+          gzthl001   LIKE gzthl_t.gzthl001,
+          gzthl002   LIKE gzthl_t.gzthl002,
+          gzthl004   LIKE gzthl_t.gzthl004,
+          gzth007    LIKE gzth_t.gzth007
+          END RECORD
+
+   LET g_wc_data = ""
+   LET g_wc_reflash = g_wc_reflash + 1
+   IF g_index_cfg.getLength() = 1 THEN
+      #領域
+      LET l_sql = "SELECT gzthl001,gzthl002,gzthl004 FROM gzth_t,gzthl_t",
+                  "  WHERE gzthl001=gzth001 AND gzthl002=gzth002",
+                  "    AND gzthstus='Y' AND gzth001 = gzth002",
+                  "    AND gzth004='ROOT_APP'",
+                  "    AND gzthl003=? AND gzthl004 IS NOT NULL",
+                  " ORDER BY gzth005"
+      PREPARE azzi003_elearn_init_root_pre01 FROM l_sql
+      DECLARE azzi003_elearn_init_root_cur01 CURSOR FOR azzi003_elearn_init_root_pre01
+
+      #領域分群
+      LET l_sql = "SELECT gzthl001,gzthl002,gzthl004 FROM gzth_t,gzthl_t",
+                  "  WHERE gzthl001=gzth001 AND gzthl002=gzth002",
+                  "    AND gzthstus='Y' AND gzth001 <> gzth002",
+                  "    AND gzth004='NODE'",
+                  "    AND gzthl003=? AND gzthl004 IS NOT NULL",
+                  "    AND gzth002=?",
+                  " ORDER BY gzth005"
+      PREPARE azzi003_elearn_init_root_pre02 FROM l_sql
+      DECLARE azzi003_elearn_init_root_cur02 SCROLL CURSOR FOR azzi003_elearn_init_root_pre02
+
+      #模組
+      LET l_sql = "SELECT gzthl001,gzthl002,gzth007 FROM gzth_t,gzthl_t",
+                  "  WHERE gzthl001=gzth001 AND gzthl002=gzth002",
+                  "    AND gzthstus='Y' AND gzth001 <> gzth002",
+                  "    AND gzth007 IS NOT NULL",
+                  "    AND gzthl003=? AND gzthl004 IS NOT NULL",
+                  "    AND gzth002=?",
+                  " ORDER BY gzth005"
+      PREPARE azzi003_elearn_init_root_pre03 FROM l_sql
+      DECLARE azzi003_elearn_init_root_cur03 SCROLL CURSOR FOR azzi003_elearn_init_root_pre03
+
+      LET l_html =
+        '<div class="wrap">',
+        '    <div class="tabs">',
+        '        <ul class="tab-links">'
+      LET l_i = 0
+      FOREACH azzi003_elearn_init_root_cur01 USING g_lang INTO l_rootapp.gzthl001,l_rootapp.gzthl002,l_rootapp.gzthl004
+         OPEN azzi003_elearn_init_root_cur02 USING g_lang,l_rootapp.gzthl001
+         LET l_i = l_i + 1
+         IF l_i = 1 THEN
+            FETCH ABSOLUTE 1 azzi003_elearn_init_root_cur02 INTO l_rootnode.gzthl004
+            LET l_html = l_html,
+                 '<li id="',l_rootapp.gzthl001 CLIPPED,'" class="tabA-links active">',
+                     l_rootapp.gzthl004 CLIPPED,
+                 '</li>'
+         ELSE
+            FETCH FIRST azzi003_elearn_init_root_cur02 INTO l_rootnode.gzthl004
+            LET l_html = l_html,
+                 '<li id="',l_rootapp.gzthl001 CLIPPED,'" class="tabA-links">',
+                     l_rootapp.gzthl004 CLIPPED,
+                 '</li>'
+         END IF
+      END FOREACH
+
+      LET l_html = l_html,
+        '        </ul>',
+        '        <div class="tab-content">'
+      #內容
+      LET l_html = l_html,
+        '<div id="tab1-2" class="tab active">',
+        '    <div class="emenu-left">'
+
+      FOREACH azzi003_elearn_init_root_cur02 USING g_lang,"MANUFACTUR" INTO l_rootnode.gzthl001,l_rootnode.gzthl002,l_rootnode.gzthl004
+         IF l_rootnode.gzthl001 != "MANUF_T02" THEN
+            LET l_html = l_html,
+            '        <div class="emenu-left-item" >',l_rootnode.gzthl004 CLIPPED,'</div>'
+         ELSE
+            LET l_html = l_html,
+            '        <div class="emenu-left-item active">',l_rootnode.gzthl004 CLIPPED,'</div>'
+         END IF
+      END FOREACH
+
+      LET l_html = l_html,
+        '    </div>',
+        '    <div  class="emenu-right">'
+
+      LET l_i = 0
+      FOREACH azzi003_elearn_init_root_cur03 USING g_lang,"MANUF_T02" INTO l_rootnode.gzthl001,l_rootnode.gzthl002,l_rootnode.gzth007
+         LET l_i = l_i + 1
+         LET l_str = l_i
+         LET l_rootnode.gzthl004 = cl_helps932_get_module_name(l_rootnode.gzth007),'(',l_rootnode.gzth007 CLIPPED,')'
+         IF l_rootnode.gzth007 != "AAP" THEN
+            LET l_html = l_html,
+                    '<div class="accordion_group">',
+                        '<div id="g_1-2-',l_str CLIPPED,'" class="accordion_title accordion_open">',
+                              l_rootnode.gzthl004 CLIPPED,'</div>',
+                        '<div id="g_1-2-',l_str CLIPPED,'_content" style="display:none;" class="accordion_content">',
+                        '</div>',
+                    '</div>'
+         ELSE
+            LET l_html = l_html,
+                    '<div class="accordion_group">',
+                        '<div id="g_1-2-',l_str CLIPPED,'" class="accordion_title accordion_close"  onClick="content_show(\'g_1-2-',l_str CLIPPED,'\',0);">',
+                              l_rootnode.gzthl004 CLIPPED,'</div>',
+                        '<div id="g_1-2-',l_str CLIPPED,'_content" style="display:block;" class="accordion_content">',
+                          '<table class="elearn-table">',
+                             '<tr>',
+                                '<th class="elearn-table-th elearn-th1">',g_index_cfg[1].elearn_m_seq CLIPPED,'</th>',     #學習順序
+                                '<th class="elearn-table-th elearn-th2">',g_index_cfg[1].elearn_m_course CLIPPED,'</th>',  #單元課程名稱
+                                '<th class="elearn-table-th elearn-th3">',g_index_cfg[1].elearn_m_func CLIPPED,'</th>',    #適合職能
+                                '<th class="elearn-table-th elearn-th4">',g_index_cfg[1].elearn_m_appdoc CLIPPED,'</th>',  #應用專題
+                             '</tr>',
+                             '<tr>',
+                                '<td class="elearn-table-td">1003</td>'
+            #點選課程
+            #http://IP/t10dev/doc/elearning/zh_CN/AAP001/HTML/Two.htm
+            CALL l_param_arr.clear()
+            LET l_param_arr[1] = "AAP001"
+            LET gs_json = cl_helps932_support_json("",l_param_arr)
+                  LET l_html = l_html,
+                                '<td class="elearn-table-td elearn-link" onClick=\'wc_act("elearning_course","',gs_json CLIPPED,'")\'>',g_index_cfg[1].elearn_m_course_1 CLIPPED,'</td>',
+                                '<td class="elearn-table-td">',g_index_cfg[1].elearn_m_func_1 CLIPPED,'</td>',
+                                '<td class="elearn-table-td">',
+                                   '<table class="elearn-table">'
+            #點選應用專題
+            CALL l_param_arr.clear()
+            LET l_param_arr[1] = "APP_AAP109"
+            LET gs_json = cl_helps932_support_json("",l_param_arr)
+            LET l_html = l_html,
+                                      '<tr onClick=\'wc_act("elearning_appdoc","',gs_json CLIPPED,'")\'>',
+                                         '<td class="elearn-td-app elearn-vtop elearn-link">',l_param_arr[1] CLIPPED,'</td>'
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = "APP_AAP109"
+            CALL ap_ref_array2(g_ref_fields,"SELECT gztel003 FROM gzte_t LEFT JOIN gztel_t ON gzte001 = gztel001 AND gztel002='"||g_lang||"' WHERE gzte004 = ?","") RETURNING g_rtn_fields
+            LET l_html = l_html,
+                                         '<td class="elearn-vtop elearn-link">',g_rtn_fields[1] CLIPPED,'</td>'
+            LET l_html = l_html,
+                                      '</tr>',
+                                   '</table>',
+                                '</td>',
+                             '</tr>',
+                          '</table>',
+                        '</div>',
+                    '</div>'
+         END IF
+      END FOREACH
+
+      LET l_html = l_html,
+         '    </div>',
+         '</div>'
+
+      LET l_html = l_html,
+        '        </div>',
+        '    </div>',
+        '</div>'
+
+      LET l_cssstyle =
+            'body {',
+                'margin-left: 0px;',
+                'margin-top: 0px;',
+                'margin-right: 0px;',
+                'margin-bottom: 0px;',
+            '}',
+            '.wrap {',
+            '  width: 1334px;',
+            '  margin: 0px auto;',
+            '}',
+            '/*----- Tabs -----*/',
+            '.tabs {',
+            '  display: inline-block;',
+            '}',
+            '/*----- Tab Links -----*/',
+            '.tab-links {',
+            '  padding: 0px;',
+            '}',
+            '/* Clearfix */',
+            '.tab-links:after {',
+            '  display: block;',
+            '  clear: both;',
+            '  content: "";',
+            '}',
+            '.tab-links li {',
+            '  float: left;',
+            '  list-style: none;',
+            '  border-style: solid;',
+            '  border-color: #e5e5e5;',
+            '  border-width: 1px 1px 1px 1px;',
+            '  cursor: pointer;',
+            '}',
+            '.tabA-links {',
+            '  padding: 9px 15px;',
+            '  display: inline-block;',
+            '  background: #faf7f7;',
+            '  font-weight: 600;',
+            '  color: #8e8d8d;',
+            '  transition: all linear 0.15s;',
+            '}',
+            '.tabA-links :hover {',
+            '  text-decoration: none;',
+            '}',
+            '.tabA-links.active , .tabA-links.active :hover {',
+            '  background: #fff;',
+            '  color: #4c4c4c;',
+            '}',
+            'li.active {',
+            '  border-bottom-color: white;',
+            '  cursor: default;',
+            '}',
+            '/*----- Content of Tabs -----*/',
+            '.tab-content {',
+            '  border-style: solid;',
+            '  border-color: #e5e5e5;',
+            '  border-width: 1px 1px 1px 1px;',
+            '  margin-top: -17px;',
+            '  padding-top: 15px;',
+            '  position: absolute;',
+            '  width: 1334px;',
+            '}',
+            '.tab {',
+            '  display: none;',
+            '}',
+            '.tab.active {',
+            '  display: block;',
+            '}',
+            '.emenu-left {',
+            '  position: relative;',
+            '  float: left;',
+            '  width: 120px;',
+            '  display: block;',
+            '  padding-left: 10px;',
+            '  padding-right: 10px;',
+            '}',
+            '.emenu-right {',
+            '  position: relative;',
+            '  float: left;',
+            '  width: 1173px;',
+            '  min-height: 500px;',
+            '  display: block;',
+            '  border-left: 1px solid #e5e5e5;',
+            '  padding: 0px 10px;',
+            '}',
+            '.emenu-left div {',
+            '  margin-top: 15px;',
+            '}',
+            '.emenu-left-item {',
+            '  border: 2px solid #e5e5e5;',
+            '  border-radius: 5px;',
+            '  padding: 5px;',
+            '  text-align: center;',
+            '  cursor: pointer;',
+            '  text-decoration: blink;',
+            '}',
+            '.emenu-left-item a {',
+            '  text-decoration: blink;',
+            '  color: black;',
+            '}',
+            '.emenu-left-item.active {',
+            '  border: 2px solid #ff3c76;',
+            '  border-radius: 5px;',
+            '  padding: 5px;',
+            '  text-align: center;',
+            '  cursor: default;',
+            '}',
+            '.elearn-table {',
+            '  width: 100%;',
+            '  border-collapse: collapse;',
+            '}',
+            '.elearn-table-td {',
+            '  padding: 4px 10px;',
+            '  vertical-align: top;',
+            '  border-top: 1px solid #e5e5e5;',
+            '}',
+            '.elearn-table-th {',
+            '  padding: 4px;',
+            '  color: #8e8d8d;',
+            '  text-align: center;',
+            '  font-weight: 600;',
+            '  border-bottom: 1px solid #e5e5e5;',
+            '}',
+            '.elearn-th1 {',
+            '  width: 70px;',
+            '}',
+            '.elearn-th2 {',
+            '  width: 200px;',
+            '}',
+            '.elearn-th4 {',
+            '  width: 300px;',
+            '}',
+            '.elearn-vtop {',
+            '  vertical-align: top;',
+            '}',
+            '.elearn-td-app {',
+            '  width: 100px;',
+            '}',
+            '.elearn-link {',
+            '  cursor: pointer;',
+            '  color: blue;',
+            '}',
+            '.elearn-link-none {',
+            '  cursor: default;',
+            '  color: blue;',
+            '}',
+            '.elearn-table-noborder {',
+            '  border: none;',
+            '}'
+
+      LET l_webc_data.wc_cssstyle = l_cssstyle
+      LET l_webc_data.wc_body = l_html
+      LET l_webc_data.wc_reflash = g_wc_reflash
+      LET g_wc_data = util.JSON.stringify(l_webc_data)
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: E-learning課程
+# Memo...........:
+# Usage..........: CALL azzi003_elearn_course(p_course)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: No.160621-00009#2 2016/07/05 By tsai_yen
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi003_elearn_course(p_course)
+   DEFINE p_course            STRING
+   DEFINE l_url               STRING
+   DEFINE li_stat             LIKE type_t.num5
+
+   LET l_url = FGL_GETENV("FGLASIP"),"/doc/elearning/",g_lang CLIPPED,"/",p_course CLIPPED,"/HTML/Two.htm"
+   CALL ui.Interface.frontCall( "standard", "launchurl", [l_url], [li_stat] )
+END FUNCTION
+
+################################################################################
+# Descriptions...: E-learning應用專題
+# Memo...........:
+# Usage..........: CALL azzi003_elearn_appdoc(p_gzth001)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: No.160621-00009#2 2016/07/05 By tsai_yen
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi003_elearn_appdoc(p_gzth001)
+   DEFINE p_gzth001           LIKE gzth_t.gzth001
+   DEFINE l_sql               STRING
+   DEFINE l_cnt               LIKE type_t.num5
+   DEFINE l_cssstyle          STRING
+   DEFINE l_html              STRING
+   DEFINE l_chk               BOOLEAN
+   DEFINE lwin_curr           ui.Window
+   DEFINE lfrm_curr           ui.Form
+   DEFINE l_wc_data           STRING
+   DEFINE l_webc_data         type_webc_data
+
+   LET l_chk = TRUE
+   IF cl_null(p_gzth001) THEN
+      LET l_chk = FALSE
+   ELSE
+      #有效資料
+      LET l_sql = "SELECT COUNT(gztp001) FROM gztp_t WHERE gztpstus = 'Y' AND gztp001 = ? AND gztp004 = ?"
+      PREPARE azzi003_elearn_appdoc_init_cnt_pre FROM l_sql
+      EXECUTE azzi003_elearn_appdoc_init_cnt_pre USING p_gzth001,g_lang INTO l_cnt
+      IF l_cnt = 0 THEN
+         LET l_chk = FALSE
+      ELSE
+         OPEN WINDOW w_azzi003_s01 WITH FORM cl_ap_formpath("azz","azzi003_s01")
+         CALL cl_ui_init()
+         LET lwin_curr = ui.Window.getCurrent()
+         LET lfrm_curr = lwin_curr.getForm()
+
+         DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+            INPUT l_wc_data FROM wc_azzi003_s01
+            END INPUT
+
+            BEFORE DIALOG
+               LET l_html = cl_helps553_gen_html("APP",FALSE,p_gzth001,g_lang)   #應用專題
+               LET l_webc_data.wc_body = l_html
+               LET l_webc_data.wc_reflash = g_wc_reflash
+               LET l_wc_data = util.JSON.stringify(l_webc_data)
+
+            ON ACTION close       #在dialog 右上角 (X)
+               LET INT_FLAG=TRUE
+               EXIT DIALOG
+
+            ON ACTION exit        #toolbar 離開
+               LET INT_FLAG=TRUE
+               EXIT DIALOG
+         END DIALOG
+
+         IF INT_FLAG THEN
+            LET INT_FLAG = 0
+         END IF
+
+         #畫面關閉
+         CLOSE WINDOW w_azzi003_s01
+      END IF
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 按鈕提示說明
+# Memo...........:
+# Usage..........: CALL azzi003_set_comment(ps_prog)
+#                  RETURNING 回传参数
+# Input parameter: ps_comps       程式編號
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: No.160621-00009#2 2016/07/05 By tsai_yen
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi003_set_comment(ps_prog)
+   DEFINE ps_prog    LIKE gzzq_t.gzzq001
+   DEFINE l_gzzq002  LIKE gzzq_t.gzzq002
+   DEFINE ls_comp    STRING
+   DEFINE lnode_item om.DomNode
+   DEFINE ls_tagname STRING
+   DEFINE ls_comment STRING
+   DEFINE l_sql      STRING
+
+   LET l_sql = "SELECT gzzq002 FROM gzzq_t WHERE gzzq001 = ?  AND gzzq002 LIKE 'cmt_%' AND gzzq003 = ? AND gzzq006 = 's'"
+   PREPARE azzi003_set_comment_pre FROM l_sql
+   DECLARE azzi003_set_comment_cur CURSOR FOR azzi003_set_comment_pre
+
+   FOREACH azzi003_set_comment_cur USING ps_prog,g_lang INTO l_gzzq002
+      LET ls_comp = l_gzzq002
+      IF ls_comp.getIndexOf("cmt_",1) THEN
+         LET ls_comp = ls_comp.subString(5,ls_comp.getLength())  #去掉"cmt_"就是元件名稱
+         LET lnode_item = gfrm_curr.findNode("Button", ls_comp)
+
+         IF lnode_item IS NOT NULL THEN
+            LET ls_tagname = lnode_item.getTagName()
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = ps_prog
+            LET g_ref_fields[2] = l_gzzq002
+            CALL ap_ref_array2(g_ref_fields," SELECT gzzq004 FROM gzzq_t WHERE gzzq001 = ?  AND gzzq002 = ? AND gzzq003 = '"||g_lang CLIPPED||"' AND gzzq006 = 's'","") RETURNING g_rtn_fields
+            LET ls_comment = g_rtn_fields[1]
+            IF ls_tagname = "Button" THEN
+               IF cl_null(ls_comment) THEN
+                  CALL lnode_item.removeAttribute("comment")
+               ELSE
+                  CALL lnode_item.setAttribute("comment", ls_comment)
+               END IF
+            END IF
+         END IF
+      END IF
+   END FOREACH
+END FUNCTION
+
+################################################################################
+# Descriptions...: 我的知識庫
+# Memo...........:
+# Usage..........: CALL azzi003_mykm_init()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: No.160803-00011#1 2016/09/14 By frank0521
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi003_mykm_init()
+#   DEFINE l_webc_data         type_webc_data
+#   DEFINE l_cssstyle          STRING
+#   DEFINE l_html              STRING
+#
+#   LET l_html = 
+#                '<div class="km">',
+#                '   <img src="images/pic-myKnowledge26.png" />我最愛的知識</br>',
+#                '   <img src="images/pic-myKnowledge26.png" />我關注過的職能知識</br>',
+#                '   <img src="images/pic-myKnowledge26.png" />和我相關的職能知識</br>',
+#                '</div>'
+#   LET l_html = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">',
+#                '<html xmlns="http://www.w3.org/1999/xhtml">',
+#                '<head>',
+#                '<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />',
+#                '<title></title>',
+#                '</head>',
+#                '<body>',
+#                l_html CLIPPED,
+#                '</body>',
+#                '</html>'
+#   LET l_cssstyle =
+#      '.km{',
+#      '   color: #AB121D;',
+#      'font-size: 18px;',
+#      'font-weight: bold;',
+#      'font-family: "微軟正黑體";',
+#      '}'
+#   
+#   LET l_webc_data.wc_cssstyle = l_cssstyle
+#   LET l_webc_data.wc_body = l_html
+#   LET g_wc_data = util.JSON.stringify(l_webc_data)   #160523-00070#2
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

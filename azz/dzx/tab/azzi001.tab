@@ -1,0 +1,92 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi001" module="azz" jobmode="N" type="i10" industry="std" fix_arg="0" crtid="01274" crtdt="2014-09-18 11:47:24" modid="01274" moddt="2014-09-25 15:57:04" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="系統流程圖維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzbal003,gzbal003_1(chr500),gzba003,gzbastus,gzba001,gzba002,gzbaownid,gzbaownid_desc(chr80),gzbaowndp,gzbaowndp_desc(chr80),gzbacrtid,gzbacrtid_desc(chr80),gzbacrtdp,gzbacrtdp_desc(chr80),gzbacrtdt,gzbamodid,gzbamodid_desc(chr80),gzbamoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="azzi001_01" chk="N"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi001" method="dialog">
+    <section id="input">
+      <input id="head" field="gzbal003,gzbal003_1,gzba003,gzbastus,gzba001,gzba002"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzbal003,gzbal003_1,gzba003,gzbastus,gzba001,gzba002,gzbaownid,gzbaowndp,gzbacrtid,gzbacrtdp,gzbacrtdt,gzbamodid,gzbamoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzba001"/>
+      <set id="head" type="no_entry" field="gzba001"/>
+    </init>
+    <init id="head">
+      <column id="gzbal003"/>
+      <column id="gzbal003_1"/>
+      <column id="gzba003"/>
+      <column id="gzbastus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="gzba001"/>
+      <column id="gzba002"/>
+      <column id="gzbaownid">
+        <after>
+          <reference field="gzbaownid_desc" ref_field="gzba_t.gzbaownid" map_field="gzbaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzbaownid_desc"/>
+      <column id="gzbaowndp">
+        <after>
+          <reference field="gzbaowndp_desc" ref_field="gzba_t.gzbaowndp" map_field="gzbaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooea001_1" state="c"/>
+      </column>
+      <column id="gzbaowndp_desc"/>
+      <column id="gzbacrtid">
+        <after>
+          <reference field="gzbacrtid_desc" ref_field="gzba_t.gzbacrtid" map_field="gzbacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzbacrtid_desc"/>
+      <column id="gzbacrtdp">
+        <after>
+          <reference field="gzbacrtdp_desc" ref_field="gzba_t.gzbacrtdp" map_field="gzbacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooea001_1" state="c"/>
+      </column>
+      <column id="gzbacrtdp_desc"/>
+      <column id="gzbacrtdt"/>
+      <column id="gzbamodid">
+        <after>
+          <reference field="gzbamodid_desc" ref_field="gzba_t.gzbamodid" map_field="gzbamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzbamodid_desc"/>
+      <column id="gzbamoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzba_t" pk="gzba001">
+      <sql id="forupd_sql" type="sql" query="SELECT &apos;&apos;,&apos;&apos;,gzba003,gzbastus,gzba001,gzba002,gzbaownid,&apos;&apos;,gzbaowndp,&apos;&apos;,gzbacrtid,&apos;&apos;,gzbacrtdp,&apos;&apos;,gzbacrtdt,gzbamodid,&apos;&apos;,gzbamoddt FROM gzba_t WHERE gzbaent= ? AND gzba001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzba001 FROM gzba_t" order="gzba001"/>
+      <sql id="append" type="lang" target="gzbal_t.gzbal003" table="gzbal_t" fk="gzba001" pk="gzbal001,gzbal002" field="gzbal003"/>
+    </head>
+  </dataset>
+</assembly>
+

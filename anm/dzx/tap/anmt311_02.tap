@@ -1,0 +1,582 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="anmt311_02" std_prog="anmt311_02" erpver="1.0" module="ANM" ver="1" env="s" zone="t10dev" normal_style="N" booking="Y">
+  <point name="free_style.variable" order="0" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[{<Module define>}
+
+#單身 type 宣告
+PRIVATE TYPE type_g_nmbt_d RECORD
+   nmbt004 LIKE nmbt_t.nmbt004,
+   nmbt004_desc LIKE glacl_t.glacl004,
+   nmbt017 LIKE nmbt_t.nmbt017,
+   nmbt018 LIKE nmbt_t.nmbt018,
+   nmbt019 LIKE nmbt_t.nmbt019,
+   nmbt020 LIKE nmbt_t.nmbt020,
+   nmbt021 LIKE nmbt_t.nmbt021,
+   nmbt022 LIKE nmbt_t.nmbt022,
+   nmbt023 LIKE nmbt_t.nmbt023,
+   nmbt024 LIKE nmbt_t.nmbt024,
+   nmbt025 LIKE nmbt_t.nmbt025,
+   nmbt026 LIKE nmbt_t.nmbt026,
+   nmbt027 LIKE nmbt_t.nmbt027,
+   nmbt028 LIKE nmbt_t.nmbt028,
+   nmbt008 LIKE nmbt_t.nmbt008,
+   nmbt009 LIKE nmbt_t.nmbt009
+       END RECORD
+
+
+#無單身append欄位定義
+
+#模組變數(Module Variables)
+DEFINE g_nmbt_d          DYNAMIC ARRAY OF type_g_nmbt_d
+DEFINE g_nmbt_d_t        type_g_nmbt_d
+
+
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10
+DEFINE l_ac                 LIKE type_t.num5              #目前處理的ARRAY CNT
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_temp_idx           LIKE type_t.num5              #單身 所在筆數(暫存用)
+DEFINE g_detail_idx         LIKE type_t.num5              #單身 所在筆數(所有資料)
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_chk                BOOLEAN
+
+#多table用wc
+DEFINE g_wc_table           STRING
+DEFINE g_glaa004            LIKE glaa_t.glaa004
+
+{</Module define>}]]>
+  </point>
+  <point name="input.a.page1.nmbt004" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.a.page1.nmbt005" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.a.page1.nmbt017" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.a.page1.nmbt018" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.a.page1.nmbt019" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.a.page1.nmbt020" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.a.page1.nmbt021" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.a.page1.nmbt022" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.a.page1.nmbt023" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.a.page1.nmbt024" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.a.page1.nmbt025" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.a.page1.nmbt026" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.a.page1.nmbtcomp" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_nmbt_d[g_detail_idx].nmbtcomp IS NOT NULL AND g_nmbt_d[g_detail_idx].nmbtld IS NOT NULL AND g_nmbt_d[g_detail_idx].nmbtdocno IS NOT NULL AND g_nmbt_d[g_detail_idx].nmbtseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_nmbt_d[g_detail_idx].nmbtcomp != g_nmbt_d_t.nmbtcomp OR g_nmbt_d[g_detail_idx].nmbtld != g_nmbt_d_t.nmbtld OR g_nmbt_d[g_detail_idx].nmbtdocno != g_nmbt_d_t.nmbtdocno OR g_nmbt_d[g_detail_idx].nmbtseq != g_nmbt_d_t.nmbtseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM nmbt_t WHERE "||"nmbtent = '" ||g_enterprise|| "' AND "||"nmbtcomp = '"||g_nmbt_d[g_detail_idx].nmbtcomp ||"' AND "|| "nmbtld = '"||g_nmbt_d[g_detail_idx].nmbtld ||"' AND "|| "nmbtdocno = '"||g_nmbt_d[g_detail_idx].nmbtdocno ||"' AND "|| "nmbtseq = '"||g_nmbt_d[g_detail_idx].nmbtseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.nmbtdocno" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_nmbt_d[g_detail_idx].nmbtcomp IS NOT NULL AND g_nmbt_d[g_detail_idx].nmbtld IS NOT NULL AND g_nmbt_d[g_detail_idx].nmbtdocno IS NOT NULL AND g_nmbt_d[g_detail_idx].nmbtseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_nmbt_d[g_detail_idx].nmbtcomp != g_nmbt_d_t.nmbtcomp OR g_nmbt_d[g_detail_idx].nmbtld != g_nmbt_d_t.nmbtld OR g_nmbt_d[g_detail_idx].nmbtdocno != g_nmbt_d_t.nmbtdocno OR g_nmbt_d[g_detail_idx].nmbtseq != g_nmbt_d_t.nmbtseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM nmbt_t WHERE "||"nmbtent = '" ||g_enterprise|| "' AND "||"nmbtcomp = '"||g_nmbt_d[g_detail_idx].nmbtcomp ||"' AND "|| "nmbtld = '"||g_nmbt_d[g_detail_idx].nmbtld ||"' AND "|| "nmbtdocno = '"||g_nmbt_d[g_detail_idx].nmbtdocno ||"' AND "|| "nmbtseq = '"||g_nmbt_d[g_detail_idx].nmbtseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.nmbtld" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_nmbt_d[g_detail_idx].nmbtcomp IS NOT NULL AND g_nmbt_d[g_detail_idx].nmbtld IS NOT NULL AND g_nmbt_d[g_detail_idx].nmbtdocno IS NOT NULL AND g_nmbt_d[g_detail_idx].nmbtseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_nmbt_d[g_detail_idx].nmbtcomp != g_nmbt_d_t.nmbtcomp OR g_nmbt_d[g_detail_idx].nmbtld != g_nmbt_d_t.nmbtld OR g_nmbt_d[g_detail_idx].nmbtdocno != g_nmbt_d_t.nmbtdocno OR g_nmbt_d[g_detail_idx].nmbtseq != g_nmbt_d_t.nmbtseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM nmbt_t WHERE "||"nmbtent = '" ||g_enterprise|| "' AND "||"nmbtcomp = '"||g_nmbt_d[g_detail_idx].nmbtcomp ||"' AND "|| "nmbtld = '"||g_nmbt_d[g_detail_idx].nmbtld ||"' AND "|| "nmbtdocno = '"||g_nmbt_d[g_detail_idx].nmbtdocno ||"' AND "|| "nmbtseq = '"||g_nmbt_d[g_detail_idx].nmbtseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.nmbtseq" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_nmbt_d[g_detail_idx].nmbtcomp IS NOT NULL AND g_nmbt_d[g_detail_idx].nmbtld IS NOT NULL AND g_nmbt_d[g_detail_idx].nmbtdocno IS NOT NULL AND g_nmbt_d[g_detail_idx].nmbtseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_nmbt_d[g_detail_idx].nmbtcomp != g_nmbt_d_t.nmbtcomp OR g_nmbt_d[g_detail_idx].nmbtld != g_nmbt_d_t.nmbtld OR g_nmbt_d[g_detail_idx].nmbtdocno != g_nmbt_d_t.nmbtdocno OR g_nmbt_d[g_detail_idx].nmbtseq != g_nmbt_d_t.nmbtseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM nmbt_t WHERE "||"nmbtent = '" ||g_enterprise|| "' AND "||"nmbtcomp = '"||g_nmbt_d[g_detail_idx].nmbtcomp ||"' AND "|| "nmbtld = '"||g_nmbt_d[g_detail_idx].nmbtld ||"' AND "|| "nmbtdocno = '"||g_nmbt_d[g_detail_idx].nmbtdocno ||"' AND "|| "nmbtseq = '"||g_nmbt_d[g_detail_idx].nmbtseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="function.anmt311_02_init" order="1" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION anmt311_02_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+
+
+
+   LET g_error_show = 1
+
+   #add-point:畫面資料初始化
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_argv[2]
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaa004 FROM glaa_t WHERE glaaent='"||g_enterprise||"' AND glaald=? ","") RETURNING g_rtn_fields
+   LET g_glaa004 = g_rtn_fields[1]    
+   #end add-point
+
+   CALL anmt311_02_default_search()
+
+END FUNCTION]]>
+  </point>
+  <point name="function.anmt311_02_ui_dialog" order="2" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION anmt311_02_ui_dialog()
+   {<Local define>}
+   DEFINE li_idx   LIKE type_t.num5
+   {</Local define>}
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+
+   LET g_action_choice = " "
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+
+   LET g_detail_idx = 1
+
+   WHILE TRUE
+
+      CALL anmt311_02_b_fill(g_wc2)
+
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_nmbt_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               LET g_temp_idx = l_ac
+
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont()
+
+            #自訂ACTION(detail_show,page_1)
+
+
+         END DISPLAY
+
+
+
+         #add-point:ui_dialog段define
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+
+         BEFORE DIALOG
+            IF g_temp_idx > 0 THEN
+               LET l_ac = g_temp_idx
+               CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+               LET g_temp_idx = 1
+            END IF
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            #add-point:ui_dialog段before
+            {<point name="ui_dialog.b_dialog"/>}
+            #end add-point
+            NEXT FIELD CURRENT
+
+
+
+
+
+         ON ACTION output
+
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+
+         ON ACTION close
+            LET INT_FLAG=FALSE
+            LET g_action_choice="exit"
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG=FALSE
+            LET g_action_choice="exit"
+            EXIT DIALOG
+
+
+
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         LET g_action_choice = "anmt311_02"
+         EXIT WHILE
+      END IF
+
+   END WHILE
+
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+
+END FUNCTION]]>
+  </point>
+  <point name="function.anmt311_02_b_fill" order="3" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION anmt311_02_b_fill(p_wc2)
+              #BODY FILL UP
+   {<Local define>}
+   DEFINE p_wc2           STRING
+   {</Local define>}
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point
+
+   IF cl_null(p_wc2) THEN
+      LET p_wc2 = " 1=1"
+   END IF
+
+   #add-point:b_fill段sql之前
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+
+   LET g_sql = "SELECT  UNIQUE a,'',nmbt017,nmbt018,nmbt019,nmbt020,nmbt021,nmbt022,nmbt023,nmbt024,nmbt025,nmbt026,nmbt027,nmbt028,SUM(nmbt008),SUM(nmbt009) FROM (",
+               "   SELECT nmbt004 a,'',nmbt017,nmbt018,nmbt019,nmbt020,nmbt021,nmbt022,nmbt023,nmbt024,nmbt025,nmbt026,nmbt027,nmbt028,nmbt008,nmbt009 ",
+               "    FROM nmbt_t WHERE nmbtent= ? AND 1=1 AND ", p_wc2,
+               " UNION",
+               "   SELECT nmbt005 a,'',nmbt017,nmbt018,nmbt019,nmbt020,nmbt021,nmbt022,nmbt023,nmbt024,nmbt025,nmbt026,nmbt027,nmbt028,nmbt008,nmbt009 ",
+               "    FROM nmbt_t WHERE nmbtent= ? AND 1=1 AND ", p_wc2,")",
+               " WHERE a IS NOT NULL "
+   LET g_sql = g_sql, " GROUP BY a,nmbt017,nmbt018,nmbt019,nmbt020,nmbt021,nmbt022,nmbt023,nmbt024,nmbt025,nmbt026,nmbt027,nmbt028 ORDER BY a"
+
+   PREPARE anmt311_02_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR anmt311_02_pb
+
+   OPEN b_fill_curs USING g_enterprise,g_enterprise
+
+   CALL g_nmbt_d.clear()
+
+
+   LET g_cnt = l_ac
+   LET l_ac = 1
+   ERROR "Searching!"
+
+   FOREACH b_fill_curs INTO g_nmbt_d[l_ac].nmbt004,g_nmbt_d[l_ac].nmbt004_desc,g_nmbt_d[l_ac].nmbt017,g_nmbt_d[l_ac].nmbt018,g_nmbt_d[l_ac].nmbt019,g_nmbt_d[l_ac].nmbt020,g_nmbt_d[l_ac].nmbt021,g_nmbt_d[l_ac].nmbt022,g_nmbt_d[l_ac].nmbt023,g_nmbt_d[l_ac].nmbt024,g_nmbt_d[l_ac].nmbt025,g_nmbt_d[l_ac].nmbt026,g_nmbt_d[l_ac].nmbt027,g_nmbt_d[l_ac].nmbt028,g_nmbt_d[l_ac].nmbt008,g_nmbt_d[l_ac].nmbt009
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+
+      IF NOT anmt311_02_chk_choise(2,g_nmbt_d[l_ac].nmbt004) THEN LET g_nmbt_d[l_ac].nmbt018 = '' END IF
+      IF NOT anmt311_02_chk_choise(3,g_nmbt_d[l_ac].nmbt004) THEN LET g_nmbt_d[l_ac].nmbt019 = '' END IF
+      IF NOT anmt311_02_chk_choise(4,g_nmbt_d[l_ac].nmbt004) THEN LET g_nmbt_d[l_ac].nmbt020 = '' END IF
+      IF NOT anmt311_02_chk_choise(5,g_nmbt_d[l_ac].nmbt004) THEN LET g_nmbt_d[l_ac].nmbt021 = '' END IF
+      IF NOT anmt311_02_chk_choise(6,g_nmbt_d[l_ac].nmbt004) THEN LET g_nmbt_d[l_ac].nmbt022 = '' END IF
+      IF NOT anmt311_02_chk_choise(7,g_nmbt_d[l_ac].nmbt004) THEN LET g_nmbt_d[l_ac].nmbt023 = '' END IF
+      IF NOT anmt311_02_chk_choise(8,g_nmbt_d[l_ac].nmbt004) THEN LET g_nmbt_d[l_ac].nmbt024 = '' END IF
+      IF NOT anmt311_02_chk_choise(9,g_nmbt_d[l_ac].nmbt004) THEN LET g_nmbt_d[l_ac].nmbt025 = '' END IF
+      IF NOT anmt311_02_chk_choise(10,g_nmbt_d[l_ac].nmbt004) THEN LET g_nmbt_d[l_ac].nmbt026 = '' END IF
+      IF NOT anmt311_02_chk_choise(11,g_nmbt_d[l_ac].nmbt004) THEN LET g_nmbt_d[l_ac].nmbt027 = '' END IF
+      IF NOT anmt311_02_chk_choise(12,g_nmbt_d[l_ac].nmbt004) THEN LET g_nmbt_d[l_ac].nmbt028 = '' END IF
+
+      CALL anmt311_02_detail_show()
+
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+
+   END FOREACH
+
+   IF l_ac > g_max_rec AND g_error_show = 1 THEN
+      CALL cl_err("nmbt_t",9035,1)
+   END IF
+   LET g_error_show = 0
+
+
+
+
+   CALL g_nmbt_d.deleteElement(g_nmbt_d.getLength())
+
+
+   #將key欄位填到每個page
+   FOR l_ac = 1 TO g_nmbt_d.getLength()
+
+   END FOR
+
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+
+   LET g_detail_cnt = l_ac - 1
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+
+   CLOSE b_fill_curs
+   FREE anmt311_02_pb
+
+END FUNCTION]]>
+  </point>
+  <point name="function.anmt311_02_detail_show" order="4" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION anmt311_02_detail_show()
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+
+
+
+   #帶出公用欄位reference值page1
+
+
+
+
+   #讀入ref值
+   #add-point:show段單身reference
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_glaa004
+   LET g_ref_fields[2] = g_nmbt_d[l_ac].nmbt004
+   CALL ap_ref_array2(g_ref_fields,"SELECT glacl004 FROM glacl_t WHERE glaclent='"||g_enterprise||"' AND glacl001= ? AND glacl002=? AND glacl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_nmbt_d[l_ac].nmbt004_desc = g_rtn_fields[1] 
+   #end add-point
+
+
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+
+END FUNCTION]]>
+  </point>
+  <point name="function.anmt311_02_default_search" order="5" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION anmt311_02_default_search()
+   {<Local define>}
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   {</Local define>}
+   #add-point:default_search段define
+   {<point name="default_search.define"/>}
+   #end add-point
+
+   IF NOT cl_null(g_argv[1]) THEN
+      LET ls_wc = ls_wc, " nmbtcomp = '", g_argv[1], "' AND "
+   END IF
+
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " nmbtld = '", g_argv[02], "' AND "
+   END IF
+
+   IF NOT cl_null(g_argv[03]) THEN
+      LET ls_wc = ls_wc, " nmbtdocno = '", g_argv[03], "' AND "
+   END IF
+
+   IF NOT cl_null(ls_wc) THEN
+      LET ls_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_wc2 = ls_wc
+   ELSE
+      LET g_wc2 = " 1=1"
+   END IF
+
+END FUNCTION]]>
+  </point>
+  <point name="function.anmt311_02" order="6" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PUBLIC FUNCTION anmt311_02(p_nmbtld,p_nmbtcomp,p_nmbtdocno)
+DEFINE p_nmbtld    LIKE nmbt_t.nmbtld
+DEFINE p_nmbtcomp  LIKE nmbt_t.nmbtcomp
+DEFINE p_nmbtdocno LIKE nmbt_t.nmbtdocno
+
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+
+   LET g_argv[1] = p_nmbtcomp
+   LET g_argv[2] = p_nmbtld
+   LET g_argv[3] = p_nmbtdocno
+   
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" mark="Y"/>}
+   #end add-point
+   LET g_forupd_sql = ""
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)   #轉換不同資料庫語法
+   DECLARE anmt311_02_cl CURSOR FROM g_forupd_sql     # LOCK CURSOR
+
+
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_anmt311_02 WITH FORM cl_ap_formpath("anm","anmt311_02")
+
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+
+   #程式初始化
+   CALL anmt311_02_init()
+
+   #進入選單 Menu (="N")
+   CALL anmt311_02_ui_dialog()
+
+   #畫面關閉
+   CLOSE WINDOW w_anmt311_02
+
+   CLOSE anmt311_02_cl
+
+
+
+   #add-point:離開前
+   {<point name="main.exit" />}
+   #end add-point
+
+END FUNCTION]]>
+  </point>
+  <point name="function.anmt311_02_chk_choise" order="7" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 檢查科目勾選的固定核算項
+# Memo...........:
+# Usage..........: CALL anmt311_02_chk_choise(p_no,p_nmbt004)
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt311_02_chk_choise(p_no,p_nmbt004)
+DEFINE p_no      LIKE type_t.num5
+DEFINE p_nmbt004 LIKE nmbt_t.nmbt004
+DEFINE l_sql     STRING
+DEFINE l_str1    STRING
+DEFINE l_str2    STRING
+DEFINE r_choise  LIKE type_t.num5
+DEFINE l_cnt     LIKE type_t.num5
+
+   
+   CASE p_no 
+      WHEN 2  #部門編號
+         LET l_str1 = " AND glad007 = 'Y'"
+         LET l_str2 = " AND glac017 = 'Y'"
+      WHEN 3  #利潤/成本中心
+         LET l_str1 = " AND glad008 = 'Y'"
+         LET l_str2 = " AND glac018 = 'Y'"      
+      WHEN 4  #區域
+         LET l_str1 = " AND glad009 = 'Y'"
+         LET l_str2 = " AND glac019 = 'Y'"      
+      WHEN 5  #交易客商
+         LET l_str1 = " AND glad010 = 'Y'"
+         LET l_str2 = " AND glac020 = 'Y'"      
+      WHEN 6  #帳款客商
+         LET l_str1 = " AND glad027 = 'Y'"
+         LET l_str2 = " AND glac027 = 'Y'"      
+      WHEN 7  #客群
+         LET l_str1 = " AND glad011 = 'Y'"
+         LET l_str2 = " AND glac021 = 'Y'"      
+      WHEN 8  #產品類別
+         LET l_str1 = " AND glad012 = 'Y'"
+         LET l_str2 = " AND glac022 = 'Y'"     
+      WHEN 9  #人員
+         LET l_str1 = " AND glad013 = 'Y'"
+         LET l_str2 = " AND glac023 = 'Y'"      
+      WHEN 10 #預算編號
+         LET l_str1 = " AND glad014 = 'Y'"
+         LET l_str2 = " AND glac024 = 'Y'"      
+      WHEN 11 #專案編號
+         LET l_str1 = " AND glad015 = 'Y'"
+         LET l_str2 = " AND glac025 = 'Y'"      
+      WHEN 12 #WBS
+         LET l_str1 = " AND glad016 = 'Y'"
+         LET l_str2 = " AND glac026 = 'Y'"       
+   END CASE
+
+   LET l_cnt = 0
+   LET l_sql =  "SELECT COUNT(*) FROM glad_t",
+                " WHERE gladent = '",g_enterprise,"'",
+                "   AND gladld = '",g_argv[02],"'",
+                "   AND glad001 ='",p_nmbt004,"' ",l_str1
+   PREPARE glad_pre FROM l_sql
+   EXECUTE glad_pre INTO l_cnt 
+   IF l_cnt > 0 THEN 
+      RETURN TRUE
+   END IF
+
+   LET l_cnt = 0
+   LET l_sql =  "SELECT COUNT(*) FROM glac_t",
+                " WHERE glacent = '",g_enterprise,"'",
+                "   AND glac001 = '",g_glaa004,"'",
+                "   AND glac002 = '",p_nmbt004,"' ",l_str2
+   PREPARE glac_pre FROM l_sql
+   EXECUTE glac_pre INTO l_cnt 
+   IF l_cnt > 0 THEN 
+      RETURN TRUE
+   END IF
+   
+   RETURN FALSE
+END FUNCTION]]>
+  </point>
+</add_points>

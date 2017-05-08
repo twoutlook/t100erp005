@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axmp430" std_prog="axmp430" erpver="1.0" ver="1" module="AXM" type="M" booking="N" designer_ver="1.0" class="p" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 提供業務人員進行銷售折扣合約已經發生銷售出貨的數量金額結算，計算累積數量與金額
+標準作業功能：報表/詳細資料/查詢/篩選/條件查詢/條件儲存/說明/離開/重新整理
+作業類型：批次作業
+輸入模式：批次作業版型
+作業資料來源(Detail)：
+xmfj_t銷售折扣合約單頭檔
+xmfl_t銷售折扣合約單明細檔
+●程式目的:
+  1.依據畫面查維護的合約單+項次進行結算並產生xmde_t(合約結算明細檔)
+
+●資料處理:
+  1.依據畫面查維護的合約單+項次抓出符合條件的出貨單or銷退單
+    1-1.抓取的出貨單/銷退單上的訂單客戶+最終客戶須符合折扣合約上限制的結算客戶範圍
+    1-2.若折扣合約上有限定交易條件例如幣別、稅別、收款條件..等等時，則抓取的出貨單/銷退單
+        上的交易條件就必須符合的才可以抓取
+　　1-3.抓取出貨單/銷退單的料件需要需要符合折扣合約上的指定的資料範圍
+    1-4.若折扣合約上是設置銷退單不納入時，則銷退單就不需抓取
+    1-5.抓取的出貨單/銷退單需要是已經過帳，且過帳日期是落在畫面上結算起始與截止日期前(含結算截止日當天)
+        的資料才可以抓取結算
+    1-6.已階結算過的出貨單/銷退單就不需要再抓出來
+    1-7.若訂單流程是走簽收流程時，是要抓取簽收單而不是出貨單
+    1-8.調撥訂單不納入結算
+
+  2.依據步驟1抓出的出貨單/銷退單資料依序產生結算明細資料(xmde_t)
+    xmde_t欄位預設值如下:
+    xmde000 資料類型        = 3
+    xmde001 合約/核價單號      = 折扣合約單號
+    xmde002 項次        = 折扣合約項次
+    xmde003 關聯單號        = 出貨單/銷退單號
+    xmde004 關聯項次        = 出貨單/銷退單項次
+    xmde005 結算日期        = 畫面上的節算截止日期
+    xmde006 料件編號        = 出貨單/銷退單上的料號
+    xmde007 產品特徵        = 出貨單/銷退單上的產品特徵
+    xmde008 交易數量        = 出貨單/銷退單上的計價數量
+    xmde009 交易單位        = 出貨單/銷退單上的計價單位
+    xmde010 原始單價        = 出貨單/銷退單上的單價
+    xmde011 原始未稅金額       = 出貨單/銷退單上的未稅金額
+    xmde012 原始含稅金額       = 出貨單/銷退單上的含稅金額
+    xmde013 原始稅額        = 出貨單/銷退單上的稅額
+    xmde014 建議調整後未稅金額 = 用應用元件計算
+    xmde015 建議調整後含稅金額 = 用應用元件計算
+    xmde016 建議調整後稅額     = 用應用元件計算
+    xmde017 差異未稅金額       = 建議調整後未稅金額
+    xmde018 差異含稅金額       = 建議調整後含稅金額
+    xmde019 差異稅額        = 建議調整後稅金額
+    xmde020 差異數量        = 1.若合約是單價折扣、單價百分比折扣時，則數量等於出貨單/銷退單上的計價數量
+                                    2.若合約是金額百分比時，則數量等於1
+    xmde021 差異數量的單價     = 建議調整後單價
+    xmde022 來源單號        = 出貨單/銷退單對應的訂單單號
+    xmde023 來源項次        = 出貨單/銷退單對應的訂單項次
+    xmde024 來源據點        = 出貨單/銷退單的據點
+    xmde025 差異處理否        = N
+    xmde026 差異處理方式       = 折扣合約上的帳款處理方式
+    xmde027 差異處理單號       = NULL
+    xmde028 差異處理項次       = NULL
+    xmde029 建議調整後單價     =    1.若折扣額合約是制定折扣單價時，則此欄位是預設合約單上的折扣單
+                                      價，若有分段折扣時須依據此次結算的總出貨數量判斷是若在哪一區段的折扣單價
+                                    2.若折扣合約是制定金額百分比時，則先依據合約上的稅別判斷是含稅或
+                                      是未若是未稅的話則依據出貨單/銷退單上的未稅金額呈上合約單上的折
+                                      扣率等於建議調整後單價，反之則是用含稅金額去推算，若有分段折扣
+                                      時一樣須看本次結算的總出貨金額是落在哪一個折扣區間後，
+　　　　　　　　　　　　　　　　　　　判斷是多少百分比折扣在依據這一張出貨金額乘上折扣百分比
+3.將結算日期、起始日期、截止日期回寫回對應的合約單項次檔
+4.若畫面有勾選"同時產生折扣帳款"時需自動呼叫axmp431並傳入合約單號+項次讓user產生折扣帳款
+]]>
+  </all>
+  <field cite_std="N" name="chk" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="">
+    <![CDATA[當勾選時自執行完結算作業後需要自動開啟axmp431作業並自動將該已結算未產生帳款的資料顯示在畫面上供user維護]]>
+  </field>
+  <field cite_std="N" name="date_e" ver="1" src="s" column="xmfl010" table="xmfl_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="DateEdit" status="">
+    <![CDATA[1.預設結算日期
+2.截止日期不可以小於起始日期]]>
+  </field>
+  <field cite_std="N" name="date_s" ver="1" src="s" column="xmfl010" table="xmfl_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="DateEdit" status="">
+    <![CDATA[截止日期不可以小於起始日期]]>
+  </field>
+  <field cite_std="N" name="xmfj_t.xmfjdocno" ver="1" src="s" column="xmfjdocno" table="xmfj_t" attribute="" type="" req="Y" i_zoom="q_xmfjdocno_1" c_zoom="" chk_ref="v_xmfjdocno" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[開窗：arg1 = 稅區(ooef019)
+校驗：arg1 = 合約單號(xmfjdocno)
+]]>
+  </field>
+  <field cite_std="N" name="xmfl_t.xmfl010" ver="1" src="s" column="xmfl010" table="xmfl_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="DateEdit" status="">
+    <![CDATA[1.預設today
+2.不可以小於該合約上記錄的最近結算日期]]>
+  </field>
+  <field cite_std="N" name="xmflseq" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="q_xmflseq" c_zoom="" chk_ref="v_xmflseq" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[開窗：arg1 = 合約單號(xmfjdocno)
+校驗：arg1 = 合約單號(xmfjdocno)、arg2 = 項次(xmflseq)
+此欄位可以不輸入，當不輸入時代表是整張合約同時結算
+]]>
+  </field>
+  <field cite_std="N" name="buttonedit_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="checkbox_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dateedit_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dateedit_2" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xmfl_t.xmflseq" ver="1" src="s" column="xmflseq" table="xmfl_t" attribute="" type="" req="N" i_zoom="q_xmflseq" c_zoom="" chk_ref="v_xmflseq" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="d">
+    <![CDATA[開窗：arg1 = 合約單號(xmfjdocno)
+校驗：arg1 = 合約單號(xmfjdocno)、arg2 = 項次(xmflseq)
+此欄位可以不輸入，當不輸入時代表是整張合約同時結算
+]]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="buttonedit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="checkbox_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="chk" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="date_e" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="date_s" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dateedit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="dateedit_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="xmfj_t.xmfjdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmfl_t.xmfl010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xmfl_t.xmflseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="xmflseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="lbl_group_qbe" text="合約資訊" lstr=""/>
+    <sfield name="lbl_xmfjdocno" text="合約單號" lstr=""/>
+    <sfield name="lbl_xmflseq" text="項次" lstr=""/>
+    <sfield name="group_input" text="其他條件" lstr=""/>
+    <sfield name="lbl_xmfl010" text="結算日期" lstr=""/>
+    <sfield name="lbl_date_s" text="起始日期" lstr=""/>
+    <sfield name="lbl_date_e" text="截止日期" lstr=""/>
+    <sfield name="lbl_chk" text="是否同時產生折扣帳款" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

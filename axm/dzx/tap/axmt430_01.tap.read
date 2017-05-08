@@ -1,0 +1,1193 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="axmt430_01" std_prog="axmt430_01" erpver="1.0" module="AXM" ver="1" env="s" zone="t10prd" booking="N" type="S" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="function.axmt430_01_init" order="1" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: axmt430_01的初始化
+# Memo...........:
+# Usage..........: CALL axmt430_01_init()
+#                  
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2015/06/08 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmt430_01_init()
+   
+   CALL cl_set_combo_scc('xmfl001','2104') 
+   CALL cl_set_combo_scc('xmfl005','2105')
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt430_01_xmfl002_desc" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 資料編號說明
+# Memo...........:
+# Usage..........: CALL axmt430_01_xmfl002_desc(p_xmfl001,p_xmfl002)
+#                  
+# Input parameter: p_xmfl001      資料類型
+#                : p_xmfl002      資料編號
+# Return code....: 
+# Date & Author..: 2015/06/08 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmt430_01_xmfl002_desc(p_xmfl001,p_xmfl002)
+DEFINE p_xmfl001         LIKE xmfl_t.xmfl001
+DEFINE p_xmfl002         LIKE xmfl_t.xmfl002
+DEFINE l_xmfl002_desc    LIKE type_t.chr80
+DEFINE l_xmfl002_desc1   LIKE type_t.chr80
+
+   LET l_xmfl002_desc = ''
+   LET l_xmfl002_desc1= ''
+   
+   IF cl_null(p_xmfl001) OR cl_null(p_xmfl002) THEN
+      RETURN 
+   END IF
+   
+   CASE p_xmfl001
+      WHEN '1'   #料件
+           CALL s_desc_get_item_desc(p_xmfl002) RETURNING l_xmfl002_desc,l_xmfl002_desc1
+      WHEN '2'   #產品分類
+           CALL s_desc_get_rtaxl003_desc(p_xmfl002) RETURNING l_xmfl002_desc
+      WHEN '3'   #系列號
+           CALL s_desc_get_acc_desc('2003',p_xmfl002) RETURNING l_xmfl002_desc
+   END CASE
+   
+   DISPLAY l_xmfl002_desc,l_xmfl002_desc1 TO xmfl002_desc,xmfl002_desc1
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt430_01_b_fill" order="3" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 分段計價單身填充
+# Memo...........:
+# Usage..........: CALL axmt430_01_b_fill(p_xmfjdocno,p_xmflseq)
+#                  
+# Input parameter: p_xmfjdocno    合約單號
+#                : p_xmflseq      項次
+# Return code....: 
+# Date & Author..: 2015/06/09 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmt430_01_b_fill(p_xmfjdocno,p_xmflseq)
+DEFINE p_xmfjdocno       LIKE xmfj_t.xmfjdocno
+DEFINE p_xmflseq         LIKE xmfl_t.xmflseq
+DEFINE l_sql             STRING
+
+   IF cl_null(p_xmfjdocno) OR cl_null(p_xmflseq) THEN
+      RETURN
+   END IF
+   
+   LET l_sql = "SELECT xmfmdocno,xmfmsite,xmfmseq,xmfm001,xmfm002,xmfm003,xmfm004 ",
+               "  FROM xmfm_t ",
+               " WHERE xmfment = ",g_enterprise,
+               "   AND xmfmdocno = '",p_xmfjdocno,"'",
+               "   AND xmfmseq = ",p_xmflseq,
+               " ORDER BY xmfm001 "
+   PREPARE axmt430_01_b_fill_pre FROM l_sql
+   DECLARE axmt430_01_b_fill_cs CURSOR FOR axmt430_01_b_fill_pre
+   
+   CALL g_xmfm_d.clear()
+   LET l_ac = 1
+   FOREACH axmt430_01_b_fill_cs INTO g_xmfm_d[l_ac].xmfmdocno,g_xmfm_d[l_ac].xmfmsite,
+                                     g_xmfm_d[l_ac].xmfmseq,
+                                     g_xmfm_d[l_ac].xmfm001,g_xmfm_d[l_ac].xmfm002,
+                                     g_xmfm_d[l_ac].xmfm003,g_xmfm_d[l_ac].xmfm004
+   
+      IF l_ac > g_max_rec THEN
+         IF g_errshow = 1 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code   = 9035
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+
+      LET l_ac = l_ac + 1
+   END FOREACH
+   
+   LET l_ac = l_ac - 1
+   CALL g_xmfm_d.deleteElement(g_xmfm_d.getLength())
+   LET g_rec_b = l_ac
+   DISPLAY g_rec_b TO FORMONLY.cnt
+   CLOSE axmt430_01_b_fill_cs
+   FREE axmt430_01_b_fill_cs
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt430_01_xmfm001_init" order="4" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 預設起始數量/金額
+# Memo...........:
+# Usage..........: CALL axmt430_01_xmfm001_init(p_xmfmdocno,p_xmfmseq,p_xmfj004,p_xmfl005,p_xmfl006)
+#                  RETURNING r_xmfm001
+# Input parameter: p_xmfmdocno    合約單號
+#                : p_xmfmseq      項次
+#                : p_xmfj004      幣別
+#                : p_xmfl005      折扣方式
+#                : p_xmfl006      計價單位
+# Return code....: r_xmfm001      起始數量/金額
+# Date & Author..: 2015/06/09 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmt430_01_xmfm001_init(p_xmfmdocno,p_xmfmseq,p_xmfj004,p_xmfl005,p_xmfl006)
+DEFINE p_xmfmdocno       LIKE xmfm_t.xmfmdocno
+DEFINE p_xmfmseq         LIKE xmfm_t.xmfmseq
+DEFINE p_xmfj004         LIKE xmfj_t.xmfj004
+DEFINE p_xmfl005         LIKE xmfl_t.xmfl005
+DEFINE p_xmfl006         LIKE xmfl_t.xmfl006
+DEFINE r_xmfm001         LIKE xmfm_t.xmfm001
+DEFINE l_max_xmfm002     LIKE xmfm_t.xmfm002
+DEFINE l_ooca002         LIKE ooca_t.ooca002
+DEFINE l_ooca004         LIKE ooca_t.ooca004
+DEFINE l_success         LIKE type_t.num5
+DEFINE l_round           LIKE xmdv_t.xmdv001
+DEFINE l_num             LIKE xmdv_t.xmdv001
+DEFINE l_ooef014         LIKE ooef_t.ooef014
+
+   INITIALIZE r_xmfm001 TO NULL
+   
+   IF cl_null(p_xmfmdocno) OR cl_null(p_xmfmseq) THEN
+      RETURN r_xmfm001
+   END IF
+   
+   #折扣方式為單價時，計價單位要有值
+   IF p_xmfl005 <> '2' AND cl_null(p_xmfl006) THEN
+      RETURN r_xmfm001
+   END IF
+   
+   LET l_max_xmfm002 = 0
+   SELECT MAX(xmfm002) INTO l_max_xmfm002
+     FROM xmfm_t
+    WHERE xmfment = g_enterprise
+      AND xmfmdocno = p_xmfmdocno
+      AND xmfmseq = p_xmfmseq
+   IF cl_null(l_max_xmfm002) THEN
+      LET l_max_xmfm002 = 0
+   END IF
+   
+   #取得小數位數
+   LET l_ooca002 = 0
+   LET l_ooca004 = NULL
+   IF p_xmfl005 = '2' THEN
+      #金額
+      LET l_ooef014 = ''
+      SELECT ooef014 INTO l_ooef014 
+        FROM ooef_t 
+       WHERE ooefent = g_enterprise
+         AND ooef001 = g_site
+      IF cl_null(l_ooef014) THEN
+         RETURN r_xmfm001
+      END IF
+      
+      CALL s_curr_sel_ooaj004(l_ooef014,p_xmfj004) RETURNING l_ooca002
+      LET l_ooca004 = '1'   #四捨五入
+   ELSE
+      #數量
+      CALL s_aooi250_get_msg(p_xmfl006) RETURNING l_success,l_ooca002,l_ooca004
+      IF NOT l_success THEN
+         RETURN r_xmfm001
+      END IF
+   END IF
+   
+   #計算起始數量/金額
+   LET l_round = 0
+   LET l_num = 0
+   LET l_round = util.Math.pow(10,l_ooca002)
+   LET l_num = 1/l_round
+   LET r_xmfm001 = l_max_xmfm002 + l_num
+   
+   RETURN r_xmfm001
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt430_01_num_chk" order="5" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 數量/金額檢查
+# Memo...........:
+# Usage..........: CALL axmt430_01_num_chk(p_cmd,p_type,p_xmfm001,p_xmfm002)
+#                  RETURNING r_success
+# Input parameter: p_cmd          a.新增 u.修改
+#                : p_type         1.起始數量/金額 2.截止數量/金額
+#                : p_xmfm001      起始數量/金額
+#                : p_xmfm002      截止數量/金額
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2015/06/09 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmt430_01_num_chk(p_cmd,p_type,p_xmfm001,p_xmfm002)
+DEFINE p_cmd             LIKE type_t.chr1
+DEFINE p_type            LIKE type_t.chr1
+DEFINE p_xmfm001         LIKE xmfm_t.xmfm001
+DEFINE p_xmfm002         LIKE xmfm_t.xmfm002
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_num             LIKE xmfm_t.xmfm001
+DEFINE l_cnt             LIKE type_t.num5
+DEFINE l_sql             STRING
+
+   LET r_success = TRUE
+   
+   IF cl_null(p_type) OR (cl_null(p_xmfm001) AND cl_null(p_xmfm002)) THEN
+      RETURN r_success
+   END IF
+   
+   IF p_type = 1 THEN
+      LET l_num = p_xmfm001
+   ELSE
+      LET l_num = p_xmfm002
+   END IF
+   
+   #檢查數量/金額是否在其他筆的起始數量/金額和截止數量/金額之間
+   LET l_cnt = 0
+   LET l_sql = "SELECT COUNT(*) ",
+               "  FROM xmfm_t ",
+               " WHERE xmfment = ",g_enterprise,
+               "   AND xmfmdocno = '",g_xmfm_d[l_ac].xmfmdocno,"'",
+               "   AND xmfmseq = ",g_xmfm_d[l_ac].xmfmseq,
+               "   AND ",l_num," BETWEEN xmfm001 AND xmfm002 "
+   IF p_cmd = 'u' THEN
+      LET l_sql = l_sql CLIPPED,
+                  " AND (xmfm001 <> ",g_xmfm_d_t.xmfm001," AND xmfm002 <> ",g_xmfm_d_t.xmfm002,")"
+   END IF
+   PREPARE axmt430_01_num_chk_pre FROM l_sql
+   EXECUTE axmt430_01_num_chk_pre INTO l_cnt
+   IF NOT cl_null(l_cnt) AND l_cnt > 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = l_num
+      LET g_errparam.code = 'apm-00227'
+      LET g_errparam.popup = TRUE
+      
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   IF cl_null(p_xmfm001) OR cl_null(p_xmfm002) THEN
+      RETURN r_success
+   END IF
+   
+   #起始數量/金額不可大於等於截止數量/金額
+   IF p_xmfm001 > p_xmfm002 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = p_xmfm001,">",p_xmfm002
+      LET g_errparam.code = 'axm-00659'
+      LET g_errparam.popup = TRUE
+      
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #檢查此筆資料有無含蓋其他筆數量/金額
+   LET l_cnt = 0
+   LET l_sql = "SELECT COUNT(*) ",
+               "  FROM xmfm_t ",
+               " WHERE xmfment = ",g_enterprise,
+               "   AND xmfmdocno = '",g_xmfm_d[l_ac].xmfmdocno,"' ",
+               "   AND xmfmseq = ",g_xmfm_d[l_ac].xmfmseq,
+               "   AND (xmfm001 BETWEEN ",p_xmfm001," AND ",p_xmfm002,
+               "    OR xmfm002 BETWEEN ",p_xmfm001," AND ",p_xmfm002,")"
+   IF p_cmd = 'u' THEN
+      LET l_sql = l_sql CLIPPED,
+                  " AND (xmfm001 <> ",g_xmfm_d_t.xmfm001," AND xmfm002 <> ",g_xmfm_d_t.xmfm002,")"
+   END IF
+   PREPARE axmt430_01_num_chk_pre1 FROM l_sql
+   EXECUTE axmt430_01_num_chk_pre1 INTO l_cnt
+   IF NOT cl_null(l_cnt) AND l_cnt > 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = l_num
+      LET g_errparam.code = 'apm-00227'
+      LET g_errparam.popup = TRUE
+      
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt430_take_decimals" order="6" ver="1" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="function.axmt430_01_take_decimals" order="6" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 數量/金額取位
+# Memo...........:
+# Usage..........: CALL axmt430_01_take_decimals(p_xmfj004,p_xmfl005,p_xmfl006,p_num)
+#                  RETURNING r_success,r_num
+# Input parameter: p_xmfj004      幣別
+#                : p_xmfl005      折扣方式
+#                : p_xmfl006      計價單位
+#                : p_num          數量/金額
+# Return code....: r_success      TRUE/FALSE
+#                : r_num          取位後的數量/金額
+# Date & Author..: 2015/06/09 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmt430_01_take_decimals(p_xmfj004,p_xmfl005,p_xmfl006,p_num)
+DEFINE p_xmfj004         LIKE xmfj_t.xmfj004
+DEFINE p_xmfl005         LIKE xmfl_t.xmfl005
+DEFINE p_xmfl006         LIKE xmfl_t.xmfl006
+DEFINE p_num             LIKE xmfm_t.xmfm001
+DEFINE r_success         LIKE type_t.num5
+DEFINE r_num             LIKE xmfm_t.xmfm001
+DEFINE l_success         LIKE type_t.num5
+
+   LET r_success = TRUE
+   LET r_num = p_num
+   
+   IF cl_null(p_xmfl005) OR cl_null(p_num) THEN
+      RETURN r_success,r_num
+   END IF
+   
+   IF p_xmfl005 = '2' THEN
+      #金額取位
+      IF cl_null(p_xmfj004) THEN
+         RETURN r_success,r_num
+      END IF
+      
+      CALL s_curr_round(g_site,p_xmfj004,p_num,'2')
+           RETURNING r_num
+   ELSE
+      #數量取位
+      IF cl_null(p_xmfl006) THEN
+         RETURN r_success,r_num
+      END IF
+      
+      CALL s_aooi250_take_decimals(p_xmfl006,p_num)
+           RETURNING l_success,p_num
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success,r_num
+      END IF
+      
+      LET r_num = p_num
+   END IF
+   
+   RETURN r_success,r_num
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt430_01_set_entry_b" order="7" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 欄位開放
+# Memo...........:
+# Usage..........: CALL axmt430_01_set_entry_b(p_cmd)
+#                  
+# Input parameter: p_cmd          a.新增 u.修改
+# Return code....: 
+# Date & Author..: 2015/06/09 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmt430_01_set_entry_b(p_cmd)
+DEFINE p_cmd             LIKE type_t.chr1
+
+   CALL cl_set_comp_entry("xmfm003,xmfm004",TRUE)
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt430_01_set_no_entry_b" order="8" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 欄位關閉
+# Memo...........:
+# Usage..........: CALL axmt430_01_set_no_entry_b(p_cmd,p_xmfl005)
+#                  
+# Input parameter: p_cmd          a.新增 u.修改
+#                : p_xmfl005      折扣方式
+# Return code....: 
+# Date & Author..: 2015/06/09 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmt430_01_set_no_entry_b(p_cmd,p_xmfl005)
+DEFINE p_cmd             LIKE type_t.chr1
+DEFINE p_xmfl005         LIKE xmfl_t.xmfl005
+
+   CASE p_xmfl005
+      WHEN '1'   #單價折扣
+           CALL cl_set_comp_entry("xmfm004",FALSE)
+      WHEN '2'   #金額百分比折扣
+           CALL cl_set_comp_entry("xmfm003",FALSE)
+      WHEN '3'   #單價百分比折扣
+           CALL cl_set_comp_entry("xmfm003",FALSE)
+   END CASE
+   
+END FUNCTION]]>
+  </point>
+  <point name="global.import" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[IMPORT util]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE g_forupd_sql          STRING
+DEFINE g_xmfm_d_o            type_g_xmfm_d]]>
+  </point>
+  <point name="input.a.page1.xmfm001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_xmfm_d[g_detail_idx].xmfmdocno IS NOT NULL AND g_xmfm_d[g_detail_idx].xmfmseq IS NOT NULL AND g_xmfm_d[g_detail_idx].xmfm001 IS NOT NULL AND g_xmfm_d[g_detail_idx].xmfm002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmfm_d[g_detail_idx].xmfmdocno != g_xmfm_d_t.xmfmdocno OR g_xmfm_d[g_detail_idx].xmfmseq != g_xmfm_d_t.xmfmseq OR g_xmfm_d[g_detail_idx].xmfm001 != g_xmfm_d_t.xmfm001 OR g_xmfm_d[g_detail_idx].xmfm002 != g_xmfm_d_t.xmfm002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmfm_t WHERE "||"xmfment = '" ||g_enterprise|| "' AND "||"xmfmdocno = '"||g_xmfm_d[g_detail_idx].xmfmdocno ||"' AND "|| "xmfmseq = '"||g_xmfm_d[g_detail_idx].xmfmseq ||"' AND "|| "xmfm001 = '"||g_xmfm_d[g_detail_idx].xmfm001 ||"' AND "|| "xmfm002 = '"||g_xmfm_d[g_detail_idx].xmfm002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF 
+            
+            IF NOT cl_null(g_xmfm_d[l_ac].xmfm001) THEN 
+               #數量取位
+               CALL axmt430_01_take_decimals(l_xmfj004,p_xmfl005,p_xmfl006,g_xmfm_d[l_ac].xmfm001)
+                    RETURNING l_success,g_xmfm_d[l_ac].xmfm001
+               IF NOT l_success THEN
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #數量檢查
+               IF NOT axmt430_01_num_chk(l_cmd,'1',g_xmfm_d[l_ac].xmfm001,g_xmfm_d[l_ac].xmfm002) THEN
+                  LET g_xmfm_d[l_ac].xmfm001 = g_xmfm_d_t.xmfm001
+                  DISPLAY BY NAME g_xmfm_d[l_ac].xmfm001
+                  NEXT FIELD CURRENT
+               END IF
+            END IF ]]>
+  </point>
+  <point name="input.a.page1.xmfm002" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_xmfm_d[g_detail_idx].xmfmdocno IS NOT NULL AND g_xmfm_d[g_detail_idx].xmfmseq IS NOT NULL AND g_xmfm_d[g_detail_idx].xmfm001 IS NOT NULL AND g_xmfm_d[g_detail_idx].xmfm002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmfm_d[g_detail_idx].xmfmdocno != g_xmfm_d_t.xmfmdocno OR g_xmfm_d[g_detail_idx].xmfmseq != g_xmfm_d_t.xmfmseq OR g_xmfm_d[g_detail_idx].xmfm001 != g_xmfm_d_t.xmfm001 OR g_xmfm_d[g_detail_idx].xmfm002 != g_xmfm_d_t.xmfm002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmfm_t WHERE "||"xmfment = '" ||g_enterprise|| "' AND "||"xmfmdocno = '"||g_xmfm_d[g_detail_idx].xmfmdocno ||"' AND "|| "xmfmseq = '"||g_xmfm_d[g_detail_idx].xmfmseq ||"' AND "|| "xmfm001 = '"||g_xmfm_d[g_detail_idx].xmfm001 ||"' AND "|| "xmfm002 = '"||g_xmfm_d[g_detail_idx].xmfm002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+            IF NOT cl_null(g_xmfm_d[l_ac].xmfm002) THEN 
+               #數量取位
+               CALL axmt430_01_take_decimals(l_xmfj004,p_xmfl005,p_xmfl006,g_xmfm_d[l_ac].xmfm002)
+                    RETURNING l_success,g_xmfm_d[l_ac].xmfm002
+               IF NOT l_success THEN
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #數量檢查
+               IF NOT axmt430_01_num_chk(l_cmd,'2',g_xmfm_d[l_ac].xmfm001,g_xmfm_d[l_ac].xmfm002) THEN
+                  LET g_xmfm_d[l_ac].xmfm002 = g_xmfm_d_t.xmfm002
+                  DISPLAY BY NAME g_xmfm_d[l_ac].xmfm001
+                  NEXT FIELD CURRENT
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.a.page1.xmfm003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xmfm_d[l_ac].xmfm003) THEN 
+               CALL s_curr_round(g_site,l_xmfj004,g_xmfm_d[l_ac].xmfm003,'1')
+                    RETURNING g_xmfm_d[l_ac].xmfm003
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1.xmfm004" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xmfm_d[l_ac].xmfm004) THEN 
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1.xmfmdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_xmfm_d[g_detail_idx].xmfmdocno IS NOT NULL AND g_xmfm_d[g_detail_idx].xmfmseq IS NOT NULL AND g_xmfm_d[g_detail_idx].xmfm001 IS NOT NULL AND g_xmfm_d[g_detail_idx].xmfm002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmfm_d[g_detail_idx].xmfmdocno != g_xmfm_d_t.xmfmdocno OR g_xmfm_d[g_detail_idx].xmfmseq != g_xmfm_d_t.xmfmseq OR g_xmfm_d[g_detail_idx].xmfm001 != g_xmfm_d_t.xmfm001 OR g_xmfm_d[g_detail_idx].xmfm002 != g_xmfm_d_t.xmfm002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmfm_t WHERE "||"xmfment = '" ||g_enterprise|| "' AND "||"xmfmdocno = '"||g_xmfm_d[g_detail_idx].xmfmdocno ||"' AND "|| "xmfmseq = '"||g_xmfm_d[g_detail_idx].xmfmseq ||"' AND "|| "xmfm001 = '"||g_xmfm_d[g_detail_idx].xmfm001 ||"' AND "|| "xmfm002 = '"||g_xmfm_d[g_detail_idx].xmfm002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.xmfmseq" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_xmfm_d[g_detail_idx].xmfmdocno IS NOT NULL AND g_xmfm_d[g_detail_idx].xmfmseq IS NOT NULL AND g_xmfm_d[g_detail_idx].xmfm001 IS NOT NULL AND g_xmfm_d[g_detail_idx].xmfm002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmfm_d[g_detail_idx].xmfmdocno != g_xmfm_d_t.xmfmdocno OR g_xmfm_d[g_detail_idx].xmfmseq != g_xmfm_d_t.xmfmseq OR g_xmfm_d[g_detail_idx].xmfm001 != g_xmfm_d_t.xmfm001 OR g_xmfm_d[g_detail_idx].xmfm002 != g_xmfm_d_t.xmfm002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmfm_t WHERE "||"xmfment = '" ||g_enterprise|| "' AND "||"xmfmdocno = '"||g_xmfm_d[g_detail_idx].xmfmdocno ||"' AND "|| "xmfmseq = '"||g_xmfm_d[g_detail_idx].xmfmseq ||"' AND "|| "xmfm001 = '"||g_xmfm_d[g_detail_idx].xmfm001 ||"' AND "|| "xmfm002 = '"||g_xmfm_d[g_detail_idx].xmfm002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.b.page1.xmfm001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF cl_null(g_xmfm_d[l_ac].xmfm001) THEN
+               CALL axmt430_01_xmfm001_init(g_xmfm_d[l_ac].xmfmdocno,g_xmfm_d[l_ac].xmfmseq,l_xmfj004,p_xmfl005,p_xmfl006)
+                    RETURNING g_xmfm_d[l_ac].xmfm001
+            END IF]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+         BEFORE ROW
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            DISPLAY l_ac TO FORMONLY.idx
+            LET g_detail_idx = l_ac
+
+            IF g_rec_b >= l_ac THEN
+               LET l_cmd = 'u'
+               LET g_xmfm_d_t.* = g_xmfm_d[l_ac].*  #BACKUP
+               LET g_xmfm_d_o.* = g_xmfm_d[l_ac].*
+               
+               OPEN axmt430_01_bcl USING g_xmfm_d[l_ac].xmfm001,g_xmfm_d[l_ac].xmfm002
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = "axmt430_01_bcl"
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  EXIT DIALOG
+               END IF
+               
+               FETCH axmt430_01_bcl INTO g_xmfm_d[l_ac].xmfmdocno,g_xmfm_d[l_ac].xmfmsite,
+                                         g_xmfm_d[l_ac].xmfmseq,
+                                         g_xmfm_d[l_ac].xmfm001,g_xmfm_d[l_ac].xmfm002,
+                                         g_xmfm_d[l_ac].xmfm003,g_xmfm_d[l_ac].xmfm004
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = g_xmfm_d_t.xmfmseq
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET l_lock_sw = 'Y'
+               END IF
+               
+               LET g_xmfm_d_t.* = g_xmfm_d[l_ac].*
+               LET g_xmfm_d_o.* = g_xmfm_d[l_ac].*
+               
+               CALL cl_show_fld_cont()
+            ELSE
+               LET l_cmd = 'a'
+            END IF
+            CALL axmt430_01_set_entry_b(l_cmd)
+            CALL axmt430_01_set_no_entry_b(l_cmd,p_xmfl005)
+            
+         BEFORE INSERT
+            LET l_cmd = 'a'
+            INITIALIZE g_xmfm_d[l_ac].* TO NULL
+               
+            LET g_xmfm_d[l_ac].xmfmdocno = p_xmfjdocno
+            LET g_xmfm_d[l_ac].xmfmsite = g_site
+            LET g_xmfm_d[l_ac].xmfmseq = p_xmflseq
+            #起始數量預設
+            CALL axmt430_01_xmfm001_init(g_xmfm_d[l_ac].xmfmdocno,g_xmfm_d[l_ac].xmfmseq,l_xmfj004,p_xmfl005,p_xmfl006)
+                 RETURNING g_xmfm_d[l_ac].xmfm001
+               
+            LET g_xmfm_d_t.* = g_xmfm_d[l_ac].*
+            LET g_xmfm_d_o.* = g_xmfm_d[l_ac].*
+            CALL cl_show_fld_cont()
+            CALL axmt430_01_set_entry_b(l_cmd)
+            CALL axmt430_01_set_no_entry_b(l_cmd,p_xmfl005)
+               
+         AFTER INSERT
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ''
+               LET g_errparam.code = 9001
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1
+            SELECT COUNT(*) INTO l_count 
+              FROM xmfm_t
+             WHERE xmfment = g_enterprise
+               AND xmfmdocno = g_xmfm_d[l_ac].xmfmdocno
+               AND xmfmseq = g_xmfm_d[l_ac].xmfmseq
+               AND xmfm001 = g_xmfm_d[l_ac].xmfm001
+               AND xmfm002 = g_xmfm_d[l_ac].xmfm002
+            IF l_count = 0 THEN
+               INSERT INTO xmfm_t(xmfment,xmfmdocno,xmfmsite,xmfmseq,xmfm001,xmfm002,
+                                  xmfm003,xmfm004)
+                  VALUES (g_enterprise,g_xmfm_d[l_ac].xmfmdocno,g_xmfm_d[l_ac].xmfmsite,
+                          g_xmfm_d[l_ac].xmfmseq,g_xmfm_d[l_ac].xmfm001,g_xmfm_d[l_ac].xmfm002,
+                          g_xmfm_d[l_ac].xmfm003,g_xmfm_d[l_ac].xmfm004)
+            ELSE
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code   = "std-00006" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               INITIALIZE g_xmfm_d[l_ac].* TO NULL
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "xmfm_t" 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()                  
+               CANCEL INSERT
+            ELSE
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+            
+         BEFORE DELETE
+            IF NOT cl_null(g_xmfm_d[l_ac].xmfmdocno) AND
+               NOT cl_null(g_xmfm_d[l_ac].xmfmseq) AND
+               NOT cl_null(g_xmfm_d[l_ac].xmfm001) AND
+               NOT cl_null(g_xmfm_d[l_ac].xmfm002) THEN
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               
+               DELETE FROM xmfm_t
+                WHERE xmfment = g_enterprise
+                  AND xmfmdocno = g_xmfm_d_t.xmfmdocno
+                  AND xmfmseq = g_xmfm_d_t.xmfmseq
+                  AND xmfm001 = g_xmfm_d_t.xmfm001
+                  AND xmfm002 = g_xmfm_d_t.xmfm002
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = 'DELETE xmfm_t'
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  
+                  CANCEL DELETE
+               ELSE
+                  CLOSE axmt430_01_bcl
+                  LET g_rec_b = g_rec_b - 1
+               END IF
+            END IF
+         
+         AFTER DELETE
+            #如果是最後一筆
+            IF l_ac = (g_xmfm_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+            
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_xmfm_d[l_ac].* = g_xmfm_d_t.*
+               EXIT DIALOG
+            END IF
+            
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = g_xmfm_d[l_ac].xmfm001,',',g_xmfm_d[l_ac].xmfm002 
+               LET g_errparam.code   = -263 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET g_xmfm_d[l_ac].* = g_xmfm_d_t.*
+            ELSE
+               UPDATE xmfm_t SET xmfm001 = g_xmfm_d[l_ac].xmfm001,
+                                 xmfm002 = g_xmfm_d[l_ac].xmfm002,
+                                 xmfm003 = g_xmfm_d[l_ac].xmfm003,
+                                 xmfm004 = g_xmfm_d[l_ac].xmfm004
+                WHERE xmfment = g_enterprise
+                  AND xmfmdocno = g_xmfm_d_t.xmfmdocno
+                  AND xmfmseq = g_xmfm_d_t.xmfmseq
+                  AND xmfm001 = g_xmfm_d_t.xmfm001
+                  AND xmfm002 = g_xmfm_d_t.xmfm002
+                     
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "UPDATE xmfm_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+            
+                  LET g_xmfm_d[l_ac].* = g_xmfm_d_t.*
+               END IF
+            END IF
+
+         AFTER ROW
+            CLOSE axmt430_01_bcl]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE p_xmfjdocno     LIKE xmfj_t.xmfjdocno   #合約單號
+   DEFINE p_xmflseq       LIKE xmfl_t.xmflseq     #項次
+   DEFINE p_xmfl001       LIKE xmfl_t.xmfl001     #資料類型
+   DEFINE p_xmfl002       LIKE xmfl_t.xmfl002     #資料編號
+   DEFINE p_xmfl005       LIKE xmfl_t.xmfl005     #折扣方式
+   DEFINE p_xmfl006       LIKE xmfl_t.xmfl006     #計價單位
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否 
+   DEFINE l_xmfj004       LIKE xmfj_t.xmfj004     #幣別
+   DEFINE l_success       LIKE type_t.num5]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   p_xmfjdocno,p_xmflseq,p_xmfl001,p_xmfl002,p_xmfl005,p_xmfl006]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET INT_FLAG = FALSE]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   WHENEVER ERROR CONTINUE
+   
+   #檢查是否有是transaction內
+   #检查是否在事务中
+   IF NOT s_transaction_chk('Y',1) THEN
+      CLOSE WINDOW w_axmt430_01 
+      RETURN 
+   END IF
+   
+   CALL axmt430_01_init()
+   
+   #顯示單頭資料
+   DISPLAY p_xmfjdocno,p_xmflseq,p_xmfl001,p_xmfl002,p_xmfl005 
+        TO xmfjdocno,xmflseq,xmfl001,xmfl002,xmfl005
+        
+   #資料編號說明
+   CALL axmt430_01_xmfl002_desc(p_xmfl001,p_xmfl002)
+   
+   #抓取合約單頭幣別
+   LET l_xmfj004 = ''
+   SELECT xmfj004 INTO l_xmfj004 
+     FROM xmfj_t
+    WHERE xmfjent = g_enterprise
+      AND xmfjdocno = p_xmfjdocno
+   
+   #抓取單身資料
+   CALL axmt430_01_b_fill(p_xmfjdocno,p_xmflseq)
+   
+   LET g_forupd_sql = "SELECT xmfmdocno,xmfmsite,xmfmseq,xmfm001,xmfm002,xmfm003,xmfm004 ",
+                      "  FROM xmfm_t ",
+                      " WHERE xmfment = ",g_enterprise,
+                      "   AND xmfmdocno = '",p_xmfjdocno,"'",
+                      "   AND xmfmseq = ",p_xmflseq,
+                      "   AND xmfm001 = ? ",
+                      "   AND xmfm002 = ? ",
+                      "   FOR UPDATE "
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE axmt430_01_bcl CURSOR FROM g_forupd_sql]]>
+  </point>
+  <section id="axmt430_01.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000010
+#+ 
+#+ Filename...: axmt430_01
+#+ Description: 折扣合約分段計價維護作業
+#+ Creator....: 01588(2015-06-08 17:42:30)
+#+ Modifier...: 01588(2015-06-09 17:27:29) -SD/PR-
+]]>
+  </section>
+  <section id="axmt430_01.global" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 c02b 樣板自動產生(Version:5)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_xmfm_d        RECORD
+       xmfmdocno LIKE xmfm_t.xmfmdocno, 
+   xmfmsite LIKE xmfm_t.xmfmsite, 
+   xmfmseq LIKE xmfm_t.xmfmseq, 
+   xmfm001 LIKE xmfm_t.xmfm001, 
+   xmfm002 LIKE xmfm_t.xmfm002, 
+   xmfm003 LIKE xmfm_t.xmfm003, 
+   xmfm004 LIKE xmfm_t.xmfm004
+       END RECORD
+ 
+ 
+DEFINE g_xmfm_d          DYNAMIC ARRAY OF type_g_xmfm_d
+DEFINE g_xmfm_d_t        type_g_xmfm_d
+ 
+ 
+DEFINE g_xmfmdocno_t   LIKE xmfm_t.xmfmdocno    #Key值備份
+DEFINE g_xmfmseq_t      LIKE xmfm_t.xmfmseq    #Key值備份
+DEFINE g_xmfm001_t      LIKE xmfm_t.xmfm001    #Key值備份
+DEFINE g_xmfm002_t      LIKE xmfm_t.xmfm002    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+    
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point    
+]]>
+  </section>
+  <section id="axmt430_01.input" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION axmt430_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define" edit="s"/>}
+   #end add-point
+   #add-point:input段define
+   {<point name="input.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axmt430_01 WITH FORM cl_ap_formpath("axm","axmt430_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_xmfm_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xmfmdocno
+            #add-point:BEFORE FIELD xmfmdocno
+            {<point name="input.b.page1.xmfmdocno" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xmfmdocno
+            
+            #add-point:AFTER FIELD xmfmdocno
+            {<point name="input.a.page1.xmfmdocno" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xmfmdocno
+            #add-point:ON CHANGE xmfmdocno
+            {<point name="input.g.page1.xmfmdocno" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xmfmsite
+            #add-point:BEFORE FIELD xmfmsite
+            {<point name="input.b.page1.xmfmsite" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xmfmsite
+            
+            #add-point:AFTER FIELD xmfmsite
+            {<point name="input.a.page1.xmfmsite" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xmfmsite
+            #add-point:ON CHANGE xmfmsite
+            {<point name="input.g.page1.xmfmsite" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xmfmseq
+            #add-point:BEFORE FIELD xmfmseq
+            {<point name="input.b.page1.xmfmseq" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xmfmseq
+            
+            #add-point:AFTER FIELD xmfmseq
+            {<point name="input.a.page1.xmfmseq" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xmfmseq
+            #add-point:ON CHANGE xmfmseq
+            {<point name="input.g.page1.xmfmseq" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xmfm001
+            #應用 a15 樣板自動產生(Version:2)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xmfm_d[l_ac].xmfm001,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD xmfm001
+            END IF 
+ 
+ 
+            #add-point:AFTER FIELD xmfm001
+            {<point name="input.a.page1.xmfm001" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xmfm001
+            #add-point:BEFORE FIELD xmfm001
+            {<point name="input.b.page1.xmfm001" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xmfm001
+            #add-point:ON CHANGE xmfm001
+            {<point name="input.g.page1.xmfm001" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xmfm002
+            #應用 a15 樣板自動產生(Version:2)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xmfm_d[l_ac].xmfm002,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD xmfm002
+            END IF 
+ 
+ 
+            #add-point:AFTER FIELD xmfm002
+            {<point name="input.a.page1.xmfm002" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xmfm002
+            #add-point:BEFORE FIELD xmfm002
+            {<point name="input.b.page1.xmfm002" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xmfm002
+            #add-point:ON CHANGE xmfm002
+            {<point name="input.g.page1.xmfm002" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xmfm003
+            #應用 a15 樣板自動產生(Version:2)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xmfm_d[l_ac].xmfm003,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmfm003
+            END IF 
+ 
+ 
+            #add-point:AFTER FIELD xmfm003
+            {<point name="input.a.page1.xmfm003" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xmfm003
+            #add-point:BEFORE FIELD xmfm003
+            {<point name="input.b.page1.xmfm003" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xmfm003
+            #add-point:ON CHANGE xmfm003
+            {<point name="input.g.page1.xmfm003" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xmfm004
+            #應用 a15 樣板自動產生(Version:2)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xmfm_d[l_ac].xmfm004,"0.000","1","100.000","1","azz-00087",1) THEN 
+
+               NEXT FIELD xmfm004
+            END IF 
+ 
+ 
+            #add-point:AFTER FIELD xmfm004
+            {<point name="input.a.page1.xmfm004" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xmfm004
+            #add-point:BEFORE FIELD xmfm004
+            {<point name="input.b.page1.xmfm004" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xmfm004
+            #add-point:ON CHANGE xmfm004
+            {<point name="input.g.page1.xmfm004" />}
+            #END add-point 
+ 
+ 
+                  #Ctrlp:input.c.page1.xmfmdocno
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xmfmdocno
+            #add-point:ON ACTION controlp INFIELD xmfmdocno
+            {<point name="input.c.page1.xmfmdocno" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmfmsite
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xmfmsite
+            #add-point:ON ACTION controlp INFIELD xmfmsite
+            {<point name="input.c.page1.xmfmsite" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmfmseq
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xmfmseq
+            #add-point:ON ACTION controlp INFIELD xmfmseq
+            {<point name="input.c.page1.xmfmseq" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmfm001
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xmfm001
+            #add-point:ON ACTION controlp INFIELD xmfm001
+            {<point name="input.c.page1.xmfm001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmfm002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xmfm002
+            #add-point:ON ACTION controlp INFIELD xmfm002
+            {<point name="input.c.page1.xmfm002" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmfm003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xmfm003
+            #add-point:ON ACTION controlp INFIELD xmfm003
+            {<point name="input.c.page1.xmfm003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmfm004
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xmfm004
+            #add-point:ON ACTION controlp INFIELD xmfm004
+            {<point name="input.c.page1.xmfm004" />}
+            #END add-point
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...)
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel
+         {<point name="input.cancel"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axmt430_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="axmt430_01.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="axmt430_01.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

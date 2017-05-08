@@ -1,0 +1,1134 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="asrp370.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0007(2014-11-17 15:47:21), PR版次:0007(2016-11-01 18:36:05)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000074
+#+ Filename...: asrp370
+#+ Description: 重複性生產調撥產生作業
+#+ Creator....: 00768(2014-11-11 11:09:05)
+#+ Modifier...: 00768 -SD/PR- 05384
+ 
+{</section>}
+ 
+{<section id="asrp370.global" >}
+#應用 p01 樣板自動產生(Version:19)
+#add-point:填寫註解說明 name="global.memo" name="global.memo"
+#151118-00029#11  2016/04/05 By Sarah     引導式作業整批調整
+#160727-00019#19  2016/08/04 By 08734     临时表长度超过15码的减少到15码以下 asrp370_01_temp1 ——> asrp370_tmp01,p370_01_lock_b_t ——> asrp370_tmp03,asrp370_02_temp2 ——> asrp370_tmp05
+#160706-00037#11  2016/10/26 By shiun     引導式作業調整的作法:進行到第二步時，針對勾選的資料中若有被別人處理中的單據提示"單據編號OOO+項次XX被其他使用者處理中"
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目 name="global.import"
+IMPORT FGL asr_asrp370_01
+IMPORT FGL asr_asrp370_02
+IMPORT FGL asr_asrp370_03
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       sfda009 LIKE type_t.chr10,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+GLOBALS "../../asr/4gl/asrp370.inc"
+DEFINE li_step              LIKE type_t.num5
+DEFINE gwin_curr            ui.Window
+DEFINE gfrm_curr            ui.Form
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asrp370.main" >}
+MAIN
+   #add-point:main段define (客製用) name="main.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define name="main.define"
+   DEFINE l_success     LIKE type_t.num5
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("asr","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   CALL cl_get_para(g_enterprise,g_site,'S-BAS-0028') RETURNING g_ref_unit  #是否启用参考单位
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+      CALL asrp370_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_asrp370 WITH FORM cl_ap_formpath("asr",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL asrp370_init()
+ 
+      #進入選單 Menu (="N")
+      CALL asrp370_ui_dialog()
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+
+      #建立各程式的temp table
+      CALL asrp370_01_create_temp_table() RETURNING l_success
+      IF NOT l_success THEN
+         #dorislai-20150914-modify----(S)
+#         EXIT PROGRAM
+         CALL cl_ap_exitprogram("1")
+         #dorislai-20150914-modify----(E)
+      END IF
+      CALL asrp370_02_create_temp_table() RETURNING l_success
+      IF NOT l_success THEN
+         #dorislai-20150914-modify----(S)
+#         EXIT PROGRAM
+         CALL cl_ap_exitprogram("1")
+         #dorislai-20150914-modify----(E)
+      END IF
+      LET li_step = 1
+      IF l_success THEN
+         WHILE TRUE
+            CASE li_step
+               WHEN 1
+                  CALL asrp370_ui_dialog_step1() RETURNING li_step
+               WHEN 2
+                  CALL asrp370_ui_dialog_step2() RETURNING li_step
+               WHEN 3
+                  CALL asrp370_ui_dialog_step3() RETURNING li_step
+               WHEN 0
+                  EXIT WHILE
+               OTHERWISE
+                  EXIT WHILE
+            END CASE
+         END WHILE
+      END IF
+
+      CALL asrp370_01_drop_temp_table() RETURNING l_success
+      CALL asrp370_02_drop_temp_table() RETURNING l_success
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_asrp370
+   END IF
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="asrp370.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION asrp370_init()
+ 
+   #add-point:init段define (客製用) name="init.define_customerization"
+   
+   #end add-point
+   #add-point:ui_dialog段define name="init.define"
+   LET g_error_show  = 1
+
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+
+   #畫面嵌入
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("asr", "asrp370_01"), "main_grid01", "VBox", "vbmaster_01")
+   CALL asrp370_01_init()        #asrp370_01的畫面預設
+
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("asr", "asrp370_02"), "main_grid02", "VBox", "vbmaster_02")
+   CALL asrp370_02_init()        #asrp370_02的畫面預設
+
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("asr", "asrp370_03"), "main_grid03", "VBox", "vbmaster_03")
+   CALL asrp370_03_init()        #asrp370_03的畫面預設
+
+
+   #先將嵌入的畫面都隱藏
+   #CALL cl_set_comp_visible("group_progress",FALSE)
+   CALL cl_set_comp_visible("main_vbox01",FALSE)
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+
+   #IF NOT cl_null(g_argv[1]) THEN
+   #   LET g_sfdcdocno_01 = g_argv[1]
+   #END IF
+   
+   RETURN
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化 name="init.init"
+ 
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asrp370.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION asrp370_ui_dialog()
+ 
+   #add-point:ui_dialog段define (客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define name="ui_dialog.define"
+   
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   #不启用pattern产生代码
+   RETURN
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2 name="ui_dialog.before_dialog2"
+      
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         
+         
+         #應用 a58 樣板自動產生(Version:3)
+         CONSTRUCT BY NAME g_master.wc ON sfda009
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct name="cs.head.before_construct"
+               
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfda009
+            #add-point:BEFORE FIELD sfda009 name="construct.b.sfda009"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfda009
+            
+            #add-point:AFTER FIELD sfda009 name="construct.a.sfda009"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.sfda009
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfda009
+            #add-point:ON ACTION controlp INFIELD sfda009 name="construct.c.sfda009"
+            
+            #END add-point
+ 
+ 
+ 
+            
+            #add-point:其他管控 name="cs.other"
+            
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+ 
+      
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL asrp370_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog3"
+            
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear name="ui_dialog.before_qbeclear"
+         
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL asrp370_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog name="process.exit_dialog"
+      
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL asrp370_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = asrp370_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule name="process.after_schedule"
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asrp370.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION asrp370_transfer_argv(ls_js)
+ 
+   #add-point:transfer_agrv段define (客製用) name="transfer_agrv.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define name="transfer_agrv.define"
+   
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容 name="transfer.argv.define"
+   
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asrp370.process" >}
+#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION asrp370_process(ls_js)
+ 
+   #add-point:process段define (客製用) name="process.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define name="process.define"
+   
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+   LET li_p01_status = 1
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理 name="process.pre_process"
+   
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress name="process.count_progress"
+      
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE asrp370_process_cs CURSOR FROM ls_sql
+#  FOREACH asrp370_process_cs INTO
+   #add-point:process段process name="process.process"
+   
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理 name="process.foreground_finish"
+      
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理 name="process.background_finish"
+      
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL asrp370_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asrp370.get_buffer" >}
+PRIVATE FUNCTION asrp370_get_buffer(p_dialog)
+ 
+   #add-point:process段define (客製用) name="get_buffer.define_customerization"
+   
+   #end add-point
+   DEFINE p_dialog   ui.DIALOG
+   #add-point:process段define name="get_buffer.define"
+   
+   #end add-point
+ 
+   
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理 name="get_buffer.others"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asrp370.msgcentre_notify" >}
+PRIVATE FUNCTION asrp370_msgcentre_notify()
+ 
+   #add-point:process段define (客製用) name="msgcentre_notify.define_customerization"
+   
+   #end add-point
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:process段define name="msgcentre_notify.define"
+   
+   #end add-point
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知 name="msg_centre.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asrp370.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+PRIVATE FUNCTION asrp370_ui_dialog_step1()
+   DEFINE l_cnt              LIKE type_t.num5
+   DEFINE l_success          LIKE type_t.num5
+   DEFINE l_today            LIKE indc_t.indcdocdt
+   #add--160706-00037#11 By shiun--(S)
+   DEFINE l_lock             RECORD
+          srab000            LIKE srab_t.srab000,            #版本
+          srab001            LIKE srab_t.srab001,            #生產計劃
+          srab002            LIKE srab_t.srab002,            #年
+          srab003            LIKE srab_t.srab003,            #月
+          srab004            LIKE srab_t.srab004,            #料件編號
+          srab005            LIKE srab_t.srab005,            #BOM特性
+          srab006            LIKE srab_t.srab006,            #產品特徵
+          srab009            LIKE srab_t.srab009             #日期
+                             END RECORD
+   DEFINE l_sql              STRING
+   DEFINE l_srab             RECORD
+          srab000            LIKE srab_t.srab000,            #版本
+          srab001            LIKE srab_t.srab001,            #生產計劃
+          srab002            LIKE srab_t.srab002,            #年
+          srab003            LIKE srab_t.srab003,            #月
+          srab004            LIKE srab_t.srab004,            #料件編號
+          srab005            LIKE srab_t.srab005,            #BOM特性
+          srab006            LIKE srab_t.srab006,            #產品特徵
+          srab009            LIKE srab_t.srab009             #日期
+                             END RECORD
+   #add--160706-00037#11 By shiun--(E)
+   
+   CLEAR FORM
+   
+   #設定左方的流程圖  
+   CALL gfrm_curr.setElementImage("step01","32/step01on.png")    #有on的是顏色不同的圖  
+   CALL gfrm_curr.setElementImage("step02","32/step02.png")
+   CALL gfrm_curr.setElementImage("step03","32/step03.png")
+   
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("main_vbox01",TRUE)       #將第一步的畫面顯示  
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+
+   #設定下方的button的 顯示 與 隱藏 
+   #CALL cl_set_comp_visible("save",FALSE)              #收貨資料寫入 (使用於第一步)  
+   CALL cl_set_comp_visible("back_step",FALSE)        #回上一步     (第一步,第四步不使用)
+   CALL cl_set_comp_visible("next_step",TRUE)         #下一步       (第四步不使用) 
+   CALL cl_set_comp_visible("continue",FALSE)         #處理其他資料 (使用於第四步) 
+   
+   LET l_today = cl_get_today()
+   IF cl_null(g_asrp370_01_m.yy) OR g_asrp370_01_m.yy=0 THEN LET g_asrp370_01_m.yy = YEAR(l_today) END IF
+   IF cl_null(g_asrp370_01_m.mm) OR g_asrp370_01_m.mm=0 THEN LET g_asrp370_01_m.mm = MONTH(l_today) END IF
+   
+   #mark--160706-00037#10 By shiun--(S)
+#   CALL s_transaction_begin()    #160120-00002#10 160218 pomelo add
+   #mark--160706-00037#10 By shiun--(E)
+   
+   CALL asrp370_01_b_fill()
+   
+   LET g_action_choice = ''
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         SUBDIALOG asr_asrp370_01.asrp370_01_construct
+         SUBDIALOG asr_asrp370_01.asrp370_01_input_a
+         SUBDIALOG asr_asrp370_01.asrp370_01_input_b
+         SUBDIALOG asr_asrp370_01.asrp370_01_display2
+         
+         BEFORE DIALOG
+            
+         ON ACTION continue
+         
+         ON ACTION back_step
+            
+         ON ACTION next_step
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt FROM asrp370_tmp01 WHERE sel = 'Y'  #160727-00019#19   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asrp370_01_temp1 ——> asrp370_tmp01
+            IF l_cnt > 0 THEN
+               #add--160706-00037#11 By shiun--(S)
+               CALL s_transaction_begin()
+               
+               CALL cl_err_collect_init()
+               
+               LET l_sql = "SELECT srab000, srab001, srab002, srab003,",
+                           "       srab004, srab005, srab006, srab009",
+                           "  FROM asrp370_tmp03 b",   #160727-00019#19   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 p370_01_lock_b_t ——> asrp370_tmp03
+                           " WHERE EXISTS(SELECT 1",
+                           "                FROM asrp370_tmp01 a",   #160727-00019#19   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asrp370_01_temp1 ——> asrp370_tmp01
+                           "               WHERE a.srab001 = b.srab001",
+                           "                 AND a.srab004 = b.srab004",
+                           "                 AND a.srab005 = b.srab005",
+                           "                 AND a.srab006 = b.srab006",
+                           "                 AND a.sel = 'Y')"
+               PREPARE p370_chk_lock_prep FROM l_sql
+               DECLARE p370_chk_lock_curs CURSOR WITH HOLD FOR p370_chk_lock_prep
+               
+               LET l_sql = "SELECT srab000, srab001, srab002, srab003,",
+                           "       srab004, srab005, srab006, srab009",
+                           " WHERE srabent = '",g_enterprise,"' ",
+                           "   AND srab000 = ? ",
+                           "   AND srab001 = ? ",
+                           "   AND srab002 = ? ",
+                           "   AND srab003 = ? ",
+                           "   AND srab004 = ? ",
+                           "   AND srab005 = ? ",
+                           "   AND srab006 = ? ",
+                           "   AND srab009 = ? ",
+                           "   FOR UPDATE SKIP LOCKED "
+               PREPARE p370_test_lock_prep FROM l_sql
+               
+               INITIALIZE l_lock.* TO NULL
+               
+               FOREACH p370_chk_lock_curs INTO l_lock.*
+                  INITIALIZE l_srab.* TO NULL
+                  EXECUTE p370_test_lock_prep USING l_lock.*
+                                               INTO l_srab.*
+                  IF cl_null(l_srab.srab000) OR cl_null(l_srab.srab001) 
+                     OR cl_null(l_srab.srab002) OR cl_null(l_srab.srab003)
+                     OR cl_null(l_srab.srab004) OR cl_null(l_srab.srab005)
+                     OR cl_null(l_srab.srab006) OR cl_null(l_srab.srab009) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = ''
+                     LET g_errparam.code   = 'apm-01134' 
+                     LET g_errparam.popup  = TRUE
+                     LET g_errparam.replace[1] = l_lock.srab000
+                     LET g_errparam.replace[2] = l_lock.srab001
+                     LET g_errparam.replace[3] = l_lock.srab002
+                     LET g_errparam.replace[4] = l_lock.srab003
+                     LET g_errparam.replace[5] = l_lock.srab004
+                     LET g_errparam.replace[6] = l_lock.srab005
+                     LET g_errparam.replace[7] = l_lock.srab006
+                     LET g_errparam.replace[8] = l_lock.srab009
+               
+                     CALL cl_err()
+               
+                     DELETE FROM asrp370_tmp01
+                      WHERE srab001 = l_lock.srab001
+                        AND srab004 = l_lock.srab004
+                        AND srab005 = l_lock.srab005
+                        AND srab006 = l_lock.srab006
+               
+                     DELETE FROM asrp370_tmp02
+                      WHERE srab001 = l_lock.srab001
+                        AND srab004 = l_lock.srab004
+                        AND srab005 = l_lock.srab005
+                        AND srab006 = l_lock.srab006
+                        
+                     DELETE FROM asrp370_tmp03
+                      WHERE srab000 = l_lock.srab000
+                        AND srab001 = l_lock.srab001
+                        AND srab002 = l_lock.srab002
+                        AND srab003 = l_lock.srab003
+                        AND srab004 = l_lock.srab004
+                        AND srab005 = l_lock.srab005
+                        AND srab006 = l_lock.srab006
+                        AND srab009 = l_lock.srab009
+               
+                  END IF
+               
+                  INITIALIZE l_lock.* TO NULL
+               END FOREACH
+               
+               CALL cl_err_collect_show()
+               
+               CALL s_transaction_end('Y','0')
+               #add--160706-00037#11 By shiun--(E)
+               CALL asrp370_02_insert_asrp370_02_temp1() RETURNING l_success
+               IF l_success THEN
+                  LET g_action_choice = "next_step"
+                  EXIT DIALOG
+               END IF
+            ELSE
+               #拟调拨料号中没有选择要处理的资料,請先選擇要處理的資料!
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'asf-00355'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+            END IF
+            
+         ON ACTION step01
+               
+         ON ACTION step02
+         
+         ON ACTION step03
+
+         ON ACTION CLOSE
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+            
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF 
+
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+   
+   #mark--160706-00037#10 By shiun--(S)
+#   CALL s_transaction_end('Y','0')    #160120-00002#10 160218 pomelo add
+   #mark--160706-00037#10 By shiun--(E)
+   
+   CASE g_action_choice
+      WHEN "next_step"
+         LET g_action_choice = ''
+         RETURN 2
+      OTHERWISE
+         RETURN 0
+   END CASE
+END FUNCTION
+
+PRIVATE FUNCTION asrp370_ui_dialog_step2()
+   DEFINE l_cnt              LIKE type_t.num5
+   DEFINE l_success          LIKE type_t.num5
+   #160120-00002#10 160218 pomelo add(S)
+   DEFINE l_lock             RECORD
+          srab000            LIKE srab_t.srab000,            #版本
+          srab001            LIKE srab_t.srab001,            #生產計劃
+          srab002            LIKE srab_t.srab002,            #年
+          srab003            LIKE srab_t.srab003,            #月
+          srab004            LIKE srab_t.srab004,            #料件編號
+          srab005            LIKE srab_t.srab005,            #BOM特性
+          srab006            LIKE srab_t.srab006,            #產品特徵
+          srab009            LIKE srab_t.srab009             #日期
+                             END RECORD
+   DEFINE l_sql              STRING
+   DEFINE l_where            STRING
+   #160120-00002#10 160218 pomelo add(E)
+   #add--160706-00037#11 By shiun--(S)
+   DEFINE l_srab             RECORD
+          srab000            LIKE srab_t.srab000,            #版本
+          srab001            LIKE srab_t.srab001,            #生產計劃
+          srab002            LIKE srab_t.srab002,            #年
+          srab003            LIKE srab_t.srab003,            #月
+          srab004            LIKE srab_t.srab004,            #料件編號
+          srab005            LIKE srab_t.srab005,            #BOM特性
+          srab006            LIKE srab_t.srab006,            #產品特徵
+          srab009            LIKE srab_t.srab009             #日期
+                             END RECORD
+   #add--160706-00037#11 By shiun--(E)
+
+   CLEAR FORM
+   #INITIALIZE g_asrp370_02_m.* TO NULL
+   #INITIALIZE g_wc_02 TO NULL
+   #CALL g_sfdc02_d.clear()
+   #CALL g_inag_d.clear()
+   #CALL g_inai_d.clear()
+   
+   #設定左方的流程圖  
+   CALL gfrm_curr.setElementImage("step01","32/step01.png")    #有on的是顏色不同的圖  
+   CALL gfrm_curr.setElementImage("step02","32/step02on.png")
+   CALL gfrm_curr.setElementImage("step03","32/step03.png")
+   
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("main_vbox01",FALSE)       #將第一步的畫面顯示  
+   CALL cl_set_comp_visible("main_vbox02",TRUE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+
+   #設定下方的button的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("save",FALSE)             #收貨資料寫入 (使用於第一步)  
+   CALL cl_set_comp_visible("back_step",TRUE)         #回上一步     (第一步,第三步不使用)
+   CALL cl_set_comp_visible("next_step",TRUE)         #下一步       (第三步不使用) 
+   CALL cl_set_comp_visible("continue",FALSE)         #處理其他資料 (使用於第四步) 
+   
+   #160120-00002#10 160218 pomelo add(S)
+   CALL s_transaction_begin()
+   
+   LET l_sql = "SELECT srab000, srab001, srab002, srab003,",
+               "       srab004, srab005, srab006, srab009",
+               "  FROM asrp370_tmp03 b",   #160727-00019#19   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 p370_01_lock_b_t ——> asrp370_tmp03
+               " WHERE EXISTS(SELECT 1",
+               "                FROM asrp370_tmp01 a",   #160727-00019#19   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asrp370_01_temp1 ——> asrp370_tmp01
+               "               WHERE a.srab001 = b.srab001",
+               "                 AND a.srab004 = b.srab004",
+               "                 AND a.srab005 = b.srab005",
+               "                 AND a.srab006 = b.srab006",
+               "                 AND a.sel = 'Y')"
+   PREPARE asrp370_lock_pre FROM l_sql
+   DECLARE asrp370_lock_cs CURSOR FOR asrp370_lock_pre
+   
+   LET l_sql = "SELECT srab001",
+               "  FROM srab_t",
+               " WHERE srabent = ",g_enterprise,
+               "   AND srabsite = '",g_site,"'"
+   
+   LET l_where = ''
+   INITIALIZE l_lock.* TO NULL
+   FOREACH asrp370_lock_cs
+      INTO l_lock.srab000, l_lock.srab001, l_lock.srab002, l_lock.srab003,
+           l_lock.srab004, l_lock.srab005, l_lock.srab006, l_lock.srab009
+      
+      IF cl_null(l_where) THEN
+         LET l_where = "(srab000 = ",l_lock.srab000,
+                       " AND srab001 = '",l_lock.srab001,"'",
+                       " AND srab002 = ",l_lock.srab002,
+                       " AND srab003 = ",l_lock.srab003,
+                       " AND srab004 = '",l_lock.srab004,"'",
+                       " AND srab005 = '",l_lock.srab005,"'",
+                       " AND srab006 = '",l_lock.srab006,"'",
+                       " AND srab009 = '",l_lock.srab009,"')"
+      ELSE
+         LET l_where = l_where," OR (srab000 = ",l_lock.srab000,
+                               " AND srab001 = '",l_lock.srab001,"'",
+                               " AND srab002 = ",l_lock.srab002,
+                               " AND srab003 = ",l_lock.srab003,
+                               " AND srab004 = '",l_lock.srab004,"'",
+                               " AND srab005 = '",l_lock.srab005,"'",
+                               " AND srab006 = '",l_lock.srab006,"'",
+                               " AND srab009 = '",l_lock.srab009,"')"
+      END IF
+      
+      INITIALIZE l_lock.* TO NULL
+   END FOREACH
+   LET l_sql = l_sql," AND ",l_where," FOR UPDATE"
+   PREPARE asrp370_lock_date_pre FROM l_sql
+   DECLARE asrp370_lock_date_cs CURSOR FOR asrp370_lock_date_pre
+   OPEN asrp370_lock_date_cs
+   #160120-00002#10 160218 pomelo add(E)
+
+   CALL asrp370_02_b_fill('Y')
+
+   IF cl_null(g_asrp370_02_m.chief_default) THEN
+      LET g_asrp370_02_m.chief_default = 'N'
+   END IF
+   
+   LET g_action_choice = ''
+   
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         
+         SUBDIALOG asr_asrp370_02.asrp370_02_construct
+         SUBDIALOG asr_asrp370_02.asrp370_02_input
+         SUBDIALOG asr_asrp370_02.asrp370_02_display1
+        #SUBDIALOG asr_asrp370_02.asrp370_02_input2        #151118-00029#11 mark
+         SUBDIALOG asr_asrp370_02.asrp370_02_display2      #151118-00029#11 add
+        #SUBDIALOG asr_asrp370_02.asrp370_02_input3        #151118-00029#11 mark
+         SUBDIALOG asr_asrp370_02.asrp370_02_display3      #151118-00029#11 add         
+         
+         BEFORE DIALOG
+
+         ON ACTION save
+         
+         ON ACTION continue
+
+        #151118-00029#11 add str
+         ON ACTION modify_detail2
+            CALL asrp370_02_b2()
+
+         ON ACTION modify_detail3
+            CALL asrp370_02_b3()
+        #151118-00029#11 add end
+
+         ON ACTION back_step
+            IF cl_ask_confirm('apm-00541') THEN 
+               LET g_action_choice = "back_step"
+               EXIT DIALOG
+            END IF
+            
+         ON ACTION next_step
+            #chk
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt FROM asrp370_tmp05  #160727-00019#19   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asrp370_02_temp2 ——> asrp370_tmp05
+             WHERE sel = 'Y'
+               AND qty > 0
+            IF l_cnt > 0 THEN
+               CALL asrp370_02_upd_temp('0') RETURNING l_success #此处只能做更新，不能做检查数量相平 因为测试单身编辑状态可直接按这个按钮，不过ON ROW CHANGE
+               IF l_success THEN
+                  LET g_action_choice = "next_step"
+                  EXIT DIALOG
+               END IF
+            ELSE
+               #没有选择要拨出的库存资料,請先選擇要處理的資料!
+               #没有选择有实际拨出数量的库存资料
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'asf-00368'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+            END IF
+            
+         ON ACTION step01
+            
+         ON ACTION step02
+         
+         ON ACTION step03
+
+         ON ACTION CLOSE
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF 
+      
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+
+   END WHILE
+   
+   CALL s_transaction_end('Y','0')    #160120-00002#10 160218 pomelo add
+   
+   CASE g_action_choice
+      WHEN "next_step"
+         RETURN 3
+      WHEN "back_step"
+         CALL asrp370_02_delete_temp_table()
+         RETURN 1
+      OTHERWISE
+         RETURN 0
+   END CASE
+
+END FUNCTION
+
+PRIVATE FUNCTION asrp370_ui_dialog_step3()
+
+   CLEAR FORM
+   
+   #設定左方的流程圖  
+   CALL gfrm_curr.setElementImage("step01","32/step01.png")  
+   CALL gfrm_curr.setElementImage("step02","32/step02.png")
+   CALL gfrm_curr.setElementImage("step03","32/step03on.png")
+   
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("main_vbox01",FALSE)
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",TRUE)
+
+   #設定下方的button的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("save",FALSE)             #收貨資料寫入 (使用於第一步)  
+   CALL cl_set_comp_visible("back_step",TRUE)        #回上一步     (第一步,第三步不使用)
+   CALL cl_set_comp_visible("next_step",FALSE)        #下一步       (第三步不使用) 
+   CALL cl_set_comp_visible("continue",TRUE)          #處理其他資料 (使用於第四步) 
+   
+   LET g_asrp370_03_m.indcdocdt = cl_get_today()
+   LET g_asrp370_03_m.post = 'Y'
+   
+   LET g_action_choice = ''
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         
+         SUBDIALOG asr_asrp370_03.asrp370_03_input 
+         SUBDIALOG asr_asrp370_03.asrp370_03_display1
+
+         BEFORE DIALOG
+
+         ON ACTION save
+         
+         ON ACTION continue
+            LET g_action_choice = "continue"
+            EXIT DIALOG
+            
+         ON ACTION back_step
+            IF NOT cl_null(g_asrp370_03_m.indcdocno_03) THEN 
+               #已产生调拨单，不可返回上一步;请选择“处理其他资料”
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'asf-00396'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+            ELSE
+               LET g_action_choice = "back_step"
+               EXIT DIALOG
+            END IF
+            
+         #ON ACTION next_step
+            
+         ON ACTION step01
+            
+         ON ACTION step02
+         
+         ON ACTION step03
+
+         ON ACTION CLOSE
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF 
+      
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+
+   END WHILE
+   
+   CASE g_action_choice
+      WHEN "continue"
+         CALL asrp370_delete_temp()
+         LET g_asrp370_03_m.indcent_03 = ''
+         LET g_asrp370_03_m.indcdocno_03 = ''
+         LET g_asrp370_03_m.indcdocdt_03 = ''
+         CALL g_indd03_d.clear()
+         RETURN 1
+      WHEN "back_step"
+         RETURN 2
+      OTHERWISE
+         RETURN 0
+   END CASE
+END FUNCTION
+
+PRIVATE FUNCTION asrp370_delete_temp()
+   CALL asrp370_01_delete_temp_table()
+   CALL asrp370_02_delete_temp_table()
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

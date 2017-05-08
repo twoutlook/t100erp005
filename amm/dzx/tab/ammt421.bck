@@ -1,0 +1,187 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammt421" module="amm" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02331" crtdt="2013-09-03 10:19:49" modid="02003" moddt="2015-07-14 20:18:25" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="會員卡積點調整維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mmbhsite,mmbhsite_desc(chr80),mmbhdocdt,mmbhdocno,mmbhunit,mmbh000,mmbh001,mmbh001_desc(chr80),mmbh002,mmbh002_desc(chr80),mmbh003,mmbhstus,mmbhownid,mmbhownid_desc(chr80),mmbhowndp,mmbhowndp_desc(chr80),mmbhcrtid,mmbhcrtid_desc(chr80),mmbhcrtdp,mmbhcrtdp_desc(chr80),mmbhcrtdt,mmbhmodid,mmbhmodid_desc(chr80),mmbhmoddt,mmbhcnfid,mmbhcnfid_desc(chr80),mmbhcnfdt,mmanl001(chr500),mmanl001_desc(chr80),mmaf001(chr500),mmaf001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mmbiseq,mmbisite,mmbisite_desc(chr500),mmbiunit,mmbi002,mmbi005,mmbi006,mmbi007,mmaq018(chr500),mmbi008,mmbi008_desc(chr500),mmbi009,mmbi009_desc(chr500),mmbi003,mmbi003_desc(chr500),mmbi004,mmaf008(chr500)"/>
+      <var id="bs_field" value="mmbhdocno,mmbhdocdt,mmbhsite,mmbhsite_desc(chr80),mmbh001,mmbh001_desc(chr80),mmbh002,mmbh002_desc(chr80)" pk="mmbhdocno" order=""/>
+      <bs_reference field="mmbhsite_desc" ref_field="mmbhsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="mmbh001_desc" ref_field="mmbh001" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2055&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+      <bs_reference field="mmbh002_desc" ref_field="mmbh002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2056&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="amm" filename="ammt421" method="dialog">
+    <section id="input">
+      <input id="head" field="mmbhsite,mmbhdocdt,mmbhdocno,mmbhunit,mmbh001,mmbh002,mmbh003"/>
+      <input id="body" page="1" field="mmbisite,mmbiunit,mmbi002,mmbi005,mmbi006,mmbi008,mmbi009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mmbhsite,mmbhdocdt,mmbhdocno,mmbhunit,mmbh000,mmbh001,mmbh002,mmbh003,mmbhstus,mmbhownid,mmbhowndp,mmbhcrtid,mmbhcrtdp,mmbhcrtdt,mmbhmodid,mmbhmoddt,mmbhcnfid,mmbhcnfdt"/>
+      <construct id="body" page="1" field="mmbisite,mmbiunit,mmbi002,mmbi005,mmbi006,mmbi007,mmbi008,mmbi009,mmbi003,mmbi004"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mmbhdocno"/>
+      <set id="head" type="no_entry" field="mmbhdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="mmbhsite">
+        <after>
+          <reference field="mmbhsite_desc" ref_field="mmbh_t.mmbhsite" map_field="mmbhsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_14" state="c"/>
+      </column>
+      <column id="mmbhsite_desc"/>
+      <column id="mmbhdocdt"/>
+      <column id="mmbhdocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_mmbh001" state="c"/>
+      </column>
+      <column id="mmbhunit"/>
+      <column id="mmbh000"/>
+      <column id="mmbh001">
+        <after>
+          <reference field="mmbh001_desc" ref_field="mmbh001" map_field="mmbh001" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2055&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmbh001_desc"/>
+      <column id="mmbh002">
+        <after>
+          <reference field="mmbh002_desc" ref_field="mmbh002" map_field="mmbh002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2056&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmbh002_desc"/>
+      <column id="mmbh003"/>
+      <column id="mmbhstus" scc="13">
+        <stus id="Y" pic="confirmed"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="mmbhownid">
+        <after>
+          <reference field="mmbhownid_desc" ref_field="mmbh_t.mmbhownid" map_field="mmbhownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmbhownid_desc"/>
+      <column id="mmbhowndp">
+        <after>
+          <reference field="mmbhowndp_desc" ref_field="mmbh_t.mmbhowndp" map_field="mmbhowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mmbhowndp_desc"/>
+      <column id="mmbhcrtid">
+        <after>
+          <reference field="mmbhcrtid_desc" ref_field="mmbh_t.mmbhcrtid" map_field="mmbhcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmbhcrtid_desc"/>
+      <column id="mmbhcrtdp">
+        <after>
+          <reference field="mmbhcrtdp_desc" ref_field="mmbh_t.mmbhcrtdp" map_field="mmbhcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mmbhcrtdp_desc"/>
+      <column id="mmbhcrtdt"/>
+      <column id="mmbhmodid">
+        <after>
+          <reference field="mmbhmodid_desc" ref_field="mmbh_t.mmbhmodid" map_field="mmbhmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmbhmodid_desc"/>
+      <column id="mmbhmoddt"/>
+      <column id="mmbhcnfid">
+        <after>
+          <reference field="mmbhcnfid_desc" ref_field="mmbh_t.mmbhcnfid" map_field="mmbhcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmbhcnfid_desc"/>
+      <column id="mmbhcnfdt"/>
+      <column id="mmanl001">
+        <after>
+          <reference field="mmanl001_desc" ref_field="mmanl001" map_field="mmbhent,mmanl001" ref_sql="SELECT mmanl003 FROM mmanl_t WHERE mmanlent=$varg_enterprise$var AND mmanl001=? AND mmanl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="mmanl001_desc"/>
+      <column id="mmaf001">
+        <after>
+          <reference field="mmaf001_desc" ref_field="mmaf001" map_field="mmbnent,mmaf001" ref_sql="SELECT mmaf008 FROM mmaf_t WHERE mmafent=$varg_enterprise$var AND mmaf001=? "/>
+        </after>
+      </column>
+      <column id="mmaf001_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="mmbiseq"/>
+      <column id="mmbisite">
+        <after>
+          <reference field="mmbisite_desc" ref_field="mmbi_t.mmbisite" map_field="mmbisite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="mmbisite_desc"/>
+      <column id="mmbiunit"/>
+      <column id="mmbi002">
+        <controlp form="q_mmbi002" state="i"/>
+        <controlp form="q_mmbi002" state="c"/>
+      </column>
+      <column id="mmbi005"/>
+      <column id="mmbi006" type="S" default="0"/>
+      <column id="mmbi007"/>
+      <column id="mmaq018"/>
+      <column id="mmbi008">
+        <after/>
+      </column>
+      <column id="mmbi008_desc"/>
+      <column id="mmbi009">
+        <after>
+          <reference field="mmbi009_desc" ref_field="mmbi009" map_field="mmbi009" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2055&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmbi009_desc"/>
+      <column id="mmbi003">
+        <after>
+          <reference field="mmbi003_desc" ref_field="mmbi_t.mmbi003" map_field="mmbient,mmbi003" ref_sql="SELECT mmanl003 FROM mmanl_t WHERE mmanlent=$varg_enterprise$var AND mmanl001=? AND mmanl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mman001" state="c"/>
+      </column>
+      <column id="mmbi003_desc"/>
+      <column id="mmbi004">
+        <controlp form="q_mmaf001" state="c"/>
+      </column>
+      <column id="mmaf008"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="mmbh_t" pk="mmbhdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT mmbhsite,&apos;&apos;,mmbhdocdt,mmbhdocno,mmbhunit,mmbh000,mmbh001,&apos;&apos;,mmbh002,&apos;&apos;,mmbh003,mmbhstus,mmbhownid,&apos;&apos;,mmbhowndp,&apos;&apos;,mmbhcrtid,&apos;&apos;,mmbhcrtdp,&apos;&apos;,mmbhcrtdt,mmbhmodid,&apos;&apos;,mmbhmoddt,mmbhcnfid,&apos;&apos;,mmbhcnfdt,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM mmbh_t WHERE mmbhent= ? AND mmbhdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mmbhsite,&apos;&apos;,mmbhdocdt,mmbhdocno,mmbhunit,mmbh000,mmbh001,&apos;&apos;,mmbh002,&apos;&apos;,mmbh003,mmbhstus,mmbhownid,&apos;&apos;,mmbhowndp,&apos;&apos;,mmbhcrtid,&apos;&apos;,mmbhcrtdp,&apos;&apos;,mmbhcrtdt,mmbhmodid,&apos;&apos;,mmbhmoddt,mmbhcnfid,&apos;&apos;,mmbhcnfdt,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM mmbh_t" order="mmbhdocno"/>
+    </head>
+    <body id="mmbi_t" page="1" linked="" pk="mmbiseq" fk="mmbidocno">
+      <sql id="forupd_sql_detail" query="SELECT mmbiseq,mmbisite,&apos;&apos;,mmbiunit,mmbi002,mmbi005,mmbi006,mmbi007,&apos;&apos;,mmbi008,&apos;&apos;,mmbi009,&apos;&apos;,mmbi003,&apos;&apos;,mmbi004,&apos;&apos; FROM mmbi_t WHERE mmbient=? AND mmbidocno=? AND mmbiseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mmbiseq,mmbisite,&apos;&apos;,mmbiunit,mmbi002,mmbi005,mmbi006,mmbi007,&apos;&apos;,mmbi008,&apos;&apos;,mmbi009,&apos;&apos;,mmbi003,&apos;&apos;,mmbi004,&apos;&apos; FROM mmbi_t WHERE mmbient=? AND mmbidocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

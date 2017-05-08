@@ -1,0 +1,1610 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="azzp660.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0008(2016-09-07 15:33:17), PR版次:0008(2016-11-02 11:04:58)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000034
+#+ Filename...: azzp660
+#+ Description: 開帳資料設定作業
+#+ Creator....: 03079(2016-02-16 15:11:46)
+#+ Modifier...: 04441 -SD/PR- 04441
+ 
+{</section>}
+ 
+{<section id="azzp660.global" >}
+#應用 i00 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#160615-00006#1  2016/06/16  By ming      第四步按下一步時，呼叫s_azzp661_gen產生s_azzp660_gen_func.4gl
+#160620-00026#1  2016/06/21  By ming      修正第五步在匯入資料時不會有錯誤訊息的提示 
+#160620-00026#1  2016/06/22  By ming      第二步增加action，可修改table的關聯欄位 dzeb003 改成 dzebl003
+#160707-00038#1  2016/07/14  By dorislai  步驟三，修正按第五步驟時，程式整個關閉的情況
+#160204-00005#1  2016/09/07  By whitney   add open_azzp660_s01
+#161026-00020#1  2016/11/02  By Whitney   複製開窗預設查詢畫面
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+#ming 20160726 add -----(S) 
+IMPORT util
+#ming 20160726 add -----(E) 
+IMPORT FGL azz_azzp660_01 
+IMPORT FGL azz_azzp660_02 
+IMPORT FGL azz_azzp660_03 
+IMPORT FGL azz_azzp660_04 
+IMPORT FGL sub_s_azzp661
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable)
+GLOBALS "../../azz/4gl/azzp660.inc" 
+GLOBALS "../../../com/sub/4gl/s_azzp661.inc"
+
+DEFINE gwin_curr  ui.Window
+DEFINE gfrm_curr  ui.Form  
+DEFINE gdig_curr  ui.Dialog
+
+#160204-00005#1-s
+DEFINE g_gzal_s01  DYNAMIC ARRAY OF RECORD
+    b_gzal001       LIKE gzal_t.gzal001,
+    b_gzal001_desc  LIKE oocql_t.oocql004,
+    b_gzal002       LIKE gzal_t.gzal002
+           END RECORD
+#160204-00005#1-e
+
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzp660.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define
+   DEFINE li_step     LIKE type_t.num5
+   #end add-point    
+   #add-point:main段define(客製用)
+
+   #end add-point
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義
+
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("azz","")
+ 
+   #add-point:作業初始化
+
+   #end add-point
+ 
+   #add-point:SQL_define
+
+   #end add-point
+   #LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   #DECLARE azzp660_cl CURSOR FROM g_forupd_sql 
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_azzp660 WITH FORM cl_ap_formpath("azz",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL azzp660_init()
+ 
+      ##進入選單 Menu (='N')
+      #CALL azzp660_ui_dialog()
+      
+      CALL azzp660_01_create_temp_table()
+      CALL azzp660_02_create_temp_table()
+      CALL azzp660_04_create_temp_table()  #160910-00014#1
+      
+      LET li_step = 1
+ 
+      WHILE TRUE
+         CASE li_step
+            WHEN 1
+               CALL azzp660_ui_dialog_step1() RETURNING li_step
+            WHEN 2
+               CALL azzp660_ui_dialog_step2() RETURNING li_step
+            WHEN 3
+               CALL azzp660_ui_dialog_step3() RETURNING li_step
+            WHEN 4
+               CALL azzp660_ui_dialog_step4() RETURNING li_step
+            WHEN 5
+               CALL azzp660_ui_dialog_step5() RETURNING li_step
+            WHEN 0
+               EXIT WHILE
+            OTHERWISE
+               EXIT WHILE
+         END CASE
+      END WHILE 
+      
+      CALL azzp660_01_drop_temp_table()
+      CALL azzp660_02_drop_temp_table()
+      CALL azzp660_04_drop_temp_table()  #160910-00014#1
+   
+      #畫面關閉
+      CLOSE WINDOW w_azzp660
+   END IF
+ 
+   #add-point:作業離開前
+
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+ 
+{</section>}
+ 
+{<section id="azzp660.other_function" readonly="Y" >}
+#add-point:自定義元件(Function)
+
+PRIVATE FUNCTION azzp660_init()
+
+   #add-point:init段define (客製用)
+
+   #end add-point
+   #add-point:ui_dialog段define
+
+   #end add-point
+
+   #LET g_error_show = 1
+   #LET gwin_curr2 = ui.Window.getCurrent()
+   #LET gfrm_curr2 = gwin_curr2.getForm()
+   #CALL cl_schedule_import_4fd()
+   #CALL cl_set_combo_scc("gzpa003","75")
+   #IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+   #    CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   #END IF
+   
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+   
+   #畫面嵌入 
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("azz","azzp660_01"),"main_grid01","Group","master")
+   
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("azz","azzp660_02"),"main_grid02","Group","master") 
+   
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("azz","azzp660_03"),"main_grid03","Group","master") 
+   
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("azz","azzp660_04"),"main_grid04","Group","master") 
+   
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("sub","s_azzp661_s01"),"main_grid05","Grid","master")
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("sub","s_azzp661_s02"),"main_grid06","Group","master")
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("sub","s_azzp661_s03"),"main_grid07","Group","master")
+
+   #將嵌入的畫面都設定隱藏 
+   CALL azzp660_set_vbox_visible('0')
+   #add-point:畫面資料初始化
+   CALL azzp660_02_init()
+   
+   CALL azzp660_03_init() 
+   
+   CALL azzp660_04_init() 
+   #end add-point
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 設定每一步畫面的顯示或隱藏
+# Memo...........:
+# Usage..........: CALL azzp660_set_vbox_visible(p_step)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp660_set_vbox_visible(p_step)
+   DEFINE p_step     LIKE type_t.num5     #第幾步驟  
+
+   #設定嵌入畫面的 顯示 或 隱藏 
+   CALL cl_set_comp_visible("main_vbox01",FALSE)
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+   CALL cl_set_comp_visible("main_vbox04",FALSE)
+   CALL cl_set_comp_visible("main_vbox05",FALSE) 
+   CALL cl_set_comp_visible("main_vbox06",FALSE)
+   CALL cl_set_comp_visible("main_vbox07",FALSE)
+
+   CASE p_step
+      WHEN 1
+         CALL cl_set_comp_visible("main_vbox01",TRUE)
+      WHEN 2
+         CALL cl_set_comp_visible("main_vbox02",TRUE)
+      WHEN 3
+         CALL cl_set_comp_visible("main_vbox03",TRUE)
+      WHEN 4
+         CALL cl_set_comp_visible("main_vbox04",TRUE)
+      WHEN 5
+         CALL cl_set_comp_visible("main_vbox05",TRUE) 
+         CALL cl_set_comp_visible("main_vbox06",TRUE)
+         CALL cl_set_comp_visible("main_vbox07",TRUE)
+   END CASE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 設定各步驟的action button顯示否
+# Memo...........:
+# Usage..........: CALL azzp660_set_act_visible(p_step)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp660_set_act_visible(p_step)
+   DEFINE p_step     LIKE type_t.num5    #第幾步驟  
+
+   CALL cl_set_comp_visible("back_step",FALSE)
+   CALL cl_set_comp_visible("next_step",FALSE)
+   CALL cl_set_comp_visible("del_setting_data",FALSE)
+   CALL cl_set_comp_visible("copy_setting_data",FALSE)
+   CALL cl_set_comp_visible("open_prog",FALSE)
+   CALL cl_set_comp_visible("back_first",FALSE)
+   CALL cl_set_comp_visible("the_end",FALSE)
+   CALL cl_set_comp_visible("change_table_key",FALSE)  #160620-00026#1
+   CALL cl_set_comp_visible("open_azzp660_s01",FALSE)  #160204-00005#1
+
+   CASE p_step
+      WHEN '1'
+         CALL cl_set_comp_visible("next_step",TRUE)
+         CALL cl_set_comp_visible("del_setting_data",TRUE)
+         CALL cl_set_comp_visible("copy_setting_data",TRUE)
+         CALL cl_set_comp_visible("open_azzp660_s01",TRUE)  #160204-00005#1
+      WHEN '2' 
+         CALL cl_set_comp_visible("next_step",TRUE)
+         CALL cl_set_comp_visible("back_step",TRUE)
+         CALL cl_set_comp_visible("change_table_key",TRUE)  #160620-00026#1
+      WHEN '3'
+         CALL cl_set_comp_visible("next_step",TRUE)
+         CALL cl_set_comp_visible("back_step",TRUE)
+      WHEN '4' 
+         CALL cl_set_comp_visible("next_step",TRUE)
+         CALL cl_set_comp_visible("back_step",TRUE)
+      WHEN '5'
+         CALL cl_set_comp_visible("open_prog",TRUE)
+         CALL cl_set_comp_visible("back_first",TRUE)
+         CALL cl_set_comp_visible("back_step",TRUE)
+         CALL cl_set_comp_visible("the_end",TRUE)
+   END CASE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 設定左方流程圖片的顯示方式
+# Memo...........:
+# Usage..........: CALL azzp660_set_step_img(p_step)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp660_set_step_img(p_step)
+   DEFINE p_step     LIKE type_t.num5     #第幾步驟 
+
+   #設定圖片為預設值 
+   CALL gfrm_curr.setElementImage("step01","32/step01.png")
+   CALL gfrm_curr.setElementImage("step02","32/step02.png")
+   CALL gfrm_curr.setElementImage("step03","32/step03.png")
+   CALL gfrm_curr.setElementImage("step04","32/step04.png")
+   CALL gfrm_curr.setElementImage("step05","32/step05.png")
+
+   #文字顏色設定  
+   CALL gfrm_curr.setElementStyle("step01","menuitem")
+   CALL gfrm_curr.setElementStyle("step02","menuitem")
+   CALL gfrm_curr.setElementStyle("step03","menuitem")
+   CALL gfrm_curr.setElementStyle("step04","menuitem")
+   CALL gfrm_curr.setElementStyle("step05","menuitem") 
+   
+   #設定圖片為亮燈 及 改變文字顏色 
+   CASE p_step
+      WHEN 1
+         CALL gfrm_curr.setElementImage("step01","32/step01on.png")
+         CALL gfrm_curr.setElementStyle("step01","menuitemfocus")
+      WHEN 2
+         CALL gfrm_curr.setElementImage("step02","32/step02on.png")
+         CALL gfrm_curr.setElementStyle("step02","menuitemfocus")
+      WHEN 3
+         CALL gfrm_curr.setElementImage("step03","32/step03on.png")
+         CALL gfrm_curr.setElementStyle("step03","menuitemfocus")
+      WHEN 4
+         CALL gfrm_curr.setElementImage("step04","32/step04on.png")
+         CALL gfrm_curr.setElementStyle("step04","menuitemfocus")
+      WHEN 5
+         CALL gfrm_curr.setElementImage("step05","32/step05on.png")
+         CALL gfrm_curr.setElementStyle("step05","menuitemfocus")
+   END CASE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp660_ui_dialog_step1()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp660_ui_dialog_step1()
+   DEFINE l_gzal001     LIKE gzal_t.gzal001
+   DEFINE l_gzal002     LIKE gzal_t.gzal002 
+   
+   #設定左方的流程圖 
+   CALL azzp660_set_step_img('1')
+
+   #設定嵌入畫面的顯示與隱藏 
+   CALL azzp660_set_vbox_visible('1') 
+   
+   #設定下方button的顯示與隱藏 
+   CALL azzp660_set_act_visible('1')
+
+   #由g_action_choice所存的內容決定之後會做的事 
+   LET g_action_choice = NULL
+
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         SUBDIALOG azz_azzp660_01.azzp660_01_input01
+
+         BEFORE DIALOG 
+         
+         #160204-00005#1-s
+         ON ACTION open_azzp660_s01
+            #已設定之作業
+            CALL azzp660_open_s01()
+         #160204-00005#1-e
+            
+         ON ACTION next_step
+            #下一步   
+            
+            LET g_action_choice = "next_step"
+            ACCEPT DIALOG  #160829-00007#1
+
+         ON ACTION del_setting_data
+            #刪除設定資料 
+            CALL azzp660_01_del_all_data()
+
+         ON ACTION copy_setting_data
+            #複製設定資料 
+            IF cl_null(g_gzal.gzal001) THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ''
+               LET g_errparam.code   = 'aws-00028'     #作業編號不可為空值  
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+               LET g_action_choice = ""  #160829-00007#1
+               EXIT DIALOG
+            END IF
+            IF cl_null(g_gzal.gzal002) THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ''
+               LET g_errparam.code   = 'azz-00986'     #格式代號為空，請輸入格式代號。   
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+               LET g_action_choice = ""  #160829-00007#1
+               EXIT DIALOG
+            END IF 
+            
+            IF (NOT cl_null(g_gzal.gzal001)) AND
+               (NOT cl_null(g_gzal.gzal002)) THEN
+               IF FGL_GETENV("DGENV") = "s" THEN
+                  #因為是標準環境，所以可以新增standard的資料 
+                  #所以可以copy 
+                  IF g_gzal.gzal002 != "standard" THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = ''
+                     LET g_errparam.code   = 'azz-01024'     #標準環境不可新增非standard的資料！  
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+                     LET g_action_choice = ""  #160829-00007#1
+                     EXIT DIALOG
+                  END IF
+               ELSE
+                  #客戶環境不可新增standard的資料 
+                  IF g_gzal.gzal002 = "standard" THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = ''
+                     LET g_errparam.code   = 'azz-01025'     #非標準環境不可新增standard的資料！  
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+                     LET g_action_choice = ""  #160829-00007#1
+                     EXIT DIALOG
+                  END IF
+               END IF
+               
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = TRUE  #161026-00020#1
+               LET g_qryparam.arg1  = g_gzal.gzal001
+               LET g_qryparam.arg2  = g_gzal.gzal002
+               CALL q_gzal001()
+
+               LET l_gzal001 = g_qryparam.return1
+               LET l_gzal002 = g_qryparam.return2
+
+               #先把要copy的資料寫入temp table 
+               CALL azzp660_01_read_data_write_temp(l_gzal001,l_gzal002)
+            END IF
+
+         ON ACTION step01
+            #此action是為了讓圖片能夠有顏色 
+            LET g_action_choice = ""  #160829-00007#1
+            EXIT DIALOG
+
+         ON ACTION step02
+            IF cl_null(g_gzal.gzal001) OR
+               cl_null(g_gzal.gzal002) THEN
+               #如果作業編號或格式代號沒有輸入時，不可進入其他步驟 
+               CONTINUE DIALOG
+            END IF
+
+            LET g_action_choice = "next_step" 
+            ACCEPT DIALOG  #160829-00007#1
+
+         ON ACTION step05
+            #讓user能直接進入最後一步做匯入匯出 
+            IF cl_null(g_gzal.gzal001) OR
+               cl_null(g_gzal.gzal002) THEN
+               #如果作業編號或格式代號沒有輸入時，不可進入其他步驟 
+               CONTINUE DIALOG
+            END IF
+
+            LET g_action_choice = "final_step"
+            ACCEPT DIALOG  #160829-00007#1
+
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            LET g_action_choice = ""  #160829-00007#1
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            LET g_action_choice = ""  #160829-00007#1
+            EXIT DIALOG
+
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+         CONTINUE DIALOG
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF 
+      
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+   END WHILE
+
+   CASE g_action_choice
+      WHEN "next_step"
+         #新增/更新gzal_t 
+         CALL azzp660_01_ins_upd_gzal()
+
+         #如果是用copy來的，那temp table會有資料  
+         #此時應該把temp table的東西寫入實體db 
+         IF (NOT cl_null(l_gzal001)) AND
+            (NOT cl_null(l_gzal002)) THEN
+            CALL azzp660_01_insert_data_to_db(l_gzal001,l_gzal002)
+         END IF
+
+         #如果沒有舊資料的話，要取得設計資料做為預設值 
+         CALL azzp660_01_get_default(g_gzal.gzal001,g_gzal.gzal002) 
+      
+         RETURN 2
+      WHEN "final_step"
+         RETURN 5
+      OTHERWISE
+         RETURN 0
+   END CASE 
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp660_ui_dialog_step2()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp660_ui_dialog_step2()
+   #160620-00026#1 20160628 add by ming -----(S) 
+   DEFINE l_success     LIKE type_t.num5
+   #160620-00026#1 20160628 add by ming -----(E) 
+   
+   #設定左方的流程圖 
+   CALL azzp660_set_step_img('2')
+
+   #設定嵌入畫面的顯示與隱藏 
+   CALL azzp660_set_vbox_visible('2') 
+   
+   #設定下方button的顯示與隱藏 
+   CALL azzp660_set_act_visible('2') 
+   
+   CALL azzp660_02_set_entry('a')
+   CALL azzp660_02_set_no_entry('a')
+   
+   #如果有資料的話就要顯示樹狀結構的table資料 
+   CALL azzp660_02_table_tree_b_fill()
+
+   LET g_action_choice = NULL 
+   
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         SUBDIALOG azz_azzp660_02.azzp660_02_input01 
+         SUBDIALOG azz_azzp660_02.azzp660_02_display01
+
+         BEFORE DIALOG
+
+         ON ACTION back_step
+            #上一步 
+
+            LET g_action_choice = "back_step"
+            EXIT DIALOG
+
+         ON ACTION next_step
+            #下一步  
+            #ming 這個可能不需要了 
+            #把畫面中的table都寫到gzam_t的temp table 
+            #CALL azzp660_02_save_temp_gzam()
+            
+            #160620-00026#1 20160628 add by ming -----(S) 
+            CALL azzp660_02_chk_gzam_key(g_gzal.gzal001,g_gzal.gzal002)
+                 RETURNING l_success
+            IF NOT l_success THEN
+               CONTINUE DIALOG
+            END IF
+            #160620-00026#1 20160628 add by ming -----(E) 
+
+            LET g_action_choice = "next_step"
+            EXIT DIALOG
+
+         ON ACTION add_table
+            CALL azzp660_02_add_table()
+
+         ON ACTION del_table 
+            CALL azzp660_02_del_table()
+            
+         #160620-00026#1 20160622 add by ming -----(S) 
+         ON ACTION change_table_key 
+            #修改table的關聯欄位 
+            CALL azzp660_02_change_table_key()
+         #160620-00026#1 20160622 add by ming -----(E) 
+         
+         ON ACTION step01
+            LET g_action_choice = "back_step"
+            EXIT DIALOG
+
+         ON ACTION step02
+            LET g_action_choice = ""  #160829-00007#1
+            EXIT DIALOG
+
+         ON ACTION step03
+            #160620-00026#1 20160628 add by ming -----(S) 
+            CALL azzp660_02_chk_gzam_key(g_gzal.gzal001,g_gzal.gzal002)
+                 RETURNING l_success
+            IF NOT l_success THEN
+               CONTINUE DIALOG
+            END IF
+            #160620-00026#1 20160628 add by ming -----(E) 
+         
+            LET g_action_choice = "next_step"
+            ACCEPT DIALOG  #160829-00007#1
+
+         ON ACTION step05
+            LET g_action_choice = "final_step"
+            ACCEPT DIALOG  #160829-00007#1
+
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            LET g_action_choice = ""  #160829-00007#1
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            LET g_action_choice = ""  #160829-00007#1
+            EXIT DIALOG
+
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl" 
+         CONTINUE DIALOG
+
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF
+
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+   END WHILE
+
+   CASE g_action_choice 
+      WHEN "back_step"
+         RETURN 1
+      
+      WHEN "next_step"
+         RETURN 3
+
+      WHEN "final_step"
+         RETURN 5
+
+      OTHERWISE
+         RETURN 0
+   END CASE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp660_ui_dialog_step3()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp660_ui_dialog_step3()
+   #設定左方的流程圖 
+   CALL azzp660_set_step_img('3')
+
+   #設定嵌入畫面的顯示與隱藏 
+   CALL azzp660_set_vbox_visible('3') 
+   
+   #設定下方button的顯示與隱藏 
+   CALL azzp660_set_act_visible('3')
+   
+   CALL azzp660_03_set_entry('a')
+   CALL azzp660_03_set_no_entry('a')
+
+   LET g_action_choice = NULL 
+   
+   CALL azzp660_03_table_tree_b_fill() 
+   CALL azzp660_fieldsel_b_fill() 
+
+
+   WHILE TRUE
+      DIALOG ATTRIBUTE(UNBUFFERED,FIELD ORDER FORM)
+         SUBDIALOG azz_azzp660_03.azzp660_03_display01
+         SUBDIALOG azz_azzp660_03.azzp660_03_display02 
+         SUBDIALOG azz_azzp660_03.azzp660_03_display03
+         SUBDIALOG azz_azzp660_03.azzp660_03_display04
+         SUBDIALOG azz_azzp660_03.azzp660_03_display05
+         SUBDIALOG azz_azzp660_03.azzp660_03_display06
+         SUBDIALOG azz_azzp660_03.azzp660_03_display07
+         SUBDIALOG azz_azzp660_03.azzp660_03_display08
+         SUBDIALOG azz_azzp660_03.azzp660_03_display09
+         SUBDIALOG azz_azzp660_03.azzp660_03_display10
+         SUBDIALOG azz_azzp660_03.azzp660_03_display11
+         SUBDIALOG azz_azzp660_03.azzp660_03_display12
+
+         BEFORE DIALOG
+            LET gdig_curr = ui.Dialog.getCurrent() 
+            
+            #設定單身可多選 
+            CALL gdig_curr.setSelectionMode("s_field_detail1",1)
+
+            CALL gdig_curr.setSelectionMode("s_azzp660_03_right_detail1",1)
+            CALL gdig_curr.setSelectionMode("s_azzp660_03_right_detail2",1)
+            CALL gdig_curr.setSelectionMode("s_azzp660_03_right_detail3",1)
+            CALL gdig_curr.setSelectionMode("s_azzp660_03_right_detail4",1)
+            CALL gdig_curr.setSelectionMode("s_azzp660_03_right_detail5",1)
+            CALL gdig_curr.setSelectionMode("s_azzp660_03_right_detail6",1)
+            CALL gdig_curr.setSelectionMode("s_azzp660_03_right_detail7",1)
+            CALL gdig_curr.setSelectionMode("s_azzp660_03_right_detail8",1)
+            CALL gdig_curr.setSelectionMode("s_azzp660_03_right_detail9",1)
+            CALL gdig_curr.setSelectionMode("s_azzp660_03_right_detail10",1)
+            
+         ON ACTION back_step
+            #上一步 
+
+            LET g_action_choice = "back_step" 
+            EXIT DIALOG
+
+         ON ACTION next_step
+            #下一步 
+
+            LET g_action_choice = "next_step"
+            ACCEPT DIALOG  #160829-00007#1
+
+         ON ACTION step02
+            LET g_action_choice = "back_step"
+            EXIT DIALOG
+
+         ON ACTION step03
+            LET g_action_choice = ""  #160829-00007#1
+            EXIT DIALOG
+
+         ON ACTION step04
+            LET g_action_choice = "next_step"
+            ACCEPT DIALOG  #160829-00007#1
+
+         ON ACTION step05
+            LET g_action_choice = "final_step"
+            ACCEPT DIALOG  #160829-00007#1
+            
+         ON ACTION add_sheet
+            #增加sheet 
+            CALL azzp660_03_add_sheet()
+
+         ON ACTION sub_sheet
+            #減少sheet 
+            CALL azzp660_03_sub_sheet()
+
+         ON ACTION add_field
+            #增加欄位 
+            #由於會使用到ui.Dialog物件，所以只能寫在相同檔案之中 
+            CALL azzp660_add_field() 
+            CALL azzp660_fieldsel_b_fill() 
+            #兩邊的單身都要重新整理 
+            CALL azzp660_03_field_b_fill()
+
+         ON ACTION del_field
+            #移除欄位 
+            CALL azzp660_del_field()
+            CALL azzp660_fieldsel_b_fill() 
+            #兩邊的單身都要重新整理 
+            CALL azzp660_03_field_b_fill()
+
+         ON ACTION up_field
+            #上移欄位 
+            CALL azzp660_move_up_down("up")
+
+         ON ACTION down_field
+            #下移欄位 
+            CALL azzp660_move_up_down("down")
+            
+         ON ACTION page_sheet01
+            #切換到第1頁 
+            LET g_now_rd_num = 1
+
+         ON ACTION page_sheet02
+            #切換到第2頁 
+            LET g_now_rd_num = 2
+
+         ON ACTION page_sheet03
+            #切換到第3頁 
+            LET g_now_rd_num = 3
+
+         ON ACTION page_sheet04
+            #切換到第4頁 
+            LET g_now_rd_num = 4
+
+         ON ACTION page_sheet05
+            #切換到第5頁 
+            LET g_now_rd_num = 5
+
+         ON ACTION page_sheet06
+            #切換到第6頁 
+            LET g_now_rd_num = 6
+
+         ON ACTION page_sheet07
+            #切換到第7頁 
+            LET g_now_rd_num = 7
+
+         ON ACTION page_sheet08 
+            #切換到第8頁 
+            LET g_now_rd_num = 8
+
+         ON ACTION page_sheet09
+            #切換到第9頁 
+            LET g_now_rd_num = 9
+
+         ON ACTION page_sheet10
+            #切換到第10頁 
+            LET g_now_rd_num = 10
+
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            LET g_action_choice = ""  #160829-00007#1
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            LET g_action_choice = ""  #160829-00007#1
+            EXIT DIALOG 
+            
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+         CONTINUE DIALOG
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF
+
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+   END WHILE 
+
+   CASE g_action_choice 
+      WHEN "back_step"
+         RETURN 2
+         
+      WHEN "next_step"
+         RETURN 4
+         
+      #160707-00038#1-add-(S)
+      WHEN "final_step"
+         RETURN 5
+      #160707-00038#1-add-(E)
+      
+      OTHERWISE
+         RETURN 0
+   END CASE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp660_ui_dialog_step4()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp660_ui_dialog_step4()
+   #ming 20160726 add -----(S)    
+   DEFINE la_param      RECORD
+                           prog       STRING,
+                           actionid   STRING,
+                           background LIKE type_t.chr1,
+                           param      DYNAMIC ARRAY OF STRING
+                        END RECORD
+   DEFINE ls_js         STRING
+   DEFINE l_tran_master RECORD
+                           gzal001     LIKE gzal_t.gzal001,
+                           gzal002     LIKE gzal_t.gzal002
+                        END RECORD
+   DEFINE l_tran        STRING
+   #ming 20160726 add -----(E)    
+
+   #設定左方的流程圖 
+   CALL azzp660_set_step_img('4')
+
+   #設定嵌入畫面的顯示與隱藏 
+   CALL azzp660_set_vbox_visible('4') 
+   
+   #設定下方button的顯示與隱藏 
+   CALL azzp660_set_act_visible('4')
+
+   LET g_action_choice = NULL
+
+   WHILE TRUE
+      DIALOG ATTRIBUTE(UNBUFFERED,FIELD ORDER FORM)
+         SUBDIALOG azz_azzp660_04.azzp660_04_display01 
+         SUBDIALOG azz_azzp660_04.azzp660_04_display02
+
+         BEFORE DIALOG
+
+         ON ACTION back_step
+            #上一步 
+
+            LET g_action_choice = "back_step"
+            EXIT DIALOG
+
+         ON ACTION next_step
+            #下一步 
+
+            LET g_action_choice = "next_step" 
+            #160615-00006#1 20160616 add by ming -----(S) 
+            #產出s_azzp660_gen_func.4gl
+            #CALL s_azzp661_gen(g_gzal.gzal001,g_gzal.gzal002)             
+            #160615-00006#1 20160616 add by ming -----(E) 
+            ACCEPT DIALOG  #160829-00007#1
+
+         ON ACTION step03
+            LET g_action_choice = "back_step"
+            EXIT DIALOG
+
+         ON ACTION step04
+            LET g_action_choice = ""  #160829-00007#1
+            EXIT DIALOG
+
+         ON ACTION step05
+            LET g_action_choice = "next_step" 
+            #160615-00006#1 20160616 add by ming -----(S) 
+            #產出s_azzp660_gen_func.4gl
+            #CALL s_azzp661_gen(g_gzal.gzal001,g_gzal.gzal002)             
+            #160615-00006#1 20160616 add by ming -----(E) 
+            
+            #ming 20160726 add -----(S) 
+            INITIALIZE l_tran_master.* TO NULL
+            LET l_tran_master.gzal001 = g_gzal.gzal001
+            LET l_tran_master.gzal002 = g_gzal.gzal002
+            LET l_tran = util.JSON.stringify(l_tran_master)
+
+            INITIALIZE la_param.* TO NULL
+            LET la_param.prog       = 'azzp662'
+            LET la_param.background = 'Y'
+            LET la_param.param[1]   = l_tran
+
+            LET ls_js = util.JSON.stringify(la_param)
+           #CALL cl_cmdrun_wait(ls_js) RETURNING  
+            #ming 20160804 這裡要等it支援才可以
+
+            DISPLAY 'azzp660_FGL_GETPID:',FGL_GETPID()
+            
+            IF NOT cl_null(g_showmsg) THEN
+               CONTINUE DIALOG
+            END IF
+            #ming 20160726 add -----(E) 
+            
+            ACCEPT DIALOG  #160829-00007#1
+            
+         ON ACTION azzp660_04_modify_detail
+            IF FGL_GETENV("DGENV") = 's' THEN
+               IF g_gzal.gzal002 = "standard" THEN
+                  CALL azzp660_04_b()
+               END IF
+            ELSE 
+               IF g_gzal.gzal002 != "standard" THEN
+                  CALL azzp660_04_b()
+               END IF
+            END IF 
+
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            LET g_action_choice = ""  #160829-00007#1
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            LET g_action_choice = ""  #160829-00007#1
+            EXIT DIALOG
+
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+         CONTINUE DIALOG
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF
+
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+   END WHILE
+
+   CASE g_action_choice 
+      WHEN "back_step"
+         RETURN 3 
+         
+      WHEN "next_step"
+         RETURN 5
+
+      OTHERWISE
+         RETURN 0
+   END CASE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp660_ui_dialog_step5()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp660_ui_dialog_step5()
+   #設定左方的流程圖 
+   CALL azzp660_set_step_img('5')
+
+   #設定嵌入畫面的顯示與隱藏 
+   CALL azzp660_set_vbox_visible('5') 
+   
+   #設定下方button的顯示與隱藏 
+   CALL azzp660_set_act_visible('5') 
+   
+   #160620-00026#1 20160621 add by ming -----(S) 
+   CALL s_azzp661_import_tmp_create() 
+   #160620-00026#1 20160621 add by ming -----(E) 
+   
+   LET g_gzal001 = g_gzal.gzal001
+   LET g_gzal002 = g_gzal.gzal002 
+
+   LET g_action_choice = NULL
+
+   WHILE TRUE
+      DIALOG ATTRIBUTE(UNBUFFERED,FIELD ORDER FORM)
+         SUBDIALOG sub_s_azzp661.s_azzp661_s01_input
+         SUBDIALOG sub_s_azzp661.s_azzp661_s02_input
+         SUBDIALOG sub_s_azzp661.s_azzp661_s03_input
+
+         BEFORE DIALOG 
+            NEXT FIELD gzal001_s01
+
+         ON ACTION step01 
+            LET g_action_choice = "back_first"
+            EXIT DIALOG
+
+         ON ACTION step04
+            LET g_action_choice = "back_step"
+
+         ON ACTION step05
+            LET g_action_choice = ""  #160829-00007#1
+            EXIT DIALOG 
+            
+         ON ACTION open_prog
+            #開啟對應作業 
+
+         ON ACTION back_step
+            #上一步 
+            LET g_action_choice = "back_step"
+            EXIT DIALOG
+
+         ON ACTION back_first
+            #繼續作業 
+            LET g_action_choice = "back_first" 
+            
+            LET g_gzal.gzal001 = ''
+            LET g_gzal.gzal002 = 'standard'
+            LET g_gzal.gzal003 = '1000'
+
+            #清除temp table裡的資料 
+            DELETE FROM p660_01_gzal_t;
+            DELETE FROM p660_01_gzam_t;
+            DELETE FROM p660_01_gzan_t;
+            DELETE FROM p660_01_gzao_t;
+            DELETE FROM p660_01_gzap_t; 
+            
+            EXIT DIALOG
+
+         ON ACTION the_end
+            #結束 
+            LET INT_FLAG = TRUE
+            LET g_action_choice = ""  #160829-00007#1
+            EXIT DIALOG
+
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            LET g_action_choice = ""  #160829-00007#1
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            LET g_action_choice = ""  #160829-00007#1
+            EXIT DIALOG
+
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl" 
+         CONTINUE DIALOG
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF
+
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+   END WHILE
+   
+   #160620-00026#1 20160621 add by ming -----(S) 
+   CALL s_azzp661_import_tmp_drop()
+   #160620-00026#1 20160621 add by ming -----(E) 
+
+   CASE g_action_choice
+      WHEN "back_step"
+         RETURN 4
+      WHEN "back_first"
+         RETURN 1
+      OTHERWISE
+         RETURN 0
+   END CASE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp660_add_field()
+   DEFINE l_cnt         LIKE type_t.num10
+   DEFINE l_i           LIKE type_t.num10
+   DEFINE l_add_seq     LIKE type_t.num10                     
+   DEFINE l_gzan        RECORD
+                           gzan001     LIKE gzan_t.gzan001,
+                           gzan002     LIKE gzan_t.gzan002,
+                           gzan003     LIKE gzan_t.gzan003,
+                           gzan004     LIKE gzan_t.gzan004,
+                           gzan005     LIKE gzan_t.gzan005,
+                           gzan006     LIKE gzan_t.gzan006,
+                           gzan007     LIKE gzan_t.gzan007,
+                           gzan008     LIKE gzan_t.gzan008,
+                           gzan009     LIKE gzan_t.gzan009,
+                           gzan010     LIKE gzan_t.gzan010,
+                           gzan011     LIKE gzan_t.gzan011,
+                           gzan012     LIKE gzan_t.gzan012,
+                           gzan013     LIKE gzan_t.gzan013,
+                           gzan014     LIKE gzan_t.gzan014,
+                           gzan015     LIKE gzan_t.gzan015,
+                           gzan016     LIKE gzan_t.gzan016
+                        END RECORD
+   DEFINE l_new_gzan007 LIKE gzan_t.gzan007
+   DEFINE l_sql         STRING 
+   DEFINE l_detail      STRING 
+   DEFINE l_gzan006     LIKE gzan_t.gzan006
+   
+   CASE g_now_rd_num
+      WHEN 1
+         LET l_detail = "s_azzp660_03_right_detail1"
+      WHEN 2
+         LET l_detail = "s_azzp660_03_right_detail2"
+      WHEN 3
+         LET l_detail = "s_azzp660_03_right_detail3"
+      WHEN 4
+         LET l_detail = "s_azzp660_03_right_detail4"
+      WHEN 5
+         LET l_detail = "s_azzp660_03_right_detail5"
+      WHEN 6
+         LET l_detail = "s_azzp660_03_right_detail6"
+      WHEN 7
+         LET l_detail = "s_azzp660_03_right_detail7"
+      WHEN 8
+         LET l_detail = "s_azzp660_03_right_detail8"
+      WHEN 9
+         LET l_detail = "s_azzp660_03_right_detail9"
+      WHEN 10
+         LET l_detail = "s_azzp660_03_right_detail10"
+   END CASE 
+   
+   LET g_fieldsel_idx = gdig_curr.getCurrentRow(l_detail)
+
+   IF cl_null(g_fieldsel_idx) OR g_fieldsel_idx <= 0 THEN
+      IF g_rd_array[g_now_rd_num].rd.getLength() > 0 THEN
+         LET g_fieldsel_idx = 1
+      ELSE
+         LET g_fieldsel_idx = 0
+      END IF
+   END IF
+
+   #先計算選取了幾個欄位 
+   LET l_cnt = 0
+   FOR l_i = 1 TO g_dzeb.getLength()
+      IF gdig_curr.isRowSelected("s_field_detail1",l_i) THEN
+         #同一個table的只能放入同一個sheet中 
+         LET l_gzan006 = ''
+         SELECT DISTINCT gzan006 INTO l_gzan006
+           FROM gzan_t
+          WHERE gzan001 = g_gzal.gzal001
+            AND gzan002 = g_gzal.gzal002
+            AND gzan003 = (SELECT gzan003 FROM gzan_t
+                            WHERE gzan001 = g_gzal.gzal001
+                              AND gzan002 = g_gzal.gzal002
+                              AND gzan004 = g_dzeb[l_i].dzeb002)
+            AND gzan006 IS NOT NULL
+         IF NOT cl_null(l_gzan006) THEN
+            IF l_gzan006 <> g_now_rd_num THEN
+               CONTINUE FOR
+            END IF
+         END IF
+
+         LET l_cnt = l_cnt + 1
+      END IF
+   END FOR
+
+   #儲存一次會加入的數量 
+   LET l_add_seq = l_cnt
+
+   #因為會從中間插入，所以要修改欄位的順序 
+   FOR l_i = g_rd_array[g_now_rd_num].rd.getLength() TO g_fieldsel_idx + 1 STEP -1
+      LET l_new_gzan007 = g_rd_array[g_now_rd_num].rd[l_i].gzan007 + l_add_seq
+
+      UPDATE gzan_t SET gzan007 = l_new_gzan007
+       WHERE gzan001 = g_gzal.gzal001
+         AND gzan002 = g_gzal.gzal002
+         AND gzan004 = g_rd_array[g_now_rd_num].rd[l_i].gzan004
+         AND gzan006 = g_now_rd_num 
+         AND gzan007 = g_rd_array[g_now_rd_num].rd[l_i].gzan007
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'upd temp gzan_t'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+
+         RETURN
+      END IF
+   END FOR
+   
+   INITIALIZE l_gzan.* TO NULL
+
+   #目前選取的序號往後+1就是現在開始要加入的序號 
+   LET l_gzan.gzan007 = g_fieldsel_idx + 1
+   IF l_gzan.gzan007 IS NULL THEN
+      LET l_gzan.gzan007 = 1
+   END IF
+
+   LET l_sql = "UPDATE gzan_t SET gzan005 = 'Y', ",
+               "                  gzan006 = ?, ",
+               "                  gzan007 = ? ",
+               " WHERE gzan001 = '",g_gzal.gzal001,"' ",
+               "   AND gzan002 = '",g_gzal.gzal002,"' ",
+               "   AND gzan003 = '",g_table_tree[g_table_tree_idx].tableid,"' ",
+               "   AND gzan004 = ? "
+   PREPARE azzp660_upd_gzan_add_prep FROM l_sql
+
+   #跑迴圈，有被選擇的才會被加入右方  
+   FOR l_i = 1 TO g_dzeb.getLength()
+      IF gdig_curr.isRowSelected("s_field_detail1",l_i) THEN
+         #同一個table的只能放入同一個sheet中 
+         LET l_gzan006 = ''
+         SELECT DISTINCT gzan006 INTO l_gzan006
+           FROM gzan_t
+          WHERE gzan001 = g_gzal.gzal001
+            AND gzan002 = g_gzal.gzal002
+            AND gzan003 = (SELECT gzan003 FROM gzan_t
+                            WHERE gzan001 = g_gzal.gzal001
+                              AND gzan002 = g_gzal.gzal002
+                              AND gzan004 = g_dzeb[l_i].dzeb002)
+            AND gzan006 IS NOT NULL
+         IF NOT cl_null(l_gzan006) THEN
+            IF l_gzan006 <> g_now_rd_num THEN
+               CONTINUE FOR
+            END IF
+         END IF
+
+         EXECUTE azzp660_upd_gzan_add_prep USING g_now_rd_num,l_gzan.gzan007,g_dzeb[l_i].dzeb002
+
+         LET l_gzan.gzan007 = l_gzan.gzan007 + 1
+      END IF
+   END FOR 
+   
+   LET g_fieldsel_idx = g_rd_array[g_now_rd_num].rd.getLength()
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp660_del_field()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp660_del_field()
+   DEFINE l_detail     STRING
+   DEFINE l_i          LIKE type_t.num10
+
+   CASE g_now_rd_num
+      WHEN 1
+         LET l_detail = "s_azzp660_03_right_detail1"
+      WHEN 2
+         LET l_detail = "s_azzp660_03_right_detail2"
+      WHEN 3
+         LET l_detail = "s_azzp660_03_right_detail3"
+      WHEN 4
+         LET l_detail = "s_azzp660_03_right_detail4"
+      WHEN 5
+         LET l_detail = "s_azzp660_03_right_detail5"
+      WHEN 6
+         LET l_detail = "s_azzp660_03_right_detail6"
+      WHEN 7
+         LET l_detail = "s_azzp660_03_right_detail7"
+      WHEN 8
+         LET l_detail = "s_azzp660_03_right_detail8"
+      WHEN 9
+         LET l_detail = "s_azzp660_03_right_detail9"
+      WHEN 10
+         LET l_detail = "s_azzp660_03_right_detail10"
+   END CASE 
+   
+   FOR l_i = 1 TO g_rd_array[g_now_rd_num].rd.getLength()
+      IF gdig_curr.isRowSelected(l_detail,l_i) THEN 
+         UPDATE gzan_t SET gzan005 = 'N', 
+                           gzan006 = '', 
+                           gzan007 = '' 
+          WHERE gzan001 = g_gzal.gzal001 
+            AND gzan002 = g_gzal.gzal002 
+            AND gzan004 = g_rd_array[g_now_rd_num].rd[l_i].gzan004
+      
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = 'upd gzan_t'
+            LET g_errparam.code   = SQLCA.sqlcode
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+         END IF
+
+      END IF
+   END FOR
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 把已選取的欄位資料顯示在sheet中
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp660_fieldsel_b_fill()
+   DEFINE l_sql             STRING 
+   DEFINE l_sheet_i         LIKE type_t.num5 
+   DEFINE l_i               LIKE type_t.num5 
+   DEFINE l_max_gzan006     LIKE gzan_t.gzan006 
+
+   #測試2維陣列是否能如此使用 
+   CALL g_rd_array.clear()  
+
+   #取得目前最大的頁數 
+   SELECT MAX(gzan006) INTO l_max_gzan006 
+     FROM gzan_t
+    WHERE gzan001 = g_gzal.gzal001 
+      AND gzan002 = g_gzal.gzal002  
+      AND gzan005 = 'Y'
+   IF cl_null(l_max_gzan006) THEN 
+      RETURN 
+   END IF 
+
+   #160620-00026#1 20160628 modify -----(S) 
+   #LET l_sql = "SELECT '',gzan004,(SELECT dzeb003 FROM dzeb_t ", 
+   #            "                    WHERE dzeb002 = gzan004), ", 
+   #            "       gzan007 ", 
+   LET l_sql = "SELECT '',gzan004,(SELECT dzebl003 FROM dzebl_t ", 
+               "                    WHERE dzebl001 = gzan004 ", 
+               "                      AND dzebl002 = '",g_dlang,"'), ", 
+               "       gzan007 ",              
+  #160620-00026#1 20160628 modify -----(E)                
+               "  FROM gzan_t ",
+               " WHERE gzan001 = '",g_gzal.gzal001,"' ", 
+               "   AND gzan002 = '",g_gzal.gzal002,"' ",  
+               "   AND gzan005 = 'Y' ",
+               "   AND gzan006 = ? ", 
+               " ORDER BY gzan007 " 
+   PREPARE azzp660_sheet_b_fill_prep FROM l_sql 
+   DECLARE azzp660_sheet_b_fill_curs CURSOR FOR azzp660_sheet_b_fill_prep  
+
+   FOR l_sheet_i = 1 TO l_max_gzan006 
+      IF l_sheet_i = 2  THEN CALL cl_set_comp_visible("page02",TRUE) END IF
+      IF l_sheet_i = 3  THEN CALL cl_set_comp_visible("page03",TRUE) END IF
+      IF l_sheet_i = 4  THEN CALL cl_set_comp_visible("page04",TRUE) END IF
+      IF l_sheet_i = 5  THEN CALL cl_set_comp_visible("page05",TRUE) END IF
+      IF l_sheet_i = 6  THEN CALL cl_set_comp_visible("page06",TRUE) END IF
+      IF l_sheet_i = 7  THEN CALL cl_set_comp_visible("page07",TRUE) END IF
+      IF l_sheet_i = 8  THEN CALL cl_set_comp_visible("page08",TRUE) END IF
+      IF l_sheet_i = 9  THEN CALL cl_set_comp_visible("page09",TRUE) END IF
+      IF l_sheet_i = 10 THEN CALL cl_set_comp_visible("page10",TRUE) END IF
+   
+      LET l_i = 1 
+      FOREACH azzp660_sheet_b_fill_curs USING l_sheet_i 
+                                         INTO g_rd_array[l_sheet_i].rd[l_i].*  
+         #更新順序 
+         UPDATE gzan_t SET gzan007 = l_i
+          WHERE gzan001 = g_gzal.gzal001
+            AND gzan002 = g_gzal.gzal002
+            AND gzan004 = g_rd_array[l_sheet_i].rd[l_i].gzan004
+            AND gzan007 = g_rd_array[l_sheet_i].rd[l_i].gzan007
+
+         LET g_rd_array[l_sheet_i].rd[l_i].gzan007 = l_i
+                                         
+         LET l_i = l_i + 1 
+      END FOREACH  
+      
+      CALL g_rd_array[l_sheet_i].rd.deleteElement(l_i)
+   END FOR  
+END FUNCTION
+
+################################################################################
+# Descriptions...: 控制欄位的上下移動
+# Memo...........:
+# Usage..........: CALL azzp660_move_up_down(p_type)
+#                  RETURNING 回传参数
+# Input parameter: p_type：(up/down) 
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp660_move_up_down(p_type)
+   DEFINE p_type     STRING
+   DEFINE l_step     LIKE type_t.num5
+   DEFINE l_detail   STRING
+   DEFINE l_sql      STRING
+   DEFINE li_idx     LIKE gzan_t.gzan007
+   DEFINE li_idx_p   LIKE gzan_t.gzan007
+   DEFINE li_idx_t   LIKE gzan_t.gzan007
+
+   IF p_type = 'up' THEN
+      LET l_step = -1
+   ELSE
+      LET l_step = 1
+   END IF 
+   
+   CASE g_now_rd_num
+      WHEN 1
+         LET l_detail = "s_azzp660_03_right_detail1"
+      WHEN 2
+         LET l_detail = "s_azzp660_03_right_detail2"
+      WHEN 3
+         LET l_detail = "s_azzp660_03_right_detail3"
+      WHEN 4
+         LET l_detail = "s_azzp660_03_right_detail4"
+      WHEN 5
+         LET l_detail = "s_azzp660_03_right_detail5"
+      WHEN 6
+         LET l_detail = "s_azzp660_03_right_detail6"
+      WHEN 7
+         LET l_detail = "s_azzp660_03_right_detail7"
+      WHEN 8
+         LET l_detail = "s_azzp660_03_right_detail8"
+      WHEN 9
+         LET l_detail = "s_azzp660_03_right_detail9"
+      WHEN 10
+         LET l_detail = "s_azzp660_03_right_detail10"
+   END CASE
+
+   LET li_idx = gdig_curr.getCurrentRow(l_detail)
+   LET li_idx_p = li_idx + l_step 
+   
+   IF li_idx_p <= 0 THEN
+      RETURN
+   END IF
+
+   #取得目前sheet的序號最大值  
+   SELECT MAX(gzan007)+1 INTO li_idx_t
+     FROM gzan_t 
+    WHERE gzan001 = g_gzal.gzal001
+      AND gzan002 = g_gzal.gzal002
+      AND gzan006 = g_now_rd_num     #目前的sheet  
+
+   LET l_sql = "UPDATE gzan_t SET gzan007 = ? ", 
+               " WHERE gzan001 = '",g_gzal.gzal001,"' ",
+               "   AND gzan002 = '",g_gzal.gzal002,"' ",
+               "   AND gzan006 = '",g_now_rd_num,"' ",
+               "   AND gzan007 = ? "
+   PREPARE azzp660_change_gzan_seq_prep FROM l_sql
+
+   #把目前的資料移到最後一筆 
+   EXECUTE azzp660_change_gzan_seq_prep USING li_idx_t,li_idx_p
+   #把上或下的資料移到目前的位置 
+   EXECUTE azzp660_change_gzan_seq_prep USING li_idx_p,li_idx
+   #把先前被移到最後的資料，放到剛才空出來的位置 
+   EXECUTE azzp660_change_gzan_seq_prep USING li_idx,li_idx_t
+
+   #重新顯示資料 
+   CALL azzp660_fieldsel_b_fill()
+
+   #設定畫面的游標會跟著移動，這樣才不用每次移完都要再用滑鼠定位  
+   CALL gdig_curr.setCurrentRow(l_detail,li_idx_p)
+END FUNCTION
+
+################################################################################
+# Descriptions...: 已設定之作業
+# Memo...........:
+# Usage..........: CALL azzp660_open_s01()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 160204-00005#1 By whitney
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp660_open_s01()
+DEFINE l_ac         LIKE type_t.num5
+
+   OPEN WINDOW w_azzp660_s01 WITH FORM cl_ap_formpath("azz","azzp660_s01")
+
+   CALL g_gzal_s01.clear()
+   LET l_ac = 1
+   DECLARE azzp660_open_s01_cur CURSOR FOR
+      SELECT gzal001,(SELECT gzzal003 FROM gzzal_t WHERE gzzal001 = gzal001 AND gzzal002 = g_dlang) gzzal003,gzal002 FROM gzal_t
+   FOREACH azzp660_open_s01_cur INTO g_gzal_s01[l_ac].b_gzal001,g_gzal_s01[l_ac].b_gzal001_desc,g_gzal_s01[l_ac].b_gzal002
+      LET l_ac = l_ac + 1
+   END FOREACH
+
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      DISPLAY ARRAY g_gzal_s01 TO s_azzp660_s01_detail1.*
+              ATTRIBUTE(COUNT = g_gzal_s01.getLength())
+      
+      END DISPLAY
+
+      ON ACTION close
+         EXIT DIALOG
+    
+      ON ACTION exit
+         EXIT DIALOG
+    
+      #主選單用ACTION
+      &include "main_menu_exit_dialog.4gl"
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+
+   CLOSE WINDOW w_azzp660_s01
+
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

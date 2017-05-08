@@ -1,0 +1,477 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="aglq730_x01" std_prog="aglq730_x01" erpver="1.0" module="AGL" ver="1" env="s" zone="t10prd" booking="Y" type="X" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="X" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="component.arg.prep" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_tmp_table = tm.a1]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE g_tmp_table     STRING]]>
+  </point>
+  <point name="ins_data.after" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[    LET g_xgrid.visible_column = NULL
+    
+    #核算項顯示列數
+    FOR l_i=1 TO tm.a2
+        IF l_i=1 THEN
+           LET l_str="amt",l_i USING '<<<',"1"
+           LET l_str1="amt",l_i USING '<<<',"2"
+           LET l_str2="amt",l_i USING '<<<',"3"
+        ELSE
+           LET l_str=l_str,"|amt",l_i USING '<<<',"1"
+           LET l_str1=l_str1,"|amt",l_i USING '<<<',"2"
+           LET l_str2=l_str2,"|amt",l_i USING '<<<',"3"
+        END IF
+    END FOR
+    
+    #只顯示本位幣一
+    IF tm.a3='0' THEN
+       IF NOT cl_null(g_xgrid.visible_column)THEN       
+          LET g_xgrid.visible_column =g_xgrid.visible_column CLIPPED ,"|",l_str1,"|",l_str2
+       ELSE
+          LET g_xgrid.visible_column = l_str1,"|",l_str2
+       END IF
+    END IF
+    #顯示本位幣二
+    IF tm.a3='1' THEN
+       IF NOT cl_null(g_xgrid.visible_column)THEN       
+          LET g_xgrid.visible_column =g_xgrid.visible_column CLIPPED ,"|",l_str2
+       ELSE
+          LET g_xgrid.visible_column = l_str2
+       END IF
+    END IF
+    #顯示本位幣三
+    IF tm.a3='2' THEN
+       IF NOT cl_null(g_xgrid.visible_column)THEN       
+          LET g_xgrid.visible_column =g_xgrid.visible_column CLIPPED ,"|",l_str1
+       ELSE
+          LET g_xgrid.visible_column = l_str1
+       END IF
+    END IF
+    #核算項隱藏列數
+    FOR l_i=tm.a2+1 TO 30
+       LET l_str="amt",l_i USING '<<<',"1|",
+                 "amt",l_i USING '<<<',"2|",
+                 "amt",l_i USING '<<<',"3"
+       IF NOT cl_null(g_xgrid.visible_column)THEN       
+          LET g_xgrid.visible_column =g_xgrid.visible_column CLIPPED ,"|",l_str
+       ELSE
+          LET g_xgrid.visible_column = l_str
+       END IF
+    END FOR]]>
+  </point>
+  <point name="ins_data.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_i       LIKE type_t.num5
+   DEFINE l_str     STRING
+   DEFINE l_str1    STRING
+   DEFINE l_str2    STRING]]>
+  </point>
+  <point name="sel_prep.sql.after" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_sql = " SELECT * FROM ", g_tmp_table CLIPPED#," ORDER BY glar001"
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段]]>
+  </point>
+  <section id="aglq730_x01.create_tmptable" ver="3" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION aglq730_x01_create_tmptable()
+ 
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before
+   {<point name="create_tmp.before"/>}
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "glar001.glar_t.glar001,glar001_desc.type_t.chr200,amt11.type_t.num20_6,amt12.type_t.num20_6,amt13.type_t.num20_6,amt21.type_t.num20_6,amt22.type_t.num20_6,amt23.type_t.num20_6,amt31.type_t.num20_6,amt32.type_t.num20_6,amt33.type_t.num20_6,amt41.type_t.num20_6,amt42.type_t.num20_6,amt43.type_t.num20_6,amt51.type_t.num20_6,amt52.type_t.num20_6,amt53.type_t.num20_6,amt61.type_t.num20_6,amt62.type_t.num20_6,amt63.type_t.num20_6,amt71.type_t.num20_6,amt72.type_t.num20_6,amt73.type_t.num20_6,amt81.type_t.num20_6,amt82.type_t.num20_6,amt83.type_t.num20_6,amt91.type_t.num20_6,amt92.type_t.num20_6,amt93.type_t.num20_6,amt101.type_t.num20_6,amt102.type_t.num20_6,amt103.type_t.num20_6,amt111.type_t.num20_6,amt112.type_t.num20_6,amt113.type_t.num20_6,amt121.type_t.num20_6,amt122.type_t.num20_6,amt123.type_t.num20_6,amt131.type_t.num20_6,amt132.type_t.num20_6,amt133.type_t.num20_6,amt141.type_t.num20_6,amt142.type_t.num20_6,amt143.type_t.num20_6,amt151.type_t.num20_6,amt152.type_t.num20_6,amt153.type_t.num20_6,amt161.type_t.num20_6,amt162.type_t.num20_6,amt163.type_t.num20_6,amt171.type_t.num20_6,amt172.type_t.num20_6,amt173.type_t.num20_6,amt181.type_t.num20_6,amt182.type_t.num20_6,amt183.type_t.num20_6,amt191.type_t.num20_6,amt192.type_t.num20_6,amt193.type_t.num20_6,amt201.type_t.num20_6,amt202.type_t.num20_6,amt203.type_t.num20_6,amt211.type_t.num20_6,amt212.type_t.num20_6,amt213.type_t.num20_6,amt221.type_t.num20_6,amt222.type_t.num20_6,amt223.type_t.num20_6,amt231.type_t.num20_6,amt232.type_t.num20_6,amt233.type_t.num20_6,amt241.type_t.num20_6,amt242.type_t.num20_6,amt243.type_t.num20_6,amt251.type_t.num20_6,amt252.type_t.num20_6,amt253.type_t.num20_6,amt261.type_t.num20_6,amt262.type_t.num20_6,amt263.type_t.num20_6,amt271.type_t.num20_6,amt272.type_t.num20_6,amt273.type_t.num20_6,amt281.type_t.num20_6,amt282.type_t.num20_6,amt283.type_t.num20_6,amt291.type_t.num20_6,amt292.type_t.num20_6,amt293.type_t.num20_6,amt301.type_t.num20_6,amt302.type_t.num20_6,amt303.type_t.num20_6,l_glaald_desc.type_t.chr500,l_glaacomp_desc.type_t.chr500,l_curr.type_t.chr500,l_sdate.type_t.chr500,l_edate.type_t.chr500,l_ctype.type_t.chr500,l_fix_acc.type_t.chr500,l_stype.type_t.chr500,l_glac005.glac_t.glac005,l_stus.type_t.chr500" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after
+   {<point name="create_tmp.after"/>}
+   #end add-point:create_tmp.after
+END FUNCTION
+]]>
+  </section>
+  <section id="aglq730_x01.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000002
+#+ 
+#+ Filename...: aglq730_x01
+#+ Description: 科目核算項二維查詢
+#+ Creator....: 01727(2015-06-01 09:55:21)
+#+ Modifier...: 02291(2015-06-10 15:07:17) -SD/PR-
+]]>
+  </section>
+  <section id="aglq730_x01.global" ver="3" status="" src="s" readonly="">
+    <![CDATA[#報表 x01 樣板自動產生(Version:1)
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #where condition 
+       a1 LIKE type_t.chr20,         #臨時表名稱 
+       a2 LIKE type_t.num5,         #hide_flag 
+       a3 LIKE type_t.num5          #curr_flag
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+ 
+#add-point:自定義環境變數(Global Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="aglq730_x01.ins_data" ver="3" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION aglq730_x01_ins_data()
+DEFINE sr RECORD 
+   glar001 LIKE glar_t.glar001, 
+   glar001_desc LIKE type_t.chr200, 
+   amt11 LIKE type_t.num20_6, 
+   amt12 LIKE type_t.num20_6, 
+   amt13 LIKE type_t.num20_6, 
+   amt21 LIKE type_t.num20_6, 
+   amt22 LIKE type_t.num20_6, 
+   amt23 LIKE type_t.num20_6, 
+   amt31 LIKE type_t.num20_6, 
+   amt32 LIKE type_t.num20_6, 
+   amt33 LIKE type_t.num20_6, 
+   amt41 LIKE type_t.num20_6, 
+   amt42 LIKE type_t.num20_6, 
+   amt43 LIKE type_t.num20_6, 
+   amt51 LIKE type_t.num20_6, 
+   amt52 LIKE type_t.num20_6, 
+   amt53 LIKE type_t.num20_6, 
+   amt61 LIKE type_t.num20_6, 
+   amt62 LIKE type_t.num20_6, 
+   amt63 LIKE type_t.num20_6, 
+   amt71 LIKE type_t.num20_6, 
+   amt72 LIKE type_t.num20_6, 
+   amt73 LIKE type_t.num20_6, 
+   amt81 LIKE type_t.num20_6, 
+   amt82 LIKE type_t.num20_6, 
+   amt83 LIKE type_t.num20_6, 
+   amt91 LIKE type_t.num20_6, 
+   amt92 LIKE type_t.num20_6, 
+   amt93 LIKE type_t.num20_6, 
+   amt101 LIKE type_t.num20_6, 
+   amt102 LIKE type_t.num20_6, 
+   amt103 LIKE type_t.num20_6, 
+   amt111 LIKE type_t.num20_6, 
+   amt112 LIKE type_t.num20_6, 
+   amt113 LIKE type_t.num20_6, 
+   amt121 LIKE type_t.num20_6, 
+   amt122 LIKE type_t.num20_6, 
+   amt123 LIKE type_t.num20_6, 
+   amt131 LIKE type_t.num20_6, 
+   amt132 LIKE type_t.num20_6, 
+   amt133 LIKE type_t.num20_6, 
+   amt141 LIKE type_t.num20_6, 
+   amt142 LIKE type_t.num20_6, 
+   amt143 LIKE type_t.num20_6, 
+   amt151 LIKE type_t.num20_6, 
+   amt152 LIKE type_t.num20_6, 
+   amt153 LIKE type_t.num20_6, 
+   amt161 LIKE type_t.num20_6, 
+   amt162 LIKE type_t.num20_6, 
+   amt163 LIKE type_t.num20_6, 
+   amt171 LIKE type_t.num20_6, 
+   amt172 LIKE type_t.num20_6, 
+   amt173 LIKE type_t.num20_6, 
+   amt181 LIKE type_t.num20_6, 
+   amt182 LIKE type_t.num20_6, 
+   amt183 LIKE type_t.num20_6, 
+   amt191 LIKE type_t.num20_6, 
+   amt192 LIKE type_t.num20_6, 
+   amt193 LIKE type_t.num20_6, 
+   amt201 LIKE type_t.num20_6, 
+   amt202 LIKE type_t.num20_6, 
+   amt203 LIKE type_t.num20_6, 
+   amt211 LIKE type_t.num20_6, 
+   amt212 LIKE type_t.num20_6, 
+   amt213 LIKE type_t.num20_6, 
+   amt221 LIKE type_t.num20_6, 
+   amt222 LIKE type_t.num20_6, 
+   amt223 LIKE type_t.num20_6, 
+   amt231 LIKE type_t.num20_6, 
+   amt232 LIKE type_t.num20_6, 
+   amt233 LIKE type_t.num20_6, 
+   amt241 LIKE type_t.num20_6, 
+   amt242 LIKE type_t.num20_6, 
+   amt243 LIKE type_t.num20_6, 
+   amt251 LIKE type_t.num20_6, 
+   amt252 LIKE type_t.num20_6, 
+   amt253 LIKE type_t.num20_6, 
+   amt261 LIKE type_t.num20_6, 
+   amt262 LIKE type_t.num20_6, 
+   amt263 LIKE type_t.num20_6, 
+   amt271 LIKE type_t.num20_6, 
+   amt272 LIKE type_t.num20_6, 
+   amt273 LIKE type_t.num20_6, 
+   amt281 LIKE type_t.num20_6, 
+   amt282 LIKE type_t.num20_6, 
+   amt283 LIKE type_t.num20_6, 
+   amt291 LIKE type_t.num20_6, 
+   amt292 LIKE type_t.num20_6, 
+   amt293 LIKE type_t.num20_6, 
+   amt301 LIKE type_t.num20_6, 
+   amt302 LIKE type_t.num20_6, 
+   amt303 LIKE type_t.num20_6, 
+   l_glaald_desc LIKE type_t.chr500, 
+   l_glaacomp_desc LIKE type_t.chr500, 
+   l_curr LIKE type_t.chr500, 
+   l_sdate LIKE type_t.chr500, 
+   l_edate LIKE type_t.chr500, 
+   l_ctype LIKE type_t.chr500, 
+   l_fix_acc LIKE type_t.chr500, 
+   l_stype LIKE type_t.chr500, 
+   l_glac005 LIKE glac_t.glac005, 
+   l_stus LIKE type_t.chr500
+ END RECORD
+#add-point:ins_data段define
+{<point name="ins_data.define"/>}
+#end add-point
+ 
+    #add-point:ins_data段before
+    {<point name="ins_data.before"/>}
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH aglq730_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach
+       {<point name="ins_data.foreach"/>}
+       #end add-point
+ 
+       #add-point:ins_data段before.save
+       {<point name="ins_data.before.save"/>}
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.glar001,sr.glar001_desc,sr.amt11,sr.amt12,sr.amt13,sr.amt21,sr.amt22,sr.amt23,sr.amt31,sr.amt32,sr.amt33,sr.amt41,sr.amt42,sr.amt43,sr.amt51,sr.amt52,sr.amt53,sr.amt61,sr.amt62,sr.amt63,sr.amt71,sr.amt72,sr.amt73,sr.amt81,sr.amt82,sr.amt83,sr.amt91,sr.amt92,sr.amt93,sr.amt101,sr.amt102,sr.amt103,sr.amt111,sr.amt112,sr.amt113,sr.amt121,sr.amt122,sr.amt123,sr.amt131,sr.amt132,sr.amt133,sr.amt141,sr.amt142,sr.amt143,sr.amt151,sr.amt152,sr.amt153,sr.amt161,sr.amt162,sr.amt163,sr.amt171,sr.amt172,sr.amt173,sr.amt181,sr.amt182,sr.amt183,sr.amt191,sr.amt192,sr.amt193,sr.amt201,sr.amt202,sr.amt203,sr.amt211,sr.amt212,sr.amt213,sr.amt221,sr.amt222,sr.amt223,sr.amt231,sr.amt232,sr.amt233,sr.amt241,sr.amt242,sr.amt243,sr.amt251,sr.amt252,sr.amt253,sr.amt261,sr.amt262,sr.amt263,sr.amt271,sr.amt272,sr.amt273,sr.amt281,sr.amt282,sr.amt283,sr.amt291,sr.amt292,sr.amt293,sr.amt301,sr.amt302,sr.amt303,sr.l_glaald_desc,sr.l_glaacomp_desc,sr.l_curr,sr.l_sdate,sr.l_edate,sr.l_ctype,sr.l_fix_acc,sr.l_stype,sr.l_glac005,sr.l_stus
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "aglq730_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save
+       {<point name="ins_data.after.save"/>}
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after
+    {<point name="ins_data.after"/>}
+    #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="aglq730_x01.ins_prep" ver="3" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION aglq730_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define
+{<point name="ins_prep.define"/>}
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段
+         {<point name="insert_prep"/>}
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+]]>
+  </section>
+  <section id="aglq730_x01.main" ver="3" status="" src="s" readonly="">
+    <![CDATA[PUBLIC FUNCTION aglq730_x01(p_arg1,p_arg2,p_arg3,p_arg4)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition 
+DEFINE  p_arg2 LIKE type_t.chr20         #tm.a1  臨時表名稱 
+DEFINE  p_arg3 LIKE type_t.num5         #tm.a2  hide_flag 
+DEFINE  p_arg4 LIKE type_t.num5         #tm.a3  curr_flag
+#add-point:init段define
+{<point name="component.define"/>}
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.a1 = p_arg2
+   LET tm.a2 = p_arg3
+   LET tm.a3 = p_arg4
+ 
+   #add-point:報表元件參數準備
+   {<point name="component.arg.prep" />}
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "aglq730_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL aglq730_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL aglq730_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL aglq730_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL aglq730_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL aglq730_x01_rep_data()
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="aglq730_x01.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="aglq730_x01.rep_data" ver="1" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION aglq730_x01_rep_data()
+#add-point:rep_data.define
+{<point name="rep_data.define"/>}
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before
+    {<point name="rep_data.before"/>}
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after
+    {<point name="rep_data.after"/>}
+    #end add-point:rep_data.after
+END FUNCTION
+]]>
+  </section>
+  <section id="aglq730_x01.sel_prep" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION aglq730_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define
+{<point name="sel_prep.define"/>}
+#end add-point
+ 
+   #add-point:sel_prep before
+   {<point name="sel_prep.before" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep g_select
+   {<point name="sel_prep.g_select" mark="Y"/>}
+   #end add-point
+   LET g_select = " SELECT glar001,NULL,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 
+       0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 
+       0,0,0,0,0,0,0,0,0,0,0,0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL"
+ 
+   #add-point:sel_prep g_from
+   {<point name="sel_prep.g_from" mark="Y"/>}
+   #end add-point
+    LET g_from = " FROM glar_t"
+ 
+   #add-point:sel_prep g_where
+   {<point name="sel_prep.g_where" mark="Y"/>}
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order
+   {<point name="sel_prep.g_order" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before
+   {<point name="sel_prep.sql.before" mark="Y"/>}
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("glar_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after
+   {<point name="sel_prep.sql.after" mark="Y"/>}
+   #end add-point
+   PREPARE aglq730_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE aglq730_x01_curs CURSOR FOR aglq730_x01_prepare
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

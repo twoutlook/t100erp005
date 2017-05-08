@@ -1,0 +1,144 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmi120" module="anm" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="02299" crtdt="2013-08-20 15:24:21" modid="07673" moddt="2016-05-03 10:55:55" sdver="0009" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="企業銀行帳戶資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="nmaa001,nmaal003,nmaa006,nmaa002,nmaa002_desc(chr80),nmaa003,nmaa003_desc(chr80),nmaa004,nmaa004_desc(chr80),nmaa005,nmaa007,l_oofa011(chr500),nmaa008,l_oofc012(chr500),nmaa010,l_oofb017(chr500),nmaa009,nmaastus,nmaaownid,nmaaownid_desc(chr80),nmaaowndp,nmaaowndp_desc(chr80),nmaacrtid,nmaacrtid_desc(chr80),nmaacrtdp,nmaacrtdp_desc(chr80),nmaacrtdt,nmaamodid,nmaamodid_desc(chr80),nmaamoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmas002,nmas003,nmas004,nmas005"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="open_anmi120_02"/>
+      <action id="query" type="standard"/>
+      <action id="open_anmi120_01"/>
+      <action id="open_anmi121"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmi120" method="dialog">
+    <section id="input">
+      <input id="head" field="nmaa001,nmaal003,nmaa006,nmaa002,nmaa003,nmaa004,nmaa005,nmaa007,l_oofa011,nmaa008,l_oofc012,nmaa010,l_oofb017,nmaa009,nmaastus"/>
+      <input id="body" page="1" field="nmas002,nmas003,nmas004,nmas005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="nmaa001,nmaal003,nmaa006,nmaa002,nmaa003,nmaa004,nmaa005,nmaa007,l_oofa011,nmaa008,l_oofc012,nmaa010,l_oofb017,nmaa009,nmaastus,nmaaownid,nmaaowndp,nmaacrtid,nmaacrtdp,nmaacrtdt,nmaamodid,nmaamoddt"/>
+      <construct id="body" page="1" field="nmas002,nmas003,nmas004,nmas005"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="nmaa001"/>
+      <set id="head" type="no_entry" field="nmaa001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="nmaa001">
+        <controlp form="q_nmaa001" state="c"/>
+      </column>
+      <column id="nmaal003"/>
+      <column id="nmaa006" type="S" default="N"/>
+      <column id="nmaa002">
+        <after>
+          <reference field="nmaa002_desc" ref_field="nmaa_t.nmaa002" map_field="nmaaent,nmaa002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="nmaa002_desc"/>
+      <column id="nmaa003">
+        <after>
+          <reference field="nmaa003_desc" ref_field="nmaa_t.nmaa003" map_field="nmaaent,nmaa003" ref_sql="SELECT nmagl003 FROM nmagl_t WHERE nmaglent=$varg_enterprise$var AND nmagl001=? AND nmagl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmag001" state="i"/>
+        <controlp form="q_nmag001" state="c"/>
+      </column>
+      <column id="nmaa003_desc"/>
+      <column id="nmaa004">
+        <after>
+          <reference field="nmaa004_desc" ref_field="nmaa_t.nmaa004" map_field="nmaaent,nmaa004" ref_sql="SELECT nmabl003 FROM nmabl_t WHERE nmablent=$varg_enterprise$var AND nmabl001=? AND nmabl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmab001" state="i"/>
+        <controlp form="q_nmab001" state="c"/>
+      </column>
+      <column id="nmaa004_desc"/>
+      <column id="nmaa005"/>
+      <column id="nmaa007"/>
+      <column id="l_oofa011">
+        <controlp form="q_oofa001" state="i"/>
+        <controlp form="q_oofa001" state="c"/>
+      </column>
+      <column id="nmaa008"/>
+      <column id="l_oofc012"/>
+      <column id="nmaa010"/>
+      <column id="l_oofb017"/>
+      <column id="nmaa009"/>
+      <column id="nmaastus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="nmaaownid">
+        <after>
+          <reference field="nmaaownid_desc" ref_field="nmaa_t.nmaaownid" map_field="nmaaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmaaownid_desc"/>
+      <column id="nmaaowndp">
+        <after>
+          <reference field="nmaaowndp_desc" ref_field="nmaa_t.nmaaowndp" map_field="nmaaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmaaowndp_desc"/>
+      <column id="nmaacrtid">
+        <after>
+          <reference field="nmaacrtid_desc" ref_field="nmaa_t.nmaacrtid" map_field="nmaacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmaacrtid_desc"/>
+      <column id="nmaacrtdp">
+        <after>
+          <reference field="nmaacrtdp_desc" ref_field="nmaa_t.nmaacrtdp" map_field="nmaacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmaacrtdp_desc"/>
+      <column id="nmaacrtdt"/>
+      <column id="nmaamodid">
+        <after>
+          <reference field="nmaamodid_desc" ref_field="nmaa_t.nmaamodid" map_field="nmaamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmaamodid_desc"/>
+      <column id="nmaamoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="nmas002"/>
+      <column id="nmas003">
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="nmas004" type="S" default="N"/>
+      <column id="nmas005" type="S" default="N"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="nmaa_t" pk="nmaa001">
+      <sql id="forupd_sql" type="sql" query="SELECT nmaa001,&apos;&apos;,nmaa006,nmaa002,&apos;&apos;,nmaa003,&apos;&apos;,nmaa004,&apos;&apos;,nmaa005,nmaa007,&apos;&apos;,nmaa008,&apos;&apos;,nmaa010,&apos;&apos;,nmaa009,nmaastus,nmaaownid,&apos;&apos;,nmaaowndp,&apos;&apos;,nmaacrtid,&apos;&apos;,nmaacrtdp,&apos;&apos;,nmaacrtdt,nmaamodid,&apos;&apos;,nmaamoddt FROM nmaa_t WHERE nmaaent= ? AND nmaa001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT nmaa001,&apos;&apos;,nmaa006,nmaa002,&apos;&apos;,nmaa003,&apos;&apos;,nmaa004,&apos;&apos;,nmaa005,nmaa007,&apos;&apos;,nmaa008,&apos;&apos;,nmaa010,&apos;&apos;,nmaa009,nmaastus,nmaaownid,&apos;&apos;,nmaaowndp,&apos;&apos;,nmaacrtid,&apos;&apos;,nmaacrtdp,&apos;&apos;,nmaacrtdt,nmaamodid,&apos;&apos;,nmaamoddt FROM nmaa_t" order="nmaa001"/>
+      <sql id="append" type="lang" target="nmaal_t.nmaal003" table="nmaal_t" fk="nmaa001" pk="nmaal001,nmaal002" field="nmaal003"/>
+    </head>
+    <body id="nmas_t" page="1" linked="" pk="nmas002" fk="nmas001">
+      <sql id="forupd_sql_detail" query="SELECT nmas002,nmas003,nmas004,nmas005 FROM nmas_t WHERE nmasent=? AND nmas001=? AND nmas002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmas002,nmas003,nmas004,nmas005 FROM nmas_t WHERE nmasent=? AND nmas001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

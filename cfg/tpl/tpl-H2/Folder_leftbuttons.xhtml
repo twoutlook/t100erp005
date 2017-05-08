@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ FOURJS_START_COPYRIGHT(D,2011)
+ Property of Four Js*
+ (c) Copyright Four Js 2011, 2014. All Rights Reserved.
+ * Trademark of Four Js Development Tools Europe Ltd
+   in the United States and elsewhere
+ 
+ This file can be modified by licensees according to the
+ product manual.
+ FOURJS_END_COPYRIGHT
+ -->
+<html
+	xmlns='http://www.w3.org/1999/xhtml'
+	xmlns:gwc='http://www.4js.com/GWC'
+>
+	<head>
+		<meta
+			content='text/html; charset=utf-8'
+			http-equiv='Content-Type'
+		/>
+	</head>
+
+	<body>
+
+<gwc:snippet-root>
+	<div
+		gwc:condition='!hidden'
+
+		class='g{type} gSStar gS{type} {prefix("gc", class)} container-style'
+		style='{ttyfontfamily ? "font-family: " + ttyfontfamily + ";" : null}'
+	>
+		<div
+			gwc:define='
+				positionStyle style["position"];
+				folderPosition (switch(positionStyle, ["left", "right", "bottom"], ["\"row\": 0, \"column\": 0, \"rowSpan\": 3", "\"row\": 0, \"column\": 2, \"rowSpan\": 3", "\"row\": 2, \"column\": 0, \"columnSpan\": 3"], "\"row\": 0, \"column\": 0, \"columnSpan\": 3"));
+			'
+
+			data-g-layout-container=''
+		>
+			<ul
+				class='{positionStyle == "left" ? "gFolderNavigationLeft" : positionStyle == "right" ? "gFolderNavigationRight" : positionStyle == "bottom" ? "gFolderNavigationBottom" : "gFolderNavigation"}'
+
+				data-g-id='{type}'
+				data-g-qa-idRef='{auiid(id)}'
+				data-g-layout-item='{folderPosition}'
+			>
+				<gwc:dummy
+					gwc:repeat='p pages'
+					gwc:omit-tag='true'
+				>
+					<li
+						gwc:condition='!p/hidden'
+
+						class='{"gFolderTab folder-tab-style " + (p/isCurrent ? "folder-tab-style-selected" : "")}'
+
+						data-did='{p/idid}'
+
+						data-g-qa-name='{p/type},{p/name || ""}'
+						data-g-qa-idRef='{auiid(p/id)}'
+						title='{p/comment || null}'
+					>
+						<a
+							href='#'
+
+
+						>
+							<img
+								gwc:condition='p/image'
+
+								draggable='false'
+								alt='...'
+								src='{imageURI(p/image)}'
+							/>
+							<span
+							>{p/text != "" ? filterAmpersand(p/text) : "..."}</span>
+						</a>
+					</li>
+				</gwc:dummy>
+			</ul>
+
+			<div
+				gwc:condition='page &amp;&amp; !page/hidden'
+
+				data-g-layout-item='"row": 1, "column": 1, "isXSpacer": 1, "isYSpacer": 1'
+			>
+				<div
+					gwc:define='
+					  minWidth style["minWidth"];
+					  minWidth minWidth != undefined ? minWidth : "40px";
+					  minHeight style["minHeight"];
+					  minHeight minHeight != undefined ? minHeight : "40px";
+					'
+					class='gScrollView'
+
+					data-g-layout-policy='"widthHint": "{minWidth}{wantStretchHorizontally ? "*" : null}", "widthPolicy": "CanGrowInitial", "heightHint": "{minHeight}{wantStretchVertically ? "*" : null}", "heightPolicy": "CanGrowInitial", "isScrollView": 1'
+				>
+					<div
+						data-g-layout-container=''
+					>
+						<div
+							gwc:content='page/body'
+
+							class='gPage gSStar gSPage {prefix("gc", page/class)}'
+
+							data-g-layout-item='"isXSpacer": 1, "isYSpacer": 1'
+						/>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</gwc:snippet-root>
+
+	</body>
+</html>

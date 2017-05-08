@@ -1,0 +1,702 @@
+<add_points prog="asfp370_01" std_prog="asfp370_01" erpver="1.0" module="ASF" ver="1" env="s" zone="t10dev" booking="Y" type="S" identity="s">
+  <other>
+    <code_template value="F" status="" />
+    <free_style value="Y" status="" />
+  </other>
+  <point name="function.asfp370_01" cite_std="N" status="d" ver="1" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[
+PUBLIC FUNCTION asfp370_01(--)
+   #add-point:construct段變數傳入
+
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+
+
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+      #輸入開始
+
+
+      #輸入開始
+      CONSTRUCT g_wc_02 ON sfdb001,sfdb002,sfdb003,sfdb004,sfdb005
+           FROM s_detail1[1].sfdb001,s_detail1[1].sfdb002,s_detail1[1].sfdb003,s_detail1[1].sfdb004,
+               s_detail1[1].sfdb005
+
+         BEFORE CONSTRUCT
+
+
+         AFTER CONSTRUCT
+
+
+      END CONSTRUCT
+
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION close
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION exit
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+
+   END DIALOG
+
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_01_init" cite_std="N" status="d" ver="" src="s" new="Y" order="1">
+<![CDATA[
+#畫面資料初始化
+PUBLIC FUNCTION asfp370_01_init()
+
+   #no scc
+   #CALL cl_set_combo_scc('pmdo003_d1_01','2055')
+
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_01_insert_temp" cite_std="N" status="d" ver="" src="s" new="Y" order="8">
+<![CDATA[
+PUBLIC FUNCTION asfp370_01_insert_temp()
+   DEFINE    r_success LIKE type_t.num5
+   
+   LET r_sucess = TRUE
+   INSERT INTO asfp370_02_temp
+      SELECT sfdc004,sfdc005,sfdc006,sfdc009,sfdc012,sfdc013,SUM(sfdc007),SUM(inag008),SUM(sfdc010),SUM(inag025),0,0
+        FROM asfp370_01_temp
+       GROUP BY sfdc004,sfdc005,sfdc006,sfdc009,sfdc012,sfdc013
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('ins asfp370_02_temp',SQLCA.sqlcode,1)
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <point name="main.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="free_style.variable" cite_std="N" status="u" ver="" src="s" new="Y">
+<![CDATA[TYPE type_g_sfdc_d        RECORD
+      sel                  LIKE type_t.chr1,        #选择
+      sfdcdocno            LIKE sfdc_t.sfdcdocno,   #发料单号
+      sfdcseq              LIKE sfdc_t.sfdcseq,     #项次
+      sfdc001              LIKE sfdc_t.sfdc001,     #工单单号
+      sfdc002              LIKE sfdc_t.sfdc002,     #工单项次
+      sfdc003              LIKE sfdc_t.sfdc003,     #工单项序
+      sfdc004              LIKE sfdc_t.sfdc004,     #需求料号
+      sfdc004_desc         LIKE type_t.chr80,       #品名
+      sfdc004_desc_desc    LIKE type_t.chr80,       #规格
+      sfdc005              LIKE sfdc_t.sfdc005,     #特征
+      sfdc006              LIKE sfdc_t.sfdc006,     #单位
+      sfba013              LIKE sfba_t.sfba013,     #应发数量
+      sfba016              LIKE sfba_t.sfba016,     #已发量
+      sfdc007              LIKE sfdc_t.sfdc007,     #申请数量
+      inag008              LIKE inag_t.inag008,     #库存数量
+      diff                 LIKE sfdc_t.sfdc007,     #差异数量
+      sfdc009              LIKE sfdc_t.sfdc009,     #参考单位
+      sfdc010              LIKE sfdc_t.sfdc010,     #参考单位申请数量
+      inag025              LIKE inag_t.inag025,     #参考单位库存数量
+      diffr                LIKE sfdc_t.sfdc010,     #参考单位差异数量
+      sfdc012              LIKE sfdc_t.sfdc012,     #拨入库位
+      sfdc013              LIKE sfdc_t.sfdc013      #拨入储位
+                          END RECORD
+DEFINE g_sfdc_d          DYNAMIC ARRAY OF type_g_sfdc_d
+DEFINE g_sfdc_d_t        type_g_sfdc_d
+
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列]]>
+</point>
+  <point name="global.variable" cite_std="N" status="u" ver="" src="s" new="Y">
+<![CDATA[DEFINE g_rec_b               LIKE type_t.num5 
+DEFINE l_ac                  LIKE type_t.num5
+DEFINE g_master_idx          LIKE type_t.num5
+
+DEFINE g_wc_01               STRING]]>
+</point>
+  <point name="function.asfp370_01_delete_temp_table" cite_std="N" status="u" ver="" src="s" new="Y" order="7">
+<![CDATA[
+#删除临时表中的资料
+PUBLIC FUNCTION asfp370_01_delete_temp_table()
+   DELETE FROM asfp370_01_temp
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_01_drop_temp_table" cite_std="N" status="u" ver="" src="s" new="Y" order="6">
+<![CDATA[
+PUBLIC FUNCTION asfp370_01_drop_temp_table()
+   DEFINE r_success          LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+
+   LET r_success = TRUE
+
+   DROP TABLE asfp370_01_temp
+
+   IF NOT (SQLCA.sqlcode = 0 OR SQLCA.sqlcode = -206) THEN
+      CALL cl_err('drop asfp370_01_temp',SQLCA.sqlcode,1)
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_01_create_temp_table" cite_std="N" status="u" ver="" src="s" new="Y" order="5">
+<![CDATA[
+PUBLIC FUNCTION asfp370_01_create_temp_table()
+   DEFINE r_success         LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+
+   LET r_success = TRUE
+
+   IF NOT asfp370_01_drop_temp_table() THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   CREATE TEMP TABLE asfp370_01_temp(
+      sel                  LIKE type_t.chr1,        #选择
+      sfdcdocno            LIKE sfdc_t.sfdcdocno,   #发料单号
+      sfdcseq              LIKE sfdc_t.sfdcseq,     #项次
+      sfdc001              LIKE sfdc_t.sfdc001,     #工单单号
+      sfdc002              LIKE sfdc_t.sfdc002,     #工单项次
+      sfdc003              LIKE sfdc_t.sfdc003,     #工单项序
+      sfdc004              LIKE sfdc_t.sfdc004,     #需求料号
+      sfdc005              LIKE sfdc_t.sfdc005,     #特征
+      sfdc006              LIKE sfdc_t.sfdc006,     #单位
+      sfdc007              LIKE sfdc_t.sfdc007,     #申请数量
+      inag008              LIKE inag_t.inag008,     #库存数量
+      sfdc009              LIKE sfdc_t.sfdc009,     #参考单位
+      sfdc010              LIKE sfdc_t.sfdc010,     #参考单位申请数量
+      inag025              LIKE inag_t.inag025,     #参考单位库存数量
+      sfdc012              LIKE sfdc_t.sfdc012,     #拨入库位
+      sfdc013              LIKE sfdc_t.sfdc013      #拨入储位
+      )
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('create asfp370_01_temp',SQLCA.sqlcode,1)
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   CREATE UNIQUE INDEX asfp370_01_temp_01 on asfp370_01_temp (sfdcdocno,sfdcseq)
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('create index asfp370_01_temp',SQLCA.sqlcode,1)
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_01_init" cite_std="N" status="u" ver="" src="s" new="Y" order="1">
+<![CDATA[
+#畫面資料初始化
+PUBLIC FUNCTION asfp370_01_init()
+
+   #no scc
+   #CALL cl_set_combo_scc('pmdo003_d1_01','2055')
+
+END FUNCTION]]>
+</point>
+  <point name="dialog.asfp370_01_construct" cite_std="N" status="u" ver="" src="s" new="Y" order="1">
+<![CDATA[
+DIALOG asfp370_01_construct()
+   CONSTRUCT BY NAME g_wc_01 ON sfdcdocno,sfdc004
+
+      ON ACTION controlp INFIELD sfdcdocno
+         #開窗c段
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'c'
+         LET g_qryparam.reqry = FALSE
+         LET g_qryparam.where = " sfdasite ='",g_site,"' AND sfdastus = 'Y' AND sfda002 not in ('16','26')"
+         CALL q_sfdadocno()                           #呼叫開窗
+         DISPLAY g_qryparam.return1 TO sfdcdocno  #顯示到畫面上
+         NEXT FIELD sfdcdocno                     #返回原欄位
+         
+      ON ACTION controlp INFIELD sfdc004
+         #需求料号
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = "c"
+         LET g_qryparam.reqry = FALSE
+         LET g_qryparam.where = " sfdcsite ='",g_site,"' "
+         CALL q_sfdc004()
+         DISPLAY g_qryparam.return1 TO sfdc004
+         NEXT FIELD sfdc004                     #返回原欄位
+
+      ON ACTION accept
+         DELETE FROM asfp370_01_temp
+         CALL asfp370_01_b_fill()
+
+       ON ACTION selall
+          CALL asfp370_01_sel_all("Y")
+       
+       ON ACTION selnone
+          CALL asfp370_01_sel_all("N")
+       
+   END CONSTRUCT
+END DIALOG]]>
+</point>
+  <point name="dialog.asfp370_01_input" cite_std="N" status="u" ver="" src="s" new="Y" order="2">
+<![CDATA[
+DIALOG asfp370_01_input()
+   INPUT ARRAY g_sfdc_d FROM s_detail1_asfp370_01.*
+       ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+               INSERT ROW = FALSE,DELETE ROW = FALSE,APPEND ROW = FALSE)
+       BEFORE INPUT
+       
+       BEFORE ROW
+          LET l_ac = ARR_CURR()
+          
+       AFTER FIELD sel_01
+          IF cl_null(g_sfdc_d[l_ac].sel) THEN
+             CALL cl_err('','aqc-00006',1)
+             NEXT FIELD CURRENT
+          END IF
+          IF g_sfdc_d[l_ac].sel NOT MATCHES '[NY]' THEN
+             CALL cl_err('','agl-00144',1)
+             NEXT FIELD CURRENT
+          END IF
+          
+       #ON ROW CHANGE
+       ON CHANGE sel_01
+          IF g_sfdc_d[l_ac].sel = 'Y' THEN
+             INSERT INTO asfp370_01_temp(sel      ,sfdcdocno,sfdcseq  ,sfdc001  ,sfdc002  ,
+                                         sfdc003  ,sfdc004  ,sfdc005  ,sfdc006  ,sfdc007  ,
+                                         inag008  ,sfdc009  ,sfdc010  ,inag025  ,sfdc012  ,
+                                         sfdc013 )
+                VALUES(g_sfdc_d[l_ac].sel      ,g_sfdc_d[l_ac].sfdcdocno,g_sfdc_d[l_ac].sfdcseq  ,g_sfdc_d[l_ac].sfdc001  ,g_sfdc_d[l_ac].sfdc002  ,
+                       g_sfdc_d[l_ac].sfdc003  ,g_sfdc_d[l_ac].sfdc004  ,g_sfdc_d[l_ac].sfdc005  ,g_sfdc_d[l_ac].sfdc006  ,g_sfdc_d[l_ac].sfdc007  ,
+                       g_sfdc_d[l_ac].inag008  ,g_sfdc_d[l_ac].sfdc009  ,g_sfdc_d[l_ac].sfdc010  ,g_sfdc_d[l_ac].inag025  ,g_sfdc_d[l_ac].sfdc012  ,
+                       g_sfdc_d[l_ac].sfdc013 )
+             IF SQLCA.sqlcode THEN
+                CALL cl_err('ins asfp370_01_temp',SQLCA.sqlcode,1)
+                NEXT FIELD CURRENT
+             END IF 
+          ELSE
+             DELETE FROM asfp370_01_temp
+              WHERE sfdcdocno = g_sfdc_d[l_ac].sfdcdocno
+                AND sfdcseq   = g_sfdc_d[l_ac].sfdcseq 
+             IF SQLCA.sqlcode THEN
+                CALL cl_err('del asfp370_01_temp',SQLCA.sqlcode,1)
+                NEXT FIELD CURRENT
+             END IF 
+          END IF
+
+       ON ACTION selall
+          CALL asfp370_01_sel_all("Y")
+       
+       ON ACTION selnone
+          CALL asfp370_01_sel_all("N")
+       
+   END INPUT
+
+END DIALOG]]>
+</point>
+  <point name="function.asfp370_01_b_fill" cite_std="N" status="u" ver="" src="s" new="Y" order="2">
+<![CDATA[
+PUBLIC FUNCTION asfp370_01_b_fill()
+   DEFINE l_sql        STRING
+   DEFINE l_ac_t       LIKE type_t.num5
+   DEFINE l_rate       LIKE inaj_t.inaj014  #单位换算率
+   DEFINE l_success    LIKE type_t.num5
+   
+   CALL g_sfdc_d.clear()
+   
+   LET l_sql = "SELECT UNIQUE 'N',sfdcdocno,sfdcseq,sfdc001,sfdc002, ",
+               "       sfdc003,sfdc004,imaal003,imaal004,sfdc005, ",
+               "       sfdc006,sfba013,sfba016,sfdc007,0,0, ",
+               "       sfdc009,sfdc010,0,0,sfdc012  ,sfdc013  ",
+               "  FROM sfdc_t LEFT JOIN imaal_t ON imaalent='"||g_enterprise||"' AND imaal001=sfdc004 AND imaal002='"||g_dlang||"' ",
+               "              LEFT JOIN sfba_t ON sfbaent='"||g_enterprise||"' AND sfbadocno=sfdc001 AND sfbaseq=sfdc002 AND sfbaseq1=sfdc003 ",
+               "       ,sfda_t ",
+               " WHERE sfdadocno = sfdcdocno AND sfdaent = sfdcent ",
+               "   AND sfdcent =",g_enterprise,
+               "   AND sfdcsite='",g_site,"'",
+               "   AND ",g_wc_01 CLIPPED,
+               "   AND sfda002 NOT IN('16','26') ",  #排除重复性生产
+               "   AND sfdastus = 'Y' ",
+               " ORDER BY sfdcdocno,sfdcseq"
+   PREPARE asfp370_01_b_fill_sel FROM l_sql
+   DECLARE asfp370_01_b_fill_curs CURSOR FOR asfp370_01_b_fill_sel
+   LET l_ac_t = l_ac
+   LET l_ac = 1
+   ERROR "Searching!"
+   FOREACH asfp370_01_b_fill_curs INTO g_sfdc_d[l_ac].*
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:asfp370_01_b_fill_curs",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+   
+      #计算库存量及差异量
+      CALL asfp370_01_get_inag008() RETURNING g_sfdc_d[l_ac].inag008  #库存数量
+      LET g_sfdc_d[l_ac].diff  = g_sfdc_d[l_ac].sfdc007 - g_sfdc_d[l_ac].inag008     #差异数量
+      IF g_sfdc_d[l_ac].diff < 0 THEN
+         LET g_sfdc_d[l_ac].diff = 0
+      END IF
+      
+      IF NOT cl_null(g_sfdc_d[l_ac].sfdc009) THEN
+         #计算单位换算率
+         CALL s_aimi190_get_convert(g_sfdc_d[l_ac].sfdc004,g_sfdc_d[l_ac].sfdc006,g_sfdc_d[l_ac].sfdc009)
+            RETURNING l_success,l_rate
+         IF NOT l_success THEN
+            LET l_rate = 1
+         END IF
+         #计算参考单位库存量及差异量
+         LET g_sfdc_d[l_ac].inag025 = g_sfdc_d[l_ac].inag008 * l_rate  #参考单位库存数量
+         LET g_sfdc_d[l_ac].diffr = g_sfdc_d[l_ac].sfdc010 - g_sfdc_d[l_ac].inag025     #参考单位差异数量
+         IF g_sfdc_d[l_ac].diffr < 0 THEN
+            LET g_sfdc_d[l_ac].diffr = 0
+         END IF
+      END IF
+      
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         CALL cl_err( "", 9035, 1 )
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   LET g_rec_b = l_ac - 1
+   CALL g_sfdc_d.deleteElement(l_ac)
+   LET l_ac = l_ac_t
+   CLOSE asfp370_01_b_fill_curs
+   FREE asfp370_01_b_fill_sel
+   
+   LET g_master_idx = l_ac
+
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_01_get_inag008" cite_std="N" status="u" ver="" src="s" new="Y" order="3">
+<![CDATA[#计算单身库存量
+PUBLIC FUNCTION asfp370_01_get_inag008()
+   DEFINE r_inag008    LIKE inag_t.inag008   #库存量
+   DEFINE l_sql        STRING
+   DEFINE l_success    LIKE type_t.num5
+   DEFINE l_qty        LIKE inag_t.inag008
+   DEFINE l_inag006    LIKE inag_t.inag006
+   DEFINE l_inag003    LIKE inag_t.inag003
+   
+   LET r_inag008 = 0
+   LET l_sql = "SELECT UNIQUE inag006,inag003  ", #批号，库存管理特征
+               "  FROM inag_t ",
+               " WHERE inagent =",g_enterprise,
+               "   AND inagsite= '",g_site,"'",
+               "   AND inag001 = '",g_sfdc_d[l_ac].sfdc004,"' ",  #料件編號
+               "   AND inag002 = '",g_sfdc_d[l_ac].sfdc005,"' ",  #產品特徵
+               "   AND inag004 = '",g_sfdc_d[l_ac].sfdc012,"' ",  #庫位編號
+               "   AND inag005 = '",g_sfdc_d[l_ac].sfdc013,"' ",  #儲位編號
+               "   AND inag007 = '",g_sfdc_d[l_ac].sfdc006,"' "   #庫存單位
+   PREPARE asfp370_01_get_inag008_sel FROM l_sql
+   DECLARE asfp370_01_get_inag008_curs CURSOR FOR asfp370_01_get_inag008_sel
+   FOREACH asfp370_01_get_inag008_curs INTO l_inag006,l_inag003
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:asfp370_01_get_inag008_curs",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      CALL s_inventory_get_inag008_3(g_site,g_sfdc_d[l_ac].sfdc004,g_sfdc_d[l_ac].sfdc005,g_sfdc_d[l_ac].sfdc012,g_sfdc_d[l_ac].sfdc013,l_inag006,l_inag003,g_sfdc_d[l_ac].sfdc006)
+         RETURNING l_success,l_qty
+      IF NOT l_success THEN
+         EXIT FOREACH
+      END IF
+      LET r_inag008 = r_inag008 + l_qty
+   END FOREACH
+   CLOSE asfp370_01_get_inag008_curs
+   FREE asfp370_01_get_inag008_sel
+   
+   RETURN r_inag008
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_01_sel_all" cite_std="N" status="u" ver="" src="s" new="Y" order="4">
+<![CDATA[
+PUBLIC FUNCTION asfp370_01_sel_all(p_flag)
+   DEFINE p_flag         LIKE type_t.chr1
+   DEFINE l_i            LIKE type_t.num5
+
+   IF g_rec_b = 0 THEN
+      RETURN
+   END IF
+   
+   FOR l_i = 1 TO g_rec_b
+       #更新临时表
+       IF p_flag = 'Y' THEN
+          IF g_sfdc_d[l_i].sel = 'N' THEN
+             INSERT INTO asfp370_01_temp(sel      ,sfdcdocno,sfdcseq  ,sfdc001  ,sfdc002  ,
+                                         sfdc003  ,sfdc004  ,sfdc005  ,sfdc006  ,sfdc007  ,
+                                         inag008  ,sfdc009  ,sfdc010  ,inag025  ,sfdc012  ,
+                                         sfdc013 )
+                VALUES(p_flag                 ,g_sfdc_d[l_i].sfdcdocno,g_sfdc_d[l_i].sfdcseq  ,g_sfdc_d[l_i].sfdc001  ,g_sfdc_d[l_i].sfdc002  ,
+                       g_sfdc_d[l_i].sfdc003  ,g_sfdc_d[l_i].sfdc004  ,g_sfdc_d[l_i].sfdc005  ,g_sfdc_d[l_i].sfdc006  ,g_sfdc_d[l_i].sfdc007  ,
+                       g_sfdc_d[l_i].inag008  ,g_sfdc_d[l_i].sfdc009  ,g_sfdc_d[l_i].sfdc010  ,g_sfdc_d[l_i].inag025  ,g_sfdc_d[l_i].sfdc012  ,
+                       g_sfdc_d[l_i].sfdc013 )
+             IF SQLCA.sqlcode THEN
+                CALL cl_err('ins asfp370_01_temp',SQLCA.sqlcode,1)
+                EXIT FOR
+             END IF
+          END IF          
+       ELSE
+          IF g_sfdc_d[l_i].sel = 'Y' THEN
+             DELETE FROM asfp370_01_temp
+              WHERE sfdcdocno = g_sfdc_d[l_i].sfdcdocno
+                AND sfdcseq   = g_sfdc_d[l_i].sfdcseq 
+             IF SQLCA.sqlcode THEN
+                CALL cl_err('del asfp370_01_temp',SQLCA.sqlcode,1)
+                EXIT FOR
+             END IF 
+          END IF
+       END IF
+       ###
+       LET g_sfdc_d[l_i].sel = p_flag
+   END FOR
+END FUNCTION]]>
+</point>
+  <point name="function.asfp370_01_insert_asfp370_02_temp" cite_std="N" status="u" ver="" src="s" new="Y" order="8">
+<![CDATA[
+PUBLIC FUNCTION asfp370_01_insert_asfp370_02_temp()
+   DEFINE    r_success LIKE type_t.num5
+   
+   LET r_success = TRUE
+   INSERT INTO asfp370_02_temp
+      SELECT sfdc004,sfdc005,sfdc006,sfdc009,sfdc012,sfdc013,SUM(sfdc007),SUM(inag008),SUM(sfdc010),SUM(inag025),0,0
+        FROM asfp370_01_temp
+       WHERE sel = 'Y'
+       GROUP BY sfdc004,sfdc005,sfdc006,sfdc009,sfdc012,sfdc013
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('ins asfp370_02_temp',SQLCA.sqlcode,1)
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <section id="asfp370.free_style_variable" ver="1" status="" src="s">
+<![CDATA[#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+]]>
+</section>
+  <section id="asfp370.global" ver="1" status="" src="s">
+<![CDATA[#add-point:註解編寫項目
+{<point name="main.memo" />}
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="main.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+]]>
+</section>
+  <section id="asfp370.global_variable" ver="1" status="" src="s">
+<![CDATA[#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+</section>
+  <section id="asfp370.other_dialog" ver="1" status="" src="s">
+<![CDATA[{<point name="other.dialog"/>}
+]]>
+</section>
+  <section id="asfp370.other_function" ver="1" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+  <section id="asfp370_01.description" ver="1" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000012
+#+ 
+#+ Filename...: asfp370_01
+#+ Description: ...
+#+ Creator....: 00768(2014/07/03)
+#+ Modifier...: 00768(2014/07/03)
+#+ Buildtype..: 應用 p00 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="asfp370_01.global" ver="1" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+DEFINE g_rec_b            LIKE type_t.num5   
+DEFINE g_wc_m             STRING
+DEFINE g_wc               STRING 
+DEFINE g_ref_fields       DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields       DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point       
+]]>
+</section>
+  <section id="asfp370_01.input" ver="1" status="" src="s">
+<![CDATA[#+ 資料輸入
+PUBLIC FUNCTION asfp370_01(--)
+   #add-point:construct段變數傳入
+   {<point name="construct.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:construct段define
+   {<point name="construct.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_asfp370_01 WITH FORM cl_ap_formpath("asf","asfp370_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="construct.pre_construct"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      CONSTRUCT BY NAME g_wc_m ON sfdadocno 
+      
+         BEFORE CONSTRUCT
+            #add-point:單頭輸入前處理
+            {<point name="construct.head.before_construct"/>}
+            #end add-point
+            
+         AFTER CONSTRUCT
+            #add-point:單頭輸入後處理
+            {<point name="construct.head.after_construct"/>}
+            #end add-point
+            
+         
+ 
+         
+       
+      END CONSTRUCT
+ 
+      #輸入開始
+      CONSTRUCT g_wc ON sfdb001,sfdb002,sfdb003,sfdb004,sfdb005 
+           FROM s_detail1[1].sfdb001,s_detail1[1].sfdb002,s_detail1[1].sfdb003,s_detail1[1].sfdb004, 
+               s_detail1[1].sfdb005 
+         
+         #自訂ACTION
+         #add-point:自訂ACTION
+         {<point name="construct.action"/>}
+         #end add-point
+         
+         BEFORE CONSTRUCT
+            #add-point:單頭輸入前處理
+            {<point name="construct.body.before_construct"/>}
+            #end add-point
+            
+         AFTER CONSTRUCT
+            #add-point:單頭輸入後處理
+            {<point name="construct.body.after_construct"/>}
+            #end add-point
+            
+         #單身公用欄位開窗相關處理
+         
+           
+         #單身一般欄位開窗相關處理
+           
+            
+      END CONSTRUCT
+      
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+         
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="construct.before_close"/>}
+   #end add-point 
+   
+   #畫面關閉
+   CLOSE WINDOW w_asfp370_01 
+   
+   #add-point:construct段after construct 
+   {<point name="construct.post_construct"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+</section>
+  <section id="asfp370_01.other_dialog" ver="1" status="" src="s">
+<![CDATA[{<point name="other.dialog"/>}
+]]>
+</section>
+  <section id="asfp370_01.other_function" ver="1" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+</add_points>

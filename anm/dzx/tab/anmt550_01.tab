@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmt550_01" module="anm" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="02097" crtdt="2015-06-23 09:52:00" modid="02097" moddt="2015-06-23 11:20:54" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description=" 交易對象變更">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmbbcomp,nmbbdocno,nmbbseq,nmbb026,nmbb026_desc(chr500),nmbb008,nmbb009,nmbb020,nmbb023"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmt550_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="nmbbcomp,nmbbdocno,nmbbseq,nmbb026,nmbb008,nmbb009,nmbb020,nmbb023" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="nmbbcomp,nmbbdocno,nmbbseq,nmbb026,nmbb008,nmbb009,nmbb020,nmbb023"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="nmbbcomp"/>
+      <column id="nmbbdocno">
+        <controlp form="q_nmbadocno" state="c"/>
+      </column>
+      <column id="nmbbseq"/>
+      <column id="nmbb026">
+        <after>
+          <reference field="nmbb026_desc" ref_field="nmbb_t.nmbb026" map_field="nmbbent,nmba026" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001" state="i"/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="nmbb026_desc"/>
+      <column id="nmbb008" type="S" default="0"/>
+      <column id="nmbb009" type="S" default="0"/>
+      <column id="nmbb020" type="S" default="0"/>
+      <column id="nmbb023" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="nmbb_t" page="1" linked="" pk="nmbbcomp,nmbbdocno,nmbbseq">
+      <sql id="forupd_sql_detail" query="SELECT nmbbcomp,nmbbdocno,nmbbseq,nmbb026,&apos;&apos;,nmbb008,nmbb009,nmbb020,nmbb023 FROM nmbb_t WHERE nmbbent=? AND nmbbcomp=? AND nmbbdocno=? AND nmbbseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmbbcomp,nmbbdocno,nmbbseq,nmbb026,&apos;&apos;,nmbb008,nmbb009,nmbb020,nmbb023 FROM nmbb_t WHERE nmbbent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

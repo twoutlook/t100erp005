@@ -1,0 +1,353 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aapt110_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0007(2017-02-06 11:33:06), PR版次:0007(2017-02-06 14:11:28)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000088
+#+ Filename...: aapt110_02
+#+ Description: 產生對帳明細
+#+ Creator....: 04152(2015-01-13 23:38:16)
+#+ Modifier...: 04152 -SD/PR- 04152
+ 
+{</section>}
+ 
+{<section id="aapt110_02.global" >}
+#應用 c01c 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#150629-00038#1              By albireo  入庫單類型增加20委外採購入庫;借貨相關
+#150702-00001#1              By albireo  入庫單性質改動態抓取
+#160530-00005#3   2016/05/30 By 03538    採購性質串 scc 2061 應用分類一, 若為Y 之性質才可立帳
+#160705-00035#1   2016/07/26 By Reanna   增加預付&雜項發票立帳流程
+#161206-00042#1   2016/12/28 By albireo  新增欄位交易對象識別碼(apbb059)
+#161228-00025#1   2017/01/06 By Reanna   增加訂金時，採購單號的期別(pmdm001)欄位
+#170110-00035#1   2017/01/24 By Reanna   當對帳來源為7.預付發票立帳時，自動產生單身採購單期別請給予至期別(apba020)
+#                                        自動產生單身段改用input決定採購單/單身僅適用同一張採購單控管
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+DEFINE g_rec_b               LIKE type_t.num10
+DEFINE g_wc                  STRING
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_l_type              LIKE type_t.num5    #使用哪種方式產生
+#170110-00035#1 add ------
+DEFINE g_master              RECORD
+          pmdldocno             LIKE pmdl_t.pmdldocno,
+          pmdm001               LIKE pmdm_t.pmdm001
+                             END RECORD
+#170110-00035#1 add end---
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point  
+ 
+{</section>}
+ 
+{<section id="aapt110_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aapt110_02(--)
+   #add-point:construct段變數傳入 name="construct.get_var"
+   p_apbb004,p_apbb002,p_apbb012,p_apbb014,p_apbb050,p_wc_apbaorga,p_apbb003,p_apbb059
+   #end add-point
+   )
+   #add-point:construct段define name="construct.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   #add-point:construct段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="construct.define"
+   DEFINE p_apbb004       LIKE apbb_t.apbb004     #帳務中心
+   DEFINE p_apbb002       LIKE apbb_t.apbb002     #交易對象
+   DEFINE p_apbb012       LIKE apbb_t.apbb012     #稅別
+   DEFINE p_apbb014       LIKE apbb_t.apbb014     #幣別
+   DEFINE p_apbb050       LIKE apbb_t.apbb050     #發票性質
+   DEFINE p_wc_apbaorga   STRING                  #帳務組織條件
+   DEFINE p_apbb003       LIKE apbb_t.apbb003     #對帳方式  #160705-00035#1
+   #150702-00001#1-----s
+   DEFINE l_pmds000_str1   STRING    #AP全可使用的入庫單性質
+   DEFINE l_pmds000_str4  STRING    #入庫單性質(倉退)
+   #150702-00001#1-----e
+   DEFINE l_pmds011_str1   STRING#160530-00005#3
+   #161206-00042#5-----s
+   DEFINE p_apbb059       LIKE apbb_t.apbb059
+   #161206-00042#5-----e
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aapt110_02 WITH FORM cl_ap_formpath("aap","aapt110_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="construct.pre_construct"
+   CALL cl_set_combo_scc('l_type','9963')
+   LET g_l_type = "1"
+   CALL s_fin_create_account_center_tmp()
+   
+   
+   #150702-00001#1-----s
+   LET l_pmds000_str1 = s_aap_get_acc_str('2060',"gzcb003 = 'Y'")
+   LET l_pmds000_str1 = s_fin_get_wc_str(l_pmds000_str1)
+  
+   LET l_pmds000_str4 = s_aap_get_acc_str('2060',"gzcb003 = 'Y' AND gzcb004 = -1 AND gzcb005 = 1")
+   LET l_pmds000_str4 = s_fin_get_wc_str(l_pmds000_str4)  
+   #150702-00001#1-----e
+   #160530-00005#3--s
+   LET l_pmds011_str1 = s_aap_get_acc_str('2061',"gzcb003 = 'Y'")
+   LET l_pmds011_str1 = s_fin_get_wc_str(l_pmds011_str1)   
+   #160530-00005#3--e
+   CALL cl_set_comp_visible("group_1,group_2,group_3",TRUE) #170110-00035#1
+   #160705-00035#1-s
+   IF p_apbb003 = '7' THEN #7:預付發票立帳
+      CALL cl_set_comp_visible("group_1",FALSE) #170110-00035#1
+      CALL cl_set_comp_visible("group_2",FALSE)
+   ELSE
+      CALL cl_set_comp_visible("group_3",FALSE)
+   END IF
+   #160705-00035#1-e
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      CONSTRUCT BY NAME g_wc ON pmdsdocno,pmds001,pmds002,pmds003 
+      
+            #add-point:自定義action name="construct.action"
+         #入庫單
+         ON ACTION controlp INFIELD pmdsdocno
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = p_wc_apbaorga            #帳務中心
+            LET g_qryparam.arg2 = p_apbb002                #交易對象
+            IF p_apbb050 = "2" THEN #紅字發票只開倉退單
+               #LET g_qryparam.arg3 = "('7','14','15','26')"  #150629-00038#1 add 26   #150702-00001#1 mark
+               LET g_qryparam.arg3 = l_pmds000_str4  #150702-00001#1 add
+            ELSE #入庫單+倉退單
+               #LET g_qryparam.arg3 = "('3','4','6','7','12','13','14','15','22','24','25','26','20')"   #150629-00038#1 add 20~26   150702-00001#1 mark
+               LET g_qryparam.arg3 = l_pmds000_str1  #150702-00001#1 add
+            END IF
+            LET g_qryparam.arg4 = p_apbb012                #稅別
+            LET g_qryparam.where = " pmds037 ='",p_apbb014,"'"
+                                  ," AND pmds011 IN ",l_pmds011_str1 CLIPPED   #160530-00005#3
+            #161206-00042#5-----s
+            IF NOT cl_null(p_apbb059)THEN
+               LET g_qryparam.where = g_qryparam.where ," AND pmds028 = '",p_apbb059,"' "
+            END IF
+            #161206-00042#5-----e
+            CALL q_pmdtdocno_5()
+            DISPLAY g_qryparam.return1 TO pmdsdocno
+            NEXT FIELD pmdsdocno
+            
+         
+         #收貨人員
+         ON ACTION controlp INFIELD pmds002
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()
+            DISPLAY g_qryparam.return1 TO pmds002
+            NEXT FIELD pmds002
+         
+         
+         #收貨部門
+         ON ACTION controlp INFIELD pmds003
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001()
+            DISPLAY g_qryparam.return1 TO pmds003
+            NEXT FIELD pmds003
+         
+         #170110-00035#1 mark ------
+         ##160705-00035#1 -s
+         ##採購單
+         #ON ACTION controlp INFIELD pmdldocno
+         #   INITIALIZE g_qryparam.* TO NULL
+         #   #LET g_qryparam.state = 'c' #170110-00035#1 mark
+         #   LET g_qryparam.state = 'i'  #170110-00035#1
+         #   LET g_qryparam.reqry = FALSE
+         #   LET g_qryparam.arg1 = g_today         #立帳日期
+         #   LET g_qryparam.arg2 = p_apbb002       #帳款對象
+         #   #預付款發票開立方式pmdl046=2.應開立增值稅發票&帳款類型pmdm014=1.簽約金2.訂金
+         #   LET g_qryparam.where = " pmdlsite IN ",p_wc_apbaorga,
+         #                          " AND pmdl011 = '",p_apbb012,"'",  #稅別
+         #                          " AND pmdl015 = '",p_apbb014,"'",  #幣別
+         #                          " AND pmdl046 ='2' AND pmdm014 IN ('1','2') ",
+         #                          " AND NOT EXISTS (SELECT 1 FROM apba_t ",  #不存在aapt110
+         #                          "                   LEFT JOIN apbb_t ON apbaent=apbbent AND apbadocno=apbbdocno",
+         #                          "                  WHERE apbaent = ",g_enterprise,
+         #                          "                    AND apba020=pmdm001", #170110-00035#1
+         #                          "                    AND apba005=pmdldocno AND apbbstus <> 'X')",
+         #                          " AND NOT EXISTS (SELECT 1 FROM apca_t",   #不存在aapt310
+         #                          "                  WHERE apcaent = ",g_enterprise,
+         #                          "                    AND apca018=pmdldocno AND apcastus <> 'X')"
+         #   #161206-00042#5-----s
+         #   IF NOT cl_null(p_apbb059)THEN
+         #      LET g_qryparam.where = g_qryparam.where ," AND pmdl028 = '",p_apbb059,"' "
+         #   END IF
+         #   #161206-00042#5-----e
+         #   CALL q_pmdn_aap()
+         #   DISPLAY g_qryparam.return1 TO pmdldocno
+         #   DISPLAY g_qryparam.return2 TO pmdm001   #170110-00035#1
+         #   NEXT FIELD pmdldocno
+         ##160705-00035#1 -e
+         #170110-00035#1 mark end---
+            #end add-point
+      
+         BEFORE CONSTRUCT
+            #add-point:單頭輸入前處理 name="construct.before_construct"
+            IF g_l_type = "1" THEN
+               #170110-00035#1 add ------
+               IF p_apbb003 = '7' THEN #7:預付發票立帳
+                  LET g_l_type = '2'
+                  NEXT FIELD pmdldocno
+               ELSE
+               #170110-00035#1 add end---
+                  LET g_wc = " 1=1 "
+                  NEXT FIELD l_type
+               END IF  #170110-00035#1
+            END IF
+            #end add-point
+            
+         AFTER CONSTRUCT
+            #add-point:單頭輸入後處理 name="construct.after_construct"
+            
+            #end add-point
+            
+         
+ 
+         
+       
+      END CONSTRUCT
+ 
+      #add-point:自定義construct name="construct.more_construct"
+      INPUT g_l_type FROM l_type ATTRIBUTE(WITHOUT DEFAULTS)
+      
+         ON CHANGE l_type
+            CLEAR FORM
+      
+      END INPUT
+      
+      #170110-00035#1 add ------
+      INPUT BY NAME g_master.pmdldocno,g_master.pmdm001 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         ON ACTION controlp INFIELD pmdldocno
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_master.pmdldocno
+            LET g_qryparam.default2 = g_master.pmdm001
+            LET g_qryparam.arg1 = g_today         #立帳日期
+            LET g_qryparam.arg2 = p_apbb002       #帳款對象
+            #預付款發票開立方式pmdl046=2.應開立增值稅發票&帳款類型pmdm014=1.簽約金2.訂金
+            LET g_qryparam.where = " pmdlsite IN ",p_wc_apbaorga,
+                                   " AND pmdl011 = '",p_apbb012,"'",  #稅別
+                                   " AND pmdl015 = '",p_apbb014,"'",  #幣別
+                                   " AND pmdl046 ='2' AND pmdm014 IN ('1','2') ",
+                                   " AND NOT EXISTS (SELECT 1 FROM apba_t ",  #不存在aapt110
+                                   "                   LEFT JOIN apbb_t ON apbaent=apbbent AND apbadocno=apbbdocno",
+                                   "                  WHERE apbaent = ",g_enterprise,
+                                   "                    AND apba020=pmdm001",
+                                   "                    AND apba005=pmdldocno AND apbbstus <> 'X')",
+                                   " AND NOT EXISTS (SELECT 1 FROM apca_t",   #不存在aapt310
+                                   "                  WHERE apcaent = ",g_enterprise,
+                                   "                    AND apca018=pmdldocno AND apcastus <> 'X')"
+            IF NOT cl_null(p_apbb059)THEN
+               LET g_qryparam.where = g_qryparam.where ," AND pmdl028 = '",p_apbb059,"' "
+            END IF
+            CALL q_pmdn_aap()
+            LET g_master.pmdldocno = g_qryparam.return1
+            LET g_master.pmdm001 = g_qryparam.return2
+            DISPLAY g_master.pmdldocno TO pmdldocno
+            DISPLAY g_master.pmdm001 TO pmdm001
+            NEXT FIELD pmdldocno
+      END INPUT
+      #170110-00035#1 add end---
+      #end add-point
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+         
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="construct.before_close"
+   IF INT_FLAG THEN
+      LET g_wc = " 1=2 "
+      LET INT_FLAG = 0
+   END IF
+   #end add-point 
+   
+   #畫面關閉
+   CLOSE WINDOW w_aapt110_02 
+   
+   #add-point:construct段after construct name="construct.post_construct"
+   #170110-00035#1 add ------
+   IF p_apbb003 = '7' THEN #7:預付發票立帳
+      LET g_wc = " pmdldocno = '",g_master.pmdldocno,"' AND pmdm001=",g_master.pmdm001
+   END IF
+   #170110-00035#1 add end---
+   RETURN g_wc
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapt110_02.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aapt110_02.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

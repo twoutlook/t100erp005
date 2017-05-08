@@ -1,0 +1,188 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apst310" module="aps" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="05384" crtdt="2015-12-24 09:38:08" modid="03079" moddt="2016-05-16 14:29:10" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="MPS計劃維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="psacdocno,psacdocno_desc(chr80),psacdocdt,psac001,psac001_desc(chr80),psac002,psac002_desc(chr80),psacsite,psac003,psacstus,psacownid,psacownid_desc(chr80),psacowndp,psacowndp_desc(chr80),psaccrtid,psaccrtid_desc(chr80),psaccrtdp,psaccrtdp_desc(chr80),psaccrtdt,psacmodid,psacmodid_desc(chr80),psacmoddt,psaccnfid,psaccnfid_desc(chr80),psaccnfdt,psacpstid,psacpstid_desc(chr80),psacpstdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="psadsite,psadseq,psad001,psad001_desc(chr500),psad001_desc_1(chr500),psad002,psad002_desc(chr500),psad003,psad004,psad004_desc(chr500),psad005,psad006,cmt(chr500),psad007,psad008,psad009,psad010"/>
+      <var id="bs_field" value="psacdocno,psacdocdt,psac001,psac002" pk="psacdocno" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="psad008_unconfirm"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="psad006_modify"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="psad008_confirm"/>
+    </section>
+  </structure>
+  <form id="0" module="aps" filename="apst310" method="dialog">
+    <section id="input">
+      <input id="head" field="psacdocno,psacdocdt,psac001,psac002,psacsite,psac003,psacstus"/>
+      <input id="body" page="1" field="psadsite,psadseq,psad001,psad002,psad003,psad004,psad005,psad006,cmt,psad007,psad008,psad009,psad010" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="psacdocno,psacdocdt,psac001,psac002,psacsite,psac003,psacstus,psacownid,psacowndp,psaccrtid,psaccrtdp,psaccrtdt,psacmodid,psacmoddt,psaccnfid,psaccnfdt,psacpstid,psacpstdt"/>
+      <construct id="body" page="1" field="psadsite,psadseq,psad001,psad002,psad003,psad004,psad005,psad006,cmt,psad007,psad008,psad009,psad010"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="psacdocno"/>
+      <set id="head" type="no_entry" field="psacdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="psacdocno">
+        <after/>
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_psacdocno" state="c"/>
+      </column>
+      <column id="psacdocno_desc"/>
+      <column id="psacdocdt"/>
+      <column id="psac001">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="psac001_desc" ref_field="psac_t.psac001" map_field="psac001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psac001_desc"/>
+      <column id="psac002">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="psac002_desc" ref_field="psac_t.psac002" map_field="psac002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="psac002_desc"/>
+      <column id="psacsite"/>
+      <column id="psac003"/>
+      <column id="psacstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="C" pic="closed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="psacownid">
+        <after>
+          <reference field="psacownid_desc" ref_field="psac_t.psacownid" map_field="psacownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psacownid_desc"/>
+      <column id="psacowndp">
+        <after>
+          <reference field="psacowndp_desc" ref_field="psac_t.psacowndp" map_field="psacowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="psacowndp_desc"/>
+      <column id="psaccrtid">
+        <after>
+          <reference field="psaccrtid_desc" ref_field="psac_t.psaccrtid" map_field="psaccrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psaccrtid_desc"/>
+      <column id="psaccrtdp">
+        <after>
+          <reference field="psaccrtdp_desc" ref_field="psac_t.psaccrtdp" map_field="psaccrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="psaccrtdp_desc"/>
+      <column id="psaccrtdt"/>
+      <column id="psacmodid">
+        <after>
+          <reference field="psacmodid_desc" ref_field="psac_t.psacmodid" map_field="psacmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psacmodid_desc"/>
+      <column id="psacmoddt"/>
+      <column id="psaccnfid">
+        <after>
+          <reference field="psaccnfid_desc" ref_field="psac_t.psaccnfid" map_field="psaccnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psaccnfid_desc"/>
+      <column id="psaccnfdt"/>
+      <column id="psacpstid">
+        <after>
+          <reference field="psacpstid_desc" ref_field="psac_t.psacpstid" map_field="psacpstid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psacpstid_desc"/>
+      <column id="psacpstdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="psadsite"/>
+      <column id="psadseq" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="psad001">
+        <after>
+          <check chkid="v_imae001" id="isExist"/>
+          <reference field="psad001_desc" ref_field="psad_t.psad001" map_field="psad001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imae001_2" state="i"/>
+        <controlp form="q_imae001_2" state="c"/>
+      </column>
+      <column id="psad001_desc"/>
+      <column id="psad001_desc_1"/>
+      <column id="psad002">
+        <after/>
+        <controlp form="q_psad002" state="c"/>
+      </column>
+      <column id="psad002_desc"/>
+      <column id="psad003"/>
+      <column id="psad004">
+        <after>
+          <check chkid="v_imao002" id="isExist"/>
+          <reference field="psad004_desc" ref_field="psad_t.psad004" map_field="psad004" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imao002" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="psad004_desc"/>
+      <column id="psad005" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="psad006" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="cmt"/>
+      <column id="psad007"/>
+      <column id="psad008" type="S" default="N"/>
+      <column id="psad009" type="S" default="N"/>
+      <column id="psad010" type="S" default="N"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="psac_t" pk="psacdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT psacdocno,&apos;&apos;,psacdocdt,psac001,&apos;&apos;,psac002,&apos;&apos;,psacsite,psac003,psacstus,psacownid,&apos;&apos;,psacowndp,&apos;&apos;,psaccrtid,&apos;&apos;,psaccrtdp,&apos;&apos;,psaccrtdt,psacmodid,&apos;&apos;,psacmoddt,psaccnfid,&apos;&apos;,psaccnfdt,psacpstid,&apos;&apos;,psacpstdt FROM psac_t WHERE psacent= ? AND psacdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT psacdocno,&apos;&apos;,psacdocdt,psac001,&apos;&apos;,psac002,&apos;&apos;,psacsite,psac003,psacstus,psacownid,&apos;&apos;,psacowndp,&apos;&apos;,psaccrtid,&apos;&apos;,psaccrtdp,&apos;&apos;,psaccrtdt,psacmodid,&apos;&apos;,psacmoddt,psaccnfid,&apos;&apos;,psaccnfdt,psacpstid,&apos;&apos;,psacpstdt FROM psac_t" order="psacdocno"/>
+    </head>
+    <body id="psad_t" page="1" linked="" pk="psadseq" fk="psaddocno">
+      <sql id="forupd_sql_detail" query="SELECT psadsite,psadseq,psad001,&apos;&apos;,&apos;&apos;,psad002,&apos;&apos;,psad003,psad004,&apos;&apos;,psad005,psad006,&apos;&apos;,psad007,psad008,psad009,psad010 FROM psad_t WHERE psadent=? AND psaddocno=? AND psadseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT psadsite,psadseq,psad001,&apos;&apos;,&apos;&apos;,psad002,&apos;&apos;,psad003,psad004,&apos;&apos;,psad005,psad006,&apos;&apos;,psad007,psad008,psad009,psad010 FROM psad_t WHERE psadent=? AND psaddocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

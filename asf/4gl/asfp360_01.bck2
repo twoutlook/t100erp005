@@ -1,0 +1,406 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="asfp360_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2014-07-31 18:55:00), PR版次:0003(2016-02-18 18:48:53)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000105
+#+ Filename...: asfp360_01
+#+ Description: 選擇需求工單
+#+ Creator....: 00768(2014-05-16 14:31:04)
+#+ Modifier...: 00768 -SD/PR- 06815
+ 
+{</section>}
+ 
+{<section id="asfp360_01.global" >}
+#應用 p00 樣板自動產生(Version:4)
+#add-point:填寫註解說明
+
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+GLOBALS "../../asf/4gl/asfp360.inc"
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asfp360_01.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asfp360_01.global_variable" >}
+#add-point:自定義模組變數(Module Variable)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asfp360_01.other_dialog" >}
+
+DIALOG asfp360_01_input()
+   DEFINE l_success LIKE type_t.num5
+   #160120-00002#8 s983961--add(s)
+   DEFINE l_sfaadocno  LIKE sfaa_t.sfaadocno
+   DEFINE l_sql        STRING
+   #160120-00002#8 s983961--add(e)
+   
+   INPUT g_sfaadocno_01 FROM sfaadocno_01 
+      ATTRIBUTE(WITHOUT DEFAULTS)
+
+      BEFORE INPUT
+
+      ON CHANGE sfaadocno_01
+         CALL asfp360_01_show()
+      
+      AFTER FIELD sfaadocno_01
+         CALL asfp360_01_chk_column('sfaadocno_01') RETURNING l_success
+         IF NOT l_success THEN
+            NEXT FIELD CURRENT
+         END IF
+         CALL asfp360_01_show()
+
+      ON ACTION controlp INFIELD sfaadocno_01
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'i'
+         LET g_qryparam.reqry = FALSE
+         LET g_qryparam.default1 = g_sfaadocno_01             #給予default值
+         LET g_qryparam.arg1 = 'F'
+         #LET g_qryparam.where = " sfaa012-sfaa049 > 0  "
+         CALL q_sfaadocno_1()                                #呼叫開窗
+         LET g_sfaadocno_01 = g_qryparam.return1
+         DISPLAY g_sfaadocno_01 TO sfaadocno_01              #
+         #160120-00002#8 s983961--add(s) 
+         LET l_sfaadocno = '' 
+         LET l_sql = "SELECT sfaadocno ", 
+                     "  FROM sfaa_t ", 
+                     " WHERE sfaadocno = '",g_sfaadocno_01,"'  ",                    
+                     "   FOR UPDATE SKIP LOCKED " 
+         PREPARE asfp360_04_chk_locked_prep FROM l_sql 
+         EXECUTE asfp360_04_chk_locked_prep INTO l_sfaadocno          
+         IF cl_null(l_sfaadocno)  THEN 
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'asf-00719'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+         END IF 
+         #160120-00002#8 s983961--add(e) 
+         CALL asfp360_01_show()
+         NEXT FIELD sfaadocno_01                          #返回原欄位
+
+      ON ACTION accept
+         CALL asfp360_01_chk_column('sfaadocno_01') RETURNING l_success
+         IF NOT l_success THEN
+            NEXT FIELD sfaadocno_01
+         END IF
+         CALL asfp360_01_show()
+         
+   END INPUT
+END DIALOG
+
+DIALOG asfp360_01_display()
+   DISPLAY ARRAY g_asfp360_01_d TO s_asfp360_01_detail1.* ATTRIBUTE(COUNT = g_rec_b_01)
+      BEFORE DISPLAY
+         #EXIT DISPLAY
+   END DISPLAY
+END DIALOG
+
+ 
+{</section>}
+ 
+{<section id="asfp360_01.other_function" readonly="Y" >}
+
+PUBLIC FUNCTION asfp360_01_init()
+   WHENEVER ERROR CONTINUE
+END FUNCTION
+
+PUBLIC FUNCTION asfp360_01_show()
+   #160120-00002#8 s983961--add(s)
+   DEFINE l_sfaadocno  LIKE sfaa_t.sfaadocno
+   DEFINE l_sql        STRING
+   #160120-00002#8 s983961--add(e)
+   
+   WHENEVER ERROR CONTINUE
+   
+   #mark 无值则清空
+   #IF cl_null(g_sfaadocno_01) THEN
+   #   RETURN
+   #END IF
+   
+   INITIALIZE g_asfp360_01_m2.* TO NULL
+   
+   SELECT sfaa010 ,imaal003,imaal004,sfaa012 ,
+          sfaa049 ,sfaa050 ,sfaa051 ,sfaa052 ,
+          sfaa053 ,sfaa054 ,sfaa055 ,sfaa056 
+     INTO g_asfp360_01_m2.sfaa010,g_asfp360_01_m2.sfaa010_desc,g_asfp360_01_m2.sfaa010_desc2,g_asfp360_01_m2.sfaa012,
+          g_asfp360_01_m2.sfaa049,g_asfp360_01_m2.sfaa050,g_asfp360_01_m2.sfaa051,g_asfp360_01_m2.sfaa052,
+          g_asfp360_01_m2.sfaa053,g_asfp360_01_m2.sfaa054,g_asfp360_01_m2.sfaa055,g_asfp360_01_m2.sfaa056 
+     FROM sfaa_t  LEFT JOIN imaal_t ON imaalent=g_enterprise AND imaal001=sfaa010 AND imaal002=g_dlang
+    WHERE sfaaent   = g_enterprise
+      AND sfaadocno = g_sfaadocno_01
+      
+   #160120-00002#8 s983961--add(s) 
+   LET l_sfaadocno = '' 
+   LET l_sql = "SELECT sfaadocno ", 
+               "  FROM sfaa_t ", 
+               " WHERE sfaadocno = '",g_sfaadocno_01,"'  ",                    
+               "   FOR UPDATE SKIP LOCKED " 
+   PREPARE asfp360_02_chk_locked_prep FROM l_sql 
+   EXECUTE asfp360_02_chk_locked_prep INTO l_sfaadocno          
+   IF cl_null(l_sfaadocno)  THEN 
+      INITIALIZE g_asfp360_01_m2.* TO NULL
+   END IF 
+   DISPLAY l_sql
+   #160120-00002#8 s983961--add(e) 
+   
+   DISPLAY g_asfp360_01_m2.sfaa010 TO sfaa010_01
+   DISPLAY g_asfp360_01_m2.sfaa010_desc TO sfaa010_01_desc
+   DISPLAY g_asfp360_01_m2.sfaa010_desc2 TO sfaa010_01_desc_desc
+   DISPLAY g_asfp360_01_m2.sfaa012 TO sfaa012_01
+   DISPLAY g_asfp360_01_m2.sfaa049 TO sfaa049_01
+   DISPLAY g_asfp360_01_m2.sfaa050 TO sfaa050_01
+   DISPLAY g_asfp360_01_m2.sfaa051 TO sfaa051_01
+   DISPLAY g_asfp360_01_m2.sfaa052 TO sfaa052_01
+   DISPLAY g_asfp360_01_m2.sfaa053 TO sfaa053_01
+   DISPLAY g_asfp360_01_m2.sfaa054 TO sfaa054_01
+   DISPLAY g_asfp360_01_m2.sfaa055 TO sfaa055_01
+   DISPLAY g_asfp360_01_m2.sfaa056 TO sfaa056_01
+   
+   CALL asfp360_01_b_fill()
+END FUNCTION
+
+PUBLIC FUNCTION asfp360_01_b_fill()
+   DEFINE l_sql        STRING
+   DEFINE l_ac         LIKE type_t.num5
+   DEFINE l_rate       LIKE inaj_t.inaj014  #单位换算率
+   DEFINE l_success    LIKE type_t.num5
+   #160120-00002#8 s983961--add(s)
+   DEFINE l_sfbadocno  LIKE sfba_t.sfbadocno
+   #160120-00002#8 s983961--add(e)
+   
+   WHENEVER ERROR CONTINUE
+   CALL g_asfp360_01_d.clear()
+
+   LET l_sql = "SELECT sfbaseq,sfbaseq1,sfba002,a.oocql004,sfba003,b.oocql004,",
+               "       sfba004,sfba006,imaal003,imaal004,sfba021,sfba014,oocal003, ",
+               "       sfba013,sfba016,sfba013-sfba015-sfba016  ",
+               "  FROM sfba_t LEFT OUTER JOIN imaal_t   ON imaalent = sfbaent AND imaal001=sfba006 AND imaal002= '"||g_dlang||"' ",
+               "              LEFT OUTER JOIN oocql_t a ON a.oocql001= '215' AND sfba002 = a.oocql002 AND sfbaent = a.oocqlent AND a.oocql003 = '"||g_dlang||"' ",
+               "              LEFT OUTER JOIN oocql_t b ON b.oocql001= '221' AND sfba003 = b.oocql002 AND sfbaent = b.oocqlent AND b.oocql003 = '"||g_dlang||"' ",
+               "              LEFT OUTER JOIN oocal_t   ON oocalent = sfbaent AND oocal001 = sfba014 AND oocal002 = '"||g_dlang||"' ",
+               " WHERE sfbadocno = '",g_sfaadocno_01,"' ",
+               " ORDER BY sfbaseq,sfbaseq1"
+   PREPARE asfp360_01_b_fill_sel FROM l_sql
+   DECLARE asfp360_01_b_fill_curs CURSOR FOR asfp360_01_b_fill_sel
+   LET l_ac = 1
+   ERROR "Searching!"
+   FOREACH asfp360_01_b_fill_curs INTO g_asfp360_01_d[l_ac].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:asfp360_01_b_fill_curs"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      #160120-00002#8 s983961--add(s)   
+      LET l_sfbadocno = '' 
+      LET l_sql = "SELECT sfbadocno ", 
+                  "  FROM sfba_t ", 
+                  " WHERE sfbadocno = '",g_sfaadocno_01,"'  ",  
+                  "   AND sfbaseq = '",g_asfp360_01_d[l_ac].sfbaseq,"'  ",   
+                  "   AND sfbaseq1 = '",g_asfp360_01_d[l_ac].sfbaseq1,"'  ",                     
+                  "   FOR UPDATE SKIP LOCKED " 
+      PREPARE asfp360_01_chk_locked_prep FROM l_sql 
+      EXECUTE asfp360_01_chk_locked_prep INTO l_sfbadocno          
+      IF cl_null(l_sfbadocno)  THEN 
+         CONTINUE FOREACH 
+      END IF 
+      DISPLAY l_sql
+      #160120-00002#8 s983961--add(e) 
+
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ""
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   LET g_rec_b_01 = l_ac - 1
+   CALL g_asfp360_01_d.deleteElement(l_ac)
+   CLOSE asfp360_01_b_fill_curs
+   FREE asfp360_01_b_fill_sel
+END FUNCTION
+
+PUBLIC FUNCTION asfp360_01_create_temp_table()
+   DEFINE r_success         LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+
+   #移到asfp360_02中
+   #IF NOT asfp360_01_drop_temp_table() THEN
+   #   LET r_success = FALSE
+   #   RETURN r_success
+   #END IF
+   #
+   #CREATE TEMP TABLE asfp360_01_temp(
+   #   sel                  LIKE type_t.chr1,        #选择
+   #   sfbaseq              LIKE sfba_t.sfbaseq,     #项次
+   #   sfbaseq1             LIKE sfba_t.sfbaseq1,    #项序
+   #   sfba002              LIKE sfba_t.sfba002,     #部位
+   #   sfba003              LIKE sfba_t.sfba003,     #作业
+   #   sfba004              LIKE sfba_t.sfba004,     #作业序
+   #   sfba006              LIKE sfba_t.sfba006,     #需求料号
+   #   sfba021              LIKE sfba_t.sfba021,     #特征
+   #   sfba014              LIKE sfba_t.sfba014,     #单位
+   #   sfba013              LIKE sfba_t.sfba013,     #应发数量
+   #   sfba016              LIKE sfba_t.sfba016,     #已发量
+   #   no_issue_qty         LIKE sfba_t.sfba013,     #未发数量
+   #   inqty                LIKE sfba_t.sfba013,     #拟拨入数量
+   #   unitr                LIKE sfba_t.sfba014,     #参考单位
+   #   inqtyr               LIKE sfba_t.sfba013      #参考单位拨入数量
+   #   )
+   #IF SQLCA.sqlcode THEN
+   #   INITIALIZE g_errparam TO NULL
+   #   LET g_errparam.code = SQLCA.sqlcode
+   #   LET g_errparam.extend = 'create asfp360_01_temp'
+   #   LET g_errparam.popup = TRUE
+   #   CALL cl_err()
+   #
+   #   LET r_success = FALSE
+   #   RETURN r_success
+   #END IF
+
+   RETURN r_success
+
+END FUNCTION
+
+PUBLIC FUNCTION asfp360_01_drop_temp_table()
+   DEFINE r_success          LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+
+   DROP TABLE asfp360_01_temp
+   IF NOT (SQLCA.sqlcode = 0 OR SQLCA.sqlcode = -206) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'drop asfp360_01_temp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   RETURN r_success
+END FUNCTION
+
+PUBLIC FUNCTION asfp360_01_delete_temp_table()
+   
+   WHENEVER ERROR CONTINUE
+
+   DELETE FROM asfp360_01_temp
+END FUNCTION
+
+PUBLIC FUNCTION asfp360_01_chk_column(p_column)
+   DEFINE p_column      LIKE type_t.chr20
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_sfaa012 LIKE sfaa_t.sfaa012   #生产数量
+   DEFINE l_sfaa049 LIKE sfaa_t.sfaa049   #已发套数
+   DEFINE l_sfaastus LIKE sfaa_t.sfaastus
+   #160120-00002#8 s983961--add(s)
+   DEFINE l_sfaadocno  LIKE sfaa_t.sfaadocno
+   DEFINE l_sql        STRING
+   #160120-00002#8 s983961--add(e)
+   
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+
+   #160120-00002#8 s983961--add(s) 
+   LET l_sfaadocno = '' 
+   LET l_sql = "SELECT sfaadocno ", 
+               "  FROM sfaa_t ", 
+               " WHERE sfaadocno = '",g_sfaadocno_01,"'  ",                    
+               "   FOR UPDATE SKIP LOCKED " 
+   PREPARE asfp360_03_chk_locked_prep FROM l_sql 
+   EXECUTE asfp360_03_chk_locked_prep INTO l_sfaadocno          
+   IF cl_null(l_sfaadocno)  THEN 
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'asf-00719'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF 
+   DISPLAY l_sql
+   #160120-00002#8 s983961--add(e) 
+
+   CASE p_column
+      WHEN 'sfaadocno_01'  #工单
+           IF cl_null(g_sfaadocno_01) THEN
+              INITIALIZE g_errparam TO NULL
+              LET g_errparam.code = 'aoo-00052'
+              LET g_errparam.extend = ''
+              LET g_errparam.popup = TRUE
+              CALL cl_err()
+              LET r_success = FALSE
+              RETURN r_success
+           END IF
+           #工单未发放
+           SELECT sfaastus INTO l_sfaastus FROM sfaa_t
+            WHERE sfaaent  = g_enterprise
+              #AND sfaasite = g_site
+              AND sfaadocno= g_sfaadocno_01
+           IF l_sfaastus != 'F' THEN
+              INITIALIZE g_errparam TO NULL
+              LET g_errparam.code = 'asf-00022'
+              LET g_errparam.extend = ''
+              LET g_errparam.popup = TRUE
+              CALL cl_err()
+              LET r_success = FALSE
+              RETURN r_success
+           END IF
+           ##mark 單顆挪料，擬挪入數量還是依擬挪入套數自動帶出，但不做控卡
+           ##检查可挪入套数需大于0
+           #SELECT sfaa012,sfaa049 INTO l_sfaa012,l_sfaa049 FROM sfaa_t
+           # WHERE sfaaent  = g_enterprise
+           #   AND sfaadocno= g_sfaadocno_01
+           #IF cl_null(l_sfaa012) THEN LET l_sfaa012 = 0 END IF
+           #IF cl_null(l_sfaa049) THEN LET l_sfaa049 = 0 END IF
+           #IF l_sfaa012-l_sfaa049 <= 0 THEN
+           #   LET r_success = FALSE
+           #   RETURN r_success
+           #END IF
+         
+      OTHERWISE
+   END CASE
+   
+   RETURN r_success
+   
+END FUNCTION
+
+ 
+{</section>}
+ 

@@ -1,0 +1,114 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi912" module="azz" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="01856" crtdt="2013-08-08 14:49:55" modid="01856" moddt="2015-01-27 15:29:23" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="作業級畫面多語言維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzzf001,gzzf001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzzfstus,gzzf002,gzzf003,gzzf004,gzzf005,gzzf006"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gzzf002,gzzf003,gzzfmodid,gzzfmodid_desc(chr500),gzzfmoddt,gzzfownid,gzzfownid_desc(chr500),gzzfowndp,gzzfowndp_desc(chr500),gzzfcrtid,gzzfcrtid_desc(chr500),gzzfcrtdp,gzzfcrtdp_desc(chr500),gzzfcrtdt"/>
+      <var id="bs_field" value="gzzf001,gzzf001_desc(chr80)" pk="gzzf001" order=""/>
+      <bs_reference field="gzzf001_desc" ref_field="gzzf001" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="get_other_rel_lang"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi912" method="dialog">
+    <section id="input">
+      <input id="head" field="gzzf001"/>
+      <input id="body" page="1" field="gzzfstus,gzzf002,gzzf003,gzzf004,gzzf005,gzzf006" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzzf001"/>
+      <construct id="body" page="1" field="gzzfstus,gzzf002,gzzf003,gzzf004,gzzf005,gzzf006"/>
+      <construct id="body" page="2" field="gzzfmodid,gzzfmoddt,gzzfownid,gzzfowndp,gzzfcrtid,gzzfcrtdp,gzzfcrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzzf001"/>
+      <set id="head" type="no_entry" field="gzzf001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gzzf001">
+        <after>
+          <reference field="gzzf001_desc" ref_field="gzzf_t.gzzf001" map_field="gzzf001" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzzf001" state="c"/>
+      </column>
+      <column id="gzzf001_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzzfstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="gzzf002"/>
+      <column id="gzzf003"/>
+      <column id="gzzf004" def_scc="98"/>
+      <column id="gzzf005"/>
+      <column id="gzzf006"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gzzfmodid">
+        <after>
+          <reference field="gzzfmodid_desc" ref_field="gzzf_t.gzzfmodid" map_field="gzzfmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzzfmodid_desc"/>
+      <column id="gzzfmoddt"/>
+      <column id="gzzfownid">
+        <after>
+          <reference field="gzzfownid_desc" ref_field="gzzf_t.gzzfownid" map_field="gzzfownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzzfownid_desc"/>
+      <column id="gzzfowndp">
+        <after>
+          <reference field="gzzfowndp_desc" ref_field="gzzf_t.gzzfowndp" map_field="gzzfowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzzfowndp_desc"/>
+      <column id="gzzfcrtid">
+        <after>
+          <reference field="gzzfcrtid_desc" ref_field="gzzf_t.gzzfcrtid" map_field="gzzfcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzzfcrtid_desc"/>
+      <column id="gzzfcrtdp">
+        <after>
+          <reference field="gzzfcrtdp_desc" ref_field="gzzf_t.gzzfcrtdp" map_field="gzzfcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzzfcrtdp_desc"/>
+      <column id="gzzfcrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzzf_t" pk="gzzf001">
+      <sql id="forupd_sql" type="sql" query="SELECT gzzf001,&apos;&apos; FROM gzzf_t WHERE gzzf001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzzf001,&apos;&apos; FROM gzzf_t" order="gzzf001"/>
+    </head>
+    <body id="gzzf_t" page="1,2" linked="" pk="gzzf002,gzzf003" fk="gzzf001">
+      <sql id="forupd_sql_detail" query="SELECT gzzfstus,gzzf002,gzzf003,gzzf004,gzzf005,gzzf006,&apos;&apos;,&apos;&apos;,gzzfmodid,&apos;&apos;,gzzfmoddt,gzzfownid,&apos;&apos;,gzzfowndp,&apos;&apos;,gzzfcrtid,&apos;&apos;,gzzfcrtdp,&apos;&apos;,gzzfcrtdt FROM gzzf_t WHERE gzzf001=? AND gzzf002=? AND gzzf003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzzfstus,gzzf002,gzzf003,gzzf004,gzzf005,gzzf006,&apos;&apos;,&apos;&apos;,gzzfmodid,&apos;&apos;,gzzfmoddt,gzzfownid,&apos;&apos;,gzzfowndp,&apos;&apos;,gzzfcrtid,&apos;&apos;,gzzfcrtdp,&apos;&apos;,gzzfcrtdt FROM gzzf_t WHERE gzzf001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

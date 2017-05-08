@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apsr350_g01" module="aps" jobmode="N" type="g01" industry="std" crtid="00593" crtdt="2014-10-22 01:35:00" modid="07024" moddt="2016-08-31 09:30:03" sdver="2" tabver="10001" description="採購預測表">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="l_psia003_pmaal004(chr100|trim(psia003)||&apos;.&apos;||trim((SELECT pmaal004 FROM pmaal_t WHERE pmaal_t.pmaal001 = psia_t.psia003 AND pmaal_t.pmaalent = psia_t.psiaent AND pmaal_t.pmaal002 = g_dlang))),psia002,psia005,l_group(chr500|NULL),psib006,x_imaal_t_imaal003(imaal003|x.imaal_t_imaal003),x_imaal_t_imaal004(imaal004|x.imaal_t_imaal004),psib007,l_psib007_desc(inam002|NULL),psib012,l_psib011_1(psib011|NULL),l_psib011_2(psib011|NULL),l_psib011_3(psib011|NULL),l_psib011_4(psib011|NULL),l_psib011_5(psib011|NULL),l_psib011_6(psib011|NULL),psib009,psib011,psia001,psia003,psia004,psiaent,psiasite,psiastus,psib008,psib010,psjal_t_psjal003(psjal003|psjal_t.psjal003),ooag_t_ooag011(ooag011|ooag_t.ooag011),x_oocal_t_oocal003(oocal003|x.oocal_t_oocal003),pmaal_t_pmaal004(pmaal004|pmaal_t.pmaal004),l_psia004_ooag011(chr300|trim(psia004)||&apos;.&apos;||trim((SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = psia_t.psia004 AND ooag_t.ooagent = psia_t.psiaent))),l_psib009_1(dat|NULL),l_psib009_2(dat|NULL),l_psib009_3(dat|NULL),l_psib009_4(dat|NULL),l_psib009_5(dat|NULL),l_psib009_6(dat|NULL)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="l_psia003_pmaal004(chr100|trim(psia003)||&apos;.&apos;||trim((SELECT pmaal004 FROM pmaal_t WHERE pmaal_t.pmaal001 = psia_t.psia003 AND pmaal_t.pmaalent = psia_t.psiaent AND pmaal_t.pmaal002 = g_dlang))),psia002,psia005,l_group(chr500|NULL),psib006,x_imaal_t_imaal003(imaal003|x.imaal_t_imaal003),x_imaal_t_imaal004(imaal004|x.imaal_t_imaal004),psib007,l_psib007_desc(inam002|NULL),psib012,l_psib011_1(psib011|NULL),l_psib011_2(psib011|NULL),l_psib011_3(psib011|NULL),l_psib011_4(psib011|NULL),l_psib011_5(psib011|NULL),l_psib011_6(psib011|NULL),psib009,psib011,psia001,psia003,psia004,psiaent,psiasite,psiastus,psib008,psib010,psjal_t_psjal003(psjal003|( SELECT psjal003 FROM psjal_t WHERE psjal_t.psjal001 = psia_t.psia001 AND psjal_t.psjalsite = psia_t.psiasite AND psjal_t.psjalent = psia_t.psiaent AND psjal_t.psjal002 = g_dlang)),ooag_t_ooag011(ooag011|( SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = psia_t.psia004 AND ooag_t.ooagent = psia_t.psiaent)),x_oocal_t_oocal003(oocal003|x.oocal_t_oocal003),pmaal_t_pmaal004(pmaal004|( SELECT pmaal004 FROM pmaal_t WHERE pmaal_t.pmaal001 = psia_t.psia003 AND pmaal_t.pmaalent = psia_t.psiaent AND pmaal_t.pmaal002 = g_dlang)),l_psia004_ooag011(chr300|trim(psia004)||&apos;.&apos;||trim((SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = psia_t.psia004 AND ooag_t.ooagent = psia_t.psiaent))),l_psib009_1(dat|NULL),l_psib009_2(dat|NULL),l_psib009_3(dat|NULL),l_psib009_4(dat|NULL),l_psib009_5(dat|NULL),l_psib009_6(dat|NULL)"/>
+    <sql id="g_from" query="psia_t LEFT OUTER JOIN ( SELECT psib_t.*,( SELECT imaal003 FROM imaal_t WHERE imaal_t.imaal001 = psib_t.psib006 AND imaal_t.imaalent = psib_t.psibent AND imaal_t.imaal002 = g_dlang) imaal_t_imaal003,( SELECT imaal004 FROM imaal_t WHERE imaal_t.imaal001 = psib_t.psib006 AND imaal_t.imaalent = psib_t.psibent AND imaal_t.imaal002 = g_dlang) imaal_t_imaal004,( SELECT oocal003 FROM oocal_t WHERE oocal_t.oocal001 = psib_t.psib012 AND oocal_t.oocalent = psib_t.psibent AND oocal_t.oocal002 = g_dlang) oocal_t_oocal003 FROM psib_t ) x  ON psia_t.psiaent = x.psibent AND psia_t.psiasite = x.psibsite AND psia_t.psia001 = x.psib001 AND psia_t.psia002 = x.psib002 AND psia_t.psia003 = x.psib003 AND psia_t.psia004 = x.psib004 AND psia_t.psia005 = x.psib005"/>
+    <sql id="g_where" query="" maintable="psia_t"/>
+    <sql id="g_order" query="psia003,psia002,psia005,psib006,psib007,psib012,psib009"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="l_group"/>
+    <section id="b_group" reptype="d01">
+      <rep type="l_group" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="psiaent,l_group"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="psiaent,l_group"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="psiaent,l_group"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="l_group" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="psiaent,l_group"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

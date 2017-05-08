@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aloq100" module="alo" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="00824" crtdt="2014-05-23 11:29:36" modid="00824" moddt="2014-06-04 11:51:20" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="事件檢視器">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),logt001,logt002,logt003,logt004,logt004_desc(chr500),logt005,logt006,logt007,logt008"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),logt001(b_logt001),logt002(b_logt002),logt003(b_logt003),logt004(b_logt004),logt004_desc(b_logt004_desc),logt005(b_logt005),logt006(b_logt006),logt007(b_logt007),logt008(b_logt008)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="datainfo"/>
+      <action id="insert" type="standard"/>
+      <action id="org_data_del"/>
+      <action id="query" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="condition_delete"/>
+      <action id="data_export"/>
+      <action id="data_delete"/>
+    </section>
+  </structure>
+  <form id="0" module="alo" filename="aloq100" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="logt001,logt002,logt003,logt004,logt005,logt006,logt007,logt008" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="logt001(b_logt001),logt002(b_logt002),logt003(b_logt003),logt004(b_logt004),logt005(b_logt005),logt006(b_logt006),logt007(b_logt007),logt008(b_logt008)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="logt001" def_scc="116"/>
+      <column id="logt002"/>
+      <column id="logt003"/>
+      <column id="logt004">
+        <after>
+          <reference field="logt004_desc" ref_field="logt004" map_field="logt004" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+      </column>
+      <column id="logt004_desc"/>
+      <column id="logt005"/>
+      <column id="logt006"/>
+      <column id="logt007"/>
+      <column id="logt008"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="logt_t" page="1" linked="" pk="logt001,logt002">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,logt001,logt002,logt003,logt004,&apos;&apos;,logt005,logt006,logt007,logt008 FROM logt_t WHERE logtent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

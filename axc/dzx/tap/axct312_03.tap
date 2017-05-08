@@ -1,0 +1,2272 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="axct312_03" std_prog="axct312_03" erpver="1.0" module="AXC" ver="6" env="s" zone="t10prd" booking="Y" type="S" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <point name="function.axct312_03_xccw_ins" order="1" ver="5" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[# 插入xcck_t
+PRIVATE FUNCTION axct312_03_xccw_ins(p_xccw012)
+   DEFINE p_xccw012       LIKE xccw_t.xccw012
+   DEFINE l_inba          RECORD  LIKE inba_t.*
+   DEFINE l_inbc          RECORD  LIKE inbc_t.*
+   DEFINE l_xccw          RECORD  LIKE xccw_t.*
+   DEFINE l_xccc280       LIKE xccc_t.xccc280
+   DEFINE l_xccc280a      LIKE xccc_t.xccc280a
+   DEFINE l_xccc280b      LIKE xccc_t.xccc280b
+   DEFINE l_xccc280c      LIKE xccc_t.xccc280c
+   DEFINE l_xccc280d      LIKE xccc_t.xccc280d
+   DEFINE l_xccc280e      LIKE xccc_t.xccc280e
+   DEFINE l_xccc280f      LIKE xccc_t.xccc280f
+   DEFINE l_xccc280g      LIKE xccc_t.xccc280g
+   DEFINE l_xccc280h      LIKE xccc_t.xccc280h
+   DEFINE l_xccc010       LIKE xccc_t.xccc010 
+   DEFINE l_glcc002       LIKE glcc_t.glcc002
+   DEFINE l_glcc004       LIKE glcc_t.glcc004
+   DEFINE l_imag011       LIKE imag_t.imag011
+   DEFINE l_exrate        LIKE xccw_t.xccw042
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_xccw282       LIKE xccw_t.xccw282
+   DEFINE l_xccw282a      LIKE xccw_t.xccw282a
+   DEFINE l_xccw282b      LIKE xccw_t.xccw282b
+   DEFINE l_xccw282c      LIKE xccw_t.xccw282c
+   DEFINE l_xccw282d      LIKE xccw_t.xccw282d
+   DEFINE l_xccw282e      LIKE xccw_t.xccw282e
+   DEFINE l_xccw282f      LIKE xccw_t.xccw282f
+   DEFINE l_xccw282g      LIKE xccw_t.xccw282g
+   DEFINE l_xccw282h      LIKE xccw_t.xccw282h
+   DEFINE l_xccw202       LIKE xccw_t.xccw202
+   DEFINE l_xccw202a      LIKE xccw_t.xccw202a
+   DEFINE l_xccw202b      LIKE xccw_t.xccw202b
+   DEFINE l_xccw202c      LIKE xccw_t.xccw202c
+   DEFINE l_xccw202d      LIKE xccw_t.xccw202d
+   DEFINE l_xccw202e      LIKE xccw_t.xccw202e
+   DEFINE l_xccw202f      LIKE xccw_t.xccw202f
+   DEFINE l_xccw202g      LIKE xccw_t.xccw202g
+   DEFINE l_xccw202h      LIKE xccw_t.xccw202h
+   DEFINE l_sfha          RECORD  LIKE  sfha_t.*
+   DEFINE l_sfhb          RECORD  LIKE  sfhb_t.*
+   DEFINE l_inajsite      LIKE inaj_t.inajsite
+   DEFINE l_inaj004       LIKE inaj_t.inaj004
+   DEFINE l_inaj008       LIKE inaj_t.inaj008
+   DEFINE l_flag          LIKE type_t.chr1       #檢核狀態
+   DEFINE l_errno         LIKE type_t.chr100     #錯誤訊息
+   DEFINE l_glav002       LIKE glav_t.glav002    #會計年度
+   DEFINE l_glav005       LIKE glav_t.glav005    #歸屬季別
+   DEFINE l_sdate_s       LIKE glav_t.glav004    #當季起始日
+   DEFINE l_sdate_e       LIKE glav_t.glav004    #當季截止日
+   DEFINE l_glav006       LIKE glav_t.glav006    #歸屬期別
+   DEFINE l_pdate_s       LIKE glav_t.glav004    #當期起始日
+   DEFINE l_pdate_e       LIKE glav_t.glav004    #當期截止日
+   DEFINE l_glav007       LIKE glav_t.glav007    #歸屬週別
+   DEFINE l_wdate_s       LIKE glav_t.glav004    #當週起始日
+   DEFINE l_wdate_e       LIKE glav_t.glav004    #當週截止日
+   DEFINE l_n             LIKE type_t.num5
+   DEFINE l_today         DATETIME YEAR TO SECOND
+   DEFINE l_flag1         LIKE type_t.chr1
+   DEFINE l_inaj          RECORD  LIKE  inaj_t.*
+   DEFINE l_xccw_1        RECORD  LIKE  xccw_t.*
+   DEFINE l_str           STRING
+   DEFINE l_ask           LIKE type_t.chr1  #只在第一次發現重複是提示
+   DEFINE l_sql           STRING 
+   DEFINE l_acc        LIKE gzcb_t.gzcb004    #fengmy150512
+   DEFINE l_dpt        LIKE inaj_t.inaj017    #fengmy150512
+   
+   WHENEVER ERROR CONTINUE
+   
+   LET l_ask = 'N'
+   CALL s_transaction_begin()
+   LET g_success = 'Y'
+   LET l_flag1 = 'N'
+   
+   
+
+   LET l_n = 0
+   LET g_sql = "SELECT * FROM inaj_t ",
+               " WHERE inajent = '",g_enterprise,"'",               
+               "   AND TO_CHAR(inaj022,'YYYY') = ",g_inba_m.xccw004,
+               "   AND TO_CHAR(inaj022,'MM') = ",g_inba_m.xccw005, 
+               "   AND inajsite IN (SELECT ooef001 FROM ooef_t ",
+               " WHERE ooefent = '",g_enterprise,"'",
+               "   AND ooef017 = '",g_inba_m.xccwcomp,"')",
+               "   AND ",g_wc
+   IF p_xccw012 = '1' THEN 
+      LET g_sql = g_sql," AND inaj036 = '101' "
+   END IF
+   IF p_xccw012 = '2' THEN 
+      LET g_sql = g_sql," AND inaj036 = '301' "
+   END IF
+   IF p_xccw012 = '3' THEN 
+      LET g_sql = g_sql," AND inaj036 = '115 "
+   END IF
+   IF p_xccw012 = '5' THEN 
+      LET g_sql = g_sql," AND inaj036 = '401' "
+   END IF   
+   PREPARE xccw_pre FROM g_sql
+   DECLARE xccw_cur CURSOR FOR xccw_pre  
+   LET g_wc = cl_replace_str(g_wc,"inaj001","xccw006")
+   LET g_wc = cl_replace_str(g_wc,"inaj005","xccw010")
+   LET g_wc = cl_replace_str(g_wc,"inaj016","xccw021")
+   LET g_sql = "SELECT count(*) FROM xccw_t ",
+               " WHERE xccwent = '",g_enterprise,"'",               
+               "   AND xccw004 = ",g_inba_m.xccw004,
+               "   AND xccw005 = ",g_inba_m.xccw005,
+               "   AND xccw003 = '",g_inba_m.xccw003,"'",              
+               "   AND xccwsite IN (SELECT ooef001 FROM ooef_t ",
+               " WHERE ooefent = '",g_enterprise,"'",
+               "   AND ooef017 = '",g_inba_m.xccwcomp,"')",
+               "   AND ",g_wc
+   IF p_xccw012 = '1' THEN 
+      LET g_sql = g_sql," AND xccw012='1' "
+   END IF
+   IF p_xccw012 = '2' THEN 
+      LET g_sql = g_sql," AND xccw012='2' "
+   END IF
+   IF p_xccw012 = '3' THEN 
+      LET g_sql = g_sql," AND xccw012='3' "
+   END IF
+   IF p_xccw012 = '5' THEN 
+      LET g_sql = g_sql," AND xccw012='5' "
+   END IF
+   PREPARE xccw_count_pre FROM g_sql
+   DECLARE xccw_count_cur CURSOR FOR xccw_count_pre
+   EXECUTE xccw_count_cur INTO l_n
+   
+   IF l_n >0  THEN
+      IF NOT cl_ask_confirm('axc-00389') THEN 
+         
+         RETURN
+      ELSE 
+         LET g_sql = "DELETE FROM xccw_t ",
+                    " WHERE xccwent = '",g_enterprise,"'",               
+                    "   AND xccw004 = ",g_inba_m.xccw004,
+                    "   AND xccw005 = ",g_inba_m.xccw005,
+                    "   AND xccw003 = '",g_inba_m.xccw003,"'",              
+                    "   AND xccwsite IN (SELECT ooef001 FROM ooef_t ",
+                    " WHERE ooefent = '",g_enterprise,"'",
+                    "   AND ooef017 = '",g_inba_m.xccwcomp,"')",
+                    "   AND ",g_wc
+         IF p_xccw012 = '1' THEN 
+            LET g_sql = g_sql," AND xccw012='1' "
+         END IF
+         IF p_xccw012 = '2' THEN 
+            LET g_sql = g_sql," AND xccw012='2' "
+         END IF
+         IF p_xccw012 = '3' THEN 
+            LET g_sql = g_sql," AND xccw012='3' "
+         END IF
+         IF p_xccw012 = '5' THEN 
+            LET g_sql = g_sql," AND xccw012='5' "
+         END IF         
+         PREPARE delete_xccw_pre FROM g_sql
+         EXECUTE delete_xccw_pre
+         LET l_ask = 'Y' 
+      END IF   
+   ELSE
+      LET l_ask = 'Y' 
+   END IF
+   IF l_ask = 'Y' THEN  
+#来源单号、项次、项序、料号、品名、规格、数量、单位      
+      CALL cl_err_collect_init()
+      LET g_coll_title[1] = cl_getmsg('axc-00590',g_dlang) #杂收单号
+      LET g_coll_title[2] = cl_getmsg('axm-00008',g_dlang) #项次
+      LET g_coll_title[3] = cl_getmsg('axc-00550',g_dlang) #项序
+      LET g_coll_title[4] = cl_getmsg('axc-00260',g_dlang) #料件编号
+      LET g_coll_title[5] = cl_getmsg('adb-00384',g_dlang) #品名
+      LET g_coll_title[6] = cl_getmsg('adb-00385',g_dlang) #规格
+      LET g_coll_title[7] = cl_getmsg('axc-00366',g_dlang) #数量
+      LET g_coll_title[8] = cl_getmsg('axc-00663',g_dlang) #单位
+      LET g_coll_title[9] = cl_getmsg('axc-00680',g_dlang) #仓库编号
+      LET g_coll_title[10] = cl_getmsg('axc-00681',g_dlang) #仓库名称
+      
+      FOREACH xccw_cur INTO l_inaj.*
+         IF SQLCA.sqlcode THEN 
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH:"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+         LET l_flag1 = 'Y'
+         LET l_xccw.xccwent = g_enterprise          #
+         LET l_xccw.xccwsite= l_inaj.inajsite       #site组织
+         LET l_xccw.xccwcomp= g_inba_m.xccwcomp     #法人组织
+         LET l_xccw.xccwld  = g_inba_m.xccwld       #账套
+         LET l_xccw.xccw001 = '1'                   #账套本位币顺序
+         LET l_xccw.xccw003 = g_inba_m.xccw003      #成本计算类型
+         LET l_xccw.xccw004 = g_inba_m.xccw004      #年度
+         LET l_xccw.xccw005 = g_inba_m.xccw005      #期别
+         LET l_xccw.xccw006 = l_inaj.inaj001        #参考单号         
+         LET l_xccw.xccw007 = l_inaj.inaj002        #项次     
+         LET l_xccw.xccw008 = l_inaj.inaj003        #项序
+         LET l_xccw.xccw009 = l_inaj.inaj004        #出入库码
+         LET l_xccw.xccw010 = l_inaj.inaj005        #料号
+         LET l_xccw.xccw011 = l_inaj.inaj006        #特性
+         LET l_xccw.xccw012 = p_xccw012             #单据类型
+         LET l_xccw.xccw013 = l_inaj.inaj022        #单据日期
+         LET l_xccw.xccw014 = l_inaj.inaj024        #时间
+         LET l_xccw.xccw015 = l_inaj.inaj008        #仓库编号
+         LET l_xccw.xccw016 = l_inaj.inaj009        #储位编号
+         LET l_xccw.xccw017 = l_inaj.inaj010        #批号         
+         LET l_xccw.xccw020 = l_inaj.inaj036        #异动类型
+         LET l_xccw.xccw021 = l_inaj.inaj016        #原因码
+         LET l_xccw.xccw022 = l_inaj.inaj018        #交易对象
+         LET l_xccw.xccw023 = ' '                   #客群
+         LET l_xccw.xccw024 = ' '                   #区域
+         LET l_xccw.xccw025 = l_inaj.inaj037        #成本中心
+         LET l_xccw.xccw026 = ' '                   #经营类别
+         LET l_xccw.xccw027 = ' '                   #渠道
+         LET l_xccw.xccw028 = ' '                   #品类
+         LET l_xccw.xccw029 = ' '                   #品牌
+         LET l_xccw.xccw030 = l_inaj.inaj038        #项目号
+         LET l_xccw.xccw031 = l_inaj.inaj039        #WBS
+         LET l_xccw.xccw032 = ' '                   #存货科目         
+         LET l_xccw.xccw033 = ' '                   #费用成本科目
+         LET l_xccw.xccw034 = ' '                   #收入科目
+         LET l_xccw.xccw040 = l_inaj.inaj203        #交易币别
+         LET l_xccw.xccw041 = g_glaa001             #本位币别
+         LET l_xccw.xccw042 = 1                     #汇率
+         LET l_xccw.xccw043 = l_inaj.inaj012        #交易单位
+         LET l_xccw.xccw044 = ' '                   #成本单位
+         LET l_xccw.xccw045 = l_inaj.inaj014        #换算率     #fengmy150512 inaj029 -->inaj014
+         LET l_xccw.xccw046 = l_inaj.inaj011        #交易数量
+         LET l_xccw.xccw047 = l_inaj.inaj020        #在制单号(工单号/重复性代号)
+         #fengmy add 141219-----begin  table alter
+         LET l_xccw.xccw048 = l_inaj.inaj040        #重複性生產-計畫編號
+         LET l_xccw.xccw049 = l_inaj.inaj041        #重複性生產-生產料號
+         LET l_xccw.xccw050 = l_inaj.inaj042        #重複性生產-生產料號BOM特性
+         LET l_xccw.xccw051 = l_inaj.inaj043        #重複性生產-生產料號產品特徵
+         #fengmy add 141219-----end    table alter
+         LET l_xccw.xccw201 = l_xccw.xccw045 * l_xccw.xccw046             #本期异动数量
+         LET l_xccw.xccw202 = 0                     #本期异动金额
+         LET l_xccw.xccw202a= 0                     #本期异动金额-材料
+         LET l_xccw.xccw202b= 0                     #本期异动金额-人工
+         LET l_xccw.xccw202c= 0                     #本期异动金额-加工费
+         LET l_xccw.xccw202d= 0                     #本期异动金额-制费一
+         LET l_xccw.xccw202e= 0                     #本期异动金额-制费二
+         LET l_xccw.xccw202f= 0                     #本期异动金额-制费三
+         LET l_xccw.xccw202g= 0                     #本期异动金额-制费四
+         LET l_xccw.xccw202h= 0                     #本期异动金额-制费五
+         LET l_xccw.xccw282 = 0                     #本期异动单价
+         LET l_xccw.xccw282a= 0                     #本期异动单价-材料
+         LET l_xccw.xccw282b= 0                     #本期异动单价-人工
+         LET l_xccw.xccw282c= 0                     #本期异动单价-加工
+         LET l_xccw.xccw282d= 0                     #本期异动单价-制费一
+         LET l_xccw.xccw282e= 0                     #本期异动单价-制费二
+         LET l_xccw.xccw282f= 0                     #本期异动单价-制费三
+         LET l_xccw.xccw282g= 0                     #本期异动单价-制费四
+         LET l_xccw.xccw282h= 0                     #本期异动单价-制费五  
+          #成本域 140902
+        IF g_para_data = 'Y' THEN
+           CASE g_para_data1
+                WHEN '1'
+#                     SELECT xcbf001 INTO l_xccw.xccw002 FROM xcbf_t
+#                      WHERE xcbfent = g_enterprise
+#                        AND xcbfcomp = g_inba_m.xccwcomp
+#                        AND xcbf002  = l_inaj.inajsite
+#                        AND xcbf003 = '1'
+                      LET g_sql = " SELECT xcbf001 FROM xcbf_t ",
+                                  "  WHERE xcbfent = '",g_enterprise,"'", 
+                                  "    AND xcbfcomp = '",g_inba_m.xccwcomp,"'",
+                                  "    AND xcbf002 = '",l_inaj.inajsite,"'",
+                                  "    AND xcbf003 = '1'"
+                      PREPARE xcbf001_pre FROM g_sql
+                      DECLARE xcbf001_cur CURSOR FOR xcbf001_pre
+                      OPEN xcbf001_cur
+                      FETCH xcbf001_cur INTO l_xccw.xccw002           
+                WHEN '2'
+#                     SELECT xcbf001 INTO l_xccw.xccw002 FROM xcbf_t
+#                      WHERE xcbfent = g_enterprise
+#                        AND xcbfcomp = g_inba_m.xccwcomp
+#                        AND xcbf002  = l_inaj.inaj008
+#                        AND xcbf003 = '2'
+                      LET g_sql = " SELECT xcbf001 FROM xcbf_t ",
+                                  "  WHERE xcbfent = '",g_enterprise,"'",
+                                  "    AND xcbfcomp = '",g_inba_m.xccwcomp,"'",                                  
+                                  "    AND xcbf002 = '",l_inaj.inaj008,"'",
+                                  "    AND xcbf003 = '2'"
+                      PREPARE xcbf001_pre1 FROM g_sql
+                      DECLARE xcbf001_cur1 CURSOR FOR xcbf001_pre1
+                      OPEN xcbf001_cur1
+                      FETCH xcbf001_cur1 INTO l_xccw.xccw002
+                WHEN '3'
+                     LET l_xccw.xccw002 = l_inaj.inaj007
+                OTHERWISE
+                     LET l_xccw.xccw002 = ' '
+           END CASE
+        END IF
+         
+         #      客群    区域     经营类别 渠道
+         SELECT pmaa090,pmaa241,pmaa092,pmaa231 
+           INTO l_xccw.xccw023,l_xccw.xccw024,l_xccw.xccw026,l_xccw.xccw027
+           FROM pmaa_t
+          WHERE pmaaent = g_enterprise
+            AND pmaa001 = l_xccw.xccw022         
+         #      品类     品牌
+         SELECT imaa108,imaa126 INTO l_xccw.xccw028,l_xccw.xccw029
+           FROM imaa_t
+          WHERE imaaent = g_enterprise
+            AND imaa001 = l_xccw.xccw010 
+         
+          #待分析#################################
+         #存貨科目(agli161)[140907 可能有些对应值为*] 
+         CALL s_get_item_acc(g_inba_m.xccwld,'1',l_inaj.inaj005,'','',l_inaj.inajsite,l_inaj.inaj008)
+         RETURNING l_success,l_xccw.xccw032
+         #去site
+         IF cl_null(l_xccw.xccw032) THEN
+            CALL s_get_item_acc(g_inba_m.xccwld,'1',l_inaj.inaj005,'','','',l_inaj.inaj008)
+             RETURNING l_success,l_xccw.xccw032
+         END IF 
+         #去仓库
+         IF cl_null(l_xccw.xccw032) THEN
+            CALL s_get_item_acc(g_inba_m.xccwld,'1',l_inaj.inaj005,'','',l_inaj.inajsite,'')
+            RETURNING l_success,l_xccw.xccw032
+         END IF
+         #去料件
+         IF cl_null(l_xccw.xccw032) THEN
+            CALL s_get_item_acc(g_inba_m.xccwld,'1','','','',l_inaj.inajsite,l_inaj.inaj008)
+            RETURNING l_success,l_xccw.xccw032
+         END IF
+         #去site，去仓库         
+         IF cl_null(l_xccw.xccw032) THEN
+            CALL s_get_item_acc(g_inba_m.xccwld,'1',l_inaj.inaj005,'','','','')
+             RETURNING l_success,l_xccw.xccw032
+         END IF
+         #去site，去料件
+         IF cl_null(l_xccw.xccw032) THEN
+            CALL s_get_item_acc(g_inba_m.xccwld,'1','','','','',l_inaj.inaj008)
+             RETURNING l_success,l_xccw.xccw032
+         END IF 
+         #去仓库，去料件         
+         IF cl_null(l_xccw.xccw032) THEN
+            CALL s_get_item_acc(g_inba_m.xccwld,'1','','','',l_inaj.inajsite,'')
+             RETURNING l_success,l_xccw.xccw032
+         END IF 
+         #去料件，去site，去仓库         
+#         IF cl_null(l_xccw.xccw032) THEN
+#            CALL s_get_item_acc(g_xccw_m.xccwld,'1','','','','','')
+#             RETURNING l_success,l_xccw.xccw032
+#         END IF 
+#          LET l_sql = " SELECT glcc002 ",
+#                      "   FROM glcc_t ",
+#                      "  WHERE glccent = '",g_enterprise,"'",
+#                      "    AND glcc001 = '1'",
+#                      "    AND (glcc016='",l_inaj.inaj005,"' OR glcc016 = '*' )",
+#                      "    AND (glcc014='",l_inaj.inajsite,"' OR glcc014 = '*')",
+#                      "    AND (glcc015='",l_inaj.inaj008,"' OR glcc015 = '*')"
+#          PREPARE axct312_glcc002_pre FROM l_sql         
+#          EXECUTE axct312_glcc002_pre INTO l_xccw.xccw032  
+         #費用科目（agli180） 
+#         CALL s_fin_get_account(g_inba_m.xccwld,'11','216',l_xccw.xccw021)   #fengmy150512
+#         RETURNING l_success,l_xccw.xccw033,l_errno                          #fengmy150512
+#fengmy150512----b
+          IF p_xccw012 = '1' OR p_xccw012 = '2' THEN 
+             LET l_acc = '216'
+          END IF
+          IF p_xccw012 = '3' THEN
+             LET l_acc = '1125'
+          END IF
+          IF p_xccw012 = '5' THEN
+             LET l_acc = '306'
+          END IF
+          IF cl_null(l_inaj.inaj017) THEN
+             IF p_xccw012 = '1' OR p_xccw012 = '2' THEN 
+                SELECT inba004 INTO l_dpt FROM inba_t 
+                 WHERE inbaent = g_enterprise AND inbadocno = l_xccw.xccw006
+             END IF
+             IF p_xccw012 = '3' THEN 
+                SELECT sfha003 INTO l_dpt FROM sfha_t 
+                 WHERE sfhaent = g_enterprise AND sfhadocno = l_xccw.xccw006
+             END IF
+             IF p_xccw012 = '5' THEN
+                SELECT indc101 INTO l_dpt FROM indc_t 
+                 WHERE indcent = g_enterprise AND indcdocno = l_xccw.xccw006
+                IF cl_null(l_dpt) THEN
+                 SELECT inde101 INTO l_dpt FROM inde_t 
+                 WHERE indeent = g_enterprise AND indedocno = l_xccw.xccw006
+                END IF
+             END IF 
+          ELSE
+             LET l_dpt = l_inaj.inaj017
+          END IF
+          CALL s_fin_dept_reasons_with_ld_get_account(l_dpt,l_acc,l_xccw.xccw021,l_xccw.xccwld,'11',l_xccw.xccw013)
+          RETURNING l_success,l_xccw.xccw033,l_errno 
+#fengmy150512----e
+        
+         #成本單位取axci120
+       SELECT xcbb005 INTO l_xccw.xccw044 FROM xcbb_t
+        WHERE xcbbent  = g_enterprise
+          AND xcbbcomp = g_inba_m.xccwcomp
+          AND xcbb001  = g_inba_m.xccw004
+          AND xcbb002  = g_inba_m.xccw005
+          AND xcbb003  = l_xccw.xccw010
+         CALL s_get_accdate(g_glaa003,'',g_inba_m.xccw004,g_inba_m.xccw005)
+         RETURNING l_flag,l_errno,l_glav002,l_glav005,l_sdate_s,l_sdate_e,l_glav006,l_pdate_s,l_pdate_e,l_glav007,l_wdate_s,l_wdate_e
+         #根据料号和第三区指定的账套(tm.ld)、成本计算类型(tm.type)、本位币顺序(tm.order)和成本年度(tm.yy)、
+         #期别(tm.mm)到料件成本期统计档xccc_t中抓出该料号
+         #的成本单价(xccc281,xccc281a~xccc281h)和成本核算币别(xccc010)。根据本次核算的成本币别(xccw041)、
+         #年度(xccw004)、期别(xccw005)和取到的成本核算
+         #币别(xccc010)进行汇率换算，抓到转换汇率。按取到的成本单价(xccc281,xccc281a~xccc281h)*转换汇率得到所
+         #需的成本单价（xccw282，xccw282a~xccw282h       
+         LET l_xccc280  = 0
+         LET l_xccc280a = 0
+         LET l_xccc280b = 0
+         LET l_xccc280c = 0
+         LET l_xccc280d = 0
+         LET l_xccc280e = 0
+         LET l_xccc280f = 0
+         LET l_xccc280g = 0
+         LET l_xccc280h = 0
+         SELECT xccc280,xccc280a,xccc280b,xccc280c,xccc280d,xccc280e,xccc280f,xccc280g,xccc280h,xccc010
+           INTO l_xccc280,l_xccc280a,l_xccc280b,l_xccc280c,l_xccc280d,
+                l_xccc280e,l_xccc280f,l_xccc280g,l_xccc280h,l_xccc010
+           FROM xccc_t
+           WHERE xcccent = g_enterprise
+             AND xcccld = g_xccw_m.ld
+             AND xccc003 = g_xccw_m.type
+             AND xccc001 = '1'
+             AND xccc004 = g_xccw_m.yy
+             AND xccc005 = g_xccw_m.mm
+             AND xccc006 = l_inaj.inaj005   
+         IF l_xccc280 <> 0 THEN            
+            CALL s_aooi160_get_exrate('2',g_inba_m.xccwld,l_pdate_s,l_xccc010,                                      
+                                        g_glaa001,0,g_glaa025)
+            RETURNING l_exrate
+            LET l_xccw.xccw282a = l_xccc280a * l_exrate
+            LET l_xccw.xccw282b = l_xccc280b * l_exrate
+            LET l_xccw.xccw282c = l_xccc280c * l_exrate
+            LET l_xccw.xccw282d = l_xccc280d * l_exrate
+            LET l_xccw.xccw282e = l_xccc280e * l_exrate
+            LET l_xccw.xccw282f = l_xccc280f * l_exrate
+            LET l_xccw.xccw282g = l_xccc280g * l_exrate
+            LET l_xccw.xccw282h = l_xccc280h * l_exrate
+            LET l_xccw.xccw282 = l_xccw.xccw282a+l_xccw.xccw282b+l_xccw.xccw282c+l_xccw.xccw282d
+                                +l_xccw.xccw282e+l_xccw.xccw282f+l_xccw.xccw282g+l_xccw.xccw282h
+            
+            LET l_xccw.xccw202a = l_xccw.xccw282a * l_xccw.xccw201
+            LET l_xccw.xccw202b = l_xccw.xccw282b * l_xccw.xccw201
+            LET l_xccw.xccw202c = l_xccw.xccw282c * l_xccw.xccw201
+            LET l_xccw.xccw202d = l_xccw.xccw282d * l_xccw.xccw201
+            LET l_xccw.xccw202e = l_xccw.xccw282e * l_xccw.xccw201
+            LET l_xccw.xccw202f = l_xccw.xccw282f * l_xccw.xccw201
+            LET l_xccw.xccw202g = l_xccw.xccw282g * l_xccw.xccw201
+            LET l_xccw.xccw202h = l_xccw.xccw282h * l_xccw.xccw201
+            LET l_xccw.xccw202 = l_xccw.xccw202a+l_xccw.xccw202b+l_xccw.xccw202c+l_xccw.xccw202d
+                                +l_xccw.xccw202e+l_xccw.xccw202f+l_xccw.xccw202g+l_xccw.xccw202h   
+         #add 150213 xccc抓不到抓xcca           
+         ELSE
+            SELECT xcca110,xcca110a,xcca110b,xcca110c,xcca110d,xcca110e,xcca110f,xcca110g,xcca110h
+              INTO l_xccc280,l_xccc280a,l_xccc280b,l_xccc280c,l_xccc280d,
+                   l_xccc280e,l_xccc280f,l_xccc280g,l_xccc280h
+              FROM xcca_t
+              WHERE xccaent = g_enterprise
+                AND xccald = g_xccw_m.ld  #账套
+                AND xcca003 = g_xccw_m.type  #成本计算类型
+                AND xcca001 = '1'         #账套本位币顺序
+                AND xcca004 = g_xccw_m.yy #年度
+                AND xcca005 = g_xccw_m.mm #期别
+                AND xcca006 = l_inaj.inaj005   #料号
+                #以下3个mark的是key值中缺少的，先按照原xccc的写法（xccc也有缺少）
+                #AND xcca002  #成本域
+                #AND xcca007  #特性
+                #AND xcca008  #批号
+            LET l_xccw.xccw282a = l_xccc280a
+            LET l_xccw.xccw282b = l_xccc280b
+            LET l_xccw.xccw282c = l_xccc280c
+            LET l_xccw.xccw282d = l_xccc280d
+            LET l_xccw.xccw282e = l_xccc280e
+            LET l_xccw.xccw282f = l_xccc280f
+            LET l_xccw.xccw282g = l_xccc280g
+            LET l_xccw.xccw282h = l_xccc280h
+            
+            LET l_xccw.xccw282 = l_xccw.xccw282a+l_xccw.xccw282b+l_xccw.xccw282c+l_xccw.xccw282d
+                                +l_xccw.xccw282e+l_xccw.xccw282f+l_xccw.xccw282g+l_xccw.xccw282h
+            
+            LET l_xccw.xccw202a = l_xccw.xccw282a * l_xccw.xccw201
+            LET l_xccw.xccw202b = l_xccw.xccw282b * l_xccw.xccw201
+            LET l_xccw.xccw202c = l_xccw.xccw282c * l_xccw.xccw201
+            LET l_xccw.xccw202d = l_xccw.xccw282d * l_xccw.xccw201
+            LET l_xccw.xccw202e = l_xccw.xccw282e * l_xccw.xccw201
+            LET l_xccw.xccw202f = l_xccw.xccw282f * l_xccw.xccw201
+            LET l_xccw.xccw202g = l_xccw.xccw282g * l_xccw.xccw201
+            LET l_xccw.xccw202h = l_xccw.xccw282h * l_xccw.xccw201
+            LET l_xccw.xccw202 = l_xccw.xccw202a+l_xccw.xccw202b+l_xccw.xccw202c+l_xccw.xccw202d
+                                +l_xccw.xccw202e+l_xccw.xccw202f+l_xccw.xccw202g+l_xccw.xccw202h 
+         #add 150213 end
+         END IF      
+ 
+         
+         #截位
+                     #截位          
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa001,l_xccw.xccw282a,1) RETURNING g_sub_success,g_errno,l_xccw.xccw282a
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa001,l_xccw.xccw282b,1) RETURNING g_sub_success,g_errno,l_xccw.xccw282b
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa001,l_xccw.xccw282c,1) RETURNING g_sub_success,g_errno,l_xccw.xccw282c
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa001,l_xccw.xccw282d,1) RETURNING g_sub_success,g_errno,l_xccw.xccw282d
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa001,l_xccw.xccw282e,1) RETURNING g_sub_success,g_errno,l_xccw.xccw282e
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa001,l_xccw.xccw282f,1) RETURNING g_sub_success,g_errno,l_xccw.xccw282f
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa001,l_xccw.xccw282g,1) RETURNING g_sub_success,g_errno,l_xccw.xccw282g
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa001,l_xccw.xccw282h,1) RETURNING g_sub_success,g_errno,l_xccw.xccw282h
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa001,l_xccw.xccw282,1)  RETURNING g_sub_success,g_errno,l_xccw.xccw282
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa001,l_xccw.xccw202a,2) RETURNING g_sub_success,g_errno,l_xccw.xccw202a
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa001,l_xccw.xccw202b,2) RETURNING g_sub_success,g_errno,l_xccw.xccw202b
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa001,l_xccw.xccw202c,2) RETURNING g_sub_success,g_errno,l_xccw.xccw202c
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa001,l_xccw.xccw202d,2) RETURNING g_sub_success,g_errno,l_xccw.xccw202d
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa001,l_xccw.xccw202e,2) RETURNING g_sub_success,g_errno,l_xccw.xccw202e
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa001,l_xccw.xccw202f,2) RETURNING g_sub_success,g_errno,l_xccw.xccw202f                                          
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa001,l_xccw.xccw202g,2) RETURNING g_sub_success,g_errno,l_xccw.xccw202g                                          
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa001,l_xccw.xccw202h,2) RETURNING g_sub_success,g_errno,l_xccw.xccw202h
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa001,l_xccw.xccw202,2) RETURNING  g_sub_success,g_errno,l_xccw.xccw202
+            IF cl_null(l_xccw.xccw002) THEN LET l_xccw.xccw002 = ' ' END IF
+         IF cl_null(l_xccw.xccw201) THEN LET l_xccw.xccw201 = 0 END IF
+         IF cl_null(l_xccw.xccw282a) THEN LET l_xccw.xccw282a= 0 END IF
+         IF cl_null(l_xccw.xccw282b) THEN LET l_xccw.xccw282b= 0 END IF
+         IF cl_null(l_xccw.xccw282c) THEN LET l_xccw.xccw282c= 0 END IF
+         IF cl_null(l_xccw.xccw282d) THEN LET l_xccw.xccw282d= 0 END IF
+         IF cl_null(l_xccw.xccw282e) THEN LET l_xccw.xccw282e= 0 END IF
+         IF cl_null(l_xccw.xccw282f) THEN LET l_xccw.xccw282f= 0 END IF
+         IF cl_null(l_xccw.xccw282g) THEN LET l_xccw.xccw282g= 0 END IF
+         IF cl_null(l_xccw.xccw282h) THEN LET l_xccw.xccw282h= 0 END IF
+         IF cl_null(l_xccw.xccw282) THEN LET l_xccw.xccw282 = 0 END IF
+         IF cl_null(l_xccw.xccw202a) THEN LET l_xccw.xccw202a= 0 END IF
+         IF cl_null(l_xccw.xccw202b) THEN LET l_xccw.xccw202b= 0 END IF
+         IF cl_null(l_xccw.xccw202c) THEN LET l_xccw.xccw202c= 0 END IF
+         IF cl_null(l_xccw.xccw202d) THEN LET l_xccw.xccw202d= 0 END IF
+         IF cl_null(l_xccw.xccw202e) THEN LET l_xccw.xccw202e= 0 END IF
+         IF cl_null(l_xccw.xccw202f) THEN LET l_xccw.xccw202f= 0 END IF
+         IF cl_null(l_xccw.xccw202g) THEN LET l_xccw.xccw202g= 0 END IF
+         IF cl_null(l_xccw.xccw202h) THEN LET l_xccw.xccw202h= 0 END IF
+         IF cl_null(l_xccw.xccw202) THEN LET l_xccw.xccw202 = 0 END IF       
+            
+         
+         #存值
+         LET l_xccw_1.xccw282a = l_xccw.xccw282a
+         LET l_xccw_1.xccw282b = l_xccw.xccw282b
+         LET l_xccw_1.xccw282c = l_xccw.xccw282c
+         LET l_xccw_1.xccw282d = l_xccw.xccw282d
+         LET l_xccw_1.xccw282e = l_xccw.xccw282e
+         LET l_xccw_1.xccw282f = l_xccw.xccw282f
+         LET l_xccw_1.xccw282g = l_xccw.xccw282g
+         LET l_xccw_1.xccw282h = l_xccw.xccw282h
+         LET l_xccw_1.xccw282 =  l_xccw.xccw282 
+         LET l_xccw_1.xccw202a = l_xccw.xccw202a
+         LET l_xccw_1.xccw202b = l_xccw.xccw202b
+         LET l_xccw_1.xccw202c = l_xccw.xccw202c
+         LET l_xccw_1.xccw202d = l_xccw.xccw202d
+         LET l_xccw_1.xccw202e = l_xccw.xccw202e
+         LET l_xccw_1.xccw202f = l_xccw.xccw202f
+         LET l_xccw_1.xccw202g = l_xccw.xccw202g
+         LET l_xccw_1.xccw202h = l_xccw.xccw202h
+         LET l_xccw_1.xccw202 =  l_xccw.xccw202                  
+
+#记录单价取不到的资料  来源单号、项次、项序、料号、品名、规格、数量、单位
+         IF l_xccw_1.xccw282 = 0 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'axc-00662'
+            LET g_errparam.extend = ''           
+            LET g_errparam.coll_vals[1] = l_xccw.xccw006    #杂收单号
+            LET g_errparam.coll_vals[2] = l_xccw.xccw007    #项次
+            LET g_errparam.coll_vals[3] = l_xccw.xccw008    #项序
+            LET g_errparam.coll_vals[4] = l_xccw.xccw010    #料件编号
+            CALL s_desc_get_item_desc(l_xccw.xccw010) RETURNING g_errparam.coll_vals[5],g_errparam.coll_vals[6]  #品名规格
+            LET g_errparam.coll_vals[7] = l_xccw.xccw201    #数量
+            LET g_errparam.coll_vals[8] = l_xccw.xccw044    #单位            
+            LET g_errparam.coll_vals[9] = l_xccw.xccw015    #仓库
+            CALL s_desc_get_stock_desc(g_inba_m.xccwcomp,l_xccw.xccw015) RETURNING g_errparam.coll_vals[10]  #仓库名称 
+            
+            CALL cl_err()
+         END IF
+         
+         INSERT INTO xccw_t VALUES (l_xccw.*)
+         IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] =0 THEN
+            CASE
+               WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = "std-00009"
+                  LET g_errparam.extend = "xccw_t"
+                  LET g_errparam.popup = TRUE
+                  LET g_errparam.coll_vals[1] = l_xccw.xccw006
+                  LET g_errparam.coll_vals[2] = l_xccw.xccw001
+                  LET g_errparam.coll_vals[3] = l_xccw.xccw007
+                  LET g_errparam.coll_vals[4] = l_xccw.xccw008
+                  LET g_errparam.coll_vals[5] = l_xccw.xccw010
+                  LET g_errparam.coll_vals[6] = l_xccw.xccw011                      
+                  LET g_errparam.sqlerr = SQLCA.sqlcode
+                  CALL cl_err()                   
+               WHEN SQLCA.sqlcode #其他錯誤
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = ""
+                  LET g_errparam.extend = "xccw_t"
+                  LET g_errparam.popup = TRUE
+                  LET g_errparam.coll_vals[1] = l_xccw.xccw006
+                  LET g_errparam.coll_vals[2] = l_xccw.xccw001
+                  LET g_errparam.coll_vals[3] = l_xccw.xccw007
+                  LET g_errparam.coll_vals[4] = l_xccw.xccw008
+                  LET g_errparam.coll_vals[5] = l_xccw.xccw010
+                  LET g_errparam.coll_vals[6] = l_xccw.xccw011                      
+                  LET g_errparam.sqlerr = SQLCA.sqlcode
+                  CALL cl_err()    
+            END CASE
+
+
+            LET g_success = 'N' 
+         END IF
+
+        
+         IF g_glaa015 = 'Y' THEN 
+            LET l_xccw.xccw001 = '2'
+            LET l_xccw.xccw041 = g_glaa016                                    
+            CALL s_aooi160_get_exrate('2',g_inba_m.xccwld,l_pdate_s,g_glaa001,                                      
+                                      l_xccw.xccw041,0,g_glaa018)
+            RETURNING l_xccw.xccw042
+            LET l_xccw.xccw282a = l_xccw.xccw282a * l_xccw.xccw042
+            LET l_xccw.xccw282b = l_xccw.xccw282b * l_xccw.xccw042
+            LET l_xccw.xccw282c = l_xccw.xccw282c * l_xccw.xccw042
+            LET l_xccw.xccw282d = l_xccw.xccw282d * l_xccw.xccw042
+            LET l_xccw.xccw282e = l_xccw.xccw282e * l_xccw.xccw042
+            LET l_xccw.xccw282f = l_xccw.xccw282f * l_xccw.xccw042
+            LET l_xccw.xccw282g = l_xccw.xccw282g * l_xccw.xccw042
+            LET l_xccw.xccw282h = l_xccw.xccw282h * l_xccw.xccw042
+            LET l_xccw.xccw282 = l_xccw.xccw282a+l_xccw.xccw282b+l_xccw.xccw282c+l_xccw.xccw282d
+                                +l_xccw.xccw282e+l_xccw.xccw282f+l_xccw.xccw282g+l_xccw.xccw282h
+            
+            LET l_xccw.xccw202a = l_xccw.xccw282a * l_xccw.xccw201
+            LET l_xccw.xccw202b = l_xccw.xccw282b * l_xccw.xccw201
+            LET l_xccw.xccw202c = l_xccw.xccw282c * l_xccw.xccw201 
+            LET l_xccw.xccw202d = l_xccw.xccw282d * l_xccw.xccw201
+            LET l_xccw.xccw202e = l_xccw.xccw282e * l_xccw.xccw201
+            LET l_xccw.xccw202f = l_xccw.xccw282f * l_xccw.xccw201
+            LET l_xccw.xccw202g = l_xccw.xccw282g * l_xccw.xccw201
+            LET l_xccw.xccw202h = l_xccw.xccw282h * l_xccw.xccw201
+            LET l_xccw.xccw202 = l_xccw.xccw202a+l_xccw.xccw202b+l_xccw.xccw202c+l_xccw.xccw202d
+                    +l_xccw.xccw202e+l_xccw.xccw202f+l_xccw.xccw202g+l_xccw.xccw202h
+         
+           
+                   
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa016,l_xccw.xccw282a,1) RETURNING g_sub_success,g_errno,l_xccw.xccw282a
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa016,l_xccw.xccw282b,1) RETURNING g_sub_success,g_errno,l_xccw.xccw282b
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa016,l_xccw.xccw282c,1) RETURNING g_sub_success,g_errno,l_xccw.xccw282c
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa016,l_xccw.xccw282d,1) RETURNING g_sub_success,g_errno,l_xccw.xccw282d
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa016,l_xccw.xccw282e,1) RETURNING g_sub_success,g_errno,l_xccw.xccw282e
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa016,l_xccw.xccw282f,1) RETURNING g_sub_success,g_errno,l_xccw.xccw282f
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa016,l_xccw.xccw282g,1) RETURNING g_sub_success,g_errno,l_xccw.xccw282g
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa016,l_xccw.xccw282h,1) RETURNING g_sub_success,g_errno,l_xccw.xccw282h
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa016,l_xccw.xccw282,1)  RETURNING g_sub_success,g_errno,l_xccw.xccw282
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa016,l_xccw.xccw202a,2) RETURNING g_sub_success,g_errno,l_xccw.xccw202a
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa016,l_xccw.xccw202b,2) RETURNING g_sub_success,g_errno,l_xccw.xccw202b
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa016,l_xccw.xccw202c,2) RETURNING g_sub_success,g_errno,l_xccw.xccw202c
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa016,l_xccw.xccw202d,2) RETURNING g_sub_success,g_errno,l_xccw.xccw202d
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa016,l_xccw.xccw202e,2) RETURNING g_sub_success,g_errno,l_xccw.xccw202e
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa016,l_xccw.xccw202f,2) RETURNING g_sub_success,g_errno,l_xccw.xccw202f                                          
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa016,l_xccw.xccw202g,2) RETURNING g_sub_success,g_errno,l_xccw.xccw202g                                          
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa016,l_xccw.xccw202h,2) RETURNING g_sub_success,g_errno,l_xccw.xccw202h
+            CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa016,l_xccw.xccw202,2) RETURNING  g_sub_success,g_errno,l_xccw.xccw202 
+            IF cl_null(l_xccw.xccw002) THEN LET l_xccw.xccw002 = ' ' END IF
+         IF cl_null(l_xccw.xccw201) THEN LET l_xccw.xccw201 = 0 END IF
+         IF cl_null(l_xccw.xccw282a) THEN LET l_xccw.xccw282a= 0 END IF
+         IF cl_null(l_xccw.xccw282b) THEN LET l_xccw.xccw282b= 0 END IF
+         IF cl_null(l_xccw.xccw282c) THEN LET l_xccw.xccw282c= 0 END IF
+         IF cl_null(l_xccw.xccw282d) THEN LET l_xccw.xccw282d= 0 END IF
+         IF cl_null(l_xccw.xccw282e) THEN LET l_xccw.xccw282e= 0 END IF
+         IF cl_null(l_xccw.xccw282f) THEN LET l_xccw.xccw282f= 0 END IF
+         IF cl_null(l_xccw.xccw282g) THEN LET l_xccw.xccw282g= 0 END IF
+         IF cl_null(l_xccw.xccw282h) THEN LET l_xccw.xccw282h= 0 END IF
+         IF cl_null(l_xccw.xccw282) THEN LET l_xccw.xccw282 = 0 END IF
+         IF cl_null(l_xccw.xccw202a) THEN LET l_xccw.xccw202a= 0 END IF
+         IF cl_null(l_xccw.xccw202b) THEN LET l_xccw.xccw202b= 0 END IF
+         IF cl_null(l_xccw.xccw202c) THEN LET l_xccw.xccw202c= 0 END IF
+         IF cl_null(l_xccw.xccw202d) THEN LET l_xccw.xccw202d= 0 END IF
+         IF cl_null(l_xccw.xccw202e) THEN LET l_xccw.xccw202e= 0 END IF
+         IF cl_null(l_xccw.xccw202f) THEN LET l_xccw.xccw202f= 0 END IF
+         IF cl_null(l_xccw.xccw202g) THEN LET l_xccw.xccw202g= 0 END IF
+         IF cl_null(l_xccw.xccw202h) THEN LET l_xccw.xccw202h= 0 END IF
+         IF cl_null(l_xccw.xccw202) THEN LET l_xccw.xccw202 = 0 END IF            
+
+             INSERT INTO xccw_t VALUES (l_xccw.*)
+             
+             IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] =0 THEN
+                CASE
+                   WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = "std-00009"
+                      LET g_errparam.extend = "xccw_t"
+                      LET g_errparam.popup = TRUE
+                      LET g_errparam.coll_vals[1] = l_xccw.xccw006
+                      LET g_errparam.coll_vals[2] = l_xccw.xccw001
+                      LET g_errparam.coll_vals[3] = l_xccw.xccw007
+                      LET g_errparam.coll_vals[4] = l_xccw.xccw008
+                      LET g_errparam.coll_vals[5] = l_xccw.xccw010
+                      LET g_errparam.coll_vals[6] = l_xccw.xccw011                      
+                      LET g_errparam.sqlerr = SQLCA.sqlcode
+                      CALL cl_err()                   
+                   WHEN SQLCA.sqlcode #其他錯誤
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = ""
+                      LET g_errparam.extend = "xccw_t"
+                      LET g_errparam.popup = TRUE
+                      LET g_errparam.coll_vals[1] = l_xccw.xccw006
+                      LET g_errparam.coll_vals[2] = l_xccw.xccw001
+                      LET g_errparam.coll_vals[3] = l_xccw.xccw007
+                      LET g_errparam.coll_vals[4] = l_xccw.xccw008
+                      LET g_errparam.coll_vals[5] = l_xccw.xccw010
+                      LET g_errparam.coll_vals[6] = l_xccw.xccw011                      
+                      LET g_errparam.sqlerr = SQLCA.sqlcode
+                      CALL cl_err()    
+                END CASE
+               
+                LET g_success = 'N' 
+             END IF                
+        
+         END IF
+         
+         IF g_glaa019 = 'Y' THEN          
+            LET l_xccw.xccw001 = '3'
+            LET l_xccw.xccw041 = g_glaa020                                    
+            CALL s_aooi160_get_exrate('2',g_inba_m.xccwld,l_pdate_s,g_glaa001,                                      
+                                      l_xccw.xccw041,0,g_glaa022)
+            RETURNING l_xccw.xccw042
+            LET l_xccw.xccw282a = l_xccw_1.xccw282a * l_xccw.xccw042
+            LET l_xccw.xccw282b = l_xccw_1.xccw282b * l_xccw.xccw042
+            LET l_xccw.xccw282c = l_xccw_1.xccw282c * l_xccw.xccw042
+            LET l_xccw.xccw282d = l_xccw_1.xccw282d * l_xccw.xccw042
+            LET l_xccw.xccw282e = l_xccw_1.xccw282e * l_xccw.xccw042
+            LET l_xccw.xccw282f = l_xccw_1.xccw282f * l_xccw.xccw042
+            LET l_xccw.xccw282g = l_xccw_1.xccw282g * l_xccw.xccw042
+            LET l_xccw.xccw282h = l_xccw_1.xccw282h * l_xccw.xccw042
+            LET l_xccw.xccw282 = l_xccw.xccw282a+l_xccw.xccw282b+l_xccw.xccw282c+l_xccw.xccw282d
+                                +l_xccw.xccw282e+l_xccw.xccw282f+l_xccw.xccw282g+l_xccw.xccw282h
+            
+            LET l_xccw.xccw202a = l_xccw.xccw282a * l_xccw.xccw201
+            LET l_xccw.xccw202b = l_xccw.xccw282b * l_xccw.xccw201
+            LET l_xccw.xccw202c = l_xccw.xccw282c * l_xccw.xccw201
+            LET l_xccw.xccw202d = l_xccw.xccw282d * l_xccw.xccw201
+            LET l_xccw.xccw202e = l_xccw.xccw282e * l_xccw.xccw201
+            LET l_xccw.xccw202f = l_xccw.xccw282f * l_xccw.xccw201
+            LET l_xccw.xccw202g = l_xccw.xccw282g * l_xccw.xccw201
+            LET l_xccw.xccw202h = l_xccw.xccw282h * l_xccw.xccw201
+            LET l_xccw.xccw202 = l_xccw.xccw202a+l_xccw.xccw202b+l_xccw.xccw202c+l_xccw.xccw202d
+                    +l_xccw.xccw202e+l_xccw.xccw202f+l_xccw.xccw202g+l_xccw.xccw202h
+         
+          CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa020,l_xccw.xccw282a,1) RETURNING g_sub_success,g_errno,l_xccw.xccw282a
+          CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa020,l_xccw.xccw282b,1) RETURNING g_sub_success,g_errno,l_xccw.xccw282b
+          CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa020,l_xccw.xccw282c,1) RETURNING g_sub_success,g_errno,l_xccw.xccw282c
+          CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa020,l_xccw.xccw282d,1) RETURNING g_sub_success,g_errno,l_xccw.xccw282d
+          CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa020,l_xccw.xccw282e,1) RETURNING g_sub_success,g_errno,l_xccw.xccw282e
+          CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa020,l_xccw.xccw282f,1) RETURNING g_sub_success,g_errno,l_xccw.xccw282f
+          CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa020,l_xccw.xccw282g,1) RETURNING g_sub_success,g_errno,l_xccw.xccw282g
+          CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa020,l_xccw.xccw282h,1) RETURNING g_sub_success,g_errno,l_xccw.xccw282h
+          CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa020,l_xccw.xccw282,1)  RETURNING g_sub_success,g_errno,l_xccw.xccw282
+          CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa020,l_xccw.xccw202a,2) RETURNING g_sub_success,g_errno,l_xccw.xccw202a
+          CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa020,l_xccw.xccw202b,2) RETURNING g_sub_success,g_errno,l_xccw.xccw202b
+          CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa020,l_xccw.xccw202c,2) RETURNING g_sub_success,g_errno,l_xccw.xccw202c
+          CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa020,l_xccw.xccw202d,2) RETURNING g_sub_success,g_errno,l_xccw.xccw202d
+          CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa020,l_xccw.xccw202e,2) RETURNING g_sub_success,g_errno,l_xccw.xccw202e
+          CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa020,l_xccw.xccw202f,2) RETURNING g_sub_success,g_errno,l_xccw.xccw202f                                          
+          CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa020,l_xccw.xccw202g,2) RETURNING g_sub_success,g_errno,l_xccw.xccw202g                                          
+          CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa020,l_xccw.xccw202h,2) RETURNING g_sub_success,g_errno,l_xccw.xccw202h
+          CALL s_curr_round_ld(1,l_xccw.xccwld,g_glaa020,l_xccw.xccw202,2) RETURNING  g_sub_success,g_errno,l_xccw.xccw202  
+          IF cl_null(l_xccw.xccw002) THEN LET l_xccw.xccw002 = ' ' END IF 
+         IF cl_null(l_xccw.xccw201) THEN LET l_xccw.xccw201 = 0 END IF
+         IF cl_null(l_xccw.xccw282a) THEN LET l_xccw.xccw282a= 0 END IF
+         IF cl_null(l_xccw.xccw282b) THEN LET l_xccw.xccw282b= 0 END IF
+         IF cl_null(l_xccw.xccw282c) THEN LET l_xccw.xccw282c= 0 END IF
+         IF cl_null(l_xccw.xccw282d) THEN LET l_xccw.xccw282d= 0 END IF
+         IF cl_null(l_xccw.xccw282e) THEN LET l_xccw.xccw282e= 0 END IF
+         IF cl_null(l_xccw.xccw282f) THEN LET l_xccw.xccw282f= 0 END IF
+         IF cl_null(l_xccw.xccw282g) THEN LET l_xccw.xccw282g= 0 END IF
+         IF cl_null(l_xccw.xccw282h) THEN LET l_xccw.xccw282h= 0 END IF
+         IF cl_null(l_xccw.xccw282) THEN LET l_xccw.xccw282 = 0 END IF
+         IF cl_null(l_xccw.xccw202a) THEN LET l_xccw.xccw202a= 0 END IF
+         IF cl_null(l_xccw.xccw202b) THEN LET l_xccw.xccw202b= 0 END IF
+         IF cl_null(l_xccw.xccw202c) THEN LET l_xccw.xccw202c= 0 END IF
+         IF cl_null(l_xccw.xccw202d) THEN LET l_xccw.xccw202d= 0 END IF
+         IF cl_null(l_xccw.xccw202e) THEN LET l_xccw.xccw202e= 0 END IF
+         IF cl_null(l_xccw.xccw202f) THEN LET l_xccw.xccw202f= 0 END IF
+         IF cl_null(l_xccw.xccw202g) THEN LET l_xccw.xccw202g= 0 END IF
+         IF cl_null(l_xccw.xccw202h) THEN LET l_xccw.xccw202h= 0 END IF
+         IF cl_null(l_xccw.xccw202) THEN LET l_xccw.xccw202 = 0 END IF          
+
+            INSERT INTO xccw_t VALUES (l_xccw.*)
+            IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] =0 THEN
+                CASE
+                   WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = "std-00009"
+                      LET g_errparam.extend = "xccw_t"
+                      LET g_errparam.popup = TRUE
+                      LET g_errparam.coll_vals[1] = l_xccw.xccw006
+                      LET g_errparam.coll_vals[2] = l_xccw.xccw001
+                      LET g_errparam.coll_vals[3] = l_xccw.xccw007
+                      LET g_errparam.coll_vals[4] = l_xccw.xccw008
+                      LET g_errparam.coll_vals[5] = l_xccw.xccw010
+                      LET g_errparam.coll_vals[6] = l_xccw.xccw011                      
+                      LET g_errparam.sqlerr = SQLCA.sqlcode
+                      CALL cl_err()                   
+                   WHEN SQLCA.sqlcode #其他錯誤
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = ""
+                      LET g_errparam.extend = "xccw_t"
+                      LET g_errparam.popup = TRUE
+                      LET g_errparam.coll_vals[1] = l_xccw.xccw006
+                      LET g_errparam.coll_vals[2] = l_xccw.xccw001
+                      LET g_errparam.coll_vals[3] = l_xccw.xccw007
+                      LET g_errparam.coll_vals[4] = l_xccw.xccw008
+                      LET g_errparam.coll_vals[5] = l_xccw.xccw010
+                      LET g_errparam.coll_vals[6] = l_xccw.xccw011                      
+                      LET g_errparam.sqlerr = SQLCA.sqlcode
+                      CALL cl_err()    
+                END CASE
+
+               LET g_success = 'N' 
+            END IF                 
+         
+         END IF
+      END FOREACH
+   END IF
+       
+
+
+   
+   IF g_success = 'N' THEN
+      CALL s_transaction_end('N','1') 
+   ELSE
+      IF l_flag1 = 'N' THEN 
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = ""
+         LET g_errparam.code   = 'axc-00530' 
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         CALL s_transaction_end('N','0')  
+      ELSE
+         CALL s_transaction_end('Y','1')
+      END IF
+   END IF
+   CALL cl_err_collect_show()
+END FUNCTION]]>
+  </point>
+  <point name="function.axct312_03_show_ref" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[# 參考欄位帶值
+PRIVATE FUNCTION axct312_03_show_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_inba_m.xccwld
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_inba_m.xccwld_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_inba_m.xccwld_desc
+   
+   LET g_inba_m.xccwcomp = ''
+   SELECT glaacomp,glaa015,glaa016,glaa017,glaa018,glaa019,glaa020,glaa021,glaa022,glaa025,glaa001,glaa003
+     INTO g_inba_m.xccwcomp,g_glaa015,g_glaa016,g_glaa017,g_glaa018,
+          g_glaa019,g_glaa020,g_glaa021,g_glaa022,g_glaa025,g_glaa001,g_glaa003
+     FROM glaa_t 
+    WHERE glaaent = g_enterprise 
+      AND glaald = g_inba_m.xccwld
+   DISPLAY BY NAME g_inba_m.xccwcomp
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_inba_m.xccwcomp
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_inba_m.xccwcomp_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_inba_m.xccwcomp_desc
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_inba_m.xccw003
+   CALL ap_ref_array2(g_ref_fields,"SELECT xcatl003 FROM xcatl_t WHERE xcatlent='"||g_enterprise||"' AND xcatl001=? AND xcatl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_inba_m.xccw003_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_inba_m.xccw003_desc
+   
+   SELECT xcat003 INTO g_inba_m.xcat003
+     FROM xcat_t
+    WHERE xcatent = g_enterprise
+      AND xcat001 = g_inba_m.xccw003
+   DISPLAY g_inba_m.xcat003 TO xcat003
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xccw_m.comp
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xccw_m.comp_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xccw_m.comp_desc
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xccw_m.ld
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xccw_m.ld_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xccw_m.ld_desc
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xccw_m.type
+   CALL ap_ref_array2(g_ref_fields,"SELECT xcatl003 FROM xcatl_t WHERE xcatlent='"||g_enterprise||"' AND xcatl001=? AND xcatl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xccw_m.type_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xccw_m.type_desc
+END FUNCTION]]>
+  </point>
+  <point name="construct.c.inba007" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inba007  #顯示到畫面上
+            NEXT FIELD inba007                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.inbadocno" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inbadocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inbadocno  #顯示到畫面上
+            NEXT FIELD inbadocno                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.xcck003" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_xcat001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xcck003  #顯示到畫面上
+            NEXT FIELD xcck003                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.xcck007" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inbadocno_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xcck007  #顯示到畫面上
+            NEXT FIELD xcck007                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.xcckld" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_authorised_ld()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xcckld  #顯示到畫面上
+            NEXT FIELD xcckld                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE g_glaa001             LIKE glaa_t.glaa001
+DEFINE g_glaa003             LIKE glaa_t.glaa003
+DEFINE g_glaa015             LIKE glaa_t.glaa015
+DEFINE g_glaa016             LIKE glaa_t.glaa016
+DEFINE g_glaa017             LIKE glaa_t.glaa017
+DEFINE g_glaa018             LIKE glaa_t.glaa018
+DEFINE g_glaa019             LIKE glaa_t.glaa019
+DEFINE g_glaa020             LIKE glaa_t.glaa020
+DEFINE g_glaa021             LIKE glaa_t.glaa021
+DEFINE g_glaa022             LIKE glaa_t.glaa022
+DEFINE g_glaa025             LIKE glaa_t.glaa025
+DEFINE g_wc                  STRING
+DEFINE g_sql                 STRING
+DEFINE g_para_data           LIKE type_t.chr80     #采用成本域否
+DEFINE g_para_data1          LIKE type_t.chr80     #成本域类型
+
+ type type_g_xccw_m        RECORD
+   comp LIKE type_t.chr80, 
+   comp_desc LIKE type_t.chr80, 
+   ld LIKE type_t.chr80, 
+   ld_desc LIKE type_t.chr80, 
+   type LIKE type_t.chr80, 
+   type_desc LIKE type_t.chr80, 
+#   order LIKE type_t.chr80, 
+   yy LIKE type_t.chr80, 
+   mm LIKE type_t.chr80
+       END RECORD
+DEFINE g_xccw_m        type_g_xccw_m
+DEFINE g_success       LIKE type_t.chr1]]>
+  </point>
+  <point name="input.a.comp" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL axct312_03_show_ref()
+            IF NOT cl_null(g_inba_m.comp) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_inba_m.comp
+
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooef001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_inba_m.comp = ''
+                  CALL axct312_03_show_ref()
+                  NEXT FIELD CURRENT
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.a.inbadocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+
+
+]]>
+  </point>
+  <point name="input.a.ld" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL axct312_03_show_ref()
+            IF NOT cl_null(g_inba_m.ld) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_inba_m.ld
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_glaald") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+                  #SELECT glaa010,glaa011,glaa015,glaa016,glaa017,glaa018,glaa019,glaa020,glaa021,glaa022,glaa025,glaa001
+                  # INTO g_inba_m.xcck004,g_inba_m.xcck005,g_glaa015,g_glaa016,g_glaa017,g_glaa018,
+                  #      g_glaa019,g_glaa020,g_glaa021,g_glaa022,g_glaa025,g_glaa001
+                  # FROM glaa_t
+                  #WHERE glaaent = g_enterprise
+                  #  AND glaald = g_inba_m.xcckld
+                  #DISPLAY BY NAME g_inba_m.xcck004
+                  #DISPLAY BY NAME g_inba_m.xcck005
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_inba_m.ld = ''
+                  CALL axct312_03_show_ref()
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+]]>
+  </point>
+  <point name="input.a.type" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL axct312_03_show_ref()
+            IF NOT cl_null(g_inba_m.type) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_inba_m.type
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_xcat001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_inba_m.type = ''
+                  CALL axct312_03_show_ref()
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+]]>
+  </point>
+  <point name="input.a.xcck001" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_xcck_m.xcckld) AND NOT cl_null(g_xcck_m.xcck001) AND NOT cl_null(g_xcck_m.xcck002) AND NOT cl_null(g_xcck_m.xcck003) AND NOT cl_null(g_xcck_m.xcck004) AND NOT cl_null(g_xcck_m.xcck005) AND NOT cl_null(g_xcck_m.xcck006) AND NOT cl_null(g_xcck_m.xcck007) AND NOT cl_null(g_xcck_m.xcck008) AND NOT cl_null(g_xcck_m.xcck009) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_xcck_m.xcckld != g_xcckld_t  OR g_xcck_m.xcck001 != g_xcck001_t  OR g_xcck_m.xcck002 != g_xcck002_t  OR g_xcck_m.xcck003 != g_xcck003_t  OR g_xcck_m.xcck004 != g_xcck004_t  OR g_xcck_m.xcck005 != g_xcck005_t  OR g_xcck_m.xcck006 != g_xcck006_t  OR g_xcck_m.xcck007 != g_xcck007_t  OR g_xcck_m.xcck008 != g_xcck008_t  OR g_xcck_m.xcck009 != g_xcck009_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xcck_t WHERE "||"xcckent = '" ||g_enterprise|| "' AND "||"xcckld = '"||g_xcck_m.xcckld ||"' AND "|| "xcck001 = '"||g_xcck_m.xcck001 ||"' AND "|| "xcck002 = '"||g_xcck_m.xcck002 ||"' AND "|| "xcck003 = '"||g_xcck_m.xcck003 ||"' AND "|| "xcck004 = '"||g_xcck_m.xcck004 ||"' AND "|| "xcck005 = '"||g_xcck_m.xcck005 ||"' AND "|| "xcck006 = '"||g_xcck_m.xcck006 ||"' AND "|| "xcck007 = '"||g_xcck_m.xcck007 ||"' AND "|| "xcck008 = '"||g_xcck_m.xcck008 ||"' AND "|| "xcck009 = '"||g_xcck_m.xcck009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.a.xcck002" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_xcck_m.xcckld) AND NOT cl_null(g_xcck_m.xcck001) AND NOT cl_null(g_xcck_m.xcck002) AND NOT cl_null(g_xcck_m.xcck003) AND NOT cl_null(g_xcck_m.xcck004) AND NOT cl_null(g_xcck_m.xcck005) AND NOT cl_null(g_xcck_m.xcck006) AND NOT cl_null(g_xcck_m.xcck007) AND NOT cl_null(g_xcck_m.xcck008) AND NOT cl_null(g_xcck_m.xcck009) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_xcck_m.xcckld != g_xcckld_t  OR g_xcck_m.xcck001 != g_xcck001_t  OR g_xcck_m.xcck002 != g_xcck002_t  OR g_xcck_m.xcck003 != g_xcck003_t  OR g_xcck_m.xcck004 != g_xcck004_t  OR g_xcck_m.xcck005 != g_xcck005_t  OR g_xcck_m.xcck006 != g_xcck006_t  OR g_xcck_m.xcck007 != g_xcck007_t  OR g_xcck_m.xcck008 != g_xcck008_t  OR g_xcck_m.xcck009 != g_xcck009_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xcck_t WHERE "||"xcckent = '" ||g_enterprise|| "' AND "||"xcckld = '"||g_xcck_m.xcckld ||"' AND "|| "xcck001 = '"||g_xcck_m.xcck001 ||"' AND "|| "xcck002 = '"||g_xcck_m.xcck002 ||"' AND "|| "xcck003 = '"||g_xcck_m.xcck003 ||"' AND "|| "xcck004 = '"||g_xcck_m.xcck004 ||"' AND "|| "xcck005 = '"||g_xcck_m.xcck005 ||"' AND "|| "xcck006 = '"||g_xcck_m.xcck006 ||"' AND "|| "xcck007 = '"||g_xcck_m.xcck007 ||"' AND "|| "xcck008 = '"||g_xcck_m.xcck008 ||"' AND "|| "xcck009 = '"||g_xcck_m.xcck009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.a.xcck003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL axct312_03_show_ref()
+            IF NOT cl_null(g_inba_m.xcck003) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_inba_m.xcck003
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_xcat001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+                  IF g_inba_m.xcat003 = '2' THEN 
+                    INITIALIZE g_errparam TO NULL
+                    LET g_errparam.code = 'axc-00229'
+                    LET g_errparam.extend = g_inba_m.xcck003
+                    LET g_errparam.popup = TRUE
+                    CALL cl_err()
+
+                    LET g_inba_m.xcck003 = ''
+                    LET g_inba_m.xcat003 = ''
+                    CALL axct312_03_show_ref()
+                    NEXT FIELD CURRENT
+                 END IF
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_inba_m.xcck003 = ''
+                  CALL axct312_03_show_ref()
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+]]>
+  </point>
+  <point name="input.a.xcck004" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+
+
+
+]]>
+  </point>
+  <point name="input.a.xcck005" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+
+
+
+]]>
+  </point>
+  <point name="input.a.xcck006" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_xcck_m.xcckld) AND NOT cl_null(g_xcck_m.xcck001) AND NOT cl_null(g_xcck_m.xcck002) AND NOT cl_null(g_xcck_m.xcck003) AND NOT cl_null(g_xcck_m.xcck004) AND NOT cl_null(g_xcck_m.xcck005) AND NOT cl_null(g_xcck_m.xcck006) AND NOT cl_null(g_xcck_m.xcck007) AND NOT cl_null(g_xcck_m.xcck008) AND NOT cl_null(g_xcck_m.xcck009) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_xcck_m.xcckld != g_xcckld_t  OR g_xcck_m.xcck001 != g_xcck001_t  OR g_xcck_m.xcck002 != g_xcck002_t  OR g_xcck_m.xcck003 != g_xcck003_t  OR g_xcck_m.xcck004 != g_xcck004_t  OR g_xcck_m.xcck005 != g_xcck005_t  OR g_xcck_m.xcck006 != g_xcck006_t  OR g_xcck_m.xcck007 != g_xcck007_t  OR g_xcck_m.xcck008 != g_xcck008_t  OR g_xcck_m.xcck009 != g_xcck009_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xcck_t WHERE "||"xcckent = '" ||g_enterprise|| "' AND "||"xcckld = '"||g_xcck_m.xcckld ||"' AND "|| "xcck001 = '"||g_xcck_m.xcck001 ||"' AND "|| "xcck002 = '"||g_xcck_m.xcck002 ||"' AND "|| "xcck003 = '"||g_xcck_m.xcck003 ||"' AND "|| "xcck004 = '"||g_xcck_m.xcck004 ||"' AND "|| "xcck005 = '"||g_xcck_m.xcck005 ||"' AND "|| "xcck006 = '"||g_xcck_m.xcck006 ||"' AND "|| "xcck007 = '"||g_xcck_m.xcck007 ||"' AND "|| "xcck008 = '"||g_xcck_m.xcck008 ||"' AND "|| "xcck009 = '"||g_xcck_m.xcck009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.a.xcck007" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_xcck_m.xcckld) AND NOT cl_null(g_xcck_m.xcck001) AND NOT cl_null(g_xcck_m.xcck002) AND NOT cl_null(g_xcck_m.xcck003) AND NOT cl_null(g_xcck_m.xcck004) AND NOT cl_null(g_xcck_m.xcck005) AND NOT cl_null(g_xcck_m.xcck006) AND NOT cl_null(g_xcck_m.xcck007) AND NOT cl_null(g_xcck_m.xcck008) AND NOT cl_null(g_xcck_m.xcck009) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_xcck_m.xcckld != g_xcckld_t  OR g_xcck_m.xcck001 != g_xcck001_t  OR g_xcck_m.xcck002 != g_xcck002_t  OR g_xcck_m.xcck003 != g_xcck003_t  OR g_xcck_m.xcck004 != g_xcck004_t  OR g_xcck_m.xcck005 != g_xcck005_t  OR g_xcck_m.xcck006 != g_xcck006_t  OR g_xcck_m.xcck007 != g_xcck007_t  OR g_xcck_m.xcck008 != g_xcck008_t  OR g_xcck_m.xcck009 != g_xcck009_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xcck_t WHERE "||"xcckent = '" ||g_enterprise|| "' AND "||"xcckld = '"||g_xcck_m.xcckld ||"' AND "|| "xcck001 = '"||g_xcck_m.xcck001 ||"' AND "|| "xcck002 = '"||g_xcck_m.xcck002 ||"' AND "|| "xcck003 = '"||g_xcck_m.xcck003 ||"' AND "|| "xcck004 = '"||g_xcck_m.xcck004 ||"' AND "|| "xcck005 = '"||g_xcck_m.xcck005 ||"' AND "|| "xcck006 = '"||g_xcck_m.xcck006 ||"' AND "|| "xcck007 = '"||g_xcck_m.xcck007 ||"' AND "|| "xcck008 = '"||g_xcck_m.xcck008 ||"' AND "|| "xcck009 = '"||g_xcck_m.xcck009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.a.xcck008" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_xcck_m.xcckld) AND NOT cl_null(g_xcck_m.xcck001) AND NOT cl_null(g_xcck_m.xcck002) AND NOT cl_null(g_xcck_m.xcck003) AND NOT cl_null(g_xcck_m.xcck004) AND NOT cl_null(g_xcck_m.xcck005) AND NOT cl_null(g_xcck_m.xcck006) AND NOT cl_null(g_xcck_m.xcck007) AND NOT cl_null(g_xcck_m.xcck008) AND NOT cl_null(g_xcck_m.xcck009) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_xcck_m.xcckld != g_xcckld_t  OR g_xcck_m.xcck001 != g_xcck001_t  OR g_xcck_m.xcck002 != g_xcck002_t  OR g_xcck_m.xcck003 != g_xcck003_t  OR g_xcck_m.xcck004 != g_xcck004_t  OR g_xcck_m.xcck005 != g_xcck005_t  OR g_xcck_m.xcck006 != g_xcck006_t  OR g_xcck_m.xcck007 != g_xcck007_t  OR g_xcck_m.xcck008 != g_xcck008_t  OR g_xcck_m.xcck009 != g_xcck009_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xcck_t WHERE "||"xcckent = '" ||g_enterprise|| "' AND "||"xcckld = '"||g_xcck_m.xcckld ||"' AND "|| "xcck001 = '"||g_xcck_m.xcck001 ||"' AND "|| "xcck002 = '"||g_xcck_m.xcck002 ||"' AND "|| "xcck003 = '"||g_xcck_m.xcck003 ||"' AND "|| "xcck004 = '"||g_xcck_m.xcck004 ||"' AND "|| "xcck005 = '"||g_xcck_m.xcck005 ||"' AND "|| "xcck006 = '"||g_xcck_m.xcck006 ||"' AND "|| "xcck007 = '"||g_xcck_m.xcck007 ||"' AND "|| "xcck008 = '"||g_xcck_m.xcck008 ||"' AND "|| "xcck009 = '"||g_xcck_m.xcck009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.a.xcck009" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_xcck_m.xcckld) AND NOT cl_null(g_xcck_m.xcck001) AND NOT cl_null(g_xcck_m.xcck002) AND NOT cl_null(g_xcck_m.xcck003) AND NOT cl_null(g_xcck_m.xcck004) AND NOT cl_null(g_xcck_m.xcck005) AND NOT cl_null(g_xcck_m.xcck006) AND NOT cl_null(g_xcck_m.xcck007) AND NOT cl_null(g_xcck_m.xcck008) AND NOT cl_null(g_xcck_m.xcck009) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_xcck_m.xcckld != g_xcckld_t  OR g_xcck_m.xcck001 != g_xcck001_t  OR g_xcck_m.xcck002 != g_xcck002_t  OR g_xcck_m.xcck003 != g_xcck003_t  OR g_xcck_m.xcck004 != g_xcck004_t  OR g_xcck_m.xcck005 != g_xcck005_t  OR g_xcck_m.xcck006 != g_xcck006_t  OR g_xcck_m.xcck007 != g_xcck007_t  OR g_xcck_m.xcck008 != g_xcck008_t  OR g_xcck_m.xcck009 != g_xcck009_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xcck_t WHERE "||"xcckent = '" ||g_enterprise|| "' AND "||"xcckld = '"||g_xcck_m.xcckld ||"' AND "|| "xcck001 = '"||g_xcck_m.xcck001 ||"' AND "|| "xcck002 = '"||g_xcck_m.xcck002 ||"' AND "|| "xcck003 = '"||g_xcck_m.xcck003 ||"' AND "|| "xcck004 = '"||g_xcck_m.xcck004 ||"' AND "|| "xcck005 = '"||g_xcck_m.xcck005 ||"' AND "|| "xcck006 = '"||g_xcck_m.xcck006 ||"' AND "|| "xcck007 = '"||g_xcck_m.xcck007 ||"' AND "|| "xcck008 = '"||g_xcck_m.xcck008 ||"' AND "|| "xcck009 = '"||g_xcck_m.xcck009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.a.xcckcomp" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.a.xcckld" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL axct312_03_show_ref()
+            IF NOT cl_null(g_inba_m.xcckld) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_inba_m.xcckld
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_glaald") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+                  CALL s_ld_chk_authorization(g_user,g_inba_m.xcckld) RETURNING l_success
+                  IF l_success = FALSE THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'axr-00022'
+                     LET g_errparam.extend = g_inba_m.xcckld
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_inba_m.xcckld = ''
+                     CALL axct312_03_show_ref()
+                     NEXT FIELD CURRENT
+                  END IF 
+                  SELECT glaa015,glaa016,glaa017,glaa018,glaa019,glaa020,glaa021,glaa022,glaa025,glaa001,glaa003
+                   INTO g_glaa015,g_glaa016,g_glaa017,g_glaa018,g_glaa019,
+                        g_glaa020,g_glaa021,g_glaa022,g_glaa025,g_glaa001,g_glaa003
+                   FROM glaa_t
+                  WHERE glaaent = g_enterprise
+                    AND glaald = g_inba_m.xcckld
+                  DISPLAY BY NAME g_inba_m.xcck004
+                  DISPLAY BY NAME g_inba_m.xcck005
+                  CALL cl_get_para(g_enterprise,g_inba_m.xcckcomp,'S-FIN-6001') RETURNING g_para_data   #采用成本域否
+                  CALL cl_get_para(g_enterprise,g_inba_m.xcckcomp,'S-FIN-6002') RETURNING g_para_data1  #成本域类型
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_inba_m.xcckld = ''
+                  CALL axct312_03_show_ref()
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+
+
+]]>
+  </point>
+  <point name="input.a.xccw003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_inba_m.xccw003) THEN 
+#此段落由子樣板a19產生
+               #校驗代值 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               CALL axct312_03_show_ref()
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_inba_m.xccw003
+
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_xcat001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1 
+                  #DISPLAY BY NAME 
+                  IF g_inba_m.xcat003 = '2' THEN 
+                    INITIALIZE g_errparam TO NULL
+                    LET g_errparam.code = 'axc-00229'
+                    LET g_errparam.extend = g_inba_m.xccw003
+                    LET g_errparam.popup = TRUE
+                    CALL cl_err()
+                    NEXT FIELD CURRENT
+                 END IF
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_inba_m.xccw003
+            CALL ap_ref_array2(g_ref_fields,"SELECT xcatl003 FROM xcatl_t WHERE xcatlent='"||g_enterprise||"' AND xcatl001=? AND xcatl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_inba_m.xccw003_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_inba_m.xccw003_desc
+
+             ]]>
+  </point>
+  <point name="input.a.xccw005" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[        ]]>
+  </point>
+  <point name="input.a.xccwcomp" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_inba_m.xccwcomp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_inba_m.xccwcomp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_inba_m.xccwcomp_desc
+
+]]>
+  </point>
+  <point name="input.a.xccwld" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_inba_m.xccwld) THEN  
+#此段落由子樣板a19產生 
+               #校驗代值
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_inba_m.xccwld
+
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_glaald") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_inba_m.xccwld
+            CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_inba_m.xccwld_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_inba_m.xccwld_desc
+            CALL cl_get_para(g_enterprise,g_inba_m.xccwcomp,'S-FIN-6001') RETURNING g_para_data   #采用成本域否
+            CALL cl_get_para(g_enterprise,g_inba_m.xccwcomp,'S-FIN-6002') RETURNING g_para_data1  #成本域类型
+            
+            CALL axct312_03_show_ref()]]>
+  </point>
+  <point name="input.after_input" order="" ver="3" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            LET l_year =g_inba_m.xccw004
+            LET l_month=g_inba_m.xccw005
+            IF l_month = 1 THEN 
+               LET g_xccw_m.yy = l_year - 1
+               LET g_xccw_m.mm = 12
+            ELSE
+               LET g_xccw_m.yy = l_year
+               LET g_xccw_m.mm = l_month - 1 
+            END IF
+            DISPLAY g_xccw_m.yy TO yy
+            DISPLAY g_xccw_m.mm TO mm
+            LET g_xccw_m.ld = g_inba_m.xccwld
+            LET g_xccw_m.comp = g_inba_m.xccwcomp            ]]>
+  </point>
+  <point name="input.before_close" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   IF INT_FLAG THEN
+      LET INT_FLAG = TRUE 
+   ELSE
+#      CALL cl_showmsg_init()
+      CALL axct312_03_xccw_ins(p_xccw012)
+#      CALL cl_err_showmsg()
+   END IF]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF l_month = 1 THEN 
+               LET g_xccw_m.yy = l_year - 1
+               LET g_xccw_m.mm = 12
+            ELSE
+               LET g_xccw_m.yy = l_year
+               LET g_xccw_m.mm = l_month - 1 
+            END IF
+            DISPLAY g_xccw_m.yy TO yy
+            DISPLAY g_xccw_m.mm TO mm]]>
+  </point>
+  <point name="input.c.comp" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_inba_m.comp             #給予default值
+            LET g_qryparam.default2 = "" #g_inba_m.ooefl003 #說明(簡稱)
+            #給予arg
+
+            
+            CALL q_ooef001()                                #呼叫開窗
+
+            LET g_inba_m.comp = g_qryparam.return1              
+            CALL axct312_03_show_ref()
+            DISPLAY g_inba_m.comp TO comp              #
+            #DISPLAY g_inba_m.ooefl003 TO ooefl003 #說明(簡稱)
+            NEXT FIELD comp                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.inba007" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_inba_m.inba007             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_inba_m.inba007 = g_qryparam.return1              
+
+            DISPLAY g_inba_m.inba007 TO inba007              #
+
+            NEXT FIELD inba007                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.inbadocno" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_inba_m.inbadocno             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            LET g_qryparam.arg2 = "" #
+            
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_inba_m.inbadocno = g_qryparam.return1              
+
+            DISPLAY g_inba_m.inbadocno TO inbadocno              #
+
+            NEXT FIELD inbadocno                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.ld" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_inba_m.ld             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_user
+            LET g_qryparam.arg2 = g_dept
+            
+            CALL q_authorised_ld()                                #呼叫開窗
+
+            LET g_inba_m.ld = g_qryparam.return1              
+            CALL axct312_03_show_ref()
+            DISPLAY g_inba_m.ld TO ld              #
+
+            NEXT FIELD ld                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.type" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_inba_m.type             #給予default值
+
+            #給予arg
+
+            
+            CALL q_xcat001()                                #呼叫開窗
+
+            LET g_inba_m.type = g_qryparam.return1              
+            CALL axct312_03_show_ref()
+            DISPLAY g_inba_m.type TO type              #
+
+            NEXT FIELD type                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.xcck003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_inba_m.xcck003             #給予default值
+
+            #給予arg
+
+            
+            CALL q_xcat001()                                #呼叫開窗
+
+            LET g_inba_m.xcck003 = g_qryparam.return1              
+            CALL axct312_03_show_ref()
+            DISPLAY g_inba_m.xcck003 TO xcck003              #
+
+            NEXT FIELD xcck003                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.xcck007" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xcck_m.xcck007             #給予default值
+            LET g_qryparam.default2 = "" #g_xcck_m.inba002 #扣帳日期
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            LET g_qryparam.arg2 = "" #
+            
+            CALL q_inbadocno_4()                                #呼叫開窗
+
+            LET g_xcck_m.xcck007 = g_qryparam.return1              
+            #LET g_xcck_m.inba002 = g_qryparam.return2 
+            DISPLAY g_xcck_m.xcck007 TO xcck007              #
+            #DISPLAY g_xcck_m.inba002 TO inba002 #扣帳日期
+            NEXT FIELD xcck007                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.xcckld" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_inba_m.xcckld             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_user
+            LET g_qryparam.arg2 = g_dept
+            
+            CALL q_authorised_ld()                                #呼叫開窗
+
+            LET g_inba_m.xcckld = g_qryparam.return1              
+            CALL axct312_03_show_ref()
+            DISPLAY g_inba_m.xcckld TO xcckld              #
+
+            NEXT FIELD xcckld                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.xccw003" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_inba_m.xccw003             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_xcat001()                                #呼叫開窗
+
+            LET g_inba_m.xccw003 = g_qryparam.return1              
+
+            DISPLAY g_inba_m.xccw003 TO xccw003              #
+
+            NEXT FIELD xccw003                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.xccwld" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_inba_m.xccwld             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_user
+            LET g_qryparam.arg2 = g_dept
+            
+            CALL q_authorised_ld()                                #呼叫開窗
+
+            LET g_inba_m.xccwld = g_qryparam.return1              
+
+            DISPLAY g_inba_m.xccwld TO xccwld              #
+
+            NEXT FIELD xccwld                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE p_xccw012       LIKE xccw_t.xccw012
+   DEFINE l_year          LIKE type_t.num5
+   DEFINE l_month         LIKE type_t.num5
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_ooef003       LIKE ooef_t.ooef003]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   p_xccw012]]>
+  </point>
+  <point name="input.more_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      CONSTRUCT BY NAME g_wc ON inaj001,inaj005,inaj016
+         BEFORE CONSTRUCT
+         
+         ON ACTION controlp INFIELD inaj001
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+             #140912
+            IF p_xccw012 = '1' OR p_xccw012 = '2' OR p_xccw012 = '3' THEN 
+               LET g_qryparam.where = "       TO_CHAR(inaj022,'YYYY') = ",g_inba_m.xccw004,
+                                   "   AND TO_CHAR(inaj022,'MM') = ",g_inba_m.xccw005,
+                                   "   AND inajsite IN (SELECT ooef001 FROM ooef_t ",
+                                   " WHERE ooefent = '",g_enterprise,"'",
+                                   "   AND ooef017 = '",g_inba_m.xccwcomp,"')"  
+                                   
+                                   
+               IF p_xccw012 = '1' THEN 
+#                  
+                  LET g_qryparam.arg1 = '101'
+               END IF
+               IF p_xccw012 = '2' THEN 
+                  LET g_qryparam.arg1 = '301'
+               END IF
+               IF p_xccw012 = '3' THEN 
+                  LET g_qryparam.arg1 = '115'
+               END IF
+               IF p_xccw012 = '5' THEN 
+                  LET g_qryparam.arg1 = '401'
+               END IF
+               LET g_qryparam.arg2 = g_inba_m.xccwcomp 
+      
+                CALL q_inaj001_1() 
+            END IF
+            
+            DISPLAY g_qryparam.return1 TO inaj001  #顯示到畫面上
+            NEXT FIELD inaj001                     #返回原欄位
+         
+         ON ACTION controlp INFIELD inaj005
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaf001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaj005  #顯示到畫面上
+            NEXT FIELD inaj005                    #返回原欄位
+         
+         ON ACTION controlp INFIELD inaj016
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE  
+            LET g_qryparam.arg1 = '216'             
+            CALL q_oocq002()                                #呼叫開窗            
+            DISPLAY g_qryparam.return1 TO inaj016
+            NEXT FIELD inba007                          #返回原欄位
+      END CONSTRUCT
+      
+#      INPUT BY NAME g_xccw_m.comp,g_xccw_m.ld,g_xccw_m.type,g_xccw_m.order,g_xccw_m.yy,g_xccw_m.mm
+      INPUT BY NAME g_xccw_m.comp,g_xccw_m.ld,g_xccw_m.type,g_xccw_m.yy,g_xccw_m.mm
+      ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+      
+         #----<<comp>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD comp
+            
+            #add-point:AFTER FIELD comp
+            CALL axct312_03_show_ref()
+            IF NOT cl_null(g_xccw_m.comp) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_xccw_m.comp
+
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooef001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+                  SELECT ooef003 INTO l_ooef003
+                    FROM ooef_t
+                   WHERE ooefent = g_enterprise
+                     AND ooef001 = g_xccw_m.comp
+                  IF l_ooef003 = 'N' THEN 
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'anm-00037'
+                     LET g_errparam.extend = g_xccw_m.comp
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_xccw_m.comp = ''
+                     CALL axct312_03_show_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_xccw_m.comp = ''
+                  CALL axct312_03_show_ref()
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #END add-point
+            
+            #----<<ld>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD ld
+            
+            #add-point:AFTER FIELD ld
+            CALL axct312_03_show_ref()
+            IF NOT cl_null(g_xccw_m.ld) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_xccw_m.ld
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_glaald") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  CALL s_ld_chk_authorization(g_user,g_xccw_m.ld) RETURNING l_success
+                  IF l_success = FALSE THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'axr-00022'
+                     LET g_errparam.extend = g_xccw_m.ld
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_xccw_m.ld = ''
+                     CALL axct312_03_show_ref()
+                     NEXT FIELD CURRENT
+                  END IF 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_xccw_m.ld = ''
+                  CALL axct312_03_show_ref()
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+            #END add-point
+            
+            #----<<type>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD type
+            
+            #add-point:AFTER FIELD type
+            CALL axct312_03_show_ref()
+            IF NOT cl_null(g_xccw_m.type) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_xccw_m.type
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_xcat001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_xccw_m.type = ''
+                  CALL axct312_03_show_ref()
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+
+            #END add-point
+            
+         #----<<comp>>----
+         #Ctrlp:input.c.comp
+         ON ACTION controlp INFIELD comp
+            #add-point:ON ACTION controlp INFIELD comp
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xccw_m.comp             #給予default值
+            LET g_qryparam.default2 = "" #g_inba_m.ooefl003 #說明(簡稱)
+            LET g_qryparam.where = " ooef003 = 'Y'"
+            #給予arg
+
+            
+            CALL q_ooef001()                                #呼叫開窗
+
+            LET g_xccw_m.comp = g_qryparam.return1              
+            CALL axct312_03_show_ref()
+            DISPLAY g_xccw_m.comp TO comp              #
+            #DISPLAY g_inba_m.ooefl003 TO ooefl003 #說明(簡稱)
+            NEXT FIELD comp                          #返回原欄位
+
+
+            #END add-point
+            
+         #----<<ld>>----
+         #Ctrlp:input.c.ld
+         ON ACTION controlp INFIELD ld
+            #add-point:ON ACTION controlp INFIELD ld
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xccw_m.ld             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_user
+            LET g_qryparam.arg2 = g_dept
+            
+            CALL q_authorised_ld()                                #呼叫開窗
+
+            LET g_xccw_m.ld = g_qryparam.return1              
+            CALL axct312_03_show_ref()
+            DISPLAY g_xccw_m.ld TO ld              #
+
+            NEXT FIELD ld                          #返回原欄位
+
+
+            #END add-point
+            
+         #----<<type>>----
+         #Ctrlp:input.c.type
+         ON ACTION controlp INFIELD type
+            #add-point:ON ACTION controlp INFIELD type
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xccw_m.type             #給予default值
+
+            #給予arg
+
+            
+            CALL q_xcat001()                                #呼叫開窗
+
+            LET g_xccw_m.type = g_qryparam.return1              
+            CALL axct312_03_show_ref()
+            DISPLAY g_xccw_m.type TO type              #
+
+            NEXT FIELD type                          #返回原欄位
+
+
+            #END add-point
+      END INPUT]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[     ]]>
+  </point>
+  <point name="input.pre_input" order="" ver="6" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   #出现传参为空----fengmy150709---b
+   IF cl_null(p_xccw012) THEN 
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = ''
+      LET g_errparam.extend = 'xccw012'
+      LET g_errparam.code   = 'axc-00721' 
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN
+   END IF   
+   #出现传参为空----fengmy150709---e   
+   CALL cl_set_combo_scc('xcat003','8904') 
+#   CALL cl_set_combo_scc('order','8914')
+   CALL cl_set_comp_required('comp,ld,type,yy,mm',FALSE)   
+   LET g_errshow = 1
+   CALL cl_get_para(g_enterprise,g_site,'S-FIN-6010') RETURNING l_year
+   CALL cl_get_para(g_enterprise,g_site,'S-FIN-6011') RETURNING l_month
+   LET g_inba_m.xccw004 = l_year
+   LET g_inba_m.xccw005 = l_month 
+   IF p_xccw012 = '3' THEN 
+#      CALL cl_set_comp_visible('inba007',FALSE)
+      CALL cl_set_comp_visible('inaj016',FALSE)
+   ELSE
+#      CALL cl_set_comp_visible('inba007',TRUE)
+      CALL cl_set_comp_visible('inaj016',TRUE)
+   END IF]]>
+  </point>
+  <point name="main.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   p_xccw012]]>
+  </point>
+  <point name="show.head.reference" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+            #INITIALIZE g_ref_fields TO NULL
+            #LET g_ref_fields[1] = g_xcck_m.xcck003
+            #CALL ap_ref_array2(g_ref_fields,"SELECT xcatl003 FROM xcatl_t WHERE xcatlent='"||g_enterprise||"' AND xcatl001=? AND xcatl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            #LET g_xcck_m.xcck003_desc = '', g_rtn_fields[1] , ''
+            #DISPLAY BY NAME g_xcck_m.xcck003_desc
+            #
+            #INITIALIZE g_ref_fields TO NULL
+            #LET g_ref_fields[1] = g_xcck_m.xcckld
+            #CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+            #LET g_xcck_m.xcckld_desc = '', g_rtn_fields[1] , ''
+            #DISPLAY BY NAME g_xcck_m.xcckld_desc
+]]>
+  </point>
+  <section id="axct312_03.description" ver="119" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:6,PR版次:6) Build-000087
+#+ 
+#+ Filename...: axct312_03
+#+ Description: 資料批次產生
+#+ Creator....: 03297(2014-09-03 17:40:04)
+#+ Modifier...: 03297(2015-04-03 14:30:05) -SD/PR-
+]]>
+  </section>
+  <section id="axct312_03.global" ver="16" status="" src="s" readonly="">
+    <![CDATA[#應用 c01b 樣板自動產生(Version:5)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_inba_m        RECORD
+       xccwld LIKE xccw_t.xccwld, 
+   xccwld_desc LIKE type_t.chr80, 
+   xccwcomp LIKE xccw_t.xccwcomp, 
+   xccwcomp_desc LIKE type_t.chr80, 
+   xccw003 LIKE xccw_t.xccw003, 
+   xccw003_desc LIKE type_t.chr80, 
+   xcat003 LIKE xcat_t.xcat003, 
+   xccw004 LIKE xccw_t.xccw004, 
+   xccw005 LIKE xccw_t.xccw005
+       END RECORD
+DEFINE g_inba_m        type_g_inba_m
+ 
+   
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="axct312_03.input" ver="20" status="" src="s" readonly="">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION axct312_03(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define" edit="s"/>}
+   #end add-point
+   #add-point:input段define
+   {<point name="input.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axct312_03 WITH FORM cl_ap_formpath("axc","axct312_03")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_inba_m.xccwld,g_inba_m.xccwcomp,g_inba_m.xccw003,g_inba_m.xcat003,g_inba_m.xccw004, 
+          g_inba_m.xccw005 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xccwld
+            
+            #add-point:AFTER FIELD xccwld
+            {<point name="input.a.xccwld" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xccwld
+            #add-point:BEFORE FIELD xccwld
+            {<point name="input.b.xccwld" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xccwld
+            #add-point:ON CHANGE xccwld
+            {<point name="input.g.xccwld" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xccwcomp
+            
+            #add-point:AFTER FIELD xccwcomp
+            {<point name="input.a.xccwcomp" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xccwcomp
+            #add-point:BEFORE FIELD xccwcomp
+            {<point name="input.b.xccwcomp" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xccwcomp
+            #add-point:ON CHANGE xccwcomp
+            {<point name="input.g.xccwcomp" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xccw003
+            
+            #add-point:AFTER FIELD xccw003
+            {<point name="input.a.xccw003" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xccw003
+            #add-point:BEFORE FIELD xccw003
+            {<point name="input.b.xccw003" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xccw003
+            #add-point:ON CHANGE xccw003
+            {<point name="input.g.xccw003" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xcat003
+            #add-point:BEFORE FIELD xcat003
+            {<point name="input.b.xcat003" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xcat003
+            
+            #add-point:AFTER FIELD xcat003
+            {<point name="input.a.xcat003" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xcat003
+            #add-point:ON CHANGE xcat003
+            {<point name="input.g.xcat003" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xccw004
+            #add-point:BEFORE FIELD xccw004
+            {<point name="input.b.xccw004" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xccw004
+            
+            #add-point:AFTER FIELD xccw004
+            {<point name="input.a.xccw004" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xccw004
+            #add-point:ON CHANGE xccw004
+            {<point name="input.g.xccw004" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD xccw005
+            #add-point:BEFORE FIELD xccw005
+            {<point name="input.b.xccw005" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD xccw005
+            
+            #add-point:AFTER FIELD xccw005
+            {<point name="input.a.xccw005" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE xccw005
+            #add-point:ON CHANGE xccw005
+            {<point name="input.g.xccw005" />}
+            #END add-point 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.xccwld
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xccwld
+            #add-point:ON ACTION controlp INFIELD xccwld
+            {<point name="input.c.xccwld" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xccwcomp
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xccwcomp
+            #add-point:ON ACTION controlp INFIELD xccwcomp
+            {<point name="input.c.xccwcomp" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xccw003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xccw003
+            #add-point:ON ACTION controlp INFIELD xccw003
+            {<point name="input.c.xccw003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xcat003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xcat003
+            #add-point:ON ACTION controlp INFIELD xcat003
+            {<point name="input.c.xcat003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xccw004
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xccw004
+            #add-point:ON ACTION controlp INFIELD xccw004
+            {<point name="input.c.xccw004" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.xccw005
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD xccw005
+            #add-point:ON ACTION controlp INFIELD xccw005
+            {<point name="input.c.xccw005" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axct312_03 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="axct312_03.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="axct312_03.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

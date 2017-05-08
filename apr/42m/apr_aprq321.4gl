@@ -1,0 +1,2378 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aprq321.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:2(2016-01-28 10:48:06), PR版次:0002(2016-02-04 09:51:18)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000037
+#+ Filename...: aprq321
+#+ Description: 專櫃促銷活動清單查詢作業
+#+ Creator....: 06254(2015-09-25 12:02:17)
+#+ Modifier...: 04226 -SD/PR- 04226
+ 
+{</section>}
+ 
+{<section id="aprq321.global" >}
+#應用 q02 樣板自動產生(Version:42)
+#add-point:填寫註解說明 name="global.memo"
+
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_prei_d RECORD
+       #statepic       LIKE type_t.chr1,
+       
+       pregsite LIKE preg_t.pregsite, 
+   pregsite_desc LIKE type_t.chr500, 
+   preg001 LIKE preg_t.preg001, 
+   preg003 LIKE preg_t.preg003, 
+   preg003_desc LIKE type_t.chr500, 
+   preg004 LIKE preg_t.preg004, 
+   preh003 LIKE preh_t.preh003, 
+   preh004 LIKE preh_t.preh004, 
+   preiseq LIKE prei_t.preiseq, 
+   prei003 LIKE prei_t.prei003, 
+   prei003_desc LIKE type_t.chr500, 
+   prei004 LIKE prei_t.prei004, 
+   prei004_desc LIKE type_t.chr500, 
+   prei009 LIKE prei_t.prei009, 
+   prei010 LIKE prei_t.prei010, 
+   l_state LIKE type_t.chr10, 
+   prei007 LIKE prei_t.prei007, 
+   prei008 LIKE prei_t.prei008, 
+   prei022 LIKE prei_t.prei022, 
+   prei023 LIKE prei_t.prei023, 
+   prei080 LIKE prei_t.prei080, 
+   prei082 LIKE prei_t.prei082 
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數-標準(Module Variable)  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+ TYPE type_g_prei2_d RECORD
+   pregent LIKE preg_t.pregent, 
+   pregunit LIKE preg_t.pregunit, 
+   pregunit_desc LIKE type_t.chr500, 
+   pregstus LIKE preg_t.pregstus, 
+   preg001 LIKE preg_t.preg001, 
+   preg002 LIKE preg_t.preg002, 
+   preg003 LIKE preg_t.preg003, 
+   preg003_1_desc LIKE type_t.chr500, 
+   preg004 LIKE preg_t.preg004, 
+   preg005 LIKE preg_t.preg005, 
+   preg006 LIKE preg_t.preg006, 
+   preg006_desc LIKE type_t.chr500, 
+   preg007 LIKE preg_t.preg007, 
+   preg007_desc LIKE type_t.chr500, 
+   preg008 LIKE preg_t.preg008, 
+   preg008_desc LIKE type_t.chr500, 
+   preg009 LIKE preg_t.preg009, 
+   preg009_desc LIKE type_t.chr500, 
+   preg010 LIKE preg_t.preg010, 
+   preg010_desc LIKE type_t.chr500, 
+   preg011 LIKE preg_t.preg011, 
+   preg011_desc LIKE type_t.chr500, 
+   preg012 LIKE preg_t.preg012, 
+   preg012_desc LIKE type_t.chr500, 
+   preg013 LIKE preg_t.preg013, 
+   preg014 LIKE preg_t.preg014, 
+   preg015 LIKE preg_t.preg015, 
+   preg016 LIKE preg_t.preg016, 
+   preg016_desc LIKE type_t.chr500, 
+   preg017 LIKE preg_t.preg017, 
+   preg017_desc LIKE type_t.chr500, 
+   preg018 LIKE preg_t.preg018, 
+   pregownid LIKE preg_t.pregownid, 
+   pregownid_desc LIKE type_t.chr500, 
+   pregowndp LIKE preg_t.pregowndp, 
+   pregowndp_desc LIKE type_t.chr500, 
+   pregcrtid LIKE preg_t.pregcrtid, 
+   pregcrtid_desc LIKE type_t.chr500, 
+   pregcrtdp LIKE preg_t.pregcrtdp, 
+   pregcrtdp_desc LIKE type_t.chr500, 
+   pregcrtdt DATETIME YEAR TO SECOND, 
+   pregmodid LIKE preg_t.pregmodid, 
+   pregmodid_desc LIKE type_t.chr500, 
+   pregmoddt DATETIME YEAR TO SECOND, 
+   pregcnfid LIKE preg_t.pregcnfid, 
+   pregcnfid_desc LIKE type_t.chr500, 
+   pregcnfdt DATETIME YEAR TO SECOND, 
+   pregpstid LIKE preg_t.pregpstid, 
+   pregpstid_desc LIKE type_t.chr500, 
+   pregpstdt LIKE preg_t.pregpstdt, 
+   preg050 LIKE preg_t.preg050, 
+   preg051 LIKE preg_t.preg051, 
+   preient LIKE prei_t.preient, 
+   preiunit LIKE prei_t.preiunit, 
+   preisite LIKE prei_t.preisite, 
+   preiacti LIKE prei_t.preiacti, 
+   preiseq LIKE prei_t.preiseq, 
+   prei001 LIKE prei_t.prei001, 
+   prei002 LIKE prei_t.prei002, 
+   prei003 LIKE prei_t.prei003, 
+   prei003_1_desc LIKE type_t.chr500, 
+   prei004 LIKE prei_t.prei004, 
+   prei004_1_desc LIKE type_t.chr500, 
+   prei005 LIKE prei_t.prei005, 
+   prei005_desc LIKE type_t.chr500, 
+   prei006 LIKE prei_t.prei006, 
+   prei006_desc LIKE type_t.chr500, 
+   prei007 LIKE prei_t.prei007, 
+   prei008 LIKE prei_t.prei008, 
+   prei009 LIKE prei_t.prei009, 
+   prei010 LIKE prei_t.prei010, 
+   prei011 LIKE prei_t.prei011, 
+   prei012 LIKE prei_t.prei012, 
+   prei013 LIKE prei_t.prei013, 
+   prei014 LIKE prei_t.prei014, 
+   prei015 LIKE prei_t.prei015, 
+   prei016 LIKE prei_t.prei016, 
+   prei017 LIKE prei_t.prei017, 
+   prei018 LIKE prei_t.prei018, 
+   prei019 LIKE prei_t.prei019, 
+   prei020 LIKE prei_t.prei020, 
+   prei021 LIKE prei_t.prei021, 
+   prei022 LIKE prei_t.prei022, 
+   prei023 LIKE prei_t.prei023, 
+   prei024 LIKE prei_t.prei024, 
+   prei025 LIKE prei_t.prei025, 
+   prei026 LIKE prei_t.prei026, 
+   prei027 LIKE prei_t.prei027, 
+   prei028 LIKE prei_t.prei028, 
+   prei029 LIKE prei_t.prei029, 
+   prei030 LIKE prei_t.prei030, 
+   prei031 LIKE prei_t.prei031, 
+   prei032 LIKE prei_t.prei032, 
+   prei033 LIKE prei_t.prei033, 
+   prei034 LIKE prei_t.prei034, 
+   prei035 LIKE prei_t.prei035, 
+   prei036 LIKE prei_t.prei036, 
+   prei037 LIKE prei_t.prei037, 
+   prei038 LIKE prei_t.prei038, 
+   prei039 LIKE prei_t.prei039, 
+   prei040 LIKE prei_t.prei040, 
+   prei041 LIKE prei_t.prei041, 
+   prei042 LIKE prei_t.prei042, 
+   prei043 LIKE prei_t.prei043, 
+   prei044 LIKE prei_t.prei044, 
+   prei045 LIKE prei_t.prei045, 
+   prei046 LIKE prei_t.prei046, 
+   prei047 LIKE prei_t.prei047, 
+   prei048 LIKE prei_t.prei048, 
+   prei049 LIKE prei_t.prei049, 
+   prei050 LIKE prei_t.prei050, 
+   prei051 LIKE prei_t.prei051, 
+   prei052 LIKE prei_t.prei052, 
+   prei053 LIKE prei_t.prei053, 
+   prei054 LIKE prei_t.prei054, 
+   prei055 LIKE prei_t.prei055, 
+   prei056 LIKE prei_t.prei056, 
+   prei057 LIKE prei_t.prei057, 
+   prei058 LIKE prei_t.prei058, 
+   prei059 LIKE prei_t.prei059, 
+   prei060 LIKE prei_t.prei060, 
+   prei061 LIKE prei_t.prei061, 
+   prei062 LIKE prei_t.prei062, 
+   prei063 LIKE prei_t.prei063, 
+   prei064 LIKE prei_t.prei064, 
+   prei065 LIKE prei_t.prei065, 
+   prei066 LIKE prei_t.prei066, 
+   prei067 LIKE prei_t.prei067, 
+   prei068 LIKE prei_t.prei068, 
+   prei069 LIKE prei_t.prei069, 
+   prei070 LIKE prei_t.prei070, 
+   prei071 LIKE prei_t.prei071, 
+   prei072 LIKE prei_t.prei072, 
+   prei073 LIKE prei_t.prei073, 
+   prei074 LIKE prei_t.prei074, 
+   prei075 LIKE prei_t.prei075, 
+   prei076 LIKE prei_t.prei076, 
+   prei077 LIKE prei_t.prei077, 
+   prei078 LIKE prei_t.prei078, 
+   prei079 LIKE prei_t.prei079, 
+   prei080 LIKE prei_t.prei080, 
+   prei081 LIKE prei_t.prei081, 
+   prei082 LIKE prei_t.prei082, 
+   prei083 LIKE prei_t.prei083, 
+   prei084 LIKE prei_t.prei084, 
+   prei085 LIKE prei_t.prei085, 
+   prei086 LIKE prei_t.prei086, 
+   prei087 LIKE prei_t.prei087, 
+   prei088 LIKE prei_t.prei088, 
+   prei089 LIKE prei_t.prei089, 
+   prei090 LIKE prei_t.prei090, 
+   prei091 LIKE prei_t.prei091, 
+   prei092 LIKE prei_t.prei092, 
+   prei093 LIKE prei_t.prei093, 
+   prei094 LIKE prei_t.prei094, 
+   prei095 LIKE prei_t.prei095, 
+   prei096 LIKE prei_t.prei096, 
+   prei097 LIKE prei_t.prei097, 
+   prei098 LIKE prei_t.prei098, 
+   prei099 LIKE prei_t.prei099, 
+   prei099_desc LIKE type_t.chr500, 
+   prei100 LIKE prei_t.prei100, 
+   prehent LIKE preh_t.prehent, 
+   prehunit LIKE preh_t.prehunit, 
+   prehsite LIKE preh_t.prehsite, 
+   prehacti LIKE preh_t.prehacti, 
+   preh001 LIKE preh_t.preh001, 
+   preh002 LIKE preh_t.preh002, 
+   preh003 LIKE preh_t.preh003, 
+   preh004 LIKE preh_t.preh004, 
+   preh005 LIKE preh_t.preh005, 
+   preh006 LIKE preh_t.preh006, 
+   preh007 LIKE preh_t.preh007, 
+   preh008 LIKE preh_t.preh008
+       END RECORD
+            
+DEFINE g_prei2_d   DYNAMIC ARRAY OF type_g_prei2_d
+DEFINE g_prei2_d_t type_g_prei2_d
+
+DEFINE g_check   RECORD 
+                    checkdetail   LIKE type_t.chr1,
+                    preg013       LIKE type_t.chr1,
+                    preg050       LIKE type_t.chr1,
+                    prei059       LIKE type_t.chr1,
+                    prei062       LIKE type_t.chr1,
+                    prei074       LIKE type_t.chr1
+                    END RECORD
+#DEFINE l_checkdetail   LIKE type_t.chr1
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_master                     type_g_prei_d
+DEFINE g_master_t                   type_g_prei_d
+DEFINE g_prei_d          DYNAMIC ARRAY OF type_g_prei_d
+DEFINE g_prei_d_t        type_g_prei_d
+ 
+      
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10              #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num5              #目前所在頁數
+DEFINE g_detail_cnt         LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_detail_cnt2        LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+DEFINE g_detail_idx         LIKE type_t.num10
+DEFINE g_detail_idx2        LIKE type_t.num10
+DEFINE g_hyper_url          STRING                        #hyperlink的主要網址
+DEFINE g_tot_cnt            LIKE type_t.num10             #計算總筆數
+DEFINE g_num_in_page        LIKE type_t.num10             #每頁筆數
+DEFINE g_current_row_tot    LIKE type_t.num10             #目前所在總筆數
+DEFINE g_page_act_list      STRING                        #分頁ACTION清單
+DEFINE g_page_start_num     LIKE type_t.num10             #目前頁面起始筆數
+DEFINE g_page_end_num       LIKE type_t.num10             #目前頁面結束筆數
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+DEFINE g_wc_filter_table    STRING
+DEFINE g_detail_page_action STRING
+DEFINE g_pagestart          LIKE type_t.num10
+ 
+ 
+ 
+#add-point:自定義模組變數-客製(Module Variable) name="global.variable_customerization"
+
+##end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aprq321.main" >}
+ #應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   DEFINE l_success LIKE type_t.num5
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("apr","")
+ 
+   #add-point:作業初始化 name="main.init"
+   
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = " ", 
+                      " FROM ",
+                      " "
+   #add-point:SQL_define name="main.after_define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE aprq321_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT  ",
+               " FROM  t0",
+               
+               " WHERE  "
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   
+   #end add-point
+   PREPARE aprq321_master_referesh FROM g_sql
+ 
+   #add-point:main段define_sql name="main.body.define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = ""
+   #add-point:main段define_sql name="main.body.after_define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE aprq321_bcl CURSOR FROM g_forupd_sql
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aprq321 WITH FORM cl_ap_formpath("apr",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aprq321_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aprq321_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_aprq321
+      
+   END IF 
+   
+   CLOSE aprq321_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   CALL s_aooi500_drop_temp() RETURNING l_success    #add by dengdd 151014
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aprq321.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION aprq321_init()
+   #add-point:init段define-客製 name="init.define_customerization"
+   
+   #end add-point
+   #add-point:init段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   DEFINE l_success LIKE type_t.num5
+   #end add-point
+   
+ 
+   #add-point:FUNCTION前置處理 name="init.before_function"
+   
+   #end add-point
+ 
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   
+   
+   
+   #add-point:畫面資料初始化 name="init.init"
+
+   CALL cl_set_combo_scc('preg004','6808')
+   CALL cl_set_combo_scc('prei060','6801')
+   CALL cl_set_combo_scc('prei061','6802')
+   CALL cl_set_combo_scc('prei081','6809')
+   CALL cl_set_combo_scc('preh007','6520')
+   CALL cl_set_combo_scc('preh008','6810')
+   CALL cl_set_combo_scc('preg051','6866')
+   
+   CALL cl_set_combo_scc('b_preg004','6808')
+   CALL cl_set_combo_scc_part('b_pregstus','13','N,Y,F,X')
+   CALL cl_set_combo_scc('b_preg004_1','6808')
+   CALL cl_set_combo_scc('b_preg005','6805')
+   CALL cl_set_combo_scc('b_preg051','6866')
+   CALL cl_set_combo_scc('b_prei060','6801')
+   CALL cl_set_combo_scc('b_prei061','6802')
+   CALL cl_set_combo_scc('b_prei081','6809')
+   CALL cl_set_combo_scc('b_prei100','6860')
+   CALL cl_set_combo_scc('b_preh007','6520')
+   CALL cl_set_combo_scc('b_preh008','6810')
+   
+   CALL s_aooi500_create_temp() RETURNING l_success   #add by dengdd 151014
+   #end add-point
+ 
+   CALL aprq321_default_search()  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprq321.default_search" >}
+PRIVATE FUNCTION aprq321_default_search()
+   #add-point:default_search段define-客製 name="default_search.define_customerization"
+   
+   #end add-point
+   #add-point:default_search段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point
+ 
+   #add-point:default_search段開始前 name="default_search.before"
+   
+   #end add-point
+ 
+   #應用 qs27 樣板自動產生(Version:3)
+   #+ 組承接外部參數時資料庫欄位對應條件(單身)
+   IF NOT cl_null(g_argv[01]) THEN
+      LET g_wc = g_wc, " preiseq = '", g_argv[01], "' AND "
+   END IF
+ 
+   IF NOT cl_null(g_argv[02]) THEN
+      LET g_wc = g_wc, " prei001 = '", g_argv[02], "' AND "
+   END IF
+ 
+ 
+ 
+ 
+ 
+ 
+   IF NOT cl_null(g_wc) THEN
+      LET g_wc = g_wc.subString(1,g_wc.getLength()-5)
+   ELSE
+      #預設查詢條件
+      LET g_wc = " 1=2"
+   END IF
+ 
+   #add-point:default_search段開始後 name="default_search.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprq321.ui_dialog" >}
+#+ 功能選單 
+PRIVATE FUNCTION aprq321_ui_dialog()
+   #add-point:ui_dialog段define-客製 name="ui_dialog.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_wc      STRING
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE lc_action_choice_old     STRING
+   DEFINE lc_current_row           LIKE type_t.num10
+   DEFINE ls_js      STRING
+   DEFINE la_param   RECORD
+                     prog       STRING,
+                     actionid   STRING,
+                     background LIKE type_t.chr1,
+                     param      DYNAMIC ARRAY OF STRING
+                     END RECORD
+   #add-point:ui_dialog段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   
+   #end add-point 
+ 
+   #add-point:FUNCTION前置處理 name="ui_dialog.before_function"
+   
+   #end add-point
+ 
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "
+   LET lc_action_choice_old = ""
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   CALL cl_get_num_in_page() RETURNING g_num_in_page
+         
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+ 
+   #end add-point
+ 
+   LET g_detail_page_action = "detail_first"
+   LET g_pagestart = 1
+   LET g_current_row_tot = 1
+   LET g_page_start_num = 1
+   LET g_page_end_num = g_num_in_page
+   IF NOT cl_null(g_wc) AND g_wc != " 1=2" THEN
+      LET g_detail_idx = 1
+      LET g_detail_idx2 = 1
+      CALL aprq321_b_fill()
+   ELSE
+      CALL aprq321_query()
+   END IF
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_prei_d.clear()
+ 
+         LET g_wc  = " 1=2"
+         LET g_wc2 = " 1=1"
+         LET g_action_choice = ""
+         LET g_detail_page_action = "detail_first"
+         LET g_pagestart = 1
+         LET g_current_row_tot = 1
+         LET g_page_start_num = 1
+         LET g_page_end_num = g_num_in_page
+         LET g_detail_idx = 1
+         LET g_detail_idx2 = 1
+ 
+         CALL aprq321_init()
+      END IF
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_prei_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+ 
+               #為避免按上下筆影響執行效能，所以有作一些處理
+               LET lc_action_choice_old = g_action_choice
+               LET g_action_choice = "fetch"
+               CALL aprq321_fetch()
+               LET g_action_choice = lc_action_choice_old
+               LET g_master_idx = l_ac
+               CALL aprq321_detail_action_trans()
+               #add-point:input段before row name="input.body.before_row"
+               
+               #end add-point  
+            
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+            #add-point:page1自定義行為 name="ui_dialog.body.page1.action"
+            
+            #end add-point
+ 
+         END DISPLAY
+      
+ 
+         
+ 
+      
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         #160126-00002#1 160128 By pomelo add(S)
+         CONSTRUCT g_wc
+                ON preg003,pregsite,preg004,preg051,prei081,
+                   preh003,preh004,preg014,preg015,preg011,preg012,
+                   prei003,prei004,preh007,preh008,prei060,prei061,
+                   preg013,preg050,prei059,prei062,prei074,prei058
+              FROM preg003,pregsite,preg004,preg051,prei081,
+                   preh003,preh004,preg014,preg015,preg011,preg012,
+                   prei003,prei004,preh007,preh008,prei060,prei061,
+                   preg013,preg050,prei059,prei062,prei074,prei058
+                   
+            ON ACTION controlp INFIELD pregsite
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c' 
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.where = s_aooi500_q_where(g_prog,'pregsite',g_site,'c')
+               CALL q_ooef001_24()
+               DISPLAY g_qryparam.return1 TO pregsite
+               NEXT FIELD pregsite
+            
+             ON ACTION controlp INFIELD preg003
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c' 
+               LET g_qryparam.reqry = FALSE
+		   	   LET g_qryparam.where = " prcf051 IS NOT NULL "
+               CALL q_prcf001_1()
+               DISPLAY g_qryparam.return1 TO preg003
+               NEXT FIELD preg003
+               
+             ON ACTION controlp INFIELD preg011
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c' 
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()
+               DISPLAY g_qryparam.return1 TO preg011
+               NEXT FIELD preg011
+            
+             ON ACTION controlp INFIELD preg012
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c' 
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooeg001_9()
+               DISPLAY g_qryparam.return1 TO preg012
+               NEXT FIELD preg012
+               
+               
+             ON ACTION controlp INFIELD prei003
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c' 
+               LET g_qryparam.reqry = FALSE
+               CALL q_inaa001_14()
+               DISPLAY g_qryparam.return1 TO prei003
+               NEXT FIELD prei003
+               
+             ON ACTION controlp INFIELD prei004
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c' 
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1=g_site
+               CALL q_mhae001()
+               DISPLAY g_qryparam.return1 TO prei004
+               NEXT FIELD prei004
+          
+         END CONSTRUCT
+      
+ 
+         INPUT g_check.checkdetail FROM l_checkdetail ATTRIBUTE(WITHOUT DEFAULTS)
+         
+            AFTER FIELD l_checkdetail              
+               LET g_check.checkdetail = GET_FLDBUF(l_checkdetail)
+         
+         END INPUT
+         #160126-00002#1 160128 By pomelo add(E)
+         DISPLAY ARRAY g_prei2_d TO s_detail2.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx
+ 
+               #為避免按上下筆影響執行效能，所以有作一些處理
+               LET lc_action_choice_old = g_action_choice
+               LET g_action_choice = "fetch"
+               CALL aprq321_fetch()
+               LET g_action_choice = lc_action_choice_old
+               LET g_master_idx = l_ac
+               CALL aprq321_detail_action_trans()
+               #add-point:input段before row
+
+               #end add-point  
+            
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+            #add-point:page1自定義行為
+
+            #end add-point
+ 
+         END DISPLAY
+         #end add-point
+         
+         BEFORE DIALOG
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            CALL aprq321_detail_action_trans()
+ 
+            #add-point:ui_dialog段before dialog name="ui_dialog.bef_dialog"
+            CALL cl_set_comp_visible('page_2',FALSE)
+            
+            LET g_check.checkdetail='N'
+            LET g_check.preg013    ='N'
+            LET g_check.preg050    ='N'
+            LET g_check.prei059    ='N'
+            LET g_check.prei062    ='N'
+            LET g_check.prei074    ='N'
+            
+            DISPLAY g_check.checkdetail,g_check.preg013,g_check.preg050,g_check.prei059,g_check.prei062,g_check.prei074
+                 TO l_checkdetail,preg013,preg050,prei059,prei062,prei074
+            
+            #160126-00002#1 160128 By pomelo add(S)
+            CALL cl_set_act_visible("insert,query", FALSE)
+            CALL cl_set_act_visible("selall,selnone,sel,unsel", FALSE)
+            CALL cl_set_comp_visible("sel", FALSE)
+            #160126-00002#1 160128 By pomelo add(E)
+            #end add-point
+ 
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL aprq321_insert()
+               #add-point:ON ACTION insert name="menu.insert"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL aprq321_query()
+               #add-point:ON ACTION query name="menu.query"
+               CALL aprq321_query2()
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo name="menu.datainfo"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL aprq321_filter()
+            #add-point:ON ACTION filter name="menu.filter"
+            
+            #END add-point
+ 
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+ 
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION datarefresh   # 重新整理
+            LET g_error_show = 1
+            CALL aprq321_b_fill()
+ 
+         ON ACTION exporttoexcel   #匯出excel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_prei_d)
+               LET g_export_id[1]   = "s_detail1"
+ 
+               #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+               IF g_check.checkdetail='Y' THEN
+                  LET g_export_node[2] = base.typeInfo.create(g_prei2_d)
+                  LET g_export_id[2]   = "s_detail2"
+               END IF
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+ 
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum name="ui_dialog.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+ 
+         ON ACTION detail_first               #page first
+            LET g_action_choice = "detail_first"
+            LET g_detail_page_action = "detail_first"
+            CALL aprq321_b_fill()
+ 
+         ON ACTION detail_previous                #page previous
+            LET g_action_choice = "detail_previous"
+            LET g_detail_page_action = "detail_previous"
+            CALL aprq321_b_fill()
+ 
+         ON ACTION detail_next                #page next
+            LET g_action_choice = "detail_next"
+            LET g_detail_page_action = "detail_next"
+            CALL aprq321_b_fill()
+ 
+         ON ACTION detail_last                #page last
+            LET g_action_choice = "detail_last"
+            LET g_detail_page_action = "detail_last"
+            CALL aprq321_b_fill()
+ 
+         
+         
+ 
+         #add-point:ui_dialog段自定義action name="ui_dialog.more_action"
+         #160126-00002#1 160128 By pomelo add(S)
+         ON ACTION ACCEPT
+            IF g_check.checkdetail='Y' THEN
+                 CALL cl_set_comp_visible('page_2',TRUE)
+            ELSE 
+                 CALL cl_set_comp_visible('page_2',FALSE)
+            END IF
+            LET g_detail_idx = 1
+            LET g_detail_idx2 = 1
+            CALL aprq321_b_fill()
+            IF g_prei_d.getLength() > 0 THEN
+               CALL DIALOG.setCurrentRow("s_detail1", g_detail_idx)
+               CALL aprq321_b_fill2()
+            END IF
+ 
+            IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ""
+               LET g_errparam.code   = -100
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+            END IF
+         #160126-00002#1 160128 By pomelo add(E)
+         #end add-point
+      
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+ 
+         #add-point:查詢方案相關ACTION設定前 name="ui_dialog.set_qbe_action_before"
+         
+         #end add-point
+ 
+         #add-point:查詢方案相關ACTION設定後 name="ui_dialog.set_qbe_action_after"
+         
+         #end add-point
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprq321.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION aprq321_query()
+   #add-point:query段define-客製 name="query.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_wc2     LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   RETURN
+   #end add-point 
+   
+   #add-point:FUNCTION前置處理 name="query.before_function"
+   
+   #end add-point
+ 
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_prei_d.clear()
+ 
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+   
+   LET g_qryparam.state = "c"
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_wc_filter = " 1=1"
+   LET g_detail_page_action = ""
+   LET g_pagestart = 1
+   
+   #wc備份
+   LET ls_wc = g_wc
+   LET ls_wc2 = g_wc2
+   LET g_master_idx = l_ac
+ 
+   
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc_table ON pregsite
+           FROM s_detail1[1].b_pregsite
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct name="cs.head.before_construct"
+            
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+                #----<<b_pregsite>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_pregsite
+            #add-point:BEFORE FIELD b_pregsite name="construct.b.page1.b_pregsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_pregsite
+            
+            #add-point:AFTER FIELD b_pregsite name="construct.a.page1.b_pregsite"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_pregsite
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_pregsite
+            #add-point:ON ACTION controlp INFIELD b_pregsite name="construct.c.page1.b_pregsite"
+            
+            #END add-point
+ 
+ 
+         #----<<b_pregsite_desc>>----
+         #----<<b_preg003>>----
+         #----<<b_preg003_desc>>----
+         #----<<b_preg004>>----
+         #----<<b_preh003>>----
+         #----<<b_preh004>>----
+         #----<<b_prei003>>----
+         #----<<b_prei003_desc>>----
+         #----<<b_prei004>>----
+         #----<<b_prei004_desc>>----
+         #----<<l_state>>----
+         #----<<b_prei007>>----
+         #----<<b_prei008>>----
+         #----<<b_prei022>>----
+         #----<<b_prei023>>----
+         #----<<b_prei080>>----
+         #----<<b_prei082>>----
+   
+       
+      END CONSTRUCT
+      
+ 
+      
+ 
+  
+      #add-point:query段more_construct name="query.more_construct"
+      
+      #end add-point 
+ 
+      ON ACTION accept
+         #add-point:ON ACTION accept name="query.accept"
+         
+         #end add-point
+ 
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+ 
+      #add-point:query段查詢方案相關ACTION設定前 name="query.set_qbe_action_before"
+      
+      #end add-point 
+ 
+      ON ACTION qbeclear   # 條件清除
+         CLEAR FORM
+         #add-point:條件清除後 name="query.qbeclear"
+         
+         #end add-point 
+ 
+      #add-point:query段查詢方案相關ACTION設定後 name="query.set_qbe_action_after"
+      
+      #end add-point 
+ 
+   END DIALOG
+ 
+   
+ 
+   LET g_wc = g_wc_table 
+ 
+ 
+   
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+ 
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc = " 1=2"
+      LET g_wc2 = " 1=1"
+      LET g_wc_filter = g_wc_filter_t
+      RETURN
+   ELSE
+      LET g_master_idx = 1
+   END IF
+        
+   #add-point:cs段after_construct name="cs.after_construct"
+   
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL aprq321_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = -100 
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+   END IF
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprq321.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION aprq321_b_fill()
+   #add-point:b_fill段define-客製 name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc           STRING
+   DEFINE ls_wc2          STRING
+   DEFINE ls_sql_rank     STRING
+   #add-point:b_fill段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   DEFINE l_where         STRING
+   #end add-point
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   CALL s_aooi500_sql_where(g_prog,'pregsite') RETURNING l_where
+   #end add-point
+ 
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter, cl_sql_auth_filter()   #(ver:40) add cl_sql_auth_filter()
+ 
+   LET ls_sql_rank = "SELECT  UNIQUE '','','','','','','','','',prei003,'',prei004,'','','','',prei007, 
+       prei008,prei022,prei023,prei080,prei082  ,DENSE_RANK() OVER( ORDER BY prei_t.preiseq,prei_t.prei001) AS RANK FROM prei_t", 
+ 
+ 
+ 
+                     "",
+                     " WHERE preient= ? AND 1=1 AND ", ls_wc
+    
+   LET ls_sql_rank = ls_sql_rank, cl_sql_add_filter("prei_t"),
+                     " ORDER BY prei_t.preiseq,prei_t.prei001"
+ 
+   #add-point:b_fill段rank_sql_after name="b_fill.rank_sql_after"
+   LET ls_wc=ls_wc CLIPPED," AND ",l_where
+   
+   LET ls_sql_rank = "SELECT UNIQUE pregsite,t3.ooefl003,preg001,preg003,t4.prcfl003,preg004,preh003,preh004,preiseq,prei003,t5.inayl003,prei004,t6.mhael023,
+                                    prei009,prei010,'',prei007,prei008,prei022,prei023,prei080,prei082 ,
+                                    DENSE_RANK() OVER( ORDER BY t0.pregsite,t0.preg001,t1.preiseq) AS RANK ", 
+                     "  FROM preg_t t0 ",
+                     "  LEFT OUTER JOIN prei_t  t1 ON t1.preient=t0.pregent  AND t1.prei001=t0.preg001 ",
+                     "  LEFT OUTER JOIN preh_t  t2 ON t2.prehent=t0.pregent  AND t2.preh001=t0.preg001 ",
+                     "  LEFT OUTER JOIN ooefl_t t3 ON t3.ooeflent=t0.pregent AND t3.ooefl001=t0.pregsite AND t3.ooefl002 ='",g_dlang,"'",
+                     "  LEFT OUTER JOIN prcfl_t t4 ON t4.prcflent=t0.pregent AND t4.prcfl001=t0.preg003  AND t4.prcfl002 ='",g_dlang,"'",
+                     "  LEFT OUTER JOIN inayl_t t5 ON t5.inaylent=t1.preient AND t5.inayl001=t1.prei003  AND t5.inayl002 ='",g_dlang,"'",
+                     "  LEFT OUTER JOIN mhael_t t6 ON t6.mhaelent=t1.preient AND t6.mhael001=t1.prei004  AND t6.mhael022 ='",g_dlang,"'",
+                     " WHERE t0.pregent= ? AND 1=1 AND ", ls_wc
+    
+   LET ls_sql_rank = ls_sql_rank, cl_sql_add_filter("prei_t"),
+                     " ORDER BY t0.pregsite,t0.preg001,t1.preiseq"
+  
+   #end add-point
+ 
+   LET g_sql = "SELECT COUNT(1) FROM (",ls_sql_rank,")"
+ 
+   PREPARE b_fill_cnt_pre FROM g_sql
+   EXECUTE b_fill_cnt_pre USING g_enterprise INTO g_tot_cnt
+   FREE b_fill_cnt_pre
+ 
+   #add-point:b_fill段rank_sql_after_count name="b_fill.rank_sql_after_count"
+   
+   #end add-point
+ 
+   CASE g_detail_page_action
+      WHEN "detail_first"
+          LET g_pagestart = 1
+ 
+      WHEN "detail_previous"
+          LET g_pagestart = g_pagestart - g_num_in_page
+          IF g_pagestart < 1 THEN
+              LET g_pagestart = 1
+          END IF
+ 
+      WHEN "detail_next"
+         LET g_pagestart = g_pagestart + g_num_in_page
+         IF g_pagestart > g_tot_cnt THEN
+            LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+            WHILE g_pagestart > g_tot_cnt
+               LET g_pagestart = g_pagestart - g_num_in_page
+            END WHILE
+         END IF
+ 
+      WHEN "detail_last"
+         LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+         WHILE g_pagestart > g_tot_cnt
+            LET g_pagestart = g_pagestart - g_num_in_page
+         END WHILE
+ 
+      OTHERWISE
+         LET g_pagestart = 1
+ 
+   END CASE
+ 
+   LET g_sql = "SELECT '','','','','','','','','',prei003,'',prei004,'','','','',prei007,prei008,prei022, 
+       prei023,prei080,prei082",
+               " FROM (",ls_sql_rank,")",
+              " WHERE RANK >= ",g_pagestart,
+                " AND RANK < ",g_pagestart + g_num_in_page
+ 
+   #add-point:b_fill段sql_after name="b_fill.sql_after"
+   LET g_sql = "SELECT pregsite,ooefl003,preg001,preg003,prcfl003,preg004,preh003,preh004,preiseq,
+                       prei003,inayl003,prei004,mhael023,prei009,prei010,'',prei007,prei008,prei022, 
+                       prei023,prei080,prei082",
+               " FROM (",ls_sql_rank,")",
+              " WHERE RANK >= ",g_pagestart,
+                " AND RANK < ",g_pagestart + g_num_in_page
+   #end add-point
+ 
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE aprq321_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR aprq321_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_prei_d.clear()
+ 
+   #add-point:陣列清空 name="b_fill.array_clear"
+   
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   IF g_cnt = 0 THEN
+      LET g_cnt = 1
+   END IF
+   LET l_ac = 1   
+ 
+   FOREACH b_fill_curs INTO g_prei_d[l_ac].pregsite,g_prei_d[l_ac].pregsite_desc,g_prei_d[l_ac].preg001, 
+       g_prei_d[l_ac].preg003,g_prei_d[l_ac].preg003_desc,g_prei_d[l_ac].preg004,g_prei_d[l_ac].preh003, 
+       g_prei_d[l_ac].preh004,g_prei_d[l_ac].preiseq,g_prei_d[l_ac].prei003,g_prei_d[l_ac].prei003_desc, 
+       g_prei_d[l_ac].prei004,g_prei_d[l_ac].prei004_desc,g_prei_d[l_ac].prei009,g_prei_d[l_ac].prei010, 
+       g_prei_d[l_ac].l_state,g_prei_d[l_ac].prei007,g_prei_d[l_ac].prei008,g_prei_d[l_ac].prei022,g_prei_d[l_ac].prei023, 
+       g_prei_d[l_ac].prei080,g_prei_d[l_ac].prei082
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #LET g_prei_d[l_ac].statepic = cl_get_actipic(g_prei_d[l_ac].statepic)
+ 
+      
+ 
+      #add-point:b_fill段資料填充 name="b_fill.fill"
+      CASE g_prei_d[l_ac].preg004
+           WHEN '1'   #买换
+                SELECT (g_prei_d[l_ac].prei009||'换'||g_prei_d[l_ac].prei010) INTO g_prei_d[l_ac].l_state FROM DUAL
+                IF STATUS THEN
+                    INITIALIZE g_errparam TO NULL
+                    LET g_errparam.code = SQLCA.sqlcode
+                    LET g_errparam.popup = TRUE
+                    CALL cl_err()
+                    EXIT CASE
+                END IF                
+           WHEN '2'   #买送
+                SELECT (g_prei_d[l_ac].prei009||'送'||g_prei_d[l_ac].prei010) INTO g_prei_d[l_ac].l_state FROM DUAL
+                IF STATUS THEN
+                    INITIALIZE g_errparam TO NULL
+                    LET g_errparam.code = SQLCA.sqlcode
+                    LET g_errparam.popup = TRUE
+                    CALL cl_err()
+                    EXIT CASE
+                END IF 
+                
+           WHEN '3'   #买减
+                SELECT (g_prei_d[l_ac].prei009||'减'||g_prei_d[l_ac].prei010) INTO g_prei_d[l_ac].l_state FROM DUAL
+                IF STATUS THEN
+                    INITIALIZE g_errparam TO NULL
+                    LET g_errparam.code = SQLCA.sqlcode
+                    LET g_errparam.popup = TRUE
+                    CALL cl_err()
+                    EXIT CASE
+                END IF 
+                
+           WHEN '4'   #折扣
+                SELECT ((g_prei_d[l_ac].prei010/10)||'折' ) INTO g_prei_d[l_ac].l_state FROM DUAL
+                IF STATUS THEN
+                    INITIALIZE g_errparam TO NULL
+                    LET g_errparam.code = SQLCA.sqlcode
+                    LET g_errparam.popup = TRUE
+                    CALL cl_err()
+                    EXIT CASE
+                END IF 
+                
+           WHEN '5'   #倍换
+                SELECT (g_prei_d[l_ac].prei009||'换'||g_prei_d[l_ac].prei010) INTO g_prei_d[l_ac].l_state FROM DUAL
+                IF STATUS THEN
+                    INITIALIZE g_errparam TO NULL
+                    LET g_errparam.code = SQLCA.sqlcode
+                    LET g_errparam.popup = TRUE
+                    CALL cl_err()  
+                    EXIT CASE
+                END IF 
+          
+          OTHERWISE
+               EXIT CASE
+      END CASE  
+      
+      #end add-point
+ 
+      CALL aprq321_detail_show("'1'")      
+ 
+      CALL aprq321_prei_t_mask()
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "" 
+            LET g_errparam.code = 9035 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+ 
+   
+   CALL g_prei_d.deleteElement(g_prei_d.getLength())   
+ 
+   #add-point:陣列長度調整 name="b_fill.array_deleteElement"
+   
+   #end add-point
+   
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.others.fill"
+   IF g_check.checkdetail='Y' THEN
+      CALL aprq321_b_fill2()
+   END IF
+   #end add-point
+ 
+   LET g_detail_cnt = g_prei_d.getLength()
+#  DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE aprq321_pb
+ 
+   #調整單身index指標，避免翻頁後指到空白筆數
+   CALL aprq321_detail_index_setting()
+ 
+   #重新計算單身筆數並呈現
+   CALL aprq321_detail_action_trans()
+ 
+   IF g_prei_d.getLength() > 0 THEN
+      LET l_ac = 1
+      CALL aprq321_fetch()
+   END IF
+   
+      CALL aprq321_filter_show('pregsite','b_pregsite')
+ 
+ 
+   #add-point:b_fill段結束前 name="b_fill.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprq321.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION aprq321_fetch()
+   #add-point:fetch段define-客製 name="fetch.define_customerization"
+   
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   
+   #end add-point
+   
+   #add-point:FUNCTION前置處理 name="fetch.before_function"
+   
+   #end add-point
+ 
+ 
+   #add-point:陣列清空 name="fetch.array_clear"
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+ 
+   
+   #add-point:單身填充後 name="fetch.after_fill"
+   
+   #end add-point 
+   
+ 
+   #add-point:陣列筆數調整 name="fetch.array_deleteElement"
+   
+   #end add-point
+ 
+   LET l_ac = li_ac
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprq321.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION aprq321_detail_show(ps_page)
+   #add-point:show段define-客製 name="detail_show.define_customerization"
+   
+   #end add-point
+   DEFINE ps_page    STRING
+   DEFINE ls_sql     STRING
+   #add-point:show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   
+   #end add-point
+ 
+   #add-point:detail_show段之前 name="detail_show.before"
+   
+   #end add-point
+   
+   
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      
+ 
+      #add-point:show段單身reference name="detail_show.body.reference"
+
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_prei_d[l_ac].pregsite
+#            LET ls_sql = "SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'"
+#            LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+#            CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+#            LET g_prei_d[l_ac].pregsite_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_prei_d[l_ac].pregsite_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_prei_d[l_ac].preg003
+#            LET ls_sql = "SELECT prcfl003 FROM prcfl_t WHERE prcflent='"||g_enterprise||"' AND prcfl001=? AND prcfl002='"||g_dlang||"'"
+#            LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+#            CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+#            LET g_prei_d[l_ac].preg003_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_prei_d[l_ac].preg003_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_prei_d[l_ac].prei003
+#            LET ls_sql = "SELECT inayl003 FROM inayl_t WHERE inaylent='"||g_enterprise||"' AND inayl001=? AND inayl002='"||g_dlang||"'"
+#            LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+#            CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+#            LET g_prei_d[l_ac].prei003_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_prei_d[l_ac].prei003_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_prei_d[l_ac].prei004
+#            LET ls_sql = "SELECT mhael023 FROM mhael_t WHERE mhaelent='"||g_enterprise||"' AND mhaelsite=? AND mhael001=? AND mhael022='"||g_dlang||"'"
+#            LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+#            CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+#            LET g_prei_d[l_ac].prei004_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_prei_d[l_ac].prei004_desc
+#
+#   INITIALIZE g_ref_fields TO NULL 
+#   LET g_ref_fields[1] = g_prei2_d[l_ac].preiseq
+#   LET g_ref_fields[2] = g_prei2_d[l_ac].prei001
+#   LET ls_sql = " SELECT pregent,pregunit,pregstus,preg001,preg002,preg003_1,preg004_1,preg005,preg006,preg007,preg008,preg009,preg010,preg011,preg012,preg013,preg014,preg015,preg016,preg017,preg018,pregownid,pregowndp,pregcrtid,pregcrtdp,pregcrtdt,pregmodid,pregmoddt,pregcnfid,pregcnfdt,pregpstid,pregpstdt,preg050,preg051 FROM preg_t WHERE pregent = '"||g_enterprise||"' AND "
+#   LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+#   CALL ap_ref_array2(g_ref_fields,ls_sel_sql,"") RETURNING g_rtn_fields 
+#   LET g_prei_d[l_ac].pregent = g_rtn_fields[1] 
+#   LET g_prei_d[l_ac].pregunit = g_rtn_fields[2] 
+#   LET g_prei_d[l_ac].pregstus = g_rtn_fields[3] 
+#   LET g_prei_d[l_ac].preg001 = g_rtn_fields[4] 
+#   LET g_prei_d[l_ac].preg002 = g_rtn_fields[5] 
+#   LET g_prei_d[l_ac].preg003_1 = g_rtn_fields[6] 
+#   LET g_prei_d[l_ac].preg004_1 = g_rtn_fields[7] 
+#   LET g_prei_d[l_ac].preg005 = g_rtn_fields[8] 
+#   LET g_prei_d[l_ac].preg006 = g_rtn_fields[9] 
+#   LET g_prei_d[l_ac].preg007 = g_rtn_fields[10] 
+#   LET g_prei_d[l_ac].preg008 = g_rtn_fields[11] 
+#   LET g_prei_d[l_ac].preg009 = g_rtn_fields[12] 
+#   LET g_prei_d[l_ac].preg010 = g_rtn_fields[13] 
+#   LET g_prei_d[l_ac].preg011 = g_rtn_fields[14] 
+#   LET g_prei_d[l_ac].preg012 = g_rtn_fields[15] 
+#   LET g_prei_d[l_ac].preg013 = g_rtn_fields[16] 
+#   LET g_prei_d[l_ac].preg014 = g_rtn_fields[17] 
+#   LET g_prei_d[l_ac].preg015 = g_rtn_fields[18] 
+#   LET g_prei_d[l_ac].preg016 = g_rtn_fields[19] 
+#   LET g_prei_d[l_ac].preg017 = g_rtn_fields[20] 
+#   LET g_prei_d[l_ac].preg018 = g_rtn_fields[21] 
+#   LET g_prei_d[l_ac].pregownid = g_rtn_fields[22] 
+#   LET g_prei_d[l_ac].pregowndp = g_rtn_fields[23] 
+#   LET g_prei_d[l_ac].pregcrtid = g_rtn_fields[24] 
+#   LET g_prei_d[l_ac].pregcrtdp = g_rtn_fields[25] 
+#   LET g_prei_d[l_ac].pregcrtdt = g_rtn_fields[26] 
+#   LET g_prei_d[l_ac].pregmodid = g_rtn_fields[27] 
+#   LET g_prei_d[l_ac].pregmoddt = g_rtn_fields[28] 
+#   LET g_prei_d[l_ac].pregcnfid = g_rtn_fields[29] 
+#   LET g_prei_d[l_ac].pregcnfdt = g_rtn_fields[30] 
+#   LET g_prei_d[l_ac].pregpstid = g_rtn_fields[31] 
+#   LET g_prei_d[l_ac].pregpstdt = g_rtn_fields[32] 
+#   LET g_prei_d[l_ac].preg050 = g_rtn_fields[33] 
+#   LET g_prei_d[l_ac].preg051 = g_rtn_fields[34] 
+#   DISPLAY BY NAME g_prei_d[l_ac].pregent,g_prei_d[l_ac].pregunit,g_prei_d[l_ac].pregstus,g_prei_d[l_ac].preg001,g_prei_d[l_ac].preg002,g_prei_d[l_ac].preg003_1,g_prei_d[l_ac].preg004_1,g_prei_d[l_ac].preg005,g_prei_d[l_ac].preg006,g_prei_d[l_ac].preg007,g_prei_d[l_ac].preg008,g_prei_d[l_ac].preg009,g_prei_d[l_ac].preg010,g_prei_d[l_ac].preg011,g_prei_d[l_ac].preg012,g_prei_d[l_ac].preg013,g_prei_d[l_ac].preg014,g_prei_d[l_ac].preg015,g_prei_d[l_ac].preg016,g_prei_d[l_ac].preg017,g_prei_d[l_ac].preg018,g_prei_d[l_ac].pregownid,g_prei_d[l_ac].pregowndp,g_prei_d[l_ac].pregcrtid,g_prei_d[l_ac].pregcrtdp,g_prei_d[l_ac].pregcrtdt,g_prei_d[l_ac].pregmodid,g_prei_d[l_ac].pregmoddt,g_prei_d[l_ac].pregcnfid,g_prei_d[l_ac].pregcnfdt,g_prei_d[l_ac].pregpstid,g_prei_d[l_ac].pregpstdt,g_prei_d[l_ac].preg050,g_prei_d[l_ac].preg051
+#   INITIALIZE g_ref_fields TO NULL 
+#   LET g_ref_fields[1] = g_prei2_d[l_ac].preiseq
+#   LET g_ref_fields[2] = g_prei2_d[l_ac].prei001
+#   LET ls_sql = " SELECT prehent,prehunit,prehsite,prehacti,preh001,preh002,preh003_1,preh004_1,preh005,preh006,preh007,preh008 FROM preh_t WHERE prehent = '"||g_enterprise||"' AND "
+#   LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+#   CALL ap_ref_array2(g_ref_fields,ls_sel_sql,"") RETURNING g_rtn_fields 
+#   LET g_prei_d[l_ac].prehent = g_rtn_fields[1] 
+#   LET g_prei_d[l_ac].prehunit = g_rtn_fields[2] 
+#   LET g_prei_d[l_ac].prehsite = g_rtn_fields[3] 
+#   LET g_prei_d[l_ac].prehacti = g_rtn_fields[4] 
+#   LET g_prei_d[l_ac].preh001 = g_rtn_fields[5] 
+#   LET g_prei_d[l_ac].preh002 = g_rtn_fields[6] 
+#   LET g_prei_d[l_ac].preh003_1 = g_rtn_fields[7] 
+#   LET g_prei_d[l_ac].preh004_1 = g_rtn_fields[8] 
+#   LET g_prei_d[l_ac].preh005 = g_rtn_fields[9] 
+#   LET g_prei_d[l_ac].preh006 = g_rtn_fields[10] 
+#   LET g_prei_d[l_ac].preh007 = g_rtn_fields[11] 
+#   LET g_prei_d[l_ac].preh008 = g_rtn_fields[12] 
+#   DISPLAY BY NAME g_prei_d[l_ac].prehent,g_prei_d[l_ac].prehunit,g_prei_d[l_ac].prehsite,g_prei_d[l_ac].prehacti,g_prei_d[l_ac].preh001,g_prei_d[l_ac].preh002,g_prei_d[l_ac].preh003_1,g_prei_d[l_ac].preh004_1,g_prei_d[l_ac].preh005,g_prei_d[l_ac].preh006,g_prei_d[l_ac].preh007,g_prei_d[l_ac].preh008
+      #end add-point
+   END IF
+   
+ 
+ 
+   #add-point:detail_show段之後 name="detail_show.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprq321.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION aprq321_filter()
+   #add-point:filter段define-客製 name="filter.define_customerization"
+   
+   #end add-point
+   DEFINE  ls_result   STRING
+   #add-point:filter段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter.define"
+   
+   #end add-point
+   
+   #add-point:FUNCTION前置處理 name="filter.before_function"
+   
+   #end add-point
+ 
+   LET l_ac = 1
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON pregsite
+                          FROM s_detail1[1].b_pregsite
+ 
+         BEFORE CONSTRUCT
+                     DISPLAY aprq321_filter_parser('pregsite') TO s_detail1[1].b_pregsite
+ 
+ 
+         #單身公用欄位開窗相關處理
+         
+           
+         #單身一般欄位開窗相關處理
+                  #----<<b_pregsite>>----
+         #Ctrlp:construct.c.filter.page1.b_pregsite
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_pregsite
+            #add-point:ON ACTION controlp INFIELD b_pregsite name="construct.c.filter.page1.b_pregsite"
+            
+            #END add-point
+ 
+ 
+         #----<<b_pregsite_desc>>----
+         #----<<b_preg003>>----
+         #----<<b_preg003_desc>>----
+         #----<<b_preg004>>----
+         #----<<b_preh003>>----
+         #----<<b_preh004>>----
+         #----<<b_prei003>>----
+         #----<<b_prei003_desc>>----
+         #----<<b_prei004>>----
+         #----<<b_prei004_desc>>----
+         #----<<l_state>>----
+         #----<<b_prei007>>----
+         #----<<b_prei008>>----
+         #----<<b_prei022>>----
+         #----<<b_prei023>>----
+         #----<<b_prei080>>----
+         #----<<b_prei082>>----
+   
+ 
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs name="filter.add_cs"
+      
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog name="filter.b_dialog"
+         
+         #end add-point  
+ 
+      ON ACTION accept
+         ACCEPT DIALOG 
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+      LET g_wc_filter_t = g_wc_filter
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+   
+      CALL aprq321_filter_show('pregsite','b_pregsite')
+ 
+    
+   CALL aprq321_b_fill()
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprq321.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION aprq321_filter_parser(ps_field)
+   #add-point:filter段define-客製 name="filter_parser.define_customerization"
+   
+   #end add-point
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   #add-point:filter段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_parser.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter_parser.before_function"
+   
+   #end add-point
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprq321.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION aprq321_filter_show(ps_field,ps_object)
+   #add-point:filter_show段define-客製 name="filter_show.define_customerization"
+   
+   #end add-point
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+   #add-point:filter_show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_show.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter_show.before_function"
+   
+   #end add-point
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = aprq321_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprq321.insert" >}
+#+ insert
+PRIVATE FUNCTION aprq321_insert()
+   #add-point:insert段define-客製 name="insert.define_customerization"
+   
+   #end add-point
+   #add-point:insert段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   
+   #end add-point
+ 
+   #add-point:insert段control name="insert.control"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprq321.modify" >}
+#+ modify
+PRIVATE FUNCTION aprq321_modify()
+   #add-point:modify段define-客製 name="modify.define_customerization"
+   
+   #end add-point
+   #add-point:modify段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   
+   #end add-point
+ 
+   #add-point:modify段control name="modify.control"
+   
+   #end add-point 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprq321.reproduce" >}
+#+ reproduce
+PRIVATE FUNCTION aprq321_reproduce()
+   #add-point:reproduce段define-客製 name="reproduce.define_customerization"
+   
+   #end add-point
+   #add-point:reproduce段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="reproduce.define"
+   
+   #end add-point
+ 
+   #add-point:reproduce段control name="reproduce.control"
+   
+   #end add-point 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprq321.delete" >}
+#+ delete
+PRIVATE FUNCTION aprq321_delete()
+   #add-point:delete段define-客製 name="delete.define_customerization"
+   
+   #end add-point
+   #add-point:delete段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   
+   #end add-point
+ 
+   #add-point:delete段control name="delete.control"
+   
+   #end add-point 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprq321.detail_action_trans" >}
+#+ 單身分頁筆數顯示及action圖片顯示切換功能
+PRIVATE FUNCTION aprq321_detail_action_trans()
+   #add-point:detail_action_trans段define-客製 name="detail_action_trans.define_customerization"
+   
+   #end add-point
+   #add-point:detail_action_trans段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_action_trans.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="detail_action_trans.before_function"
+   
+   #end add-point
+ 
+   #因應單身切頁功能，筆數計算方式調整
+   LET g_current_row_tot = g_pagestart + g_detail_idx - 1
+   DISPLAY g_current_row_tot TO FORMONLY.h_index
+   DISPLAY g_tot_cnt TO FORMONLY.h_count
+ 
+   #顯示單身頁面的起始與結束筆數
+   LET g_page_start_num = g_pagestart
+   LET g_page_end_num = g_pagestart + g_num_in_page - 1
+   DISPLAY g_page_start_num TO FORMONLY.p_start
+   DISPLAY g_page_end_num TO FORMONLY.p_end
+ 
+   #目前不支援跳頁功能
+   LET g_page_act_list = "detail_first,detail_previous,'',detail_next,detail_last"
+   CALL cl_navigator_detail_page_setting(g_page_act_list,g_current_row_tot,g_pagestart,g_num_in_page,g_tot_cnt)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprq321.detail_index_setting" >}
+#+ 單身切頁後，index重新調整，避免翻頁後指到空白筆數
+PRIVATE FUNCTION aprq321_detail_index_setting()
+   #add-point:detail_index_setting段define-客製 name="deatil_index_setting.define_customerization"
+   
+   #end add-point
+   DEFINE li_redirect     BOOLEAN
+   DEFINE ldig_curr       ui.Dialog
+   #add-point:detail_index_setting段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_index_setting.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="detail_index_setting.before_function"
+   
+   #end add-point
+ 
+   IF g_curr_diag IS NOT NULL THEN
+      CASE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") <= "0"
+            LET g_detail_idx = 1
+            IF g_prei_d.getLength() > 0 THEN
+               LET li_redirect = TRUE
+            END IF
+         WHEN g_curr_diag.getCurrentRow("s_detail1") > g_prei_d.getLength() AND g_prei_d.getLength() > 0
+            LET g_detail_idx = g_prei_d.getLength()
+            LET li_redirect = TRUE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") != g_detail_idx
+            IF g_detail_idx > g_prei_d.getLength() THEN
+               LET g_detail_idx = g_prei_d.getLength()
+            END IF
+            LET li_redirect = TRUE
+      END CASE
+   END IF
+ 
+   IF li_redirect THEN
+      LET ldig_curr = ui.Dialog.getCurrent()
+      CALL ldig_curr.setCurrentRow("s_detail1", g_detail_idx)
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprq321.mask_functions" >}
+ &include "erp/apr/aprq321_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="aprq321.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aprq321_query2()
+DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_wc2     LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define-標準
+   
+   #end add-point 
+   #add-point:query段define-客製
+
+   #end add-point 
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_prei_d.clear()
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+   
+   LET g_qryparam.state = "c"
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_wc_filter = " 1=1"
+   LET g_detail_page_action = ""
+   LET g_pagestart = 1
+   
+   #wc備份
+   LET ls_wc = g_wc
+   LET ls_wc2 = g_wc2
+   LET g_master_idx = l_ac
+ 
+   
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc  ON preg003,pregsite,preg004,preg051,prei081,
+                         preh003,preh004,preg014,preg015,preg011,preg012,
+                         prei003,prei004,preh007,preh008,prei060,prei061,
+                         preg013,preg050,prei059,prei062,prei074,prei058
+                    FROM preg003,pregsite,preg004,preg051,prei081,
+                         preh003,preh004,preg014,preg015,preg011,preg012,
+                         prei003,prei004,preh007,preh008,prei060,prei061,
+                         preg013,preg050,prei059,prei062,prei074,prei058
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+                #----<<b_pregsite>>----
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pregsite
+            #add-point:BEFORE FIELD b_pregsite
+
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pregsite
+            
+            #add-point:AFTER FIELD b_pregsite
+
+            #END add-point  
+            
+         #Ctrlp:construct.c.page1.b_pregsite
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD pregsite
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = s_aooi500_q_where(g_prog,'pregsite',g_site,'c')
+            CALL q_ooef001_24()                     #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pregsite  #顯示到畫面上
+            NEXT FIELD pregsite                     #返回原欄位
+            
+         
+          ON ACTION controlp INFIELD preg003
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+			   LET g_qryparam.where = " prcf051 IS NOT NULL "
+            CALL q_prcf001_1()                     #呼叫開窗
+            DISPLAY g_qryparam.return1 TO preg003  #顯示到畫面上
+            NEXT FIELD preg003                     #返回原欄位
+            
+          ON ACTION controlp INFIELD preg011
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                     #呼叫開窗
+            DISPLAY g_qryparam.return1 TO preg011  #顯示到畫面上
+            NEXT FIELD preg011
+         
+          ON ACTION controlp INFIELD preg012
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                     #呼叫開窗
+            DISPLAY g_qryparam.return1 TO preg012  #顯示到畫面上
+            NEXT FIELD preg012
+            
+            
+          ON ACTION controlp INFIELD prei003
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaa001_14()                     #呼叫開窗
+            DISPLAY g_qryparam.return1 TO prei003  #顯示到畫面上
+            NEXT FIELD prei003
+            
+          ON ACTION controlp INFIELD prei004
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1=g_site
+            CALL q_mhae001()                     #呼叫開窗
+            DISPLAY g_qryparam.return1 TO prei004  #顯示到畫面上
+            NEXT FIELD prei004
+       
+      END CONSTRUCT
+      
+ 
+      INPUT g_check.checkdetail FROM l_checkdetail
+            ATTRIBUTE(WITHOUT DEFAULTS)
+      
+            AFTER FIELD l_checkdetail              
+               LET g_check.checkdetail=GET_FLDBUF(l_checkdetail)
+      
+      END INPUT
+ 
+  
+      #add-point:query段more_construct
+      BEFORE DIALOG
+            LET g_check.checkdetail='N'
+            
+            DISPLAY g_check.checkdetail TO l_checkdetail
+
+      #end add-point 
+ 
+      ON ACTION accept
+         #add-point:ON ACTION accept
+         IF g_check.checkdetail='Y' THEN
+              CALL cl_set_comp_visible('page_2',TRUE)
+         ELSE 
+              CALL cl_set_comp_visible('page_2',FALSE)
+         END IF
+         #end add-point
+ 
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+ 
+      #add-point:query段查詢方案相關ACTION設定前
+
+      #end add-point 
+ 
+      ON ACTION qbeclear   # 條件清除
+         CLEAR FORM
+         #add-point:條件清除後
+
+         #end add-point 
+ 
+      #add-point:query段查詢方案相關ACTION設定後
+
+      #end add-point 
+ 
+   END DIALOG
+ 
+   
+ 
+   LET g_wc = g_wc
+ 
+ 
+        
+   LET g_wc2 = " 1=1"
+ 
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc = ls_wc
+      LET g_wc2 = ls_wc2
+      LET g_wc_filter = g_wc_filter_t
+   ELSE
+      LET g_master_idx = 1
+   END IF
+        
+   #add-point:cs段after_construct
+
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL aprq321_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   END IF
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 第二个页签
+# Memo...........:
+# Usage..........: CALL aprq321_b_fill2()
+# Date & Author..: 2015/9/28 By dengdd
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aprq321_b_fill2()
+DEFINE ls_wc           STRING
+DEFINE ls_wc2          STRING
+DEFINE ls_sql_rank     STRING
+
+ 
+ 
+
+   LET ls_sql_rank = "SELECT UNIQUE pregent,pregunit,t3.ooefl003 n3,pregstus,preg001,preg002,preg003,t4.prcfl003 n4,preg004,preg005,preg006,t5.mmanl003 n5,
+                                    preg007,t6.prcdl003 n6,preg008,t7.oocql004 n7,preg009,t8.oocql004 n8,preg010,t9.oocql004 n9,preg011,t10.ooag011 n10,preg012,t11.ooefl003 n11,preg013,preg014,
+                                    preg015,preg016,t12.ooag011 n12,preg017,t13.ooag011 n13,preg018,pregownid,t14.ooag011 n14,pregowndp,t15.ooefl003 n15,pregcrtid,t16.ooag011 n16,
+                                    pregcrtdp,t17.ooefl003 n17,pregcrtdt,pregmodid,t18.ooag011 n18,pregmoddt,pregcnfid,t19.ooag011 n19,pregcnfdt,pregpstid,t20.ooag011 n20,
+                                    pregpstdt,preg050,preg051,preient,preiunit,preisite,preiacti,preiseq,prei001,prei002,
+                                    prei003,t21.inayl003 n21,prei004,t22.mhael023 n22,prei005,t23.ooefl003 n23,prei006,t24.rtaxl003 n24,prei007,prei008,prei009,prei010,prei011,
+                                    prei012,prei013,prei014,prei015,prei016,prei017,prei018,prei019,prei020,prei021,prei022,
+                                    prei023,prei024,prei025,prei026,prei027,prei028,prei029,prei030,prei031,prei032,
+                                    prei033,prei034,prei035,prei036,prei037,prei038,prei039,prei040,prei041,prei042,prei043,
+                                    prei044,prei045,prei046,prei047,prei048,prei049,prei050,prei051,prei052,prei053,prei054,
+                                    prei055,prei056,prei057,prei058,prei059,prei060,prei061,prei062,prei063,prei064,prei065,
+                                    prei066,prei067,prei068,prei069,prei070,prei071,prei072,prei073,prei074,prei075,prei076,
+                                    prei077,prei078,prei079,prei080,prei081,prei082,prei083,prei084,prei085,prei086,prei087,
+                                    prei088,prei089,prei090,prei091,prei092,prei093,prei094,prei095,prei096,prei097,prei098,
+                                    prei099,t25.ooag011 n25,prei100,prehent,prehunit,prehsite,prehacti,preh001,preh002,preh003,preh004,
+                                    preh005,preh006,preh007,preh008,
+                                    DENSE_RANK() OVER( ORDER BY t0.preg001,t1.preiseq) AS RANK ", 
+                     "  FROM preg_t t0 ",
+                     "  LEFT OUTER JOIN prei_t  t1 ON t1.preient=t0.pregent  AND t1.prei001=t0.preg001 ",
+                     "  LEFT OUTER JOIN preh_t  t2 ON t2.prehent=t0.pregent  AND t2.preh001=t0.preg001 AND t2.preh002=t1.preiseq ",
+                     "  LEFT OUTER JOIN ooefl_t t3 ON t3.ooeflent=t0.pregent AND t3.ooefl001=t0.pregunit AND t3.ooefl002 ='",g_dlang,"'",
+                     "  LEFT OUTER JOIN prcfl_t t4 ON t4.prcflent=t0.pregent AND t4.prcfl001=t0.preg003  AND t4.prcfl002 ='",g_dlang,"'",
+                     "  LEFT OUTER JOIN mmanl_t t5 ON t5.mmanlent=t0.pregent AND t5.mmanl001=t0.preg006  AND t5.mmanl002 ='",g_dlang,"'",
+                     "  LEFT OUTER JOIN prcdl_t t6 ON t6.prcdlent=t0.pregent AND t6.prcdl001=t0.preg007  AND t6.prcdl002 ='",g_dlang,"'",
+                     "  LEFT OUTER JOIN oocql_t t7 ON t7.oocqlent=t0.pregent AND t7.oocql001='2135' AND t7.oocql002=t0.preg008 AND t7.oocql003='",g_dlang,"'",
+                     "  LEFT OUTER JOIN oocql_t t8 ON t8.oocqlent=t0.pregent AND t8.oocql001='2100' AND t8.oocql002=t0.preg009 AND t8.oocql003='",g_dlang,"'",
+                     "  LEFT OUTER JOIN oocql_t t9 ON t9.oocqlent=t0.pregent AND t9.oocql001='2101' AND t9.oocql002=t0.preg010 AND t8.oocql003='",g_dlang,"'",
+                     "  LEFT OUTER JOIN ooag_t  t10 ON t10.ooagent=t0.pregent AND t10.ooag001=t0.preg011 ",
+                     "  LEFT OUTER JOIN ooefl_t t11 ON t11.ooeflent=t0.pregent AND t11.ooefl001=t0.preg012 AND t11.ooefl002 ='",g_dlang,"'",
+                     "  LEFT OUTER JOIN ooag_t  t12 ON t12.ooagent=t0.pregent AND t12.ooag001=t0.preg016 ",
+                     "  LEFT OUTER JOIN ooag_t  t13 ON t13.ooagent=t0.pregent AND t13.ooag001=t0.preg017 ",
+                     "  LEFT OUTER JOIN ooag_t  t14 ON t14.ooagent=t0.pregent AND t14.ooag001=t0.pregownid ",
+                     "  LEFT OUTER JOIN ooefl_t t15 ON t15.ooeflent=t0.pregent AND t15.ooefl001=t0.pregowndp AND t15.ooefl002 ='",g_dlang,"'",
+                     "  LEFT OUTER JOIN ooag_t  t16 ON t16.ooagent=t0.pregent AND t16.ooag001=t0.pregcrtid ",
+                     "  LEFT OUTER JOIN ooefl_t t17 ON t17.ooeflent=t0.pregent AND t17.ooefl001=t0.pregcrtdp AND t17.ooefl002 ='",g_dlang,"'",
+                     "  LEFT OUTER JOIN ooag_t  t18 ON t18.ooagent=t0.pregent AND t18.ooag001=t0.pregmodid ",
+                     "  LEFT OUTER JOIN ooag_t  t19 ON t19.ooagent=t0.pregent AND t19.ooag001=t0.pregcnfid ",
+                     "  LEFT OUTER JOIN ooag_t  t20 ON t20.ooagent=t0.pregent AND t20.ooag001=t0.pregpstid ",
+                     "  LEFT OUTER JOIN inayl_t t21 ON t21.inaylent=t1.preient AND t21.inayl001=t1.prei003 AND t21.inayl002 ='",g_dlang,"'",
+                     "  LEFT OUTER JOIN mhael_t t22 ON t22.mhaelent=t1.preient AND t22.mhael001=t1.prei004 AND t22.mhael022 ='",g_dlang,"'",
+                     "  LEFT OUTER JOIN ooefl_t t23 ON t23.ooeflent=t1.preient AND t23.ooefl001=t1.prei005 AND t23.ooefl002 ='",g_dlang,"'",
+                     "  LEFT OUTER JOIN rtaxl_t t24 ON t24.rtaxlent=t1.preient AND t24.rtaxl001=t1.prei006 AND t24.rtaxl002 ='",g_dlang,"'",
+                     "  LEFT OUTER JOIN ooag_t  t25 ON t25.ooagent=t1.preient AND t25.ooag001=t1.prei099 ",                  
+                     " WHERE t0.pregent= ? AND 1=1 AND ", g_wc
+    
+   LET ls_sql_rank = ls_sql_rank, cl_sql_add_filter("prei_t"),
+                     " ORDER BY t0.preg001,t1.preiseq"
+  
+ 
+   LET g_sql = "SELECT COUNT(*) FROM (",ls_sql_rank,")"
+ 
+   PREPARE b_fill_cnt FROM g_sql
+   EXECUTE b_fill_cnt USING g_enterprise INTO g_tot_cnt
+   FREE b_fill_cnt
+ 
+   LET g_sql = "SELECT pregent,pregunit,n3,pregstus,preg001,preg002,preg003,n4,preg004,preg005,preg006,n5,
+                       preg007,n6,preg008,n7,preg009,n8,preg010,n9,preg011,n10,preg012,n11,preg013,preg014,
+                       preg015,preg016,n12,preg017,n13,preg018,pregownid,n14,pregowndp,n15,pregcrtid,n16,
+                       pregcrtdp,n17,pregcrtdt,pregmodid,n18,pregmoddt,pregcnfid,n19,pregcnfdt,pregpstid,n20,
+                       pregpstdt,preg050,preg051,preient,preiunit,preisite,preiacti,preiseq,prei001,prei002,
+                       prei003,n21,prei004,n22,prei005,n23,prei006,n24,prei007,prei008,prei009,prei010,prei011,
+                       prei012,prei013,prei014,prei015,prei016,prei017,prei018,prei019,prei020,prei021,prei022,
+                       prei023,prei024,prei025,prei026,prei027,prei028,prei029,prei030,prei031,prei032,
+                       prei033,prei034,prei035,prei036,prei037,prei038,prei039,prei040,prei041,prei042,prei043,
+                       prei044,prei045,prei046,prei047,prei048,prei049,prei050,prei051,prei052,prei053,prei054,
+                       prei055,prei056,prei057,prei058,prei059,prei060,prei061,prei062,prei063,prei064,prei065,
+                       prei066,prei067,prei068,prei069,prei070,prei071,prei072,prei073,prei074,prei075,prei076,
+                       prei077,prei078,prei079,prei080,prei081,prei082,prei083,prei084,prei085,prei086,prei087,
+                       prei088,prei089,prei090,prei091,prei092,prei093,prei094,prei095,prei096,prei097,prei098,
+                       prei099,n25,prei100,prehent,prehunit,prehsite,prehacti,preh001,preh002,preh003,preh004,
+                       preh005,preh006,preh007,preh008 ",
+               " FROM (",ls_sql_rank,")",
+              " WHERE RANK >= ",g_pagestart,
+                " AND RANK < ",g_pagestart + g_num_in_page
+   
+ 
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE aprq321_pb2 FROM g_sql
+   DECLARE b_fill_curs2 CURSOR FOR aprq321_pb2
+   
+   OPEN b_fill_curs2 USING g_enterprise
+ 
+   CALL g_prei2_d.clear()
+ 
+   #add-point:陣列清空
+
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   IF g_cnt = 0 THEN
+      LET g_cnt = 1
+   END IF
+   LET l_ac = 1   
+                       
+   FOREACH b_fill_curs2 INTO g_prei2_d[l_ac].pregent,      g_prei2_d[l_ac].pregunit,         g_prei2_d[l_ac].pregunit_desc,
+                             g_prei2_d[l_ac].pregstus,     g_prei2_d[l_ac].preg001,          g_prei2_d[l_ac].preg002,
+                             g_prei2_d[l_ac].preg003,      g_prei2_d[l_ac].preg003_1_desc,   g_prei2_d[l_ac].preg004,
+                             g_prei2_d[l_ac].preg005,      g_prei2_d[l_ac].preg006,          g_prei2_d[l_ac].preg006_desc,
+                             g_prei2_d[l_ac].preg007,      g_prei2_d[l_ac].preg007_desc,     g_prei2_d[l_ac].preg008,     
+                             g_prei2_d[l_ac].preg008_desc, g_prei2_d[l_ac].preg009,          g_prei2_d[l_ac].preg009_desc,
+                             g_prei2_d[l_ac].preg010,      g_prei2_d[l_ac].preg010_desc,     g_prei2_d[l_ac].preg011,
+                             g_prei2_d[l_ac].preg011_desc, g_prei2_d[l_ac].preg012,          g_prei2_d[l_ac].preg012_desc,
+                             g_prei2_d[l_ac].preg013,      g_prei2_d[l_ac].preg014,          g_prei2_d[l_ac].preg015,
+                             g_prei2_d[l_ac].preg016,      g_prei2_d[l_ac].preg016_desc,     g_prei2_d[l_ac].preg017, 
+                             g_prei2_d[l_ac].preg017_desc, g_prei2_d[l_ac].preg018,          g_prei2_d[l_ac].pregownid, 
+                             g_prei2_d[l_ac].pregownid_desc, g_prei2_d[l_ac].pregowndp,      g_prei2_d[l_ac].pregowndp_desc,
+                             g_prei2_d[l_ac].pregcrtid,      g_prei2_d[l_ac].pregcrtid_desc, g_prei2_d[l_ac].pregcrtdp, 
+                             g_prei2_d[l_ac].pregcrtdp_desc, g_prei2_d[l_ac].pregcrtdt,      g_prei2_d[l_ac].pregmodid,
+                             g_prei2_d[l_ac].pregmodid_desc, g_prei2_d[l_ac].pregmoddt,      g_prei2_d[l_ac].pregcnfid, 
+                             g_prei2_d[l_ac].pregcnfid_desc, g_prei2_d[l_ac].pregcnfdt,      g_prei2_d[l_ac].pregpstid, 
+                             g_prei2_d[l_ac].pregpstid_desc, g_prei2_d[l_ac].pregpstdt,      g_prei2_d[l_ac].preg050, 
+                             g_prei2_d[l_ac].preg051,        g_prei2_d[l_ac].preient,        g_prei2_d[l_ac].preiunit, 
+                             g_prei2_d[l_ac].preisite,       g_prei2_d[l_ac].preiacti,       g_prei2_d[l_ac].preiseq, 
+                             g_prei2_d[l_ac].prei001,        g_prei2_d[l_ac].prei002,        g_prei2_d[l_ac].prei003, 
+                             g_prei2_d[l_ac].prei003_1_desc, g_prei2_d[l_ac].prei004,        g_prei2_d[l_ac].prei004_1_desc,
+                             g_prei2_d[l_ac].prei005,        g_prei2_d[l_ac].prei005_desc,   g_prei2_d[l_ac].prei006, 
+                             g_prei2_d[l_ac].prei006_desc,   g_prei2_d[l_ac].prei007,        g_prei2_d[l_ac].prei008, 
+                             g_prei2_d[l_ac].prei009,        g_prei2_d[l_ac].prei010,        g_prei2_d[l_ac].prei011, 
+                             g_prei2_d[l_ac].prei012,        g_prei2_d[l_ac].prei013,        g_prei2_d[l_ac].prei014, 
+                             g_prei2_d[l_ac].prei015,        g_prei2_d[l_ac].prei016,        g_prei2_d[l_ac].prei017, 
+                             g_prei2_d[l_ac].prei018,        g_prei2_d[l_ac].prei019,        g_prei2_d[l_ac].prei020,
+                             g_prei2_d[l_ac].prei021,        g_prei2_d[l_ac].prei022,        g_prei2_d[l_ac].prei023, 
+                             g_prei2_d[l_ac].prei024,        g_prei2_d[l_ac].prei025,        g_prei2_d[l_ac].prei026, 
+                             g_prei2_d[l_ac].prei027,        g_prei2_d[l_ac].prei028,        g_prei2_d[l_ac].prei029,
+                             g_prei2_d[l_ac].prei030,        g_prei2_d[l_ac].prei031,        g_prei2_d[l_ac].prei032,
+                             g_prei2_d[l_ac].prei033,        g_prei2_d[l_ac].prei034,        g_prei2_d[l_ac].prei035,
+                             g_prei2_d[l_ac].prei036,        g_prei2_d[l_ac].prei037,        g_prei2_d[l_ac].prei038, 
+                             g_prei2_d[l_ac].prei039,        g_prei2_d[l_ac].prei040,        g_prei2_d[l_ac].prei041, 
+                             g_prei2_d[l_ac].prei042,        g_prei2_d[l_ac].prei043,        g_prei2_d[l_ac].prei044,
+                             g_prei2_d[l_ac].prei045,        g_prei2_d[l_ac].prei046,        g_prei2_d[l_ac].prei047, 
+                             g_prei2_d[l_ac].prei048,        g_prei2_d[l_ac].prei049,        g_prei2_d[l_ac].prei050, 
+                             g_prei2_d[l_ac].prei051,        g_prei2_d[l_ac].prei052,        g_prei2_d[l_ac].prei053,
+                             g_prei2_d[l_ac].prei054,        g_prei2_d[l_ac].prei055,        g_prei2_d[l_ac].prei056, 
+                             g_prei2_d[l_ac].prei057,        g_prei2_d[l_ac].prei058,        g_prei2_d[l_ac].prei059, 
+                             g_prei2_d[l_ac].prei060,        g_prei2_d[l_ac].prei061,        g_prei2_d[l_ac].prei062, 
+                             g_prei2_d[l_ac].prei063,        g_prei2_d[l_ac].prei064,        g_prei2_d[l_ac].prei065,
+                             g_prei2_d[l_ac].prei066,        g_prei2_d[l_ac].prei067,        g_prei2_d[l_ac].prei068, 
+                             g_prei2_d[l_ac].prei069,        g_prei2_d[l_ac].prei070,        g_prei2_d[l_ac].prei071, 
+                             g_prei2_d[l_ac].prei072,        g_prei2_d[l_ac].prei073,        g_prei2_d[l_ac].prei074, 
+                             g_prei2_d[l_ac].prei075,        g_prei2_d[l_ac].prei076,        g_prei2_d[l_ac].prei077, 
+                             g_prei2_d[l_ac].prei078,        g_prei2_d[l_ac].prei079,        g_prei2_d[l_ac].prei080,
+                             g_prei2_d[l_ac].prei081,        g_prei2_d[l_ac].prei082,        g_prei2_d[l_ac].prei083, 
+                             g_prei2_d[l_ac].prei084,        g_prei2_d[l_ac].prei085,        g_prei2_d[l_ac].prei086,
+                             g_prei2_d[l_ac].prei087,        g_prei2_d[l_ac].prei088,        g_prei2_d[l_ac].prei089,
+                             g_prei2_d[l_ac].prei090,        g_prei2_d[l_ac].prei091,        g_prei2_d[l_ac].prei092, 
+                             g_prei2_d[l_ac].prei093,        g_prei2_d[l_ac].prei094,        g_prei2_d[l_ac].prei095,
+                             g_prei2_d[l_ac].prei096,        g_prei2_d[l_ac].prei097,        g_prei2_d[l_ac].prei098,
+                             g_prei2_d[l_ac].prei099,        g_prei2_d[l_ac].prei099_desc,   g_prei2_d[l_ac].prei100, 
+                             g_prei2_d[l_ac].prehent,        g_prei2_d[l_ac].prehunit,       g_prei2_d[l_ac].prehsite, 
+                             g_prei2_d[l_ac].prehacti,       g_prei2_d[l_ac].preh001,        g_prei2_d[l_ac].preh002,
+                             g_prei2_d[l_ac].preh003,        g_prei2_d[l_ac].preh004,        g_prei2_d[l_ac].preh005, 
+                             g_prei2_d[l_ac].preh006,        g_prei2_d[l_ac].preh007,        g_prei2_d[l_ac].preh008
+   
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+ 
+   
+   CALL g_prei2_d.deleteElement(g_prei2_d.getLength())   
+ 
+ 
+   LET g_detail_cnt = g_prei2_d.getLength()
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs2
+   FREE aprq321_pb2
+      
+END FUNCTION
+
+ 
+{</section>}
+ 

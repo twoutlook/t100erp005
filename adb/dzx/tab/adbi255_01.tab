@@ -1,0 +1,69 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adbi255_01" module="adb" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="02749" crtdt="2014-05-02 14:46:18" modid="02749" moddt="2014-08-19 16:48:23" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="變更路線順序">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="dbaf0041(chr500),dbaf004,dbaf001,dbaf002,dbaf003,dbaf003_desc(chr500),dbad002(chr500),dbad002_desc(chr500),dbaf011,dbaf012,dbaf013,dbaf014,dbaf015"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output" chk="N"/>
+      <action id="move_down"/>
+      <action id="cancel_update"/>
+      <action id="conf_update"/>
+      <action id="modify" type="standard"/>
+      <action id="insert" chk="N" type="standard"/>
+      <action id="delete" chk="N" type="standard"/>
+      <action id="move_up"/>
+      <action id="reproduce" chk="N" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="adb" filename="adbi255_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="dbaf0041,dbaf004,dbaf003,dbad002,dbaf011,dbaf012,dbaf013,dbaf014,dbaf015" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="dbaf0041,dbaf004,dbaf003,dbad002,dbaf011,dbaf012,dbaf013,dbaf014,dbaf015"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="dbaf0041"/>
+      <column id="dbaf004"/>
+      <column id="dbaf001">
+        <controlp form="q_dbab001" state="i"/>
+        <controlp form="q_dbab001" state="c"/>
+      </column>
+      <column id="dbaf002" type="S" default="1"/>
+      <column id="dbaf003">
+        <after>
+          <reference field="dbaf003_desc" ref_field="dbaf_t.dbaf003" map_field="dbafent,dbaf003" ref_sql="SELECT dbadl003 FROM dbadl_t WHERE dbadlent=$varg_enterprise$var AND dbadl001=? AND dbadl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_dbad001" state="i"/>
+        <controlp form="q_dbad001" state="c"/>
+      </column>
+      <column id="dbaf003_desc"/>
+      <column id="dbad002">
+        <after>
+          <reference field="dbad002_desc" ref_field="dbad002" map_field="dbadent,dbac001" ref_sql="SELECT dbacl003 FROM dbacl_t WHERE dbaclent=$varg_enterprise$var AND dbacl001=? AND dbacl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="dbad002_desc"/>
+      <column id="dbaf011"/>
+      <column id="dbaf012"/>
+      <column id="dbaf013"/>
+      <column id="dbaf014"/>
+      <column id="dbaf015"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="dbaf_t" page="1" linked="" pk="dbaf001,dbaf002,dbaf003">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,dbaf004,dbaf001,dbaf002,dbaf003,&apos;&apos;,&apos;&apos;,&apos;&apos;,dbaf011,dbaf012,dbaf013,dbaf014,dbaf015 FROM dbaf_t WHERE dbafent=? AND dbaf001=? AND dbaf002=? AND dbaf003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,dbaf004,dbaf001,dbaf002,dbaf003,&apos;&apos;,&apos;&apos;,&apos;&apos;,dbaf011,dbaf012,dbaf013,dbaf014,dbaf015 FROM dbaf_t WHERE dbafent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

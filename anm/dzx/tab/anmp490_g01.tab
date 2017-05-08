@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmp490_g01" module="anm" jobmode="N" type="g01" industry="std" crtid="06821" crtdt="2015-09-22 10:19:05" modid="02159" moddt="2016-07-13 19:17:51" sdver="5" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where comdition),tm.a1(chr500|帳戶nmck004),tm.a2(dat|日期nmck012)">
+    <var seq="1" value="nmckent,l_nmab008(nmab008|&apos;&apos;),nmck037,nmck042,nmck014,l_pmaf005(pmaf005|&apos;&apos;),l_nmabl004_desc(chr500|&apos;&apos;),nmck013,nmck015,nmck103,nmck100,l_pmaal003_desc(chr500|&apos;&apos;),nmck005,nmckdocno,l_nmaal003_desc(chr500|&apos;&apos;),nmck012,nmck004,l_pmaf006(pmaf006|&apos;&apos;),l_pmaf005_show(chr1|&apos;&apos;)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="nmckent,l_nmab008(nmab008|&apos;&apos;),nmck037,nmck042,nmck014,l_pmaf005(pmaf005|&apos;&apos;),l_nmabl004_desc(chr500|&apos;&apos;),nmck013,nmck015,nmck103,nmck100,l_pmaal003_desc(chr500|&apos;&apos;),nmck005,nmckdocno,l_nmaal003_desc(chr500|&apos;&apos;),nmck012,nmck004,l_pmaf006(pmaf006|&apos;&apos;),l_pmaf005_show(chr1|&apos;&apos;)"/>
+    <sql id="g_from" query="nmck_t"/>
+    <sql id="g_where" query="" maintable="nmck_t"/>
+    <sql id="g_order" query="nmck004,nmckdocno"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="nmck004,nmckdocno"/>
+    <section id="b_group" reptype="d01">
+      <rep type="nmck004" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="nmckent,nmck004"/>
+      <rep type="nmckdocno"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="nmckent,nmck004,nmckdocno"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="nmckent,nmck004,nmckdocno"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="nmck004" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="nmckent,nmck004"/>
+      <rep type="nmckdocno"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

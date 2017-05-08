@@ -1,0 +1,16955 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="anmt564.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0008(2016-06-13 12:17:25), PR版次:0008(2017-01-18 14:00:51)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000029
+#+ Filename...: anmt564
+#+ Description: 收款單維護作業
+#+ Creator....: 05948(2016-06-13 09:53:57)
+#+ Modifier...: 05948 -SD/PR- 08729
+ 
+{</section>}
+ 
+{<section id="anmt564.global" >}
+#應用 t01 樣板自動產生(Version:79)
+#add-point:填寫註解說明 name="global.memo" 
+#150818-00032#3   2015/08/23 By RayHuang nmbc_t新增兩個欄位
+#150820-00017#1   2015/09/03 By apo      抓取匯率來源參考資金模組匯率來源
+#151012-00014#6   2015/10/26 By RayHuang nmbc_t新增三個欄位(nmbc014~nmbc016)
+#151013-00016#6   2015/10/30 By RayHuang glbc_t新增狀態碼
+#151125-00006#3   2015/12/08 By 07166    新增[編輯完單據後立即審核]功能
+#151130-00015#2   2015/12/21 BY Xiaozg   根据是否可以更改單據日期 設定開放單據日期修改
+#151222-00010#10  2015/12/25 By yangtt   1.单身增加存提码nmbb002,现金码nmbb010. nmbb002,现金码nmbb010 ,AFTERFIELD 里检查不可为空.
+#                                        2.单头增加“设置现金变动码”功能按钮。
+#                                        3.只有当当款别刷子028的款别性质ooia002 in(10,20)时，才可写入现金变动码
+#                                        4.AFTER ROW 检查，当款别刷子028的款别性质ooia002 in(10,20)时，glbc档有相应的资料（glbcld+glbcdocno+glbcseq)
+#151201-00002#14  2016/01/12 By 01727    天河產品回收
+#150813-00015#19  2016/01/19 By 02599    增加日期控管，日期不可小于等于关账日期
+#160122-00001#32  2016/02/19 By 02599    增加交易账户用户权限控管
+#160122-00001#32  2016/03/17 By 07673    添加交易帳戶編號用戶權限空管,增加部门权限
+#160322-00025#6   2016/03/23 By 02114    nmbc_t增加nmbcorga记示画面上的来源组织栏位，原nmbcsite依旧记录资金中心
+#160318-00005#28  2016/03/24 By 07900    重复错误信息修改
+#160321-00016#40  2016/03/30 By Jessy    將重複內容的錯誤訊息置換為公用錯誤訊息
+#160329-00007#1   2016/03/31 By 07673    修改无法审核问题
+#160318-00025#30  2016/04/08 By 07959    將重複內容的錯誤訊息置換為公用錯誤訊息
+#160419-00027#1   2016/04/21 By catmoon  手動輸入來源單號時，來源類型為費用單時需增加控卡：不納入結算單的單據資料
+#160509-00004#16  2016/05/20 By lujh     1,增加参数：纳入结算单否=Y时，是否可以交现 if 参数纳入结算单可以交现为Y， then 费用单可以全部选择
+#160816-00012#3   2016/09/12 By 01531    ANM增加资金中心，帐套，法人三个栏位权限
+#160913-00017#5   2016/09/23 By 07900    ANM模组调整交易客商开窗
+#160912-00024#1   2016/09/20 By 01531    来源组织权限控管
+#160930-00019#1   2016/10/9  By 07900    缴款部门nmba001，开窗选择后没有接受返回值 请同时修改anmt564
+#161021-00050#10  2016/10/28 By Reanna   资金中心开窗需调整为q_ooef001_33 新增时where条件限定ooefstus= 'Y'查询时不限定此条件；
+#                                        法人开窗调整为q_ooef001_2,要注意原本where条件中的权限设置要保留;
+#                                        来源组织见excel"资金单身来源组织"
+#161110-00001#2   2016/11/28 By 07900    ANM模組使用ooea_t/ooeaf_t的需替換ooef_t/ooefl_t
+#161212-00005#2   2016/12/14  by 02481    标准程式定义采用宣告模式,弃用.*写法
+#160824-00007#315 2017/01/12 By 08171     新舊值調整
+#161104-00046#14  2017/01/18 By 08729    單別預設值;資料依照單別user dept權限過濾單號
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point 
+ 
+SCHEMA ds 
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_nmba_m        RECORD
+       nmbasite LIKE nmba_t.nmbasite, 
+   nmbasite_desc LIKE type_t.chr80, 
+   nmba008 LIKE nmba_t.nmba008, 
+   nmba008_desc LIKE type_t.chr80, 
+   nmba001 LIKE nmba_t.nmba001, 
+   nmba001_desc LIKE type_t.chr80, 
+   nmbacomp LIKE nmba_t.nmbacomp, 
+   nmbacomp_desc LIKE type_t.chr80, 
+   nmbadocno LIKE nmba_t.nmbadocno, 
+   nmbadocno_desc LIKE type_t.chr80, 
+   nmbadocdt LIKE nmba_t.nmbadocdt, 
+   nmba003 LIKE nmba_t.nmba003, 
+   nmba004 LIKE nmba_t.nmba004, 
+   nmba004_desc LIKE type_t.chr80, 
+   nmba005 LIKE nmba_t.nmba005, 
+   tot1 LIKE type_t.num20_6, 
+   tot2 LIKE type_t.num20_6, 
+   diff LIKE type_t.num20_6, 
+   nmbastus LIKE nmba_t.nmbastus, 
+   nmba007 LIKE nmba_t.nmba007, 
+   nmba006 LIKE nmba_t.nmba006, 
+   nmba002 LIKE nmba_t.nmba002, 
+   nmba002_desc LIKE type_t.chr80, 
+   nmbaownid LIKE nmba_t.nmbaownid, 
+   nmbaownid_desc LIKE type_t.chr80, 
+   nmbaowndp LIKE nmba_t.nmbaowndp, 
+   nmbaowndp_desc LIKE type_t.chr80, 
+   nmbacrtid LIKE nmba_t.nmbacrtid, 
+   nmbacrtid_desc LIKE type_t.chr80, 
+   nmbacrtdp LIKE nmba_t.nmbacrtdp, 
+   nmbacrtdp_desc LIKE type_t.chr80, 
+   nmbacrtdt LIKE nmba_t.nmbacrtdt, 
+   nmbamodid LIKE nmba_t.nmbamodid, 
+   nmbamodid_desc LIKE type_t.chr80, 
+   nmbamoddt LIKE nmba_t.nmbamoddt, 
+   nmbacnfid LIKE nmba_t.nmbacnfid, 
+   nmbacnfid_desc LIKE type_t.chr80, 
+   nmbacnfdt LIKE nmba_t.nmbacnfdt
+       END RECORD
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_nmbb_d        RECORD
+       nmbbseq LIKE nmbb_t.nmbbseq, 
+   nmbborga LIKE nmbb_t.nmbborga, 
+   nmbborga_desc LIKE type_t.chr500, 
+   nmbblegl LIKE nmbb_t.nmbblegl, 
+   nmbb026 LIKE nmbb_t.nmbb026, 
+   nmbb026_desc LIKE type_t.chr500, 
+   nmbb027 LIKE nmbb_t.nmbb027, 
+   nmbb028 LIKE nmbb_t.nmbb028, 
+   nmbb028_desc LIKE type_t.chr500, 
+   nmbb029 LIKE nmbb_t.nmbb029, 
+   nmbb002 LIKE nmbb_t.nmbb002, 
+   nmbb002_desc LIKE type_t.chr500, 
+   nmbb010 LIKE nmbb_t.nmbb010, 
+   nmbb010_desc LIKE type_t.chr500, 
+   nmbb003 LIKE nmbb_t.nmbb003, 
+   nmbb001 LIKE nmbb_t.nmbb001, 
+   nmbb030 LIKE nmbb_t.nmbb030, 
+   nmbb043 LIKE nmbb_t.nmbb043, 
+   nmbb043_desc LIKE type_t.chr500, 
+   nmbb031 LIKE nmbb_t.nmbb031, 
+   nmbb004 LIKE nmbb_t.nmbb004, 
+   nmbb005 LIKE nmbb_t.nmbb005, 
+   nmbb006 LIKE nmbb_t.nmbb006, 
+   nmbb007 LIKE nmbb_t.nmbb007, 
+   nmbb036 LIKE nmbb_t.nmbb036, 
+   nmbb036_desc LIKE type_t.chr500, 
+   nmbb037 LIKE nmbb_t.nmbb037, 
+   nmbb038 LIKE nmbb_t.nmbb038, 
+   nmbb032 LIKE nmbb_t.nmbb032, 
+   nmbb033 LIKE nmbb_t.nmbb033, 
+   nmbb034 LIKE nmbb_t.nmbb034, 
+   nmbb035 LIKE nmbb_t.nmbb035, 
+   nmbb039 LIKE nmbb_t.nmbb039, 
+   nmbb040 LIKE nmbb_t.nmbb040, 
+   nmbb041 LIKE nmbb_t.nmbb041, 
+   nmbb042 LIKE nmbb_t.nmbb042, 
+   nmbb044 LIKE nmbb_t.nmbb044, 
+   nmbb045 LIKE nmbb_t.nmbb045
+       END RECORD
+PRIVATE TYPE type_g_nmbb2_d RECORD
+       nmeeseq LIKE nmee_t.nmeeseq, 
+   nmee022 LIKE nmee_t.nmee022, 
+   nmee001 LIKE nmee_t.nmee001, 
+   nmee001_desc LIKE type_t.chr500, 
+   nmee003 LIKE nmee_t.nmee003, 
+   nmee004 LIKE nmee_t.nmee004, 
+   nmee025 LIKE nmee_t.nmee025, 
+   nmee026 LIKE nmee_t.nmee026, 
+   nmeesite LIKE nmee_t.nmeesite, 
+   nmeesite_desc LIKE type_t.chr500, 
+   nmee005 LIKE nmee_t.nmee005, 
+   nmee005_desc LIKE type_t.chr500, 
+   nmee006 LIKE nmee_t.nmee006, 
+   nmee006_desc LIKE type_t.chr500, 
+   nmee024 LIKE nmee_t.nmee024, 
+   nmee007 LIKE nmee_t.nmee007, 
+   nmee008 LIKE nmee_t.nmee008, 
+   nmee009 LIKE nmee_t.nmee009, 
+   nmee018 LIKE nmee_t.nmee018, 
+   nmee010 LIKE nmee_t.nmee010, 
+   nmee010_desc LIKE type_t.chr500, 
+   nmee011 LIKE nmee_t.nmee011, 
+   nmee012 LIKE nmee_t.nmee012, 
+   nmee013 LIKE nmee_t.nmee013, 
+   nmee002 LIKE nmee_t.nmee002, 
+   nmee014 LIKE nmee_t.nmee014, 
+   nmee014_desc LIKE type_t.chr500, 
+   nmee019 LIKE nmee_t.nmee019, 
+   nmee019_desc LIKE type_t.chr500, 
+   nmee020 LIKE nmee_t.nmee020, 
+   nmee023 LIKE nmee_t.nmee023, 
+   nmee021 LIKE nmee_t.nmee021, 
+   nmee027 LIKE nmee_t.nmee027
+       END RECORD
+ 
+ 
+PRIVATE TYPE type_browser RECORD
+         b_statepic     LIKE type_t.chr50,
+            b_nmbacomp LIKE nmba_t.nmbacomp,
+      b_nmbadocno LIKE nmba_t.nmbadocno
+       END RECORD
+       
+#add-point:自定義模組變數(Module Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_glaald              LIKE glaa_t.glaald
+DEFINE g_glaa001             LIKE glaa_t.glaa001
+DEFINE g_glaa002             LIKE glaa_t.glaa002
+DEFINE g_glaa015             LIKE glaa_t.glaa015
+DEFINE g_glaa016             LIKE glaa_t.glaa016
+DEFINE g_glaa017             LIKE glaa_t.glaa017
+DEFINE g_glaa018             LIKE glaa_t.glaa018
+DEFINE g_glaa019             LIKE glaa_t.glaa019
+DEFINE g_glaa020             LIKE glaa_t.glaa020
+DEFINE g_glaa021             LIKE glaa_t.glaa021
+DEFINE g_glaa022             LIKE glaa_t.glaa022
+DEFINE g_glaa003             LIKE glaa_t.glaa003
+DEFINE g_glaa024             LIKE glaa_t.glaa024
+DEFINE g_ooef001             LIKE ooef_t.ooef001
+DEFINE g_ooef006             LIKE ooef_t.ooef006
+DEFINE g_ooef016             LIKE ooef_t.ooef016
+DEFINE g_ooed004_t           LIKE ooed_t.ooed004
+DEFINE g_glaa005             LIKE glaa_t.glaa005   #151222-00010#10
+DEFINE l_ooef017             LIKE ooef_t.ooef017   #151201-00002#14   Add
+DEFINE l_pmaa204             LIKE pmaa_t.pmaa204   #151201-00002#14   Add
+DEFINE g_sql_bank            STRING                #160122-00001#32 by 07673  
+DEFINE g_site_wc             STRING      #160816-00012#3               
+DEFINE g_comp_wc             STRING      #160816-00012#3  
+DEFINE g_user_dept_wc        STRING      #161104-00046#14
+DEFINE g_user_dept_wc_q      STRING      #161104-00046#14
+DEFINE g_user_slip_wc        STRING      #161104-00046#14
+#end add-point
+       
+#模組變數(Module Variables)
+DEFINE g_nmba_m          type_g_nmba_m
+DEFINE g_nmba_m_t        type_g_nmba_m
+DEFINE g_nmba_m_o        type_g_nmba_m
+DEFINE g_nmba_m_mask_o   type_g_nmba_m #轉換遮罩前資料
+DEFINE g_nmba_m_mask_n   type_g_nmba_m #轉換遮罩後資料
+ 
+   DEFINE g_nmbacomp_t LIKE nmba_t.nmbacomp
+DEFINE g_nmbadocno_t LIKE nmba_t.nmbadocno
+ 
+ 
+DEFINE g_nmbb_d          DYNAMIC ARRAY OF type_g_nmbb_d
+DEFINE g_nmbb_d_t        type_g_nmbb_d
+DEFINE g_nmbb_d_o        type_g_nmbb_d
+DEFINE g_nmbb_d_mask_o   DYNAMIC ARRAY OF type_g_nmbb_d #轉換遮罩前資料
+DEFINE g_nmbb_d_mask_n   DYNAMIC ARRAY OF type_g_nmbb_d #轉換遮罩後資料
+DEFINE g_nmbb2_d          DYNAMIC ARRAY OF type_g_nmbb2_d
+DEFINE g_nmbb2_d_t        type_g_nmbb2_d
+DEFINE g_nmbb2_d_o        type_g_nmbb2_d
+DEFINE g_nmbb2_d_mask_o   DYNAMIC ARRAY OF type_g_nmbb2_d #轉換遮罩前資料
+DEFINE g_nmbb2_d_mask_n   DYNAMIC ARRAY OF type_g_nmbb2_d #轉換遮罩後資料
+ 
+ 
+DEFINE g_browser         DYNAMIC ARRAY OF type_browser
+DEFINE g_browser_f       DYNAMIC ARRAY OF type_browser
+ 
+ 
+DEFINE g_wc                  STRING
+DEFINE g_wc_t                STRING
+DEFINE g_wc2                 STRING                          #單身CONSTRUCT結果
+DEFINE g_wc2_table1          STRING
+DEFINE g_wc2_table2   STRING
+ 
+ 
+ 
+DEFINE g_wc2_extend          STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+ 
+DEFINE g_sql                 STRING
+DEFINE g_forupd_sql          STRING
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_current_idx         LIKE type_t.num10     
+DEFINE g_jump                LIKE type_t.num10        
+DEFINE g_no_ask              LIKE type_t.num5        
+DEFINE g_rec_b               LIKE type_t.num10           
+DEFINE l_ac                  LIKE type_t.num10    
+DEFINE g_curr_diag           ui.Dialog                         #Current Dialog
+                                                               
+DEFINE g_pagestart           LIKE type_t.num10                 
+DEFINE gwin_curr             ui.Window                         #Current Window
+DEFINE gfrm_curr             ui.Form                           #Current Form
+DEFINE g_page_action         STRING                            #page action
+DEFINE g_header_hidden       LIKE type_t.num5                  #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5                  #隱藏工作Panel
+DEFINE g_page                STRING                            #第幾頁
+DEFINE g_state               STRING       
+DEFINE g_header_cnt          LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10                  #單身總筆數
+DEFINE g_detail_idx          LIKE type_t.num10                  #單身目前所在筆數
+DEFINE g_detail_idx_tmp      LIKE type_t.num10                  #單身目前所在筆數
+DEFINE g_detail_idx2         LIKE type_t.num10                  #單身2目前所在筆數
+DEFINE g_detail_idx_list     DYNAMIC ARRAY OF LIKE type_t.num10 #單身2目前所在筆數
+DEFINE g_browser_cnt         LIKE type_t.num10                  #Browser總筆數
+DEFINE g_browser_idx         LIKE type_t.num10                  #Browser目前所在筆數
+DEFINE g_temp_idx            LIKE type_t.num10                  #Browser目前所在筆數(暫存用)
+DEFINE g_order               STRING                             #查詢排序欄位
+                                                        
+DEFINE g_current_row         LIKE type_t.num10                  #Browser所在筆數
+DEFINE g_current_sw          BOOLEAN                            #Browser所在筆數用開關
+DEFINE g_current_page        LIKE type_t.num10                  #目前所在頁數
+DEFINE g_insert              LIKE type_t.chr5                   #是否導到其他page
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys               DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak           DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_bfill               LIKE type_t.chr5              #是否刷新單身
+DEFINE g_error_show          LIKE type_t.num5              #是否顯示筆數提示訊息
+DEFINE g_master_insert       BOOLEAN                       #確認單頭資料是否寫入
+ 
+DEFINE g_wc_frozen           STRING                        #凍結欄位使用
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_aw                  STRING                        #確定當下點擊的單身
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+DEFINE g_log1                STRING                        #log用
+DEFINE g_log2                STRING                        #log用
+DEFINE g_loc                 LIKE type_t.chr5              #判斷游標所在位置
+DEFINE g_add_browse          STRING                        #新增填充用WC
+DEFINE g_update              BOOLEAN                       #確定單頭/身是否異動過
+DEFINE g_idx_group           om.SaxAttributes              #頁籤群組
+DEFINE g_master_commit       LIKE type_t.chr1              #確認單頭是否修改過
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="anmt564.main" >}
+#應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("anm","")
+ 
+   #add-point:作業初始化 name="main.init"
+   #161104-00046#14-----s
+   #建立與單頭array相同的temptable
+   CALL s_aooi200def_create('','g_nmba_m','','','','','','')RETURNING g_sub_success
+   
+   #單別控制組
+   LET g_user_dept_wc = ''
+   CALL s_fin_get_user_dept_control('nmbacomp','','nmbaent','nmbadocno') RETURNING g_user_dept_wc
+   #開窗使用
+   LET g_user_dept_wc_q = g_user_dept_wc
+   
+   CALL s_control_get_docno_sql(g_user,g_dept) RETURNING g_sub_success,g_user_slip_wc  
+   #161104-00046#14-----e
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = " SELECT nmbasite,'',nmba008,'',nmba001,'',nmbacomp,'',nmbadocno,'',nmbadocdt, 
+       nmba003,nmba004,'',nmba005,'','','',nmbastus,nmba007,nmba006,nmba002,'',nmbaownid,'',nmbaowndp, 
+       '',nmbacrtid,'',nmbacrtdp,'',nmbacrtdt,nmbamodid,'',nmbamoddt,nmbacnfid,'',nmbacnfdt", 
+                      " FROM nmba_t",
+                      " WHERE nmbaent= ? AND nmbacomp=? AND nmbadocno=? FOR UPDATE"
+   #add-point:SQL_define name="main.after_define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE anmt564_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT DISTINCT t0.nmbasite,t0.nmba008,t0.nmba001,t0.nmbacomp,t0.nmbadocno,t0.nmbadocdt, 
+       t0.nmba003,t0.nmba004,t0.nmba005,t0.nmbastus,t0.nmba007,t0.nmba006,t0.nmba002,t0.nmbaownid,t0.nmbaowndp, 
+       t0.nmbacrtid,t0.nmbacrtdp,t0.nmbacrtdt,t0.nmbamodid,t0.nmbamoddt,t0.nmbacnfid,t0.nmbacnfdt,t1.ooefl003 , 
+       t2.ooag011 ,t3.ooefl003 ,t4.ooefl003 ,t5.oobal004 ,t6.pmaal003 ,t7.ooag011 ,t8.ooag011 ,t9.ooefl003 , 
+       t10.ooag011 ,t11.ooefl003 ,t12.ooag011 ,t13.ooag011",
+               " FROM nmba_t t0",
+                              " LEFT JOIN ooefl_t t1 ON t1.ooeflent="||g_enterprise||" AND t1.ooefl001=t0.nmbasite AND t1.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t2 ON t2.ooagent="||g_enterprise||" AND t2.ooag001=t0.nmba008  ",
+               " LEFT JOIN ooefl_t t3 ON t3.ooeflent="||g_enterprise||" AND t3.ooefl001=t0.nmba001 AND t3.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t4 ON t4.ooeflent="||g_enterprise||" AND t4.ooefl001=t0.nmbacomp AND t4.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN oobal_t t5 ON t5.oobalent="||g_enterprise||" AND t5.oobal001='' AND t5.oobal002=t0.nmbadocno AND t5.oobal003='"||g_dlang||"' ",
+               " LEFT JOIN pmaal_t t6 ON t6.pmaalent="||g_enterprise||" AND t6.pmaal001=t0.nmba004 AND t6.pmaal002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t7 ON t7.ooagent="||g_enterprise||" AND t7.ooag001=t0.nmba002  ",
+               " LEFT JOIN ooag_t t8 ON t8.ooagent="||g_enterprise||" AND t8.ooag001=t0.nmbaownid  ",
+               " LEFT JOIN ooefl_t t9 ON t9.ooeflent="||g_enterprise||" AND t9.ooefl001=t0.nmbaowndp AND t9.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t10 ON t10.ooagent="||g_enterprise||" AND t10.ooag001=t0.nmbacrtid  ",
+               " LEFT JOIN ooefl_t t11 ON t11.ooeflent="||g_enterprise||" AND t11.ooefl001=t0.nmbacrtdp AND t11.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t12 ON t12.ooagent="||g_enterprise||" AND t12.ooag001=t0.nmbamodid  ",
+               " LEFT JOIN ooag_t t13 ON t13.ooagent="||g_enterprise||" AND t13.ooag001=t0.nmbacnfid  ",
+ 
+               " WHERE t0.nmbaent = " ||g_enterprise|| " AND t0.nmbacomp = ? AND t0.nmbadocno = ?"
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   
+   #end add-point
+   PREPARE anmt564_master_referesh FROM g_sql
+ 
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_anmt564 WITH FORM cl_ap_formpath("anm",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL anmt564_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL anmt564_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_anmt564
+      
+   END IF 
+   
+   CLOSE anmt564_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="anmt564.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION anmt564_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point    
+   #add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="init.pre_function"
+   
+   #end add-point
+   
+   LET g_bfill       = "Y"
+   LET g_detail_idx  = 1 #第一層單身指標
+   LET g_detail_idx2 = 1 #第二層單身指標
+   
+   #各個page指標
+   LET g_detail_idx_list[1] = 1 
+   LET g_detail_idx_list[2] = 1
+ 
+   LET g_error_show  = 1
+   LET l_ac = 1 #單身指標
+      CALL cl_set_combo_scc_part('nmbastus','13','N,Y,V,A,D,R,W,X')
+ 
+      CALL cl_set_combo_scc('nmbb001','8701') 
+   CALL cl_set_combo_scc('nmbb042','8714') 
+   CALL cl_set_combo_scc('nmbb044','8715') 
+ 
+   LET gwin_curr = ui.Window.getCurrent()  #取得現行畫面
+   LET gfrm_curr = gwin_curr.getForm()     #取出物件化後的畫面物件
+   
+   #page群組
+   LET g_idx_group = om.SaxAttributes.create()
+   CALL g_idx_group.addAttribute("'1',","1")
+   CALL g_idx_group.addAttribute("'2',","1")
+ 
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL s_fin_create_account_center_tmp()
+  #151201-00002#14 Add  ---(S)---
+   CALL cl_set_combo_scc_part('nmee022','8739','1,2,4,7') #mod by liyan
+   #ammt425,ammt405,agct405,cmmt405
+   #开启栏位
+   CALL cl_set_combo_scc_part('nmbb001','8701','1,2')
+   CALL cl_set_combo_scc_part('nmee024','6004','1,2,3')  #add by liyan
+  #151201-00002#14 Add  ---(E)---
+   #160122-00001#32 by 07673--add--str--
+   LET g_sql_bank=NULL
+   CALL s_anmi120_get_bank_account_sql(g_user,g_dept) RETURNING g_sub_success,g_sql_bank
+   #160122-00001#32 by 07673--add--end
+   #end add-point
+   
+   #初始化搜尋條件
+   CALL anmt564_default_search()
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.ui_dialog" >}
+#+ 功能選單
+PRIVATE FUNCTION anmt564_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE ls_wc      STRING
+   DEFINE lb_first   BOOLEAN
+   DEFINE la_wc      DYNAMIC ARRAY OF RECORD
+          tableid    STRING,
+          wc         STRING
+          END RECORD
+   DEFINE la_param   RECORD
+          prog       STRING,
+          actionid   STRING,
+          background LIKE type_t.chr1,
+          param      DYNAMIC ARRAY OF STRING
+          END RECORD
+   DEFINE ls_js      STRING
+   DEFINE la_output  DYNAMIC ARRAY OF STRING   #報表元件鬆耦合使用
+   DEFINE  l_cmd_token           base.StringTokenizer   #報表作業cmdrun使用 
+   DEFINE  l_cmd_next            STRING                 #報表作業cmdrun使用
+   DEFINE  l_cmd_cnt             LIKE type_t.num5       #報表作業cmdrun使用
+   DEFINE  l_cmd_prog_arg        STRING                 #報表作業cmdrun使用
+   DEFINE  l_cmd_arg             STRING                 #報表作業cmdrun使用
+   #add-point:ui_dialog段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   DEFINE l_year    LIKE type_t.num5
+   DEFINE l_month   LIKE type_t.num5
+   DEFINE  l_n      LIKE type_t.num10          #151125-00006#3
+   #end add-point
+   
+   #add-point:Function前置處理  name="ui_dialog.pre_function"
+   
+   #end add-point
+   
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+ 
+   
+   #action default動作
+   #應用 a42 樣板自動產生(Version:3)
+   #進入程式時預設執行的動作
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice="insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL anmt564_insert()
+            #add-point:ON ACTION insert name="menu.default.insert"
+            
+            #END add-point
+         END IF
+ 
+      #add-point:action default自訂 name="ui_dialog.action_default"
+      
+      #end add-point
+      OTHERWISE
+   END CASE
+ 
+ 
+ 
+   
+   LET lb_first = TRUE
+   
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   
+   #end add-point
+   
+   WHILE TRUE 
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_browser.clear()       
+         INITIALIZE g_nmba_m.* TO NULL
+         CALL g_nmbb_d.clear()
+         CALL g_nmbb2_d.clear()
+ 
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL anmt564_init()
+      END IF
+   
+            
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+    
+         DISPLAY ARRAY g_nmbb_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+    
+            BEFORE ROW
+               #顯示單身筆數
+               CALL anmt564_idx_chk()
+               #確定當下選擇的筆數
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_detail_idx = l_ac
+               LET g_detail_idx_list[1] = l_ac
+               CALL g_idx_group.addAttribute("'1',",l_ac)
+               
+               #add-point:page1, before row動作 name="ui_dialog.page1.before_row"
+               
+               #end add-point
+               
+            BEFORE DISPLAY
+               #如果一直都在單身1則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'1',"))
+               END IF
+               LET g_loc = 'm'
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_current_page = 1
+               #顯示單身筆數
+               CALL anmt564_idx_chk()
+               #add-point:page1自定義行為 name="ui_dialog.page1.before_display"
+               
+               #end add-point
+               
+            #自訂ACTION(detail_show,page_1)
+            
+               
+            #add-point:page1自定義行為 name="ui_dialog.page1.action"
+            
+            #end add-point
+               
+         END DISPLAY
+        
+         #第一階單身段落
+         DISPLAY ARRAY g_nmbb2_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b)  
+    
+            BEFORE ROW
+               #顯示單身筆數
+               CALL anmt564_idx_chk()
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_detail_idx = l_ac
+               LET g_detail_idx_list[2] = l_ac
+               CALL g_idx_group.addAttribute("'2',",l_ac)
+               
+               #add-point:page2, before row動作 name="ui_dialog.body2.before_row"
+               
+               #end add-point
+               
+            BEFORE DISPLAY
+               #如果一直都在單身1則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'2',"))
+               END IF
+               LET g_loc = 'm'
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_current_page = 2
+               #顯示單身筆數
+               CALL anmt564_idx_chk()
+               #add-point:page2自定義行為 name="ui_dialog.body2.before_display"
+               
+               #end add-point
+      
+            #自訂ACTION(detail_show,page_2)
+            
+         
+            #add-point:page2自定義行為 name="ui_dialog.body2.action"
+            
+            #end add-point
+         
+         END DISPLAY
+ 
+         
+ 
+         
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+         
+      
+         BEFORE DIALOG
+            #先填充browser資料
+            CALL anmt564_browser_fill("")
+            CALL cl_notice()
+            CALL cl_navigator_setting(g_current_idx, g_detail_cnt)
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            LET g_current_sw = FALSE
+            #回歸舊筆數位置 (回到當時異動的筆數)
+            
+            #確保g_current_idx位於正常區間內
+            #小於,等於0則指到第1筆
+            IF g_current_idx <= 0 THEN
+               LET g_current_idx = 1
+            END IF
+            #超過最大筆數則指到最後1筆
+            IF g_current_idx > g_browser.getLength() THEN
+               LEt g_current_idx = g_browser.getLength()
+            END IF 
+            
+            LET g_current_sw = TRUE
+            LET g_current_row = g_current_idx #目前指標
+            
+            #有資料才進行fetch
+            IF g_current_idx <> 0 THEN
+               CALL anmt564_fetch('') # reload data
+            END IF
+            #LET g_detail_idx = 1
+            CALL anmt564_ui_detailshow() #Setting the current row 
+            
+            #筆數顯示
+            LET g_current_page = 1
+            CALL anmt564_idx_chk()
+            CALL cl_ap_performance_cal()
+            #add-point:ui_dialog段before_dialog2 name="ui_dialog.before_dialog2"
+            
+            #end add-point
+ 
+         #add-point:ui_dialog段more_action name="ui_dialog.more_action"
+         
+         #end add-point
+ 
+         #狀態碼切換
+         ON ACTION statechange
+            LET g_action_choice = "statechange"
+            CALL anmt564_statechange()
+            #根據資料狀態切換action狀態
+            CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+            CALL anmt564_set_act_visible()   
+            CALL anmt564_set_act_no_visible()
+            IF NOT (g_nmba_m.nmbacomp IS NULL
+              OR g_nmba_m.nmbadocno IS NULL
+ 
+              ) THEN
+               #組合條件
+               LET g_add_browse = " nmbaent = " ||g_enterprise|| " AND",
+                                  " nmbacomp = '", g_nmba_m.nmbacomp, "' "
+                                  ," AND nmbadocno = '", g_nmba_m.nmbadocno, "' "
+ 
+               #填到對應位置
+               CALL anmt564_browser_fill("")
+            END IF
+         #應用 a32 樣板自動產生(Version:3)
+         #簽核狀況
+         ON ACTION bpm_status
+            #查詢簽核狀況, 統一建立HyperLink
+            CALL cl_bpm_status()
+            #add-point:ON ACTION bpm_status name="menu.bpm_status"
+            
+            #END add-point
+ 
+ 
+ 
+          
+         #查詢方案選擇 
+         ON ACTION queryplansel
+            CALL cl_dlg_qryplan_select() RETURNING ls_wc
+            #不是空條件才寫入g_wc跟重新找資料
+            IF NOT cl_null(ls_wc) THEN
+               CALL util.JSON.parse(ls_wc, la_wc)
+               INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+               INITIALIZE g_wc2_table2 TO NULL
+ 
+ 
+               FOR li_idx = 1 TO la_wc.getLength()
+                  CASE
+                     WHEN la_wc[li_idx].tableid = "nmba_t" 
+                        LET g_wc = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "nmbb_t" 
+                        LET g_wc2_table1 = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "nmee_t" 
+                        LET g_wc2_table2 = la_wc[li_idx].wc
+ 
+ 
+                     WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                        LET g_wc2_extend = la_wc[li_idx].wc
+                  END CASE
+               END FOR
+               IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1) 
+                  OR NOT cl_null(g_wc2_table2)
+ 
+ 
+                  OR NOT cl_null(g_wc2_extend)
+                  THEN
+                  #組合g_wc2
+                  IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+                     LET g_wc2 = g_wc2_table1
+                  END IF
+                  IF g_wc2_table2 <> " 1=1" AND NOT cl_null(g_wc2_table2) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+                  END IF
+ 
+ 
+                  IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+                  END IF
+ 
+                  IF g_wc2.subString(1,5) = " AND " THEN
+                     LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+                  END IF
+               END IF
+               CALL anmt564_browser_fill("F")   #browser_fill()會將notice區塊清空
+            END IF
+         
+         #查詢方案選擇
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               CALL util.JSON.parse(ls_wc, la_wc)
+               INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+               INITIALIZE g_wc2_table2 TO NULL
+ 
+ 
+               FOR li_idx = 1 TO la_wc.getLength()
+                  CASE
+                     WHEN la_wc[li_idx].tableid = "nmba_t" 
+                        LET g_wc = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "nmbb_t" 
+                        LET g_wc2_table1 = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "nmee_t" 
+                        LET g_wc2_table2 = la_wc[li_idx].wc
+ 
+ 
+                     WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                        LET g_wc2_extend = la_wc[li_idx].wc
+                  END CASE
+               END FOR
+               IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1)
+                  OR NOT cl_null(g_wc2_table2)
+ 
+ 
+                  OR NOT cl_null(g_wc2_extend)
+                  THEN
+                  IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+                     LET g_wc2 = g_wc2_table1
+                  END IF
+                  IF g_wc2_table2 <> " 1=1" AND NOT cl_null(g_wc2_table2) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+                  END IF
+ 
+ 
+                  IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+                  END IF
+                  IF g_wc2.subString(1,5) = " AND " THEN
+                     LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+                  END IF
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL anmt564_browser_fill("F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code = "-100" 
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL anmt564_fetch("F")
+                  END IF
+               END IF
+            END IF
+            #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+          
+         
+         
+         ON ACTION first
+            LET g_action_choice = "fetch"
+            CALL anmt564_fetch('F')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL anmt564_idx_chk()
+            
+         ON ACTION previous
+            LET g_action_choice = "fetch"
+            CALL anmt564_fetch('P')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL anmt564_idx_chk()
+            
+         ON ACTION jump
+            LET g_action_choice = "fetch"
+            CALL anmt564_fetch('/')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL anmt564_idx_chk()
+            
+         ON ACTION next
+            LET g_action_choice = "fetch"
+            CALL anmt564_fetch('N')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL anmt564_idx_chk()
+            
+         ON ACTION last
+            LET g_action_choice = "fetch"
+            CALL anmt564_fetch('L')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL anmt564_idx_chk()
+          
+         #excel匯出功能          
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               #browser
+               CALL g_export_node.clear()
+               IF g_main_hidden = 1 THEN
+                  LET g_export_node[1] = base.typeInfo.create(g_browser)
+                  LET g_export_id[1]   = "s_browse"
+                  CALL cl_export_to_excel()
+               #非browser
+               ELSE
+                  LET g_export_node[1] = base.typeInfo.create(g_nmbb_d)
+                  LET g_export_id[1]   = "s_detail1"
+                  LET g_export_node[2] = base.typeInfo.create(g_nmbb2_d)
+                  LET g_export_id[2]   = "s_detail2"
+ 
+                  #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+                  
+                  #END add-point
+                  CALL cl_export_to_excel_getpage()
+                  CALL cl_export_to_excel()
+               END IF
+            END IF
+        
+         ON ACTION close
+            LET INT_FLAG = FALSE
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+          
+         ON ACTION exit
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+    
+         #主頁摺疊
+         ON ACTION mainhidden       
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+               CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+               CALL cl_notice()
+            END IF
+            
+       
+         #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+         ON ACTION controls     
+            IF g_header_hidden THEN
+               CALL gfrm_curr.setElementHidden("vb_master",0)
+               CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+               LET g_header_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("vb_master",1)
+               CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+               LET g_header_hidden = 1     #hidden     
+            END IF
+    
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION approval
+            LET g_action_choice="approval"
+            IF cl_auth_chk_act("approval") THEN
+               
+               #add-point:ON ACTION approval name="menu.approval"
+               #直接審核
+               CALL anmt564_approval()
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL anmt564_modify()
+               #add-point:ON ACTION modify name="menu.modify"
+               #151125-00006#3--s           
+               CALL anmt564_immediately_conf()
+               SELECT COUNT(*) INTO l_n FROM nmba_t
+                WHERE nmbaent = g_enterprise AND nmbacomp = g_nmba_m.nmbacomp AND nmbadocno = g_nmba_m.nmbadocno
+                IF l_n > 0 THEN CALL anmt564_ui_headershow() END IF
+               #151125-00006#3--e
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = g_curr_diag.getCurrentItem()
+               CALL anmt564_modify()
+               #add-point:ON ACTION modify_detail name="menu.modify_detail"
+               #151125-00006#3--s           
+               CALL anmt564_immediately_conf()
+               SELECT COUNT(*) INTO l_n FROM nmba_t
+                WHERE nmbaent = g_enterprise AND nmbacomp = g_nmba_m.nmbacomp AND nmbadocno = g_nmba_m.nmbadocno
+                IF l_n > 0 THEN CALL anmt564_ui_headershow() END IF
+               #151125-00006#3--e
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL anmt564_delete()
+               #add-point:ON ACTION delete name="menu.delete"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL anmt564_insert()
+               #add-point:ON ACTION insert name="menu.insert"
+               #151125-00006#3--s           
+               CALL anmt564_immediately_conf()
+               SELECT COUNT(*) INTO l_n FROM nmba_t
+                WHERE nmbaent = g_enterprise AND nmbacomp = g_nmba_m.nmbacomp AND nmbadocno = g_nmba_m.nmbadocno
+                IF l_n > 0 THEN CALL anmt564_ui_headershow() END IF
+               #151125-00006#3--e
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+              #151201-00002#14 Mark ---(S)---
+              #IF NOT cl_null(g_nmba_m.nmbadocno) AND NOT cl_null(g_nmba_m.nmbacomp) THEN
+              #   INITIALIZE la_param.* TO NULL
+              #   LET la_param.prog = 'anmr563'
+              #   LET la_param.param[1] = 'Y'
+              #   LET la_param.param[2] = g_nmba_m.nmbacomp
+              #   LET la_param.param[3] = g_nmba_m.nmbadocno
+              #   LET ls_js = util.JSON.stringify( la_param )
+              #   CALL cl_cmdrun_wait(ls_js)
+              #END IF
+              #151201-00002#14 Mark ---(E)---
+              #151201-00002#14 Add  ---(S)---
+              #只有審核狀態才能打印
+               IF g_nmba_m.nmbastus <>'Y' THEN
+                  EXIT DIALOG
+               END IF
+
+               IF cl_null(g_nmba_m.nmbadocno) OR  cl_null(g_nmba_m.nmbacomp) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = ""
+                  LET g_errparam.code   = "std-00003"
+                  LET g_errparam.popup  = FALSE
+                  CALL cl_err()
+                  EXIT DIALOG
+               END IF
+
+               LET g_rep_wc=" nmbaent = ",g_enterprise," AND nmbacomp = '",g_nmba_m.nmbacomp,"' AND ",
+                            " nmbadocno = '",g_nmba_m.nmbadocno,"'"
+               LET g_rep_wc = g_rep_wc CLIPPED,",'",g_nmba_m.nmbacomp,"' "
+              #151201-00002#14 Add  ---(E)---
+               #END add-point
+               &include "erp/anm/anmt564_rep.4gl"
+               #add-point:ON ACTION output.after name="menu.after_output"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+              #151201-00002#14 Mark ---(S)---
+              #IF NOT cl_null(g_nmba_m.nmbadocno) AND NOT cl_null(g_nmba_m.nmbacomp) THEN
+              #   INITIALIZE la_param.* TO NULL
+              #   LET la_param.prog = 'anmr563'
+              #   LET la_param.param[1] = 'Y'
+              #   LET la_param.param[2] = g_nmba_m.nmbacomp
+              #   LET la_param.param[3] = g_nmba_m.nmbadocno
+              #   LET ls_js = util.JSON.stringify( la_param )
+              #   CALL cl_cmdrun_wait(ls_js)
+              #END IF
+              #151201-00002#14 Mark ---(E)---
+              #151201-00002#14 Add  ---(S)---
+              #只有審核狀態才能打印
+               IF g_nmba_m.nmbastus <>'Y' THEN
+                  EXIT DIALOG
+               END IF
+
+               IF cl_null(g_nmba_m.nmbadocno) OR  cl_null(g_nmba_m.nmbacomp) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = ""
+                  LET g_errparam.code   = "std-00003"
+                  LET g_errparam.popup  = FALSE
+                  CALL cl_err()
+                  EXIT DIALOG
+               END IF
+
+               LET g_rep_wc=" nmbaent = ",g_enterprise," AND nmbacomp = '",g_nmba_m.nmbacomp,"' AND ",
+                            " nmbadocno = '",g_nmba_m.nmbadocno,"'"
+               LET g_rep_wc = g_rep_wc CLIPPED,",'",g_nmba_m.nmbacomp,"' "
+              #151201-00002#14 Add  ---(E)---
+               #END add-point
+               &include "erp/anm/anmt564_rep.4gl"
+               #add-point:ON ACTION quickprint.after name="menu.after_quickprint"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL anmt564_reproduce()
+               #add-point:ON ACTION reproduce name="menu.reproduce"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_anmt311
+            LET g_action_choice="open_anmt311"
+            IF cl_auth_chk_act("open_anmt311") THEN
+               
+               #add-point:ON ACTION open_anmt311 name="menu.open_anmt311"
+               LET la_param.prog = "anmt311"
+               LET la_param.param[1] = ""
+               LET la_param.param[2] = ""
+               LET ls_js = util.JSON.stringify(la_param)
+               CALL cl_cmdrun_wait(ls_js)
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL anmt564_query()
+               #add-point:ON ACTION query name="menu.query"
+               
+               #END add-point
+               #應用 a59 樣板自動產生(Version:3)  
+               CALL g_curr_diag.setCurrentRow("s_detail1",1)
+               CALL g_curr_diag.setCurrentRow("s_detail2",1)
+ 
+ 
+ 
+ 
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION s_cashflow
+            LET g_action_choice="s_cashflow"
+            IF cl_auth_chk_act("s_cashflow") THEN
+               
+               #add-point:ON ACTION s_cashflow name="menu.s_cashflow"
+               IF g_nmbb_d[l_ac].nmbb029 = '10' OR g_nmbb_d[l_ac].nmbb029 = '20' THEN  #151222-00010#10
+                  LET l_year = YEAR(g_nmba_m.nmbadocdt)
+                  LET l_month = MONTH(g_nmba_m.nmbadocdt)                                  
+                  IF g_detail_idx > 0 THEN
+                     CALL anmt564_glaa_get()
+                                         #帳別      #匯款編號         #年度   #期別  #借貸別 #作業編號暂时给anmt550  #單身項次
+                     CALL s_cashflow_nm(g_glaald,g_nmba_m.nmbadocno,l_year,l_month,'1','anmt564',g_nmbb_d[g_detail_idx].nmbbseq)
+                  END IF
+               END IF  #151222-00010#10
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         
+         #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL anmt564_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.dialog.related_document"
+               
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL anmt564_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.dialog.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL anmt564_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.dialog.followup"
+            
+            #END add-point
+            CALL cl_user_overview_follow(g_nmba_m.nmbadocdt)
+ 
+ 
+ 
+         
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+    
+         #交談指令共用ACTION
+         &include "common_action.4gl" 
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #(ver:79) ---add start---
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      
+      #end add-point
+      #(ver:79) --- add end ---
+    
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         EXIT WHILE
+      END IF
+    
+   END WHILE    
+      
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.browser_fill" >}
+#+ 瀏覽頁簽資料填充
+PRIVATE FUNCTION anmt564_browser_fill(ps_page_action)
+   #add-point:browser_fill段define(客製用) name="browser_fill.define_customerization"
+   
+   #end add-point  
+   DEFINE ps_page_action    STRING
+   DEFINE l_wc              STRING
+   DEFINE l_wc2             STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sub_sql         STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="browser_fill.define"
+   DEFINE l_comp_str        STRING #160816-00012#3 add 
+   #end add-point    
+   
+   #add-point:Function前置處理 name="browser_fill.before_browser_fill"
+   IF cl_null(g_wc) THEN 
+      LET g_wc = " nmba003 = 'anmt564'  "
+   ELSE
+      LET g_wc = g_wc," AND nmba003 = 'anmt564'"
+   END IF
+  
+   #160816-00012#3 add s---
+   CALL s_axrt300_get_site(g_user,'','3') RETURNING l_comp_str
+   LET l_comp_str = cl_replace_str(l_comp_str,"ooef017","nmbacomp")
+   LET g_wc = g_wc," AND ",l_comp_str  
+   #160816-00012#3 add e---   
+   #end add-point
+   
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   LET l_wc  = g_wc.trim() 
+   LET l_wc2 = g_wc2.trim()
+ 
+   #add-point:browser_fill,foreach前 name="browser_fill.before_foreach"
+   
+   #end add-point
+   
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件                      
+      LET l_sub_sql = " SELECT DISTINCT nmbacomp,nmbadocno ",
+                      " FROM nmba_t ",
+                      " ",
+                      " LEFT JOIN nmbb_t ON nmbbent = nmbaent AND nmbacomp = nmbbcomp AND nmbadocno = nmbbdocno ", "  ",
+                      #add-point:browser_fill段sql(nmbb_t1) name="browser_fill.cnt.join.}"
+                      
+                      #end add-point
+                      " LEFT JOIN nmee_t ON nmeeent = nmbaent AND nmbacomp = nmeecomp AND nmbadocno = nmeedocno", "  ",
+                      #add-point:browser_fill段sql(nmee_t1) name="browser_fill.cnt.join.nmee_t1"
+                      
+                      #end add-point
+ 
+ 
+ 
+                      " ", 
+                      " ", 
+                      " ",                      
+ 
+ 
+ 
+                      " WHERE nmbaent = " ||g_enterprise|| " AND nmbbent = " ||g_enterprise|| " AND ",l_wc, " AND ", l_wc2, cl_sql_add_filter("nmba_t")
+   ELSE
+      #單身未輸入搜尋條件
+      LET l_sub_sql = " SELECT DISTINCT nmbacomp,nmbadocno ",
+                      " FROM nmba_t ", 
+                      "  ",
+                      "  ",
+                      " WHERE nmbaent = " ||g_enterprise|| " AND ",l_wc CLIPPED, cl_sql_add_filter("nmba_t")
+   END IF
+   
+   #add-point:browser_fill,cnt wc name="browser_fill.cnt_sqlwc"
+   #160122-00001#32--add--str--
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件                      
+      LET l_sub_sql = " SELECT UNIQUE nmbacomp,nmbadocno ",
+                      " FROM nmba_t ",
+                      "      LEFT JOIN nmee_t ON nmeeent = nmbaent AND nmbacomp = nmeecomp AND nmbadocno = nmeedocno", ", ",
+                      "      nmbb_t",
+                      " WHERE nmbbent = nmbaent AND nmbacomp = nmbbcomp AND nmbadocno = nmbbdocno",
+                      "   AND nmbaent = '" ||g_enterprise|| "' AND nmbbent = '" ||g_enterprise|| "'",
+                      "   AND nmbb003 IN (",g_sql_bank,")",
+                      "   AND ",l_wc, " AND ", l_wc2, cl_sql_add_filter("nmba_t"),
+                      " UNION ",
+                      " SELECT UNIQUE nmbacomp,nmbadocno ",
+                      " FROM nmba_t ",
+                      " LEFT JOIN nmbb_t ON nmbbent = nmbaent AND nmbacomp = nmbbcomp AND nmbadocno = nmbbdocno ", "  ",
+                      " LEFT JOIN nmee_t ON nmeeent = nmbaent AND nmbacomp = nmeecomp AND nmbadocno = nmeedocno", "  ",
+                      " WHERE nmbaent = '" ||g_enterprise|| "' AND nmbbent = '" ||g_enterprise|| "'",
+                      "   AND TRIM(nmbb003) IS NULL",
+                      "   AND ",l_wc, " AND ", l_wc2, cl_sql_add_filter("nmba_t")
+   ELSE
+      #單身未輸入搜尋條件
+      LET l_sub_sql = " SELECT UNIQUE nmbacomp,nmbadocno ",
+                      " FROM nmba_t, ", 
+                      "      nmbb_t",
+                      " WHERE nmbbent = nmbaent AND nmbacomp = nmbbcomp AND nmbadocno = nmbbdocno",
+                      "   AND nmbaent = '" ||g_enterprise|| "'",
+                      "   AND nmbb003 IN (",g_sql_bank,")",
+                      "   AND ",l_wc CLIPPED, cl_sql_add_filter("nmba_t"),
+                      " UNION ",
+                      " SELECT UNIQUE nmbacomp,nmbadocno ",
+                      " FROM nmba_t ", 
+                      " LEFT JOIN nmbb_t ON nmbbent = nmbaent AND nmbacomp = nmbbcomp AND nmbadocno = nmbbdocno ", "  ",
+                      " WHERE nmbaent = '" ||g_enterprise|| "'",
+                      "   AND TRIM(nmbb003) IS NULL",
+                      "   AND ",l_wc CLIPPED, cl_sql_add_filter("nmba_t")
+   END IF
+   #160122-00001#32--add--end
+   #end add-point
+   
+   LET g_sql = " SELECT COUNT(1) FROM (",l_sub_sql,")"
+   
+   #add-point:browser_fill,count前 name="browser_fill.before_count"
+   
+   #end add-point
+   
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE header_cnt_pre FROM g_sql
+      EXECUTE header_cnt_pre INTO g_browser_cnt   #總筆數
+      FREE header_cnt_pre
+   END IF
+    
+   IF g_browser_cnt > g_max_browse THEN
+      IF g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_browser_cnt
+         LET g_errparam.code = 9035 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+      END IF
+      LET g_browser_cnt = g_max_browse
+   END IF
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+ 
+   #根據行為確定資料填充位置及WC
+   IF cl_null(g_add_browse) THEN
+      #清除畫面
+      CLEAR FORM                
+      INITIALIZE g_nmba_m.* TO NULL
+      CALL g_nmbb_d.clear()        
+      CALL g_nmbb2_d.clear() 
+ 
+      #add-point:browser_fill g_add_browse段額外處理 name="browser_fill.add_browse.other"
+      
+      #end add-point   
+      CALL g_browser.clear()
+      LET g_cnt = 1
+   ELSE
+      LET l_wc  = g_add_browse
+      LET l_wc2 = " 1=1" 
+      LET g_cnt = g_current_idx
+   END IF
+ 
+   #依照t0.nmbacomp,t0.nmbadocno Browser欄位定義(取代原本bs_sql功能)
+   #考量到單身可能下條件, 所以此處需join單身所有table
+   #DISTINCT是為了避免在join時出現重複的資料(如果不加DISTINCT則須在程式中過濾)
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件   
+      LET g_sql = " SELECT DISTINCT t0.nmbastus,t0.nmbacomp,t0.nmbadocno ",
+                  " FROM nmba_t t0",
+                  "  ",
+                  "  LEFT JOIN nmbb_t ON nmbbent = nmbaent AND nmbacomp = nmbbcomp AND nmbadocno = nmbbdocno ", "  ", 
+                  #add-point:browser_fill段sql(nmbb_t1) name="browser_fill.join.nmbb_t1"
+                  
+                  #end add-point
+                  "  LEFT JOIN nmee_t ON nmeeent = nmbaent AND nmbacomp = nmeecomp AND nmbadocno = nmeedocno", "  ", 
+                  #add-point:browser_fill段sql(nmee_t1) name="browser_fill.join.nmee_t1"
+                  
+                  #end add-point
+ 
+ 
+ 
+                  " ", 
+                  " ",                      
+ 
+ 
+ 
+                  
+                  " WHERE t0.nmbaent = " ||g_enterprise|| " AND ",l_wc," AND ",l_wc2, cl_sql_add_filter("nmba_t")
+   ELSE
+      #單身無輸入搜尋條件   
+      LET g_sql = " SELECT DISTINCT t0.nmbastus,t0.nmbacomp,t0.nmbadocno ",
+                  " FROM nmba_t t0",
+                  "  ",
+                  
+                  " WHERE t0.nmbaent = " ||g_enterprise|| " AND ",l_wc, cl_sql_add_filter("nmba_t")
+   END IF
+   #add-point:browser_fill,sql wc name="browser_fill.fill_sqlwc"
+   #160122-00001#32--add--str--
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件   
+      LET g_sql = " SELECT DISTINCT t0.nmbastus,t0.nmbacomp,t0.nmbadocno ",
+                  " FROM nmba_t t0",
+                  "      LEFT JOIN nmee_t ON nmeeent = nmbaent AND nmbacomp = nmeecomp AND nmbadocno = nmeedocno", ", ",
+                  "      nmbb_t ",
+                  " WHERE nmbbent = nmbaent AND nmbacomp = nmbbcomp AND nmbadocno = nmbbdocno",
+                  "   AND t0.nmbaent = '" ||g_enterprise|| "'",
+                  "   AND nmbb003 IN (",g_sql_bank,")",
+                  "   AND ",l_wc," AND ",l_wc2, cl_sql_add_filter("nmba_t"),
+                  " UNION ",
+                  " SELECT DISTINCT t1.nmbastus,t1.nmbacomp,t1.nmbadocno ",
+                  " FROM nmba_t t1",
+                  "  LEFT JOIN nmbb_t ON nmbbent = nmbaent AND nmbacomp = nmbbcomp AND nmbadocno = nmbbdocno ", "  ", 
+                  "  LEFT JOIN nmee_t ON nmeeent = nmbaent AND nmbacomp = nmeecomp AND nmbadocno = nmeedocno", "  ", 
+                  " WHERE t1.nmbaent = '" ||g_enterprise|| "'",
+                  "   AND TRIM(nmbb003) IS NULL",
+                  "   AND ",l_wc," AND ",l_wc2, cl_sql_add_filter("nmba_t")
+   ELSE
+      #單身無輸入搜尋條件   
+      LET g_sql = " SELECT DISTINCT t0.nmbastus,t0.nmbacomp,t0.nmbadocno ",
+                  " FROM nmba_t t0,",
+                  "      nmbb_t ",
+                  " WHERE nmbbent = nmbaent AND nmbacomp = nmbbcomp AND nmbadocno = nmbbdocno",
+                  "   AND t0.nmbaent = '" ||g_enterprise|| "'",
+                  "   AND nmbb003 IN (",g_sql_bank,")",
+                  "   AND ",l_wc, cl_sql_add_filter("nmba_t"),
+                  " UNION ",
+                  " SELECT DISTINCT t1.nmbastus,t1.nmbacomp,t1.nmbadocno ",
+                  " FROM nmba_t t1",
+                  "  LEFT JOIN nmbb_t ON nmbbent = nmbaent AND nmbacomp = nmbbcomp AND nmbadocno = nmbbdocno ", "  ", 
+                  " WHERE t1.nmbaent = '" ||g_enterprise|| "'",
+                  "   AND TRIM(nmbb003) IS NULL",
+                  "   AND ",l_wc, cl_sql_add_filter("nmba_t")
+   END IF
+   #160122-00001#32--add--end
+   #end add-point
+   LET g_sql = g_sql, " ORDER BY nmbacomp,nmbadocno ",g_order
+ 
+   #add-point:browser_fill,before_prepare name="browser_fill.before_prepare"
+   
+   #end add-point
+        
+   #LET g_sql = cl_sql_add_tabid(g_sql,"nmba_t") #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql) #遮蔽特定資料
+   
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE browse_pre FROM g_sql
+      DECLARE browse_cur CURSOR FOR browse_pre
+      
+      #add-point:browser_fill段open cursor name="browser_fill.open"
+      
+      #end add-point
+      
+      FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_nmbacomp,g_browser[g_cnt].b_nmbadocno 
+ 
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "Foreach:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+      
+         #add-point:browser_fill段reference name="browser_fill.reference"
+         
+         #end add-point
+      
+      
+               #應用 a24 樣板自動產生(Version:3)
+      #browser顯示圖片
+      CASE g_browser[g_cnt].b_statepic
+         WHEN "N"
+            LET g_browser[g_cnt].b_statepic = "stus/16/unconfirmed.png"
+         WHEN "Y"
+            LET g_browser[g_cnt].b_statepic = "stus/16/confirmed.png"
+         WHEN "V"
+            LET g_browser[g_cnt].b_statepic = "stus/16/verify.png"
+         WHEN "A"
+            LET g_browser[g_cnt].b_statepic = "stus/16/approved.png"
+         WHEN "D"
+            LET g_browser[g_cnt].b_statepic = "stus/16/withdraw.png"
+         WHEN "R"
+            LET g_browser[g_cnt].b_statepic = "stus/16/rejection.png"
+         WHEN "W"
+            LET g_browser[g_cnt].b_statepic = "stus/16/signing.png"
+         WHEN "X"
+            LET g_browser[g_cnt].b_statepic = "stus/16/invalid.png"
+         
+      END CASE
+ 
+ 
+ 
+         LET g_cnt = g_cnt + 1
+         IF g_cnt > g_max_browse THEN
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+      FREE browse_pre
+   END IF
+   
+   #清空g_add_browse, 並指定指標位置
+   IF NOT cl_null(g_add_browse) THEN
+      LET g_add_browse = ""
+      CALL g_curr_diag.setCurrentRow("s_browse",g_current_idx)
+   END IF
+   
+   IF cl_null(g_browser[g_cnt].b_nmbacomp) THEN
+      CALL g_browser.deleteElement(g_cnt)
+   END IF
+   
+   LET g_header_cnt  = g_browser.getLength()
+   LET g_browser_cnt = g_browser.getLength()
+   
+   #筆數顯示
+   IF g_browser_cnt > 0 THEN
+      DISPLAY g_browser_idx TO FORMONLY.b_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.b_count #總筆數
+      DISPLAY g_browser_idx TO FORMONLY.h_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.h_count #總筆數
+      DISPLAY g_detail_idx  TO FORMONLY.idx     #單身當下筆數
+      DISPLAY g_detail_cnt  TO FORMONLY.cnt     #單身總筆數
+   ELSE
+      DISPLAY '' TO FORMONLY.b_index #當下筆數
+      DISPLAY '' TO FORMONLY.b_count #總筆數
+      DISPLAY '' TO FORMONLY.h_index #當下筆數
+      DISPLAY '' TO FORMONLY.h_count #總筆數
+      DISPLAY '' TO FORMONLY.idx     #單身當下筆數
+      DISPLAY '' TO FORMONLY.cnt     #單身總筆數
+   END IF
+ 
+   LET g_rec_b = g_cnt - 1
+   LET g_detail_cnt = g_rec_b
+   LET g_cnt = 0
+ 
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+                  
+   
+   #add-point:browser_fill段結束前 name="browser_fill.after"
+   
+   #end add-point   
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.ui_headershow" >}
+#+ 單頭資料重新顯示
+PRIVATE FUNCTION anmt564_ui_headershow()
+   #add-point:ui_headershow段define(客製用) name="ui_headershow.define_customerization"
+   
+   #end add-point  
+   #add-point:ui_headershow段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_headershow.define"
+   
+   #end add-point      
+   
+   #add-point:Function前置處理  name="ui_headershow.pre_function"
+   
+   #end add-point
+   
+   LET g_nmba_m.nmbacomp = g_browser[g_current_idx].b_nmbacomp   
+   LET g_nmba_m.nmbadocno = g_browser[g_current_idx].b_nmbadocno   
+ 
+   EXECUTE anmt564_master_referesh USING g_nmba_m.nmbacomp,g_nmba_m.nmbadocno INTO g_nmba_m.nmbasite, 
+       g_nmba_m.nmba008,g_nmba_m.nmba001,g_nmba_m.nmbacomp,g_nmba_m.nmbadocno,g_nmba_m.nmbadocdt,g_nmba_m.nmba003, 
+       g_nmba_m.nmba004,g_nmba_m.nmba005,g_nmba_m.nmbastus,g_nmba_m.nmba007,g_nmba_m.nmba006,g_nmba_m.nmba002, 
+       g_nmba_m.nmbaownid,g_nmba_m.nmbaowndp,g_nmba_m.nmbacrtid,g_nmba_m.nmbacrtdp,g_nmba_m.nmbacrtdt, 
+       g_nmba_m.nmbamodid,g_nmba_m.nmbamoddt,g_nmba_m.nmbacnfid,g_nmba_m.nmbacnfdt,g_nmba_m.nmbasite_desc, 
+       g_nmba_m.nmba008_desc,g_nmba_m.nmba001_desc,g_nmba_m.nmbacomp_desc,g_nmba_m.nmbadocno_desc,g_nmba_m.nmba004_desc, 
+       g_nmba_m.nmba002_desc,g_nmba_m.nmbaownid_desc,g_nmba_m.nmbaowndp_desc,g_nmba_m.nmbacrtid_desc, 
+       g_nmba_m.nmbacrtdp_desc,g_nmba_m.nmbamodid_desc,g_nmba_m.nmbacnfid_desc
+   
+   CALL anmt564_nmba_t_mask()
+   CALL anmt564_show()
+      
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.ui_detailshow" >}
+#+ 單身資料重新顯示
+PRIVATE FUNCTION anmt564_ui_detailshow()
+   #add-point:ui_detailshow段define(客製用) name="ui_detailshow.define_customerization"
+   
+   #end add-point    
+   #add-point:ui_detailshow段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_detailshow.define"
+   
+   #end add-point    
+ 
+   #add-point:Function前置處理 name="ui_detailshow.before"
+   
+   #end add-point    
+   
+   IF g_curr_diag IS NOT NULL THEN
+      CALL g_curr_diag.setCurrentRow("s_detail1",g_detail_idx)      
+      CALL g_curr_diag.setCurrentRow("s_detail2",g_detail_idx)
+ 
+   END IF
+   
+   #add-point:ui_detailshow段after name="ui_detailshow.after"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.ui_browser_refresh" >}
+#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION anmt564_ui_browser_refresh()
+   #add-point:ui_browser_refresh段define(客製用) name="ui_browser_refresh.define_customerization"
+   
+   #end add-point    
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_browser_refresh.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="ui_browser_refresh.pre_function"
+   
+   #end add-point
+   
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_header_cnt  = g_browser.getLength()
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_nmbacomp = g_nmba_m.nmbacomp 
+         AND g_browser[l_i].b_nmbadocno = g_nmba_m.nmbadocno 
+ 
+         THEN
+         CALL g_browser.deleteElement(l_i)
+         EXIT FOR
+      END IF
+   END FOR
+   LET g_browser_cnt = g_browser_cnt - 1
+   LET g_header_cnt = g_header_cnt - 1
+    
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+      CLEAR FORM
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+   
+   #add-point:ui_browser_refresh段after name="ui_browser_refresh.after"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.construct" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION anmt564_construct()
+   #add-point:cs段define(客製用) name="cs.define_customerization"
+   
+   #end add-point    
+   DEFINE ls_return   STRING
+   DEFINE ls_result   STRING 
+   DEFINE ls_wc       STRING 
+   DEFINE la_wc       DYNAMIC ARRAY OF RECORD
+          tableid     STRING,
+          wc          STRING
+          END RECORD
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:cs段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="cs.define"
+   DEFINE l_wc        STRING   #160816-00012#3 Add
+   #end add-point    
+   
+   #add-point:Function前置處理  name="cs.pre_function"
+   
+   #end add-point
+    
+   #清除畫面
+   CLEAR FORM                
+   INITIALIZE g_nmba_m.* TO NULL
+   CALL g_nmbb_d.clear()        
+   CALL g_nmbb2_d.clear() 
+ 
+   
+   LET g_action_choice = ""
+    
+   INITIALIZE g_wc TO NULL
+   INITIALIZE g_wc2 TO NULL
+   
+   INITIALIZE g_wc2_table1 TO NULL
+   INITIALIZE g_wc2_table2 TO NULL
+ 
+ 
+    
+   LET g_qryparam.state = 'c'
+   
+   #add-point:cs段開始前 name="cs.before_construct"
+   
+   #end add-point 
+   
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+      #單頭
+      CONSTRUCT BY NAME g_wc ON nmbasite,nmba008,nmba001,nmbacomp,nmbadocno,nmbadocdt,nmba003,nmba004, 
+          nmba005,tot1,tot2,diff,nmbastus,nmba007,nmba006,nmba002,nmbaownid,nmbaowndp,nmbacrtid,nmbacrtdp, 
+          nmbacrtdt,nmbamodid,nmbamoddt,nmbacnfid,nmbacnfdt
+ 
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.head.before_construct"
+            
+            #end add-point 
+            
+         #公用欄位開窗相關處理
+         #應用 a11 樣板自動產生(Version:3)
+         #共用欄位查詢處理  
+         ##----<<nmbacrtdt>>----
+         AFTER FIELD nmbacrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+         #----<<nmbamoddt>>----
+         AFTER FIELD nmbamoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<nmbacnfdt>>----
+         AFTER FIELD nmbacnfdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<nmbapstdt>>----
+ 
+ 
+ 
+            
+         #一般欄位開窗相關處理    
+                  #Ctrlp:construct.c.nmbasite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbasite
+            #add-point:ON ACTION controlp INFIELD nmbasite name="construct.c.nmbasite"
+            #資金中心
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " ooef206 = 'Y'"
+            #CALL q_ooef001()    #161021-00050#10 mark
+            CALL q_ooef001_33()  #161021-00050#10
+            DISPLAY g_qryparam.return1 TO nmbasite
+            NEXT FIELD nmbasite
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbasite
+            #add-point:BEFORE FIELD nmbasite name="construct.b.nmbasite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbasite
+            
+            #add-point:AFTER FIELD nmbasite name="construct.a.nmbasite"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.nmba008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmba008
+            #add-point:ON ACTION controlp INFIELD nmba008 name="construct.c.nmba008"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001_8()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmba008  #顯示到畫面上
+            NEXT FIELD nmba008                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmba008
+            #add-point:BEFORE FIELD nmba008 name="construct.b.nmba008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmba008
+            
+            #add-point:AFTER FIELD nmba008 name="construct.a.nmba008"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.nmba001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmba001
+            #add-point:ON ACTION controlp INFIELD nmba001 name="construct.c.nmba001"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmba001  #顯示到畫面上
+            NEXT FIELD nmba001                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmba001
+            #add-point:BEFORE FIELD nmba001 name="construct.b.nmba001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmba001
+            
+            #add-point:AFTER FIELD nmba001 name="construct.a.nmba001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.nmbacomp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbacomp
+            #add-point:ON ACTION controlp INFIELD nmbacomp name="construct.c.nmbacomp"
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " ooef003 = 'Y'"
+            #160816-00012#3 Add  ---(S)---
+            CALL s_axrt300_get_site(g_user,'','3') RETURNING l_wc
+            LET g_qryparam.where = g_qryparam.where," AND ",l_wc CLIPPED
+            #160816-00012#3 Add  ---(E)---
+            #CALL q_ooef001()  #161021-00050#10 mark
+            CALL q_ooef001_2() #161021-00050#10
+            DISPLAY g_qryparam.return1 TO nmbacomp
+            NEXT FIELD nmbacomp
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbacomp
+            #add-point:BEFORE FIELD nmbacomp name="construct.b.nmbacomp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbacomp
+            
+            #add-point:AFTER FIELD nmbacomp name="construct.a.nmbacomp"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.nmbadocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbadocno
+            #add-point:ON ACTION controlp INFIELD nmbadocno name="construct.c.nmbadocno"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " nmba003 = 'anmt564'"
+            #161104-00046#14-----s
+            #單別權限控管
+            IF NOT cl_null(g_user_dept_wc_q) AND NOT g_user_dept_wc_q = ' 1=1'  THEN
+               LET g_qryparam.where = g_qryparam.where," AND ",g_user_dept_wc_q CLIPPED
+            END IF
+            #161104-00046#14-----e
+            CALL q_nmbadocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbadocno  #顯示到畫面上
+            NEXT FIELD nmbadocno                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbadocno
+            #add-point:BEFORE FIELD nmbadocno name="construct.b.nmbadocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbadocno
+            
+            #add-point:AFTER FIELD nmbadocno name="construct.a.nmbadocno"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbadocdt
+            #add-point:BEFORE FIELD nmbadocdt name="construct.b.nmbadocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbadocdt
+            
+            #add-point:AFTER FIELD nmbadocdt name="construct.a.nmbadocdt"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.nmbadocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbadocdt
+            #add-point:ON ACTION controlp INFIELD nmbadocdt name="construct.c.nmbadocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmba003
+            #add-point:BEFORE FIELD nmba003 name="construct.b.nmba003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmba003
+            
+            #add-point:AFTER FIELD nmba003 name="construct.a.nmba003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.nmba003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmba003
+            #add-point:ON ACTION controlp INFIELD nmba003 name="construct.c.nmba003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.nmba004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmba004
+            #add-point:ON ACTION controlp INFIELD nmba004 name="construct.c.nmba004"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            # CALL q_pmaa001()       #160913-00017#5  mark                  #呼叫開窗
+            CALL q_pmaa001_25()     #160913-00017#5  add      
+            DISPLAY g_qryparam.return1 TO nmba004  #顯示到畫面上
+            NEXT FIELD nmba004                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmba004
+            #add-point:BEFORE FIELD nmba004 name="construct.b.nmba004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmba004
+            
+            #add-point:AFTER FIELD nmba004 name="construct.a.nmba004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmba005
+            #add-point:BEFORE FIELD nmba005 name="construct.b.nmba005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmba005
+            
+            #add-point:AFTER FIELD nmba005 name="construct.a.nmba005"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.nmba005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmba005
+            #add-point:ON ACTION controlp INFIELD nmba005 name="construct.c.nmba005"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD tot1
+            #add-point:BEFORE FIELD tot1 name="construct.b.tot1"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD tot1
+            
+            #add-point:AFTER FIELD tot1 name="construct.a.tot1"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.tot1
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD tot1
+            #add-point:ON ACTION controlp INFIELD tot1 name="construct.c.tot1"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD tot2
+            #add-point:BEFORE FIELD tot2 name="construct.b.tot2"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD tot2
+            
+            #add-point:AFTER FIELD tot2 name="construct.a.tot2"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.tot2
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD tot2
+            #add-point:ON ACTION controlp INFIELD tot2 name="construct.c.tot2"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD diff
+            #add-point:BEFORE FIELD diff name="construct.b.diff"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD diff
+            
+            #add-point:AFTER FIELD diff name="construct.a.diff"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.diff
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD diff
+            #add-point:ON ACTION controlp INFIELD diff name="construct.c.diff"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbastus
+            #add-point:BEFORE FIELD nmbastus name="construct.b.nmbastus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbastus
+            
+            #add-point:AFTER FIELD nmbastus name="construct.a.nmbastus"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.nmbastus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbastus
+            #add-point:ON ACTION controlp INFIELD nmbastus name="construct.c.nmbastus"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmba007
+            #add-point:BEFORE FIELD nmba007 name="construct.b.nmba007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmba007
+            
+            #add-point:AFTER FIELD nmba007 name="construct.a.nmba007"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.nmba007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmba007
+            #add-point:ON ACTION controlp INFIELD nmba007 name="construct.c.nmba007"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmba006
+            #add-point:BEFORE FIELD nmba006 name="construct.b.nmba006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmba006
+            
+            #add-point:AFTER FIELD nmba006 name="construct.a.nmba006"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.nmba006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmba006
+            #add-point:ON ACTION controlp INFIELD nmba006 name="construct.c.nmba006"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.nmba002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmba002
+            #add-point:ON ACTION controlp INFIELD nmba002 name="construct.c.nmba002"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001_8()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmba002  #顯示到畫面上
+            NEXT FIELD nmba002                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmba002
+            #add-point:BEFORE FIELD nmba002 name="construct.b.nmba002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmba002
+            
+            #add-point:AFTER FIELD nmba002 name="construct.a.nmba002"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.nmbaownid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbaownid
+            #add-point:ON ACTION controlp INFIELD nmbaownid name="construct.c.nmbaownid"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbaownid  #顯示到畫面上
+            NEXT FIELD nmbaownid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbaownid
+            #add-point:BEFORE FIELD nmbaownid name="construct.b.nmbaownid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbaownid
+            
+            #add-point:AFTER FIELD nmbaownid name="construct.a.nmbaownid"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.nmbaowndp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbaowndp
+            #add-point:ON ACTION controlp INFIELD nmbaowndp name="construct.c.nmbaowndp"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbaowndp  #顯示到畫面上
+            NEXT FIELD nmbaowndp                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbaowndp
+            #add-point:BEFORE FIELD nmbaowndp name="construct.b.nmbaowndp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbaowndp
+            
+            #add-point:AFTER FIELD nmbaowndp name="construct.a.nmbaowndp"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.nmbacrtid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbacrtid
+            #add-point:ON ACTION controlp INFIELD nmbacrtid name="construct.c.nmbacrtid"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbacrtid  #顯示到畫面上
+            NEXT FIELD nmbacrtid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbacrtid
+            #add-point:BEFORE FIELD nmbacrtid name="construct.b.nmbacrtid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbacrtid
+            
+            #add-point:AFTER FIELD nmbacrtid name="construct.a.nmbacrtid"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.nmbacrtdp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbacrtdp
+            #add-point:ON ACTION controlp INFIELD nmbacrtdp name="construct.c.nmbacrtdp"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbacrtdp  #顯示到畫面上
+            NEXT FIELD nmbacrtdp                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbacrtdp
+            #add-point:BEFORE FIELD nmbacrtdp name="construct.b.nmbacrtdp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbacrtdp
+            
+            #add-point:AFTER FIELD nmbacrtdp name="construct.a.nmbacrtdp"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbacrtdt
+            #add-point:BEFORE FIELD nmbacrtdt name="construct.b.nmbacrtdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.nmbamodid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbamodid
+            #add-point:ON ACTION controlp INFIELD nmbamodid name="construct.c.nmbamodid"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbamodid  #顯示到畫面上
+            NEXT FIELD nmbamodid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbamodid
+            #add-point:BEFORE FIELD nmbamodid name="construct.b.nmbamodid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbamodid
+            
+            #add-point:AFTER FIELD nmbamodid name="construct.a.nmbamodid"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbamoddt
+            #add-point:BEFORE FIELD nmbamoddt name="construct.b.nmbamoddt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.nmbacnfid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbacnfid
+            #add-point:ON ACTION controlp INFIELD nmbacnfid name="construct.c.nmbacnfid"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbacnfid  #顯示到畫面上
+            NEXT FIELD nmbacnfid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbacnfid
+            #add-point:BEFORE FIELD nmbacnfid name="construct.b.nmbacnfid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbacnfid
+            
+            #add-point:AFTER FIELD nmbacnfid name="construct.a.nmbacnfid"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbacnfdt
+            #add-point:BEFORE FIELD nmbacnfdt name="construct.b.nmbacnfdt"
+            
+            #END add-point
+ 
+ 
+ 
+         
+      END CONSTRUCT
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc2_table1 ON nmbbseq,nmbborga,nmbblegl,nmbb026,nmbb027,nmbb028,nmbb029,nmbb002,nmbb010, 
+          nmbb010_desc,nmbb003,nmbb001,nmbb030,nmbb043,nmbb031,nmbb004,nmbb005,nmbb006,nmbb007,nmbb036, 
+          nmbb036_desc,nmbb037,nmbb038,nmbb032,nmbb033,nmbb034,nmbb035,nmbb039,nmbb040,nmbb041,nmbb042, 
+          nmbb044,nmbb045
+           FROM s_detail1[1].nmbbseq,s_detail1[1].nmbborga,s_detail1[1].nmbblegl,s_detail1[1].nmbb026, 
+               s_detail1[1].nmbb027,s_detail1[1].nmbb028,s_detail1[1].nmbb029,s_detail1[1].nmbb002,s_detail1[1].nmbb010, 
+               s_detail1[1].nmbb010_desc,s_detail1[1].nmbb003,s_detail1[1].nmbb001,s_detail1[1].nmbb030, 
+               s_detail1[1].nmbb043,s_detail1[1].nmbb031,s_detail1[1].nmbb004,s_detail1[1].nmbb005,s_detail1[1].nmbb006, 
+               s_detail1[1].nmbb007,s_detail1[1].nmbb036,s_detail1[1].nmbb036_desc,s_detail1[1].nmbb037, 
+               s_detail1[1].nmbb038,s_detail1[1].nmbb032,s_detail1[1].nmbb033,s_detail1[1].nmbb034,s_detail1[1].nmbb035, 
+               s_detail1[1].nmbb039,s_detail1[1].nmbb040,s_detail1[1].nmbb041,s_detail1[1].nmbb042,s_detail1[1].nmbb044, 
+               s_detail1[1].nmbb045
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.body.before_construct"
+            
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+                #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbbseq
+            #add-point:BEFORE FIELD nmbbseq name="construct.b.page1.nmbbseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbbseq
+            
+            #add-point:AFTER FIELD nmbbseq name="construct.a.page1.nmbbseq"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbbseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbbseq
+            #add-point:ON ACTION controlp INFIELD nmbbseq name="construct.c.page1.nmbbseq"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbborga
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbborga
+            #add-point:ON ACTION controlp INFIELD nmbborga name="construct.c.page1.nmbborga"
+            #來源組織
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            #160816-00012#3 Add  ---(S)---
+            #LET g_qryparam.where = " ooef206 = 'Y'" #161021-00050#10 mark
+            LET g_qryparam.where = " ooef201 = 'Y'"  #161021-00050#10
+            CALL s_axrt300_get_site(g_user,'','1') RETURNING l_wc
+            LET g_qryparam.where = g_qryparam.where," AND ",l_wc CLIPPED
+            #160816-00012#3 Add  ---(E)---
+            CALL q_ooef001()
+            DISPLAY g_qryparam.return1 TO nmbborga
+            NEXT FIELD nmbborga
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbborga
+            #add-point:BEFORE FIELD nmbborga name="construct.b.page1.nmbborga"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbborga
+            
+            #add-point:AFTER FIELD nmbborga name="construct.a.page1.nmbborga"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbblegl
+            #add-point:BEFORE FIELD nmbblegl name="construct.b.page1.nmbblegl"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbblegl
+            
+            #add-point:AFTER FIELD nmbblegl name="construct.a.page1.nmbblegl"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbblegl
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbblegl
+            #add-point:ON ACTION controlp INFIELD nmbblegl name="construct.c.page1.nmbblegl"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb026
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb026
+            #add-point:ON ACTION controlp INFIELD nmbb026 name="construct.c.page1.nmbb026"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            # CALL q_pmaa001()       #160913-00017#5  mark                  #呼叫開窗
+            CALL q_pmaa001_25()     #160913-00017#5  add      
+            DISPLAY g_qryparam.return1 TO nmbb026  #顯示到畫面上
+            NEXT FIELD nmbb026                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb026
+            #add-point:BEFORE FIELD nmbb026 name="construct.b.page1.nmbb026"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb026
+            
+            #add-point:AFTER FIELD nmbb026 name="construct.a.page1.nmbb026"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb027
+            #add-point:BEFORE FIELD nmbb027 name="construct.b.page1.nmbb027"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb027
+            
+            #add-point:AFTER FIELD nmbb027 name="construct.a.page1.nmbb027"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb027
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb027
+            #add-point:ON ACTION controlp INFIELD nmbb027 name="construct.c.page1.nmbb027"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb028
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb028
+            #add-point:ON ACTION controlp INFIELD nmbb028 name="construct.c.page1.nmbb028"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooie001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbb028  #顯示到畫面上
+            NEXT FIELD nmbb028                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb028
+            #add-point:BEFORE FIELD nmbb028 name="construct.b.page1.nmbb028"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb028
+            
+            #add-point:AFTER FIELD nmbb028 name="construct.a.page1.nmbb028"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb029
+            #add-point:BEFORE FIELD nmbb029 name="construct.b.page1.nmbb029"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb029
+            
+            #add-point:AFTER FIELD nmbb029 name="construct.a.page1.nmbb029"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb029
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb029
+            #add-point:ON ACTION controlp INFIELD nmbb029 name="construct.c.page1.nmbb029"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb002
+            #add-point:ON ACTION controlp INFIELD nmbb002 name="construct.c.page1.nmbb002"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_nmaj001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbb002  #顯示到畫面上
+            NEXT FIELD nmbb002                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb002
+            #add-point:BEFORE FIELD nmbb002 name="construct.b.page1.nmbb002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb002
+            
+            #add-point:AFTER FIELD nmbb002 name="construct.a.page1.nmbb002"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb010
+            #add-point:ON ACTION controlp INFIELD nmbb010 name="construct.c.page1.nmbb010"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_nmai002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbb010  #顯示到畫面上
+            NEXT FIELD nmbb010                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb010
+            #add-point:BEFORE FIELD nmbb010 name="construct.b.page1.nmbb010"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb010
+            
+            #add-point:AFTER FIELD nmbb010 name="construct.a.page1.nmbb010"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb010_desc
+            #add-point:BEFORE FIELD nmbb010_desc name="construct.b.page1.nmbb010_desc"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb010_desc
+            
+            #add-point:AFTER FIELD nmbb010_desc name="construct.a.page1.nmbb010_desc"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb010_desc
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb010_desc
+            #add-point:ON ACTION controlp INFIELD nmbb010_desc name="construct.c.page1.nmbb010_desc"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb003
+            #add-point:ON ACTION controlp INFIELD nmbb003 name="construct.c.page1.nmbb003"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            #160122-00001#32 by 07673--modify---str--
+            LET g_qryparam.where = " nmas002 IN  (",g_sql_bank,")"
+            #160122-00001#32 by 07673--modify---end
+            CALL q_nmas_01()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbb003  #顯示到畫面上
+            NEXT FIELD nmbb003                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb003
+            #add-point:BEFORE FIELD nmbb003 name="construct.b.page1.nmbb003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb003
+            
+            #add-point:AFTER FIELD nmbb003 name="construct.a.page1.nmbb003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb001
+            #add-point:BEFORE FIELD nmbb001 name="construct.b.page1.nmbb001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb001
+            
+            #add-point:AFTER FIELD nmbb001 name="construct.a.page1.nmbb001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb001
+            #add-point:ON ACTION controlp INFIELD nmbb001 name="construct.c.page1.nmbb001"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb030
+            #add-point:BEFORE FIELD nmbb030 name="construct.b.page1.nmbb030"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb030
+            
+            #add-point:AFTER FIELD nmbb030 name="construct.a.page1.nmbb030"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb030
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb030
+            #add-point:ON ACTION controlp INFIELD nmbb030 name="construct.c.page1.nmbb030"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb043
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb043
+            #add-point:ON ACTION controlp INFIELD nmbb043 name="construct.c.page1.nmbb043"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_nmab001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbb043  #顯示到畫面上
+            NEXT FIELD nmbb043                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb043
+            #add-point:BEFORE FIELD nmbb043 name="construct.b.page1.nmbb043"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb043
+            
+            #add-point:AFTER FIELD nmbb043 name="construct.a.page1.nmbb043"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb031
+            #add-point:BEFORE FIELD nmbb031 name="construct.b.page1.nmbb031"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb031
+            
+            #add-point:AFTER FIELD nmbb031 name="construct.a.page1.nmbb031"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb031
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb031
+            #add-point:ON ACTION controlp INFIELD nmbb031 name="construct.c.page1.nmbb031"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb004
+            #add-point:ON ACTION controlp INFIELD nmbb004 name="construct.c.page1.nmbb004"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_aooi001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbb004  #顯示到畫面上
+            NEXT FIELD nmbb004                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb004
+            #add-point:BEFORE FIELD nmbb004 name="construct.b.page1.nmbb004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb004
+            
+            #add-point:AFTER FIELD nmbb004 name="construct.a.page1.nmbb004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb005
+            #add-point:BEFORE FIELD nmbb005 name="construct.b.page1.nmbb005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb005
+            
+            #add-point:AFTER FIELD nmbb005 name="construct.a.page1.nmbb005"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb005
+            #add-point:ON ACTION controlp INFIELD nmbb005 name="construct.c.page1.nmbb005"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb006
+            #add-point:BEFORE FIELD nmbb006 name="construct.b.page1.nmbb006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb006
+            
+            #add-point:AFTER FIELD nmbb006 name="construct.a.page1.nmbb006"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb006
+            #add-point:ON ACTION controlp INFIELD nmbb006 name="construct.c.page1.nmbb006"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb007
+            #add-point:BEFORE FIELD nmbb007 name="construct.b.page1.nmbb007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb007
+            
+            #add-point:AFTER FIELD nmbb007 name="construct.a.page1.nmbb007"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb007
+            #add-point:ON ACTION controlp INFIELD nmbb007 name="construct.c.page1.nmbb007"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb036
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb036
+            #add-point:ON ACTION controlp INFIELD nmbb036 name="construct.c.page1.nmbb036"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_nmab001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbb036  #顯示到畫面上
+            NEXT FIELD nmbb036                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb036
+            #add-point:BEFORE FIELD nmbb036 name="construct.b.page1.nmbb036"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb036
+            
+            #add-point:AFTER FIELD nmbb036 name="construct.a.page1.nmbb036"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb036_desc
+            #add-point:BEFORE FIELD nmbb036_desc name="construct.b.page1.nmbb036_desc"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb036_desc
+            
+            #add-point:AFTER FIELD nmbb036_desc name="construct.a.page1.nmbb036_desc"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb036_desc
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb036_desc
+            #add-point:ON ACTION controlp INFIELD nmbb036_desc name="construct.c.page1.nmbb036_desc"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb037
+            #add-point:BEFORE FIELD nmbb037 name="construct.b.page1.nmbb037"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb037
+            
+            #add-point:AFTER FIELD nmbb037 name="construct.a.page1.nmbb037"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb037
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb037
+            #add-point:ON ACTION controlp INFIELD nmbb037 name="construct.c.page1.nmbb037"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb038
+            #add-point:BEFORE FIELD nmbb038 name="construct.b.page1.nmbb038"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb038
+            
+            #add-point:AFTER FIELD nmbb038 name="construct.a.page1.nmbb038"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb038
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb038
+            #add-point:ON ACTION controlp INFIELD nmbb038 name="construct.c.page1.nmbb038"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb032
+            #add-point:BEFORE FIELD nmbb032 name="construct.b.page1.nmbb032"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb032
+            
+            #add-point:AFTER FIELD nmbb032 name="construct.a.page1.nmbb032"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb032
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb032
+            #add-point:ON ACTION controlp INFIELD nmbb032 name="construct.c.page1.nmbb032"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb033
+            #add-point:BEFORE FIELD nmbb033 name="construct.b.page1.nmbb033"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb033
+            
+            #add-point:AFTER FIELD nmbb033 name="construct.a.page1.nmbb033"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb033
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb033
+            #add-point:ON ACTION controlp INFIELD nmbb033 name="construct.c.page1.nmbb033"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb034
+            #add-point:BEFORE FIELD nmbb034 name="construct.b.page1.nmbb034"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb034
+            
+            #add-point:AFTER FIELD nmbb034 name="construct.a.page1.nmbb034"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb034
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb034
+            #add-point:ON ACTION controlp INFIELD nmbb034 name="construct.c.page1.nmbb034"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb035
+            #add-point:BEFORE FIELD nmbb035 name="construct.b.page1.nmbb035"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb035
+            
+            #add-point:AFTER FIELD nmbb035 name="construct.a.page1.nmbb035"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb035
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb035
+            #add-point:ON ACTION controlp INFIELD nmbb035 name="construct.c.page1.nmbb035"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb039
+            #add-point:BEFORE FIELD nmbb039 name="construct.b.page1.nmbb039"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb039
+            
+            #add-point:AFTER FIELD nmbb039 name="construct.a.page1.nmbb039"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb039
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb039
+            #add-point:ON ACTION controlp INFIELD nmbb039 name="construct.c.page1.nmbb039"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb040
+            #add-point:BEFORE FIELD nmbb040 name="construct.b.page1.nmbb040"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb040
+            
+            #add-point:AFTER FIELD nmbb040 name="construct.a.page1.nmbb040"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb040
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb040
+            #add-point:ON ACTION controlp INFIELD nmbb040 name="construct.c.page1.nmbb040"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb041
+            #add-point:BEFORE FIELD nmbb041 name="construct.b.page1.nmbb041"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb041
+            
+            #add-point:AFTER FIELD nmbb041 name="construct.a.page1.nmbb041"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb041
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb041
+            #add-point:ON ACTION controlp INFIELD nmbb041 name="construct.c.page1.nmbb041"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb042
+            #add-point:BEFORE FIELD nmbb042 name="construct.b.page1.nmbb042"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb042
+            
+            #add-point:AFTER FIELD nmbb042 name="construct.a.page1.nmbb042"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb042
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb042
+            #add-point:ON ACTION controlp INFIELD nmbb042 name="construct.c.page1.nmbb042"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb044
+            #add-point:BEFORE FIELD nmbb044 name="construct.b.page1.nmbb044"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb044
+            
+            #add-point:AFTER FIELD nmbb044 name="construct.a.page1.nmbb044"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb044
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb044
+            #add-point:ON ACTION controlp INFIELD nmbb044 name="construct.c.page1.nmbb044"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb045
+            #add-point:BEFORE FIELD nmbb045 name="construct.b.page1.nmbb045"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb045
+            
+            #add-point:AFTER FIELD nmbb045 name="construct.a.page1.nmbb045"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbb045
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb045
+            #add-point:ON ACTION controlp INFIELD nmbb045 name="construct.c.page1.nmbb045"
+            
+            #END add-point
+ 
+ 
+   
+       
+      END CONSTRUCT
+      
+      CONSTRUCT g_wc2_table2 ON nmeeseq,nmee022,nmee001,nmee003,nmee004,nmee025,nmee026,nmeesite,nmee005, 
+          nmee006,nmee024,nmee007,nmee008,nmee009,nmee018,nmee010,nmee010_desc,nmee011,nmee012,nmee013, 
+          nmee002,nmee014,nmee019,nmee020,nmee023,nmee021,nmee027
+           FROM s_detail2[1].nmeeseq,s_detail2[1].nmee022,s_detail2[1].nmee001,s_detail2[1].nmee003, 
+               s_detail2[1].nmee004,s_detail2[1].nmee025,s_detail2[1].nmee026,s_detail2[1].nmeesite, 
+               s_detail2[1].nmee005,s_detail2[1].nmee006,s_detail2[1].nmee024,s_detail2[1].nmee007,s_detail2[1].nmee008, 
+               s_detail2[1].nmee009,s_detail2[1].nmee018,s_detail2[1].nmee010,s_detail2[1].nmee010_desc, 
+               s_detail2[1].nmee011,s_detail2[1].nmee012,s_detail2[1].nmee013,s_detail2[1].nmee002,s_detail2[1].nmee014, 
+               s_detail2[1].nmee019,s_detail2[1].nmee020,s_detail2[1].nmee023,s_detail2[1].nmee021,s_detail2[1].nmee027 
+ 
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.body2.before_construct"
+            
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理(table 2)
+       
+       
+       #單身一般欄位開窗相關處理       
+                #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmeeseq
+            #add-point:BEFORE FIELD nmeeseq name="construct.b.page2.nmeeseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmeeseq
+            
+            #add-point:AFTER FIELD nmeeseq name="construct.a.page2.nmeeseq"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmeeseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmeeseq
+            #add-point:ON ACTION controlp INFIELD nmeeseq name="construct.c.page2.nmeeseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee022
+            #add-point:BEFORE FIELD nmee022 name="construct.b.page2.nmee022"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee022
+            
+            #add-point:AFTER FIELD nmee022 name="construct.a.page2.nmee022"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee022
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee022
+            #add-point:ON ACTION controlp INFIELD nmee022 name="construct.c.page2.nmee022"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee001
+            #add-point:ON ACTION controlp INFIELD nmee001 name="construct.c.page2.nmee001"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+           # CALL q_pmaa001()       #160913-00017#5  mark                  #呼叫開窗
+            CALL q_pmaa001_25()     #160913-00017#5  add      
+            DISPLAY g_qryparam.return1 TO nmee001  #顯示到畫面上
+            NEXT FIELD nmee001                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee001
+            #add-point:BEFORE FIELD nmee001 name="construct.b.page2.nmee001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee001
+            
+            #add-point:AFTER FIELD nmee001 name="construct.a.page2.nmee001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee003
+            #add-point:ON ACTION controlp INFIELD nmee003 name="construct.c.page2.nmee003"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_nmee003()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmee003  #顯示到畫面上
+            NEXT FIELD nmee003                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee003
+            #add-point:BEFORE FIELD nmee003 name="construct.b.page2.nmee003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee003
+            
+            #add-point:AFTER FIELD nmee003 name="construct.a.page2.nmee003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee004
+            #add-point:BEFORE FIELD nmee004 name="construct.b.page2.nmee004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee004
+            
+            #add-point:AFTER FIELD nmee004 name="construct.a.page2.nmee004"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee004
+            #add-point:ON ACTION controlp INFIELD nmee004 name="construct.c.page2.nmee004"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee025
+            #add-point:BEFORE FIELD nmee025 name="construct.b.page2.nmee025"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee025
+            
+            #add-point:AFTER FIELD nmee025 name="construct.a.page2.nmee025"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee025
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee025
+            #add-point:ON ACTION controlp INFIELD nmee025 name="construct.c.page2.nmee025"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee026
+            #add-point:BEFORE FIELD nmee026 name="construct.b.page2.nmee026"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee026
+            
+            #add-point:AFTER FIELD nmee026 name="construct.a.page2.nmee026"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee026
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee026
+            #add-point:ON ACTION controlp INFIELD nmee026 name="construct.c.page2.nmee026"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page2.nmeesite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmeesite
+            #add-point:ON ACTION controlp INFIELD nmeesite name="construct.c.page2.nmeesite"
+            #所屬組織
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            #160816-00012#3 Add  ---(S)---
+            #LET g_qryparam.where = " ooef206 = 'Y'"  #161021-00050#10 mark
+            LET g_qryparam.where = " ooef201 = 'Y'"   #161021-00050#10
+            CALL s_axrt300_get_site(g_user,'','1') RETURNING l_wc
+            LET g_qryparam.where = g_qryparam.where," AND ",l_wc CLIPPED
+            #160816-00012#3 Add  ---(E)---
+            CALL q_ooef001()
+            DISPLAY g_qryparam.return1 TO nmeesite
+            NEXT FIELD nmeesite
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmeesite
+            #add-point:BEFORE FIELD nmeesite name="construct.b.page2.nmeesite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmeesite
+            
+            #add-point:AFTER FIELD nmeesite name="construct.a.page2.nmeesite"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee005
+            #add-point:ON ACTION controlp INFIELD nmee005 name="construct.c.page2.nmee005"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_mhae001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmee005  #顯示到畫面上
+            NEXT FIELD nmee005                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee005
+            #add-point:BEFORE FIELD nmee005 name="construct.b.page2.nmee005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee005
+            
+            #add-point:AFTER FIELD nmee005 name="construct.a.page2.nmee005"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee006
+            #add-point:ON ACTION controlp INFIELD nmee006 name="construct.c.page2.nmee006"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_stad001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmee006  #顯示到畫面上
+            NEXT FIELD nmee006                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee006
+            #add-point:BEFORE FIELD nmee006 name="construct.b.page2.nmee006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee006
+            
+            #add-point:AFTER FIELD nmee006 name="construct.a.page2.nmee006"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee024
+            #add-point:BEFORE FIELD nmee024 name="construct.b.page2.nmee024"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee024
+            
+            #add-point:AFTER FIELD nmee024 name="construct.a.page2.nmee024"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee024
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee024
+            #add-point:ON ACTION controlp INFIELD nmee024 name="construct.c.page2.nmee024"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+                               #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee007
+            #add-point:BEFORE FIELD nmee007 name="construct.b.page2.nmee007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee007
+            
+            #add-point:AFTER FIELD nmee007 name="construct.a.page2.nmee007"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee007
+            #add-point:ON ACTION controlp INFIELD nmee007 name="construct.c.page2.nmee007"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee008
+            #add-point:BEFORE FIELD nmee008 name="construct.b.page2.nmee008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee008
+            
+            #add-point:AFTER FIELD nmee008 name="construct.a.page2.nmee008"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee008
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee008
+            #add-point:ON ACTION controlp INFIELD nmee008 name="construct.c.page2.nmee008"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee009
+            #add-point:ON ACTION controlp INFIELD nmee009 name="construct.c.page2.nmee009"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooai001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmee009  #顯示到畫面上
+            NEXT FIELD nmee009                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee009
+            #add-point:BEFORE FIELD nmee009 name="construct.b.page2.nmee009"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee009
+            
+            #add-point:AFTER FIELD nmee009 name="construct.a.page2.nmee009"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee018
+            #add-point:BEFORE FIELD nmee018 name="construct.b.page2.nmee018"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee018
+            
+            #add-point:AFTER FIELD nmee018 name="construct.a.page2.nmee018"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee018
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee018
+            #add-point:ON ACTION controlp INFIELD nmee018 name="construct.c.page2.nmee018"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee010
+            #add-point:ON ACTION controlp INFIELD nmee010 name="construct.c.page2.nmee010"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_oodb002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmee010  #顯示到畫面上
+            NEXT FIELD nmee010                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee010
+            #add-point:BEFORE FIELD nmee010 name="construct.b.page2.nmee010"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee010
+            
+            #add-point:AFTER FIELD nmee010 name="construct.a.page2.nmee010"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee010_desc
+            #add-point:BEFORE FIELD nmee010_desc name="construct.b.page2.nmee010_desc"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee010_desc
+            
+            #add-point:AFTER FIELD nmee010_desc name="construct.a.page2.nmee010_desc"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee010_desc
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee010_desc
+            #add-point:ON ACTION controlp INFIELD nmee010_desc name="construct.c.page2.nmee010_desc"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee011
+            #add-point:BEFORE FIELD nmee011 name="construct.b.page2.nmee011"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee011
+            
+            #add-point:AFTER FIELD nmee011 name="construct.a.page2.nmee011"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee011
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee011
+            #add-point:ON ACTION controlp INFIELD nmee011 name="construct.c.page2.nmee011"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee012
+            #add-point:BEFORE FIELD nmee012 name="construct.b.page2.nmee012"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee012
+            
+            #add-point:AFTER FIELD nmee012 name="construct.a.page2.nmee012"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee012
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee012
+            #add-point:ON ACTION controlp INFIELD nmee012 name="construct.c.page2.nmee012"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee013
+            #add-point:BEFORE FIELD nmee013 name="construct.b.page2.nmee013"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee013
+            
+            #add-point:AFTER FIELD nmee013 name="construct.a.page2.nmee013"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee013
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee013
+            #add-point:ON ACTION controlp INFIELD nmee013 name="construct.c.page2.nmee013"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee002
+            #add-point:BEFORE FIELD nmee002 name="construct.b.page2.nmee002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee002
+            
+            #add-point:AFTER FIELD nmee002 name="construct.a.page2.nmee002"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee002
+            #add-point:ON ACTION controlp INFIELD nmee002 name="construct.c.page2.nmee002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee014
+            #add-point:ON ACTION controlp INFIELD nmee014 name="construct.c.page2.nmee014"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmee014  #顯示到畫面上
+            NEXT FIELD nmee014                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee014
+            #add-point:BEFORE FIELD nmee014 name="construct.b.page2.nmee014"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee014
+            
+            #add-point:AFTER FIELD nmee014 name="construct.a.page2.nmee014"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee019
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee019
+            #add-point:ON ACTION controlp INFIELD nmee019 name="construct.c.page2.nmee019"
+           #151201-00002#14 Add  ---(S)---
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = cl_get_para(g_enterprise,g_site,'E-CIR-0001')
+            CALL q_rtax001_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmee019  #顯示到畫面上
+            NEXT FIELD nmee019                     #返回原欄位
+           #151201-00002#14 Add  ---(E)---
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee019
+            #add-point:BEFORE FIELD nmee019 name="construct.b.page2.nmee019"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee019
+            
+            #add-point:AFTER FIELD nmee019 name="construct.a.page2.nmee019"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee020
+            #add-point:BEFORE FIELD nmee020 name="construct.b.page2.nmee020"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee020
+            
+            #add-point:AFTER FIELD nmee020 name="construct.a.page2.nmee020"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee020
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee020
+            #add-point:ON ACTION controlp INFIELD nmee020 name="construct.c.page2.nmee020"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee023
+            #add-point:BEFORE FIELD nmee023 name="construct.b.page2.nmee023"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee023
+            
+            #add-point:AFTER FIELD nmee023 name="construct.a.page2.nmee023"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee023
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee023
+            #add-point:ON ACTION controlp INFIELD nmee023 name="construct.c.page2.nmee023"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee021
+            #add-point:BEFORE FIELD nmee021 name="construct.b.page2.nmee021"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee021
+            
+            #add-point:AFTER FIELD nmee021 name="construct.a.page2.nmee021"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee021
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee021
+            #add-point:ON ACTION controlp INFIELD nmee021 name="construct.c.page2.nmee021"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee027
+            #add-point:BEFORE FIELD nmee027 name="construct.b.page2.nmee027"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee027
+            
+            #add-point:AFTER FIELD nmee027 name="construct.a.page2.nmee027"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmee027
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee027
+            #add-point:ON ACTION controlp INFIELD nmee027 name="construct.c.page2.nmee027"
+            
+            #END add-point
+ 
+ 
+   
+       
+      END CONSTRUCT
+ 
+ 
+      
+ 
+      
+      #add-point:cs段add_cs(本段內只能出現新的CONSTRUCT指令) name="cs.add_cs"
+      
+      #end add-point
+ 
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog name="cs.b_dialog"
+         
+         #end add-point  
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+         IF NOT cl_null(ls_wc) THEN
+            CALL util.JSON.parse(ls_wc, la_wc)
+            INITIALIZE g_wc, g_wc2, g_wc2_table1, g_wc2_extend TO NULL
+            INITIALIZE g_wc2_table2 TO NULL
+ 
+ 
+            FOR li_idx = 1 TO la_wc.getLength()
+               CASE
+                  WHEN la_wc[li_idx].tableid = "nmba_t" 
+                     LET g_wc = la_wc[li_idx].wc
+                  WHEN la_wc[li_idx].tableid = "nmbb_t" 
+                     LET g_wc2_table1 = la_wc[li_idx].wc
+                  WHEN la_wc[li_idx].tableid = "nmee_t" 
+                     LET g_wc2_table2 = la_wc[li_idx].wc
+ 
+ 
+               END CASE
+            END FOR
+         END IF
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   END DIALOG
+   
+   #組合g_wc2
+   LET g_wc2 = g_wc2_table1
+   IF g_wc2_table2 <> " 1=1" THEN
+      LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+   END IF
+ 
+ 
+ 
+ 
+   
+   #add-point:cs段結束前 name="cs.after_construct"
+   #161104-00046#14-----s
+   IF cl_null(g_user_dept_wc)THEN
+      LET g_user_dept_wc = ' 1=1'
+   END IF
+   IF g_user_dept_wc <>  " 1=1" THEN
+      LET g_wc = g_wc ," AND ", g_user_dept_wc CLIPPED
+   END IF   
+   #161104-00046#14-----e
+   #end add-point    
+ 
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.query" >}
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION anmt564_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point   
+   DEFINE ls_wc STRING
+   #add-point:query段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="query.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   
+   LET ls_wc = g_wc
+   
+   LET INT_FLAG = 0
+   CALL cl_navigator_setting( g_current_idx, g_detail_cnt )
+   ERROR ""
+   
+   #清除畫面及相關資料
+   CLEAR FORM
+   CALL g_browser.clear()       
+   CALL g_nmbb_d.clear()
+   CALL g_nmbb2_d.clear()
+ 
+   
+   #add-point:query段other name="query.other"
+   
+   #end add-point   
+   
+   DISPLAY '' TO FORMONLY.idx
+   DISPLAY '' TO FORMONLY.cnt
+   DISPLAY '' TO FORMONLY.b_index
+   DISPLAY '' TO FORMONLY.b_count
+   DISPLAY '' TO FORMONLY.h_index
+   DISPLAY '' TO FORMONLY.h_count
+   
+   CALL anmt564_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      #LET g_wc = ls_wc
+      LET g_wc = " 1=2"
+      CALL anmt564_browser_fill("")
+      CALL anmt564_fetch("")
+      RETURN
+   END IF
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||") AND ("||g_wc2||")")
+   
+   #搜尋後資料初始化 
+   LET g_detail_cnt  = 0
+   LET g_current_idx = 1
+   LET g_current_row = 0
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_detail_idx_list[1] = 1
+   LET g_detail_idx_list[2] = 1
+ 
+   LET g_error_show  = 1
+   LET g_wc_filter   = ""
+   LET l_ac = 1
+   CALL FGL_SET_ARR_CURR(1)
+   CALL anmt564_browser_fill("F")
+         
+   IF g_browser_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "-100" 
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+   ELSE
+      CALL anmt564_fetch("F") 
+      #顯示單身筆數
+      CALL anmt564_idx_chk()
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.fetch" >}
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION anmt564_fetch(p_flag)
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point    
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="fetch.pre_function"
+   
+   #end add-point
+   
+   IF g_browser_cnt = 0 THEN
+      RETURN
+   END IF
+ 
+   #清空第二階單身
+ 
+   
+   CALL cl_ap_performance_next_start()
+   CASE p_flag
+      WHEN 'F' 
+         LET g_current_idx = 1
+      WHEN 'L'  
+         LET g_current_idx = g_browser.getLength()              
+      WHEN 'P'
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN 'N'
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN '/'
+         IF (NOT g_no_ask) THEN    
+            CALL cl_set_act_visible("accept,cancel", TRUE)    
+            CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,':' FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl" 
+            END PROMPT
+ 
+            CALL cl_set_act_visible("accept,cancel", FALSE)    
+            IF INT_FLAG THEN
+                LET INT_FLAG = 0
+                EXIT CASE  
+            END IF           
+         END IF
+         
+         IF g_jump > 0 AND g_jump <= g_browser.getLength() THEN
+             LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE  
+   END CASE 
+ 
+   
+   LET g_current_row = g_current_idx
+   LET g_detail_cnt = g_header_cnt                  
+   
+   #單身總筆數顯示
+   IF g_detail_cnt > 0 THEN
+      #若單身有資料時, idx至少為1
+      IF g_detail_idx <= 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx  
+   ELSE
+      LET g_detail_idx = 0
+      DISPLAY '' TO FORMONLY.idx    
+   END IF
+   
+   #瀏覽頁筆數顯示
+   LET g_pagestart = g_current_idx
+   DISPLAY g_pagestart TO FORMONLY.b_index   #當下筆數
+   DISPLAY g_pagestart TO FORMONLY.h_index   #當下筆數
+   
+   CALL cl_navigator_setting( g_pagestart, g_browser_cnt )
+ 
+   #代表沒有資料
+   IF g_current_idx = 0 OR g_browser.getLength() = 0 THEN
+      RETURN
+   END IF
+   
+   #避免超出browser資料筆數上限
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_browser_idx = g_browser.getLength()
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   LET g_nmba_m.nmbacomp = g_browser[g_current_idx].b_nmbacomp
+   LET g_nmba_m.nmbadocno = g_browser[g_current_idx].b_nmbadocno
+ 
+   
+   #重讀DB,因TEMP有不被更新特性
+   EXECUTE anmt564_master_referesh USING g_nmba_m.nmbacomp,g_nmba_m.nmbadocno INTO g_nmba_m.nmbasite, 
+       g_nmba_m.nmba008,g_nmba_m.nmba001,g_nmba_m.nmbacomp,g_nmba_m.nmbadocno,g_nmba_m.nmbadocdt,g_nmba_m.nmba003, 
+       g_nmba_m.nmba004,g_nmba_m.nmba005,g_nmba_m.nmbastus,g_nmba_m.nmba007,g_nmba_m.nmba006,g_nmba_m.nmba002, 
+       g_nmba_m.nmbaownid,g_nmba_m.nmbaowndp,g_nmba_m.nmbacrtid,g_nmba_m.nmbacrtdp,g_nmba_m.nmbacrtdt, 
+       g_nmba_m.nmbamodid,g_nmba_m.nmbamoddt,g_nmba_m.nmbacnfid,g_nmba_m.nmbacnfdt,g_nmba_m.nmbasite_desc, 
+       g_nmba_m.nmba008_desc,g_nmba_m.nmba001_desc,g_nmba_m.nmbacomp_desc,g_nmba_m.nmbadocno_desc,g_nmba_m.nmba004_desc, 
+       g_nmba_m.nmba002_desc,g_nmba_m.nmbaownid_desc,g_nmba_m.nmbaowndp_desc,g_nmba_m.nmbacrtid_desc, 
+       g_nmba_m.nmbacrtdp_desc,g_nmba_m.nmbamodid_desc,g_nmba_m.nmbacnfid_desc
+   
+   #遮罩相關處理
+   LET g_nmba_m_mask_o.* =  g_nmba_m.*
+   CALL anmt564_nmba_t_mask()
+   LET g_nmba_m_mask_n.* =  g_nmba_m.*
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL anmt564_set_act_visible()   
+   CALL anmt564_set_act_no_visible()
+   
+   #add-point:fetch段action控制 name="fetch.action_control"
+   
+   #end add-point  
+   
+   
+   
+   #add-point:fetch結束前 name="fetch.after"
+   
+   #end add-point
+   
+   #保存單頭舊值
+   LET g_nmba_m_t.* = g_nmba_m.*
+   LET g_nmba_m_o.* = g_nmba_m.*
+   
+   LET g_data_owner = g_nmba_m.nmbaownid      
+   LET g_data_dept  = g_nmba_m.nmbaowndp
+   
+   #重新顯示   
+   CALL anmt564_show()
+ 
+   #應用 a56 樣板自動產生(Version:3)
+   #檢查此單據是否需顯示BPM簽核狀況按鈕 
+   IF cl_bpm_chk() THEN
+      CALL cl_set_act_visible("bpm_status",TRUE)
+   ELSE
+      CALL cl_set_act_visible("bpm_status",FALSE)
+   END IF
+ 
+ 
+ 
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION anmt564_insert()
+   #add-point:insert段define(客製用) name="insert.define_customerization"
+   
+   #end add-point    
+   #add-point:insert段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="insert.pre_function"
+   
+   #end add-point
+   
+   #清畫面欄位內容
+   CLEAR FORM                    
+   CALL g_nmbb_d.clear()   
+   CALL g_nmbb2_d.clear()  
+ 
+ 
+   INITIALIZE g_nmba_m.* TO NULL             #DEFAULT 設定
+   
+   LET g_nmbacomp_t = NULL
+   LET g_nmbadocno_t = NULL
+ 
+   
+   LET g_master_insert = FALSE
+   
+   #add-point:insert段before name="insert.before"
+   
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   WHILE TRUE
+      #公用欄位給值(單頭)
+      #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_nmba_m.nmbaownid = g_user
+      LET g_nmba_m.nmbaowndp = g_dept
+      LET g_nmba_m.nmbacrtid = g_user
+      LET g_nmba_m.nmbacrtdp = g_dept 
+      LET g_nmba_m.nmbacrtdt = cl_get_current()
+      LET g_nmba_m.nmbamodid = g_user
+      LET g_nmba_m.nmbamoddt = cl_get_current()
+      LET g_nmba_m.nmbastus = 'N'
+ 
+ 
+ 
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+            LET g_nmba_m.nmbastus = "N"
+      LET g_nmba_m.nmba006 = "N"
+ 
+  
+      #add-point:單頭預設值 name="insert.default"
+      #繳款日期
+      LET g_nmba_m.nmbadocdt = g_today   
+      #取得預設的資金中心,因新增階段的時候,並不會知道site,所以以登入人員做為依據
+      CALL s_fin_get_account_center('',g_user,'6',g_today) RETURNING g_sub_success,g_nmba_m.nmbasite,g_errno
+      CALL s_desc_get_department_desc(g_nmba_m.nmbasite) RETURNING g_nmba_m.nmbasite_desc
+      #法人
+      SELECT ooef017 INTO g_nmba_m.nmbacomp
+        FROM ooef_t
+       WHERE ooefent = g_enterprise
+         AND ooef001 = g_nmba_m.nmbasite
+      CALL s_desc_get_department_desc(g_nmba_m.nmbacomp) RETURNING g_nmba_m.nmbacomp_desc
+      #繳款人員   
+      LET g_nmba_m.nmba008 = g_user
+      CALL s_desc_get_person_desc(g_nmba_m.nmba008) RETURNING g_nmba_m.nmba008_desc
+      #繳款部門
+      SELECT ooag003 INTO g_nmba_m.nmba001 FROM ooag_t
+       WHERE ooag001 = g_user
+         AND ooagent = g_enterprise 
+      CALL s_desc_get_department_desc(g_nmba_m.nmba001) RETURNING g_nmba_m.nmba001_desc
+      #帳務人員
+      LET g_nmba_m.nmba002 = g_user
+      #來源作業類型
+      LET g_nmba_m.nmba003 = 'anmt564'
+      
+      CALL anmt564_glaa_get()
+      DISPLAY BY NAME g_nmba_m.nmbasite_desc,g_nmba_m.nmbacomp_desc,g_nmba_m.nmba008_desc,g_nmba_m.nmba001_desc
+      
+      #CALL s_anm_get_site_wc('6',g_nmba_m.nmbacomp,g_nmba_m.nmbadocdt) RETURNING g_site_wc  #160816-00012#3  #160912-00024#1 mark
+      CALL s_anm_get_site_wc('6',g_nmba_m.nmbasite,g_nmba_m.nmbadocdt) RETURNING g_site_wc #160912-00024#1
+      CALL s_anm_get_comp_wc('6',g_nmba_m.nmbasite,g_nmba_m.nmbadocdt) RETURNING g_comp_wc  #160816-00012#3        
+      #end add-point 
+      
+      #保存單頭舊值(用於資料輸入錯誤還原預設值時使用)
+      LET g_nmba_m_t.* = g_nmba_m.*
+      LET g_nmba_m_o.* = g_nmba_m.*
+      
+      #顯示狀態(stus)圖片
+            #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_nmba_m.nmbastus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "V"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/verify.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+ 
+ 
+ 
+    
+      CALL anmt564_input("a")
+      
+      #add-point:單頭輸入後 name="insert.after_insert"
+      
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code = 9001 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+      END IF
+      
+      IF NOT g_master_insert THEN
+         DISPLAY g_detail_cnt  TO FORMONLY.h_count    #總筆數
+         DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+         INITIALIZE g_nmba_m.* TO NULL
+         INITIALIZE g_nmbb_d TO NULL
+         INITIALIZE g_nmbb2_d TO NULL
+ 
+         #add-point:取消新增後 name="insert.cancel"
+         
+         #end add-point 
+         CALL anmt564_show()
+         RETURN
+      END IF
+      
+      LET INT_FLAG = 0
+      #CALL g_nmbb_d.clear()
+      #CALL g_nmbb2_d.clear()
+ 
+ 
+      LET g_rec_b = 0
+      CALL s_transaction_end('Y','0')
+      EXIT WHILE
+        
+   END WHILE
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL anmt564_set_act_visible()   
+   CALL anmt564_set_act_no_visible()
+   
+   #將新增的資料併入搜尋條件中
+   LET g_nmbacomp_t = g_nmba_m.nmbacomp
+   LET g_nmbadocno_t = g_nmba_m.nmbadocno
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " nmbaent = " ||g_enterprise|| " AND",
+                      " nmbacomp = '", g_nmba_m.nmbacomp, "' "
+                      ," AND nmbadocno = '", g_nmba_m.nmbadocno, "' "
+ 
+                      
+   #add-point:組合新增資料的條件後 name="insert.after.add_browse"
+   
+   #end add-point
+      
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL anmt564_browser_fill("")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   CLOSE anmt564_cl
+   
+   CALL anmt564_idx_chk()
+   
+   #撈取異動後的資料(主要是帶出reference)
+   EXECUTE anmt564_master_referesh USING g_nmba_m.nmbacomp,g_nmba_m.nmbadocno INTO g_nmba_m.nmbasite, 
+       g_nmba_m.nmba008,g_nmba_m.nmba001,g_nmba_m.nmbacomp,g_nmba_m.nmbadocno,g_nmba_m.nmbadocdt,g_nmba_m.nmba003, 
+       g_nmba_m.nmba004,g_nmba_m.nmba005,g_nmba_m.nmbastus,g_nmba_m.nmba007,g_nmba_m.nmba006,g_nmba_m.nmba002, 
+       g_nmba_m.nmbaownid,g_nmba_m.nmbaowndp,g_nmba_m.nmbacrtid,g_nmba_m.nmbacrtdp,g_nmba_m.nmbacrtdt, 
+       g_nmba_m.nmbamodid,g_nmba_m.nmbamoddt,g_nmba_m.nmbacnfid,g_nmba_m.nmbacnfdt,g_nmba_m.nmbasite_desc, 
+       g_nmba_m.nmba008_desc,g_nmba_m.nmba001_desc,g_nmba_m.nmbacomp_desc,g_nmba_m.nmbadocno_desc,g_nmba_m.nmba004_desc, 
+       g_nmba_m.nmba002_desc,g_nmba_m.nmbaownid_desc,g_nmba_m.nmbaowndp_desc,g_nmba_m.nmbacrtid_desc, 
+       g_nmba_m.nmbacrtdp_desc,g_nmba_m.nmbamodid_desc,g_nmba_m.nmbacnfid_desc
+   
+   
+   #遮罩相關處理
+   LET g_nmba_m_mask_o.* =  g_nmba_m.*
+   CALL anmt564_nmba_t_mask()
+   LET g_nmba_m_mask_n.* =  g_nmba_m.*
+   
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_nmba_m.nmbasite,g_nmba_m.nmbasite_desc,g_nmba_m.nmba008,g_nmba_m.nmba008_desc,g_nmba_m.nmba001, 
+       g_nmba_m.nmba001_desc,g_nmba_m.nmbacomp,g_nmba_m.nmbacomp_desc,g_nmba_m.nmbadocno,g_nmba_m.nmbadocno_desc, 
+       g_nmba_m.nmbadocdt,g_nmba_m.nmba003,g_nmba_m.nmba004,g_nmba_m.nmba004_desc,g_nmba_m.nmba005,g_nmba_m.tot1, 
+       g_nmba_m.tot2,g_nmba_m.diff,g_nmba_m.nmbastus,g_nmba_m.nmba007,g_nmba_m.nmba006,g_nmba_m.nmba002, 
+       g_nmba_m.nmba002_desc,g_nmba_m.nmbaownid,g_nmba_m.nmbaownid_desc,g_nmba_m.nmbaowndp,g_nmba_m.nmbaowndp_desc, 
+       g_nmba_m.nmbacrtid,g_nmba_m.nmbacrtid_desc,g_nmba_m.nmbacrtdp,g_nmba_m.nmbacrtdp_desc,g_nmba_m.nmbacrtdt, 
+       g_nmba_m.nmbamodid,g_nmba_m.nmbamodid_desc,g_nmba_m.nmbamoddt,g_nmba_m.nmbacnfid,g_nmba_m.nmbacnfid_desc, 
+       g_nmba_m.nmbacnfdt
+   
+   #add-point:新增結束後 name="insert.after"
+   
+   #end add-point 
+   
+   LET g_data_owner = g_nmba_m.nmbaownid      
+   LET g_data_dept  = g_nmba_m.nmbaowndp
+   
+   #功能已完成,通報訊息中心
+   CALL anmt564_msgcentre_notify('insert')
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION anmt564_modify()
+   #add-point:modify段define(客製用) name="modify.define_customerization"
+   
+   #end add-point    
+   DEFINE l_new_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key  DYNAMIC ARRAY OF STRING
+   DEFINE l_wc2_table1          STRING
+   DEFINE l_wc2_table2   STRING
+ 
+ 
+ 
+   #add-point:modify段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   #150813-00015#19--add--str--
+   DEFINE l_success   LIKE type_t.num5  
+   DEFINE l_slip      LIKE type_t.chr10
+   DEFINE l_dfin0033  LIKE type_t.chr80
+   DEFINE l_para_date LIKE type_t.dat
+   #150813-00015#19--add--end  
+   #end add-point    
+   
+   #add-point:Function前置處理  name="modify.pre_function"
+   
+   #end add-point
+   
+   #保存單頭舊值
+   LET g_nmba_m_t.* = g_nmba_m.*
+   LET g_nmba_m_o.* = g_nmba_m.*
+   
+   IF g_nmba_m.nmbacomp IS NULL
+   OR g_nmba_m.nmbadocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "std-00003" 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   ERROR ""
+  
+   LET g_nmbacomp_t = g_nmba_m.nmbacomp
+   LET g_nmbadocno_t = g_nmba_m.nmbadocno
+ 
+   CALL s_transaction_begin()
+   
+   OPEN anmt564_cl USING g_enterprise,g_nmba_m.nmbacomp,g_nmba_m.nmbadocno
+   IF SQLCA.SQLCODE THEN   #(ver:78)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN anmt564_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+      LET g_errparam.popup = TRUE 
+      CLOSE anmt564_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE anmt564_master_referesh USING g_nmba_m.nmbacomp,g_nmba_m.nmbadocno INTO g_nmba_m.nmbasite, 
+       g_nmba_m.nmba008,g_nmba_m.nmba001,g_nmba_m.nmbacomp,g_nmba_m.nmbadocno,g_nmba_m.nmbadocdt,g_nmba_m.nmba003, 
+       g_nmba_m.nmba004,g_nmba_m.nmba005,g_nmba_m.nmbastus,g_nmba_m.nmba007,g_nmba_m.nmba006,g_nmba_m.nmba002, 
+       g_nmba_m.nmbaownid,g_nmba_m.nmbaowndp,g_nmba_m.nmbacrtid,g_nmba_m.nmbacrtdp,g_nmba_m.nmbacrtdt, 
+       g_nmba_m.nmbamodid,g_nmba_m.nmbamoddt,g_nmba_m.nmbacnfid,g_nmba_m.nmbacnfdt,g_nmba_m.nmbasite_desc, 
+       g_nmba_m.nmba008_desc,g_nmba_m.nmba001_desc,g_nmba_m.nmbacomp_desc,g_nmba_m.nmbadocno_desc,g_nmba_m.nmba004_desc, 
+       g_nmba_m.nmba002_desc,g_nmba_m.nmbaownid_desc,g_nmba_m.nmbaowndp_desc,g_nmba_m.nmbacrtid_desc, 
+       g_nmba_m.nmbacrtdp_desc,g_nmba_m.nmbamodid_desc,g_nmba_m.nmbacnfid_desc
+   
+   #檢查是否允許此動作
+   IF NOT anmt564_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_nmba_m_mask_o.* =  g_nmba_m.*
+   CALL anmt564_nmba_t_mask()
+   LET g_nmba_m_mask_n.* =  g_nmba_m.*
+   
+   
+   
+   #add-point:modify段show之前 name="modify.before_show"
+   IF g_nmba_m.nmbastus <> 'N' THEN 
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'agl-00313'
+      LET g_errparam.extend = g_nmba_m.nmbadocno
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      CLOSE anmt564_cl                #150813-00015#19 add
+      CALL s_transaction_end('N','0') #150813-00015#19 add
+      RETURN
+   END IF
+   
+   #150813-00015#19--add--str--
+   #获取单别
+   CALL s_aooi200_fin_get_slip(g_nmba_m.nmbadocno) RETURNING l_success,l_slip
+   #是否可改日期
+   CALL s_fin_get_doc_para(g_glaald,g_nmba_m.nmbacomp,l_slip,'D-FIN-0033') RETURNING l_dfin0033
+   IF l_dfin0033 = 'N' THEN
+      #檢查當單據日期小於等於關帳日期時，不可異動單據
+      CALL s_fin_date_close_chk('',g_nmba_m.nmbacomp,'ANM',g_nmba_m.nmbadocdt) RETURNING l_success
+      IF l_success = FALSE THEN
+         CLOSE anmt564_cl
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+   END IF
+   #150813-00015#19--add--end
+   #end add-point  
+   
+   #LET l_wc2_table1 = g_wc2_table1
+   #LET g_wc2_table1 = " 1=1"
+   #LET l_wc2_table2 = g_wc2_table2
+   #LET l_wc2_table2 = " 1=1"
+ 
+ 
+ 
+   
+   CALL anmt564_show()
+   #add-point:modify段show之後 name="modify.after_show"
+   
+   #end add-point
+   
+   #LET g_wc2_table1 = l_wc2_table1
+   #LET  g_wc2_table2 = l_wc2_table2 
+ 
+ 
+ 
+    
+   WHILE TRUE
+      LET g_nmbacomp_t = g_nmba_m.nmbacomp
+      LET g_nmbadocno_t = g_nmba_m.nmbadocno
+ 
+      
+      #寫入修改者/修改日期資訊(單頭)
+      LET g_nmba_m.nmbamodid = g_user 
+LET g_nmba_m.nmbamoddt = cl_get_current()
+LET g_nmba_m.nmbamodid_desc = cl_get_username(g_nmba_m.nmbamodid)
+      
+      #add-point:modify段修改前 name="modify.before_input"
+      
+      #end add-point
+      
+      #欄位更改
+      LET g_loc = 'n'
+      LET g_update = FALSE
+      LET g_master_commit = "N"
+      CALL anmt564_input("u")
+      LET g_loc = 'n'
+ 
+      #add-point:modify段修改後 name="modify.after_input"
+      
+      #end add-point
+      
+      IF g_update OR NOT INT_FLAG THEN
+         #若有modid跟moddt則進行update
+         UPDATE nmba_t SET (nmbamodid,nmbamoddt) = (g_nmba_m.nmbamodid,g_nmba_m.nmbamoddt)
+          WHERE nmbaent = g_enterprise AND nmbacomp = g_nmbacomp_t
+            AND nmbadocno = g_nmbadocno_t
+ 
+      END IF
+    
+      IF INT_FLAG THEN
+         CALL s_transaction_end('N','0')
+         LET INT_FLAG = 0
+         #若單頭無commit則還原
+         IF g_master_commit = "N" THEN
+            LET g_nmba_m.* = g_nmba_m_t.*
+            CALL anmt564_show()
+         END IF
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code = 9001 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+         RETURN
+      END IF 
+                  
+      #若單頭key欄位有變更
+      IF g_nmba_m.nmbacomp != g_nmba_m_t.nmbacomp
+      OR g_nmba_m.nmbadocno != g_nmba_m_t.nmbadocno
+ 
+      THEN
+         CALL s_transaction_begin()
+         
+         #add-point:單身fk修改前 name="modify.body.b_fk_update"
+         
+         #end add-point
+         
+         #更新單身key值
+         UPDATE nmbb_t SET nmbbcomp = g_nmba_m.nmbacomp
+                                       ,nmbbdocno = g_nmba_m.nmbadocno
+ 
+          WHERE nmbbent = g_enterprise AND nmbbcomp = g_nmba_m_t.nmbacomp
+            AND nmbbdocno = g_nmba_m_t.nmbadocno
+ 
+            
+         #add-point:單身fk修改中 name="modify.body.m_fk_update"
+         
+         #end add-point
+ 
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            #   INITIALIZE g_errparam TO NULL 
+            #   LET g_errparam.extend = "nmbb_t" 
+            #   LET g_errparam.code = "std-00009" 
+            #   LET g_errparam.popup = TRUE 
+            #   CALL cl_err()
+            #   CALL s_transaction_end('N','0')
+            #   CONTINUE WHILE
+            WHEN SQLCA.SQLCODE #其他錯誤
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "nmbb_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CONTINUE WHILE
+         END CASE
+         
+         #add-point:單身fk修改後 name="modify.body.a_fk_update"
+         
+         #end add-point
+         
+         #更新單身key值
+         #add-point:單身fk修改前 name="modify.body.b_fk_update2"
+         
+         #end add-point
+         
+         UPDATE nmee_t
+            SET nmeecomp = g_nmba_m.nmbacomp
+               ,nmeedocno = g_nmba_m.nmbadocno
+ 
+          WHERE nmeeent = g_enterprise AND
+                nmeecomp = g_nmbacomp_t
+            AND nmeedocno = g_nmbadocno_t
+ 
+         #add-point:單身fk修改中 name="modify.body.m_fk_update2"
+         
+         #end add-point
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            #   INITIALIZE g_errparam TO NULL 
+            #   LET g_errparam.extend = "nmee_t" 
+            #   LET g_errparam.code = "std-00009" 
+            #   LET g_errparam.popup = TRUE 
+            #   CALL cl_err()
+            #   CALL s_transaction_end('N','0')
+            #   CONTINUE WHILE
+            WHEN SQLCA.SQLCODE #其他錯誤
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "nmee_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CONTINUE WHILE
+         END CASE
+         #add-point:單身fk修改後 name="modify.body.a_fk_update2"
+         
+         #end add-point
+ 
+ 
+         
+ 
+         
+         #UPDATE 多語言table key值
+         
+         
+ 
+         CALL s_transaction_end('Y','0')
+      END IF
+    
+      EXIT WHILE
+   END WHILE
+ 
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL anmt564_set_act_visible()   
+   CALL anmt564_set_act_no_visible()
+ 
+   #組合新增資料的條件
+   LET g_add_browse = " nmbaent = " ||g_enterprise|| " AND",
+                      " nmbacomp = '", g_nmba_m.nmbacomp, "' "
+                      ," AND nmbadocno = '", g_nmba_m.nmbadocno, "' "
+ 
+   #填到對應位置
+   CALL anmt564_browser_fill("")
+ 
+   CLOSE anmt564_cl
+   
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL anmt564_msgcentre_notify('modify')
+ 
+END FUNCTION 
+ 
+{</section>}
+ 
+{<section id="anmt564.input" >}
+#+ 資料輸入
+PRIVATE FUNCTION anmt564_input(p_cmd)
+   #add-point:input段define(客製用) name="input.define_customerization"
+   
+   #end add-point  
+   DEFINE  p_cmd                 LIKE type_t.chr1
+   DEFINE  l_cmd_t               LIKE type_t.chr1
+   DEFINE  l_cmd                 LIKE type_t.chr1
+   DEFINE  l_n                   LIKE type_t.num10                #檢查重複用  
+   DEFINE  l_cnt                 LIKE type_t.num10                #檢查重複用  
+   DEFINE  l_lock_sw             LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert        LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete        LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count               LIKE type_t.num10
+   DEFINE  l_i                   LIKE type_t.num10
+   DEFINE  l_ac_t                LIKE type_t.num10
+   DEFINE  l_insert              BOOLEAN
+   DEFINE  ls_return             STRING
+   DEFINE  l_var_keys            DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys          DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields              DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak        DYNAMIC ARRAY OF STRING
+   DEFINE  lb_reproduce          BOOLEAN
+   DEFINE  li_reproduce          LIKE type_t.num10
+   DEFINE  li_reproduce_target   LIKE type_t.num10
+   DEFINE  ls_keys               DYNAMIC ARRAY OF VARCHAR(500)
+   #add-point:input段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE  l_success             LIKE type_t.num5
+   DEFINE  l_ooab002             LIKE ooab_t.ooab002
+   DEFINE  l_nmbblegl            LIKE nmbb_t.nmbblegl
+   DEFINE  l_nmbb027             LIKE nmbb_t.nmbb027
+   DEFINE  l_nmee003             LIKE nmee_t.nmee003
+   DEFINE  l_nmee004             LIKE nmee_t.nmee004
+   DEFINE  l_stev014             LIKE stev_t.stev014   #151201-00002#14 Mod  stev016 --> stev014
+   DEFINE  l_oodb005             LIKE oodb_t.oodb005
+   DEFINE  l_oodb006             LIKE oodb_t.oodb006
+   DEFINE  l_oodb011             LIKE oodb_t.oodb011
+   DEFINE  l_origin_str          STRING
+   DEFINE  l_str                 STRING
+   DEFINE l_year                 LIKE type_t.num5    #151222-00010#10
+   DEFINE l_month                LIKE type_t.num5    #151222-00010#10
+  #151201-00002#14 Add  ---(S)---
+   DEFINE l_sys                  LIKE type_t.num5
+   DEFINE l_docno                STRING
+   DEFINE l_flag                 LIKE type_t.chr1
+   DEFINE l_xrca001              LIKE type_t.chr20
+   define l_xrcbseq              like xrcb_t.xrcbseq
+   define l_xrcbdocno            like xrcb_t.xrcbdocno
+   define l_xrcb056              like xrcb_t.xrcb056
+   define l_xrcb057              like xrcb_t.xrcb057
+   define l_stbc019              like stbc_t.stbc019
+   define l_nmee012_1            like nmee_t.nmee012
+  #151201-00002#14 Add  ---(E)---
+   DEFINE l_wc          STRING             #160816-00012#3 Add
+   DEFINE l_sql         STRING             #160816-00012#3 Add  
+   DEFINE l_flag1       LIKE type_t.num5      #161104-00046#14
+   DEFINE l_slip        LIKE ooba_t.ooba002   #161104-00046#14
+   #end add-point  
+   
+   #add-point:Function前置處理  name="input.pre_function"
+   
+   #end add-point
+   
+   #先做狀態判定
+   IF p_cmd = 'r' THEN
+      LET l_cmd_t = 'r'
+      LET p_cmd   = 'a'
+   ELSE
+      LET l_cmd_t = p_cmd
+   END IF   
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_nmba_m.nmbasite,g_nmba_m.nmbasite_desc,g_nmba_m.nmba008,g_nmba_m.nmba008_desc,g_nmba_m.nmba001, 
+       g_nmba_m.nmba001_desc,g_nmba_m.nmbacomp,g_nmba_m.nmbacomp_desc,g_nmba_m.nmbadocno,g_nmba_m.nmbadocno_desc, 
+       g_nmba_m.nmbadocdt,g_nmba_m.nmba003,g_nmba_m.nmba004,g_nmba_m.nmba004_desc,g_nmba_m.nmba005,g_nmba_m.tot1, 
+       g_nmba_m.tot2,g_nmba_m.diff,g_nmba_m.nmbastus,g_nmba_m.nmba007,g_nmba_m.nmba006,g_nmba_m.nmba002, 
+       g_nmba_m.nmba002_desc,g_nmba_m.nmbaownid,g_nmba_m.nmbaownid_desc,g_nmba_m.nmbaowndp,g_nmba_m.nmbaowndp_desc, 
+       g_nmba_m.nmbacrtid,g_nmba_m.nmbacrtid_desc,g_nmba_m.nmbacrtdp,g_nmba_m.nmbacrtdp_desc,g_nmba_m.nmbacrtdt, 
+       g_nmba_m.nmbamodid,g_nmba_m.nmbamodid_desc,g_nmba_m.nmbamoddt,g_nmba_m.nmbacnfid,g_nmba_m.nmbacnfid_desc, 
+       g_nmba_m.nmbacnfdt
+   
+   #切換畫面
+ 
+   CALL cl_set_head_visible("","YES")  
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   #add-point:input段define_sql name="input.define_sql"
+   LET l_xrca001 = "'241','141'"   #151201-00002#14 Add
+   #end add-point 
+   LET g_forupd_sql = "SELECT nmbbseq,nmbborga,nmbblegl,nmbb026,nmbb027,nmbb028,nmbb029,nmbb002,nmbb010, 
+       nmbb003,nmbb001,nmbb030,nmbb043,nmbb031,nmbb004,nmbb005,nmbb006,nmbb007,nmbb036,nmbb037,nmbb038, 
+       nmbb032,nmbb033,nmbb034,nmbb035,nmbb039,nmbb040,nmbb041,nmbb042,nmbb044,nmbb045 FROM nmbb_t WHERE  
+       nmbbent=? AND nmbbcomp=? AND nmbbdocno=? AND nmbbseq=? FOR UPDATE"
+   #add-point:input段define_sql name="input.after_define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE anmt564_bcl CURSOR FROM g_forupd_sql
+   
+   #add-point:input段define_sql name="input.define_sql2"
+   
+   #end add-point    
+   LET g_forupd_sql = "SELECT nmeeseq,nmee022,nmee001,nmee003,nmee004,nmee025,nmee026,nmeesite,nmee005, 
+       nmee006,nmee024,nmee007,nmee008,nmee009,nmee018,nmee010,nmee011,nmee012,nmee013,nmee002,nmee014, 
+       nmee019,nmee020,nmee023,nmee021,nmee027 FROM nmee_t WHERE nmeeent=? AND nmeecomp=? AND nmeedocno=?  
+       AND nmeeseq=? FOR UPDATE"
+   #add-point:input段define_sql name="input.after_define_sql2"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE anmt564_bcl2 CURSOR FROM g_forupd_sql
+ 
+ 
+   
+ 
+ 
+   #add-point:input段define_sql name="input.other_sql"
+   
+   #end add-point 
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   LET g_qryparam.state = 'i'
+   
+   #控制key欄位可否輸入
+   CALL anmt564_set_entry(p_cmd)
+   #add-point:set_entry後 name="input.after_set_entry"
+   
+   #end add-point
+   CALL anmt564_set_no_entry(p_cmd)
+ 
+   DISPLAY BY NAME g_nmba_m.nmbasite,g_nmba_m.nmba008,g_nmba_m.nmba001,g_nmba_m.nmbacomp,g_nmba_m.nmbadocno, 
+       g_nmba_m.nmbadocdt,g_nmba_m.nmba003,g_nmba_m.nmba004,g_nmba_m.nmba005,g_nmba_m.tot1,g_nmba_m.tot2, 
+       g_nmba_m.diff,g_nmba_m.nmbastus,g_nmba_m.nmba007,g_nmba_m.nmba006,g_nmba_m.nmba002
+   
+   LET lb_reproduce = FALSE
+   LET l_ac_t = 1
+   
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+   
+   #add-point:資料輸入前 name="input.before_input"
+  #151201-00002#14 Add  ---(S)---
+   LET l_flag = 'N'
+   WHILE TRUE
+      IF l_flag = 'Y' THEN
+         CALL anmt564_b_fill()
+      END IF
+      LET l_flag = 'N'
+  #151201-00002#14 ADd  ---(E)---
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+{</section>}
+ 
+{<section id="anmt564.input.head" >}
+      #單頭段
+      INPUT BY NAME g_nmba_m.nmbasite,g_nmba_m.nmba008,g_nmba_m.nmba001,g_nmba_m.nmbacomp,g_nmba_m.nmbadocno, 
+          g_nmba_m.nmbadocdt,g_nmba_m.nmba003,g_nmba_m.nmba004,g_nmba_m.nmba005,g_nmba_m.tot1,g_nmba_m.tot2, 
+          g_nmba_m.diff,g_nmba_m.nmbastus,g_nmba_m.nmba007,g_nmba_m.nmba006,g_nmba_m.nmba002 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+     
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            OPEN anmt564_cl USING g_enterprise,g_nmba_m.nmbacomp,g_nmba_m.nmbadocno
+            IF SQLCA.SQLCODE THEN   #(ver:78)
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN anmt564_cl:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+               LET g_errparam.popup = TRUE 
+               CLOSE anmt564_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               RETURN
+            END IF
+            
+            IF l_cmd_t = 'r' THEN
+               
+            END IF
+            #因應離開單頭後已寫入資料庫, 若重新回到單頭則視為修改
+            #因此需於此處開啟/關閉欄位
+            CALL anmt564_set_entry(p_cmd)
+            #add-point:資料輸入前 name="input.m.before_input"
+            
+            #end add-point
+            CALL anmt564_set_no_entry(p_cmd)
+    
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbasite
+            
+            #add-point:AFTER FIELD nmbasite name="input.a.nmbasite"
+            IF NOT cl_null(g_nmba_m.nmbasite) THEN 
+               #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_nmba_m.nmbasite != g_nmba_m_t.nmbasite OR g_nmba_m_t.nmbasite IS NULL )) THEN #160824-00007#315 170112 By 08171 mark
+               IF cl_null(g_nmba_m_o.nmbasite) OR g_nmba_m.nmbasite != g_nmba_m_o.nmbasite THEN  #160824-00007#315 170112 By 08171 add
+                  LET g_errno=''
+#160816-00012#3  mark s---                  
+#                  CALL s_fin_account_center_chk(g_nmba_m.nmbasite,'','6',g_nmba_m_t.nmbadocdt) RETURNING l_success,g_errno
+#                  IF NOT cl_null(g_errno) THEN
+#                     INITIALIZE g_errparam TO NULL
+#                     LET g_errparam.code = g_errno
+#                     LET g_errparam.extend = g_nmba_m.nmbasite
+#                     LET g_errparam.popup = TRUE
+#                     CALL cl_err()
+#                  
+#                     LET g_nmba_m.nmbasite = g_nmba_m_t.nmbasite
+#                     CALL s_desc_get_department_desc(g_nmba_m.nmbasite) RETURNING g_nmba_m.nmbasite_desc
+#                     DISPLAY BY NAME g_nmba_m.nmbasite_desc
+#                     NEXT FIELD CURRENT
+#                  END IF
+#160816-00012#3  mark e---
+                  #160816-00012#3 add s---
+                  CALL anmt564_nmbasite_chk()
+                  IF NOT cl_null(g_errno) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_nmba_m.nmbasite
+                     LET g_errparam.replace[1] = 'aooi125'
+                     LET g_errparam.replace[2] = cl_get_progname("aooi125",g_lang,"2")
+                     LET g_errparam.exeprog ='aooi125'
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                    #LET g_nmba_m.nmbasite = g_nmba_m_t.nmbasite #160824-00007#315 170112 By 08171 mark
+                     LET g_nmba_m.nmbasite = g_nmba_m_o.nmbasite #160824-00007#315 170112 By 08171 add
+                     CALL s_desc_get_department_desc(g_nmba_m.nmbasite) RETURNING g_nmba_m.nmbasite_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL s_anm_get_comp_wc('6',g_nmba_m.nmbasite,g_nmba_m.nmbadocdt) RETURNING g_comp_wc
+                  #160816-00012#3 add e---
+                  IF NOT cl_null(g_nmba_m.nmbacomp) THEN
+                     CALL anmt564_glaa_get()
+                     LET g_errno = NULL
+                    #CALL s_fin_account_center_with_ld_chk(g_nmba_m.nmbasite,g_glaald,g_nmba_m.nmba002,'6','N','',g_nmba_m_t.nmbadocdt) #160824-00007#315 170112 By 08171 mark
+                     CALL s_fin_account_center_with_ld_chk(g_nmba_m.nmbasite,g_glaald,g_nmba_m.nmba002,'6','N','',g_nmba_m_o.nmbadocdt) #160824-00007#315 170112 By 08171 add
+                        RETURNING l_success,g_errno
+                     IF NOT cl_null(g_errno) THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = g_errno
+                        LET g_errparam.extend = g_nmba_m.nmbasite
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                     
+                       #LET g_nmba_m.nmbasite = g_nmba_m_t.nmbasite #160824-00007#315 170112 By 08171 mark
+                        LET g_nmba_m.nmbasite = g_nmba_m_o.nmbasite #160824-00007#315 170112 By 08171 add
+                        CALL s_desc_get_department_desc(g_nmba_m.nmbasite) RETURNING g_nmba_m.nmbasite_desc
+                        DISPLAY BY NAME g_nmba_m.nmbasite_desc
+                        NEXT FIELD CURRENT
+                     END IF
+                     #160816-00012#3 add s---
+                     IF s_chr_get_index_of(g_comp_wc,g_nmba_m.nmbacomp,1) = 0 THEN   
+                        LET g_nmba_m.nmbacomp = '' #160824-00007#315 170112 By 08171 add
+                        SELECT ooef017 INTO g_nmba_m.nmbacomp
+                          FROM ooef_t
+                         WHERE ooefent = g_enterprise
+                           AND ooef001 = g_nmba_m.nmbasite
+                        #检查用户是否有资金中心对应法人的权限
+                        CALL s_axrt300_get_site(g_user,'','3') RETURNING l_wc
+                        LET l_count = 0
+                        LET l_sql = "SELECT COUNT(*) FROM ooef_t WHERE ooefent = '",g_enterprise,"' ",
+                                    "   AND ooef001 = '",g_nmba_m.nmbacomp,"'",
+                                    "   AND ooef003 = 'Y'",
+                                    "   AND ",l_wc CLIPPED
+                        PREPARE anmt564_count_prep FROM l_sql
+                        EXECUTE anmt564_count_prep INTO l_count
+                        IF cl_null(l_count) THEN LET l_count = 0 END IF
+                        IF l_count = 0 THEN
+                           LET g_nmba_m.nmbacomp = ''
+                           LET g_nmba_m.nmbacomp_desc = ''
+                           DISPLAY BY NAME g_nmba_m.nmbacomp,g_nmba_m.nmbacomp_desc
+                        END IF
+                        DISPLAY BY NAME g_nmba_m.nmbacomp
+                        #CALL s_anm_get_site_wc('6',g_nmba_m.nmbacomp,g_nmba_m.nmbadocdt) RETURNING g_site_wc #160912-00024#1
+                        CALL anmt564_glaa_get()
+                     END IF                   
+                  END IF
+                  CALL s_anm_get_site_wc('6',g_nmba_m.nmbasite,g_nmba_m.nmbadocdt) RETURNING g_site_wc #160912-00024#1
+                  #160816-00012#3 add e---
+               END IF
+            END IF
+            CALL s_desc_get_department_desc(g_nmba_m.nmbasite) RETURNING g_nmba_m.nmbasite_desc
+            DISPLAY BY NAME g_nmba_m.nmbasite_desc
+            LET g_nmba_m_o.* = g_nmba_m.* #160824-00007#315 170112 By 08171 add
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbasite
+            #add-point:BEFORE FIELD nmbasite name="input.b.nmbasite"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbasite
+            #add-point:ON CHANGE nmbasite name="input.g.nmbasite"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmba008
+            
+            #add-point:AFTER FIELD nmba008 name="input.a.nmba008"
+            IF NOT cl_null(g_nmba_m.nmba008) THEN 
+               #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_nmba_m.nmba008 != g_nmba_m_t.nmba008 OR g_nmba_m_t.nmba008 IS NULL )) THEN  #160824-00007#315 170112 By 08171 mark
+               IF cl_null(g_nmba_m_o.nmba008) OR g_nmba_m.nmba008 != g_nmba_m_o.nmba008 THEN #160824-00007#315 170112 By 08171 add
+                  #資料存在性、有效性檢查
+                  CALL s_employee_chk(g_nmba_m.nmba008) RETURNING l_success
+                  IF NOT l_success THEN
+                    #LET g_nmba_m.nmba008 = g_nmba_m_t.nmba008 #160824-00007#315 170112 By 08171 mark
+                     LET g_nmba_m.nmba008 = g_nmba_m_o.nmba008 #160824-00007#315 170112 By 08171 add
+                     CALL s_desc_get_person_desc(g_nmba_m.nmba008) RETURNING g_nmba_m.nmba008_desc
+                     DISPLAY BY NAME g_nmba_m.nmba008_desc
+                     NEXT FIELD nmba008
+                  END IF 
+               END IF
+            END IF
+            CALL s_desc_get_person_desc(g_nmba_m.nmba008) RETURNING g_nmba_m.nmba008_desc
+            DISPLAY BY NAME g_nmba_m.nmba008_desc
+            #繳款部門
+            LET g_nmba_m.nmba001 = '' #160824-00007#315 170112 By 08171 add
+            SELECT ooag003 INTO g_nmba_m.nmba001 FROM ooag_t
+             WHERE ooag001 = g_nmba_m.nmba008
+               AND ooagent = g_enterprise 
+            CALL s_desc_get_department_desc(g_nmba_m.nmba001) RETURNING g_nmba_m.nmba001_desc
+            DISPLAY BY NAME g_nmba_m.nmba001_desc
+            LET g_nmba_m_o.* = g_nmba_m.* #160824-00007#315 170112 By 08171 add
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmba008
+            #add-point:BEFORE FIELD nmba008 name="input.b.nmba008"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmba008
+            #add-point:ON CHANGE nmba008 name="input.g.nmba008"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmba001
+            
+            #add-point:AFTER FIELD nmba001 name="input.a.nmba001"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmba_m.nmba001
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmba_m.nmba001_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_nmba_m.nmba001_desc
+            IF NOT cl_null(g_nmba_m.nmba001) THEN 
+               #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_nmba_m.nmba001 != g_nmba_m_t.nmba001 OR g_nmba_m_t.nmba001 IS NULL )) THEN   #160824-00007#315 170112 By 08171 mark
+               IF cl_null(g_nmba_m_o.nmba001) OR g_nmba_m.nmba001 != g_nmba_m_o.nmba001 THEN #160824-00007#315 170112 By 08171 add
+                  CALL s_voucher_glaq018_chk(g_nmba_m.nmba001,g_nmba_m.nmbadocdt)
+                  IF NOT cl_null(g_errno) THEN 
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_nmba_m.nmba001
+                     #160321-00016#40 --s add
+                     LET g_errparam.replace[1] = 'aooi125'
+                     LET g_errparam.replace[2] = cl_get_progname('aooi125',g_lang,"2")
+                     LET g_errparam.exeprog = 'aooi125'
+                     #160321-00016#40 --e add
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     
+                    #LET g_nmba_m.nmba001 = g_nmba_m_t.nmba001 #160824-00007#315 170112 By 08171 mark
+                     LET g_nmba_m.nmba001 = g_nmba_m_o.nmba001 #160824-00007#315 170112 By 08171 add
+                     CALL s_desc_get_department_desc(g_nmba_m.nmba001) RETURNING g_nmba_m.nmba001_desc
+                     DISPLAY BY NAME g_nmba_m.nmba001_desc
+                     NEXT FIELD nmba001
+                  END IF 
+               END IF
+            END IF
+            LET g_nmba_m_o.* = g_nmba_m.* #160824-00007#315 170112 By 08171 add
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmba001
+            #add-point:BEFORE FIELD nmba001 name="input.b.nmba001"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmba001
+            #add-point:ON CHANGE nmba001 name="input.g.nmba001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbacomp
+            
+            #add-point:AFTER FIELD nmbacomp name="input.a.nmbacomp"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmba_m.nmbacomp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmba_m.nmbacomp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_nmba_m.nmbacomp_desc
+
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  NOT cl_null(g_nmba_m.nmbacomp) AND NOT cl_null(g_nmba_m.nmbadocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_nmba_m.nmbacomp != g_nmbacomp_t  OR g_nmba_m.nmbadocno != g_nmbadocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM nmba_t WHERE "||"nmbaent = '" ||g_enterprise|| "' AND "||"nmbacomp = '"||g_nmba_m.nmbacomp ||"' AND "|| "nmbadocno = '"||g_nmba_m.nmbadocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            IF NOT cl_null(g_nmba_m.nmbacomp) THEN
+               #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_nmba_m.nmbacomp != g_nmba_m_t.nmbacomp OR g_nmba_m_t.nmbacomp IS NULL )) THEN #160824-00007#315 170112 By 08171 mark
+               IF cl_null(g_nmba_m_o.nmbacomp) OR g_nmba_m.nmbacomp != g_nmba_m_o.nmbacomp THEN #160824-00007#315 170112 By 08171 add
+                  CALL s_fin_comp_chk(g_nmba_m.nmbacomp) RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     #160321-00016#40 --s add
+                     LET g_errparam.replace[1] = 'aooi100'
+                     LET g_errparam.replace[2] = cl_get_progname('aooi100',g_lang,"2")
+                     LET g_errparam.exeprog = 'aooi100'
+                     #160321-00016#40 --e add
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                    #LET g_nmba_m.nmbacomp = g_nmba_m_t.nmbacomp #160824-00007#315 170112 By 08171 mark
+                     LET g_nmba_m.nmbacomp = g_nmba_m_o.nmbacomp #160824-00007#315 170112 By 08171 add
+                     CALL s_desc_get_department_desc(g_nmba_m.nmbacomp) RETURNING g_nmba_m.nmbacomp_desc
+                     DISPLAY BY NAME g_nmba_m.nmbacomp_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  LET g_errno = ''
+                  CALL anmt564_glaa_get()
+#160816-00012#3 mark s---                  
+#                  CALL s_fin_account_center_sons_query('6',g_nmba_m.nmbasite,g_nmba_m.nmbadocdt,'')
+#                  CALL s_fin_account_center_with_ld_chk(g_nmba_m.nmbasite,g_glaald,g_nmba_m.nmba002,'6','Y','',g_nmba_m.nmbadocdt) 
+#                     RETURNING l_success,g_errno
+#                  IF NOT l_success THEN
+#                     INITIALIZE g_errparam TO NULL
+#                     LET g_errparam.code = g_errno
+#                     LET g_errparam.extend = ''
+#                     LET g_errparam.popup = TRUE
+#                     CALL cl_err()
+#                     LET g_nmba_m.nmbacomp = g_nmba_m_t.nmbacomp
+#                     CALL s_desc_get_department_desc(g_nmba_m.nmbacomp) RETURNING g_nmba_m.nmbacomp_desc
+#                     DISPLAY BY NAME g_nmba_m.nmbacomp_desc
+#                     NEXT FIELD CURRENT
+#                  END IF 
+#160816-00012#3 mark e--- 
+                  #160816-00012#3 add s---
+                  IF NOT cl_null(g_nmba_m.nmbasite) THEN  
+                     IF s_chr_get_index_of(g_comp_wc,g_nmba_m.nmbacomp,1) = 0 THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'anm-02928'
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                       #LET g_nmba_m.nmbacomp = g_nmba_m_t.nmbacomp #160824-00007#315 170112 By 08171 mark
+                        LET g_nmba_m.nmbacomp = g_nmba_m_o.nmbacomp #160824-00007#315 170112 By 08171 add
+                        CALL s_desc_get_department_desc(g_nmba_m.nmbacomp) RETURNING g_nmba_m.nmbacomp_desc
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF  
+                  #检查用户是否有资金中心对应法人的权限
+                  CALL s_axrt300_get_site(g_user,'','3') RETURNING l_wc
+                  LET l_count = 0
+                  LET l_sql = "SELECT COUNT(*) FROM ooef_t WHERE ooefent = '",g_enterprise,"' ",
+                              "   AND ooef001 = '",g_nmba_m.nmbacomp,"'",
+                              "   AND ooef003 = 'Y'",
+                              "   AND ",l_wc CLIPPED
+                  PREPARE anmt564_count_prep1 FROM l_sql
+                  EXECUTE anmt564_count_prep1 INTO l_count
+                  IF cl_null(l_count) THEN LET l_count = 0 END IF
+                  IF l_count = 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = "ais-00228"
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                    #LET g_nmba_m.nmbacomp = g_nmba_m_t.nmbacomp #160824-00007#315 170112 By 08171 mark
+                     LET g_nmba_m.nmbacomp = g_nmba_m_o.nmbacomp #160824-00007#315 170112 By 08171 add
+                     CALL s_desc_get_department_desc(g_nmba_m.nmbacomp) RETURNING g_nmba_m.nmbacomp_desc                   
+                     NEXT FIELD CURRENT
+                  END IF
+                  #CALL s_anm_get_site_wc('6',g_nmba_m.nmbacomp,g_nmba_m.nmbadocdt) RETURNING g_site_wc #160912-00024#1
+                  #160816-00012#3 add e---
+               END IF
+            END IF
+            CALL anmt564_glaa_get()
+            LET g_nmba_m_o.* = g_nmba_m.* #160824-00007#315 170112 By 08171 add
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbacomp
+            #add-point:BEFORE FIELD nmbacomp name="input.b.nmbacomp"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbacomp
+            #add-point:ON CHANGE nmbacomp name="input.g.nmbacomp"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbadocno
+            
+            #add-point:AFTER FIELD nmbadocno name="input.a.nmbadocno"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmba_m.nmbadocno
+            CALL ap_ref_array2(g_ref_fields,"SELECT oobal004 FROM oobal_t WHERE oobalent='"||g_enterprise||"' AND oobal001='' AND oobal002=? AND oobal003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmba_m.nmbadocno_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_nmba_m.nmbadocno_desc
+
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  NOT cl_null(g_nmba_m.nmbacomp) AND NOT cl_null(g_nmba_m.nmbadocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_nmba_m.nmbacomp != g_nmbacomp_t  OR g_nmba_m.nmbadocno != g_nmbadocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM nmba_t WHERE "||"nmbaent = '" ||g_enterprise|| "' AND "||"nmbacomp = '"||g_nmba_m.nmbacomp ||"' AND "|| "nmbadocno = '"||g_nmba_m.nmbadocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            IF NOT cl_null(g_nmba_m.nmbadocno) AND NOT cl_null(g_nmba_m.nmbacomp) THEN
+               CALL s_aooi200_fin_chk_slip(g_glaald,g_glaa024,g_nmba_m.nmbadocno,'anmt564') RETURNING l_success
+               IF l_success = FALSE THEN 
+                  LET g_nmba_m.nmbadocno = g_nmba_m_t.nmbadocno
+                  NEXT FIELD nmbadocno
+               END IF
+               #161104-00046#14-----s
+               CALL s_control_chk_doc('1',g_nmba_m.nmbadocno,'4',g_user,g_dept,'','') RETURNING g_sub_success,l_flag1
+               IF g_sub_success AND l_flag1 THEN             
+               ELSE
+                  LET g_nmba_m.nmbadocno = g_nmba_m_o.nmbadocno 
+                  NEXT FIELD CURRENT                  
+               END IF
+               CALL s_aooi200_fin_get_slip(g_nmba_m.nmbadocno) RETURNING g_sub_success,l_slip
+               #刪除單別預設temptable
+               DELETE FROM s_aooi200def1
+               #以目前畫面資訊新增temp資料   #請勿調整.*
+               INSERT INTO s_aooi200def1 VALUES(g_nmba_m.*)
+               #依單別預設取用資訊
+               CALL s_aooi200def_get('','',g_nmba_m.nmbacomp,'2',l_slip,'','',g_glaald)
+               #依單別預設值TEMP內容 給予到畫面上   #請勿調整.*
+               SELECT * INTO g_nmba_m.* FROM s_aooi200def1
+               #161104-00046#14-----e  
+            END IF
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbadocno
+            #add-point:BEFORE FIELD nmbadocno name="input.b.nmbadocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbadocno
+            #add-point:ON CHANGE nmbadocno name="input.g.nmbadocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbadocdt
+            #add-point:BEFORE FIELD nmbadocdt name="input.b.nmbadocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbadocdt
+            
+            #add-point:AFTER FIELD nmbadocdt name="input.a.nmbadocdt"
+            IF NOT cl_null(g_nmba_m.nmbadocdt) THEN 
+               #150813-00015#19--mod--str--
+               #IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_nmba_m.nmbadocdt != g_nmba_m_t.nmbadocdt OR cl_null(g_nmba_m_t.nmbadocdt))) THEN  #160824-00007#315 170112 By 08171 mark
+               IF cl_null(g_nmba_m_o.nmbadocdt) OR g_nmba_m.nmbadocdt != g_nmba_m_o.nmbadocdt THEN #160824-00007#315 170112 By 08171 add
+                  #檢查當單據日期小於等於關帳日期時，不可異動單據
+                  CALL s_fin_date_close_chk('',g_nmba_m.nmbacomp,'ANM',g_nmba_m.nmbadocdt) RETURNING l_success
+                  IF l_success=FALSE THEN
+                    #LET g_nmba_m.nmbadocdt = g_nmba_m_t.nmbadocdt #160824-00007#315 170112 By 08171 mark
+                     LET g_nmba_m.nmbadocdt = g_nmba_m_o.nmbadocdt #160824-00007#315 170112 By 08171 add
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+#               LET l_ooab002 = ''
+#               SELECT ooab002 INTO l_ooab002
+#                 FROM ooab_t
+#                WHERE ooabent = g_enterprise
+#                  AND ooab001 = 'S-FIN-4002'
+#                  AND ooabsite = g_nmba_m.nmbacomp
+#               IF g_nmba_m.nmbadocdt < l_ooab002 THEN 
+#                  IF p_cmd = 'a' THEN 
+#                     DISPLAY '' TO nmbadocdt
+#                     INITIALIZE g_errparam TO NULL
+#                     LET g_errparam.code = 'anm-00036'
+#                     LET g_errparam.extend = g_nmba_m.nmbadocdt
+#                     LET g_errparam.popup = TRUE
+#                     CALL cl_err()
+#
+#                     LET g_nmba_m.nmbadocdt = ''
+#                  ELSE
+#                     DISPLAY '' TO nmbadocdt
+#                     INITIALIZE g_errparam TO NULL
+#                     LET g_errparam.code = 'anm-00036'
+#                     LET g_errparam.extend = g_nmba_m.nmbadocdt
+#                     LET g_errparam.popup = TRUE
+#                     CALL cl_err()
+#
+#                     LET g_nmba_m.nmbadocdt = g_nmba_m_t.nmbadocdt
+#                  END IF
+#                  NEXT FIELD nmbadocdt
+#               END IF
+               #150813-00015#19--mod--end
+            END IF
+            LET g_nmba_m_o.* = g_nmba_m.* #160824-00007#315 170112 By 08171 add
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbadocdt
+            #add-point:ON CHANGE nmbadocdt name="input.g.nmbadocdt"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmba003
+            #add-point:BEFORE FIELD nmba003 name="input.b.nmba003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmba003
+            
+            #add-point:AFTER FIELD nmba003 name="input.a.nmba003"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmba003
+            #add-point:ON CHANGE nmba003 name="input.g.nmba003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmba004
+            
+            #add-point:AFTER FIELD nmba004 name="input.a.nmba004"
+           #151201-00002#14 Mark ---(S)---
+           #INITIALIZE g_ref_fields TO NULL
+           #LET g_ref_fields[1] = g_nmba_m.nmba004
+           #CALL ap_ref_array2(g_ref_fields,"SELECT pmaal003 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+           #LET g_nmba_m.nmba004_desc = '', g_rtn_fields[1] , ''
+           #DISPLAY BY NAME g_nmba_m.nmba004_desc
+           #151201-00002#14 Mark ---(E)---
+           #151201-00002#14 Add  ---(S)---
+            LET g_nmba_m.nmba004_desc = ' '
+            DISPLAY g_nmba_m.nmba004_desc TO nmba004_desc
+            IF NOT cl_null(g_nmba_m.nmba004) THEN
+               CALL anmt564_nmbb026_chk(g_nmba_m.nmba004,'1') RETURNING l_success,g_nmba_m.nmba005
+               IF NOT l_success THEN
+                  LET g_nmba_m.nmba004 = g_nmba_m_t.nmba004
+                  LET g_nmba_m.nmba004_desc = g_nmba_m_t.nmba004_desc
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            CALL anmt564_nmbb026_desc(g_nmba_m.nmba004,g_nmba_m.nmba005)
+               RETURNING g_nmba_m.nmba004_desc
+            DISPLAY g_nmba_m.nmba004_desc TO nmba004_desc
+           #151201-00002#14 Add  ---(E)---
+           
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmba004
+            #add-point:BEFORE FIELD nmba004 name="input.b.nmba004"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmba004
+            #add-point:ON CHANGE nmba004 name="input.g.nmba004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmba005
+            #add-point:BEFORE FIELD nmba005 name="input.b.nmba005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmba005
+            
+            #add-point:AFTER FIELD nmba005 name="input.a.nmba005"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmba005
+            #add-point:ON CHANGE nmba005 name="input.g.nmba005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD tot1
+            #add-point:BEFORE FIELD tot1 name="input.b.tot1"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD tot1
+            
+            #add-point:AFTER FIELD tot1 name="input.a.tot1"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE tot1
+            #add-point:ON CHANGE tot1 name="input.g.tot1"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD tot2
+            #add-point:BEFORE FIELD tot2 name="input.b.tot2"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD tot2
+            
+            #add-point:AFTER FIELD tot2 name="input.a.tot2"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE tot2
+            #add-point:ON CHANGE tot2 name="input.g.tot2"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD diff
+            #add-point:BEFORE FIELD diff name="input.b.diff"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD diff
+            
+            #add-point:AFTER FIELD diff name="input.a.diff"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE diff
+            #add-point:ON CHANGE diff name="input.g.diff"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbastus
+            #add-point:BEFORE FIELD nmbastus name="input.b.nmbastus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbastus
+            
+            #add-point:AFTER FIELD nmbastus name="input.a.nmbastus"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbastus
+            #add-point:ON CHANGE nmbastus name="input.g.nmbastus"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmba007
+            #add-point:BEFORE FIELD nmba007 name="input.b.nmba007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmba007
+            
+            #add-point:AFTER FIELD nmba007 name="input.a.nmba007"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmba007
+            #add-point:ON CHANGE nmba007 name="input.g.nmba007"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmba006
+            #add-point:BEFORE FIELD nmba006 name="input.b.nmba006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmba006
+            
+            #add-point:AFTER FIELD nmba006 name="input.a.nmba006"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmba006
+            #add-point:ON CHANGE nmba006 name="input.g.nmba006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmba002
+            
+            #add-point:AFTER FIELD nmba002 name="input.a.nmba002"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmba_m.nmba002
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_nmba_m.nmba002_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_nmba_m.nmba002_desc
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmba002
+            #add-point:BEFORE FIELD nmba002 name="input.b.nmba002"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmba002
+            #add-point:ON CHANGE nmba002 name="input.g.nmba002"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.nmbasite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbasite
+            #add-point:ON ACTION controlp INFIELD nmbasite name="input.c.nmbasite"
+            #資金中心
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_nmba_m.nmbasite
+            LET g_qryparam.where = " ooef206 = 'Y'"
+            LET g_qryparam.where = g_qryparam.where," AND ooefstus= 'Y'" #161021-00050#10
+            #CALL q_ooef001()    #161021-00050#10 mark
+            CALL q_ooef001_33()  #161021-00050#10
+            LET g_nmba_m.nmbasite = g_qryparam.return1
+            DISPLAY g_nmba_m.nmbasite TO nmbasite
+            NEXT FIELD nmbasite
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmba008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmba008
+            #add-point:ON ACTION controlp INFIELD nmba008 name="input.c.nmba008"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmba_m.nmba008             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+
+            CALL q_ooag001_8()                                #呼叫開窗
+
+            LET g_nmba_m.nmba008 = g_qryparam.return1              
+
+            DISPLAY g_nmba_m.nmba008 TO nmba008              #
+
+            NEXT FIELD nmba008                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmba001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmba001
+            #add-point:ON ACTION controlp INFIELD nmba001 name="input.c.nmba001"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmba_m.nmba001             #給予default值
+            LET g_qryparam.default2 = "" #g_nmba_m.ooefl003 #說明(簡稱)
+            #給予arg
+            LET g_qryparam.arg1 = g_nmba_m.nmbadocdt #
+
+
+            CALL q_ooeg001_4()                                #呼叫開窗
+            LET g_nmba_m.nmba001 = g_qryparam.return1   #160930-00019#1 ADD 
+            DISPLAY g_nmba_m.nmba001 TO nmba001              #
+            #DISPLAY g_nmba_m.ooefl003 TO ooefl003 #說明(簡稱)
+            NEXT FIELD nmba001                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmbacomp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbacomp
+            #add-point:ON ACTION controlp INFIELD nmbacomp name="input.c.nmbacomp"
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_nmba_m.nmbacomp
+            #160816-00012#3 mod s---
+            #CALL s_fin_account_center_sons_query('6',g_nmba_m.nmbasite,g_nmba_m.nmbadocdt,'')
+            #CALL s_fin_account_center_comp_str()RETURNING l_origin_str
+            #CALL s_fin_get_wc_str(l_origin_str)RETURNING l_origin_str
+            #LET g_qryparam.where = " ooef003 = 'Y' AND ooef001 IN ",l_origin_str CLIPPED
+            CALL s_anm_get_comp_wc('6',g_nmba_m.nmbasite,g_nmba_m.nmbadocdt) RETURNING g_comp_wc
+            LET g_qryparam.where = " ooef001 IN ",g_comp_wc
+            CALL s_axrt300_get_site(g_user,'','3') RETURNING l_wc
+            LET g_qryparam.where = g_qryparam.where," AND ",l_wc CLIPPED," AND ooef003 = 'Y'"
+            #160816-00012#3 mod e---
+            #CALL q_ooef001()  #161021-00050#10 mark
+            CALL q_ooef001_2() #161021-00050#10
+            LET g_nmba_m.nmbacomp = g_qryparam.return1
+            DISPLAY g_nmba_m.nmbacomp TO nmbacomp
+            NEXT FIELD nmbacomp
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmbadocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbadocno
+            #add-point:ON ACTION controlp INFIELD nmbadocno name="input.c.nmbadocno"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmba_m.nmbadocno             #給予default值
+
+            #LET g_qryparam.where = " ooba001 = '",g_glaa024,"' AND oobx003 = 'anmt564'"
+
+            #CALL q_ooba002_4()                                #呼叫開窗
+            ## add by zn  
+            LET g_qryparam.arg1 = g_glaa024
+            #LET g_qryparam.arg2 = 'anmt564'     #160705-00042#4 160711 by sakura mark
+            LET g_qryparam.arg2 = g_prog         #160705-00042#4 160711 by sakura add
+            #161104-00046#14-----s
+            IF NOT cl_null(g_user_slip_wc)THEN
+               LET g_qryparam.where = g_user_slip_wc 
+            END IF
+            #161104-00046#14-----e
+            CALL q_ooba002_1()   
+            ## add by zn 
+            LET g_nmba_m.nmbadocno = g_qryparam.return1              
+
+            DISPLAY g_nmba_m.nmbadocno TO nmbadocno              #
+
+            NEXT FIELD nmbadocno                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmbadocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbadocdt
+            #add-point:ON ACTION controlp INFIELD nmbadocdt name="input.c.nmbadocdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmba003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmba003
+            #add-point:ON ACTION controlp INFIELD nmba003 name="input.c.nmba003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmba004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmba004
+            #add-point:ON ACTION controlp INFIELD nmba004 name="input.c.nmba004"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmba_m.nmba004             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+
+            # CALL q_pmaa001()       #160913-00017#5  mark                  #呼叫開窗
+            CALL q_pmaa001_25()     #160913-00017#5  add      
+
+            LET g_nmba_m.nmba004 = g_qryparam.return1              
+
+            DISPLAY g_nmba_m.nmba004 TO nmba004              #
+
+            NEXT FIELD nmba004                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmba005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmba005
+            #add-point:ON ACTION controlp INFIELD nmba005 name="input.c.nmba005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.tot1
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD tot1
+            #add-point:ON ACTION controlp INFIELD tot1 name="input.c.tot1"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.tot2
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD tot2
+            #add-point:ON ACTION controlp INFIELD tot2 name="input.c.tot2"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.diff
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD diff
+            #add-point:ON ACTION controlp INFIELD diff name="input.c.diff"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmbastus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbastus
+            #add-point:ON ACTION controlp INFIELD nmbastus name="input.c.nmbastus"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmba007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmba007
+            #add-point:ON ACTION controlp INFIELD nmba007 name="input.c.nmba007"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmba006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmba006
+            #add-point:ON ACTION controlp INFIELD nmba006 name="input.c.nmba006"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmba002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmba002
+            #add-point:ON ACTION controlp INFIELD nmba002 name="input.c.nmba002"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmba_m.nmba002             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+
+            CALL q_ooag001_8()                                #呼叫開窗
+
+            LET g_nmba_m.nmba002 = g_qryparam.return1              
+
+            DISPLAY g_nmba_m.nmba002 TO nmba002              #
+
+            NEXT FIELD nmba002                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+ #欄位開窗
+            
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+ 
+            #CALL cl_err_collect_show()      #錯誤訊息統整顯示
+            #CALL cl_showmsg()
+            DISPLAY BY NAME g_nmba_m.nmbacomp,g_nmba_m.nmbadocno
+                        
+            #add-point:單頭INPUT後 name="input.head.after_input"
+            
+            #end add-point
+                        
+            IF p_cmd <> 'u' THEN
+    
+               CALL s_transaction_begin()
+               
+               #add-point:單頭新增前 name="input.head.b_insert"
+               CALL s_aooi200_fin_gen_docno(g_glaald,g_glaa024,g_glaa003,g_nmba_m.nmbadocno,g_nmba_m.nmbadocdt,g_prog)
+                     RETURNING l_success,g_nmba_m.nmbadocno
+               IF l_success  = 0  THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'apm-00003'
+                  LET g_errparam.extend = g_nmba_m.nmbadocno
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+              
+                  NEXT FIELD nmbadocno 
+               END IF 
+               #end add-point
+               
+               INSERT INTO nmba_t (nmbaent,nmbasite,nmba008,nmba001,nmbacomp,nmbadocno,nmbadocdt,nmba003, 
+                   nmba004,nmba005,nmbastus,nmba007,nmba006,nmba002,nmbaownid,nmbaowndp,nmbacrtid,nmbacrtdp, 
+                   nmbacrtdt,nmbamodid,nmbamoddt,nmbacnfid,nmbacnfdt)
+               VALUES (g_enterprise,g_nmba_m.nmbasite,g_nmba_m.nmba008,g_nmba_m.nmba001,g_nmba_m.nmbacomp, 
+                   g_nmba_m.nmbadocno,g_nmba_m.nmbadocdt,g_nmba_m.nmba003,g_nmba_m.nmba004,g_nmba_m.nmba005, 
+                   g_nmba_m.nmbastus,g_nmba_m.nmba007,g_nmba_m.nmba006,g_nmba_m.nmba002,g_nmba_m.nmbaownid, 
+                   g_nmba_m.nmbaowndp,g_nmba_m.nmbacrtid,g_nmba_m.nmbacrtdp,g_nmba_m.nmbacrtdt,g_nmba_m.nmbamodid, 
+                   g_nmba_m.nmbamoddt,g_nmba_m.nmbacnfid,g_nmba_m.nmbacnfdt) 
+               IF SQLCA.SQLCODE THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "g_nmba_m:",SQLERRMESSAGE 
+                  LET g_errparam.code = SQLCA.SQLCODE 
+                  LET g_errparam.popup = TRUE 
+                  CALL s_transaction_end('N','0')
+                  CALL cl_err()
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #add-point:單頭新增中 name="input.head.m_insert"
+               
+               #end add-point
+               
+               
+               
+               
+               #add-point:單頭新增後 name="input.head.a_insert"
+               
+               #end add-point
+               CALL s_transaction_end('Y','0') 
+               
+               IF l_cmd_t = 'r' AND p_cmd = 'a' THEN
+                  CALL anmt564_detail_reproduce()
+                  #因應特定程式需求, 重新刷新單身資料
+                  CALL anmt564_b_fill()
+                  CALL anmt564_b_fill2('0')
+               END IF
+               
+               #add-point:單頭新增後 name="input.head.a_insert2"
+               
+               #end add-point
+               
+               LET g_master_insert = TRUE
+               
+               LET p_cmd = 'u'
+            ELSE
+               CALL s_transaction_begin()
+            
+               #add-point:單頭修改前 name="input.head.b_update"
+               
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL anmt564_nmba_t_mask_restore('restore_mask_o')
+               
+               UPDATE nmba_t SET (nmbasite,nmba008,nmba001,nmbacomp,nmbadocno,nmbadocdt,nmba003,nmba004, 
+                   nmba005,nmbastus,nmba007,nmba006,nmba002,nmbaownid,nmbaowndp,nmbacrtid,nmbacrtdp, 
+                   nmbacrtdt,nmbamodid,nmbamoddt,nmbacnfid,nmbacnfdt) = (g_nmba_m.nmbasite,g_nmba_m.nmba008, 
+                   g_nmba_m.nmba001,g_nmba_m.nmbacomp,g_nmba_m.nmbadocno,g_nmba_m.nmbadocdt,g_nmba_m.nmba003, 
+                   g_nmba_m.nmba004,g_nmba_m.nmba005,g_nmba_m.nmbastus,g_nmba_m.nmba007,g_nmba_m.nmba006, 
+                   g_nmba_m.nmba002,g_nmba_m.nmbaownid,g_nmba_m.nmbaowndp,g_nmba_m.nmbacrtid,g_nmba_m.nmbacrtdp, 
+                   g_nmba_m.nmbacrtdt,g_nmba_m.nmbamodid,g_nmba_m.nmbamoddt,g_nmba_m.nmbacnfid,g_nmba_m.nmbacnfdt) 
+ 
+                WHERE nmbaent = g_enterprise AND nmbacomp = g_nmbacomp_t
+                  AND nmbadocno = g_nmbadocno_t
+ 
+               IF SQLCA.SQLCODE THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "nmba_t:",SQLERRMESSAGE 
+                  LET g_errparam.code = SQLCA.SQLCODE 
+                  LET g_errparam.popup = TRUE 
+                  CALL s_transaction_end('N','0')
+                  CALL cl_err()
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #add-point:單頭修改中 name="input.head.m_update"
+               
+               #end add-point
+               
+               
+               
+               
+               #將遮罩欄位進行遮蔽
+               CALL anmt564_nmba_t_mask_restore('restore_mask_n')
+               
+               #修改歷程記錄(單頭修改)
+               LET g_log1 = util.JSON.stringify(g_nmba_m_t)
+               LET g_log2 = util.JSON.stringify(g_nmba_m)
+               IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF
+               
+               #add-point:單頭修改後 name="input.head.a_update"
+              #151201-00002#14 Add  ---(S)---
+               UPDATE nmbb_t SET nmbb026 = g_nmba_m.nmba004
+                WHERE nmbbent = g_enterprise
+                  AND nmbbdocno = g_nmba_m.nmbadocno
+                  AND nmbbcomp = g_nmba_m.nmbacomp
+
+               UPDATE nmee_t SET nmee001 = g_nmba_m.nmba004
+                WHERE nmeeent = g_enterprise
+                  AND nmeedocno = g_nmba_m.nmbadocno
+                  AND nmeecomp = g_nmba_m.nmbacomp
+              #151201-00002#14 Add  ---(E)---
+               #end add-point
+            END IF
+            
+            LET g_master_commit = "Y"
+            LET g_nmbacomp_t = g_nmba_m.nmbacomp
+            LET g_nmbadocno_t = g_nmba_m.nmbadocno
+ 
+            
+      END INPUT
+   
+ 
+{</section>}
+ 
+{<section id="anmt564.input.body" >}
+   
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_nmbb_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            #add-point:資料輸入前 name="input.body.before_input2"
+            
+            #end add-point
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_nmbb_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL anmt564_b_fill()
+            #如果一直都在單身1則控制筆數位置
+            IF g_loc = 'm' AND g_rec_b != 0 THEN
+               CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'1',"))
+            END IF
+            LET g_loc = 'm'
+            LET g_rec_b = g_nmbb_d.getLength()
+            #add-point:資料輸入前 name="input.d.before_input"
+            CALL anmt564_glaa_get()
+            #end add-point
+         
+         BEFORE ROW
+            #add-point:modify段before row2 name="input.body.before_row2"
+            
+            #end add-point  
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac_t = l_ac 
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET g_detail_idx_list[1] = l_ac
+            LET g_current_page = 1
+            
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN anmt564_cl USING g_enterprise,g_nmba_m.nmbacomp,g_nmba_m.nmbadocno
+            IF SQLCA.SQLCODE THEN   #(ver:78)
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN anmt564_cl:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+               LET g_errparam.popup = TRUE 
+               CLOSE anmt564_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_nmbb_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND g_nmbb_d[l_ac].nmbbseq IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_nmbb_d_t.* = g_nmbb_d[l_ac].*  #BACKUP
+               LET g_nmbb_d_o.* = g_nmbb_d[l_ac].*  #BACKUP
+               CALL anmt564_set_entry_b(l_cmd)
+               #add-point:modify段after_set_entry_b name="input.body.after_set_entry_b"
+               
+               #end add-point  
+               CALL anmt564_set_no_entry_b(l_cmd)
+               IF NOT anmt564_lock_b("nmbb_t","'1'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH anmt564_bcl INTO g_nmbb_d[l_ac].nmbbseq,g_nmbb_d[l_ac].nmbborga,g_nmbb_d[l_ac].nmbblegl, 
+                      g_nmbb_d[l_ac].nmbb026,g_nmbb_d[l_ac].nmbb027,g_nmbb_d[l_ac].nmbb028,g_nmbb_d[l_ac].nmbb029, 
+                      g_nmbb_d[l_ac].nmbb002,g_nmbb_d[l_ac].nmbb010,g_nmbb_d[l_ac].nmbb003,g_nmbb_d[l_ac].nmbb001, 
+                      g_nmbb_d[l_ac].nmbb030,g_nmbb_d[l_ac].nmbb043,g_nmbb_d[l_ac].nmbb031,g_nmbb_d[l_ac].nmbb004, 
+                      g_nmbb_d[l_ac].nmbb005,g_nmbb_d[l_ac].nmbb006,g_nmbb_d[l_ac].nmbb007,g_nmbb_d[l_ac].nmbb036, 
+                      g_nmbb_d[l_ac].nmbb037,g_nmbb_d[l_ac].nmbb038,g_nmbb_d[l_ac].nmbb032,g_nmbb_d[l_ac].nmbb033, 
+                      g_nmbb_d[l_ac].nmbb034,g_nmbb_d[l_ac].nmbb035,g_nmbb_d[l_ac].nmbb039,g_nmbb_d[l_ac].nmbb040, 
+                      g_nmbb_d[l_ac].nmbb041,g_nmbb_d[l_ac].nmbb042,g_nmbb_d[l_ac].nmbb044,g_nmbb_d[l_ac].nmbb045 
+ 
+                  IF SQLCA.SQLCODE THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = g_nmbb_d_t.nmbbseq,":",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE 
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_nmbb_d_mask_o[l_ac].* =  g_nmbb_d[l_ac].*
+                  CALL anmt564_nmbb_t_mask()
+                  LET g_nmbb_d_mask_n[l_ac].* =  g_nmbb_d[l_ac].*
+                  
+                  LET g_bfill = "N"
+                  CALL anmt564_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row name="input.body.before_row"
+            
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+ 
+            #其他table進行lock
+            
+ 
+        
+         BEFORE INSERT  
+            
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_nmbb_d[l_ac].* TO NULL 
+            INITIALIZE g_nmbb_d_t.* TO NULL 
+            INITIALIZE g_nmbb_d_o.* TO NULL 
+            #公用欄位給值(單身)
+            
+            #自定義預設值
+                  LET g_nmbb_d[l_ac].nmbb006 = "0"
+      LET g_nmbb_d[l_ac].nmbb007 = "0"
+      LET g_nmbb_d[l_ac].nmbb040 = "N"
+      LET g_nmbb_d[l_ac].nmbb042 = "1"
+ 
+            #add-point:modify段before備份 name="input.body.insert.before_bak"
+            SELECT MAX(nmbbseq) + 1 INTO g_nmbb_d[l_ac].nmbbseq FROM nmbb_t
+             WHERE nmbbent = g_enterprise AND nmbbcomp = g_nmba_m.nmbacomp
+               AND nmbbdocno = g_nmba_m.nmbadocno
+            IF cl_null(g_nmbb_d[l_ac].nmbbseq) THEN 
+               LET g_nmbb_d[l_ac].nmbbseq = 1           
+            END IF
+           #151201-00002#14 Add  ---(S)---
+            LET g_nmbb_d[l_ac].nmbb026 = g_nmba_m.nmba004
+            LET g_nmbb_d[l_ac].nmbb027 = g_nmba_m.nmba005
+            LET g_nmbb_d[l_ac].nmbborga= g_nmba_m.nmbasite
+            CALL s_desc_get_department_desc(g_nmbb_d[l_ac].nmbborga) RETURNING g_nmbb_d[l_ac].nmbborga_desc
+            LET g_nmbb_d[l_ac].nmbb004 = g_glaa001
+            
+            LET g_nmbb2_d[l_ac].nmeesite = g_nmba_m.nmbasite  #160912-00024#1 add
+            CALL s_anm_orga_chk(g_nmbb2_d[l_ac].nmeesite,g_nmba_m.nmbacomp) RETURNING g_nmbb2_d[l_ac].nmeesite  #160912-00024#1 add                
+           #151201-00002#14 Add  ---(E)---
+            #end add-point
+            LET g_nmbb_d_t.* = g_nmbb_d[l_ac].*     #新輸入資料
+            LET g_nmbb_d_o.* = g_nmbb_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL anmt564_set_entry_b(l_cmd)
+            #add-point:modify段after_set_entry_b name="input.body.insert.after_set_entry_b"
+            
+            #end add-point
+            CALL anmt564_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_nmbb_d[li_reproduce_target].* = g_nmbb_d[li_reproduce].*
+ 
+               LET g_nmbb_d[li_reproduce_target].nmbbseq = NULL
+ 
+            END IF
+            
+ 
+            #add-point:modify段before insert name="input.body.before_insert"
+            
+            #end add-point  
+  
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = 9001 
+               LET g_errparam.popup = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            #add-point:單身新增 name="input.body.b_a_insert"
+            
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(1) INTO l_count FROM nmbb_t 
+             WHERE nmbbent = g_enterprise AND nmbbcomp = g_nmba_m.nmbacomp
+               AND nmbbdocno = g_nmba_m.nmbadocno
+ 
+               AND nmbbseq = g_nmbb_d[l_ac].nmbbseq
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前 name="input.body.b_insert"
+               
+               #end add-point
+            
+               #同步新增到同層的table
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_nmba_m.nmbacomp
+               LET gs_keys[2] = g_nmba_m.nmbadocno
+               LET gs_keys[3] = g_nmbb_d[g_detail_idx].nmbbseq
+               CALL anmt564_insert_b('nmbb_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後 name="input.body.a_insert"
+               
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code = "std-00006" 
+               LET g_errparam.popup = TRUE 
+               INITIALIZE g_nmbb_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLCODE THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "nmbb_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')                    
+               CALL cl_err()
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL anmt564_b_fill()
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert name="input.body.a_insert2"
+               
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               #ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+               #add-point:單身刪除後(=d) name="input.body.after_delete_d"
+               
+               #end add-point
+            ELSE
+               #add-point:單身刪除前 name="input.body.b_delete_ask"
+               
+               #end add-point 
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code = -263 
+                  LET g_errparam.popup = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前 name="input.body.b_delete"
+               
+               #end add-point 
+               
+               #取得該筆資料key值
+               INITIALIZE gs_keys TO NULL
+               LET gs_keys[01] = g_nmba_m.nmbacomp
+               LET gs_keys[gs_keys.getLength()+1] = g_nmba_m.nmbadocno
+ 
+               LET gs_keys[gs_keys.getLength()+1] = g_nmbb_d_t.nmbbseq
+ 
+            
+               #刪除同層單身
+               IF NOT anmt564_delete_b('nmbb_t',gs_keys,"'1'") THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE anmt564_bcl
+                  CANCEL DELETE
+               END IF
+    
+               #刪除下層單身
+               IF NOT anmt564_key_delete_b(gs_keys,'nmbb_t') THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE anmt564_bcl
+                  CANCEL DELETE
+               END IF
+               
+               #刪除多語言
+               
+ 
+               
+               #add-point:單身刪除中 name="input.body.m_delete"
+               
+               #end add-point 
+               
+               CALL s_transaction_end('Y','0')
+               CLOSE anmt564_bcl
+            
+               LET g_rec_b = g_rec_b-1
+               #add-point:單身刪除後 name="input.body.a_delete"
+               
+               #end add-point
+               LET l_count = g_nmbb_d.getLength()
+               
+               #add-point:單身刪除後(<>d) name="input.body.after_delete"
+               
+               #end add-point
+            END IF
+ 
+         AFTER DELETE
+            #如果是最後一筆
+            IF l_ac = (g_nmbb_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbbseq
+            #add-point:BEFORE FIELD nmbbseq name="input.b.page1.nmbbseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbbseq
+            
+            #add-point:AFTER FIELD nmbbseq name="input.a.page1.nmbbseq"
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_nmba_m.nmbacomp IS NOT NULL AND g_nmba_m.nmbadocno IS NOT NULL AND g_nmbb_d[g_detail_idx].nmbbseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_nmba_m.nmbacomp != g_nmbacomp_t OR g_nmba_m.nmbadocno != g_nmbadocno_t OR g_nmbb_d[g_detail_idx].nmbbseq != g_nmbb_d_t.nmbbseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM nmbb_t WHERE "||"nmbbent = '" ||g_enterprise|| "' AND "||"nmbbcomp = '"||g_nmba_m.nmbacomp ||"' AND "|| "nmbbdocno = '"||g_nmba_m.nmbadocno ||"' AND "|| "nmbbseq = '"||g_nmbb_d[g_detail_idx].nmbbseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbbseq
+            #add-point:ON CHANGE nmbbseq name="input.g.page1.nmbbseq"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbborga
+            
+            #add-point:AFTER FIELD nmbborga name="input.a.page1.nmbborga"
+            IF NOT cl_null(g_nmbb_d[l_ac].nmbborga) THEN 
+               CALL anmt564_nmbborga_chk(g_nmbb_d[l_ac].nmbborga,g_nmbb_d[l_ac].nmbb028)
+                  RETURNING l_success,g_nmbb_d[l_ac].nmbblegl
+               IF NOT l_success THEN 
+                  LET g_nmbb_d[l_ac].nmbborga = g_nmbb_d_t.nmbborga
+                  LET g_nmbb_d[l_ac].nmbborga_desc = g_nmbb_d_t.nmbborga_desc
+                  DISPLAY g_nmbb_d[l_ac].nmbborga TO s_detail1[l_ac].nmbborga
+                  DISPLAY g_nmbb_d[l_ac].nmbborga_desc TO s_detail1[l_ac].nmbborga_desc
+                  NEXT FIELD CURRENT
+               END IF
+               
+                  #160912-00024#1 add s---
+                  CALL s_anm_get_site_wc('6',g_nmba_m.nmbasite,g_nmba_m.nmbadocdt) RETURNING g_site_wc
+                  IF cl_null(g_site_wc) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'anm-03020' #该资金中心下无可用运营据点!
+                     LET g_errparam.extend = g_nmba_m.nmbasite
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_nmbb_d[l_ac].nmbborga = g_nmbb_d_t.nmbborga
+                     NEXT FIELD CURRENT
+                  END IF                  
+                  #160912-00024#1 add e---
+                  
+               #160816-00012#3 add s---
+               #檢查輸入組織代碼是否存在法人組織下的組織範圍內(1.與單頭法人組織法人相同2.屬於資金組織3.user具有拜訪權限)
+               IF s_chr_get_index_of(g_site_wc,g_nmbb_d[l_ac].nmbborga,1) = 0 THEN
+                  LET g_errno ='axc-00099'
+               END IF
+               IF NOT cl_null(g_errno) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = ""
+                  LET g_errparam.code   = g_errno
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()
+                  LET g_nmbb_d[l_ac].nmbborga = g_nmbb_d_t.nmbborga
+                  LET g_nmbb_d[l_ac].nmbborga_desc = g_nmbb_d_t.nmbborga_desc
+                  DISPLAY g_nmbb_d[l_ac].nmbborga TO s_detail1[l_ac].nmbborga
+                  DISPLAY g_nmbb_d[l_ac].nmbborga_desc TO s_detail1[l_ac].nmbborga_desc
+                  NEXT FIELD CURRENT
+               #160912-00024#1 add s---  
+               ELSE
+                  IF NOT ap_chk_isExist(g_nmbb_d[l_ac].nmbborga,"SELECT COUNT(*) FROM ooef_t WHERE "||"ooefent = '" ||g_enterprise|| "' AND "||"ooef001 = ?  AND ooefstus ='Y' AND ooef017 = '"||g_nmba_m.nmbacomp||"'",'anm-03022',1) THEN 
+                     LET g_nmbb_d[l_ac].nmbborga = g_nmbb_d_t.nmbborga
+                     NEXT FIELD CURRENT
+                  END IF                
+               #160912-00024#1 add e---
+               END IF               
+               #160816-00012#3 add e---
+                  
+            END IF 
+            CALL s_desc_get_department_desc(g_nmbb_d[l_ac].nmbborga) RETURNING g_nmbb_d[l_ac].nmbborga_desc
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbborga
+            #add-point:BEFORE FIELD nmbborga name="input.b.page1.nmbborga"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbborga
+            #add-point:ON CHANGE nmbborga name="input.g.page1.nmbborga"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbblegl
+            #add-point:BEFORE FIELD nmbblegl name="input.b.page1.nmbblegl"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbblegl
+            
+            #add-point:AFTER FIELD nmbblegl name="input.a.page1.nmbblegl"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbblegl
+            #add-point:ON CHANGE nmbblegl name="input.g.page1.nmbblegl"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb026
+            
+            #add-point:AFTER FIELD nmbb026 name="input.a.page1.nmbb026"
+            LET g_nmbb_d[l_ac].nmbb026_desc = ' '
+            DISPLAY g_nmbb_d[l_ac].nmbb026_desc TO s_tatail1[l_ac].nmbb026_desc
+            IF NOT cl_null(g_nmbb_d[l_ac].nmbb026) THEN 
+               CALL anmt564_nmbb026_chk(g_nmbb_d[l_ac].nmbb026,'1') RETURNING l_success,g_nmbb_d[l_ac].nmbb027
+               IF NOT l_success THEN 
+                  LET g_nmbb_d[l_ac].nmbb026 = g_nmbb_d_t.nmbb026
+                  LET g_nmbb_d[l_ac].nmbb026_desc = g_nmbb_d_t.nmbb026_desc
+                  NEXT FIELD CURRENT
+               END IF 
+            END IF 
+            CALL anmt564_nmbb026_desc(g_nmbb_d[l_ac].nmbb026,g_nmbb_d[l_ac].nmbb027)
+               RETURNING g_nmbb_d[l_ac].nmbb026_desc
+            DISPLAY g_nmbb_d[l_ac].nmbb026_desc TO s_tatail1[l_ac].nmbb026_desc
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb026
+            #add-point:BEFORE FIELD nmbb026 name="input.b.page1.nmbb026"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb026
+            #add-point:ON CHANGE nmbb026 name="input.g.page1.nmbb026"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb027
+            #add-point:BEFORE FIELD nmbb027 name="input.b.page1.nmbb027"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb027
+            
+            #add-point:AFTER FIELD nmbb027 name="input.a.page1.nmbb027"
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb027
+            #add-point:ON CHANGE nmbb027 name="input.g.page1.nmbb027"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb028
+            
+            #add-point:AFTER FIELD nmbb028 name="input.a.page1.nmbb028"
+            IF NOT cl_null(g_nmbb_d[l_ac].nmbb028) THEN 
+               CALL anmt564_nmbb028_chk()
+               IF NOT cl_null(g_errno) THEN 
+                  IF p_cmd = 'a' THEN 
+                     DISPLAY '' TO nmbb028
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_nmbb_d[l_ac].nmbb028
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_nmbb_d[l_ac].nmbb028 = ''
+                  ELSE
+                     DISPLAY '' TO nmbb028
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_nmbb_d[l_ac].nmbb028
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_nmbb_d[l_ac].nmbb028= g_nmbb_d_t.nmbb028 
+                  END IF 
+                  DISPLAY g_nmbb_d[l_ac].nmbb028 TO nmbb028
+                  NEXT FIELD nmbb028
+               END IF  
+            END IF 
+            CALL anmt564_nmbb028_desc(g_nmbb_d[l_ac].nmbb028) RETURNING g_nmbb_d[l_ac].nmbb028_desc
+            CALL anmt564_set_entry_b(p_cmd)
+            CALL anmt564_set_no_entry_b(p_cmd)
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb028
+            #add-point:BEFORE FIELD nmbb028 name="input.b.page1.nmbb028"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb028
+            #add-point:ON CHANGE nmbb028 name="input.g.page1.nmbb028"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb029
+            #add-point:BEFORE FIELD nmbb029 name="input.b.page1.nmbb029"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb029
+            
+            #add-point:AFTER FIELD nmbb029 name="input.a.page1.nmbb029"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb029
+            #add-point:ON CHANGE nmbb029 name="input.g.page1.nmbb029"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb002
+            
+            #add-point:AFTER FIELD nmbb002 name="input.a.page1.nmbb002"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmbb_d[l_ac].nmbb002
+            CALL ap_ref_array2(g_ref_fields,"SELECT nmajl003 FROM nmajl_t WHERE nmajlent='"||g_enterprise||"' AND nmajl001=? AND nmajl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmbb_d[l_ac].nmbb002_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_nmbb_d[l_ac].nmbb002_desc
+
+            #151222-00010#10---add---str
+            IF NOT cl_null(g_nmbb_d[l_ac].nmbb002) THEN 
+               CALL anmt564_nmbb002_chk()
+               IF NOT cl_null(g_errno) THEN
+                  DISPLAY '' TO nmbb004
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = g_nmbb_d[l_ac].nmbb002
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_nmbb_d[l_ac].nmbb002 = g_nmbb_d_t.nmbb002
+                  LET g_nmbb_d[l_ac].nmbb010 = ''
+                  DISPLAY g_nmbb_d[l_ac].nmbb010 TO s_detail1[l_ac].nmbb010
+                  CALL anmt564_nmbb002_desc()
+                  NEXT FIELD CURRENT
+               ELSE  
+                  CALL anmt564_nmbb002_desc()               
+               END IF 
+            END IF
+            #151222-00010#10---add---end
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb002
+            #add-point:BEFORE FIELD nmbb002 name="input.b.page1.nmbb002"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb002
+            #add-point:ON CHANGE nmbb002 name="input.g.page1.nmbb002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb010
+            
+            #add-point:AFTER FIELD nmbb010 name="input.a.page1.nmbb010"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmbb_d[l_ac].nmbb010
+            CALL ap_ref_array2(g_ref_fields,"SELECT nmail004 FROM nmail_t WHERE nmailent='"||g_enterprise||"' AND nmail002=? AND nmail003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmbb_d[l_ac].nmbb010_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_nmbb_d[l_ac].nmbb010_desc
+            
+            #151222-00010#10 add ------
+            IF NOT cl_null(g_nmbb_d[l_ac].nmbb010) THEN
+               CALL anmt564_nmbb010_chk()
+               IF NOT cl_null(g_errno) THEN
+                  IF l_cmd = 'a' THEN 
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_nmbb_d[l_ac].nmbb010
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_nmbb_d[l_ac].nmbb010 = ''
+                     LET g_nmbb_d[l_ac].nmbb010_desc = ''
+                  ELSE
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_nmbb_d[l_ac].nmbb010
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_nmbb_d[l_ac].nmbb010 = g_nmbb_d_t.nmbb010
+                     LET g_nmbb_d[l_ac].nmbb010_desc = g_nmbb_d_t.nmbb010_desc
+                  END IF 
+                  DISPLAY BY NAME g_nmbb_d[l_ac].nmbb010,g_nmbb_d[l_ac].nmbb010_desc
+                  NEXT FIELD nmbb010
+               END IF
+            END IF
+            LET g_nmbb_d[l_ac].nmbb010_desc = s_desc_get_nmail004_desc(g_glaa005,g_nmbb_d[l_ac].nmbb010)
+            DISPLAY BY NAME g_nmbb_d[l_ac].nmbb010_desc
+            #151222-00010#10 add end---
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb010
+            #add-point:BEFORE FIELD nmbb010 name="input.b.page1.nmbb010"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb010
+            #add-point:ON CHANGE nmbb010 name="input.g.page1.nmbb010"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb003
+            #add-point:BEFORE FIELD nmbb003 name="input.b.page1.nmbb003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb003
+            
+            #add-point:AFTER FIELD nmbb003 name="input.a.page1.nmbb003"
+            IF NOT cl_null(g_nmbb_d[l_ac].nmbb003) THEN 
+               #CALL anmt564_nmbb003_chk()
+              IF NOT cl_null(g_errno) THEN 
+                 IF l_cmd = 'a' THEN 
+                    DISPLAY '' TO s_detail1[l_ac].nmbb003
+                    DISPLAY '' TO s_detail1[l_ac].nmbb004
+                    INITIALIZE g_errparam TO NULL
+                    LET g_errparam.code = g_errno
+                    LET g_errparam.extend = g_nmbb_d[l_ac].nmbb003
+                    #160318-00005#28 by 07900 --add--str
+                    LET g_errparam.replace[1] = 'anmi120'
+                    LET g_errparam.replace[2] = cl_get_progname("anmi120",g_lang,"2")
+                    LET g_errparam.exeprog ='anmi120'
+                    #160318-00005#28 by 07900 --add--end
+                    LET g_errparam.popup = TRUE
+                    CALL cl_err()
+
+                    LET g_nmbb_d[l_ac].nmbb003 = ''
+                    LET g_nmbb_d[l_ac].nmbb004 = ''
+                 ELSE
+                    DISPLAY '' TO s_detail1[l_ac].nmbb003
+                    DISPLAY '' TO s_detail1[l_ac].nmbb004
+                    INITIALIZE g_errparam TO NULL
+                    LET g_errparam.code = g_errno
+                    LET g_errparam.extend = g_nmbb_d[l_ac].nmbb003
+                    #160318-00005#28 by 07900 --add--str
+                    LET g_errparam.replace[1] = 'anmi120'
+                    LET g_errparam.replace[2] = cl_get_progname("anmi120",g_lang,"2")
+                    LET g_errparam.exeprog ='anmi120'
+                    #160318-00005#28 by 07900 --add--end
+                    LET g_errparam.popup = TRUE
+                    CALL cl_err()
+
+                    LET g_nmbb_d[l_ac].nmbb003 = g_nmbb_d_t.nmbb003
+                    LET g_nmbb_d[l_ac].nmbb004 = g_nmbb_d_t.nmbb004
+                 END IF 
+                 DISPLAY g_nmbb_d[l_ac].nmbb003 TO s_detail1[l_ac].nmbb003
+                 DISPLAY g_nmbb_d[l_ac].nmbb004 TO s_detail1[l_ac].nmbb004
+                 NEXT FIELD nmbb003  
+               END IF 
+               #150820-00017#1 mark--s
+               #SELECT ooab002 INTO l_ooab002 FROM ooab_t
+               # WHERE ooabent = g_enterprise
+               #   AND ooabsite= g_ooef001
+               #   AND ooab001 = 'S-BAS-0010'
+               #150820-00017#1 mark--e
+               CALL cl_get_para(g_enterprise,g_nmba_m.nmbacomp,'S-FIN-4004') RETURNING l_ooab002  #資金模組匯率來源   #150820-00017#1
+                                        #匯率參照表;帳套;           日期;               來源幣別
+               CALL s_aooi160_get_exrate('2',g_glaald,g_nmba_m.nmbadocdt,g_nmbb_d[l_ac].nmbb004,
+                                        #目的幣別;  交易金額;              匯類類型
+                                         g_ooef016,0,l_ooab002)
+                  RETURNING g_nmbb_d[l_ac].nmbb005
+              IF cl_null(g_nmbb_d[l_ac].nmbb005) OR g_nmbb_d[l_ac].nmbb005 = 0 THEN
+                 LET g_nmbb_d[l_ac].nmbb005 = 1   #抓取不到值給1 
+              END IF               
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb003
+            #add-point:ON CHANGE nmbb003 name="input.g.page1.nmbb003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb001
+            #add-point:BEFORE FIELD nmbb001 name="input.b.page1.nmbb001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb001
+            
+            #add-point:AFTER FIELD nmbb001 name="input.a.page1.nmbb001"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb001
+            #add-point:ON CHANGE nmbb001 name="input.g.page1.nmbb001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb030
+            #add-point:BEFORE FIELD nmbb030 name="input.b.page1.nmbb030"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb030
+            
+            #add-point:AFTER FIELD nmbb030 name="input.a.page1.nmbb030"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb030
+            #add-point:ON CHANGE nmbb030 name="input.g.page1.nmbb030"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb043
+            
+            #add-point:AFTER FIELD nmbb043 name="input.a.page1.nmbb043"
+            IF NOT cl_null(g_nmbb_d[l_ac].nmbb043) THEN 
+               CALL anmt564_nmbb043_chk(g_nmbb_d[l_ac].nmbb043)
+               IF NOT cl_null(g_errno) THEN 
+                  IF p_cmd = 'a' THEN 
+                     DISPLAY '' TO nmbb043
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_nmbb_d[l_ac].nmbb043
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_nmbb_d[l_ac].nmbb043 = ''
+                  ELSE
+                     DISPLAY '' TO nmbb043
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_nmbb_d[l_ac].nmbb043
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_nmbb_d[l_ac].nmbb043 = g_nmbb_d_t.nmbb043
+                  END IF 
+                  DISPLAY g_nmbb_d[l_ac].nmbb043 TO nmbb043
+                  NEXT FIELD nmbb043
+               END IF 
+            END IF
+            CALL anmt564_nmbb043_desc(g_nmbb_d[l_ac].nmbb043) RETURNING g_nmbb_d[l_ac].nmbb043_desc
+            DISPLAY g_nmbb_d[l_ac].nmbb043_desc TO s_detail1[l_ac].nmbb043_desc
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb043
+            #add-point:BEFORE FIELD nmbb043 name="input.b.page1.nmbb043"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb043
+            #add-point:ON CHANGE nmbb043 name="input.g.page1.nmbb043"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb031
+            #add-point:BEFORE FIELD nmbb031 name="input.b.page1.nmbb031"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb031
+            
+            #add-point:AFTER FIELD nmbb031 name="input.a.page1.nmbb031"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb031
+            #add-point:ON CHANGE nmbb031 name="input.g.page1.nmbb031"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb004
+            #add-point:BEFORE FIELD nmbb004 name="input.b.page1.nmbb004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb004
+            
+            #add-point:AFTER FIELD nmbb004 name="input.a.page1.nmbb004"
+            IF NOT cl_null(g_nmbb_d[l_ac].nmbb004) THEN 
+               CALL anmt564_nmbb004_chk()
+               IF NOT cl_null(g_errno) THEN 
+                  IF p_cmd = 'a' THEN 
+                     DISPLAY '' TO nmbb004
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_nmbb_d[l_ac].nmbb004
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_nmbb_d[l_ac].nmbb004 = ''
+                  ELSE
+                     DISPLAY '' TO nmbb004
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_nmbb_d[l_ac].nmbb004
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_nmbb_d[l_ac].nmbb004 = g_nmbb_d_t.nmbb004
+                  END IF 
+                  DISPLAY g_nmbb_d[l_ac].nmbb004 TO nmbb004
+                  NEXT FIELD nmbb004
+               END IF 
+               #150820-00017#1 mark--s
+               #SELECT ooab002 INTO l_ooab002 FROM ooab_t
+               # WHERE ooabent = g_enterprise
+               #   AND ooabsite= g_ooef001
+               #   AND ooab001 = 'S-BAS-0010'
+               #150820-00017#1 mark--e
+               CALL cl_get_para(g_enterprise,g_nmba_m.nmbacomp,'S-FIN-4004') RETURNING l_ooab002  #資金模組匯率來源   #150820-00017#1
+                                        #匯率參照表;帳套;           日期;               來源幣別
+               CALL s_aooi160_get_exrate('2',g_glaald,g_nmba_m.nmbadocdt,g_nmbb_d[l_ac].nmbb004,
+                                        #目的幣別;  交易金額;              匯類類型
+                                         g_ooef016,0,l_ooab002)
+                  RETURNING g_nmbb_d[l_ac].nmbb005
+                           
+               DISPLAY g_nmbb_d[l_ac].nmbb005 TO s_detail1[l_ac].nmbb005   
+                  
+               IF NOT cl_null(g_nmbb_d[l_ac].nmbb006) THEN 
+                  LET g_nmbb_d[l_ac].nmbb007 = g_nmbb_d[l_ac].nmbb006 * g_nmbb_d[l_ac].nmbb005
+                  DISPLAY g_nmbb_d[l_ac].nmbb007 TO s_detail1[l_ac].nmbb007
+               END IF 
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb004
+            #add-point:ON CHANGE nmbb004 name="input.g.page1.nmbb004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb005
+            #add-point:BEFORE FIELD nmbb005 name="input.b.page1.nmbb005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb005
+            
+            #add-point:AFTER FIELD nmbb005 name="input.a.page1.nmbb005"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb005
+            #add-point:ON CHANGE nmbb005 name="input.g.page1.nmbb005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb006
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_nmbb_d[l_ac].nmbb006,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD nmbb006
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD nmbb006 name="input.a.page1.nmbb006"
+            IF NOT cl_null(g_nmbb_d[l_ac].nmbb006) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb006
+            #add-point:BEFORE FIELD nmbb006 name="input.b.page1.nmbb006"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb006
+            #add-point:ON CHANGE nmbb006 name="input.g.page1.nmbb006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb007
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_nmbb_d[l_ac].nmbb007,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD nmbb007
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD nmbb007 name="input.a.page1.nmbb007"
+            IF NOT cl_null(g_nmbb_d[l_ac].nmbb007) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb007
+            #add-point:BEFORE FIELD nmbb007 name="input.b.page1.nmbb007"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb007
+            #add-point:ON CHANGE nmbb007 name="input.g.page1.nmbb007"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb036
+            
+            #add-point:AFTER FIELD nmbb036 name="input.a.page1.nmbb036"
+            IF NOT cl_null(g_nmbb_d[l_ac].nmbb036) THEN 
+               CALL anmt564_nmbb043_chk(g_nmbb_d[l_ac].nmbb036)
+               IF NOT cl_null(g_errno) THEN 
+                  IF p_cmd = 'a' THEN 
+                     DISPLAY '' TO nmbb036
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_nmbb_d[l_ac].nmbb036
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_nmbb_d[l_ac].nmbb036 = ''
+                  ELSE
+                     DISPLAY '' TO nmbb036
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_nmbb_d[l_ac].nmbb036
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_nmbb_d[l_ac].nmbb036 = g_nmbb_d_t.nmbb036
+                  END IF 
+                  DISPLAY g_nmbb_d[l_ac].nmbb036 TO nmbb036
+                  NEXT FIELD nmbb036
+               END IF 
+            END IF
+            CALL anmt564_nmbb043_desc(g_nmbb_d[l_ac].nmbb036) RETURNING g_nmbb_d[l_ac].nmbb036_desc
+            DISPLAY g_nmbb_d[l_ac].nmbb036_desc TO s_detail1[l_ac].nmbb036_desc
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb036
+            #add-point:BEFORE FIELD nmbb036 name="input.b.page1.nmbb036"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb036
+            #add-point:ON CHANGE nmbb036 name="input.g.page1.nmbb036"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb036_desc
+            #add-point:BEFORE FIELD nmbb036_desc name="input.b.page1.nmbb036_desc"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb036_desc
+            
+            #add-point:AFTER FIELD nmbb036_desc name="input.a.page1.nmbb036_desc"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb036_desc
+            #add-point:ON CHANGE nmbb036_desc name="input.g.page1.nmbb036_desc"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb037
+            #add-point:BEFORE FIELD nmbb037 name="input.b.page1.nmbb037"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb037
+            
+            #add-point:AFTER FIELD nmbb037 name="input.a.page1.nmbb037"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb037
+            #add-point:ON CHANGE nmbb037 name="input.g.page1.nmbb037"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb038
+            #add-point:BEFORE FIELD nmbb038 name="input.b.page1.nmbb038"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb038
+            
+            #add-point:AFTER FIELD nmbb038 name="input.a.page1.nmbb038"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb038
+            #add-point:ON CHANGE nmbb038 name="input.g.page1.nmbb038"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb032
+            #add-point:BEFORE FIELD nmbb032 name="input.b.page1.nmbb032"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb032
+            
+            #add-point:AFTER FIELD nmbb032 name="input.a.page1.nmbb032"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb032
+            #add-point:ON CHANGE nmbb032 name="input.g.page1.nmbb032"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb033
+            #add-point:BEFORE FIELD nmbb033 name="input.b.page1.nmbb033"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb033
+            
+            #add-point:AFTER FIELD nmbb033 name="input.a.page1.nmbb033"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb033
+            #add-point:ON CHANGE nmbb033 name="input.g.page1.nmbb033"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb034
+            #add-point:BEFORE FIELD nmbb034 name="input.b.page1.nmbb034"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb034
+            
+            #add-point:AFTER FIELD nmbb034 name="input.a.page1.nmbb034"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb034
+            #add-point:ON CHANGE nmbb034 name="input.g.page1.nmbb034"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb035
+            #add-point:BEFORE FIELD nmbb035 name="input.b.page1.nmbb035"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb035
+            
+            #add-point:AFTER FIELD nmbb035 name="input.a.page1.nmbb035"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb035
+            #add-point:ON CHANGE nmbb035 name="input.g.page1.nmbb035"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb039
+            #add-point:BEFORE FIELD nmbb039 name="input.b.page1.nmbb039"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb039
+            
+            #add-point:AFTER FIELD nmbb039 name="input.a.page1.nmbb039"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb039
+            #add-point:ON CHANGE nmbb039 name="input.g.page1.nmbb039"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb040
+            #add-point:BEFORE FIELD nmbb040 name="input.b.page1.nmbb040"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb040
+            
+            #add-point:AFTER FIELD nmbb040 name="input.a.page1.nmbb040"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb040
+            #add-point:ON CHANGE nmbb040 name="input.g.page1.nmbb040"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb041
+            #add-point:BEFORE FIELD nmbb041 name="input.b.page1.nmbb041"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb041
+            
+            #add-point:AFTER FIELD nmbb041 name="input.a.page1.nmbb041"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb041
+            #add-point:ON CHANGE nmbb041 name="input.g.page1.nmbb041"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb042
+            #add-point:BEFORE FIELD nmbb042 name="input.b.page1.nmbb042"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb042
+            
+            #add-point:AFTER FIELD nmbb042 name="input.a.page1.nmbb042"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb042
+            #add-point:ON CHANGE nmbb042 name="input.g.page1.nmbb042"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb044
+            #add-point:BEFORE FIELD nmbb044 name="input.b.page1.nmbb044"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb044
+            
+            #add-point:AFTER FIELD nmbb044 name="input.a.page1.nmbb044"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb044
+            #add-point:ON CHANGE nmbb044 name="input.g.page1.nmbb044"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbb045
+            #add-point:BEFORE FIELD nmbb045 name="input.b.page1.nmbb045"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbb045
+            
+            #add-point:AFTER FIELD nmbb045 name="input.a.page1.nmbb045"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbb045
+            #add-point:ON CHANGE nmbb045 name="input.g.page1.nmbb045"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.nmbbseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbbseq
+            #add-point:ON ACTION controlp INFIELD nmbbseq name="input.c.page1.nmbbseq"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbborga
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbborga
+            #add-point:ON ACTION controlp INFIELD nmbborga name="input.c.page1.nmbborga"
+            #160816-00012#3 mark s---
+            #CALL s_fin_account_center_sons_query('6',g_nmba_m.nmbasite,g_nmba_m.nmbadocdt,'')
+            #CALL s_fin_account_center_sons_str()RETURNING l_origin_str   #151201-00002#14 Mod  comp --> sons
+            #CALL s_fin_get_wc_str(l_origin_str)RETURNING l_origin_str
+            #160816-00012#3 mark e---
+            #來源組織
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_nmbb_d[l_ac].nmbborga
+            #LET g_qryparam.where = " ooef017 ='",g_nmba_m.nmbacomp,"' AND ooef001 IN ",l_origin_str CLIPPED #160816-00012#3  mark
+            #LET g_qryparam.where = " ooef001 IN ",g_site_wc  #160816-00012#3 add #160912-00024#1 MARK
+            #160912-00024#1 add s---
+            CALL s_anm_get_site_wc('6',g_nmba_m.nmbasite,g_nmba_m.nmbadocdt) RETURNING g_site_wc
+            CALL s_fin_get_wc_str(g_site_wc) RETURNING l_origin_str
+            LET g_qryparam.where = " ooef017 ='",g_nmba_m.nmbacomp,"' AND ooef001 IN ",l_origin_str CLIPPED
+            #160912-00024#1 add e---
+            LET g_qryparam.where = g_qryparam.where ," AND ooef201 = 'Y'" #161021-00050#10
+            CALL q_ooef001()
+            LET g_nmbb_d[l_ac].nmbborga = g_qryparam.return1
+            DISPLAY g_nmbb_d[l_ac].nmbborga TO nmbborga
+            NEXT FIELD nmbborga
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbblegl
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbblegl
+            #add-point:ON ACTION controlp INFIELD nmbblegl name="input.c.page1.nmbblegl"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb026
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb026
+            #add-point:ON ACTION controlp INFIELD nmbb026 name="input.c.page1.nmbb026"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmbb_d[l_ac].nmbb026             #給予default值
+
+            #給予arg
+
+            # CALL q_pmaa001()       #160913-00017#5  mark                  #呼叫開窗
+            CALL q_pmaa001_25()     #160913-00017#5  add      
+
+            LET g_nmbb_d[l_ac].nmbb026 = g_qryparam.return1              
+
+            DISPLAY g_nmbb_d[l_ac].nmbb026 TO nmbb026              #
+
+            NEXT FIELD nmbb026                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb027
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb027
+            #add-point:ON ACTION controlp INFIELD nmbb027 name="input.c.page1.nmbb027"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb028
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb028
+            #add-point:ON ACTION controlp INFIELD nmbb028 name="input.c.page1.nmbb028"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmbb_d[l_ac].nmbb028             #給予default值
+
+            CALL s_money_where(g_nmbb_d[l_ac].nmbborga) RETURNING l_str
+            LET g_qryparam.where = l_str," AND ooia002 IN ('10','20','30','40','50','90')"   #151201-00002#14 Add
+            CALL q_ooia001()                                #呼叫開窗
+
+            LET g_nmbb_d[l_ac].nmbb028 = g_qryparam.return1              
+
+            DISPLAY g_nmbb_d[l_ac].nmbb028 TO nmbb028              #
+
+            NEXT FIELD nmbb028                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb029
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb029
+            #add-point:ON ACTION controlp INFIELD nmbb029 name="input.c.page1.nmbb029"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb002
+            #add-point:ON ACTION controlp INFIELD nmbb002 name="input.c.page1.nmbb002"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmbb_d[l_ac].nmbb002             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            LET g_qryparam.where = " nmaj002 = '1'"  #151222-00010#10
+
+
+            CALL q_nmaj001()                                #呼叫開窗
+
+            LET g_nmbb_d[l_ac].nmbb002 = g_qryparam.return1        
+            #151222-00010#10--add--str
+            LET g_qryparam.where = ""             
+            CALL anmt564_nmbb002_desc()
+            DISPLAY g_nmbb_d[l_ac].nmbb002 TO nmbb002
+            #抓取現金變動碼
+            CALL anmt564_nmbb002_chk() 
+            LET g_nmbb_d[l_ac].nmbb010_desc = s_desc_get_nmail004_desc(g_glaa005,g_nmbb_d[l_ac].nmbb010)
+            #151222-00010#10--add--end
+
+            DISPLAY g_nmbb_d[l_ac].nmbb002 TO nmbb002              #
+
+            NEXT FIELD nmbb002                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb010
+            #add-point:ON ACTION controlp INFIELD nmbb010 name="input.c.page1.nmbb010"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmbb_d[l_ac].nmbb010             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            LET g_qryparam.where = " nmai001 = '",g_glaa005,"'"   #151222-00010#10
+
+
+            CALL q_nmai002()                                #呼叫開窗
+
+            LET g_nmbb_d[l_ac].nmbb010 = g_qryparam.return1             
+            LET g_qryparam.where = " "                            #151222-00010#10
+            LET g_nmbb_d[l_ac].nmbb010_desc = s_desc_get_nmail004_desc(g_glaa005,g_nmbb_d[l_ac].nmbb010)  #151222-00010#10
+
+            DISPLAY g_nmbb_d[l_ac].nmbb010 TO nmbb010              #
+
+            NEXT FIELD nmbb010                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb003
+            #add-point:ON ACTION controlp INFIELD nmbb003 name="input.c.page1.nmbb003"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmbb_d[l_ac].nmbb003             #給予default值
+
+           #151201-00002#14 Mark ---(S)---
+           #LET g_qryparam.where = " nmaa002 IN (SELECT ooef001 FROM ooef_t WHERE ooefent = '",g_enterprise,"'",
+           #                       "              AND ooef017 = '",g_nmba_m.nmbacomp,"')"
+           #151201-00002#14 Mark ---(E)---
+           #151201-00002#14 Add  ---(S)---
+           #开窗只能开出anmi120中现金结算为N的数据 或是现金结算为Y且出纳人员=存缴人员
+            IF g_nmbb_d[l_ac].nmbb028 = '9005' THEN
+             LET g_qryparam.where =  " (nmaaud003 = 'Y'  )"
+            ELSE
+              LET g_qryparam.where = " ((nmaaud002 = 'Y' AND  nmaaud001 = '",g_nmba_m.nmba008,"') OR (nmaaud002 = 'N' ) OR (nmaaud002 IS NULL  ))"
+            END IF
+            LET g_qryparam.where = g_qryparam.where," AND (SELECT ooef017 FROM ooef_t ",
+                                                    "       WHERE ooefent = ",g_enterprise,
+                                                    "         AND ooef001 = nmaa002) ",
+                                                    "  = '",g_nmba_m.nmbacomp,"'"
+            #151201-00002#14 Add  ---(E)---
+            #160122-00001#32by 07673--modify---str--
+            LET g_qryparam.where = g_qryparam.where CLIPPED," AND nmas002 IN (",g_sql_bank,")"
+            #160122-00001#32by 07673--modify---end
+            CALL q_nmas_01()                                #呼叫開窗
+
+            LET g_nmbb_d[l_ac].nmbb003 = g_qryparam.return1              
+
+            DISPLAY g_nmbb_d[l_ac].nmbb003 TO nmbb003              #
+
+            NEXT FIELD nmbb003                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb001
+            #add-point:ON ACTION controlp INFIELD nmbb001 name="input.c.page1.nmbb001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb030
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb030
+            #add-point:ON ACTION controlp INFIELD nmbb030 name="input.c.page1.nmbb030"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb043
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb043
+            #add-point:ON ACTION controlp INFIELD nmbb043 name="input.c.page1.nmbb043"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmbb_d[l_ac].nmbb043             #給予default值
+            LET g_qryparam.where = " nmab008 = '",g_ooef006,"'"
+            #給予arg
+
+            CALL q_nmab001()                                #呼叫開窗
+
+            LET g_nmbb_d[l_ac].nmbb043 = g_qryparam.return1              
+
+            DISPLAY g_nmbb_d[l_ac].nmbb043 TO nmbb043              #
+
+            NEXT FIELD nmbb043                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb031
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb031
+            #add-point:ON ACTION controlp INFIELD nmbb031 name="input.c.page1.nmbb031"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb004
+            #add-point:ON ACTION controlp INFIELD nmbb004 name="input.c.page1.nmbb004"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmbb_d[l_ac].nmbb004             #給予default值
+
+            #給予arg
+
+            CALL q_aooi001_1()                                #呼叫開窗
+
+            LET g_nmbb_d[l_ac].nmbb004 = g_qryparam.return1              
+
+            DISPLAY g_nmbb_d[l_ac].nmbb004 TO nmbb004              #
+
+            NEXT FIELD nmbb004                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb005
+            #add-point:ON ACTION controlp INFIELD nmbb005 name="input.c.page1.nmbb005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb006
+            #add-point:ON ACTION controlp INFIELD nmbb006 name="input.c.page1.nmbb006"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb007
+            #add-point:ON ACTION controlp INFIELD nmbb007 name="input.c.page1.nmbb007"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb036
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb036
+            #add-point:ON ACTION controlp INFIELD nmbb036 name="input.c.page1.nmbb036"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmbb_d[l_ac].nmbb036             #給予default值
+            LET g_qryparam.where = " nmab008 = '",g_ooef006,"'"
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+
+            CALL q_nmab001()                                #呼叫開窗
+
+            LET g_nmbb_d[l_ac].nmbb036 = g_qryparam.return1              
+
+            DISPLAY g_nmbb_d[l_ac].nmbb036 TO nmbb036              #
+
+            NEXT FIELD nmbb036                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb036_desc
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb036_desc
+            #add-point:ON ACTION controlp INFIELD nmbb036_desc name="input.c.page1.nmbb036_desc"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb037
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb037
+            #add-point:ON ACTION controlp INFIELD nmbb037 name="input.c.page1.nmbb037"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb038
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb038
+            #add-point:ON ACTION controlp INFIELD nmbb038 name="input.c.page1.nmbb038"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb032
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb032
+            #add-point:ON ACTION controlp INFIELD nmbb032 name="input.c.page1.nmbb032"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb033
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb033
+            #add-point:ON ACTION controlp INFIELD nmbb033 name="input.c.page1.nmbb033"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb034
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb034
+            #add-point:ON ACTION controlp INFIELD nmbb034 name="input.c.page1.nmbb034"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb035
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb035
+            #add-point:ON ACTION controlp INFIELD nmbb035 name="input.c.page1.nmbb035"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb039
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb039
+            #add-point:ON ACTION controlp INFIELD nmbb039 name="input.c.page1.nmbb039"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb040
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb040
+            #add-point:ON ACTION controlp INFIELD nmbb040 name="input.c.page1.nmbb040"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb041
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb041
+            #add-point:ON ACTION controlp INFIELD nmbb041 name="input.c.page1.nmbb041"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb042
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb042
+            #add-point:ON ACTION controlp INFIELD nmbb042 name="input.c.page1.nmbb042"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb044
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb044
+            #add-point:ON ACTION controlp INFIELD nmbb044 name="input.c.page1.nmbb044"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbb045
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbb045
+            #add-point:ON ACTION controlp INFIELD nmbb045 name="input.c.page1.nmbb045"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               LET g_nmbb_d[l_ac].* = g_nmbb_d_t.*
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = 9001 
+               LET g_errparam.popup = FALSE 
+               CLOSE anmt564_bcl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = g_nmbb_d[l_ac].nmbbseq 
+               LET g_errparam.code = -263 
+               LET g_errparam.popup = TRUE 
+               CALL cl_err()
+               LET g_nmbb_d[l_ac].* = g_nmbb_d_t.*
+            ELSE
+            
+               #add-point:單身修改前 name="input.body.b_update"
+               
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身)
+               
+      
+               #將遮罩欄位還原
+               CALL anmt564_nmbb_t_mask_restore('restore_mask_o')
+      
+               UPDATE nmbb_t SET (nmbbcomp,nmbbdocno,nmbbseq,nmbborga,nmbblegl,nmbb026,nmbb027,nmbb028, 
+                   nmbb029,nmbb002,nmbb010,nmbb003,nmbb001,nmbb030,nmbb043,nmbb031,nmbb004,nmbb005,nmbb006, 
+                   nmbb007,nmbb036,nmbb037,nmbb038,nmbb032,nmbb033,nmbb034,nmbb035,nmbb039,nmbb040,nmbb041, 
+                   nmbb042,nmbb044,nmbb045) = (g_nmba_m.nmbacomp,g_nmba_m.nmbadocno,g_nmbb_d[l_ac].nmbbseq, 
+                   g_nmbb_d[l_ac].nmbborga,g_nmbb_d[l_ac].nmbblegl,g_nmbb_d[l_ac].nmbb026,g_nmbb_d[l_ac].nmbb027, 
+                   g_nmbb_d[l_ac].nmbb028,g_nmbb_d[l_ac].nmbb029,g_nmbb_d[l_ac].nmbb002,g_nmbb_d[l_ac].nmbb010, 
+                   g_nmbb_d[l_ac].nmbb003,g_nmbb_d[l_ac].nmbb001,g_nmbb_d[l_ac].nmbb030,g_nmbb_d[l_ac].nmbb043, 
+                   g_nmbb_d[l_ac].nmbb031,g_nmbb_d[l_ac].nmbb004,g_nmbb_d[l_ac].nmbb005,g_nmbb_d[l_ac].nmbb006, 
+                   g_nmbb_d[l_ac].nmbb007,g_nmbb_d[l_ac].nmbb036,g_nmbb_d[l_ac].nmbb037,g_nmbb_d[l_ac].nmbb038, 
+                   g_nmbb_d[l_ac].nmbb032,g_nmbb_d[l_ac].nmbb033,g_nmbb_d[l_ac].nmbb034,g_nmbb_d[l_ac].nmbb035, 
+                   g_nmbb_d[l_ac].nmbb039,g_nmbb_d[l_ac].nmbb040,g_nmbb_d[l_ac].nmbb041,g_nmbb_d[l_ac].nmbb042, 
+                   g_nmbb_d[l_ac].nmbb044,g_nmbb_d[l_ac].nmbb045)
+                WHERE nmbbent = g_enterprise AND nmbbcomp = g_nmba_m.nmbacomp 
+                  AND nmbbdocno = g_nmba_m.nmbadocno 
+ 
+                  AND nmbbseq = g_nmbb_d_t.nmbbseq #項次   
+ 
+                  
+               #add-point:單身修改中 name="input.body.m_update"
+               
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     LET g_nmbb_d[l_ac].* = g_nmbb_d_t.*
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "nmbb_t" 
+                     LET g_errparam.code = "std-00009" 
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     
+                  WHEN SQLCA.SQLCODE #其他錯誤
+                     LET g_nmbb_d[l_ac].* = g_nmbb_d_t.*  
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "nmbb_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE 
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()                   
+                     
+                  OTHERWISE
+                     #資料多語言用-增/改
+                     
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_nmba_m.nmbacomp
+               LET gs_keys_bak[1] = g_nmbacomp_t
+               LET gs_keys[2] = g_nmba_m.nmbadocno
+               LET gs_keys_bak[2] = g_nmbadocno_t
+               LET gs_keys[3] = g_nmbb_d[g_detail_idx].nmbbseq
+               LET gs_keys_bak[3] = g_nmbb_d_t.nmbbseq
+               CALL anmt564_update_b('nmbb_t',gs_keys,gs_keys_bak,"'1'")
+               END CASE
+ 
+               #將遮罩欄位進行遮蔽
+               CALL anmt564_nmbb_t_mask_restore('restore_mask_n')
+               
+               #判斷key是否有改變
+               INITIALIZE gs_keys TO NULL
+               IF NOT(g_nmbb_d[g_detail_idx].nmbbseq = g_nmbb_d_t.nmbbseq 
+ 
+                  ) THEN
+                  LET gs_keys[01] = g_nmba_m.nmbacomp
+                  LET gs_keys[gs_keys.getLength()+1] = g_nmba_m.nmbadocno
+ 
+                  LET gs_keys[gs_keys.getLength()+1] = g_nmbb_d_t.nmbbseq
+ 
+                  CALL anmt564_key_update_b(gs_keys,'nmbb_t')
+               END IF
+               
+               #修改歷程記錄(單身修改)
+               LET g_log1 = util.JSON.stringify(g_nmba_m),util.JSON.stringify(g_nmbb_d_t)
+               LET g_log2 = util.JSON.stringify(g_nmba_m),util.JSON.stringify(g_nmbb_d[l_ac])
+               IF NOT cl_log_modified_record_d(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               END IF
+               
+               #add-point:單身修改後 name="input.body.a_update"
+               
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            #add-point:單身after_row name="input.body.after_row"
+            #151222-00010#10---add--str
+            IF g_nmbb_d[l_ac].nmbb029 = '10' OR g_nmbb_d[l_ac].nmbb029 = '20' THEN  
+               LET l_year = YEAR(g_nmba_m.nmbadocdt)
+               LET l_month = MONTH(g_nmba_m.nmbadocdt)                                  
+               LET l_n = 0 
+               SELECT COUNT(*) INTO l_n FROM glbc_t
+                WHERE glbcent = g_enterprise AND glbcdocno = g_nmba_m.nmbadocno
+                  AND glbcseq = g_nmbb_d[g_detail_idx].nmbbseq
+               IF g_detail_idx > 0 AND l_n = 0 THEN
+                  CALL anmt564_glaa_get()
+                                      #帳別      #匯款編號         #年度   #期別  #借貸別 #作業編號暂时给anmt550  #單身項次
+                  CALL s_cashflow_nm(g_glaald,g_nmba_m.nmbadocno,l_year,l_month,'1','anmt564',g_nmbb_d[g_detail_idx].nmbbseq)
+               END IF
+            END IF  
+            #151222-00010#10---add--end
+            #end add-point
+            CALL anmt564_unlock_b("nmbb_t","'1'")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            #add-point:單身after_row2 name="input.body.after_row2"
+            CALL anmt564_amt_show()   #160509-00004#75 add lujh
+            #end add-point
+              
+         AFTER INPUT
+            #add-point:input段after input  name="input.body.after_input"
+            
+            #end add-point 
+    
+         ON ACTION controlo    
+            IF l_insert THEN
+               LET li_reproduce = l_ac_t
+               LET li_reproduce_target = l_ac
+               LET g_nmbb_d[li_reproduce_target].* = g_nmbb_d[li_reproduce].*
+ 
+               LET g_nmbb_d[li_reproduce_target].nmbbseq = NULL
+ 
+            ELSE
+               CALL FGL_SET_ARR_CURR(g_nmbb_d.getLength()+1)
+               LET lb_reproduce = TRUE
+               LET li_reproduce = l_ac
+               LET li_reproduce_target = g_nmbb_d.getLength()+1
+            END IF
+            
+         #ON ACTION cancel
+         #   LET INT_FLAG = 1
+         #   LET g_detail_idx = 1
+         #   EXIT DIALOG 
+ 
+      END INPUT
+      
+      INPUT ARRAY g_nmbb2_d FROM s_detail2.*
+         ATTRIBUTE(COUNT = g_rec_b,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                 INSERT ROW = l_allow_insert, #此頁面insert功能由產生器控制, 手動之設定無效! 
+ 
+                 DELETE ROW = l_allow_delete,
+                 APPEND ROW = l_allow_insert)
+                 
+         #自訂ACTION(detail_input,page_2)
+         
+         
+         BEFORE INPUT
+            #add-point:資料輸入前 name="input.body2.before_input2"
+            
+            #end add-point
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_nmbb2_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL anmt564_b_fill()
+            #如果一直都在單身1則控制筆數位置
+            IF g_loc = 'd' AND g_rec_b != 0 THEN
+               CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'2',"))
+            END IF
+            LET g_loc = 'd'
+            LET g_rec_b = g_nmbb2_d.getLength()
+            #add-point:資料輸入前 name="input.body2.before_input"
+            
+            #end add-point
+            
+         BEFORE INSERT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_nmbb2_d[l_ac].* TO NULL 
+            INITIALIZE g_nmbb2_d_t.* TO NULL 
+            INITIALIZE g_nmbb2_d_o.* TO NULL 
+            #公用欄位給值(單身2)
+            
+            #自定義預設值(單身2)
+                  LET g_nmbb2_d[l_ac].nmee022 = "1"
+      LET g_nmbb2_d[l_ac].nmee026 = "0"
+      LET g_nmbb2_d[l_ac].nmee018 = "1"
+      LET g_nmbb2_d[l_ac].nmee011 = "1"
+      LET g_nmbb2_d[l_ac].nmee012 = "0"
+      LET g_nmbb2_d[l_ac].nmee020 = "N"
+ 
+            #add-point:modify段before備份 name="input.body2.insert.before_bak"
+            SELECT MAX(nmeeseq) + 1 INTO g_nmbb2_d[l_ac].nmeeseq FROM nmee_t
+             WHERE nmeeent = g_enterprise AND nmeecomp = g_nmba_m.nmbacomp
+               AND nmeedocno = g_nmba_m.nmbadocno
+            IF cl_null(g_nmbb2_d[l_ac].nmeeseq) THEN 
+               LET g_nmbb2_d[l_ac].nmeeseq = 1           
+            END IF
+           #151201-00002#14 Add  ---(S)---
+            LET l_nmee003 = g_nmbb2_d[l_ac].nmee003
+            LET g_nmbb2_d[l_ac].nmee007 = g_today
+            LET g_nmbb2_d[l_ac].nmee008 = g_today
+            LET g_nmbb2_d[l_ac].nmee001 = g_nmba_m.nmba004
+            SELECT glaa001 INTO g_nmbb2_d[l_ac].nmee009 FROM glaa_t WHERE glaaent = g_enterprise
+               AND glaacomp = g_nmba_m.nmbacomp
+               AND glaa014 = 'Y'
+            LET g_nmbb2_d[l_ac].nmee018 = 1
+            CALL s_desc_get_department_desc(g_nmbb2_d[l_ac].nmeesite) RETURNING g_nmbb2_d[l_ac].nmeesite_desc
+           #151201-00002#14 Add  ---(E)---
+           
+            LET g_nmbb_d[l_ac].nmbborga = g_nmba_m.nmbasite  #160912-00024#1 add
+            CALL s_anm_orga_chk(g_nmbb_d[l_ac].nmbborga,g_nmba_m.nmbacomp) RETURNING g_nmbb_d[l_ac].nmbborga  #160912-00024#1 add   
+                     
+            #end add-point
+            LET g_nmbb2_d_t.* = g_nmbb2_d[l_ac].*     #新輸入資料
+            LET g_nmbb2_d_o.* = g_nmbb2_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL anmt564_set_entry_b(l_cmd)
+            #add-point:modify段after_set_entry_b name="input.body2.insert.after_set_entry_b"
+            
+            #end add-point
+            CALL anmt564_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_nmbb2_d[li_reproduce_target].* = g_nmbb2_d[li_reproduce].*
+ 
+               LET g_nmbb2_d[li_reproduce_target].nmeeseq = NULL
+            END IF
+            
+ 
+            #add-point:modify段before insert name="input.body2.before_insert"
+            
+            #end add-point  
+ 
+         BEFORE ROW     
+            #add-point:modify段before row2 name="input.body2.before_row2"
+            
+            #end add-point  
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac_t = l_ac 
+            LET g_detail_idx_list[2] = l_ac
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET g_current_page = 2
+              
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN anmt564_cl USING g_enterprise,g_nmba_m.nmbacomp,g_nmba_m.nmbadocno
+            IF SQLCA.SQLCODE THEN   #(ver:78)
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN anmt564_cl:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+               LET g_errparam.popup = TRUE 
+               CLOSE anmt564_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_nmbb2_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND g_nmbb2_d[l_ac].nmeeseq IS NOT NULL
+            THEN 
+               LET l_cmd='u'
+               LET g_nmbb2_d_t.* = g_nmbb2_d[l_ac].*  #BACKUP
+               LET g_nmbb2_d_o.* = g_nmbb2_d[l_ac].*  #BACKUP
+               CALL anmt564_set_entry_b(l_cmd)
+               #add-point:modify段after_set_entry_b name="input.body2.after_set_entry_b"
+               
+               #end add-point  
+               CALL anmt564_set_no_entry_b(l_cmd)
+               IF NOT anmt564_lock_b("nmee_t","'2'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH anmt564_bcl2 INTO g_nmbb2_d[l_ac].nmeeseq,g_nmbb2_d[l_ac].nmee022,g_nmbb2_d[l_ac].nmee001, 
+                      g_nmbb2_d[l_ac].nmee003,g_nmbb2_d[l_ac].nmee004,g_nmbb2_d[l_ac].nmee025,g_nmbb2_d[l_ac].nmee026, 
+                      g_nmbb2_d[l_ac].nmeesite,g_nmbb2_d[l_ac].nmee005,g_nmbb2_d[l_ac].nmee006,g_nmbb2_d[l_ac].nmee024, 
+                      g_nmbb2_d[l_ac].nmee007,g_nmbb2_d[l_ac].nmee008,g_nmbb2_d[l_ac].nmee009,g_nmbb2_d[l_ac].nmee018, 
+                      g_nmbb2_d[l_ac].nmee010,g_nmbb2_d[l_ac].nmee011,g_nmbb2_d[l_ac].nmee012,g_nmbb2_d[l_ac].nmee013, 
+                      g_nmbb2_d[l_ac].nmee002,g_nmbb2_d[l_ac].nmee014,g_nmbb2_d[l_ac].nmee019,g_nmbb2_d[l_ac].nmee020, 
+                      g_nmbb2_d[l_ac].nmee023,g_nmbb2_d[l_ac].nmee021,g_nmbb2_d[l_ac].nmee027
+                  IF SQLCA.SQLCODE THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = SQLERRMESSAGE  
+                     LET g_errparam.code = SQLCA.SQLCODE 
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_nmbb2_d_mask_o[l_ac].* =  g_nmbb2_d[l_ac].*
+                  CALL anmt564_nmee_t_mask()
+                  LET g_nmbb2_d_mask_n[l_ac].* =  g_nmbb2_d[l_ac].*
+                  
+                  LET g_bfill = "N"
+                  CALL anmt564_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row name="input.body2.before_row"
+ 
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+ 
+            #其他table進行lock
+            
+ 
+            
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+               #add-point:單身AFTER DELETE (=d) name="input.body2.after_delete_d"
+               
+               #end add-point
+            ELSE
+               #add-point:單身刪除前 name="input.body2.b_delete_ask"
+               
+               #end add-point 
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code = -263 
+                  LET g_errparam.popup = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身2刪除前 name="input.body2.b_delete"
+               
+               #end add-point    
+                  
+               #取得該筆資料key值
+               INITIALIZE gs_keys TO NULL
+               LET gs_keys[01] = g_nmba_m.nmbacomp
+               LET gs_keys[gs_keys.getLength()+1] = g_nmba_m.nmbadocno
+               LET gs_keys[gs_keys.getLength()+1] = g_nmbb2_d_t.nmeeseq
+            
+               #刪除同層單身
+               IF NOT anmt564_delete_b('nmee_t',gs_keys,"'2'") THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE anmt564_bcl
+                  CANCEL DELETE
+               END IF
+    
+               #刪除下層單身
+               IF NOT anmt564_key_delete_b(gs_keys,'nmee_t') THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE anmt564_bcl
+                  CANCEL DELETE
+               END IF
+               
+               #刪除多語言
+               
+ 
+               
+               #add-point:單身2刪除中 name="input.body2.m_delete"
+               
+               #end add-point    
+               
+               CALL s_transaction_end('Y','0')
+               CLOSE anmt564_bcl
+ 
+               LET g_rec_b = g_rec_b-1
+               #add-point:單身2刪除後 name="input.body2.a_delete"
+               
+               #end add-point
+               LET l_count = g_nmbb_d.getLength()
+               
+               #add-point:單身刪除後(<>d) name="input.body2.after_delete"
+               
+               #end add-point
+            END IF 
+ 
+         AFTER DELETE
+            #如果是最後一筆
+            IF l_ac = (g_nmbb2_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+         AFTER INSERT    
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = 9001 
+               LET g_errparam.popup = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            #add-point:單身2新增前 name="input.body2.b_a_insert"
+            
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(1) INTO l_count FROM nmee_t 
+             WHERE nmeeent = g_enterprise AND nmeecomp = g_nmba_m.nmbacomp
+               AND nmeedocno = g_nmba_m.nmbadocno
+               AND nmeeseq = g_nmbb2_d[l_ac].nmeeseq
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身2新增前 name="input.body2.b_insert"
+               
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_nmba_m.nmbacomp
+               LET gs_keys[2] = g_nmba_m.nmbadocno
+               LET gs_keys[3] = g_nmbb2_d[g_detail_idx].nmeeseq
+               CALL anmt564_insert_b('nmee_t',gs_keys,"'2'")
+                           
+               #add-point:單身新增後2 name="input.body2.a_insert"
+               
+               #end add-point
+            ELSE    
+               INITIALIZE g_nmbb_d[l_ac].* TO NULL
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code = "std-00006" 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLCODE THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "nmee_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')                    
+               CALL cl_err()
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL anmt564_b_fill()
+               #資料多語言用-增/改
+               
+               #add-point:單身新增後 name="input.body2.after_insert"
+ 
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               #ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+            
+         ON ROW CHANGE 
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               LET g_nmbb2_d[l_ac].* = g_nmbb2_d_t.*
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = 9001 
+               LET g_errparam.popup = FALSE 
+               CLOSE anmt564_bcl2
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               EXIT DIALOG 
+            END IF
+            
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = -263 
+               LET g_errparam.popup = TRUE 
+               CALL cl_err()
+               LET g_nmbb2_d[l_ac].* = g_nmbb2_d_t.*
+            ELSE
+               #add-point:單身page2修改前 name="input.body2.b_update"
+               
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身2)
+               
+               
+               #將遮罩欄位還原
+               CALL anmt564_nmee_t_mask_restore('restore_mask_o')
+                              
+               UPDATE nmee_t SET (nmeecomp,nmeedocno,nmeeseq,nmee022,nmee001,nmee003,nmee004,nmee025, 
+                   nmee026,nmeesite,nmee005,nmee006,nmee024,nmee007,nmee008,nmee009,nmee018,nmee010, 
+                   nmee011,nmee012,nmee013,nmee002,nmee014,nmee019,nmee020,nmee023,nmee021,nmee027) = (g_nmba_m.nmbacomp, 
+                   g_nmba_m.nmbadocno,g_nmbb2_d[l_ac].nmeeseq,g_nmbb2_d[l_ac].nmee022,g_nmbb2_d[l_ac].nmee001, 
+                   g_nmbb2_d[l_ac].nmee003,g_nmbb2_d[l_ac].nmee004,g_nmbb2_d[l_ac].nmee025,g_nmbb2_d[l_ac].nmee026, 
+                   g_nmbb2_d[l_ac].nmeesite,g_nmbb2_d[l_ac].nmee005,g_nmbb2_d[l_ac].nmee006,g_nmbb2_d[l_ac].nmee024, 
+                   g_nmbb2_d[l_ac].nmee007,g_nmbb2_d[l_ac].nmee008,g_nmbb2_d[l_ac].nmee009,g_nmbb2_d[l_ac].nmee018, 
+                   g_nmbb2_d[l_ac].nmee010,g_nmbb2_d[l_ac].nmee011,g_nmbb2_d[l_ac].nmee012,g_nmbb2_d[l_ac].nmee013, 
+                   g_nmbb2_d[l_ac].nmee002,g_nmbb2_d[l_ac].nmee014,g_nmbb2_d[l_ac].nmee019,g_nmbb2_d[l_ac].nmee020, 
+                   g_nmbb2_d[l_ac].nmee023,g_nmbb2_d[l_ac].nmee021,g_nmbb2_d[l_ac].nmee027) #自訂欄位頁簽 
+ 
+                WHERE nmeeent = g_enterprise AND nmeecomp = g_nmba_m.nmbacomp
+                  AND nmeedocno = g_nmba_m.nmbadocno
+                  AND nmeeseq = g_nmbb2_d_t.nmeeseq #項次 
+                  
+               #add-point:單身page2修改中 name="input.body2.m_update"
+               
+               #end add-point
+                  
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     LET g_nmbb2_d[l_ac].* = g_nmbb2_d_t.*
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "nmee_t" 
+                     LET g_errparam.code = "std-00009" 
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     
+                  WHEN SQLCA.SQLCODE #其他錯誤
+                     LET g_nmbb2_d[l_ac].* = g_nmbb2_d_t.*
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "nmee_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE 
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     
+                  OTHERWISE
+                     #資料多語言用-增/改
+                     
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_nmba_m.nmbacomp
+               LET gs_keys_bak[1] = g_nmbacomp_t
+               LET gs_keys[2] = g_nmba_m.nmbadocno
+               LET gs_keys_bak[2] = g_nmbadocno_t
+               LET gs_keys[3] = g_nmbb2_d[g_detail_idx].nmeeseq
+               LET gs_keys_bak[3] = g_nmbb2_d_t.nmeeseq
+               CALL anmt564_update_b('nmee_t',gs_keys,gs_keys_bak,"'2'")
+               END CASE
+               
+               #將遮罩欄位進行遮蔽
+               CALL anmt564_nmee_t_mask_restore('restore_mask_n')
+               
+               #判斷key是否有改變
+               INITIALIZE gs_keys TO NULL
+               IF NOT (g_nmbb2_d[g_detail_idx].nmeeseq = g_nmbb2_d_t.nmeeseq 
+                  ) THEN
+                  LET gs_keys[01] = g_nmba_m.nmbacomp
+                  LET gs_keys[gs_keys.getLength()+1] = g_nmba_m.nmbadocno
+                  LET gs_keys[gs_keys.getLength()+1] = g_nmbb2_d_t.nmeeseq
+                  CALL anmt564_key_update_b(gs_keys,'nmee_t')
+               END IF
+               
+               #修改歷程記錄(單身修改)
+               LET g_log1 = util.JSON.stringify(g_nmba_m),util.JSON.stringify(g_nmbb2_d_t)
+               LET g_log2 = util.JSON.stringify(g_nmba_m),util.JSON.stringify(g_nmbb2_d[l_ac])
+               IF NOT cl_log_modified_record_d(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               END IF
+               
+               #add-point:單身page2修改後 name="input.body2.a_update"
+ 
+               #end add-point
+            END IF
+         
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmeeseq
+            #add-point:BEFORE FIELD nmeeseq name="input.b.page2.nmeeseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmeeseq
+            
+            #add-point:AFTER FIELD nmeeseq name="input.a.page2.nmeeseq"
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_nmba_m.nmbacomp IS NOT NULL AND g_nmba_m.nmbadocno IS NOT NULL AND g_nmbb2_d[g_detail_idx].nmeeseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_nmba_m.nmbacomp != g_nmbacomp_t OR g_nmba_m.nmbadocno != g_nmbadocno_t OR g_nmbb2_d[g_detail_idx].nmeeseq != g_nmbb2_d_t.nmeeseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM nmee_t WHERE "||"nmeeent = '" ||g_enterprise|| "' AND "||"nmeecomp = '"||g_nmba_m.nmbacomp ||"' AND "|| "nmeedocno = '"||g_nmba_m.nmbadocno ||"' AND "|| "nmeeseq = '"||g_nmbb2_d[g_detail_idx].nmeeseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmeeseq
+            #add-point:ON CHANGE nmeeseq name="input.g.page2.nmeeseq"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee022
+            #add-point:BEFORE FIELD nmee022 name="input.b.page2.nmee022"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee022
+            
+            #add-point:AFTER FIELD nmee022 name="input.a.page2.nmee022"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee022
+            #add-point:ON CHANGE nmee022 name="input.g.page2.nmee022"
+           #151201-00002#14 Add  ---(S)---
+            IF NOT cl_null(g_nmbb2_d[l_ac].nmee022) THEN
+               CALL anmt564_set_entry_b(l_cmd)
+               CALL anmt564_set_no_entry_b(l_cmd)
+               LET g_nmbb2_d[l_ac].nmee020 = 'N'
+               LET g_nmbb2_d[l_ac].nmee003 = ''
+               LET g_nmbb2_d[l_ac].nmee004 = ''
+               LET g_nmbb2_d[l_ac].nmee005 = ''
+               LET g_nmbb2_d[l_ac].nmee005_desc = ''
+               LET g_nmbb2_d[l_ac].nmee006 = ''
+               LET g_nmbb2_d[l_ac].nmee006_desc = ''
+               LET g_nmbb2_d[l_ac].nmee007 = g_today
+               LET g_nmbb2_d[l_ac].nmee008 = g_today
+               SELECT glaa001 INTO g_nmbb2_d[l_ac].nmee009 FROM glaa_t WHERE glaaent = g_enterprise
+                  AND glaacomp = g_nmba_m.nmbacomp
+                  AND glaa014 = 'Y'
+               LET g_nmbb2_d[l_ac].nmee018 = 1
+               LET g_nmbb2_d[l_ac].nmee010 = ''
+               LET g_nmbb2_d[l_ac].nmee010_desc = ''
+               LET g_nmbb2_d[l_ac].nmee011 = 1
+               LET g_nmbb2_d[l_ac].nmee012 = 0
+               LET g_nmbb2_d[l_ac].nmee014 = ''
+               LET g_nmbb2_d[l_ac].nmee014_desc = ''
+               LET g_nmbb2_d[l_ac].nmee019 = ''
+               #add by liyan --str--
+               IF g_nmbb2_d[l_ac].nmee022='1' OR g_nmbb2_d[l_ac].nmee022='2' THEN 
+                  CALL cl_set_comp_entry("nmee024",TRUE)
+               ELSE
+                  CALL cl_set_comp_entry("nmee024",FALSE)
+               END IF 
+               #add by liyan --end--
+            END IF
+           #151201-00002#14 Add  ---(E)---
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee001
+            
+            #add-point:AFTER FIELD nmee001 name="input.a.page2.nmee001"
+           #151201-00002#14 Mark ---(S)---
+           #欄位隱藏,使用單頭的交易對象
+           #LET g_nmbb2_d[l_ac].nmee001_desc = ' '
+           #DISPLAY g_nmbb2_d[l_ac].nmee001_desc TO s_tatail2[l_ac].nmee001_desc
+           #IF NOT cl_null(g_nmbb2_d[l_ac].nmee001) THEN 
+           #   CALL anmt564_nmee001_chk(g_nmbb2_d[l_ac].nmee001) RETURNING l_success
+           #   IF NOT l_success THEN 
+           #      LET g_nmbb2_d[l_ac].nmee001 = g_nmbb2_d_t.nmee001
+           #      LET g_nmbb2_d[l_ac].nmee001_desc = g_nmbb2_d_t.nmee001_desc
+           #      NEXT FIELD CURRENT
+           #   END IF
+           #   IF NOT cl_null(g_nmbb2_d[l_ac].nmee003) AND NOT cl_null(g_nmbb2_d[l_ac].nmee004) THEN
+           #      LET l_str = " stevdocno = '",g_nmbb2_d[l_ac].nmee003,"' AND stevseq = '",g_nmbb2_d[l_ac].nmee004,"'"
+           #      IF NOT cl_null(g_nmbb2_d[l_ac].nmeesite) THEN
+           #         LET l_str = l_str," AND steusite = '",g_nmbb2_d[l_ac].nmeesite,"'"
+           #      END IF
+           #      IF NOT cl_null(g_nmbb2_d[l_ac].nmee001) THEN
+           #         LET l_str = l_str," AND steu003 = '",g_nmbb2_d[l_ac].nmee001,"'"
+           #      END IF
+           #      CALL anmt564_stev_chk(l_str,g_nmbb2_d[l_ac].nmeeseq) RETURNING l_success,l_stev016
+           #      IF NOT l_success THEN
+           #         NEXT FIELD CURRENT
+           #      END IF
+           #   END IF
+           #END IF 
+           #CALL anmt564_nmbb026_desc(g_nmbb2_d[l_ac].nmee001,'')
+           #   RETURNING g_nmbb2_d[l_ac].nmee001_desc
+           #DISPLAY g_nmbb2_d[l_ac].nmee001_desc TO s_tatail2[l_ac].nmee001_desc
+           #151201-00002#14 Mark ---(E)---
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee001
+            #add-point:BEFORE FIELD nmee001 name="input.b.page2.nmee001"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee001
+            #add-point:ON CHANGE nmee001 name="input.g.page2.nmee001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee003
+            #add-point:BEFORE FIELD nmee003 name="input.b.page2.nmee003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee003
+            
+            #add-point:AFTER FIELD nmee003 name="input.a.page2.nmee003"
+           #151201-00002#14 Mark ---(S)---
+           #IF NOT cl_null(g_nmbb2_d[l_ac].nmee003) AND NOT cl_null(g_nmbb2_d[l_ac].nmee004) THEN
+           #   LET l_str = " stevdocno = '",g_nmbb2_d[l_ac].nmee003,"' AND stevseq = '",g_nmbb2_d[l_ac].nmee004,"'"
+           #   IF NOT cl_null(g_nmbb2_d[l_ac].nmeesite) THEN
+           #      LET l_str = l_str," AND steusite = '",g_nmbb2_d[l_ac].nmeesite,"'"
+           #   END IF
+           #   IF NOT cl_null(g_nmbb2_d[l_ac].nmee001) THEN
+           #      LET l_str = l_str," AND steu003 = '",g_nmbb2_d[l_ac].nmee001,"'"
+           #   END IF
+           #   CALL anmt564_stev_chk(l_str,g_nmbb2_d[l_ac].nmeeseq) RETURNING l_success,l_stev016
+           #   IF NOT l_success THEN
+           #      NEXT FIELD CURRENT
+           #   END IF
+           #   IF cl_null(l_nmee003) OR g_nmbb2_d[l_ac].nmee003 <> l_nmee003 THEN
+           #      #修改來源單號則刷新單身
+           #      CALL anmt564_stev_desc(" stevdocno = '"||g_nmbb2_d[l_ac].nmee003||"' AND stevseq = '"||g_nmbb2_d[l_ac].nmee004||"'")
+           #         RETURNING g_nmbb2_d[l_ac].nmeesite,g_nmbb2_d[l_ac].nmee001,
+           #                   g_nmbb2_d[l_ac].nmee005,g_nmbb2_d[l_ac].nmee006,g_nmbb2_d[l_ac].nmee007,
+           #                   g_nmbb2_d[l_ac].nmee008,g_nmbb2_d[l_ac].nmee009,g_nmbb2_d[l_ac].nmee010,
+           #                   g_nmbb2_d[l_ac].nmee011,g_nmbb2_d[l_ac].nmee012,g_nmbb2_d[l_ac].nmee014,
+           #                   g_nmbb2_d[l_ac].nmee019
+           #      CALL s_desc_get_department_desc(g_nmbb2_d[l_ac].nmeesite) RETURNING g_nmbb2_d[l_ac].nmeesite_desc
+           #      CALL anmt564_nmbb026_desc(g_nmbb2_d[l_ac].nmee001,'') RETURNING g_nmbb_d[l_ac].nmbb026_desc
+           #      CALL anmt564_nmee005_desc(g_nmbb2_d[l_ac].nmee005) RETURNING g_nmbb2_d[l_ac].nmee005_desc
+           #      CALL anmt564_nmee006_desc(g_nmbb2_d[l_ac].nmee006) RETURNING g_nmbb2_d[l_ac].nmee006_desc
+           #      CALL s_desc_get_department_desc(g_nmbb2_d[l_ac].nmee014) RETURNING g_nmbb2_d[l_ac].nmee014_desc
+           #      CALL s_tax_chk(g_nmbb2_d[l_ac].nmeesite,g_nmbb2_d[l_ac].nmee010)
+           #         RETURNING l_success,g_nmbb2_d[l_ac].nmee010_desc,l_oodb005,l_oodb006,l_oodb011
+           #      #150820-00017#1 mark--s
+           #      #SELECT ooab002 INTO l_ooab002 FROM ooab_t
+           #      # WHERE ooabent = g_enterprise
+           #      #   AND ooabsite= g_ooef001
+           #      #   AND ooab001 = 'S-BAS-0010'
+           #      #150820-00017#1 mark--e
+           #      CALL cl_get_para(g_enterprise,g_nmba_m.nmbacomp,'S-FIN-4004') RETURNING l_ooab002  #資金模組匯率來源   #150820-00017#1
+           #      CALL anmt564_glaa_get()
+           #                               #匯率參照表;帳套;           日期;               來源幣別
+           #      CALL s_aooi160_get_exrate('2',g_glaald,g_nmba_m.nmbadocdt,g_nmbb2_d[l_ac].nmee009,
+           #                               #目的幣別;  交易金額;              匯類類型
+           #                                g_glaa001,0,l_ooab002)
+           #      RETURNING g_nmbb2_d[l_ac].nmee018
+           #      LET g_nmbb2_d[l_ac].nmee013 = g_nmbb2_d[l_ac].nmee012 * g_nmbb2_d[l_ac].nmee018
+           #         
+           #   ELSE
+           #      #沒有修改來源單號則檢查單身金額是否大於可結算金額
+           #      IF l_stev016 < g_nmbb2_d[l_ac].nmee012 THEN
+           #         INITIALIZE g_errparam TO NULL 
+           #         LET g_errparam.extend = "" 
+           #         LET g_errparam.code   = "anm-00357" 
+           #         LET g_errparam.popup  = FALSE 
+           #         CALL cl_err()
+           #         NEXT FIELD CURRENT
+           #      END IF
+           #      
+           #   END IF
+           #END IF
+           #151201-00002#14 Mark ---(E)---
+           #151201-00002#14 Add  ---(S)---
+            IF NOT cl_null(g_nmbb2_d[l_ac].nmee003) AND NOT cl_null(g_nmbb2_d[l_ac].nmee004) THEN
+               CALL anmt564_source_chk(g_nmbb2_d[l_ac].nmee003 == l_nmee003) RETURNING l_success
+               IF NOT l_success THEN
+                  NEXT FIELD CURRENT
+                else
+                  select xrcbseq,xrcbdocno,xrcb056,xrcb057 into l_xrcbseq,l_xrcbdocno,l_xrcb056,l_xrcb057 from xrcb_t,xrca_t
+                  where xrcbent=xrcaent and xrcald=xrcbld and xrcadocno=xrcbdocno and xrcbent=g_enterprise and xrcb002=g_nmbb2_d[l_ac].nmee003 and xrcb003=g_nmbb2_d[l_ac].nmee004 and xrcastus='Y'
+                  if not cl_null(l_xrcbdocno) then
+
+                     #let g_nmbb2_d[l_ac].nmee012=l_xrcb056-l_xrcb057
+                     #if  g_nmbb2_d[l_ac].nmee012=0 then
+                     #     INITIALIZE g_errparam TO NULL
+                     #     LET g_errparam.extend = ""
+                     #     LET g_errparam.code   = "anm-02994"
+                     #     LET g_errparam.popup  = FALSE
+                     #     CALL cl_err()
+                     #     next field nmee003
+                     #else
+                         let g_nmbb2_d[l_ac].nmee025=l_xrcbdocno
+                         let g_nmbb2_d[l_ac].nmee026=l_xrcbseq
+                          display by name  g_nmbb2_d[l_ac].nmee025, g_nmbb2_d[l_ac].nmee026                 
+                    # end if
+                  else
+                      select stbc019 into l_stbc019 from stbc_t where stbcent=g_enterprise  and stbc004= g_nmbb2_d[l_ac].nmee003  and  stbc005= g_nmbb2_d[l_ac].nmee004
+                      if l_stbc019=0 then
+                          INITIALIZE g_errparam TO NULL
+                          LET g_errparam.extend = ""
+                          LET g_errparam.code   = "anm-02994"
+                          LET g_errparam.popup  = FALSE
+                          CALL cl_err()
+                          next field nmee003
+                      else 
+                         let g_nmbb2_d[l_ac].nmee012=l_stbc019
+                         let g_nmbb2_d[l_ac].nmee025=''
+                         let g_nmbb2_d[l_ac].nmee026=''
+                          display by name  g_nmbb2_d[l_ac].nmee025, g_nmbb2_d[l_ac].nmee026 ,g_nmbb2_d[l_ac].nmee012
+                      end if 
+                  end if     
+               END IF
+            END IF
+           #151201-00002#14 Add  ---(E)---
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee003
+            #add-point:ON CHANGE nmee003 name="input.g.page2.nmee003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee004
+            #add-point:BEFORE FIELD nmee004 name="input.b.page2.nmee004"
+            LET l_nmee004 = g_nmbb2_d[l_ac].nmee004
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee004
+            
+            #add-point:AFTER FIELD nmee004 name="input.a.page2.nmee004"
+           #151201-00002#14 Mark ---(E)---
+           #IF NOT cl_null(g_nmbb2_d[l_ac].nmee003) AND NOT cl_null(g_nmbb2_d[l_ac].nmee004) THEN
+           #   LET l_str = " stevdocno = '",g_nmbb2_d[l_ac].nmee003,"' AND stevseq = '",g_nmbb2_d[l_ac].nmee004,"'"
+           #   IF NOT cl_null(g_nmbb2_d[l_ac].nmeesite) THEN
+           #      LET l_str = l_str," AND steusite = '",g_nmbb2_d[l_ac].nmeesite,"'"
+           #   END IF
+           #   IF NOT cl_null(g_nmbb2_d[l_ac].nmee001) THEN
+           #      LET l_str = l_str," AND steu003 = '",g_nmbb2_d[l_ac].nmee001,"'"
+           #   END IF
+           #   CALL anmt564_stev_chk(l_str,g_nmbb2_d[l_ac].nmeeseq) RETURNING l_success,l_stev016
+           #   IF NOT l_success THEN
+           #      NEXT FIELD CURRENT
+           #   END IF
+           #   IF cl_null(l_nmee004) OR g_nmbb2_d[l_ac].nmee004 <> l_nmee004 THEN
+           #      #修改來源單號則刷新單身
+           #      CALL anmt564_stev_desc(" stevdocno = '"||g_nmbb2_d[l_ac].nmee003||"' AND stevseq = '"||g_nmbb2_d[l_ac].nmee004||"'")
+           #         RETURNING g_nmbb2_d[l_ac].nmeesite,g_nmbb2_d[l_ac].nmee001,
+           #                   g_nmbb2_d[l_ac].nmee005,g_nmbb2_d[l_ac].nmee006,g_nmbb2_d[l_ac].nmee007,
+           #                   g_nmbb2_d[l_ac].nmee008,g_nmbb2_d[l_ac].nmee009,g_nmbb2_d[l_ac].nmee010,
+           #                   g_nmbb2_d[l_ac].nmee011,g_nmbb2_d[l_ac].nmee012,g_nmbb2_d[l_ac].nmee014,
+           #                   g_nmbb2_d[l_ac].nmee019
+           #      CALL s_desc_get_department_desc(g_nmbb2_d[l_ac].nmeesite) RETURNING g_nmbb2_d[l_ac].nmeesite_desc
+           #      CALL anmt564_nmbb026_desc(g_nmbb2_d[l_ac].nmee001,'') RETURNING g_nmbb_d[l_ac].nmbb026_desc
+           #      CALL anmt564_nmee005_desc(g_nmbb2_d[l_ac].nmee005) RETURNING g_nmbb2_d[l_ac].nmee005_desc
+           #      CALL anmt564_nmee006_desc(g_nmbb2_d[l_ac].nmee006) RETURNING g_nmbb2_d[l_ac].nmee006_desc
+           #      CALL s_desc_get_department_desc(g_nmbb2_d[l_ac].nmee014) RETURNING g_nmbb2_d[l_ac].nmee014_desc
+           #      CALL s_tax_chk(g_nmbb2_d[l_ac].nmeesite,g_nmbb2_d[l_ac].nmee010)
+           #         RETURNING l_success,g_nmbb2_d[l_ac].nmee010_desc,l_oodb005,l_oodb006,l_oodb011
+           #         
+           #   ELSE
+           #      #沒有修改來源單號則檢查單身金額是否大於可結算金額
+           #      IF l_stev016 < g_nmbb2_d[l_ac].nmee012 THEN
+           #         INITIALIZE g_errparam TO NULL 
+           #         LET g_errparam.extend = "" 
+           #         LET g_errparam.code   = "anm-00357" 
+           #         LET g_errparam.popup  = FALSE 
+           #         CALL cl_err()
+           #         NEXT FIELD CURRENT
+           #      END IF
+           #      
+           #   END IF
+           #END IF
+           #151201-00002#14 Mark ---(E)---
+           #151201-00002#14 Add  ---(S)---
+            IF NOT cl_null(g_nmbb2_d[l_ac].nmee003) AND NOT cl_null(g_nmbb2_d[l_ac].nmee004) THEN
+               CALL anmt564_source_chk(g_nmbb2_d[l_ac].nmee003 == l_nmee003) RETURNING l_success
+               IF NOT l_success THEN
+                  NEXT FIELD CURRENT
+               #add by Naysa   2016/06/14 --s--
+               else
+                 select xrcbseq,xrcbdocno,xrcb056,xrcb057 into l_xrcbseq,l_xrcbdocno,l_xrcb056,l_xrcb057 from xrcb_t,xrca_t
+                  where xrcbent=xrcaent and xrcald=xrcbld and xrcadocno=xrcbdocno and xrcbent=g_enterprise and xrcb002=g_nmbb2_d[l_ac].nmee003 and xrcb003=g_nmbb2_d[l_ac].nmee004 and xrcastus='Y'
+                  if not cl_null(l_xrcbdocno) then
+
+                     #let g_nmbb2_d[l_ac].nmee012=l_xrcb056-l_xrcb057
+                     #if  g_nmbb2_d[l_ac].nmee012=0 then
+                     #     INITIALIZE g_errparam TO NULL
+                     #     LET g_errparam.extend = ""
+                     #     LET g_errparam.code   = "anm-02994"
+                     #     LET g_errparam.popup  = FALSE
+                     #     CALL cl_err()
+                     #     next field nmee003
+                    # else
+                         let g_nmbb2_d[l_ac].nmee025=l_xrcbdocno
+                         let g_nmbb2_d[l_ac].nmee026=l_xrcbseq
+                          display by name  g_nmbb2_d[l_ac].nmee025, g_nmbb2_d[l_ac].nmee026       
+                    # end if
+                  else
+                      select stbc019 into l_stbc019 from stbc_t where stbcent=g_enterprise  and stbc004= g_nmbb2_d[l_ac].nmee003  and  stbc005= g_nmbb2_d[l_ac].nmee004
+                      if l_stbc019=0 then
+                          INITIALIZE g_errparam TO NULL
+                          LET g_errparam.extend = ""
+                          LET g_errparam.code   = "anm-02994"
+                          LET g_errparam.popup  = FALSE
+                          CALL cl_err()
+                          next field nmee003
+                      else 
+                         let g_nmbb2_d[l_ac].nmee012=l_stbc019
+                         let g_nmbb2_d[l_ac].nmee025=''
+                         let g_nmbb2_d[l_ac].nmee026=''
+                          display by name  g_nmbb2_d[l_ac].nmee025, g_nmbb2_d[l_ac].nmee026 ,g_nmbb2_d[l_ac].nmee012
+                      end if 
+                  end if                       
+                 #add by Naysa   2016/06/14 --E--                      
+                     
+               END IF
+            END IF
+           #151201-00002#14 Add  ---(E)---
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee004
+            #add-point:ON CHANGE nmee004 name="input.g.page2.nmee004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee025
+            #add-point:BEFORE FIELD nmee025 name="input.b.page2.nmee025"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee025
+            
+            #add-point:AFTER FIELD nmee025 name="input.a.page2.nmee025"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee025
+            #add-point:ON CHANGE nmee025 name="input.g.page2.nmee025"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee026
+            #add-point:BEFORE FIELD nmee026 name="input.b.page2.nmee026"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee026
+            
+            #add-point:AFTER FIELD nmee026 name="input.a.page2.nmee026"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee026
+            #add-point:ON CHANGE nmee026 name="input.g.page2.nmee026"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmeesite
+            
+            #add-point:AFTER FIELD nmeesite name="input.a.page2.nmeesite"
+            IF NOT cl_null(g_nmbb2_d[l_ac].nmeesite) THEN
+               CALL anmt564_nmeesite_chk(g_nmbb2_d[l_ac].nmeesite) RETURNING l_success
+               IF NOT l_success THEN 
+                  LET g_nmbb_d[l_ac].nmbborga = g_nmbb_d_t.nmbborga
+                  LET g_nmbb_d[l_ac].nmbborga_desc = g_nmbb_d_t.nmbborga_desc
+                  DISPLAY g_nmbb_d[l_ac].nmbborga TO s_detail1[l_ac].nmbborga
+                  DISPLAY g_nmbb_d[l_ac].nmbborga_desc TO s_detail1[l_ac].nmbborga_desc
+                  NEXT FIELD CURRENT
+               END IF
+               IF NOT cl_null(g_nmbb2_d[l_ac].nmee003) AND NOT cl_null(g_nmbb2_d[l_ac].nmee004) THEN
+                 #151201-00002#14 Add  ---(S)---
+                  CASE
+                     WHEN g_nmbb2_d[l_ac].nmee022 = '2'
+                 #151201-00002#14 Add  ---(E)---
+                        LET l_str = " stevdocno = '",g_nmbb2_d[l_ac].nmee003,"' AND stevseq = '",g_nmbb2_d[l_ac].nmee004,"'"
+                        IF NOT cl_null(g_nmbb2_d[l_ac].nmeesite) THEN
+                           LET l_str = l_str," AND steusite = '",g_nmbb2_d[l_ac].nmeesite,"'"
+                        END IF
+                        IF NOT cl_null(g_nmbb2_d[l_ac].nmee001) THEN
+                           LET l_str = l_str," AND steu003 = '",g_nmbb2_d[l_ac].nmee001,"'"
+                        END IF
+                        CALL anmt564_stev_chk(l_str,g_nmbb2_d[l_ac].nmeeseq) RETURNING l_success,l_stev014
+                        IF NOT l_success THEN
+                           NEXT FIELD CURRENT
+                        END IF
+                  END CASE   #151201-00002#14 Add
+               END IF
+               
+               #160912-00024#1 add s---
+               CALL s_anm_get_site_wc('6',g_nmba_m.nmbasite,g_nmba_m.nmbadocdt) RETURNING g_site_wc
+               IF cl_null(g_site_wc) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'anm-03020' #该资金中心下无可用运营据点!
+                  LET g_errparam.extend = g_nmba_m.nmbasite
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_nmbb2_d[l_ac].nmeesite = g_nmbb2_d_t.nmeesite
+                  NEXT FIELD CURRENT
+               END IF                       
+               #160912-00024#1 add e---
+               
+               #160816-00012#3  add s---
+               #檢查輸入組織代碼是否存在法人組織下的組織範圍內(1.與單頭法人組織法人相同2.屬於資金組織3.user具有拜訪權限)
+               IF s_chr_get_index_of(g_site_wc,g_nmbb2_d[l_ac].nmeesite,1) = 0 THEN
+                  LET g_errno ='axc-00099'
+               END IF
+               IF NOT cl_null(g_errno) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = ""
+                  LET g_errparam.code   = g_errno
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()
+                  LET g_nmbb2_d[l_ac].nmeesite = g_nmbb2_d_t.nmeesite
+                  NEXT FIELD CURRENT
+               #160912-00024#1 add s---  
+               ELSE
+                  IF NOT ap_chk_isExist(g_nmbb_d[l_ac].nmbborga,"SELECT COUNT(*) FROM ooef_t WHERE "||"ooefent = '" ||g_enterprise|| "' AND "||"ooef001 = ?  AND ooefstus ='Y' AND ooef017 = '"||g_nmba_m.nmbacomp||"'",'anm-03022',1) THEN 
+                     LET g_nmbb2_d[l_ac].nmeesite = g_nmbb2_d_t.nmeesite
+                     NEXT FIELD CURRENT
+                  END IF                  
+               #160912-00024#1 add e---                   
+               END IF    
+               #160816-00012#3  add e---               
+            END IF
+            CALL s_desc_get_department_desc(g_nmbb2_d[l_ac].nmeesite) RETURNING g_nmbb2_d[l_ac].nmeesite_desc
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmeesite
+            #add-point:BEFORE FIELD nmeesite name="input.b.page2.nmeesite"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmeesite
+            #add-point:ON CHANGE nmeesite name="input.g.page2.nmeesite"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee005
+            
+            #add-point:AFTER FIELD nmee005 name="input.a.page2.nmee005"
+           #151201-00002#14 Add  ---(S)---
+            LET g_nmbb2_d[l_ac].nmee005_desc = ' '
+            DISPLAY BY NAME g_nmbb2_d[l_ac].nmee005_desc
+            IF NOT cl_null(g_nmbb2_d[l_ac].nmee005) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_nmbb2_d[l_ac].nmee005
+               LET g_chkparam.arg2 = g_nmbb2_d[l_ac].nmeesite
+               IF NOT cl_chk_exist("cv_mhae001") THEN
+                  LET g_nmbb2_d[l_ac].nmee005 = g_nmbb2_d_t.nmee005
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_nmbb2_d[l_ac].nmee005
+                  CALL ap_ref_array2(g_ref_fields,"SELECT mhael023 FROM mhael_t WHERE mhaelent='"||g_enterprise||"' AND mhael001=? AND mhael022='"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_nmbb2_d[l_ac].nmee005_desc = '', g_rtn_fields[1] , ''
+                  DISPLAY BY NAME g_nmbb2_d[l_ac].nmee005_desc
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmbb2_d[l_ac].nmee005
+            CALL ap_ref_array2(g_ref_fields,"SELECT mhael023 FROM mhael_t WHERE mhaelent='"||g_enterprise||"' AND mhael001=? AND mhael022='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmbb2_d[l_ac].nmee005_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_nmbb2_d[l_ac].nmee005_desc
+           #151201-00002#14 Add  ---(E)---
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee005
+            #add-point:BEFORE FIELD nmee005 name="input.b.page2.nmee005"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee005
+            #add-point:ON CHANGE nmee005 name="input.g.page2.nmee005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee006
+            
+            #add-point:AFTER FIELD nmee006 name="input.a.page2.nmee006"
+           #151201-00002#14 Add  ---(S)---
+            IF NOT cl_null(g_nmbb2_d[l_ac].nmee006) THEN
+               #IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_nmbb2_d[l_ac].nmee006 <> g_nmbb2_d_t.nmee006 OR g_nmbb2_d_t.nmee006 IS NULL)) THEN #160824-00007#315 170112 By 08171 mark
+               IF cl_null(g_nmbb2_d_o.nmee006) OR g_nmbb2_d[l_ac].nmee006 <> g_nmbb2_d_o.nmee006 THEN #160824-00007#315 170112 By 08171 add
+                  #add by liyan--str--
+                  SELECT stae004 INTO g_nmbb2_d[l_ac].nmee024 
+                    FROM stae_t 
+                   WHERE staeent=g_enterprise 
+                     AND stae001=g_nmbb2_d[l_ac].nmee006
+                  DISPLAY g_nmbb2_d[l_ac].nmee024 TO s_detail2[l_ac].nmee024
+                  IF g_nmbb2_d[l_ac].nmee024='1' OR g_nmbb2_d[l_ac].nmee024='2' THEN 
+                     LET g_nmbb2_d[l_ac].nmee020='N'
+                  ELSE
+                     LET g_nmbb2_d[l_ac].nmee020='Y'
+                  end if 
+                  
+                  #add by liyan --end--
+                  INITIALIZE g_chkparam.* TO NULL
+                    #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_nmbb2_d[l_ac].nmee006
+                  IF NOT cl_chk_exist("v_stae001") THEN
+                    #LET g_nmbb2_d[l_ac].nmee006 = g_nmbb2_d_t.nmee006 #160824-00007#315 170112 By 08171 mark
+                     #160824-00007#315 170112 By 08171 --s add
+                     LET g_nmbb2_d[l_ac].nmee006 = g_nmbb2_d_o.nmee006 
+                     INITIALIZE g_ref_fields TO NULL
+                     LET g_ref_fields[1] = g_nmbb2_d[l_ac].nmee006
+                     CALL ap_ref_array2(g_ref_fields,"SELECT stael003 FROM stael_t WHERE staelent='"||g_enterprise||"' AND stael001=? AND stael002='"||g_dlang||"'","") RETURNING g_rtn_fields
+                     LET g_nmbb2_d[l_ac].nmee006_desc = '', g_rtn_fields[1] , ''
+                     DISPLAY BY NAME g_nmbb2_d[l_ac].nmee006_desc
+                     #160824-00007#315 170112 By 08171 --e add
+                     NEXT FIELD CURRENT
+                  END IF
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_nmbb2_d[l_ac].nmee006
+                  CALL ap_ref_array2(g_ref_fields,"SELECT stael003 FROM stael_t WHERE staelent='"||g_enterprise||"' AND stael001=? AND stael002='"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_nmbb2_d[l_ac].nmee006_desc = '', g_rtn_fields[1] , ''
+                  DISPLAY BY NAME g_nmbb2_d[l_ac].nmee006_desc
+                  LET g_nmbb2_d[l_ac].nmee010 = '' #160824-00007#315 170112 By 08171 add
+                  SELECT stae010 INTO g_nmbb2_d[l_ac].nmee010 FROM stae_t
+                   WHERE staeent = g_enterprise
+                     AND stae001 = g_nmbb2_d[l_ac].nmee006
+               CALL s_tax_chk(g_nmba_m.nmbacomp,g_nmbb2_d[l_ac].nmee010)
+                  RETURNING l_success,g_nmbb2_d[l_ac].nmee010_desc,l_oodb005,l_oodb006,l_oodb011
+                                
+               DISPLAY g_nmbb2_d[l_ac].nmee010,g_nmbb2_d[l_ac].nmee010_desc
+                    TO s_detail2[l_ac].nmee010,s_detail2[l_ac].nmee010_desc
+               END IF
+            END IF
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmbb2_d[l_ac].nmee006
+            CALL ap_ref_array2(g_ref_fields,"SELECT stael003 FROM stael_t WHERE staelent='"||g_enterprise||"' AND stael001=? AND stael002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmbb2_d[l_ac].nmee006_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_nmbb2_d[l_ac].nmee006_desc
+           #151201-00002#14 Add  ---(E)---
+            LET g_nmbb2_d_o.* = g_nmbb2_d[l_ac].* #160824-00007#315 170112 By 08171 add
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee006
+            #add-point:BEFORE FIELD nmee006 name="input.b.page2.nmee006"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee006
+            #add-point:ON CHANGE nmee006 name="input.g.page2.nmee006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee024
+            #add-point:BEFORE FIELD nmee024 name="input.b.page2.nmee024"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee024
+            
+            #add-point:AFTER FIELD nmee024 name="input.a.page2.nmee024"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee024
+            #add-point:ON CHANGE nmee024 name="input.g.page2.nmee024"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee007
+            #add-point:BEFORE FIELD nmee007 name="input.b.page2.nmee007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee007
+            
+            #add-point:AFTER FIELD nmee007 name="input.a.page2.nmee007"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee007
+            #add-point:ON CHANGE nmee007 name="input.g.page2.nmee007"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee008
+            #add-point:BEFORE FIELD nmee008 name="input.b.page2.nmee008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee008
+            
+            #add-point:AFTER FIELD nmee008 name="input.a.page2.nmee008"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee008
+            #add-point:ON CHANGE nmee008 name="input.g.page2.nmee008"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee009
+            #add-point:BEFORE FIELD nmee009 name="input.b.page2.nmee009"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee009
+            
+            #add-point:AFTER FIELD nmee009 name="input.a.page2.nmee009"
+           #151201-00002#14 Add  ---(S)---
+            IF NOT cl_null(g_nmbb2_d[l_ac].nmee009) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_errshow = TRUE #是否開窗 #160318-00025#30  add
+               LET g_chkparam.arg1 = g_nmbb2_d[l_ac].nmee009
+               LET g_chkparam.err_str[1] = "aoo-00011:sub-01302|aooi140|",cl_get_progname("aooi140",g_lang,"2"),"|:EXEPROGaooi140"#要執行的建議程式待補 #160318-00025#30  add
+               IF NOT cl_chk_exist("v_ooai001") THEN
+                  LET g_nmbb2_d[l_ac].nmee009 = g_nmbb2_d_t.nmee009
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+           #151201-00002#14 Add  ---(E)---
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee009
+            #add-point:ON CHANGE nmee009 name="input.g.page2.nmee009"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee018
+            #add-point:BEFORE FIELD nmee018 name="input.b.page2.nmee018"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee018
+            
+            #add-point:AFTER FIELD nmee018 name="input.a.page2.nmee018"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee018
+            #add-point:ON CHANGE nmee018 name="input.g.page2.nmee018"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee010
+            
+            #add-point:AFTER FIELD nmee010 name="input.a.page2.nmee010"
+           #151201-00002#14 Add  ---(S)---
+            LET g_nmbb2_d[l_ac].nmee010_desc = ''
+            DISPLAY g_nmbb2_d[l_ac].nmee010_desc TO s_detail1[l_ac].nmee010_desc
+            IF NOT cl_null(g_nmbb2_d[l_ac].nmee010) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_errshow = TRUE #是否開窗 #160318-00025#30  add
+               LET g_chkparam.arg1 = g_nmba_m.nmbacomp
+               LET g_chkparam.arg2 = g_nmbb2_d[l_ac].nmee010
+               LET g_chkparam.err_str[1] = "aoo-00223:sub-01302|aooi610|",cl_get_progname("aooi610",g_lang,"2"),"|:EXEPROGaooi610"#要執行的建議程式待補 #160318-00025#30  add
+               IF NOT cl_chk_exist("v_oodb002") THEN
+                  LET g_nmbb2_d[l_ac].nmee010 = g_nmbb2_d_t.nmee010
+                  NEXT FIELD CURRENT
+               END IF
+               CALL s_tax_chk(g_nmba_m.nmbacomp,g_nmbb2_d[l_ac].nmee010)
+                  RETURNING l_success,g_nmbb2_d[l_ac].nmee010_desc,l_oodb005,l_oodb006,l_oodb011
+               DISPLAY g_nmbb2_d[l_ac].nmee010_desc TO s_detail2[l_ac].nmee010_desc
+            END IF
+           #151201-00002#14 Add  ---(E)---
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee010
+            #add-point:BEFORE FIELD nmee010 name="input.b.page2.nmee010"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee010
+            #add-point:ON CHANGE nmee010 name="input.g.page2.nmee010"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee010_desc
+            #add-point:BEFORE FIELD nmee010_desc name="input.b.page2.nmee010_desc"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee010_desc
+            
+            #add-point:AFTER FIELD nmee010_desc name="input.a.page2.nmee010_desc"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee010_desc
+            #add-point:ON CHANGE nmee010_desc name="input.g.page2.nmee010_desc"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee011
+            #add-point:BEFORE FIELD nmee011 name="input.b.page2.nmee011"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee011
+            
+            #add-point:AFTER FIELD nmee011 name="input.a.page2.nmee011"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee011
+            #add-point:ON CHANGE nmee011 name="input.g.page2.nmee011"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee012
+            #add-point:BEFORE FIELD nmee012 name="input.b.page2.nmee012"
+          LET l_nmee003 = g_nmbb2_d[l_ac].nmee003
+          let l_nmee012_1=g_nmbb2_d[l_ac].nmee012
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee012
+            
+            #add-point:AFTER FIELD nmee012 name="input.a.page2.nmee012"
+           #151201-00002#14 Mark ---(S)---
+           #IF NOT cl_null(g_nmbb2_d[l_ac].nmee003) AND NOT cl_null(g_nmbb2_d[l_ac].nmee004) AND NOT cl_null(g_nmbb2_d[l_ac].nmee012) THEN
+           #   LET l_str = " stevdocno = '",g_nmbb2_d[l_ac].nmee003,"' AND stevseq = '",g_nmbb2_d[l_ac].nmee004,"'"
+           #   IF NOT cl_null(g_nmbb2_d[l_ac].nmeesite) THEN
+           #      LET l_str = l_str," AND steusite = '",g_nmbb2_d[l_ac].nmeesite,"'"
+           #   END IF
+           #   IF NOT cl_null(g_nmbb2_d[l_ac].nmee001) THEN
+           #      LET l_str = l_str," AND steu003 = '",g_nmbb2_d[l_ac].nmee001,"'"
+           #   END IF
+           #   CALL anmt564_stev_chk(l_str,g_nmbb2_d[l_ac].nmeeseq) RETURNING l_success,l_stev016
+           #   IF NOT l_success THEN
+           #      NEXT FIELD CURRENT
+           #   END IF
+           #   IF l_stev016 < g_nmbb2_d[l_ac].nmee012 THEN
+           #      INITIALIZE g_errparam TO NULL 
+           #      LET g_errparam.extend = "" 
+           #      LET g_errparam.code   = "anm-00357" 
+           #      LET g_errparam.popup  = FALSE 
+           #      CALL cl_err()
+           #      NEXT FIELD CURRENT
+           #   END IF
+           #END IF
+           #151201-00002#14 Mark ---(E)---
+           #151201-00002#14 Add  ---(S)---
+            IF NOT cl_null(g_nmbb2_d[l_ac].nmee003) AND NOT cl_null(g_nmbb2_d[l_ac].nmee004) AND NOT cl_null(g_nmbb2_d[l_ac].nmee012) THEN
+               CALL anmt564_source_chk(g_nmbb2_d[l_ac].nmee003 == l_nmee003) RETURNING l_success
+               IF NOT l_success THEN
+                  NEXT FIELD CURRENT
+               else
+                  if g_nmbb2_d[l_ac].nmee012>l_nmee012_1 then 
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "ast-00292" 
+                     LET g_errparam.popup  = FALSE 
+                     CALL cl_err()
+                     let g_nmbb2_d[l_ac].nmee012= l_nmee012_1
+                   end if                      
+               END IF
+            END IF
+           #151201-00002#14 Add  ---(E)---
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee012
+            #add-point:ON CHANGE nmee012 name="input.g.page2.nmee012"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee013
+            #add-point:BEFORE FIELD nmee013 name="input.b.page2.nmee013"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee013
+            
+            #add-point:AFTER FIELD nmee013 name="input.a.page2.nmee013"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee013
+            #add-point:ON CHANGE nmee013 name="input.g.page2.nmee013"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee002
+            #add-point:BEFORE FIELD nmee002 name="input.b.page2.nmee002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee002
+            
+            #add-point:AFTER FIELD nmee002 name="input.a.page2.nmee002"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee002
+            #add-point:ON CHANGE nmee002 name="input.g.page2.nmee002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee014
+            
+            #add-point:AFTER FIELD nmee014 name="input.a.page2.nmee014"
+           #151201-00002#14 Mark ---(S)---
+           #INITIALIZE g_ref_fields TO NULL
+           #LET g_ref_fields[1] = g_nmbb2_d[l_ac].nmee014
+           #CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+           #LET g_nmbb2_d[l_ac].nmee014_desc = '', g_rtn_fields[1] , ''
+           #DISPLAY BY NAME g_nmbb2_d[l_ac].nmee014_desc
+           #151201-00002#14 Mark ---(E)---
+           #151201-00002#14 Add  ---(S)---
+            LET g_nmbb2_d[l_ac].nmee014_desc = ' '
+            DISPLAY BY NAME g_nmbb2_d[l_ac].nmee014_desc
+            IF NOT cl_null(g_nmbb2_d[l_ac].nmee014) THEN
+               #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_nmbb2_d[l_ac].nmee014 != g_nmbb2_d_t.nmee014 OR g_nmbb2_d_t.nmee014 IS NULL )) THEN #160824-00007#315 170112 By 08171 mark
+               IF cl_null(g_nmbb2_d_o.nmee014) OR g_nmbb2_d[l_ac].nmee014 != g_nmbb2_d_o.nmee014 THEN #160824-00007#315 170112 By 08171 add
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_errshow = TRUE #是否開窗 #160318-00025#30  add
+                  LET g_chkparam.arg1 = g_nmbb2_d[l_ac].nmee014
+                  LET g_chkparam.arg2 = ' '
+                  LET g_chkparam.err_str[1] = "aoo-00095:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"#要執行的建議程式待補 #160318-00025#30  add
+                  IF NOT cl_chk_exist("v_ooef001_14") THEN
+                    #LET g_nmbb2_d[l_ac].nmee014 = g_nmbb2_d_t.nmee014 #160824-00007#315 170112 By 08171 mark
+                     LET g_nmbb2_d[l_ac].nmee014 = g_nmbb2_d_o.nmee014 #160824-00007#315 170112 By 08171 add
+                        CALL s_axrt300_xrca_ref('xrca015',g_nmbb2_d[l_ac].nmee014,'','') RETURNING l_success,g_nmbb2_d[l_ac].nmee014_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL s_axrt300_xrca_ref('xrca015',g_nmbb2_d[l_ac].nmee014,'','') RETURNING l_success,g_nmbb2_d[l_ac].nmee014_desc
+            DISPLAY BY NAME g_nmbb2_d[l_ac].nmee014,g_nmbb2_d[l_ac].nmee014_desc
+           #151201-00002#14 Add  ---(E)---
+            LET g_nmbb2_d_o.* = g_nmbb2_d[l_ac].* #160824-00007#315 170112 By 08171 add
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee014
+            #add-point:BEFORE FIELD nmee014 name="input.b.page2.nmee014"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee014
+            #add-point:ON CHANGE nmee014 name="input.g.page2.nmee014"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee019
+            
+            #add-point:AFTER FIELD nmee019 name="input.a.page2.nmee019"
+           #151201-00002#14 Add  ---(S)---
+            LET g_nmbb2_d[l_ac].nmee019_desc = ''
+            DISPLAY BY NAME g_nmbb2_d[l_ac].nmee019_desc
+            IF NOT cl_null(g_nmbb2_d[l_ac].nmee019) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_errshow = TRUE #是否開窗 #160318-00025#30  add
+               LET g_chkparam.arg1 = g_nmbb2_d[l_ac].nmee019
+               CALL cl_get_para(g_enterprise,g_site,'E-CIR-0001') RETURNING l_sys
+               LET g_chkparam.arg2 = l_sys
+               LET g_chkparam.err_str[1] = "ast-00215:sub-01302|arti202|",cl_get_progname("arti202",g_lang,"2"),"|:EXEPROGarti202"#要執行的建議程式待補 #160318-00025#30  add
+              #呼叫檢查存在並帶值的library
+              IF NOT cl_chk_exist("v_rtax001_2") THEN
+                 LET g_nmbb2_d[l_ac].nmee019 = g_nmbb2_d_t.nmee019
+                 INITIALIZE g_ref_fields TO NULL
+                 LET g_ref_fields[1] = g_nmbb2_d[l_ac].nmee019
+                 CALL ap_ref_array2(g_ref_fields,"SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent='"||g_enterprise||"' AND rtaxl001=? AND rtaxl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+                 LET g_nmbb2_d[l_ac].nmee019_desc = '', g_rtn_fields[1] , ''
+                 DISPLAY BY NAME g_nmbb2_d[l_ac].nmee019_desc
+                 NEXT FIELD CURRENT
+              END IF
+            END IF
+           #151201-00002#14 Add  ---(E)---
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmbb2_d[l_ac].nmee019
+            CALL ap_ref_array2(g_ref_fields,"SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent='"||g_enterprise||"' AND rtaxl001=? AND rtaxl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmbb2_d[l_ac].nmee019_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_nmbb2_d[l_ac].nmee019_desc
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee019
+            #add-point:BEFORE FIELD nmee019 name="input.b.page2.nmee019"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee019
+            #add-point:ON CHANGE nmee019 name="input.g.page2.nmee019"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee020
+            #add-point:BEFORE FIELD nmee020 name="input.b.page2.nmee020"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee020
+            
+            #add-point:AFTER FIELD nmee020 name="input.a.page2.nmee020"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee020
+            #add-point:ON CHANGE nmee020 name="input.g.page2.nmee020"
+            #add by liyan --str--
+            IF g_nmbb2_d[l_ac].nmee024='3' THEN 
+               LET g_nmbb2_d[l_ac].nmee020='Y'
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "" 
+               LET g_errparam.code   = "anm-02293" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               NEXT FIELD nmee020
+            END IF 
+            #add by liyan --end--
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee023
+            #add-point:BEFORE FIELD nmee023 name="input.b.page2.nmee023"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee023
+            
+            #add-point:AFTER FIELD nmee023 name="input.a.page2.nmee023"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee023
+            #add-point:ON CHANGE nmee023 name="input.g.page2.nmee023"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee021
+            #add-point:BEFORE FIELD nmee021 name="input.b.page2.nmee021"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee021
+            
+            #add-point:AFTER FIELD nmee021 name="input.a.page2.nmee021"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee021
+            #add-point:ON CHANGE nmee021 name="input.g.page2.nmee021"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmee027
+            #add-point:BEFORE FIELD nmee027 name="input.b.page2.nmee027"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmee027
+            
+            #add-point:AFTER FIELD nmee027 name="input.a.page2.nmee027"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmee027
+            #add-point:ON CHANGE nmee027 name="input.g.page2.nmee027"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page2.nmeeseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmeeseq
+            #add-point:ON ACTION controlp INFIELD nmeeseq name="input.c.page2.nmeeseq"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee022
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee022
+            #add-point:ON ACTION controlp INFIELD nmee022 name="input.c.page2.nmee022"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee001
+            #add-point:ON ACTION controlp INFIELD nmee001 name="input.c.page2.nmee001"
+            CALL anmt564_get_nmbb('nmbb026') RETURNING l_str
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            IF NOT cl_null(l_str) THEN
+               LET g_qryparam.where = " pmaa001 IN ",l_str
+            END IF
+            LET g_qryparam.default1 = g_nmbb2_d[l_ac].nmee001             #給予default值
+
+            #給予arg
+
+           # CALL q_pmaa001()       #160913-00017#5  mark                  #呼叫開窗
+            CALL q_pmaa001_25()     #160913-00017#5  add      
+
+            LET g_nmbb2_d[l_ac].nmee001 = g_qryparam.return1              
+
+            DISPLAY g_nmbb2_d[l_ac].nmee001 TO nmee001              #
+
+            NEXT FIELD nmee001                          #返回原欄位
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee003
+            #add-point:ON ACTION controlp INFIELD nmee003 name="input.c.page2.nmee003"
+           #151201-00002#14 Mark ---(S)--- 
+           ##開窗i段
+           #INITIALIZE g_qryparam.* TO NULL
+           #LET g_qryparam.state = 'i'
+           #LET g_qryparam.reqry = FALSE
+           #
+           #LET g_qryparam.default1 = g_nmbb2_d[l_ac].nmee003             #給予default值
+           #
+           #IF NOT cl_null(g_nmbb2_d[l_ac].nmeesite) THEN
+           #   LET g_qryparam.where = " steusite = '",g_nmbb2_d[l_ac].nmeesite,"'"
+           #END IF
+           #IF NOT cl_null(g_nmbb2_d[l_ac].nmee001) THEN
+           #   LET g_qryparam.where = g_qryparam.where," AND steu003 = '",g_nmbb2_d[l_ac].nmee001,"'"
+           #END IF
+           #
+           #CALL q_stevdocno()                                #呼叫開窗
+           #
+           #LET g_nmbb2_d[l_ac].nmee003 = g_qryparam.return1       
+           #LET g_nmbb2_d[l_ac].nmee004 = g_qryparam.return2             
+           #
+           #DISPLAY g_nmbb2_d[l_ac].nmee003 TO nmee003              #
+           #DISPLAY g_nmbb2_d[l_ac].nmee004 TO nmee004              #
+           #IF NOT cl_null(g_nmbb2_d[l_ac].nmee003) AND NOT cl_null(g_nmbb2_d[l_ac].nmee004) THEN
+           #   #修改來源單號則刷新單身
+           #   CALL anmt564_stev_desc(" stevdocno = '"||g_nmbb2_d[l_ac].nmee003||"' AND stevseq = '"||g_nmbb2_d[l_ac].nmee004||"'")
+           #      RETURNING g_nmbb2_d[l_ac].nmeesite,g_nmbb2_d[l_ac].nmee001,
+           #                g_nmbb2_d[l_ac].nmee005,g_nmbb2_d[l_ac].nmee006,g_nmbb2_d[l_ac].nmee007,
+           #                g_nmbb2_d[l_ac].nmee008,g_nmbb2_d[l_ac].nmee009,g_nmbb2_d[l_ac].nmee010,
+           #                g_nmbb2_d[l_ac].nmee011,g_nmbb2_d[l_ac].nmee012,g_nmbb2_d[l_ac].nmee014,
+           #                g_nmbb2_d[l_ac].nmee019
+           #   CALL s_desc_get_department_desc(g_nmbb2_d[l_ac].nmeesite) RETURNING g_nmbb2_d[l_ac].nmeesite_desc
+           #   CALL anmt564_nmbb026_desc(g_nmbb2_d[l_ac].nmee001,'') RETURNING g_nmbb_d[l_ac].nmbb026_desc
+           #   CALL anmt564_nmee005_desc(g_nmbb2_d[l_ac].nmee005) RETURNING g_nmbb2_d[l_ac].nmee005_desc
+           #   CALL anmt564_nmee006_desc(g_nmbb2_d[l_ac].nmee006) RETURNING g_nmbb2_d[l_ac].nmee006_desc
+           #   CALL s_desc_get_department_desc(g_nmbb2_d[l_ac].nmee014) RETURNING g_nmbb2_d[l_ac].nmee014_desc
+           #   CALL s_tax_chk(g_nmbb2_d[l_ac].nmeesite,g_nmbb2_d[l_ac].nmee010)
+           #      RETURNING l_success,g_nmbb2_d[l_ac].nmee010_desc,l_oodb005,l_oodb006,l_oodb011
+           #END IF
+           #NEXT FIELD nmee003                          #返回原欄位
+           #151201-00002#14 Mark ---(E)---
+           #151201-00002#14 Add  ---(S)---
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_nmbb2_d[l_ac].nmee003             #給予default值
+            LET g_qryparam.where    = " 1=1"
+            #160509-00004#16--add--str--lujh
+            LET l_ooab002 = ''
+            CALL cl_get_para(g_enterprise,g_nmba_m.nmbacomp,'S-FIN-4004') RETURNING l_ooab002
+            #160509-00004#16--add--end--lujh
+            CASE
+               WHEN g_nmbb2_d[l_ac].nmee022 = '1'
+                  IF NOT cl_null(g_nmbb2_d[l_ac].nmee001) THEN
+                     LET g_qryparam.where = g_qryparam.where," AND stbc008 = '",g_nmbb2_d[l_ac].nmee001,"'"
+                     LET g_qryparam.where = g_qryparam.where," AND ooef017 = '",g_nmba_m.nmbacomp,"'"
+                  END IF
+                  #160509-00004#16--add--str--lujh
+                  IF l_ooab002 = 'N' THEN 
+                     LET g_qryparam.where = g_qryparam.where," AND stbc037 = 'N'"
+                  END IF
+                  #160509-00004#16--add--end--lujh
+                  SELECT pmaa204 INTO l_pmaa204 FROM pmaa_t WHERE pmaa001 = g_nmba_m.nmba004 AND pmaaent = g_enterprise
+                   IF l_pmaa204 <>'4' THEN
+                      #CALL q_stbc003_1()    #160509-00004#72 mark lujh
+                      CALL q_stbc003_3()     #160509-00004#72 add lujh
+                      LET g_nmbb2_d[l_ac].nmee003 = g_qryparam.return1
+                      LET g_nmbb2_d[l_ac].nmee004 = g_qryparam.return2
+                   ELSE
+                      CALL q_stbc003_2()
+                      LET g_nmbb2_d[l_ac].nmee003 = g_qryparam.return1
+                      LET g_nmbb2_d[l_ac].nmee004 = g_qryparam.return2
+                  END IF
+               WHEN g_nmbb2_d[l_ac].nmee022 = '2'
+                  IF NOT cl_null(g_nmbb2_d[l_ac].nmee001) THEN
+                     LET g_qryparam.where = g_qryparam.where," AND steu003 = '",g_nmbb2_d[l_ac].nmee001,"'"
+                  END IF
+                  CALL q_stevdocno()                                #呼叫開窗
+               WHEN g_nmbb2_d[l_ac].nmee022 = '3'
+                  IF NOT cl_null(g_nmbb2_d[l_ac].nmee001) THEN
+                     LET g_qryparam.where = g_qryparam.where," AND xrca004 = '",g_nmbb2_d[l_ac].nmee001,"'"
+                  END IF
+                  LET g_qryparam.where = g_qryparam.where," AND xrca001 = '18'"
+                  CALL q_xrcbdocno()                                #呼叫開窗
+               WHEN g_nmbb2_d[l_ac].nmee022 = '5'
+                  LET g_qryparam.state = 'i'
+                  IF NOT cl_null(g_nmbb2_d[l_ac].nmee001) THEN
+                     LET g_qryparam.where = g_qryparam.where," AND xrca004 = '",g_nmbb2_d[l_ac].nmee001,"'"
+                  END IF
+                  LET g_qryparam.where = g_qryparam.where," AND xrca001 IN('141','241',' ')"
+                  CALL q_xrcbdocno()                                #呼叫開窗
+                  LET g_nmbb2_d[l_ac].nmee003 = g_qryparam.return1
+                  LET g_nmbb2_d[l_ac].nmee004 = g_qryparam.return2
+                  DISPLAY g_nmbb2_d[l_ac].nmee003 TO nmee003              #
+                  DISPLAY g_nmbb2_d[l_ac].nmee004 TO nmee004              #
+                  #修改來源單號則刷新單身
+                  CALL anmt564_xrcb_2_desc(g_nmbb2_d[l_ac].nmee003,g_nmbb2_d[l_ac].nmee004)
+               WHEN g_nmbb2_d[l_ac].nmee022 = '6'
+                  IF NOT cl_null(g_nmbb2_d[l_ac].nmee001) THEN
+                     LET g_qryparam.where = g_qryparam.where," AND rtia002 = '",g_nmbb2_d[l_ac].nmee001,"'"
+                  END IF
+                  CALL q_rtiadocno_3()                                #呼叫開窗
+               WHEN g_nmbb2_d[l_ac].nmee022 = '7'
+                  IF NOT cl_null(g_nmbb2_d[l_ac].nmee001) THEN
+                     LET g_qryparam.where = g_qryparam.where," AND rtia002 = '",g_nmbb2_d[l_ac].nmee001,"'"
+                  END IF
+                  CALL q_rtiadocno_2()                                #呼叫開窗
+            END CASE
+            IF g_nmbb2_d[l_ac].nmee022 <> '5' THEN
+               CALL anmt564_nmee_get(g_qryparam.return1) RETURNING l_success
+               IF l_success THEN
+                  LET l_flag = 'Y'
+                  EXIT DIALOG
+               END IF
+            END IF
+            NEXT FIELD nmee003           #返回原欄位
+           #151201-00002#14 Add  ---(E)---
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee004
+            #add-point:ON ACTION controlp INFIELD nmee004 name="input.c.page2.nmee004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee025
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee025
+            #add-point:ON ACTION controlp INFIELD nmee025 name="input.c.page2.nmee025"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee026
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee026
+            #add-point:ON ACTION controlp INFIELD nmee026 name="input.c.page2.nmee026"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmeesite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmeesite
+            #add-point:ON ACTION controlp INFIELD nmeesite name="input.c.page2.nmeesite"
+            #160816-00012#3 mark s---
+            #CALL s_fin_account_center_sons_query('6',g_nmba_m.nmbasite,g_nmba_m.nmbadocdt,'')
+            #CALL s_fin_account_center_comp_str()RETURNING l_origin_str
+            #CALL s_fin_get_wc_str(l_origin_str)RETURNING l_origin_str
+            #CALL anmt564_get_nmbb('nmbborga') RETURNING l_str
+            #160816-00012#3 mark e---
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_nmbb2_d[l_ac].nmeesite
+            #151201-00002#14 Mark ---(S)---
+            #LET g_qryparam.where = " ooef017 ='",g_nmba_m.nmbacomp,"' AND ooef001 IN ",l_origin_str CLIPPED
+            #IF NOT cl_null(l_str) THEN
+            #   LET g_qryparam.where = g_qryparam.where," AND ooef001 IN ",l_str
+            #END IF
+            #151201-00002#14 Mark ---(E)---
+            #151201-00002#14 Add  ---(S)---
+            #LET g_qryparam.where = " ooef017 ='",g_nmba_m.nmbacomp,"' AND ooef017 IN ",l_origin_str CLIPPED #160816-00012#3 mark 
+            #160912-00024#1 mod s---
+            #LET g_qryparam.where = " ooef001 IN ",g_site_wc    #160816-00012#3  add
+            #LET g_qryparam.where = g_qryparam.where," AND ooef201 ='Y' "
+            CALL s_anm_get_site_wc('6',g_nmba_m.nmbasite,g_nmba_m.nmbadocdt) RETURNING g_site_wc
+            CALL s_fin_get_wc_str(g_site_wc) RETURNING l_origin_str 
+            LET g_qryparam.where = " ooef017 ='",g_nmba_m.nmbacomp,"' AND ooef001 IN ",l_origin_str CLIPPED
+            #160912-00024#1 mod e---
+            #151201-00002#14 Add  ---(E)---
+            LET g_qryparam.where = g_qryparam.where ," AND ooef201 = 'Y'" #161021-00050#10
+            CALL q_ooef001()
+            LET g_nmbb2_d[l_ac].nmeesite = g_qryparam.return1
+            DISPLAY g_nmbb2_d[l_ac].nmeesite TO nmeesite
+            NEXT FIELD nmeesite
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee005
+            #add-point:ON ACTION controlp INFIELD nmee005 name="input.c.page2.nmee005"
+           #151201-00002#14 Add  ---(S)---
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmbb2_d[l_ac].nmee005             #給予default值
+            LET g_qryparam.arg1     = g_nmbb2_d[l_ac].nmeesite            #給予default值
+
+            CALL q_mhae001()                           #呼叫開窗
+            LET g_nmbb2_d[l_ac].nmee005 = g_qryparam.return1
+            DISPLAY g_nmbb2_d[l_ac].nmee005 TO nmee005  #顯示到畫面上
+            NEXT FIELD nmee005                     #返回原欄位
+           #151201-00002#14 Add  ---(E)---
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee006
+            #add-point:ON ACTION controlp INFIELD nmee006 name="input.c.page2.nmee006"
+           #151201-00002#14 Add  ---(S)---
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmbb2_d[l_ac].nmee006             #給予default值
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            CALL q_stae001()                                #呼叫開窗
+            LET g_nmbb2_d[l_ac].nmee006 = g_qryparam.return1
+            DISPLAY g_nmbb2_d[l_ac].nmee006 TO nmee006              #
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmbb2_d[l_ac].nmee006
+            CALL ap_ref_array2(g_ref_fields,"SELECT stael003 FROM stael_t WHERE staelent='"||g_enterprise||"' AND stael001=? AND stael002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmbb2_d[l_ac].nmee006_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_nmbb2_d[l_ac].nmee006_desc
+            NEXT FIELD nmee006                          #返回原欄位
+           #151201-00002#14 Add  ---(E)---
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee024
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee024
+            #add-point:ON ACTION controlp INFIELD nmee024 name="input.c.page2.nmee024"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+                                    #返回原欄位
+
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee007
+            #add-point:ON ACTION controlp INFIELD nmee007 name="input.c.page2.nmee007"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee008
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee008
+            #add-point:ON ACTION controlp INFIELD nmee008 name="input.c.page2.nmee008"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee009
+            #add-point:ON ACTION controlp INFIELD nmee009 name="input.c.page2.nmee009"
+           #151201-00002#14 Add  ---(S)---
+            #開窗i段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_nmbb2_d[l_ac].nmee009   #給予default值
+            #給予arg
+            CALL q_ooai001()                                    #呼叫開窗
+            LET g_nmbb2_d[l_ac].nmee009 = g_qryparam.return1    #將開窗取得的值回傳到變數
+            DISPLAY g_nmbb2_d[l_ac].nmee009 TO nmee009          #顯示到畫面上
+            NEXT FIELD nmee009                                  #返回原欄位
+           #151201-00002#14 Add  ---(E)---
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee018
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee018
+            #add-point:ON ACTION controlp INFIELD nmee018 name="input.c.page2.nmee018"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee010
+            #add-point:ON ACTION controlp INFIELD nmee010 name="input.c.page2.nmee010"
+           #151201-00002#14 Add  ---(S)---
+            #開窗i段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_nmbb2_d[l_ac].nmee010             #給予default值
+            LET g_qryparam.where = " oodb004 ='1' "
+            CALL q_oodb002_2()                                #呼叫開窗
+            LET g_nmbb2_d[l_ac].nmee010 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            DISPLAY g_nmbb2_d[l_ac].nmee010 TO nmee010              #顯示到畫面上
+            NEXT FIELD nmee010                          #返回原欄位
+           #151201-00002#14 Add  ---(E)---
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee010_desc
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee010_desc
+            #add-point:ON ACTION controlp INFIELD nmee010_desc name="input.c.page2.nmee010_desc"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee011
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee011
+            #add-point:ON ACTION controlp INFIELD nmee011 name="input.c.page2.nmee011"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee012
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee012
+            #add-point:ON ACTION controlp INFIELD nmee012 name="input.c.page2.nmee012"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee013
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee013
+            #add-point:ON ACTION controlp INFIELD nmee013 name="input.c.page2.nmee013"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee002
+            #add-point:ON ACTION controlp INFIELD nmee002 name="input.c.page2.nmee002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee014
+            #add-point:ON ACTION controlp INFIELD nmee014 name="input.c.page2.nmee014"
+           #151201-00002#14 Add  ---(S)---
+            #開窗i段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_nmbb2_d[l_ac].nmee014             #給予default值
+            #給予arg
+            LET g_qryparam.arg1 = g_nmba_m.nmbadocdt          #應以單據日期
+            CALL q_ooeg001_4()                                #呼叫開窗
+            LET g_nmbb2_d[l_ac].nmee014 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            DISPLAY g_nmbb2_d[l_ac].nmee014 TO nmee014              #顯示到畫面上
+            CALL s_axrt300_xrca_ref('xrca015',g_nmbb2_d[l_ac].nmee014,'','')
+               RETURNING l_success,g_nmbb2_d[l_ac].nmee014_desc
+            NEXT FIELD nmee014                          #返回原欄位
+           #151201-00002#14 Add  ---(E)---
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee019
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee019
+            #add-point:ON ACTION controlp INFIELD nmee019 name="input.c.page2.nmee019"
+           #151201-00002#14 Add  ---(S)---
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_nmbb2_d[l_ac].nmee019             #給予default值
+            #給予arg
+            LET g_qryparam.arg1 = cl_get_para(g_enterprise,g_site,'E-CIR-0001')
+            CALL q_rtax001_3()                                #呼叫開窗
+            LET g_nmbb2_d[l_ac].nmee019 = g_qryparam.return1
+            DISPLAY g_nmbb2_d[l_ac].nmee019 TO nmee019              #
+            NEXT FIELD nmee019                          #返回原欄位
+           #151201-00002#14 Add  ---(E)---
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee020
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee020
+            #add-point:ON ACTION controlp INFIELD nmee020 name="input.c.page2.nmee020"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee023
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee023
+            #add-point:ON ACTION controlp INFIELD nmee023 name="input.c.page2.nmee023"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee021
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee021
+            #add-point:ON ACTION controlp INFIELD nmee021 name="input.c.page2.nmee021"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmee027
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmee027
+            #add-point:ON ACTION controlp INFIELD nmee027 name="input.c.page2.nmee027"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         AFTER ROW
+            #add-point:單身page2 after_row name="input.body2.after_row"
+            
+            #end add-point
+            LET l_ac = ARR_CURR()
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_nmbb2_d[l_ac].* = g_nmbb2_d_t.*
+               END IF
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = 9001 
+               LET g_errparam.popup = FALSE 
+               CLOSE anmt564_bcl2
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               EXIT DIALOG 
+            END IF
+            
+            #其他table進行unlock
+            
+            CALL anmt564_unlock_b("nmee_t","'2'")
+            CALL s_transaction_end('Y','0')
+            #add-point:單身page2 after_row2 name="input.body2.after_row2"
+            CALL anmt564_amt_show()   #160509-00004#75 add lujh
+            #end add-point
+ 
+         AFTER INPUT
+            #add-point:input段after input  name="input.body2.after_input"
+         if cl_null(l_xrcbdocno) then 
+            update stbc_t set stbcstus='5'
+            where stbcent=g_enterprise  and stbc004= g_nmbb2_d[l_ac].nmee003  and  stbc005= g_nmbb2_d[l_ac].nmee004
+         end if 
+            #end add-point   
+    
+         ON ACTION controlo
+            IF l_insert THEN
+               LET li_reproduce = l_ac_t
+               LET li_reproduce_target = l_ac
+               LET g_nmbb2_d[li_reproduce_target].* = g_nmbb2_d[li_reproduce].*
+ 
+               LET g_nmbb2_d[li_reproduce_target].nmeeseq = NULL
+            ELSE
+               CALL FGL_SET_ARR_CURR(g_nmbb2_d.getLength()+1)
+               LET lb_reproduce = TRUE
+               LET li_reproduce = l_ac
+               LET li_reproduce_target = g_nmbb2_d.getLength()+1
+            END IF
+            
+      END INPUT
+ 
+      
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="anmt564.input.other" >}
+      
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      BEFORE DIALOG 
+         #CALL cl_err_collect_init()    
+         #add-point:input段before dialog name="input.before_dialog"
+         
+         #end add-point    
+         #重新導回資料到正確位置上
+         CALL DIALOG.setCurrentRow("s_detail1",g_idx_group.getValue("'1',"))      
+         CALL DIALOG.setCurrentRow("s_detail2",g_idx_group.getValue("'2',"))
+ 
+         #新增時強制從單頭開始填
+         IF p_cmd = 'a' THEN
+            #add-point:input段next_field name="input.next_field"
+            
+            #end add-point  
+            NEXT FIELD nmbacomp
+         ELSE
+            CASE g_aw
+               WHEN "s_detail1"
+                  NEXT FIELD nmbbseq
+               WHEN "s_detail2"
+                  NEXT FIELD nmeeseq
+ 
+               #add-point:input段modify_detail  name="input.modify_detail.other"
+               
+               #end add-point  
+            END CASE
+         END IF
+      
+      AFTER DIALOG
+         #add-point:input段after_dialog name="input.after_dialog"
+         
+         #end add-point    
+         
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         #add-point:input段accept  name="input.accept"
+         
+         #end add-point    
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         #add-point:input段cancel name="input.cancel"
+         
+         #end add-point  
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         #各個page指標
+         LET g_detail_idx_list[1] = 1 
+         LET g_detail_idx_list[2] = 1
+ 
+         CALL g_curr_diag.setCurrentRow("s_detail1",1)    
+         CALL g_curr_diag.setCurrentRow("s_detail2",1)
+ 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         #add-point:input段close name="input.close"
+         
+         #end add-point  
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         #add-point:input段exit name="input.exit"
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         #各個page指標
+         LET g_detail_idx_list[1] = 1 
+         LET g_detail_idx_list[2] = 1
+ 
+         CALL g_curr_diag.setCurrentRow("s_detail1",1)    
+         CALL g_curr_diag.setCurrentRow("s_detail2",1)
+ 
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input  name="input.after_input"
+  #151201-00002#14 Add  ---(S)---
+      IF l_flag = 'Y' THEN
+         CONTINUE WHILE
+      ELSE
+         EXIT WHILE
+      END IF
+   END WHILE
+  #151201-00002#14 Add  ---(E)---
+   #end add-point    
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.show" >}
+#+ 單頭資料重新顯示及單身資料重抓
+PRIVATE FUNCTION anmt564_show()
+   #add-point:show段define(客製用) name="show.define_customerization"
+   
+   #end add-point  
+   DEFINE l_ac_t    LIKE type_t.num10
+   #add-point:show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="show.before"
+   CALL anmt564_amt_show()   #160509-00004#75 add lujh
+   #end add-point
+   
+   
+   
+   IF g_bfill = "Y" THEN
+      CALL anmt564_b_fill() #單身填充
+      CALL anmt564_b_fill2('0') #單身填充
+   END IF
+     
+   #帶出公用欄位reference值
+   #應用 a12 樣板自動產生(Version:4)
+ 
+ 
+ 
+   
+   #顯示followup圖示
+   #應用 a48 樣板自動產生(Version:3)
+   CALL anmt564_set_pk_array()
+   #add-point:ON ACTION agendum name="show.follow_pic"
+   
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+ 
+   
+   LET l_ac_t = l_ac
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference name="show.head.reference"
+   
+   #end add-point
+   
+   #遮罩相關處理
+   LET g_nmba_m_mask_o.* =  g_nmba_m.*
+   CALL anmt564_nmba_t_mask()
+   LET g_nmba_m_mask_n.* =  g_nmba_m.*
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_nmba_m.nmbasite,g_nmba_m.nmbasite_desc,g_nmba_m.nmba008,g_nmba_m.nmba008_desc,g_nmba_m.nmba001, 
+       g_nmba_m.nmba001_desc,g_nmba_m.nmbacomp,g_nmba_m.nmbacomp_desc,g_nmba_m.nmbadocno,g_nmba_m.nmbadocno_desc, 
+       g_nmba_m.nmbadocdt,g_nmba_m.nmba003,g_nmba_m.nmba004,g_nmba_m.nmba004_desc,g_nmba_m.nmba005,g_nmba_m.tot1, 
+       g_nmba_m.tot2,g_nmba_m.diff,g_nmba_m.nmbastus,g_nmba_m.nmba007,g_nmba_m.nmba006,g_nmba_m.nmba002, 
+       g_nmba_m.nmba002_desc,g_nmba_m.nmbaownid,g_nmba_m.nmbaownid_desc,g_nmba_m.nmbaowndp,g_nmba_m.nmbaowndp_desc, 
+       g_nmba_m.nmbacrtid,g_nmba_m.nmbacrtid_desc,g_nmba_m.nmbacrtdp,g_nmba_m.nmbacrtdp_desc,g_nmba_m.nmbacrtdt, 
+       g_nmba_m.nmbamodid,g_nmba_m.nmbamodid_desc,g_nmba_m.nmbamoddt,g_nmba_m.nmbacnfid,g_nmba_m.nmbacnfid_desc, 
+       g_nmba_m.nmbacnfdt
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_nmba_m.nmbastus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "V"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/verify.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+ 
+ 
+ 
+   
+   #讀入ref值(單身)
+   FOR l_ac = 1 TO g_nmbb_d.getLength()
+      #add-point:show段單身reference name="show.body.reference"
+      
+      #end add-point
+   END FOR
+   
+   FOR l_ac = 1 TO g_nmbb2_d.getLength()
+      #add-point:show段單身reference name="show.body2.reference"
+      
+      #end add-point
+   END FOR
+ 
+   
+    
+   
+   #add-point:show段other name="show.other"
+   
+   #end add-point  
+   
+   LET l_ac = l_ac_t
+   
+   #移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()     
+ 
+   CALL anmt564_detail_show()
+ 
+   #add-point:show段之後 name="show.after"
+  #151201-00002#14 Add  ---(S)---
+   IF g_nmba_m.nmbastus <> 'Y' THEN
+      CALL cl_set_act_visible("output", FALSE)
+   ELSE
+      CALL cl_set_act_visible("output", TRUE)
+   END IF
+  #151201-00002#14 Add  ---(E)---
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.detail_show" >}
+#+ 第二階單身reference
+PRIVATE FUNCTION anmt564_detail_show()
+   #add-point:detail_show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point  
+   #add-point:detail_show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="detail_show.before"
+   
+   #end add-point
+   
+   #add-point:detail_show段之後 name="detail_show.after"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.reproduce" >}
+#+ 資料複製
+PRIVATE FUNCTION anmt564_reproduce()
+   #add-point:reproduce段define(客製用) name="reproduce.define_customerization"
+   
+   #end add-point   
+   DEFINE l_newno     LIKE nmba_t.nmbacomp 
+   DEFINE l_oldno     LIKE nmba_t.nmbacomp 
+   DEFINE l_newno02     LIKE nmba_t.nmbadocno 
+   DEFINE l_oldno02     LIKE nmba_t.nmbadocno 
+ 
+   DEFINE l_master    RECORD LIKE nmba_t.* #此變數樣板目前無使用
+   DEFINE l_detail    RECORD LIKE nmbb_t.* #此變數樣板目前無使用
+   DEFINE l_detail2    RECORD LIKE nmee_t.* #此變數樣板目前無使用
+ 
+ 
+ 
+   DEFINE l_cnt       LIKE type_t.num10
+   #add-point:reproduce段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="reproduce.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="reproduce.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   
+   LET g_master_insert = FALSE
+   
+   IF g_nmba_m.nmbacomp IS NULL
+   OR g_nmba_m.nmbadocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "std-00003" 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+    
+   LET g_nmbacomp_t = g_nmba_m.nmbacomp
+   LET g_nmbadocno_t = g_nmba_m.nmbadocno
+ 
+    
+   LET g_nmba_m.nmbacomp = ""
+   LET g_nmba_m.nmbadocno = ""
+ 
+ 
+   CALL cl_set_head_visible("","YES")
+ 
+   #公用欄位給予預設值
+   #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_nmba_m.nmbaownid = g_user
+      LET g_nmba_m.nmbaowndp = g_dept
+      LET g_nmba_m.nmbacrtid = g_user
+      LET g_nmba_m.nmbacrtdp = g_dept 
+      LET g_nmba_m.nmbacrtdt = cl_get_current()
+      LET g_nmba_m.nmbamodid = g_user
+      LET g_nmba_m.nmbamoddt = cl_get_current()
+      LET g_nmba_m.nmbastus = 'N'
+ 
+ 
+ 
+   
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前 name="reproduce.head.b_input"
+   
+   #end add-point
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_nmba_m.nmbastus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "V"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/verify.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+ 
+ 
+ 
+   
+   #清空key欄位的desc
+      LET g_nmba_m.nmbacomp_desc = ''
+   DISPLAY BY NAME g_nmba_m.nmbacomp_desc
+   LET g_nmba_m.nmbadocno_desc = ''
+   DISPLAY BY NAME g_nmba_m.nmbadocno_desc
+ 
+   
+   CALL anmt564_input("r")
+   
+   IF INT_FLAG AND NOT g_master_insert THEN
+      LET INT_FLAG = 0
+      DISPLAY g_detail_cnt  TO FORMONLY.h_count    #總筆數
+      DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+      LET INT_FLAG = 0
+      INITIALIZE g_nmba_m.* TO NULL
+      INITIALIZE g_nmbb_d TO NULL
+      INITIALIZE g_nmbb2_d TO NULL
+ 
+      #add-point:複製取消後 name="reproduce.cancel"
+      
+      #end add-point
+      CALL anmt564_show()
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = '' 
+      LET g_errparam.code = 9001 
+      LET g_errparam.popup = FALSE 
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL anmt564_set_act_visible()   
+   CALL anmt564_set_act_no_visible()
+   
+   #將新增的資料併入搜尋條件中
+   LET g_nmbacomp_t = g_nmba_m.nmbacomp
+   LET g_nmbadocno_t = g_nmba_m.nmbadocno
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " nmbaent = " ||g_enterprise|| " AND",
+                      " nmbacomp = '", g_nmba_m.nmbacomp, "' "
+                      ," AND nmbadocno = '", g_nmba_m.nmbadocno, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL anmt564_browser_fill("")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   #add-point:完成複製段落後 name="reproduce.after_reproduce"
+   
+   #end add-point
+   
+   CALL anmt564_idx_chk()
+   
+   LET g_data_owner = g_nmba_m.nmbaownid      
+   LET g_data_dept  = g_nmba_m.nmbaowndp
+   
+   #功能已完成,通報訊息中心
+   CALL anmt564_msgcentre_notify('reproduce')
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.detail_reproduce" >}
+#+ 單身自動複製
+PRIVATE FUNCTION anmt564_detail_reproduce()
+   #add-point:delete段define(客製用) name="detail_reproduce.define_customerization"
+   
+   #end add-point    
+   DEFINE ls_sql      STRING
+   DEFINE ld_date     DATETIME YEAR TO SECOND
+   DEFINE l_detail    RECORD LIKE nmbb_t.* #此變數樣板目前無使用
+   DEFINE l_detail2    RECORD LIKE nmee_t.* #此變數樣板目前無使用
+ 
+ 
+ 
+   #add-point:delete段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_reproduce.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="detail_reproduce.pre_function"
+   
+   #end add-point
+   
+   CALL s_transaction_begin()
+   
+   LET ld_date = cl_get_current()
+   
+   DROP TABLE anmt564_detail
+   
+   #add-point:單身複製前1 name="detail_reproduce.body.table1.b_insert"
+   
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   SELECT * FROM nmbb_t
+    WHERE nmbbent = g_enterprise AND nmbbcomp = g_nmbacomp_t
+     AND nmbbdocno = g_nmbadocno_t
+ 
+    INTO TEMP anmt564_detail
+ 
+   #將key修正為調整後   
+   UPDATE anmt564_detail 
+      #更新key欄位
+      SET nmbbcomp = g_nmba_m.nmbacomp
+          , nmbbdocno = g_nmba_m.nmbadocno
+ 
+      #更新共用欄位
+      
+ 
+   #add-point:單身修改前 name="detail_reproduce.body.table1.b_update"
+   
+   #end add-point                                       
+  
+   #將資料塞回原table   
+   INSERT INTO nmbb_t SELECT * FROM anmt564_detail
+   
+   IF SQLCA.SQLCODE THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "reproduce:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE 
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #add-point:單身複製中1 name="detail_reproduce.body.table1.m_insert"
+   
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE anmt564_detail
+   
+   #add-point:單身複製後1 name="detail_reproduce.body.table1.a_insert"
+   
+   #end add-point
+ 
+   #add-point:單身複製前 name="detail_reproduce.body.table2.b_insert"
+   
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   SELECT * FROM nmee_t 
+    WHERE nmeeent = g_enterprise AND nmeecomp = g_nmbacomp_t
+      AND nmeedocno = g_nmbadocno_t   
+ 
+    INTO TEMP anmt564_detail
+ 
+   #將key修正為調整後   
+   UPDATE anmt564_detail SET nmeecomp = g_nmba_m.nmbacomp
+                                       , nmeedocno = g_nmba_m.nmbadocno
+ 
+  
+   #add-point:單身修改前 name="detail_reproduce.body.table2.b_update"
+   
+   #end add-point    
+ 
+   #將資料塞回原table   
+   INSERT INTO nmee_t SELECT * FROM anmt564_detail
+   
+   #add-point:單身複製中 name="detail_reproduce.body.table2.m_insert"
+   
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE anmt564_detail
+   
+   #add-point:單身複製後 name="detail_reproduce.body.table2.a_insert"
+   
+   #end add-point
+ 
+ 
+   
+ 
+   
+   #多語言複製段落
+   
+   
+   CALL s_transaction_end('Y','0')
+   
+   #已新增完, 調整資料內容(修改時使用)
+   LET g_nmbacomp_t = g_nmba_m.nmbacomp
+   LET g_nmbadocno_t = g_nmba_m.nmbadocno
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.delete" >}
+#+ 資料刪除
+PRIVATE FUNCTION anmt564_delete()
+   #add-point:delete段define(客製用) name="delete.define_customerization"
+   
+   #end add-point     
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   DEFINE l_success        LIKE type_t.num5  #150813-00015#19 add
+   DEFINE l_cnt            LIKE type_t.num5  #160122-00001#32 add
+   #end add-point     
+   
+   #add-point:Function前置處理  name="delete.pre_function"
+   
+   #end add-point
+   
+   IF g_nmba_m.nmbacomp IS NULL
+   OR g_nmba_m.nmbadocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "std-00003" 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   
+   
+   CALL s_transaction_begin()
+ 
+   OPEN anmt564_cl USING g_enterprise,g_nmba_m.nmbacomp,g_nmba_m.nmbadocno
+   IF SQLCA.SQLCODE THEN   #(ver:78)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN anmt564_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+      LET g_errparam.popup = TRUE 
+      CLOSE anmt564_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE anmt564_master_referesh USING g_nmba_m.nmbacomp,g_nmba_m.nmbadocno INTO g_nmba_m.nmbasite, 
+       g_nmba_m.nmba008,g_nmba_m.nmba001,g_nmba_m.nmbacomp,g_nmba_m.nmbadocno,g_nmba_m.nmbadocdt,g_nmba_m.nmba003, 
+       g_nmba_m.nmba004,g_nmba_m.nmba005,g_nmba_m.nmbastus,g_nmba_m.nmba007,g_nmba_m.nmba006,g_nmba_m.nmba002, 
+       g_nmba_m.nmbaownid,g_nmba_m.nmbaowndp,g_nmba_m.nmbacrtid,g_nmba_m.nmbacrtdp,g_nmba_m.nmbacrtdt, 
+       g_nmba_m.nmbamodid,g_nmba_m.nmbamoddt,g_nmba_m.nmbacnfid,g_nmba_m.nmbacnfdt,g_nmba_m.nmbasite_desc, 
+       g_nmba_m.nmba008_desc,g_nmba_m.nmba001_desc,g_nmba_m.nmbacomp_desc,g_nmba_m.nmbadocno_desc,g_nmba_m.nmba004_desc, 
+       g_nmba_m.nmba002_desc,g_nmba_m.nmbaownid_desc,g_nmba_m.nmbaowndp_desc,g_nmba_m.nmbacrtid_desc, 
+       g_nmba_m.nmbacrtdp_desc,g_nmba_m.nmbamodid_desc,g_nmba_m.nmbacnfid_desc
+   
+   
+   #檢查是否允許此動作
+   IF NOT anmt564_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_nmba_m_mask_o.* =  g_nmba_m.*
+   CALL anmt564_nmba_t_mask()
+   LET g_nmba_m_mask_n.* =  g_nmba_m.*
+   
+   CALL anmt564_show()
+   
+   #add-point:delete段before ask name="delete.before_ask"
+   IF g_nmba_m.nmbastus <> 'N' THEN 
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'agl-00313'
+      LET g_errparam.extend = g_nmba_m.nmbadocno
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      CLOSE anmt564_cl                #150813-00015#19 add
+      CALL s_transaction_end('N','0') #150813-00015#19 add
+      RETURN
+   END IF
+   #150813-00015#19--add--str--
+   #檢查當單據日期小於等於關帳日期時，不可異動單據
+   CALL s_fin_date_close_chk('',g_nmba_m.nmbacomp,'ANM',g_nmba_m.nmbadocdt) RETURNING l_success
+   IF l_success = FALSE THEN
+      CLOSE anmt564_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   #150813-00015#19--add--end
+   #end add-point 
+ 
+   IF cl_ask_del_master() THEN              #確認一下
+   
+      #add-point:單頭刪除前 name="delete.head.b_delete"
+ 
+      #end add-point   
+      
+      #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL anmt564_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove"
+      #160122-00001#32 by 07673--modify--str--
+      LET l_cnt = 0 
+      #單身存在當前用戶沒有權限的交易帳戶編碼时，不删除单头，只删除单身中当前用户有权限操作的交易账户资料，反之，删除单头和单身资料
+      SELECT COUNT(*) INTO l_cnt FROM nmbb_t
+       WHERE nmbbent = g_enterprise AND nmbbdocno = g_nmba_m.nmbadocno
+         AND nmbb003 NOT IN( SELECT UNIQUE nmll001 FROM nmll_t WHERE nmllent = g_enterprise AND nmll002 = g_user)
+         AND nmbb003 NOT IN( SELECT UNIQUE nmlm001 FROM nmlm_t WHERE nmlment = g_enterprise AND nmlm002 = g_dept)
+         AND TRIM(nmbb003) IS NOT NULL 
+      IF l_cnt > 0 THEN
+         IF NOT cl_ask_confirm('anm-00395') THEN
+            CLOSE anmt564_cl
+            CALL s_transaction_end('N','0')
+            RETURN
+         END IF
+      END IF
+      #160122-00001#32 by 07673--modify--end
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+  
+  
+      #資料備份
+      LET g_nmbacomp_t = g_nmba_m.nmbacomp
+      LET g_nmbadocno_t = g_nmba_m.nmbadocno
+ 
+ 
+      DELETE FROM nmba_t
+       WHERE nmbaent = g_enterprise AND nmbacomp = g_nmba_m.nmbacomp
+         AND nmbadocno = g_nmba_m.nmbadocno
+ 
+       
+      #add-point:單頭刪除中 name="delete.head.m_delete"
+      
+      #end add-point
+       
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_nmba_m.nmbacomp,":",SQLERRMESSAGE  
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+         RETURN
+      END IF
+      
+      #add-point:單頭刪除後 name="delete.head.a_delete"
+ 
+      #end add-point
+  
+      #add-point:單身刪除前 name="delete.body.b_delete"
+      
+      #end add-point
+      
+      DELETE FROM nmbb_t
+       WHERE nmbbent = g_enterprise AND nmbbcomp = g_nmba_m.nmbacomp
+         AND nmbbdocno = g_nmba_m.nmbadocno
+ 
+ 
+      #add-point:單身刪除中 name="delete.body.m_delete"
+      #160122-00001#32 by 07673 mark --str
+#      #160122-00001#32--add--str--
+#      AND (nmbb003 IN( SELECT UNIQUE nmll001 FROM nmll_t WHERE nmllent = g_enterprise AND nmll002 = g_user)
+#          OR nmbb003 IS NULL)
+#      #160122-00001#32--add--end
+      #160122-00001#32 by 07673 mark --end
+      #end add-point
+         
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "nmbb_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+         RETURN
+      END IF    
+ 
+      #add-point:單身刪除後 name="delete.body.a_delete"
+      
+      #end add-point
+      
+            
+                                                               
+      #add-point:單身刪除前 name="delete.body.b_delete2"
+      
+      #end add-point
+      DELETE FROM nmee_t
+       WHERE nmeeent = g_enterprise AND
+             nmeecomp = g_nmba_m.nmbacomp AND nmeedocno = g_nmba_m.nmbadocno
+      #add-point:單身刪除中 name="delete.body.m_delete2"
+      
+      #end add-point
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "nmee_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+         RETURN
+      END IF      
+ 
+      #add-point:單身刪除後 name="delete.body.a_delete2"
+      #151222-00010#10---add--str
+      CALL anmt564_glaa_get()
+      CALL s_cashflow_nm_del_glbc(g_nmba_m.nmbadocdt,g_glaald,g_nmba_m.nmbadocno,'')
+           RETURNING g_sub_success,g_errno
+      IF NOT g_sub_success THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = "glbc_t"
+         LET g_errparam.code   = g_errno
+         LET g_errparam.popup  = FALSE
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF 
+      #151222-00010#10---add--end
+      #end add-point
+ 
+ 
+ 
+ 
+      
+      #修改歷程記錄(刪除)
+      LET g_log1 = util.JSON.stringify(g_nmba_m)   #(ver:78)
+      IF NOT cl_log_modified_record(g_log1,'') THEN    #(ver:78)
+         CLOSE anmt564_cl
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+             
+      CLEAR FORM
+      CALL g_nmbb_d.clear() 
+      CALL g_nmbb2_d.clear()       
+ 
+     
+      CALL anmt564_ui_browser_refresh()  
+      #CALL anmt564_ui_headershow()  
+      #CALL anmt564_ui_detailshow()
+ 
+      #add-point:多語言刪除 name="delete.lang.before_delete"
+      
+      #end add-point
+      
+      #單頭多語言刪除
+      
+      
+      #單身多語言刪除
+      
+      
+ 
+   
+      #add-point:多語言刪除 name="delete.lang.delete"
+      
+      #end add-point
+      
+      IF g_browser_cnt > 0 THEN 
+         #CALL anmt564_browser_fill("")
+         CALL anmt564_fetch('P')
+         DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+         DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+      ELSE
+         CLEAR FORM
+      END IF
+      
+      CALL s_transaction_end('Y','0')
+   ELSE
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE anmt564_cl
+ 
+   #功能已完成,通報訊息中心
+   CALL anmt564_msgcentre_notify('delete')
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION anmt564_b_fill()
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+   
+   #end add-point     
+   DEFINE p_wc2      STRING
+   DEFINE li_idx     LIKE type_t.num10
+   #add-point:b_fill段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   DEFINE l_success  LIKE type_t.num5
+   DEFINE l_oodb005  LIKE oodb_t.oodb005
+   DEFINE l_oodb006  LIKE oodb_t.oodb006
+   DEFINE l_oodb011  LIKE oodb_t.oodb011
+   #end add-point     
+   
+   #add-point:Function前置處理  name="b_fill.pre_function"
+   
+   #end add-point
+   
+   #清空第一階單身
+   CALL g_nmbb_d.clear()
+   CALL g_nmbb2_d.clear()
+ 
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   
+   #end add-point
+   
+   #判斷是否填充
+   IF anmt564_fill_chk(1) THEN
+      #切換上下筆時不重組SQL
+      IF (g_action_choice = "query" OR cl_null(g_action_choice))
+      #add-point:b_fill段long_sql_if name="b_fill.long_sql_if"
+      
+      #end add-point
+      THEN
+         LET g_sql = "SELECT  DISTINCT nmbbseq,nmbborga,nmbblegl,nmbb026,nmbb027,nmbb028,nmbb029,nmbb002, 
+             nmbb010,nmbb003,nmbb001,nmbb030,nmbb043,nmbb031,nmbb004,nmbb005,nmbb006,nmbb007,nmbb036, 
+             nmbb037,nmbb038,nmbb032,nmbb033,nmbb034,nmbb035,nmbb039,nmbb040,nmbb041,nmbb042,nmbb044, 
+             nmbb045 ,t1.ooefl003 ,t3.ooial003 ,t4.nmajl003 ,t5.nmabl003 FROM nmbb_t",   
+                     " INNER JOIN nmba_t ON nmbaent = " ||g_enterprise|| " AND nmbacomp = nmbbcomp ",
+                     " AND nmbadocno = nmbbdocno ",
+ 
+                     #"",
+                     
+                     "",
+                     #下層單身所需的join條件
+ 
+                                    " LEFT JOIN ooefl_t t1 ON t1.ooeflent="||g_enterprise||" AND t1.ooefl001=nmbborga AND t1.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooial_t t3 ON t3.ooialent="||g_enterprise||" AND t3.ooial001=nmbb028 AND t3.ooial002='"||g_dlang||"' ",
+               " LEFT JOIN nmajl_t t4 ON t4.nmajlent="||g_enterprise||" AND t4.nmajl001=nmbb002 AND t4.nmajl002='"||g_dlang||"' ",
+               " LEFT JOIN nmabl_t t5 ON t5.nmablent="||g_enterprise||" AND t5.nmabl001=nmbb043 AND t5.nmabl002='"||g_dlang||"' ",
+ 
+                     " WHERE nmbbent=? AND nmbbcomp=? AND nmbbdocno=?"
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         #add-point:b_fill段sql_before name="b_fill.body.fill_sql"
+         #160122-00001#32 by 07673--modify--str--
+         LET g_sql = g_sql CLIPPED," AND (nmbb003 IN (",g_sql_bank,")",
+                                   "   OR TRIM(nmbb003) IS NULL )"
+         LET g_sql = cl_sql_add_mask(g_sql) 
+         #160122-00001#32 by 07673--modify--end
+         #end add-point
+         IF NOT cl_null(g_wc2_table1) THEN
+            LET g_sql = g_sql CLIPPED, " AND ", g_wc2_table1 CLIPPED
+         END IF
+         
+         #子單身的WC
+         
+         
+         LET g_sql = g_sql, " ORDER BY nmbb_t.nmbbseq"
+         
+         #add-point:單身填充控制 name="b_fill.sql"
+         
+         #end add-point
+         
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         PREPARE anmt564_pb FROM g_sql
+         DECLARE b_fill_cs CURSOR FOR anmt564_pb
+      END IF
+      
+      LET g_cnt = l_ac
+      LET l_ac = 1
+      
+   #  OPEN b_fill_cs USING g_enterprise,g_nmba_m.nmbacomp,g_nmba_m.nmbadocno   #(ver:78)
+                                               
+      FOREACH b_fill_cs USING g_enterprise,g_nmba_m.nmbacomp,g_nmba_m.nmbadocno INTO g_nmbb_d[l_ac].nmbbseq, 
+          g_nmbb_d[l_ac].nmbborga,g_nmbb_d[l_ac].nmbblegl,g_nmbb_d[l_ac].nmbb026,g_nmbb_d[l_ac].nmbb027, 
+          g_nmbb_d[l_ac].nmbb028,g_nmbb_d[l_ac].nmbb029,g_nmbb_d[l_ac].nmbb002,g_nmbb_d[l_ac].nmbb010, 
+          g_nmbb_d[l_ac].nmbb003,g_nmbb_d[l_ac].nmbb001,g_nmbb_d[l_ac].nmbb030,g_nmbb_d[l_ac].nmbb043, 
+          g_nmbb_d[l_ac].nmbb031,g_nmbb_d[l_ac].nmbb004,g_nmbb_d[l_ac].nmbb005,g_nmbb_d[l_ac].nmbb006, 
+          g_nmbb_d[l_ac].nmbb007,g_nmbb_d[l_ac].nmbb036,g_nmbb_d[l_ac].nmbb037,g_nmbb_d[l_ac].nmbb038, 
+          g_nmbb_d[l_ac].nmbb032,g_nmbb_d[l_ac].nmbb033,g_nmbb_d[l_ac].nmbb034,g_nmbb_d[l_ac].nmbb035, 
+          g_nmbb_d[l_ac].nmbb039,g_nmbb_d[l_ac].nmbb040,g_nmbb_d[l_ac].nmbb041,g_nmbb_d[l_ac].nmbb042, 
+          g_nmbb_d[l_ac].nmbb044,g_nmbb_d[l_ac].nmbb045,g_nmbb_d[l_ac].nmbborga_desc,g_nmbb_d[l_ac].nmbb028_desc, 
+          g_nmbb_d[l_ac].nmbb002_desc,g_nmbb_d[l_ac].nmbb043_desc   #(ver:78)
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充 name="b_fill.fill"
+         CALL anmt564_nmbb026_desc(g_nmbb_d[l_ac].nmbb026,g_nmbb_d[l_ac].nmbb027)
+            RETURNING g_nmbb_d[l_ac].nmbb026_desc
+
+         CALL anmt564_nmbb043_desc(g_nmbb_d[l_ac].nmbb036) RETURNING g_nmbb_d[l_ac].nmbb036_desc
+        #151201-00002#14 Add  ---(S)---
+         IF g_nmbb_d[l_ac].nmbb001 = '2' THEN
+            LET g_nmbb_d[l_ac].nmbb006 = g_nmbb_d[l_ac].nmbb006 *(-1)
+         END IF
+
+         SELECT nmail004 INTO g_nmbb_d[l_ac].nmbb010_desc FROM nmail_t WHERE nmailent = g_enterprise
+            AND nmail001 IN (SELECT glaa005 FROM glaa_t WHERE glaaent = g_enterprise
+                                AND glaa014 = 'Y' AND glaacomp = g_nmba_m.nmbacomp)
+            AND nmail002 = g_nmbb_d[l_ac].nmbb010
+
+        #151201-00002#14 Add  ---(E)---
+         #end add-point
+      
+         IF l_ac > g_max_rec THEN
+            IF g_error_show = 1 THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = l_ac
+               LET g_errparam.code = 9035 
+               LET g_errparam.popup = TRUE 
+               CALL cl_err()
+            END IF
+            EXIT FOREACH
+         END IF
+         
+         LET l_ac = l_ac + 1
+      END FOREACH
+      LET g_error_show = 0
+   
+   END IF
+    
+   #判斷是否填充
+   IF anmt564_fill_chk(2) THEN
+      IF (g_action_choice = "query" OR cl_null(g_action_choice))
+         #add-point:b_fill段long_sql_if name="b_fill.body2.long_sql_if"
+         
+         #end add-point
+      THEN
+         LET g_sql = "SELECT  DISTINCT nmeeseq,nmee022,nmee001,nmee003,nmee004,nmee025,nmee026,nmeesite, 
+             nmee005,nmee006,nmee024,nmee007,nmee008,nmee009,nmee018,nmee010,nmee011,nmee012,nmee013, 
+             nmee002,nmee014,nmee019,nmee020,nmee023,nmee021,nmee027 ,t6.pmaal004 ,t7.ooefl003 ,t8.mhael023 , 
+             t9.stael003 ,t10.ooefl003 ,t11.rtaxl003 FROM nmee_t",   
+                     " INNER JOIN  nmba_t ON nmbaent = " ||g_enterprise|| " AND nmbacomp = nmeecomp ",
+                     " AND nmbadocno = nmeedocno ",
+ 
+                     "",
+                     
+                                    " LEFT JOIN pmaal_t t6 ON t6.pmaalent="||g_enterprise||" AND t6.pmaal001=nmee001 AND t6.pmaal002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t7 ON t7.ooeflent="||g_enterprise||" AND t7.ooefl001=nmeesite AND t7.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN mhael_t t8 ON t8.mhaelent="||g_enterprise||" AND t8.mhael001=nmee005 AND t8.mhael022='"||g_dlang||"' ",
+               " LEFT JOIN stael_t t9 ON t9.staelent="||g_enterprise||" AND t9.stael001=nmee006 AND t9.stael002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t10 ON t10.ooeflent="||g_enterprise||" AND t10.ooefl001=nmee014 AND t10.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN rtaxl_t t11 ON t11.rtaxlent="||g_enterprise||" AND t11.rtaxl001=nmee019 AND t11.rtaxl002='"||g_dlang||"' ",
+ 
+                     " WHERE nmeeent=? AND nmeecomp=? AND nmeedocno=?"   
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         #add-point:b_fill段fill_sql name="b_fill.body2.fill_sql"
+         
+         #end add-point
+         IF NOT cl_null(g_wc2_table2) THEN
+            LET g_sql = g_sql CLIPPED," AND ",g_wc2_table2 CLIPPED
+         END IF
+         
+         #子單身的WC
+         
+         
+         LET g_sql = g_sql, " ORDER BY nmee_t.nmeeseq"
+         
+         #add-point:單身填充控制 name="b_fill.sql2"
+         
+         #end add-point
+         
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         PREPARE anmt564_pb2 FROM g_sql
+         DECLARE b_fill_cs2 CURSOR FOR anmt564_pb2
+      END IF
+    
+      LET l_ac = 1
+      
+   #  OPEN b_fill_cs2 USING g_enterprise,g_nmba_m.nmbacomp,g_nmba_m.nmbadocno   #(ver:78)
+                                               
+      FOREACH b_fill_cs2 USING g_enterprise,g_nmba_m.nmbacomp,g_nmba_m.nmbadocno INTO g_nmbb2_d[l_ac].nmeeseq, 
+          g_nmbb2_d[l_ac].nmee022,g_nmbb2_d[l_ac].nmee001,g_nmbb2_d[l_ac].nmee003,g_nmbb2_d[l_ac].nmee004, 
+          g_nmbb2_d[l_ac].nmee025,g_nmbb2_d[l_ac].nmee026,g_nmbb2_d[l_ac].nmeesite,g_nmbb2_d[l_ac].nmee005, 
+          g_nmbb2_d[l_ac].nmee006,g_nmbb2_d[l_ac].nmee024,g_nmbb2_d[l_ac].nmee007,g_nmbb2_d[l_ac].nmee008, 
+          g_nmbb2_d[l_ac].nmee009,g_nmbb2_d[l_ac].nmee018,g_nmbb2_d[l_ac].nmee010,g_nmbb2_d[l_ac].nmee011, 
+          g_nmbb2_d[l_ac].nmee012,g_nmbb2_d[l_ac].nmee013,g_nmbb2_d[l_ac].nmee002,g_nmbb2_d[l_ac].nmee014, 
+          g_nmbb2_d[l_ac].nmee019,g_nmbb2_d[l_ac].nmee020,g_nmbb2_d[l_ac].nmee023,g_nmbb2_d[l_ac].nmee021, 
+          g_nmbb2_d[l_ac].nmee027,g_nmbb2_d[l_ac].nmee001_desc,g_nmbb2_d[l_ac].nmeesite_desc,g_nmbb2_d[l_ac].nmee005_desc, 
+          g_nmbb2_d[l_ac].nmee006_desc,g_nmbb2_d[l_ac].nmee014_desc,g_nmbb2_d[l_ac].nmee019_desc   #(ver:78) 
+ 
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充 name="b_fill2.fill"
+         CALL anmt564_nmee005_desc(g_nmbb2_d[l_ac].nmee005) RETURNING g_nmbb2_d[l_ac].nmee005_desc
+         CALL anmt564_nmee006_desc(g_nmbb2_d[l_ac].nmee006) RETURNING g_nmbb2_d[l_ac].nmee006_desc
+         CALL s_desc_get_department_desc(g_nmbb2_d[l_ac].nmee014) RETURNING g_nmbb2_d[l_ac].nmee014_desc
+         CALL s_tax_chk(g_nmbb2_d[l_ac].nmeesite,g_nmbb2_d[l_ac].nmee010)
+            RETURNING l_success,g_nmbb2_d[l_ac].nmee010_desc,l_oodb005,l_oodb006,l_oodb011
+        #151201-00002#14 Add  ---(S)---
+         INITIALIZE g_ref_fields TO NULL
+         LET g_ref_fields[1] = g_nmbb2_d[l_ac].nmee019
+         CALL ap_ref_array2(g_ref_fields,"SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent='"||g_enterprise||"' AND rtaxl001=? AND rtaxl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+         LET g_nmbb2_d[l_ac].nmee019_desc = '', g_rtn_fields[1] , ''
+         DISPLAY BY NAME g_nmbb2_d[l_ac].nmee019_desc
+        #151201-00002#14 Add  ---(E)---
+         #end add-point
+      
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code = 9035 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+   END IF
+ 
+ 
+   
+   #add-point:browser_fill段其他table處理 name="browser_fill.other_fill"
+   
+   #end add-point
+   
+   CALL g_nmbb_d.deleteElement(g_nmbb_d.getLength())
+   CALL g_nmbb2_d.deleteElement(g_nmbb2_d.getLength())
+ 
+   
+ 
+   LET l_ac = g_cnt
+   LET g_cnt = 0  
+   
+   FREE anmt564_pb
+   FREE anmt564_pb2
+ 
+ 
+   
+   LET li_idx = l_ac
+   
+   #遮罩相關處理
+   FOR l_ac = 1 TO g_nmbb_d.getLength()
+      LET g_nmbb_d_mask_o[l_ac].* =  g_nmbb_d[l_ac].*
+      CALL anmt564_nmbb_t_mask()
+      LET g_nmbb_d_mask_n[l_ac].* =  g_nmbb_d[l_ac].*
+   END FOR
+   
+   LET g_nmbb2_d_mask_o.* =  g_nmbb2_d.*
+   FOR l_ac = 1 TO g_nmbb2_d.getLength()
+      LET g_nmbb2_d_mask_o[l_ac].* =  g_nmbb2_d[l_ac].*
+      CALL anmt564_nmee_t_mask()
+      LET g_nmbb2_d_mask_n[l_ac].* =  g_nmbb2_d[l_ac].*
+   END FOR
+ 
+   
+   LET l_ac = li_idx
+   
+   CALL cl_ap_performance_next_end()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.delete_b" >}
+#+ 刪除單身後其他table連動
+PRIVATE FUNCTION anmt564_delete_b(ps_table,ps_keys_bak,ps_page)
+   #add-point:delete_b段define(客製用) name="delete_b.define_customerization"
+   
+   #end add-point     
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:delete_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete_b.define"
+   define l_stbc018  like stbc_t.stbc018
+   define l_stbc019  like stbc_t.stbc019
+   #end add-point     
+   
+   #add-point:Function前置處理  name="delete_b.pre_function"
+   
+   #end add-point
+   
+   LET g_update = TRUE  
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前 name="delete_b.b_delete"
+      #151222-00010#10---add--str
+      CALL s_cashflow_nm_del_glbc(g_nmba_m.nmbadocdt,g_glaald,g_nmba_m.nmbadocno,ps_keys_bak[3])
+           RETURNING g_sub_success,g_errno
+      IF NOT g_sub_success THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = "delete glbc_t"
+         LET g_errparam.code   = g_errno
+         LET g_errparam.popup  = FALSE
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+      #151222-00010#10---add--end
+      #end add-point    
+      DELETE FROM nmbb_t
+       WHERE nmbbent = g_enterprise AND
+         nmbbcomp = ps_keys_bak[1] AND nmbbdocno = ps_keys_bak[2] AND nmbbseq = ps_keys_bak[3]
+      #add-point:delete_b段刪除中 name="delete_b.m_delete"
+      
+      #end add-point    
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = ":",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_nmbb_d.deleteElement(li_idx) 
+      END IF 
+ 
+   END IF
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前 name="delete_b.b_delete2"
+      
+      #end add-point    
+      DELETE FROM nmee_t
+       WHERE nmeeent = g_enterprise AND
+             nmeecomp = ps_keys_bak[1] AND nmeedocno = ps_keys_bak[2] AND nmeeseq = ps_keys_bak[3]
+      #add-point:delete_b段刪除中 name="delete_b.m_delete2"
+     
+      #end add-point    
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "nmee_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'2'" THEN 
+         CALL g_nmbb2_d.deleteElement(li_idx) 
+      END IF 
+ 
+      #add-point:delete_b段刪除後 name="delete_b.a_delete2"
+       select stbc018,stbc019 into l_stbc018,l_stbc019   from stbc_t 
+       where stbcent=g_enterprise  and stbc004= g_nmbb2_d[l_ac].nmee003  and  stbc005= g_nmbb2_d[l_ac].nmee004
+       if l_stbc019=l_stbc018 then 
+          update stbc_t set stbcstus='1'        
+           where stbcent=g_enterprise  and stbc004= g_nmbb2_d[l_ac].nmee003  and  stbc005= g_nmbb2_d[l_ac].nmee004
+        else
+           update stbc_t set stbcstus='3'        
+             where stbcent=g_enterprise  and stbc004= g_nmbb2_d[l_ac].nmee003  and  stbc005= g_nmbb2_d[l_ac].nmee004
+        end if     
+      #end add-point    
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:delete_b段other name="delete_b.other"
+   
+   #end add-point  
+   
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.insert_b" >}
+#+ 新增單身後其他table連動
+PRIVATE FUNCTION anmt564_insert_b(ps_table,ps_keys,ps_page)
+   #add-point:insert_b段define(客製用) name="insert_b.define_customerization"
+   
+   #end add-point     
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE ls_page     STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:insert_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="insert_b.pre_function"
+   
+   #end add-point
+   
+   LET g_update = TRUE  
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前 name="insert_b.before_insert"
+      
+      #end add-point 
+      INSERT INTO nmbb_t
+                  (nmbbent,
+                   nmbbcomp,nmbbdocno,
+                   nmbbseq
+                   ,nmbborga,nmbblegl,nmbb026,nmbb027,nmbb028,nmbb029,nmbb002,nmbb010,nmbb003,nmbb001,nmbb030,nmbb043,nmbb031,nmbb004,nmbb005,nmbb006,nmbb007,nmbb036,nmbb037,nmbb038,nmbb032,nmbb033,nmbb034,nmbb035,nmbb039,nmbb040,nmbb041,nmbb042,nmbb044,nmbb045) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2],ps_keys[3]
+                   ,g_nmbb_d[g_detail_idx].nmbborga,g_nmbb_d[g_detail_idx].nmbblegl,g_nmbb_d[g_detail_idx].nmbb026, 
+                       g_nmbb_d[g_detail_idx].nmbb027,g_nmbb_d[g_detail_idx].nmbb028,g_nmbb_d[g_detail_idx].nmbb029, 
+                       g_nmbb_d[g_detail_idx].nmbb002,g_nmbb_d[g_detail_idx].nmbb010,g_nmbb_d[g_detail_idx].nmbb003, 
+                       g_nmbb_d[g_detail_idx].nmbb001,g_nmbb_d[g_detail_idx].nmbb030,g_nmbb_d[g_detail_idx].nmbb043, 
+                       g_nmbb_d[g_detail_idx].nmbb031,g_nmbb_d[g_detail_idx].nmbb004,g_nmbb_d[g_detail_idx].nmbb005, 
+                       g_nmbb_d[g_detail_idx].nmbb006,g_nmbb_d[g_detail_idx].nmbb007,g_nmbb_d[g_detail_idx].nmbb036, 
+                       g_nmbb_d[g_detail_idx].nmbb037,g_nmbb_d[g_detail_idx].nmbb038,g_nmbb_d[g_detail_idx].nmbb032, 
+                       g_nmbb_d[g_detail_idx].nmbb033,g_nmbb_d[g_detail_idx].nmbb034,g_nmbb_d[g_detail_idx].nmbb035, 
+                       g_nmbb_d[g_detail_idx].nmbb039,g_nmbb_d[g_detail_idx].nmbb040,g_nmbb_d[g_detail_idx].nmbb041, 
+                       g_nmbb_d[g_detail_idx].nmbb042,g_nmbb_d[g_detail_idx].nmbb044,g_nmbb_d[g_detail_idx].nmbb045) 
+ 
+      #add-point:insert_b段資料新增中 name="insert_b.m_insert"
+      
+      #end add-point 
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "nmbb_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_nmbb_d.insertElement(li_idx) 
+      END IF 
+ 
+      #add-point:insert_b段資料新增後 name="insert_b.after_insert"
+      
+      #end add-point 
+   END IF
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前 name="insert_b.before_insert2"
+      
+      #end add-point 
+      INSERT INTO nmee_t
+                  (nmeeent,
+                   nmeecomp,nmeedocno,
+                   nmeeseq
+                   ,nmee022,nmee001,nmee003,nmee004,nmee025,nmee026,nmeesite,nmee005,nmee006,nmee024,nmee007,nmee008,nmee009,nmee018,nmee010,nmee011,nmee012,nmee013,nmee002,nmee014,nmee019,nmee020,nmee023,nmee021,nmee027) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2],ps_keys[3]
+                   ,g_nmbb2_d[g_detail_idx].nmee022,g_nmbb2_d[g_detail_idx].nmee001,g_nmbb2_d[g_detail_idx].nmee003, 
+                       g_nmbb2_d[g_detail_idx].nmee004,g_nmbb2_d[g_detail_idx].nmee025,g_nmbb2_d[g_detail_idx].nmee026, 
+                       g_nmbb2_d[g_detail_idx].nmeesite,g_nmbb2_d[g_detail_idx].nmee005,g_nmbb2_d[g_detail_idx].nmee006, 
+                       g_nmbb2_d[g_detail_idx].nmee024,g_nmbb2_d[g_detail_idx].nmee007,g_nmbb2_d[g_detail_idx].nmee008, 
+                       g_nmbb2_d[g_detail_idx].nmee009,g_nmbb2_d[g_detail_idx].nmee018,g_nmbb2_d[g_detail_idx].nmee010, 
+                       g_nmbb2_d[g_detail_idx].nmee011,g_nmbb2_d[g_detail_idx].nmee012,g_nmbb2_d[g_detail_idx].nmee013, 
+                       g_nmbb2_d[g_detail_idx].nmee002,g_nmbb2_d[g_detail_idx].nmee014,g_nmbb2_d[g_detail_idx].nmee019, 
+                       g_nmbb2_d[g_detail_idx].nmee020,g_nmbb2_d[g_detail_idx].nmee023,g_nmbb2_d[g_detail_idx].nmee021, 
+                       g_nmbb2_d[g_detail_idx].nmee027)
+      #add-point:insert_b段資料新增中 name="insert_b.m_insert2"
+      
+      #end add-point
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "nmee_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'2'" THEN 
+         CALL g_nmbb2_d.insertElement(li_idx) 
+      END IF 
+ 
+      #add-point:insert_b段資料新增後 name="insert_b.after_insert2"
+      
+      #end add-point
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:insert_b段other name="insert_b.other"
+   
+   #end add-point     
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.update_b" >}
+#+ 修改單身後其他table連動
+PRIVATE FUNCTION anmt564_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   #add-point:update_b段define(客製用) name="update_b.define_customerization"
+   
+   #end add-point   
+   DEFINE ps_table         STRING
+   DEFINE ps_page          STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num10 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="update_b.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="update_b.pre_function"
+   
+   #end add-point
+   
+   LET g_update = TRUE   
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "nmbb_t" THEN
+      #add-point:update_b段修改前 name="update_b.before_update"
+      
+      #end add-point 
+      
+      #將遮罩欄位還原
+      CALL anmt564_nmbb_t_mask_restore('restore_mask_o')
+               
+      UPDATE nmbb_t 
+         SET (nmbbcomp,nmbbdocno,
+              nmbbseq
+              ,nmbborga,nmbblegl,nmbb026,nmbb027,nmbb028,nmbb029,nmbb002,nmbb010,nmbb003,nmbb001,nmbb030,nmbb043,nmbb031,nmbb004,nmbb005,nmbb006,nmbb007,nmbb036,nmbb037,nmbb038,nmbb032,nmbb033,nmbb034,nmbb035,nmbb039,nmbb040,nmbb041,nmbb042,nmbb044,nmbb045) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3]
+              ,g_nmbb_d[g_detail_idx].nmbborga,g_nmbb_d[g_detail_idx].nmbblegl,g_nmbb_d[g_detail_idx].nmbb026, 
+                  g_nmbb_d[g_detail_idx].nmbb027,g_nmbb_d[g_detail_idx].nmbb028,g_nmbb_d[g_detail_idx].nmbb029, 
+                  g_nmbb_d[g_detail_idx].nmbb002,g_nmbb_d[g_detail_idx].nmbb010,g_nmbb_d[g_detail_idx].nmbb003, 
+                  g_nmbb_d[g_detail_idx].nmbb001,g_nmbb_d[g_detail_idx].nmbb030,g_nmbb_d[g_detail_idx].nmbb043, 
+                  g_nmbb_d[g_detail_idx].nmbb031,g_nmbb_d[g_detail_idx].nmbb004,g_nmbb_d[g_detail_idx].nmbb005, 
+                  g_nmbb_d[g_detail_idx].nmbb006,g_nmbb_d[g_detail_idx].nmbb007,g_nmbb_d[g_detail_idx].nmbb036, 
+                  g_nmbb_d[g_detail_idx].nmbb037,g_nmbb_d[g_detail_idx].nmbb038,g_nmbb_d[g_detail_idx].nmbb032, 
+                  g_nmbb_d[g_detail_idx].nmbb033,g_nmbb_d[g_detail_idx].nmbb034,g_nmbb_d[g_detail_idx].nmbb035, 
+                  g_nmbb_d[g_detail_idx].nmbb039,g_nmbb_d[g_detail_idx].nmbb040,g_nmbb_d[g_detail_idx].nmbb041, 
+                  g_nmbb_d[g_detail_idx].nmbb042,g_nmbb_d[g_detail_idx].nmbb044,g_nmbb_d[g_detail_idx].nmbb045)  
+ 
+         WHERE nmbbent = g_enterprise AND nmbbcomp = ps_keys_bak[1] AND nmbbdocno = ps_keys_bak[2] AND nmbbseq = ps_keys_bak[3]
+      #add-point:update_b段修改中 name="update_b.m_update"
+      
+      #end add-point   
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "nmbb_t" 
+            LET g_errparam.code = "std-00009" 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         WHEN SQLCA.SQLCODE #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "nmbb_t:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         OTHERWISE
+ 
+      END CASE
+      
+      #將遮罩欄位進行遮蔽
+      CALL anmt564_nmbb_t_mask_restore('restore_mask_n')
+               
+      #add-point:update_b段修改後 name="update_b.after_update"
+      
+      #end add-point  
+   END IF
+   
+   #子表處理
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      
+   END IF
+   
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "nmee_t" THEN
+      #add-point:update_b段修改前 name="update_b.before_update2"
+      
+      #end add-point  
+      
+      #將遮罩欄位還原
+      CALL anmt564_nmee_t_mask_restore('restore_mask_o')
+               
+      UPDATE nmee_t 
+         SET (nmeecomp,nmeedocno,
+              nmeeseq
+              ,nmee022,nmee001,nmee003,nmee004,nmee025,nmee026,nmeesite,nmee005,nmee006,nmee024,nmee007,nmee008,nmee009,nmee018,nmee010,nmee011,nmee012,nmee013,nmee002,nmee014,nmee019,nmee020,nmee023,nmee021,nmee027) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3]
+              ,g_nmbb2_d[g_detail_idx].nmee022,g_nmbb2_d[g_detail_idx].nmee001,g_nmbb2_d[g_detail_idx].nmee003, 
+                  g_nmbb2_d[g_detail_idx].nmee004,g_nmbb2_d[g_detail_idx].nmee025,g_nmbb2_d[g_detail_idx].nmee026, 
+                  g_nmbb2_d[g_detail_idx].nmeesite,g_nmbb2_d[g_detail_idx].nmee005,g_nmbb2_d[g_detail_idx].nmee006, 
+                  g_nmbb2_d[g_detail_idx].nmee024,g_nmbb2_d[g_detail_idx].nmee007,g_nmbb2_d[g_detail_idx].nmee008, 
+                  g_nmbb2_d[g_detail_idx].nmee009,g_nmbb2_d[g_detail_idx].nmee018,g_nmbb2_d[g_detail_idx].nmee010, 
+                  g_nmbb2_d[g_detail_idx].nmee011,g_nmbb2_d[g_detail_idx].nmee012,g_nmbb2_d[g_detail_idx].nmee013, 
+                  g_nmbb2_d[g_detail_idx].nmee002,g_nmbb2_d[g_detail_idx].nmee014,g_nmbb2_d[g_detail_idx].nmee019, 
+                  g_nmbb2_d[g_detail_idx].nmee020,g_nmbb2_d[g_detail_idx].nmee023,g_nmbb2_d[g_detail_idx].nmee021, 
+                  g_nmbb2_d[g_detail_idx].nmee027) 
+         WHERE nmeeent = g_enterprise AND nmeecomp = ps_keys_bak[1] AND nmeedocno = ps_keys_bak[2] AND nmeeseq = ps_keys_bak[3]
+      #add-point:update_b段修改中 name="update_b.m_update2"
+      
+      #end add-point  
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "nmee_t" 
+            LET g_errparam.code = "std-00009" 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         WHEN SQLCA.SQLCODE #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "nmee_t:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         OTHERWISE
+          
+      END CASE
+      
+      #將遮罩欄位進行遮蔽
+      CALL anmt564_nmee_t_mask_restore('restore_mask_n')
+ 
+      #add-point:update_b段修改後 name="update_b.after_update2"
+      
+      #end add-point  
+   END IF
+ 
+   #子表處理
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:update_b段other name="update_b.other"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.key_update_b" >}
+#+ 上層單身key欄位變動後, 連帶修正下層單身key欄位
+PRIVATE FUNCTION anmt564_key_update_b(ps_keys_bak,ps_table)
+   #add-point:update_b段define(客製用) name="key_update_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_keys_bak       DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_table          STRING
+   DEFINE l_field_key       DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak    DYNAMIC ARRAY OF STRING
+   DEFINE l_new_key         DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key         DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="key_update_b.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="key_update_b.pre_function"
+   
+   #end add-point
+   
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.key_delete_b" >}
+#+ 上層單身刪除後, 連帶刪除下層單身key欄位
+PRIVATE FUNCTION anmt564_key_delete_b(ps_keys_bak,ps_table)
+   #add-point:delete_b段define(客製用) name="key_delete_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_keys_bak       DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_table          STRING
+   DEFINE l_field_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak    DYNAMIC ARRAY OF STRING
+   DEFINE l_new_key         DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key         DYNAMIC ARRAY OF STRING
+   #add-point:delete_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="key_delete_b.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="key_delete_b.pre_function"
+   
+   #end add-point
+   
+ 
+   
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.lock_b" >}
+#+ 連動lock其他單身table資料
+PRIVATE FUNCTION anmt564_lock_b(ps_table,ps_page)
+   #add-point:lock_b段define(客製用) name="lock_b.define_customerization"
+   
+   #end add-point   
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:lock_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="lock_b.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="lock_b.pre_function"
+   
+   #end add-point
+    
+   #先刷新資料
+   #CALL anmt564_b_fill()
+   
+   #鎖定整組table
+   #LET ls_group = "'1',"
+   #僅鎖定自身table
+   LET ls_group = "nmbb_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      OPEN anmt564_bcl USING g_enterprise,
+                                       g_nmba_m.nmbacomp,g_nmba_m.nmbadocno,g_nmbb_d[g_detail_idx].nmbbseq  
+                                               
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "anmt564_bcl:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+                                    
+   #鎖定整組table
+   #LET ls_group = "'2',"
+   #僅鎖定自身table
+   LET ls_group = "nmee_t"
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN anmt564_bcl2 USING g_enterprise,
+                                             g_nmba_m.nmbacomp,g_nmba_m.nmbadocno,g_nmbb2_d[g_detail_idx].nmeeseq 
+ 
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "anmt564_bcl2:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:lock_b段other name="lock_b.other"
+   
+   #end add-point  
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.unlock_b" >}
+#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION anmt564_unlock_b(ps_table,ps_page)
+   #add-point:unlock_b段define(客製用) name="unlock_b.define_customerization"
+   
+   #end add-point  
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:unlock_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="unlock_b.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="unlock_b.pre_function"
+   
+   #end add-point
+    
+   LET ls_group = "'1',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE anmt564_bcl
+   END IF
+   
+   LET ls_group = "'2',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE anmt564_bcl2
+   END IF
+ 
+ 
+   
+ 
+ 
+   #add-point:unlock_b段other name="unlock_b.other"
+   
+   #end add-point  
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.set_entry" >}
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION anmt564_set_entry(p_cmd)
+   #add-point:set_entry段define(客製用) name="set_entry.define_customerization"
+   
+   #end add-point       
+   DEFINE p_cmd   LIKE type_t.chr1  
+   #add-point:set_entry段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry.define"
+   
+   #end add-point       
+   
+   #add-point:Function前置處理  name="set_entry.pre_function"
+   
+   #end add-point
+   
+   CALL cl_set_comp_entry("nmbadocno",TRUE)
+   
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("nmbacomp,nmbadocno",TRUE)
+      CALL cl_set_comp_entry("nmbadocdt",TRUE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry段欄位控制 name="set_entry.field_control"
+      
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry段欄位控制後 name="set_entry.after_control"
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.set_no_entry" >}
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION anmt564_set_no_entry(p_cmd)
+   #add-point:set_no_entry段define(客製用) name="set_no_entry.define_customerization"
+   
+   #end add-point     
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry.define"
+   DEFINE l_success   LIKE type_t.num5    #151130-00015#2 
+   DEFINE l_slip      LIKE type_t.chr10   #151130-00015#2
+   DEFINE l_dfin0033  LIKE type_t.chr80   #151130-00015#2
+   DEFINE l_glaald    LIKE glaa_t.glaald  #151130-00015#2
+   DEFINE l_para_date LIKE type_t.dat     #150813-00015#19 add
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_no_entry.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("nmbacomp,nmbadocno",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry段欄位控制 name="set_no_entry.field_control"
+      
+      #end add-point 
+   END IF 
+   
+   IF p_cmd = 'u' THEN  #docno,ld欄位確認是絕對關閉
+      CALL cl_set_comp_entry("nmbadocno",FALSE)
+   END IF 
+ 
+#  IF p_cmd = 'u' THEN  #docdt欄位依照設定關閉(FALSE則為設定不同意修正) #(ver:78)
+      IF NOT cl_chk_update_docdt() THEN
+         CALL cl_set_comp_entry("nmbadocdt",FALSE)
+      END IF
+#  END IF 
+   
+   #add-point:set_no_entry段欄位控制後 name="set_no_entry.after_control"
+   #151130-00015#2 -begin -add by XZG 20151218
+   SELECT glaald INTO l_glaald FROM glaa_t
+    WHERE glaaent = g_enterprise AND glaa014 = 'Y'
+      AND glaacomp = g_nmba_m.nmbacomp
+#   IF NOT cl_null(g_nmba_m.nmbadocno) THEN  #150813-00015#19 mark
+   IF NOT cl_null(g_nmba_m.nmbadocno) AND p_cmd = 'u' THEN    #150813-00015#19 add
+      #获取单别
+      CALL s_aooi200_fin_get_slip(g_nmba_m.nmbadocno) RETURNING l_success,l_slip
+      #是否可改日期
+      CALL s_fin_get_doc_para(l_glaald,g_nmba_m.nmbacomp,l_slip,'D-FIN-0033') RETURNING l_dfin0033
+      #抓取关帐日期
+      CALL cl_get_para(g_enterprise,g_nmba_m.nmbacomp,'S-FIN-4007') RETURNING l_para_date #150813-00015#19 add
+#      IF l_dfin0033 = "N"  THEN  #150813-00015#19 mark
+      IF l_dfin0033 = "N" AND g_nmba_m.nmbadocdt <= l_para_date THEN  #150813-00015#19 add
+         CALL cl_set_comp_entry("nmbadocdt",FALSE)
+      ELSE 
+         CALL cl_set_comp_entry("nmbadocdt",TRUE)
+      END IF          
+   END IF 
+   #151130-00015#2  -end 
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.set_entry_b" >}
+#+ 單身欄位開啟設定
+PRIVATE FUNCTION anmt564_set_entry_b(p_cmd)
+   #add-point:set_entry_b段define(客製用) name="set_entry_b.define_customerization"
+   
+   #end add-point     
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_entry_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_entry_b.pre_function"
+   
+   #end add-point
+    
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("",TRUE)
+      #add-point:set_entry段欄位控制 name="set_entry_b.field_control"
+      
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry_b段 name="set_entry_b.set_entry_b"
+  #151201-00002#14 Mark ---(S)---
+  ##款別為10、20
+  #CALL cl_set_comp_entry("nmbb003", TRUE)
+  ##款別為30
+  #CALL cl_set_comp_entry("nmbb030,nmbb031,nmbb043", TRUE)
+  ##款別為40
+  #CALL cl_set_comp_entry("nmbb032,nmbb033,nmbb034,nmbb035",TRUE)
+  ##款別為50
+  #CALL cl_set_comp_entry("nmbb036,nmbb037,nmbb038",TRUE)
+  #151201-00002#14 Mark ---(E)---
+  #151201-00002#14 Add  ---(S)---
+   IF g_current_page = 1 THEN
+      #款別為10、20
+      CALL cl_set_comp_entry("nmbb003", TRUE)
+      #款別為30
+      CALL cl_set_comp_entry("nmbb030,nmbb031,nmbb043", TRUE)
+      #款別為40
+      CALL cl_set_comp_entry("nmbb032,nmbb033,nmbb034,nmbb035",TRUE)
+      #款別為50
+      CALL cl_set_comp_entry("nmbb036,nmbb037,nmbb038",TRUE)
+   END IF
+
+   IF g_current_page = 2 THEN
+      #第二單身根據來源類型開放單身欄位,這裡全部放開
+      CALL cl_set_comp_entry("nmee020,nmee003,nmee004,nmee005,nmee006,nmee007,nmee012",TRUE)
+      CALL cl_set_comp_entry("nmee008,nmee009,nmee010,nmee013,nmee002,nmee014,nmee019",TRUE)
+   END IF
+  #151201-00002#14 Add  ---(E)---
+   #end add-point  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.set_no_entry_b" >}
+#+ 單身欄位關閉設定
+PRIVATE FUNCTION anmt564_set_no_entry_b(p_cmd)
+   #add-point:set_no_entry_b段define(客製用) name="set_no_entry_b.define_customerization"
+   
+   #end add-point    
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry_b.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="set_no_entry_b.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("",FALSE)
+      #add-point:set_no_entry_b段欄位控制 name="set_no_entry_b.field_control"
+      
+      #end add-point 
+   END IF 
+   
+   #add-point:set_no_entry_b段 name="set_no_entry_b.set_no_entry_b"
+  #151201-00002#14 Mark ---(S)---
+  #CASE
+  #   WHEN g_nmbb_d[l_ac].nmbb029 = '10'
+  #      #款別為30
+  #      CALL cl_set_comp_entry("nmbb030,nmbb031,nmbb043", FALSE)
+  #      #款別為40
+  #      CALL cl_set_comp_entry("nmbb032,nmbb033,nmbb034,nmbb035",FALSE)
+  #      #款別為50
+  #      CALL cl_set_comp_entry("nmbb036,nmbb037,nmbb038",FALSE)
+  #   WHEN g_nmbb_d[l_ac].nmbb029 = '20'
+  #      #款別為30
+  #      CALL cl_set_comp_entry("nmbb030,nmbb031,nmbb043", FALSE)
+  #      #款別為40
+  #      CALL cl_set_comp_entry("nmbb032,nmbb033,nmbb034,nmbb035",FALSE)
+  #      #款別為50
+  #      CALL cl_set_comp_entry("nmbb036,nmbb037,nmbb038",FALSE)
+  #   WHEN g_nmbb_d[l_ac].nmbb029 = '30'
+  #      #款別為10、20
+  #      CALL cl_set_comp_entry("nmbb003", FALSE)
+  #      #款別為40
+  #      CALL cl_set_comp_entry("nmbb032,nmbb033,nmbb034,nmbb035",FALSE)
+  #      #款別為50
+  #      CALL cl_set_comp_entry("nmbb036,nmbb037,nmbb038",FALSE)
+  #   WHEN g_nmbb_d[l_ac].nmbb029 = '40'
+  #      #款別為10、20
+  #      CALL cl_set_comp_entry("nmbb003", FALSE)
+  #      #款別為30
+  #      CALL cl_set_comp_entry("nmbb030,nmbb031,nmbb043", FALSE)
+  #      #款別為50
+  #      CALL cl_set_comp_entry("nmbb036,nmbb037,nmbb038",FALSE)
+  #   WHEN g_nmbb_d[l_ac].nmbb029 = '50'
+  #      #款別為10、20
+  #      CALL cl_set_comp_entry("nmbb003", FALSE)
+  #      #款別為30
+  #      CALL cl_set_comp_entry("nmbb030,nmbb031,nmbb043", FALSE)
+  #      #款別為40
+  #      CALL cl_set_comp_entry("nmbb032,nmbb033,nmbb034,nmbb035",FALSE)
+  #END CASE
+  #151201-00002#14 Mark ---(E)---
+  #151201-00002#14 Add  ---(S)---
+   CALL cl_set_comp_required("nmbb036,nmbb037,nmbb038",TRUE)   #20150723 add lujh
+   IF g_current_page = 1 THEN
+      CASE
+         WHEN g_nmbb_d[l_ac].nmbb029 = '10'
+            #款別為30
+            CALL cl_set_comp_entry("nmbb030,nmbb031,nmbb043", FALSE)
+            #款別為40
+            CALL cl_set_comp_entry("nmbb032,nmbb033,nmbb034,nmbb035",FALSE)
+            #款別為50
+            CALL cl_set_comp_entry("nmbb036,nmbb037,nmbb038",FALSE)
+         WHEN g_nmbb_d[l_ac].nmbb029 = '20'
+            #款別為30
+            CALL cl_set_comp_entry("nmbb030,nmbb031,nmbb043", FALSE)
+            #款別為40
+            CALL cl_set_comp_entry("nmbb032,nmbb033,nmbb034,nmbb035",FALSE)
+            #款別為50
+            CALL cl_set_comp_entry("nmbb036,nmbb037,nmbb038",FALSE)
+         WHEN g_nmbb_d[l_ac].nmbb029 = '30'
+            #款別為10、20
+            CALL cl_set_comp_entry("nmbb003", FALSE)
+            #款別為40
+            CALL cl_set_comp_entry("nmbb032,nmbb033,nmbb034,nmbb035",FALSE)
+            #款別為50
+            CALL cl_set_comp_entry("nmbb036,nmbb037,nmbb038",FALSE)
+         WHEN g_nmbb_d[l_ac].nmbb029 = '40'
+            #款別為10、20
+            CALL cl_set_comp_entry("nmbb003", FALSE)
+            #款別為30
+            CALL cl_set_comp_entry("nmbb030,nmbb031,nmbb043", FALSE)
+            #款別為50
+            CALL cl_set_comp_entry("nmbb036,nmbb037,nmbb038",FALSE)
+         WHEN g_nmbb_d[l_ac].nmbb029 = '50'
+            #款別為10、20
+            CALL cl_set_comp_entry("nmbb003", FALSE)
+            #款別為30
+            CALL cl_set_comp_entry("nmbb030,nmbb031,nmbb043", FALSE)
+            #款別為40
+            CALL cl_set_comp_entry("nmbb032,nmbb033,nmbb034,nmbb035",FALSE)
+
+            CALL cl_set_comp_required("nmbb036,nmbb037,nmbb038",FALSE)   #20150723 add lujh
+         #20150729--add--str--lujh
+         WHEN g_nmbb_d[l_ac].nmbb029 = '90'
+            CALL cl_set_comp_entry("nmbb003", FALSE)
+            CALL cl_set_comp_entry("nmbb030,nmbb031,nmbb043", FALSE)
+            CALL cl_set_comp_entry("nmbb032,nmbb033,nmbb034,nmbb035",FALSE)
+            CALL cl_set_comp_entry("nmbb036,nmbb037,nmbb038",FALSE)
+         #20150729--add--end--lujh
+      END CASE
+   END IF
+         IF g_nmbb_d[l_ac].nmbb028 = '9005' THEN  #chenhz
+            CALL cl_set_comp_entry("nmbb003", TRUE)
+            END IF
+   IF g_current_page = 2 THEN
+      #第二單身根據來源類型開放單身欄位
+      CASE
+         WHEN g_nmbb2_d[l_ac].nmee022 = '4'
+            CALL cl_set_comp_entry("nmee003,nmee004",FALSE)
+         #20150729--add--str--lujh
+         WHEN g_nmbb2_d[l_ac].nmee022 = '5'
+            CALL cl_set_comp_entry("nmee020,nmee005,nmee007,nmee008",FALSE)
+            CALL cl_set_comp_entry("nmee009,nmee010,nmee013,nmee002,nmee014,nmee019",FALSE)
+         #20150729--add--end--lujh
+         WHEN g_nmbb2_d[l_ac].nmee022 = '6'
+            CALL cl_set_comp_entry("nmee020,nmee004,nmee005,nmee007,nmee008",FALSE)
+            CALL cl_set_comp_entry("nmee009,nmee010,nmee013,nmee002,nmee014,nmee019",FALSE)
+         WHEN g_nmbb2_d[l_ac].nmee022 = '7'
+            CALL cl_set_comp_entry("nmee020,nmee005,nmee007,nmee008",FALSE)
+            CALL cl_set_comp_entry("nmee009,nmee010,nmee013,nmee002,nmee014,nmee019",FALSE)         
+         OTHERWISE
+            CALL cl_set_comp_entry("nmee020,nmee005,nmee006,nmee007,nmee008",FALSE)
+            CALL cl_set_comp_entry("nmee009,nmee010,nmee013,nmee002,nmee014,nmee019",FALSE)
+      END CASE
+      #160509-00004 add by liyan --str--
+     # IF g_nmbb2_d[l_ac].nmee022 = '1' OR g_nmbb2_d[l_ac].nmee022 = '2' THEN 
+         CALL cl_set_comp_entry("nmee020,nmee024,nmee027",FALSE)
+      #END IF 
+      #160509-00004#27 add by liyan --end--
+   END IF
+  #151201-00002#14 Add  ---(E)---
+   #end add-point     
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.set_act_visible" >}
+#+ 單頭權限開啟
+PRIVATE FUNCTION anmt564_set_act_visible()
+   #add-point:set_act_visible段define(客製用) name="set_act_visible.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_visible段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible.define"
+   
+   #end add-point   
+   #add-point:set_act_visible段 name="set_act_visible.set_act_visible"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.set_act_no_visible" >}
+#+ 單頭權限關閉
+PRIVATE FUNCTION anmt564_set_act_no_visible()
+   #add-point:set_act_no_visible段define(客製用) name="set_act_no_visible.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_no_visible段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible.define"
+   
+   #end add-point   
+   #add-point:set_act_no_visible段 name="set_act_no_visible.set_act_no_visible"
+   #應用 a63 樣板自動產生(Version:1)
+   IF g_nmba_m.nmbastus NOT MATCHES "[NDR]" THEN   # N未確認/D抽單/R已拒絕允許修改
+      CALL cl_set_act_visible("modify,delete,modify_detail", FALSE)
+   END IF
+
+
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.set_act_visible_b" >}
+#+ 單身權限開啟
+PRIVATE FUNCTION anmt564_set_act_visible_b()
+   #add-point:set_act_visible_b段define(客製用) name="set_act_visible_b.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_visible_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible_b.define"
+   
+   #end add-point   
+   #add-point:set_act_visible_b段 name="set_act_visible_b.set_act_visible_b"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.set_act_no_visible_b" >}
+#+ 單身權限關閉
+PRIVATE FUNCTION anmt564_set_act_no_visible_b()
+   #add-point:set_act_no_visible_b段define(客製用) name="set_act_no_visible_b.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_no_visible_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible_b.define"
+   
+   #end add-point   
+   #add-point:set_act_no_visible_b段 name="set_act_no_visible_b.set_act_no_visible_b"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION anmt564_default_search()
+   #add-point:default_search段define(客製用) name="default_search.define_customerization"
+   
+   #end add-point  
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE li_cnt     LIKE type_t.num10
+   DEFINE ls_wc      STRING
+   DEFINE la_wc      DYNAMIC ARRAY OF RECORD
+          tableid    STRING,
+          wc         STRING
+          END RECORD
+   DEFINE ls_where   STRING
+   #add-point:default_search段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="default_search.before"
+   
+   #end add-point  
+   
+   LET g_pagestart = 1
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " nmbacomp = '", g_argv[01], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " nmbadocno = '", g_argv[02], "' AND "
+   END IF
+ 
+   
+   #add-point:default_search段after sql name="default_search.after_sql"
+   
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      #若無外部參數則預設為1=2
+      LET g_default = FALSE
+      
+      #預設查詢條件
+      CALL cl_qbe_get_default_qryplan() RETURNING ls_where
+      IF NOT cl_null(ls_where) THEN
+         CALL util.JSON.parse(ls_where, la_wc)
+         INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+         INITIALIZE g_wc2_table2 TO NULL
+ 
+ 
+         FOR li_idx = 1 TO la_wc.getLength()
+            CASE
+               WHEN la_wc[li_idx].tableid = "nmba_t" 
+                  LET g_wc = la_wc[li_idx].wc
+               WHEN la_wc[li_idx].tableid = "nmbb_t" 
+                  LET g_wc2_table1 = la_wc[li_idx].wc
+               WHEN la_wc[li_idx].tableid = "nmee_t" 
+                  LET g_wc2_table2 = la_wc[li_idx].wc
+ 
+ 
+               WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                  LET g_wc2_extend = la_wc[li_idx].wc
+            END CASE
+         END FOR
+         IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1) 
+            OR NOT cl_null(g_wc2_table2)
+ 
+ 
+            OR NOT cl_null(g_wc2_extend)
+            THEN
+            #組合g_wc2
+            IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+               LET g_wc2 = g_wc2_table1
+            END IF
+            IF g_wc2_table2 <> " 1=1" AND NOT cl_null(g_wc2_table2) THEN
+               LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+            END IF
+ 
+ 
+            IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+               LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+            END IF
+         
+            IF g_wc2.subString(1,5) = " AND " THEN
+               LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+            END IF
+         END IF
+      END IF
+    
+      IF cl_null(g_wc) AND cl_null(g_wc2) THEN
+         LET g_wc = " 1=2"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前 name="default_search.after"
+   
+   #end add-point  
+ 
+   IF g_wc.getIndexOf(" 1=2", 1) THEN
+      LET g_default = TRUE
+   END IF
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.state_change" >}
+   #應用 a09 樣板自動產生(Version:17)
+#+ 確認碼變更 
+PRIVATE FUNCTION anmt564_statechange()
+   #add-point:statechange段define(客製用) name="statechange.define_customerization"
+   
+   #end add-point  
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:statechange段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="statechange.define"
+   DEFINE l_success      LIKE type_t.num5
+   DEFINE l_tot_success  LIKE type_t.num5
+   DEFINE l_count        LIKE type_t.num5
+   DEFINE l_efin5001     LIKE type_t.chr1
+   DEFINE l_ooba002      LIKE ooba_t.ooba002
+   define l_stbc018      like stbc_t.stbc018
+   define l_stbc019      like stbc_t.stbc019
+   #end add-point  
+   
+   #add-point:Function前置處理 name="statechange.before"
+   
+   #end add-point  
+   
+   ERROR ""     #清空畫面右下側ERROR區塊
+ 
+   IF g_nmba_m.nmbacomp IS NULL
+      OR g_nmba_m.nmbadocno IS NULL
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   CALL s_transaction_begin()
+   
+   OPEN anmt564_cl USING g_enterprise,g_nmba_m.nmbacomp,g_nmba_m.nmbadocno
+   IF STATUS THEN
+      CLOSE anmt564_cl
+      CALL s_transaction_end('N','0')
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN anmt564_cl:" 
+      LET g_errparam.code   = STATUS 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #顯示最新的資料
+   EXECUTE anmt564_master_referesh USING g_nmba_m.nmbacomp,g_nmba_m.nmbadocno INTO g_nmba_m.nmbasite, 
+       g_nmba_m.nmba008,g_nmba_m.nmba001,g_nmba_m.nmbacomp,g_nmba_m.nmbadocno,g_nmba_m.nmbadocdt,g_nmba_m.nmba003, 
+       g_nmba_m.nmba004,g_nmba_m.nmba005,g_nmba_m.nmbastus,g_nmba_m.nmba007,g_nmba_m.nmba006,g_nmba_m.nmba002, 
+       g_nmba_m.nmbaownid,g_nmba_m.nmbaowndp,g_nmba_m.nmbacrtid,g_nmba_m.nmbacrtdp,g_nmba_m.nmbacrtdt, 
+       g_nmba_m.nmbamodid,g_nmba_m.nmbamoddt,g_nmba_m.nmbacnfid,g_nmba_m.nmbacnfdt,g_nmba_m.nmbasite_desc, 
+       g_nmba_m.nmba008_desc,g_nmba_m.nmba001_desc,g_nmba_m.nmbacomp_desc,g_nmba_m.nmbadocno_desc,g_nmba_m.nmba004_desc, 
+       g_nmba_m.nmba002_desc,g_nmba_m.nmbaownid_desc,g_nmba_m.nmbaowndp_desc,g_nmba_m.nmbacrtid_desc, 
+       g_nmba_m.nmbacrtdp_desc,g_nmba_m.nmbamodid_desc,g_nmba_m.nmbacnfid_desc
+   
+ 
+   #檢查是否允許此動作
+   IF NOT anmt564_action_chk() THEN
+      CLOSE anmt564_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_nmba_m.nmbasite,g_nmba_m.nmbasite_desc,g_nmba_m.nmba008,g_nmba_m.nmba008_desc,g_nmba_m.nmba001, 
+       g_nmba_m.nmba001_desc,g_nmba_m.nmbacomp,g_nmba_m.nmbacomp_desc,g_nmba_m.nmbadocno,g_nmba_m.nmbadocno_desc, 
+       g_nmba_m.nmbadocdt,g_nmba_m.nmba003,g_nmba_m.nmba004,g_nmba_m.nmba004_desc,g_nmba_m.nmba005,g_nmba_m.tot1, 
+       g_nmba_m.tot2,g_nmba_m.diff,g_nmba_m.nmbastus,g_nmba_m.nmba007,g_nmba_m.nmba006,g_nmba_m.nmba002, 
+       g_nmba_m.nmba002_desc,g_nmba_m.nmbaownid,g_nmba_m.nmbaownid_desc,g_nmba_m.nmbaowndp,g_nmba_m.nmbaowndp_desc, 
+       g_nmba_m.nmbacrtid,g_nmba_m.nmbacrtid_desc,g_nmba_m.nmbacrtdp,g_nmba_m.nmbacrtdp_desc,g_nmba_m.nmbacrtdt, 
+       g_nmba_m.nmbamodid,g_nmba_m.nmbamodid_desc,g_nmba_m.nmbamoddt,g_nmba_m.nmbacnfid,g_nmba_m.nmbacnfid_desc, 
+       g_nmba_m.nmbacnfdt
+ 
+   CASE g_nmba_m.nmbastus
+      WHEN "N"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+      WHEN "Y"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+      WHEN "V"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/verify.png")
+      WHEN "A"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+      WHEN "D"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+      WHEN "R"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+      WHEN "W"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+      WHEN "X"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+      
+   END CASE
+ 
+   #add-point:資料刷新後 name="statechange.after_refresh"
+   LET l_tot_success = TRUE
+   LET l_success = TRUE
+   CALL cl_err_collect_init()
+   #end add-point
+ 
+   MENU "" ATTRIBUTES (STYLE="popup")
+      BEFORE MENU
+         HIDE OPTION "approved"
+         HIDE OPTION "rejection"
+         CASE g_nmba_m.nmbastus
+            
+            WHEN "N"
+               HIDE OPTION "unconfirmed"
+            WHEN "Y"
+               HIDE OPTION "confirmed"
+            WHEN "V"
+               HIDE OPTION "verify"
+            WHEN "A"
+               HIDE OPTION "approved"
+            WHEN "D"
+               HIDE OPTION "withdraw"
+            WHEN "R"
+               HIDE OPTION "rejection"
+            WHEN "W"
+               HIDE OPTION "signing"
+            WHEN "X"
+               HIDE OPTION "invalid"
+         END CASE
+     
+      #add-point:menu前 name="statechange.before_menu"
+      #151013-00016#7 151105 by sakura add(S)
+      HIDE OPTION "verify"
+      HIDE OPTION "unverify"      
+      CALL cl_set_act_visible("unconfirmed,invalid,confirmed,hold,unhold",TRUE)
+      #無條件關結案
+      CALL cl_set_act_visible("closed",FALSE)
+      #提交和抽單一開始先無條件關
+      CALL cl_set_act_visible("signing,withdraw",FALSE)
+
+      CASE g_nmba_m.nmbastus
+         WHEN "N"
+            CALL cl_set_act_visible("unconfirmed,hold,unhold",FALSE)
+            #需提交至BPM時，則顯示「提交」功能並隱藏「確認」功能
+            IF cl_bpm_chk() THEN
+               CALL cl_set_act_visible("signing",TRUE)
+               CALL cl_set_act_visible("confirmed",FALSE)
+            END IF
+
+         WHEN "X"
+            CALL cl_set_act_visible("unconfirmed,invalid,confirmed,hold,unhold",FALSE)
+            CLOSE anmt564_cl                #150813-00015#19 add
+            CALL s_transaction_end('N','0') #150813-00015#19 add
+            RETURN
+         WHEN "Y"
+            CALL cl_set_act_visible("invalid,confirmed,unhold",FALSE)
+
+         WHEN "H"
+            CALL cl_set_act_visible("unconfirmed,invalid,confirmed,hold",FALSE)
+
+          #已核准只能顯示確認;其餘應用功能皆隱藏
+         WHEN "A"
+            CALL cl_set_act_visible("confirmed ",TRUE)
+            CALL cl_set_act_visible("unconfirmed,invalid,hold,unhold",FALSE)
+
+         #保留修改的功能(如作廢)，隱藏其他應用功能
+         WHEN "R"
+            CALL cl_set_act_visible("confirmed,unconfirmed",FALSE)
+         WHEN "D"
+            CALL cl_set_act_visible("confirmed,unconfirmed,hold,unhold",FALSE)
+
+         #送簽中只能顯示抽單;其餘應用功能皆隱藏
+         WHEN "W"
+            CALL cl_set_act_visible("withdraw",TRUE)
+            CALL cl_set_act_visible("unconfirmed,invalid,confirmed,hold,unhold",FALSE)
+      END CASE
+      #151013-00016#7 151105 by sakura add(E) 
+      #end add-point
+      
+      #應用 a36 樣板自動產生(Version:5)
+      #提交
+      ON ACTION signing
+         IF cl_auth_chk_act("signing") THEN
+            IF NOT anmt564_send() THEN
+               CALL s_transaction_end('N','0')
+            ELSE
+               CALL s_transaction_end('Y','0')
+            END IF
+            #因應簽核行為, 該動作完成後不再進行後續處理
+            #於此處直接返回
+            CLOSE anmt564_cl
+            RETURN
+         END IF
+    
+      #抽單
+      ON ACTION withdraw
+         IF cl_auth_chk_act("withdraw") THEN
+            IF NOT anmt564_draw_out() THEN
+               CALL s_transaction_end('N','0')
+            ELSE
+               CALL s_transaction_end('Y','0')
+            END IF
+            #因應簽核行為, 該動作完成後不再進行後續處理
+            #於此處直接返回
+            CLOSE anmt564_cl
+            RETURN
+         END IF
+ 
+ 
+ 
+	  
+      ON ACTION unconfirmed
+         IF cl_auth_chk_act("unconfirmed") THEN
+            LET lc_state = "N"
+            #add-point:action控制 name="statechange.unconfirmed"
+ 
+            #end add-point
+         END IF
+         EXIT MENU
+      ON ACTION confirmed
+         IF cl_auth_chk_act("confirmed") THEN
+            LET lc_state = "Y"
+            #add-point:action控制 name="statechange.confirmed"
+            #151013-00016#7 151105 by sakura mark(S)
+            ##150602-00057#2 by 02291 add
+            #CALL s_aooi200_fin_get_slip(g_nmba_m.nmbadocno) RETURNING l_success,l_ooba002
+            #CALL s_fin_chk_E5001(g_glaald,g_nmba_m.nmbacomp,l_ooba002) RETURNING l_efin5001
+            #IF l_efin5001 = 'N' THEN
+            #   IF g_nmba_m.nmbacrtid = g_user THEN
+            #      INITIALIZE g_errparam TO NULL
+            #      LET g_errparam.code = 'axr-00346'
+            #      LET g_errparam.extend = ''
+            #      LET g_errparam.popup = TRUE
+            #      CALL cl_err()
+            #      CALL s_transaction_end('N','0')
+            #      CLOSE anmt564_cl
+            #      RETURN
+            #   END IF
+            #END IF
+            ##150602-00057#2 by 02291 add
+            #151013-00016#7 151105 by sakura mark(E)
+            #end add-point
+         END IF
+         EXIT MENU
+      ON ACTION verify
+         IF cl_auth_chk_act("verify") THEN
+            LET lc_state = "V"
+            #add-point:action控制 name="statechange.verify"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+      ON ACTION approved
+         IF cl_auth_chk_act("approved") THEN
+            LET lc_state = "A"
+            #add-point:action控制 name="statechange.approved"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+      #ON ACTION withdraw
+      #   IF cl_auth_chk_act("withdraw") THEN
+      #      LET lc_state = "D"
+      #      #add-point:action控制 name="statechange.withdraw"
+      #      
+      #      #end add-point
+      #   END IF
+      #   EXIT MENU
+      ON ACTION rejection
+         IF cl_auth_chk_act("rejection") THEN
+            LET lc_state = "R"
+            #add-point:action控制 name="statechange.rejection"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+      #ON ACTION signing
+      #   IF cl_auth_chk_act("signing") THEN
+      #      LET lc_state = "W"
+      #      #add-point:action控制 name="statechange.signing"
+      #      
+      #      #end add-point
+      #   END IF
+      #   EXIT MENU
+      ON ACTION invalid
+         IF cl_auth_chk_act("invalid") THEN
+            LET lc_state = "X"
+            #add-point:action控制 name="statechange.invalid"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+ 
+      #add-point:stus控制 name="statechange.more_control"
+      
+      #end add-point
+      
+   END MENU
+   
+   #確認被選取的狀態碼在清單中
+   IF (lc_state <> "N" 
+      AND lc_state <> "Y"
+      AND lc_state <> "V"
+      AND lc_state <> "A"
+      AND lc_state <> "D"
+      AND lc_state <> "R"
+      AND lc_state <> "W"
+      AND lc_state <> "X"
+      ) OR 
+      g_nmba_m.nmbastus = lc_state OR cl_null(lc_state) THEN
+      CLOSE anmt564_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:stus修改前 name="statechange.b_update"
+   #151013-00016#7 151105 by sakura add(S)
+   CALL cl_err_collect_init()
+   #確認
+   IF lc_state = 'Y' THEN
+      IF g_nmba_m.nmbastus = 'N' THEN
+         CALL s_anmt564_conf_chk(g_nmba_m.nmbacomp,g_nmba_m.nmbadocno) RETURNING g_sub_success
+         IF NOT g_sub_success THEN
+            CALL s_transaction_end('N','0')
+            CALL cl_err_collect_show()
+            RETURN
+         ELSE
+            IF NOT cl_ask_confirm('aim-00108') THEN   #是否執行確認？
+               CALL s_transaction_end('N','0')
+               CALL cl_err_collect_show()
+               RETURN
+            ELSE
+               CALL s_transaction_begin()
+               CALL s_anmt564_conf_upd(g_nmba_m.nmbacomp,g_nmba_m.nmbadocno) RETURNING g_sub_success
+               IF NOT g_sub_success THEN
+                  CALL s_transaction_end('N','0')
+                  CALL cl_err_collect_show()
+                  RETURN
+               ELSE
+                  CALL s_transaction_end('Y','0')
+                  CALL cl_err_collect_show()
+               END IF
+            END IF
+         END IF
+      END IF 
+      CALL anmt564_show()  #160509-00004#27
+   END IF  
+   #取消確認
+   IF lc_state = 'N' THEN
+      CALL s_anmt564_unconf_chk(g_nmba_m.nmbacomp,g_nmba_m.nmbadocno) RETURNING g_sub_success
+      IF NOT g_sub_success THEN
+         CALL s_transaction_end('N','0')
+         CALL cl_err_collect_show()
+         RETURN
+      ELSE
+         IF NOT cl_ask_confirm('aim-00110') THEN   #是否執行取消確認？
+            CALL s_transaction_end('N','0')
+            CALL cl_err_collect_show()
+            RETURN
+         else 
+           if not cl_null(g_nmbb2_d[l_ac].nmee027) then 
+             INITIALIZE g_errparam TO NULL 
+             LET g_errparam.extend = "" 
+             LET g_errparam.code   = 'anm-03002'
+             LET g_errparam.popup  = FALSE 
+             CALL cl_err()
+           else
+            CALL s_transaction_begin()
+            CALL s_anmt564_unconf_upd(g_nmba_m.nmbacomp,g_nmba_m.nmbadocno) RETURNING g_sub_success
+            IF NOT g_sub_success THEN
+               CALL s_transaction_end('N','0')
+               CALL cl_err_collect_show()
+               RETURN
+            ELSE
+               CALL s_transaction_end('Y','0')
+               CALL cl_err_collect_show()
+            END IF
+          end if 
+         END IF
+      END IF
+      CALL anmt564_show()   #160509-00004#27
+   END IF
+   #作廢
+   IF lc_state = 'X' THEN
+      CALL s_anmt564_invalid_chk(g_nmba_m.nmbacomp,g_nmba_m.nmbadocno) RETURNING g_sub_success
+      IF NOT g_sub_success THEN
+         CALL s_transaction_end('N','0')
+         CALL cl_err_collect_show()
+         RETURN
+      ELSE
+         IF NOT cl_ask_confirm('aim-00109') THEN   #是否執行作廢？
+            CALL s_transaction_end('N','0')
+            CALL cl_err_collect_show()
+            RETURN
+         ELSE
+            CALL s_transaction_begin()
+            CALL s_anmt564_invalid_upd(g_nmba_m.nmbacomp,g_nmba_m.nmbadocno) RETURNING g_sub_success
+            IF NOT g_sub_success THEN
+               CALL s_transaction_end('N','0')
+               CALL cl_err_collect_show()
+               RETURN
+            ELSE
+               CALL s_transaction_end('Y','0')
+            CALL cl_err_collect_show()                     
+            END IF
+         END IF
+      END IF
+   END IF   
+   #151013-00016#7 151105 by sakura add(E)
+   #end add-point
+   
+   LET g_nmba_m.nmbamodid = g_user
+   LET g_nmba_m.nmbamoddt = cl_get_current()
+   LET g_nmba_m.nmbastus = lc_state
+   
+   #異動狀態碼欄位/修改人/修改日期
+   UPDATE nmba_t 
+      SET (nmbastus,nmbamodid,nmbamoddt) 
+        = (g_nmba_m.nmbastus,g_nmba_m.nmbamodid,g_nmba_m.nmbamoddt)     
+    WHERE nmbaent = g_enterprise AND nmbacomp = g_nmba_m.nmbacomp
+      AND nmbadocno = g_nmba_m.nmbadocno
+    
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+   ELSE
+      CASE lc_state
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "V"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/verify.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+    
+      #撈取異動後的資料
+      EXECUTE anmt564_master_referesh USING g_nmba_m.nmbacomp,g_nmba_m.nmbadocno INTO g_nmba_m.nmbasite, 
+          g_nmba_m.nmba008,g_nmba_m.nmba001,g_nmba_m.nmbacomp,g_nmba_m.nmbadocno,g_nmba_m.nmbadocdt, 
+          g_nmba_m.nmba003,g_nmba_m.nmba004,g_nmba_m.nmba005,g_nmba_m.nmbastus,g_nmba_m.nmba007,g_nmba_m.nmba006, 
+          g_nmba_m.nmba002,g_nmba_m.nmbaownid,g_nmba_m.nmbaowndp,g_nmba_m.nmbacrtid,g_nmba_m.nmbacrtdp, 
+          g_nmba_m.nmbacrtdt,g_nmba_m.nmbamodid,g_nmba_m.nmbamoddt,g_nmba_m.nmbacnfid,g_nmba_m.nmbacnfdt, 
+          g_nmba_m.nmbasite_desc,g_nmba_m.nmba008_desc,g_nmba_m.nmba001_desc,g_nmba_m.nmbacomp_desc, 
+          g_nmba_m.nmbadocno_desc,g_nmba_m.nmba004_desc,g_nmba_m.nmba002_desc,g_nmba_m.nmbaownid_desc, 
+          g_nmba_m.nmbaowndp_desc,g_nmba_m.nmbacrtid_desc,g_nmba_m.nmbacrtdp_desc,g_nmba_m.nmbamodid_desc, 
+          g_nmba_m.nmbacnfid_desc
+      
+      #將資料顯示到畫面上
+      DISPLAY BY NAME g_nmba_m.nmbasite,g_nmba_m.nmbasite_desc,g_nmba_m.nmba008,g_nmba_m.nmba008_desc, 
+          g_nmba_m.nmba001,g_nmba_m.nmba001_desc,g_nmba_m.nmbacomp,g_nmba_m.nmbacomp_desc,g_nmba_m.nmbadocno, 
+          g_nmba_m.nmbadocno_desc,g_nmba_m.nmbadocdt,g_nmba_m.nmba003,g_nmba_m.nmba004,g_nmba_m.nmba004_desc, 
+          g_nmba_m.nmba005,g_nmba_m.tot1,g_nmba_m.tot2,g_nmba_m.diff,g_nmba_m.nmbastus,g_nmba_m.nmba007, 
+          g_nmba_m.nmba006,g_nmba_m.nmba002,g_nmba_m.nmba002_desc,g_nmba_m.nmbaownid,g_nmba_m.nmbaownid_desc, 
+          g_nmba_m.nmbaowndp,g_nmba_m.nmbaowndp_desc,g_nmba_m.nmbacrtid,g_nmba_m.nmbacrtid_desc,g_nmba_m.nmbacrtdp, 
+          g_nmba_m.nmbacrtdp_desc,g_nmba_m.nmbacrtdt,g_nmba_m.nmbamodid,g_nmba_m.nmbamodid_desc,g_nmba_m.nmbamoddt, 
+          g_nmba_m.nmbacnfid,g_nmba_m.nmbacnfid_desc,g_nmba_m.nmbacnfdt
+   END IF
+ 
+   #add-point:stus修改後 name="statechange.a_update"
+   #151013-00016#7 151105 by sakura mark(S)
+   #CASE
+   #   WHEN lc_state = 'Y'
+   #      CALL anmt564_confirm_chk() RETURNING l_success
+   #      IF NOT l_success THEN LET l_tot_success = FALSE END IF
+   #      CALL anmt564_stev_upd(" 1=1","+") RETURNING l_success
+   #      IF NOT l_success THEN LET l_tot_success = FALSE END IF
+   #      CALL anmt564_nmbc_insert() RETURNING l_success
+   #      IF NOT l_success THEN LET l_tot_success = FALSE END IF
+   #   WHEN lc_state = 'N'
+   #      LET l_count = 0
+   #      SELECT COUNT(*) FROM nmbt_t WHERE nmbtent = g_enterprise
+   #         AND nmbt001 = g_nmba_m.nmbadocno
+   #      IF cl_null(l_count) THEN LET l_count = 0 END IF
+   #      IF l_count > 0 THEN
+   #         INITIALIZE g_errparam TO NULL 
+   #         LET g_errparam.extend = "" 
+   #         LET g_errparam.code   = 'axr-00361'
+   #         LET g_errparam.popup  = FALSE 
+   #         CALL cl_err()
+   #      END IF
+   #      CALL anmt564_stev_upd(" 1=1","-") RETURNING l_success
+   #      IF NOT l_success THEN LET l_tot_success = FALSE END IF
+   #      DELETE FROM nmbc_t WHERE nmbcent = g_enterprise
+   #         AND nmbccomp  = g_nmba_m.nmbacomp
+   #         AND nmbcdocno = g_nmba_m.nmbadocno
+   #END CASE
+   #151013-00016#7 151105 by sakura mark(E)
+   #end add-point
+ 
+   #add-point:statechange段結束前 name="statechange.after"
+   IF NOT l_tot_success THEN
+      CASE g_nmba_m.nmbastus
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "V"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/verify.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+      
+      END CASE
+
+      CALL s_transaction_end('N',1)
+      CALL cl_err_collect_show()
+      CLOSE anmt564_cl
+     #151201-00002#14 Add  ---(S)---
+      CALL anmt564_b_fill()
+      IF g_nmba_m.nmbastus <> 'Y' THEN
+         CALL cl_set_act_visible("output", FALSE)
+      ELSE
+         CALL cl_set_act_visible("output", TRUE)
+      END IF
+     #151201-00002#14 Add  ---(E)---
+
+      #功能已完成,通報訊息中心
+      CALL anmt564_msgcentre_notify(lc_state)
+      LET g_nmba_m.nmbastus = g_nmba_m_t.nmbastus
+      DISPLAY BY NAME g_nmba_m.nmbastus
+
+      RETURN
+   END IF
+   #151013-00016#7 151105 by sakura mark(S)
+   ##151013-00016#6---s
+   #CALL s_anm_glbc015_upd(g_glaald,g_nmba_m.nmbadocno,g_nmba_m.nmbadocdt,g_nmba_m.nmbastus) RETURNING l_success
+   #IF NOT l_success THEN
+   #   CALL s_transaction_end('N','0')
+   #   RETURN
+   #END IF
+   ##151013-00016#6---e
+   #151013-00016#7 151105 by sakura mark(E)
+   #end add-point  
+ 
+   CLOSE anmt564_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL anmt564_msgcentre_notify('statechange:'||lc_state)
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="anmt564.idx_chk" >}
+#+ 顯示正確的單身資料筆數
+PRIVATE FUNCTION anmt564_idx_chk()
+   #add-point:idx_chk段define(客製用) name="idx_chk.define_customerization"
+   
+   #end add-point  
+   #add-point:idx_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="idx_chk.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="idx_chk.pre_function"
+   
+   #end add-point
+   
+   IF g_current_page = 1 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail1")
+      IF g_detail_idx > g_nmbb_d.getLength() THEN
+         LET g_detail_idx = g_nmbb_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_nmbb_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_nmbb_d.getLength() TO FORMONLY.cnt
+   END IF
+   
+   IF g_current_page = 2 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail2")
+      IF g_detail_idx > g_nmbb2_d.getLength() THEN
+         LET g_detail_idx = g_nmbb2_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_nmbb2_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_nmbb2_d.getLength() TO FORMONLY.cnt
+   END IF
+ 
+   
+   #add-point:idx_chk段other name="idx_chk.other"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.b_fill2" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION anmt564_b_fill2(pi_idx)
+   #add-point:b_fill2段define(客製用) name="b_fill2.define_customerization"
+   
+   #end add-point
+   DEFINE pi_idx                 LIKE type_t.num10
+   DEFINE li_ac                  LIKE type_t.num10
+   DEFINE li_detail_idx_tmp      LIKE type_t.num10
+   DEFINE ls_chk                 LIKE type_t.chr1
+   #add-point:b_fill2段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill2.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="b_fill2.pre_function"
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   IF g_detail_idx <= 0 THEN
+      RETURN
+   END IF
+   
+   LET li_detail_idx_tmp = g_detail_idx
+   
+ 
+      
+ 
+      
+   #add-point:單身填充後 name="b_fill2.after_fill"
+   
+   #end add-point
+    
+   LET l_ac = li_ac
+   
+   CALL anmt564_detail_show()
+   
+   LET g_detail_idx = li_detail_idx_tmp
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.fill_chk" >}
+#+ 單身填充確認
+PRIVATE FUNCTION anmt564_fill_chk(ps_idx)
+   #add-point:fill_chk段define(客製用) name="fill_chk.define_customerization"
+   
+   #end add-point
+   DEFINE ps_idx        LIKE type_t.chr10
+   #add-point:fill_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fill_chk.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="fill_chk.before_chk"
+   
+   #end add-point
+   
+   #此funtion功能暫時停用(2015/1/12)
+   #無論傳入值為何皆回傳true(代表要填充該單身)
+ 
+   #全部為1=1 or null時回傳true
+   IF (cl_null(g_wc2_table1) OR g_wc2_table1.trim() = '1=1')  AND 
+      (cl_null(g_wc2_table2) OR g_wc2_table2.trim() = '1=1') THEN
+      #add-point:fill_chk段other_chk name="fill_chk.other_chk"
+      
+      #end add-point
+      RETURN TRUE
+   END IF
+   
+   #add-point:fill_chk段after_chk name="fill_chk.after_chk"
+   
+   #end add-point
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.status_show" >}
+PRIVATE FUNCTION anmt564_status_show()
+   #add-point:status_show段define(客製用) name="status_show.define_customerization"
+   
+   #end add-point
+   #add-point:status_show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="status_show.define"
+   
+   #end add-point
+   
+   #add-point:status_show段status_show name="status_show.status_show"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.mask_functions" >}
+&include "erp/anm/anmt564_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="anmt564.signature" >}
+   #應用 a39 樣板自動產生(Version:10)
+#+ BPM提交
+PRIVATE FUNCTION anmt564_send()
+   #add-point:send段define(客製用) name="send.define_customerization"
+   
+   #end add-point 
+   #add-point:send段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="send.define"
+   
+   #end add-point 
+   
+   #add-point:Function前置處理  name="send.pre_function"
+   
+   #end add-point
+   
+   #依據單據個數，需要指定所有單身條件為" 1=1"  (單身有幾個就要設幾個)
+   LET g_wc2_table1 = " 1=1"
+   LET g_wc2_table2 = " 1=1"
+ 
+ 
+   CALL anmt564_show()
+   CALL anmt564_set_pk_array()
+   
+   #add-point: 初始化的ADP name="send.before_send"
+   #151013-00016#7 151105 by sakura add(S)
+   IF NOT s_anmt564_conf_chk(g_nmba_m.nmbacomp,g_nmba_m.nmbadocno) THEN
+      CLOSE anmt564_cl
+      CALL s_transaction_end('N','0')
+      RETURN FALSE
+   END IF
+   #151013-00016#7 151105 by sakura add(E
+   #end add-point
+   
+   #公用變數初始化
+   CALL cl_bpm_data_init()
+                  
+   #依照主檔/單身個數產生 CALL cl_bpm_set_master_data() / cl_bpm_set_detail_data() 
+   #單頭固定為 CALL cl_bpm_set_master_data(util.JSONObject.fromFGL(xxxx)) 傳入參數: (1)單頭陣列  ; 回傳值: 無
+   CALL cl_bpm_set_master_data(util.JSONObject.fromFGL(g_nmba_m))
+                              
+   #單身固定為 CALL cl_bpm_set_detail_data(s_detailX, util.JSONArray.fromFGL(xxxx)) 傳入參數: (1)單身SR名稱  (2)單身陣列  ; 回傳值: 無
+   CALL cl_bpm_set_detail_data("s_detail1", util.JSONArray.fromFGL(g_nmbb_d))
+   CALL cl_bpm_set_detail_data("s_detail2", util.JSONArray.fromFGL(g_nmbb2_d))
+ 
+ 
+   # cl_bpm_cli() 裡有包含以前的aws_condition()=>送簽資料檢核和更新單據狀況碼為'W'
+   # cl_bpm_cli() 傳入參數:無  ;  回傳值: 0 開單失敗; 1 開單成功
+ 
+   #add-point: 提交前的ADP name="send.before_cli"
+   
+   #end add-point
+ 
+   #開單失敗
+   IF NOT cl_bpm_cli() THEN 
+      RETURN FALSE
+   END IF
+ 
+   #add-point: 提交後的ADP name="send.after_send"
+   
+   #end add-point
+ 
+   #此段落不需要刪除資料,但是否需要refresh圖片樣式???
+   #CALL anmt564_ui_browser_refresh()
+ 
+   #重新指定此筆單據資料狀態圖片=>送簽中
+   LET g_browser[g_current_idx].b_statepic = "stus/16/signing.png"
+ 
+   #重新取得單頭/單身資料,DISPLAY在畫面上
+   CALL anmt564_ui_headershow()
+   CALL anmt564_ui_detailshow()
+ 
+   RETURN TRUE
+   
+END FUNCTION
+ 
+ 
+ 
+#應用 a40 樣板自動產生(Version:9)
+#+ BPM抽單
+PRIVATE FUNCTION anmt564_draw_out()
+   #add-point:draw段define name="draw.define_customerization"
+   
+   #end add-point
+   #add-point:draw段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="draw.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="draw.pre_function"
+   
+   #end add-point
+   
+   #抽單失敗
+   IF NOT cl_bpm_draw_out() THEN 
+      RETURN FALSE
+   END IF    
+          
+   #重新指定此筆單據資料狀態圖片=>抽單
+   LET g_browser[g_current_idx].b_statepic = "stus/16/draw_out.png"
+ 
+   #重新取得單頭/單身資料,DISPLAY在畫面上
+   CALL anmt564_ui_headershow()  
+   CALL anmt564_ui_detailshow()
+ 
+   #add-point:Function後置處理  name="draw.after_function"
+   
+   #end add-point
+ 
+   RETURN TRUE
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="anmt564.set_pk_array" >}
+   #應用 a51 樣板自動產生(Version:8)
+#+ 給予pk_array內容
+PRIVATE FUNCTION anmt564_set_pk_array()
+   #add-point:set_pk_array段define name="set_pk_array.define_customerization"
+   
+   #end add-point
+   #add-point:set_pk_array段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_pk_array.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="set_pk_array.before"
+   
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_nmba_m.nmbacomp
+   LET g_pk_array[1].column = 'nmbacomp'
+   LET g_pk_array[2].values = g_nmba_m.nmbadocno
+   LET g_pk_array[2].column = 'nmbadocno'
+   
+   #add-point:set_pk_array段之後 name="set_pk_array.after"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="anmt564.other_dialog" readonly="Y" >}
+   
+ 
+{</section>}
+ 
+{<section id="anmt564.msgcentre_notify" >}
+#應用 a66 樣板自動產生(Version:6)
+PRIVATE FUNCTION anmt564_msgcentre_notify(lc_state)
+   #add-point:msgcentre_notify段define name="msgcentre_notify.define_customerization"
+   
+   #end add-point   
+   DEFINE lc_state LIKE type_t.chr80
+   #add-point:msgcentre_notify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="msgcentre_notify.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="msgcentre_notify.pre_function"
+   
+   #end add-point
+   
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = lc_state
+ 
+   #PK資料填寫
+   CALL anmt564_set_pk_array()
+   #單頭資料填寫
+   LET g_msgparam.data[1] = util.JSON.stringify(g_nmba_m)
+ 
+   #add-point:msgcentre其他通知 name="msgcentre_notify.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="anmt564.action_chk" >}
+#+ 修改/刪除前行為檢查(是否可允許此動作), 若有其他行為須管控也可透過此段落
+PRIVATE FUNCTION anmt564_action_chk()
+   #add-point:action_chk段define(客製用) name="action_chk.define_customerization"
+   
+   #end add-point
+   #add-point:action_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="action_chk.define"
+   
+   #end add-point
+   
+   #add-point:action_chk段action_chk name="action_chk.action_chk"
+   
+   #end add-point
+      
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt564.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 獲取帳套相關資料
+# Memo...........:
+# Usage..........: CALL anmt564_glaa_get()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2015/6/5 By 02599
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_glaa_get()
+   LET g_ooef001=''
+   LET g_ooef016=''
+   LET g_ooef006=''
+   LET g_glaald=''
+   LET g_glaa001=''
+   LET g_glaa002=''
+   LET g_glaa015=''
+   LET g_glaa016=''
+   LET g_glaa017=''
+   LET g_glaa018=''
+   LET g_glaa019=''
+   LET g_glaa020=''
+   LET g_glaa021=''
+   LET g_glaa022=''
+   LET g_glaa003=''
+   LET g_glaa024=''
+   
+   SELECT ooef001,ooef016,ooef006 INTO g_ooef001,g_ooef016,g_ooef006
+     FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_nmba_m.nmbacomp
+      
+    SELECT glaald,glaa001,glaa002,glaa003,glaa015,glaa016,glaa017,
+           glaa018,glaa019,glaa020,glaa021,glaa022,glaa024,glaa005        #151222-00010#10 add glaa005              
+     INTO g_glaald,g_glaa001,g_glaa002,g_glaa003,g_glaa015,g_glaa016,g_glaa017,
+          g_glaa018,g_glaa019,g_glaa020,g_glaa021,g_glaa022,g_glaa024,g_glaa005  #151222-00010#10 add g_glaa005  
+     FROM glaa_t
+    WHERE glaaent = g_enterprise 
+      AND glaacomp = g_nmba_m.nmbacomp
+      AND glaa014 = 'Y'
+END FUNCTION
+
+################################################################################
+# Descriptions...: 結合來源類型欄位檢查來源單號+項次是否可用
+# Memo...........:
+# Usage..........: CALL anmt564_source_chk()
+#                  RETURNING r_success
+# Input parameter: p_type         是否有修改來源單號/項次
+# Return code....: r_success      成功否
+# Date & Author..: 2016/01/13 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_source_chk(p_type)
+   DEFINE p_type            LIKE type_t.num5
+   DEFINE r_success         LIKE type_t.num5
+   DEFINE l_success         LIKE type_t.num5
+   DEFINE l_stev014         LIKE stev_t.stev014
+   DEFINE l_oodb005         LIKE oodb_t.oodb005
+   DEFINE l_oodb006         LIKE oodb_t.oodb006
+   DEFINE l_oodb011         LIKE oodb_t.oodb011
+   DEFINE  l_ooab002        LIKE ooab_t.ooab002
+   DEFINE l_str             STRING
+   DEFINE l_str1            STRING
+
+   IF cl_null(p_type) THEN LET p_type = FALSE END IF
+   LET r_success = TRUE
+
+   CALL anmt564_glaa_get()
+
+   LET l_str = " COL1 = '",g_nmbb2_d[l_ac].nmee003,"' "
+   LET l_str1 = " AND COL2 = '",g_nmbb2_d[l_ac].nmee004,"'"
+   IF NOT cl_null(g_nmbb2_d[l_ac].nmeesite) THEN
+      LET l_str = l_str," AND COL3 = '",g_nmbb2_d[l_ac].nmeesite,"' "
+   END IF
+   IF NOT cl_null(g_nmbb2_d[l_ac].nmee001) THEN
+      LET l_str = l_str," AND COL4 = '",g_nmbb2_d[l_ac].nmee001,"' "
+   END IF
+
+   CASE
+      WHEN g_nmbb2_d[l_ac].nmee022 = '1'
+         LET l_str = l_str,l_str1
+         LET l_str = cl_replace_str(l_str,"COL1","stbc004")
+         LET l_str = cl_replace_str(l_str,"COL2","stbc005")
+         LET l_str = cl_replace_str(l_str,"COL3","stbcsite")
+         LET l_str = cl_replace_str(l_str,"COL4","stbc008")
+         CALL anmt564_stbc_chk(l_str,g_nmbb2_d[l_ac].nmeeseq) RETURNING r_success,l_stev014
+         IF r_success THEN
+            IF NOT p_type THEN
+               CALL anmt564_stbc_desc(g_nmbb2_d[l_ac].nmee003,g_nmbb2_d[l_ac].nmee004)
+            END IF
+         END IF
+      WHEN g_nmbb2_d[l_ac].nmee022 = '2'
+         LET l_str = l_str,l_str1
+         LET l_str = cl_replace_str(l_str,"COL1","stevdocno")
+         LET l_str = cl_replace_str(l_str,"COL2","stevseq")
+         LET l_str = cl_replace_str(l_str,"COL3","steusite")
+         LET l_str = cl_replace_str(l_str,"COL4","steu003")
+         CALL anmt564_stev_chk(l_str,g_nmbb2_d[l_ac].nmeeseq) RETURNING r_success,l_stev014
+         IF r_success THEN
+            IF NOT p_type THEN
+               #修改來源單號則刷新單身
+               CALL anmt564_stev_desc(g_nmbb2_d[l_ac].nmee003,g_nmbb2_d[l_ac].nmee004)
+            END IF
+         END IF
+      WHEN g_nmbb2_d[l_ac].nmee022 = '3'
+         LET l_str = l_str,l_str1
+         LET l_str = cl_replace_str(l_str,"COL1","xrcbdocno")
+         LET l_str = cl_replace_str(l_str,"COL2","xrcbseq")
+         LET l_str = cl_replace_str(l_str,"COL3","xrcbsite")
+         LET l_str = cl_replace_str(l_str,"COL4","xrca004")
+         CALL anmt564_xrcb_chk(l_str,g_nmbb2_d[l_ac].nmeeseq,'18') RETURNING r_success,l_stev014
+         IF r_success THEN
+            IF NOT p_type THEN
+               #修改來源單號則刷新單身
+               CALL anmt564_xrcb_1_desc(g_nmbb2_d[l_ac].nmee003,g_nmbb2_d[l_ac].nmee004)
+            END IF
+         END IF
+      WHEN g_nmbb2_d[l_ac].nmee022 = '5'
+         LET l_str = l_str,l_str1
+         LET l_str = cl_replace_str(l_str,"COL1","xrcbdocno")
+         LET l_str = cl_replace_str(l_str,"COL2","xrcbseq")
+         LET l_str = cl_replace_str(l_str,"COL3","xrcbsite")
+         LET l_str = cl_replace_str(l_str,"COL4","xrca004")
+         CALL anmt564_xrcb_chk(l_str,g_nmbb2_d[l_ac].nmeeseq,"'141','241'") RETURNING r_success,l_stev014
+         IF r_success THEN
+            IF NOT p_type THEN
+               #修改來源單號則刷新單身
+               CALL anmt564_xrcb_2_desc(g_nmbb2_d[l_ac].nmee003,g_nmbb2_d[l_ac].nmee004)
+            END IF
+         END IF
+      WHEN g_nmbb2_d[l_ac].nmee022 = '6'
+         LET l_str = cl_replace_str(l_str,"COL1","rtiedocno")
+         LET l_str = cl_replace_str(l_str,"COL3","rtiasite")
+         LET l_str = cl_replace_str(l_str,"COL4","rtia002")
+         CALL anmt564_rtie_6_chk(l_str,g_nmbb2_d[l_ac].nmeeseq) RETURNING r_success,l_stev014
+         IF r_success THEN
+            IF NOT p_type THEN
+               #修改來源單號則刷新單身
+               CALL anmt564_rtie_6_desc(g_nmbb2_d[l_ac].nmee003,g_nmbb2_d[l_ac].nmee004)
+            END IF
+         END IF
+      WHEN g_nmbb2_d[l_ac].nmee022 = '7'
+         LET l_str = l_str,l_str1
+         LET l_str = cl_replace_str(l_str,"COL1","rtiedocno")
+         LET l_str = cl_replace_str(l_str,"COL2","rtieseq")
+         LET l_str = cl_replace_str(l_str,"COL3","rtiasite")
+         LET l_str = cl_replace_str(l_str,"COL4","rtia002")
+         CALL anmt564_rtie_chk(l_str,g_nmbb2_d[l_ac].nmeeseq) RETURNING r_success,l_stev014
+         IF r_success THEN
+            IF NOT p_type THEN
+               #修改來源單號則刷新單身
+               CALL anmt564_rtie_desc(g_nmbb2_d[l_ac].nmee003,g_nmbb2_d[l_ac].nmee004)
+            END IF
+         END IF
+   END CASE
+
+   IF r_success THEN
+      IF p_type THEN
+         #沒有修改來源單號則檢查單身金額是否大於可結算金額
+         IF l_stev014 < g_nmbb2_d[l_ac].nmee012 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = ""
+            LET g_errparam.code   = "anm-00391"
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            LET r_success = FALSE
+         END IF
+      END IF
+   END IF
+
+   DISPLAY g_nmbb2_d[l_ac].nmeesite,g_nmbb2_d[l_ac].nmee001,g_nmbb2_d[l_ac].nmee005,g_nmbb2_d[l_ac].nmee006,
+           g_nmbb2_d[l_ac].nmee009, g_nmbb2_d[l_ac].nmee010,g_nmbb2_d[l_ac].nmee011,g_nmbb2_d[l_ac].nmee012,
+           g_nmbb2_d[l_ac].nmee014, g_nmbb2_d[l_ac].nmee019,g_nmbb2_d[l_ac].nmee023
+   CALL s_desc_get_department_desc(g_nmbb2_d[l_ac].nmeesite) RETURNING g_nmbb2_d[l_ac].nmeesite_desc
+   CALL anmt564_nmbb026_desc(g_nmbb2_d[l_ac].nmee001,'') RETURNING g_nmbb_d[l_ac].nmbb026_desc
+   CALL anmt564_nmee005_desc(g_nmbb2_d[l_ac].nmee005) RETURNING g_nmbb2_d[l_ac].nmee005_desc
+   CALL anmt564_nmee006_desc(g_nmbb2_d[l_ac].nmee006) RETURNING g_nmbb2_d[l_ac].nmee006_desc
+   CALL s_desc_get_department_desc(g_nmbb2_d[l_ac].nmee014) RETURNING g_nmbb2_d[l_ac].nmee014_desc
+   IF NOT cl_null(g_nmbb2_d[l_ac].nmeesite) AND NOT cl_null(g_nmbb2_d[l_ac].nmee010) THEN
+      CALL s_tax_chk(g_nmbb2_d[l_ac].nmeesite,g_nmbb2_d[l_ac].nmee010)
+         RETURNING l_success,g_nmbb2_d[l_ac].nmee010_desc,l_oodb005,l_oodb006,l_oodb011
+   END IF
+   CALL cl_get_para(g_enterprise,g_nmba_m.nmbacomp,'S-FIN-4004') RETURNING l_ooab002  #資金模組匯率來源
+                            #匯率參照表;帳套;           日期;               來源幣別
+   CALL s_aooi160_get_exrate('2',g_glaald,g_nmba_m.nmbadocdt,g_nmbb2_d[l_ac].nmee009,
+                            #目的幣別;  交易金額;              匯類類型
+                             g_glaa001,0,l_ooab002)
+   RETURNING g_nmbb2_d[l_ac].nmee018
+   LET g_nmbb2_d[l_ac].nmee013 = g_nmbb2_d[l_ac].nmee012 * g_nmbb2_d[l_ac].nmee018
+
+   RETURN r_success
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 來源資料檢查
+# Memo...........:
+# Usage..........: CALL anmt564_stev_chk(p_str)
+#                  RETURNING r_success
+# Input parameter: p_str          範圍
+# Return code....: r_success      檢查成功否
+#                : r_stev014      可結算金額
+# Date & Author..: 2015/06/08 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_stev_chk(p_str,p_seq)
+   DEFINE p_str         STRING
+   DEFINE p_seq         LIKE nmee_t.nmeeseq
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE r_stev014     LIKE stev_t.stev014   #151201-00002#14 Mod 016 --> 014
+   DEFINE l_sql         STRING
+   DEFINE l_count       LIKE type_t.num5
+   DEFINE l_stevdocno   LIKE stev_t.stevdocno
+   DEFINE l_stevseq     LIKE stev_t.stevseq
+   DEFINE l_nmee012     LIKE nmee_t.nmee012
+
+  #LET l_sql = "SELECT stevdocno,stevseq,stev016 - CASE WHEN stev025 IS NULL THEN 0 ELSE stev025 END ", #151201-00002#14 Mark
+   LET l_sql = "SELECT stevdocno,stevseq,stev014 ",                                                     #151201-00002#14 Add
+               "  FROM steu_t,stev_t   ",
+               " WHERE stevent = steuent   AND stevdocno = steudocno  ",
+               "   AND steustus = 'Y'      AND ",p_str CLIPPED
+   PREPARE anmt564_stev_chk_prep FROM l_sql
+   DECLARE anmt564_stev_chk_curs CURSOR FOR anmt564_stev_chk_prep
+
+   LET l_sql = "SELECT COUNT(*) FROM (",l_sql,")"
+   PREPARE anmt564_stev_cnt_prep FROM l_sql
+   DECLARE anmt564_stev_cnt_curs CURSOR FOR anmt564_stev_cnt_prep
+
+   LET r_success = TRUE
+
+   #資料存在性
+   LET l_count = 0
+   EXECUTE anmt564_stev_cnt_curs INTO l_count
+   IF cl_null(l_count) OR l_count = 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "anm-00356" 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success,r_stev014   #151201-00002#14 Mod 016 --> 014
+   END IF
+
+   #資料有效性
+   LET r_stev014 = 0      LET l_nmee012 = 0   #151201-00002#14 Mod 016 --> 014
+   FOREACH anmt564_stev_chk_curs INTO l_stevdocno,l_stevseq,r_stev014
+      #取得在途金額
+      SELECT SUM(nmee012) INTO l_nmee012 FROM nmee_t t1,nmba_t
+       WHERE nmbaent = nmeeent     AND nmbadocno = nmeedocno
+         AND nmbacomp = nmeecomp   AND nmbastus = 'N'   #作廢的不考慮、已確認的已經回寫stev014了
+         AND nmee003 = l_stevdocno AND nmee004 = l_stevseq
+         AND NOT EXISTS (SELECT 1 FROM nmee_t t2 WHERE nmeeent = g_enterprise AND nmeedocno = g_nmba_m.nmbadocno
+                            AND nmeecomp = g_nmba_m.nmbacomp AND nmeeseq = p_seq AND t1.nmeeent = t2.nmeeent
+                            AND t1.nmeecomp = t2.nmeecomp AND t1.nmeedocno = t2.nmeedocno AND t1.nmeeseq = t2.nmeeseq)
+      IF cl_null(l_nmee012) THEN LET l_nmee012 = 0 END IF
+
+      LET r_stev014 = r_stev014 - l_nmee012   #151201-00002#14 Mod 016 --> 014
+      IF r_stev014 <= 0 THEN                  #151201-00002#14 Mod 016 --> 014
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = "anm-00357" 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         LET r_success = TRUE                 #151201-00002#14 FALSE   ---> TRUE
+         RETURN r_success,r_stev014           #151201-00002#14 Mod 016 --> 014
+      END IF
+
+   END FOREACH
+
+   RETURN r_success,r_stev014                 #151201-00002#14 Mod 016 --> 014
+
+END FUNCTION
+################################################################################
+# Descriptions...: 結算底稿資料檢查
+# Memo...........:
+# Usage..........: CALL anmt564_stbc_chk(p_str)
+#                  RETURNING r_success
+# Input parameter: p_str          範圍
+# Return code....: r_success      檢查成功否
+#                : r_stev014      可結算金額
+# Date & Author..: 2016/01/12 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_stbc_chk(p_str,p_seq)
+   DEFINE p_str         STRING
+   DEFINE p_seq         LIKE nmee_t.nmeeseq
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE r_stbc021     LIKE stbc_t.stbc021
+   DEFINE l_sql         STRING
+   DEFINE l_count       LIKE type_t.num5
+   DEFINE l_stbc004     LIKE stbc_t.stbc004
+   DEFINE l_stbc005     LIKE stbc_t.stbc005
+   DEFINE l_nmee012     LIKE nmee_t.nmee012
+   DEFINE l_ooab002     LIKE ooab_t.ooab002    #160509-00004#16 add lujh
+
+   LET l_sql = "SELECT stbc004,stbc005,stbc021 FROM stbc_t,stae_t ",
+               " WHERE stbcent = '",g_enterprise,"'   ",
+			      "   AND stbcent = staeent",
+			      "   AND stbc012 = stae001    AND ",p_str CLIPPED
+			      #"   AND stbc037 = 'N'",      #160419-00027#1 add    #160509-00004#16 mark lujh
+               #"   AND stbc038 = 'Y'      AND ",p_str CLIPPED
+              
+   #160509-00004#16--add--str--lujh
+   LET l_ooab002 = ''
+   CALL cl_get_para(g_enterprise,g_nmba_m.nmbacomp,'S-FIN-4004') RETURNING l_ooab002
+   IF l_ooab002 = 'N' THEN 
+      LET l_sql = l_sql," AND stbc037 = 'N' "
+   END IF
+   #160509-00004#16--add--end--lujh              
+              
+   PREPARE anmt564_stbc_chk_prep FROM l_sql
+   DECLARE anmt564_stbc_chk_curs CURSOR FOR anmt564_stbc_chk_prep
+
+   LET l_sql = "SELECT COUNT(*) FROM (",l_sql,")"
+   PREPARE anmt564_stbc_cnt_prep FROM l_sql
+   DECLARE anmt564_stbc_cnt_curs CURSOR FOR anmt564_stbc_cnt_prep
+
+   LET r_success = TRUE
+
+   #資料存在性
+   LET l_count = 0
+   EXECUTE anmt564_stbc_cnt_curs INTO l_count
+   IF cl_null(l_count) OR l_count = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = ""
+      LET g_errparam.code   = "anm-00394"
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success,r_stbc021
+   END IF
+
+   #資料有效性
+   LET r_stbc021 = 0      LET l_nmee012 = 0
+   FOREACH anmt564_stbc_chk_curs INTO l_stbc004,l_stbc005,r_stbc021
+      #取得在途金額
+      SELECT SUM(nmee012) INTO l_nmee012 FROM nmee_t t1,nmba_t
+       WHERE nmbaent = nmeeent     AND nmbadocno = nmeedocno
+         AND nmbacomp = nmeecomp   AND nmbastus = 'N'   #作廢的不考慮、已確認的已經回寫stbc022了
+         AND nmee003 = l_stbc004 AND nmee004 = l_stbc005
+         AND NOT EXISTS (SELECT 1 FROM nmee_t t2 WHERE nmeeent = g_enterprise AND nmeedocno = g_nmba_m.nmbadocno
+                            AND nmeecomp = g_nmba_m.nmbacomp AND nmeeseq = p_seq AND t1.nmeeent = t2.nmeeent
+                            AND t1.nmeecomp = t2.nmeecomp AND t1.nmeedocno = t2.nmeedocno AND t1.nmeeseq = t2.nmeeseq)
+      IF cl_null(l_nmee012) THEN LET l_nmee012 = 0 END IF
+
+      LET r_stbc021 = r_stbc021 - l_nmee012
+      IF r_stbc021 = 0 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = ""
+         LET g_errparam.code   = "anm-00357"
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success,r_stbc021
+      END IF
+
+   END FOREACH
+
+   RETURN r_success,r_stbc021
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_rtie_chk(p_str,p_seq)
+   DEFINE p_str         STRING
+   DEFINE p_seq         LIKE nmee_t.nmeeseq
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE r_xrcb105     LIKE xrcb_t.xrcb105
+   DEFINE l_sql         STRING
+   DEFINE l_count       LIKE type_t.num5
+   DEFINE l_xrcbdocno   LIKE xrcb_t.xrcbdocno
+   DEFINE l_xrcbseq     LIKE xrcb_t.xrcbseq
+   DEFINE l_nmee012     LIKE nmee_t.nmee012
+   DEFINE l_xrca001     LIKE xrca_t.xrca001
+
+   LET l_sql = "SELECT rtiedocno xrcbdocno,rtieseq xrcbseq,rtie006 xrcb105,rtiasite xrcbsite,rtia002 xrca004,'141' xrca001 ",
+               "  FROM rtia_t, rtie_t ",
+               " WHERE     rtiaent = rtieent ",
+               "       AND rtiadocno = rtiedocno ",
+               "       AND rtia000 IN ('ammt425','ammt405','agct405','cmmt405')",  #add by chenhz 15/12/10  'cmmt405'
+			      "       AND ",p_str CLIPPED
+   PREPARE anmt564_rtie_chk_prep FROM l_sql
+   DECLARE anmt564_rtie_chk_curs CURSOR FOR anmt564_rtie_chk_prep
+
+   LET l_sql = "SELECT COUNT(*) FROM (",l_sql,")"
+   PREPARE anmt564_rtie_cnt_prep FROM l_sql
+   DECLARE anmt564_rtie_cnt_curs CURSOR FOR anmt564_rtie_cnt_prep
+
+   LET r_success = TRUE
+
+   #資料存在性
+   LET l_count = 0
+   EXECUTE anmt564_rtie_cnt_curs INTO l_count
+   IF cl_null(l_count) OR l_count = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = ""
+      LET g_errparam.code   = "anm-00392"
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success,r_xrcb105
+   END IF
+
+   #資料有效性
+   LET r_xrcb105 = 0      LET l_nmee012 = 0
+   FOREACH anmt564_rtie_chk_curs INTO l_xrcbdocno,l_xrcbseq,r_xrcb105
+      #取得在途金額
+      SELECT SUM(nmee012) INTO l_nmee012 FROM nmee_t t1,nmba_t
+       WHERE nmbaent = nmeeent     AND nmbadocno = nmeedocno
+         AND nmbacomp = nmeecomp   AND nmbastus = 'N'   #作廢的不考慮、已確認的已經回寫xrcb022了
+         AND nmee003 = l_xrcbdocno AND nmee004 = l_xrcbseq
+         AND NOT EXISTS (SELECT 1 FROM nmee_t t2 WHERE nmeeent = g_enterprise AND nmeedocno = g_nmba_m.nmbadocno
+                            AND nmeecomp = g_nmba_m.nmbacomp AND nmeeseq = p_seq AND t1.nmeeent = t2.nmeeent
+                            AND t1.nmeecomp = t2.nmeecomp AND t1.nmeedocno = t2.nmeedocno AND t1.nmeeseq = t2.nmeeseq)
+      IF cl_null(l_nmee012) THEN LET l_nmee012 = 0 END IF
+
+      LET r_xrcb105 = r_xrcb105 - l_nmee012
+
+      IF r_xrcb105 <= 0 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = ""
+         LET g_errparam.code   = "anm-00357"
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success,r_xrcb105
+      END IF
+
+   END FOREACH
+
+   RETURN r_success,r_xrcb105
+
+END FUNCTION
+################################################################################
+# Descriptions...: 應收單資料檢查
+# Memo...........:
+# Usage..........: CALL anmt564_xrcb_chk(p_str)
+#                  RETURNING r_success
+# Input parameter: p_str          範圍
+# Return code....: r_success      檢查成功否
+#                : r_stev014      可結算金額
+# Date & Author..: 2016/01/12 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_xrcb_chk(p_str,p_seq,p_xrca001)
+   DEFINE p_str         STRING
+   DEFINE p_seq         LIKE nmee_t.nmeeseq
+   DEFINE p_xrca001     LIKE xrca_t.xrca001
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE r_xrcb105     LIKE xrcb_t.xrcb105
+   DEFINE l_sql         STRING
+   DEFINE l_count       LIKE type_t.num5
+   DEFINE l_xrcbdocno   LIKE xrcb_t.xrcbdocno
+   DEFINE l_xrcbseq     LIKE xrcb_t.xrcbseq
+   DEFINE l_nmee012     LIKE nmee_t.nmee012
+   DEFINE l_xrca001     LIKE xrca_t.xrca001
+
+   LET l_sql = "SELECT * FROM (",
+               "SELECT xrcbdocno,xrcbseq,xrcb105,xrcbsite,xrca004,xrca001",
+               "  FROM xrcb_t,xrca_t,xrcc_t    ",
+               " WHERE xrcbent = '",g_enterprise,"'   ",
+               "   AND xrcaent = xrcbent",
+               "   AND xrccent = xrcbent",
+               "   AND xrcadocno = xrcbdocno",
+               "   AND xrccdocno = xrcbdocno",
+               #"   AND xrca001 IN (",p_xrca001,"')",     #160509-00004#16 mark lujh
+               "   AND xrca001 IN ('",p_xrca001,"')",     #160509-00004#16 add lujh
+               "   AND xrcald = xrcbld",
+               "   AND xrccld = xrcbld",
+               "   AND xrcastus = 'Y'",
+              " )",
+			   "   WHERE ",p_str CLIPPED
+   PREPARE anmt564_xrcb_chk_prep FROM l_sql
+   DECLARE anmt564_xrcb_chk_curs CURSOR FOR anmt564_xrcb_chk_prep
+
+   LET l_sql = "SELECT COUNT(*) FROM (",l_sql,")"
+   PREPARE anmt564_xrcb_cnt_prep FROM l_sql
+   DECLARE anmt564_xrcb_cnt_curs CURSOR FOR anmt564_xrcb_cnt_prep
+
+   LET r_success = TRUE
+
+   #資料存在性
+   LET l_count = 0
+   EXECUTE anmt564_xrcb_cnt_curs INTO l_count
+   IF cl_null(l_count) OR l_count = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = ""
+      IF p_xrca001 = '18' THEN
+         LET g_errparam.code   = "anm-00392"
+      ELSE
+         LET g_errparam.code   = "anm-00393"
+      END IF
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success,r_xrcb105
+   END IF
+
+   #資料有效性
+   LET r_xrcb105 = 0      LET l_nmee012 = 0
+   FOREACH anmt564_xrcb_chk_curs INTO l_xrcbdocno,l_xrcbseq,r_xrcb105
+      #取得在途金額
+      SELECT SUM(nmee012) INTO l_nmee012 FROM nmee_t t1,nmba_t
+       WHERE nmbaent = nmeeent     AND nmbadocno = nmeedocno
+         AND nmbacomp = nmeecomp   AND nmbastus <> 'X'   #作廢的不考慮
+         AND nmee003 = l_xrcbdocno AND nmee004 = l_xrcbseq
+         AND NOT EXISTS (SELECT 1 FROM nmee_t t2 WHERE nmeeent = g_enterprise AND nmeedocno = g_nmba_m.nmbadocno
+                            AND nmeecomp = g_nmba_m.nmbacomp AND nmeeseq = p_seq AND t1.nmeeent = t2.nmeeent
+                            AND t1.nmeecomp = t2.nmeecomp AND t1.nmeedocno = t2.nmeedocno AND t1.nmeeseq = t2.nmeeseq)
+      IF cl_null(l_nmee012) THEN LET l_nmee012 = 0 END IF
+
+      SELECT xrca001 INTO l_xrca001 FROM xrca_t WHERE xrcaent = g_enterprise AND xrcadocno = l_xrcbdocno
+
+      IF r_xrcb105 <= 0 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = ""
+         LET g_errparam.code   = "anm-00357"
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success,r_xrcb105
+      END IF
+
+      IF l_xrca001 = '141' OR cl_null(l_xrca001) THEN
+         LET r_xrcb105 = r_xrcb105 - l_nmee012
+      ELSE
+         LET r_xrcb105 = (r_xrcb105 + l_nmee012) * -1
+      END IF
+
+   END FOREACH
+
+   RETURN r_success,r_xrcb105
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_rtie_6_chk(p_str,p_seq)
+   DEFINE p_str         STRING
+   DEFINE p_seq         LIKE nmee_t.nmeeseq
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE r_xrcb105     LIKE xrcb_t.xrcb105
+   DEFINE l_sql         STRING
+   DEFINE l_count       LIKE type_t.num5
+   DEFINE l_xrcbdocno   LIKE xrcb_t.xrcbdocno
+   DEFINE l_xrcbseq     LIKE xrcb_t.xrcbseq
+   DEFINE l_nmee012     LIKE nmee_t.nmee012
+   DEFINE l_xrca001     LIKE xrca_t.xrca001
+
+   LET l_sql = "SELECT rtiedocno,0,SUM(rtie006) ",
+               "  FROM rtia_t, rtie_t ",
+               " WHERE     rtiaent = rtieent ",
+               " AND rtiadocno = rtiedocno   ",
+               " AND rtia000 = 'crtt620'     ",
+               " AND rtie001   = '91'        ",
+               "     AND NOT EXISTS (SELECT 1 FROM nmee_t WHERE nmeeent = rtiaent  ",
+               "                        AND nmee003 = rtiedocno AND nmee004 = rtieseq) ",
+			      "       AND ",p_str CLIPPED,
+			      " GROUP BY rtiedocno"
+   PREPARE anmt564_rtie_7_chk_prep FROM l_sql
+   DECLARE anmt564_rtie_7_chk_curs CURSOR FOR anmt564_rtie_7_chk_prep
+
+   LET l_sql = "SELECT COUNT(*) FROM (",l_sql,")"
+   PREPARE anmt564_rtie_7_cnt_prep FROM l_sql
+   DECLARE anmt564_rtie_7_cnt_curs CURSOR FOR anmt564_rtie_7_cnt_prep
+
+   LET r_success = TRUE
+
+   #資料存在性
+   LET l_count = 0
+   EXECUTE anmt564_rtie_7_cnt_curs INTO l_count
+   IF cl_null(l_count) OR l_count = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = ""
+      LET g_errparam.code   = "anm-00393"
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success,r_xrcb105
+   END IF
+
+   #資料有效性
+   LET r_xrcb105 = 0      LET l_nmee012 = 0
+   FOREACH anmt564_rtie_7_chk_curs INTO l_xrcbdocno,l_xrcbseq,r_xrcb105
+      #取得在途金額
+      SELECT SUM(nmee012) INTO l_nmee012 FROM nmee_t t1,nmba_t
+       WHERE nmbaent = nmeeent     AND nmbadocno = nmeedocno
+         AND nmbacomp = nmeecomp   AND nmbastus = 'N'   #作廢的不考慮、已確認的已經回寫xrcb022了
+         AND nmee003 = l_xrcbdocno
+         AND NOT EXISTS (SELECT 1 FROM nmee_t t2 WHERE nmeeent = g_enterprise AND nmeedocno = g_nmba_m.nmbadocno
+                            AND nmeecomp = g_nmba_m.nmbacomp AND nmeeseq = p_seq AND t1.nmeeent = t2.nmeeent
+                            AND t1.nmeecomp = t2.nmeecomp AND t1.nmeedocno = t2.nmeedocno AND t1.nmeeseq = t2.nmeeseq)
+      IF cl_null(l_nmee012) THEN LET l_nmee012 = 0 END IF
+
+      LET r_xrcb105 = r_xrcb105 - l_nmee012
+
+      IF r_xrcb105 <= 0 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = ""
+         LET g_errparam.code   = "anm-00357"
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success,r_xrcb105
+      END IF
+
+   END FOREACH
+
+   RETURN r_success,r_xrcb105
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 來源資料帶單身默認值
+# Memo...........:
+# Usage..........: CALL anmt564_stev_desc(p_str)
+#                  RETURNING ---
+# Input parameter: p_nmee003      來源單號
+#                : p_nmee003      來源項次
+# Return code....: 
+# Date & Author..: 2015/06/08 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_stev_desc(p_nmee003,p_nmee004)
+   DEFINE p_nmee003     LIKE nmee_t.nmee003
+   DEFINE p_nmee004     LIKE nmee_t.nmee004
+   DEFINE l_stevseq     LIKE stev_t.stevseq
+   DEFINE l_nmee012     LIKE nmee_t.nmee012
+
+   SELECT steusite,steu003,stev024,stev005,stev006,stev007,stev008,stev009,
+          stev011,stev016 - CASE WHEN stev025 IS NULL THEN 0 ELSE stev025 END,stev020,stev019
+     INTO g_nmbb2_d[l_ac].nmeesite,g_nmbb2_d[l_ac].nmee001,g_nmbb2_d[l_ac].nmee005,
+          g_nmbb2_d[l_ac].nmee006, g_nmbb2_d[l_ac].nmee007,g_nmbb2_d[l_ac].nmee008,
+          g_nmbb2_d[l_ac].nmee009, g_nmbb2_d[l_ac].nmee010,g_nmbb2_d[l_ac].nmee011,
+          g_nmbb2_d[l_ac].nmee012, g_nmbb2_d[l_ac].nmee014,g_nmbb2_d[l_ac].nmee019
+     FROM steu_t,stev_t         
+    WHERE stevent = steuent   AND stevdocno = steudocno                      
+      AND steustus = 'Y'      AND stevdocno = p_nmee003
+      AND stevseq = p_nmee004
+
+   #取得在途金額
+   SELECT SUM(nmee012) INTO l_nmee012 FROM nmee_t,nmba_t
+    WHERE nmbaent = nmeeent     AND nmbadocno = nmeedocno
+      AND nmbacomp = nmeecomp   AND nmbastus = 'N'   #作廢的不考慮、已確認的已經回寫stev016了
+      AND nmee003 = p_nmee003   AND nmee004 = p_nmee004
+   IF cl_null(l_nmee012) THEN LET l_nmee012 = 0 END IF
+
+   LET g_nmbb2_d[l_ac].nmee012 = g_nmbb2_d[l_ac].nmee012 - l_nmee012
+
+END FUNCTION
+################################################################################
+# Descriptions...: 費用單資料帶單身默認值
+# Memo...........:
+# Usage..........: CALL anmt564_stbc_desc(p_str)
+#                  RETURNING ---
+# Input parameter: p_nmee003      來源單號
+#                : p_nmee003      來源項次
+# Return code....:
+# Date & Author..: 2016/01/12 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_stbc_desc(p_nmee003,p_nmee004)
+   DEFINE p_nmee003     LIKE nmee_t.nmee003
+   DEFINE p_nmee004     LIKE nmee_t.nmee004
+   DEFINE l_stbc004     LIKE stbc_t.stbc004
+   DEFINE l_stbc005     LIKE stbc_t.stbc005
+   DEFINE l_nmee012     LIKE nmee_t.nmee012
+
+   SELECT stbcsite,stbc008,stbc033,stbc012,stbc013,stbc014,stbc016,
+          stbc019,stbc026,stbc025
+     INTO g_nmbb2_d[l_ac].nmeesite,g_nmbb2_d[l_ac].nmee001,g_nmbb2_d[l_ac].nmee005,
+          g_nmbb2_d[l_ac].nmee006,g_nmbb2_d[l_ac].nmee009,g_nmbb2_d[l_ac].nmee010,
+          g_nmbb2_d[l_ac].nmee011,g_nmbb2_d[l_ac].nmee012,g_nmbb2_d[l_ac].nmee014,
+          g_nmbb2_d[l_ac].nmee019
+     FROM stbc_t,stae_t
+    WHERE stbcent = g_enterprise   AND stbcent = staeent
+	   AND stbc012 = stae001    
+      AND stbc004 = p_nmee003      AND stbc005 = p_nmee004
+
+   #取得在途金額
+   SELECT SUM(nmee012) INTO l_nmee012 FROM nmee_t,nmba_t
+    WHERE nmbaent = nmeeent     AND nmbadocno = nmeedocno
+      AND nmbacomp = nmeecomp   AND nmbastus = 'N'   #作廢的不考慮、已確認的已經回寫stbc022了
+      AND nmbaent = g_enterprise
+      AND nmee003 = l_stbc004 AND nmee004 = l_stbc005
+   IF cl_null(l_nmee012) THEN LET l_nmee012 = 0 END IF
+
+   LET g_nmbb2_d[l_ac].nmee012 = g_nmbb2_d[l_ac].nmee012 - l_nmee012
+
+END FUNCTION
+################################################################################
+# Descriptions...: 應收結算單資料帶單身默認值
+# Memo...........:
+# Usage..........: CALL anmt564_xrcb_1_desc(p_str)
+#                  RETURNING ---
+# Input parameter: p_nmee003      來源單號
+#                : p_nmee003      來源項次
+# Return code....:
+# Date & Author..: 2016/01/12 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_xrcb_1_desc(p_nmee003,p_nmee004)
+   DEFINE p_nmee003     LIKE nmee_t.nmee003
+   DEFINE p_nmee004     LIKE nmee_t.nmee004
+   DEFINE p_xrca001     LIKE type_t.chr10
+   DEFINE l_nmee012     LIKE nmee_t.nmee012
+   DEFINE l_xrca001     LIKE xrca_t.xrca001
+
+   SELECT xrcbsite,xrca004,xrcb014,xrca100,xrcb020,xrcb022,
+          xrcb105, xrcb010,xrcb012,xrca101
+     INTO g_nmbb2_d[l_ac].nmeesite,g_nmbb2_d[l_ac].nmee001,g_nmbb2_d[l_ac].nmee006,
+          g_nmbb2_d[l_ac].nmee009, g_nmbb2_d[l_ac].nmee010,g_nmbb2_d[l_ac].nmee011,
+          g_nmbb2_d[l_ac].nmee012, g_nmbb2_d[l_ac].nmee014,g_nmbb2_d[l_ac].nmee019,
+          g_nmbb2_d[l_ac].nmee018
+    FROM xrcb_t,xrca_t
+    WHERE xrcbent = g_enterprise   AND xrcaent = xrcbent
+      AND xrca001 = '18'           AND xrcadocno = xrcbdocno    
+      AND xrcald = xrcbld          AND xrcastus = 'Y'
+      AND xrcbdocno = p_nmee003    AND xrcbseq = p_nmee004
+
+   #取得在途金額
+   SELECT SUM(nmee012) INTO l_nmee012 FROM nmee_t,nmba_t
+    WHERE nmbaent = nmeeent     AND nmbadocno = nmeedocno
+      AND nmbacomp = nmeecomp   AND nmbastus <> 'X'
+      AND nmee003 = p_nmee003   AND nmee004 = p_nmee004
+	   AND nmbaent = g_enterprise
+   IF cl_null(l_nmee012) THEN LET l_nmee012 = 0 END IF
+
+   LET g_nmbb2_d[l_ac].nmee012 = g_nmbb2_d[l_ac].nmee012 - l_nmee012
+   LET g_nmbb2_d[l_ac].nmee023 = g_nmbb2_d[l_ac].nmee003
+
+END FUNCTION
+################################################################################
+# Descriptions...: 應收賒銷單資料帶單身默認值
+# Memo...........:
+# Usage..........: CALL anmt564_xrcb_2_desc(p_str)
+#                  RETURNING ---
+# Input parameter: p_nmee003      來源單號
+#                : p_nmee003      來源項次
+# Return code....:
+# Date & Author..: 2016/01/12 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_xrcb_2_desc(p_nmee003,p_nmee004)
+   DEFINE p_nmee003     LIKE nmee_t.nmee003
+   DEFINE p_nmee004     LIKE nmee_t.nmee004
+   DEFINE p_xrca001     LIKE type_t.chr10
+   DEFINE l_nmee012     LIKE nmee_t.nmee012
+   DEFINE l_xrca001     LIKE xrca_t.xrca001
+
+   SELECT xrcbsite,xrca004,xrcb014,xrca100,xrcb020,xrcb022,
+          xrcb105, xrcb010,xrcb012,xrca101
+     INTO g_nmbb2_d[l_ac].nmeesite,g_nmbb2_d[l_ac].nmee001,g_nmbb2_d[l_ac].nmee006,
+          g_nmbb2_d[l_ac].nmee009, g_nmbb2_d[l_ac].nmee010,g_nmbb2_d[l_ac].nmee011,
+          g_nmbb2_d[l_ac].nmee012, g_nmbb2_d[l_ac].nmee014,g_nmbb2_d[l_ac].nmee019,
+          g_nmbb2_d[l_ac].nmee018
+    FROM xrcb_t,xrca_t
+    WHERE xrcbent = g_enterprise   AND xrcaent = xrcbent
+      AND xrca001 IN ('141','241') AND xrcadocno = xrcbdocno    
+      AND xrcald = xrcbld          AND xrcastus = 'Y'
+      AND xrcbdocno = p_nmee003    AND xrcbseq = p_nmee004
+
+   #取得在途金額
+   SELECT SUM(nmee012) INTO l_nmee012 FROM nmee_t,nmba_t
+    WHERE nmbaent = nmeeent     AND nmbadocno = nmeedocno
+      AND nmbacomp = nmeecomp   AND nmbastus <> 'X'
+      AND nmee003 = p_nmee003   AND nmee004 = p_nmee004
+	   AND nmbaent = g_enterprise
+   IF cl_null(l_nmee012) THEN LET l_nmee012 = 0 END IF
+
+   SELECT xrca001 INTO l_xrca001 FROM xrca_t WHERE xrcaent = g_enterprise AND xrcadocno = p_nmee003
+
+   IF l_xrca001 = '141' THEN
+      LET g_nmbb2_d[l_ac].nmee012 = g_nmbb2_d[l_ac].nmee012 - l_nmee012
+   ELSE
+      LET g_nmbb2_d[l_ac].nmee012 = (g_nmbb2_d[l_ac].nmee012 + l_nmee012) * -1
+   END IF
+   LET g_nmbb2_d[l_ac].nmee023 = g_nmbb2_d[l_ac].nmee003
+
+END FUNCTION
+################################################################################
+# Descriptions...: 卡/券資料帶單身默認值
+# Memo...........:
+# Usage..........: CALL anmt564_stbc_desc(p_str)
+#                  RETURNING ---
+# Input parameter: p_nmee003      來源單號
+#                : p_nmee003      來源項次
+# Return code....:
+# Date & Author..: 2016/01/12 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_rtie_desc(p_nmee003,p_nmee004)
+   DEFINE p_nmee003     LIKE nmee_t.nmee003
+   DEFINE p_nmee004     LIKE nmee_t.nmee004
+   DEFINE l_nmee012     LIKE nmee_t.nmee012
+
+   SELECT rtiasite,rtia002,1,rtie006,rtia005,1
+     INTO g_nmbb2_d[l_ac].nmeesite,g_nmbb2_d[l_ac].nmee001,g_nmbb2_d[l_ac].nmee011,
+          g_nmbb2_d[l_ac].nmee012, g_nmbb2_d[l_ac].nmee014,g_nmbb2_d[l_ac].nmee018
+     FROM rtia_t, rtie_t 
+    WHERE     rtiaent = rtieent       AND rtiadocno = rtiedocno 
+          AND rtia000 IN ('ammt425','ammt405','agct405','cmmt405')
+	       AND rtiedocno = p_nmee003   AND rtieseq   = p_nmee004
+
+   #取得在途金額
+   SELECT SUM(nmee012) INTO l_nmee012 FROM nmee_t,nmba_t
+    WHERE nmbaent = nmeeent     AND nmbadocno = nmeedocno
+      AND nmbacomp = nmeecomp   AND nmbastus = 'N'   #作廢的不考慮、已確認的已經回寫xrcc109了
+      AND nmee003 = p_nmee003   AND nmee004 = p_nmee004
+	   AND nmbaent = g_enterprise
+   IF cl_null(l_nmee012) THEN LET l_nmee012 = 0 END IF
+
+   LET g_nmbb2_d[l_ac].nmee009 = g_glaa001
+   LET g_nmbb2_d[l_ac].nmee012 = g_nmbb2_d[l_ac].nmee012 - l_nmee012
+   LET g_nmbb2_d[l_ac].nmee023 = g_nmbb2_d[l_ac].nmee003
+
+END FUNCTION
+################################################################################
+# Descriptions...: 賒銷現收資料帶單身默認值
+# Memo...........:
+# Usage..........: CALL anmt564_stbc_desc(p_str)
+#                  RETURNING ---
+# Input parameter: p_nmee003      來源單號
+#                : p_nmee003      來源項次
+# Return code....:
+# Date & Author..: 2016/01/12 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_rtie_6_desc(p_nmee003,p_nmee004)
+   DEFINE p_nmee003     LIKE nmee_t.nmee003
+   DEFINE p_nmee004     LIKE nmee_t.nmee004
+   DEFINE l_nmee012     LIKE nmee_t.nmee012
+
+   SELECT rtiasite,rtia002,1,SUM(rtie006),rtia005,1
+     INTO g_nmbb2_d[l_ac].nmeesite,g_nmbb2_d[l_ac].nmee001,g_nmbb2_d[l_ac].nmee011,
+          g_nmbb2_d[l_ac].nmee012, g_nmbb2_d[l_ac].nmee014,g_nmbb2_d[l_ac].nmee018
+     FROM rtia_t, rtie_t 
+    WHERE     rtiaent = rtieent      AND rtiadocno = rtiedocno   
+       AND rtia000 = 'crtt620'       AND rtie001   = '91'        
+       AND NOT EXISTS (SELECT 1 FROM nmee_t WHERE nmeeent = rtiaent  
+                          AND nmee003 = rtiedocno AND nmee004 = rtieseq)
+	      AND rtiedocno = p_nmee003   AND rtieseq   = p_nmee004
+	 GROUP BY rtiedocno,rtiasite,rtia002,rtia005
+
+   #取得在途金額
+   SELECT SUM(nmee012) INTO l_nmee012 FROM nmee_t,nmba_t
+    WHERE nmbaent = nmeeent     AND nmbadocno = nmeedocno
+      AND nmbacomp = nmeecomp   AND nmbastus = 'N'   #作廢的不考慮、已確認的已經回寫xrcc109了
+      AND nmee003 = p_nmee003   AND nmbaent = g_enterprise
+   IF cl_null(l_nmee012) THEN LET l_nmee012 = 0 END IF
+
+   LET g_nmbb2_d[l_ac].nmee009 = g_glaa001
+   LET g_nmbb2_d[l_ac].nmee012 = g_nmbb2_d[l_ac].nmee012 - l_nmee012
+   LET g_nmbb2_d[l_ac].nmee023 = g_nmbb2_d[l_ac].nmee003
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 根據來源類型和來源單號產生單身資料
+# Memo...........:
+# Usage..........: CALL anmt564_nmee_get()
+#                  RETURNING r_success
+# Input parameter: p_wc           來源單號範圍
+# Return code....: r_success      成功否
+# Date & Author..: 2016/01/13 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmee_get(p_wc)
+   DEFINE p_wc          STRING
+   DEFINE tok           base.stringtokenizer
+   DEFINE l_str         STRING
+   DEFINE l_str1        STRING
+   DEFINE l_docno       STRING
+   DEFINE r_success     LIKE type_t.num5
+
+   LET r_success = FALSE
+
+   IF NOT cl_null(g_nmbb2_d[l_ac].nmee001) THEN
+      LET l_str1 = " AND COL2 = '",g_nmbb2_d[l_ac].nmee001,"'"
+   ELSE
+      LET l_str1 = " AND 1=1"
+   END IF
+
+   LET l_str = ""
+   LET tok = base.StringTokenizer.create(g_qryparam.return1,"||")
+   WHILE tok.hasMoreTokens()
+      LET l_docno = tok.nextToken()
+      LET l_docno = l_docno.trim()
+      IF cl_null(l_str) THEN
+         LET l_str = " COL1 IN ('",l_docno,"'"
+      ELSE
+         LET l_str = l_str,",'",l_docno,"'"
+      END IF
+   END WHILE
+
+   IF cl_null(l_str) THEN
+      RETURN r_success
+   ELSE
+      LET l_str = l_str,") ",l_str1
+   END IF
+
+   CASE
+      WHEN g_nmbb2_d[l_ac].nmee022 = '1'
+         LET l_str = cl_replace_str(l_str,"COL1","stbc004")
+         LET l_str = cl_replace_str(l_str,"COL2","stbc008")
+         CALL anmt564_nmbb_get_1(l_str) RETURNING r_success
+      WHEN g_nmbb2_d[l_ac].nmee022 = '2'
+         LET l_str = cl_replace_str(l_str,"COL1","stevdocno")
+         LET l_str = cl_replace_str(l_str,"COL2","steu003")
+         CALL anmt564_nmbb_get_2(l_str) RETURNING r_success
+      WHEN g_nmbb2_d[l_ac].nmee022 = '3'
+         LET l_str = cl_replace_str(l_str,"COL1","xrcbdocno")
+         LET l_str = cl_replace_str(l_str,"COL2","xrca004")
+         LET l_str = l_str," AND xrca001 = '18'"
+         CALL anmt564_nmbb_get_5(l_str) RETURNING r_success
+      WHEN g_nmbb2_d[l_ac].nmee022 = '6'
+         LET l_str = cl_replace_str(l_str,"COL1","rtiadocno")
+         LET l_str = cl_replace_str(l_str,"COL2","rtia002")
+         CALL anmt564_nmbb_get_6(l_str) RETURNING r_success
+      WHEN g_nmbb2_d[l_ac].nmee022 = '7'
+         LET l_str = cl_replace_str(l_str,"COL1","rtiadocno")
+         LET l_str = cl_replace_str(l_str,"COL2","rtia002")
+         CALL anmt564_nmbb_get_7(l_str) RETURNING r_success
+   END CASE
+
+   RETURN r_success
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmbb_get_1(p_str)
+   DEFINE p_str         STRING
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_sql         STRING
+   DEFINE l_stbc004     LIKE stbc_t.stbc004
+   DEFINE l_stbc005     LIKE stbc_t.stbc005
+   DEFINE l_nmee012     LIKE nmee_t.nmee012
+   DEFINE l_nmeeseq     LIKE nmee_t.nmeeseq
+   DEFINE l_ooab002     LIKE ooab_t.ooab002    #160509-00004#16 add lujh
+   DEFINE l_nmee024     LIKE nmee_t.nmee024   #add BY liyan
+   DEFINE l_nmee020     LIKE nmee_t.nmee020   #add BY liyan
+   DEFINE r_nmee        RECORD
+             nmeesite      LIKE nmee_t.nmeesite,
+             nmee001       LIKE nmee_t.nmee001,
+             nmee005       LIKE nmee_t.nmee005,
+             nmee006       LIKE nmee_t.nmee006,
+             nmee009       LIKE nmee_t.nmee009,
+             nmee010       LIKE nmee_t.nmee010,
+             nmee011       LIKE nmee_t.nmee011,
+             nmee012       LIKE nmee_t.nmee012,
+             nmee014       LIKE nmee_t.nmee014,
+             nmee019       LIKE nmee_t.nmee019
+                        END RECORD
+
+   LET l_sql = "SELECT stbc004,stbc005,stbcsite,stbc008,stbc033,stbc012,stbc013,stbc014,",
+               "       stbc016,stbc021 - CASE WHEN stbc022 IS NULL THEN 0 ELSE stbc022 END,",
+               "       stbc026,stbc025 FROM stbc_t,stae_t         ",
+               " WHERE stbcent = '",g_enterprise,"'   ",
+			      "   AND stbcent = staeent      AND stbc012 = stae001",
+			      #"   AND stbc037 = 'N'          AND stbc038 = 'N'    ",   #160509-00004#16 mark lujh
+			      "   AND stbc038 ",                                        #160509-00004#16 add lujh
+			      "   AND ",p_str CLIPPED
+			      
+	#160509-00004#16--add--str--lujh
+   LET l_ooab002 = ''
+   CALL cl_get_para(g_enterprise,g_nmba_m.nmbacomp,'S-FIN-4004') RETURNING l_ooab002
+   IF l_ooab002 = 'N' THEN 
+      LET l_sql = l_sql," AND stbc037 = 'N' "
+   END IF
+   #160509-00004#16--add--end--lujh   
+			      
+   PREPARE anmt564_stbc_ins_prep FROM l_sql
+   DECLARE anmt564_stbc_ins_curs CURSOR FOR anmt564_stbc_ins_prep
+
+   LET l_nmeeseq = 0
+   SELECT MAX(nmeeseq) + 1 INTO l_nmeeseq FROM nmee_t WHERE nmeeent = g_enterprise
+      AND nmeedocno = g_nmba_m.nmbadocno
+      AND nmeecomp = g_nmba_m.nmbacomp
+   IF cl_null(l_nmeeseq) THEN LET l_nmeeseq = 1 END IF
+
+   LET r_success = FALSE
+   FOREACH anmt564_stbc_ins_curs INTO l_stbc004,l_stbc005,r_nmee.*
+      #取得在途金額
+      SELECT SUM(nmee012) INTO l_nmee012 FROM nmee_t,nmba_t
+       WHERE nmbaent  = nmeeent     AND nmbadocno = nmeedocno
+         AND nmbacomp = nmeecomp    AND nmbastus = 'N'   #作廢的不考慮、已確認的已經回寫stbc022了
+         AND nmee003 = l_stbc004    AND nmee004 = l_stbc005
+		   AND nmbaent = g_enterprise
+      IF cl_null(l_nmee012) THEN LET l_nmee012 = 0 END IF
+
+      LET r_nmee.nmee012 = r_nmee.nmee012 - l_nmee012
+
+      IF r_nmee.nmee012 = 0 THEN CONTINUE FOREACH END IF
+      #add by liyan --str--
+      SELECT stae004 INTO l_nmee024 FROM stae_t WHERE staeent=g_enterprise AND stae001=r_nmee.nmee006 
+      IF l_nmee024 ='1' OR l_nmee024 ='2' THEN 
+         LET l_nmee020='N'
+      END IF 
+      IF l_nmee024='3' THEN 
+         LET l_nmee020='Y'
+      END IF 
+      #add by liyan --end--
+      INSERT INTO nmee_t(nmeeent,nmeedocno,nmeecomp,nmeeseq,nmeesite,
+                         nmee001,nmee002,  nmee003, nmee004,nmee005,
+                         nmee006,nmee007,  nmee008, nmee009, nmee010,nmee011,
+                         nmee012,nmee013,  nmee014, nmee018,nmee019,nmee020,nmee022,nmee024)
+                  VALUES(g_enterprise,g_nmba_m.nmbadocno,g_nmba_m.nmbacomp,l_nmeeseq,r_nmee.nmeesite,
+                         r_nmee.nmee001,'1',l_stbc004,l_stbc005,'',
+                         r_nmee.nmee006,g_nmba_m.nmbadocdt,g_nmba_m.nmbadocdt,r_nmee.nmee009,r_nmee.nmee010,r_nmee.nmee011,
+                         r_nmee.nmee012,'',r_nmee.nmee014,1,r_nmee.nmee019,l_nmee020,'1',l_nmee024)
+      IF SQLCA.SQLERRD[3] = 1 THEN
+         LET r_success = TRUE
+         LET l_nmeeseq = l_nmeeseq + 1
+      END IF
+
+   END FOREACH
+
+   RETURN r_success
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmbb_get_2(p_str)
+   DEFINE p_str         STRING
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_sql         STRING
+   DEFINE l_stevdocno   LIKE stev_t.stevdocno
+   DEFINE l_stevseq     LIKE stev_t.stevseq
+   DEFINE l_nmee012     LIKE nmee_t.nmee012
+   DEFINE l_nmeeseq     LIKE nmee_t.nmeeseq
+   DEFINE l_nmee024     LIKE nmee_t.nmee024  #add BY liyan
+   DEFINE l_nmee020     LIKE nmee_t.nmee020  #add BY liyan
+   DEFINE r_nmee        RECORD
+			 nmeesite      LIKE nmee_t.nmeesite,
+			 nmee001       LIKE nmee_t.nmee001,
+          nmee005       LIKE nmee_t.nmee005,
+			 nmee006       LIKE nmee_t.nmee006,
+			 nmee007       LIKE nmee_t.nmee007,
+          nmee008       LIKE nmee_t.nmee008,
+			 nmee009       LIKE nmee_t.nmee009,
+			 nmee010       LIKE nmee_t.nmee010,
+          nmee011       LIKE nmee_t.nmee011,
+			 nmee012       LIKE nmee_t.nmee012,
+			 nmee014       LIKE nmee_t.nmee014,
+          nmee019       LIKE nmee_t.nmee019
+                        END RECORD
+
+   LET l_sql = "SELECT stevdocno,stevseq,steusite,steu003,stev024,stev005,stev006,stev007,",
+               "       stev008,stev009,stev011,stev016 - CASE WHEN stev025 IS NULL THEN 0 ELSE stev025 END,",
+               "       stev020,stev019 FROM steu_t,stev_t         ",
+               " WHERE stevent = steuent   AND stevdocno = steudocno                      ",
+               "   AND steustus = 'Y'      AND ",p_str CLIPPED
+   PREPARE anmt564_stev_ins_prep FROM l_sql
+   DECLARE anmt564_stev_ins_curs CURSOR FOR anmt564_stev_ins_prep
+
+   LET l_nmeeseq = 0
+   SELECT MAX(nmeeseq) + 1 INTO l_nmeeseq FROM nmee_t WHERE nmeeent = g_enterprise
+      AND nmeedocno = g_nmba_m.nmbadocno
+      AND nmeecomp = g_nmba_m.nmbacomp
+   IF cl_null(l_nmeeseq) THEN LET l_nmeeseq = 1 END IF
+
+   LET r_success = FALSE
+   FOREACH anmt564_stev_ins_curs INTO l_stevdocno,l_stevseq,r_nmee.*
+      #取得在途金額
+      SELECT SUM(nmee012) INTO l_nmee012 FROM nmee_t,nmba_t
+       WHERE nmbaent = nmeeent     AND nmbadocno = nmeedocno
+         AND nmbacomp = nmeecomp   AND nmbastus = 'N'   #作廢的不考慮、已確認的已經回寫stev016了
+         AND nmee003 = l_stevdocno AND nmee004 = l_stevseq
+      IF cl_null(l_nmee012) THEN LET l_nmee012 = 0 END IF
+
+      LET r_nmee.nmee012 = r_nmee.nmee012 - l_nmee012
+
+      IF r_nmee.nmee012 = 0 THEN CONTINUE FOREACH END IF
+      #add by liyan --str--
+      SELECT stae004 INTO l_nmee024 FROM stae_t WHERE staeent=g_enterprise AND stae001=r_nmee.nmee006 
+      IF l_nmee024 ='1' OR l_nmee024 ='2' THEN 
+         LET l_nmee020='N'
+      END IF 
+      IF l_nmee024='3' THEN 
+         LET l_nmee020='Y'
+      END IF 
+      #add by liyan --end--
+      INSERT INTO nmee_t(nmeeent,nmeedocno,nmeecomp,nmeeseq,nmeesite,
+                         nmee001,nmee002,  nmee003, nmee004,nmee005,
+                         nmee006,nmee007,  nmee008, nmee009, nmee010,nmee011,
+                         nmee012,nmee013,  nmee014, nmee018,nmee019,nmee020,nmee022,nmee024)
+                  VALUES(g_enterprise,g_nmba_m.nmbadocno,g_nmba_m.nmbacomp,l_nmeeseq,r_nmee.nmeesite,
+                         r_nmee.nmee001,'1',l_stevdocno,l_stevseq,'',
+                         r_nmee.nmee006,g_nmba_m.nmbadocdt,g_nmba_m.nmbadocdt,r_nmee.nmee009,r_nmee.nmee010,r_nmee.nmee011,
+                         r_nmee.nmee012,'',r_nmee.nmee014,1,r_nmee.nmee019,l_nmee020,'2',l_nmee024)  #mod by liyan nmee020,nmee024
+      IF SQLCA.SQLERRD[3] = 1 THEN
+         LET r_success = TRUE
+         LET l_nmeeseq = l_nmeeseq + 1
+      END IF
+
+   END FOREACH
+
+   RETURN r_success
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmbb_get_5(p_str)
+   DEFINE p_str         STRING
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_sql         STRING
+   DEFINE l_xrcbdocno   LIKE xrcb_t.xrcbdocno
+   DEFINE l_xrcbseq     LIKE xrcb_t.xrcbseq
+   DEFINE l_nmee012     LIKE nmee_t.nmee012
+   DEFINE l_nmeeseq     LIKE nmee_t.nmeeseq
+   DEFINE l_xrca001     LIKE xrca_t.xrca001
+   DEFINE r_nmee        RECORD
+             nmeesite         LIKE nmee_t.nmeesite,
+             nmee001          LIKE nmee_t.nmee001,
+             nmee006          LIKE nmee_t.nmee006,
+             nmee009          LIKE nmee_t.nmee009,
+             nmee010          LIKE nmee_t.nmee010,
+             nmee011          LIKE nmee_t.nmee011,
+             nmee012          LIKE nmee_t.nmee012,
+             nmee014          LIKE nmee_t.nmee014,
+             nmee019          LIKE nmee_t.nmee019,
+             nmee018          LIKE nmee_t.nmee018,
+             nmee023        LIKE nmee_t.nmee023
+                        END RECORD
+
+   LET l_sql = "SELECT xrcbdocno,xrcbseq,xrcbsite,xrca004,xrcb014,",
+               "       xrca100,xrcb020,xrcb022,xrcb105,",
+               "       xrcb010,xrcb012,xrca101,xrcb002,xrca001 FROM xrcb_t,xrca_t,xrcc_t    ",
+               " WHERE xrcbent = '",g_enterprise,"'   ",
+               "   AND xrcaent = xrcbent",
+               "   AND xrccent = xrcbent",
+               "   AND xrcadocno = xrcbdocno",
+               "   AND xrccdocno = xrcbdocno",
+               "   AND xrcald = xrcbld",
+               "   AND xrccld = xrcbld",
+               "   AND xrcastus = 'Y'",
+			      "   AND ",p_str CLIPPED
+   PREPARE anmt564_xrcb_ins_prep FROM l_sql
+   DECLARE anmt564_xrcb_ins_curs CURSOR FOR anmt564_xrcb_ins_prep
+
+   LET l_nmeeseq = 0
+   SELECT MAX(nmeeseq) + 1 INTO l_nmeeseq FROM nmee_t WHERE nmeeent = g_enterprise
+      AND nmeedocno = g_nmba_m.nmbadocno
+      AND nmeecomp = g_nmba_m.nmbacomp
+   IF cl_null(l_nmeeseq) THEN LET l_nmeeseq = 1 END IF
+
+   LET r_success = FALSE
+   FOREACH anmt564_xrcb_ins_curs INTO l_xrcbdocno,l_xrcbseq,r_nmee.*
+      #取得在途金額
+      SELECT SUM(nmee012) INTO l_nmee012 FROM nmee_t,nmba_t
+       WHERE nmbaent = nmeeent     AND nmbadocno = nmeedocno
+         AND nmbacomp = nmeecomp   AND nmbastus <> 'X'   #作廢的不考慮
+		 AND nmbaent = g_enterprise
+         AND nmee003 = l_xrcbdocno AND nmee004 = l_xrcbseq
+      IF cl_null(l_nmee012) THEN LET l_nmee012 = 0 END IF
+
+      SELECT xrca001 INTO l_xrca001 FROM xrca_t WHERE xrcaent = g_enterprise AND xrcadocno = l_xrcbdocno
+
+      IF l_xrca001 = '141' OR cl_null(l_xrca001) THEN
+         LET r_nmee.nmee012 = r_nmee.nmee012 - l_nmee012
+      ELSE
+         LET r_nmee.nmee012 = (r_nmee.nmee012 + l_nmee012) * -1
+      END IF
+
+      LET r_nmee.nmee023 = l_xrcbdocno
+
+      IF r_nmee.nmee012 = 0 THEN CONTINUE FOREACH END IF
+
+      INSERT INTO nmee_t(nmeeent,nmeedocno,nmeecomp,nmeeseq,nmeesite,
+                         nmee001,nmee002,  nmee003, nmee004,nmee005,
+                         nmee006,nmee007,  nmee008, nmee009, nmee010,nmee011,
+                         nmee012,nmee013,  nmee014, nmee018,nmee019,nmee020,nmee022,nmee023)  #20150729 add nmee023 lujh
+                  VALUES(g_enterprise,g_nmba_m.nmbadocno,g_nmba_m.nmbacomp,l_nmeeseq,r_nmee.nmeesite,
+                         r_nmee.nmee001,'1',l_xrcbdocno,l_xrcbseq,'',
+                         r_nmee.nmee006,g_nmba_m.nmbadocdt,g_nmba_m.nmbadocdt,r_nmee.nmee009,r_nmee.nmee010,r_nmee.nmee011,
+                         r_nmee.nmee012,'',r_nmee.nmee014,r_nmee.nmee018,r_nmee.nmee019,'N',g_nmbb2_d[l_ac].nmee022,
+                         r_nmee.nmee023)
+      IF SQLCA.SQLERRD[3] = 1 THEN
+         LET r_success = TRUE
+         LET l_nmeeseq = l_nmeeseq + 1
+      END IF
+
+   END FOREACH
+
+   RETURN r_success
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmbb_get_6(p_str)
+   DEFINE p_str         STRING
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_sql         STRING
+   DEFINE l_xrcbdocno   LIKE xrcb_t.xrcbdocno
+   DEFINE l_xrcbseq     LIKE xrcb_t.xrcbseq
+   DEFINE l_nmee012     LIKE nmee_t.nmee012
+   DEFINE l_nmeeseq     LIKE nmee_t.nmeeseq
+   DEFINE l_xrca001     LIKE xrca_t.xrca001
+   DEFINE r_nmee        RECORD
+             nmeesite         LIKE nmee_t.nmeesite,
+             nmee001          LIKE nmee_t.nmee001,
+             nmee006          LIKE nmee_t.nmee006,
+             nmee009          LIKE nmee_t.nmee009,
+             nmee010          LIKE nmee_t.nmee010,
+             nmee011          LIKE nmee_t.nmee011,
+             nmee012          LIKE nmee_t.nmee012,
+             nmee014          LIKE nmee_t.nmee014,
+             nmee019          LIKE nmee_t.nmee019,
+             nmee018          LIKE nmee_t.nmee018,
+             nmee023        LIKE nmee_t.nmee023
+                        END RECORD
+
+   LET l_sql = "SELECT rtiedocno,0,rtiasite,rtia002,'','CNY',",
+               "       '',1,SUM(rtie006),rtia005,'',1,''",
+               "  FROM rtia_t, rtie_t ",
+               " WHERE     rtiaent = rtieent ",
+               " AND rtiadocno = rtiedocno   ",
+               " AND rtia000 = 'crtt620'     ",
+               " AND rtie001 IN ('91','92')        ",   #add by chenhz 15/12/17 加上92款别
+               "     AND NOT EXISTS (SELECT 1 FROM nmee_t WHERE nmeeent = rtiaent  ",
+               "                        AND nmee003 = rtiedocno AND nmee004 = rtieseq) ",
+			      "       AND ",p_str CLIPPED,
+			      " GROUP BY rtiedocno,rtiasite,rtia002,rtia005"
+   PREPARE anmt564_rtie_7_ins_prep FROM l_sql
+   DECLARE anmt564_rtie_7_ins_curs CURSOR FOR anmt564_rtie_7_ins_prep
+
+   LET l_nmeeseq = 0
+   SELECT MAX(nmeeseq) + 1 INTO l_nmeeseq FROM nmee_t WHERE nmeeent = g_enterprise
+      AND nmeedocno = g_nmba_m.nmbadocno
+      AND nmeecomp = g_nmba_m.nmbacomp
+   IF cl_null(l_nmeeseq) THEN LET l_nmeeseq = 1 END IF
+
+   LET r_success = FALSE
+   FOREACH anmt564_rtie_7_ins_curs INTO l_xrcbdocno,l_xrcbseq,r_nmee.*
+      #取得在途金額
+      SELECT SUM(nmee012) INTO l_nmee012 FROM nmee_t,nmba_t
+       WHERE nmbaent = nmeeent     AND nmbadocno = nmeedocno
+         AND nmbacomp = nmeecomp   AND nmbastus = 'N'   #作廢的不考慮、已確認的已經回寫xrcc109了
+		 AND nmbaent = g_enterprise
+         AND nmee003 = l_xrcbdocno
+      IF cl_null(l_nmee012) THEN LET l_nmee012 = 0 END IF
+
+      LET r_nmee.nmee012 = r_nmee.nmee012 - l_nmee012
+
+      IF r_nmee.nmee012 = 0 THEN CONTINUE FOREACH END IF
+
+      #单据做合计,所以来源单据项次给NULL
+      LET l_xrcbseq = NULL
+
+      LET r_nmee.nmee023 = l_xrcbdocno
+
+      INSERT INTO nmee_t(nmeeent,nmeedocno,nmeecomp,nmeeseq,nmeesite,
+                         nmee001,nmee002,  nmee003, nmee004,nmee005,
+                         nmee006,nmee007,  nmee008, nmee009, nmee010,nmee011,
+                         nmee012,nmee013,  nmee014, nmee018,nmee019,nmee020,nmee022,nmee023)  #20150729 add nmee023 lujh
+                  VALUES(g_enterprise,g_nmba_m.nmbadocno,g_nmba_m.nmbacomp,l_nmeeseq,r_nmee.nmeesite,
+                         r_nmee.nmee001,'1',l_xrcbdocno,l_xrcbseq,'',
+                         r_nmee.nmee006,g_nmba_m.nmbadocdt,g_nmba_m.nmbadocdt,r_nmee.nmee009,r_nmee.nmee010,r_nmee.nmee011,
+                         r_nmee.nmee012,'',r_nmee.nmee014,r_nmee.nmee018,r_nmee.nmee019,'N',g_nmbb2_d[l_ac].nmee022,
+                         r_nmee.nmee023)
+      IF SQLCA.SQLERRD[3] = 1 THEN
+         LET r_success = TRUE
+         LET l_nmeeseq = l_nmeeseq + 1
+      END IF
+
+   END FOREACH
+
+   RETURN r_success
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmbb_get_7(p_str)
+   DEFINE p_str         STRING
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_sql         STRING
+   DEFINE l_xrcbdocno   LIKE xrcb_t.xrcbdocno
+   DEFINE l_xrcbseq     LIKE xrcb_t.xrcbseq
+   DEFINE l_nmee012     LIKE nmee_t.nmee012
+   DEFINE l_nmeeseq     LIKE nmee_t.nmeeseq
+   DEFINE l_xrca001     LIKE xrca_t.xrca001
+   DEFINE r_nmee        RECORD
+             nmeesite         LIKE nmee_t.nmeesite,
+             nmee001          LIKE nmee_t.nmee001,
+             nmee006          LIKE nmee_t.nmee006,
+             nmee009          LIKE nmee_t.nmee009,
+             nmee010          LIKE nmee_t.nmee010,
+             nmee011          LIKE nmee_t.nmee011,
+             nmee012          LIKE nmee_t.nmee012,
+             nmee014          LIKE nmee_t.nmee014,
+             nmee019          LIKE nmee_t.nmee019,
+             nmee018          LIKE nmee_t.nmee018,
+             nmee023        LIKE nmee_t.nmee023
+                        END RECORD
+
+   LET l_sql = "SELECT rtiedocno xrcbdocno,rtieseq xrcbseq,rtiasite xrcbsite,rtia002 xrca004,'' xrcb014,",
+               "       'CNY' xrca100,'' xrcb020,1 xrcb022,rtie006 xrcb105,",
+               "       rtia005 xrcb010,'' xrcb012,1 xrca101,'' xrcb002,'141' xrca001 ",
+               "  FROM rtia_t, rtie_t ",
+               " WHERE     rtiaent = rtieent ",
+               "       AND rtiadocno = rtiedocno ",
+               "       AND rtia000 IN ('ammt425','ammt405','agct405','cmmt405')", #add by chenhz 15/12/10 'cmmt405'
+			      "       AND ",p_str CLIPPED
+   PREPARE anmt564_rtie_ins_prep FROM l_sql
+   DECLARE anmt564_rtie_ins_curs CURSOR FOR anmt564_rtie_ins_prep
+
+   LET l_nmeeseq = 0
+   SELECT MAX(nmeeseq) + 1 INTO l_nmeeseq FROM nmee_t WHERE nmeeent = g_enterprise
+      AND nmeedocno = g_nmba_m.nmbadocno
+      AND nmeecomp = g_nmba_m.nmbacomp
+   IF cl_null(l_nmeeseq) THEN LET l_nmeeseq = 1 END IF
+
+   LET r_success = FALSE
+   FOREACH anmt564_rtie_ins_curs INTO l_xrcbdocno,l_xrcbseq,r_nmee.*
+      #取得在途金額
+      SELECT SUM(nmee012) INTO l_nmee012 FROM nmee_t,nmba_t
+       WHERE nmbaent = nmeeent     AND nmbadocno = nmeedocno
+         AND nmbacomp = nmeecomp   AND nmbastus = 'N'   #作廢的不考慮、已確認的已經回寫xrcc109了
+		 AND nmbaent = g_enterprise
+         AND nmee003 = l_xrcbdocno AND nmee004 = l_xrcbseq
+      IF cl_null(l_nmee012) THEN LET l_nmee012 = 0 END IF
+
+      LET r_nmee.nmee012 = r_nmee.nmee012 - l_nmee012
+
+      IF r_nmee.nmee012 = 0 THEN CONTINUE FOREACH END IF
+
+      INSERT INTO nmee_t(nmeeent,nmeedocno,nmeecomp,nmeeseq,nmeesite,
+                         nmee001,nmee002,  nmee003, nmee004,nmee005,
+                         nmee006,nmee007,  nmee008, nmee009, nmee010,nmee011,
+                         nmee012,nmee013,  nmee014, nmee018,nmee019,nmee020,nmee022,nmee023)  #20150729 add nmee023 lujh
+                  VALUES(g_enterprise,g_nmba_m.nmbadocno,g_nmba_m.nmbacomp,l_nmeeseq,r_nmee.nmeesite,
+                         r_nmee.nmee001,'1',l_xrcbdocno,l_xrcbseq,'',
+                         r_nmee.nmee006,g_nmba_m.nmbadocdt,g_nmba_m.nmbadocdt,r_nmee.nmee009,r_nmee.nmee010,r_nmee.nmee011,
+                         r_nmee.nmee012,'',r_nmee.nmee014,r_nmee.nmee018,r_nmee.nmee019,'N',g_nmbb2_d[l_ac].nmee022,
+                         r_nmee.nmee023)
+      IF SQLCA.SQLERRD[3] = 1 THEN
+         LET r_success = TRUE
+         LET l_nmeeseq = l_nmeeseq + 1
+      END IF
+
+   END FOREACH
+
+   RETURN r_success
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 抓取核算組織
+# Memo...........:
+# Usage..........: CALL anmt564_nmbblegl_get(p_ooed004)
+#                  RETURNING ---
+# Input parameter: p_ooed004      組織
+# Return code....: r_nmbblegl     核算組織
+# Date & Author..: 2015/06/08 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmbblegl_get(p_ooed004)
+   DEFINE p_ooed004      LIKE ooed_t.ooed004
+   DEFINE r_nmbblegl     LIKE nmbb_t.nmbblegl
+   DEFINE l_ooed002      LIKE ooed_t.ooed002
+   DEFINE l_ooed005      LIKE ooed_t.ooed005
+#  DEFINE l_ooea005      LIKE ooea_t.ooea005   #161110-00001#2 MARK
+   DEFINE l_ooef204      LIKE ooef_t.ooef204   #161110-00001#2 ADD 
+   
+   #161110-00001#2 MARK--S--
+#   SELECT ooea005 INTO l_ooea005 FROM ooea_t
+#    WHERE ooeaent = g_enterprise
+#      AND ooea001 = p_ooed004
+   #161110-00001#2 MARK--E--
+   #161110-00001#2 ADD--S--
+   SELECT ooef204 INTO l_ooef204
+     FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = p_ooed004
+   #161110-00001#2 ADD--E--
+   IF l_ooef204 = 'Y' THEN               #161110-00001#2 mod  l_ooea005 -> l_ooef204
+      LET r_nmbblegl = p_ooed004                                     #組織是否為核算組織(ooea005 ='Y')
+   ELSE
+      SELECT ooed002,ooed005 INTO l_ooed002,l_ooed005 FROM ooed_t
+       WHERE ooedent = g_enterprise
+         AND ooed001 = '3'
+         AND ooed004 = p_ooed004
+         AND ooed006 < = g_nmba_m.nmbadocdt 
+         AND ooed007 > g_nmba_m.nmbadocdt
+      IF p_ooed004 <> l_ooed002 THEN
+         CALL anmt564_nmbblegl_get(l_ooed005) RETURNING r_nmbblegl   #如果取不到時再繼續往上層抓取, 直到來源組織所屬法人
+      ELSE
+         LET r_nmbblegl = g_nmba_m.nmbacomp                          #如果取不到時就以來源組織所屬法人存入 nmbblegl
+      END IF
+   END IF
+
+   RETURN r_nmbblegl
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 來源組織欄位檢查
+# Memo...........:
+# Usage..........: CALL anmt564_nmbborga_chk()
+#                  RETURNING ---
+# Input parameter: p_nmbborga     來源組織
+#                : p_nmbb028      款別編碼
+# Return code....: r_success      檢查成功否
+#                : r_nmbblegl     核算組織
+# Date & Author..: 2015/06/08 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmbborga_chk(p_nmbborga,p_nmbb028)
+   DEFINE p_nmbborga      LIKE nmbb_t.nmbborga
+   DEFINE p_nmbb028       LIKE nmbb_t.nmbb028
+   DEFINE r_success       LIKE type_t.num5
+   DEFINE r_nmbblegl      LIKE nmbb_t.nmbblegl
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_no            LIKE type_t.chr10
+   DEFINE l_ooia002       LIKE ooia_t.ooia002
+   DEFINE l_gzze001       LIKE gzze_t.gzze001
+
+   LET r_success = TRUE
+
+   CALL s_fin_apcborga_chk(g_nmba_m.nmbasite,g_nmba_m.nmbacomp,p_nmbborga,g_nmba_m.nmbadocdt,'6')
+      RETURNING r_success,l_gzze001
+   IF l_gzze001 = 'aap-00120' THEN LET l_gzze001 = 'anm-00276' END IF
+   IF l_gzze001 = 'aap-00034' THEN LET l_gzze001 = 'anm-00277' END IF
+
+   IF NOT cl_null(p_nmbb028) AND cl_null(l_gzze001) THEN 
+      CALL s_money_chk('2',p_nmbborga,p_nmbb028)
+         RETURNING l_success,l_gzze001,l_no,l_ooia002
+      IF l_success THEN 
+         IF  l_ooia002 != '10'
+          AND l_ooia002 != '20'      
+          AND l_ooia002 != '30'
+          AND l_ooia002 != '40'
+          AND l_ooia002 != '90'   #151201-00002#14 Add
+          AND l_ooia002 != '50' THEN 
+            LET l_gzze001 = 'aoo-00399'
+            LET r_success = FALSE
+         END IF
+      ELSE
+         LET r_success = FALSE
+      END IF
+   END IF  
+   CALL anmt564_nmbblegl_get(p_nmbborga) RETURNING r_nmbblegl
+
+   IF NOT cl_null(l_gzze001) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = l_gzze001
+      LET g_errparam.extend = p_nmbborga
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+   END IF
+
+   RETURN r_success,r_nmbblegl
+
+END FUNCTION
+################################################################################
+# Descriptions...: 檢查銀行存提碼
+# Memo...........:
+# Usage..........: CALL anmt564_nmbb002_chk()
+# Date & Author..: 2015/12/25 By yangtt
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmbb002_chk()
+DEFINE l_nmajstus               LIKE nmaj_t.nmajstus
+DEFINE l_nmaj002                LIKE nmaj_t.nmaj002
+
+   LET g_errno = ''
+
+   SELECT nmajstus,nmaj002 INTO l_nmajstus,l_nmaj002
+     FROM nmaj_t
+    WHERE nmajent = g_enterprise
+      AND nmaj001 = g_nmbb_d[l_ac].nmbb002
+
+   CASE
+      WHEN SQLCA.SQLCODE = 100    LET g_errno = 'anm-00017'
+      WHEN l_nmajstus = 'N'       LET g_errno = 'anm-00016'
+      WHEN l_nmaj002 <> '1'       LET g_errno = 'anm-00072'
+   END CASE
+
+   #帶值
+   SELECT glaa005 INTO g_glaa005
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaacomp = g_nmba_m.nmbacomp
+      AND glaa014 = 'Y'
+
+   IF cl_null(g_nmbb_d[l_ac].nmbb010) THEN
+      SELECT nmad003 INTO g_nmbb_d[l_ac].nmbb010
+        FROM nmad_t
+       WHERE nmadent = g_enterprise
+         AND nmad001 = g_glaa005
+         AND nmad002 = g_nmbb_d[l_ac].nmbb002
+      DISPLAY g_nmbb_d[l_ac].nmbb010 TO s_detail1[l_ac].nmbb010
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 交易帳戶編碼欄位檢查
+# Memo...........:
+# Usage..........: CALL anmt564_nmbb003_chk()
+#                  RETURNING ---
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2015/06/08 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmbb003_chk()
+   DEFINE l_nmaastus            LIKE nmaa_t.nmaastus
+   DEFINE l_ooab002             LIKE ooab_t.ooab002
+
+   LET g_errno = ''
+
+   SELECT nmaastus,nmas003 INTO l_nmaastus,g_nmbb_d[l_ac].nmbb004
+     FROM nmaa_t,nmas_t
+    WHERE nmaaent = g_enterprise
+      AND nmaaent = nmasent
+      AND nmaa001 = nmas001
+      AND nmas002 = g_nmbb_d[l_ac].nmbb003
+      AND nmaa002 IN (select ooef001 FROM ooef_t WHERE ooefent = g_enterprise
+                                               AND ooef017 = g_nmba_m.nmbacomp)
+
+   CASE
+      WHEN SQLCA.SQLCODE = 100    LET g_errno = 'anm-00026'
+      WHEN l_nmaastus = 'N'       LET g_errno = 'sub-01302' #anm-00027  #160318-00005#28  By 07900 --mod
+   END CASE
+   #160122-00001#32--add---str--
+   IF cl_null(g_errno) THEN
+      IF NOT s_anmi120_nmll002_chk(g_nmbb_d[l_ac].nmbb003,g_user) THEN
+         LET g_errno = 'anm-00574'
+      END IF
+   END IF
+   #160122-00001#32--add---end
+END FUNCTION
+
+################################################################################
+# Descriptions...: 繳款幣別欄位檢查
+# Memo...........:
+# Usage..........: CALL anmt564_nmbb004_chk()
+#                  RETURNING ---
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2015/06/08 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmbb004_chk()
+   DEFINE  l_n             LIKE type_t.num5 
+   DEFINE  l_ooab002       LIKE ooab_t.ooab002
+   
+   LET g_errno = ''
+   
+   #判斷資料是否存在
+   SELECT count(*) INTO l_n
+     FROM ooai_t
+    WHERE ooaient = g_enterprise
+      AND ooai001 = g_nmbb_d[l_ac].nmbb004
+      
+   IF l_n = 0 THEN 
+      LET g_errno = 'aoo-00028'
+      RETURN 
+   END IF
+   
+END FUNCTION
+################################################################################
+# Descriptions...: 現金變動碼檢核
+# Memo...........:
+# Usage..........: CALL anmt564_nmbb010_chk()
+# Date & Author..: 2015/12/25 By yangtt
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmbb010_chk()
+DEFINE l_nmaistus         LIKE nmai_t.nmaistus
+
+   LET g_errno = ''
+
+   SELECT nmaistus INTO l_nmaistus
+     FROM nmai_t
+    WHERE nmaient = g_enterprise
+      AND nmai001 = g_glaa005
+      AND nmai002 = g_nmbb_d[l_ac].nmbb010
+
+   CASE
+      WHEN SQLCA.SQLCODE = 100    LET g_errno = 'anm-00034'
+      WHEN l_nmaistus = 'N'       LET g_errno = 'anm-00035'
+   END CASE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 交易對象欄位檢查
+# Memo...........:
+# Usage..........: CALL anmt564_nmbb026_chk(p_nmbb026)
+#                  RETURNING ---
+# Input parameter: p_nmbb026      交易對象
+# Return code....: r_flag         是否檢查為一次性交易對象
+# Return code....: r_success      執行成功否
+# Return code....: r_nmbb027      一次性交易對象
+# Date & Author..: 2015/06/08 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmbb026_chk(p_nmbb026,p_flag)
+   DEFINE p_nmbb026          LIKE nmbb_t.nmbb026
+   DEFINE p_flag             LIKE type_t.chr1
+   DEFINE r_success          LIKE type_t.num5
+   DEFINE r_nmbb027          LIKE nmbb_t.nmbb027
+   DEFINE l_pmaastus         LIKE pmaa_t.pmaastus
+   DEFINE l_n                LIKE type_t.num5
+   DEFINE l_pmaa004          LIKE pmaa_t.pmaa004
+   DEFINE l_gzze001          LIKE gzze_t.gzze001
+
+   LET l_gzze001 = ''
+   LET r_success = TRUE
+   LET r_nmbb027 = ''
+
+   SELECT pmaa004 INTO l_pmaa004 FROM pmaa_t
+    WHERE pmaaent = g_enterprise
+      AND pmaa001 = p_nmbb026
+
+   LET l_n = 0
+   SELECT count(*) INTO l_n FROM pmaa_t
+    WHERE pmaaent = g_enterprise
+      AND pmaa001 = p_nmbb026
+   IF l_n = 0 THEN
+      LET l_gzze001 = 'ais-00019'
+   ELSE
+      LET l_n = 0
+      SELECT count(*) INTO l_n FROM pmaa_t
+       WHERE pmaaent = g_enterprise
+         AND pmaa001 = p_nmbb026
+         AND pmaastus = 'Y'
+
+      IF l_n = 0 THEN
+         LET l_gzze001 = 'ais-00020'
+      END IF
+   END IF
+
+   IF l_pmaa004 = '2' AND p_flag = '1' THEN
+      INITIALIZE g_qryparam.* TO NULL
+      LET g_qryparam.state = 'i'
+	  LET g_qryparam.reqry = FALSE
+
+      LET g_qryparam.arg1 = p_nmbb026
+      #給予arg
+
+      CALL q_pmak002()                                #呼叫開窗
+
+      LET r_nmbb027 = g_qryparam.return1
+   ELSE
+      LET r_nmbb027 = ''
+   END IF
+
+   IF NOT cl_null(l_gzze001) THEN
+      LET r_success = FALSE
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = l_gzze001
+      LET g_errparam.extend = p_nmbb026
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+   END IF
+
+   RETURN r_success,r_nmbb027
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 款別代碼檢核
+# Memo...........:
+# Usage..........: CALL anmt564_nmbb028_chk()
+#                  RETURNING ---
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2015/06/08 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmbb028_chk()
+   DEFINE l_ooiestus     LIKE ooie_t.ooiestus
+   DEFINE l_ooie003      LIKE ooie_t.ooie003
+   DEFINE l_ooie004      LIKE ooie_t.ooie004
+   DEFINE l_nmbb003      LIKE nmbb_t.nmbb003
+   DEFINE l_success      LIKE type_t.num5
+   DEFINE l_errno        LIKE type_t.chr50
+   DEFINE l_no           LIKE type_t.chr10
+   DEFINE l_ooia002      LIKE ooia_t.ooia002
+   
+   LET g_errno = ''
+
+   LET g_nmbb_d[l_ac].nmbb029 = ''
+   LET l_nmbb003 = ''
+   LET g_nmbb_d[l_ac].nmbb039 = ''
+   LET l_ooie003 = ''
+   LET l_ooie004 = ''
+
+   CALL s_money_chk('2',g_nmbb_d[l_ac].nmbborga,g_nmbb_d[l_ac].nmbb028) RETURNING l_success,l_errno,l_no,l_ooia002
+   IF NOT l_success THEN 
+      LET g_errno = l_errno
+      RETURN 
+   ELSE
+      IF  l_ooia002 != '10'
+      AND l_ooia002 != '20'      
+      AND l_ooia002 != '30'
+      AND l_ooia002 != '40'
+      AND l_ooia002 != '90'   #151201-00002#14 Add
+      AND l_ooia002 != '50' THEN 
+         LET g_errno = 'aoo-00399'
+         RETURN 
+      END IF 
+   END IF 
+   LET g_nmbb_d[l_ac].nmbb029 = l_ooia002
+   CALL s_money_ooie_get(l_no,'ooie003',g_nmbb_d[l_ac].nmbborga,g_nmbb_d[l_ac].nmbb028) RETURNING l_ooie003
+   CALL s_money_ooie_get(l_no,'ooie004',g_nmbb_d[l_ac].nmbborga,g_nmbb_d[l_ac].nmbb028) RETURNING l_ooie004
+   
+   IF cl_null(g_nmbb_d[l_ac].nmbb003) THEN 
+      LET g_nmbb_d[l_ac].nmbb003 = l_nmbb003
+   END IF 
+   
+   #依款別給預設值
+   IF g_nmbb_d[l_ac].nmbb029 = '10' THEN 
+      LET g_nmbb_d[l_ac].nmbb031 = g_nmba_m.nmbadocdt
+   END IF
+
+   IF g_nmbb_d[l_ac].nmbb029 <> '10' AND g_nmbb_d[l_ac].nmbb029 <> '20' THEN
+      LET g_nmbb_d[l_ac].nmbb003 = ''
+   END IF
+
+   IF g_nmbb_d[l_ac].nmbb029 <> '30' THEN
+      LET g_nmbb_d[l_ac].nmbb030 = ''
+      LET g_nmbb_d[l_ac].nmbb031 = ''
+      LET g_nmbb_d[l_ac].nmbb043 = ''
+      LET g_nmbb_d[l_ac].nmbb043_desc = ''
+   END IF
+
+   IF g_nmbb_d[l_ac].nmbb029 <> '40' THEN
+      LET g_nmbb_d[l_ac].nmbb032 = ''
+      LET g_nmbb_d[l_ac].nmbb033 = ''
+      LET g_nmbb_d[l_ac].nmbb034 = ''
+      LET g_nmbb_d[l_ac].nmbb035 = ''
+   END IF
+
+   IF g_nmbb_d[l_ac].nmbb029 <> '50' THEN
+      LET g_nmbb_d[l_ac].nmbb036 = ''
+      LET g_nmbb_d[l_ac].nmbb037 = ''
+      LET g_nmbb_d[l_ac].nmbb038 = ''
+   END IF
+
+   IF l_ooie003 = 'Y' THEN 
+      LET g_nmbb_d[l_ac].nmbb039 = l_ooie004
+      DISPLAY g_nmbb_d[l_ac].nmbb039 TO s_detail1[l_ac].nmbb039
+   END IF
+   
+   DISPLAY g_nmbb_d[l_ac].nmbb003 TO s_detail1[l_ac].nmbb003
+   DISPLAY g_nmbb_d[l_ac].nmbb031 TO s_detail1[l_ac].nmbb031
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 開票銀行欄位檢查
+# Memo...........:
+# Usage..........: CALL anmt564_nmbb043_chk()
+#                  RETURNING ---
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2015/06/08 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmbb043_chk(p_nmbb043)
+   DEFINE l_n            LIKE type_t.num5
+   DEFINE p_nmbb043      LIKE nmbb_t.nmbb043
+   
+   LET g_errno = ''
+   
+   LET l_n = 0
+   SELECT COUNT(*) INTO l_n 
+     FROM nmab_t
+    WHERE nmabent = g_enterprise
+      AND nmab001 = p_nmbb043
+      
+   IF l_n = 0 THEN 
+      LET g_errno = 'anm-00051'
+   ELSE
+      LET l_n = 0
+      SELECT COUNT(*) INTO l_n 
+        FROM nmab_t
+       WHERE nmabent = g_enterprise
+         AND nmab001 = p_nmbb043
+         AND nmab008 = g_ooef006
+      IF l_n = 0 THEN 
+         LET g_errno = 'anm-00052'
+      END IF
+   END IF
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 收款明細所屬組織檢查
+# Memo...........:
+# Usage..........: CALL anmt564_nmeesite_chk(p_nmeesite)
+#                  RETURNING r_success
+# Input parameter: p_nmeesite     所屬組織
+# Return code....: r_success      執行成功否
+# Date & Author..: 2015/06/09 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmeesite_chk(p_nmeesite)
+   DEFINE p_nmeesite      LIKE nmee_t.nmeesite
+   DEFINE r_success       LIKE type_t.num5
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_nmbblegl      LIKE nmbb_t.nmbblegl
+   DEFINE l_nmbborga      LIKE nmbb_t.nmbborga
+   DEFINE l_sql           STRING
+
+   LET r_success = TRUE
+
+   CALL anmt564_nmbborga_chk(p_nmeesite,"") RETURNING l_success,l_nmbblegl
+
+   IF NOT l_success THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   LET l_sql = " SELECT DISTINCT nmbborga FROM nmbb_t WHERE nmbbent = '",g_enterprise,"' AND nmbbdocno = '",g_nmba_m.nmbadocno,"'",
+               "    AND nmbbcomp = '",g_nmba_m.nmbacomp,"'"
+   PREPARE anmt564_nmbborga_prep FROM l_sql
+   DECLARE anmt564_nmbborga_curs CURSOR FOR anmt564_nmbborga_prep
+
+   LET l_success = FALSE
+
+   FOREACH anmt564_nmbborga_curs INTO l_nmbborga
+      IF l_nmbborga = p_nmeesite THEN
+         LET l_success = TRUE
+         EXIT FOREACH
+      END IF
+   END FOREACH
+
+   IF NOT l_success THEN
+      LET r_success = TRUE
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "anm-00358"
+      LET g_errparam.extend = p_nmeesite
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+   END IF
+
+   RETURN r_success
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 交易對象說明
+# Memo...........:
+# Usage..........: CALL anmt564_nmbb026_desc(p_nmbb026,p_nmbb027)
+#                  RETURNING r_nmbb026_desc
+# Input parameter: p_nmbb026      交易對象
+#                : p_nmbb027      一次性對象識別碼
+# Return code....: r_nmbb026_desc 說明
+# Date & Author..: 2015/06/08 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmbb026_desc(p_nmbb026,p_nmbb027)
+   DEFINE p_nmbb026         LIKE nmbb_t.nmbb026
+   DEFINE p_nmbb027         LIKE nmbb_t.nmbb027
+   DEFINE p_nmbb026_desc    LIKE pmaal_t.pmaal004
+
+   IF cl_null(p_nmbb027) THEN 
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = p_nmbb026
+      CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004,pmaal003 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET p_nmbb026_desc = '', g_rtn_fields[1] , ''
+   ELSE
+      SELECT pmak003 INTO p_nmbb026_desc FROM pmak_t
+       WHERE pmakent = g_enterprise
+         AND pmak001 = p_nmbb027
+   END IF
+
+   RETURN p_nmbb026_desc
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 款別說明
+# Memo...........:
+# Usage..........: CALL anmt564_nmbb028_desc(p_nmbb028)
+#                  RETURNING r_nmbb028_desc
+# Input parameter: p_nmbb028      款別編號
+# Return code....: p_nmbb028_desc 款別說明
+# Date & Author..: 2015/06/08 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmbb028_desc(p_nmbb028)
+   DEFINE p_nmbb028      LIKE nmbb_t.nmbb028
+   DEFINE r_nmbb028_desc LIKE ooial_t.ooial003
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_nmbb028
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooial003 FROM ooial_t WHERE ooialent='"||g_enterprise||"' AND ooial001=? AND ooial002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET r_nmbb028_desc = '', g_rtn_fields[1] , ''
+
+   RETURN r_nmbb028_desc
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 交易帳戶說明
+# Memo...........:
+# Usage..........: CALL anmt564_nmbb043_desc()
+#                  RETURNING r_nmbb043_desc
+# Input parameter: p_nmbb003      交易帳戶編號
+# Return code....: p_nmbb003_desc 交易帳戶說明
+# Date & Author..: 2015/06/08 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmbb043_desc(p_nmbb043)
+   DEFINE p_nmbb043      LIKE nmbb_t.nmbb043
+   DEFINE r_nmbb043_desc LIKE nmabl_t.nmabl003
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_nmbb043
+   CALL ap_ref_array2(g_ref_fields,"SELECT nmabl003 FROM nmabl_t WHERE nmablent='"||g_enterprise||"' AND nmabl001=? AND nmabl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET r_nmbb043_desc = '', g_rtn_fields[1] , ''
+
+   RETURN r_nmbb043_desc
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 缴款單身交易帳戶
+# Memo...........:
+# Usage..........: CALL anmt564_nmee001_chk(p_nmee001)
+#                  RETURNING r_success
+# Input parameter: p_nmee001      交易帳戶
+# Return code....: r_success      執行成功否
+# Date & Author..: 2015/06/09 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmee001_chk(p_nmee001)
+   DEFINE p_nmee001       LIKE nmee_t.nmee001
+   DEFINE r_success       LIKE type_t.num5
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_nmbb027       LIKE nmbb_t.nmbb027
+   DEFINE l_nmbb026       LIKE nmbb_t.nmbb026
+   DEFINE l_sql           STRING
+
+   LET r_success = TRUE
+
+   CALL anmt564_nmbb026_chk(g_nmbb2_d[l_ac].nmee001,'2') RETURNING l_success,l_nmbb027
+
+   IF NOT l_success THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   LET l_sql = " SELECT DISTINCT nmbb026 FROM nmbb_t WHERE nmbbent = '",g_enterprise,"' AND nmbbdocno = '",g_nmba_m.nmbadocno,"'",
+               "    AND nmbbcomp = '",g_nmba_m.nmbacomp,"'"
+   PREPARE anmt564_nmbb026_prep FROM l_sql
+   DECLARE anmt564_nmbb026_curs CURSOR FOR anmt564_nmbb026_prep
+
+   LET l_success = FALSE
+
+   FOREACH anmt564_nmbb026_curs INTO l_nmbb026
+      IF l_nmbb026 = p_nmee001 THEN
+         LET l_success = TRUE
+         EXIT FOREACH
+      END IF
+   END FOREACH
+
+   IF NOT l_success THEN
+      LET r_success = TRUE
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "anm-00359"
+      LET g_errparam.extend = p_nmee001
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+   END IF
+
+   RETURN r_success
+
+END FUNCTION
+################################################################################
+# Descriptions...: 151222-00010  10
+# Memo...........:
+# Usage..........: CALL anmt564_nmbb002_desc()
+#                  RETURNING 回传参数
+# Date & Author..: 2015/12/25 By yangtt
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmbb002_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_nmbb_d[l_ac].nmbb002
+   CALL ap_ref_array2(g_ref_fields,"SELECT nmajl003 FROM nmajl_t WHERE nmajlent='"||g_enterprise||"' AND nmajl001=? AND nmajl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_nmbb_d[l_ac].nmbb002_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_nmbb_d[l_ac].nmbb002_desc
+END FUNCTION
+
+################################################################################
+# Descriptions...: 專櫃編號說明
+# Memo...........:
+# Usage..........: CALL anmt564_nmee005_desc(p_nmee005)
+#                  RETURNING r_nmee005_desc
+# Input parameter: p_nmee005      專櫃編號
+# Return code....: r_nmee005_desc 說明
+# Date & Author..: 2015/06/08 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmee005_desc(p_nmee005)
+   DEFINE p_nmee005      LIKE nmee_t.nmee005
+   DEFINE r_nmee005_desc LIKE mhael_t.mhael023
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_nmee005
+   CALL ap_ref_array2(g_ref_fields,"SELECT mhael023 FROM mhael_t WHERE mhaelent='"||g_enterprise||"' AND mhael001=? AND mhael022='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET r_nmee005_desc = '', g_rtn_fields[1] , ''
+
+   RETURN r_nmee005_desc
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 費用編號說明
+# Memo...........:
+# Usage..........: CALL anmt564_nmee006_desc(p_nmee006)
+#                  RETURNING r_nmee006_desc
+# Input parameter: p_nmee006      費用編號
+# Return code....: r_nmee006_desc 費用編號說明
+# Date & Author..: 2015/06/09 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmee006_desc(p_nmee006)
+   DEFINE p_nmee006      LIKE nmee_t.nmee006
+   DEFINE r_nmee006_desc LIKE stael_t.stael003
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_nmee006
+   CALL ap_ref_array2(g_ref_fields,"SELECT stael003 FROM stael_t WHERE staelent='"||g_enterprise||"' AND stael001=? AND stael002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET r_nmee006_desc = '', g_rtn_fields[1] , ''
+
+   RETURN r_nmee006_desc
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 資料可選範圍
+# Memo...........:
+# Usage..........: CALL anmt564_get_nmbb(p_lab)
+#                  RETURNING r_str
+# Input parameter: r_lab          欄位名稱
+# Return code....: r_str          資料範圍
+# Date & Author..: 2015/06/09 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_get_nmbb(p_lab)
+   DEFINE p_lab         LIKE type_t.chr10
+   DEFINE l_flag        LIKE type_t.chr20
+   DEFINE r_str         STRING
+   DEFINE l_sql         STRING
+
+   LET l_sql = "SELECT DISTINCT ",p_lab," FROM nmbb_t WHERE nmbbent = '",g_enterprise,"'",
+               "   AND nmbbdocno = '",g_nmba_m.nmbadocno,"'",
+               "   AND nmbbcomp  = '",g_nmba_m.nmbacomp,"'"
+   PREPARE anmt564_get_nmbb_prep FROM l_sql
+   DECLARE anmt564_get_nmbb_curs CURSOR FOR anmt564_get_nmbb_prep
+
+   LET r_str = ""
+   FOREACH anmt564_get_nmbb_curs INTO l_flag
+      IF cl_null(r_str) THEN
+         LET r_str = "('",l_flag,"'"
+      ELSE
+         LET r_str = r_str,",'",l_flag,"'"
+      END IF
+   END FOREACH
+
+   IF NOT cl_null(r_str) THEN
+      LET r_str = r_str,")"
+   END IF
+
+   RETURN r_str
+
+END FUNCTION
+################################################################################
+# Descriptions...: 直接審核功能
+# Memo...........:
+# Usage..........: CALL anmt564_approval()
+#                  RETURNING 回传参数
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_approval()
+   DEFINE l_flag    LIKE type_t.chr1
+   DEFINE l_nmba002 LIKE nmba_t.nmba002  #帳務人員
+   DEFINE l_nmba002_desc LIKE ooag_t.ooag011
+   DEFINE l_nmba009 LIKE nmba_t.nmba009  #核准日期 
+   DEFINE l_success LIKE type_t.chr1     #標記成功否
+   DEFINE lc_state  LIKE type_t.chr1     #核准狀態 
+   
+   LET l_flag = 'Y'
+   IF g_nmba_m.nmbacomp IS NULL
+      OR g_nmba_m.nmbadocno IS NULL
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err() 
+      RETURN
+   END IF
+   
+   IF g_nmba_m.nmbastus <> 'Y' THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "adb-00077" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err() 
+      RETURN
+   END IF
+   
+  OPEN WINDOW w_anmt653_s01 WITH FORM cl_ap_formpath("anm",'anmt540_s01')
+  
+  DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   INPUT l_nmba002,l_nmba009 FROM nmba002,nmba009 ATTRIBUTE(WITHOUT DEFAULTS)
+    BEFORE INPUT
+      CALL cl_set_comp_entry("nmba002",TRUE)
+      CALL cl_set_comp_required("nmba002",TRUE)
+      LET l_nmba002 = g_user   #帳務人員
+      LET l_nmba009 = g_today  #核准日期
+      CALL s_desc_get_person_desc(l_nmba002) RETURNING l_nmba002_desc
+      DISPLAY l_nmba002_desc TO nmba002_desc
+      DISPLAY l_nmba002 TO nmba002
+      DISPLAY l_nmba009 TO nmba009 
+      
+   
+    AFTER FIELD nmba002
+       IF NOT cl_null(l_nmba002) THEN
+          INITIALIZE g_chkparam.* TO NULL
+          LET g_errshow = TRUE #是否開窗 #160318-00025#30  add
+          LET g_chkparam.arg1 = l_nmba002
+          LET g_chkparam.err_str[1] = "aim-00070:sub-01302|aooi130|",cl_get_progname("aooi130",g_lang,"2"),"|:EXEPROGaooi130"#要執行的建議程式待補 #160318-00025#30  add
+          IF cl_chk_exist("v_ooag001") THEN
+             CALL s_desc_get_person_desc(l_nmba002) RETURNING l_nmba002_desc
+             DISPLAY l_nmba002_desc TO nmba002_desc
+          ELSE
+             NEXT FIELD nmba002
+          END IF
+       END IF  
+       
+    AFTER FIELD nmba009
+       IF NOT cl_null(l_nmba009) THEN
+          IF l_nmba009 < g_nmba_m.nmbadocdt THEN
+             INITIALIZE g_errparam TO NULL 
+             LET g_errparam.extend = "" 
+             LET g_errparam.code   = "anm-00288" 
+             LET g_errparam.popup  = TRUE 
+             CALL cl_err()
+             NEXT FIELD nmba009
+          END IF 
+       END IF  
+       
+    ON ACTION controlp INFIELD nmba002
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'i'
+         LET g_qryparam.reqry = FALSE
+         CALL q_ooag001()
+         LET l_nmba002 = g_qryparam.return1 
+         CALL s_desc_get_person_desc(l_nmba002) RETURNING l_nmba002_desc
+         DISPLAY l_nmba002_desc TO nmba002_desc
+         DISPLAY l_nmba002 TO nmba002
+         NEXT FIELD nmba002
+         
+    
+   AFTER INPUT
+      #CALL cl_showmsg_init()
+      CALL cl_err_collect_init()
+      CALL anmt564_approval_chk() RETURNING l_success
+      IF l_success = 'N' THEN
+         #CALL cl_err_showmsg()
+         CALL cl_err_collect_show()
+         NEXT FIELD nmba002
+      END IF   
+          
+   END INPUT
+
+     ON ACTION accept
+        LET l_flag = 'Y'  #確認動作
+        ACCEPT DIALOG
+        
+     ON ACTION cancel
+        LET l_flag = 'N' #取消動作
+        EXIT DIALOG
+
+ END DIALOG
+ CLOSE WINDOW w_anmt653_s01
+ 
+ IF l_flag = 'Y' THEN
+    LET lc_state = 'V'
+   #CALL anmt564_nmbc_insert()
+    CALL anmt564_update_amt()
+    UPDATE nmba_t SET nmba009 = l_nmba009,
+                      nmba002 = l_nmba002,
+                      nmbastus = lc_state
+       WHERE nmbaent = g_enterprise
+         AND nmbacomp = g_nmba_m.nmbacomp
+         AND nmbadocno = g_nmba_m.nmbadocno
+    IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = ""
+      LET g_errparam.code   = SQLCA.sqlcode
+      LET g_errparam.popup  = FALSE
+      CALL cl_err()
+    ELSE
+       CASE lc_state
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         WHEN "V"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/verify.png")
+
+       END CASE
+       LET g_nmba_m.nmbastus = lc_state
+       DISPLAY BY NAME g_nmba_m.nmbastus
+    END IF    
+ END IF
+
+END FUNCTION
+################################################################################
+# Descriptions...: 審核檢查
+# Memo...........:
+# Usage..........: CALL anmt564_approval_chk()
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_approval_chk()
+   #161212-00005#2---modify-----begin-------------
+   #DEFINE l_nmbb            RECORD LIKE nmbb_t.*
+   DEFINE l_nmbb RECORD  #銀存收支明細檔
+       nmbbent LIKE nmbb_t.nmbbent, #企業編號
+       nmbbcomp LIKE nmbb_t.nmbbcomp, #法人
+       nmbbdocno LIKE nmbb_t.nmbbdocno, #收支單號
+       nmbbseq LIKE nmbb_t.nmbbseq, #項次
+       nmbborga LIKE nmbb_t.nmbborga, #來源組織
+       nmbblegl LIKE nmbb_t.nmbblegl, #核算組織
+       nmbb001 LIKE nmbb_t.nmbb001, #異動別
+       nmbb002 LIKE nmbb_t.nmbb002, #存提碼
+       nmbb003 LIKE nmbb_t.nmbb003, #交易帳戶編碼
+       nmbb004 LIKE nmbb_t.nmbb004, #幣別
+       nmbb005 LIKE nmbb_t.nmbb005, #匯率
+       nmbb006 LIKE nmbb_t.nmbb006, #主帳套原幣金額
+       nmbb007 LIKE nmbb_t.nmbb007, #主帳套本幣金額
+       nmbb008 LIKE nmbb_t.nmbb008, #主帳套已沖原幣金額
+       nmbb009 LIKE nmbb_t.nmbb009, #主帳套已沖本幣金額
+       nmbb010 LIKE nmbb_t.nmbb010, #現金變動碼
+       nmbb011 LIKE nmbb_t.nmbb011, #本位幣二幣別
+       nmbb012 LIKE nmbb_t.nmbb012, #本位幣二匯率
+       nmbb013 LIKE nmbb_t.nmbb013, #本位幣二金額
+       nmbb014 LIKE nmbb_t.nmbb014, #本位幣二已沖金額
+       nmbb015 LIKE nmbb_t.nmbb015, #本位幣三幣別
+       nmbb016 LIKE nmbb_t.nmbb016, #本位幣三匯率
+       nmbb017 LIKE nmbb_t.nmbb017, #本位幣三金額
+       nmbb018 LIKE nmbb_t.nmbb018, #本位幣三已沖金額
+       nmbb019 LIKE nmbb_t.nmbb019, #輔助帳套一匯率
+       nmbb020 LIKE nmbb_t.nmbb020, #輔助帳套一原幣已沖
+       nmbb021 LIKE nmbb_t.nmbb021, #輔助帳套一本幣已沖
+       nmbb022 LIKE nmbb_t.nmbb022, #輔助帳套二匯率
+       nmbb023 LIKE nmbb_t.nmbb023, #輔助帳套二原幣已沖
+       nmbb024 LIKE nmbb_t.nmbb024, #輔助帳套二本幣已沖
+       nmbb025 LIKE nmbb_t.nmbb025, #備註
+       nmbb026 LIKE nmbb_t.nmbb026, #交易對象
+       nmbb027 LIKE nmbb_t.nmbb027, #一次性交易對象識別碼
+       nmbb028 LIKE nmbb_t.nmbb028, #款別編碼
+       nmbb029 LIKE nmbb_t.nmbb029, #款別分類
+       nmbb030 LIKE nmbb_t.nmbb030, #票據號碼
+       nmbb031 LIKE nmbb_t.nmbb031, #到期日
+       nmbb032 LIKE nmbb_t.nmbb032, #有價券數量
+       nmbb033 LIKE nmbb_t.nmbb033, #有價券面額
+       nmbb034 LIKE nmbb_t.nmbb034, #有價券起始編號
+       nmbb035 LIKE nmbb_t.nmbb035, #有價券結束編號
+       nmbb036 LIKE nmbb_t.nmbb036, #刷卡銀行
+       nmbb037 LIKE nmbb_t.nmbb037, #信用卡卡號
+       nmbb038 LIKE nmbb_t.nmbb038, #手續費
+       nmbb039 LIKE nmbb_t.nmbb039, #第三方代收機構
+       nmbb040 LIKE nmbb_t.nmbb040, #背書轉入
+       nmbb041 LIKE nmbb_t.nmbb041, #發票人全名
+       nmbb042 LIKE nmbb_t.nmbb042, #票況
+       nmbb043 LIKE nmbb_t.nmbb043, #票據付款銀行
+       nmbb044 LIKE nmbb_t.nmbb044, #票面利率種類
+       nmbb045 LIKE nmbb_t.nmbb045, #票面利率百分比
+       nmbb046 LIKE nmbb_t.nmbb046, #轉付交易對象
+       nmbb047 LIKE nmbb_t.nmbb047, #票據流通期間
+       nmbb048 LIKE nmbb_t.nmbb048, #貼現利率種類
+       nmbb049 LIKE nmbb_t.nmbb049, #貼現利率
+       nmbb050 LIKE nmbb_t.nmbb050, #貼現期間
+       nmbb051 LIKE nmbb_t.nmbb051, #貼現撥款原幣金額
+       nmbb052 LIKE nmbb_t.nmbb052, #貼現撥款本幣金額
+       nmbb053 LIKE nmbb_t.nmbb053, #繳款人員
+       nmbb054 LIKE nmbb_t.nmbb054, #繳款部門
+       nmbb055 LIKE nmbb_t.nmbb055, #POS繳款單號
+       nmbb056 LIKE nmbb_t.nmbb056, #入帳匯率
+       nmbb057 LIKE nmbb_t.nmbb057, #入帳原幣金額
+       nmbb058 LIKE nmbb_t.nmbb058, #入帳主帳套本幣金額
+       nmbb059 LIKE nmbb_t.nmbb059, #入帳主帳套本位幣二匯率
+       nmbb060 LIKE nmbb_t.nmbb060, #入帳主帳套本位幣二金額
+       nmbb061 LIKE nmbb_t.nmbb061, #入帳主帳套本位幣三匯率
+       nmbb062 LIKE nmbb_t.nmbb062, #入帳主帳套本位幣三金額
+       nmbb063 LIKE nmbb_t.nmbb063, #對方會科
+       nmbb064 LIKE nmbb_t.nmbb064, #差異處理狀態
+       nmbb065 LIKE nmbb_t.nmbb065, #開票日期
+       nmbb066 LIKE nmbb_t.nmbb066, #重評後本幣金額
+       nmbb067 LIKE nmbb_t.nmbb067, #重評後本位幣二金額
+       nmbb068 LIKE nmbb_t.nmbb068, #重評後本位幣三金額
+       nmbb069 LIKE nmbb_t.nmbb069, #質押否
+       nmbbud001 LIKE nmbb_t.nmbbud001, #自定義欄位(文字)001
+       nmbbud002 LIKE nmbb_t.nmbbud002, #自定義欄位(文字)002
+       nmbbud003 LIKE nmbb_t.nmbbud003, #自定義欄位(文字)003
+       nmbbud004 LIKE nmbb_t.nmbbud004, #自定義欄位(文字)004
+       nmbbud005 LIKE nmbb_t.nmbbud005, #自定義欄位(文字)005
+       nmbbud006 LIKE nmbb_t.nmbbud006, #自定義欄位(文字)006
+       nmbbud007 LIKE nmbb_t.nmbbud007, #自定義欄位(文字)007
+       nmbbud008 LIKE nmbb_t.nmbbud008, #自定義欄位(文字)008
+       nmbbud009 LIKE nmbb_t.nmbbud009, #自定義欄位(文字)009
+       nmbbud010 LIKE nmbb_t.nmbbud010, #自定義欄位(文字)010
+       nmbbud011 LIKE nmbb_t.nmbbud011, #自定義欄位(數字)011
+       nmbbud012 LIKE nmbb_t.nmbbud012, #自定義欄位(數字)012
+       nmbbud013 LIKE nmbb_t.nmbbud013, #自定義欄位(數字)013
+       nmbbud014 LIKE nmbb_t.nmbbud014, #自定義欄位(數字)014
+       nmbbud015 LIKE nmbb_t.nmbbud015, #自定義欄位(數字)015
+       nmbbud016 LIKE nmbb_t.nmbbud016, #自定義欄位(數字)016
+       nmbbud017 LIKE nmbb_t.nmbbud017, #自定義欄位(數字)017
+       nmbbud018 LIKE nmbb_t.nmbbud018, #自定義欄位(數字)018
+       nmbbud019 LIKE nmbb_t.nmbbud019, #自定義欄位(數字)019
+       nmbbud020 LIKE nmbb_t.nmbbud020, #自定義欄位(數字)020
+       nmbbud021 LIKE nmbb_t.nmbbud021, #自定義欄位(日期時間)021
+       nmbbud022 LIKE nmbb_t.nmbbud022, #自定義欄位(日期時間)022
+       nmbbud023 LIKE nmbb_t.nmbbud023, #自定義欄位(日期時間)023
+       nmbbud024 LIKE nmbb_t.nmbbud024, #自定義欄位(日期時間)024
+       nmbbud025 LIKE nmbb_t.nmbbud025, #自定義欄位(日期時間)025
+       nmbbud026 LIKE nmbb_t.nmbbud026, #自定義欄位(日期時間)026
+       nmbbud027 LIKE nmbb_t.nmbbud027, #自定義欄位(日期時間)027
+       nmbbud028 LIKE nmbb_t.nmbbud028, #自定義欄位(日期時間)028
+       nmbbud029 LIKE nmbb_t.nmbbud029, #自定義欄位(日期時間)029
+       nmbbud030 LIKE nmbb_t.nmbbud030, #自定義欄位(日期時間)030
+       nmbb070 LIKE nmbb_t.nmbb070, #往來據點
+       nmbb071 LIKE nmbb_t.nmbb071, #來源單號
+       nmbb072 LIKE nmbb_t.nmbb072, #項次
+       nmbb073 LIKE nmbb_t.nmbb073  #開票帳號
+       END RECORD
+   #161212-00005#2---modify-----end------
+   DEFINE r_success         LIKE type_t.chr1
+   DEFINE l_n               LIKE type_t.num5
+
+   LET r_success = 'Y'
+   #單頭檢查
+   LET l_n = 0
+   SELECT count(*) INTO l_n FROM nmbb_t
+          WHERE nmbbent = g_enterprise
+            AND nmbbdocno = g_nmba_m.nmbadocno
+            AND nmbbcomp = g_nmba_m.nmbacomp
+   IF l_n = 0 THEN
+      LET r_success = 'N'
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'anm-00087'
+      LET g_errparam.extend = g_nmba_m.nmbadocno
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+   END IF
+   
+   LET l_n = 0
+   #161212-00005#2---modify-----begin-------------
+   #LET g_sql = "SELECT * FROM nmbb_t",
+   LET g_sql = "SELECT nmbbent,nmbbcomp,nmbbdocno,nmbbseq,nmbborga,nmbblegl,nmbb001,nmbb002,nmbb003,nmbb004,",
+               "nmbb005,nmbb006,nmbb007,nmbb008,nmbb009,nmbb010,nmbb011,nmbb012,nmbb013,nmbb014,nmbb015,nmbb016,",
+               "nmbb017,nmbb018,nmbb019,nmbb020,nmbb021,nmbb022,nmbb023,nmbb024,nmbb025,nmbb026,nmbb027,nmbb028,",
+               "nmbb029,nmbb030,nmbb031,nmbb032,nmbb033,nmbb034,nmbb035,nmbb036,nmbb037,nmbb038,nmbb039,nmbb040,",
+               "nmbb041,nmbb042,nmbb043,nmbb044,nmbb045,nmbb046,nmbb047,nmbb048,nmbb049,nmbb050,nmbb051,nmbb052,",
+               "nmbb053,nmbb054,nmbb055,nmbb056,nmbb057,nmbb058,nmbb059,nmbb060,nmbb061,nmbb062,nmbb063,nmbb064,",
+               "nmbb065,nmbb066,nmbb067,nmbb068,nmbb069,nmbbud001,nmbbud002,nmbbud003,nmbbud004,nmbbud005,",
+               "nmbbud006,nmbbud007,nmbbud008,nmbbud009,nmbbud010,nmbbud011,nmbbud012,nmbbud013,nmbbud014,nmbbud015,",
+               "nmbbud016,nmbbud017,nmbbud018,nmbbud019,nmbbud020,nmbbud021,nmbbud022,nmbbud023,nmbbud024,nmbbud025,",
+               "nmbbud026,nmbbud027,nmbbud028,nmbbud029,nmbbud030,nmbb070,nmbb071,nmbb072,nmbb073 FROM nmbb_t",
+   #161212-00005#2---modify-----end-------------
+               " WHERE nmbbent = '",g_enterprise,"'",
+               "   AND nmbbcomp = '",g_nmba_m.nmbacomp,"'",
+               "   AND nmbbdocno = '",g_nmba_m.nmbadocno,"'"
+   PREPARE anmt564_pre4 FROM g_sql
+   DECLARE anmt564_cs4 CURSOR FOR anmt564_pre4
+
+   FOREACH anmt564_cs4 INTO l_nmbb.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      IF cl_null(l_nmbb.nmbb002) THEN
+         LET r_success = 'N'
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'anm-00090'
+         LET g_errparam.extend = l_nmbb.nmbbseq
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+      END IF
+
+      LET l_n = 0
+      SELECT COUNT(*) INTO l_n
+        FROM glbc_t
+       WHERE glbcent = g_enterprise
+         AND glbcld  = g_glaald
+         AND glbcdocno = g_nmba_m.nmbadocno
+         AND glbcseq = l_nmbb.nmbbseq
+         AND glbc004 IS NOT NULL
+
+      IF l_n = 0 THEN
+         LET r_success = 'N'
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'anm-00091'
+         LET g_errparam.extend = l_nmbb.nmbbseq
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+      END IF
+
+      IF l_nmbb.nmbb029 = '20'THEN
+         IF cl_null(l_nmbb.nmbb003) THEN
+            LET r_success = 'N'
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'anm-00092'
+            LET g_errparam.extend = l_nmbb.nmbbseq
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+         END IF
+      END IF
+
+      IF l_nmbb.nmbb029 = '30' THEN
+         IF cl_null(l_nmbb.nmbb030) OR cl_null(l_nmbb.nmbb043) OR cl_null(l_nmbb.nmbb031) THEN
+            LET r_success = 'N'
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'anm-00093'
+            LET g_errparam.extend = l_nmbb.nmbbseq
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+         END IF
+      END IF
+   END FOREACH
+
+   RETURN r_success
+END FUNCTION
+################################################################################
+# Descriptions...: anmt564_update_amt()
+# Memo...........:
+# Usage..........: CALL anmt564_update_amt()
+#                  RETURNING 回传参数
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_update_amt()
+   DEFINE l_ooam003         LIKE ooam_t.ooam003
+   DEFINE l_nmbbseq         LIKE nmbb_t.nmbbseq
+   DEFINE l_nmbb004         LIKE nmbb_t.nmbb004
+   DEFINE l_nmbb011         LIKE nmbb_t.nmbb011
+   DEFINE l_nmbb015         LIKE nmbb_t.nmbb015
+   DEFINE l_nmbb057         LIKE nmbb_t.nmbb057
+   DEFINE l_nmbb058         LIKE nmbb_t.nmbb058
+   DEFINE l_nmbb059         LIKE nmbb_t.nmbb059
+   DEFINE l_nmbb060         LIKE nmbb_t.nmbb060
+   DEFINE l_nmbb061         LIKE nmbb_t.nmbb061
+   DEFINE l_nmbb062         LIKE nmbb_t.nmbb062
+
+   LET g_sql = "SELECT nmbbseq,nmbb004,nmbb011,nmbb015,nmbb057,nmbb058 FROM nmbb_t ",
+               " WHERE nmbbent = '",g_enterprise,"'",
+               "   AND nmbbcomp = '",g_nmba_m.nmbacomp,"'",
+               "   AND nmbbdocno = '",g_nmba_m.nmbadocno,"'"
+   PREPARE anmt564_pre2 FROM g_sql
+   DECLARE anmt564_cs2 CURSOR FOR anmt564_pre2
+
+   FOREACH anmt564_cs2 INTO l_nmbbseq,l_nmbb004,l_nmbb011,l_nmbb015,l_nmbb057,l_nmbb058
+      IF g_glaa015 = 'Y' THEN
+         #來源幣別
+         IF g_glaa017 = '1' THEN
+           LET l_ooam003 = l_nmbb004
+         ELSE   #表示帳簿幣別
+            LET l_ooam003 = g_glaa001            #帳套使用幣別
+         END IF
+
+         #主帳套本位幣二匯率
+                                  #匯率參照表;帳套;           日期;         來源幣別
+         CALL s_aooi160_get_exrate('2',g_glaald,g_today,l_ooam003,
+                                   #目的幣別;          交易金額; 匯類類型
+                                   l_nmbb011,0,g_glaa018)
+         RETURNING l_nmbb059
+
+         #主帳套本位幣二金額
+         IF g_glaa017 = '1'  THEN
+            LET l_nmbb060 = l_nmbb057 * l_nmbb059
+         ELSE
+            LET l_nmbb060 = l_nmbb058 * l_nmbb059
+         END IF
+      END IF
+      
+       IF g_glaa019 = 'Y' THEN
+         #來源幣別
+         IF g_glaa021 = '1' THEN
+            LET l_ooam003 = l_nmbb004
+         ELSE   #表示帳簿幣別
+            LET l_ooam003 = g_glaa001               #帳套使用幣別
+         END IF
+
+
+         #主帳套本位幣三匯率
+                                  #匯率參照表;帳套;           日期;         來源幣別
+         CALL s_aooi160_get_exrate('2',g_glaald,g_today,l_ooam003,
+                                   #目的幣別;         交易金額; 匯類類型
+                                   l_nmbb015,0,g_glaa022)
+         RETURNING l_nmbb061
+
+         #主帳套本位幣三金額
+         IF g_glaa017 = '1' THEN
+            LET l_nmbb062 = l_nmbb057 * l_nmbb061
+         ELSE
+            LET l_nmbb062 = l_nmbb058 * l_nmbb061
+         END IF
+      END IF
+
+      UPDATE nmbb_t set nmbb059 = l_nmbb059,
+                        nmbb060 = l_nmbb060,
+                        nmbb061 = l_nmbb061,
+                        nmbb062 = l_nmbb062
+       WHERE nmbbent = g_enterprise
+         AND nmbbseq = l_nmbbseq
+         AND nmbbcomp = g_nmba_m.nmbacomp
+         AND nmbbdocno = g_nmba_m.nmbadocno
+
+      IF SQLCA.SQLcode  THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "upd nmbb_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET g_success = 'N'
+         EXIT FOREACH
+      END IF
+   END FOREACH   
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 编辑后立即审核
+# Memo...........:
+# Usage..........: CALL anmt564_immediately_conf()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2015/12/08 By 07166
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_immediately_conf()
+#151125-00006#3--s
+   DEFINE l_success         LIKE type_t.num5
+   DEFINE l_doc_success     LIKE type_t.num5
+   DEFINE l_slip            LIKE ooba_t.ooba002
+   DEFINE l_dfin0031        LIKE type_t.chr1
+   DEFINE l_count           LIKE type_t.num5
+   
+   CALL anmt564_glaa_get()
+   IF cl_null(g_glaald)           THEN RETURN END IF   #無資料直接返回不做處理
+   IF cl_null(g_nmba_m.nmbacomp)  THEN RETURN END IF   #無資料直接返回不做處理
+   IF cl_null(g_nmba_m.nmbadocno) THEN RETURN END IF   #無資料直接返回不做處理
+    
+   LET l_count = 0
+   SELECT COUNT(*) INTO l_count FROM nmbb_t WHERE nmbbent = g_enterprise
+      AND nmbbdocno = g_nmba_m.nmbadocno
+      
+   IF cl_null(l_count) THEN LET l_count = 0 END IF
+   IF l_count = 0 THEN
+      RETURN 
+   END IF                   #第一单身無資料直接返回不做處理
+
+   LET l_count = 0
+   SELECT COUNT(*) INTO l_count FROM nmee_t WHERE nmeeent = g_enterprise
+      AND nmeedocno = g_nmba_m.nmbadocno
+      
+   IF cl_null(l_count) THEN LET l_count = 0 END IF
+   IF l_count = 0 THEN
+      RETURN 
+   END IF                   #第二单身無資料直接返回不做處理
+   
+   #取得單別
+   CALL s_aooi200_fin_get_slip(g_nmba_m.nmbadocno) RETURNING l_success,l_slip
+   #取得單別設置的"是否直接審核"參數
+   CALL s_fin_get_doc_para(g_glaald,g_nmba_m.nmbacomp,l_slip,'D-FIN-0031') RETURNING l_dfin0031
+
+   IF cl_null(l_dfin0031) OR l_dfin0031 MATCHES '[Nn]' THEN RETURN END IF #參數值為空或為N則不做直接審核邏輯
+   IF NOT cl_ask_confirm('aap-00403') THEN RETURN END IF  #询问是否立即审核?
+   
+   
+   CALL s_transaction_begin()
+   CALL cl_err_collect_init()
+   LET l_doc_success = TRUE
+        
+   IF NOT s_anmt564_conf_chk(g_nmba_m.nmbacomp,g_nmba_m.nmbadocno) THEN
+      LET l_doc_success = FALSE
+   END IF
+   
+   IF NOT s_anmt564_conf_upd(g_nmba_m.nmbacomp,g_nmba_m.nmbadocno) THEN
+      LET l_doc_success = FALSE
+   END IF 
+   
+   #異動狀態碼欄位/修改人/修改日期
+   LET g_nmba_m.nmbamoddt = cl_get_current()
+   LET g_nmba_m.nmbacnfdt = cl_get_current()
+   UPDATE nmba_t SET nmbastus = 'Y',
+                     nmbamodid= g_user,
+                     nmbamoddt= g_nmba_m.nmbamoddt,
+                     nmbacnfid= g_user,
+                     nmbacnfdt= g_nmba_m.nmbacnfdt
+    WHERE nmbaent = g_enterprise AND nmbacomp = g_nmba_m.nmbacomp
+      AND nmbadocno = g_nmba_m.nmbadocno
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      LET l_doc_success = FALSE
+   END IF
+   IF l_doc_success = TRUE THEN
+      CALL s_transaction_end('Y',1)
+   ELSE
+      CALL s_transaction_end('N',1)
+      CALL cl_err_collect_show()
+   END IF
+#151125-00006#3--e
+END FUNCTION
+
+################################################################################
+# Descriptions...: 審核檢查
+# Memo...........:
+# Usage..........: CALL anmt564_confirm_chk()
+#                  RETURNING r_success
+# Input parameter: 
+# Return code....: r_success      檢核成功否
+# Date & Author..: 2015/06/08 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_confirm_chk()
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_sql         STRING
+   DEFINE l_nmbborga    LIKE nmbb_t.nmbborga
+   DEFINE l_nmbb026     LIKE nmbb_t.nmbb026
+   DEFINE l_nmbb004     LIKE nmbb_t.nmbb004
+   DEFINE l_nmbb006     LIKE nmbb_t.nmbb006
+   DEFINE l_nmee012     LIKE nmee_t.nmee012
+
+   LET r_success = TRUE
+
+  #FUNC作廢,改調用s_anmt564中的FUNC
+
+   #离开第二单身时检核第一单与第二单身的交易对象+组织+币别需要相同，不能审核通过
+   LET l_sql = "SELECT DISTINCT nmbborga,nmbb026,nmbb004 FROM nmbb_t ",
+               " WHERE nmbbent   = '",g_enterprise,"'                ",
+               "   AND nmbbdocno = '",g_nmba_m.nmbadocno,"'          ",
+               "   AND nmbbcomp  = '",g_nmba_m.nmbacomp,"'           ",
+               " UNION                                               ",
+               "SELECT DISTINCT nmeesite,nmee001,nmee009 FROM nmee_t ",
+               " WHERE nmeeent   = '",g_enterprise,"'                ",
+               "   AND nmeedocno = '",g_nmba_m.nmbadocno,"'          ",
+               "   AND nmeecomp  = '",g_nmba_m.nmbacomp,"'           "
+   PREPARE anmt564_chk_prep FROM l_sql
+   DECLARE anmt564_chk_curs CURSOR FOR anmt564_chk_prep
+
+   LET l_sql = "SELECT SUM(nmbb006) FROM nmbb_t",
+               " WHERE nmbbent   = '",g_enterprise,"'                   ",
+               "   AND nmbbdocno = '",g_nmba_m.nmbadocno,"'             ",
+               "   AND nmbbcomp  = '",g_nmba_m.nmbacomp,"'              ",
+               "   AND nmbborga  = ?                                    ",
+               "   AND nmbb026   = ?                                    ",
+               "   AND nmbb004   = ?                                    "
+   PREPARE anmt564_nmbb_amt_prep FROM l_sql
+
+   LET l_sql = "SELECT SUM(nmee012) FROM nmee_t",
+               " WHERE nmeeent   = '",g_enterprise,"'                   ",
+               "   AND nmeedocno = '",g_nmba_m.nmbadocno,"'             ",
+               "   AND nmeecomp  = '",g_nmba_m.nmbacomp,"'              ",
+               "   AND nmeesite  = ?                                    ",
+               "   AND nmee001   = ?                                    ",
+               "   AND nmee009   = ?                                    "
+   PREPARE anmt564_nmee_amt_prep FROM l_sql
+
+   FOREACH anmt564_chk_curs INTO l_nmbborga,l_nmbb026,l_nmbb004
+      EXECUTE anmt564_nmbb_amt_prep USING l_nmbborga,l_nmbb026,l_nmbb004 INTO l_nmbb006
+      EXECUTE anmt564_nmee_amt_prep USING l_nmbborga,l_nmbb026,l_nmbb004 INTO l_nmee012
+      IF cl_null(l_nmbb006) THEN LET l_nmbb006 = 0 END IF
+      IF cl_null(l_nmee012) THEN LET l_nmee012 = 0 END IF
+
+      IF l_nmbb006 <> l_nmee012 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = "anm-00360" 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         LET r_success = FALSE
+      END IF
+
+   END FOREACH
+
+   RETURN r_success
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 審核、取消審核時更新來源資料
+# Memo...........:
+# Usage..........: CALL anmt564_stev_upd(p_chr)
+#                  RETURNING r_success
+# Input parameter: p_str          範圍
+#                : p_chr          執行方向
+# Return code....: r_success      執行成功否
+# Date & Author..: 2015/06/08 By 01727
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_stev_upd(p_str,p_chr)
+   DEFINE p_str         STRING
+   DEFINE p_chr         LIKE type_t.chr1
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_sql         STRING
+   DEFINE l_steu009     LIKE steu_t.steu009
+   DEFINE l_stev025     LIKE stev_t.stev025
+   DEFINE l_nmee003     LIKE nmee_t.nmee003
+   DEFINE l_nmee004     LIKE nmee_t.nmee004
+   DEFINE l_nmee012     LIKE nmee_t.nmee012
+  #151201-00002#14 Add  ---(S)---
+   DEFINE l_stev002     LIKE stev_t.stev002
+   DEFINE l_stev003     LIKE stev_t.stev003
+  #151201-00002#14 Add  ---(E)---
+
+   LET l_sql = "SELECT nmee003,nmee004,nmee012 FROM nmee_t ",
+               " WHERE nmeeent = '",g_enterprise,"'",
+               "   AND nmee022 = '2'",   #151201-00002#14 Add
+               "   AND nmeedocno = '",g_nmba_m.nmbadocno,"'",
+               "   AND ",p_str CLIPPED,
+               "   AND nmeecomp = '",g_nmba_m.nmbacomp,"'"
+   PREPARE anmt564_stve_upd_prep FROM l_sql
+   DECLARE anmt564_stve_upd_curs CURSOR FOR anmt564_stve_upd_prep
+
+   LET r_success = TRUE
+
+   FOREACH anmt564_stve_upd_curs INTO l_nmee003,l_nmee004,l_nmee012
+      UPDATE stev_t SET stev025 = 0
+       WHERE stevent   = g_enterprise
+         AND stevdocno = l_nmee003
+         AND stevseq   = l_nmee004
+         AND stev025 IS NULL
+      IF p_chr = '+' THEN
+         UPDATE stev_t SET stev025 = stev025 + l_nmee012
+          WHERE stevent   = g_enterprise
+            AND stevdocno = l_nmee003
+            AND stevseq   = l_nmee004
+          IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] <> 1 THEN
+             LET r_success = FALSE
+          END IF
+      ELSE
+         UPDATE stev_t SET stev025 = stev025 - l_nmee012
+          WHERE stevent   = g_enterprise
+            AND stevdocno = l_nmee003
+            AND stevseq   = l_nmee004
+          IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] <> 1 THEN
+             LET r_success = FALSE
+          END IF
+      END IF
+      LET l_steu009 = 0
+      SELECT SUM(stev016 - CASE WHEN stev025 IS NULL THEN 0 ELSE stev025 END) INTO l_steu009 FROM stev_t
+       WHERE stevent   = g_enterprise
+         AND stevdocno = l_nmee003
+      LET l_stev025 = 0
+      SELECT SUM(CASE WHEN stev025 IS NULL THEN 0 ELSE stev025 END) INTO l_stev025 FROM stev_t
+       WHERE stevent   = g_enterprise
+         AND stevdocno = l_nmee003
+      IF cl_null(l_stev025) THEN LET l_stev025 = 0 END IF
+      IF cl_null(l_steu009) OR l_steu009 > 0 THEN
+         IF l_stev025 = 0 THEN
+            UPDATE steu_t SET steu008 = '1'
+             WHERE steuent = g_enterprise
+               AND steudocno = l_nmee003
+         ELSE
+            UPDATE steu_t SET steu008 = '2'
+             WHERE steuent = g_enterprise
+               AND steudocno = l_nmee003
+         END IF
+      ELSE
+         UPDATE steu_t SET steu008 = '3'
+          WHERE steuent = g_enterprise
+            AND steudocno = l_nmee003
+      END IF
+
+     #151201-00002#14 Add  ---(S)---
+      SELECT stev002,stev003 INTO l_stev002,l_stev003 FROM stev_t WHERE stevent = g_enterprise
+         AND stevdocno = l_nmee003
+         AND stevseq   = l_nmee004
+      IF p_chr = '+' THEN
+         UPDATE stbc_t SET stbc022 = stbc022 + l_nmee012
+          WHERE stbcent = g_enterprise
+            AND stbc004 = l_stev002
+            AND stbc005 = l_stev003
+          IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] <> 1 THEN
+             LET r_success = FALSE
+          END IF
+      ELSE
+         UPDATE stbc_t SET stbc022 = stbc022 - l_nmee012
+          WHERE stbcent = g_enterprise
+            AND stbc004 = l_stev002
+            AND stbc005 = l_stev003
+          IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] <> 1 THEN
+             LET r_success = FALSE
+          END IF
+      END IF
+     #151201-00002#14 Add  ---(E)---
+
+   END FOREACH
+
+   RETURN r_success
+
+END FUNCTION
+################################################################################
+# Descriptions...: 款別分類 nmbb029 = 10 或20寫入銀存收支異動檔 nmbc_t
+# Memo...........:
+# Usage..........: CALL anmt564_nmbc_insert()
+#                  RETURNING 回传参数
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmbc_insert()
+   #161212-00005#2---modify-----begin-------------
+   #DEFINE l_nmbc         RECORD LIKE nmbc_t.*
+   #DEFINE l_nmbb         RECORD LIKE nmbb_t.*
+   DEFINE l_nmbb RECORD  #銀存收支明細檔
+       nmbbent LIKE nmbb_t.nmbbent, #企業編號
+       nmbbcomp LIKE nmbb_t.nmbbcomp, #法人
+       nmbbdocno LIKE nmbb_t.nmbbdocno, #收支單號
+       nmbbseq LIKE nmbb_t.nmbbseq, #項次
+       nmbborga LIKE nmbb_t.nmbborga, #來源組織
+       nmbblegl LIKE nmbb_t.nmbblegl, #核算組織
+       nmbb001 LIKE nmbb_t.nmbb001, #異動別
+       nmbb002 LIKE nmbb_t.nmbb002, #存提碼
+       nmbb003 LIKE nmbb_t.nmbb003, #交易帳戶編碼
+       nmbb004 LIKE nmbb_t.nmbb004, #幣別
+       nmbb005 LIKE nmbb_t.nmbb005, #匯率
+       nmbb006 LIKE nmbb_t.nmbb006, #主帳套原幣金額
+       nmbb007 LIKE nmbb_t.nmbb007, #主帳套本幣金額
+       nmbb008 LIKE nmbb_t.nmbb008, #主帳套已沖原幣金額
+       nmbb009 LIKE nmbb_t.nmbb009, #主帳套已沖本幣金額
+       nmbb010 LIKE nmbb_t.nmbb010, #現金變動碼
+       nmbb011 LIKE nmbb_t.nmbb011, #本位幣二幣別
+       nmbb012 LIKE nmbb_t.nmbb012, #本位幣二匯率
+       nmbb013 LIKE nmbb_t.nmbb013, #本位幣二金額
+       nmbb014 LIKE nmbb_t.nmbb014, #本位幣二已沖金額
+       nmbb015 LIKE nmbb_t.nmbb015, #本位幣三幣別
+       nmbb016 LIKE nmbb_t.nmbb016, #本位幣三匯率
+       nmbb017 LIKE nmbb_t.nmbb017, #本位幣三金額
+       nmbb018 LIKE nmbb_t.nmbb018, #本位幣三已沖金額
+       nmbb019 LIKE nmbb_t.nmbb019, #輔助帳套一匯率
+       nmbb020 LIKE nmbb_t.nmbb020, #輔助帳套一原幣已沖
+       nmbb021 LIKE nmbb_t.nmbb021, #輔助帳套一本幣已沖
+       nmbb022 LIKE nmbb_t.nmbb022, #輔助帳套二匯率
+       nmbb023 LIKE nmbb_t.nmbb023, #輔助帳套二原幣已沖
+       nmbb024 LIKE nmbb_t.nmbb024, #輔助帳套二本幣已沖
+       nmbb025 LIKE nmbb_t.nmbb025, #備註
+       nmbb026 LIKE nmbb_t.nmbb026, #交易對象
+       nmbb027 LIKE nmbb_t.nmbb027, #一次性交易對象識別碼
+       nmbb028 LIKE nmbb_t.nmbb028, #款別編碼
+       nmbb029 LIKE nmbb_t.nmbb029, #款別分類
+       nmbb030 LIKE nmbb_t.nmbb030, #票據號碼
+       nmbb031 LIKE nmbb_t.nmbb031, #到期日
+       nmbb032 LIKE nmbb_t.nmbb032, #有價券數量
+       nmbb033 LIKE nmbb_t.nmbb033, #有價券面額
+       nmbb034 LIKE nmbb_t.nmbb034, #有價券起始編號
+       nmbb035 LIKE nmbb_t.nmbb035, #有價券結束編號
+       nmbb036 LIKE nmbb_t.nmbb036, #刷卡銀行
+       nmbb037 LIKE nmbb_t.nmbb037, #信用卡卡號
+       nmbb038 LIKE nmbb_t.nmbb038, #手續費
+       nmbb039 LIKE nmbb_t.nmbb039, #第三方代收機構
+       nmbb040 LIKE nmbb_t.nmbb040, #背書轉入
+       nmbb041 LIKE nmbb_t.nmbb041, #發票人全名
+       nmbb042 LIKE nmbb_t.nmbb042, #票況
+       nmbb043 LIKE nmbb_t.nmbb043, #票據付款銀行
+       nmbb044 LIKE nmbb_t.nmbb044, #票面利率種類
+       nmbb045 LIKE nmbb_t.nmbb045, #票面利率百分比
+       nmbb046 LIKE nmbb_t.nmbb046, #轉付交易對象
+       nmbb047 LIKE nmbb_t.nmbb047, #票據流通期間
+       nmbb048 LIKE nmbb_t.nmbb048, #貼現利率種類
+       nmbb049 LIKE nmbb_t.nmbb049, #貼現利率
+       nmbb050 LIKE nmbb_t.nmbb050, #貼現期間
+       nmbb051 LIKE nmbb_t.nmbb051, #貼現撥款原幣金額
+       nmbb052 LIKE nmbb_t.nmbb052, #貼現撥款本幣金額
+       nmbb053 LIKE nmbb_t.nmbb053, #繳款人員
+       nmbb054 LIKE nmbb_t.nmbb054, #繳款部門
+       nmbb055 LIKE nmbb_t.nmbb055, #POS繳款單號
+       nmbb056 LIKE nmbb_t.nmbb056, #入帳匯率
+       nmbb057 LIKE nmbb_t.nmbb057, #入帳原幣金額
+       nmbb058 LIKE nmbb_t.nmbb058, #入帳主帳套本幣金額
+       nmbb059 LIKE nmbb_t.nmbb059, #入帳主帳套本位幣二匯率
+       nmbb060 LIKE nmbb_t.nmbb060, #入帳主帳套本位幣二金額
+       nmbb061 LIKE nmbb_t.nmbb061, #入帳主帳套本位幣三匯率
+       nmbb062 LIKE nmbb_t.nmbb062, #入帳主帳套本位幣三金額
+       nmbb063 LIKE nmbb_t.nmbb063, #對方會科
+       nmbb064 LIKE nmbb_t.nmbb064, #差異處理狀態
+       nmbb065 LIKE nmbb_t.nmbb065, #開票日期
+       nmbb066 LIKE nmbb_t.nmbb066, #重評後本幣金額
+       nmbb067 LIKE nmbb_t.nmbb067, #重評後本位幣二金額
+       nmbb068 LIKE nmbb_t.nmbb068, #重評後本位幣三金額
+       nmbb069 LIKE nmbb_t.nmbb069, #質押否
+       nmbbud001 LIKE nmbb_t.nmbbud001, #自定義欄位(文字)001
+       nmbbud002 LIKE nmbb_t.nmbbud002, #自定義欄位(文字)002
+       nmbbud003 LIKE nmbb_t.nmbbud003, #自定義欄位(文字)003
+       nmbbud004 LIKE nmbb_t.nmbbud004, #自定義欄位(文字)004
+       nmbbud005 LIKE nmbb_t.nmbbud005, #自定義欄位(文字)005
+       nmbbud006 LIKE nmbb_t.nmbbud006, #自定義欄位(文字)006
+       nmbbud007 LIKE nmbb_t.nmbbud007, #自定義欄位(文字)007
+       nmbbud008 LIKE nmbb_t.nmbbud008, #自定義欄位(文字)008
+       nmbbud009 LIKE nmbb_t.nmbbud009, #自定義欄位(文字)009
+       nmbbud010 LIKE nmbb_t.nmbbud010, #自定義欄位(文字)010
+       nmbbud011 LIKE nmbb_t.nmbbud011, #自定義欄位(數字)011
+       nmbbud012 LIKE nmbb_t.nmbbud012, #自定義欄位(數字)012
+       nmbbud013 LIKE nmbb_t.nmbbud013, #自定義欄位(數字)013
+       nmbbud014 LIKE nmbb_t.nmbbud014, #自定義欄位(數字)014
+       nmbbud015 LIKE nmbb_t.nmbbud015, #自定義欄位(數字)015
+       nmbbud016 LIKE nmbb_t.nmbbud016, #自定義欄位(數字)016
+       nmbbud017 LIKE nmbb_t.nmbbud017, #自定義欄位(數字)017
+       nmbbud018 LIKE nmbb_t.nmbbud018, #自定義欄位(數字)018
+       nmbbud019 LIKE nmbb_t.nmbbud019, #自定義欄位(數字)019
+       nmbbud020 LIKE nmbb_t.nmbbud020, #自定義欄位(數字)020
+       nmbbud021 LIKE nmbb_t.nmbbud021, #自定義欄位(日期時間)021
+       nmbbud022 LIKE nmbb_t.nmbbud022, #自定義欄位(日期時間)022
+       nmbbud023 LIKE nmbb_t.nmbbud023, #自定義欄位(日期時間)023
+       nmbbud024 LIKE nmbb_t.nmbbud024, #自定義欄位(日期時間)024
+       nmbbud025 LIKE nmbb_t.nmbbud025, #自定義欄位(日期時間)025
+       nmbbud026 LIKE nmbb_t.nmbbud026, #自定義欄位(日期時間)026
+       nmbbud027 LIKE nmbb_t.nmbbud027, #自定義欄位(日期時間)027
+       nmbbud028 LIKE nmbb_t.nmbbud028, #自定義欄位(日期時間)028
+       nmbbud029 LIKE nmbb_t.nmbbud029, #自定義欄位(日期時間)029
+       nmbbud030 LIKE nmbb_t.nmbbud030, #自定義欄位(日期時間)030
+       nmbb070 LIKE nmbb_t.nmbb070, #往來據點
+       nmbb071 LIKE nmbb_t.nmbb071, #來源單號
+       nmbb072 LIKE nmbb_t.nmbb072, #項次
+       nmbb073 LIKE nmbb_t.nmbb073  #開票帳號
+       END RECORD
+   DEFINE l_nmbc RECORD  #銀存收支異動檔
+       nmbcent LIKE nmbc_t.nmbcent, #企業編號
+       nmbcownid LIKE nmbc_t.nmbcownid, #資料所有者
+       nmbcowndp LIKE nmbc_t.nmbcowndp, #資料所屬部門
+       nmbccrtid LIKE nmbc_t.nmbccrtid, #資料建立者
+       nmbccrtdp LIKE nmbc_t.nmbccrtdp, #資料建立部門
+       nmbccrtdt LIKE nmbc_t.nmbccrtdt, #資料創建日
+       nmbcmodid LIKE nmbc_t.nmbcmodid, #資料修改者
+       nmbcmoddt LIKE nmbc_t.nmbcmoddt, #最近修改日
+       nmbccnfid LIKE nmbc_t.nmbccnfid, #資料確認者
+       nmbccnfdt LIKE nmbc_t.nmbccnfdt, #資料確認日
+       nmbcpstid LIKE nmbc_t.nmbcpstid, #資料過帳者
+       nmbcpstdt LIKE nmbc_t.nmbcpstdt, #資料過帳日
+       nmbcstus LIKE nmbc_t.nmbcstus, #狀態碼
+       nmbccomp LIKE nmbc_t.nmbccomp, #法人
+       nmbcsite LIKE nmbc_t.nmbcsite, #資金中心
+       nmbcdocno LIKE nmbc_t.nmbcdocno, #來源單號
+       nmbcseq LIKE nmbc_t.nmbcseq, #項次
+       nmbc001 LIKE nmbc_t.nmbc001, #單據來源
+       nmbc002 LIKE nmbc_t.nmbc002, #交易帳戶編碼
+       nmbc003 LIKE nmbc_t.nmbc003, #交易對象
+       nmbc004 LIKE nmbc_t.nmbc004, #交易對象識別碼
+       nmbc005 LIKE nmbc_t.nmbc005, #銀行日期
+       nmbc006 LIKE nmbc_t.nmbc006, #異動別
+       nmbc007 LIKE nmbc_t.nmbc007, #存提碼
+       nmbc008 LIKE nmbc_t.nmbc008, #調節碼
+       nmbc009 LIKE nmbc_t.nmbc009, #對帳碼
+       nmbc010 LIKE nmbc_t.nmbc010, #網銀媒體檔轉出日期
+       nmbc011 LIKE nmbc_t.nmbc011, #網銀媒體檔轉出批號
+       nmbc100 LIKE nmbc_t.nmbc100, #交易帳戶幣別
+       nmbc101 LIKE nmbc_t.nmbc101, #主帳套匯率
+       nmbc103 LIKE nmbc_t.nmbc103, #主帳套原幣金額
+       nmbc113 LIKE nmbc_t.nmbc113, #主帳套本幣金額
+       nmbc121 LIKE nmbc_t.nmbc121, #主帳套本位幣二匯率
+       nmbc123 LIKE nmbc_t.nmbc123, #主帳套本位幣二金額
+       nmbc131 LIKE nmbc_t.nmbc131, #主帳套本位幣三匯率
+       nmbc133 LIKE nmbc_t.nmbc133, #主帳套本位幣三金額
+       nmbcud001 LIKE nmbc_t.nmbcud001, #自定義欄位(文字)001
+       nmbcud002 LIKE nmbc_t.nmbcud002, #自定義欄位(文字)002
+       nmbcud003 LIKE nmbc_t.nmbcud003, #自定義欄位(文字)003
+       nmbcud004 LIKE nmbc_t.nmbcud004, #自定義欄位(文字)004
+       nmbcud005 LIKE nmbc_t.nmbcud005, #自定義欄位(文字)005
+       nmbcud006 LIKE nmbc_t.nmbcud006, #自定義欄位(文字)006
+       nmbcud007 LIKE nmbc_t.nmbcud007, #自定義欄位(文字)007
+       nmbcud008 LIKE nmbc_t.nmbcud008, #自定義欄位(文字)008
+       nmbcud009 LIKE nmbc_t.nmbcud009, #自定義欄位(文字)009
+       nmbcud010 LIKE nmbc_t.nmbcud010, #自定義欄位(文字)010
+       nmbcud011 LIKE nmbc_t.nmbcud011, #自定義欄位(數字)011
+       nmbcud012 LIKE nmbc_t.nmbcud012, #自定義欄位(數字)012
+       nmbcud013 LIKE nmbc_t.nmbcud013, #自定義欄位(數字)013
+       nmbcud014 LIKE nmbc_t.nmbcud014, #自定義欄位(數字)014
+       nmbcud015 LIKE nmbc_t.nmbcud015, #自定義欄位(數字)015
+       nmbcud016 LIKE nmbc_t.nmbcud016, #自定義欄位(數字)016
+       nmbcud017 LIKE nmbc_t.nmbcud017, #自定義欄位(數字)017
+       nmbcud018 LIKE nmbc_t.nmbcud018, #自定義欄位(數字)018
+       nmbcud019 LIKE nmbc_t.nmbcud019, #自定義欄位(數字)019
+       nmbcud020 LIKE nmbc_t.nmbcud020, #自定義欄位(數字)020
+       nmbcud021 LIKE nmbc_t.nmbcud021, #自定義欄位(日期時間)021
+       nmbcud022 LIKE nmbc_t.nmbcud022, #自定義欄位(日期時間)022
+       nmbcud023 LIKE nmbc_t.nmbcud023, #自定義欄位(日期時間)023
+       nmbcud024 LIKE nmbc_t.nmbcud024, #自定義欄位(日期時間)024
+       nmbcud025 LIKE nmbc_t.nmbcud025, #自定義欄位(日期時間)025
+       nmbcud026 LIKE nmbc_t.nmbcud026, #自定義欄位(日期時間)026
+       nmbcud027 LIKE nmbc_t.nmbcud027, #自定義欄位(日期時間)027
+       nmbcud028 LIKE nmbc_t.nmbcud028, #自定義欄位(日期時間)028
+       nmbcud029 LIKE nmbc_t.nmbcud029, #自定義欄位(日期時間)029
+       nmbcud030 LIKE nmbc_t.nmbcud030, #自定義欄位(日期時間)030
+       nmbc012 LIKE nmbc_t.nmbc012, #票據號碼
+       nmbc013 LIKE nmbc_t.nmbc013, #款別
+       nmbc014 LIKE nmbc_t.nmbc014, #到期日
+       nmbc015 LIKE nmbc_t.nmbc015, #匯入銀行編號
+       nmbc016 LIKE nmbc_t.nmbc016, #匯入帳號
+       nmbc017 LIKE nmbc_t.nmbc017, #受款人全名
+       nmbcorga LIKE nmbc_t.nmbcorga  #來源組織
+       END RECORD
+   #161212-00005#2---modify-----end-------------
+   DEFINE r_success      LIKE type_t.num5
+
+   #161212-00005#2---modify-----begin-------------
+   #LET g_sql = "SELECT * FROM nmbb_t",
+   LET g_sql = "SELECT nmbbent,nmbbcomp,nmbbdocno,nmbbseq,nmbborga,nmbblegl,nmbb001,nmbb002,nmbb003,nmbb004,",
+               "nmbb005,nmbb006,nmbb007,nmbb008,nmbb009,nmbb010,nmbb011,nmbb012,nmbb013,nmbb014,nmbb015,nmbb016,",
+               "nmbb017,nmbb018,nmbb019,nmbb020,nmbb021,nmbb022,nmbb023,nmbb024,nmbb025,nmbb026,nmbb027,nmbb028,",
+               "nmbb029,nmbb030,nmbb031,nmbb032,nmbb033,nmbb034,nmbb035,nmbb036,nmbb037,nmbb038,nmbb039,nmbb040,",
+               "nmbb041,nmbb042,nmbb043,nmbb044,nmbb045,nmbb046,nmbb047,nmbb048,nmbb049,nmbb050,nmbb051,nmbb052,",
+               "nmbb053,nmbb054,nmbb055,nmbb056,nmbb057,nmbb058,nmbb059,nmbb060,nmbb061,nmbb062,nmbb063,nmbb064,",
+               "nmbb065,nmbb066,nmbb067,nmbb068,nmbb069,nmbbud001,nmbbud002,nmbbud003,nmbbud004,nmbbud005,",
+               "nmbbud006,nmbbud007,nmbbud008,nmbbud009,nmbbud010,nmbbud011,nmbbud012,nmbbud013,nmbbud014,nmbbud015,",
+               "nmbbud016,nmbbud017,nmbbud018,nmbbud019,nmbbud020,nmbbud021,nmbbud022,nmbbud023,nmbbud024,nmbbud025,",
+               "nmbbud026,nmbbud027,nmbbud028,nmbbud029,nmbbud030,nmbb070,nmbb071,nmbb072,nmbb073 FROM nmbb_t",
+   #161212-00005#2---modify-----end-------------
+               " WHERE nmbbent = '",g_enterprise,"'",
+               "   AND nmbbcomp = '",g_nmba_m.nmbacomp,"'",
+               "   AND nmbbdocno = '",g_nmba_m.nmbadocno,"'",
+               "   AND (nmbb029 = '10' OR nmbb029 = '20')"
+
+   PREPARE anmt564_pre1 FROM g_sql
+   DECLARE anmt564_cs1 CURSOR FOR anmt564_pre1
+
+   LET r_success = TRUE
+
+   FOREACH anmt564_cs1 INTO l_nmbb.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+
+         EXIT FOREACH
+      END IF
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+
+         EXIT FOREACH
+      END IF
+
+      LET l_nmbc.nmbcent = g_enterprise
+      LET l_nmbc.nmbccomp = l_nmbb.nmbbcomp
+      LET l_nmbc.nmbcsite = g_nmba_m.nmbasite
+      LET l_nmbc.nmbcdocno = l_nmbb.nmbbdocno
+      LET l_nmbc.nmbcseq = l_nmbb.nmbbseq
+      LET l_nmbc.nmbc001 = 'anmt564'
+      LET l_nmbc.nmbc002 = l_nmbb.nmbb003
+      LET l_nmbc.nmbc003 = l_nmbb.nmbb026
+      LET l_nmbc.nmbc004 = l_nmbb.nmbb027
+      LET l_nmbc.nmbc005 = g_nmba_m.nmbadocdt
+      LET l_nmbc.nmbc006 = l_nmbb.nmbb001
+      LET l_nmbc.nmbc007 = l_nmbb.nmbb002
+      LET l_nmbc.nmbc008 = ''
+      LET l_nmbc.nmbc009 = ''
+      LET l_nmbc.nmbc010 = ''
+      LET l_nmbc.nmbc011 = ''
+      LET l_nmbc.nmbc012 = l_nmbb.nmbb030  #150818-00032#3
+      LET l_nmbc.nmbc013 = l_nmbb.nmbb028  #150818-00032#3
+      LET l_nmbc.nmbc014 = ''              #151012-00014#6
+      LET l_nmbc.nmbc015 = ''              #151012-00014#6
+      LET l_nmbc.nmbc016 = ''              #151012-00014#6
+      LET l_nmbc.nmbc100 = l_nmbb.nmbb004
+      LET l_nmbc.nmbc101 = l_nmbb.nmbb056
+      LET l_nmbc.nmbc103 = l_nmbb.nmbb006
+      LET l_nmbc.nmbc113 = l_nmbb.nmbb005 * l_nmbb.nmbb006
+      LET l_nmbc.nmbc121 = l_nmbb.nmbb059
+      LET l_nmbc.nmbc123 = l_nmbb.nmbb060
+      LET l_nmbc.nmbc131 = l_nmbb.nmbb061
+      LET l_nmbc.nmbc133 = l_nmbb.nmbb062
+      LET l_nmbc.nmbcownid = g_user
+      LET l_nmbc.nmbcowndp = g_dept
+      LET l_nmbc.nmbccrtid = g_user
+      LET l_nmbc.nmbccrtdp = g_dept
+      LET l_nmbc.nmbccrtdt = cl_get_current()
+      LET l_nmbc.nmbcorga  = l_nmbb.nmbborga        #160322-00025#6 add lujh
+
+      #161212-00005#2---modify-----begin-------------
+      #INSERT INTO nmbc_t VALUES(l_nmbc.*)
+      INSERT INTO nmbc_t (nmbcent,nmbcownid,nmbcowndp,nmbccrtid,nmbccrtdp,nmbccrtdt,nmbcmodid,nmbcmoddt,nmbccnfid,
+                          nmbccnfdt,nmbcpstid,nmbcpstdt,nmbcstus,nmbccomp,nmbcsite,nmbcdocno,nmbcseq,nmbc001,nmbc002,
+                          nmbc003,nmbc004,nmbc005,nmbc006,nmbc007,nmbc008,nmbc009,nmbc010,nmbc011,nmbc100,nmbc101,
+                          nmbc103,nmbc113,nmbc121,nmbc123,nmbc131,nmbc133,nmbcud001,nmbcud002,nmbcud003,nmbcud004,
+                          nmbcud005,nmbcud006,nmbcud007,nmbcud008,nmbcud009,nmbcud010,nmbcud011,nmbcud012,nmbcud013,
+                          nmbcud014,nmbcud015,nmbcud016,nmbcud017,nmbcud018,nmbcud019,nmbcud020,nmbcud021,nmbcud022,
+                          nmbcud023,nmbcud024,nmbcud025,nmbcud026,nmbcud027,nmbcud028,nmbcud029,nmbcud030,nmbc012,
+                          nmbc013,nmbc014,nmbc015,nmbc016,nmbc017,nmbcorga)
+       VALUES(l_nmbc.nmbcent,l_nmbc.nmbcownid,l_nmbc.nmbcowndp,l_nmbc.nmbccrtid,l_nmbc.nmbccrtdp,l_nmbc.nmbccrtdt,l_nmbc.nmbcmodid,l_nmbc.nmbcmoddt,l_nmbc.nmbccnfid,
+              l_nmbc.nmbccnfdt,l_nmbc.nmbcpstid,l_nmbc.nmbcpstdt,l_nmbc.nmbcstus,l_nmbc.nmbccomp,l_nmbc.nmbcsite,l_nmbc.nmbcdocno,l_nmbc.nmbcseq,l_nmbc.nmbc001,l_nmbc.nmbc002,
+              l_nmbc.nmbc003,l_nmbc.nmbc004,l_nmbc.nmbc005,l_nmbc.nmbc006,l_nmbc.nmbc007,l_nmbc.nmbc008,l_nmbc.nmbc009,l_nmbc.nmbc010,l_nmbc.nmbc011,l_nmbc.nmbc100,l_nmbc.nmbc101,
+              l_nmbc.nmbc103,l_nmbc.nmbc113,l_nmbc.nmbc121,l_nmbc.nmbc123,l_nmbc.nmbc131,l_nmbc.nmbc133,l_nmbc.nmbcud001,l_nmbc.nmbcud002,l_nmbc.nmbcud003,l_nmbc.nmbcud004,
+              l_nmbc.nmbcud005,l_nmbc.nmbcud006,l_nmbc.nmbcud007,l_nmbc.nmbcud008,l_nmbc.nmbcud009,l_nmbc.nmbcud010,l_nmbc.nmbcud011,l_nmbc.nmbcud012,l_nmbc.nmbcud013,
+              l_nmbc.nmbcud014,l_nmbc.nmbcud015,l_nmbc.nmbcud016,l_nmbc.nmbcud017,l_nmbc.nmbcud018,l_nmbc.nmbcud019,l_nmbc.nmbcud020,l_nmbc.nmbcud021,l_nmbc.nmbcud022,
+              l_nmbc.nmbcud023,l_nmbc.nmbcud024,l_nmbc.nmbcud025,l_nmbc.nmbcud026,l_nmbc.nmbcud027,l_nmbc.nmbcud028,l_nmbc.nmbcud029,l_nmbc.nmbcud030,l_nmbc.nmbc012,
+              l_nmbc.nmbc013,l_nmbc.nmbc014,l_nmbc.nmbc015,l_nmbc.nmbc016,l_nmbc.nmbc017,l_nmbc.nmbcorga)
+      #161212-00005#2---modify-----end-------------
+      IF SQLCA.SQLcode  THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "ins nmbc_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+
+         EXIT FOREACH
+      END IF
+   END FOREACH
+
+   RETURN r_success
+
+END FUNCTION
+# 汇总2个单身的金额以及差额display到单头
+#160509-00004#75 add lujh
+PRIVATE FUNCTION anmt564_amt_show()
+   
+   SELECT SUM(nmee012) INTO g_nmba_m.tot1
+     FROM nmee_t
+    WHERE nmeeent = g_enterprise
+      AND nmeecomp = g_nmba_m.nmbacomp
+      AND nmeedocno = g_nmba_m.nmbadocno
+      
+   IF cl_null(g_nmba_m.tot1) THEN 
+      LET g_nmba_m.tot1 = 0
+   END IF
+   
+   SELECT SUM(nmbb006) INTO g_nmba_m.tot2
+     FROM nmbb_t
+    WHERE nmbbent = g_enterprise
+      AND nmbbcomp = g_nmba_m.nmbacomp
+      AND nmbbdocno = g_nmba_m.nmbadocno
+      
+   IF cl_null(g_nmba_m.tot2) THEN 
+      LET g_nmba_m.tot2 = 0
+   END IF
+   
+   LET g_nmba_m.diff = g_nmba_m.tot1 - g_nmba_m.tot2
+   
+   DISPLAY g_nmba_m.tot1,g_nmba_m.tot2,g_nmba_m.diff TO tot1,tot2,diff
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...:  
+# Memo...........:
+# Usage..........: CALL anmt564_nmbasite_chk()
+# Date & Author..: 2016/09/12 By 01531
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt564_nmbasite_chk()
+DEFINE l_ooef RECORD
+                 ooef206  LIKE ooef_t.ooef206,
+                 ooefstus LIKE ooef_t.ooefstus
+              END RECORD
+   LET g_errno = ''
+   SELECT ooef206,ooefstus INTO l_ooef.*
+     FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_nmba_m.nmbasite
+   CASE
+      WHEN SQLCA.SQLCODE = 100 LET g_errno = 'aoo-00094'
+      WHEN l_ooef.ooefstus = 'N' LET g_errno = 'sub-01302'  
+      WHEN l_ooef.ooef206 <> 'Y' LET g_errno = 'anm-00272'
+   END CASE
+END FUNCTION
+
+ 
+{</section>}
+ 

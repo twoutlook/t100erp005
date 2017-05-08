@@ -1,0 +1,169 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapi350" module="aap" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="05016" crtdt="2014-03-10 19:15:27" modid="00222" moddt="2016-07-19 16:30:07" sdver="0009" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="零用金建置維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="apac001,apacl003,apacstus,apac002,apac007,apac006,apacsite,apacsite_desc(chr80),apac003,apac003_desc(chr80),apac004,apac004_desc(chr80),apac005,apac005_desc(chr80),apacownid,apacownid_desc(chr80),apacowndp,apacowndp_desc(chr80),apaccrtid,apaccrtid_desc(chr80),apaccrtdp,apaccrtdp_desc(chr80),apaccrtdt,apacmodid,apacmodid_desc(chr80),apacmoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="apad002,nmaal003(chr500),nmas003(chr10),sum(num20_6),apad003,apad004,nmaa003(chr10),nmaa003_desc(chr500),apad007,apad007_desc(chr500),nmaa004(chr500),nmaa004_desc(chr500),nmas004(chr1),apad005,apad006,apadsite"/>
+      <var id="bs_field" value="apac001" pk="apac001" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="prog_apac003" lib="cl_user_contact" parameter="&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;,g_apac_m.apac003"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="aap" filename="aapi350" method="dialog">
+    <section id="input">
+      <input id="head" field="apac001,apacl003,apacstus,apac002,apac007,apac006,apacsite,apac003,apac004,apac005"/>
+      <input id="body" page="1" field="apad002,sum,apad003,apad004,nmaa003,nmaa003_desc,apad007,apad007_desc,nmaa004,nmaa004_desc,apad005,apad006,apadsite" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="apac001,apacl003,apacstus,apac002,apac007,apac006,apacsite,apacsite_desc,apac003,apac003_desc,apac004,apac004_desc,apac005,apac005_desc,apacownid,apacowndp,apaccrtid,apaccrtdp,apaccrtdt,apacmodid,apacmoddt"/>
+      <construct id="body" page="1" field="apad002,nmaal003,nmas003,sum,apad003,apad004,nmaa003,nmaa003_desc,apad007,apad007_desc,nmaa004,nmaa004_desc,nmas004,apad005,apad006,apadsite"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="apac001"/>
+      <set id="head" type="no_entry" field="apac001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="apac001">
+        <controlp form="q_apac001" state="c"/>
+      </column>
+      <column id="apacl003"/>
+      <column id="apacstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="apac002"/>
+      <column id="apac007"/>
+      <column id="apac006"/>
+      <column id="apacsite">
+        <after/>
+        <controlp form="q_ooef001_01" state="i"/>
+        <controlp form="q_ooef001_01" state="c"/>
+      </column>
+      <column id="apacsite_desc"/>
+      <column id="apac003">
+        <after/>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="apac003_desc"/>
+      <column id="apac004">
+        <after/>
+        <controlp form="q_ooea001_1" state="i"/>
+        <controlp form="q_ooea001_1" state="c"/>
+      </column>
+      <column id="apac004_desc"/>
+      <column id="apac005">
+        <after/>
+        <controlp form="q_xrah002_3" state="i"/>
+        <controlp form="q_xrah002_3" state="c"/>
+      </column>
+      <column id="apac005_desc"/>
+      <column id="apacownid">
+        <after>
+          <reference field="apacownid_desc" ref_field="apac_t.apacownid" map_field="apacownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="apacownid_desc"/>
+      <column id="apacowndp">
+        <after>
+          <reference field="apacowndp_desc" ref_field="apac_t.apacowndp" map_field="apacowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="apacowndp_desc"/>
+      <column id="apaccrtid">
+        <after>
+          <reference field="apaccrtid_desc" ref_field="apac_t.apaccrtid" map_field="apaccrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="apaccrtid_desc"/>
+      <column id="apaccrtdp">
+        <after>
+          <reference field="apaccrtdp_desc" ref_field="apac_t.apaccrtdp" map_field="apaccrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="apaccrtdp_desc"/>
+      <column id="apaccrtdt"/>
+      <column id="apacmodid">
+        <after>
+          <reference field="apacmodid_desc" ref_field="apac_t.apacmodid" map_field="apacmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="apacmodid_desc"/>
+      <column id="apacmoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="apad002">
+        <controlp form="q_nmas002_2" state="i"/>
+        <controlp form="q_nmas002_2" state="c"/>
+      </column>
+      <column id="nmaal003"/>
+      <column id="nmas003">
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="sum"/>
+      <column id="apad003" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="apad004" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="nmaa003">
+        <after/>
+      </column>
+      <column id="nmaa003_desc"/>
+      <column id="apad007">
+        <after/>
+        <controlp form="q_nmaj001" state="i"/>
+        <controlp form="q_nmaj001" state="c"/>
+      </column>
+      <column id="apad007_desc"/>
+      <column id="nmaa004">
+        <after/>
+        <controlp form="q_nmab001" state="i"/>
+        <controlp form="q_nmab001" state="c"/>
+      </column>
+      <column id="nmaa004_desc"/>
+      <column id="nmas004" type="S" default="N"/>
+      <column id="apad005" type="S" default="Y"/>
+      <column id="apad006"/>
+      <column id="apadsite"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="apac_t" pk="apac001">
+      <sql id="forupd_sql" type="sql" query="SELECT apac001,&apos;&apos;,apacstus,apac002,apac007,apac006,apacsite,&apos;&apos;,apac003,&apos;&apos;,apac004,&apos;&apos;,apac005,&apos;&apos;,apacownid,&apos;&apos;,apacowndp,&apos;&apos;,apaccrtid,&apos;&apos;,apaccrtdp,&apos;&apos;,apaccrtdt,apacmodid,&apos;&apos;,apacmoddt FROM apac_t WHERE apacent= ? AND apac001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT apac001,&apos;&apos;,apacstus,apac002,apac007,apac006,apacsite,&apos;&apos;,apac003,&apos;&apos;,apac004,&apos;&apos;,apac005,&apos;&apos;,apacownid,&apos;&apos;,apacowndp,&apos;&apos;,apaccrtid,&apos;&apos;,apaccrtdp,&apos;&apos;,apaccrtdt,apacmodid,&apos;&apos;,apacmoddt FROM apac_t" order="apac001"/>
+      <sql id="append" type="lang" target="apacl_t.apacl003" table="apacl_t" fk="apac001" pk="apacl001,apacl002" field="apacl003"/>
+    </head>
+    <body id="apad_t" page="1" linked="" pk="apad002" fk="apad001">
+      <sql id="forupd_sql_detail" query="SELECT apad002,&apos;&apos;,&apos;&apos;,&apos;&apos;,apad003,apad004,&apos;&apos;,&apos;&apos;,apad007,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,apad005,apad006,apadsite FROM apad_t WHERE apadent=? AND apad001=? AND apad002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT apad002,&apos;&apos;,&apos;&apos;,&apos;&apos;,apad003,apad004,&apos;&apos;,&apos;&apos;,apad007,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,apad005,apad006,apadsite FROM apad_t WHERE apadent=? AND apad001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

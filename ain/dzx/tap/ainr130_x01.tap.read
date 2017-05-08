@@ -1,0 +1,666 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="ainr130_x01" std_prog="ainr130_x01" erpver="1.0" module="AIN" ver="3" env="s" zone="t10prd" booking="N" type="X" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="X" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <point name="component.arg.prep" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET l_year_b = YEAR(tm.bd)
+   LET l_month = MONTH(tm.bd)
+   SELECT ooef008 INTO l_ooef008 FROM ooef_t WHERE ooefent = g_enterprise AND ooef001 = g_site
+   CALL s_get_oogcdate(l_ooef008,'4',tm.bd,l_year_b,l_month) RETURNING 
+        g_success,l_errno,l_oogc015,l_oogc007,l_sdate_s,l_sdate_e,l_month_b,l_pdate_s,l_pdate_e,l_oogc008,l_wdate_s,l_wdate_e
+   IF NOT g_success THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = l_errno
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN
+   END IF
+   LET l_year_e = YEAR(tm.ed)
+   LET l_month = MONTH(tm.ed)
+   CALL s_get_oogcdate(l_ooef008,'4',tm.ed,l_year_e,l_month) RETURNING 
+        g_success,l_errno,l_oogc015,l_oogc007,l_sdate_s,l_sdate_e,l_month_e,l_pdate_s,l_pdate_e,l_oogc008,l_wdate_s,l_wdate_e
+   IF NOT g_success THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = l_errno
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN
+   END IF
+   
+
+   
+   IF tm.rdio = '1' THEN
+      LET l_day_b = DAY(tm.bd)  #起始日期天数
+      LET l_day_e = DAY(tm.ed)  #截至日期天数
+#      CALL s_date_get_max_day(l_year_e,l_month_e) RETURNING l_day_max
+#      IF l_month_b != l_month_e THEN
+         LET l_bmonth = l_month_b
+         LET l_emonth = l_month_e
+#         IF l_day_max != l_day_e THEN         #如果截至期别不是最后一天
+#            IF l_emonth != 1 THEN
+#               LET l_emonth = l_month_e - 1  
+#            ELSE
+#               LET l_emonth = 12
+#            END IF
+#         END IF  
+#        LET tm.wc = tm.wc," AND (inat008*12 + inat009) BETWEEN (",l_year_b," * 12 + ",l_bmonth,") AND (",l_year_e," * 12 + ",l_emonth,")" 
+#      ELSE
+#         LET tm.wc = tm.wc," AND inaj023 BETWEEN '",tm.bd,"' AND '",tm.ed,"'"      
+#      END IF
+   ELSE
+      LET l_year_b = tm.year
+      LET l_year_e = tm.year
+      LET l_bmonth = tm.bm
+      LET l_emonth = tm.em
+#     LET tm.wc = tm.wc," AND (inat008*12 + inat009) BETWEEN (",l_year_b," * 12 + ",l_bmonth,") AND (",l_year_e," * 12 + ",l_emonth,")"
+   END IF
+   ]]>
+  </point>
+  <point name="component.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE l_year_b      LIKE type_t.num5
+DEFINE l_year_e      LIKE type_t.num5
+DEFINE l_month     LIKE type_t.num5
+DEFINE l_ooef008   LIKE ooef_t.ooef008
+DEFINE l_errno              LIKE type_t.chr100
+DEFINE l_oogc015            LIKE oogc_t.oogc015
+DEFINE l_oogc007            LIKE oogc_t.oogc007
+DEFINE l_sdate_s            LIKE oogc_t.oogc003
+DEFINE l_sdate_e            LIKE oogc_t.oogc003
+DEFINE l_pdate_s            LIKE oogc_t.oogc003
+DEFINE l_pdate_e            LIKE oogc_t.oogc003
+DEFINE l_oogc008            LIKE oogc_t.oogc008
+DEFINE l_wdate_s            LIKE oogc_t.oogc003
+DEFINE l_wdate_e            LIKE oogc_t.oogc003
+DEFINE l_month_b            LIKE type_t.num5
+DEFINE l_month_e            LIKE type_t.num5
+DEFINE l_day_b             LIKE type_t.num5
+DEFINE l_day_e             LIKE type_t.num5
+DEFINE l_day_max           LIKE type_t.num5
+DEFINE l_bmonth             LIKE type_t.num5
+DEFINE l_emonth             LIKE type_t.num5]]>
+  </point>
+  <point name="ins_data.after.save" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[       
+       ]]>
+  </point>
+  <point name="ins_data.before" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[    LET l_before_inat = 0
+    LET l_before_month = 0
+    IF l_bmonth ! = 1 THEN
+       LET l_before_month = l_bmonth - 1
+    ELSE
+       LET l_year_b = l_year_b - 1
+       LET l_before_month = 12
+    END IF]]>
+  </point>
+  <point name="ins_data.before.save" order="" ver="3" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[        IF cl_null(sr.l_first_num) THEN LET sr.l_first_num = 0 END IF
+       IF cl_null(sr.inat_t_inat010) THEN LET sr.inat_t_inat010 = 0 END IF
+       IF cl_null(sr.inat_t_inat011) THEN LET sr.inat_t_inat011 = 0 END IF
+       IF cl_null(sr.inat_t_inat012) THEN LET sr.inat_t_inat012 = 0 END IF
+       IF cl_null(sr.inat_t_inat013) THEN LET sr.inat_t_inat013 = 0 END IF
+       IF cl_null(sr.inat_t_inat014) THEN LET sr.inat_t_inat014 = 0 END IF
+       IF cl_null(sr.inat_t_inat015) THEN LET sr.inat_t_inat015 = 0 END IF
+       CALL s_feature_description(sr.inag001,sr.inag002) RETURNING g_success,sr.l_inag002_desc
+       IF NOT cl_null(sr.l_inag002_desc) THEN
+          LET sr.l_inag002_desc = sr.inag002,".",sr.l_inag002_desc
+       END IF
+       IF NOT cl_null(sr.l_inag004_desc) THEN
+          LET sr.l_inag004_desc = sr.inag004,".",sr.l_inag004_desc
+       END IF
+       IF NOT cl_null(sr.l_inag005_desc) THEN
+          LET sr.l_inag005_desc = sr.inag005,".",sr.l_inag005_desc
+       END IF
+       
+       IF tm.rdio = '1'  THEN
+          INITIALIZE l_before_inat TO NULL
+          SELECT inat015 INTO l_before_inat FROM inat_t 
+           WHERE inatent = g_enterprise AND inatsite = g_site
+             AND inat001 = sr.inag001 AND inat002 = sr.inag002
+             AND inat003 = sr.inag003 AND inat004 = sr.inag004
+             AND inat005 = sr.inag005 AND inat006 = sr.inag006 AND inat007 = sr.inag007
+             AND inat008 = l_year_b  AND inat009 = l_before_month
+          IF cl_null(l_before_inat) THEN LET l_before_inat = 0 END IF
+          LET sr.l_first_num =  l_before_inat
+          IF l_day_b != 1 THEN        #如果起始天数不是1号,需要计算从1号进行推算 前面预留天数的库存量
+             LET l_year = YEAR(tm.bd)
+              LET l_month_2 = MONTH(tm.bd)
+#             IF l_month_2 != 1 THEN
+#                LET l_month_2 = l_month_2 - 1
+#             ELSE
+#                LET l_month_2 = 12
+#             END IF
+             LET l_inaj023_b = MDY(l_month_2,1,l_year)
+             LET l_day_b_2  = l_day_b - 1
+             LET l_inaj023_e = MDY(l_month_2,l_day_b_2,l_year)
+             LET l_sql = "SELECT * FROM inaj_t ",
+                         " WHERE inajent = ",g_enterprise," AND inajsite = '",g_site,"'",
+                         "   AND inaj005 = '",sr.inag001,"' AND inaj006 = '",sr.inag002,"'  AND inaj007 = '",sr.inag003,"'",  
+                         "   AND inaj008 = '",sr.inag004,"' AND inaj009 = '",sr.inag005,"'  AND inaj010 = '",sr.inag006,"' AND inaj012 = '",sr.inag007,"'", 
+                         "   AND inaj022 BETWEEN '",l_inaj023_b,"' AND '",l_inaj023_e ,"'"
+             PREPARE sel_inaj_prep1 FROM l_sql
+             DECLARE sel_inaj_curs1 CURSOR FOR sel_inaj_prep1
+             
+             INITIALIZE l_inaj.* TO NULL
+             FOREACH sel_inaj_curs1 INTO l_inaj.*
+                CASE l_inaj.inaj036[1,1]
+                   WHEN '1'
+                      LET sr.l_first_num = sr.l_first_num + l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004
+#                      LET sr.inat_t_inat015 = sr.inat_t_inat015 + l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004 
+         
+                   WHEN '2'
+                      LET sr.l_first_num = sr.l_first_num + l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004
+#                     LET sr.inat_t_inat015 = sr.inat_t_inat015 + l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004
+        
+                   WHEN '3'
+                      LET sr.l_first_num = sr.l_first_num + l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004
+#                     LET sr.inat_t_inat015 = sr.inat_t_inat015 + l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004
+                   WHEN '4'
+                      LET sr.l_first_num = sr.l_first_num + l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004
+#                     LET sr.inat_t_inat015 = sr.inat_t_inat015 + l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004 
+                   WHEN '5'
+                      LET sr.l_first_num = sr.l_first_num + l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004
+#                     LET sr.inat_t_inat015 = sr.inat_t_inat015 + l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004
+                END CASE
+            
+             END FOREACH    
+                       
+          END IF
+          
+#          IF l_month_b = l_month_e THEN
+             LET l_bdate = tm.bd
+             LET l_edate = tm.ed
+             LET l_sql = "SELECT * FROM inaj_t ",
+                         " WHERE inajent = ",g_enterprise," AND inajsite = '",g_site,"'",
+                         "   AND inaj005 = '",sr.inag001,"' AND inaj006 = '",sr.inag002,"'  AND inaj007 = '",sr.inag003,"'",  
+                         "   AND inaj008 = '",sr.inag004,"' AND inaj009 = '",sr.inag005,"'  AND inaj010 = '",sr.inag006,"' AND inaj012 = '",sr.inag007,"'", 
+                         "   AND inaj022 BETWEEN '",l_bdate,"' AND '",l_edate,"'"
+             PREPARE sel_inaj_prep2 FROM l_sql
+             DECLARE sel_inaj_curs2 CURSOR FOR sel_inaj_prep2
+               LET sr.inat_t_inat015 = sr.l_first_num
+               INITIALIZE l_inaj.* TO NULL
+               FOREACH sel_inaj_curs2 INTO l_inaj.*
+                   CASE l_inaj.inaj036[1,1]
+                      WHEN '1'
+                         LET l_now_num = l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004
+                         LET sr.inat_t_inat010 = sr.inat_t_inat010 + l_now_num
+                         LET sr.inat_t_inat015 = sr.inat_t_inat015 + l_now_num
+                
+                      WHEN '2'
+                         LET l_now_num = l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004
+                         LET sr.inat_t_inat011 = sr.inat_t_inat011 + l_now_num
+                         LET sr.inat_t_inat015 = sr.inat_t_inat015 + l_now_num
+                
+                      WHEN '3'
+                         LET l_now_num = l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004
+                         LET sr.inat_t_inat012 = sr.inat_t_inat012 + l_now_num
+                         LET sr.inat_t_inat015 = sr.inat_t_inat015 + l_now_num
+                      WHEN '4'
+                         LET l_now_num = l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004
+                         LET sr.inat_t_inat013 = sr.inat_t_inat013 + l_now_num
+                         LET sr.inat_t_inat015 = sr.inat_t_inat015 + l_now_num
+                      WHEN '5'
+                         LET l_now_num = l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004
+                         LET sr.inat_t_inat014 = sr.inat_t_inat014 + l_now_num
+                         LET sr.inat_t_inat015 = sr.inat_t_inat015 + l_now_num
+                   END CASE
+                
+                END FOREACH
+                
+#          END IF
+          
+#          IF l_day_max != l_day_e THEN
+#             LET l_year = YEAR(tm.ed)
+#             LET l_month_2 = MONTH(tm.ed)
+#             LET l_inaj023_b = MDY(l_month_2,1,l_year)
+#             LET l_day_b_2  = DAY(tm.ed)
+#             LET l_inaj023_e = MDY(l_month_2,l_day_b_2,l_year)
+#             LET l_sql = "SELECT * FROM inaj_t ",
+#                         " WHERE inajent = ",g_enterprise," AND inajsite = '",g_site,"'",
+#                         "   AND inaj005 = '",sr.inag001,"' AND inaj006 = '",sr.inag002,"'  AND inaj007 = '",sr.inag003,"'",  
+#                         "   AND inaj008 = '",sr.inag004,"' AND inaj009 = '",sr.inag005,"'  AND inaj010 = '",sr.inag006,"' AND inaj012 = '",sr.inag007,"'", 
+#                         "   AND inaj023 BETWEEN '",l_inaj023_b,"' AND '",l_inaj023_e ,"'"
+#             PREPARE sel_inaj_prep3 FROM l_sql
+#             DECLARE sel_inaj_curs3 CURSOR FOR sel_inaj_prep3
+#             
+#             FOREACH sel_inaj_curs1 INTO l_inaj.*
+#                CASE l_inaj.inaj036[1,1]
+#                   WHEN '1'
+#                      LET sr.inat_t_inat010 = sr.inat_t_inat010 + l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004
+#                      LET sr.inat_t_inat015 = sr.inat_t_inat015 +  sr.l_first_num + l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004  
+#         
+#                   WHEN '2'
+#                      LET sr.inat_t_inat011 = sr.inat_t_inat010 + l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004
+#                      LET sr.inat_t_inat015 = sr.inat_t_inat015 +  sr.l_first_num + l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004
+#        
+#                   WHEN '3'
+#                      LET sr.inat_t_inat012 = sr.inat_t_inat010 + l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004
+#                      LET sr.inat_t_inat015 = sr.inat_t_inat015 +  sr.l_first_num + l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004
+#                   WHEN '4'
+#                      LET sr.inat_t_inat013 = sr.inat_t_inat010 + l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004
+#                      LET sr.inat_t_inat015 = sr.inat_t_inat015 +  sr.l_first_num + l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004 
+#                   WHEN '5'
+#                       LET sr.inat_t_inat014 = sr.inat_t_inat010 + l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004
+#                      LET sr.inat_t_inat015 = sr.inat_t_inat015 +  sr.l_first_num + l_inaj.inaj011 * l_inaj.inaj013 * l_inaj.inaj004
+#                END CASE
+#            
+#             END FOREACH 
+#          END IF
+       END IF
+       IF tm.chk = 'N' THEN
+          IF sr.inat_t_inat015 <=0 THEN
+             CONTINUE FOREACH
+          END IF
+       END IF]]>
+  </point>
+  <point name="ins_data.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE l_before_inat LIKE type_t.num20_6
+DEFINE l_before_month LIKE type_t.num5
+DEFINE l_before_inaj LIKE type_t.num20_6
+DEFINE l_inaj023_b   LIKE type_t.dat
+DEFINE l_inaj023_e   LIKE type_t.dat
+DEFINE l_month_2     LIKE type_t.num5
+DEFINE l_year        LIKE type_t.num5
+DEFINE l_day_b_2     LIKE type_t.num5
+DEFINE l_inaj   RECORD LIKE inaj_t.*
+DEFINE l_bdate  LIKE type_t.dat
+DEFINE l_edate  LIKE type_t.dat
+DEFINE l_sql    STRING
+DEFINE l_now_num LIKE inat_t.inat015]]>
+  </point>
+  <point name="ins_data.foreach" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[       ]]>
+  </point>
+  <point name="sel_prep.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="sel_prep.g_from" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="Y">
+    <![CDATA[#   ]]>
+  </point>
+  <point name="sel_prep.g_order" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   ]]>
+  </point>
+  <point name="sel_prep.g_select" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="Y">
+    <![CDATA[    #IF tm.rdio = '1' AND l_month_b = l_month_e THEN
+     IF tm.rdio = '1' THEN
+       LET g_sql = " SELECT DISTINCT inag001,imaal003,imaal004,inag002,'',inag003,inag004,inayl003,inag005,inab003,", 
+                         "        inag006,inag007,0, 0,0,0,0,0,0",
+                         " FROM inag_t LEFT OUTER JOIN imaal_t ON inagent = imaalent AND inag001 = imaal001 AND imaal002 = '",g_dlang,"'",
+                         "             LEFT OUTER JOIN inayl_t ON inagent = inaylent AND inag004 = inayl001 AND inayl002 = '",g_dlang,"'",
+                         "             LEFT OUTER JOIN inab_t  ON inagent = inabent  AND inagsite = inabsite AND inab001 = inag004 AND inab002 = inag005 ",
+                         "             LEFT OUTER JOIN imaf_t  ON inagent = imafent AND imafsite = '",g_site,"' AND imaf001 = inag001 ", 
+                         "             ,imaa_t ",
+                         " WHERE inagent = ",g_enterprise," AND inagsite = '",g_site,"' AND imaaent = inagent AND imaa001 = inag001 AND ",tm.wc,
+                         " GROUP BY inag001,imaal003,imaal004,inag002,inag003,inag004,inayl003,inag005,inab003,inag006,inag007"
+    
+#      LET g_sql = " SELECT DISTINCT inat001,imaal003,imaal004,inat002,'',inat003,inat004,inayl003,inat005,inab003,", 
+#                        "        inat006,inat007,0,0,0,0,0,0,0 ",
+#                        " FROM inat_t LEFT OUTER JOIN imaal_t ON inatent = imaalent AND inat001 = imaal001 AND imaal002 = '",g_dlang,"'",
+#                        "             LEFT OUTER JOIN inayl_t ON inatent = inaylent AND inat004 = inayl001 AND inayl002 = '",g_dlang,"'",
+#                        "             LEFT OUTER JOIN imaf_t  ON inatent = imafent AND imafsite = '",g_site,"' AND imaf001 = inat001 ",       
+#                        "             LEFT OUTER JOIN inab_t  ON inatent = inabent  AND inatsite = inabsite AND inab001 = inat004 AND inab002 = inat005,imaa_t ",
+#                        " WHERE inatent = ",g_enterprise," AND inatsite = '",g_site,"' AND imaaent = inatent AND imaa001 = inat001 AND ",tm.wc,
+#                        " GROUP BY inat001,imaal003,imaal004,inat002,inat003,inat004,inayl003,inat005,inab003,inat006,inat007"
+    ELSE
+       LET g_sql = " SELECT DISTINCT inag001,imaal003,imaal004,inag002,'',inag003,inag004,inayl003,inag005,inab003,", 
+                         "        inag006,inag007,SUM(inat_t.inat015) - SUM(inat_t.inat010) - SUM(inat_t.inat011) - SUM(inat_t.inat012) - SUM(inat_t.inat013) - SUM(inat_t.inat014),",
+                         "        SUM(inat_t.inat010),SUM(inat_t.inat011),SUM(inat_t.inat012),SUM(inat_t.inat013),SUM(inat_t.inat014),SUM(inat_t.inat015) ",
+                         " FROM inag_t LEFT OUTER JOIN imaal_t ON inagent = imaalent AND inag001 = imaal001 AND imaal002 = '",g_dlang,"'",
+                         "             LEFT OUTER JOIN inayl_t ON inagent = inaylent AND inag004 = inayl001 AND inayl002 = '",g_dlang,"'",
+                         "             LEFT OUTER JOIN inab_t  ON inagent = inabent  AND inagsite = inabsite AND inab001 = inag004 AND inab002 = inag005 ",
+                         "             LEFT OUTER JOIN imaf_t  ON inagent = imafent AND imafsite = '",g_site,"' AND imaf001 = inag001 ", 
+                         "             LEFT OUTER JOIN inat_t  ON inagent = inatent  AND inatsite = inagsite AND inag001 = inat001 AND inag002 = inat002 ",
+                         "                                    AND inag003 = inat003 AND inag004 = inat004 AND inag005 = inat005 AND inag006 = inat006 AND inag007 = inat007 ",
+                         "                                    AND inat008 IS NOT NULL AND inat009 IS NOT NULL",
+                         "                                    AND (inat008*12 + inat009) BETWEEN (",l_year_b," * 12 + ",l_bmonth,") AND (",l_year_e," * 12 + ",l_emonth,"),imaa_t ",
+                         " WHERE inagent = ",g_enterprise," AND inagsite = '",g_site,"' AND imaaent = inagent AND imaa001 = inag001 AND ",tm.wc,
+                         " GROUP BY inag001,imaal003,imaal004,inag002,inag003,inag004,inayl003,inag005,inab003,inag006,inag007"
+    END IF
+  ]]>
+  </point>
+  <point name="sel_prep.g_where" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="Y">
+    <![CDATA[    ]]>
+  </point>
+  <point name="sel_prep.sql.after" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_sql = cl_sql_add_mask(g_sql)]]>
+  </point>
+  <point name="sel_prep.sql.before" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="Y">
+    <![CDATA[]]>
+  </point>
+  <section id="ainr130_x01.create_tmptable" ver="4" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION ainr130_x01_create_tmptable()
+ 
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before
+   {<point name="create_tmp.before"/>}
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "inag001.inag_t.inag001,imaal003.imaal_t.imaal003,imaal004.imaal_t.imaal004,inag002.inag_t.inag002,l_inag002_desc.type_t.chr500,inag003.inag_t.inag003,inag004.inag_t.inag004,l_inag004_desc.type_t.chr500,inag005.inag_t.inag005,l_inag005_desc.type_t.chr500,inag006.inag_t.inag006,inag007.inag_t.inag007,l_first_num.type_t.num15_3,inat_t_inat010.inat_t.inat010,inat_t_inat011.inat_t.inat011,inat_t_inat012.inat_t.inat012,inat_t_inat013.inat_t.inat013,inat_t_inat014.inat_t.inat014,inat_t_inat015.inat_t.inat015" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after
+   {<point name="create_tmp.after"/>}
+   #end add-point:create_tmp.after
+END FUNCTION
+]]>
+  </section>
+  <section id="ainr130_x01.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:3,PR版次:3) Build-000043
+#+ 
+#+ Filename...: ainr130_x01
+#+ Description: 料件進耗存統計表
+#+ Creator....: 01996(2014-11-06 10:04:54)
+#+ Modifier...: 01996(2015-03-03 15:00:21) -SD/PR-
+]]>
+  </section>
+  <section id="ainr130_x01.global" ver="3" status="" src="s" readonly="">
+    <![CDATA[#報表 x01 樣板自動產生(Version:1)
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #条件 
+       rdio STRING,                  #资料选项 
+       year STRING,                  #年度 
+       bm STRING,                  #起始期别 
+       em STRING,                  #截至期别 
+       bd STRING,                  #起始日期 
+       ed STRING,                  #截至日期 
+       chk STRING                   #列印期间异动
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+ 
+#add-point:自定義環境變數(Global Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="ainr130_x01.ins_data" ver="2" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION ainr130_x01_ins_data()
+DEFINE sr RECORD 
+   inag001 LIKE inag_t.inag001, 
+   imaal003 LIKE imaal_t.imaal003, 
+   imaal004 LIKE imaal_t.imaal004, 
+   inag002 LIKE inag_t.inag002, 
+   l_inag002_desc LIKE type_t.chr500, 
+   inag003 LIKE inag_t.inag003, 
+   inag004 LIKE inag_t.inag004, 
+   l_inag004_desc LIKE type_t.chr500, 
+   inag005 LIKE inag_t.inag005, 
+   l_inag005_desc LIKE type_t.chr500, 
+   inag006 LIKE inag_t.inag006, 
+   inag007 LIKE inag_t.inag007, 
+   l_first_num LIKE type_t.num15_3, 
+   inat_t_inat010 LIKE inat_t.inat010, 
+   inat_t_inat011 LIKE inat_t.inat011, 
+   inat_t_inat012 LIKE inat_t.inat012, 
+   inat_t_inat013 LIKE inat_t.inat013, 
+   inat_t_inat014 LIKE inat_t.inat014, 
+   inat_t_inat015 LIKE inat_t.inat015
+ END RECORD
+#add-point:ins_data段define
+{<point name="ins_data.define"/>}
+#end add-point
+ 
+    #add-point:ins_data段before
+    {<point name="ins_data.before"/>}
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH ainr130_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach
+       {<point name="ins_data.foreach"/>}
+       #end add-point
+ 
+       #add-point:ins_data段before.save
+       {<point name="ins_data.before.save"/>}
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.inag001,sr.imaal003,sr.imaal004,sr.inag002,sr.l_inag002_desc,sr.inag003,sr.inag004,sr.l_inag004_desc,sr.inag005,sr.l_inag005_desc,sr.inag006,sr.inag007,sr.l_first_num,sr.inat_t_inat010,sr.inat_t_inat011,sr.inat_t_inat012,sr.inat_t_inat013,sr.inat_t_inat014,sr.inat_t_inat015
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "ainr130_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save
+       {<point name="ins_data.after.save"/>}
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after
+    {<point name="ins_data.after"/>}
+    #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ainr130_x01.ins_prep" ver="2" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION ainr130_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define
+{<point name="ins_prep.define"/>}
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段
+         {<point name="insert_prep"/>}
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+]]>
+  </section>
+  <section id="ainr130_x01.main" ver="2" status="" src="s" readonly="">
+    <![CDATA[PUBLIC FUNCTION ainr130_x01(p_arg1,p_arg2,p_arg3,p_arg4,p_arg5,p_arg6,p_arg7,p_arg8)
+DEFINE  p_arg1 STRING                  #tm.wc  条件 
+DEFINE  p_arg2 STRING                  #tm.rdio  资料选项 
+DEFINE  p_arg3 STRING                  #tm.year  年度 
+DEFINE  p_arg4 STRING                  #tm.bm  起始期别 
+DEFINE  p_arg5 STRING                  #tm.em  截至期别 
+DEFINE  p_arg6 STRING                  #tm.bd  起始日期 
+DEFINE  p_arg7 STRING                  #tm.ed  截至日期 
+DEFINE  p_arg8 STRING                  #tm.chk  列印期间异动
+#add-point:init段define
+{<point name="component.define"/>}
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.rdio = p_arg2
+   LET tm.year = p_arg3
+   LET tm.bm = p_arg4
+   LET tm.em = p_arg5
+   LET tm.bd = p_arg6
+   LET tm.ed = p_arg7
+   LET tm.chk = p_arg8
+ 
+   #add-point:報表元件參數準備
+   {<point name="component.arg.prep" />}
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "ainr130_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL ainr130_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL ainr130_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL ainr130_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL ainr130_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL ainr130_x01_rep_data()
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ainr130_x01.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="ainr130_x01.rep_data" ver="1" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION ainr130_x01_rep_data()
+#add-point:rep_data.define
+{<point name="rep_data.define"/>}
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before
+    {<point name="rep_data.before"/>}
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after
+    {<point name="rep_data.after"/>}
+    #end add-point:rep_data.after
+END FUNCTION
+]]>
+  </section>
+  <section id="ainr130_x01.sel_prep" ver="2" status="" src="s" readonly="">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION ainr130_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define
+{<point name="sel_prep.define"/>}
+#end add-point
+ 
+   #add-point:sel_prep before
+   {<point name="sel_prep.before" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep g_select
+   {<point name="sel_prep.g_select" mark="Y"/>}
+   #end add-point
+   LET g_select = " SELECT inag001,imaal003,imaal004,inag002,NULL,inag003,inag004,NULL,inag005,NULL, 
+       inag006,inag007,NULL,inat_t.inat010,inat_t.inat011,inat_t.inat012,inat_t.inat013,inat_t.inat014, 
+       inat_t.inat015"
+ 
+   #add-point:sel_prep g_from
+   {<point name="sel_prep.g_from" mark="Y"/>}
+   #end add-point
+    LET g_from = " FROM inag_t,imaal_t,inat_t"
+ 
+   #add-point:sel_prep g_where
+   {<point name="sel_prep.g_where" mark="Y"/>}
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order
+   {<point name="sel_prep.g_order" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before
+   {<point name="sel_prep.sql.before" mark="Y"/>}
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("inag_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after
+   {<point name="sel_prep.sql.after" mark="Y"/>}
+   #end add-point
+   PREPARE ainr130_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE ainr130_x01_curs CURSOR FOR ainr130_x01_prepare
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

@@ -1,0 +1,109 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abgi100" module="abg" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="03080" crtdt="2015-07-14 16:55:47" modid="03080" moddt="2015-07-14 16:55:47" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="預算組織可編製預算細項維護">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bgaj001,bgaj001_desc(chr80),bgaj002,bgaj002_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bgaj003,bgaj003_desc(chr500),bgajstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="bgaj003,bgajownid,bgajownid_desc(chr500),bgajowndp,bgajowndp_desc(chr500),bgajcrtid,bgajcrtid_desc(chr500),bgajcrtdp,bgajcrtdp_desc(chr500),bgajcrtdt,bgajmodid,bgajmodid_desc(chr500),bgajmoddt"/>
+      <var id="bs_field" value="bgaj001,bgaj002" pk="bgaj001,bgaj002" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="open_abgi100_01"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abg" filename="abgi100" method="dialog">
+    <section id="input">
+      <input id="head" field="bgaj001,bgaj002"/>
+      <input id="body" page="1" field="bgaj003,bgaj003_desc,bgajstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bgaj001,bgaj002"/>
+      <construct id="body" page="1" field="bgaj003,bgajstus"/>
+      <construct id="body" page="2" field="bgajownid,bgajowndp,bgajcrtid,bgajcrtdp,bgajcrtdt,bgajmodid,bgajmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bgaj001,bgaj002"/>
+      <set id="head" type="no_entry" field="bgaj001,bgaj002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bgaj001">
+        <after/>
+      </column>
+      <column id="bgaj001_desc"/>
+      <column id="bgaj002">
+        <after/>
+      </column>
+      <column id="bgaj002_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="bgaj003">
+        <after/>
+      </column>
+      <column id="bgaj003_desc"/>
+      <column id="bgajstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="bgajownid">
+        <after>
+          <reference field="bgajownid_desc" ref_field="bgaj_t.bgajownid" map_field="bgajownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgajownid_desc"/>
+      <column id="bgajowndp">
+        <after>
+          <reference field="bgajowndp_desc" ref_field="bgaj_t.bgajowndp" map_field="bgajowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgajowndp_desc"/>
+      <column id="bgajcrtid">
+        <after>
+          <reference field="bgajcrtid_desc" ref_field="bgaj_t.bgajcrtid" map_field="bgajcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgajcrtid_desc"/>
+      <column id="bgajcrtdp">
+        <after>
+          <reference field="bgajcrtdp_desc" ref_field="bgaj_t.bgajcrtdp" map_field="bgajcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgajcrtdp_desc"/>
+      <column id="bgajcrtdt"/>
+      <column id="bgajmodid">
+        <after>
+          <reference field="bgajmodid_desc" ref_field="bgaj_t.bgajmodid" map_field="bgajmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgajmodid_desc"/>
+      <column id="bgajmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bgaj_t" pk="bgaj001,bgaj002">
+      <sql id="forupd_sql" type="sql" query="SELECT bgaj001,&apos;&apos;,bgaj002,&apos;&apos; FROM bgaj_t WHERE bgajent= ? AND bgaj001=? AND bgaj002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bgaj001,&apos;&apos;,bgaj002,&apos;&apos; FROM bgaj_t" order="bgaj001,bgaj002"/>
+    </head>
+    <body id="bgaj_t" page="1,2" linked="" pk="bgaj003" fk="bgaj001,bgaj002">
+      <sql id="forupd_sql_detail" query="SELECT bgaj003,&apos;&apos;,bgajstus,&apos;&apos;,bgajownid,&apos;&apos;,bgajowndp,&apos;&apos;,bgajcrtid,&apos;&apos;,bgajcrtdp,&apos;&apos;,bgajcrtdt,bgajmodid,&apos;&apos;,bgajmoddt FROM bgaj_t WHERE bgajent=? AND bgaj001=? AND bgaj002=? AND bgaj003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bgaj003,&apos;&apos;,bgajstus,&apos;&apos;,bgajownid,&apos;&apos;,bgajowndp,&apos;&apos;,bgajcrtid,&apos;&apos;,bgajcrtdp,&apos;&apos;,bgajcrtdt,bgajmodid,&apos;&apos;,bgajmoddt FROM bgaj_t WHERE bgajent= ? AND bgaj001=? AND bgaj002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

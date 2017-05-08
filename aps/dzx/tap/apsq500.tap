@@ -1,0 +1,2487 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="apsq500" std_prog="apsq500" erpver="1.0" module="APS" ver="1" env="s" zone="t10dev" booking="Y" type="M" identity="s">
+  <other>
+    <code_template value="Q" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="function.apsq500_fetch_page" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 取切換頁資料
+# Memo...........:
+# Usage..........: CALL apsq500_fetch_page(p_flag)
+#                  
+# Input parameter: p_flag         action代號
+#                : 
+# Return code....:
+#                : 
+# Date & Author..: 14/07/04 By emma
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsq500_fetch_page(p_flag)
+DEFINE p_flag     LIKE type_t.chr1      #處理方式
+DEFINE ls_msg     STRING
+DEFINE l_wc       STRING
+   
+   CASE p_flag
+      WHEN 'N' FETCH NEXT     apsq500_page_cs INTO g_psoz_m.psoz001,g_psoz_m.psoz002,
+                                                   g_psoz_m.psoz038,g_psoz_m.psoz039,g_psoz_m.imaf013
+      WHEN 'P' FETCH PREVIOUS apsq500_page_cs INTO g_psoz_m.psoz001,g_psoz_m.psoz002,
+                                                   g_psoz_m.psoz038,g_psoz_m.psoz039,g_psoz_m.imaf013
+      WHEN 'F' FETCH FIRST    apsq500_page_cs INTO g_psoz_m.psoz001,g_psoz_m.psoz002,
+                                                   g_psoz_m.psoz038,g_psoz_m.psoz039,g_psoz_m.imaf013
+      WHEN 'L' FETCH LAST     apsq500_page_cs INTO g_psoz_m.psoz001,g_psoz_m.psoz002,
+                                                   g_psoz_m.psoz038,g_psoz_m.psoz039,g_psoz_m.imaf013
+      WHEN '/'
+         IF (NOT g_no_ask) THEN
+            CALL cl_set_act_visible("accept,cancel", TRUE)    
+            CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+            PROMPT ls_msg CLIPPED,':' FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl" 
+            END PROMPT
+            CALL cl_set_act_visible("accept,cancel", FALSE)    
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT CASE
+            END IF
+         END IF
+         LET g_no_ask = FALSE
+         FETCH ABSOLUTE g_jump apsq500_page_cs INTO g_psoz_m.psoz001,g_psoz_m.psoz002,
+                                                    g_psoz_m.psoz038,g_psoz_m.psoz039,g_psoz_m.imaf013
+   END CASE
+
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("psoz_t",SQLCA.sqlcode,1)
+      INITIALIZE g_psoz_m.* TO NULL
+      RETURN
+   ELSE
+      CASE p_flag
+         WHEN 'F' LET g_curs_index = 1
+         WHEN 'P' LET g_curs_index = g_curs_index - 1
+         WHEN 'N' LET g_curs_index = g_curs_index + 1
+         WHEN 'L' LET g_curs_index = g_row_count
+         WHEN '/' LET g_curs_index = g_jump
+      END CASE
+      CALL cl_navigator_setting( g_curs_index, g_row_count )
+   END IF
+    SELECT UNIQUE psoz001,psoz002,psoz038,psoz039,imaf013
+           INTO g_psoz_m.psoz001,g_psoz_m.psoz002,
+                g_psoz_m.psoz038,g_psoz_m.psoz039,g_psoz_m.imaf013
+      FROM psoz_t 
+      LEFT OUTER JOIN imaf_t ON psozent = imafent AND psozsite = imafsite AND psoz038 = imaf001
+    WHERE psoz001 = g_psoz_m.psoz001
+      AND psoz002 = g_psoz_m.psoz002
+      AND psoz038 = g_psoz_m.psoz038
+      AND psoz039 = g_psoz_m.psoz039
+      AND imaf013 = g_psoz_m.imaf013
+      AND psozent = g_enterprise
+      AND psozsite = g_site
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("psoz_t",SQLCA.sqlcode,1)
+      INITIALIZE g_psoz_m.* TO NULL
+      RETURN
+   END IF
+   LET g_wc3 = "psoz001='",g_psoz_m.psoz001,"' AND psoz002='",g_psoz_m.psoz002,"' ",
+               " AND psoz038='",g_psoz_m.psoz038,"'  AND psoz039='",g_psoz_m.psoz039,"' "
+   DISPLAY BY NAME g_psoz_m.psoz001,g_psoz_m.psoz038,g_psoz_m.psoz039,g_psoz_m.imaf013
+   
+   #補給策略= 2 or 3，顯示規畫製造量 
+   IF NOT cl_null(g_psoz_m.imaf013) THEN 
+      #補給策略= 1 or 4，顯示規畫採購量   
+      IF g_psoz_m.imaf013 = '1' OR g_psoz_m.imaf013 = '4' THEN
+         CALL cl_set_comp_att_text('b_qty5','規畫採購量')
+      END IF
+      #補給策略= 2 or 3，顯示規畫製造量
+      IF g_psoz_m.imaf013 = '2' OR g_psoz_m.imaf013 = '3' THEN
+         CALL cl_set_comp_att_text('b_qty5','規畫製造量')
+      END IF
+   END IF
+   
+   #帶出料號品名、規格
+   CALL apsq500_psoz038_ref(g_psoz_m.psoz038)
+  
+   DISPLAY g_curs_index TO FORMONLY.page
+   CALL apsq500_b_fill()
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.apsq500_psoz038_ref" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 抓取料件的品名、規格
+# Memo...........:
+# Usage..........: CALL apsq500_psoz038_ref()
+#                  
+# Input parameter: p_psoz038     料號
+#                : 
+# Return code....:
+#                : 
+# Date & Author..: 14/07/04 By emma
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsq500_psoz038_ref(p_psoz038)
+DEFINE p_psoz038     LIKE psoz_t.psoz038
+
+   LET g_psoz_m.imaal003 = ''
+   LET g_psoz_m.imaal004 = ''
+   DISPLAY g_psoz_m.imaal003 TO imaal003
+   DISPLAY g_psoz_m.imaal004 TO imaal004
+   
+   IF cl_null(p_psoz038) THEN
+      RETURN
+   END IF
+   
+   INITIALIZE g_ref_fields TO NULL 
+   LET g_ref_fields[1] = p_psoz038
+   CALL ap_ref_array2(g_ref_fields,"SELECT imaal003,imaal004 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_psoz_m.imaal003 = '', g_rtn_fields[1] , '' 
+   LET g_psoz_m.imaal004 = '', g_rtn_fields[2] , '' 
+   DISPLAY g_psoz_m.imaal003 TO imaal003
+   DISPLAY g_psoz_m.imaal004 TO imaal004
+END FUNCTION]]>
+  </point>
+  <point name="function.apsq500_idx_chk" order="3" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 單身筆數變更
+# Memo...........:
+# Usage..........: CALL apsq500_idx_chk()
+#                  
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 14/07/08 By emma
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsq500_idx_chk()
+
+   IF g_current_page = 1 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail1")
+      IF g_detail_idx > g_detail_cnt THEN
+         LET g_detail_idx = g_detail_cnt
+      END IF
+      IF g_detail_idx = 0 AND g_detail_cnt <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.h_index
+   END IF
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.apsq500_qty1_show" order="4" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 用show hint方式顯示細部數量
+# Memo...........:
+# Usage..........: CALL apsq500_qty1_show()
+#                  
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 14/07/08 By emma
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsq500_qty1_show()
+DEFINE l_str     STRING
+DEFINE l_msg     STRING
+DEFINE l_str1    STRING
+DEFINE l_str2    STRING
+DEFINE l_str3    STRING
+DEFINE l_str4    STRING
+DEFINE l_str5    STRING
+DEFINE l_str6    STRING
+DEFINE l_str7    STRING
+DEFINE l_str8    STRING
+
+   #指到受訂量欄位(qty1)的值上時，用show hint方式顯示細部的3個數字
+   LET l_str1 = g_psoz_d[g_detail_idx].psoz005
+   LET l_str2 = g_psoz_d[g_detail_idx].psoz006
+   LET l_str3 = g_psoz_d[g_detail_idx].psoz007
+   
+   LET l_str = l_str1.trim() ,'|', l_str2.trim() ,'|', l_str3.trim()
+   LET l_msg = cl_getmsg_parm('aps-00107',g_lang,l_str)
+   LET l_msg = cl_replace_str(l_msg,"*","\n")
+   CALL s_hint_show_set_comments('b_qty1',l_msg)
+   
+   #指到替代量欄位(qty4)的值上時，用show hint方式顯示細部的個各數量
+   LET l_str1 = g_psoz_d[g_detail_idx].psoz009
+   LET l_str2 = g_psoz_d[g_detail_idx].psoz010
+   LET l_str3 = g_psoz_d[g_detail_idx].psoz013
+   LET l_str4 = g_psoz_d[g_detail_idx].psoz015
+   LET l_str5 = g_psoz_d[g_detail_idx].psoz020
+   LET l_str6 = g_psoz_d[g_detail_idx].psoz026
+   LET l_str7 = g_psoz_d[g_detail_idx].psoz027
+   LET l_str8 = g_psoz_d[g_detail_idx].psoz028
+   
+   LET l_str = l_str1.trim() ,'|', l_str2.trim() ,'|', l_str3.trim() ,'|', 
+               l_str4.trim() ,'|', l_str5.trim() ,'|', l_str6.trim() ,'|',
+               l_str7.trim() ,'|', l_str8.trim()
+   LET l_msg = cl_getmsg_parm('aps-00108',g_lang,l_str)
+   LET l_msg = cl_replace_str(l_msg,"*","\n")
+   CALL s_hint_show_set_comments('b_qty4',l_msg)
+      
+END FUNCTION]]>
+  </point>
+  <point name="function.apsq500_set_no_entry" order="5" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 欄位關閉控制
+# Memo...........:
+# Usage..........: CALL apsq500_set_no_entry()
+#                  
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 14/07/08 By emma
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsq500_set_no_entry()
+   #將formonly欄位關閉
+    CALL cl_set_comp_entry("qty1,qty2,qty3,qty4,qty5,qty6",FALSE)
+END FUNCTION]]>
+  </point>
+  <point name="b_fill.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_psoz      RECORD
+          psoz019   LIKE psoz_t.psoz019,
+          psoz024   LIKE psoz_t.psoz024,
+          psoz025   LIKE psoz_t.psoz025,
+          psoz032   LIKE psoz_t.psoz032,
+          psoz033   LIKE psoz_t.psoz033,
+          psoz034   LIKE psoz_t.psoz034,
+          psoz035   LIKE psoz_t.psoz035,
+          psoz041   LIKE psoz_t.psoz041
+                   END RECORD]]>
+  </point>
+  <point name="b_fill.fill" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#      INITIALIZE l_psoz.* TO NULL
+#
+#      DECLARE psoz_curs CURSOR FOR
+#         SELECT psoz019,psoz024,psoz025,psoz032,psoz033,psoz034,psoz035,psoz041  
+#           FROM psoz_t 
+#          WHERE psozent = g_enterprise
+#            AND psozsite = g_site
+#            AND psoz001 = g_psoz_d[l_ac].psoz001
+#            AND psoz002 = g_psoz_d[l_ac].psoz002
+#            AND psoz003 = g_psoz_d[l_ac].psoz003
+#            AND psoz004 = g_psoz_d[l_ac].psoz004
+#            AND psoz038 = g_psoz_d[l_ac].psoz038
+#            AND psoz039 = g_psoz_d[l_ac].psoz039
+#            
+#      FOREACH psoz_curs INTO l_psoz.psoz019,l_psoz.psoz024,l_psoz.psoz025,l_psoz.psoz032,
+#                             l_psoz.psoz033,l_psoz.psoz034,l_psoz.psoz035,l_psoz.psoz041
+#         IF SQLCA.sqlcode THEN
+#            CALL cl_err("psoz_curs",SQLCA.sqlcode,1)
+#            EXIT FOREACH
+#         END IF
+#      END FOREACH
+#  
+#      #受訂量qty1:訂單未交量psoz005+預測數量psoz006+安全庫存量psoz007
+#      LET g_psoz_d[l_ac].qty1 =  g_psoz_d[l_ac].psoz005 + g_psoz_d[l_ac].psoz006 + g_psoz_d[l_ac].psoz007
+#      DISPLAY BY NAME g_psoz_d[l_ac].qty1
+#      
+#      #在驗量qty2:psoz019+psoz041
+#      LET g_psoz_d[l_ac].qty2 = l_psoz.psoz019 + l_psoz.psoz041
+#      DISPLAY BY NAME g_psoz_d[l_ac].qty2
+#      
+#      #在製量qty3:psoz024+psoz025
+#      LET g_psoz_d[l_ac].qty3 = l_psoz.psoz024 + l_psoz.psoz025
+#      DISPLAY BY NAME g_psoz_d[l_ac].qty3
+#      
+#      #替代量qty4:訂單未交替他需求量psoz009+預測替他需求量psoz010+計劃備料替他需求量psoz013
+#      #         +工單備料替他需求量psoz015+替代庫存量psoz020+替代請購量psoz026+替代採購量+psoz027+替代在製量psoz028
+#      LET g_psoz_d[l_ac].qty4 = g_psoz_d[l_ac].psoz009 + g_psoz_d[l_ac].psoz010 + g_psoz_d[l_ac].psoz013 
+#                              + g_psoz_d[l_ac].psoz015 + g_psoz_d[l_ac].psoz020 + g_psoz_d[l_ac].psoz026 
+#                              + g_psoz_d[l_ac].psoz027 + g_psoz_d[l_ac].psoz028
+#      DISPLAY BY NAME g_psoz_d[l_ac].qty4
+#      
+#      #規畫採購或製造量qty5:psoz032+psoz033+psoz034+psoz035
+#      LET g_psoz_d[l_ac].qty5 = l_psoz.psoz032 + l_psoz.psoz033 + l_psoz.psoz034 + l_psoz.psoz035
+#      DISPLAY BY NAME g_psoz_d[l_ac].qty5]]>
+  </point>
+  <point name="b_fill.others.fill" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   ]]>
+  </point>
+  <point name="b_fill.sql_after" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter, " AND ", g_wc3
+   
+   LET g_sql = "SELECT  UNIQUE psoz001,psoz002,psoz003,psoz038,psoz039,psoz004,'',psoz012,psoz014,psoz018, ",
+               "               psoz021,psoz022,'','','',psoz031,psoz029,psoz030,psoz036,'',psoz037,psoz005, ",
+               "               psoz006,psoz007,psoz009,psoz010,psoz013,psoz015,psoz020,psoz026,psoz027,psoz028 ", 
+               "  FROM psoz_t ",
+               " LEFT OUTER JOIN pspa_t ON pspaent = psozent ",
+               "                       AND pspasite = psozsite ",
+               "                       AND psoz001 = pspa001 ",
+               "                       AND psoz002 = pspa002 ",
+               "                       AND psoz003 = pspa016 ",
+               " WHERE psozent= ? AND psozsite= ? AND 1=1 AND ", ls_wc
+    
+   LET g_sql = g_sql, " ORDER BY psoz_t.psoz004 "
+
+
+   INITIALIZE g_psoz_m.* TO NULL]]>
+  </point>
+  <point name="cs.after_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET l_page_sql = "SELECT DISTINCT psoz001,MAX(psoz002) psoz002,psoz038,psoz039,imaf013 ",
+                    " FROM psoz_t ",
+                    " LEFT OUTER JOIN imaf_t ON psozent = imafent AND psozsite = imafsite AND psoz038 = imaf001 ",
+                    " WHERE psozent = '",g_enterprise,"' ",
+                    "   AND psozsite = '",g_site,"' ",
+                    "   AND ",g_wc_filter CLIPPED,
+                    "   AND ",g_wc CLIPPED,
+                    "   AND ",g_wc2 CLIPPED,
+                    "   AND ",l_wc CLIPPED,
+                    " GROUP BY psoz001,psoz002,psoz038,psoz039,imaf013 ",
+                    " ORDER BY psoz001,psoz002 "
+   PREPARE apsq500_page_pb FROM l_page_sql
+   DECLARE apsq500_page_cs SCROLL CURSOR WITH HOLD FOR apsq500_page_pb
+   LET l_page_sql = "SELECT COUNT(*) FROM (",l_page_sql,")"
+   PREPARE apsq500_cnt_pb FROM l_page_sql
+   DECLARE apsq500_cnt_cs CURSOR FOR apsq500_cnt_pb
+   OPEN apsq500_page_cs
+   OPEN apsq500_cnt_cs
+   FETCH apsq500_cnt_cs INTO g_row_count
+   DISPLAY g_row_count TO FORMONLY.tot_page
+   CALL apsq500_fetch_page('F')]]>
+  </point>
+  <point name="cs.head.before_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="detail_show.before" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="fetch.after_fill" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_sql = "SELECT UNIQUE pspa004,pspa020,pspa006,pspa007,pspa009,'' ",
+               "  FROM pspa_t ",   
+               " WHERE pspaent = '",g_enterprise,"' ",
+               "   AND pspasite = '",g_site,"' ",
+               "   AND pspa001 = ? AND pspa002 = ? ",
+               "   AND pspa012 = ? AND pspa013 = ? ",
+               " ORDER BY pspa004 "
+ 
+   
+   PREPARE apsq500_pb2 FROM g_sql
+   DECLARE b_fill_curs2 CURSOR FOR apsq500_pb2
+   
+   OPEN b_fill_curs2 USING g_psoz_d[g_detail_idx].psoz001,
+                           g_psoz_d[g_detail_idx].psoz002,
+                           g_psoz_d[g_detail_idx].psoz038,
+                           g_psoz_d[g_detail_idx].psoz039
+
+ 
+ 
+   LET l_ac = 1
+   FOREACH b_fill_curs2 INTO g_psoz2_d[l_ac].pspa004,g_psoz2_d[l_ac].pspa020,g_psoz2_d[l_ac].pspa006, 
+                             g_psoz2_d[l_ac].pspa007,g_psoz2_d[l_ac].pspa009,g_psoz2_d[l_ac].qty6
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      
+      IF l_ac = 1 THEN
+         LET g_psoz2_d[l_ac].qty6 = g_psoz2_d[l_ac].pspa009
+      ELSE
+         IF l_ac > 1 THEN
+            LET g_psoz2_d[l_ac].qty6 = g_psoz2_d[l_ac].pspa009 + g_psoz2_d[l_ac-1].pspa009
+         END IF
+      END IF 
+      
+      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         CALL cl_err( "", 9035, 1 )
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+ ]]>
+  </point>
+  <point name="fetch.array_clear" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL g_psoz2_d.clear()]]>
+  </point>
+  <point name="fetch.array_deleteElement" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL g_psoz2_d.deleteElement(g_psoz2_d.getLength())  
+   FREE apsq500_pb2
+   
+
+   #單身2總筆數顯示
+   LET g_detail_cnt2 = g_psoz2_d.getLength()
+   DISPLAY g_detail_cnt2 TO FORMONLY.cnt
+   IF g_detail_cnt2 > 0 THEN
+      LET g_detail_idx2 = 1
+      DISPLAY g_detail_idx2 TO FORMONLY.idx
+   ELSE
+      LET g_detail_idx2 = 0
+      DISPLAY ' ' TO FORMONLY.idx
+   END IF]]>
+  </point>
+  <point name="fetch.before_fill2" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_sql = "SELECT  UNIQUE pspa004,pspa005,pspa006,pspa007,pspa009,'' FROM pspa_t ",    
+               " WHERE pspaent = ? AND pspasite = ? AND pspa001 = ? AND pspa002 = ? ",
+               "   AND pspa016 = ? AND pspa004 = ? AND pspa012 = ? AND pspa013 = ? "
+ 
+   IF NOT cl_null(g_wc2_table2) THEN
+      LET g_sql = g_sql CLIPPED," AND ",g_wc2_table2 CLIPPED
+   END IF
+ 
+   LET g_sql = g_sql, " ORDER BY pspa_t.pspa004 "]]>
+  </point>
+  <point name="fetch.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   ]]>
+  </point>
+  <point name="fetch.fill2" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      IF l_ac = 1 THEN
+         LET g_psoz2_d[l_ac].qty6 = g_psoz2_d[l_ac].pspa009
+      ELSE
+         IF l_ac > 1 THEN
+            LET g_psoz2_d[l_ac].qty6 = g_psoz2_d[l_ac].pspa009 + g_psoz2_d[l_ac-1].pspa009
+         END IF
+      END IF ]]>
+  </point>
+  <point name="global.argv" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_no_ask      LIKE type_t.num5
+DEFINE g_jump        LIKE type_t.num10
+DEFINE g_row_count   LIKE type_t.num10   
+DEFINE g_curs_index  LIKE type_t.num10 
+DEFINE g_wc3         STRING
+DEFINE g_detail_cnt2  LIKE type_t.num5              #單身2總筆數]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#單頭 type 宣告
+ TYPE type_g_psoz_m RECORD
+   psoz001   LIKE psoz_t.psoz001, 
+   psozsite  LIKE psoz_t.psozsite, 
+   psoz002   LIKE psoz_t.psoz002, 
+   psoz003   LIKE psoz_t.psoz003, 
+   psoz038   LIKE psoz_t.psoz038,
+   imaal003  LIKE imaal_t.imaal003, 
+   imaal004  LIKE imaal_t.imaal004, 
+   psoz039   LIKE psoz_t.psoz039,  
+   imaf013   LIKE imaf_t.imaf013
+            END RECORD
+DEFINE g_psoz_m          type_g_psoz_m
+DEFINE g_psoz_m_t        type_g_psoz_m
+
+#單身 type 宣告
+ TYPE type_g_psoz2_d RECORD
+   pspa004 LIKE pspa_t.pspa004, 
+   pspa020 LIKE pspa_t.pspa020, 
+   pspa006 LIKE pspa_t.pspa006, 
+   pspa007 LIKE pspa_t.pspa007, 
+   pspa009 LIKE pspa_t.pspa009, 
+   qty6    LIKE psoz_t.psoz036
+       END RECORD
+DEFINE g_psoz2_d   DYNAMIC ARRAY OF type_g_psoz2_d
+]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL cl_set_combo_scc('imaf013','2022')
+   CALL cl_set_combo_scc('b_pspa020','5440')]]>
+  </point>
+  <point name="input.a.page1.psoz001" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_psoz_d[g_detail_idx].psoz001 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz002 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz003 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz004 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz038 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz039 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_psoz_d[g_detail_idx].psoz001 != g_psoz_d_t.psoz001 OR g_psoz_d[g_detail_idx].psoz002 != g_psoz_d_t.psoz002 OR g_psoz_d[g_detail_idx].psoz003 != g_psoz_d_t.psoz003 OR g_psoz_d[g_detail_idx].psoz004 != g_psoz_d_t.psoz004 OR g_psoz_d[g_detail_idx].psoz038 != g_psoz_d_t.psoz038 OR g_psoz_d[g_detail_idx].psoz039 != g_psoz_d_t.psoz039)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM psoz_t WHERE "||"psozent = '" ||g_enterprise|| "' AND psozsite = '" ||g_site|| "' AND "||"psoz001 = '"||g_psoz_d[g_detail_idx].psoz001 ||"' AND "|| "psoz002 = '"||g_psoz_d[g_detail_idx].psoz002 ||"' AND "|| "psoz003 = '"||g_psoz_d[g_detail_idx].psoz003 ||"' AND "|| "psoz004 = '"||g_psoz_d[g_detail_idx].psoz004 ||"' AND "|| "psoz038 = '"||g_psoz_d[g_detail_idx].psoz038 ||"' AND "|| "psoz039 = '"||g_psoz_d[g_detail_idx].psoz039 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.psoz002" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_psoz_d[g_detail_idx].psoz001 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz002 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz003 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz004 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz038 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz039 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_psoz_d[g_detail_idx].psoz001 != g_psoz_d_t.psoz001 OR g_psoz_d[g_detail_idx].psoz002 != g_psoz_d_t.psoz002 OR g_psoz_d[g_detail_idx].psoz003 != g_psoz_d_t.psoz003 OR g_psoz_d[g_detail_idx].psoz004 != g_psoz_d_t.psoz004 OR g_psoz_d[g_detail_idx].psoz038 != g_psoz_d_t.psoz038 OR g_psoz_d[g_detail_idx].psoz039 != g_psoz_d_t.psoz039)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM psoz_t WHERE "||"psozent = '" ||g_enterprise|| "' AND psozsite = '" ||g_site|| "' AND "||"psoz001 = '"||g_psoz_d[g_detail_idx].psoz001 ||"' AND "|| "psoz002 = '"||g_psoz_d[g_detail_idx].psoz002 ||"' AND "|| "psoz003 = '"||g_psoz_d[g_detail_idx].psoz003 ||"' AND "|| "psoz004 = '"||g_psoz_d[g_detail_idx].psoz004 ||"' AND "|| "psoz038 = '"||g_psoz_d[g_detail_idx].psoz038 ||"' AND "|| "psoz039 = '"||g_psoz_d[g_detail_idx].psoz039 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.psoz003" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_psoz_d[g_detail_idx].psoz001 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz002 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz003 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz004 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz038 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz039 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_psoz_d[g_detail_idx].psoz001 != g_psoz_d_t.psoz001 OR g_psoz_d[g_detail_idx].psoz002 != g_psoz_d_t.psoz002 OR g_psoz_d[g_detail_idx].psoz003 != g_psoz_d_t.psoz003 OR g_psoz_d[g_detail_idx].psoz004 != g_psoz_d_t.psoz004 OR g_psoz_d[g_detail_idx].psoz038 != g_psoz_d_t.psoz038 OR g_psoz_d[g_detail_idx].psoz039 != g_psoz_d_t.psoz039)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM psoz_t WHERE "||"psozent = '" ||g_enterprise|| "' AND psozsite = '" ||g_site|| "' AND "||"psoz001 = '"||g_psoz_d[g_detail_idx].psoz001 ||"' AND "|| "psoz002 = '"||g_psoz_d[g_detail_idx].psoz002 ||"' AND "|| "psoz003 = '"||g_psoz_d[g_detail_idx].psoz003 ||"' AND "|| "psoz004 = '"||g_psoz_d[g_detail_idx].psoz004 ||"' AND "|| "psoz038 = '"||g_psoz_d[g_detail_idx].psoz038 ||"' AND "|| "psoz039 = '"||g_psoz_d[g_detail_idx].psoz039 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.psoz004" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_psoz_d[g_detail_idx].psoz001 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz002 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz003 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz004 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz038 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz039 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_psoz_d[g_detail_idx].psoz001 != g_psoz_d_t.psoz001 OR g_psoz_d[g_detail_idx].psoz002 != g_psoz_d_t.psoz002 OR g_psoz_d[g_detail_idx].psoz003 != g_psoz_d_t.psoz003 OR g_psoz_d[g_detail_idx].psoz004 != g_psoz_d_t.psoz004 OR g_psoz_d[g_detail_idx].psoz038 != g_psoz_d_t.psoz038 OR g_psoz_d[g_detail_idx].psoz039 != g_psoz_d_t.psoz039)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM psoz_t WHERE "||"psozent = '" ||g_enterprise|| "' AND psozsite = '" ||g_site|| "' AND "||"psoz001 = '"||g_psoz_d[g_detail_idx].psoz001 ||"' AND "|| "psoz002 = '"||g_psoz_d[g_detail_idx].psoz002 ||"' AND "|| "psoz003 = '"||g_psoz_d[g_detail_idx].psoz003 ||"' AND "|| "psoz004 = '"||g_psoz_d[g_detail_idx].psoz004 ||"' AND "|| "psoz038 = '"||g_psoz_d[g_detail_idx].psoz038 ||"' AND "|| "psoz039 = '"||g_psoz_d[g_detail_idx].psoz039 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.psoz038" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_psoz_d[g_detail_idx].psoz001 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz002 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz003 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz004 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz038 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz039 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_psoz_d[g_detail_idx].psoz001 != g_psoz_d_t.psoz001 OR g_psoz_d[g_detail_idx].psoz002 != g_psoz_d_t.psoz002 OR g_psoz_d[g_detail_idx].psoz003 != g_psoz_d_t.psoz003 OR g_psoz_d[g_detail_idx].psoz004 != g_psoz_d_t.psoz004 OR g_psoz_d[g_detail_idx].psoz038 != g_psoz_d_t.psoz038 OR g_psoz_d[g_detail_idx].psoz039 != g_psoz_d_t.psoz039)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM psoz_t WHERE "||"psozent = '" ||g_enterprise|| "' AND psozsite = '" ||g_site|| "' AND "||"psoz001 = '"||g_psoz_d[g_detail_idx].psoz001 ||"' AND "|| "psoz002 = '"||g_psoz_d[g_detail_idx].psoz002 ||"' AND "|| "psoz003 = '"||g_psoz_d[g_detail_idx].psoz003 ||"' AND "|| "psoz004 = '"||g_psoz_d[g_detail_idx].psoz004 ||"' AND "|| "psoz038 = '"||g_psoz_d[g_detail_idx].psoz038 ||"' AND "|| "psoz039 = '"||g_psoz_d[g_detail_idx].psoz039 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.psoz039" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_psoz_d[g_detail_idx].psoz001 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz002 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz003 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz004 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz038 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz039 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_psoz_d[g_detail_idx].psoz001 != g_psoz_d_t.psoz001 OR g_psoz_d[g_detail_idx].psoz002 != g_psoz_d_t.psoz002 OR g_psoz_d[g_detail_idx].psoz003 != g_psoz_d_t.psoz003 OR g_psoz_d[g_detail_idx].psoz004 != g_psoz_d_t.psoz004 OR g_psoz_d[g_detail_idx].psoz038 != g_psoz_d_t.psoz038 OR g_psoz_d[g_detail_idx].psoz039 != g_psoz_d_t.psoz039)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM psoz_t WHERE "||"psozent = '" ||g_enterprise|| "' AND psozsite = '" ||g_site|| "' AND "||"psoz001 = '"||g_psoz_d[g_detail_idx].psoz001 ||"' AND "|| "psoz002 = '"||g_psoz_d[g_detail_idx].psoz002 ||"' AND "|| "psoz003 = '"||g_psoz_d[g_detail_idx].psoz003 ||"' AND "|| "psoz004 = '"||g_psoz_d[g_detail_idx].psoz004 ||"' AND "|| "psoz038 = '"||g_psoz_d[g_detail_idx].psoz038 ||"' AND "|| "psoz039 = '"||g_psoz_d[g_detail_idx].psoz039 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.pspa001" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_psoz_d[g_detail_idx].psoz001 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz002 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz003 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz004 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz038 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz039 IS NOT NULL AND g_psoz2_d[g_detail_idx2].pspa001 IS NOT NULL AND g_psoz2_d[g_detail_idx2].pspa002 IS NOT NULL AND g_psoz2_d[g_detail_idx2].pspa016 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_psoz_d[g_detail_idx].psoz001 != g_psoz_d[g_detail_idx].psoz001 OR g_psoz_d[g_detail_idx].psoz002 != g_psoz_d[g_detail_idx].psoz002 OR g_psoz_d[g_detail_idx].psoz003 != g_psoz_d[g_detail_idx].psoz003 OR g_psoz_d[g_detail_idx].psoz004 != g_psoz_d[g_detail_idx].psoz004 OR g_psoz_d[g_detail_idx].psoz038 != g_psoz_d[g_detail_idx].psoz038 OR g_psoz_d[g_detail_idx].psoz039 != g_psoz_d[g_detail_idx].psoz039 OR g_psoz2_d[g_detail_idx2].pspa001 != g_psoz2_d_t.pspa001 OR g_psoz2_d[g_detail_idx2].pspa002 != g_psoz2_d_t.pspa002 OR g_psoz2_d[g_detail_idx2].pspa016 != g_psoz2_d_t.pspa016)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pspa_t WHERE "||"pspaent = '" ||g_enterprise|| "' AND pspasite = '" ||g_site|| "' AND "||"pspa001 = '"||g_psoz_d[g_detail_idx].psoz001 ||"' AND "|| "pspa002 = '"||g_psoz_d[g_detail_idx].psoz002 ||"' AND "|| "pspa016 = '"||g_psoz_d[g_detail_idx].psoz003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.pspa002" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_psoz_d[g_detail_idx].psoz001 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz002 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz003 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz004 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz038 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz039 IS NOT NULL AND g_psoz2_d[g_detail_idx2].pspa001 IS NOT NULL AND g_psoz2_d[g_detail_idx2].pspa002 IS NOT NULL AND g_psoz2_d[g_detail_idx2].pspa016 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_psoz_d[g_detail_idx].psoz001 != g_psoz_d[g_detail_idx].psoz001 OR g_psoz_d[g_detail_idx].psoz002 != g_psoz_d[g_detail_idx].psoz002 OR g_psoz_d[g_detail_idx].psoz003 != g_psoz_d[g_detail_idx].psoz003 OR g_psoz_d[g_detail_idx].psoz004 != g_psoz_d[g_detail_idx].psoz004 OR g_psoz_d[g_detail_idx].psoz038 != g_psoz_d[g_detail_idx].psoz038 OR g_psoz_d[g_detail_idx].psoz039 != g_psoz_d[g_detail_idx].psoz039 OR g_psoz2_d[g_detail_idx2].pspa001 != g_psoz2_d_t.pspa001 OR g_psoz2_d[g_detail_idx2].pspa002 != g_psoz2_d_t.pspa002 OR g_psoz2_d[g_detail_idx2].pspa016 != g_psoz2_d_t.pspa016)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pspa_t WHERE "||"pspaent = '" ||g_enterprise|| "' AND pspasite = '" ||g_site|| "' AND "||"pspa001 = '"||g_psoz_d[g_detail_idx].psoz001 ||"' AND "|| "pspa002 = '"||g_psoz_d[g_detail_idx].psoz002 ||"' AND "|| "pspa016 = '"||g_psoz_d[g_detail_idx].psoz003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.pspa016" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_psoz_d[g_detail_idx].psoz001 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz002 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz003 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz004 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz038 IS NOT NULL AND g_psoz_d[g_detail_idx].psoz039 IS NOT NULL AND g_psoz2_d[g_detail_idx2].pspa001 IS NOT NULL AND g_psoz2_d[g_detail_idx2].pspa002 IS NOT NULL AND g_psoz2_d[g_detail_idx2].pspa016 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_psoz_d[g_detail_idx].psoz001 != g_psoz_d[g_detail_idx].psoz001 OR g_psoz_d[g_detail_idx].psoz002 != g_psoz_d[g_detail_idx].psoz002 OR g_psoz_d[g_detail_idx].psoz003 != g_psoz_d[g_detail_idx].psoz003 OR g_psoz_d[g_detail_idx].psoz004 != g_psoz_d[g_detail_idx].psoz004 OR g_psoz_d[g_detail_idx].psoz038 != g_psoz_d[g_detail_idx].psoz038 OR g_psoz_d[g_detail_idx].psoz039 != g_psoz_d[g_detail_idx].psoz039 OR g_psoz2_d[g_detail_idx2].pspa001 != g_psoz2_d_t.pspa001 OR g_psoz2_d[g_detail_idx2].pspa002 != g_psoz2_d_t.pspa002 OR g_psoz2_d[g_detail_idx2].pspa016 != g_psoz2_d_t.pspa016)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pspa_t WHERE "||"pspaent = '" ||g_enterprise|| "' AND pspasite = '" ||g_site|| "' AND "||"pspa001 = '"||g_psoz_d[g_detail_idx].psoz001 ||"' AND "|| "pspa002 = '"||g_psoz_d[g_detail_idx].psoz002 ||"' AND "|| "pspa016 = '"||g_psoz_d[g_detail_idx].psoz003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.body.before_row" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               CALL apsq500_qty1_show()]]>
+  </point>
+  <point name="main.exit" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="main.init" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="query.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_wc       STRING   #組單頭construct
+   DEFINE l_page_sql STRING   #組單頭sql
+   
+   DISPLAY ' ' TO FORMONLY.page
+   DISPLAY ' ' TO FORMONLY.tot_page
+   LET g_row_count = 0
+   LET g_curs_index = 0
+   CALL cl_navigator_setting(g_curs_index,g_row_count)]]>
+  </point>
+  <point name="query.more_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      CONSTRUCT BY NAME l_wc ON psoz001,psoz038,psoz039,imaf013
+ 
+         BEFORE CONSTRUCT
+         
+         ON ACTION controlp INFIELD psoz001
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+		   	LET g_qryparam.reqry = FALSE
+            CALL q_psca001()
+            DISPLAY g_qryparam.return1 TO psoz001
+            NEXT FIELD psoz001
+            
+         ON ACTION controlp INFIELD psoz038
+		   	INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+            CALL q_imaf001()
+            DISPLAY g_qryparam.return1 TO psoz038
+            NEXT FIELD psoz038
+
+         AFTER FIELD psoz038
+            CALL apsq500_psoz038_ref(GET_FLDBUF(psoz038))
+            
+
+
+      END CONSTRUCT]]>
+  </point>
+  <point name="ui_dialog.bef_dialog" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL cl_navigator_setting(g_curs_index,g_row_count)
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            #筆數顯示
+            LET g_current_page = 1
+            CALL apsq500_idx_chk()]]>
+  </point>
+  <point name="ui_dialog.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   ]]>
+  </point>
+  <point name="ui_dialog.more_action" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         # l<<
+         ON ACTION first
+            LET g_action_choice="first"
+            IF cl_auth_chk_act("first") THEN
+               
+               #add-point:ON ACTION first
+               CALL apsq500_fetch_page('F')
+               CALL cl_navigator_setting(g_curs_index, g_row_count)
+
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               CALL apsq500_idx_chk()
+               CONTINUE DIALOG
+               #END add-point
+               EXIT DIALOG
+            END IF
+            
+         # <
+         ON ACTION previous
+            LET g_action_choice="previous"
+            IF cl_auth_chk_act("previous") THEN
+               
+               #add-point:ON ACTION previous
+               CALL apsq500_fetch_page('P')
+               CALL cl_navigator_setting(g_curs_index, g_row_count)
+               
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               CALL apsq500_idx_chk()
+               CONTINUE DIALOG
+               #END add-point
+               EXIT DIALOG
+            END IF
+            
+         # O   
+         ON ACTION jump
+            LET g_action_choice="jump"
+            IF cl_auth_chk_act("jump") THEN
+               
+               #add-point:ON ACTION jump
+               CALL apsq500_fetch_page('/')
+               CALL cl_navigator_setting(g_curs_index, g_row_count)
+               
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               CALL apsq500_idx_chk()
+               CONTINUE DIALOG
+               #END add-point
+               EXIT DIALOG
+            END IF
+            
+         # >   
+         ON ACTION next
+            LET g_action_choice="next"
+            IF cl_auth_chk_act("next") THEN
+               
+               #add-point:ON ACTION next
+               CALL apsq500_fetch_page('N')
+               CALL cl_navigator_setting(g_curs_index, g_row_count)
+               
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               CALL apsq500_idx_chk()
+               CONTINUE DIALOG
+               #END add-point
+               EXIT DIALOG
+            END IF
+            
+         # >>l
+         ON ACTION last
+            LET g_action_choice="last"
+            IF cl_auth_chk_act("last") THEN
+               
+               #add-point:ON ACTION last
+               CALL apsq500_fetch_page('L')
+               CALL cl_navigator_setting(g_curs_index, g_row_count)
+               
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               CALL apsq500_idx_chk()
+               CONTINUE DIALOG
+               #END add-point
+               EXIT DIALOG
+            END IF]]>
+  </point>
+  <point name="ui_dialog.more_displayarray" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         DISPLAY ARRAY g_psoz2_d TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt2)  
+         
+            BEFORE DISPLAY 
+               LET g_current_page = 2
+            
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx2
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               DISPLAY g_psoz2_d.getLength() TO FORMONLY.cnt
+        
+               
+         END DISPLAY]]>
+  </point>
+  <section id="apsq500.b_fill" ver="8" status="" src="s">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION apsq500_b_fill()
+   {<Local define>}
+   DEFINE ls_wc           STRING
+   {</Local define>}
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+   
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter
+   
+   LET g_sql = "SELECT  UNIQUE psoz001,psoz002,psoz003,psoz038,psoz039,psoz004,'',psoz012,psoz014,psoz018, 
+       psoz021,psoz022,'','','',psoz031,psoz029,psoz030,psoz036,'',psoz037,psoz005,psoz006,psoz007,psoz009, 
+       psoz010,psoz013,psoz015,psoz020,psoz026,psoz027,psoz028 FROM psoz_t",
+ 
+ 
+               "",
+               " WHERE psozent= ? AND psozsite= ? AND 1=1 AND ", ls_wc,cl_sql_add_filter("psoz_t")
+    
+   LET g_sql = g_sql, cl_sql_add_filter("psoz_t"),
+                      " ORDER BY psoz_t.psoz001,psoz_t.psoz002,psoz_t.psoz003,psoz_t.psoz004,psoz_t.psoz038,psoz_t.psoz039"
+  
+   #add-point:b_fill段sql_after
+   {<point name="b_fill.sql_after"/>}
+   #end add-point
+  
+   PREPARE apsq500_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR apsq500_pb
+   
+   OPEN b_fill_curs USING g_enterprise, g_site
+ 
+   CALL g_psoz_d.clear()
+ 
+   #add-point:陣列清空
+   {<point name="b_fill.array_clear" />}
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO g_psoz_d[l_ac].psoz001,g_psoz_d[l_ac].psoz002,g_psoz_d[l_ac].psoz003,g_psoz_d[l_ac].psoz038, 
+       g_psoz_d[l_ac].psoz039,g_psoz_d[l_ac].psoz004,g_psoz_d[l_ac].qty1,g_psoz_d[l_ac].psoz012,g_psoz_d[l_ac].psoz014, 
+       g_psoz_d[l_ac].psoz018,g_psoz_d[l_ac].psoz021,g_psoz_d[l_ac].psoz022,g_psoz_d[l_ac].qty2,g_psoz_d[l_ac].qty3, 
+       g_psoz_d[l_ac].qty4,g_psoz_d[l_ac].psoz031,g_psoz_d[l_ac].psoz029,g_psoz_d[l_ac].psoz030,g_psoz_d[l_ac].psoz036, 
+       g_psoz_d[l_ac].qty5,g_psoz_d[l_ac].psoz037,g_psoz_d[l_ac].psoz005,g_psoz_d[l_ac].psoz006,g_psoz_d[l_ac].psoz007, 
+       g_psoz_d[l_ac].psoz009,g_psoz_d[l_ac].psoz010,g_psoz_d[l_ac].psoz013,g_psoz_d[l_ac].psoz015,g_psoz_d[l_ac].psoz020, 
+       g_psoz_d[l_ac].psoz026,g_psoz_d[l_ac].psoz027,g_psoz_d[l_ac].psoz028
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      LET g_psoz_d[l_ac].sel = "N"
+      #LET g_psoz_d[l_ac].statepic = cl_get_actipic(g_psoz_d[l_ac].statepic)
+ 
+      
+ 
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.fill"/>}
+      #end add-point
+      
+      CALL apsq500_detail_show("'1'")      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+ 
+   
+   CALL g_psoz_d.deleteElement(g_psoz_d.getLength())   
+ 
+   #add-point:陣列長度調整
+   {<point name="b_fill.array_deleteElement" />}
+   #end add-point
+   
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE apsq500_pb
+   
+   LET l_ac = 1
+   CALL apsq500_fetch()
+   
+      CALL apsq500_filter_show('psoz001','b_psoz001')
+   CALL apsq500_filter_show('psoz002','b_psoz002')
+   CALL apsq500_filter_show('psoz003','b_psoz003')
+   CALL apsq500_filter_show('psoz038','b_psoz038')
+   CALL apsq500_filter_show('psoz039','b_psoz039')
+   CALL apsq500_filter_show('psoz004','b_psoz004')
+   CALL apsq500_filter_show('qty1','b_qty1')
+   CALL apsq500_filter_show('psoz012','b_psoz012')
+   CALL apsq500_filter_show('psoz014','b_psoz014')
+   CALL apsq500_filter_show('psoz018','b_psoz018')
+   CALL apsq500_filter_show('psoz021','b_psoz021')
+   CALL apsq500_filter_show('psoz022','b_psoz022')
+   CALL apsq500_filter_show('qty2','b_qty2')
+   CALL apsq500_filter_show('qty3','b_qty3')
+   CALL apsq500_filter_show('qty4','b_qty4')
+   CALL apsq500_filter_show('psoz031','b_psoz031')
+   CALL apsq500_filter_show('psoz029','b_psoz029')
+   CALL apsq500_filter_show('psoz030','b_psoz030')
+   CALL apsq500_filter_show('psoz036','b_psoz036')
+   CALL apsq500_filter_show('qty5','b_qty5')
+   CALL apsq500_filter_show('psoz037','b_psoz037')
+   CALL apsq500_filter_show('psoz005','b_psoz005')
+   CALL apsq500_filter_show('psoz006','b_psoz006')
+   CALL apsq500_filter_show('psoz007','b_psoz007')
+   CALL apsq500_filter_show('psoz009','b_psoz009')
+   CALL apsq500_filter_show('psoz010','b_psoz010')
+   CALL apsq500_filter_show('psoz013','b_psoz013')
+   CALL apsq500_filter_show('psoz015','b_psoz015')
+   CALL apsq500_filter_show('psoz020','b_psoz020')
+   CALL apsq500_filter_show('psoz026','b_psoz026')
+   CALL apsq500_filter_show('psoz027','b_psoz027')
+   CALL apsq500_filter_show('psoz028','b_psoz028')
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apsq500.delete" ver="1" status="" src="s">
+    <![CDATA[#+ delete
+PRIVATE FUNCTION apsq500_delete()
+   #add-point:delete段define
+   {<point name="delete.define"/>}
+   #end add-point
+ 
+   #add-point:delete段control
+   {<point name="delete.control"/>}
+   #end add-point 
+END FUNCTION
+]]>
+  </section>
+  <section id="apsq500.description" ver="1" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000216
+#+ 
+#+ Filename...: apsq500
+#+ Description: APS模擬結果查詢
+#+ Creator....: 05293(2014/07/03)
+#+ Modifier...: 05293(2014/07/07)
+#+ Buildtype..: 應用 q02 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="apsq500.detail_show" ver="3" status="" src="s">
+    <![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION apsq500_detail_show(ps_page)
+   DEFINE ps_page    STRING
+   DEFINE ls_sql     STRING
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+   
+   
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body.reference"/>}
+      #end add-point
+   END IF
+   
+ 
+ 
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apsq500.fetch" ver="2" status="" src="s">
+    <![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION apsq500_fetch()
+   {<Local define>}
+   DEFINE li_ac           LIKE type_t.num5
+   {</Local define>}
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point
+   
+ 
+   #add-point:陣列清空
+   {<point name="fetch.array_clear" />}
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+ 
+   
+   #DISPLAY g_detail_cnt TO FORMONLY.cnt
+ 
+   #add-point:單身填充後
+   {<point name="fetch.after_fill" />}
+   #end add-point 
+   
+ 
+   #add-point:陣列筆數調整
+   {<point name="fetch.array_deleteElement" />}
+   #end add-point
+ 
+   LET l_ac = li_ac
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apsq500.filter" ver="6" status="" src="s">
+    <![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION apsq500_filter()
+   {<Local define>}
+   {</Local define>}
+   #add-point:filter段define
+   {<point name="filter.define"/>}
+   #end add-point    
+   
+   LET l_ac = 1
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON psoz001,psoz002,psoz003,psoz038,psoz039,psoz004,qty1,psoz012,psoz014, 
+          psoz018,psoz021,psoz022,qty2,qty3,qty4,psoz031,psoz029,psoz030,psoz036,qty5,psoz037,psoz005, 
+          psoz006,psoz007,psoz009,psoz010,psoz013,psoz015,psoz020,psoz026,psoz027,psoz028
+                          FROM s_detail1[1].b_psoz001,s_detail1[1].b_psoz002,s_detail1[1].b_psoz003, 
+                              s_detail1[1].b_psoz038,s_detail1[1].b_psoz039,s_detail1[1].b_psoz004,s_detail1[1].b_qty1, 
+                              s_detail1[1].b_psoz012,s_detail1[1].b_psoz014,s_detail1[1].b_psoz018,s_detail1[1].b_psoz021, 
+                              s_detail1[1].b_psoz022,s_detail1[1].b_qty2,s_detail1[1].b_qty3,s_detail1[1].b_qty4, 
+                              s_detail1[1].b_psoz031,s_detail1[1].b_psoz029,s_detail1[1].b_psoz030,s_detail1[1].b_psoz036, 
+                              s_detail1[1].b_qty5,s_detail1[1].b_psoz037,s_detail1[1].b_psoz005,s_detail1[1].b_psoz006, 
+                              s_detail1[1].b_psoz007,s_detail1[1].b_psoz009,s_detail1[1].b_psoz010,s_detail1[1].b_psoz013, 
+                              s_detail1[1].b_psoz015,s_detail1[1].b_psoz020,s_detail1[1].b_psoz026,s_detail1[1].b_psoz027, 
+                              s_detail1[1].b_psoz028
+ 
+         BEFORE CONSTRUCT
+#saki       CALL cl_qbe_init()
+                     DISPLAY apsq500_filter_parser('psoz001') TO s_detail1[1].b_psoz001
+            DISPLAY apsq500_filter_parser('psoz002') TO s_detail1[1].b_psoz002
+            DISPLAY apsq500_filter_parser('psoz003') TO s_detail1[1].b_psoz003
+            DISPLAY apsq500_filter_parser('psoz038') TO s_detail1[1].b_psoz038
+            DISPLAY apsq500_filter_parser('psoz039') TO s_detail1[1].b_psoz039
+            DISPLAY apsq500_filter_parser('psoz004') TO s_detail1[1].b_psoz004
+            DISPLAY apsq500_filter_parser('qty1') TO s_detail1[1].b_qty1
+            DISPLAY apsq500_filter_parser('psoz012') TO s_detail1[1].b_psoz012
+            DISPLAY apsq500_filter_parser('psoz014') TO s_detail1[1].b_psoz014
+            DISPLAY apsq500_filter_parser('psoz018') TO s_detail1[1].b_psoz018
+            DISPLAY apsq500_filter_parser('psoz021') TO s_detail1[1].b_psoz021
+            DISPLAY apsq500_filter_parser('psoz022') TO s_detail1[1].b_psoz022
+            DISPLAY apsq500_filter_parser('qty2') TO s_detail1[1].b_qty2
+            DISPLAY apsq500_filter_parser('qty3') TO s_detail1[1].b_qty3
+            DISPLAY apsq500_filter_parser('qty4') TO s_detail1[1].b_qty4
+            DISPLAY apsq500_filter_parser('psoz031') TO s_detail1[1].b_psoz031
+            DISPLAY apsq500_filter_parser('psoz029') TO s_detail1[1].b_psoz029
+            DISPLAY apsq500_filter_parser('psoz030') TO s_detail1[1].b_psoz030
+            DISPLAY apsq500_filter_parser('psoz036') TO s_detail1[1].b_psoz036
+            DISPLAY apsq500_filter_parser('qty5') TO s_detail1[1].b_qty5
+            DISPLAY apsq500_filter_parser('psoz037') TO s_detail1[1].b_psoz037
+            DISPLAY apsq500_filter_parser('psoz005') TO s_detail1[1].b_psoz005
+            DISPLAY apsq500_filter_parser('psoz006') TO s_detail1[1].b_psoz006
+            DISPLAY apsq500_filter_parser('psoz007') TO s_detail1[1].b_psoz007
+            DISPLAY apsq500_filter_parser('psoz009') TO s_detail1[1].b_psoz009
+            DISPLAY apsq500_filter_parser('psoz010') TO s_detail1[1].b_psoz010
+            DISPLAY apsq500_filter_parser('psoz013') TO s_detail1[1].b_psoz013
+            DISPLAY apsq500_filter_parser('psoz015') TO s_detail1[1].b_psoz015
+            DISPLAY apsq500_filter_parser('psoz020') TO s_detail1[1].b_psoz020
+            DISPLAY apsq500_filter_parser('psoz026') TO s_detail1[1].b_psoz026
+            DISPLAY apsq500_filter_parser('psoz027') TO s_detail1[1].b_psoz027
+            DISPLAY apsq500_filter_parser('psoz028') TO s_detail1[1].b_psoz028
+ 
+ 
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog
+         {<point name="filter.b_dialog"/>}
+         #end add-point  
+ 
+      ON ACTION accept
+         ACCEPT DIALOG 
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+   
+      CALL apsq500_filter_show('psoz001','b_psoz001')
+   CALL apsq500_filter_show('psoz002','b_psoz002')
+   CALL apsq500_filter_show('psoz003','b_psoz003')
+   CALL apsq500_filter_show('psoz038','b_psoz038')
+   CALL apsq500_filter_show('psoz039','b_psoz039')
+   CALL apsq500_filter_show('psoz004','b_psoz004')
+   CALL apsq500_filter_show('qty1','b_qty1')
+   CALL apsq500_filter_show('psoz012','b_psoz012')
+   CALL apsq500_filter_show('psoz014','b_psoz014')
+   CALL apsq500_filter_show('psoz018','b_psoz018')
+   CALL apsq500_filter_show('psoz021','b_psoz021')
+   CALL apsq500_filter_show('psoz022','b_psoz022')
+   CALL apsq500_filter_show('qty2','b_qty2')
+   CALL apsq500_filter_show('qty3','b_qty3')
+   CALL apsq500_filter_show('qty4','b_qty4')
+   CALL apsq500_filter_show('psoz031','b_psoz031')
+   CALL apsq500_filter_show('psoz029','b_psoz029')
+   CALL apsq500_filter_show('psoz030','b_psoz030')
+   CALL apsq500_filter_show('psoz036','b_psoz036')
+   CALL apsq500_filter_show('qty5','b_qty5')
+   CALL apsq500_filter_show('psoz037','b_psoz037')
+   CALL apsq500_filter_show('psoz005','b_psoz005')
+   CALL apsq500_filter_show('psoz006','b_psoz006')
+   CALL apsq500_filter_show('psoz007','b_psoz007')
+   CALL apsq500_filter_show('psoz009','b_psoz009')
+   CALL apsq500_filter_show('psoz010','b_psoz010')
+   CALL apsq500_filter_show('psoz013','b_psoz013')
+   CALL apsq500_filter_show('psoz015','b_psoz015')
+   CALL apsq500_filter_show('psoz020','b_psoz020')
+   CALL apsq500_filter_show('psoz026','b_psoz026')
+   CALL apsq500_filter_show('psoz027','b_psoz027')
+   CALL apsq500_filter_show('psoz028','b_psoz028')
+ 
+    
+   CALL apsq500_b_fill()
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apsq500.filter_parser" ver="1" status="" src="s">
+    <![CDATA[#+ filter欄位解析
+PRIVATE FUNCTION apsq500_filter_parser(ps_field)
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+   #add-point:filter段define
+   {<point name="filter_parser.define"/>}
+   #end add-point    
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apsq500.filter_show" ver="1" status="" src="s">
+    <![CDATA[#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION apsq500_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = apsq500_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apsq500.global" ver="8" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_psoz_d RECORD
+       #statepic       LIKE type_t.chr1,
+       sel            LIKE type_t.chr1,
+       psoz001 LIKE psoz_t.psoz001, 
+   psoz002 LIKE psoz_t.psoz002, 
+   psoz003 LIKE psoz_t.psoz003, 
+   psoz038 LIKE psoz_t.psoz038, 
+   psoz039 LIKE psoz_t.psoz039, 
+   psoz004 LIKE psoz_t.psoz004, 
+   qty1 LIKE type_t.chr500, 
+   psoz012 LIKE psoz_t.psoz012, 
+   psoz014 LIKE psoz_t.psoz014, 
+   psoz018 LIKE psoz_t.psoz018, 
+   psoz021 LIKE psoz_t.psoz021, 
+   psoz022 LIKE psoz_t.psoz022, 
+   qty2 LIKE type_t.chr500, 
+   qty3 LIKE type_t.chr500, 
+   qty4 LIKE type_t.chr500, 
+   psoz031 LIKE psoz_t.psoz031, 
+   psoz029 LIKE psoz_t.psoz029, 
+   psoz030 LIKE psoz_t.psoz030, 
+   psoz036 LIKE psoz_t.psoz036, 
+   qty5 LIKE type_t.chr500, 
+   psoz037 LIKE psoz_t.psoz037, 
+   psoz005 LIKE psoz_t.psoz005, 
+   psoz006 LIKE psoz_t.psoz006, 
+   psoz007 LIKE psoz_t.psoz007, 
+   psoz009 LIKE psoz_t.psoz009, 
+   psoz010 LIKE psoz_t.psoz010, 
+   psoz013 LIKE psoz_t.psoz013, 
+   psoz015 LIKE psoz_t.psoz015, 
+   psoz020 LIKE psoz_t.psoz020, 
+   psoz026 LIKE psoz_t.psoz026, 
+   psoz027 LIKE psoz_t.psoz027, 
+   psoz028 LIKE psoz_t.psoz028 
+       END RECORD
+ 
+ 
+#模組變數(Module Variables)
+DEFINE g_master                     type_g_psoz_d
+DEFINE g_master_t                   type_g_psoz_d
+DEFINE g_psoz_d          DYNAMIC ARRAY OF type_g_psoz_d
+DEFINE g_psoz_d_t        type_g_psoz_d
+ 
+      
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num5              
+DEFINE l_ac_d               LIKE type_t.num5              #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num5              #目前所在頁數
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num5
+DEFINE g_detail_idx         LIKE type_t.num5
+DEFINE g_detail_idx2        LIKE type_t.num5
+DEFINE g_hyper_url          STRING                        #hyperlink的主要網址
+ 
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+ 
+ 
+DEFINE g_wc_filter_table           STRING
+ 
+ 
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="apsq500.init" ver="2" status="" src="s">
+    <![CDATA[#+ 畫面資料初始化
+PRIVATE FUNCTION apsq500_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+   
+   
+   
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apsq500.insert" ver="1" status="" src="s">
+    <![CDATA[#+ insert
+PRIVATE FUNCTION apsq500_insert()
+   #add-point:insert段define
+   {<point name="insert.define"/>}
+   #end add-point
+ 
+   #add-point:insert段control
+   {<point name="insert.control"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apsq500.main" ver="1" status="" src="s">
+    <![CDATA[#+ 此段落由子樣板a26產生
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aps","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = " ", 
+                      " FROM ",
+                      " "
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE apsq500_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT UNIQUE ",
+               " FROM ",
+               
+               " WHERE  "
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define
+   {<point name="main.after_refresh_sql"/>}
+   #end add-point
+   PREPARE apsq500_master_referesh FROM g_sql
+ 
+   #add-point:main段define_sql
+   {<point name="main.body.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = ""
+   #add-point:main段define_sql
+   {<point name="main.body.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE apsq500_bcl CURSOR FROM g_forupd_sql
+ 
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apsq500 WITH FORM cl_ap_formpath("aps",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL apsq500_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL apsq500_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_apsq500
+      
+   END IF 
+   
+   CLOSE apsq500_cl
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+]]>
+  </section>
+  <section id="apsq500.modify" ver="1" status="" src="s">
+    <![CDATA[#+ modify
+PRIVATE FUNCTION apsq500_modify()
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point
+ 
+   #add-point:modify段control
+   {<point name="modify.control"/>}
+   #end add-point 
+END FUNCTION
+]]>
+  </section>
+  <section id="apsq500.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="apsq500.query" ver="6" status="" src="s">
+    <![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION apsq500_query()
+   {<Local define>}
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   {</Local define>}
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point 
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_psoz_d.clear()
+   LET g_wc_filter = " 1=1"
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+   
+   LET g_qryparam.state = "c"
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   
+   #wc備份
+   LET ls_wc = g_wc
+   LET g_master_idx = l_ac
+ 
+   
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc_table ON psoz001,psoz002,psoz003,psoz038,psoz039,psoz004,qty1,psoz012,psoz014,psoz018, 
+          psoz021,psoz022,qty2,qty3,qty4,psoz031,psoz029,psoz030,psoz036,qty5,psoz037,psoz005,psoz006, 
+          psoz007,psoz009,psoz010,psoz013,psoz015,psoz020,psoz026,psoz027,psoz028
+           FROM s_detail1[1].b_psoz001,s_detail1[1].b_psoz002,s_detail1[1].b_psoz003,s_detail1[1].b_psoz038, 
+               s_detail1[1].b_psoz039,s_detail1[1].b_psoz004,s_detail1[1].b_qty1,s_detail1[1].b_psoz012, 
+               s_detail1[1].b_psoz014,s_detail1[1].b_psoz018,s_detail1[1].b_psoz021,s_detail1[1].b_psoz022, 
+               s_detail1[1].b_qty2,s_detail1[1].b_qty3,s_detail1[1].b_qty4,s_detail1[1].b_psoz031,s_detail1[1].b_psoz029, 
+               s_detail1[1].b_psoz030,s_detail1[1].b_psoz036,s_detail1[1].b_qty5,s_detail1[1].b_psoz037, 
+               s_detail1[1].b_psoz005,s_detail1[1].b_psoz006,s_detail1[1].b_psoz007,s_detail1[1].b_psoz009, 
+               s_detail1[1].b_psoz010,s_detail1[1].b_psoz013,s_detail1[1].b_psoz015,s_detail1[1].b_psoz020, 
+               s_detail1[1].b_psoz026,s_detail1[1].b_psoz027,s_detail1[1].b_psoz028
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            {<point name="cs.head.before_construct"/>}
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+                #----<<b_psoz001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz001
+            #add-point:BEFORE FIELD b_psoz001
+            {<point name="construct.b.page1.b_psoz001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz001
+            
+            #add-point:AFTER FIELD b_psoz001
+            {<point name="construct.a.page1.b_psoz001" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz001
+         ON ACTION controlp INFIELD b_psoz001
+            #add-point:ON ACTION controlp INFIELD b_psoz001
+            {<point name="construct.c.page1.b_psoz001" />}
+            #END add-point
+ 
+         #----<<b_psoz002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz002
+            #add-point:BEFORE FIELD b_psoz002
+            {<point name="construct.b.page1.b_psoz002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz002
+            
+            #add-point:AFTER FIELD b_psoz002
+            {<point name="construct.a.page1.b_psoz002" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz002
+         ON ACTION controlp INFIELD b_psoz002
+            #add-point:ON ACTION controlp INFIELD b_psoz002
+            {<point name="construct.c.page1.b_psoz002" />}
+            #END add-point
+ 
+         #----<<b_psoz003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz003
+            #add-point:BEFORE FIELD b_psoz003
+            {<point name="construct.b.page1.b_psoz003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz003
+            
+            #add-point:AFTER FIELD b_psoz003
+            {<point name="construct.a.page1.b_psoz003" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz003
+         ON ACTION controlp INFIELD b_psoz003
+            #add-point:ON ACTION controlp INFIELD b_psoz003
+            {<point name="construct.c.page1.b_psoz003" />}
+            #END add-point
+ 
+         #----<<b_psoz038>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz038
+            #add-point:BEFORE FIELD b_psoz038
+            {<point name="construct.b.page1.b_psoz038" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz038
+            
+            #add-point:AFTER FIELD b_psoz038
+            {<point name="construct.a.page1.b_psoz038" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz038
+         ON ACTION controlp INFIELD b_psoz038
+            #add-point:ON ACTION controlp INFIELD b_psoz038
+            {<point name="construct.c.page1.b_psoz038" />}
+            #END add-point
+ 
+         #----<<b_psoz039>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz039
+            #add-point:BEFORE FIELD b_psoz039
+            {<point name="construct.b.page1.b_psoz039" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz039
+            
+            #add-point:AFTER FIELD b_psoz039
+            {<point name="construct.a.page1.b_psoz039" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz039
+         ON ACTION controlp INFIELD b_psoz039
+            #add-point:ON ACTION controlp INFIELD b_psoz039
+            {<point name="construct.c.page1.b_psoz039" />}
+            #END add-point
+ 
+         #----<<b_psoz004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz004
+            #add-point:BEFORE FIELD b_psoz004
+            {<point name="construct.b.page1.b_psoz004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz004
+            
+            #add-point:AFTER FIELD b_psoz004
+            {<point name="construct.a.page1.b_psoz004" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz004
+         ON ACTION controlp INFIELD b_psoz004
+            #add-point:ON ACTION controlp INFIELD b_psoz004
+            {<point name="construct.c.page1.b_psoz004" />}
+            #END add-point
+ 
+         #----<<b_qty1>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_qty1
+            #add-point:BEFORE FIELD b_qty1
+            {<point name="construct.b.page1.b_qty1" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_qty1
+            
+            #add-point:AFTER FIELD b_qty1
+            {<point name="construct.a.page1.b_qty1" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_qty1
+         ON ACTION controlp INFIELD b_qty1
+            #add-point:ON ACTION controlp INFIELD b_qty1
+            {<point name="construct.c.page1.b_qty1" />}
+            #END add-point
+ 
+         #----<<b_psoz012>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz012
+            #add-point:BEFORE FIELD b_psoz012
+            {<point name="construct.b.page1.b_psoz012" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz012
+            
+            #add-point:AFTER FIELD b_psoz012
+            {<point name="construct.a.page1.b_psoz012" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz012
+         ON ACTION controlp INFIELD b_psoz012
+            #add-point:ON ACTION controlp INFIELD b_psoz012
+            {<point name="construct.c.page1.b_psoz012" />}
+            #END add-point
+ 
+         #----<<b_psoz014>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz014
+            #add-point:BEFORE FIELD b_psoz014
+            {<point name="construct.b.page1.b_psoz014" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz014
+            
+            #add-point:AFTER FIELD b_psoz014
+            {<point name="construct.a.page1.b_psoz014" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz014
+         ON ACTION controlp INFIELD b_psoz014
+            #add-point:ON ACTION controlp INFIELD b_psoz014
+            {<point name="construct.c.page1.b_psoz014" />}
+            #END add-point
+ 
+         #----<<b_psoz018>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz018
+            #add-point:BEFORE FIELD b_psoz018
+            {<point name="construct.b.page1.b_psoz018" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz018
+            
+            #add-point:AFTER FIELD b_psoz018
+            {<point name="construct.a.page1.b_psoz018" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz018
+         ON ACTION controlp INFIELD b_psoz018
+            #add-point:ON ACTION controlp INFIELD b_psoz018
+            {<point name="construct.c.page1.b_psoz018" />}
+            #END add-point
+ 
+         #----<<b_psoz021>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz021
+            #add-point:BEFORE FIELD b_psoz021
+            {<point name="construct.b.page1.b_psoz021" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz021
+            
+            #add-point:AFTER FIELD b_psoz021
+            {<point name="construct.a.page1.b_psoz021" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz021
+         ON ACTION controlp INFIELD b_psoz021
+            #add-point:ON ACTION controlp INFIELD b_psoz021
+            {<point name="construct.c.page1.b_psoz021" />}
+            #END add-point
+ 
+         #----<<b_psoz022>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz022
+            #add-point:BEFORE FIELD b_psoz022
+            {<point name="construct.b.page1.b_psoz022" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz022
+            
+            #add-point:AFTER FIELD b_psoz022
+            {<point name="construct.a.page1.b_psoz022" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz022
+         ON ACTION controlp INFIELD b_psoz022
+            #add-point:ON ACTION controlp INFIELD b_psoz022
+            {<point name="construct.c.page1.b_psoz022" />}
+            #END add-point
+ 
+         #----<<b_qty2>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_qty2
+            #add-point:BEFORE FIELD b_qty2
+            {<point name="construct.b.page1.b_qty2" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_qty2
+            
+            #add-point:AFTER FIELD b_qty2
+            {<point name="construct.a.page1.b_qty2" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_qty2
+         ON ACTION controlp INFIELD b_qty2
+            #add-point:ON ACTION controlp INFIELD b_qty2
+            {<point name="construct.c.page1.b_qty2" />}
+            #END add-point
+ 
+         #----<<b_qty3>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_qty3
+            #add-point:BEFORE FIELD b_qty3
+            {<point name="construct.b.page1.b_qty3" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_qty3
+            
+            #add-point:AFTER FIELD b_qty3
+            {<point name="construct.a.page1.b_qty3" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_qty3
+         ON ACTION controlp INFIELD b_qty3
+            #add-point:ON ACTION controlp INFIELD b_qty3
+            {<point name="construct.c.page1.b_qty3" />}
+            #END add-point
+ 
+         #----<<b_qty4>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_qty4
+            #add-point:BEFORE FIELD b_qty4
+            {<point name="construct.b.page1.b_qty4" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_qty4
+            
+            #add-point:AFTER FIELD b_qty4
+            {<point name="construct.a.page1.b_qty4" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_qty4
+         ON ACTION controlp INFIELD b_qty4
+            #add-point:ON ACTION controlp INFIELD b_qty4
+            {<point name="construct.c.page1.b_qty4" />}
+            #END add-point
+ 
+         #----<<b_psoz031>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz031
+            #add-point:BEFORE FIELD b_psoz031
+            {<point name="construct.b.page1.b_psoz031" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz031
+            
+            #add-point:AFTER FIELD b_psoz031
+            {<point name="construct.a.page1.b_psoz031" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz031
+         ON ACTION controlp INFIELD b_psoz031
+            #add-point:ON ACTION controlp INFIELD b_psoz031
+            {<point name="construct.c.page1.b_psoz031" />}
+            #END add-point
+ 
+         #----<<b_psoz029>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz029
+            #add-point:BEFORE FIELD b_psoz029
+            {<point name="construct.b.page1.b_psoz029" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz029
+            
+            #add-point:AFTER FIELD b_psoz029
+            {<point name="construct.a.page1.b_psoz029" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz029
+         ON ACTION controlp INFIELD b_psoz029
+            #add-point:ON ACTION controlp INFIELD b_psoz029
+            {<point name="construct.c.page1.b_psoz029" />}
+            #END add-point
+ 
+         #----<<b_psoz030>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz030
+            #add-point:BEFORE FIELD b_psoz030
+            {<point name="construct.b.page1.b_psoz030" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz030
+            
+            #add-point:AFTER FIELD b_psoz030
+            {<point name="construct.a.page1.b_psoz030" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz030
+         ON ACTION controlp INFIELD b_psoz030
+            #add-point:ON ACTION controlp INFIELD b_psoz030
+            {<point name="construct.c.page1.b_psoz030" />}
+            #END add-point
+ 
+         #----<<b_psoz036>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz036
+            #add-point:BEFORE FIELD b_psoz036
+            {<point name="construct.b.page1.b_psoz036" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz036
+            
+            #add-point:AFTER FIELD b_psoz036
+            {<point name="construct.a.page1.b_psoz036" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz036
+         ON ACTION controlp INFIELD b_psoz036
+            #add-point:ON ACTION controlp INFIELD b_psoz036
+            {<point name="construct.c.page1.b_psoz036" />}
+            #END add-point
+ 
+         #----<<b_qty5>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_qty5
+            #add-point:BEFORE FIELD b_qty5
+            {<point name="construct.b.page1.b_qty5" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_qty5
+            
+            #add-point:AFTER FIELD b_qty5
+            {<point name="construct.a.page1.b_qty5" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_qty5
+         ON ACTION controlp INFIELD b_qty5
+            #add-point:ON ACTION controlp INFIELD b_qty5
+            {<point name="construct.c.page1.b_qty5" />}
+            #END add-point
+ 
+         #----<<b_psoz037>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz037
+            #add-point:BEFORE FIELD b_psoz037
+            {<point name="construct.b.page1.b_psoz037" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz037
+            
+            #add-point:AFTER FIELD b_psoz037
+            {<point name="construct.a.page1.b_psoz037" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz037
+         ON ACTION controlp INFIELD b_psoz037
+            #add-point:ON ACTION controlp INFIELD b_psoz037
+            {<point name="construct.c.page1.b_psoz037" />}
+            #END add-point
+ 
+         #----<<b_psoz005>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz005
+            #add-point:BEFORE FIELD b_psoz005
+            {<point name="construct.b.page1.b_psoz005" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz005
+            
+            #add-point:AFTER FIELD b_psoz005
+            {<point name="construct.a.page1.b_psoz005" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz005
+         ON ACTION controlp INFIELD b_psoz005
+            #add-point:ON ACTION controlp INFIELD b_psoz005
+            {<point name="construct.c.page1.b_psoz005" />}
+            #END add-point
+ 
+         #----<<b_psoz006>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz006
+            #add-point:BEFORE FIELD b_psoz006
+            {<point name="construct.b.page1.b_psoz006" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz006
+            
+            #add-point:AFTER FIELD b_psoz006
+            {<point name="construct.a.page1.b_psoz006" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz006
+         ON ACTION controlp INFIELD b_psoz006
+            #add-point:ON ACTION controlp INFIELD b_psoz006
+            {<point name="construct.c.page1.b_psoz006" />}
+            #END add-point
+ 
+         #----<<b_psoz007>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz007
+            #add-point:BEFORE FIELD b_psoz007
+            {<point name="construct.b.page1.b_psoz007" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz007
+            
+            #add-point:AFTER FIELD b_psoz007
+            {<point name="construct.a.page1.b_psoz007" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz007
+         ON ACTION controlp INFIELD b_psoz007
+            #add-point:ON ACTION controlp INFIELD b_psoz007
+            {<point name="construct.c.page1.b_psoz007" />}
+            #END add-point
+ 
+         #----<<b_psoz009>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz009
+            #add-point:BEFORE FIELD b_psoz009
+            {<point name="construct.b.page1.b_psoz009" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz009
+            
+            #add-point:AFTER FIELD b_psoz009
+            {<point name="construct.a.page1.b_psoz009" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz009
+         ON ACTION controlp INFIELD b_psoz009
+            #add-point:ON ACTION controlp INFIELD b_psoz009
+            {<point name="construct.c.page1.b_psoz009" />}
+            #END add-point
+ 
+         #----<<b_psoz010>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz010
+            #add-point:BEFORE FIELD b_psoz010
+            {<point name="construct.b.page1.b_psoz010" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz010
+            
+            #add-point:AFTER FIELD b_psoz010
+            {<point name="construct.a.page1.b_psoz010" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz010
+         ON ACTION controlp INFIELD b_psoz010
+            #add-point:ON ACTION controlp INFIELD b_psoz010
+            {<point name="construct.c.page1.b_psoz010" />}
+            #END add-point
+ 
+         #----<<b_psoz013>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz013
+            #add-point:BEFORE FIELD b_psoz013
+            {<point name="construct.b.page1.b_psoz013" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz013
+            
+            #add-point:AFTER FIELD b_psoz013
+            {<point name="construct.a.page1.b_psoz013" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz013
+         ON ACTION controlp INFIELD b_psoz013
+            #add-point:ON ACTION controlp INFIELD b_psoz013
+            {<point name="construct.c.page1.b_psoz013" />}
+            #END add-point
+ 
+         #----<<b_psoz015>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz015
+            #add-point:BEFORE FIELD b_psoz015
+            {<point name="construct.b.page1.b_psoz015" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz015
+            
+            #add-point:AFTER FIELD b_psoz015
+            {<point name="construct.a.page1.b_psoz015" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz015
+         ON ACTION controlp INFIELD b_psoz015
+            #add-point:ON ACTION controlp INFIELD b_psoz015
+            {<point name="construct.c.page1.b_psoz015" />}
+            #END add-point
+ 
+         #----<<b_psoz020>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz020
+            #add-point:BEFORE FIELD b_psoz020
+            {<point name="construct.b.page1.b_psoz020" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz020
+            
+            #add-point:AFTER FIELD b_psoz020
+            {<point name="construct.a.page1.b_psoz020" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz020
+         ON ACTION controlp INFIELD b_psoz020
+            #add-point:ON ACTION controlp INFIELD b_psoz020
+            {<point name="construct.c.page1.b_psoz020" />}
+            #END add-point
+ 
+         #----<<b_psoz026>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz026
+            #add-point:BEFORE FIELD b_psoz026
+            {<point name="construct.b.page1.b_psoz026" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz026
+            
+            #add-point:AFTER FIELD b_psoz026
+            {<point name="construct.a.page1.b_psoz026" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz026
+         ON ACTION controlp INFIELD b_psoz026
+            #add-point:ON ACTION controlp INFIELD b_psoz026
+            {<point name="construct.c.page1.b_psoz026" />}
+            #END add-point
+ 
+         #----<<b_psoz027>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz027
+            #add-point:BEFORE FIELD b_psoz027
+            {<point name="construct.b.page1.b_psoz027" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz027
+            
+            #add-point:AFTER FIELD b_psoz027
+            {<point name="construct.a.page1.b_psoz027" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz027
+         ON ACTION controlp INFIELD b_psoz027
+            #add-point:ON ACTION controlp INFIELD b_psoz027
+            {<point name="construct.c.page1.b_psoz027" />}
+            #END add-point
+ 
+         #----<<b_psoz028>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_psoz028
+            #add-point:BEFORE FIELD b_psoz028
+            {<point name="construct.b.page1.b_psoz028" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_psoz028
+            
+            #add-point:AFTER FIELD b_psoz028
+            {<point name="construct.a.page1.b_psoz028" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_psoz028
+         ON ACTION controlp INFIELD b_psoz028
+            #add-point:ON ACTION controlp INFIELD b_psoz028
+            {<point name="construct.c.page1.b_psoz028" />}
+            #END add-point
+ 
+   
+       
+      END CONSTRUCT
+      
+ 
+      
+ 
+  
+      #add-point:query段more_construct
+      {<point name="query.more_construct"/>}
+      #end add-point 
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc = ls_wc
+   ELSE
+      LET g_master_idx = 1
+   END IF
+   
+   LET g_wc = g_wc_table 
+ 
+ 
+        
+   LET g_wc2 = " 1=1"
+ 
+        
+   #add-point:cs段after_construct
+   {<point name="cs.after_construct"/>}
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL apsq500_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      CALL cl_err("",-100,1)
+   END IF
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apsq500.reproduce" ver="1" status="" src="s">
+    <![CDATA[#+ reproduce
+PRIVATE FUNCTION apsq500_reproduce()
+   #add-point:reproduce段define
+   {<point name="reproduce.define"/>}
+   #end add-point
+ 
+   #add-point:reproduce段control
+   {<point name="reproduce.control"/>}
+   #end add-point 
+END FUNCTION
+]]>
+  </section>
+  <section id="apsq500.ui_dialog" ver="3" status="" src="s">
+    <![CDATA[#+ 功能選單 
+PRIVATE FUNCTION apsq500_ui_dialog()
+   {<Local define>}
+   DEFINE li_idx   LIKE type_t.num5
+   {</Local define>}
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point 
+ 
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   CALL apsq500_query()
+   
+   WHILE TRUE
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_psoz_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_psoz_d.getLength() TO FORMONLY.h_count
+               CALL apsq500_fetch()
+               LET g_master_idx = l_ac
+               #add-point:input段before row
+               {<point name="input.body.before_row"/>}
+               #end add-point  
+            
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY
+      
+ 
+         
+ 
+      
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         
+         BEFORE DIALOG      
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+ 
+            #add-point:ui_dialog段before dialog
+            {<point name="ui_dialog.bef_dialog"/>}
+            #end add-point
+ 
+            NEXT FIELD sel
+      
+         
+         #+ 此段落由子樣板a43產生
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL apsq500_insert()
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL apsq500_query()
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo
+               {<point name="menu.datainfo" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+      
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_psoz_d.getLength()
+               LET g_psoz_d[li_idx].sel = "Y"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selall
+            {<point name="ui_dialog.onaction_selall"/>}
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_psoz_d.getLength()
+               LET g_psoz_d[li_idx].sel = "N"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selnone
+            {<point name="ui_dialog.onaction_selnone"/>}
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_psoz_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_psoz_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action sel
+            {<point name="ui_dialog.onaction_sel"/>}
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_psoz_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_psoz_d[li_idx].sel = "N"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action unsel
+            {<point name="ui_dialog.onaction_unsel"/>}
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL apsq500_filter()
+            #add-point:ON ACTION filter
+            {<point name="menu.filter" />}
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+ 
+         ON ACTION datarefresh   # 重新整理
+            LET g_error_show = 1
+            CALL apsq500_b_fill()
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum
+            {<point name="ui_dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+ 
+         
+ 
+         #add-point:ui_dialog段自定義action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+      
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

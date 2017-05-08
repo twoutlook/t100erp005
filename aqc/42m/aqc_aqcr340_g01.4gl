@@ -1,0 +1,1463 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aqcr340_g01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:2(2016-09-09 17:07:50), PR版次:0002(2016-10-12 16:30:25)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000056
+#+ Filename...: aqcr340_g01
+#+ Description: ...
+#+ Creator....: 01996(2015-01-22 09:46:12)
+#+ Modifier...: 05423 -SD/PR- 05423
+ 
+{</section>}
+ 
+{<section id="aqcr340_g01.global" readonly="Y" >}
+#報表 g01 樣板自動產生(Version:13)
+#add-point:填寫註解說明 name="global.memo"
+#160908-00001#1   20160909    By zhujing     图表绘制
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+IMPORT util                               #160908-00001#1 add
+IMPORT JAVA com.digiwin.t100.SPCChart     #160908-00001#1 add
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+PRIVATE TYPE sr1_r RECORD
+   qcbk000 LIKE qcbk_t.qcbk000, 
+   qcbk001 LIKE qcbk_t.qcbk001, 
+   qcbk002 LIKE qcbk_t.qcbk002, 
+   qcbk003 LIKE qcbk_t.qcbk003, 
+   qcbk004 LIKE qcbk_t.qcbk004, 
+   qcbk005 LIKE qcbk_t.qcbk005, 
+   qcbk006 LIKE qcbk_t.qcbk006, 
+   qcbk007 LIKE qcbk_t.qcbk007, 
+   qcbk008 LIKE qcbk_t.qcbk008, 
+   qcbk010 LIKE qcbk_t.qcbk010, 
+   qcbk011 LIKE qcbk_t.qcbk011, 
+   qcbk012 LIKE qcbk_t.qcbk012, 
+   qcbk013 LIKE qcbk_t.qcbk013, 
+   qcbk014 LIKE qcbk_t.qcbk014, 
+   qcbk015 LIKE qcbk_t.qcbk015, 
+   qcbk016 LIKE qcbk_t.qcbk016, 
+   qcbk017 LIKE qcbk_t.qcbk017, 
+   qcbk018 LIKE qcbk_t.qcbk018, 
+   qcbk019 LIKE qcbk_t.qcbk019, 
+   qcbk020 LIKE qcbk_t.qcbk020, 
+   qcbk021 LIKE qcbk_t.qcbk021, 
+   qcbk022 LIKE qcbk_t.qcbk022, 
+   qcbk023 LIKE qcbk_t.qcbk023, 
+   qcbkent LIKE qcbk_t.qcbkent, 
+   qcbksite LIKE qcbk_t.qcbksite, 
+   qcbkstus LIKE qcbk_t.qcbkstus, 
+   qcbl003 LIKE qcbl_t.qcbl003, 
+   qcbl004 LIKE qcbl_t.qcbl004, 
+   qcbl007 LIKE qcbl_t.qcbl007, 
+   qcbl008 LIKE qcbl_t.qcbl008, 
+   qcbl009 LIKE qcbl_t.qcbl009, 
+   qcblseq LIKE qcbl_t.qcblseq, 
+   imaal_t_imaal003 LIKE imaal_t.imaal003, 
+   oocql_t_oocql004 LIKE oocql_t.oocql004, 
+   imaal_t_imaal004 LIKE imaal_t.imaal004, 
+   l_qcbk000_desc LIKE type_t.chr500, 
+   l_qcbk010_desc LIKE type_t.chr500, 
+   l_qcbk001_qcbk002 LIKE type_t.chr500
+END RECORD
+ 
+PRIVATE TYPE sr2_r RECORD
+   ooff013 LIKE ooff_t.ooff013
+END RECORD
+ 
+ 
+DEFINE tm RECORD
+       wc STRING,                  #where codition 
+       typea STRING                   #报表类型
+       END RECORD
+DEFINE sr DYNAMIC ARRAY OF sr1_r                   #宣告sr為sr1_t資料結構的動態陣列
+DEFINE g_select        STRING
+DEFINE g_from          STRING
+DEFINE g_where         STRING
+DEFINE g_order         STRING
+DEFINE g_sql           STRING                         #report_select_prep,REPORT段使用
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+TYPE sr3_r  RECORD
+     series  STRING,
+     x       LIKE type_t.num20_6,
+     y       like type_t.num20_6
+        END RECORD
+TYPE sr4_r  RECORD
+     series  STRING,
+     x       LIKE type_t.num20_6,
+     y       like type_t.num20_6
+        END RECORD
+#160908-00001#1 add-S        
+TYPE master_r  RECORD
+   l_qcbk000_desc    LIKE oocql_t.oocql004,
+   l_qcbk005_desc    LIKE oocql_t.oocql004,
+   qcbk008           LIKE qcbk_t.qcbk008,
+   qcbk003           LIKE qcbk_t.qcbk003,
+   qcbk004           LIKE qcbk_t.qcbk004,
+   imaal_t_imaal003  LIKE imaal_t.imaal003,
+   qcbk006           LIKE qcbk_t.qcbk006,
+   qcbk007           LIKE qcbk_t.qcbk007,
+   imaal_t_imaal004  LIKE imaal_t.imaal004,
+   oocql_t_oocql004  LIKE oocql_t.oocql004,
+   l_qcbk010_desc    LIKE oocql_t.oocql004,
+   qcbk022_qcbk023   LIKE type_t.chr500,
+   qcbk012           LIKE qcbk_t.qcbk012,
+   qcbk016           LIKE qcbk_t.qcbk016,
+   qcbk017           LIKE qcbk_t.qcbk017,
+   qcbk018           LIKE qcbk_t.qcbk018,
+   qcbk019           LIKE qcbk_t.qcbk019,
+   qcbk020           LIKE qcbk_t.qcbk020,
+   qcbk021           LIKE qcbk_t.qcbk021
+END RECORD
+TYPE detail_r  RECORD
+   qcblseq     LIKE qcbl_t.qcblseq,
+   qcbl009     LIKE qcbl_t.qcbl009,
+   qcbl003     LIKE qcbl_t.qcbl003,
+   qcbl004     LIKE qcbl_t.qcbl004,
+   qcbl007     LIKE qcbl_t.qcbl007,
+   qcbl008     LIKE qcbl_t.qcbl008
+END RECORD
+TYPE data_r    RECORD
+   title1      STRING,
+   master      master_r,
+   detail      DYNAMIC ARRAY OF detail_r
+END RECORD
+TYPE g_form_r  RECORD      
+   user        STRING,
+   user_name   STRING,
+   pdate       STRING,
+   ptime       STRING,
+   prog        STRING,
+   code        STRING,
+   enterprise  LIKE type_t.num10,
+   site        STRING,
+   company     STRING,
+   rept_desc   STRING,
+   header_label DYNAMIC ARRAY OF LIKE type_t.chr100,  #制表日期，制表人
+   master_label DYNAMIC ARRAY OF LIKE type_t.chr100,  #单头说明
+   detail_label DYNAMIC ARRAY OF LIKE type_t.chr100,  #单身说明
+   data         DYNAMIC ARRAY OF data_r
+END RECORD   
+DEFINE g_form     g_form_r
+DEFINE data       data_r
+DEFINE master     master_r
+DEFINE detail     detail_r
+DEFINE g_header_label   RECORD
+   l_gzgh007      LIKE dzebl_t.dzebl003,  #制表日期
+   l_gzgh006      LIKE dzebl_t.dzebl003   #制表者
+END RECORD
+DEFINE g_master_label   RECORD
+   l_qcbk000      LIKE dzebl_t.dzebl003,     #检验类型
+   l_qcbk005      LIKE dzebl_t.dzebl003,     #类型分类
+   l_qcbk008      LIKE dzebl_t.dzebl003,     #料号/版本
+   l_qcbk003      LIKE dzebl_t.dzebl003,     #来源单号
+   l_qcbk004      LIKE dzebl_t.dzebl003,     #项次
+   l_imaal003     LIKE dzebl_t.dzebl003,     #品名
+   l_qcbk006      LIKE dzebl_t.dzebl003,     #参考单号
+   l_qcbk007      LIKE dzebl_t.dzebl003,     #项次
+   l_imaal004     LIKE dzebl_t.dzebl003,     #规格
+   l_qcbk011      LIKE dzebl_t.dzebl003,     #检验项目
+   l_qcbk010      LIKE dzebl_t.dzebl003,     #产品特征
+   l_qcbk022      LIKE dzebl_t.dzebl003,     #检验期间-起始
+   l_qcbk012      LIKE dzebl_t.dzebl003     #样本数
+END RECORD
+DEFINE g_detail_label   RECORD
+   l_qcblseq      LIKE dzebl_t.dzebl003,     #组号
+   l_qcbl001      LIKE dzebl_t.dzebl003,     #检验单号
+   l_qcbl003      LIKE dzebl_t.dzebl003,     #日期
+   l_qcbl004      LIKE dzebl_t.dzebl003,     #时间
+   l_qcbl007      LIKE dzebl_t.dzebl003,     #Xbar值
+   l_qcbk016      LIKE dzebl_t.dzebl003,     #Xbar管制线CL
+   l_qcbk017      LIKE dzebl_t.dzebl003,     #UCL
+   l_qcbk018      LIKE dzebl_t.dzebl003,     #LCL
+   l_qcbl008      LIKE dzebl_t.dzebl003,     #R值
+   l_qcbk019      LIKE dzebl_t.dzebl003,     #R管制线CL
+   l_qcbk020      LIKE dzebl_t.dzebl003,     #UCL
+   l_qcbk021      LIKE dzebl_t.dzebl003      #LCL
+END RECORD
+DEFINE g_data     RECORD
+   title1         STRING,
+   master         STRING,
+   detail         DYNAMIC ARRAY OF STRING
+END RECORD
+DEFINE g_m        LIKE type_t.num10       #用来记录单头个数 
+DEFINE l_prog_desc   LIKE gzzal_t.gzzal003      #160908-00001#1 add
+DEFINE l_ooefl004    LIKE ooefl_t.ooefl004      #160908-00001#1 add
+DEFINE ls_js         STRING
+#160908-00001#1 add-E
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aqcr340_g01.main" readonly="Y" >}
+PUBLIC FUNCTION aqcr340_g01(p_arg1,p_arg2)
+DEFINE  p_arg1 STRING                  #tm.wc  where codition 
+DEFINE  p_arg2 STRING                  #tm.typea  报表类型
+#add-point:init段define (客製用) name="component_name.define_customerization"
+
+#end add-point
+#add-point:init段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component_name.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.typea = p_arg2
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   #報表元件代號
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'   
+   
+   LET g_rep_code = "aqcr340_g01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #主報表select子句準備
+   CALL aqcr340_g01_sel_prep()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料存入array
+   CALL aqcr340_g01_ins_data()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料印出
+   CALL aqcr340_g01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aqcr340_g01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aqcr340_g01_sel_prep()
+   #add-point:sel_prep段define (客製用) name="sel_prep.define_customerization"
+   
+   #end add-point
+   #add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+   
+   #end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+   
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   LET g_select = " SELECT qcbk000,qcbk001,qcbk002,qcbk003,qcbk004,qcbk005,qcbk006,qcbk007,qcbk008,qcbk010, 
+       qcbk011,qcbk012,qcbk013,qcbk014,qcbk015,qcbk016,qcbk017,qcbk018,qcbk019,qcbk020,qcbk021,qcbk022, 
+       qcbk023,qcbkent,qcbksite,qcbkstus,qcbl003,qcbl004,qcbl007,qcbl008,qcbl009,qcblseq,imaal_t.imaal003, 
+       oocql_t.oocql004,imaal_t.imaal004,'','',trim(qcbk001)||'-'||trim(qcbk002)"
+#   #end add-point
+#   LET g_select = " SELECT qcbk000,qcbk001,qcbk002,qcbk003,qcbk004,qcbk005,qcbk006,qcbk007,qcbk008,qcbk010, 
+#       qcbk011,qcbk012,qcbk013,qcbk014,qcbk015,qcbk016,qcbk017,qcbk018,qcbk019,qcbk020,qcbk021,qcbk022, 
+#       qcbk023,qcbkent,qcbksite,qcbkstus,qcbl003,qcbl004,qcbl007,qcbl008,qcbl009,qcblseq,( SELECT imaal003 FROM imaal_t WHERE imaal_t.imaal001 = qcbk_t.qcbk008 AND imaal_t.imaalent = qcbk_t.qcbkent AND imaal_t.imaal002 = '" , 
+#       g_dlang,"'" ,"),( SELECT oocql004 FROM oocql_t WHERE oocql_t.oocql001 = '1051' AND oocql_t.oocql002 = qcbk_t.qcbk011 AND oocql_t.oocqlent = qcbk_t.qcbkent AND oocql_t.oocql003 = '" , 
+#       g_dlang,"'" ,"),( SELECT imaal004 FROM imaal_t WHERE imaal_t.imaal001 = qcbk_t.qcbk008 AND imaal_t.imaalent = qcbk_t.qcbkent AND imaal_t.imaal002 = '" , 
+#       g_dlang,"'" ,"),'','',''"
+# 
+#   #add-point:sel_prep g_from name="sel_prep.g_from"
+   LET g_from = " FROM qcbk_t LEFT OUTER JOIN imaal_t ON imaal_t.imaal001 = qcbk_t.qcbk008 AND imaal_t.imaalent = qcbk_t.qcbkent AND imaal_t.imaal002 = '",g_dlang,"'" ,
+                "             LEFT OUTER JOIN oocql_t ON oocql_t.oocql001 = '1051' AND oocql_t.oocql002 = qcbk_t.qcbk011 AND oocql_t.oocqlent = qcbk_t.qcbkent AND oocql_t.oocql003 = '",g_dlang,"'" ,
+                "             LEFT OUTER JOIN ( SELECT qcbl_t.* FROM qcbl_t  ) x  ON qcbk_t.qcbkent = x.qcblent AND qcbk_t.qcbksite = x.qcblsite AND qcbk_t.qcbk001 = x.qcbl001 AND qcbk_t.qcbk002 = x.qcbl002"
+#   #end add-point
+#    LET g_from = " FROM qcbk_t LEFT OUTER JOIN ( SELECT qcbl_t.* FROM qcbl_t  ) x  ON qcbk_t.qcbkent  
+#        = x.qcblent AND qcbk_t.qcbksite = x.qcblsite AND qcbk_t.qcbk001 = x.qcbl001 AND qcbk_t.qcbk002  
+#        = x.qcbl002"
+# 
+#   #add-point:sel_prep g_where name="sel_prep.g_where"
+   LET g_where = " WHERE qcbkent = ",g_enterprise," AND qcbksite = '",g_site,"' AND ",tm.wc CLIPPED
+#   #end add-point
+#    LET g_where = " WHERE " ,tm.wc CLIPPED 
+# 
+#   #add-point:sel_prep g_order name="sel_prep.g_order"
+   LET g_order = " ORDER BY qcbk001,qcbk002,qcblseq"
+#   #end add-point
+#    LET g_order = " ORDER BY qcblseq"
+# 
+#   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("qcbk_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED ," ",g_order CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段 
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   
+   #end add-point
+   PREPARE aqcr340_g01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()   
+      LET g_rep_success = 'N'    
+   END IF
+   DECLARE aqcr340_g01_curs CURSOR FOR aqcr340_g01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aqcr340_g01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION aqcr340_g01_ins_data()
+#主報表record(用於select子句)
+   DEFINE sr_s RECORD 
+   qcbk000 LIKE qcbk_t.qcbk000, 
+   qcbk001 LIKE qcbk_t.qcbk001, 
+   qcbk002 LIKE qcbk_t.qcbk002, 
+   qcbk003 LIKE qcbk_t.qcbk003, 
+   qcbk004 LIKE qcbk_t.qcbk004, 
+   qcbk005 LIKE qcbk_t.qcbk005, 
+   qcbk006 LIKE qcbk_t.qcbk006, 
+   qcbk007 LIKE qcbk_t.qcbk007, 
+   qcbk008 LIKE qcbk_t.qcbk008, 
+   qcbk010 LIKE qcbk_t.qcbk010, 
+   qcbk011 LIKE qcbk_t.qcbk011, 
+   qcbk012 LIKE qcbk_t.qcbk012, 
+   qcbk013 LIKE qcbk_t.qcbk013, 
+   qcbk014 LIKE qcbk_t.qcbk014, 
+   qcbk015 LIKE qcbk_t.qcbk015, 
+   qcbk016 LIKE qcbk_t.qcbk016, 
+   qcbk017 LIKE qcbk_t.qcbk017, 
+   qcbk018 LIKE qcbk_t.qcbk018, 
+   qcbk019 LIKE qcbk_t.qcbk019, 
+   qcbk020 LIKE qcbk_t.qcbk020, 
+   qcbk021 LIKE qcbk_t.qcbk021, 
+   qcbk022 LIKE qcbk_t.qcbk022, 
+   qcbk023 LIKE qcbk_t.qcbk023, 
+   qcbkent LIKE qcbk_t.qcbkent, 
+   qcbksite LIKE qcbk_t.qcbksite, 
+   qcbkstus LIKE qcbk_t.qcbkstus, 
+   qcbl003 LIKE qcbl_t.qcbl003, 
+   qcbl004 LIKE qcbl_t.qcbl004, 
+   qcbl007 LIKE qcbl_t.qcbl007, 
+   qcbl008 LIKE qcbl_t.qcbl008, 
+   qcbl009 LIKE qcbl_t.qcbl009, 
+   qcblseq LIKE qcbl_t.qcblseq, 
+   imaal_t_imaal003 LIKE imaal_t.imaal003, 
+   oocql_t_oocql004 LIKE oocql_t.oocql004, 
+   imaal_t_imaal004 LIKE imaal_t.imaal004, 
+   l_qcbk000_desc LIKE type_t.chr500, 
+   l_qcbk010_desc LIKE type_t.chr500, 
+   l_qcbk001_qcbk002 LIKE type_t.chr500
+ END RECORD
+   DEFINE l_cnt           LIKE type_t.num10
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point   
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+#160908-00001#1 add-S
+   DEFINE l_key_t         LIKE type_t.chr100    #记录群组旧值
+   DEFINE l_m             LIKE type_t.num10     #单头个数
+   DEFINE l_d             LIKE type_t.num10     #单身个数
+#160908-00001#1 add-E
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    IF tm.typea = '2' THEN     #160908-00001#1 add-S
+       LET l_key_t = NULL     
+       LET l_m = 0  
+       LET l_d = 1       
+       INITIALIZE master.* TO NULL
+       INITIALIZE detail.* TO NULL
+       INITIALIZE data.* TO NULL
+       SELECT ooefl004 INTO l_ooefl004
+         FROM ooefl_t
+        WHERE ooeflent = g_enterprise
+          AND ooefl001 = g_site
+          AND ooefl002 = g_dlang
+    END IF                    #160908-00001#1 add-E
+    #end add-point
+ 
+    CALL sr.clear()                                  #rep sr
+    LET l_cnt = 1
+    FOREACH aqcr340_g01_curs INTO sr_s.*
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()       
+          LET g_rep_success = 'N'    
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       #160908-00001#1 add-S
+       LET sr_s.oocql_t_oocql004 = sr_s.qcbk011,".",sr_s.oocql_t_oocql004
+       
+       LET sr_s.l_qcbk000_desc = cl_gr_get_scc('5056',sr_s.qcbk000)
+       CALL s_feature_description(sr_s.qcbk008,sr_s.qcbk010) RETURNING g_success,sr_s.l_qcbk010_desc
+       IF NOT cl_null(sr_s.l_qcbk010_desc) THEN
+          LET sr_s.l_qcbk010_desc = sr_s.qcbk010,".",sr_s.l_qcbk010_desc
+       ELSE
+          LET sr_s.l_qcbk010_desc = sr_s.qcbk010
+       END IF
+       
+       IF tm.typea = '2' THEN
+          #固定字段rep_data段给值-此段只给单头单身资料赋值
+          IF cl_null(l_key_t) OR l_key_t <> sr_s.l_qcbk001_qcbk002 THEN    #第二个群组,单头重给值
+             IF NOT cl_null(l_key_t) THEN    #不是第一笔
+                CALL data.detail.deleteElement(l_d)
+                CALL util.JSON.parse(util.JSON.stringify(data), g_form.data[l_m]) 
+   #             LET g_form.data[l_m].* = data.*
+   #             INITIALIZE data.master TO NULL
+   #             CALL data.detail.clear()
+                INITIALIZE data.* TO NULL
+                INITIALIZE master.* TO NULL
+                INITIALIZE detail.* TO NULL
+             END IF
+             #160908-00001#1 add-S
+             LET data.title1 = l_ooefl004
+             IF NOT cl_null(sr_s.l_qcbk000_desc)   THEN LET master.l_qcbk000_desc  = sr_s.l_qcbk000_desc ELSE LET master.l_qcbk000_desc = ' ' END IF
+             IF NOT cl_null(sr_s.qcbk005)          THEN LET master.l_qcbk005_desc  = sr_s.qcbk005        ELSE LET master.l_qcbk005_desc = ' ' END IF
+             IF NOT cl_null(sr_s.qcbk008)          THEN LET master.qcbk008  = sr_s.qcbk008               ELSE LET master.qcbk008  = ' ' END IF
+             IF NOT cl_null(sr_s.qcbk003)          THEN LET master.qcbk003  = sr_s.qcbk003               ELSE LET master.qcbk003  = ' ' END IF
+             IF NOT cl_null(sr_s.qcbk004)          THEN LET master.qcbk004  = sr_s.qcbk004               ELSE LET master.qcbk004  = ' ' END IF
+             IF NOT cl_null(sr_s.imaal_t_imaal003) THEN LET master.imaal_t_imaal003  = sr_s.imaal_t_imaal003 ELSE LET master.imaal_t_imaal003  = ' ' END IF
+             IF NOT cl_null(sr_s.qcbk006)          THEN LET master.qcbk006  = sr_s.qcbk006               ELSE LET master.qcbk006  = ' ' END IF
+             IF NOT cl_null(sr_s.qcbk007)          THEN LET master.qcbk007  = sr_s.qcbk007               ELSE LET master.qcbk007  = ' ' END IF
+             IF NOT cl_null(sr_s.imaal_t_imaal004) THEN LET master.imaal_t_imaal004  = sr_s.imaal_t_imaal004 ELSE LET master.imaal_t_imaal004  = ' ' END IF
+             IF NOT cl_null(sr_s.oocql_t_oocql004) THEN LET master.oocql_t_oocql004  = sr_s.qcbk011      ELSE LET master.oocql_t_oocql004 = ' ' END IF
+             IF NOT cl_null(sr_s.l_qcbk010_desc)   THEN LET master.l_qcbk010_desc = sr_s.l_qcbk010_desc  ELSE LET master.l_qcbk010_desc = ' ' END IF
+             IF NOT cl_null(sr_s.qcbk022) AND NOT cl_null(sr_s.qcbk023) THEN 
+                LET master.qcbk022_qcbk023 = sr_s.qcbk022 CLIPPED,'~',sr_s.qcbk023
+             ELSE 
+                IF NOT cl_null(sr_s.qcbk022) THEN
+                   LET master.qcbk022_qcbk023 = sr_s.qcbk022
+                END IF
+                IF NOT cl_null(sr_s.qcbk023) THEN
+                   LET master.qcbk022_qcbk023 = sr_s.qcbk023
+                END IF
+                IF cl_null(sr_s.qcbk022) AND cl_null(sr_s.qcbk023) THEN
+                   LET master.qcbk022_qcbk023 = ' '
+                END IF
+             END IF
+             IF NOT cl_null(sr_s.qcbk012)  THEN LET master.qcbk012 = sr_s.qcbk012  ELSE LET master.qcbk012 = ' ' END IF
+             IF NOT cl_null(sr_s.qcbk016)  THEN LET master.qcbk016 = sr_s.qcbk016  ELSE LET master.qcbk016 = ' ' END IF
+             IF NOT cl_null(sr_s.qcbk017)  THEN LET master.qcbk017 = sr_s.qcbk017  ELSE LET master.qcbk017 = ' ' END IF
+             IF NOT cl_null(sr_s.qcbk018)  THEN LET master.qcbk018 = sr_s.qcbk018  ELSE LET master.qcbk018 = ' ' END IF
+             IF NOT cl_null(sr_s.qcbk019)  THEN LET master.qcbk019 = sr_s.qcbk019  ELSE LET master.qcbk019 = ' ' END IF
+             IF NOT cl_null(sr_s.qcbk020)  THEN LET master.qcbk020 = sr_s.qcbk020  ELSE LET master.qcbk020 = ' ' END IF
+             IF NOT cl_null(sr_s.qcbk021)  THEN LET master.qcbk021 = sr_s.qcbk021  ELSE LET master.qcbk021 = ' ' END IF
+             LET data.master.* = master.*
+             LET l_m = l_m + 1
+             LET l_d = 1
+             LET l_key_t = sr_s.l_qcbk001_qcbk002
+          ELSE
+             LET l_d = l_d + 1
+          END IF
+          #单身给值
+          INITIALIZE detail.* TO NULL
+          IF NOT cl_null(sr_s.qcblseq)  THEN LET detail.qcblseq = sr_s.qcblseq  ELSE LET detail.qcblseq = ' ' END IF
+          IF NOT cl_null(sr_s.qcbl009)  THEN LET detail.qcbl009 = sr_s.qcbl009  ELSE LET detail.qcbl009 = ' ' END IF
+          IF NOT cl_null(sr_s.qcbl004)  THEN LET detail.qcbl003 = sr_s.qcbl003  ELSE LET detail.qcbl003 = ' ' END IF
+          IF NOT cl_null(sr_s.qcbl004)  THEN LET detail.qcbl004 = sr_s.qcbl004  ELSE LET detail.qcbl004 = ' ' END IF
+          IF NOT cl_null(sr_s.qcbl007)  THEN LET detail.qcbl007 = sr_s.qcbl007  ELSE LET detail.qcbl007 = ' ' END IF
+          IF NOT cl_null(sr_s.qcbl008)  THEN LET detail.qcbl008 = sr_s.qcbl008  ELSE LET detail.qcbl008 = ' ' END IF
+          LET data.detail[l_d].* = detail.*
+       END IF
+       #160908-00001#1 add-E
+       #end add-point
+ 
+       #add-point:ins_data段before_arr name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #set rep array value
+       LET sr[l_cnt].qcbk000 = sr_s.qcbk000
+       LET sr[l_cnt].qcbk001 = sr_s.qcbk001
+       LET sr[l_cnt].qcbk002 = sr_s.qcbk002
+       LET sr[l_cnt].qcbk003 = sr_s.qcbk003
+       LET sr[l_cnt].qcbk004 = sr_s.qcbk004
+       LET sr[l_cnt].qcbk005 = sr_s.qcbk005
+       LET sr[l_cnt].qcbk006 = sr_s.qcbk006
+       LET sr[l_cnt].qcbk007 = sr_s.qcbk007
+       LET sr[l_cnt].qcbk008 = sr_s.qcbk008
+       LET sr[l_cnt].qcbk010 = sr_s.qcbk010
+       LET sr[l_cnt].qcbk011 = sr_s.qcbk011
+       LET sr[l_cnt].qcbk012 = sr_s.qcbk012
+       LET sr[l_cnt].qcbk013 = sr_s.qcbk013
+       LET sr[l_cnt].qcbk014 = sr_s.qcbk014
+       LET sr[l_cnt].qcbk015 = sr_s.qcbk015
+       LET sr[l_cnt].qcbk016 = sr_s.qcbk016
+       LET sr[l_cnt].qcbk017 = sr_s.qcbk017
+       LET sr[l_cnt].qcbk018 = sr_s.qcbk018
+       LET sr[l_cnt].qcbk019 = sr_s.qcbk019
+       LET sr[l_cnt].qcbk020 = sr_s.qcbk020
+       LET sr[l_cnt].qcbk021 = sr_s.qcbk021
+       LET sr[l_cnt].qcbk022 = sr_s.qcbk022
+       LET sr[l_cnt].qcbk023 = sr_s.qcbk023
+       LET sr[l_cnt].qcbkent = sr_s.qcbkent
+       LET sr[l_cnt].qcbksite = sr_s.qcbksite
+       LET sr[l_cnt].qcbkstus = sr_s.qcbkstus
+       LET sr[l_cnt].qcbl003 = sr_s.qcbl003
+       LET sr[l_cnt].qcbl004 = sr_s.qcbl004
+       LET sr[l_cnt].qcbl007 = sr_s.qcbl007
+       LET sr[l_cnt].qcbl008 = sr_s.qcbl008
+       LET sr[l_cnt].qcbl009 = sr_s.qcbl009
+       LET sr[l_cnt].qcblseq = sr_s.qcblseq
+       LET sr[l_cnt].imaal_t_imaal003 = sr_s.imaal_t_imaal003
+       LET sr[l_cnt].oocql_t_oocql004 = sr_s.oocql_t_oocql004
+       LET sr[l_cnt].imaal_t_imaal004 = sr_s.imaal_t_imaal004
+       LET sr[l_cnt].l_qcbk000_desc = sr_s.l_qcbk000_desc
+       LET sr[l_cnt].l_qcbk010_desc = sr_s.l_qcbk010_desc
+       LET sr[l_cnt].l_qcbk001_qcbk002 = sr_s.l_qcbk001_qcbk002
+ 
+ 
+       #add-point:ins_data段after_arr name="ins_data.after.save"
+       #160908-00001#1 marked-S
+#       LET sr[l_cnt].oocql_t_oocql004 = sr[l_cnt].qcbk011,".",sr[l_cnt].oocql_t_oocql004
+#       
+#       LET sr[l_cnt].l_qcbk000_desc = cl_gr_get_scc('5056',sr[l_cnt].qcbk000)
+#       CALL s_feature_description(sr[l_cnt].qcbk008,sr[l_cnt].qcbk010) RETURNING g_success,sr[l_cnt].l_qcbk010_desc
+#       IF NOT cl_null(sr[l_cnt].l_qcbk010_desc) THEN
+#          LET sr[l_cnt].l_qcbk010_desc = sr[l_cnt].qcbk010,".",sr[l_cnt].l_qcbk010_desc
+#       ELSE
+#          LET sr[l_cnt].l_qcbk010_desc = sr[l_cnt].qcbk010
+#       END IF
+       #160908-00001#1 marked-E
+       #end add-point
+       LET l_cnt = l_cnt + 1
+    END FOREACH
+    CALL sr.deleteElement(l_cnt)
+ 
+    #add-point:ins_data段after name="ins_data.after"
+    #160908-00001#1 add-S
+    IF tm.typea = '2' THEN
+       LET g_form.data[l_m].* = data.*       #zj add
+    END IF
+    #160908-00001#1 add-E
+    #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aqcr340_g01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION aqcr340_g01_rep_data()
+   DEFINE HANDLER         om.SaxDocumentHandler
+   DEFINE l_i             INTEGER
+ 
+    #判斷是否有報表資料，若回彈出訊息視窗
+    IF sr.getLength() = 0 THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = "adz-00285"
+       LET g_errparam.extend = NULL
+       LET g_errparam.popup  = FALSE
+       LET g_errparam.replace[1] = ''
+       CALL cl_err()  
+       RETURN 
+    END IF
+    WHILE TRUE   
+       #add-point:rep_data段印前 name="rep_data.before"
+       #160908-00001#1 add-S
+       IF tm.typea = '2' THEN  
+#       LET g_m = 0      
+#       INITIALIZE g_form.* TO NULL   
+#       INITIALIZE data.* TO NULL
+          LET g_form.user = ' '
+          LET g_form.user_name = ' '
+          LET g_form.pdate = ' '
+          LET g_form.ptime = ' '
+          LET g_form.prog = ' '
+          LET g_form.code = ' '
+          LET g_form.enterprise = ' '
+          LET g_form.site = ' '
+          LET g_form.company = ' '
+          LET g_form.rept_desc = ' '
+          LET g_form.prog = g_prog
+          LET g_form.code = g_rep_code
+          #製表者
+          LET g_user_name = cl_get_username(g_user)
+          #製表日期
+          LET g_pdate = cl_get_today()
+          LET g_ptime = cl_get_time()
+          IF NOT cl_null(g_user) THEN
+             LET g_form.user = g_user
+          END IF
+          IF NOT cl_null(g_user_name) THEN
+             LET g_form.user_name = g_user_name
+          END IF
+          IF NOT cl_null(g_pdate) THEN
+             LET g_form.pdate = g_pdate
+          END IF
+          IF NOT cl_null(g_ptime) THEN
+             LET g_form.ptime = g_ptime
+          END IF
+          SELECT gzzal003 INTO l_prog_desc 
+            FROM gzzal_t 
+           WHERE gzzal001 = g_prog 
+             AND gzzal002 = g_dlang
+          IF NOT cl_null(l_prog_desc) THEN
+             LET g_form.rept_desc = l_prog_desc
+          END IF
+          SELECT ooefl004 INTO l_ooefl004
+            FROM ooefl_t
+           WHERE ooeflent = g_enterprise
+             AND ooefl001 = g_site
+             AND ooefl002 = g_dlang
+          IF NOT cl_null(l_ooefl004) THEN
+             LET g_form.company = l_ooefl004
+             LET data.title1 = l_ooefl004
+          END IF 
+          IF NOT cl_null(g_enterprise) THEN
+             LET g_form.enterprise = g_enterprise
+          END IF
+          IF NOT cl_null(g_site) THEN
+             LET g_form.site = g_site
+          END IF
+          CALL aqcr340_g01_title_label()
+          LET ls_js = util.JSON.stringify(g_form)
+          CALL aqcr340_g01_export('aqcr340')
+          EXIT WHILE
+       END IF
+       #160908-00001#1 add-E
+       #end add-point     
+       LET handler = cl_gr_handler()
+       IF handler IS NOT NULL THEN
+          START REPORT aqcr340_g01_rep TO XML HANDLER handler
+          FOR l_i = 1 TO sr.getLength()
+             OUTPUT TO REPORT aqcr340_g01_rep(sr[l_i].*)
+             #報表中斷列印時，顯示錯誤訊息
+             IF fgl_report_getErrorStatus() THEN
+                DISPLAY "FGL: STOPPING REPORT msg=\"",fgl_report_getErrorString(),"\""
+                EXIT FOR
+             END IF                  
+          END FOR
+          FINISH REPORT aqcr340_g01_rep
+       END IF
+       #add-point:rep_data段印完 name="rep_data.after"
+       
+       #end add-point       
+       IF g_rep_flag = TRUE THEN
+          LET g_rep_flag = FALSE
+          EXIT WHILE
+       END IF
+    END WHILE
+    #add-point:rep_data段離開while印完前 name="rep_data.end.before"
+ 
+    #end add-point
+    CALL cl_gr_close_report()
+    #add-point:rep_data段離開while印完後 name="rep_data.end.after"
+    
+    #end add-point    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aqcr340_g01.rep" readonly="Y" >}
+PRIVATE REPORT aqcr340_g01_rep(sr1)
+DEFINE sr1 sr1_r
+DEFINE sr2 sr2_r
+DEFINE l_subrep01_show  LIKE type_t.chr1,
+       l_subrep02_show  LIKE type_t.chr1,
+       l_subrep03_show  LIKE type_t.chr1,
+       l_subrep04_show  LIKE type_t.chr1
+DEFINE l_cnt           LIKE type_t.num10
+DEFINE l_sub_sql       STRING
+#add-point:rep段define  (客製用) name="rep.define_customerization"
+
+#end add-point
+#add-point:rep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep.define"
+DEFINE sr3_s         DYNAMIC ARRAY OF RECORD
+       x             LIKE type_t.num20_6,
+       Xbar          LIKE qcbl_t.qcbl007,
+       CL            LIKE qcbk_t.qcbk016,
+       UCL           LIKE qcbk_t.qcbk017,
+       LCL           LIKE qcbk_t.qcbk018
+                     END RECORD
+DEFINE sr3           sr3_r
+DEFINE l_i           LIKE type_t.num5
+DEFINE sr4_s         DYNAMIC ARRAY OF RECORD
+       x             LIKE type_t.num20_6,
+       R             LIKE qcbl_t.qcbl008,
+       CL            LIKE qcbk_t.qcbk019,
+       UCL           LIKE qcbk_t.qcbk020,
+       LCL           LIKE qcbk_t.qcbk021
+                     END RECORD
+DEFINE sr4           sr4_r
+DEFINE l_qcbk005_desc STRING
+DEFINE l_key         STRING
+#end add-point
+ 
+    #add-point:rep段ORDER_before name="rep.order.before"
+    
+    #end add-point
+    ORDER EXTERNAL BY sr1.l_qcbk001_qcbk002
+    #add-point:rep段ORDER_after name="rep.order.after"
+    
+    #end add-point
+    
+    FORMAT
+       FIRST PAGE HEADER          
+          PRINTX g_user,g_pdate,g_rep_code,g_company,g_ptime,g_user_name,g_date_fmt
+          PRINTX tm.*
+          PRINTX g_grNumFmt.*
+          PRINTX g_rep_wcchp
+ 
+          #讀取beforeGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.l_qcbk001_qcbk002
+            #報表 d05 樣板自動產生(Version:6)
+            CALL cl_gr_title_clear()  #清除title變數值 
+            #add-point:rep.header  #公司資訊(不在公用變數內) name="rep.header"
+            LET l_i = 1
+            CALL sr3_s.clear()
+            CALL sr4_s.clear()
+            #160908-00001#1 add-S
+#            INITIALIZE master.* TO NULL
+#            INITIALIZE detail.* TO NULL
+#            IF NOT cl_null(g_user) THEN
+#               LET g_form.user = g_user
+#            END IF
+#            IF NOT cl_null(g_user_name) THEN
+#               LET g_form.user_name = g_user_name
+#            END IF
+#            IF NOT cl_null(g_pdate) THEN
+#               LET g_form.pdate = g_pdate
+#            END IF
+#            IF NOT cl_null(g_ptime) THEN
+#               LET g_form.ptime = g_ptime
+#            END IF
+#             
+#            LET g_m = g_m + 1
+#            LET l_key = sr1.l_qcbk001_qcbk002
+#            IF NOT cl_null(sr1.l_qcbk000_desc)  THEN LET master.l_qcbk000_desc  = sr1.l_qcbk000_desc ELSE LET master.l_qcbk000_desc = ' ' END IF
+#            IF NOT cl_null(sr1.qcbk005)  THEN LET master.l_qcbk005_desc  = sr1.qcbk005 ELSE LET master.l_qcbk005_desc = ' ' END IF
+#            IF NOT cl_null(sr1.qcbk008)  THEN LET master.qcbk008  = sr1.qcbk008  ELSE LET master.qcbk008  = ' ' END IF
+#            IF NOT cl_null(sr1.qcbk003)  THEN LET master.qcbk003  = sr1.qcbk003  ELSE LET master.qcbk003  = ' ' END IF
+#            IF NOT cl_null(sr1.qcbk004)  THEN LET master.qcbk004  = sr1.qcbk004  ELSE LET master.qcbk004  = ' ' END IF
+#            IF NOT cl_null(sr1.imaal_t_imaal003) THEN LET master.imaal_t_imaal003  = sr1.imaal_t_imaal003 ELSE LET master.imaal_t_imaal003  = ' ' END IF
+#            IF NOT cl_null(sr1.qcbk006)  THEN LET master.qcbk006  = sr1.qcbk006  ELSE LET master.qcbk006  = ' ' END IF
+#            IF NOT cl_null(sr1.qcbk007)  THEN LET master.qcbk007  = sr1.qcbk007  ELSE LET master.qcbk007  = ' ' END IF
+#            IF NOT cl_null(sr1.imaal_t_imaal004) THEN LET master.imaal_t_imaal004  = sr1.imaal_t_imaal004 ELSE LET master.imaal_t_imaal004  = ' ' END IF
+#            IF NOT cl_null(sr1.oocql_t_oocql004)  THEN LET master.oocql_t_oocql004  = sr1.qcbk011  ELSE LET master.oocql_t_oocql004 = ' ' END IF
+#            IF NOT cl_null(sr1.l_qcbk010_desc)  THEN LET master.l_qcbk010_desc = sr1.l_qcbk010_desc  ELSE LET master.l_qcbk010_desc = ' ' END IF
+#            IF NOT cl_null(sr1.qcbk022) AND NOT cl_null(sr1.qcbk023) THEN 
+#               LET master.qcbk022_qcbk023 = sr1.qcbk022 CLIPPED,'~',sr1.qcbk023
+#            ELSE 
+#               IF NOT cl_null(sr1.qcbk022) THEN
+#                  LET master.qcbk022_qcbk023 = sr1.qcbk022
+#               END IF
+#               IF NOT cl_null(sr1.qcbk023) THEN
+#                  LET master.qcbk022_qcbk023 = sr1.qcbk023
+#               END IF
+#               IF cl_null(sr1.qcbk022) AND cl_null(sr1.qcbk023) THEN
+#                  LET master.qcbk022_qcbk023 = ' '
+#               END IF
+#            END IF
+#            IF NOT cl_null(sr1.qcbk012)  THEN LET master.qcbk012 = sr1.qcbk012  ELSE LET master.qcbk012 = ' ' END IF
+#            IF NOT cl_null(sr1.qcbk016)  THEN LET master.qcbk016 = sr1.qcbk016  ELSE LET master.qcbk016 = ' ' END IF
+#            IF NOT cl_null(sr1.qcbk017)  THEN LET master.qcbk017 = sr1.qcbk017  ELSE LET master.qcbk017 = ' ' END IF
+#            IF NOT cl_null(sr1.qcbk018)  THEN LET master.qcbk018 = sr1.qcbk018  ELSE LET master.qcbk018 = ' ' END IF
+#            IF NOT cl_null(sr1.qcbk019)  THEN LET master.qcbk019 = sr1.qcbk019  ELSE LET master.qcbk019 = ' ' END IF
+#            IF NOT cl_null(sr1.qcbk020)  THEN LET master.qcbk020 = sr1.qcbk020  ELSE LET master.qcbk020 = ' ' END IF
+#            IF NOT cl_null(sr1.qcbk021)  THEN LET master.qcbk021 = sr1.qcbk021  ELSE LET master.qcbk021 = ' ' END IF
+#            LET data.master.* = master.*
+#            LET g_form.data.* = data.*
+            #160908-00001#1 add-E
+            #end add-point:rep.header 
+            LET g_rep_docno = sr1.l_qcbk001_qcbk002
+            CALL cl_gr_init_pageheader() #表頭資訊
+            PRINTX g_grPageHeader.*
+            PRINTX g_grPageFooter.*
+            #add-point:rep.apr.signstr.before name="rep.apr.signstr.before"
+                          
+            #end add-point:rep.apr.signstr.before   
+            LET g_doc_key = 'qcbkent=' ,sr1.qcbkent,'{+}qcbksite=' ,sr1.qcbksite,'{+}qcbk001=' ,sr1.qcbk001,'{+}qcbk002=' ,sr1.qcbk002         
+            CALL cl_gr_init_apr(sr1.l_qcbk001_qcbk002)
+            #add-point:rep.apr.signstr name="rep.apr.signstr"
+                          
+            #end add-point:rep.apr.signstr
+            PRINTX g_grSign.*
+ 
+ 
+ 
+           #add-point:rep.b_group.l_qcbk001_qcbk002.before name="rep.b_group.l_qcbk001_qcbk002.before"
+           
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub01.before name="rep.sub01.before"
+           
+           #end add-point:rep.sub01.before
+ 
+           #add-point:rep.sub01.sql name="rep.sub01.sql"
+           
+           #end add-point:rep.sub01.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='2' AND ooff004=0 AND ooffent = '", 
+                sr1.qcbkent CLIPPED ,"'", " AND  ooff003 = '", sr1.l_qcbk001_qcbk002 CLIPPED ,"'"
+ 
+           #add-point:rep.sub01.afsql name="rep.sub01.afsql"
+           
+           #end add-point:rep.sub01.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep01_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE aqcr340_g01_repcur01_cnt_pre FROM l_sub_sql
+           EXECUTE aqcr340_g01_repcur01_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep01_show ="Y"
+           END IF
+           PRINTX l_subrep01_show
+           START REPORT aqcr340_g01_subrep01
+           DECLARE aqcr340_g01_repcur01 CURSOR FROM g_sql
+           FOREACH aqcr340_g01_repcur01 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "aqcr340_g01_repcur01:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub01.foreach name="rep.sub01.foreach"
+              
+              #end add-point:rep.sub01.foreach
+              OUTPUT TO REPORT aqcr340_g01_subrep01(sr2.*)
+           END FOREACH
+           FINISH REPORT aqcr340_g01_subrep01
+           #add-point:rep.sub01.after name="rep.sub01.after"
+           
+           #end add-point:rep.sub01.after
+ 
+ 
+ 
+           #add-point:rep.b_group.l_qcbk001_qcbk002.after name="rep.b_group.l_qcbk001_qcbk002.after"
+           
+           #end add-point:
+ 
+ 
+ 
+ 
+       ON EVERY ROW
+          #add-point:rep.everyrow.before name="rep.everyrow.before"
+          
+          #end add-point:rep.everyrow.before
+ 
+          #單身前備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub02.before name="rep.sub02.before"
+           
+           #end add-point:rep.sub02.before
+ 
+           #add-point:rep.sub02.sql name="rep.sub02.sql"
+           
+           #end add-point:rep.sub02.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='2' AND ooffent = '", 
+                sr1.qcbkent CLIPPED ,"'", " AND  ooff003 = '", sr1.l_qcbk001_qcbk002 CLIPPED ,"'"
+ 
+           #add-point:rep.sub02.afsql name="rep.sub02.afsql"
+           
+           #end add-point:rep.sub02.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep02_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE aqcr340_g01_repcur02_cnt_pre FROM l_sub_sql
+           EXECUTE aqcr340_g01_repcur02_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep02_show ="Y"
+           END IF
+           PRINTX l_subrep02_show
+           START REPORT aqcr340_g01_subrep02
+           DECLARE aqcr340_g01_repcur02 CURSOR FROM g_sql
+           FOREACH aqcr340_g01_repcur02 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "aqcr340_g01_repcur02:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub02.foreach name="rep.sub02.foreach"
+              
+              #end add-point:rep.sub02.foreach
+              OUTPUT TO REPORT aqcr340_g01_subrep02(sr2.*)
+           END FOREACH
+           FINISH REPORT aqcr340_g01_subrep02
+           #add-point:rep.sub02.after name="rep.sub02.after"
+           
+           #end add-point:rep.sub02.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.beforerow name="rep.everyrow.beforerow"
+          INITIALIZE l_qcbk005_desc TO NULL
+          IF sr1.qcbk000 = '4' THEN
+             LET l_qcbk005_desc = cl_gr_get_scc('5061',sr1.qcbk005)
+          END IF
+          
+          IF sr1.qcbk000 = '5' THEN
+             LET l_qcbk005_desc = cl_gr_get_scc('5060',sr1.qcbk005)
+          END IF
+          PRINTX l_qcbk005_desc
+          #end add-point:rep.everyrow.beforerow
+            
+          PRINTX sr1.*
+ 
+          #add-point:rep.everyrow.afterrow name="rep.everyrow.afterrow"
+          LET sr3_s[l_i].x = sr1.qcblseq
+          LET sr3_s[l_i].Xbar = sr1.qcbl007
+          LET sr3_s[l_i].CL = sr1.qcbk016
+          LET sr3_s[l_i].UCL = sr1.qcbk017
+          LET sr3_s[l_i].LCL = sr1.qcbk018
+          
+          LET sr4_s[l_i].x = sr1.qcblseq
+          LET sr4_s[l_i].R = sr1.qcbl008
+          LET sr4_s[l_i].CL = sr1.qcbk019
+          LET sr4_s[l_i].UCL = sr1.qcbk020
+          LET sr4_s[l_i].LCL = sr1.qcbk021
+          #160908-00001#1 add-S
+#          INITIALIZE detail.* TO NULL
+#          IF NOT cl_null(sr1.qcblseq)  THEN LET detail.qcblseq = sr1.qcblseq  ELSE LET detail.qcblseq = ' ' END IF
+#          IF NOT cl_null(sr1.qcbl009)  THEN LET detail.qcbl009 = sr1.qcbl009  ELSE LET detail.qcbl009 = ' ' END IF
+#          IF NOT cl_null(sr1.qcbl004)  THEN LET detail.qcbl003 = sr1.qcbl003  ELSE LET detail.qcbl003 = ' ' END IF
+#          IF NOT cl_null(sr1.qcbl004)  THEN LET detail.qcbl004 = sr1.qcbl004  ELSE LET detail.qcbl004 = ' ' END IF
+#          IF NOT cl_null(sr1.qcbl007)  THEN LET detail.qcbl007 = sr1.qcbl007  ELSE LET detail.qcbl007 = ' ' END IF
+#          IF NOT cl_null(sr1.qcbl008)  THEN LET detail.qcbl008 = sr1.qcbl008  ELSE LET detail.qcbl008 = ' ' END IF
+#          LET data.detail[l_i].* = detail.*
+#          LET g_form.LabelData[l_i] = sr1.qcblseq
+#          IF cl_null(sr1.qcbl007) THEN
+#             LET g_form.XBarData[l_i] = 0
+#          ELSE
+#             LET g_form.XBarData[l_i] = sr1.qcbl007
+#          END IF
+#          IF cl_null(sr1.qcbl008) THEN
+#             LET g_form.RData[l_i] = 0
+#          ELSE  
+#             LET g_form.RData[l_i] = sr1.qcbl008
+#          END IF
+          #160908-00001#1 add-E
+          
+          LET l_i = l_i + 1
+          #end add-point:rep.everyrow.afterrow
+ 
+          #單身後備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub03.before name="rep.sub03.before"
+           
+           #end add-point:rep.sub03.before
+ 
+           #add-point:rep.sub03.sql name="rep.sub03.sql"
+           
+           #end add-point:rep.sub03.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='1' AND ooff003 = '", 
+                sr1.qcbkent CLIPPED ,"'"
+ 
+           #add-point:rep.sub03.afsql name="rep.sub03.afsql"
+           
+           #end add-point:rep.sub03.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep03_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE aqcr340_g01_repcur03_cnt_pre FROM l_sub_sql
+           EXECUTE aqcr340_g01_repcur03_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep03_show ="Y"
+           END IF
+           PRINTX l_subrep03_show
+           START REPORT aqcr340_g01_subrep03
+           DECLARE aqcr340_g01_repcur03 CURSOR FROM g_sql
+           FOREACH aqcr340_g01_repcur03 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "aqcr340_g01_repcur03:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub03.foreach name="rep.sub03.foreach"
+              
+              #end add-point:rep.sub03.foreach
+              OUTPUT TO REPORT aqcr340_g01_subrep03(sr2.*)
+           END FOREACH
+           FINISH REPORT aqcr340_g01_subrep03
+           #add-point:rep.sub03.after name="rep.sub03.after"
+           
+           #end add-point:rep.sub03.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.after name="rep.everyrow.after"
+          
+          #end add-point:rep.everyrow.after        
+ 
+          #讀取afterGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.l_qcbk001_qcbk002
+ 
+           #add-point:rep.a_group.l_qcbk001_qcbk002.before name="rep.a_group.l_qcbk001_qcbk002.before"
+           
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub04.before name="rep.sub04.before"
+           
+           #end add-point:rep.sub04.before
+ 
+           #add-point:rep.sub04.sql name="rep.sub04.sql"
+           
+           #end add-point:rep.sub04.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='1' AND ooff004=0 AND ooffent = '", 
+                sr1.qcbkent CLIPPED ,"'", " AND  ooff003 = '", sr1.l_qcbk001_qcbk002 CLIPPED ,"'"
+ 
+           #add-point:rep.sub04.afsql name="rep.sub04.afsql"
+           
+           #end add-point:rep.sub04.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep04_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE aqcr340_g01_repcur04_cnt_pre FROM l_sub_sql
+           EXECUTE aqcr340_g01_repcur04_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep04_show ="Y"
+           END IF
+           PRINTX l_subrep04_show
+           START REPORT aqcr340_g01_subrep04
+           DECLARE aqcr340_g01_repcur04 CURSOR FROM g_sql
+           FOREACH aqcr340_g01_repcur04 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "aqcr340_g01_repcur04:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub04.foreach name="rep.sub04.foreach"
+              
+              #end add-point:rep.sub04.foreach
+              OUTPUT TO REPORT aqcr340_g01_subrep04(sr2.*)
+           END FOREACH
+           FINISH REPORT aqcr340_g01_subrep04
+           #add-point:rep.sub04.after name="rep.sub04.after"
+           
+           #end add-point:rep.sub04.after
+ 
+ 
+ 
+           #add-point:rep.a_group.l_qcbk001_qcbk002.after name="rep.a_group.l_qcbk001_qcbk002.after"
+           START REPORT aqcr340_g01_subrep05
+              LET sr3.series = "Xbar"
+              FOR l_i = 1 TO sr3_s.getLength()
+                 LET sr3.x = sr3_s[l_i].x
+                 IF cl_null(sr3_s[l_i].Xbar) THEN LET sr3_s[l_i].Xbar = 0 END IF
+                 LET sr3.y = sr3_s[l_i].Xbar
+                 OUTPUT TO REPORT aqcr340_g01_subrep05(sr3.*)
+              END FOR
+              
+              LET sr3.series = "CL"
+              FOR l_i = 1 TO sr3_s.getLength()
+                 LET sr3.x = sr3_s[l_i].x
+                 IF cl_null(sr3_s[l_i].CL) THEN LET sr3_s[l_i].CL = 0 END IF
+                 LET sr3.y = sr3_s[l_i].CL
+                 OUTPUT TO REPORT aqcr340_g01_subrep05(sr3.*)
+              END FOR
+              
+              LET sr3.series = "UCL"
+              FOR l_i = 1 TO sr3_s.getLength()
+                 LET sr3.x = sr3_s[l_i].x
+                 IF cl_null(sr3_s[l_i].UCL) THEN LET sr3_s[l_i].UCL = 0 END IF
+                 LET sr3.y = sr3_s[l_i].UCL
+                 OUTPUT TO REPORT aqcr340_g01_subrep05(sr3.*)
+              END FOR
+              
+              LET sr3.series = "LCL"
+              FOR l_i = 1 TO sr3_s.getLength()
+                 LET sr3.x = sr3_s[l_i].x
+                 IF cl_null(sr3_s[l_i].LCL) THEN LET sr3_s[l_i].LCL = 0 END IF
+                 LET sr3.y = sr3_s[l_i].LCL
+                 OUTPUT TO REPORT aqcr340_g01_subrep05(sr3.*)
+              END FOR
+           FINISH REPORT aqcr340_g01_subrep05
+           
+           START REPORT aqcr340_g01_subrep06
+              LET sr4.series = "R"
+              FOR l_i = 1 TO sr4_s.getLength()
+                 LET sr4.x = sr4_s[l_i].x
+                 IF cl_null(sr4_s[l_i].R) THEN LET sr4_s[l_i].R = 0 END IF
+                 LET sr4.y = sr4_s[l_i].R
+                 OUTPUT TO REPORT aqcr340_g01_subrep06(sr4.*)
+              END FOR
+              
+              LET sr4.series = "CL"
+              FOR l_i = 1 TO sr4_s.getLength()
+                 LET sr4.x = sr4_s[l_i].x
+                 IF cl_null(sr4_s[l_i].CL) THEN LET sr4_s[l_i].CL = 0 END IF
+                 LET sr4.y = sr4_s[l_i].CL
+                 OUTPUT TO REPORT aqcr340_g01_subrep06(sr4.*)
+              END FOR
+              
+              LET sr4.series = "UCL"
+              FOR l_i = 1 TO sr4_s.getLength()
+                 LET sr4.x = sr4_s[l_i].x
+                 IF cl_null(sr4_s[l_i].UCL) THEN LET sr4_s[l_i].UCL = 0 END IF
+                 LET sr4.y = sr4_s[l_i].UCL
+                 OUTPUT TO REPORT aqcr340_g01_subrep06(sr4.*)
+              END FOR
+              
+              LET sr4.series = "LCL"
+              FOR l_i = 1 TO sr4_s.getLength()
+                 LET sr4.x = sr4_s[l_i].x
+                 IF cl_null(sr4_s[l_i].LCL) THEN LET sr4_s[l_i].LCL = 0 END IF
+                 LET sr4.y = sr4_s[l_i].LCL
+                 OUTPUT TO REPORT aqcr340_g01_subrep06(sr4.*)
+              END FOR
+           FINISH REPORT aqcr340_g01_subrep06
+           #160908-00001#1 add-S
+#           LET g_form.data[g_m].* = data.*
+           #160908-00001#1 add-E
+           #end add-point:
+ 
+ 
+ 
+       ON LAST ROW
+            #add-point:rep.lastrow.before name="rep.lastrow.before"  
+            #160908-00001#1 add-S
+            LET ls_js = util.JSON.stringify(g_form)
+#            CALL aqcr340_g01_export('aqcr340')
+#            #160908-00001#1 add-E
+            #end add-point :rep.lastrow.before
+ 
+            #add-point:rep.lastrow.after name="rep.lastrow.after"
+            
+            #end add-point :rep.lastrow.after
+END REPORT
+ 
+{</section>}
+ 
+{<section id="aqcr340_g01.subrep_str" readonly="Y" >}
+#讀取子報表樣板
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT aqcr340_g01_subrep01(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub01.define_customerization" 
+
+#end add-point
+#add-point:sub01.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub01.define" 
+
+#end add-point:sub01.define
+ 
+    #add-point:sub01.order.before name="sub01.order.before" 
+    
+    #end add-point:sub01.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub01.everyrow.before name="sub01.everyrow.before" 
+                          
+            #end add-point:sub01.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub01.everyrow.after name="sub01.everyrow.after" 
+            
+            #end add-point:sub01.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT aqcr340_g01_subrep02(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub02.define_customerization" 
+
+#end add-point
+#add-point:sub02.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub02.define" 
+
+#end add-point:sub02.define
+ 
+    #add-point:sub02.order.before name="sub02.order.before" 
+    
+    #end add-point:sub02.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub02.everyrow.before name="sub02.everyrow.before" 
+                          
+            #end add-point:sub02.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub02.everyrow.after name="sub02.everyrow.after" 
+            
+            #end add-point:sub02.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT aqcr340_g01_subrep03(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub03.define_customerization" 
+
+#end add-point
+#add-point:sub03.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub03.define" 
+
+#end add-point:sub03.define
+ 
+    #add-point:sub03.order.before name="sub03.order.before" 
+    
+    #end add-point:sub03.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub03.everyrow.before name="sub03.everyrow.before" 
+                          
+            #end add-point:sub03.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub03.everyrow.after name="sub03.everyrow.after" 
+            
+            #end add-point:sub03.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT aqcr340_g01_subrep04(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub04.define_customerization" 
+
+#end add-point
+#add-point:sub04.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub04.define" 
+
+#end add-point:sub04.define
+ 
+    #add-point:sub04.order.before name="sub04.order.before" 
+    
+    #end add-point:sub04.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub04.everyrow.before name="sub04.everyrow.before" 
+                          
+            #end add-point:sub04.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub04.everyrow.after name="sub04.everyrow.after" 
+            
+            #end add-point:sub04.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aqcr340_g01.other_function" readonly="Y" >}
+
+################################################################################
+#管制图输出到表格中
+#160908-00001#1 add
+################################################################################
+PRIVATE FUNCTION aqcr340_g01_export(p_key)
+DEFINE p_key                  STRING
+DEFINE l_channel              base.Channel
+DEFINE l_file                 STRING
+DEFINE l_xlsx                 STRING
+DEFINE l_xlsx_name            STRING
+DEFINE l_str                  STRING
+DEFINE l_date                 STRING
+DEFINE sc SPCChart
+   
+   LET l_date = cl_get_timestamp()
+   LET l_date = cl_replace_str(l_date,"-","")
+   LET l_date = cl_replace_str(l_date," ","")
+   LET l_date = cl_replace_str(l_date,":","")
+   LET l_date = cl_replace_str(l_date,".","")
+   
+   LET l_file = "aqcr340_",l_date CLIPPED,".json"
+   LET l_file = os.Path.join(FGL_GETENV("TEMPDIR"), l_file)
+   LET l_channel = base.Channel.create()
+   CALL l_channel.openFile(l_file,"w")
+   CALL l_channel.writeLine(ls_js.trim())
+   CALL l_channel.close()
+   
+   DISPLAY ls_js
+   CALL l_channel.openPipe(ls_js, "a")
+   
+   LET l_xlsx = "aqcr340_",l_date CLIPPED,".xlsx"
+   LET l_xlsx_name = l_xlsx
+   LET l_xlsx = os.Path.join(FGL_GETENV("TEMPDIR"), l_xlsx)
+   LET sc = SPCChart.create()
+   LET sc.OutputFilePath = l_xlsx
+   LET sc.JsonFilePath = l_file
+   CALL sc.genXBarRChart()   
+    
+   LET l_str = os.Path.join(os.Path.join(FGL_GETENV("FGLASIP"),"out"),l_xlsx_name)
+   CALL ui.Interface.frontCall("standard","launchurl",l_str,[])
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'Front End Call failed.'
+      LET g_errparam.code = STATUS
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN
+   END IF
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 抓取栏位的名称
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aqcr340_g01_title_label()
+DEFINE l_sql   STRING
+
+   LET l_sql = " SELECT dzebl003||':' qcbk000, ",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'qcbk005' AND dzebl002 = '",g_dlang,"')||':' qcbk005,",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'qcbk008' AND dzebl002 = '",g_dlang,"')||':' qcbk008,",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'qcbk003' AND dzebl002 = '",g_dlang,"')||':' qcbk003,",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'qcbk004' AND dzebl002 = '",g_dlang,"')||':' qcbk004,",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'imaal003' AND dzebl002 = '",g_dlang,"')||':' imaal003,",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'qcbk006' AND dzebl002 = '",g_dlang,"')||':' qcbk006,",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'qcbk007' AND dzebl002 = '",g_dlang,"')||':' qcbk007,",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'imaal004' AND dzebl002 = '",g_dlang,"')||':' imaal004,",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'qcbk011' AND dzebl002 = '",g_dlang,"')||':' qcbk011,",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'qcbk010' AND dzebl002 = '",g_dlang,"')||':' qcbk010,",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'qcbk022' AND dzebl002 = '",g_dlang,"')||':' qcbk022,",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'qcbk012' AND dzebl002 = '",g_dlang,"')||':' qcbk012,",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'qcblseq' AND dzebl002 = '",g_dlang,"') qcblseq,",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'qcbl001' AND dzebl002 = '",g_dlang,"') qcbl001,",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'qcbl003' AND dzebl002 = '",g_dlang,"') qcbl003,",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'qcbl004' AND dzebl002 = '",g_dlang,"') qcbl004,",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'qcbl007' AND dzebl002 = '",g_dlang,"') qcbl007,",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'qcbk016' AND dzebl002 = '",g_dlang,"') qcbk016,",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'qcbk017' AND dzebl002 = '",g_dlang,"') qcbk017,",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'qcbk018' AND dzebl002 = '",g_dlang,"') qcbk018,",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'qcbl008' AND dzebl002 = '",g_dlang,"') qcbl008,",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'qcbk019' AND dzebl002 = '",g_dlang,"') qcbk019,",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'qcbk020' AND dzebl002 = '",g_dlang,"') qcbk020,",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'qcbk021' AND dzebl002 = '",g_dlang,"') qcbk021,",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'gzgh007' AND dzebl002 = '",g_dlang,"')||':' l_gzgh007, ",
+               "        (SELECT dzebl003 FROM dzebl_t WHERE dzebl001 = 'gzgh006' AND dzebl002 = '",g_dlang,"')||':' l_gzgh006 ",
+               "   FROM dzebl_t WHERE dzebl001 = 'qcbk000' AND dzebl002 = '",g_dlang,"' "
+   PREPARE title_name_pre FROM l_sql
+   EXECUTE title_name_pre INTO g_master_label.l_qcbk000,g_master_label.l_qcbk005,g_master_label.l_qcbk008,g_master_label.l_qcbk003,
+                               g_master_label.l_qcbk004,g_master_label.l_imaal003,g_master_label.l_qcbk006,g_master_label.l_qcbk007,
+                               g_master_label.l_imaal004,g_master_label.l_qcbk011,g_master_label.l_qcbk010,g_master_label.l_qcbk022,
+                               g_master_label.l_qcbk012,g_detail_label.l_qcblseq,g_detail_label.l_qcbl001,g_detail_label.l_qcbl003,
+                               g_detail_label.l_qcbl004,g_detail_label.l_qcbl007,g_detail_label.l_qcbl008,g_detail_label.l_qcbk016,
+                               g_detail_label.l_qcbk017,g_detail_label.l_qcbk018,g_detail_label.l_qcbk019,g_detail_label.l_qcbk020,
+                               g_detail_label.l_qcbk021,g_header_label.l_gzgh007,g_header_label.l_gzgh006
+#   g_master_label.*,g_detail_label.*,g_header_label.*
+   LET g_form.master_label[1] = g_master_label.l_qcbk000
+   LET g_form.master_label[2] = g_master_label.l_qcbk005
+   LET g_form.master_label[3] = g_master_label.l_qcbk008
+   LET g_form.master_label[4] = g_master_label.l_qcbk003
+   LET g_form.master_label[5] = g_master_label.l_qcbk004
+   LET g_form.master_label[6] = g_master_label.l_imaal003
+   LET g_form.master_label[7] = g_master_label.l_qcbk006
+   LET g_form.master_label[8] = g_master_label.l_qcbk007
+   LET g_form.master_label[9] = g_master_label.l_imaal004
+   LET g_form.master_label[10]= g_master_label.l_qcbk011
+   LET g_form.master_label[11]= g_master_label.l_qcbk010
+   LET g_form.master_label[12]= g_master_label.l_qcbk022
+   LET g_form.master_label[13]= g_master_label.l_qcbk012
+   LET g_form.detail_label[1] = g_detail_label.l_qcblseq
+   LET g_form.detail_label[2] = g_detail_label.l_qcbl001
+   LET g_form.detail_label[3] = g_detail_label.l_qcbl003
+   LET g_form.detail_label[4] = g_detail_label.l_qcbl004
+   LET g_form.detail_label[5] = g_detail_label.l_qcbl007
+   LET g_form.detail_label[6] = g_detail_label.l_qcbl008
+   LET g_form.detail_label[7]=  g_detail_label.l_qcbk016
+   LET g_form.detail_label[8]=  g_detail_label.l_qcbk017
+   LET g_form.detail_label[9]=  g_detail_label.l_qcbk018
+   LET g_form.detail_label[10]= g_detail_label.l_qcbk019
+   LET g_form.detail_label[11]= g_detail_label.l_qcbk020
+   LET g_form.detail_label[12]= g_detail_label.l_qcbk021
+   LET g_form.header_label[1] = g_header_label.l_gzgh007
+   LET g_form.header_label[2] = g_header_label.l_gzgh006
+               
+END FUNCTION
+
+ 
+{</section>}
+ 
+{<section id="aqcr340_g01.other_report" readonly="Y" >}
+#管制图Xbar
+PRIVATE REPORT aqcr340_g01_subrep05(sr3)
+DEFINE sr3   sr3_r    
+    FORMAT
+           
+        ON EVERY ROW
+           #PRINTX g_grNumFmt.*
+            PRINTX sr3.*
+END REPORT
+#管制图R
+PRIVATE REPORT aqcr340_g01_subrep06(sr4)
+DEFINE sr4   sr4_r       
+    FORMAT
+           
+        ON EVERY ROW
+           #PRINTX g_grNumFmt.*
+            PRINTX sr4.*
+END REPORT
+
+ 
+{</section>}
+ 

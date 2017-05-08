@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapr450_g01" module="aap" jobmode="N" type="g01" industry="std" crtid="02159" crtdt="2016-01-13 16:35:34" modid="02159" moddt="2016-01-14 15:36:59" sdver="1" tabver="10001" description="薪資費用單">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="apda001,apda003,apda005,apda007,apda008,apda009,apda010,apda014,apda015,apda016,apda017,apda018,apdacomp,apdadocdt,apdadocno,apdaent,apdald,apdasite,apdastus,apde001,apde002,apde003,apde006,apde008,apde009,apde010,apde011,apde012,apde013,apde014,apde015,apde016,apde017,apde018,apde019,apde020,apde021,apde022,apde023,apde024,apde032,apde035,apde036,apde038,apde039,apde040,apde042,apde043,apde044,apde046,apde051,apde052,apde053,apde054,apde055,apde056,apde057,apde058,apde059,apde060,apde100,apde101,apde109,apde119,apde120,apde121,apde129,apde130,apde131,apde139,apdecomp,apdeorga,apdeseq,apdesite,l_apda003_ooag011(chr100|&apos;&apos;),l_apdeorga_ooefl003(chr100|&apos;&apos;),l_apde018_ooefl003(chr100|&apos;&apos;),l_apde016_glacl004(chr100|&apos;&apos;),l_apde013_pmaal004(chr100|&apos;&apos;)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="apda001(apda001|apda001),apda003(apda003|apda003),apda005(apda005|apda005),apda007(apda007|apda007),apda008(apda008|apda008),apda009(apda009|apda009),apda010(apda010|apda010),apda014(apda014|apda014),apda015(apda015|apda015),apda016(apda016|apda016),apda017(apda017|apda017),apda018(apda018|apda018),apdacomp(apdacomp|apdacomp),apdadocdt(apdadocdt|apdadocdt),apdadocno(apdadocno|apdadocno),apdaent(apdaent|apdaent),apdald(apdald|apdald),apdasite(apdasite|apdasite),apdastus(apdastus|apdastus),apde001(apde001|apde001),apde002(apde002|apde002),apde003(apde003|apde003),apde006(apde006|apde006),apde008(apde008|apde008),apde009(apde009|apde009),apde010(apde010|apde010),apde011(apde011|apde011),apde012(apde012|apde012),apde013(apde013|apde013),apde014(apde014|apde014),apde015(apde015|apde015),apde016(apde016|apde016),apde017(apde017|apde017),apde018(apde018|apde018),apde019(apde019|apde019),apde020(apde020|apde020),apde021(apde021|apde021),apde022(apde022|apde022),apde023(apde023|apde023),apde024(apde024|apde024),apde032(apde032|apde032),apde035(apde035|apde035),apde036(apde036|apde036),apde038(apde038|apde038),apde039(apde039|apde039),apde040(apde040|apde040),apde042(apde042|apde042),apde043(apde043|apde043),apde044(apde044|apde044),apde046(apde046|apde046),apde051(apde051|apde051),apde052(apde052|apde052),apde053(apde053|apde053),apde054(apde054|apde054),apde055(apde055|apde055),apde056(apde056|apde056),apde057(apde057|apde057),apde058(apde058|apde058),apde059(apde059|apde059),apde060(apde060|apde060),apde100(apde100|apde100),apde101(apde101|apde101),apde109(apde109|apde109),apde119(apde119|apde119),apde120(apde120|apde120),apde121(apde121|apde121),apde129(apde129|apde129),apde130(apde130|apde130),apde131(apde131|apde131),apde139(apde139|apde139),apdecomp(apdecomp|apdecomp),apdeorga(apdeorga|apdeorga),apdeseq(apdeseq|apdeseq),apdesite(apdesite|apdesite),l_apda003_ooag011(chr100|&apos;&apos;),l_apdeorga_ooefl003(chr100|&apos;&apos;),l_apde018_ooefl003(chr100|&apos;&apos;),l_apde016_glacl004(chr100|&apos;&apos;),l_apde013_pmaal004(chr100|&apos;&apos;)"/>
+    <sql id="g_from" query=" apda_t  LEFT OUTER JOIN ( SELECT apde_t.* FROM apde_t  ) x  ON apda_t.apdaent = x.apdeent AND apda_t.apdald = x.apdeld AND apda_t.apdadocno = x.apdedocno"/>
+    <sql id="g_where" query="" maintable="apda_t"/>
+    <sql id="g_order" query="apdadocno,apdeseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="apdadocno,apdeseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="apdadocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff002" where="apdaent,apdadocno"/>
+      <rep type="apdeseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff002,ooff003" where="apdaent,apdadocno,apdeseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff002,ooff003" where="apdaent,apdadocno,apdeseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="apdadocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff002" where="apdaent,apdadocno"/>
+      <rep type="apdeseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

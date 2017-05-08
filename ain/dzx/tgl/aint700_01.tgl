@@ -1,0 +1,861 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aint700_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2015-01-07 15:28:04), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000074
+#+ Filename...: aint700_01
+#+ Description: 多庫儲批分配作業
+#+ Creator....: 01752(2014-12-30 19:57:13)
+#+ Modifier...: 01752 -SD/PR-
+
+{</section>}
+
+{<section id="aint700_01.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_indk_d        RECORD
+       indkdocno LIKE indk_t.indkdocno, 
+   indkseq LIKE indk_t.indkseq, 
+   indksite LIKE indk_t.indksite, 
+   indkunit LIKE indk_t.indkunit, 
+   indk001 LIKE indk_t.indk001, 
+   indk002 LIKE indk_t.indk002, 
+   indkseq1 LIKE indk_t.indkseq1, 
+   indk003 LIKE indk_t.indk003, 
+   indk003_desc LIKE type_t.chr500, 
+   indk004 LIKE indk_t.indk004, 
+   indk005 LIKE indk_t.indk005, 
+   indk005_desc LIKE type_t.chr500, 
+   indk006 LIKE indk_t.indk006, 
+   indk007 LIKE indk_t.indk007, 
+   indk007_desc LIKE type_t.chr500, 
+   indk008 LIKE indk_t.indk008, 
+   indk008_desc LIKE type_t.chr500, 
+   indk009 LIKE indk_t.indk009, 
+   indk009_desc LIKE type_t.chr500, 
+   indk010 LIKE indk_t.indk010, 
+   indk015 LIKE indk_t.indk015, 
+   indk011 LIKE indk_t.indk011, 
+   indk011_desc LIKE type_t.chr500, 
+   indk012 LIKE indk_t.indk012, 
+   indk012_desc LIKE type_t.chr500, 
+   indk013 LIKE indk_t.indk013, 
+   indk013_desc LIKE type_t.chr500, 
+   indk014 LIKE indk_t.indk014
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_indk_d          DYNAMIC ARRAY OF type_g_indk_d
+DEFINE g_indk_d_t        type_g_indk_d
+ 
+ 
+DEFINE g_indkdocno_t   LIKE indk_t.indkdocno    #Key值備份
+DEFINE g_indkseq_t      LIKE indk_t.indkseq    #Key值備份
+DEFINE g_indkseq1_t      LIKE indk_t.indkseq1    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point    
+
+{</section>}
+
+{<section id="aint700_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aint700_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aint700_01 WITH FORM cl_ap_formpath("ain","aint700_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_indk_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indkdocno
+            #add-point:BEFORE FIELD indkdocno name="input.b.page1.indkdocno"
+            {<point name="input.b.page1.indkdocno" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indkdocno
+            
+            #add-point:AFTER FIELD indkdocno name="input.a.page1.indkdocno"
+            {<point name="input.a.page1.indkdocno" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE indkdocno
+            #add-point:ON CHANGE indkdocno name="input.g.page1.indkdocno"
+            {<point name="input.g.page1.indkdocno" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indkseq
+            #add-point:BEFORE FIELD indkseq name="input.b.page1.indkseq"
+            {<point name="input.b.page1.indkseq" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indkseq
+            
+            #add-point:AFTER FIELD indkseq name="input.a.page1.indkseq"
+            {<point name="input.a.page1.indkseq" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE indkseq
+            #add-point:ON CHANGE indkseq name="input.g.page1.indkseq"
+            {<point name="input.g.page1.indkseq" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indksite
+            #add-point:BEFORE FIELD indksite name="input.b.page1.indksite"
+            {<point name="input.b.page1.indksite" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indksite
+            
+            #add-point:AFTER FIELD indksite name="input.a.page1.indksite"
+            {<point name="input.a.page1.indksite" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE indksite
+            #add-point:ON CHANGE indksite name="input.g.page1.indksite"
+            {<point name="input.g.page1.indksite" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indkunit
+            #add-point:BEFORE FIELD indkunit name="input.b.page1.indkunit"
+            {<point name="input.b.page1.indkunit" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indkunit
+            
+            #add-point:AFTER FIELD indkunit name="input.a.page1.indkunit"
+            {<point name="input.a.page1.indkunit" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE indkunit
+            #add-point:ON CHANGE indkunit name="input.g.page1.indkunit"
+            {<point name="input.g.page1.indkunit" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indk001
+            #add-point:BEFORE FIELD indk001 name="input.b.page1.indk001"
+            {<point name="input.b.page1.indk001" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indk001
+            
+            #add-point:AFTER FIELD indk001 name="input.a.page1.indk001"
+            {<point name="input.a.page1.indk001" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE indk001
+            #add-point:ON CHANGE indk001 name="input.g.page1.indk001"
+            {<point name="input.g.page1.indk001" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indk002
+            #add-point:BEFORE FIELD indk002 name="input.b.page1.indk002"
+            {<point name="input.b.page1.indk002" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indk002
+            
+            #add-point:AFTER FIELD indk002 name="input.a.page1.indk002"
+            {<point name="input.a.page1.indk002" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE indk002
+            #add-point:ON CHANGE indk002 name="input.g.page1.indk002"
+            {<point name="input.g.page1.indk002" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indkseq1
+            #add-point:BEFORE FIELD indkseq1 name="input.b.page1.indkseq1"
+            {<point name="input.b.page1.indkseq1" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indkseq1
+            
+            #add-point:AFTER FIELD indkseq1 name="input.a.page1.indkseq1"
+            {<point name="input.a.page1.indkseq1" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE indkseq1
+            #add-point:ON CHANGE indkseq1 name="input.g.page1.indkseq1"
+            {<point name="input.g.page1.indkseq1" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indk003
+            
+            #add-point:AFTER FIELD indk003 name="input.a.page1.indk003"
+            {<point name="input.a.page1.indk003" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indk003
+            #add-point:BEFORE FIELD indk003 name="input.b.page1.indk003"
+            {<point name="input.b.page1.indk003" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE indk003
+            #add-point:ON CHANGE indk003 name="input.g.page1.indk003"
+            {<point name="input.g.page1.indk003" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indk004
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_indk_d[l_ac].indk004,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD indk004
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD indk004 name="input.a.page1.indk004"
+            {<point name="input.a.page1.indk004" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indk004
+            #add-point:BEFORE FIELD indk004 name="input.b.page1.indk004"
+            {<point name="input.b.page1.indk004" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE indk004
+            #add-point:ON CHANGE indk004 name="input.g.page1.indk004"
+            {<point name="input.g.page1.indk004" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indk005
+            
+            #add-point:AFTER FIELD indk005 name="input.a.page1.indk005"
+            {<point name="input.a.page1.indk005" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indk005
+            #add-point:BEFORE FIELD indk005 name="input.b.page1.indk005"
+            {<point name="input.b.page1.indk005" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE indk005
+            #add-point:ON CHANGE indk005 name="input.g.page1.indk005"
+            {<point name="input.g.page1.indk005" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indk006
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_indk_d[l_ac].indk006,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD indk006
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD indk006 name="input.a.page1.indk006"
+            {<point name="input.a.page1.indk006" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indk006
+            #add-point:BEFORE FIELD indk006 name="input.b.page1.indk006"
+            {<point name="input.b.page1.indk006" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE indk006
+            #add-point:ON CHANGE indk006 name="input.g.page1.indk006"
+            {<point name="input.g.page1.indk006" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indk007
+            
+            #add-point:AFTER FIELD indk007 name="input.a.page1.indk007"
+            {<point name="input.a.page1.indk007" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indk007
+            #add-point:BEFORE FIELD indk007 name="input.b.page1.indk007"
+            {<point name="input.b.page1.indk007" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE indk007
+            #add-point:ON CHANGE indk007 name="input.g.page1.indk007"
+            {<point name="input.g.page1.indk007" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indk008
+            
+            #add-point:AFTER FIELD indk008 name="input.a.page1.indk008"
+            {<point name="input.a.page1.indk008" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indk008
+            #add-point:BEFORE FIELD indk008 name="input.b.page1.indk008"
+            {<point name="input.b.page1.indk008" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE indk008
+            #add-point:ON CHANGE indk008 name="input.g.page1.indk008"
+            {<point name="input.g.page1.indk008" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indk009
+            
+            #add-point:AFTER FIELD indk009 name="input.a.page1.indk009"
+            {<point name="input.a.page1.indk009" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indk009
+            #add-point:BEFORE FIELD indk009 name="input.b.page1.indk009"
+            {<point name="input.b.page1.indk009" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE indk009
+            #add-point:ON CHANGE indk009 name="input.g.page1.indk009"
+            {<point name="input.g.page1.indk009" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indk010
+            #add-point:BEFORE FIELD indk010 name="input.b.page1.indk010"
+            {<point name="input.b.page1.indk010" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indk010
+            
+            #add-point:AFTER FIELD indk010 name="input.a.page1.indk010"
+            {<point name="input.a.page1.indk010" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE indk010
+            #add-point:ON CHANGE indk010 name="input.g.page1.indk010"
+            {<point name="input.g.page1.indk010" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indk015
+            #add-point:BEFORE FIELD indk015 name="input.b.page1.indk015"
+            {<point name="input.b.page1.indk015" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indk015
+            
+            #add-point:AFTER FIELD indk015 name="input.a.page1.indk015"
+            {<point name="input.a.page1.indk015" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE indk015
+            #add-point:ON CHANGE indk015 name="input.g.page1.indk015"
+            {<point name="input.g.page1.indk015" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indk011
+            
+            #add-point:AFTER FIELD indk011 name="input.a.page1.indk011"
+            {<point name="input.a.page1.indk011" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indk011
+            #add-point:BEFORE FIELD indk011 name="input.b.page1.indk011"
+            {<point name="input.b.page1.indk011" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE indk011
+            #add-point:ON CHANGE indk011 name="input.g.page1.indk011"
+            {<point name="input.g.page1.indk011" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indk012
+            
+            #add-point:AFTER FIELD indk012 name="input.a.page1.indk012"
+            {<point name="input.a.page1.indk012" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indk012
+            #add-point:BEFORE FIELD indk012 name="input.b.page1.indk012"
+            {<point name="input.b.page1.indk012" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE indk012
+            #add-point:ON CHANGE indk012 name="input.g.page1.indk012"
+            {<point name="input.g.page1.indk012" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indk013
+            
+            #add-point:AFTER FIELD indk013 name="input.a.page1.indk013"
+            {<point name="input.a.page1.indk013" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indk013
+            #add-point:BEFORE FIELD indk013 name="input.b.page1.indk013"
+            {<point name="input.b.page1.indk013" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE indk013
+            #add-point:ON CHANGE indk013 name="input.g.page1.indk013"
+            {<point name="input.g.page1.indk013" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indk014
+            #add-point:BEFORE FIELD indk014 name="input.b.page1.indk014"
+            {<point name="input.b.page1.indk014" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indk014
+            
+            #add-point:AFTER FIELD indk014 name="input.a.page1.indk014"
+            {<point name="input.a.page1.indk014" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE indk014
+            #add-point:ON CHANGE indk014 name="input.g.page1.indk014"
+            {<point name="input.g.page1.indk014" />}
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.indkdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indkdocno
+            #add-point:ON ACTION controlp INFIELD indkdocno name="input.c.page1.indkdocno"
+            {<point name="input.c.page1.indkdocno" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.indkseq
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indkseq
+            #add-point:ON ACTION controlp INFIELD indkseq name="input.c.page1.indkseq"
+            {<point name="input.c.page1.indkseq" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.indksite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indksite
+            #add-point:ON ACTION controlp INFIELD indksite name="input.c.page1.indksite"
+            {<point name="input.c.page1.indksite" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.indkunit
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indkunit
+            #add-point:ON ACTION controlp INFIELD indkunit name="input.c.page1.indkunit"
+            {<point name="input.c.page1.indkunit" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.indk001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indk001
+            #add-point:ON ACTION controlp INFIELD indk001 name="input.c.page1.indk001"
+            {<point name="input.c.page1.indk001" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.indk002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indk002
+            #add-point:ON ACTION controlp INFIELD indk002 name="input.c.page1.indk002"
+            {<point name="input.c.page1.indk002" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.indkseq1
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indkseq1
+            #add-point:ON ACTION controlp INFIELD indkseq1 name="input.c.page1.indkseq1"
+            {<point name="input.c.page1.indkseq1" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.indk003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indk003
+            #add-point:ON ACTION controlp INFIELD indk003 name="input.c.page1.indk003"
+            {<point name="input.c.page1.indk003" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.indk004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indk004
+            #add-point:ON ACTION controlp INFIELD indk004 name="input.c.page1.indk004"
+            {<point name="input.c.page1.indk004" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.indk005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indk005
+            #add-point:ON ACTION controlp INFIELD indk005 name="input.c.page1.indk005"
+            {<point name="input.c.page1.indk005" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.indk006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indk006
+            #add-point:ON ACTION controlp INFIELD indk006 name="input.c.page1.indk006"
+            {<point name="input.c.page1.indk006" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.indk007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indk007
+            #add-point:ON ACTION controlp INFIELD indk007 name="input.c.page1.indk007"
+            {<point name="input.c.page1.indk007" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.indk008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indk008
+            #add-point:ON ACTION controlp INFIELD indk008 name="input.c.page1.indk008"
+            {<point name="input.c.page1.indk008" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.indk009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indk009
+            #add-point:ON ACTION controlp INFIELD indk009 name="input.c.page1.indk009"
+            {<point name="input.c.page1.indk009" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.indk010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indk010
+            #add-point:ON ACTION controlp INFIELD indk010 name="input.c.page1.indk010"
+            {<point name="input.c.page1.indk010" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.indk015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indk015
+            #add-point:ON ACTION controlp INFIELD indk015 name="input.c.page1.indk015"
+            {<point name="input.c.page1.indk015" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.indk011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indk011
+            #add-point:ON ACTION controlp INFIELD indk011 name="input.c.page1.indk011"
+            {<point name="input.c.page1.indk011" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.indk012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indk012
+            #add-point:ON ACTION controlp INFIELD indk012 name="input.c.page1.indk012"
+            {<point name="input.c.page1.indk012" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.indk013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indk013
+            #add-point:ON ACTION controlp INFIELD indk013 name="input.c.page1.indk013"
+            {<point name="input.c.page1.indk013" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.indk014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indk014
+            #add-point:ON ACTION controlp INFIELD indk014 name="input.c.page1.indk014"
+            {<point name="input.c.page1.indk014" />}
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         {<point name="input.cancel"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aint700_01 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="aint700_01.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+
+{</section>}
+
+{<section id="aint700_01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

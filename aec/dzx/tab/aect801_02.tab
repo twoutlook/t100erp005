@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aect801_02" module="aec" jobmode="N" type="c03a" industry="std" fix_arg="0" crtid="01258" crtdt="2014-08-18 09:40:46" modid="01258" moddt="2014-12-08 16:02:19" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="Check in/Check out項目申請新增、變更維護">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="eccbdocno,eccf004_1(chr500),eccb003,eccb004,eccb004_desc(chr80),eccb005"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="eccfseq,eccf004,eccf005,eccf005_desc(chr500),eccf006,eccf007,eccf008,eccf009,eccf010,eccf901,eccf905,eccf905_desc(chr500),eccf906,eccf001,eccf002,eccf900,eccf902"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="insert" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aec" filename="aect801_02" method="dialog">
+    <section id="input">
+      <input id="head" field="eccbdocno,eccf004_1,eccb004,eccb005"/>
+      <input id="body" page="1" field="eccfseq,eccf004,eccf005,eccf006,eccf007,eccf008,eccf009,eccf010,eccf901,eccf905,eccf906,eccf001,eccf002,eccf900,eccf902" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="eccbdocno,eccf004_1,eccb003,eccb004,eccb005"/>
+      <construct id="body" page="1" field="eccfseq,eccf004,eccf005,eccf006,eccf007,eccf008,eccf009,eccf010,eccf901,eccf905,eccf906,eccf001,eccf002,eccf900,eccf902"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="eccbdocno,eccb003"/>
+      <set id="head" type="no_entry" field="eccbdocno,eccb003"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="eccbdocno"/>
+      <column id="eccf004_1"/>
+      <column id="eccb003"/>
+      <column id="eccb004">
+        <after>
+          <reference field="eccb004_desc" ref_field="eccb_t.eccb004" map_field="eccbent,eccb004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="eccb004_desc"/>
+      <column id="eccb005"/>
+    </init>
+    <init id="body" page="1">
+      <column id="eccfseq"/>
+      <column id="eccf004"/>
+      <column id="eccf005">
+        <after>
+          <reference field="eccf005_desc" ref_field="eccf_t.eccf005" map_field="eccfent,eccf005" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="eccf005_desc"/>
+      <column id="eccf006" type="S" default="1"/>
+      <column id="eccf007"/>
+      <column id="eccf008"/>
+      <column id="eccf009"/>
+      <column id="eccf010" type="S" default="Y"/>
+      <column id="eccf901" type="S" default="3" def_scc="5448"/>
+      <column id="eccf905">
+        <after>
+          <reference field="eccf905_desc" ref_field="eccf905" map_field="eccf905" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;215&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="eccf905_desc"/>
+      <column id="eccf906"/>
+      <column id="eccf001"/>
+      <column id="eccf002"/>
+      <column id="eccf900"/>
+      <column id="eccf902"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="eccb_t" pk="eccbdocno,eccb003">
+      <sql id="forupd_sql" type="sql" query="SELECT eccbdocno,&apos;&apos;,eccb003,eccb004,&apos;&apos;,eccb005 FROM eccb_t WHERE eccbent= ? AND eccbsite= ? AND eccbdocno=? AND eccb003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT eccbdocno,&apos;&apos;,eccb003,eccb004,&apos;&apos;,eccb005 FROM eccb_t" order="eccbdocno,eccb003"/>
+    </head>
+    <body id="eccf_t" page="1" linked="" pk="eccfseq" fk="eccfdocno,eccf003">
+      <sql id="forupd_sql_detail" query="SELECT eccfseq,eccf004,eccf005,&apos;&apos;,eccf006,eccf007,eccf008,eccf009,eccf010,eccf901,eccf905,&apos;&apos;,eccf906,eccf001,eccf002,eccf900,eccf902 FROM eccf_t WHERE eccfent=? AND eccfsite=? AND eccfdocno=? AND eccf003=? AND eccfseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT eccfseq,eccf004,eccf005,&apos;&apos;,eccf006,eccf007,eccf008,eccf009,eccf010,eccf901,eccf905,&apos;&apos;,eccf906,eccf001,eccf002,eccf900,eccf902 FROM eccf_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

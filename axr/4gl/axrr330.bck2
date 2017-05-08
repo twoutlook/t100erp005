@@ -1,0 +1,837 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axrr330.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0007(2015-08-25 18:40:23), PR版次:0007(2016-10-28 10:37:38)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000059
+#+ Filename...: axrr330
+#+ Description: 應收帳款對帳單列印作業
+#+ Creator....: 01727(2015-03-17 10:59:12)
+#+ Modifier...: 06816 -SD/PR- 08729
+ 
+{</section>}
+ 
+{<section id="axrr330.global" >}
+#應用 r01 樣板自動產生(Version:20)
+#add-point:填寫註解說明
+#151231-00010#8 2016/03/07 By 02599   增加控制组权限控管
+#160518-00075#10   2016/07/26  By 07900   (依單別參數作權限管理)aooi200的控制組設定, 取7/8 設定的部門及人員
+#160811-00009#5    2016/08/18  By 01531    账务中心/法人/账套权限控管
+#160913-00017#9    2016/09/22  By 07900    AXR模组调整交易客商开窗
+#161021-00050#7    2016/10/28  By 08729    處理組織開窗
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE gi_hiden_rep_temp    LIKE type_t.num5             
+   DEFINE g_chk_jobid          LIKE type_t.num5               
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       xrcasite LIKE type_t.chr10, 
+   xrcasite_desc LIKE type_t.chr80, 
+   bdate LIKE type_t.dat, 
+   edate LIKE type_t.dat, 
+   xrcacomp LIKE type_t.chr10, 
+   xrca004 LIKE type_t.chr10, 
+   xrcadocno LIKE type_t.chr20, 
+   xrcastus LIKE type_t.chr10,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable)
+ TYPE type_master_m RECORD
+       xrcasite LIKE xrca_t.xrcasite, 
+       xrcasite_desc LIKE ooefl_t.ooefl003, 
+       bdate LIKE xrca_t.xrcadocdt, 
+       edate LIKE xrca_t.xrcadocdt
+       END RECORD
+DEFINE g_master_m type_master_m
+DEFINE g_wc_xrcacomp      STRING
+DEFINE g_sql_ctrl         STRING   #151231-00010#8 add
+DEFINE g_sql_ctr2       STRING                #160518-00075#10
+DEFINE g_sql_ctr3       STRING                #160518-00075#10
+DEFINE g_glaa024        LIKE glaa_t.glaa024   #160518-00075#10
+DEFINE l_site_len       LIKE type_t.num5      #SITE段长度 #160518-00075#10
+DEFINE l_slip_len       LIKE type_t.num5      #单别段长度 #160518-00075#10
+DEFINE l_i              LIKE type_t.num5      #160518-00075#10
+DEFINE l_j              LIKE type_t.num5      #160518-00075#10
+DEFINE xrcasite_t       LIKE type_t.chr10     #161021-00050#7 add
+DEFINE g_ld             LIKE glaa_t.glaald    #161021-00050#7 add
+DEFINE g_comp           LIKE xrca_t.xrcacomp  #161021-00050#7 add
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axrr330.main" >}
+MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define 
+   
+   #end add-point 
+   #add-point:main段define (客製用)
+   
+   #end add-point 
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("axr","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   
+   #end add-point   
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+      CALL util.JSON.parse(ls_js,g_master)      #r類背景參數解析入口
+      #add-point:Service Call
+      
+      #end add-point
+      CALL axrr330_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_axrr330 WITH FORM cl_ap_formpath("axr",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL axrr330_init()
+ 
+      #進入選單 Menu (="N")
+      CALL axrr330_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_axrr330
+   END IF
+ 
+   #add-point:作業離開前
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="axrr330.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION axrr330_init()
+   #add-point:init段define 
+   
+   #end add-point
+   #add-point:init段define (客製用)
+   
+   #end add-point
+   
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   CALL cl_set_combo_scc_part('xrcastus','13','Y,N')
+   CALL s_fin_create_account_center_tmp()
+   LET g_master_m.xrcasite = NULL
+   LET g_master_m.bdate    = NULL
+   LET g_master_m.edate    = NULL
+   LET g_master.xrcastus   = 'Y'
+   IF cl_null(g_bgjob) THEN LET g_bgjob = 'N' END IF
+   #151231-00010#8--add--str--
+   LET g_sql_ctrl = NULL
+   CALL s_control_get_customer_sql('2',g_site,g_user,g_dept,'') RETURNING g_sub_success,g_sql_ctrl
+   #151231-00010#8--add--end
+      #160518-00075#10 add s--- 
+   #用g_site的單別參照表
+   SELECT glaa024 INTO g_glaa024 FROM glaa_t
+    WHERE glaaent = g_enterprise AND glaacomp = g_site
+      AND glaa014 = 'Y'
+
+   CALL s_control_get_docno_sql_q(g_user,g_dept,g_glaa024) RETURNING g_sub_success,g_sql_ctr2,g_sql_ctr3 
+     
+   #SITE 长度
+   LET l_site_len = cl_get_para(g_enterprise,g_site,'E-COM-0003')
+   
+   #单别长度
+   LET l_slip_len = cl_get_para(g_enterprise,g_site,'E-COM-0001')
+   
+   #第一个分隔符
+   IF cl_get_para(g_enterprise,g_site,'E-COM-0008') = '1' THEN    #据点+单别
+      LET l_i = l_site_len + 2
+      LET l_j = l_slip_len
+   ELSE
+      LET l_i = 1
+      LET l_j = l_slip_len
+   END IF    
+
+   #160518-00075#10 add e--- 
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrr330.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION axrr330_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define 
+   DEFINE l_success      LIKE type_t.num5
+   DEFINE l_ld_str       STRING  #160811-00009#5 
+   #end add-point
+   #add-point:ui_dialog段define (客製用)
+   
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog
+   LET g_master_m.xrcasite = g_site
+   CALL s_axrt300_xrca_ref('xrcasite',g_master_m.xrcasite,'','') RETURNING l_success,g_master_m.xrcasite_desc
+
+   LET g_master_m.bdate = s_date_get_first_date(g_today) 
+   LET g_master_m.edate = s_date_get_last_date(g_today) 
+
+   DISPLAY g_master_m.xrcasite,g_master_m.xrcasite_desc,g_master_m.bdate,g_master_m.edate
+        TO xrcasite,xrcasite_desc,bdate,edate
+   DISPLAY 'Y' TO xrcastus
+  
+   LET xrcasite_t = g_master_m.xrcasite #161021-00050#7 add
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2
+      
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #應用 a57 樣板自動產生(Version:3)
+         INPUT BY NAME g_master.xrcastus 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前 name="input.m.before_input"
+               
+               #end add-point
+         
+                     #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcastus
+            #add-point:BEFORE FIELD xrcastus name="input.b.xrcastus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcastus
+            
+            #add-point:AFTER FIELD xrcastus name="input.a.xrcastus"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcastus
+            #add-point:ON CHANGE xrcastus name="input.g.xrcastus"
+            
+            #END add-point 
+ 
+ 
+ 
+                     #Ctrlp:input.c.xrcastus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcastus
+            #add-point:ON ACTION controlp INFIELD xrcastus name="input.c.xrcastus"
+            
+            #END add-point
+ 
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後 name="input.m.after_input"
+               
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...) name="input.other"
+            
+            #end add-point
+         END INPUT
+ 
+ 
+ 
+         
+         #應用 a58 樣板自動產生(Version:3)
+         CONSTRUCT BY NAME g_master.wc ON xrcacomp,xrca004,xrcadocno
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct name="cs.head.before_construct"
+               
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcacomp
+            #add-point:BEFORE FIELD xrcacomp name="construct.b.xrcacomp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcacomp
+            
+            #add-point:AFTER FIELD xrcacomp name="construct.a.xrcacomp"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xrcacomp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcacomp
+            #add-point:ON ACTION controlp INFIELD xrcacomp name="construct.c.xrcacomp"
+            #開窗c段
+            #法人
+            CALL s_axrt300_get_site(g_user,'','3') RETURNING l_ld_str  #160811-00009#2 
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            #LET g_qryparam.where = "ooef003 = 'Y' AND ooef001 IN ",g_wc_xrcacomp CLIPPED #160811-00009#2
+            LET g_qryparam.where = "ooef003 = 'Y' AND ",l_ld_str CLIPPED  #160811-00009#2
+            #CALL q_ooef001()                                             #161021-00050#7 mark
+            CALL q_ooef001_2()                                            #161021-00050#7 add
+            DISPLAY g_qryparam.return1 TO xrcacomp
+            NEXT FIELD xrcacomp
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca004
+            #add-point:BEFORE FIELD xrca004 name="construct.b.xrca004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca004
+            
+            #add-point:AFTER FIELD xrca004 name="construct.a.xrca004"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xrca004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca004
+            #add-point:ON ACTION controlp INFIELD xrca004 name="construct.c.xrca004"
+            #開窗c段
+            #客戶編號
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = "pmaa002 IN ('2','3')"
+            #151231-00010#8--add--str--
+            IF NOT cl_null(g_sql_ctrl) AND NOT g_sql_ctrl = ' 1=1'  THEN
+               LET g_qryparam.where = g_qryparam.where," AND ",g_sql_ctrl
+            END IF
+            #151231-00010#8--add--end
+            # CALL q_pmaa001()   #160913-00017#9  mark                  #呼叫開窗
+            #160913-00017#9--ADD(S)--
+            LET g_qryparam.arg1="('2','3')"
+            CALL q_pmaa001_1()
+            #160913-00017#9--ADD(E)--   
+            DISPLAY g_qryparam.return1 TO xrca004
+            NEXT FIELD xrca004
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcadocno
+            #add-point:BEFORE FIELD xrcadocno name="construct.b.xrcadocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcadocno
+            
+            #add-point:AFTER FIELD xrcadocno name="construct.a.xrcadocno"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xrcadocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcadocno
+            #add-point:ON ACTION controlp INFIELD xrcadocno name="construct.c.xrcadocno"
+            #開窗c段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " xrcasite = '",g_master_m.xrcasite,
+                                   "' AND xrcadocdt BETWEEN '",g_master_m.bdate,"' AND '",g_master_m.edate,"'"
+            #151231-00010#8--add--str--
+            IF NOT cl_null(g_sql_ctrl) AND NOT g_sql_ctrl = ' 1=1'  THEN
+               LET g_qryparam.where = g_qryparam.where," AND EXISTS (SELECT 1 FROM pmaa_t ",
+                                                       "              WHERE pmaaent = ",g_enterprise,
+                                                       "                AND ",g_sql_ctrl,
+                                                       "                AND pmaaent = xrcaent",
+                                                       "                AND pmaa001 = xrca004 )"
+            END IF
+            #151231-00010#8--add--end
+            
+            #160518-00075#10 add s---            
+            IF NOT cl_null(g_sql_ctr2) AND NOT cl_null(g_sql_ctr3) THEN
+               LET g_qryparam.where = g_qryparam.where," AND (substr(xrcadocno,",l_i,",",l_j,") ",g_sql_ctr2," OR substr(xrcadocno,",l_i,",",l_j,") ",g_sql_ctr3,")"
+            END IF
+            #160518-00075#10 add e--- 
+            CALL q_xrcadocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xrcadocno      #顯示到畫面上
+            #END add-point
+ 
+ 
+ 
+            
+            #add-point:其他管控 name="cs.other"
+            
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+ 
+      
+         #add-point:ui_dialog段construct
+ 
+         #end add-point
+         #add-point:ui_dialog段input
+         INPUT BY NAME g_master_m.xrcasite,g_master_m.bdate,g_master_m.edate
+            ATTRIBUTE(WITHOUT DEFAULTS)
+
+            AFTER FIELD xrcasite
+               IF NOT cl_null(g_master_m.xrcasite) THEN
+                  #161021-00050#7-add(s)
+                  IF g_master_m.xrcasite != xrcasite_t THEN 
+                     CALL s_fin_orga_get_comp_ld(g_master_m.xrcasite) RETURNING l_success,g_errno,g_comp,g_ld
+                  END IF
+                  #161021-00050#7-add(e)
+                  CALL s_fin_account_center_with_ld_chk(g_master_m.xrcasite,'',g_user,'3','N','',g_today) RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_master_m.xrcasite = xrcasite_t   #161021-00050#7 add
+                     NEXT FIELD CURRENT
+                  END IF
+                  #抓取法人有哪些
+                  CALL s_fin_account_center_sons_query('3',g_master_m.xrcasite,g_today,'')
+                  CALL s_fin_account_center_comp_str() RETURNING g_wc_xrcacomp
+                  CALL s_fin_get_wc_str(g_wc_xrcacomp) RETURNING g_wc_xrcacomp
+                  CALL s_desc_get_department_desc(g_master_m.xrcasite) RETURNING g_master_m.xrcasite_desc
+                  DISPLAY BY NAME g_master_m.xrcasite_desc
+                  LET xrcasite_t = g_master_m.xrcasite  #161021-00050#7 add
+               END IF
+
+            AFTER FIELD bdate
+               IF NOT cl_null(g_master_m.bdate) AND NOT cl_null(g_master_m.edate) THEN
+                  LET g_master_m.edate = s_date_get_last_date(g_master_m.bdate)
+                  IF g_master_m.bdate > g_master_m.edate THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = "amm-00081"
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+
+            AFTER FIELD edate
+               IF NOT cl_null(g_master_m.bdate) AND NOT cl_null(g_master_m.edate) THEN
+                  IF g_master_m.bdate > g_master_m.edate THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = "amm-00081"
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+
+            ON ACTION controlp INFIELD xrcasite
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master_m.xrcasite
+               #CALL q_ooef001()      #161021-00050#7 mark
+               CALL q_ooef001_46()    #161021-00050#7 add
+               LET g_master_m.xrcasite = g_qryparam.return1
+               DISPLAY g_master_m.xrcasite TO xrcasite
+               #抓取法人有哪些
+               CALL s_fin_account_center_sons_query('3',g_master_m.xrcasite,g_today,'')
+               CALL s_fin_account_center_comp_str() RETURNING g_wc_xrcacomp
+               CALL s_fin_get_wc_str(g_wc_xrcacomp) RETURNING g_wc_xrcacomp
+               NEXT FIELD xrcasite
+
+         END INPUT
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL cl_qbe_display_condition(FGL_GETENV("QUERYPLANID"), g_user)
+            CALL axrr330_get_buffer(l_dialog)
+ 
+         ON ACTION qbe_select
+            LET ls_wc = ""
+            #需要用ITM類程式查詢方案在CONSTRUCT的功能，將值set到畫面上
+            CALL cl_qbe_list("c") RETURNING ls_wc
+            CALL axrr330_get_buffer(l_dialog)
+            IF NOT cl_null(ls_wc) THEN
+               LET g_master.wc = ls_wc
+               #取得條件後需要執行項目,應新增於下方adp
+               #add-point:ui_dialog段qbe_select後
+               
+               #end add-point
+            END IF
+ 
+         ON ACTION qbe_save
+            CALL cl_qbe_save()
+ 
+         ON ACTION output
+            LET g_action_choice = "output"
+            ACCEPT DIALOG
+ 
+         ON ACTION quickprint
+            LET g_action_choice = "quickprint"
+            ACCEPT DIALOG
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear
+            
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         ON ACTION rpt_replang
+            CALL cl_gr_set_dlang()
+ 
+         #add-point:ui_dialog段action
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL axrr330_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+ 
+     #LET lc_param.wc = g_master.wc    #r類主程式不在意lc_param,不使用轉換
+      #add-point:ui_dialog段exit dialog 
+ 
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(g_master)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL axrr330_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = axrr330_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF           
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         LET gi_hiden_rep_temp = FALSE   #報表樣板設定
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrr330.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION axrr330_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define 
+   
+   #end add-point
+   #add-point:transfer_agrv段define (客製用)
+   
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容
+   
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrr330.process" >}
+#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION axrr330_process(ls_js)
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_r01_status LIKE type_t.num5
+   DEFINE l_token       base.StringTokenizer      #cmdrun使用
+   DEFINE ls_next       STRING                    #cmdrun使用
+   DEFINE l_cnt         LIKE type_t.num5          #cmdrun使用   
+   DEFINE l_arg         DYNAMIC ARRAY OF STRING   ##cmdrun使用的陣列 
+   #add-point:process段define 
+   DEFINE l_xrcastus    STRING             
+   #end add-point
+   #add-point:process段define (客製用)
+   
+   #end add-point
+ 
+   INITIALIZE lc_param TO NULL
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+   LET li_r01_status = 1
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   LET g_rep_wcchp = cl_wcchp(g_master.wc,"xrcacomp,xrca004,xrcadocno")  #取得列印條件
+  
+   #add-point:process段前處理
+ 
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數   #r類不用計算進度條
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      LET l_xrcastus = ''
+      CASE g_master.xrcastus
+         WHEN 'Y'
+            LET l_xrcastus = " AND xrcastus = 'Y' "
+         WHEN 'N'
+            LET l_xrcastus = " AND xrcastus = 'N' "
+      END CASE
+      
+      #151231-00010#8--add--str--
+      IF NOT cl_null(g_sql_ctrl) AND NOT g_sql_ctrl = ' 1=1'  THEN
+         IF cl_null(g_master.wc) THEN
+            LET g_master.wc = " EXISTS (SELECT 1 FROM pmaa_t ",
+                              "          WHERE pmaaent = ",g_enterprise,
+                              "            AND ",g_sql_ctrl,
+                              "            AND pmaaent = xrcaent",
+                              "            AND pmaa001 = xrca004)"
+         ELSE
+            LET g_master.wc = g_master.wc," AND EXISTS (SELECT 1 FROM pmaa_t ",
+                                          "              WHERE pmaaent = ",g_enterprise,
+                                          "                AND ",g_sql_ctrl,
+                                          "                AND pmaaent = xrcaent",
+                                          "                AND pmaa001 = xrca004)"
+         END IF
+      END IF
+      #151231-00010#8--add--end
+      #160518-00075#10  add --s--
+      LET g_master.wc = g_master.wc," AND (substr(xrcadocno,",l_i,",",l_j,") ",g_sql_ctr2," OR substr(xrcadocno,",l_i,",",l_j,") ",g_sql_ctr3,")"
+      #160518-00075#10  add --e--
+      LET g_master.wc = cl_replace_str(g_master.wc,'xrcadocno','xrcbdocno') 
+      CALL axrr330_g01(g_master.wc,g_wc_xrcacomp,g_master_m.bdate,g_master_m.edate,l_xrcastus,g_master_m.xrcasite)
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE axrr330_process_cs CURSOR FROM ls_sql
+#  FOREACH axrr330_process_cs INTO
+   #add-point:process段process
+   
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" OR g_bgjob = "T" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      
+      #end add-point
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      
+      #end add-point
+      CALL cl_schedule_exec_call(li_r01_status)
+   END IF
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrr330.get_buffer" >}
+PRIVATE FUNCTION axrr330_get_buffer(p_dialog)
+   DEFINE p_dialog   ui.DIALOG
+   
+   LET g_master.xrcastus = p_dialog.getFieldBuffer('xrcastus')
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrr330.other_function" readonly="Y" >}
+#add-point:自定義元件(Function)
+
+#end add-point
+ 
+{</section>}
+ 

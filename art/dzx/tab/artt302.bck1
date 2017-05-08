@@ -1,0 +1,242 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="artt302" module="art" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="06189" crtdt="2015-08-19 18:54:51" modid="06189" moddt="2015-08-20 16:32:34" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="商品轉類單維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="rtbdsite,rtbdsite_desc(chr80),rtbddocdt,rtbddocno,rtbd001,rtbd001_desc(chr80),rtbd002,rtbd002_desc(chr80),rtbd003,rtbd003_desc(chr80),rtbd004,rtbd004_desc(chr80),rtbd005,rtbdstus,rtbdownid,rtbdownid_desc(chr80),rtbdowndp,rtbdowndp_desc(chr80),rtbdcrtid,rtbdcrtid_desc(chr80),rtbdcrtdp,rtbdcrtdp_desc(chr80),rtbdcrtdt,rtbdmodid,rtbdmodid_desc(chr80),rtbdmoddt,rtbdcnfid,rtbdcnfid_desc(chr80),rtbdcnfdt,rtbdpstid,rtbdpstid_desc(chr80),rtbdpstdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="rtbesite,rtbeseq,rtbe001,rtbe002,rtbe002_desc(chr500),rtbe003,rtbe004,rtbe004_desc(chr500),rtbe005,rtbe006"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="rtbfsite,rtbfseq,rtbfseq1,rtbf001,rtbf002,rtbf002_desc(chr500),rtbf003,rtbf004,rtbf004_desc(chr500),rtbf005,rtbf006,rtbf006_desc(chr500),rtbf007,rtbf008,rtbf009"/>
+      <var id="bs_field" value="rtbdsite,rtbddocdt,rtbddocno,rtbd001,rtbd002,rtbd003,rtbd004,rtbd005" pk="rtbddocno" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="produce_data"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="art" filename="artt302" method="dialog">
+    <section id="input">
+      <input id="head" field="rtbdsite,rtbddocdt,rtbddocno,rtbd001,rtbd002,rtbd003,rtbd004,rtbd005,rtbdstus"/>
+      <input id="body" page="1" field="rtbesite,rtbeseq,rtbe001,rtbe002,rtbe003,rtbe004,rtbe005,rtbe006" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="rtbdsite,rtbddocdt,rtbddocno,rtbd001,rtbd002,rtbd003,rtbd004,rtbd005,rtbdstus,rtbdownid,rtbdowndp,rtbdcrtid,rtbdcrtdp,rtbdcrtdt,rtbdmodid,rtbdmoddt,rtbdcnfid,rtbdcnfdt,rtbdpstid,rtbdpstdt"/>
+      <construct id="body" page="1" field="rtbesite,rtbeseq,rtbe001,rtbe002,rtbe003,rtbe004,rtbe005,rtbe006"/>
+      <construct id="body" page="2" field="rtbfsite,rtbfseq,rtbfseq1,rtbf001,rtbf002,rtbf003,rtbf004,rtbf005,rtbf006,rtbf007,rtbf008,rtbf009"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="rtbddocno"/>
+      <set id="head" type="no_entry" field="rtbddocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="rtbdsite">
+        <after>
+          <reference field="rtbdsite_desc" ref_field="rtbd_t.rtbdsite" map_field="rtbdent,rtbdsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="rtbdsite_desc"/>
+      <column id="rtbddocdt"/>
+      <column id="rtbddocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_rtbddocno" state="c"/>
+      </column>
+      <column id="rtbd001">
+        <after>
+          <check chkid="v_rtax001_1" id="isExist"/>
+          <reference field="rtbd001_desc" ref_field="rtbd_t.rtbd001" map_field="rtbdent,rtbd001" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001_2" state="i"/>
+        <controlp form="q_rtax001_2" state="c"/>
+      </column>
+      <column id="rtbd001_desc"/>
+      <column id="rtbd002">
+        <after>
+          <check chkid="v_rtax001_1" id="isExist"/>
+          <reference field="rtbd002_desc" ref_field="rtbd_t.rtbd002" map_field="rtbdent,rtbd002" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001_2" state="i"/>
+        <controlp form="q_rtax001_2" state="c"/>
+      </column>
+      <column id="rtbd002_desc"/>
+      <column id="rtbd003">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="rtbd003_desc" ref_field="rtbd_t.rtbd003" map_field="rtbdent,rtbd003" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_6" state="i"/>
+        <controlp form="q_ooag001_6" state="c"/>
+      </column>
+      <column id="rtbd003_desc"/>
+      <column id="rtbd004">
+        <after>
+          <check chkid="v_ooeg001_3" id="isExist"/>
+          <reference field="rtbd004_desc" ref_field="rtbd_t.rtbd004" map_field="rtbdent,rtbd004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="rtbd004_desc"/>
+      <column id="rtbd005"/>
+      <column id="rtbdstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="rtbdownid">
+        <after>
+          <reference field="rtbdownid_desc" ref_field="rtbd_t.rtbdownid" map_field="rtbdownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtbdownid_desc"/>
+      <column id="rtbdowndp">
+        <after>
+          <reference field="rtbdowndp_desc" ref_field="rtbd_t.rtbdowndp" map_field="rtbdowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtbdowndp_desc"/>
+      <column id="rtbdcrtid">
+        <after>
+          <reference field="rtbdcrtid_desc" ref_field="rtbd_t.rtbdcrtid" map_field="rtbdcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtbdcrtid_desc"/>
+      <column id="rtbdcrtdp">
+        <after>
+          <reference field="rtbdcrtdp_desc" ref_field="rtbd_t.rtbdcrtdp" map_field="rtbdcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtbdcrtdp_desc"/>
+      <column id="rtbdcrtdt"/>
+      <column id="rtbdmodid">
+        <after>
+          <reference field="rtbdmodid_desc" ref_field="rtbd_t.rtbdmodid" map_field="rtbdmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtbdmodid_desc"/>
+      <column id="rtbdmoddt"/>
+      <column id="rtbdcnfid">
+        <after>
+          <reference field="rtbdcnfid_desc" ref_field="rtbd_t.rtbdcnfid" map_field="rtbdcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtbdcnfid_desc"/>
+      <column id="rtbdcnfdt"/>
+      <column id="rtbdpstid">
+        <after>
+          <reference field="rtbdpstid_desc" ref_field="rtbd_t.rtbdpstid" map_field="rtbdpstid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtbdpstid_desc"/>
+      <column id="rtbdpstdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="rtbesite"/>
+      <column id="rtbeseq" type="S" default="0"/>
+      <column id="rtbe001">
+        <after>
+          <check chkid="v_imay003" id="isExist"/>
+        </after>
+        <controlp form="q_imay001" state="i"/>
+        <controlp form="q_imay001" state="c"/>
+      </column>
+      <column id="rtbe002">
+        <after>
+          <check chkid="v_imaa001_5" id="isExist"/>
+          <reference field="rtbe002_desc" ref_field="rtbe_t.rtbe002" map_field="rtbeent,rtbe002" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001_10" state="i"/>
+        <controlp form="q_imaa001_10" state="c"/>
+      </column>
+      <column id="rtbe002_desc"/>
+      <column id="rtbe003">
+        <after>
+          <check chkid="v_ooca001_99" id="isExist"/>
+        </after>
+        <controlp form="q_ooca001" state="i"/>
+        <controlp form="q_ooca001" state="c"/>
+      </column>
+      <column id="rtbe004">
+        <after>
+          <check chkid="v_pmaa001_12" id="isExist"/>
+          <reference field="rtbe004_desc" ref_field="rtbe_t.rtbe004" map_field="rtbeent,rtbe004" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_16" state="i"/>
+        <controlp form="q_pmaa001_16" state="c"/>
+      </column>
+      <column id="rtbe004_desc"/>
+      <column id="rtbe005" type="S" default="0"/>
+      <column id="rtbe006" type="S" default="0"/>
+    </init>
+    <init id="body" page="2">
+      <column id="rtbfsite"/>
+      <column id="rtbfseq" type="S" default="0"/>
+      <column id="rtbfseq1" type="S" default="0"/>
+      <column id="rtbf001">
+        <controlp form="q_imay001" state="c"/>
+      </column>
+      <column id="rtbf002">
+        <after>
+          <reference field="rtbf002_desc" ref_field="rtbf_t.rtbf002" map_field="rtbfent,rtbf002" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001_10" state="c"/>
+      </column>
+      <column id="rtbf002_desc"/>
+      <column id="rtbf003">
+        <controlp form="q_ooca001" state="c"/>
+      </column>
+      <column id="rtbf004">
+        <after>
+          <reference field="rtbf004_desc" ref_field="rtbfsite,rtbf004" map_field="rtbfsite,rtbf004" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaasite=? AND inaa001=? "/>
+        </after>
+      </column>
+      <column id="rtbf004_desc"/>
+      <column id="rtbf005"/>
+      <column id="rtbf006">
+        <after>
+          <reference field="rtbf006_desc" ref_field="rtbf_t.rtbf006" map_field="rtbfent,rtbf006" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_16" state="c"/>
+      </column>
+      <column id="rtbf006_desc"/>
+      <column id="rtbf007" type="S" default="0"/>
+      <column id="rtbf008" type="S" default="0"/>
+      <column id="rtbf009" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="rtbd_t" pk="rtbddocno">
+      <sql id="forupd_sql" type="sql" query="SELECT rtbdsite,&apos;&apos;,rtbddocdt,rtbddocno,rtbd001,&apos;&apos;,rtbd002,&apos;&apos;,rtbd003,&apos;&apos;,rtbd004,&apos;&apos;,rtbd005,rtbdstus,rtbdownid,&apos;&apos;,rtbdowndp,&apos;&apos;,rtbdcrtid,&apos;&apos;,rtbdcrtdp,&apos;&apos;,rtbdcrtdt,rtbdmodid,&apos;&apos;,rtbdmoddt,rtbdcnfid,&apos;&apos;,rtbdcnfdt,rtbdpstid,&apos;&apos;,rtbdpstdt FROM rtbd_t WHERE rtbdent= ? AND rtbddocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT rtbdsite,&apos;&apos;,rtbddocdt,rtbddocno,rtbd001,&apos;&apos;,rtbd002,&apos;&apos;,rtbd003,&apos;&apos;,rtbd004,&apos;&apos;,rtbd005,rtbdstus,rtbdownid,&apos;&apos;,rtbdowndp,&apos;&apos;,rtbdcrtid,&apos;&apos;,rtbdcrtdp,&apos;&apos;,rtbdcrtdt,rtbdmodid,&apos;&apos;,rtbdmoddt,rtbdcnfid,&apos;&apos;,rtbdcnfdt,rtbdpstid,&apos;&apos;,rtbdpstdt FROM rtbd_t" order="rtbddocno"/>
+    </head>
+    <body id="rtbe_t" page="1" linked="" pk="rtbeseq" fk="rtbedocno">
+      <sql id="forupd_sql_detail" query="SELECT rtbesite,rtbeseq,rtbe001,rtbe002,&apos;&apos;,rtbe003,rtbe004,&apos;&apos;,rtbe005,rtbe006 FROM rtbe_t WHERE rtbeent=? AND rtbedocno=? AND rtbeseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rtbesite,rtbeseq,rtbe001,rtbe002,&apos;&apos;,rtbe003,rtbe004,&apos;&apos;,rtbe005,rtbe006 FROM rtbe_t WHERE rtbeent=? AND rtbedocno=?"/>
+    </body>
+    <body id="rtbf_t" page="2" linked="" pk="rtbfseq,rtbfseq1" fk="rtbfdocno">
+      <sql id="forupd_sql_detail" query="SELECT rtbfsite,rtbfseq,rtbfseq1,rtbf001,rtbf002,&apos;&apos;,rtbf003,rtbf004,&apos;&apos;,rtbf005,rtbf006,&apos;&apos;,rtbf007,rtbf008,rtbf009 FROM rtbf_t WHERE rtbfent=? AND rtbfdocno=? AND rtbfseq=? AND rtbfseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rtbfsite,rtbfseq,rtbfseq1,rtbf001,rtbf002,&apos;&apos;,rtbf003,rtbf004,&apos;&apos;,rtbf005,rtbf006,&apos;&apos;,rtbf007,rtbf008,rtbf009 FROM rtbf_t WHERE rtbfent=? AND rtbfdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

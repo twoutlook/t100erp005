@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrq390" module="axr" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="02291" crtdt="2014-07-07 17:05:56" modid="07959" moddt="2016-04-13 16:49:32" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="應收餘額明細查詢_取消">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),xrca014_desc(chr500),xrca004_desc(chr500),xrca100,xrca108,xrca118,xrcadocno,xrcald,xrca004,xrca014,xrca057"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xrca001(chr500),xrccdocno,xrcc001,xrcc003,xrcc004,xrcc008,xrcc009,xrcc108,xrcc118,xrca018(chr500),xrcc016"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),xrca014_desc(xrca014_desc),xrca004_desc(xrca004_desc),xrca100(b_xrca100),xrca108(b_xrca108),xrca118(b_xrca118),xrcadocno(b_xrcadocno),xrcald(b_xrcald),xrca004(b_xrca004),xrca014(b_xrca014),xrca057(b_xrca057)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xrca001(xrca001),xrccdocno(b_xrccdocno),xrcc001(b_xrcc001),xrcc003(b_xrcc003),xrcc004(b_xrcc004),xrcc008(b_xrcc008),xrcc009(b_xrcc009),xrcc108(b_xrcc108),xrcc118(b_xrcc118),xrca018(xrca018),xrcc016(b_xrcc016)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axrq390" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="xrca100,xrca108,xrca118,xrcadocno,xrcald,xrca004,xrca014,xrca057" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="xrccdocno,xrcc001,xrcc003,xrcc004,xrcc008,xrcc009,xrcc108,xrcc118,xrcc016" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="xrca100(b_xrca100),xrcadocno(b_xrcadocno),xrcald(b_xrcald),xrca004(b_xrca004),xrca014(b_xrca014),xrca057(b_xrca057)"/>
+      <construct id="body" page="2" field="xrccdocno(b_xrccdocno),xrcc001(b_xrcc001),xrcc003(b_xrcc003),xrcc004(b_xrcc004),xrcc008(b_xrcc008),xrcc009(b_xrcc009),xrcc108(b_xrcc108),xrcc118(b_xrcc118),xrcc016(b_xrcc016)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="xrca014_desc"/>
+      <column id="xrca004_desc"/>
+      <column id="xrca100">
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="xrca108" type="S" default="0"/>
+      <column id="xrca118" type="S" default="0"/>
+      <column id="xrcadocno">
+        <controlp form="q_ooba002_3" state="i"/>
+        <controlp form="q_xrcadocno" state="c"/>
+      </column>
+      <column id="xrcald"/>
+      <column id="xrca004">
+        <after/>
+        <controlp form="q_pmaa001" state="i"/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="xrca014">
+        <after/>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xrca057">
+        <controlp form="q_pmak002" state="i"/>
+        <controlp form="q_xrca057" state="c"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="xrca001"/>
+      <column id="xrccdocno"/>
+      <column id="xrcc001"/>
+      <column id="xrcc003"/>
+      <column id="xrcc004"/>
+      <column id="xrcc008"/>
+      <column id="xrcc009"/>
+      <column id="xrcc108" type="S" default="0"/>
+      <column id="xrcc118" type="S" default="0"/>
+      <column id="xrca018"/>
+      <column id="xrcc016" def_scc="3015"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="xrca_t" page="1" linked="" pk="xrcald,xrcadocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,xrca100,xrca108,xrca118,xrcadocno,xrcald,xrca004,xrca014,xrca057 FROM xrca_t WHERE xrcaent= ? AND 1=1 "/>
+    </body>
+    <body id="xrcc_t" page="2" linked="" pk="xrccseq,xrcc001" fk="xrccld,xrccdocno" detail="Y">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,xrccdocno,xrcc001,xrcc003,xrcc004,xrcc008,xrcc009,xrcc108,xrcc118,&apos;&apos;,xrcc016 FROM xrcc_t WHERE xrccent=? AND xrccld=? AND xrccdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

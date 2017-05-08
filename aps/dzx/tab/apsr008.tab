@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apsr008" module="aps" jobmode="N" type="r01" industry="std" fix_arg="0" crtid="03079" crtdt="2015-04-17 14:00:17" modid="07024" moddt="2016-10-03 10:20:51" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="APS需求欠料交叉表">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="psph009,psph040,psph019,psca001(chr500),psca001_desc(chr80),day(chr5),chk(chr1)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="aps" filename="apsr008" method="dialog">
+    <section id="input">
+      <input id="head" field="psca001,day,chk"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="psph009,psph040,psph019"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="psph009">
+        <controlp form="q_psph009" state="c"/>
+      </column>
+      <column id="psph040">
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="psph019"/>
+      <column id="psca001">
+        <after>
+          <check chkid="v_psca001" id="isExist"/>
+          <reference field="psca001_desc" ref_field="pscasite,psca001" map_field="pscasite,psca001" ref_sql="SELECT pscal003 FROM pscal_t WHERE pscalent=$varg_enterprise$var AND pscalsite=? AND pscal001=? AND pscal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_psca001" state="i"/>
+      </column>
+      <column id="psca001_desc"/>
+      <column id="day" type="S" default="0"/>
+      <column id="chk" type="S" default="N"/>
+    </init>
+  </form>
+</assembly>
+

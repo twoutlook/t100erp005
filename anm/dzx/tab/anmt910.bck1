@@ -1,0 +1,162 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmt910" module="anm" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="04152" crtdt="2014-08-15 15:24:29" modid="02159" moddt="2015-11-02 14:13:53" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="資金計劃編製">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="nmbi001,nmbi001_desc(chr80),nmbidocno,nmbi007,nmbidocdt,nmbi004,nmbi002,nmbi003,nmbistus,nmbiownid,nmbiownid_desc(chr80),nmbiowndp,nmbiowndp_desc(chr80),nmbicrtid,nmbicrtid_desc(chr80),nmbicrtdp,nmbicrtdp_desc(chr80),nmbicrtdt,nmbimodid,nmbimodid_desc(chr80),nmbimoddt,nmbicnfid,nmbicnfid_desc(chr80),nmbicnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmbjseq,nmbj001,nmbj001_desc(chr500),nmbj002,nmbj002_desc(chr500),nmbj003,nmbj004,nmbj005,nmbj006,nmbj007,nmbj008"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="nmbk001,nmbk002,nmbk003,nmbk004,nmbk005,nmbk006"/>
+      <var id="bs_field" value="nmbidocno,nmbidocdt,nmbi001,nmbi002,nmbi003" pk="nmbidocno" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmt910" method="dialog">
+    <section id="input">
+      <input id="head" field="nmbi001,nmbidocno,nmbidocdt,nmbi004,nmbistus"/>
+      <input id="body" page="1" field="nmbjseq,nmbj001,nmbj002,nmbj003,nmbj004,nmbj005,nmbj006,nmbj007,nmbj008" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="nmbk002,nmbk003,nmbk004,nmbk005,nmbk006" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="nmbi001,nmbi001_desc,nmbidocno,nmbidocdt,nmbi004,nmbistus,nmbiownid,nmbiowndp,nmbicrtid,nmbicrtdp,nmbicrtdt,nmbimodid,nmbimoddt,nmbicnfid,nmbicnfdt"/>
+      <construct id="body" page="1" field="nmbjseq,nmbj001,nmbj002,nmbj003,nmbj004,nmbj005,nmbj006,nmbj007,nmbj008"/>
+      <construct id="body" page="2" field="nmbk002,nmbk003,nmbk004,nmbk005,nmbk006"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="nmbidocno"/>
+      <set id="head" type="no_entry" field="nmbidocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="nmbi001">
+        <after/>
+        <controlp form="q_nmbh006" state="i"/>
+        <controlp form="q_nmbh006" state="c"/>
+      </column>
+      <column id="nmbi001_desc"/>
+      <column id="nmbidocno">
+        <controlp form="q_ooba002_4" state="i"/>
+        <controlp form="q_nmbidocno" state="c"/>
+      </column>
+      <column id="nmbi007" type="S" default="0"/>
+      <column id="nmbidocdt"/>
+      <column id="nmbi004" type="S" default="3" def_scc="8705"/>
+      <column id="nmbi002"/>
+      <column id="nmbi003"/>
+      <column id="nmbistus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="nmbiownid">
+        <after>
+          <reference field="nmbiownid_desc" ref_field="nmbi_t.nmbiownid" map_field="nmbiownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbiownid_desc"/>
+      <column id="nmbiowndp">
+        <after>
+          <reference field="nmbiowndp_desc" ref_field="nmbi_t.nmbiowndp" map_field="nmbiowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmbiowndp_desc"/>
+      <column id="nmbicrtid">
+        <after>
+          <reference field="nmbicrtid_desc" ref_field="nmbi_t.nmbicrtid" map_field="nmbicrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbicrtid_desc"/>
+      <column id="nmbicrtdp">
+        <after>
+          <reference field="nmbicrtdp_desc" ref_field="nmbi_t.nmbicrtdp" map_field="nmbicrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmbicrtdp_desc"/>
+      <column id="nmbicrtdt"/>
+      <column id="nmbimodid">
+        <after>
+          <reference field="nmbimodid_desc" ref_field="nmbi_t.nmbimodid" map_field="nmbimodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbimodid_desc"/>
+      <column id="nmbimoddt"/>
+      <column id="nmbicnfid">
+        <after>
+          <reference field="nmbicnfid_desc" ref_field="nmbi_t.nmbicnfid" map_field="nmbicnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbicnfid_desc"/>
+      <column id="nmbicnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="nmbjseq"/>
+      <column id="nmbj001">
+        <after>
+          <reference field="nmbj001_desc" ref_field="nmbj_t.nmbj001" map_field="nmbjent,nmbj001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmbh004" state="i"/>
+        <controlp form="q_nmbh004" state="c"/>
+      </column>
+      <column id="nmbj001_desc"/>
+      <column id="nmbj002">
+        <after>
+          <reference field="nmbj002_desc" ref_field="nmbj_t.nmbj002" map_field="nmbjent,nmbj002" ref_sql="SELECT nmbdl004 FROM nmbdl_t WHERE nmbdlent=$varg_enterprise$var AND nmbdl002=? AND nmbdl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmbh004" state="i"/>
+        <controlp form="q_nmbh004" state="c"/>
+      </column>
+      <column id="nmbj002_desc"/>
+      <column id="nmbj003"/>
+      <column id="nmbj004"/>
+      <column id="nmbj005">
+        <controlp form="q_aooi001_1" state="i"/>
+        <controlp form="q_aooi001_1" state="c"/>
+      </column>
+      <column id="nmbj006"/>
+      <column id="nmbj007"/>
+      <column id="nmbj008"/>
+    </init>
+    <init id="body" page="2">
+      <column id="nmbk001"/>
+      <column id="nmbk002"/>
+      <column id="nmbk003"/>
+      <column id="nmbk004"/>
+      <column id="nmbk005"/>
+      <column id="nmbk006"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="nmbi_t" pk="nmbidocno">
+      <sql id="forupd_sql" type="sql" query="SELECT nmbi001,&apos;&apos;,nmbidocno,nmbi007,nmbidocdt,nmbi004,nmbi002,nmbi003,nmbistus,nmbiownid,&apos;&apos;,nmbiowndp,&apos;&apos;,nmbicrtid,&apos;&apos;,nmbicrtdp,&apos;&apos;,nmbicrtdt,nmbimodid,&apos;&apos;,nmbimoddt,nmbicnfid,&apos;&apos;,nmbicnfdt FROM nmbi_t WHERE nmbient= ? AND nmbidocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT nmbi001,&apos;&apos;,nmbidocno,nmbi007,nmbidocdt,nmbi004,nmbi002,nmbi003,nmbistus,nmbiownid,&apos;&apos;,nmbiowndp,&apos;&apos;,nmbicrtid,&apos;&apos;,nmbicrtdp,&apos;&apos;,nmbicrtdt,nmbimodid,&apos;&apos;,nmbimoddt,nmbicnfid,&apos;&apos;,nmbicnfdt FROM nmbi_t" order="nmbidocno"/>
+    </head>
+    <body id="nmbj_t" page="1" linked="" pk="nmbjseq" fk="nmbjdocno">
+      <sql id="forupd_sql_detail" query="SELECT nmbjseq,nmbj001,&apos;&apos;,nmbj002,&apos;&apos;,nmbj003,nmbj004,nmbj005,nmbj006,nmbj007,nmbj008 FROM nmbj_t WHERE nmbjent=? AND nmbjdocno=? AND nmbjseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmbjseq,nmbj001,&apos;&apos;,nmbj002,&apos;&apos;,nmbj003,nmbj004,nmbj005,nmbj006,nmbj007,nmbj008 FROM nmbj_t WHERE nmbjent=? AND nmbjdocno=?"/>
+    </body>
+    <body id="nmbk_t" page="2" linked="" detail="Y" master="nmbj_t" default_site="N" pk="nmbk001" fk="nmbkdocno,nmbkseq">
+      <sql id="forupd_sql_detail" query="SELECT nmbk001,nmbk002,nmbk003,nmbk004,nmbk005,nmbk006 FROM nmbk_t WHERE nmbkent=? AND nmbkdocno=? AND nmbkseq=? AND nmbk001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmbk001,nmbk002,nmbk003,nmbk004,nmbk005,nmbk006 FROM nmbk_t WHERE nmbkent=? AND nmbkdocno=? AND nmbkseq=?"/>
+    </body>
+  </dataset>
+</assembly>
+

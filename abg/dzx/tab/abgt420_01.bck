@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abgt420_01" module="abg" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02114" crtdt="2016-11-17 11:20:26" modid="02114" moddt="2016-11-17 11:21:58" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="匯入資料">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bgde001,bgde001_desc(chr80),bgde002,bgde002_desc(chr80),type(chr500),bgde005,a(chr500),b(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abg" filename="abgt420_01" method="dialog">
+    <section id="input">
+      <input id="head" field="bgde001,bgde002,type,bgde005,a,b"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="bgde001">
+        <after>
+          <reference field="bgde001_desc" ref_field="bgde001" map_field="bgde001" ref_sql="SELECT bgaal003 FROM bgaal_t WHERE bgaalent=$varg_enterprise$var AND bgaal001=? AND bgaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_bgaa001" state="i"/>
+        <controlp form="q_bgaa001" state="c"/>
+      </column>
+      <column id="bgde001_desc"/>
+      <column id="bgde002">
+        <after>
+          <reference field="bgde002_desc" ref_field="bgde002" map_field="bgde002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_77" state="i"/>
+        <controlp form="q_ooef001_77" state="c"/>
+      </column>
+      <column id="bgde002_desc"/>
+      <column id="type"/>
+      <column id="bgde005"/>
+      <column id="a" type="S" default="Y"/>
+      <column id="b"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bgde_t" pk="bgde001,bgde002,bgde004,bgde008">
+      <sql id="forupd_sql" type="sql" query="SELECT bgde001,&apos;&apos;,bgde002,&apos;&apos;,&apos;&apos;,bgde005,&apos;&apos;,&apos;&apos; FROM bgde_t WHERE bgdeent= ? AND bgde001=? AND bgde002=? AND bgde004=? AND bgde008=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="bgde001,bgde002,bgde004,bgde008"/>
+    </head>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apsp621" module="aps" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="01588" crtdt="2015-12-14 15:16:18" modid="01588" moddt="2015-12-15 11:10:01" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="APS產生工單作業[背景執行]">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="psos001,psos001_desc(chr80),imae012,psos012,psos011,imaa009,imae011,psos054,imaf013,sfaadocno,sfaadocno_desc(chr80),sfaa057,sfaa017,sfaa017_desc(chr80),l_auto_confirm(chr500),l_delay(chr500),l_delay_days(num5),stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="aps" filename="apsp621" method="dialog">
+    <section id="input">
+      <input id="head" field="psos001"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="imae012,psos012,psos011,imaa009,imae011,psos054,imaf013"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="psos001">
+        <after>
+          <reference field="psos001_desc" ref_field="psos_t.psos001" map_field="psos001" ref_sql="SELECT pscal003 FROM pscal_t WHERE pscalent=$varg_enterprise$var AND pscal001=? AND pscal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="psos001_desc"/>
+      <column id="imae012">
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psos012"/>
+      <column id="psos011"/>
+      <column id="imaa009">
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="imae011">
+        <controlp form="q_imcf011" state="c"/>
+      </column>
+      <column id="psos054">
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="imaf013" def_scc="2022"/>
+      <column id="sfaadocno">
+        <after/>
+        <controlp form="q_ooba002" state="i"/>
+      </column>
+      <column id="sfaadocno_desc"/>
+      <column id="sfaa057" def_scc="4010"/>
+      <column id="sfaa017">
+        <after>
+          <reference field="sfaa017_desc" ref_field="sfaa_t.sfaa017" map_field="sfaa017" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="sfaa017_desc"/>
+      <column id="l_auto_confirm"/>
+      <column id="l_delay"/>
+      <column id="l_delay_days"/>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

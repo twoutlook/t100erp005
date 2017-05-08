@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abgi080_01" module="abg" jobmode="N" type="c01c" industry="std" fix_arg="0" crtid="02416" crtdt="2014-02-12 15:43:50" modid="03080" moddt="2015-10-21 10:07:15" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="公式產生器">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bgae006,bgae006_desc(chr80),bgae001,bgae001_desc(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abg" filename="abgi080_01" method="dialog">
+    <section id="input"/>
+    <section id="construct">
+      <construct id="head" field="bgae006,bgae001"/>
+    </section>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="bgae006">
+        <after>
+          <reference field="bgae006_desc" ref_field="bgae006" map_field="bgae006" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;11&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooal002_12" state="i"/>
+        <controlp form="q_bgae006" state="c"/>
+      </column>
+      <column id="bgae006_desc"/>
+      <column id="bgae001">
+        <after>
+          <reference field="bgae001_desc" ref_field="bgae001,bgae006" map_field="bgae001,bgae006" ref_sql="SELECT bgael003 FROM bgael_t WHERE bgaelent=$varg_enterprise$var AND bgael001=? AND bgael006=? AND bgael002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_bgae001" state="c"/>
+      </column>
+      <column id="bgae001_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bgae_t" pk="bgae006,bgae001">
+      <sql id="forupd_sql" type="sql" query="SELECT bgae006,&apos;&apos;,bgae001,&apos;&apos; FROM bgae_t WHERE bgaeent= ? AND bgae006=? AND bgae001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="bgae006,bgae001"/>
+    </head>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aist310_03" module="ais" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="02040" crtdt="2016-10-18 17:45:21" modid="02040" moddt="2016-10-18 18:01:26" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="銷貨發票查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isat007,isat003,isat004,isat006,isat002,isat103,isat104,isat105,isat113,isat114,isat115,isat014,isat106,isat107,isatdocno,isaf035(chr20),isatseq,isatcomp"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="detail_qrystr" mode="popup">
+        <action id="prog_aist310" prog="aist310" parameter="isatdocno"/>
+      </action>
+    </section>
+  </structure>
+  <form id="0" module="ais" filename="aist310_03" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="isatcomp" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="isat007,isat003,isat004,isat006,isat002,isat103,isat104,isat105,isat113,isat114,isat115,isat014,isat106,isat107,isatdocno,isaf035,isatseq,isatcomp"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="isat007"/>
+      <column id="isat003"/>
+      <column id="isat004"/>
+      <column id="isat006"/>
+      <column id="isat002"/>
+      <column id="isat103" type="S" default="0"/>
+      <column id="isat104" type="S" default="0"/>
+      <column id="isat105" type="S" default="0"/>
+      <column id="isat113" type="S" default="0"/>
+      <column id="isat114" type="S" default="0"/>
+      <column id="isat115" type="S" default="0"/>
+      <column id="isat014"/>
+      <column id="isat106" type="S" default="0"/>
+      <column id="isat107" type="S" default="0"/>
+      <column id="isatdocno"/>
+      <column id="isaf035"/>
+      <column id="isatseq"/>
+      <column id="isatcomp"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="isat_t" page="1" linked="" pk="isatcomp,isatseq,isat003,isat004">
+      <sql id="forupd_sql_detail" query="SELECT isat007,isat003,isat004,isat006,isat002,isat103,isat104,isat105,isat113,isat114,isat115,isat014,isat106,isat107,isatdocno,&apos;&apos;,isatseq,isatcomp FROM isat_t WHERE isatent=? AND isatcomp=? AND isatseq=? AND isat003=? AND isat004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT isat007,isat003,isat004,isat006,isat002,isat103,isat104,isat105,isat113,isat114,isat115,isat014,isat106,isat107,isatdocno,&apos;&apos;,isatseq,isatcomp FROM isat_t WHERE isatent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

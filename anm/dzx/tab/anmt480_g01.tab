@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmt480_g01" module="anm" jobmode="N" type="g01" industry="std" crtid="06821" crtdt="2015-08-28 14:01:54" modid="02291" moddt="2016-02-17 09:56:04" sdver="3" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.a1(chr100|prog_name)">
+    <var seq="1" value="nmchcomp,l_nmchsite_desc(chr500|&apos;&apos;),l_nmchcomp_desc(chr500|&apos;&apos;),nmch006,nmch100,l_nmcr103(nmcr103|0),nmci115,nmci105,nmch101,l_nmas003(chr500|&apos;&apos;),l_nmcl113_nmcm003(num20_6|0),nmch003,l_nmci003_nmci001(chr30|&apos;&apos;),nmci001,nmci003,nmci132,l_nmci132_desc(chr500|&apos;&apos;),nmci133,nmci113,nmci103,l_nmck011(nmck011|&apos;&apos;),l_nmck005_desc(chr500|&apos;&apos;),l_nmck005(nmck005|&apos;&apos;),nmci002,nmciorga,nmciseq,l_nmch003_desc(chr500|&apos;&apos;),nmch007,nmchdocdt,nmchdocno,l_nmck007(nmck007|0),nmch001,l_nmci002_desc(chr500|&apos;&apos;),l_nmch001(chr500|&apos;&apos;),l_nmck101(nmck101|0),nmci118,nmch002,l_nmch002_desc(chr500|&apos;&apos;),nmchent,nmchsite,l_nmci003_133(chr500|&apos;&apos;)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="nmchcomp(nmchcomp|nmchcomp),l_nmchsite_desc(chr500|&apos;&apos;),l_nmchcomp_desc(chr500|&apos;&apos;),nmch006(nmch006|nmch006),nmch100(nmch100|nmch100),l_nmcr103(nmcr103|0),nmci115(nmci115|nmci115),nmci105(nmci105|nmci105),nmch101(nmch101|nmch101),l_nmas003(chr500|&apos;&apos;),l_nmcl113_nmcm003(num20_6|0),nmch003(nmch003|nmch003),l_nmci003_nmci001(chr30|&apos;&apos;),nmci001(nmci001|nmci001),nmci003(nmci003|nmci003),nmci132(nmci132|nmci132),l_nmci132_desc(chr500|&apos;&apos;),nmci133(nmci133|nmci133),nmci113(nmci113|nmci113),nmci121(nmci121|nmci121),nmci131(nmci131|nmci131),nmci008(nmci008|nmci008),nmci100(nmci100|nmci100),nmci101(nmci101|nmci101),nmci103(nmci103|nmci103),l_nmck011(nmck011|&apos;&apos;),l_nmck005_desc(chr500|&apos;&apos;),l_nmck005(nmck005|&apos;&apos;),nmci002(nmci002|nmci002),nmciorga(nmciorga|nmciorga),nmciseq(nmciseq|nmciseq),l_nmch003_desc(chr500|&apos;&apos;),nmch007(nmch007|nmch007),nmchdocdt(nmchdocdt|nmchdocdt),nmchdocno(nmchdocno|nmchdocno),l_nmck007(nmck007|0),nmch001(nmch001|nmch001),l_nmci002_desc(chr500|&apos;&apos;),l_nmch001(chr500|&apos;&apos;),l_nmck101(nmck101|0),nmci118(nmci118|nmci118),nmch002(nmch002|nmch002),l_nmch002_desc(chr500|&apos;&apos;),nmchent(nmchent|nmchent),nmchsite(nmchsite|nmchsite),l_nmci003_133(chr500|&apos;&apos;)"/>
+    <sql id="g_from" query="nmch_t,nmci_t"/>
+    <sql id="g_where" query="" maintable="nmch_t"/>
+    <sql id="g_order" query="nmchdocno,nmciseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="nmchdocno,nmciseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="nmchdocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="nmchent,nmchdocno"/>
+      <rep type="nmciseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="nmchent,nmchdocno,nmciseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="nmchent,nmchdocno,nmciseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="nmchdocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="nmchent,nmchdocno"/>
+      <rep type="nmciseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

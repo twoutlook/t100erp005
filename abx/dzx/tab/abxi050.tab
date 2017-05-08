@@ -1,0 +1,114 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abxi050" module="abx" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="06814" crtdt="2016-07-13 16:33:18" modid="06814" moddt="2016-07-13 16:33:18" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="內銷銷售預測資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bxfdsite,bxfd001,bxfd002,bxfd003,bxfd003_desc(chr500),bxfd003_desc_desc(chr500),bxfd004,bxfdstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="bxfdsite,bxfd001,bxfd003,bxfdownid,bxfdownid_desc(chr500),bxfdowndp,bxfdowndp_desc(chr500),bxfdcrtid,bxfdcrtid_desc(chr500),bxfdcrtdp,bxfdcrtdp_desc(chr500),bxfdcrtdt,bxfdmodid,bxfdmodid_desc(chr500),bxfdmoddt,bxfdcnfid,bxfdcnfid_desc(chr500),bxfdcnfdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abx" filename="abxi050" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="bxfdsite,bxfd001,bxfd002,bxfd003,bxfd004,bxfdstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="bxfdsite,bxfd001,bxfd002,bxfd003,bxfd004,bxfdstus"/>
+      <construct id="body" page="2" field="bxfdownid,bxfdowndp,bxfdcrtid,bxfdcrtdp,bxfdcrtdt,bxfdmodid,bxfdmoddt,bxfdcnfid,bxfdcnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="bxfdsite"/>
+      <column id="bxfd001" type="S" default="1" def_scc="2026"/>
+      <column id="bxfd002"/>
+      <column id="bxfd003">
+        <after>
+          <check chkid="v_imaf001_1" id="isExist"/>
+          <reference field="bxfd003_desc" ref_field="bxfd_t.bxfd003" map_field="bxfd003" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001" state="i"/>
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="bxfd003_desc">
+        <after>
+          <reference field="bxfd003_desc_desc" ref_field="bxfd_t.bxfd003" map_field="bxfd003" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="bxfd003_desc_desc"/>
+      <column id="bxfd004">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bxfdstus" scc="50" type="S" default="Y">
+        <stus id="N" pic="open"/>
+        <stus id="X" pic="void"/>
+        <stus id="Y" pic="valid"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="bxfdownid">
+        <after>
+          <reference field="bxfdownid_desc" ref_field="bxfd_t.bxfdownid" map_field="bxfdownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxfdownid_desc"/>
+      <column id="bxfdowndp">
+        <after>
+          <reference field="bxfdowndp_desc" ref_field="bxfd_t.bxfdowndp" map_field="bxfdowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bxfdowndp_desc"/>
+      <column id="bxfdcrtid">
+        <after>
+          <reference field="bxfdcrtid_desc" ref_field="bxfd_t.bxfdcrtid" map_field="bxfdcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxfdcrtid_desc"/>
+      <column id="bxfdcrtdp">
+        <after>
+          <reference field="bxfdcrtdp_desc" ref_field="bxfd_t.bxfdcrtdp" map_field="bxfdcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bxfdcrtdp_desc"/>
+      <column id="bxfdcrtdt"/>
+      <column id="bxfdmodid">
+        <after>
+          <reference field="bxfdmodid_desc" ref_field="bxfd_t.bxfdmodid" map_field="bxfdmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxfdmodid_desc"/>
+      <column id="bxfdmoddt"/>
+      <column id="bxfdcnfid">
+        <after>
+          <reference field="bxfdcnfid_desc" ref_field="bxfd_t.bxfdcnfid" map_field="bxfdcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxfdcnfid_desc"/>
+      <column id="bxfdcnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="bxfd_t" page="1,2" linked="" pk="bxfdsite,bxfd001,bxfd003">
+      <sql id="forupd_sql_detail" query="SELECT bxfdsite,bxfd001,bxfd002,bxfd003,&apos;&apos;,&apos;&apos;,bxfd004,bxfdstus,&apos;&apos;,&apos;&apos;,&apos;&apos;,bxfdownid,&apos;&apos;,bxfdowndp,&apos;&apos;,bxfdcrtid,&apos;&apos;,bxfdcrtdp,&apos;&apos;,bxfdcrtdt,bxfdmodid,&apos;&apos;,bxfdmoddt,bxfdcnfid,&apos;&apos;,bxfdcnfdt FROM bxfd_t WHERE bxfdent=? AND bxfdsite=? AND bxfd001=? AND bxfd003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bxfdsite,bxfd001,bxfd002,bxfd003,&apos;&apos;,&apos;&apos;,bxfd004,bxfdstus,&apos;&apos;,&apos;&apos;,&apos;&apos;,bxfdownid,&apos;&apos;,bxfdowndp,&apos;&apos;,bxfdcrtid,&apos;&apos;,bxfdcrtdp,&apos;&apos;,bxfdcrtdt,bxfdmodid,&apos;&apos;,bxfdmoddt,bxfdcnfid,&apos;&apos;,bxfdcnfdt FROM bxfd_t WHERE bxfdent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

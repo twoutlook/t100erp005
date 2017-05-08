@@ -1,0 +1,224 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="arti220" module="art" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02296" crtdt="2013-12-17 11:12:09" modid="08172" moddt="2016-05-19 15:13:36" sdver="0011" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="庫區基本資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="inaasite,inaasite_desc(chr80),ooea002(chr10),ooea002_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="inaastus,inaa001,inayl003,inayl004,l_inaa002(chr500),l_inaa003(chr500),inaa005,inaa005_desc(chr500),inaa101,inaa102,inaa120,inaa120_desc(chr500),inaa130,inaa105,inaa106,inaa106_desc(chr500),inaa110,inaa111,inaa104,inaa121,inaa121_desc(chr500),inaa122,inaa122_desc(chr500),inaa123,inaa123_desc(chr500),inaa124,inaa124_desc(chr500),inaa008,inaa009,inaa010,inaa014,inaa011,inaaunit,inaa007,inaa131,inaa131_desc(chr500),inaa132,inaa133,inaastamp(timestamp),inaa134,inaa134_desc(chr500),inaa135,inaa136,inaa137,inaa138,inaa139,inaa140,inaa141,inaa141_desc(chr500),inaa015,inaa016,inaa017,inaa012,inaa142"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="inaa001,inaaownid,inaaownid_desc(chr500),inaaowndp,inaaowndp_desc(chr500),inaacrtid,inaacrtid_desc(chr500),inaacrtdp,inaacrtdp_desc(chr500),inaacrtdt,inaamodid,inaamodid_desc(chr500),inaamoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="art" filename="arti220" method="dialog">
+    <section id="input">
+      <input id="head" field="inaasite,ooea002"/>
+      <input id="body" page="1" field="inaastus,inaa001,inayl003,inayl004,l_inaa002,l_inaa003,inaa005,inaa102,inaa120,inaa130,inaa105,inaa106,inaa110,inaa111,inaa104,inaa121,inaa122,inaa123,inaa124,inaa008,inaa009,inaa010,inaa014,inaa011,inaaunit,inaa007,inaa131,inaa132,inaa133,inaastamp,inaa134,inaa135,inaa136,inaa137,inaa138,inaa139,inaa140,inaa141,inaa015,inaa016,inaa017,inaa012,inaa142" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="inaasite,ooea002"/>
+      <construct id="body" page="1" field="inaastus,inaa001,inayl003,inayl004,l_inaa002,l_inaa003,inaa005,inaa102,inaa120,inaa130,inaa105,inaa106,inaa110,inaa111,inaa104,inaa121,inaa122,inaa123,inaa124,inaa008,inaa009,inaa010,inaa014,inaa011,inaaunit,inaa007,inaa131,inaa132,inaa133,inaastamp,inaa134,inaa135,inaa136,inaa137,inaa138,inaa139,inaa140,inaa141,inaa015,inaa016,inaa017,inaa012,inaa142"/>
+      <construct id="body" page="2" field="inaaownid,inaaowndp,inaacrtid,inaacrtdp,inaacrtdt,inaamodid,inaamoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="inaasite"/>
+      <set id="head" type="no_entry" field="inaasite"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="inaasite">
+        <after>
+          <reference field="inaasite_desc" ref_field="inaa_t.inaasite" map_field="inaasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="inaasite_desc"/>
+      <column id="ooea002">
+        <after/>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="ooea002_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="inaastus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="inaa001">
+        <controlp form="q_inaa001" state="c"/>
+      </column>
+      <column id="inayl003"/>
+      <column id="inayl004"/>
+      <column id="l_inaa002"/>
+      <column id="l_inaa003"/>
+      <column id="inaa005">
+        <after>
+          <check chkid="v_ooef001_20" id="isExist"/>
+          <reference field="inaa005_desc" ref_field="inaa_t.inaa005" map_field="inaa005" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="inaa005_desc"/>
+      <column id="inaa101"/>
+      <column id="inaa102" def_scc="6200"/>
+      <column id="inaa120">
+        <after>
+          <check chkid="v_mhae001" id="isExist"/>
+          <reference field="inaa120_desc" ref_field="inaa_t.inaa120" map_field="inaa120" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhae001" state="i"/>
+        <controlp form="q_mhae001" state="c"/>
+      </column>
+      <column id="inaa120_desc"/>
+      <column id="inaa130"/>
+      <column id="inaa105" def_scc="6201"/>
+      <column id="inaa106">
+        <after>
+          <reference field="inaa106_desc" ref_field="inaa_t.inaa106" map_field="inaa106" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001_1" state="i"/>
+        <controlp form="q_rtax001_1" state="c"/>
+      </column>
+      <column id="inaa106_desc"/>
+      <column id="inaa110" def_scc="6202"/>
+      <column id="inaa111" def_scc="6203"/>
+      <column id="inaa104" def_scc="6204"/>
+      <column id="inaa121">
+        <after>
+          <reference field="inaa121_desc" ref_field="inaa124,inaa123,inaa122,inaa121" map_field="inaa124,inaa123,inaa122,inaa121" ref_sql="SELECT mhadl006 FROM mhadl_t WHERE mhadlent=$varg_enterprise$var AND mhadl001=? AND mhadl002=? AND mhadl003=? AND mhadl004=? AND mhadl005=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhad001" state="i"/>
+        <controlp form="q_mhad001" state="c"/>
+      </column>
+      <column id="inaa121_desc"/>
+      <column id="inaa122">
+        <after>
+          <reference field="inaa122_desc" ref_field="inaa124,inaa123,inaa122" map_field="inaa124,inaa123,inaa122" ref_sql="SELECT mhacl005 FROM mhacl_t WHERE mhaclent=$varg_enterprise$var AND mhacl001=? AND mhacl002=? AND mhacl003=? AND mhacl004=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhac003" state="i"/>
+        <controlp form="q_mhac003" state="c"/>
+      </column>
+      <column id="inaa122_desc"/>
+      <column id="inaa123">
+        <after>
+          <reference field="inaa123_desc" ref_field="inaa124,inaa123" map_field="inaa124,inaa123" ref_sql="SELECT mhabl004 FROM mhabl_t WHERE mhablent=$varg_enterprise$var AND mhabl001=? AND mhabl002=? AND mhabl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhab002" state="i"/>
+        <controlp form="q_mhab002" state="c"/>
+      </column>
+      <column id="inaa123_desc"/>
+      <column id="inaa124">
+        <after>
+          <reference field="inaa124_desc" ref_field="inaa_t.inaa124" map_field="inaaent,inaa124" ref_sql="SELECT mhaal003 FROM mhaal_t WHERE mhaalent=$varg_enterprise$var AND mhaal001=? AND mhaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhaa001" state="i"/>
+        <controlp form="q_mhaa001" state="c"/>
+      </column>
+      <column id="inaa124_desc"/>
+      <column id="inaa008" type="S" default="Y"/>
+      <column id="inaa009" type="S" default="Y"/>
+      <column id="inaa010" type="S" default="Y"/>
+      <column id="inaa014" type="S" default="N"/>
+      <column id="inaa011" type="S" default="N"/>
+      <column id="inaaunit"/>
+      <column id="inaa007" type="S" default="1" def_scc="2050"/>
+      <column id="inaa131">
+        <after>
+          <check chkid="v_oocq002" id="chkandReturn"/>
+          <reference field="inaa131_desc" ref_field="inaa131" map_field="inaa131" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2127&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="inaa131_desc"/>
+      <column id="inaa132" type="S" default="N"/>
+      <column id="inaa133" type="S" default="Y"/>
+      <column id="inaastamp"/>
+      <column id="inaa134">
+        <after>
+          <check chkid="v_oocq002" id="chkandReturn"/>
+          <reference field="inaa134_desc" ref_field="inaa134" map_field="inaa134" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2126&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="inaa134_desc"/>
+      <column id="inaa135" type="S" default="1" def_scc="6781"/>
+      <column id="inaa136" type="S" default="N"/>
+      <column id="inaa137" type="S" default="Y"/>
+      <column id="inaa138" type="S" default="Y"/>
+      <column id="inaa139" type="S" default="Y"/>
+      <column id="inaa140" def_scc="6787"/>
+      <column id="inaa141">
+        <after>
+          <reference field="inaa141_desc" ref_field="inaa_t.inaa141" map_field="inaaent,inaa141" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inaa001_6" state="i"/>
+        <controlp form="q_inaa001_6" state="c"/>
+      </column>
+      <column id="inaa141_desc"/>
+      <column id="inaa015" type="S" default="N"/>
+      <column id="inaa016" type="S" default="N"/>
+      <column id="inaa017" type="S" default="N"/>
+      <column id="inaa012" type="S" default="N"/>
+      <column id="inaa142" type="S" default="1"/>
+    </init>
+    <init id="body" page="2">
+      <column id="inaaownid">
+        <after/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inaaownid_desc"/>
+      <column id="inaaowndp">
+        <after/>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="inaaowndp_desc"/>
+      <column id="inaacrtid">
+        <after/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inaacrtid_desc"/>
+      <column id="inaacrtdp">
+        <after/>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="inaacrtdp_desc"/>
+      <column id="inaacrtdt"/>
+      <column id="inaamodid">
+        <after/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inaamodid_desc"/>
+      <column id="inaamoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="inaa_t" pk="inaasite">
+      <sql id="forupd_sql" type="sql" query="SELECT inaasite,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM inaa_t WHERE inaaent= ? AND inaasite=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT inaasite,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM inaa_t" order="inaasite"/>
+    </head>
+    <body id="inaa_t" page="1,2" linked="" pk="inaa001" fk="inaasite">
+      <sql id="forupd_sql_detail" query="SELECT inaastus,inaa001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,inaa005,&apos;&apos;,inaa101,inaa102,inaa120,&apos;&apos;,inaa130,inaa105,inaa106,&apos;&apos;,inaa110,inaa111,inaa104,inaa121,&apos;&apos;,inaa122,&apos;&apos;,inaa123,&apos;&apos;,inaa124,&apos;&apos;,inaa008,inaa009,inaa010,inaa014,inaa011,inaaunit,inaa007,inaa131,&apos;&apos;,inaa132,inaa133,inaastamp,inaa134,&apos;&apos;,inaa135,inaa136,inaa137,inaa138,inaa139,inaa140,inaa141,&apos;&apos;,inaa015,inaa016,inaa017,inaa012,inaa142,&apos;&apos;,inaaownid,&apos;&apos;,inaaowndp,&apos;&apos;,inaacrtid,&apos;&apos;,inaacrtdp,&apos;&apos;,inaacrtdt,inaamodid,&apos;&apos;,inaamoddt FROM inaa_t WHERE inaaent=? AND inaasite=? AND inaa001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT inaastus,inaa001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,inaa005,&apos;&apos;,inaa101,inaa102,inaa120,&apos;&apos;,inaa130,inaa105,inaa106,&apos;&apos;,inaa110,inaa111,inaa104,inaa121,&apos;&apos;,inaa122,&apos;&apos;,inaa123,&apos;&apos;,inaa124,&apos;&apos;,inaa008,inaa009,inaa010,inaa014,inaa011,inaaunit,inaa007,inaa131,&apos;&apos;,inaa132,inaa133,inaastamp,inaa134,&apos;&apos;,inaa135,inaa136,inaa137,inaa138,inaa139,inaa140,inaa141,&apos;&apos;,inaa015,inaa016,inaa017,inaa012,inaa142,&apos;&apos;,inaaownid,&apos;&apos;,inaaowndp,&apos;&apos;,inaacrtid,&apos;&apos;,inaacrtdp,&apos;&apos;,inaacrtdt,inaamodid,&apos;&apos;,inaamoddt FROM inaa_t WHERE inaaent= ? AND inaasite=?"/>
+      <sql id="detail_append" type="lang" target="inayl_t.inayl003,inayl_t.inayl004" table="inayl_t" fk="inaa001" pk="inayl001,inayl002" field="inayl003,inayl004"/>
+    </body>
+  </dataset>
+</assembly>
+

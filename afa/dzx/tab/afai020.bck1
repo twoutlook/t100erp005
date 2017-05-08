@@ -1,0 +1,132 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afai020" module="afa" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02599" crtdt="2014-01-23 19:19:10" modid="01531" moddt="2016-08-08 09:53:27" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="固定資產主要類型維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="faacstus,faac001,faacl003,faac017,faac002,faac003,faac016,faac004,faac005,faac006,faac007,faac008,faac009,faac010,faac011,faac012,faac013,faac014,faac015"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="faac001,faacownid,faacownid_desc(chr500),faacowndp,faacowndp_desc(chr500),faaccrtid,faaccrtid_desc(chr500),faaccrtdp,faaccrtdp_desc(chr500),faaccrtdt,faacmodid,faacmodid_desc(chr500),faacmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="open_afai021"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="afa" filename="afai020" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="faacstus,faac001,faacl003,faac017,faac002,faac003,faac016,faac004,faac005,faac006,faac007,faac008,faac009,faac010,faac011,faac012,faac013,faac014,faac015" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="faacstus,faac001,faacl003,faac017,faac002,faac003,faac016,faac004,faac005,faac006,faac007,faac008,faac009,faac010,faac011,faac012,faac013,faac014,faac015"/>
+      <construct id="body" page="2" field="faacownid,faacowndp,faaccrtid,faaccrtdp,faaccrtdt,faacmodid,faacmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="faacstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="faac001">
+        <controlp form="q_faac001" state="c"/>
+      </column>
+      <column id="faacl003"/>
+      <column id="faac017" type="S" default="2"/>
+      <column id="faac002" def_scc="9903"/>
+      <column id="faac003" def_scc="9904"/>
+      <column id="faac016">
+        <after>
+          <check id="range" st="100" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="faac004">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="faac005" type="S" default="N"/>
+      <column id="faac006" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="faac007" type="S" default="Y"/>
+      <column id="faac008" type="S" default="1" def_scc="9905"/>
+      <column id="faac009" type="S" default="1" def_scc="9906"/>
+      <column id="faac010" type="S" default="1" def_scc="9907"/>
+      <column id="faac011" type="S" default="1" def_scc="9908"/>
+      <column id="faac012" type="S" default="0" def_scc="9909"/>
+      <column id="faac013">
+        <after>
+          <check id="range" st="100" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="faac014">
+        <after>
+          <check id="range" st="100" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="faac015"/>
+    </init>
+    <init id="body" page="2">
+      <column id="faacownid">
+        <after>
+          <reference field="faacownid_desc" ref_field="faac_t.faacownid" map_field="faacownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="faacownid_desc"/>
+      <column id="faacowndp">
+        <after>
+          <reference field="faacowndp_desc" ref_field="faac_t.faacowndp" map_field="faacowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="faacowndp_desc"/>
+      <column id="faaccrtid">
+        <after>
+          <reference field="faaccrtid_desc" ref_field="faac_t.faaccrtid" map_field="faaccrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="faaccrtid_desc"/>
+      <column id="faaccrtdp">
+        <after>
+          <reference field="faaccrtdp_desc" ref_field="faac_t.faaccrtdp" map_field="faaccrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="faaccrtdp_desc"/>
+      <column id="faaccrtdt"/>
+      <column id="faacmodid">
+        <after>
+          <reference field="faacmodid_desc" ref_field="faac_t.faacmodid" map_field="faacmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="faacmodid_desc"/>
+      <column id="faacmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="faac_t" page="1,2" linked="" pk="faac001">
+      <sql id="forupd_sql_detail" query="SELECT faacstus,faac001,&apos;&apos;,faac017,faac002,faac003,faac016,faac004,faac005,faac006,faac007,faac008,faac009,faac010,faac011,faac012,faac013,faac014,faac015,&apos;&apos;,faacownid,&apos;&apos;,faacowndp,&apos;&apos;,faaccrtid,&apos;&apos;,faaccrtdp,&apos;&apos;,faaccrtdt,faacmodid,&apos;&apos;,faacmoddt FROM faac_t WHERE faacent=? AND faac001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT faacstus,faac001,&apos;&apos;,faac017,faac002,faac003,faac016,faac004,faac005,faac006,faac007,faac008,faac009,faac010,faac011,faac012,faac013,faac014,faac015,&apos;&apos;,faacownid,&apos;&apos;,faacowndp,&apos;&apos;,faaccrtid,&apos;&apos;,faaccrtdp,&apos;&apos;,faaccrtdt,faacmodid,&apos;&apos;,faacmoddt FROM faac_t WHERE faacent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="faacl_t.faacl003" table="faacl_t" fk="faac001" pk="faacl001,faacl002" field="faacl003"/>
+    </body>
+  </dataset>
+</assembly>
+

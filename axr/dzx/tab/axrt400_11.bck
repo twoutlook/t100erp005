@@ -1,0 +1,99 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrt400_11" module="axr" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="01727" crtdt="2013-11-26 16:33:35" modid="01727" moddt="2014-08-18 14:53:12" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="收款沖銷單身其他資訊維護">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xrceseq,xrce002,xrce015,xrce003,xrce024,xrce025,xrce009,xrce017,xrce017_desc(chr80),xrce018,xrce018_desc(chr80),xrce019,xrce019_desc(chr80),xrce020,xrce020_desc(chr80),xrce016,xrce016_desc(chr80),xrce021,xrce021_desc(chr80),xrce022,xrce022_desc(chr80),xrce023,xrce023_desc(chr80),xrce011,xrce011_desc(chr80),xrce012,xrce012_desc(chr80),xrce026"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="axr" filename="axrt400_11" method="dialog">
+    <section id="input">
+      <input id="head" field="xrceseq,xrce002,xrce015,xrce003,xrce024,xrce025,xrce009,xrce017,xrce018,xrce019,xrce020,xrce016,xrce021,xrce022,xrce023,xrce011,xrce012,xrce026"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="xrceseq"/>
+      <column id="xrce002"/>
+      <column id="xrce015"/>
+      <column id="xrce003"/>
+      <column id="xrce024"/>
+      <column id="xrce025"/>
+      <column id="xrce009"/>
+      <column id="xrce017">
+        <after>
+          <reference field="xrce017_desc" ref_field="xrce_t.xrce017" map_field="xrce017" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="xrce017_desc"/>
+      <column id="xrce018">
+        <after>
+          <reference field="xrce018_desc" ref_field="xrce_t.xrce018" map_field="xrceent,xrce018" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xrce018_desc"/>
+      <column id="xrce019">
+        <after>
+          <reference field="xrce019_desc" ref_field="xrce_t.xrce019" map_field="xrceent,xrce019" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xrce019_desc"/>
+      <column id="xrce020">
+        <after>
+          <reference field="xrce020_desc" ref_field="xrce020" map_field="xrce020" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;200&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xrce020_desc"/>
+      <column id="xrce016">
+        <after>
+          <check chkid="v_glac002_3" id="isExist"/>
+          <reference field="xrce016_desc" ref_field="xrce016" map_field="xrce016" ref_sql="SELECT glacl004 FROM glacl_t WHERE glaclent=$varg_enterprise$var AND glacl001=&apos; &apos; AND glacl002=? AND glacl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="aglt310_04" state="i"/>
+      </column>
+      <column id="xrce016_desc"/>
+      <column id="xrce021">
+        <after>
+          <check chkid="v_glac002_3" id="isExist"/>
+        </after>
+        <controlp form="aglt310_04" state="i"/>
+      </column>
+      <column id="xrce021_desc"/>
+      <column id="xrce022">
+        <after/>
+      </column>
+      <column id="xrce022_desc"/>
+      <column id="xrce023">
+        <after/>
+      </column>
+      <column id="xrce023_desc"/>
+      <column id="xrce011">
+        <after>
+          <reference field="xrce011_desc" ref_field="xrce_t.xrce011" map_field="xrceent,xrce011" ref_sql="SELECT nmajl003 FROM nmajl_t WHERE nmajlent=$varg_enterprise$var AND nmajl001=? AND nmajl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmad002" state="i"/>
+      </column>
+      <column id="xrce011_desc"/>
+      <column id="xrce012">
+        <after>
+          <reference field="xrce012_desc" ref_field="xrce_t.xrce012" map_field="xrceent,xrce012" ref_sql="SELECT nmakl003 FROM nmakl_t WHERE nmaklent=$varg_enterprise$var AND nmakl001=? AND nmakl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmak001" state="i"/>
+      </column>
+      <column id="xrce012_desc"/>
+      <column id="xrce026">
+        <controlp form="q_nmak001" state="i"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="xrce_t" pk="xrceld,xrcedocno,xrceseq">
+      <sql id="forupd_sql" type="sql" query="SELECT xrceseq,xrce002,xrce015,xrce003,xrce024,xrce025,xrce009,xrce017,&apos;&apos;,xrce018,&apos;&apos;,xrce019,&apos;&apos;,xrce020,&apos;&apos;,xrce016,&apos;&apos;,xrce021,&apos;&apos;,xrce022,&apos;&apos;,xrce023,&apos;&apos;,xrce011,&apos;&apos;,xrce012,&apos;&apos;,xrce026 FROM xrce_t WHERE xrceent= ? AND xrceld=? AND xrcedocno=? AND xrceseq=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="xrceld,xrcedocno,xrceseq"/>
+    </head>
+  </dataset>
+</assembly>
+

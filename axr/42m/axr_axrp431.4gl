@@ -1,0 +1,1072 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axrp431.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0005(2015-03-24 17:11:51), PR版次:0005(2016-11-25 14:20:53)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000045
+#+ Filename...: axrp431
+#+ Description: 收款沖銷單批次取消確認作業
+#+ Creator....: 02114(2015-03-24 17:11:51)
+#+ Modifier...: 02114 -SD/PR- 01727
+ 
+{</section>}
+ 
+{<section id="axrp431.global" >}
+#應用 p01 樣板自動產生(Version:19)
+#add-point:填寫註解說明 name="global.memo" name="global.memo"
+#Memos
+#160905-00002#7   2016/09/05  By 08171   SQL補上ent
+#161021-00050#4   2016/10/24  By 08729   處理組織開窗
+#161111-00049#7   2016/11/24  By 01727   控制组权限修改
+
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+        xrdasite         LIKE xrda_t.xrdasite,
+        xrdald           LIKE xrda_t.xrdald,
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       xrdasite LIKE xrda_t.xrdasite, 
+   xrdasite_desc LIKE type_t.chr80, 
+   xrdald LIKE xrda_t.xrdald, 
+   xrdald_desc LIKE type_t.chr80, 
+   xrdadocno LIKE xrda_t.xrdadocno, 
+   xrdadocdt LIKE xrda_t.xrdadocdt, 
+   xrda003 LIKE xrda_t.xrda003, 
+   xrda005 LIKE xrda_t.xrda005, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_xrdasite_t         LIKE xrda_t.xrdasite
+DEFINE g_xrdald_t           LIKE xrda_t.xrdald
+DEFINE g_glaa121            LIKE glaa_t.glaa121
+
+TYPE type_xrda RECORD
+  xrdadocno   LIKE xrda_t.xrdadocno,
+  xrdasite    LIKE xrda_t.xrdasite,
+  xrdadocdt   LIKE xrda_t.xrdadocdt
+END RECORD
+DEFINE g_xrda_d DYNAMIC ARRAY OF type_xrda
+DEFINE g_sql_ctrl           STRING   #161111-00049#7 Add
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axrp431.main" >}
+MAIN
+   #add-point:main段define (客製用) name="main.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define name="main.define"
+   
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("axr","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+      CALL axrp431_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_axrp431 WITH FORM cl_ap_formpath("axr",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL axrp431_init()
+ 
+      #進入選單 Menu (="N")
+      CALL axrp431_ui_dialog()
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_axrp431
+   END IF
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="axrp431.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION axrp431_init()
+ 
+   #add-point:init段define (客製用) name="init.define_customerization"
+   
+   #end add-point
+   #add-point:ui_dialog段define name="init.define"
+   
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL s_fin_create_account_center_tmp()
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrp431.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION axrp431_ui_dialog()
+ 
+   #add-point:ui_dialog段define (客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define name="ui_dialog.define"
+   DEFINE l_xrdacomp            LIKE xrda_t.xrdacomp
+   DEFINE l_origin_str          STRING   #組織範圍
+   DEFINE l_success             LIKE type_t.num5
+   DEFINE l_glaacomp            LIKE glaa_t.glaacomp   #161111-00049#7 Add
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   CALL axrp431_default()
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2 name="ui_dialog.before_dialog2"
+      
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #應用 a57 樣板自動產生(Version:3)
+         INPUT BY NAME g_master.xrdasite,g_master.xrdald 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前 name="input.m.before_input"
+               
+               #end add-point
+         
+                     #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrdasite
+            
+            #add-point:AFTER FIELD xrdasite name="input.a.xrdasite"
+            IF NOT cl_null(g_master.xrdasite) THEN
+               CALL s_fin_account_center_sons_query('3',g_master.xrdasite,g_today,'1')
+               IF g_master.xrdasite != g_xrdasite_t THEN
+                 CALL s_fin_orga_get_comp_ld(g_master.xrdasite) RETURNING l_success,g_errno,l_xrdacomp,g_master.xrdald
+               END IF
+               CALL s_fin_account_center_with_ld_chk(g_master.xrdasite,g_master.xrdald,g_user,'3','N','',g_today) RETURNING l_success,g_errno
+               IF NOT cl_null(g_errno) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = g_master.xrdasite
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+            
+                  LET g_master.xrdasite = g_xrdasite_t
+                  LET g_master.xrdald = g_xrdald_t
+                  CALL axrp431_ref_show()
+                  NEXT FIELD CURRENT
+               END IF
+               SELECT ooef017 INTO l_xrdacomp
+                 FROM ooef_t
+                WHERE ooefent = g_enterprise
+                  AND ooef001 = g_master.xrdasite
+               #161111-00049#7 Add  ---(S)---
+               SELECT glaacomp INTO l_glaacomp FROM glaa_t WHERE glaaent = g_enterprise AND glaald = g_master.xrdald
+               CALL s_control_get_customer_sql_pmab('4',g_site,g_user,g_dept,'',l_glaacomp)
+                  RETURNING g_sub_success,g_sql_ctrl
+               #161111-00049#7 Add  ---(E)---
+            END IF
+            CALL axrp431_ref_show()
+            CALL s_fin_account_center_sons_query('3',g_master.xrdasite,g_today,'1')
+            LET g_xrdasite_t = g_master.xrdasite 
+            LET g_xrdald_t = g_master.xrdald
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrdasite
+            #add-point:BEFORE FIELD xrdasite name="input.b.xrdasite"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrdasite
+            #add-point:ON CHANGE xrdasite name="input.g.xrdasite"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrdald
+            
+            #add-point:AFTER FIELD xrdald name="input.a.xrdald"
+            IF NOT cl_null(g_master.xrdald) THEN
+               CALL s_fin_account_center_with_ld_chk(g_master.xrdasite,g_master.xrdald,g_user,'3','N','',g_today) RETURNING l_success,g_errno
+               IF NOT cl_null(g_errno) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = g_master.xrdald
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+            
+                  LET g_master.xrdald = ''
+                  CALL axrp431_ref_show()
+                  NEXT FIELD CURRENT
+               END IF
+               #161111-00049#7 Add  ---(S)---
+               SELECT glaacomp INTO l_glaacomp FROM glaa_t WHERE glaaent = g_enterprise AND glaald = g_master.xrdald
+               CALL s_control_get_customer_sql_pmab('4',g_site,g_user,g_dept,'',l_glaacomp)
+                  RETURNING g_sub_success,g_sql_ctrl
+               #161111-00049#7 Add  ---(E)---
+            END IF
+            CALL axrp431_ref_show() 
+            LET g_xrdald_t = g_master.xrdald
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrdald
+            #add-point:BEFORE FIELD xrdald name="input.b.xrdald"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrdald
+            #add-point:ON CHANGE xrdald name="input.g.xrdald"
+            
+            #END add-point 
+ 
+ 
+ 
+                     #Ctrlp:input.c.xrdasite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrdasite
+            #add-point:ON ACTION controlp INFIELD xrdasite name="input.c.xrdasite"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_master.xrdasite             #給予default值
+            LET g_qryparam.default2 = "" #g_master.ooefl003 #說明(簡稱)
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+
+            #CALL q_ooef001()                 #呼叫開窗  #161021-00050#4 mark
+            LET g_qryparam.where = " ooefstus = 'Y'"    #161021-00050#4 add
+            CALL q_ooef001_46()                         #161021-00050#4 add
+            LET g_master.xrdasite = g_qryparam.return1              
+
+            DISPLAY g_master.xrdasite TO xrdasite              #
+            CALL axrp431_ref_show()
+            NEXT FIELD xrdasite                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrdald
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrdald
+            #add-point:ON ACTION controlp INFIELD xrdald name="input.c.xrdald"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_master.xrdald             #給予default值
+            
+            #取得帳務組織下所屬成員
+            CALL s_fin_account_center_sons_query('3',g_master.xrdasite,g_today,'1')
+            #取得帳務組織下所屬成員之帳別   
+            CALL s_fin_account_center_comp_str() RETURNING l_origin_str
+            #將取回的字串轉換為SQL條件
+            CALL axrp431_change_to_sql(l_origin_str) RETURNING l_origin_str  
+            
+            LET g_qryparam.where = " (glaa008 = 'Y' OR glaa014 = 'Y') AND glaacomp IN (",l_origin_str," )"
+
+            #給予arg
+            LET g_qryparam.arg1 = g_user
+            LET g_qryparam.arg2 = g_dept
+
+            CALL q_authorised_ld()                                #呼叫開窗
+
+            LET g_master.xrdald = g_qryparam.return1              
+
+            DISPLAY g_master.xrdald TO xrdald              #
+            CALL axrp431_ref_show()
+            NEXT FIELD xrdald                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後 name="input.m.after_input"
+               
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...) name="input.other"
+            
+            #end add-point
+         END INPUT
+ 
+ 
+ 
+         
+         #應用 a58 樣板自動產生(Version:3)
+         CONSTRUCT BY NAME g_master.wc ON xrdadocno,xrdadocdt,xrda003,xrda005
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct name="cs.head.before_construct"
+               
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #Ctrlp:construct.c.xrdadocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrdadocno
+            #add-point:ON ACTION controlp INFIELD xrdadocno name="construct.c.xrdadocno"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " xrdastus = 'Y' AND xrdald = '",g_master.xrdald,"'"  #161111-00049#7 Add g_master.xrdald
+            CALL q_xrdadocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xrdadocno  #顯示到畫面上
+            NEXT FIELD xrdadocno                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrdadocno
+            #add-point:BEFORE FIELD xrdadocno name="construct.b.xrdadocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrdadocno
+            
+            #add-point:AFTER FIELD xrdadocno name="construct.a.xrdadocno"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrdadocdt
+            #add-point:BEFORE FIELD xrdadocdt name="construct.b.xrdadocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrdadocdt
+            
+            #add-point:AFTER FIELD xrdadocdt name="construct.a.xrdadocdt"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xrdadocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrdadocdt
+            #add-point:ON ACTION controlp INFIELD xrdadocdt name="construct.c.xrdadocdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.xrda003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrda003
+            #add-point:ON ACTION controlp INFIELD xrda003 name="construct.c.xrda003"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xrda003  #顯示到畫面上
+            NEXT FIELD xrda003                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrda003
+            #add-point:BEFORE FIELD xrda003 name="construct.b.xrda003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrda003
+            
+            #add-point:AFTER FIELD xrda003 name="construct.a.xrda003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.xrda005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrda005
+            #add-point:ON ACTION controlp INFIELD xrda005 name="construct.c.xrda005"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+   	      #161111-00049#7 Add  ---(S)---
+            LET g_qryparam.arg1="('2','3')"
+            IF NOT cl_null(g_sql_ctrl) AND NOT g_sql_ctrl = ' 1=1'  THEN
+               LET g_qryparam.where = g_sql_ctrl
+            END IF
+            CALL q_pmaa001_1()
+   	      #161111-00049#7 Add  ---(S)---
+           #CALL q_pmaa001_13()                     #呼叫開窗   #161111-00049#7 Mark
+            DISPLAY g_qryparam.return1 TO xrda005  #顯示到畫面上
+            NEXT FIELD xrda005                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrda005
+            #add-point:BEFORE FIELD xrda005 name="construct.b.xrda005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrda005
+            
+            #add-point:AFTER FIELD xrda005 name="construct.a.xrda005"
+            
+            #END add-point
+            
+ 
+ 
+ 
+            
+            #add-point:其他管控 name="cs.other"
+            
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+ 
+      
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL axrp431_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog3"
+            
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear name="ui_dialog.before_qbeclear"
+         
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL axrp431_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog name="process.exit_dialog"
+      
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL axrp431_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = axrp431_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule name="process.after_schedule"
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrp431.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION axrp431_transfer_argv(ls_js)
+ 
+   #add-point:transfer_agrv段define (客製用) name="transfer_agrv.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define name="transfer_agrv.define"
+   
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容 name="transfer.argv.define"
+   
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrp431.process" >}
+#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION axrp431_process(ls_js)
+ 
+   #add-point:process段define (客製用) name="process.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define name="process.define"
+   
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+   LET li_p01_status = 1
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理 name="process.pre_process"
+   CALL axrp431_p()
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress name="process.count_progress"
+      
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE axrp431_process_cs CURSOR FROM ls_sql
+#  FOREACH axrp431_process_cs INTO
+   #add-point:process段process name="process.process"
+   
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理 name="process.foreground_finish"
+      
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理 name="process.background_finish"
+      
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL axrp431_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrp431.get_buffer" >}
+PRIVATE FUNCTION axrp431_get_buffer(p_dialog)
+ 
+   #add-point:process段define (客製用) name="get_buffer.define_customerization"
+   
+   #end add-point
+   DEFINE p_dialog   ui.DIALOG
+   #add-point:process段define name="get_buffer.define"
+   
+   #end add-point
+ 
+   
+   LET g_master.xrdasite = p_dialog.getFieldBuffer('xrdasite')
+   LET g_master.xrdald = p_dialog.getFieldBuffer('xrdald')
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理 name="get_buffer.others"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrp431.msgcentre_notify" >}
+PRIVATE FUNCTION axrp431_msgcentre_notify()
+ 
+   #add-point:process段define (客製用) name="msgcentre_notify.define_customerization"
+   
+   #end add-point
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:process段define name="msgcentre_notify.define"
+   
+   #end add-point
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知 name="msg_centre.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrp431.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+# 說明欄位帶值
+PRIVATE FUNCTION axrp431_ref_show()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_master.xrdasite
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent = '"||g_enterprise||"' AND ooefl001 = ? AND ooefl002 = '"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_master.xrdasite_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_master.xrdasite_desc
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_master.xrdald
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent = '"||g_enterprise||"' AND glaalld  = ? AND glaal001 = '"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_master.xrdald_desc = g_rtn_fields[1]
+   DISPLAY BY NAME g_master.xrdald_desc
+   
+   SELECT glaa121 INTO g_glaa121 
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald = g_master.xrdald
+END FUNCTION
+# 將取回的字串轉換為SQL條件
+PRIVATE FUNCTION axrp431_change_to_sql(p_wc)
+   DEFINE p_wc       STRING
+   DEFINE r_wc       STRING
+   DEFINE tok        base.StringTokenizer
+   DEFINE l_str      STRING
+
+   LET tok = base.StringTokenizer.create(p_wc,",")
+   WHILE tok.hasMoreTokens()
+      IF cl_null(l_str) THEN
+         LET l_str = tok.nextToken()
+      ELSE
+         LET l_str = l_str,"','",tok.nextToken()
+      END IF
+   END WHILE
+   LET r_wc = "'",l_str,"'"
+
+   RETURN r_wc
+END FUNCTION
+# 賦默認值
+PRIVATE FUNCTION axrp431_default()
+   DEFINE l_xrdacomp      LIKE xrda_t.xrdacomp
+   
+   LET g_master.xrdasite = g_site
+               
+   SELECT ooef017 INTO l_xrdacomp
+     FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_master.xrdasite
+      
+   SELECT glaald INTO g_master.xrdald
+    FROM glaa_t
+   #WHERE glaacomp = l_xrdacomp  #160905-00002#7 mark
+   WHERE glaaent  = g_enterprise #160905-00002#7
+     AND glaacomp = l_xrdacomp   #160905-00002#7
+     AND glaa014 = 'Y'
+     
+   LET g_xrdasite_t = g_master.xrdasite
+   LET g_xrdald_t = g_master.xrdald
+     
+   CALL axrp431_ref_show()
+END FUNCTION
+# 批處理邏輯
+PRIVATE FUNCTION axrp431_p()
+   DEFINE l_sql            STRING 
+   DEFINE l_ac             LIKE type_t.num5
+   DEFINE li_idx           LIKE type_t.num5
+   DEFINE l_xrdastus       LIKE xrda_t.xrdastus
+   DEFINE l_wc             STRING
+   DEFINE l_success        LIKE type_t.num5
+   DEFINE l_xrda014        LIKE xrda_t.xrda014
+   
+   
+   CALL cl_err_collect_init()
+   
+   LET l_sql = "SELECT xrdadocno,xrdasite,xrdadocdt ",
+               "  FROM xrda_t ",
+               " WHERE xrdaent = '",g_enterprise,"'",
+               "   AND xrdald = '",g_master.xrdald,"'",
+               "   AND xrdasite = '",g_master.xrdasite,"'",
+               "   AND ",g_master.wc
+
+   #161111-00049#7 Add  ---(S)---
+   IF NOT cl_null(g_sql_ctrl) AND NOT g_sql_ctrl = ' 1=1'  THEN
+      LET g_sql = g_sql," AND EXISTS (SELECT 1 FROM pmaa_t ",
+                        "              WHERE pmaaent = ",g_enterprise,
+                        "                AND ",g_sql_ctrl,
+                        "                AND pmaaent = xrdaent ",
+                        "                AND pmaa001 = xrda005 )"
+   END IF
+   LET g_sql = g_sql,
+   #161111-00049#7 Add  ---(E)---
+               " ORDER BY xrdadocno"
+   PREPARE axrp431_pre FROM l_sql
+   DECLARE axrp431_cs CURSOR FOR axrp431_pre
+   
+   CALL g_xrda_d.clear()
+   LET l_ac = 1
+   
+   FOREACH axrp431_cs INTO g_xrda_d[l_ac].*
+      LET l_ac = l_ac + 1
+   END FOREACH 
+   CALL g_xrda_d.deleteElement(l_ac)
+   LET l_ac = l_ac - 1
+   
+   LET l_sql = "SELECT xrdaent,xrdald,xrdadocno FROM xrda_t WHERE xrdaent = ? AND xrdald = ? AND xrdadocno = ? FOR UPDATE"
+   LET l_sql = cl_sql_forupd(l_sql)                #轉換不同資料庫語法
+   LET l_sql = cl_sql_add_mask(l_sql)              #遮蔽特定資料
+   DECLARE axrp431_cl CURSOR FROM l_sql            # LOCK CURSOR
+   
+   FOR li_idx = 1 TO g_xrda_d.getLength()
+      CALL s_transaction_begin()
+      
+      OPEN axrp431_cl USING g_enterprise,g_master.xrdald,g_xrda_d[li_idx].xrdadocno
+      IF STATUS THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_xrda_d[li_idx].xrdadocno,"  OPEN axrp431_cl:"   
+         LET g_errparam.code   =  STATUS 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+
+         CLOSE axrp431_cl
+         CALL s_transaction_end('N','0')
+         CONTINUE FOR
+      END IF
+      
+      SELECT xrda014,xrdastus INTO l_xrda014,l_xrdastus
+        FROM xrda_t
+       WHERE xrdaent = g_enterprise
+         AND xrdald = g_master.xrdald
+         AND xrdadocno = g_xrda_d[li_idx].xrdadocno
+         
+      IF l_xrdastus <> 'Y' THEN 
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_xrda_d[li_idx].xrdadocno
+         LET g_errparam.code   = 'axr-00313' 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+      
+         CLOSE axrp431_cl
+         CALL s_transaction_end('N','0')
+         CONTINUE FOR
+      END IF
+      
+      IF NOT cl_null(l_xrda014) THEN 
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_xrda_d[li_idx].xrdadocno
+         LET g_errparam.code   = 'sub-00301' 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+      
+         CLOSE axrp431_cl
+         CALL s_transaction_end('N','0')
+         CONTINUE FOR
+      END IF
+      
+      CALL s_axrt300_date_chk(g_xrda_d[li_idx].xrdasite,g_xrda_d[li_idx].xrdadocdt) RETURNING l_success
+      IF NOT l_success THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_xrda_d[li_idx].xrdadocno
+         LET g_errparam.code   = "axr-00300"
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err() 
+         CALL s_transaction_end('N','0')
+         CONTINUE FOR
+      END IF
+   
+      CALL s_axrt400_unconfirm(g_master.xrdald,g_xrda_d[li_idx].xrdadocno) RETURNING g_errno
+      
+      IF g_errno = 'Y' THEN 
+         UPDATE xrda_t SET xrdastus = 'N'
+          WHERE xrdaent = g_enterprise
+            AND xrdald = g_master.xrdald
+            AND xrdadocno = g_xrda_d[li_idx].xrdadocno
+            
+         IF SQLCA.SQLcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = 'upd xrda_t'
+            LET g_errparam.code   = SQLCA.sqlcode
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         
+            LET g_errno = 'N'                            
+         END IF
+         
+         IF g_errno = 'Y' AND g_glaa121 = 'Y' THEN 
+            LET l_wc = "glgadocno = '",g_xrda_d[li_idx].xrdadocno,"'"
+            CALL s_pre_voucher_upd('AR','R20',g_master.xrdald,'N','','',l_wc) RETURNING l_success
+            
+            IF l_success = FALSE THEN 
+               LET g_errno = 'N'
+            END IF
+         END IF
+      END IF
+      
+      IF g_errno = 'Y' THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = g_xrda_d[li_idx].xrdadocno
+         LET g_errparam.code   = 'axr-00314' 
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         CALL s_transaction_end('Y','0')
+      ELSE
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = g_xrda_d[li_idx].xrdadocno
+         LET g_errparam.code   = 'axr-00315' 
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         CALL s_transaction_end('N','0')    
+      END IF
+   END FOR
+   
+   CALL cl_err_collect_show()
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

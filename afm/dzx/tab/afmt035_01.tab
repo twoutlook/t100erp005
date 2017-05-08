@@ -1,0 +1,106 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmt035_01" module="afm" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="02291" crtdt="2015-11-17 10:06:33" modid="02291" moddt="2016-03-25 13:52:06" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="擔保明細">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="fmcpdocno,fmcpseq,fmcpseq2,fmcp015,fmcp001,fmcp002,fmcp002_desc(chr500),fmcp003,fmcp003_desc(chr500),fmcp017,fmcp016,fmcp004,fmcp005,fmcp018,fmcp019,fmcp020,fmcp006,fmcp007,fmcp008,fmcp009,fmcp021,fmcp021_desc(chr500),fmcp010,fmcp022,fmcp022_desc(chr500),fmcp011,fmcp012,fmcp013,fmcp014"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmt035_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="fmcpdocno,fmcpseq,fmcpseq2,fmcp015,fmcp001,fmcp002,fmcp003,fmcp017,fmcp016,fmcp004,fmcp005,fmcp018,fmcp019,fmcp020,fmcp006,fmcp007,fmcp008,fmcp009,fmcp021,fmcp010,fmcp022,fmcp011,fmcp012,fmcp013,fmcp014" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="fmcpdocno,fmcpseq,fmcpseq2,fmcp015,fmcp001,fmcp002,fmcp003,fmcp017,fmcp016,fmcp004,fmcp005,fmcp018,fmcp019,fmcp020,fmcp006,fmcp007,fmcp008,fmcp009,fmcp021,fmcp010,fmcp022,fmcp011,fmcp012,fmcp013,fmcp014"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="fmcpdocno"/>
+      <column id="fmcpseq" type="S" default="1"/>
+      <column id="fmcpseq2" type="S" default="1"/>
+      <column id="fmcp015" type="S" default="5"/>
+      <column id="fmcp001"/>
+      <column id="fmcp002">
+        <after>
+          <reference field="fmcp002_desc" ref_field="fmcp_t.fmcp002" map_field="fmcpent,fmcp001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="fmcp002_desc"/>
+      <column id="fmcp003">
+        <after>
+          <reference field="fmcp003_desc" ref_field="fmcp003" map_field="fmcp003" ref_sql="SELECT gzcbl004 FROM gzcbl_t WHERE gzcbl001=&apos;8862&apos; AND gzcbl002=? AND gzcbl003=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzcb002_01" state="i"/>
+        <controlp form="q_gzcb002_01" state="c"/>
+      </column>
+      <column id="fmcp003_desc"/>
+      <column id="fmcp017"/>
+      <column id="fmcp016"/>
+      <column id="fmcp004"/>
+      <column id="fmcp005"/>
+      <column id="fmcp018"/>
+      <column id="fmcp019"/>
+      <column id="fmcp020"/>
+      <column id="fmcp006"/>
+      <column id="fmcp007"/>
+      <column id="fmcp008"/>
+      <column id="fmcp009" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmcp021">
+        <after>
+          <check chkid="v_ooaj002_1" id="isExist"/>
+          <reference field="fmcp021_desc" ref_field="fmcp_t.fmcp021" map_field="fmcpent,fmcp021" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooaj002" state="i"/>
+        <controlp form="q_ooaj002" state="c"/>
+      </column>
+      <column id="fmcp021_desc"/>
+      <column id="fmcp010" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmcp022">
+        <after>
+          <check chkid="v_ooaj002_1" id="isExist"/>
+          <reference field="fmcp022_desc" ref_field="fmcp_t.fmcp022" map_field="fmcpent,fmcp022" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooaj002" state="i"/>
+        <controlp form="q_ooaj002" state="c"/>
+      </column>
+      <column id="fmcp022_desc"/>
+      <column id="fmcp011" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmcp012"/>
+      <column id="fmcp013"/>
+      <column id="fmcp014"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="fmcp_t" page="1" linked="" pk="fmcpdocno,fmcpseq,fmcpseq2">
+      <sql id="forupd_sql_detail" query="SELECT fmcpdocno,fmcpseq,fmcpseq2,fmcp015,fmcp001,fmcp002,&apos;&apos;,fmcp003,&apos;&apos;,fmcp017,fmcp016,fmcp004,fmcp005,fmcp018,fmcp019,fmcp020,fmcp006,fmcp007,fmcp008,fmcp009,fmcp021,&apos;&apos;,fmcp010,fmcp022,&apos;&apos;,fmcp011,fmcp012,fmcp013,fmcp014 FROM fmcp_t WHERE fmcpent=? AND fmcpdocno=? AND fmcpseq=? AND fmcpseq2=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT fmcpdocno,fmcpseq,fmcpseq2,fmcp015,fmcp001,fmcp002,&apos;&apos;,fmcp003,&apos;&apos;,fmcp017,fmcp016,fmcp004,fmcp005,fmcp018,fmcp019,fmcp020,fmcp006,fmcp007,fmcp008,fmcp009,fmcp021,&apos;&apos;,fmcp010,fmcp022,&apos;&apos;,fmcp011,fmcp012,fmcp013,fmcp014 FROM fmcp_t WHERE fmcpent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

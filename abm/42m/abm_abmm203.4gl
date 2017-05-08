@@ -1,0 +1,11119 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="abmm203.description" >}
+#應用 a00 樣板自動產生(Version:2)
+#+ Version..: T100-ERP-1.01.00(SD版次:8,PR版次:8) Build-000518
+#+ 
+#+ Filename...: abmm203
+#+ Description: 集團產品結構特徵資料維護作業
+#+ Creator....: 02587(2013-09-11 13:41:34)
+#+ Modifier...: 02295(2016-03-29 14:26:44) -SD/PR- 01996
+ 
+{</section>}
+ 
+{<section id="abmm203.global" >}
+#應用 t01 樣板自動產生(Version:55)
+#add-point:填寫註解說明 name="global.memo"
+# 140928 修改调用接口，供abmm200调用:增加引号
+#160324-00007#1  2016/04/01 By xianghui 同步据点资料时参考研发中心的值需为1.参考研发中的才可同步
+#160318-00025#18 2016/04/13 BY 07900    校验代码重复错误讯息的修改
+#160705-00042#8  2016/07/12 By sakura   程式中寫死g_prog部分改寫MATCHES方式
+#160712-00010#1  2016/07/22 By lixh  s_aimi092_chk_eigenvalue() 增加料号/类型传参
+#160707-00037#1  2016/07/27 By catmoon 修正INSERT INTO bmcd_t的SQL
+#161029-00005#1  2016/11/02 by tangyi 特征说明imecl005只根据imecl003取值，但是imecl003存在相同的值，统一调整ap_ref_array2的传入sql，涉及字段bmcb011_desc,bmcd010_desc
+#161214-00055#1  2016/12/26 By 02295  效能优化
+#170105-00027#1  2017/01/05 By ywtsai 特徵起始值開窗時需判斷若主件產品特徵(庫存)有建立資料才需限定依照主件設定之特徵值輸入，否則依照產品特徵組與特徵編號取資料即可
+#161216-00029#3  2017/01/22 By xujing   若当前BOM为失效状态，修改、删除、整单操作、明细操作中各项action不可执行
+#end add-point
+        
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds 
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_bmba_m        RECORD
+       bmba001 LIKE bmba_t.bmba001, 
+   l_imaal003_1 LIKE type_t.chr500, 
+   l_imaal004_1 LIKE type_t.chr500, 
+   bmba002 LIKE bmba_t.bmba002, 
+   bmaa004 LIKE bmaa_t.bmaa004, 
+   bmba003 LIKE bmba_t.bmba003, 
+   l_imaal003_2 LIKE type_t.chr500, 
+   l_imaal004_2 LIKE type_t.chr500, 
+   bmba011 LIKE bmba_t.bmba011, 
+   bmba012 LIKE bmba_t.bmba012, 
+   bmba010 LIKE bmba_t.bmba010, 
+   bmba004 LIKE bmba_t.bmba004, 
+   bmba004_desc LIKE type_t.chr80, 
+   bmba007 LIKE bmba_t.bmba007, 
+   bmba007_desc LIKE type_t.chr80, 
+   bmba008 LIKE bmba_t.bmba008, 
+   bmba005 LIKE bmba_t.bmba006                #开section  type_t.dat--> bmba_t.bmba006
+       END RECORD
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_bmca_d        RECORD
+       bmca009 LIKE bmca_t.bmca009, 
+   bmca009_desc LIKE type_t.chr500
+       END RECORD
+PRIVATE TYPE type_g_bmca2_d RECORD
+       bmcc009 LIKE bmcc_t.bmcc009, 
+   bmcc009_desc LIKE type_t.chr500, 
+   bmcc010 LIKE bmcc_t.bmcc010
+       END RECORD
+PRIVATE TYPE type_g_bmca3_d RECORD
+       bmce009 LIKE bmce_t.bmce009, 
+   bmce009_desc LIKE type_t.chr500, 
+   bmce010 LIKE bmce_t.bmce010, 
+   bmce010_desc LIKE type_t.chr500
+       END RECORD
+ 
+ 
+PRIVATE TYPE type_browser RECORD
+         b_statepic     LIKE type_t.chr50,
+            b_bmba001 LIKE bmba_t.bmba001,
+      b_bmba002 LIKE bmba_t.bmba002,
+      b_bmba003 LIKE bmba_t.bmba003,
+      b_bmba004 LIKE bmba_t.bmba004,
+      b_bmba005 LIKE bmba_t.bmba005,
+      b_bmba007 LIKE bmba_t.bmba007,
+      b_bmba008 LIKE bmba_t.bmba008
+       END RECORD
+       
+#add-point:自定義模組變數(Module Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+ TYPE type_g_bmca4_d RECORD
+       bmcb010        LIKE bmcb_t.bmcb010,
+       bmcb011        LIKE bmcb_t.bmcb011,
+       bmcb011_desc   LIKE type_t.chr500,
+       bmcb012        LIKE bmcb_t.bmcb012,
+       bmcb012_desc   LIKE type_t.chr500
+       END RECORD
+
+ TYPE type_g_bmca5_d RECORD
+       bmcd010        LIKE bmcd_t.bmcd010,
+       bmcd010_desc   LIKE type_t.chr500,
+       bmcd011        LIKE bmcd_t.bmcd011,
+       bmcd011_desc   LIKE type_t.chr500
+       END RECORD
+
+      
+DEFINE g_bmca4_d   DYNAMIC ARRAY OF type_g_bmca4_d   
+DEFINE g_bmca4_d_t type_g_bmca4_d
+
+DEFINE g_bmca5_d   DYNAMIC ARRAY OF type_g_bmca5_d
+DEFINE g_bmca5_d_t type_g_bmca5_d
+
+DEFINE g_wc_table4           STRING                        #第4個單身table所使用的g_wc
+DEFINE g_wc_table5           STRING                        #第5個單身table所使用的g_wc
+DEFINE g_rec_b1              LIKE type_t.num5           
+DEFINE g_wc3                 STRING
+DEFINE g_flag1               LIKE type_t.chr1
+DEFINE g_flag2               LIKE type_t.chr1
+DEFINE g_bmba005_t LIKE bmba_t.bmba005
+#end add-point
+       
+#模組變數(Module Variables)
+DEFINE g_bmba_m          type_g_bmba_m
+DEFINE g_bmba_m_t        type_g_bmba_m
+DEFINE g_bmba_m_o        type_g_bmba_m
+DEFINE g_bmba_m_mask_o   type_g_bmba_m #轉換遮罩前資料
+DEFINE g_bmba_m_mask_n   type_g_bmba_m #轉換遮罩後資料
+ 
+   DEFINE g_bmba001_t LIKE bmba_t.bmba001
+DEFINE g_bmba002_t LIKE bmba_t.bmba002
+DEFINE g_bmba003_t LIKE bmba_t.bmba003
+DEFINE g_bmba004_t LIKE bmba_t.bmba004
+DEFINE g_bmba007_t LIKE bmba_t.bmba007
+DEFINE g_bmba008_t LIKE bmba_t.bmba008
+ 
+ 
+DEFINE g_bmca_d          DYNAMIC ARRAY OF type_g_bmca_d
+DEFINE g_bmca_d_t        type_g_bmca_d
+DEFINE g_bmca_d_o        type_g_bmca_d
+DEFINE g_bmca_d_mask_o   DYNAMIC ARRAY OF type_g_bmca_d #轉換遮罩前資料
+DEFINE g_bmca_d_mask_n   DYNAMIC ARRAY OF type_g_bmca_d #轉換遮罩後資料
+DEFINE g_bmca2_d          DYNAMIC ARRAY OF type_g_bmca2_d
+DEFINE g_bmca2_d_t        type_g_bmca2_d
+DEFINE g_bmca2_d_o        type_g_bmca2_d
+DEFINE g_bmca2_d_mask_o   DYNAMIC ARRAY OF type_g_bmca2_d #轉換遮罩前資料
+DEFINE g_bmca2_d_mask_n   DYNAMIC ARRAY OF type_g_bmca2_d #轉換遮罩後資料
+DEFINE g_bmca3_d          DYNAMIC ARRAY OF type_g_bmca3_d
+DEFINE g_bmca3_d_t        type_g_bmca3_d
+DEFINE g_bmca3_d_o        type_g_bmca3_d
+DEFINE g_bmca3_d_mask_o   DYNAMIC ARRAY OF type_g_bmca3_d #轉換遮罩前資料
+DEFINE g_bmca3_d_mask_n   DYNAMIC ARRAY OF type_g_bmca3_d #轉換遮罩後資料
+ 
+ 
+DEFINE g_browser         DYNAMIC ARRAY OF type_browser
+DEFINE g_browser_f       DYNAMIC ARRAY OF type_browser
+ 
+ 
+DEFINE g_wc                  STRING
+DEFINE g_wc_t                STRING
+DEFINE g_wc2                 STRING                          #單身CONSTRUCT結果
+DEFINE g_wc2_table1          STRING
+DEFINE g_wc2_table2   STRING
+ 
+DEFINE g_wc2_table3   STRING
+ 
+ 
+ 
+DEFINE g_wc2_extend          STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+ 
+DEFINE g_sql                 STRING
+DEFINE g_forupd_sql          STRING
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_current_idx         LIKE type_t.num10     
+DEFINE g_jump                LIKE type_t.num10        
+DEFINE g_no_ask              LIKE type_t.num5        
+DEFINE g_rec_b               LIKE type_t.num10           
+DEFINE l_ac                  LIKE type_t.num10    
+DEFINE g_curr_diag           ui.Dialog                         #Current Dialog
+                                                               
+DEFINE g_pagestart           LIKE type_t.num10                 
+DEFINE gwin_curr             ui.Window                         #Current Window
+DEFINE gfrm_curr             ui.Form                           #Current Form
+DEFINE g_page_action         STRING                            #page action
+DEFINE g_header_hidden       LIKE type_t.num5                  #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5                  #隱藏工作Panel
+DEFINE g_page                STRING                            #第幾頁
+DEFINE g_state               STRING       
+DEFINE g_header_cnt          LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10                  #單身總筆數
+DEFINE g_detail_idx          LIKE type_t.num10                  #單身目前所在筆數
+DEFINE g_detail_idx_tmp      LIKE type_t.num10                  #單身目前所在筆數
+DEFINE g_detail_idx2         LIKE type_t.num10                  #單身2目前所在筆數
+DEFINE g_detail_idx_list     DYNAMIC ARRAY OF LIKE type_t.num10 #單身2目前所在筆數
+DEFINE g_browser_cnt         LIKE type_t.num10                  #Browser總筆數
+DEFINE g_browser_idx         LIKE type_t.num10                  #Browser目前所在筆數
+DEFINE g_temp_idx            LIKE type_t.num10                  #Browser目前所在筆數(暫存用)
+DEFINE g_order               STRING                             #查詢排序欄位
+                                                        
+DEFINE g_current_row         LIKE type_t.num10                  #Browser所在筆數
+DEFINE g_current_sw          BOOLEAN                            #Browser所在筆數用開關
+DEFINE g_current_page        LIKE type_t.num10                  #目前所在頁數
+DEFINE g_insert              LIKE type_t.chr5                   #是否導到其他page
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys               DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak           DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_bfill               LIKE type_t.chr5              #是否刷新單身
+DEFINE g_error_show          LIKE type_t.num5              #是否顯示筆數提示訊息
+DEFINE g_master_insert       BOOLEAN                       #確認單頭資料是否寫入
+ 
+DEFINE g_wc_frozen           STRING                        #凍結欄位使用
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_aw                  STRING                        #確定當下點擊的單身
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+DEFINE g_log1                STRING                        #log用
+DEFINE g_log2                STRING                        #log用
+DEFINE g_loc                 LIKE type_t.chr5              #判斷游標所在位置
+DEFINE g_add_browse          STRING                        #新增填充用WC
+DEFINE g_update              BOOLEAN                       #確定單頭/身是否異動過
+DEFINE g_idx_group           om.SaxAttributes              #頁籤群組
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="abmm203.main" >}
+#應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("abm","")
+ 
+   #add-point:作業初始化 name="main.init"
+   #IF g_prog = 'abmm203' THEN        #160705-00042#8 160712 by sakura mark
+   IF g_prog MATCHES 'abmm203' THEN   #160705-00042#8 160712 by sakura add
+      LET g_site = 'ALL'
+   END IF
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = " SELECT bmba001,'','',bmba002,'',bmba003,'','',bmba011,bmba012,bmba010,bmba004, 
+       '',bmba007,'',bmba008,''", 
+                      " FROM bmba_t",
+                      " WHERE bmbaent= ? AND bmbasite= ? AND bmba001=? AND bmba002=? AND bmba003=? AND  
+                          bmba004=? AND bmba005=? AND bmba007=? AND bmba008=? FOR UPDATE"
+   #add-point:SQL_define name="main.after_define_sql"
+   LET g_forupd_sql = " SELECT bmba001,'','',bmba002,'',bmba003,'','',bmba011,bmba012,bmba010,bmba004, ",
+                      " '',bmba007,'',bmba008,bmba005", 
+                      " FROM bmba_t",
+                      " WHERE bmbaent= ? AND bmbasite= ? AND bmba001=? AND bmba002=? AND bmba003=? AND ", 
+                      "    bmba004=? AND bmba005=to_date(?,'yyyy-mm-dd hh24:mi:ss') AND bmba007=? AND bmba008=? FOR UPDATE"
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE abmm203_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT DISTINCT t0.bmba001,t0.bmba002,t0.bmba003,t0.bmba011,t0.bmba012,t0.bmba010,t0.bmba004, 
+       t0.bmba007,t0.bmba008,t0.bmba005,t1.oocql004 ,t2.oocql004",
+               " FROM bmba_t t0",
+                              " LEFT JOIN oocql_t t1 ON t1.oocqlent='"||g_enterprise||"' AND t1.oocql001='215' AND t1.oocql002=t0.bmba004 AND t1.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN oocql_t t2 ON t2.oocqlent='"||g_enterprise||"' AND t2.oocql001='221' AND t2.oocql002=t0.bmba007 AND t2.oocql003='"||g_dlang||"' ",
+ 
+               " WHERE t0.bmbaent = '" ||g_enterprise|| "' AND t0.bmbasite = ? AND t0.bmba001 = ? AND t0.bmba002 = ? AND t0.bmba003 = ? AND t0.bmba004 = ? AND t0.bmba005 = ? AND t0.bmba007 = ? AND t0.bmba008 = ?"
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   
+   #end add-point
+   PREPARE abmm203_master_referesh FROM g_sql
+ 
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_abmm203 WITH FORM cl_ap_formpath("abm",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL abmm203_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL abmm203_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_abmm203
+      
+   END IF 
+   
+   CLOSE abmm203_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="abmm203.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION abmm203_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point    
+   #add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="init.pre_function"
+   
+   #end add-point
+   
+   LET g_bfill       = "Y"
+   LET g_detail_idx  = 1 #第一層單身指標
+   LET g_detail_idx2 = 1 #第二層單身指標
+   
+   #各個page指標
+   LET g_detail_idx_list[1] = 1 
+   LET g_detail_idx_list[2] = 1
+   LET g_detail_idx_list[3] = 1
+ 
+   LET g_error_show  = 1
+   LET l_ac = 1 #單身指標
+   
+      CALL cl_set_combo_scc('bmcc010','1106') 
+ 
+   LET gwin_curr = ui.Window.getCurrent()  #取得現行畫面
+   LET gfrm_curr = gwin_curr.getForm()     #取出物件化後的畫面物件
+   
+   #page群組
+   LET g_idx_group = om.SaxAttributes.create()
+   CALL g_idx_group.addAttribute("'1',","1")
+   CALL g_idx_group.addAttribute("'2',","1")
+   CALL g_idx_group.addAttribute("'3',","1")
+ 
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   
+   #end add-point
+   
+   #初始化搜尋條件
+   CALL abmm203_default_search()
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.ui_dialog" >}
+#+ 功能選單
+PRIVATE FUNCTION abmm203_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE ls_wc      STRING
+   DEFINE lb_first   BOOLEAN
+   DEFINE la_wc      DYNAMIC ARRAY OF RECORD
+          tableid    STRING,
+          wc         STRING
+          END RECORD
+   DEFINE la_param   RECORD
+          prog       STRING,
+          actionid   STRING,
+          background LIKE type_t.chr1,
+          param      DYNAMIC ARRAY OF STRING
+          END RECORD
+   DEFINE ls_js      STRING
+   DEFINE la_output  DYNAMIC ARRAY OF STRING   #報表元件鬆耦合使用
+   DEFINE  l_cmd_token           base.StringTokenizer   #報表作業cmdrun使用 
+   DEFINE  l_cmd_next            STRING                 #報表作業cmdrun使用
+   DEFINE  l_cmd_cnt             LIKE type_t.num5       #報表作業cmdrun使用
+   DEFINE  l_cmd_prog_arg        STRING                 #報表作業cmdrun使用
+   DEFINE  l_cmd_arg             STRING                 #報表作業cmdrun使用
+   #add-point:ui_dialog段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   DEFINE  l_ac1  LIKE type_t.num5
+   DEFINE  l_ac2  LIKE type_t.num5
+   DEFINE  l_ac3  LIKE type_t.num5
+   #end add-point
+   
+   #add-point:Function前置處理  name="ui_dialog.pre_function"
+   
+   #end add-point
+   
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+ 
+   
+   #action default動作
+   
+   
+   LET lb_first = TRUE
+   
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   
+   #end add-point
+   
+   WHILE TRUE 
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_browser.clear()       
+         INITIALIZE g_bmba_m.* TO NULL
+         CALL g_bmca_d.clear()
+         CALL g_bmca2_d.clear()
+         CALL g_bmca3_d.clear()
+ 
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL abmm203_init()
+      END IF
+   
+            
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+    
+         DISPLAY ARRAY g_bmca_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+    
+            BEFORE ROW
+               #顯示單身筆數
+               CALL abmm203_idx_chk()
+               #確定當下選擇的筆數
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_detail_idx = l_ac
+               LET g_detail_idx_list[1] = l_ac
+               CALL g_idx_group.addAttribute("'1',",l_ac)
+               
+               #add-point:page1, before row動作 name="ui_dialog.page1.before_row"
+               LET g_flag1 = 'Y'
+               CALL abmm203_b_fill_1(g_bmca_d[l_ac].bmca009)
+               LET g_flag1 = 'N'
+               #end add-point
+               
+            BEFORE DISPLAY
+               #如果一直都在單身1則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'1',"))
+               END IF
+               LET g_loc = 'm'
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_current_page = 1
+               #顯示單身筆數
+               CALL abmm203_idx_chk()
+               #add-point:page1自定義行為 name="ui_dialog.page1.before_display"
+               
+               #end add-point
+               
+            #自訂ACTION(detail_show,page_1)
+            
+               
+            #add-point:page1自定義行為 name="ui_dialog.page1.action"
+            
+            #end add-point
+               
+         END DISPLAY
+        
+         #第一階單身段落
+         DISPLAY ARRAY g_bmca2_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b)  
+    
+            BEFORE ROW
+               #顯示單身筆數
+               CALL abmm203_idx_chk()
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_detail_idx = l_ac
+               LET g_detail_idx_list[2] = l_ac
+               CALL g_idx_group.addAttribute("'2',",l_ac)
+               
+               #add-point:page2, before row動作 name="ui_dialog.body2.before_row"
+               LET g_flag2 = 'Y'
+               CALL abmm203_b_fill_1(g_bmca2_d[l_ac].bmcc009)
+               LET g_flag2 = 'N'
+               #end add-point
+               
+            BEFORE DISPLAY
+               #如果一直都在單身1則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'2',"))
+               END IF
+               LET g_loc = 'm'
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_current_page = 2
+               #顯示單身筆數
+               CALL abmm203_idx_chk()
+               #add-point:page2自定義行為 name="ui_dialog.body2.before_display"
+               
+               #end add-point
+      
+            #自訂ACTION(detail_show,page_2)
+            
+         
+            #add-point:page2自定義行為 name="ui_dialog.body2.action"
+            
+            #end add-point
+         
+         END DISPLAY
+         #第一階單身段落
+         DISPLAY ARRAY g_bmca3_d TO s_detail3.* ATTRIBUTES(COUNT=g_rec_b)  
+    
+            BEFORE ROW
+               #顯示單身筆數
+               CALL abmm203_idx_chk()
+               LET l_ac = DIALOG.getCurrentRow("s_detail3")
+               LET g_detail_idx = l_ac
+               LET g_detail_idx_list[3] = l_ac
+               CALL g_idx_group.addAttribute("'3',",l_ac)
+               
+               #add-point:page3, before row動作 name="ui_dialog.body3.before_row"
+ 
+               #end add-point
+               
+            BEFORE DISPLAY
+               #如果一直都在單身1則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'3',"))
+               END IF
+               LET g_loc = 'm'
+               LET l_ac = DIALOG.getCurrentRow("s_detail3")
+               LET g_current_page = 3
+               #顯示單身筆數
+               CALL abmm203_idx_chk()
+               #add-point:page3自定義行為 name="ui_dialog.body3.before_display"
+               
+               #end add-point
+      
+            #自訂ACTION(detail_show,page_3)
+            
+         
+            #add-point:page3自定義行為 name="ui_dialog.body3.action"
+            
+            #end add-point
+         
+         END DISPLAY
+ 
+         
+ 
+         
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+        DISPLAY ARRAY g_bmca4_d TO s_detail4.* ATTRIBUTES(COUNT=g_rec_b1)  
+         
+            BEFORE ROW
+               CALL abmm203_idx_chk()
+			   LET l_ac1 = DIALOG.getCurrentRow("s_detail4")
+
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               LET l_ac1 = DIALOG.getCurrentRow("s_detail4")
+               CALL abmm203_idx_chk()
+               LET g_current_page = 4
+      
+         END DISPLAY
+   
+        DISPLAY ARRAY g_bmca5_d TO s_detail5.* ATTRIBUTES(COUNT=g_rec_b1)  
+         
+            BEFORE ROW
+               CALL abmm203_idx_chk()
+			   LET l_ac1 = DIALOG.getCurrentRow("s_detail5")
+
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               LET l_ac2 = DIALOG.getCurrentRow("s_detail5")
+               CALL abmm203_idx_chk()
+               LET g_current_page = 5
+                     
+         END DISPLAY
+
+         #end add-point
+         
+      
+         BEFORE DIALOG
+            #先填充browser資料
+            CALL abmm203_browser_fill("")
+            CALL cl_notice()
+            CALL cl_navigator_setting(g_current_idx, g_detail_cnt)
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            LET g_current_sw = FALSE
+            #回歸舊筆數位置 (回到當時異動的筆數)
+            
+            #確保g_current_idx位於正常區間內
+            #小於,等於0則指到第1筆
+            IF g_current_idx <= 0 THEN
+               LET g_current_idx = 1
+            END IF
+            #超過最大筆數則指到最後1筆
+            IF g_current_idx > g_browser.getLength() THEN
+               LEt g_current_idx = g_browser.getLength()
+            END IF 
+            
+            LET g_current_sw = TRUE
+            LET g_current_row = g_current_idx #目前指標
+            
+            #有資料才進行fetch
+            IF g_current_idx <> 0 THEN
+               CALL abmm203_fetch('') # reload data
+            END IF
+            #LET g_detail_idx = 1
+            CALL abmm203_ui_detailshow() #Setting the current row 
+            
+            #筆數顯示
+            LET g_current_page = 1
+            CALL abmm203_idx_chk()
+            CALL cl_ap_performance_cal()
+            #add-point:ui_dialog段before_dialog2 name="ui_dialog.before_dialog2"
+            #若執行集團級程式，則不開放切換營運中心的功能
+            #IF g_prog = 'abmm203' THEN        #160705-00042#8 160712 by sakura mark   
+            IF g_prog MATCHES 'abmm203' THEN   #160705-00042#8 160712 by sakura add
+               CALL cl_set_act_visible("logistics", FALSE)
+            ELSE
+               CALL cl_set_act_visible("logistics", TRUE)
+            END IF
+            #end add-point
+ 
+ 
+ 
+         
+          
+         #查詢方案選擇 
+         ON ACTION queryplansel
+            CALL cl_dlg_qryplan_select() RETURNING ls_wc
+            #不是空條件才寫入g_wc跟重新找資料
+            IF NOT cl_null(ls_wc) THEN
+               CALL util.JSON.parse(ls_wc, la_wc)
+               INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+               INITIALIZE g_wc2_table2 TO NULL
+ 
+               INITIALIZE g_wc2_table3 TO NULL
+ 
+ 
+               FOR li_idx = 1 TO la_wc.getLength()
+                  CASE
+                     WHEN la_wc[li_idx].tableid = "bmba_t" 
+                        LET g_wc = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "bmca_t" 
+                        LET g_wc2_table1 = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "bmcc_t" 
+                        LET g_wc2_table2 = la_wc[li_idx].wc
+ 
+                     WHEN la_wc[li_idx].tableid = "bmce_t" 
+                        LET g_wc2_table3 = la_wc[li_idx].wc
+ 
+ 
+                     WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                        LET g_wc2_extend = la_wc[li_idx].wc
+                  END CASE
+               END FOR
+               IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1) 
+                  OR NOT cl_null(g_wc2_table2)
+ 
+                  OR NOT cl_null(g_wc2_table3)
+ 
+ 
+                  OR NOT cl_null(g_wc2_extend)
+                  THEN
+                  #組合g_wc2
+                  IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+                     LET g_wc2 = g_wc2_table1
+                  END IF
+                  IF g_wc2_table2 <> " 1=1" AND NOT cl_null(g_wc2_table2) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+                  END IF
+ 
+                  IF g_wc2_table3 <> " 1=1" AND NOT cl_null(g_wc2_table3) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_table3
+                  END IF
+ 
+ 
+                  IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+                  END IF
+ 
+                  IF g_wc2.subString(1,5) = " AND " THEN
+                     LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+                  END IF
+               END IF
+               CALL abmm203_browser_fill("F")   #browser_fill()會將notice區塊清空
+            END IF
+         
+         #查詢方案選擇
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               CALL util.JSON.parse(ls_wc, la_wc)
+               INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+               INITIALIZE g_wc2_table2 TO NULL
+ 
+               INITIALIZE g_wc2_table3 TO NULL
+ 
+ 
+               FOR li_idx = 1 TO la_wc.getLength()
+                  CASE
+                     WHEN la_wc[li_idx].tableid = "bmba_t" 
+                        LET g_wc = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "bmca_t" 
+                        LET g_wc2_table1 = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "bmcc_t" 
+                        LET g_wc2_table2 = la_wc[li_idx].wc
+ 
+                     WHEN la_wc[li_idx].tableid = "bmce_t" 
+                        LET g_wc2_table3 = la_wc[li_idx].wc
+ 
+ 
+                     WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                        LET g_wc2_extend = la_wc[li_idx].wc
+                  END CASE
+               END FOR
+               IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1)
+                  OR NOT cl_null(g_wc2_table2)
+ 
+                  OR NOT cl_null(g_wc2_table3)
+ 
+ 
+                  OR NOT cl_null(g_wc2_extend)
+                  THEN
+                  IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+                     LET g_wc2 = g_wc2_table1
+                  END IF
+                  IF g_wc2_table2 <> " 1=1" AND NOT cl_null(g_wc2_table2) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+                  END IF
+ 
+                  IF g_wc2_table3 <> " 1=1" AND NOT cl_null(g_wc2_table3) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_table3
+                  END IF
+ 
+ 
+                  IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+                  END IF
+                  IF g_wc2.subString(1,5) = " AND " THEN
+                     LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+                  END IF
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL abmm203_browser_fill("F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "-100" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL abmm203_fetch("F")
+                  END IF
+               END IF
+            END IF
+            #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+          
+         
+         
+         ON ACTION first
+            LET g_action_choice = "fetch"
+            CALL abmm203_fetch('F')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL abmm203_idx_chk()
+            
+         ON ACTION previous
+            LET g_action_choice = "fetch"
+            CALL abmm203_fetch('P')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL abmm203_idx_chk()
+            
+         ON ACTION jump
+            LET g_action_choice = "fetch"
+            CALL abmm203_fetch('/')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL abmm203_idx_chk()
+            
+         ON ACTION next
+            LET g_action_choice = "fetch"
+            CALL abmm203_fetch('N')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL abmm203_idx_chk()
+            
+         ON ACTION last
+            LET g_action_choice = "fetch"
+            CALL abmm203_fetch('L')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL abmm203_idx_chk()
+          
+         #excel匯出功能          
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               #browser
+               CALL g_export_node.clear()
+               IF g_main_hidden = 1 THEN
+                  LET g_export_node[1] = base.typeInfo.create(g_browser)
+                  LET g_export_id[1]   = "s_browse"
+                  CALL cl_export_to_excel()
+               #非browser
+               ELSE
+                  LET g_export_node[1] = base.typeInfo.create(g_bmca_d)
+                  LET g_export_id[1]   = "s_detail1"
+                  LET g_export_node[2] = base.typeInfo.create(g_bmca2_d)
+                  LET g_export_id[2]   = "s_detail2"
+                  LET g_export_node[3] = base.typeInfo.create(g_bmca3_d)
+                  LET g_export_id[3]   = "s_detail3"
+ 
+                  #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+                  
+                  #END add-point
+                  CALL cl_export_to_excel_getpage()
+                  CALL cl_export_to_excel()
+               END IF
+            END IF
+        
+         ON ACTION close
+            LET INT_FLAG = FALSE
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+          
+         ON ACTION exit
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+    
+         #主頁摺疊
+         ON ACTION mainhidden       
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+               CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+               CALL cl_notice()
+            END IF
+            
+       
+         #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+         ON ACTION controls     
+            IF g_header_hidden THEN
+               CALL gfrm_curr.setElementHidden("vb_master",0)
+               CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+               LET g_header_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("vb_master",1)
+               CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+               LET g_header_hidden = 1     #hidden     
+            END IF
+    
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL abmm203_modify()
+               #add-point:ON ACTION modify name="menu.modify"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = g_curr_diag.getCurrentItem()
+               CALL abmm203_modify()
+               #add-point:ON ACTION modify_detail name="menu.modify_detail"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL abmm203_query()
+               #add-point:ON ACTION query name="menu.query"
+               
+               #END add-point
+               #應用 a59 樣板自動產生(Version:3)  
+               CALL g_curr_diag.setCurrentRow("s_detail1",1)
+               CALL g_curr_diag.setCurrentRow("s_detail2",1)
+               CALL g_curr_diag.setCurrentRow("s_detail3",1)
+ 
+ 
+ 
+ 
+            END IF
+ 
+ 
+ 
+ 
+         
+         #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL abmm203_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.dialog.related_document"
+               
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL abmm203_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.dialog.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL abmm203_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.dialog.followup"
+            
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+ 
+         
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+    
+         #交談指令共用ACTION
+         &include "common_action.4gl" 
+            CONTINUE DIALOG
+      END DIALOG
+    
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         EXIT WHILE
+      END IF
+    
+   END WHILE    
+      
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.browser_fill" >}
+#+ 瀏覽頁簽資料填充
+PRIVATE FUNCTION abmm203_browser_fill(ps_page_action)
+   #add-point:browser_fill段define(客製用) name="browser_fill.define_customerization"
+   
+   #end add-point  
+   DEFINE ps_page_action    STRING
+   DEFINE l_wc              STRING
+   DEFINE l_wc2             STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sub_sql         STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="browser_fill.define"
+   DEFINE l_wc3             STRING
+   #end add-point    
+   
+   #add-point:Function前置處理 name="browser_fill.before_browser_fill"
+   
+   #end add-point
+   
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   LET l_wc  = g_wc.trim() 
+   LET l_wc2 = g_wc2.trim()
+ 
+   #add-point:browser_fill,foreach前 name="browser_fill.before_foreach"
+#   CALL g_bmca4_d.clear()    #g_bmca_d 單頭及單身 
+#   CALL g_bmca5_d.clear()
+   LET l_wc3 = g_wc3.trim()   
+   #end add-point
+   
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件                      
+      LET l_sub_sql = " SELECT DISTINCT bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008 ",
+                      " FROM bmba_t ",
+                      " ",
+                      " LEFT JOIN bmca_t ON bmcaent = bmbaent AND bmcasite = bmbasite AND bmba001 = bmca001 AND bmba002 = bmca002 AND bmba003 = bmca003 AND bmba004 = bmca004 AND bmba005 = bmca005 AND bmba007 = bmca007 AND bmba008 = bmca008 ", "  ",
+                      #add-point:browser_fill段sql(bmca_t1) name="browser_fill.cnt.join.}"
+                      
+                      #end add-point
+                      " LEFT JOIN bmcc_t ON bmccent = bmbaent AND bmccsite = bmbasite AND bmba001 = bmcc001 AND bmba002 = bmcc002 AND bmba003 = bmcc003 AND bmba004 = bmcc004 AND bmba005 = bmcc005 AND bmba007 = bmcc007 AND bmba008 = bmcc008", "  ",
+                      #add-point:browser_fill段sql(bmcc_t1) name="browser_fill.cnt.join.bmcc_t1"
+                      
+                      #end add-point
+ 
+                      " LEFT JOIN bmce_t ON bmceent = bmbaent AND bmcesite = bmbasite AND bmba001 = bmce001 AND bmba002 = bmce002 AND bmba003 = bmce003 AND bmba004 = bmce004 AND bmba005 = bmce005 AND bmba007 = bmce007 AND bmba008 = bmce008", "  ",
+                      #add-point:browser_fill段sql(bmce_t1) name="browser_fill.cnt.join.bmce_t1"
+                      
+                      #end add-point
+ 
+ 
+ 
+                      " ", 
+                      " ", 
+                      " WHERE bmbaent = '" ||g_enterprise|| "' AND bmbasite = '" ||g_site|| "' AND bmcaent = '" ||g_enterprise|| "' AND bmcasite = '" ||g_site|| "' AND ",l_wc, " AND ", l_wc2, cl_sql_add_filter("bmba_t")
+   ELSE
+      #單身未輸入搜尋條件
+      LET l_sub_sql = " SELECT DISTINCT bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008 ",
+                      " FROM bmba_t ", 
+                      "  ",
+                      "  ",
+                      " WHERE bmbaent = '" ||g_enterprise|| "' AND bmbasite = '" ||g_site|| "' AND ",l_wc CLIPPED, cl_sql_add_filter("bmba_t")
+   END IF
+   
+   #add-point:browser_fill,cnt wc name="browser_fill.cnt_sqlwc"
+   
+   #end add-point
+   
+   LET g_sql = " SELECT COUNT(1) FROM (",l_sub_sql,")"
+   
+   #add-point:browser_fill,count前 name="browser_fill.before_count"
+   #161214-00055#1---add---s
+   LET l_sub_sql = " SELECT COUNT(1) FROM bmba_t "
+   IF l_wc.getIndexOf('a.imaal',1) > 0 THEN 
+      LET l_sub_sql = l_sub_sql," LEFT JOIN imaal_t a ON a.imaalent = bmbaent AND a.imaal001 = bmba001 AND a.imaal002 = '",g_lang,"' "
+   END IF
+   IF l_wc.getIndexOf('b.imaal',1) > 0 THEN 
+      LET l_sub_sql = l_sub_sql," LEFT JOIN imaal_t b ON b.imaalent = bmbaent AND b.imaal001 = bmba003 AND b.imaal002 = '",g_lang,"' "
+   END IF                  
+   LET l_sub_sql = l_sub_sql," LEFT JOIN bmaa_t ON bmaaent = bmbaent AND bmaasite = bmbasite AND bmba001 = bmaa001 AND bmba002 = bmaa002 "
+   IF g_wc3 <> "1=1" THEN
+      LET l_sub_sql = l_sub_sql,
+                    " LEFT JOIN bmca_t ON bmcaent = bmbaent AND bmcasite = bmbasite AND bmba001 = bmca001 AND bmba002 = bmca002 AND bmba003 = bmca003 AND bmba004 = bmca004 AND bmba005 = bmca005 AND bmba007 = bmca007 AND bmba008 = bmca008 ",
+                    " LEFT JOIN bmcc_t ON bmccent = bmbaent AND bmccsite = bmbasite AND bmba001 = bmcc001 AND bmba002 = bmcc002 AND bmba003 = bmcc003 AND bmba004 = bmcc004 AND bmba005 = bmcc005 AND bmba007 = bmcc007 AND bmba008 = bmcc008 ",
+                    " LEFT JOIN bmce_t ON bmceent = bmbaent AND bmcesite = bmbasite AND bmba001 = bmce001 AND bmba002 = bmce002 AND bmba003 = bmce003 AND bmba004 = bmce004 AND bmba005 = bmce005 AND bmba007 = bmce007 AND bmba008 = bmce008 ",
+                    " LEFT JOIN bmcb_t ON bmcbent = bmbaent AND bmcbsite = bmbasite AND bmba001 = bmcb001 AND bmba002 = bmcb002 AND bmba003 = bmcb003 AND bmba004 = bmcb004 AND bmba005 = bmcb005 AND bmba007 = bmcb007 AND bmba008 = bmcb008 ",
+                    " LEFT JOIN bmcd_t ON bmcdent = bmbaent AND bmcdsite = bmbasite AND bmba001 = bmcd001 AND bmba002 = bmcd002 AND bmba003 = bmcd003 AND bmba004 = bmcd004 AND bmba005 = bmcd005 AND bmba007 = bmcd007 AND bmba008 = bmcd008 ",
+                    " WHERE bmbaent = '" ||g_enterprise|| "' AND bmbasite = '" ||g_site||  "' AND ",l_wc, " AND ", l_wc2, " AND ", l_wc3     
+   ELSE
+      IF g_wc2 <> " 1=1" THEN
+         LET l_sub_sql = l_sub_sql,
+                       " LEFT JOIN bmca_t ON bmcaent = bmbaent AND bmcasite = bmbasite AND bmba001 = bmca001 AND bmba002 = bmca002 AND bmba003 = bmca003 AND bmba004 = bmca004 AND bmba005 = bmca005 AND bmba007 = bmca007 AND bmba008 = bmca008 ",
+                       " LEFT JOIN bmcc_t ON bmccent = bmbaent AND bmccsite = bmbasite AND bmba001 = bmcc001 AND bmba002 = bmcc002 AND bmba003 = bmcc003 AND bmba004 = bmcc004 AND bmba005 = bmcc005 AND bmba007 = bmcc007 AND bmba008 = bmcc008 ",
+                       " LEFT JOIN bmce_t ON bmceent = bmbaent AND bmcesite = bmbasite AND bmba001 = bmce001 AND bmba002 = bmce002 AND bmba003 = bmce003 AND bmba004 = bmce004 AND bmba005 = bmce005 AND bmba007 = bmce007 AND bmba008 = bmce008 ",
+                       " WHERE bmbaent = '" ||g_enterprise|| "' AND bmbasite = '" ||g_site|| "' AND ",l_wc, " AND ", l_wc2
+      ELSE
+         LET l_sub_sql = l_sub_sql,
+                       " WHERE bmbaent = '" ||g_enterprise|| "' AND bmbasite = '" ||g_site|| "' AND ",l_wc CLIPPED
+      END IF
+   END IF
+   #161214-00055#1---add---e
+   #161214-00055#1---mark---s
+   #IF g_wc3 <> "1=1" THEN
+   #   LET l_sub_sql = " SELECT UNIQUE bmba001 ",
+   #                                 ",bmba002 ",
+   #
+   #                                 ",bmba003 ",
+   #
+   #                                 ",bmba004 ",
+   #
+   #                                 ",bmba005 ",
+   #
+   #                                 ",bmba007 ",
+   #
+   #                                 ",bmba008 ",
+   #
+   #
+   #                     " FROM bmba_t ",
+   #                           " ",
+   #                           " LEFT JOIN imaal_t a ON a.imaalent = bmbaent AND a.imaal001 = bmba001 AND a.imaal002 = '",g_lang,"' ",  #
+   #                           " LEFT JOIN imaal_t b ON b.imaalent = bmbaent AND b.imaal001 = bmba003 AND b.imaal002 = '",g_lang,"' ",
+   #                           " LEFT JOIN bmaa_t ON bmaaent = bmbaent AND bmaasite = bmbasite AND bmba001 = bmaa001 AND bmba002 = bmaa002 ",
+   #                           " LEFT JOIN bmca_t ON bmcaent = bmbaent AND bmcasite = bmbasite AND bmba001 = bmca001 AND bmba002 = bmca002 AND bmba003 = bmca003 AND bmba004 = bmca004 AND bmba005 = bmca005 AND bmba007 = bmca007 AND bmba008 = bmca008 ",
+   #                           " LEFT JOIN bmcc_t ON bmccent = bmbaent AND bmccsite = bmbasite AND bmba001 = bmcc001 AND bmba002 = bmcc002 AND bmba003 = bmcc003 AND bmba004 = bmcc004 AND bmba005 = bmcc005 AND bmba007 = bmcc007 AND bmba008 = bmcc008",
+   #                           " LEFT JOIN bmce_t ON bmceent = bmbaent AND bmcesite = bmbasite AND bmba001 = bmce001 AND bmba002 = bmce002 AND bmba003 = bmce003 AND bmba004 = bmce004 AND bmba005 = bmce005 AND bmba007 = bmce007 AND bmba008 = bmce008",
+   #                           " LEFT JOIN bmcb_t ON bmcbent = bmbaent AND bmcbsite = bmbasite AND bmba001 = bmcb001 AND bmba002 = bmcb002 AND bmba003 = bmcb003 AND bmba004 = bmcb004 AND bmba005 = bmcb005 AND bmba007 = bmcb007 AND bmba008 = bmcb008 ",
+   #                           " LEFT JOIN bmcd_t ON bmcdent = bmbaent AND bmcdsite = bmbasite AND bmba001 = bmcd001 AND bmba002 = bmcd002 AND bmba003 = bmcd003 AND bmba004 = bmcd004 AND bmba005 = bmcd005 AND bmba007 = bmcd007 AND bmba008 = bmcd008 ",
+   #
+   #                           " ",
+   #                           " ",
+   #                    " WHERE bmbaent = '" ||g_enterprise|| "' AND bmbasite = '" ||g_site||  "' AND ",l_wc, " AND ", l_wc2, " AND ", l_wc3
+   #ELSE 
+   #   IF g_wc2 <> " 1=1" THEN
+   #   #單身有輸入搜尋條件                      
+   #   LET l_sub_sql = " SELECT UNIQUE bmba001 ",
+   #                                 ",bmba002 ",
+   #   
+   #                                 ",bmba003 ",
+   #   
+   #                                 ",bmba004 ",
+   #     
+   #                                 ",bmba005 ",
+   #    
+   #                                 ",bmba007 ",
+   #   
+   #                                 ",bmba008 ",
+   #     
+   #     
+   #                     " FROM bmba_t ",
+   #                            " ",
+   #                            " LEFT JOIN imaal_t a ON a.imaalent = bmbaent AND a.imaal001 = bmba001 AND a.imaal002 = '",g_lang,"' ",  
+   #                           " LEFT JOIN imaal_t b ON b.imaalent = bmbaent AND b.imaal001 = bmba003 AND b.imaal002 = '",g_lang,"' ",
+   #                           " LEFT JOIN bmaa_t ON bmaaent = bmbaent AND bmaasite = bmbasite AND bmba001 = bmaa001 AND bmba002 = bmaa002 ",
+   #                           " LEFT JOIN bmca_t ON bmcaent = bmbaent AND bmcasite = bmbasite AND bmba001 = bmca001 AND bmba002 = bmca002 AND bmba003 = bmca003 AND bmba004 = bmca004 AND bmba005 = bmca005 AND bmba007 = bmca007 AND bmba008 = bmca008 ",
+   #                           " LEFT JOIN bmcc_t ON bmccent = bmbaent AND bmccsite = bmbasite AND bmba001 = bmcc001 AND bmba002 = bmcc002 AND bmba003 = bmcc003 AND bmba004 = bmcc004 AND bmba005 = bmcc005 AND bmba007 = bmcc007 AND bmba008 = bmcc008",
+   #     
+   #                           " LEFT JOIN bmce_t ON bmceent = bmbaent AND bmcesite = bmbasite AND bmba001 = bmce001 AND bmba002 = bmce002 AND bmba003 = bmce003 AND bmba004 = bmce004 AND bmba005 = bmce005 AND bmba007 = bmce007 AND bmba008 = bmce008",
+   #     
+   #     
+   #                           " ",
+   #                           " ",
+   #                    " WHERE bmbaent = '" ||g_enterprise|| "' AND bmbasite = '" ||g_site|| "' AND ",l_wc, " AND ", l_wc2
+   #      
+   #   ELSE
+   #   #單身未輸入搜尋條件
+   #      LET l_sub_sql = " SELECT UNIQUE bmba001 ",
+   #                                    ",bmba002 ",
+   #      
+   #                                    ",bmba003 ",
+   #      
+   #                                    ",bmba004 ",
+   #      
+   #                                    ",bmba005 ",
+   #      
+   #                                    ",bmba007 ",
+   #      
+   #                                    ",bmba008 ",
+   #      
+   #      
+   #                        " FROM bmba_t ", 
+   #                        " LEFT JOIN imaal_t a ON a.imaalent = bmbaent AND a.imaal001 = bmba001 AND a.imaal002 = '",g_lang,"' ",  
+   #                           " LEFT JOIN imaal_t b ON b.imaalent = bmbaent AND b.imaal001 = bmba003 AND b.imaal002 = '",g_lang,"' ",
+   #                        " LEFT JOIN bmaa_t ON bmaaent = bmbaent AND bmaasite = bmbasite AND bmba001 = bmaa001 AND bmba002 = bmaa002 ",
+   #                              " ",
+   #                              " ",
+   #                        "WHERE bmbaent = '" ||g_enterprise|| "' AND bmbasite = '" ||g_site|| "' AND ",l_wc CLIPPED
+   #       
+   #   END IF    
+   #END IF
+   
+   #LET g_sql = " SELECT COUNT(*) FROM (",l_sub_sql,")"
+   #161214-00055#1---mark---e
+   
+   #end add-point
+   
+   IF g_sql.getIndexOf("1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE header_cnt_pre FROM g_sql
+      EXECUTE header_cnt_pre INTO g_browser_cnt   #總筆數
+      FREE header_cnt_pre
+   END IF
+    
+   IF g_browser_cnt > g_max_browse THEN
+      IF g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_browser_cnt
+         LET g_errparam.code   = 9035 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+      END IF
+      LET g_browser_cnt = g_max_browse
+   END IF
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+ 
+   #根據行為確定資料填充位置及WC
+   IF cl_null(g_add_browse) THEN
+      #清除畫面
+      CLEAR FORM                
+      INITIALIZE g_bmba_m.* TO NULL
+      CALL g_bmca_d.clear()        
+      CALL g_bmca2_d.clear() 
+      CALL g_bmca3_d.clear() 
+ 
+      #add-point:browser_fill g_add_browse段額外處理 name="browser_fill.add_browse.other"
+      
+      #end add-point   
+      CALL g_browser.clear()
+      LET g_cnt = 1
+   ELSE
+      LET l_wc  = g_add_browse
+      LET l_wc2 = " 1=1" 
+      LET g_cnt = g_current_idx
+   END IF
+ 
+   #依照t0.bmba001,t0.bmba002,t0.bmba003,t0.bmba004,t0.bmba005,t0.bmba007,t0.bmba008 Browser欄位定義(取代原本bs_sql功能)
+   #考量到單身可能下條件, 所以此處需join單身所有table
+   #DISTINCT是為了避免在join時出現重複的資料(如果不加DISTINCT則須在程式中過濾)
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件   
+      LET g_sql = " SELECT DISTINCT '',t0.bmba001,t0.bmba002,t0.bmba003,t0.bmba004,t0.bmba005,t0.bmba007, 
+          t0.bmba008 ",
+                  " FROM bmba_t t0",
+                  "  ",
+                  "  LEFT JOIN bmca_t ON bmcaent = bmbaent AND bmcasite = bmbasite AND bmba001 = bmca001 AND bmba002 = bmca002 AND bmba003 = bmca003 AND bmba004 = bmca004 AND bmba005 = bmca005 AND bmba007 = bmca007 AND bmba008 = bmca008 ", "  ", 
+                  #add-point:browser_fill段sql(bmca_t1) name="browser_fill.join.bmca_t1"
+                  
+                  #end add-point
+                  "  LEFT JOIN bmcc_t ON bmccent = bmbaent AND bmccsite = bmbasite AND bmba001 = bmcc001 AND bmba002 = bmcc002 AND bmba003 = bmcc003 AND bmba004 = bmcc004 AND bmba005 = bmcc005 AND bmba007 = bmcc007 AND bmba008 = bmcc008", "  ", 
+                  #add-point:browser_fill段sql(bmcc_t1) name="browser_fill.join.bmcc_t1"
+                  
+                  #end add-point
+ 
+                  "  LEFT JOIN bmce_t ON bmceent = bmbaent AND bmcesite = bmbasite AND bmba001 = bmce001 AND bmba002 = bmce002 AND bmba003 = bmce003 AND bmba004 = bmce004 AND bmba005 = bmce005 AND bmba007 = bmce007 AND bmba008 = bmce008", "  ", 
+                  #add-point:browser_fill段sql(bmce_t1) name="browser_fill.join.bmce_t1"
+                  
+                  #end add-point
+ 
+ 
+ 
+                  "  ",
+                  
+                  " WHERE t0.bmbaent = '" ||g_enterprise|| "' AND t0.bmbasite = '" ||g_site|| "' AND ",l_wc," AND ",l_wc2, cl_sql_add_filter("bmba_t")
+   ELSE
+      #單身無輸入搜尋條件   
+      LET g_sql = " SELECT DISTINCT '',t0.bmba001,t0.bmba002,t0.bmba003,t0.bmba004,t0.bmba005,t0.bmba007, 
+          t0.bmba008 ",
+                  " FROM bmba_t t0",
+                  "  ",
+                  
+                  " WHERE t0.bmbaent = '" ||g_enterprise|| "' AND t0.bmbasite = '" ||g_site|| "' AND ",l_wc, cl_sql_add_filter("bmba_t")
+   END IF
+   #add-point:browser_fill,sql wc name="browser_fill.fill_sqlwc"
+   
+   #end add-point
+   LET g_sql = g_sql, " ORDER BY bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008 ",g_order
+ 
+   #add-point:browser_fill,before_prepare name="browser_fill.before_prepare"
+   #161214-00055#1---mark---s 
+   ##單身有輸入查詢條件且非null
+   #IF g_wc3 <> " 1=1" AND NOT cl_null(g_wc3) THEN 
+   #   LET l_sql_rank = "SELECT DISTINCT '',bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008,DENSE_RANK() OVER(ORDER BY bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008 ",g_order,") AS RANK ",
+   #                     " FROM bmba_t ",
+   #                           " ",
+   #                           " LEFT JOIN imaal_t a ON a.imaalent = bmbaent AND a.imaal001 = bmba001 AND a.imaal002 = '",g_lang,"' ",  
+   #                           " LEFT JOIN imaal_t b ON b.imaalent = bmbaent AND b.imaal001 = bmba003 AND b.imaal002 = '",g_lang,"' ",
+   #                           " LEFT JOIN bmaa_t ON bmaaent = bmbaent AND bmaasite = bmbasite AND bmba001 = bmaa001 AND bmba002 = bmaa002 ",
+   #                           " LEFT JOIN bmca_t ON bmcaent = bmbaent AND bmcasite = bmbasite AND bmba001 = bmca001 AND bmba002 = bmca002 AND bmba003 = bmca003 AND bmba004 = bmca004 AND bmba005 = bmca005 AND bmba007 = bmca007 AND bmba008 = bmca008",
+   #                           " LEFT JOIN bmcc_t ON bmccent = bmbaent AND bmccsite = bmbasite AND bmba001 = bmcc001 AND bmba002 = bmcc002 AND bmba003 = bmcc003 AND bmba004 = bmcc004 AND bmba005 = bmcc005 AND bmba007 = bmcc007 AND bmba008 = bmcc008",
+   # 
+   #                           " LEFT JOIN bmce_t ON bmceent = bmbaent AND bmcesite = bmbasite AND bmba001 = bmce001 AND bmba002 = bmce002 AND bmba003 = bmce003 AND bmba004 = bmce004 AND bmba005 = bmce005 AND bmba007 = bmce007 AND bmba008 = bmce008",
+   #                           " LEFT JOIN bmcb_t ON bmcbent = bmbaent AND bmcbsite = bmbasite AND bmba001 = bmcb001 AND bmba002 = bmcb002 AND bmba003 = bmcb003 AND bmba004 = bmcb004 AND bmba005 = bmcb005 AND bmba007 = bmcb007 AND bmba008 = bmcb008 ",
+   #                           " LEFT JOIN bmcd_t ON bmcdent = bmbaent AND bmcdsite = bmbasite AND bmba001 = bmcd001 AND bmba002 = bmcd002 AND bmba003 = bmcd003 AND bmba004 = bmcd004 AND bmba005 = bmcd005 AND bmba007 = bmcd007 AND bmba008 = bmcd008 ",
+   #                           
+   #                           " ",
+   #                           " ",
+   #                    " ",
+   #                    " WHERE bmbaent = '" ||g_enterprise|| "' AND bmbasite = '" ||g_site|| "' AND ",g_wc," AND ",g_wc2 ," AND ",g_wc3  
+   #ELSE                       
+   #   IF g_wc2 <> " 1=1" AND NOT cl_null(g_wc2) THEN 
+   #      #依照bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008 Browser欄位定義(取代原本bs_sql功能)
+   #      LET l_sql_rank = "SELECT DISTINCT '',bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008,DENSE_RANK() OVER(ORDER BY bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008 ",g_order,") AS RANK ",
+   #                        " FROM bmba_t ",
+   #                              " ",
+   #                              " LEFT JOIN imaal_t a ON a.imaalent = bmbaent AND a.imaal001 = bmba001 AND a.imaal002 = '",g_lang,"' ",  #
+   #                              " LEFT JOIN imaal_t b ON b.imaalent = bmbaent AND b.imaal001 = bmba003 AND b.imaal002 = '",g_lang,"' ",
+   #                              " LEFT JOIN bmaa_t ON bmaaent = bmbaent AND bmaasite = bmbasite AND bmba001 = bmaa001 AND bmba002 = bmaa002 ",
+   #                              " LEFT JOIN bmca_t ON bmcaent = bmbaent AND bmcasite = bmbasite AND bmba001 = bmca001 AND bmba002 = bmca002 AND bmba003 = bmca003 AND bmba004 = bmca004 AND bmba005 = bmca005 AND bmba007 = bmca007 AND bmba008 = bmca008",
+   #                              " LEFT JOIN bmcc_t ON bmccent = bmbaent AND bmccsite = bmbasite AND bmba001 = bmcc001 AND bmba002 = bmcc002 AND bmba003 = bmcc003 AND bmba004 = bmcc004 AND bmba005 = bmcc005 AND bmba007 = bmcc007 AND bmba008 = bmcc008",
+   # 
+   #                              " LEFT JOIN bmce_t ON bmceent = bmbaent AND bmcesite = bmbasite AND bmba001 = bmce001 AND bmba002 = bmce002 AND bmba003 = bmce003 AND bmba004 = bmce004 AND bmba005 = bmce005 AND bmba007 = bmce007 AND bmba008 = bmce008",
+   # 
+   # 
+   #                              " ",
+   #                              " ",
+   #                       " ",
+   #                       " WHERE bmbaent = '" ||g_enterprise|| "' AND bmbasite = '" ||g_site|| "' AND ",g_wc," AND ",g_wc2
+   #   ELSE
+   #      #單身無輸入資料
+   #      LET l_sql_rank = "SELECT DISTINCT '',bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008,DENSE_RANK() OVER(ORDER BY bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008 ",g_order,") AS RANK ",
+   #                       " FROM bmba_t ",
+   #                            "  ",
+   #                            "  ",
+   #                            " LEFT JOIN imaal_t a ON a.imaalent = bmbaent AND a.imaal001 = bmba001 AND a.imaal002 = '",g_lang,"' ",  #
+   #                           " LEFT JOIN imaal_t b ON b.imaalent = bmbaent AND b.imaal001 = bmba003 AND b.imaal002 = '",g_lang,"' ",
+   #                           " LEFT JOIN bmaa_t ON bmaaent = bmbaent AND bmaasite = bmbasite AND bmba001 = bmaa001 AND bmba002 = bmaa002 ", 
+   #                       " WHERE bmbaent = '" ||g_enterprise|| "' AND bmbasite = '" ||g_site|| "' AND ", g_wc
+   #   END IF
+   #END IF   
+   #161214-00055#1---mark---e 
+   
+   #161214-00055#1---add---s
+   LET l_sql_rank = " SELECT '',bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008,DENSE_RANK() OVER(ORDER BY bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008 ",g_order,") AS RANK ",
+                   "   FROM bmba_t "
+   IF l_wc.getIndexOf('a.imaal',1) > 0 THEN 
+      LET l_sql_rank = l_sql_rank," LEFT JOIN imaal_t a ON a.imaalent = bmbaent AND a.imaal001 = bmba001 AND a.imaal002 = '",g_lang,"' "
+   END IF
+   IF l_wc.getIndexOf('b.imaal',1) > 0 THEN 
+      LET l_sql_rank = l_sql_rank," LEFT JOIN imaal_t b ON b.imaalent = bmbaent AND b.imaal001 = bmba003 AND b.imaal002 = '",g_lang,"' "
+   END IF                  
+   LET l_sql_rank = l_sql_rank," LEFT JOIN bmaa_t ON bmaaent = bmbaent AND bmaasite = bmbasite AND bmba001 = bmaa001 AND bmba002 = bmaa002 "
+   IF g_wc3 <> "1=1" THEN
+      LET l_sql_rank = l_sql_rank,
+                    " LEFT JOIN bmca_t ON bmcaent = bmbaent AND bmcasite = bmbasite AND bmba001 = bmca001 AND bmba002 = bmca002 AND bmba003 = bmca003 AND bmba004 = bmca004 AND bmba005 = bmca005 AND bmba007 = bmca007 AND bmba008 = bmca008 ",
+                    " LEFT JOIN bmcc_t ON bmccent = bmbaent AND bmccsite = bmbasite AND bmba001 = bmcc001 AND bmba002 = bmcc002 AND bmba003 = bmcc003 AND bmba004 = bmcc004 AND bmba005 = bmcc005 AND bmba007 = bmcc007 AND bmba008 = bmcc008 ",
+                    " LEFT JOIN bmce_t ON bmceent = bmbaent AND bmcesite = bmbasite AND bmba001 = bmce001 AND bmba002 = bmce002 AND bmba003 = bmce003 AND bmba004 = bmce004 AND bmba005 = bmce005 AND bmba007 = bmce007 AND bmba008 = bmce008 ",
+                    " LEFT JOIN bmcb_t ON bmcbent = bmbaent AND bmcbsite = bmbasite AND bmba001 = bmcb001 AND bmba002 = bmcb002 AND bmba003 = bmcb003 AND bmba004 = bmcb004 AND bmba005 = bmcb005 AND bmba007 = bmcb007 AND bmba008 = bmcb008 ",
+                    " LEFT JOIN bmcd_t ON bmcdent = bmbaent AND bmcdsite = bmbasite AND bmba001 = bmcd001 AND bmba002 = bmcd002 AND bmba003 = bmcd003 AND bmba004 = bmcd004 AND bmba005 = bmcd005 AND bmba007 = bmcd007 AND bmba008 = bmcd008 ",
+                    " WHERE bmbaent = '" ||g_enterprise|| "' AND bmbasite = '" ||g_site||  "' AND ",l_wc, " AND ", l_wc2, " AND ", l_wc3     
+   ELSE
+      IF g_wc2 <> " 1=1" THEN
+         LET l_sql_rank = l_sql_rank,
+                       " LEFT JOIN bmca_t ON bmcaent = bmbaent AND bmcasite = bmbasite AND bmba001 = bmca001 AND bmba002 = bmca002 AND bmba003 = bmca003 AND bmba004 = bmca004 AND bmba005 = bmca005 AND bmba007 = bmca007 AND bmba008 = bmca008 ",
+                       " LEFT JOIN bmcc_t ON bmccent = bmbaent AND bmccsite = bmbasite AND bmba001 = bmcc001 AND bmba002 = bmcc002 AND bmba003 = bmcc003 AND bmba004 = bmcc004 AND bmba005 = bmcc005 AND bmba007 = bmcc007 AND bmba008 = bmcc008 ",
+                       " LEFT JOIN bmce_t ON bmceent = bmbaent AND bmcesite = bmbasite AND bmba001 = bmce001 AND bmba002 = bmce002 AND bmba003 = bmce003 AND bmba004 = bmce004 AND bmba005 = bmce005 AND bmba007 = bmce007 AND bmba008 = bmce008 ",
+                       " WHERE bmbaent = '" ||g_enterprise|| "' AND bmbasite = '" ||g_site|| "' AND ",l_wc, " AND ", l_wc2
+      ELSE
+         LET l_sql_rank = l_sql_rank,
+                       " WHERE bmbaent = '" ||g_enterprise|| "' AND bmbasite = '" ||g_site|| "' AND ",l_wc CLIPPED
+      END IF
+   END IF   
+   #161214-00055#1---add---e 
+
+   #定義翻頁CURSOR
+   LET g_sql= "SELECT '',bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008 FROM (",l_sql_rank,") WHERE ",
+              " RANK >= ",1," AND RANK<",1+g_max_browse,
+              " ORDER BY bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008 ",g_order
+   #end add-point
+        
+   #LET g_sql = cl_sql_add_tabid(g_sql,"bmba_t") #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql) #遮蔽特定資料
+   
+   IF g_sql.getIndexOf("1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE browse_pre FROM g_sql
+      DECLARE browse_cur CURSOR FOR browse_pre
+      
+      #add-point:browser_fill段open cursor name="browser_fill.open"
+      
+      #end add-point
+      
+      FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_bmba001,g_browser[g_cnt].b_bmba002, 
+          g_browser[g_cnt].b_bmba003,g_browser[g_cnt].b_bmba004,g_browser[g_cnt].b_bmba005,g_browser[g_cnt].b_bmba007, 
+          g_browser[g_cnt].b_bmba008
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "Foreach:",SQLERRMESSAGE 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+      
+         #add-point:browser_fill段reference name="browser_fill.reference"
+         
+         #end add-point
+      
+      
+         
+         LET g_cnt = g_cnt + 1
+         IF g_cnt > g_max_browse THEN
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+      FREE browse_pre
+   END IF
+   
+   #清空g_add_browse, 並指定指標位置
+   IF NOT cl_null(g_add_browse) THEN
+      LET g_add_browse = ""
+      CALL g_curr_diag.setCurrentRow("s_browse",g_current_idx)
+   END IF
+   
+   IF cl_null(g_browser[g_cnt].b_bmba001) THEN
+      CALL g_browser.deleteElement(g_cnt)
+   END IF
+   
+   LET g_header_cnt  = g_browser.getLength()
+   LET g_browser_cnt = g_browser.getLength()
+   
+   #筆數顯示
+   IF g_browser_cnt > 0 THEN
+      DISPLAY g_browser_idx TO FORMONLY.b_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.b_count #總筆數
+      DISPLAY g_browser_idx TO FORMONLY.h_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.h_count #總筆數
+      DISPLAY g_detail_idx  TO FORMONLY.idx     #單身當下筆數
+      DISPLAY g_detail_cnt  TO FORMONLY.cnt     #單身總筆數
+   ELSE
+      DISPLAY '' TO FORMONLY.b_index #當下筆數
+      DISPLAY '' TO FORMONLY.b_count #總筆數
+      DISPLAY '' TO FORMONLY.h_index #當下筆數
+      DISPLAY '' TO FORMONLY.h_count #總筆數
+      DISPLAY '' TO FORMONLY.idx     #單身當下筆數
+      DISPLAY '' TO FORMONLY.cnt     #單身總筆數
+   END IF
+ 
+   LET g_rec_b = g_cnt - 1
+   LET g_detail_cnt = g_rec_b
+   LET g_cnt = 0
+ 
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+                  
+   
+   #add-point:browser_fill段結束前 name="browser_fill.after"
+   
+   #end add-point   
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.ui_headershow" >}
+#+ 單頭資料重新顯示
+PRIVATE FUNCTION abmm203_ui_headershow()
+   #add-point:ui_headershow段define(客製用) name="ui_headershow.define_customerization"
+   
+   #end add-point  
+   #add-point:ui_headershow段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_headershow.define"
+   
+   #end add-point      
+   
+   #add-point:Function前置處理  name="ui_headershow.pre_function"
+   
+   #end add-point
+   
+   LET g_bmba_m.bmba001 = g_browser[g_current_idx].b_bmba001   
+   LET g_bmba_m.bmba002 = g_browser[g_current_idx].b_bmba002   
+   LET g_bmba_m.bmba003 = g_browser[g_current_idx].b_bmba003   
+   LET g_bmba_m.bmba004 = g_browser[g_current_idx].b_bmba004   
+   LET g_bmba_m.bmba005 = g_browser[g_current_idx].b_bmba005   
+   LET g_bmba_m.bmba007 = g_browser[g_current_idx].b_bmba007   
+   LET g_bmba_m.bmba008 = g_browser[g_current_idx].b_bmba008   
+ 
+   EXECUTE abmm203_master_referesh USING g_site,g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004, 
+       g_bmba_m.bmba005,g_bmba_m.bmba007,g_bmba_m.bmba008 INTO g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003, 
+       g_bmba_m.bmba011,g_bmba_m.bmba012,g_bmba_m.bmba010,g_bmba_m.bmba004,g_bmba_m.bmba007,g_bmba_m.bmba008, 
+       g_bmba_m.bmba005,g_bmba_m.bmba004_desc,g_bmba_m.bmba007_desc
+   CALL abmm203_bmba_t_mask()
+   CALL abmm203_show()
+      
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.ui_detailshow" >}
+#+ 單身資料重新顯示
+PRIVATE FUNCTION abmm203_ui_detailshow()
+   #add-point:ui_detailshow段define(客製用) name="ui_detailshow.define_customerization"
+   
+   #end add-point    
+   #add-point:ui_detailshow段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_detailshow.define"
+   
+   #end add-point    
+ 
+   #add-point:Function前置處理 name="ui_detailshow.before"
+   
+   #end add-point    
+   
+   IF g_curr_diag IS NOT NULL THEN
+      CALL g_curr_diag.setCurrentRow("s_detail1",g_detail_idx)      
+      CALL g_curr_diag.setCurrentRow("s_detail2",g_detail_idx)
+      CALL g_curr_diag.setCurrentRow("s_detail3",g_detail_idx)
+ 
+   END IF
+   
+   #add-point:ui_detailshow段after name="ui_detailshow.after"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.ui_browser_refresh" >}
+#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION abmm203_ui_browser_refresh()
+   #add-point:ui_browser_refresh段define(客製用) name="ui_browser_refresh.define_customerization"
+   
+   #end add-point    
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_browser_refresh.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="ui_browser_refresh.pre_function"
+   
+   #end add-point
+   
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_header_cnt  = g_browser.getLength()
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_bmba001 = g_bmba_m.bmba001 
+         AND g_browser[l_i].b_bmba002 = g_bmba_m.bmba002 
+         AND g_browser[l_i].b_bmba003 = g_bmba_m.bmba003 
+         AND g_browser[l_i].b_bmba004 = g_bmba_m.bmba004 
+         AND g_browser[l_i].b_bmba005 = g_bmba_m.bmba005 
+         AND g_browser[l_i].b_bmba007 = g_bmba_m.bmba007 
+         AND g_browser[l_i].b_bmba008 = g_bmba_m.bmba008 
+ 
+         THEN
+         CALL g_browser.deleteElement(l_i)
+         EXIT FOR
+      END IF
+   END FOR
+   LET g_browser_cnt = g_browser_cnt - 1
+   LET g_header_cnt = g_header_cnt - 1
+    
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+      CLEAR FORM
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+   
+   #add-point:ui_browser_refresh段after name="ui_browser_refresh.after"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.construct" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION abmm203_construct()
+   #add-point:cs段define(客製用) name="cs.define_customerization"
+   
+   #end add-point    
+   DEFINE ls_return   STRING
+   DEFINE ls_result   STRING 
+   DEFINE ls_wc       STRING 
+   DEFINE la_wc       DYNAMIC ARRAY OF RECORD
+          tableid     STRING,
+          wc          STRING
+          END RECORD
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:cs段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="cs.define"
+   DEFINE l_wc1       STRING
+   DEFINE l_imaa005   LIKE imaa_t.imaa005
+   #end add-point    
+   
+   #add-point:Function前置處理  name="cs.pre_function"
+   
+   #end add-point
+    
+   #清除畫面
+   CLEAR FORM                
+   INITIALIZE g_bmba_m.* TO NULL
+   CALL g_bmca_d.clear()        
+   CALL g_bmca2_d.clear() 
+   CALL g_bmca3_d.clear() 
+ 
+   
+   LET g_action_choice = ""
+    
+   INITIALIZE g_wc TO NULL
+   INITIALIZE g_wc2 TO NULL
+   
+   INITIALIZE g_wc2_table1 TO NULL
+   INITIALIZE g_wc2_table2 TO NULL
+ 
+   INITIALIZE g_wc2_table3 TO NULL
+ 
+ 
+    
+   LET g_qryparam.state = 'c'
+   
+   #add-point:cs段開始前 name="cs.before_construct"
+   SELECT imaa005 INTO l_imaa005 FROM imaa_t 
+    WHERE imaaent = g_enterprise
+      AND imaa001 = g_bmba_m.bmba001
+   #end add-point 
+   
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+      #單頭
+      CONSTRUCT BY NAME g_wc ON bmba001,l_imaal003_1,l_imaal004_1,bmba002,bmaa004,bmba003,l_imaal003_2, 
+          l_imaal004_2,bmba011,bmba012,bmba010,bmba004,bmba007,bmba008,bmba005
+ 
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.head.before_construct"
+            
+            #end add-point 
+            
+         #公用欄位開窗相關處理
+         
+            
+         #一般欄位開窗相關處理    
+                  #Ctrlp:construct.c.bmba001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmba001
+            #add-point:ON ACTION controlp INFIELD bmba001 name="construct.c.bmba001"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bmba001  #顯示到畫面上
+
+            NEXT FIELD bmba001                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmba001
+            #add-point:BEFORE FIELD bmba001 name="construct.b.bmba001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmba001
+            
+            #add-point:AFTER FIELD bmba001 name="construct.a.bmba001"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_imaal003_1
+            #add-point:BEFORE FIELD l_imaal003_1 name="construct.b.l_imaal003_1"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_imaal003_1
+            
+            #add-point:AFTER FIELD l_imaal003_1 name="construct.a.l_imaal003_1"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.l_imaal003_1
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_imaal003_1
+            #add-point:ON ACTION controlp INFIELD l_imaal003_1 name="construct.c.l_imaal003_1"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_imaal004_1
+            #add-point:BEFORE FIELD l_imaal004_1 name="construct.b.l_imaal004_1"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_imaal004_1
+            
+            #add-point:AFTER FIELD l_imaal004_1 name="construct.a.l_imaal004_1"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.l_imaal004_1
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_imaal004_1
+            #add-point:ON ACTION controlp INFIELD l_imaal004_1 name="construct.c.l_imaal004_1"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmba002
+            #add-point:BEFORE FIELD bmba002 name="construct.b.bmba002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmba002
+            
+            #add-point:AFTER FIELD bmba002 name="construct.a.bmba002"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.bmba002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmba002
+            #add-point:ON ACTION controlp INFIELD bmba002 name="construct.c.bmba002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.bmaa004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmaa004
+            #add-point:ON ACTION controlp INFIELD bmaa004 name="construct.c.bmaa004"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooca001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bmaa004  #顯示到畫面上
+
+            NEXT FIELD bmaa004                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmaa004
+            #add-point:BEFORE FIELD bmaa004 name="construct.b.bmaa004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmaa004
+            
+            #add-point:AFTER FIELD bmaa004 name="construct.a.bmaa004"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.bmba003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmba003
+            #add-point:ON ACTION controlp INFIELD bmba003 name="construct.c.bmba003"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bmba003  #顯示到畫面上
+
+            NEXT FIELD bmba003                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmba003
+            #add-point:BEFORE FIELD bmba003 name="construct.b.bmba003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmba003
+            
+            #add-point:AFTER FIELD bmba003 name="construct.a.bmba003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_imaal003_2
+            #add-point:BEFORE FIELD l_imaal003_2 name="construct.b.l_imaal003_2"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_imaal003_2
+            
+            #add-point:AFTER FIELD l_imaal003_2 name="construct.a.l_imaal003_2"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.l_imaal003_2
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_imaal003_2
+            #add-point:ON ACTION controlp INFIELD l_imaal003_2 name="construct.c.l_imaal003_2"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_imaal004_2
+            #add-point:BEFORE FIELD l_imaal004_2 name="construct.b.l_imaal004_2"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_imaal004_2
+            
+            #add-point:AFTER FIELD l_imaal004_2 name="construct.a.l_imaal004_2"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.l_imaal004_2
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_imaal004_2
+            #add-point:ON ACTION controlp INFIELD l_imaal004_2 name="construct.c.l_imaal004_2"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmba011
+            #add-point:BEFORE FIELD bmba011 name="construct.b.bmba011"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmba011
+            
+            #add-point:AFTER FIELD bmba011 name="construct.a.bmba011"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.bmba011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmba011
+            #add-point:ON ACTION controlp INFIELD bmba011 name="construct.c.bmba011"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmba012
+            #add-point:BEFORE FIELD bmba012 name="construct.b.bmba012"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmba012
+            
+            #add-point:AFTER FIELD bmba012 name="construct.a.bmba012"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.bmba012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmba012
+            #add-point:ON ACTION controlp INFIELD bmba012 name="construct.c.bmba012"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.bmba010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmba010
+            #add-point:ON ACTION controlp INFIELD bmba010 name="construct.c.bmba010"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooca001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bmba010  #顯示到畫面上
+
+            NEXT FIELD bmba010                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmba010
+            #add-point:BEFORE FIELD bmba010 name="construct.b.bmba010"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmba010
+            
+            #add-point:AFTER FIELD bmba010 name="construct.a.bmba010"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.bmba004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmba004
+            #add-point:ON ACTION controlp INFIELD bmba004 name="construct.c.bmba004"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = "215" #應用分類
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bmba004  #顯示到畫面上
+
+            NEXT FIELD bmba004                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmba004
+            #add-point:BEFORE FIELD bmba004 name="construct.b.bmba004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmba004
+            
+            #add-point:AFTER FIELD bmba004 name="construct.a.bmba004"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.bmba007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmba007
+            #add-point:ON ACTION controlp INFIELD bmba007 name="construct.c.bmba007"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = "221" #應用分類
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bmba007  #顯示到畫面上
+
+            NEXT FIELD bmba007                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmba007
+            #add-point:BEFORE FIELD bmba007 name="construct.b.bmba007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmba007
+            
+            #add-point:AFTER FIELD bmba007 name="construct.a.bmba007"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmba008
+            #add-point:BEFORE FIELD bmba008 name="construct.b.bmba008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmba008
+            
+            #add-point:AFTER FIELD bmba008 name="construct.a.bmba008"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.bmba008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmba008
+            #add-point:ON ACTION controlp INFIELD bmba008 name="construct.c.bmba008"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmba005
+            #add-point:BEFORE FIELD bmba005 name="construct.b.bmba005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmba005
+            
+            #add-point:AFTER FIELD bmba005 name="construct.a.bmba005"
+#            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+#            IF NOT cl_null(ls_result) THEN
+#               IF NOT cl_chk_date_symbol(ls_result) THEN
+#                  LET ls_result = cl_add_date_extra_cond(ls_result)
+#               END IF
+#            END IF
+#            CALL FGL_DIALOG_SETBUFFER(ls_result)
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.bmba005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmba005
+            #add-point:ON ACTION controlp INFIELD bmba005 name="construct.c.bmba005"
+            
+            #END add-point
+ 
+ 
+ 
+         
+      END CONSTRUCT
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc2_table1 ON bmca009
+           FROM s_detail1[1].bmca009
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.body.before_construct"
+            
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+                #Ctrlp:construct.c.page1.bmca009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmca009
+            #add-point:ON ACTION controlp INFIELD bmca009 name="construct.c.page1.bmca009"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_imeb004_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bmca009  #顯示到畫面上
+
+            NEXT FIELD bmca009                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmca009
+            #add-point:BEFORE FIELD bmca009 name="construct.b.page1.bmca009"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmca009
+            
+            #add-point:AFTER FIELD bmca009 name="construct.a.page1.bmca009"
+            
+            #END add-point
+            
+ 
+ 
+   
+       
+      END CONSTRUCT
+      
+      CONSTRUCT g_wc2_table2 ON bmcc009,bmcc010
+           FROM s_detail2[1].bmcc009,s_detail2[1].bmcc010
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.body2.before_construct"
+            
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理(table 2)
+       
+       
+       #單身一般欄位開窗相關處理       
+                #Ctrlp:construct.c.page2.bmcc009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmcc009
+            #add-point:ON ACTION controlp INFIELD bmcc009 name="construct.c.page2.bmcc009"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_imeb004_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bmcc009  #顯示到畫面上
+
+            NEXT FIELD bmcc009                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmcc009
+            #add-point:BEFORE FIELD bmcc009 name="construct.b.page2.bmcc009"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmcc009
+            
+            #add-point:AFTER FIELD bmcc009 name="construct.a.page2.bmcc009"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmcc010
+            #add-point:BEFORE FIELD bmcc010 name="construct.b.page2.bmcc010"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmcc010
+            
+            #add-point:AFTER FIELD bmcc010 name="construct.a.page2.bmcc010"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.bmcc010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmcc010
+            #add-point:ON ACTION controlp INFIELD bmcc010 name="construct.c.page2.bmcc010"
+            
+            #END add-point
+ 
+ 
+   
+       
+      END CONSTRUCT
+ 
+      CONSTRUCT g_wc2_table3 ON bmce009,bmce010,bmce010_desc
+           FROM s_detail3[1].bmce009,s_detail3[1].bmce010,s_detail3[1].bmce010_desc
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.body3.before_construct"
+            
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理(table 3)
+       
+       
+       #單身一般欄位開窗相關處理       
+                #Ctrlp:construct.c.page3.bmce009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmce009
+            #add-point:ON ACTION controlp INFIELD bmce009 name="construct.c.page3.bmce009"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_imeb004_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bmce009  #顯示到畫面上
+
+            NEXT FIELD bmce009                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmce009
+            #add-point:BEFORE FIELD bmce009 name="construct.b.page3.bmce009"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmce009
+            
+            #add-point:AFTER FIELD bmce009 name="construct.a.page3.bmce009"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page3.bmce010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmce010
+            #add-point:ON ACTION controlp INFIELD bmce010 name="construct.c.page3.bmce010"
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_imec003_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bmce010  #顯示到畫面上
+
+            NEXT FIELD bmce010                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmce010
+            #add-point:BEFORE FIELD bmce010 name="construct.b.page3.bmce010"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmce010
+            
+            #add-point:AFTER FIELD bmce010 name="construct.a.page3.bmce010"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmce010_desc
+            #add-point:BEFORE FIELD bmce010_desc name="construct.b.page3.bmce010_desc"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmce010_desc
+            
+            #add-point:AFTER FIELD bmce010_desc name="construct.a.page3.bmce010_desc"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page3.bmce010_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmce010_desc
+            #add-point:ON ACTION controlp INFIELD bmce010_desc name="construct.c.page3.bmce010_desc"
+            
+            #END add-point
+ 
+ 
+   
+       
+      END CONSTRUCT
+ 
+ 
+      
+ 
+      
+      #add-point:cs段add_cs(本段內只能出現新的CONSTRUCT指令) name="cs.add_cs"
+      CONSTRUCT BY NAME l_wc1 ON bmaa004
+ 
+         BEFORE CONSTRUCT
+            CALL cl_qbe_init()        
+         #一般欄位開窗相關處理    
+
+         ON ACTION controlp INFIELD bmaa004
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooca001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bmaa004  #顯示到畫面上                     
+            NEXT FIELD bmaa004                    #返回原欄位
+       END CONSTRUCT
+
+      CONSTRUCT g_wc_table4 ON bmcb010,bmcb011,bmcb012
+           FROM s_detail4[1].bmcb010,s_detail4[1].bmcb011,s_detail4[1].bmcb012
+                      
+         BEFORE CONSTRUCT
+#saki       CALL cl_qbe_display_condition(lc_qbe_sn)
+
+         ON ACTION controlp INFIELD bmcb011
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_imec003_1()          #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bmcb011  #顯示到畫面上
+
+            NEXT FIELD bmcb011
+ 
+         ON ACTION controlp INFIELD bmcb012
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_imec003_1()         #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bmcb012#顯示到畫面上
+
+            NEXT FIELD bmcb012    
+       
+      END CONSTRUCT
+
+      CONSTRUCT g_wc_table5 ON bmcd010,bmcd011
+           FROM s_detail5[1].bmcd010,s_detail5[1].bmcd011
+                      
+         BEFORE CONSTRUCT
+#saki       CALL cl_qbe_display_condition(lc_qbe_sn)
+
+         ON ACTION controlp INFIELD bmcd010
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_imec003_1()      #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bmcd010  #顯示到畫面上
+
+            NEXT FIELD bmcd010
+ 
+         ON ACTION controlp INFIELD bmcd011
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'           
+            LET g_qryparam.reqry = FALSE
+            CALL q_imec003_1()    #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bmcd011   #顯示到畫面上
+
+            NEXT FIELD bmcd011    
+       
+      END CONSTRUCT
+
+      #end add-point
+ 
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog name="cs.b_dialog"
+         
+         #end add-point  
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+         IF NOT cl_null(ls_wc) THEN
+            CALL util.JSON.parse(ls_wc, la_wc)
+            INITIALIZE g_wc, g_wc2, g_wc2_table1, g_wc2_extend TO NULL
+            INITIALIZE g_wc2_table2 TO NULL
+ 
+            INITIALIZE g_wc2_table3 TO NULL
+ 
+ 
+            FOR li_idx = 1 TO la_wc.getLength()
+               CASE
+                  WHEN la_wc[li_idx].tableid = "bmba_t" 
+                     LET g_wc = la_wc[li_idx].wc
+                  WHEN la_wc[li_idx].tableid = "bmca_t" 
+                     LET g_wc2_table1 = la_wc[li_idx].wc
+                  WHEN la_wc[li_idx].tableid = "bmcc_t" 
+                     LET g_wc2_table2 = la_wc[li_idx].wc
+ 
+                  WHEN la_wc[li_idx].tableid = "bmce_t" 
+                     LET g_wc2_table3 = la_wc[li_idx].wc
+ 
+ 
+               END CASE
+            END FOR
+         END IF
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   END DIALOG
+   
+   #組合g_wc2
+   LET g_wc2 = g_wc2_table1
+   IF g_wc2_table2 <> " 1=1" THEN
+      LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+   END IF
+ 
+   IF g_wc2_table3 <> " 1=1" THEN
+      LET g_wc2 = g_wc2 ," AND ", g_wc2_table3
+   END IF
+ 
+ 
+ 
+ 
+   
+   #add-point:cs段結束前 name="cs.after_construct"
+   LET g_wc = cl_replace_str(g_wc,'bmba005=', "to_char(bmba005,'yyyy-mm-dd')>=")
+   LET g_wc = cl_replace_str(g_wc,'l_imaal003_1', 'a.imaal003')
+   LET g_wc = cl_replace_str(g_wc,'l_imaal004_1', 'a.imaal004')
+   LET g_wc = cl_replace_str(g_wc,'l_imaal003_2', 'b.imaal003')
+   LET g_wc = cl_replace_str(g_wc,'l_imaal004_2', 'b.imaal004')   
+   IF NOT cl_null(l_wc1) THEN 
+      LET g_wc = g_wc ," AND ",l_wc1
+   END IF
+   LET g_wc3 = g_wc_table4
+   IF g_wc_table4 <> " 1=1" THEN
+      LET g_wc3 = g_wc3 ," AND ", g_wc_table4
+   END IF
+   IF g_wc_table5 <> " 1=1" THEN
+      LET g_wc3 = g_wc3 ," AND ", g_wc_table5
+   END IF   
+   #end add-point    
+ 
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.query" >}
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION abmm203_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point   
+   DEFINE ls_wc STRING
+   #add-point:query段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="query.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   
+   LET ls_wc = g_wc
+   
+   LET INT_FLAG = 0
+   CALL cl_navigator_setting( g_current_idx, g_detail_cnt )
+   ERROR ""
+   
+   #清除畫面及相關資料
+   CLEAR FORM
+   CALL g_browser.clear()       
+   CALL g_bmca_d.clear()
+   CALL g_bmca2_d.clear()
+   CALL g_bmca3_d.clear()
+ 
+   
+   #add-point:query段other name="query.other"
+   
+   #end add-point   
+   
+   DISPLAY '' TO FORMONLY.idx
+   DISPLAY '' TO FORMONLY.cnt
+   DISPLAY '' TO FORMONLY.b_index
+   DISPLAY '' TO FORMONLY.b_count
+   DISPLAY '' TO FORMONLY.h_index
+   DISPLAY '' TO FORMONLY.h_count
+   
+   CALL abmm203_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      #LET g_wc = ls_wc
+      LET g_wc = " 1=2"
+      CALL abmm203_browser_fill("")
+      CALL abmm203_fetch("")
+      RETURN
+   END IF
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||") AND ("||g_wc2||")")
+   
+   #搜尋後資料初始化 
+   LET g_detail_cnt  = 0
+   LET g_current_idx = 1
+   LET g_current_row = 0
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_detail_idx_list[1] = 1
+   LET g_detail_idx_list[2] = 1
+   LET g_detail_idx_list[3] = 1
+ 
+   LET g_error_show  = 1
+   LET g_wc_filter   = ""
+   LET l_ac = 1
+   CALL FGL_SET_ARR_CURR(1)
+   CALL abmm203_browser_fill("F")
+         
+   IF g_browser_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "-100" 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   ELSE
+      CALL abmm203_fetch("F") 
+      #顯示單身筆數
+      CALL abmm203_idx_chk()
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.fetch" >}
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION abmm203_fetch(p_flag)
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point    
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   DEFINE l_bmaastus  LIKE bmaa_t.bmaastus
+   #end add-point    
+   
+   #add-point:Function前置處理  name="fetch.pre_function"
+   
+   #end add-point
+   
+   IF g_browser_cnt = 0 THEN
+      RETURN
+   END IF
+ 
+   #清空第二階單身
+ 
+   
+   CALL cl_ap_performance_next_start()
+   CASE p_flag
+      WHEN 'F' 
+         LET g_current_idx = 1
+      WHEN 'L'  
+         LET g_current_idx = g_browser.getLength()              
+      WHEN 'P'
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN 'N'
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN '/'
+         IF (NOT g_no_ask) THEN    
+            CALL cl_set_act_visible("accept,cancel", TRUE)    
+            CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,':' FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl" 
+            END PROMPT
+ 
+            CALL cl_set_act_visible("accept,cancel", FALSE)    
+            IF INT_FLAG THEN
+                LET INT_FLAG = 0
+                EXIT CASE  
+            END IF           
+         END IF
+         
+         IF g_jump > 0 AND g_jump <= g_browser.getLength() THEN
+             LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE  
+   END CASE 
+ 
+   
+   LET g_current_row = g_current_idx
+   LET g_detail_cnt = g_header_cnt                  
+   
+   #單身總筆數顯示
+   IF g_detail_cnt > 0 THEN
+      #若單身有資料時, idx至少為1
+      IF g_detail_idx <= 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx  
+   ELSE
+      LET g_detail_idx = 0
+      DISPLAY '' TO FORMONLY.idx    
+   END IF
+   
+   #瀏覽頁筆數顯示
+   LET g_pagestart = g_current_idx
+   DISPLAY g_pagestart TO FORMONLY.b_index   #當下筆數
+   DISPLAY g_pagestart TO FORMONLY.h_index   #當下筆數
+   
+   CALL cl_navigator_setting( g_pagestart, g_browser_cnt )
+ 
+   #代表沒有資料
+   IF g_current_idx = 0 OR g_browser.getLength() = 0 THEN
+      RETURN
+   END IF
+   
+   #避免超出browser資料筆數上限
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_browser_idx = g_browser.getLength()
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   LET g_bmba_m.bmba001 = g_browser[g_current_idx].b_bmba001
+   LET g_bmba_m.bmba002 = g_browser[g_current_idx].b_bmba002
+   LET g_bmba_m.bmba003 = g_browser[g_current_idx].b_bmba003
+   LET g_bmba_m.bmba004 = g_browser[g_current_idx].b_bmba004
+   LET g_bmba_m.bmba005 = g_browser[g_current_idx].b_bmba005
+   LET g_bmba_m.bmba007 = g_browser[g_current_idx].b_bmba007
+   LET g_bmba_m.bmba008 = g_browser[g_current_idx].b_bmba008
+ 
+   
+   #重讀DB,因TEMP有不被更新特性
+   EXECUTE abmm203_master_referesh USING g_site,g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004, 
+       g_bmba_m.bmba005,g_bmba_m.bmba007,g_bmba_m.bmba008 INTO g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003, 
+       g_bmba_m.bmba011,g_bmba_m.bmba012,g_bmba_m.bmba010,g_bmba_m.bmba004,g_bmba_m.bmba007,g_bmba_m.bmba008, 
+       g_bmba_m.bmba005,g_bmba_m.bmba004_desc,g_bmba_m.bmba007_desc
+   
+   #遮罩相關處理
+   LET g_bmba_m_mask_o.* =  g_bmba_m.*
+   CALL abmm203_bmba_t_mask()
+   LET g_bmba_m_mask_n.* =  g_bmba_m.*
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL abmm203_set_act_visible()   
+   CALL abmm203_set_act_no_visible()
+   
+   #add-point:fetch段action控制 name="fetch.action_control"
+   SELECT bmaastus INTO l_bmaastus FROM bmaa_t 
+    WHERE bmaaent = g_enterprise
+      AND bmaasite = g_site
+      AND bmaa001 = g_bmba_m.bmba001
+      AND bmaa002 = g_bmba_m.bmba002
+    CALL cl_set_act_visible("modify,modify_detail,delete",TRUE)    #161216-00029#3 add  
+   IF g_site != 'ALL' THEN
+      CALL cl_set_act_visible("modify,modify_detail,delete,reproduce",FALSE)
+   ELSE
+      IF l_bmaastus = 'Y' AND abmm203_act_oocq007() THEN 
+         CALL cl_set_act_visible("modify,modify_detail,delete,reproduce",FALSE)
+      ELSE   
+         CALL cl_set_act_visible("modify,modify_detail,delete",TRUE)
+      END IF
+   END IF
+   #161216-00029#3 add(s)
+   IF l_bmaastus = 'VO' THEN
+      CALL cl_set_act_visible("modify,modify_detail,delete",FALSE)
+   END IF
+   #161216-00029#3 add(e)
+   #end add-point  
+   
+   
+   
+   #add-point:fetch結束前 name="fetch.after"
+   
+   #end add-point
+   
+   #保存單頭舊值
+   LET g_bmba_m_t.* = g_bmba_m.*
+   LET g_bmba_m_o.* = g_bmba_m.*
+   
+   
+   #重新顯示   
+   CALL abmm203_show()
+ 
+   
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION abmm203_insert()
+   #add-point:insert段define(客製用) name="insert.define_customerization"
+   
+   #end add-point    
+   #add-point:insert段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="insert.pre_function"
+   
+   #end add-point
+   
+   #清畫面欄位內容
+   CLEAR FORM                    
+   CALL g_bmca_d.clear()   
+   CALL g_bmca2_d.clear()  
+   CALL g_bmca3_d.clear()  
+ 
+ 
+   INITIALIZE g_bmba_m.* LIKE bmba_t.*             #DEFAULT 設定
+   
+   LET g_bmba001_t = NULL
+   LET g_bmba002_t = NULL
+   LET g_bmba003_t = NULL
+   LET g_bmba004_t = NULL
+   LET g_bmba005_t = NULL
+   LET g_bmba007_t = NULL
+   LET g_bmba008_t = NULL
+ 
+   
+   LET g_master_insert = FALSE
+   
+   #add-point:insert段before name="insert.before"
+   
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   WHILE TRUE
+      #公用欄位給值(單頭)
+      
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+      
+  
+      #add-point:單頭預設值 name="insert.default"
+      
+      #end add-point 
+      
+      #保存單頭舊值(用於資料輸入錯誤還原預設值時使用)
+      LET g_bmba_m_t.* = g_bmba_m.*
+      LET g_bmba_m_o.* = g_bmba_m.*
+      
+      #顯示狀態(stus)圖片
+      
+    
+      CALL abmm203_input("a")
+      
+      #add-point:單頭輸入後 name="insert.after_insert"
+      
+      #end add-point
+      
+      IF INT_FLAG THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         LET INT_FLAG = 0
+      END IF
+      
+      IF NOT g_master_insert THEN
+         DISPLAY g_detail_cnt  TO FORMONLY.h_count    #總筆數
+         DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+         INITIALIZE g_bmba_m.* TO NULL
+         INITIALIZE g_bmca_d TO NULL
+         INITIALIZE g_bmca2_d TO NULL
+         INITIALIZE g_bmca3_d TO NULL
+ 
+         #add-point:取消新增後 name="insert.cancel"
+         
+         #end add-point 
+         CALL abmm203_show()
+         RETURN
+      END IF
+      
+      LET INT_FLAG = 0
+      #CALL g_bmca_d.clear()
+      #CALL g_bmca2_d.clear()
+      #CALL g_bmca3_d.clear()
+ 
+ 
+      LET g_rec_b = 0
+      CALL s_transaction_end('Y','0')
+      EXIT WHILE
+        
+   END WHILE
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL abmm203_set_act_visible()   
+   CALL abmm203_set_act_no_visible()
+   
+   #將新增的資料併入搜尋條件中
+   LET g_bmba001_t = g_bmba_m.bmba001
+   LET g_bmba002_t = g_bmba_m.bmba002
+   LET g_bmba003_t = g_bmba_m.bmba003
+   LET g_bmba004_t = g_bmba_m.bmba004
+   LET g_bmba005_t = g_bmba_m.bmba005
+   LET g_bmba007_t = g_bmba_m.bmba007
+   LET g_bmba008_t = g_bmba_m.bmba008
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " bmbaent = '" ||g_enterprise|| "' AND bmbasite = '" ||g_site|| "' AND",
+                      " bmba001 = '", g_bmba_m.bmba001, "' "
+                      ," AND bmba002 = '", g_bmba_m.bmba002, "' "
+                      ," AND bmba003 = '", g_bmba_m.bmba003, "' "
+                      ," AND bmba004 = '", g_bmba_m.bmba004, "' "
+                      ," AND bmba005 = '", g_bmba_m.bmba005, "' "
+                      ," AND bmba007 = '", g_bmba_m.bmba007, "' "
+                      ," AND bmba008 = '", g_bmba_m.bmba008, "' "
+ 
+                      
+   #add-point:組合新增資料的條件後 name="insert.after.add_browse"
+   
+   #end add-point
+      
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL abmm203_browser_fill("")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   CLOSE abmm203_cl
+   
+   CALL abmm203_idx_chk()
+   
+   #撈取異動後的資料(主要是帶出reference)
+   EXECUTE abmm203_master_referesh USING g_site,g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004, 
+       g_bmba_m.bmba005,g_bmba_m.bmba007,g_bmba_m.bmba008 INTO g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003, 
+       g_bmba_m.bmba011,g_bmba_m.bmba012,g_bmba_m.bmba010,g_bmba_m.bmba004,g_bmba_m.bmba007,g_bmba_m.bmba008, 
+       g_bmba_m.bmba005,g_bmba_m.bmba004_desc,g_bmba_m.bmba007_desc
+   
+   #遮罩相關處理
+   LET g_bmba_m_mask_o.* =  g_bmba_m.*
+   CALL abmm203_bmba_t_mask()
+   LET g_bmba_m_mask_n.* =  g_bmba_m.*
+   
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_bmba_m.bmba001,g_bmba_m.l_imaal003_1,g_bmba_m.l_imaal004_1,g_bmba_m.bmba002,g_bmba_m.bmaa004, 
+       g_bmba_m.bmba003,g_bmba_m.l_imaal003_2,g_bmba_m.l_imaal004_2,g_bmba_m.bmba011,g_bmba_m.bmba012, 
+       g_bmba_m.bmba010,g_bmba_m.bmba004,g_bmba_m.bmba004_desc,g_bmba_m.bmba007,g_bmba_m.bmba007_desc, 
+       g_bmba_m.bmba008,g_bmba_m.bmba005
+   
+   #add-point:新增結束後 name="insert.after"
+   
+   #end add-point 
+   
+   #功能已完成,通報訊息中心
+   CALL abmm203_msgcentre_notify('insert')
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION abmm203_modify()
+   #add-point:modify段define(客製用) name="modify.define_customerization"
+   
+   #end add-point    
+   DEFINE l_new_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key  DYNAMIC ARRAY OF STRING
+   DEFINE l_wc2_table1          STRING
+   DEFINE l_wc2_table2   STRING
+ 
+   DEFINE l_wc2_table3   STRING
+ 
+ 
+ 
+   #add-point:modify段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="modify.pre_function"
+   
+   #end add-point
+   
+   #保存單頭舊值
+   LET g_bmba_m_t.* = g_bmba_m.*
+   LET g_bmba_m_o.* = g_bmba_m.*
+   
+   IF g_bmba_m.bmba001 IS NULL
+   OR g_bmba_m.bmba002 IS NULL
+   OR g_bmba_m.bmba003 IS NULL
+   OR g_bmba_m.bmba004 IS NULL
+   OR g_bmba_m.bmba005 IS NULL
+   OR g_bmba_m.bmba007 IS NULL
+   OR g_bmba_m.bmba008 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   ERROR ""
+  
+   LET g_bmba001_t = g_bmba_m.bmba001
+   LET g_bmba002_t = g_bmba_m.bmba002
+   LET g_bmba003_t = g_bmba_m.bmba003
+   LET g_bmba004_t = g_bmba_m.bmba004
+   LET g_bmba005_t = g_bmba_m.bmba005
+   LET g_bmba007_t = g_bmba_m.bmba007
+   LET g_bmba008_t = g_bmba_m.bmba008
+ 
+   CALL s_transaction_begin()
+   
+   OPEN abmm203_cl USING g_enterprise, g_site,g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004,g_bmba_m.bmba005,g_bmba_m.bmba007,g_bmba_m.bmba008
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN abmm203_cl:" 
+      LET g_errparam.code   = STATUS 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      CLOSE abmm203_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE abmm203_master_referesh USING g_site,g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004, 
+       g_bmba_m.bmba005,g_bmba_m.bmba007,g_bmba_m.bmba008 INTO g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003, 
+       g_bmba_m.bmba011,g_bmba_m.bmba012,g_bmba_m.bmba010,g_bmba_m.bmba004,g_bmba_m.bmba007,g_bmba_m.bmba008, 
+       g_bmba_m.bmba005,g_bmba_m.bmba004_desc,g_bmba_m.bmba007_desc
+   
+   #檢查是否允許此動作
+   IF NOT abmm203_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_bmba_m_mask_o.* =  g_bmba_m.*
+   CALL abmm203_bmba_t_mask()
+   LET g_bmba_m_mask_n.* =  g_bmba_m.*
+   
+   
+   
+   #add-point:modify段show之前 name="modify.before_show"
+   
+   #end add-point  
+   
+   #LET l_wc2_table1 = g_wc2_table1
+   #LET g_wc2_table1 = " 1=1"
+   #LET l_wc2_table2 = g_wc2_table2
+   #LET l_wc2_table2 = " 1=1"
+ 
+   #LET l_wc2_table3 = g_wc2_table3
+   #LET l_wc2_table3 = " 1=1"
+ 
+ 
+ 
+   
+   CALL abmm203_show()
+   #add-point:modify段show之後 name="modify.after_show"
+   
+   #end add-point
+   
+   #LET g_wc2_table1 = l_wc2_table1
+   #LET  g_wc2_table2 = l_wc2_table2 
+ 
+   #LET  g_wc2_table3 = l_wc2_table3 
+ 
+ 
+ 
+    
+   WHILE TRUE
+      LET g_bmba001_t = g_bmba_m.bmba001
+      LET g_bmba002_t = g_bmba_m.bmba002
+      LET g_bmba003_t = g_bmba_m.bmba003
+      LET g_bmba004_t = g_bmba_m.bmba004
+      LET g_bmba005_t = g_bmba_m.bmba005
+      LET g_bmba007_t = g_bmba_m.bmba007
+      LET g_bmba008_t = g_bmba_m.bmba008
+ 
+      
+      #寫入修改者/修改日期資訊(單頭)
+      
+      
+      #add-point:modify段修改前 name="modify.before_input"
+ 
+      #end add-point
+      
+      #欄位更改
+      LET g_loc = 'n'
+      LET g_update = FALSE
+      CALL abmm203_input("u")
+      LET g_loc = 'n'
+ 
+      #add-point:modify段修改後 name="modify.after_input"
+      
+      #end add-point
+      
+ 
+    
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_bmba_m.* = g_bmba_m_t.*
+         CALL abmm203_show()
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF 
+                  
+      #若單頭key欄位有變更
+      IF g_bmba_m.bmba001 != g_bmba_m_t.bmba001
+      OR g_bmba_m.bmba002 != g_bmba_m_t.bmba002
+      OR g_bmba_m.bmba003 != g_bmba_m_t.bmba003
+      OR g_bmba_m.bmba004 != g_bmba_m_t.bmba004
+      OR g_bmba_m.bmba005 != g_bmba_m_t.bmba005
+      OR g_bmba_m.bmba007 != g_bmba_m_t.bmba007
+      OR g_bmba_m.bmba008 != g_bmba_m_t.bmba008
+ 
+      THEN
+         CALL s_transaction_begin()
+         
+         #add-point:單身fk修改前 name="modify.body.b_fk_update"
+         
+         #end add-point
+         
+         #更新單身key值
+         UPDATE bmca_t SET bmca001 = g_bmba_m.bmba001
+                                       ,bmca002 = g_bmba_m.bmba002
+                                       ,bmca003 = g_bmba_m.bmba003
+                                       ,bmca004 = g_bmba_m.bmba004
+                                       ,bmca005 = g_bmba_m.bmba005
+                                       ,bmca007 = g_bmba_m.bmba007
+                                       ,bmca008 = g_bmba_m.bmba008
+ 
+          WHERE bmcaent = g_enterprise AND bmcasite = g_site AND bmca001 = g_bmba_m_t.bmba001
+            AND bmca002 = g_bmba_m_t.bmba002
+            AND bmca003 = g_bmba_m_t.bmba003
+            AND bmca004 = g_bmba_m_t.bmba004
+            AND bmca005 = g_bmba_m_t.bmba005
+            AND bmca007 = g_bmba_m_t.bmba007
+            AND bmca008 = g_bmba_m_t.bmba008
+ 
+            
+         #add-point:單身fk修改中 name="modify.body.m_fk_update"
+         
+         #end add-point
+ 
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            #   INITIALIZE g_errparam TO NULL 
+            #   LET g_errparam.extend = "bmca_t" 
+            #   LET g_errparam.code   = "std-00009" 
+            #   LET g_errparam.popup  = TRUE 
+            #   CALL cl_err()
+            #   CALL s_transaction_end('N','0')
+            #   CONTINUE WHILE
+            WHEN SQLCA.sqlcode #其他錯誤
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "bmca_t:",SQLERRMESSAGE 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+         END CASE
+         
+         #add-point:單身fk修改後 name="modify.body.a_fk_update"
+         UPDATE bmca_t SET bmca001 = g_bmba_m.bmba001
+                                       ,bmca002 = g_bmba_m.bmba002
+                                       ,bmca003 = g_bmba_m.bmba003
+                                       ,bmca004 = g_bmba_m.bmba004
+                                       ,bmca005 = g_bmba_m.bmba005
+                                       ,bmca007 = g_bmba_m.bmba007
+                                       ,bmca008 = g_bmba_m.bmba008
+ 
+          WHERE bmcaent = g_enterprise AND bmcasite <> 'ALL' AND bmca001 = g_bmba001_t
+            AND bmca002 = g_bmba002_t
+            AND bmca003 = g_bmba003_t
+            AND bmca004 = g_bmba004_t
+            AND bmca005 = g_bmba005_t
+            AND bmca007 = g_bmba007_t
+            AND bmca008 = g_bmba008_t 
+         CASE
+            WHEN SQLCA.sqlcode #其他錯誤
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "bmca_t" 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+ 
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+         END CASE
+         #end add-point
+         
+         #更新單身key值
+         #add-point:單身fk修改前 name="modify.body.b_fk_update2"
+         
+         #end add-point
+         
+         UPDATE bmcc_t
+            SET bmcc001 = g_bmba_m.bmba001
+               ,bmcc002 = g_bmba_m.bmba002
+               ,bmcc003 = g_bmba_m.bmba003
+               ,bmcc004 = g_bmba_m.bmba004
+               ,bmcc005 = g_bmba_m.bmba005
+               ,bmcc007 = g_bmba_m.bmba007
+               ,bmcc008 = g_bmba_m.bmba008
+ 
+          WHERE bmccent = g_enterprise AND bmccsite = g_site AND
+                bmcc001 = g_bmba001_t
+            AND bmcc002 = g_bmba002_t
+            AND bmcc003 = g_bmba003_t
+            AND bmcc004 = g_bmba004_t
+            AND bmcc005 = g_bmba005_t
+            AND bmcc007 = g_bmba007_t
+            AND bmcc008 = g_bmba008_t
+ 
+         #add-point:單身fk修改中 name="modify.body.m_fk_update2"
+         
+         #end add-point
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            #   INITIALIZE g_errparam TO NULL 
+            #   LET g_errparam.extend = "bmcc_t" 
+            #   LET g_errparam.code   = "std-00009" 
+            #   LET g_errparam.popup  = TRUE 
+            #   CALL cl_err()
+            #   CALL s_transaction_end('N','0')
+            #   CONTINUE WHILE
+            WHEN SQLCA.sqlcode #其他錯誤
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "bmcc_t:",SQLERRMESSAGE 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+         END CASE
+         #add-point:單身fk修改後 name="modify.body.a_fk_update2"
+         UPDATE bmcc_t
+            SET bmcc001 = g_bmba_m.bmba001
+               ,bmcc002 = g_bmba_m.bmba002
+               ,bmcc003 = g_bmba_m.bmba003
+               ,bmcc004 = g_bmba_m.bmba004
+               ,bmcc005 = g_bmba_m.bmba005
+               ,bmcc007 = g_bmba_m.bmba007
+               ,bmcc008 = g_bmba_m.bmba008
+ 
+          WHERE bmccent = g_enterprise AND bmccsite <> 'ALL' AND
+                bmcc001 = g_bmba001_t
+            AND bmcc002 = g_bmba002_t
+            AND bmcc003 = g_bmba003_t
+            AND bmcc004 = g_bmba004_t
+            AND bmcc005 = g_bmba005_t
+            AND bmcc007 = g_bmba007_t
+            AND bmcc008 = g_bmba008_t
+
+         CASE
+            WHEN SQLCA.sqlcode #其他錯誤
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "bmcc_t" 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+ 
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+         END CASE
+         #end add-point
+ 
+         #更新單身key值
+         #add-point:單身fk修改前 name="modify.body.b_fk_update3"
+         
+         #end add-point
+         
+         UPDATE bmce_t
+            SET bmce001 = g_bmba_m.bmba001
+               ,bmce002 = g_bmba_m.bmba002
+               ,bmce003 = g_bmba_m.bmba003
+               ,bmce004 = g_bmba_m.bmba004
+               ,bmce005 = g_bmba_m.bmba005
+               ,bmce007 = g_bmba_m.bmba007
+               ,bmce008 = g_bmba_m.bmba008
+ 
+          WHERE bmceent = g_enterprise AND bmcesite = g_site AND
+                bmce001 = g_bmba001_t
+            AND bmce002 = g_bmba002_t
+            AND bmce003 = g_bmba003_t
+            AND bmce004 = g_bmba004_t
+            AND bmce005 = g_bmba005_t
+            AND bmce007 = g_bmba007_t
+            AND bmce008 = g_bmba008_t
+ 
+         #add-point:單身fk修改中 name="modify.body.m_fk_update3"
+         
+         #end add-point
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            #   INITIALIZE g_errparam TO NULL 
+            #   LET g_errparam.extend = "bmce_t" 
+            #   LET g_errparam.code   = "std-00009" 
+            #   LET g_errparam.popup  = TRUE 
+            #   CALL cl_err()
+            #   CALL s_transaction_end('N','0')
+            #   CONTINUE WHILE
+            WHEN SQLCA.sqlcode #其他錯誤
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "bmce_t:",SQLERRMESSAGE 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+         END CASE
+         #add-point:單身fk修改後 name="modify.body.a_fk_update3"
+         UPDATE bmce_t
+            SET bmce001 = g_bmba_m.bmba001
+               ,bmce002 = g_bmba_m.bmba002
+               ,bmce003 = g_bmba_m.bmba003
+               ,bmce004 = g_bmba_m.bmba004
+               ,bmce005 = g_bmba_m.bmba005
+               ,bmce007 = g_bmba_m.bmba007
+               ,bmce008 = g_bmba_m.bmba008
+ 
+          WHERE bmceent = g_enterprise AND bmcesite <> 'ALL' AND
+                bmce001 = g_bmba001_t
+            AND bmce002 = g_bmba002_t
+            AND bmce003 = g_bmba003_t
+            AND bmce004 = g_bmba004_t
+            AND bmce005 = g_bmba005_t
+            AND bmce007 = g_bmba007_t
+            AND bmce008 = g_bmba008_t
+ 
+         CASE
+            WHEN SQLCA.sqlcode #其他錯誤
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "bmce_t" 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+ 
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+         END CASE
+         #end add-point
+ 
+ 
+         
+ 
+         
+         #UPDATE 多語言table key值
+         
+         
+         
+ 
+         CALL s_transaction_end('Y','0')
+      END IF
+    
+      EXIT WHILE
+   END WHILE
+ 
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL abmm203_set_act_visible()   
+   CALL abmm203_set_act_no_visible()
+ 
+   #組合新增資料的條件
+   LET g_add_browse = " bmbaent = '" ||g_enterprise|| "' AND bmbasite = '" ||g_site|| "' AND",
+                      " bmba001 = '", g_bmba_m.bmba001, "' "
+                      ," AND bmba002 = '", g_bmba_m.bmba002, "' "
+                      ," AND bmba003 = '", g_bmba_m.bmba003, "' "
+                      ," AND bmba004 = '", g_bmba_m.bmba004, "' "
+                      ," AND bmba005 = '", g_bmba_m.bmba005, "' "
+                      ," AND bmba007 = '", g_bmba_m.bmba007, "' "
+                      ," AND bmba008 = '", g_bmba_m.bmba008, "' "
+ 
+   #填到對應位置
+   CALL abmm203_browser_fill("")
+ 
+   CLOSE abmm203_cl
+   
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL abmm203_msgcentre_notify('modify')
+ 
+END FUNCTION 
+ 
+{</section>}
+ 
+{<section id="abmm203.input" >}
+#+ 資料輸入
+PRIVATE FUNCTION abmm203_input(p_cmd)
+   #add-point:input段define(客製用) name="input.define_customerization"
+   
+   #end add-point  
+   DEFINE  p_cmd                 LIKE type_t.chr1
+   DEFINE  l_cmd_t               LIKE type_t.chr1
+   DEFINE  l_cmd                 LIKE type_t.chr1
+   DEFINE  l_n                   LIKE type_t.num10                #檢查重複用  
+   DEFINE  l_cnt                 LIKE type_t.num10                #檢查重複用  
+   DEFINE  l_lock_sw             LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert        LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete        LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count               LIKE type_t.num10
+   DEFINE  l_i                   LIKE type_t.num10
+   DEFINE  l_ac_t                LIKE type_t.num10
+   DEFINE  l_insert              BOOLEAN
+   DEFINE  ls_return             STRING
+   DEFINE  l_var_keys            DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys          DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields              DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak        DYNAMIC ARRAY OF STRING
+   DEFINE  lb_reproduce          BOOLEAN
+   DEFINE  li_reproduce          LIKE type_t.num10
+   DEFINE  li_reproduce_target   LIKE type_t.num10
+   DEFINE  ls_keys               DYNAMIC ARRAY OF VARCHAR(500)
+   #add-point:input段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE l_ac1            LIKE type_t.num5 
+   DEFINE l_ac2            LIKE type_t.num5
+   DEFINE l_ac3            LIKE type_t.num5
+   DEFINE l_ac1_t          LIKE type_t.num5
+   DEFINE l_ac2_t          LIKE type_t.num5
+   DEFINE l_ac3_t          LIKE type_t.num5
+   DEFINE l_success        LIKE type_t.num5
+   DEFINE l_success1       LIKE type_t.num5
+   DEFINE l_bmcb011        LIKE type_t.num5
+   DEFINE l_bmcb012        LIKE type_t.num5
+   DEFINE l_sql            STRING
+   DEFINE l_str1           STRING
+   DEFINE l_str2           STRING
+   DEFINE l_flag1          LIKE type_t.chr1
+   DEFINE l_imaa005        LIKE imaa_t.imaa005
+   DEFINE l_imaa005_2      LIKE imaa_t.imaa005
+   DEFINE l_errno          LIKE gzze_t.gzze001
+   DEFINE l_imeb006        LIKE imeb_t.imeb006
+   DEFINE l_imeb005        LIKE imeb_t.imeb005
+   #end add-point  
+   
+   #add-point:Function前置處理  name="input.pre_function"
+   
+   #end add-point
+   
+   #先做狀態判定
+   IF p_cmd = 'r' THEN
+      LET l_cmd_t = 'r'
+      LET p_cmd   = 'a'
+   ELSE
+      LET l_cmd_t = p_cmd
+   END IF   
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_bmba_m.bmba001,g_bmba_m.l_imaal003_1,g_bmba_m.l_imaal004_1,g_bmba_m.bmba002,g_bmba_m.bmaa004, 
+       g_bmba_m.bmba003,g_bmba_m.l_imaal003_2,g_bmba_m.l_imaal004_2,g_bmba_m.bmba011,g_bmba_m.bmba012, 
+       g_bmba_m.bmba010,g_bmba_m.bmba004,g_bmba_m.bmba004_desc,g_bmba_m.bmba007,g_bmba_m.bmba007_desc, 
+       g_bmba_m.bmba008,g_bmba_m.bmba005
+   
+   #切換畫面
+ 
+   CALL cl_set_head_visible("","YES")  
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   #add-point:input段define_sql name="input.define_sql"
+   SELECT imaa005 INTO l_imaa005 FROM imaa_t 
+   WHERE imaaent = g_enterprise
+     AND imaa001 = g_bmba_m.bmba001
+   SELECT imaa005 INTO l_imaa005_2 FROM imaa_t 
+   WHERE imaaent = g_enterprise
+     AND imaa001 = g_bmba_m.bmba003     
+   #end add-point 
+   LET g_forupd_sql = "SELECT bmca009 FROM bmca_t WHERE bmcaent=? AND bmcasite=? AND bmca001=? AND bmca002=?  
+       AND bmca003=? AND bmca004=? AND bmca005=? AND bmca007=? AND bmca008=? AND bmca009=? FOR UPDATE" 
+ 
+   #add-point:input段define_sql name="input.after_define_sql"
+ 
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE abmm203_bcl CURSOR FROM g_forupd_sql
+   
+   #add-point:input段define_sql name="input.define_sql2"
+   
+   #end add-point    
+   LET g_forupd_sql = "SELECT bmcc009,bmcc010 FROM bmcc_t WHERE bmccent=? AND bmccsite=? AND bmcc001=?  
+       AND bmcc002=? AND bmcc003=? AND bmcc004=? AND bmcc005=? AND bmcc007=? AND bmcc008=? AND bmcc009=?  
+       FOR UPDATE"
+   #add-point:input段define_sql name="input.after_define_sql2"
+ 
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE abmm203_bcl2 CURSOR FROM g_forupd_sql
+ 
+   #add-point:input段define_sql name="input.define_sql3"
+   
+   #end add-point    
+   LET g_forupd_sql = "SELECT bmce009,bmce010 FROM bmce_t WHERE bmceent=? AND bmcesite=? AND bmce001=?  
+       AND bmce002=? AND bmce003=? AND bmce004=? AND bmce005=? AND bmce007=? AND bmce008=? AND bmce009=?  
+       FOR UPDATE"
+   #add-point:input段define_sql name="input.after_define_sql3"
+ 
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE abmm203_bcl3 CURSOR FROM g_forupd_sql
+ 
+ 
+   
+ 
+ 
+   #add-point:input段define_sql name="input.other_sql"
+   
+   #end add-point 
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   LET g_qryparam.state = 'i'
+   
+   #控制key欄位可否輸入
+   CALL abmm203_set_entry(p_cmd)
+   #add-point:set_entry後 name="input.after_set_entry"
+   
+   #end add-point
+   CALL abmm203_set_no_entry(p_cmd)
+ 
+   DISPLAY BY NAME g_bmba_m.bmba001,g_bmba_m.l_imaal003_1,g_bmba_m.l_imaal004_1,g_bmba_m.bmba002,g_bmba_m.bmaa004, 
+       g_bmba_m.bmba003,g_bmba_m.l_imaal003_2,g_bmba_m.l_imaal004_2,g_bmba_m.bmba011,g_bmba_m.bmba012, 
+       g_bmba_m.bmba010,g_bmba_m.bmba004,g_bmba_m.bmba007,g_bmba_m.bmba008,g_bmba_m.bmba005
+   
+   LET lb_reproduce = FALSE
+   LET l_ac_t = 1
+   
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+   
+   #add-point:資料輸入前 name="input.before_input"
+   LET g_forupd_sql = "SELECT bmcb010,bmcb011,bmcb012 FROM bmcb_t WHERE bmcbent=? AND bmcbsite=? AND bmcb001=? AND bmcb002=? AND bmcb003=? AND bmcb004=? AND bmcb005=? AND bmcb007=? AND bmcb008=? AND bmcb009=? AND bmcb010 = ? FOR UPDATE"
+
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE abmm203_bcl4 CURSOR FROM g_forupd_sql
+
+   LET g_forupd_sql = "SELECT bmcd010,bmcd011 FROM bmcd_t WHERE bmcdent=? AND bmcdsite=? AND bmcd001=? AND bmcd002=? AND bmcd003=? AND bmcd004=? AND bmcd005=? AND bmcd007=? AND bmcd008=? AND bmcd009=? AND bmcd010 = ? FOR UPDATE"
+
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE abmm203_bcl5 CURSOR FROM g_forupd_sql
+   
+   WHILE TRUE   
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+{</section>}
+ 
+{<section id="abmm203.input.head" >}
+      #單頭段
+      INPUT BY NAME g_bmba_m.bmba001,g_bmba_m.l_imaal003_1,g_bmba_m.l_imaal004_1,g_bmba_m.bmba002,g_bmba_m.bmaa004, 
+          g_bmba_m.bmba003,g_bmba_m.l_imaal003_2,g_bmba_m.l_imaal004_2,g_bmba_m.bmba011,g_bmba_m.bmba012, 
+          g_bmba_m.bmba010,g_bmba_m.bmba004,g_bmba_m.bmba007,g_bmba_m.bmba008,g_bmba_m.bmba005 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+     
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            OPEN abmm203_cl USING g_enterprise, g_site,g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004,g_bmba_m.bmba005,g_bmba_m.bmba007,g_bmba_m.bmba008
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN abmm203_cl:" 
+               LET g_errparam.code   = STATUS 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CLOSE abmm203_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            
+            IF l_cmd_t = 'r' THEN
+               
+            END IF
+            #因應離開單頭後已寫入資料庫, 若重新回到單頭則視為修改
+            #因此需於此處開啟/關閉欄位
+            CALL abmm203_set_entry(p_cmd)
+            #add-point:資料輸入前 name="input.m.before_input"
+            
+            #end add-point
+            CALL abmm203_set_no_entry(p_cmd)
+    
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmba001
+            #add-point:BEFORE FIELD bmba001 name="input.b.bmba001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmba001
+            
+            #add-point:AFTER FIELD bmba001 name="input.a.bmba001"
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_bmba_m.bmba001) AND NOT cl_null(g_bmba_m.bmba002) AND NOT cl_null(g_bmba_m.bmba003) AND NOT cl_null(g_bmba_m.bmba004) AND NOT cl_null(g_bmba_m.bmba005) AND NOT cl_null(g_bmba_m.bmba007) AND NOT cl_null(g_bmba_m.bmba008) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_bmba_m.bmba001 != g_bmba001_t  OR g_bmba_m.bmba002 != g_bmba002_t  OR g_bmba_m.bmba003 != g_bmba003_t  OR g_bmba_m.bmba004 != g_bmba004_t  OR g_bmba_m.bmba005 != g_bmba005_t  OR g_bmba_m.bmba007 != g_bmba007_t  OR g_bmba_m.bmba008 != g_bmba008_t ))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bmba_t WHERE "||"bmbaent = '" ||g_enterprise|| "' AND bmbasite = '" ||g_site|| "' AND "||"bmba001 = '"||g_bmba_m.bmba001 ||"' AND "|| "bmba002 = '"||g_bmba_m.bmba002 ||"' AND "|| "bmba003 = '"||g_bmba_m.bmba003 ||"' AND "|| "bmba004 = '"||g_bmba_m.bmba004 ||"' AND "|| "bmba005 = '"||g_bmba_m.bmba005 ||"' AND "|| "bmba007 = '"||g_bmba_m.bmba007 ||"' AND "|| "bmba008 = '"||g_bmba_m.bmba008 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bmba001
+            #add-point:ON CHANGE bmba001 name="input.g.bmba001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_imaal003_1
+            #add-point:BEFORE FIELD l_imaal003_1 name="input.b.l_imaal003_1"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_imaal003_1
+            
+            #add-point:AFTER FIELD l_imaal003_1 name="input.a.l_imaal003_1"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_imaal003_1
+            #add-point:ON CHANGE l_imaal003_1 name="input.g.l_imaal003_1"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_imaal004_1
+            #add-point:BEFORE FIELD l_imaal004_1 name="input.b.l_imaal004_1"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_imaal004_1
+            
+            #add-point:AFTER FIELD l_imaal004_1 name="input.a.l_imaal004_1"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_imaal004_1
+            #add-point:ON CHANGE l_imaal004_1 name="input.g.l_imaal004_1"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmba002
+            #add-point:BEFORE FIELD bmba002 name="input.b.bmba002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmba002
+            
+            #add-point:AFTER FIELD bmba002 name="input.a.bmba002"
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_bmba_m.bmba001) AND NOT cl_null(g_bmba_m.bmba002) AND NOT cl_null(g_bmba_m.bmba003) AND NOT cl_null(g_bmba_m.bmba004) AND NOT cl_null(g_bmba_m.bmba005) AND NOT cl_null(g_bmba_m.bmba007) AND NOT cl_null(g_bmba_m.bmba008) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_bmba_m.bmba001 != g_bmba001_t  OR g_bmba_m.bmba002 != g_bmba002_t  OR g_bmba_m.bmba003 != g_bmba003_t  OR g_bmba_m.bmba004 != g_bmba004_t  OR g_bmba_m.bmba005 != g_bmba005_t  OR g_bmba_m.bmba007 != g_bmba007_t  OR g_bmba_m.bmba008 != g_bmba008_t ))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bmba_t WHERE "||"bmbaent = '" ||g_enterprise|| "' AND bmbasite = '" ||g_site|| "' AND "||"bmba001 = '"||g_bmba_m.bmba001 ||"' AND "|| "bmba002 = '"||g_bmba_m.bmba002 ||"' AND "|| "bmba003 = '"||g_bmba_m.bmba003 ||"' AND "|| "bmba004 = '"||g_bmba_m.bmba004 ||"' AND "|| "bmba005 = '"||g_bmba_m.bmba005 ||"' AND "|| "bmba007 = '"||g_bmba_m.bmba007 ||"' AND "|| "bmba008 = '"||g_bmba_m.bmba008 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bmba002
+            #add-point:ON CHANGE bmba002 name="input.g.bmba002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmaa004
+            #add-point:BEFORE FIELD bmaa004 name="input.b.bmaa004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmaa004
+            
+            #add-point:AFTER FIELD bmaa004 name="input.a.bmaa004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bmaa004
+            #add-point:ON CHANGE bmaa004 name="input.g.bmaa004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmba003
+            #add-point:BEFORE FIELD bmba003 name="input.b.bmba003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmba003
+            
+            #add-point:AFTER FIELD bmba003 name="input.a.bmba003"
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_bmba_m.bmba001) AND NOT cl_null(g_bmba_m.bmba002) AND NOT cl_null(g_bmba_m.bmba003) AND NOT cl_null(g_bmba_m.bmba004) AND NOT cl_null(g_bmba_m.bmba005) AND NOT cl_null(g_bmba_m.bmba007) AND NOT cl_null(g_bmba_m.bmba008) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_bmba_m.bmba001 != g_bmba001_t  OR g_bmba_m.bmba002 != g_bmba002_t  OR g_bmba_m.bmba003 != g_bmba003_t  OR g_bmba_m.bmba004 != g_bmba004_t  OR g_bmba_m.bmba005 != g_bmba005_t  OR g_bmba_m.bmba007 != g_bmba007_t  OR g_bmba_m.bmba008 != g_bmba008_t ))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bmba_t WHERE "||"bmbaent = '" ||g_enterprise|| "' AND bmbasite = '" ||g_site|| "' AND "||"bmba001 = '"||g_bmba_m.bmba001 ||"' AND "|| "bmba002 = '"||g_bmba_m.bmba002 ||"' AND "|| "bmba003 = '"||g_bmba_m.bmba003 ||"' AND "|| "bmba004 = '"||g_bmba_m.bmba004 ||"' AND "|| "bmba005 = '"||g_bmba_m.bmba005 ||"' AND "|| "bmba007 = '"||g_bmba_m.bmba007 ||"' AND "|| "bmba008 = '"||g_bmba_m.bmba008 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bmba003
+            #add-point:ON CHANGE bmba003 name="input.g.bmba003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_imaal003_2
+            #add-point:BEFORE FIELD l_imaal003_2 name="input.b.l_imaal003_2"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_imaal003_2
+            
+            #add-point:AFTER FIELD l_imaal003_2 name="input.a.l_imaal003_2"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_imaal003_2
+            #add-point:ON CHANGE l_imaal003_2 name="input.g.l_imaal003_2"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_imaal004_2
+            #add-point:BEFORE FIELD l_imaal004_2 name="input.b.l_imaal004_2"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_imaal004_2
+            
+            #add-point:AFTER FIELD l_imaal004_2 name="input.a.l_imaal004_2"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_imaal004_2
+            #add-point:ON CHANGE l_imaal004_2 name="input.g.l_imaal004_2"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmba011
+            #add-point:BEFORE FIELD bmba011 name="input.b.bmba011"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmba011
+            
+            #add-point:AFTER FIELD bmba011 name="input.a.bmba011"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bmba011
+            #add-point:ON CHANGE bmba011 name="input.g.bmba011"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmba012
+            #add-point:BEFORE FIELD bmba012 name="input.b.bmba012"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmba012
+            
+            #add-point:AFTER FIELD bmba012 name="input.a.bmba012"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bmba012
+            #add-point:ON CHANGE bmba012 name="input.g.bmba012"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmba010
+            #add-point:BEFORE FIELD bmba010 name="input.b.bmba010"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmba010
+            
+            #add-point:AFTER FIELD bmba010 name="input.a.bmba010"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bmba010
+            #add-point:ON CHANGE bmba010 name="input.g.bmba010"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmba004
+            
+            #add-point:AFTER FIELD bmba004 name="input.a.bmba004"
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_bmba_m.bmba001) AND NOT cl_null(g_bmba_m.bmba002) AND NOT cl_null(g_bmba_m.bmba003) AND NOT cl_null(g_bmba_m.bmba004) AND NOT cl_null(g_bmba_m.bmba005) AND NOT cl_null(g_bmba_m.bmba007) AND NOT cl_null(g_bmba_m.bmba008) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_bmba_m.bmba001 != g_bmba001_t  OR g_bmba_m.bmba002 != g_bmba002_t  OR g_bmba_m.bmba003 != g_bmba003_t  OR g_bmba_m.bmba004 != g_bmba004_t  OR g_bmba_m.bmba005 != g_bmba005_t  OR g_bmba_m.bmba007 != g_bmba007_t  OR g_bmba_m.bmba008 != g_bmba008_t ))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bmba_t WHERE "||"bmbaent = '" ||g_enterprise|| "' AND bmbasite = '" ||g_site|| "' AND "||"bmba001 = '"||g_bmba_m.bmba001 ||"' AND "|| "bmba002 = '"||g_bmba_m.bmba002 ||"' AND "|| "bmba003 = '"||g_bmba_m.bmba003 ||"' AND "|| "bmba004 = '"||g_bmba_m.bmba004 ||"' AND "|| "bmba005 = '"||g_bmba_m.bmba005 ||"' AND "|| "bmba007 = '"||g_bmba_m.bmba007 ||"' AND "|| "bmba008 = '"||g_bmba_m.bmba008 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bmba_m.bmba004
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='215' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bmba_m.bmba004_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_bmba_m.bmba004_desc
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmba004
+            #add-point:BEFORE FIELD bmba004 name="input.b.bmba004"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bmba004
+            #add-point:ON CHANGE bmba004 name="input.g.bmba004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmba007
+            
+            #add-point:AFTER FIELD bmba007 name="input.a.bmba007"
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_bmba_m.bmba001) AND NOT cl_null(g_bmba_m.bmba002) AND NOT cl_null(g_bmba_m.bmba003) AND NOT cl_null(g_bmba_m.bmba004) AND NOT cl_null(g_bmba_m.bmba005) AND NOT cl_null(g_bmba_m.bmba007) AND NOT cl_null(g_bmba_m.bmba008) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_bmba_m.bmba001 != g_bmba001_t  OR g_bmba_m.bmba002 != g_bmba002_t  OR g_bmba_m.bmba003 != g_bmba003_t  OR g_bmba_m.bmba004 != g_bmba004_t  OR g_bmba_m.bmba005 != g_bmba005_t  OR g_bmba_m.bmba007 != g_bmba007_t  OR g_bmba_m.bmba008 != g_bmba008_t ))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bmba_t WHERE "||"bmbaent = '" ||g_enterprise|| "' AND bmbasite = '" ||g_site|| "' AND "||"bmba001 = '"||g_bmba_m.bmba001 ||"' AND "|| "bmba002 = '"||g_bmba_m.bmba002 ||"' AND "|| "bmba003 = '"||g_bmba_m.bmba003 ||"' AND "|| "bmba004 = '"||g_bmba_m.bmba004 ||"' AND "|| "bmba005 = '"||g_bmba_m.bmba005 ||"' AND "|| "bmba007 = '"||g_bmba_m.bmba007 ||"' AND "|| "bmba008 = '"||g_bmba_m.bmba008 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bmba_m.bmba007
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='221' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bmba_m.bmba007_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_bmba_m.bmba007_desc
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmba007
+            #add-point:BEFORE FIELD bmba007 name="input.b.bmba007"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bmba007
+            #add-point:ON CHANGE bmba007 name="input.g.bmba007"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmba008
+            #add-point:BEFORE FIELD bmba008 name="input.b.bmba008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmba008
+            
+            #add-point:AFTER FIELD bmba008 name="input.a.bmba008"
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_bmba_m.bmba001) AND NOT cl_null(g_bmba_m.bmba002) AND NOT cl_null(g_bmba_m.bmba003) AND NOT cl_null(g_bmba_m.bmba004) AND NOT cl_null(g_bmba_m.bmba005) AND NOT cl_null(g_bmba_m.bmba007) AND NOT cl_null(g_bmba_m.bmba008) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_bmba_m.bmba001 != g_bmba001_t  OR g_bmba_m.bmba002 != g_bmba002_t  OR g_bmba_m.bmba003 != g_bmba003_t  OR g_bmba_m.bmba004 != g_bmba004_t  OR g_bmba_m.bmba005 != g_bmba005_t  OR g_bmba_m.bmba007 != g_bmba007_t  OR g_bmba_m.bmba008 != g_bmba008_t ))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bmba_t WHERE "||"bmbaent = '" ||g_enterprise|| "' AND bmbasite = '" ||g_site|| "' AND "||"bmba001 = '"||g_bmba_m.bmba001 ||"' AND "|| "bmba002 = '"||g_bmba_m.bmba002 ||"' AND "|| "bmba003 = '"||g_bmba_m.bmba003 ||"' AND "|| "bmba004 = '"||g_bmba_m.bmba004 ||"' AND "|| "bmba005 = '"||g_bmba_m.bmba005 ||"' AND "|| "bmba007 = '"||g_bmba_m.bmba007 ||"' AND "|| "bmba008 = '"||g_bmba_m.bmba008 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bmba008
+            #add-point:ON CHANGE bmba008 name="input.g.bmba008"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmba005
+            #add-point:BEFORE FIELD bmba005 name="input.b.bmba005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmba005
+            
+            #add-point:AFTER FIELD bmba005 name="input.a.bmba005"
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_bmba_m.bmba001) AND NOT cl_null(g_bmba_m.bmba002) AND NOT cl_null(g_bmba_m.bmba003) AND NOT cl_null(g_bmba_m.bmba004) AND NOT cl_null(g_bmba_m.bmba005) AND NOT cl_null(g_bmba_m.bmba007) AND NOT cl_null(g_bmba_m.bmba008) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_bmba_m.bmba001 != g_bmba001_t  OR g_bmba_m.bmba002 != g_bmba002_t  OR g_bmba_m.bmba003 != g_bmba003_t  OR g_bmba_m.bmba004 != g_bmba004_t  OR g_bmba_m.bmba005 != g_bmba005_t  OR g_bmba_m.bmba007 != g_bmba007_t  OR g_bmba_m.bmba008 != g_bmba008_t ))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bmba_t WHERE "||"bmbaent = '" ||g_enterprise|| "' AND bmbasite = '" ||g_site|| "' AND "||"bmba001 = '"||g_bmba_m.bmba001 ||"' AND "|| "bmba002 = '"||g_bmba_m.bmba002 ||"' AND "|| "bmba003 = '"||g_bmba_m.bmba003 ||"' AND "|| "bmba004 = '"||g_bmba_m.bmba004 ||"' AND "|| "bmba005 = '"||g_bmba_m.bmba005 ||"' AND "|| "bmba007 = '"||g_bmba_m.bmba007 ||"' AND "|| "bmba008 = '"||g_bmba_m.bmba008 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bmba005
+            #add-point:ON CHANGE bmba005 name="input.g.bmba005"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.bmba001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmba001
+            #add-point:ON ACTION controlp INFIELD bmba001 name="input.c.bmba001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.l_imaal003_1
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_imaal003_1
+            #add-point:ON ACTION controlp INFIELD l_imaal003_1 name="input.c.l_imaal003_1"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.l_imaal004_1
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_imaal004_1
+            #add-point:ON ACTION controlp INFIELD l_imaal004_1 name="input.c.l_imaal004_1"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.bmba002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmba002
+            #add-point:ON ACTION controlp INFIELD bmba002 name="input.c.bmba002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.bmaa004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmaa004
+            #add-point:ON ACTION controlp INFIELD bmaa004 name="input.c.bmaa004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.bmba003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmba003
+            #add-point:ON ACTION controlp INFIELD bmba003 name="input.c.bmba003"
+#此段落由子樣板a07產生            
+            #開窗i段
+ 			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'           
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_bmba_m.bmba003             #給予default值
+
+            #給予arg
+
+            CALL q_imaa001()                                #呼叫開窗
+
+            LET g_bmba_m.bmba003 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_bmba_m.bmba003 TO bmba003              #顯示到畫面上
+
+            NEXT FIELD bmba003                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.l_imaal003_2
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_imaal003_2
+            #add-point:ON ACTION controlp INFIELD l_imaal003_2 name="input.c.l_imaal003_2"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.l_imaal004_2
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_imaal004_2
+            #add-point:ON ACTION controlp INFIELD l_imaal004_2 name="input.c.l_imaal004_2"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.bmba011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmba011
+            #add-point:ON ACTION controlp INFIELD bmba011 name="input.c.bmba011"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.bmba012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmba012
+            #add-point:ON ACTION controlp INFIELD bmba012 name="input.c.bmba012"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.bmba010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmba010
+            #add-point:ON ACTION controlp INFIELD bmba010 name="input.c.bmba010"
+#此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_bmba_m.bmba010             #給予default值
+
+            #給予arg
+
+            CALL q_ooca001()                                #呼叫開窗
+
+            LET g_bmba_m.bmba010 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_bmba_m.bmba010 TO bmba010              #顯示到畫面上
+
+            NEXT FIELD bmba010                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.bmba004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmba004
+            #add-point:ON ACTION controlp INFIELD bmba004 name="input.c.bmba004"
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'            
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_bmba_m.bmba004             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "215" #應用分類
+
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_bmba_m.bmba004 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_bmba_m.bmba004 TO bmba004              #顯示到畫面上
+
+            NEXT FIELD bmba004                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.bmba007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmba007
+            #add-point:ON ACTION controlp INFIELD bmba007 name="input.c.bmba007"
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'            
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_bmba_m.bmba007             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "221" #應用分類
+
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_bmba_m.bmba007 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_bmba_m.bmba007 TO bmba007              #顯示到畫面上
+
+            NEXT FIELD bmba007                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.bmba008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmba008
+            #add-point:ON ACTION controlp INFIELD bmba008 name="input.c.bmba008"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.bmba005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmba005
+            #add-point:ON ACTION controlp INFIELD bmba005 name="input.c.bmba005"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+            
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+ 
+            #CALL cl_err_collect_show()      #錯誤訊息統整顯示
+            #CALL cl_showmsg()
+            DISPLAY BY NAME g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004,g_bmba_m.bmba005, 
+                g_bmba_m.bmba007,g_bmba_m.bmba008
+                        
+            #add-point:單頭INPUT後 name="input.head.after_input"
+            
+            #end add-point
+                        
+            IF p_cmd <> 'u' THEN
+    
+               CALL s_transaction_begin()
+               
+               #add-point:單頭新增前 name="input.head.b_insert"
+               
+               #end add-point
+               
+               INSERT INTO bmba_t (bmbaent, bmbasite,bmba001,bmba002,bmba003,bmba011,bmba012,bmba010, 
+                   bmba004,bmba007,bmba008,bmba005)
+               VALUES (g_enterprise, g_site,g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba011, 
+                   g_bmba_m.bmba012,g_bmba_m.bmba010,g_bmba_m.bmba004,g_bmba_m.bmba007,g_bmba_m.bmba008, 
+                   g_bmba_m.bmba005) 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "g_bmba_m:",SQLERRMESSAGE 
+                  LET g_errparam.code   = SQLCA.sqlcode 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CALL s_transaction_end('N','0')
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #add-point:單頭新增中 name="input.head.m_insert"
+               
+               #end add-point
+               
+               
+               
+               
+               #add-point:單頭新增後 name="input.head.a_insert"
+               
+               #end add-point
+               CALL s_transaction_end('Y','0') 
+               
+               IF l_cmd_t = 'r' AND p_cmd = 'a' THEN
+                  CALL abmm203_detail_reproduce()
+                  #因應特定程式需求, 重新刷新單身資料
+                  CALL abmm203_b_fill()
+                  CALL abmm203_b_fill2('0')
+               END IF
+               
+               #add-point:單頭新增後 name="input.head.a_insert2"
+               
+               #end add-point
+               
+               LET g_master_insert = TRUE
+               
+               LET p_cmd = 'u'
+            ELSE
+               CALL s_transaction_begin()
+            
+               #add-point:單頭修改前 name="input.head.b_update"
+               
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL abmm203_bmba_t_mask_restore('restore_mask_o')
+               
+               UPDATE bmba_t SET (bmba001,bmba002,bmba003,bmba011,bmba012,bmba010,bmba004,bmba007,bmba008, 
+                   bmba005) = (g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba011,g_bmba_m.bmba012, 
+                   g_bmba_m.bmba010,g_bmba_m.bmba004,g_bmba_m.bmba007,g_bmba_m.bmba008,g_bmba_m.bmba005) 
+ 
+                WHERE bmbaent = g_enterprise AND bmbasite = g_site AND bmba001 = g_bmba001_t
+                  AND bmba002 = g_bmba002_t
+                  AND bmba003 = g_bmba003_t
+                  AND bmba004 = g_bmba004_t
+                  AND bmba005 = g_bmba005_t
+                  AND bmba007 = g_bmba007_t
+                  AND bmba008 = g_bmba008_t
+ 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "bmba_t:",SQLERRMESSAGE 
+                  LET g_errparam.code   = SQLCA.sqlcode 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CALL s_transaction_end('N','0')
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #add-point:單頭修改中 name="input.head.m_update"
+               
+               #end add-point
+               
+               
+               
+               
+               #將遮罩欄位進行遮蔽
+               CALL abmm203_bmba_t_mask_restore('restore_mask_n')
+               
+               #修改歷程記錄(單頭修改)
+               LET g_log1 = util.JSON.stringify(g_bmba_m_t)
+               LET g_log2 = util.JSON.stringify(g_bmba_m)
+               IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF
+               
+               #add-point:單頭修改後 name="input.head.a_update"
+               
+               #end add-point
+            END IF
+            
+            LET g_bmba001_t = g_bmba_m.bmba001
+            LET g_bmba002_t = g_bmba_m.bmba002
+            LET g_bmba003_t = g_bmba_m.bmba003
+            LET g_bmba004_t = g_bmba_m.bmba004
+            LET g_bmba005_t = g_bmba_m.bmba005
+            LET g_bmba007_t = g_bmba_m.bmba007
+            LET g_bmba008_t = g_bmba_m.bmba008
+ 
+            
+      END INPUT
+   
+ 
+{</section>}
+ 
+{<section id="abmm203.input.body" >}
+   
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_bmca_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            #add-point:資料輸入前 name="input.body.before_input2"
+            
+            #end add-point
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_bmca_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL abmm203_b_fill()
+            #如果一直都在單身1則控制筆數位置
+            IF g_loc = 'm' AND g_rec_b != 0 THEN
+               CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'1',"))
+            END IF
+            LET g_loc = 'm'
+            LET g_rec_b = g_bmca_d.getLength()
+            #add-point:資料輸入前 name="input.d.before_input"
+            
+            #end add-point
+         
+         BEFORE ROW
+            #add-point:modify段before row2 name="input.body.before_row2"
+            
+            #end add-point  
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac_t = l_ac 
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET g_detail_idx_list[1] = l_ac
+            LET g_current_page = 1
+            
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN abmm203_cl USING g_enterprise, g_site,g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004,g_bmba_m.bmba005,g_bmba_m.bmba007,g_bmba_m.bmba008
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN abmm203_cl:" 
+               LET g_errparam.code   = STATUS 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CLOSE abmm203_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_bmca_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND g_bmca_d[l_ac].bmca009 IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_bmca_d_t.* = g_bmca_d[l_ac].*  #BACKUP
+               LET g_bmca_d_o.* = g_bmca_d[l_ac].*  #BACKUP
+               CALL abmm203_set_entry_b(l_cmd)
+               #add-point:modify段after_set_entry_b name="input.body.after_set_entry_b"
+               
+               #end add-point  
+               CALL abmm203_set_no_entry_b(l_cmd)
+               IF NOT abmm203_lock_b("bmca_t","'1'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH abmm203_bcl INTO g_bmca_d[l_ac].bmca009
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = g_bmca_d_t.bmca009,":",SQLERRMESSAGE 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_bmca_d_mask_o[l_ac].* =  g_bmca_d[l_ac].*
+                  CALL abmm203_bmca_t_mask()
+                  LET g_bmca_d_mask_n[l_ac].* =  g_bmca_d[l_ac].*
+                  
+                  LET g_bfill = "N"
+                  CALL abmm203_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row name="input.body.before_row"
+            LET g_flag1 = 'Y'
+            CALL abmm203_b_fill_1(g_bmca_d[l_ac].bmca009)
+            LET g_flag1 = 'N'
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+        
+         BEFORE INSERT  
+            
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_bmca_d[l_ac].* TO NULL 
+            INITIALIZE g_bmca_d_t.* TO NULL 
+            INITIALIZE g_bmca_d_o.* TO NULL 
+            #公用欄位給值(單身)
+            
+            #自定義預設值
+            
+            #add-point:modify段before備份 name="input.body.insert.before_bak"
+            
+            #end add-point
+            LET g_bmca_d_t.* = g_bmca_d[l_ac].*     #新輸入資料
+            LET g_bmca_d_o.* = g_bmca_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL abmm203_set_entry_b(l_cmd)
+            #add-point:modify段after_set_entry_b name="input.body.insert.after_set_entry_b"
+            
+            #end add-point
+            CALL abmm203_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_bmca_d[li_reproduce_target].* = g_bmca_d[li_reproduce].*
+ 
+               LET g_bmca_d[li_reproduce_target].bmca009 = NULL
+ 
+            END IF
+            
+            #add-point:modify段before insert name="input.body.before_insert"
+            
+            #end add-point  
+  
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            #add-point:單身新增 name="input.body.b_a_insert"
+            
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(1) INTO l_count FROM bmca_t 
+             WHERE bmcaent = g_enterprise AND bmcasite = g_site AND bmca001 = g_bmba_m.bmba001
+               AND bmca002 = g_bmba_m.bmba002
+               AND bmca003 = g_bmba_m.bmba003
+               AND bmca004 = g_bmba_m.bmba004
+               AND bmca005 = g_bmba_m.bmba005
+               AND bmca007 = g_bmba_m.bmba007
+               AND bmca008 = g_bmba_m.bmba008
+ 
+               AND bmca009 = g_bmca_d[l_ac].bmca009
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前 name="input.body.b_insert"
+               
+               #end add-point
+            
+               #同步新增到同層的table
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_bmba_m.bmba001
+               LET gs_keys[2] = g_bmba_m.bmba002
+               LET gs_keys[3] = g_bmba_m.bmba003
+               LET gs_keys[4] = g_bmba_m.bmba004
+               LET gs_keys[5] = g_bmba_m.bmba005
+               LET gs_keys[6] = g_bmba_m.bmba007
+               LET gs_keys[7] = g_bmba_m.bmba008
+               LET gs_keys[8] = g_bmca_d[g_detail_idx].bmca009
+               CALL abmm203_insert_b('bmca_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後 name="input.body.a_insert"
+               
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code   = "std-00006" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               INITIALIZE g_bmca_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "bmca_t:",SQLERRMESSAGE 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL abmm203_b_fill()
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert name="input.body.a_insert2"
+               
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               #ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+               #add-point:單身刪除後(=d) name="input.body.after_delete_d"
+               
+               #end add-point
+            ELSE
+               #add-point:單身刪除前 name="input.body.b_delete_ask"
+               
+               #end add-point 
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   = -263 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前 name="input.body.b_delete"
+               
+               #end add-point 
+               
+               #取得該筆資料key值
+               INITIALIZE gs_keys TO NULL
+               LET gs_keys[01] = g_bmba_m.bmba001
+               LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba002
+               LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba003
+               LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba004
+               LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba005
+               LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba007
+               LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba008
+ 
+               LET gs_keys[gs_keys.getLength()+1] = g_bmca_d_t.bmca009
+ 
+            
+               #刪除同層單身
+               IF NOT abmm203_delete_b('bmca_t',gs_keys,"'1'") THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE abmm203_bcl
+                  CANCEL DELETE
+               END IF
+    
+               #刪除下層單身
+               IF NOT abmm203_key_delete_b(gs_keys,'bmca_t') THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE abmm203_bcl
+                  CANCEL DELETE
+               END IF
+               
+               #刪除多語言
+               
+               
+               #add-point:單身刪除中 name="input.body.m_delete"
+               
+               #end add-point 
+               
+               CALL s_transaction_end('Y','0')
+               CLOSE abmm203_bcl
+            
+               LET g_rec_b = g_rec_b-1
+               #add-point:單身刪除後 name="input.body.a_delete"
+               DELETE FROM bmcb_t
+                WHERE bmcbent = g_enterprise AND bmcbsite = g_site
+                  AND bmcb001 = g_bmba_m.bmba001
+                  AND bmcb002 = g_bmba_m.bmba002
+                  AND bmcb003 = g_bmba_m.bmba003
+                  AND bmcb004 = g_bmba_m.bmba004
+                  AND bmcb005 = g_bmba_m.bmba005
+                  AND bmcb007 = g_bmba_m.bmba007
+                  AND bmcb008 = g_bmba_m.bmba008
+                  AND bmcb009 = g_bmca_d_t.bmca009
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "bmcb_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_rec_b1 = g_rec_b1-1 
+               END IF  
+               
+               #end add-point
+               LET l_count = g_bmca_d.getLength()
+               
+               #add-point:單身刪除後(<>d) name="input.body.after_delete"
+               
+               #end add-point
+            END IF
+ 
+         AFTER DELETE
+            #如果是最後一筆
+            IF l_ac = (g_bmca_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmca009
+            
+            #add-point:AFTER FIELD bmca009 name="input.a.page1.bmca009"
+            #此段落由子樣板a05產生
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bmca_d[l_ac].bmca009
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='273' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bmca_d[l_ac].bmca009_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_bmca_d[l_ac].bmca009_desc
+            
+            IF  NOT cl_null(g_bmba_m.bmba001) AND g_bmba_m.bmba002 IS NOT NULL AND NOT cl_null(g_bmba_m.bmba003) AND g_bmba_m.bmba004 IS NOT NULL AND g_bmba_m.bmba005 IS NOT NULL AND g_bmba_m.bmba007 IS NOT NULL AND g_bmba_m.bmba008 IS NOT NULL AND NOT cl_null(g_bmca_d[l_ac].bmca009) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_bmba_m.bmba001 != g_bmba001_t OR g_bmba_m.bmba002 != g_bmba002_t OR g_bmba_m.bmba003 != g_bmba003_t OR g_bmba_m.bmba004 != g_bmba004_t OR g_bmba_m.bmba005 != g_bmba005_t OR g_bmba_m.bmba007 != g_bmba007_t OR g_bmba_m.bmba008 != g_bmba008_t OR g_bmca_d[l_ac].bmca009 != g_bmca_d_t.bmca009))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bmca_t WHERE "||"bmcaent = '" ||g_enterprise|| "' AND bmcasite = '" ||g_site|| "' AND "||"bmca001 = '"||g_bmba_m.bmba001 ||"' AND "|| "bmca002 = '"||g_bmba_m.bmba002 ||"' AND "|| "bmca003 = '"||g_bmba_m.bmba003 ||"' AND "|| "bmca004 = '"||g_bmba_m.bmba004 ||"' AND "|| " to_char(bmca005,'yyyy-mm-dd hh24:mi:ss') = '"||g_bmba_m.bmba005 ||"' AND "|| "bmca007 = '"||g_bmba_m.bmba007 ||"' AND "|| "bmca008 = '"||g_bmba_m.bmba008 ||"' AND "|| "bmca009 = '"||g_bmca_d[l_ac].bmca009 ||"'",'std-00004',0) THEN 
+                     LET g_bmca_d[l_ac].bmca009 = g_bmca_d_t.bmca009
+                     INITIALIZE g_ref_fields TO NULL
+                     LET g_ref_fields[1] = g_bmca_d[l_ac].bmca009
+                     CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='273' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+                     LET g_bmca_d[l_ac].bmca009_desc = '', g_rtn_fields[1] , ''
+                     DISPLAY BY NAME g_bmca_d[l_ac].bmca009_desc                       
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            IF NOT cl_null(g_bmca_d[l_ac].bmca009) THEN           
+               IF NOT abmm203_chk_bmca009(g_bmca_d[l_ac].bmca009,'1') THEN
+                  LET g_bmca_d[l_ac].bmca009 = g_bmca_d_t.bmca009
+       
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_bmca_d[l_ac].bmca009
+                  CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='273' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_bmca_d[l_ac].bmca009_desc = '', g_rtn_fields[1] , ''
+                  DISPLAY BY NAME g_bmca_d[l_ac].bmca009_desc
+                  
+                  NEXT FIELD CURRENT
+               END IF               
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmca009
+            #add-point:BEFORE FIELD bmca009 name="input.b.page1.bmca009"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bmca009
+            #add-point:ON CHANGE bmca009 name="input.g.page1.bmca009"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.bmca009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmca009
+            #add-point:ON ACTION controlp INFIELD bmca009 name="input.c.page1.bmca009"
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+             
+            LET g_qryparam.default1 = g_bmca_d[l_ac].bmca009             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = l_imaa005
+
+            CALL q_imeb004_4()                                #呼叫開窗
+
+            LET g_bmca_d[l_ac].bmca009 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_bmca_d[l_ac].bmca009 TO bmca009              #顯示到畫面上
+
+            NEXT FIELD bmca009                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               LET g_bmca_d[l_ac].* = g_bmca_d_t.*
+               CLOSE abmm203_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = g_bmca_d[l_ac].bmca009 
+               LET g_errparam.code   = -263 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET g_bmca_d[l_ac].* = g_bmca_d_t.*
+            ELSE
+            
+               #add-point:單身修改前 name="input.body.b_update"
+               
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身)
+               
+      
+               #將遮罩欄位還原
+               CALL abmm203_bmca_t_mask_restore('restore_mask_o')
+      
+               UPDATE bmca_t SET (bmca001,bmca002,bmca003,bmca004,bmca005,bmca007,bmca008,bmca009) = (g_bmba_m.bmba001, 
+                   g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004,g_bmba_m.bmba005,g_bmba_m.bmba007, 
+                   g_bmba_m.bmba008,g_bmca_d[l_ac].bmca009)
+                WHERE bmcaent = g_enterprise AND bmcasite = g_site AND bmca001 = g_bmba_m.bmba001 
+                  AND bmca002 = g_bmba_m.bmba002 
+                  AND bmca003 = g_bmba_m.bmba003 
+                  AND bmca004 = g_bmba_m.bmba004 
+                  AND bmca005 = g_bmba_m.bmba005 
+                  AND bmca007 = g_bmba_m.bmba007 
+                  AND bmca008 = g_bmba_m.bmba008 
+ 
+                  AND bmca009 = g_bmca_d_t.bmca009 #項次   
+ 
+                  
+               #add-point:單身修改中 name="input.body.m_update"
+               
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "bmca_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                     LET g_bmca_d[l_ac].* = g_bmca_d_t.*
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "bmca_t:",SQLERRMESSAGE 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()                   
+                     CALL s_transaction_end('N','0')
+                     LET g_bmca_d[l_ac].* = g_bmca_d_t.*  
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_bmba_m.bmba001
+               LET gs_keys_bak[1] = g_bmba001_t
+               LET gs_keys[2] = g_bmba_m.bmba002
+               LET gs_keys_bak[2] = g_bmba002_t
+               LET gs_keys[3] = g_bmba_m.bmba003
+               LET gs_keys_bak[3] = g_bmba003_t
+               LET gs_keys[4] = g_bmba_m.bmba004
+               LET gs_keys_bak[4] = g_bmba004_t
+               LET gs_keys[5] = g_bmba_m.bmba005
+               LET gs_keys_bak[5] = g_bmba005_t
+               LET gs_keys[6] = g_bmba_m.bmba007
+               LET gs_keys_bak[6] = g_bmba007_t
+               LET gs_keys[7] = g_bmba_m.bmba008
+               LET gs_keys_bak[7] = g_bmba008_t
+               LET gs_keys[8] = g_bmca_d[g_detail_idx].bmca009
+               LET gs_keys_bak[8] = g_bmca_d_t.bmca009
+               CALL abmm203_update_b('bmca_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                     
+               END CASE
+ 
+               #將遮罩欄位進行遮蔽
+               CALL abmm203_bmca_t_mask_restore('restore_mask_n')
+               
+               #判斷key是否有改變
+               INITIALIZE gs_keys TO NULL
+               IF NOT(g_bmca_d[g_detail_idx].bmca009 = g_bmca_d_t.bmca009 
+ 
+                  ) THEN
+                  LET gs_keys[01] = g_bmba_m.bmba001
+                  LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba002
+                  LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba003
+                  LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba004
+                  LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba005
+                  LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba007
+                  LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba008
+ 
+                  LET gs_keys[gs_keys.getLength()+1] = g_bmca_d_t.bmca009
+ 
+                  CALL abmm203_key_update_b(gs_keys,'bmca_t')
+               END IF
+               
+               #修改歷程記錄(單身修改)
+               LET g_log1 = util.JSON.stringify(g_bmba_m),util.JSON.stringify(g_bmca_d_t)
+               LET g_log2 = util.JSON.stringify(g_bmba_m),util.JSON.stringify(g_bmca_d[l_ac])
+               IF NOT cl_log_modified_record_d(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               END IF
+               
+               #add-point:單身修改後 name="input.body.a_update"
+               UPDATE bmcb_t SET bmcb009 = g_bmca_d[l_ac].bmca009
+                WHERE bmcbent = g_enterprise AND bmcbsite = g_site AND bmcb001 = g_bmba_m.bmba001 
+                  AND bmcb002 = g_bmba_m.bmba002 
+                  AND bmcb003 = g_bmba_m.bmba003 
+                  AND bmcb004 = g_bmba_m.bmba004 
+                  AND bmcb005 = g_bmba_m.bmba005 
+                  AND bmcb007 = g_bmba_m.bmba007 
+                  AND bmcb008 = g_bmba_m.bmba008 
+                  AND bmcb009 = g_bmca_d_t.bmca009 #項次   
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "bmcd_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+   
+                  LET g_bmca4_d[l_ac1].* = g_bmca4_d_t.*
+               END IF                  
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            #add-point:單身after_row name="input.body.after_row"
+            
+            #end add-point
+            CALL abmm203_unlock_b("bmca_t","'1'")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            #add-point:單身after_row2 name="input.body.after_row2"
+            
+            #end add-point
+              
+         AFTER INPUT
+            #add-point:input段after input  name="input.body.after_input"
+            
+            #end add-point 
+    
+         ON ACTION controlo    
+            IF l_insert THEN
+               LET li_reproduce = l_ac_t
+               LET li_reproduce_target = l_ac
+               LET g_bmca_d[li_reproduce_target].* = g_bmca_d[li_reproduce].*
+ 
+               LET g_bmca_d[li_reproduce_target].bmca009 = NULL
+ 
+            ELSE
+               CALL FGL_SET_ARR_CURR(g_bmca_d.getLength()+1)
+               LET lb_reproduce = TRUE
+               LET li_reproduce = l_ac
+               LET li_reproduce_target = g_bmca_d.getLength()+1
+            END IF
+            
+         #ON ACTION cancel
+         #   LET INT_FLAG = 1
+         #   LET g_detail_idx = 1
+         #   EXIT DIALOG 
+ 
+      END INPUT
+      
+      INPUT ARRAY g_bmca2_d FROM s_detail2.*
+         ATTRIBUTE(COUNT = g_rec_b,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                 INSERT ROW = l_allow_insert, #此頁面insert功能由產生器控制, 手動之設定無效! 
+ 
+                 DELETE ROW = l_allow_delete,
+                 APPEND ROW = l_allow_insert)
+                 
+         #自訂ACTION(detail_input,page_2)
+         
+         
+         BEFORE INPUT
+            #add-point:資料輸入前 name="input.body2.before_input2"
+            
+            #end add-point
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_bmca2_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL abmm203_b_fill()
+            #如果一直都在單身1則控制筆數位置
+            IF g_loc = 'd' AND g_rec_b != 0 THEN
+               CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'2',"))
+            END IF
+            LET g_loc = 'd'
+            LET g_rec_b = g_bmca2_d.getLength()
+            #add-point:資料輸入前 name="input.body2.before_input"
+ 
+            #end add-point
+            
+         BEFORE INSERT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_bmca2_d[l_ac].* TO NULL 
+            INITIALIZE g_bmca2_d_t.* TO NULL 
+            INITIALIZE g_bmca2_d_o.* TO NULL 
+            #公用欄位給值(單身2)
+            
+            #自定義預設值(單身2)
+                  LET g_bmca2_d[l_ac].bmcc010 = "1"
+ 
+            #add-point:modify段before備份 name="input.body2.insert.before_bak"
+            
+            #end add-point
+            LET g_bmca2_d_t.* = g_bmca2_d[l_ac].*     #新輸入資料
+            LET g_bmca2_d_o.* = g_bmca2_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL abmm203_set_entry_b(l_cmd)
+            #add-point:modify段after_set_entry_b name="input.body2.insert.after_set_entry_b"
+            
+            #end add-point
+            CALL abmm203_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_bmca2_d[li_reproduce_target].* = g_bmca2_d[li_reproduce].*
+ 
+               LET g_bmca2_d[li_reproduce_target].bmcc009 = NULL
+            END IF
+            
+            #add-point:modify段before insert name="input.body2.before_insert"
+            
+            #end add-point  
+ 
+         BEFORE ROW     
+            #add-point:modify段before row2 name="input.body2.before_row2"
+            
+            #end add-point  
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac_t = l_ac 
+            LET g_detail_idx_list[2] = l_ac
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET g_current_page = 2
+              
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN abmm203_cl USING g_enterprise, g_site,g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004,g_bmba_m.bmba005,g_bmba_m.bmba007,g_bmba_m.bmba008
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN abmm203_cl:" 
+               LET g_errparam.code   = STATUS 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CLOSE abmm203_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_bmca2_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND g_bmca2_d[l_ac].bmcc009 IS NOT NULL
+            THEN 
+               LET l_cmd='u'
+               LET g_bmca2_d_t.* = g_bmca2_d[l_ac].*  #BACKUP
+               LET g_bmca2_d_o.* = g_bmca2_d[l_ac].*  #BACKUP
+               CALL abmm203_set_entry_b(l_cmd)
+               #add-point:modify段after_set_entry_b name="input.body2.after_set_entry_b"
+               
+               #end add-point  
+               CALL abmm203_set_no_entry_b(l_cmd)
+               IF NOT abmm203_lock_b("bmcc_t","'2'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH abmm203_bcl2 INTO g_bmca2_d[l_ac].bmcc009,g_bmca2_d[l_ac].bmcc010
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = SQLERRMESSAGE  
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_bmca2_d_mask_o[l_ac].* =  g_bmca2_d[l_ac].*
+                  CALL abmm203_bmcc_t_mask()
+                  LET g_bmca2_d_mask_n[l_ac].* =  g_bmca2_d[l_ac].*
+                  
+                  LET g_bfill = "N"
+                  CALL abmm203_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row name="input.body2.before_row"
+            LET g_flag2 = 'Y'
+            CALL abmm203_b_fill_1(g_bmca2_d[l_ac].bmcc009)
+            LET g_flag2 = 'N'
+            NEXT FIELD bmcc009
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+            
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+               #add-point:單身AFTER DELETE (=d) name="input.body2.after_delete_d"
+               
+               #end add-point
+            ELSE
+               #add-point:單身刪除前 name="input.body2.b_delete_ask"
+               
+               #end add-point 
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   = -263 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身2刪除前 name="input.body2.b_delete"
+               
+               #end add-point    
+                  
+               #取得該筆資料key值
+               INITIALIZE gs_keys TO NULL
+               LET gs_keys[01] = g_bmba_m.bmba001
+               LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba002
+               LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba003
+               LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba004
+               LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba005
+               LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba007
+               LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba008
+               LET gs_keys[gs_keys.getLength()+1] = g_bmca2_d_t.bmcc009
+            
+               #刪除同層單身
+               IF NOT abmm203_delete_b('bmcc_t',gs_keys,"'2'") THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE abmm203_bcl
+                  CANCEL DELETE
+               END IF
+    
+               #刪除下層單身
+               IF NOT abmm203_key_delete_b(gs_keys,'bmcc_t') THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE abmm203_bcl
+                  CANCEL DELETE
+               END IF
+               
+               #刪除多語言
+               
+               
+               #add-point:單身2刪除中 name="input.body2.m_delete"
+               
+               #end add-point    
+               
+               CALL s_transaction_end('Y','0')
+               CLOSE abmm203_bcl
+ 
+               LET g_rec_b = g_rec_b-1
+               
+               #add-point:單身2刪除後 name="input.body2.a_delete"
+                  DELETE FROM bmcd_t
+                   WHERE bmcdent = g_enterprise AND bmcdsite = g_site
+                     AND bmcd001 = g_bmba_m.bmba001
+                     AND bmcd002 = g_bmba_m.bmba002
+                     AND bmcd003 = g_bmba_m.bmba003
+                     AND bmcd004 = g_bmba_m.bmba004
+                     AND bmcd005 = g_bmba_m.bmba005
+                     AND bmcd007 = g_bmba_m.bmba007
+                     AND bmcd008 = g_bmba_m.bmba008
+                     AND bmcd009 = g_bmca2_d_t.bmcc009
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "bmcd_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_rec_b1 = g_rec_b1-1 
+               END IF   
+               #end add-point
+               LET l_count = g_bmca_d.getLength()
+               
+               #add-point:單身刪除後(<>d) name="input.body2.after_delete"
+               
+               #end add-point
+            END IF 
+ 
+         AFTER DELETE
+            #如果是最後一筆
+            IF l_ac = (g_bmca2_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+         AFTER INSERT    
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            #add-point:單身2新增前 name="input.body2.b_a_insert"
+            
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(1) INTO l_count FROM bmcc_t 
+             WHERE bmccent = g_enterprise AND bmccsite = g_site AND bmcc001 = g_bmba_m.bmba001
+               AND bmcc002 = g_bmba_m.bmba002
+               AND bmcc003 = g_bmba_m.bmba003
+               AND bmcc004 = g_bmba_m.bmba004
+               AND bmcc005 = g_bmba_m.bmba005
+               AND bmcc007 = g_bmba_m.bmba007
+               AND bmcc008 = g_bmba_m.bmba008
+               AND bmcc009 = g_bmca2_d[l_ac].bmcc009
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身2新增前 name="input.body2.b_insert"
+               
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_bmba_m.bmba001
+               LET gs_keys[2] = g_bmba_m.bmba002
+               LET gs_keys[3] = g_bmba_m.bmba003
+               LET gs_keys[4] = g_bmba_m.bmba004
+               LET gs_keys[5] = g_bmba_m.bmba005
+               LET gs_keys[6] = g_bmba_m.bmba007
+               LET gs_keys[7] = g_bmba_m.bmba008
+               LET gs_keys[8] = g_bmca2_d[g_detail_idx].bmcc009
+               CALL abmm203_insert_b('bmcc_t',gs_keys,"'2'")
+                           
+               #add-point:單身新增後2 name="input.body2.a_insert"
+               
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code   = "std-00006" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               INITIALIZE g_bmca_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "bmcc_t:",SQLERRMESSAGE 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL abmm203_b_fill()
+               #資料多語言用-增/改
+               
+               #add-point:單身新增後 name="input.body2.after_insert"
+               
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               #ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+            
+         ON ROW CHANGE 
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               LET g_bmca2_d[l_ac].* = g_bmca2_d_t.*
+               CLOSE abmm203_bcl2
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+            
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = -263 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET g_bmca2_d[l_ac].* = g_bmca2_d_t.*
+            ELSE
+               #add-point:單身page2修改前 name="input.body2.b_update"
+               
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身2)
+               
+               
+               #將遮罩欄位還原
+               CALL abmm203_bmcc_t_mask_restore('restore_mask_o')
+                              
+               UPDATE bmcc_t SET (bmcc001,bmcc002,bmcc003,bmcc004,bmcc005,bmcc007,bmcc008,bmcc009,bmcc010) = (g_bmba_m.bmba001, 
+                   g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004,g_bmba_m.bmba005,g_bmba_m.bmba007, 
+                   g_bmba_m.bmba008,g_bmca2_d[l_ac].bmcc009,g_bmca2_d[l_ac].bmcc010) #自訂欄位頁簽 
+ 
+                WHERE bmccent = g_enterprise AND bmccsite = g_site AND bmcc001 = g_bmba_m.bmba001
+                  AND bmcc002 = g_bmba_m.bmba002
+                  AND bmcc003 = g_bmba_m.bmba003
+                  AND bmcc004 = g_bmba_m.bmba004
+                  AND bmcc005 = g_bmba_m.bmba005
+                  AND bmcc007 = g_bmba_m.bmba007
+                  AND bmcc008 = g_bmba_m.bmba008
+                  AND bmcc009 = g_bmca2_d_t.bmcc009 #項次 
+                  
+               #add-point:單身page2修改中 name="input.body2.m_update"
+               
+               #end add-point
+                  
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "bmcc_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                     LET g_bmca2_d[l_ac].* = g_bmca2_d_t.*
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "bmcc_t:",SQLERRMESSAGE 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                     LET g_bmca2_d[l_ac].* = g_bmca2_d_t.*
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_bmba_m.bmba001
+               LET gs_keys_bak[1] = g_bmba001_t
+               LET gs_keys[2] = g_bmba_m.bmba002
+               LET gs_keys_bak[2] = g_bmba002_t
+               LET gs_keys[3] = g_bmba_m.bmba003
+               LET gs_keys_bak[3] = g_bmba003_t
+               LET gs_keys[4] = g_bmba_m.bmba004
+               LET gs_keys_bak[4] = g_bmba004_t
+               LET gs_keys[5] = g_bmba_m.bmba005
+               LET gs_keys_bak[5] = g_bmba005_t
+               LET gs_keys[6] = g_bmba_m.bmba007
+               LET gs_keys_bak[6] = g_bmba007_t
+               LET gs_keys[7] = g_bmba_m.bmba008
+               LET gs_keys_bak[7] = g_bmba008_t
+               LET gs_keys[8] = g_bmca2_d[g_detail_idx].bmcc009
+               LET gs_keys_bak[8] = g_bmca2_d_t.bmcc009
+               CALL abmm203_update_b('bmcc_t',gs_keys,gs_keys_bak,"'2'")
+                     #資料多語言用-增/改
+                     
+               END CASE
+               
+               #將遮罩欄位進行遮蔽
+               CALL abmm203_bmcc_t_mask_restore('restore_mask_n')
+               
+               #判斷key是否有改變
+               INITIALIZE gs_keys TO NULL
+               IF NOT (g_bmca2_d[g_detail_idx].bmcc009 = g_bmca2_d_t.bmcc009 
+                  ) THEN
+                  LET gs_keys[01] = g_bmba_m.bmba001
+                  LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba002
+                  LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba003
+                  LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba004
+                  LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba005
+                  LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba007
+                  LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba008
+                  LET gs_keys[gs_keys.getLength()+1] = g_bmca2_d_t.bmcc009
+                  CALL abmm203_key_update_b(gs_keys,'bmcc_t')
+               END IF
+               
+               #修改歷程記錄(單身修改)
+               LET g_log1 = util.JSON.stringify(g_bmba_m),util.JSON.stringify(g_bmca2_d_t)
+               LET g_log2 = util.JSON.stringify(g_bmba_m),util.JSON.stringify(g_bmca2_d[l_ac])
+               IF NOT cl_log_modified_record_d(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               END IF
+               
+               #add-point:單身page2修改後 name="input.body2.a_update"
+               SELECT bmcc010 INTO g_bmca2_d[l_ac].bmcc010 FROM bmcc_t
+                WHERE bmccent = g_enterprise AND bmccsite = g_site AND bmcc001 = g_bmba_m.bmba001
+                  AND bmcc002 = g_bmba_m.bmba002
+
+                  AND bmcc003 = g_bmba_m.bmba003
+
+                  AND bmcc004 = g_bmba_m.bmba004
+
+                  AND bmcc005 = g_bmba_m.bmba005
+
+                  AND bmcc007 = g_bmba_m.bmba007
+
+                  AND bmcc008 = g_bmba_m.bmba008
+
+                  AND bmcc009 = g_bmca2_d_t.bmcc009
+               IF g_bmca2_d[l_ac].bmcc010 = '1' THEN
+                  DELETE FROM bmcd_t
+                   WHERE bmcdent = g_enterprise AND bmcdsite = g_site AND bmcd001 = g_bmba_m.bmba001
+                     AND bmcd002 = g_bmba_m.bmba002
+   
+                     AND bmcd003 = g_bmba_m.bmba003
+   
+                     AND bmcd004 = g_bmba_m.bmba004
+   
+                     AND bmcd005 = g_bmba_m.bmba005
+   
+                     AND bmcd007 = g_bmba_m.bmba007
+   
+                     AND bmcd008 = g_bmba_m.bmba008
+                     AND bmcd009 = g_bmca2_d_t.bmcc009
+               END IF 
+               
+               UPDATE bmcd_t SET bmcd009 = g_bmca2_d[l_ac].bmcc009
+                                
+                WHERE bmcdent = g_enterprise AND bmcdsite = g_site AND bmcd001 = g_bmba_m.bmba001 
+                  AND bmcd002 = g_bmba_m.bmba002 
+
+                  AND bmcd003 = g_bmba_m.bmba003 
+
+                  AND bmcd004 = g_bmba_m.bmba004 
+
+                  AND bmcd005 = g_bmba_m.bmba005 
+
+                  AND bmcd007 = g_bmba_m.bmba007 
+
+                  AND bmcd008 = g_bmba_m.bmba008 
+                  AND bmcd009 = g_bmca2_d_t.bmcc009
+                 
+               
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "bmcd_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+   
+                  LET g_bmca5_d[l_ac2].* = g_bmca5_d_t.*
+               END IF
+                 
+               #end add-point
+            END IF
+         
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmcc009
+            
+            #add-point:AFTER FIELD bmcc009 name="input.a.page2.bmcc009"
+            #此段落由子樣板a05產生
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bmca2_d[l_ac].bmcc009
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='273' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bmca2_d[l_ac].bmcc009_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_bmca2_d[l_ac].bmcc009_desc             
+            IF  NOT cl_null(g_bmba_m.bmba001) AND NOT cl_null(g_bmba_m.bmba002) AND NOT cl_null(g_bmba_m.bmba003) AND NOT cl_null(g_bmba_m.bmba004) AND NOT cl_null(g_bmba_m.bmba005) AND NOT cl_null(g_bmba_m.bmba007) AND NOT cl_null(g_bmba_m.bmba008) AND NOT cl_null(g_bmca2_d[l_ac].bmcc009) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_bmba_m.bmba001 != g_bmba001_t OR g_bmba_m.bmba002 != g_bmba002_t OR g_bmba_m.bmba003 != g_bmba003_t OR g_bmba_m.bmba004 != g_bmba004_t OR g_bmba_m.bmba005 != g_bmba005_t OR g_bmba_m.bmba007 != g_bmba007_t OR g_bmba_m.bmba008 != g_bmba008_t OR g_bmca2_d[l_ac].bmcc009 != g_bmca2_d_t.bmcc009))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bmcc_t WHERE "||"bmccent = '" ||g_enterprise|| "' AND bmccsite = '" ||g_site|| "' AND "||"bmcc001 = '"||g_bmba_m.bmba001 ||"' AND "|| "bmcc002 = '"||g_bmba_m.bmba002 ||"' AND "|| "bmcc003 = '"||g_bmba_m.bmba003 ||"' AND "|| "bmcc004 = '"||g_bmba_m.bmba004 ||"' AND "|| " to_char(bmcc005,'yyyy-mm-dd hh24:mi:ss') = '"||g_bmba_m.bmba005 ||"' AND "|| "bmcc007 = '"||g_bmba_m.bmba007 ||"' AND "|| "bmcc008 = '"||g_bmba_m.bmba008 ||"' AND "|| "bmcc009 = '"||g_bmca2_d[l_ac].bmcc009 ||"'",'std-00004',0) THEN 
+                     LET g_bmca2_d[l_ac].bmcc009 = g_bmca2_d_t.bmcc009
+                     INITIALIZE g_ref_fields TO NULL
+                     LET g_ref_fields[1] = g_bmca2_d[l_ac].bmcc009
+                     CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='273' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+                     LET g_bmca2_d[l_ac].bmcc009_desc = '', g_rtn_fields[1] , ''
+                     DISPLAY BY NAME g_bmca2_d[l_ac].bmcc009_desc                        
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+            IF NOT cl_null(g_bmca2_d[l_ac].bmcc009) THEN           
+               IF NOT abmm203_chk_bmca009(g_bmca2_d[l_ac].bmcc009,'2') THEN
+                  LET g_bmca2_d[l_ac].bmcc009 = g_bmca2_d_t.bmcc009
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_bmca2_d[l_ac].bmcc009
+                  CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='273' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_bmca2_d[l_ac].bmcc009_desc = '', g_rtn_fields[1] , ''
+                  DISPLAY BY NAME g_bmca2_d[l_ac].bmcc009_desc
+                  NEXT FIELD bmcc009                  
+               END IF               
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmcc009
+            #add-point:BEFORE FIELD bmcc009 name="input.b.page2.bmcc009"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bmcc009
+            #add-point:ON CHANGE bmcc009 name="input.g.page2.bmcc009"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmcc010
+            #add-point:BEFORE FIELD bmcc010 name="input.b.page2.bmcc010"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmcc010
+            
+            #add-point:AFTER FIELD bmcc010 name="input.a.page2.bmcc010"
+             
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bmcc010
+            #add-point:ON CHANGE bmcc010 name="input.g.page2.bmcc010"
+ 
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page2.bmcc009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmcc009
+            #add-point:ON ACTION controlp INFIELD bmcc009 name="input.c.page2.bmcc009"
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_bmca2_d[l_ac].bmcc009             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = l_imaa005
+            LET g_qryparam.where = " imeb003 = '2' AND imeb001 = '",l_imaa005,"' ",
+                                   " AND imeb004 IN (SELECT imeb004 FROM imeb_t WHERE imebent = '",g_enterprise,"'",
+                                   "            AND imeb003 = '2' AND imeb001 = '",l_imaa005_2,"')"
+            CALL q_imeb004_1()                                #呼叫開窗
+
+            LET g_bmca2_d[l_ac].bmcc009 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            LET g_qryparam.where = NULL
+            DISPLAY g_bmca2_d[l_ac].bmcc009 TO bmcc009              #顯示到畫面上
+
+            NEXT FIELD bmcc009                          #返回原欄位
+ 
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.bmcc010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmcc010
+            #add-point:ON ACTION controlp INFIELD bmcc010 name="input.c.page2.bmcc010"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         AFTER ROW
+            #add-point:單身page2 after_row name="input.body2.after_row"
+            
+            #end add-point
+            LET l_ac = ARR_CURR()
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_bmca2_d[l_ac].* = g_bmca2_d_t.*
+               END IF
+               CLOSE abmm203_bcl2
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+            
+            #其他table進行unlock
+            
+            CALL abmm203_unlock_b("bmcc_t","'2'")
+            CALL s_transaction_end('Y','0')
+            #add-point:單身page2 after_row2 name="input.body2.after_row2"
+            
+            #end add-point
+ 
+         AFTER INPUT
+            #add-point:input段after input  name="input.body2.after_input"
+                       
+            #end add-point   
+    
+         ON ACTION controlo
+            IF l_insert THEN
+               LET li_reproduce = l_ac_t
+               LET li_reproduce_target = l_ac
+               LET g_bmca2_d[li_reproduce_target].* = g_bmca2_d[li_reproduce].*
+ 
+               LET g_bmca2_d[li_reproduce_target].bmcc009 = NULL
+            ELSE
+               CALL FGL_SET_ARR_CURR(g_bmca2_d.getLength()+1)
+               LET lb_reproduce = TRUE
+               LET li_reproduce = l_ac
+               LET li_reproduce_target = g_bmca2_d.getLength()+1
+            END IF
+            
+      END INPUT
+      INPUT ARRAY g_bmca3_d FROM s_detail3.*
+         ATTRIBUTE(COUNT = g_rec_b,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                 INSERT ROW = l_allow_insert, #此頁面insert功能由產生器控制, 手動之設定無效! 
+ 
+                 DELETE ROW = l_allow_delete,
+                 APPEND ROW = l_allow_insert)
+                 
+         #自訂ACTION(detail_input,page_3)
+         
+         
+         BEFORE INPUT
+            #add-point:資料輸入前 name="input.body3.before_input2"
+            
+            #end add-point
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_bmca3_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL abmm203_b_fill()
+            #如果一直都在單身1則控制筆數位置
+            IF g_loc = 'd' AND g_rec_b != 0 THEN
+               CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'3',"))
+            END IF
+            LET g_loc = 'd'
+            LET g_rec_b = g_bmca3_d.getLength()
+            #add-point:資料輸入前 name="input.body3.before_input"
+ 
+            #end add-point
+            
+         BEFORE INSERT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_bmca3_d[l_ac].* TO NULL 
+            INITIALIZE g_bmca3_d_t.* TO NULL 
+            INITIALIZE g_bmca3_d_o.* TO NULL 
+            #公用欄位給值(單身3)
+            
+            #自定義預設值(單身3)
+            
+            #add-point:modify段before備份 name="input.body3.insert.before_bak"
+            
+            #end add-point
+            LET g_bmca3_d_t.* = g_bmca3_d[l_ac].*     #新輸入資料
+            LET g_bmca3_d_o.* = g_bmca3_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL abmm203_set_entry_b(l_cmd)
+            #add-point:modify段after_set_entry_b name="input.body3.insert.after_set_entry_b"
+            
+            #end add-point
+            CALL abmm203_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_bmca3_d[li_reproduce_target].* = g_bmca3_d[li_reproduce].*
+ 
+               LET g_bmca3_d[li_reproduce_target].bmce009 = NULL
+            END IF
+            
+            #add-point:modify段before insert name="input.body3.before_insert"
+            
+            #end add-point  
+ 
+         BEFORE ROW     
+            #add-point:modify段before row2 name="input.body3.before_row2"
+            
+            #end add-point  
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac_t = l_ac 
+            LET g_detail_idx_list[3] = l_ac
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET g_current_page = 3
+              
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN abmm203_cl USING g_enterprise, g_site,g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004,g_bmba_m.bmba005,g_bmba_m.bmba007,g_bmba_m.bmba008
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN abmm203_cl:" 
+               LET g_errparam.code   = STATUS 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CLOSE abmm203_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_bmca3_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND g_bmca3_d[l_ac].bmce009 IS NOT NULL
+            THEN 
+               LET l_cmd='u'
+               LET g_bmca3_d_t.* = g_bmca3_d[l_ac].*  #BACKUP
+               LET g_bmca3_d_o.* = g_bmca3_d[l_ac].*  #BACKUP
+               CALL abmm203_set_entry_b(l_cmd)
+               #add-point:modify段after_set_entry_b name="input.body3.after_set_entry_b"
+               
+               #end add-point  
+               CALL abmm203_set_no_entry_b(l_cmd)
+               IF NOT abmm203_lock_b("bmce_t","'3'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH abmm203_bcl3 INTO g_bmca3_d[l_ac].bmce009,g_bmca3_d[l_ac].bmce010
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = SQLERRMESSAGE  
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_bmca3_d_mask_o[l_ac].* =  g_bmca3_d[l_ac].*
+                  CALL abmm203_bmce_t_mask()
+                  LET g_bmca3_d_mask_n[l_ac].* =  g_bmca3_d[l_ac].*
+                  
+                  LET g_bfill = "N"
+                  CALL abmm203_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row name="input.body3.before_row"
+ 
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+            
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+               #add-point:單身AFTER DELETE (=d) name="input.body3.after_delete_d"
+               
+               #end add-point
+            ELSE
+               #add-point:單身刪除前 name="input.body3.b_delete_ask"
+               
+               #end add-point 
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   = -263 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身3刪除前 name="input.body3.b_delete"
+               
+               #end add-point    
+                  
+               #取得該筆資料key值
+               INITIALIZE gs_keys TO NULL
+               LET gs_keys[01] = g_bmba_m.bmba001
+               LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba002
+               LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba003
+               LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba004
+               LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba005
+               LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba007
+               LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba008
+               LET gs_keys[gs_keys.getLength()+1] = g_bmca3_d_t.bmce009
+            
+               #刪除同層單身
+               IF NOT abmm203_delete_b('bmce_t',gs_keys,"'3'") THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE abmm203_bcl
+                  CANCEL DELETE
+               END IF
+    
+               #刪除下層單身
+               IF NOT abmm203_key_delete_b(gs_keys,'bmce_t') THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE abmm203_bcl
+                  CANCEL DELETE
+               END IF
+               
+               #刪除多語言
+               
+               
+               #add-point:單身3刪除中 name="input.body3.m_delete"
+               
+               #end add-point    
+               
+               CALL s_transaction_end('Y','0')
+               CLOSE abmm203_bcl
+ 
+               LET g_rec_b = g_rec_b-1
+               
+               #add-point:單身3刪除後 name="input.body3.a_delete"
+ 
+               #end add-point
+               LET l_count = g_bmca_d.getLength()
+               
+               #add-point:單身刪除後(<>d) name="input.body3.after_delete"
+               
+               #end add-point
+            END IF 
+ 
+         AFTER DELETE
+            #如果是最後一筆
+            IF l_ac = (g_bmca3_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+         AFTER INSERT    
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            #add-point:單身3新增前 name="input.body3.b_a_insert"
+            
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(1) INTO l_count FROM bmce_t 
+             WHERE bmceent = g_enterprise AND bmcesite = g_site AND bmce001 = g_bmba_m.bmba001
+               AND bmce002 = g_bmba_m.bmba002
+               AND bmce003 = g_bmba_m.bmba003
+               AND bmce004 = g_bmba_m.bmba004
+               AND bmce005 = g_bmba_m.bmba005
+               AND bmce007 = g_bmba_m.bmba007
+               AND bmce008 = g_bmba_m.bmba008
+               AND bmce009 = g_bmca3_d[l_ac].bmce009
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身3新增前 name="input.body3.b_insert"
+               
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_bmba_m.bmba001
+               LET gs_keys[2] = g_bmba_m.bmba002
+               LET gs_keys[3] = g_bmba_m.bmba003
+               LET gs_keys[4] = g_bmba_m.bmba004
+               LET gs_keys[5] = g_bmba_m.bmba005
+               LET gs_keys[6] = g_bmba_m.bmba007
+               LET gs_keys[7] = g_bmba_m.bmba008
+               LET gs_keys[8] = g_bmca3_d[g_detail_idx].bmce009
+               CALL abmm203_insert_b('bmce_t',gs_keys,"'3'")
+                           
+               #add-point:單身新增後3 name="input.body3.a_insert"
+               
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code   = "std-00006" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               INITIALIZE g_bmca_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "bmce_t:",SQLERRMESSAGE 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL abmm203_b_fill()
+               #資料多語言用-增/改
+               
+               #add-point:單身新增後 name="input.body3.after_insert"
+               
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               #ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+            
+         ON ROW CHANGE 
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               LET g_bmca3_d[l_ac].* = g_bmca3_d_t.*
+               CLOSE abmm203_bcl3
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+            
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = -263 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET g_bmca3_d[l_ac].* = g_bmca3_d_t.*
+            ELSE
+               #add-point:單身page3修改前 name="input.body3.b_update"
+               
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身3)
+               
+               
+               #將遮罩欄位還原
+               CALL abmm203_bmce_t_mask_restore('restore_mask_o')
+                              
+               UPDATE bmce_t SET (bmce001,bmce002,bmce003,bmce004,bmce005,bmce007,bmce008,bmce009,bmce010) = (g_bmba_m.bmba001, 
+                   g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004,g_bmba_m.bmba005,g_bmba_m.bmba007, 
+                   g_bmba_m.bmba008,g_bmca3_d[l_ac].bmce009,g_bmca3_d[l_ac].bmce010) #自訂欄位頁簽 
+ 
+                WHERE bmceent = g_enterprise AND bmcesite = g_site AND bmce001 = g_bmba_m.bmba001
+                  AND bmce002 = g_bmba_m.bmba002
+                  AND bmce003 = g_bmba_m.bmba003
+                  AND bmce004 = g_bmba_m.bmba004
+                  AND bmce005 = g_bmba_m.bmba005
+                  AND bmce007 = g_bmba_m.bmba007
+                  AND bmce008 = g_bmba_m.bmba008
+                  AND bmce009 = g_bmca3_d_t.bmce009 #項次 
+                  
+               #add-point:單身page3修改中 name="input.body3.m_update"
+               
+               #end add-point
+                  
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "bmce_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                     LET g_bmca3_d[l_ac].* = g_bmca3_d_t.*
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "bmce_t:",SQLERRMESSAGE 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                     LET g_bmca3_d[l_ac].* = g_bmca3_d_t.*
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_bmba_m.bmba001
+               LET gs_keys_bak[1] = g_bmba001_t
+               LET gs_keys[2] = g_bmba_m.bmba002
+               LET gs_keys_bak[2] = g_bmba002_t
+               LET gs_keys[3] = g_bmba_m.bmba003
+               LET gs_keys_bak[3] = g_bmba003_t
+               LET gs_keys[4] = g_bmba_m.bmba004
+               LET gs_keys_bak[4] = g_bmba004_t
+               LET gs_keys[5] = g_bmba_m.bmba005
+               LET gs_keys_bak[5] = g_bmba005_t
+               LET gs_keys[6] = g_bmba_m.bmba007
+               LET gs_keys_bak[6] = g_bmba007_t
+               LET gs_keys[7] = g_bmba_m.bmba008
+               LET gs_keys_bak[7] = g_bmba008_t
+               LET gs_keys[8] = g_bmca3_d[g_detail_idx].bmce009
+               LET gs_keys_bak[8] = g_bmca3_d_t.bmce009
+               CALL abmm203_update_b('bmce_t',gs_keys,gs_keys_bak,"'3'")
+                     #資料多語言用-增/改
+                     
+               END CASE
+               
+               #將遮罩欄位進行遮蔽
+               CALL abmm203_bmce_t_mask_restore('restore_mask_n')
+               
+               #判斷key是否有改變
+               INITIALIZE gs_keys TO NULL
+               IF NOT (g_bmca3_d[g_detail_idx].bmce009 = g_bmca3_d_t.bmce009 
+                  ) THEN
+                  LET gs_keys[01] = g_bmba_m.bmba001
+                  LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba002
+                  LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba003
+                  LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba004
+                  LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba005
+                  LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba007
+                  LET gs_keys[gs_keys.getLength()+1] = g_bmba_m.bmba008
+                  LET gs_keys[gs_keys.getLength()+1] = g_bmca3_d_t.bmce009
+                  CALL abmm203_key_update_b(gs_keys,'bmce_t')
+               END IF
+               
+               #修改歷程記錄(單身修改)
+               LET g_log1 = util.JSON.stringify(g_bmba_m),util.JSON.stringify(g_bmca3_d_t)
+               LET g_log2 = util.JSON.stringify(g_bmba_m),util.JSON.stringify(g_bmca3_d[l_ac])
+               IF NOT cl_log_modified_record_d(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               END IF
+               
+               #add-point:單身page3修改後 name="input.body3.a_update"
+ 
+               #end add-point
+            END IF
+         
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmce009
+            
+            #add-point:AFTER FIELD bmce009 name="input.a.page3.bmce009"
+            #此段落由子樣板a05產生
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bmca3_d[l_ac].bmce009
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='273' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bmca3_d[l_ac].bmce009_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_bmca3_d[l_ac].bmce009_desc            
+            IF  NOT cl_null(g_bmba_m.bmba001) AND NOT cl_null(g_bmba_m.bmba002) AND NOT cl_null(g_bmba_m.bmba003) AND NOT cl_null(g_bmba_m.bmba004) AND NOT cl_null(g_bmba_m.bmba005) AND NOT cl_null(g_bmba_m.bmba007) AND NOT cl_null(g_bmba_m.bmba008) AND NOT cl_null(g_bmca3_d[l_ac].bmce009) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_bmba_m.bmba001 != g_bmba001_t OR g_bmba_m.bmba002 != g_bmba002_t OR g_bmba_m.bmba003 != g_bmba003_t OR g_bmba_m.bmba004 != g_bmba004_t OR g_bmba_m.bmba005 != g_bmba005_t OR g_bmba_m.bmba007 != g_bmba007_t OR g_bmba_m.bmba008 != g_bmba008_t OR g_bmca3_d[l_ac].bmce009 != g_bmca3_d_t.bmce009))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bmce_t WHERE "||"bmceent = '" ||g_enterprise|| "' AND bmcesite = '" ||g_site|| "' AND "||"bmce001 = '"||g_bmba_m.bmba001 ||"' AND "|| "bmce002 = '"||g_bmba_m.bmba002 ||"' AND "|| "bmce003 = '"||g_bmba_m.bmba003 ||"' AND "|| "bmce004 = '"||g_bmba_m.bmba004 ||"' AND "|| " to_char(bmce005,'yyyy-mm-dd hh24:mi:ss') = '"||g_bmba_m.bmba005 ||"' AND "|| "bmce007 = '"||g_bmba_m.bmba007 ||"' AND "|| "bmce008 = '"||g_bmba_m.bmba008 ||"' AND "|| "bmce009 = '"||g_bmca3_d[l_ac].bmce009 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            IF NOT cl_null(g_bmca3_d[l_ac].bmce009) THEN           
+               IF NOT abmm203_chk_bmca009(g_bmca3_d[l_ac].bmce009,'3') THEN
+                  LET g_bmca3_d[l_ac].bmce009 = g_bmca3_d_t.bmce009
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_bmca3_d[l_ac].bmce009
+                  CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='273' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_bmca3_d[l_ac].bmce009_desc = '', g_rtn_fields[1] , ''
+                  DISPLAY BY NAME g_bmca3_d[l_ac].bmce009_desc
+                  NEXT FIELD bmce009                  
+               END IF               
+            END IF
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmce009
+            #add-point:BEFORE FIELD bmce009 name="input.b.page3.bmce009"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bmce009
+            #add-point:ON CHANGE bmce009 name="input.g.page3.bmce009"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmce010
+            
+            #add-point:AFTER FIELD bmce010 name="input.a.page3.bmce010"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bmca3_d[l_ac].bmce010
+            CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005_2||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bmca3_d[l_ac].bmce010_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_bmca3_d[l_ac].bmce010_desc 
+            IF NOT cl_null(g_bmca3_d[l_ac].bmce009) AND NOT cl_null(g_bmca3_d[l_ac].bmce010) THEN
+               CALL s_aimi092_chk_eigenvalue(l_imaa005_2,g_bmca3_d[l_ac].bmce009,g_bmca3_d[l_ac].bmce010,g_bmba_m.bmba001,'2') RETURNING l_success,l_errno,g_bmca3_d[l_ac].bmce010   #160712-00010#1
+               IF NOT cl_null(l_errno) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = l_errno
+                  LET g_errparam.extend = g_bmca3_d[l_ac].bmce010
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_bmca3_d[l_ac].bmce010 = g_bmca3_d_t.bmce010
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_bmca3_d[l_ac].bmce010
+                  CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005_2||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_bmca3_d[l_ac].bmce010_desc = g_rtn_fields[1]
+                  DISPLAY BY NAME g_bmca3_d[l_ac].bmce010_desc                   
+                  NEXT FIELD CURRENT
+               END IF
+            END IF           
+            IF NOT cl_null(g_bmba_m.bmba001) AND g_bmba_m.bmba002 IS NOT NULL AND NOT cl_null(g_bmba_m.bmba003) AND NOT cl_null(g_bmba_m.bmba004) AND NOT cl_null(g_bmba_m.bmba005) AND NOT cl_null(g_bmba_m.bmba007) AND NOT cl_null(g_bmba_m.bmba008) AND NOT cl_null(g_bmca3_d[l_ac].bmce009) AND NOT cl_null(g_bmca3_d[l_ac].bmce010) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_bmba_m.bmba001 != g_bmba001_t OR g_bmba_m.bmba002 != g_bmba002_t OR g_bmba_m.bmba003 != g_bmba003_t OR g_bmba_m.bmba004 != g_bmba004_t OR g_bmba_m.bmba005 != g_bmba005_t OR g_bmba_m.bmba007 != g_bmba007_t OR g_bmba_m.bmba008 != g_bmba008_t OR g_bmca3_d[l_ac].bmce009 != g_bmca3_d_t.bmce009 OR g_bmca3_d[l_ac].bmce010 != g_bmca3_d_t.bmce010))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bmce_t WHERE "||"bmceent = '" ||g_enterprise|| "' AND bmcesite = '" ||g_site|| "' AND "||"bmce001 = '"||g_bmba_m.bmba001 ||"' AND "|| "bmce002 = '"||g_bmba_m.bmba002 ||"' AND "|| "bmce003 = '"||g_bmba_m.bmba003 ||"' AND "|| "bmce004 = '"||g_bmba_m.bmba004 ||"' AND "|| " to_char(bmce005,'yyyy-mm-dd hh24:mi:ss') = '"||g_bmba_m.bmba005 ||"' AND "|| "bmce007 = '"||g_bmba_m.bmba007 ||"' AND "|| "bmce008 = '"||g_bmba_m.bmba008 ||"' AND "|| "bmce009 = '"||g_bmca3_d[l_ac].bmce009 ||"' AND "|| "bmce010 = '"||g_bmca3_d[l_ac].bmce010 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bmca3_d[l_ac].bmce010
+            CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005_2||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bmca3_d[l_ac].bmce010_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_bmca3_d[l_ac].bmce010_desc             
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmce010
+            #add-point:BEFORE FIELD bmce010 name="input.b.page3.bmce010"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bmce010
+            #add-point:ON CHANGE bmce010 name="input.g.page3.bmce010"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bmce010_desc
+            #add-point:BEFORE FIELD bmce010_desc name="input.b.page3.bmce010_desc"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bmce010_desc
+            
+            #add-point:AFTER FIELD bmce010_desc name="input.a.page3.bmce010_desc"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bmce010_desc
+            #add-point:ON CHANGE bmce010_desc name="input.g.page3.bmce010_desc"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page3.bmce009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmce009
+            #add-point:ON ACTION controlp INFIELD bmce009 name="input.c.page3.bmce009"
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_bmca3_d[l_ac].bmce009             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = l_imaa005_2
+
+            CALL q_imeb004_4()                                #呼叫開窗
+
+            LET g_bmca3_d[l_ac].bmce009 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_bmca3_d[l_ac].bmce009 TO bmce009              #顯示到畫面上
+
+            NEXT FIELD bmce009                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page3.bmce010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmce010
+            #add-point:ON ACTION controlp INFIELD bmce010 name="input.c.page3.bmce010"
+#此段落由子樣板a07產生            
+            #開窗i段
+             IF NOT cl_null(l_imaa005) AND NOT cl_null(g_bmca3_d[l_ac].bmce009) THEN
+               SELECT imeb005 INTO l_imeb005
+                 FROM imeb_t
+                WHERE imebent = g_enterprise
+                  AND imeb001 = l_imaa005_2
+                  AND imeb004 = g_bmca3_d[l_ac].bmce009 
+                IF l_imeb005 = '2' THEN                            
+                   INITIALIZE g_qryparam.* TO NULL
+                   LET g_qryparam.state = 'i'
+                   LET g_qryparam.reqry = FALSE
+                   
+                   LET g_qryparam.default1 = g_bmca3_d[l_ac].bmce010             #給予default值
+                   
+                   #給予arg
+                   LET g_qryparam.where = "imeastus = 'Y' "
+                   LET g_qryparam.arg1 = l_imaa005_2
+                   LET g_qryparam.arg2 = g_bmca3_d[l_ac].bmce009 
+                   
+                   CALL q_imec003_2()                                #呼叫開窗
+                   
+                   LET g_bmca3_d[l_ac].bmce010 = g_qryparam.return1              #將開窗取得的值回傳到變數
+                   
+                   DISPLAY g_bmca3_d[l_ac].bmce010 TO bmce010              #顯示到畫面上
+                   
+                   NEXT FIELD bmce010                          #返回原欄位
+                END IF
+             END IF                
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page3.bmce010_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bmce010_desc
+            #add-point:ON ACTION controlp INFIELD bmce010_desc name="input.c.page3.bmce010_desc"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         AFTER ROW
+            #add-point:單身page3 after_row name="input.body3.after_row"
+            
+            #end add-point
+            LET l_ac = ARR_CURR()
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_bmca3_d[l_ac].* = g_bmca3_d_t.*
+               END IF
+               CLOSE abmm203_bcl3
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+            
+            #其他table進行unlock
+            
+            CALL abmm203_unlock_b("bmce_t","'3'")
+            CALL s_transaction_end('Y','0')
+            #add-point:單身page3 after_row2 name="input.body3.after_row2"
+            
+            #end add-point
+ 
+         AFTER INPUT
+            #add-point:input段after input  name="input.body3.after_input"
+            
+            #end add-point   
+    
+         ON ACTION controlo
+            IF l_insert THEN
+               LET li_reproduce = l_ac_t
+               LET li_reproduce_target = l_ac
+               LET g_bmca3_d[li_reproduce_target].* = g_bmca3_d[li_reproduce].*
+ 
+               LET g_bmca3_d[li_reproduce_target].bmce009 = NULL
+            ELSE
+               CALL FGL_SET_ARR_CURR(g_bmca3_d.getLength()+1)
+               LET lb_reproduce = TRUE
+               LET li_reproduce = l_ac
+               LET li_reproduce_target = g_bmca3_d.getLength()+1
+            END IF
+            
+      END INPUT
+ 
+      
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="abmm203.input.other" >}
+      
+      #add-point:自定義input name="input.more_input"
+       INPUT ARRAY g_bmca4_d FROM s_detail4.*
+          ATTRIBUTE(COUNT = g_rec_b1,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_bmca4_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+            LET g_flag1 = 'Y'
+            CALL abmm203_b_fill_1(g_bmca_d[l_ac].bmca009)
+            LET g_flag1 = 'N'
+            LET g_rec_b1= g_bmca4_d.getLength()
+         
+         BEFORE ROW
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac1 = ARR_CURR()
+            LET g_detail_idx = l_ac1
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac1 TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN abmm203_cl USING g_enterprise, g_site,g_bmba_m.bmba001
+                                                                ,g_bmba_m.bmba002
+
+                                                                ,g_bmba_m.bmba003
+
+                                                                ,g_bmba_m.bmba004
+
+                                                                ,g_bmba_m.bmba005
+
+                                                                ,g_bmba_m.bmba007
+
+                                                                ,g_bmba_m.bmba008
+
+
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  STATUS
+               LET g_errparam.extend = "OPEN abmm203_cl:"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               CLOSE abmm203_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+                   
+
+            LET g_rec_b1= g_bmca4_d.getLength()
+            
+            IF g_rec_b1>= l_ac1 
+               AND NOT cl_null(g_bmca4_d[l_ac1].bmcb010) 
+
+            THEN
+               LET l_cmd='u'
+	           LET g_bmca4_d_t.* = g_bmca4_d[l_ac1].*  #BACKUP
+	           CALL abmm203_set_entry_b(l_cmd)
+               CALL abmm203_set_no_entry_b(l_cmd)          
+               OPEN abmm203_bcl4 USING g_enterprise, g_site,g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004,g_bmba_m.bmba005,g_bmba_m.bmba007,g_bmba_m.bmba008,g_bmca_d[l_ac].bmca009,g_bmca4_d[l_ac1].bmcb010                                       
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "abmm203_bcl4"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH abmm203_bcl4 INTO g_bmca4_d[l_ac1].bmcb010,g_bmca4_d[l_ac1].bmcb011,g_bmca4_d[l_ac1].bmcb012
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = g_bmca4_d_t.bmcb010
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET l_lock_sw = "Y"
+                  END IF
+                  				  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF 
+            NEXT FIELD bmcb010            
+            
+         BEFORE INSERT
+            
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_bmca4_d[l_ac1].* TO NULL 
+            
+            LET g_bmca4_d_t.* = g_bmca4_d[l_ac1].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL abmm203_set_entry_b(l_cmd)
+            CALL abmm203_set_no_entry_b(l_cmd)
+
+
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM bmcb_t 
+             WHERE bmcbent = g_enterprise AND bmcbsite = g_site AND bmcb001 = g_bmba_m.bmba001
+               AND bmcb002 = g_bmba_m.bmba002
+
+               AND bmcb003 = g_bmba_m.bmba003
+
+               AND bmcb004 = g_bmba_m.bmba004
+
+               AND bmcb005 = g_bmba_m.bmba005
+
+               AND bmcb007 = g_bmba_m.bmba007
+
+               AND bmcb008 = g_bmba_m.bmba008
+
+
+               AND bmcb009 = g_bmca_d[l_ac].bmca009
+               AND bmcb010 = g_bmca4_d[l_ac1].bmcb010
+
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+ 
+              # INSERT INTO bmcb_t
+              #    (bmcbent, bmcbsite,
+              #     bmcb001,bmcb002,bmcb003,bmcb004,bmcb005,bmcb007,bmcb008,
+              #     bmcb009,bmcb010,bmcb011,bmcb012
+              #     ) 
+              # VALUES(g_enterprise, g_site,
+              #        g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004,g_bmba_m.bmba005,g_bmba_m.bmba007,
+              #        g_bmba_m.bmba008,g_bmca_d[l_ac].bmca009,g_bmca4_d[l_ac1].bmcb010,g_bmca4_d[l_ac1].bmcb011,g_bmca4_d[l_ac1].bmcb012
+              #       )
+               LET l_sql="INSERT INTO bmcb_t(bmcbent, bmcbsite, bmcb001,bmcb002,bmcb003,bmcb004,bmcb005,bmcb007,bmcb008,bmcb009,bmcb010,bmcb011,bmcb012)",
+                   " VALUES('",g_enterprise,"','",g_site,"','",g_bmba_m.bmba001,"','",g_bmba_m.bmba002,"','",g_bmba_m.bmba003,"','",g_bmba_m.bmba004,"',",
+                   " to_date('",g_bmba_m.bmba005,"','YYYY-MM-DD hh24:mi:ss'),'",g_bmba_m.bmba007,"','",g_bmba_m.bmba008,"','",g_bmca_d[l_ac].bmca009,"',",
+                   "'",g_bmca4_d[l_ac1].bmcb010,"','",g_bmca4_d[l_ac1].bmcb011,"','",g_bmca4_d[l_ac1].bmcb012,"')"
+               PREPARE ins_bmcb_pre FROM l_sql
+               EXECUTE ins_bmcb_pre      
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "bmcb_t"
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+
+               END IF
+               
+               #160324-00007#1---mod---begin
+               #LET l_sql="INSERT INTO bmcb_t(bmcbent, bmcbsite, bmcb001,bmcb002,bmcb003,bmcb004,bmcb005,bmcb007,bmcb008,bmcb009,bmcb010,bmcb011,bmcb012)",
+               #          " SELECT bmcaent, bmcasite, bmca001,bmca002,bmca003,bmca004,bmca005,bmca007,bmca008,bmca009,'",g_bmca4_d[l_ac1].bmcb010,"','",g_bmca4_d[l_ac1].bmcb011,"','",g_bmca4_d[l_ac1].bmcb012,"'",
+               #          "   FROM bmca_t ",
+               #          "  WHERE bmcaent = '",g_enterprise,"'",
+               #          "    AND bmcasite <> 'ALL' ",
+               #          "    AND bmca001 = '",g_bmba_m.bmba001,"'",
+               #          "    AND bmca002 = '",g_bmba_m.bmba002,"'",
+               #          "    AND bmca003 = '",g_bmba_m.bmba003,"'",
+               #          "    AND bmca004 = '",g_bmba_m.bmba004,"'",
+               #          "    AND bmca005 = to_date('",g_bmba_m.bmba005,"','YYYY-MM-DD hh24:mi:ss')",
+               #          "    AND bmca007 = '",g_bmba_m.bmba007,"'",
+               #          "    AND bmca008 = '",g_bmba_m.bmba008,"'",
+               #          "    AND bmca009 = '",g_bmca_d[l_ac].bmca009,"'"
+               #IF g_prog = 'abmm203' THEN        #160705-00042#8 160712 by sakura mark
+               IF g_prog MATCHES 'abmm203' THEN   #160705-00042#8 160712 by sakura add
+                  LET l_sql = "INSERT INTO bmcb_t(bmcbent, bmcbsite, bmcb001,bmcb002,bmcb003,bmcb004,bmcb005,bmcb007,bmcb008,bmcb009,bmcb010,bmcb011,bmcb012)",
+                              " SELECT bmbaent,bmbasite,bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008,'",g_bmca_d[l_ac].bmca009,"','",g_bmca4_d[l_ac1].bmcb010,"','",g_bmca4_d[l_ac1].bmcb011,"','",g_bmca4_d[l_ac1].bmcb012,"'",
+                              "   FROM bmba_t ",
+                              "  WHERE bmbaent = '",g_enterprise,"'",
+                              "    AND bmbasite <> 'ALL' ",
+                              "    AND bmba001 = '",g_bmba_m.bmba001,"'",
+                              "    AND bmba002 = '",g_bmba_m.bmba002,"'",
+                              "    AND bmba003 = '",g_bmba_m.bmba003,"'",
+                              "    AND bmba004 = '",g_bmba_m.bmba004,"'",
+                              "    AND bmba005 = to_date('",g_bmba_m.bmba005,"','YYYY-MM-DD hh24:mi:ss')",
+                              "    AND bmba007 = '",g_bmba_m.bmba007,"'",
+                              "    AND bmba008 = '",g_bmba_m.bmba008,"'",
+                              "    AND bmba019 = '1' "                                    
+                  PREPARE ins_bmcb_pre_site FROM l_sql
+                  EXECUTE ins_bmcb_pre_site      
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "bmcb_t"
+                     LET g_errparam.popup = FALSE
+                     CALL cl_err()
+                  END IF
+               END IF
+               #160324-00007#1---mod---end
+            ELSE    
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               INITIALIZE g_bmca4_d[l_ac1].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "bmcb_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+  
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               CALL s_transaction_end('Y','0')
+               ERROR 'INSERT O.K'
+               LET g_rec_b1 = g_rec_b1 + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF NOT cl_null(g_bmca_d[l_ac].bmca009) 
+
+               THEN 
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  -263
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CANCEL DELETE
+               END IF
+ 
+               
+               #DELETE FROM bmcb_t
+               # WHERE bmcbent = g_enterprise AND bmcbsite = g_site 
+               #   AND bmcb001 = g_bmba_m.bmba001
+               #   AND bmcb002 = g_bmba_m.bmba002
+               #   AND bmcb003 = g_bmba_m.bmba003 
+               #   AND bmcb004 = g_bmba_m.bmba004 
+               #   AND bmcb005 = g_bmba_m.bmba005 
+               #   AND bmcb007 = g_bmba_m.bmba007 
+               #   AND bmcb008 = g_bmba_m.bmba008 
+               #   AND bmcb009 = g_bmca_d[l_ac].bmca009
+               #   AND bmcb010 = g_bmca4_d_t.bmcb010
+               LET l_sql = " DELETE FROM bmcb_t ",
+                           "  WHERE bmcbent = '",g_enterprise,"' AND bmcb001 = '",g_bmba_m.bmba001 ,"' AND bmcb002 = '",g_bmba_m.bmba002,"'",
+                           "    AND bmcb003 = '",g_bmba_m.bmba003,"' AND bmcb004 = '",g_bmba_m.bmba004,"' AND bmcb005 = to_date('",g_bmba_m.bmba005 ,"','YYYY-MM-DD hh24:mi:ss')",
+                           "    AND bmcb007 = '",g_bmba_m.bmba007 ,"' AND bmcb008 = '",g_bmba_m.bmba008,"' AND bmcb009 = '",g_bmca_d[l_ac].bmca009,"' AND bmcb010 = '",g_bmca4_d[l_ac1].bmcb010,"'"
+               #160324-00007#1---add---begin 
+               #IF g_prog = 'abmm203' THEN        #160705-00042#8 160712 by sakura mark              
+               IF g_prog MATCHES 'abmm203' THEN   #160705-00042#8 160712 by sakura add
+                  LET l_sql =l_sql,"    AND EXISTS(SELECT 1 FROM bmba_t WHERE bmbaent = bmcbent AND bmbasite = bmcbsite AND bmba001 = bmcb001 AND bmba002 = bmcb002 AND bmba003 = bmcb003 ",   
+                                  "    AND bmba004 = bmcb004 AND bmba005 = bmcb005 AND bmba007 = bmcb007 AND bmba008 = bmcb008 AND bmba019 = '1')"        
+               ELSE
+                  LET l_sql = l_sql," AND bmcbsite = '",g_site,"'"              
+               END IF
+               #160324-00007#1---add---end
+               PREPARE del_bmcb_pre FROM l_sql
+               EXECUTE del_bmcb_pre 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "bmcb_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_rec_b1 = g_rec_b1-1
+                  CALL s_transaction_end('Y','0')
+               END IF 
+               CLOSE abmm203_bcl4
+               LET l_count = g_bmca4_d.getLength()
+            END IF 
+            
+              
+         AFTER DELETE 
+
+         BEFORE FIELD bmcb010
+            IF l_cmd = 'a' THEN 
+               SELECT max(bmcb010) +1 INTO g_bmca4_d[l_ac1].bmcb010
+                FROM bmcb_t
+               WHERE bmcbent = g_enterprise
+                 AND bmcbsite = g_site
+                 AND bmcb001 = g_bmba_m.bmba001
+                 AND bmcb002 = g_bmba_m.bmba002
+                 AND bmcb003 = g_bmba_m.bmba003
+                 AND bmcb004 = g_bmba_m.bmba004
+                 AND bmcb005 = g_bmba_m.bmba005
+                 AND bmcb007 = g_bmba_m.bmba007
+                 AND bmcb008 = g_bmba_m.bmba008
+                 AND bmcb009 = g_bmca_d[l_ac].bmca009
+
+               IF cl_null(g_bmca4_d[l_ac1].bmcb010) THEN
+                  LET g_bmca4_d[l_ac1].bmcb010 = 1
+               END IF
+            END IF    
+         AFTER FIELD bmcb010
+            IF NOT cl_null(g_bmba_m.bmba001) AND NOT cl_null(g_bmba_m.bmba002) AND NOT cl_null(g_bmba_m.bmba003) AND NOT cl_null(g_bmba_m.bmba004) AND NOT cl_null(g_bmba_m.bmba005) AND NOT cl_null(g_bmba_m.bmba007) AND NOT cl_null(g_bmba_m.bmba008) AND NOT cl_null(g_bmca_d[l_ac].bmca009) AND NOT cl_null(g_bmca4_d[l_ac1].bmcb010) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_bmba_m.bmba001 != g_bmba001_t OR g_bmba_m.bmba002 != g_bmba002_t OR g_bmba_m.bmba003 != g_bmba003_t OR g_bmba_m.bmba004 != g_bmba004_t OR g_bmba_m.bmba005 != g_bmba005_t OR g_bmba_m.bmba007 != g_bmba007_t OR g_bmba_m.bmba008 != g_bmba008_t OR g_bmca_d[l_ac].bmca009 != g_bmca_d_t.bmca009 OR g_bmca4_d[l_ac1].bmcb010 != g_bmca4_d_t.bmcb010))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bmcb_t WHERE "||"bmcbent = '" ||g_enterprise|| "' AND bmcbsite = '" ||g_site|| "' AND "||"bmcb001 = '"||g_bmba_m.bmba001 ||"' AND "|| "bmcb002 = '"||g_bmba_m.bmba002 ||"' AND "|| "bmcb003 = '"||g_bmba_m.bmba003 ||"' AND "|| "bmcb004 = '"||g_bmba_m.bmba004 ||"' AND "|| " to_char(bmcb005,'yyyy-mm-dd hh24:mi:ss') = '"||g_bmba_m.bmba005 ||"' AND "|| "bmcb007 = '"||g_bmba_m.bmba007 ||"' AND "|| "bmcb008 = '"||g_bmba_m.bmba008 ||"' AND "|| "bmcb009 = '"||g_bmca_d[l_ac].bmca009 ||"' AND "|| "bmcb010 = '"||g_bmca4_d[l_ac1].bmcb010 ||"'",'std-00004',0) THEN 
+                     LET g_bmca4_d[l_ac1].bmcb010 = g_bmca4_d_t.bmcb010
+                     NEXT FIELD CURRENT
+                  END IF
+                  IF NOT ap_chk_Range(g_bmca4_d[l_ac1].bmcb010,"1.000","1","","","azz-00079",1) THEN
+                     LET g_bmca4_d[l_ac1].bmcb010 = g_bmca4_d_t.bmcb010
+                     NEXT FIELD bmcb010
+                  END IF
+               END IF
+            END IF
+
+
+         ON CHANGE bmcb010
+         
+         AFTER FIELD bmcb011
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] =  g_bmca4_d[l_ac1].bmcb011
+            #CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+            CALL ap_ref_array2(g_ref_fields,
+                               "SELECT imecl005 FROM imecl_t,imec_t,imeb_t 
+                                 WHERE imeclent=imecent
+                                   and imecl001=imec001
+                                   and imecl002=imec002
+                                   and imecl003=imec003
+                                   and imecent=imebent
+                                   and imec001=imeb001
+                                   and imec002=imeb002
+                                   AND imeb004='"||g_bmca_d[l_ac].bmca009||"'
+                                   AND imeclent='"||g_enterprise||"' 
+                                   AND imecl001= '"||l_imaa005||"' 
+                                   AND imecl003 = ? 
+                                   AND imecl004='"||g_dlang||"'","") 
+              RETURNING g_rtn_fields     #161029-00005#imecl003有重名
+            LET g_bmca4_d[l_ac1].bmcb011_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_bmca4_d[l_ac1].bmcb011_desc  
+            
+            IF NOT cl_null(g_bmca_d[l_ac].bmca009) AND NOT cl_null(g_bmca4_d[l_ac1].bmcb011) THEN
+               CALL s_aimi092_chk_eigenvalue(l_imaa005,g_bmca_d[l_ac].bmca009,g_bmca4_d[l_ac1].bmcb011,g_bmba_m.bmba001,'2') RETURNING l_success,l_errno,g_bmca4_d[l_ac1].bmcb011   #160712-00010#1
+               IF NOT cl_null(l_errno) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = l_errno
+                  LET g_errparam.extend = g_bmca4_d[l_ac1].bmcb011
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_bmca4_d[l_ac1].bmcb011 = g_bmca4_d_t.bmcb011
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] =  g_bmca4_d[l_ac1].bmcb011
+                  #CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+                  CALL ap_ref_array2(g_ref_fields,
+                               "SELECT imecl005 FROM imecl_t,imec_t,imeb_t 
+                                 WHERE imeclent=imecent
+                                   and imecl001=imec001
+                                   and imecl002=imec002
+                                   and imecl003=imec003
+                                   and imecent=imebent
+                                   and imec001=imeb001
+                                   and imec002=imeb002
+                                   AND imeb004='"||g_bmca_d[l_ac].bmca009||"'
+                                   AND imeclent='"||g_enterprise||"' 
+                                   AND imecl001= '"||l_imaa005||"' 
+                                   AND imecl003 = ? 
+                                   AND imecl004='"||g_dlang||"'","") 
+                  RETURNING g_rtn_fields     #161029-00005
+                  LET g_bmca4_d[l_ac1].bmcb011_desc = g_rtn_fields[1]
+                  DISPLAY BY NAME g_bmca4_d[l_ac1].bmcb011_desc                  
+                  NEXT FIELD CURRENT
+               END IF
+            END IF   
+            IF NOT cl_null(g_bmca4_d[l_ac1].bmcb011) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_bmca4_d[l_ac1].bmcb011 != g_bmca4_d_t.bmcb011))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bmcb_t WHERE "||"bmcbent = '" ||g_enterprise|| "' AND bmcbsite = '" ||g_site|| "' AND "||"bmcb001 = '"||g_bmba_m.bmba001 ||"' AND "|| "bmcb002 = '"||g_bmba_m.bmba002 ||"' AND "|| "bmcb003 = '"||g_bmba_m.bmba003 ||"' AND "|| "bmcb004 = '"||g_bmba_m.bmba004 ||"' AND "|| "to_char(bmcb005,'yyyy-mm-dd hh24:mi:ss') = '"||g_bmba_m.bmba005 ||"' AND "|| "bmcb007 = '"||g_bmba_m.bmba007 ||"' AND "|| "bmcb008 = '"||g_bmba_m.bmba008 ||"' AND "|| "bmcb009 = '"||g_bmca_d[l_ac].bmca009 ||"' AND "|| "bmcb011 = '"||g_bmca4_d[l_ac1].bmcb011 ||"'",'std-00004',0) THEN 
+                     LET g_bmca4_d[l_ac1].bmcb011 = g_bmca4_d_t.bmcb011
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               SELECT imeb006 INTO l_imeb006 FROM imeb_t 
+                WHERE imebent = g_enterprise
+                  AND imeb001 = l_imaa005
+                  AND imeb004 = g_bmca_d[l_ac].bmca009
+               IF l_imeb006 MATCHES '[23]' THEN                
+                  LET l_n = 0
+                  LET l_success = TRUE
+                  LET l_success1 = TRUE
+                  CALL s_num_isnum(g_bmca4_d[l_ac1].bmcb011) RETURNING l_success
+                  IF l_success = TRUE THEN
+                     LET l_bmcb011 = 0
+                     LET l_bmcb011 = g_bmca4_d[l_ac1].bmcb011
+                     IF NOT cl_null(g_bmca4_d[l_ac1].bmcb012) THEN                  
+                        CALL s_num_isnum(g_bmca4_d[l_ac1].bmcb012) RETURNING l_success1
+                        IF l_success1 = TRUE THEN
+                           LET l_bmcb012 = 0
+                           LET l_bmcb012 = g_bmca4_d[l_ac1].bmcb012 
+                           IF l_bmcb011 > l_bmcb012 THEN
+                              INITIALIZE g_errparam TO NULL
+                              LET g_errparam.code = 'abm-00037'
+                              LET g_errparam.extend = l_bmcb011
+                              LET g_errparam.popup = TRUE
+                              CALL cl_err()
+
+                              LET g_bmca4_d[l_ac1].bmcb011 = g_bmca4_d_t.bmcb011
+                              INITIALIZE g_ref_fields TO NULL
+                              LET g_ref_fields[1] =  g_bmca4_d[l_ac1].bmcb011
+                              #CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+                              CALL ap_ref_array2(g_ref_fields,
+                               "SELECT imecl005 FROM imecl_t,imec_t,imeb_t 
+                                 WHERE imeclent=imecent
+                                   and imecl001=imec001
+                                   and imecl002=imec002
+                                   and imecl003=imec003
+                                   and imecent=imebent
+                                   and imec001=imeb001
+                                   and imec002=imeb002
+                                   AND imeb004='"||g_bmca_d[l_ac].bmca009||"'
+                                   AND imeclent='"||g_enterprise||"' 
+                                   AND imecl001= '"||l_imaa005||"' 
+                                   AND imecl003 = ? 
+                                   AND imecl004='"||g_dlang||"'","") 
+                               RETURNING g_rtn_fields     #161029-00005
+                              LET g_bmca4_d[l_ac1].bmcb011_desc = g_rtn_fields[1]
+                              DISPLAY BY NAME g_bmca4_d[l_ac1].bmcb011_desc                              
+                              NEXT FIELD bmcb011
+                           END IF   
+                        END IF                 
+                     END IF   
+                     IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_bmca4_d[l_ac1].bmcb011 != g_bmca4_d_t.bmcb011 OR g_bmca4_d[l_ac1].bmcb012 != g_bmca4_d_t.bmcb012 )) THEN 
+                        CALL abmm203_bmcb011_chk(g_bmca4_d[l_ac1].bmcb011,g_bmca4_d[l_ac1].bmcb012,l_cmd) 
+                        IF NOT cl_null(g_errno) THEN
+                           INITIALIZE g_errparam TO NULL
+                           LET g_errparam.code = g_errno
+                           LET g_errparam.extend = g_bmca4_d[l_ac1].bmcb011
+                           LET g_errparam.popup = TRUE
+                           CALL cl_err()
+  
+                           LET g_bmca4_d[l_ac1].bmcb011 = g_bmca4_d_t.bmcb011
+                           INITIALIZE g_ref_fields TO NULL
+                           LET g_ref_fields[1] =  g_bmca4_d[l_ac1].bmcb011
+                           #CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+                           CALL ap_ref_array2(g_ref_fields,
+                               "SELECT imecl005 FROM imecl_t,imec_t,imeb_t 
+                                 WHERE imeclent=imecent
+                                   and imecl001=imec001
+                                   and imecl002=imec002
+                                   and imecl003=imec003
+                                   and imecent=imebent
+                                   and imec001=imeb001
+                                   and imec002=imeb002
+                                   AND imeb004='"||g_bmca_d[l_ac].bmca009||"'
+                                   AND imeclent='"||g_enterprise||"' 
+                                   AND imecl001= '"||l_imaa005||"' 
+                                   AND imecl003 = ? 
+                                   AND imecl004='"||g_dlang||"'","") 
+                           RETURNING g_rtn_fields     #161029-00005
+                           LET g_bmca4_d[l_ac1].bmcb011_desc = g_rtn_fields[1]
+                           DISPLAY BY NAME g_bmca4_d[l_ac1].bmcb011_desc                           
+                           NEXT FIELD bmcb011
+                        END IF
+                     END IF                                     
+                  END IF 
+                  IF cl_null(g_bmca4_d[l_ac1].bmcb012) THEN 
+                     LET g_bmca4_d[l_ac1].bmcb012 = g_bmca4_d[l_ac1].bmcb011
+                     INITIALIZE g_ref_fields TO NULL
+                     LET g_ref_fields[1] =  g_bmca4_d[l_ac1].bmcb012
+                     CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+                     LET g_bmca4_d[l_ac1].bmcb012_desc = g_rtn_fields[1]
+                     DISPLAY BY NAME g_bmca4_d[l_ac1].bmcb012_desc                     
+                  END IF 
+               END IF                  
+            END IF  
+            
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] =  g_bmca4_d[l_ac1].bmcb011
+            #CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+            CALL ap_ref_array2(g_ref_fields,
+                               "SELECT imecl005 FROM imecl_t,imec_t,imeb_t 
+                                 WHERE imeclent=imecent
+                                   and imecl001=imec001
+                                   and imecl002=imec002
+                                   and imecl003=imec003
+                                   and imecent=imebent
+                                   and imec001=imeb001
+                                   and imec002=imeb002
+                                   AND imeb004='"||g_bmca_d[l_ac].bmca009||"'
+                                   AND imeclent='"||g_enterprise||"' 
+                                   AND imecl001= '"||l_imaa005||"' 
+                                   AND imecl003 = ? 
+                                   AND imecl004='"||g_dlang||"'","") 
+              RETURNING g_rtn_fields     #161029-00005#imecl003有重名
+            LET g_bmca4_d[l_ac1].bmcb011_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_bmca4_d[l_ac1].bmcb011_desc   
+            
+            CALL abmm203_set_entry_b(l_cmd)
+            CALL abmm203_set_no_entry_b(l_cmd)            
+         BEFORE FIELD bmcb012 
+            CALL abmm203_set_entry_b(l_cmd)
+            CALL abmm203_set_no_entry_b(l_cmd)               
+         AFTER FIELD bmcb012
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] =  g_bmca4_d[l_ac1].bmcb012
+            CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bmca4_d[l_ac1].bmcb012_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_bmca4_d[l_ac1].bmcb012_desc 
+            IF NOT cl_null(g_bmca_d[l_ac].bmca009) AND NOT cl_null(g_bmca4_d[l_ac1].bmcb012) THEN
+               CALL s_aimi092_chk_eigenvalue(l_imaa005,g_bmca_d[l_ac].bmca009,g_bmca4_d[l_ac1].bmcb012,g_bmba_m.bmba001,'2') RETURNING l_success,l_errno,g_bmca4_d[l_ac1].bmcb012  #160712-00010#1
+               IF NOT cl_null(l_errno) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = l_errno
+                  LET g_errparam.extend = g_bmca4_d[l_ac1].bmcb012
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_bmca4_d[l_ac1].bmcb012 = g_bmca4_d_t.bmcb012
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] =  g_bmca4_d[l_ac1].bmcb012
+                  CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_bmca4_d[l_ac1].bmcb012_desc = g_rtn_fields[1]
+                  DISPLAY BY NAME g_bmca4_d[l_ac1].bmcb012_desc 
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            IF NOT cl_null(g_bmca4_d[l_ac1].bmcb012) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_bmca4_d[l_ac1].bmcb012 != g_bmca4_d_t.bmcb012))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bmcb_t WHERE "||"bmcbent = '" ||g_enterprise|| "' AND bmcbsite = '" ||g_site|| "' AND "||"bmcb001 = '"||g_bmba_m.bmba001 ||"' AND "|| "bmcb002 = '"||g_bmba_m.bmba002 ||"' AND "|| "bmcb003 = '"||g_bmba_m.bmba003 ||"' AND "|| "bmcb004 = '"||g_bmba_m.bmba004 ||"' AND "|| "to_char(bmcb005,'yyyy-mm-dd hh24:mi:ss') = '" ||g_bmba_m.bmba005 ||"' AND "|| "bmcb007 = '"||g_bmba_m.bmba007 ||"' AND "|| "bmcb008 = '"||g_bmba_m.bmba008 ||"' AND "|| "bmcb009 = '"||g_bmca_d[l_ac].bmca009 ||"' AND "|| "bmcb012 = '"||g_bmca4_d[l_ac1].bmcb012 ||"'",'std-00004',0) THEN 
+                     LET g_bmca4_d[l_ac1].bmcb012 = g_bmca4_d_t.bmcb012
+                     INITIALIZE g_ref_fields TO NULL
+                     LET g_ref_fields[1] =  g_bmca4_d[l_ac1].bmcb012
+                     CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+                     LET g_bmca4_d[l_ac1].bmcb012_desc = g_rtn_fields[1]
+                     DISPLAY BY NAME g_bmca4_d[l_ac1].bmcb012_desc 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+
+               LET l_success = TRUE
+               LET l_success1 = TRUE
+               CALL s_num_isnum(g_bmca4_d[l_ac1].bmcb012) RETURNING l_success
+               IF l_success = TRUE THEN
+                  LET l_bmcb012 = 0
+                  LET l_bmcb012 = g_bmca4_d[l_ac1].bmcb012
+                  IF NOT cl_null(g_bmca4_d[l_ac1].bmcb011) THEN
+                     CALL s_num_isnum(g_bmca4_d[l_ac1].bmcb011) RETURNING l_success1
+                     IF l_success1 = TRUE THEN
+                        LET l_bmcb011 = 0
+                        LET l_bmcb011 = g_bmca4_d[l_ac1].bmcb011 
+                        IF l_bmcb011 > l_bmcb012 THEN
+                           INITIALIZE g_errparam TO NULL
+                           LET g_errparam.code = 'abm-00037'
+                           LET g_errparam.extend = l_bmcb012
+                           LET g_errparam.popup = TRUE
+                           CALL cl_err()
+
+                           LET g_bmca4_d[l_ac1].bmcb012 = g_bmca4_d_t.bmcb012
+                           INITIALIZE g_ref_fields TO NULL
+                           LET g_ref_fields[1] =  g_bmca4_d[l_ac1].bmcb012
+                           CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+                           LET g_bmca4_d[l_ac1].bmcb012_desc = g_rtn_fields[1]
+                           DISPLAY BY NAME g_bmca4_d[l_ac1].bmcb012_desc 
+                           NEXT FIELD bmcb012
+                        END IF   
+                     END IF 
+                  END IF                               
+                  IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_bmca4_d[l_ac1].bmcb011 != g_bmca4_d_t.bmcb011 OR g_bmca4_d[l_ac1].bmcb012 != g_bmca4_d_t.bmcb012 )) THEN 
+                     CALL abmm203_bmcb011_chk(g_bmca4_d[l_ac1].bmcb011,g_bmca4_d[l_ac1].bmcb012,l_cmd) 
+                     IF NOT cl_null(g_errno) THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = g_errno
+                        LET g_errparam.extend = g_bmca4_d[l_ac1].bmcb012
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+  
+                        LET g_bmca4_d[l_ac1].bmcb012 = g_bmca4_d_t.bmcb012
+                        INITIALIZE g_ref_fields TO NULL
+                        LET g_ref_fields[1] =  g_bmca4_d[l_ac1].bmcb012
+                        CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+                        LET g_bmca4_d[l_ac1].bmcb012_desc = g_rtn_fields[1]
+                        DISPLAY BY NAME g_bmca4_d[l_ac1].bmcb012_desc 
+                        NEXT FIELD bmcb012
+                     END IF
+                  END IF 
+               END IF                  
+            END IF
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] =  g_bmca4_d[l_ac1].bmcb012
+            CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bmca4_d[l_ac1].bmcb012_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_bmca4_d[l_ac1].bmcb012_desc             
+            
+         ON ACTION controlp INFIELD bmcb011
+            IF NOT cl_null(l_imaa005) AND NOT cl_null(g_bmca_d[l_ac].bmca009) THEN
+               SELECT imeb005 INTO l_imeb005
+                 FROM imeb_t
+                WHERE imebent = g_enterprise
+                  AND imeb001 = l_imaa005
+                  AND imeb004 = g_bmca_d[l_ac].bmca009 
+                IF l_imeb005 = '2' THEN                  
+                   #開窗i段
+                   INITIALIZE g_qryparam.* TO NULL
+                   LET g_qryparam.state = 'i'
+                   LET g_qryparam.reqry = FALSE
+        
+                   LET g_qryparam.default1 = g_bmca4_d[l_ac1].bmcb011             #給予default值
+        
+                   #給予arg
+                   LET g_qryparam.where = "imeastus = 'Y' "
+                   #170105-00027#1 add---start---
+                   LET l_cnt = 0
+                   SELECT COUNT(*) INTO l_cnt FROM imas_t
+                    WHERE imasent = g_enterprise
+                      AND imas001 = g_bmba_m.bmba001
+                      AND imas002 = g_bmca_d[l_ac].bmca009
+                   IF l_cnt > 0 THEN
+                   #170105-00027#1 add---end---
+                      #161018-00033#1 add by tangyi 161018-str-
+                      LET g_qryparam.where = g_qryparam.where ,
+                      " AND IMEC003 IN(SELECT IMAS003 FROM IMAS_T 
+                                        WHERE imasent='",g_enterprise,"' 
+                                          AND imas001='",g_bmba_m.bmba001,"' 
+                                          AND imas002='",g_bmca_d[l_ac].bmca009,"')"
+                      #161018-00033#1 add by tangyi 161018-end-
+                   END IF                      #170105-00027#1 add
+                   LET g_qryparam.arg1 = l_imaa005 #特徵群組代碼
+                   LET g_qryparam.arg2 = g_bmca_d[l_ac].bmca009
+                   CALL q_imec003_2()                                #呼叫開窗
+        
+                   LET g_bmca4_d[l_ac1].bmcb011 = g_qryparam.return1              #將開窗取得的值回傳到變數
+        
+                   DISPLAY g_bmca4_d[l_ac1].bmcb011 TO bmcb011           #顯示到畫面上
+        
+                   NEXT FIELD bmcb011                          #返回原欄位
+                END IF
+             END IF                       
+
+         ON ACTION controlp INFIELD bmcb012
+            IF NOT cl_null(l_imaa005) AND NOT cl_null(g_bmca_d[l_ac].bmca009) THEN
+               SELECT imeb005 INTO l_imeb005
+                 FROM imeb_t
+                WHERE imebent = g_enterprise
+                  AND imeb001 = l_imaa005
+                  AND imeb004 = g_bmca_d[l_ac].bmca009 
+                IF l_imeb005 = '2' THEN                  
+                   #開窗i段
+                   INITIALIZE g_qryparam.* TO NULL
+                   LET g_qryparam.state = 'i'
+                   LET g_qryparam.reqry = FALSE
+        
+                   LET g_qryparam.default1 = g_bmca4_d[l_ac1].bmcb012             #給予default值
+        
+                   #給予arg
+                   LET g_qryparam.where = "imeastus = 'Y' "
+                   LET g_qryparam.arg1 = l_imaa005 #特徵群組代碼
+                   LET g_qryparam.arg2 = g_bmca_d[l_ac].bmca009
+                   CALL q_imec003_2()                                #呼叫開窗
+        
+                   LET g_bmca4_d[l_ac1].bmcb012 = g_qryparam.return1              #將開窗取得的值回傳到變數
+        
+                   DISPLAY g_bmca4_d[l_ac1].bmcb012 TO bmcb012           #顯示到畫面上
+        
+                   NEXT FIELD bmcb012                          #返回原欄位
+                END IF
+             END IF 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_bmca4_d[l_ac1].* = g_bmca4_d_t.*
+               CLOSE abmm203_bcl4
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = g_bmca_d[l_ac].bmca009
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_bmca4_d[l_ac1].* = g_bmca4_d_t.*
+            ELSE
+            
+
+      
+               #UPDATE bmcb_t SET (bmcb001,bmcb002,bmcb003,bmcb004,bmcb005,bmcb007,bmcb008,bmcb009,bmcb010,bmcb011,bmcb012) = (g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004,g_bmba_m.bmba005,g_bmba_m.bmba007,
+#g_bmba_m.bmba008,g_bmca_d[l_ac].bmca009,g_bmca4_d[l_ac1].bmcb010,g_bmca4_d[l_ac1].bmcb011,g_bmca4_d[l_ac1].bmcb012)
+                #ERE bmcbent = g_enterprise AND bmcbsite = g_site AND bmcb001 = g_bmba_m.bmba001 
+                #AND bmcb002 = g_bmba_m.bmba002 
+#
+                #AND bmcb003 = g_bmba_m.bmba003 
+#
+                #AND bmcb004 = g_bmba_m.bmba004 
+#
+                #AND bmcb005 = g_bmba_m.bmba005 
+#
+                #AND bmcb007 = g_bmba_m.bmba007 
+#
+                #AND bmcb008 = g_bmba_m.bmba008 
+#
+#
+                #AND bmcb009 = g_bmca_d[l_ac].bmca009
+                #AND bmcb010 = g_bmca4_d_t.bmcb010   
+
+                  
+               LET l_sql = " UPDATE bmcb_t ", 
+               " SET (bmcb001,bmcb002,bmcb003,bmcb004,bmcb005,bmcb007,bmcb008,bmcb009,bmcb010,bmcb011,bmcb012)",
+               "    = ",
+               "   ('",g_bmba_m.bmba001,"','",g_bmba_m.bmba002,"','",g_bmba_m.bmba003,"','",g_bmba_m.bmba004,"',",
+               " to_date('",g_bmba_m.bmba005,"','YYYY-MM-DD hh24:mi:ss'),'",g_bmba_m.bmba007,"','",g_bmba_m.bmba008,"','",g_bmca_d[l_ac].bmca009,"',",
+               " '",g_bmca4_d[l_ac1].bmcb010,"','",g_bmca4_d[l_ac1].bmcb011,"','",g_bmca4_d[l_ac1].bmcb012,"')",
+               " WHERE bmcbent = '",g_enterprise,"' AND bmcb001 = '",g_bmba_m.bmba001 ,"' AND bmcb002 = '",g_bmba_m.bmba002,"'",
+               " AND bmcb003 = '",g_bmba_m.bmba003,"' AND bmcb004 = '",g_bmba_m.bmba004,"' AND bmcb005 = to_date('",g_bmba_m.bmba005 ,"','YYYY-MM-DD hh24:mi:ss')",
+               " AND bmcb007 = '",g_bmba_m.bmba007 ,"' AND bmcb008 = '",g_bmba_m.bmba008,"' AND bmcb009 = '",g_bmca_d[l_ac].bmca009,"' AND bmcb010 = '",g_bmca4_d_t.bmcb010,"'"
+               #160324-00007#1---add---begin 
+               #IF g_prog = 'abmm203' THEN        #160705-00042#8 160712 by sakura mark             
+               IF g_prog MATCHES 'abmm203' THEN   #160705-00042#8 160712 by sakura add
+                  LET l_sql = l_sql," AND EXISTS(SELECT 1 FROM bmba_t WHERE bmbaent = bmcbent AND bmbasite = bmcbsite AND bmba001 = bmcb001 AND bmba002 = bmcb002 AND bmba003 = bmcb003 ",   
+                                    " AND bmba004 = bmcb004 AND bmba005 = bmcb005 AND bmba007 = bmcb007 AND bmba008 = bmcb008 AND bmba019 = '1')" 
+               ELSE
+                  LET l_sql = l_sql," AND bmcbsite = '",g_site,"'"               
+               END IF
+               #160324-00007#1---add---end                                 
+               PREPARE upd_bmcb_pre FROM l_sql
+               EXECUTE upd_bmcb_pre  
+               
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "bmcb_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+   
+                  LET g_bmca4_d[l_ac1].* = g_bmca4_d_t.*
+               END IF
+                
+            END IF
+            
+         AFTER ROW
+            LET l_ac1 = ARR_CURR()
+            LET l_ac1_t = l_ac1
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_bmca4_d[l_ac1].* = g_bmca4_d_t.*
+               END IF
+               CLOSE abmm203_bcl4
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG
+            END IF
+
+            CLOSE abmm203_bcl4
+            CALL s_transaction_end('Y','0')
+            
+              
+         AFTER INPUT 
+              
+      END INPUT
+
+       INPUT ARRAY g_bmca5_d FROM s_detail5.*
+          ATTRIBUTE(COUNT = g_rec_b1,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         
+         BEFORE INPUT
+            IF g_bmca2_d[l_ac].bmcc010 = '1' OR cl_null(g_bmca2_d[l_ac].bmcc010) THEN
+               LET l_flag1 ='Y'
+               EXIT DIALOG
+            END IF            
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_bmca5_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+            LET g_flag2 = 'Y'
+            CALL abmm203_b_fill_1(g_bmca2_d[l_ac].bmcc009)
+            LET g_flag2 = 'N'
+            LET g_rec_b1= g_bmca5_d.getLength()
+         
+         BEFORE ROW
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac2 = ARR_CURR()
+            LET g_detail_idx = l_ac2
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac2 TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN abmm203_cl USING g_enterprise, g_site,g_bmba_m.bmba001
+                                                                ,g_bmba_m.bmba002
+
+                                                                ,g_bmba_m.bmba003
+
+                                                                ,g_bmba_m.bmba004
+
+                                                                ,g_bmba_m.bmba005
+
+                                                                ,g_bmba_m.bmba007
+
+                                                                ,g_bmba_m.bmba008
+
+
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  STATUS
+               LET g_errparam.extend = "OPEN abmm203_cl:"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               CLOSE abmm203_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+                   
+
+            LET g_rec_b1= g_bmca5_d.getLength()
+            
+            IF g_rec_b1>= l_ac2
+               AND NOT cl_null(g_bmca5_d[l_ac2].bmcd010) 
+
+            THEN
+               LET l_cmd='u'
+	           LET g_bmca5_d_t.* = g_bmca5_d[l_ac2].*  #BACKUP
+	           CALL abmm203_set_entry_b(l_cmd)
+               CALL abmm203_set_no_entry_b(l_cmd)
+               OPEN abmm203_bcl5 USING g_enterprise, g_site,                                    
+                    g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004,g_bmba_m.bmba005,g_bmba_m.bmba007,
+                    g_bmba_m.bmba008,g_bmca2_d[l_ac].bmcc009,g_bmca5_d[l_ac2].bmcd010                                       
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "abmm203_bcl5"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH abmm203_bcl5 INTO g_bmca5_d[l_ac2].bmcd010,g_bmca5_d[l_ac2].bmcd011
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = g_bmca5_d_t.bmcd010
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET l_lock_sw = "Y"
+                  END IF
+                  				  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF            
+            
+         BEFORE INSERT
+            
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_bmca5_d[l_ac2].* TO NULL 
+            
+            LET g_bmca5_d_t.* = g_bmca5_d[l_ac2].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL abmm203_set_entry_b(l_cmd)
+            CALL abmm203_set_no_entry_b(l_cmd)
+
+
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM bmcd_t 
+             WHERE bmcdent = g_enterprise AND bmcdsite = g_site AND bmcd001 = g_bmba_m.bmba001
+               AND bmcd002 = g_bmba_m.bmba002
+
+               AND bmcd003 = g_bmba_m.bmba003
+
+               AND bmcd004 = g_bmba_m.bmba004
+
+               AND bmcd005 = g_bmba_m.bmba005
+
+               AND bmcd007 = g_bmba_m.bmba007
+
+               AND bmcd008 = g_bmba_m.bmba008
+
+
+               AND bmcd009 = g_bmca2_d[l_ac].bmcc009
+               AND bmcd010 = g_bmca5_d[l_ac2].bmcd010
+
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+ 
+               #INSERT INTO bmcd_t
+               #   (bmcdent, bmcdsite,
+               #    bmcd001,bmcd002,bmcd003,bmcd004,bmcd005,bmcd007,bmcd008,
+               #    bmcd009,bmcd010,bmcd011
+               #    ) 
+               #VALUES(g_enterprise, g_site,
+               #       g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004,g_bmba_m.bmba005,g_bmba_m.bmba007,
+               #       g_bmba_m.bmba008,g_bmca2_d[l_ac].bmcc009,g_bmca5_d[l_ac2].bmcd010,g_bmca5_d[l_ac2].bmcd011
+               #      )
+               LET l_sql="INSERT INTO bmcd_t(bmcdent, bmcdsite, bmcd001,bmcd002,bmcd003,bmcd004,bmcd005,bmcd007,bmcd008,bmcd009,bmcd010,bmcd011)",
+                   " VALUES('",g_enterprise,"','",g_site,"','",g_bmba_m.bmba001,"','",g_bmba_m.bmba002,"','",g_bmba_m.bmba003,"','",g_bmba_m.bmba004,"',",
+                   " to_date('",g_bmba_m.bmba005,"','YYYY-MM-DD hh24:mi:ss'),'",g_bmba_m.bmba007,"','",g_bmba_m.bmba008,"','",g_bmca2_d[l_ac].bmcc009,"',",
+                   "'",g_bmca5_d[l_ac2].bmcd010,"','",g_bmca5_d[l_ac2].bmcd011,"')"
+               PREPARE ins_bmcd_pre FROM l_sql
+               EXECUTE ins_bmcd_pre                 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "bmcd_t"
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+               END IF
+               
+               #160324-00007#1---mod---begin
+               #LET l_sql="INSERT INTO bmcd_t(bmcdent, bmcdsite, bmcd001,bmcd002,bmcd003,bmcd004,bmcd005,bmcd007,bmcd008,bmcd009,bmcd010,bmcd011)",
+               #          " SELECT bmccent, bmccsite, bmcc001,bmcc002,bmcc003,bmcc004,bmcc005,bmcc007,bmcc008,bmcc009,'",g_bmca5_d[l_ac2].bmcd010,"','",g_bmca5_d[l_ac2].bmcd011,"'",
+               #          "   FROM bmcc_t ",
+               #          "  WHERE bmccent = '",g_enterprise,"'",
+               #          "    AND bmccsite <> 'ALL' ",
+               #          "    AND bmcc001 = '",g_bmba_m.bmba001,"'",
+               #          "    AND bmcc002 = '",g_bmba_m.bmba002,"'",
+               #          "    AND bmcc003 = '",g_bmba_m.bmba003,"'",
+               #          "    AND bmcc004 = '",g_bmba_m.bmba004,"'",
+               #          "    AND bmcc005 = to_date('",g_bmba_m.bmba005,"','YYYY-MM-DD hh24:mi:ss')",
+               #          "    AND bmcc007 = '",g_bmba_m.bmba007,"'",
+               #          "    AND bmcc008 = '",g_bmba_m.bmba008,"'",
+               #          "    AND bmcc009 = '",g_bmca2_d[l_ac].bmcc009,"'"
+               #IF g_prog = 'abmm203' THEN        #160705-00042#8 160712 by sakura mark
+               IF g_prog MATCHES 'abmm203' THEN   #160705-00042#8 160712 by sakura add
+                  LET l_sql = "INSERT INTO bmcd_t(bmcdent, bmcdsite, bmcd001,bmcd002,bmcd003,bmcd004,bmcd005,bmcd007,bmcd008,bmcd009,bmcd010,bmcd011)",
+                             #" SELECT bmbaent,bmbasite,bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008,'",g_bmca2_d[l_ac].bmcc009,"'",g_bmca5_d[l_ac2].bmcd010,"','",g_bmca5_d[l_ac2].bmcd011,"'",   #160707-00037#1 mark
+                              " SELECT bmbaent,bmbasite,bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008,'",g_bmca2_d[l_ac].bmcc009,"','",g_bmca5_d[l_ac2].bmcd010,"','",g_bmca5_d[l_ac2].bmcd011,"'", #160707-00037#1 add
+                              "   FROM bmba_t ",
+                              "  WHERE bmbaent = '",g_enterprise,"'",
+                              "    AND bmbasite <> 'ALL' ",
+                              "    AND bmba001 = '",g_bmba_m.bmba001,"'", 
+                              "    AND bmba002 = '",g_bmba_m.bmba002,"'",
+                              "    AND bmba003 = '",g_bmba_m.bmba003,"'",
+                              "    AND bmba004 = '",g_bmba_m.bmba004,"'",
+                              "    AND bmba005 = to_date('",g_bmba_m.bmba005,"','YYYY-MM-DD hh24:mi:ss')",
+                              "    AND bmba007 = '",g_bmba_m.bmba007,"'",
+                              "    AND bmba008 = '",g_bmba_m.bmba008,"'",
+                              "    AND bmba019 = '1' "         
+                                          
+                  PREPARE ins_bmcd_pre_site FROM l_sql
+                  EXECUTE ins_bmcd_pre_site                 
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "bmcd_t"
+                     LET g_errparam.popup = FALSE
+                     CALL cl_err()
+                  END IF 
+               END IF
+               #160324-00007#1---mod---end               
+            ELSE    
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               INITIALIZE g_bmca5_d[l_ac2].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "bmcd_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+  
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               CALL s_transaction_end('Y','0')
+               ERROR 'INSERT O.K'
+               LET g_rec_b1 = g_rec_b1 + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF NOT cl_null(g_bmca2_d[l_ac].bmcc009) 
+
+               THEN 
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  -263
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CANCEL DELETE
+               END IF
+ 
+               
+               #DELETE FROM bmcd_t
+               # WHERE bmcdent = g_enterprise AND bmcdsite = g_site 
+               #   AND bmcd001 = g_bmba_m.bmba001
+               #   AND bmcd002 = g_bmba_m.bmba002
+               #   AND bmcd003 = g_bmba_m.bmba003 
+               #   AND bmcd004 = g_bmba_m.bmba004 
+               #   AND bmcd005 = g_bmba_m.bmba005 
+               #   AND bmcd007 = g_bmba_m.bmba007 
+               #   AND bmcd008 = g_bmba_m.bmba008 
+               #   AND bmcd009 = g_bmca2_d[l_ac].bmcc009
+               #   AND bmcd010 = g_bmca5_d_t.bmcd010
+               LET l_sql = " DELETE FROM bmcd_t ",
+                   " WHERE bmcdent = '",g_enterprise,"' AND bmcd001 = '",g_bmba_m.bmba001 ,"' AND bmcd002 = '",g_bmba_m.bmba002,"'",
+                   " AND bmcd003 = '",g_bmba_m.bmba003,"' AND bmcd004 = '",g_bmba_m.bmba004,"' AND bmcd005 = to_date('",g_bmba_m.bmba005 ,"','YYYY-MM-DD hh24:mi:ss')",
+                   " AND bmcd007 = '",g_bmba_m.bmba007 ,"' AND bmcd008 = '",g_bmba_m.bmba008,"' AND bmcd009 = '",g_bmca2_d[l_ac].bmcc009,"' AND bmcd010 = '",g_bmca5_d[l_ac2].bmcd010,"'"
+               #160324-00007#1---add---begin
+               #IF g_prog = 'abmm203' THEN        #160705-00042#8 160712 by sakura mark     
+               IF g_prog MATCHES 'abmm203' THEN   #160705-00042#8 160712 by sakura add
+                  LET l_sql = l_sql," AND EXISTS(SELECT 1 FROM bmba_t WHERE bmbaent = bmcdent AND bmbasite = bmcdsite AND bmba001 = bmcd001 AND bmba002 = bmcd002 AND bmba003 = bmcd003 ",   
+                                    " AND bmba004 = bmcd004 AND bmba005 = bmcd005 AND bmba007 = bmcd007 AND bmba008 = bmcd008 AND bmba019 = '1')"   
+               ELSE
+                  LET l_sql = l_sql," bmcdsite = '",g_site,"'"               
+               END IF
+               #160324-00007#1---add---end
+               PREPARE del_bmcd_pre FROM l_sql
+               EXECUTE del_bmcd_pre
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "bmcd_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_rec_b1 = g_rec_b1-1
+                  CALL s_transaction_end('Y','0')
+               END IF 
+               CLOSE abmm203_bcl5
+               LET l_count = g_bmca5_d.getLength()
+            END IF 
+            
+              
+         AFTER DELETE 
+
+         BEFORE FIELD bmcd010
+            
+         AFTER FIELD bmcd010
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bmca5_d[l_ac2].bmcd010
+            #CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+            CALL ap_ref_array2(g_ref_fields,
+                               "SELECT imecl005 FROM imecl_t,imec_t,imeb_t 
+                                 WHERE imeclent=imecent
+                                   and imecl001=imec001
+                                   and imecl002=imec002
+                                   and imecl003=imec003
+                                   and imecent=imebent
+                                   and imec001=imeb001
+                                   and imec002=imeb002
+                                   AND imeb004='"||g_bmca2_d[l_ac].bmcc009||"'
+                                   AND imeclent='"||g_enterprise||"' 
+                                   AND imecl001= '"||l_imaa005||"' 
+                                   AND imecl003 = ? 
+                                   AND imecl004='"||g_dlang||"'","") 
+              RETURNING g_rtn_fields     #161029-00005
+            LET g_bmca5_d[l_ac2].bmcd010_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_bmca5_d[l_ac2].bmcd010_desc 
+            
+            IF  NOT cl_null(g_bmba_m.bmba001) AND NOT cl_null(g_bmba_m.bmba002) AND NOT cl_null(g_bmba_m.bmba003) AND NOT cl_null(g_bmba_m.bmba004) 
+                AND NOT cl_null(g_bmba_m.bmba005) AND NOT cl_null(g_bmba_m.bmba007) AND NOT cl_null(g_bmba_m.bmba008) AND NOT cl_null(g_bmca2_d[l_ac].bmcc009) 
+                AND NOT cl_null(g_bmca5_d[l_ac2].bmcd010) THEN 
+                IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_bmba_m.bmba001 != g_bmba001_t OR g_bmba_m.bmba002 != g_bmba002_t 
+                   OR g_bmba_m.bmba003!= g_bmba003_t OR g_bmba_m.bmba004 != g_bmba004_t OR g_bmba_m.bmba005 != g_bmba005_t OR g_bmba_m.bmba007 != g_bmba007_t 
+                   OR g_bmba_m.bmba008 != g_bmba008_t OR g_bmca2_d[l_ac].bmcc009 != g_bmca2_d_t.bmcc009 OR g_bmca5_d[l_ac2].bmcd010 != g_bmca5_d_t.bmcd010))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bmcd_t WHERE "||"bmcdent = '" ||g_enterprise|| "' AND bmcdsite = '" ||g_site|| "' AND "||"bmcd001 = '"||g_bmba_m.bmba001 ||
+                     "' AND "|| "bmcd002 = '"||g_bmba_m.bmba002 ||"' AND "|| "bmcd003 = '"||g_bmba_m.bmba003 ||"' AND "|| "bmcd004 ='"||g_bmba_m.bmba004 ||
+                     "' AND "||"to_char(bmcd005,'yyyy-mm-dd hh24:mi:ss') = '"||g_bmba_m.bmba005 ||"' AND "|| "bmcd007 = '"||g_bmba_m.bmba007 ||"' AND "|| "bmcd008 = '"||g_bmba_m.bmba008||
+                     "' AND "|| "bmcd009 = '"||g_bmca2_d[l_ac].bmcc009 ||"' AND "|| "bmcd010 = '"||g_bmca5_d[l_ac2].bmcd010 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            IF NOT cl_null(g_bmca2_d[l_ac].bmcc009) AND NOT cl_null(g_bmca5_d[l_ac2].bmcd010) THEN
+               CALL s_aimi092_chk_eigenvalue(l_imaa005,g_bmca2_d[l_ac].bmcc009,g_bmca5_d[l_ac2].bmcd010,g_bmba_m.bmba001,'2') RETURNING l_success,l_errno,g_bmca5_d[l_ac2].bmcd010  #160712-00010#1
+               IF NOT cl_null(l_errno) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = l_errno
+                  LET g_errparam.extend = g_bmca5_d[l_ac2].bmcd010
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_bmca5_d[l_ac2].bmcd010 = g_bmca5_d_t.bmcd010
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_bmca5_d[l_ac2].bmcd010
+                  #CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+                  CALL ap_ref_array2(g_ref_fields,
+                               "SELECT imecl005 FROM imecl_t,imec_t,imeb_t 
+                                 WHERE imeclent=imecent
+                                   and imecl001=imec001
+                                   and imecl002=imec002
+                                   and imecl003=imec003
+                                   and imecent=imebent
+                                   and imec001=imeb001
+                                   and imec002=imeb002
+                                   AND imeb004='"||g_bmca2_d[l_ac].bmcc009||"'
+                                   AND imeclent='"||g_enterprise||"' 
+                                   AND imecl001= '"||l_imaa005||"' 
+                                   AND imecl003 = ? 
+                                   AND imecl004='"||g_dlang||"'","") 
+                   RETURNING g_rtn_fields     #161029-00005
+                  LET g_bmca5_d[l_ac2].bmcd010_desc = g_rtn_fields[1]
+                  DISPLAY BY NAME g_bmca5_d[l_ac2].bmcd010_desc                   
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bmca5_d[l_ac2].bmcd010
+            #CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+            CALL ap_ref_array2(g_ref_fields,
+                               "SELECT imecl005 FROM imecl_t,imec_t,imeb_t 
+                                 WHERE imeclent=imecent
+                                   and imecl001=imec001
+                                   and imecl002=imec002
+                                   and imecl003=imec003
+                                   and imecent=imebent
+                                   and imec001=imeb001
+                                   and imec002=imeb002
+                                   AND imeb004='"||g_bmca2_d[l_ac].bmcc009||"'
+                                   AND imeclent='"||g_enterprise||"' 
+                                   AND imecl001= '"||l_imaa005||"' 
+                                   AND imecl003 = ? 
+                                   AND imecl004='"||g_dlang||"'","") 
+              RETURNING g_rtn_fields     #161029-00005
+            LET g_bmca5_d[l_ac2].bmcd010_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_bmca5_d[l_ac2].bmcd010_desc 
+         ON CHANGE bmcd010
+         
+         AFTER FIELD bmcd011
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bmca5_d[l_ac2].bmcd011
+            CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005_2||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bmca5_d[l_ac2].bmcd011_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_bmca5_d[l_ac2].bmcd011_desc             
+            IF NOT cl_null(g_bmca2_d[l_ac].bmcc009) AND NOT cl_null(g_bmca5_d[l_ac2].bmcd011) THEN
+               #CALL s_aimi092_chk_eigenvalue(l_imaa005_2,g_bmca2_d[l_ac].bmcc009,g_bmca5_d[l_ac2].bmcd011,g_bmba_m.bmba001,'2') RETURNING l_success,l_errno,g_bmca5_d[l_ac2].bmcd011  #160712-00010#1
+               CALL s_aimi092_chk_eigenvalue(l_imaa005_2,g_bmca2_d[l_ac].bmcc009,g_bmca5_d[l_ac2].bmcd011,g_bmba_m.bmba003,'2')  #161029-00005#1 mod by tangyi 161029 应该检查元件
+                 RETURNING l_success,l_errno,g_bmca5_d[l_ac2].bmcd011
+               IF NOT cl_null(l_errno) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = l_errno
+                  LET g_errparam.extend = g_bmca5_d[l_ac2].bmcd011
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_bmca5_d[l_ac2].bmcd011 = g_bmca5_d_t.bmcd011
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_bmca5_d[l_ac2].bmcd011
+                  CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005_2||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_bmca5_d[l_ac2].bmcd011_desc = g_rtn_fields[1]
+                  DISPLAY BY NAME g_bmca5_d[l_ac2].bmcd011_desc                   
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+     
+         ON ACTION controlp INFIELD bmcd010
+            IF NOT cl_null(l_imaa005) AND NOT cl_null(g_bmca2_d[l_ac].bmcc009) THEN
+               SELECT imeb005 INTO l_imeb005
+                 FROM imeb_t
+                WHERE imebent = g_enterprise
+                  AND imeb001 = l_imaa005
+                  AND imeb004 = g_bmca2_d[l_ac].bmcc009 
+                IF l_imeb005 = '2' THEN                  
+                   #開窗i段
+                   INITIALIZE g_qryparam.* TO NULL
+                   LET g_qryparam.state = 'i'
+                   LET g_qryparam.reqry = FALSE
+        
+                   LET g_qryparam.default1 = g_bmca5_d[l_ac2].bmcd010             #給予default值
+        
+                   #給予arg
+                   LET g_qryparam.where = "imeastus = 'Y' "
+                   LET g_qryparam.arg1 = l_imaa005 #特徵群組代碼
+                   LET g_qryparam.arg2 = g_bmca2_d[l_ac].bmcc009
+                   CALL q_imec003_2()                                #呼叫開窗
+        
+                   LET g_bmca5_d[l_ac2].bmcd010 = g_qryparam.return1              #將開窗取得的值回傳到變數
+        
+                   DISPLAY g_bmca5_d[l_ac2].bmcd010 TO bmcd010          #顯示到畫面上
+        
+                   NEXT FIELD bmcd010                         #返回原欄位
+                END IF
+             END IF            
+
+         ON ACTION controlp INFIELD bmcd011
+            IF NOT cl_null(l_imaa005_2) AND NOT cl_null(g_bmca2_d[l_ac].bmcc009) THEN
+               SELECT imeb005 INTO l_imeb005
+                 FROM imeb_t
+                WHERE imebent = g_enterprise
+                  AND imeb001 = l_imaa005
+                  AND imeb004 = g_bmca2_d[l_ac].bmcc009 
+                IF l_imeb005 = '2' THEN                  
+                   #開窗i段
+                   INITIALIZE g_qryparam.* TO NULL
+                   LET g_qryparam.state = 'i'
+                   LET g_qryparam.reqry = FALSE
+        
+                   LET g_qryparam.default1 = g_bmca5_d[l_ac2].bmcd011             #給予default值
+        
+                   #給予arg
+                   LET g_qryparam.where = "imeastus = 'Y' "
+                   #161029-00005#1 add -str-
+                   LET g_qryparam.where = g_qryparam.where ,
+                   " AND IMEC003 IN(SELECT IMAS003 FROM IMAS_T 
+                                     WHERE imasent='",g_enterprise,"' 
+                                       AND imas001='",g_bmba_m.bmba003,"' 
+                                       AND imas002='",g_bmca2_d[l_ac].bmcc009,"')"
+                  #161029-00005#1 add -end-
+                   LET g_qryparam.arg1 = l_imaa005_2 #特徵群組代碼
+                   LET g_qryparam.arg2 = g_bmca2_d[l_ac].bmcc009
+                   CALL q_imec003_2()                                #呼叫開窗
+        
+                   LET g_bmca5_d[l_ac2].bmcd011 = g_qryparam.return1              #將開窗取得的值回傳到變數
+        
+                   DISPLAY g_bmca5_d[l_ac2].bmcd011 TO bmcd011          #顯示到畫面上
+        
+                   NEXT FIELD bmcd011                         #返回原欄位
+                END IF
+             END IF
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_bmca5_d[l_ac2].* = g_bmca5_d_t.*
+               CLOSE abmm203_bcl5
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = g_bmca2_d[l_ac].bmcc009
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_bmca5_d[l_ac2].* = g_bmca5_d_t.*
+            ELSE
+            
+
+      
+              # UPDATE bmcd_t SET (bmcd001,bmcd002,bmcd003,bmcd004,bmcd005,bmcd007,bmcd008,bmcd009,bmcd010,bmcd011) = 
+#(g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004,g_bmba_m.bmba005,g_bmba_m.bmba007,
+#g_bmba_m.bmba008,g_bmca2_d[l_ac].bmcc009,g_bmca5_d[l_ac2].bmcd010,g_bmca5_d[l_ac2].bmcd011)
+                #ERE bmcdent = g_enterprise AND bmcdsite = g_site AND bmcd001 = g_bmba_m.bmba001 
+                #AND bmcd002 = g_bmba_m.bmba002 
+#
+                #AND bmcd003 = g_bmba_m.bmba003 
+#
+                #AND bmcd004 = g_bmba_m.bmba004 
+#
+                #AND bmcd005 = g_bmba_m.bmba005 
+#
+                #AND bmcd007 = g_bmba_m.bmba007 
+#
+                #AND bmcd008 = g_bmba_m.bmba008 
+                #AND bmcd009 = g_bmca2_d[l_ac].bmcc009
+                #AND bmcd010 = g_bmca5_d_t.bmcd010                  
+               LET l_sql = " UPDATE bmcd_t ", 
+               " SET (bmcd001,bmcd002,bmcd003,bmcd004,bmcd005,bmcd007,bmcd008,bmcd009,bmcd010,bmcd011)",
+               "    = ",
+               "   ('",g_bmba_m.bmba001,"','",g_bmba_m.bmba002,"','",g_bmba_m.bmba003,"','",g_bmba_m.bmba004,"',",
+               " to_date('",g_bmba_m.bmba005,"','YYYY-MM-DD hh24:mi:ss'),'",g_bmba_m.bmba007,"','",g_bmba_m.bmba008,"','",g_bmca2_d[l_ac].bmcc009,"',",
+               " '",g_bmca5_d[l_ac2].bmcd010,"','",g_bmca5_d[l_ac2].bmcd011,"')",
+               " WHERE bmcdent = '",g_enterprise,"' AND bmcd001 = '",g_bmba_m.bmba001 ,"' AND bmcd002 = '",g_bmba_m.bmba002,"'",
+               " AND bmcd003 = '",g_bmba_m.bmba003,"' AND bmcd004 = '",g_bmba_m.bmba004,"' AND bmcd005 = to_date('",g_bmba_m.bmba005 ,"','YYYY-MM-DD hh24:mi:ss')",
+               " AND bmcd007 = '",g_bmba_m.bmba007 ,"' AND bmcd008 = '",g_bmba_m.bmba008,"' AND bmcd009 = '",g_bmca2_d[l_ac].bmcc009,"' AND bmcd010 = '",g_bmca5_d_t.bmcd010,"'"
+               #160324-00007#1---add---begin
+               #IF g_prog = 'abmm203' THEN        #160705-00042#8 160712 by sakura mark
+               IF g_prog MATCHES 'abmm203' THEN   #160705-00042#8 160712 by sakura add
+                  LET l_sql = l_sql," AND EXISTS(SELECT 1 FROM bmba_t WHERE bmbaent = bmcdent AND bmbasite = bmcdsite AND bmba001 = bmcd001 AND bmba002 = bmcd002 AND bmba003 = bmcd003 ",   
+                                    " AND bmba004 = bmcd004 AND bmba005 = bmcd005 AND bmba007 = bmcd007 AND bmba008 = bmcd008 AND bmba019 = '1')"                    
+               ELSE
+                  LET l_sql = l_sql," bmcdsite = '",g_site,"'"                
+               END IF
+               #160324-00007#1---add---end
+               PREPARE upd_bmcd_pre FROM l_sql
+               EXECUTE upd_bmcd_pre               
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "bmcd_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_bmca5_d[l_ac2].* = g_bmca5_d_t.*
+               END IF
+                
+            END IF
+            
+         AFTER ROW
+            LET l_ac2 = ARR_CURR()
+            LET l_ac2_t = l_ac2
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_bmca5_d[l_ac2].* = g_bmca5_d_t.*
+               END IF
+               CLOSE abmm203_bcl5
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG
+            END IF
+
+            CLOSE abmm203_bcl5
+            CALL s_transaction_end('Y','0')
+            
+              
+         AFTER INPUT 
+              
+      END INPUT
+
+      #end add-point
+    
+      BEFORE DIALOG 
+         #CALL cl_err_collect_init()    
+         #add-point:input段before dialog name="input.before_dialog"
+         IF l_flag1 = 'Y' THEN 
+            LET l_flag1 = 'N'
+            CALL DIALOG.setCurrentRow("s_detail2",l_ac)
+            NEXT FIELD bmcc010
+         END IF 
+
+         #end add-point    
+         #重新導回資料到正確位置上
+         CALL DIALOG.setCurrentRow("s_detail1",g_idx_group.getValue("'1',"))      
+         CALL DIALOG.setCurrentRow("s_detail2",g_idx_group.getValue("'2',"))
+         CALL DIALOG.setCurrentRow("s_detail3",g_idx_group.getValue("'3',"))
+ 
+         #新增時強制從單頭開始填
+         IF p_cmd = 'a' THEN
+            #add-point:input段next_field name="input.next_field"
+            
+            #end add-point  
+            NEXT FIELD bmba001
+         ELSE
+            CASE g_aw
+               WHEN "s_detail1"
+                  NEXT FIELD bmca009
+               WHEN "s_detail2"
+                  NEXT FIELD bmcc009
+               WHEN "s_detail3"
+                  NEXT FIELD bmce009
+ 
+               #add-point:input段modify_detail  name="input.modify_detail.other"
+               
+               #end add-point  
+            END CASE
+         END IF
+      
+      AFTER DIALOG
+         #add-point:input段after_dialog name="input.after_dialog"
+         
+         #end add-point    
+         
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         #add-point:input段accept  name="input.accept"
+         
+         #end add-point    
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         #add-point:input段cancel name="input.cancel"
+         
+         #end add-point  
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         #各個page指標
+         LET g_detail_idx_list[1] = 1 
+         LET g_detail_idx_list[2] = 1
+         LET g_detail_idx_list[3] = 1
+ 
+         CALL g_curr_diag.setCurrentRow("s_detail1",1)    
+         CALL g_curr_diag.setCurrentRow("s_detail2",1)
+         CALL g_curr_diag.setCurrentRow("s_detail3",1)
+ 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         #add-point:input段close name="input.close"
+         
+         #end add-point  
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         #add-point:input段exit name="input.exit"
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         #各個page指標
+         LET g_detail_idx_list[1] = 1 
+         LET g_detail_idx_list[2] = 1
+         LET g_detail_idx_list[3] = 1
+ 
+         CALL g_curr_diag.setCurrentRow("s_detail1",1)    
+         CALL g_curr_diag.setCurrentRow("s_detail2",1)
+         CALL g_curr_diag.setCurrentRow("s_detail3",1)
+ 
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input  name="input.after_input"
+   IF l_flag1 = 'Y' THEN
+      CONTINUE WHILE
+   END IF 
+
+   EXIT WHILE
+END WHILE 
+   
+
+   #end add-point    
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.show" >}
+#+ 單頭資料重新顯示及單身資料重抓
+PRIVATE FUNCTION abmm203_show()
+   #add-point:show段define(客製用) name="show.define_customerization"
+   
+   #end add-point  
+   DEFINE l_ac_t    LIKE type_t.num10
+   #add-point:show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show.define"
+   DEFINE l_imaa005_2   LIKE imaa_t.imaa005
+   DEFINE l_ac1_t   LIKE type_t.num5
+   #end add-point  
+   
+   #add-point:Function前置處理 name="show.before"
+   SELECT imaa005 INTO l_imaa005_2 FROM imaa_t 
+   WHERE imaaent = g_enterprise
+     AND imaa001 = g_bmba_m.bmba003   
+   #end add-point
+   
+   
+   
+   IF g_bfill = "Y" THEN
+      CALL abmm203_b_fill() #單身填充
+      CALL abmm203_b_fill2('0') #單身填充
+   END IF
+     
+   #帶出公用欄位reference值
+   
+   
+   #顯示followup圖示
+   #應用 a48 樣板自動產生(Version:3)
+   CALL abmm203_set_pk_array()
+   #add-point:ON ACTION agendum name="show.follow_pic"
+   
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+ 
+   
+   LET l_ac_t = l_ac
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference name="show.head.reference"
+   SELECT bmaa004 INTO g_bmba_m.bmaa004 FROM bmaa_t
+    WHERE bmaaent = g_enterprise
+      AND bmaasite = g_site
+      AND bmaa001 = g_bmba_m.bmba001
+      AND bmaa002 = g_bmba_m.bmba002 
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_bmba_m.bmba001
+   CALL ap_ref_array2(g_ref_fields," SELECT imaal003,imaal004 FROM imaal_t WHERE imaalent = '"||g_enterprise||"' AND imaal001 = ? AND imaal002 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_bmba_m.l_imaal003_1 = g_rtn_fields[1] 
+   LET g_bmba_m.l_imaal004_1 = g_rtn_fields[2] 
+   DISPLAY BY NAME g_bmba_m.l_imaal003_1,g_bmba_m.l_imaal004_1
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_bmba_m.bmba003
+   CALL ap_ref_array2(g_ref_fields," SELECT imaal003,imaal004 FROM imaal_t WHERE imaalent = '"||g_enterprise||"' AND imaal001 = ? AND imaal002 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_bmba_m.l_imaal003_2 = g_rtn_fields[1] 
+   LET g_bmba_m.l_imaal004_2 = g_rtn_fields[2] 
+   DISPLAY BY NAME g_bmba_m.l_imaal003_2,g_bmba_m.l_imaal004_2
+              
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_bmba_m.bmba004
+#            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='215' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_bmba_m.bmba004_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_bmba_m.bmba004_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_bmba_m.bmba007
+#            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='221' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_bmba_m.bmba007_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_bmba_m.bmba007_desc
+
+   #end add-point
+   
+   #遮罩相關處理
+   LET g_bmba_m_mask_o.* =  g_bmba_m.*
+   CALL abmm203_bmba_t_mask()
+   LET g_bmba_m_mask_n.* =  g_bmba_m.*
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_bmba_m.bmba001,g_bmba_m.l_imaal003_1,g_bmba_m.l_imaal004_1,g_bmba_m.bmba002,g_bmba_m.bmaa004, 
+       g_bmba_m.bmba003,g_bmba_m.l_imaal003_2,g_bmba_m.l_imaal004_2,g_bmba_m.bmba011,g_bmba_m.bmba012, 
+       g_bmba_m.bmba010,g_bmba_m.bmba004,g_bmba_m.bmba004_desc,g_bmba_m.bmba007,g_bmba_m.bmba007_desc, 
+       g_bmba_m.bmba008,g_bmba_m.bmba005
+   
+   #顯示狀態(stus)圖片
+   
+   
+   #讀入ref值(單身)
+   FOR l_ac = 1 TO g_bmca_d.getLength()
+      #add-point:show段單身reference name="show.body.reference"
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_bmca_d[l_ac].bmca009
+#            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='273' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_bmca_d[l_ac].bmca009_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_bmca_d[l_ac].bmca009_desc
+
+      #end add-point
+   END FOR
+   
+   FOR l_ac = 1 TO g_bmca2_d.getLength()
+      #add-point:show段單身reference name="show.body2.reference"
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_bmca2_d[l_ac].bmcc009
+#            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='273' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_bmca2_d[l_ac].bmcc009_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_bmca2_d[l_ac].bmcc009_desc
+
+      #end add-point
+   END FOR
+   FOR l_ac = 1 TO g_bmca3_d.getLength()
+      #add-point:show段單身reference name="show.body3.reference"
+#      INITIALIZE g_ref_fields TO NULL
+#      LET g_ref_fields[1] = g_bmca3_d[l_ac].bmce009
+#      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='273' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+#      LET g_bmca3_d[l_ac].bmce009_desc = '', g_rtn_fields[1] , ''
+#      DISPLAY BY NAME g_bmca3_d[l_ac].bmce009_desc   
+#      
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_bmca3_d[l_ac].bmce010
+      CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005_2||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_bmca3_d[l_ac].bmce010_desc = g_rtn_fields[1]
+      DISPLAY BY NAME g_bmca3_d[l_ac].bmce010_desc 
+      #end add-point
+   END FOR
+ 
+   
+    
+   
+   #add-point:show段other name="show.other"
+   
+   #end add-point  
+   
+   LET l_ac = l_ac_t
+   
+   #移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()     
+ 
+   CALL abmm203_detail_show()
+ 
+   #add-point:show段之後 name="show.after"
+ 
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.detail_show" >}
+#+ 第二階單身reference
+PRIVATE FUNCTION abmm203_detail_show()
+   #add-point:detail_show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point  
+   #add-point:detail_show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="detail_show.before"
+   
+   #end add-point
+   
+   #add-point:detail_show段之後 name="detail_show.after"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.reproduce" >}
+#+ 資料複製
+PRIVATE FUNCTION abmm203_reproduce()
+   #add-point:reproduce段define(客製用) name="reproduce.define_customerization"
+   
+   #end add-point   
+   DEFINE l_newno     LIKE bmba_t.bmba001 
+   DEFINE l_oldno     LIKE bmba_t.bmba001 
+   DEFINE l_newno02     LIKE bmba_t.bmba002 
+   DEFINE l_oldno02     LIKE bmba_t.bmba002 
+   DEFINE l_newno03     LIKE bmba_t.bmba003 
+   DEFINE l_oldno03     LIKE bmba_t.bmba003 
+   DEFINE l_newno04     LIKE bmba_t.bmba004 
+   DEFINE l_oldno04     LIKE bmba_t.bmba004 
+   DEFINE l_newno05     LIKE bmba_t.bmba005 
+   DEFINE l_oldno05     LIKE bmba_t.bmba005 
+   DEFINE l_newno06     LIKE bmba_t.bmba007 
+   DEFINE l_oldno06     LIKE bmba_t.bmba007 
+   DEFINE l_newno07     LIKE bmba_t.bmba008 
+   DEFINE l_oldno07     LIKE bmba_t.bmba008 
+ 
+   DEFINE l_master    RECORD LIKE bmba_t.*
+   DEFINE l_detail    RECORD LIKE bmca_t.*
+   DEFINE l_detail2    RECORD LIKE bmcc_t.*
+ 
+   DEFINE l_detail3    RECORD LIKE bmce_t.*
+ 
+ 
+ 
+   DEFINE l_cnt       LIKE type_t.num10
+   #add-point:reproduce段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="reproduce.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="reproduce.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   
+   LET g_master_insert = FALSE
+   
+   IF g_bmba_m.bmba001 IS NULL
+   OR g_bmba_m.bmba002 IS NULL
+   OR g_bmba_m.bmba003 IS NULL
+   OR g_bmba_m.bmba004 IS NULL
+   OR g_bmba_m.bmba005 IS NULL
+   OR g_bmba_m.bmba007 IS NULL
+   OR g_bmba_m.bmba008 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+    
+   LET g_bmba001_t = g_bmba_m.bmba001
+   LET g_bmba002_t = g_bmba_m.bmba002
+   LET g_bmba003_t = g_bmba_m.bmba003
+   LET g_bmba004_t = g_bmba_m.bmba004
+   LET g_bmba005_t = g_bmba_m.bmba005
+   LET g_bmba007_t = g_bmba_m.bmba007
+   LET g_bmba008_t = g_bmba_m.bmba008
+ 
+    
+   LET g_bmba_m.bmba001 = ""
+   LET g_bmba_m.bmba002 = ""
+   LET g_bmba_m.bmba003 = ""
+   LET g_bmba_m.bmba004 = ""
+   LET g_bmba_m.bmba005 = ""
+   LET g_bmba_m.bmba007 = ""
+   LET g_bmba_m.bmba008 = ""
+ 
+ 
+   CALL cl_set_head_visible("","YES")
+ 
+   #公用欄位給予預設值
+   
+   
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前 name="reproduce.head.b_input"
+   
+   #end add-point
+   
+   #顯示狀態(stus)圖片
+   
+   
+   #清空key欄位的desc
+      LET g_bmba_m.bmba004_desc = ''
+   DISPLAY BY NAME g_bmba_m.bmba004_desc
+   LET g_bmba_m.bmba007_desc = ''
+   DISPLAY BY NAME g_bmba_m.bmba007_desc
+ 
+   
+   CALL abmm203_input("r")
+   
+   IF INT_FLAG AND NOT g_master_insert THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = '' 
+      LET g_errparam.code   = 9001 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      CALL s_transaction_end('N','0')
+      LET INT_FLAG = 0
+      DISPLAY g_detail_cnt  TO FORMONLY.h_count    #總筆數
+      DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+      LET INT_FLAG = 0
+      INITIALIZE g_bmba_m.* TO NULL
+      INITIALIZE g_bmca_d TO NULL
+      INITIALIZE g_bmca2_d TO NULL
+      INITIALIZE g_bmca3_d TO NULL
+ 
+      #add-point:複製取消後 name="reproduce.cancel"
+      
+      #end add-point
+      CALL abmm203_show()
+      RETURN
+   END IF
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL abmm203_set_act_visible()   
+   CALL abmm203_set_act_no_visible()
+   
+   #將新增的資料併入搜尋條件中
+   LET g_bmba001_t = g_bmba_m.bmba001
+   LET g_bmba002_t = g_bmba_m.bmba002
+   LET g_bmba003_t = g_bmba_m.bmba003
+   LET g_bmba004_t = g_bmba_m.bmba004
+   LET g_bmba005_t = g_bmba_m.bmba005
+   LET g_bmba007_t = g_bmba_m.bmba007
+   LET g_bmba008_t = g_bmba_m.bmba008
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " bmbaent = '" ||g_enterprise|| "' AND bmbasite = '" ||g_site|| "' AND",
+                      " bmba001 = '", g_bmba_m.bmba001, "' "
+                      ," AND bmba002 = '", g_bmba_m.bmba002, "' "
+                      ," AND bmba003 = '", g_bmba_m.bmba003, "' "
+                      ," AND bmba004 = '", g_bmba_m.bmba004, "' "
+                      ," AND bmba005 = '", g_bmba_m.bmba005, "' "
+                      ," AND bmba007 = '", g_bmba_m.bmba007, "' "
+                      ," AND bmba008 = '", g_bmba_m.bmba008, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL abmm203_browser_fill("")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   #add-point:完成複製段落後 name="reproduce.after_reproduce"
+   
+   #end add-point
+   
+   CALL abmm203_idx_chk()
+   
+   #功能已完成,通報訊息中心
+   CALL abmm203_msgcentre_notify('reproduce')
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.detail_reproduce" >}
+#+ 單身自動複製
+PRIVATE FUNCTION abmm203_detail_reproduce()
+   #add-point:delete段define(客製用) name="detail_reproduce.define_customerization"
+   
+   #end add-point    
+   DEFINE ls_sql      STRING
+   DEFINE ld_date     DATETIME YEAR TO SECOND
+   DEFINE l_detail    RECORD LIKE bmca_t.*
+   DEFINE l_detail2    RECORD LIKE bmcc_t.*
+ 
+   DEFINE l_detail3    RECORD LIKE bmce_t.*
+ 
+ 
+ 
+   #add-point:delete段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_reproduce.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="detail_reproduce.pre_function"
+   
+   #end add-point
+   
+   CALL s_transaction_begin()
+   
+   LET ld_date = cl_get_current()
+   
+   DROP TABLE abmm203_detail
+   
+   #add-point:單身複製前1 name="detail_reproduce.body.table1.b_insert"
+   
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   SELECT * FROM bmca_t
+    WHERE bmcaent = g_enterprise AND bmcasite = g_site AND bmca001 = g_bmba001_t
+     AND bmca002 = g_bmba002_t
+     AND bmca003 = g_bmba003_t
+     AND bmca004 = g_bmba004_t
+     AND bmca005 = g_bmba005_t
+     AND bmca007 = g_bmba007_t
+     AND bmca008 = g_bmba008_t
+ 
+    INTO TEMP abmm203_detail
+ 
+   #將key修正為調整後   
+   UPDATE abmm203_detail 
+      #更新key欄位
+      SET bmca001 = g_bmba_m.bmba001
+          , bmca002 = g_bmba_m.bmba002
+          , bmca003 = g_bmba_m.bmba003
+          , bmca004 = g_bmba_m.bmba004
+          , bmca005 = g_bmba_m.bmba005
+          , bmca007 = g_bmba_m.bmba007
+          , bmca008 = g_bmba_m.bmba008
+ 
+      #更新共用欄位
+      
+ 
+   #add-point:單身修改前 name="detail_reproduce.body.table1.b_update"
+   
+   #end add-point                                       
+  
+   #將資料塞回原table   
+   INSERT INTO bmca_t SELECT * FROM abmm203_detail
+   
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "reproduce:",SQLERRMESSAGE 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #add-point:單身複製中1 name="detail_reproduce.body.table1.m_insert"
+   
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE abmm203_detail
+   
+   #add-point:單身複製後1 name="detail_reproduce.body.table1.a_insert"
+   
+   #end add-point
+ 
+   #add-point:單身複製前 name="detail_reproduce.body.table2.b_insert"
+   
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   SELECT * FROM bmcc_t 
+    WHERE bmccent = g_enterprise AND bmccsite = g_site AND bmcc001 = g_bmba001_t
+      AND bmcc002 = g_bmba002_t   
+      AND bmcc003 = g_bmba003_t   
+      AND bmcc004 = g_bmba004_t   
+      AND bmcc005 = g_bmba005_t   
+      AND bmcc007 = g_bmba007_t   
+      AND bmcc008 = g_bmba008_t   
+ 
+    INTO TEMP abmm203_detail
+ 
+   #將key修正為調整後   
+   UPDATE abmm203_detail SET bmcc001 = g_bmba_m.bmba001
+                                       , bmcc002 = g_bmba_m.bmba002
+                                       , bmcc003 = g_bmba_m.bmba003
+                                       , bmcc004 = g_bmba_m.bmba004
+                                       , bmcc005 = g_bmba_m.bmba005
+                                       , bmcc007 = g_bmba_m.bmba007
+                                       , bmcc008 = g_bmba_m.bmba008
+ 
+  
+   #add-point:單身修改前 name="detail_reproduce.body.table2.b_update"
+   
+   #end add-point    
+ 
+   #將資料塞回原table   
+   INSERT INTO bmcc_t SELECT * FROM abmm203_detail
+   
+   #add-point:單身複製中 name="detail_reproduce.body.table2.m_insert"
+   
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE abmm203_detail
+   
+   #add-point:單身複製後 name="detail_reproduce.body.table2.a_insert"
+   
+   #end add-point
+ 
+   #add-point:單身複製前 name="detail_reproduce.body.table3.b_insert"
+   
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   SELECT * FROM bmce_t 
+    WHERE bmceent = g_enterprise AND bmcesite = g_site AND bmce001 = g_bmba001_t
+      AND bmce002 = g_bmba002_t   
+      AND bmce003 = g_bmba003_t   
+      AND bmce004 = g_bmba004_t   
+      AND bmce005 = g_bmba005_t   
+      AND bmce007 = g_bmba007_t   
+      AND bmce008 = g_bmba008_t   
+ 
+    INTO TEMP abmm203_detail
+ 
+   #將key修正為調整後   
+   UPDATE abmm203_detail SET bmce001 = g_bmba_m.bmba001
+                                       , bmce002 = g_bmba_m.bmba002
+                                       , bmce003 = g_bmba_m.bmba003
+                                       , bmce004 = g_bmba_m.bmba004
+                                       , bmce005 = g_bmba_m.bmba005
+                                       , bmce007 = g_bmba_m.bmba007
+                                       , bmce008 = g_bmba_m.bmba008
+ 
+  
+   #add-point:單身修改前 name="detail_reproduce.body.table3.b_update"
+   
+   #end add-point    
+ 
+   #將資料塞回原table   
+   INSERT INTO bmce_t SELECT * FROM abmm203_detail
+   
+   #add-point:單身複製中 name="detail_reproduce.body.table3.m_insert"
+   
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE abmm203_detail
+   
+   #add-point:單身複製後 name="detail_reproduce.body.table3.a_insert"
+   
+   #end add-point
+ 
+ 
+   
+ 
+   
+   #多語言複製段落
+   
+   
+   CALL s_transaction_end('Y','0')
+   
+   #已新增完, 調整資料內容(修改時使用)
+   LET g_bmba001_t = g_bmba_m.bmba001
+   LET g_bmba002_t = g_bmba_m.bmba002
+   LET g_bmba003_t = g_bmba_m.bmba003
+   LET g_bmba004_t = g_bmba_m.bmba004
+   LET g_bmba005_t = g_bmba_m.bmba005
+   LET g_bmba007_t = g_bmba_m.bmba007
+   LET g_bmba008_t = g_bmba_m.bmba008
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.delete" >}
+#+ 資料刪除
+PRIVATE FUNCTION abmm203_delete()
+   #add-point:delete段define(客製用) name="delete.define_customerization"
+   
+   #end add-point     
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="delete.pre_function"
+   
+   #end add-point
+   
+   IF g_bmba_m.bmba001 IS NULL
+   OR g_bmba_m.bmba002 IS NULL
+   OR g_bmba_m.bmba003 IS NULL
+   OR g_bmba_m.bmba004 IS NULL
+   OR g_bmba_m.bmba005 IS NULL
+   OR g_bmba_m.bmba007 IS NULL
+   OR g_bmba_m.bmba008 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   
+   
+   CALL s_transaction_begin()
+ 
+   OPEN abmm203_cl USING g_enterprise, g_site,g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004,g_bmba_m.bmba005,g_bmba_m.bmba007,g_bmba_m.bmba008
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN abmm203_cl:" 
+      LET g_errparam.code   = STATUS 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      CLOSE abmm203_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE abmm203_master_referesh USING g_site,g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004, 
+       g_bmba_m.bmba005,g_bmba_m.bmba007,g_bmba_m.bmba008 INTO g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003, 
+       g_bmba_m.bmba011,g_bmba_m.bmba012,g_bmba_m.bmba010,g_bmba_m.bmba004,g_bmba_m.bmba007,g_bmba_m.bmba008, 
+       g_bmba_m.bmba005,g_bmba_m.bmba004_desc,g_bmba_m.bmba007_desc
+   
+   #檢查是否允許此動作
+   IF NOT abmm203_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_bmba_m_mask_o.* =  g_bmba_m.*
+   CALL abmm203_bmba_t_mask()
+   LET g_bmba_m_mask_n.* =  g_bmba_m.*
+   
+   CALL abmm203_show()
+   
+   #add-point:delete段before ask name="delete.before_ask"
+   
+   #end add-point 
+ 
+   IF cl_ask_del_master() THEN              #確認一下
+   
+      #add-point:單頭刪除前 name="delete.head.b_delete"
+      
+      #end add-point   
+      
+      #應用 a47 樣板自動產生(Version:3)
+      #刪除相關文件
+      CALL abmm203_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove"
+      
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+  
+  
+      #資料備份
+      LET g_bmba001_t = g_bmba_m.bmba001
+      LET g_bmba002_t = g_bmba_m.bmba002
+      LET g_bmba003_t = g_bmba_m.bmba003
+      LET g_bmba004_t = g_bmba_m.bmba004
+      LET g_bmba005_t = g_bmba_m.bmba005
+      LET g_bmba007_t = g_bmba_m.bmba007
+      LET g_bmba008_t = g_bmba_m.bmba008
+ 
+ 
+      DELETE FROM bmba_t
+       WHERE bmbaent = g_enterprise AND bmbasite = g_site AND bmba001 = g_bmba_m.bmba001
+         AND bmba002 = g_bmba_m.bmba002
+         AND bmba003 = g_bmba_m.bmba003
+         AND bmba004 = g_bmba_m.bmba004
+         AND bmba005 = g_bmba_m.bmba005
+         AND bmba007 = g_bmba_m.bmba007
+         AND bmba008 = g_bmba_m.bmba008
+ 
+       
+      #add-point:單頭刪除中 name="delete.head.m_delete"
+      
+      #end add-point
+       
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_bmba_m.bmba001,":",SQLERRMESSAGE  
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      
+      #add-point:單頭刪除後 name="delete.head.a_delete"
+      
+      #end add-point
+  
+      #add-point:單身刪除前 name="delete.body.b_delete"
+      
+      #end add-point
+      
+      DELETE FROM bmca_t
+       WHERE bmcaent = g_enterprise AND bmcasite = g_site AND bmca001 = g_bmba_m.bmba001
+         AND bmca002 = g_bmba_m.bmba002
+         AND bmca003 = g_bmba_m.bmba003
+         AND bmca004 = g_bmba_m.bmba004
+         AND bmca005 = g_bmba_m.bmba005
+         AND bmca007 = g_bmba_m.bmba007
+         AND bmca008 = g_bmba_m.bmba008
+ 
+ 
+      #add-point:單身刪除中 name="delete.body.m_delete"
+      
+      #end add-point
+         
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "bmca_t:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF    
+ 
+      #add-point:單身刪除後 name="delete.body.a_delete"
+      
+      #end add-point
+      
+            
+                                                               
+      #add-point:單身刪除前 name="delete.body.b_delete2"
+      
+      #end add-point
+      DELETE FROM bmcc_t
+       WHERE bmccent = g_enterprise AND bmccsite = g_site AND
+             bmcc001 = g_bmba_m.bmba001 AND bmcc002 = g_bmba_m.bmba002 AND bmcc003 = g_bmba_m.bmba003 AND bmcc004 = g_bmba_m.bmba004 AND bmcc005 = g_bmba_m.bmba005 AND bmcc007 = g_bmba_m.bmba007 AND bmcc008 = g_bmba_m.bmba008
+      #add-point:單身刪除中 name="delete.body.m_delete2"
+      
+      #end add-point
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "bmcc_t:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF      
+ 
+      #add-point:單身刪除後 name="delete.body.a_delete2"
+      
+      #end add-point
+ 
+      #add-point:單身刪除前 name="delete.body.b_delete3"
+      
+      #end add-point
+      DELETE FROM bmce_t
+       WHERE bmceent = g_enterprise AND bmcesite = g_site AND
+             bmce001 = g_bmba_m.bmba001 AND bmce002 = g_bmba_m.bmba002 AND bmce003 = g_bmba_m.bmba003 AND bmce004 = g_bmba_m.bmba004 AND bmce005 = g_bmba_m.bmba005 AND bmce007 = g_bmba_m.bmba007 AND bmce008 = g_bmba_m.bmba008
+      #add-point:單身刪除中 name="delete.body.m_delete3"
+      
+      #end add-point
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "bmce_t:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF      
+ 
+      #add-point:單身刪除後 name="delete.body.a_delete3"
+      
+      #end add-point
+ 
+ 
+ 
+ 
+      
+      #修改歷程記錄(刪除)
+      IF NOT cl_log_modified_record('','') THEN 
+         CLOSE abmm203_cl
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+             
+      CLEAR FORM
+      CALL g_bmca_d.clear() 
+      CALL g_bmca2_d.clear()       
+      CALL g_bmca3_d.clear()       
+ 
+     
+      CALL abmm203_ui_browser_refresh()  
+      #CALL abmm203_ui_headershow()  
+      #CALL abmm203_ui_detailshow()
+      
+      IF g_browser_cnt > 0 THEN 
+         #CALL abmm203_browser_fill("")
+         CALL abmm203_fetch('P')
+         DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+         DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+      ELSE
+         CLEAR FORM
+      END IF
+ 
+      #add-point:多語言刪除 name="delete.lang.before_delete"
+      
+      #end add-point
+      
+      #單頭多語言刪除
+      
+      
+      #單身多語言刪除
+      
+      
+ 
+      
+ 
+ 
+ 
+   
+      #add-point:多語言刪除 name="delete.lang.delete"
+      
+      #end add-point
+      CALL s_transaction_end('Y','0')
+   ELSE
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE abmm203_cl
+ 
+   #功能已完成,通報訊息中心
+   CALL abmm203_msgcentre_notify('delete')
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION abmm203_b_fill()
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+
+   #end add-point     
+   DEFINE p_wc2      STRING
+   DEFINE li_idx     LIKE type_t.num10
+   #add-point:b_fill段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   DEFINE l_imaa005_2   LIKE imaa_t.imaa005
+   #end add-point     
+   
+   #add-point:Function前置處理  name="b_fill.pre_function"
+
+   #end add-point
+   
+   #清空第一階單身
+   CALL g_bmca_d.clear()
+   CALL g_bmca2_d.clear()
+   CALL g_bmca3_d.clear()
+ 
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   CALL g_bmca4_d.clear()
+   CALL g_bmca5_d.clear()
+   SELECT imaa005 INTO l_imaa005_2 FROM imaa_t 
+   WHERE imaaent = g_enterprise
+     AND imaa001 = g_bmba_m.bmba003 
+   #end add-point
+   
+   #判斷是否填充
+   IF abmm203_fill_chk(1) THEN
+      #切換上下筆時不重組SQL
+      IF g_action_choice <> 'fetch' OR cl_null(g_action_choice) THEN
+         LET g_sql = "SELECT  DISTINCT bmca009 ,t1.oocql004 FROM bmca_t",   
+                     " INNER JOIN bmba_t ON bmba001 = bmca001 ",
+                     " AND bmba002 = bmca002 ",
+                     " AND bmba003 = bmca003 ",
+                     " AND bmba004 = bmca004 ",
+                     " AND bmba005 = bmca005 ",
+                     " AND bmba007 = bmca007 ",
+                     " AND bmba008 = bmca008 ",
+ 
+                     #"",
+                     
+                     "",
+                                    " LEFT JOIN oocql_t t1 ON t1.oocqlent='"||g_enterprise||"' AND t1.oocql001='273' AND t1.oocql002=bmca009 AND t1.oocql003='"||g_dlang||"' ",
+ 
+                     " WHERE bmcaent=? AND bmcasite=? AND bmca001=? AND bmca002=? AND bmca003=? AND bmca004=? AND bmca005=? AND bmca007=? AND bmca008=?"
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         #add-point:b_fill段sql_before name="b_fill.body.fill_sql"
+
+         #end add-point
+         IF NOT cl_null(g_wc2_table1) THEN
+            LET g_sql = g_sql CLIPPED, " AND ", g_wc2_table1 CLIPPED
+         END IF
+         
+         #子單身的WC
+         
+         
+         LET g_sql = g_sql, " ORDER BY bmca_t.bmca009"
+         
+         #add-point:單身填充控制 name="b_fill.sql"
+
+         #end add-point
+         
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         PREPARE abmm203_pb FROM g_sql
+         DECLARE b_fill_cs CURSOR FOR abmm203_pb
+      END IF
+      
+      LET g_cnt = l_ac
+      LET l_ac = 1
+      
+      OPEN b_fill_cs USING g_enterprise, g_site,g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004,g_bmba_m.bmba005,g_bmba_m.bmba007,g_bmba_m.bmba008
+                                               
+      FOREACH b_fill_cs INTO g_bmca_d[l_ac].bmca009,g_bmca_d[l_ac].bmca009_desc
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:",SQLERRMESSAGE 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充 name="b_fill.fill"
+      #161214-00055#1--mark--s
+      #LET g_flag1 = 'Y'
+      #CALL abmm203_b_fill_1(g_bmca_d[1].bmca009)
+      #LET g_flag1 = 'N'
+      #161214-00055#1--mark--e
+      
+         #end add-point
+      
+         IF l_ac > g_max_rec THEN
+            IF g_error_show = 1 THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = l_ac
+               LET g_errparam.code   = 9035 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+            END IF
+            EXIT FOREACH
+         END IF
+         
+         LET l_ac = l_ac + 1
+      END FOREACH
+      LET g_error_show = 0
+      #161214-00055#1--add--s
+      LET g_flag1 = 'Y'
+      CALL abmm203_b_fill_1(g_bmca_d[1].bmca009)
+      LET g_flag1 = 'N'   
+      #161214-00055#1--add--e
+   END IF
+    
+   #判斷是否填充
+   IF abmm203_fill_chk(2) THEN
+      IF g_action_choice <> 'fetch' OR cl_null(g_action_choice) THEN
+         LET g_sql = "SELECT  DISTINCT bmcc009,bmcc010 ,t2.oocql004 FROM bmcc_t",   
+                     " INNER JOIN bmba_t ON bmba001 = bmcc001 ",
+                     " AND bmba002 = bmcc002 ",
+                     " AND bmba003 = bmcc003 ",
+                     " AND bmba004 = bmcc004 ",
+                     " AND bmba005 = bmcc005 ",
+                     " AND bmba007 = bmcc007 ",
+                     " AND bmba008 = bmcc008 ",
+ 
+                     "",
+                     
+                                    " LEFT JOIN oocql_t t2 ON t2.oocqlent='"||g_enterprise||"' AND t2.oocql001='273' AND t2.oocql002=bmcc009 AND t2.oocql003='"||g_dlang||"' ",
+ 
+                     " WHERE bmccent=? AND bmccsite=? AND bmcc001=? AND bmcc002=? AND bmcc003=? AND bmcc004=? AND bmcc005=? AND bmcc007=? AND bmcc008=?"   
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         #add-point:b_fill段sql_before name="b_fill.body2.fill_sql"
+
+         #end add-point
+         IF NOT cl_null(g_wc2_table2) THEN
+            LET g_sql = g_sql CLIPPED," AND ",g_wc2_table2 CLIPPED
+         END IF
+         
+         #子單身的WC
+         
+         
+         LET g_sql = g_sql, " ORDER BY bmcc_t.bmcc009"
+         
+         #add-point:單身填充控制 name="b_fill.sql2"
+
+         #end add-point
+         
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         PREPARE abmm203_pb2 FROM g_sql
+         DECLARE b_fill_cs2 CURSOR FOR abmm203_pb2
+      END IF
+    
+      LET l_ac = 1
+      
+      OPEN b_fill_cs2 USING g_enterprise, g_site,g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004,g_bmba_m.bmba005,g_bmba_m.bmba007,g_bmba_m.bmba008
+                                               
+      FOREACH b_fill_cs2 INTO g_bmca2_d[l_ac].bmcc009,g_bmca2_d[l_ac].bmcc010,g_bmca2_d[l_ac].bmcc009_desc 
+ 
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:",SQLERRMESSAGE 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充 name="b_fill2.fill"
+      #161214-00055#1--mark--s
+      #LET g_flag2 = 'Y'
+      #CALL abmm203_b_fill_1(g_bmca2_d[1].bmcc009)
+      #LET g_flag2 = 'N'
+      #161214-00055#1--mark--e
+      
+         #end add-point
+      
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code   = 9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+      #161214-00055#1--add--s
+      LET g_flag2 = 'Y'
+      CALL abmm203_b_fill_1(g_bmca2_d[1].bmcc009)
+      LET g_flag2 = 'N'      
+      #161214-00055#1--add--e 
+   END IF
+ 
+   #判斷是否填充
+   IF abmm203_fill_chk(3) THEN
+      IF g_action_choice <> 'fetch' OR cl_null(g_action_choice) THEN
+         LET g_sql = "SELECT  DISTINCT bmce009,bmce010 ,t3.oocql004 FROM bmce_t",   
+                     " INNER JOIN bmba_t ON bmba001 = bmce001 ",
+                     " AND bmba002 = bmce002 ",
+                     " AND bmba003 = bmce003 ",
+                     " AND bmba004 = bmce004 ",
+                     " AND bmba005 = bmce005 ",
+                     " AND bmba007 = bmce007 ",
+                     " AND bmba008 = bmce008 ",
+ 
+                     "",
+                     
+                                    " LEFT JOIN oocql_t t3 ON t3.oocqlent='"||g_enterprise||"' AND t3.oocql001='273' AND t3.oocql002=bmce009 AND t3.oocql003='"||g_dlang||"' ",
+ 
+                     " WHERE bmceent=? AND bmcesite=? AND bmce001=? AND bmce002=? AND bmce003=? AND bmce004=? AND bmce005=? AND bmce007=? AND bmce008=?"   
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         #add-point:b_fill段sql_before name="b_fill.body3.fill_sql"
+         #161214-00055#1---add---s
+         LET g_sql = "SELECT  DISTINCT bmce009,bmce010 ,t3.oocql004 FROM bmce_t",   
+                     " INNER JOIN bmba_t ON bmba001 = bmce001 ",
+                     " AND bmba002 = bmce002 ",
+                     " AND bmba003 = bmce003 ",
+                     " AND bmba004 = bmce004 ",
+                     " AND bmba005 = bmce005 ",
+                     " AND bmba007 = bmce007 ",
+                     " AND bmba008 = bmce008 ",
+                     " LEFT JOIN oocql_t t3 ON t3.oocqlent='"||g_enterprise||"' AND t3.oocql001='273' AND t3.oocql002=bmce009 AND t3.oocql003='"||g_dlang||"' ",
+                     " WHERE bmceent=? AND bmcesite=? AND bmce001=? AND bmce002=? AND bmce003=? AND bmce004=? AND bmce005=? AND bmce007=? AND bmce008=?"   
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料         
+         #161214-00055#1---add---e
+         #end add-point
+         IF NOT cl_null(g_wc2_table3) THEN
+            LET g_sql = g_sql CLIPPED," AND ",g_wc2_table3 CLIPPED
+         END IF
+         
+         #子單身的WC
+         
+         
+         LET g_sql = g_sql, " ORDER BY bmce_t.bmce009"
+         
+         #add-point:單身填充控制 name="b_fill.sql3"
+
+         #end add-point
+         
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         PREPARE abmm203_pb3 FROM g_sql
+         DECLARE b_fill_cs3 CURSOR FOR abmm203_pb3
+      END IF
+    
+      LET l_ac = 1
+      
+      OPEN b_fill_cs3 USING g_enterprise, g_site,g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004,g_bmba_m.bmba005,g_bmba_m.bmba007,g_bmba_m.bmba008
+                                               
+      FOREACH b_fill_cs3 INTO g_bmca3_d[l_ac].bmce009,g_bmca3_d[l_ac].bmce010,g_bmca3_d[l_ac].bmce009_desc 
+ 
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:",SQLERRMESSAGE 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充 name="b_fill3.fill"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bmca3_d[l_ac].bmce010
+            CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005_2||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bmca3_d[l_ac].bmce010_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_bmca3_d[l_ac].bmce010_desc 
+         #end add-point
+      
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code   = 9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+   END IF
+ 
+ 
+   
+   #add-point:browser_fill段其他table處理 name="browser_fill.other_fill"
+
+   #end add-point
+   
+   CALL g_bmca_d.deleteElement(g_bmca_d.getLength())
+   CALL g_bmca2_d.deleteElement(g_bmca2_d.getLength())
+   CALL g_bmca3_d.deleteElement(g_bmca3_d.getLength())
+ 
+   
+ 
+   LET l_ac = g_cnt
+   LET g_cnt = 0  
+   
+   FREE abmm203_pb
+   FREE abmm203_pb2
+ 
+   FREE abmm203_pb3
+ 
+ 
+   
+   LET li_idx = l_ac
+   
+   #遮罩相關處理
+   FOR l_ac = 1 TO g_bmca_d.getLength()
+      LET g_bmca_d_mask_o[l_ac].* =  g_bmca_d[l_ac].*
+      CALL abmm203_bmca_t_mask()
+      LET g_bmca_d_mask_n[l_ac].* =  g_bmca_d[l_ac].*
+   END FOR
+   
+   LET g_bmca2_d_mask_o.* =  g_bmca2_d.*
+   FOR l_ac = 1 TO g_bmca2_d.getLength()
+      LET g_bmca2_d_mask_o[l_ac].* =  g_bmca2_d[l_ac].*
+      CALL abmm203_bmcc_t_mask()
+      LET g_bmca2_d_mask_n[l_ac].* =  g_bmca2_d[l_ac].*
+   END FOR
+   LET g_bmca3_d_mask_o.* =  g_bmca3_d.*
+   FOR l_ac = 1 TO g_bmca3_d.getLength()
+      LET g_bmca3_d_mask_o[l_ac].* =  g_bmca3_d[l_ac].*
+      CALL abmm203_bmce_t_mask()
+      LET g_bmca3_d_mask_n[l_ac].* =  g_bmca3_d[l_ac].*
+   END FOR
+ 
+   
+   LET l_ac = li_idx
+   
+   CALL cl_ap_performance_next_end()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.delete_b" >}
+#+ 刪除單身後其他table連動
+PRIVATE FUNCTION abmm203_delete_b(ps_table,ps_keys_bak,ps_page)
+   #add-point:delete_b段define(客製用) name="delete_b.define_customerization"
+   
+   #end add-point     
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:delete_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete_b.define"
+   DEFINE l_sql       STRING
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      LET l_sql = " DELETE FROM bmca_t ",
+          " WHERE bmcaent = '",g_enterprise,"' AND bmcasite = '",g_site,"' AND bmca001 = '",ps_keys_bak[1] ,"' AND bmca002 = '",ps_keys_bak[2],"'",
+          " AND bmca003 = '",ps_keys_bak[3],"' AND bmca004 = '",ps_keys_bak[4],"' AND bmca005 = to_date('",ps_keys_bak[5] ,"','YYYY-MM-DD hh24:mi:ss')",
+          " AND bmca007 = '",ps_keys_bak[6] ,"' AND bmca008 = '",ps_keys_bak[7],"' AND bmca009 = '",ps_keys_bak[8],"'"
+      PREPARE del_bmca_pre FROM l_sql
+      EXECUTE del_bmca_pre 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "bmca_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+      #IF g_prog = 'abmm203' THEN #160324-00007#1   #160705-00042#8 160712 by sakura mark
+      IF g_prog MATCHES 'abmm203' THEN              #160705-00042#8 160712 by sakura add
+         LET l_sql = " DELETE FROM bmca_t ",
+             " WHERE bmcaent = '",g_enterprise,"' AND bmcasite <> 'ALL' AND bmca001 = '",ps_keys_bak[1] ,"' AND bmca002 = '",ps_keys_bak[2],"'",
+             " AND bmca003 = '",ps_keys_bak[3],"' AND bmca004 = '",ps_keys_bak[4],"' AND bmca005 = to_date('",ps_keys_bak[5] ,"','YYYY-MM-DD hh24:mi:ss')",
+             " AND bmca007 = '",ps_keys_bak[6] ,"' AND bmca008 = '",ps_keys_bak[7],"' AND bmca009 = '",ps_keys_bak[8],"'",
+             " AND EXISTS(SELECT 1 FROM bmba_t WHERE bmbaent = bmcaent AND bmbasite = bmcasite AND bmba001 = bmca001 AND bmba002 = bmca002 AND bmba003 = bmca003 ",   #160324-00007#1
+             " AND bmba004 = bmca004 AND bmba005 = bmca005 AND bmba007 = bmca007 AND bmba008 = bmca008 AND bmba019 = '1')"    #160324-00007#1
+         PREPARE del_bmca_pre_site FROM l_sql
+         EXECUTE del_bmca_pre_site 
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "bmca_t"
+            LET g_errparam.popup = FALSE
+            CALL cl_err()
+            RETURN FALSE
+         END IF 
+      
+         LET l_sql = " DELETE FROM bmcb_t ",
+             " WHERE bmcbent = '",g_enterprise,"' AND bmcbsite <> 'ALL' AND bmcb001 = '",ps_keys_bak[1] ,"' AND bmcb002 = '",ps_keys_bak[2],"'",
+             " AND bmcb003 = '",ps_keys_bak[3],"' AND bmcb004 = '",ps_keys_bak[4],"' AND bmcb005 = to_date('",ps_keys_bak[5] ,"','YYYY-MM-DD hh24:mi:ss')",
+             " AND bmcb007 = '",ps_keys_bak[6] ,"' AND bmcb008 = '",ps_keys_bak[7],"' AND bmcb009 = '",ps_keys_bak[8],"'",
+             " AND EXISTS(SELECT 1 FROM bmba_t WHERE bmbaent = bmcbent AND bmbasite = bmcbsite AND bmba001 = bmcb001 AND bmba002 = bmcb002 AND bmba003 = bmcb003 ",   #160324-00007#1
+             " AND bmba004 = bmcb004 AND bmba005 = bmcb005 AND bmba007 = bmcb007 AND bmba008 = bmcb008 AND bmba019 = '1')"    #160324-00007#1       
+         PREPARE del_bmcb_pre_site FROM l_sql
+         EXECUTE del_bmcb_pre_site 
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "bmcb_t"
+            LET g_errparam.popup = FALSE
+            CALL cl_err()
+            RETURN FALSE
+         END IF
+      END IF #160324-00007#1         
+   END IF   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN 
+      LET l_sql =  " DELETE FROM bmcc_t ",  
+          " WHERE bmccent = '",g_enterprise,"' AND bmccsite = '",g_site,"' AND bmcc001 = '",ps_keys_bak[1] ,"' AND bmcc002 = '",ps_keys_bak[2],"'",
+          " AND bmcc003 = '",ps_keys_bak[3],"' AND bmcc004 = '",ps_keys_bak[4],"' AND bmcc005 = to_date('",ps_keys_bak[5] ,"','YYYY-MM-DD hh24:mi:ss')",
+          " AND bmcc007 = '",ps_keys_bak[6] ,"' AND bmcc008 = '",ps_keys_bak[7],"' AND bmcc009 = '",ps_keys_bak[8],"'"
+      PREPARE del_bmcc_pre FROM l_sql
+      EXECUTE del_bmcc_pre  
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "bmcc_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+         RETURN FALSE
+      END IF 
+      #IF g_prog = 'abmm203' THEN #160324-00007#1   #160705-00042#8 160712 by sakura mark 
+      IF g_prog MATCHES 'abmm203' THEN              #160705-00042#8 160712 by sakura add
+         LET l_sql =  " DELETE FROM bmcc_t ",  
+             " WHERE bmccent = '",g_enterprise,"' AND bmccsite <> 'ALL' AND bmcc001 = '",ps_keys_bak[1] ,"' AND bmcc002 = '",ps_keys_bak[2],"'",
+             " AND bmcc003 = '",ps_keys_bak[3],"' AND bmcc004 = '",ps_keys_bak[4],"' AND bmcc005 = to_date('",ps_keys_bak[5] ,"','YYYY-MM-DD hh24:mi:ss')",
+             " AND bmcc007 = '",ps_keys_bak[6] ,"' AND bmcc008 = '",ps_keys_bak[7],"' AND bmcc009 = '",ps_keys_bak[8],"'",
+             " AND EXISTS(SELECT 1 FROM bmba_t WHERE bmbaent = bmccent AND bmbasite = bmccsite AND bmba001 = bmcc001 AND bmba002 = bmcc002 AND bmba003 = bmcc003 ",   #160324-00007#1
+             " AND bmba004 = bmcc004 AND bmba005 = bmcc005 AND bmbc007 = bmcc007 AND bmba008 = bmcc008 AND bmba019 = '1')"    #160324-00007#1       
+         PREPARE del_bmcc_pre_site FROM l_sql
+         EXECUTE del_bmcc_pre_site  
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "bmcc_t"
+            LET g_errparam.popup = FALSE
+            CALL cl_err()
+            RETURN FALSE
+         END IF 
+         LET l_sql =  " DELETE FROM bmcd_t ",  
+             " WHERE bmcdent = '",g_enterprise,"' AND bmcdsite <> 'ALL' AND bmcd001 = '",ps_keys_bak[1] ,"' AND bmcd002 = '",ps_keys_bak[2],"'",
+             " AND bmcd003 = '",ps_keys_bak[3],"' AND bmcd004 = '",ps_keys_bak[4],"' AND bmcd005 = to_date('",ps_keys_bak[5] ,"','YYYY-MM-DD hh24:mi:ss')",
+             " AND bmcd007 = '",ps_keys_bak[6] ,"' AND bmcd008 = '",ps_keys_bak[7],"' AND bmcd009 = '",ps_keys_bak[8],"'",
+             " AND EXISTS(SELECT 1 FROM bmba_t WHERE bmbaent = bmcdent AND bmbasite = bmcdsite AND bmba001 = bmcd001 AND bmba002 = bmcd002 AND bmba003 = bmcd003 ",   #160324-00007#1
+             " AND bmba004 = bmcd004 AND bmba005 = bmcd005 AND bmba007 = bmcd007 AND bmba008 = bmcd008 AND bmba019 = '1')"    #160324-00007#1        
+         PREPARE del_bmcd_pre_site FROM l_sql
+         EXECUTE del_bmcd_pre_site  
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "bmcd_t"
+            LET g_errparam.popup = FALSE
+            CALL cl_err()
+            RETURN FALSE
+         END IF
+      END IF   #160324-00007#1    
+   END IF 
+   LET ls_group = "'3',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN    
+      LET l_sql = " DELETE FROM bmce_t ",
+          " WHERE bmceent = '",g_enterprise,"' AND bmcesite = '",g_site,"' AND bmce001 = '",ps_keys_bak[1] ,"' AND bmce002 = '",ps_keys_bak[2],"'",
+          " AND bmce003 = '",ps_keys_bak[3],"' AND bmce004 = '",ps_keys_bak[4],"' AND bmce005 = to_date('",ps_keys_bak[5] ,"','YYYY-MM-DD hh24:mi:ss')",
+          " AND bmce007 = '",ps_keys_bak[6] ,"' AND bmce008 = '",ps_keys_bak[7],"' AND bmce009 = '",ps_keys_bak[8],"'"
+      PREPARE del_bmce_pre FROM l_sql
+      EXECUTE del_bmce_pre  
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "bmce_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+         RETURN FALSE
+      END IF 
+      #IF g_prog = 'abmm203' THEN #160324-00007#1   #160705-00042#8 160712 by sakura mark
+      IF g_prog MATCHES 'abmm203' THEN              #160705-00042#8 160712 by sakura add
+         LET l_sql = " DELETE FROM bmce_t ",
+             " WHERE bmceent = '",g_enterprise,"' AND bmcesite <> 'ALL' AND bmce001 = '",ps_keys_bak[1] ,"' AND bmce002 = '",ps_keys_bak[2],"'",
+             " AND bmce003 = '",ps_keys_bak[3],"' AND bmce004 = '",ps_keys_bak[4],"' AND bmce005 = to_date('",ps_keys_bak[5] ,"','YYYY-MM-DD hh24:mi:ss')",
+             " AND bmce007 = '",ps_keys_bak[6] ,"' AND bmce008 = '",ps_keys_bak[7],"' AND bmce009 = '",ps_keys_bak[8],"'",
+             " AND EXISTS(SELECT 1 FROM bmba_t WHERE bmbaent = bmceent AND bmbasite = bmcesite AND bmba001 = bmce001 AND bmba002 = bmce002 AND bmba003 = bmce003 ",   #160324-00007#1
+             " AND bmba004 = bmce004 AND bmba005 = bmce005 AND bmba007 = bmce007 AND bmba008 = bmce008 AND bmba019 = '1')"    #160324-00007#1       
+         PREPARE del_bmce_pre_site FROM l_sql
+         EXECUTE del_bmce_pre_site  
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "bmce_t"
+            LET g_errparam.popup = FALSE
+            CALL cl_err()
+            RETURN FALSE
+         END IF 
+      END IF#160324-00007#1      
+   END IF
+   RETURN TRUE
+   #end add-point     
+   
+   #add-point:Function前置處理  name="delete_b.pre_function"
+   
+   #end add-point
+   
+   LET g_update = TRUE  
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前 name="delete_b.b_delete"
+    
+      #end add-point    
+      DELETE FROM bmca_t
+       WHERE bmcaent = g_enterprise AND bmcasite = g_site AND
+         bmca001 = ps_keys_bak[1] AND bmca002 = ps_keys_bak[2] AND bmca003 = ps_keys_bak[3] AND bmca004 = ps_keys_bak[4] AND bmca005 = ps_keys_bak[5] AND bmca007 = ps_keys_bak[6] AND bmca008 = ps_keys_bak[7] AND bmca009 = ps_keys_bak[8]
+      #add-point:delete_b段刪除中 name="delete_b.m_delete"
+      
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = ":",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_bmca_d.deleteElement(li_idx) 
+      END IF 
+ 
+   END IF
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前 name="delete_b.b_delete2"
+      
+      #end add-point    
+      DELETE FROM bmcc_t
+       WHERE bmccent = g_enterprise AND bmccsite = g_site AND
+             bmcc001 = ps_keys_bak[1] AND bmcc002 = ps_keys_bak[2] AND bmcc003 = ps_keys_bak[3] AND bmcc004 = ps_keys_bak[4] AND bmcc005 = ps_keys_bak[5] AND bmcc007 = ps_keys_bak[6] AND bmcc008 = ps_keys_bak[7] AND bmcc009 = ps_keys_bak[8]
+      #add-point:delete_b段刪除中 name="delete_b.m_delete2"
+      
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "bmcc_t:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'2'" THEN 
+         CALL g_bmca2_d.deleteElement(li_idx) 
+      END IF 
+ 
+      #add-point:delete_b段刪除後 name="delete_b.a_delete2"
+      
+      #end add-point    
+   END IF
+ 
+   LET ls_group = "'3',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前 name="delete_b.b_delete3"
+      
+      #end add-point    
+      DELETE FROM bmce_t
+       WHERE bmceent = g_enterprise AND bmcesite = g_site AND
+             bmce001 = ps_keys_bak[1] AND bmce002 = ps_keys_bak[2] AND bmce003 = ps_keys_bak[3] AND bmce004 = ps_keys_bak[4] AND bmce005 = ps_keys_bak[5] AND bmce007 = ps_keys_bak[6] AND bmce008 = ps_keys_bak[7] AND bmce009 = ps_keys_bak[8]
+      #add-point:delete_b段刪除中 name="delete_b.m_delete3"
+      
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "bmce_t:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'3'" THEN 
+         CALL g_bmca3_d.deleteElement(li_idx) 
+      END IF 
+ 
+      #add-point:delete_b段刪除後 name="delete_b.a_delete3"
+      
+      #end add-point    
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:delete_b段other name="delete_b.other"
+   
+   #end add-point  
+   
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.insert_b" >}
+#+ 新增單身後其他table連動
+PRIVATE FUNCTION abmm203_insert_b(ps_table,ps_keys,ps_page)
+   #add-point:insert_b段define(客製用) name="insert_b.define_customerization"
+   
+   #end add-point     
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE ls_page     STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:insert_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert_b.define"
+   DEFINE l_sql       STRING
+   
+   
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN 
+      LET l_sql="INSERT INTO bmca_t(bmcaent, bmcasite,bmca001,bmca002,bmca003,bmca004,bmca005,bmca007,bmca008,bmca009)",
+          " VALUES('",g_enterprise,"','",g_site,"','",ps_keys[1],"','",ps_keys[2],"','",ps_keys[3],"','",ps_keys[4],"',",
+          " to_date('",ps_keys[5],"','YYYY-MM-DD hh24:mi:ss'),'",ps_keys[6],"','",ps_keys[7],"','",ps_keys[8],"')"
+      PREPARE ins_bmca_pre FROM l_sql
+      EXECUTE ins_bmca_pre  
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "bmca_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+      END IF
+      #IF g_prog = 'abmm203' THEN #160324-00007#1   #160705-00042#8 160712 by sakura mark
+      IF g_prog MATCHES 'abmm203' THEN              #160705-00042#8 160712 by sakura add
+         LET l_sql = "INSERT INTO bmca_t(bmcaent, bmcasite,bmca001,bmca002,bmca003,bmca004,bmca005,bmca007,bmca008,bmca009)",
+                     " SELECT bmbaent,bmbasite,bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008,'",ps_keys[8],"'",
+                     "   FROM bmba_t ",
+                     "  WHERE bmbaent = '",g_enterprise,"'",
+                     "    AND bmbasite <> 'ALL' ",
+                     "    AND bmba001 = '",ps_keys[1],"'",
+                     "    AND bmba002 = '",ps_keys[2],"'",
+                     "    AND bmba003 = '",ps_keys[3],"'",
+                     "    AND bmba004 = '",ps_keys[4],"'",
+                     "    AND bmba005 = to_date('",ps_keys[5],"','YYYY-MM-DD hh24:mi:ss')",
+                     "    AND bmba007 = '",ps_keys[6],"'",
+                     "    AND bmba008 = '",ps_keys[7],"'",
+                     "    AND bmba019 = '1' "         #160324-00007#1        
+         PREPARE ins_bmca_pre_site FROM l_sql
+         EXECUTE ins_bmca_pre_site 
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "bmca_t"
+            LET g_errparam.popup = FALSE
+            CALL cl_err()
+         END IF  
+      END IF    #160324-00007#1 
+   END IF
+  
+  
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      LET l_sql="INSERT INTO bmcc_t(bmccent, bmccsite,bmcc001,bmcc002,bmcc003,bmcc004,bmcc005,bmcc007,bmcc008,bmcc009,bmcc010)",
+          " VALUES('",g_enterprise,"','",g_site,"','",ps_keys[1],"','",ps_keys[2],"','",ps_keys[3],"','",ps_keys[4],"',",
+          " to_date('",ps_keys[5],"','YYYY-MM-DD hh24:mi:ss'),'",ps_keys[6],"','",ps_keys[7],"','",ps_keys[8],"','",g_bmca2_d[g_detail_idx].bmcc010,"')"
+      PREPARE ins_bmcc_pre FROM l_sql
+      EXECUTE ins_bmcc_pre  
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "bmcc_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+     
+      END IF
+      #IF g_prog = 'abmm203' THEN   #160324-00007#1   #160705-00042#8 160712 by sakura mark
+      IF g_prog MATCHES 'abmm203' THEN                #160705-00042#8 160712 by sakura add
+         LET l_sql = "INSERT INTO bmcc_t(bmccent, bmccsite,bmcc001,bmcc002,bmcc003,bmcc004,bmcc005,bmcc007,bmcc008,bmcc009,bmcc010)",
+                     " SELECT bmbaent,bmbasite,bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008,'",ps_keys[8],"','",g_bmca2_d[g_detail_idx].bmcc010,"'",
+                     "   FROM bmba_t ",
+                     "  WHERE bmbaent = '",g_enterprise,"'",
+                     "    AND bmbasite <> 'ALL' ",
+                     "    AND bmba001 = '",ps_keys[1],"'",
+                     "    AND bmba002 = '",ps_keys[2],"'",
+                     "    AND bmba003 = '",ps_keys[3],"'",
+                     "    AND bmba004 = '",ps_keys[4],"'",
+                     "    AND bmba005 = to_date('",ps_keys[5],"','YYYY-MM-DD hh24:mi:ss')",
+                     "    AND bmba007 = '",ps_keys[6],"'",
+                     "    AND bmba008 = '",ps_keys[7],"'",
+                     "    AND bmba019 = '1' "         #160324-00007#1
+         PREPARE ins_bmcc_pre_site FROM l_sql
+         EXECUTE ins_bmcc_pre_site 
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "bmca_t"
+            LET g_errparam.popup = FALSE
+            CALL cl_err()
+         END IF 
+      END IF      #160324-00007#1
+   END IF
+   
+   
+   LET ls_group = "'3',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      LET l_sql="INSERT INTO bmce_t(bmceent, bmcesite,bmce001,bmce002,bmce003,bmce004,bmce005,bmce007,bmce008,bmce009,bmce010)",
+          " VALUES('",g_enterprise,"','",g_site,"','",ps_keys[1],"','",ps_keys[2],"','",ps_keys[3],"','",ps_keys[4],"',",
+          " to_date('",ps_keys[5],"','YYYY-MM-DD hh24:mi:ss'),'",ps_keys[6],"','",ps_keys[7],"','",ps_keys[8],"','",g_bmca3_d[g_detail_idx].bmce010,"')"
+      PREPARE ins_bmce_pre FROM l_sql
+      EXECUTE ins_bmce_pre  
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "bmce_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+     
+      END IF
+      #IF g_prog = 'abmm203' THEN  #160324-00007#1   #160705-00042#8 160712 by sakura mark
+      IF g_prog MATCHES 'abmm203' THEN               #160705-00042#8 160712 by sakura add
+         LET l_sql = "INSERT INTO bmce_t(bmceent, bmcesite,bmce001,bmce002,bmce003,bmce004,bmce005,bmce007,bmce008,bmce009,bmce010)",
+                     " SELECT bmbaent,bmbasite,bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008,'",ps_keys[8],"','",g_bmca3_d[g_detail_idx].bmce010,"'",
+                     "   FROM bmba_t ",
+                     "  WHERE bmbaent = '",g_enterprise,"'",
+                     "    AND bmbasite <> 'ALL' ",
+                     "    AND bmba001 = '",ps_keys[1],"'",
+                     "    AND bmba002 = '",ps_keys[2],"'",
+                     "    AND bmba003 = '",ps_keys[3],"'",
+                     "    AND bmba004 = '",ps_keys[4],"'",
+                     "    AND bmba005 = to_date('",ps_keys[5],"','YYYY-MM-DD hh24:mi:ss')",
+                     "    AND bmba007 = '",ps_keys[6],"'",
+                     "    AND bmba008 = '",ps_keys[7],"'",
+                     "    AND bmba019 = '1' "         #160324-00007#1
+         PREPARE ins_bmce_pre_site FROM l_sql
+         EXECUTE ins_bmce_pre_site 
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "bmca_t"
+            LET g_errparam.popup = FALSE
+            CALL cl_err()
+         END IF  
+      END IF #160324-00007#1      
+   END IF   
+   RETURN  
+   #end add-point     
+   
+   #add-point:Function前置處理  name="insert_b.pre_function"
+   
+   #end add-point
+   
+   LET g_update = TRUE  
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前 name="insert_b.before_insert"
+     
+      #end add-point 
+      INSERT INTO bmca_t
+                  (bmcaent, bmcasite,
+                   bmca001,bmca002,bmca003,bmca004,bmca005,bmca007,bmca008,
+                   bmca009
+                   ) 
+            VALUES(g_enterprise, g_site,
+                   ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4],ps_keys[5],ps_keys[6],ps_keys[7],ps_keys[8]
+                   )
+      #add-point:insert_b段資料新增中 name="insert_b.m_insert"
+      
+      #end add-point 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "bmca_t:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_bmca_d.insertElement(li_idx) 
+      END IF 
+ 
+      #add-point:insert_b段資料新增後 name="insert_b.after_insert"
+      
+      #end add-point 
+   END IF
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前 name="insert_b.before_insert2"
+      
+      #end add-point 
+      INSERT INTO bmcc_t
+                  (bmccent, bmccsite,
+                   bmcc001,bmcc002,bmcc003,bmcc004,bmcc005,bmcc007,bmcc008,
+                   bmcc009
+                   ,bmcc010) 
+            VALUES(g_enterprise, g_site,
+                   ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4],ps_keys[5],ps_keys[6],ps_keys[7],ps_keys[8]
+                   ,g_bmca2_d[g_detail_idx].bmcc010)
+      #add-point:insert_b段資料新增中 name="insert_b.m_insert2"
+      
+      #end add-point
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "bmcc_t:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'2'" THEN 
+         CALL g_bmca2_d.insertElement(li_idx) 
+      END IF 
+ 
+      #add-point:insert_b段資料新增後 name="insert_b.after_insert2"
+      
+      #end add-point
+   END IF
+ 
+   LET ls_group = "'3',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前 name="insert_b.before_insert3"
+      
+      #end add-point 
+      INSERT INTO bmce_t
+                  (bmceent, bmcesite,
+                   bmce001,bmce002,bmce003,bmce004,bmce005,bmce007,bmce008,
+                   bmce009
+                   ,bmce010) 
+            VALUES(g_enterprise, g_site,
+                   ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4],ps_keys[5],ps_keys[6],ps_keys[7],ps_keys[8]
+                   ,g_bmca3_d[g_detail_idx].bmce010)
+      #add-point:insert_b段資料新增中 name="insert_b.m_insert3"
+      
+      #end add-point
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "bmce_t:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'3'" THEN 
+         CALL g_bmca3_d.insertElement(li_idx) 
+      END IF 
+ 
+      #add-point:insert_b段資料新增後 name="insert_b.after_insert3"
+      
+      #end add-point
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:insert_b段other name="insert_b.other"
+   
+   #end add-point     
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.update_b" >}
+#+ 修改單身後其他table連動
+PRIVATE FUNCTION abmm203_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   #add-point:update_b段define(客製用) name="update_b.define_customerization"
+   
+   #end add-point   
+   DEFINE ps_table         STRING
+   DEFINE ps_page          STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num10 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="update_b.define"
+   DEFINE l_sql           STRING
+#   20150728-b-因中间3个单身中有非KEY栏位，所以只修改非KEY栏位会更新不到据点级的，故这边mark
+#   #判斷key是否有改變
+#   LET lb_chk = TRUE
+#   FOR li_idx = 1 TO ps_keys.getLength()
+#      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+#         LET lb_chk = FALSE
+#         EXIT FOR
+#      END IF
+#   END FOR
+#   
+#   #不需要做處理
+#   IF lb_chk THEN
+#      RETURN
+#   END IF
+#   20150728-e
+   #IF g_prog = 'abmm213' THEN   #160324-00007#1   #160705-00042#8 160712 by sakura mark 
+   IF g_prog MATCHES 'abmm213' THEN                #160705-00042#8 160712 by sakura add
+      RETURN                    #160324-00007#1 
+   END IF                       #160324-00007#1 
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "bmca_t" THEN
+      LET l_sql = " UPDATE bmca_t ", 
+          " SET (bmca001,bmca002,bmca003,bmca004,bmca005,bmca007,bmca008,bmca009)",
+          "    = ",
+          "   ('",ps_keys[1],"','",ps_keys[2],"','",ps_keys[3],"','",ps_keys[4],"',",
+          " to_date('",ps_keys[5],"','YYYY-MM-DD hh24:mi:ss'),'",ps_keys[6],"','",ps_keys[7],"','",ps_keys[8],"')",
+          " WHERE bmcaent = '",g_enterprise,"' AND bmcasite <> 'ALL' AND bmca001 = '",ps_keys_bak[1] ,"' AND bmca002 = '",ps_keys_bak[2],"'",
+          " AND bmca003 = '",ps_keys_bak[3],"' AND bmca004 = '",ps_keys_bak[4],"' AND bmca005 = to_date('",ps_keys_bak[5] ,"','YYYY-MM-DD hh24:mi:ss')",
+          " AND bmca007 = '",ps_keys_bak[6] ,"' AND bmca008 = '",ps_keys_bak[7],"' AND bmca009 = '",ps_keys_bak[8],"'",
+          " AND EXISTS(SELECT 1 FROM bmba_t WHERE bmbaent = bmcaent AND bmbasite = bmcasite AND bmba001 = bmca001 AND bmba002 = bmca002 AND bmba003 = bmca003 ",   #160324-00007#1
+          " AND bmba004 = bmca004 AND bmba005 = bmca005 AND bmba007 = bmca007 AND bmba008 = bmca008 AND bmba019 = '1')"    #160324-00007#1
+     PREPARE upd_bmca_pre_site FROM l_sql
+     EXECUTE upd_bmca_pre_site  
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = "std-00009"
+            LET g_errparam.extend = "bmca_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "bmca_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+  
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      LET l_sql = " UPDATE bmcb_t ", 
+          " SET bmcb009 = '",ps_keys[8],"'",
+          " WHERE bmcbent = '",g_enterprise,"' AND bmcbsite <> 'ALL' AND bmcb001 = '",ps_keys_bak[1] ,"' AND bmcb002 = '",ps_keys_bak[2],"'",
+          " AND bmcb003 = '",ps_keys_bak[3],"' AND bmcb004 = '",ps_keys_bak[4],"' AND bmcb005 = to_date('",ps_keys_bak[5] ,"','YYYY-MM-DD hh24:mi:ss')",
+          " AND bmcb007 = '",ps_keys_bak[6] ,"' AND bmcb008 = '",ps_keys_bak[7],"' AND bmcb009 = '",ps_keys_bak[8],"'",
+          " AND EXISTS(SELECT 1 FROM bmba_t WHERE bmbaent = bmcbent AND bmbasite = bmcbsite AND bmba001 = bmcb001 AND bmba002 = bmcb002 AND bmba003 = bmcb003 ",   #160324-00007#1
+          " AND bmba004 = bmcb004 AND bmba005 = bmcb005 AND bmba007 = bmcb007 AND bmba008 = bmcb008 AND bmba019 = '1')"    #160324-00007#1     
+     PREPARE upd_bmcb_pre_site FROM l_sql
+     EXECUTE upd_bmcb_pre_site  
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = "std-00009"
+            LET g_errparam.extend = "bmcb_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "bmcb_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+  
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      
+   END IF  
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "bmcc_t" THEN
+      LET l_sql = " UPDATE bmcc_t ", 
+          " SET (bmcc001,bmcc002,bmcc003,bmcc004,bmcc005,bmcc007,bmcc008,bmcc009,bmcc010)",
+          "    = ",
+          "   ('",ps_keys[1],"','",ps_keys[2],"','",ps_keys[3],"','",ps_keys[4],"',",
+          " to_date('",ps_keys[5],"','YYYY-MM-DD hh24:mi:ss'),'",ps_keys[6],"','",ps_keys[7],"','",ps_keys[8],"','",g_bmca2_d[g_detail_idx].bmcc010,"')",
+          " WHERE bmccent = '",g_enterprise,"' AND bmccsite <> 'ALL' AND bmcc001 = '",ps_keys_bak[1] ,"' AND bmcc002 = '",ps_keys_bak[2],"'",
+          " AND bmcc003 = '",ps_keys_bak[3],"' AND bmcc004 = '",ps_keys_bak[4],"' AND bmcc005 = to_date('",ps_keys_bak[5] ,"','YYYY-MM-DD hh24:mi:ss')",
+          " AND bmcc007 = '",ps_keys_bak[6] ,"' AND bmcc008 = '",ps_keys_bak[7],"' AND bmcc009 = '",ps_keys_bak[8],"'",
+          " AND EXISTS(SELECT 1 FROM bmba_t WHERE bmbaent = bmccent AND bmbasite = bmccsite AND bmba001 = bmcc001 AND bmba002 = bmcc002 AND bmba003 = bmcc003 ",   #160324-00007#1
+          " AND bmba004 = bmcc004 AND bmba005 = bmcc005 AND bmbc007 = bmcc007 AND bmba008 = bmcc008 AND bmba019 = '1')"    #160324-00007#1     
+     PREPARE upd_bmcc_pre_site FROM l_sql
+     EXECUTE upd_bmcc_pre_site  
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = "std-00009"
+            LET g_errparam.extend = "bmcc_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "bmcc_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+  
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+ 
+      LET l_sql = " UPDATE bmcd_t ", 
+          " SET bmcd009=",ps_keys[8],"'",
+          " WHERE bmcdent = '",g_enterprise,"' AND bmcdsite <> 'ALL' AND bmcd001 = '",ps_keys_bak[1] ,"' AND bmcd002 = '",ps_keys_bak[2],"'",
+          " AND bmcd003 = '",ps_keys_bak[3],"' AND bmcd004 = '",ps_keys_bak[4],"' AND bmcd005 = to_date('",ps_keys_bak[5] ,"','YYYY-MM-DD hh24:mi:ss')",
+          " AND bmcd007 = '",ps_keys_bak[6] ,"' AND bmcd008 = '",ps_keys_bak[7],"' AND bmcd009 = '",ps_keys_bak[8],"'",
+          " AND EXISTS(SELECT 1 FROM bmba_t WHERE bmbaent = bmcdent AND bmbasite = bmcdsite AND bmba001 = bmcd001 AND bmba002 = bmcd002 AND bmba003 = bmcd003 ",   #160324-00007#1
+          " AND bmba004 = bmcd004 AND bmba005 = bmcd005 AND bmba007 = bmcd007 AND bmba008 = bmcd008 AND bmba019 = '1')"    #160324-00007#1     
+     PREPARE upd_bmcd_pre_site FROM l_sql
+     EXECUTE upd_bmcd_pre_site  
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = "std-00009"
+            LET g_errparam.extend = "bmcd_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "bmcd_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+  
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE 
+  END IF  
+   LET ls_group = "'3',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "bmce_t" THEN
+      LET l_sql = " UPDATE bmce_t ", 
+          " SET (bmce001,bmce002,bmce003,bmce004,bmce005,bmce007,bmce008,bmce009,bmce010)",
+          "    = ",
+          "   ('",ps_keys[1],"','",ps_keys[2],"','",ps_keys[3],"','",ps_keys[4],"',",
+          " to_date('",ps_keys[5],"','YYYY-MM-DD hh24:mi:ss'),'",ps_keys[6],"','",ps_keys[7],"','",ps_keys[8],"','",g_bmca3_d[g_detail_idx].bmce010,"')",
+          " WHERE bmceent = '",g_enterprise,"' AND bmcesite <> 'ALL' AND bmce001 = '",ps_keys_bak[1] ,"' AND bmce002 = '",ps_keys_bak[2],"'",
+          " AND bmce003 = '",ps_keys_bak[3],"' AND bmce004 = '",ps_keys_bak[4],"' AND bmce005 = = to_date('",ps_keys_bak[5] ,"','YYYY-MM-DD hh24:mi:ss')",
+          " AND bmce007 = '",ps_keys_bak[6] ,"' AND bmce008 = '",ps_keys_bak[7],"' AND bmce009 = '",ps_keys_bak[8],"'",
+          " AND EXISTS(SELECT 1 FROM bmba_t WHERE bmbaent = bmceent AND bmbasite = bmcesite AND bmba001 = bmce001 AND bmba002 = bmce002 AND bmba003 = bmce003 ",   #160324-00007#1
+          " AND bmba004 = bmce004 AND bmba005 = bmce005 AND bmba007 = bmce007 AND bmba008 = bmce008 AND bmba019 = '1')"    #160324-00007#1     
+     PREPARE upd_bmce_pre_site FROM l_sql
+     EXECUTE upd_bmce_pre_site  
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = "std-00009"
+            LET g_errparam.extend = "bmce_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "bmce_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+  
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+  END IF
+  RETURN  
+   #end add-point   
+   
+   #add-point:Function前置處理  name="update_b.pre_function"
+   
+   #end add-point
+   
+   LET g_update = TRUE   
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "bmca_t" THEN
+      #add-point:update_b段修改前 name="update_b.before_update"
+      
+      #end add-point 
+      
+      #將遮罩欄位還原
+      CALL abmm203_bmca_t_mask_restore('restore_mask_o')
+               
+      UPDATE bmca_t 
+         SET (bmca001,bmca002,bmca003,bmca004,bmca005,bmca007,bmca008,
+              bmca009
+              ) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4],ps_keys[5],ps_keys[6],ps_keys[7],ps_keys[8]
+              ) 
+         WHERE bmcaent = g_enterprise AND bmcasite = g_site AND bmca001 = ps_keys_bak[1] AND bmca002 = ps_keys_bak[2] AND bmca003 = ps_keys_bak[3] AND bmca004 = ps_keys_bak[4] AND bmca005 = ps_keys_bak[5] AND bmca007 = ps_keys_bak[6] AND bmca008 = ps_keys_bak[7] AND bmca009 = ps_keys_bak[8]
+      #add-point:update_b段修改中 name="update_b.m_update"
+      
+      #end add-point   
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "bmca_t" 
+            LET g_errparam.code   = "std-00009" 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "bmca_t:",SQLERRMESSAGE 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      
+      #將遮罩欄位進行遮蔽
+      CALL abmm203_bmca_t_mask_restore('restore_mask_n')
+               
+      #add-point:update_b段修改後 name="update_b.after_update"
+      
+      #end add-point  
+   END IF
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "bmcc_t" THEN
+      #add-point:update_b段修改前 name="update_b.before_update2"
+      
+      #end add-point  
+      
+      #將遮罩欄位還原
+      CALL abmm203_bmcc_t_mask_restore('restore_mask_o')
+               
+      UPDATE bmcc_t 
+         SET (bmcc001,bmcc002,bmcc003,bmcc004,bmcc005,bmcc007,bmcc008,
+              bmcc009
+              ,bmcc010) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4],ps_keys[5],ps_keys[6],ps_keys[7],ps_keys[8]
+              ,g_bmca2_d[g_detail_idx].bmcc010) 
+         WHERE bmccent = g_enterprise AND bmccsite = g_site AND bmcc001 = ps_keys_bak[1] AND bmcc002 = ps_keys_bak[2] AND bmcc003 = ps_keys_bak[3] AND bmcc004 = ps_keys_bak[4] AND bmcc005 = ps_keys_bak[5] AND bmcc007 = ps_keys_bak[6] AND bmcc008 = ps_keys_bak[7] AND bmcc009 = ps_keys_bak[8]
+      #add-point:update_b段修改中 name="update_b.m_update2"
+      
+      #end add-point  
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "bmcc_t" 
+            LET g_errparam.code   = "std-00009" 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "bmcc_t:",SQLERRMESSAGE 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      
+      #將遮罩欄位進行遮蔽
+      CALL abmm203_bmcc_t_mask_restore('restore_mask_n')
+ 
+      #add-point:update_b段修改後 name="update_b.after_update2"
+      
+      #end add-point  
+   END IF
+ 
+   LET ls_group = "'3',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "bmce_t" THEN
+      #add-point:update_b段修改前 name="update_b.before_update3"
+      
+      #end add-point  
+      
+      #將遮罩欄位還原
+      CALL abmm203_bmce_t_mask_restore('restore_mask_o')
+               
+      UPDATE bmce_t 
+         SET (bmce001,bmce002,bmce003,bmce004,bmce005,bmce007,bmce008,
+              bmce009
+              ,bmce010) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4],ps_keys[5],ps_keys[6],ps_keys[7],ps_keys[8]
+              ,g_bmca3_d[g_detail_idx].bmce010) 
+         WHERE bmceent = g_enterprise AND bmcesite = g_site AND bmce001 = ps_keys_bak[1] AND bmce002 = ps_keys_bak[2] AND bmce003 = ps_keys_bak[3] AND bmce004 = ps_keys_bak[4] AND bmce005 = ps_keys_bak[5] AND bmce007 = ps_keys_bak[6] AND bmce008 = ps_keys_bak[7] AND bmce009 = ps_keys_bak[8]
+      #add-point:update_b段修改中 name="update_b.m_update3"
+      
+      #end add-point  
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "bmce_t" 
+            LET g_errparam.code   = "std-00009" 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "bmce_t:",SQLERRMESSAGE 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      
+      #將遮罩欄位進行遮蔽
+      CALL abmm203_bmce_t_mask_restore('restore_mask_n')
+ 
+      #add-point:update_b段修改後 name="update_b.after_update3"
+      
+      #end add-point  
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:update_b段other name="update_b.other"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.key_update_b" >}
+#+ 上層單身key欄位變動後, 連帶修正下層單身key欄位
+PRIVATE FUNCTION abmm203_key_update_b(ps_keys_bak,ps_table)
+   #add-point:update_b段define(客製用) name="key_update_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_table    STRING
+   #add-point:update_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="key_update_b.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="key_update_b.pre_function"
+   
+   #end add-point
+   
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.key_delete_b" >}
+#+ 上層單身刪除後, 連帶刪除下層單身key欄位
+PRIVATE FUNCTION abmm203_key_delete_b(ps_keys_bak,ps_table)
+   #add-point:delete_b段define(客製用) name="key_delete_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_table    STRING
+   #add-point:delete_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="key_delete_b.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="key_delete_b.pre_function"
+   
+   #end add-point
+   
+ 
+   
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.lock_b" >}
+#+ 連動lock其他單身table資料
+PRIVATE FUNCTION abmm203_lock_b(ps_table,ps_page)
+   #add-point:lock_b段define(客製用) name="lock_b.define_customerization"
+   
+   #end add-point   
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:lock_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="lock_b.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="lock_b.pre_function"
+   
+   #end add-point
+    
+   #先刷新資料
+   #CALL abmm203_b_fill()
+   
+   #鎖定整組table
+   #LET ls_group = "'1',"
+   #僅鎖定自身table
+   LET ls_group = "bmca_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      OPEN abmm203_bcl USING g_enterprise, g_site,
+                                       g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004, 
+                                           g_bmba_m.bmba005,g_bmba_m.bmba007,g_bmba_m.bmba008,g_bmca_d[g_detail_idx].bmca009  
+                                               
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "abmm203_bcl:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+                                    
+   #鎖定整組table
+   #LET ls_group = "'2',"
+   #僅鎖定自身table
+   LET ls_group = "bmcc_t"
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN abmm203_bcl2 USING g_enterprise, g_site,
+                                             g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004, 
+                                                 g_bmba_m.bmba005,g_bmba_m.bmba007,g_bmba_m.bmba008, 
+                                                 g_bmca2_d[g_detail_idx].bmcc009
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "abmm203_bcl2:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+ 
+   #鎖定整組table
+   #LET ls_group = "'3',"
+   #僅鎖定自身table
+   LET ls_group = "bmce_t"
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN abmm203_bcl3 USING g_enterprise, g_site,
+                                             g_bmba_m.bmba001,g_bmba_m.bmba002,g_bmba_m.bmba003,g_bmba_m.bmba004, 
+                                                 g_bmba_m.bmba005,g_bmba_m.bmba007,g_bmba_m.bmba008, 
+                                                 g_bmca3_d[g_detail_idx].bmce009
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "abmm203_bcl3:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:lock_b段other name="lock_b.other"
+   
+   #end add-point  
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.unlock_b" >}
+#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION abmm203_unlock_b(ps_table,ps_page)
+   #add-point:unlock_b段define(客製用) name="unlock_b.define_customerization"
+   
+   #end add-point  
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:unlock_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="unlock_b.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="unlock_b.pre_function"
+   
+   #end add-point
+    
+   LET ls_group = "'1',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE abmm203_bcl
+   END IF
+   
+   LET ls_group = "'2',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE abmm203_bcl2
+   END IF
+ 
+   LET ls_group = "'3',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE abmm203_bcl3
+   END IF
+ 
+ 
+   
+ 
+ 
+   #add-point:unlock_b段other name="unlock_b.other"
+   
+   #end add-point  
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.set_entry" >}
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION abmm203_set_entry(p_cmd)
+   #add-point:set_entry段define(客製用) name="set_entry.define_customerization"
+   
+   #end add-point       
+   DEFINE p_cmd   LIKE type_t.chr1  
+   #add-point:set_entry段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry.define"
+   
+   #end add-point       
+   
+   #add-point:Function前置處理  name="set_entry.pre_function"
+   
+   #end add-point
+   
+   CALL cl_set_comp_entry("",TRUE)
+   
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008",TRUE)
+      CALL cl_set_comp_entry("",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry段欄位控制 name="set_entry.field_control"
+      
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry段欄位控制後 name="set_entry.after_control"
+    
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.set_no_entry" >}
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION abmm203_set_no_entry(p_cmd)
+   #add-point:set_no_entry段define(客製用) name="set_no_entry.define_customerization"
+   
+   #end add-point     
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_no_entry.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("bmba001,bmba002,bmba003,bmba004,bmba005,bmba007,bmba008",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry段欄位控制 name="set_no_entry.field_control"
+      
+      #end add-point 
+   END IF 
+   
+   IF p_cmd = 'u' THEN  #docno,ld欄位確認是絕對關閉
+      CALL cl_set_comp_entry("",FALSE)
+   END IF 
+ 
+   IF p_cmd = 'u' THEN  #docdt欄位依照設定關閉(FALSE則為設定不同意修正)
+      IF NOT cl_chk_update_docdt() THEN
+         CALL cl_set_comp_entry("",FALSE)
+      END IF
+   END IF 
+   
+   #add-point:set_no_entry段欄位控制後 name="set_no_entry.after_control"
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.set_entry_b" >}
+#+ 單身欄位開啟設定
+PRIVATE FUNCTION abmm203_set_entry_b(p_cmd)
+   #add-point:set_entry_b段define(客製用) name="set_entry_b.define_customerization"
+   
+   #end add-point     
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_entry_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_entry_b.pre_function"
+   
+   #end add-point
+    
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("",TRUE)
+      #add-point:set_entry段欄位控制 name="set_entry_b.field_control"
+      
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry_b段 name="set_entry_b.set_entry_b"
+   CALL cl_set_comp_entry("bmcb012",TRUE)
+   #end add-point  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.set_no_entry_b" >}
+#+ 單身欄位關閉設定
+PRIVATE FUNCTION abmm203_set_no_entry_b(p_cmd)
+   #add-point:set_no_entry_b段define(客製用) name="set_no_entry_b.define_customerization"
+   
+   #end add-point    
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry_b.define"
+   DEFINE l_imaa005    LIKE imaa_t.imaa005
+   DEFINE l_imeb006    LIKE imeb_t.imeb006
+   #end add-point    
+   
+   #add-point:Function前置處理  name="set_no_entry_b.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("",FALSE)
+      #add-point:set_no_entry_b段欄位控制 name="set_no_entry_b.field_control"
+      
+      #end add-point 
+   END IF 
+   
+   #add-point:set_no_entry_b段 name="set_no_entry_b.set_no_entry_b"
+  SELECT imaa005 INTO l_imaa005 FROM imaa_t 
+   WHERE imaaent = g_enterprise
+     AND imaa001 = g_bmba_m.bmba001
+  SELECT imeb006 INTO l_imeb006 FROM imeb_t 
+   WHERE imebent = g_enterprise
+     AND imeb001 = l_imaa005
+     AND imeb004 = g_bmca_d[l_ac].bmca009
+  IF l_imeb006 NOT MATCHES '[23]' THEN 
+     CALL cl_set_comp_entry("bmcb012",FALSE) 
+  END IF     
+   #end add-point     
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.set_act_visible" >}
+#+ 單頭權限開啟
+PRIVATE FUNCTION abmm203_set_act_visible()
+   #add-point:set_act_visible段define(客製用) name="set_act_visible.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_visible段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible.define"
+   
+   #end add-point   
+   #add-point:set_act_visible段 name="set_act_visible.set_act_visible"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.set_act_no_visible" >}
+#+ 單頭權限關閉
+PRIVATE FUNCTION abmm203_set_act_no_visible()
+   #add-point:set_act_no_visible段define(客製用) name="set_act_no_visible.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_no_visible段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible.define"
+   
+   #end add-point   
+   #add-point:set_act_no_visible段 name="set_act_no_visible.set_act_no_visible"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.set_act_visible_b" >}
+#+ 單身權限開啟
+PRIVATE FUNCTION abmm203_set_act_visible_b()
+   #add-point:set_act_visible_b段define(客製用) name="set_act_visible_b.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_visible_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible_b.define"
+   
+   #end add-point   
+   #add-point:set_act_visible_b段 name="set_act_visible_b.set_act_visible_b"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.set_act_no_visible_b" >}
+#+ 單身權限關閉
+PRIVATE FUNCTION abmm203_set_act_no_visible_b()
+   #add-point:set_act_no_visible_b段define(客製用) name="set_act_no_visible_b.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_no_visible_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible_b.define"
+   
+   #end add-point   
+   #add-point:set_act_no_visible_b段 name="set_act_no_visible_b.set_act_no_visible_b"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION abmm203_default_search()
+   #add-point:default_search段define(客製用) name="default_search.define_customerization"
+   
+   #end add-point  
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE li_cnt     LIKE type_t.num10
+   DEFINE ls_wc      STRING
+   DEFINE la_wc      DYNAMIC ARRAY OF RECORD
+          tableid    STRING,
+          wc         STRING
+          END RECORD
+   DEFINE ls_where   STRING
+   #add-point:default_search段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   DEFINE l_wc    STRING
+   #end add-point  
+   
+   #add-point:Function前置處理 name="default_search.before"
+   
+   #end add-point  
+   
+   LET g_pagestart = 1
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " bmba001 = '", g_argv[01], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " bmba002 = '", g_argv[02], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[03]) THEN
+      LET ls_wc = ls_wc, " bmba003 = '", g_argv[03], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[04]) THEN
+      LET ls_wc = ls_wc, " bmba004 = '", g_argv[04], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[05]) THEN
+      LET ls_wc = ls_wc, " bmba005 = '", g_argv[05], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[06]) THEN
+      LET ls_wc = ls_wc, " bmba007 = '", g_argv[06], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[07]) THEN
+      LET ls_wc = ls_wc, " bmba008 = '", g_argv[07], "' AND "
+   END IF
+ 
+   
+   #add-point:default_search段after sql name="default_search.after_sql"
+   
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      #若無外部參數則預設為1=2
+      LET g_default = FALSE
+      
+      #預設查詢條件
+      CALL cl_qbe_get_default_qryplan() RETURNING ls_where
+      IF NOT cl_null(ls_where) THEN
+         CALL util.JSON.parse(ls_where, la_wc)
+         INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+         INITIALIZE g_wc2_table2 TO NULL
+ 
+         INITIALIZE g_wc2_table3 TO NULL
+ 
+ 
+         FOR li_idx = 1 TO la_wc.getLength()
+            CASE
+               WHEN la_wc[li_idx].tableid = "bmba_t" 
+                  LET g_wc = la_wc[li_idx].wc
+               WHEN la_wc[li_idx].tableid = "bmca_t" 
+                  LET g_wc2_table1 = la_wc[li_idx].wc
+               WHEN la_wc[li_idx].tableid = "bmcc_t" 
+                  LET g_wc2_table2 = la_wc[li_idx].wc
+ 
+               WHEN la_wc[li_idx].tableid = "bmce_t" 
+                  LET g_wc2_table3 = la_wc[li_idx].wc
+ 
+ 
+               WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                  LET g_wc2_extend = la_wc[li_idx].wc
+            END CASE
+         END FOR
+         IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1) 
+            OR NOT cl_null(g_wc2_table2)
+ 
+            OR NOT cl_null(g_wc2_table3)
+ 
+ 
+            OR NOT cl_null(g_wc2_extend)
+            THEN
+            #組合g_wc2
+            IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+               LET g_wc2 = g_wc2_table1
+            END IF
+            IF g_wc2_table2 <> " 1=1" AND NOT cl_null(g_wc2_table2) THEN
+               LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+            END IF
+ 
+            IF g_wc2_table3 <> " 1=1" AND NOT cl_null(g_wc2_table3) THEN
+               LET g_wc2 = g_wc2 ," AND ", g_wc2_table3
+            END IF
+ 
+ 
+            IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+               LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+            END IF
+         
+            IF g_wc2.subString(1,5) = " AND " THEN
+               LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+            END IF
+         END IF
+      END IF
+    
+      IF cl_null(g_wc) AND cl_null(g_wc2) THEN
+         LET g_wc = " 1=2"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前 name="default_search.after"
+   LET l_wc = ''  #140928 add
+   IF NOT cl_null(g_argv[1]) THEN
+      LET l_wc = l_wc," bmbasite = '",g_argv[1],"' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET l_wc = l_wc, " bmba001 = '", g_argv[02], "' AND "
+   END IF
+   
+   #IF NOT cl_null(g_argv[03]) THEN
+   IF g_argv[03] IS NOT NULL THEN #140928 mod
+      LET l_wc = l_wc, " bmba002 = '", g_argv[03], "' AND " #140928 add'
+   END IF
+
+   IF NOT cl_null(g_argv[04]) THEN
+      LET l_wc = l_wc, " bmba003 = '", g_argv[04], "' AND " #140928 add'
+   END IF
+
+   #IF NOT cl_null(g_argv[05]) THEN
+   IF g_argv[05] IS NOT NULL THEN #140928 mod
+      LET l_wc = l_wc, " bmba004 = '", g_argv[05], "' AND " #140928 add'
+   END IF
+
+   IF NOT cl_null(g_argv[06]) THEN
+      #LET l_wc = l_wc, " bmba005 = ", g_argv[06], " AND "
+      LET l_wc = l_wc, " to_char(bmba005,'yyyy-mm-dd hh24:mi:ss') = '", g_argv[06], "' AND " #140928 mod
+   END IF
+
+   #IF NOT cl_null(g_argv[07]) THEN
+   IF g_argv[07] IS NOT NULL THEN #140928 mod
+      LET l_wc = l_wc, " bmba007 = '", g_argv[07], "' AND " #140928 add'
+   END IF
+
+   #IF NOT cl_null(g_argv[08]) THEN
+   IF g_argv[08] IS NOT NULL THEN #140928 mod
+      LET l_wc = l_wc, " bmba008 = '", g_argv[08], "' AND " #140928 add'
+   END IF
+
+
+   
+   IF NOT cl_null(l_wc) THEN
+      LET g_wc = l_wc.subString(1,l_wc.getLength()-5)
+   ELSE
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=1"
+      END IF
+   END IF   
+   #end add-point  
+ 
+   IF g_wc.getIndexOf(" 1=2", 1) THEN
+      LET g_default = TRUE
+   END IF
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.state_change" >}
+   
+ 
+{</section>}
+ 
+{<section id="abmm203.idx_chk" >}
+#+ 顯示正確的單身資料筆數
+PRIVATE FUNCTION abmm203_idx_chk()
+   #add-point:idx_chk段define(客製用) name="idx_chk.define_customerization"
+   
+   #end add-point  
+   #add-point:idx_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="idx_chk.define"
+   IF g_current_page = 4 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail4")
+      IF g_detail_idx > g_bmca4_d.getLength() THEN
+         LET g_detail_idx = g_bmca4_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_bmca4_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_bmca4_d.getLength() TO FORMONLY.cnt
+   END IF
+   IF g_current_page = 5 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail5")
+      IF g_detail_idx > g_bmca5_d.getLength() THEN
+         LET g_detail_idx = g_bmca5_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_bmca5_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_bmca5_d.getLength() TO FORMONLY.cnt
+   END IF
+   #end add-point  
+   
+   #add-point:Function前置處理  name="idx_chk.pre_function"
+   
+   #end add-point
+   
+   IF g_current_page = 1 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail1")
+      IF g_detail_idx > g_bmca_d.getLength() THEN
+         LET g_detail_idx = g_bmca_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_bmca_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_bmca_d.getLength() TO FORMONLY.cnt
+   END IF
+   
+   IF g_current_page = 2 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail2")
+      IF g_detail_idx > g_bmca2_d.getLength() THEN
+         LET g_detail_idx = g_bmca2_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_bmca2_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_bmca2_d.getLength() TO FORMONLY.cnt
+   END IF
+   IF g_current_page = 3 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail3")
+      IF g_detail_idx > g_bmca3_d.getLength() THEN
+         LET g_detail_idx = g_bmca3_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_bmca3_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_bmca3_d.getLength() TO FORMONLY.cnt
+   END IF
+ 
+   
+   #add-point:idx_chk段other name="idx_chk.other"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.b_fill2" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION abmm203_b_fill2(pi_idx)
+   #add-point:b_fill2段define(客製用) name="b_fill2.define_customerization"
+   
+   #end add-point
+   DEFINE pi_idx                 LIKE type_t.num10
+   DEFINE li_ac                  LIKE type_t.num10
+   DEFINE li_detail_idx_tmp      LIKE type_t.num10
+   DEFINE ls_chk                 LIKE type_t.chr1
+   #add-point:b_fill2段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill2.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="b_fill2.pre_function"
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   IF g_detail_idx <= 0 THEN
+      RETURN
+   END IF
+   
+   LET li_detail_idx_tmp = g_detail_idx
+   
+ 
+      
+ 
+      
+   #add-point:單身填充後 name="b_fill2.after_fill"
+   
+   #end add-point
+    
+   LET l_ac = li_ac
+   
+   CALL abmm203_detail_show()
+   
+   LET g_detail_idx = li_detail_idx_tmp
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.fill_chk" >}
+#+ 單身填充確認
+PRIVATE FUNCTION abmm203_fill_chk(ps_idx)
+   #add-point:fill_chk段define(客製用) name="fill_chk.define_customerization"
+   
+   #end add-point
+   DEFINE ps_idx        LIKE type_t.chr10
+   #add-point:fill_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fill_chk.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="fill_chk.before_chk"
+   
+   #end add-point
+   
+   #此funtion功能暫時停用(2015/1/12)
+   #無論傳入值為何皆回傳true(代表要填充該單身)
+ 
+   #全部為1=1 or null時回傳true
+   IF (cl_null(g_wc2_table1) OR g_wc2_table1.trim() = '1=1')  AND 
+      (cl_null(g_wc2_table2) OR g_wc2_table2.trim() = '1=1')  AND 
+      (cl_null(g_wc2_table3) OR g_wc2_table3.trim() = '1=1') THEN
+      #add-point:fill_chk段other_chk name="fill_chk.other_chk"
+      
+      #end add-point
+      RETURN TRUE
+   END IF
+   
+   #add-point:fill_chk段after_chk name="fill_chk.after_chk"
+   
+   #end add-point
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.status_show" >}
+PRIVATE FUNCTION abmm203_status_show()
+   #add-point:status_show段define(客製用) name="status_show.define_customerization"
+   
+   #end add-point
+   #add-point:status_show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="status_show.define"
+   
+   #end add-point
+   
+   #add-point:status_show段status_show name="status_show.status_show"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.mask_functions" >}
+&include "erp/abm/abmm203_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="abmm203.signature" >}
+   
+ 
+{</section>}
+ 
+{<section id="abmm203.set_pk_array" >}
+   #應用 a51 樣板自動產生(Version:8)
+#+ 給予pk_array內容
+PRIVATE FUNCTION abmm203_set_pk_array()
+   #add-point:set_pk_array段define name="set_pk_array.define_customerization"
+   
+   #end add-point
+   #add-point:set_pk_array段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_pk_array.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="set_pk_array.before"
+   
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_bmba_m.bmba001
+   LET g_pk_array[1].column = 'bmba001'
+   LET g_pk_array[2].values = g_bmba_m.bmba002
+   LET g_pk_array[2].column = 'bmba002'
+   LET g_pk_array[3].values = g_bmba_m.bmba003
+   LET g_pk_array[3].column = 'bmba003'
+   LET g_pk_array[4].values = g_bmba_m.bmba004
+   LET g_pk_array[4].column = 'bmba004'
+   LET g_pk_array[5].values = g_bmba_m.bmba005
+   LET g_pk_array[5].column = 'bmba005'
+   LET g_pk_array[6].values = g_bmba_m.bmba007
+   LET g_pk_array[6].column = 'bmba007'
+   LET g_pk_array[7].values = g_bmba_m.bmba008
+   LET g_pk_array[7].column = 'bmba008'
+   
+   #add-point:set_pk_array段之後 name="set_pk_array.after"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="abmm203.other_dialog" readonly="Y" >}
+   
+ 
+{</section>}
+ 
+{<section id="abmm203.msgcentre_notify" >}
+#應用 a66 樣板自動產生(Version:6)
+PRIVATE FUNCTION abmm203_msgcentre_notify(lc_state)
+   #add-point:msgcentre_notify段define name="msgcentre_notify.define_customerization"
+   
+   #end add-point   
+   DEFINE lc_state LIKE type_t.chr80
+   #add-point:msgcentre_notify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="msgcentre_notify.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="msgcentre_notify.pre_function"
+   
+   #end add-point
+   
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = lc_state
+ 
+   #PK資料填寫
+   CALL abmm203_set_pk_array()
+   #單頭資料填寫
+   LET g_msgparam.data[1] = util.JSON.stringify(g_bmba_m)
+ 
+   #add-point:msgcentre其他通知 name="msgcentre_notify.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="abmm203.action_chk" >}
+#+ 修改/刪除前行為檢查(是否可允許此動作), 若有其他行為須管控也可透過此段落
+PRIVATE FUNCTION abmm203_action_chk()
+   #add-point:action_chk段define(客製用) name="action_chk.define_customerization"
+   
+   #end add-point
+   #add-point:action_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="action_chk.define"
+   
+   #end add-point
+   
+   #add-point:action_chk段action_chk name="action_chk.action_chk"
+   
+   #end add-point
+      
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmm203.other_function" readonly="Y" >}
+#+ 連動單身b_fill()
+PRIVATE FUNCTION abmm203_b_fill_1(p_bmca009)
+   DEFINE p_wc2      STRING
+   {</Local define>}
+   #add-point:b_fill段define
+   DEFINE p_bmca009     LIKE bmca_t.bmca009
+   DEFINE l_ac1         LIKE type_t.num5
+   DEFINE l_ac2         LIKE type_t.num5
+   DEFINE l_imaa005     LIKE imaa_t.imaa005
+   DEFINE l_imaa005_2   LIKE imaa_t.imaa005
+   
+
+   SELECT imaa005 INTO l_imaa005 FROM imaa_t 
+   WHERE imaaent = g_enterprise
+     AND imaa001 = g_bmba_m.bmba001
+   SELECT imaa005 INTO l_imaa005_2 FROM imaa_t 
+   WHERE imaaent = g_enterprise
+     AND imaa001 = g_bmba_m.bmba003   
+     
+   IF cl_null(l_ac) OR l_ac = 0 THEN
+      LET l_ac =1
+   END IF
+   IF g_flag1 = 'Y' THEN 
+      CALL g_bmca4_d.clear()    #g_bmca_d 單頭及單身 
+    
+      LET g_sql = "SELECT  UNIQUE bmcb010,bmcb011,'',bmcb012,'' FROM bmcb_t",    
+                  "",
+                  " WHERE bmcbent=? AND bmcbsite=? AND bmcb001=? AND bmcb002=? AND bmcb003=? AND bmcb004=? AND bmcb005=? AND bmcb007=? AND bmcb008=? AND bmcb009 = ?"
+     
+      IF NOT cl_null(g_wc_table4) THEN
+         LET g_sql = g_sql CLIPPED, " AND ", g_wc_table4 CLIPPED
+      END IF
+     
+      LET g_sql = g_sql, " ORDER BY bmcb_t.bmcb010"
+    
+      
+      PREPARE abmm203_pb4 FROM g_sql
+      DECLARE b_fill_cs4 CURSOR FOR abmm203_pb4
+     
+      LET l_ac1 = 1
+     
+      OPEN b_fill_cs4 USING g_enterprise, g_site,g_bmba_m.bmba001
+                                               ,g_bmba_m.bmba002
+    
+                                               ,g_bmba_m.bmba003
+    
+                                               ,g_bmba_m.bmba004
+    
+                                               ,g_bmba_m.bmba005
+    
+                                               ,g_bmba_m.bmba007
+    
+                                               ,g_bmba_m.bmba008
+                                               ,p_bmca009
+    
+                                               
+      FOREACH b_fill_cs4 INTO g_bmca4_d[l_ac1].bmcb010,g_bmca4_d[l_ac1].bmcb011,g_bmca4_d[l_ac1].bmcb011_desc,g_bmca4_d[l_ac1].bmcb012,g_bmca4_d[l_ac1].bmcb012_desc
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH:"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            EXIT FOREACH
+         END IF
+         
+         INITIALIZE g_ref_fields TO NULL
+         LET g_ref_fields[1] =  g_bmca4_d[l_ac1].bmcb011
+         #CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+         CALL ap_ref_array2(g_ref_fields,
+                               "SELECT imecl005 FROM imecl_t,imec_t,imeb_t 
+                                 WHERE imeclent=imecent
+                                   and imecl001=imec001
+                                   and imecl002=imec002
+                                   and imecl003=imec003
+                                   and imecent=imebent
+                                   and imec001=imeb001
+                                   and imec002=imeb002
+                                   AND imeb004='"||p_bmca009||"'
+                                   AND imeclent='"||g_enterprise||"' 
+                                   AND imecl001= '"||l_imaa005||"' 
+                                   AND imecl003 = ? 
+                                   AND imecl004='"||g_dlang||"'","") 
+              RETURNING g_rtn_fields     #161029-00005
+         LET g_bmca4_d[l_ac1].bmcb011_desc = g_rtn_fields[1]
+         DISPLAY BY NAME g_bmca4_d[l_ac1].bmcb011_desc
+		  
+		  
+         INITIALIZE g_ref_fields TO NULL
+         LET g_ref_fields[1] =  g_bmca4_d[l_ac1].bmcb012
+         CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+         LET g_bmca4_d[l_ac1].bmcb012_desc = g_rtn_fields[1]
+         DISPLAY BY NAME g_bmca4_d[l_ac1].bmcb012_desc         
+    
+         LET l_ac1 = l_ac1 + 1
+         IF l_ac1 > g_max_rec THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  9035
+            LET g_errparam.extend =  ''
+            LET g_errparam.popup = FALSE
+            CALL cl_err()
+
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+      CALL g_bmca4_d.deleteElement(g_bmca4_d.getLength())
+    
+      FREE abmm203_pb4
+   END IF 
+   
+   
+   IF g_flag2 = 'Y' THEN
+      CALL g_bmca5_d.clear()
+   
+      LET g_sql = "SELECT  UNIQUE bmcd010,'',bmcd011,'' FROM bmcd_t",    
+                  "",
+                  " WHERE bmcdent=? AND bmcdsite=? AND bmcd001=? AND bmcd002=? AND bmcd003=? AND bmcd004=? AND bmcd005=? AND bmcd007=? AND bmcd008=? AND bmcd009 =?"   
+    
+      IF NOT cl_null(g_wc_table5) THEN
+         LET g_sql = g_sql CLIPPED, " AND ", g_wc_table5 CLIPPED
+      END IF
+      
+      LET g_sql = g_sql, " ORDER BY bmcd_t.bmcd010"
+   
+      
+      PREPARE abmm203_pb5 FROM g_sql
+      DECLARE b_fill_cs5 CURSOR FOR abmm203_pb5
+    
+      LET l_ac2 = 1
+   
+      OPEN b_fill_cs5 USING g_enterprise, g_site,g_bmba_m.bmba001
+                                               ,g_bmba_m.bmba002
+   
+                                               ,g_bmba_m.bmba003
+   
+                                               ,g_bmba_m.bmba004
+   
+                                               ,g_bmba_m.bmba005
+   
+                                               ,g_bmba_m.bmba007
+   
+                                               ,g_bmba_m.bmba008
+                                               ,p_bmca009
+   
+                                               
+      FOREACH b_fill_cs5 INTO g_bmca5_d[l_ac2].bmcd010,g_bmca5_d[l_ac2].bmcd010_desc,g_bmca5_d[l_ac2].bmcd011,g_bmca5_d[l_ac2].bmcd011_desc
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH:"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            EXIT FOREACH
+         END IF
+         INITIALIZE g_ref_fields TO NULL
+         LET g_ref_fields[1] =  g_bmca5_d[l_ac2].bmcd010
+         CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields
+         CALL ap_ref_array2(g_ref_fields,
+                               "SELECT imecl005 FROM imecl_t,imec_t,imeb_t 
+                                 WHERE imeclent=imecent
+                                   and imecl001=imec001
+                                   and imecl002=imec002
+                                   and imecl003=imec003
+                                   and imecent=imebent
+                                   and imec001=imeb001
+                                   and imec002=imeb002
+                                   AND imeb004='"||p_bmca009||"'
+                                   AND imeclent='"||g_enterprise||"' 
+                                   AND imecl001= '"||l_imaa005||"' 
+                                   AND imecl003 = ? 
+                                   AND imecl004='"||g_dlang||"'","") 
+              RETURNING g_rtn_fields     #161029-00005
+         LET  g_bmca5_d[l_ac2].bmcd010_desc = g_rtn_fields[1]
+         DISPLAY BY NAME g_bmca5_d[l_ac2].bmcd010_desc   
+         
+         INITIALIZE g_ref_fields TO NULL
+         LET g_ref_fields[1] =  g_bmca5_d[l_ac2].bmcd011
+         CALL ap_ref_array2(g_ref_fields,"SELECT imecl005 FROM imecl_t WHERE imeclent='"||g_enterprise||"' AND imecl001= '"||l_imaa005_2||"' AND imecl003 = ? AND imecl004='"||g_dlang||"'","") RETURNING g_rtn_fields         
+         LET  g_bmca5_d[l_ac2].bmcd011_desc = g_rtn_fields[1]
+         DISPLAY BY NAME g_bmca5_d[l_ac2].bmcd011_desc  
+         
+         LET l_ac2 = l_ac2 + 1
+         IF l_ac2 > g_max_rec THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  9035
+            LET g_errparam.extend =  ''
+            LET g_errparam.popup = FALSE
+            CALL cl_err()
+
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+   
+      CALL g_bmca5_d.deleteElement(g_bmca5_d.getLength())
+      FREE abmm203_pb5
+   END IF 
+   
+END FUNCTION
+#+ 主件庫存特徵限定用料特徵起始值，特徵終止值檢查
+PRIVATE FUNCTION abmm203_bmcb011_chk(p_bmcb011,p_bmcb012,p_cmd)
+   DEFINE p_bmcb011      LIKE bmcb_t.bmcb011
+   DEFINE p_bmcb012      LIKE bmcb_t.bmcb012
+   DEFINE p_bmcb011_1    LIKE type_t.num5
+   DEFINE p_bmcb012_1    LIKE type_t.num5
+   DEFINE l_bmcb011      LIKE bmcb_t.bmcb011
+   DEFINE l_bmcb012      LIKE bmcb_t.bmcb012
+   DEFINE l_bmcb011_1    LIKE type_t.num5
+   DEFINE l_bmcb012_1    LIKE type_t.num5
+   DEFINE l_result       LIKE type_t.num5
+   DEFINE l_result1      LIKE type_t.num5
+   DEFINE p_cmd          LIKE type_t.chr1
+   DEFINE l_sql          STRING
+   
+   LET g_errno = ""
+   LET l_result = TRUE
+   LET l_result1 = TRUE
+   LET p_bmcb011_1 = p_bmcb011
+   LET p_bmcb012_1 = p_bmcb012
+   LET l_sql = " SELECT bmcb011,bmcb012 FROM bmcb_t ",
+               "  WHERE bmcbent = ", g_enterprise ,
+               "    AND bmcbsite = '",g_site,"'",
+               "    AND bmcb001 = '",g_bmba_m.bmba001,"'",
+               "    AND bmcb002 = '",g_bmba_m.bmba002,"'",
+               "    AND bmcb003 = '",g_bmba_m.bmba003,"'",
+               "    AND bmcb004 = '",g_bmba_m.bmba004,"'",
+               "    AND to_char(bmcb005,'yyyy-mm-dd hh24:mi:ss')  = '",g_bmba_m.bmba005,"'",
+               "    AND bmcb007 = '",g_bmba_m.bmba007,"'",
+               "    AND bmcb008 = '",g_bmba_m.bmba008,"'",
+               "    AND bmcb009 = '",g_bmca_d[l_ac].bmca009,"'"
+   IF p_cmd = 'u' THEN 
+      LET l_sql = l_sql," AND bmcb011 != '", g_bmca4_d_t.bmcb011 ,"'"
+   END IF      
+   PREPARE bmcb011_pb FROM l_sql
+   DECLARE bmcb011_cs CURSOR FOR bmcb011_pb  
+   FOREACH bmcb011_cs INTO l_bmcb011,l_bmcb012
+   IF NOT cl_null(l_bmcb011)  THEN
+      CALL s_num_isnum(l_bmcb011) RETURNING l_result
+      IF l_result THEN 
+         LET l_bmcb011_1 = l_bmcb011
+         IF  NOT cl_null(l_bmcb012) THEN   
+             CALL s_num_isnum(l_bmcb011) RETURNING l_result1
+             IF l_result1 THEN 
+                LET l_bmcb012_1 = l_bmcb012  
+                IF (p_bmcb011_1 > l_bmcb011_1 AND p_bmcb011_1 < l_bmcb012_1) OR (p_bmcb011_1 < l_bmcb011_1 AND p_bmcb012_1 > l_bmcb011_1) THEN
+                  LET g_errno = 'abm-00036'
+                  EXIT FOREACH
+                  RETURN
+               END IF
+            END IF
+         END IF
+      END IF
+   END IF
+   END FOREACH            
+END FUNCTION
+
+PRIVATE FUNCTION abmm203_act_oocq007()
+DEFINE l_oocq007  LIKE oocq_t.oocq007
+DEFINE r_success  LIKE type_t.num5
+
+   SELECT oocq007 INTO l_oocq007
+     FROM oocq_t,imaa_t
+    WHERE oocqent = imaaent
+      AND oocq002 = imaa010
+      AND oocq001 = '210'
+      AND oocqent = g_enterprise
+      AND imaa001 = g_bmba_m.bmba001
+   IF l_oocq007 = 'Y' THEN 
+      LET r_success = TRUE
+   ELSE
+      LET r_success = FALSE
+   END IF
+   RETURN r_success 
+END FUNCTION
+
+PRIVATE FUNCTION abmm203_chk_bmca009(p_bmca009,p_type)
+DEFINE p_bmca009         LIKE bmca_t.bmca009
+DEFINE p_type            LIKE type_t.chr1
+DEFINE l_imaa005         LIKE imaa_t.imaa005
+DEFINE l_imaa005_2       LIKE imaa_t.imaa005
+DEFINE l_n               LIKE type_t.num5
+DEFINE r_success         LIKE type_t.num5
+
+   LET r_success = FALSE
+   LET l_imaa005 = ""
+   LET l_imaa005_2 = ""
+   SELECT imaa005 INTO l_imaa005
+     FROM imaa_t
+    WHERE imaaent = g_enterprise
+      AND imaa001 = g_bmba_m.bmba001
+      
+   SELECT imaa005 INTO l_imaa005_2
+     FROM imaa_t
+    WHERE imaaent = g_enterprise
+      AND imaa001 = g_bmba_m.bmba003
+          
+   CASE p_type
+      WHEN '1'
+         IF cl_null(l_imaa005) THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'aec-00018'
+            LET g_errparam.extend = g_bmba_m.bmba001
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            RETURN r_success
+         END IF      
+         INITIALIZE g_chkparam.* TO NULL
+         LET g_chkparam.arg1 = l_imaa005
+         LET g_chkparam.arg2 = p_bmca009
+         #160318-00025#18  by 07900 --add-str
+         LET g_errshow = TRUE #是否開窗                   
+         LET g_chkparam.err_str[1] ="aim-00159:sub-01302|aimi092|",cl_get_progname("aimi092",g_lang,"2"),"|:EXEPROGaimi092"
+         #160318-00025#18  by 07900 --add-end
+         IF cl_chk_exist("v_imeb004") THEN
+         
+         ELSE
+            RETURN r_success 
+         END IF
+      WHEN '2'
+         IF cl_null(l_imaa005) THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'aec-00018'
+            LET g_errparam.extend = g_bmba_m.bmba003
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            RETURN r_success
+         END IF 
+         IF cl_null(l_imaa005_2) THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'aec-00048'
+            LET g_errparam.extend = g_bmba_m.bmba003
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            RETURN r_success
+         END IF          
+         INITIALIZE g_chkparam.* TO NULL
+         LET g_chkparam.arg1 = l_imaa005
+         LET g_chkparam.arg2 = p_bmca009
+         #160318-00025#18  by 07900 --add-str
+         LET g_errshow = TRUE #是否開窗                   
+         LET g_chkparam.err_str[1] ="aim-00159:sub-01302|aimi092|",cl_get_progname("aimi092",g_lang,"2"),"|:EXEPROGaimi092"
+         #160318-00025#18  by 07900 --add-end
+         IF cl_chk_exist("v_imeb004") THEN
+            INITIALIZE g_chkparam.* TO NULL
+            LET g_chkparam.arg1 = l_imaa005_2
+            LET g_chkparam.arg2 = p_bmca009
+            #160318-00025#18  by 07900 --add-str
+            LET g_errshow = TRUE #是否開窗                   
+            LET g_chkparam.err_str[1] ="aim-00159:sub-01302|aimi092|",cl_get_progname("aimi092",g_lang,"2"),"|:EXEPROGaimi092"
+           #160318-00025#18  by 07900 --add-end
+            IF cl_chk_exist("v_imeb004") THEN
+               
+            ELSE
+               RETURN r_success 
+            END IF         
+         ELSE
+            RETURN r_success 
+         END IF         
+      WHEN '3'
+         IF cl_null(l_imaa005_2) THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'aec-00048'
+            LET g_errparam.extend = g_bmba_m.bmba001
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            RETURN r_success
+         END IF       
+         INITIALIZE g_chkparam.* TO NULL
+         LET g_chkparam.arg1 = l_imaa005_2
+         LET g_chkparam.arg2 = p_bmca009
+         #160318-00025#18  by 07900 --add-str
+         LET g_errshow = TRUE #是否開窗                   
+         LET g_chkparam.err_str[1] ="aim-00159:sub-01302|aimi092|",cl_get_progname("aimi092",g_lang,"2"),"|:EXEPROGaimi092"
+         #160318-00025#18  by 07900 --add-end
+         IF cl_chk_exist("v_imeb004") THEN
+         
+         ELSE
+            RETURN r_success 
+         END IF  
+   END CASE
+   LET r_success = TRUE
+   RETURN r_success 
+END FUNCTION
+
+ 
+{</section>}
+ 

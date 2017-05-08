@@ -1,0 +1,86 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abxt400_02" module="abx" jobmode="N" type="c03a" industry="std" fix_arg="0" crtid="02294" crtdt="2016-10-30 17:48:17" modid="02294" moddt="2016-10-30 17:54:49" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="出貨單產生放行單身">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xmdkdocno,xmdkdocdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xmdl087(chr1),xmdldocno(chr500),xmdlseq,xmdl008,xmdl008_desc(chr500),xmdl008_desc_1(chr500),xmdl041,xmdl021,xmdl021_desc(chr500),xmdl022,xmdl060"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="ok"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abx" filename="abxt400_02" method="dialog">
+    <section id="input">
+      <input id="head" field=""/>
+      <input id="body" page="1" field="xmdl087" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xmdkdocno,xmdkdocdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xmdkdocno"/>
+      <set id="head" type="no_entry" field="xmdkdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xmdkdocno">
+        <controlp form="q_xmdkdocno" state="c"/>
+      </column>
+      <column id="xmdkdocdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xmdl087"/>
+      <column id="xmdldocno"/>
+      <column id="xmdlseq">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmdl008">
+        <after>
+          <reference field="xmdl008_desc" ref_field="xmdl_t.xmdl008" map_field="xmdl008" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmdl008_desc"/>
+      <column id="xmdl008_desc_1"/>
+      <column id="xmdl041"/>
+      <column id="xmdl021">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="xmdl021_desc" ref_field="xmdl_t.xmdl021" map_field="xmdl021" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="xmdl021_desc"/>
+      <column id="xmdl022" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmdl060" def_scc="4083"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xmdk_t" pk="xmdkdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT xmdkdocno,xmdkdocdt FROM xmdk_t WHERE xmdkent= ? AND xmdkdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xmdkdocno,xmdkdocdt FROM xmdk_t" order="xmdkdocno"/>
+    </head>
+    <body id="xmdl_t" page="1" linked="" pk="xmdlseq" fk="xmdldocno">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,&apos;&apos;,xmdlseq,xmdl008,&apos;&apos;,&apos;&apos;,xmdl041,xmdl021,&apos;&apos;,xmdl022,xmdl060 FROM xmdl_t WHERE xmdlent=? AND xmdldocno=? AND xmdlseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,xmdlseq,xmdl008,&apos;&apos;,&apos;&apos;,xmdl041,xmdl021,&apos;&apos;,xmdl022,xmdl060 FROM xmdl_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

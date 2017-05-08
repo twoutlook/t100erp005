@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axmq501" module="axm" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="04441" crtdt="2015-07-24 10:20:55" modid="04441" moddt="2015-07-24 14:42:29" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="訂單生產狀況查詢">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="xmdadocno,xmdadocdt,xmda002,xmda003,xmdc001,imaa009,chk1,chk2,chk3,chk4,chk5"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),xmda004,xmda004_desc(chr500),xmdadocno,xmdadocdt,xmda002,url_b_xmda002(string),xmda002_desc(chr500),xmda003,xmda003_desc(chr500)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),xmda004(b_xmda004),xmda004_desc(b_xmda004_desc),xmdadocno(b_xmdadocno),xmdadocdt(b_xmdadocdt),xmda002(b_xmda002),url_b_xmda002(url_b_xmda002),xmda002_desc(b_xmda002_desc),xmda003(b_xmda003),xmda003_desc(b_xmda003_desc)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="axm" filename="axmq501" method="dialog">
+    <section id="input"/>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="xmda004(b_xmda004),xmdadocno(b_xmdadocno),xmdadocdt(b_xmdadocdt),xmda002(b_xmda002),xmda003(b_xmda003)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="xmda004">
+        <after>
+          <reference field="xmda004_desc" ref_field="xmda004" map_field="xmda004" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_6" state="c"/>
+      </column>
+      <column id="xmda004_desc"/>
+      <column id="xmdadocno">
+        <controlp form="q_xmdadocno" state="c"/>
+      </column>
+      <column id="xmdadocdt"/>
+      <column id="xmda002">
+        <after>
+          <reference field="xmda002_desc" ref_field="xmda002" map_field="pmdl002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="url_b_xmda002"/>
+      <column id="xmda002_desc"/>
+      <column id="xmda003">
+        <after>
+          <reference field="xmda003_desc" ref_field="xmda003" map_field="xmda003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="xmda003_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="xmda_t" page="1" linked="" pk="xmdadocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,xmda004,&apos;&apos;,xmdadocno,xmdadocdt,xmda002,&apos;&apos;,xmda003,&apos;&apos; FROM xmda_t WHERE xmdaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

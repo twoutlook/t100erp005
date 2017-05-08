@@ -1,0 +1,115 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="arti901" module="art" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="06815" crtdt="2015-06-30 19:56:10" modid="06815" moddt="2015-11-06 18:24:21" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="預算指標參數設定維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="rtca001,rtcal003,rtcal004,rtca002,rtca002_desc(chr500),rtca003,rtca004,rtca004_desc(chr500),rtca005,rtca006,rtcastus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="rtca001,rtcaownid,rtcaownid_desc(chr500),rtcaowndp,rtcaowndp_desc(chr500),rtcacrtid,rtcacrtid_desc(chr500),rtcacrtdp,rtcacrtdp_desc(chr500),rtcacrtdt,rtcamodid,rtcamodid_desc(chr500),rtcamoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="art" filename="arti901" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="rtca001,rtcal003,rtcal004,rtca002,rtca003,rtca004,rtca005,rtca006,rtcastus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="rtca001,rtcal003,rtcal004,rtca002,rtca003,rtca004,rtca005,rtca006,rtcastus"/>
+      <construct id="body" page="2" field="rtcaownid,rtcaowndp,rtcacrtid,rtcacrtdp,rtcacrtdt,rtcamodid,rtcamoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="rtca001">
+        <controlp form="q_rtca001_02" state="c"/>
+      </column>
+      <column id="rtcal003"/>
+      <column id="rtcal004"/>
+      <column id="rtca002">
+        <after>
+          <reference field="rtca002_desc" ref_field="rtca002" map_field="rtca002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2138&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="rtca002_desc"/>
+      <column id="rtca003" def_scc="6835"/>
+      <column id="rtca004">
+        <after>
+          <reference field="rtca004_desc" ref_field="rtca_t.rtca004" map_field="rtcaent,rtca004" ref_sql="SELECT rtcal003 FROM rtcal_t WHERE rtcalent=$varg_enterprise$var AND rtcal001=? AND rtcal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtca001_01" state="i"/>
+        <controlp form="q_rtca001_01" state="c"/>
+      </column>
+      <column id="rtca004_desc"/>
+      <column id="rtca005" type="S" default="N"/>
+      <column id="rtca006" type="S" default="Y"/>
+      <column id="rtcastus" scc="50" type="S" default="Y">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="rtcaownid">
+        <after>
+          <reference field="rtcaownid_desc" ref_field="rtca_t.rtcaownid" map_field="rtcaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtcaownid_desc"/>
+      <column id="rtcaowndp">
+        <after>
+          <reference field="rtcaowndp_desc" ref_field="rtca_t.rtcaowndp" map_field="rtcaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtcaowndp_desc"/>
+      <column id="rtcacrtid">
+        <after>
+          <reference field="rtcacrtid_desc" ref_field="rtca_t.rtcacrtid" map_field="rtcacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtcacrtid_desc"/>
+      <column id="rtcacrtdp">
+        <after>
+          <reference field="rtcacrtdp_desc" ref_field="rtca_t.rtcacrtdp" map_field="rtcacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtcacrtdp_desc"/>
+      <column id="rtcacrtdt"/>
+      <column id="rtcamodid">
+        <after>
+          <reference field="rtcamodid_desc" ref_field="rtca_t.rtcamodid" map_field="rtcamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtcamodid_desc"/>
+      <column id="rtcamoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="rtca_t" page="1,2" linked="" pk="rtca001">
+      <sql id="forupd_sql_detail" query="SELECT rtca001,&apos;&apos;,&apos;&apos;,rtca002,&apos;&apos;,rtca003,rtca004,&apos;&apos;,rtca005,rtca006,rtcastus,&apos;&apos;,rtcaownid,&apos;&apos;,rtcaowndp,&apos;&apos;,rtcacrtid,&apos;&apos;,rtcacrtdp,&apos;&apos;,rtcacrtdt,rtcamodid,&apos;&apos;,rtcamoddt FROM rtca_t WHERE rtcaent=? AND rtca001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rtca001,&apos;&apos;,&apos;&apos;,rtca002,&apos;&apos;,rtca003,rtca004,&apos;&apos;,rtca005,rtca006,rtcastus,&apos;&apos;,rtcaownid,&apos;&apos;,rtcaowndp,&apos;&apos;,rtcacrtid,&apos;&apos;,rtcacrtdp,&apos;&apos;,rtcacrtdt,rtcamodid,&apos;&apos;,rtcamoddt FROM rtca_t WHERE rtcaent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="rtcal_t.rtcal003,rtcal_t.rtcal004" table="rtcal_t" fk="rtca001" pk="rtcal001,rtcal002" field="rtcal003,rtcal004"/>
+    </body>
+  </dataset>
+</assembly>
+

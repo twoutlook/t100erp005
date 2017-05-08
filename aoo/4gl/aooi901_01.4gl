@@ -1,0 +1,473 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aooi901_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2014-09-02 18:44:13), PR版次:0004(2016-09-19 10:09:16)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000160
+#+ Filename...: aooi901_01
+#+ Description: 委託第三方代收設定
+#+ Creator....: 02295(2013-09-27 16:33:46)
+#+ Modifier...: 02295 -SD/PR- 02294
+ 
+{</section>}
+ 
+{<section id="aooi901_01.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#160905-00007#9  2016/09/05  By 01531   调整系统中无ENT的SQL条件增加ent
+#160913-00055#3  2016/09/18  By lixiang  交易对象栏位开窗调整为q_pmaa001_25
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_ooie_m        RECORD
+       ooie003 LIKE ooie_t.ooie003, 
+   ooie004 LIKE ooie_t.ooie004, 
+   ooie004_desc LIKE type_t.chr80, 
+   ooie005 LIKE ooie_t.ooie005, 
+   ooie006 LIKE ooie_t.ooie006, 
+   ooie007 LIKE ooie_t.ooie007
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_ooiesite      LIKE ooie_t.ooiesite
+DEFINE g_ooie001       LIKE ooie_t.ooie001
+DEFINE g_ooie009       LIKE ooie_t.ooie009
+DEFINE g_ooie_m_t      type_g_ooie_m
+#end add-point
+ 
+DEFINE g_ooie_m        type_g_ooie_m
+ 
+   
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aooi901_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aooi901_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   p_ooiesite,p_ooie001,p_ooie009 
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE p_ooiesite      LIKE ooie_t.ooiesite
+   DEFINE p_ooie001       LIKE ooie_t.ooie001
+   DEFINE p_ooie009       LIKE ooie_t.ooie009
+   DEFINE l_ooiemodid     LIKE ooie_t.ooiemodid
+   DEFINE l_ooiemoddt     DATETIME YEAR TO SECOND
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aooi901_01 WITH FORM cl_ap_formpath("aoo","aooi901_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   LET g_ooiesite = p_ooiesite
+   LET g_ooie001 = p_ooie001
+   LET g_ooie_m.ooie003 = p_ooie009
+   LET g_ooie_m.ooie007 = 'N'
+   CALL aooi901_01_display()
+   LET g_ooie_m_t.* = g_ooie_m.*
+   LET l_ooiemodid = g_user
+   LET l_ooiemoddt = cl_get_current()
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_ooie_m.ooie003,g_ooie_m.ooie004,g_ooie_m.ooie005,g_ooie_m.ooie006,g_ooie_m.ooie007  
+          ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            CALL aooi901_01_display()
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooie003
+            #add-point:BEFORE FIELD ooie003 name="input.b.ooie003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooie003
+            
+            #add-point:AFTER FIELD ooie003 name="input.a.ooie003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooie003
+            #add-point:ON CHANGE ooie003 name="input.g.ooie003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooie004
+            
+            #add-point:AFTER FIELD ooie004 name="input.a.ooie004"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooie_m.ooie004
+            CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_ooie_m.ooie004_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_ooie_m.ooie004_desc
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooie004
+            #add-point:BEFORE FIELD ooie004 name="input.b.ooie004"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooie004
+            #add-point:ON CHANGE ooie004 name="input.g.ooie004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooie005
+            #add-point:BEFORE FIELD ooie005 name="input.b.ooie005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooie005
+            
+            #add-point:AFTER FIELD ooie005 name="input.a.ooie005"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooie005
+            #add-point:ON CHANGE ooie005 name="input.g.ooie005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooie006
+            #add-point:BEFORE FIELD ooie006 name="input.b.ooie006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooie006
+            
+            #add-point:AFTER FIELD ooie006 name="input.a.ooie006"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooie006
+            #add-point:ON CHANGE ooie006 name="input.g.ooie006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooie007
+            #add-point:BEFORE FIELD ooie007 name="input.b.ooie007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooie007
+            
+            #add-point:AFTER FIELD ooie007 name="input.a.ooie007"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooie007
+            #add-point:ON CHANGE ooie007 name="input.g.ooie007"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.ooie003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooie003
+            #add-point:ON ACTION controlp INFIELD ooie003 name="input.c.ooie003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.ooie004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooie004
+            #add-point:ON ACTION controlp INFIELD ooie004 name="input.c.ooie004"
+
+		   	INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_ooie_m.ooie004             #給予default值
+
+            #給予arg
+
+            #CALL q_pmaa001()                                #呼叫開窗  #160913-00055#3 
+            CALL q_pmaa001_25()        #160913-00055#3
+
+            LET g_ooie_m.ooie004 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_ooie_m.ooie004 TO ooie004              #顯示到畫面上
+            CALL aooi901_01_ooie011_desc()
+            NEXT FIELD ooie004                          #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.ooie005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooie005
+            #add-point:ON ACTION controlp INFIELD ooie005 name="input.c.ooie005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.ooie006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooie006
+            #add-point:ON ACTION controlp INFIELD ooie006 name="input.c.ooie006"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.ooie007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooie007
+            #add-point:ON ACTION controlp INFIELD ooie007 name="input.c.ooie007"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            CALL s_transaction_begin()    
+            CALL cl_showmsg()   #錯誤訊息統整顯示
+
+            UPDATE ooie_t SET (ooie004,ooie005,ooie006,ooie007,ooiemodid,ooiemoddt) = (g_ooie_m.ooie004,g_ooie_m.ooie005,g_ooie_m.ooie006,g_ooie_m.ooie007,l_ooiemodid,l_ooiemoddt)
+             WHERE ooieent = g_enterprise AND ooiesite = g_ooiesite AND ooie001 = g_ooie001
+
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "ooie_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+  
+               CALL s_transaction_end('N','0')
+            ELSE
+               CALL s_transaction_end('Y','0')
+            END IF
+         
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aooi901_01 
+   
+   #add-point:input段after input name="input.post_input"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi901_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aooi901_01.other_function" readonly="Y" >}
+#+ 資料顯示
+PRIVATE FUNCTION aooi901_01_display()
+   SELECT ooie004,ooie005,ooie006,ooie007
+     INTO g_ooie_m.ooie004,g_ooie_m.ooie005,g_ooie_m.ooie006,g_ooie_m.ooie007 
+     FROM ooie_t WHERE ooiesite = g_ooiesite AND ooie001 = g_ooie001
+     AND ooieent = g_enterprise  #160905-00007#9  add
+   DISPLAY BY NAME g_ooie_m.ooie004,g_ooie_m.ooie005,g_ooie_m.ooie006,g_ooie_m.ooie007 
+   CALL aooi901_01_ooie011_desc()   
+   IF cl_null( g_ooie_m.ooie007) THEN 
+      LET  g_ooie_m.ooie007 = 'N'
+      DISPLAY BY NAME g_ooie_m.ooie007 
+   END IF
+END FUNCTION
+#+ 百分號格式轉換
+PRIVATE FUNCTION aooi901_01_set_format(ps_fields,ps_format)
+   DEFINE   ps_fields           STRING,
+            ps_format           STRING
+   DEFINE   lst_fields          base.StringTokenizer,
+            ls_field_name       STRING
+   DEFINE   lnode_root          om.DomNode,
+            llst_items          om.NodeList,
+            li_i                LIKE type_t.num5,
+            lnode_item          om.DomNode,
+            ls_item_name        STRING,
+            lnode_item_child    om.DomNode,
+            ls_item_child_tag   STRING
+   DEFINE   lwin_curr           ui.Window
+
+   IF (ps_fields IS NULL) THEN
+      RETURN
+   ELSE
+      LET ps_fields = ps_fields.toLowerCase()
+   END IF
+
+   LET lwin_curr = ui.Window.getCurrent()
+   LET lnode_root = lwin_curr.getNode()
+
+   LET llst_items = lnode_root.selectByPath("//Form//*")
+   LET lst_fields = base.StringTokenizer.create(ps_fields, ",")
+   WHILE lst_fields.hasMoreTokens()
+      LET ls_field_name = lst_fields.nextToken()
+      LET ls_field_name = ls_field_name.trim()
+
+      FOR li_i = 1 TO llst_items.getLength()
+         LET lnode_item = llst_items.item(li_i)
+         LET ls_item_name = lnode_item.getAttribute("colName")
+
+         IF (ls_item_name IS NULL) THEN
+            LET ls_item_name = lnode_item.getAttribute("name")
+
+            IF (ls_item_name IS NULL) THEN
+               CONTINUE FOR
+            END IF
+         END IF
+
+         IF (ls_item_name.equals(ls_field_name)) THEN
+            LET lnode_item_child = lnode_item.getFirstChild()
+            LET ls_item_child_tag = lnode_item_child.getTagName()
+            IF (ls_item_child_tag.equals("Edit") OR
+                ls_item_child_tag.equals("ButtonEdit") OR
+                ls_item_child_tag.equals("Label") OR
+                ls_item_child_tag.equals("DateEdit")) THEN
+
+               CALL lnode_item_child.setAttribute("format", "")
+               CALL lnode_item_child.setAttribute("format", ps_format)
+            END IF
+
+            EXIT FOR
+         END IF
+      END FOR
+   END WHILE
+END FUNCTION
+#+ 代收機構名稱
+PRIVATE FUNCTION aooi901_01_ooie011_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_ooie_m.ooie004
+   CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_ooie_m.ooie004_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_ooie_m.ooie004_desc
+END FUNCTION
+
+ 
+{</section>}
+ 

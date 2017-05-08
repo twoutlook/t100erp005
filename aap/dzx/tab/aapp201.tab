@@ -1,0 +1,87 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapp201" module="aap" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="00942" crtdt="2016-05-18 14:20:11" modid="02114" moddt="2016-06-13 11:16:06" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="租賃結算帳務批次立帳作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="apcasite,apcasite_desc(chr80),apcald,apcald_desc(chr80),glav002,glav006,apcadocno,apcadocno_desc(chr80),apcadocdt,apca003,apca003_desc(chr80),apca007,apca007_desc(chr80),apca011,apca011_desc(chr80),xrca007,xrca007_desc(chr80),rate1(chr500),apca008,apca008_desc(chr80),xrcadocno,xrcadocno_desc(chr80),stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="aap" filename="aapp201" method="dialog">
+    <section id="input">
+      <input id="head" field="apcasite,apcald,glav002,glav006,apcadocno,apcadocdt,apca003,apca007,apca011,xrca007,rate1,apca008,xrcadocno"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="apcasite">
+        <after>
+          <reference field="apcasite_desc" ref_field="apcasite" map_field="apcaent,apcasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+      </column>
+      <column id="apcasite_desc"/>
+      <column id="apcald">
+        <after>
+          <reference field="apcald_desc" ref_field="apcald" map_field="apcaent.apcald" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+      </column>
+      <column id="apcald_desc"/>
+      <column id="glav002"/>
+      <column id="glav006">
+        <after>
+          <check id="range" st="&lt;=13.000" st_type="0" errno="azz-00087" bt="&gt;=1.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="apcadocno">
+        <after/>
+        <controlp form="q_ooba002_1" state="i"/>
+      </column>
+      <column id="apcadocno_desc"/>
+      <column id="apcadocdt"/>
+      <column id="apca003">
+        <after/>
+        <controlp form="q_ooag001" state="i"/>
+      </column>
+      <column id="apca003_desc"/>
+      <column id="apca007">
+        <after/>
+        <controlp form="q_oocq002" state="i"/>
+      </column>
+      <column id="apca007_desc"/>
+      <column id="apca011">
+        <after/>
+        <controlp form="q_oodb002_5" state="i"/>
+      </column>
+      <column id="apca011_desc"/>
+      <column id="xrca007">
+        <after/>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="xrca007_desc"/>
+      <column id="rate1"/>
+      <column id="apca008">
+        <after/>
+        <controlp form="q_ooib001_2" state="i"/>
+      </column>
+      <column id="apca008_desc"/>
+      <column id="xrcadocno">
+        <after/>
+        <controlp form="q_ooba002_3" state="i"/>
+        <controlp form="q_xrcadocno" state="c"/>
+      </column>
+      <column id="xrcadocno_desc"/>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

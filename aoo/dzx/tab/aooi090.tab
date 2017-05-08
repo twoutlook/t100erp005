@@ -1,0 +1,105 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi090" module="aoo" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02587" crtdt="2013-11-19 16:09:57" modid="07024" moddt="2015-09-25 10:26:18" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="據點級資料集團控制設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="ooeh001"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="ooehstus,ooeh002,ooeh002_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="ooeh002,ooehownid,ooehownid_desc(chr500),ooehowndp,ooehowndp_desc(chr500),ooehcrtid,ooehcrtid_desc(chr500),ooehcrtdp,ooehcrtdp_desc(chr500),ooehcrtdt,ooehmodid,ooehmodid_desc(chr500),ooehmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi090" method="dialog">
+    <section id="input">
+      <input id="head" field="ooeh001"/>
+      <input id="body" page="1" field="ooehstus,ooeh002" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="ooeh001"/>
+      <construct id="body" page="1" field="ooehstus,ooeh002"/>
+      <construct id="body" page="2" field="ooehownid,ooehowndp,ooehcrtid,ooehcrtdp,ooehcrtdt,ooehmodid,ooehmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="ooeh001"/>
+      <set id="head" type="no_entry" field="ooeh001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="ooeh001" type="S" default="1" def_scc="1015"/>
+    </init>
+    <init id="body" page="1">
+      <column id="ooehstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="ooeh002">
+        <after>
+          <reference field="ooeh002_desc" ref_field="ooeh_t.ooeh002" map_field="ooeh002" ref_sql="SELECT dzebl003 FROM dzebl_t WHERE dzebl001=? AND dzebl002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_dzeb002_1" state="i"/>
+        <controlp form="q_dzeb002_3" state="c"/>
+      </column>
+      <column id="ooeh002_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="ooehownid">
+        <after>
+          <reference field="ooehownid_desc" ref_field="ooeh_t.ooehownid" map_field="ooehownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ooehownid_desc"/>
+      <column id="ooehowndp">
+        <after>
+          <reference field="ooehowndp_desc" ref_field="ooeh_t.ooehowndp" map_field="ooehowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="ooehowndp_desc"/>
+      <column id="ooehcrtid">
+        <after>
+          <reference field="ooehcrtid_desc" ref_field="ooeh_t.ooehcrtid" map_field="ooehcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ooehcrtid_desc"/>
+      <column id="ooehcrtdp">
+        <after>
+          <reference field="ooehcrtdp_desc" ref_field="ooeh_t.ooehcrtdp" map_field="ooehcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="ooehcrtdp_desc"/>
+      <column id="ooehcrtdt"/>
+      <column id="ooehmodid">
+        <after>
+          <reference field="ooehmodid_desc" ref_field="ooeh_t.ooehmodid" map_field="ooehmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ooehmodid_desc"/>
+      <column id="ooehmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="ooeh_t" pk="ooeh001">
+      <sql id="forupd_sql" type="sql" query="SELECT ooeh001 FROM ooeh_t WHERE ooehent= ? AND ooeh001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT ooeh001 FROM ooeh_t" order="ooeh001"/>
+    </head>
+    <body id="ooeh_t" page="1,2" linked="" pk="ooeh002" fk="ooeh001">
+      <sql id="forupd_sql_detail" query="SELECT ooehstus,ooeh002,&apos;&apos;,&apos;&apos;,ooehownid,&apos;&apos;,ooehowndp,&apos;&apos;,ooehcrtid,&apos;&apos;,ooehcrtdp,&apos;&apos;,ooehcrtdt,ooehmodid,&apos;&apos;,ooehmoddt FROM ooeh_t WHERE ooehent=? AND ooeh001=? AND ooeh002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT ooehstus,ooeh002,&apos;&apos;,&apos;&apos;,ooehownid,&apos;&apos;,ooehowndp,&apos;&apos;,ooehcrtid,&apos;&apos;,ooehcrtdp,&apos;&apos;,ooehcrtdt,ooehmodid,&apos;&apos;,ooehmoddt FROM ooeh_t WHERE ooehent= ? AND ooeh001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

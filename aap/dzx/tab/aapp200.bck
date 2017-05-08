@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapp200" module="aap" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="02114" crtdt="2015-05-11 10:21:06" modid="02114" moddt="2016-02-02 11:18:43" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="結算應付帳款批次產生作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="apcasite,apcasite_desc(chr80),apcald,apcald_desc(chr80),glav002,glav006,chk_21(chr500),chk_23(chr500),chk_24(chr500),chk_22(chr500),chk_29(chr500),chk_25(chr500),b_comb(chr500),rate1(chr500),source(chr500),apcadocdt,apcadocno,apcadocno_desc(chr80),apca007,apca007_desc(chr80),apca003,apca003_desc(chr80),apca008,apca008_desc(chr80),apca011,apca011_desc(chr80),stdgdocno(chr20),stbg006(chr10),stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="aap" filename="aapp200" method="dialog">
+    <section id="input">
+      <input id="head" field="apcasite,apcald,glav002,glav006,chk_21,chk_23,chk_24,chk_22,chk_29,chk_25,b_comb,rate1,source,apcadocdt,apcadocno,apca007,apca003,apca008,apca011"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="stdgdocno,stbg006"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="apcasite">
+        <after>
+          <reference field="apcasite_desc" ref_field="apcasite" map_field="apcaent,apcasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+      </column>
+      <column id="apcasite_desc"/>
+      <column id="apcald">
+        <after>
+          <reference field="apcald_desc" ref_field="apcald" map_field="apcaent.apcald" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+      </column>
+      <column id="apcald_desc"/>
+      <column id="glav002"/>
+      <column id="glav006">
+        <after>
+          <check id="range" st="&lt;=13.000" st_type="0" errno="azz-00087" bt="&gt;=1.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="chk_21"/>
+      <column id="chk_23"/>
+      <column id="chk_24"/>
+      <column id="chk_22"/>
+      <column id="chk_29"/>
+      <column id="chk_25"/>
+      <column id="b_comb"/>
+      <column id="rate1"/>
+      <column id="source"/>
+      <column id="apcadocdt"/>
+      <column id="apcadocno">
+        <after/>
+        <controlp form="q_ooba002_1" state="i"/>
+      </column>
+      <column id="apcadocno_desc"/>
+      <column id="apca007">
+        <after/>
+        <controlp form="q_oocq002" state="i"/>
+      </column>
+      <column id="apca007_desc"/>
+      <column id="apca003">
+        <after/>
+        <controlp form="q_ooag001" state="i"/>
+      </column>
+      <column id="apca003_desc"/>
+      <column id="apca008">
+        <after/>
+        <controlp form="q_ooib001_2" state="i"/>
+      </column>
+      <column id="apca008_desc"/>
+      <column id="apca011">
+        <after/>
+        <controlp form="q_oodb002_5" state="i"/>
+      </column>
+      <column id="apca011_desc"/>
+      <column id="stdgdocno">
+        <controlp form="q_stbgdocno" state="c"/>
+      </column>
+      <column id="stbg006">
+        <controlp form="q_staa001" state="c"/>
+      </column>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

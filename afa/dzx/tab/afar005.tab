@@ -1,0 +1,58 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afar005" module="afa" jobmode="N" type="r01" industry="std" fix_arg="0" crtid="01251" crtdt="2015-03-20 16:27:55" modid="01251" moddt="2015-03-20 17:27:37" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="附屬設備明細表">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="site(chr500),site_desc(chr80),faah032,faah032_desc(chr80),faah006,faah026,faah001,faah003,faah004"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="afa" filename="afar005" method="dialog">
+    <section id="input">
+      <input id="head" field="site,faah032"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="faah006,faah026,faah001,faah003,faah004"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="site">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+          <reference field="site_desc" ref_field="site" map_field="faahent,site" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+      </column>
+      <column id="site_desc"/>
+      <column id="faah032">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+          <reference field="faah032_desc" ref_field="faah_t.faah032" map_field="faahent,faah032" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+      </column>
+      <column id="faah032_desc"/>
+      <column id="faah006">
+        <controlp form="q_faac001" state="c"/>
+      </column>
+      <column id="faah026">
+        <controlp form="q_ooeg001_4" state="c"/>
+      </column>
+      <column id="faah001">
+        <controlp form="q_faah001" state="c"/>
+      </column>
+      <column id="faah003">
+        <controlp form="q_faah003" state="c"/>
+      </column>
+      <column id="faah004">
+        <controlp form="q_faah004" state="c"/>
+      </column>
+    </init>
+  </form>
+</assembly>
+

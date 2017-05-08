@@ -1,0 +1,149 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisi050" module="ais" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02114" crtdt="2013-10-11 17:23:58" modid="08732" moddt="2016-10-26 16:28:24" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="發票簿維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="isaesite,isaesite_desc(chr80),isac001(chr10),ooall004(chr80),isaecomp,isaecomp_desc(chr80),isae019"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isae001,isae002,isae003,isae004,isae004_desc(chr500),isae005,isae006,isae008,isae009,isae010,isae011,isae020,isae012,isae013,isae014,isae015,isaestus,isae016,isae017,isae018"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="isae004,isaemodid,isaemodid_desc(chr500),isaemoddt,isaeownid,isaeownid_desc(chr500),isaeowndp,isaeowndp_desc(chr500),isaecrtid,isaecrtid_desc(chr500),isaecrtdp,isaecrtdp_desc(chr500),isaecrtdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="aisi050_01"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="aisi050_02"/>
+    </section>
+  </structure>
+  <form id="0" module="ais" filename="aisi050" method="dialog">
+    <section id="input">
+      <input id="head" field="isaesite,isac001,isae019"/>
+      <input id="body" page="1" field="isae001,isae002,isae003,isae004,isae004_desc,isae005,isae006,isae008,isae009,isae010,isae011,isae020,isae012,isae014,isae015,isaestus,isae016,isae017,isae018" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="isaesite,isaecomp"/>
+      <construct id="body" page="1" field="isae001,isae002,isae003,isae004,isae004_desc,isae005,isae006,isae008,isae009,isae010,isae011,isae020,isae012,isae013,isae014,isae015,isaestus,isae016,isae017,isae018"/>
+      <construct id="body" page="2" field="isaemodid,isaemoddt,isaeownid,isaeowndp,isaecrtid,isaecrtdp,isaecrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="isaecomp,isaesite"/>
+      <set id="head" type="no_entry" field="isaecomp,isaesite"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="isaesite">
+        <after>
+          <reference field="isaesite_desc" ref_field="isae_t.isaesite" map_field="isaeent,isaesite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="isaesite_desc"/>
+      <column id="isac001"/>
+      <column id="ooall004"/>
+      <column id="isaecomp">
+        <after>
+          <reference field="isaecomp_desc" ref_field="isae_t.isaecomp" map_field="isaeent,isaecomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_isaecomp" state="c"/>
+      </column>
+      <column id="isaecomp_desc"/>
+      <column id="isae019"/>
+    </init>
+    <init id="body" page="1">
+      <column id="isae001"/>
+      <column id="isae002"/>
+      <column id="isae003"/>
+      <column id="isae004">
+        <after/>
+        <controlp form="q_isae004" state="i"/>
+        <controlp form="q_isac002" state="c"/>
+      </column>
+      <column id="isae004_desc"/>
+      <column id="isae005" type="S" default="N"/>
+      <column id="isae006" type="S" default="1" def_scc="9713"/>
+      <column id="isae008" type="S" default="1"/>
+      <column id="isae009"/>
+      <column id="isae010"/>
+      <column id="isae011"/>
+      <column id="isae020"/>
+      <column id="isae012">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="isae013" type="S" default="0"/>
+      <column id="isae014" type="S" default="N"/>
+      <column id="isae015" type="S" default="N"/>
+      <column id="isaestus" scc="13" type="S" default="Y">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="isae016"/>
+      <column id="isae017"/>
+      <column id="isae018">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="isaemodid">
+        <after>
+          <reference field="isaemodid_desc" ref_field="isae_t.isaemodid" map_field="isaemodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isaemodid_desc"/>
+      <column id="isaemoddt"/>
+      <column id="isaeownid">
+        <after>
+          <reference field="isaeownid_desc" ref_field="isae_t.isaeownid" map_field="isaeownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isaeownid_desc"/>
+      <column id="isaeowndp">
+        <after>
+          <reference field="isaeowndp_desc" ref_field="isae_t.isaeowndp" map_field="isaeowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="isaeowndp_desc"/>
+      <column id="isaecrtid">
+        <after>
+          <reference field="isaecrtid_desc" ref_field="isae_t.isaecrtid" map_field="isaecrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isaecrtid_desc"/>
+      <column id="isaecrtdp">
+        <after>
+          <reference field="isaecrtdp_desc" ref_field="isae_t.isaecrtdp" map_field="isaecrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="isaecrtdp_desc"/>
+      <column id="isaecrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="isae_t" pk="isaecomp,isaesite">
+      <sql id="forupd_sql" type="sql" query="SELECT isaesite,&apos;&apos;,&apos;&apos;,&apos;&apos;,isaecomp,&apos;&apos;,isae019 FROM isae_t WHERE isaeent= ? AND isaecomp=? AND isaesite=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT isaesite,&apos;&apos;,&apos;&apos;,&apos;&apos;,isaecomp,&apos;&apos;,isae019 FROM isae_t" order="isaecomp,isaesite"/>
+    </head>
+    <body id="isae_t" page="1,2" linked="" pk="isae001,isae002,isae003,isae004,isae016,isae017,isae018" fk="isaecomp,isaesite">
+      <sql id="forupd_sql_detail" query="SELECT isae001,isae002,isae003,isae004,&apos;&apos;,isae005,isae006,isae008,isae009,isae010,isae011,isae020,isae012,isae013,isae014,isae015,isaestus,isae016,isae017,isae018,&apos;&apos;,isaemodid,&apos;&apos;,isaemoddt,isaeownid,&apos;&apos;,isaeowndp,&apos;&apos;,isaecrtid,&apos;&apos;,isaecrtdp,&apos;&apos;,isaecrtdt FROM isae_t WHERE isaeent=? AND isaecomp=? AND isaesite=? AND isae001=? AND isae002=? AND isae003=? AND isae004=? AND isae016=? AND isae017=? AND isae018=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT isae001,isae002,isae003,isae004,&apos;&apos;,isae005,isae006,isae008,isae009,isae010,isae011,isae020,isae012,isae013,isae014,isae015,isaestus,isae016,isae017,isae018,&apos;&apos;,isaemodid,&apos;&apos;,isaemoddt,isaeownid,&apos;&apos;,isaeowndp,&apos;&apos;,isaecrtid,&apos;&apos;,isaecrtdp,&apos;&apos;,isaecrtdt FROM isae_t WHERE isaeent= ? AND isaecomp=? AND isaesite=?"/>
+    </body>
+  </dataset>
+</assembly>
+

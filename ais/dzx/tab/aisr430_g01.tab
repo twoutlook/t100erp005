@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisr430_g01" module="ais" jobmode="N" type="g01" industry="std" crtid="05016" crtdt="2015-06-03 14:58:53" modid="05384" moddt="2016-10-20 13:46:41" sdver="3" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="l_date(chr100|&apos;&apos;),l_title(chr80|&apos;&apos;),l_ooef0021(chr30|&apos;&apos;),l_ooef0022(chr30|&apos;&apos;),l_ooef0023(chr30|&apos;&apos;),l_ooef0024(chr30|&apos;&apos;),l_ooef0025(chr30|&apos;&apos;),l_ooef0026(chr30|&apos;&apos;),l_ooef0027(chr30|&apos;&apos;),l_ooef0028(chr30|&apos;&apos;),l_ooef0029(chr30|&apos;&apos;),l_isaa0022(chr30|&apos;&apos;),l_isaa0021(chr30|&apos;&apos;),l_isaa0023(chr30|&apos;&apos;),l_isaa0024(chr30|&apos;&apos;),l_isaa0025(chr30|&apos;&apos;),l_isaa0026(chr30|&apos;&apos;),l_isaa0028(chr30|&apos;&apos;),l_isaa0027(chr30|&apos;&apos;),l_isaa0029(chr30|&apos;&apos;),l_isccsite_desc(chr80|&apos;&apos;),iscc001,l_str2(chr300|&apos;&apos;),l_str(chr300|&apos;&apos;),iscc002,iscc003,iscc004,iscc005,iscc006,iscc007,iscc008,iscc009,iscc010,iscc103,iscc104,iscccomp,isccent,isccseq,isccsite,isccstus"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="l_date(chr100|&apos;&apos;),l_title(chr80|&apos;&apos;),l_ooef0021(chr30|&apos;&apos;),l_ooef0022(chr30|&apos;&apos;),l_ooef0023(chr30|&apos;&apos;),l_ooef0024(chr30|&apos;&apos;),l_ooef0025(chr30|&apos;&apos;),l_ooef0026(chr30|&apos;&apos;),l_ooef0027(chr30|&apos;&apos;),l_ooef0028(chr30|&apos;&apos;),l_ooef0029(chr30|&apos;&apos;),l_isaa0022(chr30|&apos;&apos;),l_isaa0021(chr30|&apos;&apos;),l_isaa0023(chr30|&apos;&apos;),l_isaa0024(chr30|&apos;&apos;),l_isaa0025(chr30|&apos;&apos;),l_isaa0026(chr30|&apos;&apos;),l_isaa0028(chr30|&apos;&apos;),l_isaa0027(chr30|&apos;&apos;),l_isaa0029(chr30|&apos;&apos;),l_isccsite_desc(chr80|&apos;&apos;),iscc001,l_str2(chr300|&apos;&apos;),l_str(chr300|&apos;&apos;),iscc002,iscc003,iscc004,iscc005,iscc006,iscc007,iscc008,iscc009,iscc010,iscc103,iscc104,iscccomp,isccent,isccseq,isccsite,isccstus"/>
+    <sql id="g_from" query="iscc_t"/>
+    <sql id="g_where" query="" maintable="iscc_t"/>
+    <sql id="g_order" query="isccsite,isccseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="isccsite,isccseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="isccsite" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="isccent,isccsite"/>
+      <rep type="isccseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="isccent,isccsite,isccseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="isccent,isccsite,isccseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="isccsite" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="isccent,isccsite"/>
+      <rep type="isccseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

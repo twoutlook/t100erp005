@@ -1,0 +1,105 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asti206" module="ast" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="03247" crtdt="2014-06-05 15:11:52" modid="03247" moddt="2014-11-13 17:44:48" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="結算會計期設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="stausite,stausite_desc(chr500),stau001,stau001_desc(chr500),stau002,stau003,stau004"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="stausite,stau001,stauownid,stauownid_desc(chr500),stauowndp,stauowndp_desc(chr500),staucrtid,staucrtid_desc(chr500),staucrtdp,staucrtdp_desc(chr500),staucrtdt,staumodid,staumodid_desc(chr500),staumoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="delete" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="asti206" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="stausite,stau001,stau002,stau003,stau004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="stausite,stau001,stau002,stau003,stau004"/>
+      <construct id="body" page="2" field="stauownid,stauowndp,staucrtid,staucrtdp,staucrtdt,staumodid,staumoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="stausite">
+        <after>
+          <check chkid="v_ooef001_31" id="isExist"/>
+          <reference field="stausite_desc" ref_field="stau_t.stausite" map_field="stauent,stausite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="stausite_desc"/>
+      <column id="stau001">
+        <after>
+          <check chkid="v_gzcb002" id="isExist"/>
+          <reference field="stau001_desc" ref_field="stau001" map_field="stau001" ref_sql="SELECT gzcbl004 FROM gzcbl_t WHERE gzcbl001=&apos;6072&apos; AND gzcbl002=? AND gzcbl003=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzcb002_01" state="i"/>
+        <controlp form="q_gzcb002_01" state="c"/>
+      </column>
+      <column id="stau001_desc"/>
+      <column id="stau002" type="S" default="1" def_scc="6067"/>
+      <column id="stau003"/>
+      <column id="stau004">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="stauownid">
+        <after>
+          <reference field="stauownid_desc" ref_field="stau_t.stauownid" map_field="stauownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stauownid_desc"/>
+      <column id="stauowndp">
+        <after>
+          <reference field="stauowndp_desc" ref_field="stau_t.stauowndp" map_field="stauowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="stauowndp_desc"/>
+      <column id="staucrtid">
+        <after>
+          <reference field="staucrtid_desc" ref_field="stau_t.staucrtid" map_field="staucrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="staucrtid_desc"/>
+      <column id="staucrtdp">
+        <after>
+          <reference field="staucrtdp_desc" ref_field="stau_t.staucrtdp" map_field="staucrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="staucrtdp_desc"/>
+      <column id="staucrtdt"/>
+      <column id="staumodid">
+        <after>
+          <reference field="staumodid_desc" ref_field="stau_t.staumodid" map_field="staumodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="staumodid_desc"/>
+      <column id="staumoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="stau_t" page="1,2" linked="" pk="stausite,stau001">
+      <sql id="forupd_sql_detail" query="SELECT stausite,&apos;&apos;,stau001,&apos;&apos;,stau002,stau003,stau004,&apos;&apos;,&apos;&apos;,stauownid,&apos;&apos;,stauowndp,&apos;&apos;,staucrtid,&apos;&apos;,staucrtdp,&apos;&apos;,staucrtdt,staumodid,&apos;&apos;,staumoddt FROM stau_t WHERE stauent=? AND stausite=? AND stau001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT stausite,&apos;&apos;,stau001,&apos;&apos;,stau002,stau003,stau004,&apos;&apos;,&apos;&apos;,stauownid,&apos;&apos;,stauowndp,&apos;&apos;,staucrtid,&apos;&apos;,staucrtdp,&apos;&apos;,staucrtdt,staumodid,&apos;&apos;,staumoddt FROM stau_t WHERE stauent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

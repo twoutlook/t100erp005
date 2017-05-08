@@ -1,0 +1,217 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli161" module="agl" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02416" crtdt="2014-02-07 15:55:39" modid="02749" moddt="2016-06-29 10:07:22" sdver="0011" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="產品科目依帳套設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glccld,glccld_desc(chr80),glaacomp,glaacomp_desc(chr80),glaa014,glaa008,glaa004,glaa004_desc(chr80),chk01(chr500),chk02(chr500),chk03(chr500),chk04(chr500),chk05(chr500),chk06(chr500)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glcc001,glccstus,glccseq,glcc011,glcc011_desc(chr500),glcc012,glcc012_desc(chr500),glcc013,glcc013_desc(chr500),glcc014,glcc014_desc(chr500),glcc015,glcc015_desc(chr500),glcc016,glcc016_desc(chr500),glcc016_desc_desc(chr500),glcc002,glcc002_desc(chr500),glcc003,glcc003_desc(chr500),glcc005,glcc005_desc(chr500),glcc020,glcc020_desc(chr500),glcc006,glcc006_desc(chr500),glcc007"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="glcc001,glccseq,glccownid,glccownid_desc(chr500),glccowndp,glccowndp_desc(chr500),glcccrtid,glcccrtid_desc(chr500),glcccrtdp,glcccrtdp_desc(chr500),glcccrtdt,glccmodid,glccmodid_desc(chr500),glccmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="agli161" method="dialog">
+    <section id="input">
+      <input id="head" field="glccld,glaacomp,glaa014,glaa008,glaa004,chk01,chk02,chk03,chk04,chk05,chk06"/>
+      <input id="body" page="1" field="glcc001,glccstus,glccseq,glcc011,glcc012,glcc013,glcc014,glcc015,glcc016,glcc002,glcc002_desc,glcc003,glcc003_desc,glcc005,glcc005_desc,glcc020,glcc020_desc,glcc006,glcc006_desc,glcc007" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="glccld,glaacomp,glaacomp_desc,glaa014,glaa008,glaa004,glaa004_desc,chk01,chk02,chk03,chk04,chk05,chk06"/>
+      <construct id="body" page="1" field="glcc001,glccstus,glccseq,glcc011,glcc012,glcc013,glcc014,glcc015,glcc016,glcc002,glcc002_desc,glcc003,glcc003_desc,glcc005,glcc005_desc,glcc020,glcc020_desc,glcc006,glcc006_desc,glcc007"/>
+      <construct id="body" page="2" field="glccownid,glccowndp,glcccrtid,glcccrtdp,glcccrtdt,glccmodid,glccmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="glccld"/>
+      <set id="head" type="no_entry" field="glccld"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="glccld">
+        <after>
+          <check chkid="v_glaald_1" id="isExist"/>
+          <reference field="glccld_desc" ref_field="glcc_t.glccld" map_field="glccent,glccld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="glccld_desc"/>
+      <column id="glaacomp">
+        <after/>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="glaacomp_desc"/>
+      <column id="glaa014" type="S" default="N"/>
+      <column id="glaa008" type="S" default="N"/>
+      <column id="glaa004">
+        <after>
+          <check chkid="v_ooal002_7" id="isExist"/>
+        </after>
+        <controlp form="q_ooal002" state="i"/>
+        <controlp form="q_ooal002" state="c"/>
+      </column>
+      <column id="glaa004_desc"/>
+      <column id="chk01" type="S" default="Y"/>
+      <column id="chk02" type="S" default="Y"/>
+      <column id="chk03" type="S" default="N"/>
+      <column id="chk04" type="S" default="N"/>
+      <column id="chk05" type="S" default="Y"/>
+      <column id="chk06" type="S" default="Y"/>
+    </init>
+    <init id="body" page="1">
+      <column id="glcc001"/>
+      <column id="glccstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="glccseq"/>
+      <column id="glcc011">
+        <after>
+          <check chkid="v_oocq002_206" id="isExist"/>
+          <reference field="glcc011_desc" ref_field="glcc011" map_field="glcc011" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;206&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="glcc011_desc"/>
+      <column id="glcc012">
+        <after>
+          <check chkid="v_oocq002_1" id="isExist"/>
+          <reference field="glcc012_desc" ref_field="glcc012" map_field="glcc012" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;203&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="glcc012_desc"/>
+      <column id="glcc013">
+        <after>
+          <check chkid="v_oojd001" id="isExist"/>
+          <reference field="glcc013_desc" ref_field="glcc_t.glcc013" map_field="glcc013" ref_sql="SELECT oojdl003 FROM oojdl_t WHERE oojdlent=$varg_enterprise$var AND oojdl001=? AND oojdl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oojd001_1" state="i"/>
+        <controlp form="q_oojd001_1" state="c"/>
+      </column>
+      <column id="glcc013_desc"/>
+      <column id="glcc014">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+          <reference field="glcc014_desc" ref_field="glcc_t.glcc014" map_field="glccent,glcc014" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="glcc014_desc"/>
+      <column id="glcc015">
+        <after>
+          <check chkid="v_inaa001" id="isExist"/>
+          <reference field="glcc015_desc" ref_field="glcc014,glcc015" map_field="glcc014,glcc015" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaasite=? AND inaa001=? "/>
+        </after>
+        <controlp form="q_inaa001_8" state="i"/>
+        <controlp form="q_inaa001_8" state="c"/>
+      </column>
+      <column id="glcc015_desc"/>
+      <column id="glcc016">
+        <after>
+          <check chkid="v_imaa001" id="isExist"/>
+          <reference field="glcc016_desc" ref_field="glcc_t.glcc016" map_field="glccent,glcc016" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="glcc016_desc">
+        <after>
+          <reference field="glcc016_desc_desc" ref_field="glcc016_desc" map_field="glccent,glcc016" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="glcc016_desc_desc"/>
+      <column id="glcc002">
+        <after>
+          <check chkid="v_glac002_3" id="isExist"/>
+        </after>
+      </column>
+      <column id="glcc002_desc"/>
+      <column id="glcc003">
+        <after>
+          <check chkid="v_glac002_3" id="isExist"/>
+        </after>
+      </column>
+      <column id="glcc003_desc"/>
+      <column id="glcc005">
+        <after/>
+        <controlp form="aglt310_04" state="i"/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="glcc005_desc"/>
+      <column id="glcc020">
+        <after/>
+        <controlp form="aglt310_04" state="i"/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="glcc020_desc"/>
+      <column id="glcc006">
+        <after/>
+      </column>
+      <column id="glcc006_desc"/>
+      <column id="glcc007" type="S" default="1" def_scc="8315"/>
+    </init>
+    <init id="body" page="2">
+      <column id="glccownid">
+        <after>
+          <reference field="glccownid_desc" ref_field="glcc_t.glccownid" map_field="glccownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glccownid_desc"/>
+      <column id="glccowndp">
+        <after>
+          <reference field="glccowndp_desc" ref_field="glcc_t.glccowndp" map_field="glccowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glccowndp_desc"/>
+      <column id="glcccrtid">
+        <after>
+          <reference field="glcccrtid_desc" ref_field="glcc_t.glcccrtid" map_field="glcccrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glcccrtid_desc"/>
+      <column id="glcccrtdp">
+        <after>
+          <reference field="glcccrtdp_desc" ref_field="glcc_t.glcccrtdp" map_field="glcccrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glcccrtdp_desc"/>
+      <column id="glcccrtdt"/>
+      <column id="glccmodid">
+        <after>
+          <reference field="glccmodid_desc" ref_field="glcc_t.glccmodid" map_field="glccmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glccmodid_desc"/>
+      <column id="glccmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="glcc_t" pk="glccld">
+      <sql id="forupd_sql" type="sql" query="SELECT glccld,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM glcc_t WHERE glccent= ? AND glccld=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT glccld,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM glcc_t" order="glccld"/>
+    </head>
+    <body id="glcc_t" page="1,2" linked="" pk="glcc001,glccseq" fk="glccld">
+      <sql id="forupd_sql_detail" query="SELECT glcc001,glccstus,glccseq,glcc011,&apos;&apos;,glcc012,&apos;&apos;,glcc013,&apos;&apos;,glcc014,&apos;&apos;,glcc015,&apos;&apos;,glcc016,&apos;&apos;,&apos;&apos;,glcc002,&apos;&apos;,glcc003,&apos;&apos;,glcc005,&apos;&apos;,glcc020,&apos;&apos;,glcc006,&apos;&apos;,glcc007,&apos;&apos;,&apos;&apos;,glccownid,&apos;&apos;,glccowndp,&apos;&apos;,glcccrtid,&apos;&apos;,glcccrtdp,&apos;&apos;,glcccrtdt,glccmodid,&apos;&apos;,glccmoddt FROM glcc_t WHERE glccent=? AND glccld=? AND glcc001=? AND glccseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glcc001,glccstus,glccseq,glcc011,&apos;&apos;,glcc012,&apos;&apos;,glcc013,&apos;&apos;,glcc014,&apos;&apos;,glcc015,&apos;&apos;,glcc016,&apos;&apos;,&apos;&apos;,glcc002,&apos;&apos;,glcc003,&apos;&apos;,glcc005,&apos;&apos;,glcc020,&apos;&apos;,glcc006,&apos;&apos;,glcc007,&apos;&apos;,&apos;&apos;,glccownid,&apos;&apos;,glccowndp,&apos;&apos;,glcccrtid,&apos;&apos;,glcccrtdp,&apos;&apos;,glcccrtdt,glccmodid,&apos;&apos;,glccmoddt FROM glcc_t WHERE glccent= ? AND glccld=?"/>
+    </body>
+  </dataset>
+</assembly>
+

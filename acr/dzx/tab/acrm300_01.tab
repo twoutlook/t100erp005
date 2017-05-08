@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="acrm300_01" module="acr" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="04226" crtdt="2014-04-16 16:21:10" modid="04226" moddt="2014-04-28 12:19:23" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="潛在客戶轉正式客戶作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="craa001,craa033,craa029,craa029_desc(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="acr" filename="acrm300_01" method="dialog">
+    <section id="input">
+      <input id="head" field="craa001,craa033,craa029"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="craa001">
+        <controlp form="q_craa001" state="c"/>
+      </column>
+      <column id="craa033"/>
+      <column id="craa029">
+        <after>
+          <check chkid="v_pmaa001_3" id="isExist"/>
+          <reference field="craa029_desc" ref_field="craa_t.craa029" map_field="craa029" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_6" state="i"/>
+        <controlp form="q_pmaa001_6" state="c"/>
+      </column>
+      <column id="craa029_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="craa_t" pk="craa001">
+      <sql id="forupd_sql" type="sql" query="SELECT craa001,craa033,craa029,&apos;&apos; FROM craa_t WHERE craaent= ? AND craa001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="craa001"/>
+    </head>
+  </dataset>
+</assembly>
+

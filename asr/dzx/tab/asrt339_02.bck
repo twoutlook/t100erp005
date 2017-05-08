@@ -1,0 +1,136 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asrt339_02" module="asr" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="05947" crtdt="2015-07-14 17:50:44" modid="05947" moddt="2016-01-13 09:52:07" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="報廢明細維護">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sfjbdocno,sfjbseq,sfjb019,sfjb016,sfjb017,sfjb018,sfjb003,sfjb003_desc(chr500),sfjb003_desc_1(chr500),sfjb004,sfjb005,sfjb005_desc(chr500),sfba013(num20_6),sfba016(num20_6),sfba025(num20_6),sfba017(num20_6),sfjb006,sfjb007,sfjb007_desc(chr500),sfjb008,sfjb009,sfjb009_desc(chr500),sfjb010,sfjb011,sfjb011_desc(chr500),sfjb012,sfjb012_desc(chr500),sfjb013,sfjb014"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="sfjcseq1,sfjc010,sfjc006,sfjc008,sfjc009,sfjc009_desc(chr500),sfjc011,sfjc011_desc(chr500),sfjc012,sfjc012_desc(chr500),sfjc013,sfjc014"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="asr" filename="asrt339_02" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="sfba013,sfba016,sfba025,sfba017" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="sfjcseq1,sfjc010,sfjc006,sfjc008,sfjc009,sfjc011,sfjc012,sfjc013,sfjc014" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sfjbdocno"/>
+      <column id="sfjbseq">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="sfjb019"/>
+      <column id="sfjb016"/>
+      <column id="sfjb017"/>
+      <column id="sfjb018"/>
+      <column id="sfjb003">
+        <after>
+          <reference field="sfjb003_desc" ref_field="sfjb_t.sfjb003" map_field="sfjb003" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? "/>
+        </after>
+      </column>
+      <column id="sfjb003_desc"/>
+      <column id="sfjb003_desc_1"/>
+      <column id="sfjb004"/>
+      <column id="sfjb005">
+        <after>
+          <reference field="sfjb005_desc" ref_field="sfjb_t.sfjb005" map_field="sfjb005" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="sfjb005_desc"/>
+      <column id="sfba013" type="S" default="0"/>
+      <column id="sfba016" type="S" default="0"/>
+      <column id="sfba025" type="S" default="0"/>
+      <column id="sfba017" type="S" default="0"/>
+      <column id="sfjb006">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="sfjb007">
+        <after>
+          <reference field="sfjb007_desc" ref_field="sfjb_t.sfjb007" map_field="sfib007" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="sfjb007_desc"/>
+      <column id="sfjb008">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="sfjb009">
+        <after>
+          <reference field="sfjb009_desc" ref_field="sfjb009" map_field="sfjb009" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;227&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="sfjb009_desc"/>
+      <column id="sfjb010" type="S" default="1" def_scc="5444"/>
+      <column id="sfjb011">
+        <after>
+          <reference field="sfjb011_desc" ref_field="sfjb_t.sfjb011" map_field="sfjb_t.sfjb011" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaa001=? "/>
+        </after>
+      </column>
+      <column id="sfjb011_desc"/>
+      <column id="sfjb012">
+        <after>
+          <reference field="sfjb012_desc" ref_field="sfjb_t.sfjb011,sfjb_t.sfjb012" map_field="sfjb_t.sfjb011,sfjb_t.sfjb012" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inab001=? AND inab002=? "/>
+        </after>
+      </column>
+      <column id="sfjb012_desc"/>
+      <column id="sfjb013"/>
+      <column id="sfjb014"/>
+    </init>
+    <init id="body" page="2">
+      <column id="sfjcseq1"/>
+      <column id="sfjc010"/>
+      <column id="sfjc006">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="sfjc008"/>
+      <column id="sfjc009">
+        <after>
+          <reference field="sfjc009_desc" ref_field="sfjc009" map_field="sfjc009" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;227&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="sfjc009_desc"/>
+      <column id="sfjc011">
+        <after>
+          <reference field="sfjc011_desc" ref_field="sfjc_t.sfjc011" map_field="sfjc_t.sfjc011" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaa001=? "/>
+        </after>
+      </column>
+      <column id="sfjc011_desc"/>
+      <column id="sfjc012">
+        <after>
+          <reference field="sfjc012_desc" ref_field="sfjc_t.sfjc011,sfjc_t.sfjc012" map_field="sfjc_t.sfjc011,sfjc_t.sfjc012" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inab001=? AND inab002=? "/>
+        </after>
+      </column>
+      <column id="sfjc012_desc"/>
+      <column id="sfjc013"/>
+      <column id="sfjc014"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="sfjb_t" page="1" linked="" pk="sfjbdocno,sfjbseq">
+      <sql id="forupd_sql_detail" query="SELECT sfjbdocno,sfjbseq,sfjb019,sfjb016,sfjb017,sfjb018,sfjb003,&apos;&apos;,&apos;&apos;,sfjb004,sfjb005,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,sfjb006,sfjb007,&apos;&apos;,sfjb008,sfjb009,&apos;&apos;,sfjb010,sfjb011,&apos;&apos;,sfjb012,&apos;&apos;,sfjb013,sfjb014 FROM sfjb_t WHERE sfjbent=? AND sfjbdocno=? AND sfjbseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT sfjbdocno,sfjbseq,sfjb019,sfjb016,sfjb017,sfjb018,sfjb003,&apos;&apos;,&apos;&apos;,sfjb004,sfjb005,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,sfjb006,sfjb007,&apos;&apos;,sfjb008,sfjb009,&apos;&apos;,sfjb010,sfjb011,&apos;&apos;,sfjb012,&apos;&apos;,sfjb013,sfjb014 FROM sfjb_t WHERE sfjbent= ? AND 1=1 "/>
+    </body>
+    <body id="sfjc_t" page="2" linked="" pk="sfjbdocno,sfjbseq">
+      <sql id="forupd_sql_detail" query="SELECT sfjcseq1,sfjc010,sfjc006,sfjc008,sfjc009,&apos;&apos;,sfjc011,&apos;&apos;,sfjc012,&apos;&apos;,sfjc013,sfjc014 FROM sfjc_t WHERE sfjcent=? AND sfjcdocno=? AND sfjcseq=? AND sfjcseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT sfjcseq1,sfjc010,sfjc006,sfjc008,sfjc009,&apos;&apos;,sfjc011,&apos;&apos;,sfjc012,&apos;&apos;,sfjc013,sfjc014 FROM sfjc_t WHERE sfjcent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

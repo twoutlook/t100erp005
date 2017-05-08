@@ -1,0 +1,283 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apjt001" module="apj" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02295" crtdt="2016-04-26 14:32:21" modid="02295" moddt="2016-04-28 18:27:32" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="專案成本開帳作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pjcacomp,pjcacomp_desc(chr80),pjcald,pjcald_desc(chr80),pjca004,pjca005,pjca003,pjca003_desc(chr80),pjca001"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pjca002,pjca002_desc(chr500),pjca009,pjca010,pjca006,pjca007,pjca021,pjca008,pjca902a,pjca902b,pjca902c,pjca902d,pjca902e,pjca902f,pjca902g,pjca902h,pjca902,pjca912a,pjca912b,pjca912c,pjca912d,pjca912e,pjca912f,pjca912g,pjca912h,pjca912,pjca922a,pjca922b,pjca922c,pjca922d,pjca922e,pjca922,pjca011,pjca012,pjca013,pjca014,pjca015,pjca016,pjca017,pjca018,pjca019,pjca020"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apj" filename="apjt001" method="dialog">
+    <section id="input">
+      <input id="head" field="pjcacomp,pjcald,pjca004,pjca005,pjca003,pjca001"/>
+      <input id="body" page="1" field="pjca002,pjca009,pjca010,pjca006,pjca007,pjca021,pjca008,pjca902a,pjca902b,pjca902c,pjca902d,pjca902e,pjca902f,pjca902g,pjca902h,pjca902,pjca912a,pjca912b,pjca912c,pjca912d,pjca912e,pjca912f,pjca912g,pjca912h,pjca912,pjca922a,pjca922b,pjca922c,pjca922d,pjca922e,pjca922,pjca011,pjca012,pjca013,pjca014,pjca015,pjca016,pjca017,pjca018,pjca019,pjca020" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pjcacomp,pjcald,pjca004,pjca005,pjca003,pjca001"/>
+      <construct id="body" page="1" field="pjca002,pjca009,pjca010,pjca006,pjca007,pjca021,pjca008,pjca902a,pjca902b,pjca902c,pjca902d,pjca902e,pjca902f,pjca902g,pjca902h,pjca902,pjca912a,pjca912b,pjca912c,pjca912d,pjca912e,pjca912f,pjca912g,pjca912h,pjca912,pjca922a,pjca922b,pjca922c,pjca922d,pjca922e,pjca922,pjca011,pjca012,pjca013,pjca014,pjca015,pjca016,pjca017,pjca018,pjca019,pjca020"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pjcald,pjca001,pjca003,pjca004,pjca005"/>
+      <set id="head" type="no_entry" field="pjcald,pjca001,pjca003,pjca004,pjca005"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="pjcacomp">
+        <after>
+          <check chkid="v_glaald_5" id="isExist"/>
+          <reference field="pjcacomp_desc" ref_field="pjca_t.pjcacomp" map_field="pjcacomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="pjcacomp_desc"/>
+      <column id="pjcald">
+        <after>
+          <check chkid="v_glaald" id="isExist"/>
+          <reference field="pjcald_desc" ref_field="pjca_t.pjcald" map_field="pjcald" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaal001=? "/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="pjcald_desc"/>
+      <column id="pjca004"/>
+      <column id="pjca005"/>
+      <column id="pjca003">
+        <after>
+          <check chkid="v_xcat001" id="isExist"/>
+          <reference field="pjca003_desc" ref_field="pjca_t.pjca003" map_field="pjca003" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcat001" state="i"/>
+        <controlp form="q_xcat001" state="c"/>
+      </column>
+      <column id="pjca003_desc"/>
+      <column id="pjca001" type="S" default="1" def_scc="8914"/>
+    </init>
+    <init id="body" page="1">
+      <column id="pjca002">
+        <after>
+          <check chkid="v_pjba001" id="isExist"/>
+          <reference field="pjca002_desc" ref_field="pjca_t.pjca002" map_field="pjca002" ref_sql="SELECT pjbal003 FROM pjbal_t WHERE pjbalent=$varg_enterprise$var AND pjbal001=? AND pjbal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pjba001" state="i"/>
+        <controlp form="q_pjba001" state="c"/>
+      </column>
+      <column id="pjca002_desc"/>
+      <column id="pjca009" type="S" default="1" def_scc="16011"/>
+      <column id="pjca010"/>
+      <column id="pjca006" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca007" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca021" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca008">
+        <after>
+          <check id="range" st="100" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca902a" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca902b" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca902c" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca902d" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca902e" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca902f" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca902g" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca902h" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca902" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca912a" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca912b" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca912c" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca912d" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca912e" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca912f" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca912g" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca912h" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca912" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca922a" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca922b" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca922c" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca922d" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca922e" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca922" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca011" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca012" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca013" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca014" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca015" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca016" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca017" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca018" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca019" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjca020" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="pjca_t" pk="pjcald,pjca001,pjca003,pjca004,pjca005">
+      <sql id="forupd_sql" type="sql" query="SELECT pjcacomp,&apos;&apos;,pjcald,&apos;&apos;,pjca004,pjca005,pjca003,&apos;&apos;,pjca001 FROM pjca_t WHERE pjcaent= ? AND pjcald=? AND pjca001=? AND pjca003=? AND pjca004=? AND pjca005=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pjcacomp,&apos;&apos;,pjcald,&apos;&apos;,pjca004,pjca005,pjca003,&apos;&apos;,pjca001 FROM pjca_t" order="pjcald,pjca001,pjca003,pjca004,pjca005"/>
+    </head>
+    <body id="pjca_t" page="1" linked="" pk="pjca002" fk="pjcald,pjca001,pjca003,pjca004,pjca005">
+      <sql id="forupd_sql_detail" query="SELECT pjca002,&apos;&apos;,pjca009,pjca010,pjca006,pjca007,pjca021,pjca008,pjca902a,pjca902b,pjca902c,pjca902d,pjca902e,pjca902f,pjca902g,pjca902h,pjca902,pjca912a,pjca912b,pjca912c,pjca912d,pjca912e,pjca912f,pjca912g,pjca912h,pjca912,pjca922a,pjca922b,pjca922c,pjca922d,pjca922e,pjca922,pjca011,pjca012,pjca013,pjca014,pjca015,pjca016,pjca017,pjca018,pjca019,pjca020 FROM pjca_t WHERE pjcaent=? AND pjcald=? AND pjca001=? AND pjca003=? AND pjca004=? AND pjca005=? AND pjca002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pjca002,&apos;&apos;,pjca009,pjca010,pjca006,pjca007,pjca021,pjca008,pjca902a,pjca902b,pjca902c,pjca902d,pjca902e,pjca902f,pjca902g,pjca902h,pjca902,pjca912a,pjca912b,pjca912c,pjca912d,pjca912e,pjca912f,pjca912g,pjca912h,pjca912,pjca922a,pjca922b,pjca922c,pjca922d,pjca922e,pjca922,pjca011,pjca012,pjca013,pjca014,pjca015,pjca016,pjca017,pjca018,pjca019,pjca020 FROM pjca_t WHERE pjcaent= ? AND pjcald=? AND pjca001=? AND pjca003=? AND pjca004=? AND pjca005=?"/>
+    </body>
+  </dataset>
+</assembly>
+

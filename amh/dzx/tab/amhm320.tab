@@ -1,0 +1,172 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="amhm320" module="amh" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="03247" crtdt="2015-04-07 14:04:16" modid="07142" moddt="2016-06-21 16:08:16" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="離職人員資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mhagsite,mhagsite_desc(chr80),mhag001,mhag001_desc(chr80),mhag002,mhaf004,mhaf004_desc(chr80),mhaf005,mhaf007,mhag003,mhaf009,mhaf018,mhaf012,mhaf012_desc(chr500),mhaf019,mhaf019_desc(chr80),mhaf013,mhaf013_desc(chr80),mhag004,mhag004_desc(chr80),mhag005,mhag006,mhagunit,mhag007,mhag008,mhag008_desc(chr80),mhag009,mhagstus,mhagownid,mhagownid_desc(chr80),mhagowndp,mhagowndp_desc(chr80),mhagcrtid,mhagcrtid_desc(chr80),mhagcrtdp,mhagcrtdp_desc(chr80),mhagcrtdt,mhagmodid,mhagmodid_desc(chr80),mhagmoddt,mhagcnfid,mhagcnfid_desc(chr80),mhagcnfdt"/>
+      <var id="bs_field" value="mhagsite,mhagsite_desc(chr80),mhag001,mhag001_desc(chr80),mhag002,mhag003,mhag004,mhag005,mhag006,mhag007,mhag008" pk="mhag001" order=""/>
+      <bs_reference field="mhagsite_desc" ref_field="mhagsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="mhag001_desc" ref_field="mhag001" ref_sql="SELECT mhaf002 FROM mhaf_t WHERE mhafent=$varg_enterprise$var AND mhaf001=? "/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="ins_blacklist"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="produce_payment"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="del_blacklist"/>
+    </section>
+  </structure>
+  <form id="0" module="amh" filename="amhm320" method="dialog">
+    <section id="input">
+      <input id="head" field="mhagsite,mhag001,mhag002,mhaf004,mhaf005,mhaf007,mhag003,mhaf009,mhaf018,mhaf012,mhaf012_desc,mhaf019,mhaf013,mhag004,mhag005,mhag006,mhagunit,mhag007,mhag008,mhag009,mhagstus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mhagsite,mhag001,mhag002,mhaf004,mhaf005,mhaf007,mhag003,mhaf009,mhaf018,mhaf012,mhaf012_desc,mhaf019,mhaf013,mhag004,mhag005,mhag006,mhagunit,mhag007,mhag008,mhag009,mhagstus,mhagownid,mhagowndp,mhagcrtid,mhagcrtdp,mhagcrtdt,mhagmodid,mhagmoddt,mhagcnfid,mhagcnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mhag001"/>
+      <set id="head" type="no_entry" field="mhag001"/>
+    </init>
+    <init id="head">
+      <column id="mhagsite">
+        <after>
+          <reference field="mhagsite_desc" ref_field="mhag_t.mhagsite" map_field="mhagsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="mhagsite_desc"/>
+      <column id="mhag001">
+        <after>
+          <check chkid="v_mhaf001" id="isExist"/>
+          <reference field="mhag001_desc" ref_field="mhag_t.mhag001" map_field="mhag001" ref_sql="SELECT mhaf002 FROM mhaf_t WHERE mhafent=$varg_enterprise$var AND mhaf001=? "/>
+        </after>
+        <controlp form="q_mhaf001" state="i"/>
+        <controlp form="q_mhaf001" state="c"/>
+      </column>
+      <column id="mhag001_desc"/>
+      <column id="mhag002">
+        <after>
+          <check chkid="v_mhaf003" id="isExist"/>
+        </after>
+        <controlp form="q_mhaf001" state="i"/>
+        <controlp form="q_mhaf001" state="c"/>
+      </column>
+      <column id="mhaf004">
+        <after>
+          <reference field="mhaf004_desc" ref_field="mhaf004" map_field="mhaf004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2016&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mhaf004_desc"/>
+      <column id="mhaf005" def_scc="6773"/>
+      <column id="mhaf007"/>
+      <column id="mhag003"/>
+      <column id="mhaf009" def_scc="6774"/>
+      <column id="mhaf018"/>
+      <column id="mhaf012">
+        <after/>
+        <controlp form="q_mhae001" state="c"/>
+      </column>
+      <column id="mhaf012_desc"/>
+      <column id="mhaf019">
+        <after>
+          <reference field="mhaf019_desc" ref_field="mhaf_t.mhaf019" map_field="steqent,steq004" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="mhaf019_desc"/>
+      <column id="mhaf013">
+        <after>
+          <reference field="mhaf013_desc" ref_field="mhaf013" map_field="mhaf013" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2002&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mhaf013_desc"/>
+      <column id="mhag004">
+        <after>
+          <reference field="mhag004_desc" ref_field="mhag004" map_field="mhag004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2128&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mhag004_desc"/>
+      <column id="mhag005" type="S" default="N"/>
+      <column id="mhag006"/>
+      <column id="mhagunit"/>
+      <column id="mhag007" type="S" default="N"/>
+      <column id="mhag008">
+        <after>
+          <reference field="mhag008_desc" ref_field="mhag008" map_field="mhag008" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2129&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mhag008_desc"/>
+      <column id="mhag009"/>
+      <column id="mhagstus" scc="50">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="mhagownid">
+        <after>
+          <reference field="mhagownid_desc" ref_field="mhag_t.mhagownid" map_field="mhagownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhagownid_desc"/>
+      <column id="mhagowndp">
+        <after>
+          <reference field="mhagowndp_desc" ref_field="mhag_t.mhagowndp" map_field="mhagowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhagowndp_desc"/>
+      <column id="mhagcrtid">
+        <after>
+          <reference field="mhagcrtid_desc" ref_field="mhag_t.mhagcrtid" map_field="mhagcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhagcrtid_desc"/>
+      <column id="mhagcrtdp">
+        <after>
+          <reference field="mhagcrtdp_desc" ref_field="mhag_t.mhagcrtdp" map_field="mhagcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhagcrtdp_desc"/>
+      <column id="mhagcrtdt"/>
+      <column id="mhagmodid">
+        <after>
+          <reference field="mhagmodid_desc" ref_field="mhag_t.mhagmodid" map_field="mhagmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhagmodid_desc"/>
+      <column id="mhagmoddt"/>
+      <column id="mhagcnfid">
+        <after>
+          <reference field="mhagcnfid_desc" ref_field="mhag_t.mhagcnfid" map_field="mhagcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhagcnfid_desc"/>
+      <column id="mhagcnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="mhag_t" pk="mhag001">
+      <sql id="forupd_sql" type="sql" query="SELECT mhagsite,&apos;&apos;,mhag001,&apos;&apos;,mhag002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,mhag003,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,mhag004,&apos;&apos;,mhag005,mhag006,mhagunit,mhag007,mhag008,&apos;&apos;,mhag009,mhagstus,mhagownid,&apos;&apos;,mhagowndp,&apos;&apos;,mhagcrtid,&apos;&apos;,mhagcrtdp,&apos;&apos;,mhagcrtdt,mhagmodid,&apos;&apos;,mhagmoddt,mhagcnfid,&apos;&apos;,mhagcnfdt FROM mhag_t WHERE mhagent= ? AND mhag001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mhag001 FROM mhag_t" order="mhag001"/>
+    </head>
+  </dataset>
+</assembly>
+

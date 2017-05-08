@@ -1,0 +1,106 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axct321" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="03297" crtdt="2014-09-15 16:15:40" modid="03297" moddt="2014-09-22 11:06:54" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="本期在製成本次要素調整作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcdpcomp,xcdpcomp_desc(chr80),xcdp004,xcdp005,xcdp006,xcdpld,xcdpld_desc(chr80),xcdp003,xcdp003_desc(chr80),xcdp008"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcdp001,xcdp007,sfaa010(chr500),xcdp010,xcdp010_desc(chr500),xcdp002,xcdp002_desc(chr500),xcdp009,xcdp101,xcdp102"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="output"/>
+      <action id="axct311"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axct321" method="dialog">
+    <section id="input">
+      <input id="head" field="xcdpcomp,xcdp004,xcdp005,xcdp006,xcdpld,xcdp003,xcdp008"/>
+      <input id="body" page="1" field="xcdp001,xcdp007,sfaa010,xcdp010,xcdp002,xcdp009,xcdp101,xcdp102" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcdpcomp,xcdp004,xcdp005,xcdp006,xcdpld,xcdp003,xcdp008"/>
+      <construct id="body" page="1" field="xcdp001,xcdp007,sfaa010,xcdp010,xcdp002,xcdp009,xcdp101,xcdp102"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcdpld,xcdp003,xcdp004,xcdp005,xcdp006"/>
+      <set id="head" type="no_entry" field="xcdpld,xcdp003,xcdp004,xcdp005,xcdp006"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcdpcomp">
+        <after>
+          <reference field="xcdpcomp_desc" ref_field="xcdp_t.xcdpcomp" map_field="xcdpent,xcdpcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="xcdpcomp_desc"/>
+      <column id="xcdp004"/>
+      <column id="xcdp005"/>
+      <column id="xcdp006">
+        <controlp form="q_xcdp006" state="i"/>
+        <controlp form="q_xcdp006" state="c"/>
+      </column>
+      <column id="xcdpld">
+        <after>
+          <reference field="xcdpld_desc" ref_field="xcdp_t.xcdpld" map_field="xcdpent,xcdpld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xcdpld_desc"/>
+      <column id="xcdp003">
+        <after>
+          <reference field="xcdp003_desc" ref_field="xcdp_t.xcdp003" map_field="xcdpent,xcdp003" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcat001" state="i"/>
+        <controlp form="q_xcat001" state="c"/>
+      </column>
+      <column id="xcdp003_desc"/>
+      <column id="xcdp008"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcdp001"/>
+      <column id="xcdp007">
+        <controlp form="q_sfaadocno" state="i"/>
+        <controlp form="q_sfaadocno" state="c"/>
+      </column>
+      <column id="sfaa010"/>
+      <column id="xcdp010">
+        <after>
+          <check chkid="v_xcau001" id="isExist"/>
+          <reference field="xcdp010_desc" ref_field="xcdp_t.xcdp010" map_field="xcdpent,xcdp010" ref_sql="SELECT xcaul003 FROM xcaul_t WHERE xcaulent=$varg_enterprise$var AND xcaul001=? AND xcaul002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcau001" state="i"/>
+        <controlp form="q_xcau001" state="c"/>
+      </column>
+      <column id="xcdp010_desc"/>
+      <column id="xcdp002">
+        <after>
+          <reference field="xcdp002_desc" ref_field="xcdpcomp,xcdp002" map_field="xcdpcomp,xcdp002" ref_sql="SELECT xcbfl003 FROM xcbfl_t WHERE xcbflent=$varg_enterprise$var AND xcbflcomp=? AND xcbfl001=? AND xcbfl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcbf001" state="i"/>
+        <controlp form="q_xcbf001" state="c"/>
+      </column>
+      <column id="xcdp002_desc"/>
+      <column id="xcdp009"/>
+      <column id="xcdp101"/>
+      <column id="xcdp102"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcdp_t" pk="xcdpld,xcdp003,xcdp004,xcdp005,xcdp006">
+      <sql id="forupd_sql" type="sql" query="SELECT xcdpcomp,&apos;&apos;,xcdp004,xcdp005,xcdp006,xcdpld,&apos;&apos;,xcdp003,&apos;&apos;,xcdp008 FROM xcdp_t WHERE xcdpent= ? AND xcdpld=? AND xcdp003=? AND xcdp004=? AND xcdp005=? AND xcdp006=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcdpcomp,&apos;&apos;,xcdp004,xcdp005,xcdp006,xcdpld,&apos;&apos;,xcdp003,&apos;&apos;,xcdp008 FROM xcdp_t" order="xcdpld,xcdp003,xcdp004,xcdp005,xcdp006"/>
+    </head>
+    <body id="xcdp_t" page="1" linked="" pk="xcdp001,xcdp007,xcdp010" fk="xcdpld,xcdp003,xcdp004,xcdp005,xcdp006">
+      <sql id="forupd_sql_detail" query="SELECT xcdp001,xcdp007,&apos;&apos;,xcdp010,&apos;&apos;,xcdp002,&apos;&apos;,xcdp009,xcdp101,xcdp102 FROM xcdp_t WHERE xcdpent=? AND xcdpld=? AND xcdp003=? AND xcdp004=? AND xcdp005=? AND xcdp006=? AND xcdp001=? AND xcdp007=? AND xcdp010=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcdp001,xcdp007,&apos;&apos;,xcdp010,&apos;&apos;,xcdp002,&apos;&apos;,xcdp009,xcdp101,xcdp102 FROM xcdp_t WHERE xcdpent= ? AND xcdpld=? AND xcdp003=? AND xcdp004=? AND xcdp005=? AND xcdp006=?"/>
+    </body>
+  </dataset>
+</assembly>
+

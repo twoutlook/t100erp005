@@ -1,0 +1,71 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ainq620" module="ain" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="01533" crtdt="2015-03-17 10:57:33" modid="01533" moddt="2015-05-08 15:56:10" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="門店商品異常庫存情況查詢">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="rtdxsite,rtdxsite_desc(chr80),imaa009"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),rtdx001,rtdx001_desc(chr500),rtdx002,imaa009(chr500),imaa009_desc(chr500),imaa104,imaa104_desc(chr500),inag008,inag009,zero1(chr500)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),rtdx001(b_rtdx001),rtdx001_desc(b_rtdx001_desc),rtdx002(b_rtdx002),imaa009(b_imaa009),imaa009_desc(b_imaa009_desc),imaa104(b_imaa104),imaa104_desc(b_imaa104_desc),inag008(b_inag008),inag009(b_inag009),zero1(zero1)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+    <section id="detail_show" page="1">
+      <cluster id="url_b_imaa009" qry_field="imaa009" prog="aimi010" parameter="imaa009"/>
+      <action id="detail_qrystr" mode="popup">
+        <action id="prog_aimi010" prog="aimi010" parameter="imaa009"/>
+      </action>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="ainq620" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="rtdx001,rtdx002,imaa009,imaa104,inag008,inag009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="rtdx001(b_rtdx001),rtdx002(b_rtdx002),imaa104(b_imaa104),inag008(b_inag008),inag009(b_inag009)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="rtdx001">
+        <after>
+          <reference field="rtdx001_desc" ref_field="rtdx001" map_field="rtdx001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="rtdx001_desc"/>
+      <column id="rtdx002">
+        <controlp form="q_imay001" state="c"/>
+      </column>
+      <column id="imaa009">
+        <after>
+          <reference field="imaa009_desc" ref_field="imaa009" map_field="b_imaa009" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="imaa009_desc"/>
+      <column id="imaa104">
+        <after>
+          <reference field="imaa104_desc" ref_field="imaa104" map_field="imaaent,imaa104" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="imaa104_desc"/>
+      <column id="inag008"/>
+      <column id="inag009"/>
+      <column id="zero1"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="rtdx_t" page="1" linked="" pk="rtdxsite,rtdx001">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,rtdx001,&apos;&apos;,rtdx002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM rtdx_t WHERE rtdxent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

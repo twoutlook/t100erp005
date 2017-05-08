@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglp550" module="agl" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="02291" crtdt="2014-07-03 16:36:50" modid="02291" moddt="2014-11-17 10:48:02" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="常用及分攤傳票複製產生作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="year(num5),month(num5),glalld,glalld_desc(chr80),glal002,glal002_desc(chr80),glan018(num5),glan019(num5),glapdocdt(dat),glap002(num5),glap004(num5),regenerate(chr500),stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="agl" filename="aglp550" method="dialog">
+    <section id="input">
+      <input id="head" field="year,month,glalld,glal002,glan018,glan019,glapdocdt,glap002,glap004,regenerate"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="year"/>
+      <column id="month"/>
+      <column id="glalld">
+        <after>
+          <reference field="glalld_desc" ref_field="glal_t.glalld" map_field="glalent,glalld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="glalld_desc"/>
+      <column id="glal002">
+        <after>
+          <check chkid="v_oocq002_3004" id="isExist"/>
+          <reference field="glal002_desc" ref_field="glal002" map_field="glal002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;3004&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="glal002_desc"/>
+      <column id="glan018"/>
+      <column id="glan019"/>
+      <column id="glapdocdt"/>
+      <column id="glap002">
+        <after>
+          <check id="range" st="9999.000" st_type="1" errno="azz-00087" bt="1000.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="glap004">
+        <after>
+          <check id="range" st="13.000" st_type="1" errno="azz-00087" bt="1.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="regenerate" type="S" default="N"/>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

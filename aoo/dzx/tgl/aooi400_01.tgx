@@ -1,0 +1,688 @@
+{<section id="aooi400_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2013-12-16 09:45:47), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000172
+#+ Filename...: aooi400_01
+#+ Description: 週期月季資料產生
+#+ Creator....: 02482(2013-12-09 09:33:52)
+#+ Modifier...: 02482 -SD/PR-
+{</section>}
+
+
+
+{<section id="aooi400_01.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_oogc_m        RECORD
+       oogc015 LIKE oogc_t.oogc015, 
+   bdate LIKE type_t.dat, 
+   edate LIKE type_t.dat, 
+   type LIKE type_t.chr500, 
+   season LIKE type_t.chr500, 
+   week LIKE type_t.chr500, 
+   mw1b LIKE type_t.num5, 
+   mw1e LIKE type_t.num5, 
+   mw2b LIKE type_t.num5, 
+   mw2e LIKE type_t.num5, 
+   mw3b LIKE type_t.num5, 
+   mw3e LIKE type_t.num5, 
+   mw4b LIKE type_t.num5, 
+   mw4e LIKE type_t.num5, 
+   mw5b LIKE type_t.num5, 
+   mw5e LIKE type_t.num5
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_oogc_m        type_g_oogc_m
+ 
+   DEFINE g_oogc015_t LIKE oogc_t.oogc015
+
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+{</section>}
+ 
+{<section id="aooi400_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aooi400_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aooi400_01 WITH FORM cl_ap_formpath("aoo","aooi400_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_oogc_m.oogc015,g_oogc_m.bdate,g_oogc_m.edate,g_oogc_m.type,g_oogc_m.season,g_oogc_m.week,g_oogc_m.mw1b,g_oogc_m.mw1e,g_oogc_m.mw2b,g_oogc_m.mw2e,g_oogc_m.mw3b,g_oogc_m.mw3e,g_oogc_m.mw4b,g_oogc_m.mw4e,g_oogc_m.mw5b,g_oogc_m.mw5e ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD oogc015
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_oogc_m.oogc015,"2000","1","2100","1","azz-00087",1) THEN
+               NEXT FIELD oogc015
+            END IF 
+
+
+
+            #add-point:AFTER FIELD oogc015 name="input.a.oogc015"
+            {<point name="input.a.oogc015" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD oogc015
+            #add-point:BEFORE FIELD oogc015 name="input.b.oogc015"
+            {<point name="input.b.oogc015" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE oogc015
+            #add-point:ON CHANGE oogc015 name="input.g.oogc015"
+            {<point name="input.g.oogc015" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bdate
+            #add-point:BEFORE FIELD bdate name="input.b.bdate"
+            {<point name="input.b.bdate" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bdate
+            
+            #add-point:AFTER FIELD bdate name="input.a.bdate"
+            {<point name="input.a.bdate" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bdate
+            #add-point:ON CHANGE bdate name="input.g.bdate"
+            {<point name="input.g.bdate" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD edate
+            #add-point:BEFORE FIELD edate name="input.b.edate"
+            {<point name="input.b.edate" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD edate
+            
+            #add-point:AFTER FIELD edate name="input.a.edate"
+            {<point name="input.a.edate" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE edate
+            #add-point:ON CHANGE edate name="input.g.edate"
+            {<point name="input.g.edate" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD type
+            #add-point:BEFORE FIELD type name="input.b.type"
+            {<point name="input.b.type" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD type
+            
+            #add-point:AFTER FIELD type name="input.a.type"
+            {<point name="input.a.type" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE type
+            #add-point:ON CHANGE type name="input.g.type"
+            {<point name="input.g.type" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD season
+            #add-point:BEFORE FIELD season name="input.b.season"
+            {<point name="input.b.season" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD season
+            
+            #add-point:AFTER FIELD season name="input.a.season"
+            {<point name="input.a.season" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE season
+            #add-point:ON CHANGE season name="input.g.season"
+            {<point name="input.g.season" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD week
+            #add-point:BEFORE FIELD week name="input.b.week"
+            {<point name="input.b.week" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD week
+            
+            #add-point:AFTER FIELD week name="input.a.week"
+            {<point name="input.a.week" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE week
+            #add-point:ON CHANGE week name="input.g.week"
+            {<point name="input.g.week" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mw1b
+            #add-point:BEFORE FIELD mw1b name="input.b.mw1b"
+            {<point name="input.b.mw1b" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mw1b
+            
+            #add-point:AFTER FIELD mw1b name="input.a.mw1b"
+            {<point name="input.a.mw1b" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mw1b
+            #add-point:ON CHANGE mw1b name="input.g.mw1b"
+            {<point name="input.g.mw1b" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mw1e
+            #add-point:BEFORE FIELD mw1e name="input.b.mw1e"
+            {<point name="input.b.mw1e" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mw1e
+            
+            #add-point:AFTER FIELD mw1e name="input.a.mw1e"
+            {<point name="input.a.mw1e" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mw1e
+            #add-point:ON CHANGE mw1e name="input.g.mw1e"
+            {<point name="input.g.mw1e" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mw2b
+            #add-point:BEFORE FIELD mw2b name="input.b.mw2b"
+            {<point name="input.b.mw2b" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mw2b
+            
+            #add-point:AFTER FIELD mw2b name="input.a.mw2b"
+            {<point name="input.a.mw2b" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mw2b
+            #add-point:ON CHANGE mw2b name="input.g.mw2b"
+            {<point name="input.g.mw2b" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mw2e
+            #add-point:BEFORE FIELD mw2e name="input.b.mw2e"
+            {<point name="input.b.mw2e" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mw2e
+            
+            #add-point:AFTER FIELD mw2e name="input.a.mw2e"
+            {<point name="input.a.mw2e" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mw2e
+            #add-point:ON CHANGE mw2e name="input.g.mw2e"
+            {<point name="input.g.mw2e" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mw3b
+            #add-point:BEFORE FIELD mw3b name="input.b.mw3b"
+            {<point name="input.b.mw3b" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mw3b
+            
+            #add-point:AFTER FIELD mw3b name="input.a.mw3b"
+            {<point name="input.a.mw3b" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mw3b
+            #add-point:ON CHANGE mw3b name="input.g.mw3b"
+            {<point name="input.g.mw3b" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mw3e
+            #add-point:BEFORE FIELD mw3e name="input.b.mw3e"
+            {<point name="input.b.mw3e" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mw3e
+            
+            #add-point:AFTER FIELD mw3e name="input.a.mw3e"
+            {<point name="input.a.mw3e" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mw3e
+            #add-point:ON CHANGE mw3e name="input.g.mw3e"
+            {<point name="input.g.mw3e" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mw4b
+            #add-point:BEFORE FIELD mw4b name="input.b.mw4b"
+            {<point name="input.b.mw4b" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mw4b
+            
+            #add-point:AFTER FIELD mw4b name="input.a.mw4b"
+            {<point name="input.a.mw4b" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mw4b
+            #add-point:ON CHANGE mw4b name="input.g.mw4b"
+            {<point name="input.g.mw4b" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mw4e
+            #add-point:BEFORE FIELD mw4e name="input.b.mw4e"
+            {<point name="input.b.mw4e" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mw4e
+            
+            #add-point:AFTER FIELD mw4e name="input.a.mw4e"
+            {<point name="input.a.mw4e" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mw4e
+            #add-point:ON CHANGE mw4e name="input.g.mw4e"
+            {<point name="input.g.mw4e" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mw5b
+            #add-point:BEFORE FIELD mw5b name="input.b.mw5b"
+            {<point name="input.b.mw5b" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mw5b
+            
+            #add-point:AFTER FIELD mw5b name="input.a.mw5b"
+            {<point name="input.a.mw5b" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mw5b
+            #add-point:ON CHANGE mw5b name="input.g.mw5b"
+            {<point name="input.g.mw5b" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mw5e
+            #add-point:BEFORE FIELD mw5e name="input.b.mw5e"
+            {<point name="input.b.mw5e" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mw5e
+            
+            #add-point:AFTER FIELD mw5e name="input.a.mw5e"
+            {<point name="input.a.mw5e" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mw5e
+            #add-point:ON CHANGE mw5e name="input.g.mw5e"
+            {<point name="input.g.mw5e" />}
+            #END add-point 
+
+
+ #欄位檢查
+                  #Ctrlp:input.c.oogc015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD oogc015
+            #add-point:ON ACTION controlp INFIELD oogc015 name="input.c.oogc015"
+            {<point name="input.c.oogc015" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.bdate
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bdate
+            #add-point:ON ACTION controlp INFIELD bdate name="input.c.bdate"
+            {<point name="input.c.bdate" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.edate
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD edate
+            #add-point:ON ACTION controlp INFIELD edate name="input.c.edate"
+            {<point name="input.c.edate" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.type
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD type
+            #add-point:ON ACTION controlp INFIELD type name="input.c.type"
+            {<point name="input.c.type" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.season
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD season
+            #add-point:ON ACTION controlp INFIELD season name="input.c.season"
+            {<point name="input.c.season" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.week
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD week
+            #add-point:ON ACTION controlp INFIELD week name="input.c.week"
+            {<point name="input.c.week" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.mw1b
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mw1b
+            #add-point:ON ACTION controlp INFIELD mw1b name="input.c.mw1b"
+            {<point name="input.c.mw1b" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.mw1e
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mw1e
+            #add-point:ON ACTION controlp INFIELD mw1e name="input.c.mw1e"
+            {<point name="input.c.mw1e" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.mw2b
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mw2b
+            #add-point:ON ACTION controlp INFIELD mw2b name="input.c.mw2b"
+            {<point name="input.c.mw2b" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.mw2e
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mw2e
+            #add-point:ON ACTION controlp INFIELD mw2e name="input.c.mw2e"
+            {<point name="input.c.mw2e" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.mw3b
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mw3b
+            #add-point:ON ACTION controlp INFIELD mw3b name="input.c.mw3b"
+            {<point name="input.c.mw3b" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.mw3e
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mw3e
+            #add-point:ON ACTION controlp INFIELD mw3e name="input.c.mw3e"
+            {<point name="input.c.mw3e" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.mw4b
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mw4b
+            #add-point:ON ACTION controlp INFIELD mw4b name="input.c.mw4b"
+            {<point name="input.c.mw4b" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.mw4e
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mw4e
+            #add-point:ON ACTION controlp INFIELD mw4e name="input.c.mw4e"
+            {<point name="input.c.mw4e" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.mw5b
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mw5b
+            #add-point:ON ACTION controlp INFIELD mw5b name="input.c.mw5b"
+            {<point name="input.c.mw5b" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.mw5e
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mw5e
+            #add-point:ON ACTION controlp INFIELD mw5e name="input.c.mw5e"
+            {<point name="input.c.mw5e" />}
+            #END add-point
+
+
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aooi400_01 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="aooi400_01.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+{</section>}
+{<section id="aooi400_01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+

@@ -1,0 +1,270 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="artt230" module="art" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02003" crtdt="2015-07-08 13:48:33" modid="07142" moddt="2016-07-18 15:46:05" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="門店資源協議申請作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="rtamsite,rtamsite_desc(chr80),rtamdocdt,rtamdocno,rtam000,rtam001,rtam002,rtam003,rtam003_desc(chr80),rtam007(chr10),rtam004,rtam004_desc(chr80),rtam005,rtam005_desc(chr80),rtam006,rtamunit,rtamstus,rtamownid,rtamownid_desc(chr80),rtamowndp,rtamowndp_desc(chr80),rtamcrtid,rtamcrtid_desc(chr80),rtamcrtdp,rtamcrtdp_desc(chr80),rtamcrtdt,rtammodid,rtammodid_desc(chr80),rtammoddt,rtamcnfid,rtamcnfid_desc(chr80),rtamcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="rtanseq,rtan001,rtan002,rtan002_desc(chr500),rtan003,rtan004,rtan005,rtan006,rtan024(chr10),rtan007,rtan007_desc(chr500),rtan008,rtan008_desc(chr500),rtan025,rtan009,rtan009_desc(chr500),rtan010,rtan010_desc(chr500),rtan011,rtan011_desc(chr500),rtan012,rtan013,rtan014,rtan015,rtan016,rtan017,rtan018,rtan019,rtan020,rtan021,rtan022,rtan023,rtansite,rtancomp"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="rtaqunit(chr10),rtaqsite(chr10),rtaqseq(num10),rtaqseq1(num10),rtaq001(chr10),rtaq002(chr10),rtaq002_desc(chr500),rtaq004(chr10),rtaq003(chr10),rtaq003_desc(chr500),rtaq005(chr10),rtaq006(chr1),rtaq007(chr1),rtaq008(num20_6),rtaq009(num20_6),rtaq010(num20_6),rtaqacti(chr1)"/>
+      <var id="bs_field" value="rtamsite,rtamsite_desc(chr80),rtamdocno,rtamdocdt,rtam001,rtam003,rtam004,rtam004_desc(chr80),rtam005,rtam005_desc(chr80),rtam006" pk="rtamdocno" order=""/>
+      <bs_reference field="rtamsite_desc" ref_field="rtamsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="rtam004_desc" ref_field="rtam004" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="rtam005_desc" ref_field="rtam005" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="art" filename="artt230" method="dialog">
+    <section id="input">
+      <input id="head" field="rtamsite,rtamdocdt,rtamdocno,rtam000,rtam001,rtam003,rtam007,rtam004,rtam005,rtam006,rtamunit,rtamstus"/>
+      <input id="body" page="1" field="rtanseq,rtan001,rtan002,rtan003,rtan004,rtan005,rtan024,rtan007,rtan008,rtan025,rtan010,rtan011,rtan012,rtan013,rtan014,rtan015,rtan017,rtan018,rtan019,rtansite,rtancomp" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="rtaqunit,rtaqsite,rtaqseq,rtaqseq1,rtaq001,rtaq002,rtaq004,rtaq003,rtaq005,rtaq006,rtaq007,rtaq008,rtaq009,rtaq010,rtaqacti" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="rtamsite,rtamdocdt,rtamdocno,rtam000,rtam001,rtam002,rtam003,rtam007,rtam004,rtam005,rtam006,rtamunit,rtamstus,rtamownid,rtamowndp,rtamcrtid,rtamcrtdp,rtamcrtdt,rtammodid,rtammoddt,rtamcnfid,rtamcnfdt"/>
+      <construct id="body" page="1" field="rtanseq,rtan001,rtan002,rtan003,rtan004,rtan005,rtan006,rtan024,rtan007,rtan008,rtan025,rtan009,rtan010,rtan011,rtan012,rtan013,rtan014,rtan015,rtan016,rtan017,rtan018,rtan019,rtan020,rtan021,rtan022,rtan023,rtansite,rtancomp"/>
+      <construct id="body" page="2" field="rtaqunit,rtaqsite,rtaqseq,rtaqseq1,rtaq001,rtaq002,rtaq004,rtaq003,rtaq005,rtaq006,rtaq007,rtaq008,rtaq009,rtaq010,rtaqacti"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="rtamdocno"/>
+      <set id="head" type="no_entry" field="rtamdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="rtamsite">
+        <after>
+          <check chkid="q_ooef001_24" id="isExist"/>
+          <reference field="rtamsite_desc" ref_field="rtam_t.rtamsite" map_field="rtamsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="rtamsite_desc"/>
+      <column id="rtamdocdt"/>
+      <column id="rtamdocno">
+        <controlp form="q_rtamdocno" state="c"/>
+      </column>
+      <column id="rtam000" def_scc="32"/>
+      <column id="rtam001">
+        <controlp form="q_rtao001" state="i"/>
+        <controlp form="q_rtam001" state="c"/>
+      </column>
+      <column id="rtam002"/>
+      <column id="rtam003">
+        <after>
+          <reference field="rtam003_desc" ref_field="rtam_t.rtam003" map_field="rtam003" ref_sql="SELECT prcfl003 FROM prcfl_t WHERE prcflent=$varg_enterprise$var AND prcfl001=? AND prcfl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_prcf001" state="i"/>
+        <controlp form="q_prcf001" state="c"/>
+      </column>
+      <column id="rtam003_desc"/>
+      <column id="rtam007"/>
+      <column id="rtam004">
+        <after>
+          <reference field="rtam004_desc" ref_field="rtam_t.rtam004" map_field="rtam004" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtam004_desc"/>
+      <column id="rtam005">
+        <after>
+          <reference field="rtam005_desc" ref_field="rtam_t.rtam005" map_field="rtam005" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="rtam005_desc"/>
+      <column id="rtam006"/>
+      <column id="rtamunit"/>
+      <column id="rtamstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="rtamownid">
+        <after>
+          <reference field="rtamownid_desc" ref_field="rtam_t.rtamownid" map_field="rtamownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtamownid_desc"/>
+      <column id="rtamowndp">
+        <after>
+          <reference field="rtamowndp_desc" ref_field="rtam_t.rtamowndp" map_field="rtamowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtamowndp_desc"/>
+      <column id="rtamcrtid">
+        <after>
+          <reference field="rtamcrtid_desc" ref_field="rtam_t.rtamcrtid" map_field="rtamcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtamcrtid_desc"/>
+      <column id="rtamcrtdp">
+        <after>
+          <reference field="rtamcrtdp_desc" ref_field="rtam_t.rtamcrtdp" map_field="rtamcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtamcrtdp_desc"/>
+      <column id="rtamcrtdt"/>
+      <column id="rtammodid">
+        <after>
+          <reference field="rtammodid_desc" ref_field="rtam_t.rtammodid" map_field="rtammodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtammodid_desc"/>
+      <column id="rtammoddt"/>
+      <column id="rtamcnfid">
+        <after>
+          <reference field="rtamcnfid_desc" ref_field="rtam_t.rtamcnfid" map_field="rtamcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtamcnfid_desc"/>
+      <column id="rtamcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="rtanseq"/>
+      <column id="rtan001"/>
+      <column id="rtan002">
+        <after>
+          <reference field="rtan002_desc" ref_field="rtan_t.rtan002" map_field="rtan002" ref_sql="SELECT rtall003 FROM rtall_t WHERE rtallent=$varg_enterprise$var AND rtall001=? AND rtall002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtal001" state="i"/>
+        <controlp form="q_rtal001" state="c"/>
+      </column>
+      <column id="rtan002_desc"/>
+      <column id="rtan003"/>
+      <column id="rtan004"/>
+      <column id="rtan005">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtan006" type="S" default="0"/>
+      <column id="rtan024"/>
+      <column id="rtan007">
+        <after>
+          <reference field="rtan007_desc" ref_field="rtan_t.rtan007" map_field="rtan007" ref_sql="SELECT mhael023 FROM mhael_t WHERE mhaelent=$varg_enterprise$var AND mhael001=? AND mhael022=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="rtan007_desc"/>
+      <column id="rtan008">
+        <after>
+          <reference field="rtan008_desc" ref_field="rtan_t.rtan008" map_field="rtan0008" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_1" state="i"/>
+        <controlp form="q_pmaa001_1" state="c"/>
+      </column>
+      <column id="rtan008_desc"/>
+      <column id="rtan025">
+        <controlp form="q_stje001" state="i"/>
+        <controlp form="q_rtan005" state="c"/>
+      </column>
+      <column id="rtan009">
+        <after>
+          <reference field="rtan009_desc" ref_field="rtan_t.rtan009" map_field="rtan009" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="rtan009_desc"/>
+      <column id="rtan010">
+        <after>
+          <reference field="rtan010_desc" ref_field="rtan_t.rtan010" map_field="rtan010" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="rtan010_desc"/>
+      <column id="rtan011">
+        <after>
+          <reference field="rtan011_desc" ref_field="rtan_t.rtan011" map_field="rtan011" ref_sql="SELECT stael003 FROM stael_t WHERE staelent=$varg_enterprise$var AND stael001=? AND stael002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_stae001" state="i"/>
+        <controlp form="q_stae001" state="c"/>
+      </column>
+      <column id="rtan011_desc"/>
+      <column id="rtan012" type="S" default="N"/>
+      <column id="rtan013" type="S" default="N"/>
+      <column id="rtan014" type="S" default="2" def_scc="6006"/>
+      <column id="rtan015" type="S" default="1" def_scc="6842"/>
+      <column id="rtan016" type="S" default="0"/>
+      <column id="rtan017" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtan018" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtan019"/>
+      <column id="rtan020" type="S" default="1" def_scc="6841"/>
+      <column id="rtan021"/>
+      <column id="rtan022"/>
+      <column id="rtan023"/>
+      <column id="rtansite"/>
+      <column id="rtancomp"/>
+    </init>
+    <init id="body" page="2">
+      <column id="rtaqunit"/>
+      <column id="rtaqsite"/>
+      <column id="rtaqseq" type="S" default="0"/>
+      <column id="rtaqseq1" type="S" default="0"/>
+      <column id="rtaq001"/>
+      <column id="rtaq002">
+        <after>
+          <reference field="rtaq002_desc" ref_field="rtaq002" map_field="rtaq002" ref_sql="SELECT rtall003 FROM rtall_t WHERE rtallent=$varg_enterprise$var AND rtall001=? AND rtall002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="rtaq002_desc"/>
+      <column id="rtaq004"/>
+      <column id="rtaq003">
+        <after>
+          <reference field="rtaq003_desc" ref_field="rtaq003" map_field="rtaq003" ref_sql="SELECT stael003 FROM stael_t WHERE staelent=$varg_enterprise$var AND stael001=? AND stael002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="rtaq003_desc"/>
+      <column id="rtaq005"/>
+      <column id="rtaq006" type="S" default="N"/>
+      <column id="rtaq007" type="S" default="N"/>
+      <column id="rtaq008" type="S" default="0"/>
+      <column id="rtaq009" type="S" default="0"/>
+      <column id="rtaq010" type="S" default="0"/>
+      <column id="rtaqacti" type="S" default="Y"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="rtam_t" pk="rtamdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT rtamsite,&apos;&apos;,rtamdocdt,rtamdocno,rtam000,rtam001,rtam002,rtam003,&apos;&apos;,&apos;&apos;,rtam004,&apos;&apos;,rtam005,&apos;&apos;,rtam006,rtamunit,rtamstus,rtamownid,&apos;&apos;,rtamowndp,&apos;&apos;,rtamcrtid,&apos;&apos;,rtamcrtdp,&apos;&apos;,rtamcrtdt,rtammodid,&apos;&apos;,rtammoddt,rtamcnfid,&apos;&apos;,rtamcnfdt FROM rtam_t WHERE rtament= ? AND rtamdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT rtamsite,&apos;&apos;,rtamdocdt,rtamdocno,rtam000,rtam001,rtam002,rtam003,&apos;&apos;,&apos;&apos;,rtam004,&apos;&apos;,rtam005,&apos;&apos;,rtam006,rtamunit,rtamstus,rtamownid,&apos;&apos;,rtamowndp,&apos;&apos;,rtamcrtid,&apos;&apos;,rtamcrtdp,&apos;&apos;,rtamcrtdt,rtammodid,&apos;&apos;,rtammoddt,rtamcnfid,&apos;&apos;,rtamcnfdt FROM rtam_t" order="rtamdocno"/>
+    </head>
+    <body id="rtan_t" page="1" linked="" pk="rtanseq" fk="rtandocno">
+      <sql id="forupd_sql_detail" query="SELECT rtanseq,rtan001,rtan002,&apos;&apos;,rtan003,rtan004,rtan005,rtan006,&apos;&apos;,rtan007,&apos;&apos;,rtan008,&apos;&apos;,rtan025,rtan009,&apos;&apos;,rtan010,&apos;&apos;,rtan011,&apos;&apos;,rtan012,rtan013,rtan014,rtan015,rtan016,rtan017,rtan018,rtan019,rtan020,rtan021,rtan022,rtan023,rtansite,rtancomp FROM rtan_t WHERE rtanent=? AND rtandocno=? AND rtanseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rtanseq,rtan001,rtan002,&apos;&apos;,rtan003,rtan004,rtan005,rtan006,&apos;&apos;,rtan007,&apos;&apos;,rtan008,&apos;&apos;,rtan025,rtan009,&apos;&apos;,rtan010,&apos;&apos;,rtan011,&apos;&apos;,rtan012,rtan013,rtan014,rtan015,rtan016,rtan017,rtan018,rtan019,rtan020,rtan021,rtan022,rtan023,rtansite,rtancomp FROM rtan_t WHERE rtanent=? AND rtandocno=?"/>
+    </body>
+    <body id="rtaq_t" page="2" linked="" pk="rtaqseq,rtaqseq1" fk="rtaqdocno">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM rtaq_t WHERE rtaqent=? AND rtaqdocno=? AND rtaqseq=? AND rtaqseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM rtaq_t WHERE rtaqent=? AND rtaqdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

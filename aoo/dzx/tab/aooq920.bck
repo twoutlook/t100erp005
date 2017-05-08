@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooq920" module="aoo" jobmode="N" type="i05" industry="std" fix_arg="0" crtid="01996" crtdt="2016-05-13 17:26:00" modid="05423" moddt="2016-08-30 14:33:57" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="異常管理查詢作業(停用)">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="ookb001,ookb002"/>
+      <var id="bs_field" value="ookb001,ookb001_desc(chr80),ookb002,ookb002_desc(chr80),exc_qty_1(chr80),war_qty_1(chr80)" pk="ookb001,ookb002" order=""/>
+      <bs_reference field="ookb001_desc" ref_field="ookb001" ref_sql="SELECT ookbl003 FROM ookbl_t WHERE ookblent=$varg_enterprise$var AND ookbl001=? AND ookbl002=$varg_dlang$var"/>
+      <bs_reference field="ookb002_desc" ref_field="ookb002" ref_sql="SELECT ookal004 FROM ookal_t WHERE ookalent=$varg_enterprise$var AND ookal001=? AND ookal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="war_detail"/>
+      <action id="exc_detail"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooq920" method="dialog">
+    <section id="input">
+      <input id="head" field="ookb001,ookb002"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="ookb001,ookb002"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="ookb001,ookb002"/>
+      <set id="head" type="no_entry" field="ookb001,ookb002"/>
+    </init>
+    <init id="head">
+      <column id="ookb001"/>
+      <column id="ookb002"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="ookb_t" lid="ookb002" pid="ookb001" type=" " desc=" " speed="ookbs_t" stype=" " slid="ookbs002" spid="ookbs001" pk="ookb001,ookb002">
+      <sql id="forupd_sql" type="sql" query="SELECT ookb001,ookb002 FROM ookb_t WHERE ookbent= ? AND ookb001=? AND ookb002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT ookb001,ookb002 FROM ookb_t" order="ookb001,ookb002"/>
+    </head>
+  </dataset>
+</assembly>
+

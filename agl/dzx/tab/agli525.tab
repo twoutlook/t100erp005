@@ -1,0 +1,125 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli525" module="agl" jobmode="N" type="i07" industry="std" fix_arg="10" crtid="05016" crtdt="2015-04-02 16:46:45" modid="05016" moddt="2015-04-09 18:12:31" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="合併報表會計科目沖銷規則_核算項值設定">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gldy002,gldy002_desc(chr80),gldy001,gldy001_desc(chr80),gldy004,gldy004_desc(chr80),gldy003,gldy003_desc(chr80),gldy006,gldy006_desc(chr80),gldy005,gldy005_desc(chr80),gldy007,gldy008,gldy009"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gldystus,gldy010,gldy010_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gldy010,gldyownid,gldyownid_desc(chr500),gldyowndp,gldyowndp_desc(chr500),gldycrtid,gldycrtid_desc(chr500),gldycrtdp,gldycrtdp_desc(chr500),gldycrtdt,gldymodid,gldymodid_desc(chr500),gldymoddt"/>
+      <var id="bs_field" value="gldy001,gldy002,gldy003,gldy004,gldy005,gldy006,gldy007,gldy008,gldy009" pk="gldy001,gldy002,gldy003,gldy004,gldy005,gldy006,gldy007,gldy008,gldy009" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="agli525" method="dialog">
+    <section id="input">
+      <input id="head" field="gldy002,gldy001,gldy004,gldy003,gldy006,gldy005,gldy007,gldy008,gldy009"/>
+      <input id="body" page="1" field="gldystus,gldy010" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gldy002,gldy001,gldy004,gldy003,gldy006,gldy005,gldy007,gldy008,gldy009"/>
+      <construct id="body" page="1" field="gldystus,gldy010"/>
+      <construct id="body" page="2" field="gldyownid,gldyowndp,gldycrtid,gldycrtdp,gldycrtdt,gldymodid,gldymoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gldy001,gldy002,gldy003,gldy004,gldy005,gldy006,gldy007,gldy008,gldy009"/>
+      <set id="head" type="no_entry" field="gldy001,gldy002,gldy003,gldy004,gldy005,gldy006,gldy007,gldy008,gldy009"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gldy002">
+        <after/>
+      </column>
+      <column id="gldy002_desc"/>
+      <column id="gldy001">
+        <after/>
+      </column>
+      <column id="gldy001_desc"/>
+      <column id="gldy004">
+        <after/>
+      </column>
+      <column id="gldy004_desc"/>
+      <column id="gldy003">
+        <after/>
+      </column>
+      <column id="gldy003_desc"/>
+      <column id="gldy006">
+        <after/>
+      </column>
+      <column id="gldy006_desc"/>
+      <column id="gldy005">
+        <after/>
+      </column>
+      <column id="gldy005_desc"/>
+      <column id="gldy007" type="S" default="0"/>
+      <column id="gldy008"/>
+      <column id="gldy009"/>
+    </init>
+    <init id="body" page="1">
+      <column id="gldystus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="gldy010">
+        <after/>
+      </column>
+      <column id="gldy010_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gldyownid">
+        <after>
+          <reference field="gldyownid_desc" ref_field="gldy_t.gldyownid" map_field="gldyownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gldyownid_desc"/>
+      <column id="gldyowndp">
+        <after>
+          <reference field="gldyowndp_desc" ref_field="gldy_t.gldyowndp" map_field="gldyowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gldyowndp_desc"/>
+      <column id="gldycrtid">
+        <after>
+          <reference field="gldycrtid_desc" ref_field="gldy_t.gldycrtid" map_field="gldycrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gldycrtid_desc"/>
+      <column id="gldycrtdp">
+        <after>
+          <reference field="gldycrtdp_desc" ref_field="gldy_t.gldycrtdp" map_field="gldycrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gldycrtdp_desc"/>
+      <column id="gldycrtdt"/>
+      <column id="gldymodid">
+        <after>
+          <reference field="gldymodid_desc" ref_field="gldy_t.gldymodid" map_field="gldymodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gldymodid_desc"/>
+      <column id="gldymoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gldy_t" pk="gldy001,gldy002,gldy003,gldy004,gldy005,gldy006,gldy007,gldy008,gldy009">
+      <sql id="forupd_sql" type="sql" query="SELECT gldy002,&apos;&apos;,gldy001,&apos;&apos;,gldy004,&apos;&apos;,gldy003,&apos;&apos;,gldy006,&apos;&apos;,gldy005,&apos;&apos;,gldy007,gldy008,gldy009 FROM gldy_t WHERE gldyent= ? AND gldy001=? AND gldy002=? AND gldy003=? AND gldy004=? AND gldy005=? AND gldy006=? AND gldy007=? AND gldy008=? AND gldy009=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gldy002,&apos;&apos;,gldy001,&apos;&apos;,gldy004,&apos;&apos;,gldy003,&apos;&apos;,gldy006,&apos;&apos;,gldy005,&apos;&apos;,gldy007,gldy008,gldy009 FROM gldy_t" order="gldy001,gldy002,gldy003,gldy004,gldy005,gldy006,gldy007,gldy008,gldy009"/>
+    </head>
+    <body id="gldy_t" page="1,2" linked="" pk="gldy010" fk="gldy001,gldy002,gldy003,gldy004,gldy005,gldy006,gldy007,gldy008,gldy009">
+      <sql id="forupd_sql_detail" query="SELECT gldystus,gldy010,&apos;&apos;,&apos;&apos;,gldyownid,&apos;&apos;,gldyowndp,&apos;&apos;,gldycrtid,&apos;&apos;,gldycrtdp,&apos;&apos;,gldycrtdt,gldymodid,&apos;&apos;,gldymoddt FROM gldy_t WHERE gldyent=? AND gldy001=? AND gldy002=? AND gldy003=? AND gldy004=? AND gldy005=? AND gldy006=? AND gldy007=? AND gldy008=? AND gldy009=? AND gldy010=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gldystus,gldy010,&apos;&apos;,&apos;&apos;,gldyownid,&apos;&apos;,gldyowndp,&apos;&apos;,gldycrtid,&apos;&apos;,gldycrtdp,&apos;&apos;,gldycrtdt,gldymodid,&apos;&apos;,gldymoddt FROM gldy_t WHERE gldyent= ? AND gldy001=? AND gldy002=? AND gldy003=? AND gldy004=? AND gldy005=? AND gldy006=? AND gldy007=? AND gldy008=? AND gldy009=?"/>
+    </body>
+  </dataset>
+</assembly>
+

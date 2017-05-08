@@ -1,0 +1,145 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ainq446" module="ain" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="06189" crtdt="2015-02-05 21:58:48" modid="02159" moddt="2016-10-19 17:27:30" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="商品貨架到期狀況查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="infgsite,sel1,sel2,oocq019,infc002,infc001,imaa009,infh001"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),infgsite,infgsite_desc(chr500),infgdocdt,infgdocno,infhseq,infh001,infh001_desc(chr500),infh001_desc_1(chr500),infh001_desc_1_desc(chr500),infh004,infh004_desc(chr500),infh005,infh005_desc(chr10),infh006,infh006_desc(chr10),infh007,infh008,infh008_desc(chr10),infh010,infh011"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="infgsite,infgsite_2_desc(chr500),infgdocdt,infgdocno,infhseq,infh001,infh001_2_desc(chr500),infh001_2_desc_1(chr500),infh001_2_desc_1_desc(chr500),infh004,infh004_2_desc(chr500),infh005,infh005_2_desc(chr10),infh006,infh006_2_desc(chr10),infh007,infh008,infh008_2_desc(chr10),infh010,infh011"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),infgsite(b_infgsite),infgsite_desc(b_infgsite_desc),infgdocdt(b_infgdocdt),infgdocno(b_infgdocno),infhseq(b_infhseq),infh001(b_infh001),infh001_desc(b_infh001_desc),infh001_desc_1(b_infh001_desc_1),infh001_desc_1_desc(b_infh001_desc_1_desc),infh004(b_infh004),infh004_desc(b_infh004_desc),infh005(b_infh005),infh005_desc(b_infh005_desc),infh006(b_infh006),infh006_desc(b_infh006_desc),infh007(b_infh007),infh008(b_infh008),infh008_desc(b_infh008_desc),infh010(b_infh010),infh011(b_infh011)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="infgsite_2(b_infgsite_2),infgsite_2_desc(b_infgsite_2_desc),infgdocdt_2(b_infgdocdt_2),infgdocno_2(b_infgdocno_2),infhseq_2(b_infhseq_2),infh001_2(b_infh001_2),infh001_2_desc(b_infh001_2_desc),infh001_2_desc_1(b_infh001_2_desc_1),infh001_2_desc_1_desc(b_infh001_2_desc_1_desc),infh004_2(b_infh004_2),infh004_2_desc(b_infh004_2_desc),infh005_2(b_infh005_2),infh005_2_desc(b_infh005_2_desc),infh006_2(b_infh006_2),infh006_2_desc(b_infh006_2_desc),infh007_2(b_infh007_2),infh008_2(b_infh008_2),infh008_2_desc(b_infh008_2_desc),infh010_2(b_infh010_2),infh011_2(b_infh011_2)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="ainq446" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="infgsite,infgdocdt,infgdocno,infhseq,infh001,infh004,infh005,infh006,infh007,infh008,infh010,infh011" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="infgsite(b_infgsite),infgdocdt(b_infgdocdt),infgdocno(b_infgdocno),infhseq(b_infhseq),infh001(b_infh001),infh004(b_infh004),infh005(b_infh005),infh006(b_infh006),infh007(b_infh007),infh008(b_infh008),infh010(b_infh010),infh011(b_infh011)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="infgsite">
+        <after>
+          <reference field="infgsite_desc" ref_field="infgsite" map_field="infgent,infgsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="infgsite_desc"/>
+      <column id="infgdocdt"/>
+      <column id="infgdocno">
+        <controlp form="q_infgdocno" state="c"/>
+      </column>
+      <column id="infhseq" type="S" default="0"/>
+      <column id="infh001">
+        <after>
+          <reference field="infh001_desc" ref_field="infh001" map_field="infhent,infh001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="infh001_desc"/>
+      <column id="infh001_desc_1">
+        <after>
+          <reference field="infh001_desc_1_desc" ref_field="infh001_desc_1" map_field="infhent,b_infh001_desc_1" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="infh001_desc_1_desc"/>
+      <column id="infh004">
+        <after>
+          <reference field="infh004_desc" ref_field="infh004" map_field="infhent,infh004" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="infh004_desc"/>
+      <column id="infh005">
+        <after>
+          <reference field="infh005_desc" ref_field="infhsite,infh005" map_field="infhsite,infh005" ref_sql="SELECT infc002 FROM infc_t WHERE infcent=$varg_enterprise$var AND infcsite=? AND infc001=? "/>
+        </after>
+      </column>
+      <column id="infh005_desc"/>
+      <column id="infh006">
+        <after>
+          <reference field="infh006_desc" ref_field="infhsite,infh006" map_field="infhsite,infh006" ref_sql="SELECT infc002 FROM infc_t WHERE infcent=$varg_enterprise$var AND infcsite=? AND infc001=? "/>
+        </after>
+      </column>
+      <column id="infh006_desc"/>
+      <column id="infh007"/>
+      <column id="infh008">
+        <after>
+          <reference field="infh008_desc" ref_field="infhsite,infh008" map_field="infhsite,infh008" ref_sql="SELECT infc002 FROM infc_t WHERE infcent=$varg_enterprise$var AND infcsite=? AND infc001=? "/>
+        </after>
+      </column>
+      <column id="infh008_desc"/>
+      <column id="infh010" type="S" default="0"/>
+      <column id="infh011" type="S" default="0"/>
+    </init>
+    <init id="body" page="2">
+      <column id="infgsite_2">
+        <after>
+          <reference field="infgsite_2_desc" ref_field="infgsite_2" map_field="infgent,infgsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="infgsite_2_desc"/>
+      <column id="infgdocdt_2"/>
+      <column id="infgdocno_2"/>
+      <column id="infhseq_2"/>
+      <column id="infh001_2">
+        <after>
+          <reference field="infh001_2_desc" ref_field="infh001_2" map_field="infhent,infh001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="infh001_2_desc"/>
+      <column id="infh001_2_desc_1">
+        <after>
+          <reference field="infh001_2_desc_1_desc" ref_field="infh001_2_desc_1" map_field="infhent,b_infh001_2_desc_1" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="infh001_2_desc_1_desc"/>
+      <column id="infh004_2">
+        <after>
+          <reference field="infh004_2_desc" ref_field="infh004_2" map_field="infhent,infh004" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="infh004_2_desc"/>
+      <column id="infh005_2">
+        <after>
+          <reference field="infh005_2_desc" ref_field="infhsite,infh005" map_field="infhsite,infh005" ref_sql="SELECT infc002 FROM infc_t WHERE infcent=$varg_enterprise$var AND infcsite=? AND infc001=? "/>
+        </after>
+      </column>
+      <column id="infh005_2_desc"/>
+      <column id="infh006_2">
+        <after>
+          <reference field="infh006_2_desc" ref_field="infhsite,infh006" map_field="infhsite,infh006" ref_sql="SELECT infc002 FROM infc_t WHERE infcent=$varg_enterprise$var AND infcsite=? AND infc001=? "/>
+        </after>
+      </column>
+      <column id="infh006_2_desc"/>
+      <column id="infh007_2"/>
+      <column id="infh008_2">
+        <after>
+          <reference field="infh008_2_desc" ref_field="infhsite,infh008" map_field="infhsite,infh008" ref_sql="SELECT infc002 FROM infc_t WHERE infcent=$varg_enterprise$var AND infcsite=? AND infc001=? "/>
+        </after>
+      </column>
+      <column id="infh008_2_desc"/>
+      <column id="infh010_2"/>
+      <column id="infh011_2"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="infg_t" page="1" linked="" pk="infgdocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,infgsite,&apos;&apos;,infgdocdt,infgdocno,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM infg_t WHERE infgent= ? AND 1=1 "/>
+    </body>
+    <body id="infh_t" page="2" linked="" pk="infhseq" fk="infhdocno" detail="Y">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM infh_t WHERE infhent=? AND infhdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

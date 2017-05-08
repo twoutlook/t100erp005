@@ -1,0 +1,73 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asfp302_01" module="asf" jobmode="N" type="c03b" industry="std" fix_arg="0" crtid="00768" crtdt="2014-05-09 15:15:59" modid="00768" moddt="2014-06-30 18:18:37" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="RUNCARD拆分">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="sfcbdocno(chr20),sfaa010(chr500),wip_qty(num20_6),sfcb001(num10),imaal003(chr500),split_qty(num20_6),sfcb003(chr10),sfcb003_desc(chr80),sfcb004(chr10),imaal004(chr500),split_lot(num5)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="ln(num5),qty(num20_6),qtys(num20_6)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+    </section>
+  </structure>
+  <form id="0" module="asf" filename="asfp302_01" method="dialog">
+    <section id="input">
+      <input id="head" field="sfcbdocno,sfaa010,wip_qty,sfcb001,imaal003,split_qty,sfcb003,sfcb004,imaal004,split_lot"/>
+      <input id="body" page="1" field="ln,qty,qtys" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="sfcbdocno"/>
+      <column id="sfaa010">
+        <controlp form="q_imaa001_9" state="i"/>
+        <controlp form="q_imaa001_9" state="c"/>
+      </column>
+      <column id="wip_qty"/>
+      <column id="sfcb001"/>
+      <column id="imaal003"/>
+      <column id="split_qty"/>
+      <column id="sfcb003">
+        <after>
+          <reference field="sfcb003_desc" ref_field="sfcb003" map_field="sfcb003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="sfcb003_desc"/>
+      <column id="sfcb004">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imaal004"/>
+      <column id="split_lot">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="1">
+      <column id="ln"/>
+      <column id="qty"/>
+      <column id="qtys"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="sfca_t" pk="sfcadocno,sfca001">
+      <sql id="forupd_sql" type="sql" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM sfca_t WHERE sfcaent= ? AND sfcadocno=? AND sfca001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM sfca_t" order="sfcadocno,sfca001"/>
+    </head>
+    <body id="sfcb_t" page="1" linked="" pk="sfcb002" fk="sfcbdocno,sfcb001">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos; FROM sfcb_t WHERE sfcbent=? AND sfcbdocno=? AND sfcb001=? AND sfcb002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos; FROM sfcb_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,3382 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axmt610_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0020(2017-02-17 16:08:25), PR版次:0020(2017-02-21 19:05:43)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000107
+#+ Filename...: axmt610_01
+#+ Description: 整批產生包裝單身子作業
+#+ Creator....: 01996(2014-05-21 17:00:26)
+#+ Modifier...: 07024 -SD/PR- 07024
+ 
+{</section>}
+ 
+{<section id="axmt610_01.global" >}
+#應用 p00 樣板自動產生(Version:5)
+#add-point:填寫註解說明 name="main.memo"
+#150310-00003#13 2016/03/15 By lixh       新增覆出單自動產生單身
+#160318-00025#41 2016/04/25 By pengxin    將重複內容的錯誤訊息置換為公用錯誤訊息(r.v)
+#160810-00019#1  2016/08/10 By Sarah      將FUNCTION axmt610_01_b_fill2()中抓取imaa018->xmam016的程式段mark還原,否則後面做單位轉換時會報錯
+#160908-00016#1  2016/09/13 By 06948      1.整批產生時，取得出通單數量時需扣除已轉包裝單的數量
+#                                         2.單身截止箱號欄位(xmem011)不可修改，調整規格畫面的noEntry=TRUE
+#                                         3.產生包裝單單身明細後，若繼續，需重新計算一次數量(總數量-已包裝數量=未包裝數量)
+#161102-00019#1  2016/11/02 By shiun      生成包装明细资料时，作业会down出
+#161109-00085#7  2016/11/10 By lienjunqi  整批調整系統星號寫法
+#161129-00056#1  2016/11/29 By Sarah      修正#161109-00085#7 INSERT INTO xmem_t沒有把欄位展開的問題
+#161109-00085#65 2016/12/01 By 08171      整批調整系統星號寫法
+#161213-00029#1  2016/12/13 By 08993      調整PREPARE sel_sum_xmem012位置,以避免程式當出
+#170104-00066#3  2017/01/06 By Rainy     筆數相關變數由num5放大至num10
+#170216-00017#1  2017/02/18 By 07024      1.規格新增多角流程編號(xmdh051)
+#                                         2.多角流程編號(xmdh051)欄位顯隱，出通或出貨單=>顯示、其他來源類型=>隱藏
+#                                         3.當來源類型為 1:出通單 或 2:出貨單時，
+#                                           用滑鼠一筆一筆選取       =>與第一筆勾選的比較 多角流程編號，是否一致
+#                                           按滿箱選取、全選、反向選取=>與第一筆的資料比 多角流程編號，是否一致
+#end add-point
+#add-point:填寫註解說明(客製用) name="main.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="main.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axmt610_01.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+ TYPE type_g_xmem2_d RECORD
+             xmem001   LIKE xmem_t.xmem001,
+             xmdh051   LIKE xmdh_t.xmdh051,  #170216-00017#1-add
+             xmem002   LIKE xmem_t.xmEm002,
+             imaa001   LIKE imaa_t.imaa001,
+             imaal003  LIKE imaal_t.imaal003,
+             imaal004  LIKE imaal_t.imaal004,
+             xmdh007   LIKE xmdh_t.xmdh007,
+             xmdh015   LIKE xmdh_t.xmdh015,
+             xmdh016   LIKE xmdh_t.xmdh016,
+             xman005   LIKE xman_t.xman005,
+             xman005_desc   LIKE type_t.chr500,   #150910-00007#1 150916 by sakura add
+             every_num LIKE type_t.num5,
+             sel1      LIKE type_t.chr1,
+             full_num  LIKE type_t.num5,
+             sel2      LIKE type_t.chr1,
+             unfull_num LIKE type_t.num5,
+             space     LIKE type_t.num20_6
+                       END RECORD
+
+ TYPE type_g_xmem_d        RECORD
+       xmemseq LIKE xmem_t.xmemseq, 
+   xmem001 LIKE xmem_t.xmem001, 
+   xmem002 LIKE xmem_t.xmem002, 
+   xmem003 LIKE xmem_t.xmem003, 
+   xmem003_desc LIKE type_t.chr500, 
+   xmem003_desc_desc LIKE type_t.chr500,
+   xmem004 LIKE xmem_t.xmem004, 
+   xmem005 LIKE xmem_t.xmem005, 
+   xmem005_desc LIKE type_t.chr500,   #150910-00007#1 150916 by sakura add
+   xmem006 LIKE xmem_t.xmem006, 
+   xmem007 LIKE type_t.num20_6, 
+   xmem008 LIKE xmem_t.xmem008, 
+   xmem009 LIKE xmem_t.xmem009, 
+   xmem010 LIKE xmem_t.xmem010, 
+   xmem011 LIKE xmem_t.xmem011, 
+   xmem012 LIKE xmem_t.xmem012, 
+   xmem013 LIKE xmem_t.xmem013, 
+   xmem014 LIKE xmem_t.xmem014, 
+   xmem015 LIKE xmem_t.xmem015, 
+   xmem016 LIKE xmem_t.xmem016, 
+   xmem017 LIKE xmem_t.xmem017, 
+   xmem018 LIKE xmem_t.xmem018, 
+   xmem019 LIKE xmem_t.xmem019
+       END RECORD
+TYPE type_g_xmem_m    RECORD
+          xmem0081 LIKE xmem_t.xmem008,
+          xmem0101 LIKE xmem_t.xmem010,
+          xmem0091 LIKE xmem_t.xmem009
+             END RECORD 
+ 
+DEFINE g_xmem_d          DYNAMIC ARRAY OF type_g_xmem_d
+DEFINE g_xmem_d_t        type_g_xmem_d
+
+DEFINE g_xmem2_d          DYNAMIC ARRAY OF type_g_xmem2_d
+DEFINE g_xmem2_d_t        type_g_xmem2_d
+ 
+DEFINE g_xmemdocno_t   LIKE xmem_t.xmemdocno    #Keyå¼åä»½
+DEFINE g_xmemseq_t      LIKE xmem_t.xmemseq    #Keyå¼åä»½
+DEFINE g_xmem_m          type_g_xmem_m
+ 
+DEFINE l_ac                  LIKE type_t.num10  #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+DEFINE l_ac2                 LIKE type_t.num10  #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_refç¨é£å
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_refç¨é£å
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_refç¨é£å
+DEFINE g_rec_b               LIKE type_t.num10   #170104-00066#3 num5->num10  17/01/06 mod by rainy   
+DEFINE g_rec_b2              LIKE type_t.num10   #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+DEFINE g_detail_idx          LIKE type_t.num10   #170104-00066#3 num5->num10  17/01/06 mod by rainy  
+DEFINE g_sql                 STRING 
+DEFINE l_cnt                 LIKE type_t.num10   #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+DEFINE g_full_num        LIKE type_t.num5
+DEFINE g_unfull_num      LIKE type_t.num5
+DEFINE g_all_space       LIKE type_t.num20_6
+DEFINE g_action_choice   STRING
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axmt610_01.global_variable" >}
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+#mod--161109-00085#7-s
+#DEFINE g_xmel     RECORD LIKE xmel_t.*
+   DEFINE g_xmel RECORD  #包裝單單頭檔
+       xmelent LIKE xmel_t.xmelent, #企業編號         
+       xmelsite LIKE xmel_t.xmelsite, #營運據點
+       xmeldocno LIKE xmel_t.xmeldocno, #包裝單號
+       xmeldocdt LIKE xmel_t.xmeldocdt, #單據日期
+       xmel001 LIKE xmel_t.xmel001, #人員
+       xmel002 LIKE xmel_t.xmel002, #部門
+       xmel003 LIKE xmel_t.xmel003, #客戶
+       xmel004 LIKE xmel_t.xmel004, #包裝單來源
+       xmel005 LIKE xmel_t.xmel005, #來源單號
+       xmel006 LIKE xmel_t.xmel006, #起運日期
+       xmel007 LIKE xmel_t.xmel007, #運輸方式
+       xmel008 LIKE xmel_t.xmel008, #航次
+       xmel009 LIKE xmel_t.xmel009, #起運地
+       xmel010 LIKE xmel_t.xmel010, #卸貨地
+       xmel011 LIKE xmel_t.xmel011, #重量計量制度
+       xmel012 LIKE xmel_t.xmel012, #材積計量制度
+       xmel013 LIKE xmel_t.xmel013, #額外品名規格編號
+       xmel014 LIKE xmel_t.xmel014, #備註
+       xmelownid LIKE xmel_t.xmelownid, #資料所有者
+       xmelowndp LIKE xmel_t.xmelowndp, #資料所屬部門
+       xmelcrtid LIKE xmel_t.xmelcrtid, #資料建立者
+       xmelcrtdp LIKE xmel_t.xmelcrtdp, #資料建立部門
+       xmelcrtdt LIKE xmel_t.xmelcrtdt, #資料創建日
+       xmelmodid LIKE xmel_t.xmelmodid, #資料修改者
+       xmelmoddt LIKE xmel_t.xmelmoddt, #最近修改日
+       xmelcnfid LIKE xmel_t.xmelcnfid, #資料確認者
+       xmelcnfdt LIKE xmel_t.xmelcnfdt, #資料確認日
+       xmelpstid LIKE xmel_t.xmelpstid, #資料過帳者
+       xmelpstdt LIKE xmel_t.xmelpstdt, #資料過帳日
+       xmelstus LIKE xmel_t.xmelstus, #狀態碼
+       #161109-00085#65 --s add    
+       xmelud001 LIKE xmel_t.xmelud001, #自定義欄位(文字)001
+       xmelud002 LIKE xmel_t.xmelud002, #自定義欄位(文字)002
+       xmelud003 LIKE xmel_t.xmelud003, #自定義欄位(文字)003
+       xmelud004 LIKE xmel_t.xmelud004, #自定義欄位(文字)004
+       xmelud005 LIKE xmel_t.xmelud005, #自定義欄位(文字)005
+       xmelud006 LIKE xmel_t.xmelud006, #自定義欄位(文字)006
+       xmelud007 LIKE xmel_t.xmelud007, #自定義欄位(文字)007
+       xmelud008 LIKE xmel_t.xmelud008, #自定義欄位(文字)008
+       xmelud009 LIKE xmel_t.xmelud009, #自定義欄位(文字)009
+       xmelud010 LIKE xmel_t.xmelud010, #自定義欄位(文字)010
+       xmelud011 LIKE xmel_t.xmelud011, #自定義欄位(數字)011
+       xmelud012 LIKE xmel_t.xmelud012, #自定義欄位(數字)012
+       xmelud013 LIKE xmel_t.xmelud013, #自定義欄位(數字)013
+       xmelud014 LIKE xmel_t.xmelud014, #自定義欄位(數字)014
+       xmelud015 LIKE xmel_t.xmelud015, #自定義欄位(數字)015
+       xmelud016 LIKE xmel_t.xmelud016, #自定義欄位(數字)016
+       xmelud017 LIKE xmel_t.xmelud017, #自定義欄位(數字)017
+       xmelud018 LIKE xmel_t.xmelud018, #自定義欄位(數字)018
+       xmelud019 LIKE xmel_t.xmelud019, #自定義欄位(數字)019
+       xmelud020 LIKE xmel_t.xmelud020, #自定義欄位(數字)020
+       xmelud021 LIKE xmel_t.xmelud021, #自定義欄位(日期時間)021
+       xmelud022 LIKE xmel_t.xmelud022, #自定義欄位(日期時間)022
+       xmelud023 LIKE xmel_t.xmelud023, #自定義欄位(日期時間)023
+       xmelud024 LIKE xmel_t.xmelud024, #自定義欄位(日期時間)024
+       xmelud025 LIKE xmel_t.xmelud025, #自定義欄位(日期時間)025
+       xmelud026 LIKE xmel_t.xmelud026, #自定義欄位(日期時間)026
+       xmelud027 LIKE xmel_t.xmelud027, #自定義欄位(日期時間)027
+       xmelud028 LIKE xmel_t.xmelud028, #自定義欄位(日期時間)028
+       xmelud029 LIKE xmel_t.xmelud029, #自定義欄位(日期時間)029
+       xmelud030 LIKE xmel_t.xmelud030, #自定義欄位(日期時間)030    
+       #161109-00085#65 --e add
+       xmel015 LIKE xmel_t.xmel015, #多角流程編號  
+       xmel016 LIKE xmel_t.xmel016, #多角貿易已拋轉
+       xmel017 LIKE xmel_t.xmel017, #多角序號
+       xmel018 LIKE xmel_t.xmel018, #集裝箱載貨清單
+       xmel019 LIKE xmel_t.xmel019, #封條號碼
+       xmel020 LIKE xmel_t.xmel020, #預計出發日期
+       xmel021 LIKE xmel_t.xmel021 #預計到達日期
+               END RECORD
+#mod--161109-00085#7-e
+DEFINE   g_aic       LIKE  xmdh_t.xmdh051   #多角流程編號    170216-00017#1-add
+DEFINE   g_sel_cnt   LIKE  type_t.num10     #紀錄勾選筆數    170216-00017#1-add
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axmt610_01.other_dialog" >}
+
+ 
+{</section>}
+ 
+{<section id="axmt610_01.other_function" readonly="Y" >}
+#170216-00017#1-add p_xmel015
+PUBLIC FUNCTION axmt610_01(p_xmeldocno,p_xmel003,p_xmel004,p_xmel005,p_xmel011,p_xmel012,p_xmel015)
+   DEFINE l_ac_t          LIKE type_t.num10        #æªåæ¶çARRAY CNT     #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+   DEFINE l_allow_insert  LIKE type_t.num5        #å¯æ°å¢å¦ 
+   DEFINE l_allow_delete  LIKE type_t.num5        #å¯åªé¤å¦  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   DEFINE p_xmeldocno     LIKE xmel_t.xmeldocno
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE p_xmel005       LIKE xmel_t.xmel005
+   #mod--161109-00085#7-s
+   #DEFINE l_imaa     RECORD LIKE imaa_t.* 
+   DEFINE l_imaa RECORD  #料件主檔
+       imaaent LIKE imaa_t.imaaent, #企業編號
+       imaa001 LIKE imaa_t.imaa001, #料號
+       imaa002 LIKE imaa_t.imaa002, #目前版本
+       imaa003 LIKE imaa_t.imaa003, #主分群碼
+       imaa004 LIKE imaa_t.imaa004, #料件類別
+       imaa005 LIKE imaa_t.imaa005, #特徵組別
+       imaa006 LIKE imaa_t.imaa006, #基礎單位
+       imaa009 LIKE imaa_t.imaa009, #產品分類
+       imaa010 LIKE imaa_t.imaa010, #生命週期狀態
+       imaa011 LIKE imaa_t.imaa011, #產出類型
+       imaa012 LIKE imaa_t.imaa012, #允許副產品
+       imaa013 LIKE imaa_t.imaa013, #目錄編號
+       imaa014 LIKE imaa_t.imaa014, #產品條碼編號
+       imaa016 LIKE imaa_t.imaa016, #毛重
+       imaa017 LIKE imaa_t.imaa017, #淨重
+       imaa018 LIKE imaa_t.imaa018, #重量單位
+       imaa019 LIKE imaa_t.imaa019, #長度
+       imaa020 LIKE imaa_t.imaa020, #寬度
+       imaa021 LIKE imaa_t.imaa021, #高度
+       imaa022 LIKE imaa_t.imaa022, #長度單位
+       imaa023 LIKE imaa_t.imaa023, #面積
+       imaa024 LIKE imaa_t.imaa024, #面積單位
+       imaa025 LIKE imaa_t.imaa025, #體積
+       imaa026 LIKE imaa_t.imaa026, #體積單位
+       imaa027 LIKE imaa_t.imaa027, #為包裝容器
+       imaa028 LIKE imaa_t.imaa028, #容量
+       imaa029 LIKE imaa_t.imaa029, #容量單位
+       imaa030 LIKE imaa_t.imaa030, #超量容差(%)
+       imaa031 LIKE imaa_t.imaa031, #載重量
+       imaa032 LIKE imaa_t.imaa032, #載重單位
+       imaa033 LIKE imaa_t.imaa033, #超重容差(%)
+       imaa034 LIKE imaa_t.imaa034, #料號來源
+       imaa035 LIKE imaa_t.imaa035, #來源參考料號
+       imaa036 LIKE imaa_t.imaa036, #記錄位置(插件)
+       imaa037 LIKE imaa_t.imaa037, #組裝位置須勾稽
+       imaa038 LIKE imaa_t.imaa038, #工程料件
+       imaa039 LIKE imaa_t.imaa039, #轉正式料號
+       imaa040 LIKE imaa_t.imaa040, #轉正式料號時間
+       imaa041 LIKE imaa_t.imaa041, #工程圖號
+       imaa042 LIKE imaa_t.imaa042, #主要模具編號
+       imaa043 LIKE imaa_t.imaa043, #據點研發可調整元件
+       imaa044 LIKE imaa_t.imaa044, #AVL控管點
+       imaa045 LIKE imaa_t.imaa045, #生產國家地區
+       imaa100 LIKE imaa_t.imaa100, #條碼分類
+       imaa101 LIKE imaa_t.imaa101, #主供應商
+       imaa102 LIKE imaa_t.imaa102, #保質期(月)
+       imaa103 LIKE imaa_t.imaa103, #保質期(天)
+       imaa104 LIKE imaa_t.imaa104, #庫存單位
+       imaa105 LIKE imaa_t.imaa105, #銷售單位
+       imaa106 LIKE imaa_t.imaa106, #銷售計價單位
+       imaa107 LIKE imaa_t.imaa107, #採購單位
+       imaa108 LIKE imaa_t.imaa108, #商品種類
+       imaa109 LIKE imaa_t.imaa109, #條碼類型
+       imaa110 LIKE imaa_t.imaa110, #季節性商品
+       imaa111 LIKE imaa_t.imaa111, #開始日期
+       imaa112 LIKE imaa_t.imaa112, #結束日期
+       imaa113 LIKE imaa_t.imaa113, #傳秤因子
+       imaa114 LIKE imaa_t.imaa114, #計價幣別
+       imaa115 LIKE imaa_t.imaa115, #預計進貨價格
+       imaa116 LIKE imaa_t.imaa116, #預計銷貨價格
+       imaa117 LIKE imaa_t.imaa117, #進銷差率
+       imaa118 LIKE imaa_t.imaa118, #試銷期(天)
+       imaa119 LIKE imaa_t.imaa119, #試銷金額
+       imaa120 LIKE imaa_t.imaa120, #試銷數量
+       imaa121 LIKE imaa_t.imaa121, #是否網路經營
+       imaa122 LIKE imaa_t.imaa122, #產地分類
+       imaa123 LIKE imaa_t.imaa123, #產地說明
+       imaa124 LIKE imaa_t.imaa124, #進銷項稅別
+       imaa125 LIKE imaa_t.imaa125, #一次性商品
+       imaa126 LIKE imaa_t.imaa126, #品牌
+       imaa127 LIKE imaa_t.imaa127, #系列
+       imaa128 LIKE imaa_t.imaa128, #型別
+       imaa129 LIKE imaa_t.imaa129, #功能
+       imaa130 LIKE imaa_t.imaa130, #主材
+       imaa131 LIKE imaa_t.imaa131, #價格帶
+       imaa132 LIKE imaa_t.imaa132, #其他屬性一
+       imaa133 LIKE imaa_t.imaa133, #其他屬性二
+       imaa134 LIKE imaa_t.imaa134, #其他屬性三
+       imaa135 LIKE imaa_t.imaa135, #其他屬性四
+       imaa136 LIKE imaa_t.imaa136, #其他屬性五
+       imaa137 LIKE imaa_t.imaa137, #其他屬性六
+       imaa138 LIKE imaa_t.imaa138, #其他屬性七
+       imaa139 LIKE imaa_t.imaa139, #其他屬性八
+       imaa140 LIKE imaa_t.imaa140, #其他屬性九
+       imaa141 LIKE imaa_t.imaa141, #其他屬性十
+       imaa142 LIKE imaa_t.imaa142, #制定組織
+       imaa143 LIKE imaa_t.imaa143, #產品組編號
+       imaa144 LIKE imaa_t.imaa144, #庫存多單位
+       imaa145 LIKE imaa_t.imaa145, #採購計價單位
+       imaa146 LIKE imaa_t.imaa146, #成本單位
+       imaastus LIKE imaa_t.imaastus, #狀態碼
+       imaaownid LIKE imaa_t.imaaownid, #資料所有者
+       imaaowndp LIKE imaa_t.imaaowndp, #資料所屬部門
+       imaacrtid LIKE imaa_t.imaacrtid, #資料建立者
+       imaacrtdp LIKE imaa_t.imaacrtdp, #資料建立部門
+       imaacrtdt LIKE imaa_t.imaacrtdt, #資料創建日
+       imaamodid LIKE imaa_t.imaamodid, #資料修改者
+       imaamoddt LIKE imaa_t.imaamoddt, #最近修改日
+       imaacnfid LIKE imaa_t.imaacnfid, #資料確認者
+       imaacnfdt LIKE imaa_t.imaacnfdt, #資料確認日
+       #161109-00085#65 --s add
+       imaaud001 LIKE imaa_t.imaaud001, #自定義欄位(文字)001
+       imaaud002 LIKE imaa_t.imaaud002, #自定義欄位(文字)002
+       imaaud003 LIKE imaa_t.imaaud003, #自定義欄位(文字)003
+       imaaud004 LIKE imaa_t.imaaud004, #自定義欄位(文字)004
+       imaaud005 LIKE imaa_t.imaaud005, #自定義欄位(文字)005
+       imaaud006 LIKE imaa_t.imaaud006, #自定義欄位(文字)006
+       imaaud007 LIKE imaa_t.imaaud007, #自定義欄位(文字)007
+       imaaud008 LIKE imaa_t.imaaud008, #自定義欄位(文字)008
+       imaaud009 LIKE imaa_t.imaaud009, #自定義欄位(文字)009
+       imaaud010 LIKE imaa_t.imaaud010, #自定義欄位(文字)010
+       imaaud011 LIKE imaa_t.imaaud011, #自定義欄位(數字)011
+       imaaud012 LIKE imaa_t.imaaud012, #自定義欄位(數字)012
+       imaaud013 LIKE imaa_t.imaaud013, #自定義欄位(數字)013
+       imaaud014 LIKE imaa_t.imaaud014, #自定義欄位(數字)014
+       imaaud015 LIKE imaa_t.imaaud015, #自定義欄位(數字)015
+       imaaud016 LIKE imaa_t.imaaud016, #自定義欄位(數字)016
+       imaaud017 LIKE imaa_t.imaaud017, #自定義欄位(數字)017
+       imaaud018 LIKE imaa_t.imaaud018, #自定義欄位(數字)018
+       imaaud019 LIKE imaa_t.imaaud019, #自定義欄位(數字)019
+       imaaud020 LIKE imaa_t.imaaud020, #自定義欄位(數字)020
+       imaaud021 LIKE imaa_t.imaaud021, #自定義欄位(日期時間)021
+       imaaud022 LIKE imaa_t.imaaud022, #自定義欄位(日期時間)022
+       imaaud023 LIKE imaa_t.imaaud023, #自定義欄位(日期時間)023
+       imaaud024 LIKE imaa_t.imaaud024, #自定義欄位(日期時間)024
+       imaaud025 LIKE imaa_t.imaaud025, #自定義欄位(日期時間)025
+       imaaud026 LIKE imaa_t.imaaud026, #自定義欄位(日期時間)026
+       imaaud027 LIKE imaa_t.imaaud027, #自定義欄位(日期時間)027
+       imaaud028 LIKE imaa_t.imaaud028, #自定義欄位(日期時間)028
+       imaaud029 LIKE imaa_t.imaaud029, #自定義欄位(日期時間)029
+       imaaud030 LIKE imaa_t.imaaud030, #自定義欄位(日期時間)030
+       #161109-00085#65 --e add
+       imaa147 LIKE imaa_t.imaa147, #預設商品臨期比例
+       imaa148 LIKE imaa_t.imaa148, #商品臨期天數
+       imaa149 LIKE imaa_t.imaa149, #臨期控管方式
+       imaa150 LIKE imaa_t.imaa150, #輔材
+       imaa151 LIKE imaa_t.imaa151, #等級
+       imaa152 LIKE imaa_t.imaa152, #顏色
+       imaa153 LIKE imaa_t.imaa153, #型號
+       imaa154 LIKE imaa_t.imaa154, #年份
+       imaa155 LIKE imaa_t.imaa155, #訂貨季
+       imaa156 LIKE imaa_t.imaa156, #性別
+       imaa157 LIKE imaa_t.imaa157, #標牌價
+       imaa158 LIKE imaa_t.imaa158, #上市日
+       imaa159 LIKE imaa_t.imaa159, #每m²克重
+       imaa160 LIKE imaa_t.imaa160, #面料幅寬
+       imaa161 LIKE imaa_t.imaa161  #觸屏分類編號
+               END RECORD
+   #mod--161109-00085#7-e
+   #mod--161109-00085#7-s
+   #DEFINE l_imaa_1   RECORD LIKE imaa_t.*
+   DEFINE l_imaa_1 RECORD  #料件主檔
+       imaaent LIKE imaa_t.imaaent, #企業編號
+       imaa001 LIKE imaa_t.imaa001, #料號
+       imaa002 LIKE imaa_t.imaa002, #目前版本
+       imaa003 LIKE imaa_t.imaa003, #主分群碼
+       imaa004 LIKE imaa_t.imaa004, #料件類別
+       imaa005 LIKE imaa_t.imaa005, #特徵組別
+       imaa006 LIKE imaa_t.imaa006, #基礎單位
+       imaa009 LIKE imaa_t.imaa009, #產品分類
+       imaa010 LIKE imaa_t.imaa010, #生命週期狀態
+       imaa011 LIKE imaa_t.imaa011, #產出類型
+       imaa012 LIKE imaa_t.imaa012, #允許副產品
+       imaa013 LIKE imaa_t.imaa013, #目錄編號
+       imaa014 LIKE imaa_t.imaa014, #產品條碼編號
+       imaa016 LIKE imaa_t.imaa016, #毛重
+       imaa017 LIKE imaa_t.imaa017, #淨重
+       imaa018 LIKE imaa_t.imaa018, #重量單位
+       imaa019 LIKE imaa_t.imaa019, #長度
+       imaa020 LIKE imaa_t.imaa020, #寬度
+       imaa021 LIKE imaa_t.imaa021, #高度
+       imaa022 LIKE imaa_t.imaa022, #長度單位
+       imaa023 LIKE imaa_t.imaa023, #面積
+       imaa024 LIKE imaa_t.imaa024, #面積單位
+       imaa025 LIKE imaa_t.imaa025, #體積
+       imaa026 LIKE imaa_t.imaa026, #體積單位
+       imaa027 LIKE imaa_t.imaa027, #為包裝容器
+       imaa028 LIKE imaa_t.imaa028, #容量
+       imaa029 LIKE imaa_t.imaa029, #容量單位
+       imaa030 LIKE imaa_t.imaa030, #超量容差(%)
+       imaa031 LIKE imaa_t.imaa031, #載重量
+       imaa032 LIKE imaa_t.imaa032, #載重單位
+       imaa033 LIKE imaa_t.imaa033, #超重容差(%)
+       imaa034 LIKE imaa_t.imaa034, #料號來源
+       imaa035 LIKE imaa_t.imaa035, #來源參考料號
+       imaa036 LIKE imaa_t.imaa036, #記錄位置(插件)
+       imaa037 LIKE imaa_t.imaa037, #組裝位置須勾稽
+       imaa038 LIKE imaa_t.imaa038, #工程料件
+       imaa039 LIKE imaa_t.imaa039, #轉正式料號
+       imaa040 LIKE imaa_t.imaa040, #轉正式料號時間
+       imaa041 LIKE imaa_t.imaa041, #工程圖號
+       imaa042 LIKE imaa_t.imaa042, #主要模具編號
+       imaa043 LIKE imaa_t.imaa043, #據點研發可調整元件
+       imaa044 LIKE imaa_t.imaa044, #AVL控管點
+       imaa045 LIKE imaa_t.imaa045, #生產國家地區
+       imaa100 LIKE imaa_t.imaa100, #條碼分類
+       imaa101 LIKE imaa_t.imaa101, #主供應商
+       imaa102 LIKE imaa_t.imaa102, #保質期(月)
+       imaa103 LIKE imaa_t.imaa103, #保質期(天)
+       imaa104 LIKE imaa_t.imaa104, #庫存單位
+       imaa105 LIKE imaa_t.imaa105, #銷售單位
+       imaa106 LIKE imaa_t.imaa106, #銷售計價單位
+       imaa107 LIKE imaa_t.imaa107, #採購單位
+       imaa108 LIKE imaa_t.imaa108, #商品種類
+       imaa109 LIKE imaa_t.imaa109, #條碼類型
+       imaa110 LIKE imaa_t.imaa110, #季節性商品
+       imaa111 LIKE imaa_t.imaa111, #開始日期
+       imaa112 LIKE imaa_t.imaa112, #結束日期
+       imaa113 LIKE imaa_t.imaa113, #傳秤因子
+       imaa114 LIKE imaa_t.imaa114, #計價幣別
+       imaa115 LIKE imaa_t.imaa115, #預計進貨價格
+       imaa116 LIKE imaa_t.imaa116, #預計銷貨價格
+       imaa117 LIKE imaa_t.imaa117, #進銷差率
+       imaa118 LIKE imaa_t.imaa118, #試銷期(天)
+       imaa119 LIKE imaa_t.imaa119, #試銷金額
+       imaa120 LIKE imaa_t.imaa120, #試銷數量
+       imaa121 LIKE imaa_t.imaa121, #是否網路經營
+       imaa122 LIKE imaa_t.imaa122, #產地分類
+       imaa123 LIKE imaa_t.imaa123, #產地說明
+       imaa124 LIKE imaa_t.imaa124, #進銷項稅別
+       imaa125 LIKE imaa_t.imaa125, #一次性商品
+       imaa126 LIKE imaa_t.imaa126, #品牌
+       imaa127 LIKE imaa_t.imaa127, #系列
+       imaa128 LIKE imaa_t.imaa128, #型別
+       imaa129 LIKE imaa_t.imaa129, #功能
+       imaa130 LIKE imaa_t.imaa130, #主材
+       imaa131 LIKE imaa_t.imaa131, #價格帶
+       imaa132 LIKE imaa_t.imaa132, #其他屬性一
+       imaa133 LIKE imaa_t.imaa133, #其他屬性二
+       imaa134 LIKE imaa_t.imaa134, #其他屬性三
+       imaa135 LIKE imaa_t.imaa135, #其他屬性四
+       imaa136 LIKE imaa_t.imaa136, #其他屬性五
+       imaa137 LIKE imaa_t.imaa137, #其他屬性六
+       imaa138 LIKE imaa_t.imaa138, #其他屬性七
+       imaa139 LIKE imaa_t.imaa139, #其他屬性八
+       imaa140 LIKE imaa_t.imaa140, #其他屬性九
+       imaa141 LIKE imaa_t.imaa141, #其他屬性十
+       imaa142 LIKE imaa_t.imaa142, #制定組織
+       imaa143 LIKE imaa_t.imaa143, #產品組編號
+       imaa144 LIKE imaa_t.imaa144, #庫存多單位
+       imaa145 LIKE imaa_t.imaa145, #採購計價單位
+       imaa146 LIKE imaa_t.imaa146, #成本單位
+       imaastus LIKE imaa_t.imaastus, #狀態碼
+       imaaownid LIKE imaa_t.imaaownid, #資料所有者
+       imaaowndp LIKE imaa_t.imaaowndp, #資料所屬部門
+       imaacrtid LIKE imaa_t.imaacrtid, #資料建立者
+       imaacrtdp LIKE imaa_t.imaacrtdp, #資料建立部門
+       imaacrtdt LIKE imaa_t.imaacrtdt, #資料創建日
+       imaamodid LIKE imaa_t.imaamodid, #資料修改者
+       imaamoddt LIKE imaa_t.imaamoddt, #最近修改日
+       imaacnfid LIKE imaa_t.imaacnfid, #資料確認者
+       imaacnfdt LIKE imaa_t.imaacnfdt, #資料確認日
+       #161109-00085#65 --s add
+       imaaud001 LIKE imaa_t.imaaud001, #自定義欄位(文字)001
+       imaaud002 LIKE imaa_t.imaaud002, #自定義欄位(文字)002
+       imaaud003 LIKE imaa_t.imaaud003, #自定義欄位(文字)003
+       imaaud004 LIKE imaa_t.imaaud004, #自定義欄位(文字)004
+       imaaud005 LIKE imaa_t.imaaud005, #自定義欄位(文字)005
+       imaaud006 LIKE imaa_t.imaaud006, #自定義欄位(文字)006
+       imaaud007 LIKE imaa_t.imaaud007, #自定義欄位(文字)007
+       imaaud008 LIKE imaa_t.imaaud008, #自定義欄位(文字)008
+       imaaud009 LIKE imaa_t.imaaud009, #自定義欄位(文字)009
+       imaaud010 LIKE imaa_t.imaaud010, #自定義欄位(文字)010
+       imaaud011 LIKE imaa_t.imaaud011, #自定義欄位(數字)011
+       imaaud012 LIKE imaa_t.imaaud012, #自定義欄位(數字)012
+       imaaud013 LIKE imaa_t.imaaud013, #自定義欄位(數字)013
+       imaaud014 LIKE imaa_t.imaaud014, #自定義欄位(數字)014
+       imaaud015 LIKE imaa_t.imaaud015, #自定義欄位(數字)015
+       imaaud016 LIKE imaa_t.imaaud016, #自定義欄位(數字)016
+       imaaud017 LIKE imaa_t.imaaud017, #自定義欄位(數字)017
+       imaaud018 LIKE imaa_t.imaaud018, #自定義欄位(數字)018
+       imaaud019 LIKE imaa_t.imaaud019, #自定義欄位(數字)019
+       imaaud020 LIKE imaa_t.imaaud020, #自定義欄位(數字)020
+       imaaud021 LIKE imaa_t.imaaud021, #自定義欄位(日期時間)021
+       imaaud022 LIKE imaa_t.imaaud022, #自定義欄位(日期時間)022
+       imaaud023 LIKE imaa_t.imaaud023, #自定義欄位(日期時間)023
+       imaaud024 LIKE imaa_t.imaaud024, #自定義欄位(日期時間)024
+       imaaud025 LIKE imaa_t.imaaud025, #自定義欄位(日期時間)025
+       imaaud026 LIKE imaa_t.imaaud026, #自定義欄位(日期時間)026
+       imaaud027 LIKE imaa_t.imaaud027, #自定義欄位(日期時間)027
+       imaaud028 LIKE imaa_t.imaaud028, #自定義欄位(日期時間)028
+       imaaud029 LIKE imaa_t.imaaud029, #自定義欄位(日期時間)029
+       imaaud030 LIKE imaa_t.imaaud030, #自定義欄位(日期時間)030
+       #161109-00085#65 --e add
+       imaa147 LIKE imaa_t.imaa147, #預設商品臨期比例
+       imaa148 LIKE imaa_t.imaa148, #商品臨期天數
+       imaa149 LIKE imaa_t.imaa149, #臨期控管方式
+       imaa150 LIKE imaa_t.imaa150, #輔材
+       imaa151 LIKE imaa_t.imaa151, #等級
+       imaa152 LIKE imaa_t.imaa152, #顏色
+       imaa153 LIKE imaa_t.imaa153, #型號
+       imaa154 LIKE imaa_t.imaa154, #年份
+       imaa155 LIKE imaa_t.imaa155, #訂貨季
+       imaa156 LIKE imaa_t.imaa156, #性別
+       imaa157 LIKE imaa_t.imaa157, #標牌價
+       imaa158 LIKE imaa_t.imaa158, #上市日
+       imaa159 LIKE imaa_t.imaa159, #每m²克重
+       imaa160 LIKE imaa_t.imaa160, #面料幅寬
+       imaa161 LIKE imaa_t.imaa161  #觸屏分類編號
+               END RECORD
+   #mod--161109-00085#7-e
+   DEFINE l_xmam004       LIKE xmam_t.xmam004
+   #mod--161109-00085#7-s
+   #DEFINE l_xmam     RECORD LIKE xmam_t.*
+   DEFINE l_xmam RECORD  #包裝方式檔
+       xmament LIKE xmam_t.xmament, #企業編號
+       xmam001 LIKE xmam_t.xmam001, #包裝方式
+       xmam003 LIKE xmam_t.xmam003, #包裝規格
+       xmam004 LIKE xmam_t.xmam004, #包裝容器
+       xmam005 LIKE xmam_t.xmam005, #長面個數
+       xmam006 LIKE xmam_t.xmam006, #寬面個數
+       xmam007 LIKE xmam_t.xmam007, #高面個數
+       xmam008 LIKE xmam_t.xmam008, #總包裝數
+       xmam009 LIKE xmam_t.xmam009, #包裝單位
+       xmam010 LIKE xmam_t.xmam010, #包裝容器長度
+       xmam011 LIKE xmam_t.xmam011, #包裝容器寬度
+       xmam012 LIKE xmam_t.xmam012, #包裝容器高度
+       xmam013 LIKE xmam_t.xmam013, #總體積
+       xmam014 LIKE xmam_t.xmam014, #長度單位
+       xmam015 LIKE xmam_t.xmam015, #包裝容器重量
+       xmam016 LIKE xmam_t.xmam016, #重量單位
+       xmam017 LIKE xmam_t.xmam017, #是否有內包裝
+       xmam018 LIKE xmam_t.xmam018, #內包裝方式
+       xmam019 LIKE xmam_t.xmam019, #體積單位
+       xmamownid LIKE xmam_t.xmamownid, #資料所有者
+       xmamowndp LIKE xmam_t.xmamowndp, #資料所屬部門
+       xmamcrtid LIKE xmam_t.xmamcrtid, #資料建立者
+       xmamcrtdp LIKE xmam_t.xmamcrtdp, #資料建立部門
+       xmamcrtdt LIKE xmam_t.xmamcrtdt, #資料創建日
+       xmammodid LIKE xmam_t.xmammodid, #資料修改者
+       xmammoddt LIKE xmam_t.xmammoddt, #最近修改日
+      #xmamstus LIKE xmam_t.xmamstus  #狀態碼 #161109-00085#65 mark
+       #161109-00085#65 --s add
+       xmamstus LIKE xmam_t.xmamstus, #狀態碼
+       xmamud001 LIKE xmam_t.xmamud001, #自定義欄位(文字)001
+       xmamud002 LIKE xmam_t.xmamud002, #自定義欄位(文字)002
+       xmamud003 LIKE xmam_t.xmamud003, #自定義欄位(文字)003
+       xmamud004 LIKE xmam_t.xmamud004, #自定義欄位(文字)004
+       xmamud005 LIKE xmam_t.xmamud005, #自定義欄位(文字)005
+       xmamud006 LIKE xmam_t.xmamud006, #自定義欄位(文字)006
+       xmamud007 LIKE xmam_t.xmamud007, #自定義欄位(文字)007
+       xmamud008 LIKE xmam_t.xmamud008, #自定義欄位(文字)008
+       xmamud009 LIKE xmam_t.xmamud009, #自定義欄位(文字)009
+       xmamud010 LIKE xmam_t.xmamud010, #自定義欄位(文字)010
+       xmamud011 LIKE xmam_t.xmamud011, #自定義欄位(數字)011
+       xmamud012 LIKE xmam_t.xmamud012, #自定義欄位(數字)012
+       xmamud013 LIKE xmam_t.xmamud013, #自定義欄位(數字)013
+       xmamud014 LIKE xmam_t.xmamud014, #自定義欄位(數字)014
+       xmamud015 LIKE xmam_t.xmamud015, #自定義欄位(數字)015
+       xmamud016 LIKE xmam_t.xmamud016, #自定義欄位(數字)016
+       xmamud017 LIKE xmam_t.xmamud017, #自定義欄位(數字)017
+       xmamud018 LIKE xmam_t.xmamud018, #自定義欄位(數字)018
+       xmamud019 LIKE xmam_t.xmamud019, #自定義欄位(數字)019
+       xmamud020 LIKE xmam_t.xmamud020, #自定義欄位(數字)020
+       xmamud021 LIKE xmam_t.xmamud021, #自定義欄位(日期時間)021
+       xmamud022 LIKE xmam_t.xmamud022, #自定義欄位(日期時間)022
+       xmamud023 LIKE xmam_t.xmamud023, #自定義欄位(日期時間)023
+       xmamud024 LIKE xmam_t.xmamud024, #自定義欄位(日期時間)024
+       xmamud025 LIKE xmam_t.xmamud025, #自定義欄位(日期時間)025
+       xmamud026 LIKE xmam_t.xmamud026, #自定義欄位(日期時間)026
+       xmamud027 LIKE xmam_t.xmamud027, #自定義欄位(日期時間)027
+       xmamud028 LIKE xmam_t.xmamud028, #自定義欄位(日期時間)028
+       xmamud029 LIKE xmam_t.xmamud029, #自定義欄位(日期時間)029
+       xmamud030 LIKE xmam_t.xmamud030  #自定義欄位(日期時間)030
+       #161109-00085#65 --e add
+                 END RECORD
+   #mod--161109-00085#7-e
+   DEFINE l_num           LIKE xmem_t.xmem012
+   DEFINE p_xmel004       LIKE xmel_t.xmel004
+   DEFINE p_xmel003       LIKE xmel_t.xmel003
+   DEFINE p_xmel011       LIKE xmel_t.xmel011 #150610
+   DEFINE p_xmel012       LIKE xmel_t.xmel012
+   DEFINE p_xmel015       LIKE xmel_t.xmel015 #170216-00017#1-add
+   DEFINE  l_xmem012             LIKE xmem_t.xmem012     #160908-00016#1 add
+   DEFINE  l_xmdh016             LIKE xmdh_t.xmdh016     #160908-00016#1 add 
+   
+   OPEN WINDOW w_axmt610_01 WITH FORM cl_ap_formpath("axm","axmt610_01")
+ 
+   
+   CALL cl_ui_init()
+   LET g_xmel.xmeldocno = p_xmeldocno
+   LET g_xmel.xmel003 = p_xmel003
+   LET g_xmel.xmel004 = p_xmel004
+   LET g_xmel.xmel005 = p_xmel005
+   LET g_xmel.xmel011 = p_xmel011
+   LET g_xmel.xmel012 = p_xmel012
+   LET g_qryparam.state = "i"
+   #170216-00017#1-s-add
+   LET g_aic = ''
+   LET g_sel_cnt = 0  
+   LET g_xmel.xmel015 = p_xmel015
+   #出通單、出貨單才顯示此欄位
+   IF g_xmel.xmel004 MATCHES "[12]" THEN
+      CALL cl_set_comp_visible("xmdh051",TRUE)
+   ELSE
+      CALL cl_set_comp_visible("xmdh051",FALSE)
+   END IF
+   #170216-00017#1-e-add
+   
+   INITIALIZE g_xmem_m.* TO NULL
+   CALL g_xmem_d.clear()
+   CALL g_xmem2_d.clear()
+   LET g_all_space = 0
+   CALL axmt610_01_b_fill()
+   
+   LET g_errshow = 1
+#   WHILE TRUE
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      INPUT ARRAY g_xmem2_d FROM s_detail2.*
+         ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE) 
+         
+         BEFORE ROW
+            LET l_ac = ARR_CURR()
+         AFTER FIELD xman005
+            IF NOT cl_null(g_xmem2_d[l_ac].xman005) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_xmem2_d[l_ac].xman005
+               
+               IF NOT cl_chk_exist("v_xmam001") THEN
+                  NEXT FIELD CURRENT
+               END IF
+               IF g_xmem2_d[l_ac].sel1 = 'Y' THEN
+                  LET g_all_space = g_all_space - g_xmem2_d[l_ac].full_num
+               END IF
+               IF g_xmem2_d[l_ac].sel2 = 'Y' THEN
+                  LET g_all_space = g_all_space - g_xmem2_d[l_ac].space
+               END IF
+               SELECT xmam008 INTO g_xmem2_d[l_ac].every_num FROM xmam_t 
+                WHERE xmament = g_enterprise AND xmam001 = g_xmem2_d[l_ac].xman005
+               LET g_xmem2_d[l_ac].full_num =  g_xmem2_d[l_ac].xmdh016 / g_xmem2_d[l_ac].every_num
+               LET g_xmem2_d[l_ac].unfull_num  =  g_xmem2_d[l_ac].xmdh016 - (g_xmem2_d[l_ac].every_num * g_xmem2_d[l_ac].full_num)             
+               LET g_xmem2_d[l_ac].space  = g_xmem2_d[l_ac].unfull_num / g_xmem2_d[l_ac].every_num 
+               
+            END IF
+            
+            IF g_xmem2_d[l_ac].sel1 = 'Y' THEN
+               LET g_all_space = g_all_space + g_xmem2_d[l_ac].full_num
+            END IF
+            IF g_xmem2_d[l_ac].sel2 = 'Y' THEN
+               LET g_all_space = g_all_space + g_xmem2_d[l_ac].space
+            END IF
+            CALL axmt610_01_xman005_desc(g_xmem2_d[l_ac].xman005,l_ac)   #150910-00007#1 150916 by sakura add
+         AFTER FIELD every_num
+            IF g_xmem2_d[l_ac].sel1 = 'Y' THEN
+               LET g_all_space = g_all_space - g_xmem2_d[l_ac].full_num
+            END IF
+            IF g_xmem2_d[l_ac].sel2 = 'Y' THEN
+               LET g_all_space = g_all_space - g_xmem2_d[l_ac].space
+            END IF
+            
+            IF NOT cl_null(g_xmem2_d[l_ac].every_num) THEN
+               LET g_xmem2_d[l_ac].full_num =  g_xmem2_d[l_cnt].xmdh016 / g_xmem2_d[l_ac].every_num
+               LET g_xmem2_d[l_ac].unfull_num  =  g_xmem2_d[l_ac].xmdh016 - (g_xmem2_d[l_ac].every_num * g_xmem2_d[l_ac].full_num)                
+               LET g_xmem2_d[l_ac].space  = g_xmem2_d[l_ac].unfull_num /  g_xmem2_d[l_ac].every_num 
+            END IF
+            
+            IF g_xmem2_d[l_ac].sel1 = 'Y' THEN
+               LET g_all_space = g_all_space + g_xmem2_d[l_ac].full_num
+            END IF
+            IF g_xmem2_d[l_ac].sel2 = 'Y' THEN
+               LET g_all_space = g_all_space + g_xmem2_d[l_ac].space
+            END IF
+         AFTER FIELD full_num
+            IF NOT cl_null(g_xmem2_d[l_ac].full_num) THEN
+                LET g_xmem2_d[l_ac].unfull_num  =  g_xmem2_d[l_ac].xmdh016 - (g_xmem2_d[l_ac].every_num * g_xmem2_d[l_ac].full_num)
+            END IF
+         ON CHANGE sel1 
+            #170216-00017#1-s-add
+            #檢查多角流程編號是否相同
+            IF g_xmem2_d[l_ac].sel1 = 'Y' THEN
+               IF axmt610_01_aic_chk(g_xmem2_d[l_ac].xmdh051) THEN
+                  #如果勾同一筆，就不用再+1次
+                  IF g_xmem2_d[l_ac].sel2 = 'Y' THEN
+                     LET g_sel_cnt = g_sel_cnt - 1
+                  END IF
+               ELSE
+                  LET g_xmem2_d[l_ac].sel1 = 'N'
+                  NEXT FIELD CURRENT
+               END IF
+            ELSE
+               #另一個沒勾，又取消勾選sel1，表示此筆不選
+               IF g_xmem2_d[l_ac].sel2 = 'N' THEN
+                  LET g_sel_cnt = g_sel_cnt - 1
+               END IF
+            END IF
+            #170216-00017#1-e-add
+            IF g_xmem2_d[l_ac].sel1 = 'Y' THEN
+               LET g_all_space = g_all_space + g_xmem2_d[l_ac].full_num
+            ELSE
+               LET g_all_space = g_all_space - g_xmem2_d[l_ac].full_num
+            END IF
+            DISPLAY g_all_space TO FORMONLY.all_space
+         ON CHANGE sel2  
+            #170216-00017#1-s-add
+            #檢查多角流程編號是否相同
+            IF g_xmem2_d[l_ac].sel2 = 'Y' THEN
+               IF axmt610_01_aic_chk(g_xmem2_d[l_ac].xmdh051) THEN
+                  #如果勾同一筆，就不用再+1次
+                  IF g_xmem2_d[l_ac].sel1 = 'Y' THEN
+                     LET g_sel_cnt = g_sel_cnt - 1
+                  END IF
+               ELSE
+                  #另一個沒勾，又取消勾選sel2，表示此筆不選
+                  IF g_xmem2_d[l_ac].sel1 = 'N' THEN
+                     LET g_xmem2_d[l_ac].sel2 = 'N'
+                  END IF
+               END IF
+            ELSE
+               LET g_sel_cnt = g_sel_cnt - 1
+            END IF
+            #170216-00017#1-e-add         
+            IF g_xmem2_d[l_ac].sel2 = 'Y' THEN
+               LET g_all_space = g_all_space + g_xmem2_d[l_ac].space
+            ELSE
+               LET g_all_space = g_all_space - g_xmem2_d[l_ac].space
+            END IF
+            DISPLAY g_all_space TO FORMONLY.all_space
+         AFTER INPUT
+            DISPLAY g_all_space TO FORMONLY.all_space
+            
+         ON ACTION controlp INFIELD xman005
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmem2_d[l_ac].xman005             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_xmam001()                                #呼叫開窗
+
+            LET g_xmem2_d[l_ac].xman005 = g_qryparam.return1              
+
+            DISPLAY g_xmem2_d[l_ac].xman005 TO xman005              #
+            #150910-00007#1 150916 by sakura add(S)
+            CALL axmt610_01_xman005_desc(g_xmem2_d[l_ac].xman005,l_ac)
+            DISPLAY g_xmem2_d[l_ac].xman005_desc
+            #150910-00007#1 150916 by sakura add(E)
+            NEXT FIELD xman005
+      END INPUT
+      INPUT BY NAME g_xmem_m.xmem0081,g_xmem_m.xmem0091,g_xmem_m.xmem0101
+         AFTER FIELD xmem0101 
+            IF NOT cl_ap_chk_range(g_xmem_m.xmem0101,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem0101
+            END IF
+      END INPUT 
+      
+      INPUT ARRAY g_xmem_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b2,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+         
+         
+         BEFORE INPUT
+          
+         BEFORE ROW 
+            LET l_ac2 = ARR_CURR()
+            INITIALIZE l_imaa.* TO NULL
+            INITIALIZE l_imaa_1.* TO NULL
+         #mod--161109-00085#7-s   
+         #SELECT * INTO l_imaa.* FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem_d[l_ac2].xmem003
+         SELECT imaaent,imaa001,imaa002,imaa003,imaa004,
+                imaa005,imaa006,imaa009,imaa010,imaa011,
+                imaa012,imaa013,imaa014,imaa016,imaa017,
+                imaa018,imaa019,imaa020,imaa021,imaa022,
+                imaa023,imaa024,imaa025,imaa026,imaa027,
+                imaa028,imaa029,imaa030,imaa031,imaa032,
+                imaa033,imaa034,imaa035,imaa036,imaa037,
+                imaa038,imaa039,imaa040,imaa041,imaa042,
+                imaa043,imaa044,imaa045,imaa100,imaa101,
+                imaa102,imaa103,imaa104,imaa105,imaa106,
+                imaa107,imaa108,imaa109,imaa110,imaa111,
+                imaa112,imaa113,imaa114,imaa115,imaa116,
+                imaa117,imaa118,imaa119,imaa120,imaa121,
+                imaa122,imaa123,imaa124,imaa125,imaa126,
+                imaa127,imaa128,imaa129,imaa130,imaa131,
+                imaa132,imaa133,imaa134,imaa135,imaa136,
+                imaa137,imaa138,imaa139,imaa140,imaa141,
+                imaa142,imaa143,imaa144,imaa145,imaa146,
+                imaastus,imaaownid,imaaowndp,imaacrtid,imaacrtdp,
+                imaacrtdt,imaamodid,imaamoddt,imaacnfid,imaacnfdt,
+                #161109-00085#65 --s add
+                imaaud001,imaaud002,imaaud003,imaaud004,imaaud005,
+                imaaud006,imaaud007,imaaud008,imaaud009,imaaud010,
+                imaaud011,imaaud012,imaaud013,imaaud014,imaaud015,
+                imaaud016,imaaud017,imaaud018,imaaud019,imaaud020,
+                imaaud021,imaaud022,imaaud023,imaaud024,imaaud025,
+                imaaud026,imaaud027,imaaud028,imaaud029,imaaud030,
+                #161109-00085#65 --e add
+                imaa147,imaa148,imaa149,imaa150,imaa151,
+                imaa152,imaa153,imaa154,imaa155,imaa156,
+                imaa157,imaa158,imaa159,imaa160,imaa161
+         INTO l_imaa.imaaent,l_imaa.imaa001,l_imaa.imaa002,l_imaa.imaa003,l_imaa.imaa004,
+              l_imaa.imaa005,l_imaa.imaa006,l_imaa.imaa009,l_imaa.imaa010,l_imaa.imaa011,
+              l_imaa.imaa012,l_imaa.imaa013,l_imaa.imaa014,l_imaa.imaa016,l_imaa.imaa017,
+              l_imaa.imaa018,l_imaa.imaa019,l_imaa.imaa020,l_imaa.imaa021,l_imaa.imaa022,
+              l_imaa.imaa023,l_imaa.imaa024,l_imaa.imaa025,l_imaa.imaa026,l_imaa.imaa027,
+              l_imaa.imaa028,l_imaa.imaa029,l_imaa.imaa030,l_imaa.imaa031,l_imaa.imaa032,
+              l_imaa.imaa033,l_imaa.imaa034,l_imaa.imaa035,l_imaa.imaa036,l_imaa.imaa037,
+              l_imaa.imaa038,l_imaa.imaa039,l_imaa.imaa040,l_imaa.imaa041,l_imaa.imaa042,
+              l_imaa.imaa043,l_imaa.imaa044,l_imaa.imaa045,l_imaa.imaa100,l_imaa.imaa101,
+              l_imaa.imaa102,l_imaa.imaa103,l_imaa.imaa104,l_imaa.imaa105,l_imaa.imaa106,
+              l_imaa.imaa107,l_imaa.imaa108,l_imaa.imaa109,l_imaa.imaa110,l_imaa.imaa111,
+              l_imaa.imaa112,l_imaa.imaa113,l_imaa.imaa114,l_imaa.imaa115,l_imaa.imaa116,
+              l_imaa.imaa117,l_imaa.imaa118,l_imaa.imaa119,l_imaa.imaa120,l_imaa.imaa121,
+              l_imaa.imaa122,l_imaa.imaa123,l_imaa.imaa124,l_imaa.imaa125,l_imaa.imaa126,
+              l_imaa.imaa127,l_imaa.imaa128,l_imaa.imaa129,l_imaa.imaa130,l_imaa.imaa131,
+              l_imaa.imaa132,l_imaa.imaa133,l_imaa.imaa134,l_imaa.imaa135,l_imaa.imaa136,
+              l_imaa.imaa137,l_imaa.imaa138,l_imaa.imaa139,l_imaa.imaa140,l_imaa.imaa141,
+              l_imaa.imaa142,l_imaa.imaa143,l_imaa.imaa144,l_imaa.imaa145,l_imaa.imaa146,
+              l_imaa.imaastus,l_imaa.imaaownid,l_imaa.imaaowndp,l_imaa.imaacrtid,l_imaa.imaacrtdp,
+              l_imaa.imaacrtdt,l_imaa.imaamodid,l_imaa.imaamoddt,l_imaa.imaacnfid,l_imaa.imaacnfdt,
+              #161109-00085#65 --s add
+              l_imaa.imaaud001,l_imaa.imaaud002,l_imaa.imaaud003,l_imaa.imaaud004,l_imaa.imaaud005,
+              l_imaa.imaaud006,l_imaa.imaaud007,l_imaa.imaaud008,l_imaa.imaaud009,l_imaa.imaaud010,
+              l_imaa.imaaud011,l_imaa.imaaud012,l_imaa.imaaud013,l_imaa.imaaud014,l_imaa.imaaud015,
+              l_imaa.imaaud016,l_imaa.imaaud017,l_imaa.imaaud018,l_imaa.imaaud019,l_imaa.imaaud020,
+              l_imaa.imaaud021,l_imaa.imaaud022,l_imaa.imaaud023,l_imaa.imaaud024,l_imaa.imaaud025,
+              l_imaa.imaaud026,l_imaa.imaaud027,l_imaa.imaaud028,l_imaa.imaaud029,l_imaa.imaaud030,
+              #161109-00085#65 --e add
+              l_imaa.imaa147,l_imaa.imaa148,l_imaa.imaa149,l_imaa.imaa150,l_imaa.imaa151,
+              l_imaa.imaa152,l_imaa.imaa153,l_imaa.imaa154,l_imaa.imaa155,l_imaa.imaa156,
+              l_imaa.imaa157,l_imaa.imaa158,l_imaa.imaa159,l_imaa.imaa160,l_imaa.imaa161
+         FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem_d[l_ac2].xmem003
+         #mod--161109-00085#7-e
+         SELECT xmam004 INTO l_xmam004 FROM xmam_t WHERE xmament = g_enterprise AND xmam001 = g_xmem_d[l_ac2].xmem005
+         #mod--161109-00085#7-s
+         #SELECT * INTO l_imaa_1.* FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = l_xmam004
+         SELECT imaaent,imaa001,imaa002,imaa003,imaa004,
+                imaa005,imaa006,imaa009,imaa010,imaa011,
+                imaa012,imaa013,imaa014,imaa016,imaa017,
+                imaa018,imaa019,imaa020,imaa021,imaa022,
+                imaa023,imaa024,imaa025,imaa026,imaa027,
+                imaa028,imaa029,imaa030,imaa031,imaa032,
+                imaa033,imaa034,imaa035,imaa036,imaa037,
+                imaa038,imaa039,imaa040,imaa041,imaa042,
+                imaa043,imaa044,imaa045,imaa100,imaa101,
+                imaa102,imaa103,imaa104,imaa105,imaa106,
+                imaa107,imaa108,imaa109,imaa110,imaa111,
+                imaa112,imaa113,imaa114,imaa115,imaa116,
+                imaa117,imaa118,imaa119,imaa120,imaa121,
+                imaa122,imaa123,imaa124,imaa125,imaa126,
+                imaa127,imaa128,imaa129,imaa130,imaa131,
+                imaa132,imaa133,imaa134,imaa135,imaa136,
+                imaa137,imaa138,imaa139,imaa140,imaa141,
+                imaa142,imaa143,imaa144,imaa145,imaa146,
+                imaastus,imaaownid,imaaowndp,imaacrtid,imaacrtdp,
+                imaacrtdt,imaamodid,imaamoddt,imaacnfid,imaacnfdt,
+                #161109-00085#65 --s add
+                imaaud001,imaaud002,imaaud003,imaaud004,imaaud005,
+                imaaud006,imaaud007,imaaud008,imaaud009,imaaud010,
+                imaaud011,imaaud012,imaaud013,imaaud014,imaaud015,
+                imaaud016,imaaud017,imaaud018,imaaud019,imaaud020,
+                imaaud021,imaaud022,imaaud023,imaaud024,imaaud025,
+                imaaud026,imaaud027,imaaud028,imaaud029,imaaud030,
+                #161109-00085#65 --e add
+                imaa147,imaa148,imaa149,imaa150,imaa151,
+                imaa152,imaa153,imaa154,imaa155,imaa156,
+                imaa157,imaa158,imaa159,imaa160,imaa161 
+         INTO l_imaa_1.imaaent,l_imaa_1.imaa001,l_imaa_1.imaa002,l_imaa_1.imaa003,l_imaa_1.imaa004,
+              l_imaa_1.imaa005,l_imaa_1.imaa006,l_imaa_1.imaa009,l_imaa_1.imaa010,l_imaa_1.imaa011,
+              l_imaa_1.imaa012,l_imaa_1.imaa013,l_imaa_1.imaa014,l_imaa_1.imaa016,l_imaa_1.imaa017,
+              l_imaa_1.imaa018,l_imaa_1.imaa019,l_imaa_1.imaa020,l_imaa_1.imaa021,l_imaa_1.imaa022,
+              l_imaa_1.imaa023,l_imaa_1.imaa024,l_imaa_1.imaa025,l_imaa_1.imaa026,l_imaa_1.imaa027,
+              l_imaa_1.imaa028,l_imaa_1.imaa029,l_imaa_1.imaa030,l_imaa_1.imaa031,l_imaa_1.imaa032,
+              l_imaa_1.imaa033,l_imaa_1.imaa034,l_imaa_1.imaa035,l_imaa_1.imaa036,l_imaa_1.imaa037,
+              l_imaa_1.imaa038,l_imaa_1.imaa039,l_imaa_1.imaa040,l_imaa_1.imaa041,l_imaa_1.imaa042,
+              l_imaa_1.imaa043,l_imaa_1.imaa044,l_imaa_1.imaa045,l_imaa_1.imaa100,l_imaa_1.imaa101,
+              l_imaa_1.imaa102,l_imaa_1.imaa103,l_imaa_1.imaa104,l_imaa_1.imaa105,l_imaa_1.imaa106,
+              l_imaa_1.imaa107,l_imaa_1.imaa108,l_imaa_1.imaa109,l_imaa_1.imaa110,l_imaa_1.imaa111,
+              l_imaa_1.imaa112,l_imaa_1.imaa113,l_imaa_1.imaa114,l_imaa_1.imaa115,l_imaa_1.imaa116,
+              l_imaa_1.imaa117,l_imaa_1.imaa118,l_imaa_1.imaa119,l_imaa_1.imaa120,l_imaa_1.imaa121,
+              l_imaa_1.imaa122,l_imaa_1.imaa123,l_imaa_1.imaa124,l_imaa_1.imaa125,l_imaa_1.imaa126,
+              l_imaa_1.imaa127,l_imaa_1.imaa128,l_imaa_1.imaa129,l_imaa_1.imaa130,l_imaa_1.imaa131,
+              l_imaa_1.imaa132,l_imaa_1.imaa133,l_imaa_1.imaa134,l_imaa_1.imaa135,l_imaa_1.imaa136,
+              l_imaa_1.imaa137,l_imaa_1.imaa138,l_imaa_1.imaa139,l_imaa_1.imaa140,l_imaa_1.imaa141,
+              l_imaa_1.imaa142,l_imaa_1.imaa143,l_imaa_1.imaa144,l_imaa_1.imaa145,l_imaa_1.imaa146,
+              l_imaa_1.imaastus,l_imaa_1.imaaownid,l_imaa_1.imaaowndp,l_imaa_1.imaacrtid,l_imaa_1.imaacrtdp,
+              l_imaa_1.imaacrtdt,l_imaa_1.imaamodid,l_imaa_1.imaamoddt,l_imaa_1.imaacnfid,l_imaa_1.imaacnfdt,
+              #161109-00085#65 --s add
+              l_imaa.imaaud001,l_imaa.imaaud002,l_imaa.imaaud003,l_imaa.imaaud004,l_imaa.imaaud005,
+              l_imaa.imaaud006,l_imaa.imaaud007,l_imaa.imaaud008,l_imaa.imaaud009,l_imaa.imaaud010,
+              l_imaa.imaaud011,l_imaa.imaaud012,l_imaa.imaaud013,l_imaa.imaaud014,l_imaa.imaaud015,
+              l_imaa.imaaud016,l_imaa.imaaud017,l_imaa.imaaud018,l_imaa.imaaud019,l_imaa.imaaud020,
+              l_imaa.imaaud021,l_imaa.imaaud022,l_imaa.imaaud023,l_imaa.imaaud024,l_imaa.imaaud025,
+              l_imaa.imaaud026,l_imaa.imaaud027,l_imaa.imaaud028,l_imaa.imaaud029,l_imaa.imaaud030,
+              #161109-00085#65 --e add
+              l_imaa_1.imaa147,l_imaa_1.imaa148,l_imaa_1.imaa149,l_imaa_1.imaa150,l_imaa_1.imaa151,
+              l_imaa_1.imaa152,l_imaa_1.imaa153,l_imaa_1.imaa154,l_imaa_1.imaa155,l_imaa_1.imaa156,
+              l_imaa_1.imaa157,l_imaa_1.imaa158,l_imaa_1.imaa159,l_imaa_1.imaa160,l_imaa_1.imaa161  
+         FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = l_xmam004
+         #mod--161109-00085#7-e
+            
+         #SELECT * INTO l_xmam.* FROM xmam_t
+         #161109-00085#65 --s mark
+         #SELECT xmament,xmam001,xmam003,xmam004,xmam005,
+         #       xmam006,xmam007,xmam008,xmam009,xmam010,
+         #       xmam011,xmam012,xmam013,xmam014,xmam015,
+         #       xmam016,xmam017,xmam018,xmam019,xmamownid,
+         #       xmamowndp,xmamcrtid,xmamcrtdp,xmamcrtdt,xmammodid,
+         #       xmammoddt,xmamstus 
+         #INTO l_xmam.xmament,l_xmam.xmam001,l_xmam.xmam003,l_xmam.xmam004,l_xmam.xmam005,
+         #     l_xmam.xmam006,l_xmam.xmam007,l_xmam.xmam008,l_xmam.xmam009,l_xmam.xmam010,
+         #     l_xmam.xmam011,l_xmam.xmam012,l_xmam.xmam013,l_xmam.xmam014,l_xmam.xmam015,
+         #     l_xmam.xmam016,l_xmam.xmam017,l_xmam.xmam018,l_xmam.xmam019,l_xmam.xmamownid,
+         #     l_xmam.xmamowndp,l_xmam.xmamcrtid,l_xmam.xmamcrtdp,l_xmam.xmamcrtdt,l_xmam.xmammodid,
+         #     l_xmam.xmammoddt,l_xmam.xmamstus
+         #161109-00085#65 --e mark
+         #161109-00085#65 --s add
+         SELECT xmament,xmam001,xmam003,xmam004,xmam005,
+                xmam006,xmam007,xmam008,xmam009,xmam010,
+                xmam011,xmam012,xmam013,xmam014,xmam015,
+                xmam016,xmam017,xmam018,xmam019,xmamownid,
+                xmamowndp,xmamcrtid,xmamcrtdp,xmamcrtdt,xmammodid,
+                xmammoddt,xmamstus,xmamud001,xmamud002,xmamud003,
+                xmamud004,xmamud005,xmamud006,xmamud007,xmamud008,
+                xmamud009,xmamud010,xmamud011,xmamud012,xmamud013,
+                xmamud014,xmamud015,xmamud016,xmamud017,xmamud018,
+                xmamud019,xmamud020,xmamud021,xmamud022,xmamud023,
+                xmamud024,xmamud025,xmamud026,xmamud027,xmamud028,
+                xmamud029,xmamud030
+           INTO l_xmam.xmament,l_xmam.xmam001,l_xmam.xmam003,l_xmam.xmam004,l_xmam.xmam005,
+                l_xmam.xmam006,l_xmam.xmam007,l_xmam.xmam008,l_xmam.xmam009,l_xmam.xmam010,
+                l_xmam.xmam011,l_xmam.xmam012,l_xmam.xmam013,l_xmam.xmam014,l_xmam.xmam015,
+                l_xmam.xmam016,l_xmam.xmam017,l_xmam.xmam018,l_xmam.xmam019,l_xmam.xmamownid,
+                l_xmam.xmamowndp,l_xmam.xmamcrtid,l_xmam.xmamcrtdp,l_xmam.xmamcrtdt,l_xmam.xmammodid,
+                l_xmam.xmammoddt,l_xmam.xmamstus,l_xmam.xmamud001,l_xmam.xmamud002,l_xmam.xmamud003,
+                l_xmam.xmamud004,l_xmam.xmamud005,l_xmam.xmamud006,l_xmam.xmamud007,l_xmam.xmamud008,
+                l_xmam.xmamud009,l_xmam.xmamud010,l_xmam.xmamud011,l_xmam.xmamud012,l_xmam.xmamud013,
+                l_xmam.xmamud014,l_xmam.xmamud015,l_xmam.xmamud016,l_xmam.xmamud017,l_xmam.xmamud018,
+                l_xmam.xmamud019,l_xmam.xmamud020,l_xmam.xmamud021,l_xmam.xmamud022,l_xmam.xmamud023,
+                l_xmam.xmamud024,l_xmam.xmamud025,l_xmam.xmamud026,l_xmam.xmamud027,l_xmam.xmamud028,
+                l_xmam.xmamud029,l_xmam.xmamud030
+         #161109-00085#65 --e add
+         FROM xmam_t               
+         #mod--161109-00085#7-e
+        
+         WHERE xmament = g_enterprise AND xmam001 = g_xmem_d[l_ac2].xmem005
+         AFTER FIELD xmem004
+  
+            IF NOT cl_ap_chk_range(g_xmem_d[l_ac2].xmem004,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem004
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmem004
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem004) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+         BEFORE FIELD xmem004
+            
+         ON CHANGE xmem004
+          
+         AFTER FIELD xmem005
+            
+            #add-point:AFTER FIELD xmem005
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem005) THEN 
+
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_xmem_d[l_ac2].xmem005
+               
+               IF NOT cl_chk_exist("v_xmam001") THEN
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+            CALL axmt610_01_xmem005_desc()   #150910-00007#1 150916 by sakura add
+
+            #END add-point
+            
+ 
+       
+         BEFORE FIELD xmem005
+            
+         ON CHANGE xmem005
+            #add-point:ON CHANGE xmem005
+            
+            #END add-point
+ 
+        
+         AFTER FIELD xmem006
+           
+            IF NOT cl_ap_chk_range(g_xmem_d[l_ac2].xmem006,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem006
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmem006
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem006) THEN 
+               IF g_xmem_d[l_ac2].xmem007 < 1 THEN
+                  LET g_xmem_d[l_ac2].xmem011 = g_xmem_d[l_ac2].xmem010
+               ELSE
+                  LET g_xmem_d[l_ac2].xmem011 = g_xmem_d[l_ac2].xmem010 + g_xmem_d[l_ac2].xmem007 - 1
+               END IF
+               #add--2015/05/12 By shiun--(S)
+               IF cl_null(l_imaa_1.imaa016) THEN
+                  LET l_imaa_1.imaa016 = 0
+               END IF
+               IF cl_null(l_imaa.imaa016) THEN
+                  LET l_imaa.imaa016 = 0
+               END IF
+               IF cl_null(l_imaa.imaa017) THEN
+                  LET l_imaa.imaa017 = 0
+               END IF
+               #add--2015/05/12 By shiun--(E)
+               LET g_xmem_d[l_ac2].xmem014 = g_xmem_d[l_ac2].xmem006 * l_imaa.imaa017
+               
+               LET g_xmem_d[l_ac2].xmem016 = g_xmem_d[l_ac2].xmem006 * (l_imaa_1.imaa016 + l_imaa.imaa016)
+
+                IF cl_null(l_xmam.xmam016) THEN
+                   SELECT imaa018 INTO l_xmam.xmam016 FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem_d[l_ac2].xmem003
+                END IF
+                IF cl_null(l_xmam.xmam013) THEN
+                   SELECT imaa025 INTO l_xmam.xmam013 FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem_d[l_ac2].xmem003
+                END IF
+                IF g_xmel.xmel012 = '2' THEN
+                   LET g_xmem_d[l_ac2].xmem018 = l_xmam.xmam013 * 0.0000353
+                ELSE
+                   LET g_xmem_d[l_ac2].xmem018 = l_xmam.xmam013 * 0.0000353 / 35.315
+                END IF
+                IF NOT cl_null(g_xmem_d[l_ac2].xmem007) THEN
+                   IF NOT cl_null(g_xmem_d[l_ac2].xmem014) THEN
+                     LET g_xmem_d[l_ac2].xmem015 = g_xmem_d[l_ac2].xmem014 * g_xmem_d[l_ac2].xmem007
+                   END IF
+                   IF NOT cl_null(g_xmem_d[l_ac2].xmem016) THEN
+                      LET g_xmem_d[l_ac2].xmem017 = g_xmem_d[l_ac2].xmem016 * g_xmem_d[l_ac2].xmem007
+                   END IF 
+                   IF NOT cl_null(g_xmem_d[l_ac2].xmem018) THEN
+                      LET g_xmem_d[l_ac2].xmem019 = g_xmem_d[l_ac2].xmem018 * g_xmem_d[l_ac2].xmem007
+                   END IF 
+                   IF NOT cl_null(g_xmem_d[l_ac2].xmem006) THEN
+                      LET g_xmem_d[l_ac2].xmem012 = g_xmem_d[l_ac2].xmem006 * g_xmem_d[l_ac2].xmem007
+                   END IF
+                END IF
+            END IF 
+
+
+            #END add-point
+            
+ 
+        
+         BEFORE FIELD xmem006
+            #add-point:BEFORE FIELD xmem006
+            
+            #END add-point
+ 
+        
+         ON CHANGE xmem006
+            #add-point:ON CHANGE xmem006
+            
+            #END add-point
+ 
+      
+         AFTER FIELD xmem007
+            
+            IF NOT cl_ap_chk_range(g_xmem_d[l_ac2].xmem007,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem007
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmem007
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem007) THEN 
+               IF g_xmem_d[l_ac2].xmem007 < 1 THEN
+                  LET g_xmem_d[l_ac2].xmem011 = g_xmem_d[l_ac2].xmem010
+               ELSE
+                  LET g_xmem_d[l_ac2].xmem011 = g_xmem_d[l_ac2].xmem010 + g_xmem_d[l_ac2].xmem007 - 1
+               END IF
+               #add--2015/05/12 By shiun--(S)
+               IF cl_null(l_imaa_1.imaa016) THEN
+                  LET l_imaa_1.imaa016 = 0
+               END IF
+               IF cl_null(l_imaa.imaa016) THEN
+                  LET l_imaa.imaa016 = 0
+               END IF
+               IF cl_null(l_imaa.imaa017) THEN
+                  LET l_imaa.imaa017 = 0
+               END IF
+               #add--2015/05/12 By shiun--(E)
+               LET g_xmem_d[l_ac2].xmem014 = g_xmem_d[l_ac2].xmem006 * l_imaa.imaa017
+               
+               LET g_xmem_d[l_ac2].xmem016 = g_xmem_d[l_ac2].xmem006 * (l_imaa_1.imaa016 + l_imaa.imaa016)
+
+                IF cl_null(l_xmam.xmam016) THEN
+                   SELECT imaa018 INTO l_xmam.xmam016 FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem_d[l_ac2].xmem003
+                END IF
+                IF cl_null(l_xmam.xmam013) THEN
+                   SELECT imaa025 INTO l_xmam.xmam013 FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem_d[l_ac2].xmem003
+                END IF
+                IF g_xmel.xmel012 = '2' THEN
+                   LET g_xmem_d[l_ac2].xmem018 = l_xmam.xmam013 * 0.0000353
+                ELSE
+                   LET g_xmem_d[l_ac2].xmem018 = l_xmam.xmam013 * 0.0000353 / 35.315
+                END IF
+                
+                IF NOT cl_null(g_xmem_d[l_ac2].xmem014) THEN
+                  LET g_xmem_d[l_ac2].xmem015 = g_xmem_d[l_ac2].xmem014 * g_xmem_d[l_ac2].xmem007
+                END IF
+                IF NOT cl_null(g_xmem_d[l_ac2].xmem016) THEN
+                   LET g_xmem_d[l_ac2].xmem017 = g_xmem_d[l_ac2].xmem016 * g_xmem_d[l_ac2].xmem007
+                END IF 
+                IF NOT cl_null(g_xmem_d[l_ac2].xmem018) THEN
+                   LET g_xmem_d[l_ac2].xmem019 = g_xmem_d[l_ac2].xmem018 * g_xmem_d[l_ac2].xmem007
+                END IF 
+                IF NOT cl_null(g_xmem_d[l_ac2].xmem006) THEN
+                   LET g_xmem_d[l_ac2].xmem012 = g_xmem_d[l_ac2].xmem006 * g_xmem_d[l_ac2].xmem007
+                END IF
+              
+            END IF 
+
+
+            #END add-point
+            
+ 
+        
+         BEFORE FIELD xmem007
+            #add-point:BEFORE FIELD xmem007
+            
+            #END add-point
+ 
+         
+         ON CHANGE xmem007
+            #add-point:ON CHANGE xmem007
+            
+            #END add-point
+ 
+        
+         BEFORE FIELD xmem008
+            #add-point:BEFORE FIELD xmem008
+            
+            #END add-point
+ 
+        
+         AFTER FIELD xmem008
+            
+            #add-point:AFTER FIELD xmem008
+            
+            #END add-point
+            
+ 
+       
+         ON CHANGE xmem008
+            #add-point:ON CHANGE xmem008
+            
+            #END add-point
+ 
+        
+         BEFORE FIELD xmem009
+            #add-point:BEFORE FIELD xmem009
+            
+            #END add-point
+ 
+        
+         AFTER FIELD xmem009
+            
+            #add-point:AFTER FIELD xmem009
+            
+            #END add-point
+            
+ 
+      
+         ON CHANGE xmem009
+            #add-point:ON CHANGE xmem009
+            
+            #END add-point
+ 
+         #æ­¤æ®µè½ç±å­æ¨£æ¿a02ç¢ç
+         AFTER FIELD xmem010
+
+            IF NOT cl_ap_chk_range(g_xmem_d[l_ac2].xmem010,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem010
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmem010
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem010) THEN 
+               IF g_xmem_d[l_ac2].xmem007 < 1 THEN
+                  LET g_xmem_d[l_ac2].xmem011 = g_xmem_d[l_ac2].xmem010
+               ELSE
+                  LET g_xmem_d[l_ac2].xmem011 = g_xmem_d[l_ac2].xmem010 + g_xmem_d[l_ac2].xmem007 - 1
+               END IF  
+            END IF 
+
+
+            #END add-point
+            
+ 
+     
+         BEFORE FIELD xmem010
+            #add-point:BEFORE FIELD xmem010
+            
+            #END add-point
+ 
+        
+         ON CHANGE xmem010
+            #add-point:ON CHANGE xmem010
+            
+            #END add-point
+ 
+         #æ­¤æ®µè½ç±å­æ¨£æ¿a02ç¢ç
+         AFTER FIELD xmem011
+        
+            IF NOT cl_ap_chk_range(g_xmem_d[l_ac2].xmem011,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem011
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmem011
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem011) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+      
+         BEFORE FIELD xmem011
+            #add-point:BEFORE FIELD xmem011
+            
+            #END add-point
+ 
+     
+         ON CHANGE xmem011
+         
+         
+         AFTER FIELD xmem012
+            IF NOT cl_ap_chk_range(g_xmem_d[l_ac2].xmem012,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem012
+            END IF
+            
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem012) THEN
+               LET l_num = 0
+               CASE g_xmel.xmel004 
+                  WHEN '1'
+                     SELECT xmdh016 INTO l_num FROM xmdh_t WHERE xmdhent = g_enterprise 
+                        AND xmdhdocno = g_xmem_d[l_ac2].xmem001 AND xmdhseq = g_xmem_d[l_ac2].xmem002
+                  WHEN '2'
+                     SELECT xmdl018 INTO l_num FROM xmdl_t WHERE xmdlent = g_enterprise 
+                        AND xmdldocno = g_xmem_d[l_ac2].xmem001 AND xmdlseq = g_xmem_d[l_ac2].xmem002
+                  WHEN '3'
+                     SELECT pmdt020 INTO l_num FROM pmdt_t WHERE pmdtent = g_enterprise 
+                        AND pmdtdocno = g_xmem_d[l_ac2].xmem001 AND pmdtseq = g_xmem_d[l_ac2].xmem002
+                  WHEN '4'
+                     SELECT indd009 INTO l_num FROM indd_t WHERE inddent = g_enterprise 
+                        AND indddocno = g_xmem_d[l_ac2].xmem001 AND inddseq = g_xmem_d[l_ac2].xmem002
+                  WHEN '5'
+                     SELECT inbb011 INTO l_num FROM inbb_t WHERE inbbent = g_enterprise 
+                        AND inbbdocno = g_xmem_d[l_ac2].xmem001 AND inbbseq = g_xmem_d[l_ac2].xmem002
+               END CASE
+               IF g_xmem_d[l_ac2].xmem012 > l_num THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = g_xmem_d[l_ac2].xmem012||" > "||l_num 
+                  LET g_errparam.code   = "axm-00490" 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            
+         AFTER FIELD xmem013
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem013) THEN 
+
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_xmem_d[l_ac2].xmem013
+               #160318-00025#41  2016/04/25  by pengxin  add(S)
+               LET g_errshow = TRUE #是否開窗 
+               LET g_chkparam.err_str[1] = "aim-00005:sub-01302|aooi250|",cl_get_progname("aooi250",g_lang,"2"),"|:EXEPROGaooi250"
+               #160318-00025#41  2016/04/25  by pengxin  add(E)
+               IF NOT cl_chk_exist("v_ooca001") THEN
+                  NEXT FIELD CURRENT
+               END IF
+            
+            END IF 
+        
+         AFTER FIELD xmem014
+
+            IF NOT cl_ap_chk_range(g_xmem_d[l_ac2].xmem014,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem014
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmem014
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem014) THEN 
+               LET g_xmem_d[l_ac2].xmem015 = g_xmem_d[l_ac2].xmem007 * g_xmem_d[l_ac2].xmem014
+            END IF 
+
+
+            #END add-point
+            
+ 
+         #æ­¤æ®µè½ç±å­æ¨£æ¿a01ç¢ç
+         BEFORE FIELD xmem014
+            #add-point:BEFORE FIELD xmem014
+            
+            #END add-point
+ 
+         
+         ON CHANGE xmem014
+            #add-point:ON CHANGE xmem014
+            
+            #END add-point
+ 
+         
+         AFTER FIELD xmem015
+            
+            IF NOT cl_ap_chk_range(g_xmem_d[l_ac2].xmem015,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem015
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmem015
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem015) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+         
+         BEFORE FIELD xmem015
+            #add-point:BEFORE FIELD xmem015
+            
+            #END add-point
+ 
+         
+         ON CHANGE xmem015
+            #add-point:ON CHANGE xmem015
+            
+            #END add-point
+ 
+         
+         AFTER FIELD xmem016
+            
+            IF NOT cl_ap_chk_range(g_xmem_d[l_ac2].xmem016,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem016
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmem016
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem016) THEN 
+               LET g_xmem_d[l_ac2].xmem017 = g_xmem_d[l_ac2].xmem007 * g_xmem_d[l_ac2].xmem016
+            END IF 
+
+
+            #END add-point
+            
+ 
+        
+         BEFORE FIELD xmem016
+            #add-point:BEFORE FIELD xmem016
+            
+            #END add-point
+ 
+         
+         ON CHANGE xmem016
+            #add-point:ON CHANGE xmem016
+            
+            #END add-point
+ 
+        
+         AFTER FIELD xmem017
+            
+            IF NOT cl_ap_chk_range(g_xmem_d[l_ac2].xmem017,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem017
+            END IF
+ 
+ 
+           
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem017) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+         
+         BEFORE FIELD xmem017
+            #add-point:BEFORE FIELD xmem017
+            
+            #END add-point
+ 
+        
+         ON CHANGE xmem017
+            #add-point:ON CHANGE xmem017
+            
+            #END add-point
+ 
+         
+         AFTER FIELD xmem018
+            
+            IF NOT cl_ap_chk_range(g_xmem_d[l_ac2].xmem018,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem018
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmem018
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem018) THEN 
+               LET g_xmem_d[l_ac2].xmem019 = g_xmem_d[l_ac2].xmem018 * g_xmem_d[l_ac2].xmem007
+            END IF 
+
+
+            #END add-point
+            
+ 
+        
+         BEFORE FIELD xmem018
+            #add-point:BEFORE FIELD xmem018
+            
+            #END add-point
+ 
+        
+         ON CHANGE xmem018
+            #add-point:ON CHANGE xmem018
+            
+            #END add-point
+ 
+        
+         AFTER FIELD xmem019
+            
+            IF NOT cl_ap_chk_range(g_xmem_d[l_ac2].xmem019,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem019
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmem019
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem019) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+    
+         BEFORE FIELD xmem019
+            #add-point:BEFORE FIELD xmem019
+            
+            #END add-point
+ 
+    
+         ON CHANGE xmem019
+            #add-point:ON CHANGE xmem019
+            
+            #END add-point
+ 
+ 
+
+ 
+         #Ctrlp:input.c.page1.xmem005
+         ON ACTION controlp INFIELD xmem005
+        
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmem_d[l_ac2].xmem005             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_xmam001()                                #呼叫開窗
+
+            LET g_xmem_d[l_ac2].xmem005 = g_qryparam.return1              
+
+            DISPLAY g_xmem_d[l_ac2].xmem005 TO xmem005              #
+            CALL axmt610_01_xmem005_desc()   #150910-00007#1 150916 by sakura add
+
+            NEXT FIELD xmem005                         
+
+
+         ON ACTION controlp INFIELD xmem013
+      
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmem_d[l_ac2].xmem013             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ooca001_1()                                #呼叫開窗
+
+            LET g_xmem_d[l_ac2].xmem013 = g_qryparam.return1              
+
+            DISPLAY g_xmem_d[l_ac2].xmem013 TO xmem013              #
+
+            NEXT FIELD xmem013 
+
+ 
+ 
+     
+         
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:
+            
+            #end add-point
+            
+      END INPUT
+      
+      ON ACTION full_sel
+         CALL axmt610_01_full_sel()
+         LET g_action_choice = "full_sel"
+      
+      ON ACTION all_sel
+         CALL axmt610_01_all_sel()
+         LET g_action_choice = "all_sel"
+     
+      ON ACTION un_sel
+         CALL axmt610_01_un_sel()
+         LET g_action_choice = "un_sel"
+       
+      ON ACTION cancel_sel
+         CALL axmt610_01_cancel_sel()
+         LET g_action_choice = "cancel_sel"
+        
+      ON ACTION make_paper
+         IF NOT cl_null(g_xmem_m.xmem0081) AND NOT cl_null(g_xmem_m.xmem0101) THEN #150610
+            CALL axmt610_01_b_fill2()
+         ELSE
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = '' 
+            LET g_errparam.code   = 'axm-00666'
+            LET g_errparam.popup  = FALSE 
+            CALL cl_err()
+         END IF
+         LET g_action_choice = "make_paper"
+      
+      ON ACTION make_detail
+         #add--161102-00019#1 By shiun--(S)
+         IF cl_null(l_ac2) OR l_ac2 = 0 THEN
+            LET l_ac2 = DIALOG.getCurrentRow("s_detail1")
+         END IF
+         #add--161102-00019#1 By shiun--(E)
+         #160908-00016#1 --- add start ---
+         LET l_xmem012 = 0
+         LET l_xmdh016 = 0
+         LET g_xmem_d[l_ac2].xmem012 = g_xmem_d[l_ac2].xmem006 * g_xmem_d[l_ac2].xmem007
+         #取得包裝單數量
+         LET g_sql = " SELECT SUM(xmem012) FROM xmem_t ",
+                     "  WHERE xmement = ",g_enterprise,
+                     "    AND xmem001 = '",g_xmem_d[l_ac2].xmem001,"'",
+                     "    AND xmem002 = ",g_xmem_d[l_ac2].xmem002
+         PREPARE sel_sum_xmem012_3 FROM g_sql
+         EXECUTE sel_sum_xmem012_3 INTO l_xmem012
+         IF cl_null(l_xmem012) THEN
+            LET l_xmem012 = 0
+         END IF
+         IF NOT cl_null(g_xmem_d[l_ac2].xmem006) THEN
+               LET l_xmem012 = l_xmem012 + (g_xmem_d[l_ac2].xmem006 * g_xmem_d[l_ac2].xmem007)
+         END IF 
+      
+          #161213-00029#-s mark     
+#         #取得出通單數量
+#         LET g_sql = "SELECT SUM(xmdh016) FROM xmdh_t ",
+#                     " WHERE xmdhent = ",g_enterprise,
+#                     "   AND xmdhsite = '",g_site,"'",
+#                     "   AND xmdhdocno = '",g_xmem_d[l_ac2].xmem001,"'",
+#                     "   AND xmdhseq = ",g_xmem_d[l_ac2].xmem002
+#         PREPARE sel_sum_xmdh016_1 FROM g_sql
+#         EXECUTE sel_sum_xmdh016_1 INTO l_xmdh016
+         #161213-00029#-s add
+         #取得出貨單數量
+         IF g_xmel.xmel004 = '1' THEN   #取得出通單數量
+            LET g_sql = "SELECT SUM(xmdh016) FROM xmdh_t ",
+                     " WHERE xmdhent = ",g_enterprise,
+                     "   AND xmdhsite = '",g_site,"'",
+                     "   AND xmdhdocno = '",g_xmem_d[l_ac2].xmem001,"'",
+                     "   AND xmdhseq = ",g_xmem_d[l_ac2].xmem002
+         END IF
+         
+         IF g_xmel.xmel004 = '2' THEN   #取得出貨單數量
+            LET g_sql = "SELECT SUM(xmdl018) FROM xmdl_t ",
+                     " WHERE xmdlent = ",g_enterprise,
+                     "   AND xmdlsite = '",g_site,"'",
+                     "   AND xmdldocno = '",g_xmem_d[l_ac2].xmem001,"'",
+                     "   AND xmdlseq = ",g_xmem_d[l_ac2].xmem002
+         END IF
+         
+         IF g_xmel.xmel004 = '3' THEN   #取得倉退單數量
+            LET g_sql = "SELECT SUM(pmdt020) FROM pmdt_t ",
+                     " WHERE pmdtent = ",g_enterprise,
+                     "   AND pmdtsite = '",g_site,"'",
+                     "   AND pmdtdocno = '",g_xmem_d[l_ac2].xmem001,"'",
+                     "   AND pmdtseq = ",g_xmem_d[l_ac2].xmem002
+         END IF
+         
+         IF g_xmel.xmel004 = '4' THEN   #取得調撥單數量
+            LET g_sql = "SELECT SUM(indd009) FROM indd_t ",
+                     " WHERE inddent = ",g_enterprise,
+                     "   AND inddsite = '",g_site,"'",
+                     "   AND indddocno = '",g_xmem_d[l_ac2].xmem001,"'",
+                     "   AND inddseq = ",g_xmem_d[l_ac2].xmem002        
+         END IF
+         
+         IF g_xmel.xmel004 = '5' THEN   #取得雜發單數量
+            LET g_sql = "SELECT SUM(inbb011) FROM inbb_t ",
+                     " WHERE inbbent = ",g_enterprise,
+                     "   AND inbbsite = '",g_site,"'",
+                     "   AND inbbdocno = '",g_xmem_d[l_ac2].xmem001,"'",
+                     "   AND inbbseq = ",g_xmem_d[l_ac2].xmem002      
+         END IF
+         
+         IF g_xmel.xmel004 = '7' THEN   #取得RMA覆出單數量
+            LET g_sql = "SELECT SUM(rmdb006) FROM rmdb_t ",
+                     " WHERE rmdbent = ",g_enterprise,
+                     "   AND rmdbsite = '",g_site,"'",
+                     "   AND rmdbdocno = '",g_xmem_d[l_ac2].xmem001,"'",
+                     "   AND rmdbseq = ",g_xmem_d[l_ac2].xmem002       
+         END IF
+         PREPARE sel_sum_xmdh016_1 FROM g_sql
+         EXECUTE sel_sum_xmdh016_1 INTO l_xmdh016
+         #161213-00029#-e add
+      #161213-00029#-e mod       
+         IF cl_null(l_xmdh016) THEN
+            LET l_xmdh016 = 0
+         END IF
+         
+         LET l_xmem012 = l_xmdh016 - l_xmem012
+         IF l_xmem012 < 0 OR g_xmem_d[l_ac2].xmem007 > l_xmdh016 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = '' 
+            LET g_errparam.code   = 'axm-00796'
+            LET g_errparam.replace[1] = g_xmem_d[l_ac2].xmem001
+            LET g_errparam.replace[2] = g_xmem_d[l_ac2].xmem002
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            NEXT FIELD xmem007
+         END IF
+         CALL axmt610_01_b_fill()
+         #160908-00016#1 --- add end ---
+         IF NOT axmt610_01_ins_xmem() THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = '' 
+            LET g_errparam.code   = 'axm-00089'
+            LET g_errparam.popup  = FALSE 
+            CALL cl_err()
+         ELSE
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = '' 
+            LET g_errparam.code   = 'axm-00088'
+            LET g_errparam.popup  = FALSE 
+            CALL cl_err()
+            #add--2015/05/12 By shiun--(S)
+            IF NOT cl_ask_confirm("apm-00285") THEN
+               LET INT_FLAG = TRUE 
+               LET g_action_choice = "exit"
+               EXIT DIALOG
+            END IF
+            #add--2015/05/12 By shiun--(E)
+            CALL axmt610_01_b_fill()    #160908-00016#1 add
+         END IF
+         LET g_action_choice = "make_detail"
+         
+      ON ACTION accept
+         LET INT_FLAG = TRUE 
+         LET g_action_choice = "exit"
+         EXIT DIALOG
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         LET g_action_choice = "exit"
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         LET g_action_choice = "exit"
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         LET g_action_choice = "exit"
+         EXIT DIALOG
+   
+      
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+#   IF NOT cl_null(g_action_choice) AND g_action_choice = "exit" THEN
+#      EXIT WHILE
+#   END IF
+#   
+#   END WHILE
+   
+   LET INT_FLAG = FALSE
+   
+   #end add-point
+   
+ 
+   CLOSE WINDOW w_axmt610_01 
+   
+   #add-point:inputæ®µafter input 
+   
+   #end add-point    
+END FUNCTION
+
+PRIVATE FUNCTION axmt610_01_b_fill()
+DEFINE l_n       LIKE type_t.num10     #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+DEFINE l_xmem012 LIKE xmem_t.xmem012
+   CALL g_xmem2_d.clear()
+      #161213-00029#1-s mod
+      #160908-00016#1 --- add start ---
+      LET g_sql = " SELECT SUM(xmem012) FROM xmem_t ",
+                  "  WHERE xmement = ",g_enterprise,
+                  "    AND xmem001 = ? " ,
+                  "    AND xmem002 = ? "
+      PREPARE sel_sum_xmem012 FROM g_sql
+      #160908-00016#1 --- add end --- 
+      #161213-00029#1-e mod  
+   IF g_xmel.xmel004 = '2' THEN
+      #170216-00017#1-s-mod 多xmdl088, Y->N
+      #LET g_sql = "SELECT DISTINCT xmdldocno,xmdlseq,xmdl008,imaal003,imaal004,xmdl009,xmdl017,xmdl018,'','','','Y','','Y','','' ",   #150910-00007#1 150916 by sakura add ''
+      #            "  FROM xmdl_t LEFT OUTER JOIN imaal_t ON imaalent = xmdlent AND imaal001 = xmdl008 AND imaal002 = '",g_dlang,"',xmdk_t",
+      #            " WHERE xmdkent = xmdlent AND xmdkdocno = xmdldocno AND xmdksite = '",g_site,"' AND xmdk000 = '1' AND xmdlent = ",g_enterprise," AND (xmdkstus = 'Y' OR xmdkstus = 'S')"
+      LET g_sql = "SELECT DISTINCT xmdldocno,xmdl088,xmdlseq,xmdl008,imaal003,imaal004,xmdl009,xmdl017,xmdl018,'','','','N','','N','','' ",   #150910-00007#1 150916 by sakura add ''
+                  "  FROM xmdl_t LEFT OUTER JOIN imaal_t ON imaalent = xmdlent AND imaal001 = xmdl008 AND imaal002 = '",g_dlang,"',xmdk_t",
+                  " WHERE xmdkent = xmdlent AND xmdkdocno = xmdldocno AND xmdksite = '",g_site,"' AND xmdk000 = '1' AND xmdlent = ",g_enterprise," AND (xmdkstus = 'Y' OR xmdkstus = 'S')"
+      #170216-00017#1-e-mod
+      IF NOT cl_null(g_xmel.xmel005) THEN
+         LET g_sql = g_sql," AND xmdldocno = '",g_xmel.xmel005,"'" 
+      END IF  
+   END IF
+     
+   IF g_xmel.xmel004 = '1' THEN
+      #161213-00029#1-s mark
+#     #160908-00016#1 --- add start ---
+#     LET g_sql = " SELECT SUM(xmem012) FROM xmem_t ",
+#                 "  WHERE xmement = ",g_enterprise,
+#                 "    AND xmem001 = ? " ,
+#                 "    AND xmem002 = ? "
+#     PREPARE sel_sum_xmem012 FROM g_sql
+#     #160908-00016#1 --- add end --- 
+      
+      #170216-00017#1-s-mod 多xmdh051, Y->N
+      #LET g_sql = "SELECT DISTINCT xmdhdocno,xmdhseq,xmdh006,imaal003,imaal004,xmdh007,xmdh015,xmdh016,'','','','Y','','Y','','' ",   #150910-00007#1 150916 by sakura add ''
+      #            "  FROM xmdh_t LEFT OUTER JOIN imaal_t ON imaalent = xmdhent AND imaal001 = xmdh006 AND imaal002 = '",g_dlang,"',xmdg_t",
+      #            " WHERE xmdgent = xmdhent AND xmdgdocno = xmdhdocno AND xmdgsite = '",g_site,"' AND xmdhent = ",g_enterprise," AND xmdgstus = 'Y'"
+      LET g_sql = "SELECT DISTINCT xmdhdocno,xmdh051,xmdhseq,xmdh006,imaal003,imaal004,xmdh007,xmdh015,xmdh016,'','','','N','','N','','' ",   #150910-00007#1 150916 by sakura add ''
+                  "  FROM xmdh_t LEFT OUTER JOIN imaal_t ON imaalent = xmdhent AND imaal001 = xmdh006 AND imaal002 = '",g_dlang,"',xmdg_t",
+                  " WHERE xmdgent = xmdhent AND xmdgdocno = xmdhdocno AND xmdgsite = '",g_site,"' AND xmdhent = ",g_enterprise," AND xmdgstus = 'Y'"
+      #170216-00017#1-e-mod
+      IF NOT cl_null(g_xmel.xmel005) THEN
+         LET g_sql = g_sql," AND xmdhdocno = '",g_xmel.xmel005,"'"
+      END IF
+   END IF
+   
+   IF g_xmel.xmel004 = '3' THEN
+      #170216-00017#1-s-mod 多''
+      #LET g_sql = "SELECT DISTINCT pmdtdocno,pmdtseq,pmdt006,imaal003,imaal004,pmdt007,pmdt019,pmdt020,'','','','Y','','Y','','' ",   #150910-00007#1 150916 by sakura add ''
+      #            "  FROM pmdt_t LEFT OUTER JOIN imaal_t ON imaalent = pmdtent AND imaal001 = pmdt006 AND imaal002 = '",g_dlang,"',pmds_t",
+      #            " WHERE pmdsent = pmdtent AND pmdsdocno = pmdtdocno AND pmdtent = ",g_enterprise,
+      #            "   AND pmds000 = '7' AND pmdsstus = 'Y' AND pmdssite = '",g_site,"'"  
+      LET g_sql = "SELECT DISTINCT pmdtdocno,'',pmdtseq,pmdt006,imaal003,imaal004,pmdt007,pmdt019,pmdt020,'','','','Y','','Y','','' ",   #150910-00007#1 150916 by sakura add ''
+                  "  FROM pmdt_t LEFT OUTER JOIN imaal_t ON imaalent = pmdtent AND imaal001 = pmdt006 AND imaal002 = '",g_dlang,"',pmds_t",
+                  " WHERE pmdsent = pmdtent AND pmdsdocno = pmdtdocno AND pmdtent = ",g_enterprise,
+                  "   AND pmds000 = '7' AND pmdsstus = 'Y' AND pmdssite = '",g_site,"'" 
+      #170216-00017#1-e-mod
+      IF NOT cl_null(g_xmel.xmel005) THEN
+         LET g_sql = g_sql," AND pmdtdocno = '",g_xmel.xmel005,"'"
+      END IF
+   END IF
+   
+   IF g_xmel.xmel004 = '4' THEN
+      #170216-00017#1-s-mod 多''
+      #LET g_sql = "SELECT DISTINCT indddocno,inddseq,indd002,imaal003,imaal004,indd004,indd006,indd009,'','','','Y','','Y','','' ",   #150910-00007#1 150916 by sakura add ''
+      #            "  FROM indd_t LEFT OUTER JOIN imaal_t ON imaalent = inddent AND imaal001 = indd002 AND imaal002 = '",g_dlang,"',indc_t",
+      #            " WHERE indcent = inddent AND indcdocno = indddocno AND inddent = ",g_enterprise," AND indcstus = 'O'",
+      #            "   AND indc000 = '1' AND indcsite = '",g_site,"'"
+      LET g_sql = "SELECT DISTINCT indddocno,'',inddseq,indd002,imaal003,imaal004,indd004,indd006,indd009,'','','','Y','','Y','','' ",   #150910-00007#1 150916 by sakura add ''
+                  "  FROM indd_t LEFT OUTER JOIN imaal_t ON imaalent = inddent AND imaal001 = indd002 AND imaal002 = '",g_dlang,"',indc_t",
+                  " WHERE indcent = inddent AND indcdocno = indddocno AND inddent = ",g_enterprise," AND indcstus = 'O'",
+                  "   AND indc000 = '1' AND indcsite = '",g_site,"'"
+      #170216-00017#1-e-mod
+      IF NOT cl_null(g_xmel.xmel005) THEN
+         LET g_sql = g_sql," AND indddocno = '",g_xmel.xmel005,"'"
+      END IF
+   END IF
+   
+   IF g_xmel.xmel004 = '5' THEN
+      #170216-00017#1-s-mod 多''
+      #LET g_sql = "SELECT DISTINCT inbbdocno,inbbseq,inbb001,imaal003,imaal004,inbb002,inbb010,inbb011,'','','','Y','','Y','','' ",   #150910-00007#1 150916 by sakura add ''
+      #            "  FROM inbb_t LEFT OUTER JOIN imaal_t ON imaalent = inbbent AND imaal001 = inbb001 AND imaal002 = '",g_dlang,"',inba_t",
+      #            " WHERE inbaent = inbbent AND inbadocno = inbbdocno AND inbbent = ",g_enterprise," AND inbastus = 'Y'",
+      #            "   AND inba001 = '1' AND inbasite = '",g_site,"'"
+      LET g_sql = "SELECT DISTINCT inbbdocno,'',inbbseq,inbb001,imaal003,imaal004,inbb002,inbb010,inbb011,'','','','Y','','Y','','' ",   #150910-00007#1 150916 by sakura add ''
+                  "  FROM inbb_t LEFT OUTER JOIN imaal_t ON imaalent = inbbent AND imaal001 = inbb001 AND imaal002 = '",g_dlang,"',inba_t",
+                  " WHERE inbaent = inbbent AND inbadocno = inbbdocno AND inbbent = ",g_enterprise," AND inbastus = 'Y'",
+                  "   AND inba001 = '1' AND inbasite = '",g_site,"'"
+      #170216-00017#1-e-mod
+      IF NOT cl_null(g_xmel.xmel005) THEN
+         LET g_sql = g_sql," AND inbbdocno = '",g_xmel.xmel005,"'"
+      END IF
+   END IF
+   
+   #150310-00003#13 add by lixh 20160315
+   IF g_xmel.xmel004 = '7' THEN    #覆出單
+      #170216-00017#1-s-mod 多''
+      #LET g_sql = "SELECT DISTINCT rmdbdocno,rmdbseq,rmdb003,imaal003,imaal004,rmdb004,rmdb005,rmdb006,'','','','Y','','Y','','' ",
+      #            "  FROM rmdb_t LEFT OUTER JOIN imaal_t ON imaalent = rmdbent AND imaal001 = rmdb003 AND imaal002 = '",g_dlang,"',rmda_t",
+      #            " WHERE rmdaent = rmdbent AND rmdadocno = rmdbdocno AND rmdbent = ",g_enterprise," AND rmdastus = 'Y'"  
+      LET g_sql = "SELECT DISTINCT rmdbdocno,'',rmdbseq,rmdb003,imaal003,imaal004,rmdb004,rmdb005,rmdb006,'','','','Y','','Y','','' ",
+                  "  FROM rmdb_t LEFT OUTER JOIN imaal_t ON imaalent = rmdbent AND imaal001 = rmdb003 AND imaal002 = '",g_dlang,"',rmda_t",
+                  " WHERE rmdaent = rmdbent AND rmdadocno = rmdbdocno AND rmdbent = ",g_enterprise," AND rmdastus = 'Y'" 
+      #170216-00017#1-e-mod
+      IF NOT cl_null(g_xmel.xmel005) THEN
+         LET g_sql = g_sql," AND rmdbdocno = '",g_xmel.xmel005,"'"
+      END IF                  
+   END IF
+   #150310-00003#13 add by lixh 20160315
+   
+   PREPARE sel_prep1 FROM g_sql
+   DECLARE sel_curs1 CURSOR FOR sel_prep1
+      
+   LET l_cnt = 1
+   #170216-00017#1-s-mod 多g_xmem2_d[l_cnt].xmdh051
+   #FOREACH sel_curs1 INTO g_xmem2_d[l_cnt].xmem001,g_xmem2_d[l_cnt].xmem002,g_xmem2_d[l_cnt].imaa001,g_xmem2_d[l_cnt].imaal003,
+   #                            g_xmem2_d[l_cnt].imaal004,g_xmem2_d[l_cnt].xmdh007,g_xmem2_d[l_cnt].xmdh015,g_xmem2_d[l_cnt].xmdh016,
+   #                            g_xmem2_d[l_cnt].xman005,g_xmem2_d[l_cnt].xman005_desc,g_xmem2_d[l_cnt].every_num,g_xmem2_d[l_cnt].sel1,g_xmem2_d[l_cnt].full_num,   #150910-00007#1 150916 by sakura add xman005_desc
+   #                            g_xmem2_d[l_cnt].sel2,g_xmem2_d[l_cnt].unfull_num,g_xmem2_d[l_cnt].space
+   FOREACH sel_curs1 INTO g_xmem2_d[l_cnt].xmem001,g_xmem2_d[l_cnt].xmdh051,g_xmem2_d[l_cnt].xmem002,g_xmem2_d[l_cnt].imaa001,
+                          g_xmem2_d[l_cnt].imaal003,g_xmem2_d[l_cnt].imaal004,g_xmem2_d[l_cnt].xmdh007,g_xmem2_d[l_cnt].xmdh015,
+                          g_xmem2_d[l_cnt].xmdh016,g_xmem2_d[l_cnt].xman005,g_xmem2_d[l_cnt].xman005_desc,g_xmem2_d[l_cnt].every_num,
+                          g_xmem2_d[l_cnt].sel1,g_xmem2_d[l_cnt].full_num,g_xmem2_d[l_cnt].sel2,g_xmem2_d[l_cnt].unfull_num,g_xmem2_d[l_cnt].space
+   #170216-00017#1-e-mod
+       IF SQLCA.SQLCODE THEN
+          EXIT FOREACH
+       END IF
+       LET l_n = 0 
+       SELECT COUNT(*) INTO l_n FROM xmem_t 
+        WHERE xmement = g_enterprise 
+          AND xmem001 = g_xmem2_d[l_cnt].xmem001 
+          AND xmem002 = g_xmem2_d[l_cnt].xmem002
+          AND xmemdocno <> g_xmel.xmeldocno       #160908-00016#1 add
+                                            
+       IF l_n > 0 THEN
+          CONTINUE FOREACH
+       END IF
+       CALL axmt610_01_xman005_ref()
+       #150910-00007#1 150916 by sakura add(S)
+       CALL axmt610_01_xman005_desc(g_xmem2_d[l_cnt].xman005,l_cnt)
+       DISPLAY g_xmem2_d[l_cnt].xman005_desc
+       #150910-00007#1 150916 by sakura add(E)
+       
+       #160908-00016#1 --- add start ---
+       LET l_xmem012 = 0
+       #取得出通單數量
+       EXECUTE sel_sum_xmem012 USING g_xmem2_d[l_cnt].xmem001,g_xmem2_d[l_cnt].xmem002   
+                               INTO l_xmem012
+       IF cl_null(l_xmem012) THEN
+          LET l_xmem012 = 0
+       END IF
+       
+       #出通單數量扣除已轉包裝單的數量
+       LET g_xmem2_d[l_cnt].xmdh016 = g_xmem2_d[l_cnt].xmdh016 - l_xmem012 
+       IF g_xmem2_d[l_cnt].xmdh016 < 0 THEN
+          INITIALIZE g_errparam TO NULL 
+          LET g_errparam.extend = '' 
+          LET g_errparam.code   = 'axm-00796'
+          LET g_errparam.replace[1] = g_xmem2_d[l_cnt].xmem001
+          LET g_errparam.replace[2] = g_xmem2_d[l_cnt].xmem002
+          LET g_errparam.popup  = TRUE 
+          CALL cl_err()
+          EXIT FOREACH
+       END IF
+       #160908-00016#1 --- add end   ---
+       
+       SELECT xmam008 INTO g_xmem2_d[l_cnt].every_num FROM xmam_t 
+        WHERE xmament = g_enterprise AND xmam001 = g_xmem2_d[l_cnt].xman005
+       LET g_xmem2_d[l_cnt].full_num =  g_xmem2_d[l_cnt].xmdh016 / g_xmem2_d[l_cnt].every_num
+       LET g_xmem2_d[l_cnt].unfull_num  =  g_xmem2_d[l_cnt].xmdh016 - (g_xmem2_d[l_cnt].every_num * g_xmem2_d[l_cnt].full_num)   
+                    
+       LET g_xmem2_d[l_cnt].space  = g_xmem2_d[l_cnt].unfull_num / g_xmem2_d[l_cnt].every_num 
+       
+       
+       IF g_xmem2_d[l_cnt].sel1 = 'Y' THEN
+          LET g_all_space = g_all_space + g_xmem2_d[l_cnt].full_num
+       END IF
+
+       IF g_xmem2_d[l_cnt].sel2 = 'Y' THEN
+          LET g_all_space = g_all_space + g_xmem2_d[l_cnt].space
+       END IF
+       
+       LET l_cnt = l_cnt + 1
+   END FOREACH
+   LET g_rec_b = l_cnt - 1
+   CALL g_xmem2_d.deleteElement(g_xmem2_d.getLength())  
+#   DISPLAY ARRAY g_xmem2_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b)
+#      BEFORE DISPLAY 
+#         EXIT DISPLAY
+#   END DISPLAY
+
+END FUNCTION
+
+PRIVATE FUNCTION axmt610_01_full_sel()
+DEFINE l_i   LIKE type_t.num10    #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+   LET g_all_space = 0
+   LET g_sel_cnt = 0           #170216-00017#1-add
+   CALL cl_err_collect_init()  #170216-00017#1-add
+   FOR l_i = 1 TO g_rec_b
+      IF g_xmem2_d[l_i].full_num != 0 THEN
+         LET g_xmem2_d[l_i].sel1 = 'Y'
+         LET g_xmem2_d[l_i].sel2 = 'N'  
+      ELSE
+         LET g_xmem2_d[l_i].sel1 = 'N'
+         LET g_xmem2_d[l_i].sel2 = 'Y'
+      END IF
+      #170216-00017#1-sadd
+      #檢查多角流程編號是否相同
+      IF (g_xmem2_d[l_i].sel1 = 'Y' OR g_xmem2_d[l_i].sel2 = 'Y') THEN
+         IF NOT axmt610_01_aic_chk(g_xmem2_d[l_i].xmdh051) THEN
+            LET g_xmem2_d[l_i].sel1 = 'N'
+            LET g_xmem2_d[l_i].sel2 = 'N'
+            CONTINUE FOR
+         END IF
+      END IF
+      #170216-00017#1-e-add 
+      IF g_xmem2_d[l_i].sel1 = 'Y' THEN
+         LET g_all_space = g_all_space + g_xmem2_d[l_i].full_num
+      END IF
+      IF g_xmem2_d[l_i].sel2 = 'Y' THEN
+         LET g_all_space = g_all_space + g_xmem2_d[l_i].space
+      END IF
+   END FOR 
+   CALL cl_err_collect_show()  #170216-00017#1-add
+   DISPLAY g_all_space TO FORMONLY.all_space
+#   DISPLAY ARRAY g_xmem2_d TO s_detail2.* ATTRIBUTES(COUNT=g_xmem2_d.getLength())
+#      BEFORE DISPLAY 
+#         EXIT DISPLAY
+#   END DISPLAY
+END FUNCTION
+
+PRIVATE FUNCTION axmt610_01_all_sel()
+DEFINE l_i   LIKE type_t.num10    #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+   LET g_all_space = 0
+   LET g_sel_cnt = 0           #170216-00017#1-add
+   CALL cl_err_collect_init()  #170216-00017#1-add
+   FOR l_i = 1 TO g_rec_b
+      LET g_xmem2_d[l_i].sel1 = 'Y'
+      LET g_xmem2_d[l_i].sel2 = 'Y'
+      #170216-00017#1-s-add
+      #檢查多角流程編號是否相同
+      IF NOT axmt610_01_aic_chk(g_xmem2_d[l_i].xmdh051) THEN
+         LET g_xmem2_d[l_i].sel1 = 'N'
+         LET g_xmem2_d[l_i].sel2 = 'N'
+         CONTINUE FOR
+      END IF
+      #170216-00017#1-e-add 
+      LET g_all_space = g_all_space + g_xmem2_d[l_i].full_num
+      LET g_all_space = g_all_space + g_xmem2_d[l_i].space
+   END FOR 
+   CALL cl_err_collect_show()  #170216-00017#1-add
+   DISPLAY g_all_space TO FORMONLY.all_space
+#   DISPLAY ARRAY g_xmem2_d TO s_detail2.* ATTRIBUTES(COUNT=g_xmem2_d.getLength())
+#      BEFORE DISPLAY 
+#         EXIT DISPLAY
+#   END DISPLAY   
+END FUNCTION
+
+PRIVATE FUNCTION axmt610_01_un_sel()
+DEFINE l_i   LIKE type_t.num10     #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+   LET g_all_space = 0 
+   LET g_sel_cnt = 0 #170216-00017#1-add
+   FOR l_i = 1 TO g_rec_b
+      LET g_xmem2_d[l_i].sel1 = 'N'
+      LET g_xmem2_d[l_i].sel2 = 'N'
+   END FOR 
+   DISPLAY g_all_space TO FORMONLY.all_space
+#   DISPLAY ARRAY g_xmem2_d TO s_detail2.* ATTRIBUTES(COUNT=g_xmem2_d.getLength())
+#      BEFORE DISPLAY 
+#         EXIT DISPLAY
+#   END DISPLAY   
+END FUNCTION
+
+PRIVATE FUNCTION axmt610_01_cancel_sel()
+DEFINE l_i   LIKE type_t.num10     #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+   LET g_all_space = 0
+   LET g_sel_cnt = 0           #170216-00017#1-add
+   CALL cl_err_collect_init()  #170216-00017#1-add
+   FOR l_i = 1 TO g_rec_b
+      IF g_xmem2_d[l_i].sel1 = 'Y' THEN
+         LET g_xmem2_d[l_i].sel1 = 'N'
+      ELSE
+         LET g_xmem2_d[l_i].sel1 = 'Y'
+      END IF
+      
+      IF g_xmem2_d[l_i].sel2 = 'Y' THEN
+         LET g_xmem2_d[l_i].sel2 = 'N'
+      ELSE
+         LET g_xmem2_d[l_i].sel2 = 'Y'
+      END IF
+      #170216-00017#1-s-add
+      #檢查多角流程編號是否相同
+      IF (g_xmem2_d[l_i].sel1 = 'Y' OR g_xmem2_d[l_i].sel2 = 'Y') THEN
+         IF NOT axmt610_01_aic_chk(g_xmem2_d[l_i].xmdh051) THEN
+            LET g_xmem2_d[l_i].sel1 = 'N'
+            LET g_xmem2_d[l_i].sel2 = 'N'
+            CONTINUE FOR
+         END IF
+      END IF
+      #170216-00017#1-e-add
+      IF g_xmem2_d[l_i].sel1 = 'Y' THEN
+         LET g_all_space = g_all_space + g_xmem2_d[l_i].full_num
+      END IF
+
+      IF g_xmem2_d[l_i].sel2 = 'Y' THEN
+         LET g_all_space = g_all_space + g_xmem2_d[l_i].space
+      END IF
+   END FOR 
+   CALL cl_err_collect_show()  #170216-00017#1-add
+   DISPLAY g_all_space TO FORMONLY.all_space
+#   DISPLAY ARRAY g_xmem2_d TO s_detail2.* ATTRIBUTES(COUNT=g_xmem2_d.getLength())
+#      BEFORE DISPLAY 
+#         EXIT DISPLAY
+#   END DISPLAY  
+END FUNCTION
+
+PRIVATE FUNCTION axmt610_01_xman005_ref()
+   DEFINE l_n  LIKE type_t.num10     #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+DEFINE l_n1  LIKE type_t.num10       #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+DEFINE l_imaa009  LIKE imaa_t.imaa009
+DEFINE l_sql STRING
+DEFINE l_address  LIKE xmdg_t.xmdg017
+
+   LET l_n = 0
+   SELECT COUNT(*) INTO l_n FROM xman_t WHERE xmanent = g_enterprise  #判断该料号在xman_t是否有资料
+     AND xmansite = g_site AND xman001 = g_xmem2_d[l_cnt].imaa001
+     AND xman002 = g_xmem2_d[l_cnt].xmdh007
+   IF l_n > 0 THEN
+      LET l_n1 = 0
+      SELECT COUNT(*) INTO l_n1 FROM xman_t WHERE xmanent = g_enterprise  #判断客户在xman_t中有多少笔资料  
+         AND xmansite = g_site AND xman001 = g_xmem2_d[l_cnt].imaa001
+         AND xman002 = g_xmem2_d[l_cnt].xmdh007 AND xman003 = g_xmel.xmel003
+      IF l_n1 = 1 THEN            #如果只有一笔就直接抓取包装方式
+         LET l_sql = "SELECT xman005 FROM xman_t WHERE xmanent = ",g_enterprise,  
+                     " AND xmansite = '",g_site,"' AND xman001 = '",g_xmem2_d[l_cnt].imaa001,"'",
+                     " AND xman002 = '",g_xmem2_d[l_cnt].xmdh007,"' AND xman003 = '",g_xmel.xmel003,"'",
+                     " ORDER BY xmanent,xmansite,xman001,xman002,xman003,xman004"
+         PREPARE sel_xman_prep1 FROM l_sql
+         DECLARE sel_xman_curs1 SCROLL CURSOR FOR sel_xman_prep1
+         OPEN sel_xman_curs1
+         FETCH FIRST sel_xman_curs1 INTO g_xmem2_d[l_cnt].xman005
+         CLOSE sel_xman_curs1
+      END IF
+      
+      IF l_n1 > 1 THEN                                       #如果有多笔则抓取对应的联络地址
+         CASE WHEN g_xmel.xmel004 = '1'
+                 SELECT xmdg017 INTO l_address FROM xmdg_t 
+                  WHERE xmdgent = g_enterprise AND xmdgdocno = g_xmel.xmel005
+                  
+                 SELECT xman005 INTO g_xmem2_d[l_cnt].xman005 FROM xman_t 
+                  WHERE xmanent = g_enterprise AND xmansite = g_site
+                    AND xman001 = g_xmem2_d[l_cnt].imaa001 AND xman002 = g_xmem2_d[l_cnt].xmdh007
+                    AND xman003 = g_xmel.xmel003 AND xman004 = l_address   
+                 IF cl_null(g_xmem2_d[l_cnt].xman005) THEN              #如果没抓到包装方式,则抓取第一笔除了联络地址以外的资料
+                    LET l_sql = "SELECT xman005 FROM xman_t WHERE xmanent = ",g_enterprise,  
+                          " AND xmansite = '",g_site,"' AND xman001 = '",g_xmem2_d[l_cnt].imaa001,"'",
+                          " AND xman002 = '",g_xmem2_d[l_cnt].xmdh007,"' AND xman003 = '",g_xmel.xmel003,"'",
+                          " ORDER BY xmanent,xmansite,xman001,xman002,xman003,xman004"
+                    PREPARE sel_xman_prep2 FROM l_sql
+                    DECLARE sel_xman_curs2 SCROLL CURSOR FOR sel_xman_prep2
+                    OPEN sel_xman_curs2
+                    FETCH FIRST sel_xman_curs2 INTO g_xmem2_d[l_cnt].xman005
+                    CLOSE sel_xman_curs2
+                 END IF
+             WHEN g_xmel.xmel004 = '2'   
+                 SELECT xmdk021 INTO l_address FROM xmdk_t  
+                  WHERE xmdkent = g_enterprise AND xmdkdocno = g_xmel.xmel005
+                 
+                 SELECT xman005 INTO g_xmem2_d[l_cnt].xman005 FROM xman_t 
+                  WHERE xmanent = g_enterprise AND xmansite = g_site
+                    AND xman001 = g_xmem2_d[l_cnt].imaa001 AND xman002 = g_xmem2_d[l_cnt].xmdh007
+                    AND xman003 = g_xmel.xmel003 AND xman004 = l_address 
+                 IF cl_null(g_xmem2_d[l_cnt].xman005) THEN              #如果没抓到包装方式,则抓取第一笔除了联络地址以外的资料
+                    LET l_sql = "SELECT xman005 FROM xman_t WHERE xmanent = ",g_enterprise,  
+                          " AND xmansite = '",g_site,"' AND xman001 = '",g_xmem2_d[l_cnt].imaa001,"'",
+                          " AND xman002 = '",g_xmem2_d[l_cnt].xmdh007,"' AND xman003 = '",g_xmel.xmel003,"'",
+                          " ORDER BY xmanent,xmansite,xman001,xman002,xman003,xman004"
+                    PREPARE sel_xman_prep3 FROM l_sql
+                    DECLARE sel_xman_curs3 SCROLL CURSOR FOR sel_xman_prep3
+                    OPEN sel_xman_curs3
+                    FETCH FIRST sel_xman_curs3 INTO g_xmem2_d[l_cnt].xman005
+                    CLOSE sel_xman_curs3
+                 END IF   
+         END CASE
+      END IF
+      IF l_n1 = 0 THEN  #如果没有这个客户,则抓取料件条件下的第一笔
+         LET l_sql = "SELECT xman005 FROM xman_t WHERE xmanent = ",g_enterprise,  
+                     " AND xmansite = '",g_site,"' AND xman001 = '",g_xmem2_d[l_cnt].imaa001,"'",
+                     " AND xman002 = '",g_xmem2_d[l_cnt].xmdh007,"'",
+                     " ORDER BY xmanent,xmansite,xman001,xman002,xman003,xman004"
+         PREPARE sel_xman_prep4 FROM l_sql
+         DECLARE sel_xman_curs4 SCROLL CURSOR FOR sel_xman_prep4
+         OPEN sel_xman_curs4
+         FETCH FIRST sel_xman_curs4 INTO g_xmem2_d[l_cnt].xman005
+         CLOSE sel_xman_curs4
+      END IF
+   ELSE
+      LET l_sql = "SELECT xman005 FROM xman_t WHERE xmanent = ",g_enterprise,  
+                     " AND xmansite = '",g_site,"'",
+                     " ORDER BY xmanent,xmansite,xman001,xman002,xman003,xman004"
+      PREPARE sel_xman_prep5 FROM l_sql
+      DECLARE sel_xman_curs5 SCROLL CURSOR FOR sel_xman_prep5
+      OPEN sel_xman_curs5
+      FETCH FIRST sel_xman_curs5 INTO g_xmem2_d[l_cnt].xman005
+      CLOSE sel_xman_curs5
+   END IF
+   
+END FUNCTION
+
+PRIVATE FUNCTION axmt610_01_b_fill2()
+DEFINE l_cnt1  LIKE type_t.num10   #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+DEFINE l_i     LIKE type_t.num10   #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+   #mod--161109-00085#7-s
+   #DEFINE l_imaa     RECORD LIKE imaa_t.*
+   DEFINE l_imaa RECORD  #料件主檔
+       imaaent LIKE imaa_t.imaaent, #企業編號
+       imaa001 LIKE imaa_t.imaa001, #料號
+       imaa002 LIKE imaa_t.imaa002, #目前版本
+       imaa003 LIKE imaa_t.imaa003, #主分群碼
+       imaa004 LIKE imaa_t.imaa004, #料件類別
+       imaa005 LIKE imaa_t.imaa005, #特徵組別
+       imaa006 LIKE imaa_t.imaa006, #基礎單位
+       imaa009 LIKE imaa_t.imaa009, #產品分類
+       imaa010 LIKE imaa_t.imaa010, #生命週期狀態
+       imaa011 LIKE imaa_t.imaa011, #產出類型
+       imaa012 LIKE imaa_t.imaa012, #允許副產品
+       imaa013 LIKE imaa_t.imaa013, #目錄編號
+       imaa014 LIKE imaa_t.imaa014, #產品條碼編號
+       imaa016 LIKE imaa_t.imaa016, #毛重
+       imaa017 LIKE imaa_t.imaa017, #淨重
+       imaa018 LIKE imaa_t.imaa018, #重量單位
+       imaa019 LIKE imaa_t.imaa019, #長度
+       imaa020 LIKE imaa_t.imaa020, #寬度
+       imaa021 LIKE imaa_t.imaa021, #高度
+       imaa022 LIKE imaa_t.imaa022, #長度單位
+       imaa023 LIKE imaa_t.imaa023, #面積
+       imaa024 LIKE imaa_t.imaa024, #面積單位
+       imaa025 LIKE imaa_t.imaa025, #體積
+       imaa026 LIKE imaa_t.imaa026, #體積單位
+       imaa027 LIKE imaa_t.imaa027, #為包裝容器
+       imaa028 LIKE imaa_t.imaa028, #容量
+       imaa029 LIKE imaa_t.imaa029, #容量單位
+       imaa030 LIKE imaa_t.imaa030, #超量容差(%)
+       imaa031 LIKE imaa_t.imaa031, #載重量
+       imaa032 LIKE imaa_t.imaa032, #載重單位
+       imaa033 LIKE imaa_t.imaa033, #超重容差(%)
+       imaa034 LIKE imaa_t.imaa034, #料號來源
+       imaa035 LIKE imaa_t.imaa035, #來源參考料號
+       imaa036 LIKE imaa_t.imaa036, #記錄位置(插件)
+       imaa037 LIKE imaa_t.imaa037, #組裝位置須勾稽
+       imaa038 LIKE imaa_t.imaa038, #工程料件
+       imaa039 LIKE imaa_t.imaa039, #轉正式料號
+       imaa040 LIKE imaa_t.imaa040, #轉正式料號時間
+       imaa041 LIKE imaa_t.imaa041, #工程圖號
+       imaa042 LIKE imaa_t.imaa042, #主要模具編號
+       imaa043 LIKE imaa_t.imaa043, #據點研發可調整元件
+       imaa044 LIKE imaa_t.imaa044, #AVL控管點
+       imaa045 LIKE imaa_t.imaa045, #生產國家地區
+       imaa100 LIKE imaa_t.imaa100, #條碼分類
+       imaa101 LIKE imaa_t.imaa101, #主供應商
+       imaa102 LIKE imaa_t.imaa102, #保質期(月)
+       imaa103 LIKE imaa_t.imaa103, #保質期(天)
+       imaa104 LIKE imaa_t.imaa104, #庫存單位
+       imaa105 LIKE imaa_t.imaa105, #銷售單位
+       imaa106 LIKE imaa_t.imaa106, #銷售計價單位
+       imaa107 LIKE imaa_t.imaa107, #採購單位
+       imaa108 LIKE imaa_t.imaa108, #商品種類
+       imaa109 LIKE imaa_t.imaa109, #條碼類型
+       imaa110 LIKE imaa_t.imaa110, #季節性商品
+       imaa111 LIKE imaa_t.imaa111, #開始日期
+       imaa112 LIKE imaa_t.imaa112, #結束日期
+       imaa113 LIKE imaa_t.imaa113, #傳秤因子
+       imaa114 LIKE imaa_t.imaa114, #計價幣別
+       imaa115 LIKE imaa_t.imaa115, #預計進貨價格
+       imaa116 LIKE imaa_t.imaa116, #預計銷貨價格
+       imaa117 LIKE imaa_t.imaa117, #進銷差率
+       imaa118 LIKE imaa_t.imaa118, #試銷期(天)
+       imaa119 LIKE imaa_t.imaa119, #試銷金額
+       imaa120 LIKE imaa_t.imaa120, #試銷數量
+       imaa121 LIKE imaa_t.imaa121, #是否網路經營
+       imaa122 LIKE imaa_t.imaa122, #產地分類
+       imaa123 LIKE imaa_t.imaa123, #產地說明
+       imaa124 LIKE imaa_t.imaa124, #進銷項稅別
+       imaa125 LIKE imaa_t.imaa125, #一次性商品
+       imaa126 LIKE imaa_t.imaa126, #品牌
+       imaa127 LIKE imaa_t.imaa127, #系列
+       imaa128 LIKE imaa_t.imaa128, #型別
+       imaa129 LIKE imaa_t.imaa129, #功能
+       imaa130 LIKE imaa_t.imaa130, #主材
+       imaa131 LIKE imaa_t.imaa131, #價格帶
+       imaa132 LIKE imaa_t.imaa132, #其他屬性一
+       imaa133 LIKE imaa_t.imaa133, #其他屬性二
+       imaa134 LIKE imaa_t.imaa134, #其他屬性三
+       imaa135 LIKE imaa_t.imaa135, #其他屬性四
+       imaa136 LIKE imaa_t.imaa136, #其他屬性五
+       imaa137 LIKE imaa_t.imaa137, #其他屬性六
+       imaa138 LIKE imaa_t.imaa138, #其他屬性七
+       imaa139 LIKE imaa_t.imaa139, #其他屬性八
+       imaa140 LIKE imaa_t.imaa140, #其他屬性九
+       imaa141 LIKE imaa_t.imaa141, #其他屬性十
+       imaa142 LIKE imaa_t.imaa142, #制定組織
+       imaa143 LIKE imaa_t.imaa143, #產品組編號
+       imaa144 LIKE imaa_t.imaa144, #庫存多單位
+       imaa145 LIKE imaa_t.imaa145, #採購計價單位
+       imaa146 LIKE imaa_t.imaa146, #成本單位
+       imaastus LIKE imaa_t.imaastus, #狀態碼
+       imaaownid LIKE imaa_t.imaaownid, #資料所有者
+       imaaowndp LIKE imaa_t.imaaowndp, #資料所屬部門
+       imaacrtid LIKE imaa_t.imaacrtid, #資料建立者
+       imaacrtdp LIKE imaa_t.imaacrtdp, #資料建立部門
+       imaacrtdt LIKE imaa_t.imaacrtdt, #資料創建日
+       imaamodid LIKE imaa_t.imaamodid, #資料修改者
+       imaamoddt LIKE imaa_t.imaamoddt, #最近修改日
+       imaacnfid LIKE imaa_t.imaacnfid, #資料確認者
+       imaacnfdt LIKE imaa_t.imaacnfdt, #資料確認日
+       #161109-00085#65 --s add
+       imaaud001 LIKE imaa_t.imaaud001, #自定義欄位(文字)001
+       imaaud002 LIKE imaa_t.imaaud002, #自定義欄位(文字)002
+       imaaud003 LIKE imaa_t.imaaud003, #自定義欄位(文字)003
+       imaaud004 LIKE imaa_t.imaaud004, #自定義欄位(文字)004
+       imaaud005 LIKE imaa_t.imaaud005, #自定義欄位(文字)005
+       imaaud006 LIKE imaa_t.imaaud006, #自定義欄位(文字)006
+       imaaud007 LIKE imaa_t.imaaud007, #自定義欄位(文字)007
+       imaaud008 LIKE imaa_t.imaaud008, #自定義欄位(文字)008
+       imaaud009 LIKE imaa_t.imaaud009, #自定義欄位(文字)009
+       imaaud010 LIKE imaa_t.imaaud010, #自定義欄位(文字)010
+       imaaud011 LIKE imaa_t.imaaud011, #自定義欄位(數字)011
+       imaaud012 LIKE imaa_t.imaaud012, #自定義欄位(數字)012
+       imaaud013 LIKE imaa_t.imaaud013, #自定義欄位(數字)013
+       imaaud014 LIKE imaa_t.imaaud014, #自定義欄位(數字)014
+       imaaud015 LIKE imaa_t.imaaud015, #自定義欄位(數字)015
+       imaaud016 LIKE imaa_t.imaaud016, #自定義欄位(數字)016
+       imaaud017 LIKE imaa_t.imaaud017, #自定義欄位(數字)017
+       imaaud018 LIKE imaa_t.imaaud018, #自定義欄位(數字)018
+       imaaud019 LIKE imaa_t.imaaud019, #自定義欄位(數字)019
+       imaaud020 LIKE imaa_t.imaaud020, #自定義欄位(數字)020
+       imaaud021 LIKE imaa_t.imaaud021, #自定義欄位(日期時間)021
+       imaaud022 LIKE imaa_t.imaaud022, #自定義欄位(日期時間)022
+       imaaud023 LIKE imaa_t.imaaud023, #自定義欄位(日期時間)023
+       imaaud024 LIKE imaa_t.imaaud024, #自定義欄位(日期時間)024
+       imaaud025 LIKE imaa_t.imaaud025, #自定義欄位(日期時間)025
+       imaaud026 LIKE imaa_t.imaaud026, #自定義欄位(日期時間)026
+       imaaud027 LIKE imaa_t.imaaud027, #自定義欄位(日期時間)027
+       imaaud028 LIKE imaa_t.imaaud028, #自定義欄位(日期時間)028
+       imaaud029 LIKE imaa_t.imaaud029, #自定義欄位(日期時間)029
+       imaaud030 LIKE imaa_t.imaaud030, #自定義欄位(日期時間)030
+       #161109-00085#65 --e add
+       imaa147 LIKE imaa_t.imaa147, #預設商品臨期比例
+       imaa148 LIKE imaa_t.imaa148, #商品臨期天數
+       imaa149 LIKE imaa_t.imaa149, #臨期控管方式
+       imaa150 LIKE imaa_t.imaa150, #輔材
+       imaa151 LIKE imaa_t.imaa151, #等級
+       imaa152 LIKE imaa_t.imaa152, #顏色
+       imaa153 LIKE imaa_t.imaa153, #型號
+       imaa154 LIKE imaa_t.imaa154, #年份
+       imaa155 LIKE imaa_t.imaa155, #訂貨季
+       imaa156 LIKE imaa_t.imaa156, #性別
+       imaa157 LIKE imaa_t.imaa157, #標牌價
+       imaa158 LIKE imaa_t.imaa158, #上市日
+       imaa159 LIKE imaa_t.imaa159, #每m²克重
+       imaa160 LIKE imaa_t.imaa160, #面料幅寬
+       imaa161 LIKE imaa_t.imaa161  #觸屏分類編號
+               END RECORD
+   #mod--161109-00085#7-e
+   #mod--161109-00085#7-s
+   #DEFINE l_imaa_1   RECORD LIKE imaa_t.*   
+   DEFINE l_imaa_1 RECORD  #料件主檔
+       imaaent LIKE imaa_t.imaaent, #企業編號
+       imaa001 LIKE imaa_t.imaa001, #料號
+       imaa002 LIKE imaa_t.imaa002, #目前版本
+       imaa003 LIKE imaa_t.imaa003, #主分群碼
+       imaa004 LIKE imaa_t.imaa004, #料件類別
+       imaa005 LIKE imaa_t.imaa005, #特徵組別
+       imaa006 LIKE imaa_t.imaa006, #基礎單位
+       imaa009 LIKE imaa_t.imaa009, #產品分類
+       imaa010 LIKE imaa_t.imaa010, #生命週期狀態
+       imaa011 LIKE imaa_t.imaa011, #產出類型
+       imaa012 LIKE imaa_t.imaa012, #允許副產品
+       imaa013 LIKE imaa_t.imaa013, #目錄編號
+       imaa014 LIKE imaa_t.imaa014, #產品條碼編號
+       imaa016 LIKE imaa_t.imaa016, #毛重
+       imaa017 LIKE imaa_t.imaa017, #淨重
+       imaa018 LIKE imaa_t.imaa018, #重量單位
+       imaa019 LIKE imaa_t.imaa019, #長度
+       imaa020 LIKE imaa_t.imaa020, #寬度
+       imaa021 LIKE imaa_t.imaa021, #高度
+       imaa022 LIKE imaa_t.imaa022, #長度單位
+       imaa023 LIKE imaa_t.imaa023, #面積
+       imaa024 LIKE imaa_t.imaa024, #面積單位
+       imaa025 LIKE imaa_t.imaa025, #體積
+       imaa026 LIKE imaa_t.imaa026, #體積單位
+       imaa027 LIKE imaa_t.imaa027, #為包裝容器
+       imaa028 LIKE imaa_t.imaa028, #容量
+       imaa029 LIKE imaa_t.imaa029, #容量單位
+       imaa030 LIKE imaa_t.imaa030, #超量容差(%)
+       imaa031 LIKE imaa_t.imaa031, #載重量
+       imaa032 LIKE imaa_t.imaa032, #載重單位
+       imaa033 LIKE imaa_t.imaa033, #超重容差(%)
+       imaa034 LIKE imaa_t.imaa034, #料號來源
+       imaa035 LIKE imaa_t.imaa035, #來源參考料號
+       imaa036 LIKE imaa_t.imaa036, #記錄位置(插件)
+       imaa037 LIKE imaa_t.imaa037, #組裝位置須勾稽
+       imaa038 LIKE imaa_t.imaa038, #工程料件
+       imaa039 LIKE imaa_t.imaa039, #轉正式料號
+       imaa040 LIKE imaa_t.imaa040, #轉正式料號時間
+       imaa041 LIKE imaa_t.imaa041, #工程圖號
+       imaa042 LIKE imaa_t.imaa042, #主要模具編號
+       imaa043 LIKE imaa_t.imaa043, #據點研發可調整元件
+       imaa044 LIKE imaa_t.imaa044, #AVL控管點
+       imaa045 LIKE imaa_t.imaa045, #生產國家地區
+       imaa100 LIKE imaa_t.imaa100, #條碼分類
+       imaa101 LIKE imaa_t.imaa101, #主供應商
+       imaa102 LIKE imaa_t.imaa102, #保質期(月)
+       imaa103 LIKE imaa_t.imaa103, #保質期(天)
+       imaa104 LIKE imaa_t.imaa104, #庫存單位
+       imaa105 LIKE imaa_t.imaa105, #銷售單位
+       imaa106 LIKE imaa_t.imaa106, #銷售計價單位
+       imaa107 LIKE imaa_t.imaa107, #採購單位
+       imaa108 LIKE imaa_t.imaa108, #商品種類
+       imaa109 LIKE imaa_t.imaa109, #條碼類型
+       imaa110 LIKE imaa_t.imaa110, #季節性商品
+       imaa111 LIKE imaa_t.imaa111, #開始日期
+       imaa112 LIKE imaa_t.imaa112, #結束日期
+       imaa113 LIKE imaa_t.imaa113, #傳秤因子
+       imaa114 LIKE imaa_t.imaa114, #計價幣別
+       imaa115 LIKE imaa_t.imaa115, #預計進貨價格
+       imaa116 LIKE imaa_t.imaa116, #預計銷貨價格
+       imaa117 LIKE imaa_t.imaa117, #進銷差率
+       imaa118 LIKE imaa_t.imaa118, #試銷期(天)
+       imaa119 LIKE imaa_t.imaa119, #試銷金額
+       imaa120 LIKE imaa_t.imaa120, #試銷數量
+       imaa121 LIKE imaa_t.imaa121, #是否網路經營
+       imaa122 LIKE imaa_t.imaa122, #產地分類
+       imaa123 LIKE imaa_t.imaa123, #產地說明
+       imaa124 LIKE imaa_t.imaa124, #進銷項稅別
+       imaa125 LIKE imaa_t.imaa125, #一次性商品
+       imaa126 LIKE imaa_t.imaa126, #品牌
+       imaa127 LIKE imaa_t.imaa127, #系列
+       imaa128 LIKE imaa_t.imaa128, #型別
+       imaa129 LIKE imaa_t.imaa129, #功能
+       imaa130 LIKE imaa_t.imaa130, #主材
+       imaa131 LIKE imaa_t.imaa131, #價格帶
+       imaa132 LIKE imaa_t.imaa132, #其他屬性一
+       imaa133 LIKE imaa_t.imaa133, #其他屬性二
+       imaa134 LIKE imaa_t.imaa134, #其他屬性三
+       imaa135 LIKE imaa_t.imaa135, #其他屬性四
+       imaa136 LIKE imaa_t.imaa136, #其他屬性五
+       imaa137 LIKE imaa_t.imaa137, #其他屬性六
+       imaa138 LIKE imaa_t.imaa138, #其他屬性七
+       imaa139 LIKE imaa_t.imaa139, #其他屬性八
+       imaa140 LIKE imaa_t.imaa140, #其他屬性九
+       imaa141 LIKE imaa_t.imaa141, #其他屬性十
+       imaa142 LIKE imaa_t.imaa142, #制定組織
+       imaa143 LIKE imaa_t.imaa143, #產品組編號
+       imaa144 LIKE imaa_t.imaa144, #庫存多單位
+       imaa145 LIKE imaa_t.imaa145, #採購計價單位
+       imaa146 LIKE imaa_t.imaa146, #成本單位
+       imaastus LIKE imaa_t.imaastus, #狀態碼
+       imaaownid LIKE imaa_t.imaaownid, #資料所有者
+       imaaowndp LIKE imaa_t.imaaowndp, #資料所屬部門
+       imaacrtid LIKE imaa_t.imaacrtid, #資料建立者
+       imaacrtdp LIKE imaa_t.imaacrtdp, #資料建立部門
+       imaacrtdt LIKE imaa_t.imaacrtdt, #資料創建日
+       imaamodid LIKE imaa_t.imaamodid, #資料修改者
+       imaamoddt LIKE imaa_t.imaamoddt, #最近修改日
+       imaacnfid LIKE imaa_t.imaacnfid, #資料確認者
+       imaacnfdt LIKE imaa_t.imaacnfdt, #資料確認日
+       #161109-00085#65 --s add
+       imaaud001 LIKE imaa_t.imaaud001, #自定義欄位(文字)001
+       imaaud002 LIKE imaa_t.imaaud002, #自定義欄位(文字)002
+       imaaud003 LIKE imaa_t.imaaud003, #自定義欄位(文字)003
+       imaaud004 LIKE imaa_t.imaaud004, #自定義欄位(文字)004
+       imaaud005 LIKE imaa_t.imaaud005, #自定義欄位(文字)005
+       imaaud006 LIKE imaa_t.imaaud006, #自定義欄位(文字)006
+       imaaud007 LIKE imaa_t.imaaud007, #自定義欄位(文字)007
+       imaaud008 LIKE imaa_t.imaaud008, #自定義欄位(文字)008
+       imaaud009 LIKE imaa_t.imaaud009, #自定義欄位(文字)009
+       imaaud010 LIKE imaa_t.imaaud010, #自定義欄位(文字)010
+       imaaud011 LIKE imaa_t.imaaud011, #自定義欄位(數字)011
+       imaaud012 LIKE imaa_t.imaaud012, #自定義欄位(數字)012
+       imaaud013 LIKE imaa_t.imaaud013, #自定義欄位(數字)013
+       imaaud014 LIKE imaa_t.imaaud014, #自定義欄位(數字)014
+       imaaud015 LIKE imaa_t.imaaud015, #自定義欄位(數字)015
+       imaaud016 LIKE imaa_t.imaaud016, #自定義欄位(數字)016
+       imaaud017 LIKE imaa_t.imaaud017, #自定義欄位(數字)017
+       imaaud018 LIKE imaa_t.imaaud018, #自定義欄位(數字)018
+       imaaud019 LIKE imaa_t.imaaud019, #自定義欄位(數字)019
+       imaaud020 LIKE imaa_t.imaaud020, #自定義欄位(數字)020
+       imaaud021 LIKE imaa_t.imaaud021, #自定義欄位(日期時間)021
+       imaaud022 LIKE imaa_t.imaaud022, #自定義欄位(日期時間)022
+       imaaud023 LIKE imaa_t.imaaud023, #自定義欄位(日期時間)023
+       imaaud024 LIKE imaa_t.imaaud024, #自定義欄位(日期時間)024
+       imaaud025 LIKE imaa_t.imaaud025, #自定義欄位(日期時間)025
+       imaaud026 LIKE imaa_t.imaaud026, #自定義欄位(日期時間)026
+       imaaud027 LIKE imaa_t.imaaud027, #自定義欄位(日期時間)027
+       imaaud028 LIKE imaa_t.imaaud028, #自定義欄位(日期時間)028
+       imaaud029 LIKE imaa_t.imaaud029, #自定義欄位(日期時間)029
+       imaaud030 LIKE imaa_t.imaaud030, #自定義欄位(日期時間)030
+       #161109-00085#65 --e add
+       imaa147 LIKE imaa_t.imaa147, #預設商品臨期比例
+       imaa148 LIKE imaa_t.imaa148, #商品臨期天數
+       imaa149 LIKE imaa_t.imaa149, #臨期控管方式
+       imaa150 LIKE imaa_t.imaa150, #輔材
+       imaa151 LIKE imaa_t.imaa151, #等級
+       imaa152 LIKE imaa_t.imaa152, #顏色
+       imaa153 LIKE imaa_t.imaa153, #型號
+       imaa154 LIKE imaa_t.imaa154, #年份
+       imaa155 LIKE imaa_t.imaa155, #訂貨季
+       imaa156 LIKE imaa_t.imaa156, #性別
+       imaa157 LIKE imaa_t.imaa157, #標牌價
+       imaa158 LIKE imaa_t.imaa158, #上市日
+       imaa159 LIKE imaa_t.imaa159, #每m²克重
+       imaa160 LIKE imaa_t.imaa160, #面料幅寬
+       imaa161 LIKE imaa_t.imaa161  #觸屏分類編號
+               END RECORD
+   #mod--161109-00085#7-e
+DEFINE l_xmam004 LIKE xmam_t.xmam004
+DEFINE l_imaa016 LIKE imaa_t.imaa016
+DEFINE l_xmemseq LIKE xmem_t.xmemseq
+DEFINE l_xmem004 LIKE xmem_t.xmem004
+   #mod--161109-00085#7-s
+   #DEFINE l_xmam     RECORD LIKE xmam_t.*   
+   DEFINE l_xmam RECORD  #包裝方式檔
+       xmament LIKE xmam_t.xmament, #企業編號
+       xmam001 LIKE xmam_t.xmam001, #包裝方式
+       xmam003 LIKE xmam_t.xmam003, #包裝規格
+       xmam004 LIKE xmam_t.xmam004, #包裝容器
+       xmam005 LIKE xmam_t.xmam005, #長面個數
+       xmam006 LIKE xmam_t.xmam006, #寬面個數
+       xmam007 LIKE xmam_t.xmam007, #高面個數
+       xmam008 LIKE xmam_t.xmam008, #總包裝數
+       xmam009 LIKE xmam_t.xmam009, #包裝單位
+       xmam010 LIKE xmam_t.xmam010, #包裝容器長度
+       xmam011 LIKE xmam_t.xmam011, #包裝容器寬度
+       xmam012 LIKE xmam_t.xmam012, #包裝容器高度
+       xmam013 LIKE xmam_t.xmam013, #總體積
+       xmam014 LIKE xmam_t.xmam014, #長度單位
+       xmam015 LIKE xmam_t.xmam015, #包裝容器重量
+       xmam016 LIKE xmam_t.xmam016, #重量單位
+       xmam017 LIKE xmam_t.xmam017, #是否有內包裝
+       xmam018 LIKE xmam_t.xmam018, #內包裝方式
+       xmam019 LIKE xmam_t.xmam019, #體積單位
+       xmamownid LIKE xmam_t.xmamownid, #資料所有者
+       xmamowndp LIKE xmam_t.xmamowndp, #資料所屬部門
+       xmamcrtid LIKE xmam_t.xmamcrtid, #資料建立者
+       xmamcrtdp LIKE xmam_t.xmamcrtdp, #資料建立部門
+       xmamcrtdt LIKE xmam_t.xmamcrtdt, #資料創建日
+       xmammodid LIKE xmam_t.xmammodid, #資料修改者
+       xmammoddt LIKE xmam_t.xmammoddt, #最近修改日
+      #xmamstus LIKE xmam_t.xmamstus  #狀態碼 #161109-00085#65 mark
+       #161109-00085#65 --s add
+       xmamstus LIKE xmam_t.xmamstus, #狀態碼
+       xmamud001 LIKE xmam_t.xmamud001, #自定義欄位(文字)001
+       xmamud002 LIKE xmam_t.xmamud002, #自定義欄位(文字)002
+       xmamud003 LIKE xmam_t.xmamud003, #自定義欄位(文字)003
+       xmamud004 LIKE xmam_t.xmamud004, #自定義欄位(文字)004
+       xmamud005 LIKE xmam_t.xmamud005, #自定義欄位(文字)005
+       xmamud006 LIKE xmam_t.xmamud006, #自定義欄位(文字)006
+       xmamud007 LIKE xmam_t.xmamud007, #自定義欄位(文字)007
+       xmamud008 LIKE xmam_t.xmamud008, #自定義欄位(文字)008
+       xmamud009 LIKE xmam_t.xmamud009, #自定義欄位(文字)009
+       xmamud010 LIKE xmam_t.xmamud010, #自定義欄位(文字)010
+       xmamud011 LIKE xmam_t.xmamud011, #自定義欄位(數字)011
+       xmamud012 LIKE xmam_t.xmamud012, #自定義欄位(數字)012
+       xmamud013 LIKE xmam_t.xmamud013, #自定義欄位(數字)013
+       xmamud014 LIKE xmam_t.xmamud014, #自定義欄位(數字)014
+       xmamud015 LIKE xmam_t.xmamud015, #自定義欄位(數字)015
+       xmamud016 LIKE xmam_t.xmamud016, #自定義欄位(數字)016
+       xmamud017 LIKE xmam_t.xmamud017, #自定義欄位(數字)017
+       xmamud018 LIKE xmam_t.xmamud018, #自定義欄位(數字)018
+       xmamud019 LIKE xmam_t.xmamud019, #自定義欄位(數字)019
+       xmamud020 LIKE xmam_t.xmamud020, #自定義欄位(數字)020
+       xmamud021 LIKE xmam_t.xmamud021, #自定義欄位(日期時間)021
+       xmamud022 LIKE xmam_t.xmamud022, #自定義欄位(日期時間)022
+       xmamud023 LIKE xmam_t.xmamud023, #自定義欄位(日期時間)023
+       xmamud024 LIKE xmam_t.xmamud024, #自定義欄位(日期時間)024
+       xmamud025 LIKE xmam_t.xmamud025, #自定義欄位(日期時間)025
+       xmamud026 LIKE xmam_t.xmamud026, #自定義欄位(日期時間)026
+       xmamud027 LIKE xmam_t.xmamud027, #自定義欄位(日期時間)027
+       xmamud028 LIKE xmam_t.xmamud028, #自定義欄位(日期時間)028
+       xmamud029 LIKE xmam_t.xmamud029, #自定義欄位(日期時間)029
+       xmamud030 LIKE xmam_t.xmamud030  #自定義欄位(日期時間)030
+       #161109-00085#65 --e add
+                 END RECORD
+   #mod--161109-00085#7-e
+   LET l_cnt1 = 1
+   CALL g_xmem_d.clear()
+#   SELECT MAX(xmemseq) INTO l_xmemseq FROM xmem_t WHERE xmement = g_enterprise    #2015/09/08 by stellar mark
+   SELECT MAX(xmemseq)+1 INTO l_xmemseq FROM xmem_t WHERE xmement = g_enterprise   #2015/09/08 by stellar add
+      AND xmemdocno = g_xmel.xmeldocno
+   IF cl_null(l_xmemseq) THEN LET l_xmemseq = 1 END IF
+   
+   CALL cl_err_collect_init()    #160908-00016#1 add
+   FOR l_i = 1 TO g_rec_b
+      #160908-00016#1 --- add start ---
+      IF g_xmem2_d[l_i].xmdh016 = 0 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = '' 
+         LET g_errparam.code = 'axc-00530'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+      END IF
+      #160908-00016#1 --- add end   ---
+#      SELECT MAX(xmem004) INTO l_xmem004 FROM xmem_t WHERE xmement = g_enterprise    #2015/09/08 by stellar mark
+      SELECT MAX(xmem004)+1 INTO l_xmem004 FROM xmem_t WHERE xmement = g_enterprise   #2015/09/08 by stellar add
+         AND xmemdocno = g_xmel.xmeldocno
+      IF cl_null(l_xmem004) THEN LET l_xmem004 = 1 END IF
+      IF g_xmem2_d[l_i].sel1 = 'Y' AND g_xmem2_d[l_i].full_num != 0 THEN
+         INITIALIZE l_imaa.* TO NULL
+         INITIALIZE l_imaa_1.* TO NULL
+         #mod--161109-00085#7-s         
+         #SELECT * INTO l_imaa.* FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem2_d[l_i].imaa001
+         SELECT imaaent,imaa001,imaa002,imaa003,imaa004,
+                imaa005,imaa006,imaa009,imaa010,imaa011,
+                imaa012,imaa013,imaa014,imaa016,imaa017,
+                imaa018,imaa019,imaa020,imaa021,imaa022,
+                imaa023,imaa024,imaa025,imaa026,imaa027,
+                imaa028,imaa029,imaa030,imaa031,imaa032,
+                imaa033,imaa034,imaa035,imaa036,imaa037,
+                imaa038,imaa039,imaa040,imaa041,imaa042,
+                imaa043,imaa044,imaa045,imaa100,imaa101,
+                imaa102,imaa103,imaa104,imaa105,imaa106,
+                imaa107,imaa108,imaa109,imaa110,imaa111,
+                imaa112,imaa113,imaa114,imaa115,imaa116,
+                imaa117,imaa118,imaa119,imaa120,imaa121,
+                imaa122,imaa123,imaa124,imaa125,imaa126,
+                imaa127,imaa128,imaa129,imaa130,imaa131,
+                imaa132,imaa133,imaa134,imaa135,imaa136,
+                imaa137,imaa138,imaa139,imaa140,imaa141,
+                imaa142,imaa143,imaa144,imaa145,imaa146,
+                imaastus,imaaownid,imaaowndp,imaacrtid,imaacrtdp,
+                imaacrtdt,imaamodid,imaamoddt,imaacnfid,imaacnfdt,
+                #161109-00085#65 --s add
+                imaaud001,imaaud002,imaaud003,imaaud004,imaaud005,
+                imaaud006,imaaud007,imaaud008,imaaud009,imaaud010,
+                imaaud011,imaaud012,imaaud013,imaaud014,imaaud015,
+                imaaud016,imaaud017,imaaud018,imaaud019,imaaud020,
+                imaaud021,imaaud022,imaaud023,imaaud024,imaaud025,
+                imaaud026,imaaud027,imaaud028,imaaud029,imaaud030,
+                #161109-00085#65 --e add
+                imaa147,imaa148,imaa149,imaa150,imaa151,
+                imaa152,imaa153,imaa154,imaa155,imaa156,
+                imaa157,imaa158,imaa159,imaa160,imaa161
+         INTO l_imaa.imaaent,l_imaa.imaa001,l_imaa.imaa002,l_imaa.imaa003,l_imaa.imaa004,
+              l_imaa.imaa005,l_imaa.imaa006,l_imaa.imaa009,l_imaa.imaa010,l_imaa.imaa011,
+              l_imaa.imaa012,l_imaa.imaa013,l_imaa.imaa014,l_imaa.imaa016,l_imaa.imaa017,
+              l_imaa.imaa018,l_imaa.imaa019,l_imaa.imaa020,l_imaa.imaa021,l_imaa.imaa022,
+              l_imaa.imaa023,l_imaa.imaa024,l_imaa.imaa025,l_imaa.imaa026,l_imaa.imaa027,
+              l_imaa.imaa028,l_imaa.imaa029,l_imaa.imaa030,l_imaa.imaa031,l_imaa.imaa032,
+              l_imaa.imaa033,l_imaa.imaa034,l_imaa.imaa035,l_imaa.imaa036,l_imaa.imaa037,
+              l_imaa.imaa038,l_imaa.imaa039,l_imaa.imaa040,l_imaa.imaa041,l_imaa.imaa042,
+              l_imaa.imaa043,l_imaa.imaa044,l_imaa.imaa045,l_imaa.imaa100,l_imaa.imaa101,
+              l_imaa.imaa102,l_imaa.imaa103,l_imaa.imaa104,l_imaa.imaa105,l_imaa.imaa106,
+              l_imaa.imaa107,l_imaa.imaa108,l_imaa.imaa109,l_imaa.imaa110,l_imaa.imaa111,
+              l_imaa.imaa112,l_imaa.imaa113,l_imaa.imaa114,l_imaa.imaa115,l_imaa.imaa116,
+              l_imaa.imaa117,l_imaa.imaa118,l_imaa.imaa119,l_imaa.imaa120,l_imaa.imaa121,
+              l_imaa.imaa122,l_imaa.imaa123,l_imaa.imaa124,l_imaa.imaa125,l_imaa.imaa126,
+              l_imaa.imaa127,l_imaa.imaa128,l_imaa.imaa129,l_imaa.imaa130,l_imaa.imaa131,
+              l_imaa.imaa132,l_imaa.imaa133,l_imaa.imaa134,l_imaa.imaa135,l_imaa.imaa136,
+              l_imaa.imaa137,l_imaa.imaa138,l_imaa.imaa139,l_imaa.imaa140,l_imaa.imaa141,
+              l_imaa.imaa142,l_imaa.imaa143,l_imaa.imaa144,l_imaa.imaa145,l_imaa.imaa146,
+              l_imaa.imaastus,l_imaa.imaaownid,l_imaa.imaaowndp,l_imaa.imaacrtid,l_imaa.imaacrtdp,
+              l_imaa.imaacrtdt,l_imaa.imaamodid,l_imaa.imaamoddt,l_imaa.imaacnfid,l_imaa.imaacnfdt,
+              #161109-00085#65 --s add
+              l_imaa.imaaud001,l_imaa.imaaud002,l_imaa.imaaud003,l_imaa.imaaud004,l_imaa.imaaud005,
+              l_imaa.imaaud006,l_imaa.imaaud007,l_imaa.imaaud008,l_imaa.imaaud009,l_imaa.imaaud010,
+              l_imaa.imaaud011,l_imaa.imaaud012,l_imaa.imaaud013,l_imaa.imaaud014,l_imaa.imaaud015,
+              l_imaa.imaaud016,l_imaa.imaaud017,l_imaa.imaaud018,l_imaa.imaaud019,l_imaa.imaaud020,
+              l_imaa.imaaud021,l_imaa.imaaud022,l_imaa.imaaud023,l_imaa.imaaud024,l_imaa.imaaud025,
+              l_imaa.imaaud026,l_imaa.imaaud027,l_imaa.imaaud028,l_imaa.imaaud029,l_imaa.imaaud030,
+              #161109-00085#65 --e add
+              l_imaa.imaa147,l_imaa.imaa148,l_imaa.imaa149,l_imaa.imaa150,l_imaa.imaa151,
+              l_imaa.imaa152,l_imaa.imaa153,l_imaa.imaa154,l_imaa.imaa155,l_imaa.imaa156,
+              l_imaa.imaa157,l_imaa.imaa158,l_imaa.imaa159,l_imaa.imaa160,l_imaa.imaa161
+         FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem2_d[l_i].imaa001
+         #mod--161109-00085#7-e
+         SELECT xmam004 INTO l_xmam004 FROM xmam_t WHERE xmament = g_enterprise AND xmam001 = g_xmem2_d[l_i].xman005
+         #mod--161109-00085#7-s
+         #SELECT * INTO l_imaa_1.* FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = l_xmam004
+         SELECT imaaent,imaa001,imaa002,imaa003,imaa004,
+                imaa005,imaa006,imaa009,imaa010,imaa011,
+                imaa012,imaa013,imaa014,imaa016,imaa017,
+                imaa018,imaa019,imaa020,imaa021,imaa022,
+                imaa023,imaa024,imaa025,imaa026,imaa027,
+                imaa028,imaa029,imaa030,imaa031,imaa032,
+                imaa033,imaa034,imaa035,imaa036,imaa037,
+                imaa038,imaa039,imaa040,imaa041,imaa042,
+                imaa043,imaa044,imaa045,imaa100,imaa101,
+                imaa102,imaa103,imaa104,imaa105,imaa106,
+                imaa107,imaa108,imaa109,imaa110,imaa111,
+                imaa112,imaa113,imaa114,imaa115,imaa116,
+                imaa117,imaa118,imaa119,imaa120,imaa121,
+                imaa122,imaa123,imaa124,imaa125,imaa126,
+                imaa127,imaa128,imaa129,imaa130,imaa131,
+                imaa132,imaa133,imaa134,imaa135,imaa136,
+                imaa137,imaa138,imaa139,imaa140,imaa141,
+                imaa142,imaa143,imaa144,imaa145,imaa146,
+                imaastus,imaaownid,imaaowndp,imaacrtid,imaacrtdp,
+                imaacrtdt,imaamodid,imaamoddt,imaacnfid,imaacnfdt,
+                #161109-00085#65 --s add
+                imaaud001,imaaud002,imaaud003,imaaud004,imaaud005,
+                imaaud006,imaaud007,imaaud008,imaaud009,imaaud010,
+                imaaud011,imaaud012,imaaud013,imaaud014,imaaud015,
+                imaaud016,imaaud017,imaaud018,imaaud019,imaaud020,
+                imaaud021,imaaud022,imaaud023,imaaud024,imaaud025,
+                imaaud026,imaaud027,imaaud028,imaaud029,imaaud030,
+                #161109-00085#65 --e add
+                imaa147,imaa148,imaa149,imaa150,imaa151,
+                imaa152,imaa153,imaa154,imaa155,imaa156,
+                imaa157,imaa158,imaa159,imaa160,imaa161 
+         INTO l_imaa_1.imaaent,l_imaa_1.imaa001,l_imaa_1.imaa002,l_imaa_1.imaa003,l_imaa_1.imaa004,
+              l_imaa_1.imaa005,l_imaa_1.imaa006,l_imaa_1.imaa009,l_imaa_1.imaa010,l_imaa_1.imaa011,
+              l_imaa_1.imaa012,l_imaa_1.imaa013,l_imaa_1.imaa014,l_imaa_1.imaa016,l_imaa_1.imaa017,
+              l_imaa_1.imaa018,l_imaa_1.imaa019,l_imaa_1.imaa020,l_imaa_1.imaa021,l_imaa_1.imaa022,
+              l_imaa_1.imaa023,l_imaa_1.imaa024,l_imaa_1.imaa025,l_imaa_1.imaa026,l_imaa_1.imaa027,
+              l_imaa_1.imaa028,l_imaa_1.imaa029,l_imaa_1.imaa030,l_imaa_1.imaa031,l_imaa_1.imaa032,
+              l_imaa_1.imaa033,l_imaa_1.imaa034,l_imaa_1.imaa035,l_imaa_1.imaa036,l_imaa_1.imaa037,
+              l_imaa_1.imaa038,l_imaa_1.imaa039,l_imaa_1.imaa040,l_imaa_1.imaa041,l_imaa_1.imaa042,
+              l_imaa_1.imaa043,l_imaa_1.imaa044,l_imaa_1.imaa045,l_imaa_1.imaa100,l_imaa_1.imaa101,
+              l_imaa_1.imaa102,l_imaa_1.imaa103,l_imaa_1.imaa104,l_imaa_1.imaa105,l_imaa_1.imaa106,
+              l_imaa_1.imaa107,l_imaa_1.imaa108,l_imaa_1.imaa109,l_imaa_1.imaa110,l_imaa_1.imaa111,
+              l_imaa_1.imaa112,l_imaa_1.imaa113,l_imaa_1.imaa114,l_imaa_1.imaa115,l_imaa_1.imaa116,
+              l_imaa_1.imaa117,l_imaa_1.imaa118,l_imaa_1.imaa119,l_imaa_1.imaa120,l_imaa_1.imaa121,
+              l_imaa_1.imaa122,l_imaa_1.imaa123,l_imaa_1.imaa124,l_imaa_1.imaa125,l_imaa_1.imaa126,
+              l_imaa_1.imaa127,l_imaa_1.imaa128,l_imaa_1.imaa129,l_imaa_1.imaa130,l_imaa_1.imaa131,
+              l_imaa_1.imaa132,l_imaa_1.imaa133,l_imaa_1.imaa134,l_imaa_1.imaa135,l_imaa_1.imaa136,
+              l_imaa_1.imaa137,l_imaa_1.imaa138,l_imaa_1.imaa139,l_imaa_1.imaa140,l_imaa_1.imaa141,
+              l_imaa_1.imaa142,l_imaa_1.imaa143,l_imaa_1.imaa144,l_imaa_1.imaa145,l_imaa_1.imaa146,
+              l_imaa_1.imaastus,l_imaa_1.imaaownid,l_imaa_1.imaaowndp,l_imaa_1.imaacrtid,l_imaa_1.imaacrtdp,
+              l_imaa_1.imaacrtdt,l_imaa_1.imaamodid,l_imaa_1.imaamoddt,l_imaa_1.imaacnfid,l_imaa_1.imaacnfdt,
+              #161109-00085#65 --s add
+              l_imaa_1.imaaud001,l_imaa_1.imaaud002,l_imaa_1.imaaud003,l_imaa_1.imaaud004,l_imaa_1.imaaud005,
+              l_imaa_1.imaaud006,l_imaa_1.imaaud007,l_imaa_1.imaaud008,l_imaa_1.imaaud009,l_imaa_1.imaaud010,
+              l_imaa_1.imaaud011,l_imaa_1.imaaud012,l_imaa_1.imaaud013,l_imaa_1.imaaud014,l_imaa_1.imaaud015,
+              l_imaa_1.imaaud016,l_imaa_1.imaaud017,l_imaa_1.imaaud018,l_imaa_1.imaaud019,l_imaa_1.imaaud020,
+              l_imaa_1.imaaud021,l_imaa_1.imaaud022,l_imaa_1.imaaud023,l_imaa_1.imaaud024,l_imaa_1.imaaud025,
+              l_imaa_1.imaaud026,l_imaa_1.imaaud027,l_imaa_1.imaaud028,l_imaa_1.imaaud029,l_imaa_1.imaaud030,
+              #161109-00085#65 --e add
+              l_imaa_1.imaa147,l_imaa_1.imaa148,l_imaa_1.imaa149,l_imaa_1.imaa150,l_imaa_1.imaa151,
+              l_imaa_1.imaa152,l_imaa_1.imaa153,l_imaa_1.imaa154,l_imaa_1.imaa155,l_imaa_1.imaa156,
+              l_imaa_1.imaa157,l_imaa_1.imaa158,l_imaa_1.imaa159,l_imaa_1.imaa160,l_imaa_1.imaa161  
+         FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = l_xmam004
+         #mod--161109-00085#7-e
+         LET g_xmem_d[l_cnt1].xmemseq = l_xmemseq
+         LET g_xmem_d[l_cnt1].xmem001 = g_xmem2_d[l_i].xmem001
+         LET g_xmem_d[l_cnt1].xmem002 = g_xmem2_d[l_i].xmem002
+         LET g_xmem_d[l_cnt1].xmem003 = g_xmem2_d[l_i].imaa001
+         LET g_xmem_d[l_cnt1].xmem003_desc = g_xmem2_d[l_i].imaal003
+         LET g_xmem_d[l_cnt1].xmem003_desc_desc = g_xmem2_d[l_i].imaal004
+         LET g_xmem_d[l_cnt1].xmem004 = l_xmem004
+         LET g_xmem_d[l_cnt1].xmem005 = g_xmem2_d[l_i].xman005
+         LET g_xmem_d[l_cnt1].xmem005_desc = g_xmem2_d[l_i].xman005_desc   #150910-00007#1 150916 by sakura add
+         LET g_xmem_d[l_cnt1].xmem006 = g_xmem2_d[l_i].every_num
+         LET g_xmem_d[l_cnt1].xmem007 = g_xmem2_d[l_i].full_num
+         LET g_xmem_d[l_cnt1].xmem008 = g_xmem_m.xmem0081
+         LET g_xmem_d[l_cnt1].xmem009 = g_xmem_m.xmem0091
+          # LET g_xmem_d[l_cnt1].xmem010 = g_xmem_m.xmem0101  xujingmark
+         IF l_cnt1 = 1 THEN
+            LET g_xmem_d[l_cnt1].xmem010 = g_xmem_m.xmem0101 
+         ELSE
+            LET g_xmem_d[l_cnt1].xmem010 = g_xmem_d[l_cnt1-1].xmem011 + 1
+         END IF
+         IF g_xmem_d[l_cnt1].xmem007 < 1 THEN
+            LET g_xmem_d[l_cnt1].xmem011 = g_xmem_d[l_cnt1].xmem010
+         ELSE
+            LET g_xmem_d[l_cnt1].xmem011 = g_xmem_d[l_cnt1].xmem010 + g_xmem_d[l_cnt1].xmem007 - 1
+         END IF
+         LET g_xmem_d[l_cnt1].xmem012 = g_xmem2_d[l_i].xmdh016
+#         LET g_xmem_d[l_cnt1].xmem013 = l_imaa.imaa018
+         #add--2015/05/12 By shiun--(S)
+         IF cl_null(l_imaa_1.imaa016) THEN
+            LET l_imaa_1.imaa016 = 0
+         END IF
+         IF cl_null(l_imaa.imaa016) THEN
+            LET l_imaa.imaa016 = 0
+         END IF
+         IF cl_null(l_imaa.imaa017) THEN
+            LET l_imaa.imaa017 = 0
+         END IF
+         #add--2015/05/12 By shiun--(E)
+         #mod--161109-00085#7-s
+         #SELECT * INTO l_xmam.* FROM xmam_t
+         #161109-00085#65 --s mark
+         #SELECT xmament,xmam001,xmam003,xmam004,xmam005,
+         #       xmam006,xmam007,xmam008,xmam009,xmam010,
+         #       xmam011,xmam012,xmam013,xmam014,xmam015,
+         #       xmam016,xmam017,xmam018,xmam019,xmamownid,
+         #       xmamowndp,xmamcrtid,xmamcrtdp,xmamcrtdt,xmammodid,
+         #       xmammoddt,xmamstus 
+         #INTO l_xmam.xmament,l_xmam.xmam001,l_xmam.xmam003,l_xmam.xmam004,l_xmam.xmam005,
+         #     l_xmam.xmam006,l_xmam.xmam007,l_xmam.xmam008,l_xmam.xmam009,l_xmam.xmam010,
+         #     l_xmam.xmam011,l_xmam.xmam012,l_xmam.xmam013,l_xmam.xmam014,l_xmam.xmam015,
+         #     l_xmam.xmam016,l_xmam.xmam017,l_xmam.xmam018,l_xmam.xmam019,l_xmam.xmamownid,
+         #     l_xmam.xmamowndp,l_xmam.xmamcrtid,l_xmam.xmamcrtdp,l_xmam.xmamcrtdt,l_xmam.xmammodid,
+         #     l_xmam.xmammoddt,l_xmam.xmamstus
+         #FROM xmam_t               
+         #161109-00085#65 --e mark
+         #mod--161109-00085#7-e  
+         #161109-00085#65 --s add
+         SELECT xmament,xmam001,xmam003,xmam004,xmam005,
+                xmam006,xmam007,xmam008,xmam009,xmam010,
+                xmam011,xmam012,xmam013,xmam014,xmam015,
+                xmam016,xmam017,xmam018,xmam019,xmamownid,
+                xmamowndp,xmamcrtid,xmamcrtdp,xmamcrtdt,xmammodid,
+                xmammoddt,xmamstus,xmamud001,xmamud002,xmamud003,
+                xmamud004,xmamud005,xmamud006,xmamud007,xmamud008,
+                xmamud009,xmamud010,xmamud011,xmamud012,xmamud013,
+                xmamud014,xmamud015,xmamud016,xmamud017,xmamud018,
+                xmamud019,xmamud020,xmamud021,xmamud022,xmamud023,
+                xmamud024,xmamud025,xmamud026,xmamud027,xmamud028,
+                xmamud029,xmamud030
+           INTO l_xmam.xmament,l_xmam.xmam001,l_xmam.xmam003,l_xmam.xmam004,l_xmam.xmam005,
+                l_xmam.xmam006,l_xmam.xmam007,l_xmam.xmam008,l_xmam.xmam009,l_xmam.xmam010,
+                l_xmam.xmam011,l_xmam.xmam012,l_xmam.xmam013,l_xmam.xmam014,l_xmam.xmam015,
+                l_xmam.xmam016,l_xmam.xmam017,l_xmam.xmam018,l_xmam.xmam019,l_xmam.xmamownid,
+                l_xmam.xmamowndp,l_xmam.xmamcrtid,l_xmam.xmamcrtdp,l_xmam.xmamcrtdt,l_xmam.xmammodid,
+                l_xmam.xmammoddt,l_xmam.xmamstus,l_xmam.xmamud001,l_xmam.xmamud002,l_xmam.xmamud003,
+                l_xmam.xmamud004,l_xmam.xmamud005,l_xmam.xmamud006,l_xmam.xmamud007,l_xmam.xmamud008,
+                l_xmam.xmamud009,l_xmam.xmamud010,l_xmam.xmamud011,l_xmam.xmamud012,l_xmam.xmamud013,
+                l_xmam.xmamud014,l_xmam.xmamud015,l_xmam.xmamud016,l_xmam.xmamud017,l_xmam.xmamud018,
+                l_xmam.xmamud019,l_xmam.xmamud020,l_xmam.xmamud021,l_xmam.xmamud022,l_xmam.xmamud023,
+                l_xmam.xmamud024,l_xmam.xmamud025,l_xmam.xmamud026,l_xmam.xmamud027,l_xmam.xmamud028,
+                l_xmam.xmamud029,l_xmam.xmamud030
+           FROM xmam_t
+         #161109-00085#65 --e add         
+         WHERE xmament = g_enterprise AND xmam001 = g_xmem2_d[l_i].xman005
+#160810-00019#1-s mark還原
+         IF cl_null(l_xmam.xmam016) THEN
+            SELECT imaa018 INTO l_xmam.xmam016 FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem_d[l_cnt1].xmem003
+         END IF
+#160810-00019#1-e mark還原
+         IF cl_null(l_xmam.xmam013) THEN
+            SELECT imaa025 INTO l_xmam.xmam013 FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem_d[l_cnt1].xmem003
+         END IF
+         IF g_xmel.xmel011 = '1' THEN           #150610 add
+            LET g_xmem_d[l_cnt1].xmem013 = 'KG'
+         ELSE
+            LET g_xmem_d[l_cnt1].xmem013 = 'PON'
+         END IF
+#         LET g_xmem_d[l_ac].xmem006 = l_xmam.xmam008
+         #150617 by whitney add start
+         IF cl_null(l_imaa.imaa018) THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'axm-00689'
+            LET g_errparam.replace[1] = g_xmem2_d[l_i].imaa001
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+         ELSE
+         #150617 by whitney add end
+            CALL s_aooi250_convert_qty1(g_xmem_d[l_cnt1].xmem003,l_imaa.imaa018,g_xmem_d[l_cnt1].xmem013,l_imaa.imaa016) 
+                 RETURNING g_success,l_imaa.imaa016
+         END IF  #150617 by whitney add
+         IF g_success THEN
+            LET g_xmem_d[l_cnt1].xmem014 = g_xmem_d[l_cnt1].xmem006 * l_imaa.imaa016 #l_imaa.imaa017  150610
+            CALL s_aooi250_convert_qty1(g_xmem_d[l_cnt1].xmem003,l_xmam.xmam016,g_xmem_d[l_cnt1].xmem013,l_xmam.xmam015) 
+               RETURNING g_success,l_xmam.xmam015
+            IF g_success THEN
+               LET g_xmem_d[l_cnt1].xmem016 = g_xmem_d[l_cnt1].xmem014 + l_xmam.xmam015
+            END IF
+         END IF
+         
+#        LET g_xmem_d[l_cnt1].xmem016 = g_xmem_d[l_cnt1].xmem006 * (l_imaa_1.imaa016 + l_imaa.imaa016)
+         
+
+         
+#        LET g_xmem_d[l_cnt1].xmem013 = l_xmam.xmam016   150610 mark
+         IF cl_null(l_xmam.xmam013) THEN
+            LET l_xmam.xmam013 = 0
+         END IF
+         IF g_xmel.xmel012 = '2' THEN
+            LET g_xmem_d[l_cnt1].xmem018 = l_xmam.xmam013 * 0.0000353
+         ELSE
+            LET g_xmem_d[l_cnt1].xmem018 = l_xmam.xmam013 * 0.0000353 / 35.315
+         END IF
+         IF NOT cl_null(g_xmem_d[l_cnt1].xmem007) THEN
+            IF NOT cl_null(g_xmem_d[l_cnt1].xmem014) THEN
+               LET g_xmem_d[l_cnt1].xmem015 = g_xmem_d[l_cnt1].xmem014 * g_xmem_d[l_cnt1].xmem007
+            END IF
+            IF NOT cl_null(g_xmem_d[l_cnt1].xmem016) THEN
+               LET g_xmem_d[l_cnt1].xmem017 = g_xmem_d[l_cnt1].xmem016 * g_xmem_d[l_cnt1].xmem007
+            END IF 
+            IF NOT cl_null(g_xmem_d[l_cnt1].xmem018) THEN
+               LET g_xmem_d[l_cnt1].xmem019 = g_xmem_d[l_cnt1].xmem018 * g_xmem_d[l_cnt1].xmem007
+            END IF 
+            
+            IF NOT cl_null(g_xmem_d[l_cnt1].xmem006) THEN
+               LET g_xmem_d[l_cnt1].xmem012 = g_xmem_d[l_cnt1].xmem006 * g_xmem_d[l_cnt1].xmem007
+            END IF
+         END IF      
+         
+         LET l_cnt1 = l_cnt1 + 1
+         LET l_xmem004 = l_xmem004 + 1
+         LET l_xmemseq = l_xmemseq + 1
+      END IF
+      
+      IF g_xmem2_d[l_i].sel2 = 'Y' AND g_xmem2_d[l_i].unfull_num != 0 THEN
+         INITIALIZE l_imaa.* TO NULL
+         INITIALIZE l_imaa_1.* TO NULL
+         #mod--161109-00085#7-s         
+         #SELECT * INTO l_imaa.* FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem2_d[l_i].imaa001
+         SELECT imaaent,imaa001,imaa002,imaa003,imaa004,
+                imaa005,imaa006,imaa009,imaa010,imaa011,
+                imaa012,imaa013,imaa014,imaa016,imaa017,
+                imaa018,imaa019,imaa020,imaa021,imaa022,
+                imaa023,imaa024,imaa025,imaa026,imaa027,
+                imaa028,imaa029,imaa030,imaa031,imaa032,
+                imaa033,imaa034,imaa035,imaa036,imaa037,
+                imaa038,imaa039,imaa040,imaa041,imaa042,
+                imaa043,imaa044,imaa045,imaa100,imaa101,
+                imaa102,imaa103,imaa104,imaa105,imaa106,
+                imaa107,imaa108,imaa109,imaa110,imaa111,
+                imaa112,imaa113,imaa114,imaa115,imaa116,
+                imaa117,imaa118,imaa119,imaa120,imaa121,
+                imaa122,imaa123,imaa124,imaa125,imaa126,
+                imaa127,imaa128,imaa129,imaa130,imaa131,
+                imaa132,imaa133,imaa134,imaa135,imaa136,
+                imaa137,imaa138,imaa139,imaa140,imaa141,
+                imaa142,imaa143,imaa144,imaa145,imaa146,
+                imaastus,imaaownid,imaaowndp,imaacrtid,imaacrtdp,
+                imaacrtdt,imaamodid,imaamoddt,imaacnfid,imaacnfdt,
+                #161109-00085#65 --s add
+                imaaud001,imaaud002,imaaud003,imaaud004,imaaud005,
+                imaaud006,imaaud007,imaaud008,imaaud009,imaaud010,
+                imaaud011,imaaud012,imaaud013,imaaud014,imaaud015,
+                imaaud016,imaaud017,imaaud018,imaaud019,imaaud020,
+                imaaud021,imaaud022,imaaud023,imaaud024,imaaud025,
+                imaaud026,imaaud027,imaaud028,imaaud029,imaaud030,
+                #161109-00085#65 --e add
+                imaa147,imaa148,imaa149,imaa150,imaa151,
+                imaa152,imaa153,imaa154,imaa155,imaa156,
+                imaa157,imaa158,imaa159,imaa160,imaa161
+         INTO l_imaa.imaaent,l_imaa.imaa001,l_imaa.imaa002,l_imaa.imaa003,l_imaa.imaa004,
+              l_imaa.imaa005,l_imaa.imaa006,l_imaa.imaa009,l_imaa.imaa010,l_imaa.imaa011,
+              l_imaa.imaa012,l_imaa.imaa013,l_imaa.imaa014,l_imaa.imaa016,l_imaa.imaa017,
+              l_imaa.imaa018,l_imaa.imaa019,l_imaa.imaa020,l_imaa.imaa021,l_imaa.imaa022,
+              l_imaa.imaa023,l_imaa.imaa024,l_imaa.imaa025,l_imaa.imaa026,l_imaa.imaa027,
+              l_imaa.imaa028,l_imaa.imaa029,l_imaa.imaa030,l_imaa.imaa031,l_imaa.imaa032,
+              l_imaa.imaa033,l_imaa.imaa034,l_imaa.imaa035,l_imaa.imaa036,l_imaa.imaa037,
+              l_imaa.imaa038,l_imaa.imaa039,l_imaa.imaa040,l_imaa.imaa041,l_imaa.imaa042,
+              l_imaa.imaa043,l_imaa.imaa044,l_imaa.imaa045,l_imaa.imaa100,l_imaa.imaa101,
+              l_imaa.imaa102,l_imaa.imaa103,l_imaa.imaa104,l_imaa.imaa105,l_imaa.imaa106,
+              l_imaa.imaa107,l_imaa.imaa108,l_imaa.imaa109,l_imaa.imaa110,l_imaa.imaa111,
+              l_imaa.imaa112,l_imaa.imaa113,l_imaa.imaa114,l_imaa.imaa115,l_imaa.imaa116,
+              l_imaa.imaa117,l_imaa.imaa118,l_imaa.imaa119,l_imaa.imaa120,l_imaa.imaa121,
+              l_imaa.imaa122,l_imaa.imaa123,l_imaa.imaa124,l_imaa.imaa125,l_imaa.imaa126,
+              l_imaa.imaa127,l_imaa.imaa128,l_imaa.imaa129,l_imaa.imaa130,l_imaa.imaa131,
+              l_imaa.imaa132,l_imaa.imaa133,l_imaa.imaa134,l_imaa.imaa135,l_imaa.imaa136,
+              l_imaa.imaa137,l_imaa.imaa138,l_imaa.imaa139,l_imaa.imaa140,l_imaa.imaa141,
+              l_imaa.imaa142,l_imaa.imaa143,l_imaa.imaa144,l_imaa.imaa145,l_imaa.imaa146,
+              l_imaa.imaastus,l_imaa.imaaownid,l_imaa.imaaowndp,l_imaa.imaacrtid,l_imaa.imaacrtdp,
+              l_imaa.imaacrtdt,l_imaa.imaamodid,l_imaa.imaamoddt,l_imaa.imaacnfid,l_imaa.imaacnfdt,
+              #161109-00085#65 --s add
+              l_imaa_1.imaaud001,l_imaa_1.imaaud002,l_imaa_1.imaaud003,l_imaa_1.imaaud004,l_imaa_1.imaaud005,
+              l_imaa_1.imaaud006,l_imaa_1.imaaud007,l_imaa_1.imaaud008,l_imaa_1.imaaud009,l_imaa_1.imaaud010,
+              l_imaa_1.imaaud011,l_imaa_1.imaaud012,l_imaa_1.imaaud013,l_imaa_1.imaaud014,l_imaa_1.imaaud015,
+              l_imaa_1.imaaud016,l_imaa_1.imaaud017,l_imaa_1.imaaud018,l_imaa_1.imaaud019,l_imaa_1.imaaud020,
+              l_imaa_1.imaaud021,l_imaa_1.imaaud022,l_imaa_1.imaaud023,l_imaa_1.imaaud024,l_imaa_1.imaaud025,
+              l_imaa_1.imaaud026,l_imaa_1.imaaud027,l_imaa_1.imaaud028,l_imaa_1.imaaud029,l_imaa_1.imaaud030,
+              #161109-00085#65 --e add
+              l_imaa.imaa147,l_imaa.imaa148,l_imaa.imaa149,l_imaa.imaa150,l_imaa.imaa151,
+              l_imaa.imaa152,l_imaa.imaa153,l_imaa.imaa154,l_imaa.imaa155,l_imaa.imaa156,
+              l_imaa.imaa157,l_imaa.imaa158,l_imaa.imaa159,l_imaa.imaa160,l_imaa.imaa161
+         FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem2_d[l_i].imaa001
+         #mod--161109-00085#7-e         
+         SELECT xmam004 INTO l_xmam004 FROM xmam_t WHERE xmament = g_enterprise AND xmam001 = g_xmem2_d[l_i].xman005
+         #mod--161109-00085#7-s
+         #SELECT * INTO l_imaa_1.* FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = l_xmam004
+         SELECT imaaent,imaa001,imaa002,imaa003,imaa004,
+                imaa005,imaa006,imaa009,imaa010,imaa011,
+                imaa012,imaa013,imaa014,imaa016,imaa017,
+                imaa018,imaa019,imaa020,imaa021,imaa022,
+                imaa023,imaa024,imaa025,imaa026,imaa027,
+                imaa028,imaa029,imaa030,imaa031,imaa032,
+                imaa033,imaa034,imaa035,imaa036,imaa037,
+                imaa038,imaa039,imaa040,imaa041,imaa042,
+                imaa043,imaa044,imaa045,imaa100,imaa101,
+                imaa102,imaa103,imaa104,imaa105,imaa106,
+                imaa107,imaa108,imaa109,imaa110,imaa111,
+                imaa112,imaa113,imaa114,imaa115,imaa116,
+                imaa117,imaa118,imaa119,imaa120,imaa121,
+                imaa122,imaa123,imaa124,imaa125,imaa126,
+                imaa127,imaa128,imaa129,imaa130,imaa131,
+                imaa132,imaa133,imaa134,imaa135,imaa136,
+                imaa137,imaa138,imaa139,imaa140,imaa141,
+                imaa142,imaa143,imaa144,imaa145,imaa146,
+                imaastus,imaaownid,imaaowndp,imaacrtid,imaacrtdp,
+                imaacrtdt,imaamodid,imaamoddt,imaacnfid,imaacnfdt,
+                #161109-00085#65 --s add
+                imaaud001,imaaud002,imaaud003,imaaud004,imaaud005,
+                imaaud006,imaaud007,imaaud008,imaaud009,imaaud010,
+                imaaud011,imaaud012,imaaud013,imaaud014,imaaud015,
+                imaaud016,imaaud017,imaaud018,imaaud019,imaaud020,
+                imaaud021,imaaud022,imaaud023,imaaud024,imaaud025,
+                imaaud026,imaaud027,imaaud028,imaaud029,imaaud030,
+                #161109-00085#65 --e add
+                imaa147,imaa148,imaa149,imaa150,imaa151,
+                imaa152,imaa153,imaa154,imaa155,imaa156,
+                imaa157,imaa158,imaa159,imaa160,imaa161 
+         INTO l_imaa_1.imaaent,l_imaa_1.imaa001,l_imaa_1.imaa002,l_imaa_1.imaa003,l_imaa_1.imaa004,
+              l_imaa_1.imaa005,l_imaa_1.imaa006,l_imaa_1.imaa009,l_imaa_1.imaa010,l_imaa_1.imaa011,
+              l_imaa_1.imaa012,l_imaa_1.imaa013,l_imaa_1.imaa014,l_imaa_1.imaa016,l_imaa_1.imaa017,
+              l_imaa_1.imaa018,l_imaa_1.imaa019,l_imaa_1.imaa020,l_imaa_1.imaa021,l_imaa_1.imaa022,
+              l_imaa_1.imaa023,l_imaa_1.imaa024,l_imaa_1.imaa025,l_imaa_1.imaa026,l_imaa_1.imaa027,
+              l_imaa_1.imaa028,l_imaa_1.imaa029,l_imaa_1.imaa030,l_imaa_1.imaa031,l_imaa_1.imaa032,
+              l_imaa_1.imaa033,l_imaa_1.imaa034,l_imaa_1.imaa035,l_imaa_1.imaa036,l_imaa_1.imaa037,
+              l_imaa_1.imaa038,l_imaa_1.imaa039,l_imaa_1.imaa040,l_imaa_1.imaa041,l_imaa_1.imaa042,
+              l_imaa_1.imaa043,l_imaa_1.imaa044,l_imaa_1.imaa045,l_imaa_1.imaa100,l_imaa_1.imaa101,
+              l_imaa_1.imaa102,l_imaa_1.imaa103,l_imaa_1.imaa104,l_imaa_1.imaa105,l_imaa_1.imaa106,
+              l_imaa_1.imaa107,l_imaa_1.imaa108,l_imaa_1.imaa109,l_imaa_1.imaa110,l_imaa_1.imaa111,
+              l_imaa_1.imaa112,l_imaa_1.imaa113,l_imaa_1.imaa114,l_imaa_1.imaa115,l_imaa_1.imaa116,
+              l_imaa_1.imaa117,l_imaa_1.imaa118,l_imaa_1.imaa119,l_imaa_1.imaa120,l_imaa_1.imaa121,
+              l_imaa_1.imaa122,l_imaa_1.imaa123,l_imaa_1.imaa124,l_imaa_1.imaa125,l_imaa_1.imaa126,
+              l_imaa_1.imaa127,l_imaa_1.imaa128,l_imaa_1.imaa129,l_imaa_1.imaa130,l_imaa_1.imaa131,
+              l_imaa_1.imaa132,l_imaa_1.imaa133,l_imaa_1.imaa134,l_imaa_1.imaa135,l_imaa_1.imaa136,
+              l_imaa_1.imaa137,l_imaa_1.imaa138,l_imaa_1.imaa139,l_imaa_1.imaa140,l_imaa_1.imaa141,
+              l_imaa_1.imaa142,l_imaa_1.imaa143,l_imaa_1.imaa144,l_imaa_1.imaa145,l_imaa_1.imaa146,
+              l_imaa_1.imaastus,l_imaa_1.imaaownid,l_imaa_1.imaaowndp,l_imaa_1.imaacrtid,l_imaa_1.imaacrtdp,
+              l_imaa_1.imaacrtdt,l_imaa_1.imaamodid,l_imaa_1.imaamoddt,l_imaa_1.imaacnfid,l_imaa_1.imaacnfdt,
+              #161109-00085#65 --s add
+              l_imaa_1.imaaud001,l_imaa_1.imaaud002,l_imaa_1.imaaud003,l_imaa_1.imaaud004,l_imaa_1.imaaud005,
+              l_imaa_1.imaaud006,l_imaa_1.imaaud007,l_imaa_1.imaaud008,l_imaa_1.imaaud009,l_imaa_1.imaaud010,
+              l_imaa_1.imaaud011,l_imaa_1.imaaud012,l_imaa_1.imaaud013,l_imaa_1.imaaud014,l_imaa_1.imaaud015,
+              l_imaa_1.imaaud016,l_imaa_1.imaaud017,l_imaa_1.imaaud018,l_imaa_1.imaaud019,l_imaa_1.imaaud020,
+              l_imaa_1.imaaud021,l_imaa_1.imaaud022,l_imaa_1.imaaud023,l_imaa_1.imaaud024,l_imaa_1.imaaud025,
+              l_imaa_1.imaaud026,l_imaa_1.imaaud027,l_imaa_1.imaaud028,l_imaa_1.imaaud029,l_imaa_1.imaaud030,
+              #161109-00085#65 --e add
+              l_imaa_1.imaa147,l_imaa_1.imaa148,l_imaa_1.imaa149,l_imaa_1.imaa150,l_imaa_1.imaa151,
+              l_imaa_1.imaa152,l_imaa_1.imaa153,l_imaa_1.imaa154,l_imaa_1.imaa155,l_imaa_1.imaa156,
+              l_imaa_1.imaa157,l_imaa_1.imaa158,l_imaa_1.imaa159,l_imaa_1.imaa160,l_imaa_1.imaa161  
+         FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = l_xmam004
+         #mod--161109-00085#7-e
+         LET g_xmem_d[l_cnt1].xmemseq = l_xmemseq
+         LET g_xmem_d[l_cnt1].xmem001 = g_xmem2_d[l_i].xmem001
+         LET g_xmem_d[l_cnt1].xmem002 = g_xmem2_d[l_i].xmem002
+         LET g_xmem_d[l_cnt1].xmem003 = g_xmem2_d[l_i].imaa001
+         LET g_xmem_d[l_cnt1].xmem003_desc = g_xmem2_d[l_i].imaal003
+         LET g_xmem_d[l_cnt1].xmem003_desc_desc = g_xmem2_d[l_i].imaal004
+         LET g_xmem_d[l_cnt1].xmem004 = l_xmem004
+         LET g_xmem_d[l_cnt1].xmem005 = g_xmem2_d[l_i].xman005
+         LET g_xmem_d[l_cnt1].xmem005_desc = g_xmem2_d[l_i].xman005_desc   #150910-00007#1 150916 by sakura add   
+         #2015/09/08 by stellar modify ----- (S)
+         #修改：每箱裝數=上單身的每箱裝數
+         #修改：箱數無條件進位
+#         LET g_xmem_d[l_cnt1].xmem006 = g_xmem2_d[l_i].unfull_num
+#         LET g_xmem_d[l_cnt1].xmem007 = g_xmem2_d[l_i].space
+         LET g_xmem_d[l_cnt1].xmem006 = g_xmem2_d[l_i].every_num
+         CALL s_num_round('4',g_xmem2_d[l_i].space,0)
+              RETURNING g_xmem_d[l_cnt1].xmem007
+         #2015/09/08 by stellar modify ----- (S)
+         LET g_xmem_d[l_cnt1].xmem008 = g_xmem_m.xmem0081
+         LET g_xmem_d[l_cnt1].xmem009 = g_xmem_m.xmem0091
+          # LET g_xmem_d[l_cnt1].xmem010 = g_xmem_m.xmem0101  xujingmark
+         IF l_cnt1 = 1 THEN
+            LET g_xmem_d[l_cnt1].xmem010 = g_xmem_m.xmem0101 
+         ELSE
+            LET g_xmem_d[l_cnt1].xmem010 = g_xmem_d[l_cnt1-1].xmem011 + 1
+         END IF
+         IF g_xmem_d[l_cnt1].xmem007 < 1 THEN
+            LET g_xmem_d[l_cnt1].xmem011 = g_xmem_d[l_cnt1].xmem010
+         ELSE
+            LET g_xmem_d[l_cnt1].xmem011 = g_xmem_d[l_cnt1].xmem010 + g_xmem_d[l_cnt1].xmem007 - 1
+         END IF
+         LET g_xmem_d[l_cnt1].xmem012 = g_xmem2_d[l_i].xmdh016
+#         LET g_xmem_d[l_cnt1].xmem013 = l_imaa.imaa018
+         #add--2015/05/12 By shiun--(S)
+         IF cl_null(l_imaa_1.imaa016) THEN
+            LET l_imaa_1.imaa016 = 0
+         END IF
+         IF cl_null(l_imaa.imaa016) THEN
+            LET l_imaa.imaa016 = 0
+         END IF
+         IF cl_null(l_imaa.imaa017) THEN
+            LET l_imaa.imaa017 = 0
+         END IF
+         #add--2015/05/12 By shiun--(E)
+         #mod--161109-00085#7-s
+         #SELECT * INTO l_xmam.* FROM xmam_t
+         #161109-00085#65 --s mark
+         #SELECT xmament,xmam001,xmam003,xmam004,xmam005,
+         #       xmam006,xmam007,xmam008,xmam009,xmam010,
+         #       xmam011,xmam012,xmam013,xmam014,xmam015,
+         #       xmam016,xmam017,xmam018,xmam019,xmamownid,
+         #       xmamowndp,xmamcrtid,xmamcrtdp,xmamcrtdt,xmammodid,
+         #       xmammoddt,xmamstus 
+         #INTO l_xmam.xmament,l_xmam.xmam001,l_xmam.xmam003,l_xmam.xmam004,l_xmam.xmam005,
+         #     l_xmam.xmam006,l_xmam.xmam007,l_xmam.xmam008,l_xmam.xmam009,l_xmam.xmam010,
+         #     l_xmam.xmam011,l_xmam.xmam012,l_xmam.xmam013,l_xmam.xmam014,l_xmam.xmam015,
+         #     l_xmam.xmam016,l_xmam.xmam017,l_xmam.xmam018,l_xmam.xmam019,l_xmam.xmamownid,
+         #     l_xmam.xmamowndp,l_xmam.xmamcrtid,l_xmam.xmamcrtdp,l_xmam.xmamcrtdt,l_xmam.xmammodid,
+         #     l_xmam.xmammoddt,l_xmam.xmamstus
+         #FROM xmam_t 
+         #161109-00085#65 --e mark
+         #161109-00085#65 --s add
+         SELECT xmament,xmam001,xmam003,xmam004,xmam005,
+                xmam006,xmam007,xmam008,xmam009,xmam010,
+                xmam011,xmam012,xmam013,xmam014,xmam015,
+                xmam016,xmam017,xmam018,xmam019,xmamownid,
+                xmamowndp,xmamcrtid,xmamcrtdp,xmamcrtdt,xmammodid,
+                xmammoddt,xmamstus,xmamud001,xmamud002,xmamud003,
+                xmamud004,xmamud005,xmamud006,xmamud007,xmamud008,
+                xmamud009,xmamud010,xmamud011,xmamud012,xmamud013,
+                xmamud014,xmamud015,xmamud016,xmamud017,xmamud018,
+                xmamud019,xmamud020,xmamud021,xmamud022,xmamud023,
+                xmamud024,xmamud025,xmamud026,xmamud027,xmamud028,
+                xmamud029,xmamud030
+           INTO l_xmam.xmament,l_xmam.xmam001,l_xmam.xmam003,l_xmam.xmam004,l_xmam.xmam005,
+                l_xmam.xmam006,l_xmam.xmam007,l_xmam.xmam008,l_xmam.xmam009,l_xmam.xmam010,
+                l_xmam.xmam011,l_xmam.xmam012,l_xmam.xmam013,l_xmam.xmam014,l_xmam.xmam015,
+                l_xmam.xmam016,l_xmam.xmam017,l_xmam.xmam018,l_xmam.xmam019,l_xmam.xmamownid,
+                l_xmam.xmamowndp,l_xmam.xmamcrtid,l_xmam.xmamcrtdp,l_xmam.xmamcrtdt,l_xmam.xmammodid,
+                l_xmam.xmammoddt,l_xmam.xmamstus,l_xmam.xmamud001,l_xmam.xmamud002,l_xmam.xmamud003,
+                l_xmam.xmamud004,l_xmam.xmamud005,l_xmam.xmamud006,l_xmam.xmamud007,l_xmam.xmamud008,
+                l_xmam.xmamud009,l_xmam.xmamud010,l_xmam.xmamud011,l_xmam.xmamud012,l_xmam.xmamud013,
+                l_xmam.xmamud014,l_xmam.xmamud015,l_xmam.xmamud016,l_xmam.xmamud017,l_xmam.xmamud018,
+                l_xmam.xmamud019,l_xmam.xmamud020,l_xmam.xmamud021,l_xmam.xmamud022,l_xmam.xmamud023,
+                l_xmam.xmamud024,l_xmam.xmamud025,l_xmam.xmamud026,l_xmam.xmamud027,l_xmam.xmamud028,
+                l_xmam.xmamud029,l_xmam.xmamud030
+           FROM xmam_t
+         #161109-00085#65 --e add                
+         #mod--161109-00085#7-e         
+          WHERE xmament = g_enterprise AND xmam001 = g_xmem2_d[l_i].xman005
+#        IF cl_null(l_xmam.xmam016) THEN
+#           SELECT imaa018 INTO l_xmam.xmam016 FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem_d[l_cnt1].xmem003
+#        END IF
+         IF cl_null(l_xmam.xmam013) THEN
+            SELECT imaa025 INTO l_xmam.xmam013 FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem_d[l_cnt1].xmem003
+         END IF
+         IF g_xmel.xmel011 = '1' THEN           #150610 add
+            LET g_xmem_d[l_cnt1].xmem013 = 'KG'
+         ELSE
+            LET g_xmem_d[l_cnt1].xmem013 = 'PON'
+         END IF
+#         LET g_xmem_d[l_ac].xmem006 = l_xmam.xmam008 
+         #150617 by whitney add start
+         IF cl_null(l_imaa.imaa018) THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'axm-00689'
+            LET g_errparam.replace[1] = g_xmem2_d[l_i].imaa001
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+         ELSE
+         #150617 by whitney add end
+            CALL s_aooi250_convert_qty1(g_xmem_d[l_cnt1].xmem003,l_imaa.imaa018,g_xmem_d[l_cnt1].xmem013,l_imaa.imaa016) 
+                 RETURNING g_success,l_imaa.imaa016
+         END IF  #150617 by whitney add
+         IF g_success THEN
+            LET g_xmem_d[l_cnt1].xmem014 = g_xmem_d[l_cnt1].xmem006 * l_imaa.imaa016 #l_imaa.imaa017  150610
+            CALL s_aooi250_convert_qty1(g_xmem_d[l_cnt1].xmem003,l_xmam.xmam016,g_xmem_d[l_cnt1].xmem013,l_xmam.xmam015) 
+               RETURNING g_success,l_xmam.xmam015
+            IF g_success THEN
+               LET g_xmem_d[l_cnt1].xmem016 = g_xmem_d[l_cnt1].xmem014 + l_xmam.xmam015
+            END IF
+         END IF
+         
+#        LET g_xmem_d[l_cnt1].xmem016 = g_xmem_d[l_cnt1].xmem006 * (l_imaa_1.imaa016 + l_imaa.imaa016)
+         
+
+         
+#        LET g_xmem_d[l_cnt1].xmem013 = l_xmam.xmam016   150610 mark
+         #add--2015/05/12 By shiun--(S)
+         IF cl_null(l_xmam.xmam013) THEN
+            LET l_xmam.xmam013 = 0
+         END IF
+         #add--2015/05/12 By shiun--(E)
+         IF g_xmel.xmel012 = '2' THEN
+            LET g_xmem_d[l_cnt1].xmem018 = l_xmam.xmam013 * 0.0000353
+         ELSE
+            LET g_xmem_d[l_cnt1].xmem018 = l_xmam.xmam013 * 0.0000353 / 35.315
+         END IF
+         IF NOT cl_null(g_xmem_d[l_cnt1].xmem007) THEN
+            IF NOT cl_null(g_xmem_d[l_cnt1].xmem014) THEN
+               LET g_xmem_d[l_cnt1].xmem015 = g_xmem_d[l_cnt1].xmem014 * g_xmem_d[l_cnt1].xmem007
+            END IF
+            IF NOT cl_null(g_xmem_d[l_cnt1].xmem016) THEN
+               LET g_xmem_d[l_cnt1].xmem017 = g_xmem_d[l_cnt1].xmem016 * g_xmem_d[l_cnt1].xmem007
+            END IF 
+            IF NOT cl_null(g_xmem_d[l_cnt1].xmem018) THEN
+               LET g_xmem_d[l_cnt1].xmem019 = g_xmem_d[l_cnt1].xmem018 * g_xmem_d[l_cnt1].xmem007
+            END IF 
+            
+            IF NOT cl_null(g_xmem_d[l_cnt1].xmem006) THEN
+               #2015/09/08 by stellar modify ----- (S)
+               #修改：數量=餘數
+#               LET g_xmem_d[l_cnt1].xmem012 = g_xmem_d[l_cnt1].xmem006 * g_xmem_d[l_cnt1].xmem007
+               LET g_xmem_d[l_cnt1].xmem012 = g_xmem2_d[l_i].unfull_num
+               #2015/09/08 by stellar modify ----- (E)
+            END IF
+         END IF      
+         
+         LET l_cnt1 = l_cnt1 + 1
+         LET l_xmem004 = l_xmem004 + 1
+         LET l_xmemseq = l_xmemseq + 1
+      END IF
+   END FOR
+   LET g_rec_b2 = l_cnt1 - 1
+   CALL cl_err_collect_show()    #160908-00016#1 add
+#   CALL g_xmem_d.deleteElement(g_xmem_d.getLength())  
+#   DISPLAY ARRAY g_xmem_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b2)
+#      BEFORE DISPLAY 
+#         EXIT DISPLAY
+#   END DISPLAY
+END FUNCTION
+
+PRIVATE FUNCTION axmt610_01_ins_xmem()
+DEFINE l_i LIKE type_t.num10    #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+#mod--161109-00085#7-s
+#DEFINE l_xmem     RECORD LIKE xmem_t.*
+DEFINE l_xmem RECORD  #包裝單明細檔
+       xmement LIKE xmem_t.xmement, #企業編號
+       xmemsite LIKE xmem_t.xmemsite, #營運據點
+       xmemdocno LIKE xmem_t.xmemdocno, #包裝單號
+       xmemseq LIKE xmem_t.xmemseq, #項次
+       xmem001 LIKE xmem_t.xmem001, #來源單號
+       xmem002 LIKE xmem_t.xmem002, #來源項次
+       xmem003 LIKE xmem_t.xmem003, #料件編號
+       xmem004 LIKE xmem_t.xmem004, #包裝序
+       xmem005 LIKE xmem_t.xmem005, #包裝方式
+       xmem006 LIKE xmem_t.xmem006, #每箱裝數
+       xmem007 LIKE xmem_t.xmem007, #箱數
+       xmem008 LIKE xmem_t.xmem008, #字軌
+       xmem009 LIKE xmem_t.xmem009, #棧板號
+       xmem010 LIKE xmem_t.xmem010, #起始包裝箱號
+       xmem011 LIKE xmem_t.xmem011, #截止包裝箱號
+       xmem012 LIKE xmem_t.xmem012, #數量
+       xmem013 LIKE xmem_t.xmem013, #重量單位
+       xmem014 LIKE xmem_t.xmem014, #單位淨重
+       xmem015 LIKE xmem_t.xmem015, #總淨重
+       xmem016 LIKE xmem_t.xmem016, #單位毛重
+       xmem017 LIKE xmem_t.xmem017, #總毛重
+       xmem018 LIKE xmem_t.xmem018, #單位材積
+       xmem019 LIKE xmem_t.xmem019, #總材積
+       xmemud001 LIKE xmem_t.xmemud001, #自定義欄位(文字)001
+       xmemud002 LIKE xmem_t.xmemud002, #自定義欄位(文字)002
+       xmemud003 LIKE xmem_t.xmemud003, #自定義欄位(文字)003
+       xmemud004 LIKE xmem_t.xmemud004, #自定義欄位(文字)004
+       xmemud005 LIKE xmem_t.xmemud005, #自定義欄位(文字)005
+       xmemud006 LIKE xmem_t.xmemud006, #自定義欄位(文字)006
+       xmemud007 LIKE xmem_t.xmemud007, #自定義欄位(文字)007
+       xmemud008 LIKE xmem_t.xmemud008, #自定義欄位(文字)008
+       xmemud009 LIKE xmem_t.xmemud009, #自定義欄位(文字)009
+       xmemud010 LIKE xmem_t.xmemud010, #自定義欄位(文字)010
+       xmemud011 LIKE xmem_t.xmemud011, #自定義欄位(數字)011
+       xmemud012 LIKE xmem_t.xmemud012, #自定義欄位(數字)012
+       xmemud013 LIKE xmem_t.xmemud013, #自定義欄位(數字)013
+       xmemud014 LIKE xmem_t.xmemud014, #自定義欄位(數字)014
+       xmemud015 LIKE xmem_t.xmemud015, #自定義欄位(數字)015
+       xmemud016 LIKE xmem_t.xmemud016, #自定義欄位(數字)016
+       xmemud017 LIKE xmem_t.xmemud017, #自定義欄位(數字)017
+       xmemud018 LIKE xmem_t.xmemud018, #自定義欄位(數字)018
+       xmemud019 LIKE xmem_t.xmemud019, #自定義欄位(數字)019
+       xmemud020 LIKE xmem_t.xmemud020, #自定義欄位(數字)020
+       xmemud021 LIKE xmem_t.xmemud021, #自定義欄位(日期時間)021
+       xmemud022 LIKE xmem_t.xmemud022, #自定義欄位(日期時間)022
+       xmemud023 LIKE xmem_t.xmemud023, #自定義欄位(日期時間)023
+       xmemud024 LIKE xmem_t.xmemud024, #自定義欄位(日期時間)024
+       xmemud025 LIKE xmem_t.xmemud025, #自定義欄位(日期時間)025
+       xmemud026 LIKE xmem_t.xmemud026, #自定義欄位(日期時間)026
+       xmemud027 LIKE xmem_t.xmemud027, #自定義欄位(日期時間)027
+       xmemud028 LIKE xmem_t.xmemud028, #自定義欄位(日期時間)028
+       xmemud029 LIKE xmem_t.xmemud029, #自定義欄位(日期時間)029
+       xmemud030 LIKE xmem_t.xmemud030 #自定義欄位(日期時間)030
+END RECORD
+#mod--161109-00085#7-e
+
+   WHENEVER ERROR CONTINUE
+   
+   FOR l_i =1 TO g_rec_b2
+      LET l_xmem.xmement = g_enterprise
+      LET l_xmem.xmemsite = g_site         #160913-00029#1
+      LET l_xmem.xmemdocno = g_xmel.xmeldocno
+      LET l_xmem.xmemseq = g_xmem_d[l_i].xmemseq
+      LET l_xmem.xmem001 = g_xmem_d[l_i].xmem001
+      LET l_xmem.xmem002 = g_xmem_d[l_i].xmem002
+      LET l_xmem.xmem003 = g_xmem_d[l_i].xmem003
+      LET l_xmem.xmem004 = g_xmem_d[l_i].xmem004
+      LET l_xmem.xmem005 = g_xmem_d[l_i].xmem005
+      LET l_xmem.xmem006 = g_xmem_d[l_i].xmem006
+      LET l_xmem.xmem007 = g_xmem_d[l_i].xmem007
+      LET l_xmem.xmem008 = g_xmem_d[l_i].xmem008
+      LET l_xmem.xmem009 = g_xmem_d[l_i].xmem009
+      LET l_xmem.xmem010 = g_xmem_d[l_i].xmem010
+      LET l_xmem.xmem011 = g_xmem_d[l_i].xmem011
+      LET l_xmem.xmem012 = g_xmem_d[l_i].xmem012
+      LET l_xmem.xmem013 = g_xmem_d[l_i].xmem013
+      LET l_xmem.xmem014 = g_xmem_d[l_i].xmem014
+      LET l_xmem.xmem015 = g_xmem_d[l_i].xmem015
+      LET l_xmem.xmem016 = g_xmem_d[l_i].xmem016
+      LET l_xmem.xmem017 = g_xmem_d[l_i].xmem017
+      LET l_xmem.xmem018 = g_xmem_d[l_i].xmem018
+      LET l_xmem.xmem019 = g_xmem_d[l_i].xmem019
+      #mod--161109-00085#7-s
+      #INSERT INTO xmem_t VALUES (l_xmem.*)
+      INSERT INTO xmem_t
+#161129-00056#1-s add
+             (xmement,xmemsite,xmemdocno,xmemseq,
+              xmem001,xmem002,xmem003,xmem004,xmem005,
+              xmem006,xmem007,xmem008,xmem009,xmem010,
+              xmem011,xmem012,xmem013,xmem014,xmem015,
+              xmem016,xmem017,xmem018,xmem019,
+              xmemud001,xmemud002,xmemud003,xmemud004,xmemud005,
+              xmemud006,xmemud007,xmemud008,xmemud009,xmemud010,
+              xmemud011,xmemud012,xmemud013,xmemud014,xmemud015,
+              xmemud016,xmemud017,xmemud018,xmemud019,xmemud020,
+              xmemud021,xmemud022,xmemud023,xmemud024,xmemud025,
+              xmemud026,xmemud027,xmemud028,xmemud029,xmemud030)
+#161129-00056#1-e add
+      VALUES (l_xmem.xmement,l_xmem.xmemsite,l_xmem.xmemdocno,l_xmem.xmemseq,
+              l_xmem.xmem001,l_xmem.xmem002,l_xmem.xmem003,l_xmem.xmem004,l_xmem.xmem005,
+              l_xmem.xmem006,l_xmem.xmem007,l_xmem.xmem008,l_xmem.xmem009,l_xmem.xmem010,
+              l_xmem.xmem011,l_xmem.xmem012,l_xmem.xmem013,l_xmem.xmem014,l_xmem.xmem015,
+              l_xmem.xmem016,l_xmem.xmem017,l_xmem.xmem018,l_xmem.xmem019,
+#161129-00056#1-s add
+              l_xmem.xmemud001,l_xmem.xmemud002,l_xmem.xmemud003,l_xmem.xmemud004,l_xmem.xmemud005,
+              l_xmem.xmemud006,l_xmem.xmemud007,l_xmem.xmemud008,l_xmem.xmemud009,l_xmem.xmemud010,
+              l_xmem.xmemud011,l_xmem.xmemud012,l_xmem.xmemud013,l_xmem.xmemud014,l_xmem.xmemud015,
+              l_xmem.xmemud016,l_xmem.xmemud017,l_xmem.xmemud018,l_xmem.xmemud019,l_xmem.xmemud020,
+              l_xmem.xmemud021,l_xmem.xmemud022,l_xmem.xmemud023,l_xmem.xmemud024,l_xmem.xmemud025,
+              l_xmem.xmemud026,l_xmem.xmemud027,l_xmem.xmemud028,l_xmem.xmemud029,l_xmem.xmemud030)
+#161129-00056#1-e add
+      #mod--161109-00085#7-e
+      IF SQLCA.SQLCODE THEN
+         RETURN FALSE
+      END IF
+   END FOR
+   
+   RETURN TRUE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 包裝方式說明欄位
+# Memo...........:
+# Usage..........: CALL axmt610_01_xman005_desc(p_xman005,p_ac)
+# Input parameter: p_xman005   包裝方式
+#                : p_ac        項次
+# Return code....: 無
+# Date & Author..: 2015/09/16 By  sakura
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmt610_01_xman005_desc(p_xman005,p_ac)
+DEFINE p_xman005   LIKE xman_t.xman005
+DEFINE p_ac        LIKE type_t.num10     #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_xman005
+   CALL ap_ref_array2(g_ref_fields,"SELECT xmaml003 FROM xmaml_t WHERE xmamlent='"||g_enterprise||"' AND xmaml001=? AND xmaml002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xmem2_d[p_ac].xman005_desc = '', g_rtn_fields[1] , ''
+END FUNCTION
+
+################################################################################
+# Descriptions...: 包裝方式說明欄位
+# Memo...........:
+# Usage..........: CALL axmt610_01_xmem005_desc()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2015/09/16 By  sakura
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmt610_01_xmem005_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xmem_d[l_ac2].xmem005
+   CALL ap_ref_array2(g_ref_fields,"SELECT xmaml003 FROM xmaml_t WHERE xmamlent='"||g_enterprise||"' AND xmaml001=? AND xmaml002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xmem_d[l_ac2].xmem005_desc = '', g_rtn_fields[1] , ''
+   DISPLAY g_xmem_d[l_ac2].xmem005_desc
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢查多角流程編號是否相同
+# Memo...........:
+# Usage..........: CALL axmt610_01_aic_chk(p_xmdh051)
+#                  RETURNING r_success
+# Input parameter: p_xmdh051      多角流程編號
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2017/02/17 By dorislai (#170216-00017#1)
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmt610_01_aic_chk(p_xmdh051)
+   DEFINE  p_xmdh051    LIKE   xmdh_t.xmdh051
+   DEFINE  r_success    LIKE   type_t.num5
+   DEFINE  l_xmel015    LIKE   xmel_t.xmel015
+   LET r_success = TRUE
+   
+   #出通單、出貨單才檢查
+   IF g_xmel.xmel004 NOT MATCHES "[12]" THEN
+      RETURN r_success
+   END IF
+   
+   #g_sel_cnt=0，表示一筆都沒勾選，清空變數-多角流程編號
+   IF g_sel_cnt = 0 THEN
+      LET g_aic = ''
+   END IF
+   IF g_aic IS NULL THEN
+      IF p_xmdh051 IS NULL THEN
+         LET g_aic = ' '
+      ELSE
+         LET g_aic = p_xmdh051
+      END IF
+   END IF
+   
+   #勾選第一筆資料的多角流程編號<>現在勾選那一筆的多角流程編號
+   IF (g_aic <> p_xmdh051) OR (cl_null(g_aic) <> cl_null(p_xmdh051)) THEN
+      LET l_xmel015 = p_xmdh051
+      LET r_success = FALSE
+   END IF
+   #現在勾選那一筆的多角流程編號，要等於 單頭的多角流程編號
+   IF r_success AND p_xmdh051 <> g_xmel.xmel015 AND NOT cl_null(g_xmel.xmel015) THEN
+      LET l_xmel015 = g_xmel.xmel015
+      LET r_success = FALSE
+   END IF
+   
+   IF NOT r_success THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = ''
+      LET g_errparam.code = 'axm-00807' #此張單的多角流程編號：%1，與其他筆資料的多角流程編號：%2 不相符！
+      LET g_errparam.replace[1] = l_xmel015
+      LET g_errparam.replace[2] = g_aic
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+      RETURN r_success
+   END IF
+   
+
+   LET g_sel_cnt = g_sel_cnt + 1
+   RETURN r_success
+END FUNCTION
+
+ 
+{</section>}
+ 

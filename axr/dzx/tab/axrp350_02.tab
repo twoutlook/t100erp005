@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrp350_02" module="axr" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="02114" crtdt="2014-02-17 09:24:53" modid="02114" moddt="2014-02-17 11:21:50" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="發票預覽">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xrcadocno(chr20),isafcomp,isaf002,isaf002_desc(chr500),isafdocno,isaf014,isaf010,isaf011,isaf103,isaf104,isaf105"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axrp350_02" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="xrcadocno,isafcomp,isaf002,isafdocno,isaf014,isaf010,isaf011,isaf103,isaf104,isaf105" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="xrcadocno,isafcomp,isaf002,isafdocno,isaf014,isaf010,isaf011,isaf103,isaf104,isaf105"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="xrcadocno"/>
+      <column id="isafcomp"/>
+      <column id="isaf002">
+        <after/>
+      </column>
+      <column id="isaf002_desc"/>
+      <column id="isafdocno">
+        <after>
+          <check chkid="v_ooba002" id="isExist"/>
+        </after>
+        <controlp form="q_ooba002" state="i"/>
+        <controlp form="q_isafdocno" state="c"/>
+      </column>
+      <column id="isaf014"/>
+      <column id="isaf010"/>
+      <column id="isaf011"/>
+      <column id="isaf103"/>
+      <column id="isaf104"/>
+      <column id="isaf105"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="isaf_t" page="1" linked="" pk="isafcomp,isafdocno">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,isafcomp,isaf002,&apos;&apos;,isafdocno,isaf014,isaf010,isaf011,isaf103,isaf104,isaf105 FROM isaf_t WHERE isafent=? AND isafcomp=? AND isafdocno=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,isafcomp,isaf002,&apos;&apos;,isafdocno,isaf014,isaf010,isaf011,isaf103,isaf104,isaf105 FROM isaf_t WHERE isafent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,1347 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="azzp193.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0012(1900-01-01 00:00:00), PR版次:0012(2016-11-02 16:49:38)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000073
+#+ Filename...: azzp193
+#+ Description: 4ad/4tm 檔背景產生作業
+#+ Creator....: 01856(2014-07-16 17:49:20)
+#+ Modifier...: 00000 -SD/PR- 01856
+ 
+{</section>}
+ 
+{<section id="azzp193.global" >}
+#應用 i00 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#160601-00026 #1 2016/06/01 by jrg542 4tm 產生時漏掉部分資料
+#160826-00018 #1 2016/08/26 by jrg542 azzi903 action 功能設定無效 azzp193 就不予產生 action
+#160910-00009 #1 2016/09/12 by jrg542 azzp193 工具優化 修正azzp193 傳入參數 傳入多個語言別，可以一併帶出其他4tm/4ad
+#161003-00001 #1 2016/10/03 by jrg542 修正 adzi140 adzi150 要有設定資料才重產4tm
+#161005-00019 #1 2016/10/05 by jrg542 修正 adzi140 4tm 資料不正確
+#160919-00044 #4 2016/11/12 by jrg542 新增欄位因應 popupmenu / hotkey 的處理
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+IMPORT util
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable)
+DEFINE gc_gzza001    LIKE gzza_t.gzza001
+DEFINE gc_type       LIKE type_t.chr3
+DEFINE gc_lang       LIKE type_t.chr6
+DEFINE gc_prog_type  LIKE type_t.chr1   #程式的種類:主程式M/子程式S
+DEFINE g_count       LIKE type_t.num5   #下拉選單數量管制
+DEFINE g_rec_arr     DYNAMIC ARRAY OF RECORD 
+          g_idx       LIKE type_t.num5,  
+          g_gzzp002   STRING ,
+          g_gzzp003   STRING ,
+          g_gzzs002  STRING
+                     END RECORD  
+DEFINE g_str_lang   STRING  
+DEFINE g_gzzr002_arr DYNAMIC ARRAY OF RECORD 
+           g_gzzr002 LIKE gzzr_t.gzzr002
+                     END RECORD   
+
+DEFINE g_4ad_tag DYNAMIC ARRAY OF RECORD
+         gt_lang   LIKE gzzd_t.gzzd002,
+         g_gzzr002 LIKE gzzr_t.gzzr002,
+         g_gzzq004 LIKE gzzq_t.gzzq004,
+         g_gzzq005 LIKE gzzq_t.gzzq005
+    END RECORD 
+DEFINE gc_gzza003   LIKE gzza_t.gzza003 
+DEFINE g_start_time DATETIME YEAR TO FRACTION(5)
+DEFINE g_end_time   DATETIME YEAR TO FRACTION(5) 
+DEFINE g_chk        LIKE type_t.num5  #for azzp193_trans_r2p 檢查用  
+DEFINE g_cnt_lang   LIKE type_t.num5 
+DEFINE gs_file      STRING                     
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzp193.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define
+   
+   DEFINE lch_channel  base.channel 
+   DEFINE l_token      base.StringTokenizer
+   #end add-point    
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+   
+   LET g_bgjob = "Y"
+   LET gc_prog_type = "Z"      #程式種類初始值
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("azz","")
+   
+   #add-point:作業初始化
+   LET gc_gzza001 = g_argv[1]   #程式代碼
+   LET gc_type = g_argv[2]      #產生種類
+   #LET gc_lang = g_argv[3]      #語言代碼
+   #160910-00009 start
+   LET g_str_lang = g_argv[3]
+   IF g_str_lang.getIndexOf(",",1) THEN
+       #進行token
+      LET l_token = base.StringTokenizer.create(g_str_lang, ",")
+      LET lch_channel = base.Channel.create()
+      LET g_cnt_lang = l_token.countTokens()
+      LET gc_lang = g_str_lang.subString(1,g_str_lang.getIndexOf(",",1)-1)
+      LET g_str_lang = g_str_lang.subString(g_str_lang.getIndexOf(",",1)+1,g_str_lang.getLength())
+   ELSE 
+      #單一語系 
+      LET gc_lang = g_argv[3]
+   END IF
+   #160910-00009 end 
+   #15/04/29 開放adz 模組
+   #IF gc_gzza001[1,3] = "adz" THEN
+   #   DISPLAY "ADZ Module...Leave..."
+   #ELSE
+      #檢查傳入參數資料
+      IF cl_null(gc_gzza001) OR cl_null(gc_lang) OR (gc_type <> "4ad" AND gc_type <> "4tm" ) OR  gc_lang MATCHES "[01-9]" THEN
+         CALL azzp193_msg()
+      ELSE
+         CALL azzp193_init()
+      END IF
+   #END IF
+   #end add-point
+ 
+   #add-point:SQL_define
+
+   #end add-point
+#   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+#   DECLARE azzp193_cl CURSOR FROM g_forupd_sql 
+#   
+#   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+
+      #end add-point
+#   ELSE
+#      #畫面開啟 (identifier)
+#      OPEN WINDOW w_azzp193 WITH FORM cl_ap_formpath("azz",g_code)
+#   
+#      #程式初始化
+#      CALL azzp193_init()
+#   
+#      #瀏覽頁簽資料初始化
+#      CALL cl_ui_init()
+#   
+#      #進入選單 Menu (='N')
+#      CALL azzp193_ui_dialog()
+#   
+#      #畫面關閉
+#      CLOSE WINDOW w_azzp193
+#   END IF
+ 
+   #add-point:作業離開前
+
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+ 
+{</section>}
+ 
+{<section id="azzp193.other_function" readonly="Y" >}
+#add-point:自定義元件(Function)
+
+PRIVATE FUNCTION azzp193_init()
+   #add-point:init段define
+
+   #end add-point
+   DEFINE ls_filepath   STRING
+   DEFINE l_dom         om.DomNode
+   DEFINE li_status     LIKE type_t.num5
+
+   CALL g_rec_arr.clear()
+   CALL g_4ad_tag.clear()
+   CALL g_gzzr002_arr.clear()
+   LET g_chk = FALSE  
+   #產出檔案 (先查路徑+DOM)
+   CALL azzp193_generate_path() RETURNING ls_filepath,l_dom,li_status
+   IF li_status THEN
+      DISPLAY "INFO: 檔案將會產生在:",ls_filepath
+      #產出檔案
+      IF azzp193_writefile(l_dom.toString(),ls_filepath) THEN
+         DISPLAY "INFO: ",gc_type," ok:",gc_lang  #for rebuild 讀取訊息
+      ELSE
+         DISPLAY "檔案產生失敗 ",gc_type," fail:",gc_lang
+      END IF
+   END IF
+   #160910-00009 start
+   #產生其他語系4tm/4ad
+   CALL azzp193_generate_other_file() 
+   #160910-00009 end
+   
+   #add-point:畫面資料初始化
+
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION azzp193_process(ls_js)
+   DEFINE ls_js       STRING
+   #DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+
+   #end add-point
+
+   #CALL util.JSON.parse(ls_js,lc_param)
+
+   #add-point:process段前處理
+
+   #end add-point
+
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+
+      #end add-point
+   END IF
+
+   #主SQL及相關FOREACH前置處理
+#  DECLARE azzp193_process_cs CURSOR FROM ls_sql
+#  FOREACH azzp193_process_cs INTO
+   #add-point:process段process
+
+   #end add-point
+#  END FOREACH
+
+#   IF g_bgjob = "N" THEN
+#      #前景作業完成處理
+#      #add-point:process段foreground完成處理
+#
+#      #end add-point
+#      CALL cl_ask_confirm3("std-00012","")
+#   ELSE
+#      #背景作業完成處理
+#      #add-point:process段background完成處理
+#
+#      #end add-point
+#   END IF
+END FUNCTION
+
+PRIVATE FUNCTION azzp193_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   #DEFINE la_param    type_parameter
+
+#   CALL util.JSON.parse(ls_js,la_param)
+#
+#   LET la_cmdrun.prog = g_prog
+#   #add-point:transfer.argv段define
+#
+#   #end add-point
+#
+#   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+
+PRIVATE FUNCTION azzp193_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   #DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define
+
+   #end add-point
+
+   #add-point:ui_dialog段before dialog
+
+   #end add-point
+
+#   WHILE TRUE
+#      #add-point:ui_dialog段before dialog2
+#
+#      #end add-point
+#
+#      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+#
+#
+
+
+         #add-point:ui_dialog段construct
+
+         #end add-point
+         #add-point:ui_dialog段input
+
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+
+         #end add-point
+
+#         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+#         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+#         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+#         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+
+#         ON ACTION qbe_select
+#            CALL cl_qbe_list("m") RETURNING ls_wc
+#            IF NOT cl_null(ls_wc) THEN
+#               LET lc_param.wc = ls_wc
+#               #取得條件後需要執行項目,應新增於下方adp
+#               #add-point:ui_dialog段qbe_select後
+#
+#               #end add-point
+#            END IF
+#
+#         ON ACTION qbe_save
+#            CALL cl_qbe_save()
+#
+#         ON ACTION batch_execute
+#            ACCEPT DIALOG
+#
+#         ON ACTION qbeclear
+#            CLEAR FORM
+#            INITIALIZE lc_param.* TO NULL
+#            #add-point:ui_dialog段qbeclear
+#
+#            #end add-point
+#
+#         ON ACTION history_fill
+#            CALL cl_schedule_history_fill()
+#
+#         ON ACTION close
+#            LET INT_FLAG = TRUE
+#            EXIT DIALOG
+#
+#         ON ACTION exit
+#            LET INT_FLAG = TRUE
+#            EXIT DIALOG
+#
+#         #add-point:ui_dialog段action
+#
+#         #end add-point
+#
+#         #主選單用ACTION
+#         &include "main_menu.4gl"
+#         &include "relating_action.4gl"
+#         #交談指令共用ACTION
+#         &include "common_action.4gl"
+#            CONTINUE DIALOG
+#      END DIALOG
+
+      #add-point:ui_dialog段exit dialog
+
+      #end add-point
+
+#      LET ls_js = util.JSON.stringify(lc_param)
+#
+#      IF INT_FLAG THEN
+#         LET INT_FLAG = FALSE
+#         EXIT WHILE
+#      ELSE
+#         LET g_jobid = cl_schedule_get_jobid(g_prog)
+#         CASE
+#            WHEN g_schedule.gzpa003 = "0"
+#                 CALL azzp193_process(ls_js)
+#            WHEN g_schedule.gzpa003 = "1"
+#            #    CALL cl_schedule_update_data(g_jobid,ls_js)
+#                 LET ls_js = azzp193_transfer_argv(ls_js)
+#                 CALL cl_cmdrun(ls_js)
+#            WHEN g_schedule.gzpa003 = "2"
+#                 CALL cl_schedule_update_data(g_jobid,ls_js)
+#            WHEN g_schedule.gzpa003 = "3"
+#                 CALL cl_schedule_update_data(g_jobid,ls_js)
+#         END CASE
+#         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+#
+#         #add-point:ui_dialog段after schedule
+#
+#         #end add-point
+#
+#         #欄位初始資訊
+#         CALL cl_schedule_init_info("all",g_schedule.gzpa003)
+#         LET gi_hiden_asign = FALSE
+#         LET gi_hiden_exec = FALSE
+#         LET gi_hiden_spec = FALSE
+#         LET gi_hiden_exec_end = FALSE
+#         CALL cl_schedule_hidden()
+#      END IF
+#   END WHILE
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 依據傳入的參數，產出路徑
+# Memo...........:
+# Usage..........: CALL azzp193_generate_path()
+#                  
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp193_generate_path()
+   DEFINE ls_path     STRING
+   DEFINE ls_file     STRING
+   DEFINE l_doc       om.DomNode
+   DEFINE lc_gzza003  LIKE gzza_t.gzza003    #模組名稱
+   DEFINE li_status   LIKE type_t.num5       #狀態
+
+   #檢查輸入的程式名稱是否為主程式
+   SELECT gzza003 INTO lc_gzza003 FROM gzza_t
+    WHERE gzza001 = gc_gzza001
+   IF SQLCA.SQLCODE THEN
+      IF gc_type = "4tm" THEN
+         #如果主程式內沒有這個編號,查看是否為子程式
+         SELECT gzde002 INTO lc_gzza003 FROM gzde_t
+          WHERE gzde001 = gc_gzza001
+         IF SQLCA.SQLCODE THEN
+            DISPLAY "Error:輸入的程式編號不屬於主程式及子程式,請先完成註冊"
+            RETURN "",l_doc,FALSE
+         ELSE
+            LET gc_prog_type = "S"  #子程式
+         END IF
+      ELSE
+         DISPLAY "Error:輸入的程式編號不屬於主程式,4ad不可產生在子程式上"
+         RETURN "",l_doc,FALSE
+      END IF
+   ELSE
+      LET gc_prog_type = "M" #主程式
+   END IF
+
+   #檢查模組編號是否已經存在
+   IF cl_null(lc_gzza003) THEN
+      DISPLAY "Error:模組編號不存在"
+      RETURN "",l_doc,FALSE
+   END IF
+
+   #指定模組不可以產生
+   IF lc_gzza003 = "LIB" OR lc_gzza003 = "SUB" OR lc_gzza003 = "QRY" OR
+      lc_gzza003 = "LNG" OR lc_gzza003 = "WSS" THEN
+      DISPLAY "Error:$COM目錄下不可建置4tm"
+      RETURN "",l_doc,FALSE
+   END IF
+
+   LET gc_gzza003 = lc_gzza003 
+
+   #產生 4tm (位於各模組下 $MODULE/4tm/語言別)
+   IF DOWNSHIFT(gc_type) = "4tm" THEN 
+      LET g_start_time = cl_get_timestamp() 
+      LET ls_file = gc_gzza001,".4tm"
+      LET ls_path = os.Path.join(os.Path.join(os.Path.join(FGL_GETENV(UPSHIFT(lc_gzza003)),"4tm"),gc_lang),ls_file)
+      CALL azzp193_generate_4tm() RETURNING l_doc,li_status
+      LET g_end_time = cl_get_timestamp()
+      DISPLAY "4tm spent time:",g_end_time - g_start_time ," start:",g_start_time," end:",g_end_time
+   #產生 4ad  (位於各模組下 $MODULE/4ad/語言別)
+   ELSE 
+      LET g_start_time = cl_get_timestamp()
+      LET ls_file = gc_gzza001,".4ad"
+      LET ls_path = os.Path.join(os.Path.join(os.Path.join(FGL_GETENV(UPSHIFT(lc_gzza003)),"4ad"),gc_lang),ls_file)
+      LET l_doc = azzp193_generate_4ad()
+      LET li_status = TRUE
+      LET g_end_time = cl_get_timestamp()
+      DISPLAY "4ad spent time:",g_end_time - g_start_time ," start:",g_start_time," end:",g_end_time
+   END IF 
+
+   RETURN ls_path,l_doc,li_status
+END FUNCTION
+
+################################################################################
+# Descriptions...: 產出檔案
+# Memo...........:
+# Usage..........: CALL azzp193_writefile(ls_file,ls_path)
+#                  RETURNING TRUE/FALSE
+# Input parameter: ls_file STRING 
+#                : ls_path STRING 
+# Return code....: 
+#                : 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp193_writefile(ls_file,ls_path)
+   DEFINE ls_file    STRING
+   DEFINE ls_path    STRING
+   DEFINE l_channel  base.Channel
+
+   IF ls_path.getLength() < 1 THEN
+      RETURN FALSE
+   END IF
+
+   #刪除現存檔案
+   IF os.Path.exists(ls_path) THEN
+      IF os.Path.delete(ls_path) THEN
+      END IF
+   END IF
+
+   #寫入檔案
+   LET l_channel = base.Channel.create()
+   CALL l_channel.setDelimiter("")
+   CALL l_channel.openFile(ls_path,"w")
+   CALL l_channel.write(ls_file)
+   CALL l_channel.close()
+
+   RETURN TRUE
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 建立 4tm 的 dom
+# Memo...........:
+# Usage..........: CALL azzp193_generate_4tm()
+#                  RETURNING 回传参数
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp193_generate_4tm()
+   DEFINE l_domdoc        om.DomDocument
+   DEFINE l_root          om.DomNode     #整支作業
+   DEFINE l_child         om.DomNode  
+   DEFINE li_cntp         LIKE type_t.num5
+   DEFINE ls_item         STRING
+   DEFINE lc_gzzq002      LIKE gzzq_t.gzzq002   #功能名稱
+   DEFINE lc_gzzq004      LIKE gzzq_t.gzzq004   #功能名稱
+
+   #4tm的產生先檢查所有的action是否均已進入gzzp(比對,不清除)
+   IF NOT g_chk THEN 
+      CALL azzp193_trans_r2p() #從gzzr產生基本的TREE資料到gzzp內
+      LET g_chk = TRUE 
+   END IF 
+
+   #確認一下筆數
+   SELECT COUNT(*) INTO li_cntp FROM gzzp_t
+    WHERE gzzp001 = gc_gzza001
+   IF li_cntp = 0 THEN
+      DISPLAY "WARNING:不存在 action 資料"
+      RETURN l_root,FALSE
+   END IF
+
+   #進入 gzzp_t 4tm 自動產生程序
+   LET l_domdoc = om.DomDocument.create("TopMenu")
+   LET l_root = l_domdoc.getDocumentElement()
+
+   #15/04/29 
+   #針對adzi140(r.t) 特殊處理 
+   IF gc_gzza001 = "adzi140" OR gc_gzza001 = "adzi150" OR gc_gzza001 = "adzi200" THEN 
+
+     #161003-00001 start
+     SELECT COUNT(1) INTO li_cntp FROM gzzp_t
+      WHERE gzzp001 = gc_gzza001  
+       AND gzzp002 = gzzp003 
+       AND gzzp003 <> 'popup_action'
+     IF li_cntp = 0 THEN 
+        DISPLAY "WARNING:不存在 popup_action 以外資料"
+        RETURN l_root,FALSE
+     END IF 
+     #161003-00001 end
+
+      DECLARE azzp193_gen_4tm_cs CURSOR FOR 
+       SELECT gzzp003  FROM gzzp_t
+        WHERE gzzp001 = gc_gzza001 
+         AND gzzp002 = gzzp003 
+         AND gzzp003 <> 'popup_action' 
+        ORDER BY gzzp004 ASC  
+
+       FOREACH azzp193_gen_4tm_cs INTO lc_gzzq002 
+          #先抓小池概念
+          SELECT gzzq004 INTO lc_gzzq004      #功能名稱/說明
+           FROM gzzq_t
+           WHERE gzzq001 = gc_gzza001
+            AND gzzq002 = lc_gzzq002          #action編號
+            AND gzzq003 = gc_lang             #要製作的語言別 
+          IF SQLCA.SQLCODE THEN 
+             #大池概念,先抓取standard
+             SELECT gzzq004 INTO lc_gzzq004   #功能名稱/說明
+              FROM gzzq_t
+              WHERE gzzq001 = 'standard'
+               AND gzzq002 = lc_gzzq002       #action編號
+               AND gzzq003 = gc_lang          #要製作的語言別
+          END IF 
+          LET ls_item = lc_gzzq002
+          LET l_child = l_root.createChild("TopMenuGroup")
+          CALL l_child.setAttribute("text",lc_gzzq004)
+          CALL azzp193_generate_recursive(ls_item,l_child,ls_item,0) RETURNING l_child
+       END FOREACH  
+      RETURN l_root,TRUE
+   END IF 
+   
+   #開始產出七項TOPMENUGroup需要的項目 (項目0不產出)
+   FOR li_cntp = 1 TO 7
+      CALL g_rec_arr.clear() #160601-00026 #1
+      CASE li_cntp
+         WHEN 1 LET ls_item = "full_operator"        #整單操作
+         WHEN 2 LET ls_item = "detail_operator"      #明細操作
+         WHEN 3 LET ls_item = "relating_data"        #相關資料    
+         WHEN 4 LET ls_item = "relating_job"         #相關作業
+         WHEN 5 LET ls_item = "relating_query"       #相關查詢
+         WHEN 6 LET ls_item = "relating_report"      #相關報表
+         WHEN 7 LET ls_item = "relating_parameter"   #相關參數
+      END CASE
+
+      LET g_count = 1
+      LET l_child = l_root.createChild("TopMenuGroup")
+      LET lc_gzzq002 = ls_item.trim()
+
+      #大池概念,先抓取standard
+      SELECT gzzq004 INTO lc_gzzq004  #功能名稱/說明
+        FROM gzzq_t
+       WHERE gzzq001 = "standard"
+         AND gzzq002 = lc_gzzq002    #action編號
+         AND gzzq003 = gc_lang      #要製作的語言別
+      CALL l_child.setAttribute("text",lc_gzzq004)
+display lc_gzzq002,'--->',lc_gzzq004      
+      CALL azzp193_generate_recursive(ls_item,l_child,ls_item,0) RETURNING l_child
+   END FOR
+
+   RETURN l_root,TRUE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 從gzzr產生基本的TREE資料到gzzp內
+# Memo...........:
+# Usage..........: CALL azzp193_trans_r2p()
+#                  RETURNING 回传参数
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp193_trans_r2p()
+   DEFINE li_cnt      LIKE type_t.num5
+   DEFINE li_pos      LIKE type_t.num5
+   DEFINE l_current   DATETIME YEAR TO SECOND
+   DEFINE lc_gzzp     RECORD
+            gzzp001   LIKE gzzp_t.gzzp001,
+            gzzp002   LIKE gzzp_t.gzzp002,
+            gzzp003   LIKE gzzp_t.gzzp003,
+            gzzp004   LIKE gzzp_t.gzzp004,
+            gzzp005   LIKE gzzp_t.gzzp005,
+            gzzpstus  LIKE gzzp_t.gzzpstus,
+            gzzpmodid LIKE gzzp_t.gzzpmodid,
+            gzzpmoddt DATETIME YEAR TO SECOND,
+            gzzpownid LIKE gzzp_t.gzzpownid,
+            gzzpowndp LIKE gzzp_t.gzzpowndp,
+            gzzpcrtid LIKE gzzp_t.gzzpcrtid,
+            gzzpcrtdp LIKE gzzp_t.gzzpcrtdp,
+            gzzpcrtdt DATETIME YEAR TO SECOND
+                  END RECORD
+   DEFINE ls_cmd      STRING
+   DEFINE ls_sql      STRING
+
+   LET l_current = cl_get_current()
+
+   #準備抓取資料用的SQL
+
+   #主檔的來源和子程式的來源不同
+   IF gc_prog_type = "M" THEN
+      LET ls_sql = "SELECT gzzr001,gzzr002,'','','','Y','','','','','','','','' ",
+                    " FROM gzzr_t ",
+                   " WHERE gzzr001 = '",gc_gzza001 CLIPPED,"' "
+   ELSE
+      LET ls_sql = "SELECT '",gc_gzza001 CLIPPED,"',gzzr002,'','','','Y','','','','','','','','' ",
+                    " FROM gzzr_t ",
+                   " WHERE gzzr004 = '",gc_gzza001 CLIPPED,"' "
+   END IF
+
+   #DISPLAY "azzp193 gc_prog_type ",gc_prog_type
+   #從gzzr轉出到dynamic array
+   PREPARE azzp193_r2p_cs FROM ls_sql
+   DECLARE azzp193_r2p_cur CURSOR FOR azzp193_r2p_cs
+
+   FOREACH azzp193_r2p_cur INTO lc_gzzp.*
+      IF SQLCA.SQLCODE THEN
+         EXIT FOREACH
+      END IF
+
+      #不秀在 TOPMENU 的選項 (但要管制權限)
+      IF lc_gzzp.gzzp002 = "modify" OR lc_gzzp.gzzp002 = "query" OR 
+         lc_gzzp.gzzp002 = "delete" OR lc_gzzp.gzzp002 = "insert" OR
+         lc_gzzp.gzzp002 = "reproduce" OR lc_gzzp.gzzp002 = "output" THEN
+         #EXIT FOREACH
+         CONTINUE FOREACH
+      END IF
+
+      #回頭看一下gzzp內是否已經存在
+      SELECT COUNT(*) INTO li_cnt 
+        FROM gzzp_t
+       WHERE gzzp001 = lc_gzzp.gzzp001 AND gzzp002 = lc_gzzp.gzzp002
+
+      #不存在的部分就新增到popup_action項目內
+      IF li_cnt = 0 THEN
+         LET lc_gzzp.gzzp003 = "popup_action"
+         LET lc_gzzp.gzzp004 = li_cnt USING "&<<<<"
+         LET lc_gzzp.gzzp005 = "1"         #屬於MENU(0) 屬於功能(1)
+         LET lc_gzzp.gzzpstus = "Y"
+         LET lc_gzzp.gzzpcrtid = g_user
+         LET lc_gzzp.gzzpownid = g_user
+         LET lc_gzzp.gzzpowndp = g_dept
+         LET lc_gzzp.gzzpcrtdp = g_dept
+         LET lc_gzzp.gzzpcrtdt = cl_get_current()
+         LET li_cnt = li_cnt + 1
+         #回寫 gzzp_t
+         INSERT INTO gzzp_t(gzzp001,gzzp002,gzzp003,gzzp004,gzzp005,
+                            gzzpstus,gzzpmodid,gzzpmoddt,gzzpownid,
+                            gzzpowndp,gzzpcrtid,gzzpcrtdp,gzzpcrtdt)
+         VALUES(lc_gzzp.gzzp001,lc_gzzp.gzzp002,lc_gzzp.gzzp003,lc_gzzp.gzzp004,lc_gzzp.gzzp005,
+                lc_gzzp.gzzpstus,lc_gzzp.gzzpmodid,lc_gzzp.gzzpmoddt,lc_gzzp.gzzpownid,
+                lc_gzzp.gzzpowndp,lc_gzzp.gzzpcrtid,lc_gzzp.gzzpcrtdp,lc_gzzp.gzzpcrtdt)
+      END IF
+
+   END FOREACH
+
+   #追補主階層資料
+   FOR li_pos = 0 TO 7
+      CASE li_pos
+         WHEN 0 LET lc_gzzp.gzzp002 = "popup_action"         #未編寫到TOPMENU選項
+         WHEN 1 LET lc_gzzp.gzzp002 = "full_operator"        #整單操作
+         WHEN 2 LET lc_gzzp.gzzp002 = "detail_operator"      #明細操作
+         WHEN 3 LET lc_gzzp.gzzp002 = "relating_data"        #相關資料    
+         WHEN 4 LET lc_gzzp.gzzp002 = "relating_job"         #相關作業
+         WHEN 5 LET lc_gzzp.gzzp002 = "relating_query"       #相關查詢
+         WHEN 6 LET lc_gzzp.gzzp002 = "relating_report"      #相關報表
+         WHEN 7 LET lc_gzzp.gzzp002 = "relating_parameter"   #相關參數
+      END CASE
+
+      #針對adzi140(r.t) 特殊處理 只新增 popup_action 其餘不新增
+      IF (gc_gzza001 = "adzi140"  OR gc_gzza001 = "adzi150" OR gc_gzza001 = "adzi200" )AND li_pos > 0 THEN
+         RETURN 
+      END IF 
+      
+      #回頭看一下gzzp內是否已經存在
+      SELECT COUNT(*) INTO li_cnt 
+        FROM gzzp_t
+       WHERE gzzp001 = lc_gzzp.gzzp001 AND gzzp002 = lc_gzzp.gzzp002
+      
+      #不存在的部分就新增到popup_action項目內
+      IF li_cnt = 0 THEN
+         LET lc_gzzp.gzzp003 = lc_gzzp.gzzp002
+         LET lc_gzzp.gzzp004 = li_pos USING "&<<<<"
+         LET lc_gzzp.gzzp005 = "0"  #屬於MENU
+         INSERT INTO gzzp_t(gzzp001,gzzp002,gzzp003,gzzp004,gzzp005,
+                            gzzpstus,gzzpmodid,gzzpmoddt,gzzpownid,
+                            gzzpowndp,gzzpcrtid,gzzpcrtdp,gzzpcrtdt)
+         VALUES(lc_gzzp.gzzp001,lc_gzzp.gzzp002,lc_gzzp.gzzp003,lc_gzzp.gzzp004,lc_gzzp.gzzp005,
+                lc_gzzp.gzzpstus,lc_gzzp.gzzpmodid,lc_gzzp.gzzpmoddt,lc_gzzp.gzzpownid,
+                lc_gzzp.gzzpowndp,lc_gzzp.gzzpcrtid,lc_gzzp.gzzpcrtdp,lc_gzzp.gzzpcrtdt)
+      END IF
+   END FOR
+
+   CLOSE azzp193_r2p_cur
+   FREE azzp193_r2p_cur
+END FUNCTION
+
+################################################################################
+# Descriptions...: 遞迴產生階層MENU TREE
+# Memo...........:
+# Usage..........: CALL azzp193_generate_recursive(lc_gzzp003,l_root,lc_gzzs002,li_status)
+#                  RETURNING 
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp193_generate_recursive(lc_gzzp003,l_root,lc_gzzs002,li_status)
+   DEFINE l_root          om.DomNode
+   DEFINE l_topmenugroup  om.DomNode
+   DEFINE lc_gzzp002      LIKE gzzp_t.gzzp002
+   DEFINE lc_gzzp003      LIKE gzzp_t.gzzp003
+   DEFINE lc_gzzp004      LIKE gzzp_t.gzzp004   #序號
+   DEFINE lc_gzzp005      LIKE gzzp_t.gzzp005
+   DEFINE lc_gzzq004      LIKE gzzq_t.gzzq004   #功能名稱
+   DEFINE lc_gzzq005      LIKE gzzq_t.gzzq005   #功能說明
+   DEFINE li_cnt          LIKE type_t.num5
+   DEFINE li_pos          LIKE type_t.num5
+   DEFINE lc_gzzal003     LIKE gzzal_t.gzzal003
+   DEFINE lc_gzzs002      LIKE gzzs_t.gzzs002   #下拉式選單根項目
+   DEFINE ls_tmp          STRING
+   DEFINE ls_sql          STRING
+   DEFINE li_status       LIKE type_t.num5
+   DEFINE li_cnt3         LIKE type_t.num5
+   DEFINE li_cnt2         LIKE type_t.num5
+   DEFINE li_chk          LIKE type_t.num5
+   DEFINE li_recursive    LIKE type_t.num5
+   DEFINE ls_img          STRING 
+
+
+   LET ls_sql = "SELECT gzzp002,gzzp004,gzzp005 FROM gzzp_t",
+                " WHERE gzzp001 = '",gc_gzza001 CLIPPED,"' AND gzzp003 = ? ",
+                  #" AND gzzp002 <> gzzp003 ",
+                  " AND gzzp002 <> gzzp003 AND gzzpstus = 'Y'", #160826-00018 #1 add
+                " ORDER BY gzzp004 ASC "
+
+   PREPARE azzp193_4tm_pre FROM ls_sql
+   #DECLARE azzp193_4tm_cur CURSOR FOR azzp193_4tm_pre
+   DECLARE azzp193_4tm_cur CURSOR WITH HOLD FOR azzp193_4tm_pre
+
+   OPEN azzp193_4tm_cur USING lc_gzzp003
+   IF STATUS THEN
+      #CALL cl_err('open:',status,1)
+   END IF
+   LET li_cnt3 = 0 
+   LET li_recursive = FALSE 
+   FOREACH azzp193_4tm_cur INTO lc_gzzp002,lc_gzzp004,lc_gzzp005
+      IF STATUS OR sqlca.sqlcode THEN 
+         IF sqlca.sqlcode = "-400" THEN # 表示前一個cursor被關閉 
+            LET li_recursive = TRUE #160601-00026 #1  
+         END IF 
+         
+         DISPLAY "STATUS:",STATUS # 沒有資料會是 STATUS -400 
+         #CALL cl_err('lalaforeach:',SQLCA.SQLCODE,1)
+         EXIT FOREACH
+      END IF
+      
+      #160601-00026 #1 start
+      LET li_cnt3 = li_cnt3 + 1
+      #比對資料 拜訪過的資料就不繼續往下
+      IF g_rec_arr.getLength() > 0 THEN 
+         FOR li_cnt2 = 1 TO g_rec_arr.getLength()
+             IF lc_gzzp003 = g_rec_arr[li_cnt2].g_gzzp003 THEN 
+                IF li_cnt3 < g_rec_arr[li_cnt2].g_idx THEN 
+                   CONTINUE FOREACH
+                END IF   
+                IF lc_gzzp002 = g_rec_arr[li_cnt2].g_gzzp002 AND lc_gzzp003 = g_rec_arr[li_cnt2].g_gzzp003 THEN 
+                   CALL g_rec_arr.deleteElement(li_cnt2)
+                   CONTINUE FOREACH 
+                END IF 
+             END IF  
+         END FOR
+      END IF
+      ##160601-00026 #1 end       
+      
+      SELECT COUNT(*) INTO li_cnt
+        FROM gzzq_t
+       WHERE gzzq001 = gc_gzza001    #作業名稱
+         AND gzzq002 = lc_gzzp002    #action編號
+         AND gzzq003 = gc_lang       #要製作的語言別
+
+      #大池概念,先抓取standard
+      SELECT gzzq004,gzzq005 INTO lc_gzzq004,lc_gzzq005  #功能名稱/說明
+        FROM gzzq_t
+       WHERE gzzq001 = "standard"
+         AND gzzq002 = lc_gzzp002    #action編號
+         AND gzzq003 = gc_lang      #要製作的語言別
+      IF SQLCA.SQLCODE OR li_cnt > 0 THEN
+          SELECT gzzq004,gzzq005 INTO lc_gzzq004,lc_gzzq005  #功能名稱/說明
+           FROM gzzq_t
+          WHERE gzzq001 = gc_gzza001    #作業名稱
+            AND gzzq002 = lc_gzzp002    #action編號
+            AND gzzq003 = gc_lang      #要製作的語言別
+      END IF
+
+      #gzzp005為種類, 1為MENU/0為ACTION節點
+      CASE 
+         WHEN lc_gzzp005 = 0  # 選單分類
+            LET l_topmenugroup = l_root.createChild("TopMenuGroup")
+            CALL l_topmenugroup.setAttribute("text",lc_gzzq004)
+            #160601-00026 #1 start
+            #紀錄cursor 位置
+            IF g_rec_arr.getLength() > 0 THEN 
+               LET li_chk = FALSE 
+               #比對是否有在陣列資料 
+               FOR li_cnt2 = 1 TO g_rec_arr.getLength()
+                   IF lc_gzzp002 = g_rec_arr[li_cnt2].g_gzzp002 AND g_rec_arr[li_cnt2].g_gzzp003 = lc_gzzp003 THEN 
+                      LET li_chk = TRUE
+                      EXIT FOR  
+                   END IF    
+               END FOR 
+               #不存在就把資料把資料keep下來
+               IF NOT li_chk THEN
+                  #紀錄cursor 位置，把資料keep下來，當作下次要遞回的開始 
+                  LET g_rec_arr[g_rec_arr.getLength()+1].g_idx = li_cnt3 
+                  LET g_rec_arr[g_rec_arr.getLength()].g_gzzp002 = lc_gzzp002 
+                  LET g_rec_arr[g_rec_arr.getLength()].g_gzzp003 = lc_gzzp003 
+                  LET g_rec_arr[g_rec_arr.getLength()].g_gzzs002 = lc_gzzs002
+               END IF 
+            ELSE
+               #紀錄cursor 位置 把資料keep 下來，當作下次要遞回的開始 
+               LET g_rec_arr[g_rec_arr.getLength()+1].g_idx = li_cnt3 
+               LET g_rec_arr[g_rec_arr.getLength()].g_gzzp002 = lc_gzzp002 
+               LET g_rec_arr[g_rec_arr.getLength()].g_gzzp003 = lc_gzzp003 
+               LET g_rec_arr[g_rec_arr.getLength()].g_gzzs002 = lc_gzzs002
+            END IF 
+            #160601-00026 #1 end             
+            CALL azzp193_generate_recursive(lc_gzzp002,l_topmenugroup,lc_gzzs002,1) RETURNING l_topmenugroup
+         WHEN lc_gzzp005 = 1  # 程式功能  
+            LET l_topmenugroup = l_root.createChild("TopMenuCommand")
+            CALL l_topmenugroup.setAttribute("name",lc_gzzp002)
+            CALL l_topmenugroup.setAttribute("text",lc_gzzq004)
+            CALL l_topmenugroup.setAttribute("comment",lc_gzzq005)
+            #161005-00019 #1 start
+            IF gc_gzza001 = "adzi140" OR gc_gzza001 = "adzi150" OR gc_gzza001 = "adzi200" THEN 
+               LET ls_img = os.Path.join("tabledesigner",lc_gzzp002),".png"
+               CALL l_topmenugroup.setAttribute("image",ls_img)  
+               #目前先寫死 adzi140  產生TopMenuSeparator
+               IF (lc_gzzp002 = "tm_gen_aps_grant_file" OR lc_gzzp002 = "tm_batch_table_rebuild" OR 
+                   lc_gzzp002 = "tm_clone_import" OR lc_gzzp002 = "tm_affect_prog_list" ) THEN 
+                  LET l_topmenugroup = l_root.createChild("TopMenuSeparator")
+               END IF 
+            END IF
+            #161005-00019 #1 end            
+         WHEN lc_gzzp005 = 2  # 關聯作業
+            LET l_topmenugroup = l_root.createChild("TopMenuCommand")
+            LET ls_tmp = lc_gzzs002 CLIPPED,g_count USING "&&"
+
+            #決定編號後先寫入gzzs_t
+            SELECT COUNT(*) INTO li_pos FROM gzzs_t
+             WHERE gzzs001 = gc_gzza001 
+               AND gzzs002 = lc_gzzs002
+               AND gzzs003 = g_count
+            IF li_pos > 0 THEN
+               DELETE FROM gzzs_t 
+                WHERE gzzs001 = gc_gzza001 
+                  AND gzzs002 = lc_gzzs002
+                  AND gzzs003 = g_count
+            END IF
+            INSERT INTO gzzs_t(gzzs001,gzzs002,gzzs003,gzzs004)
+             VALUES(gc_gzza001,lc_gzzs002,g_count,lc_gzzp002)
+            IF SQLCA.SQLCODE THEN
+   #           CALL cl_err("gzzs insert error",sqlca.sqlcode,1)
+            END IF
+            LET g_count = g_count + 1
+
+            #Name的項目要對應include檔  Ex.relating_jobXX
+            CALL l_topmenugroup.setAttribute("name",ls_tmp)
+            LET lc_gzzal003 = ""
+            #取作業名稱來做為TOPMENU外顯名稱
+            SELECT gzzal003 INTO lc_gzzal003 FROM gzzal_t
+             WHERE gzzal001 = lc_gzzp002
+               AND gzzal002 = gc_lang
+
+           #Melody:取消 "執行" 字樣
+           #LET lc_gzzal003 = cl_getmsg("azz-00252",gc_lang),lc_gzzal003 CLIPPED
+
+            CALL l_topmenugroup.setAttribute("text",lc_gzzal003)
+            CALL l_topmenugroup.setAttribute("comment",lc_gzzq005)
+      END CASE
+   END FOREACH
+
+   #160601-00026 #1 mark 
+   #CLOSE azzp193_4tm_cur
+   #FREE azzp193_4tm_cur
+   #160601-00026 #1 end 
+   
+   #160601-00026 #1 start
+   #表示開始遞迴
+   IF li_recursive THEN
+      CALL azzp193_generate_recursive(g_rec_arr[g_rec_arr.getLength()].g_gzzp003,l_root,g_rec_arr[g_rec_arr.getLength()].g_gzzs002,1) RETURNING l_topmenugroup
+      CALL g_rec_arr.deleteElement(g_rec_arr.getLength())
+   END IF 
+   #160601-00026 #1 end 
+
+   RETURN l_root
+END FUNCTION
+
+################################################################################
+# Descriptions...: #產出4ad檔
+# Memo...........:
+# Usage..........: CALL azzp193_generate_4ad()
+#                  RETURNING 
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp193_generate_4ad()
+   DEFINE l_domdoc        om.DomDocument
+   DEFINE l_root          om.DomNode
+   DEFINE l_action        om.DomNode
+   DEFINE lc_gzzr002      LIKE gzzr_t.gzzr002
+   DEFINE lc_gzzq004      LIKE gzzq_t.gzzq004   #功能名稱
+   DEFINE lc_gzzq005      LIKE gzzq_t.gzzq005   #功能說明
+   DEFINE ls_sql          STRING
+   DEFINE li_status       LIKE type_t.num5
+   DEFINE lc_stus         LIKE gzzp_t.gzzpstus
+   DEFINE lc_gzzp006      LIKE gzzp_t.gzzp006   #快捷鍵(熱鍵)        #160919-00044
+   DEFINE lc_gzzp007      LIKE gzzp_t.gzzp007   #Pop up action 隱藏  #160919-00044  
+
+   #進入4ad自動產生程序
+   LET l_domdoc = om.DomDocument.create("ActionDefaultList")
+   LET l_root = l_domdoc.getDocumentElement()
+
+   #先創出CUSROR給狀態碼抓取用
+   LET ls_sql = " SELECT gzcbl004 FROM gzcb_t,gzcbl_t ",
+                 " WHERE (gzcb001 = 13 OR gzcb001 = 17 OR gzcb001 = 50 ) ",
+                   " AND gzcb004 =  ? ",
+                   " AND gzcbl001 = gzcb001 ",
+                   " AND gzcbl002 = gzcb002 ",
+                   " AND gzcbl003 = '",gc_lang CLIPPED,"' "
+
+   DECLARE azzp195_gzcb_cs CURSOR FROM ls_sql
+
+   #定義抓去gzzr的CURSOR
+   DECLARE azzp193_4ad_cur CURSOR FOR
+    SELECT gzzr002 FROM gzzr_t
+     WHERE gzzr001 = gc_gzza001
+       AND gzzr002 NOT IN ("modify","query","delete","insert","reproduce","controlo","output","add_catalog","add_favorite","add_favorite_catalog","announcement","btn_accept","btn_cancel","cancelfollow","cl_err_s02_accept","del_favorite","favorite_del","favorite_list","qbefield_user","qryplan_delete","qryplan_modify","qryplan_reproduce","queryplansel","related_document","bpm_status","exporttoexcel","datainfo","datarefresh","batch_execute","quickprint","qbeclear","rpt_replang")
+     ORDER BY gzzr002
+
+   #先抓gzzr gzzr沒有再抓gzcbl
+   #1.先抓gzzr standard
+   #2.在抓gzzr by 程式編號
+   #3.假設都沒有 抓gzcbl 
+   FOREACH azzp193_4ad_cur INTO lc_gzzr002
+      IF cl_null(lc_gzzr002) THEN
+         CONTINUE FOREACH
+      END IF
+      
+      #無效的狀態碼就不予以產生
+      SELECT gzzpstus,gzzp006,gzzp007 INTO lc_stus,lc_gzzp006,lc_gzzp007 FROM gzzp_t  #160919-00044   
+       WHERE gzzp001 = gc_gzza001 
+        AND  gzzp002 = lc_gzzr002
+
+      IF cl_null(lc_stus) OR lc_stus = "N" THEN 
+         CONTINUE FOREACH
+      END IF 
+      
+      #DISPLAY "lc_gzzr002:",lc_gzzr002 
+      LET lc_gzzq004 = "" 
+      LET lc_gzzq005 = ""  
+      #先抓標準
+      SELECT gzzq004,gzzq005
+        INTO lc_gzzq004,lc_gzzq005
+        FROM gzzq_t
+       WHERE gzzq001 = "standard"
+         AND gzzq002 = lc_gzzr002
+         AND gzzq003 = gc_lang
+      LET li_status = SQLCA.SQLCODE
+      #在抓特定的,成功就會蓋過
+      SELECT gzzq004,gzzq005
+        INTO lc_gzzq004,lc_gzzq005
+        FROM gzzq_t
+       WHERE gzzq001 = gc_gzza001
+         AND gzzq002 = lc_gzzr002
+         AND gzzq003 = gc_lang
+
+      #DISPLAY "SQLCA.SQLCODE:",SQLCA.SQLCODE
+      IF SQLCA.SQLCODE AND li_status THEN
+         #都不存在的話檢查是否為狀態碼ACTION
+         #160910-00009 start
+         CALL azzp193_get_gzcbl004(lc_gzzr002,gc_lang)RETURNING lc_gzzq004
+
+         #FOREACH azzp195_gzcb_cs USING lc_gzzr002 INTO lc_gzzq004
+         #   IF SQLCA.SQLCODE THEN
+               #再不存在,就用id呈現
+         #      LET lc_gzzq004 = lc_gzzr002
+         #   ELSE
+         #      EXIT FOREACH
+         #   END IF                 
+         #END FOREACH 
+         #160910-00009 end
+      END IF                 
+
+      LET l_action = l_root.createChild("ActionDefault")
+      CALL l_action.setAttribute("name",lc_gzzr002)
+      CALL l_action.setAttribute("text",lc_gzzq004)
+      CALL l_action.setAttribute("comment",lc_gzzq005)
+      #160919-00044 start
+      IF lc_gzzp007 = "Y" THEN  #有隱藏多這一行
+         CALL l_action.setAttribute("contextMenu","no")
+      END IF 
+      IF NOT cl_null(lc_gzzp006) THEN #快捷鍵
+         CALL l_action.setAttribute("acceleratorName",lc_gzzp006)
+      END IF 
+      #160919-00044 end      
+      #多個語系一併產生，action 先放進陣列
+      IF g_cnt_lang > 1 THEN 
+         LET g_gzzr002_arr[g_gzzr002_arr.getLength()+1].g_gzzr002 = lc_gzzr002
+      END IF 
+   END FOREACH
+   
+   CLOSE azzp195_gzcb_cs
+   CLOSE azzp193_4ad_cur
+   FREE azzp195_gzcb_cs
+   FREE azzp193_4ad_cur
+
+   #多個語系一併產生
+   CALL azzp193_generate_other_4ad()
+   RETURN l_root
+END FUNCTION
+
+################################################################################
+# Descriptions...: 使用方式說明
+# Memo...........:
+# Usage..........: CALL azzp193_msg()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp193_msg()
+   DISPLAY ""
+   DISPLAY ""
+   DISPLAY "Usage:   r.r azzp193 Program_ID type Language_ID"
+   DISPLAY "Example: r.r azzp193 azzi900 4ad zh_TW   產生中文的4ad "
+   DISPLAY "Example: r.r azzp193 azzi900 4tm zh_CN   產生簡體的4tm "
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp193_generate_other_4ad()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+# Return code....: 回传参数变量1   回传参数变量说明1
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp193_generate_other_4ad()
+   DEFINE lc_gzzr002      LIKE gzzr_t.gzzr002
+   DEFINE lc_gzzq004      LIKE gzzq_t.gzzq004   #功能名稱
+   DEFINE lc_gzzq005      LIKE gzzq_t.gzzq005   #功能說明
+   DEFINE li_status       LIKE type_t.num5
+   DEFINE li_cnt          LIKE type_t.num5
+   DEFINE l_token         base.StringTokenizer
+   DEFINE ls_token        STRING
+   DEFINE lc_gzzd002      LIKE gzzd_t.gzzd002
+   
+   LET l_token = base.StringTokenizer.create(g_str_lang, ",")
+   WHILE l_token.hasMoreTokens()
+      LET ls_token = l_token.nextToken()
+      LET lc_gzzd002 = ls_token
+
+      FOR li_cnt = 1 TO g_gzzr002_arr.getLength()
+          LET lc_gzzq004 = "" 
+          LET lc_gzzq005 = ""           
+          #先抓標準
+          SELECT gzzq004,gzzq005
+            INTO lc_gzzq004,lc_gzzq005
+            FROM gzzq_t
+           WHERE gzzq001 = "standard"
+             AND gzzq002 = g_gzzr002_arr[li_cnt].g_gzzr002
+             AND gzzq003 = lc_gzzd002
+
+          LET li_status = SQLCA.SQLCODE
+          #在抓特定的,成功就會蓋過
+          SELECT gzzq004,gzzq005
+            INTO lc_gzzq004,lc_gzzq005
+            FROM gzzq_t
+           WHERE gzzq001 = gc_gzza001
+             AND gzzq002 = g_gzzr002_arr[li_cnt].g_gzzr002
+             AND gzzq003 = lc_gzzd002
+
+          IF SQLCA.SQLCODE AND li_status THEN
+             CALL azzp193_get_gzcbl004(g_gzzr002_arr[li_cnt].g_gzzr002,lc_gzzd002)RETURNING lc_gzzq004 #, li_chk 
+          END IF      
+
+          #放進產生4ad陣列
+          LET g_4ad_tag[g_4ad_tag.getLength()+1].gt_lang = lc_gzzd002 
+          LET g_4ad_tag[g_4ad_tag.getLength()].g_gzzr002 = g_gzzr002_arr[li_cnt].g_gzzr002
+          LET g_4ad_tag[g_4ad_tag.getLength()].g_gzzq004 = lc_gzzq004
+          LET g_4ad_tag[g_4ad_tag.getLength()].g_gzzq005 = lc_gzzq005
+      END FOR 
+
+   END WHILE 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp193_get_gzcbl004(pc_gzzr002,pc_gzzd002)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+# Return code....: 回传参数变量1   回传参数变量说明1
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp193_get_gzcbl004(pc_gzzr002,pc_gzzd002)
+   DEFINE pc_gzzr002    LIKE gzzr_t.gzzr002
+   DEFINE pc_gzzd002    LIKE gzzd_t.gzzd002
+   DEFINE ls_sql        STRING 
+   DEFINE lc_gzzq004    LIKE gzzq_t.gzzq004
+   DEFINE li_chk        LIKE type_t.num5 
+
+   #LET li_chk = FALSE 
+   #先創出CUSROR給狀態碼抓取用
+   LET ls_sql = " SELECT gzcbl004 FROM gzcb_t,gzcbl_t ",
+                 " WHERE (gzcb001 = 13 OR gzcb001 = 17 OR gzcb001 = 50 ) ",
+                   " AND gzcb004 =  ? ",
+                   " AND gzcbl001 = gzcb001 ",
+                   " AND gzcbl002 = gzcb002 ",
+                   " AND gzcbl003 = '",pc_gzzd002 CLIPPED,"' "
+
+   DECLARE azzp195_gzcb_cs2 CURSOR FROM ls_sql
+
+   FOREACH azzp195_gzcb_cs USING pc_gzzr002 INTO lc_gzzq004
+            IF SQLCA.SQLCODE THEN
+               #DISPLAY "SQLCA.SQLCODE:",SQLCA.SQLCODE , " pc_gzzr002:",pc_gzzr002 ," lc_gzzq004:",lc_gzzq004
+               #再不存在,就用id呈現
+               LET lc_gzzq004 = pc_gzzr002
+            ELSE
+               EXIT FOREACH
+            END IF                 
+   END FOREACH 
+   CLOSE azzp195_gzcb_cs2
+   FREE azzp195_gzcb_cs2
+   RETURN lc_gzzq004 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp193_generate_other_file()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+# Return code....: 回传参数变量1   回传参数变量说明1
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp193_generate_other_file()
+   DEFINE ls_file    STRING
+   DEFINE ls_path    STRING  
+   DEFINE l_token    base.StringTokenizer
+   DEFINE ls_token   STRING
+   DEFINE l_doc      om.DomNode
+   DEFINE li_status  LIKE type_t.num5
+
+   IF g_cnt_lang > 1 THEN
+      LET ls_file = gc_gzza001,".",DOWNSHIFT(gc_type) 
+
+      LET l_token = base.StringTokenizer.create(g_str_lang, ",")
+      WHILE l_token.hasMoreTokens()
+         LET ls_token = l_token.nextToken()
+         LET ls_path = os.Path.join(os.Path.join(os.Path.join(FGL_GETENV(UPSHIFT(gc_gzza003)),DOWNSHIFT(gc_type)),ls_token),ls_file)
+         #刪除現存檔案
+         IF os.Path.exists(ls_path) THEN
+            IF os.Path.delete(ls_path) THEN
+            END IF
+         END IF
+
+         #####產生4ad /產生4tm
+         IF DOWNSHIFT(gc_type) = "4tm" THEN
+            LET g_start_time = cl_get_timestamp() 
+            LET gc_lang =  ls_token
+            CALL azzp193_generate_4tm() RETURNING l_doc,li_status
+            LET g_end_time = cl_get_timestamp()
+            DISPLAY "4tm spent time:",g_end_time - g_start_time ," start:",g_start_time," end:",g_end_time
+            IF li_status THEN
+               IF azzp193_writefile(l_doc.toString(),ls_path) THEN
+                  DISPLAY "INFO: 檔案將會產生在:",ls_path
+                  DISPLAY "INFO: ",gc_type," ok:",gc_lang
+               END IF
+            END IF             
+         ELSE
+            LET g_start_time = cl_get_timestamp()
+            #產生其他語系4ad 
+            CALL  azzp193_write_other_lang_4ad(ls_token,ls_path)
+         END IF  
+
+      END WHILE 
+      
+   END IF 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzp193_write_other_lang_4ad(ps_lang,ps_file_path)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+# Return code....: 回传参数变量1   回传参数变量说明1
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp193_write_other_lang_4ad(ps_lang,ps_file_path)
+   DEFINE ps_file_path    STRING    
+   DEFINE ps_lang         STRING 
+   DEFINE l_domdoc        om.DomDocument
+   DEFINE l_root          om.DomNode
+   DEFINE l_action        om.DomNode
+   DEFINE li_cnt          LIKE type_t.num5
+   DEFINE l_channel       base.Channel
+   DEFINE ls_file         STRING
+   DEFINE li_chk          LIKE type_t.num5 
+   DEFINE lc_stus         LIKE gzzp_t.gzzpstus
+   DEFINE lc_gzzp006      LIKE gzzp_t.gzzp006   #快捷鍵(熱鍵)        #160919-00044
+   DEFINE lc_gzzp007      LIKE gzzp_t.gzzp007   #Pop up action 隱藏  #160919-00044  
+   
+   #進入4ad自動產生程序
+   LET l_domdoc = om.DomDocument.create("ActionDefaultList")
+   LET l_root = l_domdoc.getDocumentElement()
+   FOR li_cnt = 1 TO g_4ad_tag.getLength()
+      
+      IF ps_lang = g_4ad_tag[li_cnt].gt_lang THEN 
+
+         #無效的狀態碼就不予以產生
+         SELECT gzzpstus,gzzp006,gzzp007 INTO lc_stus,lc_gzzp006,lc_gzzp007 FROM gzzp_t
+          WHERE gzzp001 = gc_gzza001 
+           AND  gzzp002 = g_4ad_tag[li_cnt].g_gzzr002
+
+         IF cl_null(lc_stus) OR lc_stus = "N" THEN 
+             CONTINUE FOR
+         END IF       
+         LET l_action = l_root.createChild("ActionDefault")
+         CALL l_action.setAttribute("name",g_4ad_tag[li_cnt].g_gzzr002)
+         CALL l_action.setAttribute("text",g_4ad_tag[li_cnt].g_gzzq004)
+         CALL l_action.setAttribute("comment",g_4ad_tag[li_cnt].g_gzzq005)
+         #160919-00044 start
+         IF lc_gzzp007 = "Y" THEN  #有隱藏多這一行
+            CALL l_action.setAttribute("contextMenu","no")
+         END IF 
+         IF NOT cl_null(lc_gzzp006) THEN #快捷鍵
+            CALL l_action.setAttribute("acceleratorName",lc_gzzp006)
+         END IF
+         #160919-00044 end
+      END IF 
+
+   END FOR  
+   LET g_end_time = cl_get_timestamp()
+   DISPLAY "4ad spent time:",g_end_time - g_start_time ," start:",g_start_time," end:",g_end_time
+
+   LET ls_file = l_root.toString()
+   LET li_chk = TRUE 
+   
+   #寫入檔案
+   LET l_channel = base.Channel.create()
+   CALL l_channel.setDelimiter("")
+   CALL l_channel.openFile(ps_file_path,"w")
+   CALL l_channel.write(ls_file)
+   CALL l_channel.close() 
+
+   IF ps_file_path.getLength() < 1 OR NOT os.Path.exists(ps_file_path) THEN
+      LET li_chk = FALSE 
+   END IF   
+   
+   IF li_chk THEN 
+      DISPLAY "INFO: 檔案將會產生在:",ps_file_path
+      DISPLAY "INFO: ",gc_type," ok:",ps_lang  #for rebuild 讀取訊息
+   END IF 
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

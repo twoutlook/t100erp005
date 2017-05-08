@@ -1,0 +1,343 @@
+<add_points prog="abgi045_01" std_prog="abgi045_01" erpver="1.0" module="ABG" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.abgi045_01_b_fill" cite_std="N" status="" ver="1" src="s" new="Y" order="1" cite_ver="" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 填充顯示項目編號資料
+# Memo...........:
+# Usage..........: CALL abgi045_01_b_fill(传入参数)
+# Input parameter: p_wc 條件
+# Return code....: 無
+# Date & Author..: 14/02/11 By yuhuabao
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgi045_01_b_fill(p_wc)
+DEFINE p_wc    STRING
+DEFINE l_sql   STRING
+DEFINE l_cnt   LIKE type_t.num5
+   IF p_wc IS NULL THEN LET p_wc = " 1=1" END IF
+   LET l_cnt = 1
+   LET l_sql = "SELECT DISTINCT bgae001,bgael003 ",
+               "  FROM bgae_t LEFT OUTER JOIN bgael_t ON bgae001=bgael001 AND bgae006=bgael006 AND bgaeent=bgaelent ",
+               " WHERE bgaeent = '",g_enterprise,"' AND bgaestus = 'Y' ",
+               "   AND ",p_wc CLIPPED
+   IF NOT cl_null(g_p_wc) THEN
+      LET l_sql = l_sql CLIPPED," AND ",g_p_wc
+   END IF
+   IF NOT cl_null(g_bgae006) THEN
+      LET l_sql = l_sql CLIPPED," AND bgae006='",g_bgae006,"'"
+   END IF
+   PREPARE bgae_pre FROM l_sql
+   DECLARE bgae_cur CURSOR FOR bgae_pre
+   FOREACH bgae_cur INTO g_bgae_d[l_cnt].*
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      LET l_cnt = l_cnt + 1
+      IF l_cnt > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   CALL g_bgae_d.deleteElement(g_bgae_d.getLength())
+   LET g_rec_b = l_cnt
+
+END FUNCTION]]>
+</point>
+  <point name="function.abgi045_01_input" cite_std="N" status="" ver="1" src="s" new="Y" order="2" cite_ver="" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 整批更改資料
+# Memo...........:
+# Usage..........: CALL abgi045_01_input()
+#                  RETURNING 無
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 14/02/11 By yuhuabao
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgi045_01_input()
+      LET g_bgae_m.bgae037 = "Y"
+      LET g_bgae_m.bgae015 = "N"
+      LET g_bgae_m.bgae016 = "N"
+      LET g_bgae_m.bgae017 = "N"
+      LET g_bgae_m.bgae018 = "N"
+      LET g_bgae_m.bgae019 = "N"
+      LET g_bgae_m.bgae020 = "N"
+      LET g_bgae_m.bgae021 = "N"
+      LET g_bgae_m.bgae022 = "N"
+      LET g_bgae_m.bgae023 = "N"
+      LET g_bgae_m.bgae024 = "N"
+      LET g_bgae_m.bgae025 = "N"
+      LET g_bgae_m.bgae026 = "N"
+      LET g_bgae_m.bgae027 = "N"
+      LET g_bgae_m.bgae028 = "N"
+      LET g_bgae_m.bgae029 = "N"
+      LET g_bgae_m.bgae030 = "N"
+      LET g_bgae_m.bgae031 = "N"
+      LET g_bgae_m.bgae032 = "N"
+      LET g_bgae_m.bgae033 = "N"
+      LET g_bgae_m.bgae034 = "N"
+      LET g_bgae_m.bgae035 = "N"
+   DISPLAY BY NAME g_bgae_m.bgae037,g_bgae_m.bgae015,g_bgae_m.bgae016,g_bgae_m.bgae017,g_bgae_m.bgae018,g_bgae_m.bgae019,
+                  g_bgae_m.bgae020,g_bgae_m.bgae021,g_bgae_m.bgae022,g_bgae_m.bgae023,g_bgae_m.bgae024,g_bgae_m.bgae025,
+                  g_bgae_m.bgae026,g_bgae_m.bgae027,g_bgae_m.bgae028,g_bgae_m.bgae029,g_bgae_m.bgae030,g_bgae_m.bgae031,
+                  g_bgae_m.bgae032,g_bgae_m.bgae033,g_bgae_m.bgae034,g_bgae_m.bgae035
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)                
+      INPUT BY NAME g_bgae_m.bgae015,g_bgae_m.bgae016,g_bgae_m.bgae017,g_bgae_m.bgae018,g_bgae_m.bgae019,
+                  g_bgae_m.bgae020,g_bgae_m.bgae021,g_bgae_m.bgae022,g_bgae_m.bgae023,g_bgae_m.bgae024,g_bgae_m.bgae025,
+                  g_bgae_m.bgae026,g_bgae_m.bgae027,g_bgae_m.bgae028,g_bgae_m.bgae029,g_bgae_m.bgae030,g_bgae_m.bgae031,
+                  g_bgae_m.bgae032,g_bgae_m.bgae033,g_bgae_m.bgae034,g_bgae_m.bgae035
+             ATTRIBUTE(WITHOUT DEFAULTS)
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+           
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            IF s_transaction_chk("N",0) THEN
+                CALL s_transaction_begin()
+            END IF
+           
+       END INPUT
+      DISPLAY ARRAY g_bgae_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b)  
+      
+         BEFORE ROW
+            LET l_ac = 1
+        
+         BEFORE DISPLAY 
+            CALL FGL_SET_ARR_CURR(l_ac)      
+      END DISPLAY 
+      
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         CALL cl_set_head_visible("","AUTO")
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG   
+END FUNCTION]]>
+</point>
+  <point name="function.abgi045_01_update_bgae" cite_std="N" status="" ver="1" src="s" new="Y" order="3" cite_ver="" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 整批更新
+# Memo...........:
+# Usage..........: CALL abgi045_01_update_bgae()
+#                  RETURNING 無
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 14/02/11 By yuhuabao
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgi045_01_update_bgae()
+DEFINE  l_sql  STRING               
+       LET l_sql = "UPDATE bgae_t SET (bgae037,bgae015,bgae016,bgae017,bgae018,bgae019,bgae020,  ",
+                   "                   bgae021,bgae022,bgae023,bgae024,bgae025,bgae026,bgae027,bgae028,bgae029,bgae030,bgae031, ",
+                   "                   bgae032,bgae033,bgae034,bgae035) = ('",g_bgae_m.bgae037, "',",
+                   "                   '",g_bgae_m.bgae015,"', '",g_bgae_m.bgae016,"', '",g_bgae_m.bgae017,"', '",g_bgae_m.bgae018,"',", 
+                   "                   '",g_bgae_m.bgae019,"', '",g_bgae_m.bgae020,"', '",g_bgae_m.bgae021,"', '",g_bgae_m.bgae022,"',",
+                   "                   '",g_bgae_m.bgae023,"', '",g_bgae_m.bgae024,"', '",g_bgae_m.bgae025,"', '",g_bgae_m.bgae026,"',",
+                   "                   '",g_bgae_m.bgae027,"', '",g_bgae_m.bgae028,"', '",g_bgae_m.bgae029,"', '",g_bgae_m.bgae030,"',",
+                   "                   '",g_bgae_m.bgae031,"', '",g_bgae_m.bgae032,"', '",g_bgae_m.bgae033,"', '",g_bgae_m.bgae034,"',",
+                   "                   '",g_bgae_m.bgae035,"') ",
+                   " WHERE bgaeent = '",g_enterprise,"' AND bgaestus = 'Y' ",
+                   "   AND ",g_wc
+      IF NOT cl_null(g_p_wc) THEN
+         LET l_sql = l_sql CLIPPED," AND ",g_p_wc
+      END IF
+      IF NOT cl_null(g_bgae006) THEN
+         LET l_sql = l_sql CLIPPED ," AND bgae006='",g_bgae006,"'"
+      END IF         
+      PREPARE bgae_upd  FROM l_sql
+      EXECUTE bgae_upd
+      
+END FUNCTION]]>
+</point>
+  <point name="construct.after_construct" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            DISPLAY BY NAME g_bgae_m.bgae006
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bgae_m.bgae006
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooall004 FROM ooall_t WHERE ooallent='"||g_enterprise||"' AND ooall001='11' AND ooall002=? AND ooall003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bgae_m.bgae006_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_bgae_m.bgae006_desc   
+            CALL abgi045_01_b_fill(g_wc)    
+             
+
+        AFTER FIELD bgae006
+           CALL FGL_DIALOG_GETBUFFER() RETURNING g_bgae006
+           LET g_bgae_m.bgae006 = g_bgae006
+           
+        ON ACTION controlp INFIELD bgae006
+            #add-point:ON ACTION controlp INFIELD bgae006
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+            CALL q_bgae006()              #呼叫開窗
+            LET g_bgae006 = g_qryparam.return1
+            DISPLAY  g_bgae006 TO bgae006  #顯示到畫面上
+
+            NEXT FIELD bgae006  
+            #返回原欄位
+         ON ACTION controlp INFIELD bgae001
+            #add-point:ON ACTION controlp INFIELD bgae001
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+			LET g_qryparam.where = " bgae007='1' AND bgae006='",g_bgae006,"'"
+            CALL q_bgae001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bgae001  #顯示到畫面上
+
+            NEXT FIELD bgae001                     #返回原欄位]]>
+</point>
+  <point name="construct.before_close" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[#   DISPLAY BY NAME g_bgae_m.bgae006
+#   INITIALIZE g_ref_fields TO NULL
+#   LET g_ref_fields[1] = g_bgae_m.bgae006
+#   CALL ap_ref_array2(g_ref_fields,"SELECT ooall004 FROM ooall_t WHERE ooallent='"||g_enterprise||"' AND ooall001='11' AND ooall002=? AND ooall003='"||g_dlang||"'","") RETURNING g_rtn_fields
+#   LET g_bgae_m.bgae006_desc = '', g_rtn_fields[1] , ''
+#   DISPLAY BY NAME g_bgae_m.bgae006_desc   
+#   CALL abgi045_01_b_fill(g_wc)
+#   CALL abgi045_01_input()
+   IF NOT INT_FLAG THEN 
+      CALL abgi045_01_update_bgae()
+   END IF]]>
+</point>
+  <point name="construct.before_construct" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_bgae006)THEN
+               DISPLAY p_bgae006 TO bgae006
+               NEXT FIELD bgae001
+            END IF
+            ]]>
+</point>
+  <point name="construct.define" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   DEFINE p_bgae006       LIKE bgae_t.bgae006
+   DEFINE p_wc2           STRING]]>
+</point>
+  <point name="construct.get_var" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   p_bgae006,
+   p_wc2]]>
+</point>
+  <point name="construct.more_construct" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[      DISPLAY ARRAY g_bgae_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b)  
+      
+         BEFORE ROW
+            
+            LET l_ac = 1
+        
+         BEFORE DISPLAY 
+            CALL FGL_SET_ARR_CURR(l_ac)      
+      END DISPLAY  
+
+      INPUT BY NAME g_bgae_m.bgae015,g_bgae_m.bgae016,g_bgae_m.bgae017,g_bgae_m.bgae018,g_bgae_m.bgae019,
+                  g_bgae_m.bgae020,g_bgae_m.bgae021,g_bgae_m.bgae022,g_bgae_m.bgae023,g_bgae_m.bgae024,g_bgae_m.bgae025,
+                  g_bgae_m.bgae026,g_bgae_m.bgae027,g_bgae_m.bgae028,g_bgae_m.bgae029,g_bgae_m.bgae030,g_bgae_m.bgae031,
+                  g_bgae_m.bgae032,g_bgae_m.bgae033,g_bgae_m.bgae034,g_bgae_m.bgae035
+             ATTRIBUTE(WITHOUT DEFAULTS)
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+
+                   
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            IF s_transaction_chk("N",0) THEN
+                CALL s_transaction_begin()
+            END IF
+           
+       END INPUT
+       
+       BEFORE DIALOG
+          CALL g_bgae_d.clear()
+          LET g_bgae_m.bgae037 = "Y"
+             LET g_bgae_m.bgae015 = "N"
+         LET g_bgae_m.bgae016 = "N"
+         LET g_bgae_m.bgae017 = "N"
+         LET g_bgae_m.bgae018 = "N"
+         LET g_bgae_m.bgae019 = "N"
+         LET g_bgae_m.bgae020 = "N"
+         LET g_bgae_m.bgae021 = "N"
+         LET g_bgae_m.bgae022 = "N"
+         LET g_bgae_m.bgae023 = "N"
+         LET g_bgae_m.bgae024 = "N"
+         LET g_bgae_m.bgae025 = "N"
+         LET g_bgae_m.bgae026 = "N"
+         LET g_bgae_m.bgae027 = "N"
+         LET g_bgae_m.bgae028 = "N"
+         LET g_bgae_m.bgae029 = "N"
+         LET g_bgae_m.bgae030 = "N"
+         LET g_bgae_m.bgae031 = "N"
+         LET g_bgae_m.bgae032 = "N"
+         LET g_bgae_m.bgae033 = "N"
+         LET g_bgae_m.bgae034 = "N"
+         LET g_bgae_m.bgae035 = "N"
+            DISPLAY BY NAME g_bgae_m.bgae037,g_bgae_m.bgae015,g_bgae_m.bgae016,g_bgae_m.bgae017,g_bgae_m.bgae018,g_bgae_m.bgae019,
+                            g_bgae_m.bgae020,g_bgae_m.bgae021,g_bgae_m.bgae022,g_bgae_m.bgae023,g_bgae_m.bgae024,g_bgae_m.bgae025,
+                            g_bgae_m.bgae026,g_bgae_m.bgae027,g_bgae_m.bgae028,g_bgae_m.bgae029,g_bgae_m.bgae030,g_bgae_m.bgae031,
+                             g_bgae_m.bgae032,g_bgae_m.bgae033,g_bgae_m.bgae034,g_bgae_m.bgae035      ]]>
+</point>
+  <point name="construct.pre_construct" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   LET g_bgae006 = p_bgae006
+   IF cl_null(p_bgae006) THEN RETURN END IF
+   LET g_p_wc    = p_wc2
+   LET g_bgae_m.bgae006 = p_bgae006]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[DEFINE g_bgae006    LIKE bgae_t.bgae006
+DEFINE g_p_wc       STRING
+ TYPE type_g_bgae_d        RECORD
+          bgae001   LIKE bgae_t.bgae006,
+          bgael003  LIKE bgael_t.bgael003
+       END RECORD
+DEFINE g_bgae_d          DYNAMIC ARRAY OF type_g_bgae_d
+DEFINE l_ac                  LIKE type_t.num5
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num5  
+DEFINE g_detail_idx          LIKE type_t.num5 ]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.post_construct" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+</add_points>

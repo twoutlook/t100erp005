@@ -1,0 +1,748 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="ammm320" std_prog="ammm320" erpver="1.0" ver="8" module="AMM" type="M" booking="Y" designer_ver="1.0" class="m" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="mman_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status=""/>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 提供卡種基本資料維護查詢
+作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：基本資料維護作業
+輸入模式：單檔F001_00
+作業資料來源(Master)：
+ 資料來源表：mman_t(卡種基本資申請檔)
+                        mmanl_t(卡種基本資申請多語言檔)
+             mmao_t(效期延長則設定申請檔)
+                        mmap_t(生效營運據點設定申請檔)
+
+1.程式依參數設定是會員卡種維護否走申請流程(Y/N)?
+  當為'Y'時按新增修改時則顯示"會員卡種資料異動需由申請作業進行維護",不允許由ammm320直接進行新增修改維護.
+                               ]]>
+  </all>
+  <field cite_std="N" name="mman_t.mman001" ver="1" src="s" column="mman001" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_mman001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman002" ver="5" src="s" column="mman002" table="mman_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[●版本:
+1.141203-00025#1改為預設值為0]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman003" ver="1" src="s" column="mman003" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[外社卡：
+    計算與處理: 1.當[T:卡種基本資料檔].[C:外社卡 mman003]='Y '時以下畫面所有資料均不允許維護或修改.
+                         2.當外社卡從 N 異動成 Y時,提示此行為會將以下面畫面所有資料清空
+   
+ 
+]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman004" ver="4" src="s" column="mman004" table="mman_t" attribute="" type="" req="Y" i_zoom="q_ooed004" c_zoom="q_ooed004" chk_ref="v_ooed004" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[制定組織：
+     no use
+    隱藏]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman005" ver="1" src="s" column="mman005" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="&lt;=" max="30.000" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman006" ver="1" src="s" column="mman006" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[卡號固定代碼長度：
+     欄位控制:
+         進入欄位前先判斷
+         1.[卡號總碼長 mman006] 為空值時, 導到卡號總碼長
+    校驗:輸入值不可大於等於[C.卡號總碼長 mman005]
+    計算與處理:當輸入值改變時,清空卡號固定代碼的值
+]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman007" ver="1" src="s" column="mman007" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[卡號固定代碼：
+     欄位控制:
+         進入欄位前先判斷
+         1.[卡號總碼長 mman006] 為空值時, 導到卡號總碼長
+         2.[卡號固定代碼長 mman006] 為空值時, 導到卡號固定代長度
+     校驗:
+         1.程式需 check [T:卡種基本資料檔].[C:卡號固定代碼 mman007] 資料長度必須 = [C:卡號固定代碼長度mman006], 否則顯示 error message.
+]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman008" ver="1" src="s" column="mman008" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[卡號流水碼：
+    預設值:[C:卡號總碼長 mman004] - [C:卡號固定代碼長度 mman005]
+   
+   
+]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman009" ver="1" src="s" column="mman009" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6505" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman010" ver="1" src="s" column="mman010" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[消費附贈最低消費金額
+   欄位控管: 發卡方式 若選擇 "2.銷售卡" 則不允許輸入]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman011" ver="1" src="s" column="mman011" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman012" ver="1" src="s" column="mman012" table="mman_t" attribute="" type="" req="N" i_zoom="q_rtdx001_1" c_zoom="q_imaa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[發卡贈品商品編號：
+     校驗:
+         1.輸入值必須存在於[T.門店清單檔 rtdx_t]中,且資料已確認(rtdxstus = 'Y')
+
+]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman013" ver="1" src="s" column="mman013" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman014" ver="1" src="s" column="mman014" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman015" ver="1" src="s" column="mman015" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman016" ver="1" src="s" column="mman016" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman017" ver="1" src="s" column="mman017" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman018" ver="1" src="s" column="mman018" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[卡效期控制：
+    計算與處理:
+        1.當輸入值為'N'時,將"效期規則起算基準"、"有效期至"、"效期指定日期"與"效期指定月份長度" 清空為Null]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman019" ver="1" src="s" column="mman019" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6506" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[效期控管起算基準：
+    欄位控制:
+       1.當[C:卡效期控管 mman018]='Y' 時才允許輸入
+    預設值: "2.發卡日"
+       
+]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman020" ver="1" src="s" column="mman020" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6507" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[有效期至：
+    欄位控制:
+       1.當[C:卡效期控管 mman018]='Y' 時才允許輸入
+    預設值: "1.指定日期"
+]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman021" ver="1" src="s" column="mman021" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[效期指定日期：
+    欄位控制:
+        1.當[C:卡效期控管 mman018]='Y' 且  [C.有效期至 mman020] = '1.指定日期' 時,才可輸入]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman022" ver="1" src="s" column="mman022" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[效期指定長度：
+    欄位控制:
+        1.當[C:卡效期控管 mman018]='Y' 時才允許輸入 且 [C.有效期至 mman020] = '2.指定月長度' 時,才可輸入
+
+ 
+]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman023" ver="1" src="s" column="mman023" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[卡效期延長：
+    計算與處理:
+       1.當輸入值為'N'時,將"效期延長月份長度"與"效期延長次數" 清空為Null
+       2.當欄位值 由'Y'變'N'時,檢查"卡種效期延長規則設定 mmao_t"是否有資料,如果有資料則提示,是否確定要將此欄位設定為'N'
+          在離開輸入的過程中,當此欄位為'N'時,將"卡種效期延長規則設定 mmao_t"的資料刪除]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman024" ver="1" src="s" column="mman024" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[延長月份長度：
+    欄位控制:
+       1.當[C:卡效期延長 mman023]='Y' 時才允許輸入]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman025" ver="1" src="s" column="mman025" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[延長次數：
+    欄位控制:
+       1.當[C:卡效期延長 mman023]='Y' 時才允許輸入]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman026" ver="6" src="s" column="mman026" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman027" ver="1" src="s" column="mman027" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[積點：
+    計算與處理:
+       1.當輸入值為'N'時,將"預設、積點基準單位"、"預設積點基準"、"預設單位積點"、"積點清零規則"
+                                          "月後清零"、"日後清零"、"指定日期清零"、"積點取位"與"取位方法" 清空為Null]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman028" ver="1" src="s" column="mman028" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6503" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[效期控管起算基準：
+    欄位控制:
+       1.當[C.積點 mman027] ='Y'時才允許輸入
+    預設值: '1.金額'
+]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman029" ver="1" src="s" column="mman029" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設積點基準：
+    欄位控制:
+       1.當[C.積點 mman027] ='Y'時才允許輸入
+     
+   
+]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman030" ver="1" src="s" column="mman030" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設每單位積點：
+    欄位控制:
+       1.當[C.積點 mman027] ='Y'時才允許輸入]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman031" ver="1" src="s" column="mman031" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6504" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[積點清零規則：
+    欄位控制:
+       1.當[C.積點 mman027] ='Y'時才允許輸入
+    預設值: '1.不清零'
+]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman032" ver="1" src="s" column="mman032" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="1.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[月後清零：
+    欄位控制:
+       1.當[C.積點 mman027] ='Y' 且 [C:積點清零規則 mman031] = 2 時,才允許輸入]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman033" ver="1" src="s" column="mman033" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="1.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[日後清零：
+    欄位控制:
+       1.當[C.積點 mman027] ='Y' 且 [C:積點清零規則 mman031] = 3 時,才允許輸入]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman034" ver="1" src="s" column="mman034" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="&lt;=" max="12.000" min_compare="&gt;=" min="1.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[指定日期清零-月：
+    欄位控制:
+       1.當[T.積點 mman027] ='Y' 且 [C:積點清零規則 mman031] = 4 時,才允許輸入]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman035" ver="1" src="s" column="mman035" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="&lt;=" max="31.000" min_compare="&gt;=" min="1.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[指定日期清零-日：
+    欄位控制:
+       1.當[T.積點 mman027] ='Y'時才允許輸入 且 [C:積點清零規則 mman031] = 4 時,才允許輸入
+       2.輸入前 如果 "月 mman035"的資料為空值,則先將指標導向 "月"
+    校驗:
+       1. 1 ,3 ,5 ,7 ,8 ,10 ,12月 可輸入的範圍 為 1~31
+       2. 4 ,6 ,9 ,11月 可輸入的範圍為 1~30
+       3. 2月 可輸入範圍為 1~29
+  
+]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman036" ver="1" src="s" column="mman036" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6509" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[積點取位：
+    欄位控制:
+       1.當[C.積點 mman027] ='Y'時才允許輸入
+    預設值: '1.取整數'
+]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman037" ver="1" src="s" column="mman037" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="12" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[取位方法：
+    欄位控制:
+       1.當[C.積點 mman027] ='Y'時才允許輸入
+    預設值: '1.四捨五入'
+]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman038" ver="1" src="s" column="mman038" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[積點抵現：
+    計算與處理:
+       1.當輸入值為'N'時,將"預設最低抵現消費額"、"預設抵現積點基準"、"預設抵現單位金額"、"預設抵現上限比例"與"預設抵現上限金額" 清空為Null]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman039" ver="6" src="s" column="mman039" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設最低抵現消費額：
+    欄位控制:
+       1.當[C.積點抵現 mman038] ='Y' 時才允許輸入
+#150511-00027#1 2015/05/12 modify(移除預設值:0) by06814 BeckXie
+     
+]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman040" ver="6" src="s" column="mman040" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設抵現積點基準：
+    欄位控制:
+       1.當[C.積點抵現 mman038] ='Y' 時才允許輸入
+#150511-00027#1 2015/05/12 modify(移除預設值:0) by06814 BeckXie
+     
+]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman041" ver="6" src="s" column="mman041" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設抵現單位金額
+    欄位控制:
+       1.當[C.積點抵現 mman038] ='Y' 時才允許輸入
+#150511-00027#1 2015/05/12 modify(移除預設值:0) by06814 BeckXie]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman042" ver="1" src="s" column="mman042" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[可儲值：
+    計算與處理:
+       1.當輸入值為'N'時,將 "可重複儲值" 修改成'N' 且將 "每次儲值金額上限"、"每次儲值金額下限"與"最高總儲值金額" 清空為Null
+       2.當輸入值為Y時,儲值金額對應商品(mmak054) 設為 必要輸入]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman043" ver="1" src="s" column="mman043" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[可重複儲值：
+    欄位控制:
+       1.[C.可儲值 mman042] ='Y'時才允許輸入]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman044" ver="6" src="s" column="mman044" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[每次儲值金額上限：
+    欄位控制:
+       1.[C.可儲值 mman042] ='Y'時才允許輸入
+    校驗:
+       1.必須大於 [C:每次儲值金額下限 mman045]
+       2.必須小於等於 [C.最高總儲值金額 mman046]
+#150511-00027#1 2015/05/12 modify(移除預設值:0) by06814 BeckXie]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman045" ver="6" src="s" column="mman045" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[每次儲值金額下限：
+    欄位控制:
+       1.[C.可儲值 mmak042] ='Y'時才允許輸入
+    校驗:
+       1.必須小於等於 [C:每次儲值金額上限 mman044]
+       2.不可大於[C:最高總儲值金額 mman046]
+#150511-00027#1 2015/05/12 modify(移除預設值:0) by06814 BeckXie]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman046" ver="6" src="s" column="mman046" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[最高總儲值金額：
+    欄位控制:
+       1.[C.可儲值 mmak042] ='Y'時才允許輸入
+    校驗:
+       1.必須大於等於 [C:每次儲值金額上限 mman045]
+#150511-00027#1 2015/05/12 modify(移除預設值:0) by06814 BeckXie
+    ]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman047" ver="1" src="s" column="mman047" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[儲值折扣：
+    計算與處理:
+       1.當輸入值為'N'時,將"預設儲值折扣率"清空為Null]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman048" ver="1" src="s" column="mman048" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="&lt;=" max="100" min_compare="&gt;=" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設儲值折扣率：
+    欄位控制:
+       1.[C.儲值折扣 mman047] ='Y'時才允許輸入]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman049" ver="1" src="s" column="mman049" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[儲值加值：
+    計算與處理:
+       1.當輸入值為'N'時,將"預設加值最低金額"、"預設加值儲值金額"與"預設單位加值金額" 清空為Null]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman050" ver="6" src="s" column="mman050" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設加值最底金額：
+    欄位控制:
+       1.[C.儲值加值 mman049] ='Y'時才允許輸入
+#150511-00027#1 2015/05/12 modify(移除預設值:0) by06814 BeckXie]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman051" ver="6" src="s" column="mman051" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設加值儲值金額：
+    欄位控制:
+       1.[C.儲值加值 mman049] ='Y'時才允許輸入
+#150511-00027#1 2015/05/12 modify(移除預設值:0) by06814 BeckXie]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman052" ver="6" src="s" column="mman052" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設單位加值金額：
+    欄位控制:
+       1.[C.儲值加值 mman049] ='Y'時才允許輸入
+#150511-00027#1 2015/05/12 modify(移除預設值:0) by06814 BeckXie]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman053" ver="1" src="s" column="mman053" table="mman_t" attribute="" type="" req="Y" i_zoom="q_rtdx001_1" c_zoom="q_imaa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[卡種對應商品編號：
+     校驗:
+         1.輸入值必須存在於[T.門店清單檔 rtdx_t]中,且資料已確認(rtdxstus = 'Y')
+
+]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman054" ver="1" src="s" column="mman054" table="mman_t" attribute="" type="" req="N" i_zoom="q_rtdx001_1" c_zoom="q_imaa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[儲值金額對應商品編號：
+     校驗:
+         1.輸入值必須存在於[T.門店清單檔 rtdx_t]中,且資料已確認(rtdxstus = 'Y')
+]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman055" ver="1" src="s" column="mman055" table="mman_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="&lt;=" max="100" min_compare="&gt;=" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設抵現上限比例
+    欄位控制:
+       1.當[C.積點抵現 mman038] ='Y' 時才允許輸入]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman056" ver="6" src="s" column="mman056" table="mman_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設抵現上限金額
+    欄位控制:
+       1.當[C.積點抵現 mman038] ='Y' 時才允許輸入
+#150511-00027#1 2015/05/12 modify(移除預設值:0) by06814 BeckXie]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman057" ver="1" src="s" column="mman057" table="mman_t" attribute="" type="" req="" i_zoom="q_ooia001" c_zoom="q_ooia001" chk_ref="v_ooia001_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[預設值：無,允許空白
+檢核：v_ooia001_1 
+            參數一：款別編號 mman057
+            參數二：款別分類 '60' 
+            程式需 check 對應款別編號需存在[T:款別主檔ooia_t]且[T:款別主檔][C:款別分類]='60' AND 狀態碼='Y'
+
+開窗：q_ooia001
+查詢條件：[T:款別主檔ooia_t][C:款別分類]='60' 且狀態碼='Y' 
+]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman058" ver="1" src="s" column="mman058" table="mman_t" attribute="" type="" req="" i_zoom="q_ooia001" c_zoom="q_ooia001" chk_ref="v_ooia001_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[預設值：無,允許空白
+檢核：v_ooia001_1 
+            參數一：款別編號 mman058
+            參數二：款別分類 '60' 
+            程式需 check 對應款別編號需存在[T:款別主檔ooia_t]且[T:款別主檔][C:款別分類]='60' AND 狀態碼='Y'
+
+開窗：q_ooia001
+查詢條件：[T:款別主檔ooia_t][C:款別分類]='60' 且狀態碼='Y' 
+]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman059" ver="1" src="s" column="mman059" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6021" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman060" ver="1" src="s" column="mman060" table="mman_t" attribute="" type="" req="" i_zoom="q_rtdx001_1" c_zoom="q_imaa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[積分對應商品編號：
+     校驗:
+         1.輸入值必須存在於[T.門店清單檔 rtdx_t]中,且資料已確認(rtdxstus = 'Y')]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman061" ver="6" src="s" column="mman061" table="mman_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman062" ver="6" src="s" column="mman062" table="mman_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman063" ver="6" src="s" column="mman063" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman064" ver="6" src="s" column="mman064" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman065" ver="8" src="s" column="mman065" table="mman_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman066" ver="8" src="s" column="mman066" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6823" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman067" ver="8" src="s" column="mman067" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman068" ver="8" src="s" column="mman068" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mman069" ver="8" src="s" column="mman069" table="mman_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="&gt;" min="0.00" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mmancnfdt" ver="1" src="s" column="mmancnfdt" table="mman_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mmancnfid" ver="1" src="s" column="mmancnfid" table="mman_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mmancrtdp" ver="1" src="s" column="mmancrtdp" table="mman_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mmancrtdt" ver="1" src="s" column="mmancrtdt" table="mman_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mmancrtid" ver="1" src="s" column="mmancrtid" table="mman_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mmanmoddt" ver="1" src="s" column="mmanmoddt" table="mman_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mmanmodid" ver="1" src="s" column="mmanmodid" table="mman_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mmanowndp" ver="1" src="s" column="mmanowndp" table="mman_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mmanownid" ver="1" src="s" column="mmanownid" table="mman_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[程式說明及目的： 提供卡種基本資料維護查詢
+作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：基本資料維護作業
+輸入模式：單檔F001_00
+作業資料來源(Master)：
+ 資料來源表：mman_t(卡種基本資申請檔)
+                        mmanl_t(卡種基本資申請多語言檔)
+             mmao_t(效期延長則設定申請檔)
+                        mmap_t(生效營運據點設定申請檔)]]>
+  </field>
+  <field cite_std="N" name="mman_t.mmanstus" ver="1" src="s" column="mmanstus" table="mman_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mman_t.mmanunit" ver="4" src="s" column="mmanunit" table="mman_t" attribute="" type="" req="Y" i_zoom="q_ooed004" c_zoom="q_ooed004" chk_ref="v_ooed004" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[制定組織：
+     預設值:登入系統的營運據點 g_site
+     校驗:輸入值 的 [T:營運據點檔].[C:狀態 ooefsuts]='Y.有效' ]]>
+  </field>
+  <field cite_std="N" name="checkbox_1" ver="8" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="combobox_1" ver="8" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="edit_1" ver="8" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl" ver="8" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="mman004_desc" src="s" depend_field="mman_t.mman004" correspon_key="mman004" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mman012_desc" src="s" depend_field="mman_t.mman012" correspon_key="mman012" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="mman053_desc" src="s" depend_field="mman_t.mman053" correspon_key="mman053" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="mman054_desc" src="s" depend_field="mman_t.mman054" correspon_key="mman054" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="mman057_desc" src="s" depend_field="mman_t.mman057" correspon_key="mmanent,mman057" ref_table="ooial_t" ref_fk="ooialent,ooial001" ref_dlang="ooial002" ref_rtn="ooial003" status=""/>
+    <rfield cite_std="N" ver="1" name="mman058_desc" src="s" depend_field="mman_t.mman058" correspon_key="mmanent,mman058" ref_table="ooial_t" ref_fk="ooialent,ooial001" ref_dlang="ooial002" ref_rtn="ooial003" status=""/>
+    <rfield cite_std="N" ver="1" name="mman060_desc" src="s" depend_field="mman_t.mman060" correspon_key="mmanent,mman060" ref_table="imaal_t" ref_fk="imaalent,imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmancnfid_desc" src="s" depend_field="mman_t.mmancnfid" correspon_key="mmancnfid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="mmancrtdp_desc" src="s" depend_field="mman_t.mmancrtdp" correspon_key="mmancrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmancrtid_desc" src="s" depend_field="mman_t.mmancrtid" correspon_key="mmancrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="mmanmodid_desc" src="s" depend_field="mman_t.mmanmodid" correspon_key="mmanmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="mmanowndp_desc" src="s" depend_field="mman_t.mmanowndp" correspon_key="mmanowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmanownid_desc" src="s" depend_field="mman_t.mmanownid" correspon_key="mmanownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="4" name="mmanunit_desc" src="s" depend_field="mman_t.mmanunit" correspon_key="mmanunit" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+  </ref_field>
+  <multi_lang>
+    <mfield cite_std="N" ver="1" name="mmanl_t.mmanl003" src="s" depend_field="mman_t.mman001" correspon_key="mman001" lang_table="mmanl_t" lang_fk="mmanl001" lang_dlang="mmanl002" lang_rtn="mmanl003" status="">
+      <![CDATA[]]>
+    </mfield>
+    <mfield cite_std="N" ver="1" name="mmanl_t.mmanl004" src="s" depend_field="mman_t.mman001" correspon_key="mman001" lang_table="mmanl_t" lang_fk="mmanl001" lang_dlang="mmanl002" lang_rtn="mmanl004" status="">
+      <![CDATA[]]>
+    </mfield>
+  </multi_lang>
+  <help_code>
+    <hfield cite_std="N" ver="8" name="checkbox_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="8" name="combobox_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="8" name="edit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="8" name="lbl" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="mman_t.mman002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="mman_t.mman004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman023" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman024" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman025" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="mman_t.mman026" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman027" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman028" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman029" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman030" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman031" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman032" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman033" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman034" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman035" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman036" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman037" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman038" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="mman_t.mman039" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="mman_t.mman040" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="mman_t.mman041" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman042" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman043" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="mman_t.mman044" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="mman_t.mman045" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="mman_t.mman046" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman047" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman048" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman049" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="mman_t.mman050" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="mman_t.mman051" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="mman_t.mman052" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman053" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman054" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman055" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="mman_t.mman056" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman057" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman058" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman059" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mman060" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="mman_t.mman061" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="mman_t.mman062" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="mman_t.mman063" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="mman_t.mman064" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="8" name="mman_t.mman065" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="8" name="mman_t.mman066" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="8" name="mman_t.mman067" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="8" name="mman_t.mman068" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="8" name="mman_t.mman069" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="mman_t.mmancnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mmancnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mmancrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mmancrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mmancrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mmanmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mmanmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mmanowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mmanownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mman_t.mmanstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="mman_t.mmanunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="open_ammm320_01" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[生效範圍設定 - 串 ammm320_01
+]]>
+  </act>
+  <act cite_std="N" id="open_ammm320_02" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[效期延長規則設定 - 串 ammm320_02 ]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_mman001" text="卡種編號" lstr=""/>
+    <sfield name="lbl_mman002" text="版本" lstr=""/>
+    <sfield name="lbl_mmanl003" text="卡種名稱" lstr=""/>
+    <sfield name="lbl_mmanl004" text="助記碼" lstr=""/>
+    <sfield name="lbl_mman066" text="卡類型" lstr=""/>
+    <sfield name="lbl_mmanunit" text="制定組織" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_mman003" text="外社卡" lstr=""/>
+    <sfield name="lbl_mman004" text="no use" lstr=""/>
+    <sfield name="lbl_mmanstus" text="狀態碼" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_mmanownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="page_2" text="發行規則" lstr=""/>
+    <sfield name="lbl_mman005" text="卡號總碼長" lstr=""/>
+    <sfield name="lbl_mman006" text="卡號固定代碼長度" lstr=""/>
+    <sfield name="lbl_mman007" text="卡號固定代碼" lstr=""/>
+    <sfield name="lbl_mman008" text="卡號流水碼長度" lstr=""/>
+    <sfield name="page_3" text="發卡規則" lstr=""/>
+    <sfield name="lbl_mman009" text="發卡方式" lstr=""/>
+    <sfield name="lbl_mman010" text="消費附贈最低消費金額" lstr=""/>
+    <sfield name="lbl_mman011" text="購卡金額" lstr=""/>
+    <sfield name="lbl_mman012" text="發卡贈品商品編號" lstr=""/>
+    <sfield name="lbl_mman013" text="換卡工本費" lstr=""/>
+    <sfield name="lbl_mman014" text="補卡工本費" lstr=""/>
+    <sfield name="lbl_mman015" text="卡記名" lstr=""/>
+    <sfield name="lbl_mman069" text="記名纍計金額" lstr=""/>
+    <sfield name="lbl_mman016" text="使用時需開卡" lstr=""/>
+    <sfield name="lbl_mman017" text="卡需設定密碼" lstr=""/>
+    <sfield name="page_4" text="效期控管規則" lstr=""/>
+    <sfield name="lbl_mman018" text="卡效期控管" lstr=""/>
+    <sfield name="lbl_mman019" text="效期規則起算基準" lstr=""/>
+    <sfield name="lbl_mman020" text="有效期至" lstr=""/>
+    <sfield name="lbl_mman021" text="效期指定日期" lstr=""/>
+    <sfield name="lbl_mman022" text="效期指定月份長度" lstr=""/>
+    <sfield name="lbl_dummy01" text="月" lstr=""/>
+    <sfield name="lbl_mman023" text="卡效期延長" lstr=""/>
+    <sfield name="lbl_mman024" text="效期延長月份長度" lstr=""/>
+    <sfield name="lbl_dummy02" text="月" lstr=""/>
+    <sfield name="lbl_mman025" text="效期延長次數" lstr=""/>
+    <sfield name="page_5" text="取價規則" lstr=""/>
+    <sfield name="lbl_mman062" text="會員價" lstr=""/>
+    <sfield name="lbl_mman063" text="會員價選擇" lstr=""/>
+    <sfield name="lbl_mman026" text="會員折扣" lstr=""/>
+    <sfield name="lbl_mman064" text="預設折扣率" lstr=""/>
+    <sfield name="lbl_dummy04" text="%" lstr=""/>
+    <sfield name="page_6" text="其它" lstr=""/>
+    <sfield name="lbl_mman053" text="卡種對應商品編號" lstr=""/>
+    <sfield name="lbl_mman060" text="積分對應商品編號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_mman054" text="儲值金額對應商品編號" lstr=""/>
+    <sfield name="lbl_mman061" text="銷售認列方式" lstr=""/>
+    <sfield name="lbl_mman058" text="儲值對應款別編號" lstr=""/>
+    <sfield name="lbl_ooial003" text="說明" lstr=""/>
+    <sfield name="lbl_mman057" text="積分抵現對應款別編號" lstr=""/>
+    <sfield name="lbl_mman059" text="卡異動明細產生方式" lstr=""/>
+    <sfield name="page_7" text="積點規則" lstr=""/>
+    <sfield name="lbl_mman027" text="積點" lstr=""/>
+    <sfield name="lbl_mman028" text="預設積點基準單位" lstr=""/>
+    <sfield name="lbl_mman029" text="預設積點基準" lstr=""/>
+    <sfield name="lbl_mman030" text="預設單位積點" lstr=""/>
+    <sfield name="lbl_mman067" text="特價積點基準" lstr=""/>
+    <sfield name="lbl_mman068" text="特價單位積點" lstr=""/>
+    <sfield name="lbl_mman036" text="積點取位" lstr=""/>
+    <sfield name="lbl_mman037" text="取位方法" lstr=""/>
+    <sfield name="lbl_mman031" text="積點清零規則" lstr=""/>
+    <sfield name="lbl_mman032" text="月後清零" lstr=""/>
+    <sfield name="lbl_mman033" text="日後清零" lstr=""/>
+    <sfield name="lbl_mman034" text="指定日期清零(月/日)" lstr=""/>
+    <sfield name="lbl_dummy03" text="/" lstr=""/>
+    <sfield name="lbl_mman035" text="積點指定清零日期-日" lstr=""/>
+    <sfield name="lbl_mman038" text="積點抵現" lstr=""/>
+    <sfield name="lbl_mman039" text="預設最低抵現消費額" lstr=""/>
+    <sfield name="lbl_mman040" text="預設抵現積點基準" lstr=""/>
+    <sfield name="lbl_mman041" text="預設抵現單位金額" lstr=""/>
+    <sfield name="lbl_mman055" text="預設抵現上限比例" lstr=""/>
+    <sfield name="lbl_dummy05" text="%" lstr=""/>
+    <sfield name="lbl_mman056" text="預設抵現上限金額" lstr=""/>
+    <sfield name="page_8" text="儲值規則" lstr=""/>
+    <sfield name="lbl_mman042" text="可儲值" lstr=""/>
+    <sfield name="lbl_mman043" text="可重複儲值" lstr=""/>
+    <sfield name="lbl_mman065" text="儲值付款單次使用否" lstr=""/>
+    <sfield name="lbl_mman044" text="每次儲值金額上限" lstr=""/>
+    <sfield name="lbl_mman045" text="每次儲值金額下限" lstr=""/>
+    <sfield name="lbl_mman046" text="最高總儲值金額" lstr=""/>
+    <sfield name="lbl_mman047" text="儲值折扣" lstr=""/>
+    <sfield name="lbl_mman048" text="預設儲值折扣率" lstr=""/>
+    <sfield name="lbl_mman049" text="儲值加值" lstr=""/>
+    <sfield name="lbl_mman050" text="預設加值最低金額條件" lstr=""/>
+    <sfield name="lbl_mman051" text="預設加值儲值金額基準" lstr=""/>
+    <sfield name="lbl_mman052" text="預設單位加值金額" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="bpage_1" text="生效營運組織" lstr=""/>
+    <sfield name="lbl_mmap001" text="程式編號" lstr=""/>
+    <sfield name="lbl_mmap002" text="卡種/券種" lstr=""/>
+    <sfield name="lbl_mmap003" text="營運組織" lstr=""/>
+    <sfield name="lbl_ooeal003" text="營運組織名稱" lstr=""/>
+    <sfield name="lbl_mmap005" text="包括組織以下所有營運據點" lstr=""/>
+    <sfield name="lbl_mmap006" text="上級發佈卡儲值規則自行確認" lstr=""/>
+    <sfield name="lbl_mmap007" text="上級發佈卡積點規則自行確認" lstr=""/>
+    <sfield name="lbl_mmap004" text="安全存量" lstr=""/>
+    <sfield name="lbl_mmapstus" text="有效" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="bpage_2" text="效期延長規則設定" lstr=""/>
+    <sfield name="lbl_mmao001" text="卡種編號" lstr=""/>
+    <sfield name="lbl_mmao002" text="規則組別" lstr=""/>
+    <sfield name="lbl_mmao003" text="效期延長規則" lstr=""/>
+    <sfield name="lbl_mmao004" text="下限" lstr=""/>
+    <sfield name="lbl_mmaostus" text="有效" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_mmanl001" text="卡種編號" lstr=""/>
+    <sfield name="lbl_mmanl002" text="語言別" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="open_ammm320_01" text="生效範圍設定" lstr=""/>
+    <sact name="open_ammm320_02" text="效期延長規則設定" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

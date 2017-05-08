@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aimp110" std_prog="aimp110" erpver="1.0" ver="1" module="AIM" type="M" booking="N" designer_ver="1.0" class="p" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 利用此作業，將由期間內採購單蒐集各料件的最近進價及平均單價,並更新回料件主檔
+作業類型：批次作業
+輸入模式：批次 P003_00
+作業資料來源(Master)：
+ 資料來源表：imaa_t(商品料件主檔)
+資料處理：
+  1.資料來源：商品料件主檔(imaa_t)、
+    1-1.抓取[T.料件主檔(imaa_t)]已確認且有效，符合條件的料件資料
+    1-2.條件符合QBE
+  2.資料處理：
+    2-1.擷取採購單頭擋(pmdl_t)、採購單身明細擋(pmdn_t)
+        採購日期(pmdldocdt)介於期間內            
+        狀態碼為已確認單據
+        料件編號符合條件
+     ※ 計算時需注意同一營運據點的資料才能算在一起
+    2-2.採購平均單價 = (計價數量(pmdn011) * 單價(pmdn015)) / 實際採購量(對基礎單位)
+        採購平均單價 = SUM(計價數量(pmdn011) * 計價單位與基礎單位換算率) 
+                        * 單價(pmdn015) * 單頭匯率(pmdl016)) / 
+                     / SUM(採購數量(pmdn007) * 交易單位與基礎單位換算率) 
+       
+    2-3.是否更新料件主檔 = 'Y' ，
+             更新[T:料號據點資訊檔(imai_t)].[C:平均採購單價(imai022)]]]>
+  </all>
+  <field cite_std="N" name="a" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bdate" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="edate" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaa001" ver="1" src="s" column="imaa001" table="imaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_imaa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaa009" ver="1" src="s" column="imaa009" table="imaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_rtax001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="print" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="a" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="bdate" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="edate" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaa001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaa009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="print" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+  </help_code>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="group_qbe" text="QBE條件" lstr=""/>
+    <sfield name="lbl_imaa001" text="料件編號" lstr=""/>
+    <sfield name="lbl_imaa009" text="產品分類" lstr=""/>
+    <sfield name="group_input" text="條件選項" lstr=""/>
+    <sfield name="lbl_bdate" text="期間" lstr=""/>
+    <sfield name="lbl_edate" text="~" lstr=""/>
+    <sfield name="lbl_a" text="是否更新料件主檔" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_oojk001" text="簽核代號" lstr=""/>
+    <sfield name="lbl_oojk004_str" text="簽核關卡" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

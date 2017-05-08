@@ -1,0 +1,144 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aimi092" module="aim" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02482" crtdt="2013-11-06 16:41:25" modid="02294" moddt="2016-06-21 15:18:23" sdver="0008" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="料件特徵維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="imea001,imeal003(chr500),imea002,imea003,imea004,imeastus,imeaownid,imeaownid_desc(chr80),imeacrtid,imeacrtid_desc(chr80),imeaowndp,imeaowndp_desc(chr80),imeacrtdp,imeacrtdp_desc(chr80),imeacrtdt,imeamodid,imeamodid_desc(chr80),imeamoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="imeb002,imeb003,imeb004,imeb004_desc(chr500),imeb005,imeb013,imeb013_desc(chr500),imeb006,imeb007,imeb008,imeb009,imeb010,imeb011,imeb012"/>
+      <var id="bs_field" value="imea001,imea001_desc(chr80),imea002" pk="imea001" order=""/>
+      <bs_reference field="imea001_desc" ref_field="imea001" ref_sql="SELECT imeal003 FROM imeal_t WHERE imealent=$varg_enterprise$var AND imeal001=? AND imeal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="aim" filename="aimi092" method="dialog">
+    <section id="input">
+      <input id="head" field="imea001,imeal003,imea002,imea003,imea004,imeastus"/>
+      <input id="body" page="1" field="imeb002,imeb003,imeb004,imeb005,imeb013,imeb006,imeb007,imeb008,imeb009,imeb010,imeb011,imeb012" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="imea001,imeal003,imea002,imea003,imea004,imeastus,imeaownid,imeacrtid,imeaowndp,imeacrtdp,imeacrtdt,imeamodid,imeamoddt"/>
+      <construct id="body" page="1" field="imeb002,imeb003,imeb004,imeb005,imeb013,imeb006,imeb007,imeb008,imeb009,imeb010,imeb011,imeb012"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="imea001"/>
+      <set id="head" type="no_entry" field="imea001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="imea001">
+        <controlp form="q_imea001" state="c"/>
+      </column>
+      <column id="imeal003"/>
+      <column id="imea002" type="S" default="Y"/>
+      <column id="imea003"/>
+      <column id="imea004" type="S" default="N"/>
+      <column id="imeastus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="imeaownid">
+        <after>
+          <reference field="imeaownid_desc" ref_field="imea_t.imeaownid" map_field="imeaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imeaownid_desc"/>
+      <column id="imeacrtid">
+        <after>
+          <reference field="imeacrtid_desc" ref_field="imea_t.imeacrtid" map_field="imeacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imeacrtid_desc"/>
+      <column id="imeaowndp">
+        <after>
+          <reference field="imeaowndp_desc" ref_field="imea_t.imeaowndp" map_field="imeaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imeaowndp_desc"/>
+      <column id="imeacrtdp">
+        <after>
+          <reference field="imeacrtdp_desc" ref_field="imea_t.imeacrtdp" map_field="imeacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imeacrtdp_desc"/>
+      <column id="imeacrtdt"/>
+      <column id="imeamodid">
+        <after>
+          <reference field="imeamodid_desc" ref_field="imea_t.imeamodid" map_field="imeamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imeamodid_desc"/>
+      <column id="imeamoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="imeb002">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imeb003" type="S" default="1" def_scc="4004"/>
+      <column id="imeb004">
+        <after>
+          <reference field="imeb004_desc" ref_field="imeb004" map_field="imeb004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;273&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imeb004_desc"/>
+      <column id="imeb005" type="S" default="1" def_scc="4005"/>
+      <column id="imeb013">
+        <after>
+          <check chkid="v_gzzz001_6" id="isExist"/>
+          <reference field="imeb013_desc" ref_field="imeb_t.imeb013" map_field="imeb013" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzzz001_9" state="i"/>
+        <controlp form="q_gzzz001_9" state="c"/>
+      </column>
+      <column id="imeb013_desc"/>
+      <column id="imeb006" type="S" default="1" def_scc="4006"/>
+      <column id="imeb007">
+        <after>
+          <check id="range" st="30.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="imeb008" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imeb009"/>
+      <column id="imeb010"/>
+      <column id="imeb011"/>
+      <column id="imeb012" type="S" default="N"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="imea_t" pk="imea001">
+      <sql id="forupd_sql" type="sql" query="SELECT imea001,&apos;&apos;,imea002,imea003,imea004,imeastus,imeaownid,&apos;&apos;,imeacrtid,&apos;&apos;,imeaowndp,&apos;&apos;,imeacrtdp,&apos;&apos;,imeacrtdt,imeamodid,&apos;&apos;,imeamoddt FROM imea_t WHERE imeaent= ? AND imea001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT imea001,&apos;&apos;,imea002,imea003,imea004,imeastus,imeaownid,&apos;&apos;,imeacrtid,&apos;&apos;,imeaowndp,&apos;&apos;,imeacrtdp,&apos;&apos;,imeacrtdt,imeamodid,&apos;&apos;,imeamoddt FROM imea_t" order="imea001"/>
+      <sql id="append" type="lang" target="imeal003" table="imeal_t" fk="imea001" pk="imeal001,imeal002" field="imeal003"/>
+    </head>
+    <body id="imeb_t" page="1" linked="" pk="imeb002" fk="imeb001">
+      <sql id="forupd_sql_detail" query="SELECT imeb002,imeb003,imeb004,&apos;&apos;,imeb005,imeb013,&apos;&apos;,imeb006,imeb007,imeb008,imeb009,imeb010,imeb011,imeb012 FROM imeb_t WHERE imebent=? AND imeb001=? AND imeb002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT imeb002,imeb003,imeb004,&apos;&apos;,imeb005,imeb013,&apos;&apos;,imeb006,imeb007,imeb008,imeb009,imeb010,imeb011,imeb012 FROM imeb_t WHERE imebent=? AND imeb001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

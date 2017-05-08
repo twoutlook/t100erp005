@@ -1,0 +1,153 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abmm204" module="abm" jobmode="N" type="i04" industry="std" fix_arg="0" crtid="02587" crtdt="2013-10-09 23:42:47" modid="02295" moddt="2016-03-31 16:56:17" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="集團生管資料修改作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bmaasite,bmaa001,bmaa002,imaal003,imaa009,imaa009_desc(chr80),imaal004,imaa010,imaa010_desc(chr80),bmaa004"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bmba009,bmba003,bmba003_desc(chr500),bmba003_desc_desc(chr500),bmba004,bmba004_desc(chr500),bmba007,bmba007_desc(chr500),bmba008,bmba005(dat),bmba006,bmba011,bmba012,bmba010,bmba021,bmba022,bmba023,bmba024,bmba024_desc(chr500),bmba024_desc_desc(chr500),bmba030,bmba031,bmba015,bmba015_desc(chr500),bmba016,bmba016_desc(chr500),bmba032"/>
+      <var id="bs_field" value="bmaa001,bmaa001_desc(chr80),bmaa001_desc_desc(chr80),bmaa002,bmaasite" pk="bmaasite,bmaa001,bmaa002" order=""/>
+      <bs_reference field="bmaa001_desc" ref_field="bmaa001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+      <bs_reference field="bmaa001_desc_desc" ref_field="bmaa001" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abm" filename="abmm204" method="dialog">
+    <section id="input">
+      <input id="head" field="bmaasite,bmaa001,bmaa002,imaal003,imaa009,imaal004,imaa010,bmaa004"/>
+      <input id="body" page="1" field="bmba009,bmba003,bmba004,bmba007,bmba008,bmba005,bmba006,bmba011,bmba012,bmba010,bmba021,bmba022,bmba023,bmba024,bmba030,bmba031,bmba015,bmba016,bmba032" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bmaasite,bmaa001,bmaa002,imaa009,imaa010,bmaa004"/>
+      <construct id="body" page="1" field="bmba009,bmba003,bmba004,bmba007,bmba008,bmba005,bmba006,bmba011,bmba012,bmba010,bmba021,bmba022,bmba023,bmba024,bmba030,bmba031,bmba015,bmba016,bmba032"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bmaasite,bmaa001,bmaa002"/>
+      <set id="head" type="no_entry" field="bmaasite,bmaa001,bmaa002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bmaasite"/>
+      <column id="bmaa001">
+        <controlp form="q_imaa001_2" state="i"/>
+        <controlp form="q_imaa001_2" state="c"/>
+      </column>
+      <column id="bmaa002"/>
+      <column id="imaal003"/>
+      <column id="imaa009">
+        <after>
+          <reference field="imaa009_desc" ref_field="imaa_t.imaa009" map_field="imaa009" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001" state="i"/>
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="imaa009_desc"/>
+      <column id="imaal004"/>
+      <column id="imaa010">
+        <after>
+          <reference field="imaa010_desc" ref_field="imaa010" map_field="imaa010" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;210&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="imaa010_desc"/>
+      <column id="bmaa004">
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+    </init>
+    <init id="body" page="1">
+      <column id="bmba009"/>
+      <column id="bmba003">
+        <after>
+          <reference field="bmba003_desc" ref_field="bmba_t.bmba003" map_field="bmba003" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="bmba003_desc">
+        <after>
+          <reference field="bmba003_desc_desc" ref_field="bmba_t.bmba003" map_field="bmba003" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="bmba003_desc_desc"/>
+      <column id="bmba004">
+        <after>
+          <reference field="bmba004_desc" ref_field="bmba004" map_field="bmba004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;215&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bmba004_desc"/>
+      <column id="bmba007">
+        <after>
+          <reference field="bmba007_desc" ref_field="bmba007" map_field="bmba007" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bmba007_desc"/>
+      <column id="bmba008"/>
+      <column id="bmba005"/>
+      <column id="bmba006"/>
+      <column id="bmba011"/>
+      <column id="bmba012"/>
+      <column id="bmba010">
+        <controlp form="q_ooca001" state="i"/>
+        <controlp form="q_ooca001" state="c"/>
+      </column>
+      <column id="bmba021" def_scc="4003"/>
+      <column id="bmba022" type="S" default="N"/>
+      <column id="bmba023" type="S" default="0"/>
+      <column id="bmba024">
+        <after>
+          <reference field="bmba024_desc" ref_field="bmba_t.bmba024" map_field="bmba024" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_bmea008_1" state="i"/>
+        <controlp form="q_bmea008_2" state="c"/>
+      </column>
+      <column id="bmba024_desc">
+        <after>
+          <reference field="bmba024_desc_desc" ref_field="bmba_t.bmba024" map_field="bmba024" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="bmba024_desc_desc"/>
+      <column id="bmba030"/>
+      <column id="bmba031" type="S" default="N"/>
+      <column id="bmba015">
+        <after>
+          <check chkid="v_inaa001_3" id="isExist"/>
+          <reference field="bmba015_desc" ref_field="bmbasite,bmba015" map_field="bmbasite,bmba015" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaasite=? AND inaa001=? "/>
+        </after>
+        <controlp form="q_inaa001_2" state="i"/>
+        <controlp form="q_inaa001_2" state="c"/>
+      </column>
+      <column id="bmba015_desc"/>
+      <column id="bmba016">
+        <after>
+          <check chkid="v_inab002_2" id="isExist"/>
+          <reference field="bmba016_desc" ref_field="bmbasite,bmba015,bmba016" map_field="bmbasite,bmba015,bmba016" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inabsite=? AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inab002_1" state="i"/>
+        <controlp form="q_inab002_1" state="c"/>
+      </column>
+      <column id="bmba016_desc"/>
+      <column id="bmba032"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bmaa_t" pid="bmaa001" type="" desc="" pk="bmaasite,bmaa001,bmaa002">
+      <sql id="forupd_sql" type="sql" query="SELECT bmaasite,bmaa001,bmaa002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,bmaa004 FROM bmaa_t WHERE bmaaent= ? AND bmaasite=? AND bmaa001=? AND bmaa002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="bmaasite,bmaa001,bmaa002"/>
+    </head>
+    <body id="bmba_t" page="1" linked="" lid="bmba003" pid="bmba001" type="" pk="bmba003,bmba004,bmba005,bmba007,bmba008" fk="bmbasite,bmba001,bmba002">
+      <sql id="forupd_sql_detail" query="SELECT bmba009,bmba003,&apos;&apos;,&apos;&apos;,bmba004,&apos;&apos;,bmba007,&apos;&apos;,bmba008,&apos;&apos;,bmba006,bmba011,bmba012,bmba010,bmba021,bmba022,bmba023,bmba024,&apos;&apos;,&apos;&apos;,bmba030,bmba031,bmba015,&apos;&apos;,bmba016,&apos;&apos;,bmba032 FROM bmba_t WHERE bmbaent=? AND bmbasite=? AND bmba001=? AND bmba002=? AND bmba003=? AND bmba004=? AND bmba005=? AND bmba007=? AND bmba008=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bmba009,bmba003,&apos;&apos;,&apos;&apos;,bmba004,&apos;&apos;,bmba007,&apos;&apos;,bmba008,&apos;&apos;,bmba006,bmba011,bmba012,bmba010,bmba021,bmba022,bmba023,bmba024,&apos;&apos;,&apos;&apos;,bmba030,bmba031,bmba015,&apos;&apos;,bmba016,&apos;&apos;,bmba032 FROM bmba_t WHERE bmbaent=? AND bmbasite=? AND bmba001=? AND bmba002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

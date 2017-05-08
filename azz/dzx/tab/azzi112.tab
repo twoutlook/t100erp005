@@ -1,0 +1,97 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi112" module="azz" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02159" crtdt="2016-03-08 10:37:08" modid="02159" moddt="2016-03-08 10:37:08" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="標準字詞表維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzow000,gzow001,gzow002,gzow003,gzow004,gzow005,gzow006"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gzow000,gzowownid,gzowownid_desc(chr500),gzowowndp,gzowowndp_desc(chr500),gzowcrtid,gzowcrtid_desc(chr500),gzowcrtdp,gzowcrtdp_desc(chr500),gzowcrtdt,gzowmodid,gzowmodid_desc(chr500),gzowmoddt,gzowcnfid,gzowcnfid_desc(chr500),gzowcnfdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi112" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="gzow000,gzow001,gzow002" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="gzow000,gzow001,gzow002"/>
+      <construct id="body" page="2" field="gzowownid,gzowowndp,gzowcrtid,gzowcrtdp,gzowcrtdt,gzowmodid,gzowmoddt,gzowcnfid,gzowcnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzow000"/>
+      <column id="gzow001"/>
+      <column id="gzow002"/>
+      <column id="gzow003"/>
+      <column id="gzow004"/>
+      <column id="gzow005"/>
+      <column id="gzow006"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gzowownid">
+        <after>
+          <reference field="gzowownid_desc" ref_field="gzow_t.gzowownid" map_field="gzowownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzowownid_desc"/>
+      <column id="gzowowndp">
+        <after>
+          <reference field="gzowowndp_desc" ref_field="gzow_t.gzowowndp" map_field="gzowowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzowowndp_desc"/>
+      <column id="gzowcrtid">
+        <after>
+          <reference field="gzowcrtid_desc" ref_field="gzow_t.gzowcrtid" map_field="gzowcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzowcrtid_desc"/>
+      <column id="gzowcrtdp">
+        <after>
+          <reference field="gzowcrtdp_desc" ref_field="gzow_t.gzowcrtdp" map_field="gzowcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzowcrtdp_desc"/>
+      <column id="gzowcrtdt"/>
+      <column id="gzowmodid">
+        <after>
+          <reference field="gzowmodid_desc" ref_field="gzow_t.gzowmodid" map_field="gzowmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzowmodid_desc"/>
+      <column id="gzowmoddt"/>
+      <column id="gzowcnfid">
+        <after>
+          <reference field="gzowcnfid_desc" ref_field="gzow_t.gzowcnfid" map_field="gzowcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzowcnfid_desc"/>
+      <column id="gzowcnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="gzow_t" page="1,2" linked="" pk="gzow000">
+      <sql id="forupd_sql_detail" query="SELECT gzow000,gzow001,gzow002,gzow003,gzow004,gzow005,gzow006,&apos;&apos;,gzowownid,&apos;&apos;,gzowowndp,&apos;&apos;,gzowcrtid,&apos;&apos;,gzowcrtdp,&apos;&apos;,gzowcrtdt,gzowmodid,&apos;&apos;,gzowmoddt,gzowcnfid,&apos;&apos;,gzowcnfdt FROM gzow_t WHERE gzow000=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzow000,gzow001,gzow002,gzow003,gzow004,gzow005,gzow006,&apos;&apos;,gzowownid,&apos;&apos;,gzowowndp,&apos;&apos;,gzowcrtid,&apos;&apos;,gzowcrtdp,&apos;&apos;,gzowcrtdt,gzowmodid,&apos;&apos;,gzowmoddt,gzowcnfid,&apos;&apos;,gzowcnfdt FROM gzow_t WHERE 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

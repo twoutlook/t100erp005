@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="amrp050" std_prog="amrp050" erpver="1.0" ver="2" module="AMR" type="M" booking="Y" designer_ver="1.0" class="p" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="W" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="1" cite_std="N">
+    <tbl name="mrba_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 依照資源主檔設定的保養校正週期,並配合保養週期的時間設定,產生指定期間內各資源的行事曆
+作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：批次處理作業
+輸入模式：批次 P02
+ 資料來源表：mrba_t(資源主檔)
+                         mrbb_t
+                         mrbh_t(資源行事曆檔)
+勾選欲做批次作業的資料後，點選執行
+
+1.取出符合條件且資源狀態為已確認(mrbastus = 'Y')之資源編號(mrba001)及其保養校正週期資料(mrbb_t)
+  1.1 若畫面"已存在資料重新產生"未勾選,則資源編號+保養項目(mrbb003)有已存在行事曆區間起迄之資源行事曆資料(mrbh_t),則此筆不執行
+  1.2 若畫面"已存在資料重新產生"有勾選,將先將資源編號已存在行事曆區間起迄之資源行事曆資料(mrbh_t)刪除
+
+2.從行事曆基準日開始,依amri007之週期(mrbb004)設定,計算在行事曆日期區間,該保修項目之保修日期:
+　5.1 將保修日期時間新增至資源行事曆檔:
+ 目的欄位    欄位說明    來源資料
+ mrbe001 資源編號 mrbb001
+ mrbe002 日期 若有多個日期則須新增多筆mrbh_t
+ mrbe003 開始時間 1.amri070 "時段"之欄位值,若有多個時段,則須新增多筆mrbh_t
+                                    2.若amri070 "時段"之欄位值均為空值,則依amrm200 [C:稼動班別](mrba103)取出aooi426 [C:上班時間](oogd003)
+                                    3.若[C:上班時間]為空值,則提示錯誤訊息
+ mrbe004 結束時間    1.依amrm200 保養校正週期頁籤[C:預計時間](mrbb009)設定,將開始時間+預計時間作為結束時間
+                                      (預計時間須配合[C:時間單位mrbb010]作轉換)
+                                    2.若預計時間小於1分鐘,則以1分鐘計
+                                    3.若預計時間為空值,則依amrm200 [C:稼動班別]取出aooi426 [C:下班時間]
+                                    4.若[C:下班時間]為空值,則提示錯誤訊息
+ mrbe005 正常運作否 'N'
+ mrbe006 工作站 mrba022
+ mrbe007 保修項目 上述1取出之amrm200 保養校正週期頁籤[C:保修類型](mrbb003)
+ mrbe008 備註 空值 
+  5.2 呼叫s_ins_able_time(計算資源可用時間元件)將正常運作日期時間新增至資源行事曆檔:
+        日期範圍:行事曆基準日至畫面"行事曆區間"結束日
+
+##忽略不做########################################
+#3.取得此資源編號+保養項目本次欲產生之行事曆基準日:
+#  3.1 取出該資源編號+保養項目於[T:資源行事曆檔]最近一次之日期
+#  3.2 若無上述3.1資料,則依畫面"最近一次保養日期基準"指定:
+#      若為1.最近保養日期,則取mrbb007
+#          2.下次保養日期,則取mrbb008
+#  3.3 若畫面指定欄位之日期為空值,則依下列優先序取出其他日期:
+#      1.最近保養日期
+#      2.資源啟用日期(mrba033)
+#      3.畫面指定"行事曆日期區間"開始日
+##################################################
+]]>
+  </all>
+  <db_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[符合左方QBD和INPUT條件的amrm200 資源主檔資料顯示在單身]]>
+  </db_all>
+  <field cite_std="N" name="b_mrba001" ver="1" src="s" column="mrba001" table="mrba_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mrba004" ver="1" src="s" column="mrba004" table="mrba_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mrba010" ver="1" src="s" column="mrba010" table="mrba_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mrba021" ver="1" src="s" column="mrba021" table="mrba_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mrba022" ver="1" src="s" column="mrba022" table="mrba_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mrba103" ver="1" src="s" column="mrba103" table="mrba_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="v_oogd001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_sel" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="chk1" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="chk2" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="date1" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="DateEdit" status="">
+    <![CDATA[校驗：結束日期輸入值不可小於開始日期]]>
+  </field>
+  <field cite_std="N" name="date2" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="DateEdit" status="">
+    <![CDATA[校驗：若"新承認有效日-起"及"新承認有效日-迄"均有輸入值,則此欄位輸入值不可小於"新承認有效日-起"輸入值]]>
+  </field>
+  <field cite_std="N" name="mrba_t.mrba001" ver="1" src="s" column="mrba001" table="mrba_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_mrba001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrba_t.mrba010" ver="1" src="s" column="mrba010" table="mrba_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[開窗：arg1='1101']]>
+  </field>
+  <field cite_std="N" name="mrba_t.mrba021" ver="1" src="s" column="mrba021" table="mrba_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[開窗：arg1='221']]>
+  </field>
+  <field cite_std="N" name="mrba_t.mrba022" ver="1" src="s" column="mrba022" table="mrba_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ecaa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_mrba010_desc" src="s" depend_field="b_mrba010" correspon_key="&apos;1101&apos;,mrba010" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="b_mrba021_desc" src="s" depend_field="b_mrba021" correspon_key="&apos;221&apos;,mrba021" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="b_mrba022_desc" src="s" depend_field="b_mrba022" correspon_key="mrbasite,mrba022" ref_table="ecaa_t" ref_fk="ecaasite,ecaa001" ref_dlang="" ref_rtn="ecaa002" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_mrba001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mrba004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mrba010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mrba021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mrba022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mrba103" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_sel" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="chk1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="chk2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="date1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="date2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrba_t.mrba001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrba_t.mrba010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrba_t.mrba021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrba_t.mrba022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="page_qbe" text="查詢條件" lstr=""/>
+    <sfield name="lbl_mrba021" text="專屬作業編號" lstr=""/>
+    <sfield name="lbl_mrba022" text="所屬工作站" lstr=""/>
+    <sfield name="lbl_mrba010" text="資源分類" lstr=""/>
+    <sfield name="lbl_mrba001" text="資源編號" lstr=""/>
+    <sfield name="lbl_date1" text="行事曆日期區間" lstr=""/>
+    <sfield name="lbl_date2" text="~" lstr=""/>
+    <sfield name="lbl_chk1" text="已存在資料是否重新產生" lstr=""/>
+    <sfield name="lbl_chk2" text="產生後進入資源行事曆維護" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="bpage_1" text="項目" lstr=""/>
+    <sfield name="lbl_sel" text="選擇" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_ecaa002" text="工作站名稱" lstr=""/>
+    <sfield name="lbl_mrba004" text="資源名稱" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

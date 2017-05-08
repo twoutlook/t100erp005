@@ -1,0 +1,2780 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="asfp360_04.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0005(2015-04-16 17:59:05), PR版次:0005(1900-01-01 00:00:00)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000093
+#+ Filename...: asfp360_04
+#+ Description: 產生單據
+#+ Creator....: 00768(2014-05-16 14:37:57)
+#+ Modifier...: 00768 -SD/PR- 00000
+ 
+{</section>}
+ 
+{<section id="asfp360_04.global" >}
+#應用 p00 樣板自動產生(Version:4)
+#add-point:填寫註解說明
+#160318-00025#21   2016/04/19  BY 07900    校验代码重复错误讯息的修改
+#160408-00035#7 16/04/21 By xianghui  插入sfdd时增加备置量和在拣量的计算
+#160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_03_temp1 ——> asfp360_tmp01,asfp360_03_temp3 ——> asfp360_tmp02,asfp360_05_temp3 ——> asfp360_tmp04
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+GLOBALS "../../asf/4gl/asfp360.inc"
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asfp360_04.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable)
+ 
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asfp360_04.global_variable" >}
+#add-point:自定義模組變數(Module Variable)
+DEFINE l_ac                  LIKE type_t.num5
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asfp360_04.other_dialog" >}
+
+DIALOG asfp360_04_input()
+   DEFINE l_success    LIKE type_t.num5
+   DEFINE l_ooef004    LIKE ooef_t.ooef004
+   DEFINE l_where      STRING
+   DEFINE l_inaa007     LIKE inaa_t.inaa007   #儲位控管
+   
+   INPUT g_asfp360_04_m.user,g_asfp360_04_m.slips,g_asfp360_04_m.slipr,g_asfp360_04_m.ware,g_asfp360_04_m.loca,g_asfp360_04_m.lot
+      FROM user_04a,slips_04a,slipr_04a,ware_04a,loca_04a,lot_04a
+      
+      ATTRIBUTE(WITHOUT DEFAULTS)
+
+      BEFORE INPUT
+
+      AFTER FIELD user_04a
+         CALL asfp360_04_chk_column('user_04a') RETURNING l_success
+         IF NOT l_success THEN
+            NEXT FIELD CURRENT
+         END IF
+         CALL s_desc_get_person_desc(g_asfp360_04_m.user) RETURNING g_asfp360_04_m.user_desc
+         DISPLAY g_asfp360_04_m.user_desc TO user_04a_desc
+
+      AFTER FIELD slips_04a
+         CALL asfp360_04_chk_column('slips_04a') RETURNING l_success
+         IF NOT l_success THEN
+            NEXT FIELD CURRENT
+         END IF
+         
+         CALL s_aooi200_get_slip_desc(g_asfp360_04_m.slips) RETURNING g_asfp360_04_m.slips_desc
+         DISPLAY g_asfp360_04_m.slips_desc TO slips_04a_desc
+
+      AFTER FIELD slipr_04a
+         CALL asfp360_04_chk_column('slipr_04a') RETURNING l_success
+         IF NOT l_success THEN
+            NEXT FIELD CURRENT
+         END IF
+         
+         CALL s_aooi200_get_slip_desc(g_asfp360_04_m.slipr) RETURNING g_asfp360_04_m.slipr_desc
+         DISPLAY g_asfp360_04_m.slipr_desc TO slipr_04a_desc
+
+      AFTER FIELD ware_04a
+         CALL asfp360_04_chk_column('ware_04a') RETURNING l_success
+         IF NOT l_success THEN
+            NEXT FIELD CURRENT
+         END IF
+         
+         CALL s_desc_get_stock_desc(g_site,g_asfp360_04_m.ware) RETURNING g_asfp360_04_m.ware_desc
+         DISPLAY g_asfp360_04_m.ware_desc TO ware_04a_desc
+         IF NOT cl_null(g_asfp360_04_m.ware) AND NOT cl_null(g_asfp360_04_m.loca) THEN
+            CALL s_desc_get_locator_desc(g_site,g_asfp360_04_m.ware,g_asfp360_04_m.loca) RETURNING g_asfp360_04_m.loca_desc
+            DISPLAY g_asfp360_04_m.loca_desc TO loca_04a_desc
+         END IF
+
+      BEFORE FIELD loca_04a
+         IF cl_null(g_asfp360_04_m.ware) THEN
+            #请先维护库位
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'asf-00419'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            NEXT FIELD ware_04a
+         END IF
+         
+      AFTER FIELD loca_04a
+         CALL asfp360_04_chk_column('loca_04a') RETURNING l_success
+         IF NOT l_success THEN
+            NEXT FIELD CURRENT
+         END IF
+         
+         IF NOT cl_null(g_asfp360_04_m.ware) AND NOT cl_null(g_asfp360_04_m.loca) THEN
+            CALL s_desc_get_locator_desc(g_site,g_asfp360_04_m.ware,g_asfp360_04_m.loca) RETURNING g_asfp360_04_m.loca_desc
+            DISPLAY g_asfp360_04_m.loca_desc TO loca_04a_desc
+         END IF
+
+      AFTER FIELD lot_04a
+         CALL asfp360_04_chk_column('lot_04a') RETURNING l_success
+         IF NOT l_success THEN
+            NEXT FIELD CURRENT
+         END IF
+         
+         IF NOT cl_null(g_asfp360_04_m.lot) THEN
+            CALL s_aooi200_get_slip_desc(g_asfp360_04_m.lot) RETURNING g_asfp360_04_m.lot_desc
+            DISPLAY g_asfp360_04_m.lot_desc TO lot_04a
+         END IF
+
+      ON ACTION controlp INFIELD user_04a
+         #開窗i段
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'i'
+         LET g_qryparam.reqry = FALSE
+         LET g_qryparam.default1 = g_asfp360_04_m.user           #給予default值
+         LET g_qryparam.default2 = "" #g_sfda_m.oofa011 #全名
+         #給予arg
+         CALL q_ooag001_8()                                #呼叫開窗
+         LET g_asfp360_04_m.user = g_qryparam.return1              #將開窗取得的值回傳到變數
+         DISPLAY g_asfp360_04_m.user TO user_04a              #顯示到畫面上
+         CALL s_desc_get_person_desc(g_asfp360_04_m.user) RETURNING g_asfp360_04_m.user_desc
+         DISPLAY g_asfp360_04_m.user_desc TO user_04a_desc
+         NEXT FIELD user_04a                          #返回原欄位
+
+      ON ACTION controlp INFIELD slips_04a
+         #開窗i段
+         SELECT ooef004 INTO l_ooef004 FROM ooef_t
+          WHERE ooefent = g_enterprise
+            AND ooef001 = g_site
+            
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'i'
+         LET g_qryparam.reqry = FALSE
+         LET g_qryparam.default1 = g_asfp360_04_m.slips           #給予default值
+         #給予arg
+         LET g_qryparam.arg1 = l_ooef004 #參照表編號
+         IF g_asfp360_02_m.type = '1' THEN
+            #1.成套挪料
+            LET g_qryparam.arg2 = "asft311" #作业代号 成套发料
+         ELSE
+            #2.单颗挪料
+            LET g_qryparam.arg2 = "asft313" #作业代号 欠料补料
+         END IF
+         CALL q_ooba002_8()                                #呼叫開窗
+         LET g_asfp360_04_m.slips = g_qryparam.return1              #將開窗取得的值回傳到變數
+         DISPLAY g_asfp360_04_m.slips TO slips_04a              #顯示到畫面上
+         CALL s_aooi200_get_slip_desc(g_asfp360_04_m.slips) RETURNING g_asfp360_04_m.slips_desc
+         DISPLAY g_asfp360_04_m.slips_desc TO slips_04a_desc
+         NEXT FIELD slips_04a                          #返回原欄位
+   
+      ON ACTION controlp INFIELD slipr_04a
+         #開窗i段
+         SELECT ooef004 INTO l_ooef004 FROM ooef_t
+          WHERE ooefent = g_enterprise
+            AND ooef001 = g_site
+            
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'i'
+         LET g_qryparam.reqry = FALSE
+         LET g_qryparam.default1 = g_asfp360_04_m.slipr           #給予default值
+         #給予arg
+         LET g_qryparam.arg1 = l_ooef004 #參照表編號
+         IF g_asfp360_02_m.type = '1' THEN
+            #1.成套挪料
+            LET g_qryparam.arg2 = "asft321" #作业代号 成套退料
+         ELSE
+            #2.单颗挪料
+            LET g_qryparam.arg2 = "asft323" #作业代号 一般退料
+         END IF
+         CALL q_ooba002_8()                                #呼叫開窗
+         LET g_asfp360_04_m.slipr = g_qryparam.return1              #將開窗取得的值回傳到變數
+         DISPLAY g_asfp360_04_m.slipr TO slipr_04a              #顯示到畫面上
+         CALL s_aooi200_get_slip_desc(g_asfp360_04_m.slipr) RETURNING g_asfp360_04_m.slipr_desc
+         DISPLAY g_asfp360_04_m.slipr_desc TO slipr_04a_desc
+         NEXT FIELD slipr_04a                          #返回原欄位
+
+      ON ACTION controlp INFIELD ware_04a
+         #仓库
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = "i"
+         LET g_qryparam.reqry = FALSE
+         LET g_qryparam.default1 = g_asfp360_04_m.ware
+         LET g_qryparam.where = " 1=1"
+
+         #关于控制组
+         IF NOT cl_null(g_asfp360_04_m.slips) THEN
+            CALL s_control_get_doc_sql("inaa001",g_asfp360_04_m.slips,'6')
+                 RETURNING l_success,l_where
+            IF l_success THEN
+               LET g_qryparam.where = g_qryparam.where ," AND ",l_where
+            END IF
+         END IF
+         IF NOT cl_null(g_asfp360_04_m.slipr) THEN
+            CALL s_control_get_doc_sql("inaa001",g_asfp360_04_m.slipr,'7')
+                 RETURNING l_success,l_where
+            IF l_success THEN
+               LET g_qryparam.where = g_qryparam.where ," AND ",l_where
+            END IF
+         END IF
+         #关于控制组--end
+
+         CALL q_inaa001_12()  #库位
+         LET g_asfp360_04_m.ware = g_qryparam.return1
+         DISPLAY g_asfp360_04_m.ware TO ware_04a
+         CALL s_desc_get_stock_desc(g_site,g_asfp360_04_m.ware) RETURNING g_asfp360_04_m.ware_desc
+         IF NOT cl_null(g_asfp360_04_m.loca) THEN
+            CALL s_desc_get_locator_desc(g_site,g_asfp360_04_m.ware,g_asfp360_04_m.loca) RETURNING g_asfp360_04_m.loca_desc
+         END IF
+         DISPLAY g_asfp360_04_m.ware_desc TO ware_04a_desc
+         DISPLAY g_asfp360_04_m.loca_desc TO loca_04a_desc
+         NEXT FIELD ware_04a
+
+      ON ACTION controlp INFIELD loca_04a
+         IF cl_null(g_asfp360_04_m.ware) THEN
+            #请先维护库位
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'asf-00419'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            NEXT FIELD ware_04a
+         END IF
+         #储位
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = "i"
+         LET g_qryparam.reqry = FALSE
+         LET g_qryparam.arg1 = g_asfp360_04_m.ware
+         LET g_qryparam.default1 = g_asfp360_04_m.loca
+         CALL q_inab002_5()  #储位
+         LET g_asfp360_04_m.loca = g_qryparam.return1
+         DISPLAY g_asfp360_04_m.loca TO loca_04a
+         #栏位说明
+         CALL s_desc_get_locator_desc(g_site,g_asfp360_04_m.ware,g_asfp360_04_m.loca) RETURNING g_asfp360_04_m.loca_desc
+         DISPLAY g_asfp360_04_m.loca_desc TO loca_04a_desc
+         NEXT FIELD loca_04a
+
+      ON ACTION gen_asft310  #产生发退料单
+         CALL asfp360_04_chk_column('user_04a') RETURNING l_success
+         IF NOT l_success THEN
+            NEXT FIELD user_04a
+         END IF
+         CALL asfp360_04_chk_column('slips_04a') RETURNING l_success
+         IF NOT l_success THEN
+            NEXT FIELD slips_04a
+         END IF
+         CALL asfp360_04_chk_column('slipr_04a') RETURNING l_success
+         IF NOT l_success THEN
+            NEXT FIELD slipr_04a
+         END IF
+         CALL asfp360_04_chk_column('ware_04a') RETURNING l_success
+         IF NOT l_success THEN
+            NEXT FIELD ware_04a
+         END IF
+         CALL asfp360_04_chk_column('loca_04a') RETURNING l_success
+         IF NOT l_success THEN
+            NEXT FIELD loca_04a
+         END IF
+         CALL asfp360_04_chk_column('lot_04a') RETURNING l_success
+         IF NOT l_success THEN
+            NEXT FIELD lot_04a
+         END IF
+         
+         SELECT inaa007 INTO l_inaa007  #儲位控管
+           FROM inaa_t
+          WHERE inaaent = g_enterprise
+            AND inaasite= g_site
+            AND inaa001 = g_asfp360_04_m.ware
+         IF l_inaa007 != '5' THEN
+            IF cl_null(g_asfp360_04_m.loca) THEN  #储位
+               #当前库位限定使用储位管理，储位不可为空！
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'ain-00271'
+               LET g_errparam.extend = g_asfp360_04_m.ware
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               NEXT FIELD loca_04a
+            END IF
+         END IF
+         
+         IF NOT cl_null(g_asfp360_04_m2.send_no) THEN
+            #单据已产生，不可重复产生
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'asf-00408'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+         ELSE
+            CALL asfp360_04_gen_asft310() RETURNING l_success
+            IF l_success THEN
+               CALL asfp360_04_show()
+            ELSE
+               #清空显示的资料变量
+               LET g_asfp360_04_m2.sfladocno = ''  #挪料序号
+               LET g_asfp360_04_m2.send_no =''
+               LET g_asfp360_04_m2.return_no =''
+            END IF
+         END IF
+
+   END INPUT
+END DIALOG
+
+DIALOG asfp360_04_display1()
+   DISPLAY ARRAY g_asfp360_04_d1 TO s_asfp360_04_detail1.* ATTRIBUTE(COUNT = g_rec_b04_1)
+      BEFORE DISPLAY
+         CALL FGL_SET_ARR_CURR(l_ac)
+
+      BEFORE ROW
+        LET l_ac = DIALOG.getCurrentRow("s_asfp360_04_detail1")
+
+   END DISPLAY
+END DIALOG
+
+DIALOG asfp360_04_display2()
+   DISPLAY ARRAY g_asfp360_04_d2 TO s_asfp360_04_detail2.* ATTRIBUTE(COUNT = g_rec_b04_2)
+      BEFORE DISPLAY
+         CALL FGL_SET_ARR_CURR(l_ac)
+
+      BEFORE ROW
+        LET l_ac = DIALOG.getCurrentRow("s_asfp360_04_detail2")
+
+   END DISPLAY
+END DIALOG
+
+ 
+{</section>}
+ 
+{<section id="asfp360_04.other_function" readonly="Y" >}
+
+PUBLIC FUNCTION asfp360_04_init()
+
+   WHENEVER ERROR CONTINUE
+
+   #當整體參數有使用參考單位時才顯示
+   IF g_ref_unit = 'N' THEN
+      CALL cl_set_comp_visible("sfdc009_04b1,sfdc009_04b1_desc,sfdc011_04b1",FALSE) #參考單位
+      CALL cl_set_comp_visible("sfdc009_04b2,sfdc009_04b2_desc,sfdc011_04b2",FALSE) #參考單位
+   END IF
+
+END FUNCTION
+
+#检查栏位
+PUBLIC FUNCTION asfp360_04_chk_column(p_column)
+   DEFINE p_column      LIKE type_t.chr20
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_prog        LIKE type_t.chr20
+   DEFINE l_flag        LIKE type_t.num5  #s_control使用
+   DEFINE l_inaa015     LIKE inaa_t.inaa015  #保税否
+   DEFINE l_inaa010     LIKE inaa_t.inaa010  #成本库否
+   DEFINE l_cnt         LIKE type_t.num5
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_inaa007     LIKE inaa_t.inaa007   #儲位控管
+   
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+
+   CASE p_column
+      WHEN 'user_04a'  #申请人
+           IF cl_null(g_asfp360_04_m.user) THEN
+              #此字段不可空白, 请输入数据!输入数据
+              INITIALIZE g_errparam TO NULL
+              LET g_errparam.code = 'aoo-00052'
+              LET g_errparam.extend = ''
+              LET g_errparam.popup = TRUE
+              CALL cl_err()
+              LET r_success = FALSE
+              RETURN r_success
+           END IF
+           IF NOT s_employee_chk(g_asfp360_04_m.user) THEN
+              LET r_success = FALSE
+              RETURN r_success
+           END IF
+
+      WHEN 'slips_04a' #发料单别
+           IF cl_null(g_asfp360_04_m.slips) THEN
+              #此字段不可空白, 请输入数据!输入数据
+              INITIALIZE g_errparam TO NULL
+              LET g_errparam.code = 'aoo-00052'
+              LET g_errparam.extend = ''
+              LET g_errparam.popup = TRUE
+              CALL cl_err()
+              LET r_success = FALSE
+              RETURN r_success
+           END IF
+           
+           IF g_asfp360_02_m.type = '1' THEN
+              #1.成套挪料
+              LET l_prog = "asft311" #作业代号 成套发料
+           ELSE
+              #2.单颗挪料
+              LET l_prog = "asft313" #作业代号 欠料补料
+           END IF
+           IF NOT s_aooi200_chk_slip(g_site,'',g_asfp360_04_m.slips,l_prog) THEN
+              LET r_success = FALSE
+              RETURN r_success
+           END IF
+           
+           #檢核輸入的單據別是否可以被key人員對應的控制組使用,'6' 為生管控制組類型
+           CALL s_control_chk_doc('1',g_asfp360_04_m.slips,'6',g_user,g_dept,'','')
+                RETURNING l_success,l_flag
+           IF l_success THEN
+              IF NOT l_flag THEN
+                 LET r_success = FALSE
+                 RETURN r_success
+              END IF
+           ELSE
+              LET r_success = FALSE
+              RETURN r_success
+           END IF
+      WHEN 'slipr_04a' #退料单别
+           IF cl_null(g_asfp360_04_m.slipr) THEN
+              #此字段不可空白, 请输入数据!输入数据
+              INITIALIZE g_errparam TO NULL
+              LET g_errparam.code = 'aoo-00052'
+              LET g_errparam.extend = ''
+              LET g_errparam.popup = TRUE
+              CALL cl_err()
+              LET r_success = FALSE
+              RETURN r_success
+           END IF
+           
+           IF g_asfp360_02_m.type = '1' THEN
+              #1.成套挪料
+              LET l_prog = "asft321" #作业代号 成套退料
+           ELSE
+              #2.单颗挪料
+              LET l_prog = "asft323" #作业代号 一般退料
+           END IF
+           IF NOT s_aooi200_chk_slip(g_site,'',g_asfp360_04_m.slipr,l_prog) THEN
+              LET r_success = FALSE
+              RETURN r_success
+           END IF
+           
+           #檢核輸入的單據別是否可以被key人員對應的控制組使用,'6' 為生管控制組類型
+           CALL s_control_chk_doc('1',g_asfp360_04_m.slipr,'6',g_user,g_dept,'','')
+                RETURNING l_success,l_flag
+           IF l_success THEN
+              IF NOT l_flag THEN
+                 LET r_success = FALSE
+                 RETURN r_success
+              END IF
+           ELSE
+              LET r_success = FALSE
+              RETURN r_success
+           END IF
+      WHEN 'ware_04a'  #库位
+           IF cl_null(g_asfp360_04_m.ware) THEN
+              #此字段不可空白, 请输入数据!输入数据
+              INITIALIZE g_errparam TO NULL
+              LET g_errparam.code = 'aoo-00052'
+              LET g_errparam.extend = ''
+              LET g_errparam.popup = TRUE
+              CALL cl_err()
+              LET r_success = FALSE
+              RETURN r_success
+           END IF
+           #是否存在库位资料
+           INITIALIZE g_chkparam.* TO NULL
+           LET g_chkparam.arg1 = g_asfp360_04_m.ware
+           #160318-00025#21  by 07900 --add-str
+           LET g_errshow = TRUE #是否開窗                   
+           LET g_chkparam.err_str[1] ="aim-00065:sub-01302|aini001|",cl_get_progname("aini001",g_lang,"2"),"|:EXEPROGaini001"
+           #160318-00025#21  by 07900 --add-end 
+           IF NOT cl_chk_exist("v_inaa001_2") THEN
+              LET r_success = FALSE
+              RETURN r_success
+           END IF
+
+           #檢核輸入的庫位是否在單據別限制範圍內，若不在限制內則不允許使用此庫位--发料单
+           CALL s_control_chk_doc('6',g_asfp360_04_m.slips,g_asfp360_04_m.ware,'','','','')
+              RETURNING l_success,l_flag
+           IF NOT l_success OR NOT l_flag THEN
+              #控制组检查错误,请检查单别设定的相关内容
+              INITIALIZE g_errparam TO NULL
+              LET g_errparam.code = 'asf-00122'
+              LET g_errparam.extend = ''
+              LET g_errparam.popup = TRUE
+              CALL cl_err()
+              LET r_success = FALSE
+              RETURN r_success
+           END IF
+           #檢核輸入的庫位是否在單據別限制範圍內，若不在限制內則不允許使用此庫位--退料单
+           CALL s_control_chk_doc('7',g_asfp360_04_m.slipr,g_asfp360_04_m.ware,'','','','')
+              RETURNING l_success,l_flag
+           IF NOT l_success OR NOT l_flag THEN
+              #控制组检查错误,请检查单别设定的相关内容
+              INITIALIZE g_errparam TO NULL
+              LET g_errparam.code = 'asf-00122'
+              LET g_errparam.extend = ''
+              LET g_errparam.popup = TRUE
+              CALL cl_err()
+              LET r_success = FALSE
+              RETURN r_success
+           END IF
+           
+           #如果储位已有，检查储位
+           IF NOT cl_null(g_asfp360_04_m.loca) THEN
+              INITIALIZE g_chkparam.* TO NULL
+              LET g_chkparam.arg1 = g_site
+              LET g_chkparam.arg2 = g_asfp360_04_m.ware
+              LET g_chkparam.arg3 = g_asfp360_04_m.loca
+              #160318-00025#21  by 07900 --add-str
+              LET g_errshow = TRUE #是否開窗                   
+              LET g_chkparam.err_str[1] ="aim-00063:sub-01302|aini002|",cl_get_progname("aini002",g_lang,"2"),"|:EXEPROGaini002"
+              #160318-00025#21  by 07900 --add-end 
+              IF NOT cl_chk_exist("v_inab002") THEN
+                 LET r_success = FALSE
+                 RETURN r_success
+              END IF
+           END IF
+
+           SELECT inaa010,inaa015,inaa007
+             INTO l_inaa010,l_inaa015,l_inaa007  #成本库否，保税仓否,儲位控管
+             FROM inaa_t
+            WHERE inaaent = g_enterprise
+              AND inaasite= g_site
+              AND inaa001 = g_asfp360_04_m.ware
+           IF cl_null(l_inaa015) THEN LET l_inaa015='N' END IF
+           IF cl_null(l_inaa010) THEN LET l_inaa010='N' END IF
+
+           #IF l_inaa007 != '5' THEN
+           #   IF cl_null(g_asfp360_04_m.loca) THEN  #储位
+           #      #当前库位限定使用储位管理，储位不可为空！
+           #      INITIALIZE g_errparam TO NULL
+           #      LET g_errparam.code = 'ain-00271'
+           #      LET g_errparam.extend = g_asfp360_04_m.ware
+           #      LET g_errparam.popup = TRUE
+           #      CALL cl_err()
+           #      LET r_success = FALSE
+           #      RETURN r_success
+           #   END IF
+           #END IF
+
+           #参数：生產非保稅料號，可由保稅倉發料
+           CALL cl_get_doc_para(g_enterprise,g_site,g_asfp360_04_m.slips,'D-MFG-0031') RETURNING g_para
+           IF l_inaa015='Y' AND (g_para = '1' OR g_para = '2') THEN #拒绝或警告
+              #欲拋转的资料中有生产料号为非保税的资料吗
+              SELECT COUNT(*) INTO l_cnt FROM imaf_t,asfp360_tmp01   #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_03_temp1 ——> asfp360_tmp01
+               WHERE imaf_t.imafent  = g_enterprise
+                 AND imaf_t.imafsite = g_site
+                 AND imaf_t.imaf001  = asfp360_tmp01.sfaa010   #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_03_temp1 ——> asfp360_tmp01
+                 AND asfp360_tmp01.sel = 'Y'  #欲拋转的资料    #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_03_temp1 ——> asfp360_tmp01
+                 AND imaf034  = 'N'   #非保税料
+              #當工單的生產料號=非保稅料，不可由保稅倉發料。
+              IF l_cnt > 0  AND (g_para = '1' OR g_para = '2') THEN  #拒绝或警告
+                 CASE
+                    WHEN g_para = '1'
+                         #当工单的生产料号为非保税料时，不可由保税仓发料！
+                         INITIALIZE g_errparam TO NULL
+                         LET g_errparam.code = 'asr-00008'
+                         LET g_errparam.extend = ''
+                         LET g_errparam.popup = TRUE
+                         CALL cl_err()
+                         LET r_success = FALSE
+                         RETURN r_success
+                    WHEN g_para = '2'
+                         #拨出工单中，有非保税的生产料号将通过保税仓发料
+                         INITIALIZE g_errparam TO NULL
+                         LET g_errparam.code = 'asf-00421'
+                         LET g_errparam.extend = ''
+                         LET g_errparam.popup = TRUE
+                         CALL cl_err()
+                 END CASE
+              END IF
+           END IF
+           
+           #參數：客供料可由成本倉料領料
+           CALL cl_get_doc_para(g_enterprise,g_site,g_asfp360_04_m.slips,'D-MFG-0052') RETURNING g_para
+           #1.拒絕時，只可輸入非成本倉。(2為警告)
+           IF l_inaa010='Y' AND (g_para = '1' OR g_para = '2') THEN
+              #检查发退料中是否存在客供料的资料
+              #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_03_temp3 ——> asfp360_tmp02
+              SELECT COUNT(*) INTO l_cnt FROM asfp360_tmp01,asfp360_tmp02,sfba_t   #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_03_temp1 ——> asfp360_tmp01
+               WHERE asfp360_tmp01.sfaadocno = asfp360_tmp02.sfaadocno    #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_03_temp1 ——> asfp360_tmp01
+                 AND asfp360_tmp02.sfaadocno = sfba_t.sfbadocno
+                 AND asfp360_tmp02.sfbaseq   = sfba_t.sfbaseq
+                 AND asfp360_tmp02.sfbaseq1  = sfba_t.sfbaseq1
+                 AND sfba_t.sfbaent = g_enterprise
+                 AND asfp360_tmp01.sel = 'Y'  #欲拋转的资料   #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_03_temp1 ——> asfp360_tmp01
+                 AND sfba028 = 'Y'  #客供料
+              IF l_cnt > 0  AND (g_para = '1' OR g_para = '2') THEN  #拒绝或警告
+                 CASE
+                    WHEN g_para = '1' #拒绝
+                         #客供料不可由成本仓领料
+                         INITIALIZE g_errparam TO NULL
+                         LET g_errparam.code = 'asf-00048'
+                         LET g_errparam.extend = ''
+                         LET g_errparam.popup = TRUE
+                         CALL cl_err()
+                         LET r_success = FALSE
+                         RETURN r_success
+                    WHEN g_para = '2' #警告
+                         #挪料明细中，有客供料将通过成本仓领料
+                         INITIALIZE g_errparam TO NULL
+                         LET g_errparam.code = 'asf-00422'
+                         LET g_errparam.extend = ''
+                         LET g_errparam.popup = TRUE
+                         CALL cl_err()
+                 END CASE
+              END IF
+           END IF
+
+      WHEN 'loca_04a'  #储位
+           IF NOT cl_null(g_asfp360_04_m.loca) THEN
+              #检查库位+储位
+              IF NOT cl_null(g_asfp360_04_m.ware) THEN
+                 INITIALIZE g_chkparam.* TO NULL
+                 LET g_chkparam.arg1 = g_site
+                 LET g_chkparam.arg2 = g_asfp360_04_m.ware
+                 LET g_chkparam.arg3 = g_asfp360_04_m.loca
+                 #160318-00025#21  by 07900 --add-str
+                 LET g_errshow = TRUE #是否開窗                   
+                 LET g_chkparam.err_str[1] ="aim-00063:sub-01302|aini002|",cl_get_progname("aini002",g_lang,"2"),"|:EXEPROGaini002"
+                 #160318-00025#21  by 07900 --add-end 
+                 IF NOT cl_chk_exist("v_inab002") THEN
+                    LET r_success = FALSE
+                    RETURN r_success
+                 END IF
+              END IF
+              
+              #檢核輸入的庫位是否在單據別限制範圍內，若不在限制內則不允許使用此庫位
+              CALL s_control_chk_doc('6',g_asfp360_04_m.slips,g_asfp360_04_m.ware,g_asfp360_04_m.loca,'','','')
+                 RETURNING l_success,l_flag
+              IF NOT l_success OR NOT l_flag THEN
+                 #控制组检查错误,请检查单别设定的相关内容
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.code = 'asf-00122'
+                 LET g_errparam.extend = ''
+                 LET g_errparam.popup = TRUE
+                 CALL cl_err()
+                 LET r_success = FALSE
+                 RETURN r_success
+              END IF
+              CALL s_control_chk_doc('7',g_asfp360_04_m.slipr,g_asfp360_04_m.ware,g_asfp360_04_m.loca,'','','')
+                 RETURNING l_success,l_flag
+              IF NOT l_success OR NOT l_flag THEN
+                 #控制组检查错误,请检查单别设定的相关内容
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.code = 'asf-00122'
+                 LET g_errparam.extend = ''
+                 LET g_errparam.popup = TRUE
+                 CALL cl_err()
+                 LET r_success = FALSE
+                 RETURN r_success
+              END IF
+           END IF
+      WHEN 'lot_04a'   #批号
+           IF NOT cl_null(g_asfp360_04_m.lot) THEN
+           END IF
+   END CASE
+   RETURN r_success
+END FUNCTION
+
+#产生发退单
+PUBLIC FUNCTION asfp360_04_gen_asft310()
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_success     LIKE type_t.num5
+   
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+
+   CALL s_transaction_begin()
+   
+   #产生挪料记录--单头sfla
+   CALL asfp360_04_gen_sfla() RETURNING l_success
+   IF NOT l_success THEN
+      CALL s_transaction_end('N','0')
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #产生退料单
+   CALL asfp360_04_gen_return_no() RETURNING l_success
+   IF NOT l_success THEN
+      CALL s_transaction_end('N','0')
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #产生发料单
+   CALL asfp360_04_gen_send_no() RETURNING l_success
+   IF NOT l_success THEN
+      CALL s_transaction_end('N','0')
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   UPDATE sfla_t SET sfla003 = g_asfp360_04_m2.send_no,    #發料單號
+                     sfla004 = g_asfp360_04_m2.return_no   #退料單號
+    WHERE sflaent  = g_enterprise
+      AND sflasite = g_site
+      AND sfladocno= g_asfp360_04_m2.sfladocno
+   IF SQLCA.sqlcode OR SQLCA.sqlerrd[3]=0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'upd sfla_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      CALL s_transaction_end('N','0')
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   #产生挪料记录--明细sflb\sflc\sfld\sfle
+   CALL asfp360_04_gen_sflb() RETURNING l_success
+   IF NOT l_success THEN
+      CALL s_transaction_end('N','0')
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   CALL s_transaction_end('Y','0')
+   RETURN r_success
+   
+END FUNCTION
+
+#产生退料单
+PUBLIC FUNCTION asfp360_04_gen_return_no()
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_prog        LIKE type_t.chr20
+   
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+
+   #退料单头
+   CALL asfp360_04_gen_sfda('r') RETURNING l_success
+   IF NOT l_success THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   IF g_asfp360_02_m.type = '1' THEN
+      #成套挪--从asfp360_03中获取来源资料 21
+      #成套退料套数单身
+      CALL asfp360_04_gen_sfdb_21() RETURNING l_success
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   
+      #退料明细
+      CALL asfp360_04_gen_sfdc_21() RETURNING l_success
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   ELSE
+      #单颗挪--从asfp360_05中获取来源资料 23
+      #一般退料，无套数单身 
+   
+      #退料明细
+      CALL asfp360_04_gen_sfdc_23() RETURNING l_success
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF
+
+   RETURN r_success
+END FUNCTION
+
+#产生发料单
+PUBLIC FUNCTION asfp360_04_gen_send_no()
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_prog        LIKE type_t.chr20
+   
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+
+   #发料单头
+   CALL asfp360_04_gen_sfda('s') RETURNING l_success
+   IF NOT l_success THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   IF g_asfp360_02_m.type = '1' THEN
+      #成套挪--从asfp360_03中获取来源资料 11
+      #发料套数单身
+      CALL asfp360_04_gen_sfdb_11() RETURNING l_success
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   
+      #发料明细
+      CALL asfp360_04_gen_sfdc_11() RETURNING l_success
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   ELSE
+      #单颗挪--从asfp360_05中获取来源资料 13
+      #发料套数单身
+      CALL asfp360_04_gen_sfdb_13() RETURNING l_success
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   
+      #发料明细
+      CALL asfp360_04_gen_sfdc_13() RETURNING l_success
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF
+
+   RETURN r_success
+END FUNCTION
+
+#发/退料单单头
+PUBLIC FUNCTION asfp360_04_gen_sfda(p_type)
+   DEFINE p_type        LIKE type_t.chr1  #s:发料单  r:退料单
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_sfda        RECORD LIKE sfda_t.*
+   DEFINE l_prog        LIKE type_t.chr20
+   DEFINE l_slip        LIKE sfda_t.sfdadocno  #发退料单单别
+   
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+   
+   #退料单单头
+   INITIALIZE l_sfda.* TO NULL
+   
+   LET l_sfda.sfdaent   = g_enterprise #企業編號
+   LET l_sfda.sfdasite  = g_site       #營運據點
+   
+   #单别取画面输入的值
+   IF p_type = 's' THEN
+      LET l_slip = g_asfp360_04_m.slips  #发料单
+   ELSE
+      LET l_slip = g_asfp360_04_m.slipr  #退料单
+   END IF
+   #取aooi200中BY单据别设定的栏位预设值
+   LET l_sfda.sfdadocdt  = s_aooi200_get_doc_default(g_site,'1',l_slip,'sfdadocdt',l_sfda.sfdadocdt)     #單據日期
+   LET l_sfda.sfda001    = s_aooi200_get_doc_default(g_site,'1',l_slip,'sfda001'  ,l_sfda.sfda001  )     #過帳日期
+   LET l_sfda.sfda002    = s_aooi200_get_doc_default(g_site,'1',l_slip,'sfda002'  ,l_sfda.sfda002  )     #发退料类别
+   LET l_sfda.sfda003    = s_aooi200_get_doc_default(g_site,'1',l_slip,'sfda003'  ,l_sfda.sfda003  )     #部門
+   LET l_sfda.sfda004    = s_aooi200_get_doc_default(g_site,'1',l_slip,'sfda004'  ,l_sfda.sfda004  )     #申請人
+   LET l_sfda.sfda005    = s_aooi200_get_doc_default(g_site,'1',l_slip,'sfda005'  ,l_sfda.sfda005  )     #PBI編號
+   
+   IF cl_null(l_sfda.sfdadocdt) THEN
+      LET l_sfda.sfdadocdt = cl_get_today()   #單據日期
+   END IF
+   IF cl_null(l_sfda.sfda001) THEN
+      LET l_sfda.sfda001   = cl_get_today()   #過帳日期
+   END IF
+   
+   #發退料類別
+   IF p_type = 's' THEN
+      #发料单
+      IF g_asfp360_02_m.type = '1' THEN
+         #1.成套挪料
+         LET l_prog = "asft311" #作业代号 成套发料
+         #发退料单别应该严格控管单别与类型的关系 防止成本计算异常
+         IF NOT cl_null(l_sfda.sfda002) AND l_sfda.sfda002!='11' THEN
+            #发料单别设置的退料类型%1与此次需求类型%2不符，请查看[单据别维护作业aooi200]或修改单别
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'asf-00424'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            LET g_errparam.replace[1] = l_sfda.sfda002
+            LET g_errparam.replace[2] = '11'
+            CALL cl_err()
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+         LET l_sfda.sfda002 = '11'
+      ELSE
+         #2.单颗挪料
+         LET l_prog = "asft313" #作业代号 欠料补料
+         #发退料单别应该严格控管单别与类型的关系 防止成本计算异常
+         IF NOT cl_null(l_sfda.sfda002) AND l_sfda.sfda002!='13' THEN
+            #发料单别设置的退料类型%1与此次需求类型%2不符，请查看[单据别维护作业aooi200]或修改单别
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'asf-00424'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            LET g_errparam.replace[1] = l_sfda.sfda002
+            LET g_errparam.replace[2] = '13'
+            CALL cl_err()
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+         LET l_sfda.sfda002 = '13'
+      END IF
+   ELSE
+      #退料单
+      IF g_asfp360_02_m.type = '1' THEN
+         #1.成套挪料
+         LET l_prog = "asft321" #作业代号 成套退料
+         #发退料单别应该严格控管单别与类型的关系 防止成本计算异常
+         IF NOT cl_null(l_sfda.sfda002) AND l_sfda.sfda002!='21' THEN
+            #退料单别设置的退料类型%1与此次需求类型%2不符，请查看[单据别维护作业aooi200]或修改单别
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'asf-00423'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            LET g_errparam.replace[1] = l_sfda.sfda002
+            LET g_errparam.replace[2] = '21'
+            CALL cl_err()
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+         LET l_sfda.sfda002 = '21'
+      ELSE
+         #2.单颗挪料
+         LET l_prog = "asft323" #作业代号 一般退料
+         #发退料单别应该严格控管单别与类型的关系 防止成本计算异常
+         IF NOT cl_null(l_sfda.sfda002) AND l_sfda.sfda002!='23' THEN
+            #退料单别设置的退料类型%1与此次需求类型%2不符，请查看[单据别维护作业aooi200]或修改单别
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'asf-00423'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            LET g_errparam.replace[1] = l_sfda.sfda002
+            LET g_errparam.replace[2] = '23'
+            CALL cl_err()
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+         LET l_sfda.sfda002 = '23'
+      END IF
+   END IF
+   
+   IF cl_null(l_sfda.sfda003) THEN
+      LET l_sfda.sfda003   = g_dept  #生產部門
+   END IF
+   LET l_sfda.sfda004   = g_asfp360_04_m.user  #申請人 按照画面输入的给值
+   IF cl_null(l_sfda.sfda005) THEN
+      LET l_sfda.sfda005   = ''  #PBI編號
+   END IF
+   
+   LET l_sfda.sfda006   = ''   #生產料號
+   LET l_sfda.sfda007   = ''   #BOM特性
+   LET l_sfda.sfda008   = ''   #產品特徵
+   LET l_sfda.sfda009   = ''   #生產控制組
+   LET l_sfda.sfda010   = ''   #作業編號
+   LET l_sfda.sfda011   = ''   #作業序
+   LET l_sfda.sfda012   = ''   #庫位
+   LET l_sfda.sfda013   = 0    #套數
+   LET l_sfda.sfda014   = g_asfp360_04_m2.sfladocno   #來源單號-挪料序号
+   LET l_sfda.sfda015   = '05'   #來源類型--工单挪料作业
+   LET l_sfda.sfdaownid = g_user  #資料所有者
+   LET l_sfda.sfdaowndp = g_dept  #資料所屬部門
+   LET l_sfda.sfdacrtid = g_user  #資料建立者
+   LET l_sfda.sfdacrtdp = g_dept  #資料建立部門
+   LET l_sfda.sfdacrtdt = cl_get_current()  #資料創建日
+   LET l_sfda.sfdamodid = ''  #資料修改者
+   LET l_sfda.sfdamoddt = ''  #最近修改日
+   LET l_sfda.sfdacnfid = ''  #資料確認者
+   LET l_sfda.sfdacnfdt = ''  #資料確認日
+   LET l_sfda.sfdapstid = ''  #資料過帳者
+   LET l_sfda.sfdapstdt = ''  #資料過帳日
+   LET l_sfda.sfdastus  = 'N' #狀態碼
+   LET l_sfda.sfdaud001 = ''  #自定義欄位(文字)001
+   LET l_sfda.sfdaud002 = ''  #自定義欄位(文字)002
+   LET l_sfda.sfdaud003 = ''  #自定義欄位(文字)003
+   LET l_sfda.sfdaud004 = ''  #自定義欄位(文字)004
+   LET l_sfda.sfdaud005 = ''  #自定義欄位(文字)005
+   LET l_sfda.sfdaud006 = ''  #自定義欄位(文字)006
+   LET l_sfda.sfdaud007 = ''  #自定義欄位(文字)007
+   LET l_sfda.sfdaud008 = ''  #自定義欄位(文字)008
+   LET l_sfda.sfdaud009 = ''  #自定義欄位(文字)009
+   LET l_sfda.sfdaud010 = ''  #自定義欄位(文字)010
+   LET l_sfda.sfdaud011 = ''  #自定義欄位(數字)011
+   LET l_sfda.sfdaud012 = ''  #自定義欄位(數字)012
+   LET l_sfda.sfdaud013 = ''  #自定義欄位(數字)013
+   LET l_sfda.sfdaud014 = ''  #自定義欄位(數字)014
+   LET l_sfda.sfdaud015 = ''  #自定義欄位(數字)015
+   LET l_sfda.sfdaud016 = ''  #自定義欄位(數字)016
+   LET l_sfda.sfdaud017 = ''  #自定義欄位(數字)017
+   LET l_sfda.sfdaud018 = ''  #自定義欄位(數字)018
+   LET l_sfda.sfdaud019 = ''  #自定義欄位(數字)019
+   LET l_sfda.sfdaud020 = ''  #自定義欄位(數字)020
+   LET l_sfda.sfdaud021 = ''  #自定義欄位(日期時間)021
+   LET l_sfda.sfdaud022 = ''  #自定義欄位(日期時間)022
+   LET l_sfda.sfdaud023 = ''  #自定義欄位(日期時間)023
+   LET l_sfda.sfdaud024 = ''  #自定義欄位(日期時間)024
+   LET l_sfda.sfdaud025 = ''  #自定義欄位(日期時間)025
+   LET l_sfda.sfdaud026 = ''  #自定義欄位(日期時間)026
+   LET l_sfda.sfdaud027 = ''  #自定義欄位(日期時間)027
+   LET l_sfda.sfdaud028 = ''  #自定義欄位(日期時間)028
+   LET l_sfda.sfdaud029 = ''  #自定義欄位(日期時間)029
+   LET l_sfda.sfdaud030 = ''  #自定義欄位(日期時間)030
+
+   #發退料單號
+   CALL s_aooi200_gen_docno(l_sfda.sfdasite,l_slip,l_sfda.sfdadocdt,l_prog)
+      RETURNING l_success,l_sfda.sfdadocno
+   IF NOT l_success THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   INSERT INTO sfda_t VALUES(l_sfda.*)
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'ins sfda_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   IF p_type = 's' THEN
+      LET g_asfp360_04_m2.send_no  = l_sfda.sfdadocno  #发料单
+      LET g_asfp360_04_m2.send_type= l_sfda.sfda002    #发料类型
+   ELSE
+      LET g_asfp360_04_m2.return_no  = l_sfda.sfdadocno  #退料单
+      LET g_asfp360_04_m2.return_type= l_sfda.sfda002    #退料类型
+   END IF
+   
+   RETURN r_success
+
+END FUNCTION
+
+#成套发料
+PUBLIC FUNCTION asfp360_04_gen_sfdb_11()
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_sfdb        RECORD LIKE sfdb_t.*
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+   
+   INITIALIZE l_sfdb.* TO NULL
+   LET l_sfdb.sfdbent   = g_enterprise   #企業編號
+   LET l_sfdb.sfdbsite  = g_site         #營運據點
+
+   LET l_sfdb.sfdbdocno = g_asfp360_04_m2.send_no   #發退料單號
+   LET l_sfdb.sfdb001   = g_sfaadocno_01            #工單單號
+   LET l_sfdb.sfdb008   = -1   #正負
+   
+   LET l_sfdb.sfdb002   = ''     #Run Card
+
+   SELECT sfca001 INTO l_sfdb.sfdb002 FROM sfca_t
+    WHERE sfcaent = g_enterprise
+      AND sfcasite= g_site
+      AND sfcadocno=l_sfdb.sfdb001   #工单单号
+   
+   LET l_sfdb.sfdb003   = ' '   #部位
+   LET l_sfdb.sfdb004   = ' '   #作業
+   LET l_sfdb.sfdb005   = ' '   #作業序
+   LET l_sfdb.sfdb006   = g_asfp360_02_m.insets   #預計套數
+   LET l_sfdb.sfdb007   = l_sfdb.sfdb006         #實際套數
+   
+   
+   LET l_sfdb.sfdbud001 = ''      #自定義欄位(文字)001
+   LET l_sfdb.sfdbud002 = ''      #自定義欄位(文字)002
+   LET l_sfdb.sfdbud003 = ''      #自定義欄位(文字)003
+   LET l_sfdb.sfdbud004 = ''      #自定義欄位(文字)004
+   LET l_sfdb.sfdbud005 = ''      #自定義欄位(文字)005
+   LET l_sfdb.sfdbud006 = ''      #自定義欄位(文字)006
+   LET l_sfdb.sfdbud007 = ''      #自定義欄位(文字)007
+   LET l_sfdb.sfdbud008 = ''      #自定義欄位(文字)008
+   LET l_sfdb.sfdbud009 = ''      #自定義欄位(文字)009
+   LET l_sfdb.sfdbud010 = ''      #自定義欄位(文字)010
+   LET l_sfdb.sfdbud011 = ''      #自定義欄位(數字)011
+   LET l_sfdb.sfdbud012 = ''      #自定義欄位(數字)012
+   LET l_sfdb.sfdbud013 = ''      #自定義欄位(數字)013
+   LET l_sfdb.sfdbud014 = ''      #自定義欄位(數字)014
+   LET l_sfdb.sfdbud015 = ''      #自定義欄位(數字)015
+   LET l_sfdb.sfdbud016 = ''      #自定義欄位(數字)016
+   LET l_sfdb.sfdbud017 = ''      #自定義欄位(數字)017
+   LET l_sfdb.sfdbud018 = ''      #自定義欄位(數字)018
+   LET l_sfdb.sfdbud019 = ''      #自定義欄位(數字)019
+   LET l_sfdb.sfdbud020 = ''      #自定義欄位(數字)020
+   LET l_sfdb.sfdbud021 = ''      #自定義欄位(日期時間)021
+   LET l_sfdb.sfdbud022 = ''      #自定義欄位(日期時間)022
+   LET l_sfdb.sfdbud023 = ''      #自定義欄位(日期時間)023
+   LET l_sfdb.sfdbud024 = ''      #自定義欄位(日期時間)024
+   LET l_sfdb.sfdbud025 = ''      #自定義欄位(日期時間)025
+   LET l_sfdb.sfdbud026 = ''      #自定義欄位(日期時間)026
+   LET l_sfdb.sfdbud027 = ''      #自定義欄位(日期時間)027
+   LET l_sfdb.sfdbud028 = ''      #自定義欄位(日期時間)028
+   LET l_sfdb.sfdbud029 = ''      #自定義欄位(日期時間)029
+   LET l_sfdb.sfdbud030 = ''      #自定義欄位(日期時間)030
+   
+   INSERT INTO sfdb_t VALUES(l_sfdb.*)
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'ins sfdb_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   RETURN r_success
+END FUNCTION
+
+#成套发料
+PUBLIC FUNCTION asfp360_04_gen_sfdc_11()
+   DEFINE p_sfaadocno   LIKE sfaa_t.sfaadocno  #工单
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_sfdc        RECORD LIKE sfdc_t.*
+   DEFINE l_sfdd        RECORD LIKE sfdd_t.*
+   DEFINE l_sql         STRING
+   DEFINE l_temp        RECORD
+                        sfbaseq        LIKE sfba_t.sfbaseq,  #项次
+                        sfbaseq1       LIKE sfba_t.sfbaseq1, #项序
+                        sfba005        LIKE sfba_t.sfba005,  #BOM料号 需要和asfp360_02_temp匹配
+                        sfba006        LIKE sfba_t.sfba006,  #发料料号
+                        sfba021        LIKE sfba_t.sfba021,  #特征
+                        sfba014        LIKE sfba_t.sfba014,  #单位
+                        unitr          LIKE sfba_t.sfba014,  #参考单位
+                        inqty_sum      LIKE sfba_t.sfba016,  #来源拨出数量合计
+                        inqtyr_sum     LIKE sfba_t.sfba016   #参考单位来源拨出数量合计
+                        END RECORD
+   DEFINE l_sfdcseq     LIKE sfdc_t.sfdcseq
+   DEFINE l_qty            LIKE sfdd_t.sfdd014    #160408-00035#7
+   
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+
+   LET l_sql = " SELECT sfbaseq,sfbaseq1,sfba005,sfba006,sfba021,sfba014,unitr,",
+               "        SUM(inqty_sum),SUM(inqtyr_sum) ",
+               "   FROM asfp360_02_temp ",
+               "  WHERE inqty_sum > 0 ",
+               "    AND sel = 'Y' ",
+               "  GROUP BY sfbaseq,sfbaseq1,sfba005,sfba006,sfba021,sfba014,unitr ",
+               "  ORDER BY sfbaseq,sfbaseq1 "
+   PREPARE asfp360_04_gen_sfdc_11_p FROM l_sql
+   DECLARE asfp360_04_gen_sfdc_11_c CURSOR FOR asfp360_04_gen_sfdc_11_p
+   LET l_sfdcseq = 0
+   FOREACH asfp360_04_gen_sfdc_11_c INTO l_temp.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:asfp360_04_gen_sfdc_11_c"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   
+      IF cl_null(l_temp.inqty_sum) THEN LET l_temp.inqty_sum = 0 END IF
+      IF cl_null(l_temp.inqtyr_sum) THEN LET l_temp.inqtyr_sum = 0 END IF
+      
+      INITIALIZE l_sfdc.* TO NULL
+      LET l_sfdc.sfdcent   = g_enterprise   #企業編號
+      LET l_sfdc.sfdcsite  = g_site         #營運據點
+
+      #发料单
+      LET l_sfdc.sfdcdocno = g_asfp360_04_m2.send_no   #發退料單號
+      LET l_sfdc.sfdc017   = -1   #正負
+      
+      LET l_sfdcseq = l_sfdcseq + 1
+      LET l_sfdc.sfdcseq   = l_sfdcseq   #項次
+      
+      LET l_sfdc.sfdc001   = g_sfaadocno_01     #工單單號
+      LET l_sfdc.sfdc002   = l_temp.sfbaseq     #工單項次
+      LET l_sfdc.sfdc003   = l_temp.sfbaseq1    #工單項序
+      LET l_sfdc.sfdc004   = l_temp.sfba006     #需求料號
+      LET l_sfdc.sfdc005   = l_temp.sfba021     #產品特徵
+      IF cl_null(l_sfdc.sfdc005) THEN LET l_sfdc.sfdc005 = ' ' END IF  #产品特征
+      LET l_sfdc.sfdc006   = l_temp.sfba014     #單位
+      LET l_sfdc.sfdc007   = l_temp.inqty_sum      #申請數量  跟实际数量一起更新
+      LET l_sfdc.sfdc008   = 0  #l_temp.inqty_sum      #實際數量
+      LET l_sfdc.sfdc009   = l_temp.unitr       #參考單位
+      LET l_sfdc.sfdc010   = l_temp.inqtyr_sum     #參考單位需求數量
+      LET l_sfdc.sfdc011   = 0  #l_temp.inqtyr_sum     #參考單位實際數量
+      LET l_sfdc.sfdc012   = g_asfp360_04_m.ware #指定庫位
+      IF cl_null(l_sfdc.sfdc012) THEN LET l_sfdc.sfdc012 = ' ' END IF
+      LET l_sfdc.sfdc013   = g_asfp360_04_m.loca #指定儲位
+      IF cl_null(l_sfdc.sfdc013) THEN LET l_sfdc.sfdc013 = ' ' END IF
+      LET l_sfdc.sfdc014   = g_asfp360_04_m.lot  #指定批號
+      IF cl_null(l_sfdc.sfdc014) THEN LET l_sfdc.sfdc014 = ' ' END IF
+      LET l_sfdc.sfdc015   = ''   #理由碼
+      LET l_sfdc.sfdc016   = ' '   #庫存管理特徴
+      
+      LET l_sfdc.sfdcud001 = ''   #自定義欄位(文字)001
+      LET l_sfdc.sfdcud002 = ''   #自定義欄位(文字)002
+      LET l_sfdc.sfdcud003 = ''   #自定義欄位(文字)003
+      LET l_sfdc.sfdcud004 = ''   #自定義欄位(文字)004
+      LET l_sfdc.sfdcud005 = ''   #自定義欄位(文字)005
+      LET l_sfdc.sfdcud006 = ''   #自定義欄位(文字)006
+      LET l_sfdc.sfdcud007 = ''   #自定義欄位(文字)007
+      LET l_sfdc.sfdcud008 = ''   #自定義欄位(文字)008
+      LET l_sfdc.sfdcud009 = ''   #自定義欄位(文字)009
+      LET l_sfdc.sfdcud010 = ''   #自定義欄位(文字)010
+      LET l_sfdc.sfdcud011 = ''   #自定義欄位(數字)011
+      LET l_sfdc.sfdcud012 = ''   #自定義欄位(數字)012
+      LET l_sfdc.sfdcud013 = ''   #自定義欄位(數字)013
+      LET l_sfdc.sfdcud014 = ''   #自定義欄位(數字)014
+      LET l_sfdc.sfdcud015 = ''   #自定義欄位(數字)015
+      LET l_sfdc.sfdcud016 = ''   #自定義欄位(數字)016
+      LET l_sfdc.sfdcud017 = ''   #自定義欄位(數字)017
+      LET l_sfdc.sfdcud018 = ''   #自定義欄位(數字)018
+      LET l_sfdc.sfdcud019 = ''   #自定義欄位(數字)019
+      LET l_sfdc.sfdcud020 = ''   #自定義欄位(數字)020
+      LET l_sfdc.sfdcud021 = ''   #自定義欄位(日期時間)021
+      LET l_sfdc.sfdcud022 = ''   #自定義欄位(日期時間)022
+      LET l_sfdc.sfdcud023 = ''   #自定義欄位(日期時間)023
+      LET l_sfdc.sfdcud024 = ''   #自定義欄位(日期時間)024
+      LET l_sfdc.sfdcud025 = ''   #自定義欄位(日期時間)025
+      LET l_sfdc.sfdcud026 = ''   #自定義欄位(日期時間)026
+      LET l_sfdc.sfdcud027 = ''   #自定義欄位(日期時間)027
+      LET l_sfdc.sfdcud028 = ''   #自定義欄位(日期時間)028
+      LET l_sfdc.sfdcud029 = ''   #自定義欄位(日期時間)029
+      LET l_sfdc.sfdcud030 = ''   #自定義欄位(日期時間)030
+
+      INSERT INTO sfdc_t VALUES(l_sfdc.*)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'ins sfdc_t'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      
+      #新增或更新sfde(包含新增或更新sfdf)   'N'代表不自动增加sfdf
+      CALL s_asft310_chg_sfde_f_sfdc_ins(l_sfdc.sfdcdocno,l_sfdc.sfdcseq,'N') RETURNING l_success
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      
+      INITIALIZE l_sfdd.* TO NULL
+      LET l_sfdd.sfddent   = g_enterprise           #企業代碼
+      LET l_sfdd.sfddsite  = g_site                 #營運據
+
+      #发料单
+      LET l_sfdd.sfdddocno = g_asfp360_04_m2.send_no   #發退料單號
+      LET l_sfdd.sfdd012   = -1   #正負
+
+      LET l_sfdd.sfddseq   = l_sfdc.sfdcseq         #項次
+      LET l_sfdd.sfddseq1  = 1                      #項序
+      LET l_sfdd.sfdd001   = l_sfdc.sfdc004         #發退料料號
+      LET l_sfdd.sfdd013   = l_sfdc.sfdc005         #产品特征
+      IF cl_null(l_sfdd.sfdd013) THEN LET l_sfdd.sfdd013 = ' ' END IF
+      LET l_sfdd.sfdd002   = 1                      #替代率
+      LET l_sfdd.sfdd003   = l_sfdc.sfdc012         #庫位
+      LET l_sfdd.sfdd004   = l_sfdc.sfdc013         #儲位
+      LET l_sfdd.sfdd005   = l_sfdc.sfdc014         #批號
+      LET l_sfdd.sfdd006   = l_sfdc.sfdc006         #單位
+      LET l_sfdd.sfdd007   = l_sfdc.sfdc007         #數量
+      LET l_sfdd.sfdd008   = l_sfdc.sfdc009         #参考单位
+      LET l_sfdd.sfdd009   = l_sfdc.sfdc010         #参考单位数量
+      LET l_sfdd.sfdd010   = l_sfdc.sfdc016         #庫存管理特徵
+      LET l_sfdd.sfdd011   = ''   #包裝容器
+
+      LET l_sfdd.sfddud001 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud002 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud003 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud004 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud005 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud006 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud007 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud008 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud009 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud010 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud011 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud012 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud013 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud014 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud015 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud016 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud017 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud018 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud019 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud020 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud021 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud022 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud023 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud024 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud025 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud026 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud027 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud028 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud029 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud030 = ''    #自定義欄位(日期時間)
+      #160408-00035#7---add---begin
+      CALL s_asft310_get_sfbb008_sfbb009(l_sfdc.sfdc001,l_sfdc.sfdc002,l_sfdc.sfdc003,l_sfdc.sfdc004,l_sfdc.sfdc005,l_sfdc.sfdc016,l_sfdc.sfdc012,l_sfdc.sfdc013,l_sfdc.sfdc014,l_sfdc.sfdc006)
+         RETURNING l_qty
+      IF l_sfdd.sfdd007 >= l_qty THEN 
+         LET l_sfdd.sfdd014 = l_qty
+      ELSE   
+         LET l_sfdd.sfdd014 = l_sfdd.sfdd007 
+      END IF
+      LET l_sfdd.sfdd015 = l_sfdd.sfdd007 - l_sfdd.sfdd014
+      ##160408-00035#7---add---end										
+      INSERT INTO sfdd_t VALUES(l_sfdd.*)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'ins sfdd_t'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+
+      #更新sfdc
+      CALL s_asft310_chg_sfdc_f_sfdd_ins(l_sfdd.sfdddocno,l_sfdc.sfdcseq,l_sfdd.sfddseq1) RETURNING l_success
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      #处理sfdf,sfde：sfdd与sfdf总数应该平的
+      CALL s_asft310_chg_sfdf_f_sfdd_ins(l_sfdd.sfdddocno,l_sfdc.sfdcseq,l_sfdd.sfddseq1) RETURNING l_success
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+
+      ##更新申请数量=实际数量
+      #UPDATE sfdc_t SET sfdc007 = sfdc008,  #申請數量
+      #                  sfdc010 = sfdc011   #参考单位申請數量
+      # WHERE sfdcent  = g_enterprise
+      #   AND sfdcdocno =l_sfdadocno
+      #UPDATE sfde_t SET sfde004 = sfde005,  #申請數量
+      #                  sfde007 = sfde008   #参考单位申請數量
+      # WHERE sfdeent  = g_enterprise
+      #   AND sfdedocno =l_sfdadocno
+   END FOREACH
+   CLOSE asfp360_04_gen_sfdc_11_c
+   FREE asfp360_04_gen_sfdc_11_p
+
+   RETURN r_success
+END FUNCTION
+
+#发退料套数单身(成套挪)--从asfp360_03中获取来源资料
+#成套退料单21
+PUBLIC FUNCTION asfp360_04_gen_sfdb_21()
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_sfdb        RECORD LIKE sfdb_t.*
+   DEFINE l_sql         STRING
+   DEFINE l_temp1       RECORD
+                        sfaadocno      LIKE sfaa_t.sfaadocno, #工单单号
+                        plan_outsets   LIKE sfaa_t.sfaa049    #拟拨出套数
+                        END RECORD
+   
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+   
+   LET l_sql = " SELECT sfaadocno,plan_outsets ",
+               "   FROM asfp360_tmp01",   #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_03_temp1 ——> asfp360_tmp01
+               "  WHERE sel = 'Y' ",
+               "    AND plan_outsets > 0 ",
+               "  ORDER BY sfaadocno "
+   PREPARE asfp360_04_gen_sfdb_1_p FROM l_sql
+   DECLARE asfp360_04_gen_sfdb_1_c CURSOR FOR asfp360_04_gen_sfdb_1_p
+   FOREACH asfp360_04_gen_sfdb_1_c INTO l_temp1.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:asfp360_04_gen_sfdb_1_c"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   
+      INITIALIZE l_sfdb.* TO NULL
+      LET l_sfdb.sfdbent   = g_enterprise   #企業編號
+      LET l_sfdb.sfdbsite  = g_site         #營運據點
+      
+      #退料单
+      LET l_sfdb.sfdbdocno = g_asfp360_04_m2.return_no #發退料單號
+      LET l_sfdb.sfdb001   = l_temp1.sfaadocno   #工單單號
+      LET l_sfdb.sfdb008   = 1    #正負
+      
+      LET l_sfdb.sfdb002   = ''     #Run Card
+
+      SELECT sfca001 INTO l_sfdb.sfdb002 FROM sfca_t
+       WHERE sfcaent = g_enterprise
+         AND sfcasite= g_site
+         AND sfcadocno=l_sfdb.sfdb001   #工单单号
+      
+      LET l_sfdb.sfdb003   = ' '   #部位
+      LET l_sfdb.sfdb004   = ' '   #作業
+      LET l_sfdb.sfdb005   = ' '   #作業序
+      LET l_sfdb.sfdb006   = l_temp1.plan_outsets   #預計套數
+      LET l_sfdb.sfdb007   = l_sfdb.sfdb006         #實際套數
+      
+      
+      LET l_sfdb.sfdbud001 = ''      #自定義欄位(文字)001
+      LET l_sfdb.sfdbud002 = ''      #自定義欄位(文字)002
+      LET l_sfdb.sfdbud003 = ''      #自定義欄位(文字)003
+      LET l_sfdb.sfdbud004 = ''      #自定義欄位(文字)004
+      LET l_sfdb.sfdbud005 = ''      #自定義欄位(文字)005
+      LET l_sfdb.sfdbud006 = ''      #自定義欄位(文字)006
+      LET l_sfdb.sfdbud007 = ''      #自定義欄位(文字)007
+      LET l_sfdb.sfdbud008 = ''      #自定義欄位(文字)008
+      LET l_sfdb.sfdbud009 = ''      #自定義欄位(文字)009
+      LET l_sfdb.sfdbud010 = ''      #自定義欄位(文字)010
+      LET l_sfdb.sfdbud011 = ''      #自定義欄位(數字)011
+      LET l_sfdb.sfdbud012 = ''      #自定義欄位(數字)012
+      LET l_sfdb.sfdbud013 = ''      #自定義欄位(數字)013
+      LET l_sfdb.sfdbud014 = ''      #自定義欄位(數字)014
+      LET l_sfdb.sfdbud015 = ''      #自定義欄位(數字)015
+      LET l_sfdb.sfdbud016 = ''      #自定義欄位(數字)016
+      LET l_sfdb.sfdbud017 = ''      #自定義欄位(數字)017
+      LET l_sfdb.sfdbud018 = ''      #自定義欄位(數字)018
+      LET l_sfdb.sfdbud019 = ''      #自定義欄位(數字)019
+      LET l_sfdb.sfdbud020 = ''      #自定義欄位(數字)020
+      LET l_sfdb.sfdbud021 = ''      #自定義欄位(日期時間)021
+      LET l_sfdb.sfdbud022 = ''      #自定義欄位(日期時間)022
+      LET l_sfdb.sfdbud023 = ''      #自定義欄位(日期時間)023
+      LET l_sfdb.sfdbud024 = ''      #自定義欄位(日期時間)024
+      LET l_sfdb.sfdbud025 = ''      #自定義欄位(日期時間)025
+      LET l_sfdb.sfdbud026 = ''      #自定義欄位(日期時間)026
+      LET l_sfdb.sfdbud027 = ''      #自定義欄位(日期時間)027
+      LET l_sfdb.sfdbud028 = ''      #自定義欄位(日期時間)028
+      LET l_sfdb.sfdbud029 = ''      #自定義欄位(日期時間)029
+      LET l_sfdb.sfdbud030 = ''      #自定義欄位(日期時間)030
+      
+      INSERT INTO sfdb_t VALUES(l_sfdb.*)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'ins sfdb_t'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      
+   END FOREACH
+   CLOSE asfp360_04_gen_sfdb_1_c
+   FREE asfp360_04_gen_sfdb_1_p
+
+   RETURN r_success
+END FUNCTION
+
+#发退料需求档（成套挪）
+#成套退料单21
+PUBLIC FUNCTION asfp360_04_gen_sfdc_21()
+   DEFINE p_sfaadocno   LIKE sfaa_t.sfaadocno  #工单
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_sfdc        RECORD LIKE sfdc_t.*
+   DEFINE l_sfdd        RECORD LIKE sfdd_t.*
+   DEFINE l_sql         STRING
+   DEFINE l_temp3       RECORD
+                        sfaadocno      LIKE sfaa_t.sfaadocno, #工单单号
+                        sfbaseq        LIKE sfba_t.sfbaseq,  #项次
+                        sfbaseq1       LIKE sfba_t.sfbaseq1, #项序
+                        sfba005        LIKE sfba_t.sfba005,  #BOM料号 需要和asfp360_02_temp匹配
+                        sfba006        LIKE sfba_t.sfba006,  #发料料号
+                        sfba021        LIKE sfba_t.sfba021,  #特征
+                        sfba014        LIKE sfba_t.sfba014,  #单位
+                        unitr          LIKE sfba_t.sfba014,  #参考单位
+                        outqty         LIKE sfba_t.sfba016,  #拟拨出数量
+                        outqtyr        LIKE sfba_t.sfba016   #参考单位拨出数量
+                        END RECORD
+   DEFINE l_sfdcseq     LIKE sfdc_t.sfdcseq
+   
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+   #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_03_temp3 ——> asfp360_tmp02
+   LET l_sql = " SELECT asfp360_tmp02.sfaadocno,asfp360_tmp02.sfbaseq,asfp360_tmp02.sfbaseq1, ",
+               "        asfp360_tmp02.sfba005,asfp360_tmp02.sfba006,asfp360_tmp02.sfba021, ",
+               "        asfp360_tmp02.sfba014,asfp360_tmp02.unitr,",
+               "        SUM(asfp360_tmp02.outqty),SUM(asfp360_tmp02.outqtyr) ",
+               "   FROM asfp360_tmp02,asfp360_tmp01",   #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_03_temp1 ——> asfp360_tmp01
+               "  WHERE asfp360_tmp02.sfaadocno = asfp360_tmp01.sfaadocno ",   #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_03_temp1 ——> asfp360_tmp01
+               "    AND asfp360_tmp02.outqty > 0 ",
+               "  GROUP BY asfp360_tmp02.sfaadocno,asfp360_tmp02.sfbaseq,asfp360_tmp02.sfbaseq1, ",
+               "           asfp360_tmp02.sfba005,asfp360_tmp02.sfba006,asfp360_tmp02.sfba021, ",
+               "           asfp360_tmp02.sfba014,asfp360_tmp02.unitr ",
+               "  ORDER BY asfp360_tmp02.sfaadocno,asfp360_tmp02.sfbaseq,asfp360_tmp02.sfbaseq1 "
+   PREPARE asfp360_04_gen_sfdc_21_p FROM l_sql
+   DECLARE asfp360_04_gen_sfdc_21_c CURSOR FOR asfp360_04_gen_sfdc_21_p
+   LET l_sfdcseq = 0
+   FOREACH asfp360_04_gen_sfdc_21_c INTO l_temp3.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:asfp360_04_gen_sfdc_21_c"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success
+         
+      END IF
+   
+      IF cl_null(l_temp3.outqty) THEN LET l_temp3.outqty = 0 END IF
+      IF cl_null(l_temp3.outqtyr) THEN LET l_temp3.outqtyr = 0 END IF
+      
+      INITIALIZE l_sfdc.* TO NULL
+      LET l_sfdc.sfdcent   = g_enterprise   #企業編號
+      LET l_sfdc.sfdcsite  = g_site         #營運據點
+
+      #退料单
+      LET l_sfdc.sfdcdocno = g_asfp360_04_m2.return_no #發退料單號
+      LET l_sfdc.sfdc017   = 1    #正負
+      
+      LET l_sfdcseq = l_sfdcseq + 1
+      LET l_sfdc.sfdcseq   = l_sfdcseq   #項次
+      
+      LET l_sfdc.sfdc001   = l_temp3.sfaadocno   #工單單號
+      LET l_sfdc.sfdc002   = l_temp3.sfbaseq     #工單項次
+      LET l_sfdc.sfdc003   = l_temp3.sfbaseq1    #工單項序
+      LET l_sfdc.sfdc004   = l_temp3.sfba006     #需求料號
+      LET l_sfdc.sfdc005   = l_temp3.sfba021     #產品特徵
+      IF cl_null(l_sfdc.sfdc005) THEN LET l_sfdc.sfdc005 = ' ' END IF  #产品特征
+      LET l_sfdc.sfdc006   = l_temp3.sfba014     #單位
+      LET l_sfdc.sfdc007   = l_temp3.outqty      #申請數量  跟实际数量一起更新
+      LET l_sfdc.sfdc008   = 0  #l_temp3.outqty      #實際數量
+      LET l_sfdc.sfdc009   = l_temp3.unitr       #參考單位
+      LET l_sfdc.sfdc010   = l_temp3.outqtyr     #參考單位需求數量
+      LET l_sfdc.sfdc011   = 0  #l_temp3.outqtyr     #參考單位實際數量
+      LET l_sfdc.sfdc012   = g_asfp360_04_m.ware #指定庫位
+      IF cl_null(l_sfdc.sfdc012) THEN LET l_sfdc.sfdc012 = ' ' END IF
+      LET l_sfdc.sfdc013   = g_asfp360_04_m.loca #指定儲位
+      IF cl_null(l_sfdc.sfdc013) THEN LET l_sfdc.sfdc013 = ' ' END IF
+      LET l_sfdc.sfdc014   = g_asfp360_04_m.lot  #指定批號
+      IF cl_null(l_sfdc.sfdc014) THEN LET l_sfdc.sfdc014 = ' ' END IF
+      LET l_sfdc.sfdc015   = ''   #理由碼
+      LET l_sfdc.sfdc016   = ' '   #庫存管理特徴
+      
+      LET l_sfdc.sfdcud001 = ''   #自定義欄位(文字)001
+      LET l_sfdc.sfdcud002 = ''   #自定義欄位(文字)002
+      LET l_sfdc.sfdcud003 = ''   #自定義欄位(文字)003
+      LET l_sfdc.sfdcud004 = ''   #自定義欄位(文字)004
+      LET l_sfdc.sfdcud005 = ''   #自定義欄位(文字)005
+      LET l_sfdc.sfdcud006 = ''   #自定義欄位(文字)006
+      LET l_sfdc.sfdcud007 = ''   #自定義欄位(文字)007
+      LET l_sfdc.sfdcud008 = ''   #自定義欄位(文字)008
+      LET l_sfdc.sfdcud009 = ''   #自定義欄位(文字)009
+      LET l_sfdc.sfdcud010 = ''   #自定義欄位(文字)010
+      LET l_sfdc.sfdcud011 = ''   #自定義欄位(數字)011
+      LET l_sfdc.sfdcud012 = ''   #自定義欄位(數字)012
+      LET l_sfdc.sfdcud013 = ''   #自定義欄位(數字)013
+      LET l_sfdc.sfdcud014 = ''   #自定義欄位(數字)014
+      LET l_sfdc.sfdcud015 = ''   #自定義欄位(數字)015
+      LET l_sfdc.sfdcud016 = ''   #自定義欄位(數字)016
+      LET l_sfdc.sfdcud017 = ''   #自定義欄位(數字)017
+      LET l_sfdc.sfdcud018 = ''   #自定義欄位(數字)018
+      LET l_sfdc.sfdcud019 = ''   #自定義欄位(數字)019
+      LET l_sfdc.sfdcud020 = ''   #自定義欄位(數字)020
+      LET l_sfdc.sfdcud021 = ''   #自定義欄位(日期時間)021
+      LET l_sfdc.sfdcud022 = ''   #自定義欄位(日期時間)022
+      LET l_sfdc.sfdcud023 = ''   #自定義欄位(日期時間)023
+      LET l_sfdc.sfdcud024 = ''   #自定義欄位(日期時間)024
+      LET l_sfdc.sfdcud025 = ''   #自定義欄位(日期時間)025
+      LET l_sfdc.sfdcud026 = ''   #自定義欄位(日期時間)026
+      LET l_sfdc.sfdcud027 = ''   #自定義欄位(日期時間)027
+      LET l_sfdc.sfdcud028 = ''   #自定義欄位(日期時間)028
+      LET l_sfdc.sfdcud029 = ''   #自定義欄位(日期時間)029
+      LET l_sfdc.sfdcud030 = ''   #自定義欄位(日期時間)030
+
+      INSERT INTO sfdc_t VALUES(l_sfdc.*)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'ins sfdc_t'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      
+      #新增或更新sfde(包含新增或更新sfdf)   'N'代表不自动增加sfdf
+      CALL s_asft310_chg_sfde_f_sfdc_ins(l_sfdc.sfdcdocno,l_sfdc.sfdcseq,'N') RETURNING l_success
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      
+      INITIALIZE l_sfdd.* TO NULL
+      LET l_sfdd.sfddent   = g_enterprise           #企業代碼
+      LET l_sfdd.sfddsite  = g_site                 #營運據
+
+      #退料单
+      LET l_sfdd.sfdddocno = g_asfp360_04_m2.return_no #發退料單號
+      LET l_sfdd.sfdd012   = 1    #正負
+
+      LET l_sfdd.sfddseq   = l_sfdc.sfdcseq         #項次
+      LET l_sfdd.sfddseq1  = 1                      #項序
+      LET l_sfdd.sfdd001   = l_temp3.sfba006        #發退料料號
+      LET l_sfdd.sfdd013   = l_temp3.sfba021        #产品特征
+      IF cl_null(l_sfdd.sfdd013) THEN LET l_sfdd.sfdd013 = ' ' END IF
+      LET l_sfdd.sfdd002   = 1                      #替代率
+      LET l_sfdd.sfdd003   = l_sfdc.sfdc012         #庫位
+      LET l_sfdd.sfdd004   = l_sfdc.sfdc013         #儲位
+      LET l_sfdd.sfdd005   = l_sfdc.sfdc014         #批號
+      LET l_sfdd.sfdd006   = l_sfdc.sfdc006         #單位
+      LET l_sfdd.sfdd007   = l_temp3.outqty         #數量
+      LET l_sfdd.sfdd008   = l_sfdc.sfdc009         #参考单位
+      LET l_sfdd.sfdd009   = l_temp3.outqtyr        #参考单位数量
+      LET l_sfdd.sfdd010   = l_sfdc.sfdc016         #庫存管理特徵
+      LET l_sfdd.sfdd011   = ''   #包裝容器
+
+      LET l_sfdd.sfddud001 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud002 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud003 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud004 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud005 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud006 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud007 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud008 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud009 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud010 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud011 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud012 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud013 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud014 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud015 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud016 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud017 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud018 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud019 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud020 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud021 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud022 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud023 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud024 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud025 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud026 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud027 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud028 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud029 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud030 = ''    #自定義欄位(日期時間)										
+      INSERT INTO sfdd_t VALUES(l_sfdd.*)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'ins sfdd_t'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+
+      #更新sfdc
+      CALL s_asft310_chg_sfdc_f_sfdd_ins(l_sfdd.sfdddocno,l_sfdc.sfdcseq,l_sfdd.sfddseq1) RETURNING l_success
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      #处理sfdf,sfde：sfdd与sfdf总数应该平的
+      CALL s_asft310_chg_sfdf_f_sfdd_ins(l_sfdd.sfdddocno,l_sfdc.sfdcseq,l_sfdd.sfddseq1) RETURNING l_success
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+
+      ##更新申请数量=实际数量
+      #UPDATE sfdc_t SET sfdc007 = sfdc008,  #申請數量
+      #                  sfdc010 = sfdc011   #参考单位申請數量
+      # WHERE sfdcent  = g_enterprise
+      #   AND sfdcdocno =l_sfdadocno
+      #UPDATE sfde_t SET sfde004 = sfde005,  #申請數量
+      #                  sfde007 = sfde008   #参考单位申請數量
+      # WHERE sfdeent  = g_enterprise
+      #   AND sfdedocno =l_sfdadocno
+   END FOREACH
+   CLOSE asfp360_04_gen_sfdc_21_c
+   FREE asfp360_04_gen_sfdc_21_p
+
+   RETURN r_success
+END FUNCTION
+
+#欠料补料
+PUBLIC FUNCTION asfp360_04_gen_sfdb_13()
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_sfdb        RECORD LIKE sfdb_t.*
+   
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+   
+   INITIALIZE l_sfdb.* TO NULL
+   LET l_sfdb.sfdbent   = g_enterprise   #企業編號
+   LET l_sfdb.sfdbsite  = g_site         #營運據點
+
+   #发料单
+   LET l_sfdb.sfdbdocno = g_asfp360_04_m2.send_no   #發退料單號
+   LET l_sfdb.sfdb008   = -1   #正負
+   LET l_sfdb.sfdb001   = g_sfaadocno_01     #工單單號
+   
+   LET l_sfdb.sfdb002   = ''     #Run Card
+   SELECT sfca001 INTO l_sfdb.sfdb002 FROM sfca_t
+    WHERE sfcaent = g_enterprise
+      AND sfcasite= g_site
+      AND sfcadocno=l_sfdb.sfdb001   #工单单号
+   
+   LET l_sfdb.sfdb003   = ' '   #部位
+   LET l_sfdb.sfdb004   = ' '   #作業
+   LET l_sfdb.sfdb005   = ' '   #作業序
+   LET l_sfdb.sfdb006   = 0     #預計套數
+   LET l_sfdb.sfdb007   = l_sfdb.sfdb006         #實際套數
+   
+   
+   LET l_sfdb.sfdbud001 = ''      #自定義欄位(文字)001
+   LET l_sfdb.sfdbud002 = ''      #自定義欄位(文字)002
+   LET l_sfdb.sfdbud003 = ''      #自定義欄位(文字)003
+   LET l_sfdb.sfdbud004 = ''      #自定義欄位(文字)004
+   LET l_sfdb.sfdbud005 = ''      #自定義欄位(文字)005
+   LET l_sfdb.sfdbud006 = ''      #自定義欄位(文字)006
+   LET l_sfdb.sfdbud007 = ''      #自定義欄位(文字)007
+   LET l_sfdb.sfdbud008 = ''      #自定義欄位(文字)008
+   LET l_sfdb.sfdbud009 = ''      #自定義欄位(文字)009
+   LET l_sfdb.sfdbud010 = ''      #自定義欄位(文字)010
+   LET l_sfdb.sfdbud011 = ''      #自定義欄位(數字)011
+   LET l_sfdb.sfdbud012 = ''      #自定義欄位(數字)012
+   LET l_sfdb.sfdbud013 = ''      #自定義欄位(數字)013
+   LET l_sfdb.sfdbud014 = ''      #自定義欄位(數字)014
+   LET l_sfdb.sfdbud015 = ''      #自定義欄位(數字)015
+   LET l_sfdb.sfdbud016 = ''      #自定義欄位(數字)016
+   LET l_sfdb.sfdbud017 = ''      #自定義欄位(數字)017
+   LET l_sfdb.sfdbud018 = ''      #自定義欄位(數字)018
+   LET l_sfdb.sfdbud019 = ''      #自定義欄位(數字)019
+   LET l_sfdb.sfdbud020 = ''      #自定義欄位(數字)020
+   LET l_sfdb.sfdbud021 = ''      #自定義欄位(日期時間)021
+   LET l_sfdb.sfdbud022 = ''      #自定義欄位(日期時間)022
+   LET l_sfdb.sfdbud023 = ''      #自定義欄位(日期時間)023
+   LET l_sfdb.sfdbud024 = ''      #自定義欄位(日期時間)024
+   LET l_sfdb.sfdbud025 = ''      #自定義欄位(日期時間)025
+   LET l_sfdb.sfdbud026 = ''      #自定義欄位(日期時間)026
+   LET l_sfdb.sfdbud027 = ''      #自定義欄位(日期時間)027
+   LET l_sfdb.sfdbud028 = ''      #自定義欄位(日期時間)028
+   LET l_sfdb.sfdbud029 = ''      #自定義欄位(日期時間)029
+   LET l_sfdb.sfdbud030 = ''      #自定義欄位(日期時間)030
+      
+   INSERT INTO sfdb_t VALUES(l_sfdb.*)
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'ins sfdb_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   RETURN r_success
+END FUNCTION
+
+#欠料补料
+PUBLIC FUNCTION asfp360_04_gen_sfdc_13()
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_sfdc        RECORD LIKE sfdc_t.*
+   DEFINE l_sfdd        RECORD LIKE sfdd_t.*
+   DEFINE l_sql         STRING
+   DEFINE l_temp        RECORD
+                        sfbaseq        LIKE sfba_t.sfbaseq,  #项次
+                        sfbaseq1       LIKE sfba_t.sfbaseq1, #项序
+                        sfba005        LIKE sfba_t.sfba005,  #BOM料号 需要和asfp360_02_temp匹配
+                        sfba006        LIKE sfba_t.sfba006,  #发料料号
+                        sfba021        LIKE sfba_t.sfba021,  #特征
+                        sfba014        LIKE sfba_t.sfba014,  #单位
+                        unitr          LIKE sfba_t.sfba014,  #参考单位
+                        inqty_sum      LIKE sfba_t.sfba016,  #来源拨出数量合计
+                        inqtyr_sum     LIKE sfba_t.sfba016   #参考单位来源拨出数量合计
+                        END RECORD
+   DEFINE l_sfdcseq     LIKE sfdc_t.sfdcseq
+   
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+   
+   #同成套发料处理方式
+   CALL asfp360_04_gen_sfdc_11() RETURNING l_success
+   IF NOT l_success THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   RETURN r_success
+END FUNCTION
+
+#发退料需求档（单颗挪）
+#一般退料23
+PUBLIC FUNCTION asfp360_04_gen_sfdc_23()
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_sfdc        RECORD LIKE sfdc_t.*
+   DEFINE l_sfdd        RECORD LIKE sfdd_t.*
+   DEFINE l_sql         STRING
+   DEFINE l_temp3       RECORD
+                        sfaadocno      LIKE sfaa_t.sfaadocno, #工单单号
+                        sfbaseq        LIKE sfba_t.sfbaseq,  #项次
+                        sfbaseq1       LIKE sfba_t.sfbaseq1, #项序
+                        sfba005        LIKE sfba_t.sfba005,  #BOM料号 需要和asfp360_02_temp匹配
+                        sfba006        LIKE sfba_t.sfba006,  #发料料号
+                        sfba021        LIKE sfba_t.sfba021,  #特征
+                        sfba014        LIKE sfba_t.sfba014,  #单位
+                        unitr          LIKE sfba_t.sfba014,  #参考单位
+                        outqty         LIKE sfba_t.sfba016,  #拟拨出数量
+                        outqtyr        LIKE sfba_t.sfba016   #参考单位拨出数量
+                        END RECORD
+   DEFINE l_sfdcseq     LIKE sfdc_t.sfdcseq
+   
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+   
+   LET l_sql = " SELECT sfaadocno,sfbaseq,sfbaseq1, ",
+               "        sfba005,sfba006,sfba021, ",
+               "        sfba014,unitr,",
+               "        SUM(outqty),SUM(outqtyr) ",
+               "   FROM asfp360_tmp04",   #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp3 ——> asfp360_tmp04
+               "  WHERE sel = 'Y' ",
+               "    AND outqty > 0 ",
+               "  GROUP BY sfaadocno,sfbaseq,sfbaseq1, ",
+               "           sfba005,sfba006,sfba021, ",
+               "           sfba014,unitr ",
+               "  ORDER BY sfaadocno,sfbaseq,sfbaseq1 "
+   PREPARE asfp360_04_gen_sfdc_23_p FROM l_sql
+   DECLARE asfp360_04_gen_sfdc_23_c CURSOR FOR asfp360_04_gen_sfdc_23_p
+   LET l_sfdcseq = 0
+   FOREACH asfp360_04_gen_sfdc_23_c INTO l_temp3.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:asfp360_04_gen_sfdc_23_c"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   
+   
+      IF cl_null(l_temp3.outqty) THEN LET l_temp3.outqty = 0 END IF
+      IF cl_null(l_temp3.outqtyr) THEN LET l_temp3.outqtyr = 0 END IF
+      
+      INITIALIZE l_sfdc.* TO NULL
+      LET l_sfdc.sfdcent   = g_enterprise   #企業編號
+      LET l_sfdc.sfdcsite  = g_site         #營運據點
+
+      #退料单
+      LET l_sfdc.sfdcdocno = g_asfp360_04_m2.return_no #發退料單號
+      LET l_sfdc.sfdc017   = 1    #正負
+      
+      LET l_sfdcseq = l_sfdcseq + 1
+      LET l_sfdc.sfdcseq   = l_sfdcseq   #項次
+      
+      LET l_sfdc.sfdc001   = l_temp3.sfaadocno   #工單單號
+      LET l_sfdc.sfdc002   = l_temp3.sfbaseq     #工單項次
+      LET l_sfdc.sfdc003   = l_temp3.sfbaseq1    #工單項序
+      LET l_sfdc.sfdc004   = l_temp3.sfba006     #需求料號
+      LET l_sfdc.sfdc005   = l_temp3.sfba021     #產品特徵
+      IF cl_null(l_sfdc.sfdc005) THEN LET l_sfdc.sfdc005 = ' ' END IF  #产品特征
+      LET l_sfdc.sfdc006   = l_temp3.sfba014     #單位
+      LET l_sfdc.sfdc007   = l_temp3.outqty      #申請數量  跟实际数量一起更新
+      LET l_sfdc.sfdc008   = 0  #l_temp3.outqty      #實際數量
+      LET l_sfdc.sfdc009   = l_temp3.unitr       #參考單位
+      LET l_sfdc.sfdc010   = l_temp3.outqtyr     #參考單位需求數量
+      LET l_sfdc.sfdc011   = 0  #l_temp3.outqtyr     #參考單位實際數量
+      LET l_sfdc.sfdc012   = g_asfp360_04_m.ware #指定庫位
+      IF cl_null(l_sfdc.sfdc012) THEN LET l_sfdc.sfdc012 = ' ' END IF
+      LET l_sfdc.sfdc013   = g_asfp360_04_m.loca #指定儲位
+      IF cl_null(l_sfdc.sfdc013) THEN LET l_sfdc.sfdc013 = ' ' END IF
+      LET l_sfdc.sfdc014   = g_asfp360_04_m.lot  #指定批號
+      IF cl_null(l_sfdc.sfdc014) THEN LET l_sfdc.sfdc014 = ' ' END IF
+      LET l_sfdc.sfdc015   = ''   #理由碼
+      LET l_sfdc.sfdc016   = ' '   #庫存管理特徴
+      
+      LET l_sfdc.sfdcud001 = ''   #自定義欄位(文字)001
+      LET l_sfdc.sfdcud002 = ''   #自定義欄位(文字)002
+      LET l_sfdc.sfdcud003 = ''   #自定義欄位(文字)003
+      LET l_sfdc.sfdcud004 = ''   #自定義欄位(文字)004
+      LET l_sfdc.sfdcud005 = ''   #自定義欄位(文字)005
+      LET l_sfdc.sfdcud006 = ''   #自定義欄位(文字)006
+      LET l_sfdc.sfdcud007 = ''   #自定義欄位(文字)007
+      LET l_sfdc.sfdcud008 = ''   #自定義欄位(文字)008
+      LET l_sfdc.sfdcud009 = ''   #自定義欄位(文字)009
+      LET l_sfdc.sfdcud010 = ''   #自定義欄位(文字)010
+      LET l_sfdc.sfdcud011 = ''   #自定義欄位(數字)011
+      LET l_sfdc.sfdcud012 = ''   #自定義欄位(數字)012
+      LET l_sfdc.sfdcud013 = ''   #自定義欄位(數字)013
+      LET l_sfdc.sfdcud014 = ''   #自定義欄位(數字)014
+      LET l_sfdc.sfdcud015 = ''   #自定義欄位(數字)015
+      LET l_sfdc.sfdcud016 = ''   #自定義欄位(數字)016
+      LET l_sfdc.sfdcud017 = ''   #自定義欄位(數字)017
+      LET l_sfdc.sfdcud018 = ''   #自定義欄位(數字)018
+      LET l_sfdc.sfdcud019 = ''   #自定義欄位(數字)019
+      LET l_sfdc.sfdcud020 = ''   #自定義欄位(數字)020
+      LET l_sfdc.sfdcud021 = ''   #自定義欄位(日期時間)021
+      LET l_sfdc.sfdcud022 = ''   #自定義欄位(日期時間)022
+      LET l_sfdc.sfdcud023 = ''   #自定義欄位(日期時間)023
+      LET l_sfdc.sfdcud024 = ''   #自定義欄位(日期時間)024
+      LET l_sfdc.sfdcud025 = ''   #自定義欄位(日期時間)025
+      LET l_sfdc.sfdcud026 = ''   #自定義欄位(日期時間)026
+      LET l_sfdc.sfdcud027 = ''   #自定義欄位(日期時間)027
+      LET l_sfdc.sfdcud028 = ''   #自定義欄位(日期時間)028
+      LET l_sfdc.sfdcud029 = ''   #自定義欄位(日期時間)029
+      LET l_sfdc.sfdcud030 = ''   #自定義欄位(日期時間)030
+
+      INSERT INTO sfdc_t VALUES(l_sfdc.*)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'ins sfdc_t'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      
+      #新增或更新sfde(包含新增或更新sfdf)   'N'代表不自动增加sfdf
+      CALL s_asft310_chg_sfde_f_sfdc_ins(l_sfdc.sfdcdocno,l_sfdc.sfdcseq,'N') RETURNING l_success
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      
+      INITIALIZE l_sfdd.* TO NULL
+      LET l_sfdd.sfddent   = g_enterprise           #企業代碼
+      LET l_sfdd.sfddsite  = g_site                 #營運據
+
+      #退料单
+      LET l_sfdd.sfdddocno = g_asfp360_04_m2.return_no #發退料單號
+      LET l_sfdd.sfdd012   = 1    #正負
+
+      LET l_sfdd.sfddseq   = l_sfdc.sfdcseq         #項次
+      LET l_sfdd.sfddseq1  = 1                      #項序
+      LET l_sfdd.sfdd001   = l_temp3.sfba006        #發退料料號
+      LET l_sfdd.sfdd013   = l_temp3.sfba021        #产品特征
+      IF cl_null(l_sfdd.sfdd013) THEN LET l_sfdd.sfdd013 = ' ' END IF
+      LET l_sfdd.sfdd002   = 1                      #替代率
+      LET l_sfdd.sfdd003   = l_sfdc.sfdc012         #庫位
+      LET l_sfdd.sfdd004   = l_sfdc.sfdc013         #儲位
+      LET l_sfdd.sfdd005   = l_sfdc.sfdc014         #批號
+      LET l_sfdd.sfdd006   = l_sfdc.sfdc006         #單位
+      LET l_sfdd.sfdd007   = l_temp3.outqty         #數量
+      LET l_sfdd.sfdd008   = l_sfdc.sfdc009         #参考单位
+      LET l_sfdd.sfdd009   = l_temp3.outqtyr        #参考单位数量
+      LET l_sfdd.sfdd010   = l_sfdc.sfdc016         #庫存管理特徵
+      LET l_sfdd.sfdd011   = ''   #包裝容器
+
+      LET l_sfdd.sfddud001 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud002 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud003 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud004 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud005 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud006 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud007 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud008 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud009 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud010 = ''    #自定義欄位(文字)
+      LET l_sfdd.sfddud011 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud012 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud013 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud014 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud015 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud016 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud017 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud018 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud019 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud020 = ''    #自定義欄位(數字)
+      LET l_sfdd.sfddud021 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud022 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud023 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud024 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud025 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud026 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud027 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud028 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud029 = ''    #自定義欄位(日期時間)
+      LET l_sfdd.sfddud030 = ''    #自定義欄位(日期時間)											
+      INSERT INTO sfdd_t VALUES(l_sfdd.*)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'ins sfdd_t'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+
+      #更新sfdc
+      CALL s_asft310_chg_sfdc_f_sfdd_ins(l_sfdd.sfdddocno,l_sfdc.sfdcseq,l_sfdd.sfddseq1) RETURNING l_success
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      #处理sfdf,sfde：sfdd与sfdf总数应该平的
+      CALL s_asft310_chg_sfdf_f_sfdd_ins(l_sfdd.sfdddocno,l_sfdc.sfdcseq,l_sfdd.sfddseq1) RETURNING l_success
+      IF NOT l_success THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+
+      ##更新申请数量=实际数量
+      #UPDATE sfdc_t SET sfdc007 = sfdc008,  #申請數量
+      #                  sfdc010 = sfdc011   #参考单位申請數量
+      # WHERE sfdcent  = g_enterprise
+      #   AND sfdcdocno =l_sfdadocno
+      #UPDATE sfde_t SET sfde004 = sfde005,  #申請數量
+      #                  sfde007 = sfde008   #参考单位申請數量
+      # WHERE sfdeent  = g_enterprise
+      #   AND sfdedocno =l_sfdadocno
+   END FOREACH
+   CLOSE asfp360_04_gen_sfdc_23_c
+   FREE asfp360_04_gen_sfdc_23_p
+   
+   RETURN r_success
+END FUNCTION
+
+#显示产生的资料
+PUBLIC FUNCTION asfp360_04_show()
+
+   WHENEVER ERROR CONTINUE
+
+   DISPLAY g_asfp360_04_m2.send_no TO send_no_04a1
+   DISPLAY g_asfp360_04_m2.return_no TO return_no_04a2
+                   
+   CALL asfp360_04_b_fill1()
+   CALL asfp360_04_b_fill2()
+END FUNCTION
+
+#发料单
+PUBLIC FUNCTION asfp360_04_b_fill1()
+   DEFINE l_sql        STRING
+   DEFINE l_ac_l       LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+   CALL g_asfp360_04_d1.clear()
+
+   LET l_sql = "SELECT sfdcseq,sfdc001,sfdc002,sfdc003,sfba002,a.oocql004, ",
+               "       sfba003,b.oocql004,sfba004,sfdc004,imaal003,imaal004, ",
+               "       sfdc005,sfdc006,c.oocal003,sfba013,sfba016,sfdc008, ",
+               "       sfdc009,d.oocal003,sfdc011 ",
+               "  FROM sfdc_t LEFT OUTER JOIN sfba_t    ON sfbaent = sfdcent AND sfbadocno=sfdc001 AND sfbaseq=sfdc002 AND sfbaseq1=sfdc003 ",
+               "              LEFT OUTER JOIN imaal_t   ON imaalent = sfdcent AND imaal001=sfdc004 AND imaal002= '"||g_dlang||"' ",
+               "              LEFT OUTER JOIN oocql_t a ON a.oocql001= '215' AND sfba002 = a.oocql002 AND sfbaent = a.oocqlent AND a.oocql003 = '"||g_dlang||"' ",
+               "              LEFT OUTER JOIN oocql_t b ON b.oocql001= '221' AND sfba003 = b.oocql002 AND sfbaent = b.oocqlent AND b.oocql003 = '"||g_dlang||"' ",
+               "              LEFT OUTER JOIN oocal_t c ON c.oocalent = sfdcent AND c.oocal001 = sfdc006 AND c.oocal002 = '"||g_dlang||"' ",
+               "              LEFT OUTER JOIN oocal_t d ON d.oocalent = sfdcent AND d.oocal001 = sfdc009 AND d.oocal002 = '"||g_dlang||"' ",
+               " WHERE sfdcdocno = '",g_asfp360_04_m2.send_no,"' ",
+               " ORDER BY sfdcseq"
+   PREPARE asfp360_04_b_fill1_sel FROM l_sql
+   DECLARE asfp360_04_b_fill1_curs CURSOR FOR asfp360_04_b_fill1_sel
+   LET l_ac_l = 1
+   ERROR "Searching!"
+   FOREACH asfp360_04_b_fill1_curs INTO g_asfp360_04_d1[l_ac_l].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:asfp360_04_b_fill1_curs"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+
+      LET l_ac_l = l_ac_l + 1
+      IF l_ac_l > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ""
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   CALL g_asfp360_04_d1.deleteElement(l_ac_l)
+   CLOSE asfp360_04_b_fill1_curs
+   FREE asfp360_04_b_fill1_sel
+
+END FUNCTION
+
+#退料单
+PUBLIC FUNCTION asfp360_04_b_fill2()
+   DEFINE l_sql        STRING
+   DEFINE l_ac_l       LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+   CALL g_asfp360_04_d2.clear()
+
+   LET l_sql = "SELECT sfdcseq,sfdc001,sfdc002,sfdc003,sfba002,a.oocql004, ",
+               "       sfba003,b.oocql004,sfba004,sfdc004,imaal003,imaal004, ",
+               "       sfdc005,sfdc006,c.oocal003,sfba013,sfba016,sfdc008, ",
+               "       sfdc009,d.oocal003,sfdc011 ",
+               "  FROM sfdc_t LEFT OUTER JOIN sfba_t    ON sfbaent = sfdcent AND sfbadocno=sfdc001 AND sfbaseq=sfdc002 AND sfbaseq1=sfdc003 ",
+               "              LEFT OUTER JOIN imaal_t   ON imaalent = sfdcent AND imaal001=sfdc004 AND imaal002= '"||g_dlang||"' ",
+               "              LEFT OUTER JOIN oocql_t a ON a.oocql001= '215' AND sfba002 = a.oocql002 AND sfbaent = a.oocqlent AND a.oocql003 = '"||g_dlang||"' ",
+               "              LEFT OUTER JOIN oocql_t b ON b.oocql001= '221' AND sfba003 = b.oocql002 AND sfbaent = b.oocqlent AND b.oocql003 = '"||g_dlang||"' ",
+               "              LEFT OUTER JOIN oocal_t c ON c.oocalent = sfdcent AND c.oocal001 = sfdc006 AND c.oocal002 = '"||g_dlang||"' ",
+               "              LEFT OUTER JOIN oocal_t d ON d.oocalent = sfdcent AND d.oocal001 = sfdc009 AND d.oocal002 = '"||g_dlang||"' ",
+               " WHERE sfdcdocno = '",g_asfp360_04_m2.return_no,"' ",
+               " ORDER BY sfdcseq"
+   PREPARE asfp360_04_b_fill2_sel FROM l_sql
+   DECLARE asfp360_04_b_fill2_curs CURSOR FOR asfp360_04_b_fill2_sel
+   LET l_ac_l = 1
+   ERROR "Searching!"
+   FOREACH asfp360_04_b_fill2_curs INTO g_asfp360_04_d2[l_ac_l].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:asfp360_04_b_fill2_curs"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+
+      LET l_ac_l = l_ac_l + 1
+      IF l_ac_l > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ""
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   CALL g_asfp360_04_d2.deleteElement(l_ac_l)
+   CLOSE asfp360_04_b_fill2_curs
+   FREE asfp360_04_b_fill2_sel
+
+END FUNCTION
+
+#产生挪料记录单头档
+PUBLIC FUNCTION asfp360_04_gen_sfla()
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_sfla        RECORD LIKE sfla_t.*
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+
+   LET l_sfla.sflaent   = g_enterprise  #企業編號
+   LET l_sfla.sflasite  = g_site        #營運據點
+   #LET l_sfla.sfladocno =    #挪料序號
+   LET l_sfla.sfladocdt = cl_get_today()  #挪料日期
+   LET l_sfla.sfla001   = g_asfp360_02_m.type #挪料類型 1 成套 2单颗
+   LET l_sfla.sfla002   = g_asfp360_04_m.user #申請人
+   LET l_sfla.sfla003   = ''   #發料單號
+   LET l_sfla.sfla004   = ''   #退料單號
+   LET l_sfla.sflaud001 = ''   #自定義欄位(文字)001
+   LET l_sfla.sflaud002 = ''   #自定義欄位(文字)002
+   LET l_sfla.sflaud003 = ''   #自定義欄位(文字)003
+   LET l_sfla.sflaud004 = ''   #自定義欄位(文字)004
+   LET l_sfla.sflaud005 = ''   #自定義欄位(文字)005
+   LET l_sfla.sflaud006 = ''   #自定義欄位(文字)006
+   LET l_sfla.sflaud007 = ''   #自定義欄位(文字)007
+   LET l_sfla.sflaud008 = ''   #自定義欄位(文字)008
+   LET l_sfla.sflaud009 = ''   #自定義欄位(文字)009
+   LET l_sfla.sflaud010 = ''   #自定義欄位(文字)010
+   LET l_sfla.sflaud011 = ''   #自定義欄位(數字)011
+   LET l_sfla.sflaud012 = ''   #自定義欄位(數字)012
+   LET l_sfla.sflaud013 = ''   #自定義欄位(數字)013
+   LET l_sfla.sflaud014 = ''   #自定義欄位(數字)014
+   LET l_sfla.sflaud015 = ''   #自定義欄位(數字)015
+   LET l_sfla.sflaud016 = ''   #自定義欄位(數字)016
+   LET l_sfla.sflaud017 = ''   #自定義欄位(數字)017
+   LET l_sfla.sflaud018 = ''   #自定義欄位(數字)018
+   LET l_sfla.sflaud019 = ''   #自定義欄位(數字)019
+   LET l_sfla.sflaud020 = ''   #自定義欄位(數字)020
+   LET l_sfla.sflaud021 = ''   #自定義欄位(日期時間)021
+   LET l_sfla.sflaud022 = ''   #自定義欄位(日期時間)022
+   LET l_sfla.sflaud023 = ''   #自定義欄位(日期時間)023
+   LET l_sfla.sflaud024 = ''   #自定義欄位(日期時間)024
+   LET l_sfla.sflaud025 = ''   #自定義欄位(日期時間)025
+   LET l_sfla.sflaud026 = ''   #自定義欄位(日期時間)026
+   LET l_sfla.sflaud027 = ''   #自定義欄位(日期時間)027
+   LET l_sfla.sflaud028 = ''   #自定義欄位(日期時間)028
+   LET l_sfla.sflaud029 = ''   #自定義欄位(日期時間)029
+   LET l_sfla.sflaud030 = ''   #自定義欄位(日期時間)030
+   
+   CALL asfp360_04_get_sfladocno(l_sfla.sfladocdt) RETURNING l_success,l_sfla.sfladocno #计算挪料序号
+   IF NOT l_success THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   INSERT INTO sfla_t VALUES(l_sfla.*)
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'ins sfla_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   LET g_asfp360_04_m2.sfladocno = l_sfla.sfladocno  #挪料序號
+
+   RETURN r_success
+END FUNCTION
+
+#产生挪料记录
+#当非成套挪料时，不需要回写sflb_t和sflc_t
+#不放在产生发料单重处理，为了程序的可读性，效能差距可以忽略
+PUBLIC FUNCTION asfp360_04_gen_sflb()
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_sflb        RECORD LIKE sflb_t.*   #工單挪料記錄套數單身檔（目的）
+   DEFINE l_sflc        RECORD LIKE sflc_t.*   #工單挪料記錄套數單身檔（來源）
+   DEFINE l_sfld        RECORD LIKE sfld_t.*   #工單挪料記錄明細單身檔（目的）
+   DEFINE l_sfle        RECORD LIKE sfle_t.*   #工單挪料記錄明細單身檔（來源）
+   DEFINE l_sflbseq     LIKE sflb_t.sflbseq
+   DEFINE l_sflcseq     LIKE sflc_t.sflcseq
+   DEFINE l_sfldseq1    LIKE sfld_t.sfldseq1
+   DEFINE l_sfleseq1    LIKE sfle_t.sfleseq1
+   DEFINE l_sql         STRING
+   DEFINE l_sfdb        RECORD LIKE sfdb_t.*
+   DEFINE l_sfdb001     LIKE sfdb_t.sfdb001  #工单
+   DEFINE l_sfdb007     LIKE sfdb_t.sfdb007  #套数
+   DEFINE l_sfaa012     LIKE sfaa_t.sfaa012  #生產數量
+   DEFINE l_sfaa049     LIKE sfaa_t.sfaa049  #已發料套數
+   DEFINE l_sfaa050     LIKE sfaa_t.sfaa050  #已入庫合格量
+   DEFINE l_sfdc001     LIKE sfdc_t.sfdc001
+   DEFINE l_sfdc002     LIKE sfdc_t.sfdc002
+   DEFINE l_sfdc003     LIKE sfdc_t.sfdc003
+   DEFINE l_sfdc004     LIKE sfdc_t.sfdc004
+   DEFINE l_sfba010     LIKE sfba_t.sfba010
+   DEFINE l_sfba011     LIKE sfba_t.sfba011
+   DEFINE l_sfba013     LIKE sfba_t.sfba013
+   DEFINE l_sfba016     LIKE sfba_t.sfba016
+   DEFINE l_sfdc008     LIKE sfdc_t.sfdc008
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+   
+   #sflb工單挪料記錄套數單身檔
+   LET l_sql = " SELECT sfdb001,sfdb007,sfaa012,sfaa049,sfaa050 ",
+               "   FROM sfdb_t,sfaa_t ",
+               "  WHERE sfdb001 = sfaadocno AND sfdbsite = sfaasite AND sfdbent = sfaaent ",
+               "    AND sfdbent = ",g_enterprise," AND sfdbdocno=?"
+   PREPARE asfp360_04_gen_sflb_p1 FROM l_sql
+   DECLARE asfp360_04_gen_sflb_c1 CURSOR FOR asfp360_04_gen_sflb_p1
+
+   #sfle工單挪料記錄明細單身檔（有套数单身）
+   LET l_sql = " SELECT sfdc001,sfdc002,sfdc003,sfdc004,sfba010,sfba011,sfba013,sfba016,sfdc008 ",
+               "   FROM sfdc_t,sfba_t ",
+               "  WHERE sfdc001 = sfbadocno AND sfdc002 = sfbaseq AND sfdc003 = sfbaseq1 ",
+               "    AND sfdcsite = sfbasite AND sfdcent = sfbaent ",
+               "    AND sfdcent = ",g_enterprise," AND sfdcdocno=? ",
+               "    AND sfdc001 = ? "  #工单
+   PREPARE asfp360_04_gen_sflb_p2 FROM l_sql
+   DECLARE asfp360_04_gen_sflb_c2 CURSOR FOR asfp360_04_gen_sflb_p2
+
+   #sfle工單挪料記錄明細單身檔（无套数单身）
+   LET l_sql = " SELECT sfdc001,sfdc002,sfdc003,sfdc004,sfba010,sfba011,sfba013,sfba016,sfdc008 ",
+               "   FROM sfdc_t,sfba_t ",
+               "  WHERE sfdc001 = sfbadocno AND sfdc002 = sfbaseq AND sfdc003 = sfbaseq1 ",
+               "    AND sfdcsite = sfbasite AND sfdcent = sfbaent ",
+               "    AND sfdcent = ",g_enterprise," AND sfdcdocno=? "
+   PREPARE asfp360_04_gen_sflb_p3 FROM l_sql
+   DECLARE asfp360_04_gen_sflb_c3 CURSOR FOR asfp360_04_gen_sflb_p3
+   
+   #工單挪料記錄套數單身檔
+   IF g_asfp360_02_m.type = '1' THEN
+      #sflc工單挪料記錄套數單身檔（來源）
+      LET l_sflcseq = 0
+      FOREACH asfp360_04_gen_sflb_c1 USING g_asfp360_04_m2.return_no
+                                     INTO l_sfdb001,l_sfdb007,l_sfaa012,l_sfaa049,l_sfaa050
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH:asfp360_04_gen_sflb_c1"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+         
+         LET l_sflcseq = l_sflcseq + 1
+         INITIALIZE l_sflc.* TO NULL
+         LET l_sflc.sflcent   = g_enterprise  #企業編號
+         LET l_sflc.sflcsite  = g_site        #營運據點
+         LET l_sflc.sflcdocno = g_asfp360_04_m2.sfladocno #挪料序號
+         LET l_sflc.sflcseq   = l_sflcseq #項次
+         LET l_sflc.sflc001   = l_sfdb001 #工單單號
+         LET l_sflc.sflc002   = l_sfaa012 #生產數量
+         LET l_sflc.sflc003   = l_sfaa049 #已發套數
+         LET l_sflc.sflc004   = l_sfaa050 #已入庫量
+         LET l_sflc.sflc005   = l_sfdb007 #撥出套數
+         LET l_sflc.sflcud001 = ''  #自定義欄位(文字)001
+         LET l_sflc.sflcud002 = ''  #自定義欄位(文字)002
+         LET l_sflc.sflcud003 = ''  #自定義欄位(文字)003
+         LET l_sflc.sflcud004 = ''  #自定義欄位(文字)004
+         LET l_sflc.sflcud005 = ''  #自定義欄位(文字)005
+         LET l_sflc.sflcud006 = ''  #自定義欄位(文字)006
+         LET l_sflc.sflcud007 = ''  #自定義欄位(文字)007
+         LET l_sflc.sflcud008 = ''  #自定義欄位(文字)008
+         LET l_sflc.sflcud009 = ''  #自定義欄位(文字)009
+         LET l_sflc.sflcud010 = ''  #自定義欄位(文字)010
+         LET l_sflc.sflcud011 = ''  #自定義欄位(數字)011
+         LET l_sflc.sflcud012 = ''  #自定義欄位(數字)012
+         LET l_sflc.sflcud013 = ''  #自定義欄位(數字)013
+         LET l_sflc.sflcud014 = ''  #自定義欄位(數字)014
+         LET l_sflc.sflcud015 = ''  #自定義欄位(數字)015
+         LET l_sflc.sflcud016 = ''  #自定義欄位(數字)016
+         LET l_sflc.sflcud017 = ''  #自定義欄位(數字)017
+         LET l_sflc.sflcud018 = ''  #自定義欄位(數字)018
+         LET l_sflc.sflcud019 = ''  #自定義欄位(數字)019
+         LET l_sflc.sflcud020 = ''  #自定義欄位(數字)020
+         LET l_sflc.sflcud021 = ''  #自定義欄位(日期時間)021
+         LET l_sflc.sflcud022 = ''  #自定義欄位(日期時間)022
+         LET l_sflc.sflcud023 = ''  #自定義欄位(日期時間)023
+         LET l_sflc.sflcud024 = ''  #自定義欄位(日期時間)024
+         LET l_sflc.sflcud025 = ''  #自定義欄位(日期時間)025
+         LET l_sflc.sflcud026 = ''  #自定義欄位(日期時間)026
+         LET l_sflc.sflcud027 = ''  #自定義欄位(日期時間)027
+         LET l_sflc.sflcud028 = ''  #自定義欄位(日期時間)028
+         LET l_sflc.sflcud029 = ''  #自定義欄位(日期時間)029
+         LET l_sflc.sflcud030 = ''  #自定義欄位(日期時間)030
+         INSERT INTO sflc_t VALUES(l_sflc.*)
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'ins sflc_t'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+
+         #sfle工單挪料記錄明細單身檔（來源）
+         LET l_sfleseq1 = 0
+         FOREACH asfp360_04_gen_sflb_c2 USING g_asfp360_04_m2.return_no,l_sflc.sflc001
+                                        INTO l_sfdc001,l_sfdc002,l_sfdc003,l_sfdc004,
+                                             l_sfba010,l_sfba011,l_sfba013,l_sfba016,
+                                             l_sfdc008
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "FOREACH:asfp360_04_gen_sflb_c2"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET r_success = FALSE
+               RETURN r_success
+            END IF
+            
+            LET l_sfleseq1 = l_sfleseq1 + 1
+            INITIALIZE l_sfle.* TO NULL
+            LET l_sfle.sfleent   = g_enterprise  #企業編號
+            LET l_sfle.sflesite  = g_site        #營運據點
+            LET l_sfle.sfledocno = g_asfp360_04_m2.sfladocno #挪料序號
+            LET l_sfle.sfleseq   = l_sflcseq  #項次
+            LET l_sfle.sfleseq1  = l_sfleseq1 #項序
+            LET l_sfle.sfle001   = l_sfdc001  #工單單號
+            LET l_sfle.sfle002   = l_sfdc002  #工單項次
+            LET l_sfle.sfle003   = l_sfdc003  #工單項序
+            LET l_sfle.sfle004   = l_sfdc004  #發料料號
+            LET l_sfle.sfle005   = l_sfba010  #標準QPA分子
+            LET l_sfle.sfle006   = l_sfba011  #標準QPA分母
+            LET l_sfle.sfle007   = l_sfba013  #應發數量
+            LET l_sfle.sfle008   = l_sfba016  #已發數量
+            LET l_sfle.sfle009   = l_sfdc008  #撥出數量
+            LET l_sfle.sfleud001 = '' #自定義欄位(文字)001
+            LET l_sfle.sfleud002 = '' #自定義欄位(文字)002
+            LET l_sfle.sfleud003 = '' #自定義欄位(文字)003
+            LET l_sfle.sfleud004 = '' #自定義欄位(文字)004
+            LET l_sfle.sfleud005 = '' #自定義欄位(文字)005
+            LET l_sfle.sfleud006 = '' #自定義欄位(文字)006
+            LET l_sfle.sfleud007 = '' #自定義欄位(文字)007
+            LET l_sfle.sfleud008 = '' #自定義欄位(文字)008
+            LET l_sfle.sfleud009 = '' #自定義欄位(文字)009
+            LET l_sfle.sfleud010 = '' #自定義欄位(文字)010
+            LET l_sfle.sfleud011 = '' #自定義欄位(數字)011
+            LET l_sfle.sfleud012 = '' #自定義欄位(數字)012
+            LET l_sfle.sfleud013 = '' #自定義欄位(數字)013
+            LET l_sfle.sfleud014 = '' #自定義欄位(數字)014
+            LET l_sfle.sfleud015 = '' #自定義欄位(數字)015
+            LET l_sfle.sfleud016 = '' #自定義欄位(數字)016
+            LET l_sfle.sfleud017 = '' #自定義欄位(數字)017
+            LET l_sfle.sfleud018 = '' #自定義欄位(數字)018
+            LET l_sfle.sfleud019 = '' #自定義欄位(數字)019
+            LET l_sfle.sfleud020 = '' #自定義欄位(數字)020
+            LET l_sfle.sfleud021 = '' #自定義欄位(日期時間)021
+            LET l_sfle.sfleud022 = '' #自定義欄位(日期時間)022
+            LET l_sfle.sfleud023 = '' #自定義欄位(日期時間)023
+            LET l_sfle.sfleud024 = '' #自定義欄位(日期時間)024
+            LET l_sfle.sfleud025 = '' #自定義欄位(日期時間)025
+            LET l_sfle.sfleud026 = '' #自定義欄位(日期時間)026
+            LET l_sfle.sfleud027 = '' #自定義欄位(日期時間)027
+            LET l_sfle.sfleud028 = '' #自定義欄位(日期時間)028
+            LET l_sfle.sfleud029 = '' #自定義欄位(日期時間)029
+            LET l_sfle.sfleud030 = '' #自定義欄位(日期時間)030
+            INSERT INTO sfle_t VALUES(l_sfle.*)
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = 'ins sfle_t'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET r_success = FALSE
+               RETURN r_success
+            END IF
+         END FOREACH
+         CLOSE asfp360_04_gen_sflb_c2
+         FREE asfp360_04_gen_sflb_p2
+
+      END FOREACH
+      CLOSE asfp360_04_gen_sflb_c1
+      FREE asfp360_04_gen_sflb_p1
+      
+      #sflb工單挪料記錄套數單身檔（目的）
+      LET l_sflbseq = 0
+      FOREACH asfp360_04_gen_sflb_c1 USING g_asfp360_04_m2.send_no
+                                     INTO l_sfdb001,l_sfdb007,l_sfaa012,l_sfaa049,l_sfaa050
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH:asfp360_04_gen_sflb_c1"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+
+         LET l_sflbseq = l_sflbseq + 1
+         INITIALIZE l_sflb.* TO NULL
+         LET l_sflb.sflbent   = g_enterprise #企業編號
+         LET l_sflb.sflbsite  = g_site       #營運據點
+         LET l_sflb.sflbdocno = g_asfp360_04_m2.sfladocno #挪料序號
+         LET l_sflb.sflbseq   = l_sflbseq #項次
+         LET l_sflb.sflb001   = l_sfdb001 #工單單號
+         LET l_sflb.sflb002   = l_sfaa012 #生產數量
+         LET l_sflb.sflb003   = l_sfaa049 #已發套數
+         LET l_sflb.sflb004   = l_sfaa050 #已入庫量
+         LET l_sflb.sflb005   = l_sfdb007 #撥入套數
+         LET l_sflb.sflbud001 = '' #自定義欄位(文字)001
+         LET l_sflb.sflbud002 = '' #自定義欄位(文字)002
+         LET l_sflb.sflbud003 = '' #自定義欄位(文字)003
+         LET l_sflb.sflbud004 = '' #自定義欄位(文字)004
+         LET l_sflb.sflbud005 = '' #自定義欄位(文字)005
+         LET l_sflb.sflbud006 = '' #自定義欄位(文字)006
+         LET l_sflb.sflbud007 = '' #自定義欄位(文字)007
+         LET l_sflb.sflbud008 = '' #自定義欄位(文字)008
+         LET l_sflb.sflbud009 = '' #自定義欄位(文字)009
+         LET l_sflb.sflbud010 = '' #自定義欄位(文字)010
+         LET l_sflb.sflbud011 = '' #自定義欄位(數字)011
+         LET l_sflb.sflbud012 = '' #自定義欄位(數字)012
+         LET l_sflb.sflbud013 = '' #自定義欄位(數字)013
+         LET l_sflb.sflbud014 = '' #自定義欄位(數字)014
+         LET l_sflb.sflbud015 = '' #自定義欄位(數字)015
+         LET l_sflb.sflbud016 = '' #自定義欄位(數字)016
+         LET l_sflb.sflbud017 = '' #自定義欄位(數字)017
+         LET l_sflb.sflbud018 = '' #自定義欄位(數字)018
+         LET l_sflb.sflbud019 = '' #自定義欄位(數字)019
+         LET l_sflb.sflbud020 = '' #自定義欄位(數字)020
+         LET l_sflb.sflbud021 = '' #自定義欄位(日期時間)021
+         LET l_sflb.sflbud022 = '' #自定義欄位(日期時間)022
+         LET l_sflb.sflbud023 = '' #自定義欄位(日期時間)023
+         LET l_sflb.sflbud024 = '' #自定義欄位(日期時間)024
+         LET l_sflb.sflbud025 = '' #自定義欄位(日期時間)025
+         LET l_sflb.sflbud026 = '' #自定義欄位(日期時間)026
+         LET l_sflb.sflbud027 = '' #自定義欄位(日期時間)027
+         LET l_sflb.sflbud028 = '' #自定義欄位(日期時間)028
+         LET l_sflb.sflbud029 = '' #自定義欄位(日期時間)029
+         LET l_sflb.sflbud030 = '' #自定義欄位(日期時間)030
+         INSERT INTO sflb_t VALUES(l_sflb.*)
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'ins sflb_t'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+
+         #sfld工單挪料記錄明細單身檔（目的）
+         LET l_sfldseq1 = 0
+         FOREACH asfp360_04_gen_sflb_c2 USING g_asfp360_04_m2.send_no,l_sflb.sflb001
+                                        INTO l_sfdc001,l_sfdc002,l_sfdc003,l_sfdc004,
+                                             l_sfba010,l_sfba011,l_sfba013,l_sfba016,
+                                             l_sfdc008
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "FOREACH:asfp360_04_gen_sflb_c2"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET r_success = FALSE
+               RETURN r_success
+            END IF
+
+            LET l_sfldseq1 = l_sfldseq1 + 1
+            INITIALIZE l_sfld.* TO NULL
+            LET l_sfld.sfldent   = g_enterprise #企業編號
+            LET l_sfld.sfldsite  = g_site       #營運據點
+            LET l_sfld.sflddocno = g_asfp360_04_m2.sfladocno #挪料序號
+            LET l_sfld.sfldseq   = l_sflbseq #項次
+            LET l_sfld.sfldseq1  = l_sfldseq1 #項序
+            LET l_sfld.sfld001   = l_sfdc001  #工單單號
+            LET l_sfld.sfld002   = l_sfdc002  #工單項次
+            LET l_sfld.sfld003   = l_sfdc003  #工單項序
+            LET l_sfld.sfld004   = l_sfdc004  #發料料號
+            LET l_sfld.sfld005   = l_sfba010  #標準QPA分子
+            LET l_sfld.sfld006   = l_sfba011  #標準QPA分母
+            LET l_sfld.sfld007   = l_sfba013  #應發數量
+            LET l_sfld.sfld008   = l_sfba016  #已發數量
+            LET l_sfld.sfld009   = l_sfdc008  #撥入數量
+            LET l_sfld.sfldud001 = ''  #自定義欄位(文字)001
+            LET l_sfld.sfldud002 = ''  #自定義欄位(文字)002
+            LET l_sfld.sfldud003 = ''  #自定義欄位(文字)003
+            LET l_sfld.sfldud004 = ''  #自定義欄位(文字)004
+            LET l_sfld.sfldud005 = ''  #自定義欄位(文字)005
+            LET l_sfld.sfldud006 = ''  #自定義欄位(文字)006
+            LET l_sfld.sfldud007 = ''  #自定義欄位(文字)007
+            LET l_sfld.sfldud008 = ''  #自定義欄位(文字)008
+            LET l_sfld.sfldud009 = ''  #自定義欄位(文字)009
+            LET l_sfld.sfldud010 = ''  #自定義欄位(文字)010
+            LET l_sfld.sfldud011 = ''  #自定義欄位(數字)011
+            LET l_sfld.sfldud012 = ''  #自定義欄位(數字)012
+            LET l_sfld.sfldud013 = ''  #自定義欄位(數字)013
+            LET l_sfld.sfldud014 = ''  #自定義欄位(數字)014
+            LET l_sfld.sfldud015 = ''  #自定義欄位(數字)015
+            LET l_sfld.sfldud016 = ''  #自定義欄位(數字)016
+            LET l_sfld.sfldud017 = ''  #自定義欄位(數字)017
+            LET l_sfld.sfldud018 = ''  #自定義欄位(數字)018
+            LET l_sfld.sfldud019 = ''  #自定義欄位(數字)019
+            LET l_sfld.sfldud020 = ''  #自定義欄位(數字)020
+            LET l_sfld.sfldud021 = ''  #自定義欄位(日期時間)021
+            LET l_sfld.sfldud022 = ''  #自定義欄位(日期時間)022
+            LET l_sfld.sfldud023 = ''  #自定義欄位(日期時間)023
+            LET l_sfld.sfldud024 = ''  #自定義欄位(日期時間)024
+            LET l_sfld.sfldud025 = ''  #自定義欄位(日期時間)025
+            LET l_sfld.sfldud026 = ''  #自定義欄位(日期時間)026
+            LET l_sfld.sfldud027 = ''  #自定義欄位(日期時間)027
+            LET l_sfld.sfldud028 = ''  #自定義欄位(日期時間)028
+            LET l_sfld.sfldud029 = ''  #自定義欄位(日期時間)029
+            LET l_sfld.sfldud030 = ''  #自定義欄位(日期時間)030
+            INSERT INTO sfld_t VALUES(l_sfld.*)
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = 'ins sfld_t'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET r_success = FALSE
+               RETURN r_success
+            END IF
+         END FOREACH
+         CLOSE asfp360_04_gen_sflb_c2
+         FREE asfp360_04_gen_sflb_p2
+      END FOREACH
+      CLOSE asfp360_04_gen_sflb_c1
+      FREE asfp360_04_gen_sflb_p1
+   ELSE  #单颗挪料
+      #sfle工單挪料記錄明細單身檔（來源）
+      LET l_sfleseq1 = 0
+      FOREACH asfp360_04_gen_sflb_c3 USING g_asfp360_04_m2.return_no
+                                     INTO l_sfdc001,l_sfdc002,l_sfdc003,l_sfdc004,
+                                          l_sfba010,l_sfba011,l_sfba013,l_sfba016,
+                                          l_sfdc008
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH:asfp360_04_gen_sflb_c3"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+
+         LET l_sfleseq1 = l_sfleseq1 + 1
+         INITIALIZE l_sfle.* TO NULL
+         LET l_sfle.sfleent   = g_enterprise  #企業編號
+         LET l_sfle.sflesite  = g_site        #營運據點
+         LET l_sfle.sfledocno = g_asfp360_04_m2.sfladocno #挪料序號
+         LET l_sfle.sfleseq   = 0 #項次
+         LET l_sfle.sfleseq1  = l_sfleseq1 #項序
+         LET l_sfle.sfle001   = l_sfdc001  #工單單號
+         LET l_sfle.sfle002   = l_sfdc002  #工單項次
+         LET l_sfle.sfle003   = l_sfdc003  #工單項序
+         LET l_sfle.sfle004   = l_sfdc004  #發料料號
+         LET l_sfle.sfle005   = l_sfba010  #標準QPA分子
+         LET l_sfle.sfle006   = l_sfba011  #標準QPA分母
+         LET l_sfle.sfle007   = l_sfba013  #應發數量
+         LET l_sfle.sfle008   = l_sfba016  #已發數量
+         LET l_sfle.sfle009   = l_sfdc008  #撥出數量
+         LET l_sfle.sfleud001 = '' #自定義欄位(文字)001
+         LET l_sfle.sfleud002 = '' #自定義欄位(文字)002
+         LET l_sfle.sfleud003 = '' #自定義欄位(文字)003
+         LET l_sfle.sfleud004 = '' #自定義欄位(文字)004
+         LET l_sfle.sfleud005 = '' #自定義欄位(文字)005
+         LET l_sfle.sfleud006 = '' #自定義欄位(文字)006
+         LET l_sfle.sfleud007 = '' #自定義欄位(文字)007
+         LET l_sfle.sfleud008 = '' #自定義欄位(文字)008
+         LET l_sfle.sfleud009 = '' #自定義欄位(文字)009
+         LET l_sfle.sfleud010 = '' #自定義欄位(文字)010
+         LET l_sfle.sfleud011 = '' #自定義欄位(數字)011
+         LET l_sfle.sfleud012 = '' #自定義欄位(數字)012
+         LET l_sfle.sfleud013 = '' #自定義欄位(數字)013
+         LET l_sfle.sfleud014 = '' #自定義欄位(數字)014
+         LET l_sfle.sfleud015 = '' #自定義欄位(數字)015
+         LET l_sfle.sfleud016 = '' #自定義欄位(數字)016
+         LET l_sfle.sfleud017 = '' #自定義欄位(數字)017
+         LET l_sfle.sfleud018 = '' #自定義欄位(數字)018
+         LET l_sfle.sfleud019 = '' #自定義欄位(數字)019
+         LET l_sfle.sfleud020 = '' #自定義欄位(數字)020
+         LET l_sfle.sfleud021 = '' #自定義欄位(日期時間)021
+         LET l_sfle.sfleud022 = '' #自定義欄位(日期時間)022
+         LET l_sfle.sfleud023 = '' #自定義欄位(日期時間)023
+         LET l_sfle.sfleud024 = '' #自定義欄位(日期時間)024
+         LET l_sfle.sfleud025 = '' #自定義欄位(日期時間)025
+         LET l_sfle.sfleud026 = '' #自定義欄位(日期時間)026
+         LET l_sfle.sfleud027 = '' #自定義欄位(日期時間)027
+         LET l_sfle.sfleud028 = '' #自定義欄位(日期時間)028
+         LET l_sfle.sfleud029 = '' #自定義欄位(日期時間)029
+         LET l_sfle.sfleud030 = '' #自定義欄位(日期時間)030
+         INSERT INTO sfle_t VALUES(l_sfle.*)
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'ins sfle_t'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+      END FOREACH
+      CLOSE asfp360_04_gen_sflb_c3
+      FREE asfp360_04_gen_sflb_p3
+
+      #sfld工單挪料記錄明細單身檔（目的）
+      LET l_sfldseq1 = 0
+      FOREACH asfp360_04_gen_sflb_c3 USING g_asfp360_04_m2.send_no
+                                     INTO l_sfdc001,l_sfdc002,l_sfdc003,l_sfdc004,
+                                          l_sfba010,l_sfba011,l_sfba013,l_sfba016,
+                                          l_sfdc008
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH:asfp360_04_gen_sflb_c3"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+
+         LET l_sfldseq1 = l_sfldseq1 + 1
+         INITIALIZE l_sfld.* TO NULL
+         LET l_sfld.sfldent   = g_enterprise #企業編號
+         LET l_sfld.sfldsite  = g_site       #營運據點
+         LET l_sfld.sflddocno = g_asfp360_04_m2.sfladocno #挪料序號
+         LET l_sfld.sfldseq   = 0 #項次
+         LET l_sfld.sfldseq1  = l_sfldseq1 #項序
+         LET l_sfld.sfld001   = l_sfdc001  #工單單號
+         LET l_sfld.sfld002   = l_sfdc002  #工單項次
+         LET l_sfld.sfld003   = l_sfdc003  #工單項序
+         LET l_sfld.sfld004   = l_sfdc004  #發料料號
+         LET l_sfld.sfld005   = l_sfba010  #標準QPA分子
+         LET l_sfld.sfld006   = l_sfba011  #標準QPA分母
+         LET l_sfld.sfld007   = l_sfba013  #應發數量
+         LET l_sfld.sfld008   = l_sfba016  #已發數量
+         LET l_sfld.sfld009   = l_sfdc008  #撥入數量
+         LET l_sfld.sfldud001 = ''  #自定義欄位(文字)001
+         LET l_sfld.sfldud002 = ''  #自定義欄位(文字)002
+         LET l_sfld.sfldud003 = ''  #自定義欄位(文字)003
+         LET l_sfld.sfldud004 = ''  #自定義欄位(文字)004
+         LET l_sfld.sfldud005 = ''  #自定義欄位(文字)005
+         LET l_sfld.sfldud006 = ''  #自定義欄位(文字)006
+         LET l_sfld.sfldud007 = ''  #自定義欄位(文字)007
+         LET l_sfld.sfldud008 = ''  #自定義欄位(文字)008
+         LET l_sfld.sfldud009 = ''  #自定義欄位(文字)009
+         LET l_sfld.sfldud010 = ''  #自定義欄位(文字)010
+         LET l_sfld.sfldud011 = ''  #自定義欄位(數字)011
+         LET l_sfld.sfldud012 = ''  #自定義欄位(數字)012
+         LET l_sfld.sfldud013 = ''  #自定義欄位(數字)013
+         LET l_sfld.sfldud014 = ''  #自定義欄位(數字)014
+         LET l_sfld.sfldud015 = ''  #自定義欄位(數字)015
+         LET l_sfld.sfldud016 = ''  #自定義欄位(數字)016
+         LET l_sfld.sfldud017 = ''  #自定義欄位(數字)017
+         LET l_sfld.sfldud018 = ''  #自定義欄位(數字)018
+         LET l_sfld.sfldud019 = ''  #自定義欄位(數字)019
+         LET l_sfld.sfldud020 = ''  #自定義欄位(數字)020
+         LET l_sfld.sfldud021 = ''  #自定義欄位(日期時間)021
+         LET l_sfld.sfldud022 = ''  #自定義欄位(日期時間)022
+         LET l_sfld.sfldud023 = ''  #自定義欄位(日期時間)023
+         LET l_sfld.sfldud024 = ''  #自定義欄位(日期時間)024
+         LET l_sfld.sfldud025 = ''  #自定義欄位(日期時間)025
+         LET l_sfld.sfldud026 = ''  #自定義欄位(日期時間)026
+         LET l_sfld.sfldud027 = ''  #自定義欄位(日期時間)027
+         LET l_sfld.sfldud028 = ''  #自定義欄位(日期時間)028
+         LET l_sfld.sfldud029 = ''  #自定義欄位(日期時間)029
+         LET l_sfld.sfldud030 = ''  #自定義欄位(日期時間)030
+         INSERT INTO sfld_t VALUES(l_sfld.*)
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'ins sfld_t'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+      END FOREACH
+      CLOSE asfp360_04_gen_sflb_c3
+      FREE asfp360_04_gen_sflb_p3
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+#自动编码-挪料序号
+#4位年+2位月+4位流水
+PUBLIC FUNCTION asfp360_04_get_sfladocno(p_sfladocdt)
+DEFINE p_sfladocdt   LIKE sfla_t.sfladocdt  #挪料日期
+DEFINE r_success     LIKE type_t.num5
+DEFINE r_sfladocno   LIKE sfla_t.sfladocno
+#DEFINE l_yy          LIKE type_t.chr4  #年
+#DEFINE l_mm          LIKE type_t.chr2  #月
+DEFINE l_ym          LIKE type_t.chr6  #年月
+#DEFINE l_no          LIKE type_t.chr4  #流水码
+DEFINE l_num         LIKE type_t.num5  #流水码
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+
+   #LET l_yy = YEAR(p_sfladocdt)
+   #LET l_mm = MONTH(p_sfladocdt)
+   LET l_ym = YEAR(p_sfladocdt) USING "####",MONTH(p_sfladocdt) USING "&&"
+
+   SELECT MAX(sfladocno) INTO r_sfladocno FROM sfla_t
+    WHERE sflaent  = g_enterprise
+      AND sflasite = g_site
+      AND substr(sfladocno,1,6)= l_ym
+   IF cl_null(r_sfladocno)THEN
+      LET l_num = 0
+   ELSE
+      LET l_num = r_sfladocno[7,10]
+   END IF
+   IF l_num = 9999 THEN
+      #流水码不可超过9999,请联系信管人员放宽流水码长度
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'asf-00437'
+      LET g_errparam.extend = 'ins sfla_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      LET r_sfladocno = ''
+      RETURN r_success,r_sfladocno
+   END IF
+
+   LET l_num = l_num + 1
+   LET r_sfladocno = l_ym,l_num USING "&&&&"
+
+   RETURN r_success,r_sfladocno
+END FUNCTION
+
+ 
+{</section>}
+ 

@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmq813" module="apm" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="02749" crtdt="2014-04-09 16:25:21" modid="00700" moddt="2016-09-09 11:21:38" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="供應商績效評核項目得分結果查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),pmcj004,pmcj004_desc(chr500),pmcj001,pmcj002,pmcj002_desc(chr500),pmcj003,pmcj005,pmcj005_desc(chr500),pmcj006,pmcj006_desc(chr500),pmcj007"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),pmcj004(b_pmcj004),pmcj004_desc(b_pmcj004_desc),pmcj001(b_pmcj001),pmcj002(b_pmcj002),pmcj002_desc(b_pmcj002_desc),pmcj003(b_pmcj003),pmcj005(b_pmcj005),pmcj005_desc(b_pmcj005_desc),pmcj006(b_pmcj006),pmcj006_desc(b_pmcj006_desc),pmcj007(b_pmcj007)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmq813" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="pmcj004,pmcj001,pmcj002,pmcj003,pmcj005,pmcj006,pmcj007" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="pmcj004(b_pmcj004),pmcj001(b_pmcj001),pmcj002(b_pmcj002),pmcj003(b_pmcj003),pmcj005(b_pmcj005),pmcj006(b_pmcj006),pmcj007(b_pmcj007)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="pmcj004">
+        <after>
+          <reference field="pmcj004_desc" ref_field="pmcj004" map_field="pmcjent,pmcj004" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal004=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_10" state="c"/>
+      </column>
+      <column id="pmcj004_desc"/>
+      <column id="pmcj001">
+        <controlp form="q_pmcc001" state="c"/>
+      </column>
+      <column id="pmcj002">
+        <after>
+          <reference field="pmcj002_desc" ref_field="pmcj002" map_field="pmcjent,pmcj002" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="pmcj002_desc"/>
+      <column id="pmcj003"/>
+      <column id="pmcj005">
+        <after>
+          <reference field="pmcj005_desc" ref_field="pmcj005" map_field="pmcjent,pmcj005" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmcj005" state="c"/>
+      </column>
+      <column id="pmcj005_desc"/>
+      <column id="pmcj006">
+        <after>
+          <reference field="pmcj006_desc" ref_field="pmcj006" map_field="pmcjent,pmcj006" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_4" state="c"/>
+      </column>
+      <column id="pmcj006_desc"/>
+      <column id="pmcj007"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="pmcj_t" page="1" linked="" pk="pmcj001,pmcj002,pmcj003,pmcj004,pmcj005">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,pmcj004,&apos;&apos;,pmcj001,pmcj002,&apos;&apos;,pmcj003,pmcj005,&apos;&apos;,pmcj006,&apos;&apos;,pmcj007 FROM pmcj_t WHERE pmcjent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

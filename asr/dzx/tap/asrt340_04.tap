@@ -1,0 +1,1798 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="asrt340_04" std_prog="asrt340_04" erpver="1.0" module="ASR" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="b_fill.sql_before" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET p_wc2 = p_wc2 CLIPPED," AND sfeddocno = '",g_sfeddocno,"'"]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_sfeddocno          LIKE sfed_t.sfeddocno]]>
+  </point>
+  <point name="input.a.page1.sfed001" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.a.page1.sfed004" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_sfed_d[g_detail_idx].sfeddocno IS NOT NULL AND g_sfed_d[g_detail_idx].sfed004 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_sfed_d[g_detail_idx].sfeddocno != g_sfed_d_t.sfeddocno OR g_sfed_d[g_detail_idx].sfed004 != g_sfed_d_t.sfed004)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM sfed_t WHERE "||"sfedent = '" ||g_enterprise|| "' AND "||"sfeddocno = '"||g_sfed_d[g_detail_idx].sfeddocno ||"' AND "|| "sfed004 = '"||g_sfed_d[g_detail_idx].sfed004 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.sfeddocno" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_sfed_d[g_detail_idx].sfeddocno IS NOT NULL AND g_sfed_d[g_detail_idx].sfed004 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_sfed_d[g_detail_idx].sfeddocno != g_sfed_d_t.sfeddocno OR g_sfed_d[g_detail_idx].sfed004 != g_sfed_d_t.sfed004)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM sfed_t WHERE "||"sfedent = '" ||g_enterprise|| "' AND "||"sfeddocno = '"||g_sfed_d[g_detail_idx].sfeddocno ||"' AND "|| "sfed004 = '"||g_sfed_d[g_detail_idx].sfed004 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="main.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE p_sfeddocno      LIKE sfed_t.sfeddocno]]>
+  </point>
+  <point name="main.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   p_sfeddocno]]>
+  </point>
+  <point name="main.init" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_sfeddocno = p_sfeddocno]]>
+  </point>
+  <section id="asrt340_04.b_fill" ver="4" status="" src="s">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION asrt340_04_b_fill(p_wc2)              #BODY FILL UP
+   DEFINE p_wc2           STRING
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point
+   
+   IF cl_null(p_wc2) THEN
+      LET p_wc2 = " 1=1"
+   END IF
+   
+   #add-point:b_fill段sql之前
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   LET g_sql = "SELECT  UNIQUE sfedsite,sfeddocno,sfed004,sfed001,'','',sfed002,sfed003 FROM sfed_t", 
+
+               "",
+               " WHERE sfedent= ? AND 1=1 AND ", p_wc2 
+    
+   LET g_sql = g_sql, #,cl_get_extra_cond('zzuser', 'zzgrup') 
+                      " ORDER BY sfed_t.sfeddocno,sfed_t.sfed004"
+  
+   #add-point:b_fill段sql之後
+   {<point name="b_fill.sql_after"/>}
+   #end add-point
+  
+   PREPARE asrt340_04_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR asrt340_04_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_sfed_d.clear()
+ 
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO g_sfed_d[l_ac].sfedsite,g_sfed_d[l_ac].sfeddocno,g_sfed_d[l_ac].sfed004, 
+       g_sfed_d[l_ac].sfed001,g_sfed_d[l_ac].sfed001_desc1,g_sfed_d[l_ac].sfed001_desc2,g_sfed_d[l_ac].sfed002, 
+       g_sfed_d[l_ac].sfed003
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+  
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.fill"/>}
+      #end add-point
+      
+      CALL asrt340_04_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   
+   IF l_ac > g_max_rec THEN
+      IF g_error_show = 1 THEN
+         CALL cl_err("sfed_t",9035,1)
+      END IF
+   END IF 
+   LET g_error_show = 0
+   
+ 
+  
+   
+   CALL g_sfed_d.deleteElement(g_sfed_d.getLength())   
+ 
+   
+   #將key欄位填到每個page
+   FOR l_ac = 1 TO g_sfed_d.getLength()
+ 
+   END FOR
+   
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+ 
+   LET g_detail_cnt = l_ac - 1
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE asrt340_04_pb
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="asrt340_04.default_search" ver="3" status="" src="s">
+    <![CDATA[#+ 外部參數搜尋
+PRIVATE FUNCTION asrt340_04_default_search()
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define
+   {<point name="default_search.define"/>}
+   #end add-point  
+   
+   IF NOT cl_null(g_argv[1]) THEN
+      LET ls_wc = ls_wc, " sfeddocno = '", g_argv[1], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " sfed004 = ", g_argv[02], " AND "
+   END IF
+ 
+ 
+   #add-point:default_search段after sql
+   {<point name="default_search.after_sql"/>}
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET ls_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_wc2 = ls_wc
+   ELSE
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="asrt340_04.delete" ver="2" status="" src="s">
+    <![CDATA[#+ 資料刪除
+PRIVATE FUNCTION asrt340_04_delete()
+   DEFINE li_ac LIKE type_t.num5
+   #add-point:delete段define
+   {<point name="delete.define"/>}
+   #end add-point 
+   
+   IF NOT cl_ask_delete() THEN
+      LET INT_FLAG = 1 #不刪除
+   ELSE
+      LET INT_FLAG = 0 #要刪除
+   END IF
+   
+   LET li_ac = ARR_CURR()
+   
+   CALL s_transaction_begin()  
+ 
+   #add-point:delete段刪除前
+   {<point name="delete.b_delete" mark="Y"/>}
+   #end add-point 
+   DELETE FROM sfed_t 
+         WHERE sfeddocno = g_sfed_d[li_ac].sfeddocno
+           AND sfed004 = g_sfed_d[li_ac].sfed004
+ 
+   #add-point:delete段刪除中
+   {<point name="delete.m_delete"/>}
+   #end add-point 
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("sfed_t",SQLCA.sqlcode,1) 
+      CALL s_transaction_end('N','0')
+   ELSE
+      CALL s_transaction_end('Y','0')
+   END IF
+   #add-point:delete段刪除後
+   {<point name="delete.a_delete"/>}
+   #end add-point 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="asrt340_04.delete_b" ver="2" status="" src="s">
+    <![CDATA[#+ 刪除單身後其他table連動
+PRIVATE FUNCTION asrt340_04_delete_b(ps_table,ps_keys_bak,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:delete_b段define
+   {<point name="delete_b.define"/>}
+   #end add-point     
+ 
+   #判斷是否是同一群組的table
+   LET ls_group = "sfed_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+   
+      #add-point:delete_b段刪除前
+      {<point name="delete_b.b_delete" mark="Y"/>}
+      #end add-point     
+   
+      DELETE FROM sfed_t
+       WHERE sfedent = g_enterprise AND
+         sfeddocno = ps_keys_bak[1] AND sfed004 = ps_keys_bak[2]
+ 
+      #add-point:delete_b段刪除中
+      {<point name="delete_b.m_delete"/>}
+      #end add-point  
+         
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("",SQLCA.sqlcode,0)
+      END IF
+      
+      #add-point:delete_b段刪除後
+      {<point name="delete_b.a_delete"/>}
+      #end add-point
+      
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="asrt340_04.description" ver="16" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000015
+#+ 
+#+ Filename...: asrt340_04
+#+ Description: ...
+#+ Creator....: 00378(2014/03/17)
+#+ Modifier...: 00378(2014/03/17)
+#+ Buildtype..: 應用 i02 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="asrt340_04.detail_show" ver="1" status="" src="s">
+    <![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION asrt340_04_detail_show()
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值page1
+   
+    
+ 
+   
+   #讀入ref值
+   #add-point:show段單身reference
+   {<point name="detail_show.reference"/>}
+   #end add-point
+   
+ 
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="asrt340_04.global" ver="5" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_sfed_d RECORD
+       sfedsite LIKE sfed_t.sfedsite, 
+   sfeddocno LIKE sfed_t.sfeddocno, 
+   sfed004 LIKE sfed_t.sfed004, 
+   sfed001 LIKE sfed_t.sfed001, 
+   sfed001_desc1 LIKE type_t.chr500, 
+   sfed001_desc2 LIKE type_t.chr500, 
+   sfed002 LIKE sfed_t.sfed002, 
+   sfed003 LIKE sfed_t.sfed003
+       END RECORD
+ 
+ 
+#無單身append欄位定義
+ 
+#模組變數(Module Variables)
+DEFINE g_sfed_d          DYNAMIC ARRAY OF type_g_sfed_d
+DEFINE g_sfed_d_t        type_g_sfed_d
+ 
+      
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num5              #目前處理的ARRAY CNT 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_temp_idx           LIKE type_t.num5              #單身 所在筆數(暫存用)
+DEFINE g_detail_idx         LIKE type_t.num5              #單身 所在筆數(所有資料)
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_chk                BOOLEAN
+DEFINE g_aw                 STRING                        #確定當下點擊的單身
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="asrt340_04.init" ver="1" status="" src="s">
+    <![CDATA[#+ 畫面資料初始化
+PRIVATE FUNCTION asrt340_04_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point   
+   
+   
+   
+   LET g_error_show = 1
+   
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+   CALL asrt340_04_default_search()
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="asrt340_04.input" ver="1" status="" src="s">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION asrt340_04(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   {<Local define>}
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   {</Local define>}
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_asrt340_04 WITH FORM cl_ap_formpath("asr","asrt340_04")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_sfed_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = ,
+                  DELETE ROW = ,
+                  APPEND ROW = )
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+         #---------------------<  Detail: page1  >---------------------
+ 
+         #---------------------<  Detail: page1  >---------------------
+ 
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_asrt340_04 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="asrt340_04.insert" ver="2" status="" src="s">
+    <![CDATA[#+ 資料新增
+PRIVATE FUNCTION asrt340_04_insert()
+   DEFINE li_ac LIKE type_t.num5
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:delete段define
+   {<point name="insert.define"/>}
+   #end add-point 
+   
+   #輸入前動作  
+   LET li_ac = l_ac 
+   LET l_ac = 1   
+   LET g_before_input_done = FALSE                                        
+   CALL asrt340_04_set_entry_b("a")  
+   
+   CALL asrt340_04_set_no_entry_b("a")                                          
+   LET g_before_input_done = TRUE                                            
+   
+   #append欄位         
+      
+ 
+ 
+   
+   #add-point:insert段before insert
+   {<point name="insert.before_insert"/>}
+   #end add-point  
+ 
+   #資料輸入
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM) 
+      INPUT g_sfed_d[1].* FROM s_detail1[1].*
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         BEFORE INPUT
+         
+      END INPUT
+      
+ 
+      
+      BEFORE DIALOG 
+   
+   END DIALOG
+   
+   #輸入後動作
+   IF INT_FLAG THEN
+      CALL cl_err("",9001,0)
+      LET INT_FLAG = 1
+      RETURN
+   END IF
+   
+   CALL s_transaction_begin()                    
+   
+   #add-point:單身新增前
+   {<point name="insert.b_insert"/>}
+   #end add-point
+   
+   
+   #add-point:單身新增後
+   {<point name="insert.a_insert"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="asrt340_04.insert_b" ver="2" status="" src="s">
+    <![CDATA[#+ 新增單身後其他table連動
+PRIVATE FUNCTION asrt340_04_insert_b(ps_table,ps_keys,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:insert_b段define
+   {<point name="insert_b.define"/>}
+   #end add-point     
+ 
+   #判斷是否是同一群組的table
+   LET ls_group = "sfed_t,"
+   #IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      
+      #add-point:insert_b段新增前
+      {<point name="insert_b.b_insert" mark="Y"/>}
+      #end add-point    
+      INSERT INTO sfed_t
+                  (sfedent,
+                   sfeddocno,sfed004
+                   ,sfedsite,sfed001,sfed002,sfed003) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2]
+                   ,g_sfed_d[l_ac].sfedsite,g_sfed_d[l_ac].sfed001,g_sfed_d[l_ac].sfed002,g_sfed_d[l_ac].sfed003) 
+
+      #add-point:insert_b段新增中
+      {<point name="insert_b.m_insert"/>}
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("sfed_t",SQLCA.sqlcode,0)
+      END IF
+      #add-point:insert_b段新增後
+      {<point name="insert_b.a_insert"/>}
+      #end add-point    
+   #END IF
+   
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="asrt340_04.link_b" ver="1" status="" src="s">
+    <![CDATA[#+ 連動單身idx
+PRIVATE FUNCTION asrt340_04_link_b(ps_table,pi_idx)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   DEFINE pi_idx   INTEGER
+   #add-point:link_b段define
+   {<point name="link_b.define"/>}
+   #end add-point  
+   
+   LET ls_group = ""
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+ 
+   END IF
+   
+ 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="asrt340_04.lock_b" ver="1" status="" src="s">
+    <![CDATA[#+ 連動lock其他單身table資料
+PRIVATE FUNCTION asrt340_04_lock_b(ps_table)
+ 
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:lock_b段define
+   {<point name="lock_b.define"/>}
+   #end add-point   
+   
+   #先刷新資料
+   #CALL asrt340_04_b_fill(g_wc2)
+   
+   #鎖定整組table
+   #LET ls_group = ""
+   #僅鎖定自身table
+   LET ls_group = "sfed_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN asrt340_04_bcl USING g_enterprise,
+                                       g_sfed_d[g_detail_idx].sfeddocno,g_sfed_d[g_detail_idx].sfed004 
+
+                                       
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("asrt340_04_bcl",SQLCA.sqlcode,1)
+         RETURN FALSE
+      END IF
+   
+   END IF
+                                    
+ 
+   
+   RETURN TRUE
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="asrt340_04.main" ver="2" status="" src="s">
+    <![CDATA[#+ 此段落由子樣板a27產生
+#+ 資料輸入
+PUBLIC FUNCTION asrt340_04(--)
+   #add-point:main段變數傳入
+   {<point name="main.get_var"/>}
+   #end add-point
+   )
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" mark="Y"/>}
+   #end add-point
+   LET g_forupd_sql = ""
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)   #轉換不同資料庫語法
+   DECLARE asrt340_04_cl CURSOR FROM g_forupd_sql     # LOCK CURSOR
+ 
+   LET g_sql = " SELECT UNIQUE ",
+               " FROM ",
+               " WHERE  "
+   #add-point:SQL_define
+   {<point name="main.after_refresh_sql"/>}
+   #end add-point
+   PREPARE asrt340_04_master_referesh FROM g_sql
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_asrt340_04 WITH FORM cl_ap_formpath("asr","asrt340_04")
+   
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   #程式初始化
+   CALL asrt340_04_init()   
+ 
+   #進入選單 Menu (="N")
+   CALL asrt340_04_ui_dialog() 
+ 
+   #畫面關閉
+   CLOSE WINDOW w_asrt340_04
+ 
+   CLOSE asrt340_04_cl
+   
+   
+ 
+   #add-point:離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+END FUNCTION
+ 
+ 
+]]>
+  </section>
+  <section id="asrt340_04.modify" ver="5" status="" src="s">
+    <![CDATA[#+ 資料修改
+PRIVATE FUNCTION asrt340_04_modify()
+   DEFINE  l_cmd                  LIKE type_t.chr1
+   DEFINE  l_ac_t                 LIKE type_t.num5                #未取消的ARRAY CNT 
+   DEFINE  l_n                    LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_cnt                  LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_lock_sw              LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert         LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete         LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count                LIKE type_t.num5
+   DEFINE  l_i                    LIKE type_t.num5
+   DEFINE  ls_return              STRING
+   DEFINE  l_var_keys             DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys           DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                 DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields               DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak         DYNAMIC ARRAY OF STRING
+   DEFINE  li_reproduce           LIKE type_t.num5
+   DEFINE  li_reproduce_target    LIKE type_t.num5
+   DEFINE  lb_reproduce           BOOLEAN
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point 
+   
+   LET g_action_choice = ""
+   
+   LET g_qryparam.state = "i"
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+ 
+   #add-point:modify段define_sql
+   {<point name="modify.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = "SELECT sfedsite,sfeddocno,sfed004,sfed001,'','',sfed002,sfed003 FROM sfed_t WHERE  
+       sfedent=? AND sfeddocno=? AND sfed004=? FOR UPDATE"
+   #add-point:modify段define_sql
+   {<point name="modify.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE asrt340_04_bcl CURSOR FROM g_forupd_sql      # LOCK CURSOR
+   
+ 
+   
+   LET INT_FLAG = FALSE
+   LET lb_reproduce = FALSE
+ 
+   #add-point:modify段修改前
+   {<point name="modify.before_input"/>}
+   #end add-point
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_sfed_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE, 
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_sfed_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL asrt340_04_b_fill(g_wc2)
+            LET g_detail_cnt = g_sfed_d.getLength()
+         
+         BEFORE ROW
+            #add-point:modify段before row
+            {<point name="input.body.before_row2"/>}
+            #end add-point  
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+            DISPLAY g_sfed_d.getLength() TO FORMONLY.cnt
+         
+            CALL s_transaction_begin()
+            LET g_detail_cnt = g_sfed_d.getLength()
+            
+            IF g_detail_cnt >= l_ac 
+               AND g_sfed_d[l_ac].sfeddocno IS NOT NULL
+               AND g_sfed_d[l_ac].sfed004 IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_sfed_d_t.* = g_sfed_d[l_ac].*  #BACKUP
+               IF NOT asrt340_04_lock_b("sfed_t") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH asrt340_04_bcl INTO g_sfed_d[l_ac].sfedsite,g_sfed_d[l_ac].sfeddocno,g_sfed_d[l_ac].sfed004, 
+                      g_sfed_d[l_ac].sfed001,g_sfed_d[l_ac].sfed001_desc1,g_sfed_d[l_ac].sfed001_desc2, 
+                      g_sfed_d[l_ac].sfed002,g_sfed_d[l_ac].sfed003
+                  IF SQLCA.sqlcode THEN
+                     CALL cl_err(g_sfed_d_t.sfeddocno,SQLCA.sqlcode,1)
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  CALL asrt340_04_detail_show()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row
+            {<point name="input.body.before_row"/>}
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+        
+         BEFORE INSERT
+            
+            CALL s_transaction_begin()
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_sfed_d_t.* TO NULL
+            INITIALIZE g_sfed_d[l_ac].* TO NULL 
+            
+            LET g_sfed_d_t.* = g_sfed_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL asrt340_04_set_entry_b("a")
+            CALL asrt340_04_set_no_entry_b("a")
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_sfed_d[li_reproduce_target].* = g_sfed_d[li_reproduce].*
+ 
+               LET g_sfed_d[g_sfed_d.getLength()].sfeddocno = NULL
+               LET g_sfed_d[g_sfed_d.getLength()].sfed004 = NULL
+ 
+            END IF
+            #公用欄位給值(單身)
+            
+            
+            #add-point:modify段before insert
+            {<point name="input.body.before_insert"/>}
+            #end add-point  
+  
+         AFTER INSERT
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM sfed_t 
+             WHERE sfedent = g_enterprise AND sfeddocno = g_sfed_d[l_ac].sfeddocno
+                                       AND sfed004 = g_sfed_d[l_ac].sfed004
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前
+               {<point name="input.body.b_insert"/>}
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_sfed_d[g_detail_idx].sfeddocno
+               LET gs_keys[2] = g_sfed_d[g_detail_idx].sfed004
+               CALL asrt340_04_insert_b('sfed_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後
+               {<point name="input.body.a_insert"/>}
+               #end add-point
+            ELSE    
+               CALL cl_err('INSERT',"std-00006",1)
+               INITIALIZE g_sfed_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("sfed_t",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL asrt340_04_b_fill(g_wc2)
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert
+               {<point name="input.body.a_insert2"/>}
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ERROR 'INSERT O.K'
+               LET g_detail_cnt = g_detail_cnt + 1
+               
+               LET g_wc2 = g_wc2, " OR (sfeddocno = '", g_sfed_d[l_ac].sfeddocno, "' "
+                                  ," AND sfed004 = '", g_sfed_d[l_ac].sfed004, "' "
+ 
+                                  ,")"
+            END IF                
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' AND g_sfed_d.getLength() < l_ac THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+               CALL g_sfed_d.deleteElement(l_ac)
+               NEXT FIELD sfeddocno
+            END IF
+            IF g_sfed_d[l_ac].sfeddocno IS NOT NULL
+               AND g_sfed_d_t.sfed004 IS NOT NULL
+ 
+               THEN     
+            
+               #add-point:單身刪除ask前
+               {<point name="input.body.b_delete_ask"/>}
+               #end add-point   
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  CALL cl_err("", -263, 1)
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前
+               {<point name="input.body.b_delete" mark="Y"/>}
+               #end add-point   
+               
+               DELETE FROM sfed_t
+                WHERE sfedent = g_enterprise AND 
+                      sfeddocno = g_sfed_d_t.sfeddocno
+                      AND sfed004 = g_sfed_d_t.sfed004
+ 
+                      
+               #add-point:單身刪除中
+               {<point name="input.body.m_delete"/>}
+               #end add-point  
+                      
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("sfed_t",SQLCA.sqlcode,1)
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_detail_cnt = g_detail_cnt-1
+                  
+                  #add-point:單身刪除後
+                  {<point name="input.body.a_delete"/>}
+                  #end add-point
+                  CALL s_transaction_end('Y','0')
+               END IF 
+               CLOSE asrt340_04_bcl
+               LET l_count = g_sfed_d.getLength()
+            END IF 
+                           INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_sfed_d[g_detail_idx].sfeddocno
+               LET gs_keys[2] = g_sfed_d[g_detail_idx].sfed004
+ 
+              
+         AFTER DELETE 
+            #add-point:單身刪除後2
+            {<point name="input.body.after_delete"/>}
+            #end add-point
+                           CALL asrt340_04_delete_b('sfed_t',gs_keys,"'1'")
+ 
+         #---------------------<  Detail: page1  >---------------------
+         #----<<sfedsite>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfedsite
+            #add-point:BEFORE FIELD sfedsite
+            {<point name="input.b.page1.sfedsite" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfedsite
+            
+            #add-point:AFTER FIELD sfedsite
+            {<point name="input.a.page1.sfedsite" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sfedsite
+            #add-point:ON CHANGE sfedsite
+            {<point name="input.g.page1.sfedsite" />}
+            #END add-point
+ 
+         #----<<sfeddocno>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfeddocno
+            #add-point:BEFORE FIELD sfeddocno
+            {<point name="input.b.page1.sfeddocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfeddocno
+            
+            #add-point:AFTER FIELD sfeddocno
+            {<point name="input.a.page1.sfeddocno" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sfeddocno
+            #add-point:ON CHANGE sfeddocno
+            {<point name="input.g.page1.sfeddocno" />}
+            #END add-point
+ 
+         #----<<sfed004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfed004
+            #add-point:BEFORE FIELD sfed004
+            {<point name="input.b.page1.sfed004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfed004
+            
+            #add-point:AFTER FIELD sfed004
+            {<point name="input.a.page1.sfed004" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sfed004
+            #add-point:ON CHANGE sfed004
+            {<point name="input.g.page1.sfed004" />}
+            #END add-point
+ 
+         #----<<sfed001>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD sfed001
+            
+            #add-point:AFTER FIELD sfed001
+            {<point name="input.a.page1.sfed001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfed001
+            #add-point:BEFORE FIELD sfed001
+            {<point name="input.b.page1.sfed001" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sfed001
+            #add-point:ON CHANGE sfed001
+            {<point name="input.g.page1.sfed001" />}
+            #END add-point
+ 
+         #----<<sfed001_desc1>>----
+         #----<<sfed001_desc2>>----
+         #----<<sfed002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfed002
+            #add-point:BEFORE FIELD sfed002
+            {<point name="input.b.page1.sfed002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfed002
+            
+            #add-point:AFTER FIELD sfed002
+            {<point name="input.a.page1.sfed002" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sfed002
+            #add-point:ON CHANGE sfed002
+            {<point name="input.g.page1.sfed002" />}
+            #END add-point
+ 
+         #----<<sfed003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfed003
+            #add-point:BEFORE FIELD sfed003
+            {<point name="input.b.page1.sfed003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfed003
+            
+            #add-point:AFTER FIELD sfed003
+            {<point name="input.a.page1.sfed003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sfed003
+            #add-point:ON CHANGE sfed003
+            {<point name="input.g.page1.sfed003" />}
+            #END add-point
+ 
+ 
+         #---------------------<  Detail: page1  >---------------------
+         #----<<sfedsite>>----
+         #Ctrlp:input.c.page1.sfedsite
+         ON ACTION controlp INFIELD sfedsite
+            #add-point:ON ACTION controlp INFIELD sfedsite
+            {<point name="input.c.page1.sfedsite" />}
+            #END add-point
+ 
+         #----<<sfeddocno>>----
+         #Ctrlp:input.c.page1.sfeddocno
+         ON ACTION controlp INFIELD sfeddocno
+            #add-point:ON ACTION controlp INFIELD sfeddocno
+            {<point name="input.c.page1.sfeddocno" />}
+            #END add-point
+ 
+         #----<<sfed004>>----
+         #Ctrlp:input.c.page1.sfed004
+         ON ACTION controlp INFIELD sfed004
+            #add-point:ON ACTION controlp INFIELD sfed004
+            {<point name="input.c.page1.sfed004" />}
+            #END add-point
+ 
+         #----<<sfed001>>----
+         #Ctrlp:input.c.page1.sfed001
+         ON ACTION controlp INFIELD sfed001
+            #add-point:ON ACTION controlp INFIELD sfed001
+            {<point name="input.c.page1.sfed001" />}
+            #END add-point
+ 
+         #----<<sfed001_desc1>>----
+         #----<<sfed001_desc2>>----
+         #----<<sfed002>>----
+         #Ctrlp:input.c.page1.sfed002
+         ON ACTION controlp INFIELD sfed002
+            #add-point:ON ACTION controlp INFIELD sfed002
+            {<point name="input.c.page1.sfed002" />}
+            #END add-point
+ 
+         #----<<sfed003>>----
+         #Ctrlp:input.c.page1.sfed003
+         ON ACTION controlp INFIELD sfed003
+            #add-point:ON ACTION controlp INFIELD sfed003
+            {<point name="input.c.page1.sfed003" />}
+            #END add-point
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               LET g_sfed_d[l_ac].* = g_sfed_d_t.*
+               CLOSE asrt340_04_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               CALL cl_err(g_sfed_d[l_ac].sfeddocno,-263,1)
+               LET g_sfed_d[l_ac].* = g_sfed_d_t.*
+            ELSE
+               
+               #寫入修改者/修改日期資訊(單身)
+               
+            
+               #add-point:單身修改前
+               {<point name="input.body.b_update" mark="Y"/>}
+               #end add-point
+               
+               UPDATE sfed_t SET (sfedsite,sfeddocno,sfed004,sfed001,sfed002,sfed003) = (g_sfed_d[l_ac].sfedsite, 
+                   g_sfed_d[l_ac].sfeddocno,g_sfed_d[l_ac].sfed004,g_sfed_d[l_ac].sfed001,g_sfed_d[l_ac].sfed002, 
+                   g_sfed_d[l_ac].sfed003)
+                WHERE sfedent = g_enterprise AND
+                  sfeddocno = g_sfed_d_t.sfeddocno #項次   
+                  AND sfed004 = g_sfed_d_t.sfed004  
+ 
+                  
+               #add-point:單身修改中
+               {<point name="input.body.m_update"/>}
+               #end add-point
+                  
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL cl_err("sfed_t","std-00009",1)
+                     CALL s_transaction_end('N','0')
+                    WHEN SQLCA.sqlcode #其他錯誤
+                     CALL cl_err("sfed_t",SQLCA.sqlcode,1)  
+                     CALL s_transaction_end('N','0')
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_sfed_d[g_detail_idx].sfeddocno
+               LET gs_keys_bak[1] = g_sfed_d_t.sfeddocno
+               LET gs_keys[2] = g_sfed_d[g_detail_idx].sfed004
+               LET gs_keys_bak[2] = g_sfed_d_t.sfed004
+               CALL asrt340_04_update_b('sfed_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                     
+               END CASE
+               
+               #add-point:單身修改後
+               {<point name="input.body.a_update"/>}
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            CALL asrt340_04_unlock_b("sfed_t")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            
+             #add-point:單身after row
+            {<point name="input.body.a_row"/>}
+            #end add-point
+            
+         AFTER INPUT
+            #add-point:單身input後
+            {<point name="input.body.a_input"/>}
+            #end add-point
+            
+         ON ACTION controlo   
+            CALL FGL_SET_ARR_CURR(g_sfed_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_sfed_d.getLength()+1
+            
+      END INPUT
+      
+ 
+      
+ 
+      
+      #add-point:before_more_input
+      {<point name="input.more_input"/>}
+      #end add-point
+      
+      BEFORE DIALOG 
+         IF g_temp_idx > 0 THEN
+            LET l_ac = g_temp_idx
+            CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+            LET g_temp_idx = 1
+         END IF
+         LET g_curr_diag = ui.DIALOG.getCurrent()
+         #add-point:before_dialog
+         {<point name="input.before_dialog"/>}
+         #end add-point
+         CASE g_aw
+            WHEN "s_detail1"
+               NEXT FIELD sfedsite
+ 
+         END CASE
+   
+      ON ACTION accept
+         ACCEPT DIALOG
+      
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) 
+              RETURNING g_fld_name,g_frm_name 
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang) 
+           
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   
+   END DIALOG 
+   
+   #add-point:modify段修改後
+   {<point name="modify.after_input"/>}
+   #end add-point
+ 
+   CLOSE asrt340_04_bcl
+   CALL s_transaction_end('Y','0')
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="asrt340_04.modify_detail_chk" ver="2" status="" src="s">
+    <![CDATA[#+ 單身輸入判定
+PRIVATE FUNCTION asrt340_04_modify_detail_chk(ps_record)
+   DEFINE ps_record STRING
+   DEFINE ls_return STRING
+   #add-point:modify_detail_chk段define
+   {<point name="modify_detail_chk.define"/>}
+   #end add-point
+   
+   #add-point:modify_detail_chk段開始前
+   {<point name="modify_detail_chk.before"/>}
+   #end add-point
+   
+   CASE ps_record
+      WHEN "s_detail1" 
+         LET ls_return = "sfedsite"
+ 
+      #add-point:modify_detail_chk段自訂page控制
+      {<point name="modify_detail_chk.page_control"/>}
+      #end add-point
+   END CASE
+    
+   #add-point:modify_detail_chk段結束前
+   {<point name="modify_detail_chk.after"/>}
+   #end add-point
+   
+   RETURN ls_return
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="asrt340_04.other_dialog" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="asrt340_04.other_function" ver="5" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="asrt340_04.query" ver="5" status="" src="s">
+    <![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION asrt340_04_query()
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point 
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_sfed_d.clear()
+   
+   LET g_qryparam.state = "c"
+   
+   #wc備份
+   LET ls_wc = g_wc2
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      CONSTRUCT g_wc2 ON sfedsite,sfeddocno,sfed004,sfed001,sfed002,sfed003 
+ 
+         FROM s_detail1[1].sfedsite,s_detail1[1].sfeddocno,s_detail1[1].sfed004,s_detail1[1].sfed001, 
+             s_detail1[1].sfed002,s_detail1[1].sfed003 
+      
+         
+      
+         #---------------------<  Detail: page1  >---------------------
+         #----<<sfedsite>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfedsite
+            #add-point:BEFORE FIELD sfedsite
+            {<point name="query.b.page1.sfedsite" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfedsite
+            
+            #add-point:AFTER FIELD sfedsite
+            {<point name="query.a.page1.sfedsite" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.sfedsite
+         ON ACTION controlp INFIELD sfedsite
+            #add-point:ON ACTION controlp INFIELD sfedsite
+            {<point name="query.c.page1.sfedsite" />}
+            #END add-point
+ 
+         #----<<sfeddocno>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfeddocno
+            #add-point:BEFORE FIELD sfeddocno
+            {<point name="query.b.page1.sfeddocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfeddocno
+            
+            #add-point:AFTER FIELD sfeddocno
+            {<point name="query.a.page1.sfeddocno" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.sfeddocno
+         ON ACTION controlp INFIELD sfeddocno
+            #add-point:ON ACTION controlp INFIELD sfeddocno
+            {<point name="query.c.page1.sfeddocno" />}
+            #END add-point
+ 
+         #----<<sfed004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfed004
+            #add-point:BEFORE FIELD sfed004
+            {<point name="query.b.page1.sfed004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfed004
+            
+            #add-point:AFTER FIELD sfed004
+            {<point name="query.a.page1.sfed004" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.sfed004
+         ON ACTION controlp INFIELD sfed004
+            #add-point:ON ACTION controlp INFIELD sfed004
+            {<point name="query.c.page1.sfed004" />}
+            #END add-point
+ 
+         #----<<sfed001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfed001
+            #add-point:BEFORE FIELD sfed001
+            {<point name="query.b.page1.sfed001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfed001
+            
+            #add-point:AFTER FIELD sfed001
+            {<point name="query.a.page1.sfed001" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.sfed001
+         ON ACTION controlp INFIELD sfed001
+            #add-point:ON ACTION controlp INFIELD sfed001
+            {<point name="query.c.page1.sfed001" />}
+            #END add-point
+ 
+         #----<<sfed001_desc1>>----
+         #----<<sfed001_desc2>>----
+         #----<<sfed002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfed002
+            #add-point:BEFORE FIELD sfed002
+            {<point name="query.b.page1.sfed002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfed002
+            
+            #add-point:AFTER FIELD sfed002
+            {<point name="query.a.page1.sfed002" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.sfed002
+         ON ACTION controlp INFIELD sfed002
+            #add-point:ON ACTION controlp INFIELD sfed002
+            {<point name="query.c.page1.sfed002" />}
+            #END add-point
+ 
+         #----<<sfed003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfed003
+            #add-point:BEFORE FIELD sfed003
+            {<point name="query.b.page1.sfed003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfed003
+            
+            #add-point:AFTER FIELD sfed003
+            {<point name="query.a.page1.sfed003" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.sfed003
+         ON ACTION controlp INFIELD sfed003
+            #add-point:ON ACTION controlp INFIELD sfed003
+            {<point name="query.c.page1.sfed003" />}
+            #END add-point
+ 
+  
+         
+ 
+      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            {<point name="cs.before_construct"/>}
+            #end add-point 
+      
+      END CONSTRUCT
+  
+      #add-point:query段more_construct
+      {<point name="query.more_construct"/>}
+      #end add-point 
+  
+      BEFORE DIALOG 
+         CALL cl_qbe_init()
+         #add-point:query段before_dialog
+         {<point name="query.before_dialog"/>}
+         #end add-point 
+      
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+      
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:query段after_construct
+   {<point name="query.after_construct"/>}
+   #end add-point
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc2 = ls_wc
+   END IF
+    
+   LET g_error_show = 1
+   CALL asrt340_04_b_fill(g_wc2)
+   
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      CALL cl_err("",-100,1)
+   END IF
+   
+   LET INT_FLAG = FALSE
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="asrt340_04.set_entry_b" ver="2" status="" src="s">
+    <![CDATA[#+ 單身欄位開啟設定
+PRIVATE FUNCTION asrt340_04_set_entry_b(p_cmd)                                                  
+   DEFINE p_cmd   LIKE type_t.chr1         
+   #add-point:set_entry_b段define
+   {<point name="set_entry_b.define"/>}
+   #end add-point     
+   
+   #add-point:set_entry_b段control
+   {<point name="set_entry_b.set_entry_b"/>}
+   #end add-point                                                                   
+                                                                                
+END FUNCTION                                                                    
+]]>
+  </section>
+  <section id="asrt340_04.set_no_entry_b" ver="2" status="" src="s">
+    <![CDATA[#+ 單身欄位關閉設定
+PRIVATE FUNCTION asrt340_04_set_no_entry_b(p_cmd)                                               
+   DEFINE p_cmd   LIKE type_t.chr1           
+   #add-point:set_no_entry_b段define
+   {<point name="set_no_entry_b.define"/>}
+   #end add-point  
+ 
+   #add-point:set_no_entry_b段control
+   {<point name="set_no_entry_b.set_no_entry_b"/>}
+   #end add-point       
+                                                                                
+END FUNCTION  
+]]>
+  </section>
+  <section id="asrt340_04.state_change" ver="1" status="" src="s">
+    <![CDATA[   
+]]>
+  </section>
+  <section id="asrt340_04.ui_dialog" ver="5" status="" src="s">
+    <![CDATA[#+ 功能選單 
+PRIVATE FUNCTION asrt340_04_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE la_param  RECORD
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point 
+ 
+   LET g_action_choice = " "  
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()      
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   
+   LET g_detail_idx = 1
+   
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE
+   
+      CALL asrt340_04_b_fill(g_wc2)
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_sfed_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+      
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               LET g_temp_idx = l_ac
+               
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont() 
+               #add-point:display array-before row
+               {<point name="ui_dialog.before_row"/>}
+               #end add-point                        
+      
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY
+      
+ 
+      
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         
+         BEFORE DIALOG
+            IF g_temp_idx > 0 THEN
+               LET l_ac = g_temp_idx
+               CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+               LET g_temp_idx = 1
+            END IF
+            LET g_curr_diag = ui.DIALOG.getCurrent()         
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            #add-point:ui_dialog段before
+            {<point name="ui_dialog.b_dialog"/>}
+            #end add-point
+            NEXT FIELD CURRENT
+      
+         
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice="exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+            
+         
+         
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="asrt340_04.unlock_b" ver="1" status="" src="s">
+    <![CDATA[#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION asrt340_04_unlock_b(ps_table)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:unlock_b段define
+   {<point name="unlock_b.define"/>}
+   #end add-point  
+   
+   LET ls_group = ""
+   
+   #IF ls_group.getIndexOf(ps_table,1) THEN
+      CLOSE asrt340_04_bcl
+   #END IF
+   
+ 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="asrt340_04.update_b" ver="2" status="" src="s">
+    <![CDATA[#+ 修改單身後其他table連動
+PRIVATE FUNCTION asrt340_04_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   DEFINE ps_page          STRING
+   DEFINE ps_table         STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num5 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define
+   {<point name="update_b.define"/>}
+   #end add-point     
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+    
+   #判斷是否是同一群組的table
+   LET ls_group = "sfed_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 AND ps_table <> "sfed_t" THEN
+      #add-point:update_b段修改前
+      {<point name="update_b.b_update" mark="Y"/>}
+      #end add-point     
+      UPDATE sfed_t 
+         SET (sfeddocno,sfed004
+              ,sfedsite,sfed001,sfed002,sfed003) 
+              = 
+             (ps_keys[1],ps_keys[2]
+              ,g_sfed_d[l_ac].sfedsite,g_sfed_d[l_ac].sfed001,g_sfed_d[l_ac].sfed002,g_sfed_d[l_ac].sfed003)  
+
+         WHERE sfeddocno = ps_keys_bak[1] AND sfed004 = ps_keys_bak[2]
+      #add-point:update_b段修改中
+      {<point name="update_b.m_update"/>}
+      #end add-point 
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            CALL cl_err("sfed_t","std-00009",1)
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            CALL cl_err("sfed_t",SQLCA.sqlcode,1)  
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      #add-point:update_b段修改後
+      {<point name="update_b.a_update"/>}
+      #end add-point 
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+]]>
+  </section>
+</add_points>

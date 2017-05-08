@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammp424" module="amm" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="02482" crtdt="2014-04-09 16:19:18" modid="02159" moddt="2016-06-28 18:24:59" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="會員卡自動續期批次處理作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mmaq005,mmaq002,mmbnsite,mmbnsite_desc(chr80),mmbm001_desc(chr80),mmbm002_desc(chr80),stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="amm" filename="ammp424" method="dialog">
+    <section id="input">
+      <input id="head" field="mmbnsite"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mmaq005,mmaq002"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="mmaq005"/>
+      <column id="mmaq002">
+        <controlp form="q_mman001_10" state="c"/>
+      </column>
+      <column id="mmbnsite">
+        <after>
+          <reference field="mmbnsite_desc" ref_field="mmbn_t.mmbnsite" map_field="mmbnsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="mmbnsite_desc"/>
+      <column id="mmbm001_desc"/>
+      <column id="mmbm002_desc"/>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrq910" module="axr" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="02114" crtdt="2015-01-26 17:34:13" modid="05016" moddt="2017-02-10 17:15:23" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="客戶帳款匯總查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),xreacomp,xreald(chr100),xreald_desc(chr500),xrea009,xrea009_desc(chr500),pmab031,pmab031_desc(chr500),xrea011,xrea011_desc(chr500),xrea019,xrea019_desc(chr500),xrea100,xrea103,l_xrea1031(num20_6),l_xrea1032(num20_6),l_xrea1033(num20_6),xrea113,l_xrea1131(num20_6),l_xrea1132(num20_6),l_xrea1133(num20_6),xrea004,xrea003,xrea002,xrea001,xrea005,xrea006,xrea007"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),xreacomp(b_xreacomp),xreald(b_xreald),xreald_desc(b_xreald_desc),xrea009(b_xrea009),xrea009_desc(xrea009_desc),pmab031(b_pmab031),pmab031_desc(pmab031_desc),xrea011(b_xrea011),xrea011_desc(xrea011_desc),xrea019(b_xrea019),xrea019_desc(xrea019_desc),xrea100(b_xrea100),xrea103(b_xrea103),l_xrea1031(l_xrea1031),l_xrea1032(l_xrea1032),l_xrea1033(l_xrea1033),xrea113(b_xrea113),l_xrea1131(l_xrea1131),l_xrea1132(l_xrea1132),l_xrea1133(l_xrea1133),xrea004(b_xrea004),xrea003(b_xrea003),xrea002(b_xrea002),xrea001(b_xrea001),xrea005(b_xrea005),xrea006(b_xrea006),xrea007(b_xrea007)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="aapq911"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axrq910" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="xreacomp,xreald,xrea009,pmab031,xrea011,xrea019,xrea100,xrea103,xrea113,xrea004,xrea003,xrea002,xrea001,xrea005,xrea006,xrea007" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="xreacomp(b_xreacomp),xrea009(b_xrea009),pmab031(b_pmab031),xrea011(b_xrea011),xrea019(b_xrea019),xrea100(b_xrea100),xrea103(b_xrea103),xrea113(b_xrea113),xrea004(b_xrea004),xrea003(b_xrea003),xrea002(b_xrea002),xrea001(b_xrea001),xrea005(b_xrea005),xrea006(b_xrea006),xrea007(b_xrea007)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="xreacomp">
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="xreald">
+        <after>
+          <reference field="xreald_desc" ref_field="xreald" map_field="xreaent,xreald" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xreald_desc"/>
+      <column id="xrea009">
+        <after/>
+        <controlp form="q_pmaa001_25" state="c"/>
+      </column>
+      <column id="xrea009_desc"/>
+      <column id="pmab031">
+        <after/>
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="pmab031_desc"/>
+      <column id="xrea011">
+        <after/>
+      </column>
+      <column id="xrea011_desc"/>
+      <column id="xrea019">
+        <after/>
+      </column>
+      <column id="xrea019_desc"/>
+      <column id="xrea100">
+        <controlp form="q_aooi001_1" state="c"/>
+      </column>
+      <column id="xrea103" type="S" default="0"/>
+      <column id="l_xrea1031"/>
+      <column id="l_xrea1032"/>
+      <column id="l_xrea1033"/>
+      <column id="xrea113" type="S" default="0"/>
+      <column id="l_xrea1131"/>
+      <column id="l_xrea1132"/>
+      <column id="l_xrea1133"/>
+      <column id="xrea004"/>
+      <column id="xrea003"/>
+      <column id="xrea002"/>
+      <column id="xrea001"/>
+      <column id="xrea005"/>
+      <column id="xrea006"/>
+      <column id="xrea007"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="xrea_t" page="1" linked="" pk="xreald,xrea001,xrea002,xrea003,xrea004,xrea005,xrea006,xrea007">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,xreacomp,&apos;&apos;,&apos;&apos;,xrea009,&apos;&apos;,&apos;&apos;,&apos;&apos;,xrea011,&apos;&apos;,xrea019,&apos;&apos;,xrea100,xrea103,&apos;&apos;,&apos;&apos;,&apos;&apos;,xrea113,&apos;&apos;,&apos;&apos;,&apos;&apos;,xrea004,xrea003,xrea002,xrea001,xrea005,xrea006,xrea007 FROM xrea_t WHERE xreaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

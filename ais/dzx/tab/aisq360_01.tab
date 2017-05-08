@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisq360_01" module="ais" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="03080" crtdt="2015-01-19 18:13:18" modid="03080" moddt="2015-01-20 13:46:00" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="對帳發票明細備註維護">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isahcomp,isahdocno,isaf003_desc(chr100),isaf002_desc(chr100),isahseq,isah011,isah003,isah004,isah013,isah012,isah106,isah105"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+      <action id="modify_detail"/>
+    </section>
+  </structure>
+  <form id="0" module="ais" filename="aisq360_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="isahcomp,isahdocno,isaf003_desc,isaf002_desc,isahseq,isah011,isah003,isah004,isah013,isah012,isah106,isah105" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="isahcomp,isahdocno,isaf003_desc,isaf002_desc,isahseq,isah011,isah003,isah004,isah013,isah012,isah106,isah105"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="isahcomp"/>
+      <column id="isahdocno"/>
+      <column id="isaf003_desc"/>
+      <column id="isaf002_desc"/>
+      <column id="isahseq"/>
+      <column id="isah011" type="S" default="0"/>
+      <column id="isah003">
+        <controlp form="q_imaa001" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="isah004"/>
+      <column id="isah013"/>
+      <column id="isah012"/>
+      <column id="isah106" type="S" default="0"/>
+      <column id="isah105" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="isah_t" page="1" linked="" pk="isahcomp,isahdocno,isahseq">
+      <sql id="forupd_sql_detail" query="SELECT isahcomp,isahdocno,&apos;&apos;,&apos;&apos;,isahseq,isah011,isah003,isah004,isah013,isah012,isah106,isah105 FROM isah_t WHERE isahent=? AND isahcomp=? AND isahdocno=? AND isahseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT isahcomp,isahdocno,&apos;&apos;,&apos;&apos;,isahseq,isah011,isah003,isah004,isah013,isah012,isah106,isah105 FROM isah_t WHERE isahent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

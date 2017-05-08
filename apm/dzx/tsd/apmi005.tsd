@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="apmi005" std_prog="apmi005" erpver="1.0" ver="3" module="APM" type="M" booking="Y" designer_ver="1.0" class="i" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="pmaj_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 維護供應商連絡人資料
+標準作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：基本資料維護作業
+輸入模式：假雙檔(子作業)無搭配任何方案F003_00
+作業資料來源(Master)：
+ 資料來源表：pmaj_t(交易對象連絡人資料檔)
+                     pmaal_t(供應商多語言資料檔)
+作業資料來源(Detail)：
+ 資料來源表：pmaj_t(交易對象連絡人資料檔)
+資料處理：
+1.執行此程式可傳入兩個參數:
+  p_type(類型):"1"代表是供應商聯絡人維護作業(apmi100)
+               "2"代表是客戶聯絡人維護作業(axmi100)
+               "3"代表是交易對象聯絡人維護作業(apmi005)
+  p_pmaa001(交易對象編號)
+2.當傳入參數p_pmaa001有值時，代表是由主檔維護作業串查執行，所以只能帶出對應的交易對象編號資料供維護，
+  而且不能提供查詢的功能
+3.當傳入參數p_type = '1'(供應商聯絡人維護作業)時，
+  3-1只能查詢出pmaa002='1' or pmaa002='3'的資料
+  3-2.畫面上是交易對象的名稱均改為供應商
+4.當傳入參數p_type = '2'(客戶聯絡人維護作業)時，
+  4-1.只能查詢出pmaa002='2' or pmaa002='3'的資料
+  4-2.畫面上是交易對象的名稱均改為客戶
+5.聯絡地址頁籤的畫面是嵌入aooi350_1子作業的畫面,裡面欄位的處理由aooi350_1來做
+6.通訊方式頁籤的畫面是嵌入aooi350_2子作業的畫面,裡面欄位的處理由aooi350_2來做]]>
+  </all>
+  <field cite_std="N" name="lbl_pmaa002" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_pmaal004" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmaa_t.pmaa002" ver="2" src="s" column="pmaa002" table="pmaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="2014" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ComboBox" status="">
+    <![CDATA[客商類型：
+   ●欄位控管：
+     資料欄位:pmaa002/Display only
+     選項:1(供應商),2(客戶),3(客商)]]>
+  </field>
+  <field cite_std="N" name="pmaal004" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="2014" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[簡稱：
+   ●欄位控管：
+     資料欄位:pmaal004/Display only]]>
+  </field>
+  <field cite_std="N" name="pmaj_t.pmaj001" ver="1" src="s" column="pmaj001" table="pmaj_t" attribute="" type="" req="Y" i_zoom="q_pmaa001_4" c_zoom="q_pmaa001_4" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[客商編號：
+   ●欄位控管：
+     資料欄位:pmaj001 /可Display可Input
+     預設值:無
+     校驗:1.若執行程式傳入參數p_type='1'(供應商維護作業)時，則輸入的值必須
+            存在[T:交易對象主檔].[C:交易對象編號]，且[C:狀態] =有效，且[C:交易對象類型]='1' OR '3'
+          2.若執行程式傳入參數p_type='2'(客戶維護作業)時，則輸入的值必須
+            存在[T:交易對象主檔].[C:交易對象編號]，且[C:狀態] =有效，且[C:交易對象類型]='2' OR '3'
+          3.若執行程式傳入參數p_type='3'(交易對象維護作業)時，則輸入的值必須
+            存在[T:交易對象主檔].[C:交易對象編號]，且[C:狀態] =有效
+
+     帶值:1.[C:交易對象簡稱]=[T:交易對象多語言檔].[C:簡稱]
+          2.[C:交易對象類型]=[T:交易對象主檔].[C:交易對象類型]
+                 
+   ●開窗處理：
+     1.查詢時：
+       參考函式：依標準查詢視窗 
+       查詢欄位：[T:交易對象主檔].[C:交易對象編號],[T:交易對象多語言檔].[C:簡稱]
+       查詢條件：如果傳入值g_argv[1]為'1',則 g_qryparam.where=" (pmaa002 = '1' or pmaa002 = '3') "
+                        如果傳入值g_argv[1]為'2',則 g_qryparam.where=" (pmaa002 = '2' or pmaa002 = '3') "
+                        如果傳入值g_argv[3]為'1',則 g_qryparam.where=" (pmaa002 = '1' or pmaa002 = '2' or pmaa002 = '3') "
+
+       回值類型：多重回值
+      
+     2.新增/修改時： 
+         開窗處理:
+           參考函式：依標準查詢視窗
+           查詢欄位：[T:交易對象主檔].[C:交易對象編號],[T:交易對象多語言檔].[C:簡稱]
+           查詢條件：1.若執行程式傳入參數p_type='1'(供應商維護作業)時，則[C:交易對象類型]='1' OR '3'
+                     2.若執行程式傳入參數p_type='2'(客戶維護作業)時，則[C:交易對象類型]='2' OR '3'
+                     3.若執行程式傳入參數p_type='3'(維護作業)時，則[C:交易對象類型]='1' OR '2' OR '3'   
+           回值類型：單一回值]]>
+  </field>
+  <field cite_std="N" name="pmaj_t.pmaj002" ver="1" src="s" column="pmaj002" table="pmaj_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmaj_t.pmaj003" ver="1" src="s" column="pmaj003" table="pmaj_t" attribute="" type="" req="Y" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[聯絡人類別：
+  ●欄位控制：
+     資料欄位: pmaj003/可Display可Input
+     允許空白: No
+     校驗:1.輸入值須存在[T:應用分類碼檔].[C:應用分類碼]、[C:應用分類]=259 且為有效資料
+     帶值:1.顯示時將[T:應用分類碼多語言檔].[C:說明]帶回pmaj003
+
+   ●開窗處理：
+       傳入條件 arg1='259' ([T:應用分類碼檔].[C:應用分類碼]=259)]]>
+  </field>
+  <field cite_std="N" name="pmaj_t.pmaj004" ver="1" src="s" column="pmaj004" table="pmaj_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[主要聯絡人：
+   ●欄位控管：
+     資料欄位:pmaj004 /可Display可Input
+     預設值:未勾選
+     選項組合:勾選為Y，未勾選為N
+     校驗:1.不允許空白
+          2.同一供應商只能有一個聯絡人資料可以勾選為主要聯絡人]]>
+  </field>
+  <field cite_std="N" name="pmaj_t.pmaj005" ver="1" src="s" column="pmaj005" table="pmaj_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[財務主要聯絡人：
+   ●欄位控管：
+     資料欄位:pmaj005 /可Display可Input
+     預設值:未勾選
+     選項組合:勾選為Y，未勾選為N
+     校驗:1.不允許空白
+          2.同一供應商只能有一個聯絡人資料可以勾選為財務主要聯絡人]]>
+  </field>
+  <field cite_std="N" name="pmaj_t.pmaj006" ver="1" src="s" column="pmaj006" table="pmaj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmaj_t.pmaj007" ver="1" src="s" column="pmaj007" table="pmaj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmaj_t.pmaj008" ver="1" src="s" column="pmaj008" table="pmaj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmaj_t.pmaj009" ver="2" src="s" column="pmaj009" table="pmaj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmaj_t.pmaj010" ver="2" src="s" column="pmaj010" table="pmaj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmaj_t.pmaj011" ver="2" src="s" column="pmaj011" table="pmaj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmaj_t.pmaj012" ver="2" src="s" column="pmaj012" table="pmaj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[全名：
+   ●欄位控管：
+     資料欄位: oofa011/可Display可Input
+     預設值: 依據User登入的營運據點串回[T:營運據點檔],
+             得到該營運據點屬於哪一個[C:所屬國家地區],
+             再以此國家地區的值串到[T:國家地區檔]取得[C:全名組合方式]的設定，
+             來產生全名。
+　     　　　全名的組合處理，請呼叫應用元件s_aooi350_gen_fullname
+　     　　　第一個傳入參數：g_site
+　　     　　第二個傳入參數：畫面上的[C:姓氏]
+　     　　　第三個傳入參數：畫面上的[C:中間名]
+　　     　　第四個傳入參數：畫面上的[C:名字]
+　　     　　回傳值1：success
+             回傳值2：全名
+]]>
+  </field>
+  <field cite_std="N" name="pmaj_t.pmaj013" ver="2" src="s" column="pmaj013" table="pmaj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmaj_t.pmaj014" ver="2" src="s" column="pmaj014" table="pmaj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmaj_t.pmajstus" ver="1" src="s" column="pmajstus" table="pmaj_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="2" name="pmaj003_desc" src="s" depend_field="pmaj_t.pmaj003" correspon_key="&apos;259&apos;,pmaj003" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="lbl_pmaa002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_pmaal004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="pmaa_t.pmaa002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="pmaal004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmaj_t.pmaj001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmaj_t.pmaj002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmaj_t.pmaj003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmaj_t.pmaj004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmaj_t.pmaj005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmaj_t.pmaj006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmaj_t.pmaj007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmaj_t.pmaj008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="pmaj_t.pmaj009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="pmaj_t.pmaj010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="pmaj_t.pmaj011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="pmaj_t.pmaj012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="pmaj_t.pmaj013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="pmaj_t.pmaj014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pmaj_t.pmajstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="aooi350_01" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="aooi350_02" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_oofcstus" text="狀態碼" lstr=""/>
+    <sfield name="lbl_oofc001" text="通訊方式識別碼" lstr=""/>
+    <sfield name="lbl_oofc008" text="通訊類型" lstr=""/>
+    <sfield name="lbl_oofc009" text="通訊應用分類" lstr=""/>
+    <sfield name="lbl_oocql004_desc" text="通訊應用分類碼說明" lstr=""/>
+    <sfield name="lbl_oofc012" text="通訊內容" lstr=""/>
+    <sfield name="lbl_oofc010" text="主要通訊方式" lstr=""/>
+    <sfield name="lbl_oofc014" text="簡要代碼" lstr=""/>
+    <sfield name="lbl_oofc011" text="簡要說明" lstr=""/>
+    <sfield name="lbl_oofc015" text="寄發郵件" lstr=""/>
+    <sfield name="lbl_oofc013" text="失效日期" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_oofbstus" text="有效" lstr=""/>
+    <sfield name="lbl_oofb001" text="聯絡地址識別碼" lstr=""/>
+    <sfield name="lbl_oofb019" text="簡要代碼" lstr=""/>
+    <sfield name="lbl_oofb011" text="簡要說明" lstr=""/>
+    <sfield name="lbl_oofb008" text="地址類型" lstr=""/>
+    <sfield name="lbl_oofb009" text="地址應用分類" lstr=""/>
+    <sfield name="lbl_oocql004x" text="地址應用分類碼說明" lstr=""/>
+    <sfield name="lbl_oofb010" text="主要聯絡地址" lstr=""/>
+    <sfield name="lbl_oofb012" text="國家/地區" lstr=""/>
+    <sfield name="lbl_oocgl003_desc" text="國家/地區說明" lstr=""/>
+    <sfield name="lbl_oofb013" text="郵政編號" lstr=""/>
+    <sfield name="lbl_oofb014" text="州/省/直轄市" lstr=""/>
+    <sfield name="lbl_oocil004_desc" text="州/省/直轄市說明" lstr=""/>
+    <sfield name="lbl_oofb015" text="縣/市" lstr=""/>
+    <sfield name="lbl_oockl005_desc" text="說明" lstr=""/>
+    <sfield name="lbl_oofb016" text="行政區域" lstr=""/>
+    <sfield name="lbl_oocml006_desc" text="行政地區說明" lstr=""/>
+    <sfield name="lbl_oofb017" text="地址" lstr=""/>
+    <sfield name="lbl_oofb022" text="送貨站點" lstr=""/>
+    <sfield name="lbl_dbadl003_desc" text="站點簡稱" lstr=""/>
+    <sfield name="lbl_oofb020" text="經度" lstr=""/>
+    <sfield name="lbl_oofb021" text="維度" lstr=""/>
+    <sfield name="lbl_oofb018" text="失效日期" lstr=""/>
+    <sfield name="lbl_pmaj001" text="交易對象編號" lstr=""/>
+    <sfield name="lbl_pmaal004" text="交易對象簡稱" lstr=""/>
+    <sfield name="lbl_pmaa002" text="交易對象類型" lstr=""/>
+    <sfield name="group_1" text="聯絡人" lstr=""/>
+    <sfield name="lbl_pmajstus" text="狀態碼" lstr=""/>
+    <sfield name="lbl_pmaj002" text="聯絡人識別碼" lstr=""/>
+    <sfield name="lbl_pmaj003" text="聯絡人類別" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_pmaj009" text="姓氏" lstr=""/>
+    <sfield name="lbl_pmaj010" text="中間名" lstr=""/>
+    <sfield name="lbl_pmaj011" text="名字" lstr=""/>
+    <sfield name="lbl_pmaj012" text="全名" lstr=""/>
+    <sfield name="lbl_pmaj013" text="參考名" lstr=""/>
+    <sfield name="lbl_pmaj014" text="暱稱" lstr=""/>
+    <sfield name="lbl_pmaj004" text="主要聯絡人否" lstr=""/>
+    <sfield name="lbl_pmaj005" text="財務主要聯絡人否" lstr=""/>
+    <sfield name="lbl_pmaj006" text="聯絡人部門" lstr=""/>
+    <sfield name="lbl_pmaj007" text="職稱" lstr=""/>
+    <sfield name="lbl_pmaj008" text="簡要說明" lstr=""/>
+    <sfield name="page_2" text="聯絡地址" lstr=""/>
+    <sfield name="page_3" text="通訊方式" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="aooi350_01" text="聯絡地址" lstr=""/>
+    <sact name="aooi350_02" text="通訊方式" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

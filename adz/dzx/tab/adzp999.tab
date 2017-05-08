@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adzp999" module="adz" jobmode="N" type="i09" industry="std" crtid="01375" crtdt="2014/06/09" modid="01375" moddt="2014/06/09" sdver="1" page="2" tabver="10001" description="程式註冊資料匯出入">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="itjk001,itjk002,itjk003,itjk003_desc(chr80),itjk004,itjk005,itjk006,itjk007(datetime),itjk008(datetime),itjk009(datetime),itjk010(datetime)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="itjl002,itjl003,itjl004,itjl005,itjl006,itjl007,itjl008,itjl009"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="itjm002,itjm003,itjm004,itjm005,itjm006,itjm007"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+    </section>
+  </structure>
+  <form id="0" module="adz" filename="adzp999" method="dialog">
+    <section id="input">
+      <input id="head" field="itjk001,itjk002,itjk003,itjk004,itjk005,itjk006,itjk007,itjk008,itjk009,itjk010"/>
+      <input id="body" page="1" field="itjl002,itjl003,itjl004,itjl005,itjl006,itjl007,itjl008,itjl009" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="itjm002,itjm003,itjm004,itjm005,itjm006,itjm007" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="itjk001,itjk002,itjk003,itjk004,itjk005,itjk006,itjk007,itjk008,itjk009,itjk010"/>
+      <construct id="body" page="1" field="itjl002,itjl003,itjl004,itjl005,itjl006,itjl007,itjl008,itjl009"/>
+      <construct id="body" page="2" field="itjm002,itjm003,itjm004,itjm005,itjm006,itjm007"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="itjk001"/>
+      <set id="head" type="no_entry" field="itjk001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="itjk001"/>
+      <column id="itjk002"/>
+      <column id="itjk003">
+        <after>
+          <reference field="itjk003_desc" ref_field="itjk003" map_field="itjk003" ref_sql="SELECT oofa011 FROM oofa_t WHERE oofaent=$varg_enterprise$var AND oofa002=&apos;2&apos; AND oofa003=? "/>
+        </after>
+      </column>
+      <column id="itjk003_desc"/>
+      <column id="itjk004"/>
+      <column id="itjk005"/>
+      <column id="itjk006"/>
+      <column id="itjk007"/>
+      <column id="itjk008"/>
+      <column id="itjk009"/>
+      <column id="itjk010"/>
+    </init>
+    <init id="body" page="1">
+      <column id="itjl002"/>
+      <column id="itjl003"/>
+      <column id="itjl004"/>
+      <column id="itjl005"/>
+      <column id="itjl006"/>
+      <column id="itjl007"/>
+      <column id="itjl008"/>
+      <column id="itjl009"/>
+    </init>
+    <init id="body" page="2">
+      <column id="itjm002"/>
+      <column id="itjm003"/>
+      <column id="itjm004"/>
+      <column id="itjm005"/>
+      <column id="itjm006"/>
+      <column id="itjm007"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="itjk_t" pk="itjk001">
+      <sql id="forupd_sql" type="sql" query="SELECT itjk001,itjk002,itjk003,&apos;&apos;,itjk004,itjk005,itjk006,itjk007,itjk008,itjk009,itjk010 FROM itjk_t WHERE itjk001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT itjk001,itjk002,itjk003,&apos;&apos;,itjk004,itjk005,itjk006,itjk007,itjk008,itjk009,itjk010 FROM itjk_t" order="itjk001"/>
+    </head>
+    <body id="itjl_t" page="1" linked="" pk="itjl002" fk="itjl001">
+      <sql id="forupd_sql_detail" query="SELECT itjl002,itjl003,itjl004,itjl005,itjl006,itjl007,itjl008,itjl009 FROM itjl_t WHERE itjl001=? AND itjl002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT itjl002,itjl003,itjl004,itjl005,itjl006,itjl007,itjl008,itjl009 FROM itjl_t WHERE itjl001=?"/>
+    </body>
+    <body id="itjm_t" page="2" linked="" pk="itjm002" fk="itjm001">
+      <sql id="forupd_sql_detail" query="SELECT itjm002,itjm003,itjm004,itjm005,itjm006,itjm007 FROM itjm_t WHERE itjm001=? AND itjm002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT itjm002,itjm003,itjm004,itjm005,itjm006,itjm007 FROM itjm_t WHERE itjm001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,90 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apcq807" module="apc" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="06189" crtdt="2015-09-17 11:29:45" modid="06814" moddt="2016-03-02 16:30:31" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="門店收銀流水查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="rtjasite,rtja033,rtjf002,rtjf013,rtjadocdt,rtjadocdt_1,rtja034,rtja034_1,rtjf014,rtja036,rtja037,rtja032,rtjb035,rtjf016_1,rtjf016_2"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),rtjasite,rtjasite_desc(chr500),rtja033,rtja036,rtjadocdt,rtja034,rtja035,rtja037,rtja037_desc(chr500),ooie002,rtjf019,rtjf003,rtjf031,rtjf026,rtjfseq,rtjfseq1,rtjf001,rtjf002,rtjf002_desc(chr500),rtjf013,rtjf013_desc(chr500),rtjf014,rtjf016,rtjf017,rtjf018"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),rtjasite(b_rtjasite),rtjasite_desc(b_rtjasite_desc),rtja033(b_rtja033),rtja036(b_rtja036),rtjadocdt(b_rtjadocdt),rtja034(b_rtja034),rtja035(b_rtja035),rtja037(b_rtja037),rtja037_desc(b_rtja037_desc),ooie002(b_ooie002),rtjf019(b_rtjf019),rtjf003(b_rtjf003),rtjf031(b_rtjf031),rtjf026(b_rtjf026),rtjfseq(b_rtjfseq),rtjfseq1(b_rtjfseq1),rtjf001(b_rtjf001),rtjf002(b_rtjf002),rtjf002_desc(b_rtjf002_desc),rtjf013(b_rtjf013),rtjf013_desc(b_rtjf013_desc),rtjf014(b_rtjf014),rtjf016(b_rtjf016),rtjf017(b_rtjf017),rtjf018(b_rtjf018)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="apc" filename="apcq807" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="rtjasite,rtja033,rtja036,rtjadocdt,rtja034,rtja035,rtja037,ooie002,rtjf019,rtjf003,rtjf031,rtjf026,rtjfseq,rtjfseq1,rtjf001,rtjf002,rtjf013,rtjf014,rtjf016,rtjf017,rtjf018" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="rtjasite(b_rtjasite),rtja033(b_rtja033),rtja036(b_rtja036),rtjadocdt(b_rtjadocdt),rtja034(b_rtja034),rtja035(b_rtja035),rtja037(b_rtja037),ooie002(b_ooie002),rtjf019(b_rtjf019),rtjf003(b_rtjf003),rtjf031(b_rtjf031),rtjf026(b_rtjf026),rtjfseq(b_rtjfseq),rtjfseq1(b_rtjfseq1),rtjf001(b_rtjf001),rtjf002(b_rtjf002),rtjf013(b_rtjf013),rtjf014(b_rtjf014),rtjf016(b_rtjf016),rtjf017(b_rtjf017),rtjf018(b_rtjf018)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="rtjasite">
+        <after>
+          <check chkid="v_ooed004" id="isExist"/>
+          <reference field="rtjasite_desc" ref_field="rtjasite" map_field="rtjaent,rtjasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="rtjasite_desc"/>
+      <column id="rtja033"/>
+      <column id="rtja036"/>
+      <column id="rtjadocdt"/>
+      <column id="rtja034"/>
+      <column id="rtja035"/>
+      <column id="rtja037">
+        <after>
+          <reference field="rtja037_desc" ref_field="rtja037" map_field="rtja037" ref_sql="SELECT pcab003 FROM pcab_t WHERE pcabent=$varg_enterprise$var AND pcab001=? "/>
+        </after>
+      </column>
+      <column id="rtja037_desc"/>
+      <column id="ooie002"/>
+      <column id="rtjf019"/>
+      <column id="rtjf003" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtjf031" type="S" default="0"/>
+      <column id="rtjf026"/>
+      <column id="rtjfseq"/>
+      <column id="rtjfseq1"/>
+      <column id="rtjf001" def_scc="8310"/>
+      <column id="rtjf002">
+        <after>
+          <check chkid="v_ooie001_1" id="isExist"/>
+          <reference field="rtjf002_desc" ref_field="rtjf002" map_field="rtjf002" ref_sql="SELECT ooial003 FROM ooial_t WHERE ooialent=$varg_enterprise$var AND ooial001=? AND ooial002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooie001_1" state="c"/>
+      </column>
+      <column id="rtjf002_desc"/>
+      <column id="rtjf013">
+        <after>
+          <reference field="rtjf013_desc" ref_field="rtjf013" map_field="rtjf013" ref_sql="SELECT gcafl003 FROM gcafl_t WHERE gcaflent=$varg_enterprise$var AND gcafl001=? AND gcafl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="rtjf013_desc"/>
+      <column id="rtjf014"/>
+      <column id="rtjf016"/>
+      <column id="rtjf017"/>
+      <column id="rtjf018" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="rtja_t" page="1" linked="" pk="rtjadocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,rtjasite,&apos;&apos;,rtja033,rtja036,rtjadocdt,rtja034,rtja035,rtja037,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM rtja_t WHERE rtjaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

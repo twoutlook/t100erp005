@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapr550_g01" module="aap" jobmode="N" type="g01" industry="std" crtid="05016" crtdt="2016-03-15 14:17:44" modid="08993" moddt="2016-11-09 16:13:21" sdver="3" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="l_apgl005_ooag011(chr100|&apos;&apos;),apgl001,apgl002,l_apgl002_desc(chr100|&apos;&apos;),apgl003,apgl004,apgl005,apgl006,apgl007,l_apgl006_desc(chr100|&apos;&apos;),apgl008,apgl024,apgl026,l_apgl026_desc(chr100|&apos;&apos;),l_apgl008_desc(chr100|&apos;&apos;),apgl009,apgl014,apgl010,apgl011,apgl012,apgl013,apgl015,apgl016,apgl017,apgl018,apgl019,apgl020,apgl021,apgl022,apgl023,apgl025,apgl027,apgl028,apgl029,apgl030,apgl100,apgl101,apgl103,apglcomp,apgldocdt,apgldocno,apglent,apglstus,apgm001,apgm002,apgm003,l_apgm003_desc(chr100|&apos;&apos;),apgm004,apgm005,apgm006,apgm105,apgmorga,apgmseq,apgmseq2"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="l_apgl005_ooag011(chr100|&apos;&apos;),apgl001(apgl001|apgl001),apgl002(apgl002|apgl002),l_apgl002_desc(chr100|&apos;&apos;),apgl003(apgl003|apgl003),apgl004(apgl004|apgl004),apgl005(apgl005|apgl005),apgl006(apgl006|apgl006),apgl007(apgl007|apgl007),l_apgl006_desc(chr100|&apos;&apos;),apgl008(apgl008|apgl008),apgl024(apgl024|apgl024),apgl026(apgl026|apgl026),l_apgl026_desc(chr100|&apos;&apos;),l_apgl008_desc(chr100|&apos;&apos;),apgl009(apgl009|apgl009),apgl014(apgl014|apgl014),apgl010(apgl010|apgl010),apgl011(apgl011|apgl011),apgl012(apgl012|apgl012),apgl013(apgl013|apgl013),apgl015(apgl015|apgl015),apgl016(apgl016|apgl016),apgl017(apgl017|apgl017),apgl018(apgl018|apgl018),apgl019(apgl019|apgl019),apgl020(apgl020|apgl020),apgl021(apgl021|apgl021),apgl022(apgl022|apgl022),apgl023(apgl023|apgl023),apgl025(apgl025|apgl025),apgl027(apgl027|apgl027),apgl028(apgl028|apgl028),apgl029(apgl029|apgl029),apgl030(apgl030|apgl030),apgl100(apgl100|apgl100),apgl101(apgl101|apgl101),apgl103(apgl103|apgl103),apglcomp(apglcomp|apglcomp),apgldocdt(apgldocdt|apgldocdt),apgldocno(apgldocno|apgldocno),apglent(apglent|apglent),apglstus(apglstus|apglstus),apgm001(apgm001|apgm001),apgm002(apgm002|apgm002),apgm003(apgm003|apgm003),l_apgm003_desc(chr100|&apos;&apos;),apgm004(apgm004|apgm004),apgm005(apgm005|apgm005),apgm006(apgm006|apgm006),apgm105(apgm105|apgm105),apgmorga(apgmorga|apgmorga),apgmseq(apgmseq|apgmseq),apgmseq2(apgmseq2|apgmseq2)"/>
+    <sql id="g_from" query=" apgl_t  LEFT OUTER JOIN ( SELECT apgm_t.* FROM apgm_t  ) x  ON apgl_t.apglent = x.apgment AND apgl_t.apglcomp = x.apgmcomp AND apgl_t.apgldocno = x.apgmdocno"/>
+    <sql id="g_where" query="" maintable="apgl_t"/>
+    <sql id="g_order" query="apgldocno,apgmseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="apgldocno,apgmseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="apgldocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="apglent,apgldocno"/>
+      <rep type="apgmseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="apglent,apgldocno,apgmseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="apglent,apgldocno,apgmseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="apgldocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="apglent,apgldocno"/>
+      <rep type="apgmseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

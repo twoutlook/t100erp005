@@ -1,0 +1,78 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapq336" module="aap" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="04152" crtdt="2014-12-12 09:37:22" modid="02097" moddt="2015-11-30 16:07:07" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="員工借支查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="apcastus,apcald,apcald_desc(chr500),apca057,l_apca057_desc(chr500),apcadocdt,apca010,apca018,apcadocno,apca100,apca101,apca108,l_apcc109_sum(num20_6),l_unreturn(num20_6),apca118,l_apcc119_sum(num20_6),l_unreturn1(num20_6)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="apcastus(b_apcastus),apcald(b_apcald),apcald_desc(b_apcald_desc),apca057(b_apca057),l_apca057_desc(l_apca057_desc),apcadocdt(b_apcadocdt),apca010(b_apca010),apca018(b_apca018),apcadocno(b_apcadocno),apca100(b_apca100),apca101(b_apca101),apca108(b_apca108),l_apcc109_sum(l_apcc109_sum),l_unreturn(l_unreturn),apca118(b_apca118),l_apcc119_sum(l_apcc119_sum),l_unreturn1(l_unreturn1)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="aap" filename="aapq336" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="apcastus,apcald,apca057,apcadocdt,apca010,apca018,apcadocno,apca100,apca101,apca108,apca118" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="apcastus(b_apcastus),apcald(b_apcald),apca057(b_apca057),apcadocdt(b_apcadocdt),apca010(b_apca010),apca018(b_apca018),apcadocno(b_apcadocno),apca100(b_apca100),apca101(b_apca101),apca108(b_apca108),apca118(b_apca118)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="apcastus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="apcald">
+        <after>
+          <check chkid="v_glaald_3" id="isExist"/>
+          <reference field="apcald_desc" ref_field="apcald" map_field="apcaent,apcald" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="apcald_desc"/>
+      <column id="apca057">
+        <after/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="l_apca057_desc"/>
+      <column id="apcadocdt"/>
+      <column id="apca010"/>
+      <column id="apca018"/>
+      <column id="apcadocno">
+        <controlp form="q_apcadocno" state="c"/>
+      </column>
+      <column id="apca100">
+        <controlp form="q_ooaj002_1" state="c"/>
+      </column>
+      <column id="apca101"/>
+      <column id="apca108"/>
+      <column id="l_apcc109_sum"/>
+      <column id="l_unreturn"/>
+      <column id="apca118"/>
+      <column id="l_apcc119_sum"/>
+      <column id="l_unreturn1"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="apca_t" page="1" linked="" pk="apcald,apcadocno">
+      <sql id="b_fill_sql" query="SELECT apcastus,apcald,&apos;&apos;,apca057,&apos;&apos;,apcadocdt,apca010,apca018,apcadocno,apca100,apca101,apca108,&apos;&apos;,&apos;&apos;,apca118,&apos;&apos;,&apos;&apos; FROM apca_t WHERE apcaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

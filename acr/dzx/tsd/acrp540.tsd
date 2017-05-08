@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="acrp540" std_prog="acrp540" erpver="1.0" ver="1" module="ACR" type="M" booking="Y" designer_ver="1.0" class="p" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="W" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="1" cite_std="N">
+    <tbl name="mmaf_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="mmaq_t" main="N" head="N" pk="" fk_detail="" parent="mmaf_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status=""/>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 区间范围内消费金额对比分析会员流失预警
+作業功能：查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：資料查詢作業
+輸入模式：???
+作業資料來源(Master)：
+ 資料來源表：mmaf_t(會員基本資料檔-主檔)
+             mmaq_t(會員卡資訊檔)
+                        decc_t(会员日结档)
+                        mmag_t(会员属性)   
+]]>
+  </all>
+  <mi_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[QBE条件逻辑  
+      会员资料表【mmaf_t】关联会员属性资料 [mmag_t] 获得会员信息
+          当日期范围<>空白时 
+                   消费次数<>'' OR 消费金额<>‘’ OR 累计积分<>''  则
+                            关联 会员日结【decc_t] 信息 统计消费次数/消费金额/累计积分
+           否则
+                    消费次数<>'' OR 消费金额<>‘’ OR 累计积分<>''  则
+                             关联 会员卡数据表[mmaq_t] 统计消费次数/消费金额/累计积分
+ 符合条件的会员呈现到结果上，默认都勾选
+
+]]>
+  </mi_all>
+  <field cite_std="N" name="b_age" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mmaf001" ver="1" src="s" column="mmaf001" table="mmaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_mmaf001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mmaf008" ver="1" src="s" column="mmaf008" table="mmaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mmaf014" ver="1" src="s" column="mmaf014" table="mmaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mmaf015" ver="1" src="s" column="mmaf015" table="mmaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mmag004" ver="1" src="s" column="mmag004" table="mmag_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[查询的时候隐藏栏位，当进行批次处理呈现标签内容
+]]>
+  </field>
+  <field cite_std="N" name="b_mmaq014" ver="1" src="s" column="mmaq014" table="mmaq_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mmaq015" ver="1" src="s" column="mmaq015" table="mmaq_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mmaq016" ver="1" src="s" column="mmaq016" table="mmaq_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="bdate" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[查询日期范围默认为上月初到上月末,比如当前为14年5月，则默认为14/04/01～14/04/30
+管控后面日期不可小于前面日期
+]]>
+  </field>
+  <field cite_std="N" name="edate" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[查询日期范围默认为上月初到上月末,比如当前为14年5月，则默认为14/04/01～14/04/30
+管控后面日期不可小于前面日期
+]]>
+  </field>
+  <field cite_std="N" name="mmaf_t.mmaf001" ver="1" src="s" column="mmaf001" table="mmaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_mmaf001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmaf_t.mmaf008" ver="1" src="s" column="mmaf008" table="mmaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmaf_t.mmaf014" ver="1" src="s" column="mmaf014" table="mmaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmaf_t.mmaf015" ver="1" src="s" column="mmaf015" table="mmaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmag002_1" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[SCC:6831]]>
+  </field>
+  <field cite_std="N" name="mmag002_2" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[SCC:6831]]>
+  </field>
+  <field cite_std="N" name="mmag002_3" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[SCC:6831]]>
+  </field>
+  <field cite_std="N" name="mmag002_4" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[SCC:6831]]>
+  </field>
+  <field cite_std="N" name="mmag004_1" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmag004_2" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmag004_3" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmag004_4" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmaq_t.mmaq014" ver="1" src="s" column="mmaq014" table="mmaq_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmaq_t.mmaq015" ver="1" src="s" column="mmaq015" table="mmaq_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmaq_t.mmaq016" ver="1" src="s" column="mmaq016" table="mmaq_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sel" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_sel" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="buttonedit_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="buttonedit_2" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="combobox_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="edit_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmag002" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="d">
+    <![CDATA[SCC:6831]]>
+  </field>
+  <field cite_std="N" name="mmag004" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_mmaf001_desc" src="s" depend_field="b_mmaf001" correspon_key="&apos;2016&apos;,mmaf001" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="b_age" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mmaf001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mmaf008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mmaf014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mmaf015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mmag004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mmaq014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mmaq015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mmaq016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_sel" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="bdate" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="buttonedit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="buttonedit_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="combobox_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="edate" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="edit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="mmaf_t.mmaf001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmaf_t.mmaf008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmaf_t.mmaf014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmaf_t.mmaf015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmag002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="mmag002_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmag002_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmag002_3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmag002_4" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmag004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="mmag004_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmag004_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmag004_3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmag004_4" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmaq_t.mmaq014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmaq_t.mmaq015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmaq_t.mmaq016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sel" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="action_1" ver="1" src="s" type="" gen_code="" status="d">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="action_2" ver="1" src="s" type="" gen_code="" status="d">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="check_all" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="check_no_all" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_master" text="標籤操作" lstr=""/>
+    <sfield name="lbl_mmag002_01" text="屬性" lstr=""/>
+    <sfield name="lbl_mmag004_01" text="屬性值" lstr=""/>
+    <sfield name="page_qbe" text="查詢條件" lstr=""/>
+    <sfield name="acrp540.group_1" text="會員查詢" lstr=""/>
+    <sfield name="lbl_mmaf001" text="會員編號" lstr=""/>
+    <sfield name="lbl_mmaf008" text="會員姓名" lstr=""/>
+    <sfield name="lbl_mmaf014" text="會員手機號碼" lstr=""/>
+    <sfield name="lbl_mmaf015" text="會員出生日期" lstr=""/>
+    <sfield name="acrp540.group_2" text="屬性查詢" lstr=""/>
+    <sfield name="lbl_mmab002" text="屬性項目" lstr=""/>
+    <sfield name="lbl_mmag002_1" text="屬性項目" lstr=""/>
+    <sfield name="lbl_mmag002_2" text="屬性項目" lstr=""/>
+    <sfield name="lbl_mmag002_3" text="屬性項目" lstr=""/>
+    <sfield name="acrp540.group_3" text="消費查詢" lstr=""/>
+    <sfield name="lbl_bdate" text="日期範圍" lstr=""/>
+    <sfield name="lbl_edate" text="~" lstr=""/>
+    <sfield name="lbl_mmaq014" text="累計消費次數" lstr=""/>
+    <sfield name="lbl_mmaq015" text="累計消費額" lstr=""/>
+    <sfield name="lbl_mmaq016" text="累計積點" lstr=""/>
+    <sfield name="lbl_sel" text="選取" lstr=""/>
+    <sfield name="lbl_sex" text="性別" lstr=""/>
+    <sfield name="lbl_age" text="年齡" lstr=""/>
+    <sfield name="lbl_mmag004" text="精選會員標籤" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="check_all" text="全選" lstr=""/>
+    <sact name="check_no_all" text="全部選" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="1" cite_std="N" src="s">
+    <widget name="b_age" status=""/>
+    <widget name="b_mmaf001_desc" status=""/>
+    <widget name="bdate" status="d"/>
+    <widget name="edate" status="d"/>
+    <widget name="mmag002" status="d"/>
+    <widget name="mmag002_1" status=""/>
+    <widget name="mmag002_2" status=""/>
+    <widget name="mmag002_3" status=""/>
+    <widget name="mmag002_4" status=""/>
+    <widget name="mmag004" status="d"/>
+    <widget name="mmag004_1" status=""/>
+    <widget name="mmag004_2" status=""/>
+    <widget name="mmag004_3" status=""/>
+    <widget name="mmag004_4" status=""/>
+    <widget name="mmaq_t.mmaq014" status="d"/>
+    <widget name="mmaq_t.mmaq015" status="d"/>
+    <widget name="mmaq_t.mmaq016" status="d"/>
+  </exclude>
+</spec>

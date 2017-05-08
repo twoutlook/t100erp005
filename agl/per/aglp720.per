@@ -1,0 +1,93 @@
+---------------------------------------------------------------------------------- 
+-- File created from /u1/topprd/erp/agl/42f/aglp720.4fd by Genero Studio
+-- WARNING! All changes made in this file will be lost!
+----------------------------------------------------------------------------------
+
+SCHEMA ds
+
+LAYOUT (tag="P001_00", minWidth=0, minHeight=0, spacing=compact, text=%"aglp720")
+VBox mainlayout(tag="CantDel_FormRoot", splitter)
+Folder condition
+Page condition_page(action=condition_input, text=%"condition_page")
+VBox vb_qbe(tag="CantDel", splitter)
+Group group_input(text=%"group_input")
+HBox group_input_hbox(tag="")
+Grid group_input_hbox_grid(tag="insW")
+{
+[lbl_gldtld|gldtld      |gldtld_desc ]
+[lbl_gldt00|gldt001     |gldt001_desc]
+[lbl_gldt01|gldt005     ]
+[lbl_type  |l_type      ]
+[lbl_gldt02|gldt006     ]
+[lbl_chk1  |chk1        ]
+[lbl_chk2  |chk2        ]
+
+}
+END -- group_input_hbox_grid
+END -- group_input_hbox
+END -- group_input
+Group group_progress(text=%"group_progress")
+Grid grid1
+{
+[lbl_stagen][stagenow                                ]
+[lbl_stagec][stagecomplete                           ]
+}
+END -- grid1
+END -- group_progress
+END -- vb_qbe
+END -- condition_page
+Page scheduling_page(tag="CantDel", action=scheduling_setting, text=%"scheduling_page")
+Grid scheduling_grid(tag="CantDel")
+{
+
+
+
+
+
+}
+END -- scheduling_grid
+END -- scheduling_page
+Page history_page(action=history_fill, text=%"history_page")
+Grid executehistory_grid
+{
+
+
+
+
+
+}
+END -- executehistory_grid
+END -- history_page
+END -- condition
+END -- mainlayout
+END -- aglp720
+
+TABLES
+gldt_t
+ATTRIBUTES
+Label lbl_gldtld:lbl_gldtld, tag="", text=%"lbl_gldtld", color = black, sizePolicy=initial, comment=%"cmt_gldtld";
+ButtonEdit gldtld=gldt_t.gldtld, tag="", action=controlp, tabIndex=1, default = "", not null, required, INCLUDE = (NULL), color = black, image="16/openwindow.png", upShift, program="", scroll, sizePolicy=initial, style="required", century="R", comment=%"cmt_buttonedit_1";
+LABEL gldtld_desc=formonly.gldtld_desc type CHAR, tag="", color = black, sizePolicy=dynamic, style="reference", comment=%"cmt_gldtld_desc";
+Label lbl_gldt00:lbl_gldt001, tag="", text=%"lbl_gldt001", color = black, sizePolicy=initial, comment=%"cmt_gldt001";
+ButtonEdit gldt001=gldt_t.gldt001, tag="", action=controlp, tabIndex=2, default = "", not null, required, INCLUDE = (NULL), color = black, image="16/openwindow.png", upShift, program="", scroll, sizePolicy=initial, style="required", century="R", comment=%"cmt_gldt001";
+LABEL gldt001_desc=formonly.gldt001_desc type CHAR, tag="", color = black, sizePolicy=dynamic, style="reference", comment=%"cmt_gldt001_desc";
+Label lbl_gldt01:lbl_gldt005, tag="", text=%"lbl_gldt005", color = black, sizePolicy=initial, comment=%"cmt_gldt005";
+Edit gldt005=gldt_t.gldt005, tag="", tabIndex=3, default = "", not null, required, INCLUDE = (NULL), color = black, program="", scroll, style="required", sizePolicy=initial, century="R", format="####", comment=%"cmt_gldt005";
+Label lbl_type:lbl_type, tag="", text=%"lbl_type", color = black, sizePolicy=initial, comment=%"cmt_type";
+ComboBox l_type=formonly.l_type type CHAR, tag="", tabIndex=4, default = "", noEntry, not null, required, INCLUDE = (NULL), color = black, scroll, sizePolicy=initial, style="required", queryEditable, comment=%"cmt_l_type", items=(("1", %"cbo_l_type.1"),("2", %"cbo_l_type.2"),("3", %"cbo_l_type.3"));
+Label lbl_gldt02:lbl_gldt006, tag="", text=%"lbl_gldt006", color = black, sizePolicy=initial, comment=%"cmt_gldt006";
+Edit gldt006=gldt_t.gldt006, tag="", tabIndex=5, default = "", not null, required, INCLUDE = (NULL), color = black, program="", scroll, style="required", sizePolicy=initial, century="R", format="##", comment=%"cmt_gldt006";
+Label lbl_chk1:lbl_chk1, tag="", text=%"lbl_chk1", color = black, sizePolicy=initial, comment=%"cmt_chk1";
+ComboBox chk1=formonly.chk1 type CHAR, tag="", tabIndex=6, default = "", not null, required, INCLUDE = (NULL), color = black, scroll, sizePolicy=initial, style="required", queryEditable, comment=%"cmt_chk1", items=(("0", %"lbl_chk1_0"),("1", %"lbl_chk1_1"),("2", %"lbl_chk1_2"),("3", %"lbl_chk1_3"),("4", %"lbl_chk1_4"));
+Label lbl_chk2:lbl_chk2, tag="", text=%"lbl_chk2", color = black, sizePolicy=initial, comment=%"cmt_chk2";
+ComboBox chk2=formonly.chk2 type CHAR, tag="", tabIndex=7, default = "", not null, required, INCLUDE = (NULL), color = black, scroll, sizePolicy=initial, style="required", queryEditable, comment=%"cmt_chk2", items=(("0", %"lbl_chk2_0"),("1", %"lbl_chk2_1"),("2", %"lbl_chk2_2"));
+Label lbl_stagen:lbl_stagenow, text=%"lbl_stagenow", color = black, sizePolicy=initial;
+LABEL stagenow=formonly.stagenow type CHAR, color = black, sizePolicy=initial;
+Label lbl_stagec:lbl_stagecomplete, text=%"lbl_stagecomplete", color = black, sizePolicy=initial;
+ProgressBar stagecomplete=formonly.stagecomplete type CHAR, valueMin=0, valueMax=100, color = black, sizePolicy=initial;
+END -- ATTRIBUTES
+
+INSTRUCTIONS
+SCREEN RECORD Undefined(gldt_t.gldtld,formonly.gldtld_desc,gldt_t.gldt001,formonly.gldt001_desc,gldt_t.gldt005,formonly.l_type,gldt_t.gldt006,formonly.chk1,formonly.chk2,formonly.stagenow,formonly.stagecomplete)
+END -- INSTRUCTIONS
+

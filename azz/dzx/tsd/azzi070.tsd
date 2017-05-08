@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="azzi070" std_prog="azzi070" erpver="1.0" ver="3" module="AZZ" type="M" booking="Y" designer_ver="1.0" class="i" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="gzzj_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+    <tbl name="gzzn_t" main="N" head="N" pk="" fk_detail="" parent="gzzj_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="gzzo_t" main="N" head="N" pk="gzzo001" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status=""/>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：維護系統內模組的編號，及設定新設模組後要增加的參數(r.t開啟table允許表頭)
+作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+狀態功能：[有效/無效] 
+作業類型：模組維護作業
+輸入模式：雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)：
+ 資料來源表：gzzj_t(模組編號設定檔)
+             gzzjl_t(模組編號多語言記錄檔)
+作業資料來源(Detail)：
+ 資料來源表：gzzn_t(模組內子作業設定)
+
+相關配合修改資料表：gzzt_t(模組可用表格代碼對照表)
+
+]]>
+  </all>
+  <mi_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[單頭新增後
+  3.1 建立該模組相關目錄結構
+      42f  42m  42r  42s  4ad  4fd  4gl  4pw 4rp  4tm  dzx  per  sa sch  str  xcf
+
+      其中，在 sa下再建立 csc  prs  psc  tsc 子目錄
+            在dzx下再建立 tab  tap  tbl  tgl  tsd 子目錄
+
+      另外，在 4tm sch sa 42s 4ad str dzx/tbl 目錄下則建立『現有語言種類的』子目錄
+ 
+  3.2 在42m目錄下，執行 $FGLDIR/bin/fgl2p -o 模組名稱(小寫).42x
+
+  3.3 參照 gzzj001,gzzj002 建立tiptop_erp.sys ($ERP/azz 或 $COM/lng)
+
+  3.4 若模組代碼為 A 開頭時，新增 gzzt_t，其中gzzt001 為取模組後兩碼，轉為小寫
+  ]]>
+  </mi_all>
+  <field cite_std="N" name="b_gzzj001" ver="1" src="s" column="gzzj001" table="gzzj_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzzj_t.gzzj001" ver="1" src="s" column="gzzj001" table="gzzj_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[(1)1.資料欄位: 模組編號/可Display可Input
+2.預設值: 無
+3.校驗:
+  1).不允許空白
+2).輸入值不可重複，錯誤訊息「本欄位為鍵值不可重複, 請重新輸入!」
+  3).輸入後，若為A開頭的，則取後兩碼，轉為小寫後檢查 gzzt001，若已經有存在，
+     顯示錯誤訊息：『此模組名稱的table命名區塊已被占用，請更換新模組名稱!』
+  4).新增時報錯恢復為空白
+      修改時報錯恢復為舊值
+　5).模組名稱命名原則為：CCC 長度為3個大寫字元，不可為數字
+  6).環境變數 DGENV=c 時，首碼為C，DGENV=s 則不限制
+  7).首碼為 A/C 時，gzzj002=ERP，非A/C時，不予指定
+4.帶值: 無
+5.計算或處理: 無
+6.查詢時：
+  不提供開窗
+7.新增時：
+  不提供開窗
+
+]]>
+  </field>
+  <field cite_std="N" name="gzzj_t.gzzj002" ver="2" src="s" column="gzzj002" table="gzzj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="88" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[1.資料欄位: 功能類別/可Display可Input
+2.預設值: 無
+3.校驗:
+  1).不允許空白
+
+4.帶值: 無
+5.計算或處理: 無
+6.查詢時：
+  不提供開窗
+7.新增時：
+  不提供開窗
+]]>
+  </field>
+  <field cite_std="N" name="gzzj_t.gzzjcrtdp" ver="1" src="s" column="gzzjcrtdp" table="gzzj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzzj_t.gzzjcrtdt" ver="1" src="s" column="gzzjcrtdt" table="gzzj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzzj_t.gzzjcrtid" ver="1" src="s" column="gzzjcrtid" table="gzzj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzzj_t.gzzjmoddt" ver="1" src="s" column="gzzjmoddt" table="gzzj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzzj_t.gzzjmodid" ver="1" src="s" column="gzzjmodid" table="gzzj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzzj_t.gzzjowndp" ver="1" src="s" column="gzzjowndp" table="gzzj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzzj_t.gzzjownid" ver="1" src="s" column="gzzjownid" table="gzzj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzzj_t.gzzjstus" ver="1" src="s" column="gzzjstus" table="gzzj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[下拉選項來自  SCC17(基本資料狀態碼) ]]>
+  </field>
+  <field cite_std="N" name="gzzn_t.gzzn002" ver="1" src="s" column="gzzn002" table="gzzn_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[模組編號：
+   ●欄位控管：
+     資料欄位:gzzn002 /可Display可Input
+     預設值:無
+     校驗:1.本欄位為key值，不可重複
+          2.輸入的資料必須已經存在 azzi901 的設定內
+     帶值:無
+     計算或處理:
+   ●開窗處理：無
+6. 其他；
+A. 若為 qry 模組，則於維護完成後執行重新產生 q_total 作業
+]]>
+  </field>
+  <field cite_std="N" name="gzzn_t.gzzn003" ver="3" src="s" column="gzzn003" table="gzzn_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="u">
+    <![CDATA[此欄位為Not NULL,新增預設值為Y,執行無效功能時才UPDATE為N]]>
+  </field>
+  <field cite_std="N" name="gzzo_t.gzzo004" ver="1" src="s" column="gzzo004" table="gzzo_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzzo_t.gzzo005" ver="1" src="s" column="gzzo005" table="gzzo_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzzo_t.gzzo006" ver="1" src="s" column="gzzo006" table="gzzo_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="107" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzzo_t.gzzo007" ver="1" src="s" column="gzzo007" table="gzzo_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzzo_t.gzzo008" ver="1" src="s" column="gzzo008" table="gzzo_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="109" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_crtdp" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="109" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_crtdt" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="109" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_crtid" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="109" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_gzzj002" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="109" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_moddt" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="109" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_modid" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="109" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_owndp" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="109" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_ownid" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="109" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_gzzj001_desc" src="s" depend_field="b_gzzj001" correspon_key="gzzj001" ref_table="gzzjl_t" ref_fk="gzzjl001" ref_dlang="gzzjl002" ref_rtn="gzzjl003" status=""/>
+    <rfield cite_std="N" ver="1" name="gzzjcrtdp_desc" src="s" depend_field="gzzj_t.gzzjcrtdp" correspon_key="gzzjcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="gzzjcrtid_desc" src="s" depend_field="gzzj_t.gzzjcrtid" correspon_key="gzzjcrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="gzzjmodid_desc" src="s" depend_field="gzzj_t.gzzjmodid" correspon_key="gzzjmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="gzzjowndp_desc" src="s" depend_field="gzzj_t.gzzjowndp" correspon_key="gzzjowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="gzzjownid_desc" src="s" depend_field="gzzj_t.gzzjownid" correspon_key="gzzjownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="gzzn002_desc" src="s" depend_field="gzzn_t.gzzn002" correspon_key="gzzn002" ref_table="gzdel_t" ref_fk="gzdel001" ref_dlang="gzdel002" ref_rtn="gzdel003" status=""/>
+  </ref_field>
+  <multi_lang>
+    <mfield cite_std="N" ver="1" name="gzzol_t.gzzol003" src="s" depend_field="gzzj_t.gzzj001" correspon_key="gzzj001" lang_table="gzzol_t" lang_fk="gzzol001" lang_dlang="gzzol002" lang_rtn="gzzol003" status="">
+      <![CDATA[]]>
+    </mfield>
+    <mfield cite_std="N" ver="1" name="gzzol_t.gzzol004" src="s" depend_field="gzzj_t.gzzj001" correspon_key="gzzj001" lang_table="gzzol_t" lang_fk="gzzol001" lang_dlang="gzzol002" lang_rtn="gzzol004" status="">
+      <![CDATA[]]>
+    </mfield>
+  </multi_lang>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_gzzj001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzzj_t.gzzj001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="gzzj_t.gzzj002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzzj_t.gzzjcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzzj_t.gzzjcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzzj_t.gzzjcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzzj_t.gzzjmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzzj_t.gzzjmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzzj_t.gzzjowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzzj_t.gzzjownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzzj_t.gzzjstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzzn_t.gzzn002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="gzzn_t.gzzn003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="gzzo_t.gzzo004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzzo_t.gzzo005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzzo_t.gzzo006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzzo_t.gzzo007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzzo_t.gzzo008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_crtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_crtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_crtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_gzzj002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_moddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_modid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_owndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_ownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="action_1" ver="3" src="s" type="" gen_code="" status="d">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="createxcf_module" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="gen_module_link" ver="3" src="s" type="all" gen_code="Y" status="u">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="gen_one_link" ver="3" src="s" type="" gen_code="" status="d">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[1. 維護完成後，若維護的是 QRY 組的資料，則呼叫 s_azzi070_gen 重新產生 q_total.4gl]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_gzzj001" text="實際模組編號" lstr=""/>
+    <sfield name="b_gzzj001_desc" text="模組名稱" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_gzzo006" text="模組類別" lstr=""/>
+    <sfield name="lbl_gzzol003" text="模組名稱" lstr=""/>
+    <sfield name="lbl_gzzol004" text="助記碼" lstr=""/>
+    <sfield name="lbl_gzzo007" text="歸屬行業編號" lstr=""/>
+    <sfield name="lbl_gzzj002" text="功能類別" lstr=""/>
+    <sfield name="lbl_page_2" text="介面設定" lstr=""/>
+    <sfield name="lbl_gzzo004" text="佈景編號" lstr=""/>
+    <sfield name="lbl_gzzo005" text="色調編號" lstr=""/>
+    <sfield name="lbl_gzzo008" text="作業操作模式" lstr=""/>
+    <sfield name="page_info" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_gzzn003" text="生效否" lstr=""/>
+    <sfield name="lbl_gzzn002" text="連結程式編號" lstr=""/>
+    <sfield name="lbl_gzdel003" text="說明" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_gzzol001" text="模組編號" lstr=""/>
+    <sfield name="lbl_gzzol002" text="語言別" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="createxcf_module" text="產生模組佈景設定檔" lstr=""/>
+    <sact name="gen_module_link" text="重新link 指定單一模組" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

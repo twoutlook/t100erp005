@@ -1,0 +1,370 @@
+{<section id="axri020_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2013-11-27 14:24:10), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000148
+#+ Filename...: axri020_01
+#+ Description: 批次新增
+#+ Creator....: 02295(2013-10-31 09:44:43)
+#+ Modifier...: 02295 -SD/PR-
+{</section>}
+
+
+
+{<section id="axri020_01.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_ooea_d        RECORD
+       check LIKE type_t.chr500, 
+   ooea001 LIKE ooea_t.ooea001, 
+   ooeal003 LIKE ooeal_t.ooeal003, 
+   ooea002 LIKE ooea_t.ooea002, 
+   ooea009 LIKE ooea_t.ooea009, 
+   ooea016 LIKE ooea_t.ooea016
+       END RECORD
+
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_ooea_d          DYNAMIC ARRAY OF type_g_ooea_d
+DEFINE g_ooea_d_t        type_g_ooea_d
+
+ 
+DEFINE g_ooea001_t   LIKE ooea_t.ooea001    #Key值備份
+
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point    
+{</section>}
+ 
+{<section id="axri020_01.input" >}    
+#+ 資料輸入
+PUBLIC FUNCTION axri020_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axri020_01 WITH FORM cl_ap_formpath("axr","axri020_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_ooea_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION update_item
+            LET g_action_choice="update_item"
+            IF cl_auth_chk_act("update_item") THEN
+               #該樣板不需此段落
+               
+               #add-point:ON ACTION update_item name="input.detail_input.page1.update_item"
+               {<point name="input.detail_input.page1.update_item" mark="Y"/>}
+               #END add-point
+               #該樣板不需此段落
+               #該樣板不需此段落
+            END IF
+ 
+
+
+
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooea001
+            #add-point:BEFORE FIELD ooea001 name="input.b.page1.ooea001"
+            {<point name="input.b.page1.ooea001" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooea001
+            
+            #add-point:AFTER FIELD ooea001 name="input.a.page1.ooea001"
+            {<point name="input.a.page1.ooea001" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooea001
+            #add-point:ON CHANGE ooea001 name="input.g.page1.ooea001"
+            {<point name="input.g.page1.ooea001" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooeal003
+            #add-point:BEFORE FIELD ooeal003 name="input.b.page1.ooeal003"
+            {<point name="input.b.page1.ooeal003" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooeal003
+            
+            #add-point:AFTER FIELD ooeal003 name="input.a.page1.ooeal003"
+            {<point name="input.a.page1.ooeal003" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooeal003
+            #add-point:ON CHANGE ooeal003 name="input.g.page1.ooeal003"
+            {<point name="input.g.page1.ooeal003" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooea002
+            #add-point:BEFORE FIELD ooea002 name="input.b.page1.ooea002"
+            {<point name="input.b.page1.ooea002" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooea002
+            
+            #add-point:AFTER FIELD ooea002 name="input.a.page1.ooea002"
+            {<point name="input.a.page1.ooea002" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooea002
+            #add-point:ON CHANGE ooea002 name="input.g.page1.ooea002"
+            {<point name="input.g.page1.ooea002" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooea009
+            #add-point:BEFORE FIELD ooea009 name="input.b.page1.ooea009"
+            {<point name="input.b.page1.ooea009" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooea009
+            
+            #add-point:AFTER FIELD ooea009 name="input.a.page1.ooea009"
+            {<point name="input.a.page1.ooea009" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooea009
+            #add-point:ON CHANGE ooea009 name="input.g.page1.ooea009"
+            {<point name="input.g.page1.ooea009" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooea016
+            #add-point:BEFORE FIELD ooea016 name="input.b.page1.ooea016"
+            {<point name="input.b.page1.ooea016" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooea016
+            
+            #add-point:AFTER FIELD ooea016 name="input.a.page1.ooea016"
+            {<point name="input.a.page1.ooea016" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooea016
+            #add-point:ON CHANGE ooea016 name="input.g.page1.ooea016"
+            {<point name="input.g.page1.ooea016" />}
+            #END add-point 
+
+
+ 
+                  #Ctrlp:input.c.page1.ooea001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooea001
+            #add-point:ON ACTION controlp INFIELD ooea001 name="input.c.page1.ooea001"
+            {<point name="input.c.page1.ooea001" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.ooeal003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooeal003
+            #add-point:ON ACTION controlp INFIELD ooeal003 name="input.c.page1.ooeal003"
+            {<point name="input.c.page1.ooeal003" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.ooea002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooea002
+            #add-point:ON ACTION controlp INFIELD ooea002 name="input.c.page1.ooea002"
+            {<point name="input.c.page1.ooea002" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.ooea009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooea009
+            #add-point:ON ACTION controlp INFIELD ooea009 name="input.c.page1.ooea009"
+            {<point name="input.c.page1.ooea009" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.ooea016
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooea016
+            #add-point:ON ACTION controlp INFIELD ooea016 name="input.c.page1.ooea016"
+            {<point name="input.c.page1.ooea016" />}
+            #END add-point
+
+
+
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+
+      
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         {<point name="input.cancel"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axri020_01 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="axri020_01.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+{</section>}
+{<section id="axri020_01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+

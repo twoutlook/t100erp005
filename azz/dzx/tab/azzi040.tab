@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi040" module="azz" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="00845" crtdt="2013-06-01 00:00:00" modid="01856" moddt="2013-10-29 16:51:28" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="時區基本資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzotstus,gzot001,gzot002,gzot003"/>
+      <var id="body" page="2" record="s_detail1_info" page_id="1_info" value="gzot001_s_detail1_info(chr500),gzotmodid,gzotmodid_desc(chr500),gzotmoddt,gzotownid,gzotownid_desc(chr500),gzotowndp,gzotowndp_desc(chr500),gzotcrtid,gzotcrtid_desc(chr500),gzotcrtdp,gzotcrtdp_desc(chr500),gzotcrtdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi040" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="gzotstus,gzot001,gzot002,gzot003" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="gzotstus,gzot001,gzot002,gzot003"/>
+      <construct id="body" page="2" field="gzotmodid,gzotmoddt,gzotownid,gzotowndp,gzotcrtid,gzotcrtdp,gzotcrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzotstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="gzot001"/>
+      <column id="gzot002"/>
+      <column id="gzot003"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gzot001_s_detail1_info"/>
+      <column id="gzotmodid">
+        <after>
+          <reference field="gzotmodid_desc" ref_field="gzot_t.gzotmodid" map_field="gzotmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzotmodid_desc"/>
+      <column id="gzotmoddt"/>
+      <column id="gzotownid">
+        <after>
+          <reference field="gzotownid_desc" ref_field="gzot_t.gzotownid" map_field="gzotownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzotownid_desc"/>
+      <column id="gzotowndp">
+        <after>
+          <reference field="gzotowndp_desc" ref_field="gzot_t.gzotowndp" map_field="gzotowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzotowndp_desc"/>
+      <column id="gzotcrtid">
+        <after>
+          <reference field="gzotcrtid_desc" ref_field="gzot_t.gzotcrtid" map_field="gzotcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzotcrtid_desc"/>
+      <column id="gzotcrtdp">
+        <after>
+          <reference field="gzotcrtdp_desc" ref_field="gzot_t.gzotcrtdp" map_field="gzotcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzotcrtdp_desc"/>
+      <column id="gzotcrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="gzot_t" page="1,2" linked="" pk="gzot001">
+      <sql id="forupd_sql_detail" query="SELECT gzotstus,gzot001,gzot002,gzot003,&apos;&apos;,gzotmodid,&apos;&apos;,gzotmoddt,gzotownid,&apos;&apos;,gzotowndp,&apos;&apos;,gzotcrtid,&apos;&apos;,gzotcrtdp,&apos;&apos;,gzotcrtdt FROM gzot_t WHERE gzot001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzotstus,gzot001,gzot002,gzot003,&apos;&apos;,gzotmodid,&apos;&apos;,gzotmoddt,gzotownid,&apos;&apos;,gzotowndp,&apos;&apos;,gzotcrtid,&apos;&apos;,gzotcrtdp,&apos;&apos;,gzotcrtdt FROM gzot_t WHERE 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

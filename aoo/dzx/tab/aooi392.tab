@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi392" module="aoo" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="05384" crtdt="2015-02-12 10:09:15" modid="00593" moddt="2015-06-17 17:11:40" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="自動編碼最大流水號維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="oofi001,oofi002,oofi003"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="oofi001,oofi002,oofiownid,oofiownid_desc(chr500),oofiowndp,oofiowndp_desc(chr500),ooficrtid,ooficrtid_desc(chr500),ooficrtdp,ooficrtdp_desc(chr500),ooficrtdt,oofimodid,oofimodid_desc(chr500),oofimoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi392" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="oofi003" insert="N" append="Y" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="oofi001,oofi002,oofi003"/>
+      <construct id="body" page="2" field="oofiownid,oofiowndp,ooficrtid,ooficrtdp,ooficrtdt,oofimodid,oofimoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="oofi001">
+        <controlp form="q_oofg001" state="c"/>
+      </column>
+      <column id="oofi002"/>
+      <column id="oofi003" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="oofiownid">
+        <after>
+          <reference field="oofiownid_desc" ref_field="oofi_t.oofiownid" map_field="oofiownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oofiownid_desc"/>
+      <column id="oofiowndp">
+        <after>
+          <reference field="oofiowndp_desc" ref_field="oofi_t.oofiowndp" map_field="oofiowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oofiowndp_desc"/>
+      <column id="ooficrtid">
+        <after>
+          <reference field="ooficrtid_desc" ref_field="oofi_t.ooficrtid" map_field="ooficrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ooficrtid_desc"/>
+      <column id="ooficrtdp">
+        <after>
+          <reference field="ooficrtdp_desc" ref_field="oofi_t.ooficrtdp" map_field="ooficrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="ooficrtdp_desc"/>
+      <column id="ooficrtdt"/>
+      <column id="oofimodid">
+        <after>
+          <reference field="oofimodid_desc" ref_field="oofi_t.oofimodid" map_field="oofimodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oofimodid_desc"/>
+      <column id="oofimoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="oofi_t" page="1,2" linked="" pk="oofi001,oofi002">
+      <sql id="forupd_sql_detail" query="SELECT oofi001,oofi002,oofi003,&apos;&apos;,&apos;&apos;,oofiownid,&apos;&apos;,oofiowndp,&apos;&apos;,ooficrtid,&apos;&apos;,ooficrtdp,&apos;&apos;,ooficrtdt,oofimodid,&apos;&apos;,oofimoddt FROM oofi_t WHERE oofient=? AND oofi001=? AND oofi002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT oofi001,oofi002,oofi003,&apos;&apos;,&apos;&apos;,oofiownid,&apos;&apos;,oofiowndp,&apos;&apos;,ooficrtid,&apos;&apos;,ooficrtdp,&apos;&apos;,ooficrtdt,oofimodid,&apos;&apos;,oofimoddt FROM oofi_t WHERE oofient= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,442 @@
+<add_points prog="axci301_01" std_prog="axci301_01" erpver="1.0" module="AXC" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.axci301_01_ins_excel" cite_std="N" status="u" ver="1" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 讀取Excel中內容插入xcbn_t中
+# Memo...........:
+# Usage..........: CALL axci301_01_ins_excel(p_excelname)
+#                  RETURNING r_success
+# Input parameter: p_excelname    excel文件名稱
+# Return code....: r_success      執行結果
+# Date & Author..: 2014/04/24 By wangrr
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axci301_01_ins_excel(p_excelname)
+   DEFINE p_excelname LIKE type_t.chr1000  #excel档名
+   DEFINE r_success   LIKE type_t.num5
+   DEFINE l_excelname STRING               #excel档名
+   DEFINE l_count     LIKE type_t.num10
+   DEFINE li_i        LIKE type_t.num10
+   DEFINE li_j        LIKE type_t.num10
+   DEFINE xlapp,iRes,iRow    LIKE type_t.num5
+   DEFINE l_xcbn      RECORD LIKE xcbn_t.*
+   DEFINE l_n         LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+   
+   LET r_success = TRUE
+   LET l_count = LENGTH(p_excelname CLIPPED)
+   #转换路径分隔符
+   FOR li_i = 1 TO l_count
+      IF p_excelname[li_i,li_i] ="/" THEN
+         LET l_excelname = l_excelname CLIPPED,'\\'
+      ELSE
+         LET l_excelname = l_excelname CLIPPED,p_excelname[li_i,li_i]
+      END IF
+   END FOR
+
+   CALL ui.interface.frontCall('WinCOM','CreateInstance',['Excel.Application'],[xlApp])
+   IF xlApp <> -1 THEN
+      CALL ui.interface.frontCall('WinCOM','CallMethod',[xlApp,'WorkBooks.Open',l_excelname],[iRes])
+      IF iRes <> -1 THEN
+         CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.UsedRange.Rows.Count'],[iRow])
+         IF iRow > 1 THEN
+            FOR li_i = 2 TO iRow
+               INITIALIZE l_xcbn.* TO NULL
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',1).Value'],[l_xcbn.xcbnent])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',2).Value'],[l_xcbn.xcbn001])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',3).Value'],[l_xcbn.xcbn002])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',4).Value'],[l_xcbn.xcbn003])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',5).Value'],[l_xcbn.xcbn004])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',6).Value'],[l_xcbn.xcbn005])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',7).Value'],[l_xcbn.xcbn010])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',8).Value'],[l_xcbn.xcbn102])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',9).Value'],[l_xcbn.xcbn102a])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',10).Value'],[l_xcbn.xcbn102b])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',11).Value'],[l_xcbn.xcbn102c])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',12).Value'],[l_xcbn.xcbn102d])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',13).Value'],[l_xcbn.xcbn102e])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',14).Value'],[l_xcbn.xcbn102f])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',15).Value'],[l_xcbn.xcbn102g])
+               CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',16).Value'],[l_xcbn.xcbn102h])
+               
+               IF cl_null(l_xcbn.xcbn102) THEN LET l_xcbn.xcbn102=0 END IF
+               IF cl_null(l_xcbn.xcbn102a) THEN LET l_xcbn.xcbn102a=0 END IF
+               IF cl_null(l_xcbn.xcbn102b) THEN LET l_xcbn.xcbn102b=0 END IF
+               IF cl_null(l_xcbn.xcbn102c) THEN LET l_xcbn.xcbn102c=0 END IF
+               IF cl_null(l_xcbn.xcbn102d) THEN LET l_xcbn.xcbn102d=0 END IF
+               IF cl_null(l_xcbn.xcbn102e) THEN LET l_xcbn.xcbn102e=0 END IF
+               IF cl_null(l_xcbn.xcbn102f) THEN LET l_xcbn.xcbn102f=0 END IF
+               IF cl_null(l_xcbn.xcbn102g) THEN LET l_xcbn.xcbn102g=0 END IF
+               IF cl_null(l_xcbn.xcbn102h) THEN LET l_xcbn.xcbn102h=0 END IF
+               #轉撥單價
+               LET l_xcbn.xcbn102=l_xcbn.xcbn102a+l_xcbn.xcbn102b+l_xcbn.xcbn102c+l_xcbn.xcbn102d+
+                                  l_xcbn.xcbn102e+l_xcbn.xcbn102f+l_xcbn.xcbn102g+l_xcbn.xcbn102h
+               #赋默认值
+               LET l_xcbn.xcbnownid = g_user
+               LET l_xcbn.xcbnowndp = g_dept
+               LET l_xcbn.xcbncrtid = g_user
+               LET l_xcbn.xcbncrtdp = g_dept 
+               LET l_xcbn.xcbncrtdt = cl_get_current()
+               LET l_xcbn.xcbnmodid = ""
+               LET l_xcbn.xcbnmoddt = ""
+     
+               INSERT INTO xcbn_t VALUES l_xcbn.*
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err('ins xcbn',SQLCA.sqlcode,0)
+                  LET r_success = FALSE
+                  EXIT FOR
+               END IF
+            END FOR
+         END IF
+      ELSE
+         CALL cl_err('NO FILE','',1)
+         LET r_success = FALSE
+      END IF
+   ELSE
+      CALL cl_err('NO EXCEL','',1)
+      LET r_success = FALSE
+   END IF
+
+   CALL ui.interface.frontCall('WinCOM','CallMethod',[xlApp,'Quit'],[iRes])
+   CALL ui.interface.frontCall('WinCOM','ReleaseInstance',[xlApp],[iRes])
+
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[DEFINE g_xcbn_m_t      type_g_xcbn_m]]>
+</point>
+  <point name="input.define" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   DEFINE ls_str          STRING
+   DEFINE l_chr           LIKE type_t.chr1   
+   DEFINE l_chr1          LIKE type_t.chr1   
+   DEFINE l_num           LIKE type_t.num5
+   DEFINE l_success       LIKE type_t.num5]]>
+</point>
+  <point name="input.more_input" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[      ON ACTION browser
+         CALL cl_client_browse_file() RETURNING g_xcbn_m.dir
+         LET ls_str = g_xcbn_m.dir
+         #抓取目录斜杆
+         LET l_num =ls_str.getIndexOf(':',1)                                    #抓取：后的字符位置
+         LET l_chr = ls_str.substring(l_num+1,l_num+1)                        #截取冒号后的字符 
+         LET l_chr1 = ls_str.substring(ls_str.getLength(),ls_str.getLength())    #判断是否为根目录
+         LET g_xcbn_m.dir = g_xcbn_m.dir
+         DISPLAY BY NAME g_xcbn_m.dir]]>
+</point>
+  <point name="input.post_input" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   CALL axci301_01_ins_excel(g_xcbn_m.dir) RETURNING l_success
+   RETURN l_success]]>
+</point>
+  <point name="input.pre_input" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   INITIALIZE g_xcbn_m.* TO NULL
+   CALL cl_set_combo_scc('format','8915')
+   LET l_success=TRUE]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.get_var" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.action" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.before_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.format" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.format" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.format" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.mold" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.mold" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.mold" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.dir" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.dir" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.dir" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.format" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.mold" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.dir" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.after_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.before_close" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <section id="axci301_01.description" ver="20" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000020
+#+ 
+#+ Filename...: axci301_01
+#+ Description: ...
+#+ Creator....: 02599(2014/04/23)
+#+ Modifier...: 02599(2014/04/24)
+#+ Buildtype..: 應用 c01b 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="axci301_01.global" ver="1" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_xcbn_m        RECORD
+       format LIKE type_t.chr80, 
+   mold LIKE type_t.chr80, 
+   dir LIKE type_t.chr80
+       END RECORD
+DEFINE g_xcbn_m        type_g_xcbn_m
+ 
+   
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="axci301_01.input" ver="2" status="" src="s">
+<![CDATA[#+ 資料輸入
+PUBLIC FUNCTION axci301_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axci301_01 WITH FORM cl_ap_formpath("axc","axci301_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_xcbn_m.format,g_xcbn_m.mold,g_xcbn_m.dir ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+         #---------------------------<  Master  >---------------------------
+         #----<<format>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD format
+            #add-point:BEFORE FIELD format
+            {<point name="input.b.format" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD format
+            
+            #add-point:AFTER FIELD format
+            {<point name="input.a.format" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE format
+            #add-point:ON CHANGE format
+            {<point name="input.g.format" />}
+            #END add-point
+ 
+         #----<<mold>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD mold
+            #add-point:BEFORE FIELD mold
+            {<point name="input.b.mold" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mold
+            
+            #add-point:AFTER FIELD mold
+            {<point name="input.a.mold" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mold
+            #add-point:ON CHANGE mold
+            {<point name="input.g.mold" />}
+            #END add-point
+ 
+         #----<<dir>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dir
+            #add-point:BEFORE FIELD dir
+            {<point name="input.b.dir" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD dir
+            
+            #add-point:AFTER FIELD dir
+            {<point name="input.a.dir" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE dir
+            #add-point:ON CHANGE dir
+            {<point name="input.g.dir" />}
+            #END add-point
+ 
+ #欄位檢查
+         #---------------------------<  Master  >---------------------------
+         #----<<format>>----
+         #Ctrlp:input.c.format
+         ON ACTION controlp INFIELD format
+            #add-point:ON ACTION controlp INFIELD format
+            {<point name="input.c.format" />}
+            #END add-point
+ 
+         #----<<mold>>----
+         #Ctrlp:input.c.mold
+         ON ACTION controlp INFIELD mold
+            #add-point:ON ACTION controlp INFIELD mold
+            {<point name="input.c.mold" />}
+            #END add-point
+ 
+         #----<<dir>>----
+         #Ctrlp:input.c.dir
+         ON ACTION controlp INFIELD dir
+            #add-point:ON ACTION controlp INFIELD dir
+            {<point name="input.c.dir" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axci301_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+</section>
+  <section id="axci301_01.other_dialog" ver="1" status="" src="s">
+<![CDATA[{<point name="other.dialog"/>}
+]]>
+</section>
+  <section id="axci301_01.other_function" ver="1" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+</add_points>

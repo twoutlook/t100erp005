@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abcq003" module="abc" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="04543" crtdt="2017-01-11 09:47:37" modid="04543" moddt="2017-01-11 09:47:37" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="條碼庫存列表查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bcaa001,bcaa002,bcaa002_desc(chr500),bcaa002_desc_desc(chr500),bcaa008,bcaa008_desc(chr500),bcaa013,bcaa012,sum(num20_6)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="bcab002,bcab002_desc(chr500),bcab003,bcab003_desc(chr500),bcab004,bcab008,bcab009,bcab007"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bcaa001(b_bcaa001),bcaa002(b_bcaa002),bcaa002_desc(b_bcaa002_desc),bcaa002_desc_desc(b_bcaa002_desc_desc),bcaa008(b_bcaa008),bcaa008_desc(b_bcaa008_desc),bcaa013(b_bcaa013),bcaa012(b_bcaa012),sum(sum)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="bcab002(b_bcab002),bcab002_desc(b_bcab002_desc),bcab003(b_bcab003),bcab003_desc(b_bcab003_desc),bcab004(b_bcab004),bcab008(b_bcab008),bcab009(b_bcab009),bcab007(b_bcab007)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="abc" filename="abcq003" method="dialog">
+    <section id="input">
+      <input id="body" page="2" field="bcab002,bcab003,bcab004,bcab008,bcab009,bcab007" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="bcaa001(b_bcaa001),bcaa002(b_bcaa002),bcaa008(b_bcaa008),bcaa013(b_bcaa013),bcaa012(b_bcaa012)"/>
+      <construct id="body" page="2" field="bcab002(b_bcab002),bcab003(b_bcab003),bcab004(b_bcab004),bcab008(b_bcab008),bcab009(b_bcab009),bcab007(b_bcab007)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="bcaa001"/>
+      <column id="bcaa002">
+        <after/>
+      </column>
+      <column id="bcaa002_desc">
+        <after/>
+      </column>
+      <column id="bcaa002_desc_desc"/>
+      <column id="bcaa008">
+        <after/>
+      </column>
+      <column id="bcaa008_desc"/>
+      <column id="bcaa013"/>
+      <column id="bcaa012"/>
+      <column id="sum"/>
+    </init>
+    <init id="body" page="2">
+      <column id="bcab002">
+        <after/>
+      </column>
+      <column id="bcab002_desc"/>
+      <column id="bcab003">
+        <after/>
+      </column>
+      <column id="bcab003_desc"/>
+      <column id="bcab004"/>
+      <column id="bcab008"/>
+      <column id="bcab009"/>
+      <column id="bcab007"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="bcaa_t" page="1" linked="" pk="bcaa000,bcaa001,bcaa002,bcaa003,bcaa004,bcaa005,bcaa006,bcaa007,bcaa008">
+      <sql id="b_fill_sql" query="SELECT bcaa001,bcaa002,&apos;&apos;,&apos;&apos;,bcaa008,&apos;&apos;,bcaa013,bcaa012,&apos;&apos; FROM bcaa_t WHERE bcaaent= ? AND bcaasite= ? AND 1=1 "/>
+    </body>
+    <body id="bcab_t" page="2" linked="" pk="bcab000,bcab002,bcab003,bcab004,bcab008,bcab009" fk="bcab001" detail="Y">
+      <sql id="b_fill_sql" query="SELECT bcab002,&apos;&apos;,bcab003,&apos;&apos;,bcab004,bcab008,bcab009,bcab007 FROM bcab_t WHERE bcabent=? AND bcabsite=? AND bcab001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

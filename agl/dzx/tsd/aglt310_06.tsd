@@ -1,0 +1,525 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aglt310_06" std_prog="aglt310_06" erpver="1.0" ver="1" module="AGL" booking="Y" class="I" template="F002_00" env="s" zone="t10dev">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="Y" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="glax_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[沖帳傳票資料子視窗依傳票憑證作業傳入參數(有做細項立沖的科目編號),
+並自動抓取匹配的傳票項次立帳異動檔資料多行顯示,供user挑選並逐筆檢視(或輸入)本次沖帳狀況後,
+自動寫入傳票項次沖帳異動檔(glay_t),離開子視窗後並自動寫入傳票憑證單身檔(glaq_t)
+
+處理邏輯：
+1.沖帳傳票資料子視窗的運作
+  1-1.沖帳傳票資料子視窗啟動時機
+      aglt310/aglt320/aglt330傳票憑證作業裡, 
+      當單身該行資料輸入完畢，判斷該項次的科目有勾選需管理細項立沖(glad003='Y')，如果是細項沖帳，查詢相匹配的立帳資料，開啟沖帳子視窗
+     
+     注：一下大括號的邏輯暫不實現
+     { 加總單身所有借方合計金額與貸方合計金額差額
+      IF 借>貸 (預想每次的輸入都為平衡本張傳票,此筆輸入應為貸方)
+         若當筆科目為借方立帳,則應開啟沖帳傳票資料子視窗供勾選立帳資料帶入傳票單身,以方便user在單身逐筆輸入沖帳金額
+      ELSE (貸>借,則此筆輸入應為借方)
+         若當筆科目為貸方立帳,則應開啟沖帳傳票資料子視窗供勾選立帳資料資料帶入傳票單身,以方便user在單身逐筆輸入沖帳金額
+      END IF
+      若借貸方相等或均為0(尚無單身資料)則都不用開啟沖帳傳票資料子視窗  
+     }
+  1-2.開啟子視窗後的資料處理
+      由傳票單身的資料：帳別+科目編號+固定核算項+自由核算項
+      抓取符合傳入參數的傳票項次立帳檔資料(glax_t)列示等候勾選
+      勾選的該筆僅可修改沖帳數量,原幣沖帳金額,本幣沖帳金額三個欄位(其餘欄位僅顯示),必要檢核請參看欄位的處理邏輯說明
+
+2.由勾選後的傳票細項立帳異動資料(glax_t),逐筆產生傳票項次沖帳異動檔(glay_t)
+　2-1.勾選到的資料逐筆寫入傳票項次沖帳異動檔(glay_t)
+      沖帳傳票編號=傳票編號(glap001)
+      沖帳傳票項次=傳票項次(glaqseq)
+      沖帳傳票日期=傳票日期(glapdocdt)
+      行序=MAX(glayseq1)+1
+      本幣沖帳金額=子視窗.本幣沖帳金額
+      沖帳數量=子視窗.沖帳數量
+      原幣沖帳金額=子視窗.原幣沖帳金額
+      其他欄位同子視窗裡的立帳異動檔資料
+　2-2.回寫對應的傳票項次立帳異動檔(glax_t)資料,累加預沖
+      UPDATE 本幣預沖金額(glax0041)=本幣預沖金額+子視窗.本幣沖帳金額,
+             預沖數量(glax043)=預沖數量+子視窗.沖帳數量,
+             原幣預沖金額(glax045)=原幣預沖金額+子視窗.原幣沖帳金額
+　2-3.離開視窗後由傳票項次沖帳異動檔(glay_t)整批帶入傳票單身檔(glaq_t)
+  　　傳票單身.金額(沖帳方)=子視窗.本幣沖帳金額(另一方金額=0)
+  　　傳票單身.原幣金額=子視窗.原幣沖帳金額
+  　　若該科目有勾選數量金額式(glad005='Y'),傳票單身.數量=子視窗.沖帳數量
+  　  其餘欄位均同沖帳異動檔資料
+
+3.因應立沖功能,增補傳票憑證維護作業的規格(aglt310/aglt320/aglt330)
+　傳票單身輸入時:
+  3-1.若該科目有做細項立沖管理(glad03='Y')且本次單身為立帳方(依glad004判斷),
+      則該項次應相對產生立帳異動檔資料(glax_t)
+      本幣立帳金額=當筆傳票單身金額(若傳票項次異動別glad004='1'借方立帳,則取傳票單身借方金額,反之則取貸方金額）
+      本幣預沖金額=0
+      本幣已沖金額=0
+　　　原幣立帳金額=當筆傳票單身原幣金額
+      原幣預沖金額=0
+      原幣已沖金額=0
+　　　立帳數量=當筆傳票單身數量
+      預沖數量=0
+      已沖數量=0
+      資料來源=1.傳票輸入時產生
+　　  狀態碼=0.開立（未確認)
+      其餘欄位均與當筆傳票項次的內容相同
+  3-2.若為沖帳方,邏輯同規格第1,2點,且帶入傳票單身後若有修改金額,應回寫沖帳異動檔資料(glay_t),若傳票單身刪除則同步刪除之
+      注意:若傳票單身修改的內容已不匹配原對應的沖帳異動檔資料內容,亦應刪除原對應的沖帳異動檔資料並新增一筆新的沖帳異動資料
+  
+  傳票確認時:         
+  3-3.檢查每筆傳票單身,該科目有做細項立沖管理(glad003='Y')則進行以下處理:
+　    若為立帳方,檢核傳票項次立帳異動檔資料是否與傳票單身檔匹配(是否有正確產生）
+      若為沖帳方,檢核傳票項次沖帳異動檔資料是否與傳票單身檔匹配(是否有正確產生）
+                 當筆沖帳方是否已全數沖完(傳票單身金額是否等於所有對應的沖帳異動檔金額總合）
+  3-4.取對應當筆傳票編號+項次的所有沖帳異動資料(glay_t),每筆資料均進行以下處理:
+      更新項次立帳異動檔(glax_t).本幣預沖金額(glax041)=本幣預沖金額-本幣沖帳金額(glay003),
+                                 本幣已沖金額(glax042)=本幣已沖金額+本幣沖帳金額(glay003),
+                                 預沖數量(glax043)=預沖數量-沖帳數量(glay008),
+                                 已沖數量(glax044)=已沖數量+沖帳數量(glay008), 
+                                 原幣預沖金額(glax045)=原幣預沖金額-原幣沖帳金額(glay010),
+                                 原幣已沖金額(glax046)=原幣已沖金額+原幣沖帳金額(glay010)
+      更新傳票項次沖帳異動檔(glay_t)狀態碼=Y.已確認,確認人=登入user,確認日期=g_today   
+
+  傳票取消確認時:
+  3-5.按3-4進行反向處理
+   
+4.因應立沖功能,增補期末結轉作業的規格(aglp530)
+  期末結轉作業產生完會計科目各期餘額檔(glar_t)之後,進行以下處理：
+  4-1.先刪除期末結轉作業指定的帳別+年度+期別的立沖餘額檔資料(glaz_t)
+  4-2.產生傳票項次立沖期餘額檔資料(glaz_t)
+      4-2-1.上期未沖完的餘額資料應結轉下期
+            取上期(同帳別的上一個年度+期別)的立沖餘額檔資料未沖完的資料(立帳-已沖>0)
+            每筆相應新增一筆本期的立沖餘額檔資料
+            本幣立帳金額(glaz004)=上期的未沖餘額(glaz004-glaz005)
+            本幣已沖金額(glaz005)=0
+            立帳數量(glaz007)=上期的未沖餘額(glaz007-glaz008)
+            已沖數量(glaz008)=0
+            原幣立帳金額(glaz010)=上期的未沖餘額(glaz010-glaz011)
+            原幣已沖金額(glaz011)=0
+            會計年度(glaz001)=期末結轉年度
+            會計期別(glaz002)=期末結轉期別
+            其餘欄位均同上期
+      4-2-2.取得4-2-1的立帳傳票編號+項次,累加期餘額檔(glaz_t).當期已沖
+            抓出對應的當期沖帳資料(glay_t)
+            每筆資料 UPDATE 本幣已沖金額(glaz005)=本幣已沖金額+沖帳金額(glay004)
+                            已沖數量(glaz008)=已沖數量+沖帳金額(glay007)
+                            原幣已沖金額(glaz011)=原幣已沖金額+沖帳金額(glay010)
+      4-2-3.本期新增的立帳資料產生相應餘額檔
+            取符合帳別+年度+期別的傳票項次立帳異動資料(glax_t)
+            每筆相應新增一筆餘額檔資料,本幣已沖金額(glaz005)=0,已沖數量(glaz008)=0,原幣已沖金額(glaz011)=0,其餘欄位均同立帳資料
+      4-2-4.取得4-2-3的立帳傳票編號+項次,累加期餘額檔(glaz_t).當期已沖
+            同4-2-2
+單身凍結:
+頁籤裡的欄位只做顯示,不可輸入
+當游標點選單身時,同步顯示該筆單身資料相應的欄位內容供user參考]]>
+  </all>
+  <di_all cite_std="" ver="1" src="s" status="">
+    <![CDATA[1.本位幣二及本位幣三的相關欄位分別by帳別基本資料(agli010)的設定決定是否隱藏(啟用本位幣二:glaa015,啟用本位幣三:glaa019)
+2.本位幣二匯率/本位幣二立帳金額/本位幣二未沖金額/本位幣三匯率/本位幣三立帳金額/本位幣三未沖金額此六個欄位僅顯示用(noentry)
+3.相關檔案的寫入規則同aglt400.sco,沖帳傳票資料子視窗的處理邏輯第2,3,4點]]>
+  </di_all>
+  <field cite_std="N" name="chk" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax003_1" ver="1" src="s" column="glax003" table="glax_t" attribute="N202" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="" name="glax003_2" ver="1" src="s" column="glax003" table="glax_t" attribute="N202" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;=0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：本幣沖帳金額
+   ●欄位控管：
+     資料欄位:可input可display
+     預設值:本幣未沖金額=本幣立帳金額(glax003)-本幣預沖金額(glax041)-本幣已沖金額(glax042)
+　　　　　　本幣沖帳金額=本幣未沖金額
+     校驗:1.不允許空白
+          2.不可小於0
+          3.不可大於本幣未沖金額
+          4.當數量金額式='Y'(glad005)且本次沖帳數量=未沖數量(最末一次沖帳)時,本幣沖帳金額須判斷也要全額沖完(即等於本幣未沖金額)
+　　　　　　當數量金額式='N'(glad005),則改依原幣沖帳金額=原幣未沖金額(最末一次沖帳)時,本幣沖帳金額須判斷也要全額沖完(即等於本幣未沖金額)]]>
+  </field>
+  <field cite_std="N" name="glax008_1" ver="1" src="s" column="glax008" table="glax_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="" name="glax008_2" ver="1" src="s" column="glax008" table="glax_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;=0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：立帳數量/未沖數量/沖帳數量
+   ●欄位控管：
+     資料欄位:此三個欄位在該科目的數量金額式管理(glad005)='N'時須隱藏
+     預設值:未沖數量=立帳數量(glax008)-預沖數量(glax043)-已沖數量(glax044)
+　　　　　　沖帳數量=未沖數量
+     校驗:1.不允許空白
+          2.不可小於0
+          3.不可大於未沖數量]]>
+  </field>
+  <field cite_std="N" name="glax010_1" ver="1" src="s" column="glax010" table="glax_t" attribute="N202" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax010_2" ver="1" src="s" column="glax010" table="glax_t" attribute="N202" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;=0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：原幣沖帳金額
+   ●欄位控管：
+     資料欄位:可input可display
+     預設值:原幣未沖金額=原幣立帳金額(glax010)-原幣預沖金額(glax045)-原幣已沖金額(glax046)
+　　　　　　原幣沖帳金額=原幣未沖金額
+     校驗:1.不允許空白
+          2.不可小於0
+          3.不可大於原幣未沖金額
+          4.當數量金額式='Y'(glad005)且本次沖帳數量=未沖數量(最末一次沖帳)時,原幣沖帳金額須判斷也要全額沖完(即等於原幣未沖金額)
+    ]]>
+  </field>
+  <field cite_std="N" name="glax029_desc" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax030_desc" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax031_desc" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax032_desc" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax033_desc" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax034_desc" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax035_desc" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax036_desc" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax037_desc" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax038_desc" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax003" ver="1" src="s" column="glax003" table="glax_t" attribute="N202" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax005" ver="1" src="s" column="glax005" table="glax_t" attribute="C008" type="varchar2(10)" req="N" i_zoom="q_ooai001" c_zoom="q_ooai001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax006" ver="1" src="s" column="glax006" table="glax_t" attribute="N203" type="number(20,10)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax007" ver="1" src="s" column="glax007" table="glax_t" attribute="C009" type="varchar2(10)" req="" i_zoom="" c_zoom="q_ooca001_1" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax008" ver="1" src="s" column="glax008" table="glax_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax009" ver="1" src="s" column="glax009" table="glax_t" attribute="N201" type="number(20,6)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax010" ver="1" src="s" column="glax010" table="glax_t" attribute="N202" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax011" ver="1" src="s" column="glax011" table="glax_t" attribute="C203" type="varchar2(20)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax012" ver="1" src="s" column="glax012" table="glax_t" attribute="D001" type="date()" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax013" ver="1" src="s" column="glax013" table="glax_t" attribute="C006" type="varchar2(10)" req="" i_zoom="" c_zoom="q_ooag001_2" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax014" ver="1" src="s" column="glax014" table="glax_t" attribute="C504" type="varchar2(30)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax015" ver="1" src="s" column="glax015" table="glax_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="8310" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax016" ver="1" src="s" column="glax016" table="glax_t" attribute="C001" type="varchar2(1)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax017" ver="1" src="s" column="glax017" table="glax_t" attribute="C813" type="varchar2(10)" req="" i_zoom="" c_zoom="q_ooef001" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax018" ver="1" src="s" column="glax018" table="glax_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax019" ver="1" src="s" column="glax019" table="glax_t" attribute="C007" type="varchar2(10)" req="" i_zoom="" c_zoom="q_ooeg001" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax020" ver="1" src="s" column="glax020" table="glax_t" attribute="C002" type="varchar2(10)" req="" i_zoom="" c_zoom="q_oocq002" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax021" ver="1" src="s" column="glax021" table="glax_t" attribute="C004" type="varchar2(10)" req="" i_zoom="" c_zoom="q_pmaa001" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax022" ver="1" src="s" column="glax022" table="glax_t" attribute="C004" type="varchar2(10)" req="" i_zoom="" c_zoom="q_pmaa001" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax023" ver="1" src="s" column="glax023" table="glax_t" attribute="C002" type="varchar2(10)" req="" i_zoom="" c_zoom="q_oocq002" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax024" ver="1" src="s" column="glax024" table="glax_t" attribute="C002" type="varchar2(10)" req="" i_zoom="" c_zoom="q_rtax001_1" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax025" ver="1" src="s" column="glax025" table="glax_t" attribute="C006" type="varchar2(10)" req="" i_zoom="" c_zoom="q_ooag001_2" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax026" ver="1" src="s" column="glax026" table="glax_t" attribute="C509" type="varchar2(10)" req="" i_zoom="" c_zoom="q_bgaa001" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax027" ver="1" src="s" column="glax027" table="glax_t" attribute="C090" type="varchar2(10)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax028" ver="1" src="s" column="glax028" table="glax_t" attribute="C091" type="varchar2(30)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax029" ver="1" src="s" column="glax029" table="glax_t" attribute="C507" type="varchar2(30)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax030" ver="1" src="s" column="glax030" table="glax_t" attribute="C507" type="varchar2(30)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax031" ver="1" src="s" column="glax031" table="glax_t" attribute="C507" type="varchar2(30)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax032" ver="1" src="s" column="glax032" table="glax_t" attribute="C507" type="varchar2(30)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax033" ver="1" src="s" column="glax033" table="glax_t" attribute="C507" type="varchar2(30)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax034" ver="1" src="s" column="glax034" table="glax_t" attribute="C507" type="varchar2(30)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax035" ver="1" src="s" column="glax035" table="glax_t" attribute="C507" type="varchar2(30)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax036" ver="1" src="s" column="glax036" table="glax_t" attribute="C507" type="varchar2(30)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax037" ver="1" src="s" column="glax037" table="glax_t" attribute="C507" type="varchar2(30)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax038" ver="1" src="s" column="glax038" table="glax_t" attribute="C507" type="varchar2(30)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax048" ver="1" src="s" column="glax048" table="glax_t" attribute="C204" type="varchar2(20)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax051" ver="1" src="s" column="glax051" table="glax_t" attribute="N203" type="number(20,10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax052" ver="1" src="s" column="glax052" table="glax_t" attribute="N202" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax053" ver="1" src="s" column="glax053" table="glax_t" attribute="N202" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax054" ver="1" src="s" column="glax054" table="glax_t" attribute="N202" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;=0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：沖帳金額(本位幣二)
+   ●欄位控管：
+     資料欄位:可input可display
+     預設值:本位幣二未沖金額=本位幣二立帳金額(glax052)-本位幣二預沖金額(glax053)-本位幣二已沖金額(glax054)
+　　　　　　本位幣二沖帳金額=本位幣二未沖金額
+     校驗:1.不允許空白
+          2.不可小於0
+          3.不可大於本位幣二未沖金額
+          4.當數量金額式='Y'(glad005)且本次沖帳數量=未沖數量(最末一次沖帳)時,本位幣二沖帳金額須判斷也要全額沖完(即等於本位幣二未沖金額)
+　　　　　　當數量金額式='N'(glad005),則改依原幣沖帳金額=原幣未沖金額(最末一次沖帳)時,本位幣二沖帳金額須判斷也要全額沖完(即等於本位幣二未沖金額)]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax055" ver="1" src="s" column="glax055" table="glax_t" attribute="N203" type="number(20,10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax056" ver="1" src="s" column="glax056" table="glax_t" attribute="N202" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax057" ver="1" src="s" column="glax057" table="glax_t" attribute="N202" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glax058" ver="1" src="s" column="glax058" table="glax_t" attribute="N202" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;=0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：沖帳金額(本位幣三)
+   ●欄位控管：
+     資料欄位:可input可display
+     預設值:本位幣三未沖金額=本位幣三立帳金額(glax056)-本位幣三預沖金額(glax057)-本位幣三已沖金額(glax058)
+　　　　　　本位幣三沖帳金額=本位幣三未沖金額
+     校驗:1.不允許空白
+          2.不可小於0
+          3.不可大於本位幣三未沖金額
+          4.當數量金額式='Y'(glad005)且本次沖帳數量=未沖數量(最末一次沖帳)時,本位幣三沖帳金額須判斷也要全額沖完(即等於本位幣三未沖金額)
+　　　　　　當數量金額式='N'(glad005),則改依原幣沖帳金額=原幣未沖金額(最末一次沖帳)時,本位幣三沖帳金額須判斷也要全額沖完(即等於本位幣三未沖金額)]]>
+  </field>
+  <field cite_std="N" name="glax_t.glaxdocno" ver="1" src="s" column="glaxdocno" table="glax_t" attribute="C203" type="varchar2(20)" req="N" i_zoom="q_ooba002_4" c_zoom="q_glaxdocno" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glax_t.glaxseq" ver="1" src="s" column="glaxseq" table="glax_t" attribute="N004" type="number(10,0)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lc_glax005" ver="1" src="s" column="glax005" table="glax_t" attribute="C008" type="varchar2(10)" req="" i_zoom="" c_zoom="q_ooai001" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lc_glax008" ver="1" src="s" column="glax008" table="glax_t" attribute="N101" type="number(20, 6)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lc_glax010" ver="1" src="s" column="glax010" table="glax_t" attribute="N202" type="number(20,6)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="glax013_desc" src="s" depend_field="glax_t.glax013" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status=""/>
+    <rfield cite_std="N" ver="1" name="glax017_desc" src="s" depend_field="glax_t.glax017" correspon_key="glaxent,glax017" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="glax018_desc" src="s" depend_field="glax_t.glax018" correspon_key="glaxent,glax018" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="glax019_desc" src="s" depend_field="glax_t.glax019" correspon_key="glaxent,glax019" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="glax020_desc" src="s" depend_field="glax_t.glax020" correspon_key="glaxent,&apos;287&apos;,glax020" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="glax021_desc" src="s" depend_field="glax_t.glax021" correspon_key="glaxent,glax021" ref_table="pmaal_t" ref_fk="pmaalent,pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="glax022_desc" src="s" depend_field="glax_t.glax022" correspon_key="glaxent,glax022" ref_table="pmaal_t" ref_fk="pmaalent,pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="glax023_desc" src="s" depend_field="" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status=""/>
+    <rfield cite_std="N" ver="1" name="glax024_desc" src="s" depend_field="glax_t.glax024" correspon_key="glaxent,glax024" ref_table="rtaxl_t" ref_fk="rtaxlent,rtaxl001" ref_dlang="rtaxl002" ref_rtn="rtaxl003" status=""/>
+    <rfield cite_std="N" ver="1" name="glax025_desc" src="s" depend_field="glax_t.glax025" correspon_key="&apos;2&apos;,glax025" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="glax026_desc" src="s" depend_field="glax_t.glax026" correspon_key="glaxent,glax026" ref_table="bgaal_t" ref_fk="bgaalent,bgaal001" ref_dlang="bgaal002" ref_rtn="bgaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="glax027_desc" src="s" depend_field="glax_t.glax027" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status=""/>
+    <rfield cite_std="N" ver="1" name="glax028_desc" src="s" depend_field="glax_t.glax028" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="chk" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax003_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="" ver="1" name="glax003_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax008_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="" ver="1" name="glax008_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax010_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax010_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax029_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax030_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax031_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax032_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax033_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax034_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax035_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax036_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax037_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax038_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax023" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax024" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax025" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax026" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax027" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax028" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax029" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax030" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax031" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax032" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax033" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax034" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax035" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax036" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax037" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax038" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax048" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax051" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax052" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax053" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax054" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax055" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax056" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax057" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glax058" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glaxdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glax_t.glaxseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lc_glax005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lc_glax008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lc_glax010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <strings>
+    <sfield name="lbl_check" text="選擇" lstr=""/>
+    <sfield name="lbl_glaxdocno" text="立帳傳票單號" lstr=""/>
+    <sfield name="lbl_glaxseq" text="項次" lstr=""/>
+    <sfield name="lbl_glax008" text="立帳數量" lstr=""/>
+    <sfield name="lbl_glax008_1" text="未沖數量" lstr=""/>
+    <sfield name="lbl_glax008_2" text="沖帳數量" lstr=""/>
+    <sfield name="lbl_glax005" text="交易幣別" lstr=""/>
+    <sfield name="lbl_glax010" text="原幣立帳金額" lstr=""/>
+    <sfield name="lbl_glax010_1" text="原幣未沖金額" lstr=""/>
+    <sfield name="lbl_glax010_2" text="原幣沖帳金額" lstr=""/>
+    <sfield name="lbl_glax003" text="本幣立帳金額" lstr=""/>
+    <sfield name="lbl_glax003_1" text="本幣未沖金額" lstr=""/>
+    <sfield name="lbl_glax003_2" text="本幣沖帳金額" lstr=""/>
+    <sfield name="lbl_glax051" text="匯率(本位幣二)" lstr=""/>
+    <sfield name="lbl_glax052" text="立帳金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_glax053" text="未沖金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_glax054" text="沖帳金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_glax055" text="匯率(本位幣三)" lstr=""/>
+    <sfield name="lbl_glax056" text="立帳金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_glax057" text="未沖金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_glax058" text="沖帳金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_glax048" text="原始憑證號碼" lstr=""/>
+    <sfield name="lbl_page1" text="立帳資料明細" lstr=""/>
+    <sfield name="lbl_glax017" text="營運據點" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_glax018" text="部門" lstr=""/>
+    <sfield name="lbl_glax019" text="利潤/成本中心" lstr=""/>
+    <sfield name="lbl_glax020" text="區域" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_glax021" text="交易客商" lstr=""/>
+    <sfield name="lbl_pmaal004" text="交易對象簡稱" lstr=""/>
+    <sfield name="lbl_glax022" text="帳款客商" lstr=""/>
+    <sfield name="lbl_glax023" text="客群" lstr=""/>
+    <sfield name="lbl_glax024" text="產品類別" lstr=""/>
+    <sfield name="lbl_rtaxl003" text="說明" lstr=""/>
+    <sfield name="lbl_glax025" text="人員" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_glax026" text="預算編號" lstr=""/>
+    <sfield name="lbl_bgaal003" text="說明" lstr=""/>
+    <sfield name="lbl_glax027" text="專案編號" lstr=""/>
+    <sfield name="lbl_glax028" text="WBS" lstr=""/>
+    <sfield name="lbl_glax006" text="匯率" lstr=""/>
+    <sfield name="lbl_glax007" text="計價單位" lstr=""/>
+    <sfield name="lbl_glax008_3" text="數量" lstr=""/>
+    <sfield name="lbl_glax009" text="單價" lstr=""/>
+    <sfield name="lbl_glax010_3" text="金額" lstr=""/>
+    <sfield name="lbl_glax011" text="票據號碼" lstr=""/>
+    <sfield name="lbl_glax012" text="票據日期" lstr=""/>
+    <sfield name="lbl_glax013" text="申請人" lstr=""/>
+    <sfield name="lbl_glax014" text="銀行帳號" lstr=""/>
+    <sfield name="lbl_glax015" text="結算方式" lstr=""/>
+    <sfield name="lbl_glax016" text="收支項目" lstr=""/>
+    <sfield name="lbl_page2" text="自由核算項" lstr=""/>
+    <sfield name="lbl_glax029" text="自由核算項一" lstr=""/>
+    <sfield name="lbl_glax030" text="自由核算項二" lstr=""/>
+    <sfield name="lbl_glax031" text="自由核算項三" lstr=""/>
+    <sfield name="lbl_glax032" text="自由核算項四" lstr=""/>
+    <sfield name="lbl_glax033" text="自由核算項五" lstr=""/>
+    <sfield name="lbl_glax034" text="自由核算項六" lstr=""/>
+    <sfield name="lbl_glax035" text="自由核算項七" lstr=""/>
+    <sfield name="lbl_glax036" text="自由核算項八" lstr=""/>
+    <sfield name="lbl_glax037" text="自由核算項九" lstr=""/>
+    <sfield name="lbl_glax038" text="自由核算項十" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

@@ -1,0 +1,62 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aini802" module="ain" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="06540" crtdt="2016-06-24 17:23:45" modid="02159" moddt="2016-10-19 14:13:16" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="貨架商品關係維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="infqsite,infqsite_desc(chr500),infq001,infq001_desc(chr500),infq003,infq003_desc(chr500),infq002"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="downloadtemplet"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="uploadtemplet"/>
+      <action id="excel_load"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="aini802" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="infqsite,infq001,infq003,infq002" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="infqsite,infq001,infq003,infq002"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="infqsite">
+        <after>
+          <reference field="infqsite_desc" ref_field="infq_t.infqsite" map_field="infqsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="infqsite_desc"/>
+      <column id="infq001">
+        <after>
+          <reference field="infq001_desc" ref_field="infq_t.infq001" map_field="infq001" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="infq001_desc"/>
+      <column id="infq003">
+        <after>
+          <reference field="infq003_desc" ref_field="infq_t.infq003" map_field="infq003" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="infq003_desc"/>
+      <column id="infq002"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="infq_t" page="1" linked="" pk="infqsite,infq001,infq002">
+      <sql id="forupd_sql_detail" query="SELECT infqsite,&apos;&apos;,infq001,&apos;&apos;,infq003,&apos;&apos;,infq002 FROM infq_t WHERE infqent=? AND infqsite=? AND infq001=? AND infq002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT infqsite,&apos;&apos;,infq001,&apos;&apos;,infq003,&apos;&apos;,infq002 FROM infq_t WHERE infqent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

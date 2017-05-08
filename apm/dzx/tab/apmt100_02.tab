@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmt100_02" module="apm" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="02294" crtdt="2013-10-21 16:20:04" modid="02294" moddt="2014-10-27 11:47:06" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="交易對象往來銀行申請作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1_apmt100_02" page_id="1_apmt100_02" value="pmbfstus,pmbfdocno,pmbf001,pmbf002,pmbf002_desc(chr500),pmbf003,pmbf004,pmbf008,pmbf009,pmbf005,pmbf007,pmbf006"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="apm" filename="apmt100_02" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="pmbfstus,pmbfdocno,pmbf001,pmbf002,pmbf003,pmbf004,pmbf008,pmbf009,pmbf005,pmbf007,pmbf006" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="pmbfstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pmbfdocno"/>
+      <column id="pmbf001"/>
+      <column id="pmbf002">
+        <after>
+          <reference field="pmbf002_desc" ref_field="pmbf_t.pmbf002" map_field="pmbf002" ref_sql="SELECT nmabl003 FROM nmabl_t WHERE nmablent=$varg_enterprise$var AND nmabl001=? AND nmabl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmab001" state="i"/>
+        <controlp form="q_nmab001" state="c"/>
+      </column>
+      <column id="pmbf002_desc"/>
+      <column id="pmbf003"/>
+      <column id="pmbf004"/>
+      <column id="pmbf008" type="S" default="N"/>
+      <column id="pmbf009" type="S" default="N"/>
+      <column id="pmbf005"/>
+      <column id="pmbf007"/>
+      <column id="pmbf006"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="pmbf_t" page="1" linked="" pk="pmbfdocno,pmbf002,pmbf003">
+      <sql id="forupd_sql_detail" query="SELECT pmbfstus,pmbfdocno,pmbf001,pmbf002,&apos;&apos;,pmbf003,pmbf004,pmbf008,pmbf009,pmbf005,pmbf007,pmbf006 FROM pmbf_t WHERE pmbfent=? AND pmbfdocno=? AND pmbf002=? AND pmbf003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pmbfstus,pmbfdocno,pmbf001,pmbf002,&apos;&apos;,pmbf003,pmbf004,pmbf008,pmbf009,pmbf005,pmbf007,pmbf006 FROM pmbf_t WHERE pmbfent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

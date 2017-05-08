@@ -1,0 +1,750 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="afat410_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0008(2016-05-25 17:43:36), PR版次:0008(2016-10-26 16:18:59)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000111
+#+ Filename...: afat410_01
+#+ Description: 自動產生
+#+ Creator....: 02291(2014-10-11 10:06:51)
+#+ Modifier...: 06821 -SD/PR- 02114
+ 
+{</section>}
+ 
+{<section id="afat410_01.global" >}
+#應用 c01c 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#160329-00022#1   2016/04/06  By 07673    afat410自动产生时，财产编号+卡片编号+附号开窗应过虑法人且开窗的折旧方式只能是工作量法。
+#160905-00007#2   2016/09/05  by 08742    调整系统中无ENT的SQL条件增加ent
+#160922-00042#1   2016/09/22  BY 02114    无法整批产生单身
+#160930-00022#1   2016/10/10  BY 02114    自动产生单身的弹窗，【卡片编号】、【财产编号】、【附号】栏位开窗出的资料未排除掉afai100未审核的资料
+#161017-00023#1   2016/10/26  By 02114    权限调整
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+DEFINE g_rec_b               LIKE type_t.num10
+DEFINE g_wc                  STRING
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_fabadocno           LIKE faba_t.fabadocno
+DEFINE g_faba001             LIKE faba_t.faba001
+DEFINE g_faba003             LIKE faba_t.faba003
+DEFINE g_faba     RECORD LIKE faba_t.*
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point  
+ 
+{</section>}
+ 
+{<section id="afat410_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION afat410_01(--)
+   #add-point:construct段變數傳入
+   p_fabadocno,p_faba001,p_faba003
+   #end add-point
+   )
+   #add-point:construct段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   #add-point:construct段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE p_fabadocno     LIKE faba_t.fabadocno
+   DEFINE p_faba001       LIKE faba_t.faba001
+   DEFINE p_faba003       LIKE faba_t.faba003
+   DEFINE l_fabacomp      LIKE faba_t.fabacomp  #160329-00022#1 add
+   DEFINE l_comp_str      STRING                #161017-00023#1 add lujh
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_afat410_01 WITH FORM cl_ap_formpath("afa","afat410_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   LET g_fabadocno = p_fabadocno
+   LET g_faba001 = p_faba001
+   LET g_faba003 = p_faba003
+   #160329-00022#1 add -str
+   SELECT fabacomp INTO  l_fabacomp
+     FROM faba_t
+    WHERE fabaent = g_enterprise
+      AND fabadocno  =  p_fabadocno
+   #160329-00022#1 add -end 
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      CONSTRUCT BY NAME g_wc ON faah001,faah003,faah004,faah008,faah030,faah031,faah028,faah000 
+      
+            #add-point:自定義action
+            ON ACTION controlp INFIELD faah001
+               #此段落由子樣板a08產生
+               #開窗c段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+			      LET g_qryparam.reqry = FALSE 
+			      IF p_faba003 = '11' THEN
+		            LET g_qryparam.where = " faah019 > 0 "               
+		         END IF
+		         #160329-00022#1 add -str
+		         IF NOT cl_null(g_qryparam.where)THEN
+                  LET g_qryparam.where = g_qryparam.where," AND faah032 = '",l_fabacomp,"'",
+                                                          " AND faahstus = 'Y' "   #160930-00022#1 add lujh
+               ELSE 
+                  LET g_qryparam.where = "   faah032 = '",l_fabacomp,"'",
+                                         " AND faahstus = 'Y' "  #160930-00022#1 add lujh
+               END IF
+		         
+		         IF g_prog != 'afat410'  THEN
+                  CALL q_faah001()                           #呼叫開窗  
+               ELSE
+                  LET g_qryparam.where = g_qryparam.where," AND faaj003 = '4' AND faah015 NOT IN ('0','5','6','8','10') "
+                  CALL q_faah003_7() 
+               END IF                   
+               #160329-00022#1 add -end 
+#               DISPLAY g_qryparam.return1 TO faah001  #顯示到畫面上   #160329-00022#1
+                DISPLAY g_qryparam.return3 TO faah001                 #160329-00022#1
+               
+               NEXT FIELD faah001                     #返回原欄位
+            
+            ON ACTION controlp INFIELD faah003
+               #此段落由子樣板a08產生
+               #開窗c段
+			      INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE             
+               IF p_faba003 = '11' THEN
+		            LET g_qryparam.where = " faah019 > 0 " 
+		         END IF
+
+		         #160329-00022#1 add -str
+		         IF NOT cl_null(g_qryparam.where)THEN
+                  LET g_qryparam.where = g_qryparam.where," AND faah032 = '",l_fabacomp,"'",
+                                                          " AND faahstus = 'Y' "   #160930-00022#1 add lujh
+               ELSE 
+                  LET g_qryparam.where = "   faah032 = '",l_fabacomp,"'",
+                                         " AND faahstus = 'Y' "   #160930-00022#1 add lujh
+               END IF
+		         IF g_prog != 'afat410'  THEN
+                  CALL q_faah003()                          #呼叫開窗  
+               ELSE
+                  LET g_qryparam.where = g_qryparam.where," AND faaj003 = '4' AND faah015 NOT IN ('0','5','6','8','10') "
+                  CALL q_faah003_5()
+               END IF                   
+               #160329-00022#1 add -end 
+               DISPLAY g_qryparam.return1 TO faah003  #顯示到畫面上
+               
+               NEXT FIELD faah003                     #返回原欄位
+               
+            ON ACTION controlp INFIELD faah004
+               #此段落由子樣板a08產生
+               #開窗c段
+			      INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE              
+                IF p_faba003 = '11' THEN
+		            LET g_qryparam.where = " faah019 > 0 " 
+		         END IF         
+		         #160329-00022#1 add -str
+		         IF NOT cl_null(g_qryparam.where)THEN
+                  LET g_qryparam.where = g_qryparam.where," AND faah032 = '",l_fabacomp,"'",
+                                                          " AND faahstus = 'Y' "   #160930-00022#1 add lujh
+               ELSE 
+                  LET g_qryparam.where = "   faah032 = '",l_fabacomp,"'",
+                                         " AND faahstus = 'Y' "   #160930-00022#1 add lujh
+               END IF
+		         IF g_prog != 'afat410'  THEN
+                  CALL q_faah004()                          #呼叫開窗  
+               ELSE
+                  LET g_qryparam.where = g_qryparam.where," AND faaj003 = '4' AND faah015 NOT IN ('0','5','6','8','10') "
+                  CALL q_faah003_6()
+               END IF                   
+               #160329-00022#1 add -end 
+#               DISPLAY g_qryparam.return1 TO faah004  #顯示到畫面上   #160329-00022#1
+               DISPLAY g_qryparam.return2 TO faah004                   #160329-00022#1
+               
+               NEXT FIELD faah004                     #返回原欄位
+            
+            ON ACTION controlp INFIELD faah008
+               #此段落由子樣板a08產生
+               #開窗c段
+			      INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_faah008()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO faah008  #顯示到畫面上
+               
+               NEXT FIELD faah008                     #返回原欄位
+            
+            ON ACTION controlp INFIELD faah030
+               #此段落由子樣板a08產生
+               #開窗c段
+               CALL s_axrt300_get_site(g_user,'','1') RETURNING l_comp_str    #161017-00023#1 add lujh
+			      INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               #161017-00023#1--add--str--lujh
+               LET g_qryparam.where = " ooef207 = 'Y' AND ",l_comp_str   
+               CALL q_ooef001()         
+               #161017-00023#1--add--end--lujh
+               #CALL q_faah030()                      #呼叫開窗     #161017-00023#1 mark lujh
+               DISPLAY g_qryparam.return1 TO faah030  #顯示到畫面上
+               
+               NEXT FIELD faah030                     #返回原欄位
+            
+            ON ACTION controlp INFIELD faah031
+               #此段落由子樣板a08產生
+               #開窗c段
+               CALL s_axrt300_get_site(g_user,'','1') RETURNING l_comp_str    #161017-00023#1 add lujh
+			      INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               #161017-00023#1--add--str--lujh
+               LET g_qryparam.where = " ooef204 = 'Y' AND ",l_comp_str     
+               CALL q_ooef001()          
+               #161017-00023#1--add--end--lujh               
+               #CALL q_faah031()                      #呼叫開窗      #161017-00023#1 mark lujh
+               DISPLAY g_qryparam.return1 TO faah031  #顯示到畫面上
+               
+               NEXT FIELD faah031                     #返回原欄位
+            
+            ON ACTION controlp INFIELD faah028
+               #此段落由子樣板a08產生
+               #開窗c段
+               CALL s_axrt300_get_site(g_user,'','1') RETURNING l_comp_str    #161017-00023#1 add lujh
+			      INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               #161017-00023#1--add--str--lujh
+               LET g_qryparam.where = l_comp_str     
+               CALL q_ooef001()  
+               #161017-00023#1--add--end--lujh
+               #CALL q_faah028()                      #呼叫開窗      #161017-00023#1 mark lujh
+               DISPLAY g_qryparam.return1 TO faah028  #顯示到畫面上
+               
+               NEXT FIELD faah028                     #返回原欄位
+               
+            #end add-point
+      
+         BEFORE CONSTRUCT
+            #add-point:單頭輸入前處理
+            
+            #end add-point
+            
+         AFTER CONSTRUCT
+            #add-point:單頭輸入後處理
+            
+            #end add-point
+            
+         
+ 
+         
+       
+      END CONSTRUCT
+ 
+      #add-point:自定義construct
+      
+      #end add-point
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+         
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+   ELSE
+      CASE g_faba003
+         WHEN '1' 
+            CALL afat410_01_fabn_ins()
+         WHEN '5'     
+            CALL afat410_01_fabb_ins()
+         WHEN '7'
+            CALL afat410_01_fabb_ins()
+         WHEN '10'
+            CALL afat410_01_fabk_ins()
+         WHEN '11'
+            CALL afat410_01_fabk_ins()
+        #140122-00001#117--add--str--lujh
+         WHEN '32'
+            CALL afat410_01_fabv_ins()
+        #140122-00001#117--add--end--lujh
+      END CASE
+   END IF
+   #end add-point 
+   
+   #畫面關閉
+   CLOSE WINDOW w_afat410_01 
+   
+   #add-point:construct段after construct 
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afat410_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="afat410_01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 整批自動生成到單身
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afat410_01_fabb_ins()
+DEFINE  l_sql        STRING
+DEFINE  l_faah       RECORD LIKE faah_t.*
+DEFINE  l_fabb       RECORD LIKE fabb_t.*
+DEFINE  l_ooag004    LIKE ooag_t.ooag004
+DEFINE  l_origin_str  STRING
+DEFINE tok        base.StringTokenizer
+DEFINE l_str      STRING
+DEFINE l_glaald      LIKE glaa_t.glaald
+DEFINE l_faaj003     LIKE faaj_t.faaj003
+
+   #SELECT ooag004 INTO l_ooag004 FROM ooag_t
+   # WHERE ooagent = g_enterprise AND ooag001 = g_faba001
+   #
+   #LET l_sql = " SELECT faah003,faah004,faah001,faah031,faah032 FROM faah_t",
+   #            "  WHERE faahent = ",g_enterprise," AND faahstus = 'Y' ",
+   #            "    AND faah028 IN ( SELECT ooef001 FROM ooef_t WHERE ooefent = ",g_enterprise,
+   #            "    AND ooef017 = '",l_ooag004,"')",
+   #            "    AND faah019 > 0  ",
+   #            "    AND ",g_wc CLIPPED
+   SELECT * INTO g_faba.* FROM faba_t WHERE fabaent = g_enterprise AND fabadocno = g_fabadocno
+   CALL s_fin_create_account_center_tmp() 
+   CALL s_fin_account_center_sons_query('5',g_faba.fabasite,g_faba.fabadocdt,'1')
+   CALL s_fin_account_center_comp_str() RETURNING l_origin_str
+   
+   CALL afat410_01_change_to_sql(l_origin_str)RETURNING l_origin_str
+   LET l_origin_str = "(",l_origin_str,")"
+   LET l_sql = " SELECT * FROM faah_t",
+               "  WHERE faahent = ",g_enterprise," AND faahstus = 'Y' ",
+               "    AND faah028 IN ( SELECT ooef001 FROM ooef_t WHERE ooefent = ",g_enterprise,
+               "    AND ooef017 = '",g_faba.fabacomp,"' AND ooef001 IN ",l_origin_str,")",
+               "    AND ",g_wc CLIPPED
+   IF g_faba003 = '5' THEN
+      LET l_sql = l_sql," AND faah015 NOT IN ('0','5','6','8','10')"
+   END IF
+   IF g_faba003 = '7' THEN
+      LET l_sql = l_sql," AND faah015 NOT IN ('0','5','6','10')"
+   END IF
+   PREPARE afat410_01_faah_prep FROM l_sql
+   DECLARE afat410_01_faah_curs CURSOR FOR afat410_01_faah_prep
+   
+  # LET l_fabb004 = g_user
+  # SELECT ooag003 INTO l_fabb003 FROM ooag_t
+  #  WHERE ooagent = g_enterprise AND ooag001 = g_user
+    
+   FOREACH afat410_01_faah_curs INTO l_faah.*
+      #160329-00022#1 add -str
+      #160905-00007#2 -S
+     #SELECT glaald INTO l_glaald 
+     #  FROM glaa_t 
+     # WHERE glaacomp = g_faba.fabacomp 
+     #   AND glaa014 = 'Y'
+      SELECT glaald INTO l_glaald 
+        FROM glaa_t 
+       WHERE glaacomp = g_faba.fabacomp 
+         AND glaa014 = 'Y'
+         AND glaaent = g_enterprise
+      #160905-00007#2  -E
+         
+      SELECT faaj003 INTO l_faaj003 
+        FROM faaj_t
+       WHERE faajent = g_enterprise
+         AND faaj001 = l_faah.faah003
+         AND faaj002 = l_faah.faah004
+         AND faaj037 = l_faah.faah001
+         AND faajld  = l_glaald
+      
+      IF l_faaj003 ! = 4 AND g_faba003 = '5' THEN    #160922-00042#1 add AND g_faba003 = '5' lujh
+         CONTINUE FOREACH      
+      END IF
+      #160329-00022#1 add -end
+      SELECT MAX(fabbseq) INTO l_fabb.fabbseq   FROM fabb_t
+       WHERE fabbent = g_enterprise AND fabbdocno = g_fabadocno
+      IF cl_null(l_fabb.fabbseq) THEN
+         LET l_fabb.fabbseq = 1
+      ELSE
+         LET l_fabb.fabbseq = l_fabb.fabbseq +1
+      END IF
+      LET l_fabb.fabbent = g_enterprise
+      LET l_fabb.fabbcomp = g_faba.fabacomp
+      LET l_fabb.fabbdocno = g_fabadocno
+      LET l_fabb.fabblegl = l_faah.faah031
+      LET l_fabb.fabb000 = l_faah.faah001
+      LET l_fabb.fabb001 = l_faah.faah003
+      LET l_fabb.fabb002 = l_faah.faah004
+      LET l_fabb.fabb003 = l_faah.faah026
+      LET l_fabb.fabb004 = l_faah.faah025 
+      LET l_fabb.fabb005 = 0
+      LET l_fabb.fabb007 = l_faah.faah015
+      LET l_fabb.fabb008 = 'Y'
+      
+      INSERT INTO fabb_t VALUES(l_fabb.*)
+   END FOREACH
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afat410_01_fabk_ins()
+DEFINE  l_sql        STRING
+DEFINE  l_faah001    LIKE faah_t.faah001
+DEFINE  l_faah003    LIKE faah_t.faah003
+DEFINE  l_faah004    LIKE faah_t.faah004
+DEFINE  l_faah031    LIKE faah_t.faah031
+DEFINE  l_faah032    LIKE faah_t.faah032
+DEFINE  l_fabkseq    LIKE fabk_t.fabkseq
+DEFINE  l_faah006    LIKE faah_t.faah006
+DEFINE  l_faah007    LIKE faah_t.faah007
+DEFINE  l_faah015    LIKE faah_t.faah015
+DEFINE  l_faah017    LIKE faah_t.faah017
+DEFINE  l_faah018    LIKE faah_t.faah018
+DEFINE  l_faah019    LIKE faah_t.faah019
+DEFINE  l_ooag004    LIKE ooag_t.ooag004
+DEFINE  l_origin_str  STRING
+DEFINE tok        base.StringTokenizer
+DEFINE l_str      STRING
+
+   #SELECT ooag004 INTO l_ooag004 FROM ooag_t
+   # WHERE ooagent = g_enterprise AND ooag001 = g_faba001
+   #
+   #LET l_sql = " SELECT faah003,faah004,faah001,faah006,faah007,faah015,faah017,faah018,faah019,faah032 FROM faah_t",
+   #            "  WHERE faahent = ",g_enterprise," AND faahstus = 'Y' ",
+   #            "    AND faah028 IN ( SELECT ooef001 FROM ooef_t WHERE ooefent = ",g_enterprise,
+   #            "    AND ooef017 = '",l_ooag004,"')",
+   #            "    AND faah019 > 0  ",
+   #            "    AND ",g_wc CLIPPED
+   
+   SELECT * INTO g_faba.* FROM faba_t WHERE fabaent = g_enterprise AND fabadocno = g_fabadocno
+   CALL s_fin_create_account_center_tmp() 
+   CALL s_fin_account_center_sons_query('5',g_faba.fabasite,g_faba.fabadocdt,'1')
+   CALL s_fin_account_center_comp_str() RETURNING l_origin_str
+   
+   CALL afat410_01_change_to_sql(l_origin_str)RETURNING l_origin_str
+   LET l_origin_str = "(",l_origin_str,")"
+   LET l_sql = " SELECT faah003,faah004,faah001,faah006,faah007,faah015,faah017,faah018,faah019,faah032 FROM faah_t",
+               "  WHERE faahent = ",g_enterprise," AND faahstus = 'Y' AND faah015 NOT IN ('5','6','8','10') ",
+               "    AND faah028 IN ( SELECT ooef001 FROM ooef_t WHERE ooefent = ",g_enterprise,
+               "    AND ooef017 = '",g_faba.fabacomp,"' AND ooef001 IN ",l_origin_str,")",
+               "    AND ",g_wc CLIPPED
+   
+   IF g_faba003 = '11' THEN
+      LET l_sql = l_sql," AND faah019 > 0  "
+   END IF
+   
+   PREPARE afat410_01_faah_prep1 FROM l_sql
+   DECLARE afat410_01_faah_curs1 CURSOR FOR afat410_01_faah_prep1
+    
+   FOREACH afat410_01_faah_curs1 INTO l_faah003,l_faah004,l_faah001,l_faah006,l_faah007,l_faah015,l_faah017,
+                                      l_faah018,l_faah019,l_faah032
+      SELECT MAX(fabkseq) INTO l_fabkseq
+        FROM fabk_t
+       WHERE fabkent = g_enterprise
+         AND fabkdocno = g_fabadocno
+      IF cl_null(l_fabkseq) THEN
+         LET l_fabkseq = 1
+      ELSE
+         LET l_fabkseq = l_fabkseq +1
+      END IF
+      
+      INSERT INTO fabk_t(fabkent,fabkcomp,fabkdocno,fabkseq,fabk000,fabk001,fabk002,fabk003,fabk004,fabk005,
+                         fabk006,fabk009)
+                 VALUES(g_enterprise,l_faah032,g_fabadocno,l_fabkseq,
+                        l_faah001,l_faah003,l_faah004,l_faah017,l_faah018,l_faah019,0,l_faah015)
+   END FOREACH
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION afat410_01_change_to_sql(p_wc)
+   DEFINE p_wc       STRING
+   DEFINE r_wc       STRING
+   DEFINE tok        base.StringTokenizer
+   DEFINE l_str      STRING
+
+   LET tok = base.StringTokenizer.create(p_wc,",")
+   WHILE tok.hasMoreTokens()
+      IF cl_null(l_str) THEN
+         LET l_str = tok.nextToken()
+      ELSE
+         LET l_str = l_str,"','",tok.nextToken()
+      END IF
+   END WHILE
+   LET r_wc = "'",l_str,"'"
+
+   RETURN r_wc
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION afat410_01_fabn_ins()
+DEFINE  l_sql        STRING
+DEFINE  l_faah     RECORD LIKE faah_t.*
+DEFINE  l_fabn     RECORD LIKE fabn_t.*
+DEFINE  l_origin_str  STRING
+DEFINE  tok        base.StringTokenizer
+DEFINE  l_str      STRING
+
+   SELECT * INTO g_faba.* FROM faba_t WHERE fabaent = g_enterprise AND fabadocno = g_fabadocno
+   CALL s_fin_create_account_center_tmp() 
+   CALL s_fin_account_center_sons_query('5',g_faba.fabasite,g_faba.fabadocdt,'1')
+   CALL s_fin_account_center_comp_str() RETURNING l_origin_str
+   
+   CALL afat410_01_change_to_sql(l_origin_str)RETURNING l_origin_str
+   LET l_origin_str = "(",l_origin_str,")"
+   LET l_sql = " SELECT * FROM faah_t",
+               "  WHERE faahent = ",g_enterprise," AND faahstus = 'Y' AND faah015 ='0' ",
+               "    AND faah028 IN ( SELECT ooef001 FROM ooef_t WHERE ooefent = ",g_enterprise,
+               "    AND ooef017 = '",g_faba.fabacomp,"' AND ooef001 IN ",l_origin_str,")",
+               "    AND ",g_wc CLIPPED
+   
+    
+   PREPARE afat410_01_faah_prep2 FROM l_sql
+   DECLARE afat410_01_faah_curs2 CURSOR FOR afat410_01_faah_prep2
+    
+   FOREACH afat410_01_faah_curs2 INTO l_faah.*
+   
+      SELECT MAX(fabnseq) INTO l_fabn.fabnseq
+        FROM fabn_t WHERE fabnent = g_enterprise  AND fabndocno = g_fabadocno
+      IF cl_null(l_fabn.fabnseq) THEN
+         LET l_fabn.fabnseq = 1
+      ELSE
+         LET l_fabn.fabnseq = l_fabn.fabnseq +1
+      END IF
+      
+      LET l_fabn.fabnent = g_enterprise 
+      LET l_fabn.fabncomp = g_faba.fabacomp
+      LET l_fabn.fabndocno =g_fabadocno
+      LET l_fabn.fabn001 =  l_faah.faah003
+      LET l_fabn.fabn002 =  l_faah.faah004
+      LET l_fabn.fabn003 =  l_faah.faah001
+      LET l_fabn.fabn004 =  l_fabn.fabn001
+      LET l_fabn.fabn005 =  l_fabn.fabn002
+      LET l_fabn.fabn018 =  l_fabn.fabn003
+      LET l_fabn.fabn006 =  l_faah.faah014
+      LET l_fabn.fabn007 =  l_faah.faah020
+      IF cl_null(l_faah.faah024) OR l_faah.faah024 = 0 THEN
+         LET l_fabn.fabn008 = 1
+      ELSE
+         LET l_fabn.fabn008  =  l_faah.faah022/l_faah.faah024      
+      END IF
+      LET l_fabn.fabn009 =  l_faah.faah022
+      LET l_fabn.fabn010 =  l_faah.faah024
+      LET l_fabn.fabn011 =  l_faah.faah025
+      LET l_fabn.fabn012 =  l_faah.faah026
+      LET l_fabn.fabn013 =  l_faah.faah027
+      LET l_fabn.fabn014 =  l_faah.faah030
+      LET l_fabn.fabn015 =  l_faah.faah028
+      LET l_fabn.fabn016 =  l_faah.faah031
+      LET l_fabn.fabn017 =  ''
+           
+      INSERT INTO fabn_t  VALUES(l_fabn.*)
+      
+   END FOREACH
+END FUNCTION
+# 插入调拨单身档
+PRIVATE FUNCTION afat410_01_fabv_ins()
+#160329-00022#1 mark -str  暂时不用过正
+#   DEFINE l_sql             STRING
+#   DEFINE l_faah            RECORD LIKE faah_t.*
+#   DEFINE l_faaj            RECORD LIKE faaj_t.*
+#   DEFINE l_fabv            RECORD LIKE fabv_t.*
+#   DEFINE l_ooag004         LIKE ooag_t.ooag004
+#   DEFINE l_origin_str      STRING
+#   DEFINE tok               base.StringTokenizer
+#   DEFINE l_str             STRING
+#   DEFINE l_glaald          LIKE glaa_t.glaald
+#   DEFINE l_ooab002         LIKE ooab_t.ooab002   
+#   
+#   SELECT * INTO g_faba.* FROM faba_t WHERE fabaent = g_enterprise AND fabadocno = g_fabadocno
+#   
+#   SELECT glaald INTO l_glaald FROM glaa_t WHERE glaacomp = g_faba.fabacomp AND glaa014 = 'Y'
+#   CALL cl_get_para(g_enterprise,g_faba.fabacomp,'S-FIN-9016') RETURNING l_ooab002
+#   
+#   CALL s_fin_create_account_center_tmp() 
+#   CALL s_fin_account_center_sons_query('5',g_faba.fabasite,g_faba.fabadocdt,'1')
+#   CALL s_fin_account_center_comp_str() RETURNING l_origin_str
+#   
+#   CALL afat410_01_change_to_sql(l_origin_str)RETURNING l_origin_str
+#   LET l_origin_str = "(",l_origin_str,")"
+#   LET l_sql = " SELECT * FROM faah_t",
+#               "  WHERE faahent = ",g_enterprise," AND faahstus = 'Y' ",
+#               "    AND faah028 IN ( SELECT ooef001 FROM ooef_t WHERE ooefent = ",g_enterprise,
+#               "    AND ooef017 = '",g_faba.fabacomp,"' AND ooef001 IN ",l_origin_str,")",
+#               "    AND ",g_wc CLIPPED
+#   IF g_faba003 = '32' THEN
+#      LET l_sql = l_sql," AND faah015 NOT IN ('0','5','6','10')"
+#   END IF
+#   PREPARE afat410_01_faah_prep3 FROM l_sql
+#   DECLARE afat410_01_faah_curs3 CURSOR FOR afat410_01_faah_prep3
+#    
+#   FOREACH afat410_01_faah_curs3 INTO l_faah.*
+#      
+#      SELECT * INTO l_faaj.*
+#        FROM faaj_t
+#       WHERE faajent = g_enterprise
+#         AND faajld = l_glaald
+#         AND faaj001 = l_faah.faah003
+#         AND faaj002 = l_faah.faah004
+#         AND faaj037 = l_faah.faah001
+#         
+#      IF cl_null(l_faaj.faaj033) THEN LET l_faaj.faaj033 = 0 END IF
+#      IF cl_null(l_faaj.faaj016) THEN LET l_faaj.faaj016 = 0 END IF
+#      IF cl_null(l_faaj.faaj020) THEN LET l_faaj.faaj020 = 0 END IF
+#      IF cl_null(l_faaj.faaj034) THEN LET l_faaj.faaj034 = 0 END IF
+#      IF cl_null(l_faaj.faaj028) THEN LET l_faaj.faaj028 = 0 END IF
+#      IF cl_null(l_faaj.faaj017) THEN LET l_faaj.faaj017 = 0 END IF
+#      IF cl_null(l_faaj.faaj035) THEN LET l_faaj.faaj035 = 0 END IF
+#      IF cl_null(l_faaj.faaj021) THEN LET l_faaj.faaj021 = 0 END IF
+#      IF cl_null(l_faaj.faaj027) THEN LET l_faaj.faaj027 = 0 END IF
+#      
+#      SELECT MAX(fabvseq) INTO l_fabv.fabvseq   
+#        FROM fabv_t
+#       WHERE fabvent = g_enterprise 
+#         AND fabvdocno = g_fabadocno
+#      IF cl_null(l_fabv.fabvseq) THEN
+#         LET l_fabv.fabvseq = 1
+#      ELSE
+#         LET l_fabv.fabvseq = l_fabv.fabvseq +1
+#      END IF
+#      LET l_fabv.fabvent = g_enterprise
+#      LET l_fabv.fabvdocno = g_fabadocno
+#      LET l_fabv.fabv001 = g_faba003
+#      LET l_fabv.fabv004 = l_faah.faah003 
+#      LET l_fabv.fabv005 = l_faah.faah004
+#      LET l_fabv.fabv006 = l_faah.faah001
+#      LET l_fabv.fabv007 = l_faah.faah006
+#      LET l_fabv.fabv008 = l_faah.faah027
+#      LET l_fabv.fabv009 = g_faba.fabacomp
+#      LET l_fabv.fabv011 = l_faah.faah031
+#      LET l_fabv.fabv012 = l_faah.faah031
+#      LET l_fabv.fabv013 = l_faah.faah030
+#      LET l_fabv.fabv014 = l_faah.faah030
+#      
+#      #调拨数量=数量faah018-处置数量faaj033    
+#      LET l_fabv.fabv015 = l_faah.faah018 - l_faaj.faaj033
+#      
+#      IF l_ooab002 = '1' THEN 
+#         #成本价
+#         #成本=固定资产的原价faaj016+调整成本faaj020-处置成本faaj034
+#         #累计折旧=（计提的累计折旧faaj017-处置的累折faaj035）/(数量faah018-处置数量faaj033）
+#         #减值准备=（计提的减值准备faaj021-处置的减值准备faaj027）/(数量faah018-处置数量faaj033）       
+#         LET l_fabv.fabv016 = l_faaj.faaj016 - l_faaj.faaj020 - l_faaj.faaj034
+#         LET l_fabv.fabv017 = (l_faaj.faaj017 - l_faaj.faaj035) / l_fabv.fabv015
+#         LET l_fabv.fabv019 = (l_faaj.faaj021 - l_faaj.faaj027) / l_fabv.fabv015
+#      ELSE
+#         LET l_fabv.fabv016 = l_faaj.faaj028
+#         LET l_fabv.fabv017 = 0
+#         LET l_fabv.fabv019 = 0
+#      END IF    
+#      
+#      INSERT INTO fabv_t VALUES(l_fabv.*)
+#   END FOREACH
+#160329-00022#1 mark -end
+END FUNCTION
+
+ 
+{</section>}
+ 

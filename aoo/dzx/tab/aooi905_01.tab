@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi905_01" module="aoo" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02003" crtdt="2014-09-02 16:02:44" modid="02003" moddt="2014-09-02 17:25:03" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="委託第三方代收設定">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="ooif003,ooif004,ooif004_desc(chr80),ooif005,ooif006,ooif007"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="aoo" filename="aooi905_01" method="dialog">
+    <section id="input">
+      <input id="head" field="ooif003,ooif004,ooif005,ooif006,ooif007"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="ooif003" type="S" default="N"/>
+      <column id="ooif004">
+        <after>
+          <reference field="ooif004_desc" ref_field="ooif_t.ooif004" map_field="ooifent,ooif004" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="ooif004_desc"/>
+      <column id="ooif005"/>
+      <column id="ooif006"/>
+      <column id="ooif007"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="ooif_t" pk="ooif000,ooif001">
+      <sql id="forupd_sql" type="sql" query="SELECT ooif003,ooif004,&apos;&apos;,ooif005,ooif006,ooif007 FROM ooif_t WHERE ooifent= ? AND ooif000=? AND ooif001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="ooif000,ooif001"/>
+    </head>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,98 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglq935" module="agl" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="06821" crtdt="2015-11-16 10:15:18" modid="06821" moddt="2016-06-03 14:21:33" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="合併報表合併後各期科目餘額查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gleald,gleald_desc(chr80),glea001,glea001_desc(chr80),glea003,glea004,l_glea007(chr10),l_glea026(chr10),l_glea029(chr10)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glea005,glea005_desc(chr100),glea034,glea008,glea009,l_amty(num20_6),glea002,glea006,glea032,glea033,glea007"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="glea005,glea0052_desc(chr100),glea035,glea027,glea028,l_amty2(num20_6),glea002,glea006,glea032,glea033,glea026"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="glea005,glea0053_desc(chr100),glea036,glea030,glea031,l_amty3(num20_6),glea002,glea006,glea032,glea033,glea029"/>
+      <var id="bs_field" value="gleald,glea001,glea003,glea004" pk="gleald,glea001,glea003,glea004" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="aglq935" method="dialog">
+    <section id="input">
+      <input id="head" field="gleald,glea001,glea003,glea004"/>
+      <input id="body" page="1" field="glea005,glea005_desc,glea034,glea008,glea009,l_amty,glea002,glea006,glea032,glea033,glea007" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="glea0052_desc,glea035,glea027,glea028,l_amty2,glea026" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="glea0053_desc,glea036,glea030,glea031,l_amty3,glea029" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gleald,glea001,glea003,glea004"/>
+      <construct id="body" page="1" field="glea005,glea034,glea002,glea006,glea032,glea033,glea007"/>
+      <construct id="body" page="2" field="glea035,glea027,glea028,glea026"/>
+      <construct id="body" page="3" field="glea036,glea030,glea031,glea029"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gleald,glea001,glea003,glea004"/>
+      <set id="head" type="no_entry" field="gleald,glea001,glea003,glea004"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gleald">
+        <after/>
+      </column>
+      <column id="gleald_desc"/>
+      <column id="glea001">
+        <after/>
+      </column>
+      <column id="glea001_desc"/>
+      <column id="glea003" type="S" default="0"/>
+      <column id="glea004"/>
+      <column id="l_glea007"/>
+      <column id="l_glea026"/>
+      <column id="l_glea029"/>
+    </init>
+    <init id="body" page="1">
+      <column id="glea005">
+        <after/>
+      </column>
+      <column id="glea005_desc"/>
+      <column id="glea034"/>
+      <column id="glea008" type="S" default="0"/>
+      <column id="glea009" type="S" default="0"/>
+      <column id="l_amty" type="S" default="0"/>
+      <column id="glea002"/>
+      <column id="glea006"/>
+      <column id="glea032"/>
+      <column id="glea033"/>
+      <column id="glea007"/>
+    </init>
+    <init id="body" page="2">
+      <column id="glea0052_desc"/>
+      <column id="glea035"/>
+      <column id="glea027"/>
+      <column id="glea028"/>
+      <column id="l_amty2" type="S" default="0"/>
+      <column id="glea026"/>
+    </init>
+    <init id="body" page="3">
+      <column id="glea0053_desc"/>
+      <column id="glea036"/>
+      <column id="glea030"/>
+      <column id="glea031"/>
+      <column id="l_amty3" type="S" default="0"/>
+      <column id="glea029"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="glea_t" pk="gleald,glea001,glea003,glea004">
+      <sql id="forupd_sql" type="sql" query="SELECT gleald,&apos;&apos;,glea001,&apos;&apos;,glea003,glea004,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM glea_t WHERE gleaent= ? AND gleald=? AND glea001=? AND glea003=? AND glea004=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gleald,&apos;&apos;,glea001,&apos;&apos;,glea003,glea004,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM glea_t" order="gleald,glea001,glea003,glea004"/>
+    </head>
+    <body id="glea_t" page="1,2,3" linked="" pk="glea002,glea005,glea006,glea032,glea033" fk="gleald,glea001,glea003,glea004">
+      <sql id="forupd_sql_detail" query="SELECT glea005,&apos;&apos;,glea034,glea008,glea009,&apos;&apos;,glea002,glea006,glea032,glea033,glea007,&apos;&apos;,&apos;&apos;,glea035,glea027,glea028,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,glea026,&apos;&apos;,&apos;&apos;,glea036,glea030,glea031,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,glea029 FROM glea_t WHERE gleaent=? AND gleald=? AND glea001=? AND glea003=? AND glea004=? AND glea002=? AND glea005=? AND glea006=? AND glea032=? AND glea033=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glea005,&apos;&apos;,glea034,glea008,glea009,&apos;&apos;,glea002,glea006,glea032,glea033,glea007,&apos;&apos;,&apos;&apos;,glea035,glea027,glea028,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,glea026,&apos;&apos;,&apos;&apos;,glea036,glea030,glea031,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,glea029 FROM glea_t WHERE gleaent= ? AND gleald=? AND glea001=? AND glea003=? AND glea004=?"/>
+    </body>
+  </dataset>
+</assembly>
+

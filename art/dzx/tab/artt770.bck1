@@ -1,0 +1,188 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="artt770" module="art" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="03247" crtdt="2014-12-23 14:42:44" modid="03247" moddt="2015-01-20 11:01:01" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="自動補貨建議維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="rtkmsite,rtkmsite_desc(chr80),rtkmdocdt,rtkmdocno,rtkm001,rtkm004,rtkm002,rtkm002_desc(chr80),rtkm003,rtkm003_desc(chr80),rtkmunit,rtkmstus,rtkmownid,rtkmownid_desc(chr80),rtkmowndp,rtkmowndp_desc(chr80),rtkmcrtid,rtkmcrtid_desc(chr80),rtkmcrtdp,rtkmcrtdp_desc(chr80),rtkmcrtdt,rtkmmodid,rtkmmodid_desc(chr80),rtkmmoddt,rtkmcnfid,rtkmcnfid_desc(chr80),rtkmcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="rtknseq,rtkn002,rtkn001,rtkn001_desc(chr500),rtkn001_desc_desc(chr500),rtkn004,rtkn004_desc(chr500),rtkn006,rtkn006_desc(chr500),rtkn007,rtkn007_desc(chr500),rtkn501a,rtkn501b,rtkn501c,rtkn501d,rtkn501,rtkn008,rtkn009,rtkn010"/>
+      <var id="bs_field" value="rtkmsite,rtkmsite_desc(chr80),rtkmdocdt,rtkmdocno,rtkm001,rtkm004,rtkm002,rtkm002_desc(chr80),rtkm003,rtkm003_desc(chr80)" pk="rtkmdocno" order=""/>
+      <bs_reference field="rtkmsite_desc" ref_field="rtkmsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="rtkm002_desc" ref_field="rtkm002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="rtkm003_desc" ref_field="rtkm003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="ins_pmda"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="art" filename="artt770" method="dialog">
+    <section id="input">
+      <input id="head" field="rtkmsite,rtkmdocdt,rtkmdocno,rtkm001,rtkm004,rtkm002,rtkm003,rtkmunit,rtkmstus"/>
+      <input id="body" page="1" field="rtknseq,rtkn002,rtkn001,rtkn004,rtkn006,rtkn007,rtkn501a,rtkn501b,rtkn501c,rtkn501d,rtkn501,rtkn008,rtkn009,rtkn010" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="rtkmsite,rtkmdocdt,rtkmdocno,rtkm001,rtkm004,rtkm002,rtkm003,rtkmunit,rtkmstus,rtkmownid,rtkmowndp,rtkmcrtid,rtkmcrtdp,rtkmcrtdt,rtkmmodid,rtkmmoddt,rtkmcnfid,rtkmcnfdt"/>
+      <construct id="body" page="1" field="rtknseq,rtkn002,rtkn001,rtkn004,rtkn006,rtkn007,rtkn501a,rtkn501b,rtkn501c,rtkn501d,rtkn501,rtkn008,rtkn009,rtkn010"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="rtkmdocno"/>
+      <set id="head" type="no_entry" field="rtkmdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="rtkmsite">
+        <after>
+          <reference field="rtkmsite_desc" ref_field="rtkm_t.rtkmsite" map_field="rtkmsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="rtkmsite_desc"/>
+      <column id="rtkmdocdt"/>
+      <column id="rtkmdocno">
+        <controlp form="q_rtkmdocno" state="c"/>
+      </column>
+      <column id="rtkm001"/>
+      <column id="rtkm004">
+        <controlp form="q_pmdadocno" state="c"/>
+      </column>
+      <column id="rtkm002">
+        <after>
+          <reference field="rtkm002_desc" ref_field="rtkm_t.rtkm002" map_field="rtkm002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_6" state="c"/>
+      </column>
+      <column id="rtkm002_desc"/>
+      <column id="rtkm003">
+        <after>
+          <reference field="rtkm003_desc" ref_field="rtkm_t.rtkm003" map_field="rtkm003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="rtkm003_desc"/>
+      <column id="rtkmunit"/>
+      <column id="rtkmstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="rtkmownid">
+        <after>
+          <reference field="rtkmownid_desc" ref_field="rtkm_t.rtkmownid" map_field="rtkmownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtkmownid_desc"/>
+      <column id="rtkmowndp">
+        <after>
+          <reference field="rtkmowndp_desc" ref_field="rtkm_t.rtkmowndp" map_field="rtkmowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtkmowndp_desc"/>
+      <column id="rtkmcrtid">
+        <after>
+          <reference field="rtkmcrtid_desc" ref_field="rtkm_t.rtkmcrtid" map_field="rtkmcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtkmcrtid_desc"/>
+      <column id="rtkmcrtdp">
+        <after>
+          <reference field="rtkmcrtdp_desc" ref_field="rtkm_t.rtkmcrtdp" map_field="rtkmcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtkmcrtdp_desc"/>
+      <column id="rtkmcrtdt"/>
+      <column id="rtkmmodid">
+        <after>
+          <reference field="rtkmmodid_desc" ref_field="rtkm_t.rtkmmodid" map_field="rtkmmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtkmmodid_desc"/>
+      <column id="rtkmmoddt"/>
+      <column id="rtkmcnfid">
+        <after>
+          <reference field="rtkmcnfid_desc" ref_field="rtkm_t.rtkmcnfid" map_field="rtkmcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtkmcnfid_desc"/>
+      <column id="rtkmcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="rtknseq"/>
+      <column id="rtkn002">
+        <controlp form="q_imay003_2" state="c"/>
+      </column>
+      <column id="rtkn001">
+        <after>
+          <reference field="rtkn001_desc" ref_field="rtkn_t.rtkn001" map_field="rtkn001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="rtkn001_desc">
+        <after>
+          <reference field="rtkn001_desc_desc" ref_field="rtkn_t.rtkn001" map_field="rtkn001" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="rtkn001_desc_desc"/>
+      <column id="rtkn004">
+        <after>
+          <reference field="rtkn004_desc" ref_field="rtkn_t.rtkn004" map_field="rtkn004" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001_1" state="c"/>
+      </column>
+      <column id="rtkn004_desc"/>
+      <column id="rtkn006">
+        <after>
+          <reference field="rtkn006_desc" ref_field="rtkn_t.rtkn006" map_field="rtkn006" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="rtkn006_desc"/>
+      <column id="rtkn007">
+        <after>
+          <reference field="rtkn007_desc" ref_field="rtkn_t.rtkn007" map_field="rtkn007" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="rtkn007_desc"/>
+      <column id="rtkn501a" type="S" default="0"/>
+      <column id="rtkn501b" type="S" default="0"/>
+      <column id="rtkn501c" type="S" default="0"/>
+      <column id="rtkn501d" type="S" default="0"/>
+      <column id="rtkn501" type="S" default="0"/>
+      <column id="rtkn008" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkn009" type="S" default="0"/>
+      <column id="rtkn010"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="rtkm_t" pk="rtkmdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT rtkmsite,&apos;&apos;,rtkmdocdt,rtkmdocno,rtkm001,rtkm004,rtkm002,&apos;&apos;,rtkm003,&apos;&apos;,rtkmunit,rtkmstus,rtkmownid,&apos;&apos;,rtkmowndp,&apos;&apos;,rtkmcrtid,&apos;&apos;,rtkmcrtdp,&apos;&apos;,rtkmcrtdt,rtkmmodid,&apos;&apos;,rtkmmoddt,rtkmcnfid,&apos;&apos;,rtkmcnfdt FROM rtkm_t WHERE rtkment= ? AND rtkmdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT rtkmsite,&apos;&apos;,rtkmdocdt,rtkmdocno,rtkm001,rtkm004,rtkm002,&apos;&apos;,rtkm003,&apos;&apos;,rtkmunit,rtkmstus,rtkmownid,&apos;&apos;,rtkmowndp,&apos;&apos;,rtkmcrtid,&apos;&apos;,rtkmcrtdp,&apos;&apos;,rtkmcrtdt,rtkmmodid,&apos;&apos;,rtkmmoddt,rtkmcnfid,&apos;&apos;,rtkmcnfdt FROM rtkm_t" order="rtkmdocno"/>
+    </head>
+    <body id="rtkn_t" page="1" linked="" pk="rtknseq" fk="rtkndocno">
+      <sql id="forupd_sql_detail" query="SELECT rtknseq,rtkn002,rtkn001,&apos;&apos;,&apos;&apos;,rtkn004,&apos;&apos;,rtkn006,&apos;&apos;,rtkn007,&apos;&apos;,rtkn501a,rtkn501b,rtkn501c,rtkn501d,rtkn501,rtkn008,rtkn009,rtkn010 FROM rtkn_t WHERE rtknent=? AND rtkndocno=? AND rtknseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rtknseq,rtkn002,rtkn001,&apos;&apos;,&apos;&apos;,rtkn004,&apos;&apos;,rtkn006,&apos;&apos;,rtkn007,&apos;&apos;,rtkn501a,rtkn501b,rtkn501c,rtkn501d,rtkn501,rtkn008,rtkn009,rtkn010 FROM rtkn_t WHERE rtknent=? AND rtkndocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

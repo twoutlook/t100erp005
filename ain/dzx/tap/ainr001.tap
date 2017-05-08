@@ -1,0 +1,527 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="ainr001" std_prog="ainr001" erpver="1.0" module="AIN" ver="1" env="s" zone="t10dev" booking="Y" type="M" identity="s">
+  <other>
+    <code_template value="R" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="construct.c.imaa001" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaa001  #顯示到畫面上
+            NEXT FIELD imaa001                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.imaa009" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_rtax001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaa009  #顯示到畫面上
+            NEXT FIELD imaa009                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.imaf052" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001_2()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaf052  #顯示到畫面上
+            NEXT FIELD imaf052                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="global.parameter" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[        v            LIKE type_t.chr1, #列印單據前備註]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL cl_set_combo_scc_part('storetype','6070','1,2')]]>
+  </point>
+  <point name="ui_dialog.before_dialog2" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="ui_dialog.more_action" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="ui_dialog.qbe_select" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               LET g_master.wc = ls_wc," AND pmdient = ",g_enterprise," AND pmdisite = ",g_site]]>
+  </point>
+  <section id="ainr001.description" ver="1" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000007
+#+ 
+#+ Filename...: ainr001
+#+ Description: 庫存預計失效表
+#+ Creator....: 05423(2014/07/10)
+#+ Modifier...: 05423(2014/07/10)
+#+ Buildtype..: 應用 r01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="ainr001.global" ver="1" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       imaa001 LIKE imaa_t.imaa001, 
+   imaa009 LIKE imaa_t.imaa009, 
+   imaf052 LIKE imaf_t.imaf052, 
+   storetype LIKE type_t.chr80, 
+   invaliddate LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="ainr001.init" ver="1" status="" src="s">
+    <![CDATA[#+ 初始化作業
+PRIVATE FUNCTION ainr001_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ainr001.main" ver="1" status="" src="s">
+    <![CDATA[MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point 
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("ain","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+      CALL ainr001_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_ainr001 WITH FORM cl_ap_formpath("ain",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL ainr001_init()
+ 
+      #進入選單 Menu (="N")
+      CALL ainr001_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_ainr001
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+  </section>
+  <section id="ainr001.other_function" ver="1" status="" src="s">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="ainr001.process" ver="1" status="" src="s">
+    <![CDATA[#+ 資料處理
+PRIVATE FUNCTION ainr001_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   {<point name="process.define"/>}
+   #end add-point
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE ainr001_process_cs CURSOR FROM ls_sql
+#  FOREACH ainr001_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+   END IF
+END FUNCTION
+]]>
+  </section>
+  <section id="ainr001.transfer_argv" ver="1" status="" src="s">
+    <![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION ainr001_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+ 
+   CALL util.JSON.parse(ls_js,la_param)
+ 
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+  </section>
+  <section id="ainr001.ui_dialog" ver="1" status="" src="s">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION ainr001_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+ 
+   #add-point:ui_dialog段before dialog
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2
+      {<point name="ui_dialog.before_dialog2"/>}
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         
+         
+         #+ 此段落由子樣板a57產生
+         CONSTRUCT BY NAME g_master.wc ON imaa001,imaa009,imaf052,storetype,invaliddate
+         
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct
+               {<point name="cs.head.before_construct"/>}
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #Ctrlp:construct.c.imaa001
+         ON ACTION controlp INFIELD imaa001
+            #add-point:ON ACTION controlp INFIELD imaa001
+            {<point name="construct.c.imaa001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imaa001
+            #add-point:BEFORE FIELD imaa001
+            {<point name="construct.b.imaa001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imaa001
+            
+            #add-point:AFTER FIELD imaa001
+            {<point name="construct.a.imaa001" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.imaa009
+         ON ACTION controlp INFIELD imaa009
+            #add-point:ON ACTION controlp INFIELD imaa009
+            {<point name="construct.c.imaa009" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imaa009
+            #add-point:BEFORE FIELD imaa009
+            {<point name="construct.b.imaa009" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imaa009
+            
+            #add-point:AFTER FIELD imaa009
+            {<point name="construct.a.imaa009" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.imaf052
+         ON ACTION controlp INFIELD imaf052
+            #add-point:ON ACTION controlp INFIELD imaf052
+            {<point name="construct.c.imaf052" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD imaf052
+            #add-point:BEFORE FIELD imaf052
+            {<point name="construct.b.imaf052" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD imaf052
+            
+            #add-point:AFTER FIELD imaf052
+            {<point name="construct.a.imaf052" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD storetype
+            #add-point:BEFORE FIELD storetype
+            {<point name="construct.b.storetype" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD storetype
+            
+            #add-point:AFTER FIELD storetype
+            {<point name="construct.a.storetype" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.storetype
+         ON ACTION controlp INFIELD storetype
+            #add-point:ON ACTION controlp INFIELD storetype
+            {<point name="construct.c.storetype" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD invaliddate
+            #add-point:BEFORE FIELD invaliddate
+            {<point name="construct.b.invaliddate" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD invaliddate
+            
+            #add-point:AFTER FIELD invaliddate
+            {<point name="construct.a.invaliddate" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.invaliddate
+         ON ACTION controlp INFIELD invaliddate
+            #add-point:ON ACTION controlp INFIELD invaliddate
+            {<point name="construct.c.invaliddate" />}
+            #END add-point
+ 
+ 
+            
+            #add-point:其他管控
+            {<point name="cs.other"/>}
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+      
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               LET lc_param.wc = ls_wc
+               #取得條件後需要執行項目,應新增於下方adp
+               #add-point:ui_dialog段qbe_select後
+               {<point name="ui_dialog.qbe_select"/>}
+               #end add-point
+            END IF
+ 
+         ON ACTION qbe_save
+            CALL cl_qbe_save()
+ 
+         ON ACTION output
+            ACCEPT DIALOG
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE lc_param.* TO NULL
+            #add-point:ui_dialog段qbeclear
+            {<point name="ui_dialog.qbeclear"/>}
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         LET g_jobid = cl_schedule_get_jobid(g_prog)
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL ainr001_process(ls_js)
+            WHEN g_schedule.gzpa003 = "1"
+            #    CALL cl_schedule_update_data(g_jobid,ls_js)
+                 LET ls_js = ainr001_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule
+         {<point name="process.after_schedule"/>}
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

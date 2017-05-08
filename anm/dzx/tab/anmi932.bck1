@@ -1,0 +1,127 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmi932" module="anm" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="07673" crtdt="2016-04-20 15:40:34" modid="07673" moddt="2016-04-20 15:40:34" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="資金模擬方案維護">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmfa001,nmfal001_desc(chr500),nmfa002,nmfa003,nmfa004,nmfa005,nmfa006,nmfa007,nmfa008,nmfastus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="nmfa001,nmfaownid,nmfaownid_desc(chr500),nmfaowndp,nmfaowndp_desc(chr500),nmfacrtid,nmfacrtid_desc(chr500),nmfacrtdp,nmfacrtdp_desc(chr500),nmfacrtdt,nmfamodid,nmfamodid_desc(chr500),nmfamoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmi932" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="nmfa001,nmfal001_desc,nmfa002,nmfa003,nmfa004,nmfa005,nmfa006,nmfa007,nmfa008,nmfastus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="nmfa001,nmfal001_desc,nmfa002,nmfa003,nmfa004,nmfa005,nmfa006,nmfa007,nmfa008,nmfastus"/>
+      <construct id="body" page="2" field="nmfaownid,nmfaowndp,nmfacrtid,nmfacrtdp,nmfacrtdt,nmfamodid,nmfamoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="nmfa001">
+        <controlp form="q_nmfa001" state="c"/>
+      </column>
+      <column id="nmfal001_desc"/>
+      <column id="nmfa002">
+        <after>
+          <check chkid="v_ooeb005_1" id="isExist"/>
+        </after>
+        <controlp form="q_ooeb005_3" state="i"/>
+        <controlp form="q_ooeb005_3" state="c"/>
+      </column>
+      <column id="nmfa003">
+        <after>
+          <check chkid="v_ooeb006" id="isExist"/>
+        </after>
+        <controlp form="q_ooeb006_1" state="i"/>
+        <controlp form="q_ooeb006_1" state="c"/>
+      </column>
+      <column id="nmfa004">
+        <after>
+          <check chkid="v_nmbd001" id="isExist"/>
+        </after>
+        <controlp form="q_nmbd001" state="i"/>
+        <controlp form="q_nmbd001" state="c"/>
+      </column>
+      <column id="nmfa005">
+        <after>
+          <check chkid="v_ooai001" id="isExist"/>
+        </after>
+        <controlp form="q_aooi001_1" state="i"/>
+        <controlp form="q_aooi001_1" state="c"/>
+      </column>
+      <column id="nmfa006"/>
+      <column id="nmfa007"/>
+      <column id="nmfa008"/>
+      <column id="nmfastus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="nmfaownid">
+        <after>
+          <reference field="nmfaownid_desc" ref_field="nmfa_t.nmfaownid" map_field="nmfaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmfaownid_desc"/>
+      <column id="nmfaowndp">
+        <after>
+          <reference field="nmfaowndp_desc" ref_field="nmfa_t.nmfaowndp" map_field="nmfaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmfaowndp_desc"/>
+      <column id="nmfacrtid">
+        <after>
+          <reference field="nmfacrtid_desc" ref_field="nmfa_t.nmfacrtid" map_field="nmfacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmfacrtid_desc"/>
+      <column id="nmfacrtdp">
+        <after>
+          <reference field="nmfacrtdp_desc" ref_field="nmfa_t.nmfacrtdp" map_field="nmfacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmfacrtdp_desc"/>
+      <column id="nmfacrtdt"/>
+      <column id="nmfamodid">
+        <after>
+          <reference field="nmfamodid_desc" ref_field="nmfa_t.nmfamodid" map_field="nmfamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmfamodid_desc"/>
+      <column id="nmfamoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="nmfa_t" page="1,2" linked="" pk="nmfa001">
+      <sql id="forupd_sql_detail" query="SELECT nmfa001,&apos;&apos;,nmfa002,nmfa003,nmfa004,nmfa005,nmfa006,nmfa007,nmfa008,nmfastus,&apos;&apos;,nmfaownid,&apos;&apos;,nmfaowndp,&apos;&apos;,nmfacrtid,&apos;&apos;,nmfacrtdp,&apos;&apos;,nmfacrtdt,nmfamodid,&apos;&apos;,nmfamoddt FROM nmfa_t WHERE nmfaent=? AND nmfa001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmfa001,&apos;&apos;,nmfa002,nmfa003,nmfa004,nmfa005,nmfa006,nmfa007,nmfa008,nmfastus,&apos;&apos;,nmfaownid,&apos;&apos;,nmfaowndp,&apos;&apos;,nmfacrtid,&apos;&apos;,nmfacrtdp,&apos;&apos;,nmfacrtdt,nmfamodid,&apos;&apos;,nmfamoddt FROM nmfa_t WHERE nmfaent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="nmfal001_desc" table="nmfal_t" fk="nmfa001" pk="nmfal001,nmfal002" field="nmfal003"/>
+    </body>
+  </dataset>
+</assembly>
+

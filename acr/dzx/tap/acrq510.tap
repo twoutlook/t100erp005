@@ -1,0 +1,2601 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="acrq510" std_prog="acrq510" erpver="1.0" module="ACR" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.acrq510_query" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 查詢
+# Date & Author..: 2014/06/03 By dongsz
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION acrq510_query()
+DEFINE ls_wc STRING
+
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+
+   LET ls_wc = g_wc
+   
+   LET INT_FLAG = 0
+   CALL cl_navigator_setting( g_current_idx, g_detail_cnt )
+   ERROR ""
+   
+   #清除畫面及相關資料
+   CLEAR FORM       
+   CALL g_mmaf_d.clear()
+   CALL g_mmaf2_d.clear()
+   CALL g_mmaf3_d.clear()
+   CALL g_mmaf4_d.clear()
+   CALL g_mmaf5_d.clear()
+   CALL g_mmaf6_d.clear()
+   CALL g_mmaf7_d.clear()
+   
+   DISPLAY ' ' TO FORMONLY.idx
+   DISPLAY ' ' TO FORMONLY.cnt
+   DISPLAY ' ' TO FORMONLY.b_index
+   DISPLAY ' ' TO FORMONLY.b_count
+   DISPLAY ' ' TO FORMONLY.h_index
+   DISPLAY ' ' TO FORMONLY.h_count
+   
+   CALL acrq510_construct()
+   
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      LET g_wc = ls_wc
+      CALL acrq510_b_fill()
+      RETURN
+   END IF
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||") AND ("||g_wc2||")")
+   
+   #搜尋後資料初始化
+   LET g_detail_cnt  = 0
+   LET g_current_idx = 1
+   LET g_current_row = 0
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_error_show  = 1
+   LET g_wc_filter   = ""
+   LET l_ac = 1
+   CALL FGL_SET_ARR_CURR(1)
+         
+   CALL acrq510_b_fill()
+   
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+
+END FUNCTION]]>
+  </point>
+  <point name="function.acrq510_construct" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 查詢條件
+# Date & Author..: 2014/06/03 By dongsz
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION acrq510_construct()
+DEFINE ls_wc       STRING
+
+   #清除畫面
+   CLEAR FORM
+   
+   LET g_action_choice = ""
+   
+   LET g_qryparam.state = 'c'
+   
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+      #單頭
+      CONSTRUCT BY NAME g_wc ON mmaf001,mmaf008,mmaf014
+      
+         BEFORE CONSTRUCT
+         
+         BEFORE FIELD mmaf001
+            #add-point:BEFORE FIELD mmaf001
+                                    
+            #END add-point
+         AFTER FIELD mmaf001            
+            #add-point:AFTER FIELD mmaf001
+                                    
+            #END add-point
+         ON ACTION controlp INFIELD mmaf001
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_mmaf001_1()                          #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mmaf001  #顯示到畫面上
+
+            NEXT FIELD mmaf001                     #返回原欄位
+            
+         BEFORE FIELD mmaf008
+            #add-point:BEFORE FIELD mmaf008
+                                    
+            #END add-point
+         AFTER FIELD mmaf008            
+            #add-point:AFTER FIELD mmaf008
+                                    
+            #END add-point
+            
+         BEFORE FIELD mmaf014
+            #add-point:BEFORE FIELD mmaf014
+                                    
+            #END add-point
+         AFTER FIELD mmaf014           
+            #add-point:AFTER FIELD mmaf014
+                                    
+            #END add-point
+            
+      END CONSTRUCT
+      
+      CONSTRUCT BY NAME g_wc2 ON mmag002,mmag003,mmag004
+      
+         BEFORE CONSTRUCT
+         
+         BEFORE FIELD mmag002
+            #add-point:BEFORE FIELD mmag002
+                                    
+            #END add-point
+         AFTER FIELD mmag002            
+            #add-point:AFTER FIELD mmag002
+                                    
+            #END add-point
+         ON ACTION controlp INFIELD mmag002
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '2049'
+            CALL q_oocq002_02()                          #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mmag002  #顯示到畫面上
+
+            NEXT FIELD mmag002                     #返回原欄位
+            
+         BEFORE FIELD mmag003
+            #add-point:BEFORE FIELD mmaf008
+                                    
+            #END add-point
+         AFTER FIELD mmag003            
+            #add-point:AFTER FIELD mmaf008
+                                    
+            #END add-point          
+         ON ACTION controlp INFIELD mmag003
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '2049'
+            CALL q_oocq004()                          #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mmag003  #顯示到畫面上
+
+            NEXT FIELD mmag003                     #返回原欄位
+            
+         BEFORE FIELD mmag004
+            #add-point:BEFORE FIELD mmag004
+                                    
+            #END add-point
+         AFTER FIELD mmag004           
+            #add-point:AFTER FIELD mmag004
+                                    
+            #END add-point
+          ON ACTION controlp INFIELD mmag004
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '2049'
+            CALL q_oocq002_21()                          #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mmag004  #顯示到畫面上
+
+            NEXT FIELD mmag004                     #返回原欄位
+            
+      END CONSTRUCT
+      
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   END DIALOG
+   
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+
+END FUNCTION]]>
+  </point>
+  <point name="function.acrq510_mmaf020_ref" order="3" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 會員價值帶說明
+# Date & Author..: 2014/06/04 By dongsz
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION acrq510_mmaf020_ref(p_mmaf020)
+DEFINE p_mmaf020      LIKE mmaf_t.mmaf020
+DEFINE l_oocql004     LIKE oocql_t.oocql004
+
+   SELECT oocql004 INTO l_oocql004 
+     FROM oocql_t
+    WHERE oocqlent = g_enterprise
+      AND oocql001 = '2111'
+      AND oocql002 = p_mmaf020
+      AND oocql003 = g_dlang
+      
+   RETURN l_oocql004
+END FUNCTION]]>
+  </point>
+  <point name="function.acrq510_mmaf021_ref" order="4" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 會員生命週期帶說明
+# Date & Author..: 2014/06/04 By dongsz
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION acrq510_mmaf021_ref(p_mmaf021)
+DEFINE p_mmaf021      LIKE mmaf_t.mmaf021
+DEFINE l_oocql004     LIKE oocql_t.oocql004
+
+   SELECT oocql004 INTO l_oocql004 
+     FROM oocql_t
+    WHERE oocqlent = g_enterprise
+      AND oocql001 = '2112'
+      AND oocql002 = p_mmaf020
+      AND oocql003 = g_dlang
+      
+   RETURN l_oocql004
+END FUNCTION]]>
+  </point>
+  <point name="function.acrq510_b_fill_2" order="5" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+################################################################################
+PRIVATE FUNCTION acrq510_b_fill_2()
+
+   LET g_sql = " SELECT UNIQUE mmaf001,mmaf008,a.oocql004,mmaf015,'',mmaf014, ",
+               "               mmcxdocdt,mmcy002,b.oocql004,mmcy003,c.oocql004,mmcy004,d.oocql004,mmcy006,mmcul003 ",
+               "   FROM mmaf_t LEFT OUTER JOIN oocql_t a ON a.oocql001 = '2016' AND a.oocql002 = mmaf001 AND a.oocql003 = '",g_dlang,"', ",
+               "        mmcx_t,mmcy_t LEFT OUTER JOIN oocql_t b ON b.oocql001 = '2024' AND b.oocql002 = mmcy002 AND b.oocql003 = '",g_dlang,"' ",
+               "                      LEFT OUTER JOIN oocq_t e ON e.oocq001 = '2024' AND e.oocq002 = mmcy002 ",
+               "                      LEFT OUTER JOIN oocql_t c ON c.oocql001 = '2024' AND c.oocql002 = mmcy003 AND c.oocql003 = '",g_dlang,"' ",
+               "                      LEFT OUTER JOIN oocq_t f ON f.oocq001 = '2024' AND f.oocq002 = mmcy003 ",
+               "                      LEFT OUTER JOIN oocql_t d ON d.oocql001 = '2025' AND d.oocql002 = mmcy004 AND d.oocql003 = '",g_dlang,"' ",
+               "                      LEFT OUTER JOIN mmcul_t ON mmcul001 = mmcy006 AND mmcul002 = '",g_dlang,"' ",
+               "  WHERE mmafent = mmcyent AND mmcxent = mmcyent ",
+               "    AND mmaf001 = mmcy001 ",
+               "    AND mmcxdocno = mmcydocno ",
+               "    AND mmcxstus = 'Y' ",
+               "    AND e.oocq009 < f.oocq009 ",
+               "    AND ",g_wc
+   IF NOT cl_null(g_wc2) AND g_wc2 <> " 1=1" THEN
+      LET g_sql = g_sql," AND mmaf001 IN (SELECT DISTINCT mmag001 FROM mmag_t WHERE ",g_wc2," )"
+   END IF
+   LET g_sql = g_sql," ORDER BY mmaf001"
+   
+   PREPARE acrq510_pb8 FROM g_sql
+   DECLARE b_fill_curs8 CURSOR FOR acrq510_pb8
+   
+   LET l_ac = 1
+   FOREACH b_fill_curs8 INTO g_mmaf2_d[l_ac].mmaf001a,g_mmaf2_d[l_ac].mmaf008a,g_mmaf2_d[l_ac].oocql004a, 
+       g_mmaf2_d[l_ac].mmaf015a,g_mmaf2_d[l_ac].agea,g_mmaf2_d[l_ac].mmaf014a,g_mmaf2_d[l_ac].mmcxdocdt, 
+       g_mmaf2_d[l_ac].mmcy002,g_mmaf2_d[l_ac].mmcy002_desc,g_mmaf2_d[l_ac].mmcy003,g_mmaf2_d[l_ac].mmcy003_desc, 
+       g_mmaf2_d[l_ac].mmcy004,g_mmaf2_d[l_ac].mmcy004_desc,g_mmaf2_d[l_ac].mmcy006,g_mmaf2_d[l_ac].mmcy006_desc
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+ 
+      LET g_mmaf2_d[l_ac].sel_a = "N"
+  
+      #add-point:b_fill段資料填充
+      CALL acrq510_mmaf015_ref(g_mmaf2_d[l_ac].mmaf015a) RETURNING g_mmaf2_d[l_ac].agea
+      #end add-point
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+ 
+   END FOREACH
+   
+   CLOSE b_fill_curs8
+   FREE acrq510_pb8
+END FUNCTION]]>
+  </point>
+  <point name="function.acrq510_b_fill_3" order="6" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+
+################################################################################
+PRIVATE FUNCTION acrq510_b_fill_3()
+
+   LET g_sql = " SELECT UNIQUE mmaf001,mmaf008,a.oocql004,mmaf015,'',mmaf014, ",
+               "               mmcxdocdt,mmcy002,b.oocql004,mmcy003,c.oocql004,mmcy004,d.oocql004,mmcy006,mmcul003 ",
+               "   FROM mmaf_t LEFT OUTER JOIN oocql_t a ON a.oocql001 = '2016' AND a.oocql002 = mmaf001 AND a.oocql003 = '",g_dlang,"', ",
+               "        mmcx_t,mmcy_t LEFT OUTER JOIN oocql_t b ON b.oocql001 = '2024' AND b.oocql002 = mmcy002 AND b.oocql003 = '",g_dlang,"' ",
+               "                      LEFT OUTER JOIN oocq_t e ON e.oocq001 = '2024' AND e.oocq002 = mmcy002 ",
+               "                      LEFT OUTER JOIN oocql_t c ON c.oocql001 = '2024' AND c.oocql002 = mmcy003 AND c.oocql003 = '",g_dlang,"' ",
+               "                      LEFT OUTER JOIN oocq_t f ON f.oocq001 = '2024' AND f.oocq002 = mmcy003 ",
+               "                      LEFT OUTER JOIN oocql_t d ON d.oocql001 = '2025' AND d.oocql002 = mmcy004 AND d.oocql003 = '",g_dlang,"' ",
+               "                      LEFT OUTER JOIN mmcul_t ON mmcul001 = mmcy006 AND mmcul002 = '",g_dlang,"' ",
+               "  WHERE mmafent = mmcyent AND mmcxent = mmcyent ",
+               "    AND mmaf001 = mmcy001 ",
+               "    AND mmcxdocno = mmcydocno ",
+               "    AND mmcxstus = 'Y' ",
+               "    AND e.oocq009 > f.oocq009 ",
+               "    AND ",g_wc
+   IF NOT cl_null(g_wc2) AND g_wc2 <> " 1=1" THEN
+      LET g_sql = g_sql," AND mmaf001 IN (SELECT DISTINCT mmag001 FROM mmag_t WHERE ",g_wc2," )"
+   END IF
+   LET g_sql = g_sql," ORDER BY mmaf001"
+   
+   PREPARE acrq510_pb3 FROM g_sql
+   DECLARE b_fill_curs3 CURSOR FOR acrq510_pb3
+   
+   LET l_ac = 1
+   
+   FOREACH b_fill_curs3 INTO g_mmaf3_d[l_ac].mmaf001b,g_mmaf3_d[l_ac].mmaf008b,g_mmaf3_d[l_ac].oocql004b, 
+       g_mmaf3_d[l_ac].mmaf015b,g_mmaf3_d[l_ac].ageb,g_mmaf3_d[l_ac].mmaf014b,g_mmaf3_d[l_ac].mmcxdocdta, 
+       g_mmaf3_d[l_ac].mmcy002a,g_mmaf3_d[l_ac].mmcy002a_desc,g_mmaf3_d[l_ac].mmcy003a,g_mmaf3_d[l_ac].mmcy003a_desc, 
+       g_mmaf3_d[l_ac].mmcy004a,g_mmaf3_d[l_ac].mmcy004a_desc,g_mmaf3_d[l_ac].mmcy006a,g_mmaf3_d[l_ac].mmcy006a_desc 
+
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+ 
+      LET g_mmaf3_d[l_ac].sel_b = "N"
+  
+      #add-point:b_fill段資料填充
+      CALL acrq510_mmaf015_ref(g_mmaf3_d[l_ac].mmaf015b) RETURNING g_mmaf3_d[l_ac].ageb
+      #end add-point
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+ 
+   END FOREACH
+   
+   CLOSE b_fill_curs3
+   FREE acrq510_pb3
+END FUNCTION]]>
+  </point>
+  <point name="function.acrq510_b_fill_4" order="7" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+
+################################################################################
+PRIVATE FUNCTION acrq510_b_fill_4()
+
+   LET g_sql = " SELECT mmaf001,mmaf008,oocql004,mmaf015,'',mmaf014,mmbe001,mmbe002,mmanl003,mmbe005,mmbddocdt,mmaq013 ",
+               "   FROM mmaf_t LEFT OUTER JOIN oocql_t ON oocql001 = '2016' AND oocql002 = mmaf001 AND oocql003 = '",g_dlang,"', ",
+               "        mmaq_t,mmbd_t,mmbe_t LEFT OUTER JOIN mmanl_t ON mmanl001 = mmbe002 AND mmanl002 = '",g_dlang,"' ",
+               "  WHERE mmafent = mmaqent AND mmafent = mmbeent AND mmbdent = mmbeent ",
+               "    AND mmaf001 = mmaq003 AND mmaq001 = mmbe001 ",
+               "    AND mmaf001 = mmbe003 AND mmbddocno = mmbedocno ",
+               "    AND mmaq006 = '5' ",
+               "    AND mmbdstus = 'Y' ",
+               "    AND ",g_wc
+   IF NOT cl_null(g_wc2) AND g_wc2 <> " 1=1" THEN
+      LET g_sql = g_sql," AND mmaf001 IN (SELECT DISTINCT mmag001 FROM mmag_t WHERE ",g_wc2," )"
+   END IF
+   LET g_sql = g_sql," ORDER BY mmaf001"
+   
+   PREPARE acrq510_pb4 FROM g_sql
+   DECLARE b_fill_curs4 CURSOR FOR acrq510_pb4
+   
+   LET l_ac = 1   
+
+   FOREACH b_fill_curs4 INTO g_mmaf4_d[l_ac].mmaf001c,g_mmaf4_d[l_ac].mmaf008c,g_mmaf4_d[l_ac].oocql004c, 
+       g_mmaf4_d[l_ac].mmaf015c,g_mmaf4_d[l_ac].agec,g_mmaf4_d[l_ac].mmaf014c,g_mmaf4_d[l_ac].mmbe001, 
+       g_mmaf4_d[l_ac].mmbe002,g_mmaf4_d[l_ac].mmbe002_desc,g_mmaf4_d[l_ac].mmbe005,g_mmaf4_d[l_ac].mmbddocdt, 
+       g_mmaf4_d[l_ac].mmaq013a
+       
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+ 
+      LET g_mmaf4_d[l_ac].sel_c = "N"
+  
+      #add-point:b_fill段資料填充
+      CALL acrq510_mmaf015_ref(g_mmaf4_d[l_ac].mmaf015c) RETURNING g_mmaf4_d[l_ac].agec
+      #end add-point
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+ 
+   END FOREACH
+   
+   CLOSE b_fill_curs4
+   FREE acrq510_pb4
+END FUNCTION]]>
+  </point>
+  <point name="function.acrq510_b_fill_5" order="8" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+
+################################################################################
+PRIVATE FUNCTION acrq510_b_fill_5()
+
+   LET g_sql = " SELECT UNIQUE mmaf001,mmaf008,oocql004,mmaf015,'',mmaf014, ",
+               "               MAX(mmaq013),SUM(mmaq014),SUM(mmaq015),mmaf021,'',mmaf020,'' ",
+               "   FROM mmaf_t LEFT OUTER JOIN oocql_t ON oocqlent = mmafent AND oocql001 = '2016' AND oocql002 = mmaf001 AND oocql003 = '",g_dlang,"', ",
+               "   mmaq_t ",
+               "  WHERE mmafent = mmaqent ",
+               "    AND mmaf001 = mmaq003 ",            
+               "    AND mmaq006 = '3' ",
+               "    AND mmaf022 = 'A' ",
+               "    AND ",g_wc
+   IF NOT cl_null(g_wc2) AND g_wc2 <> " 1=1" THEN
+      LET g_sql = g_sql," AND mmaf001 IN (SELECT DISTINCT mmag001 FROM mmag_t WHERE ",g_wc2," )"
+   END IF
+   LET g_sql = g_sql,"  GROUP BY mmaf001,mmaf008,oocql004,mmaf015,mmaf014,mmaf021,mmaf020 ","  ORDER BY mmaf001 " 
+   
+   PREPARE acrq510_pb5 FROM g_sql
+   DECLARE b_fill_curs5 CURSOR FOR acrq510_pb5
+   
+   LET l_ac = 1
+ 
+   FOREACH b_fill_curs5 INTO g_mmaf5_d[l_ac].mmaf001d,g_mmaf5_d[l_ac].mmaf008d, 
+       g_mmaf5_d[l_ac].oocql004d,g_mmaf5_d[l_ac].mmaf015d,g_mmaf5_d[l_ac].aged,g_mmaf5_d[l_ac].mmaf014d, 
+       g_mmaf5_d[l_ac].mmaq013b,g_mmaf5_d[l_ac].mmaq014a,g_mmaf5_d[l_ac].mmaq015a,g_mmaf5_d[l_ac].mmaf021a, 
+       g_mmaf5_d[l_ac].mmaf021a_desc,g_mmaf5_d[l_ac].mmaf020a,g_mmaf5_d[l_ac].mmaf020a_desc
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+ 
+      LET g_mmaf5_d[l_ac].sel_d = "N"     
+ 
+      #add-point:b_fill段資料填充
+      CALL acrq510_mmaf020_ref(g_mmaf5_d[l_ac].mmaf020a) RETURNING g_mmaf5_d[l_ac].mmaf020a_desc
+      CALL acrq510_mmaf021_ref(g_mmaf5_d[l_ac].mmaf021a) RETURNING g_mmaf5_d[l_ac].mmaf021a_desc
+      CALL acrq510_mmaf015_ref(g_mmaf5_d[l_ac].mmaf015d) RETURNING g_mmaf5_d[l_ac].aged
+      #end add-point
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+ 
+   END FOREACH
+
+   CLOSE b_fill_curs5
+   FREE acrq510_pb5
+END FUNCTION]]>
+  </point>
+  <point name="function.acrq510_b_fill_6" order="9" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+
+################################################################################
+PRIVATE FUNCTION acrq510_b_fill_6()
+
+   LET g_sql = " SELECT UNIQUE mmaf001,mmaf008,oocql004,mmaf015,'',mmaf014, ",
+               "               MAX(mmaq013),SUM(mmaq014),SUM(mmaq015),mmaf021,'',mmaf020,'' ",
+               "   FROM mmaf_t LEFT OUTER JOIN oocql_t ON oocqlent = mmafent AND oocql001 = '2016' AND oocql002 = mmaf001 AND oocql003 = '",g_dlang,"', ",
+               "   mmaq_t ",
+               "  WHERE mmafent = mmaqent ",
+               "    AND mmaf001 = mmaq003 ",            
+               "    AND mmaq006 = '3' ",
+               "    AND mmaf022 = 'B' ",
+               "    AND ",g_wc
+   IF NOT cl_null(g_wc2) AND g_wc2 <> " 1=1" THEN
+      LET g_sql = g_sql," AND mmaf001 IN (SELECT DISTINCT mmag001 FROM mmag_t WHERE ",g_wc2," )"
+   END IF
+   LET g_sql = g_sql,"  GROUP BY mmaf001,mmaf008,oocql004,mmaf015,mmaf014,mmaf021,mmaf020 ","  ORDER BY mmaf001 " 
+   
+   PREPARE acrq510_pb6 FROM g_sql
+   DECLARE b_fill_curs6 CURSOR FOR acrq510_pb6
+   
+   LET l_ac = 1
+ 
+   FOREACH b_fill_curs6 INTO g_mmaf6_d[l_ac].mmaf001e,g_mmaf6_d[l_ac].mmaf008e,g_mmaf6_d[l_ac].oocql004e,g_mmaf6_d[l_ac].mmaf015e, 
+       g_mmaf6_d[l_ac].agee,g_mmaf6_d[l_ac].mmaf014e,g_mmaf6_d[l_ac].mmaq013c,g_mmaf6_d[l_ac].mmaq014b, 
+       g_mmaf6_d[l_ac].mmaq015b,g_mmaf6_d[l_ac].mmaf021b,g_mmaf6_d[l_ac].mmaf021b_desc,g_mmaf6_d[l_ac].mmaf020b, 
+       g_mmaf6_d[l_ac].mmaf020b_desc
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+ 
+      LET g_mmaf6_d[l_ac].sel_e = "N"
+ 
+      #add-point:b_fill段資料填充
+      CALL acrq510_mmaf020_ref(g_mmaf6_d[l_ac].mmaf020b) RETURNING g_mmaf6_d[l_ac].mmaf020b_desc
+      CALL acrq510_mmaf021_ref(g_mmaf6_d[l_ac].mmaf021b) RETURNING g_mmaf6_d[l_ac].mmaf021b_desc
+      CALL acrq510_mmaf015_ref(g_mmaf6_d[l_ac].mmaf015e) RETURNING g_mmaf6_d[l_ac].agee
+      #end add-point
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+ 
+   END FOREACH
+   
+   CLOSE b_fill_curs6
+   FREE acrq510_pb6
+END FUNCTION]]>
+  </point>
+  <point name="function.acrq510_b_fill_7" order="10" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+
+################################################################################
+PRIVATE FUNCTION acrq510_b_fill_7()
+
+   LET g_sql = " SELECT UNIQUE mmaf001,mmaf008,oocql004,mmaf015,'',mmaf014, ",
+               "               MAX(mmaq013),SUM(mmaq014),SUM(mmaq015),mmaf021,'',mmaf020,'' ",
+               "   FROM mmaf_t LEFT OUTER JOIN oocql_t ON oocqlent = mmafent AND oocql001 = '2016' AND oocql002 = mmaf001 AND oocql003 = '",g_dlang,"', ",
+               "   mmaq_t ",
+               "  WHERE mmafent = mmaqent ",
+               "    AND mmaf001 = mmaq003 ",            
+               "    AND mmaq006 = '3' ",
+               "    AND mmaf022 = 'C' ",
+               "    AND ",g_wc
+   IF NOT cl_null(g_wc2) AND g_wc2 <> " 1=1" THEN
+      LET g_sql = g_sql," AND mmaf001 IN (SELECT DISTINCT mmag001 FROM mmag_t WHERE ",g_wc2," )"
+   END IF
+   LET g_sql = g_sql,"  GROUP BY mmaf001,mmaf008,oocql004,mmaf015,mmaf014,mmaf021,mmaf020 ","  ORDER BY mmaf001 " 
+   
+   PREPARE acrq510_pb7 FROM g_sql
+   DECLARE b_fill_curs7 CURSOR FOR acrq510_pb7
+   
+   LET l_ac = 1
+ 
+   FOREACH b_fill_curs7 INTO g_mmaf7_d[l_ac].mmaf001f,g_mmaf7_d[l_ac].mmaf008f, 
+       g_mmaf7_d[l_ac].oocql004f,g_mmaf7_d[l_ac].mmaf015f,g_mmaf7_d[l_ac].agef,g_mmaf7_d[l_ac].mmaf014f, 
+       g_mmaf7_d[l_ac].mmaq013d,g_mmaf7_d[l_ac].mmaq014c,g_mmaf7_d[l_ac].mmaq015c,g_mmaf7_d[l_ac].mmaf021c, 
+       g_mmaf7_d[l_ac].mmaf021c_desc,g_mmaf7_d[l_ac].mmaf020c,g_mmaf7_d[l_ac].mmaf020c_desc
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+ 
+      LET g_mmaf7_d[l_ac].sel_f = "N"
+ 
+      #add-point:b_fill段資料填充
+      CALL acrq510_mmaf020_ref(g_mmaf7_d[l_ac].mmaf020c) RETURNING g_mmaf7_d[l_ac].mmaf020c_desc
+      CALL acrq510_mmaf021_ref(g_mmaf7_d[l_ac].mmaf021c) RETURNING g_mmaf7_d[l_ac].mmaf021c_desc
+      CALL acrq510_mmaf015_ref(g_mmaf7_d[l_ac].mmaf015f) RETURNING g_mmaf7_d[l_ac].agef
+      #end add-point
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+ 
+   END FOREACH
+   
+   CLOSE b_fill_curs7
+   FREE acrq510_pb7
+END FUNCTION]]>
+  </point>
+  <point name="function.acrq510_construct_add" order="11" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 進階查詢
+# Date & Author..: 2014/06/04 By dongsz
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION acrq510_construct_add()
+DEFINE l_str       LIKE type_t.chr1
+DEFINE l_str1      LIKE type_t.chr2
+DEFINE l_str2      LIKE type_t.chr2
+DEFINE l_month     LIKE type_t.num5
+DEFINE l_day       LIKE type_t.num5
+DEFINE l_n         LIKE type_t.num5
+
+   LET g_action_choice = ""
+   
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      INPUT g_date FROM birth
+      
+         BEFORE INPUT
+            LET g_month = MONTH(g_today) USING "&#"
+            LET g_day = DAY(g_today) USING "&#"
+            LET g_date = g_month,g_day
+         
+         BEFORE FIELD birth
+         
+         AFTER FIELD birth
+            IF NOT cl_null(g_date) THEN
+               IF LENGTH(g_date) <> 4 THEN
+                  CALL cl_err('','acr-00043',1)
+                  NEXT FIELD birth
+               END IF
+               FOR l_n = 1 TO 4
+                  LET l_str = g_date[l_n,l_n]
+                  IF l_str NOT MATCHES'[0123456789]' THEN
+                     CALL cl_err('','acr-00043',1)
+                     NEXT FIELD birth
+                     EXIT FOR
+                  END IF
+               END FOR
+               LET l_str1 = g_date[1,2]
+               LET l_str2 = g_date[3,4]
+               LET l_month = l_str1
+               LET l_day = l_str2
+               IF l_month < 1 OR l_month > 12 THEN
+                  CALL cl_err('','acr-00044',1)
+                  NEXT FIELD birth
+               END IF
+               IF l_day <1 OR l_day > 31 THEN
+                  CALL cl_err('','acr-00045',1)
+                  NEXT FIELD birth
+               END IF
+            END IF
+         
+      END INPUT
+      
+      BEFORE DIALOG
+         #add-point:cs段b_dialog
+
+         #end add-point  
+         
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         LET g_date = ""
+         DISPLAY g_date TO birth
+         EXIT DIALOG 
+         
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   END DIALOG
+   
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+
+END FUNCTION]]>
+  </point>
+  <point name="function.acrq510_b_fill1" order="12" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 進階查詢顯示
+# Date & Author..: 2014/06/04 By dongsz
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION acrq510_b_fill1()
+DEFINE l_str1      LIKE type_t.chr2
+DEFINE l_str2      LIKE type_t.chr2
+DEFINE l_month     LIKE type_t.num5
+DEFINE l_day       LIKE type_t.num5
+
+   CALL g_mmaf_d.clear()
+   
+   LET g_cnt = l_ac
+   LET l_ac = 1
+   ERROR "Searching!"
+   
+   LET g_sql = " SELECT UNIQUE mmaf001,mmaf008,oocql004,mmaf015,'',mmaf014, ",
+               "               SUM(mmaq014),SUM(mmaq015),MAX(mmaq013),mmaf021,'',mmaf020,'' ",
+               "   FROM mmaf_t LEFT OUTER JOIN oocql_t ON oocqlent = mmafent AND oocql001 = '2016' AND oocql002 = mmaf001 AND oocql003 = '",g_dlang,"', ",
+               "   mmaq_t ",
+               "  WHERE mmafent = mmaqent ",
+               "    AND mmaf001 = mmaq003 ",           
+               "    AND mmaq006 ='3' ",
+               --"    AND MONTH(mmaf015) = '",g_month,"' ",
+               --"    AND DAY(mmaf015) = '",g_day,"' ",
+               "    AND ",g_wc
+   IF NOT cl_null(g_wc2) AND g_wc2 <> " 1=1" THEN
+      LET g_sql = g_sql," AND mmaf001 IN (SELECT DISTINCT mmag001 FROM mmag_t WHERE ",g_wc2," )"
+   END IF
+   LET g_sql = g_sql,"  GROUP BY mmaf001,mmaf008,oocql004,mmaf015,mmaf014,mmaf021,mmaf020 ","  ORDER BY mmaf001 "   
+ 
+   PREPARE acrq510_pb1 FROM g_sql
+   DECLARE b_fill_curs1 CURSOR FOR acrq510_pb1
+   
+   IF NOT cl_null(g_date) THEN
+      LET l_str1 = g_date[1,2]
+      LET l_str2 = g_date[3,4]
+      LET l_month = l_str1
+      LET l_day = l_str2
+   END IF
+ 
+   FOREACH b_fill_curs1 INTO g_mmaf_d[l_ac].mmaf001,g_mmaf_d[l_ac].mmaf008,g_mmaf_d[l_ac].oocql004,g_mmaf_d[l_ac].mmaf015, 
+       g_mmaf_d[l_ac].age,g_mmaf_d[l_ac].mmaf014,g_mmaf_d[l_ac].mmaq014,g_mmaf_d[l_ac].mmaq015,g_mmaf_d[l_ac].mmaq013, 
+       g_mmaf_d[l_ac].mmaf021,g_mmaf_d[l_ac].mmaf021_desc,g_mmaf_d[l_ac].mmaf020,g_mmaf_d[l_ac].mmaf020_desc
+
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+ 
+      LET g_mmaf_d[l_ac].sel = "N"
+ 
+      IF NOT cl_null(g_date) THEN
+         IF cl_null(g_mmaf_d[l_ac].mmaf015) THEN
+            CONTINUE FOREACH
+         ELSE
+            IF l_month <> MONTH(g_mmaf_d[l_ac].mmaf015) OR 
+               l_day <> DAY(g_mmaf_d[l_ac].mmaf015) THEN
+               CONTINUE FOREACH
+            END IF
+         END IF
+      END IF
+ 
+      #add-point:b_fill段資料填充
+      CALL acrq510_mmaf020_ref(g_mmaf_d[l_ac].mmaf020) RETURNING g_mmaf_d[l_ac].mmaf020_desc
+      CALL acrq510_mmaf021_ref(g_mmaf_d[l_ac].mmaf021) RETURNING g_mmaf_d[l_ac].mmaf021_desc
+      CALL acrq510_mmaf015_ref(g_mmaf_d[l_ac].mmaf015) RETURNING g_mmaf_d[l_ac].age
+      #end add-point
+ 
+      CALL acrq510_detail_show("'1'")
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+ 
+   END FOREACH
+   
+   CALL g_mmaf_d.deleteElement(g_mmaf_d.getLength())
+ 
+   #add-point:陣列長度調整
+
+   #end add-point
+ 
+   LET g_error_show = 0
+ 
+   LET g_detail_cnt = l_ac - 1
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+ 
+   #+ 此段落由子樣板qs06產生
+   #+ b_fill段CURSOR釋放
+   CLOSE b_fill_curs1
+   FREE acrq510_pb1
+
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+END FUNCTION]]>
+  </point>
+  <point name="function.acrq510_mmaf015_ref" order="13" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 計算年齡
+# Date & Author..: 2014/06/04 By dongsz
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION acrq510_mmaf015_ref(p_mmaf015)
+DEFINE p_mmaf015      LIKE mmaf_t.mmaf015
+DEFINE l_age          LIKE type_t.num5
+
+   LET l_age = YEAR(g_today) - YEAR(p_mmaf015) + 1
+   
+   RETURN l_age
+END FUNCTION]]>
+  </point>
+  <point name="b_fill.array_clear" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL g_mmaf2_d.clear()
+   CALL g_mmaf3_d.clear()
+   CALL g_mmaf4_d.clear()
+   CALL g_mmaf5_d.clear()
+   CALL g_mmaf6_d.clear()
+   CALL g_mmaf7_d.clear()]]>
+  </point>
+  <point name="b_fill.array_deleteElement" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL g_mmaf2_d.deleteElement(g_mmaf2_d.getLength())
+   CALL g_mmaf3_d.deleteElement(g_mmaf3_d.getLength())
+   CALL g_mmaf4_d.deleteElement(g_mmaf4_d.getLength())
+   CALL g_mmaf5_d.deleteElement(g_mmaf5_d.getLength())
+   CALL g_mmaf6_d.deleteElement(g_mmaf6_d.getLength())
+   CALL g_mmaf7_d.deleteElement(g_mmaf7_d.getLength())]]>
+  </point>
+  <point name="b_fill.fill" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      CALL acrq510_mmaf020_ref(g_mmaf_d[l_ac].mmaf020) RETURNING g_mmaf_d[l_ac].mmaf020_desc
+      CALL acrq510_mmaf021_ref(g_mmaf_d[l_ac].mmaf021) RETURNING g_mmaf_d[l_ac].mmaf021_desc
+      CALL acrq510_mmaf015_ref(g_mmaf_d[l_ac].mmaf015) RETURNING g_mmaf_d[l_ac].age]]>
+  </point>
+  <point name="b_fill.others.fill" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET l_ac1 = l_ac
+   CALL acrq510_b_fill_2()
+   CALL acrq510_b_fill_3()
+   CALL acrq510_b_fill_4()
+   CALL acrq510_b_fill_5()
+   CALL acrq510_b_fill_6()
+   CALL acrq510_b_fill_7()
+   LET l_ac = l_ac1]]>
+  </point>
+  <point name="b_fill.sql_after" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_sql = " SELECT UNIQUE mmaf001,mmaf008,oocql004,mmaf015,'',mmaf014, ",
+               "               SUM(mmaq014),SUM(mmaq015),MAX(mmaq013),mmaf021,'',mmaf020,'' ",
+               #" '','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','', ",
+               #" '','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','', ",
+               #" '','','','','','','','','','','','','','','','','','','','','','','','','' ",
+               "   FROM mmaf_t LEFT OUTER JOIN oocql_t ON oocqlent = mmafent AND oocql001 = '2016' AND oocql002 = mmaf001 AND oocql003 = '",g_dlang,"', ",
+               "   mmaq_t ",
+               "  WHERE mmafent = mmaqent ",
+               "    AND mmaf001 = mmaq003 ",            
+               "    AND mmaq006 ='3' ",
+               "    AND ",g_wc
+   IF NOT cl_null(g_wc2) AND g_wc2 <> " 1=1" THEN
+      LET g_sql = g_sql," AND mmaf001 IN (SELECT DISTINCT mmag001 FROM mmag_t WHERE ",g_wc2," )"
+   END IF
+   LET g_sql = g_sql,"  GROUP BY mmaf001,mmaf008,oocql004,mmaf015,mmaf014,mmaf021,mmaf020 ","  ORDER BY mmaf001 "                  ]]>
+  </point>
+  <point name="b_fill2.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   RETURN]]>
+  </point>
+  <point name="construct.c.page1.b_mmaf001" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_mmaf001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_mmaf001  #顯示到畫面上
+            NEXT FIELD b_mmaf001                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page3.b_mmaf001b" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_mmaf001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_mmaf001b  #顯示到畫面上
+            NEXT FIELD b_mmaf001b                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page4.b_mmaf001c" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_mmaf001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_mmaf001c  #顯示到畫面上
+            NEXT FIELD b_mmaf001c                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page4.b_mmbe001" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_mmbe001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_mmbe001  #顯示到畫面上
+            NEXT FIELD b_mmbe001                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page4.b_mmbe002" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_mman001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_mmbe002  #顯示到畫面上
+            NEXT FIELD b_mmbe002                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page5.b_mmaf001d" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_mmaf001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_mmaf001d  #顯示到畫面上
+            NEXT FIELD b_mmaf001d                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page6.b_mmaf001e" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_mmaf001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_mmaf001e  #顯示到畫面上
+            NEXT FIELD b_mmaf001e                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page7.b_mmaf001f" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_mmaf001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_mmaf001f  #顯示到畫面上
+            NEXT FIELD b_mmaf001f                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="detail_show.body.reference" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+#   INITIALIZE g_ref_fields TO NULL 
+#   LET g_ref_fields[1] = g_mmaf_d[l_ac].mmaf001
+#   CALL ap_ref_array2(g_ref_fields," SELECT oocql004a,mmcy002_desc,mmcy003_desc,mmcy004_desc FROM oocql_t WHERE oocqlent = '"||g_enterprise||"' AND ","") RETURNING g_rtn_fields 
+#   LET g_mmaf_d[l_ac].oocql004a = g_rtn_fields[1] 
+#   LET g_mmaf_d[l_ac].mmcy002_desc = g_rtn_fields[2] 
+#   LET g_mmaf_d[l_ac].mmcy003_desc = g_rtn_fields[3] 
+#   LET g_mmaf_d[l_ac].mmcy004_desc = g_rtn_fields[4] 
+#   DISPLAY BY NAME g_mmaf_d[l_ac].oocql004a,g_mmaf_d[l_ac].mmcy002_desc,g_mmaf_d[l_ac].mmcy003_desc,g_mmaf_d[l_ac].mmcy004_desc
+#   INITIALIZE g_ref_fields TO NULL 
+#   LET g_ref_fields[1] = g_mmaf_d[l_ac].mmaf001
+#   CALL ap_ref_array2(g_ref_fields," SELECT oocql004d,mmaf020a_desc,mmaf021a_desc,oocql004d,mmaf020a_desc,mmaf021a_desc,oocql004d,mmaf020a_desc,mmaf021a_desc FROM oocql_t WHERE oocqlent = '"||g_enterprise||"' AND ","") RETURNING g_rtn_fields 
+#   LET g_mmaf_d[l_ac].oocql004d = g_rtn_fields[1] 
+#   LET g_mmaf_d[l_ac].mmaf020a_desc = g_rtn_fields[2] 
+#   LET g_mmaf_d[l_ac].mmaf021a_desc = g_rtn_fields[3] 
+#   LET g_mmaf_d[l_ac].oocql004d = g_rtn_fields[4] 
+#   LET g_mmaf_d[l_ac].mmaf020a_desc = g_rtn_fields[5] 
+#   LET g_mmaf_d[l_ac].mmaf021a_desc = g_rtn_fields[6] 
+#   LET g_mmaf_d[l_ac].oocql004d = g_rtn_fields[7] 
+#   LET g_mmaf_d[l_ac].mmaf020a_desc = g_rtn_fields[8] 
+#   LET g_mmaf_d[l_ac].mmaf021a_desc = g_rtn_fields[9] 
+#   DISPLAY BY NAME g_mmaf_d[l_ac].oocql004d,g_mmaf_d[l_ac].mmaf020a_desc,g_mmaf_d[l_ac].mmaf021a_desc,g_mmaf_d[l_ac].oocql004d,g_mmaf_d[l_ac].mmaf020a_desc,g_mmaf_d[l_ac].mmaf021a_desc,g_mmaf_d[l_ac].oocql004d,g_mmaf_d[l_ac].mmaf020a_desc,g_mmaf_d[l_ac].mmaf021a_desc
+#   INITIALIZE g_ref_fields TO NULL 
+#   LET g_ref_fields[1] = g_mmaf_d[l_ac].mmaf001
+#   CALL ap_ref_array2(g_ref_fields," SELECT mmaq013b,mmaq014a,mmaq015a,mmaq013b,mmaq014a,mmaq015a,mmaq013b,mmaq014a,mmaq015a FROM mmaq_t WHERE mmaqent = '"||g_enterprise||"' AND ","") RETURNING g_rtn_fields 
+#   LET g_mmaf_d[l_ac].mmaq013b = g_rtn_fields[1] 
+#   LET g_mmaf_d[l_ac].mmaq014a = g_rtn_fields[2] 
+#   LET g_mmaf_d[l_ac].mmaq015a = g_rtn_fields[3] 
+#   LET g_mmaf_d[l_ac].mmaq013b = g_rtn_fields[4] 
+#   LET g_mmaf_d[l_ac].mmaq014a = g_rtn_fields[5] 
+#   LET g_mmaf_d[l_ac].mmaq015a = g_rtn_fields[6] 
+#   LET g_mmaf_d[l_ac].mmaq013b = g_rtn_fields[7] 
+#   LET g_mmaf_d[l_ac].mmaq014a = g_rtn_fields[8] 
+#   LET g_mmaf_d[l_ac].mmaq015a = g_rtn_fields[9] 
+#   DISPLAY BY NAME g_mmaf_d[l_ac].mmaq013b,g_mmaf_d[l_ac].mmaq014a,g_mmaf_d[l_ac].mmaq015a,g_mmaf_d[l_ac].mmaq013b,g_mmaf_d[l_ac].mmaq014a,g_mmaf_d[l_ac].mmaq015a,g_mmaf_d[l_ac].mmaq013b,g_mmaf_d[l_ac].mmaq014a,g_mmaf_d[l_ac].mmaq015a
+#   INITIALIZE g_ref_fields TO NULL 
+#   LET g_ref_fields[1] = g_mmaf_d[l_ac].mmaf001
+#   CALL ap_ref_array2(g_ref_fields," SELECT oocql004e,mmaf020b_desc,mmaf021b_desc,oocql004e,mmaf020b_desc,mmaf021b_desc,oocql004e,mmaf020b_desc,mmaf021b_desc FROM oocql_t WHERE oocqlent = '"||g_enterprise||"' AND ","") RETURNING g_rtn_fields 
+#   LET g_mmaf_d[l_ac].oocql004e = g_rtn_fields[1] 
+#   LET g_mmaf_d[l_ac].mmaf020b_desc = g_rtn_fields[2] 
+#   LET g_mmaf_d[l_ac].mmaf021b_desc = g_rtn_fields[3] 
+#   LET g_mmaf_d[l_ac].oocql004e = g_rtn_fields[4] 
+#   LET g_mmaf_d[l_ac].mmaf020b_desc = g_rtn_fields[5] 
+#   LET g_mmaf_d[l_ac].mmaf021b_desc = g_rtn_fields[6] 
+#   LET g_mmaf_d[l_ac].oocql004e = g_rtn_fields[7] 
+#   LET g_mmaf_d[l_ac].mmaf020b_desc = g_rtn_fields[8] 
+#   LET g_mmaf_d[l_ac].mmaf021b_desc = g_rtn_fields[9] 
+#   DISPLAY BY NAME g_mmaf_d[l_ac].oocql004e,g_mmaf_d[l_ac].mmaf020b_desc,g_mmaf_d[l_ac].mmaf021b_desc,g_mmaf_d[l_ac].oocql004e,g_mmaf_d[l_ac].mmaf020b_desc,g_mmaf_d[l_ac].mmaf021b_desc,g_mmaf_d[l_ac].oocql004e,g_mmaf_d[l_ac].mmaf020b_desc,g_mmaf_d[l_ac].mmaf021b_desc
+#   INITIALIZE g_ref_fields TO NULL 
+#   LET g_ref_fields[1] = g_mmaf_d[l_ac].mmaf001
+#   CALL ap_ref_array2(g_ref_fields," SELECT mmaq013c,mmaq014b,mmaq015b,mmaq013c,mmaq014b,mmaq015b,mmaq013c,mmaq014b,mmaq015b FROM mmaq_t WHERE mmaqent = '"||g_enterprise||"' AND ","") RETURNING g_rtn_fields 
+#   LET g_mmaf_d[l_ac].mmaq013c = g_rtn_fields[1] 
+#   LET g_mmaf_d[l_ac].mmaq014b = g_rtn_fields[2] 
+#   LET g_mmaf_d[l_ac].mmaq015b = g_rtn_fields[3] 
+#   LET g_mmaf_d[l_ac].mmaq013c = g_rtn_fields[4] 
+#   LET g_mmaf_d[l_ac].mmaq014b = g_rtn_fields[5] 
+#   LET g_mmaf_d[l_ac].mmaq015b = g_rtn_fields[6] 
+#   LET g_mmaf_d[l_ac].mmaq013c = g_rtn_fields[7] 
+#   LET g_mmaf_d[l_ac].mmaq014b = g_rtn_fields[8] 
+#   LET g_mmaf_d[l_ac].mmaq015b = g_rtn_fields[9] 
+#   DISPLAY BY NAME g_mmaf_d[l_ac].mmaq013c,g_mmaf_d[l_ac].mmaq014b,g_mmaf_d[l_ac].mmaq015b,g_mmaf_d[l_ac].mmaq013c,g_mmaf_d[l_ac].mmaq014b,g_mmaf_d[l_ac].mmaq015b,g_mmaf_d[l_ac].mmaq013c,g_mmaf_d[l_ac].mmaq014b,g_mmaf_d[l_ac].mmaq015b
+#   INITIALIZE g_ref_fields TO NULL 
+#   LET g_ref_fields[1] = g_mmaf_d[l_ac].mmaf001
+#   CALL ap_ref_array2(g_ref_fields," SELECT oocql004f,mmaf020c_desc,mmaf021c_desc,oocql004f,mmaf020c_desc,mmaf021c_desc,oocql004f,mmaf020c_desc,mmaf021c_desc FROM oocql_t WHERE oocqlent = '"||g_enterprise||"' AND ","") RETURNING g_rtn_fields 
+#   LET g_mmaf_d[l_ac].oocql004f = g_rtn_fields[1] 
+#   LET g_mmaf_d[l_ac].mmaf020c_desc = g_rtn_fields[2] 
+#   LET g_mmaf_d[l_ac].mmaf021c_desc = g_rtn_fields[3] 
+#   LET g_mmaf_d[l_ac].oocql004f = g_rtn_fields[4] 
+#   LET g_mmaf_d[l_ac].mmaf020c_desc = g_rtn_fields[5] 
+#   LET g_mmaf_d[l_ac].mmaf021c_desc = g_rtn_fields[6] 
+#   LET g_mmaf_d[l_ac].oocql004f = g_rtn_fields[7] 
+#   LET g_mmaf_d[l_ac].mmaf020c_desc = g_rtn_fields[8] 
+#   LET g_mmaf_d[l_ac].mmaf021c_desc = g_rtn_fields[9] 
+#   DISPLAY BY NAME g_mmaf_d[l_ac].oocql004f,g_mmaf_d[l_ac].mmaf020c_desc,g_mmaf_d[l_ac].mmaf021c_desc,g_mmaf_d[l_ac].oocql004f,g_mmaf_d[l_ac].mmaf020c_desc,g_mmaf_d[l_ac].mmaf021c_desc,g_mmaf_d[l_ac].oocql004f,g_mmaf_d[l_ac].mmaf020c_desc,g_mmaf_d[l_ac].mmaf021c_desc
+#   INITIALIZE g_ref_fields TO NULL 
+#   LET g_ref_fields[1] = g_mmaf_d[l_ac].mmaf001
+#   CALL ap_ref_array2(g_ref_fields," SELECT mmaq013d,mmaq014c,mmaq015c,mmaq013d,mmaq014c,mmaq015c,mmaq013d,mmaq014c,mmaq015c FROM mmaq_t WHERE mmaqent = '"||g_enterprise||"' AND ","") RETURNING g_rtn_fields 
+#   LET g_mmaf_d[l_ac].mmaq013d = g_rtn_fields[1] 
+#   LET g_mmaf_d[l_ac].mmaq014c = g_rtn_fields[2] 
+#   LET g_mmaf_d[l_ac].mmaq015c = g_rtn_fields[3] 
+#   LET g_mmaf_d[l_ac].mmaq013d = g_rtn_fields[4] 
+#   LET g_mmaf_d[l_ac].mmaq014c = g_rtn_fields[5] 
+#   LET g_mmaf_d[l_ac].mmaq015c = g_rtn_fields[6] 
+#   LET g_mmaf_d[l_ac].mmaq013d = g_rtn_fields[7] 
+#   LET g_mmaf_d[l_ac].mmaq014c = g_rtn_fields[8] 
+#   LET g_mmaf_d[l_ac].mmaq015c = g_rtn_fields[9] 
+#   DISPLAY BY NAME g_mmaf_d[l_ac].mmaq013d,g_mmaf_d[l_ac].mmaq014c,g_mmaf_d[l_ac].mmaq015c,g_mmaf_d[l_ac].mmaq013d,g_mmaf_d[l_ac].mmaq014c,g_mmaf_d[l_ac].mmaq015c,g_mmaf_d[l_ac].mmaq013d,g_mmaf_d[l_ac].mmaq014c,g_mmaf_d[l_ac].mmaq015c]]>
+  </point>
+  <point name="detail_show.body2.reference" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+   INITIALIZE g_ref_fields TO NULL 
+   LET g_ref_fields[1] = g_mmaf_d[l_ac].mmaf001
+   CALL ap_ref_array2(g_ref_fields," SELECT mmcxdocdt FROM mmcx_t WHERE mmcxent = '"||g_enterprise||"' AND ","") RETURNING g_rtn_fields 
+   LET g_mmaf2_d[l_ac].mmcxdocdt = g_rtn_fields[1] 
+   DISPLAY BY NAME g_mmaf2_d[l_ac].mmcxdocdt
+   INITIALIZE g_ref_fields TO NULL 
+   LET g_ref_fields[1] = g_mmaf_d[l_ac].mmaf001
+   CALL ap_ref_array2(g_ref_fields," SELECT mmcy002,mmcy003,mmcy004,mmcy006 FROM mmcy_t WHERE mmcyent = '"||g_enterprise||"' AND ","") RETURNING g_rtn_fields 
+   LET g_mmaf2_d[l_ac].mmcy002 = g_rtn_fields[1] 
+   LET g_mmaf2_d[l_ac].mmcy003 = g_rtn_fields[2] 
+   LET g_mmaf2_d[l_ac].mmcy004 = g_rtn_fields[3] 
+   LET g_mmaf2_d[l_ac].mmcy006 = g_rtn_fields[4] 
+   DISPLAY BY NAME g_mmaf2_d[l_ac].mmcy002,g_mmaf2_d[l_ac].mmcy003,g_mmaf2_d[l_ac].mmcy004,g_mmaf2_d[l_ac].mmcy006]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_month     LIKE type_t.chr5
+DEFINE g_day       LIKE type_t.chr5
+DEFINE g_date      LIKE type_t.chr5
+DEFINE l_ac1       LIKE type_t.num5]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL cl_set_combo_scc('mmbe005','6515')
+   CALL cl_set_act_visible("filter", FALSE)]]>
+  </point>
+  <point name="input.a.page1.mmaf001" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_mmaf_d[g_detail_idx].mmaf001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mmaf_d[g_detail_idx].mmaf001 != g_mmaf_d_t.mmaf001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmaf_t WHERE "||"mmafent = '" ||g_enterprise|| "' AND "||"mmaf001 = '"||g_mmaf_d[g_detail_idx].mmaf001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.mmaf001_2" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_mmaf2_d[g_detail_idx].mmaf001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mmaf2_d[g_detail_idx].mmaf001 != g_mmaf2_d_t.mmaf001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmaf_t WHERE "||"mmafent = '" ||g_enterprise|| "' AND "||"mmaf001 = '"||g_mmaf2_d[g_detail_idx].mmaf001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.mmag002" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_mmaf_d[g_detail_idx].mmaf001 IS NOT NULL AND g_mmaf2_d[g_detail_idx2].mmag002 IS NOT NULL AND g_mmaf2_d[g_detail_idx2].mmag003 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mmaf_d[g_detail_idx].mmaf001 != g_mmaf_d[g_detail_idx].mmaf001 OR g_mmaf2_d[g_detail_idx2].mmag002 != g_mmaf2_d_t.mmag002 OR g_mmaf2_d[g_detail_idx2].mmag003 != g_mmaf2_d_t.mmag003)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmag_t WHERE "||"mmagent = '" ||g_enterprise|| "' AND "||"mmag001 = '"||g_mmaf_d[g_detail_idx].mmaf001 ||"' AND "|| "mmag002 = '"||g_mmaf2_d[g_detail_idx2].mmag002 ||"' AND "|| "mmag003 = '"||g_mmaf2_d[g_detail_idx2].mmag003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.mmag003" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_mmaf_d[g_detail_idx].mmaf001 IS NOT NULL AND g_mmaf2_d[g_detail_idx2].mmag002 IS NOT NULL AND g_mmaf2_d[g_detail_idx2].mmag003 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mmaf_d[g_detail_idx].mmaf001 != g_mmaf_d[g_detail_idx].mmaf001 OR g_mmaf2_d[g_detail_idx2].mmag002 != g_mmaf2_d_t.mmag002 OR g_mmaf2_d[g_detail_idx2].mmag003 != g_mmaf2_d_t.mmag003)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmag_t WHERE "||"mmagent = '" ||g_enterprise|| "' AND "||"mmag001 = '"||g_mmaf_d[g_detail_idx].mmaf001 ||"' AND "|| "mmag002 = '"||g_mmaf2_d[g_detail_idx2].mmag002 ||"' AND "|| "mmag003 = '"||g_mmaf2_d[g_detail_idx2].mmag003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page3.mmaf001" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_mmaf3_d[g_detail_idx].mmaf001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mmaf3_d[g_detail_idx].mmaf001 != g_mmaf3_d_t.mmaf001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmaf_t WHERE "||"mmafent = '" ||g_enterprise|| "' AND "||"mmaf001 = '"||g_mmaf3_d[g_detail_idx].mmaf001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page3.mmaf001_3" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_mmaf3_d[g_detail_idx].mmaf001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mmaf3_d[g_detail_idx].mmaf001 != g_mmaf3_d_t.mmaf001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmaf_t WHERE "||"mmafent = '" ||g_enterprise|| "' AND "||"mmaf001 = '"||g_mmaf3_d[g_detail_idx].mmaf001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page3.mmag002_3" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_mmaf_d[g_detail_idx].mmaf001 IS NOT NULL AND g_mmaf3_d[g_detail_idx2].mmag002 IS NOT NULL AND g_mmaf3_d[g_detail_idx2].mmag003 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mmaf_d[g_detail_idx].mmaf001 != g_mmaf_d[g_detail_idx].mmaf001 OR g_mmaf3_d[g_detail_idx2].mmag002 != g_mmaf3_d_t.mmag002 OR g_mmaf3_d[g_detail_idx2].mmag003 != g_mmaf3_d_t.mmag003)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmag_t WHERE "||"mmagent = '" ||g_enterprise|| "' AND "||"mmag001 = '"||g_mmaf_d[g_detail_idx].mmaf001 ||"' AND "|| "mmag002 = '"||g_mmaf3_d[g_detail_idx2].mmag002 ||"' AND "|| "mmag003 = '"||g_mmaf3_d[g_detail_idx2].mmag003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page3.mmag003_3" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_mmaf_d[g_detail_idx].mmaf001 IS NOT NULL AND g_mmaf3_d[g_detail_idx2].mmag002 IS NOT NULL AND g_mmaf3_d[g_detail_idx2].mmag003 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mmaf_d[g_detail_idx].mmaf001 != g_mmaf_d[g_detail_idx].mmaf001 OR g_mmaf3_d[g_detail_idx2].mmag002 != g_mmaf3_d_t.mmag002 OR g_mmaf3_d[g_detail_idx2].mmag003 != g_mmaf3_d_t.mmag003)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmag_t WHERE "||"mmagent = '" ||g_enterprise|| "' AND "||"mmag001 = '"||g_mmaf_d[g_detail_idx].mmaf001 ||"' AND "|| "mmag002 = '"||g_mmaf3_d[g_detail_idx2].mmag002 ||"' AND "|| "mmag003 = '"||g_mmaf3_d[g_detail_idx2].mmag003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page4.mmaf001" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_mmaf4_d[g_detail_idx].mmaf001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mmaf4_d[g_detail_idx].mmaf001 != g_mmaf4_d_t.mmaf001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmaf_t WHERE "||"mmafent = '" ||g_enterprise|| "' AND "||"mmaf001 = '"||g_mmaf4_d[g_detail_idx].mmaf001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page4.mmaf001_4" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_mmaf4_d[g_detail_idx].mmaf001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mmaf4_d[g_detail_idx].mmaf001 != g_mmaf4_d_t.mmaf001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmaf_t WHERE "||"mmafent = '" ||g_enterprise|| "' AND "||"mmaf001 = '"||g_mmaf4_d[g_detail_idx].mmaf001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page4.mmag002_4" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_mmaf_d[g_detail_idx].mmaf001 IS NOT NULL AND g_mmaf4_d[g_detail_idx2].mmag002 IS NOT NULL AND g_mmaf4_d[g_detail_idx2].mmag003 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mmaf_d[g_detail_idx].mmaf001 != g_mmaf_d[g_detail_idx].mmaf001 OR g_mmaf4_d[g_detail_idx2].mmag002 != g_mmaf4_d_t.mmag002 OR g_mmaf4_d[g_detail_idx2].mmag003 != g_mmaf4_d_t.mmag003)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmag_t WHERE "||"mmagent = '" ||g_enterprise|| "' AND "||"mmag001 = '"||g_mmaf_d[g_detail_idx].mmaf001 ||"' AND "|| "mmag002 = '"||g_mmaf4_d[g_detail_idx2].mmag002 ||"' AND "|| "mmag003 = '"||g_mmaf4_d[g_detail_idx2].mmag003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page4.mmag003_4" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_mmaf_d[g_detail_idx].mmaf001 IS NOT NULL AND g_mmaf4_d[g_detail_idx2].mmag002 IS NOT NULL AND g_mmaf4_d[g_detail_idx2].mmag003 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mmaf_d[g_detail_idx].mmaf001 != g_mmaf_d[g_detail_idx].mmaf001 OR g_mmaf4_d[g_detail_idx2].mmag002 != g_mmaf4_d_t.mmag002 OR g_mmaf4_d[g_detail_idx2].mmag003 != g_mmaf4_d_t.mmag003)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmag_t WHERE "||"mmagent = '" ||g_enterprise|| "' AND "||"mmag001 = '"||g_mmaf_d[g_detail_idx].mmaf001 ||"' AND "|| "mmag002 = '"||g_mmaf4_d[g_detail_idx2].mmag002 ||"' AND "|| "mmag003 = '"||g_mmaf4_d[g_detail_idx2].mmag003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page5.mmaf001_5" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_mmaf5_d[g_detail_idx].mmaf001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mmaf5_d[g_detail_idx].mmaf001 != g_mmaf5_d_t.mmaf001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmaf_t WHERE "||"mmafent = '" ||g_enterprise|| "' AND "||"mmaf001 = '"||g_mmaf5_d[g_detail_idx].mmaf001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page5.mmag002_5" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_mmaf_d[g_detail_idx].mmaf001 IS NOT NULL AND g_mmaf5_d[g_detail_idx2].mmag002 IS NOT NULL AND g_mmaf5_d[g_detail_idx2].mmag003 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mmaf_d[g_detail_idx].mmaf001 != g_mmaf_d[g_detail_idx].mmaf001 OR g_mmaf5_d[g_detail_idx2].mmag002 != g_mmaf5_d_t.mmag002 OR g_mmaf5_d[g_detail_idx2].mmag003 != g_mmaf5_d_t.mmag003)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmag_t WHERE "||"mmagent = '" ||g_enterprise|| "' AND "||"mmag001 = '"||g_mmaf_d[g_detail_idx].mmaf001 ||"' AND "|| "mmag002 = '"||g_mmaf5_d[g_detail_idx2].mmag002 ||"' AND "|| "mmag003 = '"||g_mmaf5_d[g_detail_idx2].mmag003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page5.mmag003_5" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_mmaf_d[g_detail_idx].mmaf001 IS NOT NULL AND g_mmaf5_d[g_detail_idx2].mmag002 IS NOT NULL AND g_mmaf5_d[g_detail_idx2].mmag003 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mmaf_d[g_detail_idx].mmaf001 != g_mmaf_d[g_detail_idx].mmaf001 OR g_mmaf5_d[g_detail_idx2].mmag002 != g_mmaf5_d_t.mmag002 OR g_mmaf5_d[g_detail_idx2].mmag003 != g_mmaf5_d_t.mmag003)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmag_t WHERE "||"mmagent = '" ||g_enterprise|| "' AND "||"mmag001 = '"||g_mmaf_d[g_detail_idx].mmaf001 ||"' AND "|| "mmag002 = '"||g_mmaf5_d[g_detail_idx2].mmag002 ||"' AND "|| "mmag003 = '"||g_mmaf5_d[g_detail_idx2].mmag003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page6.mmaf001_6" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_mmaf6_d[g_detail_idx].mmaf001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mmaf6_d[g_detail_idx].mmaf001 != g_mmaf6_d_t.mmaf001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmaf_t WHERE "||"mmafent = '" ||g_enterprise|| "' AND "||"mmaf001 = '"||g_mmaf6_d[g_detail_idx].mmaf001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page6.mmag002_6" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_mmaf_d[g_detail_idx].mmaf001 IS NOT NULL AND g_mmaf6_d[g_detail_idx2].mmag002 IS NOT NULL AND g_mmaf6_d[g_detail_idx2].mmag003 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mmaf_d[g_detail_idx].mmaf001 != g_mmaf_d[g_detail_idx].mmaf001 OR g_mmaf6_d[g_detail_idx2].mmag002 != g_mmaf6_d_t.mmag002 OR g_mmaf6_d[g_detail_idx2].mmag003 != g_mmaf6_d_t.mmag003)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmag_t WHERE "||"mmagent = '" ||g_enterprise|| "' AND "||"mmag001 = '"||g_mmaf_d[g_detail_idx].mmaf001 ||"' AND "|| "mmag002 = '"||g_mmaf6_d[g_detail_idx2].mmag002 ||"' AND "|| "mmag003 = '"||g_mmaf6_d[g_detail_idx2].mmag003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page6.mmag003_6" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_mmaf_d[g_detail_idx].mmaf001 IS NOT NULL AND g_mmaf6_d[g_detail_idx2].mmag002 IS NOT NULL AND g_mmaf6_d[g_detail_idx2].mmag003 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mmaf_d[g_detail_idx].mmaf001 != g_mmaf_d[g_detail_idx].mmaf001 OR g_mmaf6_d[g_detail_idx2].mmag002 != g_mmaf6_d_t.mmag002 OR g_mmaf6_d[g_detail_idx2].mmag003 != g_mmaf6_d_t.mmag003)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmag_t WHERE "||"mmagent = '" ||g_enterprise|| "' AND "||"mmag001 = '"||g_mmaf_d[g_detail_idx].mmaf001 ||"' AND "|| "mmag002 = '"||g_mmaf6_d[g_detail_idx2].mmag002 ||"' AND "|| "mmag003 = '"||g_mmaf6_d[g_detail_idx2].mmag003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page7.mmaf001_7" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_mmaf7_d[g_detail_idx].mmaf001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mmaf7_d[g_detail_idx].mmaf001 != g_mmaf7_d_t.mmaf001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmaf_t WHERE "||"mmafent = '" ||g_enterprise|| "' AND "||"mmaf001 = '"||g_mmaf7_d[g_detail_idx].mmaf001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page7.mmag002_7" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_mmaf_d[g_detail_idx].mmaf001 IS NOT NULL AND g_mmaf7_d[g_detail_idx2].mmag002 IS NOT NULL AND g_mmaf7_d[g_detail_idx2].mmag003 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mmaf_d[g_detail_idx].mmaf001 != g_mmaf_d[g_detail_idx].mmaf001 OR g_mmaf7_d[g_detail_idx2].mmag002 != g_mmaf7_d_t.mmag002 OR g_mmaf7_d[g_detail_idx2].mmag003 != g_mmaf7_d_t.mmag003)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmag_t WHERE "||"mmagent = '" ||g_enterprise|| "' AND "||"mmag001 = '"||g_mmaf_d[g_detail_idx].mmaf001 ||"' AND "|| "mmag002 = '"||g_mmaf7_d[g_detail_idx2].mmag002 ||"' AND "|| "mmag003 = '"||g_mmaf7_d[g_detail_idx2].mmag003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page7.mmag003_7" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_mmaf_d[g_detail_idx].mmaf001 IS NOT NULL AND g_mmaf7_d[g_detail_idx2].mmag002 IS NOT NULL AND g_mmaf7_d[g_detail_idx2].mmag003 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mmaf_d[g_detail_idx].mmaf001 != g_mmaf_d[g_detail_idx].mmaf001 OR g_mmaf7_d[g_detail_idx2].mmag002 != g_mmaf7_d_t.mmag002 OR g_mmaf7_d[g_detail_idx2].mmag003 != g_mmaf7_d_t.mmag003)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmag_t WHERE "||"mmagent = '" ||g_enterprise|| "' AND "||"mmag001 = '"||g_mmaf_d[g_detail_idx].mmaf001 ||"' AND "|| "mmag002 = '"||g_mmaf7_d[g_detail_idx2].mmag002 ||"' AND "|| "mmag003 = '"||g_mmaf7_d[g_detail_idx2].mmag003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.body2.before_row" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               DISPLAY g_detail_idx2 TO FORMONLY.h_index
+               DISPLAY g_mmaf2_d.getLength() TO FORMONLY.h_count]]>
+  </point>
+  <point name="input.body3.before_row" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               DISPLAY g_detail_idx2 TO FORMONLY.h_index
+               DISPLAY g_mmaf3_d.getLength() TO FORMONLY.h_count]]>
+  </point>
+  <point name="input.body4.before_row" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               DISPLAY g_detail_idx2 TO FORMONLY.h_index
+               DISPLAY g_mmaf4_d.getLength() TO FORMONLY.h_count]]>
+  </point>
+  <point name="input.body5.before_row" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               DISPLAY g_detail_idx2 TO FORMONLY.h_index
+               DISPLAY g_mmaf5_d.getLength() TO FORMONLY.h_count]]>
+  </point>
+  <point name="input.body6.before_row" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               DISPLAY g_detail_idx2 TO FORMONLY.h_index
+               DISPLAY g_mmaf6_d.getLength() TO FORMONLY.h_count]]>
+  </point>
+  <point name="input.body7.before_row" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               DISPLAY g_detail_idx2 TO FORMONLY.h_index
+               DISPLAY g_mmaf7_d.getLength() TO FORMONLY.h_count]]>
+  </point>
+  <point name="menu.filter" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="menu.open_query" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               IF g_mmaf_d.getLength()<>0 THEN
+                  CALL acrq510_construct_add()
+                  CALL acrq510_b_fill1()
+               END IF  
+               CONTINUE DIALOG    ]]>
+  </point>
+  <point name="menu.query" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               CALL acrq510_query()]]>
+  </point>
+  <point name="ui_dialog.bef_dialog" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL cl_set_act_visible("filter", FALSE)]]>
+  </point>
+  <point name="ui_dialog.before_dialog" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_wc = " 1=0"
+   LET g_wc2 = " 1=0"]]>
+  </point>
+  <section id="acrq510.b_fill" ver="11" status="" src="s">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION acrq510_b_fill()
+   {<Local define>}
+   DEFINE ls_wc           STRING
+   DEFINE l_pid           LIKE type_t.chr50
+   {</Local define>}
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+ 
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter
+ 
+   CALL g_mmaf_d.clear()
+ 
+   #add-point:陣列清空
+   {<point name="b_fill.array_clear" />}
+   #end add-point
+ 
+   
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1
+   ERROR "Searching!"
+ 
+   # b_fill段sql組成及FOREACH撰寫
+   #+ 此段落由子樣板qs04產生
+   #+ b_fill段資料取得(包含sql組成及FOREACH段撰寫)
+   LET g_sql = "SELECT  UNIQUE mmaf001,mmaf008,'',mmaf015,'',mmaf014,'','','',mmaf021,'',mmaf020,'' FROM mmaf_t", 
+
+ 
+#table2
+               " LEFT JOIN mmag_t ON mmagent = mmafent AND mmaf001 = mmag001",
+ 
+               "",
+               " WHERE mmafent= ? AND 1=1 AND ", ls_wc
+ 
+   LET g_sql = g_sql, " ORDER BY mmaf_t.mmaf001"
+ 
+   #add-point:b_fill段sql_after
+   {<point name="b_fill.sql_after"/>}
+   #end add-point
+ 
+   PREPARE acrq510_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR acrq510_pb
+ 
+   FOREACH b_fill_curs INTO g_mmaf_d[l_ac].mmaf001,g_mmaf_d[l_ac].mmaf008,g_mmaf_d[l_ac].oocql004,g_mmaf_d[l_ac].mmaf015, 
+       g_mmaf_d[l_ac].age,g_mmaf_d[l_ac].mmaf014,g_mmaf_d[l_ac].mmaq014,g_mmaf_d[l_ac].mmaq015,g_mmaf_d[l_ac].mmaq013, 
+       g_mmaf_d[l_ac].mmaf021,g_mmaf_d[l_ac].mmaf021_desc,g_mmaf_d[l_ac].mmaf020,g_mmaf_d[l_ac].mmaf020_desc 
+
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+ 
+      LET g_mmaf_d[l_ac].sel = "N"
+ 
+      
+ 
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.fill"/>}
+      #end add-point
+ 
+      CALL acrq510_detail_show("'1'")
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+ 
+   END FOREACH
+ 
+ 
+ 
+ 
+ 
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+ 
+   CALL g_mmaf_d.deleteElement(g_mmaf_d.getLength())
+ 
+   #add-point:陣列長度調整
+   {<point name="b_fill.array_deleteElement" />}
+   #end add-point
+ 
+   LET g_error_show = 0
+ 
+   LET g_detail_cnt = l_ac - 1
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+ 
+   #+ 此段落由子樣板qs06產生
+   #+ b_fill段CURSOR釋放
+   CLOSE b_fill_curs
+   FREE acrq510_pb
+ 
+ 
+ 
+ 
+   LET l_ac = 1
+   CALL acrq510_b_fill2()
+ 
+      CALL acrq510_filter_show('mmaf001','b_mmaf001')
+   CALL acrq510_filter_show('mmaf008','b_mmaf008')
+   CALL acrq510_filter_show('oocql004','b_oocql004')
+   CALL acrq510_filter_show('mmaf015','b_mmaf015')
+   CALL acrq510_filter_show('age','b_age')
+   CALL acrq510_filter_show('mmaf014','b_mmaf014')
+   CALL acrq510_filter_show('mmaq014','b_mmaq014')
+   CALL acrq510_filter_show('mmaq015','b_mmaq015')
+   CALL acrq510_filter_show('mmaq013','b_mmaq013')
+   CALL acrq510_filter_show('mmaf021','b_mmaf021')
+   CALL acrq510_filter_show('mmaf020','b_mmaf020')
+ 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="acrq510.b_fill2" ver="2" status="" src="s">
+    <![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION acrq510_b_fill2()
+   {<Local define>}
+   DEFINE li_ac           LIKE type_t.num5
+   {</Local define>}
+   #add-point:b_fill2段define
+   {<point name="b_fill2.define"/>}
+   #end add-point
+ 
+   LET li_ac = l_ac
+ 
+   #單身組成
+   #+ 此段落由子樣板qs07產生
+   #+ b_fill2段table資料取得(包含sql組成及資料填充)
+#Page7
+   CALL g_mmaf7_d.clear()
+ 
+   #add-point:陣列清空
+   {<point name="b_fill2.array_clear" />}
+   #end add-point
+ 
+#table2
+   LET g_sql = "SELECT  UNIQUE '','','','','','','','','','','','','','','','','','','','','','','', 
+       '','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','', 
+       '','','','','','','','','','','','','','','','','','','','','','','','','','','','','','','', 
+       '','' FROM mmag_t",
+               "",
+               " WHERE mmagent=? AND mmag001=?"
+ 
+   IF NOT cl_null(g_wc2_table2) THEN
+      LET g_sql = g_sql CLIPPED," AND ",g_wc2_table2 CLIPPED
+   END IF
+ 
+   LET g_sql = g_sql, " ORDER BY mmag_t.mmag002,mmag_t.mmag003"
+ 
+   #add-point:單身填充前
+   {<point name="b_fill2.before_fill2" />}
+   #end add-point
+ 
+   PREPARE acrq510_pb2 FROM g_sql
+   DECLARE b_fill_curs2 CURSOR FOR acrq510_pb2
+ 
+   OPEN b_fill_curs2 USING g_enterprise,g_mmaf_d[g_detail_idx].mmaf001
+ 
+   LET l_ac = 1
+   FOREACH b_fill_curs2 INTO g_mmaf2_d[l_ac].sel_a,g_mmaf2_d[l_ac].mmaf001a,g_mmaf2_d[l_ac].mmaf008a, 
+       g_mmaf2_d[l_ac].oocql004a,g_mmaf2_d[l_ac].mmaf015a,g_mmaf2_d[l_ac].agea,g_mmaf2_d[l_ac].mmaf014a, 
+       g_mmaf2_d[l_ac].mmcxdocdt,g_mmaf2_d[l_ac].mmcy002,g_mmaf2_d[l_ac].mmcy002_desc,g_mmaf2_d[l_ac].mmcy003, 
+       g_mmaf2_d[l_ac].mmcy003_desc,g_mmaf2_d[l_ac].mmcy004,g_mmaf2_d[l_ac].mmcy004_desc,g_mmaf2_d[l_ac].mmcy006, 
+       g_mmaf2_d[l_ac].mmcy006_desc,g_mmaf3_d[l_ac].sel_b,g_mmaf3_d[l_ac].mmaf001b,g_mmaf3_d[l_ac].mmaf008b, 
+       g_mmaf3_d[l_ac].oocql004b,g_mmaf3_d[l_ac].mmaf015b,g_mmaf3_d[l_ac].ageb,g_mmaf3_d[l_ac].mmaf014b, 
+       g_mmaf3_d[l_ac].mmcxdocdta,g_mmaf3_d[l_ac].mmcy002a,g_mmaf3_d[l_ac].mmcy002a_desc,g_mmaf3_d[l_ac].mmcy003a, 
+       g_mmaf3_d[l_ac].mmcy003a_desc,g_mmaf3_d[l_ac].mmcy004a,g_mmaf3_d[l_ac].mmcy004a_desc,g_mmaf3_d[l_ac].mmcy006a, 
+       g_mmaf3_d[l_ac].mmcy006a_desc,g_mmaf4_d[l_ac].sel_c,g_mmaf4_d[l_ac].mmaf001c,g_mmaf4_d[l_ac].mmaf008c, 
+       g_mmaf4_d[l_ac].oocql004c,g_mmaf4_d[l_ac].mmaf015c,g_mmaf4_d[l_ac].agec,g_mmaf4_d[l_ac].mmaf014c, 
+       g_mmaf4_d[l_ac].mmbe001,g_mmaf4_d[l_ac].mmbe002,g_mmaf4_d[l_ac].mmbe002_desc,g_mmaf4_d[l_ac].mmbe005, 
+       g_mmaf4_d[l_ac].mmbddocdt,g_mmaf4_d[l_ac].mmaq013a,g_mmaf5_d[l_ac].sel_d,g_mmaf5_d[l_ac].mmaf001d, 
+       g_mmaf5_d[l_ac].mmaf008d,g_mmaf5_d[l_ac].oocql004d,g_mmaf5_d[l_ac].mmaf015d,g_mmaf5_d[l_ac].aged, 
+       g_mmaf5_d[l_ac].mmaf014d,g_mmaf5_d[l_ac].mmaq013b,g_mmaf5_d[l_ac].mmaq014a,g_mmaf5_d[l_ac].mmaq015a, 
+       g_mmaf5_d[l_ac].mmaf021a,g_mmaf5_d[l_ac].mmaf021a_desc,g_mmaf5_d[l_ac].mmaf020a,g_mmaf5_d[l_ac].mmaf020a_desc, 
+       g_mmaf6_d[l_ac].sel_e,g_mmaf6_d[l_ac].mmaf001e,g_mmaf6_d[l_ac].mmaf008e,g_mmaf6_d[l_ac].oocql004e, 
+       g_mmaf6_d[l_ac].mmaf015e,g_mmaf6_d[l_ac].agee,g_mmaf6_d[l_ac].mmaf014e,g_mmaf6_d[l_ac].mmaq013c, 
+       g_mmaf6_d[l_ac].mmaq014b,g_mmaf6_d[l_ac].mmaq015b,g_mmaf6_d[l_ac].mmaf021b,g_mmaf6_d[l_ac].mmaf021b_desc, 
+       g_mmaf6_d[l_ac].mmaf020b,g_mmaf6_d[l_ac].mmaf020b_desc,g_mmaf7_d[l_ac].sel_f,g_mmaf7_d[l_ac].mmaf001f, 
+       g_mmaf7_d[l_ac].mmaf008f,g_mmaf7_d[l_ac].oocql004f,g_mmaf7_d[l_ac].mmaf015f,g_mmaf7_d[l_ac].agef, 
+       g_mmaf7_d[l_ac].mmaf014f,g_mmaf7_d[l_ac].mmaq013d,g_mmaf7_d[l_ac].mmaq014c,g_mmaf7_d[l_ac].mmaq015c, 
+       g_mmaf7_d[l_ac].mmaf021c,g_mmaf7_d[l_ac].mmaf021c_desc,g_mmaf7_d[l_ac].mmaf020c,g_mmaf7_d[l_ac].mmaf020c_desc 
+
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+ 
+      
+ 
+      #add-point:b_fill2段資料填充
+      {<point name="b_fill2.fill2"/>}
+      #end add-point
+ 
+      CALL acrq510_detail_show("'2'")
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         CALL cl_err( "", 9035, 1 )
+         EXIT FOREACH
+      END IF
+ 
+   END FOREACH
+ 
+   LET li_ac = l_ac - 1
+   DISPLAY li_ac TO FORMONLY.cnt
+   LET g_detail_idx2 = 1
+   DISPLAY g_detail_idx2 TO FORMONLY.idx
+ 
+ 
+#Page7
+   CALL g_mmaf7_d.deleteElement(g_mmaf7_d.getLength())
+ 
+   #add-point:陣列長度調整
+   {<point name="b_fill2.array_deleteElement" />}
+   #end add-point
+ 
+ 
+ 
+   #add-point:單身填充後
+   {<point name="b_fill2.after_fill" />}
+   #end add-point
+ 
+   LET l_ac = li_ac
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="acrq510.description" ver="1" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000090
+#+ 
+#+ Filename...: acrq510
+#+ Description: 會員綜合分析查詢作業
+#+ Creator....: 03247(2014/05/29)
+#+ Modifier...: 03247(2014/06/05)
+#+ Buildtype..: 應用 q01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="acrq510.detail_show" ver="3" status="" src="s">
+    <![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION acrq510_detail_show(ps_page)
+   DEFINE ps_page   STRING
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+ 
+   
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'2'",1) > 0 THEN
+      #帶出公用欄位reference值page2
+      
+      #add-point:show段單身reference
+      {<point name="detail_show.body2.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'3'",1) > 0 THEN
+      #帶出公用欄位reference值page3
+      
+      #add-point:show段單身reference
+      {<point name="detail_show.body3.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'4'",1) > 0 THEN
+      #帶出公用欄位reference值page4
+      
+      #add-point:show段單身reference
+      {<point name="detail_show.body4.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'5'",1) > 0 THEN
+      #帶出公用欄位reference值page5
+      
+      #add-point:show段單身reference
+      {<point name="detail_show.body5.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'6'",1) > 0 THEN
+      #帶出公用欄位reference值page6
+      
+      #add-point:show段單身reference
+      {<point name="detail_show.body6.reference"/>}
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'7'",1) > 0 THEN
+      #帶出公用欄位reference值page7
+      
+      #add-point:show段單身reference
+      {<point name="detail_show.body7.reference"/>}
+      #end add-point
+   END IF
+ 
+ 
+ 
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="acrq510.filter" ver="6" status="" src="s">
+    <![CDATA[#+ 此段落由子樣板qs13產生
+#+ filter段相關程式段
+#+ filter過濾功能
+PRIVATE FUNCTION acrq510_filter()
+   {<Local define>}
+   {</Local define>}
+   #add-point:filter段define
+   {<point name="filter.define"/>}
+   #end add-point
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+ 
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", TRUE)
+ 
+   
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   #+ 此段落由子樣板qs08產生
+   #+ filter段DIALOG段的組成
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON mmaf001,mmaf008,oocql004,mmaf015,age,mmaf014,mmaq014,mmaq015,mmaq013, 
+          mmaf021,mmaf020
+                          FROM s_detail1[1].b_mmaf001,s_detail1[1].b_mmaf008,s_detail1[1].b_oocql004, 
+                              s_detail1[1].b_mmaf015,s_detail1[1].b_age,s_detail1[1].b_mmaf014,s_detail1[1].b_mmaq014, 
+                              s_detail1[1].b_mmaq015,s_detail1[1].b_mmaq013,s_detail1[1].b_mmaf021,s_detail1[1].b_mmaf020 
+
+ 
+         BEFORE CONSTRUCT
+            CALL cl_qbe_init()
+                     DISPLAY acrq510_filter_parser('mmaf001') TO s_detail1[1].b_mmaf001
+            DISPLAY acrq510_filter_parser('mmaf008') TO s_detail1[1].b_mmaf008
+            DISPLAY acrq510_filter_parser('oocql004') TO s_detail1[1].b_oocql004
+            DISPLAY acrq510_filter_parser('mmaf015') TO s_detail1[1].b_mmaf015
+            DISPLAY acrq510_filter_parser('age') TO s_detail1[1].b_age
+            DISPLAY acrq510_filter_parser('mmaf014') TO s_detail1[1].b_mmaf014
+            DISPLAY acrq510_filter_parser('mmaq014') TO s_detail1[1].b_mmaq014
+            DISPLAY acrq510_filter_parser('mmaq015') TO s_detail1[1].b_mmaq015
+            DISPLAY acrq510_filter_parser('mmaq013') TO s_detail1[1].b_mmaq013
+            DISPLAY acrq510_filter_parser('mmaf021') TO s_detail1[1].b_mmaf021
+            DISPLAY acrq510_filter_parser('mmaf020') TO s_detail1[1].b_mmaf020
+ 
+ 
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog
+         {<point name="filter.b_dialog"/>}
+         #end add-point
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+ 
+ 
+   
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+ 
+      CALL acrq510_filter_show('mmaf001','b_mmaf001')
+   CALL acrq510_filter_show('mmaf008','b_mmaf008')
+   CALL acrq510_filter_show('oocql004','b_oocql004')
+   CALL acrq510_filter_show('mmaf015','b_mmaf015')
+   CALL acrq510_filter_show('age','b_age')
+   CALL acrq510_filter_show('mmaf014','b_mmaf014')
+   CALL acrq510_filter_show('mmaq014','b_mmaq014')
+   CALL acrq510_filter_show('mmaq015','b_mmaq015')
+   CALL acrq510_filter_show('mmaq013','b_mmaq013')
+   CALL acrq510_filter_show('mmaf021','b_mmaf021')
+   CALL acrq510_filter_show('mmaf020','b_mmaf020')
+ 
+   CALL acrq510_b_fill()
+ 
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", FALSE)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="acrq510.filter_parser" ver="1" status="" src="s">
+    <![CDATA[#+ 此段落由子樣板qs14產生
+#+ filter pasara段
+#+ filter欄位解析
+PRIVATE FUNCTION acrq510_filter_parser(ps_field)
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+   #add-point:filter段define
+   {<point name="filter_parser.define"/>}
+   #end add-point
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="acrq510.filter_show" ver="1" status="" src="s">
+    <![CDATA[#+ 此段落由子樣板qs15產生
+#+ 標題欄位顯示搜尋條件
+PRIVATE FUNCTION acrq510_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = acrq510_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="acrq510.global" ver="10" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_mmaf_d RECORD
+       sel            LIKE type_t.chr1,
+       mmaf001 LIKE mmaf_t.mmaf001, 
+   mmaf008 LIKE mmaf_t.mmaf008, 
+   oocql004 LIKE oocql_t.oocql004, 
+   mmaf015 LIKE mmaf_t.mmaf015, 
+   age LIKE type_t.chr80, 
+   mmaf014 LIKE mmaf_t.mmaf014, 
+   mmaq014 LIKE mmaq_t.mmaq014, 
+   mmaq015 LIKE mmaq_t.mmaq015, 
+   mmaq013 LIKE mmaq_t.mmaq013, 
+   mmaf021 LIKE mmaf_t.mmaf021, 
+   mmaf021_desc LIKE type_t.chr80, 
+   mmaf020 LIKE mmaf_t.mmaf020, 
+   mmaf020_desc LIKE type_t.chr80
+       END RECORD
+PRIVATE TYPE type_g_mmaf2_d RECORD
+       sel_a LIKE type_t.chr80, 
+   mmaf001a LIKE type_t.chr30, 
+   mmaf008a LIKE type_t.chr500, 
+   oocql004a LIKE type_t.chr500, 
+   mmaf015a LIKE type_t.dat, 
+   agea LIKE type_t.chr80, 
+   mmaf014a LIKE type_t.chr20, 
+   mmcxdocdt LIKE type_t.dat, 
+   mmcy002 LIKE type_t.chr10, 
+   mmcy002_desc LIKE type_t.chr500, 
+   mmcy003 LIKE type_t.chr10, 
+   mmcy003_desc LIKE type_t.chr500, 
+   mmcy004 LIKE type_t.chr10, 
+   mmcy004_desc LIKE type_t.chr500, 
+   mmcy006 LIKE type_t.chr30, 
+   mmcy006_desc LIKE type_t.chr500
+       END RECORD
+ 
+PRIVATE TYPE type_g_mmaf3_d RECORD
+       sel_b LIKE type_t.chr80, 
+   mmaf001b LIKE type_t.chr30, 
+   mmaf008b LIKE type_t.chr500, 
+   oocql004b LIKE type_t.chr500, 
+   mmaf015b LIKE type_t.dat, 
+   ageb LIKE type_t.chr80, 
+   mmaf014b LIKE type_t.chr20, 
+   mmcxdocdta LIKE type_t.dat, 
+   mmcy002a LIKE type_t.chr10, 
+   mmcy002a_desc LIKE type_t.chr80, 
+   mmcy003a LIKE type_t.chr10, 
+   mmcy003a_desc LIKE type_t.chr500, 
+   mmcy004a LIKE type_t.chr10, 
+   mmcy004a_desc LIKE type_t.chr500, 
+   mmcy006a LIKE type_t.chr30, 
+   mmcy006a_desc LIKE type_t.chr500
+       END RECORD
+ 
+PRIVATE TYPE type_g_mmaf4_d RECORD
+       sel_c LIKE type_t.chr80, 
+   mmaf001c LIKE type_t.chr30, 
+   mmaf008c LIKE type_t.chr500, 
+   oocql004c LIKE type_t.chr500, 
+   mmaf015c LIKE type_t.dat, 
+   agec LIKE type_t.chr80, 
+   mmaf014c LIKE type_t.chr20, 
+   mmbe001 LIKE type_t.chr30, 
+   mmbe002 LIKE type_t.chr10, 
+   mmbe002_desc LIKE type_t.chr500, 
+   mmbe005 LIKE type_t.chr1, 
+   mmbddocdt LIKE type_t.dat, 
+   mmaq013a LIKE type_t.dat
+       END RECORD
+ 
+PRIVATE TYPE type_g_mmaf5_d RECORD
+       sel_d LIKE type_t.chr80, 
+   mmaf001d LIKE type_t.chr30, 
+   mmaf008d LIKE type_t.chr500, 
+   oocql004d LIKE type_t.chr500, 
+   mmaf015d LIKE type_t.dat, 
+   aged LIKE type_t.chr80, 
+   mmaf014d LIKE type_t.chr20, 
+   mmaq013b LIKE type_t.dat, 
+   mmaq014a LIKE type_t.num5, 
+   mmaq015a LIKE type_t.num20_6, 
+   mmaf021a LIKE type_t.chr10, 
+   mmaf021a_desc LIKE type_t.chr500, 
+   mmaf020a LIKE type_t.chr10, 
+   mmaf020a_desc LIKE type_t.chr500
+       END RECORD
+ 
+PRIVATE TYPE type_g_mmaf6_d RECORD
+       sel_e LIKE type_t.chr80, 
+   mmaf001e LIKE type_t.chr30, 
+   mmaf008e LIKE type_t.chr500, 
+   oocql004e LIKE type_t.chr500, 
+   mmaf015e LIKE type_t.dat, 
+   agee LIKE type_t.chr80, 
+   mmaf014e LIKE type_t.chr20, 
+   mmaq013c LIKE type_t.dat, 
+   mmaq014b LIKE type_t.num5, 
+   mmaq015b LIKE type_t.num20_6, 
+   mmaf021b LIKE type_t.chr10, 
+   mmaf021b_desc LIKE type_t.chr500, 
+   mmaf020b LIKE type_t.chr10, 
+   mmaf020b_desc LIKE type_t.chr500
+       END RECORD
+ 
+PRIVATE TYPE type_g_mmaf7_d RECORD
+       sel_f LIKE type_t.chr80, 
+   mmaf001f LIKE type_t.chr30, 
+   mmaf008f LIKE type_t.chr500, 
+   oocql004f LIKE type_t.chr500, 
+   mmaf015f LIKE type_t.dat, 
+   agef LIKE type_t.chr80, 
+   mmaf014f LIKE type_t.chr20, 
+   mmaq013d LIKE type_t.dat, 
+   mmaq014c LIKE type_t.num5, 
+   mmaq015c LIKE type_t.num20_6, 
+   mmaf021c LIKE type_t.chr10, 
+   mmaf021c_desc LIKE type_t.chr500, 
+   mmaf020c LIKE type_t.chr10, 
+   mmaf020c_desc LIKE type_t.chr500
+       END RECORD
+ 
+ 
+ 
+#模組變數(Module Variables)
+DEFINE g_mmaf_d            DYNAMIC ARRAY OF type_g_mmaf_d
+DEFINE g_mmaf_d_t          type_g_mmaf_d
+DEFINE g_mmaf2_d     DYNAMIC ARRAY OF type_g_mmaf2_d
+DEFINE g_mmaf2_d_t   type_g_mmaf2_d
+ 
+DEFINE g_mmaf3_d     DYNAMIC ARRAY OF type_g_mmaf3_d
+DEFINE g_mmaf3_d_t   type_g_mmaf3_d
+ 
+DEFINE g_mmaf4_d     DYNAMIC ARRAY OF type_g_mmaf4_d
+DEFINE g_mmaf4_d_t   type_g_mmaf4_d
+ 
+DEFINE g_mmaf5_d     DYNAMIC ARRAY OF type_g_mmaf5_d
+DEFINE g_mmaf5_d_t   type_g_mmaf5_d
+ 
+DEFINE g_mmaf6_d     DYNAMIC ARRAY OF type_g_mmaf6_d
+DEFINE g_mmaf6_d_t   type_g_mmaf6_d
+ 
+DEFINE g_mmaf7_d     DYNAMIC ARRAY OF type_g_mmaf7_d
+DEFINE g_mmaf7_d_t   type_g_mmaf7_d
+ 
+ 
+ 
+ 
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                 STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE l_ac                  LIKE type_t.num5              #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_current_page        LIKE type_t.num5              #目前所在頁數
+DEFINE g_current_row         LIKE type_t.num5              #目前所在筆數
+DEFINE g_current_idx         LIKE type_t.num5
+DEFINE g_detail_cnt          LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_row_index           LIKE type_t.num10
+DEFINE g_master_idx          LIKE type_t.num5
+DEFINE g_detail_idx          LIKE type_t.num5              #單身 所在筆數(所有資料)
+DEFINE g_detail_idx2         LIKE type_t.num5
+DEFINE g_hyper_url           STRING                        #hyperlink的主要網址
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+DEFINE g_wc2_table2   STRING
+ 
+ 
+ 
+DEFINE g_wc_filter_table           STRING
+ 
+DEFINE g_wc2_filter_table2   STRING
+ 
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="acrq510.init" ver="3" status="" src="s">
+    <![CDATA[#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION acrq510_init()
+ 
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1" 
+   LET g_error_show  = 1
+#  LET g_selcolor    = "#D0E7FD"
+   
+     
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="acrq510.main" ver="5" status="" src="s">
+    <![CDATA[#+ 此段落由子樣板a26產生
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("acr","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = ""
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   DECLARE acrq510_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT UNIQUE ",
+               " FROM ",
+               " WHERE  "
+   #add-point:SQL_define
+   {<point name="main.after_refresh_sql"/>}
+   #end add-point
+   PREPARE acrq510_master_referesh FROM g_sql
+ 
+   #add-point:main段define_sql
+   {<point name="main.body.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = ""
+   #add-point:main段define_sql
+   {<point name="main.body.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE acrq510_bcl CURSOR FROM g_forupd_sql
+ 
+ 
+ 
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+ 
+   ELSE
+      
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_acrq510 WITH FORM cl_ap_formpath("acr",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL acrq510_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL acrq510_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_acrq510
+      
+   END IF 
+   
+   CLOSE acrq510_cl
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+]]>
+  </section>
+  <section id="acrq510.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="acrq510.ui_dialog" ver="8" status="" src="s">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION acrq510_ui_dialog() 
+   {<Local define>}
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num5
+   DEFINE ls_result STRING
+   {</Local define>}
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+   
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+ 
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   LET g_current_row = 0
+   LET g_current_idx = 1
+   LET g_action_choice = " "
+   LET g_main_hidden = 1
+   LET l_ac = 1
+ 
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   
+   CALL acrq510_b_fill()
+  
+   WHILE li_exit = FALSE
+ 
+      CALL cl_dlg_query_bef_disp()  #相關查詢
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:input段落
+         {<point name="ui_dialog.input"/>}
+         #end add-point
+ 
+         #add-point:construct段落
+         {<point name="ui_dialog.construct"/>}
+         #end add-point
+     
+         DISPLAY ARRAY g_mmaf_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_mmaf_d.getLength() TO FORMONLY.h_count
+               LET g_master_idx = l_ac
+               CALL acrq510_b_fill2()
+ 
+               #add-point:input段before row
+               {<point name="input.body.before_row"/>}
+               #end add-point
+ 
+            
+ 
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_mmaf2_d TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 2
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+               {<point name="input.body2.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_2)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_mmaf3_d TO s_detail3.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 3
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail3")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+               {<point name="input.body3.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_3)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_mmaf4_d TO s_detail4.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 4
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail4")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+               {<point name="input.body4.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_4)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_mmaf5_d TO s_detail5.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 5
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail5")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+               {<point name="input.body5.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_5)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_mmaf6_d TO s_detail6.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 6
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail6")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+               {<point name="input.body6.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_6)
+            
+         END DISPLAY
+ 
+         DISPLAY ARRAY g_mmaf7_d TO s_detail7.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+            BEFORE DISPLAY
+               LET g_current_page = 7
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail7")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+               #add-point:input段before row
+               {<point name="input.body7.before_row"/>}
+               #end add-point
+            #自訂ACTION(detail_show,page_7)
+            
+         END DISPLAY
+ 
+ 
+ 
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+      
+         BEFORE DIALOG
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            #add-point:ui_dialog段before dialog
+            {<point name="ui_dialog.bef_dialog"/>}
+            #end add-point
+ 
+         AFTER DIALOG
+            #add-point:ui_dialog段 after dialog
+            {<point name="ui_dialog.after_dialog"/>}
+            #end add-point
+            
+         ON ACTION exit
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            INITIALIZE g_wc_filter TO NULL
+            IF cl_null(g_wc) THEN
+               LET g_wc = " 1=1"
+            END IF
+ 
+            IF NOT cl_null(g_wc2_table2) AND g_wc2_table2 <> " 1=1" THEN
+               LET g_wc = g_wc, " AND ", g_wc2_table2
+            END IF
+ 
+ 
+         
+            LET g_wc2 = " 1=1"
+            IF NOT cl_null(g_wc2_table2) AND g_wc2_table2 <> " 1=1" THEN
+               LET g_wc2 = g_wc2, " AND ", g_wc2_table2
+            END IF
+ 
+ 
+            #儲存WC資訊
+            CALL cl_dlg_save_user_latestqry("("||g_wc||") AND ("||g_wc2||")")
+            CALL acrq510_b_fill()
+      
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum
+            {<point name="ui_dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+ 
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+ 
+         ON ACTION datarefresh   # 重新整理
+            CALL acrq510_b_fill()
+ 
+         #+ 此段落由子樣板qs19產生
+         #有關於sel欄位選取的action段落
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_mmaf_d.getLength()
+               LET g_mmaf_d[li_idx].sel = "Y"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selall
+            {<point name="ui_dialog.onaction_selall"/>}
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_mmaf_d.getLength()
+               LET g_mmaf_d[li_idx].sel = "N"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selnone
+            {<point name="ui_dialog.onaction_selnone"/>}
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_mmaf_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_mmaf_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action sel
+            {<point name="ui_dialog.onaction_sel"/>}
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_mmaf_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_mmaf_d[li_idx].sel = "N"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action unsel
+            {<point name="ui_dialog.onaction_unsel"/>}
+            #end add-point
+ 
+ 
+ 
+         #+ 此段落由子樣板qs16產生
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL acrq510_filter()
+            #add-point:ON ACTION filter
+            {<point name="menu.filter" />}
+            #END add-point
+            EXIT DIALOG
+ 
+ 
+         
+         #+ 此段落由子樣板a43產生
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo
+               {<point name="menu.datainfo" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION open_query
+            LET g_action_choice="open_query"
+            IF cl_auth_chk_act("open_query") THEN
+               
+               #add-point:ON ACTION open_query
+               {<point name="menu.open_query" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+      
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+ 
+      END DIALOG 
+   
+   END WHILE
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

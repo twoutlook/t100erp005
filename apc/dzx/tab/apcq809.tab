@@ -1,0 +1,70 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apcq809" module="apc" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="06189" crtdt="2015-09-28 14:20:01" modid="06189" moddt="2015-10-11 11:42:02" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="收銀員效率月考核查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="rtjasite,rtja037,sdate,edate"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),rtjadocno,rtjasite,rtjasite_desc(chr500),rtjadocdt,rtja037,rtja037_desc(chr500),rtja036,rtja033,rtja035,endtime(chr500),scantime(num10),count(num20_6),speed(num20_6),number(num20_6),amount(num20_6),rtja041"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),rtjadocno(b_rtjadocno),rtjasite(b_rtjasite),rtjasite_desc(b_rtjasite_desc),rtjadocdt(b_rtjadocdt),rtja037(b_rtja037),rtja037_desc(b_rtja037_desc),rtja036(b_rtja036),rtja033(b_rtja033),rtja035(b_rtja035),endtime(b_endtime),scantime(scantime),count(count),speed(speed),number(number),amount(amount),rtja041(b_rtja041)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="apc" filename="apcq809" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="rtjadocno,rtjasite,rtjadocdt,rtja037,rtja036,rtja033,rtja035,endtime,rtja041" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="rtjadocno(b_rtjadocno),rtjasite(b_rtjasite),rtjadocdt(b_rtjadocdt),rtja037(b_rtja037),rtja036(b_rtja036),rtja033(b_rtja033),rtja035(b_rtja035),rtja041(b_rtja041)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="rtjadocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_rtjadocno" state="c"/>
+      </column>
+      <column id="rtjasite">
+        <after>
+          <check chkid="v_ooed004" id="isExist"/>
+          <reference field="rtjasite_desc" ref_field="rtjasite" map_field="rtjaent,rtjasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="rtjasite_desc"/>
+      <column id="rtjadocdt"/>
+      <column id="rtja037">
+        <after>
+          <reference field="rtja037_desc" ref_field="rtja037" map_field="rtja037" ref_sql="SELECT pcab003 FROM pcab_t WHERE pcabent=$varg_enterprise$var AND pcab001=? "/>
+        </after>
+      </column>
+      <column id="rtja037_desc"/>
+      <column id="rtja036"/>
+      <column id="rtja033"/>
+      <column id="rtja035"/>
+      <column id="endtime"/>
+      <column id="scantime"/>
+      <column id="count"/>
+      <column id="speed"/>
+      <column id="number"/>
+      <column id="amount"/>
+      <column id="rtja041"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="rtja_t" page="1" linked="" pk="rtjadocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,rtjadocno,rtjasite,&apos;&apos;,rtjadocdt,rtja037,&apos;&apos;,rtja036,rtja033,rtja035,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,rtja041 FROM rtja_t WHERE rtjaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

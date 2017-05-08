@@ -1,0 +1,1249 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="apsp640" std_prog="apsp640" erpver="1.0" module="APS" ver="2" env="s" zone="t10dev" booking="N" type="M" identity="s">
+  <other>
+    <code_template value="W" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="function.apsp640_batch_execute" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 轉變更
+# Memo...........:
+# Usage..........: CALL apsp640_batch_execute()
+# Input parameter: no
+# Return code....: no
+# Date & Author..: 140512 By whitney
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp640_batch_execute()
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE li_sql      STRING             #主SQL
+   DEFINE l_cnt       LIKE type_t.num5
+   DEFINE l_success   LIKE type_t.num5
+   DEFINE l_msg       STRING
+   DEFINE l_pmee      RECORD LIKE pmee_t.*
+   DEFINE l_pmeh      RECORD LIKE pmeh_t.*
+   DEFINE l_pmdo      RECORD
+      pmdodocno LIKE pmdo_t.pmdodocno,
+      pmdoseq   LIKE pmdo_t.pmdoseq,
+      pmdoseq1  LIKE pmdo_t.pmdoseq1,
+      pmdoseq2  LIKE pmdo_t.pmdoseq2,
+      pspc034   LIKE pspc_t.pspc034,
+      pspc045   LIKE pspc_t.pspc045,
+      pspc001   LIKE pspc_t.pspc001,
+      pspc002   LIKE pspc_t.pspc002,
+      pspc004   LIKE pspc_t.pspc004
+                  END RECORD
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+   
+   END IF
+
+   CALL s_transaction_begin()
+   CALL cl_showmsg_init()
+   LET l_success = TRUE
+   
+   INITIALIZE l_pmdo.* TO NULL
+   DECLARE apsp640_cur CURSOR FOR
+      SELECT pmdodocno,pmdoseq,pmdoseq1,pmdoseq2,pspc034,pspc045,pspc001,pspc002,pspc004
+        FROM apsp640_tmp
+   FOREACH apsp640_cur INTO l_pmdo.*
+      IF SQLCA.SQLCODE THEN
+         CALL cl_errmsg('foreach:','','',SQLCA.sqlcode,1)
+         LET l_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      INITIALIZE l_pmee.* TO NULL
+
+      LET l_pmee.pmeeownid = g_user
+      LET l_pmee.pmeeowndp = g_dept
+      LET l_pmee.pmeecrtid = g_user
+      LET l_pmee.pmeecrtdp = g_dept 
+      LET l_pmee.pmeecrtdt = cl_get_current()
+      LET l_pmee.pmeemodid = ""
+      LET l_pmee.pmeemoddt = ""
+      LET l_pmee.pmeestus = "N"
+      LET l_pmee.pmeeacti = "N"
+      LET l_pmee.pmeesite = g_site
+      LET l_pmee.pmeeent = g_enterprise
+      LET l_pmee.pmeedocno = l_pmdo.pmdodocno
+      LET l_pmee.pmee005 = "1"
+      LET l_pmee.pmee006 = "1"
+      LET l_pmee.pmee007 = "1"
+      LET l_pmee.pmee019 = "Y"
+      LET l_pmee.pmee030 = "N"
+      LET l_pmee.pmee040 = "0"
+      LET l_pmee.pmee041 = "0"
+      LET l_pmee.pmee042 = "0"
+      LET l_pmee.pmee046 = "1"
+      LET l_pmee.pmee901 = "N"
+      LET l_pmee.pmee902 = g_today
+
+      #版本 = 目前[T:採購單單頭檔].[C:版本]加1
+      SELECT MAX(pmdl001)+1 INTO l_pmee.pmee001
+        FROM pmdl_t
+       WHERE pmdlent = g_enterprise
+         AND pmdldocno = l_pmee.pmeedocno
+
+      #變更序=採購變更單的變更序最大值+1
+      SELECT MAX(pmee900)+1 INTO l_pmee.pmee900
+        FROM pmee_t
+       WHERE pmeeent = g_enterprise
+         AND pmeedocno = l_pmee.pmeedocno
+      IF cl_null(l_pmee.pmee900) THEN
+         LET l_pmee.pmee900 = 1
+      END IF
+
+      #抓取採購單單頭資料
+      #版本=採購單的版本+1
+      SELECT pmdldocdt,pmdl002,pmdl003,pmdl004,pmdl005,pmdl006,pmdl007,pmdl008,pmdl027,pmdl009,
+             pmdl010  ,pmdl011,pmdl012,pmdl013,pmdl033,pmdl015,pmdl016,pmdl017,pmdl018,pmdl019,
+             pmdl043  ,pmdl044,pmdl020,pmdl025,pmdl026,pmdl029,pmdl021,pmdl022,pmdl032,pmdl023,
+             pmdl024  ,pmdl030,pmdl031,pmdl046                       
+        INTO l_pmee.pmeedocdt,l_pmee.pmee002,l_pmee.pmee003,l_pmee.pmee004,l_pmee.pmee005,
+             l_pmee.pmee006  ,l_pmee.pmee007,l_pmee.pmee008,l_pmee.pmee027,l_pmee.pmee009,
+             l_pmee.pmee010  ,l_pmee.pmee011,l_pmee.pmee012,l_pmee.pmee013,l_pmee.pmee033,
+             l_pmee.pmee015  ,l_pmee.pmee016,l_pmee.pmee017,l_pmee.pmee018,l_pmee.pmee019,
+             l_pmee.pmee043  ,l_pmee.pmee044,l_pmee.pmee020,l_pmee.pmee025,l_pmee.pmee026,
+             l_pmee.pmee029  ,l_pmee.pmee021,l_pmee.pmee022,l_pmee.pmee032,l_pmee.pmee023,
+             l_pmee.pmee024  ,l_pmee.pmee030,l_pmee.pmee031,l_pmee.pmee046
+        FROM pmdl_t
+       WHERE pmdlent = g_enterprise
+         AND pmdldocno = l_pmee.pmeedocno
+      IF SQLCA.sqlcode THEN
+         CALL cl_err('sel pmdl_t',SQLCA.sqlcode,1)
+         LET l_success = FALSE
+         EXIT FOREACH
+      END IF
+
+      INSERT INTO pmee_t VALUES(l_pmee.*)
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg('ins pmee','','',SQLCA.sqlcode,1)
+         LET l_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      INITIALIZE l_pmeh.* TO NULL
+      
+      SELECT pmdo003,pmdo001,pmdo002,pmdo004,pmdo005,pmdo006,pmdo028,pmdo029,pmdo011,pmdo012,
+             pmdo013,pmdo010,pmdo014,pmdo009,pmdo015,pmdo016,pmdo017,pmdo019,pmdo020,pmdo021,
+             pmdo030,pmdo031,pmdo022,pmdo023,pmdo024,pmdo032,pmdo033,pmdo034,pmdo025,pmdo026,
+             pmdo027
+        INTO l_pmeh.pmeh003, l_pmeh.pmeh001, l_pmeh.pmeh002, l_pmeh.pmeh004, l_pmeh.pmeh005,
+             l_pmeh.pmeh006, l_pmeh.pmeh028, l_pmeh.pmeh029, l_pmeh.pmeh011, l_pmeh.pmeh012,
+             l_pmeh.pmeh013, l_pmeh.pmeh010, l_pmeh.pmeh014, l_pmeh.pmeh009, l_pmeh.pmeh015,
+             l_pmeh.pmeh016, l_pmeh.pmeh017, l_pmeh.pmeh019, l_pmeh.pmeh020, l_pmeh.pmeh021,
+             l_pmeh.pmeh030, l_pmeh.pmeh031, l_pmeh.pmeh022, l_pmeh.pmeh023, l_pmeh.pmeh024,
+             l_pmeh.pmeh032, l_pmeh.pmeh033, l_pmeh.pmeh034, l_pmeh.pmeh025, l_pmeh.pmeh026,
+             l_pmeh.pmeh027
+        FROM pmdo_t
+       WHERE pmdoent = g_enterprise
+         AND pmdodocno = l_pmee.pmeedocno
+         AND pmdoseq = l_pmdo.pmdoseq
+         AND pmdoseq1 = l_pmdo.pmdoseq1
+         AND pmdoseq2 = l_pmdo.pmdoseq2
+         
+      LET l_pmeh.pmehent = l_pmee.pmeeent
+      LET l_pmeh.pmehsite = l_pmee.pmeesite
+      LET l_pmeh.pmehdocno = l_pmee.pmeedocno
+      LET l_pmeh.pmehseq = l_pmdo.pmdoseq
+      LET l_pmeh.pmehseq1 = l_pmdo.pmdoseq1
+      LET l_pmeh.pmehseq2 = l_pmdo.pmdoseq2
+      LET l_pmeh.pmeh901 = 1  #未變更
+      SELECT MAX(pmeh900)+1 INTO l_pmeh.pmeh900
+        FROM pmeh_t
+       WHERE pmehent = g_enterprise
+         AND pmehdocno = l_pmeh.pmehdocno
+         AND pmehseq = l_pmeh.pmehseq
+         AND pmehseq1 = l_pmeh.pmehseq1
+         AND pmehseq2 = l_pmeh.pmehseq2
+      IF cl_null(l_pmeh.pmeh900) THEN
+         LET l_pmeh.pmeh900 = 1
+      END IF
+         
+      INSERT INTO pmeh_t VALUES(l_pmeh.*)
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg('ins pmeh','','',SQLCA.sqlcode,1)
+         LET l_success = FALSE
+      ELSE      
+         UPDATE pspc_t SET pspc054 = 'Y',
+                           pspc055 = l_pmdo.pmdodocno,
+                           pspc056 = l_pmdo.pmdoseq
+          WHERE pspcent = g_enterprise
+            AND pspcsite = g_site
+            AND pspc001 = l_pmdo.pspc001
+            AND pspc002 = l_pmdo.pspc002
+            AND pspc004 = l_pmdo.pspc004
+         IF SQLCA.sqlcode THEN
+            CALL cl_errmsg('upd pspc','','',SQLCA.sqlcode,1)
+            LET l_success = FALSE
+         END IF
+      END IF
+
+      INITIALIZE l_pmdo.* TO NULL
+   END FOREACH   
+
+   CALL cl_showmsg()
+   
+   IF l_success THEN
+      CALL s_transaction_end('Y','0')
+   ELSE
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      CALL cl_ask_confirm("std-00012") RETURNING li_stus
+   ELSE
+      #背景作業完成處理
+   END IF
+
+END FUNCTION]]>
+  </point>
+  <point name="function.apsp640_create_tmp" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: create tmpe table
+# Memo...........:
+# Usage..........: CALL apsp640_create_tmp()
+# Input parameter: no
+# Return code....: no
+# Date & Author..: 140512 By whiteny
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp640_create_tmp()
+   DROP TABLE apsp640_tmp 
+   CREATE TEMP TABLE apsp640_tmp( 
+       pmdodocno         LIKE pmdo_t.pmdodocno,
+       pmdoseq           LIKE pmdo_t.pmdoseq,  
+       pmdoseq1          LIKE pmdo_t.pmdoseq1, 
+       pmdoseq2          LIKE pmdo_t.pmdoseq2, 
+       pspc034           LIKE pspc_t.pspc034,  
+       pspc045           LIKE pspc_t.pspc045,
+       pspc001           LIKE pspc_t.pspc001,  
+       pspc002           LIKE pspc_t.pspc002,  
+       pspc004           LIKE pspc_t.pspc004   
+   )
+END FUNCTION]]>
+  </point>
+  <point name="function.apsp640_pspc001_ref" order="3" ver="2" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: APS版本说明
+# Memo...........:
+# Usage..........: CALL apsp640_pspc001_ref()
+# Input parameter: no
+# Return code....: no
+# Date & Author..: 140702 By whitney
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp640_pspc001_ref()
+   INITIALIZE g_ref_fields TO NULL 
+   LET g_ref_fields[1] = tm.pspc001
+   CALL ap_ref_array2(g_ref_fields,"SELECT pscal003 FROM pscal_t WHERE pscalent='"||g_enterprise||"' AND pscalsite='"||g_site||"' AND pscal001=? AND pscal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   DISPLAY g_rtn_fields[1] TO pspc001_desc
+END FUNCTION]]>
+  </point>
+  <point name="b_fill.clear" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="b_fill.define" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_imaa006       LIKE imaa_t.imaa006
+   DEFINE l_pmdo004       LIKE pmdo_t.pmdo004
+   DEFINE ls_tmp          STRING
+   DEFINE l_n             LIKE type_t.num5
+   DEFINE l_n1            LIKE type_t.num5
+   DEFINE l_pspc002       LIKE pspc_t.pspc002]]>
+  </point>
+  <point name="b_fill.foreach_into" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[       g_detail_d[l_ac].sel,g_detail_d[l_ac].pmdodocno,g_detail_d[l_ac].pmdoseq,g_detail_d[l_ac].pmdoseq1,
+       g_detail_d[l_ac].pmdoseq2,g_detail_d[l_ac].pspc050,g_detail_d[l_ac].pspc050_desc,g_detail_d[l_ac].pspc050_desc_desc,
+       g_detail_d[l_ac].pspc051,g_detail_d[l_ac].imaa009,g_detail_d[l_ac].imaa009_desc,g_detail_d[l_ac].imaf141,
+       g_detail_d[l_ac].imaf141_desc,g_detail_d[l_ac].imaa006,g_detail_d[l_ac].imaa006_desc,g_detail_d[l_ac].pmdo006,
+       g_detail_d[l_ac].pspc034,g_detail_d[l_ac].pmdo019,g_detail_d[l_ac].pmdo013,g_detail_d[l_ac].pspc045,
+       g_detail_d[l_ac].imaf142,g_detail_d[l_ac].imaf142_desc,g_detail_d[l_ac].imae012,g_detail_d[l_ac].imae012_desc,
+       g_detail_d[l_ac].pspc054,g_detail_d[l_ac].pspc055,g_detail_d[l_ac].pspc056,g_detail_d[l_ac].pspc001,
+       g_detail_d[l_ac].pspc002,g_detail_d[l_ac].pspc004]]>
+  </point>
+  <point name="b_fill.foreach_iside" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+      LET ls_tmp = g_detail_d[l_ac].pspc004
+      LET g_detail_d[l_ac].pmdodocno = ls_tmp.subString(1,ls_tmp.getIndexOf('-',1)-1)
+      LET l_n = ls_tmp.getIndexOf('-',1)+1
+      LET l_n1 = ls_tmp.getIndexOf('-',l_n)-1
+      LET g_detail_d[l_ac].pmdoseq = ls_tmp.subString(l_n,l_n1)
+      LET l_n = ls_tmp.getIndexOf('-',l_n)+1
+      LET l_n1 = ls_tmp.getIndexOf('-',l_n)-1
+      LET g_detail_d[l_ac].pmdoseq1 = ls_tmp.subString(l_n,l_n1)
+      LET l_n = ls_tmp.getIndexOf('-',l_n)+1
+      LET l_n1 = ls_tmp.getLength()
+      LET g_detail_d[l_ac].pmdoseq2 = ls_tmp.subString(l_n,l_n1)
+
+      #存在採購單檢查
+      LET l_n = ''
+      SELECT COUNT(*) INTO l_n
+        FROM pmdl_t
+       WHERE pmdlent = g_enterprise
+         AND pmdlsite = g_site
+         AND pmdldocno = g_detail_d[l_ac].pmdodocno
+         AND pmdlstus = 'Y'
+      IF cl_null(l_n) OR l_n = 0 THEN 
+         CONTINUE FOREACH
+      END IF
+
+      ##同一張採購單號不能同時存在兩張以上未確認的變更單內
+      #LET l_n = 0
+      #SELECT COUNT(pmeedocno) INTO l_n
+      #  FROM pmee_t
+      # WHERE pmeeent = g_enterprise
+      #   AND pmeedocno = g_pmee_m.pmeedocno
+      #   AND pmeestus = 'N'
+      #IF cl_null(l_n) THEN LET l_n = 0 END IF
+      #IF l_n > 0 THEN
+      #   CONTINUE FOREACH
+      #END IF
+
+      LET l_pmdo004 = ''
+      SELECT pmdo004,pmdo006,pmdo019,pmdo013
+        INTO l_pmdo004,g_detail_d[l_ac].pmdo006,g_detail_d[l_ac].pmdo019,g_detail_d[l_ac].pmdo013
+        FROM pmdo_t
+       WHERE pmdoent = g_enterprise
+         AND pmdosite = g_site
+         AND pmdodocno = g_detail_d[l_ac].pmdodocno
+         AND pmdoseq = g_detail_d[l_ac].pmdoseq
+         AND pmdoseq1 = g_detail_d[l_ac].pmdoseq1
+         AND pmdoseq2 = g_detail_d[l_ac].pmdoseq2
+      IF SQLCA.sqlcode THEN
+         CONTINUE FOREACH
+      END IF
+
+      IF NOT cl_null(tm.pmdo013) THEN
+         IF g_detail_d[l_ac].pmdo013 <> tm.pmdo013 THEN
+         CONTINUE FOREACH
+         END IF
+      END IF
+
+      #建議到庫日與原預計到庫日不同，或是建議量與原採購量不時的資料才顯示
+      IF g_detail_d[l_ac].pmdo013 = g_detail_d[l_ac].pspc045 AND 
+         g_detail_d[l_ac].pmdo006 = g_detail_d[l_ac].pspc034 THEN
+         CONTINUE FOREACH
+      END IF
+
+      LET l_imaa006 = ''
+      SELECT imaa006,imaa009 INTO l_imaa006,g_detail_d[l_ac].imaa009
+        FROM imaa_t
+       WHERE imaaent = g_enterprise
+         AND imaa001 = g_detail_d[l_ac].pspc050
+      CALL s_aooi250_convert_qty(g_detail_d[l_ac].pspc050,g_detail_d[l_ac].imaa006,l_imaa006,g_detail_d[l_ac].pspc034)
+           RETURNING l_success,g_detail_d[l_ac].pspc034
+      CALL s_aooi250_convert_qty(g_detail_d[l_ac].pspc050,l_pmdo004,l_imaa006,g_detail_d[l_ac].pmdo006)
+           RETURNING l_success,g_detail_d[l_ac].pmdo006
+      CALL s_aooi250_convert_qty(g_detail_d[l_ac].pspc050,l_pmdo004,l_imaa006,g_detail_d[l_ac].pmdo019)
+           RETURNING l_success,g_detail_d[l_ac].pmdo019
+      LET g_detail_d[l_ac].imaa006 = l_imaa006
+
+]]>
+  </point>
+  <point name="b_fill.other_table" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL g_detail_d.deleteElement(g_detail_d.getLength())]]>
+  </point>
+  <point name="b_fill.sql_before" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET ls_wc = ""
+   IF NOT cl_null(tm.pspc001) THEN
+      LET ls_wc = ls_wc CLIPPED," AND pspc001 = '",tm.pspc001,"' "
+   END IF
+
+   IF tm.chk = 'N' THEN
+      LET ls_wc = ls_wc CLIPPED," AND (pspc054 = 'N' OR pspc054 IS NULL) "
+   END IF
+
+   IF cl_null(tm.wc1) THEN
+      LET tm.wc1 = '1=1'
+   END IF
+
+   LET l_pspc002 = ''
+   SELECT MAX(pspc002) INTO l_pspc002 FROM pspc_t
+    WHERE pspcent = g_enterprise AND pspcsite = g_site AND pspc001 = tm.pspc001
+
+   LET g_sql = " SELECT 'N','','','','',pspc050,'','',pspc051,",
+               "        '','',imaf141,'',pspc014,'','',pspc034,'','',pspc045, ",
+               "        imaf142,'',imae012,'',pspc054,pspc055,pspc056,pspc001,pspc002,pspc004 ",
+               "   FROM pspc_t ",
+               "        LEFT OUTER JOIN imae_t ON imaeent = '",g_enterprise,"' AND imaesite = '",g_site,"' AND imae001 = pspc050 ",
+               "        LEFT OUTER JOIN imaf_t ON imafent = '",g_enterprise,"' AND imafsite = '",g_site,"' AND imaf001 = pspc050 ",
+               "        LEFT OUTER JOIN imaa_t ON imaaent = '",g_enterprise,"' AND imaa001 = pspc050 ",
+               "        LEFT OUTER JOIN pmdo_t ON pmdoent = '",g_enterprise,"' AND pmdosite = '",g_site,"' ",
+               "  WHERE pspcent = ? AND pspcsite = '",g_site,"' AND pspc002 = '",l_pspc002,"' AND pspc007 = '1' ",ls_wc,
+               "    AND ",tm.wc1 CLIPPED,  
+               "  ORDER BY pspc004 "
+]]>
+  </point>
+  <point name="detail_show.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="detail_show.detail_show" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+      #料號說明
+      CALL s_desc_get_item_desc(g_detail_d[l_ac].pspc050) RETURNING g_detail_d[l_ac].pspc050_desc,g_detail_d[l_ac].pspc050_desc_desc
+
+      #產品分類
+      CALL s_desc_get_rtaxl003_desc(g_detail_d[l_ac].imaa009) RETURNING g_detail_d[l_ac].imaa009_desc
+
+      #採購分類
+      CALL s_desc_get_acc_desc('203',g_detail_d[l_ac].imaf141) RETURNING g_detail_d[l_ac].imaf141_desc
+
+      #單位
+      CALL s_desc_get_unit_desc(g_detail_d[l_ac].imaa006) RETURNING g_detail_d[l_ac].imaa006_desc
+
+      #採購員
+      CALL s_desc_get_person_desc(g_detail_d[l_ac].imaf142) RETURNING g_detail_d[l_ac].imaf142_desc
+
+      #計畫員
+      CALL s_desc_get_person_desc(g_detail_d[l_ac].imae012) RETURNING g_detail_d[l_ac].imae012_desc
+]]>
+  </point>
+  <point name="fetch.after_fill" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL g_detail2_d.clear()
+
+   LET g_sql = " SELECT UNIQUE pspa004,pspa005,pspa006,pspa009,'' ",    
+               "   FROM pspa_t ",
+               "  WHERE pspaent=? AND pspasite=? AND pspa001=? AND pspa002=? AND pspa012=? AND pspa013=? ",
+               "  ORDER BY pspa004 "
+ 
+   PREPARE apsp600_sel2 FROM g_sql
+   DECLARE b_fill_curs2 CURSOR FOR apsp600_sel2
+   
+   OPEN b_fill_curs2 USING g_enterprise,g_site,g_detail_d[g_detail_idx].pspc001,g_detail_d[g_detail_idx].pspc002,
+                           g_detail_d[g_detail_idx].pspc050,g_detail_d[g_detail_idx].pspc051
+ 
+   LET l_ac = 1
+   FOREACH b_fill_curs2 INTO g_detail2_d[l_ac].pspa004,g_detail2_d[l_ac].pspa005,
+                             g_detail2_d[l_ac].pspa006,g_detail2_d[l_ac].pspa009,
+                             g_detail2_d[l_ac].count
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+
+      IF l_ac = 1 THEN
+         LET g_detail2_d[l_ac].count = g_detail2_d[l_ac].pspa009
+      ELSE
+         LET g_detail2_d[l_ac].count = g_detail2_d[l_ac-1].count + g_detail2_d[l_ac].pspa009
+      END IF
+
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         CALL cl_err( "", 9035, 1 )
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+ 
+ 
+   CALL g_detail2_d.deleteElement(g_detail2_d.getLength())   
+]]>
+  </point>
+  <point name="filter.detail_cnt" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_detail2_cnt = 1]]>
+  </point>
+  <point name="global.argv" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_detail_idx         LIKE type_t.num5
+DEFINE g_detail2_idx        LIKE type_t.num5
+DEFINE l_allow_insert       LIKE type_t.num5              #可新增否 
+DEFINE l_allow_delete       LIKE type_t.num5              #可刪除否
+DEFINE g_detail2_cnt         LIKE type_t.num5             #單身
+]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[       sel               LIKE type_t.chr1,      #選擇
+       pmdodocno         LIKE pmdo_t.pmdodocno, #採購單號
+       pmdoseq           LIKE pmdo_t.pmdoseq,   #項次
+       pmdoseq1          LIKE pmdo_t.pmdoseq1,  #項序
+       pmdoseq2          LIKE pmdo_t.pmdoseq2,  #分批序
+       pspc050           LIKE pspc_t.pspc050,   #料件編號
+       pspc050_desc      LIKE type_t.chr80,     #品名
+       pspc050_desc_desc LIKE type_t.chr80,     #規格
+       pspc051           LIKE pspc_t.pspc051,   #產品特徵
+       imaa009           LIKE imaa_t.imaa009,   #產品分類
+       imaa009_desc      LIKE type_t.chr80,     #說明
+       imaf141           LIKE imaf_t.imaf141,   #採購分類
+       imaf141_desc      LIKE type_t.chr80,     #說明
+       imaa006           LIKE imaa_t.imaa006,   #單位
+       imaa006_desc      LIKE type_t.chr80,     #說明
+       pmdo006           LIKE pmdo_t.pmdo006,   #原採購量
+       pspc034           LIKE pspc_t.pspc034,   #建議量
+       pmdo019           LIKE pmdo_t.pmdo019,   #已入庫量
+       pmdo013           LIKE pmdo_t.pmdo013,   #原到廠日
+       pspc045           LIKE pspc_t.pspc045,   #建議到廠日
+       imaf142           LIKE imaf_t.imaf142,   #採購員
+       imaf142_desc      LIKE type_t.chr80,     #全名
+       imae012           LIKE imae_t.imae012,   #計畫員
+       imae012_desc      LIKE type_t.chr80,     #全名
+       pspc054           LIKE pspc_t.pspc054,   #已產生單據
+       pspc055           LIKE pspc_t.pspc055,   #產生單號
+       pspc056           LIKE pspc_t.pspc056,   #項次
+       pspc001           LIKE pspc_t.pspc001,   #APS版本
+       pspc002           LIKE pspc_t.pspc002,   #執行日期時間
+       pspc004           LIKE pspc_t.pspc004    #APS虛擬單號
+                     END RECORD
+TYPE type_g_detail2_d RECORD
+       pspa004           LIKE pspa_t.pspa004,   #供需日期
+       pspa005           LIKE pspa_t.pspa005,   #類別
+       pspa006           LIKE pspa_t.pspa006,   #單號
+       pspa009           LIKE pspa_t.pspa009,   #供需數量
+       count             LIKE pspa_t.pspa009    #預計結存
+                     END RECORD
+DEFINE g_detail_d_t    type_g_detail_d
+DEFINE g_detail2_d     DYNAMIC ARRAY OF type_g_detail2_d
+DEFINE g_detail2_d_t   type_g_detail2_d
+DEFINE tm            RECORD
+       wc1               STRING,                #QBE
+       pspc001           LIKE pspc_t.pspc001,   #APS版本
+       pmdo013           LIKE pmdo_t.pmdo013,   #原到廠日
+       chk               LIKE type_t.chr1       #顯示已變更資料
+                     END RECORD]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF cl_null(g_bgjob) THEN
+      LET g_bgjob = 'N'
+   END IF
+   LET g_errshow = 1
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   CALL cl_set_combo_scc('b_pspa005','5440')
+   LET tm.chk  = 'N'
+   LET tm.pmdo013  = ''
+   LET g_detail_idx  = 1
+   LET g_detail2_idx = 1]]>
+  </point>
+  <point name="ui_dialog.before_dialog" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_detail2_cnt = g_detail2_d.getLength()]]>
+  </point>
+  <point name="ui_dialog.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING
+   DEFINE l_success  LIKE type_t.num5
+   DEFINE l_flag     LIKE type_t.num5
+   DEFINE l_cnt      LIKE type_t.num5
+   DEFINE l_imaa009  LIKE imaa_t.imaa009
+   DEFINE l_imaf141  LIKE imaf_t.imaf141
+   DEFINE l_imaf142  LIKE imaf_t.imaf142
+   DEFINE l_imae012  LIKE imae_t.imae012]]>
+  </point>
+  <point name="ui_dialog.more_action" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         ON ACTION batch_execute
+            CALL apsp640_create_tmp()
+            LET l_cnt = 0
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF g_detail_d[li_idx].sel = 'Y' THEN
+                  LET l_cnt = l_cnt + 1
+                  INSERT INTO apsp640_tmp 
+                     VALUES(g_detail_d[li_idx].pmdodocno,g_detail_d[li_idx].pmdoseq,
+                            g_detail_d[li_idx].pmdoseq1,g_detail_d[li_idx].pmdoseq2,
+                            g_detail_d[li_idx].pspc034,g_detail_d[li_idx].pspc045,
+                            g_detail_d[li_idx].pspc001,g_detail_d[li_idx].pspc002,
+                            g_detail_d[li_idx].pspc004)
+               END IF
+            END FOR
+            IF l_cnt = 0 THEN
+               CALL cl_ask_pressanykey('-400')
+            ELSE
+               CALL apsp640_batch_execute()
+            END IF
+]]>
+  </point>
+  <point name="ui_dialog.more_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         CONSTRUCT BY NAME tm.wc1 ON imae012,imaf142,pmdo013,pspc045,imaa009,imaf141,pspc050
+	   
+            BEFORE CONSTRUCT
+
+            AFTER FIELD pmdo013                  #原到庫日
+               CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+               IF NOT cl_null(ls_result) THEN
+                  IF NOT cl_chk_date_symbol(ls_result) THEN
+                     LET ls_result = cl_add_date_extra_cond(ls_result)
+                  END IF
+               END IF
+               CALL FGL_DIALOG_SETBUFFER(ls_result)
+
+            AFTER FIELD pspc045                  #建議到庫日期
+               CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+               IF NOT cl_null(ls_result) THEN
+                  IF NOT cl_chk_date_symbol(ls_result) THEN
+                     LET ls_result = cl_add_date_extra_cond(ls_result)
+                  END IF
+               END IF
+               CALL FGL_DIALOG_SETBUFFER(ls_result)
+
+            ON ACTION controlp INFIELD imae012   #計畫員
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()
+               DISPLAY g_qryparam.return1 TO imae012
+               NEXT FIELD imae012
+
+            ON ACTION controlp INFIELD imaf142   #採購員
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()
+               DISPLAY g_qryparam.return1 TO imaf142
+               NEXT FIELD imaf142
+
+            ON ACTION controlp INFIELD imaa009   #產品分類
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_rtax001()
+               DISPLAY g_qryparam.return1 TO imaa009
+               NEXT FIELD imaa009
+
+            ON ACTION controlp INFIELD imaf141   #採購分類
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_imce141()
+               DISPLAY g_qryparam.return1 TO imaf141
+               NEXT FIELD imaf141
+
+            ON ACTION controlp INFIELD pspc050   #料件編號
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_imaf001()
+               DISPLAY g_qryparam.return1 TO pspc050
+               NEXT FIELD pspc050
+
+         END CONSTRUCT
+]]>
+  </point>
+  <point name="ui_dialog.more_displayarray" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         DISPLAY ARRAY g_detail2_d TO s_detail2.* ATTRIBUTES(COUNT=g_detail2_cnt)
+            BEFORE ROW
+               LET g_detail2_idx = DIALOG.getCurrentRow("s_detail2")
+               
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail2_idx)
+               LET g_detail2_idx = DIALOG.getCurrentRow("s_detail2")
+         END DISPLAY
+]]>
+  </point>
+  <point name="ui_dialog.more_input" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         INPUT BY NAME tm.pspc001,tm.pmdo013,tm.chk
+            ATTRIBUTE(WITHOUT DEFAULTS)
+         
+            BEFORE INPUT
+
+            AFTER FIELD pspc001
+               IF cl_null(tm.pspc001) THEN
+                  CALL cl_err(tm.pspc001,'aoo-00052',0)
+                  NEXT FIELD CURRENT
+               ELSE
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = tm.pspc001
+                  IF NOT cl_chk_exist("v_psca001") THEN
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               CALL apsp640_pspc001_ref()
+
+            ON ACTION controlp INFIELD pspc001   #APS版本
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = tm.pspc001
+               LET g_qryparam.where = "pscasite = '",g_site,"'"
+               CALL q_psca001()
+               LET tm.pspc001 = g_qryparam.return1
+               DISPLAY tm.pspc001 TO pspc001
+               CALL apsp640_pspc001_ref()
+               NEXT FIELD pspc001
+         
+            AFTER INPUT
+               IF INT_FLAG THEN
+                  EXIT DIALOG
+               END IF
+
+         END INPUT
+
+         INPUT ARRAY g_detail_d FROM s_detail1.*
+            ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                    INSERT ROW = FALSE,
+                    DELETE ROW = FALSE,
+                    APPEND ROW = FALSE)
+            
+            BEFORE INPUT
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               CALL apsp640_fetch()
+            
+            ON CHANGE b_sel
+               IF g_detail_d[g_detail_idx].sel = 'Y' THEN
+                  IF g_detail_d[g_detail_idx].pspc054 = 'Y' THEN
+                     CALL cl_ask_pressanykey('anm-00075')
+                     LET g_detail_d[g_detail_idx].sel = 'N'
+                  END IF
+                  IF g_detail_d[g_detail_idx].pspc034 < g_detail_d[g_detail_idx].pmdo006 - g_detail_d[g_detail_idx].pmdo019 THEN
+                     CALL cl_ask_pressanykey('aps-00100')
+                     LET g_detail_d[g_detail_idx].sel = 'N'
+                  END IF
+               END IF
+               
+ 
+            AFTER ROW
+ 
+            AFTER INPUT
+ 
+         END INPUT
+]]>
+  </point>
+  <point name="ui_dialog.onaction_sel" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF g_detail_d[li_idx].pspc054 = 'Y' THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+               IF g_detail_d[li_idx].pspc034 < g_detail_d[li_idx].pmdo006 - g_detail_d[li_idx].pmdo019 THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR]]>
+  </point>
+  <point name="ui_dialog.onaction_selall" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF g_detail_d[li_idx].pspc054 = 'Y' THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+               IF g_detail_d[li_idx].pspc034 < g_detail_d[li_idx].pmdo006 - g_detail_d[li_idx].pmdo019 THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR]]>
+  </point>
+  <section id="apsp640.b_fill" ver="1" status="" src="s">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION apsp640_b_fill()
+ 
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   PREPARE apsp640_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR apsp640_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空
+   {<point name="b_fill.clear"/>}
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into
+   {<point name="b_fill.foreach_into"/>}
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.foreach_iside"/>}
+      #end add-point
+      
+      CALL apsp640_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.other_table"/>}
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE apsp640_sel
+   
+   LET l_ac = 1
+   CALL apsp640_fetch()
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.after_b_fill"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apsp640.description" ver="49" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000081
+#+ 
+#+ Filename...: apsp640
+#+ Description: 採購變更整批調整作業
+#+ Creator....: 04441(2014/05/08)
+#+ Modifier...: 04441(2014/07/02)
+#+ Buildtype..: 應用 p02 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="apsp640.detail_show" ver="1" status="" src="s">
+    <![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION apsp640_detail_show()
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段
+   {<point name="detail_show.detail_show"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apsp640.fetch" ver="1" status="" src="s">
+    <![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION apsp640_fetch()
+ 
+   DEFINE li_ac           LIKE type_t.num5
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後
+   {<point name="fetch.after_fill" />}
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apsp640.filter" ver="1" status="" src="s">
+    <![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION apsp640_filter()
+   #add-point:filter段define
+   {<point name="filter.define"/>}
+   #end add-point    
+ 
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define
+   {<point name="filter.detail_cnt"/>}
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL apsp640_b_fill()
+   CALL apsp640_fetch()
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apsp640.filter_parser" ver="1" status="" src="s">
+    <![CDATA[#+ filter欄位解析
+PRIVATE FUNCTION apsp640_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   #add-point:filter段define
+   {<point name="filter_parser.define"/>}
+   #end add-point    
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apsp640.filter_show" ver="1" status="" src="s">
+    <![CDATA[#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION apsp640_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = apsp640_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apsp640.global" ver="1" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num5              
+DEFINE l_ac_d               LIKE type_t.num5              #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num5              #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num5
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="apsp640.init" ver="1" status="" src="s">
+    <![CDATA[#+ 畫面資料初始化
+PRIVATE FUNCTION apsp640_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point   
+ 
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apsp640.main" ver="1" status="" src="s">
+    <![CDATA[#+ 作業開始 
+MAIN
+   DEFINE ls_js  STRING
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aps","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apsp640 WITH FORM cl_ap_formpath("aps",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL apsp640_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL apsp640_ui_dialog() 
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_apsp640
+   END IF 
+   
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+  </section>
+  <section id="apsp640.other_function" ver="1" status="" src="s">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="apsp640.query" ver="1" status="" src="s">
+    <![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION apsp640_query()
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+   {<point name="query.define" />}
+   #end add-point 
+   
+   #add-point:cs段after_construct
+   {<point name="query.after_construct" />}
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL apsp640_b_fill()
+   LET l_ac = g_master_idx
+   CALL apsp640_fetch()
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      CALL cl_err("",-100,1)
+   END IF
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apsp640.ui_dialog" ver="1" status="" src="s">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION apsp640_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num5
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point 
+ 
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE
+ 
+      CALL cl_dlg_query_bef_disp()  #相關查詢
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2
+            {<point name="ui_dialog.before_dialog2"/>}
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+            END FOR
+            #add-point:ui_dialog段on action selall
+            {<point name="ui_dialog.onaction_selall"/>}
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+            END FOR
+            #add-point:ui_dialog段on action selnone
+            {<point name="ui_dialog.onaction_selnone"/>}
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel
+            {<point name="ui_dialog.onaction_sel"/>}
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel
+            {<point name="ui_dialog.onaction_unsel"/>}
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL apsp640_filter()
+            #add-point:ON ACTION filter
+            {<point name="menu.filter" />}
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            CALL apsp640_query()
+ 
+         # 條件清除
+         ON ACTION qbeclear
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            CALL apsp640_b_fill()
+            CALL apsp640_fetch()
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

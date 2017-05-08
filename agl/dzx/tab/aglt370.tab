@@ -1,0 +1,241 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglt370" module="agl" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02114" crtdt="2013-11-06 18:04:32" modid="02599" moddt="2015-04-20 17:02:59" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="固定比率常用傳票維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glalld,glalld_desc(chr80),glalcomp,glalcomp_desc(chr80),glaa001,glal001,glaldocno,glaldocdt,glal002,glal002_desc(chr80),glal003,glal004,glal005,periods(chr500),glal006,glal007,glalstus,glalownid,glalownid_desc(chr80),glalowndp,glalowndp_desc(chr80),glalcrtid,glalcrtid_desc(chr80),glalcrtdp,glalcrtdp_desc(chr80),glalcrtdt,glalmodid,glalmodid_desc(chr80),glalmoddt,glalcnfid,glalcnfid_desc(chr80),glalcnfdt,glalpstid,glalpstid_desc(chr80),glalpstdt,glam007,glam007_desc(chr80),glam008,glam008_desc(chr80),glam009,glam009_desc(chr80),glam010,glam010_desc(chr80),glam011,glam011_desc(chr80),glam012,glam012_desc(chr80),glam013,glam013_desc(chr80),glam014,glam014_desc(chr80),glam051,glam052,glam052_desc(chr80),glam053,glam053_desc(chr80),glam015,glam015_desc(chr80),glam017,glam017_desc(chr80),glam018,glam018_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glamseq,glamcomp,glam001,glam002,lc_subject(chr500),glam003,glam004,edit1(chr500)"/>
+      <var id="bs_field" value="glalld,glaldocno,glal002,glal002_desc(chr80),glal003,glal004,glal005" pk="glalld,glaldocno" order=""/>
+      <bs_reference field="glal002_desc" ref_field="glal002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;3004&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="open_aglt370_01"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="open_agli090"/>
+      <action id="open_aglt310_01"/>
+      <action id="open_aglt360_01"/>
+      <action id="prog_glam015" prog="cl_user_contact(&quot;aooi130&quot;," parameter="&quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;)"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="aglt370" method="dialog">
+    <section id="input">
+      <input id="head" field="glalld,glalcomp,glal001,glaldocno,glaldocdt,glal002,glal003,glal004,glal005,periods,glal006,glal007,glalstus,glam007,glam008,glam009,glam010,glam011,glam012,glam013,glam014,glam051,glam052,glam053,glam015,glam017,glam018"/>
+      <input id="body" page="1" field="glamseq,glam001,glam002,lc_subject,glam003,glam004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="glalld,glalcomp,glal001,glaldocno,glaldocdt,glal002,glal003,glal004,glal005,periods,glal006,glal007,glalstus,glalownid,glalowndp,glalcrtid,glalcrtdp,glalcrtdt,glalmodid,glalmoddt,glalcnfid,glalcnfdt,glalpstid,glalpstdt,glam007,glam007_desc,glam008,glam008_desc,glam009,glam009_desc,glam010,glam010_desc,glam011,glam011_desc,glam012,glam012_desc,glam013,glam013_desc,glam014,glam014_desc,glam051,glam052,glam052_desc,glam053,glam053_desc,glam015,glam015_desc,glam017,glam017_desc,glam018,glam018_desc"/>
+      <construct id="body" page="1" field="glamseq,glam001,glam002,lc_subject,glam003,glam004"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="glalld,glaldocno"/>
+      <set id="head" type="no_entry" field="glalld,glaldocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="glalld">
+        <after>
+          <reference field="glalld_desc" ref_field="glal_t.glalld" map_field="glalent,glalld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="glalld_desc"/>
+      <column id="glalcomp">
+        <after>
+          <reference field="glalcomp_desc" ref_field="glal_t.glalcomp" map_field="glalent,glalcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="glalcomp_desc"/>
+      <column id="glaa001"/>
+      <column id="glal001" type="S" default="2"/>
+      <column id="glaldocno">
+        <controlp form="q_ooba002_4" state="i"/>
+        <controlp form="q_glaldocno" state="c"/>
+      </column>
+      <column id="glaldocdt"/>
+      <column id="glal002">
+        <after>
+          <reference field="glal002_desc" ref_field="glal002" map_field="glal002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;3004&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="glal002_desc"/>
+      <column id="glal003" type="S" default="1">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="glal004"/>
+      <column id="glal005"/>
+      <column id="periods"/>
+      <column id="glal006">
+        <controlp form="q_ooba002_4" state="i"/>
+        <controlp form="q_ooba002_4" state="c"/>
+      </column>
+      <column id="glal007"/>
+      <column id="glalstus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="glalownid">
+        <after>
+          <reference field="glalownid_desc" ref_field="glal_t.glalownid" map_field="glalownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glalownid_desc"/>
+      <column id="glalowndp">
+        <after>
+          <reference field="glalowndp_desc" ref_field="glal_t.glalowndp" map_field="glalowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glalowndp_desc"/>
+      <column id="glalcrtid">
+        <after>
+          <reference field="glalcrtid_desc" ref_field="glal_t.glalcrtid" map_field="glalcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glalcrtid_desc"/>
+      <column id="glalcrtdp">
+        <after>
+          <reference field="glalcrtdp_desc" ref_field="glal_t.glalcrtdp" map_field="glalcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glalcrtdp_desc"/>
+      <column id="glalcrtdt"/>
+      <column id="glalmodid">
+        <after>
+          <reference field="glalmodid_desc" ref_field="glal_t.glalmodid" map_field="glalmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glalmodid_desc"/>
+      <column id="glalmoddt"/>
+      <column id="glalcnfid">
+        <after>
+          <reference field="glalcnfid_desc" ref_field="glal_t.glalcnfid" map_field="glalcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glalcnfid_desc"/>
+      <column id="glalcnfdt"/>
+      <column id="glalpstid">
+        <after>
+          <reference field="glalpstid_desc" ref_field="glal_t.glalpstid" map_field="glalpstid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glalpstid_desc"/>
+      <column id="glalpstdt"/>
+      <column id="glam007">
+        <after/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="glam007_desc"/>
+      <column id="glam008">
+        <after/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="glam008_desc"/>
+      <column id="glam009">
+        <after/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="glam009_desc"/>
+      <column id="glam010">
+        <after/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="glam010_desc"/>
+      <column id="glam011">
+        <after/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="glam011_desc"/>
+      <column id="glam012">
+        <after/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="glam012_desc"/>
+      <column id="glam013">
+        <after/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="glam013_desc"/>
+      <column id="glam014">
+        <after/>
+        <controlp form="q_rtax001_1" state="c"/>
+      </column>
+      <column id="glam014_desc"/>
+      <column id="glam051"/>
+      <column id="glam052">
+        <after/>
+        <controlp form="q_oojd001_2" state="c"/>
+      </column>
+      <column id="glam052_desc"/>
+      <column id="glam053">
+        <after/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="glam053_desc"/>
+      <column id="glam015">
+        <after/>
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="glam015_desc"/>
+      <column id="glam017">
+        <after/>
+      </column>
+      <column id="glam017_desc"/>
+      <column id="glam018">
+        <after/>
+      </column>
+      <column id="glam018_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="glamseq"/>
+      <column id="glamcomp"/>
+      <column id="glam001">
+        <controlp form="q_oocq002_2" state="i"/>
+        <controlp form="q_oocq002_2" state="c"/>
+      </column>
+      <column id="glam002"/>
+      <column id="lc_subject"/>
+      <column id="glam003">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="glam004">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="edit1"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="glal_t" pk="glalld,glaldocno">
+      <sql id="forupd_sql" type="sql" query="SELECT glalld,&apos;&apos;,glalcomp,&apos;&apos;,&apos;&apos;,glal001,glaldocno,glaldocdt,glal002,&apos;&apos;,glal003,glal004,glal005,&apos;&apos;,glal006,glal007,glalstus,glalownid,&apos;&apos;,glalowndp,&apos;&apos;,glalcrtid,&apos;&apos;,glalcrtdp,&apos;&apos;,glalcrtdt,glalmodid,&apos;&apos;,glalmoddt,glalcnfid,&apos;&apos;,glalcnfdt,glalpstid,&apos;&apos;,glalpstdt,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM glal_t WHERE glalent= ? AND glalld=? AND glaldocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT glalld,&apos;&apos;,glalcomp,&apos;&apos;,&apos;&apos;,glal001,glaldocno,glaldocdt,glal002,&apos;&apos;,glal003,glal004,glal005,&apos;&apos;,glal006,glal007,glalstus,glalownid,&apos;&apos;,glalowndp,&apos;&apos;,glalcrtid,&apos;&apos;,glalcrtdp,&apos;&apos;,glalcrtdt,glalmodid,&apos;&apos;,glalmoddt,glalcnfid,&apos;&apos;,glalcnfdt,glalpstid,&apos;&apos;,glalpstdt,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM glal_t" order="glalld,glaldocno"/>
+    </head>
+    <body id="glam_t" page="1" linked="" pk="glamseq" fk="glamld,glamdocno">
+      <sql id="forupd_sql_detail" query="SELECT glamseq,glamcomp,glam001,glam002,&apos;&apos;,glam003,glam004,&apos;&apos; FROM glam_t WHERE glament=? AND glamld=? AND glamdocno=? AND glamseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glamseq,glamcomp,glam001,glam002,&apos;&apos;,glam003,glam004,&apos;&apos; FROM glam_t WHERE glament=? AND glamld=? AND glamdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

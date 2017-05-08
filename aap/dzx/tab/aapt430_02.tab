@@ -1,0 +1,72 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapt430_02" module="aap" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="03080" crtdt="2014-08-14 19:56:41" modid="03080" moddt="2014-11-30 18:30:22" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="費用分攤目的來源查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),pmds011,pmds007,pmds007_desc(chr500),pmdsdocno,pmdtseq(num10),pmds001,pmdt006(chr500),pmdt006_desc(chr500),pmdt001(chr20),pmds048,pmdtsite(chr10),pmdtsite_desc(chr500),apcbdocno(chr20),apcbseq(num10)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aap" filename="aapt430_02" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="sel,pmds011,pmds007,pmds007_desc,pmdsdocno,pmdtseq,pmds001,pmdt006,pmdt006_desc,pmdt001,pmds048,pmdtsite,pmdtsite_desc,apcbdocno,apcbseq" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="pmds011" type="S" default="1" def_scc="2061"/>
+      <column id="pmds007">
+        <after>
+          <check chkid="v_pmaa001_1" id="isExist"/>
+        </after>
+        <controlp form="q_pmaa001_3" state="i"/>
+        <controlp form="q_pmaa001_3" state="c"/>
+      </column>
+      <column id="pmds007_desc"/>
+      <column id="pmdsdocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_pmdsdocno" state="c"/>
+      </column>
+      <column id="pmdtseq"/>
+      <column id="pmds001"/>
+      <column id="pmdt006">
+        <after>
+          <check chkid="v_imaf001_14" id="isExist"/>
+        </after>
+        <controlp form="q_imaf001" state="i"/>
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="pmdt006_desc"/>
+      <column id="pmdt001">
+        <controlp form="q_pmdldocno" state="i"/>
+        <controlp form="q_pmdldocno" state="c"/>
+      </column>
+      <column id="pmds048" type="S" default="1" def_scc="2087"/>
+      <column id="pmdtsite">
+        <after/>
+      </column>
+      <column id="pmdtsite_desc"/>
+      <column id="apcbdocno"/>
+      <column id="apcbseq">
+        <after>
+          <check id="range" bt="1.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <body id="pmds_t" page="1" linked="" pk="pmdsdocno">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,pmds011,pmds007,&apos;&apos;,pmdsdocno,&apos;&apos;,pmds001,&apos;&apos;,&apos;&apos;,&apos;&apos;,pmds048,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM pmds_t WHERE pmdsent=? AND pmdsdocno=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,pmds011,pmds007,&apos;&apos;,pmdsdocno,&apos;&apos;,pmds001,&apos;&apos;,&apos;&apos;,&apos;&apos;,pmds048,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM pmds_t WHERE pmdsent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

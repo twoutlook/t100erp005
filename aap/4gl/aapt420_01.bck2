@@ -1,0 +1,689 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aapt420_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0006(2014-10-24 15:02:15), PR版次:0006(2016-07-01 18:32:54)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000119
+#+ Filename...: aapt420_01
+#+ Description: 自動產生付款核銷資料
+#+ Creator....: 03538(2014-10-21 16:31:36)
+#+ Modifier...: 03538 -SD/PR- 03538
+ 
+{</section>}
+ 
+{<section id="aapt420_01.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#150817-00025#1  2015/08/19 By Reanna 增加差異處理時要預帶科目
+#160328-00012#1  2016/03/28 By fengmy 增加溢付转待抵款默认转入账款单别&科目
+#160509-00004#89 2016/07/01 By 03538  來源應改為現在執行的作業
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_apcc_m        RECORD
+       type LIKE type_t.chr1, 
+   apeadocno LIKE type_t.chr20, 
+   apea005 LIKE type_t.chr10, 
+   apeasite LIKE type_t.chr10, 
+   apeacomp LIKE type_t.chr10, 
+   nmcldocno1 LIKE type_t.chr20, 
+   nmcldocno2 LIKE type_t.chr20
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE tm    RECORD 
+             order01     LIKE type_t.chr1,
+             order02     LIKE type_t.chr1,
+             order03     LIKE type_t.chr1,
+             apeasite    LIKE type_t.chr10, 
+             apeadocno   LIKE type_t.chr20, 
+             apeadocdt   LIKE type_t.dat, 
+             apea009     LIKE type_t.chr10, 
+             withouttips LIKE type_t.chr80, 
+             nmad002     LIKE type_t.chr10, 
+             apee012     LIKE type_t.chr10,  
+             apea018     LIKE type_t.chr10,  
+             apea017     LIKE type_t.chr500
+             END RECORD
+             
+DEFINE g_apea            RECORD LIKE apea_t.*
+DEFINE g_apda            RECORD LIKE apda_t.*
+
+                         
+DEFINE g_apee            RECORD
+             apee001   LIKE apee_t.apee001,
+             apee002   LIKE apee_t.apee002,
+             apee003   LIKE apee_t.apee003,
+             apee004   LIKE apee_t.apee004,
+             apee005   LIKE apee_t.apee005,
+             apee006   LIKE apee_t.apee006,
+             apee008   LIKE apee_t.apee008,
+             apee009   LIKE apee_t.apee009,
+             apee010   LIKE apee_t.apee010,
+             apee011   LIKE apee_t.apee011,
+             apee012   LIKE apee_t.apee012,
+             apee013   LIKE apee_t.apee013,
+             apee014   LIKE apee_t.apee014,
+             apee015   LIKE apee_t.apee015,
+             apee016   LIKE apee_t.apee016,
+             apee017   LIKE apee_t.apee017,
+             apee018   LIKE apee_t.apee018,
+             apee021   LIKE apee_t.apee021,
+             apee024   LIKE apee_t.apee024,
+             apee025   LIKE apee_t.apee025,
+             apee028   LIKE apee_t.apee028,
+             apee031   LIKE apee_t.apee031,
+             apee032   LIKE apee_t.apee032,
+             apee033   LIKE apee_t.apee033,
+             apee034   LIKE apee_t.apee034,
+             apee100   LIKE apee_t.apee100,
+             apee101   LIKE apee_t.apee101,
+             apee109   LIKE apee_t.apee109,
+             apee119   LIKE apee_t.apee119,
+             apeecomp  LIKE apee_t.apeecomp,
+             apeedocno LIKE apee_t.apeedocno,
+             apeeent   LIKE apee_t.apeeent,
+             apeeorga  LIKE apee_t.apeeorga,
+             apeeseq   LIKE apee_t.apeeseq,
+             apeesite  LIKE apee_t.apeesite
+                         END RECORD  
+DEFINE g_apde            RECORD
+             apde001   LIKE apde_t.apde001,
+             apde002   LIKE apde_t.apde002,
+             apde003   LIKE apde_t.apde003,
+             apde004   LIKE apde_t.apde004,
+             apde006   LIKE apde_t.apde006,
+             apde008   LIKE apde_t.apde008,
+             apde009   LIKE apde_t.apde009,
+             apde010   LIKE apde_t.apde010,
+             apde011   LIKE apde_t.apde011,
+             apde012   LIKE apde_t.apde012,
+             apde013   LIKE apde_t.apde013,
+             apde014   LIKE apde_t.apde014,
+             apde015   LIKE apde_t.apde015,
+             apde016   LIKE apde_t.apde016,
+             apde017   LIKE apde_t.apde017,
+             apde018   LIKE apde_t.apde018,
+             apde021   LIKE apde_t.apde021,
+             apde028   LIKE apde_t.apde028,
+             apde032   LIKE apde_t.apde032,
+             apde100   LIKE apde_t.apde100,
+             apde101   LIKE apde_t.apde101,
+             apde109   LIKE apde_t.apde109,
+             apde119   LIKE apde_t.apde119,
+             apdeld  LIKE apde_t.apdeld,
+             apdecomp  LIKE apde_t.apdecomp,
+             apdedocno LIKE apde_t.apdedocno,
+             apdeent   LIKE apde_t.apdeent,
+             apdeorga  LIKE apde_t.apdeorga,
+             apdeseq   LIKE apde_t.apdeseq,
+             apdesite  LIKE apde_t.apdesite
+                         END RECORD                           
+DEFINE g_crossdoc_key    RECORD                #拆單條件
+             apca005    LIKE apca_t.apca005,
+             apca057    LIKE apca_t.apca057,   
+             apcc100    LIKE apcc_t.apcc100,
+             apcc003    LIKE apcc_t.apcc003,
+             apcc002    LIKE apcc_t.apcc002
+                         END RECORD
+DEFINE g_tmp2            RECORD
+             apccdocno     LIKE apcc_t.apccdocno,
+             apccseq       LIKE apcc_t.apccseq,
+             apcc001       LIKE apcc_t.apcc001,
+             apccent       LIKE apcc_t.apccent,
+             apccld        LIKE apcc_t.apccld,
+             apca005       LIKE apca_t.apca005,
+             apcc002       LIKE apcc_t.apcc002,
+             apcc003       LIKE apcc_t.apcc003,
+             apcc100       LIKE apcc_t.apcc100,
+             apca004       LIKE apca_t.apca004,
+             apca057       LIKE apca_t.apca057,
+             apcb002       LIKE apcb_t.apcb002    #交易單號             
+                         END RECORD
+DEFINE g_glaa005     LIKE glaa_t.glaa005
+DEFINE g_glaacomp    LIKE glaa_t.glaacomp
+
+DEFINE g_apca        RECORD LIKE apca_t.*
+DEFINE l_nouse       LIKE type_t.num20_6
+#end add-point
+ 
+DEFINE g_apcc_m        type_g_apcc_m
+ 
+   
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aapt420_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aapt420_01(--)
+   #add-point:input段變數傳入
+   p_apda005 
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE r_wc            STRING   
+   DEFINE r_wc2           STRING   
+   DEFINE p_apda005       LIKE apda_t.apda005
+   DEFINE l_sql           STRING
+   DEFINE l_nmcl001       LIKE nmcl_t.nmcl001
+   DEFINE l_str           STRING
+   
+   WHENEVER ERROR CONTINUE
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aapt420_01 WITH FORM cl_ap_formpath("aap","aapt420_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   CALL cl_set_combo_scc('type','9955')
+   LET g_apcc_m.type = '1'
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_apcc_m.type ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD type
+            #add-point:BEFORE FIELD type name="input.b.type"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD type
+            
+            #add-point:AFTER FIELD type name="input.a.type"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE type
+            #add-point:ON CHANGE type name="input.g.type"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.type
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD type
+            #add-point:ON ACTION controlp INFIELD type name="input.c.type"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      CONSTRUCT r_wc ON apeadocno,apea005,apeasite,apeacomp
+                   FROM apeadocno,apea005,apeasite,apeacomp
+         BEFORE CONSTRUCT
+            IF g_apcc_m.type <> '2' THEN
+               LET r_wc = " 1=1 "
+               NEXT FIELD type 
+            END IF
+            
+         ON ACTION controlp INFIELD apeadocno
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " apea005 = '",p_apda005,"' AND apeastus = 'Y' "
+            CALL q_apeadocno()
+            DISPLAY g_qryparam.return1 TO apeadocno
+            NEXT FIELD apeadocno
+            
+         ON ACTION controlp INFIELD apea005
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_apca005()                       
+            DISPLAY g_qryparam.return1 TO apea005  
+            NEXT FIELD apea005            
+            
+         ON ACTION controlp INFIELD apeasite
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooef001()                        
+            DISPLAY g_qryparam.return1 TO apeasite  
+            NEXT FIELD apeasite   
+
+         ON ACTION controlp INFIELD apeacomp
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooef001()                        
+            DISPLAY g_qryparam.return1 TO apeacomp  
+            NEXT FIELD apeacomp
+            
+      END CONSTRUCT             
+      CONSTRUCT r_wc2 ON nmcldocno1,nmcldocno2
+                    FROM nmcldocno1,nmcldocno2
+                    
+         BEFORE CONSTRUCT
+            IF g_apcc_m.type <> '2' THEN
+               LET r_wc2 = " 1=1 "
+               NEXT FIELD type 
+            END IF
+            
+         ON ACTION controlp INFIELD nmcldocno1
+
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " nmck002 IN (SELECT ooia001 FROM ooia_t  WHERE ooia002 = '20') ",
+                                   " AND EXISTS (SELECT 1 FROM nmcl_t,apea_t
+                                                         WHERE nmckent = nmclent
+                                                           AND nmckdocno = nmcldocno
+                                                           AND nmclent = apeaent
+                                                           AND nmcl001 = apeadocno )"
+            CALL q_nmckdocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmcldocno1  #顯示到畫面上
+            NEXT FIELD nmcldocno1                     #返回原欄位            
+            
+         ON ACTION controlp INFIELD nmcldocno2
+
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " nmck002 IN (SELECT ooia001 FROM ooia_t  WHERE ooia002 = '30')",
+                                   " AND EXISTS (SELECT 1 FROM nmcl_t,apea_t
+                                                         WHERE nmckent = nmclent
+                                                           AND nmckdocno = nmcldocno
+                                                           AND nmclent = apeaent
+                                                           AND nmcl001 = apeadocno )"            
+            CALL q_nmckdocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmcldocno2  #顯示到畫面上
+            NEXT FIELD nmcldocno2                     #返回原欄位        
+
+      END CONSTRUCT          
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   IF r_wc2 <> " 1=1" THEN
+      LET r_wc2 = cl_replace_str(r_wc2,'nmcldocno1','nmcldocno')
+      LET r_wc2 = cl_replace_str(r_wc2,'nmcldocno2','nmcldocno')
+      LET r_wc2 = cl_replace_str(r_wc2,'and','or')
+      
+      LET l_nmcl001 = ''
+      LET l_str = ''
+      LET l_sql = " SELECT DISTINCT nmcl001 FROM nmcl_t ",
+                  " WHERE nmclent= '",g_enterprise CLIPPED,"' ",
+                  "   AND ",r_wc2 CLIPPED
+                  
+      PREPARE sel_aapt420_01_nmcl_p FROM l_sql
+      DECLARE sel_aapt420_01_nmcl_c CURSOR FOR sel_aapt420_01_nmcl_p   
+      
+      FOREACH sel_aapt420_01_nmcl_c INTO l_nmcl001
+         IF NOT cl_null(l_str) THEN LET l_str = l_str,"," END IF
+         LET l_str = l_str,l_nmcl001
+      END FOREACH
+      LET r_wc2 = "apeadocno IN ",s_fin_get_wc_str(l_str)
+   END IF
+   LET r_wc = r_wc," AND ",r_wc2
+   
+   IF INT_FLAG THEN
+      LET r_wc = " 1=2 "
+      LET INT_FLAG = 0
+   END IF
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aapt420_01 
+   
+   #add-point:input段after input 
+   RETURN r_wc
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapt420_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aapt420_01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 差異處理產生差異單身
+# Memo...........:
+# Usage..........: CALL aapt420_01_apde_diff(p_apdadocno,p_apdald,p_type1,p_type2)
+# Input parameter: p_apdadocno    請款單單號
+#                : p_apdald       帳別
+#                : p_type1        帳<付 時的差異類別
+#                : p_type2        帳>付 時的差異類別
+# Return code....:
+# Date & Author..: 14/10/21 By apo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION aapt420_01_apde_diff(p_apdadocno,p_apdald,p_type1,p_type2)
+   DEFINE p_apdadocno   LIKE apda_t.apdadocno    #請款單號
+   DEFINE p_apdald      LIKE apda_t.apdald       #帳別
+   DEFINE p_type1       LIKE oocq_t.oocq002      #付款<帳款 選擇的類型
+   DEFINE p_type2       LIKE oocq_t.oocq002      #付款>帳款 選擇的類別
+   DEFINE l_sql         STRING
+   DEFINE l_str         STRING
+   DEFINE l_where       STRING
+   DEFINE l_pay         RECORD         #付款單身(第二)
+                        apde119        LIKE apde_t.apde119
+                        END RECORD
+ 
+   DEFINE l_bill        RECORD         #帳款單身(第一)
+                        apde119        LIKE apde_t.apde119
+                        END RECORD
+   DEFINE l_other       RECORD         #其他東西(第二)
+                        apde015        LIKE apde_t.apde015,
+                        apde119        LIKE apde_t.apde119
+                        END RECORD
+
+   DEFINE l_sum         RECORD         #總計
+                        apde119        LIKE apde_t.apde119
+                        END RECORD
+   DEFINE l_type        LIKE oocq_t.oocq002
+
+   WHENEVER ERROR CONTINUE
+   IF cl_null(p_apdadocno) OR cl_null(p_apdald)
+      OR cl_null(p_type1) OR cl_null(p_type2) THEN
+      RETURN
+   END IF  
+   
+   #取得差異金額
+   CALL s_aapt420_balance_chk(p_apdald,p_apdadocno,'aapt410')
+      RETURNING g_sub_success,g_errno,l_sum.apde119
+
+   CASE
+      #付款<帳款 
+      WHEN l_sum.apde119 < 0 
+         LET l_type = p_type1 
+         
+      #付款>帳款 
+      WHEN l_sum.apde119 > 0 
+         LET l_type = p_type2
+      OTHERWISE
+   END CASE 
+
+   IF l_sum.apde119 <> 0 THEN
+      CALL aapt420_01_ins_apde3(p_apdadocno,p_apdald,l_type,'1',l_sum.apde119)
+   END IF
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 差異處理的產生單身
+# Memo...........:
+# Usage..........: CALL aapt420_01_ins_apde3(p_apdadocno,p_apdald,p_type,p_field,p_apde1x9)
+# Input parameter: 
+#                : 
+# Return code....:
+# Date & Author..: 14/10/21 By apo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION aapt420_01_ins_apde3(p_apdadocno,p_apdald,p_type,p_field,p_apde1x9)
+   DEFINE p_apdadocno       LIKE apda_t.apdadocno   #請款單號
+   DEFINE p_apdald          LIKE apda_t.apdald      #帳別
+   DEFINE p_type            LIKE oocq_t.oocq002     #apde002 帳款類別
+   DEFINE p_field           LIKE type_t.chr1        #1:本幣 2:本幣二 3:本幣三
+   DEFINE p_apde1x9         LIKE apde_t.apde119
+   DEFINE l_balance_apde119 LIKE type_t.num5
+   DEFINE l_glaa            RECORD
+                glaa018     LIKE glaa_t.glaa018,
+                glaa022     LIKE glaa_t.glaa022
+                            END RECORD
+   DEFINE l_apdadocdt       LIKE apda_t.apdadocdt
+   DEFINE l_dc              LIKE type_t.chr1
+   DEFINE l_success         LIKE type_t.num5        #160328-00012#1 add
+   DEFINE l_slip            LIKE apde_t.apdedocno   #160328-00012#1 add
+   DEFINE l_glaa024         LIKE glaa_t.glaa024     #160328-00012#1 add
+
+   WHENEVER ERROR CONTINUE
+
+
+   INITIALIZE g_apda.* TO NULL
+   SELECT * INTO g_apda.* FROM apda_t
+    WHERE apdadocno = p_apdadocno
+      AND apdald    = p_apdald
+      AND apdaent   = g_enterprise 
+
+   INITIALIZE g_apde.* TO NULL
+   LET g_apde.apdeent  = g_apda.apdaent
+   LET g_apde.apdeld = g_apda.apdald
+   LET g_apde.apdecomp = g_apda.apdacomp
+   LET g_apde.apdeorga = g_apda.apdacomp
+   LET g_apde.apdesite = g_apda.apdasite
+   LET g_apde.apdedocno = g_apda.apdadocno
+   SELECT MAX(apdeseq) INTO g_apde.apdeseq FROM apde_t
+    WHERE apdeent   = g_apde.apdeent
+      AND apdedocno = g_apde.apdedocno
+   IF cl_null(g_apde.apdeseq)THEN LET g_apde.apdeseq = 0 END IF
+   LET g_apde.apdeseq = g_apde.apdeseq + 1 
+  #LET g_apde.apde001 = 'aapt420'   #160509-00004#89 mark
+   LET g_apde.apde001 = g_prog      #160509-00004#89
+   LET g_apde.apde009 = 'N'
+   LET g_apde.apde028 = '0'
+   LET g_apde.apde002 = p_type 
+   LET g_apde.apde109 = 0
+   
+   CASE
+      WHEN p_field = '1'  
+         #apde119
+         LET g_apde.apde119 = p_apde1x9 
+         LET g_apde.apde119 = s_math_abs(g_apde.apde119)
+   END CASE
+   IF cl_null(g_apde.apde119)THEN LET g_apde.apde119 = 0 END IF
+
+
+   LET l_glaa.glaa018 = NULL
+   LET l_glaa.glaa022 = NULL
+   SELECT glaa001
+     INTO g_apde.apde100
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald  = p_apdald
+
+   #本幣不平且不選擇匯兌
+   IF p_field = '1' AND p_type <> '12' AND p_type <> '11' THEN
+      LET l_glaa.glaa018 = NULL
+      LET l_glaa.glaa022 = NULL
+      SELECT glaa001,glaa018,glaa022
+        INTO g_apde.apde100,l_glaa.glaa018,l_glaa.glaa022
+        FROM glaa_t
+       WHERE glaaent = g_enterprise
+         AND glaald  = p_apdald
+      LET g_apde.apde101 = 1
+      LET g_apde.apde109 = g_apde.apde119
+      
+
+   END IF
+   #匯兌損益:寫入一筆本幣紀錄匯兌損失或收益,因此原幣金額等於本幣金額
+   IF p_type = '11' OR p_type = '12' THEN
+      LET g_apde.apde109 = g_apde.apde119
+   END IF
+   
+   IF p_type <> '19' THEN
+      #沖銷加減項
+      SELECT gzcb003 INTO g_apde.apde015 
+        FROM gzcb_t
+       WHERE gzcb001 = '8506'
+         AND gzcb002 = g_apde.apde002     #應付核銷類型
+         
+
+
+   ELSE
+      #19類要判斷是帳款>付款
+      #            正 C
+      #          OR 付款>帳款
+      #            負 D
+      CALL s_aapt420_balance_chk(g_apda.apdald,g_apda.apdadocno,'aapt410')
+           RETURNING g_sub_success,g_errno,l_balance_apde119           
+      IF l_balance_apde119 > 0 THEN
+         LET g_apde.apde015 = 'D'
+      ELSE
+         LET g_apde.apde015 = 'C'
+      END IF
+   END IF 
+   #-150211--(s)
+   #取上一筆項次摘要做預設值
+   SELECT apde010 INTO g_apde.apde010
+     FROM apde_t
+    WHERE apdeent  = g_enterprise
+      AND apdeld   = g_apde.apdeld
+      AND apdedocno= g_apde.apdedocno
+      AND apdeseq  = g_apde.apdeseq - 1
+   #-150211--(e)
+   #銀行存提碼
+   LET g_apde.apde011 = ''
+   
+   #現金變動碼
+   LET g_apde.apde012 = ''
+   
+   #20/21/22類型,帶單頭帳款對象預設
+   IF p_type[1,1] = '2' THEN               #150527apo
+      LET g_apde.apde013 = g_apda.apda005  #150527apo
+   ELSE                                    #150527apo
+      LET g_apde.apde013 = ''
+   END IF                                  #150527apo
+   #160328-00012#1 -----------------begin
+   IF p_type = '20' THEN                   
+      CALL s_aooi200_fin_get_slip(g_apde.apdedocno) RETURNING l_success,l_slip
+      CALL s_ld_sel_glaa(g_apde.apdeld,'glaa024')
+          RETURNING l_success,l_glaa024
+      SELECT ooac004 INTO g_apde.apde014
+        FROM ooac_t
+       WHERE ooacent = g_enterprise
+         AND ooac001 = l_glaa024
+         AND ooac002 = l_slip
+         AND ooac003 = 'D-FIN-3005'      
+   ELSE
+   #160328-00012#1 -----------------end
+      LET g_apde.apde014 = ''
+   END IF     #160328-00012#1 add
+   #LET g_apde.apde016 = ''  #150817-00025#1 mark
+   
+   #150817-00025#1 add ------
+   IF p_type = '11' OR p_type = '12' OR p_type[1,1] = '2' THEN   #160328-00012#1 add p_type[1,1] = '2'
+      LET g_apde.apde016 = s_aapt420_bring_acc_code2(g_apde.apdeld,g_apde.apdesite,g_apda.apda005,p_type,g_apde.apde006,'')
+   ELSE
+      LET g_apde.apde016 = ''
+   END IF
+   #150817-00025#1 add end---
+   
+   IF cl_null(g_apde.apde101) THEN LET g_apde.apde101 = 1 END IF
+   IF cl_null(g_apde.apde109) THEN LET g_apde.apde109 = 0 END IF
+   IF cl_null(g_apde.apde119) THEN LET g_apde.apde119 = 0 END IF
+   
+   LET g_apde.apde032 = NULL
+   SELECT apdadocdt INTO g_apde.apde032 FROM apda_t
+    WHERE apdaent = g_enterprise
+      AND apdadocno = g_apde.apdedocno      
+   
+   INSERT INTO apde_t(apdeent,
+                      apdeld,apdecomp,apdesite,apdedocno,apdeseq,
+                      apde001,apde009,apde028,apde002,apde015,
+                      apde003,apde004,apdeorga,apde006,apde010,
+                      apde011,apde012,apde013,apde014,apde016,
+                      apde017,apde018,apde021,apde032,apde100,
+                      apde101,apde109,apde119)
+          VALUES(g_apde.apdeent,
+                 g_apde.apdeld,g_apde.apdecomp,g_apde.apdesite,g_apde.apdedocno,g_apde.apdeseq,
+                 g_apde.apde001,g_apde.apde009,g_apde.apde028,g_apde.apde002,g_apde.apde015,
+                 g_apde.apde003,g_apde.apde004,g_apde.apdeorga,g_apde.apde006,g_apde.apde010,
+                 g_apde.apde011,g_apde.apde012,g_apde.apde013,g_apde.apde014,g_apde.apde016,
+                 g_apde.apde017,g_apde.apde018,g_apde.apde021,g_apde.apde032,g_apde.apde100,
+                 g_apde.apde101,g_apde.apde109,g_apde.apde119)
+   IF SQLCA.SQLCODE THEN END IF
+END FUNCTION
+
+ 
+{</section>}
+ 

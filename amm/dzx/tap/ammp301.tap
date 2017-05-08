@@ -1,0 +1,3333 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="ammp301" std_prog="ammp301" erpver="1.0" module="AMM" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="construct.c.page1.mmaf001" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_mmaf001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mmaf001  #顯示到畫面上
+            NEXT FIELD mmaf001                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1.mmaf004" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_mmaf004()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mmaf004  #顯示到畫面上
+            NEXT FIELD mmaf004                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_wc3                STRING
+DEFINE l_mmaf0001           LIKE type_t.chr1]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL cl_set_combo_scc("mmaf0001","6052")
+   CALL cl_set_combo_scc("mmaf0002","6052")
+   CALL cl_set_combo_scc("mmaf0003","6052")]]>
+  </point>
+  <point name="input.a.page1.mmaf001" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_mmaf_d[g_detail_idx].mmaf001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mmaf_d[g_detail_idx].mmaf001 != g_mmaf_d_t.mmaf001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmaf_t WHERE "||"mmafent = '" ||g_enterprise|| "' AND "||"mmaf001 = '"||g_mmaf_d[g_detail_idx].mmaf001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="menu.modify1" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               LET g_action_choice="modify"
+               CALL ammp301_modify()]]>
+  </point>
+  <point name="menu.output" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               ]]>
+  </point>
+  <point name="query.more_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      INPUT l_mmaf0001 FROM mmaf0001
+         AFTER INPUT
+             IF l_mmaf0001='1' then
+                call cl_set_comp_visible("mmaf0131",TRUE)
+             end if
+             IF l_mmaf0001='2' then
+                call cl_set_comp_visible("mmaf0141",TRUE)
+             end if
+      END INPUT
+      CONSTRUCT g_wc3 ON mmaf013,mmaf014,mmaf015,mmaf004,mmaq001,mmaf001,mmaf008 
+ 
+      FROM mmaf0131,mmaf0141,mmaf0151,mmaf0041,mmaq0011,mmaf0011,mmaf0081 
+      END CONSTRUCT]]>
+  </point>
+  <point name="ui_dialog.more_displayarray" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         ]]>
+  </point>
+  <point name="ui_dialog.more_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         INPUT g_query1,g_query2,g_query3,g_mmaf013,g_mmaf014,g_mmaf015
+          FROM formonly.mmaf0131,formonly.mmaf0141,formonly.mmaf0151, 
+               formonly.mmaf0132,formonly.mmaf0142,formonly.mmaf0152
+            BEFORE INPUT
+         END INPUT
+    
+           
+         INPUT ARRAY g_mmaf_d FROM s_detail1.*
+            ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = TRUE, 
+                  DELETE ROW = FALSE,
+                  APPEND ROW = TRUE)
+    
+            BEFORE ROW
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_detail_idx = l_ac
+               
+            BEFORE INPUT
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               
+         END INPUT
+         DISPLAY ARRAY g_mmaq_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+    
+            BEFORE ROW
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_detail_idx = l_ac
+               
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               
+         END DISPLAY         ]]>
+  </point>
+  <section id="ammp301.b_fill" ver="1" status="" src="s">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION ammp301_b_fill(p_wc2)
+   {<Local define>}
+   DEFINE p_wc2           STRING
+   {</Local define>}
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+   
+   LET g_sql = "SELECT  UNIQUE '',mmaf008,mmaf009,mmaf001,mmaf013,mmaf014,mmaf015,mmaf004 FROM mmaf_t", 
+
+ 
+               " LEFT JOIN mmaq_t ON mmaqent = mmafent AND mmaf001 = mmaq001",
+ 
+ 
+               "",
+               " WHERE mmafent= ? AND 1=1 AND ", p_wc2
+    
+   LET g_sql = g_sql, " ORDER BY mmaf_t.mmaf001"
+  
+   #add-point:b_fill段sql_after
+   {<point name="b_fill.sql_after"/>}
+   #end add-point
+  
+   PREPARE ammp301_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR ammp301_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_mmaf_d.clear()
+   CALL g_mmaf2_d.clear()   
+ 
+ 
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO g_mmaf_d[l_ac].check,g_mmaf_d[l_ac].mmaf008,g_mmaf_d[l_ac].mmaf009,g_mmaf_d[l_ac].mmaf001, 
+       g_mmaf_d[l_ac].mmaf013,g_mmaf_d[l_ac].mmaf014,g_mmaf_d[l_ac].mmaf015,g_mmaf_d[l_ac].mmaf004
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+  
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.fill"/>}
+      #end add-point
+      
+      CALL ammp301_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec AND g_error_show = 1 THEN
+         CALL cl_err( "", 9035, 1 )
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+ 
+   CALL g_mmaf_d.deleteElement(g_mmaf_d.getLength())   
+   CALL g_mmaf2_d.deleteElement(g_mmaf2_d.getLength())
+ 
+ 
+   #將key欄位填到每個page
+   FOR g_detail_idx = 1 TO g_mmaf_d.getLength()
+      #LET  = g_mmaf_d[g_detail_idx].mmaf001 
+ 
+ 
+   END FOR
+   LET g_detail_idx = 1
+   
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE ammp301_pb
+   
+   LET l_ac = 1
+   IF g_mmaf_d.getLength() > 0 THEN
+      CALL ammp301_fetch()
+   END IF
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.b_fill2" ver="1" status="" src="s">
+    <![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION ammp301_b_fill2(pi_idx)
+   DEFINE pi_idx          LIKE type_t.num5
+   DEFINE li_ac           LIKE type_t.num5
+   #add-point:b_fill2段define
+   {<point name="b_fill2.define"/>}
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+ 
+      
+   #add-point:單身填充後
+   {<point name="b_fill2.after_fill" />}
+   #end add-point
+    
+   LET l_ac = li_ac
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.before_delete" ver="1" status="" src="s">
+    <![CDATA[#+ 單身db資料刪除
+PRIVATE FUNCTION ammp301_before_delete()
+   #add-point:before_delete段define
+   {<point name="before_delete.define"/>}
+   #end add-point 
+   
+   #add-point:單筆刪除前
+   {<point name="delete.body.b_single_delete" mark="Y"/>}
+   #end add-point
+   
+   DELETE FROM mmaf_t
+    WHERE mmafent = g_enterprise AND  =  AND
+ 
+          mmaf001 = g_mmaf_d_t.mmaf001
+ 
+      
+   #add-point:單筆刪除中
+   {<point name="delete.body.m_single_delete"/>}
+   #end add-point
+   
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("mmaf_t",SQLCA.sqlcode,1)
+      RETURN FALSE 
+   END IF
+   
+   #add-point:單筆刪除後
+   {<point name="delete.body.a_single_delete"/>}
+   #end add-point
+ 
+   LET g_rec_b = g_rec_b-1
+   DISPLAY g_rec_b TO FORMONLY.cnt
+ 
+   RETURN TRUE
+    
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.browser_fill" ver="1" status="" src="s">
+    <![CDATA[#+ 瀏覽頁簽資料填充
+PRIVATE FUNCTION ammp301_browser_fill(ps_page_action)
+   DEFINE ps_page_action    STRING
+   DEFINE l_wc              STRING
+   DEFINE l_wc2             STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sub_sql         STRING
+   DEFINE l_sql_rank        STRING
+   DEFINE l_searchcol       STRING
+   #add-point:browser_fill段define
+   {<point name="browser_fill.define"/>}
+   #end add-point    
+   
+   #add-point:browser_fill段動作開始前
+   {<point name="browser_fill.before_browser_fill"/>}
+   #end add-point    
+   
+   CALL g_browser.clear()
+ 
+   #搜尋用
+   IF cl_null(g_searchcol) OR g_searchcol = '0' THEN
+      LET l_searchcol = ""
+   ELSE
+      LET l_searchcol = g_searchcol
+   END IF
+   
+   LET l_wc  = g_wc.trim() 
+   LET l_wc2 = g_wc2.trim()
+   IF cl_null(l_wc) THEN  #p_wc 查詢條件
+      RETURN
+   END IF
+   
+   IF g_wc2 <> " 1=1" OR NOT cl_null(g_wc2) THEN
+      #單身有輸入搜尋條件                      
+      LET l_sub_sql = " SELECT UNIQUE  ",
+ 
+                      " FROM mmaf_t ",
+                      " ",
+                      " ",
+ 
+                      " WHERE mmafent = '" ||g_enterprise|| "' AND ",l_wc, " AND ", l_wc2 
+   ELSE
+      #單身未輸入搜尋條件
+      LET l_sub_sql = " SELECT UNIQUE  ",
+ 
+                      " FROM mmaf_t ",
+                      " ",
+                      " ",
+                      " WHERE mmafent = '" ||g_enterprise|| "' AND ",l_wc CLIPPED
+   END IF 
+   
+   LET g_sql = " SELECT COUNT(*) FROM (",l_sub_sql,")"
+ 
+   #add-point:browser_fill,count前
+   {<point name="browser_fill.before_count"/>}
+   #end add-point
+   
+   PREPARE header_cnt_pre FROM g_sql
+   EXECUTE header_cnt_pre INTO g_browser_cnt   #總筆數
+   FREE header_cnt_pre
+   
+   #若超過最大顯示筆數
+   LET g_error_show = 0
+ 
+   DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+ 
+   #LET g_page_action = ps_page_action          # Keep Action
+   IF ps_page_action = "first" OR              
+      ps_page_action = "prev"  OR
+      ps_page_action = "next"  OR
+      ps_page_action = "last"  THEN
+      LET g_page_action = ps_page_action        #g_page_action 這個會影響 browser 下面四個button 的判斷 
+   END IF
+   
+   CASE ps_page_action
+      WHEN "F" 
+         LET g_pagestart = 1
+          
+      WHEN "P"  
+         LET g_pagestart = g_pagestart - g_max_browse
+         IF g_pagestart < 1 THEN
+             LET g_pagestart = 1
+         END IF
+          
+      WHEN "N"  
+         LET g_pagestart = g_pagestart + g_max_browse
+         IF g_pagestart > g_browser_cnt THEN
+            LET g_pagestart = g_browser_cnt - (g_browser_cnt mod g_max_browse) + 1
+            WHILE g_pagestart > g_browser_cnt 
+               LET g_pagestart = g_pagestart - g_max_browse
+            END WHILE
+         END IF
+      
+      WHEN "L"  
+         LET g_pagestart = g_browser_cnt - (g_browser_cnt mod g_max_browse) + 1
+         WHILE g_pagestart > g_browser_cnt 
+            LET g_pagestart = g_pagestart - g_max_browse
+         END WHILE
+ 
+      OTHERWISE
+         LET g_pagestart = 1
+         
+   END CASE
+   
+   #單身有輸入查詢條件且非null
+   IF g_wc2 <> " 1=1" AND NOT cl_null(g_wc2) THEN 
+ 
+      #依照 Browser欄位定義(取代原本bs_sql功能)
+      LET l_sub_sql  = "SELECT DISTINCT  ",
+                       " FROM mmaf_t ",
+ 
+                       " ",
+                       " WHERE mmafent = '" ||g_enterprise|| "' AND ", g_wc," AND ",g_wc2
+ 
+   ELSE
+      #單身無輸入資料
+      LET l_sub_sql  = "SELECT DISTINCT  ",
+                       " FROM mmaf_t ",
+                       " WHERE mmafent = '" ||g_enterprise|| "' AND ", g_wc
+                 
+   END IF
+   
+   #add-point:browser_fill,sql_rank前
+   {<point name="browser_fill.before_sql_rank"/>}
+   #end add-point
+   
+   LET l_sql_rank = "SELECT ,DENSE_RANK() OVER(ORDER BY  ",g_order,") AS RANK ",
+                    " FROM (",l_sub_sql,") "
+                       
+   #定義翻頁CURSOR
+   LET g_sql= " SELECT  FROM (",l_sql_rank,") WHERE RANK>=",g_pagestart,
+              " AND RANK<",g_pagestart+g_max_browse,
+              " ORDER BY ",l_searchcol," ",g_order
+                
+   #add-point:browser_fill,pre前
+   {<point name="browser_fill.before_pre"/>}
+   #end add-point
+                
+   PREPARE browse_pre FROM g_sql
+   DECLARE browse_cur CURSOR FOR browse_pre
+ 
+   CALL g_browser.clear()
+   LET g_cnt = 1
+   FOREACH browse_cur INTO     
+      IF SQLCA.sqlcode THEN
+         CALL cl_err('foreach:',SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      
+      
+      #add-point:browser_fill段reference
+      {<point name="browser_fill.reference"/>}
+      #end add-point    
+      
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+ 
+   CALL g_browser.deleteElement(g_cnt)
+   IF g_browser.getLength() = 0 AND g_wc THEN
+      INITIALIZE g_mmaf_m.* TO NULL
+      CALL g_mmaf_d.clear()
+ 
+      CLEAR FORM
+   END IF
+   
+   LET g_header_cnt = g_browser.getLength()
+   LET g_rec_b = g_cnt - 1
+   LET g_detail_cnt = g_rec_b
+   LET g_cnt = 0
+   
+   
+   FREE browse_pre
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+   ELSE
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   END IF
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.browser_search" ver="1" status="" src="s">
+    <![CDATA[#+ 瀏覽頁簽資料搜尋
+PRIVATE FUNCTION ammp301_browser_search(p_type)
+   DEFINE p_type LIKE type_t.chr10
+   #add-point:browser_search段define
+   {<point name="browser_search.define"/>}
+   #end add-point    
+   
+   #若無輸入關鍵字則查找出所有資料
+   IF NOT cl_null(g_searchstr) AND g_searchcol='0' THEN
+      CALL cl_err("searchcol","std-00005",0)
+      RETURN FALSE 
+   END IF 
+   
+   IF NOT cl_null(g_searchstr) THEN
+      LET g_wc = " lower(", g_searchcol, ") LIKE '%", g_searchstr, "%'"
+      LET g_wc = g_wc.toLowerCase()
+   ELSE
+      LET g_wc = " 1=1"
+   END IF         
+   
+   #若為排序搜尋則添加以下條件
+   IF cl_null(g_searchcol) OR g_searchcol = "0" THEN
+      LET g_wc = g_wc, " ORDER BY "
+   ELSE
+      LET g_wc = g_wc, " ORDER BY ", g_searchcol
+   END IF 
+ 
+   CALL ammp301_browser_fill("F")
+   CALL ui.Interface.refresh()
+   RETURN TRUE
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.construct" ver="1" status="" src="s">
+    <![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION ammp301_construct()
+   DEFINE ls_return   STRING
+   DEFINE ls_result   STRING 
+   DEFINE ls_wc       STRING 
+   #add-point:cs段define
+   {<point name="cs.define"/>}
+   #end add-point    
+ 
+   #清除畫面上相關資料
+   CLEAR FORM                 
+   INITIALIZE g_mmaf_m.* TO NULL
+   CALL g_mmaf_d.clear()
+ 
+   INITIALIZE g_wc TO NULL
+   INITIALIZE g_wc2 TO NULL
+   LET g_action_choice = ""
+    
+   LET g_qryparam.state = 'c'
+   
+   #add-point:cs段construct外
+   {<point name="cs.head.before"/>}
+   #end add-point 
+   
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+      #單頭
+      CONSTRUCT BY NAME g_wc ON mmaf003
+ 
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            {<point name="cs.head.before_construct"/>}
+            #end add-point 
+            
+        #---------------------------<  Master  >---------------------------
+         #----<<mmaf003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD mmaf003
+            #add-point:BEFORE FIELD mmaf003
+            {<point name="construct.b.mmaf003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mmaf003
+            
+            #add-point:AFTER FIELD mmaf003
+            {<point name="construct.a.mmaf003" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mmaf003
+         ON ACTION controlp INFIELD mmaf003
+            #add-point:ON ACTION controlp INFIELD mmaf003
+            {<point name="construct.c.mmaf003" />}
+            #END add-point
+ 
+ 
+         
+      END CONSTRUCT
+ 
+      CONSTRUCT g_wc2_table1 ON NULL
+           FROM NULL
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            {<point name="cs.body.before_construct"/>}
+            #end add-point 
+            
+         #單身公用欄位開窗相關處理
+         
+           
+         #單身一般欄位開窗相關處理
+         #---------------------<  Detail: page1  >---------------------
+   
+       
+      END CONSTRUCT
+  
+ 
+  
+      #add-point:cs段more_construct
+      {<point name="cs.more_construct"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:ui_dialog段b_dialog
+         {<point name="cs.before_dialog"/>}
+         #end add-point
+      
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+   
+   #add-point:cs段after_construct
+   {<point name="cs.after_construct"/>}
+   #end add-point
+   
+   #組合g_wc2
+   LET g_wc2 = g_wc2_table1
+ 
+ 
+ 
+   
+   LET g_current_row = 1
+ 
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+   
+   LET g_wc_filter = ""
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.default_search" ver="1" status="" src="s">
+    <![CDATA[#+ 外部參數搜尋, 施工中
+PRIVATE FUNCTION ammp301_default_search()
+   {<Local define>}
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   {</Local define>}
+   #add-point:default_search段define
+   {<point name="default_search.define"/>}
+   #end add-point  
+   
+   IF NOT cl_null(g_argv[1]) THEN
+      LET ls_wc = ls_wc, " mmaf001 = '", g_argv[1], "' AND "
+   END IF
+   
+ 
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET ls_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_wc = ls_wc
+   ELSE
+      LET g_wc = " 1=1"
+   END IF
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.delete" ver="1" status="" src="s">
+    <![CDATA[#+ 資料刪除
+PRIVATE FUNCTION ammp301_delete()
+   {<Local define>}
+   DEFINE li_ac LIKE type_t.num5
+   {<Local define>}
+   #add-point:delete段define
+   {<point name="delete.define"/>}
+   #end add-point 
+   IF NOT cl_ask_delete() THEN
+      #不刪除
+      RETURN
+   END IF
+   
+   LET li_ac = ARR_CURR()
+   LET g_mmaf_d_t.* = g_mmaf_d[li_ac].*
+   
+   CALL s_transaction_begin()  
+   
+   #add-point:delete段刪除前
+   {<point name="delete.before_delete" mark="Y"/>}
+   #end add-point 
+   
+   #刪除單頭
+   DELETE FROM mmaf_t 
+         WHERE mmaf001 = g_mmaf_d_t.mmaf001
+ 
+           
+   #add-point:delete段刪除中
+   {<point name="delete.m_delete"/>}
+   #end add-point 
+           
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("mmaf_t",SQLCA.sqlcode,1) 
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:delete段刪除後
+   {<point name="delete.after_delete"/>}
+   #end add-point 
+   
+   #刪除單頭
+   #add-point:delete段刪除前
+   {<point name="delete.before_delete2" mark="Y"/>}
+   #end add-point 
+   DELETE FROM mmaq_t 
+         WHERE mmaq001 = g_mmaf_d_t.mmaf001
+ 
+   #add-point:delete段刪除中
+   {<point name="delete.m_delete2"/>}
+   #end add-point 
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("mmaq_t",SQLCA.sqlcode,1) 
+      CALL s_transaction_end('N','0')
+      RETURN
+   ELSE
+      CALL s_transaction_end('Y','0')
+   END IF
+   #add-point:delete段刪除後
+   {<point name="delete.after_delete2"/>}
+   #end add-point 
+ 
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.delete_b" ver="1" status="" src="s">
+    <![CDATA[#+ 刪除單身後其他table連動
+PRIVATE FUNCTION ammp301_delete_b(ps_table,ps_keys_bak,ps_page)
+   {<Local define>}
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   {</Local define>}
+   #add-point:delete_b段define
+   {<point name="delete_b.define"/>}
+   #end add-point     
+ 
+   #判斷是否是同一群組的table
+   LET ls_group = "mmaf_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      #add-point:delete_b段刪除前
+      {<point name="delete_b.before_delete" mark="Y"/>}
+      #end add-point  
+      DELETE FROM mmaf_t
+       WHERE mmafent = g_enterprise AND
+         mmaf001 = ps_keys_bak[1]
+      #add-point:delete_b段刪除中
+      {<point name="delete_b.m_delete"/>}
+      #end add-point  
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("",SQLCA.sqlcode,0)
+      END IF
+      #add-point:delete_b段刪除後
+      {<point name="delete_b.after_delete"/>}
+      #end add-point  
+   END IF
+   
+ 
+   
+   LET ls_group = "mmaq_t,"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      #add-point:delete_b段刪除前
+      {<point name="delete_b.before_delete2" mark="Y"/>}
+      #end add-point  
+      DELETE FROM mmaq_t
+       WHERE mmaqent = g_enterprise AND
+         mmaq001 = ps_keys_bak[1]
+      #add-point:delete_b段刪除中
+      {<point name="delete_b.m_delete2"/>}
+      #end add-point  
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("mmaq_t",SQLCA.sqlcode,0)
+      END IF
+      #add-point:delete_b段刪除後
+      {<point name="delete_b.after_delete2"/>}
+      #end add-point  
+      RETURN
+   END IF
+ 
+ 
+   
+   #單頭刪除, 連帶刪除單身
+   LET ls_group = "mmaf_t,"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      #add-point:delete_b段刪除前
+      {<point name="delete_b.before_body_delete2" mark="Y"/>}
+      #end add-point  
+      DELETE FROM mmaq_t
+       WHERE mmaqent = g_enterprise AND
+         mmaq001 = ps_keys_bak[1]
+      #add-point:delete_b段刪除中
+      {<point name="delete_b.m_body_delete2"/>}
+      #end add-point  
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("mmaq_t",SQLCA.sqlcode,0)
+      END IF
+      #add-point:delete_b段刪除後
+      {<point name="delete_b.after_body_delete2"/>}
+      #end add-point  
+      RETURN
+   END IF
+ 
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.description" ver="1" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(版次:1) Build-000000
+#+ 
+#+ Filename...: ammp301
+#+ Description: 會員資料批次處理作業
+#+ Creator....: 02296(2014/03/09)
+#+ Modifier...: 02296(2014/03/09)
+#+ Buildtype..: 應用 t02 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="ammp301.detail_reproduce" ver="1" status="" src="s">
+    <![CDATA[#+ 單身自動複製
+PRIVATE FUNCTION ammp301_detail_reproduce()
+   DEFINE ls_sql      STRING
+   DEFINE ld_date     DATETIME YEAR TO SECOND
+   DEFINE l_detail    RECORD LIKE mmaf_t.*
+ 
+ 
+   #add-point:delete段define
+   {<point name="detail_reproduce.define"/>}
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   
+   LET ld_date = cl_get_current()
+   
+   DROP TABLE ammp301_detail
+   
+   #add-point:單身複製前1
+   {<point name="detail_reproduce.body.table1.b_insert" mark="Y"/>}
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   LET ls_sql = "CREATE GLOBAL TEMPORARY TABLE ammp301_detail AS ",
+                "SELECT * FROM mmaf_t "
+   PREPARE repro_tbl FROM ls_sql
+   EXECUTE repro_tbl
+   FREE repro_tbl
+                
+   #將符合條件的資料丟入TEMP TABLE
+   INSERT INTO ammp301_detail SELECT * FROM mmaf_t 
+                                         WHERE mmafent = g_enterprise AND  = g__t
+ 
+   
+   #將key修正為調整後   
+   UPDATE ammp301_detail 
+      #更新key欄位
+      SET  = 
+ 
+      #更新共用欄位
+      
+                                       
+  
+   #將資料塞回原table   
+   INSERT INTO mmaf_t SELECT * FROM ammp301_detail
+   
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("reproduce",SQLCA.sqlcode,1)
+      RETURN
+   END IF
+   
+   #add-point:單身複製中1
+   {<point name="detail_reproduce.body.table1.m_insert"/>}
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE ammp301_detail
+   
+   #add-point:單身複製後1
+   {<point name="detail_reproduce.body.table1.a_insert"/>}
+   #end add-point
+ 
+ 
+   
+ 
+   
+   #多語言複製段落
+   
+   
+   CALL s_transaction_end('Y','0')
+   
+   #已新增完, 調整資料內容(修改時使用)
+   LET g__t = 
+ 
+   
+   DROP TABLE ammp301_detail
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.detail_show" ver="1" status="" src="s">
+    <![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION ammp301_detail_show()
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值page1
+   
+    
+   #帶出公用欄位reference值page2
+   
+ 
+ 
+   
+   #讀入ref值
+   #add-point:show段單身reference
+   {<point name="detail_show.body.reference"/>}
+   #end add-point
+   
+   #add-point:show段單身reference
+   {<point name="detail_show.body2.reference"/>}
+   #end add-point
+ 
+ 
+   
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.fetch" ver="1" status="" src="s">
+    <![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION ammp301_fetch()
+   {<Local define>}
+   DEFINE li_ac           LIKE type_t.num5
+   {</Local define>}
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point
+   
+   #判定單頭是否有資料
+   IF cl_null(g_mmaf_d[g_detail_idx].mmaf001) THEN
+      RETURN
+   END IF
+   
+   CALL g_mmaf2_d.clear()
+ 
+ 
+   
+   LET li_ac = l_ac 
+   
+   LET g_sql = "SELECT  UNIQUE '','','','' FROM mmaq_t",    
+               "",
+               " WHERE mmaqent=? AND mmaq001=?"
+ 
+   IF NOT cl_null(g_wc2_table2) THEN
+      LET g_sql = g_sql CLIPPED," AND ",g_wc2_table2 CLIPPED
+   END IF
+ 
+   LET g_sql = g_sql, " ORDER BY " 
+                      
+   #add-point:單身填充前
+   {<point name="fetch.before_fill" />}
+   #end add-point
+   
+   PREPARE ammp301_pb2 FROM g_sql
+   DECLARE b_fill_curs2 CURSOR FOR ammp301_pb2
+   
+   OPEN b_fill_curs2 USING g_enterprise,g_mmaf_d[g_detail_idx].mmaf001
+ 
+   LET l_ac = 1
+   FOREACH b_fill_curs2 INTO g_mmaf2_d[l_ac].mmaq001,g_mmaf2_d[l_ac].mmaq002,g_mmaf2_d[l_ac].mmaq005, 
+       g_mmaf2_d[l_ac].mmaq006
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充
+      {<point name="fetch.fill2"/>}
+      #end add-point
+      
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+ 
+ 
+ 
+   #add-point:單身填充後
+   {<point name="fetch.after_fill" />}
+   #end add-point
+   
+   CALL g_mmaf2_d.deleteElement(g_mmaf2_d.getLength())   
+ 
+ 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.fill_chk" ver="1" status="" src="s">
+    <![CDATA[#+ 單身填充確認
+PRIVATE FUNCTION ammp301_fill_chk(ps_idx)
+   DEFINE ps_idx        LIKE type_t.chr10
+   DEFINE lst_token     base.StringTokenizer
+   DEFINE ls_token      STRING
+   #add-point:fill_chk段define
+   {<point name="fill_chk.define"/>}
+   #end add-point
+   
+   #全部為1=1 or null時回傳true
+   IF (cl_null(g_wc2_table1) OR g_wc2_table1.trim() = '1=1') THEN
+      RETURN TRUE
+   END IF
+   
+   #第一單身
+   IF ps_idx = 1 AND
+      ((NOT cl_null(g_wc2_table1) AND g_wc2_table1.trim() <> '1=1')) THEN
+      RETURN TRUE
+   END IF
+   
+   #根據wc判定是否需要填充
+ 
+ 
+   
+   #add-point:fill_chk段other
+   {<point name="fill_chk.other"/>}
+   #end add-point
+   
+   RETURN FALSE
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.filter" ver="1" status="" src="s">
+    <![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION ammp301_filter()
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+                            #add-point:filter段cs_ctrl
+                            {<point name="filter.cs_ctrl"/>}
+                            #end add-point
+                         
+ 
+      #add-point:filter段add_cs
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+         #add-point:filter段b_dialog
+         {<point name="filter.b_dialog"/>}
+         #end add-point  
+ 
+ 
+ 
+   
+ 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.filter_parser" ver="1" status="" src="s">
+    <![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION ammp301_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+ 
+ 
+ 
+ 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.filter_show" ver="1" status="" src="s">
+    <![CDATA[#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION ammp301_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = ammp301_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.func_signature" ver="1" status="" src="s">
+    <![CDATA[   
+]]>
+  </section>
+  <section id="ammp301.global" ver="1" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+{<Module define>}
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_mmaf_d RECORD
+       check LIKE type_t.chr80, 
+   mmaf008 LIKE mmaf_t.mmaf008, 
+   mmaf009 LIKE mmaf_t.mmaf009, 
+   mmaf001 LIKE mmaf_t.mmaf001, 
+   mmaf013 LIKE mmaf_t.mmaf013, 
+   mmaf014 LIKE mmaf_t.mmaf014, 
+   mmaf015 LIKE mmaf_t.mmaf015, 
+   mmaf004 LIKE mmaf_t.mmaf004
+       END RECORD
+PRIVATE TYPE type_g_mmaf2_d RECORD
+       mmaq001 LIKE type_t.chr30, 
+   mmaq002 LIKE type_t.chr10, 
+   mmaq005 LIKE type_t.dat, 
+   mmaq006 LIKE type_t.chr1
+       END RECORD
+ 
+ 
+ 
+#無單身append欄位定義
+ 
+#模組變數(Module Variables)
+DEFINE g_master                     type_g_mmaf_d
+DEFINE g_master_t                   type_g_mmaf_d
+DEFINE g_mmaf_d          DYNAMIC ARRAY OF type_g_mmaf_d
+DEFINE g_mmaf_d_t        type_g_mmaf_d
+DEFINE g_mmaf2_d   DYNAMIC ARRAY OF type_g_mmaf2_d
+DEFINE g_mmaf2_d_t type_g_mmaf2_d
+ 
+ 
+      
+DEFINE g_wc                 STRING
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num5              
+DEFINE l_ac_d               LIKE type_t.num5              #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_master_idx         LIKE type_t.num5              #單身 所在筆數(暫存用)
+DEFINE g_detail_idx         LIKE type_t.num5              #單身 所在筆數(所有資料)
+DEFINE g_detail_idx2        LIKE type_t.num5              #單身 所在筆數(所有資料)
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_aw                 STRING                        #確定當下點擊的單身
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+DEFINE g_wc2_table2   STRING
+ 
+ 
+ 
+{</Module define>}
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="ammp301.init" ver="1" status="" src="s">
+    <![CDATA[#+ 畫面資料初始化
+PRIVATE FUNCTION ammp301_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point   
+   
+   LET g_error_show = 1
+   
+   
+   LET l_ac = 1
+   
+   
+ 
+ 
+   #避免USER直接進入第二單身時無資料
+   IF g_mmaf_d.getLength() > 0 THEN
+      LET g_master_t.* = g_mmaf_d[1].*
+      LET g_master.* = g_mmaf_d[1].*
+   END IF
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+   CALL ammp301_default_search()
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.input" ver="1" status="" src="s">
+    <![CDATA[#+ 資料輸入
+PRIVATE FUNCTION ammp301_input(p_cmd)
+   {<Local define>}
+   DEFINE  p_cmd                 LIKE type_t.chr1
+   DEFINE  l_cmd                 LIKE type_t.chr1
+   DEFINE  l_ac_t                LIKE type_t.num5                #未取消的ARRAY CNT 
+   DEFINE  l_n                   LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_cnt                 LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_lock_sw             LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert        LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete        LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count               LIKE type_t.num5
+   DEFINE  l_i                   LIKE type_t.num5
+   DEFINE  ls_return             STRING
+   DEFINE  l_var_keys            DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys          DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields              DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak        DYNAMIC ARRAY OF STRING
+   DEFINE  lb_reproduce          BOOLEAN
+   DEFINE  li_reproduce          LIKE type_t.num5
+   DEFINE  li_reproduce_target   LIKE type_t.num5
+   {</Local define>}
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point 
+   
+   LET g_action_choice = ""
+   
+   LET g_qryparam.state = "i"
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+ 
+   #add-point:input段define_sql
+   {<point name="input.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = "SELECT '',mmaf008,mmaf009,mmaf001,mmaf013,mmaf014,mmaf015,mmaf004 FROM mmaf_t  
+       WHERE mmafent=? AND mmaf001=? FOR UPDATE"
+   #add-point:input段define_sql
+   {<point name="input.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE ammp301_bcl CURSOR FROM g_forupd_sql      # LOCK CURSOR
+   
+ 
+   
+   #add-point:input段define_sql
+   {<point name="input.define_sql2" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = "SELECT '','','','' FROM mmaq_t WHERE mmaqent=? AND mmaq001=? FOR UPDATE"
+   #add-point:input段define_sql
+   {<point name="input.after_define_sql2"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE ammp301_bcl2 CURSOR FROM g_forupd_sql
+ 
+ 
+ 
+   LET lb_reproduce = FALSE
+   
+   #add-point:input段修改前
+   {<point name="input.before_input"/>}
+   #end add-point
+ 
+   LET INT_FLAG = 0
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_mmaf_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = ,
+                  DELETE ROW = ,
+                  APPEND ROW = )
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_mmaf_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            IF p_cmd = 'u' THEN
+               CALL ammp301_b_fill(g_wc)
+            END IF
+            LET g_detail_cnt = g_mmaf_d.getLength()
+            #add-point:資料輸入前
+            {<point name="input.body.before_input"/>}
+            #end add-point
+            
+         BEFORE ROW
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET g_master_t.* = g_mmaf_d[l_ac].*
+            LET g_master.* = g_mmaf_d[l_ac].*
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_n TO FORMONLY.idx
+            LET g_master_idx = l_ac
+         
+            CALL s_transaction_begin()
+            LET g_detail_cnt = g_mmaf_d.getLength()
+            
+            IF g_detail_cnt >= l_ac 
+               AND g_mmaf_d[l_ac].mmaf001 IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_mmaf_d_t.* = g_mmaf_d[l_ac].*  #BACKUP
+               IF NOT ammp301_lock_b("mmaf_t") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH ammp301_bcl INTO g_mmaf_d[l_ac].check,g_mmaf_d[l_ac].mmaf008,g_mmaf_d[l_ac].mmaf009, 
+                      g_mmaf_d[l_ac].mmaf001,g_mmaf_d[l_ac].mmaf013,g_mmaf_d[l_ac].mmaf014,g_mmaf_d[l_ac].mmaf015, 
+                      g_mmaf_d[l_ac].mmaf004
+                  IF SQLCA.sqlcode THEN
+                     CALL cl_err(g_mmaf_d_t.mmaf001,SQLCA.sqlcode,1)
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  CALL ammp301_detail_show()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            CALL ammp301_set_entry_b(l_cmd)
+            CALL ammp301_set_no_entry_b(l_cmd)
+            #add-point:input段before row
+            {<point name="input.body.before_row"/>}
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+            #讀取對應的單身資料
+            CALL ammp301_fetch()
+        
+         BEFORE INSERT
+            
+            
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_mmaf_d[l_ac].* TO NULL 
+            
+            LET g_mmaf_d_t.* = g_mmaf_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL ammp301_set_entry_b("a")
+            CALL ammp301_set_no_entry_b("a")
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_mmaf_d[li_reproduce_target].* = g_mmaf_d[li_reproduce].*
+ 
+               LET g_mmaf_d[g_mmaf_d.getLength()].mmaf001 = NULL
+ 
+            END IF
+            #公用欄位給值(單身)
+            
+            #add-point:input段before insert
+            {<point name="input.body.before_insert"/>}
+            #end add-point  
+  
+         AFTER INSERT
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+            
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM mmaf_t 
+             WHERE mmafent = g_enterprise AND mmaf001 = g_mmaf_d[l_ac].mmaf001 
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前
+               {<point name="input.body.b_insert"/>}
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_mmaf_d[g_detail_idx].mmaf001
+               CALL ammp301_insert_b('mmaf_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後
+               {<point name="input.body.a_insert"/>}
+               #end add-point
+            ELSE    
+               CALL cl_err('INSERT',"std-00006",1)
+               INITIALIZE g_mmaf_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("mmaf_t",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL ammp301_b_fill(g_wc)
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert
+               {<point name="input.body.a_insert2"/>}
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ERROR 'INSERT O.K'
+               LET g_detail_cnt = g_detail_cnt + 1
+               LET g_master.* = g_mmaf_d[l_ac].*
+            END IF
+              
+         BEFORE DELETE  #是否取消單身
+            IF l_cmd = 'a' AND g_mmaf_d.getLength() < l_ac THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+               CALL g_mmaf_d.deleteElement(l_ac)
+               NEXT FIELD mmaf001
+            END IF
+            IF g_mmaf_d[l_ac].mmaf001 IS NOT NULL
+ 
+               THEN
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  CALL cl_err("", -263, 1)
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前
+               {<point name="input.body.b_delete" mark="Y"/>}
+               #end add-point
+               
+               DELETE FROM mmaf_t
+                WHERE mmafent = g_enterprise AND 
+                      mmaf001 = g_mmaf_d_t.mmaf001
+ 
+                      
+               #add-point:單身刪除中
+               {<point name="input.body.m_delete"/>}
+               #end add-point
+                      
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("mmaf_t",SQLCA.sqlcode,1)
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_detail_cnt = g_detail_cnt-1
+                  
+                  #add-point:單身刪除後
+                  {<point name="input.body.a_delete"/>}
+                  #end add-point
+                  CALL s_transaction_end('Y','0')
+               END IF 
+               CLOSE ammp301_bcl
+               LET l_count = g_mmaf_d.getLength()
+            END IF 
+            
+                           INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_mmaf_d[g_detail_idx].mmaf001
+ 
+              
+         AFTER DELETE 
+            #add-point:單身刪除後2
+            {<point name="input.body.after_delete"/>}
+            #end add-point
+                           CALL ammp301_delete_b('mmaf_t',gs_keys,"'1'")
+ 
+         #---------------------<  Detail: page1  >---------------------
+ 
+         #---------------------<  Detail: page1  >---------------------
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               LET g_mmaf_d[l_ac].* = g_mmaf_d_t.*
+               CLOSE ammp301_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               CALL cl_err(g_mmaf_d[l_ac].mmaf001,-263,1)
+               LET g_mmaf_d[l_ac].* = g_mmaf_d_t.*
+            ELSE
+               
+               #寫入修改者/修改日期資訊(單身)
+               
+               
+               #add-point:單身修改前
+               {<point name="input.body.b_update" mark="Y"/>}
+               #end add-point
+               
+               UPDATE mmaf_t SET (mmaf008,mmaf009,mmaf001,mmaf013,mmaf014,mmaf015,mmaf004) = (g_mmaf_d[l_ac].mmaf008, 
+                   g_mmaf_d[l_ac].mmaf009,g_mmaf_d[l_ac].mmaf001,g_mmaf_d[l_ac].mmaf013,g_mmaf_d[l_ac].mmaf014, 
+                   g_mmaf_d[l_ac].mmaf015,g_mmaf_d[l_ac].mmaf004)
+                WHERE mmafent = g_enterprise AND
+                  mmaf001 = g_mmaf_d_t.mmaf001 #項次   
+ 
+                  
+               #add-point:單身修改中
+               {<point name="input.body.m_update"/>}
+               #end add-point
+                  
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL cl_err("mmaf_t","std-00009",1)
+                     CALL s_transaction_end('N','0')
+                     LET g_mmaf_d[l_ac].* = g_mmaf_d_t.*
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     CALL cl_err("mmaf_t",SQLCA.sqlcode,1)  
+                     CALL s_transaction_end('N','0')
+                     LET g_mmaf_d[l_ac].* = g_mmaf_d_t.*
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_mmaf_d[g_detail_idx].mmaf001
+               LET gs_keys_bak[1] = g_mmaf_d_t.mmaf001
+               CALL ammp301_update_b('mmaf_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                     
+               END CASE
+               
+               #若Key欄位有變動
+               LET g_master.* = g_mmaf_d[l_ac].*
+               CALL ammp301_key_update_b()
+               
+               #add-point:單身修改後
+               {<point name="input.body.a_update"/>}
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            CALL ammp301_unlock_b("mmaf_t")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            
+              
+         AFTER INPUT
+            #add-point:input段after input 
+            {<point name="input.body.after_input"/>}
+            #end add-point   
+              
+         ON ACTION controlo   
+            CALL FGL_SET_ARR_CURR(g_mmaf_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_mmaf_d.getLength()+1
+              
+      END INPUT
+      
+ 
+      
+ 
+      
+ 
+    
+      DISPLAY ARRAY g_mmaf2_d TO s_detail2.*
+         ATTRIBUTES(COUNT=g_detail_cnt)  
+      
+         BEFORE DISPLAY 
+            CALL FGL_SET_ARR_CURR(g_detail_idx2)
+            CALL ammp301_fetch()
+            
+         BEFORE ROW
+            LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail2")
+            LET l_ac = g_detail_idx
+            DISPLAY g_detail_idx TO FORMONLY.idx
+            CALL cl_show_fld_cont() 
+ 
+            #LET g_master_idx = l_ac
+            #CALL ammp301_fetch()
+            
+         #add-point:page2自定義行為
+         {<point name="input.body2.action"/>}
+         #end add-point
+            
+      END DISPLAY
+ 
+ 
+      
+      #add-point:input段input_array"
+      {<point name="input.more_inputarray"/>}
+      #end add-point
+      
+      BEFORE DIALOG 
+         LET g_curr_diag = ui.DIALOG.getCurrent()
+         IF g_master_idx > 0 THEN
+            IF g_master_idx > g_mmaf_d.getLength() THEN
+               LET g_master_idx = g_mmaf_d.getLength()
+            END IF
+            CALL DIALOG.setCurrentRow("s_detail1", g_master_idx)
+            LET l_ac = g_master_idx
+         END IF 
+         LET g_master_idx = l_ac
+         #add-point:input段input_array"
+         {<point name="input.before_dialog"/>}
+         #end add-point
+         #先確定單頭(第一單身)是否有資料
+         IF g_mmaf_d.getLength() > 0 THEN
+            CASE g_aw
+               WHEN "s_detail1"
+                  NEXT FIELD check
+               WHEN "s_detail2"
+                  NEXT FIELD mmaq001
+ 
+ 
+            END CASE
+         ELSE
+            NEXT FIELD check
+         END IF
+   
+      ON ACTION accept
+         ACCEPT DIALOG
+      
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) 
+              RETURNING g_fld_name,g_frm_name 
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang) 
+           
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   
+   END DIALOG 
+   
+   #add-point:input段修改後
+   {<point name="input.after_input"/>}
+   #end add-point
+ 
+   CLOSE ammp301_bcl
+   CALL s_transaction_end('Y','0')
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.input.body" ver="1" status="" src="s">
+    <![CDATA[      #Page1 預設值產生於此處
+      INPUT ARRAY g_mmaf_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = ,
+                  DELETE ROW = ,
+                  APPEND ROW = )
+ 
+         #自訂單身ACTION
+         
+ 
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_mmaf_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL ammp301_b_fill(g_wc2) 
+            IF g_rec_b != 0 THEN
+               CALL fgl_set_arr_curr(l_ac)
+            END IF
+            #add-point:資料輸入前
+            {<point name="input.body.before_input"/>}
+            #end add-point
+         
+         BEFORE ROW
+            LET l_insert = FALSE
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            LET l_ac = ARR_CURR()
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+            
+         
+            CALL s_transaction_begin()
+            
+            #判定新增或修改
+            IF l_cmd = 'u' THEN
+               OPEN ammp301_cl USING g_enterprise,
+                                               
+ 
+                                               
+               IF STATUS THEN
+                  CALL cl_err("OPEN ammp301_cl:", STATUS, 1)
+                  CLOSE ammp301_cl
+                  CALL s_transaction_end('N','0')
+                  RETURN
+               END IF
+            END IF
+            
+            LET l_cmd = ''
+            
+            IF g_rec_b >= l_ac 
+               AND g_mmaf_d[l_ac].mmaf001 IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_mmaf_d_t.* = g_mmaf_d[l_ac].*  #BACKUP
+               CALL ammp301_set_entry_b(l_cmd)
+               CALL ammp301_set_no_entry_b(l_cmd)
+               OPEN ammp301_bcl USING g_enterprise,,
+ 
+                                                g_mmaf_d_t.mmaf001
+ 
+               IF STATUS THEN
+                  CALL cl_err("OPEN ammp301_bcl:", STATUS, 1)
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH ammp301_bcl INTO g_mmaf_d[l_ac].sel,g_mmaf_d[l_ac].mmaf008,g_mmaf_d[l_ac].mmaf009, 
+                      g_mmaf_d[l_ac].mmaf001,g_mmaf_d[l_ac].mmaf015,g_mmaf_d[l_ac].mmaf013,g_mmaf_d[l_ac].mmaf014, 
+                      g_mmaf_d[l_ac].mmaf004
+                  IF SQLCA.sqlcode THEN
+                      CALL cl_err(g_mmaf_d_t.mmaf001,SQLCA.sqlcode,1)
+                      LET l_lock_sw = "Y"
+                  END IF
+                  
+                  CALL ammp301_ref_show()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row
+            {<point name="input.body.before_row"/>}
+            #end add-point  
+            
+        
+         BEFORE INSERT
+            
+            INITIALIZE g_mmaf_d_t.* TO NULL
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_mmaf_d[l_ac].* TO NULL
+            
+            #公用欄位預設值
+              
+            
+            #一般欄位預設值
+            
+            
+            
+            LET g_mmaf_d_t.* = g_mmaf_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL ammp301_set_entry_b(l_cmd)
+            CALL ammp301_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_mmaf_d[li_reproduce_target].* = g_mmaf_d[li_reproduce].*
+ 
+               LET g_mmaf_d[g_mmaf_d.getLength()].mmaf001 = NULL
+ 
+            END IF
+            
+            #add-point:modify段before insert
+            {<point name="input.body.before_insert"/>}
+            #end add-point  
+ 
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM mmaf_t 
+             WHERE mmafent = g_enterprise AND  = 
+ 
+               AND mmaf001 = g_mmaf_d[l_ac].mmaf001
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               CALL s_transaction_begin()
+               #add-point:單身新增前
+               {<point name="input.body.b_insert" mark="Y"/>}
+               #end add-point
+               INSERT INTO mmaf_t
+                           (mmafent,
+                            mmaf003,
+                            mmaf001
+                            ,mmaf008,mmaf009,mmaf015,mmaf013,mmaf014,mmaf004) 
+                     VALUES(g_enterprise,
+                            g_mmaf_m.mmaf003,
+                            g_mmaf_d[l_ac].mmaf001
+                            ,g_mmaf_d[l_ac].mmaf008,g_mmaf_d[l_ac].mmaf009,g_mmaf_d[l_ac].mmaf015,g_mmaf_d[l_ac].mmaf013, 
+                                g_mmaf_d[l_ac].mmaf014,g_mmaf_d[l_ac].mmaf004)
+               #add-point:單身新增中
+               {<point name="input.body.m_insert"/>}
+               #end add-point
+               LET p_cmd = 'u'
+            ELSE    
+               CALL cl_err('INSERT',"std-00006",1)
+               INITIALIZE g_mmaf_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("mmaf_t",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert
+               {<point name="input.body.a_insert"/>}
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ERROR "INSERT O.K"
+               LET g_rec_b=g_rec_b+1
+               DISPLAY g_rec_b TO FORMONLY.cnt
+            END IF
+            
+            #add-point:單身新增後
+            {<point name="input.body.after_insert"/>}
+            #end add-point
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' AND g_mmaf_d.getLength() < l_ac THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+               CALL g_mmaf_d.deleteElement(l_ac)
+               NEXT FIELD mmaf001
+            END IF
+            IF g_mmaf_d_t.mmaf001 IS NOT NULL
+ 
+               THEN
+               
+               #add-point:單身刪除前
+               {<point name="input.body.b_delete"/>}
+               #end add-point
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  CALL cl_err("", -263, 1)
+                  CANCEL DELETE
+               END IF
+               IF ammp301_before_delete() THEN 
+                  CALL s_transaction_end('Y','0')
+               ELSE 
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               END IF 
+               CLOSE ammp301_bcl
+               LET l_count = g_mmaf_d.getLength()
+            END IF 
+            
+            #add-point:單身刪除後
+            {<point name="input.body.a_delete"/>}
+            #end add-point
+              
+         AFTER DELETE 
+            #add-point:單身AFTER DELETE 
+            {<point name="input.body.after_delete"/>}
+            #end add-point
+ 
+         #---------------------<  Detail: page1  >---------------------
+ 
+         #---------------------<  Detail: page1  >---------------------
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               LET g_mmaf_d[l_ac].* = g_mmaf_d_t.*
+               CLOSE ammp301_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               CALL cl_err(g_mmaf_d[l_ac].mmaf001,-263,1)
+               LET g_mmaf_d[l_ac].* = g_mmaf_d_t.*
+            ELSE
+               #寫入修改者/修改日期資訊
+               
+            
+               #add-point:單身修改前
+               {<point name="input.body.b_update" mark="Y"/>}
+               #end add-point
+         
+               UPDATE mmaf_t SET (mmaf008,mmaf009,mmaf001,mmaf015,mmaf013,mmaf014,mmaf004) = (g_mmaf_d[l_ac].mmaf008, 
+                   g_mmaf_d[l_ac].mmaf009,g_mmaf_d[l_ac].mmaf001,g_mmaf_d[l_ac].mmaf015,g_mmaf_d[l_ac].mmaf013, 
+                   g_mmaf_d[l_ac].mmaf014,g_mmaf_d[l_ac].mmaf004)
+                WHERE mmafent = g_enterprise AND  =  
+ 
+                 AND mmaf001 = g_mmaf_d_t.mmaf001 #項次   
+ 
+                 
+               #add-point:單身修改中
+               {<point name="input.body.m_update"/>}
+               #end add-point
+               
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL cl_err("mmaf_t","std-00009",1)
+                     CALL s_transaction_end('N','0')
+                  #WHEN SQLCA.sqlcode #其他錯誤
+                  #   CALL cl_err("mmaf_t",SQLCA.sqlcode,1)  
+                  #   CALL s_transaction_end('N','0')
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_mmaf_d[g_detail_idx].mmaf001
+               LET gs_keys_bak[1] = g_mmaf_d_t.mmaf001
+               CALL ammp301_update_b('mmaf_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                     
+               END CASE
+               
+               #add-point:單身修改後
+               {<point name="input.body.a_update"/>}
+               #end add-point
+            END IF
+ 
+         AFTER INPUT
+            #若單身還沒有輸入資料, 強制切換至單身
+            IF cl_null(g_mmaf_d[1].mmaf001) THEN
+               CALL g_mmaf_d.deleteElement(1)
+               NEXT FIELD mmaf001
+            END IF
+            #add-point:input段after input 
+            {<point name="input.body.after_input"/>}
+            #end add-point    
+            
+         ON ACTION controlo   
+            CALL FGL_SET_ARR_CURR(g_mmaf_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_mmaf_d.getLength()+1
+            
+      END INPUT
+ 
+ 
+      
+ 
+      
+ 
+      
+      #add-point:input段more_input
+      {<point name="input.more_inputarray"/>}
+      #end add-point    
+      
+      BEFORE DIALOG
+         #add-point:input段before_dialog
+         {<point name="input.before_dialog"/>}
+         #end add-point 
+         #新增時強制從單頭開始填
+         IF p_cmd = 'a' THEN
+            NEXT FIELD 
+        ELSE
+            CASE g_aw
+               WHEN "s_detail1"
+                  NEXT FIELD sel
+ 
+            END CASE
+         END IF
+   
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+   
+   #add-point:input段after_input
+   {<point name="input.after_input"/>}
+   #end add-point  
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.input.head" ver="1" status="" src="s">
+    <![CDATA[   
+      #單頭段
+      INPUT BY NAME g_mmaf_m.mmaf003 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂單頭ACTION
+         
+         
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            
+            IF l_cmd_t = 'r' THEN
+               
+            END IF
+            #add-point:單頭input前
+            {<point name="input.head.b_input"/>}
+            #end add-point
+          
+         #---------------------------<  Master  >---------------------------
+         #----<<mmaf003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD mmaf003
+            #add-point:BEFORE FIELD mmaf003
+            {<point name="input.b.mmaf003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mmaf003
+            
+            #add-point:AFTER FIELD mmaf003
+            {<point name="input.a.mmaf003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mmaf003
+            #add-point:ON CHANGE mmaf003
+            {<point name="input.g.mmaf003" />}
+            #END add-point
+ 
+ #欄位檢查
+         #---------------------------<  Master  >---------------------------
+         #----<<mmaf003>>----
+         #Ctrlp:input.c.mmaf003
+         ON ACTION controlp INFIELD mmaf003
+            #add-point:ON ACTION controlp INFIELD mmaf003
+            {<point name="input.c.mmaf003" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            
+            IF s_transaction_chk("N",0) THEN
+                CALL s_transaction_begin()
+            END IF
+ 
+            #多語言處理
+            
+                
+            CALL cl_showmsg()
+            DISPLAY BY NAME              
+ 
+ 
+            IF p_cmd = 'u' THEN
+               #add-point:單頭修改前
+               {<point name="input.head.b_update" mark="Y"/>}
+               #end add-point
+            
+               UPDATE mmaf_t SET (mmaf003) = (g_mmaf_m.mmaf003)
+                WHERE mmafent = g_enterprise AND  = g__t
+ 
+               #add-point:單頭修改中
+               {<point name="input.head.m_update"/>}
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL cl_err("mmaf_t","std-00009",1)
+                     CALL s_transaction_end('N','0')
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     CALL cl_err("mmaf_t",SQLCA.sqlcode,1)  
+                     CALL s_transaction_end('N','0')
+                  OTHERWISE
+                     #資料多語言用-增/改
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_mmaf_d[g_detail_idx].mmaf001
+               LET gs_keys_bak[1] = g_mmaf_d_t.mmaf001
+               CALL ammp301_update_b('mmaf_t',gs_keys,gs_keys_bak,"'1'")
+                     
+                     LET g__t = 
+ 
+                     #add-point:單頭修改後
+                     {<point name="input.head.a_update"/>}
+                     #end add-point
+                     CALL s_transaction_end('Y','0')
+               END CASE
+            
+            ELSE    
+               #add-point:單頭新增
+               {<point name="input.head.a_insert"/>}
+               #end add-point
+                                 
+               IF l_cmd_t = 'r' AND p_cmd = 'a' THEN
+                  CALL ammp301_detail_reproduce()
+               END IF
+            END IF
+           #controlp
+                     
+           LET g__t = 
+ 
+           
+           #若單身還沒有輸入資料, 強制切換至單身
+           IF cl_null(g_mmaf_d[1].mmaf001) THEN
+              CALL g_mmaf_d.deleteElement(1)
+              NEXT FIELD mmaf001
+           END IF
+ 
+      END INPUT
+]]>
+  </section>
+  <section id="ammp301.insert" ver="1" status="" src="s">
+    <![CDATA[#+ 資料修改
+PRIVATE FUNCTION ammp301_insert()
+   #add-point:insert段define
+   {<point name="insert.define"/>}
+   #end add-point 
+ 
+   #add-point:insert段新增前
+   {<point name="insert.before_insert"/>}
+   #end add-point 
+   
+   #進入資料輸入段落
+   CALL g_mmaf_d.clear() 
+   CALL g_mmaf2_d.clear() 
+ 
+ 
+   CALL ammp301_input('a')
+   
+   CALL ammp301_b_fill(g_wc)
+   
+   #add-point:insert段新增後
+   {<point name="insert.after_insert"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.insert_b" ver="1" status="" src="s">
+    <![CDATA[#+ 新增單身後其他table連動
+PRIVATE FUNCTION ammp301_insert_b(ps_table,ps_keys,ps_page)
+   {<Local define>}
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   {</Local define>}
+   #add-point:insert_b段define
+   {<point name="insert_b.define"/>}
+   #end add-point
+ 
+   #判斷是否是同一群組的table
+   LET ls_group = "mmaf_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      #add-point:insert_b段新增前
+      {<point name="insert_b.before_insert" mark="Y"/>}
+      #end add-point
+      INSERT INTO mmaf_t
+                  (mmafent,
+                   mmaf001
+                   ,mmaf008,mmaf009,mmaf013,mmaf014,mmaf015,mmaf004) 
+            VALUES(g_enterprise,
+                   ps_keys[1]
+                   ,g_mmaf_d[g_detail_idx].mmaf008,g_mmaf_d[g_detail_idx].mmaf009,g_mmaf_d[g_detail_idx].mmaf013, 
+                       g_mmaf_d[g_detail_idx].mmaf014,g_mmaf_d[g_detail_idx].mmaf015,g_mmaf_d[g_detail_idx].mmaf004) 
+
+      #add-point:insert_b段新增中
+      {<point name="insert_b.m_insert"/>}
+      #end add-point
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("mmaf_t",SQLCA.sqlcode,0)
+      END IF
+      #add-point:insert_b段新增後
+      {<point name="insert_b.after_insert"/>}
+      #end add-point
+   END IF
+   
+ 
+   
+   LET ls_group = "mmaq_t,"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      #add-point:insert_b段新增前
+      {<point name="insert_b.before_insert2" mark="Y"/>}
+      #end add-point
+      INSERT INTO mmaq_t
+                  (mmaqent,
+                   mmaq001,
+                   ,mmaq001,mmaq002,mmaq005,mmaq006) 
+            VALUES(g_enterprise,
+                   ps_keys[1]
+                   ,g_mmaf2_d[g_detail_idx2].mmaq001,g_mmaf2_d[g_detail_idx2].mmaq002,g_mmaf2_d[g_detail_idx2].mmaq005, 
+                       g_mmaf2_d[g_detail_idx2].mmaq006)
+      #add-point:insert_b段新增中
+      {<point name="insert_b.m_insert2"/>}
+      #end add-point
+      IF SQLCA.sqlcode THEN
+         RETURN
+      END IF
+      #add-point:insert_b段新增後
+      {<point name="insert_b.after_insert2"/>}
+      #end add-point
+   END IF
+ 
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.key_update_b" ver="1" status="" src="s">
+    <![CDATA[#+ 單頭key欄位變動後, 連帶修正其他單身table
+PRIVATE FUNCTION ammp301_key_update_b()
+   {<Local define>}
+   DEFINE li_idx           LIKE type_t.num5 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   {</Local define>}
+   #add-point:update_b段define
+   {<point name="key_update_b.define"/>}
+   #end add-point
+ 
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   
+   IF g_master.mmaf001 <> g_master_t.mmaf001 THEN
+      LET lb_chk = FALSE
+   END IF
+ 
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+    
+   #add-point:update_b段修改前
+   {<point name="key_update_b.before_update2" mark="Y"/>}
+   #end add-point
+   
+   UPDATE mmaq_t 
+      SET (mmaq001) 
+           = 
+          (g_master.mmaf001) 
+      WHERE 
+           mmaq001 = g_master_t.mmaf001
+ 
+           
+   #add-point:update_b段修改中
+   {<point name="key_update_b.m_update2"/>}
+   #end add-point
+           
+   CASE
+      WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+         CALL cl_err("mmaq_t","std-00009",1)
+         CALL s_transaction_end('N','0')
+      WHEN SQLCA.sqlcode #其他錯誤
+         CALL cl_err("mmaq_t",SQLCA.sqlcode,1)  
+         CALL s_transaction_end('N','0')
+      OTHERWISE
+         #若有多語言table資料一同更新
+         
+   END CASE
+   
+   #add-point:update_b段修改後
+   {<point name="key_update_b.after_update2"/>}
+   #end add-point
+ 
+ 
+   
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.link_b" ver="1" status="" src="s">
+    <![CDATA[#+ 連動單身idx
+PRIVATE FUNCTION ammp301_link_b(ps_table,pi_idx)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   DEFINE pi_idx   INTEGER
+   #add-point:link_b段define
+   {<point name="link_b.define"/>}
+   #end add-point  
+   
+   LET ls_group = ""
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+ 
+   END IF
+   
+ 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.lock_b" ver="1" status="" src="s">
+    <![CDATA[#+ 連動lock其他單身table資料
+PRIVATE FUNCTION ammp301_lock_b(ps_table)
+ 
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:lock_b段define
+   {<point name="lock_b.define"/>}
+   #end add-point   
+   
+   #先刷新資料
+   #CALL ammp301_b_fill(g_wc)
+   
+   #鎖定整組table
+   #LET ls_group = ""
+   #僅鎖定自身table
+   LET ls_group = "mmaf_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN ammp301_bcl USING g_enterprise,
+                                       g_mmaf_d[g_detail_idx].mmaf001
+                                       
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("ammp301_bcl",SQLCA.sqlcode,1)
+         RETURN FALSE
+      END IF
+   
+   END IF
+                                    
+ 
+   
+   #鎖定整組table
+   #LET ls_group = "mmaq_t,"
+   #僅鎖定自身table
+   LET ls_group = "mmaq_t"
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN ammp301_bcl2 USING g_enterprise,
+                                             g_master.mmaf001,
+                                             
+ 
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("ammp301_bcl2",SQLCA.sqlcode,1)
+         RETURN FALSE
+      END IF
+   END IF
+ 
+ 
+   
+   RETURN TRUE
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.main" ver="1" status="" src="s">
+    <![CDATA[#+ 此段落由子樣板a26產生
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("amm","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = ""
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   DECLARE ammp301_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+ 
+   ELSE
+      
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_ammp301 WITH FORM cl_ap_formpath("amm",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL ammp301_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL ammp301_ui_dialog() 
+	  
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_ammp301
+      
+   END IF 
+   
+   CLOSE ammp301_cl
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+]]>
+  </section>
+  <section id="ammp301.modify" ver="1" status="" src="s">
+    <![CDATA[#+ 資料新增
+PRIVATE FUNCTION ammp301_modify()
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point 
+ 
+   #add-point:modify段新增前
+   {<point name="modify.before_modify"/>}
+   #end add-point 
+   
+   #進入資料輸入段落
+   CALL ammp301_input('u')
+   
+   #add-point:modify段新增後
+   {<point name="modify.after_modify"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.modify_detail_chk" ver="1" status="" src="s">
+    <![CDATA[#+ 單身輸入判定
+PRIVATE FUNCTION ammp301_modify_detail_chk(ps_record)
+   {<Local define>}
+   DEFINE ps_record STRING
+   DEFINE ls_return STRING
+   {</Local define>}
+   #add-point:modify_detail_chk段define
+   {<point name="modify_detail_chk.define"/>}
+   #end add-point
+   
+   #add-point:modify_detail_chk段開始前
+   {<point name="modify_detail_chk.before"/>}
+   #end add-point
+   
+   CASE ps_record
+      WHEN "s_detail1" 
+         LET ls_return = "check"
+      WHEN "s_detail2"
+         LET ls_return = "mmaq001"
+ 
+ 
+      #add-point:modify_detail_chk段自訂page控制
+      {<point name="modify_detail_chk.page_control"/>}
+      #end add-point
+   END CASE
+    
+   #add-point:modify_detail_chk段結束前
+   {<point name="modify_detail_chk.after"/>}
+   #end add-point
+   
+   RETURN ls_return
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.other_dialog" ver="1" status="" src="s">
+    <![CDATA[ 
+]]>
+  </section>
+  <section id="ammp301.other_function" ver="1" status="" src="s">
+    <![CDATA[   
+{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="ammp301.process" ver="1" status="" src="s">
+    <![CDATA[#+ 資料處理
+PRIVATE FUNCTION ammp301_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   {<point name="process.define"/>}
+   #end add-point
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE ammp301_process_cs CURSOR FROM ls_sql
+#  FOREACH ammp301_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm("std-00012") RETURNING li_stus
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+   END IF
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.query" ver="1" status="" src="s">
+    <![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION ammp301_query()
+   {<Local define>}
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   {</Local define>}
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point 
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_mmaf_d.clear()
+   
+   LET g_qryparam.state = "c"
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   
+   #wc備份
+   LET ls_wc = g_wc
+   LET g_master_idx = l_ac
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc_table ON NULL
+           FROM NULL
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            {<point name="cs.head.before_construct"/>}
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+       #---------------------<  Detail: page1  >---------------------
+   
+       
+      END CONSTRUCT
+      
+ 
+      
+      CONSTRUCT g_wc2_table2 ON NULL
+           FROM NULL
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            {<point name="cs.body2.before_construct"/>}
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理(table 2)
+       
+       
+       #單身一般欄位開窗相關處理       
+       #---------------------<  Detail: page2  >---------------------
+   
+       
+      END CONSTRUCT
+ 
+ 
+  
+      #add-point:query段more_construct
+      {<point name="query.more_construct"/>}
+      #end add-point 
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc = ls_wc
+   ELSE
+      LET g_master_idx = 1
+   END IF
+   
+   LET g_wc = g_wc_table 
+ 
+              , " AND ", g_wc2_table2
+ 
+ 
+        
+   LET g_wc2 = " 1=1"
+               , " AND ", g_wc2_table2
+ 
+ 
+        
+   #add-point:cs段after_construct
+   {<point name="cs.after_construct"/>}
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL ammp301_b_fill(g_wc)
+   LET l_ac = g_master_idx
+   CALL ammp301_fetch()
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      CALL cl_err("",-100,1)
+   END IF
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.ref_show" ver="1" status="" src="s">
+    <![CDATA[#+ 帶出reference資料
+PRIVATE FUNCTION ammp301_ref_show()
+   DEFINE l_ac_t LIKE type_t.num10 #l_ac暫存用
+   #add-point:ref_show段define
+   {<point name="ref_show.define"/>}
+   #end add-point
+   
+   LET l_ac_t = l_ac
+   
+   #讀入ref值(單頭)
+   #add-point:ref_show段m_reference
+   {<point name="ref_show.head.reference"/>}
+   #end add-point
+ 
+   #讀入ref值(單身)
+   FOR l_ac = 1 TO g_mmaf_d.getLength()
+      #add-point:ref_show段d_reference
+      {<point name="ref_show.body.reference"/>}
+      #end add-point
+   END FOR
+   
+ 
+   
+   LET l_ac = l_ac_t
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.reproduce" ver="1" status="" src="s">
+    <![CDATA[#+ 資料複製
+PRIVATE FUNCTION ammp301_reproduce()
+   DEFINE l_newno     LIKE mmaf_t. 
+   DEFINE l_oldno     LIKE mmaf_t. 
+ 
+   DEFINE l_master    RECORD LIKE mmaf_t.*
+   DEFINE l_detail    RECORD LIKE mmaf_t.*
+ 
+   DEFINE l_cnt       LIKE type_t.num5
+   #add-point:reproduce段define
+   {<point name="reproduce.define"/>}
+   #end add-point
+ 
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF     
+ 
+   IF  IS NULL
+ 
+      THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+   
+   LET g__t = 
+ 
+   
+   LET  = ""
+ 
+    
+   CALL ammp301_set_entry('a')
+   CALL ammp301_set_no_entry('a')
+   
+   CALL cl_set_head_visible("","YES")
+   
+   #add-point:複製輸入前
+   {<point name="reproduce.head.b_input"/>}
+   #end add-point
+   
+   CALL ammp301_input("r")
+   
+   
+   
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      RETURN
+   END IF
+   
+   LET g_state = "Y"
+   
+   LET g_wc = g_wc,  
+              " OR (",
+              "  = '", l_newno CLIPPED, "' "
+ 
+              , ") "
+   
+   #add-point:完成複製段落後
+   {<point name="reproduce.after_reproduce" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.set_entry" ver="1" status="" src="s">
+    <![CDATA[#+ 單頭欄位開啟設定
+PRIVATE FUNCTION ammp301_set_entry(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1  
+   #add-point:set_entry段define
+   {<point name="set_entry.define"/>}
+   #end add-point       
+ 
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("",TRUE)
+      #add-point:set_entry段欄位控制
+      {<point name="set_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry段欄位控制後
+   {<point name="set_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.set_entry_b" ver="1" status="" src="s">
+    <![CDATA[#+ 單身欄位開啟設定
+PRIVATE FUNCTION ammp301_set_entry_b(p_cmd)                                                  
+   {<Local define>}
+   DEFINE p_cmd   LIKE type_t.chr1         
+   {</Local define>}
+   #add-point:set_entry_b段define
+   {<point name="set_entry_b.define"/>}
+   #end add-point
+   
+   #add-point:set_entry段欄位控制後
+   {<point name="set_entry.after_control"/>}
+   #end add-point 
+                                                                     
+END FUNCTION                                                                    
+]]>
+  </section>
+  <section id="ammp301.set_no_entry" ver="1" status="" src="s">
+    <![CDATA[#+ 單頭欄位關閉設定
+PRIVATE FUNCTION ammp301_set_no_entry(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry段define
+   {<point name="set_no_entry.define"/>}
+   #end add-point     
+ 
+   IF p_cmd = 'u' THEN
+      CALL cl_set_comp_entry("",FALSE)
+      #add-point:set_no_entry段欄位控制
+      {<point name="set_no_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry段欄位控制後
+   {<point name="set_no_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.set_no_entry_b" ver="1" status="" src="s">
+    <![CDATA[#+ 單身欄位關閉設定
+PRIVATE FUNCTION ammp301_set_no_entry_b(p_cmd)                                               
+   {<Local define>}
+   DEFINE p_cmd   LIKE type_t.chr1           
+   {</Local define>}
+   #add-point:set_no_entry_b段define
+   {<point name="set_no_entry_b.define"/>}
+   #end add-point
+   
+   #add-point:set_no_entry段欄位控制後
+   {<point name="set_no_entry.after_control"/>}
+   #end add-point 
+                                                                          
+END FUNCTION  
+]]>
+  </section>
+  <section id="ammp301.show" ver="1" status="" src="s">
+    <![CDATA[#+ 單頭資料重新顯示及單身資料重抓
+PRIVATE FUNCTION ammp301_show()
+   #add-point:show段define
+   {<point name="show.define"/>}
+   #end add-point
+   
+   #add-point:show段之前
+   {<point name="show.before"/>}
+   #end add-point
+   
+   IF g_bfill = "Y" THEN
+      CALL ammp301_b_fill(g_wc2) #單身填充
+      CALL ammp301_b_fill2('0') #單身填充
+   END IF
+   
+   
+ 
+   LET g_mmaf_m_t.* = g_mmaf_m.*      #保存單頭舊值
+   
+   DISPLAY BY NAME g_mmaf_m.mmaf0001,g_mmaf_m.mmaf0002,g_mmaf_m.mmaf0003,g_mmaf_m.mmaf0083,g_mmaf_m.mmaf003 
+
+   CALL ammp301_b_fill(g_wc2_table1)                 #單身
+   CALL ammp301_b_fill2('0') #單身填充
+ 
+   CALL ammp301_ref_show()
+ 
+   #移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()  
+ 
+   #add-point:show段之後
+   {<point name="show.after"/>}
+   #end add-point   
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.state_change" ver="1" status="" src="s">
+    <![CDATA[    
+]]>
+  </section>
+  <section id="ammp301.transfer_argv" ver="1" status="" src="s">
+    <![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION ammp301_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+ 
+   CALL util.JSON.parse(ls_js,la_param)
+ 
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.ui_browser_refresh" ver="1" status="" src="s">
+    <![CDATA[#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION ammp301_ui_browser_refresh()
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define
+   {<point name="ui_browser_refresh.define"/>}
+   #end add-point    
+   
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_ =  
+ 
+         THEN  
+         CALL g_browser.deleteElement(l_i)
+         LET g_header_cnt = g_header_cnt - 1
+      END IF
+   END FOR
+ 
+   LET g_browser_cnt = g_browser_cnt - 1
+   IF g_current_row > g_browser_cnt THEN        #確定browse 筆數指在同一筆
+      LET g_current_row = g_browser_cnt
+   END IF
+ 
+   DISPLAY g_browser_cnt TO FORMONLY.b_count    #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數的顯示
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.ui_detailshow" ver="1" status="" src="s">
+    <![CDATA[#+ 單身資料重新顯示
+PRIVATE FUNCTION ammp301_ui_detailshow()
+   #add-point:ui_detailshow段define
+   {<point name="ui_detailshow.define"/>}
+   #end add-point    
+   
+   #add-point:ui_detailshow段before
+   {<point name="ui_detailshow.before"/>}
+   #end add-point  
+   
+   IF g_curr_diag IS NOT NULL THEN
+      CALL g_curr_diag.setCurrentRow("s_detail1",g_detail_idx)      
+ 
+      #add-point:ui_detailshow段more
+      {<point name="ui_detailshow.more"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:ui_detailshow段after
+   {<point name="ui_detailshow.after"/>}
+   #end add-point 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.ui_dialog" ver="1" status="" src="s">
+    <![CDATA[#+ 功能選單 
+PRIVATE FUNCTION ammp301_ui_dialog()
+   {<Local define>}
+   DEFINE li_idx   LIKE type_t.num5
+   {</Local define>}
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point 
+ 
+   LET g_action_choice = " "  
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm() 
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE
+   
+      CALL ammp301_b_fill(g_wc)
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_mmaf_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+      
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               LET g_master_idx = l_ac
+               LET g_master.* = g_mmaf_d[g_detail_idx].*
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont()
+ 
+               CALL ammp301_fetch()
+               
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY
+      
+         DISPLAY ARRAY g_mmaf2_d TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               CALL FGL_SET_ARR_CURR(g_detail_idx2)
+         
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx2
+               LET g_master.* = g_mmaf_d[g_detail_idx].*
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont() 
+ 
+               #LET g_master_idx = l_ac
+               #CALL ammp301_fetch()
+               
+            #自訂ACTION(detail_show,page_2)
+            
+               
+         END DISPLAY
+ 
+ 
+      
+         #add-point:ui_dialog段define
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         
+         BEFORE DIALOG
+            LET g_curr_diag = ui.DIALOG.getCurrent()         
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            IF g_master_idx > 0 THEN
+               IF g_master_idx > g_mmaf_d.getLength() THEN
+                  LET g_master_idx = g_mmaf_d.getLength()
+               END IF
+               CALL DIALOG.setCurrentRow("s_detail1", g_master_idx)
+               LET l_ac = g_master_idx
+            END IF 
+            LET g_master_idx = l_ac
+            NEXT FIELD CURRENT
+         
+         AFTER DIALOG
+            #add-point:ui_dialog段after dialog
+            {<point name="ui_dialog.after_dialog"/>}
+            #end add-point
+         
+         
+ 
+         ON ACTION output
+ 
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN 
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice="exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+            
+         
+      
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.ui_headershow" ver="1" status="" src="s">
+    <![CDATA[#+ 單頭資料重新顯示
+PRIVATE FUNCTION ammp301_ui_headershow()
+   #add-point:ui_headershow段define
+   {<point name="ui_headershow.define"/>}
+   #end add-point    
+   
+   LET  = g_browser[g_current_idx].b_   
+ 
+    SELECT UNIQUE mmaf003
+ INTO g_mmaf_m.mmaf003
+ FROM mmaf_t
+ WHERE mmafent = g_enterprise
+   CALL ammp301_show()
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.unlock_b" ver="1" status="" src="s">
+    <![CDATA[#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION ammp301_unlock_b(ps_table)
+ 
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:unlock_b段define
+   {<point name="unlock_b.define"/>}
+   #end add-point  
+   
+   LET ls_group = ""
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      CLOSE ammp301_bcl
+   END IF
+   
+ 
+    
+   LET ls_group = "mmaq_t,"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      CLOSE ammp301_bcl2
+   END IF
+ 
+ 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="ammp301.update_b" ver="1" status="" src="s">
+    <![CDATA[#+ 修改單身後其他table連動
+PRIVATE FUNCTION ammp301_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   {<Local define>}
+   DEFINE ps_table         STRING
+   DEFINE ps_page          STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num5 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   {</Local define>}
+   #add-point:update_b段define
+   {<point name="update_b.define"/>}
+   #end add-point     
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "mmaf_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 AND ps_table <> "mmaf_t" THEN
+   
+      #add-point:update_b段修改前
+      {<point name="update_b.before_update" mark="Y"/>}
+      #end add-point     
+   
+      UPDATE mmaf_t 
+         SET (mmaf001
+              ,mmaf008,mmaf009,mmaf013,mmaf014,mmaf015,mmaf004) 
+              = 
+             (ps_keys[1]
+              ,g_mmaf_d[g_detail_idx].mmaf008,g_mmaf_d[g_detail_idx].mmaf009,g_mmaf_d[g_detail_idx].mmaf013, 
+                  g_mmaf_d[g_detail_idx].mmaf014,g_mmaf_d[g_detail_idx].mmaf015,g_mmaf_d[g_detail_idx].mmaf004)  
+
+         WHERE mmaf001 = ps_keys_bak[1]
+ 
+      #add-point:update_b段修改中
+      {<point name="update_b.m_update"/>}
+      #end add-point 
+         
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            CALL cl_err("mmaf_t","std-00009",1)
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            CALL cl_err("mmaf_t",SQLCA.sqlcode,1)  
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+ 
+      #add-point:update_b段修改後
+      {<point name="update_b.after_update"/>}
+      #end add-point
+      
+      RETURN
+   END IF
+   
+ 
+   
+   LET ls_group = "mmaq_t,"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_table,1) > 0 AND ps_table <> "mmaq_t" THEN
+   
+      #add-point:update_b段修改前
+      {<point name="update_b.before_update2" mark="Y"/>}
+      #end add-point    
+      
+      UPDATE mmaq_t 
+         SET (mmaq001,
+              ,mmaq001,mmaq002,mmaq005,mmaq006) 
+              = 
+             (ps_keys[1]
+              ,g_mmaf2_d[g_detail_idx2].mmaq001,g_mmaf2_d[g_detail_idx2].mmaq002,g_mmaf2_d[g_detail_idx2].mmaq005, 
+                  g_mmaf2_d[g_detail_idx2].mmaq006) 
+         WHERE mmaq001 = ps_keys_bak[1]
+ 
+      #add-point:update_b段修改中
+      {<point name="update_b.m_update2"/>}
+      #end add-point 
+         
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            CALL cl_err("mmaq_t","std-00009",1)
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            CALL cl_err("mmaq_t",SQLCA.sqlcode,1)  
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      
+      #add-point:update_b段修改後
+      {<point name="update_b.after_update2"/>}
+      #end add-point 
+      
+      RETURN
+   END IF
+ 
+ 
+   
+END FUNCTION
+]]>
+  </section>
+</add_points>

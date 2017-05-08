@@ -1,0 +1,3057 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="apmt860_03" std_prog="apmt860_03" erpver="1.0" module="APM" ver="3" env="s" zone="t10prd" booking="N" type="S" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="function.apmt860_03_master_show" order="1" ver="2" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 顯示單頭欄位值
+# Memo...........:
+# Usage..........: CALL apmt860_03_master_show()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/01/12 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmt860_03_master_show()
+DEFINE l_success         LIKE type_t.num5
+
+    #商品編號
+    CALL s_desc_get_item_desc(g_pmdu_m.pmdu001)
+       RETURNING g_pmdu_m.pmdu001_desc,g_pmdu_m.pmdu001_desc_1
+    
+    #產品特徵
+    CALL s_feature_description(g_pmdu_m.pmdu001,g_pmdu_m.pmdu002)
+       RETURNING l_success,g_pmdu_m.pmdu002_desc
+    
+    #出貨單位
+    CALL s_desc_get_unit_desc(g_pmdu_m.pmdt019) RETURNING g_pmdu_m.pmdt019_desc
+
+    #包裝單位
+    CALL s_desc_get_unit_desc(g_pmdu_m.pmdt201) RETURNING g_pmdu_m.pmdt201_desc
+    
+    DISPLAY BY NAME g_pmdu_m.pmdusite, g_pmdu_m.pmdudocno, g_pmdu_m.pmduseq,
+                    g_pmdu_m.pmdu001,  g_pmdu_m.pmdu002,   g_pmdu_m.pmdt019,
+                    g_pmdu_m.pmdt020,  g_pmdu_m.pmdt201,  g_pmdu_m.pmdt202,
+                    g_pmdu_m.pmdu001_desc, g_pmdu_m.pmdu001_desc_1,
+                    g_pmdu_m.pmdu002_desc, g_pmdu_m.pmdt019_desc,
+                    g_pmdu_m.pmdt201_desc
+                    
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt860_03_create_temp_table" order="2" ver="2" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 建立處理多庫儲批所需的temp table
+# Memo...........: 當使用者已有修改多庫儲批資料，可是按放棄
+#                : 表示使用者不要維護多庫儲批資料，必須要把原本的資料還原
+# Usage..........: CALL apmt860_03_create_temp_table()
+#                     RETURNING r_success
+# Input parameter: 無
+# Return code....: r_success      True/False
+# Date & Author..: 2015/01/12 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmt860_03_create_temp_table()
+DEFINE r_success    LIKE type_t.num5
+DEFINE l_success    LIKE type_t.num5
+
+   LET r_success = TRUE
+
+   CALL apmt860_03_drop_temp_table()
+   
+   CREATE TEMP TABLE apmt860_03_temp(
+      pmduent    LIKE pmdu_t.pmduent,            #企業編號
+      pmdusite   LIKE pmdu_t.pmdusite,           #營運據點
+      pmdudocno  LIKE pmdu_t.pmdudocno,          #單據編號
+      pmduseq    LIKE pmdu_t.pmduseq,            #項次
+      pmduseq1   LIKE pmdu_t.pmduseq1,           #項序
+      pmdu001    LIKE pmdu_t.pmdu001,            #料件編號
+      pmdu002    LIKE pmdu_t.pmdu002,            #產品特徵
+      pmdu003    LIKE pmdu_t.pmdu003,            #作業編號
+      pmdu004    LIKE pmdu_t.pmdu004,            #製程式
+      pmdu005    LIKE pmdu_t.pmdu005,            #庫存管理特徵
+      pmdu006    LIKE pmdu_t.pmdu006,            #庫位
+      pmdu007    LIKE pmdu_t.pmdu007,            #儲位
+      pmdu008    LIKE pmdu_t.pmdu008,            #批號
+      pmdu009    LIKE pmdu_t.pmdu009,            #單位
+      pmdu010    LIKE pmdu_t.pmdu010,            #數量
+      pmdu011    LIKE pmdu_t.pmdu011,            #參考單位
+      pmdu012    LIKE pmdu_t.pmdu012,            #參考數量
+      pmdu013    LIKE pmdu_t.pmdu013,            #允收數量
+      pmdu014    LIKE pmdu_t.pmdu014,            #已入庫量
+      pmdu015    LIKE pmdu_t.pmdu015,            #已驗退量
+      pmdu016    LIKE pmdu_t.pmdu016,            #存貨備註
+      pmdu017    LIKE pmdu_t.pmdu017,            #有效日期
+      pmdu200    LIKE pmdu_t.pmdu200,            #包裝單位
+      pmdu201    LIKE pmdu_t.pmdu201,            #包裝數量
+      pmdu202    LIKE pmdu_t.pmdu202)            #製造日期
+
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'Create Temp Table apmt860_03_temp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt860_03_drop_temp_table" order="3" ver="2" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 刪除建立的temp table
+# Memo...........: 
+# Usage..........: CALL apmt860_03_drop_temp_table()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2015/01/12 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmt860_03_drop_temp_table()
+
+   DROP TABLE apmt860_03_temp
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt860_03_set_no_required_b" order="4" ver="2" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 必要輸入欄位關閉
+# Memo...........:
+# Usage..........: CALL apmt860_03_set_no_required_b()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2015/01/15 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmt860_03_set_no_required_b()
+
+   CALL cl_set_comp_required("pmdu006",FALSE)   #庫位
+   CALL cl_set_comp_required("pmdu005",FALSE)   #庫存管理特徵
+   CALL cl_set_comp_required("pmdu017",FALSE)   #有效日期
+   CALL cl_set_comp_required("pmdu202",FALSE)   #製造日期
+   CALL cl_set_comp_required("pmdu008",FALSE)   #批號           #150427-00001#8 1500601 by lori522612 add
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt860_03_set_required_b" order="5" ver="2" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 必要輸入欄位開啟
+# Memo...........:
+# Usage..........: CALL apmt860_03_set_required_b()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2015/01/15 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmt860_03_set_required_b()
+DEFINE l_success        LIKE type_t.num5
+DEFINE l_set_required   LIKE type_t.num5
+
+   #收貨入庫和退廠時，庫位不可為空
+   IF g_pmds000 MATCHES '[347]' THEN
+      CALL cl_set_comp_required("pmdu006",TRUE)
+   END IF
+   
+   #庫存管理特徵 = 1.必須有庫存管理特徵，庫存管理特徵欄位必須輸入
+   IF g_imaf055 = '1' THEN
+      CALL cl_set_comp_required("pmdu005",TRUE)
+   END IF
+   
+   #批號 出/入庫扣帳作業時需依設定判斷是否設為必填
+   LET l_success = ''
+   LET l_set_required = ''
+   IF g_argv[1] MATCHES '[3467]' THEN   #150427-00001#8 1500601 by lori522612 add
+      CALL s_lot_out_required(g_pmdu_m.pmdu001)
+         RETURNING l_success,l_set_required
+      IF l_success THEN
+         CALL cl_set_comp_required("pmdu008",l_set_required)
+      END IF
+   END IF                               #150427-00001#8 1500601 by lori522612 add
+   
+   #當為(無)採購收貨單 (無)採購收貨入庫單 採購收貨入庫單時
+   IF g_argv[1] MATCHES '[12346]' THEN
+      #製造日期
+      CALL cl_set_comp_required("pmdu202",TRUE)
+      #有效日期
+      #IF NOT cl_null(g_pmdu_d[l_ac].pmdu008) THEN   ##150613 by lori mark
+         LET l_success = ''
+         LET l_set_required = ''
+         CALL s_lot_out_effdate_required(g_pmdu_m.pmdu001,g_pmdu_d[l_ac].pmdu008)
+            RETURNING l_success,l_set_required
+         IF l_success THEN
+            CALL cl_set_comp_required("pmdu017",l_set_required)
+         END IF
+      #END IF                                        ##150613 by lori mark
+   END IF
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt860_03_set_comp_visible_b" order="6" ver="2" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 單身欄位因不同作業有顯示跟隱藏
+# Memo...........:
+# Usage..........: CALL apmt860_03_set_comp_visible_b()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2015/01/14 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmt860_03_set_comp_visible_b()
+
+   #當(無)採購收貨入庫單、採購驗退單、採購入庫單、採購倉退單
+   IF g_pmds000 MATCHES '[34567]' THEN
+      CALL cl_set_comp_visible("pmdu013",FALSE)      #允收數量
+      CALL cl_set_comp_visible("pmdt0261",FALSE)     #檢驗
+   END IF
+   
+   #採購驗退單、採購倉退單
+   IF g_pmds000 MATCHES '[57]' THEN
+      CALL cl_set_comp_visible("pmdu017",FALSE)      #有效日期
+      CALL cl_set_comp_visible("pmdu202",FALSE)      #製造日期
+   END IF
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt860_03_copy_pmdu_t" order="7" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: Copy pmdu_t To apmt860_03_temp
+# Memo...........: 當使用這放棄時，可以還原原始資料
+# Usage..........: CALL apmt860_03_copy_pmdu_t()
+#                :    RETURNING r_success
+# Input parameter: 無
+# Return code....: r_success      True/False
+# Date & Author..: 2015/01/12 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmt860_03_copy_pmdu_t()
+DEFINE r_success         LIKE type_t.num5
+
+   LET r_success = TRUE
+   
+   #1.刪除tepm table 裡資料(確保資料正確性)
+   DELETE FROM apmt860_03_temp
+   
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'Del apmt860_03_temp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #2.複製此單號+項次 的原始資料
+   INSERT INTO apmt860_03_temp(pmduent, pmdusite, pmdudocno, pmduseq, pmduseq1,
+                               pmdu001, pmdu002,  pmdu003,   pmdu004, pmdu005,
+                               pmdu006, pmdu007,  pmdu008,   pmdu009, pmdu010,
+                               pmdu011, pmdu012,  pmdu013,   pmdu014, pmdu015,
+                               pmdu016, pmdu017,  pmdu200,   pmdu201, pmdu202)
+   SELECT pmduent, pmdusite, pmdudocno, pmduseq, pmduseq1,
+          pmdu001, pmdu002,  pmdu003,   pmdu004, pmdu005,
+          pmdu006, pmdu007,  pmdu008,   pmdu009, pmdu010,
+          pmdu011, pmdu012,  pmdu013,   pmdu014, pmdu015,
+          pmdu016, pmdu017,  pmdu200,   pmdu201, pmdu202
+     FROM pmdu_t
+    WHERE pmduent = g_enterprise
+      AND pmdudocno = g_pmdu_m.pmdudocno
+      AND pmduseq = g_pmdu_m.pmduseq
+    #ORDER BY pmduseq1
+    
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'Ins apmt860_03_temp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt860_03_b_fill" order="8" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 顯示單身值
+# Memo...........:
+# Usage..........: CALL apmt860_03_b_fill()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/01/12 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmt860_03_b_fill()
+DEFINE l_sql           STRING
+DEFINE l_cnt           LIKE type_t.num5
+
+   CALL g_pmdu_d.clear()
+   
+   LET l_sql = "SELECT pmduseq1, pmdu006,     t1.inayl003, pmdu007,     t2.inab003,",
+               "       pmdu008,  pmdu005,     pmdu200,     t3.oocal003, pmdu201,",
+               "       pmdu009,  t4.oocal003, pmdu010,     '',          pmdu013,",
+               "       pmdu015,  pmdu202,     pmdu017,     pmdu016",
+               "  FROM pmdu_t",
+               "  LEFT OUTER JOIN inayl_t t1 ON t1.inaylent = ",g_enterprise,
+               "                            AND t1.inayl001 = pmdu006",
+               "                            AND t1.inayl002 = '",g_dlang,"'",
+               "  LEFT OUTER JOIN inab_t t2  ON t2.inabent = ",g_enterprise,
+               "                            AND t2.inabsite = '",g_pmdu_m.pmdusite,"'",
+               "                            AND t2.inab001 = pmdu006",
+               "                            AND t2.inab002 = pmdu007",
+               "  LEFT OUTER JOIN oocal_t t3 ON t3.oocalent = ",g_enterprise,
+               "                            AND t3.oocal001 = pmdu200",
+               "                            AND t3.oocal002 = '",g_dlang,"'",
+               "  LEFT OUTER JOIN oocal_t t4 ON t4.oocalent = ",g_enterprise,
+               "                            AND t4.oocal001 = pmdu009",
+               "                            AND t4.oocal002 = '",g_dlang,"'",
+               " WHERE pmduent = ?",
+               "   AND pmdudocno = ?",
+               "   AND pmduseq = ?",
+               " ORDER BY pmduseq1 "
+   PREPARE apmt860_03_pb FROM l_sql
+   DECLARE b_fill_cs CURSOR FOR apmt860_03_pb
+   
+   LET l_cnt = l_ac
+   LET l_ac = 1
+
+   OPEN b_fill_cs USING g_enterprise,g_pmdu_m.pmdudocno,g_pmdu_m.pmduseq
+   
+   FOREACH b_fill_cs
+      INTO g_pmdu_d[l_ac].pmduseq1, g_pmdu_d[l_ac].pmdu006,      g_pmdu_d[l_ac].pmdu006_desc,
+           g_pmdu_d[l_ac].pmdu007,  g_pmdu_d[l_ac].pmdu007_desc, g_pmdu_d[l_ac].pmdu008,
+           g_pmdu_d[l_ac].pmdu005,  g_pmdu_d[l_ac].pmdu200,      g_pmdu_d[l_ac].pmdu200_desc,
+           g_pmdu_d[l_ac].pmdu201,  g_pmdu_d[l_ac].pmdu009,      g_pmdu_d[l_ac].pmdu009_desc,
+           g_pmdu_d[l_ac].pmdu010,  g_pmdu_d[l_ac].pmdt0261,     g_pmdu_d[l_ac].pmdu013,
+           g_pmdu_d[l_ac].pmdu015,  g_pmdu_d[l_ac].pmdu202,      g_pmdu_d[l_ac].pmdu017,
+           g_pmdu_d[l_ac].pmdu016
+                   
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.code = SQLCA.sqlcode
+          LET g_errparam.extend = "Foreach b_fill_cs"
+          LET g_errparam.popup = TRUE
+          CALL cl_err()
+
+          EXIT FOREACH
+       END IF
+       
+       #檢驗
+       LET g_pmdu_d[l_ac].pmdt0261 = g_pmdu_m.pmdt026
+       
+       LET l_ac = l_ac + 1
+       IF l_ac > g_max_rec THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.code =  9035
+          LET g_errparam.extend =  ''
+          LET g_errparam.popup = TRUE
+          CALL cl_err()
+          EXIT FOREACH
+       END IF
+    
+    END FOREACH
+    LET l_ac = l_cnt
+    CALL g_pmdu_d.deleteElement(g_pmdu_d.getLength())
+       
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt860_03_set_entry_b" order="9" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 單身欄位開啟
+# Memo...........:
+# Usage..........: CALL apmt860_03_set_entry_b()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/01/12 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmt860_03_set_entry_b()
+    
+    CALL cl_set_comp_entry("pmduseq1",TRUE)  #分批序
+    CALL cl_set_comp_entry("pmdu005",TRUE)   #庫存管理特徵
+    CALL cl_set_comp_entry("pmdu006",TRUE)   #庫位
+    CALL cl_set_comp_entry("pmdu007",TRUE)   #儲位
+    CALL cl_set_comp_entry("pmdu008",TRUE)   #批號
+    CALL cl_set_comp_entry("pmdu201",TRUE)   #包裝收貨數量
+    #CALL cl_set_comp_entry("pmdu010",TRUE)   #收貨數量
+    CALL cl_set_comp_entry("pmdu013",TRUE)   #允收數量
+    CALL cl_set_comp_entry("pmdu017",TRUE)   #有效日期
+    
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt860_03_set_no_entry_b" order="10" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 單身欄位關閉
+# Memo...........:
+# Usage..........: CALL apmt860_03_set_no_entry_b()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/01/12 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmt860_03_set_no_entry_b()
+DEFINE l_inaa007   LIKE inaa_t.inaa007
+DEFINE l_success   LIKE type_t.num5
+DEFINE l_set_entry LIKE type_t.num5
+DEFINE l_type      LIKE type_t.num5      #150427-00001#5 150514 by lori522612 add 
+
+    #1.單前單據有限定庫位、儲位、批號
+    #1-1.當前單據有限定庫位，庫位欄位不可以維護
+    IF NOT cl_null(g_pmdt016) AND g_pmds000 MATCHES '[123456]' THEN
+       CALL cl_set_comp_entry("pmdu006",FALSE)
+    END IF
+    
+    #1-2.當前單據有限定儲位，儲位欄位不可以維護
+    IF NOT cl_null(g_pmdt017) AND g_pmds000 MATCHES '[123456]' THEN
+       CALL cl_set_comp_entry("pmdu007",FALSE)
+    END IF
+    
+    #1-3.當前單據有限定批號，批號欄位不可以維護
+    IF NOT cl_null(g_pmdt018) AND g_pmds000 MATCHES '[123456]' THEN
+       CALL cl_set_comp_entry("pmdu008",FALSE)
+    END IF
+    
+    #1-4.當前單據有庫存管理特徵，庫存管理特徵欄位不可以維護
+    IF NOT cl_null(g_pmdt063) AND g_pmds000 MATCHES '[123456]' THEN
+       CALL cl_set_comp_entry("pmdu005",FALSE)
+    END IF
+    
+    #1-5.當為採購驗退單 分批序、庫位、儲位、批號、庫存管理特徵不可以修改
+    # 分批序不可以修改主要是要對回原單據計算數量
+    IF g_argv[1] = '5' AND NOT cl_null(g_docno) THEN
+       CALL cl_set_comp_entry("pmduseq1",FALSE)
+       CALL cl_set_comp_entry("pmdu005",FALSE)
+       CALL cl_set_comp_entry("pmdu006",FALSE)
+       CALL cl_set_comp_entry("pmdu007",FALSE)
+       CALL cl_set_comp_entry("pmdu008",FALSE)
+    END IF
+    
+    #2.若該庫位設置不做儲位管理時，則儲位欄位不可以維護
+    IF NOT cl_null(g_pmdu_d[l_ac].pmdu006) THEN
+       LET l_inaa007 = ''
+       CALL s_apmt860_get_inaa007(g_pmdu_m.pmdusite,g_pmdu_d[l_ac].pmdu006)
+          RETURNING l_inaa007
+       IF l_inaa007 = '5' THEN
+          CALL cl_set_comp_entry("pmdu007",FALSE)
+       END IF
+    END IF
+    
+    #3.庫存批號控管方式 = 2.不可有批號
+    #150427-00001#8 1500601 by lori522612 mark and add---(S)
+    #IF g_imaf061 = '2' THEN
+    #   CALL cl_set_comp_entry("pmdu008",FALSE)
+    #END IF
+    LET l_success = ''  
+    LET l_set_entry = ''
+    
+    CASE 
+       WHEN g_argv[1] MATCHES '[7]'       #出項
+          LET l_type = -1
+       WHEN g_argv[1] MATCHES '[12346]'   #入項
+          LET l_type = 1
+    END CASE
+    
+    CALL s_lot_out_entry(l_type,g_pmdu_m.pmdudocno,g_pmdu_m.pmdusite,g_pmdu_m.pmdu001) 
+       RETURNING l_success,l_set_entry
+    IF l_success THEN
+       CALL cl_set_comp_entry("pmdu008",l_set_entry) 
+    END IF    
+    #150427-00001#8 1500601 by lori522612 mark and add---(E)
+    
+    #4.庫存管理特徵 = 2.不可有庫存管理特徵，庫存管理特徵欄位必須輸入
+    IF g_imaf055 = '1' THEN
+       CALL cl_set_comp_entry("pmdu005",FALSE)
+    END IF
+    
+    #5.當收貨數量為空，包裝收貨數量才可以維護
+    IF NOT cl_null(g_pmdu_d[l_ac].pmdu010) THEN
+       CALL cl_set_comp_entry("pmdu201",FALSE)
+    END IF
+    
+    #5.當檢驗 = 'Y'，允收才可以輸入
+    IF g_pmdu_m.pmdt026 = 'N' OR cl_null(g_pmdu_m.pmdt026) THEN
+       CALL cl_set_comp_entry("pmdu013",FALSE)
+    END IF
+    
+    #6.批號不為空
+    # 批號不為空時，依照商品是否維護有效日期
+    #IF NOT cl_null(g_pmdu_d[l_ac].pmdu008) THEN   ##150613 by lori mark           
+       LET l_success = ''
+       LET l_set_entry = ''
+       CALL s_lot_out_effdate_entry(g_pmdu_m.pmdusite,g_pmdu_m.pmdu001,
+                                    g_pmdu_m.pmdu002, g_pmdu_d[l_ac].pmdu008)
+          RETURNING l_success,l_set_entry
+       IF l_success THEN
+          CALL cl_set_comp_entry("pmdu089",l_set_entry)
+       END IF
+    #END IF                                        ##150613 by lori mark
+    
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt860_03_chk_pmdu005" order="11" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 庫存管理特徵檢查
+# Memo...........:
+# Usage..........: CALL apmt860_03_chk_pmdu005()
+#                  RETURNING r_success
+# Input parameter: 無
+# Return code....: r_success      True/False
+# Date & Author..: 2015/01/15 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmt860_03_chk_pmdu005()
+DEFINE r_success           LIKE type_t.num5
+DEFINE l_success           LIKE type_t.num5
+   LET r_success = TRUE   
+   
+   #產品特徵
+   IF cl_null(g_pmdu_m.pmdu002) THEN
+      LET g_pmdu_m.pmdu002 = ' '
+   END IF
+   
+   #庫存管理特徵
+   IF cl_null(g_pmdu_d[l_ac].pmdu005) THEN
+      LET g_pmdu_d[l_ac].pmdu005 = ' '
+   END IF
+   
+   #檢查庫位+儲位+批號+庫存管理特徵是否唯一
+   IF NOT apmt860_03_chk_only_warehouse('2',TRUE) THEN
+      IF cl_null(g_pmdt017) THEN
+         LET g_pmdu_d[l_ac].pmdu007 = ' '
+      END IF
+      IF cl_null(g_pmdt018) THEN
+         LET g_pmdu_d[l_ac].pmdu008 = ' '
+      END IF
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #倉退時 輸入的商品編號+產品特徵+庫存管理特徵+庫位+儲位必須存在[T:庫存明細檔]中
+   IF g_pmds000 = '7' THEN
+      LET l_success = ''
+      CALL s_apmt860_chk_inag(g_pmdu_m.pmdusite,      g_pmdu_m.pmdu001,
+                              g_pmdu_m.pmdu002,       g_pmdu_d[l_ac].pmdu005,
+                              g_pmdu_d[l_ac].pmdu006, g_pmdu_d[l_ac].pmdu007,
+                              g_pmdu_d[l_ac].pmdu008, g_pmdu_d[l_ac].pmdu009,
+                              g_pmdu_d[l_ac].pmdu010)
+         RETURNING l_success
+      IF l_success = FALSE THEN
+         LET r_success = FALSE
+         RETURN r_success  
+      END IF
+   END IF
+   
+   RETURN r_success 
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt860_03_chk_pmdu006" order="12" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 輸入的商品編號+產品特徵+庫存管理特徵+庫位必須存在[T:庫存明細檔]中
+# Memo...........:
+# Usage..........: CALL apmt860_03_chk_pmdu006()
+#                :    RETURNING r_success
+# Input parameter: 無
+# Return code....: r_success       True/False
+# Date & Author..: 2014/01/12 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmt860_03_chk_pmdu006()
+DEFINE r_success           LIKE type_t.num5
+DEFINE l_success           LIKE type_t.num5
+DEFINE l_inaa007           LIKE inaa_t.inaa007
+DEFINE l_chk               LIKE type_t.num5
+DEFINE l_pmdt210           LIKE pmdt_t.pmdt210     #150518-00001#3--add by dongsz
+
+   LET r_success = TRUE
+   
+   #產品特徵
+   IF cl_null(g_pmdu_m.pmdu002) THEN
+      LET g_pmdu_m.pmdu002 = ' '
+   END IF
+   
+   #庫存管理特徵
+   IF cl_null(g_pmdu_d[l_ac].pmdu005) THEN
+      LET g_pmdu_d[l_ac].pmdu005 = ' '
+   END IF
+   
+   #1.檢查庫位是否存在庫位基本資料檢查
+   INITIALIZE g_chkparam.* TO NULL
+   LET g_chkparam.arg1 = g_pmdu_d[l_ac].pmdu006
+   IF NOT cl_chk_exist("v_inaa001_9") THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #判斷是否要檢查唯一key值
+   LET l_inaa007 = ''
+   CALL s_apmt860_get_inaa007(g_pmdu_m.pmdusite,g_pmdu_d[l_ac].pmdu006)
+      RETURNING l_inaa007
+   IF (l_inaa007 = '5' OR NOT cl_null(g_pmdt017) ) AND 
+      (g_imaf061 = '2' OR NOT cl_null(g_pmdt018) ) THEN
+      LET l_chk = TRUE
+   ELSE
+      LET l_chk = FALSE
+   END IF
+   
+   #2.檢查庫位+儲位+批號+庫存管理特徵是否唯一
+   IF NOT apmt860_03_chk_only_warehouse('2',l_chk) THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #3.倉退時 輸入的商品編號+產品特徵+庫存管理特徵+庫位必須存在[T:庫存明細檔]中
+   IF g_pmds000 = '7' THEN
+      LET l_success = ''
+      CALL s_apmt860_chk_inag(g_pmdu_m.pmdusite,      g_pmdu_m.pmdu001,
+                              g_pmdu_m.pmdu002,       g_pmdu_d[l_ac].pmdu005,
+                              g_pmdu_d[l_ac].pmdu006, g_pmdu_d[l_ac].pmdu007,
+                              g_pmdu_d[l_ac].pmdu008, g_pmdu_d[l_ac].pmdu009,
+                              g_pmdu_d[l_ac].pmdu010)
+         RETURNING l_success
+      IF l_success = FALSE THEN
+         LET r_success = FALSE
+         RETURN r_success  
+      END IF
+   END IF
+   
+   #150518-00001#3--add by dongsz--str---
+   #抓取经营方式
+   SELECT pmdt210 INTO l_pmdt210
+     FROM pmdt_t
+    WHERE pmdtent = g_enterprise
+      AND pmdtdocno = g_pmdu_m.pmdudocno
+      AND pmdtseq = g_pmdu_m.pmduseq
+   #根據經營方式判斷庫位
+   IF NOT s_inaa_chk(g_pmdu_m.pmdusite,g_pmdu_d[l_ac].pmdu006,l_pmdt210) THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   #150518-00001#3--add by dongsz--end---
+   
+   #校驗正確 儲位、批號必須清空
+   IF cl_null(g_pmdt017) AND g_pmds000 != '7' THEN
+      LET g_pmdu_d[l_ac].pmdu007 = ' '
+   END IF
+   IF cl_null(g_pmdt018) AND g_pmds000 != '7' THEN
+      IF g_argv[1] NOT MATCHES '[12346]' THEN   ##150613 by lori add
+         LET g_pmdu_d[l_ac].pmdu008 = ' '
+      END IF                                    ##150613 by lori add    
+   END IF
+   
+   RETURN r_success
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt860_03_chk_pmdu007" order="13" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 輸入的商品編號+產品特徵+庫存管理特徵+庫位+儲位必須存在[T:庫存明細檔]中
+# Memo...........:
+# Usage..........: CALL apmt860_03_chk_pmdu007()
+#                :    RETURNING r_success
+# Input parameter: 無
+# Return code....: r_success       True/False
+# Date & Author..: 2014/01/12 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmt860_03_chk_pmdu007()
+DEFINE r_success           LIKE type_t.num5
+DEFINE l_success           LIKE type_t.num5
+DEFINE l_inaa007           LIKE inaa_t.inaa007
+DEFINE l_chk               LIKE type_t.num5
+
+   LET r_success = TRUE   
+   
+   #產品特徵
+   IF cl_null(g_pmdu_m.pmdu002) THEN
+      LET g_pmdu_m.pmdu002 = ' '
+   END IF
+   
+   #庫存管理特徵
+   IF cl_null(g_pmdu_d[l_ac].pmdu005) THEN
+      LET g_pmdu_d[l_ac].pmdu005 = ' '
+   END IF
+   
+   #1.檢查儲位基本資料
+   INITIALIZE g_chkparam.* TO NULL
+   LET g_chkparam.arg1 = g_pmdu_m.pmdusite
+   LET g_chkparam.arg2 = g_pmdu_d[l_ac].pmdu006
+   LET g_chkparam.arg3 = g_pmdu_d[l_ac].pmdu007
+   IF NOT cl_chk_exist("v_inab002_1") THEN
+      LET r_success = FALSE
+      RETURN r_success  
+   END IF
+   
+   #判斷是否要檢查唯一key值
+   LET l_inaa007 = ''
+   CALL s_apmt860_get_inaa007(g_pmdu_m.pmdusite,g_pmdu_d[l_ac].pmdu006)
+      RETURNING l_inaa007
+   IF g_imaf061 = '2' OR NOT cl_null(g_pmdt018) THEN
+      LET l_chk = TRUE
+   ELSE
+      LET l_chk = FALSE
+   END IF
+   
+   #2.檢查庫位+儲位+批號+庫存管理特徵是否唯一
+   IF NOT apmt860_03_chk_only_warehouse('2',l_chk) THEN
+      LET g_pmdu_d[l_ac].pmdu007 = ' '
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #3.倉退時 輸入的商品編號+產品特徵+庫存管理特徵+庫位+儲位必須存在[T:庫存明細檔]中
+   IF g_pmds000 = '7' THEN
+      LET l_success = ''
+      CALL s_apmt860_chk_inag(g_pmdu_m.pmdusite,      g_pmdu_m.pmdu001,
+                              g_pmdu_m.pmdu002,       g_pmdu_d[l_ac].pmdu005,
+                              g_pmdu_d[l_ac].pmdu006, g_pmdu_d[l_ac].pmdu007,
+                              g_pmdu_d[l_ac].pmdu008, g_pmdu_d[l_ac].pmdu009,
+                              g_pmdu_d[l_ac].pmdu010)
+         RETURNING l_success
+      IF l_success = FALSE THEN
+         LET r_success = FALSE
+         RETURN r_success  
+      END IF
+   END IF
+
+   #校驗正確 批號必須清空
+   ##150613 by lori add---(S)
+   IF cl_null(g_pmdt018) AND g_pmds000 != '7' THEN
+      IF g_argv[1] NOT MATCHES '[12346]' THEN   
+         LET g_pmdu_d[l_ac].pmdu008 = ' '
+      END IF                                   
+   END IF
+   ##150613 by lori add---(E)
+   RETURN r_success  
+      
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt860_03_chk_pmdu008" order="14" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 批號檢查
+# Memo...........:
+# Usage..........: CALL apmt860_03_chk_pmdu008()
+#                  RETURNING r_success
+# Input parameter: 無
+# Return code....: r_success      True/False
+# Date & Author..: 2015/01/15 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmt860_03_chk_pmdu008()
+DEFINE r_success           LIKE type_t.num5
+DEFINE l_success           LIKE type_t.num5
+   LET r_success = TRUE   
+   
+   #產品特徵
+   IF cl_null(g_pmdu_m.pmdu002) THEN
+      LET g_pmdu_m.pmdu002 = ' '
+   END IF
+   
+   #庫存管理特徵
+   IF cl_null(g_pmdu_d[l_ac].pmdu005) THEN
+      LET g_pmdu_d[l_ac].pmdu005 = ' '
+   END IF
+   
+   #檢查庫位+儲位+批號+庫存管理特徵是否唯一
+   IF NOT apmt860_03_chk_only_warehouse('2',TRUE) THEN
+      IF cl_null(g_pmdt017) THEN
+         LET g_pmdu_d[l_ac].pmdu007 = ' '
+      END IF
+      IF cl_null(g_pmdt018) THEN
+         LET g_pmdu_d[l_ac].pmdu008 = ' '
+      END IF
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #倉退時 輸入的商品編號+產品特徵+庫存管理特徵+庫位+儲位必須存在[T:庫存明細檔]中
+   IF g_pmds000 = '7' THEN
+      LET l_success = ''
+      CALL s_apmt860_chk_inag(g_pmdu_m.pmdusite,      g_pmdu_m.pmdu001,
+                              g_pmdu_m.pmdu002,       g_pmdu_d[l_ac].pmdu005,
+                              g_pmdu_d[l_ac].pmdu006, g_pmdu_d[l_ac].pmdu007,
+                              g_pmdu_d[l_ac].pmdu008, g_pmdu_d[l_ac].pmdu009,
+                              g_pmdu_d[l_ac].pmdu010)
+         RETURNING l_success
+      IF l_success = FALSE THEN
+         LET r_success = FALSE
+         RETURN r_success  
+      END IF
+   END IF
+   
+   #150507-00001#4 150529 By pomelo add(S)
+   IF g_pmds000 MATCHES '[12346]' AND
+      NOT cl_null(g_pmdu_m.pmdu001) AND
+      NOT cl_null(g_pmdu_d[l_ac].pmdu008)  THEN
+      IF NOT s_lot_out_chk(g_pmdu_m.pmdusite, g_pmdu_m.pmdudocno,
+                           g_pmdu_m.pmdu001,  g_pmdu_m.pmdu002,
+                           g_pmdu_d[l_ac].pmdu008) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF
+   #150507-00001#4 150529 By pomelo add(E)
+   
+   RETURN r_success 
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt860_03_chk_pmdu010" order="15" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 收貨數量檢查
+# Memo...........:
+# Usage..........: CALL apmt860_03_chk_pmdu010()
+#                  RETURNING r_success
+# Input parameter: 無
+# Return code....: r_success      True/False
+# Date & Author..: 2015/01/13 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmt860_03_chk_pmdu010()
+DEFINE r_success        LIKE type_t.num5
+DEFINE l_pmdu010        LIKE pmdu_t.pmdu010
+DEFINE l_success        LIKE type_t.num5
+DEFINE l_field_name     LIKE dzebl_t.dzebl003
+DEFINE l_sql            STRING
+
+   LET r_success = TRUE
+   
+   #1.加總以key打的收貨數量(不包含自己那筆項序)
+   LET l_sql = "SELECT COALESCE(SUM(pmdu010),0)",
+               "  FROM pmdu_t",
+               " WHERE pmduent = ",g_enterprise,
+               "   AND pmdudocno = '",g_pmdu_m.pmdudocno,"'",
+               "   AND pmduseq = ",g_pmdu_m.pmduseq,
+               "   AND pmduseq1 != COALESCE('",g_pmdu_d[l_ac].pmduseq1,"','-1')"
+   PREPARE apmt860_03_sum_pmdu010 FROM l_sql
+   LET l_pmdu010 = 0
+   EXECUTE apmt860_03_sum_pmdu010 INTO l_pmdu010
+   
+   #2.計算輸入的出貨數量是否正確
+   #2-1.取出此作業時的欄位名稱
+   LET l_field_name = ''
+   CALL s_apmt860_get_field_name("pmdu010") RETURNING l_field_name
+   IF (g_total_pmdt020 < l_pmdu010 + g_pmdu_d[l_ac].pmdu010) AND NOT cl_null(g_docno) THEN
+      #IF g_pmdu_d[l_ac].pmdu010 > g_pmdu_m.pmdt020 - l_pmdu010 THEN
+      #            
+      #   #2-2.顯示錯誤訊息：單身的%1不可大於該項次的%1-已經維護的單身%1！
+      #   INITIALIZE g_errparam TO NULL
+      #   LET g_errparam.code = 'apm-00768'
+      #   LET g_errparam.extend = ''
+      #   LET g_errparam.popup = TRUE
+      #   LET g_errparam.replace[1] = l_field_name
+      #   CALL cl_err()
+      #   LET r_success = FALSE
+      #   RETURN r_success
+      #END IF
+      #該項次的多庫儲批%1加總>該項次可以登打的%1！
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'apm-00871'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      LET g_errparam.replace[1] = l_field_name
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #3.倉退時 輸入的商品編號+產品特徵+庫存管理特徵+庫位必須存在[T:庫存明細檔]中
+   IF g_pmds000 = '7' THEN
+      LET l_success = ''
+      CALL s_apmt860_chk_inag(g_pmdu_m.pmdusite,      g_pmdu_m.pmdu001,
+                              g_pmdu_m.pmdu002,       g_pmdu_d[l_ac].pmdu005,
+                              g_pmdu_d[l_ac].pmdu006, g_pmdu_d[l_ac].pmdu007,
+                              g_pmdu_d[l_ac].pmdu008, g_pmdu_d[l_ac].pmdu009,
+                              g_pmdu_d[l_ac].pmdu010)
+         RETURNING l_success
+      IF l_success = FALSE THEN
+         LET r_success = FALSE
+         RETURN r_success  
+      END IF
+   END IF
+   
+   #4.出貨數量推算出包裝收貨數量
+   CALL s_aooi250_convert_qty(g_pmdu_m.pmdu001,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu200,g_pmdu_d[l_ac].pmdu010)
+      RETURNING l_success,g_pmdu_d[l_ac].pmdu201
+      
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt860_03_chk_pmdu201" order="16" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 包裝收貨數量檢查
+# Memo...........:
+# Usage..........: CALL apmt860_03_chk_pmdu201()
+#                  RETURNING r_success
+# Input parameter: 無
+# Return code....: r_success      True/False
+# Date & Author..: 2015/01/13 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmt860_03_chk_pmdu201()
+DEFINE r_success        LIKE type_t.num5
+DEFINE l_pmdu010        LIKE pmdu_t.pmdu010
+DEFINE l_pmdu201        LIKE pmdu_t.pmdu201
+DEFINE l_total_pmdt202  LIKE pmdt_t.pmdt202
+DEFINE l_success        LIKE type_t.num5
+DEFINE l_field_name     LIKE dzebl_t.dzebl003
+DEFINE l_sql            STRING
+
+   LET r_success = TRUE
+   
+   #1.加總以key打的包裝收貨數量(不包含自己那筆項序)
+   LET l_sql = "SELECT COALESCE(SUM(pmdu201),0)",
+               "  FROM pmdu_t",
+               " WHERE pmduent = ",g_enterprise,
+               "   AND pmdudocno = '",g_pmdu_m.pmdudocno,"'",
+               "   AND pmduseq = ",g_pmdu_m.pmduseq,
+               "   AND pmduseq1 != COALESCE('",g_pmdu_d[l_ac].pmduseq1,"','-1')"
+   PREPARE apmt860_03_sum_pmdu201 FROM l_sql
+   LET l_pmdu201 = 0
+   EXECUTE apmt860_03_sum_pmdu201 INTO l_pmdu201
+   
+   #2.計算輸入的包裝出貨數量是否正確
+   
+   CALL s_aooi250_convert_qty(g_pmdu_m.pmdu001,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu200,g_total_pmdt020)
+      RETURNING l_success,l_total_pmdt202
+   #2-1.取出此作業時的欄位名稱
+   LET l_field_name = ''
+   CALL s_apmt860_get_field_name("pmdu201") RETURNING l_field_name
+   
+   IF (l_total_pmdt202 < l_pmdu201 + g_pmdu_d[l_ac].pmdu201) AND NOT cl_null(g_docno) THEN
+      #IF g_pmdu_d[l_ac].pmdu201 > g_pmdu_m.pmdt202 - l_pmdu201 THEN
+      #   
+      #   #2-2.顯示錯誤訊息：單身的%1不可大於該項次的%1-已經維護的單身%1！
+      #   INITIALIZE g_errparam TO NULL
+      #   LET g_errparam.code = 'apm-00768'
+      #   LET g_errparam.extend = ''
+      #   LET g_errparam.popup = TRUE
+      #   LET g_errparam.replace[1] = l_field_name
+      #   CALL cl_err()
+      #   LET r_success = FALSE
+      #   RETURN r_success
+      #END IF
+      #該項次的多庫儲批%1加總>該項次可以登打的%1！
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'apm-00871'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      LET g_errparam.replace[1] = l_field_name
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #3.包裝收貨數量推算出出貨數量
+   CALL s_aooi250_convert_qty(g_pmdu_m.pmdu001,g_pmdu_d[l_ac].pmdu200,g_pmdu_d[l_ac].pmdu009,g_pmdu_d[l_ac].pmdu201)
+      RETURNING l_success,g_pmdu_d[l_ac].pmdu010
+   
+   #4.倉退時 輸入的商品編號+產品特徵+庫存管理特徵+庫位必須存在[T:庫存明細檔]中
+   IF g_pmds000 = '7' THEN
+      LET l_success = ''
+      CALL s_apmt860_chk_inag(g_pmdu_m.pmdusite,      g_pmdu_m.pmdu001,
+                              g_pmdu_m.pmdu002,       g_pmdu_d[l_ac].pmdu005,
+                              g_pmdu_d[l_ac].pmdu006, g_pmdu_d[l_ac].pmdu007,
+                              g_pmdu_d[l_ac].pmdu008, g_pmdu_d[l_ac].pmdu009,
+                              g_pmdu_d[l_ac].pmdu010)
+         RETURNING l_success
+      IF l_success = FALSE THEN
+         LET r_success = FALSE
+         RETURN r_success  
+      END IF
+   END IF
+      
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt860_03_num_default" order="17" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 檢查輸入數量正確後，對允收數量的處理
+# Memo...........:
+# Usage..........: CALL apmt860_03_num_default()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2015/01/14 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmt860_03_num_default()
+
+   #當(無)採購收貨單、(無)採購收貨入庫單
+   IF g_pmds000 MATCHES '[1234]' THEN
+   
+      #檢驗否 = 'N' OR cl_null(允收數量) OR
+      #(檢驗否 = 'Y' AND 允收數量>收貨數量)
+      # 允收數量 = 出貨數量
+      IF g_pmdu_m.pmdt026 = 'N' OR cl_null(g_pmdu_m.pmdt026) OR
+         cl_null(g_pmdu_d[l_ac].pmdu013) OR
+         (g_pmdu_m.pmdt026 = 'Y' AND
+         g_pmdu_d[l_ac].pmdu013 > g_pmdu_d[l_ac].pmdu010)THEN
+         LET g_pmdu_d[l_ac].pmdu013 = g_pmdu_d[l_ac].pmdu010
+      END IF
+
+   ELSE
+      LET g_pmdu_d[l_ac].pmdu013 = 0
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt860_03_chk_total_num" order="18" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 確認維護的多庫儲批總數量與單身數量是否一致
+# Memo...........:
+# Usage..........: CALL apmt860_03_chk_total_num()
+#                  RETURNING r_type
+# Input parameter: 無
+# Return code....: r_type         0.檢查的數量都相同
+#                :                1.出貨數量不相同
+#                :                2.出貨包裝數量不相同
+#                :                3.允收數量不相同
+# Date & Author..: 2015/01/14 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmt860_03_chk_total_num()
+DEFINE r_type          LIKE type_t.num5
+
+                       
+   LET r_type = 0
+   
+   #1.計算輸入的總total數量
+   INITIALIZE g_total.* TO NULL
+   SELECT COALESCE(SUM(pmdu010),0),COALESCE(SUM(pmdu013),0),COALESCE(SUM(pmdu201),0)
+     INTO g_total.pmdu010, g_total.pmdu013, g_total.pmdu201
+     FROM pmdu_t
+    WHERE pmduent = g_enterprise
+      AND pmdudocno = g_pmdu_m.pmdudocno
+      AND pmduseq = g_pmdu_m.pmduseq
+    
+   #2.多庫儲批收貨數量加總是否與該項次收貨數量相同
+   IF g_pmdu_m.pmdt020 != g_total.pmdu010 THEN
+      LET r_type = 1
+      RETURN r_type
+   END IF
+   
+   #3.多庫儲批包裝收貨數量加總是否與該項次包裝收貨數量相同
+   IF g_pmdu_m.pmdt202 != g_total.pmdu201 THEN
+      LET r_type = 2
+      RETURN r_type
+   END IF
+   
+   #4.當(無)採購收貨單 且 檢驗 = 'Y'
+   # 多庫儲批允收數量加總是否與該項次允收數量相同
+   IF g_pmds000 MATCHES '[12]' AND g_pmdu_m.pmdt026 = 'Y' THEN
+      IF g_pmdu_m.pmdt053 != g_total.pmdu013 THEN
+         LET r_type = 3
+         RETURN r_type
+      END IF
+   END IF
+   
+   RETURN r_type
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt860_03_reduction" order="19" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 把原本的多庫儲批資料還原
+# Memo...........:
+# Usage..........: CALL apmt860_03_reduction()
+#                :    RETURNING r_success
+# Input parameter: 無
+# Return code....: r_success      True/False
+# Date & Author..: 2015/01/14 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmt860_03_reduction()
+DEFINE r_success        LIKE type_t.num5
+
+   LET r_success = TRUE
+   
+   DELETE FROM pmdu_t
+    WHERE pmduent = g_enterprise
+      AND pmdudocno = g_pmdu_m.pmdudocno
+      AND pmduseq = g_pmdu_m.pmduseq
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "Del pmdu_t"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   INSERT INTO pmdu_t(pmduent, pmdusite, pmdudocno, pmduseq, pmduseq1,
+                      pmdu001, pmdu002,  pmdu003,   pmdu004, pmdu005,
+                      pmdu006, pmdu007,  pmdu008,   pmdu009, pmdu010,
+                      pmdu011, pmdu012,  pmdu013,   pmdu014, pmdu015,
+                      pmdu016, pmdu017,  pmdu200,   pmdu201, pmdu202)
+      SELECT pmduent, pmdusite, pmdudocno, pmduseq, pmduseq1,
+             pmdu001, pmdu002,  pmdu003,   pmdu004, pmdu005,
+             pmdu006, pmdu007,  pmdu008,   pmdu009, pmdu010,
+             pmdu011, pmdu012,  pmdu013,   pmdu014, pmdu015,
+             pmdu016, pmdu017,  pmdu200,   pmdu201, pmdu202
+        FROM apmt860_03_temp
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "Ins pmdu_t"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.apmt860_03_chk_only_warehouse" order="20" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 檢查庫位+儲位+批號 不可以重複
+# Memo...........:
+# Usage..........: CALL apmt860_03_chk_only_warehouse(p_type,p_chk)
+#                  RETURNING r_success
+# Input parameter: p_type         是否顯示錯誤訊息 1.不顯示 2.顯示
+#                : p_chk          是否一定要檢查
+# Return code....: r_success      True/False
+# Date & Author..: 2015/03/05 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmt860_03_chk_only_warehouse(p_type,p_chk)
+DEFINE p_type            LIKE type_t.chr1
+DEFINE p_chk             LIKE type_t.num5
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_inaa007         LIKE inaa_t.inaa007
+DEFINE l_cnt             LIKE type_t.num5
+DEFINE l_sql             STRING
+   LET r_success = TRUE
+   
+   #1.取庫位是否做儲位管理
+   LET l_inaa007 = ''
+   CALL s_apmt860_get_inaa007(g_pmdu_m.pmdusite,g_pmdu_d[l_ac].pmdu006)
+      RETURNING l_inaa007
+   
+   #2.
+   LET l_cnt = 0
+   IF ((NOT cl_null(g_pmdt016) OR
+        NOT cl_null(g_pmdu_d[l_ac].pmdu007)) AND
+       (NOT cl_null(g_pmdt017) OR       #前單據有預設儲位 或 庫位不做儲位管理(=5.不使用儲位管理)
+            l_inaa007 = '5' OR
+        NOT cl_null(g_pmdu_d[l_ac].pmdu008)) AND
+       (NOT cl_null(g_pmdt018) OR       #前單據有預設批號 或 商品不做批號管理(=2.不可有批號)
+          g_imaf061 = '2') AND
+       (NOT cl_null(g_pmdt063) OR       #前單據有預設庫存管理特徵 或 商品不可有庫存管理特徵(=2.不可有庫存管理特徵)
+          g_imaf055 = '2')
+      )OR p_chk THEN
+       
+       LET l_sql = "SELECT COUNT(pmduseq1)",
+                   "  FROM pmdu_t",
+                   " WHERE pmduent = ",g_enterprise,
+                   "   AND pmdudocno = '",g_pmdu_m.pmdudocno,"'",
+                   "   AND pmduseq = ",g_pmdu_m.pmduseq,
+                   "   AND pmduseq1 != COALESCE(",g_pmdu_d[l_ac].pmduseq1,",-1)",
+                   "   AND COALESCE(pmdu005,' ') = COALESCE('",g_pmdu_d[l_ac].pmdu005,"',' ')",
+                   "   AND COALESCE(pmdu006,' ') = COALESCE('",g_pmdu_d[l_ac].pmdu006,"',' ')",
+                   "   AND COALESCE(pmdu007,' ') = COALESCE('",g_pmdu_d[l_ac].pmdu007,"',' ')",
+                   "   AND COALESCE(pmdu008,' ') = COALESCE('",g_pmdu_d[l_ac].pmdu008,"',' ')"
+       PREPARE apmt860_03_chk_pmdu1 FROM l_sql
+       EXECUTE apmt860_03_chk_pmdu1 INTO l_cnt
+   END IF
+   
+   IF l_cnt >= 1 THEN
+      IF p_type = '1' THEN
+         #前單據預設的庫位+儲位+批號+庫存管理特徵已存在其中一筆項序中，不可以新增另外一筆多庫儲批資料！
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = "apm-00844"
+         LET g_errparam.extend = ""
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+      ELSE
+         #庫位+儲位+批號+庫存管理特徵已存在其中一筆項序中！
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = "apm-00774"
+         LET g_errparam.extend = ""
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+      END IF
+      LET r_success = FALSE
+   END IF
+   
+   RETURN r_success
+   
+END FUNCTION]]>
+  </point>
+  <point name="global.argv" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#請依照順序呼叫此Function
+#1.CALL apmt860_03_create_temp_table()
+#2.CALL s_transaction_begin()
+#3.CALL apmt860_03()
+#4.CALL s_transaxtion_end('Y',0)
+#5.CALL apmt860_03_drop_temp_table()
+
+
+#傳入參數說明
+# p_pmdtdocno     #單據編號
+# p_pmdtseq       #項次
+# p_pmdt006       #商品編號
+# p_pmdt007       #產品特徵
+# p_pmdt019       #收貨/入庫單位
+# p_pmdt020       #收貨/入庫數量
+# p_pmdt026       #檢驗
+# p_pmdt053       #允收數量
+# p_pmdt201       #收貨包裝單位
+# p_pmdt202       #收貨包裝數量
+# p_docno         #前單據單號
+# p_seq           #前單據項次
+
+#備註：前單據單號、前單據項次傳值特別注意
+#1.當單據性質 = (1.採購收貨單 或 3.採購收貨入庫單) 且 預約收貨單不為空
+#  => 前單據單號 = 收貨預約單號(pmdt206)、前單據項次 = 預約收貨項次(pmdt207)
+#2.當單據性質 = (1.採購收貨單 或 3.採購收貨入庫單) 且 預約收貨單為空
+#  => 前單據單號 = 採購單號(pmdt001)、前單據項次 = 採購項次(pmdt002)
+#3.當單據性質 = 5.採購驗退單 或 6.採購入庫單 或 7.採購倉退單
+#  => 前單據單號 = 收貨單號(pmdt027)、前單據項次 = 收貨項次(pmdt028)
+
+#回傳值說明
+# r_success       #True/False
+# r_pmdt020       #收貨/入庫數量
+# r_pmdt053       #允收數量
+# r_pmdt202       #收貨包裝數量]]>
+  </point>
+  <point name="global.variable" order="" ver="3" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE g_pmdu_d_o        type_g_pmdu_d
+DEFINE g_pmdu_m          RECORD
+       pmdusite          LIKE pmdu_t.pmdusite,   #營運據點
+       pmdudocno         LIKE pmdu_t.pmdudocno,  #單據編號
+       pmduseq           LIKE pmdu_t.pmduseq,    #項次
+       pmdu001           LIKE pmdu_t.pmdu001,    #商品編號
+       pmdu001_desc      LIKE imaal_t.imaal003,  #商品品名
+       pmdu001_desc_1    LIKE imaal_t.imaal004,  #商品規格
+       pmdu002           LIKE pmdu_t.pmdu002,    #產品特徵
+       pmdu002_desc      LIKE type_t.chr80,      #產品特徵說明
+       pmdt019           LIKE pmdt_t.pmdt019,    #出貨單位
+       pmdt019_desc      LIKE oocal_t.oocal003,  #出貨單位名稱
+       pmdt020           LIKE pmdt_t.pmdt020,    #出貨單位數量
+       pmdt026           LIKE pmdt_t.pmdt026,    #檢驗
+       pmdt053           LIKE pmdt_t.pmdt053,    #允收數量
+       pmdt201           LIKE pmdt_t.pmdt201,    #包裝單位
+       pmdt201_desc      LIKE oocal_t.oocal003,  #包裝單位名稱
+       pmdt202           LIKE pmdt_t.pmdt202     #包裝數量
+       END RECORD
+DEFINE g_total           RECORD
+       pmdu010           LIKE pmdu_t.pmdu010,    #收貨數量
+       pmdu013           LIKE pmdu_t.pmdu013,    #允收數量
+       pmdu201           LIKE pmdu_t.pmdu201     #包裝收貨數量
+                         END RECORD
+DEFINE g_pmds000         LIKE pmds_t.pmds000     #單據性質
+DEFINE g_pmdsdocdt       LIKE pmds_t.pmdsdocdt   #單據日期
+DEFINE g_docno           LIKE pmds_t.pmdsdocno   #前單據編號
+DEFINE g_total_pmdt020   LIKE pmdt_t.pmdt020     #該項次可以輸入的最大數量
+DEFINE g_pmdt016         LIKE pmdt_t.pmdt016     #前單據限定庫位
+DEFINE g_pmdt017         LIKE pmdt_t.pmdt017     #前單據限定儲位
+DEFINE g_pmdt018         LIKE pmdt_t.pmdt018     #前單據限定批號
+DEFINE g_pmdt063         LIKE pmdt_t.pmdt063     #前單據庫存管理特徵
+DEFINE g_imaf055         LIKE imaf_t.imaf055     #庫存管理特徵
+DEFINE g_imaf061         LIKE imaf_t.imaf061     #庫存批號管理
+DEFINE g_imaa149         LIKE imaa_t.imaa149     #臨期控管方式  150714-00016#1 150714 By pomelo add]]>
+  </point>
+  <point name="input.a.page1.pmdu005" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF cl_null(g_pmdu_d[l_ac].pmdu005) THEN
+               LET g_pmdu_d[l_ac].pmdu005 = ' '
+            END IF
+            IF g_pmdu_d[l_ac].pmdu008 != g_pmdu_d_o.pmdu008 OR cl_null(g_pmdu_d_o.pmdu008) THEN
+               IF NOT apmt860_03_chk_pmdu005() THEN
+                  LET g_pmdu_d[l_ac].pmdu005 = g_pmdu_d_o.pmdu005
+                  LET g_pmdu_d[l_ac].pmdu006 = g_pmdu_d_o.pmdu006
+                  LET g_pmdu_d[l_ac].pmdu007 = g_pmdu_d_o.pmdu007
+                  LET g_pmdu_d[l_ac].pmdu008 = g_pmdu_d_o.pmdu008
+                  #庫位
+                  CALL s_desc_get_stock_desc('',g_pmdu_d[l_ac].pmdu006)
+                     RETURNING  g_pmdu_d[l_ac].pmdu006_desc
+                  #儲位
+                  CALL s_desc_get_locator_desc(g_pmdu_m.pmdusite,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007)
+                     RETURNING g_pmdu_d[l_ac].pmdu007_desc
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #庫位
+            CALL s_desc_get_stock_desc('',g_pmdu_d[l_ac].pmdu006)
+               RETURNING  g_pmdu_d[l_ac].pmdu006_desc
+            #儲位
+            CALL s_desc_get_locator_desc(g_pmdu_m.pmdusite,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007)
+               RETURNING g_pmdu_d[l_ac].pmdu007_desc
+            LET g_pmdu_d_o.pmdu005 = g_pmdu_d[l_ac].pmdu005
+            LET g_pmdu_d_o.pmdu006 = g_pmdu_d[l_ac].pmdu006
+            LET g_pmdu_d_o.pmdu007 = g_pmdu_d[l_ac].pmdu007
+            LET g_pmdu_d_o.pmdu008 = g_pmdu_d[l_ac].pmdu008 ]]>
+  </point>
+  <point name="input.a.page1.pmdu006" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            LET g_pmdu_d[l_ac].pmdu006_desc = ''
+            DISPLAY BY NAME g_pmdu_d[l_ac].pmdu006_desc
+            IF NOT cl_null(g_pmdu_d[l_ac].pmdu006) THEN
+               IF g_pmdu_d[l_ac].pmdu006 != g_pmdu_d_o.pmdu006 OR cl_null(g_pmdu_d_o.pmdu006) THEN
+                  IF apmt860_03_chk_pmdu006() THEN
+                     CALL s_apmt860_get_inaa007(g_pmdu_m.pmdusite,g_pmdu_d[l_ac].pmdu006)
+                        RETURNING l_inaa007
+                     IF l_inaa007 = '5' THEN
+                        LET g_pmdu_d[l_ac].pmdu007 = ' '
+                     END IF
+                  ELSE
+                     LET g_pmdu_d[l_ac].pmdu005 = g_pmdu_d_o.pmdu005
+                     LET g_pmdu_d[l_ac].pmdu006 = g_pmdu_d_o.pmdu006
+                     LET g_pmdu_d[l_ac].pmdu007 = g_pmdu_d_o.pmdu007
+                     LET g_pmdu_d[l_ac].pmdu008 = g_pmdu_d_o.pmdu008
+                     #庫位
+                     CALL s_desc_get_stock_desc('',g_pmdu_d[l_ac].pmdu006)
+                        RETURNING  g_pmdu_d[l_ac].pmdu006_desc
+                     #儲位
+                     CALL s_desc_get_locator_desc(g_pmdu_m.pmdusite,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007)
+                        RETURNING g_pmdu_d[l_ac].pmdu007_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            #庫位
+            CALL s_desc_get_stock_desc('',g_pmdu_d[l_ac].pmdu006)
+               RETURNING  g_pmdu_d[l_ac].pmdu006_desc
+            #儲位
+            CALL s_desc_get_locator_desc(g_pmdu_m.pmdusite,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007)
+               RETURNING g_pmdu_d[l_ac].pmdu007_desc
+            LET g_pmdu_d_o.pmdu005 = g_pmdu_d[l_ac].pmdu005
+            LET g_pmdu_d_o.pmdu006 = g_pmdu_d[l_ac].pmdu006
+            LET g_pmdu_d_o.pmdu007 = g_pmdu_d[l_ac].pmdu007
+            LET g_pmdu_d_o.pmdu008 = g_pmdu_d[l_ac].pmdu008
+            CALL apmt860_03_set_entry_b()
+            CALL apmt860_03_set_no_entry_b()
+            NEXT FIELD pmdu007]]>
+  </point>
+  <point name="input.a.page1.pmdu007" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF cl_null(g_pmdu_d[l_ac].pmdu007) THEN
+               LET g_pmdu_d[l_ac].pmdu007 = ' '
+            END IF
+            LET g_pmdu_d[l_ac].pmdu007_desc = ''
+            DISPLAY BY NAME g_pmdu_d[l_ac].pmdu007_desc
+            IF g_pmdu_d[l_ac].pmdu007 != g_pmdu_d_o.pmdu007 OR cl_null(g_pmdu_d_o.pmdu007) THEN
+               IF NOT apmt860_03_chk_pmdu007() THEN
+                  LET g_pmdu_d[l_ac].pmdu005 = g_pmdu_d_o.pmdu005
+                  LET g_pmdu_d[l_ac].pmdu006 = g_pmdu_d_o.pmdu006
+                  LET g_pmdu_d[l_ac].pmdu007 = g_pmdu_d_o.pmdu007
+                  LET g_pmdu_d[l_ac].pmdu008 = g_pmdu_d_o.pmdu008
+                  #庫位
+                  CALL s_desc_get_stock_desc('',g_pmdu_d[l_ac].pmdu006)
+                     RETURNING  g_pmdu_d[l_ac].pmdu006_desc
+                  #儲位
+                  CALL s_desc_get_locator_desc(g_pmdu_m.pmdusite,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007)
+                     RETURNING g_pmdu_d[l_ac].pmdu007_desc
+                     
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #庫位
+            CALL s_desc_get_stock_desc('',g_pmdu_d[l_ac].pmdu006)
+               RETURNING  g_pmdu_d[l_ac].pmdu006_desc
+            #儲位
+            CALL s_desc_get_locator_desc(g_pmdu_m.pmdusite,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007)
+               RETURNING g_pmdu_d[l_ac].pmdu007_desc
+            LET g_pmdu_d_o.pmdu005 = g_pmdu_d[l_ac].pmdu005
+            LET g_pmdu_d_o.pmdu006 = g_pmdu_d[l_ac].pmdu006
+            LET g_pmdu_d_o.pmdu007 = g_pmdu_d[l_ac].pmdu007
+            LET g_pmdu_d_o.pmdu008 = g_pmdu_d[l_ac].pmdu008            
+            NEXT FIELD pmdu008]]>
+  </point>
+  <point name="input.a.page1.pmdu008" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF cl_null(g_pmdu_d[l_ac].pmdu008) THEN
+               LET g_pmdu_d[l_ac].pmdu008 = ' '
+            END IF
+            #判斷[T:料件據點進銷存檔].[C:批號自動編碼]是否有勾選，若勾選自動編碼時,呼叫命名規則產生的應用元件產生批號
+            IF g_pmdu_d[l_ac].pmdu008 != g_pmdu_d_o.pmdu008 OR cl_null(g_pmdu_d_o.pmdu008) THEN
+               IF NOT apmt860_03_chk_pmdu008() THEN
+                  LET g_pmdu_d[l_ac].pmdu005 = g_pmdu_d_o.pmdu005
+                  LET g_pmdu_d[l_ac].pmdu006 = g_pmdu_d_o.pmdu006
+                  LET g_pmdu_d[l_ac].pmdu007 = g_pmdu_d_o.pmdu007
+                  LET g_pmdu_d[l_ac].pmdu008 = g_pmdu_d_o.pmdu008
+                  #庫位
+                  CALL s_desc_get_stock_desc('',g_pmdu_d[l_ac].pmdu006)
+                     RETURNING  g_pmdu_d[l_ac].pmdu006_desc
+                  #儲位
+                  CALL s_desc_get_locator_desc(g_pmdu_m.pmdusite,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007)
+                     RETURNING g_pmdu_d[l_ac].pmdu007_desc
+                  NEXT FIELD pmdu006
+               END IF
+           END IF    
+           #有效日期
+           IF NOT cl_null(g_pmdu_d[l_ac].pmdu202) THEN
+              LET l_success = ''
+              LET l_pmdu017 = ''
+              CALL s_lot_out_effdate(g_pmdu_m.pmdusite, g_pmdu_m.pmdu001, g_pmdu_m.pmdu002,
+                                     g_pmdu_d[l_ac].pmdu202,  g_pmdu_d[l_ac].pmdu008)
+                 RETURNING l_success,l_pmdu017
+              IF l_success THEN
+                 LET g_pmdu_d[l_ac].pmdu017 = l_pmdu017
+              END IF
+           END IF
+               
+            #庫位
+            CALL s_desc_get_stock_desc('',g_pmdu_d[l_ac].pmdu006)
+               RETURNING  g_pmdu_d[l_ac].pmdu006_desc
+            #儲位
+            CALL s_desc_get_locator_desc(g_pmdu_m.pmdusite,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007)
+               RETURNING g_pmdu_d[l_ac].pmdu007_desc
+            LET g_pmdu_d_o.pmdu005 = g_pmdu_d[l_ac].pmdu005
+            LET g_pmdu_d_o.pmdu006 = g_pmdu_d[l_ac].pmdu006
+            LET g_pmdu_d_o.pmdu007 = g_pmdu_d[l_ac].pmdu007
+            LET g_pmdu_d_o.pmdu008 = g_pmdu_d[l_ac].pmdu008
+            LET g_pmdu_d_o.pmdu017 = g_pmdu_d[l_ac].pmdu017
+            LET g_pmdu_d_o.pmdu202 = g_pmdu_d[l_ac].pmdu202
+            CALL apmt860_03_set_entry_b()
+            CALL apmt860_03_set_no_required_b()
+            CALL apmt860_03_set_required_b()
+            CALL apmt860_03_set_no_entry_b()
+            NEXT FIELD pmdu005]]>
+  </point>
+  <point name="input.a.page1.pmdu009" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.a.page1.pmdu010" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_pmdu_d[l_ac].pmdu010) THEN
+               IF g_pmdu_d[l_ac].pmdu010 != g_pmdu_d_o.pmdu010 OR cl_null(g_pmdu_d_o.pmdu010) THEN
+                  IF NOT apmt860_03_chk_pmdu010() THEN
+                     LET g_pmdu_d[l_ac].pmdu010 = g_pmdu_d_o.pmdu010
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL apmt860_03_num_default()
+               END IF
+            END IF
+            LET g_pmdu_d_o.pmdu010 = g_pmdu_d[l_ac].pmdu010
+            LET g_pmdu_d_o.pmdu201 = g_pmdu_d[l_ac].pmdu201
+            LET g_pmdu_d_o.pmdu013 = g_pmdu_d[l_ac].pmdu013]]>
+  </point>
+  <point name="input.a.page1.pmdu011" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.a.page1.pmdu013" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_pmdu_d[l_ac].pmdu013) THEN
+               IF g_pmdu_d[l_ac].pmdu013 != g_pmdu_d_o.pmdu013 OR cl_null(g_pmdu_d_o.pmdu013) THEN
+                  IF cl_null(g_pmdu_d[l_ac].pmdu010) THEN
+                     #請先輸入收貨數量！
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = "apm-00769"
+                     LET g_errparam.extend = ""
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_pmdu_d[l_ac].pmdu013 = ''
+                     NEXT FIELD pmdu010
+                  END IF
+                  IF g_pmdu_d[l_ac].pmdu013 > g_pmdu_d[l_ac].pmdu010 THEN
+                     #輸入的允收數量不可以大於收貨數量！
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = "apm-00770"
+                     LET g_errparam.extend = ""
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_pmdu_d[l_ac].pmdu013 = g_pmdu_d_o.pmdu013
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            LET g_pmdu_d_o.pmdu013 = g_pmdu_d[l_ac].pmdu013]]>
+  </point>
+  <point name="input.a.page1.pmdu200" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            ]]>
+  </point>
+  <point name="input.a.page1.pmdu201" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_pmdu_d[l_ac].pmdu201) THEN
+               IF g_pmdu_d[l_ac].pmdu201 != g_pmdu_d_o.pmdu201 OR cl_null(g_pmdu_d_o.pmdu201) THEN
+                  IF NOT apmt860_03_chk_pmdu201() THEN
+                     LET g_pmdu_d[l_ac].pmdu201 = g_pmdu_d_o.pmdu201
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               CALL apmt860_03_num_default()
+            END IF
+            LET g_pmdu_d_o.pmdu010 = g_pmdu_d[l_ac].pmdu010
+            LET g_pmdu_d_o.pmdu201 = g_pmdu_d[l_ac].pmdu201
+            LET g_pmdu_d_o.pmdu013 = g_pmdu_d[l_ac].pmdu013]]>
+  </point>
+  <point name="input.a.page1.pmdu202" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_pmdu_d[l_ac].pmdu202) THEN
+               IF g_pmdu_d[l_ac].pmdu202 != g_pmdu_d_o.pmdu202 OR cl_null(g_pmdu_d_o.pmdu202) THEN
+                  #IF NOT cl_null(g_pmdu_d[l_ac].pmdu008) THEN    ##150613 by lori mark
+                     LET l_success = ''
+                     LET l_pmdu017 = ''
+                     CALL s_lot_out_effdate(g_pmdu_m.pmdusite, g_pmdu_m.pmdu001, g_pmdu_m.pmdu002,
+                                            g_pmdu_d[l_ac].pmdu202,  g_pmdu_d[l_ac].pmdu008)
+                        RETURNING l_success,l_pmdu017
+                     IF l_success THEN
+                        LET g_pmdu_d[l_ac].pmdu017 = l_pmdu017
+                     END IF
+                  #END IF                                         ##150613 by lori mark
+               END IF
+            END IF
+            LET g_pmdu_d_o.pmdu017 = g_pmdu_d[l_ac].pmdu017
+            LET g_pmdu_d_o.pmdu202 = g_pmdu_d[l_ac].pmdu202
+            CALL apmt860_03_set_entry_b()
+            CALL apmt860_03_set_no_required_b()
+            CALL apmt860_03_set_required_b()
+            CALL apmt860_03_set_no_entry_b()]]>
+  </point>
+  <point name="input.a.page1.pmdudocno" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_pmdu_d[g_detail_idx].pmdudocno IS NOT NULL AND g_pmdu_d[g_detail_idx].pmduseq IS NOT NULL AND g_pmdu_d[g_detail_idx].pmduseq1 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmdu_d[g_detail_idx].pmdudocno != g_pmdu_d_t.pmdudocno OR g_pmdu_d[g_detail_idx].pmduseq != g_pmdu_d_t.pmduseq OR g_pmdu_d[g_detail_idx].pmduseq1 != g_pmdu_d_t.pmduseq1)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmdu_t WHERE "||"pmduent = '" ||g_enterprise|| "' AND "||"pmdudocno = '"||g_pmdu_d[g_detail_idx].pmdudocno ||"' AND "|| "pmduseq = '"||g_pmdu_d[g_detail_idx].pmduseq ||"' AND "|| "pmduseq1 = '"||g_pmdu_d[g_detail_idx].pmduseq1 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.pmduseq" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_pmdu_d[g_detail_idx].pmdudocno IS NOT NULL AND g_pmdu_d[g_detail_idx].pmduseq IS NOT NULL AND g_pmdu_d[g_detail_idx].pmduseq1 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmdu_d[g_detail_idx].pmdudocno != g_pmdu_d_t.pmdudocno OR g_pmdu_d[g_detail_idx].pmduseq != g_pmdu_d_t.pmduseq OR g_pmdu_d[g_detail_idx].pmduseq1 != g_pmdu_d_t.pmduseq1)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmdu_t WHERE "||"pmduent = '" ||g_enterprise|| "' AND "||"pmdudocno = '"||g_pmdu_d[g_detail_idx].pmdudocno ||"' AND "|| "pmduseq = '"||g_pmdu_d[g_detail_idx].pmduseq ||"' AND "|| "pmduseq1 = '"||g_pmdu_d[g_detail_idx].pmduseq1 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.pmduseq1" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_pmdu_m.pmdudocno IS NOT NULL AND g_pmdu_m.pmduseq IS NOT NULL AND g_pmdu_d[l_ac].pmduseq1 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmdu_d[l_ac].pmduseq1 != g_pmdu_d_t.pmduseq1)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmdu_t WHERE "||"pmduent = '" ||g_enterprise|| "' AND "||"pmdudocno = '"||g_pmdu_m.pmdudocno ||"' AND "|| "pmduseq = '"||g_pmdu_m.pmduseq ||"' AND "|| "pmduseq1 = '"||g_pmdu_d[l_ac].pmduseq1 ||"'",'std-00004',0) THEN 
+                     LET g_pmdu_d[l_ac].pmduseq1 = g_pmdu_d_t.pmduseq1
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.after_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #1.確認維護的多庫儲批總數量與單身數量是否一致
+            #  l_type 0.檢查的數量都相同　　　1.出貨數量不相同
+            #         2.出貨包裝數量不相同　　3.允收數量不相同
+            LET l_type = ''
+            CALL apmt860_03_chk_total_num() RETURNING l_type
+            
+            #2.檢查數量是否有錯誤
+            # 把total數，放入回傳值
+            IF l_type = 0 THEN
+               LET r_pmdt020 = g_pmdu_m.pmdt020     #收貨/入庫數量
+               LET r_pmdt053 = g_pmdu_m.pmdt053     #允收數量
+               LET r_pmdt202 = g_pmdu_m.pmdt202     #收貨包裝數量
+            ELSE
+               #3.當有錯誤時詢問使用者
+               # 3-1.依照檢查總數量回傳值，判斷哪個欄位有不相同
+               LET l_field_no = ''
+               CASE l_type
+                  WHEN 1       #出貨數量不相同
+                     LET l_field_no = 'pmdu010'
+                  WHEN 2       #出貨包裝數量不相同
+                     LET l_field_no = 'pmdu201'
+                  WHEN 3       #允收數量不相同
+                     LET l_field_no = 'pmdu013'
+               END CASE
+               
+               # 3-2.取出此作業時的欄位名稱
+               LET l_field_name = ''
+               CALL s_apmt860_get_field_name(l_field_no) RETURNING l_field_name
+               
+               # 3-3.詢問使用者
+               #  錯誤訊息：多庫儲批%1總和需等於單身%1！是否依多庫儲批%1回寫單身%1？
+               #  如回答Y：計算total量
+               #  　　　N：回到該對應的欄位上繼續給使用者維護
+               IF cl_ask_confirm_parm('apm-00771',l_field_name) THEN
+                  LET r_pmdt020 = g_total.pmdu010     #收貨/入庫數量
+                  LET r_pmdt053 = g_total.pmdu013     #允收數量
+                  LET r_pmdt202 = g_total.pmdu201     #收貨包裝數量
+               ELSE
+                  CASE l_type
+                     WHEN 1       #出貨數量不相同
+                        NEXT FIELD pmdu010
+                     WHEN 2       #出貨包裝數量不相同
+                        NEXT FIELD pmdu201
+                     WHEN 3       #允收數量不相同
+                        NEXT FIELD pmdu013
+                  END CASE
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.b.page1.pmdu007" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF cl_null(g_pmdu_d[l_ac].pmdu006) THEN
+               #請先維護庫位
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "asf-00419"
+               LET g_errparam.extend = ""
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               NEXT FIELD pmdu006
+            END IF]]>
+  </point>
+  <point name="input.before_close" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   IF INT_FLAG THEN
+      #須把原本的資料還原
+      LET l_success = ''
+      CALL apmt860_03_reduction() RETURNING l_success
+      LET r_pmdt020 = g_pmdu_m.pmdt020     #收貨/入庫數量
+      LET r_pmdt053 = g_pmdu_m.pmdt053     #允收數量
+      LET r_pmdt202 = g_pmdu_m.pmdt202     #收貨包裝數量
+      
+      IF l_success = FALSE THEN
+         LET r_success = FALSE
+         RETURN r_success,r_pmdt020,r_pmdt053,r_pmdt202
+      END IF
+   END IF]]>
+  </point>
+  <point name="input.before_input" order="" ver="3" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #取前單據限定庫位、限定儲位、限定批號
+            LET g_pmdt016 = ''
+            LET g_pmdt017 = ''
+            LET g_pmdt018 = ''
+            LET g_pmdt063 = ''
+            CALL s_apmt860_before_docno_data(g_pmdu_m.pmdudocno,p_docno,p_seq)
+               RETURNING g_pmdt016,g_pmdt017,g_pmdt018,g_pmdt063
+
+            #此商品編號是否做庫存批號管理
+            LET g_imaf055 = ''
+            LET g_imaf061 = ''
+            CALL s_apmt860_get_imaf(g_pmdu_m.pmdu001) RETURNING g_imaf055,g_imaf061
+            
+            
+         BEFORE ROW
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+
+            LET g_rec_b = g_pmdu_d.getLength()
+
+            IF g_rec_b >= l_ac AND g_pmdu_d[l_ac].pmduseq1 IS NOT NULL THEN
+               LET l_cmd='u'
+               CALL apmt860_03_set_entry_b()
+               CALL apmt860_03_set_no_entry_b()
+               LET g_pmdu_d_t.* = g_pmdu_d[l_ac].*
+               LET g_pmdu_d_o.* = g_pmdu_d[l_ac].*
+               OPEN apmt860_03_bcl USING g_enterprise,g_pmdu_m.pmdudocno,g_pmdu_m.pmduseq,g_pmdu_d[l_ac].pmduseq1
+
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "apmt860_03_bcl"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH apmt860_03_bcl
+                   INTO g_pmdu_d[l_ac].pmduseq1, g_pmdu_d[l_ac].pmdu006,      g_pmdu_d[l_ac].pmdu006_desc,
+                        g_pmdu_d[l_ac].pmdu007,  g_pmdu_d[l_ac].pmdu007_desc, g_pmdu_d[l_ac].pmdu008,
+                        g_pmdu_d[l_ac].pmdu200,  g_pmdu_d[l_ac].pmdu200_desc, g_pmdu_d[l_ac].pmdu201,
+                        g_pmdu_d[l_ac].pmdu009,  g_pmdu_d[l_ac].pmdu009_desc, g_pmdu_d[l_ac].pmdu010,
+                        g_pmdu_d[l_ac].pmdt0261, g_pmdu_d[l_ac].pmdu013,      g_pmdu_d[l_ac].pmdu015,
+                        g_pmdu_d[l_ac].pmdu016
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = g_pmdu_d_t.pmduseq1
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  CALL apmt860_03_b_fill()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd = 'a'
+               #IF NOT apmt860_03_chk_insert_b() THEN
+               #   CANCEL INSERT
+               #END IF
+            END IF
+            CALL apmt860_03_set_entry_b()
+            CALL apmt860_03_set_no_required_b()
+            CALL apmt860_03_set_required_b()
+            CALL apmt860_03_set_no_entry_b()
+            
+         BEFORE INSERT
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_pmdu_d[l_ac].* TO NULL
+            SELECT COALESCE(MAX(pmduseq1),0)+1 INTO g_pmdu_d[l_ac].pmduseq1
+              FROM pmdu_t
+             WHERE pmduent = g_enterprise
+               AND pmdudocno = g_pmdu_m.pmdudocno
+               AND pmduseq = g_pmdu_m.pmduseq
+            
+            #出貨單位
+            LET g_pmdu_d[l_ac].pmdu009 = g_pmdu_m.pmdt019
+            CALL s_desc_get_unit_desc(g_pmdu_d[l_ac].pmdu009) RETURNING g_pmdu_d[l_ac].pmdu009_desc
+            
+            #包裝單位
+            LET g_pmdu_d[l_ac].pmdu200 = g_pmdu_m.pmdt201
+            CALL s_desc_get_unit_desc(g_pmdu_d[l_ac].pmdu200) RETURNING g_pmdu_d[l_ac].pmdu200_desc
+            
+            #允收數量
+            IF g_pmds000 MATCHES '[34567]' AND g_pmdu_m.pmdt026 = 'N' THEN
+               LET g_pmdu_d[l_ac].pmdu013 = 0
+            END IF
+            
+            #驗退量
+            LET g_pmdu_d[l_ac].pmdu015 = 0
+            
+            #檢驗
+            LET g_pmdu_d[l_ac].pmdt0261 = g_pmdu_m.pmdt026
+            
+            #庫存管理特徵
+            LET g_pmdu_d[l_ac].pmdu005 = ' '
+            
+            #如前單據沒有有預設庫位
+            IF cl_null(g_pmdt016) THEN
+               ##庫位預設
+               #CALL s_apmt860_inv_def(p_pmdt001,p_pmdt002,g_pmdu_m.pmdu001)
+               #   RETURNING g_pmdu_d[l_ac].pmdu006
+               #IF NOT apmt860_03_chk_only_warehouse('1',FALSE) THEN
+               #   CANCEL INSERT
+               #END IF
+            ELSE
+               LET g_pmdu_d[l_ac].pmdu006 = g_pmdt016
+               IF NOT apmt860_03_chk_only_warehouse('1',FALSE) THEN
+                  CANCEL INSERT
+               END IF
+            END IF
+            
+            #庫存名稱
+            CALL s_desc_get_stock_desc('',g_pmdu_d[l_ac].pmdu006)
+               RETURNING g_pmdu_d[l_ac].pmdu006_desc
+            
+            #如前單據沒有有預設儲位
+            IF cl_null(g_pmdt017) THEN
+               CALL s_apmt860_get_inaa007(g_pmdu_m.pmdusite,g_pmdu_d[l_ac].pmdu006)
+                  RETURNING l_inaa007
+               IF l_inaa007 = '5' THEN
+                  LET g_pmdu_d[l_ac].pmdu007 = ' '
+               END IF
+            ELSE
+               LET g_pmdu_d[l_ac].pmdu007 = g_pmdt017
+               IF NOT apmt860_03_chk_only_warehouse('1',FALSE) THEN
+                  CANCEL INSERT
+               END IF
+            END IF
+            
+            #如前單據沒有預設批號
+            IF cl_null(g_pmdt018) THEN
+               IF g_imaf061 = '2' THEN
+                  LET g_pmdu_d[l_ac].pmdu008 = ' '
+               END IF
+            ELSE
+               LET g_pmdu_d[l_ac].pmdu008 = g_pmdt018
+               IF NOT apmt860_03_chk_only_warehouse('1',FALSE) THEN
+                  CANCEL INSERT
+               END IF
+            END IF
+            
+            #如前單據沒有預設庫存管理特徵
+            IF cl_null(g_pmdt063) THEN
+               IF g_imaf055 = '2' THEN
+                  LET g_pmdu_d[l_ac].pmdu005 = ' '
+               END IF
+            ELSE
+               LET g_pmdu_d[l_ac].pmdu005 = g_pmdt063
+               IF NOT apmt860_03_chk_only_warehouse('1',FALSE) THEN
+                  CANCEL INSERT
+               END IF
+            END IF
+            
+            #150714-00016#1 By pomelo add(S)
+            IF g_imaa149 MATCHES '[23]' AND NOT cl_null(g_imaa149) THEN
+            #150714-00016#1 By pomelo add(E)
+               #製造日期
+               LET g_pmdu_d[l_ac].pmdu202 = g_pmdsdocdt
+               
+               #有效日期
+               LET l_success = ''
+               LET l_pmdu017 = ''
+               CALL s_lot_out_effdate(g_pmdu_m.pmdusite,      g_pmdu_m.pmdu001,g_pmdu_m.pmdu002,
+                                      g_pmdu_d[l_ac].pmdu202, g_pmdu_d[l_ac].pmdu008)
+                  RETURNING l_success,l_pmdu017
+               LET g_pmdu_d[l_ac].pmdu017 = l_pmdu017
+            END IF                #150714-00016#1 By pomelo add
+            
+            LET g_pmdu_d_t.* = g_pmdu_d[l_ac].*     #新輸入資料
+            LET g_pmdu_d_o.* = g_pmdu_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL apmt860_03_set_entry_b()
+            CALL apmt860_03_set_no_entry_b()
+            
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+            
+            #新增確認時需檢核庫位、儲位、批號、庫存管理特徵至少需一個欄位需要有一個欄位有值
+            IF cl_null(g_pmdu_d[l_ac].pmdu005) AND
+               cl_null(g_pmdu_d[l_ac].pmdu006) AND
+               cl_null(g_pmdu_d[l_ac].pmdu007) AND
+               cl_null(g_pmdu_d[l_ac].pmdu008) THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'apm-00767'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               NEXT FIELD pmdu006
+            END IF
+            
+            #新增時須檢核庫位、儲位、批號，相同的不可以存在兩筆以上
+            LET l_count = 0
+            LET l_sql = "SELECT COUNT(pmduseq1)",
+                        "  FROM pmdu_t",
+                        " WHERE pmduent = ",g_enterprise,
+                        "   AND pmdudocno = '",g_pmdu_m.pmdudocno,"'",
+                        "   AND pmduseq = ",g_pmdu_m.pmduseq,
+                        "   AND COALESCE(pmdu006,' ') = COALESCE('",g_pmdu_d[l_ac].pmdu006,"',' ')",
+                        "   AND COALESCE(pmdu007,' ') = COALESCE('",g_pmdu_d[l_ac].pmdu007,"',' ')",
+                        "   AND COALESCE(pmdu008,' ') = COALESCE('",g_pmdu_d[l_ac].pmdu008,"',' ')"
+            PREPARE apmt860_03_chk_pmdu FROM l_sql
+            EXECUTE apmt860_03_chk_pmdu INTO l_count
+            IF l_count >= 1 THEN
+               #庫位+儲位+批號+庫存管理特徵已存在其中一筆項序中！
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "apm-00774"
+               LET g_errparam.extend = ""
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               NEXT FIELD pmdu006
+            END IF
+            
+            LET l_count = 0
+            SELECT COUNT(pmduseq1) INTO l_count
+              FROM pmdu_t
+             WHERE pmduent = g_enterprise
+               AND pmdudocno = g_pmdu_m.pmdudocno
+               AND pmduseq = g_pmdu_m.pmduseq
+               AND pmduseq1 = g_pmdu_d[l_ac].pmduseq1
+
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN
+            
+               #150601-00009#1 150601 By pomelo add(S)
+               #當為(無)採購收貨單 (無)採購收貨入庫單 且 非多庫儲批
+               IF g_argv[1] MATCHES '[1234]' THEN
+                  LET l_success = ''
+                  CALL s_lot_out_get_batch_no(g_pmdu_m.pmdu001)
+                     RETURNING l_success,g_pmdu_d[l_ac].pmdu008
+                  IF l_success = FALSE THEN
+                     CANCEL INSERT
+                  END IF
+               END IF
+               #150601-00009#1 150601 By pomelo add(E)
+               
+               INSERT INTO pmdu_t(pmduent, pmdusite, pmdudocno, pmduseq, pmduseq1,
+                                  pmdu001, pmdu002,  pmdu003,   pmdu004, pmdu005,
+                                  pmdu006, pmdu007,  pmdu008,   pmdu009, pmdu010,
+                                  pmdu011, pmdu012,  pmdu013,   pmdu014, pmdu015,
+                                  pmdu016, pmdu017,  pmdu200,   pmdu201)
+                VALUES (g_enterprise,           g_pmdu_m.pmdusite,      g_pmdu_m.pmdudocno,     g_pmdu_m.pmduseq,       g_pmdu_d[l_ac].pmduseq1,
+                        g_pmdu_m.pmdu001,       g_pmdu_m.pmdu002,       '',                     '',                     g_pmdu_d[l_ac].pmdu005,
+                        g_pmdu_d[l_ac].pmdu006, g_pmdu_d[l_ac].pmdu007, g_pmdu_d[l_ac].pmdu008, g_pmdu_d[l_ac].pmdu009, g_pmdu_d[l_ac].pmdu010,
+                        '',                     '',                     g_pmdu_d[l_ac].pmdu013, 0,                      0,
+                        g_pmdu_d[l_ac].pmdu016, '',                     g_pmdu_d[l_ac].pmdu200, g_pmdu_d[l_ac].pmdu201)
+            ELSE
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               INITIALIZE g_pmdu_d[l_ac].* TO NULL
+               LET r_success = FALSE
+               CANCEL INSERT
+            END IF
+
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "pmdu_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET r_success = FALSE
+               CANCEL INSERT
+            ELSE
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF      
+            
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' AND g_pmdu_d.getLength() < l_ac THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+               CALL g_pmdu_d.deleteElement(l_ac)
+               NEXT FIELD pmduseq1
+            END IF
+
+            IF g_pmdu_d[l_ac].pmduseq1 IS NOT NULL THEN
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  -263
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               DELETE FROM pmdu_t
+                WHERE pmduent = g_enterprise
+                  AND pmdudocno = g_pmdu_m.pmdudocno 
+                  AND pmduseq = g_pmdu_m.pmduseq
+                  AND pmduseq1 = g_pmdu_d_t.pmduseq1
+
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "pmdu_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET r_success = FALSE
+                  CANCEL DELETE
+               ELSE
+                  LET g_rec_b = g_rec_b - 1
+               END IF
+               CLOSE apmt860_03_bcl
+               LET l_count = g_pmdu_d.getLength()
+            END IF
+            
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_pmdu_d[l_ac].* = g_pmdu_d_t.*
+               CLOSE apmt860_03_bcl
+               LET r_success = FALSE
+               EXIT DIALOG
+            END IF
+            
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = g_pmdu_d[l_ac].pmduseq1
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET g_pmdu_d[l_ac].* = g_pmdu_d_t.*
+            ELSE
+               UPDATE pmdu_t
+                  SET (pmduseq1, pmdu005, pmdu006, pmdu007,
+                       pmdu008,  pmdu009, pmdu010, pmdu013,
+                       pmdu015,  pmdu016, pmdu017, pmdu200,
+                       pmdu201,  pmdu202)
+                    = (g_pmdu_d[l_ac].pmduseq1, g_pmdu_d[l_ac].pmdu005, g_pmdu_d[l_ac].pmdu006, g_pmdu_d[l_ac].pmdu007,
+                       g_pmdu_d[l_ac].pmdu008,  g_pmdu_d[l_ac].pmdu009, g_pmdu_d[l_ac].pmdu010, g_pmdu_d[l_ac].pmdu013,
+                       g_pmdu_d[l_ac].pmdu015,  g_pmdu_d[l_ac].pmdu016, g_pmdu_d[l_ac].pmdu017, g_pmdu_d[l_ac].pmdu200,
+                       g_pmdu_d[l_ac].pmdu201,  g_pmdu_d[l_ac].pmdu202)
+                WHERE pmduent = g_enterprise
+                  AND pmdudocno = g_pmdu_m.pmdudocno 
+                  AND pmduseq = g_pmdu_m.pmduseq
+                  AND pmduseq1 = g_pmdu_d_t.pmduseq1
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = "std-00009"
+                     LET g_errparam.extend = "pmdu_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET r_success = FALSE
+                     LET g_pmdu_d[l_ac].* = g_pmdu_d_t.*
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "pmdu_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_pmdu_d[l_ac].* = g_pmdu_d_t.*
+                     LET r_success = FALSE
+               END CASE
+            END IF               ]]>
+  </point>
+  <point name="input.c.page1.pmdu005" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #開窗i段
+            #倉退時，開有庫存的庫位
+            IF g_argv[1] = '7' THEN
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_pmdu_d[l_ac].pmdu006
+               LET g_qryparam.default2 = g_pmdu_d[l_ac].pmdu007
+               LET g_qryparam.default3 = g_pmdu_d[l_ac].pmdu008
+               LET g_qryparam.default4 = g_pmdu_d[l_ac].pmdu005
+               LET g_qryparam.arg1 = g_pmdu_m.pmdusite  #營運據點
+               LET g_qryparam.arg2 = g_pmdu_m.pmdu001   #商品編號
+               #產品特徵
+               IF cl_null(g_pmdu_m.pmdu002) THEN
+                  LET g_pmdu_m.pmdu002 = ' '
+               END IF
+               LET g_qryparam.arg3 = g_pmdu_m.pmdu002
+               
+               #庫存管理特徵
+               LET g_qryparam.arg4 = ''
+               
+               LET g_qryparam.arg5 = g_pmdu_d[l_ac].pmdu006   #庫位               
+               #儲位
+               IF cl_null(g_pmdu_d[l_ac].pmdu007) THEN
+                  LET g_qryparam.arg6 = ''
+               ELSE
+                  LET g_qryparam.arg6 = g_pmdu_d[l_ac].pmdu007
+               END IF
+               
+               #批號
+               IF cl_null(g_pmdu_d[l_ac].pmdu008) THEN
+                  LET g_qryparam.arg7 = ''
+               ELSE
+                  LET g_qryparam.arg7 = g_pmdu_d[l_ac].pmdu008
+               END IF
+               
+               CALL q_inag004_19()
+               LET g_pmdu_d[l_ac].pmdu006 = g_qryparam.return1   #庫位
+               LET g_pmdu_d[l_ac].pmdu007 = g_qryparam.return2   #儲位
+               LET g_pmdu_d[l_ac].pmdu008 = g_qryparam.return3   #批號
+               LET g_pmdu_d[l_ac].pmdu005 = g_qryparam.return4   #庫存管理特徵
+               DISPLAY g_pmdu_d[l_ac].pmdu006 TO pmdu006
+               DISPLAY g_pmdu_d[l_ac].pmdu007 TO pmdu007
+               DISPLAY g_pmdu_d[l_ac].pmdu008 TO pmdu008
+               DISPLAY g_pmdu_d[l_ac].pmdu005 TO pmdu005
+               #庫位
+               CALL s_desc_get_stock_desc(g_site,g_pmdu_d[l_ac].pmdu006)
+                  RETURNING g_pmdu_d[l_ac].pmdu006_desc
+               #儲位
+               CALL s_desc_get_locator_desc(g_site,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007)
+                  RETURNING g_pmdu_d[l_ac].pmdu007_desc
+               NEXT FIELD pmdu005
+            END IF]]>
+  </point>
+  <point name="input.c.page1.pmdu006" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            
+            #150518-00001#3--add by dongsz--str---
+            #抓取经营方式
+            LET l_pmdt210 = ''
+            SELECT pmdt210 INTO l_pmdt210
+              FROM pmdt_t
+             WHERE pmdtent = g_enterprise
+               AND pmdtdocno = g_pmdu_m.pmdudocno
+               AND pmdtseq = g_pmdu_m.pmduseq
+            #150518-00001#3--add by dongsz--end---
+            
+            #倉退時，開有庫存的庫位
+            IF g_argv[1] = '7' THEN
+               LET g_qryparam.default1 = g_pmdu_d[l_ac].pmdu006
+               LET g_qryparam.default2 = g_pmdu_d[l_ac].pmdu007
+               LET g_qryparam.default3 = g_pmdu_d[l_ac].pmdu008
+               LET g_qryparam.default4 = g_pmdu_d[l_ac].pmdu005
+               LET g_qryparam.arg1 = g_pmdu_m.pmdusite  #營運據點
+               LET g_qryparam.arg2 = g_pmdu_m.pmdu001   #商品編號
+               #產品特徵
+               IF cl_null(g_pmdu_m.pmdu002) THEN
+                  LET g_pmdu_m.pmdu002 = ' '
+               END IF
+               LET g_qryparam.arg3 = g_pmdu_m.pmdu002
+               
+               #庫存管理特徵
+               IF cl_null(g_pmdu_d[l_ac].pmdu005) THEN
+                  LET g_qryparam.arg4 = ''
+               ELSE
+                  LET g_qryparam.arg4 = g_pmdu_d[l_ac].pmdu005
+               END IF
+               LET g_qryparam.arg5 = ''   #庫位               
+               #儲位
+               IF cl_null(g_pmdu_d[l_ac].pmdu007) THEN
+                  LET g_qryparam.arg6 = ''
+               ELSE
+                  LET g_qryparam.arg6 = g_pmdu_d[l_ac].pmdu007
+               END IF
+               
+               #批號
+               IF cl_null(g_pmdu_d[l_ac].pmdu008) THEN
+                  LET g_qryparam.arg7 = ''
+               ELSE
+                  LET g_qryparam.arg7 = g_pmdu_d[l_ac].pmdu008
+               END IF
+               LET g_qryparam.where = s_inaa_ctrlp(l_pmdt210)    #150518-00001#3--add by dongsz
+               
+               CALL q_inag004_19()
+               LET g_pmdu_d[l_ac].pmdu006 = g_qryparam.return1   #庫位
+               LET g_pmdu_d[l_ac].pmdu007 = g_qryparam.return2   #儲位
+               LET g_pmdu_d[l_ac].pmdu008 = g_qryparam.return3   #批號
+               LET g_pmdu_d[l_ac].pmdu005 = g_qryparam.return4   #庫存管理特徵
+               DISPLAY g_pmdu_d[l_ac].pmdu006 TO pmdu006
+               DISPLAY g_pmdu_d[l_ac].pmdu007 TO pmdu007
+               DISPLAY g_pmdu_d[l_ac].pmdu008 TO pmdu008
+               DISPLAY g_pmdu_d[l_ac].pmdu005 TO pmdu005
+               #儲位
+               CALL s_desc_get_locator_desc(g_site,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007)
+                  RETURNING g_pmdu_d[l_ac].pmdu007_desc
+            ELSE
+               LET g_qryparam.default1 = g_pmdu_d[l_ac].pmdu006
+               LET g_qryparam.where = s_inaa_ctrlp(l_pmdt210)    #150518-00001#3--add by dongsz
+               CALL q_inaa001_15()
+               LET g_pmdu_d[l_ac].pmdu006 = g_qryparam.return1
+               DISPLAY g_pmdu_d[l_ac].pmdu006 TO pmdu006
+            END IF
+            #庫位
+            CALL s_desc_get_stock_desc(g_site,g_pmdu_d[l_ac].pmdu006)
+               RETURNING g_pmdu_d[l_ac].pmdu006_desc
+            DISPLAY BY NAME g_pmdu_d[l_ac].pmdu006_desc
+            NEXT FIELD pmdu006]]>
+  </point>
+  <point name="input.c.page1.pmdu007" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            
+
+            #倉退時，開有庫存的庫位
+            IF g_argv[1] = '7' THEN
+               LET g_qryparam.default1 = g_pmdu_d[l_ac].pmdu006
+               LET g_qryparam.default2 = g_pmdu_d[l_ac].pmdu007
+               LET g_qryparam.default3 = g_pmdu_d[l_ac].pmdu008
+               LET g_qryparam.default4 = g_pmdu_d[l_ac].pmdu005
+               LET g_qryparam.arg1 = g_pmdu_m.pmdusite  #營運據點
+               LET g_qryparam.arg2 = g_pmdu_m.pmdu001   #商品編號
+               #產品特徵
+               IF cl_null(g_pmdu_m.pmdu002) THEN
+                  LET g_pmdu_m.pmdu002 = ' '
+               END IF
+               LET g_qryparam.arg3 = g_pmdu_m.pmdu002
+               
+               #庫存管理特徵
+               IF cl_null(g_pmdu_d[l_ac].pmdu005) THEN
+                  LET g_qryparam.arg4 = ''
+               ELSE
+                  LET g_qryparam.arg4 = g_pmdu_d[l_ac].pmdu005
+               END IF
+               LET g_qryparam.arg5 = g_pmdu_d[l_ac].pmdu006   #庫位               
+               #儲位
+               LET g_qryparam.arg6 = ''
+               
+               #批號
+               IF cl_null(g_pmdu_d[l_ac].pmdu008) THEN
+                  LET g_qryparam.arg7 = ''
+               ELSE
+                  LET g_qryparam.arg7 = g_pmdu_d[l_ac].pmdu008
+               END IF
+               
+               CALL q_inag004_19()
+               LET g_pmdu_d[l_ac].pmdu006 = g_qryparam.return1   #庫位
+               LET g_pmdu_d[l_ac].pmdu007 = g_qryparam.return2   #儲位
+               LET g_pmdu_d[l_ac].pmdu008 = g_qryparam.return3   #批號
+               LET g_pmdu_d[l_ac].pmdu005 = g_qryparam.return4   #庫存管理特徵
+               DISPLAY g_pmdu_d[l_ac].pmdu006 TO pmdu006
+               DISPLAY g_pmdu_d[l_ac].pmdu007 TO pmdu007
+               DISPLAY g_pmdu_d[l_ac].pmdu008 TO pmdu008
+               DISPLAY g_pmdu_d[l_ac].pmdu005 TO pmdu005
+               #庫位
+               CALL s_desc_get_stock_desc(g_site,g_pmdu_d[l_ac].pmdu006)
+                  RETURNING g_pmdu_d[l_ac].pmdu006_desc
+            ELSE
+               LET g_qryparam.default1 = g_pmdu_d[l_ac].pmdu007
+               LET g_qryparam.arg1 = g_pmdu_d[l_ac].pmdu006    #限定庫位
+               CALL q_inab002_3()
+               LET g_pmdu_d[l_ac].pmdu007 = g_qryparam.return1
+               DISPLAY g_pmdu_d[l_ac].pmdu007 TO pmdu007
+            END IF
+            #儲位
+            CALL s_desc_get_locator_desc(g_site,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007)
+               RETURNING g_pmdu_d[l_ac].pmdu007_desc
+            DISPLAY BY NAME g_pmdu_d[l_ac].pmdu007_desc
+            NEXT FIELD pmdu007]]>
+  </point>
+  <point name="input.c.page1.pmdu008" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #開窗i段
+            #倉退時，開有庫存的庫位
+            IF g_argv[1] = '7' THEN
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_pmdu_d[l_ac].pmdu006
+               LET g_qryparam.default2 = g_pmdu_d[l_ac].pmdu007
+               LET g_qryparam.default3 = g_pmdu_d[l_ac].pmdu008
+               LET g_qryparam.default4 = g_pmdu_d[l_ac].pmdu005
+               LET g_qryparam.arg1 = g_pmdu_m.pmdusite  #營運據點
+               LET g_qryparam.arg2 = g_pmdu_m.pmdu001   #商品編號
+               #產品特徵
+               IF cl_null(g_pmdu_m.pmdu002) THEN
+                  LET g_pmdu_m.pmdu002 = ' '
+               END IF
+               LET g_qryparam.arg3 = g_pmdu_m.pmdu002
+               
+               #庫存管理特徵
+               IF cl_null(g_pmdu_d[l_ac].pmdu005) THEN
+                  LET g_qryparam.arg4 = ''
+               ELSE
+                  LET g_qryparam.arg4 = g_pmdu_d[l_ac].pmdu005
+               END IF
+               LET g_qryparam.arg5 = g_pmdu_d[l_ac].pmdu006   #庫位               
+               #儲位
+               IF cl_null(g_pmdu_d[l_ac].pmdu007) THEN
+                  LET g_qryparam.arg6 = ''
+               ELSE
+                  LET g_qryparam.arg6 = g_pmdu_d[l_ac].pmdu007
+               END IF
+               
+               #批號
+               LET g_qryparam.arg7 = ''
+               
+               CALL q_inag004_19()
+               LET g_pmdu_d[l_ac].pmdu006 = g_qryparam.return1   #庫位
+               LET g_pmdu_d[l_ac].pmdu007 = g_qryparam.return2   #儲位
+               LET g_pmdu_d[l_ac].pmdu008 = g_qryparam.return3   #批號
+               LET g_pmdu_d[l_ac].pmdu005 = g_qryparam.return4   #庫存管理特徵
+               DISPLAY g_pmdu_d[l_ac].pmdu006 TO pmdu006
+               DISPLAY g_pmdu_d[l_ac].pmdu007 TO pmdu007
+               DISPLAY g_pmdu_d[l_ac].pmdu008 TO pmdu008
+               DISPLAY g_pmdu_d[l_ac].pmdu005 TO pmdu005
+               #庫位
+               CALL s_desc_get_stock_desc(g_site,g_pmdu_d[l_ac].pmdu006)
+                  RETURNING g_pmdu_d[l_ac].pmdu006_desc
+               #儲位
+               CALL s_desc_get_locator_desc(g_site,g_pmdu_d[l_ac].pmdu006,g_pmdu_d[l_ac].pmdu007)
+                  RETURNING g_pmdu_d[l_ac].pmdu007_desc
+               NEXT FIELD pmdu008
+            END IF]]>
+  </point>
+  <point name="input.c.page1.pmdu009" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.c.page1.pmdu011" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.cancel" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.define" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE p_pmdtdocno     LIKE pmdt_t.pmdtdocno   #單據編號
+   DEFINE p_pmdtseq       LIKE pmdt_t.pmdtseq     #項次
+   DEFINE p_pmdtsite      LIKE pmdt_t.pmdtsite    #營運據點
+   DEFINE p_pmdt006       LIKE pmdt_t.pmdt006     #商品編號
+   DEFINE p_pmdt007       LIKE pmdt_t.pmdt007     #產品特徵
+   DEFINE p_pmdt019       LIKE pmdt_t.pmdt019     #收貨/入庫單位
+   DEFINE p_pmdt020       LIKE pmdt_t.pmdt020     #收貨/入庫數量
+   DEFINE p_pmdt026       LIKE pmdt_t.pmdt026     #檢驗
+   DEFINE p_pmdt053       LIKE pmdt_t.pmdt053     #允收數量
+   DEFINE p_pmdt201       LIKE pmdt_t.pmdt201     #收貨包裝單位
+   DEFINE p_pmdt202       LIKE pmdt_t.pmdt202     #收貨包裝數量
+   DEFINE p_pmdt001       LIKE pmdt_t.pmdt001     #訂單單號(庫位預設apmti830設定需要)
+   DEFINE p_pmdt002       LIKE pmdt_t.pmdt002     #訂單項次(庫位預設apmti830設定需要)
+   DEFINE p_total_pmdt020 LIKE pmdt_t.pmdt020     #該項次可以輸入的最大數量
+   DEFINE p_docno         LIKE pmdt_t.pmdt001     #前單據單號
+   DEFINE p_seq           LIKE pmdt_t.pmdt002     #前單據項次
+   DEFINE r_success       LIKE type_t.num5        #True/False
+   DEFINE r_pmdt020       LIKE pmdt_t.pmdt020     #收貨/入庫數量
+   DEFINE r_pmdt053       LIKE pmdt_t.pmdt053     #允收數量
+   DEFINE r_pmdt202       LIKE pmdt_t.pmdt202     #收貨包裝數量
+   
+   DEFINE l_inaa007       LIKE inaa_t.inaa007     #庫位是否做儲位控管
+   DEFINE l_pmdu017       LIKE pmdu_t.pmdu017     #有效日期
+   DEFINE l_sql           STRING
+   DEFINE l_lock_sw       LIKE type_t.chr1
+   DEFINE l_n             LIKE type_t.num5
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_type          LIKE type_t.num5        #檢查多庫儲批總數量與單身數量是否相同 flag
+   DEFINE l_field_name    LIKE type_t.chr100      #欄位名稱
+   DEFINE l_field_no      LIKE type_t.chr100      #欄位代碼
+   DEFINE l_pmdt210       LIKE pmdt_t.pmdt210     #150518-00001#3--add by dongsz]]>
+  </point>
+  <point name="input.g.page1.pmdu006" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL apmt860_03_set_entry_b()
+            CALL apmt860_03_set_no_entry_b()]]>
+  </point>
+  <point name="input.g.page1.pmdu010" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL apmt860_03_set_entry_b()
+            CALL apmt860_03_set_no_entry_b()]]>
+  </point>
+  <point name="input.g.page1.pmdu201" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL apmt860_03_set_entry_b()
+            CALL apmt860_03_set_no_entry_b()]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   p_pmdtdocno,    #單據編號
+   p_pmdtseq,      #項次
+   p_pmdtsite,     #營運據點
+   p_pmdt006,      #商品編號
+   p_pmdt007,      #產品特徵
+   p_pmdt019,      #收貨/入庫單位
+   p_pmdt020,      #收貨/入庫數量
+   p_pmdt026,      #檢驗
+   p_pmdt053,      #允收數量
+   p_pmdt201,      #收貨包裝單位
+   p_pmdt202,      #收貨包裝數量
+   p_pmdt001,      #訂單單號(庫位預設apmti830設定需要)
+   p_pmdt002,      #訂單項次(庫位預設apmti830設定需要)
+   p_total_pmdt020,#該項次可以輸入的最大數量
+   p_docno,        #前單據單號
+   p_seq           #前單據項次]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET INT_FLAG = FALSE
+   RETURN r_success,r_pmdt020,r_pmdt053,r_pmdt202]]>
+  </point>
+  <point name="input.pre_input" order="" ver="3" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+   LET r_pmdt020 = 0     #收貨/入庫數量
+   LET r_pmdt053 = 0     #允收數量
+   LET r_pmdt202 = 0     #收貨包裝數量
+   LET g_errshow = 1
+   
+   #必須包在transaction裡面
+   IF NOT s_transaction_chk('Y',1) THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #0.當為採購驗退單 或 採購退廠單 只能修改數量，不可新增、刪除
+   LET g_docno = p_docno
+   LET g_total_pmdt020 = p_total_pmdt020
+   LET g_imaa149 = s_apmt860_get_imaa149(p_pmdt006)
+   IF g_argv[1] = '5' AND NOT cl_null(g_docno) THEN
+      LET l_allow_insert = FALSE
+      LET l_allow_delete = FALSE
+   END IF
+    
+   #1.單頭欄位值顯示
+   LET g_pmdu_m.pmdudocno = p_pmdtdocno   #單據編號
+   LET g_pmdu_m.pmduseq = p_pmdtseq       #項次
+   LET g_pmdu_m.pmdusite = p_pmdtsite     #營運據點
+   LET g_pmdu_m.pmdu001 = p_pmdt006       #商品編號
+   LET g_pmdu_m.pmdu002 = p_pmdt007       #產品特徵
+   LET g_pmdu_m.pmdt019 = p_pmdt019       #收貨/入庫單位
+   LET g_pmdu_m.pmdt020 = p_pmdt020       #收貨/入庫數量
+   LET g_pmdu_m.pmdt026 = p_pmdt026       #檢驗
+   LET g_pmdu_m.pmdt053 = p_pmdt053       #允收數量
+   LET g_pmdu_m.pmdt201 = p_pmdt201       #收貨包裝單位
+   LET g_pmdu_m.pmdt202 = p_pmdt202       #收貨包裝數量
+   CALL apmt860_03_master_show()
+
+   #2.Copy pmdu_t To apmt860_03_temp
+   #當使用者放棄時，可以還原原本資料
+   LET l_success = ''
+   CALL apmt860_03_copy_pmdu_t() RETURNING l_success
+   IF l_success = FALSE THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #3.準備lock SQL
+   LET l_sql = "SELECT pmduseq1, pmdu006, '', pmdu007, '',",
+               "       pmdu008,  pmdu200, '', pmdu201, pmdu009,",
+               "       '',       pmdu010, '', pmdu013, pmdu015,",
+               "       pmdu016",
+               "  FROM pmdu_t",
+               " WHERE pmduent = ?",
+               "   AND pmdudocno = ?",
+               "   AND pmduseq = ?",
+               "   AND pmduseq1 = ? FOR UPDATE"
+   LET l_sql = cl_sql_forupd(l_sql)                #轉換不同資料庫語法
+   LET l_sql = cl_sql_add_mask(l_sql)
+   DECLARE apmt860_03_bcl CURSOR FROM l_sql
+   
+   #4.取的單據性質
+   LET g_pmds000 = ''
+   LET g_pmdsdocdt = ''
+   SELECT pmds000,pmdsdocdt INTO g_pmds000,g_pmdsdocdt
+     FROM pmds_t
+    WHERE pmdsent = g_enterprise
+      AND pmdsdocno = g_pmdu_m.pmdudocno          
+   
+   #5.單身欄位隱藏
+   CALL apmt860_03_set_comp_visible_b()
+   
+   #6.顯示單身已經有的資料
+   CALL apmt860_03_b_fill()
+   
+   #7.維護單身資料]]>
+  </point>
+  <point name="show.body.reference" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmdu_d[l_ac].pmdu006
+            CALL ap_ref_array2(g_ref_fields,"SELECT inaa002 FROM inaa_t WHERE inaaent='"||g_enterprise||"' AND inaa=? ","") RETURNING g_rtn_fields
+            LET g_pmdu_d[l_ac].pmdu006_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pmdu_d[l_ac].pmdu006_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmdu_d[l_ac].pmdu006
+            LET g_ref_fields[2] = g_pmdu_d[l_ac].pmdu007
+            CALL ap_ref_array2(g_ref_fields,"SELECT inab003 FROM inab_t WHERE inabent='"||g_enterprise||"' AND inab001=? AND inab002=? ","") RETURNING g_rtn_fields
+            LET g_pmdu_d[l_ac].pmdu007_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pmdu_d[l_ac].pmdu007_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmdu_d[l_ac].pmdu009
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_pmdu_d[l_ac].pmdu009_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pmdu_d[l_ac].pmdu009_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmdu_d[l_ac].pmdu011
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_pmdu_d[l_ac].pmdu011_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pmdu_d[l_ac].pmdu011_desc
+]]>
+  </point>
+  <section id="apmt860_03.description" ver="32" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:3,PR版次:3) Build-000059
+#+ 
+#+ Filename...: apmt860_03
+#+ Description: 多庫儲批收貨
+#+ Creator....: 04226(2015-01-05 17:47:01)
+#+ Modifier...: 04226(2015-06-01 14:53:07) -SD/PR-
+]]>
+  </section>
+  <section id="apmt860_03.global" ver="12" status="" src="s" readonly="">
+    <![CDATA[#應用 c02b 樣板自動產生(Version:5)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_pmdu_d        RECORD
+       pmduseq1 LIKE pmdu_t.pmduseq1, 
+   pmdu006 LIKE pmdu_t.pmdu006, 
+   pmdu006_desc LIKE type_t.chr500, 
+   pmdu007 LIKE pmdu_t.pmdu007, 
+   pmdu007_desc LIKE type_t.chr500, 
+   pmdu008 LIKE pmdu_t.pmdu008, 
+   pmdu005 LIKE pmdu_t.pmdu005, 
+   pmdu200 LIKE pmdu_t.pmdu200, 
+   pmdu200_desc LIKE type_t.chr500, 
+   pmdu201 LIKE pmdu_t.pmdu201, 
+   pmdu009 LIKE pmdu_t.pmdu009, 
+   pmdu009_desc LIKE type_t.chr500, 
+   pmdu010 LIKE pmdu_t.pmdu010, 
+   pmdt0261 LIKE type_t.chr1, 
+   pmdu013 LIKE pmdu_t.pmdu013, 
+   pmdu015 LIKE pmdu_t.pmdu015, 
+   pmdu202 LIKE pmdu_t.pmdu202, 
+   pmdu017 LIKE pmdu_t.pmdu017, 
+   pmdu016 LIKE pmdu_t.pmdu016
+       END RECORD
+ 
+ 
+DEFINE g_pmdu_d          DYNAMIC ARRAY OF type_g_pmdu_d
+DEFINE g_pmdu_d_t        type_g_pmdu_d
+ 
+ 
+DEFINE g_pmdudocno_t   LIKE pmdu_t.pmdudocno    #Key值備份
+DEFINE g_pmduseq_t      LIKE pmdu_t.pmduseq    #Key值備份
+DEFINE g_pmduseq1_t      LIKE pmdu_t.pmduseq1    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+    
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point    
+]]>
+  </section>
+  <section id="apmt860_03.input" ver="16" status="" src="s" readonly="">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION apmt860_03(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define" edit="s"/>}
+   #end add-point
+   #add-point:input段define
+   {<point name="input.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_apmt860_03 WITH FORM cl_ap_formpath("apm","apmt860_03")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_pmdu_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmduseq1
+            #add-point:BEFORE FIELD pmduseq1
+            {<point name="input.b.page1.pmduseq1" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmduseq1
+            
+            #add-point:AFTER FIELD pmduseq1
+            {<point name="input.a.page1.pmduseq1" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE pmduseq1
+            #add-point:ON CHANGE pmduseq1
+            {<point name="input.g.page1.pmduseq1" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmdu006
+            
+            #add-point:AFTER FIELD pmdu006
+            {<point name="input.a.page1.pmdu006" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmdu006
+            #add-point:BEFORE FIELD pmdu006
+            {<point name="input.b.page1.pmdu006" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE pmdu006
+            #add-point:ON CHANGE pmdu006
+            {<point name="input.g.page1.pmdu006" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmdu007
+            
+            #add-point:AFTER FIELD pmdu007
+            {<point name="input.a.page1.pmdu007" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmdu007
+            #add-point:BEFORE FIELD pmdu007
+            {<point name="input.b.page1.pmdu007" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE pmdu007
+            #add-point:ON CHANGE pmdu007
+            {<point name="input.g.page1.pmdu007" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmdu008
+            #add-point:BEFORE FIELD pmdu008
+            {<point name="input.b.page1.pmdu008" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmdu008
+            
+            #add-point:AFTER FIELD pmdu008
+            {<point name="input.a.page1.pmdu008" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE pmdu008
+            #add-point:ON CHANGE pmdu008
+            {<point name="input.g.page1.pmdu008" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmdu005
+            #add-point:BEFORE FIELD pmdu005
+            {<point name="input.b.page1.pmdu005" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmdu005
+            
+            #add-point:AFTER FIELD pmdu005
+            {<point name="input.a.page1.pmdu005" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE pmdu005
+            #add-point:ON CHANGE pmdu005
+            {<point name="input.g.page1.pmdu005" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmdu200
+            
+            #add-point:AFTER FIELD pmdu200
+            {<point name="input.a.page1.pmdu200" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmdu200
+            #add-point:BEFORE FIELD pmdu200
+            {<point name="input.b.page1.pmdu200" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE pmdu200
+            #add-point:ON CHANGE pmdu200
+            {<point name="input.g.page1.pmdu200" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmdu201
+            #add-point:BEFORE FIELD pmdu201
+            {<point name="input.b.page1.pmdu201" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmdu201
+            
+            #add-point:AFTER FIELD pmdu201
+            {<point name="input.a.page1.pmdu201" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE pmdu201
+            #add-point:ON CHANGE pmdu201
+            {<point name="input.g.page1.pmdu201" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmdu009
+            
+            #add-point:AFTER FIELD pmdu009
+            {<point name="input.a.page1.pmdu009" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmdu009
+            #add-point:BEFORE FIELD pmdu009
+            {<point name="input.b.page1.pmdu009" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE pmdu009
+            #add-point:ON CHANGE pmdu009
+            {<point name="input.g.page1.pmdu009" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmdu010
+            #應用 a15 樣板自動產生(Version:2)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pmdu_d[l_ac].pmdu010,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD pmdu010
+            END IF 
+ 
+ 
+            #add-point:AFTER FIELD pmdu010
+            {<point name="input.a.page1.pmdu010" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmdu010
+            #add-point:BEFORE FIELD pmdu010
+            {<point name="input.b.page1.pmdu010" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE pmdu010
+            #add-point:ON CHANGE pmdu010
+            {<point name="input.g.page1.pmdu010" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmdt0261
+            #add-point:BEFORE FIELD pmdt0261
+            {<point name="input.b.page1.pmdt0261" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmdt0261
+            
+            #add-point:AFTER FIELD pmdt0261
+            {<point name="input.a.page1.pmdt0261" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE pmdt0261
+            #add-point:ON CHANGE pmdt0261
+            {<point name="input.g.page1.pmdt0261" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmdu013
+            #add-point:BEFORE FIELD pmdu013
+            {<point name="input.b.page1.pmdu013" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmdu013
+            
+            #add-point:AFTER FIELD pmdu013
+            {<point name="input.a.page1.pmdu013" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE pmdu013
+            #add-point:ON CHANGE pmdu013
+            {<point name="input.g.page1.pmdu013" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmdu015
+            #add-point:BEFORE FIELD pmdu015
+            {<point name="input.b.page1.pmdu015" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmdu015
+            
+            #add-point:AFTER FIELD pmdu015
+            {<point name="input.a.page1.pmdu015" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE pmdu015
+            #add-point:ON CHANGE pmdu015
+            {<point name="input.g.page1.pmdu015" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmdu202
+            #add-point:BEFORE FIELD pmdu202
+            {<point name="input.b.page1.pmdu202" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmdu202
+            
+            #add-point:AFTER FIELD pmdu202
+            {<point name="input.a.page1.pmdu202" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE pmdu202
+            #add-point:ON CHANGE pmdu202
+            {<point name="input.g.page1.pmdu202" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmdu017
+            #add-point:BEFORE FIELD pmdu017
+            {<point name="input.b.page1.pmdu017" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmdu017
+            
+            #add-point:AFTER FIELD pmdu017
+            {<point name="input.a.page1.pmdu017" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE pmdu017
+            #add-point:ON CHANGE pmdu017
+            {<point name="input.g.page1.pmdu017" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmdu016
+            #add-point:BEFORE FIELD pmdu016
+            {<point name="input.b.page1.pmdu016" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmdu016
+            
+            #add-point:AFTER FIELD pmdu016
+            {<point name="input.a.page1.pmdu016" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE pmdu016
+            #add-point:ON CHANGE pmdu016
+            {<point name="input.g.page1.pmdu016" />}
+            #END add-point 
+ 
+ 
+                  #Ctrlp:input.c.page1.pmduseq1
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD pmduseq1
+            #add-point:ON ACTION controlp INFIELD pmduseq1
+            {<point name="input.c.page1.pmduseq1" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.pmdu006
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD pmdu006
+            #add-point:ON ACTION controlp INFIELD pmdu006
+            {<point name="input.c.page1.pmdu006" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.pmdu007
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD pmdu007
+            #add-point:ON ACTION controlp INFIELD pmdu007
+            {<point name="input.c.page1.pmdu007" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.pmdu008
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD pmdu008
+            #add-point:ON ACTION controlp INFIELD pmdu008
+            {<point name="input.c.page1.pmdu008" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.pmdu005
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD pmdu005
+            #add-point:ON ACTION controlp INFIELD pmdu005
+            {<point name="input.c.page1.pmdu005" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.pmdu200
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD pmdu200
+            #add-point:ON ACTION controlp INFIELD pmdu200
+            {<point name="input.c.page1.pmdu200" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.pmdu201
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD pmdu201
+            #add-point:ON ACTION controlp INFIELD pmdu201
+            {<point name="input.c.page1.pmdu201" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.pmdu009
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD pmdu009
+            #add-point:ON ACTION controlp INFIELD pmdu009
+            {<point name="input.c.page1.pmdu009" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.pmdu010
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD pmdu010
+            #add-point:ON ACTION controlp INFIELD pmdu010
+            {<point name="input.c.page1.pmdu010" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.pmdt0261
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD pmdt0261
+            #add-point:ON ACTION controlp INFIELD pmdt0261
+            {<point name="input.c.page1.pmdt0261" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.pmdu013
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD pmdu013
+            #add-point:ON ACTION controlp INFIELD pmdu013
+            {<point name="input.c.page1.pmdu013" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.pmdu015
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD pmdu015
+            #add-point:ON ACTION controlp INFIELD pmdu015
+            {<point name="input.c.page1.pmdu015" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.pmdu202
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD pmdu202
+            #add-point:ON ACTION controlp INFIELD pmdu202
+            {<point name="input.c.page1.pmdu202" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.pmdu017
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD pmdu017
+            #add-point:ON ACTION controlp INFIELD pmdu017
+            {<point name="input.c.page1.pmdu017" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.pmdu016
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD pmdu016
+            #add-point:ON ACTION controlp INFIELD pmdu016
+            {<point name="input.c.page1.pmdu016" />}
+            #END add-point
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...)
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel
+         {<point name="input.cancel"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_apmt860_03 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apmt860_03.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="apmt860_03.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

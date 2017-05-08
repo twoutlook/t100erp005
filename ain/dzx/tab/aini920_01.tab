@@ -1,0 +1,106 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aini920_01" module="ain" jobmode="N" type="c03a" industry="std" fix_arg="0" crtid="01534" crtdt="2015-12-24 14:45:13" modid="01534" moddt="2015-12-29 11:48:12" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="inpo001,inpo002,inpo003,inpo004,inpo006,inpo007,inposite"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="inpp002,inpp002_desc(chr500),inpp004"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="inpu003,inpu004,inpu005,inpu006,inpu007"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="aini920_01" method="dialog">
+    <section id="input">
+      <input id="head" field="inpo001,inpo002,inpo003,inpo004,inpo006,inpo007,inposite"/>
+      <input id="body" page="1" field="inpp002,inpp004" insert="N" append="N" delete="N"/>
+      <input id="body" page="2" field="inpu003,inpu004,inpu005,inpu006,inpu007" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="inpo001,inpo002,inpo003,inpo004,inpo006,inpo007,inposite"/>
+      <construct id="body" page="1" field="inpp002,inpp004"/>
+      <construct id="body" page="2" field="inpu003,inpu004,inpu005,inpu006,inpu007"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="inposite,inpo001"/>
+      <set id="head" type="no_entry" field="inposite,inpo001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="inpo001"/>
+      <column id="inpo002"/>
+      <column id="inpo003"/>
+      <column id="inpo004"/>
+      <column id="inpo006" type="S" default="0"/>
+      <column id="inpo007" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="inposite"/>
+    </init>
+    <init id="body" page="1">
+      <column id="inpp002">
+        <after/>
+      </column>
+      <column id="inpp002_desc"/>
+      <column id="inpp004" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="inpu003">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="inpu004">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="inpu005">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="inpu006">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="inpu007" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="inpo_t" pk="inposite,inpo001">
+      <sql id="forupd_sql" type="sql" query="SELECT inpo001,inpo002,inpo003,inpo004,inpo006,inpo007,inposite FROM inpo_t WHERE inpoent= ? AND inposite=? AND inpo001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT inpo001,inpo002,inpo003,inpo004,inpo006,inpo007,inposite FROM inpo_t" order="inposite,inpo001"/>
+    </head>
+    <body id="inpp_t" page="1" linked="" pk="inpp002" fk="inppsite,inpp001">
+      <sql id="forupd_sql_detail" query="SELECT inpp002,&apos;&apos;,inpp004 FROM inpp_t WHERE inppent=? AND inppsite=? AND inpp001=? AND inpp002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT inpp002,&apos;&apos;,inpp004 FROM inpp_t WHERE "/>
+    </body>
+    <body id="inpu_t" page="2" linked="" detail="Y" master="inpp_t" default_site="Y" pk="inpu003,inpu004,inpu005,inpu006" fk="inpusite,inpu001,inpu002">
+      <sql id="forupd_sql_detail" query="SELECT inpu003,inpu004,inpu005,inpu006,inpu007 FROM inpu_t WHERE inpuent=? AND inpusite=? AND inpu001=? AND inpu002=? AND inpu003=? AND inpu004=? AND inpu005=? AND inpu006=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT inpu003,inpu004,inpu005,inpu006,inpu007 FROM inpu_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

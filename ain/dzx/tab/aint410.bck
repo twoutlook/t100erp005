@@ -1,0 +1,181 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aint410" module="ain" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="06189" crtdt="2015-02-07 15:42:56" modid="02159" moddt="2015-07-24 16:15:24" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="貨架編號申請作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="infasite,infasite_desc(chr80),infadocdt,infadocno,infa001,infa005,infa005_desc(chr80),infa002,infa002_desc(chr80),infa003,infa003_desc(chr80),infa004,infa004_desc(chr80),infaunit,infastus,infaownid,infaownid_desc(chr80),infaowndp,infaowndp_desc(chr80),infacrtid,infacrtid_desc(chr80),infacrtdp,infacrtdp_desc(chr80),infacrtdt,infamodid,infamodid_desc(chr80),infamoddt,infacnfid,infacnfid_desc(chr80),infacnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="infbseq,infb001,infb002,infb002_desc(chr500),infb003,infb004,infb005,infb006,infb007,infb008,infbstus,infbsite"/>
+      <var id="bs_field" value="infasite,infasite_desc(chr80),infadocdt,infadocno,infa001,infa002,infa002_desc(chr80),infa003,infa003_desc(chr80),infa004,infa004_desc(chr80)" pk="infadocno" order=""/>
+      <bs_reference field="infasite_desc" ref_field="infasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="infa002_desc" ref_field="infa002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2116&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+      <bs_reference field="infa003_desc" ref_field="infa003" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="infa004_desc" ref_field="infa004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="prog_infa003" lib="cl_user_contact" parameter="&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;,g_infa_m.infa003"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="aint410" method="dialog">
+    <section id="input">
+      <input id="head" field="infasite,infadocdt,infadocno,infa001,infa005,infa002,infa003,infa004,infaunit,infastus"/>
+      <input id="body" page="1" field="infbseq,infb001,infb002,infb003,infb004,infb005,infb006,infb007,infb008,infbstus,infbsite" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="infasite,infadocdt,infadocno,infa001,infa005,infa002,infa003,infa004,infaunit,infastus,infaownid,infaowndp,infacrtid,infacrtdp,infacrtdt,infamodid,infamoddt,infacnfid,infacnfdt"/>
+      <construct id="body" page="1" field="infbseq,infb001,infb002,infb003,infb004,infb005,infb006,infb007,infb008,infbstus,infbsite"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="infadocno"/>
+      <set id="head" type="no_entry" field="infadocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="infasite">
+        <after>
+          <reference field="infasite_desc" ref_field="infa_t.infasite" map_field="infaent,infasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="infasite_desc"/>
+      <column id="infadocdt"/>
+      <column id="infadocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_infadocno" state="c"/>
+      </column>
+      <column id="infa001"/>
+      <column id="infa005">
+        <after>
+          <check chkid="v_rtax001_3" id="isExist"/>
+          <reference field="infa005_desc" ref_field="infa_t.infa005" map_field="infaent,infa005" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001_4" state="i"/>
+        <controlp form="q_rtax001_4" state="c"/>
+      </column>
+      <column id="infa005_desc"/>
+      <column id="infa002">
+        <after>
+          <reference field="infa002_desc" ref_field="infa002" map_field="infa002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2116&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="infa002_desc"/>
+      <column id="infa003">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="infa003_desc" ref_field="infa_t.infa003" map_field="infa003" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_6" state="i"/>
+        <controlp form="q_ooag001_6" state="c"/>
+      </column>
+      <column id="infa003_desc"/>
+      <column id="infa004">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="infa004_desc" ref_field="infa_t.infa004" map_field="infaent,infa004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="infa004_desc"/>
+      <column id="infaunit"/>
+      <column id="infastus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="infaownid">
+        <after>
+          <reference field="infaownid_desc" ref_field="infa_t.infaownid" map_field="infaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="infaownid_desc"/>
+      <column id="infaowndp">
+        <after>
+          <reference field="infaowndp_desc" ref_field="infa_t.infaowndp" map_field="infaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="infaowndp_desc"/>
+      <column id="infacrtid">
+        <after>
+          <reference field="infacrtid_desc" ref_field="infa_t.infacrtid" map_field="infacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="infacrtid_desc"/>
+      <column id="infacrtdp">
+        <after>
+          <reference field="infacrtdp_desc" ref_field="infa_t.infacrtdp" map_field="infacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="infacrtdp_desc"/>
+      <column id="infacrtdt"/>
+      <column id="infamodid">
+        <after>
+          <reference field="infamodid_desc" ref_field="infa_t.infamodid" map_field="infamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="infamodid_desc"/>
+      <column id="infamoddt"/>
+      <column id="infacnfid">
+        <after>
+          <reference field="infacnfid_desc" ref_field="infa_t.infacnfid" map_field="infacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="infacnfid_desc"/>
+      <column id="infacnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="infbseq"/>
+      <column id="infb001">
+        <controlp form="q_infc001" state="i"/>
+        <controlp form="q_infc001" state="c"/>
+      </column>
+      <column id="infb002">
+        <after>
+          <reference field="infb002_desc" ref_field="infb002" map_field="infb002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2116&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="infb002_desc"/>
+      <column id="infb003"/>
+      <column id="infb004"/>
+      <column id="infb005"/>
+      <column id="infb006"/>
+      <column id="infb007"/>
+      <column id="infb008"/>
+      <column id="infbstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="infbsite"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="infa_t" pk="infadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT infasite,&apos;&apos;,infadocdt,infadocno,infa001,infa005,&apos;&apos;,infa002,&apos;&apos;,infa003,&apos;&apos;,infa004,&apos;&apos;,infaunit,infastus,infaownid,&apos;&apos;,infaowndp,&apos;&apos;,infacrtid,&apos;&apos;,infacrtdp,&apos;&apos;,infacrtdt,infamodid,&apos;&apos;,infamoddt,infacnfid,&apos;&apos;,infacnfdt FROM infa_t WHERE infaent= ? AND infadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT infasite,&apos;&apos;,infadocdt,infadocno,infa001,infa005,&apos;&apos;,infa002,&apos;&apos;,infa003,&apos;&apos;,infa004,&apos;&apos;,infaunit,infastus,infaownid,&apos;&apos;,infaowndp,&apos;&apos;,infacrtid,&apos;&apos;,infacrtdp,&apos;&apos;,infacrtdt,infamodid,&apos;&apos;,infamoddt,infacnfid,&apos;&apos;,infacnfdt FROM infa_t" order="infadocno"/>
+    </head>
+    <body id="infb_t" page="1" linked="" pk="infbseq" fk="infbdocno">
+      <sql id="forupd_sql_detail" query="SELECT infbseq,infb001,infb002,&apos;&apos;,infb003,infb004,infb005,infb006,infb007,infb008,infbstus,infbsite FROM infb_t WHERE infbent=? AND infbdocno=? AND infbseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT infbseq,infb001,infb002,&apos;&apos;,infb003,infb004,infb005,infb006,infb007,infb008,infbstus,infbsite FROM infb_t WHERE infbent=? AND infbdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

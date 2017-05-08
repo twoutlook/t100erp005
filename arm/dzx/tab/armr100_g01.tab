@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="armr100_g01" module="arm" jobmode="N" type="g01" industry="std" crtid="05423" crtdt="2015-07-20 14:07:06" modid="05423" moddt="2015-07-21 14:06:34" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.pr(chr1|列印點收資訊)">
+    <var seq="1" value="rmaa001,rmaa002,rmaa003,rmaa004,rmaa005,rmaa006,rmaa007,rmaa008,rmaadocdt,rmaadocno,rmaaent,rmaasite,rmaastus,rmab001,rmab002,rmab003,rmab004,l_rmab003(chr50|trim(rmab003)||&apos;/&apos;||trim(rmab004)),l_rmab003_show(chr3|NULL),rmab005,rmab006,rmab007,l_rmab005(chr50|NULL),l_rmab005_show(chr3|NULL),rmab008,rmab009,rmab010,l_rmab010_desc(chr50|NULL),rmab011,rmab012,rmab013,rmab014,rmab015,rmab016,rmab017,rmabseq,rmabsite,pmaal_t_pmaal003(pmaal003|pmaal_t.pmaal003),ooag_t_ooag011(ooag011|ooag_t.ooag011),ooefl_t_ooefl003(ooefl003|ooefl_t.ooefl003),x_imaal_t_imaal003(imaal003|x.imaal_t_imaal003),x_imaal_t_imaal004(imaal004|x.imaal_t_imaal004),x_oocal_t_oocal003(oocal003|x.oocal_t_oocal003),l_rmaa002_ooag011(chr300|trim(rmaa002)||&apos;.&apos;||trim((SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = rmaa_t.rmaa002 AND ooag_t.ooagent = rmaa_t.rmaaent))),l_rmaa003_ooefl003(chr1000|trim(rmaa003)||&apos;.&apos;||trim((SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = rmaa_t.rmaa003 AND ooefl_t.ooeflent = rmaa_t.rmaaent AND ooefl_t.ooefl002 = g_dlang))),l_rmaa001_pmaal003(chr300|trim(rmaa001)||&apos;.&apos;||trim((SELECT pmaal003 FROM pmaal_t WHERE pmaal_t.pmaal001 = rmaa_t.rmaa001 AND pmaal_t.pmaalent = rmaa_t.rmaaent AND pmaal_t.pmaal002 = g_dlang)))"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="rmaa001,rmaa002,rmaa003,rmaa004,rmaa005,rmaa006,rmaa007,rmaa008,rmaadocdt,rmaadocno,rmaaent,rmaasite,rmaastus,rmab001,rmab002,rmab003,rmab004,l_rmab003(chr50|trim(rmab003)||&apos;/&apos;||trim(rmab004)),l_rmab003_show(chr3|NULL),rmab005,rmab006,rmab007,l_rmab005(chr50|NULL),l_rmab005_show(chr3|NULL),rmab008,rmab009,rmab010,l_rmab010_desc(chr50|NULL),rmab011,rmab012,rmab013,rmab014,rmab015,rmab016,rmab017,rmabseq,rmabsite,pmaal_t_pmaal003(pmaal003|( SELECT pmaal003 FROM pmaal_t WHERE pmaal_t.pmaal001 = rmaa_t.rmaa001 AND pmaal_t.pmaalent = rmaa_t.rmaaent AND pmaal_t.pmaal002 = g_dlang)),ooag_t_ooag011(ooag011|( SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = rmaa_t.rmaa002 AND ooag_t.ooagent = rmaa_t.rmaaent)),ooefl_t_ooefl003(ooefl003|( SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = rmaa_t.rmaa003 AND ooefl_t.ooeflent = rmaa_t.rmaaent AND ooefl_t.ooefl002 = g_dlang)),x_imaal_t_imaal003(imaal003|x.imaal_t_imaal003),x_imaal_t_imaal004(imaal004|x.imaal_t_imaal004),x_oocal_t_oocal003(oocal003|x.oocal_t_oocal003),l_rmaa002_ooag011(chr300|trim(rmaa002)||&apos;.&apos;||trim((SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = rmaa_t.rmaa002 AND ooag_t.ooagent = rmaa_t.rmaaent))),l_rmaa003_ooefl003(chr1000|trim(rmaa003)||&apos;.&apos;||trim((SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = rmaa_t.rmaa003 AND ooefl_t.ooeflent = rmaa_t.rmaaent AND ooefl_t.ooefl002 = g_dlang))),l_rmaa001_pmaal003(chr300|trim(rmaa001)||&apos;.&apos;||trim((SELECT pmaal003 FROM pmaal_t WHERE pmaal_t.pmaal001 = rmaa_t.rmaa001 AND pmaal_t.pmaalent = rmaa_t.rmaaent AND pmaal_t.pmaal002 = g_dlang)))"/>
+    <sql id="g_from" query="rmaa_t LEFT OUTER JOIN ( SELECT rmab_t.*,( SELECT imaal003 FROM imaal_t WHERE imaal_t.imaal001 = rmab_t.rmab009 AND imaal_t.imaalent = rmab_t.rmabent AND imaal_t.imaal002 = g_dlang) imaal_t_imaal003,( SELECT imaal004 FROM imaal_t WHERE imaal_t.imaal001 = rmab_t.rmab009 AND imaal_t.imaalent = rmab_t.rmabent AND imaal_t.imaal002 = g_dlang) imaal_t_imaal004,( SELECT oocal003 FROM oocal_t WHERE oocal_t.oocal001 = rmab_t.rmab011 AND oocal_t.oocalent = rmab_t.rmabent AND oocal_t.oocal002 = g_dlang) oocal_t_oocal003 FROM rmab_t ) x  ON rmaa_t.rmaaent = x.rmabent AND rmaa_t.rmaadocno = x.rmabdocno"/>
+    <sql id="g_where" query="" maintable="rmaa_t"/>
+    <sql id="g_order" query="rmaadocno,rmabseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="rmaadocno,rmabseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="rmaadocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="rmaaent,rmaadocno"/>
+      <rep type="rmabseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="rmaaent,rmaadocno,rmabseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="rmaaent,rmaadocno,rmabseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="rmaadocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="rmaaent,rmaadocno"/>
+      <rep type="rmabseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

@@ -1,0 +1,408 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axrt920_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2014-10-28 14:50:46), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000140
+#+ Filename...: axrt920_01
+#+ Description: 依幣別更新重評匯率
+#+ Creator....: 01727(2014-04-23 11:22:40)
+#+ Modifier...: 02114 -SD/PR-
+
+{</section>}
+
+{<section id="axrt920_01.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_xreb_m        RECORD
+       xrebld LIKE xreb_t.xrebld, 
+   xrebld_desc LIKE type_t.chr80, 
+   lbl_comb LIKE type_t.chr500, 
+   ooai001 LIKE type_t.chr500, 
+   xreb001 LIKE xreb_t.xreb001, 
+   xreb002 LIKE xreb_t.xreb002, 
+   xreb100 LIKE xreb_t.xreb100, 
+   xreb101 LIKE xreb_t.xreb101, 
+   xreb006 LIKE xreb_t.xreb006, 
+   xreb007 LIKE xreb_t.xreb007, 
+   xreb005 LIKE xreb_t.xreb005
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_xreb_m        type_g_xreb_m
+ 
+   DEFINE g_xrebld_t LIKE xreb_t.xrebld
+DEFINE g_xreb001_t LIKE xreb_t.xreb001
+DEFINE g_xreb002_t LIKE xreb_t.xreb002
+DEFINE g_xreb006_t LIKE xreb_t.xreb006
+DEFINE g_xreb007_t LIKE xreb_t.xreb007
+DEFINE g_xreb005_t LIKE xreb_t.xreb005
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="axrt920_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axrt920_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axrt920_01 WITH FORM cl_ap_formpath("axr","axrt920_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_xreb_m.xrebld,g_xreb_m.lbl_comb,g_xreb_m.ooai001,g_xreb_m.xreb001,g_xreb_m.xreb002, 
+          g_xreb_m.xreb100,g_xreb_m.xreb101 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrebld
+            
+            #add-point:AFTER FIELD xrebld name="input.a.xrebld"
+            {<point name="input.a.xrebld" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrebld
+            #add-point:BEFORE FIELD xrebld name="input.b.xrebld"
+            {<point name="input.b.xrebld" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrebld
+            #add-point:ON CHANGE xrebld name="input.g.xrebld"
+            {<point name="input.g.xrebld" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD lbl_comb
+            #add-point:BEFORE FIELD lbl_comb name="input.b.lbl_comb"
+            {<point name="input.b.lbl_comb" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD lbl_comb
+            
+            #add-point:AFTER FIELD lbl_comb name="input.a.lbl_comb"
+            {<point name="input.a.lbl_comb" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE lbl_comb
+            #add-point:ON CHANGE lbl_comb name="input.g.lbl_comb"
+            {<point name="input.g.lbl_comb" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooai001
+            #add-point:BEFORE FIELD ooai001 name="input.b.ooai001"
+            {<point name="input.b.ooai001" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooai001
+            
+            #add-point:AFTER FIELD ooai001 name="input.a.ooai001"
+            {<point name="input.a.ooai001" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooai001
+            #add-point:ON CHANGE ooai001 name="input.g.ooai001"
+            {<point name="input.g.ooai001" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xreb001
+            #add-point:BEFORE FIELD xreb001 name="input.b.xreb001"
+            {<point name="input.b.xreb001" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xreb001
+            
+            #add-point:AFTER FIELD xreb001 name="input.a.xreb001"
+            {<point name="input.a.xreb001" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xreb001
+            #add-point:ON CHANGE xreb001 name="input.g.xreb001"
+            {<point name="input.g.xreb001" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xreb002
+            #add-point:BEFORE FIELD xreb002 name="input.b.xreb002"
+            {<point name="input.b.xreb002" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xreb002
+            
+            #add-point:AFTER FIELD xreb002 name="input.a.xreb002"
+            {<point name="input.a.xreb002" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xreb002
+            #add-point:ON CHANGE xreb002 name="input.g.xreb002"
+            {<point name="input.g.xreb002" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xreb100
+            #add-point:BEFORE FIELD xreb100 name="input.b.xreb100"
+            {<point name="input.b.xreb100" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xreb100
+            
+            #add-point:AFTER FIELD xreb100 name="input.a.xreb100"
+            {<point name="input.a.xreb100" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xreb100
+            #add-point:ON CHANGE xreb100 name="input.g.xreb100"
+            {<point name="input.g.xreb100" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xreb101
+            #add-point:BEFORE FIELD xreb101 name="input.b.xreb101"
+            {<point name="input.b.xreb101" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xreb101
+            
+            #add-point:AFTER FIELD xreb101 name="input.a.xreb101"
+            {<point name="input.a.xreb101" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xreb101
+            #add-point:ON CHANGE xreb101 name="input.g.xreb101"
+            {<point name="input.g.xreb101" />}
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.xrebld
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrebld
+            #add-point:ON ACTION controlp INFIELD xrebld name="input.c.xrebld"
+            {<point name="input.c.xrebld" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.lbl_comb
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD lbl_comb
+            #add-point:ON ACTION controlp INFIELD lbl_comb name="input.c.lbl_comb"
+            {<point name="input.c.lbl_comb" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.ooai001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooai001
+            #add-point:ON ACTION controlp INFIELD ooai001 name="input.c.ooai001"
+            {<point name="input.c.ooai001" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xreb001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xreb001
+            #add-point:ON ACTION controlp INFIELD xreb001 name="input.c.xreb001"
+            {<point name="input.c.xreb001" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xreb002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xreb002
+            #add-point:ON ACTION controlp INFIELD xreb002 name="input.c.xreb002"
+            {<point name="input.c.xreb002" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xreb100
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xreb100
+            #add-point:ON ACTION controlp INFIELD xreb100 name="input.c.xreb100"
+            {<point name="input.c.xreb100" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xreb101
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xreb101
+            #add-point:ON ACTION controlp INFIELD xreb101 name="input.c.xreb101"
+            {<point name="input.c.xreb101" />}
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axrt920_01 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="axrt920_01.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+
+{</section>}
+
+{<section id="axrt920_01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

@@ -1,0 +1,370 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aglq901_x01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:1(2016-06-02 14:45:38), PR版次:0001(2016-06-02 14:07:52)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000023
+#+ Filename...: aglq901_x01
+#+ Description: ...
+#+ Creator....: 06821(2016-06-02 10:57:59)
+#+ Modifier...: 06821 -SD/PR- 06821
+ 
+{</section>}
+ 
+{<section id="aglq901_x01.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:8)
+#add-point:填寫註解說明 name="global.memo"
+ 
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #where conditiob 
+       a1 STRING,                  #gldn_tmp 
+       a2 STRING                   #visible_column
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_tmp_table     STRING
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aglq901_x01.main" readonly="Y" >}
+PUBLIC FUNCTION aglq901_x01(p_arg1,p_arg2,p_arg3)
+DEFINE  p_arg1 STRING                  #tm.wc  where conditiob 
+DEFINE  p_arg2 STRING                  #tm.a1  gldn_tmp 
+DEFINE  p_arg3 STRING                  #tm.a2  visible_column
+#add-point:init段define(客製用) name="component.define_customerization"
+
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.a1 = p_arg2
+   LET tm.a2 = p_arg3
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   LET g_tmp_table = tm.a1
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "aglq901_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL aglq901_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL aglq901_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL aglq901_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL aglq901_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL aglq901_x01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglq901_x01.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION aglq901_x01_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "l_gldnld_desc.type_t.chr80,l_gldn001_desc.type_t.chr80,l_gldn002_desc.type_t.chr80,gldn005.gldn_t.gldn005,gldn006.gldn_t.gldn006,gldn009.gldn_t.gldn009,gldn026.gldn_t.gldn026,gldn029.gldn_t.gldn029,gldn007.gldn_t.gldn007,l_gldn007_desc.type_t.chr100,l_gldn014_desc.type_t.chr100,l_gldn015_desc.type_t.chr100,l_gldn016_desc.type_t.chr100,l_gldn017_desc.type_t.chr100,l_gldn018_desc.type_t.chr100,l_gldn019_desc.type_t.chr100,l_gldn020_desc.type_t.chr100,l_gldn021_desc.type_t.chr100,l_gldn037_desc.type_t.chr80,l_gldn038_desc.type_t.chr100,l_gldn039_desc.type_t.chr100,l_gldn022_desc.type_t.chr100,l_gldn024_desc.type_t.chr100,l_gldn025_desc.type_t.chr100,gldn034.gldn_t.gldn034,gldn010.gldn_t.gldn010,gldn011.gldn_t.gldn011,l_gldn011.type_t.num20_6,gldn035.gldn_t.gldn035,gldn027.gldn_t.gldn027,gldn028.gldn_t.gldn028,l_gldn028.type_t.num20_6,gldn036.gldn_t.gldn036,gldn030.gldn_t.gldn030,gldn031.gldn_t.gldn031,l_gldn031.type_t.num20_6" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   
+   #end add-point:create_tmp.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglq901_x01.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION aglq901_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglq901_x01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aglq901_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+ 
+#   #end add-point
+#   LET g_select = " SELECT gldnent,'','','',gldn005,gldn006,gldn009,gldn026,gldn029,gldn007,'','','', 
+#       '','','','','','','','','','','','',gldn034,gldn010,gldn011,'',gldn035,gldn027,gldn028,'',gldn036, 
+#       gldn030,gldn031,''"
+# 
+#   #add-point:sel_prep g_from name="sel_prep.g_from"
+ 
+#   #end add-point
+#    LET g_from = " FROM gldn_t"
+# 
+#   #add-point:sel_prep g_where name="sel_prep.g_where"
+ 
+#   #end add-point
+#    LET g_where = " WHERE " ,tm.wc CLIPPED
+# 
+#   #add-point:sel_prep g_order name="sel_prep.g_order"
+   
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+ 
+#   #end add-point:sel_prep.sql.before
+#   LET g_where = g_where ,cl_sql_add_filter("gldn_t")   #資料過濾功能
+#   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+#   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+# 
+#   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   LET g_sql = " SELECT * FROM ", g_tmp_table CLIPPED,
+               "  ORDER BY gldn007 "
+   #end add-point
+   PREPARE aglq901_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE aglq901_x01_curs CURSOR FOR aglq901_x01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglq901_x01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION aglq901_x01_ins_data()
+DEFINE sr RECORD 
+   gldnent LIKE gldn_t.gldnent, 
+   l_gldnld_desc LIKE type_t.chr80, 
+   l_gldn001_desc LIKE type_t.chr80, 
+   l_gldn002_desc LIKE type_t.chr80, 
+   gldn005 LIKE gldn_t.gldn005, 
+   gldn006 LIKE gldn_t.gldn006, 
+   gldn009 LIKE gldn_t.gldn009, 
+   gldn026 LIKE gldn_t.gldn026, 
+   gldn029 LIKE gldn_t.gldn029, 
+   gldn007 LIKE gldn_t.gldn007, 
+   l_gldn007_desc LIKE type_t.chr100, 
+   l_gldn014_desc LIKE type_t.chr100, 
+   l_gldn015_desc LIKE type_t.chr100, 
+   l_gldn016_desc LIKE type_t.chr100, 
+   l_gldn017_desc LIKE type_t.chr100, 
+   l_gldn018_desc LIKE type_t.chr100, 
+   l_gldn019_desc LIKE type_t.chr100, 
+   l_gldn020_desc LIKE type_t.chr100, 
+   l_gldn021_desc LIKE type_t.chr100, 
+   l_gldn037_desc LIKE type_t.chr80, 
+   l_gldn038_desc LIKE type_t.chr100, 
+   l_gldn039_desc LIKE type_t.chr100, 
+   l_gldn022_desc LIKE type_t.chr100, 
+   l_gldn024_desc LIKE type_t.chr100, 
+   l_gldn025_desc LIKE type_t.chr100, 
+   gldn034 LIKE gldn_t.gldn034, 
+   gldn010 LIKE gldn_t.gldn010, 
+   gldn011 LIKE gldn_t.gldn011, 
+   l_gldn011 LIKE type_t.num20_6, 
+   gldn035 LIKE gldn_t.gldn035, 
+   gldn027 LIKE gldn_t.gldn027, 
+   gldn028 LIKE gldn_t.gldn028, 
+   l_gldn028 LIKE type_t.num20_6, 
+   gldn036 LIKE gldn_t.gldn036, 
+   gldn030 LIKE gldn_t.gldn030, 
+   gldn031 LIKE gldn_t.gldn031, 
+   l_gldn031 LIKE type_t.num20_6
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH aglq901_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.l_gldnld_desc,sr.l_gldn001_desc,sr.l_gldn002_desc,sr.gldn005,sr.gldn006,sr.gldn009,sr.gldn026,sr.gldn029,sr.gldn007,sr.l_gldn007_desc,sr.l_gldn014_desc,sr.l_gldn015_desc,sr.l_gldn016_desc,sr.l_gldn017_desc,sr.l_gldn018_desc,sr.l_gldn019_desc,sr.l_gldn020_desc,sr.l_gldn021_desc,sr.l_gldn037_desc,sr.l_gldn038_desc,sr.l_gldn039_desc,sr.l_gldn022_desc,sr.l_gldn024_desc,sr.l_gldn025_desc,sr.gldn034,sr.gldn010,sr.gldn011,sr.l_gldn011,sr.gldn035,sr.gldn027,sr.gldn028,sr.l_gldn028,sr.gldn036,sr.gldn030,sr.gldn031,sr.l_gldn031
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "aglq901_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    LET g_xgrid.visible_column = NULL
+    LET g_xgrid.visible_column = tm.a2
+    #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglq901_x01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION aglq901_x01_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    
+    #end add-point:rep_data.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglq901_x01.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

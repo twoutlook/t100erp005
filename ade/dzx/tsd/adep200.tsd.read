@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="adep200" std_prog="adep200" erpver="1.0" ver="2" module="ADE" type="M" booking="N" designer_ver="1.0" class="p" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 批次產生非即時異動庫存資料整批產生處理作業
+作業功能：相關文件/說明/離開
+作業類型：批次處理
+輸入模式：單檔(子作業)無搭配任何方案F001_00
+
+==========================================
+1.產生銷售收入檔
+  1.1程式依QBE 選項抓取[T:銷售整合單頭檔],[T:銷售整合商品明細檔] WHERE 資料來源 <>'1.ERP'
+  1.2將取出資料分別複制到 銷售暫存單頭檔/銷售暫存單身檔
+  1.3將[T:銷售暫存單頭檔]/[T:銷售暫存單身檔]
+  1.4程式依[C:企業編號]+[C:營運據點]+[C:單據日期]+[C:專櫃編號]+[C:品類編號]+[C:稅別編號]+[C:庫區] 寫入[T:門店收入日結檔]debz_t
+     LET  [T:門店收入日結檔] [C:企業編號]    =匯總後企業編號
+                             [C:營運據點]    = 匯總後營運據點   
+                             [C:層級類型]    = ooef101
+                             [C:統計日期]    = rtjadocdt
+                             [C:會計週]        = oogc008
+                             [C:會計期]        = oogc006
+                             [C:專櫃編號]    =rtjb028
+                             [C:專櫃類型]    =mhae002
+                             [C:品類編號]    = imaa009
+                             [C:稅別編號]    = rtjb006
+                             [C:稅額]            = rtjb021 - rtjb022
+                             [C:銷售額]        = rtjb020 - rtjb021
+                             [C:收貨折讓總額] ->改成銷售折讓總額rtjb020
+                             [C:應收金額]   = rtjb021
+                             [C:銷售收入]   = 應收金額
+                             [C:庫區]  rtjb025
+                   
+2.產生銷售收款檔
+  2.1 程式依QBE 選項抓取[T:銷售整合單頭檔],[T:銷售交易收款明細檔] WHERE 資料來源 <>'1.ERP'
+  2.2 將資料取出複制至[T:銷售整合單頭暫存檔],[T:銷售交易收款明細暫存檔]
+  2.3 依[C:企業編號]+[C:營運據點]+[C:款別編號]+[C:統計日期]+[C:款別類型對應憑證編號]+[C:卡/券種編號]+[c:退款類型]
+      LET [T:門店收款日結檔][C:企業編號]    = 匯總後企業編號
+                            [C:營運據點]    = 匯總後營運據點   
+                            [C:款別類型]    = rtjb001
+                            [C:款別編號]    = rtjb002
+                            [C:統計日期]    = [T:銷售整合單頭暫存檔][C:統計日期] rtjadocdt
+                            [C:收款金額]    =  rtjb03
+                            [C:款別類型對應憑證號] = rtjb004
+                            [C:支票面額]    =  rtjb08
+                            [C:票據到期日]= rtjb009
+                            [C:票據付款銀行] = rtjb010
+                            [C:開客票]        = rtjb011
+                            [C:開票人全名] = rtjb012
+                            [C:卡/券種編號] = rtjb013
+                            [C:票券溢交金額] =rtjb020
+                            [C:沖預收款類型] = rtjb021
+                            [C:抵現積點]         = rtjb022
+                            [C:退款類型]         = rtjb024]]>
+  </all>
+  <field cite_std="N" name="l_a" ver="1" src="s" column="chr1" table="type_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtja_t.rtjadocdt" ver="1" src="s" column="rtjadocdt" table="rtja_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="DateEdit" status="">
+    <![CDATA[預設：g_today]]>
+  </field>
+  <field cite_std="N" name="rtja_t.rtjasite" ver="1" src="s" column="rtjasite" table="rtja_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooef001_24" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[開窗 where = s_aooi500_q_where(g_prog,'rtjasite',g_site,'c')]]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="l_a" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtja_t.rtjadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtja_t.rtjasite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="group_qbe" text="QBE條件" lstr=""/>
+    <sfield name="lbl_rtjbsite" text="銷售組織" lstr=""/>
+    <sfield name="group_input" text="其他條件" lstr=""/>
+    <sfield name="lbl_rtjadocdt" text="銷售日期" lstr=""/>
+    <sfield name="lbl_a" text="已存在日結資料刪除重新結算" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

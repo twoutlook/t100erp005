@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmt850_01" module="apm" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="02749" crtdt="2014-12-17 06:03:03" modid="02749" moddt="2014-12-17 06:17:38" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="維護多交期明細子作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pmejsite,pmejdocno,pmej900,pmej901,pmejseq,pmej001,pmej008,pmej002,pmej003,pmej004,pmej005,pmej006,pmej006_desc(chr500),pmej007"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmt850_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="pmejsite,pmejdocno,pmej900,pmej901,pmejseq,pmej001,pmej008,pmej002,pmej003,pmej004,pmej005,pmej006,pmej007" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="pmejsite"/>
+      <column id="pmejdocno"/>
+      <column id="pmej900"/>
+      <column id="pmej901"/>
+      <column id="pmejseq"/>
+      <column id="pmej001"/>
+      <column id="pmej008" def_scc="2057"/>
+      <column id="pmej002" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pmej003"/>
+      <column id="pmej004"/>
+      <column id="pmej005"/>
+      <column id="pmej006">
+        <after>
+          <check chkid="v_oocq002_274" id="isExist"/>
+          <reference field="pmej006_desc" ref_field="pmej006" map_field="pmej006" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;274&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pmej006_desc"/>
+      <column id="pmej007" type="S" default="N"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="pmej_t" page="1" linked="" pk="pmejdocno,pmejseq,pmej001,pmej900">
+      <sql id="forupd_sql_detail" query="SELECT pmejsite,pmejdocno,pmej900,pmej901,pmejseq,pmej001,pmej008,pmej002,pmej003,pmej004,pmej005,pmej006,&apos;&apos;,pmej007 FROM pmej_t WHERE pmejent=? AND pmejdocno=? AND pmejseq=? AND pmej001=? AND pmej900=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pmejsite,pmejdocno,pmej900,pmej901,pmejseq,pmej001,pmej008,pmej002,pmej003,pmej004,pmej005,pmej006,&apos;&apos;,pmej007 FROM pmej_t WHERE pmejent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

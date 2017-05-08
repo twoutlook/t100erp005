@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abgi100_01" module="abg" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="03080" crtdt="2015-07-15 16:50:12" modid="03080" moddt="2015-07-16 09:39:12" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="適當性檢查">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bgaa001,bgaal003"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="abg" filename="abgi100_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="bgaa001,bgaal003" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="bgaa001,bgaal003"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="bgaa001">
+        <controlp form="q_bgaa001" state="c"/>
+      </column>
+      <column id="bgaal003"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="bgaa_t" page="1" linked="" pk="bgaa001">
+      <sql id="forupd_sql_detail" query="SELECT bgaa001,&apos;&apos; FROM bgaa_t WHERE bgaaent=? AND bgaa001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bgaa001,&apos;&apos; FROM bgaa_t WHERE bgaaent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="bgaal_t.bgaal003" table="bgaal_t" fk="bgaa001" pk="bgaal001,bgaal002" field="bgaal003"/>
+    </body>
+  </dataset>
+</assembly>
+

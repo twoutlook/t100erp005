@@ -1,0 +1,90 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapq911" module="aap" jobmode="N" type="q02" industry="std" fix_arg="7" crtid="05016" crtdt="2015-01-16 09:16:58" modid="05016" moddt="2015-09-14 10:01:50" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="供應商帳款明細查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),apcacomp,apcacomp_desc(chr500),apcald,apcald_desc(chr500),apca004,apca004_desc(chr500),pmab031(chr20),pmab031_desc(chr500),type(chr500),apcadocdt,apca001,apca001_desc(chr500),apcadocno,apcb047(chr500),apca035,apca035_desc(chr500),apca038,apca066,apca100,apca108,l_apca1081(num20_6),l_apca1082(num20_6),apca118,l_apca1181(num20_6),l_apca1182(num20_6)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),apcacomp(b_apcacomp),apcacomp_desc(apcacomp_desc),apcald(b_apcald),apcald_desc(apcald_desc),apca004(b_apca004),apca004_desc(apca004_desc),pmab031(pmab031),pmab031_desc(pmab031_desc),type(b_type),apcadocdt(b_apcadocdt),apca001(b_apca001),apca001_desc(apca001_desc),apcadocno(b_apcadocno),apcb047(apcb047),apca035(b_apca035),apca035_desc(apca035_desc),apca038(b_apca038),apca066(b_apca066),apca100(b_apca100),apca108(b_apca108),l_apca1081(l_apca1081),l_apca1082(l_apca1082),apca118(b_apca118),l_apca1181(l_apca1181),l_apca1182(l_apca1182)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="aap" filename="aapq911" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="apcacomp,apcald,type,apcadocdt,apca001,apcadocno,apca035,apca038,apca066,apca100,apca108,apca118" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="apcacomp(b_apcacomp),apcald(b_apcald),apca004(b_apca004),apcadocdt(b_apcadocdt),apca001(b_apca001),apcadocno(b_apcadocno),apca035(b_apca035),apca038(b_apca038),apca066(b_apca066),apca100(b_apca100),apca108(b_apca108),apca118(b_apca118)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="apcacomp">
+        <after/>
+      </column>
+      <column id="apcacomp_desc"/>
+      <column id="apcald">
+        <after>
+          <check chkid="v_glaald_3" id="isExist"/>
+        </after>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="apcald_desc"/>
+      <column id="apca004">
+        <after/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="apca004_desc"/>
+      <column id="pmab031">
+        <after/>
+      </column>
+      <column id="pmab031_desc"/>
+      <column id="type"/>
+      <column id="apcadocdt"/>
+      <column id="apca001" def_scc="8502">
+        <after/>
+      </column>
+      <column id="apca001_desc"/>
+      <column id="apcadocno">
+        <controlp form="q_apcadocno" state="c"/>
+      </column>
+      <column id="apcb047"/>
+      <column id="apca035">
+        <after>
+          <check chkid="v_glac002_2" id="chkandReturn"/>
+        </after>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="apca035_desc"/>
+      <column id="apca038">
+        <controlp form="q_apca038" state="c"/>
+      </column>
+      <column id="apca066"/>
+      <column id="apca100">
+        <controlp form="q_ooaj002_1" state="c"/>
+      </column>
+      <column id="apca108"/>
+      <column id="l_apca1081"/>
+      <column id="l_apca1082"/>
+      <column id="apca118"/>
+      <column id="l_apca1181"/>
+      <column id="l_apca1182"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="apca_t" page="1" linked="" pk="apcald,apcadocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,apcacomp,&apos;&apos;,apcald,&apos;&apos;,apca004,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,apcadocdt,apca001,&apos;&apos;,apcadocno,&apos;&apos;,apca035,&apos;&apos;,apca038,apca066,apca100,apca108,&apos;&apos;,&apos;&apos;,apca118,&apos;&apos;,&apos;&apos; FROM apca_t WHERE apcaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

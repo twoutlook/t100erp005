@@ -1,0 +1,145 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axri014" module="axr" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02291" crtdt="2013-11-13 14:14:09" modid="01727" moddt="2015-04-21 11:29:04" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="帳齡及備抵呆帳提列設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xrad001,xradl003,xrad004,xradstus,xradownid,xradownid_desc(chr80),xradowndp,xradowndp_desc(chr80),xradcrtid,xradcrtid_desc(chr80),xradcrtdp,xradcrtdp_desc(chr80),xradcrtdt,xradmodid,xradmodid_desc(chr80),xradmoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xrae002,xrae003,xrae004,xrae005"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xraf002,xraf002_desc(chr500),xraf003,xraf004,xraf005,xraf006,xraf007,xraf008,xraf009,xraf010,xraf011,xraf012,xraf013,xraf014,xraf015,xraf016,xraf017,xraf018,xraf019,xraf020,xraf021,xraf022,total_1(chr500)"/>
+      <var id="bs_field" value="xrad001,xrad001_desc(chr80)" pk="xrad001" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="open_axri014_s01"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axri014" method="dialog">
+    <section id="input">
+      <input id="head" field="xrad001,xradl003,xrad004,xradstus"/>
+      <input id="body" page="1" field="xrae002,xrae003,xrae004,xrae005" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="xraf002,xraf003,xraf004,xraf005,xraf006,xraf007,xraf008,xraf009,xraf010,xraf011,xraf012,xraf013,xraf014,xraf015,xraf016,xraf017,xraf018,xraf019,xraf020,xraf021,xraf022,total_1" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xrad001,xradl003,xrad004,xradstus,xradownid,xradowndp,xradcrtid,xradcrtdp,xradcrtdt,xradmodid,xradmoddt"/>
+      <construct id="body" page="1" field="xrae002,xrae003,xrae004,xrae005"/>
+      <construct id="body" page="2" field="xraf002,xraf003,xraf004,xraf005,xraf006,xraf007,xraf008,xraf009,xraf010,xraf011,xraf012,xraf013,xraf014,xraf015,xraf016,xraf017,xraf018,xraf019,xraf020,xraf021,xraf022,total_1"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xrad001"/>
+      <set id="head" type="no_entry" field="xrad001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xrad001">
+        <controlp form="q_xrad001_1" state="c"/>
+      </column>
+      <column id="xradl003"/>
+      <column id="xrad004" type="S" default="1" def_scc="8312"/>
+      <column id="xradstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="xradownid">
+        <after>
+          <reference field="xradownid_desc" ref_field="xrad_t.xradownid" map_field="xradownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xradownid_desc"/>
+      <column id="xradowndp">
+        <after>
+          <reference field="xradowndp_desc" ref_field="xrad_t.xradowndp" map_field="xradowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xradowndp_desc"/>
+      <column id="xradcrtid">
+        <after>
+          <reference field="xradcrtid_desc" ref_field="xrad_t.xradcrtid" map_field="xradcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xradcrtid_desc"/>
+      <column id="xradcrtdp">
+        <after>
+          <reference field="xradcrtdp_desc" ref_field="xrad_t.xradcrtdp" map_field="xradcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xradcrtdp_desc"/>
+      <column id="xradcrtdt"/>
+      <column id="xradmodid">
+        <after>
+          <reference field="xradmodid_desc" ref_field="xrad_t.xradmodid" map_field="xradmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xradmodid_desc"/>
+      <column id="xradmoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xrae002"/>
+      <column id="xrae003"/>
+      <column id="xrae004"/>
+      <column id="xrae005"/>
+    </init>
+    <init id="body" page="2">
+      <column id="xraf002">
+        <after>
+          <reference field="xraf002_desc" ref_field="xraf002" map_field="xraf002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2054&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="xraf002_desc"/>
+      <column id="xraf003"/>
+      <column id="xraf004"/>
+      <column id="xraf005"/>
+      <column id="xraf006"/>
+      <column id="xraf007"/>
+      <column id="xraf008"/>
+      <column id="xraf009"/>
+      <column id="xraf010"/>
+      <column id="xraf011"/>
+      <column id="xraf012"/>
+      <column id="xraf013"/>
+      <column id="xraf014"/>
+      <column id="xraf015"/>
+      <column id="xraf016"/>
+      <column id="xraf017"/>
+      <column id="xraf018"/>
+      <column id="xraf019"/>
+      <column id="xraf020"/>
+      <column id="xraf021"/>
+      <column id="xraf022"/>
+      <column id="total_1"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xrad_t" pk="xrad001">
+      <sql id="forupd_sql" type="sql" query="SELECT xrad001,&apos;&apos;,xrad004,xradstus,xradownid,&apos;&apos;,xradowndp,&apos;&apos;,xradcrtid,&apos;&apos;,xradcrtdp,&apos;&apos;,xradcrtdt,xradmodid,&apos;&apos;,xradmoddt FROM xrad_t WHERE xradent= ? AND xrad001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xrad001,&apos;&apos;,xrad004,xradstus,xradownid,&apos;&apos;,xradowndp,&apos;&apos;,xradcrtid,&apos;&apos;,xradcrtdp,&apos;&apos;,xradcrtdt,xradmodid,&apos;&apos;,xradmoddt FROM xrad_t" order="xrad001"/>
+      <sql id="append" type="lang" target="xradl_t.xradl003" table="xradl_t" fk="xrad001" pk="xradl001,xradl002" field="xradl003"/>
+    </head>
+    <body id="xrae_t" page="1" linked="" pk="xrae002" fk="xrae001">
+      <sql id="forupd_sql_detail" query="SELECT xrae002,xrae003,xrae004,xrae005 FROM xrae_t WHERE xraeent=? AND xrae001=? AND xrae002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xrae002,xrae003,xrae004,xrae005 FROM xrae_t WHERE xraeent=? AND xrae001=?"/>
+    </body>
+    <body id="xraf_t" page="2" linked="" pk="xraf002" fk="xraf001">
+      <sql id="forupd_sql_detail" query="SELECT xraf002,&apos;&apos;,xraf003,xraf004,xraf005,xraf006,xraf007,xraf008,xraf009,xraf010,xraf011,xraf012,xraf013,xraf014,xraf015,xraf016,xraf017,xraf018,xraf019,xraf020,xraf021,xraf022,&apos;&apos; FROM xraf_t WHERE xrafent=? AND xraf001=? AND xraf002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xraf002,&apos;&apos;,xraf003,xraf004,xraf005,xraf006,xraf007,xraf008,xraf009,xraf010,xraf011,xraf012,xraf013,xraf014,xraf015,xraf016,xraf017,xraf018,xraf019,xraf020,xraf021,xraf022,&apos;&apos; FROM xraf_t WHERE xrafent=? AND xraf001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

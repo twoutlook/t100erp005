@@ -1,0 +1,3611 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="ainq850.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:13(2016-05-11 11:42:52), PR版次:0013(2016-08-16 17:52:19)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000071
+#+ Filename...: ainq850
+#+ Description: 盤點資料查詢作業
+#+ Creator....: 01534(2014-10-31 17:37:17)
+#+ Modifier...: 01534 -SD/PR- 08742
+ 
+{</section>}
+ 
+{<section id="ainq850.global" >}
+#應用 q01 樣板自動產生(Version:34)
+#add-point:填寫註解說明 name="global.memo"
+#151117-00008#1   2015/11/17  By Sarah  將標籤編號開窗從q_inpddocno改成q_inpddocno_3
+#160407-00016#1   2016/4/20   By dorislai  ainq850_b_fill2()多加g_detail_idx的判斷
+#160320-00004#1   2016/4/20   By lixh 参数中，使用产品特征=N，查询的产品特征栏位隐藏
+#160504-00019#4   2016/05/10  By lixh 1.畫面增加顯示各參考單位數量資料
+#.....................................2.差異分析時，參考單位數量有差異者也需顯示  
+#160519-00046#1   2016/06/13  By lixh 成本计算
+#160704-00020#1   2016/07/04  By lixh 開啟作業時不預先查詢所有資料
+#160816-00001#3  16/08/16 By 08742     抓取理由碼改CALL sub
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_inpd_d RECORD
+       
+       sel LIKE type_t.chr1, 
+   inpd008 LIKE inpd_t.inpd008, 
+   inpddocno LIKE inpd_t.inpddocno, 
+   inpdseq LIKE inpd_t.inpdseq, 
+   inpd001 LIKE inpd_t.inpd001, 
+   inpd001_desc LIKE type_t.chr500, 
+   inpd001_desc_1 LIKE type_t.chr500, 
+   inpd002 LIKE inpd_t.inpd002, 
+   inpd002_desc LIKE type_t.chr500, 
+   inpd005 LIKE inpd_t.inpd005, 
+   inpd005_desc LIKE type_t.chr500, 
+   inpd006 LIKE inpd_t.inpd006, 
+   inpd006_desc LIKE type_t.chr500, 
+   inpd007 LIKE inpd_t.inpd007, 
+   inpd003 LIKE inpd_t.inpd003, 
+   inpd010 LIKE inpd_t.inpd010, 
+   inpd010_desc LIKE type_t.chr500, 
+   inpd011 LIKE inpd_t.inpd011, 
+   inpd012 LIKE inpd_t.inpd012, 
+   inpd012_desc LIKE type_t.chr500, 
+   inpd013 LIKE inpd_t.inpd013, 
+   inpd030 LIKE inpd_t.inpd030, 
+   inpd031 LIKE inpd_t.inpd031, 
+   inpd034 LIKE inpd_t.inpd034, 
+   inpd034_desc LIKE type_t.chr500, 
+   inpd035 LIKE inpd_t.inpd035, 
+   inpd036 LIKE inpd_t.inpd036, 
+   inpd037 LIKE inpd_t.inpd037, 
+   inpd040 LIKE inpd_t.inpd040, 
+   inpd040_desc LIKE type_t.chr500, 
+   inpd041 LIKE inpd_t.inpd041, 
+   inpd050 LIKE inpd_t.inpd050, 
+   inpd051 LIKE inpd_t.inpd051, 
+   inpd054 LIKE inpd_t.inpd054, 
+   inpd054_desc LIKE type_t.chr500, 
+   inpd055 LIKE inpd_t.inpd055, 
+   inpd056 LIKE inpd_t.inpd056, 
+   inpd057 LIKE inpd_t.inpd057, 
+   inpd060 LIKE inpd_t.inpd060, 
+   inpd060_desc LIKE type_t.chr500, 
+   inpd061 LIKE inpd_t.inpd061, 
+   mored LIKE type_t.num20_6, 
+   ckmored LIKE type_t.num20_6, 
+   costd LIKE type_t.num20_6, 
+   scostd LIKE type_t.num20_6, 
+   inpd014 LIKE type_t.chr10, 
+   inpd014_desc LIKE type_t.chr500
+       END RECORD
+PRIVATE TYPE type_g_inpd2_d RECORD
+       inpeseq2 LIKE inpe_t.inpeseq2, 
+   inpe008 LIKE inpe_t.inpe008, 
+   inpe009 LIKE inpe_t.inpe009, 
+   inpe010 LIKE inpe_t.inpe010, 
+   inpe012 LIKE inpe_t.inpe012, 
+   inpe030 LIKE inpe_t.inpe030, 
+   inpe033 LIKE inpe_t.inpe033, 
+   inpe033_desc LIKE type_t.chr500, 
+   inpe034 LIKE inpe_t.inpe034, 
+   inpe035 LIKE inpe_t.inpe035, 
+   inpe038 LIKE inpe_t.inpe038, 
+   inpe038_desc LIKE type_t.chr500, 
+   inpe039 LIKE inpe_t.inpe039, 
+   inpe050 LIKE inpe_t.inpe050, 
+   inpe053 LIKE inpe_t.inpe053, 
+   inpe053_desc LIKE type_t.chr500, 
+   inpe054 LIKE inpe_t.inpe054, 
+   inpe055 LIKE inpe_t.inpe055, 
+   inpe058 LIKE inpe_t.inpe058, 
+   inpe058_desc LIKE type_t.chr500, 
+   inpe059 LIKE inpe_t.inpe059
+       END RECORD
+ 
+ 
+ 
+#add-point:自定義模組變數-標準(Module Variable)  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE  g_wc_inpd034    STRING
+DEFINE  g_wc_inpd032    STRING
+DEFINE  g_wc_inpd033    STRING
+DEFINE  g_wc_inpd035    STRING
+DEFINE  g_wc1           STRING
+DEFINE  g_wc3           STRING
+DEFINE  g_inpd033       LIKE inpd_t.inpd033
+DEFINE  g_inpd035       LIKE inpd_t.inpd035
+DEFINE  g_wc_inpd005    STRING
+DEFINE  g_option        LIKE type_t.chr1
+DEFINE  g_compare       LIKE type_t.chr1
+DEFINE  g_type          LIKE type_t.chr1
+DEFINE  g_year          LIKE type_t.num5
+DEFINE  g_month         LIKE type_t.num5
+DEFINE  g_chk1          LIKE type_t.chr1
+DEFINE  g_chk2          LIKE type_t.chr1
+DEFINE  g_chk3          LIKE type_t.chr1
+DEFINE  g_cnt2          LIKE type_t.num10              
+DEFINE  l_ac2           LIKE type_t.num5              #目前處理的ARRAY CNT 
+DEFINE  g_detail_idx3   LIKE type_t.num5
+DEFINE  g_detail_idx4   LIKE type_t.num5
+DEFINE  g_detail_cnt3   LIKE type_t.num5
+
+TYPE type_g_inpf_d RECORD
+                 sel                    LIKE type_t.chr1, 
+                 inpf004                LIKE inpf_t.inpf004, 
+                 inpfdocno              LIKE inpf_t.inpfdocno, 
+                 inpfseq                LIKE inpf_t.inpfseq,
+                 inpf001                LIKE inpf_t.inpf001,
+                 inpf003                LIKE inpf_t.inpf003,
+                 inpf003_desc           LIKE type_t.chr500,
+                 inpf003_desc_desc      LIKE type_t.chr500,
+                 inpf007                LIKE inpf_t.inpf007,
+                 inpf006                LIKE inpf_t.inpf006,
+                 inpf006_desc           LIKE type_t.chr500,
+                 inpf002                LIKE inpf_t.inpf002,
+                 inpf002_desc           LIKE type_t.chr500,    
+                 sfaa061                LIKE sfaa_t.sfaa061,
+                 inpf009                LIKE inpf_t.inpf009,
+                 inpf009_desc           LIKE type_t.chr500                                  
+                           END RECORD
+ TYPE type_g_inpg_d RECORD
+                 inpgseq1               LIKE inpg_t.inpgseq1,
+                 inpgseq2               LIKE inpg_t.inpgseq2,
+                 inpg001                LIKE inpg_t.inpg001,
+                 inpg001_desc           LIKE type_t.chr500,
+                 inpg001_desc_desc      LIKE type_t.chr500,
+                 inpg010                LIKE inpg_t.inpg010,
+                 inpg007                LIKE inpg_t.inpg007,
+                 inpg007_desc           LIKE type_t.chr500,
+                 inpg012                LIKE inpg_t.inpg012,
+                 inpg030                LIKE inpg_t.inpg030,
+                 inpg031                LIKE inpg_t.inpg031,
+                 inpg031_desc           LIKE type_t.chr500,
+                 inpg032                LIKE inpg_t.inpg032,
+                 inpg033                LIKE inpg_t.inpg033,
+                 inpg034                LIKE inpg_t.inpg034,
+                 inpg034_desc           LIKE type_t.chr500,
+                 inpg035                LIKE inpg_t.inpg035,
+                 inpg050                LIKE inpg_t.inpg050,
+                 inpg051                LIKE inpg_t.inpg051,
+                 inpg051_desc           LIKE type_t.chr500,
+                 inpg052                LIKE inpg_t.inpg052,
+                 inpg053                LIKE inpg_t.inpg053,
+                 inpg054                LIKE inpg_t.inpg054,
+                 inpg054_desc           LIKE type_t.chr500,
+                 inpg055                LIKE inpg_t.inpg055,
+                 more                   LIKE inpg_t.inpg030,
+                 cost                   LIKE inpg_t.inpg030,
+                 scost                  LIKE inpg_t.inpg030,
+                 inpg013                LIKE inpg_t.inpg013,
+                 inpg013_desc           LIKE type_t.chr500
+
+                           END RECORD                           
+DEFINE g_inpf_d            DYNAMIC ARRAY OF type_g_inpf_d
+DEFINE g_inpg_d            DYNAMIC ARRAY OF type_g_inpg_d
+DEFINE l_ac3               LIKE type_t.num5
+DEFINE g_flag              LIKE type_t.chr1
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_inpd_d            DYNAMIC ARRAY OF type_g_inpd_d
+DEFINE g_inpd_d_t          type_g_inpd_d
+DEFINE g_inpd2_d     DYNAMIC ARRAY OF type_g_inpd2_d
+DEFINE g_inpd2_d_t   type_g_inpd2_d
+ 
+ 
+ 
+ 
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                 STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE l_ac                  LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_current_page        LIKE type_t.num5              #目前所在頁數
+DEFINE g_current_row         LIKE type_t.num10             #目前所在筆數
+DEFINE g_current_idx         LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_row_index           LIKE type_t.num10
+DEFINE g_master_idx          LIKE type_t.num10
+DEFINE g_detail_idx          LIKE type_t.num10             #單身 所在筆數(所有資料)
+DEFINE g_detail_idx2         LIKE type_t.num10
+DEFINE g_hyper_url           STRING                        #hyperlink的主要網址
+DEFINE g_qbe_hidden          LIKE type_t.num5              #qbe頁籤折疊
+DEFINE g_tot_cnt             LIKE type_t.num10             #計算總筆數
+DEFINE g_num_in_page         LIKE type_t.num10             #每頁筆數
+DEFINE g_page_act_list       STRING                        #分頁ACTION清單
+DEFINE g_current_row_tot     LIKE type_t.num10             #目前所在總筆數
+DEFINE g_page_start_num      LIKE type_t.num10             #目前頁面起始筆數
+DEFINE g_page_end_num        LIKE type_t.num10             #目前頁面結束筆數
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+DEFINE g_detail_page_action STRING
+DEFINE g_pagestart          LIKE type_t.num10
+ 
+DEFINE g_wc2_table2   STRING
+DEFINE g_detail2_page_action2 STRING
+ 
+ 
+ 
+DEFINE g_wc_filter_table           STRING
+ 
+DEFINE g_wc2_filter_table2   STRING
+ 
+ 
+ 
+#add-point:自定義模組變數-客製(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="ainq850.main" >}
+ #應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("ain","")
+ 
+   #add-point:作業初始化 name="main.init"
+   
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = " ", 
+                      " FROM ",
+                      " "
+   #add-point:SQL_define name="main.after_define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE ainq850_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT  ",
+               " FROM  t0",
+               
+               " WHERE  "
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   
+   #end add-point
+   PREPARE ainq850_master_referesh FROM g_sql
+ 
+   #add-point:main段define_sql name="main.body.define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = ""
+   #add-point:main段define_sql name="main.body.after_define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE ainq850_bcl CURSOR FROM g_forupd_sql
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_ainq850 WITH FORM cl_ap_formpath("ain",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL ainq850_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL ainq850_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_ainq850
+      
+   END IF 
+   
+   CLOSE ainq850_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="ainq850.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION ainq850_init()
+   #add-point:init段define-客製 name="init.define_customerization"
+   
+   #end add-point
+   #add-point:init段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="init.before_function"
+   
+   #end add-point
+ 
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1" 
+   LET g_error_show  = 1
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   
+     
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   LET g_option = '1' 
+   CALL cl_set_comp_entry("compare",FALSE)
+   LET g_type = '1'
+   LET g_chk1 = 'N' 
+   LET g_chk2 = 'N' 
+   LET g_chk3 = 'N' 
+   LET g_year = YEAR(g_today)
+   LET g_month = MONTH(g_today)
+   CALL cl_set_combo_scc('option','2213')
+   CALL cl_set_combo_scc('compare','2214')
+   CALL cl_set_combo_scc('type','2211')
+   CALL cl_set_comp_visible("group_1",FALSE)
+   
+   CALL ainq850_inpd_visible_false()
+   CALL ainq850_inpg_visible_false()      
+   CALL ainq850_inpd_visible_true()
+   CALL ainq850_inpg_visible_true()
+   
+   #160320-00004#1
+   #判斷據點參數若不使用產品特徵時，則產品特徵需隱藏不可以維護(據點參數:S-BAS-0036)
+   IF cl_get_para(g_enterprise,g_site,'S-BAS-0036') = 'N' THEN
+      CALL cl_set_comp_visible("b_inpd002,b_inpd002_desc",FALSE)
+   END IF
+   #160320-00004#1
+
+   #160504-00019#4  #參考單位
+   IF cl_get_para(g_enterprise,g_site,'S-BAS-0028') = 'N' THEN   
+      CALL cl_set_comp_visible("b_inpd012,b_inpd012_desc,b_inpd013,b_inpd031,b_inpd037,b_inpd051,b_inpd057,ckmored",FALSE)
+   END IF
+   #160504-00019#4
+   #end add-point
+ 
+   CALL ainq850_default_search()
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq850.default_search" >}
+PRIVATE FUNCTION ainq850_default_search()
+   #add-point:default_search段define-客製 name="default_search.define_customerization"
+   
+   #end add-point
+   #add-point:default_search段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point
+ 
+ 
+   #add-point:default_search段開始前 name="default_search.before"
+   
+   #end add-point
+ 
+   #應用 qs27 樣板自動產生(Version:3)
+   #+ 組承接外部參數時資料庫欄位對應條件(單身)
+   IF NOT cl_null(g_argv[01]) THEN
+      LET g_wc = g_wc, " inpddocno = '", g_argv[01], "' AND "
+   END IF
+ 
+   IF NOT cl_null(g_argv[02]) THEN
+      LET g_wc = g_wc, " inpdseq = '", g_argv[02], "' AND "
+   END IF
+ 
+ 
+ 
+ 
+ 
+ 
+   IF NOT cl_null(g_wc) THEN
+      LET g_wc = g_wc.subString(1,g_wc.getLength()-5)
+   ELSE
+      #預設查詢條件
+      LET g_wc = " 1=2"
+   END IF
+ 
+   #add-point:default_search段結束前 name="default_search.after"
+   IF NOT cl_null(g_argv[01]) THEN
+      LET g_wc = g_wc, " inpddocno = '", g_argv[01], "' AND "
+   END IF
+ 
+   IF NOT cl_null(g_argv[02]) THEN
+      LET g_wc = g_wc, " inpdseq = '", g_argv[02], "' AND "
+   END IF
+ 
+ 
+ 
+ 
+   IF NOT cl_null(g_wc) THEN
+      LET g_wc = g_wc.subString(1,g_wc.getLength()-5)
+   ELSE
+      #預設查詢條件
+      LET g_wc = cl_qbe_get_default_qryplan()
+   END IF #160704-00020#1 add   
+      IF cl_null(g_wc) THEN
+         #LET g_wc = " 1=1" #160704-00020#1 mark
+         LET g_wc = " 1=2"  #160704-00020#1 add 
+      END IF
+   #END IF   #160704-00020#1 mark
+
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq850.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION ainq850_ui_dialog() 
+   #add-point:ui_dialog段define-客製 name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num10
+   DEFINE ls_result STRING
+   DEFINE ls_wc     STRING
+   DEFINE lc_action_choice_old   STRING
+   DEFINE ls_js     STRING
+   DEFINE la_param  RECORD
+                    prog       STRING,
+                    actionid   STRING,
+                    background LIKE type_t.chr1,
+                    param      DYNAMIC ARRAY OF STRING
+                    END RECORD
+   #add-point:ui_dialog段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+ 
+   #end add-point
+   
+ 
+   #add-point:FUNCTION前置處理 name="ui_dialog.before_function"
+   
+   #end add-point
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   CALL cl_get_num_in_page() RETURNING g_num_in_page
+ 
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   LET g_current_idx = 1
+   LET g_action_choice = " "
+   LET lc_action_choice_old = ""
+   LET g_current_row_tot = 0
+   LET g_page_start_num = 1
+   LET g_page_end_num = g_num_in_page
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   LET l_ac = 1
+ 
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   
+   #end add-point
+ 
+   
+   CALL ainq850_b_fill()
+  
+   WHILE li_exit = FALSE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_inpd_d.clear()
+         CALL g_inpd2_d.clear()
+ 
+ 
+         LET g_wc  = " 1=2"
+         LET g_wc2 = " 1=1"
+         LET g_action_choice = ""
+         LET g_detail_page_action = "detail_first"
+         LET g_pagestart = 1
+         LET g_current_row_tot = 0
+         LET g_page_start_num = 1
+         LET g_page_end_num = g_num_in_page
+         LET g_detail_idx = 1
+         LET g_detail_idx2 = 1
+ 
+         CALL ainq850_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:input段落 name="ui_dialog.input"
+         
+         #end add-point
+ 
+         #add-point:construct段落 name="ui_dialog.construct"
+         CONSTRUCT BY NAME g_wc ON inpd008,inpddocno
+	   
+            BEFORE CONSTRUCT
+                                                      
+            ON ACTION controlp INFIELD inpd008 
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_inpadocno()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO inpd008  #顯示到畫面上
+               NEXT FIELD inpd008                     #返回原欄位
+
+            ON ACTION controlp INFIELD inpddocno      #产品分类
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+              #CALL q_inpddocno()                        #呼叫開窗  #151117-00008#1 mark
+               CALL q_inpddocno_3()                      #呼叫開窗  #151117-00008#1 mod
+               DISPLAY g_qryparam.return1 TO inpddocno   #顯示到畫面上
+               NEXT FIELD inpddocno                      #返回原欄位               
+
+         END CONSTRUCT
+         
+         CONSTRUCT BY NAME g_wc_inpd034 ON inpd034
+	   
+            BEFORE CONSTRUCT    
+
+            ON ACTION controlp INFIELD inpd034 
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO inpd034  #顯示到畫面上
+               NEXT FIELD inpd034  
+
+         END CONSTRUCT      
+         
+         CONSTRUCT BY NAME g_wc_inpd032 ON inpd032
+            BEFORE CONSTRUCT    
+
+            ON ACTION controlp INFIELD inpd032 
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO inpd032  #顯示到畫面上
+               NEXT FIELD inpd032  
+
+         END CONSTRUCT      
+
+         CONSTRUCT BY NAME g_wc_inpd033 ON inpd033
+            BEFORE CONSTRUCT    
+ 
+            AFTER FIELD inpd033
+               LET g_inpd033 = GET_FLDBUF(inpd033)
+
+         END CONSTRUCT    
+         
+         CONSTRUCT BY NAME g_wc_inpd035 ON inpd035
+            BEFORE CONSTRUCT    
+ 
+            AFTER FIELD inpd035
+               LET g_inpd035 = GET_FLDBUF(inpd035)
+
+         END CONSTRUCT           
+         
+         CONSTRUCT BY NAME g_wc_inpd005 ON inpd005,inpd006
+            BEFORE CONSTRUCT    
+            
+            ON ACTION controlp INFIELD inpd005 
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_inaa001_12()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO inpd005  #顯示到畫面上
+               NEXT FIELD inpd005      
+
+            ON ACTION controlp INFIELD inpd006 
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_inab002_1()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO inpd006  #顯示到畫面上
+               NEXT FIELD inpd006 
+               
+         END CONSTRUCT     
+         
+         INPUT g_option,g_compare,g_type,g_year,g_month,g_chk1,g_chk2,g_chk3 FROM option,compare,type,year,month,chk1,chk2,chk3
+            BEFORE INPUT
+               IF g_option = '3' THEN
+                  CALL cl_set_comp_entry("compare",TRUE)   
+               ELSE
+                  CALL cl_set_comp_entry("compare",FALSE)
+               END IF  
+               
+               AFTER FIELD option 
+               
+                  IF g_option = '3' THEN
+                     CALL cl_set_comp_entry("compare",TRUE)   
+                  ELSE
+                     CALL cl_set_comp_entry("compare",FALSE)
+                     LET g_compare = '' 
+                     DISPLAY g_compare TO compare
+                  END IF
+                  
+               ON CHANGE option 
+               
+                  IF g_option = '3' THEN
+                     CALL cl_set_comp_entry("compare",TRUE)
+                     #151221-00013 by whitney mark start
+                     #CALL cl_set_comp_entry("chk2",FALSE)
+                     #LET g_chk2 = 'N'
+                     #DISPLAY g_chk2 TO chk2                  
+                     #151221-00013 by whitney mark end
+                     LET g_compare = '1'                     
+                  ELSE
+                     CALL cl_set_comp_entry("compare",FALSE)
+                     #CALL cl_set_comp_entry("chk2",TRUE)  #151221-00013 by whitney mark
+                     LET g_compare = '' 
+                     DISPLAY g_compare TO compare
+                  END IF      
+
+                  CALL ainq850_inpd_visible_false()
+                  CALL ainq850_inpg_visible_false()
+                  CALL ainq850_inpd_visible_true()
+                  CALL ainq850_inpg_visible_true()                  
+
+               ON CHANGE compare
+                  CALL ainq850_inpd_visible_false()
+                  CALL ainq850_inpg_visible_false()                
+                  CALL ainq850_inpd_visible_true()
+                  CALL ainq850_inpg_visible_true()
+               
+                  
+               ON CHANGE chk1
+#                  CALL ainq850_b_fill()
+                  
+
+               ON CHANGE chk2
+#                  CALL ainq850_b_fill()
+               
+               ON CHANGE chk3
+                 IF g_chk3 = 'Y' THEN
+                    CALL cl_set_comp_visible("group_1",TRUE)
+                 ELSE 
+                    CALL cl_set_comp_visible("group_1",FALSE)                 
+                 END IF
+                 
+               AFTER FIELD chk3
+                 IF g_chk3 = 'Y' THEN
+                    CALL cl_set_comp_visible("group_1",TRUE)
+                 ELSE 
+                    CALL cl_set_comp_visible("group_1",FALSE)                 
+                 END IF
+                
+            AFTER INPUT  
+                        
+         END INPUT         
+         #end add-point
+     
+         DISPLAY ARRAY g_inpd_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               CALL ainq850_detail_action_trans()
+ 
+               LET g_master_idx = l_ac
+               #為避免按上下筆時影響執行效能，所以做一些處理
+               LET lc_action_choice_old = g_action_choice
+               LET g_action_choice = "fetch"
+               CALL ainq850_b_fill2()
+               LET g_action_choice = lc_action_choice_old
+ 
+               #add-point:input段before row name="input.body.before_row"
+               
+               #end add-point
+ 
+            
+ 
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+            #add-point:page1自定義行為 name="ui_dialog.body.page1.action"
+            
+            #end add-point
+ 
+         END DISPLAY
+ 
+         #add-point:第一頁籤程式段mark結束用 name="ui_dialog.page1.mark.end"
+         
+         #end add-point
+ 
+         DISPLAY ARRAY g_inpd2_d TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 2
+ 
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body2.before_row"
+               
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_2)
+            
+ 
+            #add-point:page2自定義行為 name="ui_dialog.body2.action"
+            
+            #end add-point
+ 
+         END DISPLAY
+ 
+ 
+ 
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         DISPLAY ARRAY g_inpf_d TO s_detail3.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 3
+ 
+            BEFORE ROW
+               LET g_detail_idx3 = DIALOG.getCurrentRow("s_detail3")
+               LET l_ac2 = g_detail_idx3
+               DISPLAY g_detail_idx3 TO FORMONLY.h_index
+               DISPLAY g_inpf_d.getLength() TO FORMONLY.h_count
+               LET g_master_idx = l_ac2
+               CALL ainq850_b_fill_inpg()
+            
+ 
+         END DISPLAY
+         
+         DISPLAY ARRAY g_inpg_d TO s_detail4.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 4
+ 
+            BEFORE ROW
+               LET g_detail_idx4 = DIALOG.getCurrentRow("s_detail4")
+               LET l_ac2 = g_detail_idx4
+               DISPLAY g_detail_idx4 TO FORMONLY.h_index
+               DISPLAY g_inpg_d.getLength() TO FORMONLY.h_count
+               LET g_master_idx = l_ac2
+
+            
+         END DISPLAY         
+         #end add-point
+ 
+         BEFORE DIALOG
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            CALL ainq850_detail_action_trans()
+ 
+            #add-point:ui_dialog段before dialog name="ui_dialog.bef_dialog"
+            IF cl_null(g_option) THEN LET g_option = '1' END IF 
+#            IF cl_null(g_compare) THEN LET g_compare = '2' END IF
+            IF cl_null(g_type) THEN LET g_type = '1' END IF
+            IF cl_null(g_chk1) THEN LET g_chk1 = 'N' END IF
+            IF cl_null(g_chk2) THEN LET g_chk2 = 'N' END IF
+            IF cl_null(g_chk3) THEN LET g_chk3 = 'N' END IF
+            IF cl_null(g_year) THEN LET g_year = YEAR(g_today) END IF
+            IF cl_null(g_month) THEN LET g_month = MONTH(g_today) END IF
+            DISPLAY g_option TO option
+            DISPLAY g_compare TO compare
+            DISPLAY g_type TO type
+            DISPLAY g_chk1 TO chk1
+            DISPLAY g_chk2 TO chk2
+            DISPLAY g_chk3 TO chk3
+            DISPLAY g_year TO year
+            DISPLAY g_month TO month
+            CALL ainq850_inpd_visible_false()
+            CALL ainq850_inpg_visible_false()
+            CALL ainq850_inpd_visible_true()
+            CALL ainq850_inpg_visible_true()            
+            #end add-point
+            NEXT FIELD inpd008
+ 
+         AFTER DIALOG
+            #add-point:ui_dialog段 after dialog name="ui_dialog.after_dialog"
+ 
+            #end add-point
+            
+         ON ACTION exit
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            INITIALIZE g_wc_filter TO NULL
+            IF cl_null(g_wc) THEN
+               LET g_wc = " 1=1"
+            END IF
+ 
+            IF NOT cl_null(g_wc2_table2) AND g_wc2_table2 <> " 1=1" THEN
+               LET g_wc = g_wc, " AND ", g_wc2_table2
+            END IF
+ 
+ 
+         
+            IF cl_null(g_wc2) THEN
+               LET g_wc2 = " 1=1"
+            END IF
+ 
+            IF NOT cl_null(g_wc2_table2) AND g_wc2_table2 <> " 1=1" THEN
+               LET g_wc2 = g_wc2, " AND ", g_wc2_table2
+            END IF
+ 
+ 
+ 
+            #add-point:ON ACTION accept name="ui_dialog.accept"
+            
+            #end add-point
+ 
+            LET g_detail_idx = 1
+            LET g_detail_idx2 = 1
+            CALL ainq850_b_fill()
+ 
+            IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ""
+               LET g_errparam.code   = -100
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+            END IF
+ 
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum name="ui_dialog.agendum"
+            
+            #end add-point
+            CALL cl_user_overview()
+ 
+         ON ACTION exporttoexcel   #匯出excel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_inpd_d)
+               LET g_export_id[1]   = "s_detail1"
+               LET g_export_node[2] = base.typeInfo.create(g_inpd2_d)
+               LET g_export_id[2]   = "s_detail2"
+ 
+ 
+               #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+               #151111-00022 by whitney add start
+               LET g_export_node[3] = base.typeInfo.create(g_inpf_d)
+               LET g_export_id[3]   = "s_detail3"
+               LET g_export_node[4] = base.typeInfo.create(g_inpg_d)
+               LET g_export_id[4]   = "s_detail4"
+               #151111-00022 by whitney add end
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+ 
+         ON ACTION datarefresh   # 重新整理
+            CALL ainq850_b_fill()
+ 
+         ON ACTION qbehidden     #qbe頁籤折疊
+            IF g_qbe_hidden THEN
+               CALL gfrm_curr.setElementHidden("qbe",0)
+               CALL gfrm_curr.setElementImage("qbehidden","16/mainhidden.png")
+               LET g_qbe_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("qbe",1)
+               CALL gfrm_curr.setElementImage("qbehidden","16/worksheethidden.png")
+               LET g_qbe_hidden = 1     #hidden
+            END IF
+ 
+         ON ACTION detail_first               #page first
+            LET g_action_choice = "detail_first"
+            LET g_detail_page_action = "detail_first"
+            CALL ainq850_b_fill()
+ 
+         ON ACTION detail_previous                #page previous
+            LET g_action_choice = "detail_previous"
+            LET g_detail_page_action = "detail_previous"
+            CALL ainq850_b_fill()
+ 
+         ON ACTION detail_next               #page next
+            LET g_action_choice = "detail_next"
+            LET g_detail_page_action = "detail_next"
+            CALL ainq850_b_fill()
+ 
+         ON ACTION detail_last               #page last
+            LET g_action_choice = "detail_last"
+            LET g_detail_page_action = "detail_last"
+            CALL ainq850_b_fill()
+ 
+         #應用 qs19 樣板自動產生(Version:3)
+         #有關於sel欄位選取的action段落
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_inpd_d.getLength()
+               LET g_inpd_d[li_idx].sel = "Y"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selall name="ui_dialog.onaction_selall"
+            
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_inpd_d.getLength()
+               LET g_inpd_d[li_idx].sel = "N"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selnone name="ui_dialog.onaction_selnone"
+            
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_inpd_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_inpd_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action sel name="ui_dialog.onaction_sel"
+            
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_inpd_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_inpd_d[li_idx].sel = "N"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action unsel name="ui_dialog.onaction_unsel"
+            
+            #end add-point
+ 
+ 
+ 
+ 
+ 
+         #應用 qs16 樣板自動產生(Version:3)
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL ainq850_filter()
+            #add-point:ON ACTION filter name="menu.filter"
+            
+            #END add-point
+            EXIT DIALOG
+ 
+ 
+ 
+ 
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               
+               #add-point:ON ACTION insert name="menu.insert"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               
+               #add-point:ON ACTION query name="menu.query"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo name="menu.datainfo"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+      
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+ 
+         #add-point:查詢方案相關ACTION設定前 name="ui_dialog.set_qbe_action_before"
+         
+         #end add-point
+ 
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+            #add-point:條件清除後 name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         #add-point:查詢方案相關ACTION設定後 name="ui_dialog.set_qbe_action_after"
+         
+         #end add-point
+ 
+      END DIALOG 
+   
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq850.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION ainq850_b_fill()
+   #add-point:b_fill段define-客製 name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc           STRING
+   DEFINE l_pid           LIKE type_t.chr50
+   DEFINE ls_sql_rank     STRING
+   #add-point:b_fill段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   DEFINE l_wc            STRING
+   DEFINE l_wc2           STRING
+   DEFINE l_wc3           STRING
+   DEFINE l_wc4           STRING  
+   DEFINE l_wc5           STRING
+   DEFINE l_wc6           STRING
+   DEFINE l_wc7           STRING  
+   DEFINE l_wc8           STRING
+   DEFINE l_wc9           STRING   
+   DEFINE l_wc10          STRING
+   DEFINE l_wc11          STRING
+   DEFINE l_wc12          STRING      
+   DEFINE g_inpd008_t     LIKE inpd_t.inpd008 
+   DEFINE l_inpa009       LIKE inpa_t.inpa009
+   DEFINE l_inpa010       LIKE inpa_t.inpa010
+   DEFINE l_inpa011       LIKE inpa_t.inpa011 
+   DEFINE l_inpa012       LIKE inpa_t.inpa012 
+   DEFINE l_inpd056       LIKE inpd_t.inpd056
+   DEFINE l_inpd036       LIKE inpd_t.inpd036
+   DEFINE l_flag          LIKE type_t.chr1   
+   DEFINE g_acc           LIKE gzcb_t.gzcb004   
+   DEFINE l_inpa008       LIKE inpa_t.inpa008
+   DEFINE l_num           LIKE inpd_t.inpd030
+   DEFINE l_num2          LIKE inpd_t.inpd030  #160504-00019#4
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_xccc003       LIKE xccc_t.xccc003
+   #end add-point
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   
+   #end add-point
+ 
+ 
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter, cl_sql_auth_filter()   #(ver:34) add cl_sql_auth_filter()
+ 
+   CALL g_inpd_d.clear()
+ 
+   #add-point:陣列清空 name="b_fill.array_clear"
+   
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   IF g_cnt = 0 THEN
+      LET g_cnt = 1
+   END IF
+   LET l_ac = 1
+ 
+   # b_fill段sql組成及FOREACH撰寫
+   #應用 qs04 樣板自動產生(Version:9)
+   #+ b_fill段資料取得(包含sql組成及FOREACH段撰寫)
+   LET ls_sql_rank = "SELECT  UNIQUE '',inpd008,inpddocno,inpdseq,inpd001,'','',inpd002,'',inpd005,'', 
+       inpd006,'',inpd007,inpd003,inpd010,'',inpd011,inpd012,'',inpd013,inpd030,inpd031,inpd034,'',inpd035, 
+       inpd036,inpd037,inpd040,'',inpd041,inpd050,inpd051,inpd054,'',inpd055,inpd056,inpd057,inpd060, 
+       '',inpd061,'','','','','',''  ,DENSE_RANK() OVER( ORDER BY inpd_t.inpddocno,inpd_t.inpdseq) AS RANK FROM inpd_t", 
+ 
+ 
+#table2
+                     " LEFT JOIN inpe_t ON inpeent = inpdent AND inpesite = inpdsite AND inpddocno = inpedocno AND inpdseq = inpeseq",
+ 
+                     "",
+                     " WHERE inpdent= ? AND inpdsite= ? AND 1=1 AND ", ls_wc
+   LET ls_sql_rank = ls_sql_rank, cl_sql_add_filter("inpd_t"),
+                     " ORDER BY inpd_t.inpddocno,inpd_t.inpdseq"
+ 
+   #add-point:b_fill段rank_sql_after name="b_fill.rank_sql_after"
+   
+   #end add-point
+ 
+   LET g_sql = "SELECT COUNT(1) FROM (",ls_sql_rank,")"
+ 
+   PREPARE b_fill_cnt_pre FROM g_sql  #總筆數
+   EXECUTE b_fill_cnt_pre USING g_enterprise, g_site INTO g_tot_cnt
+   FREE b_fill_cnt_pre
+ 
+   #add-point:b_fill段rank_sql_after_count name="b_fill.rank_sql_after_count"
+   
+   #end add-point
+ 
+   CASE g_detail_page_action
+      WHEN "detail_first"
+          LET g_pagestart = 1
+ 
+      WHEN "detail_previous"
+          LET g_pagestart = g_pagestart - g_num_in_page
+          IF g_pagestart < 1 THEN
+              LET g_pagestart = 1
+          END IF
+ 
+      WHEN "detail_next"
+         LET g_pagestart = g_pagestart + g_num_in_page
+         IF g_pagestart > g_tot_cnt THEN
+            LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+            WHILE g_pagestart > g_tot_cnt
+               LET g_pagestart = g_pagestart - g_num_in_page
+            END WHILE
+         END IF
+ 
+      WHEN "detail_last"
+         LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+         WHILE g_pagestart > g_tot_cnt
+            LET g_pagestart = g_pagestart - g_num_in_page
+         END WHILE
+ 
+      OTHERWISE
+         LET g_pagestart = 1
+ 
+   END CASE
+ 
+   LET g_sql = "SELECT '',inpd008,inpddocno,inpdseq,inpd001,'','',inpd002,'',inpd005,'',inpd006,'',inpd007, 
+       inpd003,inpd010,'',inpd011,inpd012,'',inpd013,inpd030,inpd031,inpd034,'',inpd035,inpd036,inpd037, 
+       inpd040,'',inpd041,inpd050,inpd051,inpd054,'',inpd055,inpd056,inpd057,inpd060,'',inpd061,'','', 
+       '','','',''",
+               " FROM (",ls_sql_rank,")",
+              " WHERE RANK >= ",g_pagestart,
+                " AND RANK < ",g_pagestart + g_num_in_page
+ 
+   #add-point:b_fill段sql_after name="b_fill.sql_after"
+#  LET g_sql = "SELECT  UNIQUE 'N',inpd008,inpddocno,inpdseq,inpd001,'','',inpd002,'',inpd005,'',inpd006,'',inpd007, 
+#      inpd003,inpd010,'',inpd011,inpd030,inpd034,'',inpd035,inpd036,inpd040,'',inpd041,inpd050,inpd054, 
+#      '',inpd055,inpd056,inpd060,'',inpd061,'','','','','' FROM inpd_t",
+   CALL cl_err_collect_init()   #160519-00046#1   
+   LET g_sql = "SELECT  UNIQUE 'N',inpd008,inpddocno,inpdseq,inpd001,'','',inpd002,'',inpd005,'',inpd006,'',inpd007, 
+       inpd003,inpd010,'',inpd011,inpd012,'',inpd013,inpd030,inpd031,inpd034,'',inpd035,inpd036,inpd037, 
+       inpd040,'',inpd041,inpd050,inpd051,inpd054,'',inpd055,inpd056,inpd057,inpd060,'',inpd061,'','', 
+       '','','','' FROM inpd_t ", 
+
+               " LEFT JOIN inpe_t ON inpeent = inpdent AND inpesite = inpdsite AND inpddocno = inpedocno AND inpdseq = inpeseq ",
+               " LEFT JOIN inpb_t ON inpbent = inpdent AND inpbsite = inpdsite AND inpbdocno = inpd008 ",
+               " LEFT JOIN inpa_t ON inpaent = inpdent AND inpasite = inpdsite AND inpadocno = inpd008 ",
+ 
+               "",
+               " WHERE inpdent= ? AND inpdsite= ? AND 1=1 AND ", ls_wc
+               
+   IF g_option = '1' OR (g_option = '3' AND g_compare = '1' ) THEN  #初盤
+#      LET g_sql = g_sql," AND inpb001 = '6' AND (inpa009 = 'Y' OR inpa010 = 'Y' )"
+      LET g_sql = g_sql," AND (inpa009 = 'Y' OR inpa010 = 'Y' )"   #add by lixh 20150402
+      IF NOT cl_null(g_wc_inpd034) THEN
+         LET l_wc = cl_replace_str(g_wc_inpd034,'inpd034','inpd040')
+         LET g_sql = g_sql," AND (",l_wc," OR ",g_wc_inpd034,")"
+      END IF 
+      IF NOT cl_null(g_wc_inpd032) THEN      
+         LET l_wc2 = cl_replace_str(g_wc_inpd032,'inpd032','inpd038')
+         LET g_sql = g_sql," AND (",l_wc2," OR ",g_wc_inpd032,")"
+      END IF   
+      IF NOT cl_null(g_wc_inpd033) THEN      
+         LET l_wc3 = cl_replace_str(g_wc_inpd033,'inpd033','inpd039')
+         LET g_sql = g_sql," AND (",l_wc3," OR ",g_wc_inpd033,")"
+      END IF      
+      IF NOT cl_null(g_wc_inpd035) THEN      
+         LET l_wc4 = cl_replace_str(g_wc_inpd035,'inpd035','inpd041')
+         LET g_sql = g_sql," AND (",l_wc4," OR ",g_wc_inpd035,")"
+      END IF   
+      IF NOT cl_null(g_wc_inpd005) THEN
+         LET g_sql = g_sql," AND ",g_wc_inpd005
+      END IF    
+      IF g_chk1 = 'N' THEN   #不包含未盤點的資料
+#         LET g_sql = g_sql," AND inpb002 = 'Y' "  #add by lixh 20150402
+         LET g_sql = g_sql," AND (inpd034 IS NOT NULL OR inpd040 IS NOT NULL)  " 
+      END IF      
+
+   END IF   
+   
+   IF g_option = '2' OR (g_option = '3' AND g_compare = '2' ) THEN  #復盤
+      LET g_sql = g_sql," AND (inpa011 = 'Y' OR inpa012 = 'Y' )"
+      IF NOT cl_null(g_wc_inpd034) THEN
+         LET l_wc = cl_replace_str(g_wc_inpd034,'inpd034','inpd054')
+         LET l_wc2 = cl_replace_str(g_wc_inpd034,'inpd034','inpd060')
+         LET g_sql = g_sql," AND (",l_wc," OR ",l_wc2,")"
+      END IF 
+      IF NOT cl_null(g_wc_inpd032) THEN      
+         LET l_wc2 = cl_replace_str(g_wc_inpd032,'inpd032','inpd052')
+         LET l_wc3 = cl_replace_str(g_wc_inpd032,'inpd032','inpd058')
+         LET g_sql = g_sql," AND (",l_wc2," OR ",l_wc3,")"
+      END IF   
+      IF NOT cl_null(g_wc_inpd033) THEN      
+         LET l_wc4 = cl_replace_str(g_wc_inpd033,'inpd033','inpd053')
+         LET l_wc5 = cl_replace_str(g_wc_inpd033,'inpd033','inpd059')
+         LET g_sql = g_sql," AND (",l_wc4," OR ",l_wc5,")"
+      END IF      
+      IF NOT cl_null(g_wc_inpd035) THEN      
+         LET l_wc6 = cl_replace_str(g_wc_inpd035,'inpd035','inpd055')
+         LET l_wc7 = cl_replace_str(g_wc_inpd035,'inpd035','inpd061')
+         LET g_sql = g_sql," AND (",l_wc6," OR ",l_wc7,")"
+      END IF   
+      IF NOT cl_null(g_wc_inpd005) THEN
+         LET g_sql = g_sql," AND ",g_wc_inpd005
+      END IF    
+      IF g_chk1 = 'N' THEN   #不包含未盤點的資料
+#         LET g_sql = g_sql," AND inpb002 = 'Y'  "   
+         LET g_sql = g_sql," AND (inpd054 IS NOT NULL OR inpd060 IS NOT NULL) "  #add by lixh 20150402
+      END IF      
+      
+   END IF  
+   IF g_option = '3' THEN       #差異分析     
+      IF g_compare = '3' THEN   #初盤&復盤
+      #   LET g_sql = g_sql," AND (inpb001 = '6' OR inpb001 = '10') AND (inpa009 = 'Y' OR inpa010 = 'Y') AND (inpa011 = 'Y' OR inpa012 = 'Y')"
+         LET g_sql = g_sql," AND (inpa009 = 'Y' OR inpa010 = 'Y') AND (inpa011 = 'Y' OR inpa012 = 'Y')"     #add by lixh 20150402  
+         IF NOT cl_null(g_wc_inpd034) THEN
+            LET l_wc = cl_replace_str(g_wc_inpd034,'inpd034','inpd040')
+            LET l_wc2 = cl_replace_str(g_wc_inpd034,'inpd034','inpd054')
+            LET l_wc3 = cl_replace_str(g_wc_inpd034,'inpd034','inpd060')
+            LET g_sql = g_sql," AND (",l_wc," OR ",g_wc_inpd034," OR ",l_wc2," OR ",l_wc3,")"
+         END IF  
+         IF NOT cl_null(g_wc_inpd032) THEN      
+            LET l_wc4 = cl_replace_str(g_wc_inpd032,'inpd032','inpd038')
+            LET l_wc5 = cl_replace_str(g_wc_inpd032,'inpd032','inpd052')
+            LET l_wc6 = cl_replace_str(g_wc_inpd032,'inpd032','inpd058')
+            LET g_sql = g_sql," AND (",l_wc4," OR ",g_wc_inpd032," OR ",l_wc5," OR ",l_wc6,")"
+         END IF
+         IF NOT cl_null(g_wc_inpd033) THEN      
+            LET l_wc7 = cl_replace_str(g_wc_inpd033,'inpd033','inpd039')
+            LET l_wc8 = cl_replace_str(g_wc_inpd033,'inpd033','inpd053')
+            LET l_wc9 = cl_replace_str(g_wc_inpd033,'inpd033','inpd059')
+            LET g_sql = g_sql," AND (",l_wc7," OR ",g_wc_inpd033," OR ",l_wc8," OR ",l_wc9,")"
+         END IF   
+         IF NOT cl_null(g_wc_inpd035) THEN      
+            LET l_wc10 = cl_replace_str(g_wc_inpd035,'inpd035','inpd041')
+            LET l_wc11 = cl_replace_str(g_wc_inpd035,'inpd035','inpd055')
+            LET l_wc12 = cl_replace_str(g_wc_inpd035,'inpd035','inpd061')
+            LET g_sql = g_sql," AND (",l_wc10," OR ",g_wc_inpd035," OR ",l_wc11," OR ",l_wc12,")"
+         END IF  
+         IF NOT cl_null(g_wc_inpd005) THEN
+            LET g_sql = g_sql," AND ",g_wc_inpd005
+         END IF   
+                
+         IF g_chk1 = 'N'THEN   #不包含未盤點的資料
+            LET g_sql = g_sql," AND (inpd034 IS NOT NULL OR inpd040 IS NOT NULL OR inpd054 IS NOT NULL OR inpd060 IS NOT NULL)  "   #add by lixh 20150402  
+         END IF      
+      END IF        
+   END IF
+   LET g_sql = g_sql, cl_sql_add_filter("inpd_t"),
+                      " ORDER BY inpd_t.inpddocno,inpd_t.inpdseq"
+   LET g_inpd008_t = NULL  
+   LET l_flag = 'N' 
+   #SELECT gzcb004 INTO g_acc FROM gzcb_t WHERE gzcb001 = '24' AND gzcb002 = 'aint830'   #160816-00001#3  mark
+   LET g_acc = s_fin_get_scc_value('24','aint830','2')  #160816-00001#3  Add
+   
+   #end add-point
+ 
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE ainq850_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR ainq850_pb
+ 
+   OPEN b_fill_curs USING g_enterprise, g_site
+ 
+   FOREACH b_fill_curs INTO g_inpd_d[l_ac].sel,g_inpd_d[l_ac].inpd008,g_inpd_d[l_ac].inpddocno,g_inpd_d[l_ac].inpdseq, 
+       g_inpd_d[l_ac].inpd001,g_inpd_d[l_ac].inpd001_desc,g_inpd_d[l_ac].inpd001_desc_1,g_inpd_d[l_ac].inpd002, 
+       g_inpd_d[l_ac].inpd002_desc,g_inpd_d[l_ac].inpd005,g_inpd_d[l_ac].inpd005_desc,g_inpd_d[l_ac].inpd006, 
+       g_inpd_d[l_ac].inpd006_desc,g_inpd_d[l_ac].inpd007,g_inpd_d[l_ac].inpd003,g_inpd_d[l_ac].inpd010, 
+       g_inpd_d[l_ac].inpd010_desc,g_inpd_d[l_ac].inpd011,g_inpd_d[l_ac].inpd012,g_inpd_d[l_ac].inpd012_desc, 
+       g_inpd_d[l_ac].inpd013,g_inpd_d[l_ac].inpd030,g_inpd_d[l_ac].inpd031,g_inpd_d[l_ac].inpd034,g_inpd_d[l_ac].inpd034_desc, 
+       g_inpd_d[l_ac].inpd035,g_inpd_d[l_ac].inpd036,g_inpd_d[l_ac].inpd037,g_inpd_d[l_ac].inpd040,g_inpd_d[l_ac].inpd040_desc, 
+       g_inpd_d[l_ac].inpd041,g_inpd_d[l_ac].inpd050,g_inpd_d[l_ac].inpd051,g_inpd_d[l_ac].inpd054,g_inpd_d[l_ac].inpd054_desc, 
+       g_inpd_d[l_ac].inpd055,g_inpd_d[l_ac].inpd056,g_inpd_d[l_ac].inpd057,g_inpd_d[l_ac].inpd060,g_inpd_d[l_ac].inpd060_desc, 
+       g_inpd_d[l_ac].inpd061,g_inpd_d[l_ac].mored,g_inpd_d[l_ac].ckmored,g_inpd_d[l_ac].costd,g_inpd_d[l_ac].scostd, 
+       g_inpd_d[l_ac].inpd014,g_inpd_d[l_ac].inpd014_desc
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+ 
+      
+ 
+      #add-point:b_fill段資料填充 name="b_fill.fill"
+      IF g_inpd_d[l_ac].inpd008 <> g_inpd008_t OR cl_null(g_inpd008_t) THEN
+         LET g_inpd008_t = g_inpd_d[l_ac].inpd008
+         SELECT inpa009,inpa010,inpa011,inpa012,inpa008 INTO l_inpa009,l_inpa010,l_inpa011,l_inpa012,l_inpa008 FROM inpa_t 
+          WHERE inpaent = g_enterprise
+            AND inpasite = g_site
+            AND inpadocno = g_inpd_d[l_ac].inpd008                       
+      END IF
+      #mark by lixh 20150402
+#      IF g_chk1 = 'N' THEN   #不包含未盤點的資料
+#         IF g_option = '1' OR (g_option = '3' AND (g_compare = '1' OR g_compare = '3'))  THEN  #初盤
+#            IF l_inpa009 = 'Y' AND cl_null(g_inpd_d[l_ac].inpd034) THEN
+#               CONTINUE FOREACH
+#            END IF
+#            IF l_inpa010 = 'Y' AND cl_null(g_inpd_d[l_ac].inpd040) THEN
+#               CONTINUE FOREACH
+#            END IF
+#         END IF
+#         IF g_option = '2' OR (g_option = '3' AND (g_compare = '2' OR g_compare = '3')) THEN  #復盤
+#            IF l_inpa011 = 'Y' AND cl_null(g_inpd_d[l_ac].inpd054) THEN
+#               CONTINUE FOREACH
+#            END IF
+#            IF l_inpa012 = 'Y' AND cl_null(g_inpd_d[l_ac].inpd060) THEN
+#               CONTINUE FOREACH
+#            END IF
+#         END IF         
+#      END IF   
+      #mark by lixh 20150402
+      
+      #add by lixh 20150402
+      IF l_inpa008 = '2' THEN   #盤差輸入
+         IF cl_null(g_inpd_d[l_ac].inpd034) THEN
+            LET g_inpd_d[l_ac].inpd030 = '' 
+            LET g_inpd_d[l_ac].inpd031 = ''  #160504-00019#4
+         END IF
+         IF cl_null(g_inpd_d[l_ac].inpd040) THEN
+            LET g_inpd_d[l_ac].inpd036 = '' 
+            LET g_inpd_d[l_ac].inpd037 = ''  #160504-00019#4
+         END IF    
+         IF cl_null(g_inpd_d[l_ac].inpd054) THEN
+            LET g_inpd_d[l_ac].inpd050 = '' 
+            LET g_inpd_d[l_ac].inpd051 = ''  #160504-00019#4
+         END IF    
+         IF cl_null(g_inpd_d[l_ac].inpd060) THEN
+            LET g_inpd_d[l_ac].inpd056 = '' 
+            LET g_inpd_d[l_ac].inpd057 = ''  #160504-00019#4
+         END IF             
+      END IF
+      #add by lixh 20150402
+      
+      LET l_flag = 'N'
+      IF g_chk2 = 'N' THEN   #不包含盤點數量無差異的資料
+         IF g_option = '1' OR (g_option = '3' AND (g_compare = '1' OR g_compare = '3')) THEN  #初盤
+#            IF l_inpa009 = 'Y' THEN
+#               IF g_inpd_d[l_ac].inpd030 <> g_inpd_d[l_ac].inpd011 THEN
+#                  LET l_flag = 'Y'
+#               END IF   
+#            END IF
+#            IF l_inpa010 = 'Y' THEN    #初盤二
+#               IF g_inpd_d[l_ac].inpd036 <> g_inpd_d[l_ac].inpd011 THEN
+#                  LET l_flag = 'Y'
+#               END IF   
+#            END IF    
+#            #add by lixh 20150125(S)            
+#            IF g_inpd_d[l_ac].inpd030 <> g_inpd_d[l_ac].inpd036 THEN
+#               LET l_flag = 'Y'
+#            END IF
+#            #add by lixh 20150125(E)
+
+            #add by lixh 20150402(S)  
+            IF NOT cl_null(g_inpd_d[l_ac].inpd030) THEN
+               IF g_inpd_d[l_ac].inpd030 <> g_inpd_d[l_ac].inpd011 THEN
+                  LET l_flag = 'Y'
+               END IF
+            END IF
+            IF NOT cl_null(g_inpd_d[l_ac].inpd036) THEN
+               IF g_inpd_d[l_ac].inpd036 <> g_inpd_d[l_ac].inpd011 THEN
+                  LET l_flag = 'Y'
+               END IF
+            END IF
+            #add by lixh 20150402(E)
+            
+            #160504-00019#4  #參考單位有異動
+            IF NOT cl_null(g_inpd_d[l_ac].inpd031) THEN
+               IF g_inpd_d[l_ac].inpd031 <> g_inpd_d[l_ac].inpd013 THEN
+                  LET l_flag = 'Y'
+               END IF
+            END IF
+            IF NOT cl_null(g_inpd_d[l_ac].inpd037) THEN
+               IF g_inpd_d[l_ac].inpd037 <> g_inpd_d[l_ac].inpd013 THEN
+                  LET l_flag = 'Y'
+               END IF
+            END IF            
+            #160504-00019#4
+            
+         END IF 
+         IF g_option = '2' OR (g_option = '3' AND (g_compare = '2' OR g_compare = '3')) THEN  #復盤
+#             IF l_inpa011 = 'Y' THEN
+#               IF g_inpd_d[l_ac].inpd050 <> g_inpd_d[l_ac].inpd011 THEN
+#                  LET l_flag = 'Y'
+#               END IF   
+#            END IF
+#            IF l_inpa012 = 'Y' THEN    #復盤二
+#               IF g_inpd_d[l_ac].inpd056 <> g_inpd_d[l_ac].inpd011 THEN
+#                  LET l_flag = 'Y'
+#               END IF   
+#            END IF    
+#            #add by lixh 20150125(S)            
+#            IF g_inpd_d[l_ac].inpd050 <> g_inpd_d[l_ac].inpd056 THEN
+#               LET l_flag = 'Y'
+#            END IF
+#            #add by lixh 20150125(E) 
+
+            #add by lixh 20150402
+            IF NOT cl_null(g_inpd_d[l_ac].inpd050) THEN
+               IF g_inpd_d[l_ac].inpd050 <> g_inpd_d[l_ac].inpd011 THEN
+                  LET l_flag = 'Y'
+               END IF   
+            END IF
+            IF NOT cl_null(g_inpd_d[l_ac].inpd056) THEN
+               IF g_inpd_d[l_ac].inpd056 <> g_inpd_d[l_ac].inpd011 THEN
+                  LET l_flag = 'Y'
+               END IF   
+            END IF            
+            #add by lixh 20150402
+            
+            #160504-00019#4  #參考單位有異動
+            IF NOT cl_null(g_inpd_d[l_ac].inpd051) THEN
+               IF g_inpd_d[l_ac].inpd051 <> g_inpd_d[l_ac].inpd013 THEN
+                  LET l_flag = 'Y'
+               END IF   
+            END IF
+            IF NOT cl_null(g_inpd_d[l_ac].inpd057) THEN
+               IF g_inpd_d[l_ac].inpd057 <> g_inpd_d[l_ac].inpd013 THEN
+                  LET l_flag = 'Y'
+               END IF   
+            END IF             
+            #160504-00019#4
+            
+         END IF  
+         IF l_flag = 'N'  THEN
+            CONTINUE FOREACH
+         END IF      
+                 
+#         IF g_option = '3' AND g_compare = '3' THEN
+#            IF l_inpa010 = 'Y' AND l_inpa012 = 'Y' THEN  #初盤二與復盤二
+#               IF (g_inpd_d[l_ac].inpd050 <> g_inpd_d[l_ac].inpd011) OR (g_inpd_d[l_ac].inpd056 <> g_inpd_d[l_ac].inpd011) THEN
+#                  LET l_flag = 'Y'
+#               END IF  
+#            ELSE
+#               IF (g_inpd_d[l_ac].inpd030 <> g_inpd_d[l_ac].inpd011) OR (g_inpd_d[l_ac].inpd036 <> g_inpd_d[l_ac].inpd011) THEN
+#                  LET l_flag = 'Y'
+#               END IF            
+#            END IF
+#            IF l_inpa012 = 'Y' THEN
+#               LET l_inpd056 = g_inpd_d[l_ac].inpd056
+#            ELSE
+#               IF l_inpa011 = 'Y' THEN
+#                  LET l_inpd056 = g_inpd_d[l_ac].inpd050 
+#               END IF
+#            END IF    
+#            IF l_inpa010 = 'Y' THEN
+#               LET l_inpd036 = g_inpd_d[l_ac].inpd036
+#            ELSE
+#               IF l_inpa009 = 'Y' THEN
+#                  LET l_inpd036 = g_inpd_d[l_ac].inpd030 
+#               END IF
+#            END IF  
+#            IF l_inpd056 <> g_inpd_d[l_ac].inpd011 THEN
+#               LET l_flag = 'Y'
+#            END IF
+#            #add by lixh 20150125(S)            
+#            IF l_inpd036 <> l_inpd056 THEN
+#               LET l_flag = 'Y'
+#            END IF
+#            #add by lixh 20150125(E)
+         ELSE
+         #20150128 mark by lixh 
+#            IF g_option = '3' THEN
+#               IF g_option = '3' AND (g_compare = '1' OR g_compare = '3') THEN
+#                  IF g_inpd_d[l_ac].inpd030 <> g_inpd_d[l_ac].inpd036 THEN
+#                     LET l_flag = 'Y'
+#                  END IF               
+#               END IF
+#               IF g_option = '3' AND (g_compare = '2' OR g_compare = '3') THEN
+#                  IF g_inpd_d[l_ac].inpd050 <> g_inpd_d[l_ac].inpd056 THEN
+#                     LET l_flag = 'Y'
+#                  END IF            
+#               END IF            
+#               IF l_flag = 'N'  THEN
+#                  CONTINUE FOREACH
+#               END IF  
+#            END IF            
+      END IF
+      #盤盈虧數量
+      IF g_option = '1' OR (g_option = '3' AND g_compare = '1' ) THEN   #初盤
+#         IF l_inpa009 = 'Y' AND l_inpa010 = 'N' THEN  #初盤一
+#            LET g_inpd_d[l_ac].mored = g_inpd_d[l_ac].inpd030 - g_inpd_d[l_ac].inpd011
+#         END IF
+#         IF l_inpa010 = 'Y'  THEN  #初盤二
+#            LET g_inpd_d[l_ac].mored = g_inpd_d[l_ac].inpd036 - g_inpd_d[l_ac].inpd011
+#         END IF            
+          IF NOT cl_null(g_inpd_d[l_ac].inpd036) THEN
+             LET g_inpd_d[l_ac].mored = g_inpd_d[l_ac].inpd036 - g_inpd_d[l_ac].inpd011
+             LET g_inpd_d[l_ac].ckmored = g_inpd_d[l_ac].inpd037 - g_inpd_d[l_ac].inpd013  #160504-00019#4
+          ELSE
+             IF NOT cl_null(g_inpd_d[l_ac].inpd030) THEN
+                LET g_inpd_d[l_ac].mored = g_inpd_d[l_ac].inpd030 - g_inpd_d[l_ac].inpd011
+                LET g_inpd_d[l_ac].ckmored = g_inpd_d[l_ac].inpd031 - g_inpd_d[l_ac].inpd013  #160504-00019#4
+             END IF             
+          END IF
+      END IF
+      IF g_option = '2' OR (g_option = '3' AND g_compare = '2') OR (g_option = '3' AND g_compare = '3') THEN     #復盤
+#         IF l_inpa012 = 'Y' THEN  #復盤二
+#            LET g_inpd_d[l_ac].mored = g_inpd_d[l_ac].inpd056 - g_inpd_d[l_ac].inpd011
+#         ELSE
+#            LET g_inpd_d[l_ac].mored = g_inpd_d[l_ac].inpd050 - g_inpd_d[l_ac].inpd011         
+#         END IF  
+          LET l_num = 0
+          LET l_num2 = 0
+          IF NOT cl_null(g_inpd_d[l_ac].inpd030) THEN
+             LET l_num = g_inpd_d[l_ac].inpd030
+             LET l_num2 = g_inpd_d[l_ac].inpd031    #160504-00019#4
+          END IF  
+          IF NOT cl_null(g_inpd_d[l_ac].inpd036) THEN
+             LET l_num = g_inpd_d[l_ac].inpd036
+             LET l_num2 = g_inpd_d[l_ac].inpd037    #160504-00019#4
+          END IF     
+          IF NOT cl_null(g_inpd_d[l_ac].inpd050) THEN
+             LET l_num = g_inpd_d[l_ac].inpd050
+             LET l_num2 = g_inpd_d[l_ac].inpd051    #160504-00019#4
+          END IF  
+          IF NOT cl_null(g_inpd_d[l_ac].inpd056) THEN
+             LET l_num = g_inpd_d[l_ac].inpd056
+             LET l_num2 = g_inpd_d[l_ac].inpd057    #160504-00019#4
+          END IF   
+          LET g_inpd_d[l_ac].mored = l_num - g_inpd_d[l_ac].inpd011
+          LET g_inpd_d[l_ac].ckmored = l_num2 - g_inpd_d[l_ac].inpd013    #160504-00019#4          
+          IF cl_null(l_num) THEN
+             LET g_inpd_d[l_ac].mored = 0 
+          END IF  
+          #160504-00019#4          
+          IF cl_null(l_num2) THEN
+             LET g_inpd_d[l_ac].ckmored = 0 
+          END IF 
+          #160504-00019#4 
+          
+      END IF     
+      
+      #成本邏輯段暫時擱置
+      IF g_type = '1' THEN   #標準成本
+         #160519-00046#1-s
+         #料件的成本单价
+         SELECT DISTINCT xcat001 INTO l_xccc003 FROM xcat_t
+          WHERE xcatent = g_enterprise 
+            AND xcat005 = '1'
+            AND rownum = 1
+         CALL s_cost_price_get_item_cost(g_site,'','',l_xccc003,g_year,g_month,g_inpd_d[l_ac].inpd001,g_inpd_d[l_ac].inpd002,g_inpd_d[l_ac].inpd005,g_inpd_d[l_ac].inpd007,g_inpd_d[l_ac].inpd003,'')
+              RETURNING l_success,g_inpd_d[l_ac].costd    
+         #160519-00046#1-e              
+      END IF
+      
+      IF g_type = '2' THEN   #實際成本
+         #160519-00046#1-s
+         SELECT DISTINCT xcat001 INTO l_xccc003 FROM xcat_t
+          WHERE xcatent = g_enterprise
+            AND xcat005 = '5'
+            AND rownum = 1
+         CALL s_cost_price_get_item_cost(g_site,'','',l_xccc003,g_year,g_month,g_inpd_d[l_ac].inpd001,g_inpd_d[l_ac].inpd002,g_inpd_d[l_ac].inpd005,g_inpd_d[l_ac].inpd007,g_inpd_d[l_ac].inpd003,'')
+              RETURNING l_success,g_inpd_d[l_ac].costd    
+         #160519-00046#1-e     
+      END IF
+      
+      IF g_type = '3' THEN   #先進先出成本--系統目前還沒有這種計算方式
+      
+      END IF      
+      
+      LET g_inpd_d[l_ac].scostd = g_inpd_d[l_ac].mored * g_inpd_d[l_ac].costd
+      CALL s_desc_get_acc_desc(g_acc,g_inpd_d[l_ac].inpd014) RETURNING g_inpd_d[l_ac].inpd014_desc  
+      CALL s_feature_description(g_inpd_d[l_ac].inpd001,g_inpd_d[l_ac].inpd002)
+           RETURNING l_success,g_inpd_d[l_ac].inpd002_desc      
+      #end add-point
+ 
+      CALL ainq850_detail_show("'1'")
+ 
+      CALL ainq850_inpd_t_mask()
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+ 
+   END FOREACH
+ 
+ 
+ 
+ 
+ 
+   #應用 qs05 樣板自動產生(Version:4)
+   #+ b_fill段其他table資料取得(包含sql組成及資料填充)
+ 
+ 
+ 
+ 
+ 
+ 
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.others.fill"
+   CALL ainq850_b_fill_inpf()   #在制工單盤點
+   #end add-point
+ 
+   CALL g_inpd_d.deleteElement(g_inpd_d.getLength())
+ 
+   #add-point:陣列長度調整 name="b_fill.array_deleteElement"
+   CALL cl_err_collect_show()  #160519-00046#1
+   #end add-point
+ 
+   LET g_error_show = 0
+ 
+   LET g_detail_cnt = g_inpd_d.getLength()
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+ 
+   #應用 qs06 樣板自動產生(Version:3)
+   #+ b_fill段CURSOR釋放
+   CLOSE b_fill_curs
+   FREE ainq850_pb
+ 
+ 
+ 
+ 
+ 
+ 
+   #調整單身index指標，避免翻頁後指到空白筆數
+   CALL ainq850_detail_index_setting()
+ 
+   #重新計算單身筆數並呈現
+   CALL ainq850_detail_action_trans()
+ 
+   LET l_ac = 1
+   IF g_inpd_d.getLength() > 0 THEN
+      CALL ainq850_b_fill2()
+   END IF
+ 
+      CALL ainq850_filter_show('inpd008','b_inpd008')
+   CALL ainq850_filter_show('inpddocno','b_inpddocno')
+   CALL ainq850_filter_show('inpdseq','b_inpdseq')
+   CALL ainq850_filter_show('inpd001','b_inpd001')
+   CALL ainq850_filter_show('inpd002','b_inpd002')
+   CALL ainq850_filter_show('inpd005','b_inpd005')
+   CALL ainq850_filter_show('inpd006','b_inpd006')
+   CALL ainq850_filter_show('inpd007','b_inpd007')
+   CALL ainq850_filter_show('inpd003','b_inpd003')
+   CALL ainq850_filter_show('inpd010','b_inpd010')
+   CALL ainq850_filter_show('inpd011','b_inpd011')
+   CALL ainq850_filter_show('inpd012','b_inpd012')
+   CALL ainq850_filter_show('inpd013','b_inpd013')
+   CALL ainq850_filter_show('inpd030','b_inpd030')
+   CALL ainq850_filter_show('inpd031','b_inpd031')
+   CALL ainq850_filter_show('inpd034','b_inpd034')
+   CALL ainq850_filter_show('inpd035','b_inpd035')
+   CALL ainq850_filter_show('inpd036','b_inpd036')
+   CALL ainq850_filter_show('inpd037','b_inpd037')
+   CALL ainq850_filter_show('inpd040','b_inpd040')
+   CALL ainq850_filter_show('inpd041','b_inpd041')
+   CALL ainq850_filter_show('inpd050','b_inpd050')
+   CALL ainq850_filter_show('inpd051','b_inpd051')
+   CALL ainq850_filter_show('inpd054','b_inpd054')
+   CALL ainq850_filter_show('inpd055','b_inpd055')
+   CALL ainq850_filter_show('inpd056','b_inpd056')
+   CALL ainq850_filter_show('inpd057','b_inpd057')
+   CALL ainq850_filter_show('inpd060','b_inpd060')
+   CALL ainq850_filter_show('inpd061','b_inpd061')
+   CALL ainq850_filter_show('inpeseq2','b_inpeseq2')
+   CALL ainq850_filter_show('inpe008','b_inpe008')
+   CALL ainq850_filter_show('inpe009','b_inpe009')
+   CALL ainq850_filter_show('inpe010','b_inpe010')
+   CALL ainq850_filter_show('inpe012','b_inpe012')
+   CALL ainq850_filter_show('inpe030','b_inpe030')
+   CALL ainq850_filter_show('inpe033','b_inpe033')
+   CALL ainq850_filter_show('inpe034','b_inpe034')
+   CALL ainq850_filter_show('inpe035','b_inpe035')
+   CALL ainq850_filter_show('inpe038','b_inpe038')
+   CALL ainq850_filter_show('inpe039','b_inpe039')
+   CALL ainq850_filter_show('inpe050','b_inpe050')
+   CALL ainq850_filter_show('inpe053','b_inpe053')
+   CALL ainq850_filter_show('inpe054','b_inpe054')
+   CALL ainq850_filter_show('inpe055','b_inpe055')
+   CALL ainq850_filter_show('inpe058','b_inpe058')
+   CALL ainq850_filter_show('inpe059','b_inpe059')
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq850.b_fill2" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION ainq850_b_fill2()
+   #add-point:b_fill2段define-客製 name="b_fill2.define_customerization"
+   
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:b_fill2段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill2.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="b_fill2.before_function"
+   
+   #end add-point
+ 
+   LET li_ac = l_ac
+ 
+   #單身組成
+   #應用 qs07 樣板自動產生(Version:7)
+   #+ b_fill2段table資料取得(包含sql組成及資料填充)
+#Page2
+   CALL g_inpd2_d.clear()
+ 
+   #add-point:陣列清空 name="b_fill2.array_clear"
+   #160407-00016#1-add-(S) 避免程式抓不到欄位，就直接關閉
+   IF g_detail_idx IS NULL OR g_detail_idx = 0 THEN 
+      RETURN
+   END IF   
+   #160407-00016#1-add-(E)
+   #end add-point
+ 
+#table2
+   #為避免影響執行效能，若是按上下筆就不重組SQL
+   IF g_action_choice <> "fetch" OR cl_null(g_action_choice) THEN
+      LET g_sql = "SELECT  UNIQUE inpeseq2,inpe008,inpe009,inpe010,inpe012,inpe030,inpe033,'',inpe034, 
+          inpe035,inpe038,'',inpe039,inpe050,inpe053,'',inpe054,inpe055,inpe058,'',inpe059 FROM inpe_t", 
+ 
+                  "",
+                  " WHERE inpeent=? AND inpesite=? AND inpedocno=? AND inpeseq=?"
+  
+      IF NOT cl_null(g_wc2_table2) THEN
+         LET g_sql = g_sql CLIPPED," AND ",g_wc2_table2 CLIPPED
+      END IF
+  
+      LET g_sql = g_sql, " ORDER BY inpe_t.inpeseq2"
+  
+      #add-point:單身填充前 name="b_fill2.before_fill2"
+      
+      #end add-point
+ 
+      LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+      PREPARE ainq850_pb2 FROM g_sql
+      DECLARE b_fill_curs2 CURSOR FOR ainq850_pb2
+   END IF
+ 
+   #(ver:7) ---mark start---
+#  OPEN b_fill_curs2 USING g_enterprise, g_site,g_inpd_d[g_detail_idx].inpddocno
+#                                 ,g_inpd_d[g_detail_idx].inpdseq
+ 
+ 
+   LET l_ac = 1
+   FOREACH b_fill_curs2
+      USING g_enterprise, g_site,g_inpd_d[g_detail_idx].inpddocno
+            ,g_inpd_d[g_detail_idx].inpdseq
+ 
+ 
+      INTO g_inpd2_d[l_ac].inpeseq2,g_inpd2_d[l_ac].inpe008,g_inpd2_d[l_ac].inpe009,g_inpd2_d[l_ac].inpe010, 
+          g_inpd2_d[l_ac].inpe012,g_inpd2_d[l_ac].inpe030,g_inpd2_d[l_ac].inpe033,g_inpd2_d[l_ac].inpe033_desc, 
+          g_inpd2_d[l_ac].inpe034,g_inpd2_d[l_ac].inpe035,g_inpd2_d[l_ac].inpe038,g_inpd2_d[l_ac].inpe038_desc, 
+          g_inpd2_d[l_ac].inpe039,g_inpd2_d[l_ac].inpe050,g_inpd2_d[l_ac].inpe053,g_inpd2_d[l_ac].inpe053_desc, 
+          g_inpd2_d[l_ac].inpe054,g_inpd2_d[l_ac].inpe055,g_inpd2_d[l_ac].inpe058,g_inpd2_d[l_ac].inpe058_desc, 
+          g_inpd2_d[l_ac].inpe059
+   #(ver:7) --- end ---
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+ 
+      
+ 
+      #add-point:b_fill2段資料填充 name="b_fill2.fill2"
+      
+      #end add-point
+ 
+      CALL ainq850_detail_show("'2'")
+ 
+      CALL ainq850_inpe_t_mask()
+ 
+      IF l_ac > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend =  "" 
+         LET g_errparam.code   =  9035 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+ 
+   END FOREACH
+ 
+ 
+#Page2
+   CALL g_inpd2_d.deleteElement(g_inpd2_d.getLength())
+ 
+   #add-point:陣列長度調整 name="b_fill2.array_deleteElement"
+   
+   #end add-point
+ 
+#Page2
+   LET li_ac = g_inpd2_d.getLength()
+ 
+   DISPLAY li_ac TO FORMONLY.cnt
+   LET g_detail_idx2 = 1
+   DISPLAY g_detail_idx2 TO FORMONLY.idx
+ 
+ 
+ 
+ 
+ 
+   #add-point:單身填充後 name="b_fill2.after_fill"
+   #151111-00022 by whitney add start
+   IF g_detail_cnt = 0 AND g_detail_cnt3 <> 0 THEN
+      LET g_detail_cnt = g_detail_cnt3
+   END IF
+   #151111-00022 by whitney add end
+   #end add-point
+ 
+   LET l_ac = li_ac
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq850.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION ainq850_detail_show(ps_page)
+   #add-point:show段define-客製 name="detail_show.define_customerization"
+   
+   #end add-point
+   DEFINE ps_page    STRING
+   DEFINE ls_sql     STRING
+   #add-point:show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   
+   #end add-point
+ 
+   #add-point:detail_show段之前 name="detail_show.before"
+   
+   #end add-point
+ 
+   
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      
+ 
+      #add-point:show段單身reference name="detail_show.body.reference"
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_inpd_d[l_ac].inpd001
+            LET ls_sql = "SELECT imaal003,imaal004 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'"
+            LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+            CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+            LET g_inpd_d[l_ac].inpd001_desc = '', g_rtn_fields[1] , ''
+            LET g_inpd_d[l_ac].inpd001_desc_1 = '', g_rtn_fields[2] , ''
+            DISPLAY BY NAME g_inpd_d[l_ac].inpd001_desc,g_inpd_d[l_ac].inpd001_desc_1
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_inpd_d[l_ac].inpd005
+            LET ls_sql = "SELECT inayl003 FROM inayl_t WHERE inaylent='"||g_enterprise||"' AND inayl001=? AND inayl002='"||g_dlang||"'"
+            LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+            CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+            LET g_inpd_d[l_ac].inpd005_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_inpd_d[l_ac].inpd005_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_site
+            LET g_ref_fields[2] = g_inpd_d[l_ac].inpd005
+            LET g_ref_fields[3] = g_inpd_d[l_ac].inpd006
+            LET ls_sql = "SELECT inab003 FROM inab_t WHERE inabent='"||g_enterprise||"' AND inabsite=? AND inab001=? AND inab002=? "
+            LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+            CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+            LET g_inpd_d[l_ac].inpd006_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_inpd_d[l_ac].inpd006_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_inpd_d[l_ac].inpd010
+            LET ls_sql = "SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'"
+            LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+            CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+            LET g_inpd_d[l_ac].inpd010_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_inpd_d[l_ac].inpd010_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_inpd_d[l_ac].inpd034
+            LET ls_sql = "SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? "
+            LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+            CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+            LET g_inpd_d[l_ac].inpd034_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_inpd_d[l_ac].inpd034_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_inpd_d[l_ac].inpd040
+            LET ls_sql = "SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? "
+            LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+            CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+            LET g_inpd_d[l_ac].inpd040_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_inpd_d[l_ac].inpd040_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_inpd_d[l_ac].inpd054
+            LET ls_sql = "SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? "
+            LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+            CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+            LET g_inpd_d[l_ac].inpd054_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_inpd_d[l_ac].inpd054_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_inpd_d[l_ac].inpd060
+            LET ls_sql = "SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? "
+            LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+            CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+            LET g_inpd_d[l_ac].inpd060_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_inpd_d[l_ac].inpd060_desc
+            CALL s_desc_get_unit_desc(g_inpd_d[l_ac].inpd012) RETURNING g_inpd_d[l_ac].inpd012_desc   #160504-00019#4
+      #end add-point
+   END IF
+ 
+   IF ps_page.getIndexOf("'2'",1) > 0 THEN
+      #帶出公用欄位reference值page2
+      
+ 
+      #add-point:show段單身reference name="detail_show.body2.reference"
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_inpd2_d[l_ac].inpe033
+            LET ls_sql = "SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? "
+            LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+            CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+            LET g_inpd2_d[l_ac].inpe033_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_inpd2_d[l_ac].inpe033_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_inpd2_d[l_ac].inpe038
+            LET ls_sql = "SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? "
+            LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+            CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+            LET g_inpd2_d[l_ac].inpe038_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_inpd2_d[l_ac].inpe038_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_inpd2_d[l_ac].inpe053
+            LET ls_sql = "SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? "
+            LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+            CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+            LET g_inpd2_d[l_ac].inpe053_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_inpd2_d[l_ac].inpe053_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_inpd2_d[l_ac].inpe058
+            LET ls_sql = "SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? "
+            LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+            CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+            LET g_inpd2_d[l_ac].inpe058_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_inpd2_d[l_ac].inpe058_desc
+
+      #end add-point
+   END IF
+ 
+ 
+ 
+   #add-point:detail_show段之後 name="detail_show.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq850.filter" >}
+#應用 qs13 樣板自動產生(Version:8)
+#+ filter段相關程式段
+#+ filter過濾功能
+PRIVATE FUNCTION ainq850_filter()
+   #add-point:filter段define-客製 name="filter.define_customerization"
+   
+   #end add-point
+   DEFINE  ls_result   STRING
+   #add-point:filter段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter.before_function"
+   
+   #end add-point
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+ 
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", TRUE)
+ 
+   
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   #應用 qs08 樣板自動產生(Version:5)
+   #+ filter段DIALOG段的組成
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON inpd008,inpddocno,inpdseq,inpd001,inpd002,inpd005,inpd006,inpd007,inpd003, 
+          inpd010,inpd011,inpd012,inpd013,inpd030,inpd031,inpd034,inpd035,inpd036,inpd037,inpd040,inpd041, 
+          inpd050,inpd051,inpd054,inpd055,inpd056,inpd057,inpd060,inpd061
+                          FROM s_detail1[1].b_inpd008,s_detail1[1].b_inpddocno,s_detail1[1].b_inpdseq, 
+                              s_detail1[1].b_inpd001,s_detail1[1].b_inpd002,s_detail1[1].b_inpd005,s_detail1[1].b_inpd006, 
+                              s_detail1[1].b_inpd007,s_detail1[1].b_inpd003,s_detail1[1].b_inpd010,s_detail1[1].b_inpd011, 
+                              s_detail1[1].b_inpd012,s_detail1[1].b_inpd013,s_detail1[1].b_inpd030,s_detail1[1].b_inpd031, 
+                              s_detail1[1].b_inpd034,s_detail1[1].b_inpd035,s_detail1[1].b_inpd036,s_detail1[1].b_inpd037, 
+                              s_detail1[1].b_inpd040,s_detail1[1].b_inpd041,s_detail1[1].b_inpd050,s_detail1[1].b_inpd051, 
+                              s_detail1[1].b_inpd054,s_detail1[1].b_inpd055,s_detail1[1].b_inpd056,s_detail1[1].b_inpd057, 
+                              s_detail1[1].b_inpd060,s_detail1[1].b_inpd061
+ 
+         BEFORE CONSTRUCT
+                     DISPLAY ainq850_filter_parser('inpd008') TO s_detail1[1].b_inpd008
+            DISPLAY ainq850_filter_parser('inpddocno') TO s_detail1[1].b_inpddocno
+            DISPLAY ainq850_filter_parser('inpdseq') TO s_detail1[1].b_inpdseq
+            DISPLAY ainq850_filter_parser('inpd001') TO s_detail1[1].b_inpd001
+            DISPLAY ainq850_filter_parser('inpd002') TO s_detail1[1].b_inpd002
+            DISPLAY ainq850_filter_parser('inpd005') TO s_detail1[1].b_inpd005
+            DISPLAY ainq850_filter_parser('inpd006') TO s_detail1[1].b_inpd006
+            DISPLAY ainq850_filter_parser('inpd007') TO s_detail1[1].b_inpd007
+            DISPLAY ainq850_filter_parser('inpd003') TO s_detail1[1].b_inpd003
+            DISPLAY ainq850_filter_parser('inpd010') TO s_detail1[1].b_inpd010
+            DISPLAY ainq850_filter_parser('inpd011') TO s_detail1[1].b_inpd011
+            DISPLAY ainq850_filter_parser('inpd012') TO s_detail1[1].b_inpd012
+            DISPLAY ainq850_filter_parser('inpd013') TO s_detail1[1].b_inpd013
+            DISPLAY ainq850_filter_parser('inpd030') TO s_detail1[1].b_inpd030
+            DISPLAY ainq850_filter_parser('inpd031') TO s_detail1[1].b_inpd031
+            DISPLAY ainq850_filter_parser('inpd034') TO s_detail1[1].b_inpd034
+            DISPLAY ainq850_filter_parser('inpd035') TO s_detail1[1].b_inpd035
+            DISPLAY ainq850_filter_parser('inpd036') TO s_detail1[1].b_inpd036
+            DISPLAY ainq850_filter_parser('inpd037') TO s_detail1[1].b_inpd037
+            DISPLAY ainq850_filter_parser('inpd040') TO s_detail1[1].b_inpd040
+            DISPLAY ainq850_filter_parser('inpd041') TO s_detail1[1].b_inpd041
+            DISPLAY ainq850_filter_parser('inpd050') TO s_detail1[1].b_inpd050
+            DISPLAY ainq850_filter_parser('inpd051') TO s_detail1[1].b_inpd051
+            DISPLAY ainq850_filter_parser('inpd054') TO s_detail1[1].b_inpd054
+            DISPLAY ainq850_filter_parser('inpd055') TO s_detail1[1].b_inpd055
+            DISPLAY ainq850_filter_parser('inpd056') TO s_detail1[1].b_inpd056
+            DISPLAY ainq850_filter_parser('inpd057') TO s_detail1[1].b_inpd057
+            DISPLAY ainq850_filter_parser('inpd060') TO s_detail1[1].b_inpd060
+            DISPLAY ainq850_filter_parser('inpd061') TO s_detail1[1].b_inpd061
+ 
+ 
+         #單身公用欄位開窗相關處理
+         
+ 
+         #單身一般欄位開窗相關處理
+                  #----<<sel>>----
+         #----<<b_inpd008>>----
+         #Ctrlp:construct.c.page1.b_inpd008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd008
+            #add-point:ON ACTION controlp INFIELD b_inpd008 name="construct.c.filter.page1.b_inpd008"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_inpadocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_inpd008  #顯示到畫面上
+            NEXT FIELD b_inpd008                     #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<b_inpddocno>>----
+         #Ctrlp:construct.c.page1.b_inpddocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpddocno
+            #add-point:ON ACTION controlp INFIELD b_inpddocno name="construct.c.filter.page1.b_inpddocno"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+           #CALL q_inpddocno()                         #呼叫開窗  #151117-00008#1 mark
+            CALL q_inpddocno_3()                       #呼叫開窗  #151117-00008#1 mod
+            DISPLAY g_qryparam.return1 TO b_inpddocno  #顯示到畫面上
+            NEXT FIELD b_inpddocno                     #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<b_inpdseq>>----
+         #Ctrlp:construct.c.filter.page1.b_inpdseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpdseq
+            #add-point:ON ACTION controlp INFIELD b_inpdseq name="construct.c.filter.page1.b_inpdseq"
+            
+            #END add-point
+ 
+ 
+         #----<<b_inpd001>>----
+         #Ctrlp:construct.c.page1.b_inpd001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd001
+            #add-point:ON ACTION controlp INFIELD b_inpd001 name="construct.c.filter.page1.b_inpd001"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaf001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_inpd001  #顯示到畫面上
+            NEXT FIELD b_inpd001                     #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<b_inpd001_desc>>----
+         #----<<b_inpd001_desc_1>>----
+         #----<<b_inpd002>>----
+         #Ctrlp:construct.c.page1.b_inpd002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd002
+            #add-point:ON ACTION controlp INFIELD b_inpd002 name="construct.c.filter.page1.b_inpd002"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_inpd002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_inpd002  #顯示到畫面上
+            NEXT FIELD b_inpd002                     #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<b_inpd002_desc>>----
+         #----<<b_inpd005>>----
+         #Ctrlp:construct.c.page1.b_inpd005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd005
+            #add-point:ON ACTION controlp INFIELD b_inpd005 name="construct.c.filter.page1.b_inpd005"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaa001_12()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_inpd005  #顯示到畫面上
+            NEXT FIELD b_inpd005                     #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<b_inpd005_desc>>----
+         #----<<b_inpd006>>----
+         #Ctrlp:construct.c.page1.b_inpd006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd006
+            #add-point:ON ACTION controlp INFIELD b_inpd006 name="construct.c.filter.page1.b_inpd006"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_inab002_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_inpd006  #顯示到畫面上
+            NEXT FIELD b_inpd006                     #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<b_inpd006_desc>>----
+         #----<<b_inpd007>>----
+         #Ctrlp:construct.c.page1.b_inpd007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd007
+            #add-point:ON ACTION controlp INFIELD b_inpd007 name="construct.c.filter.page1.b_inpd007"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_inad001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_inpd007  #顯示到畫面上
+            NEXT FIELD b_inpd007                     #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<b_inpd003>>----
+         #Ctrlp:construct.c.page1.b_inpd003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd003
+            #add-point:ON ACTION controlp INFIELD b_inpd003 name="construct.c.filter.page1.b_inpd003"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_inpd003()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_inpd003  #顯示到畫面上
+            NEXT FIELD b_inpd003                     #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<b_inpd010>>----
+         #Ctrlp:construct.c.page1.b_inpd010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd010
+            #add-point:ON ACTION controlp INFIELD b_inpd010 name="construct.c.filter.page1.b_inpd010"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooca001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_inpd010  #顯示到畫面上
+            NEXT FIELD b_inpd010                     #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<b_inpd010_desc>>----
+         #----<<b_inpd011>>----
+         #Ctrlp:construct.c.filter.page1.b_inpd011
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd011
+            #add-point:ON ACTION controlp INFIELD b_inpd011 name="construct.c.filter.page1.b_inpd011"
+            
+            #END add-point
+ 
+ 
+         #----<<b_inpd012>>----
+         #Ctrlp:construct.c.page1.b_inpd012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd012
+            #add-point:ON ACTION controlp INFIELD b_inpd012 name="construct.c.filter.page1.b_inpd012"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooca001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_inpd012  #顯示到畫面上
+            NEXT FIELD b_inpd012                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #----<<b_inpd012_desc>>----
+         #----<<b_inpd013>>----
+         #Ctrlp:construct.c.filter.page1.b_inpd013
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd013
+            #add-point:ON ACTION controlp INFIELD b_inpd013 name="construct.c.filter.page1.b_inpd013"
+            
+            #END add-point
+ 
+ 
+         #----<<b_inpd030>>----
+         #Ctrlp:construct.c.filter.page1.b_inpd030
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd030
+            #add-point:ON ACTION controlp INFIELD b_inpd030 name="construct.c.filter.page1.b_inpd030"
+            
+            #END add-point
+ 
+ 
+         #----<<b_inpd031>>----
+         #Ctrlp:construct.c.filter.page1.b_inpd031
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd031
+            #add-point:ON ACTION controlp INFIELD b_inpd031 name="construct.c.filter.page1.b_inpd031"
+            
+            #END add-point
+ 
+ 
+         #----<<b_inpd034>>----
+         #Ctrlp:construct.c.page1.b_inpd034
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd034
+            #add-point:ON ACTION controlp INFIELD b_inpd034 name="construct.c.filter.page1.b_inpd034"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_inpd034  #顯示到畫面上
+            NEXT FIELD b_inpd034                     #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<b_inpd034_desc>>----
+         #----<<b_inpd035>>----
+         #Ctrlp:construct.c.filter.page1.b_inpd035
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd035
+            #add-point:ON ACTION controlp INFIELD b_inpd035 name="construct.c.filter.page1.b_inpd035"
+            
+            #END add-point
+ 
+ 
+         #----<<b_inpd036>>----
+         #Ctrlp:construct.c.filter.page1.b_inpd036
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd036
+            #add-point:ON ACTION controlp INFIELD b_inpd036 name="construct.c.filter.page1.b_inpd036"
+            
+            #END add-point
+ 
+ 
+         #----<<b_inpd037>>----
+         #Ctrlp:construct.c.filter.page1.b_inpd037
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd037
+            #add-point:ON ACTION controlp INFIELD b_inpd037 name="construct.c.filter.page1.b_inpd037"
+            
+            #END add-point
+ 
+ 
+         #----<<b_inpd040>>----
+         #Ctrlp:construct.c.page1.b_inpd040
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd040
+            #add-point:ON ACTION controlp INFIELD b_inpd040 name="construct.c.filter.page1.b_inpd040"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_inpd040  #顯示到畫面上
+            NEXT FIELD b_inpd040                     #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<b_inpd040_desc>>----
+         #----<<b_inpd041>>----
+         #Ctrlp:construct.c.filter.page1.b_inpd041
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd041
+            #add-point:ON ACTION controlp INFIELD b_inpd041 name="construct.c.filter.page1.b_inpd041"
+            
+            #END add-point
+ 
+ 
+         #----<<b_inpd050>>----
+         #Ctrlp:construct.c.filter.page1.b_inpd050
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd050
+            #add-point:ON ACTION controlp INFIELD b_inpd050 name="construct.c.filter.page1.b_inpd050"
+            
+            #END add-point
+ 
+ 
+         #----<<b_inpd051>>----
+         #Ctrlp:construct.c.filter.page1.b_inpd051
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd051
+            #add-point:ON ACTION controlp INFIELD b_inpd051 name="construct.c.filter.page1.b_inpd051"
+            
+            #END add-point
+ 
+ 
+         #----<<b_inpd054>>----
+         #Ctrlp:construct.c.page1.b_inpd054
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd054
+            #add-point:ON ACTION controlp INFIELD b_inpd054 name="construct.c.filter.page1.b_inpd054"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_inpd054  #顯示到畫面上
+            NEXT FIELD b_inpd054                     #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<b_inpd054_desc>>----
+         #----<<b_inpd055>>----
+         #Ctrlp:construct.c.filter.page1.b_inpd055
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd055
+            #add-point:ON ACTION controlp INFIELD b_inpd055 name="construct.c.filter.page1.b_inpd055"
+            
+            #END add-point
+ 
+ 
+         #----<<b_inpd056>>----
+         #Ctrlp:construct.c.filter.page1.b_inpd056
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd056
+            #add-point:ON ACTION controlp INFIELD b_inpd056 name="construct.c.filter.page1.b_inpd056"
+            
+            #END add-point
+ 
+ 
+         #----<<b_inpd057>>----
+         #Ctrlp:construct.c.filter.page1.b_inpd057
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd057
+            #add-point:ON ACTION controlp INFIELD b_inpd057 name="construct.c.filter.page1.b_inpd057"
+            
+            #END add-point
+ 
+ 
+         #----<<b_inpd060>>----
+         #Ctrlp:construct.c.page1.b_inpd060
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd060
+            #add-point:ON ACTION controlp INFIELD b_inpd060 name="construct.c.filter.page1.b_inpd060"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_inpd060  #顯示到畫面上
+            NEXT FIELD b_inpd060                     #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<b_inpd060_desc>>----
+         #----<<b_inpd061>>----
+         #Ctrlp:construct.c.filter.page1.b_inpd061
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_inpd061
+            #add-point:ON ACTION controlp INFIELD b_inpd061 name="construct.c.filter.page1.b_inpd061"
+            
+            #END add-point
+ 
+ 
+         #----<<mored>>----
+         #----<<ckmored>>----
+         #----<<costd>>----
+         #----<<scostd>>----
+         #----<<inpd014>>----
+         #----<<inpd014_desc>>----
+ 
+ 
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs name="filter.add_cs"
+      
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog name="filter.b_dialog"
+         
+         #end add-point
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+ 
+ 
+ 
+ 
+   
+ 
+   #add-point:離開DIALOG後相關處理 name="filter.after_dialog"
+   
+   #end add-point
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+ 
+      CALL ainq850_filter_show('inpd008','b_inpd008')
+   CALL ainq850_filter_show('inpddocno','b_inpddocno')
+   CALL ainq850_filter_show('inpdseq','b_inpdseq')
+   CALL ainq850_filter_show('inpd001','b_inpd001')
+   CALL ainq850_filter_show('inpd002','b_inpd002')
+   CALL ainq850_filter_show('inpd005','b_inpd005')
+   CALL ainq850_filter_show('inpd006','b_inpd006')
+   CALL ainq850_filter_show('inpd007','b_inpd007')
+   CALL ainq850_filter_show('inpd003','b_inpd003')
+   CALL ainq850_filter_show('inpd010','b_inpd010')
+   CALL ainq850_filter_show('inpd011','b_inpd011')
+   CALL ainq850_filter_show('inpd012','b_inpd012')
+   CALL ainq850_filter_show('inpd013','b_inpd013')
+   CALL ainq850_filter_show('inpd030','b_inpd030')
+   CALL ainq850_filter_show('inpd031','b_inpd031')
+   CALL ainq850_filter_show('inpd034','b_inpd034')
+   CALL ainq850_filter_show('inpd035','b_inpd035')
+   CALL ainq850_filter_show('inpd036','b_inpd036')
+   CALL ainq850_filter_show('inpd037','b_inpd037')
+   CALL ainq850_filter_show('inpd040','b_inpd040')
+   CALL ainq850_filter_show('inpd041','b_inpd041')
+   CALL ainq850_filter_show('inpd050','b_inpd050')
+   CALL ainq850_filter_show('inpd051','b_inpd051')
+   CALL ainq850_filter_show('inpd054','b_inpd054')
+   CALL ainq850_filter_show('inpd055','b_inpd055')
+   CALL ainq850_filter_show('inpd056','b_inpd056')
+   CALL ainq850_filter_show('inpd057','b_inpd057')
+   CALL ainq850_filter_show('inpd060','b_inpd060')
+   CALL ainq850_filter_show('inpd061','b_inpd061')
+   CALL ainq850_filter_show('inpeseq2','b_inpeseq2')
+   CALL ainq850_filter_show('inpe008','b_inpe008')
+   CALL ainq850_filter_show('inpe009','b_inpe009')
+   CALL ainq850_filter_show('inpe010','b_inpe010')
+   CALL ainq850_filter_show('inpe012','b_inpe012')
+   CALL ainq850_filter_show('inpe030','b_inpe030')
+   CALL ainq850_filter_show('inpe033','b_inpe033')
+   CALL ainq850_filter_show('inpe034','b_inpe034')
+   CALL ainq850_filter_show('inpe035','b_inpe035')
+   CALL ainq850_filter_show('inpe038','b_inpe038')
+   CALL ainq850_filter_show('inpe039','b_inpe039')
+   CALL ainq850_filter_show('inpe050','b_inpe050')
+   CALL ainq850_filter_show('inpe053','b_inpe053')
+   CALL ainq850_filter_show('inpe054','b_inpe054')
+   CALL ainq850_filter_show('inpe055','b_inpe055')
+   CALL ainq850_filter_show('inpe058','b_inpe058')
+   CALL ainq850_filter_show('inpe059','b_inpe059')
+ 
+ 
+   CALL ainq850_b_fill()
+ 
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", FALSE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq850.filter_parser" >}
+#應用 qs14 樣板自動產生(Version:6)
+#+ filter pasara段
+#+ filter欄位解析
+PRIVATE FUNCTION ainq850_filter_parser(ps_field)
+   #add-point:filter段define-客製 name="filter_parser.define_customerization"
+   
+   #end add-point
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+   #add-point:filter段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_parser.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter_parser.before_function"
+   
+   #end add-point
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+ 
+{</section>}
+ 
+{<section id="ainq850.filter_show" >}
+#應用 qs15 樣板自動產生(Version:6)
+#+ filter標題欄位顯示搜尋條件
+PRIVATE FUNCTION ainq850_filter_show(ps_field,ps_object)
+   #add-point:filter_show段define-客製 name="filter_show.define_customerization"
+   
+   #end add-point
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+   #add-point:filter_show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_show.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter_show.before_function"
+   
+   #end add-point
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LET ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = ainq850_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+ 
+{</section>}
+ 
+{<section id="ainq850.detail_action_trans" >}
+#+ 單身分頁筆數顯示及action圖片顯示切換功能
+PRIVATE FUNCTION ainq850_detail_action_trans()
+   #add-point:detail_action_trans段define-客製 name="detail_action_trans.define_customerization"
+   
+   #end add-point
+   #add-point:detail_action_trans段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_action_trans.define"
+   
+   #end add-point
+ 
+ 
+   #add-point:FUNCTION前置處理 name="detail_action_trans.before_function"
+   
+   #end add-point
+ 
+   #因應單身切頁功能，筆數計算方式調整
+   LET g_current_row_tot = g_pagestart + g_detail_idx - 1
+   DISPLAY g_current_row_tot TO FORMONLY.h_index
+   DISPLAY g_tot_cnt TO FORMONLY.h_count
+ 
+   #顯示單身頁面的起始與結束筆數
+   LET g_page_start_num = g_pagestart
+   LET g_page_end_num = g_pagestart + g_num_in_page - 1
+   DISPLAY g_page_start_num TO FORMONLY.p_start
+   DISPLAY g_page_end_num TO FORMONLY.p_end
+ 
+   #目前不支援跳頁功能
+   LET g_page_act_list = "detail_first,detail_previous,'',detail_next,detail_last"
+   CALL cl_navigator_detail_page_setting(g_page_act_list,g_current_row_tot,g_pagestart,g_num_in_page,g_tot_cnt)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq850.detail_index_setting" >}
+#+ 單身切頁後，index重新調整，避免翻頁後指到空白筆數
+PRIVATE FUNCTION ainq850_detail_index_setting()
+   #add-point:detail_index_setting段define-客製 name="detail_index_setting.define_customerization"
+   
+   #end add-point
+   DEFINE li_redirect     BOOLEAN
+   DEFINE ldig_curr       ui.Dialog
+   #add-point:detail_index_setting段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_index_setting.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="detail_index_setting.before_function"
+   
+   #end add-point
+ 
+   IF g_curr_diag IS NOT NULL THEN
+      CASE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") <= "0"
+            LET g_detail_idx = 1
+            IF g_inpd_d.getLength() > 0 THEN
+               LET li_redirect = TRUE
+            END IF
+         WHEN g_curr_diag.getCurrentRow("s_detail1") > g_inpd_d.getLength() AND g_inpd_d.getLength() > 0
+            LET g_detail_idx = g_inpd_d.getLength()
+            LET li_redirect = TRUE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") != g_detail_idx
+            IF g_detail_idx > g_inpd_d.getLength() THEN
+               LET g_detail_idx = g_inpd_d.getLength()
+            END IF
+            LET li_redirect = TRUE
+      END CASE
+   END IF
+ 
+   IF li_redirect THEN
+      LET ldig_curr = ui.Dialog.getCurrent()
+      CALL ldig_curr.setCurrentRow("s_detail1", g_detail_idx)
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq850.mask_functions" >}
+ &include "erp/ain/ainq850_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="ainq850.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 在製工單顯示
+# Memo...........:
+# Usage..........: CALL ainq850_b_fill_inpf()
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By lixh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ainq850_b_fill_inpf()
+   DEFINE ls_wc           STRING
+   DEFINE ls_wc2          STRING   
+   DEFINE l_pid           LIKE type_t.chr50
+   DEFINE l_wc            STRING
+   DEFINE l_wc2           STRING
+   DEFINE l_wc3           STRING
+   DEFINE l_wc4           STRING  
+   DEFINE l_wc5           STRING
+   DEFINE l_wc6           STRING
+   DEFINE l_wc7           STRING  
+   DEFINE l_wc8           STRING
+   DEFINE l_wc9           STRING   
+   DEFINE l_wc10          STRING
+   DEFINE l_wc11          STRING
+   DEFINE l_wc12          STRING   
+   DEFINE l_wc13          STRING
+   DEFINE l_wc14          STRING  
+   DEFINE l_wc15          STRING
+   DEFINE l_wc16          STRING     
+   DEFINE l_inpa009       LIKE inpa_t.inpa009
+   DEFINE l_inpa010       LIKE inpa_t.inpa010
+   DEFINE l_inpa011       LIKE inpa_t.inpa011 
+   DEFINE l_inpa012       LIKE inpa_t.inpa012 
+   DEFINE l_flag          LIKE type_t.chr1   
+   DEFINE g_acc           LIKE gzcb_t.gzcb004   
+   DEFINE l_inpf005       LIKE inpf_t.inpf005
+   
+   LET g_detail_idx3  = 1
+   LET g_detail_idx4 = 1
+   
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter 
+ 
+   CALL g_inpf_d.clear()
+ 
+   LET g_cnt2 = l_ac2
+   LET l_ac2 = 1
+   ERROR "Searching!" 
+   LET ls_wc2 = cl_replace_str(ls_wc,'inpd008','inpf004') 
+   LET ls_wc2 = cl_replace_str(ls_wc2,'inpddocno','inpfdocno')    
+   LET g_sql = " SELECT  UNIQUE 'N',inpf004,inpfdocno,inpfseq,inpf001,inpf003,'','',inpf007,inpf006,'',inpf002,'',",
+               "                '',inpf009,'',inpf005 FROM inpf_t",
+ 
+
+               " LEFT JOIN inpg_t ON inpgent = inpfent AND inpgsite = inpfsite AND inpgdocno = inpfdocno AND inpgseq = inpfseq ",
+               " LEFT JOIN inpb_t ON inpbent = inpfent AND inpbsite = inpfsite AND inpbdocno = inpf004 ",
+               " LEFT JOIN inpa_t ON inpaent = inpfent AND inpasite = inpfsite AND inpadocno = inpf004 ",
+ 
+               "",
+               " WHERE inpfent= ? AND inpfsite= ? AND 1=1 AND ", ls_wc2   
+            
+   IF g_option = '1' OR (g_option = '3' AND g_compare = '1' ) THEN  #初盤
+      LET g_sql = g_sql," AND (inpa013 = 'Y' OR inpa014 = 'Y' )"
+      IF NOT cl_null(g_wc_inpd032) THEN      
+         LET l_wc = cl_replace_str(g_wc_inpd032,'inpd032','inpf020')
+         LET l_wc2 = cl_replace_str(g_wc_inpd032,'inpd032','inpf022')
+         LET g_sql = g_sql," AND (",l_wc2," OR ",l_wc,")"
+      END IF   
+      IF NOT cl_null(g_wc_inpd033) THEN      
+         LET l_wc3 = cl_replace_str(g_wc_inpd033,'inpd033','inpf021')
+         LET l_wc4 = cl_replace_str(g_wc_inpd033,'inpd033','inpf023')
+         LET g_sql = g_sql," AND (",l_wc3," OR ",l_wc4,")"
+      END IF 
+      IF NOT cl_null(g_wc_inpd034) THEN  
+         LET l_wc5 = cl_replace_str(g_wc_inpd034,'inpd034','inpg031')
+         LET l_wc6 = cl_replace_str(g_wc_inpd034,'inpd034','inpg034')
+         LET g_sql = g_sql," AND (",l_wc5," OR ",l_wc6,")"      
+      END IF
+      IF NOT cl_null(g_wc_inpd035) THEN  
+         LET l_wc7 = cl_replace_str(g_wc_inpd035,'inpd035','inpg032')
+         LET l_wc8 = cl_replace_str(g_wc_inpd035,'inpd035','inpg035')
+         LET g_sql = g_sql," AND (",l_wc7," OR ",l_wc8,")"      
+      END IF      
+#      IF g_chk1 = 'N' THEN   #不包含未盤點的資料
+#         LET g_sql = g_sql," AND inpb002 = 'Y' "     
+#      END IF  
+    
+   END IF   
+  
+   IF g_option = '2' OR (g_option = '3' AND g_compare = '2' ) THEN  #復盤
+      LET g_sql = g_sql," AND (inpa015 = 'Y' OR inpa016 = 'Y' )"
+      IF NOT cl_null(g_wc_inpd032) THEN      
+         LET l_wc = cl_replace_str(g_wc_inpd032,'inpd032','inpf024')
+         LET l_wc2 = cl_replace_str(g_wc_inpd032,'inpd032','inpf026')
+         LET g_sql = g_sql," AND (",l_wc2," OR ",l_wc,")"
+      END IF   
+      IF NOT cl_null(g_wc_inpd033) THEN      
+         LET l_wc3 = cl_replace_str(g_wc_inpd033,'inpd033','inpf025')
+         LET l_wc4 = cl_replace_str(g_wc_inpd033,'inpd033','inpf027')
+         LET g_sql = g_sql," AND (",l_wc3," OR ",l_wc4,")"
+      END IF      
+      IF NOT cl_null(g_wc_inpd034) THEN  
+         LET l_wc5 = cl_replace_str(g_wc_inpd034,'inpd034','inpg051')
+         LET l_wc6 = cl_replace_str(g_wc_inpd034,'inpd034','inpg054')
+         LET g_sql = g_sql," AND (",l_wc5," OR ",l_wc6,")"      
+      END IF
+      IF NOT cl_null(g_wc_inpd035) THEN  
+         LET l_wc7 = cl_replace_str(g_wc_inpd035,'inpd035','inpg052')
+         LET l_wc8 = cl_replace_str(g_wc_inpd035,'inpd035','inpg055')
+         LET g_sql = g_sql," AND (",l_wc7," OR ",l_wc8,")"      
+      END IF 
+#      IF g_chk1 = 'N' THEN   #不包含未盤點的資料
+#         LET g_sql = g_sql," AND inpb002 = 'Y' "     
+#      END IF 
+
+#      IF g_option = '3' AND g_compare = '2' THEN
+#         LET g_sql = g_sql," AND inpg050 <> inpg053 "    #初盤一与初盤二有差異的數量（盤點數量不可以為0，如果可以為0則不可這樣判讀）    
+#      END IF      
+   END IF 
+
+   IF g_option = '3' THEN       #差異分析     
+      IF g_compare = '3' THEN   #初盤&復盤
+         LET g_sql = g_sql," AND (inpa013 = 'Y' OR inpa014 = 'Y') AND (inpa015 = 'Y' OR inpa016 = 'Y')" 
+ 
+         IF NOT cl_null(g_wc_inpd032) THEN      
+            LET l_wc = cl_replace_str(g_wc_inpd032,'inpd032','inpf020')
+            LET l_wc2 = cl_replace_str(g_wc_inpd032,'inpd032','inpf022')
+            LET l_wc3 = cl_replace_str(g_wc_inpd032,'inpd032','inpf024')
+            LET l_wc4 = cl_replace_str(g_wc_inpd032,'inpd032','inpf026')
+            LET g_sql = g_sql," AND (",l_wc," OR ",l_wc2," OR ",l_wc3," OR ",l_wc4,")"
+         END IF
+         IF NOT cl_null(g_wc_inpd033) THEN      
+            LET l_wc5 = cl_replace_str(g_wc_inpd033,'inpd033','inpf021')
+            LET l_wc6 = cl_replace_str(g_wc_inpd033,'inpd033','inpf023')
+            LET l_wc7 = cl_replace_str(g_wc_inpd033,'inpd033','inpf025')
+            LET l_wc8 = cl_replace_str(g_wc_inpd033,'inpd033','inpf027')
+            LET g_sql = g_sql," AND (",l_wc5," OR ",l_wc6," OR ",l_wc7," OR ",l_wc8,")"
+         END IF  
+         
+         IF NOT cl_null(g_wc_inpd034) THEN  
+            LET l_wc9 = cl_replace_str(g_wc_inpd034,'inpd034','inpg031')
+            LET l_wc10 = cl_replace_str(g_wc_inpd034,'inpd034','inpg034')
+            LET l_wc11 = cl_replace_str(g_wc_inpd034,'inpd034','inpg051')
+            LET l_wc12 = cl_replace_str(g_wc_inpd034,'inpd034','inpg054')            
+            LET g_sql = g_sql," AND (",l_wc9," OR ",l_wc10," OR ",l_wc11," OR ",l_wc12,")"      
+         END IF
+         IF NOT cl_null(g_wc_inpd035) THEN  
+            LET l_wc13 = cl_replace_str(g_wc_inpd035,'inpd035','inpg032')
+            LET l_wc14 = cl_replace_str(g_wc_inpd035,'inpd035','inpg035')
+            LET l_wc15 = cl_replace_str(g_wc_inpd035,'inpd035','inpg052')
+            LET l_wc16 = cl_replace_str(g_wc_inpd035,'inpd035','inpg055')            
+            LET g_sql = g_sql," AND (",l_wc13," OR ",l_wc14," OR ",l_wc15," OR ",l_wc16,")"  
+         END IF   
+      
+#         IF g_chk1 = 'N' THEN   #不包含未盤點的資料
+#            LET g_sql = g_sql," AND inpb002 = 'Y' "     
+#         END IF           
+      END IF        
+   END IF
+
+   LET g_sql = g_sql, cl_sql_add_filter("inpf_t"),
+                      " ORDER BY inpf_t.inpfdocno,inpf_t.inpfseq"
+   #end add-point
+ 
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE ainq850_pb_inpf FROM g_sql
+   DECLARE b_fill_curs_inpf CURSOR FOR ainq850_pb_inpf
+ 
+   OPEN b_fill_curs_inpf USING g_enterprise,g_site
+   
+   FOREACH b_fill_curs_inpf INTO g_inpf_d[l_ac2].sel,g_inpf_d[l_ac2].inpf004,g_inpf_d[l_ac2].inpfdocno,g_inpf_d[l_ac2].inpfseq,g_inpf_d[l_ac2].inpf001,
+                                 g_inpf_d[l_ac2].inpf003,g_inpf_d[l_ac2].inpf003_desc,g_inpf_d[l_ac2].inpf003_desc_desc,g_inpf_d[l_ac2].inpf007,g_inpf_d[l_ac2].inpf006,
+                                 g_inpf_d[l_ac2].inpf006_desc,g_inpf_d[l_ac2].inpf002,g_inpf_d[l_ac2].inpf002_desc,g_inpf_d[l_ac2].sfaa061,g_inpf_d[l_ac2].inpf009,g_inpf_d[l_ac2].inpf009_desc,
+                                 l_inpf005
+                                 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF   
+
+      CALL ainq850_inpf_desc()
+      LET g_flag = 'N'
+      LET g_detail_idx3 = l_ac2
+      CALL ainq850_b_fill_inpg()
+      IF g_chk1 = 'Y' AND l_inpf005 = 'Y' AND g_flag = 'N' AND g_chk2 = 'Y'  THEN
+      ELSE
+         IF g_flag = 'N' THEN
+            CONTINUE FOREACH 
+         END IF
+      END IF
+      IF l_ac2 > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      LET l_ac2 = l_ac2 + 1                                 
+   END FOREACH    
+
+   CALL g_inpf_d.deleteElement(g_inpf_d.getLength())
+ 
+   #add-point:陣列長度調整
+
+   #end add-point
+ 
+   LET g_error_show = 0
+ 
+   LET g_detail_cnt3 = g_inpf_d.getLength()
+   DISPLAY g_detail_cnt3 TO FORMONLY.h_count
+   LET g_detail_idx3 = 1
+   DISPLAY g_detail_idx3 TO FORMONLY.h_index
+   LET l_ac2 = g_cnt2
+   LET g_cnt2 = 0
+ 
+   #+ 此段落由子樣板qs06產生
+   #+ b_fill段CURSOR釋放
+   CLOSE b_fill_curs_inpf
+   FREE ainq850_pb_inpf 
+   LET l_ac2 = 1
+   CALL ainq850_b_fill_inpg()
+END FUNCTION
+
+################################################################################
+# Descriptions...: 盤點明細單身
+# Memo...........:
+# Usage..........: CALL ainq850_b_fill_inpg()
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By lixh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ainq850_b_fill_inpg()
+   DEFINE li_ac           LIKE type_t.num5  
+   DEFINE l_inpa013       LIKE inpa_t.inpa009
+   DEFINE l_inpa014       LIKE inpa_t.inpa010
+   DEFINE l_inpa015       LIKE inpa_t.inpa011 
+   DEFINE l_inpa016       LIKE inpa_t.inpa012 
+   DEFINE l_inpg033       LIKE inpg_t.inpg033
+   DEFINE l_inpg053       LIKE inpg_t.inpg053
+   DEFINE l_flag          LIKE type_t.chr1   
+   DEFINE g_acc           LIKE gzcb_t.gzcb004   
+   DEFINE l_inpa008       LIKE inpa_t.inpa008
+   DEFINE l_inpg_num      LIKE inpg_t.inpg030
+   
+   LET li_ac = l_ac3
+
+   CALL g_inpg_d.clear()
+   
+   LET g_sql = "SELECT  UNIQUE inpgseq1,inpgseq2,inpg001,'','',inpg010,inpg007,'',inpg012,inpg030,inpg031,'',inpg032,inpg033,",
+               "               inpg034,'',inpg035,inpg050,inpg051,'',inpg052,inpg053,inpg054,'',inpg055,0,0,0,inpg013,'' FROM inpg_t ",
+
+               " WHERE inpgent=? AND inpgsite=? AND inpgdocno=? AND inpgseq=?"
+               
+   IF g_chk1 = 'N' THEN   #不包含未盤點的資料
+      IF g_option = '1' OR (g_option = '3' AND g_compare = '1')  THEN  #初盤
+         LET g_sql = g_sql," AND (inpg031 IS NOT NULL OR inpg034 IS NOT NULL)"
+      END IF
+      IF g_option = '2' OR (g_option = '3' AND g_compare = '2')  THEN  #復盤
+         LET g_sql = g_sql," AND (inpg051 IS NOT NULL OR inpg054 IS NOT NULL)"
+      END IF 
+      IF g_option = '3' AND g_compare = '3' THEN
+         LET g_sql = g_sql," AND (inpg031 IS NOT NULL OR inpg034 IS NOT NULL OR inpg051 IS NOT NULL OR inpg054 IS NOT NULL)"
+      END IF      
+   END IF  
+      
+   IF NOT cl_null(g_wc2_table2) THEN
+      LET g_sql = g_sql CLIPPED," AND ",g_wc2_table2 CLIPPED
+   END IF
+ 
+   LET g_sql = g_sql, " ORDER BY inpg_t.inpgseq1,inpg_t.inpgseq2"  
+
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE ainq850_pb2_inpg FROM g_sql
+   DECLARE b_fill_curs2_inpg CURSOR FOR ainq850_pb2_inpg
+ 
+   OPEN b_fill_curs2_inpg USING g_enterprise, g_site,g_inpf_d[g_detail_idx3].inpfdocno
+                                  ,g_inpf_d[g_detail_idx3].inpfseq
+ 
+  
+   LET l_ac3 = 1
+   LET l_flag = 'N' 
+   LET g_flag = 'N'
+   SELECT gzcb004 INTO g_acc FROM gzcb_t WHERE gzcb001 = '24' AND gzcb002 = 'aint835'   
+   FOREACH b_fill_curs2_inpg INTO g_inpg_d[l_ac3].inpgseq1,g_inpg_d[l_ac3].inpgseq2,g_inpg_d[l_ac3].inpg001,g_inpg_d[l_ac3].inpg001_desc,
+                                  g_inpg_d[l_ac3].inpg001_desc_desc,g_inpg_d[l_ac3].inpg010,g_inpg_d[l_ac3].inpg007,g_inpg_d[l_ac3].inpg007_desc,
+                                  g_inpg_d[l_ac3].inpg012,g_inpg_d[l_ac3].inpg030,g_inpg_d[l_ac3].inpg031,g_inpg_d[l_ac3].inpg031_desc,g_inpg_d[l_ac3].inpg032,
+                                  g_inpg_d[l_ac3].inpg033,g_inpg_d[l_ac3].inpg034,g_inpg_d[l_ac3].inpg034_desc,g_inpg_d[l_ac3].inpg035,g_inpg_d[l_ac3].inpg050,
+                                  g_inpg_d[l_ac3].inpg051,g_inpg_d[l_ac3].inpg051_desc,g_inpg_d[l_ac3].inpg052,g_inpg_d[l_ac3].inpg053,g_inpg_d[l_ac3].inpg054,
+                                  g_inpg_d[l_ac3].inpg054_desc,g_inpg_d[l_ac3].inpg055,g_inpg_d[l_ac3].more,g_inpg_d[l_ac3].cost,g_inpg_d[l_ac3].scost,
+                                  g_inpg_d[l_ac3].inpg013,g_inpg_d[l_ac3].inpg013_desc
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+ 
+
+      SELECT inpa013,inpa014,inpa015,inpa016,inpa008 INTO l_inpa013,l_inpa014,l_inpa015,l_inpa016,l_inpa008 FROM inpa_t 
+       WHERE inpaent = g_enterprise
+         AND inpasite = g_site
+         AND inpadocno = g_inpf_d[g_detail_idx3].inpf004  
+         
+      IF g_chk1 = 'N' THEN   #不包含未盤點的資料
+      #mark by lixh 20150403
+#         IF g_option = '1' OR (g_option = '3' AND (g_compare = '1' OR g_compare = '3'))  THEN  #初盤
+#            IF l_inpa013 = 'Y' AND cl_null(g_inpg_d[l_ac3].inpg031) THEN
+#               CONTINUE FOREACH
+#            END IF
+#            IF l_inpa014 = 'Y' AND cl_null(g_inpg_d[l_ac3].inpg034) THEN
+#               CONTINUE FOREACH
+#            END IF
+#         END IF
+#         IF g_option = '2' OR (g_option = '3' AND (g_compare = '2' OR g_compare = '3')) THEN  #復盤
+#            IF l_inpa015 = 'Y' AND cl_null(g_inpg_d[l_ac3].inpg051) THEN
+#               CONTINUE FOREACH
+#            END IF
+#            IF l_inpa016 = 'Y' AND cl_null(g_inpg_d[l_ac3].inpg054) THEN
+#               CONTINUE FOREACH
+#            END IF
+#         END IF  
+      #mark by lixh 20150403
+      #add by lixh 20150403
+         IF g_option = '1' OR (g_option = '3' AND g_compare = '1')  THEN  #初盤
+
+            IF cl_null(g_inpg_d[l_ac3].inpg031) AND cl_null(g_inpg_d[l_ac3].inpg034) THEN
+               CONTINUE FOREACH
+            END IF
+
+         END IF
+         IF g_option = '2' OR (g_option = '3' AND g_compare = '2') THEN  #復盤
+         
+            IF cl_null(g_inpg_d[l_ac3].inpg051) AND cl_null(g_inpg_d[l_ac3].inpg054) THEN
+               CONTINUE FOREACH
+            END IF
+            
+         END IF
+         
+         IF g_option = '3' AND g_compare = '3' THEN   #初盤与復盤
+         
+            IF cl_null(g_inpg_d[l_ac3].inpg031) AND cl_null(g_inpg_d[l_ac3].inpg034) AND cl_null(g_inpg_d[l_ac3].inpg051) 
+               AND cl_null(g_inpg_d[l_ac3].inpg054) THEN
+               CONTINUE FOREACH
+            END IF
+            
+         END IF
+      #add by lixh 20150403
+      END IF 
+      LET l_flag = 'N'
+      IF g_chk2 = 'N' THEN   #不包含盤點數量無差異的資料
+         IF g_option = '1' OR (g_option = '3' AND (g_compare = '1' OR g_compare = '3')) THEN  #初盤
+#            IF l_inpa013 = 'Y' THEN
+#               IF g_inpg_d[l_ac3].inpg030 <> g_inpg_d[l_ac3].inpg012 THEN
+#                  LET l_flag = 'Y'
+#               END IF   
+#            END IF
+#            IF l_inpa014 = 'Y' THEN    #初盤二
+#               IF g_inpg_d[l_ac3].inpg033 <> g_inpg_d[l_ac3].inpg012 THEN
+#                  LET l_flag = 'Y'
+#               END IF   
+#            END IF  
+#            #add by lixh 20150125(S)
+#            IF g_inpg_d[l_ac3].inpg033 <> g_inpg_d[l_ac3].inpg030 THEN
+#               LET l_flag = 'Y'
+#            END IF
+#            #add by lixh 20150125(E)
+
+            #add by lixh 20150403
+            IF l_inpa008 = '1' THEN   #全盤輸入
+               IF NOT cl_null(g_inpg_d[l_ac3].inpg030) THEN
+                  IF g_inpg_d[l_ac3].inpg030 <> g_inpg_d[l_ac3].inpg012 THEN
+                     LET l_flag = 'Y'
+                  END IF
+               END IF
+               IF NOT cl_null(g_inpg_d[l_ac3].inpg033) THEN 
+                  IF g_inpg_d[l_ac3].inpg033 <> g_inpg_d[l_ac3].inpg012 THEN
+                     LET l_flag = 'Y'
+                  END IF                    
+               END IF
+            ELSE
+               #盤差
+               IF NOT cl_null(g_inpg_d[l_ac3].inpg031) THEN
+                  IF g_inpg_d[l_ac3].inpg030 <> g_inpg_d[l_ac3].inpg012 THEN
+                     LET l_flag = 'Y'
+                  END IF
+               END IF
+               IF NOT cl_null(g_inpg_d[l_ac3].inpg034) THEN 
+                  IF g_inpg_d[l_ac3].inpg033 <> g_inpg_d[l_ac3].inpg012 THEN
+                     LET l_flag = 'Y'
+                  END IF                    
+               END IF               
+            END IF
+            #add by lixh 20150403
+            
+         END IF 
+         IF g_option = '2' OR (g_option = '3' AND (g_compare = '2' OR g_compare = '3')) THEN  #復盤
+#            IF l_inpa015 = 'Y' THEN
+#               IF g_inpg_d[l_ac3].inpg050 <> g_inpg_d[l_ac3].inpg012 THEN
+#                  LET l_flag = 'Y'
+#               END IF   
+#            END IF
+#            IF l_inpa016 = 'Y' THEN    #復盤二
+#               IF g_inpg_d[l_ac3].inpg053 <> g_inpg_d[l_ac3].inpg012 THEN
+#                  LET l_flag = 'Y'
+#               END IF   
+#            END IF  
+#            #add by lixh 20150125(S)
+#            IF g_inpg_d[l_ac3].inpg053 <> g_inpg_d[l_ac3].inpg050 THEN
+#               LET l_flag = 'Y'
+#            END IF
+#            #add by lixh 20150125(E)             
+
+         #add by lixh 20150403
+            IF l_inpa008 = '1' THEN   #全盤輸入
+               IF NOT cl_null(g_inpg_d[l_ac3].inpg050) THEN
+                  IF g_inpg_d[l_ac3].inpg050 <> g_inpg_d[l_ac3].inpg012 THEN
+                     LET l_flag = 'Y'
+                  END IF
+               END IF
+               IF NOT cl_null(g_inpg_d[l_ac3].inpg053) THEN 
+                  IF g_inpg_d[l_ac3].inpg053 <> g_inpg_d[l_ac3].inpg012 THEN
+                     LET l_flag = 'Y'
+                  END IF                    
+               END IF
+            ELSE
+               #盤差
+               IF NOT cl_null(g_inpg_d[l_ac3].inpg051) THEN
+                  IF g_inpg_d[l_ac3].inpg050 <> g_inpg_d[l_ac3].inpg012 THEN
+                     LET l_flag = 'Y'
+                  END IF
+               END IF
+               IF NOT cl_null(g_inpg_d[l_ac3].inpg054) THEN 
+                  IF g_inpg_d[l_ac3].inpg053 <> g_inpg_d[l_ac3].inpg012 THEN
+                     LET l_flag = 'Y'
+                  END IF                    
+               END IF               
+            END IF         
+         #add by lixh 20150403 
+         
+         END IF  
+#         IF g_option = '3' AND g_compare = '3' THEN
+#            #add by lixh 20150125
+#            IF l_inpa016 = 'Y' THEN  #復盤
+#               LET l_inpg053 = g_inpg_d[l_ac3].inpg053
+#            ELSE
+#               IF l_inpa015 = 'Y' THEN
+#                  LET l_inpg053 = g_inpg_d[l_ac3].inpg050
+#               END IF
+#            END IF
+#            IF l_inpa014 = 'Y' THEN  #初盤
+#               LET l_inpg033 = g_inpg_d[l_ac3].inpg033
+#            ELSE
+#               IF l_inpa013 = 'Y' THEN
+#                  LET l_inpg033 = g_inpg_d[l_ac3].inpg030
+#               END IF
+#            END IF  
+#            IF l_inpg033 <> l_inpg053 THEN
+#               LET l_flag = 'Y'
+#            END IF
+#            IF l_inpg033 <> g_inpg_d[l_ac3].inpg012 THEN
+#               LET l_flag = 'Y'
+#            END IF  
+#            IF l_inpg053 <> g_inpg_d[l_ac3].inpg012 THEN
+#               LET l_flag = 'Y'
+#            END IF               
+#            #add by lixh 20150125            
+#         END IF
+         IF l_flag = 'N'  THEN
+            CONTINUE FOREACH
+         END IF  
+      ELSE
+         #20150128 mark by lixh
+#         IF g_option = '3' THEN
+#            IF g_option = '3' AND (g_compare = '1' OR g_compare = '3') THEN
+#               IF g_inpg_d[l_ac3].inpg030 <> g_inpg_d[l_ac3].inpg033 THEN
+#                  LET l_flag = 'Y'
+#               END IF               
+#            END IF
+#            IF g_option = '3' AND (g_compare = '2' OR g_compare = '3') THEN
+#               IF g_inpg_d[l_ac3].inpg050 <> g_inpg_d[l_ac].inpg053 THEN
+#                  LET l_flag = 'Y'
+#               END IF            
+#            END IF            
+#            IF l_flag = 'N'  THEN
+#               CONTINUE FOREACH
+#            END IF  
+#         END IF                         
+      END IF  
+      
+      #add by lixh 20150403
+      IF l_inpa008 = '2' THEN   #盤差
+         IF cl_null(g_inpg_d[l_ac3].inpg031) THEN
+            LET g_inpg_d[l_ac3].inpg030 = ''
+         END IF
+         IF cl_null(g_inpg_d[l_ac3].inpg034) THEN
+            LET g_inpg_d[l_ac3].inpg033 = ''
+         END IF  
+         IF cl_null(g_inpg_d[l_ac3].inpg051) THEN
+            LET g_inpg_d[l_ac3].inpg050 = ''
+         END IF      
+         IF cl_null(g_inpg_d[l_ac3].inpg054) THEN
+            LET g_inpg_d[l_ac3].inpg053 = ''
+         END IF             
+      END IF
+      
+      IF NOT cl_null(g_inpg_d[l_ac3].inpg030) THEN
+         LET l_inpg_num = g_inpg_d[l_ac3].inpg030
+      END IF
+      IF NOT cl_null(g_inpg_d[l_ac3].inpg033) THEN
+         LET l_inpg_num = g_inpg_d[l_ac3].inpg033
+      END IF  
+      IF NOT cl_null(g_inpg_d[l_ac3].inpg050) THEN
+         LET l_inpg_num = g_inpg_d[l_ac3].inpg050
+      END IF     
+      IF NOT cl_null(g_inpg_d[l_ac3].inpg053) THEN
+         LET l_inpg_num = g_inpg_d[l_ac3].inpg053
+      END IF     
+      LET g_inpg_d[l_ac3].more = l_inpg_num - g_inpg_d[l_ac3].inpg012     
+      #add by lixh 20150403
+      
+      CALL ainq850_inpg_desc()
+      LET g_flag = 'Y'
+      IF l_ac3 > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend =  "" 
+         LET g_errparam.code   =  9035 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      LET l_ac3 = l_ac3 + 1  
+   END FOREACH
+   CALL g_inpg_d.deleteElement(g_inpg_d.getLength())
+ 
+   LET li_ac = g_inpg_d.getLength()
+ 
+   DISPLAY li_ac TO FORMONLY.cnt
+   LET g_detail_idx4 = 1
+   DISPLAY g_detail_idx4 TO FORMONLY.idx   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL ainq850_inpf_desc()
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By lixh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ainq850_inpf_desc()
+   CALL s_desc_get_item_desc(g_inpf_d[l_ac2].inpf003) 
+        RETURNING g_inpf_d[l_ac2].inpf003_desc,g_inpf_d[l_ac2].inpf003_desc_desc
+   CALL s_desc_get_department_desc(g_inpf_d[l_ac2].inpf006) 
+        RETURNING g_inpf_d[l_ac2].inpf006_desc
+   CALL s_desc_get_acc_desc('221',g_inpf_d[l_ac2].inpf002)       
+        RETURNING g_inpf_d[l_ac2].inpf002_desc  
+   CALL ainq850_inpf009_ref()    
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL ainq850_inpf009_ref()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By lixh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ainq850_inpf009_ref()
+     IF l_ac = 0 THEN
+        RETURN
+     END IF
+     INITIALIZE g_ref_fields TO NULL
+     LET g_ref_fields[1] = g_inpf_d[l_ac2].inpf003
+     LET g_ref_fields[2] = g_inpf_d[l_ac2].inpf009
+     CALL ap_ref_array2(g_ref_fields,"SELECT ecba003 FROM ecba_t WHERE ecbaent='"||g_enterprise||"' AND ecba001=? AND ecba002=? ","") RETURNING g_rtn_fields
+     LET g_inpf_d[l_ac2].inpf009_desc = '', g_rtn_fields[1] , '' 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL ainq850_inpg_desc()
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By lixh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ainq850_inpg_desc()
+   CALL s_desc_get_item_desc(g_inpg_d[l_ac3].inpg001) 
+        RETURNING g_inpg_d[l_ac3].inpg001_desc,g_inpg_d[l_ac3].inpg001_desc_desc 
+   CALL s_desc_get_unit_desc(g_inpg_d[l_ac3].inpg007)
+        RETURNING g_inpg_d[l_ac3].inpg007_desc
+   CALL s_desc_get_person_desc(g_inpg_d[l_ac3].inpg031)
+        RETURNING g_inpg_d[l_ac3].inpg031_desc   
+   CALL s_desc_get_person_desc(g_inpg_d[l_ac3].inpg034)
+        RETURNING g_inpg_d[l_ac3].inpg034_desc    
+   CALL s_desc_get_person_desc(g_inpg_d[l_ac3].inpg051)
+        RETURNING g_inpg_d[l_ac3].inpg051_desc   
+   CALL s_desc_get_person_desc(g_inpg_d[l_ac3].inpg054)
+        RETURNING g_inpg_d[l_ac3].inpg054_desc            
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL ainq850_inpd_visible()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By lixh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ainq850_inpd_visible_true()
+   IF g_option = '1' OR (g_option = '3' AND (g_compare = '1' OR g_compare = '3')) THEN
+      CALL cl_set_comp_visible("b_inpd030,b_inpd031,b_inpd033,b_inpd034,b_inpd034_desc,b_inpd035",TRUE) #160504-00019#4 add inpd031
+      CALL cl_set_comp_visible("b_inpd036,b_inpd037,b_inpd039,b_inpd040,b_inpd040_desc,b_inpd041",TRUE) #160504-00019#4 add inpd037     
+   END IF
+   IF g_option = '2' OR (g_option = '3' AND (g_compare = '2' OR g_compare = '3')) THEN
+      CALL cl_set_comp_visible("b_inpd050,b_inpd051,b_inpd053,b_inpd054,b_inpd054_desc,b_inpd055",TRUE) #160504-00019#4 add inpd051
+      CALL cl_set_comp_visible("b_inpd056,b_inpd057,b_inpd059,b_inpd060,b_inpd060_desc,b_inpd061",TRUE) #160504-00019#4 add inpd057     
+   END IF
+   #160504-00019#4  #參考單位
+   IF cl_get_para(g_enterprise,g_site,'S-BAS-0028') = 'N' THEN   
+      CALL cl_set_comp_visible("b_inpd012,b_inpd012_desc,b_inpd013,b_inpd031,b_inpd037,b_inpd051,b_inpd057",FALSE)
+   END IF
+   #160504-00019#4   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL ainq850_inpd_visible_false()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By lixh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ainq850_inpd_visible_false()
+   CALL cl_set_comp_visible("b_inpd030,b_inpd031,b_inpd033,b_inpd034,b_inpd034_desc,b_inpd035",FALSE)  #160504-00019#4 add inpd031
+   CALL cl_set_comp_visible("b_inpd036,b_inpd037,b_inpd039,b_inpd040,b_inpd040_desc,b_inpd041",FALSE)  #160504-00019#4 add inpd037
+   CALL cl_set_comp_visible("b_inpd050,b_inpd051,b_inpd053,b_inpd054,b_inpd054_desc,b_inpd055",FALSE)  #160504-00019#4 add inpd051
+   CALL cl_set_comp_visible("b_inpd056,b_inpd057,b_inpd059,b_inpd060,b_inpd060_desc,b_inpd061",FALSE)  #160504-00019#4 add inpd057
+ 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL ainq850_inpg_visible_true()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By lixh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ainq850_inpg_visible_true()
+   IF g_option = '1' OR (g_option = '3' AND (g_compare = '1' OR g_compare = '3')) THEN
+      CALL cl_set_comp_visible("inpg030,inpg031,inpg031_desc,inpg032",TRUE)
+      CALL cl_set_comp_visible("inpg033,inpg034,inpg034_desc,inpg035",TRUE)   
+   END IF
+   IF g_option = '2' OR (g_option = '3' AND (g_compare = '2' OR g_compare = '3')) THEN
+      CALL cl_set_comp_visible("inpg050,inpg051,inpg051_desc,inpg052",TRUE)
+      CALL cl_set_comp_visible("inpg053,inpg054,inpg054_desc,inpg055",TRUE)       
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL ainq850_inpg_visible_false()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By lixh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ainq850_inpg_visible_false()
+
+   CALL cl_set_comp_visible("inpg030,inpg031,inpg031_desc,inpg032",FALSE)
+   CALL cl_set_comp_visible("inpg033,inpg034,inpg034_desc,inpg035",FALSE)
+   CALL cl_set_comp_visible("inpg050,inpg051,inpg051_desc,inpg052",FALSE)
+   CALL cl_set_comp_visible("inpg053,inpg054,inpg054_desc,inpg055",FALSE)    
+END FUNCTION
+
+ 
+{</section>}
+ 

@@ -1,0 +1,5705 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="awsi011.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0022(2016-12-20 09:35:39), PR版次:0022(2016-12-29 15:16:40)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000622
+#+ Filename...: awsi011
+#+ Description: BPM協同設定作業
+#+ Creator....: 01375(2013-12-03 14:43:24)
+#+ Modifier...: 07556 -SD/PR- 07375
+ 
+{</section>}
+ 
+{<section id="awsi011.global" >}
+#應用 i00 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#151105-00002#7  2016/01/28 By nikoybeat    調整sql取值條件  
+#160318-00005#45 2016/03/28 By pengxin      修正azzi920重复定义之错误讯息
+#151105-00002#15 2016/05/30 By nikoybeat    取得bpm相關參數方式調整
+#160902-00024#2  2016/09/13 By Jessica      一、awsi011整合設置介面優化:
+#                                            1)原[wsaa001單據性質]顯示名稱改為[作業編號]
+#                                            2)畫面隱藏: [wsaa010作業編號]，由wsaa001賦值
+#                                            3)畫面隱藏: [單據資訊]頁籤的[wsaa005交易對象欄位](工作流應用，先隱藏)
+#                                            4)畫面隱藏: [工作流關卡]頁籤(工作流應用，先隱藏)
+#                                            5)增加TopMenu相關作業連結
+#                                            6)增加三個應用元件設定: 交易前元件、交易後元件、更新狀態後元件
+#                                            7)TopMenu整單操作 [BPM表單設計師]、[BPM簽核流程設計師]
+#                                              執行前檢查是否有啟用BPM，若未啟用則中止程序
+#                                            8)取得預設簽核模板，執行前檢查是否有啟用BPM，若未啟用則中止程序
+#160902-00024#7  2016/11/02 By Jessica      移除新舊相容的判斷，直接用新參數  
+#160902-00024#8  2016/11/04 By Jessica      應用元件編號輸入值不符合格式時，只需提示訊息，不要清空欄位值: wsaa007, wsaa015, wsaa016, wsaa017
+#161102-00047#6  2016/11/10 By nikoybeat    重新產生欄位資訊時,程式若為客製,模組別改取回客製模組
+#161102-00047#7  2016/11/10 By nikoybeat    g_account若不為tiptop不可進行重新產生欄位資訊
+#160902-00024#10 2016/12/09 By Jessica      wsaa007, wsaa015, wsaa016, wsaa017 輸入後檢查函式是否存在，目前只搜SUB目錄，要加上也搜CSUB目錄(客制)
+#161102-00047#14 2016/12/16 By nikoybeat    新增調整權限過濾段落
+#160902-00024#13 2016/12/20 By Jessica      1.已選擇重要欄位清單，增加CheckBox可多選，按鈕「<」移除所選欄位
+#                                            (1) 修改模式下才可操作
+#                                            (2) 按鈕「<」:
+#                                                    - 如果有選取項目，詢問 "是否確定移除所選擇的重要欄位？"
+#                                                    - 依選取項目刪除wsac_t資料後，畫面重新顯示
+#161102-00047#17 2016/12/29 By nikoybeat    若新增重要元件為排除控件，跳窗提示使用者輸入其欄位類型
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+IMPORT util
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+{<Module define>}
+
+#單頭 type 宣告
+ TYPE type_g_wsaa_m     RECORD
+          wsaa001          LIKE wsaa_t.wsaa001,
+          wsaa001_desc     LIKE type_t.chr80,
+          wsaa003          LIKE wsaa_t.wsaa003,
+          wsaa003_desc     LIKE type_t.chr80,
+          wsaa002          LIKE wsaa_t.wsaa002,
+          wsaa002_desc     LIKE type_t.chr80,
+          wsaa004          LIKE wsaa_t.wsaa004,
+          wsaa005          LIKE wsaa_t.wsaa005,
+          wsaa006          LIKE wsaa_t.wsaa006,
+          wsaa007          LIKE wsaa_t.wsaa007,
+          wsaa008          LIKE wsaa_t.wsaa008,
+          wsaa009          LIKE wsaa_t.wsaa009,
+          wsaa010          LIKE wsaa_t.wsaa010,
+          wsaa011          LIKE wsaa_t.wsaa011,
+          wsaa012          LIKE wsaa_t.wsaa012,
+          wsaa013          LIKE wsaa_t.wsaa013,
+          wsaa014          LIKE wsaa_t.wsaa014,
+          #160902-00024#2-S
+          wsaa015          LIKE wsaa_t.wsaa015,
+          wsaa016          LIKE wsaa_t.wsaa016,
+          wsaa017          LIKE wsaa_t.wsaa017,
+          #160902-00024#2-E
+          wsaaownid        LIKE wsaa_t.wsaaownid,
+          wsaaownid_desc   LIKE type_t.chr80,
+          wsaaowndp        LIKE wsaa_t.wsaaowndp,
+          wsaaowndp_desc   LIKE type_t.chr80,
+          wsaacrtid        LIKE wsaa_t.wsaacrtid,
+          wsaacrtid_desc   LIKE type_t.chr80,
+          wsaacrtdp        LIKE wsaa_t.wsaacrtdp,
+          wsaacrtdp_desc   LIKE type_t.chr80,
+          wsaacrtdt        DATETIME YEAR TO SECOND,
+          wsaamodid        LIKE wsaa_t.wsaamodid,
+          wsaamodid_desc   LIKE type_t.chr80,
+          wsaamoddt        DATETIME YEAR TO SECOND
+       END RECORD
+
+#晝面欄位所屬結構
+TYPE type_g_detail1     RECORD
+          name_1           LIKE type_t.chr100,       #(外顯欄位)
+          pid_1            LIKE type_t.chr100,       #父節點id
+          id_1             LIKE type_t.chr100,       #本身節點id
+          exp_1            LIKE type_t.chr100,       #是否已展開
+          hasC_1           LIKE type_t.num5,         #是否有子節點
+          isExp_1          LIKE type_t.num5,         # 
+          expcode_1        LIKE type_t.num5,         #展開值
+          dzfj008_1        LIKE dzfj_t.dzfj008       #所屬結構代碼(exp:master_Folder_page)
+       END RECORD      
+
+#畫面結構下所屬欄位
+TYPE type_g_detail2     RECORD
+          ui_chk            LIKE type_t.chr1,      
+          ui_col            LIKE dzfj_t.dzfj005,     #欄位控件代號
+          ui_name           LIKE dzebl_t.dzebl003,   #欄位說明
+          is_ins            LIKE type_t.chr1         #是否已為重要欄位(已insert在wsac_t中)
+       END RECORD
+
+#單據性質重要欄位資料
+TYPE type_g_wsac        RECORD         
+          ui_del            LIKE type_t.chr1,      
+          wsac003           LIKE wsac_t.wsac003,     #結構  
+          wsac004           LIKE wsac_t.wsac004,     #控件代號          
+          wsac005           LIKE wsac_t.wsac005,     #欄位標籤代號
+          wsac005_desc      LIKE dzebl_t.dzebl003,   #欄位標籤說明
+          wsac006           LIKE wsac_t.wsac006,     #參考欄位代號          
+          wsac007           LIKE wsac_t.wsac007,     #自定義變數名稱
+          dzfj009_desc      LIKE dzebl_t.dzebl003    #所屬結構
+       END RECORD
+
+TYPE type_g_wsaf        RECORD         
+          wsaf002           LIKE wsaf_t.wsaf002,     #
+          wsaf002_desc      LIKE dzebl_t.dzebl003,
+          wsaf003           LIKE wsaf_t.wsaf003,
+          wsaf003_desc      LIKE dzebl_t.dzebl003
+       END RECORD
+       
+#模組變數(Module Variables)
+DEFINE g_wsaa_m        type_g_wsaa_m
+DEFINE g_wsaa_m_t      type_g_wsaa_m                #備份舊值
+DEFINE g_wsaa001_t     LIKE wsaa_t.wsaa001          #Key值備份
+
+
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD                   #資料瀏覽之欄位
+            b_wsaa011 LIKE wsaa_t.wsaa011,
+            b_wsaa003 LIKE wsaa_t.wsaa003,
+            b_wsaa003_desc LIKE type_t.chr80,
+            b_wsaa001 LIKE wsaa_t.wsaa001,
+            b_wsaa001_desc LIKE type_t.chr80
+            #,rank           LIKE type_t.num10
+      END RECORD
+      
+#流程樣版
+TYPE type_flow_template RECORD         
+         flow_template_id            STRING,
+         flow_template_name          STRING,
+         flow_template_image_url     STRING         
+       END RECORD
+DEFINE g_flow_tpl                    DYNAMIC ARRAY OF type_flow_template        
+
+#無單頭append欄位定義
+
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+
+DEFINE g_sql                 STRING                        #組 sql 用
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_jump                LIKE type_t.num10             #查詢指定的筆數
+DEFINE g_no_ask              LIKE type_t.num5              #是否開啟指定筆視窗
+DEFINE g_rec_b               LIKE type_t.num5              #單身筆數
+DEFINE l_ac                  LIKE type_t.num5              #目前處理的ARRAY CNT
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_pagestart           LIKE type_t.num5              #page起始筆數
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_state               STRING
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+
+#快速搜尋用
+DEFINE g_searchcol           STRING             #查詢欄位代碼
+DEFINE g_searchstr           STRING             #查詢欄位字串
+DEFINE g_order               STRING             #查詢排序模式
+
+#Browser用
+DEFINE g_current_idx         LIKE type_t.num5   #Browser 所在筆數(當下page)
+DEFINE g_current_row         LIKE type_t.num5   #Browser 所在筆數(暫存用)
+DEFINE g_current_cnt         LIKE type_t.num10  #Browser 總筆數(當下page)
+DEFINE g_browser_idx         LIKE type_t.num5   #Browser 所在筆數(所有資料)
+DEFINE g_browser_cnt         LIKE type_t.num10  #Browser 總筆數(所有資料)
+DEFINE g_tmp_page            LIKE type_t.num5
+DEFINE g_row_index           LIKE type_t.num5
+DEFINE g_chk                 BOOLEAN
+{</Module define>}
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+DEFINE g_dzfb002         LIKE dzfb_t.dzfb002                 #設計點版本
+DEFINE g_dzfb007         LIKE dzfb_t.dzfb007                 #客製標示
+
+DEFINE g_detail1         DYNAMIC ARRAY OF type_g_detail1     #晝面欄位所屬結構
+DEFINE g_detail1_idx     LIKE type_t.num5                    #[畫面結構]Tree目前所在筆數
+
+DEFINE g_detail2         DYNAMIC ARRAY OF type_g_detail2     #畫面結構下所屬欄位
+DEFINE g_detail2_idx     LIKE type_t.num5                    #[畫面結構下所屬欄位]目前所在筆數
+
+DEFINE g_wsac            DYNAMIC ARRAY OF type_g_wsac        #單據性質重要欄位資料
+DEFINE g_wsac_t          type_g_wsac
+DEFINE g_detail3_idx     LIKE type_t.num5                    #已挑選[重要欄位資料]目前所在筆數
+DEFINE g_detail3_cnt     LIKE type_t.num5
+
+DEFINE g_wsaf            DYNAMIC ARRAY OF type_g_wsaf
+DEFINE g_wsaf_t          type_g_wsaf
+DEFINE g_detail4_idx     LIKE type_t.num5                    #已挑選[重要欄位資料]目前所在筆數
+DEFINE g_detail4_cnt     LIKE type_t.num5
+DEFINE g_data_insert     STRING
+DEFINE g_bpm_url         LIKE ooaa_t.ooaa002 
+DEFINE g_gzzz002_temp    STRING
+DEFINE g_wsaa010_desc    LIKE gzzal_t.gzzal003
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="awsi011.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define name="main.define"
+   
+   #end add-point    
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aws","")
+ 
+   #add-point:作業初始化 name="main.init"
+   
+   #end add-point
+ 
+   #add-point:SQL_define name="main.define_sql"
+  #LET g_forupd_sql = "SELECT wsaa001,'',wsaa003,'',wsaa002,wsaa004,wsaa005,wsaa006,wsaa007,wsaa008,wsaa009,wsaa010,wsaa011,wsaa012,wsaa013,wsaa014,wsaaownid,'',wsaaowndp,'',wsaacrtid,'',wsaacrtdp,'',wsaacrtdt,wsaamodid,'',wsaamoddt FROM wsaa_t WHERE wsaa001=? FOR UPDATE"                         #160902-00024#2 mark
+   LET g_forupd_sql = "SELECT wsaa001,'',wsaa003,'',wsaa002,wsaa004,wsaa005,wsaa006,wsaa007,wsaa008,wsaa009,wsaa010,wsaa011,wsaa012,wsaa013,wsaa014,wsaa015,wsaa016,wsaa017,wsaaownid,'',wsaaowndp,'',wsaacrtid,'',wsaacrtdp,'',wsaacrtdt,wsaamodid,'',wsaamoddt FROM wsaa_t WHERE wsaa001=? FOR UPDATE" #160902-00024#2 
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE awsi011_cl CURSOR FROM g_forupd_sql 
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_awsi011 WITH FORM cl_ap_formpath("aws",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL awsi011_init()
+ 
+      #進入選單 Menu (='N')
+      CALL awsi011_ui_dialog()
+   
+      #畫面關閉
+      CLOSE WINDOW w_awsi011
+   END IF
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+ 
+{</section>}
+ 
+{<section id="awsi011.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+PRIVATE FUNCTION awsi011_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   DEFINE l_sql         STRING
+   DEFINE l_forupd_sql  STRING
+   #end add-point
+
+   #該樣板不需此段落LET g_main_hidden = 0
+
+   #重要欄位單身鎖定
+   LET l_forupd_sql = "SELECT wsac003, wsac004, '',  wsac005, '', ",
+                      "       wsac006, wsac007, ''",
+                      "  FROM wsac_t  ",
+                      "  WHERE wsac001 = ? AND wsac004 = ? FOR UPDATE"
+
+   LET l_forupd_sql = cl_sql_forupd(l_forupd_sql)
+   DECLARE awsi011_wsac_lock CURSOR FROM l_forupd_sql
+   
+   
+   LET l_forupd_sql = "SELECT wsaf002,wsaf003 FROM wsaf_t WHERE wsaf001 = ? AND wsaf002 = ? FOR UPDATE"  
+   LET l_forupd_sql = cl_sql_forupd(l_forupd_sql)   
+   DECLARE awsi011_wsaf_lock CURSOR FROM l_forupd_sql
+   
+   #todo:畫面代碼的最大規格版號如何取得?---(dzfb002)
+   LET g_dzfb002 = "1"
+   LET g_dzfb007 = "s"
+
+   LET g_error_show = 1
+   LET g_detail1_idx = 1
+   LET g_detail2_idx = 1
+   LET g_detail3_idx = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+
+   #取得wsac003(欄位單頭/單身)結構item
+   CALL awsi011_set_wsac003_item()
+   
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   
+   #取得畫面欄位所屬結構(結構分類定義:1.Page 2.Group 3.Table)
+   LET l_sql= "SELECT DISTINCT dzfb003, dzfj008, dzfj009 ",
+              "  FROM dzfb_t LEFT JOIN dzfj_t ON dzfb001 = dzfj001 AND dzfb002 = dzfj002 AND dzfb005 = dzfj005 ",
+              "  WHERE dzfb001 = ? ",
+              "    AND dzfb002 = ? ",
+              "    AND dzfb007 = ? ",
+              "  ORDER BY dzfb003, dzfj008 "
+   
+   PREPARE awsi011_detail1_pre FROM l_sql
+   
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  SQLCA.sqlcode
+      LET g_errparam.extend = 'PREPARE awsi011_detail1_pre:'
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+   END IF
+
+   DECLARE awsi011_detail1_cur CURSOR FOR awsi011_detail1_pre
+   
+   
+   
+   #取得畫面結構下所屬欄位(承awsi011_detail1_cur設計)
+   #dzfj012(是否為參考欄位):不將參考欄位列出,參考欄位隨著[依附欄位]被選擇時,而自動帶出
+   
+   LET l_sql= "SELECT 'N', dzfb005, dzfj010, wsac004 ",
+              "  FROM dzfb_t LEFT JOIN dzfj_t ON dzfb001 = dzfj001 AND dzfb002 = dzfj002 AND dzfb005 = dzfj005 ", 
+              "              LEFT JOIN wsac_t ON wsac001= ?  AND dzfb005 = wsac004 ",              
+              "              LEFT JOIN gzzz_t ON dzfb001 = gzzz002 AND gzzz001 = wsac002 ",              
+              "  WHERE dzfb001 = ? ",
+              "    AND dzfb002 = ? ",
+              "    AND dzfb007 = ? ",
+              "    AND dzfj017 = ? ",   #151105-00002#7 by nikoybeat add
+              "    AND dzfj008 = ? ",
+              "    AND (dzfj012 = 'N' OR dzfj012 = '') ",
+              "  ORDER BY dzfb005 "
+   
+   PREPARE awsi011_detail2_pre FROM l_sql
+   
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  SQLCA.sqlcode
+      LET g_errparam.extend = 'PREPARE awsi011_detail2_pre:'
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+   END IF
+
+   DECLARE awsi011_detail2_cur CURSOR FOR awsi011_detail2_pre
+   
+   #單身結構需補上 reference 欄位
+   LET l_sql= "SELECT 'N', dzfb005, dzfj010, wsac004 ",
+              "  FROM dzfb_t LEFT JOIN dzfj_t ON dzfb001 = dzfj001 AND dzfb002 = dzfj002 AND dzfb005 = dzfj005 ", 
+              "              LEFT JOIN wsac_t ON wsac001= ?  AND dzfb005 = wsac004 ",              
+              "              LEFT JOIN gzzz_t ON dzfb001 = gzzz002 AND gzzz001 = wsac002 ",              
+              "  WHERE dzfb001 = ? ",
+              "    AND dzfb002 = ? ",
+              "    AND dzfb007 = ? ",
+              "    AND dzfj017 = ? ",   #151105-00002#7 by nikoybeat add
+              "    AND dzfj008 = ? ",              
+              "    AND dzfj012 = 'Y' ",
+              "  ORDER BY dzfb005 "
+   
+   PREPARE awsi011_detail2_pre2 FROM l_sql
+   
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  SQLCA.sqlcode
+      LET g_errparam.extend = 'PREPARE awsi011_detail2_pre:'
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+   END IF
+
+   DECLARE awsi011_detail2_cur2 CURSOR FOR awsi011_detail2_pre2
+   
+   #取得此單據性質已挑選的重要欄位
+   LET l_sql= "SELECT wsac003, wsac004, dzfj009, wsac005, '', ",
+              "       wsac006, wsac007, dzfj008, dzfj003 ",
+              "  FROM wsac_t LEFT JOIN gzzz_t ON gzzz001 = wsac002 ",
+              "              LEFT JOIN dzfj_t ON gzzz002 = dzfj001 AND dzfj002 = ? AND dzfj017 = ? AND wsac004 = dzfj005 ", 
+              "  WHERE wsac001 = ? ",
+              "  ORDER BY wsac003, dzfj008, wsac004 "
+   
+   PREPARE awsi011_wsac_pre FROM l_sql
+   
+  
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  SQLCA.sqlcode
+      LET g_errparam.extend = 'PREPARE awsi011_wsac_pre:'
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+   END IF
+
+   DECLARE awsi011_wsac_cur CURSOR FOR awsi011_wsac_pre
+   
+   LET l_sql = "SELECT wsaf002,wsaf003 FROM wsaf_t WHERE wsaf001 = ? ORDER BY wsaf002"   
+   DECLARE awsi011_wsaf_cur CURSOR FROM l_sql
+   #end add-point
+
+   CALL cl_set_comp_visible("wsaa005,wsaa005_desc,wsaa010,wsaa010_desc,page4",FALSE)      #160902-00024#2
+   CALL awsi011_default_search()
+
+END FUNCTION
+
+PRIVATE FUNCTION awsi011_ui_dialog()
+   {<Local define>}
+   #DEFINE li_exit                  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx                   LIKE type_t.num5
+   {</Local define>}
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   DEFINE l_url              STRING
+   DEFINE l_detail1_rec      LIKE type_t.num5
+   DEFINE l_detail2_rec      LIKE type_t.num5
+   DEFINE l_detail3_rec      LIKE type_t.num5
+   DEFINE l_wsaf_rec         LIKE type_t.num5
+   DEFINE l_param            LIKE gzzz_t.gzzz004
+   DEFINE ls_js              STRING
+   DEFINE la_param           RECORD
+             prog            STRING,
+             param           DYNAMIC ARRAY OF STRING
+                             END RECORD
+   DEFINE l_ssokey           STRING 
+   #160902-00024#2-S
+   DEFINE l_return1          LIKE type_t.num5   
+   DEFINE l_return2          LIKE type_t.num5   
+   DEFINE l_return3          LIKE type_t.num5   
+   DEFINE l_return4          LIKE type_t.num5
+   #160902-00024#2-E 
+   #end add-point
+
+   #LET li_exit = FALSE
+   LET g_current_row = 0
+   LET g_current_idx = 1
+   CALL gfrm_curr.setElementImage("logo","logo/applogo.png")
+
+   IF g_wc.trim() <> "1=1" THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   ELSE
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF
+             
+   IF awsi011_chk_bpm() THEN      #160902-00024#7         
+      #預先取回所有的模版名稱
+      LET g_flow_tpl = cl_bpm_flow_template_get()
+   END IF                         #160902-00024#7    
+  
+   #add-point:ui_dialog段before dialog
+   {<point name="ui_dialog.before_dialog"/>}   
+   #SELECT ooaa002 INTO g_bpm_url                             #151105-00002#15 by nikoybeat mod start
+   #  FROM ooaa_t 
+   # WHERE ooaaent = g_enterprise  AND ooaa001 = 'E-SYS-0701' #151105-00002#15 by nikoybeat mod end
+   LET g_bpm_url = cl_aws_prod_para(g_enterprise,"bpm-0002")  #151105-00002#15 by nikoybeat add
+   #end add-point
+
+   WHILE TRUE
+
+      CALL awsi011_browser_fill(g_wc, "")
+      CALL lib_cl_dlg.cl_dlg_before_display()
+      CALL cl_notice()
+      
+      LET l_detail1_rec = g_detail1.getLength()
+      LET l_detail3_rec = g_wsac.getLength()
+      LET l_wsaf_rec = g_wsaf.getLength()
+      
+      #判斷前一個動作是否為新增, 若是的話切換到新增的筆數
+      IF g_state = "Y" THEN
+         FOR li_idx = 1 TO g_browser.getLength()
+            IF g_browser[li_idx].b_wsaa001 = g_wsaa001_t THEN
+               LET g_current_row = li_idx
+               LET g_current_idx = li_idx
+               EXIT FOR
+            END IF
+         END FOR
+         LET g_state = ""
+      END IF
+
+
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+         #左側瀏覽頁簽
+         DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTE(COUNT=g_rec_b)
+
+            BEFORE ROW
+               #回歸舊筆數位置 (回到當時異動的筆數)
+               LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+               IF g_current_idx = 0 THEN
+                  LET g_current_idx = 1
+               END IF
+               LET g_current_row = g_current_idx  #目前指標
+               LET g_current_sw = TRUE
+               CALL cl_show_fld_cont()
+
+               #當每次點任一筆資料都會需要用到
+               CALL awsi011_fetch("")
+
+            ON COLLAPSE (g_row_index)
+               #樹關閉
+
+         END DISPLAY
+
+         #重要欄位頁籤-畫面結構
+         DISPLAY ARRAY g_detail1 TO s_detail1.* ATTRIBUTES(COUNT=l_detail1_rec)   #page3
+
+            BEFORE ROW
+               LET g_detail1_idx = DIALOG.getCurrentRow("s_detail1")
+               
+               #取得畫面結構下所屬欄位控件
+               CALL g_detail2.clear()
+               LET l_detail2_rec = 0
+               
+               IF g_detail1_idx > 1 AND g_detail1_idx <= g_detail1.getLength() THEN
+                  IF cl_null(g_detail1[g_detail1_idx].dzfj008_1) THEN
+                     DISPLAY "g_detail1 is no data:" ,g_detail1_idx
+                  ELSE
+                     LET g_detail2 = awsi011_s_detail2_fill(g_detail1[g_detail1_idx].dzfj008_1)
+                  END IF
+               #ELSE
+               #   CALL g_detail1.clear()
+               END IF
+               
+               LET l_detail2_rec = g_detail2.getLength()
+               
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail1_idx)
+         END DISPLAY
+
+         #重要欄位頁籤-畫面結構下所屬欄位
+         DISPLAY ARRAY g_detail2 TO s_detail2.* ATTRIBUTES(COUNT=l_detail2_rec)   #page3
+
+            BEFORE ROW
+               LET g_detail2_idx = DIALOG.getCurrentRow("s_detail2")
+               
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail2_idx)
+         END DISPLAY
+
+         #重要欄位頁籤-畫面結構下所屬欄位
+         DISPLAY ARRAY g_wsac TO s_detail3.* ATTRIBUTES(COUNT=l_detail3_rec)   #page3
+
+            BEFORE ROW
+               LET g_detail3_idx = DIALOG.getCurrentRow("s_detail3")
+               
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail3_idx)
+         END DISPLAY
+         
+         #
+         DISPLAY ARRAY g_wsaf TO s_wsaf.* ATTRIBUTES(COUNT=l_wsaf_rec) 
+
+            BEFORE ROW
+               LET g_detail4_idx = DIALOG.getCurrentRow("s_wsaf")
+               
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail4_idx)
+         END DISPLAY
+
+         SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+         SUBDIALOG lib_cl_dlg.cl_dlg_relateapps
+
+         #add-point:ui_dialog段define
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+
+         BEFORE DIALOG
+            CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            #LET g_page = "first"
+            #還原為原本指定筆數
+            IF g_current_row > 1 THEN
+               #當刪除最後一筆資料時可能產生錯誤, 進行額外判斷
+               IF g_current_row > g_browser.getLength() THEN
+                  LET g_current_row = g_browser.getLength()
+               END IF
+               LET g_current_idx = g_current_row
+               CALL DIALOG.setCurrentRow("s_browse",g_current_idx)
+            END IF
+
+            #當每次點任一筆資料都會需要用到
+            IF g_browser_cnt > 0 THEN
+               CALL awsi011_fetch("")
+            END IF
+            
+            #161102-00047#7 by nikoybeat add start
+            #帳號不為tiptop時不可進行重產
+            IF g_account != 'tiptop' THEN
+               CALL cl_set_act_visible("ui_data_regen", FALSE)
+            END IF
+            #161102-00047#7 by nikoybeat add end
+
+         AFTER DIALOG
+            #add-point:ui_dialog段 after dialog
+            {<point name="ui_dialog.after_dialog"/>}
+            #end add-point
+
+         #ON ACTION statechange
+         #   CALL awsi011_statechange()
+         #   LET g_action_choice="statechange"
+         #   EXIT DIALOG
+
+         ON ACTION filter
+            CALL awsi011_filter()
+            EXIT DIALOG
+
+         ON ACTION first
+            CALL awsi011_fetch("F")
+            LET g_current_row = g_current_idx
+
+         ON ACTION next
+            CALL awsi011_fetch("N")
+            LET g_current_row = g_current_idx
+
+         ON ACTION jump
+            CALL awsi011_fetch("/")
+            LET g_current_row = g_current_idx
+
+         ON ACTION previous
+            CALL awsi011_fetch("P")
+            LET g_current_row = g_current_idx
+
+         ON ACTION last
+            CALL awsi011_fetch("L")
+            #CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+            #CALL fgl_set_arr_curr(g_current_idx)
+            LET g_current_row = g_current_idx
+
+         ON ACTION exit
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            EXIT DIALOG
+
+         ON ACTION close
+            LET INT_FLAG = FALSE
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+
+         ON ACTION mainhidden       #主頁摺疊
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+               CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+            END IF
+
+         ON ACTION worksheethidden   #瀏覽頁折疊
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+               CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+            END IF
+
+         #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+         ON ACTION controls
+            IF g_header_hidden THEN
+               CALL gfrm_curr.setElementHidden("worksheet_detail",0)
+               CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+               LET g_header_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("worksheet_detail",1)
+               CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+               LET g_header_hidden = 1     #hidden
+            END IF
+
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL awsi011_delete()
+               #add-point:ON ACTION delete
+               {<point name="menu.delete" />}
+               #END add-point
+            END IF
+
+
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL awsi011_insert()                           
+            END IF
+
+
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               CALL awsi011_modify()
+               #add-point:ON ACTION modify
+               {<point name="menu.modify" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+
+
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+
+
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL awsi011_query()
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+            END IF
+
+
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL awsi011_reproduce()
+               #add-point:ON ACTION reproduce
+                  {<point name="menu.reproduce" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+
+         #營運據點簽核設定
+         ON ACTION run_awsi010
+            LET g_action_choice="run_awsi010"
+            
+            #LET la_param.prog = 'awsi010'                        
+            #LET ls_js = util.JSON.stringify( la_param ) 
+            #CALL cl_cmdrun(ls_js)
+            CALL cl_cmdrun('awsi010')
+            
+         #單據性質簽核設定
+         ON ACTION run_awsi013
+            LET g_action_choice="run_awsi013"
+                       
+            LET la_param.prog = 'awsi013'            
+            LET la_param.param[1] = g_wsaa_m.wsaa001
+            LET ls_js = util.JSON.stringify( la_param )            
+            CALL cl_cmdrun(ls_js)            
+          
+         #160902-00024#2-S 
+         #BPM簽核設定作業
+         ON ACTION run_awsi014
+            LET g_action_choice="run_awsi014"                       
+            LET la_param.prog = 'awsi014'            
+            LET la_param.param[1] = g_wsaa_m.wsaa001
+            LET ls_js = util.JSON.stringify( la_param )            
+            CALL cl_cmdrun(ls_js) 
+         #160902-00024#2-E    
+            
+         #BPM 系統管理員 
+         #ON ACTION bpm_admin
+         #   LET l_url = g_bpm_url CLIPPED,"GP/ToolSuite?hdnMethod=openDesigner&hdnAppType=nana-administrator"
+         #   LET l_url = l_url ,"&userId=", g_account CLIPPED,"&lang=", g_lang CLIPPED
+         #   DISPLAY "bpm-admin:", l_url, ";"
+         #   CALL ui.Interface.frontCall( "standard", "launchurl", [l_url], [] )
+            
+         #BPM 組織設計師 
+         #ON ACTION org_designer
+         #   LET l_url = g_bpm_url CLIPPED,"GP/ToolSuite?hdnMethod=openDesigner&hdnAppType=nana-organization-designer"
+         #   LET l_url = l_url ,"&userId=", g_account CLIPPED,"&lang=", g_lang CLIPPED
+            #LET l_url = l_url ,"&userId=administrator&lang=", g_lang CLIPPED
+         #   DISPLAY "org_designer:", l_url, ";"
+         #   CALL ui.Interface.frontCall( "standard", "launchurl", [l_url], [] )   
+          
+         #BPM組織同步
+         ON ACTION org_sync
+            LET g_action_choice="org_sync"
+            
+            LET la_param.prog = 'awsp004'                        
+            LET ls_js = util.JSON.stringify( la_param ) 
+            CALL cl_cmdrun(ls_js)
+            #CALL cl_cmdrun('awsp004')
+             
+         #BPM表單設計師
+         ON ACTION form_designer
+            #160902-00024#7-S              
+            IF NOT awsi011_chk_bpm() THEN
+               LET g_errparam.code = "aws-00081"   #未啟用BPM協同!
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+            ELSE             
+            #160902-00024#7-E 
+               LET g_action_choice="form_designer"
+               IF g_browser[g_current_idx].b_wsaa001 IS NULL THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  "std-00003"
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+   
+               ELSE               
+                  LET g_action_choice="form_designer"                  
+                  LET l_url = g_bpm_url CLIPPED,"GP/ToolSuite?hdnMethod=openDesigner&hdnAppType=nana-form-designer"
+                  LET l_ssokey = cl_bpm_get_ssokey()               
+                  #LET l_url = l_url, "&userId=", g_account CLIPPED, "&lang=", g_lang CLIPPED, "&docPropId=", g_wsaa_m.wsaa001 CLIPPED ,"&designerType=signatureFlowDesigner"
+                  LET l_url = l_url, "&hdnSSOKey=", l_ssokey , "&lang=", g_lang CLIPPED, "&docPropId=", g_wsaa_m.wsaa001 CLIPPED ,"&designerType=signatureFlowDesigner"
+                  DISPLAY "form_designer:", l_url, ";"
+                  CALL ui.Interface.frontCall( "standard", "launchurl", [l_url], [] )
+               END IF
+            END IF      #160902-00024#2 
+
+         #BPM簽核流程設計師
+         ON ACTION bpm_designer
+            #160902-00024#7-S              
+            IF NOT awsi011_chk_bpm() THEN
+               LET g_errparam.code = "aws-00081"   #未啟用BPM協同!
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+            ELSE             
+            #160902-00024#7-E 
+               LET g_action_choice="bpm_designer"
+               IF g_browser[g_current_idx].b_wsaa001 IS NULL THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  "std-00003"
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+   
+               ELSE               
+                  LET g_action_choice="bpm_designer"
+                  LET l_url = g_bpm_url CLIPPED,"GP/ToolSuite?hdnMethod=openDesigner&hdnAppType=nana-bpm-designer"
+                  LET l_ssokey = cl_bpm_get_ssokey()
+                  #LET l_url = l_url, "&userId=", g_account CLIPPED , "&lang=", g_lang CLIPPED, "&companyId=", g_site, "&docPropId=", g_wsaa_m.wsaa001 CLIPPED ,"&designerType=signatureFlowDesigner"
+                  LET l_url = l_url, "&hdnSSOKey=", l_ssokey , "&lang=", g_lang CLIPPED, "&companyId=", g_site, "&docPropId=", g_wsaa_m.wsaa001 CLIPPED ,"&designerType=signatureFlowDesigner"
+                  DISPLAY "bpm_designer:", l_url, ";"
+                  CALL ui.Interface.frontCall( "standard", "launchurl", [l_url], [] )
+               END IF 
+            END IF      #160902-00024#2 
+
+         #BPM工作流程設計師
+         ON ACTION work_designer    
+            #160902-00024#7-S              
+            IF NOT awsi011_chk_bpm() THEN
+               LET g_errparam.code = "aws-00081"   #未啟用BPM協同!
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+            ELSE             
+            #160902-00024#7-E  
+               LET g_action_choice="work_designer"
+               LET l_url = g_bpm_url CLIPPED,"GP/ToolSuite?hdnMethod=openDesigner&hdnAppType=nana-bpm-designer"
+               LET l_ssokey = cl_bpm_get_ssokey()
+               #LET l_url = l_url, "&userId=", g_account CLIPPED , "&lang=", g_lang CLIPPED ,"&designerType=workFlowDesigner"
+               LET l_url = l_url, "&hdnSSOKey=", l_ssokey , "&lang=", g_lang CLIPPED ,"&designerType=workFlowDesigner"
+               DISPLAY "work_designer:", l_url, ";"
+               CALL ui.Interface.frontCall( "standard", "launchurl", [l_url], [] )
+            END IF      #160902-00024#2 
+         
+         #UI 設計資料重新產生
+         ON ACTION ui_data_regen
+            LET g_action_choice="ui_data_regen"
+            CALL awsi011_ui_data_regen(g_wsaa_m.wsaa010)
+            
+         #重新產生呼叫確認的程式
+         ON ACTION gen_ws_confirm
+            LET g_action_choice="gen_ws_confirm"
+            #160902-00024#2-S       
+            #CALL awsi011_gen_ws_confirm()
+            LET l_return1 = TRUE            
+            LET l_return2 = TRUE            
+            LET l_return3 = TRUE            
+            LET l_return4 = TRUE            
+            CALL awsi011_gen_ws_confirm()      RETURNING l_return1 #確認應用元件編號
+            CALL awsi011_gen_preprocess()      RETURNING l_return2 #交易前元件編號
+            CALL awsi011_gen_postprocess()     RETURNING l_return3 #交易後元件編號
+            CALL awsi011_gen_ws_statechange()  RETURNING l_return4 #更新狀態後元件編號 
+            
+            IF l_return1 AND l_return2 AND l_return3 AND l_return4 THEN
+               LET g_errparam.code = "aws-00042"   #重新進行link成功！
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+            END IF
+            #160902-00024#2-E                
+            
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+
+      END DIALOG
+
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+    
+   END WHILE
+
+END FUNCTION
+
+PRIVATE FUNCTION awsi011_browser_fill(p_wc,ps_page_action)
+   {<Local define>}
+   DEFINE p_wc              STRING
+   DEFINE ps_page_action    STRING
+   DEFINE l_searchcol       STRING
+   DEFINE l_sql             STRING
+   DEFINE l_order           STRING
+   DEFINE l_sql_rank        STRING
+   {</Local define>}
+   #add-point:browser_fill段define
+   {<point name="browser_fill.define"/>}
+   #end add-point
+
+   CLEAR FORM
+   INITIALIZE g_wsaa_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   CALL g_browser.clear()
+
+   #搜尋用
+   IF cl_null(g_searchcol) OR g_searchcol = "0" THEN
+      LET l_searchcol = "wsaa001"
+   ELSE
+      LET l_searchcol = g_searchcol
+   END IF
+
+   LET p_wc = p_wc.trim() #當查詢按下Q時 按下放棄 g_wc = "  " 所以要清掉空白
+   IF cl_null(p_wc) THEN  #p_wc 查詢條件
+      LET p_wc = " 1=1 "
+      LET g_wc = ""
+   ELSE
+      LET g_wc = p_wc
+   END IF
+
+   #add-point:browser_fill段wc控制
+   {<point name="browser_fill.wc"/>}
+   #end add-point
+
+   LET g_sql = " SELECT COUNT(*) FROM wsaa_t ",
+               " WHERE  ",
+               p_wc CLIPPED
+
+   PREPARE header_cnt_pre FROM g_sql
+   EXECUTE header_cnt_pre INTO g_browser_cnt
+   FREE header_cnt_pre
+
+   #若超過最大顯示筆數
+   IF g_browser_cnt > g_max_browse AND g_error_show = 1 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = '9035'
+      LET g_errparam.extend = g_browser_cnt
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+   END IF
+
+   LET g_error_show = 0
+
+   DISPLAY g_browser_cnt TO FORMONLY.b_count
+   DISPLAY g_browser_cnt TO FORMONLY.h_count
+
+   
+   #LET g_page_action = ps_page_action          # Keep Action
+
+   IF ps_page_action = "F" OR
+      ps_page_action = "P"  OR
+      ps_page_action = "N"  OR
+      ps_page_action = "L"  THEN
+      LET g_page_action = ps_page_action
+   END IF
+
+   CASE ps_page_action
+
+      WHEN "F"
+         LET g_pagestart = 1
+
+      WHEN "P"
+         LET g_pagestart = g_pagestart - g_max_browse
+         IF g_pagestart < 1 THEN
+            LET g_pagestart = 1
+         END IF
+
+      WHEN "N"
+         LET g_pagestart = g_pagestart + g_max_browse
+         IF g_pagestart > g_browser_cnt THEN
+            LET g_pagestart = g_browser_cnt - (g_browser_cnt mod g_max_browse) + 1
+            WHILE g_pagestart > g_browser_cnt
+               LET g_pagestart = g_pagestart - g_max_browse
+            END WHILE
+         END IF
+
+      WHEN "L"
+         LET g_pagestart = g_browser_cnt - (g_browser_cnt mod g_max_browse) + 1
+         WHILE g_pagestart > g_browser_cnt
+            LET g_pagestart = g_pagestart - g_max_browse
+         END WHILE
+
+      WHEN '/'
+         LET g_pagestart = g_jump
+         IF g_pagestart > g_browser_cnt THEN
+            LET g_pagestart = 1
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'azz-998'
+            LET g_errparam.extend = g_jump
+            LET g_errparam.popup = FALSE
+            CALL cl_err()
+
+         END IF
+
+      OTHERWISE
+
+   END CASE
+   
+   LET l_sql_rank = "SELECT wsaa011,wsaa003,'',wsaa001,'',RANK() OVER(ORDER BY wsaa001 ",
+                    g_order,
+                    ") AS RANK ",
+                    " FROM wsaa_t ",
+                    "  ",
+                    "  ",
+                    " WHERE  ", g_wc
+   LET l_sql_rank = l_sql_rank, cl_sql_add_filter("wsaa_t")        #161102-00047#14 by nikoybeat add 
+
+   #定義翻頁CURSOR
+   #IF p_wc="1=1" THEN
+   #    LET l_sql= " SELECT gzcb003,'',gzcb002,'' FROM (",l_sql_rank,") " 
+   #   LET l_order = " ORDER BY gzcb003,gzcb002 "      
+   #ELSE
+      LET l_sql= " SELECT wsaa011,wsaa003,'',wsaa001,'' FROM (",l_sql_rank,") "
+      LET l_order = " ORDER BY wsaa003,wsaa001 "
+   #END IF
+   
+   LET g_sql= l_sql ,
+              "  WHERE RANK >= ", g_pagestart,
+              "    AND RANK <  ", (g_pagestart + g_max_browse) ,
+              l_order
+              
+
+   PREPARE browse_pre FROM g_sql
+   DECLARE browse_cur CURSOR FOR browse_pre
+
+   CALL g_browser.clear()
+   LET g_cnt = 1
+   FOREACH browse_cur INTO g_browser[g_cnt].b_wsaa011,g_browser[g_cnt].b_wsaa003,g_browser[g_cnt].b_wsaa003_desc,g_browser[g_cnt].b_wsaa001,g_browser[g_cnt].b_wsaa001_desc   #單身 ARRAY 填充
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "foreach:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_browser[g_cnt].b_wsaa003
+      CALL ap_ref_array2(g_ref_fields,"SELECT gzzol003 FROM gzzol_t WHERE gzzol001=? AND gzzol002='"||g_lang||"'","") RETURNING g_rtn_fields
+      LET g_browser[g_cnt].b_wsaa003_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_browser[g_cnt].b_wsaa003_desc
+
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_browser[g_cnt].b_wsaa001
+      CALL ap_ref_array2(g_ref_fields,"SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002='"||g_lang||"'","") RETURNING g_rtn_fields
+      LET g_browser[g_cnt].b_wsaa001_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_browser[g_cnt].b_wsaa001_desc
+
+
+      #add-point:browser_fill段reference
+      {<point name="browser_fill.reference"/>}
+      #end add-point
+
+      #LET g_browser[g_cnt].b_statepic = cl_get_actipic(g_browser[g_cnt].b_statepic)
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = "std-00002"
+         LET g_errparam.extend = "Max_Row:"||g_max_rec USING "<<<<<"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+   END FOREACH
+
+   CALL g_browser.deleteElement(g_cnt)
+   LET g_header_cnt = g_browser.getLength()
+   #該樣板不需此段落LET g_header_cnt = g_browser_cnt
+   LET g_rec_b = g_cnt - 1
+   LET g_current_cnt = g_rec_b
+   #該樣板不需此段落LET g_current_cnt = g_browser_cnt
+   LET g_cnt = 0
+
+   CALL awsi011_fetch("")
+
+   FREE browse_pre
+
+END FUNCTION
+
+PRIVATE FUNCTION awsi011_filter()
+   {<Local define>}
+   {</Local define>}
+   #add-point:filter段define
+   {<point name="filter.define"/>}
+   #end add-point
+
+   LET INT_FLAG = 0
+
+   LET g_qryparam.state = 'c'
+
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+      #單頭
+      CONSTRUCT g_wc_filter ON wsaa003,wsaa001
+                          FROM s_browse[1].b_wsaa003,s_browse[1].b_wsaa001
+
+         BEFORE CONSTRUCT
+            #CALL cl_qbe_init()
+               DISPLAY awsi011_filter_parser('wsaa003') TO s_browse[1].b_wsaa003
+            DISPLAY awsi011_filter_parser('wsaa001') TO s_browse[1].b_wsaa001
+
+      END CONSTRUCT
+
+      #add-point:filter段add_cs
+      {<point name="filter.add_cs"/>}
+      #end add-point
+
+      BEFORE DIALOG
+         #add-point:filter段b_dialog
+         {<point name="filter.b_dialog"/>}
+         #end add-point
+
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+
+   END DIALOG
+
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = "   AND   ", g_wc_filter, "   "
+      LET g_wc = g_wc , g_wc_filter
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+      LET g_wc = g_wc_t
+   END IF
+
+END FUNCTION
+
+PRIVATE FUNCTION awsi011_filter_parser(ps_field)
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+   #add-point:filter段define
+   {<point name="filter_parser.define"/>}
+   #end add-point
+
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+
+   RETURN ls_var
+
+END FUNCTION
+
+PRIVATE FUNCTION awsi011_query()
+   {<Local define>}
+   DEFINE ls_wc STRING
+   {</Local define>}
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point
+
+   LET INT_FLAG = 0
+   LET ls_wc = g_wc
+
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+
+   CALL g_browser.clear()
+
+   IF g_worksheet_hidden THEN  #browser panel 單身折疊
+      CALL gfrm_curr.setElementHidden("worksheet_vbox",0)
+      CALL gfrm_curr.setElementImage("worksheethidden","worksheethidden-24.png")
+      LET g_worksheet_hidden = 0
+   END IF
+   IF g_header_hidden THEN    #單頭折疊
+      CALL gfrm_curr.setElementHidden("worksheet_detail",0)
+      CALL gfrm_curr.setElementImage("controls","headerhidden-24")
+      LET g_header_hidden = 0
+   END IF
+
+   INITIALIZE g_wsaa_m.* TO NULL
+   ERROR ""
+
+   DISPLAY " " TO FORMONLY.b_count
+   DISPLAY " " TO FORMONLY.h_count
+   CALL awsi011_construct()
+
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      LET g_wc = ls_wc
+      CALL awsi011_browser_fill(g_wc,"F")
+      CALL awsi011_fetch("")
+      RETURN
+   ELSE
+      LET g_current_row = 1
+      LET g_current_cnt = 0
+      LET g_detail1_idx = 1
+      LET g_detail2_idx = 1
+      LET g_detail3_idx = 1
+   END IF
+
+   LET g_error_show = 1
+   CALL awsi011_browser_fill(g_wc,"F")   # 移到第一頁
+
+   #備份搜尋條件
+   LET ls_wc = g_wc
+
+   #第一層模糊搜尋
+   IF g_browser.getLength() = 0 THEN
+      LET g_wc = cl_wc_parser(ls_wc)
+      LET g_error_show = 1
+      CALL awsi011_browser_fill(g_wc,"F")
+   END IF
+
+   #第二層助記碼搜尋
+   IF g_browser.getLength() = 0 THEN
+      IF NOT cl_null(g_wc) THEN
+         LET g_error_show = 1
+         CALL awsi011_browser_fill(g_wc,"F")
+      END IF
+
+   END IF
+
+   IF g_browser.getLength() = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "-100"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      
+      #清空[重要欄位]
+      CALL g_detail1.clear()
+      CALL g_detail2.clear()
+      CALL g_wsac.clear()
+
+   ELSE
+      CALL awsi011_fetch("F")
+   END IF
+
+   LET g_wc_filter = ""
+
+END FUNCTION
+
+PRIVATE FUNCTION awsi011_fetch(p_fl)
+   {<Local define>}
+   DEFINE p_fl       LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   DEFINE l_sql      STRING
+   DEFINE li_cnt     LIKE type_t.num5
+   DEFINE l_i        LIKE type_t.num5
+   #DEFINE l_oobx004  LIKE oobx_t.oobx004
+   {</Local define>}
+
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point
+
+   CASE p_fl
+      WHEN "F" LET g_current_idx = 1
+      WHEN "P"
+         IF g_current_idx > 1 THEN
+            LET g_current_idx = g_current_idx - 1
+         END IF
+      WHEN "N"
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF
+      WHEN "L"
+         LET g_current_idx = g_header_cnt
+      WHEN "/"
+         IF (NOT g_no_ask) THEN
+            CALL cl_getmsg("fetch", g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+
+            PROMPT ls_msg CLIPPED,": " FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl"
+            END PROMPT
+
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT CASE
+            END IF
+         END IF
+         IF g_jump > 0 THEN
+            LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE
+   END CASE
+
+   LET g_browser_cnt = g_browser.getLength()
+
+   #瀏覽頁筆數顯示
+   LET g_browser_idx = g_pagestart+g_current_idx-1
+   DISPLAY g_browser_idx TO FORMONLY.b_index        #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.b_count        #總筆數
+   DISPLAY g_browser_idx TO FORMONLY.h_index        #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.h_count        #總筆數
+   CALL ui.Interface.refresh()
+
+   #單頭筆數顯示
+   #DISPLAY g_browser_idx TO FORMONLY.idx            #當下筆數
+   #DISPLAY g_browser_cnt TO FORMONLY.cnt            #總筆數
+
+   #該樣板不需此段落IF g_browser[g_current_idx].b_expcode <> "1" THEN
+   #該樣板不需此段落   INITIALIZE g_wsaa_m.* TO NULL
+   #該樣板不需此段落   DISPLAY BY NAME g_wsaa_m.*
+   #該樣板不需此段落   CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+   #該樣板不需此段落   RETURN
+   #該樣板不需此段落ELSE
+   #該樣板不需此段落   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   #該樣板不需此段落END IF
+
+   #該樣板不需此段落CALL awsi011_browser_fill(g_wc,p_fl)
+
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_current_idx = g_browser.getLength()
+   END IF
+
+   # 設定browse索引
+   CALL g_curr_diag.setCurrentRow("s_browse", g_current_idx)
+
+   CALL cl_navigator_setting(g_browser_idx, g_current_cnt)
+   #該樣板不需此段落CALL cl_navigator_setting(g_browser_idx, g_browser_cnt )
+
+   #代表沒有資料, 無需做後續資料撈取之動作
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+
+   LET g_wsaa_m.wsaa001 = g_browser[g_current_idx].b_wsaa001
+
+   SELECT COUNT(*) INTO li_cnt FROM wsaa_t WHERE wsaa001 = g_wsaa_m.wsaa001
+   
+   IF li_cnt > 0 THEN
+      #重讀DB,因TEMP有不被更新特性
+      SELECT UNIQUE wsaa001,wsaa003,wsaa002,wsaa004,wsaa005,wsaa006,wsaa007,wsaa008,wsaa009,wsaa010,wsaa011,wsaa012,wsaa013,wsaa014,
+                    wsaaownid,wsaaowndp,wsaacrtid,wsaacrtdp,wsaacrtdt,wsaamodid,wsaamoddt,
+                    wsaa015,wsaa016,wsaa017 #160902-00024#2 
+        INTO g_wsaa_m.wsaa001,g_wsaa_m.wsaa003,g_wsaa_m.wsaa002,g_wsaa_m.wsaa004,g_wsaa_m.wsaa005,g_wsaa_m.wsaa006,g_wsaa_m.wsaa007,g_wsaa_m.wsaa008,g_wsaa_m.wsaa009,g_wsaa_m.wsaa010,g_wsaa_m.wsaa011,g_wsaa_m.wsaa012,
+             g_wsaa_m.wsaa013,g_wsaa_m.wsaa014,g_wsaa_m.wsaaownid,g_wsaa_m.wsaaowndp,g_wsaa_m.wsaacrtid,g_wsaa_m.wsaacrtdp,g_wsaa_m.wsaacrtdt,g_wsaa_m.wsaamodid,g_wsaa_m.wsaamoddt,
+             g_wsaa_m.wsaa015,g_wsaa_m.wsaa016,g_wsaa_m.wsaa017 #160902-00024#2 
+        FROM wsaa_t
+       WHERE wsaa001 = g_wsaa_m.wsaa001
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "wsaa_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+         INITIALIZE g_wsaa_m.* TO NULL
+         RETURN
+      END IF
+      LET g_data_insert = 'N'
+   ELSE
+      
+      LET g_data_insert = 'Y'
+      INITIALIZE g_wsaa_m.* LIKE wsaa_t.*   #給default 
+      
+      LET g_wsaa_m.wsaa001 = g_browser[g_current_idx].b_wsaa001
+      LET g_wsaa_m.wsaa003 = g_browser[g_current_idx].b_wsaa003
+      
+      #指定 oobx004 給 wsaa010
+#      SELECT oobx004 INTO l_oobx004 FROM oobx_t
+#       WHERE oobx003 = g_wsaa_m.wsaa001     
+#         AND oobx004 = g_wsaa_m.wsaa001
+#         
+#      IF cl_null(l_oobx004) THEN
+#         LET l_sql ="SELECT oobx004 INTO l_oobx004 FROM oobx_t",
+#                    " WHERE oobx003 = ? "
+#         DECLARE awsi011_oobx004_cur CURSOR FROM l_sql         
+#         #找第一筆 oobx004
+#         FOREACH awsi011_oobx004_cur USING g_wsaa_m.wsaa001 INTO l_oobx004
+#            IF SQLCA.sqlcode THEN
+#               CALL cl_err("foreach:",SQLCA.sqlcode,1)
+#               EXIT FOREACH
+#            END IF
+#            IF cl_null(l_oobx004) THEN
+#               LET g_wsaa_m.wsaa010 = ""
+#            ELSE
+#               LET g_wsaa_m.wsaa010 = l_oobx004               
+#            END IF
+#            EXIT FOREACH
+#         END FOREACH
+#      ELSE
+#         LET g_wsaa_m.wsaa010 = l_oobx004
+#      END IF
+
+    END IF 
+
+   #CALL cl_set_act_visible("insert", FALSE)
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+   ELSE
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   END IF
+
+   #add-point:fetch段action控制
+   {<point name="fetch.action_control"/>}
+   #end add-point
+
+   #重新顯示
+   CALL awsi011_show()
+
+END FUNCTION
+
+PRIVATE FUNCTION awsi011_insert()
+   #add-point:insert段define
+   {<point name="insert.define"/>}
+   #end add-point
+
+   CLEAR FORM                    #清畫面欄位內容
+
+   INITIALIZE g_wsaa_m.* LIKE wsaa_t.*             #DEFAULT 設定
+   LET g_wsaa001_t = NULL
+   
+   #CALL s_transaction_begin()
+
+   WHILE TRUE
+
+      #公用欄位給值
+      #此段落由子樣板a14產生
+      LET g_wsaa_m.wsaaownid = g_user
+      LET g_wsaa_m.wsaaowndp = g_dept
+      LET g_wsaa_m.wsaacrtid = g_user
+      LET g_wsaa_m.wsaacrtdp = g_dept
+      LET g_wsaa_m.wsaacrtdt = cl_get_current()
+      #LET g_wsaa_m.wsaamodid = g_user
+      #LET g_wsaa_m.wsaamoddt = cl_get_current()
+      ##LET g_wsaa_m.wsaastus = "Y"
+
+      #append欄位給值
+
+
+      #一般欄位給值
+
+
+      #add-point:單頭預設值
+      {<point name="insert.default"/>}
+      #end add-point
+
+      CALL awsi011_input("a")
+
+      #add-point:單頭輸入後
+      {<point name="insert.after_insert"/>}
+      #end add-point
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         #LET g_wsaa_m.* = g_wsaa_m_t.*
+         CALL awsi011_show()
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 9001
+         LET g_errparam.extend = ""
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+         EXIT WHILE
+      END IF
+
+      LET g_rec_b = 0
+      EXIT WHILE
+   END WHILE
+
+   LET g_state = "Y"
+   LET g_wc = " wsaa001 = '", g_wsaa_m.wsaa001 CLIPPED, "'"              
+   CALL awsi011_browser_fill(g_wc,"")
+   CALL awsi011_fetch("F")           
+
+END FUNCTION
+
+PRIVATE FUNCTION awsi011_modify()
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point
+   
+   IF g_wsaa_m.wsaa001 IS NULL
+   THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "std-00003"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      RETURN
+   END IF
+
+    SELECT UNIQUE wsaa001,wsaa003,wsaa002,wsaa004,wsaa005,wsaa006,wsaa007,wsaa008,wsaa009,wsaa010,wsaa011,wsaa012,wsaa013,wsaa014,
+                  wsaaownid,wsaaowndp,wsaacrtid,wsaacrtdp,wsaacrtdt,wsaamodid,wsaamoddt,
+                  wsaa015,wsaa016,wsaa017 #160902-00024#2 
+      INTO g_wsaa_m.wsaa001,g_wsaa_m.wsaa003,g_wsaa_m.wsaa002,g_wsaa_m.wsaa004,g_wsaa_m.wsaa005,g_wsaa_m.wsaa006,g_wsaa_m.wsaa007,g_wsaa_m.wsaa008,g_wsaa_m.wsaa009,g_wsaa_m.wsaa010,g_wsaa_m.wsaa011,g_wsaa_m.wsaa012,
+           g_wsaa_m.wsaa013,g_wsaa_m.wsaa014,g_wsaa_m.wsaaownid,g_wsaa_m.wsaaowndp,g_wsaa_m.wsaacrtid,g_wsaa_m.wsaacrtdp,g_wsaa_m.wsaacrtdt,g_wsaa_m.wsaamodid,g_wsaa_m.wsaamoddt,
+           g_wsaa_m.wsaa015,g_wsaa_m.wsaa016,g_wsaa_m.wsaa017 #160902-00024#2 
+      FROM wsaa_t
+      WHERE wsaa001 = g_wsaa_m.wsaa001
+
+   ERROR ""
+
+   LET g_wsaa001_t = g_wsaa_m.wsaa001
+
+   CALL s_transaction_begin()
+
+   OPEN awsi011_cl USING g_wsaa_m.wsaa001
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "OPEN awsi011_cl:"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      CLOSE awsi011_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+
+   #鎖住將被更改或取消的資料
+   FETCH awsi011_cl INTO g_wsaa_m.wsaa001,g_wsaa_m.wsaa001_desc,g_wsaa_m.wsaa003,g_wsaa_m.wsaa003_desc,g_wsaa_m.wsaa002,g_wsaa_m.wsaa004,g_wsaa_m.wsaa005,
+                         g_wsaa_m.wsaa006,g_wsaa_m.wsaa007,g_wsaa_m.wsaa008,g_wsaa_m.wsaa009,g_wsaa_m.wsaa010,g_wsaa_m.wsaa011,g_wsaa_m.wsaa012,g_wsaa_m.wsaa013,g_wsaa_m.wsaa014,
+                         g_wsaa_m.wsaa015,g_wsaa_m.wsaa016,g_wsaa_m.wsaa017, #160902-00024#2 
+                         g_wsaa_m.wsaaownid,g_wsaa_m.wsaaownid_desc,g_wsaa_m.wsaaowndp,g_wsaa_m.wsaaowndp_desc,g_wsaa_m.wsaacrtid,g_wsaa_m.wsaacrtid_desc,g_wsaa_m.wsaacrtdp,g_wsaa_m.wsaacrtdp_desc,g_wsaa_m.wsaacrtdt,g_wsaa_m.wsaamodid,g_wsaa_m.wsaamodid_desc,g_wsaa_m.wsaamoddt
+
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "wsaa_t"
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      CLOSE awsi011_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+
+   CALL awsi011_show()
+
+   WHILE TRUE
+      LET g_wsaa_m.wsaa001 = g_wsaa001_t
+ 
+      #寫入修改者/修改日期資訊
+      LET g_wsaa_m.wsaamodid = g_user
+      LET g_wsaa_m.wsaamoddt = cl_get_current()
+
+      #add-point:modify段修改前
+      {<point name="modify.before_input"/>}
+      #end add-point
+
+      CALL awsi011_input("u")     #欄位更改
+
+      #add-point:modify段修改後
+      {<point name="modify.after_input"/>}
+      #end add-point
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_wsaa_m.* = g_wsaa_m_t.*
+         CALL awsi011_show()
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 9001
+         LET g_errparam.extend = ""
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+         EXIT WHILE
+      END IF
+
+      EXIT WHILE
+
+   END WHILE
+
+   #修改歷程記錄
+   IF NOT cl_log_modified_record(g_wsaa_m.wsaa001,g_site) THEN
+      CALL s_transaction_end('N','0')
+   END IF
+
+   CLOSE awsi011_cl
+   CALL s_transaction_end('Y','0')
+
+   #流程通知預埋點-U
+   CALL cl_flow_notify(g_wsaa_m.wsaa001,"U")
+
+   LET g_worksheet_hidden = 0
+
+END FUNCTION
+
+PRIVATE FUNCTION awsi011_input(p_cmd)
+   {<Local define>}
+   DEFINE p_cmd           LIKE type_t.chr1
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT
+   DEFINE l_n             LIKE type_t.num5        #檢查重複用
+   DEFINE l_cnt           LIKE type_t.num5        #檢查重複用
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE li_idx          LIKE type_t.num5
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE l_gzcb003       LIKE gzcb_t.gzcb003
+   
+   {</Local define>}
+   #add-point:input段define
+   {<point name="input.define"/>}
+   DEFINE l_cmd_t         LIKE type_t.chr1
+   DEFINE l_cmd           LIKE type_t.chr1
+   DEFINE l_detail1_rec   LIKE type_t.num5
+   DEFINE l_detail2_rec   LIKE type_t.num5
+   DEFINE l_ac            LIKE type_t.num5
+   DEFINE l_dzfj008       LIKE dzfj_t.dzfj008    #所屬結構代碼
+   DEFINE l_dzfj009       LIKE dzfj_t.dzfj009    #所屬結構標籤代碼
+   DEFINE l_dzfj010       LIKE dzfj_t.dzfj010    #欄位標籤代碼
+   DEFINE l_wsaa002_img   STRING
+   DEFINE l_gzzz002       LIKE gzzz_t.gzzz002    #程式編號
+   DEFINE l_found         BOOLEAN
+   DEFINE l_wsaa009_desc  LIKE dzeal_t.dzeal003
+   DEFINE l_wsaa007_s     LIKE wsaa_t.wsaa007    #確認應用元件標準格式 
+   DEFINE l_wsaa007_c     LIKE wsaa_t.wsaa007    #確認應用元件客製格式  
+   #160902-00024#2-S
+   DEFINE l_wsaa015_s     LIKE wsaa_t.wsaa015    #確認應用元件標準格式 
+   DEFINE l_wsaa015_c     LIKE wsaa_t.wsaa015    #確認應用元件客製格式 
+   DEFINE l_wsaa016_s     LIKE wsaa_t.wsaa016    #確認應用元件標準格式 
+   DEFINE l_wsaa016_c     LIKE wsaa_t.wsaa016    #確認應用元件客製格式 
+   DEFINE l_wsaa017_s     LIKE wsaa_t.wsaa017    #確認應用元件標準格式 
+   DEFINE l_wsaa017_c     LIKE wsaa_t.wsaa017    #確認應用元件客製格式 
+   DEFINE l_return        LIKE type_t.num5       
+   #160902-00024#2-E              
+   DEFINE l_link          LIKE gzzn_t.gzzn002    #link資料
+   DEFINE l_sub_chk       STRING                 #確認sub程式中的確認應用元件
+   DEFINE l_cmd_sub       STRING
+   #160902-00024#10-S
+   DEFINE l_csub_chk      STRING                 #確認csub程式中的確認應用元件 
+   DEFINE l_cmd_csub      STRING
+   #160902-00024#10-S
+   DEFINE channel_l       base.Channel
+   DEFINE l_wsaa009_str   DYNAMIC ARRAY OF STRING 
+   DEFINE l_wsaa009_chk   LIKE wsaa_t.wsaa009 
+   DEFINE l_wsac_cnt      LIKE type_t.num5       #160902-00024#13
+   DEFINE l_type          LIKE wsac_t.wsac003    #161102-00047#17
+   DEFINE ls_msg          STRING                 #161102-00047#17
+   
+  
+   
+   #end add-point
+
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+   #該樣板不需此段落CALL gfrm_curr.setElementHidden("mainlayout",0)
+   #該樣板不需此段落CALL gfrm_curr.setElementImage("mainhidden","small/arr-u.png")
+   #該樣板不需此段落LET g_main_hidden = 1
+
+   CALL cl_set_head_visible("","YES")
+
+   #新增動作時,需要取得單據性質檔的畫面結構
+   IF p_cmd = 'a' THEN
+      #CALL awsi011_s_detail1_fill()      
+      IF cl_null(g_wsaa_m.wsaa010) THEN
+         #清空[重要欄位]
+         CALL g_detail1.clear()
+         CALL g_detail2.clear()
+         CALL g_wsac.clear()
+      END IF      
+      LET g_wsaa_m.wsaa011 = "N"
+   END IF
+   
+   IF p_cmd = 'r' THEN
+      #此段落的r動作等同於a
+      LET p_cmd = 'a'      
+   END IF
+
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+
+   LET g_qryparam.state = "i"
+
+   #控制key欄位可否輸入
+   CALL awsi011_set_entry(p_cmd)
+   #add-point:set_entry後
+   {<point name="input.after_set_entry"/>}
+   #end add-point
+   CALL awsi011_set_no_entry(p_cmd)
+   #add-point:資料輸入前
+   {<point name="input.before_input"/>}
+   #end add-point
+
+   DISPLAY BY NAME g_wsaa_m.wsaa001,g_wsaa_m.wsaa003,g_wsaa_m.wsaa002,g_wsaa_m.wsaa004,g_wsaa_m.wsaa005,g_wsaa_m.wsaa012,
+                   g_wsaa_m.wsaa006,g_wsaa_m.wsaa007,g_wsaa_m.wsaa008,g_wsaa_m.wsaa009,g_wsaa_m.wsaa010,g_wsaa_m.wsaa011,
+                   g_wsaa_m.wsaa013,g_wsaa_m.wsaa014,
+                   g_wsaa_m.wsaa015,g_wsaa_m.wsaa016,g_wsaa_m.wsaa017 #160902-00024#2 
+
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+      #單頭段
+      INPUT BY NAME g_wsaa_m.wsaa001,g_wsaa_m.wsaa003,g_wsaa_m.wsaa002,g_wsaa_m.wsaa004,g_wsaa_m.wsaa005,g_wsaa_m.wsaa012,
+                    g_wsaa_m.wsaa006,g_wsaa_m.wsaa007,g_wsaa_m.wsaa008,g_wsaa_m.wsaa009,g_wsaa_m.wsaa010,g_wsaa_m.wsaa011,
+                    g_wsaa_m.wsaa013,g_wsaa_m.wsaa014,
+                    g_wsaa_m.wsaa015,g_wsaa_m.wsaa016,g_wsaa_m.wsaa017 #160902-00024#2 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+            　 IF p_cmd <> 'a' THEN
+                  CALL s_transaction_begin()
+               END IF
+            END IF
+            #其他table資料備份(確定是否更改用)
+
+            #add-point:input開始前
+            {<point name="input.before.input"/>}   
+            #end add-point
+
+        
+         #---------------------------<  Master  >---------------------------
+         #----<<wsaa001>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD wsaa001
+            #add-point:AFTER FIELD wsaa001
+            {<point name="input.a.wsaa001" />}                        
+            SELECT COUNT(*) INTO l_cnt FROM wsaa_t
+              WHERE wsaa001 = g_wsaa_m.wsaa001 
+            #SELECT COUNT(*) INTO l_cnt FROM gzzz_t
+            #  WHERE gzzz001 = g_wsaa_m.wsaa001            
+                
+            IF l_cnt > 0 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  "std-00004"
+               LET g_errparam.extend = ""
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               NEXT FIELD wsaa001
+            END IF
+            
+            #160902-00024#2-S   
+            #SELECT COUNT(*) INTO l_cnt FROM gzcb_t
+            #  WHERE gzcb001 = 24 AND gzcb002 = g_wsaa_m.wsaa001            
+            #IF cl_null(l_cnt) OR l_cnt = 0 THEN
+            ##   INITIALIZE g_errparam TO NULL
+            ##   LET g_errparam.code =  "aws-00002"
+            ##   LET g_errparam.extend = ""
+            ##   LET g_errparam.popup = TRUE
+            ##   CALL cl_err()
+            #
+            ##   NEXT FIELD wsaa001
+            #ELSE
+            #   #151105-00002#15    抓取理由碼改CALL sub  
+            #   SELECT gzcb003 INTO g_wsaa_m.wsaa003 FROM gzcb_t
+            #   WHERE gzcb001 = 24 AND gzcb002 = g_wsaa_m.wsaa001
+            #   #LET g_wsaa_m.wsaa003 = s_fin_get_scc_value('24',g_wsaa_m.wsaa001,'1') 
+            #   DISPLAY BY NAME g_wsaa_m.wsaa003
+            #END IF
+  
+            INITIALIZE g_chkparam.* TO NULL
+            LET g_errshow = TRUE             
+            LET g_chkparam.arg1 = g_wsaa_m.wsaa001
+            IF cl_chk_exist("v_gzzz001") THEN
+               SELECT gzzz005 INTO g_wsaa_m.wsaa003 FROM gzzz_t WHERE gzzz001 = g_wsaa_m.wsaa001
+               DISPLAY BY NAME g_wsaa_m.wsaa003
+            ELSE
+               NEXT FIELD CURRENT
+            END IF
+ 
+                  
+            LET g_wsaa_m.wsaa010 = g_wsaa_m.wsaa001
+            IF cl_null(g_wsaa_m.wsaa007) THEN
+               #依照作業編號，預設為 s_[程式編號]_ws_confirm
+               LET g_wsaa_m.wsaa007 = "s_" , g_wsaa_m.wsaa010 , "_ws_confirm"                  
+            END IF                              
+            LET g_wsaa_m.wsaa009 = g_wsaa_m.wsaa010
+            
+            IF p_cmd = 'a' THEN
+               #更新[重要欄位]
+               CALL awsi011_ui_data_regen(g_wsaa_m.wsaa010)  
+            END IF   
+            #160902-00024#2-E
+            
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_wsaa_m.wsaa001
+            CALL ap_ref_array2(g_ref_fields,"SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002='"||g_lang||"'","") RETURNING g_rtn_fields
+            LET g_wsaa_m.wsaa001_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_wsaa_m.wsaa001_desc
+            
+            
+            #END add-point
+
+
+         #此段落由子樣板a01產生
+         BEFORE FIELD wsaa001
+            #add-point:BEFORE FIELD wsaa001
+            {<point name="input.b.wsaa001" />}
+            #END add-point
+
+         #此段落由子樣板a04產生
+         ON CHANGE wsaa001
+            #add-point:ON CHANGE wsaa001
+            {<point name="input.g.wsaa001" />}
+            #END add-point
+
+         #----<<wsaa003>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD wsaa003
+
+            #add-point:AFTER FIELD wsaa003
+            {<point name="input.a.wsaa003" />}
+            #END add-point
+
+
+         #此段落由子樣板a01產生
+         BEFORE FIELD wsaa003
+            #add-point:BEFORE FIELD wsaa003
+            {<point name="input.b.wsaa003" />}
+            #END add-point
+
+         #此段落由子樣板a04產生
+         ON CHANGE wsaa003
+            #add-point:ON CHANGE wsaa003
+            {<point name="input.g.wsaa003" />}
+            #END add-point
+
+         #----<<wsaa002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD wsaa002
+            #add-point:BEFORE FIELD wsaa002
+            {<point name="input.b.wsaa002" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD wsaa002
+
+            #add-point:AFTER FIELD wsaa002
+            {<point name="input.a.wsaa002" />}
+            LET l_found = FALSE
+            FOR l_i = 1 TO g_flow_tpl.getLength()
+               IF g_wsaa_m.wsaa002 = g_flow_tpl[l_i].flow_template_id THEN               
+                  LET l_found = TRUE
+                  LET g_wsaa_m.wsaa002_desc = g_flow_tpl[l_i].flow_template_name
+                  LET l_wsaa002_img = g_bpm_url , g_flow_tpl[l_i].flow_template_image_url                  
+               END IF       
+            END FOR
+            
+            IF l_found = FALSE THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  "aws-00010"
+               LET g_errparam.extend = ""
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               NEXT FIELD wsaa002
+            END IF
+            DISPLAY BY NAME g_wsaa_m.wsaa002_desc
+            DISPLAY l_wsaa002_img TO wsaa002_img
+            #END add-point
+
+
+         #此段落由子樣板a04產生
+         ON CHANGE wsaa002
+            #add-point:ON CHANGE wsaa002
+            {<point name="input.g.wsaa002" />}
+            #END add-point
+
+         AFTER FIELD wsaa004
+            IF NOT cl_null(g_wsaa_m.wsaa004) THEN
+               SELECT COUNT(*) INTO l_cnt FROM dzeb_t WHERE dzeb002 = g_wsaa_m.wsaa004
+               IF cl_null(l_cnt) OR l_cnt = 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  "aws-00003"
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  NEXT FIELD wsaa004
+               END IF
+            END IF
+           
+         AFTER FIELD wsaa005
+            IF NOT cl_null(g_wsaa_m.wsaa005) THEN
+               SELECT COUNT(*) INTO l_cnt FROM dzeb_t WHERE dzeb002 = g_wsaa_m.wsaa005
+               IF cl_null(l_cnt) OR l_cnt = 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  "aws-00003"
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  NEXT FIELD wsaa005
+               END IF   
+            END IF
+       
+         AFTER FIELD wsaa006
+            IF NOT cl_null(g_wsaa_m.wsaa006) THEN
+               SELECT COUNT(*) INTO l_cnt FROM dzea_t WHERE dzea001 = g_wsaa_m.wsaa006
+               IF cl_null(l_cnt) OR l_cnt = 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  "aws-00004"
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  NEXT FIELD wsaa006
+               END IF   
+            END IF   
+            
+         BEFORE FIELD wsaa007            
+            IF NOT cl_null(g_wsaa_m.wsaa010) THEN  
+               IF cl_null(g_wsaa_m.wsaa007) THEN
+                  #依照作業編號，預設為 s_[程式編號]_ws_confirm
+                  LET g_wsaa_m.wsaa007= "s_" , g_wsaa_m.wsaa010 , "_ws_confirm"
+               END IF
+            END IF
+            
+         AFTER FIELD wsaa007
+            LET l_wsaa007_s = "s_" , g_wsaa_m.wsaa010 , "_ws_confirm"
+            LET l_wsaa007_c = "cs_" , g_wsaa_m.wsaa010 , "_ws_confirm"
+            IF NOT cl_null(g_wsaa_m.wsaa010) THEN
+               IF NOT cl_null(g_wsaa_m.wsaa007) THEN
+                  #確認應用元件代號必須符合格式
+                  IF g_wsaa_m.wsaa007 != l_wsaa007_s AND g_wsaa_m.wsaa007 != l_wsaa007_c THEN
+                     #LET g_errparam.code =  "aws-00043"          #160902-00024#2 mark
+                     LET g_errparam.code =  "aws-00079"           #160902-00024#2 
+                     LET g_errparam.extend = ""
+                     LET g_errparam.replace[1] = g_wsaa_m.wsaa007
+                     LET g_errparam.replace[2] = l_wsaa007_s      #160902-00024#2 
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                  END IF
+                  
+                  #160902-00024#2-S
+                  ##確認link資料是否存在
+                  #LET l_link = "s_", g_wsaa_m.wsaa010
+                  #SELECT COUNT(*) INTO l_cnt FROM gzzn_t WHERE gzzn002 = l_link
+                  #IF cl_null(l_cnt) OR l_cnt = 0 THEN
+                  #   LET g_errparam.code =  "aws-00046"
+                  #   LET g_errparam.extend = ""
+                  #   LET g_errparam.replace[1] = l_link
+                  #   LET g_errparam.popup = TRUE
+                  #   CALL cl_err()
+                  #END IF 
+                  #160902-00024#2-E                    
+                  
+                  LET l_sub_chk = ''
+                  LET l_cmd_sub = "cd ", os.Path.join(FGL_GETENV("SUB"),"4gl"),"; grep ", g_wsaa_m.wsaa007, " *.4gl 1>&1"
+                  LET channel_l = base.Channel.create()
+                  CALL channel_l.setDelimiter("")
+                  CALL channel_l.openPipe( l_cmd_sub, "r" )
+      
+                  WHILE channel_l.read(l_sub_chk)
+                     IF l_sub_chk.trim() IS NULL THEN CONTINUE WHILE END IF
+                     DISPLAY l_sub_chk #顯示背景訊息
+                  END WHILE
+                  #160902-00024#10-S
+                  LET l_csub_chk = ''
+                  LET l_cmd_csub = "cd ", os.Path.join(FGL_GETENV("CSUB"),"4gl"),"; grep ", g_wsaa_m.wsaa007, " *.4gl 1>&1"
+                  LET channel_l = base.Channel.create()
+                  CALL channel_l.setDelimiter("")
+                  CALL channel_l.openPipe( l_cmd_csub, "r" )
+      
+                  WHILE channel_l.read(l_csub_chk)
+                     IF l_csub_chk.trim() IS NULL THEN CONTINUE WHILE END IF
+                     DISPLAY l_csub_chk #顯示背景訊息
+                  END WHILE
+                  
+                  #IF cl_null(l_sub_chk) THEN
+                  IF cl_null(l_sub_chk) AND cl_null(l_csub_chk) THEN
+                  #160902-00024#10-E
+                     DISPLAY "ws_confirm does not exist"
+                     #160902-00024#2-S
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code =  "aws-00091"
+                     LET g_errparam.extend = ""
+                     LET g_errparam.replace[1] = g_wsaa_m.wsaa007
+                     LET g_errparam.popup = TRUE                     
+                     CALL cl_err()
+                     LET g_wsaa_m.wsaa007 = ''
+                     DISPLAY BY NAME g_wsaa_m.wsaa007
+                     #160902-00024#2-E
+                  END IF
+               END IF
+            END IF
+            
+         AFTER FIELD wsaa008
+            IF NOT cl_null(g_wsaa_m.wsaa008) THEN
+               SELECT COUNT(*) INTO l_cnt FROM dzea_t WHERE dzea001 = g_wsaa_m.wsaa008
+               IF cl_null(l_cnt) OR l_cnt = 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  "aws-00004"
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  NEXT FIELD wsaa008
+               END IF   
+            END IF
+            
+         AFTER FIELD wsaa009
+            IF NOT cl_null(g_wsaa_m.wsaa009) THEN
+               LET l_wsaa009_str = awsi011_splite(g_wsaa_m.wsaa009)
+               #160902-00024#2-S
+               LET l_count = l_wsaa009_str.getLength()
+               LET l_wsaa009_desc = ''
+               #160902-00024#2-E
+               
+               FOR l_i = 1 TO l_wsaa009_str.getLength()
+               
+                  LET l_wsaa009_chk = l_wsaa009_str[l_i]
+                  SELECT COUNT(*) INTO l_cnt FROM gzcb_t
+                    WHERE gzcb001 = 24 AND gzcb002 = l_wsaa009_chk                 
+                
+                  IF cl_null(l_cnt) OR l_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code =  "aws-00002"
+                     LET g_errparam.extend = ""
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     NEXT FIELD wsaa009
+                  #160902-00024#2-S
+                  ELSE
+                     INITIALIZE g_ref_fields TO NULL
+                     LET g_ref_fields[1] = l_wsaa009_chk
+                     CALL ap_ref_array2(g_ref_fields,"SELECT gzcbl004 FROM gzcbl_t WHERE gzcbl001='24' AND gzcbl002=? AND gzcbl003='"||g_lang||"'","") RETURNING g_rtn_fields
+                     IF l_i == 1 THEN
+                        LET l_wsaa009_desc = g_rtn_fields[1]
+                     ElSE   
+                        LET l_wsaa009_desc = l_wsaa009_desc, g_rtn_fields[1]
+                     END IF
+                     IF l_count > 1 AND l_i <> l_count THEN
+                        LET l_wsaa009_desc = l_wsaa009_desc , '|'
+                     END IF
+                     DISPLAY l_wsaa009_desc TO wsaa009_desc
+                  #160902-00024#2-E                  
+                  END IF
+               END FOR
+               
+               DISPLAY l_wsaa009_desc TO wsaa009_desc
+               #160902-00024#2-S
+               #INITIALIZE g_ref_fields TO NULL
+               #LET g_ref_fields[1] = g_wsaa_m.wsaa009
+               #CALL ap_ref_array2(g_ref_fields,"SELECT gzcbl004 FROM gzcbl_t WHERE gzcbl001='24' AND gzcbl002=? AND gzcbl003='"||g_lang||"'","") RETURNING g_rtn_fields
+               #LET l_wsaa009_desc = '', g_rtn_fields[1] , ''
+               #DISPLAY l_wsaa009_desc TO wsaa009_desc
+               #160902-00024#2-E
+            ELSE 
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  "aws-00074"
+               LET g_errparam.extend = ""
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               NEXT FIELD wsaa009
+            END IF            
+            
+         AFTER FIELD wsaa010
+            IF NOT cl_null(g_wsaa_m.wsaa010) THEN            
+               SELECT COUNT(*) INTO l_cnt FROM gzzz_t 
+                WHERE gzzz001 = g_wsaa_m.wsaa010                  
+                  
+               IF cl_null(l_cnt) OR l_cnt = 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  "aws-00006"
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  NEXT FIELD wsaa010
+               END IF  
+               
+               IF cl_null(g_wsaa_m.wsaa007) THEN
+                  #依照作業編號，預設為 s_[程式編號]_ws_confirm
+                  LET g_wsaa_m.wsaa007 = "s_" , g_wsaa_m.wsaa010 , "_ws_confirm"                  
+               END IF                              
+               LET g_wsaa_m.wsaa009 = g_wsaa_m.wsaa010
+               
+               IF p_cmd = 'a' THEN
+                  #更新[重要欄位]
+                  CALL awsi011_ui_data_regen(g_wsaa_m.wsaa010)  
+               END IF 
+               
+            ELSE
+               IF p_cmd = 'a' THEN
+                  #作業編號不可為空值
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  "aws-00028"
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()                  
+                  NEXT FIELD wsaa010
+               END IF               
+            END IF  
+            
+         #160902-00024#2-S
+         AFTER FIELD wsaa015
+            LET l_wsaa015_s = "s_" , g_wsaa_m.wsaa010 , "_ws_preprocess"
+            LET l_wsaa015_c = "cs_" , g_wsaa_m.wsaa010 , "_ws_preprocess"
+            IF NOT cl_null(g_wsaa_m.wsaa015) THEN
+               #交易前元件代號必須符合格式
+               IF g_wsaa_m.wsaa015 != l_wsaa015_s AND g_wsaa_m.wsaa015 != l_wsaa015_c THEN
+                  LET g_errparam.code =  "aws-00079"
+                  LET g_errparam.extend = ""
+                  LET g_errparam.replace[1] = g_wsaa_m.wsaa015
+                  LET g_errparam.replace[2] = l_wsaa015_s
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  #160902-00024#8-S
+                  #LET g_wsaa_m.wsaa015 = ''
+                  #DISPLAY BY NAME g_wsaa_m.wsaa015
+                  #160902-00024#8-E
+               END IF
+               #確認交易前元件編號是否存在
+               LET l_sub_chk = ''
+               LET l_cmd_sub = "cd ", os.Path.join(FGL_GETENV("SUB"),"4gl"),"; grep ", g_wsaa_m.wsaa015, " *.4gl 1>&1"
+               LET channel_l = base.Channel.create()
+               CALL channel_l.setDelimiter("")
+               CALL channel_l.openPipe( l_cmd_sub, "r" )
+            
+               WHILE channel_l.read(l_sub_chk)
+                  IF l_sub_chk.trim() IS NULL THEN CONTINUE WHILE END IF
+                  DISPLAY l_sub_chk #顯示背景訊息
+               END WHILE
+               
+               #160902-00024#10-S
+               LET l_csub_chk = ''
+               LET l_cmd_csub = "cd ", os.Path.join(FGL_GETENV("CSUB"),"4gl"),"; grep ", g_wsaa_m.wsaa015, " *.4gl 1>&1"
+               LET channel_l = base.Channel.create()
+               CALL channel_l.setDelimiter("")
+               CALL channel_l.openPipe( l_cmd_csub, "r" )
+                
+               WHILE channel_l.read(l_csub_chk)
+                  IF l_csub_chk.trim() IS NULL THEN CONTINUE WHILE END IF
+                  DISPLAY l_csub_chk #顯示背景訊息
+               END WHILE
+               
+               #IF cl_null(l_sub_chk) THEN
+               IF cl_null(l_sub_chk) AND cl_null(l_csub_chk) THEN
+               #160902-00024#10-E
+                  DISPLAY "ws_preprocess does not exist"
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  "aws-00076"
+                  LET g_errparam.extend = ""
+                  LET g_errparam.replace[1] = g_wsaa_m.wsaa015
+                  LET g_errparam.popup = TRUE                     
+                  CALL cl_err()
+                  LET g_wsaa_m.wsaa015 = ''
+                  DISPLAY BY NAME g_wsaa_m.wsaa015
+               END IF                 
+            END IF
+            
+         AFTER FIELD wsaa016
+            LET l_wsaa016_s = "s_" , g_wsaa_m.wsaa010 , "_ws_postprocess"
+            LET l_wsaa016_c = "cs_" , g_wsaa_m.wsaa010 , "_ws_postprocess"
+            IF NOT cl_null(g_wsaa_m.wsaa016) THEN
+               #交易後元件代號必須符合格式
+               IF g_wsaa_m.wsaa016 != l_wsaa016_s AND g_wsaa_m.wsaa016 != l_wsaa016_c THEN
+                  LET g_errparam.code =  "aws-00079"
+                  LET g_errparam.extend = ""
+                  LET g_errparam.replace[1] = g_wsaa_m.wsaa016
+                  LET g_errparam.replace[2] = l_wsaa016_s
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  #160902-00024#8-S
+                  #LET g_wsaa_m.wsaa016 = ''
+                  #DISPLAY BY NAME g_wsaa_m.wsaa016
+                  #160902-00024#8-E
+               END IF
+               
+               #確認交易後元件編號是否存在
+               LET l_sub_chk = ''
+               LET l_cmd_sub = "cd ", os.Path.join(FGL_GETENV("SUB"),"4gl"),"; grep ", g_wsaa_m.wsaa016, " *.4gl 1>&1"
+               LET channel_l = base.Channel.create()
+               CALL channel_l.setDelimiter("")
+               CALL channel_l.openPipe( l_cmd_sub, "r" )
+            
+               WHILE channel_l.read(l_sub_chk)
+                  IF l_sub_chk.trim() IS NULL THEN CONTINUE WHILE END IF
+                  DISPLAY l_sub_chk #顯示背景訊息
+               END WHILE
+               
+               #160902-00024#10-S
+               LET l_csub_chk = ''
+               LET l_cmd_csub = "cd ", os.Path.join(FGL_GETENV("CSUB"),"4gl"),"; grep ", g_wsaa_m.wsaa016, " *.4gl 1>&1"
+               LET channel_l = base.Channel.create()
+               CALL channel_l.setDelimiter("")
+               CALL channel_l.openPipe( l_cmd_csub, "r" )
+                
+               WHILE channel_l.read(l_csub_chk)
+                  IF l_csub_chk.trim() IS NULL THEN CONTINUE WHILE END IF
+                  DISPLAY l_csub_chk #顯示背景訊息
+               END WHILE
+               
+               #IF cl_null(l_sub_chk) THEN
+               IF cl_null(l_sub_chk) AND cl_null(l_csub_chk) THEN
+               #160902-00024#10-E
+                  DISPLAY "ws_postprocess does not exist"
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  "aws-00077"
+                  LET g_errparam.extend = ""
+                  LET g_errparam.replace[1] = g_wsaa_m.wsaa016
+                  LET g_errparam.popup = TRUE                     
+                  CALL cl_err()
+                  LET g_wsaa_m.wsaa016 = ''
+                  DISPLAY BY NAME g_wsaa_m.wsaa016
+               END IF              
+            END IF
+            
+         AFTER FIELD wsaa017
+            LET l_wsaa017_s = "s_" , g_wsaa_m.wsaa010 , "_ws_statechange"
+            LET l_wsaa017_c = "cs_" , g_wsaa_m.wsaa010 , "_ws_statechange"
+            IF NOT cl_null(g_wsaa_m.wsaa017) THEN
+               #更新狀態後元件代號必須符合格式
+               IF g_wsaa_m.wsaa017 != l_wsaa017_s AND g_wsaa_m.wsaa017 != l_wsaa017_c THEN
+                  LET g_errparam.code =  "aws-00079"
+                  LET g_errparam.extend = ""
+                  LET g_errparam.replace[1] = g_wsaa_m.wsaa017
+                  LET g_errparam.replace[2] = l_wsaa017_s
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  #160902-00024#8-S
+                  #LET g_wsaa_m.wsaa017 = ''
+                  #DISPLAY BY NAME g_wsaa_m.wsaa017
+                  #160902-00024#8-E
+               END IF
+               
+               #確認更新狀態後元件編號是否存在
+               LET l_sub_chk = ''
+               LET l_cmd_sub = "cd ", os.Path.join(FGL_GETENV("SUB"),"4gl"),"; grep ", g_wsaa_m.wsaa017, " *.4gl 1>&1"
+               LET channel_l = base.Channel.create()
+               CALL channel_l.setDelimiter("")
+               CALL channel_l.openPipe( l_cmd_sub, "r" )
+            
+               WHILE channel_l.read(l_sub_chk)
+                  IF l_sub_chk.trim() IS NULL THEN CONTINUE WHILE END IF
+                  DISPLAY l_sub_chk #顯示背景訊息
+               END WHILE
+               
+               #160902-00024#10-S
+               LET l_csub_chk = ''
+               LET l_cmd_csub = "cd ", os.Path.join(FGL_GETENV("CSUB"),"4gl"),"; grep ", g_wsaa_m.wsaa017, " *.4gl 1>&1"
+               LET channel_l = base.Channel.create()
+               CALL channel_l.setDelimiter("")
+               CALL channel_l.openPipe( l_cmd_csub, "r" )
+                
+               WHILE channel_l.read(l_csub_chk)
+                  IF l_csub_chk.trim() IS NULL THEN CONTINUE WHILE END IF
+                  DISPLAY l_csub_chk #顯示背景訊息
+               END WHILE
+               
+               #IF cl_null(l_sub_chk) THEN
+               IF cl_null(l_sub_chk) AND cl_null(l_csub_chk) THEN
+               #160902-00024#10-E
+                  DISPLAY "ws_statechange does not exist"
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  "aws-00078"
+                  LET g_errparam.extend = ""
+                  LET g_errparam.replace[1] = g_wsaa_m.wsaa017
+                  LET g_errparam.popup = TRUE                     
+                  CALL cl_err()
+                  LET g_wsaa_m.wsaa017 = ''
+                  DISPLAY BY NAME g_wsaa_m.wsaa017
+               END IF                   
+            END IF
+         #160902-00024#2-E
+   
+         #---------------------------<  Master  >---------------------------
+         #----<<wsaa001>>----
+         #Ctrlp:input.c.wsaa001
+         ON ACTION controlp INFIELD wsaa001
+            #add-point:ON ACTION controlp INFIELD wsaa001
+            {<point name="input.c.wsaa001" />}
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_wsaa_m.wsaa001         #給予default值
+
+            #給予arg
+            #160902-00024#2-S
+            #LET g_qryparam.arg1 = "24"                         #單據性質系統分類碼為24
+            #CALL q_gzcb001()                                   #呼叫開窗
+            LET g_qryparam.arg1 = g_wsaa_m.wsaa001             #給予default值
+            CALL q_gzzz001_1()                                 #呼叫開窗  
+            LET g_wsaa_m.wsaa010 = g_qryparam.return1          #將開窗取得的值回傳到變數
+            #160902-00024#2-E
+            
+            LET g_wsaa_m.wsaa001 = g_qryparam.return1          #將開窗取得的值回傳到變數
+            DISPLAY g_wsaa_m.wsaa001 TO wsaa001                #顯示到畫面上
+
+            NEXT FIELD wsaa001
+            #END add-point
+
+         #----<<wsaa003>>----
+         #Ctrlp:input.c.wsaa003
+#         ON ACTION controlp INFIELD wsaa003
+            #add-point:ON ACTION controlp INFIELD wsaa003
+            {<point name="input.c.wsaa003" />}
+            #END add-point
+
+         #----<<wsaa002>>----
+         #Ctrlp:input.c.wsaa002
+         ON ACTION controlp INFIELD wsaa002 
+            #160902-00024#7-S              
+            IF NOT awsi011_chk_bpm() THEN
+               LET g_errparam.code = "aws-00081"   #未啟用BPM協同!
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+            ELSE             
+            #160902-00024#7-E        
+               LET g_qryparam.reqry = FALSE
+               CALL awsi011_01()
+               LET g_wsaa_m.wsaa002 = g_qryparam.return1
+               LET g_wsaa_m.wsaa002_desc = g_qryparam.return2
+   
+               DISPLAY BY NAME g_wsaa_m.wsaa002, g_wsaa_m.wsaa002_desc            
+               
+               FOR l_i = 1 TO g_flow_tpl.getLength()
+                  IF g_wsaa_m.wsaa002 = g_flow_tpl[l_i].flow_template_id THEN               
+                     LET l_wsaa002_img = g_bpm_url , g_flow_tpl[l_i].flow_template_image_url
+                  END IF       
+               END FOR
+               DISPLAY l_wsaa002_img TO wsaa002_img
+            END IF      #160902-00024#2     
+            
+         ON ACTION controlp INFIELD wsaa004            
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            #LET g_qryparam.default1 = g_wsaa_m.wsaa004         #給予default值
+            SELECT gzzz002 INTO l_gzzz002 FROM gzzz_t 
+             WHERE gzzz001 = g_wsaa_m.wsaa010
+            #給予arg1             
+            LET g_qryparam.arg1 = g_wsaa_m.wsaa001
+            IF g_wsaa_m.wsaa001 <> l_gzzz002 THEN
+               LET g_qryparam.arg1 = l_gzzz002
+            END IF 
+
+            CALL q_dzeb001_1()                                   #呼叫開窗
+
+            LET g_wsaa_m.wsaa004 = g_qryparam.return1          #將開窗取得的值回傳到變數
+            DISPLAY g_wsaa_m.wsaa004 TO wsaa004                #顯示到畫面上
+            DISPLAY g_qryparam.return2 TO wsaa004_desc
+
+            NEXT FIELD wsaa004
+            
+         ON ACTION controlp INFIELD wsaa012            
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            
+            SELECT gzzz002 INTO l_gzzz002 FROM gzzz_t 
+             WHERE gzzz001 = g_wsaa_m.wsaa010
+            #給予arg1            
+            LET g_qryparam.arg1 = g_wsaa_m.wsaa001
+            IF g_wsaa_m.wsaa001 <> l_gzzz002 THEN
+               LET g_qryparam.arg1 = l_gzzz002
+            END IF
+            
+            CALL q_dzeb001_1()                                   #呼叫開窗
+
+            LET g_wsaa_m.wsaa012 = g_qryparam.return1          #將開窗取得的值回傳到變數
+            DISPLAY g_wsaa_m.wsaa012 TO wsaa012                #顯示到畫面上
+            DISPLAY g_qryparam.return2 TO wsaa012_desc
+
+            NEXT FIELD wsaa012            
+            
+         ON ACTION controlp INFIELD wsaa013            
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            #LET g_qryparam.default1 = g_wsaa_m.wsaa004         #給予default值
+            SELECT gzzz002 INTO l_gzzz002 FROM gzzz_t 
+             WHERE gzzz001 = g_wsaa_m.wsaa010
+            #給予arg1             
+            LET g_qryparam.arg1 = g_wsaa_m.wsaa001
+            IF g_wsaa_m.wsaa001 <> l_gzzz002 THEN
+               LET g_qryparam.arg1 = l_gzzz002
+            END IF 
+
+            CALL q_dzeb001_1()                                   #呼叫開窗
+
+            LET g_wsaa_m.wsaa013 = g_qryparam.return1          #將開窗取得的值回傳到變數
+            DISPLAY g_wsaa_m.wsaa013 TO wsaa013                #顯示到畫面上
+            DISPLAY g_qryparam.return2 TO wsaa013_desc
+
+            NEXT FIELD wsaa013
+            
+         ON ACTION controlp INFIELD wsaa014            
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            
+            SELECT gzzz002 INTO l_gzzz002 FROM gzzz_t 
+             WHERE gzzz001 = g_wsaa_m.wsaa010
+            #給予arg1            
+            LET g_qryparam.arg1 = g_wsaa_m.wsaa001
+            IF g_wsaa_m.wsaa001 <> l_gzzz002 THEN
+               LET g_qryparam.arg1 = l_gzzz002
+            END IF
+            
+            CALL q_dzeb001_1()                                   #呼叫開窗
+
+            LET g_wsaa_m.wsaa014 = g_qryparam.return1          #將開窗取得的值回傳到變數
+            DISPLAY g_wsaa_m.wsaa014 TO wsaa014                #顯示到畫面上
+            DISPLAY g_qryparam.return2 TO wsaa014_desc
+
+            NEXT FIELD wsaa014          
+            
+         ON ACTION controlp INFIELD wsaa005            
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            #LET g_qryparam.default1 = g_wsaa_m.wsaa005         #給予default值
+            SELECT gzzz002 INTO l_gzzz002 FROM gzzz_t 
+             WHERE gzzz001 = g_wsaa_m.wsaa010
+            #給予arg1
+            LET g_qryparam.arg1 = g_wsaa_m.wsaa001 
+            IF g_wsaa_m.wsaa001 <> l_gzzz002 THEN
+               LET g_qryparam.arg1 = l_gzzz002
+            END IF
+            
+            CALL q_dzeb001_1()                                   #呼叫開窗
+
+            LET g_wsaa_m.wsaa005 = g_qryparam.return1          #將開窗取得的值回傳到變數
+            DISPLAY g_wsaa_m.wsaa005 TO wsaa005                #顯示到畫面上
+            DISPLAY g_qryparam.return2 TO wsaa005_desc
+
+            NEXT FIELD wsaa005  
+
+         ON ACTION controlp INFIELD wsaa006            
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_wsaa_m.wsaa006         #給予default值
+
+            CALL q_dzea001()                                   #呼叫開窗
+
+            LET g_wsaa_m.wsaa006 = g_qryparam.return1          #將開窗取得的值回傳到變數
+            DISPLAY g_wsaa_m.wsaa006 TO wsaa006                #顯示到畫面上
+
+            NEXT FIELD wsaa006
+            
+         ON ACTION controlp INFIELD wsaa007            
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_wsaa_m.wsaa007         #給予default值
+
+            CALL q_dzeb001()                                   #呼叫開窗
+
+            LET g_wsaa_m.wsaa007 = g_qryparam.return1          #將開窗取得的值回傳到變數
+            DISPLAY g_wsaa_m.wsaa007 TO wsaa007                #顯示到畫面上
+
+            NEXT FIELD wsaa007
+            
+         ON ACTION controlp INFIELD wsaa008            
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_wsaa_m.wsaa008         #給予default值
+
+            CALL q_dzea001()                                   #呼叫開窗
+
+            LET g_wsaa_m.wsaa008 = g_qryparam.return1          #將開窗取得的值回傳到變數
+            DISPLAY g_wsaa_m.wsaa008 TO wsaa008                #顯示到畫面上
+
+            NEXT FIELD wsaa008
+            
+         ON ACTION controlp INFIELD wsaa009            
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_wsaa_m.wsaa009         #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "24"    #單據性質系統分類碼為24
+
+            CALL q_gzcb001()                                   #呼叫開窗
+
+            LET g_wsaa_m.wsaa009 = g_qryparam.return1          #將開窗取得的值回傳到變數
+            DISPLAY g_wsaa_m.wsaa009 TO wsaa009                #顯示到畫面上
+
+            NEXT FIELD wsaa009
+            
+         ON ACTION controlp INFIELD wsaa010            
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = g_wsaa_m.wsaa001             #給予default值
+
+            CALL q_gzzz001_1()                                 #呼叫開窗           
+            
+            LET g_wsaa_m.wsaa010 = g_qryparam.return1          #將開窗取得的值回傳到變數
+            DISPLAY g_wsaa_m.wsaa010 TO wsaa010                #顯示到畫面上
+
+            NEXT FIELD wsaa010
+      
+       
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            
+            LET l_return = TRUE  #160902-00024#2 
+            
+            #CALL cl_showmsg()   #錯誤訊息統整顯示
+            IF p_cmd = "a" THEN  
+               #因 ui_data_regen() , transaction 必須移至此
+               CALL s_transaction_begin()
+               LET l_count = 1
+           　　
+           　　SELECT COUNT(*) INTO l_count FROM wsaa_t
+           　　WHERE  wsaa001 = g_wsaa_m.wsaa001
+           　　
+           　　IF l_count = 0 THEN
+           　　  INSERT INTO wsaa_t (wsaa001,wsaa003,wsaa002,wsaa004,wsaa005,wsaa006,wsaa007,wsaa008,wsaa009,wsaa010,wsaa011,wsaa012,wsaa013,wsaa014,
+           　　                      wsaa015,wsaa016,wsaa017, #160902-00024#2 
+           　　                      wsaaownid,wsaaowndp,wsaacrtid,wsaacrtdp,wsaacrtdt,wsaamodid,wsaamoddt)
+           　　  VALUES (g_wsaa_m.wsaa001,g_wsaa_m.wsaa003,g_wsaa_m.wsaa002,g_wsaa_m.wsaa004,g_wsaa_m.wsaa005,
+           　　          g_wsaa_m.wsaa006,g_wsaa_m.wsaa007,g_wsaa_m.wsaa008,g_wsaa_m.wsaa009,g_wsaa_m.wsaa010,g_wsaa_m.wsaa011,g_wsaa_m.wsaa012,g_wsaa_m.wsaa013,g_wsaa_m.wsaa014,
+           　　          g_wsaa_m.wsaa015,g_wsaa_m.wsaa016,g_wsaa_m.wsaa017, #160902-00024#2 
+           　　          g_wsaa_m.wsaaownid,g_wsaa_m.wsaaowndp,g_wsaa_m.wsaacrtid,g_wsaa_m.wsaacrtdp,g_wsaa_m.wsaacrtdt,g_wsaa_m.wsaamodid,g_wsaa_m.wsaamoddt) # DISK WRITE
+           　　
+           　　  IF SQLCA.sqlcode THEN
+           　　         INITIALIZE g_errparam TO NULL
+           　　         LET g_errparam.code = SQLCA.sqlcode
+           　　         LET g_errparam.extend = "wsaa_t"
+           　　         LET g_errparam.popup = TRUE
+           　　         CALL cl_err()
+           　　
+           　　         CONTINUE DIALOG
+           　　  END IF
+                  
+                 #160902-00024#2-S    
+                 #確認應用元件編號    
+                 IF g_wsaa_m.wsaa007 IS NOT NULL THEN CALL awsi011_gen_ws_confirm()       RETURNING l_return   END IF  
+                     
+                 #交易前元件編號                                                          
+                 IF g_wsaa_m.wsaa015 IS NOT NULL THEN CALL awsi011_gen_preprocess()       RETURNING l_return   END IF   
+                                                                                         
+                 #交易後元件編號                                                          
+                 IF g_wsaa_m.wsaa016 IS NOT NULL THEN CALL awsi011_gen_postprocess()      RETURNING l_return   END IF 
+                                                                                         
+                 #更新狀態後元件編號                                                       
+                 IF g_wsaa_m.wsaa017 IS NOT NULL THEN CALL awsi011_gen_ws_statechange()   RETURNING l_return   END IF 
+                       
+                 #160902-00024#2-E  
+                 
+           　　  CALL s_transaction_end('Y','0')
+           　　ELSE
+           　　      INITIALIZE g_errparam TO NULL
+           　　      LET g_errparam.code =  "std-00006"
+           　　      LET g_errparam.extend =  "g_wsaa_m.wsaa001"
+           　　      LET g_errparam.popup = FALSE
+           　　      CALL cl_err()
+           　　
+           　　      CALL s_transaction_end('N','0')               
+           　　END IF
+            END IF
+            
+            IF p_cmd = "u" THEN              
+               
+               UPDATE wsaa_t SET (wsaa001,wsaa003,wsaa002,wsaa004,wsaa005,wsaa006,wsaa007,wsaa008,wsaa009,wsaa010,wsaa011,wsaa012,wsaa013,wsaa014,
+                                  wsaa015,wsaa016,wsaa017, #160902-00024#2 
+                                  wsaaownid,wsaaowndp,wsaacrtid,wsaacrtdp,wsaacrtdt,wsaamodid,wsaamoddt)
+                               = (g_wsaa_m.wsaa001,g_wsaa_m.wsaa003,g_wsaa_m.wsaa002,g_wsaa_m.wsaa004,g_wsaa_m.wsaa005,g_wsaa_m.wsaa006,g_wsaa_m.wsaa007,g_wsaa_m.wsaa008,g_wsaa_m.wsaa009,g_wsaa_m.wsaa010,g_wsaa_m.wsaa011,g_wsaa_m.wsaa012,g_wsaa_m.wsaa013,g_wsaa_m.wsaa014,  
+                                  g_wsaa_m.wsaa015,g_wsaa_m.wsaa016,g_wsaa_m.wsaa017, #160902-00024#2 
+                                  g_wsaa_m.wsaaownid,g_wsaa_m.wsaaowndp,g_wsaa_m.wsaacrtid,g_wsaa_m.wsaacrtdp,g_wsaa_m.wsaacrtdt,g_wsaa_m.wsaamodid,g_wsaa_m.wsaamoddt)
+                WHERE  wsaa001 = g_wsaa001_t 
+             
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = "std-00009"
+                     LET g_errparam.extend = "wsaa_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     CALL s_transaction_end('N','0')
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "wsaa_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     CALL s_transaction_end('N','0')
+                  OTHERWISE
+
+                     #資料多語言用-增/改
+
+                     #add-point:單頭修改後
+                     {<point name="input.head.a_update"/>} 
+                     #160902-00024#2-S            
+                     #確認應用元件編號    
+                     IF (g_wsaa_m.wsaa007 <> g_wsaa_m_t.wsaa007) OR (g_wsaa_m.wsaa007 IS NULL AND g_wsaa_m_t.wsaa007 IS NOT NULL) OR (g_wsaa_m.wsaa007 IS NOT NULL AND g_wsaa_m_t.wsaa007 IS NULL ) THEN
+                        CALL awsi011_gen_ws_confirm()       RETURNING l_return
+                     END IF   
+                     
+                     #交易前元件編號
+                     IF (g_wsaa_m.wsaa015 <> g_wsaa_m_t.wsaa015) OR (g_wsaa_m.wsaa015 IS NULL AND g_wsaa_m_t.wsaa015 IS NOT NULL) OR (g_wsaa_m.wsaa015 IS NOT NULL AND g_wsaa_m_t.wsaa015 IS NULL ) THEN
+                        CALL awsi011_gen_preprocess()       RETURNING l_return
+                     END IF   
+                     
+                     #交易後元件編號
+                     IF (g_wsaa_m.wsaa016 <> g_wsaa_m_t.wsaa016) OR (g_wsaa_m.wsaa016 IS NULL AND g_wsaa_m_t.wsaa016 IS NOT NULL) OR (g_wsaa_m.wsaa016 IS NOT NULL AND g_wsaa_m_t.wsaa016 IS NULL ) THEN
+                        CALL awsi011_gen_postprocess()      RETURNING l_return
+                     END IF 
+                     
+                     #更新狀態後元件編號 
+                     IF (g_wsaa_m.wsaa017 <> g_wsaa_m_t.wsaa017) OR (g_wsaa_m.wsaa017 IS NULL AND g_wsaa_m_t.wsaa017 IS NOT NULL) OR (g_wsaa_m.wsaa017 IS NOT NULL AND g_wsaa_m_t.wsaa017 IS NULL ) THEN
+                        CALL awsi011_gen_ws_statechange()   RETURNING l_return
+                     END IF     
+                     #160902-00024#2-E 
+                     #end add-point
+                     CALL s_transaction_end('Y','0')
+               END CASE
+            END IF
+           #controlp
+      END INPUT
+
+      
+      #重要欄位頁籤-畫面結構(s_detail1)
+      DISPLAY ARRAY g_detail1 TO s_detail1.* ATTRIBUTES(COUNT=l_detail1_rec)   #page3
+
+         BEFORE ROW           
+            LET g_detail1_idx = DIALOG.getCurrentRow("s_detail1")
+            DISPLAY "input().g_detail1_idx:", g_detail1_idx, ";"
+            
+            LET l_ac = ARR_CURR()
+            DISPLAY "input().l_ac:", l_ac, ";"
+            
+            LET l_n = ARR_COUNT()
+            DISPLAY "input().l_n:", l_n, ";"
+            
+            #取得畫面結構下所屬欄位控件
+            CALL g_detail2.clear()
+            LET l_detail2_rec = 0
+            
+            IF g_detail1_idx > 1 AND g_detail1_idx <= g_detail1.getLength() THEN
+               LET g_detail2 = awsi011_s_detail2_fill(g_detail1[g_detail1_idx].dzfj008_1)
+               LET g_detail2_idx = 1
+            #ELSE
+            #   CALL g_detail1.clear()
+            END IF
+            
+            LET l_detail2_rec = g_detail2.getLength()
+            
+         BEFORE DISPLAY
+            CALL FGL_SET_ARR_CURR(g_detail1_idx)
+      END DISPLAY
+
+      #重要欄位頁籤-畫面結構下所屬欄位(s_detail2)
+      INPUT ARRAY g_detail2 FROM s_detail2.* 
+         ATTRIBUTES(APPEND ROW=FALSE, INSERT ROW=FALSE, DELETE ROW=FALSE)   #page3
+
+         BEFORE ROW
+            LET g_detail2_idx = DIALOG.getCurrentRow("s_detail2")
+            
+         BEFORE INPUT
+            #CALL DIALOG.setArrayAttributes("s_detail2", g_detail2)   #欄位列表顏色屬性,已使用的欄位要變色
+         
+         ON CHANGE ui_chk
+            #已insert在wsac_t(單據性質重要欄位)中,不得取消勾選狀態
+            IF g_detail2[g_detail2_idx].is_ins = "Y" THEN
+               LET g_detail2[g_detail2_idx].ui_chk = "Y"
+            END IF
+            
+      END INPUT
+
+      
+      #重要欄位頁籤-單據性質重要欄位(s_detail3) 
+      INPUT ARRAY g_wsac FROM s_detail3.*
+         ATTRIBUTES(APPEND ROW=TRUE, INSERT ROW=TRUE, DELETE ROW=TRUE)
+
+         BEFORE INPUT
+            #CALL DIALOG.setArrayAttributes("s_detail3", g_wsac)   #欄位列表顏色屬性,已使用的欄位要變色
+            CALL awsi011_s_detail3_fill()
+            LET l_wsac_cnt = 0                                     #160902-00024#13-E 
+
+         BEFORE ROW
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail3_idx = l_ac
+            
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET g_detail3_cnt = g_wsac.getLength()
+
+            CALL s_transaction_begin()
+            
+            OPEN awsi011_cl USING g_wsaa_m.wsaa001
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  STATUS
+               LET g_errparam.extend = "OPEN awsi011_cl:"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               CLOSE awsi011_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+
+            IF g_detail3_cnt >= g_detail3_idx AND g_wsac[g_detail3_idx].wsac004 IS NOT NULL THEN
+               LET l_cmd='u'
+               LET g_wsac_t.* = g_wsac[g_detail3_idx].*   #BACKUP
+               
+               CALL awsi011_set_entry_b(l_cmd)
+               CALL awsi011_set_no_entry_b(l_cmd)
+               
+               OPEN awsi011_wsac_lock USING  g_wsaa_m.wsaa001, g_wsac[g_detail3_idx].wsac004
+               
+               IF STATUS THEN
+                  LET l_lock_sw='Y'
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  STATUS
+                  LET g_errparam.extend = "OPEN awsi011_wsac_lock:"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CLOSE awsi011_wsac_lock
+                  CALL s_transaction_end('N', '0')
+               ELSE
+                  FETCH awsi011_wsac_lock INTO g_wsac[g_detail3_idx].wsac003, g_wsac[g_detail3_idx].wsac004, l_dzfj009, g_wsac[g_detail3_idx].wsac005, g_wsac[g_detail3_idx].wsac005_desc,
+                                               g_wsac[g_detail3_idx].wsac006, g_wsac[g_detail3_idx].wsac007, l_dzfj008 
+                  
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code =  SQLCA.sqlcode
+                     LET g_errparam.extend = g_wsac[g_detail3_idx].wsac004
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+
+                  SELECT dzfj009, dzfj008  
+                    FROM wsac_t LEFT JOIN gzzz_t ON gzzz001 = wsac002               
+                                LEFT JOIN dzfj_t ON gzzz002 = dzfj001 AND dzfj002 = g_dzfb002  AND wsac004 = dzfj005   
+                    WHERE wsac001 = g_wsaa_m.wsaa001 AND wsac004 =  g_wsac[g_detail3_idx].wsac004
+
+                     
+                  LET g_wsac[g_detail3_idx].dzfj009_desc = awsi011_get_description(l_dzfj009, l_dzfj008)
+                  LET g_wsac[g_detail3_idx].wsac005_desc = awsi011_get_description(g_wsac[g_detail3_idx].wsac005, g_wsac[g_detail3_idx].wsac005)
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+
+         BEFORE INSERT
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_wsac[l_ac].* TO NULL 
+            
+            #新輸入資料
+            LET g_wsac_t.* = g_wsac[l_ac].*
+            CALL awsi011_set_entry_b(l_cmd)
+            CALL awsi011_set_no_entry_b(l_cmd)
+         
+         AFTER INSERT
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+            
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM wsac_t 
+              WHERE wsac001 = g_wsaa_m.wsaa001 AND wsac004 = g_wsac[l_ac].wsac004
+
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               IF awsi011_insert_wsac(g_wsac[l_ac].*) THEN
+                  CALL s_transaction_end('Y','0')
+                  ERROR 'INSERT O.K'
+                  LET g_detail3_cnt = g_detail3_cnt + 1
+                  
+                  CALL awsi011_s_detail2_set_chk(g_wsac[l_ac].wsac004, "Y")
+               ELSE
+                  INITIALIZE g_wsac[l_ac].* TO NULL
+                  CALL s_transaction_end('N','0')                    
+                  CANCEL INSERT
+               END IF
+            ELSE    
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               INITIALIZE g_wsac[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+             
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_wsac[g_detail3_idx].* = g_wsac_t.*
+               
+               CLOSE awsi011_wsac_lock
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG
+            END IF
+
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  -263
+               LET g_errparam.extend = g_wsac[g_detail3_idx].wsac004
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_wsac[g_detail3_idx].* = g_wsac_t.*
+            ELSE
+               UPDATE wsac_t SET (wsac005, wsac006, wsac007) = 
+                                 (g_wsac[g_detail3_idx].wsac005, g_wsac[g_detail3_idx].wsac006, g_wsac[g_detail3_idx].wsac007)
+                 WHERE wsac001 = g_wsaa_m.wsaa001
+                   AND wsac004 = g_wsac[g_detail3_idx].wsac004  
+			   
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  SQLCA.sqlcode
+                  LET g_errparam.extend = "wsac_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+   
+                  LET g_wsac[g_detail3_idx].* = g_wsac_t.*
+                  
+                  CALL s_transaction_end('N','0')
+               END IF
+            END IF
+            
+         AFTER ROW
+            CLOSE awsi011_wsac_lock
+            CALL s_transaction_end('Y', '0')
+            
+         BEFORE DELETE
+            IF l_cmd = 'a' AND g_wsac.getLength() < l_ac THEN
+               CALL FGL_SET_ARR_CURR(l_ac - 1)
+               CALL g_wsac.deleteElement(l_ac)
+               NEXT FIELD wsac004
+            END IF
+            
+            IF g_wsac[g_detail3_idx].wsac004 IS NOT NULL THEN
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  -263
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CANCEL DELETE
+               END IF
+               
+               IF awsi011_delete_wsac(g_wsac[l_ac].*) THEN
+                  LET g_detail3_cnt = g_detail3_cnt - 1
+                  CALL s_transaction_end('Y', '0')
+                  
+                  #將s_detail2的控件欄位勾選狀態變更為FALSE
+                  CALL awsi011_s_detail2_set_chk(g_wsac[g_detail3_idx].wsac004, "N")
+               ELSE
+                  CALL s_transaction_end('N', '0')                    
+                  CANCEL DELETE
+               END IF
+               
+               CLOSE awsi011_wsac_lock
+            END IF
+         
+         AFTER FIELD wsac004
+            #重覆性檢查
+            IF g_wsaa_m.wsaa001 IS NOT NULL AND g_wsac[g_detail3_idx].wsac004 THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_wsaa_m.wsaa001 != g_wsaa001_t OR g_wsac[g_detail3_idx].wsac004 != g_wsac_t.wsac004)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM wsac_t WHERE " || "wsac001 = '" || g_wsaa_m.wsaa001 || "' AND " || "wsac004 = '" ||  g_wsac[g_detail3_idx].wsac004 || "'", 'std-00004', 0) THEN 
+                     NEXT FIELD CURRENT
+                  ELSE
+                     #檢查輸入控件資料是否存在UI解析資料中(dzfb_t)
+                     #SELECT COUNT(*) INTO l_count FROM dzfb_t 
+                     #  WHERE dzfb001 = g_wsaa_m.wsaa001 AND dzfb005 = g_wsac[g_detail3_idx].wsac004
+                     SELECT COUNT(*) INTO l_count FROM dzfj_t
+                      WHERE dzfj001 = g_wsaa_m.wsaa001 AND dzfj002 = g_dzfb002                            
+                        AND dzfj005 = g_wsac[g_detail3_idx].wsac004 AND dzfj017 = g_dzfb007
+                     
+                     IF l_count = 0 THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code =  "aws-00005"
+                        LET g_errparam.extend = ""
+                        LET g_errparam.popup = FALSE
+                        CALL cl_err()
+
+                        NEXT FIELD wsac004
+                     END IF
+                     
+                     SELECT dzfb003, dzfj009, dzfj010, dzfj011, dzfb006, dzfj008 
+                       INTO g_wsac[g_detail3_idx].wsac003, l_dzfj009, g_wsac[g_detail3_idx].wsac005, g_wsac[g_detail3_idx].wsac006, g_wsac[g_detail3_idx].wsac007, l_dzfj008
+                       FROM dzfb_t LEFT JOIN dzfj_t ON dzfb001 = dzfj001 AND dzfb002 = dzfj002 AND dzfb005 = dzfj005
+                       WHERE dzfb001 = g_wsaa_m.wsaa001
+                         AND dzfb002 = g_dzfb002
+                         AND dzfb005 = g_wsac[g_detail3_idx].wsac004
+                      
+                     #161102-00047#17-S 
+                     #新增欄位為排除控件,跳窗詢問設定為單頭或單身
+                     IF cl_null(g_wsac[g_detail3_idx].wsac003) THEN   
+                        LET ls_msg = "此控件為排除控件，請輸入欄位類型：1:單頭 2:單身"
+                        PROMPT ls_msg CLIPPED,': ' FOR l_type
+                           #交談指令共用ACTION
+                           &include "common_action.4gl"
+                        END PROMPT
+                        IF l_type = "1" OR l_type = "2" THEN
+                           LET g_wsac[g_detail3_idx].wsac003 = l_type
+                        END IF
+                     END IF
+                     #161102-00047#17-E
+                     
+                     #取回所屬結構標籤代碼文字說明
+                     LET g_wsac[g_detail3_idx].dzfj009_desc = awsi011_get_description(l_dzfj009, l_dzfj008)
+                     
+                     #取回欄位標籤代碼文字說明
+                     LET g_wsac[g_detail3_idx].wsac005_desc = awsi011_get_description(g_wsac[g_detail3_idx].wsac005, g_wsac[g_detail3_idx].wsac005)
+                  END IF
+               END IF
+            END IF
+     
+         AFTER FIELD wsac005 
+            IF g_wsaa_m.wsaa001 IS NOT NULL AND g_wsac[g_detail3_idx].wsac005 THEN
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_wsaa_m.wsaa001 != g_wsaa001_t OR g_wsac[g_detail3_idx].wsac005 != g_wsac_t.wsac005)) THEN 
+                  #取回標籤代碼文字說明
+                  LET g_wsac[g_detail3_idx].wsac005_desc = awsi011_get_description(g_wsac[g_detail3_idx].wsac005, g_wsac[g_detail3_idx].wsac005)
+                  DISPLAY BY NAME g_wsac[g_detail3_idx].wsac005_desc
+               END IF               
+            END IF
+            
+         #160902-00024#13-S   
+         ON CHANGE ui_del
+            IF g_wsac[g_detail3_idx].ui_del = "Y" THEN
+               LET l_wsac_cnt = l_wsac_cnt + 1
+            ELSE   
+               LET l_wsac_cnt = l_wsac_cnt - 1
+            END IF
+         #160902-00024#13-E   
+            
+      END INPUT
+      
+      #工作流關卡頁籤-設定關卡表格(s_wsaf)
+      INPUT ARRAY g_wsaf FROM s_wsaf.*
+         ATTRIBUTES(APPEND ROW=TRUE, INSERT ROW=TRUE, DELETE ROW=TRUE)
+
+         BEFORE INPUT            
+            CALL awsi011_s_wsaf_fill()
+
+         BEFORE ROW
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail4_idx = l_ac          
+            
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET g_detail4_cnt = g_wsaf.getLength()
+
+            CALL s_transaction_begin()
+            
+            OPEN awsi011_cl USING g_wsaa_m.wsaa001
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  STATUS
+               LET g_errparam.extend = "OPEN awsi011_cl:"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               CLOSE awsi011_wsaf_cur
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            
+            IF g_detail4_cnt >= g_detail4_idx AND g_wsaf[g_detail4_idx].wsaf002 IS NOT NULL THEN
+               LET l_cmd='u'
+               LET g_wsaf_t.* = g_wsaf[g_detail4_idx].*   #BACKUP
+               
+               CALL awsi011_set_entry_b(l_cmd)
+               CALL awsi011_set_no_entry_b(l_cmd)
+               
+               OPEN awsi011_wsaf_lock USING g_wsaa_m.wsaa001, g_wsaf[g_detail4_idx].wsaf002
+               
+               IF STATUS THEN
+                  LET l_lock_sw='Y'
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  STATUS
+                  LET g_errparam.extend = "OPEN awsi011_wsaf_lock:"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CLOSE awsi011_wsaf_lock
+                  CALL s_transaction_end('N', '0')
+               ELSE
+                  FETCH awsi011_wsaf_lock INTO g_wsaf[g_detail4_idx].wsaf002, g_wsaf[g_detail4_idx].wsaf003
+                  
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code =  SQLCA.sqlcode
+                     LET g_errparam.extend = g_wsaf[g_detail4_idx].wsaf002
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET l_lock_sw = "Y"
+                  END IF
+                     
+                  #LET g_wsac[g_detail3_idx].dzfj009_desc = awsi011_get_description(l_dzfj009, l_dzfj008)
+                  #LET g_wsac[g_detail3_idx].wsac005_desc = awsi011_get_description(g_wsac[g_detail3_idx].wsac005, g_wsac[g_detail3_idx].wsac005)
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+
+         AFTER FIELD wsaf002
+            IF NOT cl_null(g_wsaf[l_ac].wsaf002) THEN
+               SELECT COUNT(*) INTO l_cnt FROM dzeb_t WHERE dzeb001 = g_wsaa_m.wsaa008 AND dzeb002 = g_wsaf[l_ac].wsaf002
+               IF cl_null(l_cnt) OR l_cnt = 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  "aws-00003"
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  NEXT FIELD wsaf002
+               END IF
+               
+               INITIALIZE g_ref_fields TO NULL
+               LET g_ref_fields[1] = g_wsaf[l_ac].wsaf002  
+               CALL ap_ref_array2(g_ref_fields,"SELECT dzebl003 FROM dzebl_t WHERE dzebl001=? AND dzebl002='"||g_lang||"'","") RETURNING g_rtn_fields
+               LET g_wsaf[l_ac].wsaf002_desc = '', g_rtn_fields[1] , ''            
+            END IF
+            
+         AFTER FIELD wsaf003   
+            IF NOT cl_null(g_wsaf[l_ac].wsaf003) THEN
+               SELECT COUNT(*) INTO l_cnt FROM dzeb_t WHERE dzeb001 = g_wsaa_m.wsaa006 AND dzeb002 = g_wsaf[l_ac].wsaf003
+               IF cl_null(l_cnt) OR l_cnt = 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  "aws-00003"
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  NEXT FIELD wsaf003
+               END IF        
+               
+               INITIALIZE g_ref_fields TO NULL
+               LET g_ref_fields[1] = g_wsaf[l_ac].wsaf003
+               CALL ap_ref_array2(g_ref_fields,"SELECT dzebl003 FROM dzebl_t WHERE dzebl001=? AND dzebl002='"||g_lang||"'","") RETURNING g_rtn_fields
+               LET g_wsaf[l_ac].wsaf003_desc = '', g_rtn_fields[1] , '' 
+            END IF
+         
+         BEFORE INSERT
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_wsaf[l_ac].* TO NULL 
+            
+            #新輸入資料
+            LET g_wsaf_t.* = g_wsaf[l_ac].*
+            
+         AFTER INSERT
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+            
+            LET l_count = 1
+            SELECT COUNT(*) INTO l_count FROM wsaf_t 
+             WHERE wsaf001 = g_wsaa_m.wsaa001 AND wsaf002 = g_wsaf[l_ac].wsaf002
+
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               INSERT INTO wsaf_t(wsaf001, wsaf002, wsaf003)
+                  VALUES(g_wsaa_m.wsaa001,g_wsaf[l_ac].wsaf002,g_wsaf[l_ac].wsaf003)
+               
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  SQLCA.sqlcode
+                  LET g_errparam.extend = "wsaf_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+   
+                  LET g_wsaf[g_detail4_idx].* = g_wsaf_t.*
+                  
+                  CALL s_transaction_end('N','0')
+               ELSE
+                  CALL s_transaction_end('Y','0')
+                  ERROR 'INSERT O.K'
+                  LET g_detail4_cnt = g_detail4_cnt + 1
+               END IF
+            END IF  
+
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_wsaf[g_detail4_idx].* = g_wsaf_t.*
+               
+               CLOSE awsi011_wsaf_lock
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG
+            END IF
+
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  -263
+               LET g_errparam.extend = g_wsaf[g_detail4_idx].wsaf002
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_wsaf[g_detail4_idx].* = g_wsaf_t.*
+            ELSE
+               UPDATE wsaf_t SET (wsaf002, wsaf003) = 
+                                 (g_wsaf[g_detail4_idx].wsaf002, g_wsaf[g_detail4_idx].wsaf003)
+                 WHERE wsaf001 = g_wsaa_m.wsaa001
+                   AND wsaf002 = g_wsaf_t.wsaf002 
+			   
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  SQLCA.sqlcode
+                  LET g_errparam.extend = "wsaf_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+   
+                  LET g_wsaf[g_detail4_idx].* = g_wsaf_t.*
+                  
+                  CALL s_transaction_end('N','0')
+               END IF
+            END IF
+
+         BEFORE DELETE
+            IF l_cmd = 'a' AND g_wsaf.getLength() < l_ac THEN
+               CALL FGL_SET_ARR_CURR(l_ac - 1)
+               CALL g_wsaf.deleteElement(l_ac)
+               NEXT FIELD wsaf002
+            END IF
+            
+            IF g_wsaf[g_detail4_idx].wsaf002 IS NOT NULL THEN
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  -263
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CANCEL DELETE
+               END IF
+               
+               DELETE FROM wsaf_t 
+                WHERE wsaf001 = g_wsaa_m.wsaa001 
+                  AND wsaf002 = g_wsaf_t.wsaf002
+   
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  SQLCA.sqlcode
+                  LET g_errparam.extend = "wsac_f"
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+                                   
+                  CALL s_transaction_end('N', '0')                    
+                  CANCEL DELETE
+               ELSE
+                  LET g_detail4_cnt = g_detail4_cnt - 1
+                  CALL s_transaction_end('Y', '0')
+               END IF               
+               CLOSE awsi011_wsaf_lock
+            END IF
+            
+         AFTER ROW
+            CLOSE awsi011_wsaf_cur
+            CALL s_transaction_end('Y', '0')
+            
+         ON ACTION controlp INFIELD wsaf002            
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = g_wsaa_m.wsaa008 
+
+            CALL q_dzeb002_2()                                   #呼叫開窗
+
+            LET g_wsaf[g_detail4_idx].wsaf002 = g_qryparam.return1          #將開窗取得的值回傳到變數
+            DISPLAY g_wsaf[g_detail4_idx].wsaf002 TO wsaf002                #顯示到畫面上
+            DISPLAY g_qryparam.return2 TO g_wsaf[g_detail4_idx].wsaf002_desc
+
+            NEXT FIELD wsaf002            
+
+         ON ACTION controlp INFIELD wsaf003    
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = g_wsaa_m.wsaa006 
+
+            CALL q_dzeb002_2()                                   #呼叫開窗
+
+            LET g_wsaf[g_detail4_idx].wsaf003 = g_qryparam.return1          #將開窗取得的值回傳到變數
+            DISPLAY g_wsaf[g_detail4_idx].wsaf003 TO wsaf003                #顯示到畫面上
+            DISPLAY g_qryparam.return2 TO g_wsaf[g_detail4_idx].wsaf003_desc
+
+            NEXT FIELD wsaf003                        
+            
+      END INPUT
+       
+      ON ACTION select_all    #挑選欄位-全選
+         FOR l_i = 1 TO g_detail2.getLength()
+            LET g_detail2[l_i].ui_chk = "Y"
+         END FOR
+
+      ON ACTION select_none   #挑選欄位-位全不選
+         FOR l_i = 1 TO g_detail2.getLength()
+            LET g_detail2[l_i].ui_chk = "N"
+            
+            #已insert在wsac_t(單據性質重要欄位)中,不得取消勾選狀態
+            IF g_detail2[l_i].is_ins = "Y" THEN
+               LET g_detail2[l_i].ui_chk = "Y"
+            END IF
+         END FOR
+
+      ON ACTION add_col       #加入挑選欄位
+         FOR l_i = 1 TO g_detail2.getLength()
+            IF g_detail2[l_i].ui_chk = "Y" THEN
+               SELECT COUNT(*) INTO l_count FROM wsac_t 
+                 WHERE wsac001 = g_wsaa_m.wsaa001 AND wsac004 = g_detail2[l_i].ui_col
+
+               #資料未重複, 插入新增資料
+               IF l_count = 0 THEN
+                  LET g_detail3_cnt = g_wsac.getLength() + 1
+
+                  #取得程式編號
+                  SELECT gzzz002 INTO l_gzzz002 FROM gzzz_t
+                   WHERE gzzz001 = g_wsaa_m.wsaa010
+     
+                  #取得欄位設計定義資訊(tab資訊)
+                  SELECT dzfb003, dzfb005, dzfj010, dzfj011, dzfb006, dzfj009, dzfj008 
+                    INTO g_wsac[g_detail3_cnt].wsac003, g_wsac[g_detail3_cnt].wsac004, g_wsac[g_detail3_cnt].wsac005, g_wsac[g_detail3_cnt].wsac006, g_wsac[g_detail3_cnt].wsac007, l_dzfj009, l_dzfj008
+                    FROM dzfb_t LEFT JOIN dzfj_t ON dzfb001 = dzfj001 AND dzfb002 = dzfj002 AND dzfb005 = dzfj005 
+                    WHERE dzfb001 = l_gzzz002
+                      AND dzfb002 = g_dzfb002
+                      AND dzfj008 = g_detail1[g_detail1_idx].dzfj008_1
+                      AND dzfb005 = g_detail2[l_i].ui_col
+                      
+                      #AND (dzfj012 = 'N' OR dzfj012 = '')
+                      
+                   #單身不提供參考欄位   
+                   IF g_wsac[g_detail3_cnt].wsac003 = "2" THEN
+                      DISPLAY g_wsac[g_detail3_cnt].wsac006
+                      LET g_wsac[g_detail3_cnt].wsac006 = ""                      
+                   END IF                   
+    
+                  LET g_wsac[g_detail3_cnt].wsac005_desc = g_detail2[l_i].ui_name CLIPPED
+                  
+                  #取回所屬結構標籤代碼文字說明
+                  IF NOT cl_null(l_dzfj009) THEN
+                     LET g_wsac[g_detail3_cnt].dzfj009_desc = awsi011_get_description(l_dzfj009, l_dzfj008)
+                  END IF
+     
+                  IF NOT awsi011_insert_wsac(g_wsac[g_detail3_cnt].*) THEN
+                     #insert時,失敗處理將g_wsac陣列刪除本筆insert記錄,勾選狀態為不勾選
+                     CALL g_wsac.deleteElement(g_detail3_cnt)
+                     LET g_detail3_cnt = g_detail3_cnt - 1
+                     LET g_detail2[l_i].ui_chk = "N"
+                     EXIT FOR
+                  ELSE
+                     LET g_detail2[l_i].is_ins = "Y"
+                  END IF
+               END IF
+            END IF
+         END FOR
+         
+      ON ACTION del_col       #刪除挑選欄位
+         #160902-00024#13-S 
+         IF l_wsac_cnt > 0 THEN   
+            IF cl_ask_confirm("aws-00103") THEN          
+               FOR l_i = 1 TO g_wsac.getLength()
+                  IF g_wsac[l_i].ui_del = "Y" THEN               
+                     IF awsi011_delete_wsac(g_wsac[l_i].*) THEN
+                        LET g_detail3_cnt = g_detail3_cnt - 1
+                        CALL s_transaction_end('Y', '0')                     
+                        #將s_detail2的控件欄位勾選狀態變更為FALSE
+                        CALL awsi011_s_detail2_set_chk(g_wsac[l_i].wsac004, "Y")
+                     ELSE
+                        CALL s_transaction_end('N', '0')     
+                     END IF                  
+                  END IF
+               END FOR
+               #重新顯示
+               LET g_detail2 = awsi011_s_detail2_fill(g_detail1[g_detail1_idx].dzfj008_1)
+               CALL awsi011_s_detail3_fill()
+            END IF        
+         END IF          
+         #160902-00024#13-E
+      
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+
+      ON ACTION controls
+         CALL cl_set_head_visible("","AUTO")
+
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel      #在dialog button (放棄)
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION close       #在dialog 右上角 (X)
+         LET INT_FLAG = TRUE
+         LET g_detail1_idx = 1
+         LET g_detail2_idx = 1
+         LET g_detail3_idx = 1
+         EXIT DIALOG
+
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+
+   #add-point:input段after input
+   {<point name="input.after_input"/>}
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION awsi011_reproduce()
+   {<Local define>}
+   DEFINE l_newno     LIKE wsaa_t.wsaa001
+   DEFINE l_oldno     LIKE wsaa_t.wsaa001
+
+   DEFINE l_master    RECORD LIKE wsaa_t.*
+   DEFINE l_cnt       LIKE type_t.num5
+   {</Local define>}
+
+   #add-point:reproduce段define
+   {<point name="reproduce.define"/>}
+   #end add-point
+
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+
+   IF g_wsaa_m.wsaa001 IS NULL
+
+   THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "std-00003"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      RETURN
+   END IF
+
+   LET g_wsaa001_t = g_wsaa_m.wsaa001
+
+
+   CALL awsi011_set_entry("a")
+   CALL awsi011_set_no_entry("a")
+
+   #公用欄位給予預設值
+   #此段落由子樣板a14產生
+      LET g_wsaa_m.wsaaownid = g_user
+      LET g_wsaa_m.wsaaowndp = g_dept
+      LET g_wsaa_m.wsaacrtid = g_user
+      LET g_wsaa_m.wsaacrtdp = g_dept
+      LET g_wsaa_m.wsaacrtdt = cl_get_current()
+      #LET g_wsaa_m.wsaamodid = g_user
+      #LET g_wsaa_m.wsaamoddt = cl_get_current()
+      ##LET g_wsaa_m.wsaastus = "Y"
+
+
+
+   CALL awsi011_input("r")
+
+      LET g_wsaa_m.wsaa001_desc = ''
+   DISPLAY BY NAME g_wsaa_m.wsaa001_desc
+
+
+   IF INT_FLAG  THEN
+      LET INT_FLAG = 0
+      RETURN
+   END IF
+
+   CALL s_transaction_begin()
+
+   #add-point:單頭複製前
+   {<point name="reproduce.head.b_insert" mark="Y"/>}
+   #end add-point
+
+   #add-point:單頭複製中
+   {<point name="reproduce.head.m_insert"/>}
+   #end add-point
+
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "wsaa_t"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+
+   #add-point:單頭複製後
+   {<point name="reproduce.head.a_insert"/>}
+   #end add-point
+
+   CALL s_transaction_end('Y','0')
+
+   LET g_state = "Y"
+
+   LET g_wc = g_wc,
+              " OR (",
+              " wsaa001 = '", g_wsaa_m.wsaa001 CLIPPED, "' "
+
+              , ") "
+
+   LET g_wsaa001_t = g_wsaa_m.wsaa001
+
+
+   #add-point:完成複製段落後
+   {<point name="reproduce.after_reproduce" />}
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION awsi011_show()
+   #add-point:show段define
+   {<point name="show.define"/>}
+   DEFINE l_wsaa002_img   STRING
+   DEFINE l_wsaa004_desc  LIKE wsaa_t.wsaa004
+   DEFINE l_wsaa005_desc  LIKE wsaa_t.wsaa005
+   DEFINE l_wsaa006_desc  LIKE dzeal_t.dzeal003
+   DEFINE l_wsaa008_desc  LIKE dzeal_t.dzeal003
+   DEFINE l_wsaa009_desc  LIKE dzeal_t.dzeal003
+   DEFINE l_wsaa012_desc  LIKE dzeal_t.dzeal003
+   DEFINE l_wsaa013_desc  LIKE wsaa_t.wsaa013
+   DEFINE l_wsaa014_desc  LIKE dzeal_t.dzeal003
+   
+   DEFINE l_i             LIKE type_t.num5
+   #160902-00024#2-S
+   DEFINE l_cnt           LIKE type_t.num5
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_wsaa009_str   DYNAMIC ARRAY OF STRING 
+   DEFINE l_wsaa009_chk   LIKE wsaa_t.wsaa009
+   #160902-00024#2-E
+   #end add-point
+
+   #add-point:show段之前
+   {<point name="show.before"/>}
+   #取得畫面欄位所屬結構
+   #CALL awsi011_s_detail1_fill()
+   #CALL awsi011_s_detail3_fill()
+   #end add-point
+
+   LET g_wsaa_m_t.* = g_wsaa_m.*      #保存單頭舊值
+
+   #在browser 移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()
+
+   #帶出公用欄位reference值
+   #此段落由子樣板a12產生
+   #LET g_wsaa_m.wsaaownid_desc = cl_get_username(g_wsaa_m.wsaaownid)
+   #LET g_wsaa_m.wsaaowndp_desc = cl_get_deptname(g_wsaa_m.wsaaowndp)
+   #LET g_wsaa_m.wsaacrtid_desc = cl_get_username(g_wsaa_m.wsaacrtid)
+   #LET g_wsaa_m.wsaacrtdp_desc = cl_get_deptname(g_wsaa_m.wsaacrtdp)
+   #LET g_wsaa_m.wsaamodid_desc = cl_get_username(g_wsaa_m.wsaamodid)
+   ##LET g_wsaa_m.wsaacnfid_desc = cl_get_deptname(g_wsaa_m.wsaacnfid)
+   ##LET g_wsaa_m.wsaapstid_desc = cl_get_deptname(g_wsaa_m.wsaapstid)
+
+   #讀入ref值(單頭)
+   #add-point:show段reference
+   {<point name="show.head.reference"/>}
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = g_wsaa_m.wsaa001
+       CALL ap_ref_array2(g_ref_fields,"SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002='"||g_lang||"'","") RETURNING g_rtn_fields
+       LET g_wsaa_m.wsaa001_desc = '', g_rtn_fields[1] , ''
+       
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = g_wsaa_m.wsaa003
+       CALL ap_ref_array2(g_ref_fields,"SELECT gzzol003 FROM gzzol_t WHERE gzzol001=? AND gzzol002='"||g_lang||"'","") RETURNING g_rtn_fields
+       LET g_wsaa_m.wsaa003_desc = '', g_rtn_fields[1] , ''
+       
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = g_wsaa_m.wsaa004
+       CALL ap_ref_array2(g_ref_fields,"SELECT dzebl003 FROM dzebl_t WHERE dzebl001=? AND dzebl002='"||g_lang||"'","") RETURNING g_rtn_fields
+       LET l_wsaa004_desc = '', g_rtn_fields[1] , ''
+       
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = g_wsaa_m.wsaa005
+       CALL ap_ref_array2(g_ref_fields,"SELECT dzebl003 FROM dzebl_t WHERE dzebl001=? AND dzebl002='"||g_lang||"'","") RETURNING g_rtn_fields
+       LET l_wsaa005_desc = '', g_rtn_fields[1] , ''
+       
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = g_wsaa_m.wsaa006
+       CALL ap_ref_array2(g_ref_fields,"SELECT dzeal003 FROM dzeal_t WHERE dzeal001=? AND dzeal002='"||g_lang||"'","") RETURNING g_rtn_fields
+       LET l_wsaa006_desc = '', g_rtn_fields[1] , ''
+       
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = g_wsaa_m.wsaa008
+       CALL ap_ref_array2(g_ref_fields,"SELECT dzeal003 FROM dzeal_t WHERE dzeal001=? AND dzeal002='"||g_lang||"'","") RETURNING g_rtn_fields
+       LET l_wsaa008_desc = '', g_rtn_fields[1] , ''
+       
+       #160902-00024#2-S
+       LET l_wsaa009_str = awsi011_splite(g_wsaa_m.wsaa009)
+       LET l_count = l_wsaa009_str.getLength()
+       LET l_wsaa009_desc = ''       
+       FOR l_i = 1 TO l_wsaa009_str.getLength()  
+          LET l_wsaa009_chk = l_wsaa009_str[l_i]
+          SELECT COUNT(*) INTO l_cnt FROM gzcb_t WHERE gzcb001 = 24 AND gzcb002 = l_wsaa009_chk                 
+          IF l_cnt > 0 THEN
+             INITIALIZE g_ref_fields TO NULL
+             LET g_ref_fields[1] = l_wsaa009_chk
+             CALL ap_ref_array2(g_ref_fields,"SELECT gzcbl004 FROM gzcbl_t WHERE gzcbl001='24' AND gzcbl002=? AND gzcbl003='"||g_lang||"'","") RETURNING g_rtn_fields 
+             
+             IF l_i == 1 THEN
+                LET l_wsaa009_desc = g_rtn_fields[1]
+             ElSE   
+                LET l_wsaa009_desc = l_wsaa009_desc, g_rtn_fields[1]
+             END IF
+             IF l_count > 1 AND l_i <> l_count THEN
+                LET l_wsaa009_desc = l_wsaa009_desc , '|'
+             END IF                
+          END IF
+       END FOR
+       #INITIALIZE g_ref_fields TO NULL
+       #LET g_ref_fields[1] = g_wsaa_m.wsaa009
+       #CALL ap_ref_array2(g_ref_fields,"SELECT gzcbl004 FROM gzcbl_t WHERE gzcbl001='24' AND gzcbl002=? AND gzcbl003='"||g_lang||"'","") RETURNING g_rtn_fields
+       #LET l_wsaa009_desc = '', g_rtn_fields[1] , ''
+       #160902-00024#2-E
+       
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = g_wsaa_m.wsaa010
+       CALL ap_ref_array2(g_ref_fields,"SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002='"||g_lang||"'","") RETURNING g_rtn_fields
+       LET g_wsaa010_desc = '', g_rtn_fields[1] , ''
+       
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = g_wsaa_m.wsaa012
+       CALL ap_ref_array2(g_ref_fields,"SELECT dzebl003 FROM dzebl_t WHERE dzebl001=? AND dzebl002='"||g_lang||"'","") RETURNING g_rtn_fields
+       LET l_wsaa012_desc = '', g_rtn_fields[1] , ''
+       
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = g_wsaa_m.wsaa013
+       CALL ap_ref_array2(g_ref_fields,"SELECT dzebl003 FROM dzebl_t WHERE dzebl001=? AND dzebl002='"||g_lang||"'","") RETURNING g_rtn_fields
+       LET l_wsaa013_desc = '', g_rtn_fields[1] , ''
+       
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = g_wsaa_m.wsaa014
+       CALL ap_ref_array2(g_ref_fields,"SELECT dzebl003 FROM dzebl_t WHERE dzebl001=? AND dzebl002='"||g_lang||"'","") RETURNING g_rtn_fields
+       LET l_wsaa014_desc = '', g_rtn_fields[1] , ''
+       
+       #簽核模版名稱   
+       LET g_wsaa_m.wsaa002_desc = ""
+       #簽核模版圖片url 
+       LET l_wsaa002_img = ""
+       FOR l_i = 1 TO g_flow_tpl.getLength()
+           IF g_wsaa_m.wsaa002 = g_flow_tpl[l_i].flow_template_id THEN
+              LET g_wsaa_m.wsaa002_desc = g_flow_tpl[l_i].flow_template_name
+              LET l_wsaa002_img = g_bpm_url , g_flow_tpl[l_i].flow_template_image_url
+          END IF       
+       END FOR            
+   #end add-point
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_wsaa_m.wsaa001,g_wsaa_m.wsaa001_desc,g_wsaa_m.wsaa003,g_wsaa_m.wsaa003_desc,g_wsaa_m.wsaa002,g_wsaa_m.wsaa002_desc,
+                   g_wsaa_m.wsaa004,g_wsaa_m.wsaa005,g_wsaa_m.wsaa006,g_wsaa_m.wsaa007,g_wsaa_m.wsaa008,g_wsaa_m.wsaa009,g_wsaa_m.wsaa010,g_wsaa_m.wsaa011,g_wsaa_m.wsaa012,g_wsaa_m.wsaa013,g_wsaa_m.wsaa014,
+                   g_wsaa_m.wsaa015,g_wsaa_m.wsaa016,g_wsaa_m.wsaa017, #160902-00024#2 
+                   g_wsaa_m.wsaaownid,g_wsaa_m.wsaaownid_desc,g_wsaa_m.wsaaowndp,g_wsaa_m.wsaaowndp_desc,g_wsaa_m.wsaacrtid,g_wsaa_m.wsaacrtid_desc,g_wsaa_m.wsaacrtdp,g_wsaa_m.wsaacrtdp_desc,g_wsaa_m.wsaacrtdt,g_wsaa_m.wsaamodid,g_wsaa_m.wsaamodid_desc,g_wsaa_m.wsaamoddt
+                   
+   DISPLAY l_wsaa004_desc,l_wsaa005_desc,l_wsaa006_desc,l_wsaa008_desc,l_wsaa009_desc,g_wsaa010_desc,l_wsaa012_desc,l_wsaa013_desc,l_wsaa014_desc
+        TO wsaa004_desc,wsaa005_desc,wsaa006_desc,wsaa008_desc,wsaa009_desc,wsaa010_desc,wsaa012_desc,wsaa013_desc,wsaa014_desc
+
+   #顯示流程圖片   
+   DISPLAY l_wsaa002_img TO wsaa002_img
+
+   #add-point:show段之後
+   {<point name="show.after"/>}
+   CALL awsi011_s_detail1_fill()
+   CALL awsi011_s_detail3_fill()
+   CALL awsi011_s_wsaf_fill()
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION awsi011_delete()
+   {<Local define>}
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_count         LIKE type_t.num5
+   {</Local define>}
+   #add-point:delete段define
+   {<point name="delete.define"/>}
+   #end add-point
+
+   IF g_wsaa_m.wsaa001 IS NULL
+   THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "std-00003"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      RETURN
+   END IF
+
+   CALL s_transaction_begin()
+
+   LET g_wsaa001_t = g_wsaa_m.wsaa001
+
+   OPEN awsi011_cl USING g_wsaa_m.wsaa001
+
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "OPEN awsi011_cl:"
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      CLOSE awsi011_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+
+   FETCH awsi011_cl INTO g_wsaa_m.wsaa001,g_wsaa_m.wsaa001_desc,g_wsaa_m.wsaa003,g_wsaa_m.wsaa003_desc,g_wsaa_m.wsaa002,g_wsaa_m.wsaa004,g_wsaa_m.wsaa005,
+                         g_wsaa_m.wsaa006,g_wsaa_m.wsaa007,g_wsaa_m.wsaa008,g_wsaa_m.wsaa009,g_wsaa_m.wsaa010,g_wsaa_m.wsaa011,g_wsaa_m.wsaa012,g_wsaa_m.wsaa013,g_wsaa_m.wsaa014,
+                         g_wsaa_m.wsaa015,g_wsaa_m.wsaa016,g_wsaa_m.wsaa017, #160902-00024#2 
+                         g_wsaa_m.wsaaownid,g_wsaa_m.wsaaownid_desc,g_wsaa_m.wsaaowndp,g_wsaa_m.wsaaowndp_desc,g_wsaa_m.wsaacrtid,g_wsaa_m.wsaacrtid_desc,g_wsaa_m.wsaacrtdp,g_wsaa_m.wsaacrtdp_desc,g_wsaa_m.wsaacrtdt,g_wsaa_m.wsaamodid,g_wsaa_m.wsaamodid_desc,g_wsaa_m.wsaamoddt
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = g_wsaa_m.wsaa001
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      RETURN
+   END IF
+
+   CALL awsi011_show()
+   IF cl_ask_delete() THEN
+      INITIALIZE g_doc.* TO NULL
+      LET g_doc.column1 = "wsaa001"
+      LET g_doc.value1 = g_wsaa_m.wsaa001
+      #CALL cl_del_doc()
+
+      #add-point:單頭刪除前
+      {<point name="delete.head.b_delete" mark="Y"/>}
+      #end add-point
+
+      DELETE FROM wsaa_t
+       WHERE  wsaa001 = g_wsaa_m.wsaa001
+
+      #add-point:單頭刪除中
+      {<point name="delete.head.m_delete"/>}
+      #end add-point
+
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "wsaa_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+         CALL s_transaction_end('N','0')
+      END IF
+
+      #刪除[重要欄位]
+      SELECT COUNT(*) INTO l_count FROM wsac_t 
+        WHERE wsac001 = g_wsaa_m.wsaa001
+      
+      IF l_count > 0 THEN  
+         DELETE FROM wsac_t
+          WHERE  wsac001 = g_wsaa_m.wsaa001
+         
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "wsac_t"
+            LET g_errparam.popup = FALSE
+            CALL cl_err()
+            CALL s_transaction_end('N','0')         
+         END IF
+      END IF
+        
+      CLEAR FORM
+      CALL g_detail1.clear()
+      CALL g_detail2.clear()
+      CALL g_wsac.clear()      
+      CALL awsi011_ui_browser_refresh()
+      IF g_browser_cnt > 0 THEN
+         CALL awsi011_fetch("P")
+      ELSE
+         CALL awsi011_browser_fill(" 1=1 ","F")
+      END IF
+
+   END IF
+
+   CLOSE awsi011_cl
+   CALL s_transaction_end('Y','0')
+
+   #流程通知預埋點-D
+   CALL cl_flow_notify(g_wsaa_m.wsaa001,"D")
+
+END FUNCTION
+
+PRIVATE FUNCTION awsi011_ui_browser_refresh()
+   {<Local define>}
+   DEFINE l_i  LIKE type_t.num10
+   {</Local define>}
+
+   #add-point:ui_browser_refresh段define
+   {<point name="ui_browser_refresh.define"/>}
+   #end add-point
+
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_wsaa001 = g_wsaa_m.wsaa001 THEN
+         CALL g_browser.deleteElement(l_i)
+         LET g_header_cnt = g_header_cnt - 1
+       END IF
+   END FOR
+
+   DISPLAY g_header_cnt TO FORMONLY.b_count     #page count
+   DISPLAY g_header_cnt TO FORMONLY.h_count     #page count
+   LET g_browser_cnt = g_browser_cnt-1
+   IF g_current_idx > g_browser_cnt THEN        #確定browse 筆數指在同一筆
+      LET g_current_idx = g_browser_cnt
+   END IF
+
+END FUNCTION
+
+PRIVATE FUNCTION awsi011_set_entry(p_cmd)
+
+   {<Local define>}
+   DEFINE p_cmd LIKE type_t.chr1
+   {</Local define>}
+
+   #add-point:set_entry段define
+   {<point name="set_entry.define"/>}
+   #end add-point
+
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("wsaa001",TRUE)
+      #add-point:set_entry段欄位控制
+      {<point name="set_entry.field_control"/>}
+      #end add-point
+   END IF
+
+   #add-point:set_entry段欄位控制後
+   {<point name="set_entry.after_control"/>}
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION awsi011_set_no_entry(p_cmd)
+
+   {<Local define>}
+   DEFINE p_cmd LIKE type_t.chr1
+   {</Local define>}
+
+   #add-point:set_no_entry段define
+   {<point name="set_no_entry.define"/>}
+   #end add-point
+
+   #IF p_cmd = "a" THEN
+   #   CALL cl_set_comp_entry("wsaa001,wsaa003",FALSE)
+   #END IF
+   
+   IF p_cmd = "u" THEN
+      CALL cl_set_comp_entry("wsaa001",FALSE)
+      #add-point:set_no_entry段欄位控制
+      {<point name="set_no_entry.field_control"/>}
+      #end add-point
+   END IF
+
+   #add-point:set_no_entry段欄位控制後
+   {<point name="set_no_entry.after_control"/>}
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION awsi011_default_search()
+   {<Local define>}
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   {</Local define>}
+   #add-point:default_search段define
+   {<point name="default_search.define"/>}
+   #end add-point
+
+   #add-point:default_search段開始前
+   {<point name="default_search.before"/>}
+   #end add-point
+
+   LET g_pagestart = 1
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   IF NOT cl_null(g_argv[1]) THEN
+      LET ls_wc = ls_wc, " wsaa001 = '", g_argv[1], "' AND "
+   END IF
+
+
+
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+   ELSE
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=1"
+      END IF
+   END IF
+
+   #add-point:default_search段結束前
+   {<point name="default_search.after"/>}
+   #end add-point
+
+END FUNCTION
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsi011_s_detail1_fill ()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsi011_s_detail1_fill()
+   DEFINE l_dzfj008     LIKE dzfj_t.dzfj008   #所屬結構代碼(exp:master_Folder_page)
+   DEFINE l_dzfj009     LIKE dzfj_t.dzfj009   #所屬結構標籤代碼(exp:page_1)
+   DEFINE l_dzfb003     LIKE dzfb_t.dzfb003   #所屬結構樣式
+   DEFINE l_str         STRING                #現行g_lang標籤說明文字(exp:基本資料)
+   DEFINE l_root_idx    LIKE type_t.num5
+   DEFINE l_cnt         LIKE type_t.num5
+   DEFINE l_gzzz002     LIKE gzzz_t.gzzz002   #程式編號
+   
+   CALL g_detail1.clear()
+   CALL g_detail2.clear()
+
+   IF cl_null(g_wsaa_m.wsaa001) OR  cl_null(g_wsaa_m.wsaa010) THEN
+      RETURN
+   END IF
+   
+   #設定一個root節點:作業編號,exp:aimt300(料件申請維護作業)
+   LET l_root_idx = 1
+   LET g_detail1[l_root_idx].pid_1     = 0 
+   LET g_detail1[l_root_idx].id_1      = l_root_idx
+   LET g_detail1[l_root_idx].exp_1     = TRUE
+   LET g_detail1[l_root_idx].hasC_1    = TRUE
+   #LET g_detail1[l_root_idx].name_1   = g_wsaa_m.wsaa001 CLIPPED, "(", g_wsaa_m.wsaa001_desc CLIPPED, ")"
+   LET g_detail1[l_root_idx].name_1    = g_wsaa_m.wsaa010 CLIPPED, "(", g_wsaa010_desc CLIPPED, ")"
+   LET g_detail1[l_root_idx].expcode_1 = 1
+   LET g_detail1[l_root_idx].dzfj008_1 = "*"
+   
+   LET l_cnt = l_root_idx + 1
+   
+   #取得程式編號
+   SELECT gzzz002 INTO l_gzzz002 FROM gzzz_t
+     WHERE gzzz001 = g_wsaa_m.wsaa010
+
+   CALL awsi011_ui_data_ver(g_wsaa_m.wsaa010)   #取得畫面版次及客製標示
+   #取得畫面欄位所屬結構
+   FOREACH awsi011_detail1_cur USING l_gzzz002, g_dzfb002, g_dzfb007 INTO l_dzfb003, l_dzfj008, l_dzfj009
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      IF cl_null(l_dzfj008) THEN
+         LET l_dzfj008 = l_dzfb003
+         LET l_dzfj009 = l_dzfb003
+      END IF
+
+      #取得現行g_lang標籤說明文字(exp:基本資料)
+      LET l_str = awsi011_get_description(l_dzfj009, l_dzfj008)
+      
+      LET g_detail1[l_cnt].pid_1     = g_detail1[l_root_idx].id_1
+      LET g_detail1[l_cnt].id_1      = g_detail1[l_root_idx].id_1, ".", l_cnt USING "<<<"
+      LET g_detail1[l_cnt].exp_1     = FALSE      
+      LET g_detail1[l_cnt].hasC_1    = FALSE
+      LET g_detail1[l_cnt].name_1    = l_str.trim(), "(", l_dzfj008 CLIPPED, ")"
+      LET g_detail1[l_cnt].expcode_1 = g_detail1[l_root_idx].expcode_1 + 1
+      LET g_detail1[l_cnt].dzfj008_1 = l_dzfj008 CLIPPED
+
+      LET l_cnt = l_cnt + 1
+   END FOREACH
+
+   CALL g_detail1.deleteElement(l_cnt)
+   
+   IF g_detail1.getLength() = 0 THEN
+      #INITIALIZE g_wsab_m.* TO NULL
+      CALL g_detail1.clear()
+   END IF
+
+END FUNCTION
+################################################################################
+# Descriptions...: 取得畫面結構下所屬欄位控件
+# Memo...........:
+# Usage..........: CALL awsi011_s_detail2_fill (p_dzfj008)
+#                  RETURNING 回传参数
+# Input parameter: p_dzfb008:   所屬結構代碼
+# Return code....: l_detail2:   s_detail2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsi011_s_detail2_fill(p_dzfj008)
+   DEFINE p_dzfj008     LIKE dzfj_t.dzfj008               #所屬結構代碼(exp:master_Folder_page)
+
+   DEFINE l_detail2     DYNAMIC ARRAY OF type_g_detail2   #畫面結構下所屬欄位
+   DEFINE l_dzfj010     LIKE dzfj_t.dzfj009               #欄位標籤代碼(exp:lbl_imba001)
+   DEFINE l_dzfb003     LIKE dzfb_t.dzfb003               #所屬結構樣式
+   DEFINE l_cnt         LIKE type_t.num5
+   DEFINE l_wsac004     LIKE wsac_t.wsac004
+   DEFINE l_gzzz002     LIKE gzzz_t.gzzz002   #程式編號
+    
+   IF g_wsaa_m.wsaa001 IS NULL OR p_dzfj008 IS NULL THEN
+      RETURN
+   END IF
+
+   CALL l_detail2.clear()
+   LET l_cnt = 1
+
+   #取得程式編號
+   SELECT gzzz002 INTO l_gzzz002 FROM gzzz_t
+     WHERE gzzz001 = g_wsaa_m.wsaa010    
+
+   CALL awsi011_ui_data_ver(g_wsaa_m.wsaa010)   #取得畫面版次及客製標示
+  
+   #單身   
+   SELECT DISTINCT dzfb003 INTO l_dzfb003
+       FROM dzfb_t LEFT JOIN dzfj_t ON dzfb001 = dzfj001 AND dzfb002 = dzfj002 AND dzfb005 = dzfj005
+      WHERE dzfb001 = l_gzzz002 AND dzfj008 = p_dzfj008     
+     
+   #取得畫面結構下所屬欄位控件
+   FOREACH awsi011_detail2_cur USING g_wsaa_m.wsaa001, l_gzzz002, g_dzfb002, g_dzfb007, g_dzfb007, p_dzfj008    #151105-00002#7 by nikoybeat mod ( g_dzfb007 ) 
+      INTO l_detail2[l_cnt].ui_chk, l_detail2[l_cnt].ui_col, l_dzfj010, l_wsac004
+           
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      #wsac_t有此項重要欄位設定時,需將欄位勾選預設為"Y"
+      IF NOT cl_null(l_wsac004) THEN
+         LET l_detail2[l_cnt].ui_chk = "Y"
+         LET l_detail2[l_cnt].is_ins = "Y"
+      ELSE
+         LET l_detail2[l_cnt].ui_chk = "N"
+         LET l_detail2[l_cnt].is_ins = "N"
+      END IF
+      
+      #取得現行g_lang標籤說明文字(exp:料件編號)
+      LET l_detail2[l_cnt].ui_name = awsi011_get_description(l_dzfj010, l_dzfj010)
+      
+      LET l_cnt = l_cnt + 1
+   END FOREACH
+   
+   #單身參考欄位
+   IF l_dzfb003 = "2" THEN
+      FOREACH awsi011_detail2_cur2 USING g_wsaa_m.wsaa001, l_gzzz002, g_dzfb002, g_dzfb007, g_dzfb007, p_dzfj008   #151105-00002#7 by nikoybeat mod ( g_dzfb007 )  
+         INTO l_detail2[l_cnt].ui_chk, l_detail2[l_cnt].ui_col, l_dzfj010, l_wsac004  
+      
+         #wsac_t有此項重要欄位設定時,需將欄位勾選預設為"Y"
+         IF NOT cl_null(l_wsac004) THEN
+            LET l_detail2[l_cnt].ui_chk = "Y"
+            LET l_detail2[l_cnt].is_ins = "Y"
+         ELSE
+            LET l_detail2[l_cnt].ui_chk = "N"
+            LET l_detail2[l_cnt].is_ins = "N"
+         END IF
+      
+         #取得現行g_lang標籤說明文字(exp:料件編號)
+         LET l_detail2[l_cnt].ui_name = awsi011_get_description(l_dzfj010, l_dzfj010)         
+         
+         LET l_cnt = l_cnt + 1
+      END FOREACH     
+   END IF
+   
+   CALL l_detail2.deleteElement(l_cnt)
+   
+   IF l_detail2.getLength() = 0 THEN
+      CALL l_detail2.clear()
+   END IF
+
+   RETURN l_detail2
+END FUNCTION
+################################################################################
+# Descriptions...: 單身欄位開啟設定
+# Memo...........:
+# Usage..........: CALL awsi011_set_entry_b (p_cmd)
+# Input parameter: p_cmd:action動作代碼
+# Return code....: 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsi011_set_entry_b(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1
+   
+   CALL cl_set_comp_entry("wsac004", TRUE)
+END FUNCTION
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsi011_set_no_entry_b (p_cmd)
+#                  RETURNING 回传参数
+# Input parameter: p_cmd:action動作代碼
+# Return code....: 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsi011_set_no_entry_b(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1
+   
+   IF p_cmd = 'u' THEN
+      CALL cl_set_comp_entry("wsac004", FALSE)
+   END IF
+END FUNCTION
+################################################################################
+# Descriptions...: 取用現行的 g_lang 資料 取回標籤代碼文字說明
+# Memo...........:
+# Usage..........: CALL awsi011_get_description (p_gzzd003,p_text)
+#                  RETURNING l_str
+# Input parameter: p_gzzd003: 待轉標籤
+#                  p_text: Default文字
+# Return code....: l_str:說明文字
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsi011_get_description(p_gzzd003,p_text)
+   DEFINE p_gzzd003     LIKE gzzd_t.gzzd003
+   DEFINE l_gzzf005     LIKE gzzf_t.gzzf005
+   DEFINE p_text        STRING                  #預設顯示文字
+   DEFINE l_str         STRING                  #現行g_lang標籤說明文字(exp:料件編號)
+   DEFINE l_comment     STRING
+   
+   
+   #作業級畫面
+   SELECT gzzf005 INTO l_gzzf005 FROM gzzf_t 
+    WHERE gzzf001 = g_wsaa_m.wsaa010 AND gzzf003 = p_gzzd003 AND gzzf002 = g_lang
+    
+   IF NOT cl_null(l_gzzf005) THEN
+      LET l_str = l_gzzf005
+      RETURN l_str
+   END IF
+      
+   IF NOT cl_null(p_gzzd003) THEN
+      CALL s_azzi902_get_gzzd(g_wsaa_m.wsaa001, p_gzzd003)
+         RETURNING l_str, l_comment 
+   END IF
+   
+   IF cl_null(l_str) THEN
+      LET l_str = p_text.trim()     #"No description."
+   END IF
+   
+   RETURN l_str
+END FUNCTION
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsi011_s_detail3_fill ()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsi011_s_detail3_fill()
+   DEFINE l_dzfj009     LIKE dzfj_t.dzfj009     #所屬結構標籤代碼(exp:page_1)
+   DEFINE l_dzfj008     LIKE dzfj_t.dzfj008     #所屬結構代碼(exp:master_Folder_page)
+   DEFINE l_dzfj003     LIKE dzfj_t.dzfj003     #所屬結構代碼(排除元件)
+   DEFINE l_dzfi004     LIKE dzfi_t.dzfi004     #parent node
+   DEFINE l_page        LIKE dzfi_t.dzfi004 
+   DEFINE l_cnt         LIKE type_t.num5
+   
+   IF g_wsaa_m.wsaa001 IS NULL THEN
+      RETURN
+   END IF
+
+   CALL g_wsac.clear()
+   LET l_cnt = 1
+   
+   CALL awsi011_ui_data_ver(g_wsaa_m.wsaa010)   #取得畫面版次及客製標示   
+   
+   #取得已設定之重要欄位
+   FOREACH awsi011_wsac_cur USING g_dzfb002, g_dzfb007, g_wsaa_m.wsaa001
+      INTO g_wsac[l_cnt].wsac003, g_wsac[l_cnt].wsac004, l_dzfj009, g_wsac[l_cnt].wsac005, g_wsac[l_cnt].wsac005_desc,
+           g_wsac[l_cnt].wsac006, g_wsac[l_cnt].wsac007, l_dzfj008, l_dzfj003      
+      LET g_wsac[l_cnt].ui_del = 'N'      #160902-00024#13
+      
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      #取回標籤代碼文字說明
+      IF NOT cl_null(l_dzfj009) THEN
+         LET g_wsac[l_cnt].dzfj009_desc = awsi011_get_description(l_dzfj009, l_dzfj008)
+      END IF
+      
+      IF cl_null(g_wsac[l_cnt].wsac003) THEN
+         SELECT dzfi004 INTO l_dzfi004 FROM dzfi_t WHERE dzfi001 = g_wsaa_m.wsaa001 
+             AND dzfi002 = g_dzfb002             
+             AND dzfi006 = l_dzfj003
+             AND dzfi009 = g_dzfb007
+             
+         SELECT dzfi004 INTO l_page FROM dzfi_t WHERE dzfi001 = g_wsaa_m.wsaa001 
+             AND dzfi002 = g_dzfb002
+             AND dzfi006 = l_dzfi004
+             AND dzfi009 = g_dzfb007
+             AND dzfi007 = 'Table'
+             
+         LET g_wsac[l_cnt].dzfj009_desc = awsi011_get_description(l_page, l_dzfj008)    
+             
+      END IF
+
+      #取回標籤代碼文字說明
+      LET g_wsac[l_cnt].wsac005_desc = awsi011_get_description(g_wsac[l_cnt].wsac005, g_wsac[l_cnt].wsac005)
+      
+      LET l_cnt = l_cnt + 1
+   END FOREACH
+
+   CALL g_wsac.deleteElement(l_cnt)
+   
+   IF g_wsac.getLength() = 0 THEN
+      CALL g_wsac.clear()
+   END IF
+
+END FUNCTION
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsi011_set_wsac003_item ()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsi011_set_wsac003_item()
+   DEFINE pa_array DYNAMIC ARRAY OF RECORD
+             value       STRING,
+             label_tag   STRING,
+             label       STRING
+                   END RECORD
+
+   LET pa_array[1].value = "1"
+   LET pa_array[1].label_tag = "1"
+   LET pa_array[1].LABEL = "master"
+
+   LET pa_array[2].value = "2"
+   LET pa_array[2].label_tag = "2"
+   LET pa_array[2].LABEL = "detail"
+      
+   CALL cl_set_combo_detail("wsac003", pa_array)
+END FUNCTION
+################################################################################
+# Descriptions...: 新增一筆重要欄位記錄
+# Memo...........:
+# Usage..........: CALL awsi011_insert_wsac (p_wsac)
+#                  RETURNING TRUE/FALSE
+# Input parameter: p_wsac: type_g_wsac
+# Return code....: TRUE/FALSE
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsi011_insert_wsac(p_wsac)
+   DEFINE p_wsac        type_g_wsac
+   
+   INSERT INTO wsac_t(wsac001, wsac002, wsac003, wsac004, wsac005, 
+                      wsac006, wsac007)
+     VALUES(g_wsaa_m.wsaa001, g_wsaa_m.wsaa010, p_wsac.wsac003, p_wsac.wsac004, p_wsac.wsac005,
+            p_wsac.wsac006, p_wsac.wsac007)
+   
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  SQLCA.sqlcode
+      LET g_errparam.extend = "wsac_t"
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      RETURN FALSE
+   END IF
+
+   RETURN TRUE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 刪除一筆重要欄位記錄
+# Memo...........:
+# Usage..........: CALL awsi011_delete_wsac (p_wsac)
+#                  RETURNING TRUE/FALSE
+# Input parameter: p_wsac: type_g_wsac
+# Return code....: TRUE/FALSE
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsi011_delete_wsac(p_wsac)
+   DEFINE p_wsac        type_g_wsac
+   
+   DELETE FROM wsac_t WHERE wsac001 = g_wsaa_m.wsaa001 AND wsac004 = p_wsac.wsac004
+   
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  SQLCA.sqlcode
+      LET g_errparam.extend = "wsac_t"
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      RETURN FALSE
+   END IF
+
+   RETURN TRUE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 控件欄位勾選狀態變更
+# Memo...........:
+# Usage..........: CALL awsi011_s_detail2_set_chk(p_col,p_chk)
+# Input parameter: p_col:欄位控件代號
+#                : p_chk:checkbox勾選狀態("Y"/"N")
+# Return code....: 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsi011_s_detail2_set_chk(p_col,p_chk)
+   DEFINE p_col         LIKE dzfj_t.dzfj005     #欄位控件代號
+   DEFINE p_chk         LIKE dzfj_t.dzfj005     #checkbox勾選狀態("Y"/"N")
+   
+   DEFINE l_i            LIKE type_t.num5
+   
+   IF cl_null(p_col) THEN
+      RETURN
+   END IF
+   
+   FOR l_i = 1 TO g_detail2.getLength()
+      IF g_detail2[l_i].ui_col = p_col THEN
+         LET g_detail2[l_i].ui_chk = p_chk
+         LET g_detail2[l_i].is_ins = p_chk
+      END IF
+   END FOR
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsi011_s_wsaf_fill ()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsi011_s_wsaf_fill()
+   DEFINE l_cnt         LIKE type_t.num5
+   
+   IF g_wsaa_m.wsaa001 IS NULL THEN
+      RETURN
+   END IF
+
+   CALL g_wsaf.clear()
+   LET l_cnt = 1
+   
+   #取得已設定之重要欄位
+   FOREACH awsi011_wsaf_cur USING g_wsaa_m.wsaa001
+      INTO g_wsaf[l_cnt].wsaf002,g_wsaf[l_cnt].wsaf003
+      
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      #取回標籤代碼文字說明
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_wsaf[l_cnt].wsaf002
+      CALL ap_ref_array2(g_ref_fields,"SELECT dzebl003 FROM dzebl_t WHERE dzebl001=? AND dzebl002='"||g_lang||"'","") RETURNING g_rtn_fields
+      LET g_wsaf[l_cnt].wsaf002_desc = '', g_rtn_fields[1] , ''
+      
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_wsaf[l_cnt].wsaf003
+      CALL ap_ref_array2(g_ref_fields,"SELECT dzebl003 FROM dzebl_t WHERE dzebl001=? AND dzebl002='"||g_lang||"'","") RETURNING g_rtn_fields
+      LET g_wsaf[l_cnt].wsaf003_desc = '', g_rtn_fields[1] , ''
+
+      LET l_cnt = l_cnt + 1
+   END FOREACH
+
+   CALL g_wsaf.deleteElement(l_cnt)
+   
+   IF g_wsaf.getLength() = 0 THEN
+      CALL g_wsaf.clear()
+   END IF
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsi011_ui_data_regen(p_wsaa010)
+#                  RETURNING 
+# Input parameter: wsaa010        作業編號
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsi011_ui_data_regen(p_wsaa010)
+   DEFINE p_wsaa010         STRING                  #作業編號
+   DEFINE l_dzfi002         LIKE dzfi_t.dzfi002     #畫面規格版次
+   DEFINE l_dzaf010         LIKE dzaf_t.dzaf010     #識別標示
+   DEFINE l_result          LIKE type_t.chr1
+   DEFINE l_error_message   STRING
+   DEFINE l_gzzz002         LIKE gzzz_t.gzzz002     #程式編號
+   DEFINE l_gzza003         LIKE gzza_t.gzza003     #歸屬模組
+   DEFINE l_prog_type       LIKE gzde_t.gzde005     #程式類型   #140626 add
+   DEFINE l_module          LIKE gzde_t.gzde002     #模組       #140626 add
+   DEFINE l_spec_ver        LIKE dzga_t.dzga002     #客製版次    #140626 add
+   DEFINE l_spec_ide        LIKE dzga_t.dzga005     #規格標示    ##140626 add
+   DEFINE ls_err_msg        STRING
+   DEFINE l_cust_fg         LIKE gzza_t.gzza011     #客製否     #161102-00047#6 by nikoybeat add
+   
+   IF cl_null(p_wsaa010) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  "aws-00007"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN
+   END IF
+  
+   #取得程式編號
+   SELECT gzzz002 INTO l_gzzz002 FROM gzzz_t
+     WHERE gzzz001 = g_wsaa_m.wsaa010
+   
+   IF cl_null(l_gzzz002) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  "azz-00095"
+      LET g_errparam.extend = NULL
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN 
+   END IF
+   
+   #取得子程式相關資訊
+   SELECT gzde003, gzde002 INTO l_prog_type, l_module FROM gzde_t
+    WHERE gzde001 = l_gzzz002    
+    
+   IF l_prog_type IS NULL AND l_module IS NULL THEN
+      SELECT gzza002, gzza003 INTO l_prog_type, l_module FROM gzza_t
+       WHERE gzza001 = l_gzzz002
+       #取出若是T類，在規格中是歸在M
+       IF l_prog_type="T" THEN 
+          LET l_prog_type="M" 
+       END IF
+   END IF
+   
+   #161102-00047#6 by nikoybeat add start
+   #客製否
+   SELECT gzza011 INTO l_cust_fg FROM gzza_t
+    WHERE gzza001 = l_gzzz002
+   
+   #若程式為客製,取回客製模組別   
+   IF l_cust_fg = 'Y' OR l_cust_fg = 'c' THEN 
+      CALL awsi011_translate_cust_module(l_module) RETURNING l_module
+   END IF
+   #161102-00047#6 by nikoybeat add end
+   
+   #取得程式碼版次及客製標示識別
+   CALL cl_adz_get_spec_curr_revision(l_gzzz002, NULL, l_prog_type)
+     RETURNING l_spec_ver, l_spec_ide, ls_err_msg
+
+   IF NOT cl_null(ls_err_msg) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  'adz-00303'
+      LET g_errparam.extend = NULL
+      LET g_errparam.popup = TRUE
+      LET g_errparam.replace[1] =  l_gzzz002
+      CALL cl_err()
+
+      RETURN
+   END IF
+   
+   CALL sadzp168_3(l_module, l_gzzz002, l_spec_ver, l_spec_ide)
+      RETURNING l_result, ls_err_msg
+      
+   IF NOT l_result THEN
+      DISPLAY "Regenerate failure:", ls_err_msg
+      RETURN
+   END IF
+   
+   #取得畫面欄位資訊(含tsd資料與產生器資料)--取得欄位tab資訊
+   CALL sadzp168_4(l_gzzz002, l_spec_ver, l_spec_ide)
+      RETURNING l_result, l_error_message
+   
+   IF NOT l_result THEN 
+      INITIALIZE g_errparam TO NULL
+#      LET g_errparam.code =  "adz-00022"    #160318-00005#45  mark
+      LET g_errparam.code = "std-00008"      #160318-00005#45  add
+      LET g_errparam.extend = NULL
+      LET g_errparam.popup = TRUE
+      LET g_errparam.replace[1] =  l_error_message CLIPPED
+      CALL cl_err()
+
+      RETURN 
+   END IF
+   
+   LET g_dzfb002 = l_spec_ver
+   LET g_dzfb007 = l_spec_ide
+   
+   #IF cl_ask_confirm("aws-00008") THEN
+   CALL awsi011_s_detail1_fill()
+   #END IF
+   
+   DISPLAY "取得設計資料成功."
+END FUNCTION
+
+################################################################################
+# Descriptions...: 自動產生呼叫確認段的4gl程式
+# Memo...........:
+# Usage..........: CALL awsi011_gen_ws_confirm()
+#                  RETURNING TRUE/FALSE
+# Input parameter: 
+#                : 
+# Return code....: TRUE/FALSE     處理狀態
+#                : 
+# Date & Author..: 14/05/21 BY echolinlc
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsi011_gen_ws_confirm()
+DEFINE l_sql           STRING
+DEFINE l_wsaa001       LIKE wsaa_t.wsaa001
+DEFINE l_wsaa007       LIKE wsaa_t.wsaa007
+DEFINE l_file          STRING
+DEFINE l_file2         STRING
+DEFINE l_file3         STRING
+DEFINE l_cmd           STRING
+DEFINE l_str           STRING
+DEFINE l_ws_str        STRING
+DEFINE channel_r       base.Channel
+DEFINE channel_w       base.Channel
+DEFINE channel_l       base.Channel       #檢查link狀況
+DEFINE ls_file         STRING
+DEFINE ld_file         STRING
+DEFINE l_link          STRING             #執行r.l背景訊息
+DEFINE l_status        LIKE type_t.num5
+DEFINE l_success       LIKE type_t.num5
+DEFINE li_idx          LIKE type_t.num5
+DEFINE l_err           BOOLEAN            #r.l錯誤的狀況
+
+   LET l_success = TRUE
+   
+   #先行備份42r檔,可用於link失敗時進行還原
+   LET ls_file = "wssp999.42r"
+   LET ls_file = os.path.join(os.path.join(FGL_GETENV("WSS"),"42r"), ls_file)
+   LET ld_file = "wssp999.42r.bck"
+   LET ld_file = os.path.join(os.path.join(FGL_GETENV("WSS"),"42r"), ld_file)
+   IF NOT os.path.copy(ls_file, ld_file) THEN
+      DISPLAY "Error: Fail in Copying ",ls_file, " File." 
+   END IF
+   
+   LET l_sql = "SELECT wsaa001,wsaa007 FROM wsaa_t WHERE wsaa007 IS NOT NULL ORDER BY wsaa001"
+   DECLARE wsaa_confirm_curs CURSOR FROM l_sql
+   FOREACH wsaa_confirm_curs INTO l_wsaa001,l_wsaa007
+       IF cl_null(l_ws_str) THEN
+          LET l_ws_str =        "   CASE g_datakey.DocProp",ASCII 10
+       END IF
+       LET l_ws_str = l_ws_str, "       WHEN \"", l_wsaa001 CLIPPED, "\" ", ASCII 10,
+                                "            CALL ",l_wsaa007 CLIPPED, "(p_docno) RETURNING r_success", ASCII 10, ASCII 10
+   END FOREACH
+   IF cl_null(l_ws_str) THEN
+      DISPLAY "awsp900_03_ws_confirm(): No data generate."
+      #160902-00024#2-S
+      #RETURN 
+      RETURN FALSE
+      #160902-00024#2-E
+   END IF
+   
+   LET l_ws_str = l_ws_str, "   END CASE ",ASCII 10
+   
+   #LET channel_r = base.Channel.create()
+   LET channel_w = base.Channel.create()
+    
+   LET l_file = os.Path.join(os.Path.join(FGL_GETENV("COM"),"inc/erp/aws"),"awsp900_03_confirm.4gl")
+   LET l_file2 = os.Path.join(os.Path.join(FGL_GETENV("COM"),"inc/erp/aws"),"awsp900_03_confirm.bak")
+   LET l_file3 = os.Path.join(os.Path.join(FGL_GETENV("COM"),"inc/erp/aws"),"awsp900_03_confirm.temp") 
+  
+   CALL channel_w.openFile(l_file3,  "w")
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "Can't open file: "
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+      #160902-00024#2-S
+      #RETURN 
+      RETURN FALSE
+      #160902-00024#2-E
+   END IF 
+   
+   CALL channel_w.setDelimiter("")   #寫入的每一行結尾 delimiter 
+   
+   CALL channel_w.write("   DISPLAY 'call ',g_datakey.DocProp CLIPPED, 'confirm()'")
+   CALL channel_w.write(l_ws_str)        
+       
+   CALL channel_w.close()
+   IF STATUS THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code =  STATUS
+       LET g_errparam.extend = "Can't close file: "
+       LET g_errparam.popup = FALSE
+       CALL cl_err()
+       LET l_success = FALSE
+    END IF
+
+    IF l_success THEN
+
+       LET l_cmd = "cp ",l_file," ",l_file2
+       RUN l_cmd
+   
+       LET l_cmd = "mv ",l_file3," ",l_file
+       RUN l_cmd   
+
+       LET l_cmd = "cd ", os.Path.join(FGL_GETENV("AWS"),"4gl"),"; r.c awsp900_03"
+       RUN l_cmd 
+       
+       LET l_cmd = "cd ", os.Path.join(FGL_GETENV("WSS"),"4gl"),"; r.l wssp999 2>&1"
+       #RUN l_cmd
+       LET l_err = FALSE
+       #利用openPipe方式 擷取系統背景執行訊息
+       LET channel_l = base.Channel.create()
+       CALL channel_l.setDelimiter("")
+       CALL channel_l.openPipe( l_cmd, "r" )
+       
+       WHILE channel_l.read(l_link)
+          IF l_link.trim() IS NULL THEN CONTINUE WHILE END IF
+          
+          DISPLAY l_link #顯示背景訊息
+          
+          LET li_idx = l_link.getIndexOf("ERROR", 1) #若r.l出現錯誤訊息 顯示出error
+          IF li_idx > 0 THEN
+             LET l_link = l_link.subString(li_idx + 13, l_link.getLength())
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.code = "aws-00041"
+             LET g_errparam.extend = l_link
+             LET g_errparam.popup = TRUE
+             CALL cl_err()
+             LET l_err = TRUE
+             EXIT WHILE
+          END IF
+       END WHILE
+       
+       CALL channel_l.close()
+       
+       #160902-00024#2-S
+       ##執行r.l 成功 顯示完成訊息
+       #IF l_err == FALSE THEN
+       #   LET g_errparam.code = "aws-00042"
+       #   LET g_errparam.popup = TRUE
+       #   CALL cl_err()
+       #END IF
+       #160902-00024#2-E
+       
+       LET l_str =  "'awsp900_03' generated successfully."
+       display l_str
+    ELSE
+       LET l_str =  "'awsp900_03' generate Failed."
+       display l_str         
+               
+    END IF
+    
+    #160902-00024#2-S
+    IF l_success == TRUE AND l_err == TRUE THEN
+       LET l_success = FALSE   
+    END IF
+    RETURN l_success
+    #160902-00024#2-E
+    
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取得畫面版次及客製標示
+# Memo...........:
+# Usage..........: CALL awsi011_ui_data_ver(p_gzzz002)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsi011_ui_data_ver(p_gzzz002)
+   DEFINE p_gzzz002         LIKE gzzz_t.gzzz002     #程式編號
+   DEFINE l_gzzz002         LIKE gzzz_t.gzzz002     #程式編號
+   DEFINE l_gzza003         LIKE gzza_t.gzza003     #歸屬模組
+   DEFINE l_prog_type       LIKE gzde_t.gzde005     #程式類型   
+   DEFINE l_module          LIKE gzde_t.gzde002     #模組       
+   DEFINE l_spec_ver        LIKE dzga_t.dzga002     #客製版次   
+   DEFINE l_spec_ide        LIKE dzga_t.dzga005     #規格標示
+   DEFINE ls_err_msg        STRING
+  
+   IF cl_null(p_gzzz002) THEN
+      RETURN
+   END IF
+   
+   IF g_gzzz002_temp = p_gzzz002 THEN  #相同程式只取一次
+      RETURN
+   ELSE
+      LET g_gzzz002_temp = p_gzzz002
+   END IF
+   
+   #取得程式編號
+   SELECT gzzz002 INTO l_gzzz002 FROM gzzz_t
+     WHERE gzzz001 = p_gzzz002
+   
+   #取得子程式相關資訊
+   SELECT gzde003, gzde002 INTO l_prog_type, l_module FROM gzde_t
+    WHERE gzde001 = l_gzzz002  
+    
+   IF l_prog_type IS NULL AND l_module IS NULL THEN
+      SELECT gzza002, gzza003 INTO l_prog_type, l_module FROM gzza_t
+       WHERE gzza001 = l_gzzz002
+       #取出若是T類，在規格中是歸在M
+       IF l_prog_type="T" THEN 
+          LET l_prog_type="M" 
+       END IF
+   END IF
+   
+   #取得程式碼版次及客製標示識別
+   CALL cl_adz_get_spec_curr_revision(l_gzzz002, NULL, l_prog_type)
+     RETURNING l_spec_ver, l_spec_ide, ls_err_msg
+
+   IF NOT cl_null(ls_err_msg) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  'adz-00303'
+      LET g_errparam.extend = NULL
+      LET g_errparam.popup = TRUE
+      LET g_errparam.replace[1] =  l_gzzz002
+      CALL cl_err()
+
+      RETURN
+   END IF
+   
+   LET g_dzfb002 = l_spec_ver
+   LET g_dzfb007 = l_spec_ide
+   
+END FUNCTION
+
+PRIVATE FUNCTION awsi011_construct()
+   {<Local define>}
+   DEFINE ls_return      STRING
+   DEFINE ls_result      STRING
+   {</Local define>}
+   #add-point:cs段define
+   {<point name="cs.define"/>}
+   #end add-point
+
+   CLEAR FORM
+   INITIALIZE g_wsaa_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   LET g_current_row = 1
+
+   LET g_qryparam.state = "c"   
+
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+      #螢幕上取條件
+      CONSTRUCT BY NAME g_wc ON wsaa001,wsaa003,wsaa002,wsaa004,wsaa012,wsaa013,wsaa014,wsaa005,wsaa010,wsaa011,wsaa007,wsaa009,wsaaownid,wsaaowndp,wsaacrtid,wsaacrtdp,wsaacrtdt,wsaamodid,wsaamoddt,
+                                wsaa015,wsaa016,wsaa017 #160902-00024#2 
+
+         BEFORE CONSTRUCT
+            #CALL cl_qbe_init()
+            #add-point:cs段more_construct
+           
+            {<point name="cs.before_construct"/>}
+            #end add-point
+
+         #公用欄位開窗相關處理
+         #此段落由子樣板a11產生
+         ##----<<wsaaownid>>----
+         #ON ACTION controlp INFIELD wsaaownid
+         #   CALL q_common('wsaa_t','wsaaownid',TRUE,FALSE,g_wsaa_m.wsaaownid) RETURNING ls_return
+         #   DISPLAY ls_return TO wsaaownid
+         #   NEXT FIELD wsaaownid
+         #
+         ##----<<wsaaowndp>>----
+         #ON ACTION controlp INFIELD wsaaowndp
+         #   CALL q_common('wsaa_t','wsaaowndp',TRUE,FALSE,g_wsaa_m.wsaaowndp) RETURNING ls_return
+         #   DISPLAY ls_return TO wsaaowndp
+         #   NEXT FIELD wsaaowndp
+         #
+         ##----<<wsaacrtid>>----
+         #ON ACTION controlp INFIELD wsaacrtid
+         #   CALL q_common('wsaa_t','wsaacrtid',TRUE,FALSE,g_wsaa_m.wsaacrtid) RETURNING ls_return
+         #   DISPLAY ls_return TO wsaacrtid
+         #   NEXT FIELD wsaacrtid
+         #
+         ##----<<wsaacrtdp>>----
+         #ON ACTION controlp INFIELD wsaacrtdp
+         #   CALL q_common('wsaa_t','wsaacrtdp',TRUE,FALSE,g_wsaa_m.wsaacrtdp) RETURNING ls_return
+         #   DISPLAY ls_return TO wsaacrtdp
+         #   NEXT FIELD wsaacrtdp
+         #
+         ##----<<wsaamodid>>----
+         #ON ACTION controlp INFIELD wsaamodid
+         #   CALL q_common('wsaa_t','wsaamodid',TRUE,FALSE,g_wsaa_m.wsaamodid) RETURNING ls_return
+         #   DISPLAY ls_return TO wsaamodid
+         #   NEXT FIELD wsaamodid
+         #
+         ##----<<wsaacnfid>>----
+         ##ON ACTION controlp INFIELD wsaacnfid
+         ##   CALL q_common('wsaa_t','wsaacnfid',TRUE,FALSE,g_wsaa_m.wsaacnfid) RETURNING ls_return
+         ##   DISPLAY ls_return TO wsaacnfid
+         ##   NEXT FIELD wsaacnfid
+         #
+         ##----<<wsaapstid>>----
+         ##ON ACTION controlp INFIELD wsaapstid
+         ##   CALL q_common('wsaa_t','wsaapstid',TRUE,FALSE,g_wsaa_m.wsaapstid) RETURNING ls_return
+         ##   DISPLAY ls_return TO wsaapstid
+         ##   NEXT FIELD wsaapstid
+
+         ##----<<wsaacrtdt>>----
+         AFTER FIELD wsaacrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+
+         #----<<wsaamoddt>>----
+         AFTER FIELD wsaamoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+
+         #----<<wsaacnfdt>>----
+         #AFTER FIELD wsaacnfdt
+         #   CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+         #   IF NOT cl_null(ls_result) THEN
+         #      IF NOT cl_chk_date_symbol(ls_result) THEN
+         #         LET ls_result = cl_add_date_extra_cond(ls_result)
+         #      END IF
+         #   END IF
+         #   CALL FGL_DIALOG_SETBUFFER(ls_result)
+
+         #----<<wsaapstdt>>----
+         #AFTER FIELD wsaapstdt
+         #   CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+         #   IF NOT cl_null(ls_result) THEN
+         #      IF NOT cl_chk_date_symbol(ls_result) THEN
+         #         LET ls_result = cl_add_date_extra_cond(ls_result)
+         #      END IF
+         #   END IF
+         #   CALL FGL_DIALOG_SETBUFFER(ls_result)
+
+
+
+         #一般欄位
+         #---------------------------<  Master  >---------------------------
+         #----<<wsaa001>>----
+         #Ctrlp:construct.c.wsaa001
+         ON ACTION controlp INFIELD wsaa001
+            #add-point:ON ACTION controlp INFIELD wsaa001
+            {<point name="construct.c.wsaa001" />}
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+
+            CALL q_wsaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO wsaa001  #顯示到畫面上
+            #DISPLAY g_qryparam.return2 TO wsaa001 #單據性質
+
+            NEXT FIELD wsaa001
+            #END add-point
+            
+         ON ACTION controlp INFIELD wsaa004      
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+
+            CALL q_wsaa004()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO wsaa004  #顯示到畫面上
+            
+            NEXT FIELD wsaa004
+            #END add-point     
+         
+         ON ACTION controlp INFIELD wsaa013      
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+
+            CALL q_wsaa013()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO wsaa013  #顯示到畫面上
+            
+            NEXT FIELD wsaa013
+            #END add-point  
+            
+         ON ACTION controlp INFIELD wsaa014      
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+
+            CALL q_wsaa014()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO wsaa014  #顯示到畫面上
+            
+            NEXT FIELD wsaa014
+            #END add-point  
+            
+         ON ACTION controlp INFIELD wsaa005      
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+
+            CALL q_wsaa005()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO wsaa005  #顯示到畫面上
+            
+            NEXT FIELD wsaa005
+            #END add-point 
+
+         #此段落由子樣板a01產生
+         BEFORE FIELD wsaa001
+            #add-point:BEFORE FIELD wsaa001
+            {<point name="construct.b.wsaa001" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD wsaa001             
+            #add-point:AFTER FIELD wsaa001
+            {<point name="construct.a.wsaa001" />}
+            
+            #END add-point
+
+
+         #----<<wsaa003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD wsaa003
+            #add-point:BEFORE FIELD wsaa003
+            {<point name="construct.b.wsaa003" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD wsaa003
+
+            #add-point:AFTER FIELD wsaa003
+            {<point name="construct.a.wsaa003" />}
+            #END add-point
+
+
+         #Ctrlp:construct.c.wsaa003
+#         ON ACTION controlp INFIELD wsaa003
+            #add-point:ON ACTION controlp INFIELD wsaa003
+            {<point name="construct.c.wsaa003" />}
+            #END add-point
+
+         #----<<wsaa002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD wsaa002
+            #add-point:BEFORE FIELD wsaa002
+            {<point name="construct.b.wsaa002" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD wsaa002
+
+            #add-point:AFTER FIELD wsaa002
+            {<point name="construct.a.wsaa002" />}
+            #END add-point
+
+
+         #Ctrlp:construct.c.wsaa002
+         ON ACTION controlp INFIELD wsaa002            
+            LET g_qryparam.reqry = FALSE
+            CALL awsi011_01()
+            LET g_wsaa_m.wsaa002 = g_qryparam.return1
+            LET g_wsaa_m.wsaa002_desc = g_qryparam.return2
+
+            DISPLAY BY NAME g_wsaa_m.wsaa002, g_wsaa_m.wsaa002_desc            
+
+         #----<<wsaaownid>>----
+         #Ctrlp:construct.c.wsaaownid
+#         ON ACTION controlp INFIELD wsaaownid
+            #add-point:ON ACTION controlp INFIELD wsaaownid
+            {<point name="construct.c.wsaaownid" />}
+            #END add-point
+
+         #此段落由子樣板a01產生
+         BEFORE FIELD wsaaownid
+            #add-point:BEFORE FIELD wsaaownid
+            {<point name="construct.b.wsaaownid" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD wsaaownid
+
+            #add-point:AFTER FIELD wsaaownid
+            {<point name="construct.a.wsaaownid" />}
+            #END add-point
+
+
+         #----<<wsaaowndp>>----
+         #Ctrlp:construct.c.wsaaowndp
+#         ON ACTION controlp INFIELD wsaaowndp
+            #add-point:ON ACTION controlp INFIELD wsaaowndp
+            {<point name="construct.c.wsaaowndp" />}
+            #END add-point
+
+         #此段落由子樣板a01產生
+         BEFORE FIELD wsaaowndp
+            #add-point:BEFORE FIELD wsaaowndp
+            {<point name="construct.b.wsaaowndp" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD wsaaowndp
+
+            #add-point:AFTER FIELD wsaaowndp
+            {<point name="construct.a.wsaaowndp" />}
+            #END add-point
+
+
+         #----<<wsaacrtid>>----
+         #Ctrlp:construct.c.wsaacrtid
+#         ON ACTION controlp INFIELD wsaacrtid
+            #add-point:ON ACTION controlp INFIELD wsaacrtid
+            {<point name="construct.c.wsaacrtid" />}
+            #END add-point
+
+         #此段落由子樣板a01產生
+         BEFORE FIELD wsaacrtid
+            #add-point:BEFORE FIELD wsaacrtid
+            {<point name="construct.b.wsaacrtid" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD wsaacrtid
+
+            #add-point:AFTER FIELD wsaacrtid
+            {<point name="construct.a.wsaacrtid" />}
+            #END add-point
+
+
+         #----<<wsaacrtdp>>----
+         #Ctrlp:construct.c.wsaacrtdp
+#         ON ACTION controlp INFIELD wsaacrtdp
+            #add-point:ON ACTION controlp INFIELD wsaacrtdp
+            {<point name="construct.c.wsaacrtdp" />}
+            #END add-point
+
+         #此段落由子樣板a01產生
+         BEFORE FIELD wsaacrtdp
+            #add-point:BEFORE FIELD wsaacrtdp
+            {<point name="construct.b.wsaacrtdp" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD wsaacrtdp
+
+            #add-point:AFTER FIELD wsaacrtdp
+            {<point name="construct.a.wsaacrtdp" />}
+            #END add-point
+
+
+         #----<<wsaacrtdt>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD wsaacrtdt
+            #add-point:BEFORE FIELD wsaacrtdt
+            {<point name="construct.b.wsaacrtdt" />}
+            #END add-point
+
+         #----<<wsaamodid>>----
+         #Ctrlp:construct.c.wsaamodid
+#         ON ACTION controlp INFIELD wsaamodid
+            #add-point:ON ACTION controlp INFIELD wsaamodid
+            {<point name="construct.c.wsaamodid" />}
+            #END add-point
+
+         #此段落由子樣板a01產生
+         BEFORE FIELD wsaamodid
+            #add-point:BEFORE FIELD wsaamodid
+            {<point name="construct.b.wsaamodid" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD wsaamodid
+
+            #add-point:AFTER FIELD wsaamodid
+            {<point name="construct.a.wsaamodid" />}
+            #END add-point
+
+
+         #----<<wsaamoddt>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD wsaamoddt
+            #add-point:BEFORE FIELD wsaamoddt
+            {<point name="construct.b.wsaamoddt" />}
+            #END add-point
+
+
+
+      END CONSTRUCT
+
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+
+      #add-point:cs段more_construct
+      {<point name="cs.more_construct"/>}
+      #end add-point
+
+      #查詢CONSTRUCT共用ACTION
+      &include "construct_action.4gl"
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+
+   #add-point:cs段after_construct
+   {<point name="cs.after_construct"/>}
+   #end add-point
+
+   #LET g_wc = g_wc CLIPPED,cl_get_extra_cond("", "")
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL awsi011_splite(p_str)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsi011_splite(p_str)
+    DEFINE p_str       STRING
+    DEFINE l_tok       base.StringTokenizer
+    DEFINE l_tok_key   base.StringTokenizer
+    DEFINE l_wc        DYNAMIC ARRAY OF STRING 
+    DEFINE l_str       STRING
+    DEFINE l_str2      STRING
+    DEFINE l_cnt       LIKE type_t.num10
+    DEFINE l_cnt2      LIKE type_t.num10
+    DEFINE l_key_str   STRING
+    DEFINE buf         base.StringBuffer
+            
+    LET l_wc = ""
+    LET l_str = ""
+    LET l_cnt = 1
+
+    LET l_tok = base.StringTokenizer.createExt(p_str CLIPPED,"|","",TRUE)
+    WHILE l_tok.hasMoreTokens()
+         LET l_str = l_tok.nextToken()
+         LET l_wc[l_cnt] = l_str
+         LET l_cnt = l_cnt + 1
+    END WHILE
+
+    RETURN l_wc
+END FUNCTION
+
+################################################################################
+# Descriptions...: 自動產生呼叫交易前的4gl程式
+# Usage..........: CALL awsi011_preprocess()
+#                  RETURNING TRUE/FALSE
+# Return code....: TRUE/FALSE     處理狀態
+################################################################################
+PUBLIC FUNCTION awsi011_gen_preprocess()
+   DEFINE l_sql           STRING
+   DEFINE l_wsaa001       LIKE wsaa_t.wsaa001
+   DEFINE l_wsaa015       LIKE wsaa_t.wsaa015
+   DEFINE l_file          STRING
+   DEFINE l_file2         STRING
+   DEFINE l_file3         STRING
+   DEFINE l_cmd           STRING
+   DEFINE l_str           STRING
+   DEFINE l_ws_str        STRING
+   DEFINE channel_r       base.Channel
+   DEFINE channel_w       base.Channel
+   DEFINE channel_l       base.Channel       #檢查link狀況
+   DEFINE ls_file         STRING
+   DEFINE ld_file         STRING
+   DEFINE l_link          STRING             #執行r.l背景訊息
+   DEFINE l_status        LIKE type_t.num5
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE li_idx          LIKE type_t.num5
+   DEFINE l_err           BOOLEAN            #r.l錯誤的狀況
+
+   LET l_success = TRUE
+   
+   LET l_sql = "SELECT wsaa001,wsaa015 FROM wsaa_t WHERE wsaa015 IS NOT NULL ORDER BY wsaa001"
+   DECLARE wsaa_preprocess_curs CURSOR FROM l_sql
+   FOREACH wsaa_preprocess_curs INTO l_wsaa001,l_wsaa015
+       IF cl_null(l_ws_str) THEN
+          LET l_ws_str =        "   CASE g_datakey.DocProp",ASCII 10
+       END IF
+       LET l_ws_str = l_ws_str, "       WHEN \"", l_wsaa001 CLIPPED, "\" ", ASCII 10,
+                                "            CALL ",l_wsaa015 CLIPPED, "()", ASCII 10, ASCII 10
+   END FOREACH
+   IF cl_null(l_ws_str) THEN
+      DISPLAY "wssp999_preprocess(): No data generate."
+   ELSE
+      LET l_ws_str = l_ws_str, "   END CASE ",ASCII 10
+   END IF
+   
+   #LET channel_r = base.Channel.create()
+   LET channel_w = base.Channel.create()
+    
+   LET l_file = os.Path.join(os.Path.join(FGL_GETENV("COM"),"inc/erp/aws"),"wssp999_preprocess.4gl")
+   LET l_file2 = os.Path.join(os.Path.join(FGL_GETENV("COM"),"inc/erp/aws"),"wssp999_preprocess.bak")
+   LET l_file3 = os.Path.join(os.Path.join(FGL_GETENV("COM"),"inc/erp/aws"),"wssp999_preprocess.temp") 
+  
+   CALL channel_w.openFile(l_file3,  "w")
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "Can't open file: "
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+      RETURN FALSE
+   END IF 
+   
+   CALL channel_w.setDelimiter("")   #寫入的每一行結尾 delimiter 
+   
+   CALL channel_w.write("   DISPLAY 'call ',g_datakey.DocProp CLIPPED, 'preprocess()'")
+   CALL channel_w.write(l_ws_str)        
+       
+   CALL channel_w.close()
+   IF STATUS THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code =  STATUS
+       LET g_errparam.extend = "Can't close file: "
+       LET g_errparam.popup = FALSE
+       CALL cl_err()
+
+       LET l_success = FALSE
+    END IF
+
+    IF l_success THEN
+
+       LET l_cmd = "cp ",l_file," ",l_file2
+       RUN l_cmd
+   
+       LET l_cmd = "mv ",l_file3," ",l_file
+       RUN l_cmd   
+       
+       LET l_cmd = "cd ", os.Path.join(FGL_GETENV("WSS"),"4gl"),"; r.l wssp999 2>&1"
+       RUN l_cmd
+
+       LET l_err = FALSE
+       #利用openPipe方式 擷取系統背景執行訊息
+       LET channel_l = base.Channel.create()
+       CALL channel_l.setDelimiter("")
+       CALL channel_l.openPipe( l_cmd, "r" )
+       
+       WHILE channel_l.read(l_link)
+          IF l_link.trim() IS NULL THEN CONTINUE WHILE END IF
+          
+          DISPLAY l_link #顯示背景訊息
+          
+          LET li_idx = l_link.getIndexOf("ERROR", 1) #若r.l出現錯誤訊息 顯示出error
+          IF li_idx > 0 THEN
+             LET l_link = l_link.subString(li_idx + 13, l_link.getLength())
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.code = "aws-00041"
+             LET g_errparam.extend = l_link
+             LET g_errparam.popup = TRUE
+             CALL cl_err()
+             LET l_err = TRUE
+             EXIT WHILE
+          END IF
+       END WHILE
+       
+       CALL channel_l.close()
+       
+       #執行r.l 成功 顯示完成訊息
+       #IF l_err == FALSE THEN
+       #   LET g_errparam.code = "aws-00042"
+       #   LET g_errparam.popup = TRUE
+       #   CALL cl_err()
+       #END IF
+       
+       #LET l_str =  "'awsp900_03' generated successfully."
+       DISPLAY l_str
+    ELSE
+       #LET l_str =  "'awsp900_03' generate Failed."
+       DISPLAY l_str         
+               
+    END IF
+    
+    IF l_success == TRUE AND l_err == TRUE THEN
+       LET l_success = FALSE   
+    END IF
+    RETURN l_success
+    
+END FUNCTION
+
+################################################################################
+# Descriptions...: 自動產生呼叫交易後的4gl程式
+# Usage..........: CALL awsi011_gen_postprocess()
+#                  RETURNING TRUE/FALSE
+# Return code....: TRUE/FALSE     處理狀態
+################################################################################
+PUBLIC FUNCTION awsi011_gen_postprocess()
+   DEFINE l_sql           STRING
+   DEFINE l_wsaa001       LIKE wsaa_t.wsaa001
+   DEFINE l_wsaa016       LIKE wsaa_t.wsaa016
+   DEFINE l_file          STRING
+   DEFINE l_file2         STRING
+   DEFINE l_file3         STRING
+   DEFINE l_cmd           STRING
+   DEFINE l_str           STRING
+   DEFINE l_ws_str        STRING
+   DEFINE channel_r       base.Channel
+   DEFINE channel_w       base.Channel
+   DEFINE channel_l       base.Channel       #檢查link狀況
+   DEFINE ls_file         STRING
+   DEFINE ld_file         STRING
+   DEFINE l_link          STRING             #執行r.l背景訊息
+   DEFINE l_status        LIKE type_t.num5
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE li_idx          LIKE type_t.num5
+   DEFINE l_err           BOOLEAN            #r.l錯誤的狀況
+
+   LET l_success = TRUE
+   
+   LET l_sql = "SELECT wsaa001,wsaa016 FROM wsaa_t WHERE wsaa016 IS NOT NULL ORDER BY wsaa001"
+   DECLARE wsaa_postprocess_curs CURSOR FROM l_sql
+   FOREACH wsaa_postprocess_curs INTO l_wsaa001,l_wsaa016
+       IF cl_null(l_ws_str) THEN
+          LET l_ws_str =        "   CASE g_datakey.DocProp",ASCII 10
+       END IF
+       LET l_ws_str = l_ws_str, "       WHEN \"", l_wsaa001 CLIPPED, "\" ", ASCII 10,
+                                "            CALL ",l_wsaa016 CLIPPED, "()", ASCII 10, ASCII 10
+   END FOREACH
+   IF cl_null(l_ws_str) THEN
+      DISPLAY "wssp999_postprocess(): No data generate."
+   ELSE
+      LET l_ws_str = l_ws_str, "   END CASE ",ASCII 10
+   END IF
+   
+   #LET channel_r = base.Channel.create()
+   LET channel_w = base.Channel.create()
+    
+   LET l_file = os.Path.join(os.Path.join(FGL_GETENV("COM"),"inc/erp/aws"),"wssp999_postprocess.4gl")
+   LET l_file2 = os.Path.join(os.Path.join(FGL_GETENV("COM"),"inc/erp/aws"),"wssp999_postprocess.bak")
+   LET l_file3 = os.Path.join(os.Path.join(FGL_GETENV("COM"),"inc/erp/aws"),"wssp999_postprocess.temp") 
+  
+   CALL channel_w.openFile(l_file3,  "w")
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "Can't open file: "
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+      RETURN FALSE
+   END IF 
+   
+   CALL channel_w.setDelimiter("")   #寫入的每一行結尾 delimiter 
+   
+   CALL channel_w.write("   DISPLAY 'call ',g_datakey.DocProp CLIPPED, 'postprocess()'")
+   CALL channel_w.write(l_ws_str)        
+       
+   CALL channel_w.close()
+   IF STATUS THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code =  STATUS
+       LET g_errparam.extend = "Can't close file: "
+       LET g_errparam.popup = FALSE
+       CALL cl_err()
+
+       LET l_success = FALSE
+    END IF
+
+    IF l_success THEN
+
+       LET l_cmd = "cp ",l_file," ",l_file2
+       RUN l_cmd
+   
+       LET l_cmd = "mv ",l_file3," ",l_file
+       RUN l_cmd  
+       
+       LET l_cmd = "cd ", os.Path.join(FGL_GETENV("WSS"),"4gl"),"; r.l wssp999 2>&1"
+       RUN l_cmd 
+
+       LET l_err = FALSE
+       #利用openPipe方式 擷取系統背景執行訊息
+       LET channel_l = base.Channel.create()
+       CALL channel_l.setDelimiter("")
+       CALL channel_l.openPipe( l_cmd, "r" )
+       
+       WHILE channel_l.read(l_link)
+          IF l_link.trim() IS NULL THEN CONTINUE WHILE END IF
+          
+          DISPLAY l_link #顯示背景訊息
+          
+          LET li_idx = l_link.getIndexOf("ERROR", 1) #若r.l出現錯誤訊息 顯示出error
+          IF li_idx > 0 THEN
+             LET l_link = l_link.subString(li_idx + 13, l_link.getLength())
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.code = "aws-00041"
+             LET g_errparam.extend = l_link
+             LET g_errparam.popup = TRUE
+             CALL cl_err()
+             LET l_err = TRUE
+             EXIT WHILE
+          END IF
+       END WHILE
+       
+       CALL channel_l.close()
+       
+       #執行r.l 成功 顯示完成訊息
+       #IF l_err == FALSE THEN
+       #   LET g_errparam.code = "aws-00042"
+       #   LET g_errparam.popup = TRUE
+       #   CALL cl_err()
+       #END IF
+       
+       #LET l_str =  "'awsp900_03' generated successfully."
+       DISPLAY l_str
+    ELSE
+       #LET l_str =  "'awsp900_03' generate Failed."
+       DISPLAY l_str         
+               
+    END IF
+    
+    IF l_success == TRUE AND l_err == TRUE THEN
+       LET l_success = FALSE   
+    END IF
+    RETURN l_success
+    
+END FUNCTION
+
+################################################################################
+# Descriptions...: 自動產生呼叫更新狀態後的4gl程式
+# Usage..........: CALL awsi011_gen_ws_statechange()
+#                  RETURNING TRUE/FALSE
+# Return code....: TRUE/FALSE     處理狀態
+################################################################################
+PUBLIC FUNCTION awsi011_gen_ws_statechange()
+   DEFINE l_sql           STRING
+   DEFINE l_wsaa001       LIKE wsaa_t.wsaa001
+   DEFINE l_wsaa017       LIKE wsaa_t.wsaa017
+   DEFINE l_file          STRING
+   DEFINE l_file2         STRING
+   DEFINE l_file3         STRING
+   DEFINE l_cmd           STRING
+   DEFINE l_str           STRING
+   DEFINE l_ws_str        STRING
+   DEFINE channel_r       base.Channel
+   DEFINE channel_w       base.Channel
+   DEFINE channel_l       base.Channel       #檢查link狀況
+   DEFINE ls_file         STRING
+   DEFINE ld_file         STRING
+   DEFINE l_link          STRING             #執行r.l背景訊息
+   DEFINE l_status        LIKE type_t.num5
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE li_idx          LIKE type_t.num5
+   DEFINE l_err           BOOLEAN            #r.l錯誤的狀況
+
+   LET l_success = TRUE
+   
+   #先行備份42r檔,可用於link失敗時進行還原
+   #LET ls_file = "wssp999.42r"
+   #LET ls_file = os.path.join(os.path.join(FGL_GETENV("WSS"),"42r"), ls_file)
+   #LET ld_file = "wssp999.42r.bck"
+   #LET ld_file = os.path.join(os.path.join(FGL_GETENV("WSS"),"42r"), ld_file)
+   #IF NOT os.path.copy(ls_file, ld_file) THEN
+   #   DISPLAY "Error: Fail in Copying ",ls_file, " File." 
+   #END IF
+   
+   LET l_sql = "SELECT wsaa001,wsaa017 FROM wsaa_t WHERE wsaa017 IS NOT NULL ORDER BY wsaa001"
+   DECLARE wsaa_statechange_curs CURSOR FROM l_sql
+   FOREACH wsaa_statechange_curs INTO l_wsaa001,l_wsaa017
+       IF cl_null(l_ws_str) THEN
+          LET l_ws_str =        "   CASE g_datakey.DocProp",ASCII 10
+       END IF
+       LET l_ws_str = l_ws_str, "       WHEN \"", l_wsaa001 CLIPPED, "\" ", ASCII 10,
+                                "            CALL ",l_wsaa017 CLIPPED, "(p_docno) RETURNING r_success", ASCII 10, ASCII 10
+   END FOREACH
+   IF cl_null(l_ws_str) THEN
+      DISPLAY "awsp900_03_state_change(): No data generate."
+      #RETURN FALSE
+   ELSE
+      LET l_ws_str = l_ws_str, "   END CASE ",ASCII 10
+   END IF
+   
+   #LET channel_r = base.Channel.create()
+   LET channel_w = base.Channel.create()
+    
+   LET l_file = os.Path.join(os.Path.join(FGL_GETENV("COM"),"inc/erp/aws"),"awsp900_03_state_change.4gl")
+   LET l_file2 = os.Path.join(os.Path.join(FGL_GETENV("COM"),"inc/erp/aws"),"awsp900_03_state_change.bak")
+   LET l_file3 = os.Path.join(os.Path.join(FGL_GETENV("COM"),"inc/erp/aws"),"awsp900_03_state_change.temp") 
+  
+   CALL channel_w.openFile(l_file3,  "w")
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "Can't open file: "
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+      RETURN FALSE
+   END IF 
+   
+   CALL channel_w.setDelimiter("")   #寫入的每一行結尾 delimiter 
+   
+   CALL channel_w.write("   DISPLAY 'call ',g_datakey.DocProp CLIPPED, 'state_change()'")
+   CALL channel_w.write(l_ws_str)        
+       
+   CALL channel_w.close()
+   IF STATUS THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code =  STATUS
+       LET g_errparam.extend = "Can't close file: "
+       LET g_errparam.popup = FALSE
+       CALL cl_err()
+
+       LET l_success = FALSE
+    END IF
+
+    IF l_success THEN
+
+       LET l_cmd = "cp ",l_file," ",l_file2
+       RUN l_cmd
+   
+       LET l_cmd = "mv ",l_file3," ",l_file
+       RUN l_cmd   
+
+       LET l_cmd = "cd ", os.Path.join(FGL_GETENV("AWS"),"4gl"),"; r.c awsp900_03"
+       RUN l_cmd 
+       
+       LET l_cmd = "cd ", os.Path.join(FGL_GETENV("WSS"),"4gl"),"; r.l wssp999 2>&1"
+       RUN l_cmd
+       
+       LET l_err = FALSE
+       #利用openPipe方式 擷取系統背景執行訊息
+       LET channel_l = base.Channel.create()
+       CALL channel_l.setDelimiter("")
+       CALL channel_l.openPipe( l_cmd, "r" )
+       
+       WHILE channel_l.read(l_link)
+          IF l_link.trim() IS NULL THEN CONTINUE WHILE END IF
+          
+          DISPLAY l_link #顯示背景訊息
+          
+          LET li_idx = l_link.getIndexOf("ERROR", 1) #若r.l出現錯誤訊息 顯示出error
+          IF li_idx > 0 THEN
+             LET l_link = l_link.subString(li_idx + 13, l_link.getLength())
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.code = "aws-00041"
+             LET g_errparam.extend = l_link
+             LET g_errparam.popup = TRUE
+             CALL cl_err()
+             LET l_err = TRUE
+             EXIT WHILE
+          END IF
+       END WHILE
+       
+       CALL channel_l.close()
+       
+       #執行r.l 成功 顯示完成訊息
+       #IF l_err == FALSE THEN
+       #   LET g_errparam.code = "aws-00042"
+       #   LET g_errparam.popup = TRUE
+       #   CALL cl_err()
+       #END IF
+       
+       LET l_str =  "'awsp900_03' generated successfully."
+       DISPLAY l_str
+    ELSE
+       LET l_str =  "'awsp900_03' generate Failed."
+       DISPLAY l_str         
+               
+    END IF
+    
+    #160902-00024#2-S
+    IF l_success == TRUE AND l_err == TRUE THEN
+       LET l_success = FALSE   
+    END IF
+    RETURN l_success
+    #160902-00024#2-E
+    
+END FUNCTION
+
+#160902-00024#7
+# 1.BPM整合設定新舊版本
+# 2.是否啟用BPM協同
+PRIVATE FUNCTION awsi011_chk_bpm()
+   IF cl_aws_prod_para(g_enterprise,"bpm-0001")  != "Y" THEN  
+      RETURN FALSE
+   END IF   
+   RETURN TRUE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 轉換對應客製模組
+# Memo...........:
+# Usage..........: CALL awsi011_translate_cust_module(p_module)
+#                  RETURNING r_module
+# Input parameter: p_module   
+# Return code....: r_module   
+# Date & Author..: 161102-00047#6 By nikoybeat
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsi011_translate_cust_module(p_module)
+   DEFINE p_module  LIKE gzza_t.gzza003,
+          r_module  LIKE gzza_t.gzza003,
+          l_gzzj001 LIKE gzzj_t.gzzj001, #實際模組
+          ls_sql    STRING,
+          l_cnt     LIKE type_t.num5
+
+ TRY
+   LET r_module = p_module
+
+   #註冊資訊為客製,需透過gzzj_t找到實際的模組別,以AZZ為例:
+   #若歸屬模組(gzzj003)相等， 但!= 實際模組(gzzj001)的話, 表示是AZZ-->CZZ ,否則用原本模組就好
+   SELECT gzzj001 INTO l_gzzj001 FROM gzzj_t WHERE gzzj003 = p_module AND gzzj003 <> gzzj001
+   IF SQLCA.sqlcode = 0  THEN
+      LET r_module = l_gzzj001
+   END IF
+
+  CATCH
+   DISPLAY "error: sqlca.sqlcode=",SQLCA.SQLCODE
+
+  END TRY
+
+  RETURN r_module
+  
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

@@ -1,0 +1,337 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aapt540_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0005(2016-06-14 11:20:00), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000030
+#+ Filename...: aapt540_02
+#+ Description: 融資還款
+#+ Creator....: 03080(2016-06-13 20:11:18)
+#+ Modifier...: 03080 -SD/PR-
+
+{</section>}
+
+{<section id="aapt540_02.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_fmcv_m        RECORD
+       fmcvdocno LIKE fmcv_t.fmcvdocno, 
+   fmcvdocdt LIKE fmcv_t.fmcvdocdt, 
+   l_fmcw009 LIKE type_t.chr10, 
+   l_fmcw009_desc LIKE type_t.chr80, 
+   l_fmcw016 LIKE type_t.chr10, 
+   l_fmcw016_desc LIKE type_t.chr80, 
+   l_fmcw010 LIKE type_t.num26_10
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_fmcv_m        type_g_fmcv_m
+ 
+   DEFINE g_fmcvdocno_t LIKE fmcv_t.fmcvdocno
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="aapt540_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aapt540_02(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aapt540_02 WITH FORM cl_ap_formpath("aap","aapt540_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_fmcv_m.fmcvdocno,g_fmcv_m.fmcvdocdt,g_fmcv_m.l_fmcw009,g_fmcv_m.l_fmcw016,g_fmcv_m.l_fmcw010  
+          ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmcvdocno
+            #add-point:BEFORE FIELD fmcvdocno name="input.b.fmcvdocno"
+            {<point name="input.b.fmcvdocno" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmcvdocno
+            
+            #add-point:AFTER FIELD fmcvdocno name="input.a.fmcvdocno"
+            {<point name="input.a.fmcvdocno" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmcvdocno
+            #add-point:ON CHANGE fmcvdocno name="input.g.fmcvdocno"
+            {<point name="input.g.fmcvdocno" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmcvdocdt
+            #add-point:BEFORE FIELD fmcvdocdt name="input.b.fmcvdocdt"
+            {<point name="input.b.fmcvdocdt" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmcvdocdt
+            
+            #add-point:AFTER FIELD fmcvdocdt name="input.a.fmcvdocdt"
+            {<point name="input.a.fmcvdocdt" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmcvdocdt
+            #add-point:ON CHANGE fmcvdocdt name="input.g.fmcvdocdt"
+            {<point name="input.g.fmcvdocdt" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_fmcw009
+            
+            #add-point:AFTER FIELD l_fmcw009 name="input.a.l_fmcw009"
+            {<point name="input.a.l_fmcw009" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_fmcw009
+            #add-point:BEFORE FIELD l_fmcw009 name="input.b.l_fmcw009"
+            {<point name="input.b.l_fmcw009" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_fmcw009
+            #add-point:ON CHANGE l_fmcw009 name="input.g.l_fmcw009"
+            {<point name="input.g.l_fmcw009" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_fmcw016
+            
+            #add-point:AFTER FIELD l_fmcw016 name="input.a.l_fmcw016"
+            {<point name="input.a.l_fmcw016" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_fmcw016
+            #add-point:BEFORE FIELD l_fmcw016 name="input.b.l_fmcw016"
+            {<point name="input.b.l_fmcw016" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_fmcw016
+            #add-point:ON CHANGE l_fmcw016 name="input.g.l_fmcw016"
+            {<point name="input.g.l_fmcw016" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_fmcw010
+            #add-point:BEFORE FIELD l_fmcw010 name="input.b.l_fmcw010"
+            {<point name="input.b.l_fmcw010" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_fmcw010
+            
+            #add-point:AFTER FIELD l_fmcw010 name="input.a.l_fmcw010"
+            {<point name="input.a.l_fmcw010" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_fmcw010
+            #add-point:ON CHANGE l_fmcw010 name="input.g.l_fmcw010"
+            {<point name="input.g.l_fmcw010" />}
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.fmcvdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmcvdocno
+            #add-point:ON ACTION controlp INFIELD fmcvdocno name="input.c.fmcvdocno"
+            {<point name="input.c.fmcvdocno" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmcvdocdt
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmcvdocdt
+            #add-point:ON ACTION controlp INFIELD fmcvdocdt name="input.c.fmcvdocdt"
+            {<point name="input.c.fmcvdocdt" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.l_fmcw009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_fmcw009
+            #add-point:ON ACTION controlp INFIELD l_fmcw009 name="input.c.l_fmcw009"
+            {<point name="input.c.l_fmcw009" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.l_fmcw016
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_fmcw016
+            #add-point:ON ACTION controlp INFIELD l_fmcw016 name="input.c.l_fmcw016"
+            {<point name="input.c.l_fmcw016" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.l_fmcw010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_fmcw010
+            #add-point:ON ACTION controlp INFIELD l_fmcw010 name="input.c.l_fmcw010"
+            {<point name="input.c.l_fmcw010" />}
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aapt540_02 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="aapt540_02.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+
+{</section>}
+
+{<section id="aapt540_02.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

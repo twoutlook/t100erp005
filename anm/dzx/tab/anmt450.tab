@@ -1,0 +1,206 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmt450" module="anm" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="02114" crtdt="2014-06-11 14:17:49" modid="02599" moddt="2016-11-30 15:26:54" sdver="0009" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="應付票據異動作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="nmchsite,nmchsite_desc(chr80),nmchcomp,nmchcomp_desc(chr80),nmch002,nmch002_desc(chr80),nmchdocno,nmch001,nmchdocdt,nmch003,nmch003_desc(chr80),nmas003,nmch007,nmch010,nmchstus,nmch100,nmch101,nmch004,nmch006,nmchownid,nmchownid_desc(chr80),nmchowndp,nmchowndp_desc(chr80),nmchcrtid,nmchcrtid_desc(chr80),nmchcrtdp,nmchcrtdp_desc(chr80),nmchcrtdt,nmchmodid,nmchmodid_desc(chr80),nmchmoddt,nmchcnfid,nmchcnfid_desc(chr80),nmchcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmciseq,nmciorga,nmciorga_desc(chr200),nmci001,nmci002,nmci003,nmci133,nmck005(chr10),nmck005_desc(chr500),nmck011_2(dat),nmci009,nmci101,nmci103,nmci113,nmck101(num26_10),nmck113(num20_6),xreb116(num20_6),nmci118,nmci008,nmci105,nmci115,nmci100,nmci121,nmci131"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="open_anmt450_01"/>
+      <action id="open_anmt450_02"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="modify" type="standard"/>
+      <action id="cashflow"/>
+      <action id="open_anmt450_03"/>
+      <action id="prog_nmch002" prog="cl_user_contact(&quot;aooi130&quot;," parameter="&quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;)"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="detail_qrystr" mode="popup">
+        <action id="prog_anmt440" prog="anmt440" parameter="nmci003"/>
+      </action>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmt450" method="dialog">
+    <section id="input">
+      <input id="head" field="nmchsite,nmchcomp,nmch002,nmchdocno,nmch001,nmchdocdt,nmch003,nmas003,nmch007,nmch010,nmchstus,nmch100,nmch101,nmch004,nmch006"/>
+      <input id="body" page="1" field="nmciseq,nmciorga_desc,nmci001,nmci002,nmci003,nmci133,nmck005,nmci009,nmci101,nmci103,nmci113,nmci118,nmci008,nmci105,nmci115,nmci100,nmci121,nmci131" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="nmchsite,nmchcomp,nmch002,nmchdocno,nmch001,nmchdocdt,nmch003,nmch007,nmch010,nmchstus,nmch100,nmch101,nmch004,nmch006,nmchownid,nmchowndp,nmchcrtid,nmchcrtdp,nmchcrtdt,nmchmodid,nmchmoddt,nmchcnfid,nmchcnfdt"/>
+      <construct id="body" page="1" field="nmciseq,nmciorga,nmciorga_desc,nmci001,nmci002,nmci003,nmci133,nmck005,nmci009,nmci101,nmci103,nmci113,nmci118,nmci008,nmci105,nmci115,nmci100,nmci121,nmci131"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="nmchcomp,nmchdocno"/>
+      <set id="head" type="no_entry" field="nmchcomp,nmchdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="nmchsite">
+        <after>
+          <reference field="nmchsite_desc" ref_field="nmch_t.nmchsite" map_field="nmchent,nmchsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="nmchsite_desc"/>
+      <column id="nmchcomp">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+          <reference field="nmchcomp_desc" ref_field="nmch_t.nmchcomp" map_field="nmchent,nmchcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="nmchcomp_desc"/>
+      <column id="nmch002">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="nmch002_desc" ref_field="nmch_t.nmch002" map_field="nmch002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmch002_desc"/>
+      <column id="nmchdocno">
+        <controlp form="q_ooba002" state="i"/>
+        <controlp form="q_nmchdocno" state="c"/>
+      </column>
+      <column id="nmch001"/>
+      <column id="nmchdocdt"/>
+      <column id="nmch003">
+        <after>
+          <check chkid="v_nmas002_1" id="isExist"/>
+          <reference field="nmch003_desc" ref_field="nmch_t.nmch003" map_field="nmchent,nmch003" ref_sql="SELECT nmaal003 FROM nmaal_t WHERE nmaalent=$varg_enterprise$var AND nmaal001=? AND nmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmas_01" state="i"/>
+        <controlp form="q_nmas_01" state="c"/>
+      </column>
+      <column id="nmch003_desc"/>
+      <column id="nmas003">
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="nmch007">
+        <controlp form="q_nmch007" state="c"/>
+      </column>
+      <column id="nmch010"/>
+      <column id="nmchstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="nmch100">
+        <after>
+          <check chkid="v_ooai001" id="isExist"/>
+        </after>
+        <controlp form="q_aooi001_1" state="i"/>
+        <controlp form="q_aooi001_1" state="c"/>
+      </column>
+      <column id="nmch101"/>
+      <column id="nmch004" type="S" default="N"/>
+      <column id="nmch006"/>
+      <column id="nmchownid">
+        <after>
+          <reference field="nmchownid_desc" ref_field="nmch_t.nmchownid" map_field="nmchownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmchownid_desc"/>
+      <column id="nmchowndp">
+        <after>
+          <reference field="nmchowndp_desc" ref_field="nmch_t.nmchowndp" map_field="nmchowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmchowndp_desc"/>
+      <column id="nmchcrtid">
+        <after>
+          <reference field="nmchcrtid_desc" ref_field="nmch_t.nmchcrtid" map_field="nmchcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmchcrtid_desc"/>
+      <column id="nmchcrtdp">
+        <after>
+          <reference field="nmchcrtdp_desc" ref_field="nmch_t.nmchcrtdp" map_field="nmchcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmchcrtdp_desc"/>
+      <column id="nmchcrtdt"/>
+      <column id="nmchmodid">
+        <after>
+          <reference field="nmchmodid_desc" ref_field="nmch_t.nmchmodid" map_field="nmchmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmchmodid_desc"/>
+      <column id="nmchmoddt"/>
+      <column id="nmchcnfid">
+        <after>
+          <reference field="nmchcnfid_desc" ref_field="nmch_t.nmchcnfid" map_field="nmchcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmchcnfid_desc"/>
+      <column id="nmchcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="nmciseq"/>
+      <column id="nmciorga"/>
+      <column id="nmciorga_desc"/>
+      <column id="nmci001">
+        <after>
+          <check chkid="v_nmck025" id="isExist"/>
+        </after>
+        <controlp form="q_nmck025" state="i"/>
+        <controlp form="q_nmck025" state="c"/>
+      </column>
+      <column id="nmci002"/>
+      <column id="nmci003"/>
+      <column id="nmci133" type="S" default="1"/>
+      <column id="nmck005">
+        <after/>
+      </column>
+      <column id="nmck005_desc"/>
+      <column id="nmck011_2"/>
+      <column id="nmci009" type="S" default="N"/>
+      <column id="nmci101"/>
+      <column id="nmci103"/>
+      <column id="nmci113"/>
+      <column id="nmck101"/>
+      <column id="nmck113"/>
+      <column id="xreb116" type="S" default="0"/>
+      <column id="nmci118"/>
+      <column id="nmci008"/>
+      <column id="nmci105"/>
+      <column id="nmci115"/>
+      <column id="nmci100"/>
+      <column id="nmci121"/>
+      <column id="nmci131"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="nmch_t" pk="nmchcomp,nmchdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT nmchsite,&apos;&apos;,nmchcomp,&apos;&apos;,nmch002,&apos;&apos;,nmchdocno,nmch001,nmchdocdt,nmch003,&apos;&apos;,&apos;&apos;,nmch007,nmch010,nmchstus,nmch100,nmch101,nmch004,nmch006,nmchownid,&apos;&apos;,nmchowndp,&apos;&apos;,nmchcrtid,&apos;&apos;,nmchcrtdp,&apos;&apos;,nmchcrtdt,nmchmodid,&apos;&apos;,nmchmoddt,nmchcnfid,&apos;&apos;,nmchcnfdt FROM nmch_t WHERE nmchent= ? AND nmchcomp=? AND nmchdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT nmchsite,&apos;&apos;,nmchcomp,&apos;&apos;,nmch002,&apos;&apos;,nmchdocno,nmch001,nmchdocdt,nmch003,&apos;&apos;,&apos;&apos;,nmch007,nmch010,nmchstus,nmch100,nmch101,nmch004,nmch006,nmchownid,&apos;&apos;,nmchowndp,&apos;&apos;,nmchcrtid,&apos;&apos;,nmchcrtdp,&apos;&apos;,nmchcrtdt,nmchmodid,&apos;&apos;,nmchmoddt,nmchcnfid,&apos;&apos;,nmchcnfdt FROM nmch_t" order="nmchcomp,nmchdocno"/>
+    </head>
+    <body id="nmci_t" page="1" linked="" pk="nmciseq" fk="nmcicomp,nmcidocno">
+      <sql id="forupd_sql_detail" query="SELECT nmciseq,nmciorga,&apos;&apos;,nmci001,nmci002,nmci003,nmci133,&apos;&apos;,&apos;&apos;,&apos;&apos;,nmci009,nmci101,nmci103,nmci113,&apos;&apos;,&apos;&apos;,&apos;&apos;,nmci118,nmci008,nmci105,nmci115,nmci100,nmci121,nmci131 FROM nmci_t WHERE nmcient=? AND nmcicomp=? AND nmcidocno=? AND nmciseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmciseq,nmciorga,&apos;&apos;,nmci001,nmci002,nmci003,nmci133,&apos;&apos;,&apos;&apos;,&apos;&apos;,nmci009,nmci101,nmci103,nmci113,&apos;&apos;,&apos;&apos;,&apos;&apos;,nmci118,nmci008,nmci105,nmci115,nmci100,nmci121,nmci131 FROM nmci_t WHERE nmcient=? AND nmcicomp=? AND nmcidocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

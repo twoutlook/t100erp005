@@ -1,0 +1,115 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmi070" module="apm" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02294" crtdt="2013-10-30 17:58:23" modid="05423" moddt="2017-01-12 11:10:41" sdver="0008" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="交易對象料號對應維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pmaostus,pmao000,pmao001,pmao001_desc(chr500),pmao002,pmao002_desc(chr500),imaal004(chr500),pmao003,pmao003_desc(chr500),pmao004,pmao009,pmao010,pmao007,pmao005,pmao006"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="pmao000,pmao001,pmao002,pmao003,pmao004,pmaoownid,pmaoownid_desc(chr500),pmaoowndp,pmaoowndp_desc(chr500),pmaocrtid,pmaocrtid_desc(chr500),pmaocrtdp,pmaocrtdp_desc(chr500),pmaocrtdt,pmaomodid,pmaomodid_desc(chr500),pmaomoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmi070" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="pmaostus,pmao000,pmao001,pmao002,pmao003,pmao004,pmao009,pmao010,pmao007,pmao005,pmao006" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="pmaostus,pmao000,pmao001,pmao002,pmao003,pmao004,pmao009,pmao010,pmao007,pmao005,pmao006"/>
+      <construct id="body" page="2" field="pmaoownid,pmaoowndp,pmaocrtid,pmaocrtdp,pmaocrtdt,pmaomodid,pmaomoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="pmaostus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pmao000" def_scc="3091"/>
+      <column id="pmao001">
+        <after>
+          <reference field="pmao001_desc" ref_field="pmao_t.pmao001" map_field="pmao001" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001" state="i"/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="pmao001_desc"/>
+      <column id="pmao002">
+        <after>
+          <reference field="pmao002_desc" ref_field="pmao_t.pmao002" map_field="pmao002" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="pmao002_desc"/>
+      <column id="imaal004"/>
+      <column id="pmao003">
+        <after/>
+      </column>
+      <column id="pmao003_desc"/>
+      <column id="pmao004">
+        <controlp form="q_pmao004" state="c"/>
+      </column>
+      <column id="pmao009"/>
+      <column id="pmao010"/>
+      <column id="pmao007" type="S" default="N"/>
+      <column id="pmao005"/>
+      <column id="pmao006"/>
+    </init>
+    <init id="body" page="2">
+      <column id="pmaoownid">
+        <after>
+          <reference field="pmaoownid_desc" ref_field="pmao_t.pmaoownid" map_field="pmaoownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmaoownid_desc"/>
+      <column id="pmaoowndp">
+        <after>
+          <reference field="pmaoowndp_desc" ref_field="pmao_t.pmaoowndp" map_field="pmaoowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pmaoowndp_desc"/>
+      <column id="pmaocrtid">
+        <after>
+          <reference field="pmaocrtid_desc" ref_field="pmao_t.pmaocrtid" map_field="pmaocrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmaocrtid_desc"/>
+      <column id="pmaocrtdp">
+        <after>
+          <reference field="pmaocrtdp_desc" ref_field="pmao_t.pmaocrtdp" map_field="pmaocrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pmaocrtdp_desc"/>
+      <column id="pmaocrtdt"/>
+      <column id="pmaomodid">
+        <after>
+          <reference field="pmaomodid_desc" ref_field="pmao_t.pmaomodid" map_field="pmaomodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmaomodid_desc"/>
+      <column id="pmaomoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="pmao_t" page="1,2" linked="" pk="pmao001,pmao002,pmao003,pmao004,pmao000">
+      <sql id="forupd_sql_detail" query="SELECT pmaostus,pmao000,pmao001,&apos;&apos;,pmao002,&apos;&apos;,&apos;&apos;,pmao003,&apos;&apos;,pmao004,pmao009,pmao010,pmao007,pmao005,pmao006,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,pmaoownid,&apos;&apos;,pmaoowndp,&apos;&apos;,pmaocrtid,&apos;&apos;,pmaocrtdp,&apos;&apos;,pmaocrtdt,pmaomodid,&apos;&apos;,pmaomoddt FROM pmao_t WHERE pmaoent=? AND pmao001=? AND pmao002=? AND pmao003=? AND pmao004=? AND pmao000=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pmaostus,pmao000,pmao001,&apos;&apos;,pmao002,&apos;&apos;,&apos;&apos;,pmao003,&apos;&apos;,pmao004,pmao009,pmao010,pmao007,pmao005,pmao006,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,pmaoownid,&apos;&apos;,pmaoowndp,&apos;&apos;,pmaocrtid,&apos;&apos;,pmaocrtdp,&apos;&apos;,pmaocrtdt,pmaomodid,&apos;&apos;,pmaomoddt FROM pmao_t WHERE pmaoent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

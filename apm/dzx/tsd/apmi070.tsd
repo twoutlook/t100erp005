@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="apmi070" std_prog="apmi070" erpver="1.0" ver="1" module="APM" booking="Y" normal_style="Y" class="i" template="F002_00" env="s" zone="t10dev">
+  <toolbar items="insert,modify,delete,output,query"/>
+  <table ver="1">
+    <tbl name="pmao_t" parent="" main="Y" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" status=""/>
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" status=""/>
+    </tbl>
+  </table>
+  <all src="s" ver="1" cite_std="" cite_ver="" status="">
+    <![CDATA[程式說明及目的： 維護公司料件編號與交易對象的料件編號對應關係
+標準作業功能：新增/修改/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：基本資料維護作業
+輸入模式：單檔多欄模式F002_00
+作業資料來源(Master)：
+ 資料來源表：pmao_t(交易對象料號對應檔)
+資料處理：
+程式執行初始化:
+  1.執行此程式可傳入1個參數:
+    p_type(類型):"1"代表是供應商料號對應維護作業(apmi120)
+                 "2"代表是客戶料號對應維護作業(axmi120)
+                 "3"代表是交易對象料號對應維護作業(apmi070)
+
+●查詢狀態:
+  1.當是供應商料號對應維護作業只能查出交易對項類型'1' or '3'的交易對項資料
+  2.當是客戶號對應維護作業只能查出交易對項類型'2' or '3'的交易對項資料
+  3.當是交易對象料號對應維護作業可以查出所有類型的交易對象資料]]>
+  </all>
+  <field column="" name="imaal004" ver="1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="pmao001" name="pmao001_2" ver="1" table="pmao_t" attribute="C004" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="pmao002" name="pmao002_2" ver="1" table="pmao_t" attribute="C301" type="varchar2(40)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="pmao003" name="pmao003_2" ver="1" table="pmao_t" attribute="C508" type="varchar2(256)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="pmao004" name="pmao004_2" ver="1" table="pmao_t" attribute="C301" type="varchar2(40)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="pmao001" name="pmao_t.pmao001" ver="1" table="pmao_t" attribute="C004" type="varchar2(10)" req="Y" i_zoom="q_pmaa001" c_zoom="q_pmaa001" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[交易對象編號：
+     校驗:1.若執行程式傳入參數p_type='1'(供應商料號對應維護作業)時，則輸入的值必須
+            存在[T:交易對象主檔].[C:交易對象編號]，且[C:狀態] =確認，且[C:交易對象類型]='1' OR '3'
+          2.若執行程式傳入參數p_type='2'(客戶料號對應維護作業)時，則輸入的值必須
+            存在[T:交易對象主檔].[C:交易對象編號]，且[C:狀態] =確認，且[C:交易對象類型]='2' OR '3'
+          3.若執行程式傳入參數p_type='3'(交易對象料號對應維護作業)時，則輸入的值必須
+            存在[T:交易對象主檔].[C:交易對象編號]，且[C:狀態] =確認
+
+   ●開窗處理：
+     1.查詢時：
+       查詢條件：
+       1.若執行程式傳入參數p_type='1'(供應商料號對應維護作業)時，則[C:交易對象類型]='1' OR '3'  
+         LET g_qryparam.where = " (pmaa002 ='1' OR pmaa002 ='3') "
+       2.若執行程式傳入參數p_type='2'(客戶料號對應維護作業)時，則[C:交易對象類型]='2' OR '3'
+         LET g_qryparam.where = " (pmaa002 ='2' OR pmaa002 ='3') "
+      3.若執行程式傳入參數p_type='3'(交易對象料號對應維護作業)時，則[C:交易對象類型]='1' OR '2' OR '3'
+    ]]>
+  </field>
+  <field column="pmao002" name="pmao_t.pmao002" ver="1" table="pmao_t" attribute="C301" type="varchar2(40)" req="Y" i_zoom="q_imaa001" c_zoom="q_imaa001" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[   校驗:1.輸入值須存在[T:料件基本資料檔].[C:料件編號]，且[C:資料狀態]為確認     
+     帶值:1.自動填入: [C:品名]=[T:料件基本資料多語言檔].[C:品名]
+                      [C:規格]=[T:料件基本資料多語言檔].[C:規格]]]>
+  </field>
+  <field column="pmao003" name="pmao_t.pmao003" ver="1" table="pmao_t" attribute="C508" type="varchar2(256)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[1.當料件有使用產品特徵功能時此欄位才可輸入
+不使用時，賦值為'  '
+CALL 應用元件檢查產品特徵值是否符合條件]]>
+  </field>
+  <field column="pmao004" name="pmao_t.pmao004" ver="1" table="pmao_t" attribute="C301" type="varchar2(40)" req="Y" i_zoom="" c_zoom="q_pmao004" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="pmao005" name="pmao_t.pmao005" ver="1" table="pmao_t" attribute="C102" type="varchar2(255)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="pmao006" name="pmao_t.pmao006" ver="1" table="pmao_t" attribute="C203" type="varchar2(20)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="pmao007" name="pmao_t.pmao007" ver="1" table="pmao_t" attribute="C001" type="varchar2(1)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="N" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" cite_std="N" cite_ver="" status="">
+    <![CDATA[校驗:1.同一個交易對象+公司料號+產品特徵只能有一筆資料可以勾選為主要的]]>
+  </field>
+  <field column="pmao008" name="pmao_t.pmao008" ver="1" table="pmao_t" attribute="N301" type="number(20, 6)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="0" max="&lt;=,100.000" min="&gt;=,0.000" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="pmaocrtdp" name="pmao_t.pmaocrtdp" ver="1" table="pmao_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" src="s" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="pmaocrtdt" name="pmao_t.pmaocrtdt" ver="1" table="pmao_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="pmaocrtid" name="pmao_t.pmaocrtid" ver="1" table="pmao_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" src="s" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="pmaomoddt" name="pmao_t.pmaomoddt" ver="1" table="pmao_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="pmaomodid" name="pmao_t.pmaomodid" ver="1" table="pmao_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" src="s" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="pmaoowndp" name="pmao_t.pmaoowndp" ver="1" table="pmao_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" src="s" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="pmaoownid" name="pmao_t.pmaoownid" ver="1" table="pmao_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" src="s" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="pmaostus" name="pmao_t.pmaostus" ver="1" table="pmao_t" attribute="C822" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield src="s" ver="1" name="pmao001_desc" depend_filed="pmao_t.pmao001" correspon_key="pmao001" ref_table="pmaal_t" ref_fk="pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield src="s" ver="1" name="pmao002_desc" depend_filed="pmao_t.pmao002" correspon_key="pmao002" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield src="s" ver="1" name="pmaocrtdp_desc" depend_filed="pmao_t.pmaocrtdp" correspon_key="pmaocrtdp" ref_table="ooeal_t" ref_fk="ooeal001" ref_dlang="ooeal002" ref_rtn="ooeal003" status=""/>
+    <rfield src="s" ver="1" name="pmaocrtid_desc" depend_filed="pmao_t.pmaocrtid" correspon_key="&apos;2&apos;,pmaocrtid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield src="s" ver="1" name="pmaomodid_desc" depend_filed="pmao_t.pmaomodid" correspon_key="&apos;2&apos;,pmaomodid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield src="s" ver="1" name="pmaoowndp_desc" depend_filed="pmao_t.pmaoowndp" correspon_key="pmaoowndp" ref_table="ooeal_t" ref_fk="ooeal001" ref_dlang="ooeal002" ref_rtn="ooeal003" status=""/>
+    <rfield src="s" ver="1" name="pmaoownid_desc" depend_filed="pmao_t.pmaoownid" correspon_key="&apos;2&apos;,pmaoownid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code/>
+  <act src="s" id="modify" ver="1" cite_std="N" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <act src="s" id="output" ver="1" cite_std="N" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <act src="s" id="query" ver="1" cite_std="N" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="bpage_1" text="項目" comment="" lstr=""/>
+    <sfield name="lbl_pmaostus" text="狀態碼" comment="" lstr=""/>
+    <sfield name="lbl_pmao001" text="交易對象編號" comment="" lstr=""/>
+    <sfield name="lbl_pmaal004" text="交易對象簡稱" comment="" lstr=""/>
+    <sfield name="lbl_pmao002" text="公司料件編號" comment="" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" comment="" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" comment="" lstr=""/>
+    <sfield name="lbl_pmao003" text="產品特徵" comment="" lstr=""/>
+    <sfield name="lbl_pmao004" text="交易對象料件編號" comment="" lstr=""/>
+    <sfield name="lbl_pmao007" text="主要對應料號否" comment="" lstr=""/>
+    <sfield name="lbl_pmao008" text="分配比率" comment="" lstr=""/>
+    <sfield name="lbl_pmao005" text="簡要說明" comment="" lstr=""/>
+    <sfield name="lbl_pmao006" text="參考單號" comment="" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" comment="" lstr=""/>
+    <sfield name="lbl_pmao001" text="交易對象編號" comment="" lstr=""/>
+    <sfield name="lbl_pmao002" text="公司料件編號" comment="" lstr=""/>
+    <sfield name="lbl_pmao003" text="產品特徵" comment="" lstr=""/>
+    <sfield name="lbl_pmao004" text="交易對象料件編號" comment="" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" comment="" lstr=""/>
+    <sfield name="ownid_desc" text="員工名" comment="" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" comment="" lstr=""/>
+    <sfield name="owndp_desc" text="部門名" comment="" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" comment="" lstr=""/>
+    <sfield name="crtid_desc" text="員工名" comment="" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" comment="" lstr=""/>
+    <sfield name="crtdp_desc" text="部門名" comment="" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" comment="" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" comment="" lstr=""/>
+    <sfield name="modid_desc" text="員工名" comment="" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" comment="" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" comment="" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" comment="" lstr=""/>
+    <sfield name="lbl_dend" text="項)" comment="" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" comment="" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" comment="" lstr=""/>
+    <sfield name="lbl_check" text="多選" comment="" lstr=""/>
+    <sfield name="lbl_pmaa001" text="交易對象編號" comment="" lstr=""/>
+    <sfield name="lbl_pmaal003" text="交易對象全名" comment="" lstr=""/>
+    <sfield name="lbl_pmaal004" text="交易對象簡稱" comment="" lstr=""/>
+    <sfield name="lbl_check" text="多選" comment="" lstr=""/>
+    <sfield name="lbl_imaa001" text="料號" comment="" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" comment="" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" comment="" lstr=""/>
+    <sfield name="lbl_check" text="多選" comment="" lstr=""/>
+    <sfield name="lbl_imea001" text="特徵群組代碼" comment="" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" comment="" lstr=""/>
+    <sfield name="lbl_check" text="多選" comment="" lstr=""/>
+    <sfield name="lbl_pmao004" text="交易對象料件編號" comment="" lstr=""/>
+    <sfield name="lbl_gzxm001" text="QBE編號" comment="" lstr=""/>
+    <sfield name="lbl_gzxm005" text="查詢方案名稱" comment="" lstr=""/>
+    <sfield name="lbl_gzxm002" text="作業編號" comment="" lstr=""/>
+    <sfield name="lbl_gzxm003" text="員工編號" comment="" lstr=""/>
+    <sfield name="lbl_gzxm004_qbe" text="設為預設查詢條件" comment="" lstr=""/>
+    <sfield name="bpage_1_qbe" text="條件組合內容" comment="" lstr=""/>
+    <sfield name="lbl_gzxn005_qbe" text="欄位說明" comment="" lstr=""/>
+    <sfield name="lbl_gzxn006_qbe" text="運算子" comment="" lstr=""/>
+    <sfield name="lbl_gzxn007_qbe" text="條件值" comment="" lstr=""/>
+    <sfield name="accept" text="確定" comment="" lstr=""/>
+    <sfield name="cancel" text="取消" comment="" lstr=""/>
+    <sfield name="lbl_funid" text="函式代碼" comment="" lstr=""/>
+    <sfield name="lbl_fundesc" text="函式說明" comment="" lstr=""/>
+    <sfield name="accept" text="確定" comment="" lstr=""/>
+    <sfield name="cancel" text="取消" comment="" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" comment="" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" comment="" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" comment="" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" comment="" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" comment="" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" comment="" lstr=""/>
+    <sfield name="lbl_check" text="多選" comment="" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" comment="" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" comment="" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="1"/>
+</spec>

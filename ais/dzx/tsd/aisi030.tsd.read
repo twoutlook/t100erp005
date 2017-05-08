@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aisi030" std_prog="aisi030" erpver="1.0" ver="3" module="AIS" type="M" booking="N" designer_ver="1.0" class="i" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="isac_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 發票類型維護作業
+                 維護進銷項發票類型,對應到申報時媒體申報格式
+                 各交易稅區有不同的發票類型,故以交易稅區為 KEY 值 
+
+標準作業功能：新增/修改/刪除/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：基本資料維護作業
+輸入模式：假雙檔(子作業)無搭配任何方案F003_00
+作業資料來源(Master)：
+ 資料來源表：isac_t(發票類型資料檔)
+             isacl_t(發票類型多語言檔)
+作業資料來源(Detail)：
+ 資料來源表：isac_t(發票類型資料檔)
+
+TOPMENU:
+    相關資料:aooi072稅區資料維護作業
+    相關查詢:aooi050發票簿維護作業
+       
+]]>
+  </all>
+  <field cite_std="N" name="isac002_2" ver="1" src="s" column="isac002" table="isac_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isac_t.isac001" ver="1" src="s" column="isac001" table="isac_t" attribute="" type="" req="Y" i_zoom="q_ooal002_11" c_zoom="q_isac001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：交易稅區
+   ●欄位控管：
+     資料欄位:[T:發票類型維護檔].[C:交易稅區]/可input及Display
+     預設值:無
+     校驗: 1.不允許空白
+           2.交易稅區为key值,不可重複
+           3.若輸入的資料已存在，则報資料存在的错
+           4.輸入的資料必須存在於稅區維護 aooi072中,若不存在,則報資料不存在的錯
+           5.輸入的資料必須在稅區維護 aooi072中有效,若無效,則報資料無效的錯]]>
+  </field>
+  <field cite_std="N" name="isac_t.isac002" ver="1" src="s" column="isac002" table="isac_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：發票類型
+   ●欄位控管：
+     資料欄位:[T:發票類型維護檔].[C:發票類型]/可input及Display
+     預設值:無
+     校驗: 1.不允許空白
+           2.交易稅區+發票類型为key值,不可重複
+           3.若輸入的資料已存在，则報資料存在的错
+]]>
+  </field>
+  <field cite_std="N" name="isac_t.isac003" ver="1" src="s" column="isac003" table="isac_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="9707" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：發票歸屬進銷項
+   ●欄位控管：
+     資料欄位:[T:發票類型維護檔].[C:發票歸屬進銷項]/可input及Display
+     預設值:無
+     下拉選項 scc=  9707]]>
+  </field>
+  <field cite_std="N" name="isac_t.isac004" ver="1" src="s" column="isac004" table="isac_t" attribute="" type="" req="N" i_zoom="q_isap002" c_zoom="q_isap002" chk_ref="v_isap002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：媒體申報格式
+   ●欄位控管：
+     資料欄位:[T:發票類型維護檔].[C:媒體申報格式]/可input及Display
+     預設值:無
+     校驗: 1.允許空白(非台灣區的運用不同)
+           2.輸入的資料需存在于稅區發票相關資料設定作業[aisi080]中,若不存在,則報錯
+           3.輸入的資料需在稅區發票相關資料設定作業[aisi080]中有效,若無效,則報錯]]>
+  </field>
+  <field cite_std="N" name="isac_t.isac005" ver="1" src="s" column="isac005" table="isac_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="9721" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：課稅別
+   ●欄位控管：
+     資料欄位:[T:發票類型維護檔].[C:課稅別]/可input及Display
+     預設值:1.應稅
+     下拉選項 scc=  9721
+     可空白, 本欄為台灣區媒體申報必須欄位, 但其他地區運用不同]]>
+  </field>
+  <field cite_std="N" name="isac_t.isac006" ver="1" src="s" column="isac006" table="isac_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：發票明細筆數
+   ●欄位控管：
+     資料欄位:[T:發票類型維護檔].[C:發票明細筆數]/可input及Display
+     預設值:0(表示不限制筆數) 
+     校驗: 1.允許空白
+     if 進銷項 isac003 = '銷項'及'銷項折讓' 時才可維護本欄位]]>
+  </field>
+  <field cite_std="N" name="isac_t.isac007" ver="2" src="s" column="isac007" table="isac_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[容差額:
+  ●欄位控管：
+    資料欄位: isac007 /可Display 可Input
+    預設值:  無  
+    可空白]]>
+  </field>
+  <field cite_std="N" name="isac_t.isac008" ver="1" src="s" column="isac008" table="isac_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isac_t.isac009" ver="1" src="s" column="isac009" table="isac_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：對應折單類型
+  ●欄位控管： 以說明顯示,如果對應的發票類型被刪除時,則必須把本欄清空
+    資料欄位: isac009 /可Display 可Input
+    預設值:  無  
+    可空白
+    下拉選項為活的, 
+    if 本筆發票類型為進項/銷項折單則不可維護
+    if 本筆為進項, 則可下拉的發票類型為 isac003 = 3 進項折單
+    if 本筆為銷項, 則可下拉的發票類型為 isac003 = 4 銷項折單
+]]>
+  </field>
+  <field cite_std="N" name="isac_t.isac010" ver="1" src="s" column="isac010" table="isac_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isac_t.isac011" ver="1" src="s" column="isac011" table="isac_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[isac003=2 才可維護]]>
+  </field>
+  <field cite_std="N" name="isac_t.isac012" ver="1" src="s" column="isac012" table="isac_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[isac003=2 才可維護]]>
+  </field>
+  <field cite_std="N" name="isac_t.isaccrtdp" ver="1" src="s" column="isaccrtdp" table="isac_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isac_t.isaccrtdt" ver="1" src="s" column="isaccrtdt" table="isac_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isac_t.isaccrtid" ver="1" src="s" column="isaccrtid" table="isac_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isac_t.isacmoddt" ver="1" src="s" column="isacmoddt" table="isac_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isac_t.isacmodid" ver="1" src="s" column="isacmodid" table="isac_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isac_t.isacowndp" ver="1" src="s" column="isacowndp" table="isac_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isac_t.isacownid" ver="1" src="s" column="isacownid" table="isac_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isac_t.isacstus" ver="1" src="s" column="isacstus" table="isac_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooall004_desc" ver="1" src="s" column="ooall004" table="ooall_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="isac004_desc" src="s" depend_field="isac_t.isac004" correspon_key="isacent,isac001,isac004" ref_table="isapl_t" ref_fk="isaplent,isapl001,isapl002" ref_dlang="isapl003" ref_rtn="isapl004" status=""/>
+    <rfield cite_std="N" ver="1" name="isaccrtdp_desc" src="s" depend_field="isac_t.isaccrtdp" correspon_key="isaccrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="isaccrtid_desc" src="s" depend_field="isac_t.isaccrtid" correspon_key="isaccrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="isacmodid_desc" src="s" depend_field="isac_t.isacmodid" correspon_key="isacmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="isacowndp_desc" src="s" depend_field="isac_t.isacowndp" correspon_key="isacowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="isacownid_desc" src="s" depend_field="isac_t.isacownid" correspon_key="isacownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+  </ref_field>
+  <multi_lang>
+    <mfield cite_std="N" ver="1" name="isacl_t.isacl004" src="s" depend_field="isac_t.isac002" correspon_key="isacent,isac001,isac002" lang_table="isacl_t" lang_fk="isaclent,isacl001,isacl002" lang_dlang="isacl003" lang_rtn="isacl004" status="">
+      <![CDATA[]]>
+    </mfield>
+  </multi_lang>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="isac002_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isac_t.isac001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isac_t.isac002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isac_t.isac003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isac_t.isac004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isac_t.isac005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isac_t.isac006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="isac_t.isac007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isac_t.isac008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isac_t.isac009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isac_t.isac010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isac_t.isac011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isac_t.isac012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isac_t.isaccrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isac_t.isaccrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isac_t.isaccrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isac_t.isacmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isac_t.isacmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isac_t.isacowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isac_t.isacownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isac_t.isacstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooall004_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="3" src="s" type="all" gen_code="Y" status="u">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_isac001" text="交易稅區" lstr=""/>
+    <sfield name="lbl_ooall004" text="說明" lstr=""/>
+    <sfield name="bpage_1" text="發票類型資料" lstr=""/>
+    <sfield name="lbl_isac002" text="發票類型" lstr=""/>
+    <sfield name="lbl_isacl004" text="說明" lstr=""/>
+    <sfield name="lbl_isac008" text="發票聯別" lstr=""/>
+    <sfield name="lbl_isac003" text="進/銷項" lstr=""/>
+    <sfield name="lbl_isac011" text="發票張數" lstr=""/>
+    <sfield name="lbl_isac012" text="不同稅務編號可調撥否" lstr=""/>
+    <sfield name="lbl_isac004" text="媒體申報格式" lstr=""/>
+    <sfield name="lbl_isapl004" text="媒體申報格式說明" lstr=""/>
+    <sfield name="lbl_isac005" text="計稅原則" lstr=""/>
+    <sfield name="lbl_isac006" text="發票明細筆數" lstr=""/>
+    <sfield name="lbl_isac010" text="允許多稅率" lstr=""/>
+    <sfield name="lbl_isac007" text="容差額" lstr=""/>
+    <sfield name="lbl_isac009" text="對應折單類型" lstr=""/>
+    <sfield name="lbl_isacstus" text="有效" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="modid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="ownid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="owndp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="crtid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="crtdp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_isacl001" text="交易稅區" lstr=""/>
+    <sfield name="lbl_isacl002" text="憑證類型代碼" lstr=""/>
+    <sfield name="lbl_isacl003" text="語言別" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

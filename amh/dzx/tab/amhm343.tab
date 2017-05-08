@@ -1,0 +1,181 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="amhm343" module="amh" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="06189" crtdt="2015-05-08 10:22:36" modid="06189" moddt="2015-05-11 10:59:25" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="單價收費項目費用維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mhalsite,mhalsite_desc(chr80),mhal001,mhal002,mhal003,mhal004,mhal005,mhal005_desc(chr80),mhal006,mhal006_desc(chr80),mhal007,mhal007_desc(chr80),mhal008,mhal009,mhal010,mhal011,mhal012,mhal013,mhal014,mhal025,mhal015,mhal016,mhal017,mhal018,mhal019,mhal026,mhal020,mhal020_desc(chr80),mhal021,mhal022,mhal023,mhal024,mhalstus,mhalownid,mhalownid_desc(chr80),mhalowndp,mhalowndp_desc(chr80),mhalcrtid,mhalcrtid_desc(chr80),mhalcrtdp,mhalcrtdp_desc(chr80),mhalcrtdt,mhalmodid,mhalmodid_desc(chr80),mhalmoddt,mhalcnfid,mhalcnfid_desc(chr80),mhalcnfdt"/>
+      <var id="bs_field" value="mhalsite,mhalsite_desc(chr80),mhal001,mhal002,mhal003,mhal004,mhal005,mhal005_desc(chr80),mhal006,mhal006_desc(chr80),mhal007,mhal007_desc(chr80),mhal008,mhal009,mhal010,mhal011,mhal012,mhal013,mhal014,mhal025,mhal015,mhal016,mhal017,mhal018,mhal019,mhal026,mhal020,mhal020_desc(chr80),mhal021,mhal022,mhal023,mhal024" pk="mhalsite,mhal001,mhal002,mhal004,mhal005,mhal007" order=""/>
+      <bs_reference field="mhalsite_desc" ref_field="mhalsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="mhal005_desc" ref_field="mhal005" ref_sql="SELECT mhael023 FROM mhael_t WHERE mhaelent=$varg_enterprise$var AND mhael001=? AND mhael022=$varg_dlang$var"/>
+      <bs_reference field="mhal006_desc" ref_field="mhal006" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="mhal007_desc" ref_field="mhal007" ref_sql="SELECT mhaml003 FROM mhaml_t WHERE mhamlent=$varg_enterprise$var AND mhaml001=? AND mhaml002=$varg_dlang$var"/>
+      <bs_reference field="mhal020_desc" ref_field="mhal020" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="produce_cost"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="amh" filename="amhm343" method="dialog">
+    <section id="input">
+      <input id="head" field="mhalsite,mhal001,mhal002,mhal003,mhal004,mhal005,mhal006,mhal007,mhal008,mhal009,mhal010,mhal011,mhal012,mhal013,mhal014,mhal025,mhal015,mhal016,mhal017,mhal018,mhal019,mhal026,mhal020,mhal021,mhal022,mhal023,mhal024,mhalstus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mhalsite,mhal001,mhal002,mhal003,mhal004,mhal005,mhal006,mhal007,mhal008,mhal009,mhal010,mhal011,mhal012,mhal013,mhal014,mhal025,mhal015,mhal016,mhal017,mhal018,mhal019,mhal026,mhal020,mhal021,mhal022,mhal023,mhal024,mhalstus,mhalownid,mhalowndp,mhalcrtid,mhalcrtdp,mhalcrtdt,mhalmodid,mhalmoddt,mhalcnfid,mhalcnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mhalsite,mhal001,mhal002,mhal004,mhal005,mhal007"/>
+      <set id="head" type="no_entry" field="mhalsite,mhal001,mhal002,mhal004,mhal005,mhal007"/>
+    </init>
+    <init id="head">
+      <column id="mhalsite">
+        <after>
+          <reference field="mhalsite_desc" ref_field="mhal_t.mhalsite" map_field="mhalent,mhalsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="mhalsite_desc"/>
+      <column id="mhal001"/>
+      <column id="mhal002" type="S" default="2"/>
+      <column id="mhal003" type="S" default="1"/>
+      <column id="mhal004" type="S" default="1"/>
+      <column id="mhal005">
+        <after>
+          <check chkid="v_mhae001" id="isExist"/>
+          <reference field="mhal005_desc" ref_field="mhal_t.mhal005" map_field="mhalent,mhal005" ref_sql="SELECT mhael023 FROM mhael_t WHERE mhaelent=$varg_enterprise$var AND mhael001=? AND mhael022=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhae001" state="i"/>
+        <controlp form="q_mhae001" state="c"/>
+      </column>
+      <column id="mhal005_desc"/>
+      <column id="mhal006">
+        <after>
+          <reference field="mhal006_desc" ref_field="mhal_t.mhal006" map_field="mhalent,mhal006" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhal006_desc"/>
+      <column id="mhal007">
+        <after>
+          <check chkid="v_mham001" id="isExist"/>
+          <reference field="mhal007_desc" ref_field="mhal_t.mhal007" map_field="mhalent,mhal007" ref_sql="SELECT mhaml003 FROM mhaml_t WHERE mhamlent=$varg_enterprise$var AND mhaml001=? AND mhaml002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mham001" state="i"/>
+        <controlp form="q_mham001" state="c"/>
+      </column>
+      <column id="mhal007_desc"/>
+      <column id="mhal008"/>
+      <column id="mhal009"/>
+      <column id="mhal010"/>
+      <column id="mhal011">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhal012"/>
+      <column id="mhal013">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhal014">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhal025" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhal015"/>
+      <column id="mhal016"/>
+      <column id="mhal017">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhal018"/>
+      <column id="mhal019"/>
+      <column id="mhal026" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhal020">
+        <after>
+          <reference field="mhal020_desc" ref_field="mhal_t.mhal020" map_field="mhalent,mhal020" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="mhal020_desc"/>
+      <column id="mhal021"/>
+      <column id="mhal022" type="S" default="N"/>
+      <column id="mhal023"/>
+      <column id="mhal024"/>
+      <column id="mhalstus" scc="50">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="mhalownid">
+        <after>
+          <reference field="mhalownid_desc" ref_field="mhal_t.mhalownid" map_field="mhalownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhalownid_desc"/>
+      <column id="mhalowndp">
+        <after>
+          <reference field="mhalowndp_desc" ref_field="mhal_t.mhalowndp" map_field="mhalowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhalowndp_desc"/>
+      <column id="mhalcrtid">
+        <after>
+          <reference field="mhalcrtid_desc" ref_field="mhal_t.mhalcrtid" map_field="mhalcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhalcrtid_desc"/>
+      <column id="mhalcrtdp">
+        <after>
+          <reference field="mhalcrtdp_desc" ref_field="mhal_t.mhalcrtdp" map_field="mhalcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhalcrtdp_desc"/>
+      <column id="mhalcrtdt"/>
+      <column id="mhalmodid">
+        <after>
+          <reference field="mhalmodid_desc" ref_field="mhal_t.mhalmodid" map_field="mhalmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhalmodid_desc"/>
+      <column id="mhalmoddt"/>
+      <column id="mhalcnfid">
+        <after>
+          <reference field="mhalcnfid_desc" ref_field="mhal_t.mhalcnfid" map_field="mhalcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhalcnfid_desc"/>
+      <column id="mhalcnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="mhal_t" pk="mhalsite,mhal001,mhal002,mhal004,mhal005,mhal007">
+      <sql id="forupd_sql" type="sql" query="SELECT mhalsite,&apos;&apos;,mhal001,mhal002,mhal003,mhal004,mhal005,&apos;&apos;,mhal006,&apos;&apos;,mhal007,&apos;&apos;,mhal008,mhal009,mhal010,mhal011,mhal012,mhal013,mhal014,mhal025,mhal015,mhal016,mhal017,mhal018,mhal019,mhal026,mhal020,&apos;&apos;,mhal021,mhal022,mhal023,mhal024,mhalstus,mhalownid,&apos;&apos;,mhalowndp,&apos;&apos;,mhalcrtid,&apos;&apos;,mhalcrtdp,&apos;&apos;,mhalcrtdt,mhalmodid,&apos;&apos;,mhalmoddt,mhalcnfid,&apos;&apos;,mhalcnfdt FROM mhal_t WHERE mhalent= ? AND mhalsite=? AND mhal001=? AND mhal002=? AND mhal004=? AND mhal005=? AND mhal007=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mhalsite,mhal001,mhal002,mhal004,mhal005,mhal007 FROM mhal_t" order="mhalsite,mhal001,mhal002,mhal004,mhal005,mhal007"/>
+    </head>
+  </dataset>
+</assembly>
+

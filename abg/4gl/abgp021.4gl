@@ -1,0 +1,2393 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="abgp021.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2016-06-06 18:20:01), PR版次:0004(2016-11-25 15:27:20)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000024
+#+ Filename...: abgp021
+#+ Description: 歷史資料匯入預算作業
+#+ Creator....: 03538(2016-06-04 11:14:31)
+#+ Modifier...: 03538 -SD/PR- 05016
+ 
+{</section>}
+ 
+{<section id="abgp021.global" >}
+#應用 p02 樣板自動產生(Version:22)
+#add-point:填寫註解說明 name="global.memo"
+#Memosdddd
+#161102-00032#1 2016/11/04    By Hans 載入glar 時扣除當月的CE憑證金額，根據abgi110的設定，決定是否將核算項給值。
+#161123-00024#1 2016/11/24    By Hans 未來期處理
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10             #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num10             #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+   l_type1     LIKE type_t.chr1,
+   bgbi002_1   LIKE bgbi_t.bgbi002,
+   bgbi003_1   LIKE bgbi_t.bgbi003,
+   l_bgae006_1 LIKE bgae_t.bgae006,
+   l_type2     LIKE type_t.chr1,
+   glarld      LIKE glar_t.glarld,
+   glar002     LIKE glar_t.glar002,
+   glar003_s   LIKE glar_t.glar003,
+   glar003_e   LIKE glar_t.glar003,
+   l_type3     LIKE type_t.chr1,
+   bgbi002     LIKE bgbi_t.bgbi002,
+   bgbi003     LIKE bgbi_t.bgbi003,
+   l_pr        LIKE type_t.num5,
+   bgae006     LIKE bgae_t.bgae006,
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)  #注意要在add-point內寫入END RECORD name="global.variable"
+   sel         LIKE type_t.chr1,
+   bgae003     LIKE bgae_t.bgae003,
+   bgae005     LIKE bgae_t.bgae005,
+   bgae008     LIKE bgae_t.bgae008,
+   l_pr        LIKE type_t.num5
+END RECORD
+DEFINE g_success LIKE type_t.num5
+DEFINE g_input type_parameter
+DEFINE g_curr_o  LIKE bgaa_t.bgaa003   #來源幣別
+DEFINE g_curr    LIKE bgaa_t.bgaa003   #目的幣別
+DEFINE g_glaa004 LIKE glaa_t.glaa004   #會計科目參照表
+DEFINE g_glaa003 LIKE glaa_t.glaa003   #會計週期參照表
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num10              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="abgp021.main" >}
+#+ 作業開始 
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   DEFINE ls_js  STRING
+   #add-point:main段define name="main.define"
+   
+   #end add-point   
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("abg","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   CALL abgp021_cre_tmp()
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_abgp021 WITH FORM cl_ap_formpath("abg",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL abgp021_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL abgp021_ui_dialog() 
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_abgp021
+   END IF 
+   
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="abgp021.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION abgp021_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point   
+   #add-point:init段define name="init.define"
+   
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL cl_set_combo_scc('b_bgae003','9405')
+   CALL cl_set_combo_scc('b_bgae005','9407')
+   CALL cl_set_combo_scc('b_bgae008','9418')   
+   CALL cl_set_combo_scc('bgae003','9405')
+   CALL cl_set_combo_scc('bgae005','9407')
+   CALL cl_set_combo_scc('bgae008','9418')      
+
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgp021.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION abgp021_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point 
+   DEFINE li_idx   LIKE type_t.num10
+   #add-point:ui_dialog段define name="init.init"
+   
+   #end add-point 
+   
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   
+   #end add-point
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_detail_d.clear()
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL abgp021_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         INPUT BY NAME g_input.l_type1,g_input.bgbi002_1,g_input.bgbi003_1,g_input.l_type2,g_input.glarld,
+                       g_input.glar002,g_input.glar003_s,g_input.glar003_e,g_input.l_type3,g_input.bgbi002,
+                       g_input.bgbi003,g_input.l_pr
+            
+            ON CHANGE l_type1
+               IF g_input.l_type1 = 'Y' THEN
+                  LET g_input.l_type2 = 'N'
+               ELSE
+                  LET g_input.l_type2 = 'Y'
+               END IF
+               CALL abgp021_set_entry()
+               CALL abgp021_set_no_entry()
+               
+            ON CHANGE l_type2
+               IF g_input.l_type2 = 'Y' THEN
+                  LET g_input.l_type1 = 'N'
+               ELSE
+                  LET g_input.l_type1 = 'Y'
+               END IF               
+               CALL abgp021_set_entry()
+               CALL abgp021_set_no_entry()             
+
+            ON ACTION controlp INFIELD bgbi002_1
+   
+               #預算編號
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_input.bgbi002_1
+               LET g_qryparam.where = " bgaastus = 'Y'"
+               IF NOT cl_null(g_input.bgae006) THEN
+                  LET g_qryparam.where = g_qryparam.where," AND bgaa008 = '",g_input.bgae006,"' "
+               END IF          
+               IF NOT cl_null(g_curr) THEN
+                  LET g_qryparam.where = g_qryparam.where," AND bgaa003 = '",g_curr,"' "
+               END IF                     
+               CALL q_bgaa001()
+               LET g_input.bgbi002_1 = g_qryparam.return1
+               DISPLAY BY NAME g_input.bgbi002_1
+               NEXT FIELD bgbi002_1  
+               
+            AFTER FIELD bgbi002_1
+            
+               #預算編號
+               IF NOT cl_null(g_input.bgbi002_1) THEN
+                  CALL s_fin_budget_chk(g_input.bgbi002_1)RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success  THEN
+                     INITIALIZE g_errparam.* TO NULL
+                     IF g_errno = 'abg-00005' THEN LET g_errno = 'abg-00007' END IF
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.popup = TRUE
+                     LET g_errparam.replace[1] = 'abgi010'
+                     LET g_errparam.replace[2] = cl_get_progname('abgi010',g_lang,"2")
+                     LET g_errparam.exeprog = 'abgi010'
+                     LET g_errparam.extend = ''
+                     CALL cl_err()
+                     LET g_input.bgbi002_1 = ''
+                     LET g_input.l_bgae006_1 = ''
+                     DISPLAY BY NAME g_input.bgbi002_1,g_input.l_bgae006_1
+                     NEXT FIELD CURRENT
+                  END IF
+                  SELECT bgaa008,bgaa003 INTO g_input.l_bgae006_1,g_curr_o
+                    FROM bgaa_t
+                   WHERE bgaaent = g_enterprise
+                     AND bgaa001 = g_input.bgbi002_1     
+                  DISPLAY BY NAME g_input.l_bgae006_1  
+                  IF NOT cl_null(g_input.bgae006) THEN
+                     IF g_input.bgae006 <> g_input.l_bgae006_1 THEN
+                        INITIALIZE g_errparam.* TO NULL
+                        LET g_errparam.code = 'abg-00130'
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()                        
+                        LET g_input.bgbi002_1 = ''
+                        LET g_input.l_bgae006_1 = ''
+                        DISPLAY BY NAME g_input.bgbi002_1,g_input.l_bgae006_1
+                        NEXT FIELD CURRENT                     
+                     END IF
+                  END IF   
+                  IF NOT cl_null(g_curr) THEN
+                     IF g_curr_o <> g_curr THEN
+                        INITIALIZE g_errparam.* TO NULL
+                        LET g_errparam.code = 'abg-00132'
+                        LET g_errparam.popup = TRUE
+                        LET g_errparam.replace[1] = s_fin_get_colname('abgp021','bgaa003')
+                        CALL cl_err()                        
+                        LET g_input.bgbi002_1 = ''
+                        LET g_input.l_bgae006_1 = ''
+                        LET g_curr_o = ''
+                        DISPLAY BY NAME g_input.bgbi002_1,g_input.l_bgae006_1
+                        NEXT FIELD CURRENT                          
+                     END IF
+                  END IF
+                  IF NOT cl_null(g_input.bgbi002_1) AND NOT cl_null(g_input.bgbi003_1) THEN
+                     CALL abgp021_bgbi_chk(g_input.bgbi002_1,g_input.bgbi003_1) RETURNING g_sub_success
+                     IF NOT g_sub_success  THEN
+                        INITIALIZE g_errparam.* TO NULL
+                        LET g_errparam.code = g_errno
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        LET g_input.bgbi002_1 = ''
+                        LET g_input.l_bgae006_1 = ''
+                        DISPLAY BY NAME g_input.bgbi002_1,g_input.l_bgae006_1
+                        NEXT FIELD CURRENT
+                     END IF                                          
+                  END IF   
+               END IF   
+               SELECT bgaa008,bgaa003 INTO g_input.l_bgae006_1,g_curr_o
+                 FROM bgaa_t
+                WHERE bgaaent = g_enterprise
+                  AND bgaa001 = g_input.bgbi002_1     
+               DISPLAY BY NAME g_input.l_bgae006_1                 
+               
+            AFTER FIELD bgbi003_1
+              
+               #預算版本
+               IF NOT cl_null(g_input.bgbi002_1) AND NOT cl_null(g_input.bgbi003_1) THEN
+                  CALL abgp021_bgbi_chk(g_input.bgbi002_1,g_input.bgbi003_1) RETURNING g_sub_success
+                  IF NOT g_sub_success  THEN
+                     INITIALIZE g_errparam.* TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_input.bgbi003_1 = ''
+                     DISPLAY BY NAME g_input.bgbi003_1
+                     NEXT FIELD CURRENT
+                  END IF                                          
+               END IF              
+
+            ON ACTION controlp INFIELD bgbi002
+   
+               #預算編號(目的)
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_input.bgbi002
+               LET g_qryparam.where = " bgaastus = 'Y'"
+               IF NOT cl_null(g_input.l_bgae006_1) THEN
+                  LET g_qryparam.where = g_qryparam.where," AND bgaa008 = '",g_input.l_bgae006_1,"' "
+               END IF
+               IF NOT cl_null(g_curr_o) THEN
+                  LET g_qryparam.where = g_qryparam.where," AND bgaa003 = '",g_curr_o,"' "
+               END IF                  
+               CALL q_bgaa001()
+               LET g_input.bgbi002 = g_qryparam.return1
+               DISPLAY BY NAME g_input.bgbi002
+               NEXT FIELD bgbi002  
+               
+            AFTER FIELD bgbi002
+            
+               #預算編號(目的)
+               IF NOT cl_null(g_input.bgbi002) THEN
+                  CALL s_fin_budget_chk(g_input.bgbi002)RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success  THEN
+                     INITIALIZE g_errparam.* TO NULL
+                     IF g_errno = 'abg-00005' THEN LET g_errno = 'abg-00007' END IF
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.popup = TRUE
+                     LET g_errparam.replace[1] = 'abgi010'
+                     LET g_errparam.replace[2] = cl_get_progname('abgi010',g_lang,"2")
+                     LET g_errparam.exeprog = 'abgi010'
+                     LET g_errparam.extend = ''
+                     CALL cl_err()
+                     LET g_input.bgbi002 = ''
+                     LET g_input.bgae006 = ''
+                     DISPLAY BY NAME g_input.bgbi002,g_input.bgae006
+                     NEXT FIELD CURRENT
+                  END IF
+                  SELECT bgaa008,bgaa003 INTO g_input.bgae006,g_curr
+                    FROM bgaa_t
+                   WHERE bgaaent = g_enterprise
+                     AND bgaa001 = g_input.bgbi002     
+                  DISPLAY BY NAME g_input.bgae006                       
+                  IF NOT cl_null(g_input.l_bgae006_1) THEN
+                     IF g_input.bgae006 <> g_input.l_bgae006_1 THEN
+                        INITIALIZE g_errparam.* TO NULL
+                        LET g_errparam.code = 'abg-00130'
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()                        
+                        LET g_input.bgbi002 = ''
+                        LET g_input.bgae006 = ''
+                        DISPLAY BY NAME g_input.bgbi002,g_input.bgae006
+                        NEXT FIELD CURRENT                     
+                     END IF
+                  END IF            
+                  IF NOT cl_null(g_curr_o) THEN
+                     IF g_curr_o <> g_curr THEN
+                        INITIALIZE g_errparam.* TO NULL
+                        LET g_errparam.code = 'abg-00132'
+                        LET g_errparam.popup = TRUE
+                        LET g_errparam.replace[1] = s_fin_get_colname('abgp021','bgaa003')
+                        CALL cl_err()                        
+                        LET g_input.bgbi002 = ''
+                        LET g_input.bgae006 = ''
+                        LET g_curr = ''
+                        DISPLAY BY NAME g_input.bgbi002,g_input.bgae006
+                        NEXT FIELD CURRENT                          
+                     END IF
+                  END IF                  
+               END IF   
+               SELECT bgaa008,bgaa003 INTO g_input.bgae006,g_curr
+                 FROM bgaa_t
+                WHERE bgaaent = g_enterprise
+                  AND bgaa001 = g_input.bgbi002     
+               DISPLAY BY NAME g_input.bgae006                   
+
+               
+            AFTER FIELD l_pr
+               IF NOT cl_null(g_input.l_pr) THEN
+                  IF g_input.l_pr < 0 THEN
+                     INITIALIZE g_errparam.* TO NULL
+                     LET g_errparam.code = 'amm-00082'
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_input.l_pr = ''
+                     DISPLAY BY NAME g_input.l_pr
+                     NEXT FIELD CURRENT                  
+                  END IF
+               END IF
+
+         ON ACTION controlp INFIELD glarld
+
+            #帳套
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_input.glarld         
+            #給予arg
+            LET g_qryparam.arg1 = g_user
+            LET g_qryparam.arg2 = g_dept
+            LET g_qryparam.where = " (glaa008 = 'Y' OR glaa014 = 'Y') "       
+            CALL q_authorised_ld()                               
+            LET g_input.glarld = g_qryparam.return1
+            DISPLAY g_input.glarld TO glarld            
+            NEXT FIELD glarld     
+            
+         AFTER FIELD glarld
+         
+            #帳套
+            IF NOT cl_null(g_input.glarld) THEN
+               CALL s_fin_ld_chk(g_input.glarld,g_user,'Y') RETURNING g_sub_success,g_errno
+               IF NOT g_sub_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = g_input.glarld
+                  LET g_errparam.code   = g_errno
+                  LET g_errparam.replace[1] = 'agli010'
+                  LET g_errparam.replace[2] = cl_get_progname('agli010',g_lang,"2")
+                  LET g_errparam.exeprog = 'agli010'
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()
+                  LET g_input.glarld = ''
+                  NEXT FIELD CURRENT
+               END IF            
+               SELECT glaa001 INTO g_curr_o
+                 FROM glaa_t
+                WHERE glaaent = g_enterprise
+                  AND glaald = g_input.glarld
+               IF NOT cl_null(g_curr) THEN
+                  IF g_curr_o <> g_curr THEN
+                     INITIALIZE g_errparam.* TO NULL
+                     LET g_errparam.code = 'abg-00132'
+                     LET g_errparam.popup = TRUE
+                     LET g_errparam.replace[1] = s_fin_get_colname('abgp021','bgaa003')
+                     CALL cl_err()                        
+                     LET g_input.glarld = ''
+                     LET g_curr_o = ''
+                     NEXT FIELD CURRENT                          
+                  END IF
+               END IF               
+            END IF         
+            SELECT glaa001 INTO g_curr_o
+              FROM glaa_t
+             WHERE glaaent = g_enterprise
+               AND glaald = g_input.glarld            
+               
+            
+         END INPUT    
+         CONSTRUCT BY NAME g_input.wc ON bgae003,bgae005,bgae008
+         END CONSTRUCT
+         INPUT ARRAY g_detail_d FROM s_detail1.*
+             ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                       INSERT ROW = FALSE,
+                       DELETE ROW = FALSE,
+                       APPEND ROW = FALSE)    
+                       
+            BEFORE ROW
+               LET l_ac = ARR_CURR()
+               DISPLAY l_ac TO FORMONLY.h_index                       
+
+            AFTER FIELD l_pr
+               IF NOT cl_null(g_detail_d[l_ac].l_pr) THEN
+                  IF g_detail_d[l_ac].l_pr < 0 THEN
+                     INITIALIZE g_errparam.* TO NULL
+                     LET g_errparam.code = 'amm-00082'
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_detail_d[l_ac].l_pr = ''
+                     DISPLAY BY NAME g_detail_d[l_ac].l_pr
+                     NEXT FIELD CURRENT                  
+                  END IF
+               END IF
+
+         END INPUT
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+ 
+         #end add-point
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2 name="ui_dialog.before_dialog2"
+            CALL cl_set_act_visible("selall,selnone,sel,unsel", FALSE)            
+            CALL abgp021_qbeclear()
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            #add-point:ui_dialog段on action selall name="ui_dialog.selall.befroe"
+            
+            #end add-point            
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+               #add-point:ui_dialog段on action selall name="ui_dialog.for.onaction_selall"
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selall name="ui_dialog.onaction_selall"
+            
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+               #add-point:ui_dialog段on action selnone name="ui_dialog.for.onaction_selnone"
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selnone name="ui_dialog.onaction_selnone"
+            
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel name="ui_dialog.onaction_sel"
+            
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel name="ui_dialog.onaction_unsel"
+            
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL abgp021_filter()
+            #add-point:ON ACTION filter name="menu.filter"
+            
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            #add-point:ui_dialog段accept之前 name="menu.filter"
+            
+            #end add-point
+            CALL abgp021_query()
+             
+         # 條件清除
+         ON ACTION qbeclear
+            #add-point:ui_dialog段 name="ui_dialog.qbeclear"
+            CALL abgp021_qbeclear()
+            #end add-point
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            #add-point:ui_dialog段datarefresh name="ui_dialog.datarefresh"
+            
+            #end add-point
+            CALL abgp021_b_fill()
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         ON ACTION batch_execute
+            CALL abgp021_process()         
+            CALL g_detail_d.clear()
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #(ver:22) ---start---
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      
+      #end add-point
+      #(ver:22) --- end ---
+ 
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #(ver:22) ---start---
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         #(ver:22) --- end ---
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgp021.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION abgp021_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define name="query.define"
+   
+   #end add-point 
+    
+   #add-point:cs段after_construct name="query.after_construct"
+   IF (g_input.l_type1 = 'Y' AND (cl_null(g_input.bgbi002_1) OR cl_null(g_input.bgbi003_1)  )) OR
+      (g_input.l_type2 = 'Y' AND (cl_null(g_input.glarld) OR cl_null(g_input.glar002) OR cl_null(g_input.glar003_s) OR cl_null(g_input.glar003_e) OR cl_null(g_input.l_type3) )) OR
+      cl_null(g_input.bgbi002) OR cl_null(g_input.bgbi003) OR
+      cl_null(g_input.l_pr)  THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'acr-00015'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN      
+   END IF
+   #查詢前檢查--(E)
+   
+   #預算編號
+   IF NOT cl_null(g_input.bgbi002_1) THEN
+      CALL s_fin_budget_chk(g_input.bgbi002_1)RETURNING g_sub_success,g_errno
+      IF NOT g_sub_success  THEN
+         INITIALIZE g_errparam.* TO NULL
+         IF g_errno = 'abg-00005' THEN LET g_errno = 'abg-00007' END IF
+         LET g_errparam.code = g_errno
+         LET g_errparam.popup = TRUE
+         LET g_errparam.replace[1] = 'abgi010'
+         LET g_errparam.replace[2] = cl_get_progname('abgi010',g_lang,"2")
+         LET g_errparam.exeprog = 'abgi010'
+         LET g_errparam.extend = ''
+         CALL cl_err()
+         LET g_input.bgbi002_1 = ''
+         LET g_input.l_bgae006_1 = ''
+         DISPLAY BY NAME g_input.bgbi002_1,g_input.l_bgae006_1
+         RETURN 
+      END IF
+      SELECT bgaa008,bgaa003 INTO g_input.l_bgae006_1,g_curr_o
+        FROM bgaa_t
+       WHERE bgaaent = g_enterprise
+         AND bgaa001 = g_input.bgbi002_1     
+      DISPLAY BY NAME g_input.l_bgae006_1  
+      IF NOT cl_null(g_input.bgae006) THEN
+         IF g_input.bgae006 <> g_input.l_bgae006_1 THEN
+            INITIALIZE g_errparam.* TO NULL
+            LET g_errparam.code = 'abg-00130'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()                        
+            LET g_input.bgbi002_1 = ''
+            LET g_input.l_bgae006_1 = ''
+            DISPLAY BY NAME g_input.bgbi002_1,g_input.l_bgae006_1
+            RETURN 
+         END IF
+      END IF                      
+   END IF   
+   
+   #預算版本
+   IF NOT cl_null(g_input.bgbi002_1) AND NOT cl_null(g_input.bgbi003_1) THEN
+      CALL abgp021_bgbi_chk(g_input.bgbi002_1,g_input.bgbi003_1) RETURNING g_sub_success
+      IF NOT g_sub_success  THEN
+         INITIALIZE g_errparam.* TO NULL
+         LET g_errparam.code = g_errno
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET g_input.bgbi003_1 = ''
+         DISPLAY BY NAME g_input.bgbi003_1
+         RETURN
+      END IF                                          
+   END IF        
+    
+   
+   #預算編號(目的)
+   IF NOT cl_null(g_input.bgbi002) THEN
+      CALL s_fin_budget_chk(g_input.bgbi002)RETURNING g_sub_success,g_errno
+      IF NOT g_sub_success  THEN
+         INITIALIZE g_errparam.* TO NULL
+         IF g_errno = 'abg-00005' THEN LET g_errno = 'abg-00007' END IF
+         LET g_errparam.code = g_errno
+         LET g_errparam.popup = TRUE
+         LET g_errparam.replace[1] = 'abgi010'
+         LET g_errparam.replace[2] = cl_get_progname('abgi010',g_lang,"2")
+         LET g_errparam.exeprog = 'abgi010'
+         LET g_errparam.extend = ''
+         CALL cl_err()
+         LET g_input.bgbi002 = ''
+         LET g_input.bgae006 = ''
+         DISPLAY BY NAME g_input.bgbi002,g_input.bgae006
+         RETURN 
+      END IF
+      SELECT bgaa008,bgaa003 INTO g_input.bgae006,g_curr
+        FROM bgaa_t
+       WHERE bgaaent = g_enterprise
+         AND bgaa001 = g_input.bgbi002     
+      DISPLAY BY NAME g_input.bgae006                       
+      IF NOT cl_null(g_input.l_bgae006_1) THEN
+         IF g_input.bgae006 <> g_input.l_bgae006_1 THEN
+            INITIALIZE g_errparam.* TO NULL
+            LET g_errparam.code = 'abg-00130'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()                        
+            LET g_input.bgbi002 = ''
+            LET g_input.bgae006 = ''
+            DISPLAY BY NAME g_input.bgbi002,g_input.bgae006
+            RETURN 
+         END IF
+      END IF                  
+   END IF   
+    
+   #預設比率
+   IF NOT cl_null(g_input.l_pr) THEN
+      IF g_input.l_pr < 0 THEN
+         INITIALIZE g_errparam.* TO NULL
+         LET g_errparam.code = 'amm-00082'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET g_input.l_pr = ''
+         DISPLAY BY NAME g_input.l_pr
+         RETURN 
+      END IF
+   END IF
+        
+   
+   #帳套
+   IF NOT cl_null(g_input.glarld) THEN
+      CALL s_fin_ld_chk(g_input.glarld,g_user,'Y') RETURNING g_sub_success,g_errno
+      IF NOT g_sub_success THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = g_input.glarld
+         LET g_errparam.code   = g_errno
+         LET g_errparam.replace[1] = 'agli010'
+         LET g_errparam.replace[2] = cl_get_progname('agli010',g_lang,"2")
+         LET g_errparam.exeprog = 'agli010'
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         LET g_input.glarld = ''
+         RETURN 
+      END IF            
+      SELECT glaa001,glaa004,glaa003 INTO g_curr_o,g_glaa004,g_glaa003
+        FROM glaa_t
+       WHERE glaaent = g_enterprise
+         AND glaald = g_input.glarld      
+   END IF       
+   #預算編號+版本
+   IF NOT cl_null(g_input.bgbi002_1) AND NOT cl_null(g_input.bgbi002) AND
+      NOT cl_null (g_input.bgbi003_1) AND NOT cl_null(g_input.bgbi003) AND
+      g_input.bgbi002_1 = g_input.bgbi002 AND g_input.bgbi003_1 = g_input.bgbi003 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code   = 'abg-00131'
+      LET g_errparam.replace[1] = s_fin_get_colname('abgp021','bgbi002'),"+",s_fin_get_colname('abgp021','bgbi003')
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      RETURN          
+   END IF
+   #來源與目的幣別
+   IF g_curr_o <> g_curr THEN
+      INITIALIZE g_errparam.* TO NULL
+      LET g_errparam.code = 'abg-00132'
+      LET g_errparam.popup = TRUE
+      LET g_errparam.replace[1] = s_fin_get_colname('abgp021','bgaa003')
+      CALL cl_err()                        
+      RETURN                   
+   END IF   
+   #查詢前檢查--(E)
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL abgp021_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   END IF
+   
+   #add-point:cs段after_query name="query.cs_after_query"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgp021.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION abgp021_b_fill()
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define name="b_fill.define"
+   
+   #end add-point
+ 
+   LET g_wc = g_wc, cl_sql_auth_filter()   #(ver:21) add cl_sql_auth_filter()
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   LET g_sql = " SELECT DISTINCT 'Y',bgae003,bgae005,bgae008,",g_input.l_pr,"",
+               "   FROM bgae_t ",
+               "  WHERE bgaeent = ?",
+               "    AND bgae006 = '",g_input.bgae006,"'",
+               "    AND ",g_input.wc,
+               "  ORDER BY bgae003,bgae005,bgae008 "
+   #end add-point
+ 
+   PREPARE abgp021_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR abgp021_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空 name="b_fill.clear"
+   
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into name="b_fill.foreach_into"
+   g_detail_d[l_ac].*
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充 name="b_fill.foreach_iside"
+      
+      #end add-point
+      
+      CALL abgp021_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.other_table"
+   CALL g_detail_d.deleteElement(g_detail_d.getLength())
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE abgp021_sel
+   
+   LET l_ac = 1
+   CALL abgp021_fetch()
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.after_b_fill"
+ 
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgp021.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION abgp021_fetch()
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define name="fetch.define"
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後 name="fetch.after_fill"
+   
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgp021.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION abgp021_detail_show()
+   #add-point:show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point
+   #add-point:show段define name="detail_show.define"
+   
+   #end add-point
+   
+   #add-point:detail_show段 name="detail_show.detail_show"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgp021.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION abgp021_filter()
+   #add-point:filter段define(客製用) name="filter.define_customerization"
+   
+   #end add-point    
+   #add-point:filter段define name="filter.define"
+   
+   #end add-point
+   
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define name="filter.detail_cnt"
+ 
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL abgp021_b_fill()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgp021.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION abgp021_filter_parser(ps_field)
+   #add-point:filter段define(客製用) name="filter_parser.define_customerization"
+   
+   #end add-point    
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define name="filter_parser.define"
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgp021.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION abgp021_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = abgp021_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgp021.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: 清空條件並且帶預設值
+# Memo...........:
+# Usage..........: abgp021_qbeclear()
+
+# Date & Author..: 160604 By 03538
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgp021_qbeclear()
+   LET g_input.wc = " 1=1"
+   LET g_input.l_type1='Y'
+   LET g_input.l_type2='N'
+   CALL abgp021_set_entry()
+   CALL abgp021_set_no_entry()
+   LET g_input.bgbi002_1 = ''
+   LET g_input.bgbi003_1 = ''
+   LET g_input.l_bgae006_1 = ''
+   LET g_input.glarld = ''
+   LET g_input.glar002 = ''      
+   LET g_input.glar003_s = ''      
+   LET g_input.glar003_e = ''      
+   LET g_input.l_type3=''
+   LET g_input.bgbi002 = ''
+   LET g_input.bgbi003 = ''
+   LET g_input.l_pr = ''
+   LET g_input.bgae006 = ''
+   DISPLAY BY NAME g_input.l_bgae006_1,g_input.bgae006 
+   CALL g_detail_d.clear()
+               
+    
+END FUNCTION
+
+PRIVATE FUNCTION abgp021_process()
+DEFINE l_i         LIKE type_t.num10   
+DEFINE l_chr       STRING
+DEFINE l_sql       STRING
+DEFINE l_cnt_sql   STRING
+DEFINE l_tmp       RECORD
+      bgae003   LIKE bgae_t.bgae003,
+      bgae005   LIKE bgae_t.bgae005,
+      bgae008   LIKE bgae_t.bgae008,
+      bgbiseq   LIKE bgbi_t.bgbiseq,
+      bgbi001   LIKE bgbi_t.bgbi001,
+                                        
+      bgbi002   LIKE bgbi_t.bgbi002,
+      bgbi003   LIKE bgbi_t.bgbi003,
+      bgbi004   LIKE bgbi_t.bgbi004,
+      bgbi005   LIKE bgbi_t.bgbi005,
+      bgbi006   LIKE bgbi_t.bgbi006,
+                                        
+      bgbi007   LIKE bgbi_t.bgbi007,
+      bgbi008   LIKE bgbi_t.bgbi008,
+      bgbi009   LIKE bgbi_t.bgbi009,
+      bgbi010   LIKE bgbi_t.bgbi010,
+      bgbi011   LIKE bgbi_t.bgbi011,      
+                                  
+      bgbi012   LIKE bgbi_t.bgbi012,
+      bgbi013   LIKE bgbi_t.bgbi013,
+      bgbi014   LIKE bgbi_t.bgbi014,
+      bgbi015   LIKE bgbi_t.bgbi015,
+      bgbi016   LIKE bgbi_t.bgbi016,     
+                                  
+      bgbi017   LIKE bgbi_t.bgbi017,
+      bgbi018   LIKE bgbi_t.bgbi018,
+      bgbi019   LIKE bgbi_t.bgbi019,
+      bgbi020   LIKE bgbi_t.bgbi020,
+      bgbi021   LIKE bgbi_t.bgbi021,
+      bgbi022   LIKE bgbi_t.bgbi022,
+                                      
+      bgbi023   LIKE bgbi_t.bgbi023,
+      bgbi024   LIKE bgbi_t.bgbi024,
+      bgbi025   LIKE bgbi_t.bgbi025,
+      bgbi026   LIKE bgbi_t.bgbi026,
+      bgbi027   LIKE bgbi_t.bgbi027,     
+                                  
+      bgbi028   LIKE bgbi_t.bgbi028,
+      bgbi029   LIKE bgbi_t.bgbi029,
+      bgbi030   LIKE bgbi_t.bgbi030,
+      bgbi031   LIKE bgbi_t.bgbi031,
+      bgbi032   LIKE bgbi_t.bgbi032,
+                               
+      bgbi033   LIKE bgbi_t.bgbi033,
+      bgbi034   LIKE bgbi_t.bgbi034,
+      bgbi035   LIKE bgbi_t.bgbi035,
+      bgbi036   LIKE bgbi_t.bgbi036,
+      bgbi037   LIKE bgbi_t.bgbi037,
+                                     
+      bgbi038   LIKE bgbi_t.bgbi038,
+      bgbi039   LIKE bgbi_t.bgbi039,
+      bgbi040   LIKE bgbi_t.bgbi040,
+      bgbi041   LIKE bgbi_t.bgbi041,
+      bgbi042   LIKE bgbi_t.bgbi042,
+                            
+      bgbi043   LIKE bgbi_t.bgbi043,
+      bgbi044   LIKE bgbi_t.bgbi044,
+      bgbi045   LIKE bgbi_t.bgbi045,
+      bgbi046   LIKE bgbi_t.bgbi046,
+      pr        LIKE type_t.num5
+                     
+                   END RECORD
+DEFINE l_bgbi      RECORD                
+      bgbiseq    LIKE bgbi_t.bgbiseq,
+      bgbi001    LIKE bgbi_t.bgbi001,                            
+      bgbi002    LIKE bgbi_t.bgbi002,
+      bgbi003    LIKE bgbi_t.bgbi003,
+      bgbi004    LIKE bgbi_t.bgbi004,
+      
+      bgbi005    LIKE bgbi_t.bgbi005,
+      bgbi006    LIKE bgbi_t.bgbi006,                                 
+      bgbi007    LIKE bgbi_t.bgbi007,
+      bgbi008    LIKE bgbi_t.bgbi008,
+      bgbi009    LIKE bgbi_t.bgbi009,
+      
+      bgbi010    LIKE bgbi_t.bgbi010,
+      bgbi011    LIKE bgbi_t.bgbi011,                                 
+      bgbi012    LIKE bgbi_t.bgbi012,
+      bgbi013    LIKE bgbi_t.bgbi013,
+      bgbi014    LIKE bgbi_t.bgbi014,
+      
+      bgbi015    LIKE bgbi_t.bgbi015,
+      bgbi016    LIKE bgbi_t.bgbi016,                                  
+      bgbi017    LIKE bgbi_t.bgbi017,
+      bgbi018    LIKE bgbi_t.bgbi018,
+      bgbi019    LIKE bgbi_t.bgbi019,
+      
+      bgbi020    LIKE bgbi_t.bgbi020,
+      bgbi021    LIKE bgbi_t.bgbi021,
+      bgbi022    LIKE bgbi_t.bgbi022,                                  
+      bgbi023    LIKE bgbi_t.bgbi023,
+      bgbi024    LIKE bgbi_t.bgbi024,
+      
+      bgbi025    LIKE bgbi_t.bgbi025,
+      bgbi026    LIKE bgbi_t.bgbi026,
+      bgbi027    LIKE bgbi_t.bgbi027,                                  
+      bgbi028    LIKE bgbi_t.bgbi028,
+      bgbi029    LIKE bgbi_t.bgbi029,
+      
+      bgbi030    LIKE bgbi_t.bgbi030,
+      bgbi031    LIKE bgbi_t.bgbi031,
+      bgbi032    LIKE bgbi_t.bgbi032,                                  
+      bgbi033    LIKE bgbi_t.bgbi033,
+      bgbi034    LIKE bgbi_t.bgbi034,
+      
+      bgbi035    LIKE bgbi_t.bgbi035,
+      bgbi036    LIKE bgbi_t.bgbi036,
+      bgbi037    LIKE bgbi_t.bgbi037,                                  
+      bgbi038    LIKE bgbi_t.bgbi038,
+      bgbi039    LIKE bgbi_t.bgbi039,
+      
+      bgbi040    LIKE bgbi_t.bgbi040,
+      bgbi041    LIKE bgbi_t.bgbi041,
+      bgbi042    LIKE bgbi_t.bgbi042,                                  
+      bgbi043    LIKE bgbi_t.bgbi043,
+      bgbi044    LIKE bgbi_t.bgbi044,
+      
+      bgbi045    LIKE bgbi_t.bgbi045,
+      bgbi046    LIKE bgbi_t.bgbi046,
+      bgbiownid  LIKE bgbi_t.bgbiownid, 
+      bgbiowndp  LIKE bgbi_t.bgbiowndp, 
+      bgbicrtid  LIKE bgbi_t.bgbicrtid, 
+      
+      bgbicrtdp  LIKE bgbi_t.bgbicrtdp, 
+      bgbicrtdt  LIKE bgbi_t.bgbicrtdt, 
+      bgbimodid  LIKE bgbi_t.bgbimodid, 
+      bgbimoddt  LIKE bgbi_t.bgbimoddt, 
+      bgbicnfid  LIKE bgbi_t.bgbicnfid, 
+      
+      bgbicnfdt  LIKE bgbi_t.bgbicnfdt, 
+      bgbistus   LIKE bgbi_t.bgbistus,
+      bgbient    LIKE bgbi_t.bgbient
+                   END RECORD
+DEFINE l_cnt      LIKE type_t.num5
+DEFINE l_cnt1     LIKE type_t.num5
+DEFINE l_bgai005  DYNAMIC ARRAY OF STRING
+DEFINE l_bgao003  LIKE bgao_t.bgao003
+DEFINE l_bgao004  LIKE bgao_t.bgao004
+DEFINE l_bgae    RECORD
+   bgae015   LIKE bgae_t.bgae015,
+   bgae016   LIKE bgae_t.bgae016,
+   bgae017   LIKE bgae_t.bgae017,
+   bgae018   LIKE bgae_t.bgae018,
+   bgae019   LIKE bgae_t.bgae019,
+   bgae020   LIKE bgae_t.bgae020,
+   bgae021   LIKE bgae_t.bgae021,
+   bgae022   LIKE bgae_t.bgae022,
+   bgae023   LIKE bgae_t.bgae023,
+   bgae024   LIKE bgae_t.bgae024,
+   bgae025   LIKE bgae_t.bgae025,
+   bgae026   LIKE bgae_t.bgae026,
+   bgae027   LIKE bgae_t.bgae027,
+   bgae028   LIKE bgae_t.bgae028,
+   bgae029   LIKE bgae_t.bgae029,
+   bgae030   LIKE bgae_t.bgae030,
+   bgae031   LIKE bgae_t.bgae031,
+   bgae032   LIKE bgae_t.bgae032,
+   bgae033   LIKE bgae_t.bgae033,
+   bgae034   LIKE bgae_t.bgae034,
+   bgae035   LIKE bgae_t.bgae035,
+   bgae040   LIKE bgae_t.bgae040,
+   bgae041   LIKE bgae_t.bgae041
+                 END RECORD
+DEFINE l_glar    RECORD
+  glarent   LIKE glar_t.glarent,
+  glar001   LIKE glar_t.glar001,
+  glar012   LIKE glar_t.glar012,
+  glar013   LIKE glar_t.glar013,
+  glar014   LIKE glar_t.glar014,
+  glar015   LIKE glar_t.glar015,
+  glar016   LIKE glar_t.glar016,
+  glar017   LIKE glar_t.glar017,
+  glar018   LIKE glar_t.glar018,
+  glar019   LIKE glar_t.glar019,
+  glar020   LIKE glar_t.glar020,
+  glar022   LIKE glar_t.glar022,
+  glar023   LIKE glar_t.glar023,
+  glar051   LIKE glar_t.glar051,
+  glar024   LIKE glar_t.glar024,
+  glar025   LIKE glar_t.glar025,
+  glar026   LIKE glar_t.glar026,
+  glar027   LIKE glar_t.glar027,
+  glar028   LIKE glar_t.glar028,
+  glar029   LIKE glar_t.glar029,
+  glar030   LIKE glar_t.glar030,
+  glar031   LIKE glar_t.glar031,
+  glar032   LIKE glar_t.glar032,
+  glar033   LIKE glar_t.glar033,
+  glar052   LIKE glar_t.glar052,
+  glar053   LIKE glar_t.glar053
+                 END RECORD
+DEFINE l_feld STRING                 
+DEFINE l_yy             LIKE glav_t.glav002
+DEFINE l_yy_p           LIKE glav_t.glav002
+DEFINE l_mm_s           LIKE glav_t.glav006
+DEFINE l_mm_e           LIKE glav_t.glav006
+DEFINE l_dep_mm         LIKE glav_t.glav006
+DEFINE l_amt            LIKE glar_t.glar005
+DEFINE l_bgae003        LIKE bgae_t.bgae003
+DEFINE l_bgae005        LIKE bgae_t.bgae005
+DEFINE l_bgae008        LIKE bgae_t.bgae008
+DEFINE l_pr             LIKE type_t.num5
+DEFINE l_glaa013        LIKE glaa_t.glaa013
+DEFINE l_flag           LIKE type_t.chr1
+DEFINE l_errno          LIKE type_t.chr100
+DEFINE l_glav002        LIKE glav_t.glav002
+DEFINE l_glav005        LIKE glav_t.glav005
+DEFINE l_sdate_s        LIKE glav_t.glav004
+DEFINE l_sdate_e        LIKE glav_t.glav004
+DEFINE l_glav006        LIKE glav_t.glav006
+DEFINE l_pdate_s        LIKE glav_t.glav004   #當期起始日
+DEFINE l_pdate_e        LIKE glav_t.glav004   #當期截止日
+DEFINE l_glav007        LIKE glav_t.glav007
+DEFINE l_wdate_s        LIKE glav_t.glav004
+DEFINE l_wdate_e        LIKE glav_t.glav004
+
+#161102-00032#1 ---s---
+DEFINE l_glar002       LIKE glar_t.glar002 
+DEFINE l_glar003       LIKE glar_t.glar003 
+DEFINE l_glar005       LIKE glar_t.glar005
+DEFINE l_glar006       LIKE glar_t.glar006
+DEFINE l_glaq003       LIKE glaq_t.glaq003
+DEFINE l_glaq004       LIKE glaq_t.glaq004
+DEFINE l_array DYNAMIC ARRAY OF RECORD
+                  chr1   LIKE type_t.chr1
+                  END RECORD
+DEFINE l_amt2         LIKE glar_t.glar005                  
+DEFINE l_amt3         LIKE glar_t.glar005  
+DEFINE l_glac008      LIKE glac_t.glac008
+DEFINE l_feld2        STRING
+#161102-00032#1 ---e---
+#161123-00024#1 ---s---
+DEFINE l_fture        LIKE type_t.chr1 
+DEFINE l_fy           LIKE glav_t.glav002
+DEFINE l_fm           LIKE glav_t.glav006
+#161123-00024#1 ---e---
+   DELETE FROM abgp021_tmp
+   DELETE FROM abgp021_tmp_g
+   #說明值準備
+   LET l_chr = s_fin_get_colname('abgp021','b_l_pr')
+   FOR l_i = 1 TO 7 
+      LET l_bgai005[l_i] = s_desc_gzcbl004_desc('9417',l_i USING '0#')   
+   END FOR
+
+   FOR l_i = 1 TO g_detail_cnt
+      IF g_detail_d[l_i].sel = 'N' THEN
+         CONTINUE FOR
+      ELSE
+         IF cl_null(g_detail_d[l_i].l_pr) THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'acr-00015'
+            LET g_errparam.extend = l_chr
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            RETURN
+         END IF
+         IF g_detail_d[l_i].l_pr < 0 THEN
+            INITIALIZE g_errparam.* TO NULL
+            LET g_errparam.code = 'amm-00082'
+            LET g_errparam.extend = l_chr
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            RETURN              
+         END IF        
+         INSERT INTO abgp021_tmp(bgae003,bgae005,bgae008,pr)     
+                          VALUES(g_detail_d[l_i].bgae003,g_detail_d[l_i].bgae005,g_detail_d[l_i].bgae008,g_detail_d[l_i].l_pr)         
+      END IF
+   END FOR
+
+   LET g_success = TRUE
+   CALL cl_err_collect_init()
+   CALL s_transaction_begin()   
+   #是否目的預算編號+版本已存在資料
+   SELECT COUNT(1) INTO l_cnt
+     FROM bgbi_t
+    WHERE bgbient = g_enterprise
+      AND bgbi002 = g_input.bgbi002
+      AND bgbi003 = g_input.bgbi003      
+   IF cl_null(l_cnt) THEN LET l_cnt = 0 END IF
+   IF l_cnt > 0 THEN
+      #是否刪除已存在資料
+      IF NOT cl_ask_confirm("abg-00133") THEN
+         DISPLAY '' ,0 TO stagenow,stagecomplete   #失敗:清空進度條
+         CALL cl_err_collect_show()
+         CALL s_transaction_end('N','0')
+         RETURN
+      ELSE
+         DELETE FROM bgbi_t
+          WHERE bgbient = g_enterprise
+            AND bgbi002 = g_input.bgbi002
+            AND bgbi003 = g_input.bgbi003               
+      END IF
+   END IF
+  
+   LET l_cnt1 = 0
+   CASE 
+      WHEN g_input.l_type1 = 'Y'
+         #1.依預算值
+         LET l_sql = " SELECT * FROM ",
+                     "(SELECT bgae003,bgae005,CASE WHEN bgae008 IS NULL THEN ' ' ELSE bgae008 END bgae008, ",
+                     "        bgbiseq,bgbi001,bgbi002,bgbi003,bgbi004, ",
+                     "        bgbi005,bgbi006,bgbi007,bgbi008,bgbi009, ",
+                     "        bgbi010,bgbi011,bgbi012,bgbi013,bgbi014, ",
+                     "        bgbi015,bgbi016,bgbi017,bgbi018,bgbi019, ",
+                     "        bgbi020,bgbi021,bgbi022,bgbi023,bgbi024, ",
+                     "        bgbi025,bgbi026,bgbi027,bgbi028,bgbi029, ",
+                     "        bgbi030,bgbi031,bgbi032,bgbi033,bgbi034, ",
+                     "        bgbi035,bgbi036,bgbi037,bgbi038,bgbi039, ",
+                     "        bgbi040,bgbi041,bgbi042,bgbi043,bgbi044, ",
+                     "        bgbi045,bgbi046 ",
+                     "   FROM bgbi_t,bgae_t ",
+                     "  WHERE bgbient = bgaeent ",
+                     "    AND bgbi005 = bgae001 ",
+                     "    AND bgbient = '",g_enterprise,"' ",               
+                     "    AND bgae006 = '",g_input.bgae006,"' ",     #預算編號參照表
+                     "    AND bgbi002 = '",g_input.bgbi002_1,"' ",   #來源預算編號
+                     "    AND bgbi003 = '",g_input.bgbi003_1,"' ",   #來源預算版本
+                     "    AND bgbi044 = '1') A, ",                   #1:本層資料
+                     "(SELECT pr,bgae003, bgae005, CASE WHEN bgae008 IS NULL THEN ' ' ELSE BGAE008 END bgae008 ",
+                     "   FROM abgp021_tmp) B ",
+                     "  WHERE A.bgae003 = B.bgae003 ",
+                     "    AND A.bgae005 = B.bgae005 ",
+                     "    AND A.bgae008 = B.bgae008 "
+         DECLARE abgp021_bgbi_c CURSOR FROM l_sql
+         LET l_cnt_sql = cl_replace_str(l_sql,"SELECT *","SELECT COUNT(1)")
+         DECLARE abgp021_bgbi_cnt_c CURSOR FROM l_cnt_sql
+         LET l_cnt = 0 
+         EXECUTE abgp021_bgbi_cnt_c INTO l_cnt
+         IF cl_null(l_cnt) THEN LET l_cnt = 0 END IF
+         CALL cl_progress_bar_no_window(l_cnt+1)                  
+         
+         FOREACH abgp021_bgbi_c INTO l_tmp.*
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = "FOREACH:abgp021_bgbi_c"
+               LET g_errparam.code   = SQLCA.sqlcode
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+               LET g_success = 'N'
+               EXIT FOREACH
+            END IF   
+            CALL cl_progress_no_window_ing("")       #每次執行推進
+            INITIALIZE l_bgbi.* TO NULL
+            LET l_bgbi.bgbient   = g_enterprise
+            LET l_bgbi.bgbiseq   = l_tmp.bgbiseq
+            LET l_bgbi.bgbi001   = l_tmp.bgbi001                        
+            LET l_bgbi.bgbi002   = g_input.bgbi002
+            LET l_bgbi.bgbi003   = g_input.bgbi003
+            LET l_bgbi.bgbi004   = l_tmp.bgbi004
+                     
+            LET l_bgbi.bgbi005   = l_tmp.bgbi005
+            LET l_bgbi.bgbi006   = l_tmp.bgbi006                             
+            LET l_bgbi.bgbi007   = l_tmp.bgbi007 
+            LET l_bgbi.bgbi008   = l_tmp.bgbi008
+            LET l_bgbi.bgbi009   = l_tmp.bgbi009      
+               
+            LET l_bgbi.bgbi010   = l_tmp.bgbi010
+            LET l_bgbi.bgbi011   = l_tmp.bgbi011                              
+            LET l_bgbi.bgbi012   = l_tmp.bgbi012
+            LET l_bgbi.bgbi013   = l_tmp.bgbi013
+            LET l_bgbi.bgbi014   = l_tmp.bgbi014
+                     
+            LET l_bgbi.bgbi015   = l_tmp.bgbi015
+            LET l_bgbi.bgbi016   = l_tmp.bgbi016                               
+            LET l_bgbi.bgbi017   = l_tmp.bgbi017
+            LET l_bgbi.bgbi018   = l_tmp.bgbi027 * l_tmp.pr/100       #來源核准金額 * 比率
+            LET l_bgbi.bgbi018   = s_curr_round(l_bgbi.bgbi004 ,l_bgbi.bgbi017,l_bgbi.bgbi018,'2')
+            LET l_bgbi.bgbi019   = l_bgbi.bgbi018   
+                     
+            LET l_bgbi.bgbi020   = l_tmp.bgbi020
+            LET l_bgbi.bgbi021   = 1
+            LET l_bgbi.bgbi022   = l_bgbi.bgbi018                                  
+            LET l_bgbi.bgbi023   = l_bgbi.bgbi018   
+            LET l_bgbi.bgbi024   = 0      
+               
+            LET l_bgbi.bgbi025   = 0
+            LET l_bgbi.bgbi026   = 0
+            LET l_bgbi.bgbi027   = l_bgbi.bgbi018                 
+            LET l_bgbi.bgbi028   = l_tmp.bgbi028
+            LET l_bgbi.bgbi029   = l_tmp.bgbi029
+                     
+            LET l_bgbi.bgbi030   = l_tmp.bgbi030
+            LET l_bgbi.bgbi031   = l_tmp.bgbi031
+            LET l_bgbi.bgbi032   = l_tmp.bgbi032                  
+            LET l_bgbi.bgbi033   = l_tmp.bgbi033
+            LET l_bgbi.bgbi034   = l_tmp.bgbi034
+                     
+            LET l_bgbi.bgbi035   = l_tmp.bgbi035
+            LET l_bgbi.bgbi036   = l_tmp.bgbi036
+            LET l_bgbi.bgbi037   = l_tmp.bgbi037                  
+            LET l_bgbi.bgbi038   = l_tmp.bgbi038
+            LET l_bgbi.bgbi039   = l_tmp.bgbi039      
+               
+            LET l_bgbi.bgbi040   = l_tmp.bgbi040
+            LET l_bgbi.bgbi041   = l_tmp.bgbi041
+            LET l_bgbi.bgbi042   = l_tmp.bgbi042                               
+            LET l_bgbi.bgbi043   = l_tmp.bgbi043
+            LET l_bgbi.bgbi044   = l_tmp.bgbi044
+                     
+            #取得管理組織+預算樣表;取不到者不複製,只留下紀錄
+            CALL abgp021_get_abgi090(g_input.bgbi002,l_bgbi.bgbi004,l_tmp.bgae005 USING '0#') 
+             RETURNING l_bgbi.bgbi045,l_bgbi.bgbi046
+            IF cl_null(l_bgbi.bgbi045) OR cl_null(l_bgbi.bgbi046) THEN
+               INITIALIZE g_errparam.* TO NULL
+               LET g_errparam.code = 'abg-00134'
+               LET g_errparam.popup = TRUE
+               LET g_errparam.replace[1] = g_input.bgbi002
+               LET g_errparam.replace[2] = l_bgbi.bgbi004
+               LET g_errparam.replace[3] = l_tmp.bgae005,"-",l_bgai005[l_tmp.bgae005]
+               CALL cl_err()              
+               CONTINUE FOREACH
+            END IF
+            LET l_bgbi.bgbiownid = g_user
+            LET l_bgbi.bgbiowndp = g_dept
+            LET l_bgbi.bgbicrtid = g_user      
+               
+            LET l_bgbi.bgbicrtdp = g_dept
+            LET l_bgbi.bgbicrtdt = cl_get_current()
+            LET l_bgbi.bgbimodid = g_user
+            LET l_bgbi.bgbimoddt = cl_get_current()
+            LET l_bgbi.bgbistus  = 'N'
+            INSERT INTO bgbi_t
+            (bgbiseq,bgbi001,bgbi002,bgbi003,bgbi004,
+             bgbi005,bgbi006,bgbi007,bgbi008,bgbi009,
+             bgbi010,bgbi011,bgbi012,bgbi013,bgbi014,
+             bgbi015,bgbi016,bgbi017,bgbi018,bgbi019,
+             bgbi020,bgbi021,bgbi022,bgbi023,bgbi024,
+             bgbi025,bgbi026,bgbi027,bgbi028,bgbi029,
+             bgbi030,bgbi031,bgbi032,bgbi033,bgbi034,
+             bgbi035,bgbi036,bgbi037,bgbi038,bgbi039,
+             bgbi040,bgbi041,bgbi042,bgbi043,bgbi044,
+             bgbi045,bgbi046,bgbiownid,bgbiowndp,bgbicrtid,  
+             bgbicrtdp,bgbicrtdt,bgbimodid,bgbimoddt,bgbicnfid,  
+             bgbicnfdt,bgbistus,bgbient)
+            VALUES
+            (l_bgbi.bgbiseq,l_bgbi.bgbi001,l_bgbi.bgbi002,l_bgbi.bgbi003,l_bgbi.bgbi004,
+             l_bgbi.bgbi005,l_bgbi.bgbi006,l_bgbi.bgbi007,l_bgbi.bgbi008,l_bgbi.bgbi009,
+             l_bgbi.bgbi010,l_bgbi.bgbi011,l_bgbi.bgbi012,l_bgbi.bgbi013,l_bgbi.bgbi014,
+             l_bgbi.bgbi015,l_bgbi.bgbi016,l_bgbi.bgbi017,l_bgbi.bgbi018,l_bgbi.bgbi019,
+             l_bgbi.bgbi020,l_bgbi.bgbi021,l_bgbi.bgbi022,l_bgbi.bgbi023,l_bgbi.bgbi024,
+             l_bgbi.bgbi025,l_bgbi.bgbi026,l_bgbi.bgbi027,l_bgbi.bgbi028,l_bgbi.bgbi029,
+             l_bgbi.bgbi030,l_bgbi.bgbi031,l_bgbi.bgbi032,l_bgbi.bgbi033,l_bgbi.bgbi034,
+             l_bgbi.bgbi035,l_bgbi.bgbi036,l_bgbi.bgbi037,l_bgbi.bgbi038,l_bgbi.bgbi039,
+             l_bgbi.bgbi040,l_bgbi.bgbi041,l_bgbi.bgbi042,l_bgbi.bgbi043,l_bgbi.bgbi044,
+             l_bgbi.bgbi045,l_bgbi.bgbi046,l_bgbi.bgbiownid,l_bgbi.bgbiowndp,l_bgbi.bgbicrtid,  
+             l_bgbi.bgbicrtdp,l_bgbi.bgbicrtdt,l_bgbi.bgbimodid,l_bgbi.bgbimoddt,l_bgbi.bgbicnfid,  
+             l_bgbi.bgbicnfdt,l_bgbi.bgbistus,l_bgbi.bgbient)      
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "ins bgbi_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET g_success = FALSE
+               EXIT FOREACH
+            END IF                          
+            LET l_cnt1 = l_cnt1 +1            
+         END FOREACH
+         
+      #2.依實際值
+      WHEN g_input.l_type2 = 'Y'
+         
+         CALL cl_progress_bar_no_window(2)
+         LET l_yy_p = g_input.glar002 - 1
+         #依輸入來源帳套+年度取得未來期分界
+         SELECT MAX(glar003) INTO l_dep_mm 
+           FROM glar_t 
+          WHERE glarent = g_enterprise
+            AND glarld = g_input.glarld
+            AND glar002 = g_input.glar002
+         IF cl_null(l_dep_mm) THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'abg-00135'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()       
+            LET g_success = FALSE     
+            EXIT CASE            
+         END IF
+         #若為當年度,則應取得帳套之關帳日期別,避免直接取餘額最大期卻是不完整的餘額(因傳票過帳可寫入glar)
+         IF g_input.glar002 = YEAR(g_today) THEN
+            SELECT glaa013 INTO l_glaa013
+              FROM glaa_t
+             WHERE glaaent = g_enterprise
+               AND glaald = g_input.glarld
+            CALL s_get_accdate(g_glaa003,l_glaa013,'','')
+            RETURNING l_flag,l_errno,l_glav002,l_glav005,l_sdate_s,l_sdate_e,
+                      l_glav006,l_pdate_s,l_pdate_e,l_glav007,l_wdate_s,l_wdate_e       
+            IF l_glav006 < l_dep_mm THEN
+               LET l_dep_mm = l_glav006
+            END IF
+         END IF
+
+            
+         #取得預算專案+核算項維度abgi045
+         LET l_sql = "SELECT A.*,B.pr FROM ( ",
+                     " SELECT DISTINCT bgao004,bgae015,bgae016,bgae017,bgae018, ",
+                     "                 bgae019,bgae020,bgae021,bgae022,bgae023, ",
+                     "                 bgae024,bgae025,bgae026,bgae027,bgae028, ",
+                     "                 bgae029,bgae030,bgae031,bgae032,bgae033, ",
+                     "                 bgae034,bgae035,bgae040,bgae041, ",
+                     "                 CASE WHEN bgae008 IS NULL THEN ' ' ELSE bgae008 END bgae008,bgae005,bgae003 ",
+                     "   FROM bgao_t ",
+                     "   LEFT OUTER JOIN bgae_t ",
+                     "     ON bgaoent = bgaeent ",
+                     "    AND bgao001 = bgae006 ",
+                     "    AND bgao004 = bgae001 ",
+                     "  WHERE bgaoent = '",g_enterprise,"' ",
+                     "    AND bgao001='",g_input.bgae006,"' ",
+                     "    AND bgao002='",g_glaa004,"' ",
+                     ")A,",
+                     " (SELECT pr,bgae003,bgae005,CASE WHEN bgae008 IS NULL THEN ' ' ELSE BGAE008 END bgae008 ",
+                     "    FROM abgp021_tmp) B ",
+                     "   WHERE A.bgae003 = B.bgae003 ",
+                     "     AND A.bgae005 = B.bgae005 ",
+                     "     AND A.bgae008 = B.bgae008 "
+         DECLARE abgp021_bgao_c CURSOR FROM l_sql
+         
+         #取得單項預算專案對應之所有科目abgi140
+         LET l_sql = " SELECT DISTINCT bgao003 FROM bgao_t ",
+                     "  WHERE bgaoent = '",g_enterprise,"' ",
+                     "    AND bgao001='",g_input.bgae006,"' ",
+                     "    AND bgao002='",g_glaa004,"' ",
+                     "    AND bgao004 = ? "
+         DECLARE abgp021_bgao_c2 CURSOR FROM l_sql
+         
+         #取得目的預算之年度/期別abgi030
+         LET l_sql = " SELECT ",
+                     "(SELECT MIN(to_char(bgac002,'yyyy')) FROM bgac_t WHERE bgacent = bgaaent AND bgac001 = bgaa002 ), ",
+                     "(SELECT MIN(bgac004) FROM bgac_t WHERE bgacent = bgaaent AND bgac001 = bgaa002 ), ",
+                     "(SELECT MAX(bgac004) FROM bgac_t WHERE bgacent = bgaaent AND bgac001 = bgaa002 ) ",
+                     "   FROM bgaa_t ",
+                     "  WHERE bgaaent = '",g_enterprise,"'",
+                     "    AND bgaa001='",g_input.bgbi002,"' "
+         DECLARE abgp021_bgaa_c CURSOR FROM l_sql
+         EXECUTE abgp021_bgaa_c INTO l_yy,l_mm_s,l_mm_e
+         
+         LET l_sql = " SELECT SUM(amt),pr,bgae005,glar003,bgbi005,glar012,glar013,glar014, ",
+                            " glar015,glar016,glar017,glar018,glar019, ",
+                            " glar020,glar022,glar023,glar051,glar024, ",
+                            " glar025,glar026,glar027,glar028,glar029, ",
+                            " glar030,glar031,glar032,glar033,glar052, ",
+                            " glar053 ",
+                     "   FROM abgp021_tmp_g",
+                     "  GROUP BY pr,bgae005,glar003,bgbi005,glar012,glar013,glar014, ",
+                     "           glar015,glar016,glar017,glar018,glar019, ",
+                     "           glar020,glar022,glar023,glar051,glar024, ",
+                     "           glar025,glar026,glar027,glar028,glar029, ",
+                     "           glar030,glar031,glar032,glar033,glar052, ",
+                     "           glar053 ",
+                     "    ORDER BY glar003,bgbi005                        " #161123-00024#1
+         DECLARE abgp021_tmp_c CURSOR FROM l_sql                     
+                  
+         FOREACH abgp021_bgao_c INTO l_bgao004,l_bgae.*,l_bgae008,l_bgae005,l_bgae003,l_pr
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = "FOREACH:abgp021_bgbi_c"
+               LET g_errparam.code   = SQLCA.sqlcode
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+               LET g_success = FALSE
+               EXIT FOREACH
+            END IF  
+
+            CALL abgp021_get_abgi045(l_bgae.*) RETURNING l_feld,l_feld2 #161123-00024#1 add l_feld2
+            #取會科餘額glar_t
+            #161102-00032#1---s--- 
+            #LET l_sql = " SELECT glarent,glar001,glar012,",l_feld,",",
+            #            "        CASE(SELECT glac008 FROM glac_t WHERE glacent = glarent AND glac001 = '",g_glaa004,"' AND glac002 = glar001) ",
+            #            "        WHEN '1' THEN SUM(glar005-glar006) ELSE SUM(glar006-glar005) END ",
+            #            "   FROM glar_t ",
+            #            "  WHERE glarent = '",g_enterprise,"' ",
+            #            "    AND glarld = '",g_input.glarld,"'",
+            #            "    AND glar002 = ? ",
+            #            "    AND glar003 = ? ",
+            #            "    AND glar001 = ? ",
+            #            "  GROUP BY glarent,glar001,glar012,",l_feld
+                                  
+          LET l_sql = " SELECT glarent,glar001,glar012,",l_feld,",                              ",
+                      "          '',SUM(glar005),SUM(glar006),                                  ",
+                      "          COALESCE((SELECT SUM(glaq003) FROM glap_t,glaq_t               ",
+                      "                      WHERE glapent = glaqent AND glapent = glarent      ",
+                      "                        AND ",l_feld2,                                #161123-00024#1 add
+                      "                        AND glap007 = 'CE' AND glapdocno = glaqdocno AND glapstus = 'S'        ",
+                      "                        AND glap002 = glar002 AND glap004 = glar003  AND glaq002 = glar001),0), ",                      
+                      "          COALESCE((SELECT SUM(glaq004) FROM glap_t,glaq_t                ",                
+                      "                     WHERE glapent = glaqent AND glapent = glarent        ",
+                     "                        AND ",l_feld2,                                  #161123-00024#1 add
+                      "                       AND glap007 = 'CE' AND glapdocno = glaqdocno AND glapstus = 'S'          ",
+                      "                       AND glap002 = glar002 AND glap004 = glar003 AND glaq002 = glar001),0),   ",
+                      "   glar002,glar003 ",
+                      "   FROM glar_t ", 
+                      "  WHERE glarent = '",g_enterprise,"' ",
+                      "    AND glarld = '",g_input.glarld,"'",
+                      "    AND glar002 = ? ",
+                      "    AND glar003 = ? ",
+                      "    AND glar001 = ? ",
+                      "  GROUP BY glarent,glar001,glar012,glar002,glar003,",l_feld                  
+            PREPARE abgp021_glar_p FROM l_sql
+            DECLARE abgp021_glar_c CURSOR FOR abgp021_glar_p
+            #161102-00032#1---s---
+            FOR l_i = g_input.glar003_s TO g_input.glar003_e
+               FOREACH abgp021_bgao_c2 USING l_bgao004 INTO l_bgao003
+                  LET l_amt = 0 LET l_glar005 = 0 LET l_glar006 = 0 LET l_glaq003 = 0  LET l_glaq004 = 0
+                  #EXECUTE abgp021_glar_c USING g_input.glar002,l_i,l_bgao003 INTO l_glar.*,l_amt  #161102-00032#1
+                  LET l_fture = 'Y' #161123-00024#1
+                  FOREACH abgp021_glar_c USING g_input.glar002,l_i,l_bgao003 INTO l_glar.*,l_amt,l_glar005,l_glar006,     #161123-00024#1 add
+                                                                                  l_glaq003,l_glaq004,l_glar002,l_glar003  #161123-00024#1 add
+                     LET l_fture = 'N' #161123-00024#1                                                                                
+                     IF cl_null(l_glaq003) THEN LET l_glaq003 = 0 END IF
+                     IF cl_null(l_glaq004) THEN LET l_glaq004 = 0 END IF
+                     IF cl_null(l_glar005) THEN LET l_glar005 = 0 END IF
+                     IF cl_null(l_glar006) THEN LET l_glar006 = 0 END IF
+                     ##161123-00024#1 add
+                     #IF l_glar005 = 0 AND l_glar006 = 0 THEN
+                     ##IF l_amt = 0 THEN
+                     #   CASE g_input.l_type3
+                     #      WHEN '1'   #依實際最後一期
+                     #         #EXECUTE abgp021_glar_c USING g_input.glar002,l_dep_mm,l_bgao003 INTO l_glar.*,l_amt  #161102-00032#1
+                     #         EXECUTE abgp021_glar_c USING g_input.glar002,l_dep_mm,l_bgao003 INTO l_glar.*,l_amt,l_glar005,l_glar006,     #161102-00032#1
+                     #                                                                              l_glaq003,l_glaq004,l_glar002,l_glar003  #161102-00032#1                          
+                     #      WHEN '2'   #依前年度同期別實際數
+                     #        # EXECUTE abgp021_glar_c USING l_yy_p,l_i,l_bgao003 INTO l_glar.*,l_amt  #161102-00032#1
+                     #         EXECUTE abgp021_glar_c USING l_yy_p,l_i,l_bgao003 INTO l_glar.*,l_amt,l_glar005,l_glar006,     #161102-00032#1
+                     #                                                               l_glaq003,l_glaq004,l_glar002,l_glar003  #161102-00032#1
+                     #   END CASE
+                     #   IF cl_null(l_amt) THEN LET l_amt = 0 END IF
+                     #END IF #161123-00024#1 add
+                     #161102-00032#1 ---s---
+                     IF l_glar005 =0 AND l_glar006 =0 THEN CONTINUE FOREACH END IF 
+                     IF cl_null(l_glaq003) THEN LET l_glaq003 = 0 END IF
+                     IF cl_null(l_glaq004) THEN LET l_glaq004 = 0 END IF
+                     IF cl_null(l_glar005) THEN LET l_glar005 = 0 END IF
+                     IF cl_null(l_glar006) THEN LET l_glar006 = 0 END IF
+                     IF l_glaq003  > 0  THEN 
+                        LET l_glar005 = l_glar005 - l_glaq003
+                     ELSE                   
+                        LET l_glar006 = l_glar006 - l_glaq004
+                     END IF                          
+                     SELECT glac008 INTO l_glac008 FROM glac_t WHERE glacent = g_enterprise AND glac001 = g_glaa004 AND glac002 = l_bgao003      
+                     IF l_glac008 = 1 THEN 
+                        LET l_amt = l_glar005 - l_glar006 
+                     ELSE
+                        LET l_amt = l_glar006 - l_glar005
+                     END IF
+                     IF cl_null(l_amt) THEN LET l_amt = 0 END IF    
+                     #161102-00032#1 ----e---
+                     INSERT INTO abgp021_tmp_g(
+                     pr,bgae005,glar003,bgbi005,amt ,  
+                     glar012,glar013,glar014,glar015,glar016,  
+                     glar017,glar018,glar019,glar020,glar022,  
+                     glar023,glar051,glar024,glar025,glar026,  
+                     glar027,glar028,glar029,glar030,glar031,  
+                     glar032,glar033,glar052,glar053                        
+                     )
+                     VALUES(
+                     l_pr,l_bgae005,l_i,l_bgao004,l_amt,
+                     l_glar.glar012,l_glar.glar013,l_glar.glar014,l_glar.glar015,l_glar.glar016,
+                     l_glar.glar017,l_glar.glar018,l_glar.glar019,l_glar.glar020,l_glar.glar022,
+                     l_glar.glar023,l_glar.glar051,l_glar.glar024,l_glar.glar025,l_glar.glar026,
+                     l_glar.glar027,l_glar.glar028,l_glar.glar029,l_glar.glar030,l_glar.glar031,
+                     l_glar.glar032,l_glar.glar033,l_glar.glar052,l_glar.glar053)
+                  END FOREACH
+                  #161123-00024#1 add
+                  IF l_fture = 'Y' THEN 
+                      CASE g_input.l_type3
+                         WHEN '1'   #依實際最後一期END IF
+                            LET l_fy = g_input.glar002
+                            LET l_fm = l_dep_mm                           
+                         WHEN '2'   #依前年度同期別實際數
+                             LET l_fy = l_yy_p
+                             LET l_fm = l_i                             
+                     END CASE                                                                                 
+                     FOREACH abgp021_glar_c USING l_fy,l_i,l_bgao003 INTO l_glar.*,l_amt,l_glar005,l_glar006, 
+                                                                               l_glaq003,l_glaq004,l_glar002,l_glar003  
+                        IF cl_null(l_glaq003) THEN LET l_glaq003 = 0 END IF
+                        IF cl_null(l_glaq004) THEN LET l_glaq004 = 0 END IF
+                        IF cl_null(l_glar005) THEN LET l_glar005 = 0 END IF
+                        IF cl_null(l_glar006) THEN LET l_glar006 = 0 END IF  
+                        
+                        IF l_glaq003  > 0  THEN 
+                           LET l_glar005 = l_glar005 - l_glaq003
+                        ELSE                   
+                           LET l_glar006 = l_glar006 - l_glaq004
+                        END IF                          
+                        SELECT glac008 INTO l_glac008 FROM glac_t WHERE glacent = g_enterprise AND glac001 = g_glaa004 AND glac002 = l_bgao003      
+                        IF l_glac008 = 1 THEN 
+                           LET l_amt = l_glar005 - l_glar006 
+                        ELSE
+                           LET l_amt = l_glar006 - l_glar005
+                        END IF
+                        IF cl_null(l_amt) THEN LET l_amt = 0 END IF    
+                        INSERT INTO abgp021_tmp_g(
+                        pr,bgae005,glar003,bgbi005,amt ,  
+                        glar012,glar013,glar014,glar015,glar016,  
+                        glar017,glar018,glar019,glar020,glar022,  
+                        glar023,glar051,glar024,glar025,glar026,  
+                        glar027,glar028,glar029,glar030,glar031,  
+                        glar032,glar033,glar052,glar053                        
+                        )
+                        VALUES(
+                        l_pr,l_bgae005,l_i,l_bgao004,l_amt,
+                        l_glar.glar012,l_glar.glar013,l_glar.glar014,l_glar.glar015,l_glar.glar016,
+                        l_glar.glar017,l_glar.glar018,l_glar.glar019,l_glar.glar020,l_glar.glar022,
+                        l_glar.glar023,l_glar.glar051,l_glar.glar024,l_glar.glar025,l_glar.glar026,
+                        l_glar.glar027,l_glar.glar028,l_glar.glar029,l_glar.glar030,l_glar.glar031,
+                        l_glar.glar032,l_glar.glar033,l_glar.glar052,l_glar.glar053)                                                                                                                                                                                                                                                                                                                           
+                     END FOREACH                                                                         
+                  END IF
+                  #161123-00024#1 add
+               END FOREACH            
+            END FOR   
+        END FOREACH    
+
+        FOREACH abgp021_tmp_c INTO l_tmp.bgbi018,l_tmp.pr,l_tmp.bgae005,l_tmp.bgbi006,l_tmp.bgbi005,l_tmp.bgbi004,l_tmp.bgbi007,l_tmp.bgbi008,
+                                   l_tmp.bgbi009,l_tmp.bgbi010,l_tmp.bgbi011,l_tmp.bgbi012,l_tmp.bgbi013,
+                                   l_tmp.bgbi014,l_tmp.bgbi015,l_tmp.bgbi016,l_tmp.bgbi039,l_tmp.bgbi028,
+                                   l_tmp.bgbi029,l_tmp.bgbi030,l_tmp.bgbi031,l_tmp.bgbi032,l_tmp.bgbi033,
+                                   l_tmp.bgbi034,l_tmp.bgbi035,l_tmp.bgbi036,l_tmp.bgbi037,l_tmp.bgbi040,
+                                   l_tmp.bgbi041
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = "FOREACH:abgp021_tmp_c"
+               LET g_errparam.code   = SQLCA.sqlcode
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+               LET g_success = 'N'
+               EXIT FOREACH
+            END IF   
+
+            INITIALIZE l_bgbi.* TO NULL
+            LET l_bgbi.bgbient   = g_enterprise
+             SELECT MAX(bgbiseq) INTO l_bgbi.bgbiseq
+               FROM bgbi_t
+              WHERE bgbient = g_enterprise
+                AND bgbi002 = g_input.bgbi002
+                AND bgbi003 = g_input.bgbi003
+                AND bgbi004 = l_tmp.bgbi004
+                AND bgbi005 = l_tmp.bgbi005 
+                AND bgbi006 = l_tmp.bgbi006 #161123-00024#1
+            IF cl_null(l_bgbi.bgbiseq) THEN LET l_bgbi.bgbiseq = 0 END IF                               
+            LET l_bgbi.bgbiseq = l_bgbi.bgbiseq + 1     
+            LET l_bgbi.bgbi002   = g_input.bgbi002
+            LET l_bgbi.bgbi003   = g_input.bgbi003
+            LET l_bgbi.bgbi004   = l_tmp.bgbi004
+                     
+            LET l_bgbi.bgbi005   = l_tmp.bgbi005
+            LET l_bgbi.bgbi006   = l_tmp.bgbi006                             
+            LET l_bgbi.bgbi007   = l_tmp.bgbi007 
+            LET l_bgbi.bgbi008   = l_tmp.bgbi008
+            LET l_bgbi.bgbi009   = l_tmp.bgbi009      
+               
+            LET l_bgbi.bgbi010   = l_tmp.bgbi010
+            LET l_bgbi.bgbi011   = l_tmp.bgbi011                              
+            LET l_bgbi.bgbi012   = l_tmp.bgbi012
+            LET l_bgbi.bgbi013   = l_tmp.bgbi013
+            LET l_bgbi.bgbi014   = l_tmp.bgbi014
+                     
+            LET l_bgbi.bgbi015   = l_tmp.bgbi015
+            LET l_bgbi.bgbi016   = l_tmp.bgbi016                               
+            LET l_bgbi.bgbi017   = g_curr_o
+            LET l_bgbi.bgbi018   = l_tmp.bgbi018 * l_tmp.pr/100       #來源核准金額 * 比率   
+            LET l_bgbi.bgbi018   = s_curr_round(l_bgbi.bgbi004 ,l_bgbi.bgbi017,l_bgbi.bgbi018,'2')
+            IF l_bgbi.bgbi018 < 0 THEN LET l_bgbi.bgbi018 = 0 END IF #161102-00032#1
+            LET l_bgbi.bgbi019   = l_bgbi.bgbi018   
+                     
+            LET l_bgbi.bgbi020   = ' '
+            LET l_bgbi.bgbi021   = 1
+            LET l_bgbi.bgbi022   = l_bgbi.bgbi018                                  
+            LET l_bgbi.bgbi023   = l_bgbi.bgbi018   
+            LET l_bgbi.bgbi024   = 0      
+               
+            LET l_bgbi.bgbi025   = 0
+            LET l_bgbi.bgbi026   = 0
+            LET l_bgbi.bgbi027   = l_bgbi.bgbi018                 
+            LET l_bgbi.bgbi028   = l_tmp.bgbi028
+            LET l_bgbi.bgbi029   = l_tmp.bgbi029
+                     
+            LET l_bgbi.bgbi030   = l_tmp.bgbi030
+            LET l_bgbi.bgbi031   = l_tmp.bgbi031
+            LET l_bgbi.bgbi032   = l_tmp.bgbi032                  
+            LET l_bgbi.bgbi033   = l_tmp.bgbi033
+            LET l_bgbi.bgbi034   = l_tmp.bgbi034
+                     
+            LET l_bgbi.bgbi035   = l_tmp.bgbi035
+            LET l_bgbi.bgbi036   = l_tmp.bgbi036
+            LET l_bgbi.bgbi037   = l_tmp.bgbi037                  
+            LET l_bgbi.bgbi038   = l_tmp.bgbi038
+            LET l_bgbi.bgbi039   = l_tmp.bgbi039      
+               
+            LET l_bgbi.bgbi040   = l_tmp.bgbi040
+            LET l_bgbi.bgbi041   = l_tmp.bgbi041
+            LET l_bgbi.bgbi042   = 0                        
+            LET l_bgbi.bgbi043   = 0
+            LET l_bgbi.bgbi044   = '1'
+                     
+            #取得管理組織+預算樣表;取不到者不複製,只留下紀錄
+            CALL abgp021_get_abgi090(g_input.bgbi002,l_bgbi.bgbi004,l_tmp.bgae005 USING '0#')   
+             RETURNING l_bgbi.bgbi045,l_bgbi.bgbi046
+            IF cl_null(l_bgbi.bgbi045) OR cl_null(l_bgbi.bgbi046) THEN
+               INITIALIZE g_errparam.* TO NULL
+               LET g_errparam.code = 'abg-00134'
+               LET g_errparam.popup = TRUE
+               LET g_errparam.replace[1] = g_input.bgbi002
+               LET g_errparam.replace[2] = l_bgbi.bgbi004
+               LET g_errparam.replace[3] = l_tmp.bgae005,"-",l_bgai005[l_tmp.bgae005]
+               CALL cl_err()              
+               CONTINUE FOREACH
+            END IF
+            #161102-00032#1 ---s--- 
+            #取得可用預算係項
+            CALL l_array.clear()
+            CALL s_abg_used_cond(l_bgbi.bgbi004,l_bgbi.bgbi002,l_bgbi.bgbi005)
+            RETURNING l_array
+            IF l_array[2].chr1 = 'N'  THEN LET l_bgbi.bgbi007 = ' ' END IF #部門
+            IF l_array[3].chr1 = 'N'  THEN LET l_bgbi.bgbi008 = ' ' END IF #利潤中心
+            IF l_array[4].chr1 = 'N'  THEN LET l_bgbi.bgbi009 = ' ' END IF #區域
+            IF l_array[5].chr1 = 'N'  THEN LET l_bgbi.bgbi010 = ' ' END IF #交易客商
+            IF l_array[6].chr1 = 'N'  THEN LET l_bgbi.bgbi011 = ' ' END IF #收款客商
+            IF l_array[7].chr1 = 'N'  THEN LET l_bgbi.bgbi012 = ' ' END IF #客群
+            IF l_array[8].chr1 = 'N'  THEN LET l_bgbi.bgbi013 = ' ' END IF #產品類別
+            IF l_array[9].chr1 = 'N'  THEN LET l_bgbi.bgbi014 = ' ' END IF #人員
+            IF l_array[10].chr1 = 'N' THEN LET l_bgbi.bgbi015 = ' ' END IF #專案編號
+            IF l_array[11].chr1 = 'N' THEN LET l_bgbi.bgbi016 = ' ' END IF #WBS
+            IF l_array[12].chr1 = 'N' THEN LET l_bgbi.bgbi039 = ' ' END IF #經營方式
+            IF l_array[13].chr1 = 'N' THEN LET l_bgbi.bgbi040 = ' ' END IF #渠道
+            IF l_array[14].chr1 = 'N' THEN LET l_bgbi.bgbi041 = ' ' END IF #品牌
+            IF l_array[15].chr1 = 'N' THEN LET l_bgbi.bgbi028 = ' ' END IF #自由核算項一
+            IF l_array[16].chr1 = 'N' THEN LET l_bgbi.bgbi029 = ' ' END IF 
+            IF l_array[17].chr1 = 'N' THEN LET l_bgbi.bgbi030 = ' ' END IF 
+            IF l_array[18].chr1 = 'N' THEN LET l_bgbi.bgbi031 = ' ' END IF 
+            IF l_array[19].chr1 = 'N' THEN LET l_bgbi.bgbi032 = ' ' END IF 
+            IF l_array[20].chr1 = 'N' THEN LET l_bgbi.bgbi033 = ' ' END IF 
+            IF l_array[21].chr1 = 'N' THEN LET l_bgbi.bgbi034 = ' ' END IF 
+            IF l_array[22].chr1 = 'N' THEN LET l_bgbi.bgbi035 = ' ' END IF 
+            IF l_array[23].chr1 = 'N' THEN LET l_bgbi.bgbi036 = ' ' END IF 
+            IF l_array[24].chr1 = 'N' THEN LET l_bgbi.bgbi037 = ' ' END IF #自由核算項十    
+            IF l_bgbi.bgbi027 <=0 tHEN CONTINUE FOREACH END IF            
+            #161102-00032#1 ---e---
+            LET l_bgbi.bgbiownid = g_user
+            LET l_bgbi.bgbiowndp = g_dept
+            LET l_bgbi.bgbicrtid = g_user      
+               
+            LET l_bgbi.bgbicrtdp = g_dept
+            LET l_bgbi.bgbicrtdt = cl_get_current()
+            LET l_bgbi.bgbimodid = g_user
+            LET l_bgbi.bgbimoddt = cl_get_current()
+            LET l_bgbi.bgbistus  = 'N'
+            INSERT INTO bgbi_t
+            (bgbiseq,bgbi002,bgbi003,bgbi004,
+             bgbi005,bgbi006,bgbi007,bgbi008,bgbi009,
+             bgbi010,bgbi011,bgbi012,bgbi013,bgbi014,
+             bgbi015,bgbi016,bgbi017,bgbi018,bgbi019,
+             bgbi020,bgbi021,bgbi022,bgbi023,bgbi024,
+             bgbi025,bgbi026,bgbi027,bgbi028,bgbi029,
+             bgbi030,bgbi031,bgbi032,bgbi033,bgbi034,
+             bgbi035,bgbi036,bgbi037,bgbi038,bgbi039,
+             bgbi040,bgbi041,bgbi042,bgbi043,bgbi044,
+             bgbi045,bgbi046,bgbiownid,bgbiowndp,bgbicrtid,  
+             bgbicrtdp,bgbicrtdt,bgbimodid,bgbimoddt,bgbicnfid,  
+             bgbicnfdt,bgbistus,bgbient)
+            VALUES
+            (l_bgbi.bgbiseq,l_bgbi.bgbi002,l_bgbi.bgbi003,l_bgbi.bgbi004,
+             l_bgbi.bgbi005,l_bgbi.bgbi006,l_bgbi.bgbi007,l_bgbi.bgbi008,l_bgbi.bgbi009,
+             l_bgbi.bgbi010,l_bgbi.bgbi011,l_bgbi.bgbi012,l_bgbi.bgbi013,l_bgbi.bgbi014,
+             l_bgbi.bgbi015,l_bgbi.bgbi016,l_bgbi.bgbi017,l_bgbi.bgbi018,l_bgbi.bgbi019,
+             l_bgbi.bgbi020,l_bgbi.bgbi021,l_bgbi.bgbi022,l_bgbi.bgbi023,l_bgbi.bgbi024,
+             l_bgbi.bgbi025,l_bgbi.bgbi026,l_bgbi.bgbi027,l_bgbi.bgbi028,l_bgbi.bgbi029,
+             l_bgbi.bgbi030,l_bgbi.bgbi031,l_bgbi.bgbi032,l_bgbi.bgbi033,l_bgbi.bgbi034,
+             l_bgbi.bgbi035,l_bgbi.bgbi036,l_bgbi.bgbi037,l_bgbi.bgbi038,l_bgbi.bgbi039,
+             l_bgbi.bgbi040,l_bgbi.bgbi041,l_bgbi.bgbi042,l_bgbi.bgbi043,l_bgbi.bgbi044,
+             l_bgbi.bgbi045,l_bgbi.bgbi046,l_bgbi.bgbiownid,l_bgbi.bgbiowndp,l_bgbi.bgbicrtid,  
+             l_bgbi.bgbicrtdp,l_bgbi.bgbicrtdt,l_bgbi.bgbimodid,l_bgbi.bgbimoddt,l_bgbi.bgbicnfid,  
+             l_bgbi.bgbicnfdt,l_bgbi.bgbistus,l_bgbi.bgbient)      
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "ins bgbi_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               LET g_success = FALSE
+               EXIT FOREACH
+            END IF                          
+            LET l_cnt1 = l_cnt1 +1                                        
+        END FOREACH
+   END CASE
+         
+   #無資料處理
+   IF l_cnt1 = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'asf-00230'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      DISPLAY '' ,0 TO stagenow,stagecomplete   #失敗:清空進度條
+      CALL cl_err_collect_show()
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+
+   CALL cl_progress_no_window_ing("")       #每次執行推進
+   IF g_success THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'amh-00619'
+      LET g_errparam.extend = ''
+      LET g_errparam.replace[1] = l_cnt1
+      LET g_errparam.popup = TRUE
+      CALL cl_err()            
+      CALL s_transaction_end('Y','0')
+      CALL cl_err_collect_show()
+      CALL cl_progress_no_window_ing("")       #成功:最後一次次執行推進
+   ELSE
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'axm-00089'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()          
+      CALL s_transaction_end('N','0')
+      CALL cl_err_collect_show()
+      DISPLAY '' ,0 TO stagenow,stagecomplete  #失敗:清空進度條
+   END IF   
+   
+END FUNCTION
+
+PRIVATE FUNCTION abgp021_set_entry()
+   CALL cl_set_comp_entry("bgbi002_1,bgbi003_1,glarld,glar002,glar003_s,glar003_e,l_type3",TRUE)
+END FUNCTION
+
+PRIVATE FUNCTION abgp021_set_no_entry()
+   IF g_input.l_type1 = 'N' THEN
+      CALL cl_set_comp_entry("bgbi002_1,bgbi003_1",FALSE)
+      LET g_input.bgbi002_1 = ''
+      LET g_input.bgbi003_1 = ''
+      LET g_input.l_bgae006_1 = ''
+      DISPLAY BY NAME g_input.l_bgae006_1
+   END IF
+   IF g_input.l_type2 = 'N' THEN
+      CALL cl_set_comp_entry("glarld,glar002,glar003_s,glar003_e,l_type3",FALSE)
+      LET g_input.glarld = ''
+      LET g_input.glar002 = ''      
+      LET g_input.glar003_s = ''      
+      LET g_input.glar003_e = ''      
+      LET g_input.l_type3=''
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 預算編號+預算版本存在檢查
+# Memo...........:
+# Usage..........: CALL abgp021_bgbi_chk(p_bgbi002,p_bgbi003)
+#                  RETURNING g_sub_success
+# Input parameter: p_bgbi002      預算編號
+#                : p_bgbi003      預算版本
+# Return code....: r_success
+# Date & Author..: 160606 By 03538
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgp021_bgbi_chk(p_bgbi002,p_bgbi003)
+DEFINE p_bgbi002     LIKE bgbi_t.bgbi002
+DEFINE p_bgbi003     LIKE bgbi_t.bgbi003
+DEFINE r_success     LIKE type_t.num5       
+DEFINE r_errno       LIKE gzze_t.gzze001
+DEFINE l_cnt         LIKE type_t.num5       
+
+   LET r_success = TRUE
+   LET g_errno = ''
+   LET l_cnt = 0
+   SELECT COUNT(bgbiseq) INTO l_cnt
+     FROM bgbi_t
+    WHERE bgbient = g_enterprise
+      AND bgbi002 = p_bgbi002
+      AND bgbi003 = p_bgbi003
+   IF cl_null(l_cnt) THEN LET l_cnt = 0 END IF
+   IF l_cnt = 0 THEN
+      LET r_success = FALSE
+      LET g_errno = 'abg-00125'
+   END IF
+   RETURN r_success
+   
+END FUNCTION
+
+PRIVATE FUNCTION abgp021_cre_tmp()
+    DROP TABLE abgp021_tmp
+    CREATE TEMP TABLE abgp021_tmp(
+      bgae003  LIKE bgae_t.bgae003,    #資產損益別
+      bgae005  LIKE bgae_t.bgae005,    #所屬預算大類
+      bgae008  LIKE bgae_t.bgae008,    #費用分類
+      pr       LIKE type_t.num5        #比率      
+      );
+    DROP TABLE abgp021_tmp_g
+    CREATE TEMP TABLE abgp021_tmp_g(      
+     pr        LIKE type_t.num5, 
+     bgae005   LIKE bgae_t.bgae005,
+     glar003   LIKE glar_t.glar003,
+     bgbi005   LIKE bgbi_t.bgbi005,
+     amt       LIKE glar_t.glar005,
+     glar012   LIKE glar_t.glar012,
+     glar013   LIKE glar_t.glar013,
+     glar014   LIKE glar_t.glar014,
+     glar015   LIKE glar_t.glar015,
+     glar016   LIKE glar_t.glar016,
+     glar017   LIKE glar_t.glar017,
+     glar018   LIKE glar_t.glar018,
+     glar019   LIKE glar_t.glar019,
+     glar020   LIKE glar_t.glar020,
+     glar022   LIKE glar_t.glar022,
+     glar023   LIKE glar_t.glar023,
+     glar051   LIKE glar_t.glar051,
+     glar024   LIKE glar_t.glar024,
+     glar025   LIKE glar_t.glar025,
+     glar026   LIKE glar_t.glar026,
+     glar027   LIKE glar_t.glar027,
+     glar028   LIKE glar_t.glar028,
+     glar029   LIKE glar_t.glar029,
+     glar030   LIKE glar_t.glar030,
+     glar031   LIKE glar_t.glar031,
+     glar032   LIKE glar_t.glar032,
+     glar033   LIKE glar_t.glar033,
+     glar052   LIKE glar_t.glar052,
+     glar053   LIKE glar_t.glar053      
+     );
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取得管理組織+預算樣表
+# Memo...........:
+# Usage..........: CALL abgp021_get_abgi090(p_bgai001,p_bgai004,p_bgai005)
+#                  RETURNING r_bgai002,r_bgai008
+# Input parameter: p_bgai001      目的預算編號
+#                : p_bgai004      預算組織
+#                : p_bgai005      所屬預算大類
+# Return code....: r_bgai002      管理組織
+#                : r_bgai008      樣表編號
+# Date & Author..: 160607 By 03538
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgp021_get_abgi090(p_bgai001,p_bgai004,p_bgai005)
+DEFINE p_bgai001  LIKE bgai_t.bgai001
+DEFINE p_bgai004  LIKE bgai_t.bgai004
+DEFINE p_bgai005  LIKE bgai_t.bgai005
+DEFINE r_bgai002  LIKE bgai_t.bgai002
+DEFINE r_bgai008  LIKE bgai_t.bgai008
+
+   SELECT bgai002,bgai008 INTO r_bgai002,r_bgai008
+     FROM bgai_t
+    WHERE bgaient = g_enterprise
+      AND bgai001 = p_bgai001
+      AND bgai004 = p_bgai004
+      AND bgai005 = p_bgai005
+      
+   RETURN r_bgai002,r_bgai008
+END FUNCTION
+
+################################################################################
+# Descriptions...: 依照abgi045預算參照表使用核算項維度,回傳欄位
+# Memo...........:
+# Usage..........: CALL abgp021_get_abgi045()
+#                  RETURNING r_fled
+# Date & Author..: 160608 By 03538
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgp021_get_abgi045(p_bgae)
+DEFINE p_bgae    RECORD
+   bgae015   LIKE bgae_t.bgae015,
+   bgae016   LIKE bgae_t.bgae016,
+   bgae017   LIKE bgae_t.bgae017,
+   bgae018   LIKE bgae_t.bgae018,
+   bgae019   LIKE bgae_t.bgae019,
+   bgae020   LIKE bgae_t.bgae020,
+   bgae021   LIKE bgae_t.bgae021,
+   bgae022   LIKE bgae_t.bgae022,
+   bgae023   LIKE bgae_t.bgae023,
+   bgae024   LIKE bgae_t.bgae024,
+   bgae025   LIKE bgae_t.bgae025,
+   bgae026   LIKE bgae_t.bgae026,
+   bgae027   LIKE bgae_t.bgae027,
+   bgae028   LIKE bgae_t.bgae028,
+   bgae029   LIKE bgae_t.bgae029,
+   bgae030   LIKE bgae_t.bgae030,
+   bgae031   LIKE bgae_t.bgae031,
+   bgae032   LIKE bgae_t.bgae032,
+   bgae033   LIKE bgae_t.bgae033,
+   bgae034   LIKE bgae_t.bgae034,
+   bgae035   LIKE bgae_t.bgae035,
+   bgae040   LIKE bgae_t.bgae040,
+   bgae041   LIKE bgae_t.bgae041
+                 END RECORD
+                 
+DEFINE r_feld  STRING
+DEFINE r_feld2 STRING #161123-00024#1
+
+   LET r_feld2 = " 1=1"
+   IF p_bgae.bgae015 = 'Y' THEN  
+      LET r_feld = "glar013,"
+      LET r_feld2 = r_feld2," AND glar013 = COALESCE(glaq018,' ') " ##161123-00024#1 
+   ELSE
+      LET r_feld = "' ',"
+   END IF
+   IF p_bgae.bgae016 = 'Y' THEN  
+      LET r_feld = r_feld,"glar014,"
+      LET r_feld2 = r_feld2," AND glar014 = COALESCE(glaq019,' ') " ##161123-00024#1 
+   ELSE
+      LET r_feld = r_feld,"' ',"
+   END IF
+   IF p_bgae.bgae017 = 'Y' THEN  
+      LET r_feld = r_feld,"glar015,"
+      LET r_feld2 = r_feld2," AND glar015 = COALESCE(glaq020,' ') " ##161123-00024#1 
+   ELSE
+      LET r_feld = r_feld,"' ',"
+   END IF 
+   IF p_bgae.bgae018 = 'Y' THEN  
+      LET r_feld = r_feld,"glar016,"
+      LET r_feld2 = r_feld2," AND glar016 = COALESCE(glaq021,' ') " ##161123-00024#1 
+   ELSE
+      LET r_feld = r_feld,"' ',"
+   END IF   
+   IF p_bgae.bgae019 = 'Y' THEN  
+      LET r_feld = r_feld,"glar017,"
+      LET r_feld2 = r_feld2," AND glar017 = COALESCE(glaq022,' ') " ##161123-00024#1 
+   ELSE
+      LET r_feld = r_feld,"' ',"
+   END IF   
+   IF p_bgae.bgae020 = 'Y' THEN  
+      LET r_feld = r_feld,"glar018,"
+      LET r_feld2 = r_feld2," AND glar018 = COALESCE(glaq023,' ') " ##161123-00024#1 
+   ELSE
+      LET r_feld = r_feld,"' ',"
+   END IF
+   IF p_bgae.bgae021 = 'Y' THEN  
+      LET r_feld = r_feld,"glar019,"
+      LET r_feld2 = r_feld2," AND glar019 = COALESCE(glaq024,' ') " ##161123-00024#1 
+   ELSE
+      LET r_feld = r_feld,"' ',"
+   END IF
+   IF p_bgae.bgae022 = 'Y' THEN  
+      LET r_feld = r_feld,"glar020,"
+      LET r_feld2 = r_feld2," AND glar020 = COALESCE(glaq025,' ') " ##161123-00024#1 
+   ELSE
+      LET r_feld = r_feld,"' ',"
+   END IF
+   IF p_bgae.bgae023 = 'Y' THEN  
+      LET r_feld = r_feld,"glar022,"
+      LET r_feld2 = r_feld2," AND glar022 = COALESCE(glaq027,' ') " ##161123-00024#1 
+   ELSE
+      LET r_feld = r_feld,"' ',"
+   END IF
+   IF p_bgae.bgae024 = 'Y' THEN  
+      LET r_feld = r_feld,"glar023,"
+      LET r_feld2 = r_feld2," AND glar023 = COALESCE(glaq028,' ') " ##161123-00024#1 
+   ELSE
+      LET r_feld = r_feld,"' ',"
+   END IF
+   IF p_bgae.bgae025 = 'Y' THEN  
+      LET r_feld = r_feld,"glar051,"
+      LET r_feld2 = r_feld2," AND glar051 = COALESCE(glaq051,' ') " ##161123-00024#1 
+   ELSE
+      LET r_feld = r_feld,"' ',"
+   END IF
+   IF p_bgae.bgae026 = 'Y' THEN  
+      LET r_feld = r_feld,"glar024,"
+      LET r_feld2 = r_feld2," AND glar024 = COALESCE(glaq029,' ') " ##161123-00024#1 
+   ELSE
+      LET r_feld = r_feld,"' ',"
+   END IF
+   IF p_bgae.bgae027 = 'Y' THEN  
+      LET r_feld = r_feld,"glar025,"
+      LET r_feld2 = r_feld2," AND glar025 = COALESCE(glaq030,' ') " ##161123-00024#1 
+   ELSE
+      LET r_feld = r_feld,"' ',"
+   END IF
+   IF p_bgae.bgae028 = 'Y' THEN  
+      LET r_feld = r_feld,"glar026,"
+      LET r_feld2 = r_feld2," AND glar026 = COALESCE(glaq031,' ') " ##161123-00024#1 
+   ELSE
+      LET r_feld = r_feld,"' ',"
+   END IF
+   IF p_bgae.bgae029 = 'Y' THEN  
+      LET r_feld = r_feld,"glar027,"
+      LET r_feld2 = r_feld2," AND glar027 = COALESCE(glaq032,' ') " ##161123-00024#1 
+   ELSE
+      LET r_feld = r_feld,"' ',"
+   END IF
+   IF p_bgae.bgae030 = 'Y' THEN  
+      LET r_feld = r_feld,"glar028,"
+      LET r_feld2 = r_feld2," AND glar028 = COALESCE(glaq033,' ') " ##161123-00024#1 
+   ELSE
+      LET r_feld = r_feld,"' ',"
+   END IF
+   IF p_bgae.bgae031 = 'Y' THEN  
+      LET r_feld = r_feld,"glar029,"
+      LET r_feld2 = r_feld2," AND glar029 = COALESCE(glaq034,' ') " ##161123-00024#1 
+   ELSE
+      LET r_feld = r_feld,"' ',"
+   END IF
+   IF p_bgae.bgae032 = 'Y' THEN  
+      LET r_feld = r_feld,"glar030,"
+      LET r_feld2 = r_feld2," AND glar030 = COALESCE(glaq035,' ') " ##161123-00024#1 
+   ELSE
+      LET r_feld = r_feld,"' ',"
+   END IF
+   IF p_bgae.bgae033 = 'Y' THEN  
+      LET r_feld = r_feld,"glar031,"
+      LET r_feld2 = r_feld2," AND glar031 = COALESCE(glaq036,' ') " ##161123-00024#1 
+   ELSE
+      LET r_feld = r_feld,"' ',"
+   END IF   
+   IF p_bgae.bgae034 = 'Y' THEN  
+      LET r_feld = r_feld,"glar032,"
+      LET r_feld2 = r_feld2," AND glar032 = COALESCE(glaq037,' ') " ##161123-00024#1 
+   ELSE
+      LET r_feld = r_feld,"' ',"
+   END IF
+   IF p_bgae.bgae035 = 'Y' THEN  
+      LET r_feld = r_feld,"glar033,"
+      LET r_feld2 = r_feld2," AND glar033 = COALESCE(glaq038,' ') " ##161123-00024#1 
+   ELSE
+      LET r_feld = r_feld,"' ',"
+   END IF
+   IF p_bgae.bgae040 = 'Y' THEN  
+      LET r_feld = r_feld,"glar052,"
+      LET r_feld2 = r_feld2," AND glar052 = COALESCE(glaq052,' ') " ##161123-00024#1 
+   ELSE
+      LET r_feld = r_feld,"' ',"
+   END IF
+   IF p_bgae.bgae041 = 'Y' THEN  
+      LET r_feld = r_feld,"glar053"
+      LET r_feld2 = r_feld2," AND glar053 = COALESCE(glaq055,' ') " ##161123-00024#1 
+   ELSE
+      LET r_feld = r_feld,"' '"
+   END IF
+
+   RETURN r_feld,r_feld2 #161123-00024#1
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

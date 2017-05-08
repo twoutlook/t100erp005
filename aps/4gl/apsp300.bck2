@@ -1,0 +1,984 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="apsp300.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2016-02-25 09:10:37), PR版次:0004(2016-08-02 16:41:12)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000042
+#+ Filename...: apsp300
+#+ Description: 獨立需求轉工單作業
+#+ Creator....: ()
+#+ Modifier...: 07024 -SD/PR- 08742
+ 
+{</section>}
+ 
+{<section id="apsp300.global" >}
+#Memos
+#160727-00019#14 2016/08/02 By 08742   系统中定义的临时表名称超过15码在执行时会出错,所以需要将系统中定义的临时表长度超过15码的全部改掉	 	
+#                                      Mod   p300_01_lock_b_t -->p300_tmp01
+
+
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+IMPORT util
+IMPORT FGL aps_apsp300_01
+IMPORT FGL aps_apsp300_02
+IMPORT FGL aps_apsp300_03
+IMPORT FGL aps_apsp300_04
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../aps/4gl/apsp300.inc"
+ 
+ 
+#add-point:free_style模組變數(Module Variable)
+ 
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable)
+DEFINE li_step              LIKE type_t.num5
+DEFINE gwin_curr            ui.Window
+DEFINE gfrm_curr            ui.Form
+DEFINE g_forupd_sql         STRING
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_sfaadocno_t        LIKE sfaa_t.sfaadocno
+DEFINE g_sfaadocdt_t        LIKE sfaa_t.sfaadocdt
+DEFINE g_psaadocno_t        LIKE psaa_t.psaadocno
+DEFINE g_psaadocdt_t        LIKE psaa_t.psaadocdt
+DEFINE g_psab003_t          LIKE psab_t.psab003
+
+DEFINE g_imaa009_t          LIKE imaa_t.imaa009
+DEFINE g_imae011_t          LIKE imae_t.imae011
+DEFINE g_imae012_t          LIKE imae_t.imae012 
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apsp300.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define
+   DEFINE l_success     LIKE type_t.num5
+   #end add-point    
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("asf","")
+ 
+   #add-point:作業初始化
+ 
+   #end add-point
+ 
+   #add-point:SQL_define
+
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE apsp300_cl CURSOR FROM g_forupd_sql 
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apsp300 WITH FORM cl_ap_formpath("aps",g_code)
+   
+      #程式初始化
+      CALL apsp300_init()
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+      
+     ##建立各程式的temp table 
+      CALL apsp300_01_create_temp_table() RETURNING l_success
+      IF NOT l_success THEN
+         #dorislai-20150914-modify----(S)
+#         EXIT PROGRAM
+         CALL cl_ap_exitprogram("1")
+         #dorislai-20150914-modify----(E)
+      END IF
+      CALL apsp300_03_create_temp_table() RETURNING l_success
+      IF NOT l_success THEN
+         #dorislai-20150914-modify----(S)
+#         EXIT PROGRAM
+         CALL cl_ap_exitprogram("1")
+         #dorislai-20150914-modify----(E)
+      END IF
+      CALL apsp300_04_create_temp_table() RETURNING l_success
+      IF NOT l_success THEN
+         #dorislai-20150914-modify----(S)
+#         EXIT PROGRAM
+         CALL cl_ap_exitprogram("1")
+         #dorislai-20150914-modify----(E)
+      END IF
+      LET li_step = 1
+      IF l_success THEN
+         WHILE TRUE
+            CASE li_step
+               WHEN 1
+                  CALL apsp300_ui_dialog_step1() RETURNING li_step
+               WHEN 2
+                  CALL apsp300_ui_dialog_step2() RETURNING li_step
+               WHEN 3
+                  CALL apsp300_ui_dialog_step3() RETURNING li_step
+               WHEN 4
+                  CALL apsp300_ui_dialog_step4() RETURNING li_step
+#                 CALL apsp300_delete_temp()
+               WHEN 0
+                  EXIT WHILE
+               OTHERWISE
+                  EXIT WHILE
+            END CASE
+         END WHILE
+      END IF
+      
+      CALL apsp300_01_drop_temp_table() RETURNING l_success
+      CALL apsp300_03_drop_temp_table() RETURNING l_success
+      CALL apsp300_04_drop_temp_table() RETURNING l_success
+   
+      #畫面關閉
+      CLOSE WINDOW w_apsp300
+   END IF
+ 
+   #add-point:作業離開前
+
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+ 
+{</section>}
+ 
+{<section id="apsp300.other_function" readonly="Y" >}
+#add-point:自定義元件(Function)
+
+PRIVATE FUNCTION apsp300_init()
+   #add-point:init段define
+
+   #end add-point
+
+   LET g_error_show = 1
+   LET g_errshow = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+   
+   #畫面嵌入 
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("aps", "apsp300_01"), "main_grid01", "Group", "master")
+   CALL apsp300_01_init()        #apsp300_01的畫面預設   
+   
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("aps", "apsp300_02"), "main_grid02", "VBox", "vb_master")
+   CALL cl_set_combo_scc('choice1','4036') 
+   
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("aps", "apsp300_03"), "main_grid03", "VBox", "master")
+   CALL apsp300_03_init()        #apsp300_03的畫面預設   
+
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("aps", "apsp300_04"), "main_grid04", "VBox", "master")
+   CALL apsp300_04_init()        #apsp300_03的畫面預設 
+   
+   #先將嵌入的畫面都隱藏  
+   CALL cl_set_comp_visible("main_vbox01",FALSE)
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+   CALL cl_set_comp_visible("main_vbox04",FALSE)
+
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION apsp300_process(ls_js)
+   DEFINE ls_js       STRING
+   #DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+
+   #end add-point
+
+   #CALL util.JSON.parse(ls_js,lc_param)
+
+   #add-point:process段前處理
+
+   #end add-point
+
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+
+      #end add-point
+   END IF
+
+   #主SQL及相關FOREACH前置處理
+#  DECLARE apsp300_process_cs CURSOR FROM ls_sql
+#  FOREACH apsp300_process_cs INTO
+   #add-point:process段process
+
+   #end add-point
+#  END FOREACH
+
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+
+      #end add-point
+      CALL cl_ask_confirm("std-00012") RETURNING li_stus
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+
+      #end add-point
+   END IF
+END FUNCTION
+
+PRIVATE FUNCTION apsp300_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   #DEFINE la_param    type_parameter
+
+   #CALL util.JSON.parse(ls_js,la_param)
+
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+
+   #end add-point
+
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+
+PRIVATE FUNCTION apsp300_ui_dialog_step1()
+   DEFINE l_ooef004    LIKE ooef_t.ooef004
+   DEFINE l_sfaa       RECORD
+                       sfaadocno       LIKE sfaa_t.sfaadocno,
+                       sfaadocno_desc  LIKE oobxl_t.oobxl004,
+                       sfaadocdt       LIKE sfaa_t.sfaadocdt
+                       END RECORD
+   DEFINE l_cnt        LIKE type_t.num5
+   DEFINE l_success    LIKE type_t.num5
+   
+                   
+   #設定左方的流程圖  
+   CALL gfrm_curr.setElementImage("step01","32/step01on.png")    #有on的是顏色不同的圖  
+   CALL gfrm_curr.setElementImage("step02","32/step02.png")
+   CALL gfrm_curr.setElementImage("step03","32/step03.png")
+   CALL gfrm_curr.setElementImage("step04","32/step04.png")
+   
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("main_vbox01",TRUE)       #將第一步的畫面顯示  
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+   CALL cl_set_comp_visible("main_vbox04",FALSE)
+
+   #設定下方的button的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("back_step",FALSE)       
+   CALL cl_set_comp_visible("next_step",TRUE)        
+   
+   CALL cl_set_comp_visible("condition_vbox",TRUE)
+   CALL cl_set_comp_visible("main_grid_7,main_grid_9,cmt_main_grid_11",FALSE)
+   CALL cl_set_comp_visible("main_grid_2",TRUE)  
+   CALL cl_set_comp_visible('done',FALSE)
+   
+   #160120-00002#6 20160216 by s983961--add(s)   
+   #開啟transaction 
+   CALL s_transaction_begin()
+   #160120-00002#6 20160216 by s983961--add(e) 
+   
+   LET l_ooef004 = ''
+   SELECT ooef004 INTO l_ooef004
+     FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_site
+   
+   WHILE TRUE
+      LET g_sfaadocno = ''
+      LET g_sfaadocdt = ''
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         
+         INPUT BY NAME l_sfaa.sfaadocno,l_sfaa.sfaadocdt
+         
+             BEFORE INPUT
+                IF cl_null(l_sfaa.sfaadocdt) THEN
+                   LET l_sfaa.sfaadocdt = cl_get_today()
+                END IF
+                
+             AFTER FIELD sfaadocno
+                IF cl_null(l_sfaa.sfaadocno) THEN
+                   NEXT FIELD sfaadocno
+                END IF
+                CALL apsp300_chk_sfaadocno(l_sfaa.sfaadocno)
+                     RETURNING l_success
+                IF NOT l_success THEN
+                   LET l_sfaa.sfaadocno = ''
+                   LET l_sfaa.sfaadocno_desc = ''
+                   DISPLAY BY NAME l_sfaa.sfaadocno_desc
+                   NEXT FIELD CURRENT                
+                END IF
+                CALL s_aooi200_get_slip_desc(l_sfaa.sfaadocno)
+                     RETURNING l_sfaa.sfaadocno_desc
+                DISPLAY BY NAME l_sfaa.sfaadocno_desc
+                LET g_sfaadocno = l_sfaa.sfaadocno
+             
+             AFTER FIELD sfaadocdt
+                IF cl_null(l_sfaa.sfaadocdt) THEN 
+                   NEXT FIELD sfaadocdt
+                END IF
+                LET g_sfaadocdt = l_sfaa.sfaadocdt  
+
+             AFTER INPUT
+                IF cl_null(l_sfaa.sfaadocno) THEN NEXT FIELD sfaadocno END IF
+                IF cl_null(l_sfaa.sfaadocdt) THEN NEXT FIELD sfaadocdt END IF
+  
+             ON ACTION controlp
+                CASE
+                   WHEN INFIELD(sfaadocno)
+                      INITIALIZE g_qryparam.* TO NULL
+                      LET g_qryparam.state = 'i'
+                      LET g_qryparam.reqry = FALSE
+                      LET g_qryparam.default1 = l_sfaa.sfaadocno
+
+                      #給予arg
+                      LET g_qryparam.arg1 = l_ooef004 #參照表編號
+                      LET g_qryparam.arg2 = 'asft300'
+
+                      CALL q_ooba002_1()
+                      LET l_sfaa.sfaadocno = g_qryparam.return1
+                      DISPLAY BY NAME l_sfaa.sfaadocno
+                      NEXT FIELD sfaadocno
+                END CASE
+         END INPUT
+        
+        
+         CONSTRUCT BY NAME g_wc ON psaadocno,psaadocdt,psab003,imaa009,imae011,imae012
+
+            BEFORE CONSTRUCT  
+               IF cl_null(l_sfaa.sfaadocno) THEN NEXT FIELD sfaadocno END IF            
+
+            AFTER FIELD psaadocno
+               LET g_psaadocno_t = GET_FLDBUF(psaadocno)
+
+            AFTER FIELD psaadocdt
+               LET g_psaadocdt_t = GET_FLDBUF(psaadocdt)
+
+            AFTER FIELD psab003
+               LET g_psab003_t = GET_FLDBUF(psab003)
+              
+            AFTER FIELD imaa009
+               LET g_imaa009_t = GET_FLDBUF(imaa009)
+               
+            AFTER FIELD imae011
+               LET g_imae011_t = GET_FLDBUF(imae011)
+               
+            AFTER FIELD imae012
+               LET g_imae012_t = GET_FLDBUF(imae012)
+               
+            ON ACTION controlp INFIELD psaadocno
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.where = " psaastus = 'Y' "
+               CALL q_psaadocno()
+               DISPLAY g_qryparam.return1 TO psaadocno
+               NEXT FIELD CURRENT
+
+            ON ACTION controlp INFIELD imaa009
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_rtax001()
+               DISPLAY g_qryparam.return1 TO imaa009      #顯示到畫面上 
+               NEXT FIELD CURRENT
+
+            ON ACTION controlp INFIELD imae011
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_imcf011()
+               DISPLAY g_qryparam.return1 TO imae011     #顯示到畫面上 
+               NEXT FIELD CURRENT 
+               
+            ON ACTION controlp INFIELD imae012
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.where = " ooagstus = 'Y' "
+               CALL q_ooag001_2()
+               DISPLAY g_qryparam.return1 TO imae012     #顯示到畫面上 
+               NEXT FIELD CURRENT
+               
+         END CONSTRUCT
+
+         SUBDIALOG aps_apsp300_01.apsp300_01_input
+
+         BEFORE DIALOG
+            #不明原因導致 l_sfaa.*的資料被清空,在此將資料還原　讓資料一直維持相同的狀態
+            LET l_sfaa.sfaadocno = g_sfaadocno_t
+            CALL s_aooi200_get_slip_desc(l_sfaa.sfaadocno) RETURNING l_sfaa.sfaadocno_desc
+            DISPLAY BY NAME l_sfaa.sfaadocno_desc
+            
+#            IF NOT cl_null(g_sfaadocdt_t) THEN
+#               LET l_sfaa.sfaadocdt  = g_sfaadocdt_t
+#            ELSE
+               LET l_sfaa.sfaadocdt = cl_get_today()
+#            END IF   
+#            
+#            DISPLAY g_xmdadocno_t  TO xmdadocno            
+#            DISPLAY g_xmdadocdt_t  TO xmdadocdt
+#            DISPLAY g_xmdd011_t    TO xmdd011            
+#            DISPLAY g_xmda004_t    TO xmda004
+#            DISPLAY g_imaa009_t    TO imaa009
+#            DISPLAY g_imae011_t    TO imae011
+#            DISPLAY g_imae012_t    TO imae012 
+
+        ON ACTION search_data
+           CALL cl_set_act_visible("next_step",TRUE)
+           CALL apsp300_01_b_fill()             
+
+        ON ACTION selall
+           CALL apsp300_01_sel_all("Y")
+      
+        ON ACTION selnone
+           CALL apsp300_01_sel_all("N")
+
+         ON ACTION back_step
+            
+         ON ACTION next_step
+            CALL apsp300_01_save_data()
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt FROM apsp300_01_temp
+            IF l_cnt > 0 THEN
+               LET g_action_choice = "next_step"
+               EXIT DIALOG
+            ELSE
+               #无待转的订单资料，请先选择处理的订单资料！
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'aps-00138'     #無待轉的獨立需求資料，請先選擇處理的獨立需求資料！ 
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+            END IF
+            
+            
+         ON ACTION step01
+               
+         ON ACTION step02
+         
+         ON ACTION step03
+
+         ON ACTION step04
+         
+         ON ACTION CLOSE
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF 
+      
+      LET g_sfaadocno_t = l_sfaa.sfaadocno
+      LET g_sfaadocdt_t = l_sfaa.sfaadocdt
+      
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+   
+   #160120-00002#6 s983961--add(s)   
+   CALL s_transaction_end('Y','0')
+   #160120-00002#6 s983961--add(e) 
+   
+   CASE g_action_choice
+      WHEN "next_step"
+         LET g_action_choice = ''
+         LET g_sfaadocno = l_sfaa.sfaadocno
+         LET g_sfaadocdt = l_sfaa.sfaadocdt
+         RETURN 2
+      OTHERWISE
+         RETURN 0
+   END CASE
+   
+END FUNCTION
+
+PRIVATE FUNCTION apsp300_ui_dialog_step2()
+   #160120-00002#1 s983961--add(s)   
+   DEFINE l_sql       STRING
+   DEFINE l_where     STRING
+   DEFINE l_psabdocno LIKE psab_t.psabdocno
+   DEFINE l_psabseq   LIKE psab_t.psabseq
+   #160120-00002#1 s983961--add(e) 
+   
+   #若参数设定为:下次不再进此画面,则STEP 2可以跳过
+   CALL apsp300_02_get_settings()
+   IF g_setting.choice7 = 'Y' THEN
+      RETURN 3
+   END IF
+   
+   #設定左方的流程圖  
+   CALL gfrm_curr.setElementImage("step01","32/step01.png")    #有on的是顏色不同的圖  
+   CALL gfrm_curr.setElementImage("step02","32/step02on.png")
+   CALL gfrm_curr.setElementImage("step03","32/step03.png")
+   CALL gfrm_curr.setElementImage("step04","32/step04.png")
+   
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("main_vbox01",FALSE)       #將第一步的畫面顯示  
+   CALL cl_set_comp_visible("main_vbox02",TRUE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+   CALL cl_set_comp_visible("main_vbox04",FALSE)
+
+   #設定下方的button的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("back_step",TRUE)         #回上一步     (第一步,第四步不使用)
+   CALL cl_set_comp_visible("next_step",TRUE)         #下一步       (第四步不使用) 
+   
+   CALL cl_set_comp_visible("condition_vbox",FALSE)
+   CALL cl_set_comp_visible("main_grid_2,main_grid_9,cmt_main_grid_11",FALSE)
+   CALL cl_set_comp_visible("main_grid_7",TRUE)
+
+   CALL cl_set_comp_visible('done',FALSE)
+   
+   #160120-00002#6 20160216 by s983961--add(s)   
+   #開啟transaction 
+   CALL s_transaction_begin()
+   
+   LET l_sql = "SELECT psabdocno,psabseq ",
+               "  FROM p300_tmp01 ",     #160727-00019#14 Mod   p300_01_lock_b_t -->p300_tmp01
+               " ORDER BY psabdocno,psabseq "
+   PREPARE apsp300_02_lock_prep FROM l_sql
+   DECLARE apsp300_02_lock_curs CURSOR FOR apsp300_02_lock_prep
+
+   LET l_sql = "SELECT psabdocno,psabseq ",
+               "  FROM psab_t ",
+               " WHERE "
+
+   LET l_where = ''
+   FOREACH apsp300_02_lock_curs INTO l_psabdocno,l_psabseq
+      IF cl_null(l_where) THEN
+         LET l_where = "(psabdocno = '",l_psabdocno,"' AND psabseq = '",l_psabseq,"' )"
+      ELSE
+         LET l_where = l_where," OR ","(psabdocno = '",l_psabdocno,"' AND psabseq = '",l_psabseq,"' )"
+      END IF
+   END FOREACH
+   LET l_sql = l_sql,l_where," FOR UPDATE " 
+   PREPARE apsp300_02_lock_body_prep FROM l_sql
+   DECLARE apsp300_02_lock_body_curs CURSOR FOR apsp300_02_lock_body_prep
+   OPEN apsp300_02_lock_body_curs
+   #160120-00002#6 20160216 by s983961--add(e)
+   
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         
+         SUBDIALOG aps_apsp300_02.apsp300_02_input
+
+         BEFORE DIALOG
+
+         ON ACTION back_step
+            LET g_action_choice = "back_step"
+            EXIT DIALOG
+            
+         ON ACTION next_step
+            IF g_setting.choice5 = 'Y' AND cl_null(g_setting.choice6) THEN
+               #勾选"转入PBI"的选项时,PBI单别一定要录入!
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'asf-00469'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               CONTINUE DIALOG
+            END IF
+         
+            #是否确定依当前页设置产生下一步资料？
+            IF cl_ask_confirm('asf-00353') THEN
+               LET g_action_choice = "next_step"
+               EXIT DIALOG
+            END IF 
+            
+         ON ACTION step01
+            
+         ON ACTION step02
+         
+         ON ACTION step03
+
+         ON ACTION step04
+         
+         ON ACTION CLOSE
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF 
+      
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+
+   END WHILE
+   
+   #160120-00002#6 s983961--add(s)   
+   CALL s_transaction_end('Y','0')
+   #160120-00002#6 s983961--add(e) 
+   
+   CASE g_action_choice
+      WHEN "next_step"
+         RETURN 3
+      WHEN "back_step"
+         CALL apsp300_01_b_fill()      
+         RETURN 1
+      OTHERWISE
+         RETURN 0
+   END CASE
+   
+   
+END FUNCTION
+
+PRIVATE FUNCTION apsp300_ui_dialog_step3()
+   DEFINE l_success      LIKE type_t.num5
+   #160120-00002#1 s983961--add(s)   
+   DEFINE l_sql       STRING
+   DEFINE l_where     STRING
+   DEFINE l_psabdocno LIKE psab_t.psabdocno
+   DEFINE l_psabseq   LIKE psab_t.psabseq
+   #160120-00002#1 s983961--add(e) 
+   
+   #設定左方的流程圖  
+   CALL gfrm_curr.setElementImage("step01","32/step01.png")  
+   CALL gfrm_curr.setElementImage("step02","32/step02.png")
+   CALL gfrm_curr.setElementImage("step03","32/step03on.png")
+   CALL gfrm_curr.setElementImage("step04","32/step04.png")
+   
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("main_vbox01",FALSE)
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",TRUE)
+   CALL cl_set_comp_visible("main_vbox04",FALSE)
+
+   #設定下方的button的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("back_step",TRUE)        #回上一步  
+   CALL cl_set_comp_visible("next_step",TRUE)        #下一步    
+   
+   CALL cl_set_comp_visible("condition_vbox",FALSE)
+   CALL cl_set_comp_visible("main_grid_2,main_grid_7",FALSE)
+   CALL cl_set_comp_visible("main_grid_9,cmt_main_grid_11",TRUE)
+
+   CALL cl_set_comp_visible('done',FALSE)
+   
+   #160120-00002#6 20160216 by s983961--add(s)   
+   #開啟transaction 
+   CALL s_transaction_begin()
+   
+   LET l_sql = "SELECT psabdocno,psabseq ",
+               "  FROM p300_tmp01 ",   #160727-00019#14 Mod   p300_01_lock_b_t -->p300_tmp01
+               " ORDER BY psabdocno,psabseq "
+   PREPARE apsp300_03_lock_prep FROM l_sql
+   DECLARE apsp300_03_lock_curs CURSOR FOR apsp300_03_lock_prep
+
+   LET l_sql = "SELECT psabdocno,psabseq ",
+               "  FROM psab_t ",
+               " WHERE "
+
+   LET l_where = ''
+   FOREACH apsp300_03_lock_curs INTO l_psabdocno,l_psabseq
+      IF cl_null(l_where) THEN
+         LET l_where = "(psabdocno = '",l_psabdocno,"' AND psabseq = '",l_psabseq,"')"
+      ELSE
+         LET l_where = l_where," OR ","(psabdocno = '",l_psabdocno,"' AND psabseq = '",l_psabseq,"')"
+      END IF
+   END FOREACH
+   LET l_sql = l_sql,l_where," FOR UPDATE " 
+   PREPARE apsp300_03_lock_body_prep FROM l_sql
+   DECLARE apsp300_03_lock_body_curs CURSOR FOR apsp300_03_lock_body_prep
+   OPEN apsp300_03_lock_body_curs
+   #160120-00002#6 20160216 by s983961--add(e)
+   
+   CALL apsp300_03_gen_data()
+        RETURNING l_success
+   IF NOT l_success THEN
+      RETURN 0
+   END IF
+   CALL apsp300_03_b_fill()
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         
+         SUBDIALOG aps_apsp300_03.apsp300_03_display
+         SUBDIALOG aps_apsp300_03.apsp300_03_display2
+
+         BEFORE DIALOG 
+
+         ON ACTION back_step
+            #此页设置的相关数据将会依上一页数据重新产生,是否确定回到上一步？
+            IF cl_ask_confirm('asf-00354') THEN
+               LET g_action_choice = "back_step"
+               CALL apsp300_03_delete_temp_table()
+               EXIT DIALOG
+            END IF
+            
+         ON ACTION next_step
+            #是否确定依当前页设置产生下一步资料？
+            IF cl_ask_confirm('asf-00353') THEN
+               LET g_action_choice = "next_step"
+               EXIT DIALOG
+            END IF
+            
+         ON ACTION step01
+            
+         ON ACTION step02
+            #此页设置的相关数据将会依上一页数据重新产生,是否确定回到上一步？
+            IF cl_ask_confirm('asf-00354') THEN
+               UPDATE gzxn_t SET gzxn007 = 'N' 
+                WHERE gzxnent = g_enterprise
+                  AND gzxn001 = 1
+                  AND gzxn002 = 'apsp300_02'
+                  AND gzxn003 = g_user
+                  AND gzxn004 = 6    
+               CALL apsp300_02_get_settings()
+               LET g_action_choice = "back_step"
+               CALL apsp300_03_delete_temp_table()
+               EXIT DIALOG
+            END IF                   
+         
+         ON ACTION step03
+
+         ON ACTION step04
+         
+         ON ACTION CLOSE
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF 
+      
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+
+   END WHILE
+   
+   #160120-00002#6 s983961--add(s)   
+   CALL s_transaction_end('Y','0')
+   #160120-00002#6 s983961--add(e) 
+   
+   CASE g_action_choice
+      WHEN "next_step"
+         RETURN 4
+      WHEN "back_step"
+         IF g_setting.choice6 = 'Y' THEN
+            RETURN 1
+         ELSE
+            RETURN 2
+         END IF
+      OTHERWISE
+         RETURN 0
+   END CASE
+      
+END FUNCTION
+
+PRIVATE FUNCTION apsp300_ui_dialog_step4()
+   DEFINE l_success      LIKE type_t.num5
+
+
+   #設定左方的流程圖  
+   CALL gfrm_curr.setElementImage("step01","32/step01.png")    #有on的是顏色不同的圖  
+   CALL gfrm_curr.setElementImage("step02","32/step02.png")
+   CALL gfrm_curr.setElementImage("step03","32/step03.png")
+   CALL gfrm_curr.setElementImage("step04","32/step04on.png")
+   
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("main_vbox01",FALSE)       #將第一步的畫面顯示  
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE)
+   CALL cl_set_comp_visible("main_vbox04",TRUE)
+
+
+   #設定下方的button的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("back_step",TRUE)         #回上一步     
+   CALL cl_set_comp_visible("next_step",FALSE)        #下一步     
+   
+   CALL cl_set_comp_visible("condition_vbox",FALSE)
+   CALL cl_set_comp_visible("main_grid_2,main_grid_7,main_grid_9",FALSE)
+   CALL cl_set_comp_visible("cmt_main_grid_11",FALSE)
+   CALL cl_set_comp_visible("main_vbox04",TRUE)   
+   CALL cl_set_comp_visible('done',TRUE)
+   
+   
+   CALL apsp300_04_gen_data()
+        RETURNING l_success
+   IF NOT l_success THEN
+      RETURN 0
+   END IF
+   
+   CALL apsp300_04_b_fill()
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         SUBDIALOG aps_apsp300_04.apsp300_04_display2
+#         SUBDIALOG aps_apsp300_04.apsp300_04_input   #mark--151118-00029#7-- By shiun
+         SUBDIALOG aps_apsp300_04.apsp300_04_display   #add--151118-00029#7-- By shiun
+         
+         BEFORE DIALOG
+
+         ON ACTION back_step
+            #此页设置的相关数据将会依上一页数据重新产生,是否确定回到上一步？
+            IF cl_ask_confirm('asf-00354') THEN
+               LET g_action_choice = "back_step"
+               EXIT DIALOG
+            END IF
+            
+#         ON ACTION next_step
+#            #是否确定依当前页设置产生下一步资料？
+#            IF cl_ask_confirm('asf-00353') THEN
+#               LET g_action_choice = "next_step"
+#               EXIT DIALOG
+#            END IF 
+         #add--151118-00029#7-- By shiun--(S)
+         ON ACTION apsp300_04_modify_detail
+            CALL apsp300_04_b()
+         #add--151118-00029#7-- By shiun--(E)
+         
+         ON ACTION done
+            CALL apsp300_04_done()
+                 RETURNING l_success
+            IF NOT l_success THEN
+               CONTINUE DIALOG
+            ELSE
+               CALL apsp300_delete_temp()
+               CALL apsp300_04_b_fill()
+            END IF
+            
+         ON ACTION step01
+            
+         ON ACTION step02
+         
+         ON ACTION step03
+         
+         ON ACTION step04
+
+         ON ACTION CLOSE
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF 
+      
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+
+   END WHILE
+   
+   
+   CASE g_action_choice
+#      WHEN "next_step"
+#         RETURN 3
+      WHEN "back_step"
+         RETURN 3
+      OTHERWISE
+         RETURN 0
+   END CASE
+END FUNCTION
+#將 所有temp table 的資料刪除
+PRIVATE FUNCTION apsp300_delete_temp()
+   CALL apsp300_01_delete_temp_table()
+   CALL apsp300_03_delete_temp_table()
+   CALL apsp300_04_delete_temp_table()
+END FUNCTION
+
+################################################################################
+# Descriptions...: 工单单别检查
+# Memo...........:
+# Usage..........: CALL apsp300_chk_sfaadocno(p_sfaadocno)
+#                  RETURNING 回传参数
+# Input parameter: p_sfaadocno    工单单别
+# Return code....: r_success      成功否标识
+# Date & Author..: 2014-07-07 By Carrier
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp300_chk_sfaadocno(p_sfaadocno)
+   DEFINE p_sfaadocno        LIKE sfaa_t.sfaadocno
+   DEFINE r_success          LIKE type_t.num5
+   DEFINE l_success          LIKE type_t.num5
+   DEFINE l_flag             LIKE type_t.num5
+   
+   LET r_success = FALSE
+   #檢查單別
+   IF NOT s_aooi200_chk_slip(g_site,'',p_sfaadocno,'asft300') THEN
+      RETURN r_success
+   END IF
+   
+   #檢核輸入的單據別是否可以被key人員對應的控制組使用,'2' 為銷售控制組類型
+   CALL s_control_chk_doc('1',p_sfaadocno,'6',g_user,g_dept,'','') 
+        RETURNING l_success,l_flag
+   IF l_success THEN
+      IF NOT l_flag THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'axm-00015'
+         LET g_errparam.extend = p_sfaadocno
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         RETURN r_success
+      END IF
+   ELSE
+      RETURN r_success
+   END IF
+   
+   LET r_success = TRUE
+   RETURN r_success
+   
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapq422" module="aap" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="02114" crtdt="2015-06-09 13:56:28" modid="02114" moddt="2015-06-26 10:39:13" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="結算明細查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),apcedocno,apceld,apceseq,apce003,apce004,apceorga,apceorga_desc(chr500),apcb002,apcb003,apcb004,apcb004_desc(chr500),stbe005,stbe005_desc(chr500),stbe006,stbe007,stbe008,stbe008_desc(chr500),stbe009,stbe009_desc(chr500),stbe011,stbe016,stbe020,stbe020_desc(chr500)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),apcedocno(b_apcedocno),apceld(b_apceld),apceseq(b_apceseq),apce003(b_apce003),apce004(b_apce004),apceorga(b_apceorga),apceorga_desc(b_apceorga_desc),apcb002(b_apcb002),apcb003(b_apcb003),apcb004(b_apcb004),apcb004_desc(b_apcb004_desc),stbe005(b_stbe005),stbe005_desc(b_stbe005_desc),stbe006(b_stbe006),stbe007(b_stbe007),stbe008(b_stbe008),stbe008_desc(b_stbe008_desc),stbe009(b_stbe009),stbe009_desc(b_stbe009_desc),stbe011(b_stbe011),stbe016(b_stbe016),stbe020(b_stbe020),stbe020_desc(b_stbe020_desc)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="aap" filename="aapq422" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="apcedocno,apceld,apceseq,apce003,apce004,apceorga,apceorga_desc,apcb002,apcb003,apcb004,apcb004_desc,stbe005,stbe005_desc,stbe006,stbe007,stbe008,stbe008_desc,stbe009,stbe009_desc,stbe011,stbe016,stbe020,stbe020_desc" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="apcedocno(b_apcedocno),apceld(b_apceld),apceseq(b_apceseq),apce003(b_apce003),apce004(b_apce004),apceorga(b_apceorga),apcb002(b_apcb002),apcb003(b_apcb003),apcb004(b_apcb004),stbe005(b_stbe005),stbe006(b_stbe006),stbe007(b_stbe007),stbe008(b_stbe008),stbe009(b_stbe009),stbe011(b_stbe011),stbe016(b_stbe016),stbe020(b_stbe020)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="apcedocno"/>
+      <column id="apceld"/>
+      <column id="apceseq">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="apce003"/>
+      <column id="apce004"/>
+      <column id="apceorga">
+        <after/>
+      </column>
+      <column id="apceorga_desc"/>
+      <column id="apcb002"/>
+      <column id="apcb003"/>
+      <column id="apcb004">
+        <after/>
+        <controlp form="q_imaa001_14" state="i"/>
+        <controlp form="q_imaa001_14" state="c"/>
+      </column>
+      <column id="apcb004_desc"/>
+      <column id="stbe005">
+        <after/>
+      </column>
+      <column id="stbe005_desc"/>
+      <column id="stbe006"/>
+      <column id="stbe007"/>
+      <column id="stbe008">
+        <after/>
+        <controlp form="q_aooi001_1" state="c"/>
+      </column>
+      <column id="stbe008_desc"/>
+      <column id="stbe009">
+        <after/>
+        <controlp form="q_oodb002" state="c"/>
+      </column>
+      <column id="stbe009_desc"/>
+      <column id="stbe011"/>
+      <column id="stbe016" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="stbe020">
+        <after/>
+      </column>
+      <column id="stbe020_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="apce_t" page="1" linked="" pk="apceseq" fk="apceld,apcedocno" detail="Y">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,apcedocno,apceld,apceseq,apce003,apce004,apceorga,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM apce_t WHERE apceent=? AND apceld=? AND apcedocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,66 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrr130" module="axr" jobmode="N" type="r01" industry="std" fix_arg="0" crtid="05416" crtdt="2014-09-01 11:33:25" modid="01531" moddt="2014-09-24 09:56:26" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="出貨應收對帳單列印作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xrcasite,xrcasite_desc(chr80),xmdk007,xmdk001,xmdk003,xmdl003,xmdldocno,xmdk002,t_relative_party(chr500),t_xmdk000_6(chr500),t_xmdk000_5(chr500),t_IV(chr500),t_g_type(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="axr" filename="axrr130" method="dialog">
+    <section id="input">
+      <input id="head" field="xrcasite,t_relative_party,t_xmdk000_6,t_xmdk000_5,t_IV,t_g_type"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xmdk007,xmdk001,xmdk003,xmdl003,xmdldocno,xmdk002"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xrcasite">
+        <after>
+          <reference field="xrcasite_desc" ref_field="xrca_t.xrcasite" map_field="xrcaent,xrcasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xrah002_1" state="i"/>
+        <controlp form="q_xrah002_1" state="c"/>
+      </column>
+      <column id="xrcasite_desc"/>
+      <column id="xmdk007">
+        <after>
+          <check chkid="v_pmaa001_3" id="isExist"/>
+        </after>
+        <controlp form="q_pmaa001_6" state="i"/>
+        <controlp form="q_pmaa001_6" state="c"/>
+      </column>
+      <column id="xmdk001"/>
+      <column id="xmdk003">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xmdl003">
+        <after>
+          <check chkid="v_xmdadocno_1" id="isExist"/>
+        </after>
+        <controlp form="q_xmdadocno_2" state="i"/>
+        <controlp form="q_xmdadocno_2" state="c"/>
+      </column>
+      <column id="xmdldocno"/>
+      <column id="xmdk002" type="S" default="1" def_scc="2063">
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="t_relative_party"/>
+      <column id="t_xmdk000_6" type="S" default="N"/>
+      <column id="t_xmdk000_5" type="S" default="N"/>
+      <column id="t_IV" type="S" default="1"/>
+      <column id="t_g_type" type="S" default="0"/>
+    </init>
+  </form>
+</assembly>
+

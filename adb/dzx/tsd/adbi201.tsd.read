@@ -1,0 +1,500 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="adbi201" std_prog="adbi201" erpver="1.0" ver="2" module="ADB" type="M" booking="N" class="i" env="s" zone="t10tst" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items="delete,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="dbag_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail3" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 提供發貨組織境外各類預設倉庫設定作業
+標準作業功能取消：無
+狀態功能：
+作業類型：基本資料 維護作業
+輸入模式：雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)：
+ 資料來源表：dbag_t(發貨組織境外預設倉庫資料檔)
+
+
+作業資料來源(Detail)：
+ 資料來源表：dbag_t(發貨組織境外預設倉庫資料檔)
+
+============================================================================================
+資料處理：
+(1)此作業維護倉庫類別dbag001='2.寄銷倉庫'的資料，將客戶編號及送貨客戶拉至單頭
+(2)單頭輸入完INSERT時，倉庫相關資訊先寫入空白，於單身輸入時，第一筆資料以UPDATE方式處理]]>
+  </all>
+  <field cite_std="N" name="dbag_t.dbag001" ver="1" src="s" column="dbag001" table="dbag_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbag_t.dbag002" ver="1" src="s" column="dbag002" table="dbag_t" attribute="C004" type="varchar2(10)" req="Y" i_zoom="q_pmaa001_6" c_zoom="q_pmaa001_6" chk_ref="v_pmaa001_3" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[adbi201 dbag001='2.寄銷倉庫'
+客戶編號
+校驗：arg1 = dbag002
+判斷客戶編號+送貨客戶不可重複
+帶值：抓取交易對象夥伴關係檔且交易類型為"2:出貨對象"的交易對象於[C:送貨客戶]，
+　　　若有設置多筆出貨交易對象時，則取有勾選主要的交易對象那一個，
+　　　若沒有設交易對象夥伴關係檔中交易類型為"2:出貨對象"的交易對象時，
+　　　則[C:送貨客戶]預設客戶編號
+adbi202 dbag001='1.代送商倉庫'
+代送商編號
+校驗：v_pmaa001_1　arg1 = dbag002
+開窗：q_pmaa001_10
+判斷代送商+送貨客戶不可以重複]]>
+  </field>
+  <field cite_std="N" name="dbag_t.dbag003" ver="1" src="s" column="dbag003" table="dbag_t" attribute="C004" type="varchar2(10)" req="Y" i_zoom="q_pmac002_6" c_zoom="q_pmac002_6" chk_ref="v_pmac002_2" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[adbi201 dbag001='2.寄銷倉庫'
+送貨客戶編號
+開窗：arg1 = dbag002
+校驗：arg1 = dbag002　arg2 = dbag003
+
+adbi202 dbag001='1.代送商倉庫'
+給予一個空白，欄位隱藏]]>
+  </field>
+  <field cite_std="N" name="dbag_t.dbag004" ver="1" src="s" column="dbag004" table="dbag_t" attribute="C303" type="varchar2(10)" req="Y" i_zoom="q_inaa001_18" c_zoom="q_inaa001_7" chk_ref="v_inaa001_14" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[成本倉庫
+校驗：arg1 = dbagsite　arg2 = dbag004
+開窗
+編輯：arg1 = dbagsite
+查詢：arg1 = g_site　arg2 = '2']]>
+  </field>
+  <field cite_std="N" name="dbag_t.dbag005" ver="1" src="s" column="dbag005" table="dbag_t" attribute="C303" type="varchar2(10)" req="N" i_zoom="q_inab002_6" c_zoom="q_inag005_10" chk_ref="v_inab002" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[成本儲位
+校驗：arg1 = dbagsite　arg2 = dbag004　arg3 = dbag005
+開窗
+編輯：arg1 = dbagsite　arg2 = dbag004]]>
+  </field>
+  <field cite_std="N" name="dbag_t.dbag006" ver="1" src="s" column="dbag006" table="dbag_t" attribute="C303" type="varchar2(10)" req="Y" i_zoom="q_inaa001_19" c_zoom="q_inaa001_7" chk_ref="v_inaa001_15" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[非成本倉庫
+校驗：arg1 = dbagsite　arg2 = dbag004
+開窗
+編輯：arg1 = dbagsite
+查詢：arg1 = g_site　arg2 = '2']]>
+  </field>
+  <field cite_std="N" name="dbag_t.dbag007" ver="1" src="s" column="dbag007" table="dbag_t" attribute="C303" type="varchar2(10)" req="N" i_zoom="q_inab002_6" c_zoom="q_inag005_10" chk_ref="v_inab002" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[成本儲位
+校驗：arg1 = dbagsite　arg2 = dbag006　arg3 = dbag007
+開窗
+編輯：arg1 = dbagsite　arg2 = dbag006]]>
+  </field>
+  <field cite_std="N" name="dbag_t.dbagcrtdp" ver="1" src="s" column="dbagcrtdp" table="dbag_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbag_t.dbagcrtdt" ver="1" src="s" column="dbagcrtdt" table="dbag_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbag_t.dbagcrtid" ver="1" src="s" column="dbagcrtid" table="dbag_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbag_t.dbagmoddt" ver="1" src="s" column="dbagmoddt" table="dbag_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbag_t.dbagmodid" ver="1" src="s" column="dbagmodid" table="dbag_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbag_t.dbagowndp" ver="1" src="s" column="dbagowndp" table="dbag_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbag_t.dbagownid" ver="1" src="s" column="dbagownid" table="dbag_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbag_t.dbagsite" ver="1" src="s" column="dbagsite" table="dbag_t" attribute="C007" type="varchar2(10)" req="Y" i_zoom="q_ooed004" c_zoom="q_ooed004" chk_ref="v_ooed004" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[倉庫歸屬發貨組織
+預設值：g_site
+校驗：arg1 = dbagsite　arg2 = '2'　arg3 = g_site
+客戶編號+送貨客戶+倉庫類別+倉庫屬發貨組織 為Unique
+開窗：arg1 = g_site　arg2 = '2']]>
+  </field>
+  <field cite_std="N" name="dbag_t.dbagstus" ver="1" src="s" column="dbagstus" table="dbag_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbagsite1" ver="1" src="s" column="dbagsite" table="dbag_t" attribute="C007" type="varchar2(10)" req="Y" i_zoom="q_ooed004" c_zoom="q_ooed004" chk_ref="v_ooed004" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbagsite_3" ver="1" src="s" column="dbagsite" table="dbag_t" attribute="C007" type="varchar2(10)" req="Y" i_zoom="q_ooed004" c_zoom="q_ooed004" chk_ref="v_ooed004" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="dbag002_desc" src="s" depend_field="dbag_t.dbag002" correspon_key="dbag002" ref_table="pmaal_t" ref_fk="pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="dbag003_desc" src="s" depend_field="dbag_t.dbag003" correspon_key="dbag003" ref_table="pmaal_t" ref_fk="pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="dbag004_desc" src="s" depend_field="dbag_t.dbag004" correspon_key="dbagsite,dbag004" ref_table="inaa_t" ref_fk="inaasite,inaa001" ref_dlang="" ref_rtn="inaa002" status=""/>
+    <rfield cite_std="N" ver="1" name="dbag005_desc" src="s" depend_field="dbag_t.dbag005" correspon_key="dbagsite,dbag004,dbag005" ref_table="inab_t" ref_fk="inabsite,inab001,inab002" ref_dlang="" ref_rtn="inab003" status=""/>
+    <rfield cite_std="N" ver="1" name="dbag006_desc" src="s" depend_field="dbag_t.dbag006" correspon_key="dbagsite,dbag006" ref_table="inaa_t" ref_fk="inaasite,inaa001" ref_dlang="" ref_rtn="inaa002" status=""/>
+    <rfield cite_std="N" ver="1" name="dbag007_desc" src="s" depend_field="dbag_t.dbag007" correspon_key="dbagsite,dbag006,dbag007" ref_table="inab_t" ref_fk="inabsite,inab001,inab002" ref_dlang="" ref_rtn="inab003" status=""/>
+    <rfield cite_std="N" ver="1" name="dbagcrtdp_desc" src="s" depend_field="dbag_t.dbagcrtdp" correspon_key="dbagcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="dbagcrtid_desc" src="s" depend_field="dbag_t.dbagcrtid" correspon_key="dbagcrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="dbagmodid_desc" src="s" depend_field="dbag_t.dbagmodid" correspon_key="dbagmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="dbagowndp_desc" src="s" depend_field="dbag_t.dbagowndp" correspon_key="dbagowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="dbagownid_desc" src="s" depend_field="dbag_t.dbagownid" correspon_key="dbagownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="dbagsite_desc" src="s" depend_field="dbag_t.dbagsite" correspon_key="dbagsite" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="dbag_t.dbag001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbag_t.dbag002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbag_t.dbag003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbag_t.dbag004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbag_t.dbag005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbag_t.dbag006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbag_t.dbag007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbag_t.dbagcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbag_t.dbagcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbag_t.dbagcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbag_t.dbagmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbag_t.dbagmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbag_t.dbagowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbag_t.dbagownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbag_t.dbagsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbag_t.dbagstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbagsite1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbagsite_3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="bpage_1" text="客戶資料" lstr=""/>
+    <sfield name="lbl_dbag001" text="倉庫類型" lstr=""/>
+    <sfield name="lbl_dbag002" text="客戶編號" lstr=""/>
+    <sfield name="lbl_dbag002_desc" text="客戶簡稱" lstr=""/>
+    <sfield name="lbl_dbag003" text="送貨客戶編號" lstr=""/>
+    <sfield name="lbl_dbag003_desc" text="送貨客戶簡稱" lstr=""/>
+    <sfield name="lbl_dbagsite" text="倉庫歸屬發貨組織" lstr=""/>
+    <sfield name="page_2.adbi201" text="倉庫資料" lstr=""/>
+    <sfield name="lbl_dbagstus" text="有效" lstr=""/>
+    <sfield name="lbl_ooefl003" text="發貨組織說明" lstr=""/>
+    <sfield name="lbl_dbag004" text="成本倉庫" lstr=""/>
+    <sfield name="lbl_dbag004_desc" text="成本倉庫說明" lstr=""/>
+    <sfield name="lbl_dbag005" text="成本儲位" lstr=""/>
+    <sfield name="lbl_dbag005_desc" text="成本儲位說明" lstr=""/>
+    <sfield name="lbl_dbag006" text="非成本倉庫" lstr=""/>
+    <sfield name="lbl_dbag006_desc" text="非成本倉庫說明" lstr=""/>
+    <sfield name="lbl_dbag007" text="非成本儲位" lstr=""/>
+    <sfield name="lbl_dbag007_desc" text="非成本儲位說明" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="ownid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="owndp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="crtid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="crtdp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="modid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" lstr=""/>
+    <sfield name="lbl_inaa001" text="庫位編號" lstr=""/>
+    <sfield name="lbl_inaa002" text="庫位名稱" lstr=""/>
+    <sfield name="lbl_inaasite" text="營運據點" lstr=""/>
+    <sfield name="lbl_inab002" text="儲位編號" lstr=""/>
+    <sfield name="lbl_inab003" text="儲位名稱" lstr=""/>
+    <sfield name="lbl_inag005" text="儲位編號" lstr=""/>
+    <sfield name="lbl_ooag001" text="員工編號" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_ooea001" text="組織編號" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_ooed004" text="組織編號" lstr=""/>
+    <sfield name="lbl_pmaa001" text="交易對象編號" lstr=""/>
+    <sfield name="lbl_pmaal004" text="交易對象簡稱" lstr=""/>
+    <sfield name="lbl_pmaal003" text="交易對象全名" lstr=""/>
+    <sfield name="lbl_pmac002" text="交易夥伴編號" lstr=""/>
+    <sfield name="lbl_pmac001" text="交易對象編號" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" lstr=""/>
+    <sfield name="cl_ask_s04_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s03_Test" text="測試" lstr=""/>
+    <sfield name="cl_ask_s03_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s01_Choice" text="選擇" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" lstr=""/>
+    <sfield name="lbl_collect_gzze001" text="訊息代碼" lstr=""/>
+    <sfield name="lbl_collect_gzze003" text="訊息內容" lstr=""/>
+    <sfield name="lbl_collect_gzze006" text="進階訊息" lstr=""/>
+    <sfield name="lbl_cl_err_s02_accept" text="確定" lstr=""/>
+    <sfield name="lbl_err_detail" text="進階訊息" lstr=""/>
+    <sfield name="lbl_suggest_exe" text="建議執行" lstr=""/>
+    <sfield name="lbl_err_contact" text="反應問題" lstr=""/>
+    <sfield name="lbl_cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="lbl_group_cl_err_s01" text="進階訊息" lstr=""/>
+    <sfield name="lbl_gzze001" text="訊息代碼:" lstr=""/>
+    <sfield name="lbl_gzze006" text="訊息內容:" lstr=""/>
+    <sfield name="lbl_sqlerrd2" text="SQL錯誤碼:" lstr=""/>
+    <sfield name="lbl_gzxm001" text="QBE編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm005" text="設為首頁-自動查詢方案" lstr=""/>
+    <sfield name="lbl_gzxm002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxm003" text="員工編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm004" text="設為預設查詢條件" lstr=""/>
+    <sfield name="cl_qbe_s02.bpage_1" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn005" text="欄位說明" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="cl_qbe_s02_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s02_Cancel" text="取消" lstr=""/>
+    <sfield name="lbl_funid" text="函式代碼" lstr=""/>
+    <sfield name="lbl_fundesc" text="函式說明" lstr=""/>
+    <sfield name="cl_qbe_s01_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s01_Cancel" text="取消" lstr=""/>
+    <sfield name="cl_qbe_s03.bpage_1" text="查詢方案列表" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxmstus" text="有效" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm004" text="預設" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm005" text="顯示於首頁" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm009" text="順序" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxml005" text="查詢方案說明" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm007" text="自設SQL條件" lstr=""/>
+    <sfield name="cl_qbe_s03.page_2" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn004" text="序號" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn005" text="條件欄位" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="add_favorite_catalog" text="新增目錄" lstr=""/>
+    <sfield name="modify_favorite_desc" text="修改" lstr=""/>
+    <sfield name="favorite_del" text="移除" lstr=""/>
+    <sfield name="add_catalog" text="" lstr=""/>
+    <sfield name="accept" text="確定" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+  </strings>
+  <sa_spec>
+    <sa_field name="GotoSceneRole1">
+      <![CDATA[]]>
+    </sa_field>
+    <sa_field name="TabbedPaneRole1">
+      <![CDATA[
+]]>
+    </sa_field>
+    <sa_field name="dbag002">
+      <![CDATA[客戶編號：
+   ●欄位控管：
+     資料欄位:[T:發貨組織境外預設倉庫資料檔][C:客戶編號] dbag002 /可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+          2.輸入的值必須存在[T:交易對象主檔].[C:交易對象編號]，且[C:狀態] =確認，
+            且[C:交易對象類型] ='2' OR '3'  (直接客戶) 
+          3.應判斷客戶編號+送貨客戶不可重複
+     帶值:1.顯示時將[T:交易對象多語言檔].[C:簡稱]帶回欄位後面顯示
+          2.抓取交易對象夥伴關係檔且交易類型為"2:出貨對象"的交易對象於[C:送貨客戶]，
+            若有設置多筆出貨交易對象時，則取有勾選主要的交易對象那一個，
+            若沒有設交易對象夥伴關係檔中交易類型為"2:出貨對象"的交易對象時，則[C:送貨客戶]預設客戶編號
+
+     計算或處理:無
+
+   ●開窗處理：
+     1.查詢時：
+       參考函式：依標準查詢視窗 
+       查詢欄位：[T:交易對象主檔].[C:交易對象編號],[T:交易對象多語言檔].[C:簡稱]
+       查詢條件：[T:交易對象主檔].[C:交易對象類型]='1' OR '3'
+       回值類型：多重回值
+      
+     2.新增/修改時： 
+           參考函式：依標準查詢視窗
+           查詢欄位：[T:交易對象主檔].[C:交易對象編號],[T:交易對象多語言檔].[C:簡稱]
+           查詢條件：[T:交易對象主檔].[C:交易對象類型]='1' OR '3'且[C:狀態碼]='Y'
+           回值類型：單一回值
+]]>
+    </sa_field>
+    <sa_field name="dbag0031">
+      <![CDATA[送貨客戶：
+   ●欄位控管：
+     資料欄位:[T:發貨組織境外預設倉庫資料檔][C:送貨客戶編號] dbag003 /可Display可Input
+     預設值:於輸入 客戶編號後自動帶出送貨客戶
+     校驗:1.不可空白
+          2.輸入的值需存在[T:交易對象夥伴關係檔].[C:交易夥伴編號]，檢核條件如下:
+            pmac001 = dbag001
+            pmac003='2'(出貨對象)
+          3.應判斷客戶編號+送貨客戶不可重複
+     帶值:1.顯示時將[T:交易對象多語言檔].[C:簡稱]帶回後面欄位顯示 
+     計算或處理:無
+
+   ●開窗處理：
+       新增狀態：
+         參考函式：交易對象夥伴關係資料
+         查詢欄位：[C:交易夥伴編號],[C:交易夥伴對象簡稱],[C:交易對象編號],[C:交易對象簡稱]
+         過濾條件：1.pmac001=xmda004
+                   2.pmac003='2'
+         回值類型：單一回值
+
+       查詢狀態：
+         參考函式：依標準查詢視窗 
+         查詢欄位：[T:交易對象主檔].[C:交易對象編號],[T:交易對象多語言檔].[C:簡稱]
+         查詢條件：[T:交易對象主檔].[C:交易對象類型]='2' OR '3'
+         回值類型：多重回值
+]]>
+    </sa_field>
+    <sa_field name="dbag004">
+      <![CDATA[預設成本倉庫：
+   ●欄位控管：
+     資料欄位:[T:發貨組織境外預設倉庫資料檔].[C:預設成本倉庫] dbag004/可INPUT 可Display 
+     預設值:無
+     校驗:1.不允許空白
+          2.輸入的庫儲批需存在[T:庫位基本資料檔(inaa_t)]中，且inaasite = dbagsite且為有效的成本庫位
+           
+     計算與處理：無
+
+
+   ●開窗處理：
+     1.查詢時：
+       參考函式：依標準查詢視窗 
+       查詢欄位：[T:庫位資料檔].[C:庫位編號],[T:庫位資料檔].[C:庫位名稱]
+       查詢條件：inaasite=dbagsite AND 成本庫否='Y'
+       回值類型：多重回值
+      
+     2.新增/修改時： 
+           參考函式：依標準查詢視窗
+           查詢欄位：[T:庫位資料檔].[C:庫位編號],[T:庫位資料檔].[C:庫位名稱]
+           查詢條件：inaasite=dbagsite AND 成本庫否='Y' AND stus = 'Y'
+           回值類型：單一回值
+]]>
+    </sa_field>
+    <sa_field name="dbag005">
+      <![CDATA[預設成本儲位：
+   ●欄位控管：
+     資料欄位:[T:發貨組織境外預設倉庫資料檔].[C:預設成本儲位] dbag005/可INPUT 可Display 
+     預設值:無
+     校驗:1.允許空白
+          2.輸入的庫儲批需存在[T:儲位基本資料檔(inab_t)]中，且inabsite = dbagsite AND inab001 = dbag004
+           
+     計算與處理：無
+
+
+   ●開窗處理：
+     1.查詢時：
+       參考函式：依標準查詢視窗 
+       查詢欄位：[T:儲位資料檔].[C:儲位編號],[T:儲位資料檔].[C:儲位名稱]
+       查詢條件：inabsite=dbagsite  
+       回值類型：多重回值
+      
+     2.新增/修改時： 
+           參考函式：依標準查詢視窗
+           查詢欄位：[T:庫位資料檔].[C:庫位編號],[T:庫位資料檔].[C:庫位名稱]
+           查詢條件：查詢條件：inabsite=dbagsite AND inab001 = dbag004 AND 狀態='Y'
+           回值類型：單一回值
+]]>
+    </sa_field>
+    <sa_field name="dbag006">
+      <![CDATA[預設非成本倉庫：
+   ●欄位控管：
+     資料欄位:[T:發貨組織境外預設倉庫資料檔].[C:預設非成本倉庫] dbag006/可INPUT 可Display 
+     預設值:無
+     校驗:1.不允許空白
+          2.輸入的庫儲批需存在[T:庫存明細檔(inag_t)]中，且inagsite = dbagsite且為有效的非成本庫位
+           
+     計算與處理：無
+
+
+   ●開窗處理：
+     1.查詢時：
+       參考函式：依標準查詢視窗 
+       查詢欄位：[T:庫位資料檔].[C:庫位編號],[T:庫位資料檔].[C:庫位名稱]
+       查詢條件：inagsite=dbagsite AND 成本庫='N'
+       回值類型：多重回值
+      
+     2.新增/修改時： 
+           參考函式：依標準查詢視窗
+           查詢欄位：[T:庫位資料檔].[C:庫位編號],[T:庫位資料檔].[C:庫位名稱]
+           查詢條件：inagsite=dbagsite AND 成本庫='N' AND stus = 'Y'
+           回值類型：單一回值
+]]>
+    </sa_field>
+    <sa_field name="dbag007">
+      <![CDATA[預設非成本儲位：
+   ●欄位控管：
+     資料欄位:[T:發貨組織境外預設倉庫資料檔].[C:預設非成本儲位] dbag007/可INPUT 可Display 
+     預設值:無
+     校驗:1.允許空白
+          2.輸入的庫儲批需存在[T:儲位基本資料檔(inab_t)]中，且inabsite = dbagsite AND inab001 = dbag006
+           
+     計算與處理：無
+
+
+   ●開窗處理：
+     1.查詢時：
+       參考函式：依標準查詢視窗 
+       查詢欄位：[T:儲位資料檔].[C:儲位編號],[T:儲位資料檔].[C:儲位名稱]
+       查詢條件：inabsite=dbagsite  
+       回值類型：多重回值
+      
+     2.新增/修改時： 
+           參考函式：依標準查詢視窗
+           查詢欄位：[T:庫位資料檔].[C:庫位編號],[T:庫位資料檔].[C:庫位名稱]
+           查詢條件：查詢條件：inabsite=dbagsite AND inab001 = dbag006 AND 狀態='Y'
+           回值類型：單一回值
+]]>
+    </sa_field>
+    <sa_field name="dbagsite">
+      <![CDATA[倉庫歸屬發貨組織：
+   ●欄位控管：
+     資料欄位:[T:發貨組織境外預設倉庫資料檔].[C:倉庫歸屬發貨組織] dbagsite/可INPUT 可Display 
+     預設值:User 登入營運據點.可修改.
+     校驗:1.不允許空白
+          2.輸入據點需為User登入組織及其以下營運據點資料.
+          3.客戶編號+送貨客戶+倉庫類別+倉庫屬發貨組織 為Unique
+     計算與處理：無
+
+
+   ●開窗處理：
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:營運據點檔][C:營運據點],[T:經營單位多語言檔][C:說明(簡稱)]
+                 抓取當前組織及其組織樹下展至最底層的所有組織資料
+       回值類型：查詢多重回值,新增/修改單一回值
+     
+]]>
+    </sa_field>
+    <sa_all name="ALL">
+      <![CDATA[程式說明及目的： 提供發貨組織境外各類預設倉庫設定作業
+標準作業功能取消：無
+狀態功能：
+作業類型：基本資料 維護作業
+輸入模式：雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)：
+	資料來源表：dbag_t(發貨組織境外預設倉庫資料檔)
+
+
+作業資料來源(Detail)：
+	資料來源表：dbag_t(發貨組織境外預設倉庫資料檔)
+
+============================================================================================
+資料處理：
+(1)此作業維護倉庫類別dbag001='2.寄銷倉庫'的資料，將客戶編號及送貨客戶拉至單頭
+(2)單頭輸入完INSERT時，倉庫相關資訊先寫入空白，於單身輸入時，第一筆資料以UPDATE方式處理
+
+]]>
+    </sa_all>
+  </sa_spec>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

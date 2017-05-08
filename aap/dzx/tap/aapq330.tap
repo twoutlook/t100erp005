@@ -1,0 +1,1771 @@
+<add_points prog="aapq330" std_prog="aapq330" erpver="1.0" module="AAP" ver="3" env="s" zone="t10dev" booking="Y" type="M" identity="s">
+  <other>
+    <code_template value="Q" status="" />
+    <free_style value="N" status="" />
+  </other>
+  <point name="function.aapq330_get_value_b" cite_std="N" status="" ver="3" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 取得該類型欄位sum
+# Memo...........:
+# Usage..........: CALL aapq330_get_value_b(p_apca004,p_apca100,p_type,p_yy,p_mm,p_feld)
+#                  RETURNING r_apcc105
+# Date & Author..: 14/06/25 By Belle
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION aapq330_get_value_b(p_apca004,p_apca100,p_type,p_yy,p_mm,p_feld)
+DEFINE p_apca004   LIKE apca_t.apca004 #帳款對象
+DEFINE p_apca100   LIKE apca_t.apca100 #幣別
+DEFINE p_feld      LIKE type_t.chr80   #彙總欄位條件
+DEFINE p_type      LIKE type_t.chr2    #類型
+DEFINE p_yy        LIKE glav_t.glav002 #年度
+DEFINE p_mm        LIKE glav_t.glav006 #期別
+
+DEFINE r_apcc105   LIKE apcc_t.apcc105
+DEFINE l_apcc105   LIKE apcc_t.apcc105
+DEFINE l_sql       STRING
+DEFINE l_sql1      STRING
+DEFINE l_sql2      STRING
+   
+   IF NOT g_input.op1 = '5' THEN
+      LET l_sql = " SELECT sum(apcc105) ",
+                  "   FROM apca_t,apcc_t",
+                  "  WHERE apcaent = apccent AND apcald = apccld AND apcadocno = apccdocno",
+                  "    AND apcastus = 'Y'",
+                  "    AND apcaent = ?       AND apcald = ?      AND apca004 = ? ",
+                  "    AND apca100 = ?"
+      IF NOT g_input.op1 = '1' THEN
+         LET l_sql =  l_sql ," AND ",l_ar[g_input.op1].feld1,"= '",p_feld,"'"
+      END IF
+   ELSE
+      LET l_sql = " SELECT sum(apcc105) ",
+                  "   FROM apca_t,apcc_t,glav_t",
+                  "  WHERE apcaent = apccent AND apcald = apccld AND apcadocno = apccdocno",
+                  "    AND apcaent = glavent AND glav001 = '",g_glaa003,"'",
+                  "    AND glav002 =",p_yy," AND glav006 = ",p_mm,
+                  "    AND apcastus = 'Y'    AND apcadocdt = glav004",
+                  "    AND apcaent = ?       AND apcald = ?      AND apca004 = ? ",
+                  "    AND apca100 = ?"
+   END IF
+   
+   IF g_input.op2 = '7' THEN #尚有未沖餘額者
+      LET l_sql =  l_sql ," AND apcc108 - apcc109 <> 0"
+   END IF
+   IF g_input.op2 = '8' THEN #已沖銷完畢者
+      LET l_sql =  l_sql ," AND apcc108 - apcc109 = 0"
+   END IF
+   
+   
+   CASE p_type
+        WHEN '11' #預付款
+             LET l_sql1 =  l_sql ," AND apca001 IN ('11','12')" 
+        WHEN '13' #採購應付
+             LET l_sql1 =  l_sql ," AND apca001 IN ('13','14','16','31')" 
+        WHEN '19' #其他應付
+             LET l_sql1 =  l_sql ," AND apca001 IN ('15','18','19')" 
+        WHEN '22' #倉退及折讓
+             LET l_sql1 =  l_sql ," AND apca001 ='22'" 
+        WHEN '01' #暫估應付
+             LET l_sql1 =  l_sql ," AND apca001 ='01'" 
+   END CASE
+   PREPARE aapq330_get_value_pre1 FROM l_sql1
+   EXECUTE aapq330_get_value_pre1 USING g_enterprise,g_input.apcald,p_apca004,p_apca100 INTO r_apcc105
+   IF cl_null(r_apcc105) THEN LET r_apcc105 = 0  END IF
+   
+   IF p_type = '19' OR p_type = '02' THEN 
+      CASE p_type
+           WHEN '19' #其他應付
+                LET l_sql2 =  l_sql ," AND apca001 ='29'" 
+           WHEN '01' #暫估應付
+                LET l_sql1 =  l_sql ," AND apca001 ='02'" 
+      END CASE
+      PREPARE aapq330_get_value_pre2 FROM l_sql2
+      EXECUTE aapq330_get_value_pre2 USING g_enterprise,g_input.apcald,p_apca004,p_apca100 INTO l_apcc105
+      IF cl_null(l_apcc105) THEN LET l_apcc105 = 0  END IF
+      LET r_apcc105 = r_apcc105 - l_apcc105
+   END IF
+   
+   RETURN r_apcc105
+
+END FUNCTION]]>
+</point>
+  <point name="function.aapq330_get_sum_b" cite_std="N" status="" ver="3" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 取得該類型欄位sum
+# Memo...........:
+# Usage..........: CALL aapq330_get_sum_b(p_apca004,p_apca100,p_yy,p_mm,p_feld)
+#                  RETURNING r_value
+# Date & Author..: 14/06/25 By Belle
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION aapq330_get_sum_b(p_apca004,p_apca100,p_yy,p_mm,p_feld)
+DEFINE p_apca004   LIKE apca_t.apca004 #帳款對象
+DEFINE p_apca100   LIKE apca_t.apca100 #幣別
+DEFINE p_feld      LIKE type_t.chr80   #彙總欄位條件
+DEFINE p_type      LIKE type_t.chr2    #類型
+DEFINE p_yy        LIKE glav_t.glav002 #年度
+DEFINE p_mm        LIKE glav_t.glav006 #期別
+DEFINE r_apcc105   LIKE apcc_t.apcc105
+DEFINE r_apcc109   LIKE apcc_t.apcc109
+DEFINE r_apcc1081  LIKE apcc_t.apcc108
+DEFINE r_apcc115   LIKE apcc_t.apcc115
+DEFINE r_apcc1181  LIKE apcc_t.apcc118
+
+DEFINE l_sql       STRING
+DEFINE l_sql1      STRING
+DEFINE l_sql2      STRING
+DEFINE l_apcc105   LIKE apcc_t.apcc105
+DEFINE l_apcc109   LIKE apcc_t.apcc109
+DEFINE l_apcc1081  LIKE apcc_t.apcc108
+DEFINE l_apcc115   LIKE apcc_t.apcc115
+DEFINE l_apcc1181  LIKE apcc_t.apcc118
+   
+   IF NOT g_input.op1 = '5' THEN
+      LET l_sql = " SELECT sum(apcc105),sum(apcc109),sum(apcc108-apcc109), ",
+                  "        sum(apcc115),             sum(apcc118-apcc119)",
+                  "   FROM apca_t,apcc_t",
+                  "  WHERE apcaent = apccent AND apcald = apccld AND apcadocno = apccdocno",
+                  "    AND apcastus = 'Y'",
+                  "    AND apcaent = ?       AND apcald = ?      AND apca004 = ?",
+                  "    AND apca100 = ? "
+      IF NOT g_input.op1 = '1' THEN
+         LET l_sql =  l_sql ," AND ",l_ar[g_input.op1].feld1,"= '",p_feld,"'"
+      END IF
+   ELSE
+      LET l_sql = " SELECT sum(apcc105),sum(apcc109),sum(apcc108-apcc109), ",
+                  "        sum(apcc115),             sum(apcc118-apcc119)",
+                  "   FROM apca_t,apcc_t,glav_t",
+                  "  WHERE apcaent = apccent AND apcald = apccld AND apcadocno = apccdocno",
+                  "    AND apcaent = glavent AND glav001 = '",g_glaa003,"'",
+                  "    AND glav002 =",p_yy," AND glav006 = ",p_mm,
+                  "    AND apcastus = 'Y'    AND apcadocdt = glav004",
+                  "    AND apcaent = ?       AND apcald = ?      AND apca004 = ? ",
+                  "    AND apca100 = ?"
+   END IF
+   IF g_input.op2 = '7' THEN #尚有未沖餘額者
+      LET l_sql =  l_sql ," AND apcc108 - apcc109 <> 0"
+   END IF
+   IF g_input.op2 = '8' THEN #已沖銷完畢者
+      LET l_sql =  l_sql ," AND apcc108 - apcc109 = 0"
+   END IF
+   
+   LET l_sql1= l_sql ,"    AND apca001 IN ('11','12','13','14','16','31','15','18','19')"
+   LET l_sql2= l_sql ,"    AND apca001 IN ('29','22','02')"
+   
+   PREPARE aapq330_get_sum_pre1 FROM l_sql1
+   EXECUTE aapq330_get_sum_pre1 USING g_enterprise,g_input.apcald,p_apca004,p_apca100 INTO r_apcc105,r_apcc109,r_apcc1081,r_apcc115,r_apcc1181 
+   IF cl_null(r_apcc105)  THEN LET r_apcc105 = 0  END IF
+   IF cl_null(r_apcc109)  THEN LET r_apcc109 = 0  END IF
+   IF cl_null(r_apcc1081) THEN LET r_apcc1081= 0  END IF
+   IF cl_null(r_apcc115)  THEN LET r_apcc115 = 0  END IF
+   IF cl_null(r_apcc1181) THEN LET r_apcc1181= 0  END IF
+   
+   PREPARE aapq330_get_sum_pre2 FROM l_sql2
+   EXECUTE aapq330_get_sum_pre2 USING g_enterprise,g_input.apcald,p_apca004,p_apca100 INTO l_apcc105,l_apcc109,l_apcc1081,l_apcc115,l_apcc1181 
+   IF cl_null(l_apcc105)  THEN LET l_apcc105 = 0  END IF
+   IF cl_null(l_apcc109)  THEN LET l_apcc109 = 0  END IF
+   IF cl_null(l_apcc1081) THEN LET l_apcc1081= 0  END IF
+   IF cl_null(l_apcc115)  THEN LET l_apcc115 = 0  END IF
+   IF cl_null(l_apcc1181) THEN LET l_apcc1181= 0  END IF
+   
+   LET r_apcc105  = r_apcc105 - l_apcc105 
+   LET r_apcc109  = r_apcc109 - l_apcc109 
+   LET r_apcc1081 = r_apcc1081- l_apcc1081
+   LET r_apcc115  = r_apcc115 - l_apcc115 
+   LET r_apcc1181 = r_apcc1181- l_apcc1181
+   
+   RETURN r_apcc105,r_apcc109,r_apcc1081,
+          r_apcc115,          r_apcc1181
+END FUNCTION]]>
+</point>
+  <point name="b_fill.array_clear" cite_std="N" status="" ver="3" src="s" new="N" mark_hard="N">
+<![CDATA[   IF cl_null(g_input.apcald) THEN RETURN END IF
+   CALL s_fin_ld_chk(g_input.apcald,g_user) RETURNING l_success,g_errno
+   IF NOT l_success THEN
+      CALL cl_err('',g_errno,1)
+      RETURN
+   END IF
+   LET ls_wc = ls_wc , " AND apcald = '", g_input.apcald,"'"
+   IF NOT cl_null(g_input.apcasite) THEN
+      LET ls_wc = ls_wc , " AND apcasite = '", g_input.apcasite,"'"
+   END IF]]>
+</point>
+  <point name="b_fill.define" cite_std="N" status="" ver="3" src="s" new="N" mark_hard="N">
+<![CDATA[   DEFINE l_chr           LIKE type_t.chr1
+   DEFINE l_success       LIKE type_t.num5]]>
+</point>
+  <point name="b_fill.fill" cite_std="N" status="u" ver="3" src="s" new="N" mark_hard="N">
+<![CDATA[      IF NOT cl_null(g_apca_d[l_ac].val) THEN
+         CASE g_input.op1
+            WHEN 1   LET g_apca_d[l_ac].txt = g_apca_d[l_ac].txt ,l_chr,s_desc_get_trading_partner_abbr_desc(g_apca_d[l_ac].txt) 
+            WHEN 2   LET g_apca_d[l_ac].txt = g_apca_d[l_ac].txt ,l_chr,s_desc_get_department_desc(g_apca_d[l_ac].txt) 
+            WHEN 3   LET g_apca_d[l_ac].txt = g_apca_d[l_ac].txt ,l_chr,s_desc_get_person_desc(g_apca_d[l_ac].txt) 
+            WHEN 4   LET g_apca_d[l_ac].txt = g_apca_d[l_ac].txt ,l_chr,s_desc_get_acc_desc('3211',g_apca_d[l_ac].txt) 
+            WHEN 5
+                     IF g_apca_d[l_ac].val2 > 9 THEN
+                        LET g_apca_d[l_ac].txt = g_apca_d[l_ac].val,g_apca_d[l_ac].val2
+                     ELSE
+                        LET g_apca_d[l_ac].txt = g_apca_d[l_ac].val,"0",g_apca_d[l_ac].val2
+                     END IF
+            
+         END CASE
+      END IF
+      
+      LET g_apca_d[l_ac].apcc133 = aapq330_get_value_b(g_apca_d[l_ac].apca004,g_apca_d[l_ac].apca100,'11',g_apca_d[l_ac].val,g_apca_d[l_ac].val2,g_apca_d[l_ac].val)
+      LET g_apca_d[l_ac].apcc134 = aapq330_get_value_b(g_apca_d[l_ac].apca004,g_apca_d[l_ac].apca100,'13',g_apca_d[l_ac].val,g_apca_d[l_ac].val2,g_apca_d[l_ac].val)
+      LET g_apca_d[l_ac].apcc135 = aapq330_get_value_b(g_apca_d[l_ac].apca004,g_apca_d[l_ac].apca100,'19',g_apca_d[l_ac].val,g_apca_d[l_ac].val2,g_apca_d[l_ac].val)
+      LET g_apca_d[l_ac].apcc136 = aapq330_get_value_b(g_apca_d[l_ac].apca004,g_apca_d[l_ac].apca100,'22',g_apca_d[l_ac].val,g_apca_d[l_ac].val2,g_apca_d[l_ac].val)
+      LET g_apca_d[l_ac].apcc137 = aapq330_get_value_b(g_apca_d[l_ac].apca004,g_apca_d[l_ac].apca100,'01',g_apca_d[l_ac].val,g_apca_d[l_ac].val2,g_apca_d[l_ac].val)
+      CALL aapq330_get_sum_b(g_apca_d[l_ac].apca004,g_apca_d[l_ac].apca100,g_apca_d[l_ac].val,g_apca_d[l_ac].val2,g_apca_d[l_ac].val)
+           RETURNING g_apca_d[l_ac].apcc105,g_apca_d[l_ac].apcc118,g_apca_d[l_ac].apcc138, 
+                     g_apca_d[l_ac].apcc115,                       g_apca_d[l_ac].apcc139
+      
+     ]]>
+</point>
+  <point name="b_fill.sql_after" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   IF NOT g_input.op1 = '5' THEN
+      LET g_sql = "SELECT apca004,",l_ar[g_input.op1].feld1,",",l_ar[g_input.op1].feld1,",'',apca100,'','','','','','','','','','' FROM apca_t", 
+                  " WHERE apcaent= ? AND 1=1 AND ", ls_wc ,
+                  "   AND apca004 <> 'EMPL' ",                          #暫不處理員工請款部分
+                  " GROUP BY apca100,apca004,",l_ar[g_input.op1].feld1
+   ELSE
+      LET g_sql = "SELECT apca004,'',glav002,glav006,apca100,'','','','','','','','','',''",
+                  "  FROM apca_t,glav_t", 
+                  " WHERE apcaent= ? AND 1=1 AND ", ls_wc ,
+                  "   AND glav001 = '",g_glaa003,"' AND apcadocdt = glav004 AND glavent = apcaent",
+                  "   AND apca004 <> 'EMPL' ",                          #暫不處理員工請款部分
+                  " GROUP BY apca100,apca004,glav002,glav006"
+   END IF
+   ]]>
+</point>
+  <point name="b_fill.sql_before" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   LET l_chr = '']]>
+</point>
+  <point name="b_fill2.array_clear" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   IF g_current_page = 1 THEN
+      CALL g_apca_d2.clear()
+   END IF
+   CALL g_apca_d3.clear()
+   CALL g_apca_d4.clear()]]>
+</point>
+  <point name="b_fill2.array_deleteElement" cite_std="N" status="" ver="3" src="s" new="N" mark_hard="N">
+<![CDATA[   IF g_current_page = 1 THEN
+      IF NOT g_input.op1 = 5 THEN
+         LET l_sql = "SELECT apcborga,apca001,apca007,apcb002,apcc003,apcc105,apcc108,apcc118,apcadocno,apcb001",
+                     "  FROM apca_t,apcb_t,apcc_t ",
+                     " WHERE apcaent = apccent AND apcald = apccld AND apcadocno = apccdocno ",
+                     "   AND apcaent = apcbent AND apcald = apcbld AND apcadocno = apcbdocno ",
+                     "   AND apcbseq = apccseq AND apcaent = ?     AND apcald    = ?",
+                     "   AND apca004 = ?       AND apca100 = ?     AND ",l_ar[g_input.op1].feld1 ," = '",g_apca_d[l_ac].val,"'"
+      ELSE
+         LET l_sql = "SELECT apcborga,apca001,apca007,apcb002,apcc003,apcc105,apcc108,apcc118,apcadocno,apcb001",
+                     "  FROM apca_t,apcb_t,apcc_t,glav_t ",
+                     " WHERE apcaent = apccent AND apcald = apccld AND apcadocno = apccdocno ",
+                     "   AND apcaent = apcbent AND apcald = apcbld AND apcadocno = apcbdocno ",
+                     "   AND apcaent = glavent AND glav001 = '",g_glaa003,"'",
+                     "   AND glav002 =",g_apca_d[l_ac].val," AND glav006 = ",g_apca_d[l_ac].val2,
+                     "   AND apcadocdt = glav004",
+                     "   AND apcbseq = apccseq AND apcaent = ?     AND apcald    = ?",
+                     "   AND apca004 = ?       AND apca100 = ? "
+      END IF
+      IF g_input.op2 = '7' THEN #尚有未沖餘額者
+         LET l_sql =  l_sql ," AND apcc108 - apcc109 <> 0"
+      END IF
+      IF g_input.op2 = '8' THEN #已沖銷完畢者
+         LET l_sql =  l_sql ," AND apcc108 - apcc109 = 0"
+      END IF
+      PREPARE aapq330_pb2 FROM l_sql
+      DECLARE b_fill2_curs CURSOR FOR aapq330_pb2
+      LET li_ac = 1
+      FOREACH b_fill2_curs USING g_enterprise,g_input.apcald,g_apca_d[l_ac].apca004,g_apca_d[l_ac].apca100
+         INTO g_apca_d2[li_ac].apcborga,g_apca_d2[li_ac].apca001,g_apca_d2[li_ac].apca007,g_apca_d2[li_ac].apcb002,
+              g_apca_d2[li_ac].apcc003 ,g_apca_d2[li_ac].apcc105,g_apca_d2[li_ac].apcc108,g_apca_d2[li_ac].apcc118,
+              g_apca_d2[li_ac].apcadocno,l_apcb001
+   
+         IF SQLCA.sqlcode THEN
+            CALL cl_err("FOREACH:b_fill2_curs",SQLCA.sqlcode,1)
+            EXIT FOREACH
+         END IF
+         
+         #金額欄位(交易、未沖)：
+         #金額依[帳款單性質apca001]+[來源作業別apcb001]作 正負值判別。   
+         #           帳款單性質apca001  來源作業別apcb001     負值
+         #           ----------------  ----------------     ------
+         #採購應付   13,14,16           apmt580,apmt590      -
+         #其他應付   29                 X不限                -
+         #倉退及折讓 22                 apmt580,apmt590,空白	-
+         #暫估應付   01                 apmt580,apmt590	   -
+         #暫估應付   02                 apmt580,apmt590,空白	-
+         LET l_chr = 'N'
+         IF g_apca_d2[li_ac].apca001 = '29' THEN
+            LET l_chr = 'Y'
+         END IF         
+         IF (l_apcb001 = 'apmt580' OR l_apcb001 = 'apmt590') AND 
+            (g_apca_d2[li_ac].apca001 = '13' OR g_apca_d2[li_ac].apca001 = '14' OR g_apca_d2[li_ac].apca001 = '16'  OR 
+             g_apca_d2[li_ac].apca001 = '22' OR g_apca_d2[li_ac].apca001 = '01' OR g_apca_d2[li_ac].apca001 = '02') 
+         THEN
+            LET l_chr = 'Y'
+         END IF
+         IF (g_apca_d2[li_ac].apca001 = '22' OR g_apca_d2[li_ac].apca001 = '02') AND cl_null(l_apcb001) THEN
+            LET l_chr = 'Y'
+         END IF
+         IF l_chr = 'Y' THEN
+            LET g_apca_d2[li_ac].apcc105 = g_apca_d2[li_ac].apcc105 * -1
+            LET g_apca_d2[li_ac].apcc108 = g_apca_d2[li_ac].apcc108 * -1
+            LET g_apca_d2[li_ac].apcc118 = g_apca_d2[li_ac].apcc118 * -1
+         END IF
+         
+         LET g_apca_d2[li_ac].apcborga = g_apca_d2[li_ac].apcborga,s_desc_get_department_desc(g_apca_d2[li_ac].apcborga)
+         LET g_apca_d2[li_ac].apca001  = g_apca_d2[li_ac].apca001 ,s_aap_apca001_desc(g_apca_d2[li_ac].apca001)
+         LET g_apca_d2[li_ac].apca007  = g_apca_d2[li_ac].apca007 ,s_desc_get_acc_desc('3211',g_apca_d2[li_ac].apca007)
+         
+         LET li_ac = li_ac + 1
+         IF li_ac > g_max_rec THEN
+            IF g_error_show = 1 THEN
+               CALL cl_err( "", 9035, 1 )
+            END IF
+            EXIT FOREACH
+         END IF
+      END FOREACH
+      CALL g_apca_d2.deleteElement(g_apca_d2.getLength())
+      LET g_detail_idx2 = 1
+   END IF
+   
+   #發票信息
+   LET l_sql = "SELECT isam011,isam008,isam009,isam010,isam014,",
+               "       isam023,isam024,isam025,isam026,isam027,",
+               "       isam028,isam004",
+               "  FROM isam_t ",
+               " WHERE isament = ? AND isamdocno = ?"
+               
+   PREPARE aapq330_pb3 FROM l_sql
+   DECLARE b_fill3_curs CURSOR FOR aapq330_pb3
+   LET li_ac = 1
+   FOREACH b_fill3_curs USING g_enterprise,g_apca_d2[g_detail_idx2].apcadocno
+      INTO g_apca_d3[li_ac].isam011,g_apca_d3[li_ac].isam008,g_apca_d3[li_ac].isam009,g_apca_d3[li_ac].isam010,g_apca_d3[li_ac].isam014,
+           g_apca_d3[li_ac].isam023,g_apca_d3[li_ac].isam024,g_apca_d3[li_ac].isam025,g_apca_d3[li_ac].isam026,g_apca_d3[li_ac].isam027,
+           g_apca_d3[li_ac].isam028,g_apca_d3[li_ac].isam004
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:b_fill3_curs",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      LET g_apca_d3[li_ac].isam004 = g_apca_d3[li_ac].isam004,s_desc_get_department_desc(g_apca_d3[li_ac].isam004)
+      LET li_ac = li_ac + 1
+      IF li_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   CALL g_apca_d3.deleteElement(g_apca_d3.getLength())
+   #沖銷信息
+   
+   LET l_sql = "SELECT apce001,apcedocno,apce002,apce024,apce100,",
+               "       apce109,apce119,apce003,apce010,apce014",
+               "  FROM apce_t ",
+               " WHERE apceent = ? AND apceld = ? AND apcedocno = ?"
+               
+   PREPARE aapq330_pb4 FROM l_sql
+   DECLARE b_fill4_curs CURSOR FOR aapq330_pb4
+   LET li_ac = 1
+   FOREACH b_fill4_curs USING g_enterprise,g_input.apcald,g_apca_d2[g_detail_idx2].apcadocno
+      INTO g_apca_d4[li_ac].apce001,g_apca_d4[li_ac].apcedocno,g_apca_d4[li_ac].apce002,g_apca_d4[li_ac].apce024,g_apca_d4[li_ac].apce100,
+           g_apca_d4[li_ac].apce109,g_apca_d4[li_ac].apce119  ,g_apca_d4[li_ac].apce003,g_apca_d4[li_ac].apce010,g_apca_d4[li_ac].apce014
+      
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:b_fill4_curs",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      LET g_apca_d4[li_ac].apce001 = s_desc_gzcbl004_desc('8529',g_apca_d4[li_ac].apce001)
+      LET g_apca_d4[li_ac].apce002 = s_desc_gzcbl004_desc('8506',g_apca_d4[li_ac].apce002)
+      LET li_ac = li_ac + 1
+      IF li_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   CALL g_apca_d4.deleteElement(g_apca_d4.getLength())]]>
+</point>
+  <point name="b_fill2.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   DEFINE l_sql           STRING
+   DEFINE l_chr           LIKE type_t.chr1
+   DEFINE l_apcb001       LIKE apcb_t.apcb001]]>
+</point>
+  <point name="construct.c.page1.b_apca004" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_apca004  #顯示到畫面上
+            NEXT FIELD b_apca004                     #返回原欄位
+    
+
+]]>
+</point>
+  <point name="construct.c.page1.b_apca014" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_apca014  #顯示到畫面上
+            NEXT FIELD b_apca014                     #返回原欄位
+    
+
+]]>
+</point>
+  <point name="construct.c.page1.b_apca015" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_apca015  #顯示到畫面上
+            NEXT FIELD b_apca015                     #返回原欄位
+    
+
+]]>
+</point>
+  <point name="construct.c.page1.b_apca100" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooaj002_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_apca100  #顯示到畫面上
+            NEXT FIELD b_apca100                     #返回原欄位
+    
+
+]]>
+</point>
+  <point name="detail_show.body.reference" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[TYPE type_g_apca_d2  RECORD
+        apcborga     LIKE type_t.chr80,
+        apca001      LIKE type_t.chr80,
+        apca007      LIKE type_t.chr80,
+        apcb002      LIKE apcb_t.apcb002,
+        apcc003      LIKE apcc_t.apcc003,
+        apcc105      LIKE apcc_t.apcc105,
+        apcc108      LIKE apcc_t.apcc108,
+        apcc118      LIKE apcc_t.apcc118,
+        apcadocno    LIKE apca_t.apcadocno
+                 END RECORD
+TYPE type_g_apca_d3  RECORD
+        isam011      LIKE isam_t.isam011,
+        isam008      LIKE type_t.chr80,
+        isam009      LIKE type_t.chr80,
+        isam010      LIKE isam_t.isam010,
+        isam014      LIKE isam_t.isam014,
+        isam023      LIKE isam_t.isam023,
+        isam024      LIKE isam_t.isam024,
+        isam025      LIKE isam_t.isam025,
+        isam026      LIKE isam_t.isam026,
+        isam027      LIKE isam_t.isam027,
+        isam028      LIKE isam_t.isam028,
+        isam004      LIKE type_t.chr80
+                 END RECORD
+TYPE type_g_apca_d4  RECORD
+        apce001      LIKE type_t.chr80,
+        apcedocno    LIKE apce_t.apcedocno,
+        apce002      LIKE type_t.chr80,
+        apce024      LIKE apce_t.apce024,
+        apce100      LIKE apce_t.apce100,
+        apce109      LIKE apce_t.apce109,
+        apce119      LIKE apce_t.apce119,
+        apce003      LIKE apce_t.apce003,
+        apce010      LIKE apce_t.apce010,
+        apce014      LIKE apce_t.apce014        
+                 END RECORD
+DEFINE g_apca_d2     DYNAMIC ARRAY OF type_g_apca_d2
+DEFINE g_apca_d3     DYNAMIC ARRAY OF type_g_apca_d3
+DEFINE g_apca_d4     DYNAMIC ARRAY OF type_g_apca_d4
+
+TYPE type_g_input    RECORD
+       apcald        LIKE apca_t.apcald,
+       apcacomp      LIKE apca_t.apcacomp,
+       apcasite      LIKE apca_t.apcasite,
+       apcald_desc   LIKE type_t.chr80,
+       apcasite_desc LIKE type_t.chr80,
+       apcacomp_desc LIKE type_t.chr80,
+       op1           LIKE type_t.chr1,
+       op2           LIKE type_t.chr1
+                 END RECORD
+DEFINE g_input       type_g_input  #INPUT條件
+DEFINE l_ar          DYNAMIC ARRAY OF RECORD
+           feld1     LIKE type_t.chr7,
+           title     LIKE gzze_t.gzze001
+                 END RECORD
+DEFINE g_glaa003     LIKE glaa_t.glaa003]]>
+</point>
+  <point name="init.init" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   LET g_input.op1 = 1
+   LET g_input.op2 = 6
+   CALL cl_set_comp_att_text('txt',cl_getmsg(l_ar[g_input.op1].title,g_lang))]]>
+</point>
+  <point name="input.a.page1.apcadocno" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_apca_d[g_detail_idx].apcald IS NOT NULL AND g_apca_d[g_detail_idx].apcadocno IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_apca_d[g_detail_idx].apcald != g_apca_d_t.apcald OR g_apca_d[g_detail_idx].apcadocno != g_apca_d_t.apcadocno)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM apca_t WHERE "||"apcaent = '" ||g_enterprise|| "' AND "||"apcald = '"||g_apca_d[g_detail_idx].apcald ||"' AND "|| "apcadocno = '"||g_apca_d[g_detail_idx].apcadocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page1.apcald" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_apca_d[g_detail_idx].apcald IS NOT NULL AND g_apca_d[g_detail_idx].apcadocno IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_apca_d[g_detail_idx].apcald != g_apca_d_t.apcald OR g_apca_d[g_detail_idx].apcadocno != g_apca_d_t.apcadocno)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM apca_t WHERE "||"apcaent = '" ||g_enterprise|| "' AND "||"apcald = '"||g_apca_d[g_detail_idx].apcald ||"' AND "|| "apcadocno = '"||g_apca_d[g_detail_idx].apcadocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page2.apcbseq" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_apca_d[g_detail_idx].apcald IS NOT NULL AND g_apca_d[g_detail_idx].apcadocno IS NOT NULL AND g_apca2_d[g_detail_idx2].apcbseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_apca_d[g_detail_idx].apcald != g_apca_d[g_detail_idx].apcald OR g_apca_d[g_detail_idx].apcadocno != g_apca_d[g_detail_idx].apcadocno OR g_apca2_d[g_detail_idx2].apcbseq != g_apca2_d_t.apcbseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM apcb_t WHERE "||"apcbent = '" ||g_enterprise|| "' AND "||"apcbld = '"||g_apca_d[g_detail_idx].apcald ||"' AND "|| "apcbdocno = '"||g_apca_d[g_detail_idx].apcadocno ||"' AND "|| "apcbseq = '"||g_apca2_d[g_detail_idx2].apcbseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page3.isam008" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_apca_d[g_detail_idx].apcald IS NOT NULL AND g_apca_d[g_detail_idx].apcadocno IS NOT NULL AND g_apca3_d[g_detail_idx2].isamdocno IS NOT NULL AND g_apca3_d[g_detail_idx2].isam008 IS NOT NULL AND g_apca3_d[g_detail_idx2].isam009 IS NOT NULL AND g_apca3_d[g_detail_idx2].isam010 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_apca_d[g_detail_idx].apcald != g_apca_d[g_detail_idx].apcald OR g_apca_d[g_detail_idx].apcadocno != g_apca_d[g_detail_idx].apcadocno OR g_apca3_d[g_detail_idx2].isamdocno != g_apca3_d_t.isamdocno OR g_apca3_d[g_detail_idx2].isam008 != g_apca3_d_t.isam008 OR g_apca3_d[g_detail_idx2].isam009 != g_apca3_d_t.isam009 OR g_apca3_d[g_detail_idx2].isam010 != g_apca3_d_t.isam010)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM isam_t WHERE "||"isament = '" ||g_enterprise|| "' AND "||"isamdocno = '"||g_apca_d[g_detail_idx].apcald ||"' AND "|| "isam008 = '"||g_apca_d[g_detail_idx].apcadocno ||"' AND "|| "isam009 = '"||g_apca3_d[g_detail_idx2].isamdocno ||"' AND "|| "isam010 = '"||g_apca3_d[g_detail_idx2].isam008 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page3.isam009" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_apca_d[g_detail_idx].apcald IS NOT NULL AND g_apca_d[g_detail_idx].apcadocno IS NOT NULL AND g_apca3_d[g_detail_idx2].isamdocno IS NOT NULL AND g_apca3_d[g_detail_idx2].isam008 IS NOT NULL AND g_apca3_d[g_detail_idx2].isam009 IS NOT NULL AND g_apca3_d[g_detail_idx2].isam010 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_apca_d[g_detail_idx].apcald != g_apca_d[g_detail_idx].apcald OR g_apca_d[g_detail_idx].apcadocno != g_apca_d[g_detail_idx].apcadocno OR g_apca3_d[g_detail_idx2].isamdocno != g_apca3_d_t.isamdocno OR g_apca3_d[g_detail_idx2].isam008 != g_apca3_d_t.isam008 OR g_apca3_d[g_detail_idx2].isam009 != g_apca3_d_t.isam009 OR g_apca3_d[g_detail_idx2].isam010 != g_apca3_d_t.isam010)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM isam_t WHERE "||"isament = '" ||g_enterprise|| "' AND "||"isamdocno = '"||g_apca_d[g_detail_idx].apcald ||"' AND "|| "isam008 = '"||g_apca_d[g_detail_idx].apcadocno ||"' AND "|| "isam009 = '"||g_apca3_d[g_detail_idx2].isamdocno ||"' AND "|| "isam010 = '"||g_apca3_d[g_detail_idx2].isam008 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page3.isam010" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_apca_d[g_detail_idx].apcald IS NOT NULL AND g_apca_d[g_detail_idx].apcadocno IS NOT NULL AND g_apca3_d[g_detail_idx2].isamdocno IS NOT NULL AND g_apca3_d[g_detail_idx2].isam008 IS NOT NULL AND g_apca3_d[g_detail_idx2].isam009 IS NOT NULL AND g_apca3_d[g_detail_idx2].isam010 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_apca_d[g_detail_idx].apcald != g_apca_d[g_detail_idx].apcald OR g_apca_d[g_detail_idx].apcadocno != g_apca_d[g_detail_idx].apcadocno OR g_apca3_d[g_detail_idx2].isamdocno != g_apca3_d_t.isamdocno OR g_apca3_d[g_detail_idx2].isam008 != g_apca3_d_t.isam008 OR g_apca3_d[g_detail_idx2].isam009 != g_apca3_d_t.isam009 OR g_apca3_d[g_detail_idx2].isam010 != g_apca3_d_t.isam010)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM isam_t WHERE "||"isament = '" ||g_enterprise|| "' AND "||"isamdocno = '"||g_apca_d[g_detail_idx].apcald ||"' AND "|| "isam008 = '"||g_apca_d[g_detail_idx].apcadocno ||"' AND "|| "isam009 = '"||g_apca3_d[g_detail_idx2].isamdocno ||"' AND "|| "isam010 = '"||g_apca3_d[g_detail_idx2].isam008 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page3.isamdocno" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_apca_d[g_detail_idx].apcald IS NOT NULL AND g_apca_d[g_detail_idx].apcadocno IS NOT NULL AND g_apca3_d[g_detail_idx2].isamdocno IS NOT NULL AND g_apca3_d[g_detail_idx2].isam008 IS NOT NULL AND g_apca3_d[g_detail_idx2].isam009 IS NOT NULL AND g_apca3_d[g_detail_idx2].isam010 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_apca_d[g_detail_idx].apcald != g_apca_d[g_detail_idx].apcald OR g_apca_d[g_detail_idx].apcadocno != g_apca_d[g_detail_idx].apcadocno OR g_apca3_d[g_detail_idx2].isamdocno != g_apca3_d_t.isamdocno OR g_apca3_d[g_detail_idx2].isam008 != g_apca3_d_t.isam008 OR g_apca3_d[g_detail_idx2].isam009 != g_apca3_d_t.isam009 OR g_apca3_d[g_detail_idx2].isam010 != g_apca3_d_t.isam010)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM isam_t WHERE "||"isament = '" ||g_enterprise|| "' AND "||"isamdocno = '"||g_apca_d[g_detail_idx].apcald ||"' AND "|| "isam008 = '"||g_apca_d[g_detail_idx].apcadocno ||"' AND "|| "isam009 = '"||g_apca3_d[g_detail_idx2].isamdocno ||"' AND "|| "isam010 = '"||g_apca3_d[g_detail_idx2].isam008 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page4.apcedocno" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_apca_d[g_detail_idx].apcald IS NOT NULL AND g_apca_d[g_detail_idx].apcadocno IS NOT NULL AND g_apca4_d[g_detail_idx2].apceld IS NOT NULL AND g_apca4_d[g_detail_idx2].apcedocno IS NOT NULL AND g_apca4_d[g_detail_idx2].apceseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_apca_d[g_detail_idx].apcald != g_apca_d[g_detail_idx].apcald OR g_apca_d[g_detail_idx].apcadocno != g_apca_d[g_detail_idx].apcadocno OR g_apca4_d[g_detail_idx2].apceld != g_apca4_d_t.apceld OR g_apca4_d[g_detail_idx2].apcedocno != g_apca4_d_t.apcedocno OR g_apca4_d[g_detail_idx2].apceseq != g_apca4_d_t.apceseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM apce_t WHERE "||"apceent = '" ||g_enterprise|| "' AND "||"apceld = '"||g_apca_d[g_detail_idx].apcald ||"' AND "|| "apcedocno = '"||g_apca_d[g_detail_idx].apcadocno ||"' AND "|| "apceseq = '"||g_apca4_d[g_detail_idx2].apceld ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page4.apceld" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_apca_d[g_detail_idx].apcald IS NOT NULL AND g_apca_d[g_detail_idx].apcadocno IS NOT NULL AND g_apca4_d[g_detail_idx2].apceld IS NOT NULL AND g_apca4_d[g_detail_idx2].apcedocno IS NOT NULL AND g_apca4_d[g_detail_idx2].apceseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_apca_d[g_detail_idx].apcald != g_apca_d[g_detail_idx].apcald OR g_apca_d[g_detail_idx].apcadocno != g_apca_d[g_detail_idx].apcadocno OR g_apca4_d[g_detail_idx2].apceld != g_apca4_d_t.apceld OR g_apca4_d[g_detail_idx2].apcedocno != g_apca4_d_t.apcedocno OR g_apca4_d[g_detail_idx2].apceseq != g_apca4_d_t.apceseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM apce_t WHERE "||"apceent = '" ||g_enterprise|| "' AND "||"apceld = '"||g_apca_d[g_detail_idx].apcald ||"' AND "|| "apcedocno = '"||g_apca_d[g_detail_idx].apcadocno ||"' AND "|| "apceseq = '"||g_apca4_d[g_detail_idx2].apceld ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page4.apceseq" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_apca_d[g_detail_idx].apcald IS NOT NULL AND g_apca_d[g_detail_idx].apcadocno IS NOT NULL AND g_apca4_d[g_detail_idx2].apceld IS NOT NULL AND g_apca4_d[g_detail_idx2].apcedocno IS NOT NULL AND g_apca4_d[g_detail_idx2].apceseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_apca_d[g_detail_idx].apcald != g_apca_d[g_detail_idx].apcald OR g_apca_d[g_detail_idx].apcadocno != g_apca_d[g_detail_idx].apcadocno OR g_apca4_d[g_detail_idx2].apceld != g_apca4_d_t.apceld OR g_apca4_d[g_detail_idx2].apcedocno != g_apca4_d_t.apcedocno OR g_apca4_d[g_detail_idx2].apceseq != g_apca4_d_t.apceseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM apce_t WHERE "||"apceent = '" ||g_enterprise|| "' AND "||"apceld = '"||g_apca_d[g_detail_idx].apcald ||"' AND "|| "apcedocno = '"||g_apca_d[g_detail_idx].apcadocno ||"' AND "|| "apceseq = '"||g_apca4_d[g_detail_idx2].apceld ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.body.before_row" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="main.init" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   LET l_ar[1].feld1 = 'apca004' #帳款對象
+   LET l_ar[2].feld1 = 'apca015' #業務部門
+   LET l_ar[3].feld1 = 'apca014' #業務人員
+   LET l_ar[4].feld1 = 'apca007' #帳款類型
+   LET l_ar[5].feld1 = 'ym'      #立帳期別
+   LET l_ar[1].title = 'aap-00099'
+   LET l_ar[2].title = 'aap-00100'
+   LET l_ar[3].title = 'aap-00101'
+   LET l_ar[4].title = 'aap-00102'
+   LET l_ar[5].title = 'aap-00103']]>
+</point>
+  <point name="ui_dialog.before_dialog" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   ]]>
+</point>
+  <point name="ui_dialog.construct" cite_std="N" status="" ver="3" src="s" new="N" mark_hard="N">
+<![CDATA[         #INPUT條件
+         INPUT g_input.apcald,g_input.apcasite,g_input.op1,g_input.op2 FROM apcald,apcasite,op1,op2
+               ATTRIBUTE(WITHOUT DEFAULTS)
+               
+            AFTER FIELD apcald
+               LET g_input.apcald_desc   = ''
+               LET g_input.apcacomp_desc = ''
+               IF NOT cl_null(g_input.apcald) THEN
+                  CALL s_fin_ld_chk(g_input.apcald,g_user) RETURNING l_success,g_errno
+                  IF NOT l_success THEN
+                     CALL cl_err('',g_errno,1)
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL s_fin_ld_carry(g_input.apcald,'') RETURNING l_success,g_input.apcald,g_input.apcacomp,g_errno
+                  IF NOT l_success THEN
+                      CALL cl_err(g_input.apcald,g_errno,1)
+                  END IF
+                  CALL s_ld_sel_glaa(g_input.apcald,'glaa003')
+                       RETURNING  l_success,g_glaa003
+                  IF NOT g_success THEN LET g_input.apcald = '' END IF
+                  LET g_input.apcald_desc   = s_desc_get_ld_desc(g_input.apcald)
+                  LET g_input.apcacomp_desc = s_desc_get_department_desc(g_input.apcacomp) 
+                  DISPLAY g_input.apcald,g_input.apcald_desc,g_input.apcacomp,g_input.apcacomp_desc
+                       TO apcald,apcald_desc,apcacomp,apcacomp_desc
+               END IF
+               
+            AFTER FIELD apcasite
+               LET g_input.apcasite_desc = ''
+               IF NOT cl_null(g_input.apcasite) THEN
+                  CALL s_fin_account_center_with_ld_chk(g_input.apcasite,g_input.apcald,g_user,2,'N','') RETURNING l_success,g_errno
+                  IF NOT l_success THEN
+                     CALL cl_err('',g_errno,1)
+                     CALL s_desc_get_department_desc(g_input.apcasite) RETURNING g_input.apcasite_desc
+                     DISPLAY BY NAME g_input.apcasite_desc
+                  END IF
+               END IF
+               CALL s_desc_get_department_desc(g_input.apcasite) RETURNING g_input.apcasite_desc                    
+               DISPLAY BY NAME g_input.apcasite_desc
+               
+            AFTER FIELD op1
+               IF NOT g_input.op1 MATCHES '[12345]' THEN
+                  CALL cl_err("","apm-00379",1)
+               END IF
+               
+            ON CHANGE op1
+               CALL cl_set_comp_att_text('txt',cl_getmsg(l_ar[g_input.op1].title,g_lang))
+               
+            AFTER FIELD op2
+               IF NOT g_input.op2 MATCHES '[678]' THEN
+                  CALL cl_err("","apm-00379",1)
+               END IF    
+               
+            ON ACTION controlp INFIELD apcald
+      			INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+      			LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_input.apcald                     #給予default值
+               LET g_qryparam.where = " (glaa008 = 'Y' OR glaa014 = 'Y') "  #glaa008(平行記帳)/glaa014(主帳套)
+               LET g_qryparam.arg1 = g_user                                 #人員權限
+               LET g_qryparam.arg2 = g_dept                                 #部門權限
+               CALL q_authorised_ld()                                       #呼叫開窗
+               LET g_input.apcald = g_qryparam.return1                      #將開窗取得的值回傳到變數
+               NEXT FIELD apcald             
+               
+            ON ACTION controlp INFIELD apcasite
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+   			   LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_input.apcasite       #給予default值
+               CALL q_xrah002_2()                               #呼叫開窗
+               LET g_input.apcasite = g_qryparam.return1        #將開窗取得的值回傳到變數
+               DISPLAY BY NAME g_input.apcasite
+               NEXT FIELD apcasite                              #返回原欄位
+         END INPUT
+         
+         #QBE查詢條件
+         CONSTRUCT BY NAME g_wc ON apca004,apcadocdt,apca001,apca007
+            
+            ON ACTION controlp INFIELD apca004
+               #帳款對象編號
+   			   INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+   			   LET g_qryparam.reqry = FALSE
+               CALL q_pmaa001()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO apca004      #顯示到畫面上
+               NEXT FIELD apca004                         #返回原欄位   
+            
+
+            ON ACTION controlp INFIELD apca007
+               #帳款類別
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = '3211'
+               CALL q_oocq002()
+               DISPLAY g_qryparam.return1 TO apca007
+               NEXT FIELD apca007
+               
+         END CONSTRUCT]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   DEFINE l_success LIKE type_t.num5]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[         #帳款單據
+         DISPLAY ARRAY g_apca_d2 TO s_detail2.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 2
+            
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx2
+               DISPLAY g_detail_idx2 TO FORMONLY.h_index
+               DISPLAY g_apca_d2.getLength() TO FORMONLY.h_count
+               CALL aapq330_b_fill2()
+            
+         END DISPLAY
+         #發票信息
+         DISPLAY ARRAY g_apca_d3 TO s_detail3.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 3
+ 
+  
+         END DISPLAY
+         #沖銷信息
+         DISPLAY ARRAY g_apca_d4 TO s_detail4.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 4
+  
+         END DISPLAY]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.define_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.after_define_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.after_refresh_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.body.define_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.body.after_define_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.before_close" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="init.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.bef_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.after_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.agendum" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.onaction_selall" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.onaction_selnone" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.onaction_sel" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.onaction_unsel" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.filter" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.datainfo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.query" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.output" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.others.fill" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.array_deleteElement" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill2.after_fill" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="detail_show.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="detail_show.before" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="detail_show.after" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="filter.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="filter.add_cs" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="filter.b_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="filter_parser.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <section id="aapq330.b_fill" ver="50" status="" src="s">
+<![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION aapq330_b_fill()
+   {<Local define>}
+   DEFINE ls_wc           STRING
+   DEFINE l_pid           LIKE type_t.chr50
+   {</Local define>}
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+ 
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter
+ 
+   CALL g_apca_d.clear()
+ 
+   #add-point:陣列清空
+   {<point name="b_fill.array_clear" />}
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1
+   ERROR "Searching!"
+ 
+   # b_fill段sql組成及FOREACH撰寫
+   #+ 此段落由子樣板qs04產生
+   #+ b_fill段資料取得(包含sql組成及FOREACH段撰寫)
+   LET g_sql = "SELECT  UNIQUE '','','','','',apca100,'','','','','','','','','','' FROM apca_t",
+ 
+ 
+               "",
+               " WHERE apcaent= ? AND 1=1 AND ", ls_wc
+ 
+   LET g_sql = g_sql, " ORDER BY apca_t.apcald,apca_t.apcadocno"
+ 
+   #add-point:b_fill段sql_after
+   {<point name="b_fill.sql_after"/>}
+   #end add-point
+ 
+   PREPARE aapq330_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR aapq330_pb
+ 
+   OPEN b_fill_curs USING g_enterprise
+ 
+   FOREACH b_fill_curs INTO g_apca_d[l_ac].sel,g_apca_d[l_ac].apca004,g_apca_d[l_ac].txt,g_apca_d[l_ac].val, 
+       g_apca_d[l_ac].val2,g_apca_d[l_ac].apca100,g_apca_d[l_ac].apcc105,g_apca_d[l_ac].apcc133,g_apca_d[l_ac].apcc134, 
+       g_apca_d[l_ac].apcc135,g_apca_d[l_ac].apcc136,g_apca_d[l_ac].apcc137,g_apca_d[l_ac].apcc118,g_apca_d[l_ac].apcc138, 
+       g_apca_d[l_ac].apcc115,g_apca_d[l_ac].apcc139
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+ 
+      
+ 
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.fill"/>}
+      #end add-point
+ 
+      CALL aapq330_detail_show("'1'")
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+ 
+   END FOREACH
+ 
+ 
+ 
+ 
+ 
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+ 
+   CALL g_apca_d.deleteElement(g_apca_d.getLength())
+ 
+   #add-point:陣列長度調整
+   {<point name="b_fill.array_deleteElement" />}
+   #end add-point
+ 
+   LET g_error_show = 0
+ 
+   LET g_detail_cnt = l_ac - 1
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+ 
+   #+ 此段落由子樣板qs06產生
+   #+ b_fill段CURSOR釋放
+   CLOSE b_fill_curs
+   FREE aapq330_pb
+ 
+ 
+ 
+ 
+   LET l_ac = 1
+   CALL aapq330_b_fill2()
+ 
+      CALL aapq330_filter_show('apca100','b_apca100')
+   CALL aapq330_filter_show('apcc105','b_apcc105')
+   CALL aapq330_filter_show('apcc133','b_apcc133')
+   CALL aapq330_filter_show('apcc134','b_apcc134')
+   CALL aapq330_filter_show('apcc135','b_apcc135')
+   CALL aapq330_filter_show('apcc136','b_apcc136')
+   CALL aapq330_filter_show('apcc137','b_apcc137')
+   CALL aapq330_filter_show('apcc118','b_apcc118')
+   CALL aapq330_filter_show('apcc138','b_apcc138')
+   CALL aapq330_filter_show('apcc115','b_apcc115')
+   CALL aapq330_filter_show('apcc139','b_apcc139')
+ 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aapq330.b_fill2" ver="7" status="" src="s">
+<![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION aapq330_b_fill2()
+   {<Local define>}
+   DEFINE li_ac           LIKE type_t.num5
+   {</Local define>}
+   #add-point:b_fill2段define
+   {<point name="b_fill2.define"/>}
+   #end add-point
+ 
+   LET li_ac = l_ac
+ 
+   #單身組成
+   #+ 此段落由子樣板qs07產生
+   #+ b_fill2段table資料取得(包含sql組成及資料填充)
+ 
+   #add-point:陣列清空
+   {<point name="b_fill2.array_clear" />}
+   #end add-point
+ 
+ 
+ 
+ 
+   #add-point:陣列長度調整
+   {<point name="b_fill2.array_deleteElement" />}
+   #end add-point
+ 
+ 
+ 
+   #add-point:單身填充後
+   {<point name="b_fill2.after_fill" />}
+   #end add-point
+ 
+   LET l_ac = li_ac
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aapq330.description" ver="1" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:3,PR版次:3) Build-000189
+#+ 
+#+ Filename...: aapq330
+#+ Description: 應付帳款查詢作業
+#+ Creator....: 02097(2014/06/23)
+#+ Modifier...: 02097(2014/07/01)
+#+ Buildtype..: 應用 q01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="aapq330.detail_show" ver="15" status="" src="s">
+<![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION aapq330_detail_show(ps_page)
+   DEFINE ps_page    STRING
+   DEFINE ls_sql     STRING
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+ 
+   
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      
+ 
+      #add-point:show段單身reference
+      {<point name="detail_show.body.reference"/>}
+      #end add-point
+   END IF
+ 
+ 
+ 
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aapq330.filter" ver="28" status="" src="s">
+<![CDATA[#+ 此段落由子樣板qs13產生
+#+ filter段相關程式段
+#+ filter過濾功能
+PRIVATE FUNCTION aapq330_filter()
+   {<Local define>}
+   {</Local define>}
+   #add-point:filter段define
+   {<point name="filter.define"/>}
+   #end add-point
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+ 
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", TRUE)
+ 
+   
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   #+ 此段落由子樣板qs08產生
+   #+ filter段DIALOG段的組成
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON apca100,apcc105,apcc133,apcc134,apcc135,apcc136,apcc137,apcc118,apcc138, 
+          apcc115,apcc139
+                          FROM s_detail1[1].b_apca100,s_detail1[1].b_apcc105,s_detail1[1].b_apcc133, 
+                              s_detail1[1].b_apcc134,s_detail1[1].b_apcc135,s_detail1[1].b_apcc136,s_detail1[1].b_apcc137, 
+                              s_detail1[1].b_apcc118,s_detail1[1].b_apcc138,s_detail1[1].b_apcc115,s_detail1[1].b_apcc139 
+
+ 
+         BEFORE CONSTRUCT
+            CALL cl_qbe_init()
+                     DISPLAY aapq330_filter_parser('apca100') TO s_detail1[1].b_apca100
+            DISPLAY aapq330_filter_parser('apcc105') TO s_detail1[1].b_apcc105
+            DISPLAY aapq330_filter_parser('apcc133') TO s_detail1[1].b_apcc133
+            DISPLAY aapq330_filter_parser('apcc134') TO s_detail1[1].b_apcc134
+            DISPLAY aapq330_filter_parser('apcc135') TO s_detail1[1].b_apcc135
+            DISPLAY aapq330_filter_parser('apcc136') TO s_detail1[1].b_apcc136
+            DISPLAY aapq330_filter_parser('apcc137') TO s_detail1[1].b_apcc137
+            DISPLAY aapq330_filter_parser('apcc118') TO s_detail1[1].b_apcc118
+            DISPLAY aapq330_filter_parser('apcc138') TO s_detail1[1].b_apcc138
+            DISPLAY aapq330_filter_parser('apcc115') TO s_detail1[1].b_apcc115
+            DISPLAY aapq330_filter_parser('apcc139') TO s_detail1[1].b_apcc139
+ 
+ 
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog
+         {<point name="filter.b_dialog"/>}
+         #end add-point
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+ 
+ 
+   
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+ 
+      CALL aapq330_filter_show('apca100','b_apca100')
+   CALL aapq330_filter_show('apcc105','b_apcc105')
+   CALL aapq330_filter_show('apcc133','b_apcc133')
+   CALL aapq330_filter_show('apcc134','b_apcc134')
+   CALL aapq330_filter_show('apcc135','b_apcc135')
+   CALL aapq330_filter_show('apcc136','b_apcc136')
+   CALL aapq330_filter_show('apcc137','b_apcc137')
+   CALL aapq330_filter_show('apcc118','b_apcc118')
+   CALL aapq330_filter_show('apcc138','b_apcc138')
+   CALL aapq330_filter_show('apcc115','b_apcc115')
+   CALL aapq330_filter_show('apcc139','b_apcc139')
+ 
+   CALL aapq330_b_fill()
+ 
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", FALSE)
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aapq330.filter_parser" ver="1" status="" src="s">
+<![CDATA[#+ 此段落由子樣板qs14產生
+#+ filter pasara段
+#+ filter欄位解析
+PRIVATE FUNCTION aapq330_filter_parser(ps_field)
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+   #add-point:filter段define
+   {<point name="filter_parser.define"/>}
+   #end add-point
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aapq330.filter_show" ver="2" status="" src="s">
+<![CDATA[#+ 此段落由子樣板qs15產生
+#+ 標題欄位顯示搜尋條件
+PRIVATE FUNCTION aapq330_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LET ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = aapq330_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aapq330.global" ver="54" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_apca_d RECORD
+       
+       sel LIKE type_t.chr500, 
+   apca004 LIKE type_t.chr80, 
+   txt LIKE type_t.chr80, 
+   val LIKE type_t.chr80, 
+   val2 LIKE type_t.chr80, 
+   apca100 LIKE apca_t.apca100, 
+   apcc105 LIKE apcc_t.apcc105, 
+   apcc133 LIKE apcc_t.apcc133, 
+   apcc134 LIKE apcc_t.apcc134, 
+   apcc135 LIKE apcc_t.apcc135, 
+   apcc136 LIKE apcc_t.apcc136, 
+   apcc137 LIKE apcc_t.apcc137, 
+   apcc118 LIKE apcc_t.apcc118, 
+   apcc138 LIKE apcc_t.apcc138, 
+   apcc115 LIKE apcc_t.apcc115, 
+   apcc139 LIKE apcc_t.apcc139
+       END RECORD
+ 
+ 
+#模組變數(Module Variables)
+DEFINE g_apca_d            DYNAMIC ARRAY OF type_g_apca_d
+DEFINE g_apca_d_t          type_g_apca_d
+ 
+ 
+ 
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                 STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE l_ac                  LIKE type_t.num5              #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_current_page        LIKE type_t.num5              #目前所在頁數
+DEFINE g_current_row         LIKE type_t.num5              #目前所在筆數
+DEFINE g_current_idx         LIKE type_t.num5
+DEFINE g_detail_cnt          LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_row_index           LIKE type_t.num10
+DEFINE g_master_idx          LIKE type_t.num5
+DEFINE g_detail_idx          LIKE type_t.num5              #單身 所在筆數(所有資料)
+DEFINE g_detail_idx2         LIKE type_t.num5
+DEFINE g_hyper_url           STRING                        #hyperlink的主要網址
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+ 
+ 
+DEFINE g_wc_filter_table           STRING
+ 
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="aapq330.init" ver="1" status="" src="s">
+<![CDATA[#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION aapq330_init()
+ 
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1" 
+   LET g_error_show  = 1
+#  LET g_selcolor    = "#D0E7FD"
+   
+     
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aapq330.main" ver="2" status="" src="s">
+<![CDATA[#+ 此段落由子樣板a26產生
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aap","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = " ", 
+                      " FROM ",
+                      " "
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE aapq330_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT UNIQUE ",
+               " FROM ",
+               
+               " WHERE  "
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define
+   {<point name="main.after_refresh_sql"/>}
+   #end add-point
+   PREPARE aapq330_master_referesh FROM g_sql
+ 
+   #add-point:main段define_sql
+   {<point name="main.body.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = ""
+   #add-point:main段define_sql
+   {<point name="main.body.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE aapq330_bcl CURSOR FROM g_forupd_sql
+ 
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aapq330 WITH FORM cl_ap_formpath("aap",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aapq330_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aapq330_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_aapq330
+      
+   END IF 
+   
+   CLOSE aapq330_cl
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+]]>
+</section>
+  <section id="aapq330.other_function" ver="1" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+  <section id="aapq330.ui_dialog" ver="7" status="" src="s">
+<![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION aapq330_ui_dialog() 
+   {<Local define>}
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num5
+   DEFINE ls_result STRING
+   {</Local define>}
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+   
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+ 
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   LET g_current_row = 0
+   LET g_current_idx = 1
+   LET g_action_choice = " "
+   LET g_main_hidden = 1
+   LET l_ac = 1
+ 
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   
+   CALL aapq330_b_fill()
+  
+   WHILE li_exit = FALSE
+ 
+      CALL cl_dlg_query_bef_disp()  #相關查詢
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:input段落
+         {<point name="ui_dialog.input"/>}
+         #end add-point
+ 
+         #add-point:construct段落
+         {<point name="ui_dialog.construct"/>}
+         #end add-point
+     
+         DISPLAY ARRAY g_apca_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_apca_d.getLength() TO FORMONLY.h_count
+               LET g_master_idx = l_ac
+               CALL aapq330_b_fill2()
+ 
+               #add-point:input段before row
+               {<point name="input.body.before_row"/>}
+               #end add-point
+ 
+            
+ 
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+         END DISPLAY
+ 
+ 
+ 
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+      
+         BEFORE DIALOG
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            #add-point:ui_dialog段before dialog
+            {<point name="ui_dialog.bef_dialog"/>}
+            #end add-point
+ 
+         AFTER DIALOG
+            #add-point:ui_dialog段 after dialog
+            {<point name="ui_dialog.after_dialog"/>}
+            #end add-point
+            
+         ON ACTION exit
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            INITIALIZE g_wc_filter TO NULL
+            IF cl_null(g_wc) THEN
+               LET g_wc = " 1=1"
+            END IF
+ 
+ 
+         
+            LET g_wc2 = " 1=1"
+ 
+            #儲存WC資訊
+            CALL cl_dlg_save_user_latestqry("("||g_wc||") AND ("||g_wc2||")")
+            CALL aapq330_b_fill()
+      
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum
+            {<point name="ui_dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+ 
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+ 
+         ON ACTION datarefresh   # 重新整理
+            CALL aapq330_b_fill()
+ 
+         #+ 此段落由子樣板qs19產生
+         #有關於sel欄位選取的action段落
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_apca_d.getLength()
+               LET g_apca_d[li_idx].sel = "Y"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selall
+            {<point name="ui_dialog.onaction_selall"/>}
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_apca_d.getLength()
+               LET g_apca_d[li_idx].sel = "N"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selnone
+            {<point name="ui_dialog.onaction_selnone"/>}
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_apca_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_apca_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action sel
+            {<point name="ui_dialog.onaction_sel"/>}
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_apca_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_apca_d[li_idx].sel = "N"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action unsel
+            {<point name="ui_dialog.onaction_unsel"/>}
+            #end add-point
+ 
+ 
+ 
+         #+ 此段落由子樣板qs16產生
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL aapq330_filter()
+            #add-point:ON ACTION filter
+            {<point name="menu.filter" />}
+            #END add-point
+            EXIT DIALOG
+ 
+ 
+         
+         #+ 此段落由子樣板a43產生
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo
+               {<point name="menu.datainfo" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+      
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+ 
+      END DIALOG 
+   
+   END WHILE
+ 
+END FUNCTION
+]]>
+</section>
+</add_points>

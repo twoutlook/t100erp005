@@ -1,0 +1,139 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apsi350" module="aps" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02040" crtdt="2014-07-21 14:03:54" modid="07024" moddt="2016-08-23 21:46:26" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="採購預測編號設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="psja001,psjal003,psjal004,psja002,psja009,psja003,psja004,psja004_desc(chr80),psja005,psja006,psja007,psja007_desc(chr80),psja008,psjasite,psjastus,psjaownid,psjaownid_desc(chr80),psjaowndp,psjaowndp_desc(chr80),psjacrtid,psjacrtid_desc(chr80),psjacrtdp,psjacrtdp_desc(chr80),psjacrtdt,psjamodid,psjamodid_desc(chr80),psjamoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="psjb002,psjb003"/>
+      <var id="bs_field" value="psjasite,psja001,psja001_desc(chr80)" pk="psjasite,psja001" order=""/>
+      <bs_reference field="psja001_desc" ref_field="psja001" ref_sql="SELECT psjal003 FROM psjal_t WHERE psjalent=$varg_enterprise$var AND psjal001=? AND psjal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="aps" filename="apsi350" method="dialog">
+    <section id="input">
+      <input id="head" field="psja001,psjal003,psjal004,psja002,psja009,psja003,psja004,psja005,psja006,psja007,psja008,psjasite,psjastus"/>
+      <input id="body" page="1" field="psjb003" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="psja001,psjal003,psjal004,psja002,psja009,psja003,psja004,psja005,psja006,psja007,psja008,psjasite,psjastus,psjaownid,psjaowndp,psjacrtid,psjacrtdp,psjacrtdt,psjamodid,psjamoddt"/>
+      <construct id="body" page="1" field="psjb002,psjb003"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="psjasite,psja001"/>
+      <set id="head" type="no_entry" field="psjasite,psja001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="psja001">
+        <controlp form="q_psja001" state="c"/>
+      </column>
+      <column id="psjal003"/>
+      <column id="psjal004"/>
+      <column id="psja002">
+        <after>
+          <check id="range" st="62.000" st_type="1" errno="azz-00087" bt="1.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="psja009" type="S" default="1" def_scc="4031"/>
+      <column id="psja003"/>
+      <column id="psja004">
+        <after>
+          <check chkid="v_psca001" id="isExist"/>
+          <reference field="psja004_desc" ref_field="psja_t.psja004" map_field="psja004" ref_sql="SELECT pscal003 FROM pscal_t WHERE pscalent=$varg_enterprise$var AND pscal001=? AND pscal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_psca001" state="i"/>
+        <controlp form="q_psca001" state="c"/>
+      </column>
+      <column id="psja004_desc"/>
+      <column id="psja005" type="S" default="N"/>
+      <column id="psja006" type="S" default="1" def_scc="2032"/>
+      <column id="psja007">
+        <after>
+          <check chkid="v_pmaa001_1" id="isExist"/>
+          <reference field="psja007_desc" ref_field="psja_t.psja007" map_field="psja007" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_3" state="i"/>
+        <controlp form="q_pmaa001_3" state="c"/>
+      </column>
+      <column id="psja007_desc"/>
+      <column id="psja008">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="psjasite"/>
+      <column id="psjastus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="psjaownid">
+        <after>
+          <reference field="psjaownid_desc" ref_field="psja_t.psjaownid" map_field="psjaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psjaownid_desc"/>
+      <column id="psjaowndp">
+        <after>
+          <reference field="psjaowndp_desc" ref_field="psja_t.psjaowndp" map_field="psjaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="psjaowndp_desc"/>
+      <column id="psjacrtid">
+        <after>
+          <reference field="psjacrtid_desc" ref_field="psja_t.psjacrtid" map_field="psjacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psjacrtid_desc"/>
+      <column id="psjacrtdp">
+        <after>
+          <reference field="psjacrtdp_desc" ref_field="psja_t.psjacrtdp" map_field="psjacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="psjacrtdp_desc"/>
+      <column id="psjacrtdt"/>
+      <column id="psjamodid">
+        <after>
+          <reference field="psjamodid_desc" ref_field="psja_t.psjamodid" map_field="psjamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psjamodid_desc"/>
+      <column id="psjamoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="psjb002"/>
+      <column id="psjb003" type="S" default="3" def_scc="3011"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="psja_t" pk="psjasite,psja001">
+      <sql id="forupd_sql" type="sql" query="SELECT psja001,&apos;&apos;,&apos;&apos;,psja002,psja009,psja003,psja004,&apos;&apos;,psja005,psja006,psja007,&apos;&apos;,psja008,psjasite,psjastus,psjaownid,&apos;&apos;,psjaowndp,&apos;&apos;,psjacrtid,&apos;&apos;,psjacrtdp,&apos;&apos;,psjacrtdt,psjamodid,&apos;&apos;,psjamoddt FROM psja_t WHERE psjaent= ? AND psjasite=? AND psja001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT psja001,&apos;&apos;,&apos;&apos;,psja002,psja009,psja003,psja004,&apos;&apos;,psja005,psja006,psja007,&apos;&apos;,psja008,psjasite,psjastus,psjaownid,&apos;&apos;,psjaowndp,&apos;&apos;,psjacrtid,&apos;&apos;,psjacrtdp,&apos;&apos;,psjacrtdt,psjamodid,&apos;&apos;,psjamoddt FROM psja_t" order="psjasite,psja001"/>
+      <sql id="append" type="lang" target="psjal_t.psjal003,psjal_t.psjal004" table="psjal_t" fk="psja001" pk="psjal001,psjal002" field="psjal003,psjal004"/>
+    </head>
+    <body id="psjb_t" page="1" linked="" pk="psjb002" fk="psjbsite,psjb001">
+      <sql id="forupd_sql_detail" query="SELECT psjb002,psjb003 FROM psjb_t WHERE psjbent=? AND psjbsite=? AND psjb001=? AND psjb002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT psjb002,psjb003 FROM psjb_t WHERE psjbent=? AND psjbsite=? AND psjb001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

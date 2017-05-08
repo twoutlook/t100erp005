@@ -1,0 +1,110 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmi930" module="anm" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02299" crtdt="2013-07-29 11:11:48" modid="06821" moddt="2015-07-15 17:18:04" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="資金收支項目維護">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="nmbd001,nmbd005"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmbd002,nmbdl004,nmbd003,nmbd004,nmbdstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="nmbd002,nmbdmodid,nmbdmodid_desc(chr500),nmbdmoddt,nmbdownid,nmbdownid_desc(chr500),nmbdowndp,nmbdowndp_desc(chr500),nmbdcrtid,nmbdcrtid_desc(chr500),nmbdcrtdp,nmbdcrtdp_desc(chr500),nmbdcrtdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="open_anmi931"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="act_upd_nmbd005"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmi930" method="dialog">
+    <section id="input">
+      <input id="head" field="nmbd001,nmbd005"/>
+      <input id="body" page="1" field="nmbd002,nmbdl004,nmbd003,nmbd004,nmbdstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="nmbd001,nmbd005"/>
+      <construct id="body" page="1" field="nmbd002,nmbdl004,nmbd003,nmbd004,nmbdstus"/>
+      <construct id="body" page="2" field="nmbdmodid,nmbdmoddt,nmbdownid,nmbdowndp,nmbdcrtid,nmbdcrtdp,nmbdcrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="nmbd001"/>
+      <set id="head" type="no_entry" field="nmbd001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="nmbd001"/>
+      <column id="nmbd005" type="S" default="N"/>
+    </init>
+    <init id="body" page="1">
+      <column id="nmbd002"/>
+      <column id="nmbdl004"/>
+      <column id="nmbd003" def_scc="8026"/>
+      <column id="nmbd004" def_scc="8709"/>
+      <column id="nmbdstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="nmbdmodid">
+        <after>
+          <reference field="nmbdmodid_desc" ref_field="nmbd_t.nmbdmodid" map_field="nmbdmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbdmodid_desc"/>
+      <column id="nmbdmoddt"/>
+      <column id="nmbdownid">
+        <after>
+          <reference field="nmbdownid_desc" ref_field="nmbd_t.nmbdownid" map_field="nmbdownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbdownid_desc"/>
+      <column id="nmbdowndp">
+        <after>
+          <reference field="nmbdowndp_desc" ref_field="nmbd_t.nmbdowndp" map_field="nmbdowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmbdowndp_desc"/>
+      <column id="nmbdcrtid">
+        <after>
+          <reference field="nmbdcrtid_desc" ref_field="nmbd_t.nmbdcrtid" map_field="nmbdcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbdcrtid_desc"/>
+      <column id="nmbdcrtdp">
+        <after>
+          <reference field="nmbdcrtdp_desc" ref_field="nmbd_t.nmbdcrtdp" map_field="nmbdcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmbdcrtdp_desc"/>
+      <column id="nmbdcrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="nmbd_t" pk="nmbd001">
+      <sql id="forupd_sql" type="sql" query="SELECT nmbd001,nmbd005 FROM nmbd_t WHERE nmbdent= ? AND nmbd001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT nmbd001,nmbd005 FROM nmbd_t" order="nmbd001"/>
+    </head>
+    <body id="nmbd_t" page="1,2" linked="" pk="nmbd002" fk="nmbd001">
+      <sql id="forupd_sql_detail" query="SELECT nmbd002,&apos;&apos;,nmbd003,nmbd004,nmbdstus,&apos;&apos;,nmbdmodid,&apos;&apos;,nmbdmoddt,nmbdownid,&apos;&apos;,nmbdowndp,&apos;&apos;,nmbdcrtid,&apos;&apos;,nmbdcrtdp,&apos;&apos;,nmbdcrtdt FROM nmbd_t WHERE nmbdent=? AND nmbd001=? AND nmbd002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmbd002,&apos;&apos;,nmbd003,nmbd004,nmbdstus,&apos;&apos;,nmbdmodid,&apos;&apos;,nmbdmoddt,nmbdownid,&apos;&apos;,nmbdowndp,&apos;&apos;,nmbdcrtid,&apos;&apos;,nmbdcrtdp,&apos;&apos;,nmbdcrtdt FROM nmbd_t WHERE nmbdent= ? AND nmbd001=?"/>
+      <sql id="detail_append" type="lang" target="nmbdl_t.nmbdl004" table="nmbdl_t" fk="nmbd001,nmbd002" pk="nmbdl001,nmbdl002,nmbdl003" field="nmbdl004"/>
+    </body>
+  </dataset>
+</assembly>
+

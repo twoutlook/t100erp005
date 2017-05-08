@@ -1,0 +1,134 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi988" module="azz" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="02716" crtdt="2014-09-16 09:01:35" modid="02716" moddt="2016-02-22 09:51:40" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="單據程式列印報表維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzah001,gzah001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzah005,gzah006,gzah002,gzah002_desc(chr500),gzahl004_desc(chr500),gzah008,gzah003,gzah007,gzah004,gzahstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gzahownid,gzahownid_desc(chr500),gzahowndp,gzahowndp_desc(chr500),gzahcrtid,gzahcrtid_desc(chr500),gzahcrtdp,gzahcrtdp_desc(chr500),gzahcrtdt,gzahmodid,gzahmodid_desc(chr500),gzahmoddt,gzahcnfid,gzahcnfid_desc(chr500),gzahcnfdt,gzah005"/>
+      <var id="bs_field" value="gzah001,gzah001_desc(chr80)" pk="gzah001" order=""/>
+      <bs_reference field="gzah001_desc" ref_field="gzah001" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi988" method="dialog">
+    <section id="input">
+      <input id="head" field="gzah001"/>
+      <input id="body" page="1" field="gzah005,gzah006,gzah002,gzahl004_desc,gzah008,gzah003,gzah007,gzah004,gzahstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzah001"/>
+      <construct id="body" page="1" field="gzah005,gzah006,gzah002,gzahl004_desc,gzah008,gzah003,gzah007,gzah004,gzahstus"/>
+      <construct id="body" page="2" field="gzahownid,gzahowndp,gzahcrtid,gzahcrtdp,gzahcrtdt,gzahmodid,gzahmoddt,gzahcnfid,gzahcnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzah001"/>
+      <set id="head" type="no_entry" field="gzah001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gzah001">
+        <after>
+          <reference field="gzah001_desc" ref_field="gzah_t.gzah001" map_field="gzah001" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+      </column>
+      <column id="gzah001_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzah005"/>
+      <column id="gzah006"/>
+      <column id="gzah002">
+        <after>
+          <reference field="gzah002_desc" ref_field="gzah_t.gzah002" map_field="gzah002" ref_sql="SELECT gzdel003 FROM gzdel_t WHERE gzdel001=? AND gzdel002=$varg_lang$var"/>
+        </after>
+      </column>
+      <column id="gzah002_desc"/>
+      <column id="gzahl004_desc"/>
+      <column id="gzah008"/>
+      <column id="gzah003"/>
+      <column id="gzah007"/>
+      <column id="gzah004"/>
+      <column id="gzahstus" scc="50">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="gzahownid">
+        <after>
+          <reference field="gzahownid_desc" ref_field="gzah_t.gzahownid" map_field="gzahownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzahownid_desc"/>
+      <column id="gzahowndp">
+        <after>
+          <reference field="gzahowndp_desc" ref_field="gzah_t.gzahowndp" map_field="gzahowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzahowndp_desc"/>
+      <column id="gzahcrtid">
+        <after>
+          <reference field="gzahcrtid_desc" ref_field="gzah_t.gzahcrtid" map_field="gzahcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzahcrtid_desc"/>
+      <column id="gzahcrtdp">
+        <after>
+          <reference field="gzahcrtdp_desc" ref_field="gzah_t.gzahcrtdp" map_field="gzahcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzahcrtdp_desc"/>
+      <column id="gzahcrtdt"/>
+      <column id="gzahmodid">
+        <after>
+          <reference field="gzahmodid_desc" ref_field="gzah_t.gzahmodid" map_field="gzahmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzahmodid_desc"/>
+      <column id="gzahmoddt"/>
+      <column id="gzahcnfid">
+        <after>
+          <reference field="gzahcnfid_desc" ref_field="gzah_t.gzahcnfid" map_field="gzahcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzahcnfid_desc"/>
+      <column id="gzahcnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzah_t" pk="gzah001">
+      <sql id="forupd_sql" type="sql" query="SELECT gzah001,&apos;&apos; FROM gzah_t WHERE gzah001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzah001,&apos;&apos; FROM gzah_t" order="gzah001"/>
+    </head>
+    <body id="gzah_t" page="1,2" linked="" pk="gzah005" fk="gzah001">
+      <sql id="forupd_sql_detail" query="SELECT gzah005,gzah006,gzah002,&apos;&apos;,&apos;&apos;,gzah008,gzah003,gzah007,gzah004,gzahstus,gzahownid,&apos;&apos;,gzahowndp,&apos;&apos;,gzahcrtid,&apos;&apos;,gzahcrtdp,&apos;&apos;,gzahcrtdt,gzahmodid,&apos;&apos;,gzahmoddt,gzahcnfid,&apos;&apos;,gzahcnfdt,&apos;&apos; FROM gzah_t WHERE gzah001=? AND gzah005=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzah005,gzah006,gzah002,&apos;&apos;,&apos;&apos;,gzah008,gzah003,gzah007,gzah004,gzahstus,gzahownid,&apos;&apos;,gzahowndp,&apos;&apos;,gzahcrtid,&apos;&apos;,gzahcrtdp,&apos;&apos;,gzahcrtdt,gzahmodid,&apos;&apos;,gzahmoddt,gzahcnfid,&apos;&apos;,gzahcnfdt,&apos;&apos; FROM gzah_t WHERE gzah001=?"/>
+      <sql id="detail_append" type="lang" target="gzahl004_desc" table="gzahl_t" fk="gzah001,gzah005" pk="gzahl001,gzahl002,gzahl003" field="gzahl004"/>
+    </body>
+  </dataset>
+</assembly>
+

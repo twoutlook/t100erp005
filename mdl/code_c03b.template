@@ -1,0 +1,242 @@
+{<section id="${app_id}.global" >}
+#應用 c03b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+
+#單頭 type 宣告
+PRIVATE type type_${master_var_title}        RECORD
+       ${master_fields_define}
+       END RECORD
+DEFINE ${master_var_title}        type_${master_var_title}
+ 
+   ${master_key_t_define}
+ 
+#單身 type 宣告
+PRIVATE TYPE type_${detail_var_title}        RECORD
+       ${detail_fields_define}
+       END RECORD
+#pages - Start -
+PRIVATE TYPE type_${detail_var_title${page}} RECORD
+       ${detail_fields_define${page}}
+       END RECORD
+#pages -  End  - 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+
+DEFINE ${detail_var_title}          DYNAMIC ARRAY OF type_${detail_var_title}
+DEFINE ${detail_var_title}_t        type_${detail_var_title}
+#pages - Start -
+DEFINE ${detail_var_title${page}}   DYNAMIC ARRAY OF type_${detail_var_title${page}}
+DEFINE ${detail_var_title${page}}_t type_${detail_var_title${page}}
+#pages -  End  -
+ 
+DEFINE g_${detail_field_pk01}_t   LIKE ${detail_tbl_name}.${detail_field_pk01}    #Key值備份
+#detail_keys - Start -
+DEFINE g_${detail_field_pk${key}}_t      LIKE ${detail_tbl_name}.${detail_field_pk${key}}    #Key值備份
+#keys -  End  -  
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10
+DEFINE l_ac                  LIKE type_t.num10
+
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+     
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+{</section>}
+
+{<section id="${app_id}.input" >}   
+#+ 資料輸入
+PUBLIC FUNCTION ${general_prefix}(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_${general_prefix} WITH FORM cl_ap_formpath("${general_module}","${general_prefix}")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      INPUT BY NAME ${master_input_fields} ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.head.action"
+         {<point name="input.head.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         ${master_iaction_call}
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.head.before_input"
+            {<point name="input.head.before_input"/>}
+            #end add-point
+          
+         ${master_fields_check} #欄位檢查
+         ${master_fields_ctrlp_i} #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.head.after_input"
+            {<point name="input.head.after_input"/>}
+            #end add-point
+            
+      END INPUT
+   
+      INPUT ARRAY ${detail_var_title} FROM ${sr_name}.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = ${detail_allow_insert},
+                  DELETE ROW = ${detail_allow_delete},
+                  APPEND ROW = ${detail_allow_append})
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.body.action"
+         {<point name="input.body.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         ${detail_iaction_call}
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.body.before_input"
+            {<point name="input.body.before_input"/>}
+            #end add-point
+          
+         ${detail_fields_check1} 
+         ${detail_fields_ctrlp1_i}
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.body.after_input"
+            {<point name="input.body.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+      #pages_input - Start - 
+      INPUT ARRAY ${detail_var_title${page}} FROM ${sr_name${page}}.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = ${detail_allow_insert${page}}, ${detail_allow_insert_desc}
+                  DELETE ROW = ${detail_allow_delete${page}},
+                  APPEND ROW = ${detail_allow_append${page}})
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.body.action${page_id}"
+         {<point name="input.body.action${page_id}"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         ${detail_iaction_call${page}}
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.body.before_input${page_id}"
+            {<point name="input.body.before_input${page_id}"/>}
+            #end add-point
+          
+         ${detail_fields_check${page}} 
+         ${detail_fields_ctrlp${page}_i}
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.body.after_input${page_id}"
+            {<point name="input.body.after_input${page_id}"/>}
+            #end add-point
+            
+      END INPUT
+      #pages -  End  -
+      
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_${general_prefix} 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+{</section>}
+
+{<section id="${app_id}.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+{</section>}
+{<section id="${app_id}.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}

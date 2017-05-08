@@ -1,0 +1,1090 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aglt310_05.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0007(2016-03-04 15:30:46), PR版次:0007(2016-06-14 11:24:10)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000216
+#+ Filename...: aglt310_05
+#+ Description: 業務資訊
+#+ Creator....: 02298(2013-10-18 15:31:51)
+#+ Modifier...: 02291 -SD/PR- 02599
+ 
+{</section>}
+ 
+{<section id="aglt310_05.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#160122-00001#34   2016/03/04  By 07673   根据用户是否有权限使用交易账户来显示交易账户，
+#                                         当没有权限时，用户不能看到交易账户编号，用“*”显示，当有权限时，才可以看到具体交易账户编号。
+#160318-00005#18   2016/03/29  by 07675   將重複內容的錯誤訊息置換為公用錯誤訊息
+#160614-00004#1    2016/06/14  By 02599   当凭证为转账凭证、科目为现金科目且账套可以维护资金异动明细时，银行账号、款别、收支专案这三个栏位为必输栏位
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_glaq_m        RECORD
+       glaq007 LIKE glaq_t.glaq007, 
+   glaq008 LIKE glaq_t.glaq008, 
+   glaq009 LIKE glaq_t.glaq009, 
+   glaq011 LIKE glaq_t.glaq011, 
+   glaq012 LIKE glaq_t.glaq012, 
+   glaq013 LIKE glaq_t.glaq013, 
+   glaq013_desc LIKE type_t.chr80, 
+   glaq014 LIKE glaq_t.glaq014, 
+   lc_glaq014 LIKE type_t.chr30, 
+   glaq015 LIKE glaq_t.glaq015, 
+   glaq015_desc LIKE type_t.chr80, 
+   glaq016 LIKE glaq_t.glaq016, 
+   glaq016_desc LIKE type_t.chr80
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_glaq_m_t       type_g_glaq_m
+#151223-00004#1--add--str--lujh
+DEFINE g_glaacomp       LIKE glaa_t.glaacomp    
+DEFINE g_glaq003        LIKE glaq_t.glaq003
+DEFINE g_glaq004        LIKE glaq_t.glaq004
+DEFINE g_sql_bank       STRING     #160122-00001#34  
+#151223-00004#1--add--end--lujh
+#end add-point
+ 
+DEFINE g_glaq_m        type_g_glaq_m
+ 
+   
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aglt310_05.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aglt310_05(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   p_flag,p_glapld,p_glapdocno,p_glapdocdt,p_glaq002,p_seq
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE p_flag          LIKE type_t.chr5     #资料状态
+   DEFINE p_glapld        LIKE glap_t.glapld   #帳別
+   DEFINE p_glapdocno     LIKE glap_t.glapdocno #傳票编号
+   DEFINE p_glapdocdt     LIKE glap_t.glapdocdt #傳票日期
+   DEFINE p_glaq002       LIKE glaq_t.glaq002  #科目     
+   DEFINE p_seq           LIKE glaq_t.glaqseq  #项次
+
+   DEFINE l_glad005       LIKE glad_t.glad005  #數量金額式
+   DEFINE l_glac016       LIKE glac_t.glac016  #现金科目
+   DEFINE l_glaa122       LIKE glaa_t.glaa122  #总账可维护资金异动明细
+   #151223-00004#1--add--str--lujh
+   DEFINE l_str           STRING 
+   DEFINE l_glap007       LIKE glap_t.glap007
+   #151223-00004#1--add--end--lujh   
+   DEFINE l_n       LIKE type_t.num5 #160122-00001#34
+   DEFINE l_n2       LIKE type_t.num5 #160122-00001#34
+
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aglt310_05 WITH FORM cl_ap_formpath("agl","aglt310_05")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   #160122-00001#34 --add--str--
+   LET g_sql_bank=NULL
+   CALL s_anmi120_get_bank_account_sql(g_user,g_dept) RETURNING g_sub_success,g_sql_bank
+   #160122-00001#34 --add--end   
+   INITIALIZE g_glaq_m.* TO NULL
+   INITIALIZE g_glaq_m_t.* TO NULL
+   #結算方式下拉
+   #CALL cl_set_combo_scc('glaq015','8310')   #151223-00004#1 mark lujh 
+   #依據是否啟用數量金額式
+   SELECT glad005
+     INTO l_glad005
+     FROM glad_t
+   WHERE gladent = g_enterprise
+     AND gladld = p_glapld
+     AND glad001 =p_glaq002
+   #該科目啟用數量金額式，計價單位/數量/單價不可空白,否则隐藏
+   IF l_glad005 = 'Y' THEN
+      CALL cl_set_comp_visible('Grid_gen1',TRUE)      
+      CALL cl_set_comp_required('glaq007,glaq008,glaq009',TRUE)
+   ELSE
+      CALL cl_set_comp_visible('Grid_gen1',FALSE)       
+   END IF 
+
+   #判断是否为现金科目
+   SELECT glac016 INTO l_glac016 FROM glac_t
+    WHERE glacent = g_enterprise
+      AND glac001 = (SELECT glaa004 FROM glaa_t where glaaent = g_enterprise AND glaald = p_glapld)
+      AND glac002 =p_glaq002 
+   #150827-00036#6--add--str--
+   #总账是否可以维护资金异动明细
+   SELECT glaa122,glaacomp INTO l_glaa122,g_glaacomp FROM glaa_t WHERE glaaent=g_enterprise AND glaald=p_glapld   #151223-00004#1 add glaacomp lujh
+   #150827-00036#6--add--end
+   IF l_glac016 = 'Y' AND l_glaa122='Y' THEN   #150827-00036#6 mod
+      CALL cl_set_comp_visible('Grid_gen2',TRUE)   
+   ELSE
+      CALL cl_set_comp_visible('Grid_gen2',FALSE)       
+   END IF 
+   
+   #151223-00004#1--add--str--lujh
+   SELECT glaq003,glaq004
+     INTO g_glaq003,g_glaq004
+     FROM glaq_t
+    WHERE glaqent = g_enterprise
+      AND glaqld = p_glapld
+      AND glaqdocno = p_glapdocno
+      AND glaqseq = p_seq 
+      
+   SELECT glap007 INTO l_glap007
+     FROM glap_t
+    WHERE glapent = g_enterprise
+      AND glapld = p_glapld
+      AND glapdocno = p_glapdocno
+   #151223-00004#1--add--end--lujh
+   
+   #160614-00004#1--add--str--
+   IF l_glac016 = 'Y' AND l_glaa122='Y' AND l_glap007='GL' THEN
+      CALL cl_set_comp_required("lc_glaq014,glaq015,glaq016",TRUE)
+   ELSE
+      CALL cl_set_comp_required("lc_glaq014,glaq015,glaq016",FALSE)
+   END IF
+   #160614-00004#1--add--end
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_glaq_m.glaq007,g_glaq_m.glaq008,g_glaq_m.glaq009,g_glaq_m.glaq011,g_glaq_m.glaq012, 
+          g_glaq_m.glaq013,g_glaq_m.glaq014,g_glaq_m.lc_glaq014,g_glaq_m.glaq015,g_glaq_m.glaq016 ATTRIBUTE(WITHOUT  
+          DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            IF p_flag = 'a' THEN
+               LET g_glaq_m.glaq008=0
+               LET g_glaq_m.glaq009=0
+               LET g_glaq_m.glaq013 = g_user
+               LET g_glaq_m.glaq012 = g_today
+#               LET g_glaq_m.glaq015 = '10'    #160614-00004#1 mark
+            ELSE
+               SELECT glaq007,glaq008,glaq009,
+                      glaq011,glaq012,glaq013,glaq014,glaq015,glaq016
+                 INTO g_glaq_m.glaq007,g_glaq_m.glaq008,g_glaq_m.glaq009,
+                      g_glaq_m.glaq011,g_glaq_m.glaq012,g_glaq_m.glaq013,g_glaq_m.glaq014,g_glaq_m.glaq015,g_glaq_m.glaq016
+                 FROM glaq_t
+                WHERE glaqent = g_enterprise
+                  AND glaqld = p_glapld
+                  AND glaqdocno = p_glapdocno
+                  AND glaqseq = p_seq                
+            END IF 
+            #160122-00001#34 add -str
+            CALL aglt310_05_get_lc_glaq014(g_glaq_m.glaq014) RETURNING g_glaq_m.lc_glaq014
+            #160122-00001#34 add -end
+            #旧值备份            
+            LET g_glaq_m_t.* = g_glaq_m.* 
+            CALL aglt310_05_glaq013_desc(g_glaq_m.glaq013) RETURNING g_glaq_m.glaq013_desc  
+
+            CALL aglt310_05_glaq015_desc()    #151223-00004#1 add lujh
+            CALL aglt310_05_glaq016_desc()    #151223-00004#1 add lujh
+
+            DISPLAY BY NAME 
+            g_glaq_m.glaq007,g_glaq_m.glaq008,g_glaq_m.glaq009,g_glaq_m.glaq011,g_glaq_m.glaq012,
+            g_glaq_m.glaq013,g_glaq_m.glaq013_desc,g_glaq_m.glaq014,g_glaq_m.glaq015,g_glaq_m.glaq016
+            
+            #160122-00001#34 add -str
+            CALL aglt310_05_get_lc_glaq014(g_glaq_m.glaq014) RETURNING g_glaq_m.lc_glaq014
+            DISPLAY BY NAME g_glaq_m.lc_glaq014
+            #160122-00001#34 add -end
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glaq007
+            #add-point:BEFORE FIELD glaq007 name="input.b.glaq007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glaq007
+            
+            #add-point:AFTER FIELD glaq007 name="input.a.glaq007"
+            IF NOT cl_null(g_glaq_m.glaq007) THEN
+               CALL aglt310_05_glaq007_chk(g_glaq_m.glaq007) 
+               IF NOT cl_null(g_errno) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = g_glaq_m.glaq007
+                  #160318-00005#18  --add--str
+                   LET g_errparam.replace[1] ='aooi250'
+                   LET g_errparam.replace[2] = cl_get_progname('aooi250',g_lang,"2")
+                   LET g_errparam.exeprog    ='aooi250'
+                   #160318-00005#18 --add--end
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_glaq_m.glaq007 = g_glaq_m_t.glaq007
+                  NEXT FIELD glaq007
+               END IF 
+            END IF 
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glaq007
+            #add-point:ON CHANGE glaq007 name="input.g.glaq007"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glaq008
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_glaq_m.glaq008,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD glaq008
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD glaq008 name="input.a.glaq008"
+            IF NOT cl_null(g_glaq_m.glaq008) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glaq008
+            #add-point:BEFORE FIELD glaq008 name="input.b.glaq008"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glaq008
+            #add-point:ON CHANGE glaq008 name="input.g.glaq008"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glaq009
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_glaq_m.glaq009,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD glaq009
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD glaq009 name="input.a.glaq009"
+            IF NOT cl_null(g_glaq_m.glaq009) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glaq009
+            #add-point:BEFORE FIELD glaq009 name="input.b.glaq009"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glaq009
+            #add-point:ON CHANGE glaq009 name="input.g.glaq009"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glaq011
+            #add-point:BEFORE FIELD glaq011 name="input.b.glaq011"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glaq011
+            
+            #add-point:AFTER FIELD glaq011 name="input.a.glaq011"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glaq011
+            #add-point:ON CHANGE glaq011 name="input.g.glaq011"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glaq012
+            #add-point:BEFORE FIELD glaq012 name="input.b.glaq012"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glaq012
+            
+            #add-point:AFTER FIELD glaq012 name="input.a.glaq012"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glaq012
+            #add-point:ON CHANGE glaq012 name="input.g.glaq012"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glaq013
+            
+            #add-point:AFTER FIELD glaq013 name="input.a.glaq013"
+            DISPLAY '' TO glaq013_desc
+            IF NOT cl_null(g_glaq_m.glaq013) THEN
+               CALL aglt310_05_glaq013_chk(g_glaq_m.glaq013) 
+               IF NOT cl_null(g_errno) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = g_glaq_m.glaq013
+                  #160318-00005#18  --add--str
+                  LET g_errparam.replace[1] ='aooi130'
+                  LET g_errparam.replace[2] = cl_get_progname('aooi130',g_lang,"2")
+                  LET g_errparam.exeprog    ='aooi130'
+                  #160318-00005#18 --add--end
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_glaq_m.glaq013 = g_glaq_m.glaq013_desc
+                  CALL aglt310_05_glaq013_desc(g_glaq_m.glaq013) RETURNING g_glaq_m.glaq013_desc
+                  DISPLAY BY NAME g_glaq_m.glaq013_desc
+                  NEXT FIELD glaq013
+               END IF 
+            END IF 
+            CALL aglt310_05_glaq013_desc(g_glaq_m.glaq013) RETURNING g_glaq_m.glaq013_desc
+            DISPLAY BY NAME g_glaq_m.glaq013_desc          {#ADP版次:1#}
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glaq013
+            #add-point:BEFORE FIELD glaq013 name="input.b.glaq013"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glaq013
+            #add-point:ON CHANGE glaq013 name="input.g.glaq013"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glaq014
+            #add-point:BEFORE FIELD glaq014 name="input.b.glaq014"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glaq014
+            
+            #add-point:AFTER FIELD glaq014 name="input.a.glaq014"
+#160122-00001#34 mark -str
+#            #151223-00004#1--add--str--lujh
+#            IF NOT cl_null(g_glaq_m.glaq014) THEN
+#               IF l_glap007 = 'GL' THEN
+#                  CALL aglt310_05_glaq014_chk()
+#                  IF NOT cl_null(g_errno) THEN
+#                     INITIALIZE g_errparam TO NULL
+#                     LET g_errparam.code = g_errno
+#                     LET g_errparam.extend = g_glaq_m.glaq014
+#                     LET g_errparam.popup = TRUE
+#                     CALL cl_err()   
+#                     LET g_glaq_m.glaq014 = g_glaq_m_t.glaq014
+#                     NEXT FIELD glaq014
+#                  END IF 
+#               END IF
+#
+#            END IF 
+#            #151223-00004#1--add--end--lujh
+#160122-00001#34 mark -end
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glaq014
+            #add-point:ON CHANGE glaq014 name="input.g.glaq014"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD lc_glaq014
+            #add-point:BEFORE FIELD lc_glaq014 name="input.b.lc_glaq014"
+ 
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD lc_glaq014
+            
+            #add-point:AFTER FIELD lc_glaq014 name="input.a.lc_glaq014"
+            #160122-00001#34 add -str
+            IF NOT cl_null(g_glaq_m.lc_glaq014) THEN  
+               IF g_glaq_m.lc_glaq014 != g_glaq_m_t.lc_glaq014 OR g_glaq_m_t.lc_glaq014 IS NULL  THEN            
+                  
+                  IF l_glap007 = 'GL' THEN
+                     CALL aglt310_05_glaq014_chk()
+                     IF NOT cl_null(g_errno) THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = g_errno
+                        LET g_errparam.extend = g_glaq_m.lc_glaq014
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()   
+                        LET g_glaq_m.lc_glaq014 = g_glaq_m_t.lc_glaq014
+                        NEXT FIELD lc_glaq014
+                     END IF 
+                     LET l_n = 0               
+                     SELECT COUNT(*) INTO l_n
+                       FROM nmaa_t,nmas_t 
+                      WHERE nmasent = g_enterprise AND nmasent = nmaaent AND nmas001 = nmaa001 
+                        AND nmas002 IN (SELECT nmll001 FROM nmll_t WHERE nmllent = g_enterprise AND nmll002 = g_user AND nmllstus= 'Y' ) 
+                        AND nmas001 IN (SELECT nmaa001 FROM nmaa_t WHERE nmaaent = g_enterprise AND nmaa005 = g_glaq_m.lc_glaq014 AND nmaastus='Y')
+                     LET l_n2 = 0
+                     SELECT COUNT(*) INTO l_n2
+                      FROM nmaa_t,nmas_t 
+                     WHERE nmasent = g_enterprise AND nmasent = nmaaent AND nmas001 = nmaa001 
+                       AND nmas002 IN (SELECT nmlm001 FROM nmlm_t WHERE nmlment = g_enterprise AND nmlm002 = g_dept AND nmlmstus= 'Y') 
+                       AND nmas001 IN (SELECT nmaa001 FROM nmaa_t WHERE nmaaent = g_enterprise AND nmaa005 = g_glaq_m.lc_glaq014 AND nmaastus='Y')
+                     IF l_n = 0 AND l_n2 = 0 THEN
+                        INITIALIZE g_errparam TO NULL 
+                        LET g_errparam.extend = g_glaq_m.lc_glaq014
+                        LET g_errparam.code   = 'anm-02986' 
+                        LET g_errparam.popup  = TRUE 
+                        CALL cl_err()
+                        LET g_glaq_m.lc_glaq014 = g_glaq_m_t.lc_glaq014
+                        NEXT FIELD CURRENT
+                     END IF 
+                     LET g_glaq_m.glaq014 = g_glaq_m.lc_glaq014
+                  END IF 
+               END IF                  
+            END IF
+            IF cl_null(g_glaq_m.lc_glaq014) AND NOT cl_null(g_glaq_m.glaq014)   AND g_glaq_m.lc_glaq014="********"   THEN
+               LET g_glaq_m.lc_glaq014 = g_glaq_m_t.lc_glaq014
+            END IF
+            #160122-00001#34 add -end
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE lc_glaq014
+            #add-point:ON CHANGE lc_glaq014 name="input.g.lc_glaq014"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glaq015
+            
+            #add-point:AFTER FIELD glaq015 name="input.a.glaq015"
+            #151223-00004#1--add--str--lujh
+            IF NOT cl_null(g_glaq_m.glaq015) THEN
+               IF l_glap007 = 'GL' THEN
+                  CALL aglt310_05_glaq015_chk()
+                  IF NOT cl_null(g_errno) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_glaq_m.glaq015
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()   
+                     LET g_glaq_m.glaq015 = g_glaq_m_t.glaq015
+                     CALL aglt310_05_glaq015_desc()
+                     NEXT FIELD glaq015
+                  END IF 
+               END IF
+            END IF 
+            #151223-00004#1--add--end--lujh
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glaq015
+            #add-point:BEFORE FIELD glaq015 name="input.b.glaq015"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glaq015
+            #add-point:ON CHANGE glaq015 name="input.g.glaq015"
+ 
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glaq016
+            
+            #add-point:AFTER FIELD glaq016 name="input.a.glaq016"
+            #151223-00004#1--add--str--lujh
+            IF NOT cl_null(g_glaq_m.glaq016) THEN
+               IF l_glap007 = 'GL' THEN
+                  CALL aglt310_05_glaq016_chk()
+                  IF NOT cl_null(g_errno) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_glaq_m.glaq016
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()   
+                     LET g_glaq_m.glaq016 = g_glaq_m_t.glaq016
+                     CALL aglt310_05_glaq016_desc()
+                     NEXT FIELD glaq016
+                  END IF 
+               END IF
+            END IF 
+            #151223-00004#1--add--end--lujh
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glaq016
+            #add-point:BEFORE FIELD glaq016 name="input.b.glaq016"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glaq016
+            #add-point:ON CHANGE glaq016 name="input.g.glaq016"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.glaq007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glaq007
+            #add-point:ON ACTION controlp INFIELD glaq007 name="input.c.glaq007"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glaq_m.glaq007             #給予default值
+
+            #給予arg
+
+            CALL q_ooca001_1()                                #呼叫開窗
+
+            LET g_glaq_m.glaq007 = g_qryparam.return1              #將開窗取得的值回傳到變數
+           
+            DISPLAY g_glaq_m.glaq007 TO glaq007              #顯示到畫面上
+
+            NEXT FIELD glaq007                          #返回原欄位
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glaq008
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glaq008
+            #add-point:ON ACTION controlp INFIELD glaq008 name="input.c.glaq008"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glaq009
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glaq009
+            #add-point:ON ACTION controlp INFIELD glaq009 name="input.c.glaq009"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glaq011
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glaq011
+            #add-point:ON ACTION controlp INFIELD glaq011 name="input.c.glaq011"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glaq012
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glaq012
+            #add-point:ON ACTION controlp INFIELD glaq012 name="input.c.glaq012"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glaq013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glaq013
+            #add-point:ON ACTION controlp INFIELD glaq013 name="input.c.glaq013"
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glaq_m.glaq013             #給予default值
+            LET g_qryparam.default2 = "" #g_glaq_m.oofa011 #全名
+
+            #給予arg
+
+            CALL q_ooag001_2()                                #呼叫開窗
+
+            LET g_glaq_m.glaq013 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            LET g_glaq_m.glaq013_desc = g_qryparam.return2         #全名
+
+            DISPLAY g_glaq_m.glaq013 TO glaq013              #顯示到畫面上
+            DISPLAY g_glaq_m.glaq013_desc TO glaq013_desc #全名
+
+            NEXT FIELD glaq013                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glaq014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glaq014
+            #add-point:ON ACTION controlp INFIELD glaq014 name="input.c.glaq014"
+            #151223-00004#1--add--str--lujh
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glaq_m.glaq014             #給予default值
+            LET g_qryparam.default2 = "" #g_glaq_m.oofa011 #全名
+            #160122-00001#34 mark
+#            LET g_qryparam.where = " (SELECT ooef017 FROM ooef_t ",
+#                                   "  WHERE ooefent = ",g_enterprise,
+#                                   "    AND ooef001 = nmaa002) ",
+#                                   "  = '",g_glaacomp,"'"
+            #160122-00001#34 mark
+            #給予arg
+            #160122-00001#34 add -str
+            LET g_qryparam.where = " (SELECT ooef017 FROM ooef_t ",
+                                   "  WHERE ooefent = ",g_enterprise,
+                                   "    AND ooef001 = nmaa002) ",
+                                   "  = '",g_glaacomp,"'" ,
+                                   " AND  nmas002 IN (",g_sql_bank,")"                                    
+            #160122-00001#34 add -end
+            CALL q_nmaa005()                                #呼叫開窗
+
+            LET g_glaq_m.glaq014 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_glaq_m.glaq014 TO glaq014              #顯示到畫面上
+
+            NEXT FIELD glaq014                          #返回原欄位
+            #151223-00004#1--add--end--lujh
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.lc_glaq014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD lc_glaq014
+            #add-point:ON ACTION controlp INFIELD lc_glaq014 name="input.c.lc_glaq014"
+            #160122-00001#34 add -str
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glaq_m.lc_glaq014             #給予default值
+            LET g_qryparam.default2 = "" #g_glaq_m.oofa011 #全名
+
+            LET g_qryparam.where = " (SELECT ooef017 FROM ooef_t ",
+                                   "  WHERE ooefent = ",g_enterprise,
+                                   "    AND ooef001 = nmaa002) ",
+                                   "  = '",g_glaacomp,"'" ,
+                                   " AND  nmas002 IN (",g_sql_bank,")"                                    
+            CALL q_nmaa005()                                #呼叫開窗
+
+            LET g_glaq_m.lc_glaq014 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_glaq_m.lc_glaq014 TO lc_glaq014              #顯示到畫面上
+
+            NEXT FIELD lc_glaq014                          #返回原欄位
+            #160122-00001#34 add -end
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glaq015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glaq015
+            #add-point:ON ACTION controlp INFIELD glaq015 name="input.c.glaq015"
+            #151223-00004#1--add--str--lujh
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glaq_m.glaq015             #給予default值
+            LET g_qryparam.default2 = "" #g_glaq_m.oofa011 #全名
+            
+            CALL s_money_where(g_glaacomp) RETURNING l_str
+            LET g_qryparam.where = l_str," AND ooia002 IN ('10','20','30','40','50')"
+            CALL q_ooia001()                                #呼叫開窗
+
+            LET g_glaq_m.glaq015 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_glaq_m.glaq015 TO glaq015              #顯示到畫面上
+            CALL aglt310_05_glaq015_desc()
+
+            NEXT FIELD glaq015                          #返回原欄位
+            #151223-00004#1--add--end--lujh
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glaq016
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glaq016
+            #add-point:ON ACTION controlp INFIELD glaq016 name="input.c.glaq016"
+            #151223-00004#1--add--str--lujh
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glaq_m.glaq016             #給予default值
+            LET g_qryparam.default2 = "" #g_glaq_m.oofa011 #全名
+            
+            IF g_glaq003 <> 0 THEN 
+               LET g_qryparam.where = " nmaj002 = '1'" 
+            END IF
+            
+            IF g_glaq004 <> 0 THEN 
+               LET g_qryparam.where = " nmaj002 = '2'" 
+            END IF
+
+            CALL q_nmaj001()                               #呼叫開窗
+
+            LET g_glaq_m.glaq016 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_glaq_m.glaq016 TO glaq016              #顯示到畫面上
+            CALL aglt310_05_glaq016_desc()
+
+            NEXT FIELD glaq016                          #返回原欄位
+            #151223-00004#1--add--end--lujh
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aglt310_05 
+   
+   #add-point:input段after input name="input.post_input"
+   IF INT_FLAG THEN
+      LET INT_FLAG = FALSE
+      IF p_flag = 'a' THEN
+         RETURN '','','','','','','','',''
+      ELSE
+         RETURN 
+           g_glaq_m_t.glaq007,g_glaq_m_t.glaq008,g_glaq_m_t.glaq009,
+           g_glaq_m_t.glaq011,g_glaq_m_t.glaq012,g_glaq_m_t.glaq013,g_glaq_m_t.glaq014,g_glaq_m_t.glaq015,g_glaq_m_t.glaq016  
+      END IF 
+   END IF
+ 
+   RETURN  g_glaq_m.glaq007,g_glaq_m.glaq008,g_glaq_m.glaq009,
+           g_glaq_m.glaq011,g_glaq_m.glaq012,g_glaq_m.glaq013,g_glaq_m.glaq014,g_glaq_m.glaq015,g_glaq_m.glaq016  
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglt310_05.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aglt310_05.other_function" readonly="Y" >}
+#申请人员说明
+PRIVATE FUNCTION aglt310_05_glaq013_desc(p_glaq013)
+   DEFINE l_ooag011        LIKE ooag_t.ooag011
+   DEFINE p_glaq013        LIKE glaq_t.glaq013
+
+   LET l_ooag011 = ''
+   SELECT ooag011 INTO l_ooag011 FROM ooag_t
+    WHERE ooagent = g_enterprise AND ooag001 = p_glaq013
+   RETURN l_ooag011
+END FUNCTION
+#申请人员检查
+PRIVATE FUNCTION aglt310_05_glaq013_chk(p_glaq013)
+   DEFINE p_glaq013    LIKE glaq_t.glaq013 
+   DEFINE  l_ooagstus  LIKE ooag_t.ooagstus
+
+
+   LET g_errno=''
+   SELECT ooagstus INTO l_ooagstus FROM ooag_t
+    WHERE ooagent = g_enterprise
+      AND ooag001 = p_glaq013
+
+   CASE
+      WHEN SQLCA.SQLCODE=100   LET g_errno = 'aoo-00074'
+      WHEN l_ooagstus ='N'     LET g_errno = 'sub-01302'  #160318-00005#18 mod #'aoo-00071'
+   END CASE
+END FUNCTION
+#計價單位檢查
+PRIVATE FUNCTION aglt310_05_glaq007_chk(p_glaq007)
+   DEFINE p_glaq007     LIKE glaq_t.glaq007
+   DEFINE l_oocastus    LIKE ooca_t.oocastus
+   
+   LET g_errno = ''
+   SELECT oocastus INTO l_oocastus FROM ooca_t
+    WHERE oocaent = g_enterprise
+      AND ooca001 = p_glaq007
+    
+    CASE  
+        WHEN SQLCA.sqlcode = 100   LET g_errno = 'aim-00004'
+        WHEN l_oocastus = 'N'      LET g_errno = 'sub-01302'  #160318-00005#18 mod #'aim-00005'
+     END CASE
+END FUNCTION
+# 款別說明
+#151223-00004#1 add lujh
+PRIVATE FUNCTION aglt310_05_glaq015_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_glaq_m.glaq015
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooial003 FROM ooial_t WHERE ooialent='"||g_enterprise||"' AND ooial001=? AND ooial002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_glaq_m.glaq015_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_glaq_m.glaq015_desc
+END FUNCTION
+# 存提碼說明
+#151223-00004#1 add lujh
+PRIVATE FUNCTION aglt310_05_glaq016_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_glaq_m.glaq016
+   CALL ap_ref_array2(g_ref_fields,"SELECT nmajl003 FROM nmajl_t WHERE nmajlent='"||g_enterprise||"' AND nmajl001=? AND nmajl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_glaq_m.glaq016_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_glaq_m.glaq016_desc
+END FUNCTION
+# 銀行帳號檢查
+#151223-00004#1 add lujh
+PRIVATE FUNCTION aglt310_05_glaq014_chk()
+   DEFINE l_nmaastus        LIKE nmaa_t.nmaastus
+   DEFINE l_nmaa002         LIKE nmaa_t.nmaa002
+   DEFINE l_ooef017         LIKE ooef_t.ooef017
+   DEFINE l_n               LIKE type_t.num5
+
+   LET g_errno=''
+   #SELECT nmaastus,nmaa002 INTO l_nmaastus,l_nmaa002 FROM nmaa_t
+   # WHERE nmaaent = g_enterprise
+   #   AND nmaa005 = g_glaq_m.glaq014
+   #   
+   #SELECT ooef017 INTO l_ooef017
+   #  FROM ooef_t
+   # WHERE ooefent = g_enterprise
+   #   AND ooef001 = l_nmaa002              
+   #
+   #CASE
+   #   WHEN SQLCA.SQLCODE=100   LET g_errno = 'agl-00412'
+   #   WHEN l_nmaastus ='N'     LET g_errno =  'sub-01302'  #160318-00005#18 mod#'ade-00010'
+   #   WHEN l_ooef017 <> g_glaacomp   LET g_errno = 'agl-00413'
+   #END CASE
+   
+   SELECT COUNT(*) INTO l_n
+     FROM nmaa_t
+    WHERE nmaaent = g_enterprise
+#      AND nmaa005 = g_glaq_m.glaq014    #160122-00001#34 mrak
+       AND nmaa005 = g_glaq_m.lc_glaq014 #160122-00001#34 add
+
+      AND nmaastus = 'Y'
+      AND nmaa002 IN (select ooef001 FROM ooef_t WHERE ooefent = g_enterprise
+                                               AND ooef017 = g_glaacomp)     
+   IF l_n = 0 THEN 
+      LET g_errno = 'agl-00416'
+   END IF
+   
+END FUNCTION
+# 款別編號檢查
+#151223-00004#1 add lujh
+PRIVATE FUNCTION aglt310_05_glaq015_chk()
+   DEFINE l_ooiestus     LIKE ooie_t.ooiestus
+   DEFINE l_ooie003      LIKE ooie_t.ooie003
+   DEFINE l_ooie004      LIKE ooie_t.ooie004
+   DEFINE l_nmbb003      LIKE nmbb_t.nmbb003
+   DEFINE l_success      LIKE type_t.num5
+   DEFINE l_errno        LIKE type_t.chr50
+   DEFINE l_no           LIKE type_t.chr10
+   DEFINE l_ooia002      LIKE ooia_t.ooia002
+   
+   LET g_errno = ''
+
+   CALL s_money_chk('2',g_glaacomp,g_glaq_m.glaq015) RETURNING l_success,l_errno,l_no,l_ooia002
+   IF NOT l_success THEN 
+      LET g_errno = l_errno
+      RETURN 
+   ELSE
+      IF l_ooia002 != '10' AND l_ooia002 != '20'      
+                           AND l_ooia002 != '30'
+                           AND l_ooia002 != '40'
+                           AND l_ooia002 != '50' THEN 
+         LET g_errno = 'aoo-00399'
+         RETURN
+      END IF 
+   END IF 
+END FUNCTION
+# 存提碼檢查
+#151223-00004#1 add lujh
+PRIVATE FUNCTION aglt310_05_glaq016_chk()
+   DEFINE l_nmajstus               LIKE nmaj_t.nmajstus
+   DEFINE l_nmaj002                LIKE nmaj_t.nmaj002
+   
+   LET g_errno = ''
+   
+   SELECT nmajstus,nmaj002 INTO l_nmajstus,l_nmaj002
+     FROM nmaj_t
+    WHERE nmajent = g_enterprise
+      AND nmaj001 = g_glaq_m.glaq016
+
+   CASE
+      WHEN SQLCA.SQLCODE = 100    LET g_errno = 'anm-00017'
+      WHEN l_nmajstus = 'N'       LET g_errno = 'anm-00016'
+      WHEN g_glaq003 <> 0 AND l_nmaj002 <> '1'       LET g_errno = 'agl-00414'
+      WHEN g_glaq004 <> 0 AND l_nmaj002 <> '2'       LET g_errno = 'agl-00415'
+   END CASE
+   
+
+END FUNCTION
+################################################################################
+# Descriptions...: 获取显示给用户看到的交易账户型态
+# Memo...........: #160122-00001#34
+# Usage..........: CALL aglt310_05_get_lc_glaq014(p_glaq014)
+#                  RETURNING lc_glaq014
+# Input parameter: p_glaq014  交易账户编号
+# Return code....: lc_glaq014 返回现在在画面中的交易账户编号
+# Date & Author..: 2016/03/07 By 07673
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglt310_05_get_lc_glaq014(p_glaq014)
+   DEFINE p_glaq014   LIKE glaq_t.glaq014
+   DEFINE l_cnt       LIKE type_t.num5
+   DEFINE l_cnt2      LIKE type_t.num5    
+   DEFINE l_glaq014   LIKE glaq_t.glaq014
+   #判断当前用户是否有权限查看该交易账户，如果没有权限不可看到交易账户编号，用“*”显示
+   LET  l_glaq014 = p_glaq014
+      IF NOT cl_null(p_glaq014) THEN 
+         LET l_cnt = 0 
+         SELECT COUNT(*) INTO l_cnt
+           FROM nmaa_t,nmas_t 
+          WHERE nmasent = g_enterprise AND nmasent = nmaaent AND nmas001 = nmaa001 
+            AND nmas002 IN (SELECT nmll001 FROM nmll_t WHERE nmllent = g_enterprise AND nmll002 = g_user  AND nmllstus= 'Y' ) 
+            AND nmas001 IN (SELECT nmaa001 FROM nmaa_t WHERE nmaaent = g_enterprise AND nmaa005 = p_glaq014 AND nmaastus='Y')
+         LET l_cnt2 = 0 
+         SELECT COUNT(*) INTO l_cnt2
+           FROM nmaa_t,nmas_t 
+          WHERE nmasent = g_enterprise AND nmasent = nmaaent AND nmas001 = nmaa001 
+            AND nmas002 IN (SELECT nmlm001 FROM nmlm_t WHERE nmlment = g_enterprise AND nmlm002 = g_dept AND nmlmstus= 'Y') 
+            AND nmas001 IN (SELECT nmaa001 FROM nmaa_t WHERE nmaaent = g_enterprise AND nmaa005 = p_glaq014 AND nmaastus='Y')   
+         IF l_cnt = 0 AND l_cnt2 = 0 THEN  
+             LET p_glaq014 = "********"
+          END IF 
+      END IF
+   RETURN p_glaq014 
+END FUNCTION
+
+ 
+{</section>}
+ 

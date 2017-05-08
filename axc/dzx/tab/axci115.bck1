@@ -1,0 +1,139 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axci115" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02291" crtdt="2013-12-10 14:35:55" modid="00613" moddt="2016-04-25 15:30:57" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="成本要素分攤設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcba001,xcbald,xcbald_desc(chr80),xcba002,xcba003,xcba004,xcba004_desc(chr80),xcba007"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcbastus,xcba005,xcba005_desc(chr500),xcba006,xcba006_desc(chr500),xcba008,xcba009"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcba005,xcba005_2_desc(chr500),xcba006,xcba006_2_desc(chr500),xcbaownid,xcbaownid_desc(chr500),xcbaowndp,xcbaowndp_desc(chr500),xcbacrtid,xcbacrtid_desc(chr500),xcbacrtdp,xcbacrtdp_desc(chr500),xcbacrtdt,xcbamodid,xcbamodid_desc(chr500),xcbamoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="open_axci115_s03"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="open_axci115_s01"/>
+      <action id="open_axci115_s02"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axci115" method="dialog">
+    <section id="input">
+      <input id="head" field="xcba001,xcbald,xcba002,xcba003,xcba004,xcba007"/>
+      <input id="body" page="1" field="xcbastus,xcba005,xcba005_desc,xcba006,xcba008,xcba009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcba001,xcbald,xcba002,xcba003,xcba004,xcba007"/>
+      <construct id="body" page="1" field="xcbastus,xcba005,xcba005_desc,xcba006,xcba008,xcba009"/>
+      <construct id="body" page="2" field="xcbaownid,xcbaowndp,xcbacrtid,xcbacrtdp,xcbacrtdt,xcbamodid,xcbamoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcbald,xcba001,xcba002,xcba003,xcba004"/>
+      <set id="head" type="no_entry" field="xcbald,xcba001,xcba002,xcba003,xcba004"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcba001" type="S" default="1" def_scc="8908"/>
+      <column id="xcbald">
+        <after>
+          <reference field="xcbald_desc" ref_field="xcba_t.xcbald" map_field="xcbald,xcbaent" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xcbald_desc"/>
+      <column id="xcba002"/>
+      <column id="xcba003"/>
+      <column id="xcba004">
+        <after>
+          <reference field="xcba004_desc" ref_field="xcba_t.xcba004" map_field="xcba004,xcbaent" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_3" state="i"/>
+        <controlp form="q_ooeg001_3" state="c"/>
+      </column>
+      <column id="xcba004_desc"/>
+      <column id="xcba007" type="S" default="1" def_scc="8909"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcbastus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="xcba005">
+        <after/>
+      </column>
+      <column id="xcba005_desc"/>
+      <column id="xcba006">
+        <after>
+          <reference field="xcba006_desc" ref_field="xcba_t.xcba006" map_field="xcba006,xcbaent" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_9" state="i"/>
+        <controlp form="q_ooef001_9" state="c"/>
+      </column>
+      <column id="xcba006_desc"/>
+      <column id="xcba008" def_scc="8910"/>
+      <column id="xcba009" type="S" default="100">
+        <after>
+          <check id="range" st="100" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="xcba005_2_desc"/>
+      <column id="xcba006_2_desc"/>
+      <column id="xcbaownid">
+        <after>
+          <reference field="xcbaownid_desc" ref_field="xcba_t.xcbaownid" map_field="xcbaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcbaownid_desc"/>
+      <column id="xcbaowndp">
+        <after>
+          <reference field="xcbaowndp_desc" ref_field="xcba_t.xcbaowndp" map_field="xcbaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcbaowndp_desc"/>
+      <column id="xcbacrtid">
+        <after>
+          <reference field="xcbacrtid_desc" ref_field="xcba_t.xcbacrtid" map_field="xcbacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcbacrtid_desc"/>
+      <column id="xcbacrtdp">
+        <after>
+          <reference field="xcbacrtdp_desc" ref_field="xcba_t.xcbacrtdp" map_field="xcbacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcbacrtdp_desc"/>
+      <column id="xcbacrtdt"/>
+      <column id="xcbamodid">
+        <after>
+          <reference field="xcbamodid_desc" ref_field="xcba_t.xcbamodid" map_field="xcbamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcbamodid_desc"/>
+      <column id="xcbamoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcba_t" pk="xcbald,xcba001,xcba002,xcba003,xcba004">
+      <sql id="forupd_sql" type="sql" query="SELECT xcba001,xcbald,&apos;&apos;,xcba002,xcba003,xcba004,&apos;&apos;,xcba007 FROM xcba_t WHERE xcbaent= ? AND xcbald=? AND xcba001=? AND xcba002=? AND xcba003=? AND xcba004=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcba001,xcbald,&apos;&apos;,xcba002,xcba003,xcba004,&apos;&apos;,xcba007 FROM xcba_t" order="xcbald,xcba001,xcba002,xcba003,xcba004"/>
+    </head>
+    <body id="xcba_t" page="1,2" linked="" pk="xcba005,xcba006" fk="xcbald,xcba001,xcba002,xcba003,xcba004">
+      <sql id="forupd_sql_detail" query="SELECT xcbastus,xcba005,&apos;&apos;,xcba006,&apos;&apos;,xcba008,xcba009,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcbaownid,&apos;&apos;,xcbaowndp,&apos;&apos;,xcbacrtid,&apos;&apos;,xcbacrtdp,&apos;&apos;,xcbacrtdt,xcbamodid,&apos;&apos;,xcbamoddt FROM xcba_t WHERE xcbaent=? AND xcbald=? AND xcba001=? AND xcba002=? AND xcba003=? AND xcba004=? AND xcba005=? AND xcba006=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcbastus,xcba005,&apos;&apos;,xcba006,&apos;&apos;,xcba008,xcba009,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcbaownid,&apos;&apos;,xcbaowndp,&apos;&apos;,xcbacrtid,&apos;&apos;,xcbacrtdp,&apos;&apos;,xcbacrtdt,xcbamodid,&apos;&apos;,xcbamoddt FROM xcba_t WHERE xcbaent= ? AND xcbald=? AND xcba001=? AND xcba002=? AND xcba003=? AND xcba004=?"/>
+    </body>
+  </dataset>
+</assembly>
+

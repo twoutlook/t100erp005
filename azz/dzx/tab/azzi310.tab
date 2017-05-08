@@ -1,0 +1,189 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi310" module="azz" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="02286" crtdt="2015-05-12 14:25:08" modid="02286" moddt="2016-11-25 15:45:52" sdver="0009" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="自定義查詢維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzia001,gzia002,gzial003,gzia003,gzia005,gzia004,gzia006,gziastus,gziaownid,gziaownid_desc(chr80),gziaowndp,gziaowndp_desc(chr80),gziacrtid,gziacrtid_desc(chr80),gziacrtdp,gziacrtdp_desc(chr80),gziacrtdt,gziamodid,gziamodid_desc(chr80),gziamoddt,groupname(chr500),sumyname1(chr500),comb_sumy(chr500),s_global_var(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzib002,gzib003,gzib002_desc(chr500),gzib005,gzib006,gzib004"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gzie002,gzie003,gzie005"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="gzid002,gzid003,gzig002,gzid004,gzidl004(chr500),gzid005,gzid006,gzid007,gzid018,gzid008,gzid009,gzid014,gzid015,gzid017,gzid010,gzid011,gzid012"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="groupup"/>
+      <action id="modify" type="standard"/>
+      <action id="argup"/>
+      <action id="groupadd"/>
+      <action id="groupdown"/>
+      <action id="delete" type="standard"/>
+      <action id="groupdel"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="sqlbuilder"/>
+      <action id="sumydel"/>
+      <action id="argdown"/>
+      <action id="qbedown"/>
+      <action id="query" type="standard"/>
+      <action id="sqledit"/>
+      <action id="sqlverify"/>
+      <action id="sumyadd"/>
+      <action id="qbeup"/>
+      <action id="sqltest"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="3">
+      <action id="update_item"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi310" method="dialog">
+    <section id="input">
+      <input id="head" field="gzia001,gzia002,gzial003,gzia003,gzia005,gzia004,gzia006,gziastus,groupname,sumyname1,comb_sumy"/>
+      <input id="body" page="1" field="gzib002,gzib003,gzib005,gzib006,gzib004" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="gzie002,gzie003,gzie005" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="gzid002,gzid003,gzid004,gzidl004,gzid005,gzid006,gzid007,gzid018,gzid008,gzid009,gzid014,gzid015,gzid017,gzid010,gzid011,gzid012" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzia001,gzia002,gzial003,gzia003,gzia005,gzia004,gzia006,gziastus,gziaownid,gziaowndp,gziacrtid,gziacrtdp,gziacrtdt,gziamodid,gziamoddt,groupname,sumyname1,comb_sumy,s_global_var"/>
+      <construct id="body" page="1" field="gzib002,gzib003,gzib005,gzib006,gzib004"/>
+      <construct id="body" page="2" field="gzie002,gzie003,gzie005"/>
+      <construct id="body" page="3" field="gzid002,gzid003,gzid004,gzidl004,gzid005,gzid006,gzid007,gzid018,gzid008,gzid009,gzid014,gzid015,gzid017,gzid010,gzid011,gzid012"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzia001"/>
+      <set id="head" type="no_entry" field="gzia001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gzia001">
+        <controlp form="q_gzza001_5" state="i"/>
+        <controlp form="q_gzia001" state="c"/>
+      </column>
+      <column id="gzia002"/>
+      <column id="gzial003"/>
+      <column id="gzia003"/>
+      <column id="gzia005">
+        <after>
+          <check id="range" bt="1" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="gzia004"/>
+      <column id="gzia006"/>
+      <column id="gziastus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="gziaownid">
+        <after>
+          <reference field="gziaownid_desc" ref_field="gzia_t.gziaownid" map_field="gziaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="gziaownid_desc"/>
+      <column id="gziaowndp">
+        <after>
+          <reference field="gziaowndp_desc" ref_field="gzia_t.gziaowndp" map_field="gziaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="gziaowndp_desc"/>
+      <column id="gziacrtid">
+        <after>
+          <reference field="gziacrtid_desc" ref_field="gzia_t.gziacrtid" map_field="gziacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="gziacrtid_desc"/>
+      <column id="gziacrtdp">
+        <after>
+          <reference field="gziacrtdp_desc" ref_field="gzia_t.gziacrtdp" map_field="gziacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="gziacrtdp_desc"/>
+      <column id="gziacrtdt"/>
+      <column id="gziamodid">
+        <after>
+          <reference field="gziamodid_desc" ref_field="gzia_t.gziamodid" map_field="gziamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="gziamodid_desc"/>
+      <column id="gziamoddt"/>
+      <column id="groupname"/>
+      <column id="sumyname1"/>
+      <column id="comb_sumy"/>
+      <column id="s_global_var"/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzib002">
+        <after>
+          <reference field="gzib002_desc" ref_field="gzib_t.gzib002" map_field="gzib_t.gzib002" ref_sql="SELECT dzebl003 FROM dzebl_t WHERE dzebl001=? AND dzebl002=$varg_lang$var"/>
+        </after>
+      </column>
+      <column id="gzib003"/>
+      <column id="gzib002_desc"/>
+      <column id="gzib005" type="S" default="N"/>
+      <column id="gzib006" def_scc="128"/>
+      <column id="gzib004" type="S" default="N"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gzie002"/>
+      <column id="gzie003"/>
+      <column id="gzie005"/>
+    </init>
+    <init id="body" page="3">
+      <column id="gzid002"/>
+      <column id="gzid003"/>
+      <column id="gzig002"/>
+      <column id="gzid004"/>
+      <column id="gzidl004"/>
+      <column id="gzid005" def_scc="191"/>
+      <column id="gzid006" type="S" default="0"/>
+      <column id="gzid007" type="S" default="0"/>
+      <column id="gzid018"/>
+      <column id="gzid008" type="S" default="N"/>
+      <column id="gzid009"/>
+      <column id="gzid014" type="S" default="N"/>
+      <column id="gzid015">
+        <after>
+          <check chkid="v_gzzz001" id="isExist"/>
+        </after>
+        <controlp form="q_gzzz001_1" state="i"/>
+        <controlp form="q_gzzz001_1" state="c"/>
+      </column>
+      <column id="gzid017"/>
+      <column id="gzid010" def_scc="192"/>
+      <column id="gzid011"/>
+      <column id="gzid012" type="S" default="N"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzia_t" pk="gzia001">
+      <sql id="forupd_sql" type="sql" query="SELECT gzia001,gzia002,&apos;&apos;,gzia003,gzia005,gzia004,gzia006,gziastus,gziaownid,&apos;&apos;,gziaowndp,&apos;&apos;,gziacrtid,&apos;&apos;,gziacrtdp,&apos;&apos;,gziacrtdt,gziamodid,&apos;&apos;,gziamoddt,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM gzia_t WHERE gzia001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzia001,gzia002,&apos;&apos;,gzia003,gzia005,gzia004,gzia006,gziastus,gziaownid,&apos;&apos;,gziaowndp,&apos;&apos;,gziacrtid,&apos;&apos;,gziacrtdp,&apos;&apos;,gziacrtdt,gziamodid,&apos;&apos;,gziamoddt,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM gzia_t" order="gzia001"/>
+      <sql id="append" type="lang" target="gzial_t.gzial003" table="gzial_t" fk="gzia001" pk="gzial001,gzial002" field="gzial003"/>
+    </head>
+    <body id="gzib_t" page="1" linked="" pk="gzib002,gzib007" fk="gzib001">
+      <sql id="forupd_sql_detail" query="SELECT gzib002,gzib003,&apos;&apos;,gzib005,gzib006,gzib004 FROM gzib_t WHERE gzib001=? AND gzib002=? AND gzib007=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzib002,gzib003,&apos;&apos;,gzib005,gzib006,gzib004 FROM gzib_t WHERE gzib001=?"/>
+    </body>
+    <body id="gzie_t" page="2" linked="" pk="gzie002" fk="gzie001">
+      <sql id="forupd_sql_detail" query="SELECT gzie002,gzie003,gzie005 FROM gzie_t WHERE gzie001=? AND gzie002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzie002,gzie003,gzie005 FROM gzie_t WHERE gzie001=?"/>
+    </body>
+    <body id="gzid_t" page="3" linked="" pk="gzid002" fk="gzid001">
+      <sql id="forupd_sql_detail" query="SELECT gzid002,gzid003,&apos;&apos;,gzid004,&apos;&apos;,gzid005,gzid006,gzid007,gzid018,gzid008,gzid009,gzid014,gzid015,gzid017,gzid010,gzid011,gzid012 FROM gzid_t WHERE gzid001=? AND gzid002=? FOR UPDATE"/>
+      <sql id="detail_append" type="single" table="gzig_t" pk="gzig001,gzig002,gzig003" field="gzig002"/>
+      <sql id="b_fill_sql" query="SELECT gzid002,gzid003,&apos;&apos;,gzid004,&apos;&apos;,gzid005,gzid006,gzid007,gzid018,gzid008,gzid009,gzid014,gzid015,gzid017,gzid010,gzid011,gzid012 FROM gzid_t WHERE gzid001=?"/>
+      <sql id="detail_append" type="lang" target="gzidl004" table="gzidl_t" fk="gzid004" pk="gzidl001,gzidl002,gzidl003" field="gzidl004"/>
+    </body>
+  </dataset>
+</assembly>
+

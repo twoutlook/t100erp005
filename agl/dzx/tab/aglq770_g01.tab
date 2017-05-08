@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglq770_g01" module="agl" jobmode="N" type="g01" industry="std" crtid="05416" crtdt="2014-07-22 16:10:16" modid="01251" moddt="2015-03-11 18:31:56" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.sdate(dat|起始日期),tm.syear(glap002|起始年度),tm.speri(glap004|起始期別),tm.edate(dat|截止日期),tm.eyear(glap002|截止年度),tm.eperi(glap004|截止期別),tm.curro(chr1|顯示外幣),tm.currp(chr1|幣別分頁),tm.comp(chr1|營運據點),tm.ad007(chr1|部門),tm.ad008(chr1|利潤成本),tm.ad009(chr1|區域),tm.ad010(chr1|交易客商),tm.ad027(chr1|帳款客商),tm.ad011(chr1|客群),tm.ad012(chr1|產品類別),tm.ad031(chr1|經營方式),tm.ad032(chr1|渠道),tm.ad033(chr1|品牌),tm.ad013(chr1|人員),tm.ad015(chr1|專案),tm.ad016(chr1|WBS),tm.ad017(chr1|自由核算項一),tm.ad018(chr1|自由核算項二),tm.ad019(chr1|自由核算項三),tm.ad020(chr1|自由核算項四),tm.ad021(chr1|自由核算項五),tm.ad022(chr1|自由核算項六),tm.ad023(chr1|自由核算項七),tm.ad024(chr1|自由核算項八),tm.ad025(chr1|自由核算項九),tm.ad026(chr1|自由核算項十),tm.ld(glapld|帳套)">
+    <var seq="1" value="glap002,glap004,glapdocdt,glapdocno,glaq001,style(chr200|NULL),glaq005,glaq006,glaq010d(num20_6|NULL),glaq010c(num20_6|NULL),glaq003,glaq004,state(chr10|NULL),amt(num20_6|NULL),amt1(num20_6|NULL),glapent,glaq002,glaq017,glaq018,glaq019,glaq020,glaq021,glaq022,glaq023,glaq024,glaq051,glaq052,glaq053,glaq025,glaq027,glaq028,glaq029,glaq030,glaq031,glaq032,glaq033,glaq034,glaq035,glaq036,glaq037,glaq038,l_groupby(chr500|NULL)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="glap002(glap002|glap002),glap004(glap004|glap004),glapdocdt(glapdocdt|glapdocdt),glapdocno(glapdocno|glapdocno),glaq001(glaq001|glaq001),style(chr200|NULL),glaq005(glaq005|glaq005),glaq006(glaq006|glaq006),glaq010d(num20_6|NULL),glaq010c(num20_6|NULL),glaq003(glaq003|glaq003),glaq004(glaq004|glaq004),state(chr10|NULL),amt(num20_6|NULL),amt1(num20_6|NULL),glapent(glapent|glapent),glaq002(glaq002|glaq002),glaq017(glaq017|glaq017),glaq018(glaq018|glaq018),glaq019(glaq019|glaq019),glaq020(glaq020|glaq020),glaq021(glaq021|glaq021),glaq022(glaq022|glaq022),glaq023(glaq023|glaq023),glaq024(glaq024|glaq024),glaq051(glaq051|glaq051),glaq052(glaq052|glaq052),glaq053(glaq053|glaq053),glaq025(glaq025|glaq025),glaq027(glaq027|glaq027),glaq028(glaq028|glaq028),glaq029(glaq029|glaq029),glaq030(glaq030|glaq030),glaq031(glaq031|glaq031),glaq032(glaq032|glaq032),glaq033(glaq033|glaq033),glaq034(glaq034|glaq034),glaq035(glaq035|glaq035),glaq036(glaq036|glaq036),glaq037(glaq037|glaq037),glaq038(glaq038|glaq038),l_groupby(chr500|NULL)"/>
+    <sql id="g_from" query="glap_t,glaq_t"/>
+    <sql id="g_where" query="glap_t.glapstus = &apos;Y&apos; AND " maintable="glap_t"/>
+    <sql id="g_order" query="l_groupby"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="l_groupby"/>
+    <section id="b_group" reptype="d01">
+      <rep type="l_groupby" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="glapent,l_groupby"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="glapent,l_groupby"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="glapent,l_groupby"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="l_groupby" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="glapent,l_groupby"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

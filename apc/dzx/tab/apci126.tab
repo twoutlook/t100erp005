@@ -1,0 +1,115 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apci126" module="apc" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="03247" crtdt="2014-02-17 23:39:34" modid="06189" moddt="2015-06-10 14:55:35" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="POS模塊基本資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pcadstus,pcad001,pcadl003,pcad002,pcad003,pcad003_desc(chr500),pcad004,pcad005,pcad006,pcad007,pcad008,pcadstamp(timestamp),pcadpos(chr500),pcadunit"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="pcad001,pcadownid,pcadownid_desc(chr500),pcadowndp,pcadowndp_desc(chr500),pcadcrtid,pcadcrtid_desc(chr500),pcadcrtdp,pcadcrtdp_desc(chr500),pcadcrtdt,pcadmodid,pcadmodid_desc(chr500),pcadmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="apc" filename="apci126" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="pcadstus,pcad001,pcadl003,pcad002,pcad003,pcad004,pcad005,pcad006,pcad007,pcad008,pcadstamp,pcadpos,pcadunit" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="pcadstus,pcad001,pcadl003,pcad002,pcad003,pcad004,pcad005,pcad006,pcad007,pcad008,pcadstamp,pcadpos,pcadunit"/>
+      <construct id="body" page="2" field="pcadownid,pcadowndp,pcadcrtid,pcadcrtdp,pcadcrtdt,pcadmodid,pcadmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="pcadstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pcad001">
+        <controlp form="q_pcad001" state="c"/>
+      </column>
+      <column id="pcadl003"/>
+      <column id="pcad002" type="S" default="1" def_scc="6024"/>
+      <column id="pcad003">
+        <after>
+          <check chkid="v_pcad001" id="isExist"/>
+          <reference field="pcad003_desc" ref_field="pcad_t.pcad003" map_field="pcadent,pcad003" ref_sql="SELECT pcadl003 FROM pcadl_t WHERE pcadlent=$varg_enterprise$var AND pcadl001=? AND pcadl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pcad001" state="i"/>
+        <controlp form="q_pcad001" state="c"/>
+      </column>
+      <column id="pcad003_desc"/>
+      <column id="pcad004" type="S" default="0" def_scc="6025"/>
+      <column id="pcad005"/>
+      <column id="pcad006"/>
+      <column id="pcad007" type="S" default="N"/>
+      <column id="pcad008" type="S" default="N"/>
+      <column id="pcadstamp"/>
+      <column id="pcadpos" type="S" default="N"/>
+      <column id="pcadunit"/>
+    </init>
+    <init id="body" page="2">
+      <column id="pcadownid">
+        <after>
+          <reference field="pcadownid_desc" ref_field="pcad_t.pcadownid" map_field="pcadownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcadownid_desc"/>
+      <column id="pcadowndp">
+        <after>
+          <reference field="pcadowndp_desc" ref_field="pcad_t.pcadowndp" map_field="pcadowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pcadowndp_desc"/>
+      <column id="pcadcrtid">
+        <after>
+          <reference field="pcadcrtid_desc" ref_field="pcad_t.pcadcrtid" map_field="pcadcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcadcrtid_desc"/>
+      <column id="pcadcrtdp">
+        <after>
+          <reference field="pcadcrtdp_desc" ref_field="pcad_t.pcadcrtdp" map_field="pcadcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pcadcrtdp_desc"/>
+      <column id="pcadcrtdt"/>
+      <column id="pcadmodid">
+        <after>
+          <reference field="pcadmodid_desc" ref_field="pcad_t.pcadmodid" map_field="pcadmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcadmodid_desc"/>
+      <column id="pcadmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="pcad_t" page="1,2" linked="" pk="pcad001">
+      <sql id="forupd_sql_detail" query="SELECT pcadstus,pcad001,&apos;&apos;,pcad002,pcad003,&apos;&apos;,pcad004,pcad005,pcad006,pcad007,pcad008,pcadstamp,&apos;&apos;,pcadunit,&apos;&apos;,pcadownid,&apos;&apos;,pcadowndp,&apos;&apos;,pcadcrtid,&apos;&apos;,pcadcrtdp,&apos;&apos;,pcadcrtdt,pcadmodid,&apos;&apos;,pcadmoddt FROM pcad_t WHERE pcadent=? AND pcad001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pcadstus,pcad001,&apos;&apos;,pcad002,pcad003,&apos;&apos;,pcad004,pcad005,pcad006,pcad007,pcad008,pcadstamp,&apos;&apos;,pcadunit,&apos;&apos;,pcadownid,&apos;&apos;,pcadowndp,&apos;&apos;,pcadcrtid,&apos;&apos;,pcadcrtdp,&apos;&apos;,pcadcrtdt,pcadmodid,&apos;&apos;,pcadmoddt FROM pcad_t WHERE pcadent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="pcadl_t.pcadl003" table="pcadl_t" fk="pcad001" pk="pcadl001,pcadl002" field="pcadl003"/>
+    </body>
+  </dataset>
+</assembly>
+

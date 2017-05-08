@@ -1,0 +1,1739 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="axmt610_01" std_prog="axmt610_01" erpver="1.0" module="AXM" ver="7" env="s" zone="t10prd" booking="N" type="S" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="Y" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="function.axmt610_01" order="1" ver="5" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PUBLIC FUNCTION axmt610_01(p_xmeldocno,p_xmel003,p_xmel004,p_xmel005,p_xmel011,p_xmel012)
+   DEFINE l_ac_t          LIKE type_t.num5        #æªåæ¶çARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #å¯æ°å¢å¦ 
+   DEFINE l_allow_delete  LIKE type_t.num5        #å¯åªé¤å¦  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   DEFINE p_xmeldocno     LIKE xmel_t.xmeldocno
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE p_xmel005       LIKE xmel_t.xmel005
+   DEFINE l_imaa          RECORD LIKE imaa_t.*
+   DEFINE l_imaa_1        RECORD LIKE imaa_t.*
+   DEFINE l_xmam004       LIKE xmam_t.xmam004
+   DEFINE l_xmam     RECORD LIKE xmam_t.*
+   DEFINE l_num           LIKE xmem_t.xmem012
+   DEFINE p_xmel004       LIKE xmel_t.xmel004
+   DEFINE p_xmel003       LIKE xmel_t.xmel003
+   DEFINE p_xmel011       LIKE xmel_t.xmel011 #150610
+   DEFINE p_xmel012       LIKE xmel_t.xmel012
+   OPEN WINDOW w_axmt610_01 WITH FORM cl_ap_formpath("axm","axmt610_01")
+ 
+   
+   CALL cl_ui_init()
+   LET g_xmel.xmeldocno = p_xmeldocno
+   LET g_xmel.xmel003 = p_xmel003
+   LET g_xmel.xmel004 = p_xmel004
+   LET g_xmel.xmel005 = p_xmel005
+   LET g_xmel.xmel011 = p_xmel011
+   LET g_xmel.xmel012 = p_xmel012
+   LET g_qryparam.state = "i"
+   
+   INITIALIZE g_xmem_m.* TO NULL
+   CALL g_xmem_d.clear()
+   CALL g_xmem2_d.clear()
+   LET g_all_space = 0
+   CALL axmt610_01_b_fill()
+   
+   LET g_errshow = 1
+#   WHILE TRUE
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      INPUT ARRAY g_xmem2_d FROM s_detail2.*
+         ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE) 
+         
+         BEFORE ROW
+            LET l_ac = ARR_CURR()
+         AFTER FIELD xman005
+            IF NOT cl_null(g_xmem2_d[l_ac].xman005) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_xmem2_d[l_ac].xman005
+               
+               IF NOT cl_chk_exist("v_xmam001") THEN
+                  NEXT FIELD CURRENT
+               END IF
+               IF g_xmem2_d[l_ac].sel1 = 'Y' THEN
+                  LET g_all_space = g_all_space - g_xmem2_d[l_ac].full_num
+               END IF
+               IF g_xmem2_d[l_ac].sel2 = 'Y' THEN
+                  LET g_all_space = g_all_space - g_xmem2_d[l_ac].space
+               END IF
+               SELECT xmam008 INTO g_xmem2_d[l_ac].every_num FROM xmam_t 
+                WHERE xmament = g_enterprise AND xmam001 = g_xmem2_d[l_ac].xman005
+               LET g_xmem2_d[l_ac].full_num =  g_xmem2_d[l_ac].xmdh016 / g_xmem2_d[l_ac].every_num
+               LET g_xmem2_d[l_ac].unfull_num  =  g_xmem2_d[l_ac].xmdh016 - (g_xmem2_d[l_ac].every_num * g_xmem2_d[l_ac].full_num)             
+               LET g_xmem2_d[l_ac].space  = g_xmem2_d[l_ac].unfull_num / g_xmem2_d[l_ac].every_num 
+               
+            END IF
+            
+            IF g_xmem2_d[l_ac].sel1 = 'Y' THEN
+               LET g_all_space = g_all_space + g_xmem2_d[l_ac].full_num
+            END IF
+            IF g_xmem2_d[l_ac].sel2 = 'Y' THEN
+               LET g_all_space = g_all_space + g_xmem2_d[l_ac].space
+            END IF
+         AFTER FIELD every_num
+            IF g_xmem2_d[l_ac].sel1 = 'Y' THEN
+               LET g_all_space = g_all_space - g_xmem2_d[l_ac].full_num
+            END IF
+            IF g_xmem2_d[l_ac].sel2 = 'Y' THEN
+               LET g_all_space = g_all_space - g_xmem2_d[l_ac].space
+            END IF
+            
+            IF NOT cl_null(g_xmem2_d[l_ac].every_num) THEN
+               LET g_xmem2_d[l_ac].full_num =  g_xmem2_d[l_cnt].xmdh016 / g_xmem2_d[l_ac].every_num
+               LET g_xmem2_d[l_ac].unfull_num  =  g_xmem2_d[l_ac].xmdh016 - (g_xmem2_d[l_ac].every_num * g_xmem2_d[l_ac].full_num)                
+               LET g_xmem2_d[l_ac].space  = g_xmem2_d[l_ac].unfull_num /  g_xmem2_d[l_ac].every_num 
+            END IF
+            
+            IF g_xmem2_d[l_ac].sel1 = 'Y' THEN
+               LET g_all_space = g_all_space + g_xmem2_d[l_ac].full_num
+            END IF
+            IF g_xmem2_d[l_ac].sel2 = 'Y' THEN
+               LET g_all_space = g_all_space + g_xmem2_d[l_ac].space
+            END IF
+         AFTER FIELD full_num
+            IF NOT cl_null(g_xmem2_d[l_ac].full_num) THEN
+                LET g_xmem2_d[l_ac].unfull_num  =  g_xmem2_d[l_ac].xmdh016 - (g_xmem2_d[l_ac].every_num * g_xmem2_d[l_ac].full_num)
+            END IF
+         ON CHANGE sel1 
+            IF g_xmem2_d[l_ac].sel1 = 'Y' THEN
+               LET g_all_space = g_all_space + g_xmem2_d[l_ac].full_num
+            ELSE
+               LET g_all_space = g_all_space - g_xmem2_d[l_ac].full_num
+            END IF
+            DISPLAY g_all_space TO FORMONLY.all_space
+         ON CHANGE sel2         
+            IF g_xmem2_d[l_ac].sel2 = 'Y' THEN
+               LET g_all_space = g_all_space + g_xmem2_d[l_ac].space
+            ELSE
+               LET g_all_space = g_all_space - g_xmem2_d[l_ac].space
+            END IF
+            DISPLAY g_all_space TO FORMONLY.all_space
+         AFTER INPUT
+            DISPLAY g_all_space TO FORMONLY.all_space
+            
+         ON ACTION controlp INFIELD xman005
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmem2_d[l_ac].xman005             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_xmam001()                                #呼叫開窗
+
+            LET g_xmem2_d[l_ac].xman005 = g_qryparam.return1              
+
+            DISPLAY g_xmem2_d[l_ac].xman005 TO xman005              #
+
+            NEXT FIELD xman005
+      END INPUT
+      INPUT BY NAME g_xmem_m.xmem0081,g_xmem_m.xmem0091,g_xmem_m.xmem0101
+         AFTER FIELD xmem0101 
+            IF NOT cl_ap_chk_range(g_xmem_m.xmem0101,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem0101
+            END IF
+      END INPUT 
+      
+      INPUT ARRAY g_xmem_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b2,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+         
+         
+         BEFORE INPUT
+          
+         BEFORE ROW 
+            LET l_ac2 = ARR_CURR()
+            INITIALIZE l_imaa.* TO NULL
+            INITIALIZE l_imaa_1.* TO NULL
+            SELECT * INTO l_imaa.* FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem_d[l_ac2].xmem003
+            SELECT xmam004 INTO l_xmam004 FROM xmam_t WHERE xmament = g_enterprise AND xmam001 = g_xmem_d[l_ac2].xmem005
+            SELECT * INTO l_imaa_1.* FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = l_xmam004
+            
+            SELECT * INTO l_xmam.* FROM xmam_t 
+             WHERE xmament = g_enterprise AND xmam001 = g_xmem_d[l_ac2].xmem005
+         AFTER FIELD xmem004
+  
+            IF NOT cl_ap_chk_range(g_xmem_d[l_ac2].xmem004,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem004
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmem004
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem004) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+         BEFORE FIELD xmem004
+            
+         ON CHANGE xmem004
+          
+         AFTER FIELD xmem005
+            
+            #add-point:AFTER FIELD xmem005
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem005) THEN 
+
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_xmem_d[l_ac2].xmem005
+               
+               IF NOT cl_chk_exist("v_xmam001") THEN
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+
+
+            #END add-point
+            
+ 
+       
+         BEFORE FIELD xmem005
+            
+         ON CHANGE xmem005
+            #add-point:ON CHANGE xmem005
+            
+            #END add-point
+ 
+        
+         AFTER FIELD xmem006
+           
+            IF NOT cl_ap_chk_range(g_xmem_d[l_ac2].xmem006,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem006
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmem006
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem006) THEN 
+               IF g_xmem_d[l_ac2].xmem007 < 1 THEN
+                  LET g_xmem_d[l_ac2].xmem011 = g_xmem_d[l_ac2].xmem010
+               ELSE
+                  LET g_xmem_d[l_ac2].xmem011 = g_xmem_d[l_ac2].xmem010 + g_xmem_d[l_ac2].xmem007 - 1
+               END IF
+               #add--2015/05/12 By shiun--(S)
+               IF cl_null(l_imaa_1.imaa016) THEN
+                  LET l_imaa_1.imaa016 = 0
+               END IF
+               IF cl_null(l_imaa.imaa016) THEN
+                  LET l_imaa.imaa016 = 0
+               END IF
+               IF cl_null(l_imaa.imaa017) THEN
+                  LET l_imaa.imaa017 = 0
+               END IF
+               #add--2015/05/12 By shiun--(E)
+               LET g_xmem_d[l_ac2].xmem014 = g_xmem_d[l_ac2].xmem006 * l_imaa.imaa017
+               
+               LET g_xmem_d[l_ac2].xmem016 = g_xmem_d[l_ac2].xmem006 * (l_imaa_1.imaa016 + l_imaa.imaa016)
+
+                IF cl_null(l_xmam.xmam016) THEN
+                   SELECT imaa018 INTO l_xmam.xmam016 FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem_d[l_ac2].xmem003
+                END IF
+                IF cl_null(l_xmam.xmam013) THEN
+                   SELECT imaa025 INTO l_xmam.xmam013 FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem_d[l_ac2].xmem003
+                END IF
+                IF g_xmel.xmel012 = '2' THEN
+                   LET g_xmem_d[l_ac2].xmem018 = l_xmam.xmam013 * 0.0000353
+                ELSE
+                   LET g_xmem_d[l_ac2].xmem018 = l_xmam.xmam013 * 0.0000353 / 35.315
+                END IF
+                IF NOT cl_null(g_xmem_d[l_ac2].xmem007) THEN
+                   IF NOT cl_null(g_xmem_d[l_ac2].xmem014) THEN
+                     LET g_xmem_d[l_ac2].xmem015 = g_xmem_d[l_ac2].xmem014 * g_xmem_d[l_ac2].xmem007
+                   END IF
+                   IF NOT cl_null(g_xmem_d[l_ac2].xmem016) THEN
+                      LET g_xmem_d[l_ac2].xmem017 = g_xmem_d[l_ac2].xmem016 * g_xmem_d[l_ac2].xmem007
+                   END IF 
+                   IF NOT cl_null(g_xmem_d[l_ac2].xmem018) THEN
+                      LET g_xmem_d[l_ac2].xmem019 = g_xmem_d[l_ac2].xmem018 * g_xmem_d[l_ac2].xmem007
+                   END IF 
+                   IF NOT cl_null(g_xmem_d[l_ac2].xmem006) THEN
+                      LET g_xmem_d[l_ac2].xmem012 = g_xmem_d[l_ac2].xmem006 * g_xmem_d[l_ac2].xmem007
+                   END IF
+                END IF
+            END IF 
+
+
+            #END add-point
+            
+ 
+        
+         BEFORE FIELD xmem006
+            #add-point:BEFORE FIELD xmem006
+            
+            #END add-point
+ 
+        
+         ON CHANGE xmem006
+            #add-point:ON CHANGE xmem006
+            
+            #END add-point
+ 
+      
+         AFTER FIELD xmem007
+            
+            IF NOT cl_ap_chk_range(g_xmem_d[l_ac2].xmem007,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem007
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmem007
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem007) THEN 
+               IF g_xmem_d[l_ac2].xmem007 < 1 THEN
+                  LET g_xmem_d[l_ac2].xmem011 = g_xmem_d[l_ac2].xmem010
+               ELSE
+                  LET g_xmem_d[l_ac2].xmem011 = g_xmem_d[l_ac2].xmem010 + g_xmem_d[l_ac2].xmem007 - 1
+               END IF
+               #add--2015/05/12 By shiun--(S)
+               IF cl_null(l_imaa_1.imaa016) THEN
+                  LET l_imaa_1.imaa016 = 0
+               END IF
+               IF cl_null(l_imaa.imaa016) THEN
+                  LET l_imaa.imaa016 = 0
+               END IF
+               IF cl_null(l_imaa.imaa017) THEN
+                  LET l_imaa.imaa017 = 0
+               END IF
+               #add--2015/05/12 By shiun--(E)
+               LET g_xmem_d[l_ac2].xmem014 = g_xmem_d[l_ac2].xmem006 * l_imaa.imaa017
+               
+               LET g_xmem_d[l_ac2].xmem016 = g_xmem_d[l_ac2].xmem006 * (l_imaa_1.imaa016 + l_imaa.imaa016)
+
+                IF cl_null(l_xmam.xmam016) THEN
+                   SELECT imaa018 INTO l_xmam.xmam016 FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem_d[l_ac2].xmem003
+                END IF
+                IF cl_null(l_xmam.xmam013) THEN
+                   SELECT imaa025 INTO l_xmam.xmam013 FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem_d[l_ac2].xmem003
+                END IF
+                IF g_xmel.xmel012 = '2' THEN
+                   LET g_xmem_d[l_ac2].xmem018 = l_xmam.xmam013 * 0.0000353
+                ELSE
+                   LET g_xmem_d[l_ac2].xmem018 = l_xmam.xmam013 * 0.0000353 / 35.315
+                END IF
+                
+                IF NOT cl_null(g_xmem_d[l_ac2].xmem014) THEN
+                  LET g_xmem_d[l_ac2].xmem015 = g_xmem_d[l_ac2].xmem014 * g_xmem_d[l_ac2].xmem007
+                END IF
+                IF NOT cl_null(g_xmem_d[l_ac2].xmem016) THEN
+                   LET g_xmem_d[l_ac2].xmem017 = g_xmem_d[l_ac2].xmem016 * g_xmem_d[l_ac2].xmem007
+                END IF 
+                IF NOT cl_null(g_xmem_d[l_ac2].xmem018) THEN
+                   LET g_xmem_d[l_ac2].xmem019 = g_xmem_d[l_ac2].xmem018 * g_xmem_d[l_ac2].xmem007
+                END IF 
+                IF NOT cl_null(g_xmem_d[l_ac2].xmem006) THEN
+                   LET g_xmem_d[l_ac2].xmem012 = g_xmem_d[l_ac2].xmem006 * g_xmem_d[l_ac2].xmem007
+                END IF
+              
+            END IF 
+
+
+            #END add-point
+            
+ 
+        
+         BEFORE FIELD xmem007
+            #add-point:BEFORE FIELD xmem007
+            
+            #END add-point
+ 
+         
+         ON CHANGE xmem007
+            #add-point:ON CHANGE xmem007
+            
+            #END add-point
+ 
+        
+         BEFORE FIELD xmem008
+            #add-point:BEFORE FIELD xmem008
+            
+            #END add-point
+ 
+        
+         AFTER FIELD xmem008
+            
+            #add-point:AFTER FIELD xmem008
+            
+            #END add-point
+            
+ 
+       
+         ON CHANGE xmem008
+            #add-point:ON CHANGE xmem008
+            
+            #END add-point
+ 
+        
+         BEFORE FIELD xmem009
+            #add-point:BEFORE FIELD xmem009
+            
+            #END add-point
+ 
+        
+         AFTER FIELD xmem009
+            
+            #add-point:AFTER FIELD xmem009
+            
+            #END add-point
+            
+ 
+      
+         ON CHANGE xmem009
+            #add-point:ON CHANGE xmem009
+            
+            #END add-point
+ 
+         #æ­¤æ®µè½ç±å­æ¨£æ¿a02ç¢ç
+         AFTER FIELD xmem010
+
+            IF NOT cl_ap_chk_range(g_xmem_d[l_ac2].xmem010,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem010
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmem010
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem010) THEN 
+               IF g_xmem_d[l_ac2].xmem007 < 1 THEN
+                  LET g_xmem_d[l_ac2].xmem011 = g_xmem_d[l_ac2].xmem010
+               ELSE
+                  LET g_xmem_d[l_ac2].xmem011 = g_xmem_d[l_ac2].xmem010 + g_xmem_d[l_ac2].xmem007 - 1
+               END IF  
+            END IF 
+
+
+            #END add-point
+            
+ 
+     
+         BEFORE FIELD xmem010
+            #add-point:BEFORE FIELD xmem010
+            
+            #END add-point
+ 
+        
+         ON CHANGE xmem010
+            #add-point:ON CHANGE xmem010
+            
+            #END add-point
+ 
+         #æ­¤æ®µè½ç±å­æ¨£æ¿a02ç¢ç
+         AFTER FIELD xmem011
+        
+            IF NOT cl_ap_chk_range(g_xmem_d[l_ac2].xmem011,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem011
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmem011
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem011) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+      
+         BEFORE FIELD xmem011
+            #add-point:BEFORE FIELD xmem011
+            
+            #END add-point
+ 
+     
+         ON CHANGE xmem011
+         
+         
+         AFTER FIELD xmem012
+            IF NOT cl_ap_chk_range(g_xmem_d[l_ac2].xmem012,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem012
+            END IF
+            
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem012) THEN
+               LET l_num = 0
+               CASE g_xmel.xmel004 
+                  WHEN '1'
+                     SELECT xmdh016 INTO l_num FROM xmdh_t WHERE xmdhent = g_enterprise 
+                        AND xmdhdocno = g_xmem_d[l_ac2].xmem001 AND xmdhseq = g_xmem_d[l_ac2].xmem002
+                  WHEN '2'
+                     SELECT xmdl018 INTO l_num FROM xmdl_t WHERE xmdlent = g_enterprise 
+                        AND xmdldocno = g_xmem_d[l_ac2].xmem001 AND xmdlseq = g_xmem_d[l_ac2].xmem002
+                  WHEN '3'
+                     SELECT pmdt020 INTO l_num FROM pmdt_t WHERE pmdtent = g_enterprise 
+                        AND pmdtdocno = g_xmem_d[l_ac2].xmem001 AND pmdtseq = g_xmem_d[l_ac2].xmem002
+                  WHEN '4'
+                     SELECT indd009 INTO l_num FROM indd_t WHERE inddent = g_enterprise 
+                        AND indddocno = g_xmem_d[l_ac2].xmem001 AND inddseq = g_xmem_d[l_ac2].xmem002
+                  WHEN '5'
+                     SELECT inbb011 INTO l_num FROM inbb_t WHERE inbbent = g_enterprise 
+                        AND inbbdocno = g_xmem_d[l_ac2].xmem001 AND inbbseq = g_xmem_d[l_ac2].xmem002
+               END CASE
+               IF g_xmem_d[l_ac2].xmem012 > l_num THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = g_xmem_d[l_ac2].xmem012||" > "||l_num 
+                  LET g_errparam.code   = "axm-00490" 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            
+         AFTER FIELD xmem013
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem013) THEN 
+
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_xmem_d[l_ac2].xmem013
+
+               IF NOT cl_chk_exist("v_ooca001") THEN
+                  NEXT FIELD CURRENT
+               END IF
+            
+            END IF 
+        
+         AFTER FIELD xmem014
+
+            IF NOT cl_ap_chk_range(g_xmem_d[l_ac2].xmem014,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem014
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmem014
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem014) THEN 
+               LET g_xmem_d[l_ac2].xmem015 = g_xmem_d[l_ac2].xmem007 * g_xmem_d[l_ac2].xmem014
+            END IF 
+
+
+            #END add-point
+            
+ 
+         #æ­¤æ®µè½ç±å­æ¨£æ¿a01ç¢ç
+         BEFORE FIELD xmem014
+            #add-point:BEFORE FIELD xmem014
+            
+            #END add-point
+ 
+         
+         ON CHANGE xmem014
+            #add-point:ON CHANGE xmem014
+            
+            #END add-point
+ 
+         
+         AFTER FIELD xmem015
+            
+            IF NOT cl_ap_chk_range(g_xmem_d[l_ac2].xmem015,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem015
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmem015
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem015) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+         
+         BEFORE FIELD xmem015
+            #add-point:BEFORE FIELD xmem015
+            
+            #END add-point
+ 
+         
+         ON CHANGE xmem015
+            #add-point:ON CHANGE xmem015
+            
+            #END add-point
+ 
+         
+         AFTER FIELD xmem016
+            
+            IF NOT cl_ap_chk_range(g_xmem_d[l_ac2].xmem016,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem016
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmem016
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem016) THEN 
+               LET g_xmem_d[l_ac2].xmem017 = g_xmem_d[l_ac2].xmem007 * g_xmem_d[l_ac2].xmem016
+            END IF 
+
+
+            #END add-point
+            
+ 
+        
+         BEFORE FIELD xmem016
+            #add-point:BEFORE FIELD xmem016
+            
+            #END add-point
+ 
+         
+         ON CHANGE xmem016
+            #add-point:ON CHANGE xmem016
+            
+            #END add-point
+ 
+        
+         AFTER FIELD xmem017
+            
+            IF NOT cl_ap_chk_range(g_xmem_d[l_ac2].xmem017,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem017
+            END IF
+ 
+ 
+           
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem017) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+         
+         BEFORE FIELD xmem017
+            #add-point:BEFORE FIELD xmem017
+            
+            #END add-point
+ 
+        
+         ON CHANGE xmem017
+            #add-point:ON CHANGE xmem017
+            
+            #END add-point
+ 
+         
+         AFTER FIELD xmem018
+            
+            IF NOT cl_ap_chk_range(g_xmem_d[l_ac2].xmem018,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem018
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmem018
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem018) THEN 
+               LET g_xmem_d[l_ac2].xmem019 = g_xmem_d[l_ac2].xmem018 * g_xmem_d[l_ac2].xmem007
+            END IF 
+
+
+            #END add-point
+            
+ 
+        
+         BEFORE FIELD xmem018
+            #add-point:BEFORE FIELD xmem018
+            
+            #END add-point
+ 
+        
+         ON CHANGE xmem018
+            #add-point:ON CHANGE xmem018
+            
+            #END add-point
+ 
+        
+         AFTER FIELD xmem019
+            
+            IF NOT cl_ap_chk_range(g_xmem_d[l_ac2].xmem019,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmem019
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmem019
+            IF NOT cl_null(g_xmem_d[l_ac2].xmem019) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+    
+         BEFORE FIELD xmem019
+            #add-point:BEFORE FIELD xmem019
+            
+            #END add-point
+ 
+    
+         ON CHANGE xmem019
+            #add-point:ON CHANGE xmem019
+            
+            #END add-point
+ 
+ 
+
+ 
+         #Ctrlp:input.c.page1.xmem005
+         ON ACTION controlp INFIELD xmem005
+        
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmem_d[l_ac2].xmem005             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_xmam001()                                #呼叫開窗
+
+            LET g_xmem_d[l_ac2].xmem005 = g_qryparam.return1              
+
+            DISPLAY g_xmem_d[l_ac2].xmem005 TO xmem005              #
+
+            NEXT FIELD xmem005                         
+
+
+         ON ACTION controlp INFIELD xmem013
+      
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmem_d[l_ac2].xmem013             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ooca001_1()                                #呼叫開窗
+
+            LET g_xmem_d[l_ac2].xmem013 = g_qryparam.return1              
+
+            DISPLAY g_xmem_d[l_ac2].xmem013 TO xmem013              #
+
+            NEXT FIELD xmem013 
+
+ 
+ 
+     
+         
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:
+            
+            #end add-point
+            
+      END INPUT
+      
+      ON ACTION full_sel
+         CALL axmt610_01_full_sel()
+         LET g_action_choice = "full_sel"
+      
+      ON ACTION all_sel
+         CALL axmt610_01_all_sel()
+         LET g_action_choice = "all_sel"
+     
+      ON ACTION un_sel
+         CALL axmt610_01_un_sel()
+         LET g_action_choice = "un_sel"
+       
+      ON ACTION cancel_sel
+         CALL axmt610_01_cancel_sel()
+         LET g_action_choice = "cancel_sel"
+        
+      ON ACTION make_paper
+         IF NOT cl_null(g_xmem_m.xmem0081) AND NOT cl_null(g_xmem_m.xmem0101) THEN #150610
+            CALL axmt610_01_b_fill2()
+         ELSE
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = '' 
+            LET g_errparam.code   = 'axm-00666'
+            LET g_errparam.popup  = FALSE 
+            CALL cl_err()
+         END IF
+         LET g_action_choice = "make_paper"
+      
+      ON ACTION make_detail
+         IF NOT axmt610_01_ins_xmem() THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = '' 
+            LET g_errparam.code   = 'axm-00089'
+            LET g_errparam.popup  = FALSE 
+            CALL cl_err()
+         ELSE
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = '' 
+            LET g_errparam.code   = 'axm-00088'
+            LET g_errparam.popup  = FALSE 
+            CALL cl_err()
+            #add--2015/05/12 By shiun--(S)
+            IF NOT cl_ask_confirm("apm-00285") THEN
+               LET INT_FLAG = TRUE 
+               LET g_action_choice = "exit"
+               EXIT DIALOG
+            END IF
+            #add--2015/05/12 By shiun--(E)
+         END IF
+         LET g_action_choice = "make_detail"
+         
+      ON ACTION accept
+         LET INT_FLAG = TRUE 
+         LET g_action_choice = "exit"
+         EXIT DIALOG
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         LET g_action_choice = "exit"
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         LET g_action_choice = "exit"
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         LET g_action_choice = "exit"
+         EXIT DIALOG
+   
+      
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+#   IF NOT cl_null(g_action_choice) AND g_action_choice = "exit" THEN
+#      EXIT WHILE
+#   END IF
+#   
+#   END WHILE
+   
+   LET INT_FLAG = FALSE
+   
+   #end add-point
+   
+ 
+   CLOSE WINDOW w_axmt610_01 
+   
+   #add-point:inputæ®µafter input 
+   
+   #end add-point    
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt610_01_b_fill" order="2" ver="5" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axmt610_01_b_fill()
+DEFINE l_n  LIKE type_t.num5
+   CALL g_xmem2_d.clear()
+   IF g_xmel.xmel004 = '2' THEN
+      LET g_sql = "SELECT DISTINCT xmdldocno,xmdlseq,xmdl008,imaal003,imaal004,xmdl009,xmdl017,xmdl018,'','','Y','','Y','','' ",
+                  "  FROM xmdl_t LEFT OUTER JOIN imaal_t ON imaalent = xmdlent AND imaal001 = xmdl008 AND imaal002 = '",g_dlang,"',xmdk_t",
+                  " WHERE xmdkent = xmdlent AND xmdkdocno = xmdldocno AND xmdksite = '",g_site,"' AND xmdk000 = '1' AND xmdlent = ",g_enterprise," AND xmdkstus = 'Y'"
+      IF NOT cl_null(g_xmel.xmel005) THEN
+         LET g_sql = g_sql," AND xmdldocno = '",g_xmel.xmel005,"'" 
+      END IF  
+   END IF
+   
+   IF g_xmel.xmel004 = '1' THEN
+      LET g_sql = "SELECT DISTINCT xmdhdocno,xmdhseq,xmdh006,imaal003,imaal004,xmdh007,xmdh015,xmdh016,'','','Y','','Y','','' ",
+                  "  FROM xmdh_t LEFT OUTER JOIN imaal_t ON imaalent = xmdhent AND imaal001 = xmdh006 AND imaal002 = '",g_dlang,"',xmdg_t",
+                  " WHERE xmdgent = xmdhent AND xmdgdocno = xmdhdocno AND xmdgsite = '",g_site,"' AND xmdhent = ",g_enterprise," AND xmdgstus = 'Y'"
+      IF NOT cl_null(g_xmel.xmel005) THEN
+         LET g_sql = g_sql," AND xmdhdocno = '",g_xmel.xmel005,"'"
+      END IF
+   END IF
+   
+   IF g_xmel.xmel004 = '3' THEN
+      LET g_sql = "SELECT DISTINCT pmdtdocno,pmdtseq,pmdt006,imaal003,imaal004,pmdt007,pmdt019,pmdt020,'','','Y','','Y','','' ",
+                  "  FROM pmdt_t LEFT OUTER JOIN imaal_t ON imaalent = pmdtent AND imaal001 = pmdt006 AND imaal002 = '",g_dlang,"',pmds_t",
+                  " WHERE pmdsent = pmdtent AND pmdsdocno = pmdtdocno AND pmdtent = ",g_enterprise,
+                  "   AND pmds000 = '7' AND pmdsstus = 'Y' AND pmdssite = '",g_site,"'"  
+      IF NOT cl_null(g_xmel.xmel005) THEN
+         LET g_sql = g_sql," AND pmdtdocno = '",g_xmel.xmel005,"'"
+      END IF
+   END IF
+   
+   IF g_xmel.xmel004 = '4' THEN
+      LET g_sql = "SELECT DISTINCT indddocno,inddseq,indd002,imaal003,imaal004,indd004,indd006,indd009,'','','Y','','Y','','' ",
+                  "  FROM indd_t LEFT OUTER JOIN imaal_t ON imaalent = inddent AND imaal001 = indd002 AND imaal002 = '",g_dlang,"',indc_t",
+                  " WHERE indcent = inddent AND indcdocno = indddocno AND inddent = ",g_enterprise," AND indcstus = 'O'",
+                  "   AND indc000 = '1' AND indcsite = '",g_site,"'"
+      IF NOT cl_null(g_xmel.xmel005) THEN
+         LET g_sql = g_sql," AND indddocno = '",g_xmel.xmel005,"'"
+      END IF
+   END IF
+   
+   IF g_xmel.xmel004 = '5' THEN
+      LET g_sql = "SELECT DISTINCT inbbdocno,inbbseq,inbb001,imaal003,imaal004,inbb002,inbb010,inbb011,'','','Y','','Y','','' ",
+                  "  FROM inbb_t LEFT OUTER JOIN imaal_t ON imaalent = inbbent AND imaal001 = inbb001 AND imaal002 = '",g_dlang,"',inba_t",
+                  " WHERE inbaent = inbbent AND inbadocno = inbbdocno AND inbbent = ",g_enterprise," AND inbastus = 'Y'",
+                  "   AND inba001 = '1' AND inbasite = '",g_site,"'"
+      IF NOT cl_null(g_xmel.xmel005) THEN
+         LET g_sql = g_sql," AND inbbdocno = '",g_xmel.xmel005,"'"
+      END IF
+   END IF
+   PREPARE sel_prep1 FROM g_sql
+   DECLARE sel_curs1 CURSOR FOR sel_prep1
+      
+   LET l_cnt = 1
+   FOREACH sel_curs1 INTO g_xmem2_d[l_cnt].xmem001,g_xmem2_d[l_cnt].xmem002,g_xmem2_d[l_cnt].imaa001,g_xmem2_d[l_cnt].imaal003,
+                               g_xmem2_d[l_cnt].imaal004,g_xmem2_d[l_cnt].xmdh007,g_xmem2_d[l_cnt].xmdh015,g_xmem2_d[l_cnt].xmdh016,
+                               g_xmem2_d[l_cnt].xman005,g_xmem2_d[l_cnt].every_num,g_xmem2_d[l_cnt].sel1,g_xmem2_d[l_cnt].full_num,
+                               g_xmem2_d[l_cnt].sel2,g_xmem2_d[l_cnt].unfull_num,g_xmem2_d[l_cnt].space
+       IF SQLCA.SQLCODE THEN
+          EXIT FOREACH
+       END IF
+       LET l_n = 0 
+       SELECT COUNT(*) INTO l_n FROM xmem_t WHERE xmement = g_enterprise AND xmem001 =  g_xmem2_d[l_cnt].xmem001 AND xmem002 = g_xmem2_d[l_cnt].xmem002
+       IF l_n > 0 THEN
+          CONTINUE FOREACH
+       END IF
+       CALL axmt610_01_xman005_ref()
+       SELECT xmam008 INTO g_xmem2_d[l_cnt].every_num FROM xmam_t 
+        WHERE xmament = g_enterprise AND xmam001 = g_xmem2_d[l_cnt].xman005
+       LET g_xmem2_d[l_cnt].full_num =  g_xmem2_d[l_cnt].xmdh016 / g_xmem2_d[l_cnt].every_num
+       LET g_xmem2_d[l_cnt].unfull_num  =  g_xmem2_d[l_cnt].xmdh016 - (g_xmem2_d[l_cnt].every_num * g_xmem2_d[l_cnt].full_num)   
+                    
+       LET g_xmem2_d[l_cnt].space  = g_xmem2_d[l_cnt].unfull_num / g_xmem2_d[l_cnt].every_num 
+       
+       
+       IF g_xmem2_d[l_cnt].sel1 = 'Y' THEN
+          LET g_all_space = g_all_space + g_xmem2_d[l_cnt].full_num
+       END IF
+
+       IF g_xmem2_d[l_cnt].sel2 = 'Y' THEN
+          LET g_all_space = g_all_space + g_xmem2_d[l_cnt].space
+       END IF
+       
+       LET l_cnt = l_cnt + 1
+   END FOREACH
+   LET g_rec_b = l_cnt - 1
+   CALL g_xmem2_d.deleteElement(g_xmem2_d.getLength())  
+#   DISPLAY ARRAY g_xmem2_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b)
+#      BEFORE DISPLAY 
+#         EXIT DISPLAY
+#   END DISPLAY
+
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt610_01_full_sel" order="3" ver="5" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axmt610_01_full_sel()
+DEFINE l_i   LIKE type_t.num5
+   LET g_all_space = 0
+   FOR l_i = 1 TO g_rec_b
+      IF g_xmem2_d[l_i].full_num != 0 THEN
+         LET g_xmem2_d[l_i].sel1 = 'Y'
+         LET g_xmem2_d[l_i].sel2 = 'N'  
+      ELSE
+         LET g_xmem2_d[l_i].sel1 = 'N'
+         LET g_xmem2_d[l_i].sel2 = 'Y'
+      END IF
+      IF g_xmem2_d[l_i].sel1 = 'Y' THEN
+         LET g_all_space = g_all_space + g_xmem2_d[l_i].full_num
+      END IF
+      IF g_xmem2_d[l_i].sel2 = 'Y' THEN
+         LET g_all_space = g_all_space + g_xmem2_d[l_i].space
+      END IF
+   END FOR 
+   DISPLAY g_all_space TO FORMONLY.all_space
+#   DISPLAY ARRAY g_xmem2_d TO s_detail2.* ATTRIBUTES(COUNT=g_xmem2_d.getLength())
+#      BEFORE DISPLAY 
+#         EXIT DISPLAY
+#   END DISPLAY
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt610_01_all_sel" order="4" ver="5" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axmt610_01_all_sel()
+DEFINE l_i   LIKE type_t.num5
+   LET g_all_space = 0
+   FOR l_i = 1 TO g_rec_b
+      LET g_xmem2_d[l_i].sel1 = 'Y'
+      LET g_xmem2_d[l_i].sel2 = 'Y'
+      LET g_all_space = g_all_space + g_xmem2_d[l_i].full_num
+      LET g_all_space = g_all_space + g_xmem2_d[l_i].space
+   END FOR 
+   DISPLAY g_all_space TO FORMONLY.all_space
+#   DISPLAY ARRAY g_xmem2_d TO s_detail2.* ATTRIBUTES(COUNT=g_xmem2_d.getLength())
+#      BEFORE DISPLAY 
+#         EXIT DISPLAY
+#   END DISPLAY
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt610_01_un_sel" order="5" ver="5" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axmt610_01_un_sel()
+DEFINE l_i   LIKE type_t.num5
+   LET g_all_space = 0 
+   FOR l_i = 1 TO g_rec_b
+      LET g_xmem2_d[l_i].sel1 = 'N'
+      LET g_xmem2_d[l_i].sel2 = 'N'
+   END FOR 
+   DISPLAY g_all_space TO FORMONLY.all_space
+#   DISPLAY ARRAY g_xmem2_d TO s_detail2.* ATTRIBUTES(COUNT=g_xmem2_d.getLength())
+#      BEFORE DISPLAY 
+#         EXIT DISPLAY
+#   END DISPLAY   
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt610_01_cancel_sel" order="6" ver="5" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axmt610_01_cancel_sel()
+DEFINE l_i   LIKE type_t.num5
+   LET g_all_space = 0
+   FOR l_i = 1 TO g_rec_b
+      IF g_xmem2_d[l_i].sel1 = 'Y' THEN
+         LET g_xmem2_d[l_i].sel1 = 'N'
+      ELSE
+         LET g_xmem2_d[l_i].sel1 = 'Y'
+      END IF
+      
+      IF g_xmem2_d[l_i].sel2 = 'Y' THEN
+         LET g_xmem2_d[l_i].sel2 = 'N'
+      ELSE
+         LET g_xmem2_d[l_i].sel2 = 'Y'
+      END IF
+      
+      IF g_xmem2_d[l_i].sel1 = 'Y' THEN
+         LET g_all_space = g_all_space + g_xmem2_d[l_i].full_num
+      END IF
+
+      IF g_xmem2_d[l_i].sel2 = 'Y' THEN
+         LET g_all_space = g_all_space + g_xmem2_d[l_i].space
+      END IF
+   END FOR 
+   DISPLAY g_all_space TO FORMONLY.all_space
+#   DISPLAY ARRAY g_xmem2_d TO s_detail2.* ATTRIBUTES(COUNT=g_xmem2_d.getLength())
+#      BEFORE DISPLAY 
+#         EXIT DISPLAY
+#   END DISPLAY  
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt610_01_xman005_ref" order="7" ver="5" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axmt610_01_xman005_ref()
+   DEFINE l_n  LIKE type_t.num5
+DEFINE l_n1  LIKE type_t.num5
+DEFINE l_imaa009  LIKE imaa_t.imaa009
+DEFINE l_sql STRING
+DEFINE l_address  LIKE xmdg_t.xmdg017
+
+   LET l_n = 0
+   SELECT COUNT(*) INTO l_n FROM xman_t WHERE xmanent = g_enterprise  #判断该料号在xman_t是否有资料
+     AND xmansite = g_site AND xman001 = g_xmem2_d[l_cnt].imaa001
+     AND xman002 = g_xmem2_d[l_cnt].xmdh007
+   IF l_n > 0 THEN
+      LET l_n1 = 0
+      SELECT COUNT(*) INTO l_n1 FROM xman_t WHERE xmanent = g_enterprise  #判断客户在xman_t中有多少笔资料  
+         AND xmansite = g_site AND xman001 = g_xmem2_d[l_cnt].imaa001
+         AND xman002 = g_xmem2_d[l_cnt].xmdh007 AND xman003 = g_xmel.xmel003
+      IF l_n1 = 1 THEN            #如果只有一笔就直接抓取包装方式
+         LET l_sql = "SELECT xman005 FROM xman_t WHERE xmanent = ",g_enterprise,  
+                     " AND xmansite = '",g_site,"' AND xman001 = '",g_xmem2_d[l_cnt].imaa001,"'",
+                     " AND xman002 = '",g_xmem2_d[l_cnt].xmdh007,"' AND xman003 = '",g_xmel.xmel003,"'",
+                     " ORDER BY xmanent,xmansite,xman001,xman002,xman003,xman004"
+         PREPARE sel_xman_prep1 FROM l_sql
+         DECLARE sel_xman_curs1 SCROLL CURSOR FOR sel_xman_prep1
+         OPEN sel_xman_curs1
+         FETCH FIRST sel_xman_curs1 INTO g_xmem2_d[l_cnt].xman005
+         CLOSE sel_xman_curs1
+      END IF
+      
+      IF l_n1 > 1 THEN                                       #如果有多笔则抓取对应的联络地址
+         CASE WHEN g_xmel.xmel004 = '1'
+                 SELECT xmdg017 INTO l_address FROM xmdg_t 
+                  WHERE xmdgent = g_enterprise AND xmdgdocno = g_xmel.xmel005
+                  
+                 SELECT xman005 INTO g_xmem2_d[l_cnt].xman005 FROM xman_t 
+                  WHERE xmanent = g_enterprise AND xmansite = g_site
+                    AND xman001 = g_xmem2_d[l_cnt].imaa001 AND xman002 = g_xmem2_d[l_cnt].xmdh007
+                    AND xman003 = g_xmel.xmel003 AND xman004 = l_address   
+                 IF cl_null(g_xmem2_d[l_cnt].xman005) THEN              #如果没抓到包装方式,则抓取第一笔除了联络地址以外的资料
+                    LET l_sql = "SELECT xman005 FROM xman_t WHERE xmanent = ",g_enterprise,  
+                          " AND xmansite = '",g_site,"' AND xman001 = '",g_xmem2_d[l_cnt].imaa001,"'",
+                          " AND xman002 = '",g_xmem2_d[l_cnt].xmdh007,"' AND xman003 = '",g_xmel.xmel003,"'",
+                          " ORDER BY xmanent,xmansite,xman001,xman002,xman003,xman004"
+                    PREPARE sel_xman_prep2 FROM l_sql
+                    DECLARE sel_xman_curs2 SCROLL CURSOR FOR sel_xman_prep2
+                    OPEN sel_xman_curs2
+                    FETCH FIRST sel_xman_curs2 INTO g_xmem2_d[l_cnt].xman005
+                    CLOSE sel_xman_curs2
+                 END IF
+             WHEN g_xmel.xmel004 = '2'   
+                 SELECT xmdk021 INTO l_address FROM xmdk_t  
+                  WHERE xmdkent = g_enterprise AND xmdkdocno = g_xmel.xmel005
+                 
+                 SELECT xman005 INTO g_xmem2_d[l_cnt].xman005 FROM xman_t 
+                  WHERE xmanent = g_enterprise AND xmansite = g_site
+                    AND xman001 = g_xmem2_d[l_cnt].imaa001 AND xman002 = g_xmem2_d[l_cnt].xmdh007
+                    AND xman003 = g_xmel.xmel003 AND xman004 = l_address 
+                 IF cl_null(g_xmem2_d[l_cnt].xman005) THEN              #如果没抓到包装方式,则抓取第一笔除了联络地址以外的资料
+                    LET l_sql = "SELECT xman005 FROM xman_t WHERE xmanent = ",g_enterprise,  
+                          " AND xmansite = '",g_site,"' AND xman001 = '",g_xmem2_d[l_cnt].imaa001,"'",
+                          " AND xman002 = '",g_xmem2_d[l_cnt].xmdh007,"' AND xman003 = '",g_xmel.xmel003,"'",
+                          " ORDER BY xmanent,xmansite,xman001,xman002,xman003,xman004"
+                    PREPARE sel_xman_prep3 FROM l_sql
+                    DECLARE sel_xman_curs3 SCROLL CURSOR FOR sel_xman_prep3
+                    OPEN sel_xman_curs3
+                    FETCH FIRST sel_xman_curs3 INTO g_xmem2_d[l_cnt].xman005
+                    CLOSE sel_xman_curs3
+                 END IF   
+         END CASE
+      END IF
+      IF l_n1 = 0 THEN  #如果没有这个客户,则抓取料件条件下的第一笔
+         LET l_sql = "SELECT xman005 FROM xman_t WHERE xmanent = ",g_enterprise,  
+                     " AND xmansite = '",g_site,"' AND xman001 = '",g_xmem2_d[l_cnt].imaa001,"'",
+                     " AND xman002 = '",g_xmem2_d[l_cnt].xmdh007,"'",
+                     " ORDER BY xmanent,xmansite,xman001,xman002,xman003,xman004"
+         PREPARE sel_xman_prep4 FROM l_sql
+         DECLARE sel_xman_curs4 SCROLL CURSOR FOR sel_xman_prep4
+         OPEN sel_xman_curs4
+         FETCH FIRST sel_xman_curs4 INTO g_xmem2_d[l_cnt].xman005
+         CLOSE sel_xman_curs4
+      END IF
+   ELSE
+      LET l_sql = "SELECT xman005 FROM xman_t WHERE xmanent = ",g_enterprise,  
+                     " AND xmansite = '",g_site,"'",
+                     " ORDER BY xmanent,xmansite,xman001,xman002,xman003,xman004"
+      PREPARE sel_xman_prep5 FROM l_sql
+      DECLARE sel_xman_curs5 SCROLL CURSOR FOR sel_xman_prep5
+      OPEN sel_xman_curs5
+      FETCH FIRST sel_xman_curs5 INTO g_xmem2_d[l_cnt].xman005
+      CLOSE sel_xman_curs5
+   END IF
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt610_01_b_fill2" order="8" ver="7" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axmt610_01_b_fill2()
+DEFINE l_cnt1  LIKE type_t.num5
+DEFINE l_i     LIKE type_t.num5
+DEFINE l_imaa  RECORD LIKE imaa_t.*
+DEFINE l_imaa_1 RECORD LIKE imaa_t.*
+DEFINE l_xmam004 LIKE xmam_t.xmam004
+DEFINE l_imaa016 LIKE imaa_t.imaa016
+DEFINE l_xmemseq LIKE xmem_t.xmemseq
+DEFINE l_xmem004 LIKE xmem_t.xmem004
+DEFINE l_xmam   RECORD LIKE xmam_t.*
+   LET l_cnt1 = 1
+   CALL g_xmem_d.clear()
+   SELECT MAX(xmemseq) INTO l_xmemseq FROM xmem_t WHERE xmement = g_enterprise
+      AND xmemdocno = g_xmel.xmeldocno
+   IF cl_null(l_xmemseq) THEN LET l_xmemseq = 1 END IF
+   
+   FOR l_i = 1 TO g_rec_b
+      SELECT MAX(xmem004) INTO l_xmem004 FROM xmem_t WHERE xmement = g_enterprise
+         AND xmemdocno = g_xmel.xmeldocno
+      IF cl_null(l_xmem004) THEN LET l_xmem004 = 1 END IF
+      IF g_xmem2_d[l_i].sel1 = 'Y' AND g_xmem2_d[l_i].full_num != 0 THEN
+         INITIALIZE l_imaa.* TO NULL
+         INITIALIZE l_imaa_1.* TO NULL
+         SELECT * INTO l_imaa.* FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem2_d[l_i].imaa001
+         SELECT xmam004 INTO l_xmam004 FROM xmam_t WHERE xmament = g_enterprise AND xmam001 = g_xmem2_d[l_i].xman005
+         SELECT * INTO l_imaa_1.* FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = l_xmam004
+         LET g_xmem_d[l_cnt1].xmemseq = l_xmemseq
+         LET g_xmem_d[l_cnt1].xmem001 = g_xmem2_d[l_i].xmem001
+         LET g_xmem_d[l_cnt1].xmem002 = g_xmem2_d[l_i].xmem002
+         LET g_xmem_d[l_cnt1].xmem003 = g_xmem2_d[l_i].imaa001
+         LET g_xmem_d[l_cnt1].xmem003_desc = g_xmem2_d[l_i].imaal003
+         LET g_xmem_d[l_cnt1].xmem003_desc_desc = g_xmem2_d[l_i].imaal004
+         LET g_xmem_d[l_cnt1].xmem004 = l_xmem004
+         LET g_xmem_d[l_cnt1].xmem005 = g_xmem2_d[l_i].xman005
+         LET g_xmem_d[l_cnt1].xmem006 = g_xmem2_d[l_i].every_num
+         LET g_xmem_d[l_cnt1].xmem007 = g_xmem2_d[l_i].full_num
+         LET g_xmem_d[l_cnt1].xmem008 = g_xmem_m.xmem0081
+         LET g_xmem_d[l_cnt1].xmem009 = g_xmem_m.xmem0091
+          # LET g_xmem_d[l_cnt1].xmem010 = g_xmem_m.xmem0101  xujingmark
+         IF l_cnt1 = 1 THEN
+            LET g_xmem_d[l_cnt1].xmem010 = g_xmem_m.xmem0101 
+         ELSE
+            LET g_xmem_d[l_cnt1].xmem010 = g_xmem_d[l_cnt1-1].xmem011 + 1
+         END IF
+         IF g_xmem_d[l_cnt1].xmem007 < 1 THEN
+            LET g_xmem_d[l_cnt1].xmem011 = g_xmem_d[l_cnt1].xmem010
+         ELSE
+            LET g_xmem_d[l_cnt1].xmem011 = g_xmem_d[l_cnt1].xmem010 + g_xmem_d[l_cnt1].xmem007 - 1
+         END IF
+         LET g_xmem_d[l_cnt1].xmem012 = g_xmem2_d[l_i].xmdh016
+#         LET g_xmem_d[l_cnt1].xmem013 = l_imaa.imaa018
+         #add--2015/05/12 By shiun--(S)
+         IF cl_null(l_imaa_1.imaa016) THEN
+            LET l_imaa_1.imaa016 = 0
+         END IF
+         IF cl_null(l_imaa.imaa016) THEN
+            LET l_imaa.imaa016 = 0
+         END IF
+         IF cl_null(l_imaa.imaa017) THEN
+            LET l_imaa.imaa017 = 0
+         END IF
+         #add--2015/05/12 By shiun--(E)
+         SELECT * INTO l_xmam.* FROM xmam_t 
+          WHERE xmament = g_enterprise AND xmam001 = g_xmem2_d[l_i].xman005
+#        IF cl_null(l_xmam.xmam016) THEN
+#           SELECT imaa018 INTO l_xmam.xmam016 FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem_d[l_cnt1].xmem003
+#        END IF
+         IF cl_null(l_xmam.xmam013) THEN
+            SELECT imaa025 INTO l_xmam.xmam013 FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem_d[l_cnt1].xmem003
+         END IF
+         IF g_xmel.xmel011 = '1' THEN           #150610 add
+            LET g_xmem_d[l_cnt1].xmem013 = 'KG'
+         ELSE
+            LET g_xmem_d[l_cnt1].xmem013 = 'PON'
+         END IF
+#         LET g_xmem_d[l_ac].xmem006 = l_xmam.xmam008
+         #150617 by whitney add start
+         IF cl_null(l_imaa.imaa018) THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'axm-00689'
+            LET g_errparam.replace[1] = g_xmem2_d[l_i].imaa001
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+         ELSE
+         #150617 by whitney add end
+            CALL s_aooi250_convert_qty1(g_xmem_d[l_cnt1].xmem003,l_imaa.imaa018,g_xmem_d[l_cnt1].xmem013,l_imaa.imaa016) 
+                 RETURNING g_success,l_imaa.imaa016
+         END IF  #150617 by whitney add
+         IF g_success THEN
+            LET g_xmem_d[l_cnt1].xmem014 = g_xmem_d[l_cnt1].xmem006 * l_imaa.imaa016 #l_imaa.imaa017  150610
+            CALL s_aooi250_convert_qty1(g_xmem_d[l_cnt1].xmem003,l_xmam.xmam016,g_xmem_d[l_cnt1].xmem013,l_xmam.xmam015) 
+               RETURNING g_success,l_xmam.xmam015
+            IF g_success THEN
+               LET g_xmem_d[l_cnt1].xmem016 = g_xmem_d[l_cnt1].xmem014 + l_xmam.xmam015
+            END IF
+         END IF
+         
+#        LET g_xmem_d[l_cnt1].xmem016 = g_xmem_d[l_cnt1].xmem006 * (l_imaa_1.imaa016 + l_imaa.imaa016)
+         
+
+         
+#        LET g_xmem_d[l_cnt1].xmem013 = l_xmam.xmam016   150610 mark
+         IF cl_null(l_xmam.xmam013) THEN
+            LET l_xmam.xmam013 = 0
+         END IF
+         IF g_xmel.xmel012 = '2' THEN
+            LET g_xmem_d[l_cnt1].xmem018 = l_xmam.xmam013 * 0.0000353
+         ELSE
+            LET g_xmem_d[l_cnt1].xmem018 = l_xmam.xmam013 * 0.0000353 / 35.315
+         END IF
+         IF NOT cl_null(g_xmem_d[l_cnt1].xmem007) THEN
+            IF NOT cl_null(g_xmem_d[l_cnt1].xmem014) THEN
+               LET g_xmem_d[l_cnt1].xmem015 = g_xmem_d[l_cnt1].xmem014 * g_xmem_d[l_cnt1].xmem007
+            END IF
+            IF NOT cl_null(g_xmem_d[l_cnt1].xmem016) THEN
+               LET g_xmem_d[l_cnt1].xmem017 = g_xmem_d[l_cnt1].xmem016 * g_xmem_d[l_cnt1].xmem007
+            END IF 
+            IF NOT cl_null(g_xmem_d[l_cnt1].xmem018) THEN
+               LET g_xmem_d[l_cnt1].xmem019 = g_xmem_d[l_cnt1].xmem018 * g_xmem_d[l_cnt1].xmem007
+            END IF 
+            
+            IF NOT cl_null(g_xmem_d[l_cnt1].xmem006) THEN
+               LET g_xmem_d[l_cnt1].xmem012 = g_xmem_d[l_cnt1].xmem006 * g_xmem_d[l_cnt1].xmem007
+            END IF
+         END IF      
+         
+         LET l_cnt1 = l_cnt1 + 1
+         LET l_xmem004 = l_xmem004 + 1
+         LET l_xmemseq = l_xmemseq + 1
+      END IF
+      
+      IF g_xmem2_d[l_i].sel2 = 'Y' AND g_xmem2_d[l_i].unfull_num != 0 THEN
+         INITIALIZE l_imaa.* TO NULL
+         INITIALIZE l_imaa_1.* TO NULL
+         SELECT * INTO l_imaa.* FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem2_d[l_i].imaa001
+         SELECT xmam004 INTO l_xmam004 FROM xmam_t WHERE xmament = g_enterprise AND xmam001 = g_xmem2_d[l_i].xman005
+         SELECT * INTO l_imaa_1.* FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = l_xmam004
+         LET g_xmem_d[l_cnt1].xmemseq = l_xmemseq
+         LET g_xmem_d[l_cnt1].xmem001 = g_xmem2_d[l_i].xmem001
+         LET g_xmem_d[l_cnt1].xmem002 = g_xmem2_d[l_i].xmem002
+         LET g_xmem_d[l_cnt1].xmem003 = g_xmem2_d[l_i].imaa001
+         LET g_xmem_d[l_cnt1].xmem003_desc = g_xmem2_d[l_i].imaal003
+         LET g_xmem_d[l_cnt1].xmem003_desc_desc = g_xmem2_d[l_i].imaal004
+         LET g_xmem_d[l_cnt1].xmem004 = l_xmem004
+         LET g_xmem_d[l_cnt1].xmem005 = g_xmem2_d[l_i].xman005
+         LET g_xmem_d[l_cnt1].xmem006 = g_xmem2_d[l_i].unfull_num
+         LET g_xmem_d[l_cnt1].xmem007 = g_xmem2_d[l_i].space
+         LET g_xmem_d[l_cnt1].xmem008 = g_xmem_m.xmem0081
+         LET g_xmem_d[l_cnt1].xmem009 = g_xmem_m.xmem0091
+          # LET g_xmem_d[l_cnt1].xmem010 = g_xmem_m.xmem0101  xujingmark
+         IF l_cnt1 = 1 THEN
+            LET g_xmem_d[l_cnt1].xmem010 = g_xmem_m.xmem0101 
+         ELSE
+            LET g_xmem_d[l_cnt1].xmem010 = g_xmem_d[l_cnt1-1].xmem011 + 1
+         END IF
+         IF g_xmem_d[l_cnt1].xmem007 < 1 THEN
+            LET g_xmem_d[l_cnt1].xmem011 = g_xmem_d[l_cnt1].xmem010
+         ELSE
+            LET g_xmem_d[l_cnt1].xmem011 = g_xmem_d[l_cnt1].xmem010 + g_xmem_d[l_cnt1].xmem007 - 1
+         END IF
+         LET g_xmem_d[l_cnt1].xmem012 = g_xmem2_d[l_i].xmdh016
+#         LET g_xmem_d[l_cnt1].xmem013 = l_imaa.imaa018
+         #add--2015/05/12 By shiun--(S)
+         IF cl_null(l_imaa_1.imaa016) THEN
+            LET l_imaa_1.imaa016 = 0
+         END IF
+         IF cl_null(l_imaa.imaa016) THEN
+            LET l_imaa.imaa016 = 0
+         END IF
+         IF cl_null(l_imaa.imaa017) THEN
+            LET l_imaa.imaa017 = 0
+         END IF
+         #add--2015/05/12 By shiun--(E)
+         SELECT * INTO l_xmam.* FROM xmam_t 
+          WHERE xmament = g_enterprise AND xmam001 = g_xmem2_d[l_i].xman005
+#        IF cl_null(l_xmam.xmam016) THEN
+#           SELECT imaa018 INTO l_xmam.xmam016 FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem_d[l_cnt1].xmem003
+#        END IF
+         IF cl_null(l_xmam.xmam013) THEN
+            SELECT imaa025 INTO l_xmam.xmam013 FROM imaa_t WHERE imaaent = g_enterprise AND imaa001 = g_xmem_d[l_cnt1].xmem003
+         END IF
+         IF g_xmel.xmel011 = '1' THEN           #150610 add
+            LET g_xmem_d[l_cnt1].xmem013 = 'KG'
+         ELSE
+            LET g_xmem_d[l_cnt1].xmem013 = 'PON'
+         END IF
+#         LET g_xmem_d[l_ac].xmem006 = l_xmam.xmam008 
+         #150617 by whitney add start
+         IF cl_null(l_imaa.imaa018) THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'axm-00689'
+            LET g_errparam.replace[1] = g_xmem2_d[l_i].imaa001
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+         ELSE
+         #150617 by whitney add end
+            CALL s_aooi250_convert_qty1(g_xmem_d[l_cnt1].xmem003,l_imaa.imaa018,g_xmem_d[l_cnt1].xmem013,l_imaa.imaa016) 
+                 RETURNING g_success,l_imaa.imaa016
+         END IF  #150617 by whitney add
+         IF g_success THEN
+            LET g_xmem_d[l_cnt1].xmem014 = g_xmem_d[l_cnt1].xmem006 * l_imaa.imaa016 #l_imaa.imaa017  150610
+            CALL s_aooi250_convert_qty1(g_xmem_d[l_cnt1].xmem003,l_xmam.xmam016,g_xmem_d[l_cnt1].xmem013,l_xmam.xmam015) 
+               RETURNING g_success,l_xmam.xmam015
+            IF g_success THEN
+               LET g_xmem_d[l_cnt1].xmem016 = g_xmem_d[l_cnt1].xmem014 + l_xmam.xmam015
+            END IF
+         END IF
+         
+#        LET g_xmem_d[l_cnt1].xmem016 = g_xmem_d[l_cnt1].xmem006 * (l_imaa_1.imaa016 + l_imaa.imaa016)
+         
+
+         
+#        LET g_xmem_d[l_cnt1].xmem013 = l_xmam.xmam016   150610 mark
+         #add--2015/05/12 By shiun--(S)
+         IF cl_null(l_xmam.xmam013) THEN
+            LET l_xmam.xmam013 = 0
+         END IF
+         #add--2015/05/12 By shiun--(E)
+         IF g_xmel.xmel012 = '2' THEN
+            LET g_xmem_d[l_cnt1].xmem018 = l_xmam.xmam013 * 0.0000353
+         ELSE
+            LET g_xmem_d[l_cnt1].xmem018 = l_xmam.xmam013 * 0.0000353 / 35.315
+         END IF
+         IF NOT cl_null(g_xmem_d[l_cnt1].xmem007) THEN
+            IF NOT cl_null(g_xmem_d[l_cnt1].xmem014) THEN
+               LET g_xmem_d[l_cnt1].xmem015 = g_xmem_d[l_cnt1].xmem014 * g_xmem_d[l_cnt1].xmem007
+            END IF
+            IF NOT cl_null(g_xmem_d[l_cnt1].xmem016) THEN
+               LET g_xmem_d[l_cnt1].xmem017 = g_xmem_d[l_cnt1].xmem016 * g_xmem_d[l_cnt1].xmem007
+            END IF 
+            IF NOT cl_null(g_xmem_d[l_cnt1].xmem018) THEN
+               LET g_xmem_d[l_cnt1].xmem019 = g_xmem_d[l_cnt1].xmem018 * g_xmem_d[l_cnt1].xmem007
+            END IF 
+            
+            IF NOT cl_null(g_xmem_d[l_cnt1].xmem006) THEN
+               LET g_xmem_d[l_cnt1].xmem012 = g_xmem_d[l_cnt1].xmem006 * g_xmem_d[l_cnt1].xmem007
+            END IF
+         END IF      
+         
+         LET l_cnt1 = l_cnt1 + 1
+         LET l_xmem004 = l_xmem004 + 1
+         LET l_xmemseq = l_xmemseq + 1
+      END IF
+   END FOR
+   LET g_rec_b2 = l_cnt1 - 1
+#   CALL g_xmem_d.deleteElement(g_xmem_d.getLength())  
+#   DISPLAY ARRAY g_xmem_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b2)
+#      BEFORE DISPLAY 
+#         EXIT DISPLAY
+#   END DISPLAY
+END FUNCTION]]>
+  </point>
+  <point name="function.axmt610_01_ins_xmem" order="9" ver="5" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION axmt610_01_ins_xmem()
+DEFINE l_i LIKE type_t.num5
+DEFINE l_xmem  RECORD LIKE xmem_t.*
+   WHENEVER ERROR CONTINUE
+   FOR l_i =1 TO g_rec_b2
+      LET l_xmem.xmement = g_enterprise
+      LET l_xmem.xmemdocno = g_xmel.xmeldocno
+      LET l_xmem.xmemseq = g_xmem_d[l_i].xmemseq
+      LET l_xmem.xmem001 = g_xmem_d[l_i].xmem001
+      LET l_xmem.xmem002 = g_xmem_d[l_i].xmem002
+      LET l_xmem.xmem003 = g_xmem_d[l_i].xmem003
+      LET l_xmem.xmem004 = g_xmem_d[l_i].xmem004
+      LET l_xmem.xmem005 = g_xmem_d[l_i].xmem005
+      LET l_xmem.xmem006 = g_xmem_d[l_i].xmem006
+      LET l_xmem.xmem007 = g_xmem_d[l_i].xmem007
+      LET l_xmem.xmem008 = g_xmem_d[l_i].xmem008
+      LET l_xmem.xmem009 = g_xmem_d[l_i].xmem009
+      LET l_xmem.xmem010 = g_xmem_d[l_i].xmem010
+      LET l_xmem.xmem011 = g_xmem_d[l_i].xmem011
+      LET l_xmem.xmem012 = g_xmem_d[l_i].xmem012
+      LET l_xmem.xmem013 = g_xmem_d[l_i].xmem013
+      LET l_xmem.xmem014 = g_xmem_d[l_i].xmem014
+      LET l_xmem.xmem015 = g_xmem_d[l_i].xmem015
+      LET l_xmem.xmem016 = g_xmem_d[l_i].xmem016
+      LET l_xmem.xmem017 = g_xmem_d[l_i].xmem017
+      LET l_xmem.xmem018 = g_xmem_d[l_i].xmem018
+      LET l_xmem.xmem019 = g_xmem_d[l_i].xmem019
+      
+      INSERT INTO xmem_t VALUES (l_xmem.*)
+      
+      IF SQLCA.SQLCODE THEN
+         RETURN FALSE
+      END IF
+   END FOR
+   RETURN TRUE
+END FUNCTION]]>
+  </point>
+  <point name="free_style.variable" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[ TYPE type_g_xmem2_d RECORD
+             xmem001   LIKE xmem_t.xmem001,
+             xmem002   LIKE xmem_t.xmEm002,
+             imaa001   LIKE imaa_t.imaa001,
+             imaal003  LIKE imaal_t.imaal003,
+             imaal004  LIKE imaal_t.imaal004,
+             xmdh007   LIKE xmdh_t.xmdh007,
+             xmdh015   LIKE xmdh_t.xmdh015,
+             xmdh016   LIKE xmdh_t.xmdh016,
+             xman005   LIKE xman_t.xman005,
+             every_num LIKE type_t.num5,
+             sel1      LIKE type_t.chr1,
+             full_num  LIKE type_t.num5,
+             sel2      LIKE type_t.chr1,
+             unfull_num LIKE type_t.num5,
+             space     LIKE type_t.num20_6
+                       END RECORD
+
+ TYPE type_g_xmem_d        RECORD
+       xmemseq LIKE xmem_t.xmemseq, 
+   xmem001 LIKE xmem_t.xmem001, 
+   xmem002 LIKE xmem_t.xmem002, 
+   xmem003 LIKE xmem_t.xmem003, 
+   xmem003_desc LIKE type_t.chr500, 
+   xmem003_desc_desc LIKE type_t.chr500,
+   xmem004 LIKE xmem_t.xmem004, 
+   xmem005 LIKE xmem_t.xmem005, 
+   xmem006 LIKE xmem_t.xmem006, 
+   xmem007 LIKE type_t.num20_6, 
+   xmem008 LIKE xmem_t.xmem008, 
+   xmem009 LIKE xmem_t.xmem009, 
+   xmem010 LIKE xmem_t.xmem010, 
+   xmem011 LIKE xmem_t.xmem011, 
+   xmem012 LIKE xmem_t.xmem012, 
+   xmem013 LIKE xmem_t.xmem013, 
+   xmem014 LIKE xmem_t.xmem014, 
+   xmem015 LIKE xmem_t.xmem015, 
+   xmem016 LIKE xmem_t.xmem016, 
+   xmem017 LIKE xmem_t.xmem017, 
+   xmem018 LIKE xmem_t.xmem018, 
+   xmem019 LIKE xmem_t.xmem019
+       END RECORD
+TYPE type_g_xmem_m    RECORD
+          xmem0081 LIKE xmem_t.xmem008,
+          xmem0101 LIKE xmem_t.xmem010,
+          xmem0091 LIKE xmem_t.xmem009
+             END RECORD 
+ 
+DEFINE g_xmem_d          DYNAMIC ARRAY OF type_g_xmem_d
+DEFINE g_xmem_d_t        type_g_xmem_d
+
+DEFINE g_xmem2_d          DYNAMIC ARRAY OF type_g_xmem2_d
+DEFINE g_xmem2_d_t        type_g_xmem2_d
+ 
+DEFINE g_xmemdocno_t   LIKE xmem_t.xmemdocno    #Keyå¼åä»½
+DEFINE g_xmemseq_t      LIKE xmem_t.xmemseq    #Keyå¼åä»½
+DEFINE g_xmem_m          type_g_xmem_m
+ 
+DEFINE l_ac                  LIKE type_t.num5
+DEFINE l_ac2                 LIKE type_t.num5
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_refç¨é£å
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_refç¨é£å
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_refç¨é£å
+DEFINE g_rec_b               LIKE type_t.num5  
+DEFINE g_rec_b2              LIKE type_t.num5
+DEFINE g_detail_idx          LIKE type_t.num5 
+DEFINE g_sql                 STRING 
+DEFINE l_cnt                 LIKE type_t.num5
+DEFINE g_full_num        LIKE type_t.num5
+DEFINE g_unfull_num      LIKE type_t.num5
+DEFINE g_all_space       LIKE type_t.num20_6
+DEFINE g_action_choice   STRING]]>
+  </point>
+  <point name="global.variable" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE g_xmel  RECORD LIKE xmel_t.*]]>
+  </point>
+  <point name="input.a.page1.xmem004" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xmem_d[l_ac].xmem004) THEN 
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1.xmem005" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xmem_d[l_ac].xmem005) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist_and_ref_val("v_imaf001_2") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1.xmem006" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xmem_d[l_ac].xmem006) THEN 
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1.xmem007" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xmem_d[l_ac].xmem007) THEN 
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1.xmem010" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xmem_d[l_ac].xmem010) THEN 
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1.xmem011" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xmem_d[l_ac].xmem011) THEN 
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1.xmem012" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xmem_d[l_ac].xmem012) THEN 
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1.xmem013" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xmem_d[l_ac].xmem013) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist_and_ref_val("v_ooca001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1.xmem014" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xmem_d[l_ac].xmem014) THEN 
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1.xmem015" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xmem_d[l_ac].xmem015) THEN 
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1.xmem016" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xmem_d[l_ac].xmem016) THEN 
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1.xmem017" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xmem_d[l_ac].xmem017) THEN 
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1.xmem018" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xmem_d[l_ac].xmem018) THEN 
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1.xmem019" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xmem_d[l_ac].xmem019) THEN 
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1.xmemdocno" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_xmem_d[g_detail_idx].xmemdocno IS NOT NULL AND g_xmem_d[g_detail_idx].xmemseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmem_d[g_detail_idx].xmemdocno != g_xmem_d_t.xmemdocno OR g_xmem_d[g_detail_idx].xmemseq != g_xmem_d_t.xmemseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmem_t WHERE "||"xmement = '" ||g_enterprise|| "' AND "||"xmemdocno = '"||g_xmem_d[g_detail_idx].xmemdocno ||"' AND "|| "xmemseq = '"||g_xmem_d[g_detail_idx].xmemseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.xmemseq" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_xmem_d[g_detail_idx].xmemdocno IS NOT NULL AND g_xmem_d[g_detail_idx].xmemseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmem_d[g_detail_idx].xmemdocno != g_xmem_d_t.xmemdocno OR g_xmem_d[g_detail_idx].xmemseq != g_xmem_d_t.xmemseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmem_t WHERE "||"xmement = '" ||g_enterprise|| "' AND "||"xmemdocno = '"||g_xmem_d[g_detail_idx].xmemdocno ||"' AND "|| "xmemseq = '"||g_xmem_d[g_detail_idx].xmemseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.c.page1.xmem005" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmem_d[l_ac].xmem005             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_imaf001_12()                                #呼叫開窗
+
+            LET g_xmem_d[l_ac].xmem005 = g_qryparam.return1              
+
+            DISPLAY g_xmem_d[l_ac].xmem005 TO xmem005              #
+
+            NEXT FIELD xmem005                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.page1.xmem013" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmem_d[l_ac].xmem013             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ooca001_1()                                #呼叫開窗
+
+            LET g_xmem_d[l_ac].xmem013 = g_qryparam.return1              
+
+            DISPLAY g_xmem_d[l_ac].xmem013 TO xmem013              #
+
+            NEXT FIELD xmem013                          #返回原欄位
+
+]]>
+  </point>
+  <point name="show.body.reference" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xmem_d[l_ac].xmem003
+            CALL ap_ref_array2(g_ref_fields,"SELECT imaal003 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xmem_d[l_ac].xmem003_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xmem_d[l_ac].xmem003_desc
+]]>
+  </point>
+  <section id="axmt610_01.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:7,PR版次:7) Build-000061
+#+ 
+#+ Filename...: axmt610_01
+#+ Description: 整批產生包裝單身子作業
+#+ Creator....: 01996(2014-05-21 17:00:26)
+#+ Modifier...: 01996(2015-06-11 09:59:22) -SD/PR-
+]]>
+  </section>
+  <section id="axmt610_01.free_style_variable" ver="1" status="" src="s" readonly="">
+    <![CDATA[#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="axmt610_01.global" ver="5" status="" src="s" readonly="">
+    <![CDATA[#應用 p00 樣板自動產生(Version:2)
+#add-point:註解編寫項目
+{<point name="main.memo" />}
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="main.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+]]>
+  </section>
+  <section id="axmt610_01.global_variable" ver="1" status="" src="s" readonly="">
+    <![CDATA[#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="axmt610_01.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="axmt610_01.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammt350_01" module="amm" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="01533" crtdt="2013-12-26 10:47:41" modid="01533" moddt="2013-12-27 16:03:33" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="會員卡績點規則申請作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mmbqunit,mmbqsite,mmbqdocno,mmbq001,mmbq002,mmbq003,mmbq004,mmbq004_desc(chr500),mmbqacti"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="amm" filename="ammt350_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="mmbqunit,mmbqsite,mmbqdocno,mmbq001,mmbq002,mmbq003,mmbq004,mmbq004_desc,mmbqacti" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="mmbqunit"/>
+      <column id="mmbqsite"/>
+      <column id="mmbqdocno"/>
+      <column id="mmbq001"/>
+      <column id="mmbq002"/>
+      <column id="mmbq003"/>
+      <column id="mmbq004">
+        <after/>
+        <controlp form="q_mmbq004" state="c"/>
+      </column>
+      <column id="mmbq004_desc"/>
+      <column id="mmbqacti" type="S" default="Y"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="mmbq_t" page="1" linked="" pk="mmbqdocno,mmbq003,mmbq004">
+      <sql id="forupd_sql_detail" query="SELECT mmbqunit,mmbqsite,mmbqdocno,mmbq001,mmbq002,mmbq003,mmbq004,&apos;&apos;,mmbqacti FROM mmbq_t WHERE mmbqent=? AND mmbqdocno=? AND mmbq003=? AND mmbq004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mmbqunit,mmbqsite,mmbqdocno,mmbq001,mmbq002,mmbq003,mmbq004,&apos;&apos;,mmbqacti FROM mmbq_t WHERE mmbqent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

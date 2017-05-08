@@ -1,0 +1,763 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axrt400_11.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0005(2014-08-18 14:53:12), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000250
+#+ Filename...: axrt400_11
+#+ Description: 收款沖銷單身其他資訊維護
+#+ Creator....: 01727(2013-11-26 16:33:35)
+#+ Modifier...: 01727 -SD/PR-
+
+{</section>}
+
+{<section id="axrt400_11.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_xrce_m        RECORD
+       xrceseq LIKE xrce_t.xrceseq, 
+   xrce002 LIKE xrce_t.xrce002, 
+   xrce015 LIKE xrce_t.xrce015, 
+   xrce003 LIKE xrce_t.xrce003, 
+   xrce024 LIKE xrce_t.xrce024, 
+   xrce025 LIKE xrce_t.xrce025, 
+   xrce009 LIKE xrce_t.xrce009, 
+   xrce017 LIKE xrce_t.xrce017, 
+   xrce017_desc LIKE type_t.chr80, 
+   xrce018 LIKE xrce_t.xrce018, 
+   xrce018_desc LIKE type_t.chr80, 
+   xrce019 LIKE xrce_t.xrce019, 
+   xrce019_desc LIKE type_t.chr80, 
+   xrce020 LIKE xrce_t.xrce020, 
+   xrce020_desc LIKE type_t.chr80, 
+   xrce016 LIKE xrce_t.xrce016, 
+   xrce016_desc LIKE type_t.chr80, 
+   xrce021 LIKE xrce_t.xrce021, 
+   xrce021_desc LIKE type_t.chr80, 
+   xrce022 LIKE xrce_t.xrce022, 
+   xrce022_desc LIKE type_t.chr80, 
+   xrce023 LIKE xrce_t.xrce023, 
+   xrce023_desc LIKE type_t.chr80, 
+   xrce011 LIKE xrce_t.xrce011, 
+   xrce011_desc LIKE type_t.chr80, 
+   xrce012 LIKE xrce_t.xrce012, 
+   xrce012_desc LIKE type_t.chr80, 
+   xrce026 LIKE xrce_t.xrce026
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_xrce_m        type_g_xrce_m
+ 
+   DEFINE g_xrceseq_t LIKE xrce_t.xrceseq
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="axrt400_11.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axrt400_11(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axrt400_11 WITH FORM cl_ap_formpath("axr","axrt400_11")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_xrce_m.xrceseq,g_xrce_m.xrce002,g_xrce_m.xrce015,g_xrce_m.xrce003,g_xrce_m.xrce024, 
+          g_xrce_m.xrce025,g_xrce_m.xrce009,g_xrce_m.xrce017,g_xrce_m.xrce018,g_xrce_m.xrce019,g_xrce_m.xrce020, 
+          g_xrce_m.xrce016,g_xrce_m.xrce021,g_xrce_m.xrce022,g_xrce_m.xrce023,g_xrce_m.xrce011,g_xrce_m.xrce012, 
+          g_xrce_m.xrce026 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrceseq
+            #add-point:BEFORE FIELD xrceseq name="input.b.xrceseq"
+            {<point name="input.b.xrceseq" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrceseq
+            
+            #add-point:AFTER FIELD xrceseq name="input.a.xrceseq"
+            {<point name="input.a.xrceseq" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrceseq
+            #add-point:ON CHANGE xrceseq name="input.g.xrceseq"
+            {<point name="input.g.xrceseq" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrce002
+            #add-point:BEFORE FIELD xrce002 name="input.b.xrce002"
+            {<point name="input.b.xrce002" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrce002
+            
+            #add-point:AFTER FIELD xrce002 name="input.a.xrce002"
+            {<point name="input.a.xrce002" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrce002
+            #add-point:ON CHANGE xrce002 name="input.g.xrce002"
+            {<point name="input.g.xrce002" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrce015
+            #add-point:BEFORE FIELD xrce015 name="input.b.xrce015"
+            {<point name="input.b.xrce015" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrce015
+            
+            #add-point:AFTER FIELD xrce015 name="input.a.xrce015"
+            {<point name="input.a.xrce015" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrce015
+            #add-point:ON CHANGE xrce015 name="input.g.xrce015"
+            {<point name="input.g.xrce015" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrce003
+            #add-point:BEFORE FIELD xrce003 name="input.b.xrce003"
+            {<point name="input.b.xrce003" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrce003
+            
+            #add-point:AFTER FIELD xrce003 name="input.a.xrce003"
+            {<point name="input.a.xrce003" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrce003
+            #add-point:ON CHANGE xrce003 name="input.g.xrce003"
+            {<point name="input.g.xrce003" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrce024
+            #add-point:BEFORE FIELD xrce024 name="input.b.xrce024"
+            {<point name="input.b.xrce024" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrce024
+            
+            #add-point:AFTER FIELD xrce024 name="input.a.xrce024"
+            {<point name="input.a.xrce024" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrce024
+            #add-point:ON CHANGE xrce024 name="input.g.xrce024"
+            {<point name="input.g.xrce024" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrce025
+            #add-point:BEFORE FIELD xrce025 name="input.b.xrce025"
+            {<point name="input.b.xrce025" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrce025
+            
+            #add-point:AFTER FIELD xrce025 name="input.a.xrce025"
+            {<point name="input.a.xrce025" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrce025
+            #add-point:ON CHANGE xrce025 name="input.g.xrce025"
+            {<point name="input.g.xrce025" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrce009
+            #add-point:BEFORE FIELD xrce009 name="input.b.xrce009"
+            {<point name="input.b.xrce009" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrce009
+            
+            #add-point:AFTER FIELD xrce009 name="input.a.xrce009"
+            {<point name="input.a.xrce009" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrce009
+            #add-point:ON CHANGE xrce009 name="input.g.xrce009"
+            {<point name="input.g.xrce009" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrce017
+            
+            #add-point:AFTER FIELD xrce017 name="input.a.xrce017"
+            {<point name="input.a.xrce017" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrce017
+            #add-point:BEFORE FIELD xrce017 name="input.b.xrce017"
+            {<point name="input.b.xrce017" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrce017
+            #add-point:ON CHANGE xrce017 name="input.g.xrce017"
+            {<point name="input.g.xrce017" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrce018
+            
+            #add-point:AFTER FIELD xrce018 name="input.a.xrce018"
+            {<point name="input.a.xrce018" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrce018
+            #add-point:BEFORE FIELD xrce018 name="input.b.xrce018"
+            {<point name="input.b.xrce018" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrce018
+            #add-point:ON CHANGE xrce018 name="input.g.xrce018"
+            {<point name="input.g.xrce018" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrce019
+            
+            #add-point:AFTER FIELD xrce019 name="input.a.xrce019"
+            {<point name="input.a.xrce019" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrce019
+            #add-point:BEFORE FIELD xrce019 name="input.b.xrce019"
+            {<point name="input.b.xrce019" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrce019
+            #add-point:ON CHANGE xrce019 name="input.g.xrce019"
+            {<point name="input.g.xrce019" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrce020
+            
+            #add-point:AFTER FIELD xrce020 name="input.a.xrce020"
+            {<point name="input.a.xrce020" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrce020
+            #add-point:BEFORE FIELD xrce020 name="input.b.xrce020"
+            {<point name="input.b.xrce020" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrce020
+            #add-point:ON CHANGE xrce020 name="input.g.xrce020"
+            {<point name="input.g.xrce020" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrce016
+            
+            #add-point:AFTER FIELD xrce016 name="input.a.xrce016"
+            {<point name="input.a.xrce016" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrce016
+            #add-point:BEFORE FIELD xrce016 name="input.b.xrce016"
+            {<point name="input.b.xrce016" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrce016
+            #add-point:ON CHANGE xrce016 name="input.g.xrce016"
+            {<point name="input.g.xrce016" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrce021
+            
+            #add-point:AFTER FIELD xrce021 name="input.a.xrce021"
+            {<point name="input.a.xrce021" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrce021
+            #add-point:BEFORE FIELD xrce021 name="input.b.xrce021"
+            {<point name="input.b.xrce021" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrce021
+            #add-point:ON CHANGE xrce021 name="input.g.xrce021"
+            {<point name="input.g.xrce021" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrce022
+            
+            #add-point:AFTER FIELD xrce022 name="input.a.xrce022"
+            {<point name="input.a.xrce022" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrce022
+            #add-point:BEFORE FIELD xrce022 name="input.b.xrce022"
+            {<point name="input.b.xrce022" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrce022
+            #add-point:ON CHANGE xrce022 name="input.g.xrce022"
+            {<point name="input.g.xrce022" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrce023
+            
+            #add-point:AFTER FIELD xrce023 name="input.a.xrce023"
+            {<point name="input.a.xrce023" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrce023
+            #add-point:BEFORE FIELD xrce023 name="input.b.xrce023"
+            {<point name="input.b.xrce023" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrce023
+            #add-point:ON CHANGE xrce023 name="input.g.xrce023"
+            {<point name="input.g.xrce023" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrce011
+            
+            #add-point:AFTER FIELD xrce011 name="input.a.xrce011"
+            {<point name="input.a.xrce011" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrce011
+            #add-point:BEFORE FIELD xrce011 name="input.b.xrce011"
+            {<point name="input.b.xrce011" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrce011
+            #add-point:ON CHANGE xrce011 name="input.g.xrce011"
+            {<point name="input.g.xrce011" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrce012
+            
+            #add-point:AFTER FIELD xrce012 name="input.a.xrce012"
+            {<point name="input.a.xrce012" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrce012
+            #add-point:BEFORE FIELD xrce012 name="input.b.xrce012"
+            {<point name="input.b.xrce012" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrce012
+            #add-point:ON CHANGE xrce012 name="input.g.xrce012"
+            {<point name="input.g.xrce012" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrce026
+            #add-point:BEFORE FIELD xrce026 name="input.b.xrce026"
+            {<point name="input.b.xrce026" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrce026
+            
+            #add-point:AFTER FIELD xrce026 name="input.a.xrce026"
+            {<point name="input.a.xrce026" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrce026
+            #add-point:ON CHANGE xrce026 name="input.g.xrce026"
+            {<point name="input.g.xrce026" />}
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.xrceseq
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrceseq
+            #add-point:ON ACTION controlp INFIELD xrceseq name="input.c.xrceseq"
+            {<point name="input.c.xrceseq" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrce002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrce002
+            #add-point:ON ACTION controlp INFIELD xrce002 name="input.c.xrce002"
+            {<point name="input.c.xrce002" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrce015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrce015
+            #add-point:ON ACTION controlp INFIELD xrce015 name="input.c.xrce015"
+            {<point name="input.c.xrce015" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrce003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrce003
+            #add-point:ON ACTION controlp INFIELD xrce003 name="input.c.xrce003"
+            {<point name="input.c.xrce003" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrce024
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrce024
+            #add-point:ON ACTION controlp INFIELD xrce024 name="input.c.xrce024"
+            {<point name="input.c.xrce024" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrce025
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrce025
+            #add-point:ON ACTION controlp INFIELD xrce025 name="input.c.xrce025"
+            {<point name="input.c.xrce025" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrce009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrce009
+            #add-point:ON ACTION controlp INFIELD xrce009 name="input.c.xrce009"
+            {<point name="input.c.xrce009" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrce017
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrce017
+            #add-point:ON ACTION controlp INFIELD xrce017 name="input.c.xrce017"
+            {<point name="input.c.xrce017" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrce018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrce018
+            #add-point:ON ACTION controlp INFIELD xrce018 name="input.c.xrce018"
+            {<point name="input.c.xrce018" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrce019
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrce019
+            #add-point:ON ACTION controlp INFIELD xrce019 name="input.c.xrce019"
+            {<point name="input.c.xrce019" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrce020
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrce020
+            #add-point:ON ACTION controlp INFIELD xrce020 name="input.c.xrce020"
+            {<point name="input.c.xrce020" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrce016
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrce016
+            #add-point:ON ACTION controlp INFIELD xrce016 name="input.c.xrce016"
+            {<point name="input.c.xrce016" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrce021
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrce021
+            #add-point:ON ACTION controlp INFIELD xrce021 name="input.c.xrce021"
+            {<point name="input.c.xrce021" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrce022
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrce022
+            #add-point:ON ACTION controlp INFIELD xrce022 name="input.c.xrce022"
+            {<point name="input.c.xrce022" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrce023
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrce023
+            #add-point:ON ACTION controlp INFIELD xrce023 name="input.c.xrce023"
+            {<point name="input.c.xrce023" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrce011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrce011
+            #add-point:ON ACTION controlp INFIELD xrce011 name="input.c.xrce011"
+            {<point name="input.c.xrce011" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrce012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrce012
+            #add-point:ON ACTION controlp INFIELD xrce012 name="input.c.xrce012"
+            {<point name="input.c.xrce012" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrce026
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrce026
+            #add-point:ON ACTION controlp INFIELD xrce026 name="input.c.xrce026"
+            {<point name="input.c.xrce026" />}
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axrt400_11 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="axrt400_11.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+
+{</section>}
+
+{<section id="axrt400_11.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

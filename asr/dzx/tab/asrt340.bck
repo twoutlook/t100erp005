@@ -1,0 +1,287 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asrt340" module="asr" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="00378" crtdt="2014-02-26 00:00:00" modid="06821" moddt="2016-06-17 15:44:51" sdver="0007" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="重覆性生產完工入庫維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="sfeadocno,sfeadocno_desc(chr80),sfeasite,sfeadocdt,sfea001,sfea002,sfea002_desc(chr80),sfea003,sfea003_desc(chr80),sfeastus,sfea006,sfea005,sfeaownid,sfeaownid_desc(chr80),sfeaowndp,sfeaowndp_desc(chr80),sfeacrtdt,sfeacrtid,sfeacrtid_desc(chr80),sfeacrtdp,sfeacrtdp_desc(chr80),sfeamodid,sfeamodid_desc(chr80),sfeamoddt,sfeacnfid,sfeacnfid_desc(chr80),sfeacnfdt,sfeapstid,sfeapstid_desc(chr80),sfeapstdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sfebseq,sfeb023,sfeb023_desc(chr500),sfeb023_desc_desc(chr500),sfeb024,sfeb025,sfeb002,sfeb003,sfeb004,sfeb004_desc(chr500),sfeb004_desc_desc(chr500),sfeb005,sfeb006,sfeb007,sfeb008,sfeb027,sfeb009,sfeb010,sfeb011,sfeb012,sfeb013,sfeb013_desc(chr500),sfeb014,sfeb014_desc(chr500),sfeb015,sfeb016,sfeb020,sfeb020_desc(chr500),sfeb021,sfeb022,ooff013,sfebsite"/>
+      <var id="body" page="2" record="s_detail3" page_id="3" value="sfecseq,sfecseq1,sfec018,sfec018_desc(chr500),sfec018_desc_desc(chr500),sfec019,sfec020,sfeb002_1(chr1),sfec002,sfec003,sfec003_desc(chr10),sfec003_desc_desc(chr500),sfec004,sfec005,sfec005_desc(chr500),sfec005_desc_desc(chr500),sfec006,sfec007,sfec008,sfec009,sfec010,sfec011,sfec012,sfec012_desc(chr500),sfec013,sfec013_desc(chr500),sfec014,sfec015,sfec016,sfec017,sfecsite"/>
+      <var id="bs_field" value="sfeadocno,sfeadocno_desc(chr80),sfeadocdt,sfea002,sfea002_desc(chr80),sfea003,sfea003_desc(chr80),sfea001,sfea006,sfea005" pk="sfeadocno" order=""/>
+      <bs_reference field="sfea002_desc" ref_field="sfea002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="sfea003_desc" ref_field="sfea003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="qry_issue"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="store_in_by_qc"/>
+      <action id="gen_fqc"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="mn_stock_in"/>
+      <action id="open_aqct300"/>
+      <action id="gen_issue_no"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="s_lot_ins"/>
+    </section>
+    <section id="detail_show" page="2">
+      <action id="s_lot_sel"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="s_lot_ins"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="s_lot_sel"/>
+    </section>
+  </structure>
+  <form id="0" module="asr" filename="asrt340" method="dialog">
+    <section id="input">
+      <input id="head" field="sfeadocno,sfeasite,sfeadocdt,sfea001,sfea002,sfea003,sfeastus,sfea006,sfea005"/>
+      <input id="body" page="1" field="sfebseq,sfeb023,sfeb024,sfeb025,sfeb002,sfeb003,sfeb004,sfeb005,sfeb006,sfeb007,sfeb008,sfeb027,sfeb009,sfeb010,sfeb011,sfeb012,sfeb013,sfeb014,sfeb015,sfeb016,sfeb020,sfeb021,sfeb022" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="sfeadocno,sfeasite,sfeadocdt,sfea001,sfea002,sfea003,sfeastus,sfea006,sfea005,sfeaownid,sfeaowndp,sfeacrtdt,sfeacrtid,sfeacrtdp,sfeamodid,sfeamoddt,sfeacnfid,sfeacnfdt,sfeapstid,sfeapstdt"/>
+      <construct id="body" page="1" field="sfebseq,sfeb023,sfeb024,sfeb025,sfeb002,sfeb003,sfeb004,sfeb005,sfeb006,sfeb007,sfeb008,sfeb027,sfeb009,sfeb010,sfeb011,sfeb012,sfeb013,sfeb014,sfeb015,sfeb016,sfeb020,sfeb021,sfeb022"/>
+      <construct id="body" page="2" field="sfecseq,sfecseq1,sfec018,sfec019,sfec020,sfec002,sfec003,sfec004,sfec005,sfec006,sfec007,sfec008,sfec009,sfec010,sfec011,sfec012,sfec013,sfec014,sfec015,sfec016,sfec017"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="sfeadocno"/>
+      <set id="head" type="no_entry" field="sfeadocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="sfeadocno">
+        <after/>
+      </column>
+      <column id="sfeadocno_desc"/>
+      <column id="sfeasite"/>
+      <column id="sfeadocdt"/>
+      <column id="sfea001"/>
+      <column id="sfea002">
+        <after>
+          <reference field="sfea002_desc" ref_field="sfea_t.sfea002" map_field="sfea002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_4" state="i"/>
+        <controlp form="q_ooag001_4" state="c"/>
+      </column>
+      <column id="sfea002_desc"/>
+      <column id="sfea003">
+        <after>
+          <reference field="sfea003_desc" ref_field="sfea003" map_field="sfea003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_sfea003" state="c"/>
+      </column>
+      <column id="sfea003_desc"/>
+      <column id="sfeastus" scc="13">
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="S" pic="posted"/>
+        <stus id="Z" pic="unposted"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="sfea006"/>
+      <column id="sfea005"/>
+      <column id="sfeaownid">
+        <after>
+          <reference field="sfeaownid_desc" ref_field="sfeaownid" map_field="sfeaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sfeaownid_desc"/>
+      <column id="sfeaowndp">
+        <after>
+          <reference field="sfeaowndp_desc" ref_field="sfeaowndp" map_field="sfeaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="sfeaowndp_desc"/>
+      <column id="sfeacrtdt"/>
+      <column id="sfeacrtid">
+        <after>
+          <reference field="sfeacrtid_desc" ref_field="sfeacrtid" map_field="sfeacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sfeacrtid_desc"/>
+      <column id="sfeacrtdp">
+        <after>
+          <reference field="sfeacrtdp_desc" ref_field="sfeacrtdp" map_field="sfeacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="sfeacrtdp_desc"/>
+      <column id="sfeamodid">
+        <after>
+          <reference field="sfeamodid_desc" ref_field="sfeamodid" map_field="sfeamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sfeamodid_desc"/>
+      <column id="sfeamoddt"/>
+      <column id="sfeacnfid">
+        <after>
+          <reference field="sfeacnfid_desc" ref_field="sfeacnfid" map_field="sfeacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sfeacnfid_desc"/>
+      <column id="sfeacnfdt"/>
+      <column id="sfeapstid">
+        <after>
+          <reference field="sfeapstid_desc" ref_field="sfeapstid" map_field="sfeapstid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sfeapstid_desc"/>
+      <column id="sfeapstdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="sfebseq"/>
+      <column id="sfeb023">
+        <after>
+          <reference field="sfeb023_desc" ref_field="sfeb_t.sfeb023" map_field="sfeb023" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="sfeb023_desc">
+        <after>
+          <reference field="sfeb023_desc_desc" ref_field="sfeb023_desc" map_field="sfeb023" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="sfeb023_desc_desc"/>
+      <column id="sfeb024"/>
+      <column id="sfeb025"/>
+      <column id="sfeb002" type="S" default="N"/>
+      <column id="sfeb003"/>
+      <column id="sfeb004">
+        <after>
+          <reference field="sfeb004_desc" ref_field="sfeb_t.sfeb004" map_field="sfeb004" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="sfeb004_desc">
+        <after>
+          <reference field="sfeb004_desc_desc" ref_field="sfeb004_desc" map_field="sfeb004" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="sfeb004_desc_desc"/>
+      <column id="sfeb005"/>
+      <column id="sfeb006"/>
+      <column id="sfeb007"/>
+      <column id="sfeb008" type="S" default="0"/>
+      <column id="sfeb027" type="S" default="0"/>
+      <column id="sfeb009" type="S" default="0"/>
+      <column id="sfeb010"/>
+      <column id="sfeb011" type="S" default="0"/>
+      <column id="sfeb012" type="S" default="0"/>
+      <column id="sfeb013">
+        <after>
+          <reference field="sfeb013_desc" ref_field="sfebsite,sfeb013" map_field="sfebsite,sfeb013" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaasite=? AND inaa001=? "/>
+        </after>
+      </column>
+      <column id="sfeb013_desc"/>
+      <column id="sfeb014">
+        <after>
+          <reference field="sfeb014_desc" ref_field="sfebsite,sfeb013,sfeb014" map_field="sfebsite,sfeb013,sfeb014" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inabsite=? AND inab001=? AND inab002=? "/>
+        </after>
+      </column>
+      <column id="sfeb014_desc"/>
+      <column id="sfeb015"/>
+      <column id="sfeb016"/>
+      <column id="sfeb020">
+        <after/>
+      </column>
+      <column id="sfeb020_desc"/>
+      <column id="sfeb021"/>
+      <column id="sfeb022"/>
+      <column id="sfebsite"/>
+    </init>
+    <init id="body" page="2">
+      <column id="sfecseq"/>
+      <column id="sfecseq1"/>
+      <column id="sfec018">
+        <after>
+          <reference field="sfec018_desc" ref_field="sfec_t.sfec018" map_field="sfec018" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="sfec018_desc">
+        <after>
+          <reference field="sfec018_desc_desc" ref_field="sfec018_desc" map_field="sfec018" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="sfec018_desc_desc"/>
+      <column id="sfec019"/>
+      <column id="sfec020"/>
+      <column id="sfeb002_1" type="S" default="N"/>
+      <column id="sfec002"/>
+      <column id="sfec003">
+        <after>
+          <reference field="sfec003_desc" ref_field="sfecsite,sfec002,sfec003" map_field="sfecsite,sfec002,sfec003" ref_sql="SELECT qcbc002 FROM qcbc_t WHERE qcbcent=$varg_enterprise$var AND qcbcsite=? AND qcbcdocno=? AND qcbcseq=? "/>
+        </after>
+      </column>
+      <column id="sfec003_desc">
+        <after/>
+      </column>
+      <column id="sfec003_desc_desc"/>
+      <column id="sfec004"/>
+      <column id="sfec005">
+        <after>
+          <reference field="sfec005_desc" ref_field="sfec_t.sfec005" map_field="sfec005" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="sfec005_desc">
+        <after>
+          <reference field="sfec005_desc_desc" ref_field="sfec005_desc" map_field="sfec005" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="sfec005_desc_desc"/>
+      <column id="sfec006"/>
+      <column id="sfec007"/>
+      <column id="sfec008"/>
+      <column id="sfec009"/>
+      <column id="sfec010"/>
+      <column id="sfec011"/>
+      <column id="sfec012">
+        <after>
+          <reference field="sfec012_desc" ref_field="sfecsite,sfec012" map_field="sfecsite,sfec012" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaasite=? AND inaa001=? "/>
+        </after>
+      </column>
+      <column id="sfec012_desc"/>
+      <column id="sfec013">
+        <after>
+          <reference field="sfec013_desc" ref_field="sfecsite,sfec012,sfec013" map_field="sfecsite,sfec012,sfec013" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inabsite=? AND inab001=? AND inab002=? "/>
+        </after>
+      </column>
+      <column id="sfec013_desc"/>
+      <column id="sfec014"/>
+      <column id="sfec015"/>
+      <column id="sfec016"/>
+      <column id="sfec017"/>
+      <column id="sfecsite"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="sfea_t" pk="sfeadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT sfeadocno,&apos;&apos;,sfeasite,sfeadocdt,sfea001,sfea002,&apos;&apos;,sfea003,&apos;&apos;,sfeastus,sfea006,sfea005,sfeaownid,&apos;&apos;,sfeaowndp,&apos;&apos;,sfeacrtdt,sfeacrtid,&apos;&apos;,sfeacrtdp,&apos;&apos;,sfeamodid,&apos;&apos;,sfeamoddt,sfeacnfid,&apos;&apos;,sfeacnfdt,sfeapstid,&apos;&apos;,sfeapstdt FROM sfea_t WHERE sfeaent= ? AND sfeadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT sfeadocno,&apos;&apos;,sfeasite,sfeadocdt,sfea001,sfea002,&apos;&apos;,sfea003,&apos;&apos;,sfeastus,sfea006,sfea005,sfeaownid,&apos;&apos;,sfeaowndp,&apos;&apos;,sfeacrtdt,sfeacrtid,&apos;&apos;,sfeacrtdp,&apos;&apos;,sfeamodid,&apos;&apos;,sfeamoddt,sfeacnfid,&apos;&apos;,sfeacnfdt,sfeapstid,&apos;&apos;,sfeapstdt FROM sfea_t" order="sfeadocno"/>
+    </head>
+    <body id="sfeb_t" page="1" linked="" pk="sfebseq" fk="sfebdocno">
+      <sql id="forupd_sql_detail" query="SELECT sfebseq,sfeb023,&apos;&apos;,&apos;&apos;,sfeb024,sfeb025,sfeb002,sfeb003,sfeb004,&apos;&apos;,&apos;&apos;,sfeb005,sfeb006,sfeb007,sfeb008,sfeb027,sfeb009,sfeb010,sfeb011,sfeb012,sfeb013,&apos;&apos;,sfeb014,&apos;&apos;,sfeb015,sfeb016,sfeb020,&apos;&apos;,sfeb021,sfeb022,&apos;&apos;,sfebsite FROM sfeb_t WHERE sfebent=? AND sfebdocno=? AND sfebseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT sfebseq,sfeb023,&apos;&apos;,&apos;&apos;,sfeb024,sfeb025,sfeb002,sfeb003,sfeb004,&apos;&apos;,&apos;&apos;,sfeb005,sfeb006,sfeb007,sfeb008,sfeb027,sfeb009,sfeb010,sfeb011,sfeb012,sfeb013,&apos;&apos;,sfeb014,&apos;&apos;,sfeb015,sfeb016,sfeb020,&apos;&apos;,sfeb021,sfeb022,&apos;&apos;,sfebsite FROM sfeb_t WHERE sfebent=? AND sfebdocno=?"/>
+    </body>
+    <body id="sfec_t" page="2" linked="" pk="sfecseq,sfecseq1" fk="sfecdocno">
+      <sql id="forupd_sql_detail" query="SELECT sfecseq,sfecseq1,sfec018,&apos;&apos;,&apos;&apos;,sfec019,sfec020,&apos;&apos;,sfec002,sfec003,&apos;&apos;,&apos;&apos;,sfec004,sfec005,&apos;&apos;,&apos;&apos;,sfec006,sfec007,sfec008,sfec009,sfec010,sfec011,sfec012,&apos;&apos;,sfec013,&apos;&apos;,sfec014,sfec015,sfec016,sfec017,sfecsite FROM sfec_t WHERE sfecent=? AND sfecdocno=? AND sfecseq=? AND sfecseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT sfecseq,sfecseq1,sfec018,&apos;&apos;,&apos;&apos;,sfec019,sfec020,&apos;&apos;,sfec002,sfec003,&apos;&apos;,&apos;&apos;,sfec004,sfec005,&apos;&apos;,&apos;&apos;,sfec006,sfec007,sfec008,sfec009,sfec010,sfec011,sfec012,&apos;&apos;,sfec013,&apos;&apos;,sfec014,sfec015,sfec016,sfec017,sfecsite FROM sfec_t WHERE sfecent=? AND sfecdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

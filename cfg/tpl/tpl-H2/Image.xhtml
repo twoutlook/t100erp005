@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ FOURJS_START_COPYRIGHT(D,2011)
+ Property of Four Js*
+ (c) Copyright Four Js 2011, 2014. All Rights Reserved.
+ * Trademark of Four Js Development Tools Europe Ltd
+   in the United States and elsewhere
+ 
+ This file can be modified by licensees according to the
+ product manual.
+ FOURJS_END_COPYRIGHT
+ -->
+<html
+	xmlns='http://www.w3.org/1999/xhtml'
+	xmlns:gwc='http://www.4js.com/GWC'
+>
+	<head>
+		<meta
+			content='text/html; charset=utf-8'
+			http-equiv='Content-Type'
+		/>
+	</head>
+
+	<body>
+
+<gwc:snippet-root>
+	<!-- Handle defines for common attributes -->
+	<gwc:dummy
+		gwc:define='
+			selectable type == "Image" ? isSelectable : false;
+			imageType indexof(style["imageContainerType"], "browser") != -1 ? "www" : contains(value, ".svg") ? "svg" : contains(value, ".swf") ? "swf" : "img";
+			imageStyle "width:" + (contains(width, "px") ? width : "auto") + "; height:" + (height ? (contains(height, "px") ? height : height + "em") : "1em") + ";";
+		'
+		gwc:omit-tag='true'
+	>
+		<!-- Rendering is done for a regular image -->
+		<gwc:dummy
+			gwc:condition='imageType == "img"'
+			gwc:omit-tag='true'
+		>
+			<!-- Rendering is done inside a table -->
+			<gwc:dummy
+				gwc:condition='renderNoLayout'
+				gwc:omit-tag='true'
+			>
+				<div
+					style='
+						text-align: center;
+						overflow: hidden;
+						height: {contains(height, "px") ? height : height * 1.5 + "em;"}{ttycolor ? "color: " + ttycolor + ";" : null}{ttybackgroundcolor ? "background-color: " + ttybackgroundcolor + ";" : null}{ttyfontfamily ? "font-family: " + ttyfontfamily + ";" : null}{ttytextdecoration ? "text-decoration: " + ttytextdecoration + ";" : null}{ttyfontweight ? "font-weight: " + ttyfontweight + ";" : null}'
+
+          data-g-value='{value}'
+				>
+					<img
+						alt='{comment || null}'
+						class='gWid gImage gSStar gSImage {prefix("gc", class)} widget'
+						src='{value ? ImageURI(value) : ImageURI("1x1")}'
+						style='{autoScale ? "height: 100%;" : null}'
+						title='{comment || null}'
+						draggable='false'
+					/>
+				</div>
+			</gwc:dummy>
+
+			<!-- Rendering is done outside a table -->
+			<gwc:dummy
+				gwc:condition='!renderNoLayout'
+				gwc:omit-tag='true'
+			>
+				<div
+					class='gImageScrollView {!autoScale ? "gImageScrollViewScroll" : null}'
+				>
+					<div
+						gwc:define='
+							borderedElement (style["border"] == "none") ? 0 : (!value ? 1 : 2);
+						'
+
+						class='gImageContainer {borderedElement == 1 ? "image-border-style" : null}'
+						style='{ttycolor ? "color: " + ttycolor + ";" : null}{ttybackgroundcolor ? "background-color: " + ttybackgroundcolor + ";" : null}{ttyfontfamily ? "font-family: " + ttyfontfamily + ";" : null}{ttytextdecoration ? "text-decoration: " + ttytextdecoration + ";" : null}{ttyfontweight ? "font-weight: " + ttyfontweight + ";" : null}'
+					>
+						<div
+							gwc:define='
+								xStretch stretch == "both" || stretch == "x";
+								yStretch stretch == "both" || stretch == "y";
+								sp switch(sizePolicy, ["initial", "fixed", "dynamic"], ["AllInitial", "Fixed", "All"]);
+								widthPolicy "\"widthHint\": \"" + (sp == "Fixed" ? width : "") + (xStretch ? "*\", " : "\", ") + (xStretch ? "\"minWidth\": 20, " : "") + " \"widthPolicy\": \"" + sp + "\"";
+								heightPolicy "\"heightHint\": \"" + (sp == "Fixed" ? height : "") + (yStretch ? "*\", " : "\", ") + (yStretch ? "\"minHeight\": 20, " : "") + " \"heightPolicy\": \"" + sp + "\"";
+								alignmentTokens style["alignment"] != undefined ? split(translate(style["alignment"], " ", ","), ",") : null;
+								horizontalAlignment switch(true, [!alignmentTokens || "left" in alignmentTokens, "right" in alignmentTokens], ["left", "right"], "center");
+								verticalAlignment switch(true, [!alignmentTokens || "top" in alignmentTokens, "bottom" in alignmentTokens], ["top", "bottom"], "middle");
+								deferSizing sp != "Fixed" ? "\"deferSizing\": 1" : "";
+							'
+
+							style='
+								text-align: {horizontalAlignment};
+								vertical-align: {verticalAlignment};
+							'
+						>
+							<img
+								gwc:define='
+									fallbackSrc imageURI("1x1");
+									src value ? ImageURI(value) : fallbackSrc;
+								'
+
+								alt='{comment || null}'
+								class='gWid gImage gSStar gSImage {prefix("gc", class)} {borderedElement == 2 ? "image-border-style" : null} {sp != "Fixed" &amp;&amp; value ? "gImageLoading" : null}'
+								onerror='this.gLoadedState = 2'
+								onload='this.gLoadedState = 1'
+								src='{src}'
+								title='{comment || null}'
+								draggable='false'
+								
+								data-g-qa-name='{type},{name || ""}'
+								data-g-qa-idRef='{xpath("@idRef")}'
+								data-g-active='{selectable}'
+								data-g-autoscale='{value &amp;&amp; autoScale || null}'
+								data-g-id='Image,{fallbackSrc}{(type == "Image" ? ", " + xdid : "")}'
+								data-g-layout-policy='{widthPolicy}, {heightPolicy}, {deferSizing}'
+								data-g-selectable='{selectable || null}'
+								data-g-selected='{ignoreSelection ? null : ((selectable &amp;&amp; check(isSelected)) || null)}'
+							/>
+						</div>
+					</div>
+				</div>
+			</gwc:dummy>
+		</gwc:dummy>
+
+		<!-- Rendering is done for a web page or a svg file -->
+		<div
+			gwc:omit-tag='style["border"] == "none"'
+			gwc:condition='(imageType == "www" || imageType == "svg")'
+
+			class='image-border-style'
+		>
+			<iframe
+				gwc:define='
+					xStretch stretch == "both" || stretch == "x";
+					yStretch stretch == "both" || stretch == "y";
+					sp switch(sizePolicy, ["initial", "fixed", "dynamic"], ["AllInitial", "Fixed", "All"]);
+					sp !value &amp;&amp; sp == "AllInitial" ? "Fixed" : sp;
+					widthPolicy "\"widthHint\": \"" + (sp == "Fixed" ? width : "") + (xStretch ? "*\", " : "\", ") + (xStretch ? "\"minWidth\": 20, " : "") + " \"widthPolicy\": \"" + sp + "\"";
+					heightPolicy "\"heightHint\": \"" + (sp == "Fixed" ? height : "") + (yStretch ? "*\", " : "\", ") + (yStretch ? "\"minHeight\": 20, " : "") + " \"heightPolicy\": \"" + sp + "\"";
+				'
+
+				class='gWid gImage gSStar gSImage {prefix("gc", class)} widget'
+				frameborder='0'
+
+				data-g-active='{selectable}'
+				data-g-id='ImageBrowser,{switch(sp, ["Fixed", "AllInitial", "All"], [0, 1, 2])}'
+				data-g-layout-policy='{widthPolicy}, {heightPolicy}, {sp == "AllInitial" ? "\"deferSizing\": 1," : null} "horizontalStretching": 1, "verticalStretching": 1'
+				data-g-selectable='{selectable || null}'
+				data-g-selected='{ignoreSelection ? null : ((selectable &amp;&amp; check(isSelected)) || null)}'
+				data-g-src='{value ? ImageURI(value) : null}'
+			/>
+		</div>
+
+		<!-- Rendering is done for a flash image -->
+		<div
+			gwc:omit-tag='style["border"] == "none"'
+			class='image-border-style'
+
+			gwc:condition='imageType == "swf"'
+		>
+			<embed
+				gwc:define='
+					xStretch stretch == "both" || stretch == "x";
+					yStretch stretch == "both" || stretch == "y";
+					sp switch(sizePolicy, ["initial", "fixed", "dynamic"], ["AllInitial", "Fixed", "All"]);
+					sp !value &amp;&amp; sp == "AllInitial" ? "Fixed" : sp;
+					widthPolicy "\"widthHint\": \"" + (sp == "Fixed" ? width : "") + (xStretch ? "*\", " : "\", ") + (xStretch ? "\"minWidth\": 20, " : "") + " \"widthPolicy\": \"" + sp + "\"";
+					heightPolicy "\"heightHint\": \"" + (sp == "Fixed" ? height : "") + (yStretch ? "*\", " : "\", ") + (yStretch ? "\"minHeight\": 20, " : "") + " \"heightPolicy\": \"" + sp + "\"";
+				'
+
+				class='gWid gImage gSStar gSImage {prefix("gc", class)} widget'
+				src='{value ? ImageURI(value) : null}'
+				type='application/x-shockwave-flash'
+
+				data-g-active='{selectable}'
+				data-g-layout-policy='{widthPolicy}, {heightPolicy}, {sp == "AllInitial" ? "\"deferSizing\": 1," : null} "horizontalStretching": 1, "verticalStretching": 1'
+				data-g-selectable='{selectable || null}'
+				data-g-selected='{ignoreSelection ? null : ((selectable &amp;&amp; check(isSelected)) || null)}'
+			/>
+			</div>
+	</gwc:dummy>
+</gwc:snippet-root>
+
+	</body>
+</html>

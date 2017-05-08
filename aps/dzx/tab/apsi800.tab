@@ -1,0 +1,164 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apsi800" module="aps" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="04441" crtdt="2014-04-22 08:41:49" modid="04441" moddt="2014-08-22 16:28:51" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="集團MRP版本維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="psfa001,psfal003,psfal004(chr500),psfa007,psfa008,psfa002,psfa003,psfa005,psfa004,psfa006,psfastus,psfaownid,psfaownid_desc(chr80),psfaowndp,psfaowndp_desc(chr80),psfacrtid,psfacrtid_desc(chr80),psfacrtdp,psfacrtdp_desc(chr80),psfacrtdt,psfamodid,psfamodid_desc(chr80),psfamoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="psfb002,psfb003,psfb003_desc(chr500),psfb004,psfb004_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="psfc002,psfc003"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="psfd003,psfd004,psfd004_desc(chr500)"/>
+      <var id="bs_field" value="psfa001,psfa001_desc(chr80),psfa001_desc_desc(chr80),psfa007,psfa008" pk="psfa001" order=""/>
+      <bs_reference field="psfa001_desc" ref_field="psfa001" ref_sql="SELECT psfal003 FROM psfal_t WHERE psfalent=$varg_enterprise$var AND psfal001=? AND psfal002=$varg_dlang$var"/>
+      <bs_reference field="psfa001_desc_desc" ref_field="psfa001" ref_sql="SELECT psfal004 FROM psfal_t WHERE psfalent=$varg_enterprise$var AND psfal001=? AND psfal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="aps" filename="apsi800" method="dialog">
+    <section id="input">
+      <input id="head" field="psfa001,psfal003,psfal004,psfa007,psfa008,psfa002,psfa003,psfa005,psfa004,psfa006,psfastus"/>
+      <input id="body" page="1" field="psfb002,psfb003,psfb004" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="psfc002,psfc003" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="psfd003,psfd004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="psfa001,psfal003,psfal004,psfa007,psfa008,psfa002,psfa003,psfa005,psfa004,psfa006,psfastus,psfaownid,psfaowndp,psfacrtid,psfacrtdp,psfacrtdt,psfamodid,psfamoddt"/>
+      <construct id="body" page="1" field="psfb002,psfb003,psfb004"/>
+      <construct id="body" page="2" field="psfc002,psfc003"/>
+      <construct id="body" page="3" field="psfd003,psfd004"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="psfa001"/>
+      <set id="head" type="no_entry" field="psfa001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="psfa001">
+        <controlp form="q_psfa001" state="c"/>
+      </column>
+      <column id="psfal003"/>
+      <column id="psfal004"/>
+      <column id="psfa007" def_scc="5427"/>
+      <column id="psfa008" type="S" default="Y"/>
+      <column id="psfa002" def_scc="5424"/>
+      <column id="psfa003" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="psfa005" def_scc="5425"/>
+      <column id="psfa004" def_scc="5426"/>
+      <column id="psfa006" type="S" default="Y"/>
+      <column id="psfastus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="psfaownid">
+        <after>
+          <reference field="psfaownid_desc" ref_field="psfa_t.psfaownid" map_field="psfaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psfaownid_desc"/>
+      <column id="psfaowndp">
+        <after>
+          <reference field="psfaowndp_desc" ref_field="psfa_t.psfaowndp" map_field="psfaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="psfaowndp_desc"/>
+      <column id="psfacrtid">
+        <after>
+          <reference field="psfacrtid_desc" ref_field="psfa_t.psfacrtid" map_field="psfacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psfacrtid_desc"/>
+      <column id="psfacrtdp">
+        <after>
+          <reference field="psfacrtdp_desc" ref_field="psfa_t.psfacrtdp" map_field="psfacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="psfacrtdp_desc"/>
+      <column id="psfacrtdt"/>
+      <column id="psfamodid">
+        <after>
+          <reference field="psfamodid_desc" ref_field="psfa_t.psfamodid" map_field="psfamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psfamodid_desc"/>
+      <column id="psfamoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="psfb002"/>
+      <column id="psfb003">
+        <after>
+          <check chkid="v_ooef001_13" id="isExist"/>
+          <reference field="psfb003_desc" ref_field="psfb_t.psfb003" map_field="psfb003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_12" state="i"/>
+        <controlp form="q_ooef001_12" state="c"/>
+      </column>
+      <column id="psfb003_desc"/>
+      <column id="psfb004">
+        <after>
+          <reference field="psfb004_desc" ref_field="psfb_t.psfb004" map_field="psfb004" ref_sql="SELECT pscal003 FROM pscal_t WHERE pscalent=$varg_enterprise$var AND pscal001=? AND pscal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_psca001_1" state="i"/>
+        <controlp form="q_psca001_1" state="c"/>
+      </column>
+      <column id="psfb004_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="psfc002"/>
+      <column id="psfc003"/>
+    </init>
+    <init id="body" page="3">
+      <column id="psfd003"/>
+      <column id="psfd004">
+        <after>
+          <check chkid="v_ooef001_13" id="isExist"/>
+          <reference field="psfd004_desc" ref_field="psfd_t.psfd004" map_field="psfd004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_psfb003" state="i"/>
+        <controlp form="q_psfb003" state="c"/>
+      </column>
+      <column id="psfd004_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="psfa_t" pk="psfa001">
+      <sql id="forupd_sql" type="sql" query="SELECT psfa001,&apos;&apos;,&apos;&apos;,psfa007,psfa008,psfa002,psfa003,psfa005,psfa004,psfa006,psfastus,psfaownid,&apos;&apos;,psfaowndp,&apos;&apos;,psfacrtid,&apos;&apos;,psfacrtdp,&apos;&apos;,psfacrtdt,psfamodid,&apos;&apos;,psfamoddt FROM psfa_t WHERE psfaent= ? AND psfa001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT psfa001,&apos;&apos;,&apos;&apos;,psfa007,psfa008,psfa002,psfa003,psfa005,psfa004,psfa006,psfastus,psfaownid,&apos;&apos;,psfaowndp,&apos;&apos;,psfacrtid,&apos;&apos;,psfacrtdp,&apos;&apos;,psfacrtdt,psfamodid,&apos;&apos;,psfamoddt FROM psfa_t" order="psfa001"/>
+      <sql id="append" type="lang" target="psfal_t.psfal003,psfal004" table="psfal_t" fk="psfa001" pk="psfal001,psfal002" field="psfal003,psfal004"/>
+    </head>
+    <body id="psfb_t" page="1" linked="" pk="psfb002" fk="psfb001">
+      <sql id="forupd_sql_detail" query="SELECT psfb002,psfb003,&apos;&apos;,psfb004,&apos;&apos; FROM psfb_t WHERE psfbent=? AND psfb001=? AND psfb002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT psfb002,psfb003,&apos;&apos;,psfb004,&apos;&apos; FROM psfb_t WHERE psfbent=? AND psfb001=?"/>
+    </body>
+    <body id="psfc_t" page="2" linked="" pk="psfc002" fk="psfc001">
+      <sql id="forupd_sql_detail" query="SELECT psfc002,psfc003 FROM psfc_t WHERE psfcent=? AND psfc001=? AND psfc002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT psfc002,psfc003 FROM psfc_t WHERE psfcent=? AND psfc001=?"/>
+    </body>
+    <body id="psfd_t" page="3" linked="" detail="Y" master="psfc_t" default_site="N" pk="psfd003" fk="psfd001,psfd002">
+      <sql id="forupd_sql_detail" query="SELECT psfd003,psfd004,&apos;&apos; FROM psfd_t WHERE psfdent=? AND psfd001=? AND psfd002=? AND psfd003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT psfd003,psfd004,&apos;&apos; FROM psfd_t WHERE psfdent=? AND psfd001=? AND psfd002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

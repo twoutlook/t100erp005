@@ -1,0 +1,297 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="acrm300" module="acr" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="04226" crtdt="2014-04-16 10:34:46" modid="06189" moddt="2016-03-02 10:23:40" sdver="0007" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="潛在客戶主檔維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="craaunit,craaunit_desc(chr80),craa001,craal004(chr500),craal003(chr500),craal005(chr500),craa003,craa032,craastus,craa004,craa005,craa006,craa007,craa008,craa008_desc(chr80),craa009,craa010,craa010_desc(chr80),craa011,craa012,craa014,craa014_desc(chr80),craa015,craa015_desc(chr80),craa016,craa016_desc(chr80),craa013,craa017,craa017_desc(chr80),craa018,craa018_desc(chr80),craa019,craa019_desc(chr80),craa020,craa020_desc(chr80),craa021,craa021_desc(chr80),craa022,craa023,craa024,craa025,craa026,craa027,craa027_desc(chr80),craa028,craa033,craa029,craa029_desc(chr80),craa030,craa031,craa031_desc(chr80),craaownid,craaownid_desc(chr80),craaowndp,craaowndp_desc(chr80),craacrtid,craacrtid_desc(chr80),craacrtdp,craacrtdp_desc(chr80),craacrtdt,craamodid,craamodid_desc(chr80),craamoddt,craacnfid,craacnfid_desc(chr80),craacnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pmajstus(chr10),pmaj002(chr20),pmaj003(chr10),pmaj004(chr1),pmaj005(chr1),pmaj006(chr500),pmaj007(chr500),pmaj009(chr500),pmaj010(chr500),pmaj011(chr500),pmaj012(chr500),pmaj013(chr500),pmaj014(chr500),pmaj008(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="acrm300_clear_craa031"/>
+      <action id="open_acrm300_01"/>
+      <action id="acrm300_clear_craa029"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="acrm300_upd_craa021"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="acrm300_clear_craa021"/>
+      <action id="open_acrm300_02"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="acr" filename="acrm300" method="dialog">
+    <section id="input">
+      <input id="head" field="craaunit,craa001,craal004,craal003,craal005,craa003,craa032,craastus,craa004,craa005,craa006,craa007,craa008,craa009,craa010,craa011,craa012,craa014,craa015,craa016,craa013,craa017,craa018,craa019,craa020,craa021,craa022,craa023,craa024,craa025,craa026,craa027,craa028,craa033,craa029,craa030,craa031"/>
+      <input id="body" page="1" field="pmajstus,pmaj002,pmaj003,pmaj004,pmaj005,pmaj006,pmaj007,pmaj008" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="craaunit,craa001,craal004,craal003,craal005,craa003,craa032,craastus,craa004,craa005,craa006,craa007,craa008,craa009,craa010,craa011,craa012,craa014,craa015,craa016,craa013,craa017,craa018,craa019,craa020,craa021,craa022,craa023,craa024,craa025,craa026,craa027,craa028,craa033,craa029,craa030,craa031,craaownid,craaowndp,craacrtid,craacrtdp,craacrtdt,craamodid,craamoddt,craacnfid,craacnfdt"/>
+      <construct id="body" page="1" field="pmajstus,pmaj002,pmaj003,pmaj004,pmaj005,pmaj006,pmaj007,pmaj008"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="craa001"/>
+      <set id="head" type="no_entry" field="craa001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="craaunit">
+        <after>
+          <reference field="craaunit_desc" ref_field="craa_t.craaunit" map_field="craaunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="craaunit_desc"/>
+      <column id="craa001">
+        <controlp form="q_craa001" state="c"/>
+      </column>
+      <column id="craal004"/>
+      <column id="craal003"/>
+      <column id="craal005"/>
+      <column id="craa003"/>
+      <column id="craa032" type="S" default="0" def_scc="6052"/>
+      <column id="craastus" scc="50" type="S" default="N">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="craa004"/>
+      <column id="craa005"/>
+      <column id="craa006"/>
+      <column id="craa007">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="craa008">
+        <after>
+          <check chkid="v_ooaj002" id="isExist"/>
+          <reference field="craa008_desc" ref_field="craa_t.craa008" map_field="craa008" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooaj002_1" state="i"/>
+        <controlp form="q_ooaj002_1" state="c"/>
+      </column>
+      <column id="craa008_desc"/>
+      <column id="craa009">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="craa010">
+        <after>
+          <check chkid="v_ooaj002" id="isExist"/>
+          <reference field="craa010_desc" ref_field="craa_t.craa010" map_field="craa010" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooaj002_1" state="i"/>
+        <controlp form="q_ooaj002_1" state="c"/>
+      </column>
+      <column id="craa010_desc"/>
+      <column id="craa011">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="craa012"/>
+      <column id="craa014">
+        <after>
+          <reference field="craa014_desc" ref_field="craa014" map_field="craa014" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2107&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="craa014_desc"/>
+      <column id="craa015">
+        <after>
+          <reference field="craa015_desc" ref_field="craa015" map_field="craa015" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;281&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="craa015_desc"/>
+      <column id="craa016">
+        <after>
+          <reference field="craa016_desc" ref_field="craa016" map_field="craa016" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2105&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="craa016_desc"/>
+      <column id="craa013"/>
+      <column id="craa017">
+        <after>
+          <check chkid="v_dbaa001_1" id="isExist"/>
+          <reference field="craa017_desc" ref_field="craa_t.craa017" map_field="craa017" ref_sql="SELECT dbaal003 FROM dbaal_t WHERE dbaalent=$varg_enterprise$var AND dbaal001=? AND dbaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_dbaa001_1" state="i"/>
+        <controlp form="q_dbaa001_1" state="c"/>
+      </column>
+      <column id="craa017_desc"/>
+      <column id="craa018">
+        <after>
+          <check chkid="v_dbaa001_1" id="isExist"/>
+          <reference field="craa018_desc" ref_field="craa_t.craa018" map_field="craa018" ref_sql="SELECT dbaal003 FROM dbaal_t WHERE dbaalent=$varg_enterprise$var AND dbaal001=? AND dbaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_dbaa001_1" state="i"/>
+        <controlp form="q_dbaa001_1" state="c"/>
+      </column>
+      <column id="craa018_desc"/>
+      <column id="craa019">
+        <after>
+          <check chkid="v_dbaa001_1" id="isExist"/>
+          <reference field="craa019_desc" ref_field="craa_t.craa019" map_field="craa019" ref_sql="SELECT dbaal003 FROM dbaal_t WHERE dbaalent=$varg_enterprise$var AND dbaal001=? AND dbaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_dbaa001_1" state="i"/>
+        <controlp form="q_dbaa001_1" state="c"/>
+      </column>
+      <column id="craa019_desc"/>
+      <column id="craa020">
+        <after>
+          <check chkid="v_dbaa001_1" id="isExist"/>
+          <reference field="craa020_desc" ref_field="craa_t.craa020" map_field="craa020" ref_sql="SELECT dbaal003 FROM dbaal_t WHERE dbaalent=$varg_enterprise$var AND dbaal001=? AND dbaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_dbaa001_1" state="i"/>
+        <controlp form="q_dbaa001_1" state="c"/>
+      </column>
+      <column id="craa020_desc"/>
+      <column id="craa021">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="craa021_desc" ref_field="craa_t.craa021" map_field="craa021" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="craa021_desc"/>
+      <column id="craa022"/>
+      <column id="craa023"/>
+      <column id="craa024"/>
+      <column id="craa025"/>
+      <column id="craa026">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="craa027">
+        <after>
+          <check chkid="v_ooaj002" id="isExist"/>
+          <reference field="craa027_desc" ref_field="craa_t.craa027" map_field="craa027" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooaj002_1" state="i"/>
+        <controlp form="q_ooaj002_1" state="c"/>
+      </column>
+      <column id="craa027_desc"/>
+      <column id="craa028">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="craa033"/>
+      <column id="craa029">
+        <after>
+          <check chkid="v_pmaa001_3" id="isExist"/>
+          <reference field="craa029_desc" ref_field="craa_t.craa029" map_field="craa029" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_6" state="i"/>
+        <controlp form="q_pmaa001_6" state="c"/>
+      </column>
+      <column id="craa029_desc"/>
+      <column id="craa030"/>
+      <column id="craa031">
+        <after>
+          <check chkid="v_pmaa001_1" id="isExist"/>
+          <reference field="craa031_desc" ref_field="craa_t.craa031" map_field="craa031" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_3" state="i"/>
+        <controlp form="q_pmaa001_3" state="c"/>
+      </column>
+      <column id="craa031_desc"/>
+      <column id="craaownid">
+        <after>
+          <reference field="craaownid_desc" ref_field="craa_t.craaownid" map_field="craaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="craaownid_desc"/>
+      <column id="craaowndp">
+        <after>
+          <reference field="craaowndp_desc" ref_field="craa_t.craaowndp" map_field="craaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="craaowndp_desc"/>
+      <column id="craacrtid">
+        <after>
+          <reference field="craacrtid_desc" ref_field="craa_t.craacrtid" map_field="craacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="craacrtid_desc"/>
+      <column id="craacrtdp">
+        <after>
+          <reference field="craacrtdp_desc" ref_field="craa_t.craacrtdp" map_field="craacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="craacrtdp_desc"/>
+      <column id="craacrtdt"/>
+      <column id="craamodid">
+        <after>
+          <reference field="craamodid_desc" ref_field="craa_t.craamodid" map_field="craamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="craamodid_desc"/>
+      <column id="craamoddt"/>
+      <column id="craacnfid">
+        <after>
+          <reference field="craacnfid_desc" ref_field="craa_t.craacnfid" map_field="craacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="craacnfid_desc"/>
+      <column id="craacnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="pmajstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pmaj002"/>
+      <column id="pmaj003">
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pmaj004" type="S" default="N"/>
+      <column id="pmaj005" type="S" default="N"/>
+      <column id="pmaj006"/>
+      <column id="pmaj007"/>
+      <column id="pmaj009"/>
+      <column id="pmaj010"/>
+      <column id="pmaj011"/>
+      <column id="pmaj012"/>
+      <column id="pmaj013"/>
+      <column id="pmaj014"/>
+      <column id="pmaj008"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="craa_t" pk="craa001">
+      <sql id="forupd_sql" type="sql" query="SELECT craaunit,&apos;&apos;,craa001,&apos;&apos;,&apos;&apos;,&apos;&apos;,craa003,craa032,craastus,craa004,craa005,craa006,craa007,craa008,&apos;&apos;,craa009,craa010,&apos;&apos;,craa011,craa012,craa014,&apos;&apos;,craa015,&apos;&apos;,craa016,&apos;&apos;,craa013,craa017,&apos;&apos;,craa018,&apos;&apos;,craa019,&apos;&apos;,craa020,&apos;&apos;,craa021,&apos;&apos;,craa022,craa023,craa024,craa025,craa026,craa027,&apos;&apos;,craa028,craa033,craa029,&apos;&apos;,craa030,craa031,&apos;&apos;,craaownid,&apos;&apos;,craaowndp,&apos;&apos;,craacrtid,&apos;&apos;,craacrtdp,&apos;&apos;,craacrtdt,craamodid,&apos;&apos;,craamoddt,craacnfid,&apos;&apos;,craacnfdt FROM craa_t WHERE craaent= ? AND craa001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT craaunit,&apos;&apos;,craa001,&apos;&apos;,&apos;&apos;,&apos;&apos;,craa003,craa032,craastus,craa004,craa005,craa006,craa007,craa008,&apos;&apos;,craa009,craa010,&apos;&apos;,craa011,craa012,craa014,&apos;&apos;,craa015,&apos;&apos;,craa016,&apos;&apos;,craa013,craa017,&apos;&apos;,craa018,&apos;&apos;,craa019,&apos;&apos;,craa020,&apos;&apos;,craa021,&apos;&apos;,craa022,craa023,craa024,craa025,craa026,craa027,&apos;&apos;,craa028,craa033,craa029,&apos;&apos;,craa030,craa031,&apos;&apos;,craaownid,&apos;&apos;,craaowndp,&apos;&apos;,craacrtid,&apos;&apos;,craacrtdp,&apos;&apos;,craacrtdt,craamodid,&apos;&apos;,craamoddt,craacnfid,&apos;&apos;,craacnfdt FROM craa_t" order="craa001"/>
+      <sql id="append" type="lang" target="craal004,craal003,craal005" table="craal_t" fk="craa001" pk="craal001,craal002" field="craal004,craal003,craal005"/>
+    </head>
+    <body id="craa_t" page="1" linked="" pk="" fk="craa001">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM craa_t WHERE craaent=? AND craa001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM craa_t WHERE craaent= ? AND craa001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

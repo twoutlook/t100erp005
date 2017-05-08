@@ -1,0 +1,2890 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axmp431.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2015-06-16 17:30:44), PR版次:0003(2016-06-02 11:51:13)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000043
+#+ Filename...: axmp431
+#+ Description: 銷售折扣帳款處理作業
+#+ Creator....: 01588(2015-06-11 10:38:27)
+#+ Modifier...: 01588 -SD/PR- 05384
+ 
+{</section>}
+ 
+{<section id="axmp431.global" >}
+#應用 p02 樣板自動產生(Version:19)
+#add-point:填寫註解說明
+#151118-00012#1   2015/11/19  By Shiun      更改抓取匯率時的基準日期
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+#add-point:增加匯入變數檔
+GLOBALS "../../../com/sub/4gl/s_apmm101.inc"
+##end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10             #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num10             #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+        xmfjdocno           LIKE xmfj_t.xmfjdocno,   #合約編號
+        xmflseq             LIKE xmfl_t.xmflseq,     #合約項次
+        l_docno             LIKE ooba_t.ooba002,     #帳款單別
+        l_reason            LIKE oocq_t.oocq002,     #理由碼
+        l_exchange_rate     LIKE type_t.chr1,        #匯率指定方式
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)  #注意要在add-point內寫入END RECORD
+        sel                 LIKE type_t.chr1,        #選擇
+        xmfj003             LIKE xmfj_t.xmfj003,     #帳款客戶
+        xmfj003_desc        LIKE pmaal_t.pmaal004,   #名稱
+        xmde001             LIKE xmde_t.xmde001,     #合約編號
+        xmde002             LIKE xmde_t.xmde002,     #項次
+        xmde005             LIKE xmde_t.xmde005,     #結算日期
+        xmde003             LIKE xmde_t.xmde003,     #出貨/銷退單號
+        xmde004             LIKE xmde_t.xmde004,     #項次
+        xmdk007             LIKE xmdk_t.xmdk007,     #客戶編號
+        xmdk007_desc        LIKE pmaal_t.pmaal004,   #名稱
+        xmde006             LIKE xmde_t.xmde006,     #料件編號
+        xmde006_desc        LIKE imaal_t.imaal003,   #品名
+        xmde006_desc1       LIKE imaal_t.imaal004,   #規格
+        xmde007             LIKE xmde_t.xmde007,     #產品特徵
+        xmde007_desc        LIKE type_t.chr80,       #説明
+        xmde008             LIKE xmde_t.xmde008,     #原始數量
+        xmde009             LIKE xmde_t.xmde009,     #單位
+        xmde009_desc        LIKE oocal_t.oocal003,   #說明
+        xmde010             LIKE xmde_t.xmde010,     #原始單價
+        xmde011             LIKE xmde_t.xmde011,     #原始未稅金額
+        xmde012             LIKE xmde_t.xmde012,     #原始含稅金額
+        xmde013             LIKE xmde_t.xmde013,     #原始稅額
+        xmde020             LIKE xmde_t.xmde020,     #折扣數量
+        xmde021             LIKE xmde_t.xmde021,     #折扣單價
+        xmde017             LIKE xmde_t.xmde017,     #折扣未稅金額
+        xmde018             LIKE xmde_t.xmde018,     #折扣含稅金額
+        xmde019             LIKE xmde_t.xmde019,     #折扣稅額
+        xmde029             LIKE xmde_t.xmde029,     #調整折扣單價
+        xmde014             LIKE xmde_t.xmde014,     #調整折扣未稅金額
+        xmde015             LIKE xmde_t.xmde015,     #調整折扣含稅金額
+        xmde016             LIKE xmde_t.xmde016      #調整折扣稅額
+                            END RECORD
+DEFINE g_param              type_parameter
+DEFINE g_detail_idx         LIKE type_t.num5
+DEFINE g_xmfj019            LIKE xmfj_t.xmfj019      #帳款產生方式
+DEFINE g_apcasite           LIKE apca_t.apcasite     #帳務中心
+DEFINE g_apcald             LIKE apca_t.apcald       #帳套
+DEFINE g_apcacomp           LIKE apca_t.apcacomp     #所屬法人
+DEFINE g_glaa001            LIKE glaa_t.glaa001      #使用幣別
+DEFINE g_glaa016            LIKE glaa_t.glaa016      #本位幣二
+DEFINE g_glaa020            LIKE glaa_t.glaa020      #本位幣三
+DEFINE g_glaa024            LIKE glaa_t.glaa024      #單據別參照表號
+DEFINE g_glaa121            LIKE glaa_t.glaa121      #子模組啟用分錄底稿
+DEFINE g_gen_doc            STRING                   #產生的單據組成字串
+DEFINE g_xmdk               RECORD LIKE xmdk_t.*
+DEFINE g_xmdl               RECORD LIKE xmdl_t.*
+DEFINE g_apca               RECORD LIKE apca_t.*
+DEFINE g_apcb               RECORD LIKE apcb_t.*
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num10              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axmp431.main" >}
+#+ 作業開始 
+MAIN
+   DEFINE ls_js  STRING
+   #add-point:main段define
+   
+   #end add-point   
+   #add-point:main段define
+   
+   #end add-point   
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("axm","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_axmp431 WITH FORM cl_ap_formpath("axm",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL axmp431_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL axmp431_ui_dialog() 
+ 
+      #add-point:畫面關閉前
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_axmp431
+   END IF 
+   
+   #add-point:作業離開前
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="axmp431.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION axmp431_init()
+   #add-point:init段define
+   
+   #end add-point   
+   #add-point:init段define
+   
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化
+   LET g_errshow = 1
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmp431.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION axmp431_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num10
+   #add-point:ui_dialog段define
+   DEFINE l_ooef004      LIKE ooef_t.ooef004
+   DEFINE l_ooef019      LIKE ooef_t.ooef019
+   #end add-point 
+   #add-point:ui_dialog段define
+   
+   #end add-point 
+   
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog 
+   LET g_param.xmflseq = ''
+   LET g_param.l_exchange_rate = '1'
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET g_param.xmfjdocno = g_argv[01]
+      LET g_param.xmflseq = g_argv[02]
+      CALL axmp431_query()
+   END IF
+   #end add-point
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_detail_d.clear()
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL axmp431_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct
+         
+         #end add-point
+         #add-point:ui_dialog段input
+         INPUT BY NAME g_param.xmfjdocno,g_param.xmflseq,
+                       g_param.l_docno,g_param.l_reason,g_param.l_exchange_rate
+               ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            AFTER FIELD xmfjdocno
+               IF NOT cl_null(g_param.xmfjdocno) THEN
+                  #合約編號檢查
+                  IF NOT axmp431_xmfjdocno_chk(g_param.xmfjdocno) THEN
+                     LET g_param.xmfjdocno = ''
+                     DISPLAY BY NAME g_param.xmfjdocno
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  #帶值
+                  IF NOT axmp431_xmfjdocno_default(g_param.xmfjdocno) THEN
+                     LET g_param.xmfjdocno = ''
+                     DISPLAY BY NAME g_param.xmfjdocno
+                     NEXT FIELD CURRENT
+                  END IF
+               ELSE
+                  NEXT FIELD CURRENT
+               END IF
+               CALL axmp431_set_entry()
+               CALL axmp431_set_no_entry()
+               
+            BEFORE FIELD xmflseq
+               IF cl_null(g_param.xmfjdocno) THEN
+                  NEXT FIELD xmfjdocno
+               END IF
+               
+            AFTER FIELD xmflseq
+               IF NOT cl_null(g_param.xmflseq) THEN
+                  #合約項次檢查
+                  IF NOT axmp431_xmflseq_chk(g_param.xmfjdocno,g_param.xmflseq) THEN
+                     LET g_param.xmflseq = ''
+                     DISPLAY BY NAME g_param.xmflseq
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               
+            BEFORE FIELD l_docno
+               IF cl_null(g_param.xmfjdocno) THEN
+                  NEXT FIELD xmfjdocno
+               END IF
+               
+            AFTER FIELD l_docno
+               IF NOT cl_null(g_param.l_docno) THEN
+                  #單別檢查
+                  IF NOT axmp431_docno_chk(g_param.l_docno) THEN
+                     LET g_param.l_docno = ''
+                     DISPLAY BY NAME g_param.l_docno
+                     DISPLAY '' TO FORMONLY.l_docno_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  #單別說明
+                  CALL axmp431_docno_desc(g_param.l_docno)
+               END IF
+            
+            BEFORE FIELD l_reason
+               IF cl_null(g_param.xmfjdocno) THEN 
+                  NEXT FIELD xmfjdocno
+               END IF
+               
+            AFTER FIELD l_reason
+               IF NOT cl_null(g_param.l_reason) THEN
+                  #理由碼檢查
+                  IF NOT axmp431_reason_chk(g_param.l_reason) THEN
+                     LET g_param.l_reason = ''
+                     DISPLAY BY NAME g_param.l_reason
+                     DISPLAY '' TO FORMONLY.l_reason_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  #理由碼說明
+                  CALL axmp431_reason_desc(g_param.l_reason)
+               END IF
+               
+            BEFORE FIELD l_exchange_reate
+               IF cl_null(g_param.xmfjdocno) THEN
+                  NEXT FIELD xmfjdocno
+               END IF
+            
+            ON ACTION controlp INFIELD xmfjdocno
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_param.xmfjdocno
+               LET l_ooef019 = ''
+               SELECT ooef019 INTO l_ooef019 
+                 FROM ooef_t
+                WHERE ooefent = g_enterprise
+                  AND ooef001 = g_site
+               LET g_qryparam.arg1 = l_ooef019
+               LET g_qryparam.where = " xmfjdocno IN (SELECT xmde001 FROM xmde_t ",
+                                      "                WHERE xmdeent = ",g_enterprise,
+                                      "                  AND xmdesite= '",g_site,"'",
+                                      "                  AND xmde000 = '3' ",
+                                      "                  AND xmde025 = '1' )"
+               CALL q_xmfjdocno_1()
+               LET g_param.xmfjdocno = g_qryparam.return1
+               DISPLAY BY NAME g_param.xmfjdocno
+               NEXT FIELD xmfjdocno
+               
+            ON ACTION controlp INFIELD xmflseq
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_param.xmflseq
+               LET g_qryparam.arg1 = g_param.xmfjdocno
+               LET g_qryparam.where = " EXISTS(SELECT xmde001,xmde002 FROM xmde_t ",
+                                      "         WHERE xmdeent = ",g_enterprise,
+                                      "           AND xmdesite = '",g_site,"'",
+                                      "           AND xmde000 = '3' ",
+                                      "           AND xmde001 = '",g_param.xmfjdocno,"'",
+                                      "           AND xmde002 = xmflseq ",
+                                      "           AND xmde025 = '1') "
+               CALL q_xmflseq()
+               LET g_param.xmflseq = g_qryparam.return1
+               DISPLAY BY NAME g_param.xmflseq
+               NEXT FIELD xmflseq
+            
+            ON ACTION controlp INFIELD l_docno
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_param.l_docno
+               CASE g_xmfj019
+                  WHEN '1'
+                       LET l_ooef004 = ''
+                       SELECT ooef004 INTO l_ooef004
+                         FROM ooef_t
+                        WHERE ooefent = g_enterprise
+                          AND ooef001 = g_site
+                       LET g_qryparam.arg1 = l_ooef004
+                       LET g_qryparam.arg2 = 'axmt600'
+                  WHEN '2'
+                       LET g_qryparam.arg1 = g_glaa024
+                       LET g_qryparam.arg2 = 'aapt301'
+               END CASE
+               CALL q_ooba002_1()
+               LET g_param.l_docno = g_qryparam.return1
+               DISPLAY BY NAME g_param.l_docno
+               CALL axmp431_docno_desc(g_param.l_docno)
+               NEXT FIELD l_docno
+               
+            ON ACTION controlp INFIELD l_reason
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_param.l_reason
+               CASE g_xmfj019 
+                  WHEN '1'   #銷退折讓
+                       LET g_qryparam.arg1 = '310'
+                       CALL q_oocq002()
+                       LET g_param.l_reason = g_qryparam.return1
+                       DISPLAY BY NAME g_param.l_reason
+                  WHEN '2'   #雜項應付
+               END CASE
+               CALL axmp431_reason_desc(g_param.l_reason)
+               NEXT FIELD l_reason
+         END INPUT
+
+         INPUT ARRAY g_detail_d FROM s_detail1.*
+            ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                    INSERT ROW = FALSE,
+                    DELETE ROW = FALSE,
+                    APPEND ROW = FALSE)
+            BEFORE INPUT
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_detail_idx = l_ac
+
+            BEFORE ROW
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_detail_idx = l_ac
+            
+            AFTER FIELD b_xmde029
+               IF NOT cl_null(g_detail_d[l_ac].xmde029) THEN
+                  #不可大於原始單價(xmde010)
+                  IF g_detail_d[l_ac].xmde029 > g_detail_d[l_ac].xmde010 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'axm-00675'
+                     LET g_errparam.extend = g_detail_d[l_ac].xmde029
+                     LET g_errparam.popup = TRUE
+                     LET g_errparam.replace[1] = g_detail_d[l_ac].xmde010
+                     
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  #帶出調整折扣含未稅金額與稅額
+                  CALL axmp431_xmde029_default()
+               END IF
+         END INPUT
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         
+         #end add-point
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2
+            CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+            CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            #add-point:ui_dialog段on action selall
+            
+            #end add-point            
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+               #add-point:ui_dialog段on action selall
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selall
+            
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+               #add-point:ui_dialog段on action selnone
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selnone
+            
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel
+            
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel
+            
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL axmp431_filter()
+            #add-point:ON ACTION filter
+            
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            #add-point:ui_dialog段accept之前
+            IF cl_null(g_param.xmfjdocno) THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'axm-00676'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               
+               CALL cl_err()
+               NEXT FIELD xmfjdocno
+            ELSE
+               IF NOT cl_null(g_param.xmfjdocno) THEN
+                  #合約編號檢查
+                  IF NOT axmp431_xmfjdocno_chk(g_param.xmfjdocno) THEN
+                     LET g_param.xmfjdocno = ''
+                     DISPLAY BY NAME g_param.xmfjdocno
+                     NEXT FIELD xmfjdocno
+                  END IF
+                  
+                  #帶值
+                  IF NOT axmp431_xmfjdocno_default(g_param.xmfjdocno) THEN
+                     LET g_param.xmfjdocno = ''
+                     DISPLAY BY NAME g_param.xmfjdocno
+                     NEXT FIELD xmfjdocno
+                  END IF
+               ELSE
+                  NEXT FIELD CURRENT
+               END IF
+               CALL axmp431_set_entry()
+               CALL axmp431_set_no_entry()
+            END IF
+            #end add-point
+            CALL axmp431_query()
+             
+         # 條件清除
+         ON ACTION qbeclear
+            #add-point:ui_dialog段
+            
+            #end add-point
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            #add-point:ui_dialog段datarefresh
+            
+            #end add-point
+            CALL axmp431_b_fill()
+ 
+         #add-point:ui_dialog段action
+         ON ACTION batch_execute
+            IF cl_null(g_param.l_docno) THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'apm-00603'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               NEXT FIELD l_docno
+            ELSE
+               #單別檢查
+               IF NOT axmp431_docno_chk(g_param.l_docno) THEN
+                  LET g_param.l_docno = ''
+                  DISPLAY BY NAME g_param.l_docno
+                  DISPLAY '' TO FORMONLY.l_docno_desc
+                  NEXT FIELD l_docno
+               END IF
+                  
+               #單別說明
+               CALL axmp431_docno_desc(g_param.l_docno)
+            END IF
+            IF g_xmfj019 = '1' THEN
+               IF cl_null(g_param.l_reason) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'axm-00622'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+ 
+                  NEXT FIELD l_reason
+               ELSE
+                  #理由碼檢查
+                  IF NOT axmp431_reason_chk(g_param.l_reason) THEN
+                     LET g_param.l_reason = ''
+                     DISPLAY BY NAME g_param.l_reason
+                     DISPLAY '' TO FORMONLY.l_reason_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  #理由碼說明
+                  CALL axmp431_reason_desc(g_param.l_reason)
+               END IF
+            END IF
+            CALL axmp431_batch_execute()
+            CALL axmp431_query()
+            CONTINUE DIALOG
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmp431.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION axmp431_query()
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+   
+   #end add-point 
+   #add-point:query段define
+   
+   #end add-point 
+    
+   #add-point:cs段after_construct
+   
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL axmp431_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   END IF
+   
+   #add-point:cs段after_query
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmp431.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION axmp431_b_fill()
+ 
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define
+   
+   #end add-point
+   #add-point:b_fill段define
+   
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   
+   LET g_sql = "SELECT 'Y',xmfj003,a.pmaal004,xmde001,xmde002,xmde005,xmde003,xmde004, ",
+               "       xmdk007,b.pmaal004,xmde006,imaal003,imaal004,xmde007,'',xmde008, ",
+               "       xmde009,oocal003,xmde010,xmde011,xmde012,xmde013,xmde020,xmde021, ",
+               "       xmde017,xmde018,xmde019,xmde029,xmde014,xmde015,xmde016 ",
+               "  FROM xmde_t ",
+               "       LEFT OUTER JOIN imaal_t ON imaalent=",g_enterprise," AND imaal001=xmde006 AND imaal002='",g_dlang,"'",
+               "       LEFT OUTER JOIN oocal_t ON oocalent=",g_enterprise," AND oocal001=xmde009 AND oocal002='",g_dlang,"'",
+               "      ,xmfj_t ",
+               "       LEFT OUTER JOIN pmaal_t a ON a.pmaalent=",g_enterprise," AND a.pmaal001=xmfj003 AND a.pmaal002='",g_dlang,"'",
+               "      ,xmdk_t ",
+               "       LEFT OUTER JOIN pmaal_t b ON b.pmaalent=",g_enterprise," AND b.pmaal001=xmdk007 AND b.pmaal002='",g_dlang,"'",
+               " WHERE xmdeent = ?",
+               "   AND xmdesite= '",g_site,"'",
+               "   AND xmde000 = '3' ",
+               "   AND xmde001 = '",g_param.xmfjdocno,"' ",
+               "   AND xmde025 = '1' ",
+               "   AND xmfjent = xmdeent ",
+               "   AND xmfjdocno = xmde001 ",
+               "   AND xmdkent = xmdeent ",
+               "   AND xmdkdocno = xmde003 ",
+               "   AND ",g_wc_filter CLIPPED
+   IF NOT cl_null(g_param.xmflseq) THEN
+      LET g_sql = g_sql CLIPPED,
+                  " AND xmde002 = ",g_param.xmflseq
+   END IF
+   LET g_sql = g_sql CLIPPED," ORDER BY xmde005,xmde001,xmde002,xmde003,xmde004 "
+   #end add-point
+ 
+   PREPARE axmp431_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR axmp431_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空
+   
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into
+      g_detail_d[l_ac].sel,g_detail_d[l_ac].xmfj003,g_detail_d[l_ac].xmfj003_desc,g_detail_d[l_ac].xmde001,
+      g_detail_d[l_ac].xmde002,g_detail_d[l_ac].xmde005,g_detail_d[l_ac].xmde003,g_detail_d[l_ac].xmde004,
+      g_detail_d[l_ac].xmdk007,g_detail_d[l_ac].xmdk007_desc,g_detail_d[l_ac].xmde006,g_detail_d[l_ac].xmde006_desc,
+      g_detail_d[l_ac].xmde006_desc1,g_detail_d[l_ac].xmde007,g_detail_d[l_ac].xmde007_desc,g_detail_d[l_ac].xmde008,
+      g_detail_d[l_ac].xmde009,g_detail_d[l_ac].xmde009_desc,g_detail_d[l_ac].xmde010,g_detail_d[l_ac].xmde011,
+      g_detail_d[l_ac].xmde012,g_detail_d[l_ac].xmde013,g_detail_d[l_ac].xmde020,g_detail_d[l_ac].xmde021,
+      g_detail_d[l_ac].xmde017,g_detail_d[l_ac].xmde018,g_detail_d[l_ac].xmde019,g_detail_d[l_ac].xmde029,
+      g_detail_d[l_ac].xmde014,g_detail_d[l_ac].xmde015,g_detail_d[l_ac].xmde016
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充
+      
+      #end add-point
+      
+      CALL axmp431_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身)
+   CALL g_detail_d.deleteElement(g_detail_d.getLength())
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE axmp431_sel
+   
+   LET l_ac = 1
+   CALL axmp431_fetch()
+   #add-point:b_fill段資料填充(其他單身)
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmp431.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION axmp431_fetch()
+ 
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define
+   
+   #end add-point
+   #add-point:fetch段define
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後
+   
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmp431.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION axmp431_detail_show()
+   #add-point:show段define
+   DEFINE l_success      LIKE type_t.num5
+   #end add-point
+   #add-point:show段define
+   
+   #end add-point
+   
+   #add-point:detail_show段
+   CALL s_feature_description(g_detail_d[l_ac].xmde006,g_detail_d[l_ac].xmde007)
+        RETURNING l_success,g_detail_d[l_ac].xmde007_desc
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmp431.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION axmp431_filter()
+   #add-point:filter段define
+   DEFINE l_ooef019      LIKE ooef_t.ooef019
+   #end add-point    
+   #add-point:filter段define
+   
+   #end add-point    
+   
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define
+
+   CLEAR FORM 
+   CALL g_detail_d.clear()
+   
+   CONSTRUCT g_wc_filter ON xmde001,xmde002,xmde005,xmde003,xmde004,xmde006,xmde007,
+                            xmde008,xmde009,xmde010,xmde011,xmde012,xmde013,xmde020,
+                            xmde021,xmde017,xmde018,xmde019,xmde029,xmde014
+        FROM s_detail1[1].b_xmde001,s_detail1[1].b_xmde002,s_detail1[1].b_xmde005,s_detail1[1].b_xmde003,
+             s_detail1[1].b_xmde004,s_detail1[1].b_xmde006,s_detail1[1].b_xmde007,s_detail1[1].b_xmde008,
+             s_detail1[1].b_xmde009,s_detail1[1].b_xmde010,s_detail1[1].b_xmde011,s_detail1[1].b_xmde012,
+             s_detail1[1].b_xmde013,s_detail1[1].b_xmde020,s_detail1[1].b_xmde021,s_detail1[1].b_xmde017,
+             s_detail1[1].b_xmde018,s_detail1[1].b_xmde019,s_detail1[1].b_xmde029,s_detail1[1].b_xmde014
+             
+      BEFORE CONSTRUCT
+      
+      ON ACTION controlp INFIELD b_xmde001
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'c'
+         LET g_qryparam.reqry = FALSE
+         LET l_ooef019 = ''
+         SELECT ooef019 INTO l_ooef019 
+           FROM ooef_t
+          WHERE ooefent = g_enterprise
+            AND ooef001 = g_site
+         LET g_qryparam.arg1 = l_ooef019
+         LET g_qryparam.where = " xmfjdocno IN (SELECT xmde001 FROM xmde_t ",
+                                "                WHERE xmdeent = ",g_enterprise,
+                                "                  AND xmdesite= '",g_site,"'",
+                                "                  AND xmde000 = '3' ",
+                                "                  AND xmde025 = '1' )"
+         CALL q_xmfjdocno_1()
+         DISPLAY g_qryparam.return1 TO b_xmde001
+         NEXT FIELD b_xmde001
+               
+      ON ACTION controlp INFIELD b_xmde003
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'c'
+         LET g_qryparam.reqry = FALSE
+         LET g_qryparam.where = " xmdkdocno IN (SELECT xmde003 FROM xmde_t ",
+                                "                WHERE xmdeent = ",g_enterprise,
+                                "                  AND xmdesite = '",g_site,"'",
+                                "                  AND xmde000 = '3' ",
+                                "                  AND xmde025 = '1' )"
+         CALL q_xmdkdocno_1()
+         DISPLAY g_qryparam.return1 TO b_xmde003
+         NEXT FIELD b_xmde003
+         
+      ON ACTION controlp INFIELD b_xmde006
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'c'
+         LET g_qryparam.reqry = FALSE
+         
+         CALL q_imaf001_15()
+         DISPLAY g_qryparam.return1 TO b_xmde006
+         NEXT FIELD b_xmde006
+         
+      ON ACTION controlp INFIELD b_xmde009
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'c' 
+         LET g_qryparam.reqry = FALSE
+         
+         CALL q_ooca001_1()  
+         DISPLAY g_qryparam.return1 TO b_xmde009
+         NEXT FIELD b_xmde009
+   END CONSTRUCT
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL axmp431_b_fill()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmp431.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION axmp431_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define
+   
+   #end add-point    
+   #add-point:filter段define
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmp431.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION axmp431_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = axmp431_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmp431.other_function" readonly="Y" >}
+#add-point:自定義元件(Function)
+
+################################################################################
+# Descriptions...: 合約編號檢查
+# Memo...........:
+# Usage..........: CALL axmp431_xmfjdocno_chk(p_xmfjdocno)
+#                  RETURNING r_success
+# Input parameter: p_xmfjdocno    合約編號
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2015/06/12 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp431_xmfjdocno_chk(p_xmfjdocno)
+DEFINE p_xmfjdocno       LIKE xmfj_t.xmfjdocno
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_cnt             LIKE type_t.num5
+
+   LET r_success = TRUE
+   
+   IF cl_null(p_xmfjdocno) THEN
+      RETURN r_success
+   END IF
+   
+   #校驗
+   INITIALIZE g_chkparam.* TO NULL
+   LET g_chkparam.arg1 = p_xmfjdocno
+   IF cl_chk_exist("v_xmfjdocno") THEN
+   ELSE
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #須存在xmde_t，且資料類型(xmde000) = '3'、差異處理否(xmde025) = '1'
+   LET l_cnt = 0
+   SELECT COUNT(*) INTO l_cnt 
+     FROM xmde_t
+    WHERE xmdeent = g_enterprise
+      AND xmde000 = '3'
+      AND xmde001 = p_xmfjdocno
+      AND xmde025 = '1'
+   IF cl_null(l_cnt) OR l_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'axm-00667'
+      LET g_errparam.extend = p_xmfjdocno
+      LET g_errparam.popup = TRUE
+      
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 合約編號帶值
+# Memo...........:
+# Usage..........: CALL axmp431_xmfjdocno_default(p_xmfjdocno)
+#                  RETURNING r_success
+# Input parameter: p_xmfjdocno    合約編號
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2015/06/12 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp431_xmfjdocno_default(p_xmfjdocno)
+DEFINE p_xmfjdocno       LIKE xmfj_t.xmfjdocno
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_success1        LIKE type_t.num5
+DEFINE l_xmfj019_t       LIKE xmfj_t.xmfj019
+
+   LET r_success = TRUE
+   LET g_apcasite = ''
+   LET g_apcald = ''
+   LET g_apcacomp = ''
+   LET g_glaa001 = ''
+   LET g_glaa016 = ''
+   LET g_glaa020 = ''
+   LET g_glaa024 = ''
+   LET g_glaa121 = ''
+   
+   IF cl_null(p_xmfjdocno) THEN
+      RETURN r_success
+   END IF
+   
+   #判斷該合約單是1.銷退折讓或2.雜項應付
+   LET l_xmfj019_t = g_xmfj019
+   LET g_xmfj019 = ''
+   SELECT xmfj019 INTO g_xmfj019
+     FROM xmfj_t
+    WHERE xmfjent = g_enterprise
+      AND xmfjdocno = p_xmfjdocno
+   IF cl_null(g_xmfj019) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'axm-00668'
+      LET g_errparam.extend = p_xmfjdocno
+      LET g_errparam.popup = TRUE
+      
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   CASE g_xmfj019
+      WHEN '1'   #銷退折讓
+      WHEN '2'   #雜項應付
+           #帶出財務資料
+           #帳務中心(apcasite),帳套(apcald),所屬法人(apcacomp)
+           CALL s_aap_get_default_apcasite('','','') 
+                RETURNING l_success1,g_errno,g_apcasite,g_apcald,g_apcacomp
+           IF NOT l_success1 THEN
+              INITIALIZE g_errparam TO NULL
+              LET g_errparam.code = g_errno
+              LET g_errparam.extend = p_xmfjdocno
+              LET g_errparam.popup = TRUE
+              
+              CALL cl_err()
+              LET r_success = FALSE
+              RETURN r_success
+           END IF
+           
+           #單據別參照表號(glaa024)
+           CALL s_ld_sel_glaa(g_apcald,'glaa001|glaa016|glaa020|glaa024|glaa121') 
+                RETURNING l_success1,g_glaa001,g_glaa016,g_glaa020,g_glaa024,g_glaa121
+           IF NOT l_success1 THEN
+              LET r_success = FALSE
+              RETURN r_success
+           END IF
+   END CASE
+   
+   IF NOT cl_null(l_xmfj019_t) AND g_xmfj019 != l_xmfj019_t THEN
+      LET g_param.l_docno = ''
+      DISPLAY BY NAME g_param.l_docno
+      DISPLAY '' TO FORMONLY.l_docno_desc
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 欄位開放
+# Memo...........:
+# Usage..........: CALL axmp431_set_entry()
+#                  
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2015/06/12 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp431_set_entry()
+
+   CALL cl_set_comp_entry("l_reason,l_exchange_rate",TRUE)
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 欄位關閉
+# Memo...........:
+# Usage..........: CALL axmp431_set_no_entry()
+#                  
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2015/06/12 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp431_set_no_entry()
+
+   IF NOT cl_null(g_param.xmfjdocno) THEN
+      IF g_xmfj019 = '2' THEN
+         CALL cl_set_comp_entry("l_reason,l_exchange_rate",FALSE)
+         LET g_param.l_reason = ''
+         LET g_param.l_exchange_rate = '1'
+         DISPLAY BY NAME g_param.l_reason,g_param.l_exchange_rate
+         DISPLAY '' TO l_reason_desc
+      END IF
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 合約項次檢查
+# Memo...........:
+# Usage..........: CALL axmp431_xmflseq_chk(p_xmfjdocno,p_xmflseq)
+#                  RETURNING r_success
+# Input parameter: p_xmfjdocno    合約編號
+#                : p_xmflseq      合約項次
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2015/06/12 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp431_xmflseq_chk(p_xmfjdocno,p_xmflseq)
+DEFINE p_xmfjdocno       LIKE xmfj_t.xmfjdocno
+DEFINE p_xmflseq         LIKE xmfl_t.xmflseq
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_cnt             LIKE type_t.num5
+
+   LET r_success = ''
+   
+   IF cl_null(p_xmfjdocno) OR cl_null(p_xmflseq) THEN
+      RETURN r_success
+   END IF
+   
+   #校驗
+   INITIALIZE g_chkparam.* TO NULL
+   LET g_chkparam.arg1 = p_xmfjdocno
+   LET g_chkparam.arg2 = p_xmflseq
+   IF cl_chk_exist("v_xmflseq") THEN
+   ELSE
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #須存在xmde_t，且資料類型(xmde000) = '3'、差異處理否(xmde025) = '1'
+   LET l_cnt = 0
+   SELECT COUNT(*) INTO l_cnt 
+     FROM xmde_t
+    WHERE xmdeent = g_enterprise
+      AND xmde000 = '3'
+      AND xmde001 = p_xmfjdocno
+      AND xmde002 = p_xmflseq
+      AND xmde025 = '1'
+   IF cl_null(l_cnt) OR l_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'axm-00669'
+      LET g_errparam.extend = p_xmfjdocno,"+",p_xmflseq USING '<<<<<'
+      LET g_errparam.popup = TRUE
+      
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 單別說明
+# Memo...........:
+# Usage..........: CALL axmp431_docno_desc(p_docno)
+#                  
+# Input parameter: p_docno        單別
+# Return code....: 
+# Date & Author..: 2015/06/12 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp431_docno_desc(p_docno)
+DEFINE p_docno           LIKE ooba_t.ooba002
+DEFINE l_docno_desc      LIKE type_t.chr80
+
+   IF cl_null(p_docno) THEN
+      RETURN
+   END IF
+   
+   CASE g_xmfj019
+      WHEN '1'   #銷退折讓
+           CALL s_aooi200_get_slip_desc(p_docno) RETURNING l_docno_desc
+      WHEN '2'   #雜項應付
+           CALL s_aooi200_fin_get_slip_desc(p_docno) RETURNING l_docno_desc
+   END CASE
+   
+   DISPLAY l_docno_desc TO FORMONLY.l_docno_desc
+END FUNCTION
+
+################################################################################
+# Descriptions...: 單別檢查
+# Memo...........:
+# Usage..........: CALL axmp431_docno_chk(p_docno)
+#                  RETURNING r_success
+# Input parameter: p_docno        單別
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2015/06/12 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp431_docno_chk(p_docno)
+DEFINE p_docno           LIKE ooba_t.ooba002
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_success1        LIKE type_t.num5
+DEFINE l_exist           LIKE type_t.num5
+
+   LET r_success = TRUE
+   
+   IF cl_null(p_docno) THEN
+      RETURN r_success
+   END IF
+   
+   CASE g_xmfj019
+      WHEN '1'   #銷退折讓
+           #檢查單別是否正確
+           CALL s_aooi200_chk_slip(g_site,'',p_docno,'axmt600') RETURNING l_success1
+           IF NOT l_success1 THEN
+              LET r_success = FALSE
+              RETURN r_success
+           END IF
+           
+           #檢查該單別可否被key人員對應的控制組使用
+           CALL s_control_chk_doc('1',p_docno,'2',g_user,g_dept,'','') 
+                RETURNING l_success1,l_exist
+           IF l_success1 THEN
+              IF NOT l_exist THEN
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.code = 'axm-00015'
+                 LET g_errparam.extend = p_docno
+                 LET g_errparam.popup = TRUE
+                 CALL cl_err()
+         
+                 LET r_success = FALSE
+                 RETURN r_success
+              END IF
+           ELSE
+              LET r_success = FALSE
+              RETURN r_success
+           END IF
+      WHEN '2'   #雜項應付
+           CALL s_fin_slip_chk(p_docno,'aapt301',g_apcald,'D-FIN-3001')
+                RETURNING l_success1,g_errno
+           IF NOT l_success1 THEN
+              INITIALIZE g_errparam TO NULL
+              LET g_errparam.code = g_errno
+              LET g_errparam.extend = p_docno
+              LET g_errparam.popup = TRUE
+              
+              CALL cl_err()
+              LET r_success = FALSE
+              RETURN r_success
+           END IF
+   END CASE
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 理由碼說明
+# Memo...........:
+# Usage..........: CALL axmp431_reason_desc(p_reason)
+#                  
+# Input parameter: p_reason       理由碼
+# Return code....: 
+# Date & Author..: 2015/06/12 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp431_reason_desc(p_reason)
+DEFINE p_reason          LIKE oocq_t.oocq002
+DEFINE l_reason_desc     LIKE type_t.chr80
+
+   IF cl_null(p_reason) THEN
+      RETURN 
+   END IF
+   
+   CASE g_xmfj019
+      WHEN '1'   #銷退折讓
+           CALL s_desc_get_acc_desc('310',p_reason) RETURNING l_reason_desc
+      WHEN '2'   #雜項應付
+   END CASE
+   
+   DISPLAY l_reason_desc TO FORMONLY.l_reason_desc
+END FUNCTION
+
+################################################################################
+# Descriptions...: 理由碼檢查
+# Memo...........:
+# Usage..........: CALL axmp431_reason_chk(p_reason)
+#                  RETURNING r_success
+# Input parameter: p_reason       理由碼
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2015/06/12 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp431_reason_chk(p_reason)
+DEFINE p_reason          LIKE oocq_t.oocq002
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_success1        LIKE type_t.num5
+
+   LET r_success = TRUE
+   
+   IF cl_null(p_reason) THEN
+      RETURN r_success
+   END IF
+   
+   #理由碼檢查
+   CASE g_xmfj019
+      WHEN '1'   #銷退折讓
+           CALL s_azzi650_chk_exist('310',p_reason) RETURNING l_success1
+           IF NOT l_success1 THEN
+              LET r_success = FALSE
+              RETURN r_success
+           END IF
+      WHEN '2'   #雜項應付
+   END CASE
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 帶出調整折扣含未稅金額與稅額
+# Memo...........:
+# Usage..........: CALL axmp431_xmde029_default()
+#                  
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2015/06/12 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp431_xmde029_default()
+DEFINE l_curr            LIKE ooai_t.ooai001
+DEFINE l_tax             LIKE oodb_t.oodb002
+DEFINE l_exrate          LIKE ooan_t.ooan005
+DEFINE l_amount          LIKE xmde_t.xmde014
+DEFINE l_xrcd113         LIKE xrcd_t.xrcd113
+DEFINE l_xrcd114         LIKE xrcd_t.xrcd114
+DEFINE l_xrcd115         LIKE xrcd_t.xrcd115
+DEFINE l_success         LIKE type_t.num5
+
+   CASE g_param.l_exchange_rate
+      WHEN '1'   #當下匯率
+           SELECT xmfj004,xmfj005 INTO l_curr,l_tax
+             FROM xmfj_t
+            WHERE xmfjent = g_enterprise
+              AND xmfjdocno = g_detail_d[l_ac].xmde001
+              
+           #當前匯率
+           CALL axmp431_get_exrate(g_detail_d[l_ac].xmfj003,l_curr) RETURNING l_success,l_exrate
+           IF NOT l_success THEN
+              RETURN
+           END IF
+      WHEN '2'   #依據出貨單原始匯率
+           SELECT xmdk016,xmdl025,xmdk017 INTO l_curr,l_tax,l_exrate
+             FROM xmdk_t,xmdl_t
+            WHERE xmdkent = g_enterprise
+              AND xmdkdocno = xmdldocno
+              AND xmdkdocno = g_detail_d[l_ac].xmde003
+              AND xmdlseq = g_detail_d[l_ac].xmde004
+   END CASE
+   
+   LET l_amount = g_detail_d[l_ac].xmde020 * g_detail_d[l_ac].xmde029
+   CALL s_tax_count(g_site,l_tax,l_amount,g_detail_d[l_ac].xmde020,l_curr,l_exrate)
+        RETURNING g_detail_d[l_ac].xmde014,g_detail_d[l_ac].xmde015,g_detail_d[l_ac].xmde016,
+                  l_xrcd113,l_xrcd114,l_xrcd115
+END FUNCTION
+
+################################################################################
+# Descriptions...: 資料處理
+# Memo...........:
+# Usage..........: CALL axmp431_batch_execute()
+#                  
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2015/06/12 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp431_batch_execute()
+DEFINE l_success         LIKE type_t.num5
+DEFINE l_prog            LIKE gzzz_t.gzzz001
+DEFINE ls_js             STRING
+DEFINE lc_param          type_parameter
+DEFINE la_param          RECORD
+          prog           STRING,
+          param          DYNAMIC ARRAY OF STRING
+                         END RECORD
+
+   #合約編號帶出預設值
+   IF cl_null(g_param.xmfjdocno) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'axm-00678'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      
+      CALL cl_err()
+      RETURN
+   ELSE
+      CALL axmp431_xmfjdocno_default(g_param.xmfjdocno)
+           RETURNING l_success
+      IF NOT l_success THEN
+         RETURN
+      END IF
+   END IF
+   
+   CALL axmp431_create_temptable() RETURNING l_success
+   IF NOT l_success THEN
+      RETURN 
+   END IF
+   
+   #若有需要產生分錄時要呼叫的TEMP TABLE
+   CALL s_aapp330_cre_tmp() RETURNING l_success
+   IF NOT l_success THEN 
+      RETURN
+   END IF
+   CALL s_tax_recount_tmp()
+   CALL s_transaction_begin()
+   CALL cl_err_collect_init()
+   
+   #將勾選的資料新增到temp table
+   CALL axmp431_ins_temptable() RETURNING l_success
+   IF l_success THEN
+      CASE g_xmfj019 
+         WHEN '1'   #銷退折讓
+              #新增銷退單
+              CALL axmp431_ins_axmt600() RETURNING l_success
+         WHEN '2'   #雜項應付
+              #新增雜項應付
+              CALL axmp431_ins_aapt301() RETURNING l_success
+      END CASE
+   END IF
+   
+   CALL cl_err_collect_show()
+   IF l_success THEN
+      CALL s_transaction_end('Y','0')
+      IF cl_ask_confirm('aps-00127') THEN
+         CASE g_xmfj019
+            WHEN '1'
+                 LET la_param.prog = 'axmt600'
+                 LET la_param.param[1] = g_gen_doc
+            WHEN '2'
+                 LET la_param.prog = 'aapt301'
+                 LET la_param.param[1] = g_apca.apcald
+                 LET la_param.param[2] = g_apca.apcadocno
+         END CASE
+         LET ls_js = util.JSON.stringify(la_param )
+         CALL cl_cmdrun_wait(ls_js)
+      END IF
+   ELSE
+      CALL s_transaction_end('N','0')
+   END IF
+   
+   CALL axmp431_drop_temptable()
+END FUNCTION
+
+################################################################################
+# Descriptions...: Create Temp Table
+# Memo...........:
+# Usage..........: CALL axmp431_create_temptable()
+#                  RETURNING r_success
+# Input parameter: 
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2015/06/12 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp431_create_temptable()
+DEFINE r_success         LIKE type_t.num5
+
+   LET r_success = TRUE
+   
+   CALL axmp431_drop_temptable()
+   CREATE TEMP TABLE axmp431_temp1(
+      xmfj003        LIKE xmfj_t.xmfj003,     #帳款客戶
+      xmfj004        LIKE xmfj_t.xmfj004,     #幣別
+      xmfj005        LIKE xmfj_t.xmfj005,     #稅別
+      xmfj006        LIKE xmfj_t.xmfj006,     #稅率
+      xmfj007        LIKE xmfj_t.xmfj007,     #含稅否
+      xmfj008        LIKE xmfj_t.xmfj008,     #收款條件
+      xmfj009        LIKE xmfj_t.xmfj009,     #交易條件
+      xmfj010        LIKE xmfj_t.xmfj010,     #銷售通路
+      exrate         LIKE ooan_t.ooan005,     #匯率
+      xmde001        LIKE xmde_t.xmde001,     #合約編號
+      xmde002        LIKE xmde_t.xmde002,     #合約項次
+      xmde003        LIKE xmde_t.xmde003,     #出貨/銷退單號
+      xmde004        LIKE xmde_t.xmde004,     #出貨/銷退項次
+      xmde006        LIKE xmde_t.xmde006,     #料件編號
+      xmde007        LIKE xmde_t.xmde007,     #產品特徵
+      xmde014        LIKE xmde_t.xmde014,     #未稅金額
+      xmde015        LIKE xmde_t.xmde015,     #含稅金額
+      xmde016        LIKE xmde_t.xmde016,     #稅額
+      xmde020        LIKE xmde_t.xmde020,     #折扣數量
+      xmde029        LIKE xmde_t.xmde029,     #調整折扣單價
+      xmde005        DATETIME YEAR TO SECOND  #結算日期
+   )
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create axmp431_tmp1'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+      
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: Drop Temp Table
+# Memo...........:
+# Usage..........: CALL axmp431_drop_temptable()
+#                  
+# Input parameter: 
+# Return code....:  
+# Date & Author..: 2015/06/12 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp431_drop_temptable()
+
+   DROP TABLE axmp431_temp1;
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 將勾選的資料新增到Temp Table
+# Memo...........:
+# Usage..........: CALL axmp431_ins_temptable()
+#                  RETURNING r_success
+# Input parameter: 
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2015/06/15 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp431_ins_temptable()
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_i               LIKE type_t.num5
+DEFINE l_xmfj004         LIKE xmfj_t.xmfj004
+DEFINE l_xmfj005         LIKE xmfj_t.xmfj005
+DEFINE l_xmfj006         LIKE xmfj_t.xmfj006
+DEFINE l_xmfj007         LIKE xmfj_t.xmfj007
+DEFINE l_xmfj008         LIKE xmfj_t.xmfj008
+DEFINE l_xmfj009         LIKE xmfj_t.xmfj009
+DEFINE l_xmfj010         LIKE xmfj_t.xmfj010
+DEFINE l_exrate          LIKE ooan_t.ooan005
+DEFINE l_success         LIKE type_t.num5
+DEFINE l_cnt             LIKE type_t.num5
+
+   LET r_success = TRUE
+   
+   FOR l_i = 1 TO g_detail_d.getLength()
+      IF cl_null(g_detail_d[l_i].xmde001) THEN
+         CONTINUE FOR
+      END IF
+      
+      LET l_xmfj004 = ''
+      LET l_xmfj005 = ''
+      LET l_xmfj006 = ''
+      LET l_xmfj007 = ''
+      LET l_xmfj008 = ''
+      LET l_xmfj009 = ''
+      LET l_xmfj010 = ''
+      LET l_exrate = ''
+      CASE g_param.l_exchange_rate
+         WHEN '1'   #當下匯率
+              #幣別、稅別、稅率、含稅否、收款條件、交易條件、銷售通路
+              SELECT xmfj004,xmfj005,xmfj006,xmfj007,xmfj008,xmfj009,xmfj010
+                INTO l_xmfj004,l_xmfj005,l_xmfj006,l_xmfj007,l_xmfj008,l_xmfj009,l_xmfj010
+                FROM xmfj_t
+               WHERE xmfjent = g_enterprise
+                 AND xmfjdocno = g_detail_d[l_i].xmde001
+              IF SQLCA.sqlcode THEN
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.code = SQLCA.sqlcode
+                 LET g_errparam.extend = 'sel xmfj_t:',g_detail_d[l_i].xmde001
+                 LET g_errparam.popup = TRUE
+                 
+                 CALL cl_err()
+                 LET r_success = FALSE
+                 EXIT FOR
+              END IF
+              
+              #匯率：當前匯率
+              CALL axmp431_get_exrate(g_detail_d[l_i].xmfj003,l_xmfj004) RETURNING l_success,l_exrate
+              IF NOT l_success THEN
+                 LET r_success = FALSE
+                 EXIT FOR
+              END IF
+         WHEN '2'   #依據出貨單原始匯率
+              #幣別、稅別、稅率、含稅否、收款條件、交易條件、銷售通路、匯率
+              SELECT xmdk016,xmdk012,xmdk013,xmdk014,xmdk010,xmdk011,xmdk030,xmdk017
+                INTO l_xmfj004,l_xmfj005,l_xmfj006,l_xmfj007,l_xmfj008,l_xmfj009,l_xmfj010,l_exrate
+                FROM xmdk_t
+               WHERE xmdkent = g_enterprise
+                 AND xmdkdocno = g_detail_d[l_i].xmde003
+              IF SQLCA.sqlcode THEN
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.code = SQLCA.sqlcode
+                 LET g_errparam.extend = 'sel xmdk_t:',g_detail_d[l_i].xmde003
+                 LET g_errparam.popup = TRUE
+                 
+                 CALL cl_err()
+                 LET r_success = FALSE
+                 EXIT FOR
+              END IF
+      END CASE
+      
+      INSERT INTO axmp431_temp1(xmfj003,xmfj004,xmfj005,xmfj006,xmfj007,xmfj008,xmfj009,xmfj010,exrate,
+                                xmde001,xmde002,xmde003,xmde004,xmde006,xmde007,xmde014,xmde015,xmde016,
+                                xmde020,xmde029,xmde005)
+         VALUES(g_detail_d[l_i].xmfj003,l_xmfj004,l_xmfj005,l_xmfj006,l_xmfj007,l_xmfj008,l_xmfj009,l_xmfj010,l_exrate,
+                g_detail_d[l_i].xmde001,g_detail_d[l_i].xmde002,g_detail_d[l_i].xmde003,g_detail_d[l_i].xmde004,
+                g_detail_d[l_i].xmde006,g_detail_d[l_i].xmde007,g_detail_d[l_i].xmde014,g_detail_d[l_i].xmde015,
+                g_detail_d[l_i].xmde016,g_detail_d[l_i].xmde020,g_detail_d[l_i].xmde029,g_detail_d[l_i].xmde005)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'ins temp'
+         LET g_errparam.popup = TRUE
+         
+         CALL cl_err()
+         LET r_success = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   IF NOT r_success THEN
+      RETURN r_success
+   END IF
+   
+   LET l_cnt = 0
+   SELECT COUNT(*) INTO l_cnt 
+     FROM axmp431_temp1
+   IF cl_null(l_cnt) OR l_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'afa-00063'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取當前的匯率
+# Memo...........:
+# Usage..........: CALL axmp431_get_exrate(p_customer,p_curr)
+#                  RETURNING r_success,r_exrate
+# Input parameter: p_customer     客戶編號
+#                : p_curr         幣別
+# Return code....: r_success      TRUE/FALSE
+#                : r_exrate       匯率
+# Date & Author..: 2015/06/15 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp431_get_exrate(p_customer,p_curr)
+DEFINE p_customer        LIKE pmaa_t.pmaa001
+DEFINE p_curr            LIKE ooai_t.ooai001
+DEFINE r_success         LIKE type_t.num5
+DEFINE r_exrate          LIKE ooan_t.ooan005
+DEFINE l_success         LIKE type_t.num5
+DEFINE l_controlno       LIKE ooha_t.ooha001
+
+   LET r_success = TRUE
+   LET r_exrate = ''
+   
+   IF cl_null(p_customer) OR cl_null(p_curr) THEN
+      RETURN r_success,r_exrate
+   END IF
+   
+   #取得控制組編號
+   CALL s_control_get_group('2',g_user,g_dept) RETURNING l_success,l_controlno
+   IF NOT l_success THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   CALL s_apmm101_default_pmab('2',l_controlno,g_site,p_customer) 
+        RETURNING g_pmab.*
+        
+   CALL s_axmt540_get_exchange(g_pmab.pmab057,p_curr,g_today)   #modify--151118-00012#1 By Shiun      新增傳入參數g_today
+        RETURNING r_exrate
+     
+   RETURN r_success,r_exrate
+END FUNCTION
+
+################################################################################
+# Descriptions...: 新增銷退單
+# Memo...........:
+# Usage..........: CALL axmp431_ins_axmt600()
+#                  RETURNING r_success
+# Input parameter: 
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2015/06/15 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp431_ins_axmt600()
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_sql             STRING
+DEFINE l_xmdk007         LIKE xmdk_t.xmdk007
+DEFINE l_xmdk010         LIKE xmdk_t.xmdk010
+DEFINE l_xmdk011         LIKE xmdk_t.xmdk011
+DEFINE l_xmdk012         LIKE xmdk_t.xmdk012
+DEFINE l_xmdk013         LIKE xmdk_t.xmdk013
+DEFINE l_xmdk014         LIKE xmdk_t.xmdk014
+DEFINE l_xmdk016         LIKE xmdk_t.xmdk016
+DEFINE l_xmdk017         LIKE xmdk_t.xmdk017
+DEFINE l_xmdk030         LIKE xmdk_t.xmdk030
+DEFINE l_xmdk086         LIKE xmdk_t.xmdk086
+DEFINE l_success         LIKE type_t.num5
+DEFINE l_success1        LIKE type_t.num5
+DEFINE l_tot_success     LIKE type_t.num5
+DEFINE l_xmde001         LIKE xmde_t.xmde001
+DEFINE l_xmde002         LIKE xmde_t.xmde002
+DEFINE l_xmde003         LIKE xmde_t.xmde003
+DEFINE l_xmde004         LIKE xmde_t.xmde004
+DEFINE l_xmde005         LIKE xmde_t.xmde005
+DEFINE l_xmde006         LIKE xmde_t.xmde006
+DEFINE l_xmde007         LIKE xmde_t.xmde007
+DEFINE l_xmde014         LIKE xmde_t.xmde014
+DEFINE l_xmde015         LIKE xmde_t.xmde015
+DEFINE l_xmde016         LIKE xmde_t.xmde016
+DEFINE l_xmde020         LIKE xmde_t.xmde020
+DEFINE l_xmde029         LIKE xmde_t.xmde029
+DEFINE l_xrcd113         LIKE xrcd_t.xrcd113
+DEFINE l_xrcd114         LIKE xrcd_t.xrcd114
+DEFINE l_xrcd115         LIKE xrcd_t.xrcd115
+DEFINE l_xrcd123         LIKE xrcd_t.xrcd123
+DEFINE l_xrcd124         LIKE xrcd_t.xrcd124
+DEFINE l_xrcd125         LIKE xrcd_t.xrcd125
+DEFINE l_xrcd133         LIKE xrcd_t.xrcd133
+DEFINE l_xrcd134         LIKE xrcd_t.xrcd134
+DEFINE l_xrcd135         LIKE xrcd_t.xrcd135
+DEFINE l_seq             LIKE xmdl_t.xmdlseq
+
+   LET r_success = TRUE
+   LET l_tot_success = TRUE
+   LET l_success = TRUE
+   
+   LET l_sql = "SELECT xmfj003,xmfj004,xmfj005,xmfj006,xmfj007,xmfj008,xmfj009,xmfj010,exrate,xmde001 ",
+               "  FROM axmp431_temp1 ",
+               " GROUP BY xmfj003,xmfj004,xmfj005,xmfj006,xmfj007,xmfj008,xmfj009,xmfj010,exrate,xmde001 ",
+               " ORDER BY xmfj003,xmfj004,xmfj005,xmfj006,xmfj007,xmfj008,xmfj009,xmfj010,exrate,xmde001 "
+   PREPARE axmp431_ins_axmt600_pre FROM l_sql
+   DECLARE axmp431_ins_axmt600_cs CURSOR FOR axmp431_ins_axmt600_pre
+   
+   #2015/08/04 by stellar modify ----- (S)
+   #不做匯總了
+#   #將相同的料件+產品特徵、調整折扣單價做匯總產生銷退明細
+#   LET l_sql = "SELECT xmde002,xmde006,xmde007,SUM(xmde020),xmde029",
+#               "  FROM axmp431_temp1 ",
+#               " WHERE xmfj003 = ? ",
+#               "   AND xmfj004 = ? ",
+#               "   AND xmfj005 = ? ",
+#               "   AND xmfj006 = ? ",
+#               "   AND xmfj007 = ? ",
+#               "   AND xmfj008 = ? ",
+#               "   AND xmfj009 = ? ",
+#               "   AND xmfj010 = ? ",
+#               "   AND exrate = ? ",
+#               "   AND xmde001 = ? ",
+#               " GROUP BY xmde002,xmde006,xmde007,xmde029 "
+   LET l_sql = "SELECT xmde001,xmde002,xmde003,xmde004,xmde005,xmde006,xmde007,xmde014,xmde015,xmde016,xmde020,xmde029",
+               "  FROM axmp431_temp1 ",
+               " WHERE xmfj003 = ? ",
+               "   AND xmfj004 = ? ",
+               "   AND xmfj005 = ? ",
+               "   AND xmfj006 = ? ",
+               "   AND xmfj007 = ? ",
+               "   AND xmfj008 = ? ",
+               "   AND xmfj009 = ? ",
+               "   AND xmfj010 = ? ",
+               "   AND exrate = ? ",
+               "   AND xmde001 = ? ",
+               " ORDER BY xmde001,xmde002,xmde003,xmde004 "
+   #2015/08/04 by stellar modify ----- (E)
+   PREPARE axmp431_ins_axmt600_pre1 FROM l_sql
+   DECLARE axmp431_ins_axmt600_cs1 CURSOR FOR axmp431_ins_axmt600_pre1
+   
+   #將有勾選產生帳款處理的xmde_t進行更新
+   LET l_sql = "SELECT xmde001,xmde002,xmde003,xmde004,xmde005,xmde014,xmde015,xmde016 ",
+               "  FROM axmp431_temp1 ",
+               " WHERE xmfj003 = ? ",
+               "   AND xmfj004 = ? ",
+               "   AND xmfj005 = ? ",
+               "   AND xmfj006 = ? ",
+               "   AND xmfj007 = ? ",
+               "   AND xmfj008 = ? ",
+               "   AND xmfj009 = ? ",
+               "   AND xmfj010 = ? ",
+               "   AND exrate = ? ",
+               "   AND xmde001 = ? ",
+               "   AND xmde002 = ? ",
+               "   AND xmde006 = ? ",
+               "   AND xmde007 = ? ",
+               "   AND xmde029 = ? "
+   PREPARE axmp431_ins_axmt600_pre2 FROM l_sql
+   DECLARE axmp431_ins_axmt600_cs2 CURSOR FOR axmp431_ins_axmt600_pre2
+   
+   FOREACH axmp431_ins_axmt600_cs INTO l_xmdk007,l_xmdk016,l_xmdk012,l_xmdk013,l_xmdk014,
+                                       l_xmdk010,l_xmdk011,l_xmdk030,l_xmdk017,l_xmdk086
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'axmp431_ins_axmt600_cs:'
+         LET g_errparam.popup = TRUE
+         
+         CALL cl_err()
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      IF NOT l_success THEN
+         LET l_tot_success = FALSE
+      END IF
+      LET l_success = TRUE
+      
+      #銷售單頭新增
+      INITIALIZE g_xmdk.* TO NULL
+      
+      #新增預設
+      CALL axmp431_xmdk_init()
+      
+      #單據別預設
+      CALL axmp431_xmdk_doc_default()
+      
+      #客戶預設
+      LET g_xmdk.xmdk007 = l_xmdk007
+      CALL axmp431_xmdk_customer_default()
+           RETURNING l_success1
+      IF NOT l_success1 THEN
+         LET l_success = FALSE
+         CONTINUE FOREACH
+      END IF
+      
+      #給值
+      LET g_xmdk.xmdk005 = NULL   #出貨單號
+      LET g_xmdk.xmdk008 = g_xmdk.xmdk007   #帳款客戶
+      LET g_xmdk.xmdk009 = g_xmdk.xmdk007   #收貨客戶
+      LET g_xmdk.xmdk202 = g_xmdk.xmdk007   #發票客戶
+      LET g_xmdk.xmdk045 = '1'   #多角性質
+      LET g_xmdk.xmdk082 = '4'   #銷退方式
+      LET g_xmdk.xmdk085 = '4'   #資料來源
+      LET g_xmdk.xmdk086 = l_xmdk086   #來源單號
+      
+      #幣別、稅別、稅率、含稅否、收款條件、交易條件、銷售通路、匯率給值
+      LET g_xmdk.xmdk016 = l_xmdk016
+      LET g_xmdk.xmdk012 = l_xmdk012
+      LET g_xmdk.xmdk013 = l_xmdk013
+      LET g_xmdk.xmdk014 = l_xmdk014
+      LET g_xmdk.xmdk010 = l_xmdk010
+      LET g_xmdk.xmdk011 = l_xmdk011
+      LET g_xmdk.xmdk030 = l_xmdk030
+      LET g_xmdk.xmdk017 = l_xmdk017
+      
+      #單據別自動編碼
+      CALL s_aooi200_gen_docno(g_site,g_param.l_docno,g_xmdk.xmdkdocdt,'axmt600')
+           RETURNING l_success,g_xmdk.xmdkdocno
+      IF NOT l_success THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'apm-00003'
+         LET g_errparam.extend = g_param.l_docno
+         LET g_errparam.popup = TRUE
+         
+         CALL cl_err()
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      INSERT INTO xmdk_t VALUES (g_xmdk.*)
+      IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'ins xmdk_t'
+         LET g_errparam.popup = TRUE
+         
+         CALL cl_err()
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      #新增單身
+      LET l_seq = 1
+      OPEN axmp431_ins_axmt600_cs1 USING l_xmdk007,l_xmdk016,l_xmdk012,l_xmdk013,l_xmdk014,
+                                         l_xmdk010,l_xmdk011,l_xmdk030,l_xmdk017,l_xmdk086
+      #2015/08/04 by stellar modify ----- (S)
+      #不做匯總
+#      FOREACH axmp431_ins_axmt600_cs1 INTO l_xmde002,l_xmde006,l_xmde007,l_xmde020,l_xmde029
+      FOREACH axmp431_ins_axmt600_cs1 INTO l_xmde001,l_xmde002,l_xmde003,l_xmde004,l_xmde005,
+                                           l_xmde006,l_xmde007,l_xmde014,l_xmde015,l_xmde016,
+                                           l_xmde020,l_xmde029
+      #2015/08/04 by stellar modify ----- (E)
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'axmp431_ins_axmt600_cs1:'
+            LET g_errparam.popup = TRUE
+            
+            CALL cl_err()
+            LET r_success = FALSE
+            EXIT FOREACH
+         END IF
+         
+         INITIALIZE g_xmdl.* TO NULL
+         LET g_xmdl.xmdlent = g_xmdk.xmdkent
+         LET g_xmdl.xmdlsite= g_xmdk.xmdksite
+         LET g_xmdl.xmdldocno = g_xmdk.xmdkdocno
+         LET g_xmdl.xmdlseq = l_seq
+         
+         #2015/08/04 by stellar add ----- (S)
+         #出貨單號、出貨項次、訂單單號、訂單項次
+         LET g_xmdl.xmdl001 = l_xmde003
+         LET g_xmdl.xmdl002 = l_xmde004
+         
+         SELECT xmdl003,xmdl004,xmdl005 
+           INTO g_xmdl.xmdl003,g_xmdl.xmdl004,g_xmdl.xmdl005
+           FROM xmdl_t
+          WHERE xmdlent = g_enterprise
+            AND xmdldocno = g_xmdl.xmdl001
+            AND xmdlseq = g_xmdl.xmdl002
+         #2015/08/04 by stellar add ----- (E)
+         
+         LET g_xmdl.xmdl008 = l_xmde006
+         LET g_xmdl.xmdl009 = l_xmde007
+         
+#         CALL s_axmt540_materials_search(g_xmdk.xmdk003,g_xmdk.xmdk004,g_xmdk.xmdk007,g_xmdl.xmdl008,g_xmdl.xmdl009)
+#              RETURNING g_xmdl.xmdl007,g_xmdl.xmdl010,g_xmdl.xmdl017,g_xmdl.xmdl019,g_xmdl.xmdl021,
+#                        g_xmdl.xmdl014,g_xmdl.xmdl015
+                      
+         LET g_xmdl.xmdl007 = '1'
+         LET g_xmdl.xmdl013 = 'N'
+         
+         #單位
+         SELECT xmfl006 INTO g_xmdl.xmdl017 
+           FROM xmfl_t
+          WHERE xmflent = g_enterprise
+            AND xmfldocno = l_xmdk086
+            AND xmflseq = l_xmde002
+         
+         LET g_xmdl.xmdl018 = l_xmde020
+         
+         #營運據點是否使用參考單位(若不使用為'')
+         IF cl_get_para(g_enterprise,g_site,'S-BAS-0028') = "N" THEN
+            LET g_xmdl.xmdl019 = ''  #參考單位
+         END IF
+         
+         #推算參考數量
+         IF NOT cl_null(g_xmdl.xmdl008) AND NOT cl_null(g_xmdl.xmdl017) AND
+            NOT cl_null(g_xmdl.xmdl019) AND NOT cl_null(g_xmdl.xmdl018) THEN
+
+            CALL s_aooi250_convert_qty(g_xmdl.xmdl008,g_xmdl.xmdl017,g_xmdl.xmdl019,g_xmdl.xmdl018)
+                 RETURNING l_success1,g_xmdl.xmdl020
+            IF NOT l_success1 THEN
+               LET l_success = FALSE
+               CONTINUE FOREACH
+            END IF
+         ELSE
+            LET g_xmdl.xmdl020 = ''
+         END IF
+         
+         LET g_xmdl.xmdl021 = g_xmdl.xmdl017
+         LET g_xmdl.xmdl022 = g_xmdl.xmdl018
+         LET g_xmdl.xmdl023 = 'N'
+         LET g_xmdl.xmdl024 = l_xmde029
+         
+         #稅別、稅率
+         LET g_xmdl.xmdl025 = g_xmdk.xmdk012
+         LET g_xmdl.xmdl026 = g_xmdk.xmdk013
+            
+         #含未稅金額與稅額
+         CALL s_tax_ins(g_xmdk.xmdkdocno,g_xmdl.xmdlseq,0,g_site,g_xmdl.xmdl022*g_xmdl.xmdl024,
+                        g_xmdl.xmdl025,g_xmdl.xmdl022,g_xmdk.xmdk016,g_xmdk.xmdk017,'','','')
+              RETURNING g_xmdl.xmdl027,g_xmdl.xmdl029,g_xmdl.xmdl028,l_xrcd113,l_xrcd114,l_xrcd115,
+                        l_xrcd123,l_xrcd124,l_xrcd125,l_xrcd133,l_xrcd134,l_xrcd135
+         IF NOT g_sub_success THEN
+            LET l_success = FALSE
+            CONTINUE FOREACH
+         END IF
+         
+         LET g_xmdl.xmdl050 = g_param.l_reason
+         LET g_xmdl.xmdl087 = 'Y'
+         LET g_xmdl.xmdl094 = g_xmdk.xmdk086
+         LET g_xmdl.xmdl095 = l_xmde002
+         
+         INSERT INTO xmdl_t VALUES (g_xmdl.*)
+         IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'ins xmdl_t'
+            LET g_errparam.popup = TRUE
+            
+            CALL cl_err()
+            LET r_success = FALSE
+            EXIT FOREACH
+         END IF
+         
+         INSERT INTO xmdm_t(xmdment,xmdmsite,xmdmdocno,xmdmseq,xmdmseq1,
+                            xmdm001,xmdm002,xmdm003,xmdm004,xmdm005,
+                            xmdm006,xmdm007,xmdm008,xmdm009,xmdm010,
+                            xmdm011,xmdm012,xmdm013,xmdm014,
+                            xmdm033)
+            VALUES(g_enterprise,g_site,g_xmdk.xmdkdocno,g_xmdl.xmdlseq,1,
+                   g_xmdl.xmdl008,g_xmdl.xmdl009,g_xmdl.xmdl011,g_xmdl.xmdl012,g_xmdl.xmdl014,
+                   g_xmdl.xmdl015,g_xmdl.xmdl016,g_xmdl.xmdl017,g_xmdl.xmdl018,g_xmdl.xmdl019,
+                   g_xmdl.xmdl020,0,0,0,
+                   g_xmdl.xmdl052)
+         IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'ins xmdm_t'
+            LET g_errparam.popup = TRUE
+            
+            CALL cl_err()
+            LET r_success = FALSE
+            EXIT FOREACH
+         END IF
+         
+         LET l_seq = l_seq + 1
+         
+         #2015/08/04 by stellar modify ----- (S)
+#         OPEN axmp431_ins_axmt600_cs2 USING l_xmdk007,l_xmdk016,l_xmdk012,l_xmdk013,l_xmdk014,
+#                                            l_xmdk010,l_xmdk011,l_xmdk030,l_xmdk017,l_xmdk086,
+#                                            l_xmde002,l_xmde006,l_xmde007,l_xmde029
+#         FOREACH axmp431_ins_axmt600_cs2 INTO l_xmde001,l_xmde002,l_xmde003,l_xmde004,l_xmde005,
+#                                              l_xmde014,l_xmde015,l_xmde016
+#      
+#            UPDATE xmde_t SET xmde025 = '2',
+#                              xmde026 = g_xmfj019,
+#                              xmde027 = g_xmdk.xmdkdocno,
+#                              xmde028 = g_xmdl.xmdlseq,
+#                              xmde029 = g_xmdl.xmdl024,
+#                              xmde014 = l_xmde014,
+#                              xmde015 = l_xmde015,
+#                              xmde016 = l_xmde016
+#             WHERE xmdeent = g_enterprise
+#               AND xmde000 = '3'
+#               AND xmde001 = l_xmde001
+#               AND xmde002 = l_xmde002
+#               AND xmde003 = l_xmde003
+#               AND xmde004 = l_xmde004
+#               AND xmde005 = l_xmde005
+#            IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+#               INITIALIZE g_errparam TO NULL
+#               LET g_errparam.code = SQLCA.sqlcode
+#               LET g_errparam.extend = 'upd xmde_t'
+#               LET g_errparam.popup = TRUE
+#                  
+#               CALL cl_err()
+#               LET r_success = FALSE
+#               EXIT FOREACH
+#            END IF
+#         END FOREACH
+         UPDATE xmde_t SET xmde025 = '2',
+                           xmde026 = g_xmfj019,
+                           xmde027 = g_xmdk.xmdkdocno,
+                           xmde028 = g_xmdl.xmdlseq,
+                           xmde029 = g_xmdl.xmdl024,
+                           xmde014 = l_xmde014,
+                           xmde015 = l_xmde015,
+                           xmde016 = l_xmde016
+          WHERE xmdeent = g_enterprise
+            AND xmde000 = '3'
+            AND xmde001 = l_xmde001
+            AND xmde002 = l_xmde002
+            AND xmde003 = l_xmde003
+            AND xmde004 = l_xmde004
+            AND xmde005 = l_xmde005
+         IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'upd xmde_t'
+            LET g_errparam.popup = TRUE
+               
+            CALL cl_err()
+            LET r_success = FALSE
+            EXIT FOREACH
+         END IF
+         #2015/08/04 by stellar modify ----- (E)
+         
+         IF NOT r_success THEN
+            EXIT FOREACH
+         END IF
+      END FOREACH
+         
+      IF NOT r_success THEN
+         EXIT FOREACH
+      END IF
+      
+      IF NOT l_success THEN
+         CONTINUE FOREACH
+      END IF
+      
+      #整單含未稅金額與稅額
+      CALL s_tax_recount(g_xmdk.xmdkdocno)
+           RETURNING g_xmdk.xmdk051,g_xmdk.xmdk053,g_xmdk.xmdk052,
+                     l_xrcd113,l_xrcd114,l_xrcd115
+      UPDATE xmdk_t SET xmdk051 = g_xmdk.xmdk051,
+                        xmdk052 = g_xmdk.xmdk052,
+                        xmdk053 = g_xmdk.xmdk053
+       WHERE xmdkent = g_enterprise
+         AND xmdkdocno = g_xmdk.xmdkdocno
+      IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'upd xmdk_t'
+         LET g_errparam.popup = TRUE
+            
+         CALL cl_err()
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      #2015/07/22 by stellar mark ----- (S)
+#      #同雜項應付一樣不做確認過帳
+#      #銷退單確認過帳
+#      CALL s_axmt600_conf_chk(g_xmdk.xmdkdocno) RETURNING l_success1
+#      IF NOT l_success1 THEN
+#         LET l_success = FALSE
+#         CONTINUE FOREACH
+#      END IF
+#      
+#      CALL s_axmt600_conf_upd(g_xmdk.xmdkdocno) RETURNING l_success1
+#      IF NOT l_success1 THEN
+#         LET l_success = FALSE
+#         CONTINUE FOREACH
+#      END IF
+#      
+#      CALL s_axmt600_post_chk(g_xmdk.xmdkdocno) RETURNING l_success1
+#      IF NOT l_success1 THEN
+#         LET l_success = FALSE
+#         CONTINUE FOREACH
+#      END IF
+#      
+#      CALL s_axmt600_post_upd(g_xmdk.xmdkdocno,'') RETURNING l_success1
+#      IF NOT l_success1 THEN
+#         LET l_success = FALSE
+#         CONTINUE FOREACH
+#      END IF
+      #2015/07/22 by stellar mark ----- (E)
+      
+      IF cl_null(g_gen_doc) THEN
+         LET g_gen_doc = g_xmdk.xmdkdocno
+      ELSE
+         LET g_gen_doc = g_gen_doc,"','", g_xmdk.xmdkdocno
+      END IF
+   END FOREACH
+   
+   IF NOT l_tot_success OR NOT l_success THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 銷售單頭新增預設
+# Memo...........:
+# Usage..........: CALL axmp431_xmdk_init()
+#                  
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2015/06/15 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp431_xmdk_init()
+
+   #公用欄位新增給值
+   LET g_xmdk.xmdkownid = g_user
+   LET g_xmdk.xmdkowndp = g_dept
+   LET g_xmdk.xmdkcrtid = g_user
+   LET g_xmdk.xmdkcrtdp = g_dept
+   LET g_xmdk.xmdkcrtdt = cl_get_current()
+   LET g_xmdk.xmdkmodid = g_user
+   LET g_xmdk.xmdkmoddt = cl_get_current()
+   LET g_xmdk.xmdkstus = 'N'
+      
+   #一般欄位給值
+   LET g_xmdk.xmdkent = g_enterprise
+   LET g_xmdk.xmdk000 = "6"
+   LET g_xmdk.xmdk045 = "1"
+   LET g_xmdk.xmdk082 = "1"
+   LET g_xmdk.xmdk014 = "N"
+   LET g_xmdk.xmdk084 = "1"
+   LET g_xmdk.xmdk042 = "1"
+   LET g_xmdk.xmdk043 = "1"
+   LET g_xmdk.xmdk085 = "1"
+   LET g_xmdk.xmdk083 = "N"
+   LET g_xmdk.xmdksite = g_site
+   LET g_xmdk.xmdkdocdt = g_today
+   LET g_xmdk.xmdk001 = g_today
+   LET g_xmdk.xmdkstus = 'N'
+   LET g_xmdk.xmdk003 = g_user
+   LET g_xmdk.xmdk004 = g_dept
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 銷售單的單別預設
+# Memo...........:
+# Usage..........: CALL axmp431_xmdk_doc_default()
+#                  
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2015/06/15 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp431_xmdk_doc_default()
+DEFINE l_success         LIKE type_t.num5
+DEFINE l_oodbl004        LIKE oodbl_t.oodbl004
+DEFINE l_oodb005         LIKE oodb_t.oodb005
+DEFINE l_oodb006         LIKE oodb_t.oodb006
+DEFINE l_oodb011         LIKE oodb_t.oodb011
+   
+   LET g_xmdk.xmdk001 = s_aooi200_get_doc_default(g_site,'1',g_param.l_docno,'xmdk001',g_xmdk.xmdk001)
+   LET g_xmdk.xmdk003 = s_aooi200_get_doc_default(g_site,'1',g_param.l_docno,'xmdk003',g_xmdk.xmdk003)
+   LET g_xmdk.xmdk004 = s_aooi200_get_doc_default(g_site,'1',g_param.l_docno,'xmdk004',g_xmdk.xmdk004)
+
+   LET g_xmdk.xmdk007 = s_aooi200_get_doc_default(g_site,'1',g_param.l_docno,'xmdk007',g_xmdk.xmdk007)
+   LET g_xmdk.xmdk008 = s_aooi200_get_doc_default(g_site,'1',g_param.l_docno,'xmdk008',g_xmdk.xmdk008)
+   LET g_xmdk.xmdk009 = s_aooi200_get_doc_default(g_site,'1',g_param.l_docno,'xmdk009',g_xmdk.xmdk009)
+   LET g_xmdk.xmdk010 = s_aooi200_get_doc_default(g_site,'1',g_param.l_docno,'xmdk010',g_xmdk.xmdk010)
+   LET g_xmdk.xmdk011 = s_aooi200_get_doc_default(g_site,'1',g_param.l_docno,'xmdk011',g_xmdk.xmdk011)
+   LET g_xmdk.xmdk012 = s_aooi200_get_doc_default(g_site,'1',g_param.l_docno,'xmdk012',g_xmdk.xmdk012)
+
+   LET g_xmdk.xmdk015 = s_aooi200_get_doc_default(g_site,'1',g_param.l_docno,'xmdk015',g_xmdk.xmdk015)
+   LET g_xmdk.xmdk016 = s_aooi200_get_doc_default(g_site,'1',g_param.l_docno,'xmdk016',g_xmdk.xmdk016)
+
+   LET g_xmdk.xmdk018 = s_aooi200_get_doc_default(g_site,'1',g_param.l_docno,'xmdk018',g_xmdk.xmdk018)
+
+   LET g_xmdk.xmdk030 = s_aooi200_get_doc_default(g_site,'1',g_param.l_docno,'xmdk030',g_xmdk.xmdk030)
+   LET g_xmdk.xmdk031 = s_aooi200_get_doc_default(g_site,'1',g_param.l_docno,'xmdk031',g_xmdk.xmdk031)
+
+   LET g_xmdk.xmdk033 = s_aooi200_get_doc_default(g_site,'1',g_param.l_docno,'xmdk033',g_xmdk.xmdk033)
+
+   LET g_xmdk.xmdk042 = s_aooi200_get_doc_default(g_site,'1',g_param.l_docno,'xmdk042',g_xmdk.xmdk042)
+   LET g_xmdk.xmdk043 = s_aooi200_get_doc_default(g_site,'1',g_param.l_docno,'xmdk043',g_xmdk.xmdk043)
+   LET g_xmdk.xmdk044 = s_aooi200_get_doc_default(g_site,'1',g_param.l_docno,'xmdk044',g_xmdk.xmdk044)
+   LET g_xmdk.xmdk045 = s_aooi200_get_doc_default(g_site,'1',g_param.l_docno,'xmdk045',g_xmdk.xmdk045)
+   LET g_xmdk.xmdk054 = s_aooi200_get_doc_default(g_site,'1',g_param.l_docno,'xmdk054',g_xmdk.xmdk054)
+
+   LET g_xmdk.xmdk202 = s_aooi200_get_doc_default(g_site,'1',g_param.l_docno,'xmdk202',g_xmdk.xmdk202)
+   
+   IF NOT cl_null(g_xmdk.xmdk012) THEN
+      #檢查、取得稅別、單價含稅否
+      CALL s_tax_chk(g_site,g_xmdk.xmdk012)
+      RETURNING l_success,l_oodbl004,l_oodb005,l_oodb006,l_oodb011
+
+      LET g_xmdk.xmdk013 = l_oodb006
+      LET g_xmdk.xmdk014 = l_oodb005
+   END IF
+
+   IF NOT cl_null(g_xmdk.xmdk042) AND NOT cl_null(g_xmdk.xmdk016) THEN
+      #帶出匯率
+      CALL s_axmt540_get_exchange(g_xmdk.xmdk042,g_xmdk.xmdk016,g_today) RETURNING g_xmdk.xmdk017   #modify--151118-00012#1 By Shiun      新增傳入參數g_today
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 銷售單的客戶預設
+# Memo...........:
+# Usage..........: CALL axmp431_xmdk_customer_default()
+#                  RETURNING r_success
+# Input parameter: 
+# Return code....: r_success       TRUE/FALSE
+# Date & Author..: 2015/06/15 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp431_xmdk_customer_default()
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_success         LIKE type_t.num5
+DEFINE l_controlno       LIKE ooha_t.ooha001
+
+   LET r_success = TRUE
+
+   #取得控制組編號
+   CALL s_control_get_group('2',g_user,g_dept) RETURNING l_success,l_controlno
+   IF NOT l_success THEN
+      LET r_success = FALSE
+      RETURN
+   END IF
+   
+   CALL s_apmm101_default_pmab('2',l_controlno,g_site,g_xmdk.xmdk007) 
+        RETURNING g_pmab.*
+   
+   #先判斷欄位是否在單據別設定的預設欄位中，如果存在，則不重新帶值，不存在，則根據交易對象帶預設值
+   IF NOT s_aooi200_chk_doc_fields(g_site,'1',g_param.l_docno,'xmdk003') THEN
+      LET g_xmdk.xmdk003 = g_pmab.pmab031   #業務人員
+   END IF
+   
+   IF NOT s_aooi200_chk_doc_fields(g_site,'1',g_param.l_docno,'xmdk004') THEN
+      LET g_xmdk.xmdk004 = g_pmab.pmab059  #業務部門
+   END IF
+   
+   IF NOT s_aooi200_chk_doc_fields(g_site,'1',g_param.l_docno,'xmdk015') THEN
+      LET g_xmdk.xmdk015 = g_pmab.pmab056  #發票類型
+   END IF
+   
+   IF NOT s_aooi200_chk_doc_fields(g_site,'1',g_param.l_docno,'xmdk018') THEN
+      LET g_xmdk.xmdk018 = g_pmab.pmab054  #取價方式
+   END IF
+   
+   IF NOT s_aooi200_chk_doc_fields(g_site,'1',g_param.l_docno,'xmdk042') THEN
+      LET g_xmdk.xmdk042 = g_pmab.pmab057  #內外銷
+   END IF
+   
+   IF NOT s_aooi200_chk_doc_fields(g_site,'1',g_param.l_docno,'xmdk043') THEN
+      LET g_xmdk.xmdk043 = g_pmab.pmab058  #匯率計算基準
+   END IF
+   
+   IF NOT s_aooi200_chk_doc_fields(g_site,'1',g_param.l_docno,'xmdk031') THEN
+      LET g_xmdk.xmdk031 = g_pmab.pmab039  #銷售分類
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 新增雜項應付
+# Memo...........:
+# Usage..........: CALL axmp431_ins_aapt301()
+#                  RETURNING r_success
+# Input parameter: 
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2015/06/15 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp431_ins_aapt301()
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_success         LIKE type_t.num5
+DEFINE l_amount          RECORD
+          apcb103        LIKE apcb_t.apcb103,
+          apcb113        LIKE apcb_t.apcb113,
+          apcb123        LIKE apcb_t.apcb123,
+          apcb133        LIKE apcb_t.apcb133,
+          xrcd104        LIKE xrcd_t.xrcd104,
+          xrcd114        LIKE xrcd_t.xrcd114,
+          xrcd124        LIKE xrcd_t.xrcd124,
+          xrcd134        LIKE xrcd_t.xrcd134,
+          apca106        LIKE apca_t.apca106,
+          apca116        LIKE apca_t.apca116,
+          apca126        LIKE apca_t.apca126,
+          apca136        LIKE apca_t.apca136,
+          apca107        LIKE apca_t.apca107,
+          apca117        LIKE apca_t.apca117,
+          apca127        LIKE apca_t.apca127,
+          apca137        LIKE apca_t.apca137,
+          apca108        LIKE apca_t.apca108,
+          apca118        LIKE apca_t.apca118,
+          apca128        LIKE apca_t.apca128,
+          apca138        LIKE apca_t.apca138
+                         END RECORD
+DEFINE l_chr             LIKE type_t.chr1
+DEFINE l_ap_slip         LIKE apca_t.apcadocno
+DEFINE l_desc            LIKE type_t.chr50
+
+   LET r_success = TRUE
+   
+   #新增應付單頭
+   CALL axmp431_ins_apca() RETURNING l_success
+   IF NOT l_success THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #新增應付單身
+   CALL axmp431_ins_apcb() RETURNING l_success
+   IF NOT l_success THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #回寫apca_t單頭
+   CALL s_aap_clac_bill_master(g_apca.apcald,g_apca.apcadocno) RETURNING l_amount.*
+   #本幣匯率在寫入立帳單身後才回寫單頭匯率，因為本幣匯率是單身彙總條件之一，如果先取位了立帳單身會抓不到資料
+   CALL s_curr_round_ld('1',g_apca.apcald,g_glaa001,g_apca.apca101,3) RETURNING l_success,g_errno,g_apca.apca101
+    
+   SELECT apcb001,apcb002 INTO g_apca.apca016,g_apca.apca018
+     FROM apcb_t
+    WHERE apcbent = g_enterprise
+      AND apcbld = g_apca.apcald 
+      AND apcbdocno = g_apca.apcadocno
+      AND apcbseq = 1
+       
+   UPDATE apca_t SET (apca103,apca104,apca106,apca107,apca108,
+                      apca113,apca114,apca116,apca117,apca118,
+                      apca123,apca124,apca126,apca127,apca128,
+                      apca133,apca134,apca136,apca137,apca138,
+                      apca016,apca018,apca101
+                     ) =
+                     (l_amount.apcb103,l_amount.xrcd104,l_amount.apca106,l_amount.apca107,l_amount.apca108,
+                      l_amount.apcb113,l_amount.xrcd114,l_amount.apca116,l_amount.apca117,l_amount.apca118,
+                      l_amount.apcb123,l_amount.xrcd124,l_amount.apca126,l_amount.apca127,l_amount.apca128,
+                      l_amount.apcb133,l_amount.xrcd134,l_amount.apca136,l_amount.apca137,l_amount.apca138,
+                      g_apca.apca016  ,g_apca.apca018  ,g_apca.apca101
+                     )
+    WHERE apcaent = g_enterprise AND apcald = g_apca.apcald
+      AND apcadocno = g_apca.apcadocno
+      
+   #立帳
+   SELECT apbb051,apbb052 INTO g_apca.apca014,g_apca.apca015
+     FROM apcb_t,apbb_t
+    WHERE apcbent = g_enterprise  AND apcbent = apbbent
+      AND apcb008 = apbbdocno
+      AND apcbld  = g_apca.apcald AND apcbdocno = g_apca.apcadocno
+      AND apcbseq = 1
+
+   IF NOT cl_null(g_apca.apca015) THEN #以部門去取aooi125設定的所屬責任中心,若抓不到值則帶業務部門
+      CALL s_department_get_respon_center(g_apca.apca015,g_apca.apcadocdt)
+           RETURNING l_success,g_errno,g_apca.apca034,l_desc
+   END IF
+   IF NOT cl_null(g_apca.apca014) THEN
+      UPDATE apca_t SET apca014 = g_apca.apca014,
+                        apca015 = g_apca.apca015,
+                        apca034 = g_apca.apca034
+       WHERE apcaent = g_enterprise AND apcald = g_apca.apcald
+         AND apcadocno= g_apca.apcadocno
+   END IF
+   
+   IF cl_get_para(g_enterprise,g_apcacomp,'S-FIN-2002') = '3' THEN
+      SELECT apcb030 INTO g_apca.apca008
+        FROM apcb_t
+       WHERE apcbent = g_enterprise
+         AND apcbld  = g_apca.apcald AND apcbdocno = g_apca.apcadocno
+         AND apcbseq = 1
+      CALL s_fin_date_ap_payable(g_apca.apcacomp,g_apca.apca004,g_apca.apca008,g_apca.apcadocdt,g_apca.apcadocdt,g_apca.apcadocdt,'')
+           RETURNING l_success,g_apca.apca009,g_apca.apca010
+      UPDATE apca_t SET apca008 = g_apca.apca008,
+                        apca009 = g_apca.apca009,
+                        apca010 = g_apca.apca010
+       WHERE apcaent = g_enterprise AND apcald = g_apca.apcald
+         AND apcadocno = l_apca.apcadocno
+   END IF
+   
+   #產生多帳期
+   CALL s_aap_multi_bill_period(g_apca.apcald,g_apca.apcadocno ) RETURNING l_success,g_errno
+   IF NOT l_success THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = g_errno
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      
+      CALL cl_err()
+   END IF
+   
+   #產生分錄#
+   CALL s_aooi200_fin_get_slip(g_apca.apcadocno) RETURNING l_success,l_ap_slip
+   CALL s_fin_get_doc_para(g_apca.apcald,g_apca.apcacomp,l_ap_slip,'D-FIN-0030') RETURNING l_chr
+   IF g_glaa121 = 'Y' AND l_chr = 'Y'THEN
+      CALL s_pre_voucher_ins('AP','P10',g_apca.apcald,g_apca.apcadocno,g_apca.apcadocdt,'1')
+           RETURNING l_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 新增應付單頭
+# Memo...........:
+# Usage..........: CALL axmp431_ins_apca()
+#                  RETURNING r_success
+# Input parameter: 
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2015/06/15 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp431_ins_apca()
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_success         LIKE type_t.num5
+DEFINE l_apca101         LIKE apca_t.apca101
+DEFINE l_apca011         LIKE apca_t.apca011
+DEFINE l_desc            LIKE type_t.chr50
+DEFINE l_controlno       LIKE ooha_t.ooha001
+DEFINE l_xmde001         LIKE xmde_t.xmde001
+
+   LET r_success = TRUE
+   
+   INITIALIZE g_apca.* TO NULL
+   LET g_apca.apcaent  = g_enterprise
+   LET g_apca.apcald   = g_apcald
+   LET g_apca.apcacomp = g_apcacomp
+   LET g_apca.apcadocdt= g_today
+   LET g_apca.apcasite = g_apcasite
+   LET g_apca.apca001 = '19'
+   LET g_apca.apca003 = g_user
+   
+   SELECT UNIQUE xmfj003,xmfj004,xmfj005,xmfj006,xmfj007,xmfj008,exrate,xmde001
+     INTO g_apca.apca004,g_apca.apca100,g_apca.apca011,g_apca.apca012,g_apca.apca013,
+          g_apca.apca008,g_apca.apca101,l_xmde001
+     FROM axmp431_temp1
+     
+   #付款條件
+   SELECT xmfj020 INTO g_apca.apca008
+     FROM xmfj_t
+    WHERE xmfjent = g_enterprise
+      AND xmfjdocno = l_xmde001
+     
+   LET g_apca.apca005 = g_apca.apca004
+   
+   #供應商分類/企業關係人
+   SELECT pmaa080,pmaa047 INTO g_apca.apca006,g_apca.apca046
+     FROM pmaa_t
+    WHERE pmaaent = g_enterprise
+      AND pmaa001 = g_apca.apca004
+   
+   #帳款資訊
+   CALL s_aap_get_payment_term(g_apca.apcald,g_apca.apcacomp,g_apca.apca004,g_apca.apca001)
+        RETURNING l_success,g_apca.apca015,l_desc,l_desc,g_apca.apca035,
+                  g_apca.apca036,g_apca.apca058,l_desc,l_apca011,g_apca.apca014
+   
+   #帳款類別
+   SELECT pmab055 INTO g_apca.apca007
+     FROM pmab_t
+    WHERE pmabent = g_enterprise
+      AND pmabsite= g_site
+      AND pmab001 = g_apca.apca004
+   
+   IF NOT cl_null(g_apca.apca007) THEN
+      CALL s_aap_get_apca007_default_acct(g_apca.apcald,g_apca.apca007,g_apca.apca001)
+           RETURNING g_apca.apca036,g_apca.apca035
+   END IF
+   
+   CALL s_fin_date_ap_payable(g_apca.apcacomp,g_apca.apca004,g_apca.apca008,g_apca.apcadocdt,
+                              g_apca.apcadocdt,g_apca.apcadocdt,'')
+        RETURNING l_success,g_apca.apca009,g_apca.apca010
+   
+   LET g_apca.apca017 = '0'
+   LET g_apca.apca020 = 'N'
+   LET g_apca.apca025 = '0'
+   LET g_apca.apca026 = '0'
+   LET g_apca.apca027 = '0'
+   LET g_apca.apca028 = '0'
+   LET g_apca.apca029 = '0'
+   
+   #以部門去取aooi125設定的所屬責任中心,若抓不到值則帶業務部門
+   IF NOT cl_null(g_apca.apca015) THEN
+      CALL s_department_get_respon_center(g_apca.apca015,g_apca.apcadocdt)
+           RETURNING l_success,g_errno,g_apca.apca034,l_desc
+   END IF
+   
+   LET g_apca.apca039 = '0'
+   LET g_apca.apca040 = 'N'
+   LET g_apca.apca044 =  0
+   LET g_apca.apca050 = '0'
+   LET g_apca.apca052 = '0'          #列印次數
+   
+   IF cl_get_para(g_enterprise,g_apcacomp,'S-FIN-2002') MATCHES '[12]' THEN
+      SELECT ooib025,ooib005 INTO g_apca.apca054,g_apca.apca055
+        FROM ooib_t
+       WHERE ooibent = g_enterprise
+         AND ooib002 = g_apca.apca008
+   END IF
+   LET g_apca.apca056 = '0'
+   LET g_apca.apca057 = g_apca.apca004
+   LET g_apca.apca060 = '2'
+   
+   LET g_apca.apca120 = g_glaa016
+   LET g_apca.apca130 = g_glaa020
+   
+   CALL s_fin_get_curr_rate(g_apca.apcacomp,g_apca.apcald,g_apca.apcadocdt,g_apca.apca100,'')
+        RETURNING l_apca101,g_apca.apca121,g_apca.apca131
+
+   #apca101為分帳條件因此 暫不取位，帶產生完單身後 在update apca101的值
+   CALL s_curr_round_ld('1',g_apca.apcald,g_apca.apca120,g_apca.apca121,3) 
+        RETURNING l_success,g_errno,g_apca.apca121
+   CALL s_curr_round_ld('1',g_apca.apcald,g_apca.apca130,g_apca.apca131,3)
+        RETURNING l_success,g_errno,g_apca.apca131
+   LET g_apca.apca103 = '0'   LET g_apca.apca104 = '0'   LET g_apca.apca106 = '0'
+   LET g_apca.apca107 = '0'   LET g_apca.apca108 = '0'
+   LET g_apca.apca113 = '0'   LET g_apca.apca114 = '0'   LET g_apca.apca116 = '0'
+   LET g_apca.apca117 = '0'   LET g_apca.apca118 = '0'
+   LET g_apca.apca121 = '0'   LET g_apca.apca123 = '0'   LET g_apca.apca133 = '0'
+   LET g_apca.apca131 = '0'   LET g_apca.apca124 = '0'   LET g_apca.apca134 = '0'
+   
+   LET g_apca.apcaownid = g_user
+   LET g_apca.apcaowndp = g_dept
+   LET g_apca.apcacrtid = g_user
+   LET g_apca.apcacrtdp = g_dept
+   LET g_apca.apcacrtdt = cl_get_current()
+   LET g_apca.apcastus  = 'N'
+   
+   CALL s_aooi200_fin_gen_docno(g_apca.apcald,'','',g_param.l_docno,g_apca.apcadocdt,'aapt301')
+        RETURNING l_success,g_apca.apcadocno
+        
+   INSERT INTO apca_t VALUES(g_apca.*)
+   IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'ins apca_t'
+      LET g_errparam.popup = TRUE
+      
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 新增應付單身
+# Memo...........:
+# Usage..........: CALL axmp431_ins_apcb()
+#                  RETURNING r_success
+# Input parameter: 
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2015/06/15 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp431_ins_apcb()
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_sql             STRING
+DEFINE l_seq             LIKE type_t.num5
+DEFINE l_success         LIKE type_t.num5
+DEFINE l_xmde001         LIKE xmde_t.xmde001
+DEFINE l_xmde002         LIKE xmde_t.xmde002
+DEFINE l_xmde003         LIKE xmde_t.xmde003
+DEFINE l_xmde004         LIKE xmde_t.xmde004
+DEFINE l_xmde005         LIKE xmde_t.xmde005
+DEFINE l_xmde006         LIKE xmde_t.xmde006
+DEFINE l_xmde007         LIKE xmde_t.xmde007
+DEFINE l_xmde014         LIKE xmde_t.xmde014
+DEFINE l_xmde015         LIKE xmde_t.xmde015
+DEFINE l_xmde016         LIKE xmde_t.xmde016
+DEFINE l_xmde020         LIKE xmde_t.xmde020
+DEFINE l_xmde029         LIKE xmde_t.xmde029
+DEFINE l_apcb105         LIKE apcb_t.apcb105
+
+   LET r_success = TRUE
+   
+   LET l_sql = "SELECT xmde001,xmde002,xmde006,xmde007,SUM(xmde020),xmde029 ",
+               "  FROM axmp431_temp1 ",
+               " GROUP BY xmde001,xmde002,xmde006,xmde007,xmde029 ",
+               " ORDER BY xmde001,xmde002,xmde006,xmde007,xmde029 "
+   PREPARE axmp431_ins_apcb_pre FROM l_sql
+   DECLARE axmp431_ins_apcb_cs CURSOR FOR axmp431_ins_apcb_pre
+   
+   LET l_sql = "SELECT xmde001,xmde002,xmde003,xmde004,xmde005,xmde014,xmde015,xmde016 ",
+               "  FROM axmp431_temp1 ",
+               " WHERE xmde001 = ? ",
+               "   AND xmde002 = ? ",
+               "   AND xmde006 = ? ",
+               "   AND xmde007 = ? ",
+               "   AND xmde029 = ? "
+   PREPARE axmp431_ins_apcb_pre1 FROM l_sql
+   DECLARE axmp431_ins_apcb_cs1 CURSOR FOR axmp431_ins_apcb_pre1
+   
+   LET l_seq = 1
+   FOREACH axmp431_ins_apcb_cs INTO l_xmde001,l_xmde002,l_xmde006,l_xmde007,l_xmde020,l_xmde029
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'axmp431_ins_apcb_cs:'
+         LET g_errparam.popup = TRUE
+         
+         CALL cl_err()
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+   
+      INITIALIZE g_apcb.* TO NULL
+      
+      LET g_apcb.apcbent = g_enterprise
+      LET g_apcb.apcbld = g_apca.apcald
+      LET g_apcb.apcborga = g_site
+      LET g_apcb.apcbsite = g_apca.apcasite
+      LET g_apcb.apcblegl = g_apca.apcacomp
+      LET g_apcb.apcbdocno = g_apca.apcadocno
+      LET g_apcb.apcbseq = l_seq
+      LET g_apcb.apcb001 = '1C'
+      LET g_apcb.apcb022 = 1
+      LET g_apcb.apcb002 = l_xmde001
+      LET g_apcb.apcb003 = l_xmde002
+      LET g_apcb.apcb004 = l_xmde006
+      LET g_apcb.apcb005 = s_aapt300_get_apcb005(g_apcb.apcb004,'','')
+      
+      #單位
+      SELECT xmfl006 INTO g_apcb.apcb006
+        FROM xmfl_t
+       WHERE xmflent = g_enterprise
+         AND xmfldocno = l_xmde001
+         AND xmflseq = l_xmde002
+      
+      LET g_apcb.apcb007 = l_xmde020
+      
+      SELECT imaa009 INTO g_apcb.apcb012
+        FROM imaa_t
+       WHERE imaaent = g_enterprise
+         AND imaa001 = g_apcb.apcb004
+         
+      LET g_apcb.apcb013 = 'N'
+      LET g_apcb.apcb015 = g_apca.apca033   #專案編號
+      LET g_apcb.apcb017 = g_apca.apca059   #預算編號
+      LET g_apcb.apcb020 = g_apca.apca011   #稅別
+      LET g_apcb.apcb021 = g_apca.apca036
+      LET g_apcb.apcb023 = 'N'
+      LET g_apcb.apcb029 = g_apca.apca035
+      LET g_apcb.apcb030 = g_apca.apca008
+      LET g_apcb.apcb100 = g_apca.apca100   #幣別
+      LET g_apcb.apcb101 = l_xmde029        #原幣單價
+      
+      CALL s_curr_round_ld('1',g_apca.apcald,g_apcb.apcb100,g_apcb.apcb101,1) 
+           RETURNING l_success,g_errno,g_apcb.apcb101
+           
+      LET g_apcb.apcb102  = g_apca.apca101                   #本幣匯率
+      LET g_apcb.apcb111  = g_apcb.apcb101 * g_apca.apca101  #本幣單價
+      
+      CALL s_curr_round_ld('1',g_apca.apcald,g_glaa001,g_apcb.apcb111,1) 
+           RETURNING l_success,g_errno,g_apcb.apcb111
+           
+      LET l_apcb105 = g_apcb.apcb007 * g_apcb.apcb101
+      
+      CALL s_curr_round_ld('1',g_apca.apcald,g_glaa001,l_apcb105,2) 
+           RETURNING l_success,g_errno,l_apcb105
+
+      CALL s_tax_ins(g_apca.apcadocno,g_apcb.apcbseq,'0',g_apcb.apcborga,l_apcb105,
+                     g_apcb.apcb020,g_apcb.apcb007,g_apcb.apcb100,g_apca.apca101,
+                     g_apca.apcald,g_apca.apca121,g_apca.apca131)
+           RETURNING g_apcb.apcb103,g_apcb.apcb104,g_apcb.apcb105,
+                     g_apcb.apcb113,g_apcb.apcb114,g_apcb.apcb115,
+                     g_apcb.apcb123,g_apcb.apcb124,g_apcb.apcb125,
+                     g_apcb.apcb133,g_apcb.apcb134,g_apcb.apcb135
+      
+      LET g_apcb.apcb106 = 0  LET g_apcb.apcb107 = 0  LET g_apcb.apcb108 = g_apcb.apcb103
+      LET g_apcb.apcb116 = 0  LET g_apcb.apcb117 = 0  LET g_apcb.apcb118 = g_apcb.apcb113  LET g_apcb.apcb119 = 0
+      LET g_apcb.apcb126 = 0  LET g_apcb.apcb127 = 0  LET g_apcb.apcb128 = g_apcb.apcb123
+      LET g_apcb.apcb136 = 0  LET g_apcb.apcb137 = 0  LET g_apcb.apcb138 = g_apcb.apcb133
+
+      INSERT INTO apcb_t VALUES(g_apcb.*)
+      IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'ins apcb_t'
+         LET g_errparam.popup = TRUE
+         
+         CALL cl_err()
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      OPEN axmp431_ins_apcb_cs1 USING l_xmde001,l_xmde002,l_xmde006,l_xmde007,l_xmde029
+      FOREACH axmp431_ins_apcb_cs1 INTO l_xmde001,l_xmde002,l_xmde003,l_xmde004,l_xmde005,
+                                        l_xmde014,l_xmde015,l_xmde016
+         
+         UPDATE xmde_t SET xmde025 = '2',
+                           xmde026 = g_xmfj019,
+                           xmde027 = g_apca.apcadocno,
+                           xmde028 = g_apcb.apcbseq,
+                           xmde029 = l_xmde029,
+                           xmde014 = l_xmde014,
+                           xmde015 = l_xmde015,
+                           xmde016 = l_xmde016
+             WHERE xmdeent = g_enterprise
+               AND xmde000 = '3'
+               AND xmde001 = l_xmde001
+               AND xmde002 = l_xmde002
+               AND xmde003 = l_xmde003
+               AND xmde004 = l_xmde004
+               AND xmde005 = l_xmde005
+         IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'upd xmde_t'
+            LET g_errparam.popup = TRUE
+         
+            CALL cl_err()
+            LET r_success = FALSE
+            EXIT FOREACH
+         END IF
+      END FOREACH
+      
+      IF NOT r_success THEN
+         EXIT FOREACH
+      END IF
+      
+      LET l_seq = l_seq + 1
+   END FOREACH
+   
+   RETURN r_success
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

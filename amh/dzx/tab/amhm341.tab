@@ -1,0 +1,126 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="amhm341" module="amh" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="06189" crtdt="2015-05-06 09:56:57" modid="06189" moddt="2015-05-06 09:56:57" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="組織營業時間維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mhajsite,mhajsite_desc(chr80),mhaj001,mhaj002,mhaj002_desc(chr80),mhaj003,mhaj004,mhaj005,mhaj006,mhaj007,mhaj008,mhajstus,mhajownid,mhajownid_desc(chr80),mhajowndp,mhajowndp_desc(chr80),mhajcrtid,mhajcrtid_desc(chr80),mhajcrtdp,mhajcrtdp_desc(chr80),mhajcrtdt,mhajmodid,mhajmodid_desc(chr80),mhajmoddt,mhajcnfid,mhajcnfid_desc(chr80),mhajcnfdt"/>
+      <var id="bs_field" value="mhajsite,mhajsite_desc(chr80),mhaj001,mhaj002,mhaj002_desc(chr80),mhaj003,mhaj004,mhaj005,mhaj006,mhaj007,mhaj008" pk="mhajsite,mhaj001,mhaj002" order=""/>
+      <bs_reference field="mhajsite_desc" ref_field="mhajsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="mhaj002_desc" ref_field="mhaj002" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="amh" filename="amhm341" method="dialog">
+    <section id="input">
+      <input id="head" field="mhajsite,mhaj001,mhaj002,mhaj003,mhaj004,mhaj005,mhaj006,mhaj007,mhaj008,mhajstus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mhajsite,mhaj001,mhaj002,mhaj003,mhaj004,mhaj005,mhaj006,mhaj007,mhaj008,mhajstus,mhajownid,mhajowndp,mhajcrtid,mhajcrtdp,mhajcrtdt,mhajmodid,mhajmoddt,mhajcnfid,mhajcnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mhajsite,mhaj001,mhaj002"/>
+      <set id="head" type="no_entry" field="mhajsite,mhaj001,mhaj002"/>
+    </init>
+    <init id="head">
+      <column id="mhajsite">
+        <after>
+          <reference field="mhajsite_desc" ref_field="mhaj_t.mhajsite" map_field="mhajent,mhajsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="mhajsite_desc"/>
+      <column id="mhaj001"/>
+      <column id="mhaj002">
+        <after>
+          <check chkid="v_rtax001_3" id="isExist"/>
+          <reference field="mhaj002_desc" ref_field="mhaj_t.mhaj002" map_field="mhajent,mhaj002" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001_3" state="i"/>
+        <controlp form="q_rtax001_3" state="c"/>
+      </column>
+      <column id="mhaj002_desc"/>
+      <column id="mhaj003">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhaj004">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhaj005" type="S" default="0"/>
+      <column id="mhaj006"/>
+      <column id="mhaj007" type="S" default="0"/>
+      <column id="mhaj008"/>
+      <column id="mhajstus" scc="50">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="mhajownid">
+        <after>
+          <reference field="mhajownid_desc" ref_field="mhaj_t.mhajownid" map_field="mhajownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhajownid_desc"/>
+      <column id="mhajowndp">
+        <after>
+          <reference field="mhajowndp_desc" ref_field="mhaj_t.mhajowndp" map_field="mhajowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhajowndp_desc"/>
+      <column id="mhajcrtid">
+        <after>
+          <reference field="mhajcrtid_desc" ref_field="mhaj_t.mhajcrtid" map_field="mhajcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhajcrtid_desc"/>
+      <column id="mhajcrtdp">
+        <after>
+          <reference field="mhajcrtdp_desc" ref_field="mhaj_t.mhajcrtdp" map_field="mhajcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhajcrtdp_desc"/>
+      <column id="mhajcrtdt"/>
+      <column id="mhajmodid">
+        <after>
+          <reference field="mhajmodid_desc" ref_field="mhaj_t.mhajmodid" map_field="mhajmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhajmodid_desc"/>
+      <column id="mhajmoddt"/>
+      <column id="mhajcnfid">
+        <after>
+          <reference field="mhajcnfid_desc" ref_field="mhaj_t.mhajcnfid" map_field="mhajcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhajcnfid_desc"/>
+      <column id="mhajcnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="mhaj_t" pk="mhajsite,mhaj001,mhaj002">
+      <sql id="forupd_sql" type="sql" query="SELECT mhajsite,&apos;&apos;,mhaj001,mhaj002,&apos;&apos;,mhaj003,mhaj004,mhaj005,mhaj006,mhaj007,mhaj008,mhajstus,mhajownid,&apos;&apos;,mhajowndp,&apos;&apos;,mhajcrtid,&apos;&apos;,mhajcrtdp,&apos;&apos;,mhajcrtdt,mhajmodid,&apos;&apos;,mhajmoddt,mhajcnfid,&apos;&apos;,mhajcnfdt FROM mhaj_t WHERE mhajent= ? AND mhajsite=? AND mhaj001=? AND mhaj002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mhajsite,mhaj001,mhaj002 FROM mhaj_t" order="mhajsite,mhaj001,mhaj002"/>
+    </head>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,125 @@
+#+ Version..: T6-ERP-1.00.00(版次:1) Build-000387
+#+ 
+#+ Filename...: awsp900.inc
+#+ Description: TIPTOP Services 服務全域變數檔 (暫時硬寫，無透過設計器)
+#+ Creator....: 00509(2013/10/14)
+#+ Modifier...: 00509(2013/10/14)
+#+ Buildtype..:
+
+SCHEMA ds
+ 
+GLOBALS
+ 
+    #--------------------------------------------------------------------------#
+    # Service Request String(XML)                                              #
+    #--------------------------------------------------------------------------#
+    DEFINE g_request RECORD
+              request        STRING       #呼叫 TIPTOP 服務時傳入的 XML
+           END RECORD
+    DEFINE g_request_root    xml.DomNode   #Request XML Dom Node
+ 
+ 
+    #--------------------------------------------------------------------------#
+    # Service Response String(XML)                                             #
+    #--------------------------------------------------------------------------#
+    DEFINE g_response RECORD
+              response       STRING       #TIPTOP 服務處理後回傳的 XML
+           END RECORD
+    DEFINE g_response_root   xml.DomNode   #Response XML Dom Node
+
+    #--------------------------------------------------------------------------#
+    # Request / Response 檔案路徑                                              #
+    #--------------------------------------------------------------------------#
+    DEFINE g_request_file_path  STRING
+    DEFINE g_response_file_path   STRING
+ 
+    #--------------------------------------------------------------------------#
+    # 執行狀態                                                                 #
+    #--------------------------------------------------------------------------#
+    DEFINE g_status RECORD
+              code           STRING,      #訊息代碼
+              sqlcode        STRING,      #SQL ERROR CODE
+              description    STRING       #訊息說明
+           END RECORD 
+   
+
+    #--------------------------------------------------------------------------#
+    # 抓取呼叫 cl_err() 的錯誤代碼及訊息                                       #
+    #--------------------------------------------------------------------------#
+    DEFINE gi_err_code           STRING
+    DEFINE gi_err_msg            STRING
+
+    
+    #--------------------------------------------------------------------------#
+    # 服務名稱(ERP 服務程式必須指定)                                           #
+    #--------------------------------------------------------------------------#
+    DEFINE g_service    STRING             #TIPTOP 服務名稱
+    DEFINE g_srvcode    STRING             #服務執行結果狀態代碼
+    DEFINE g_timestamp  STRING             #日期時間 
+    DEFINE g_prod_name  STRING             #對方產品
+    DEFINE g_prod_ip    STRING             #對方產品IP
+    DEFINE g_pord_mach  STRING             #POS 
+    DEFINE g_prod_shop  STRING             #POS 門店
+    DEFINE g_datakey    RECORD
+              EntId         LIKE type_t.num5,          #企業代碼  
+              CompanyId     LIKE wsba_t.wsba001,       #營運據點  
+              DocProp       LIKE wsba_t.wsba002,       #單據性質  
+              Prog          LIKE type_t.chr20,         #作業代號  
+              FormId        LIKE ooba_t.ooba002,       #單別
+              SheetNo       STRING,                    #單據編號
+              PK3           STRING,                    #其他關鍵key  
+              DocKey        STRING,                    #單據的組合key 
+              RefId         STRING                     #參照表編號
+           END RECORD
+    DEFINE g_customData STRING             #使用者自定義
+              
+
+    #--------------------------------------------------------------------------#
+    # Payload param data                                                       #
+    #--------------------------------------------------------------------------#
+    DEFINE g_payload_request  STRING
+
+    #--------------------------------------------------------------------------#
+    # web service log data                                                     #
+    #--------------------------------------------------------------------------#
+    DEFINE   g_logw003          DATETIME YEAR TO SECOND
+    
+    #EAI 主機位址
+    DEFINE  g_eai_server       STRING
+    DEFINE  g_detail_name      STRING
+    DEFINE  g_non_entId        STRING
+
+    #訊息中心 message
+    DEFINE   g_messge  RECORD
+                msgBatchNum   STRING,            #訊息批號                                                       
+                param  DYNAMIC ARRAY OF RECORD
+                                key     STRING,
+                                Value   STRING
+                        END RECORD
+             END RECORD
+    DEFINE   g_messge_out  RECORD
+                paramKey      STRING,                                                                   
+                msgText       STRING
+             END RECORD
+
+    #JSON變數
+    DEFINE g_json_rec      util.JSONObject
+| The symbol 'util' does not represent a valid variable type.
+| See error number -6622.
+    DEFINE g_json_arr      util.JSONArray
+| The symbol 'util' does not represent a valid variable type.
+| See error number -6622.
+    DEFINE g_jason_type    STRING
+
+    DEFINE g_detail           DYNAMIC ARRAY OF RECORD
+          Detailname        STRING,
+          Context           util.JSONArray
+| The symbol 'util' does not represent a valid variable type.
+| See error number -6622.
+          END RECORD
+
+    DEFINE g_master    DYNAMIC ARRAY OF util.JSONObject
+| The symbol 'util' does not represent a valid variable type.
+| See error number -6622.
+         
+END GLOBALS

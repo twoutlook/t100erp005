@@ -1,0 +1,472 @@
+<add_points prog="axrp320" std_prog="axrp320" erpver="1.0" module="AXR" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="free_style.variable" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[{<Module define>}
+
+#模組變數(Module Variables)
+DEFINE g_xrca_m   RECORD
+    xrcald        LIKE xrca_t.xrcald,
+    xrcald_desc   LIKE glaal_t.glaal002,
+    glaacomp      LIKE glaa_t.glaacomp,
+    glaacomp_desc LIKE ooeal_t.ooeal003,
+    type          LIKE type_t.chr1,
+    glapdocno     LIKE glap_t.glapdocno,
+    glapdocdt    LIKE glap_t.glapdocdt 
+    END RECORD 
+
+DEFINE g_wc           STRING                       
+DEFINE g_sql          STRING
+DEFINE g_forupd_sql   STRING
+      
+DEFINE g_ref_fields   DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields   DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ooef004      LIKE ooef_t.ooef004      
+{</Module define>}]]>
+</point>
+  <point name="main.define_sql" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[   LET g_forupd_sql = "SELECT xrcadocno,xrcald,'',xrca001,xrca004,xrcadocdt,xrca038 FROM xrca_t WHERE xrcaent= ? AND xrcald=? AND xrcadocno=? FOR UPDATE"]]>
+</point>
+  <point name="function.axrp320_init" cite_std="N" status="" ver="1" src="s" new="Y" order="1" cite_ver="" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION axrp320_init()
+   CALL cl_set_combo_scc('xrca001','8302')
+   
+   IF NOT cl_null(g_argv[1]) AND NOT cl_null(g_argv[2]) AND NOT cl_null(g_argv[3]) AND NOT cl_null(g_argv[4]) AND NOT cl_null(g_argv[5]) THEN 
+      CALL cl_set_comp_entry("xrcald",FALSE)
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.axrp320_ui_dialog" cite_std="N" status="" ver="1" src="s" new="Y" order="2" cite_ver="" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION axrp320_ui_dialog()
+   IF NOT cl_null(g_argv[1]) AND NOT cl_null(g_argv[2]) AND NOT cl_null(g_argv[3]) AND NOT cl_null(g_argv[4]) AND NOT cl_null(g_argv[5]) THEN 
+      CALL axrp320_construct2()
+   ELSE
+      CALL axrp320_construct()
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.axrp320_construct" cite_std="N" status="u" ver="1" src="s" new="Y" order="3" cite_ver="" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION axrp320_construct()
+   WHILE TRUE
+      CLEAR FORM
+      INITIALIZE g_wc TO NULL
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+         INPUT BY NAME g_xrca_m.xrcald,g_xrca_m.glaacomp    
+            BEFORE FIELD xrcald
+               CALL axrp320_xrcald_desc()
+            
+            AFTER FIELD xrcald
+               CALL axrp320_xrcald_desc()
+               IF NOT cl_null(g_xrca_m.xrcald) THEN 
+                  IF NOT ap_chk_isExist(g_xrca_m.xrcald,"SELECT COUNT(*) FROM glaa_t WHERE "||"glaaent = '" ||g_enterprise|| "' AND "||"glaald = ? ",'agl-00016',1) THEN 
+                     LET g_xrca_m.xrcald = ''
+                     NEXT FIELD CURRENT
+                  END IF 
+                  IF NOT ap_chk_isExist(g_xrca_m.xrcald,"SELECT COUNT(*) FROM glaa_t WHERE "||"glaaent = '" ||g_enterprise|| "' AND "||"glaald = ? AND glaastus = 'Y' ",'agl-00051',1) THEN 
+                     LET g_xrca_m.xrcald = ''
+                     NEXT FIELD CURRENT
+                  END IF 
+                  IF NOT ap_chk_isExist(g_xrca_m.xrcald,"SELECT COUNT(*) FROM glaa_t WHERE "||"glaaent = '" ||g_enterprise|| "' AND "||"glaald = ? AND (glaa014 = 'Y' OR glaa008 = 'Y') AND glaastus = 'Y' ",'axr-00021',1) THEN 
+                     LET g_xrca_m.xrcald = ''
+                     NEXT FIELD CURRENT
+                  END IF
+                  IF NOT s_ld_chk_authorization(g_user,g_xrca_m.xrcald) THEN 
+                     CALL cl_err(g_xrca_m.xrcald,'axr-00022',1)
+                     LET g_xrca_m.xrcald = ''
+                     NEXT FIELD CURRENT               
+                  END IF                  
+               END IF
+               
+            ON ACTION controlp INFIELD xrcald
+		   	INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+		       LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_xrca_m.xrcald      #給予default值
+               LET g_qryparam.where = " (glaa008 ='Y' OR glaa014 ='Y') "
+               LET g_qryparam.arg1 = g_user
+               LET g_qryparam.arg2 = g_dept
+               CALL q_authorised_ld()                                  #呼叫開窗
+               LET g_xrca_m.xrcald = g_qryparam.return1       #將開窗取得的值回傳到變數
+               DISPLAY g_xrca_m.xrcald TO xrcald              #顯示到畫面上
+               CALL axrp320_xrcald_desc()
+               NEXT FIELD xrcald                              #返回原欄位  
+               
+            AFTER INPUT
+
+         END INPUT 
+
+         #螢幕上取條件
+         CONSTRUCT BY NAME g_wc ON xrca001,xrca004,xrcadocdt,xrcadocno
+   
+            BEFORE CONSTRUCT
+               CALL cl_qbe_init()
+   
+            ON ACTION controlp INFIELD xrcadocno
+		       INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+		       LET g_qryparam.reqry = FALSE
+               CALL q_xrcadocno()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO xrcadocno  #顯示到畫面上  
+               NEXT FIELD xrcadocno                     #返回原欄位  
+               
+            ON ACTION controlp INFIELD xrca004
+		       INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+		       LET g_qryparam.reqry = FALSE
+               CALL q_pmaa001()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO xrca004  #顯示到畫面上
+               NEXT FIELD xrca004                     #返回原欄位  
+               
+         END CONSTRUCT
+             
+         INPUT BY NAME g_xrca_m.type,g_xrca_m.glapdocno,g_xrca_m.glapdocdt   
+    
+            AFTER FIELD type
+              IF g_xrca_m.type NOT MATCHES "[123]" THEN 
+                 NEXT FIELD type
+              END IF 
+            ON CHANGE type
+               IF g_xrca_m.type MATCHES "[3]" THEN 
+                  CALL cl_set_comp_required("glapdocdt",TRUE)
+               ELSE
+                  CALL cl_set_comp_required("glapdocdt",FALSE)               
+               END IF
+              
+            AFTER FIELD glapdocno
+               IF NOT cl_null(g_xrca_m.glapdocno) THEN
+                  CALL axrp320_glapdocno_chk()
+                  IF NOT cl_null(g_errno) THEN
+                     CALL cl_err(g_xrca_m.glapdocno,g_errno,1)
+                     LET g_xrca_m.glapdocno = ''
+                     NEXT FIELD glapdocno
+                  END IF   
+               END IF    
+
+
+            ON ACTION controlp INFIELD glapdocno
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.default1 = g_xrca_m.glapdocno            #給予default值
+               #給予arg
+               LET g_qryparam.where = " ooba001 = '",g_ooef004,"' AND oobx003 = 'aglt310' AND oobx002 = 'AGL' "
+               CALL q_ooba002_4()                                #呼叫開窗
+               LET g_xrca_m.glapdocno = g_qryparam.return1       #將開窗取得的值回傳到變數
+               DISPLAY g_xrca_m.glapdocno TO glapdocno           #顯示到畫面上
+               NEXT FIELD glapdocno                              #返回原欄位
+    
+            AFTER INPUT
+
+         END INPUT 
+
+         BEFORE DIALOG
+            SELECT glaald INTO g_xrca_m.xrcald FROM ooef_t,ooag_t,glaa_t
+             WHERE ooef001 = ooag004 AND ooefent = ooagent
+               AND ooef017 = glaacomp AND ooefent = glaaent
+               AND ooagent = g_enterprise
+               AND ooag001 = g_user
+            CALL axrp320_xrcald_desc()          
+            LET g_xrca_m.type = 1
+            DISPLAY g_xrca_m.type TO type  
+            
+         ON ACTION accept
+            ACCEPT DIALOG
+   
+         ON ACTION cancel
+            LET INT_FLAG = 1
+            EXIT WHILE
+   
+   
+         #查詢CONSTRUCT共用ACTION
+         &include "construct_action.4gl"
+   
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+   
+      LET g_wc = g_wc CLIPPED,cl_get_extra_cond("", "")
+
+      DISPLAY g_wc,g_xrca_m.*
+      
+      CALL axrp320_gen_glap()
+      IF g_intrans THEN
+         CONTINUE WHILE
+      ELSE
+         EXIT WHILE
+      END IF      
+   END WHILE
+END FUNCTION]]>
+</point>
+  <point name="function.axrp320_gen_glap" cite_std="N" status="" ver="1" src="s" new="Y" order="4" cite_ver="" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 應收產生傳票
+# Memo...........:
+# Usage..........: CALL axrp320_gen_glap(传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp320_gen_glap()
+DEFINE p_type LIKE type_t.chr2
+DEFINE p_ld LIKE glaa_t.glaald
+DEFINE p_date LIKE glap_t.glapdocdt
+DEFINE p_slip LIKE ooba_t.ooba002
+DEFINE p_sum_type LIKE type_t.chr1
+DEFINE p_wc LIKE type_t.chr1000
+DEFINE r_success LIKE type_t.num5
+DEFINE r_start_no LIKE glap_t.glapdocno
+DEFINE r_end_no LIKE glap_t.glapdocno
+DEFINE l_cmd STRING
+ 
+    LET g_intrans= 'N'
+    CALL s_voucher_cre_tmp_table() RETURNING r_success
+
+    CALL s_transaction_begin()
+    #传入参数赋值
+    LET p_type = '1'
+    LET p_ld = g_xrca_m.xrcald
+    LET p_date = g_xrca_m.glapdocdt
+    LET p_slip = g_xrca_m.glapdocno
+    LET p_sum_type = g_xrca_m.type
+    LET p_wc = g_wc
+
+    #测试元件
+    CALL s_voucher_gen(p_type,p_ld,p_date,p_slip,p_sum_type,p_wc) RETURNING r_success,r_start_no,r_end_no
+
+    IF r_success THEN
+       DISPLAY 'Begin:',r_start_no
+       DISPLAY 'End  :',r_end_no
+       CALL s_transaction_end('Y','0')
+       CALL cl_ask_end2(1) RETURNING g_intrans
+    ELSE
+       CALL s_transaction_end('N','0')
+       CALL cl_ask_end2(2) RETURNING g_intrans
+    END IF
+    DROP TABLE s_voucher_gen_tmp;
+
+END FUNCTION]]>
+</point>
+  <point name="function.axrp320_xrcald_desc" cite_std="N" status="" ver="1" src="s" new="Y" order="5" cite_ver="" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp320_xrcald_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xrca_m.xrcald
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xrca_m.xrcald_desc = g_rtn_fields[1]
+   DISPLAY BY NAME g_xrca_m.xrcald_desc
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xrca_m.xrcald
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaacomp FROM glaa_t WHERE glaaent='"||g_enterprise||"' AND glaald=? ","") RETURNING g_rtn_fields
+   LET g_xrca_m.glaacomp = g_rtn_fields[1]
+   DISPLAY BY NAME g_xrca_m.glaacomp
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xrca_m.glaacomp
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xrca_m.glaacomp_desc = g_rtn_fields[1]
+   DISPLAY BY NAME g_xrca_m.glaacomp_desc
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xrca_m.glaacomp
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooef004 FROM ooef_t WHERE ooefent='"||g_enterprise||"' AND ooef001=? ","") RETURNING g_rtn_fields
+   LET g_ooef004 = g_rtn_fields[1]
+   
+END FUNCTION]]>
+</point>
+  <point name="function.axrp320_glapdocno_chk" cite_std="N" status="u" ver="1" src="s" new="Y" order="6" cite_ver="" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp320_glapdocno_chk()
+DEFINE p_glapdocno      LIKE glap_t.glapdocno
+DEFINE l_oobastus       LIKE ooba_t.oobastus
+DEFINE l_oobg003        LIKE oobg_t.oobg003
+   
+   LET g_errno = '' 
+    
+   SELECT oobastus INTO l_oobastus FROM ooba_t,oobx_t
+    WHERE oobaent = oobxent
+      AND ooba002 = oobx001
+      AND oobaent = g_enterprise
+      AND ooba001 = g_ooef004             #单据别参照表号
+      AND ooba002 = g_xrca_m.glapdocno    #单据别
+      AND oobx002 = 'AGL'                 
+      AND oobx003 = 'aglt310'             #单据性质
+   CASE
+      WHEN SQLCA.SQLCODE =100  LET g_errno = 'aim-00056'
+      WHEN l_oobastus = 'N'    LET g_errno = 'aim-00057'
+   END CASE
+END FUNCTION]]>
+</point>
+  <point name="function.axrp320_construct2" cite_std="N" status="" ver="1" src="s" new="Y" order="7" cite_ver="" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrp320_construct2()
+   WHILE TRUE
+      CLEAR FORM
+      INITIALIZE g_wc TO NULL
+      LET g_wc = " 1=1"
+      IF NOT cl_null(g_argv[1]) THEN   #帳款帳別
+         LET g_xrca_m.xrcald = g_argv[1]
+      END IF
+      DISPLAY BY NAME g_xrca_m.xrcald
+      CALL axrp320_xrcald_desc()      
+      IF NOT cl_null(g_argv[2]) THEN   #帳款單性質
+         LET g_wc = g_wc," AND xrca001 = '",g_argv[2],"'"
+      END IF
+      IF NOT cl_null(g_argv[3]) THEN   #帳款客户範圍
+         LET g_wc = g_wc," AND xrca004 = '",g_argv[3],"'"
+      END IF
+      IF NOT cl_null(g_argv[4]) THEN   #立帳日期範圍
+         LET g_wc = g_wc," AND xrcadocdt = '",g_argv[4],"'"
+      END IF
+      IF NOT cl_null(g_argv[5]) THEN   #帳款单號範圍
+         LET g_wc = g_wc," AND xrcadocno = '",g_argv[5],"'"
+      END IF  
+      DISPLAY g_argv[2] TO xrca001
+      DISPLAY g_argv[3] TO xrca004
+      DISPLAY g_argv[4] TO xrcadocdt
+      DISPLAY g_argv[5] TO xrcadocno
+
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+             
+         INPUT BY NAME g_xrca_m.type,g_xrca_m.glapdocno,g_xrca_m.glapdocdt   
+    
+            AFTER FIELD type
+              IF g_xrca_m.type NOT MATCHES "[123]" THEN 
+                 NEXT FIELD type
+              END IF
+              
+            ON CHANGE type
+               IF g_xrca_m.type MATCHES "[3]" THEN 
+                  CALL cl_set_comp_required("glapdocdt",TRUE)
+               ELSE
+                  CALL cl_set_comp_required("glapdocdt",FALSE)               
+               END IF
+               
+            AFTER FIELD glapdocno
+               IF NOT cl_null(g_xrca_m.glapdocno) THEN
+                  CALL axrp320_glapdocno_chk()
+                  IF NOT cl_null(g_errno) THEN
+                     CALL cl_err(g_xrca_m.glapdocno,g_errno,1)
+                     LET g_xrca_m.glapdocno = ''
+                     NEXT FIELD glapdocno
+                  END IF   
+               END IF    
+
+
+            ON ACTION controlp INFIELD glapdocno
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.default1 = g_xrca_m.glapdocno            #給予default值
+               #給予arg
+               LET g_qryparam.where = "ooba001 = '",g_ooef004,"' AND ooba004 = 'aglt310' AND ooba003 = 'AGL' "
+               CALL q_ooba002_4()                                #呼叫開窗
+               LET g_xrca_m.glapdocno = g_qryparam.return1       #將開窗取得的值回傳到變數
+               DISPLAY g_xrca_m.glapdocno TO glapdocno           #顯示到畫面上
+               NEXT FIELD glapdocno                              #返回原欄位
+    
+            AFTER INPUT
+
+         END INPUT 
+   
+         BEFORE DIALOG
+            LET g_xrca_m.type = 1
+            DISPLAY g_xrca_m.type TO type         
+
+         ON ACTION accept
+            ACCEPT DIALOG
+   
+         ON ACTION cancel
+            LET INT_FLAG = 1
+            EXIT DIALOG
+   
+   
+         #查詢CONSTRUCT共用ACTION
+         &include "construct_action.4gl"
+   
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+   
+      LET g_wc = g_wc CLIPPED,cl_get_extra_cond("", "")
+    
+
+      DISPLAY g_wc,g_xrca_m.*
+      
+      IF NOT INT_FLAG THEN 
+         CALL axrp320_gen_glap()
+      END IF   
+      IF INT_FLAG = 1 THEN
+         LET INT_FLAG = 0
+         EXIT WHILE
+      END IF
+   END WHILE
+END FUNCTION]]>
+</point>
+  <point name="main.init" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   ]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[      ]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="free_style.function" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+</add_points>

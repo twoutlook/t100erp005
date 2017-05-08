@@ -1,0 +1,78 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammp422" module="amm" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="01533" crtdt="2014-03-10 15:23:21" modid="01533" moddt="2014-07-17 17:56:44" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="會員卡點數自動清零批次處理作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mmbhsite,mmbhsite_desc(chr80),mmbi003,mmbi003_desc(chr80),basedate(chr500),mmbh001,mmbh001_desc(chr80),mmbh002,mmbh002_desc(chr80),mman031,mman032,mman033,mman034,mman035"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="amm" filename="ammp422" method="dialog">
+    <section id="input">
+      <input id="head" field=""/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="mmbhsite">
+        <after>
+          <reference field="mmbhsite_desc" ref_field="mmbh_t.mmbhsite" map_field="mmbhsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="mmbhsite_desc"/>
+      <column id="mmbi003">
+        <after>
+          <reference field="mmbi003_desc" ref_field="mmbi_t.mmbi003" map_field="mmbient,mmbi003" ref_sql="SELECT mmanl003 FROM mmanl_t WHERE mmanlent=$varg_enterprise$var AND mmanl001=? AND mmanl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mman001" state="c"/>
+      </column>
+      <column id="mmbi003_desc"/>
+      <column id="basedate"/>
+      <column id="mmbh001">
+        <after>
+          <reference field="mmbh001_desc" ref_field="mmbh001" map_field="mmbh001" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2055&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmbh001_desc"/>
+      <column id="mmbh002">
+        <after>
+          <reference field="mmbh002_desc" ref_field="mmbh002" map_field="mmbh002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2056&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmbh002_desc"/>
+      <column id="mman031" type="S" default="1" def_scc="6504"/>
+      <column id="mman032">
+        <after>
+          <check id="range" bt="1.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman033">
+        <after>
+          <check id="range" bt="1.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mman034">
+        <after>
+          <check id="range" st="12.000" st_type="1" errno="azz-00087" bt="1.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="mman035">
+        <after>
+          <check id="range" st="31.000" st_type="1" errno="azz-00087" bt="1.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+    </init>
+  </form>
+</assembly>
+

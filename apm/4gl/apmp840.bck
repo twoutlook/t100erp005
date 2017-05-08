@@ -1,0 +1,2383 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="apmp840.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0011(2016-10-21 14:21:08), PR版次:0011(2017-02-18 15:42:21)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000105
+#+ Filename...: apmp840
+#+ Description: 統採要貨批次轉採購處理作業
+#+ Creator....: 04226(2014-12-05 11:37:51)
+#+ Modifier...: 02159 -SD/PR- 06814
+ 
+{</section>}
+ 
+{<section id="apmp840.global" >}
+#應用 p02 樣板自動產生(Version:22)
+#add-point:填寫註解說明 name="global.memo"
+#160318-00025#37      2016/04/20 By 07959 將重複內容的錯誤訊息置換為公用錯誤訊息(r.v)
+#160727-00019#28      2016/08/08 By 08742 系统中定义的临时表名称超过15码在执行时会出错,所以需要将系统中定义的临时表长度超过15码的全部改掉	 	
+#                                         Mod   s_apmp840_date_tmp -->apmp840_tmp01
+#161006-00008#11      2016/10/21 By sakura 整批修改組織
+#170109-00037#8       2017/01/10 by sakura 批次LOCK處理1.UI勾選LOCK檢查2.產生採購底稿LOCK檢查3.執行LOCK檢查
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10             #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num10             #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+     pmdldocno       LIKE pmdl_t.pmdldocno,       #採購單號
+     pmdb205         LIKE pmdb_t.pmdb205,         #採購中心
+     pmdb015         LIKE pmdb_t.pmdb015,         #供應商
+     pmdb206         LIKE pmdb_t.pmdb206,         #採購員
+     pmdb207         LIKE pmdb_t.pmdb207,         #採購方式
+     pmdb037         LIKE pmdb_t.pmdb037,         #收貨組織
+     pmdb260         LIKE pmdb_t.pmdb260,         #收貨部門
+     pmdb203         LIKE pmdb_t.pmdb203,         #配送中心
+     pmda202         LIKE pmda_t.pmda202,         #所屬品類   #150610-00030#2 151203 by sakura add
+     type            LIKE type_t.chr1,            #拆單方式
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)  #注意要在add-point內寫入END RECORD name="global.variable"
+     sel                LIKE type_t.chr1,         #選擇
+     pmdasite           LIKE pmda_t.pmdasite,     #要貨組織
+     pmdasite_desc      LIKE ooefl_t.ooefl003,    #要貨組織說明
+     pmdadocno          LIKE pmda_t.pmdadocno,    #要貨單號
+     pmdbseq            LIKE pmdb_t.pmdbseq,      #項次
+     pmdb200            LIKE pmdb_t.pmdb200,      #商品條碼
+     pmdb004            LIKE pmdb_t.pmdb004,      #商品編號
+     pmdb004_desc       LIKE imaal_t.imaal003,    #品名
+     pmdb004_desc_desc  LIKE imaal_t.imaal004,    #規格
+     pmdb005            LIKE pmdb_t.pmdb005,      #產品特徵
+     pmda202            LIKE pmda_t.pmda202,      #所屬品類       #150610-00030#1 150612 by sakura add
+     pmda202_desc       LIKE rtaxl_t.rtaxl003,    #所屬品類說明   #150610-00030#1 150612 by sakura add
+     l_imaa009          LIKE imaa_t.imaa009,      #商品品類編號   #150610-00030#1 150612 by sakura add
+     pmdb227            LIKE pmdb_t.pmdb227,      #要貨補貨規格說明   #150710-00016#8 150713 by sakura add
+     pmdb201            LIKE pmdb_t.pmdb201,      #要貨包裝單位
+     pmdb201_desc       LIKE oocal_t.oocal003,    #要貨包裝單位說明
+     pmdb202            LIKE pmdb_t.pmdb202,      #要貨包裝數量
+     pmdb007            LIKE pmdb_t.pmdb007,      #要貨單位
+     pmdb007_desc       LIKE oocal_t.oocal003,    #要貨單位說明
+     pmdb006            LIKE pmdb_t.pmdb006,      #要貨數量
+     l_num              LIKE type_t.num20_6,      #未轉採購量
+     pmdb049            LIKE pmdb_t.pmdb049,      #已轉採購量/配送量  #160604-00009#99 Add By ken 160624 加pmdb049
+     pmdb030            LIKE pmdb_t.pmdb030,      #需求日期
+     l_ddate            LIKE pmdb_t.pmdb030,      #預計到庫日
+     l_pdate            LIKE pmdb_t.pmdb030,      #採購出單日
+     pmdn020            LIKE pmdn_t.pmdn020,      #緊急度
+     pmdb252            LIKE pmdb_t.pmdb252,      #庫存量
+     pmdb253            LIKE pmdb_t.pmdb253,      #採購在途量
+     pmdb254            LIKE pmdb_t.pmdb254,      #前一週銷量
+     pmdb255            LIKE pmdb_t.pmdb255,      #前兩週銷量
+     pmdb256            LIKE pmdb_t.pmdb256,      #前三週銷量
+     pmdb257            LIKE pmdb_t.pmdb257,      #前四周銷量
+     pmdb015            LIKE pmdb_t.pmdb015,      #供應商
+     pmdb015_desc       LIKE pmaal_t.pmaal004,    #供應商簡稱
+     l_pmdl015          LIKE pmdl_t.pmdl015,      #幣別
+     l_pmdl015_desc     LIKE ooail_t.ooail003,    #幣別說明
+     pmda002            LIKE pmda_t.pmda002,      #要貨人員
+     pmda002_desc       LIKE ooag_t.ooag011,      #要貨人員說明
+     pmda003            LIKE pmda_t.pmda003,      #要貨部門
+     pmda003_desc       LIKE ooefl_t.ooefl003,    #要貨部門說明
+     pmdb206            LIKE pmdb_t.pmdb206,      #採購員
+     pmdb206_desc       LIKE ooag_t.ooag011,      #採購員姓名
+     pmdb207            LIKE pmdb_t.pmdb207,      #採購方式
+     pmdb037            LIKE pmdb_t.pmdb037,      #收貨組織
+     pmdb037_desc       LIKE ooefl_t.ooefl003,    #收貨組織說明
+     pmdb260            LIKE pmdb_t.pmdb260,      #收貨部門
+     pmdb260_desc       LIKE ooefl_t.ooefl003,    #收貨部門說明
+     pmdb203            LIKE pmdb_t.pmdb203,      #配送中心
+     pmdb203_desc       LIKE ooefl_t.ooefl003,    #配送中心說明
+     pmdb205            LIKE pmdb_t.pmdb205,      #採購中心
+     pmdb205_desc       LIKE ooefl_t.ooefl003,    #採購中心說明
+     pmdbsite           LIKE pmdb_t.pmdbsite,     #需求組織
+     pmdn224            LIKE pmdn_t.pmdn224       #採購失效日
+                        END RECORD
+#170218-00001#4 20170218 add by beckxie---S
+GLOBALS 
+   DEFINE g_do_flag          LIKE type_t.chr1        #Y:有異動,N:沒異動   
+END GLOBALS
+#170218-00001#4 20170218 add by beckxie---E
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num10              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明 name="global.argv"
+DEFINE g_detail_d_t     type_g_detail_d
+DEFINE g_detail_d_o     type_g_detail_d
+DEFINE l_ac2            LIKE type_t.num5 
+TYPE type_g_detail2_d   RECORD
+#add-point:自定義模組變數(Module Variable)
+     pmdp003            LIKE pmdp_t.pmdp003,    #要貨單號
+     pmdp004            LIKE pmdp_t.pmdp004,    #要貨項次
+     pmdn200            LIKE pmdn_t.pmdn200,    #商品條碼
+     pmdn001            LIKE pmdn_t.pmdn001,    #商品編號
+     pmdn001_desc       LIKE imaal_t.imaal003,  #品名
+     pmdn001_desc_desc  LIKE imaal_t.imaal004,  #規格
+     pmdn002            LIKE pmdn_t.pmdn002,    #產品特徵
+     pmdl207            LIKE pmdl_t.pmdl207,    #所屬品類       #150610-00030#1 150612 by sakura add
+     pmdl207_desc       LIKE rtaxl_t.rtaxl003,  #所屬品類說明   #150610-00030#1 150612 by sakura add
+     l_imaa009          LIKE imaa_t.imaa009,    #商品品類編號   #150610-00030#1 150612 by sakura add
+     pmdb007_1          LIKE pmdb_t.pmdb007,    #要貨單位
+     pmdb007_1_desc     LIKE oocal_t.oocal003,  #要貨單位說明
+     pmdb006_1          LIKE pmdb_t.pmdb006,    #要貨量
+     l_num1             LIKE type_t.num20_6,    #未轉採購量
+     l_ddate1           LIKE pmdb_t.pmdb030,    #預計到庫日
+     pmdp021            LIKE pmdp_t.pmdp021,    #沖銷順序
+     pmdn227            LIKE pmdn_t.pmdn227,    #補貨規格說明   #150710-00016#8 150713 by sakura add
+     pmdn201            LIKE pmdn_t.pmdn201,    #採購包裝單位
+     pmdn201_desc       LIKE oocal_t.oocal003,  #採購包裝單位說明
+     pmdn202            LIKE pmdn_t.pmdn202,    #採購包裝數量
+     pmdn006            LIKE pmdn_t.pmdn006,    #採購單位
+     pmdn006_desc       LIKE oocal_t.oocal003,  #採購單位說明
+     pmdn007            LIKE pmdn_t.pmdn007,    #採購數量
+     pmdn010            LIKE pmdn_t.pmdn010,    #計價單位
+     pmdn010_desc       LIKE oocal_t.oocal003,  #計價單位說明
+     pmdn011            LIKE pmdn_t.pmdn011     #計價數量
+                        END RECORD
+#end add-point
+DEFINE g_detail2_d      DYNAMIC ARRAY OF type_g_detail2_d
+DEFINE g_detail2_d_t    type_g_detail2_d
+DEFINE g_detail2_d_o    type_g_detail2_d
+
+DEFINE g_parameter      type_parameter
+DEFINE g_detail_idx     LIKE type_t.num5
+DEFINE g_detail_idx2    LIKE type_t.num5
+DEFINE g_rec_b          LIKE type_t.num5
+DEFINE g_qbe            RECORD
+       pmdb205          LIKE pmdb_t.pmdb205,     #採購中心
+       pmdb205_desc     LIKE ooefl_t.ooefl003,   #採購中心說明
+       pmdadocno        STRING,                  #要貨單號
+       pmdadocdt        STRING,                  #要貨日期
+       pmdb015          STRING,                  #供應商
+       pmdb206          STRING,                  #採購員
+       pmdb030          STRING,                  #需求日期
+       pmdasite         STRING,                  #要貨組織
+       pmda003          STRING,                  #要貨部門
+       pmda002          STRING,                  #要貨人員
+       pmdb207          LIKE pmdb_t.pmdb207,     #採購方式
+       imaa009          STRING,                  #商品品類
+       pmdb004          STRING,                  #要貨商品
+       pmdb037          STRING,                  #收貨組織
+       pmdb260          STRING,                  #收貨部門
+       pmdb203          STRING                   #配送中心
+                        END RECORD
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apmp840.main" >}
+#+ 作業開始 
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   DEFINE ls_js  STRING
+   #add-point:main段define name="main.define"
+   DEFINE l_success      LIKE type_t.num5
+   #end add-point   
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("apm","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   INITIALIZE g_parameter.* TO NULL
+   LET g_parameter.pmdldocno = g_argv[1]     #採購單號
+   LET g_parameter.pmdb205   = g_argv[2]     #採購中心
+   LET g_parameter.pmdb015   = g_argv[3]     #供應商
+   LET g_parameter.pmdb206   = g_argv[4]     #採購員
+   LET g_parameter.pmdb207   = g_argv[5]     #採購方式
+   LET g_parameter.pmdb037   = g_argv[6]     #收貨組織
+   LET g_parameter.pmdb260   = g_argv[7]     #收貨部門
+   LET g_parameter.pmdb203   = g_argv[8]     #配送中心
+   LET g_parameter.pmda202   = g_argv[9]     #所屬品類   #150610-00030#2 151203 by sakura add
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apmp840 WITH FORM cl_ap_formpath("apm",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL apmp840_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL apmp840_ui_dialog() 
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      #Drop Table
+      LET l_success = ''
+      CALL s_apmp840_drop_tmp() RETURNING l_success
+      CALL s_aooi500_drop_temp() RETURNING l_success   #150308-00001#3 150309 pomelo add
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_apmp840
+   END IF 
+   
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="apmp840.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION apmp840_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point   
+   #add-point:init段define name="init.define"
+   DEFINE l_success      LIKE type_t.num5
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   LET g_errshow = 1
+   #採購方式(查詢)
+   CALL cl_set_combo_scc_part('pmdb207','6014','1,3')
+   #拆單方式
+   CALL cl_set_combo_scc('b_type','6743')
+   #150610-00030#1 150612 By sakura add(S)   
+   #拆單方式參數設定
+   LET g_parameter.type = cl_get_para(g_enterprise,g_site,'E-CIR-0026')
+   DISPLAY g_parameter.type TO b_type
+   #150610-00030#1 150612 By sakura add(E)
+   #緊急度
+   CALL cl_set_combo_scc('b_pmdn020','2036')
+   #採購方式
+   CALL cl_set_combo_scc_part('b_pmdb207','6014','1,3')
+   #建立temp table
+   LET l_success = ''
+   CALL s_apmp840_create_tmp() RETURNING l_success
+   CALL s_aooi500_create_temp() RETURNING l_success   #150308-00001#3 150309 pomelo add
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp840.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION apmp840_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point 
+   DEFINE li_idx   LIKE type_t.num10
+   #add-point:ui_dialog段define name="init.init"
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_errno       LIKE type_t.chr10
+   DEFINE l_pmdb205_o   LIKE pmdb_t.pmdb205
+   DEFINE l_pmdb207_o   LIKE pmdb_t.pmdb207
+   DEFINE l_sel_cnt     LIKE type_t.num5         #選取的筆數
+   DEFINE l_type        LIKE type_t.num5
+   DEFINE l_cnt         LIKE type_t.num5
+   DEFINE l_i           LIKE type_t.num5
+   DEFINE l_sql         STRING
+   DEFINE l_docno_str   STRING
+   DEFINE la_param      RECORD
+             prog       STRING,
+             param      DYNAMIC ARRAY OF STRING
+                        END RECORD
+   DEFINE ls_js         STRING
+   DEFINE l_msg         STRING      #160225-00040#13 160310 By pomelo add
+   #end add-point 
+   
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   #檢查選取的資料是否已經存在temp table 中
+   LET l_sql = "SELECT COUNT(*)",
+               "  FROM s_apmp840_tmp",
+               " WHERE pmdp003 = ?",
+               "   AND pmdp004 = ?"
+   PREPARE apmp840_chk FROM l_sql
+   
+   #取得需求組織的慣用幣別
+   LET l_sql = "SELECT ooef016",
+               "  FROM ooef_t",
+               " WHERE ooefent = ",g_enterprise,
+               "   AND ooef001 = ?",
+               "   AND ooefstus = 'Y'"
+   PREPARE apmp840_ooef016 FROM l_sql
+
+   #算出相同 商品編號 產品特徵 採購單位 計價單位
+   #且到庫日期小於等於此筆資料的到庫日期 筆數
+   LET l_sql = "SELECT COALESCE(MAX(pmdp021),0)+1",
+               "  FROM s_apmp840_tmp",
+               " WHERE pmdn001 = ?",
+               "   AND pmdn002 = ?",
+               "   AND pmdn006 = ?",
+               "   AND pmdn010 = ?",
+               "   AND pmdn014 <= ?"
+   PREPARE apmp840_max_pmdp021 FROM l_sql
+   
+   #取要貨單上的庫位
+   LET l_sql = "SELECT pmdb038",
+               "  FROM pmdb_t",
+               " WHERE pmdbent = ",g_enterprise,
+               "   AND pmdbdocno = ?",
+               "   AND pmdbseq = ?"
+   PREPARE apmp840_pmdb038 FROM l_sql
+   
+   #取採購單單據日期
+   LET l_sql = "SELECT pmdldocdt",
+               "  FROM pmdl_t",
+               " WHERE pmdlent = ",g_enterprise,
+               "   AND pmdldocno = ?"
+   PREPARE apmp840_pmdldocdt FROM l_sql
+   
+   #拆單方式
+   LET g_parameter.type = cl_get_para(g_enterprise,g_site,'E-CIR-0026')
+   DISPLAY g_parameter.type TO b_type
+   
+   #170109-00037#8 by sakura add(S)
+   #LOCK檢查
+   LET g_sql = "SELECT pmdbdocno,pmdbseq FROM pmdb_t ",
+               " WHERE pmdbent = ",g_enterprise,
+               "   AND pmdbdocno = ? ",
+               "   AND pmdbseq = ? ",
+               "   FOR UPDATE SKIP LOCKED "
+   PREPARE apmp840_chk_lock_pmdb FROM g_sql
+   #170109-00037#8 by sakura add(E)
+   #end add-point
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_detail_d.clear()
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL apmp840_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         INPUT BY NAME g_qbe.pmdb205,g_qbe.pmdb207
+            
+            BEFORE INPUT 
+               #單號有值表示 由T類程式串入
+               IF cl_null(g_parameter.pmdb207) THEN
+                  IF cl_null(g_qbe.pmdb207) THEN
+                     LET g_qbe.pmdb207 = '1'
+                  END IF
+               ELSE
+                 LET g_qbe.pmdb205 = g_parameter.pmdb205     #採購中心
+                 LET g_qbe.pmdb015 = g_parameter.pmdb015     #供應商
+                 LET g_qbe.pmdb206 = g_parameter.pmdb206     #採購員
+                 LET g_qbe.pmdb207 = g_parameter.pmdb207     #採購方式
+                 LET g_qbe.pmdb037 = g_parameter.pmdb037     #收貨組織
+                 LET g_qbe.pmdb260 = g_parameter.pmdb260     #收貨部門
+                 LET g_qbe.pmdb203 = g_parameter.pmdb203     #配送中心
+                 DISPLAY BY NAME g_qbe.pmdb205,g_qbe.pmdb205_desc,
+                                 g_qbe.pmdb015,g_qbe.pmdb206,
+                                 g_qbe.pmdb207,g_qbe.pmdb037,
+                                 g_qbe.pmdb260,g_qbe.pmdb203
+               END IF
+               CALL apmp840_set_entry()
+               CALL apmp840_set_no_entry()
+               
+            AFTER FIELD pmdb205
+               LET g_qbe.pmdb205_desc = ' '
+               DISPLAY BY NAME g_qbe.pmdb205_desc
+               IF NOT cl_null(g_qbe.pmdb205) THEN
+                  IF g_qbe.pmdb205 != l_pmdb205_o OR cl_null(l_pmdb205_o) THEN
+                     IF s_aooi500_setpoint(g_prog,'pmdb205') THEN
+                        CALL s_aooi500_chk(g_prog,'pmdb205',g_qbe.pmdb205,g_site)
+                           RETURNING l_success,l_errno
+                        IF NOT l_success THEN
+                           INITIALIZE g_errparam TO NULL
+                           LET g_errparam.extend = ""
+                           LET g_errparam.code   = l_errno
+                           LET g_errparam.popup  = TRUE
+                           CALL cl_err()
+                           LET g_qbe.pmdb205 = l_pmdb205_o
+                           CALL s_desc_get_department_desc(g_qbe.pmdb205)
+                               RETURNING g_qbe.pmdb205_desc
+                           DISPLAY BY NAME g_qbe.pmdb205_desc
+                           NEXT FIELD CURRENT
+                        END IF
+                     ELSE
+                        INITIALIZE g_chkparam.* TO NULL
+                        LET g_chkparam.arg1 = g_qbe.pmdb205
+                        IF NOT cl_chk_exist("v_ooef001_34") THEN
+                           LET g_qbe.pmdb205 = l_pmdb205_o
+                           CALL s_desc_get_department_desc(g_qbe.pmdb205)
+                               RETURNING g_qbe.pmdb205_desc
+                           DISPLAY BY NAME g_qbe.pmdb205_desc
+                           NEXT FIELD CURRENT
+                        END IF
+                     END IF
+                  END IF
+               END IF
+               LET l_pmdb205_o = g_qbe.pmdb205
+               CALL s_desc_get_department_desc(g_qbe.pmdb205)
+                   RETURNING g_qbe.pmdb205_desc
+               DISPLAY BY NAME g_qbe.pmdb205_desc
+            
+            AFTER FIELD pmdb207
+               IF NOT cl_null(g_qbe.pmdb207) THEN
+                  IF (g_qbe.pmdb207 != l_pmdb207_o OR cl_null(l_pmdb207_o)) AND
+                     g_detail2_d.getLength() >= 1 THEN
+                     #採購底稿已經有存在資料，如更改採購方式，採購底稿將會刪除，是否還是要進行修改?
+                     IF cl_ask_confirm('apm-00703') THEN
+                        LET l_success = ''
+                        CALL s_apmp840_del_tmp()
+                           RETURNING l_success
+                        IF l_success THEN
+                           CALL g_detail2_d.clear()
+                        ELSE
+                           LET g_qbe.pmdb207 = l_pmdb207_o
+                           NEXT FIELD CURRENT
+                        END IF
+                     ELSE
+                        LET g_qbe.pmdb207 = l_pmdb207_o
+                        NEXT FIELD CURRENT
+                     END IF
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               LET l_pmdb207_o = g_qbe.pmdb207
+            
+            ON ACTION controlp INFIELD pmdb205
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_qbe.pmdb205
+               IF s_aooi500_setpoint(g_prog,'pmdb205') THEN
+                  LET g_qryparam.where = s_aooi500_q_where(g_prog,'pmdb205',g_site,'i') #150308-00001#3 150309 pomelo add 'i'
+                  CALL q_ooef001_24()
+               ELSE
+                  LET g_qryparam.where = " ooef303 = 'Y'"
+                  CALL q_ooef001()
+               END IF
+               LET g_qbe.pmdb205 = g_qryparam.return1
+               DISPLAY g_qbe.pmdb205 TO pmdb205
+               CALL s_desc_get_department_desc(g_qbe.pmdb205) RETURNING g_qbe.pmdb205_desc
+               DISPLAY BY NAME g_qbe.pmdb205_desc
+               NEXT FIELD pmdb205
+               
+         END INPUT
+         
+         CONSTRUCT BY NAME g_wc
+                ON pmdadocno,pmdadocdt,pmdb015,pmdb206,
+                   pmdb030,  pmdasite, pmda003,pmda002,
+                   imaa009,  pmdb004,  pmdb037,pmdb260,
+                   pmdb203,  pmdb049                      #160604-00009#99 Add By ken 160624 加pmdb049
+            BEFORE CONSTRUCT
+               #當由採購單傳參數，先將參數資料顯示出來
+               IF NOT cl_null(g_parameter.pmdldocno) THEN
+                  LET g_qbe.pmdb205 = g_parameter.pmdb205    #採購中心
+                  LET g_qbe.pmdb205_desc = s_desc_get_department_desc(g_qbe.pmdb205)
+                  LET g_qbe.pmdb015 = g_parameter.pmdb015    #供應商
+                  LET g_qbe.pmdb206 = g_parameter.pmdb206    #採購員
+                  LET g_qbe.pmdb207 = g_parameter.pmdb207    #採購方式
+                  LET g_qbe.pmdb037 = g_parameter.pmdb037    #收貨組織
+                  LET g_qbe.pmdb260 = g_parameter.pmdb260    #收貨部門
+                  LET g_qbe.pmdb203 = g_parameter.pmdb203    #配送中心
+               END IF
+               DISPLAY BY NAME g_qbe.pmdb205,g_qbe.pmdb205_desc,
+                               g_qbe.pmdb015,g_qbe.pmdb206,
+                               g_qbe.pmdb207,g_qbe.pmdb037,
+                               g_qbe.pmdb260,g_qbe.pmdb203
+            
+            #供應商
+            BEFORE FIELD pmdb015
+               IF NOT cl_null(g_parameter.pmdb015) THEN
+                  NEXT FIELD NEXT
+               END IF
+            
+            #採購員
+            BEFORE FIELD pmdb206
+               IF NOT cl_null(g_parameter.pmdb206) THEN
+                  NEXT FIELD NEXT
+               END IF
+               
+            #收貨組織
+            BEFORE FIELD pmdb037
+               IF NOT cl_null(g_parameter.pmdb037) THEN
+                  NEXT FIELD NEXT
+               END IF
+            
+            #收貨部門
+            BEFORE FIELD pmdb260
+               IF NOT cl_null(g_parameter.pmdb260) THEN
+                  NEXT FIELD NEXT
+               END IF
+               
+            #配送中心
+            BEFORE FIELD pmdb203
+               IF NOT cl_null(g_parameter.pmdb203) THEN
+                  NEXT FIELD NEXT
+               END IF
+            
+            ON ACTION controlp INFIELD pmdadocno
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_pmdadocno()
+               LET g_qbe.pmdadocno = g_qryparam.return1
+               DISPLAY g_qbe.pmdadocno TO pmdadocno
+               NEXT FIELD pmdadocno
+               
+            ON ACTION controlp INFIELD pmdb015
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_pmaa001_3()
+               LET g_qbe.pmdb015 = g_qryparam.return1
+               DISPLAY g_qbe.pmdb015 TO pmdb015
+               NEXT FIELD pmdb015
+               
+            ON ACTION controlp INFIELD pmdb206
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()
+               LET g_qbe.pmdb206 = g_qryparam.return1
+               DISPLAY g_qbe.pmdb206 TO pmdb206
+               NEXT FIELD pmdb206
+               
+            ON ACTION controlp INFIELD pmdasite
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.where = s_aooi500_q_where(g_prog,'pmdasite',g_site,'c') #150308-00001#3 150309 pomelo add 'c'
+               CALL q_ooef001_24()
+               LET g_qbe.pmdasite = g_qryparam.return1
+               DISPLAY g_qbe.pmdasite TO pmdasite
+               NEXT FIELD pmdasite
+               
+            ON ACTION controlp INFIELD pmda003
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooeg001()
+               LET g_qbe.pmda003 = g_qryparam.return1
+               DISPLAY g_qbe.pmda003 TO pmda003
+               NEXT FIELD pmda003
+               
+            ON ACTION controlp INFIELD pmda002
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()
+               LET g_qbe.pmda002 = g_qryparam.return1
+               DISPLAY g_qbe.pmda002 TO pmda002
+               NEXT FIELD pmda002
+               
+            ON ACTION controlp INFIELD imaa009
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_rtax001()
+               LET g_qbe.imaa009 = g_qryparam.return1
+               DISPLAY g_qbe.imaa009 TO imaa009
+               NEXT FIELD imaa009
+               
+            ON ACTION controlp INFIELD pmdb004
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_imaa001()
+               LET g_qbe.pmdb004 = g_qryparam.return1
+               DISPLAY g_qbe.pmdb004 TO pmdb004
+               NEXT FIELD pmdb004
+               
+            ON ACTION controlp INFIELD pmdb037
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               IF s_aooi500_setpoint(g_prog,'pmdb037') THEN
+                  LET g_qryparam.where = s_aooi500_q_where(g_prog,'pmdb037',g_site,'c') #150308-00001#3 150309 pomelo add 'c'
+                  CALL q_ooef001_24()
+               ELSE
+                  #161006-00008#11 by sakura mark(S)
+                  #LET g_qryparam.where = " ooef210 = 'Y'"
+                  #CALL q_ooef001()
+                  #161006-00008#11 by sakura mark(E)
+                  LET g_qryparam.arg1 = g_site
+                  LET g_qryparam.arg2 = 8
+                  CALL q_ooed004_3()
+               END IF
+               LET g_qbe.pmdb037 = g_qryparam.return1
+               DISPLAY g_qbe.pmdb037 TO pmdb037
+               NEXT FIELD pmdb037
+               
+            ON ACTION controlp INFIELD pmdb260
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooeg001()
+               LET g_qbe.pmdb260 = g_qryparam.return1
+               DISPLAY g_qbe.pmdb260 TO pmdb260
+               NEXT FIELD pmdb260
+               
+            ON ACTION controlp INFIELD pmdb203
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               IF s_aooi500_setpoint(g_prog,'pmdb203') THEN
+                  LET g_qryparam.where = s_aooi500_q_where(g_prog,'pmdb203',g_site,'c') #150308-00001#3 150309 pomelo add 'c'
+                  CALL q_ooef001_24()
+               ELSE
+                  LET g_qryparam.where = " ooef302 = 'Y'"
+                  CALL q_ooef001()
+               END IF
+               LET g_qbe.pmdb203 = g_qryparam.return1
+               DISPLAY g_qbe.pmdb203 TO pmdb203
+               NEXT FIELD pmdb203
+         END CONSTRUCT
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         #基本資料 選擇/幣別維護
+         INPUT ARRAY g_detail_d FROM s_detail1.*
+            ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                     INSERT ROW = FALSE,DELETE ROW = FALSE, APPEND ROW = FALSE)
+           BEFORE INPUT
+               CALL cl_set_act_visible("filter",FALSE)
+            
+            BEFORE ROW
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_master_idx = l_ac
+               LET g_detail_d_t.* = g_detail_d[l_ac].*
+               LET g_detail_d_o.* = g_detail_d[l_ac].*
+               DISPLAY l_ac TO FORMONLY.index
+            
+            ON CHANGE b_sel            
+               CALL apmp840_set_entry_b()
+               CALL apmp840_set_no_entry_b()
+               #170109-00037#8 by sakura add(S)
+               #UI勾選LOCK檢查
+               IF g_detail_d[l_ac].sel = "Y" THEN
+                  CALL cl_err_collect_init() 
+                  CALL s_transaction_begin()
+                  CALL apmp840_lock_chk()
+                  CALL s_transaction_end('Y',0)
+                  CALL cl_err_collect_show()
+               END IF
+               #170109-00037#8 by sakura add(E)               
+            
+            AFTER FIELD l_pmdl015
+               IF NOT cl_null(g_detail_d[l_ac].l_pmdl015) THEN
+                  IF g_detail_d[l_ac].l_pmdl015 != g_detail_d_o.l_pmdl015 OR cl_null(g_detail_d_o.l_pmdl015) THEN
+                     INITIALIZE g_chkparam.* TO NULL
+                     LET g_chkparam.arg1 = g_detail_d[l_ac].pmdbsite
+                     LET g_chkparam.arg2 = g_detail_d[l_ac].l_pmdl015
+                     
+                     #160318-00025#36  2016/04/20  by pengxin  add(S)
+                     LET g_errshow = TRUE #是否開窗 
+                     LET g_chkparam.err_str[1] = "aoo-00176:sub-01302|aooi150|",cl_get_progname("aooi150",g_lang,"2"),"|:EXEPROGaooi150"
+                     #160318-00025#36  2016/04/20  by pengxin  add(E)
+               
+                     IF NOT cl_chk_exist("v_ooaj002") THEN
+                        LET g_detail_d[l_ac].l_pmdl015 = g_detail_d_o.l_pmdl015
+                        LET g_detail_d[l_ac].l_pmdl015_desc = s_desc_get_currency_desc(g_detail_d[l_ac].l_pmdl015)
+                        NEXT FIELD l_pmdl015
+                     END IF
+                  END IF
+               END IF
+               LET g_detail_d_o.l_pmdl015 = g_detail_d[l_ac].l_pmdl015
+               LET g_detail_d[l_ac].l_pmdl015_desc = s_desc_get_currency_desc(g_detail_d[l_ac].l_pmdl015)
+            
+            ON ACTION controlp INFIELD l_pmdl015
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_detail_d[l_ac].l_pmdl015
+               LET g_qryparam.arg1 = g_detail_d[l_ac].pmdbsite
+               CALL q_ooaj002_1()
+               LET g_detail_d[l_ac].l_pmdl015 = g_qryparam.return1
+               DISPLAY g_detail_d[l_ac].l_pmdl015 TO l_pmdl015
+               LET g_detail_d[l_ac].l_pmdl015_desc = s_desc_get_currency_desc(g_detail_d[l_ac].l_pmdl015)
+               NEXT FIELD l_pmdl015
+               
+         END INPUT
+         
+         #採購底稿 INPUT ARRAY
+         INPUT ARRAY g_detail2_d FROM s_detail2.*
+            ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                     INSERT ROW = FALSE,DELETE ROW = FALSE, APPEND ROW = FALSE)
+            
+            BEFORE INPUT
+               CALL cl_set_act_visible("filter",FALSE)
+            
+            BEFORE ROW
+               LET l_ac2 = DIALOG.getCurrentRow("s_detail2")
+               LET g_master_idx = l_ac
+               LET g_detail2_d_t.* = g_detail2_d[l_ac2].*
+               LET g_detail2_d_o.* = g_detail2_d[l_ac2].*
+               DISPLAY l_ac TO FORMONLY.index
+           
+            BEFORE FIELD b_pmdn202
+               IF NOT cl_null(g_detail2_d[l_ac2].pmdn007) THEN
+                  NEXT FIELD b_pmdn007
+               END IF
+            
+            #包裝數量
+            AFTER FIELD b_pmdn202
+               IF NOT cl_ap_chk_Range(g_detail2_d[l_ac2].pmdn202,"0.000","0","","","azz-00079",1) THEN
+                  LET g_detail2_d[l_ac2].pmdn202 = g_detail2_d_o.pmdn202
+                  NEXT FIELD b_pmdn202
+               END IF
+               IF NOT cl_null(g_detail2_d[l_ac2].pmdn202) THEN
+                  IF g_detail2_d[l_ac2].pmdn202 != g_detail2_d_o.pmdn202 THEN
+                     IF NOT apmp840_chk_num('2') THEN
+                        LET g_detail2_d[l_ac2].pmdn007 = g_detail2_d_o.pmdn007
+                        LET g_detail2_d[l_ac2].pmdn011 = g_detail2_d_o.pmdn011
+                        LET g_detail2_d[l_ac2].pmdn202 = g_detail2_d_o.pmdn202
+                        NEXT FIELD CURRENT
+                     END IF
+                    #CALL apmp840_num_change('2',g_detail2_d[l_ac2].pmdn001,g_detail2_d[l_ac2].pmdn006,
+                    #                        g_detail2_d[l_ac2].pmdn007,g_detail2_d[l_ac2].pmdn010,
+                    #                        g_detail2_d[l_ac2].pmdn201,g_detail2_d[l_ac2].pmdn202)
+                    #   RETURNING g_detail2_d[l_ac2].pmdn007,g_detail2_d[l_ac2].pmdn011,g_detail2_d[l_ac2].pmdn202
+                    ##檢查輸入包裝數量轉成採購數量是否大於未轉採購量
+                    #IF g_detail2_d[l_ac2].pmdn007 > g_detail2_d[l_ac2].l_num1 THEN
+                    #   #輸入的包裝數量轉為採購數量%1 > 未轉採購量%2！
+                    #   INITIALIZE g_errparam TO NULL
+                    #   LET g_errparam.code = "apm-00683"
+                    #   LET g_errparam.extend = ""
+                    #   LET g_errparam.popup = TRUE
+                    #   LET g_errparam.replace[1] = g_detail2_d[l_ac2].pmdn007
+                    #   LET g_errparam.replace[2] = g_detail2_d[l_ac2].l_num1
+                    #   CALL cl_err()
+                    #   LET g_detail2_d[l_ac2].pmdn007 = g_detail2_d_o.pmdn007
+                    #   LET g_detail2_d[l_ac2].pmdn011 = g_detail2_d_o.pmdn011
+                    #   LET g_detail2_d[l_ac2].pmdn202 = g_detail2_d_o.pmdn202
+                    #   NEXT FIELD CURRENT
+                    #END IF
+                  END IF
+               END IF
+               LET g_detail2_d_o.pmdn007 = g_detail2_d[l_ac2].pmdn007
+               LET g_detail2_d_o.pmdn011 = g_detail2_d[l_ac2].pmdn011
+               LET g_detail2_d_o.pmdn202 = g_detail2_d[l_ac2].pmdn202
+            
+            #採購數量
+            AFTER FIELD b_pmdn007
+               IF NOT cl_ap_chk_Range(g_detail2_d[l_ac2].pmdn007,"0.000","0","","","azz-00079",1) THEN
+                  LET g_detail2_d[l_ac2].pmdn007 = g_detail2_d_o.pmdn007
+                  NEXT FIELD b_pmdn202
+               END IF
+               IF NOT cl_null(g_detail2_d[l_ac2].pmdn007) THEN
+                  IF g_detail2_d[l_ac2].pmdn007 != g_detail2_d_o.pmdn007 THEN
+                     IF NOT apmp840_chk_num('1') THEN
+                        LET g_detail2_d[l_ac2].pmdn007 = g_detail2_d_o.pmdn007
+                        LET g_detail2_d[l_ac2].pmdn011 = g_detail2_d_o.pmdn011
+                        LET g_detail2_d[l_ac2].pmdn202 = g_detail2_d_o.pmdn202
+                        NEXT FIELD CURRENT
+                     END IF
+                    #CALL apmp840_num_change('1',g_detail2_d[l_ac2].pmdn001,g_detail2_d[l_ac2].pmdn006,
+                    #                        g_detail2_d[l_ac2].pmdn007,g_detail2_d[l_ac2].pmdn010,
+                    #                        g_detail2_d[l_ac2].pmdn201,g_detail2_d[l_ac2].pmdn202)
+                    #   RETURNING g_detail2_d[l_ac2].pmdn007,g_detail2_d[l_ac2].pmdn011,g_detail2_d[l_ac2].pmdn202
+                    ##檢查輸入採購數量是否大於未轉採購量
+                    #IF g_detail2_d[l_ac2].pmdn007 > g_detail2_d[l_ac2].l_num1 THEN
+                    #   #輸入的採購數量%1 > 未轉採購量%2！
+                    #   INITIALIZE g_errparam TO NULL
+                    #   LET g_errparam.code = "apm-00682"
+                    #   LET g_errparam.extend = ""
+                    #   LET g_errparam.popup = TRUE
+                    #   LET g_errparam.replace[1] = g_detail2_d[l_ac2].pmdn007
+                    #   LET g_errparam.replace[2] = g_detail2_d[l_ac2].l_num1
+                    #   CALL cl_err()
+                    #   LET g_detail2_d[l_ac2].pmdn007 = g_detail2_d_o.pmdn007
+                    #   LET g_detail2_d[l_ac2].pmdn011 = g_detail2_d_o.pmdn011
+                    #   LET g_detail2_d[l_ac2].pmdn202 = g_detail2_d_o.pmdn202
+                    #   NEXT FIELD CURRENT
+                    #END IF
+                  END IF
+               END IF
+               LET g_detail2_d_o.pmdn007 = g_detail2_d[l_ac2].pmdn007
+               LET g_detail2_d_o.pmdn011 = g_detail2_d[l_ac2].pmdn011
+               LET g_detail2_d_o.pmdn202 = g_detail2_d[l_ac2].pmdn202
+            
+            ON ROW CHANGE
+               LET l_ac2 = DIALOG.getCurrentRow("s_detail2")
+               UPDATE s_apmp840_tmp
+                  SET pmdn007 = g_detail2_d[l_ac2].pmdn007,
+                      pmdn011 = g_detail2_d[l_ac2].pmdn011,
+                      pmdn202 = g_detail2_d[l_ac2].pmdn202
+                WHERE pmdp003 = g_detail2_d[l_ac2].pmdp003
+                  AND pmdp004 = g_detail2_d[l_ac2].pmdp004
+              
+         END INPUT
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         #DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b)
+         #   BEFORE DISPLAY
+         #      LET g_current_page = 1
+         #      CALL cl_set_act_visible("filter",FALSE)
+         #
+         #   BEFORE ROW
+         #      LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+         #      LET l_ac = g_detail_idx
+         #      DISPLAY g_detail_idx TO FORMONLY.h_index
+         #      DISPLAY g_detail_d.getLength() TO FORMONLY.h_count
+         #END DISPLAY
+         #end add-point
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2 name="ui_dialog.before_dialog2"
+            
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            #add-point:ui_dialog段on action selall name="ui_dialog.selall.befroe"
+            CALL cl_err_collect_init()   #170109-00037#8 by sakura add
+            #end add-point            
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+               #add-point:ui_dialog段on action selall name="ui_dialog.for.onaction_selall"
+               
+               #170109-00037#8 by sakura add(S)             
+               CALL s_transaction_begin()
+               LET l_ac = li_idx
+               CALL apmp840_lock_chk()
+               CALL s_transaction_end('Y',0)
+               #170109-00037#8 by sakura add(E)
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selall name="ui_dialog.onaction_selall"
+            CALL cl_err_collect_show()   #170109-00037#8 by sakura add
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+               #add-point:ui_dialog段on action selnone name="ui_dialog.for.onaction_selnone"
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selnone name="ui_dialog.onaction_selnone"
+ 
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel name="ui_dialog.onaction_sel"
+            #170109-00037#8 by sakura add(S)
+            CALL cl_err_collect_init()
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  CALL s_transaction_begin()
+                  CALL apmp840_lock_chk()
+                  CALL s_transaction_end('Y',0)
+               END IF
+            END FOR
+            CALL cl_err_collect_show()
+            #170109-00037#8 by sakura add(E)
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel name="ui_dialog.onaction_unsel"
+ 
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL apmp840_filter()
+            #add-point:ON ACTION filter name="menu.filter"
+            
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            #add-point:ui_dialog段accept之前 name="menu.filter"
+            
+            #end add-point
+            CALL apmp840_query()
+             
+         # 條件清除
+         ON ACTION qbeclear
+            #add-point:ui_dialog段 name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            #add-point:ui_dialog段datarefresh name="ui_dialog.datarefresh"
+            
+            #end add-point
+            CALL apmp840_b_fill()
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         #點選
+         ON ACTION select_item
+            LET l_i = DIALOG.getCurrentRow("s_detail1")
+            IF g_detail_d[l_i].sel = "Y" THEN
+               LET g_detail_d[l_i].sel = "N"
+            ELSE
+               LET g_detail_d[l_i].sel = "Y"
+            END IF
+            
+         #產生採購底稿
+         ON ACTION gen_papers
+            LET l_sel_cnt = 0
+            CALL cl_err_collect_init()
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               #170109-00037#8 by sakura add(S)
+               #UI勾選LOCK檢查
+               IF g_detail_d[l_ac].sel = "Y" THEN
+                  CALL s_transaction_begin()
+                  CALL apmp840_lock_chk()
+                  CALL s_transaction_end('Y',0)
+                  LET l_sel_cnt = l_sel_cnt + 1
+               END IF
+               #170109-00037#8 by sakura add(E)
+               IF g_detail_d[li_idx].sel = "Y" THEN
+                  LET l_cnt = 0
+                  #確認是否已經存在temp table中
+                  EXECUTE apmp840_chk
+                    USING g_detail_d[li_idx].pmdadocno,g_detail_d[li_idx].pmdbseq
+                     INTO l_cnt
+                  IF l_cnt = 0 THEN
+                     CALL s_transaction_begin()
+                     #新增到table table
+                     CALL apmp840_ins_tmp(li_idx) RETURNING l_success
+                     IF l_success THEN
+                        CALL s_transaction_end('Y','0')
+                     ELSE
+                        CALL s_transaction_end('N','0')
+                     END IF
+                  END IF
+                  #LET l_sel_cnt = l_sel_cnt + 1   #170109-00037#8 by sakura mark
+               END IF
+            END FOR
+            
+            CALL cl_err_collect_show()
+            #當沒有勾選任何一筆資料，報錯
+            IF l_sel_cnt = 0 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'adb-00078'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               CONTINUE DIALOG
+            END IF
+            CALL apmp840_b_fill2()
+            
+         #產生採購資料
+         ON ACTION batch_execute
+            #確保直接按產生採購資料，可是數量並沒有過欄位
+            LET l_ac2 = DIALOG.getCurrentRow("s_detail2")
+            IF l_ac2 >= 1 THEN
+               # 當採購數量為空，表示輸入包裝數量
+               IF cl_null(g_detail2_d[l_ac2].pmdn007) THEN
+                  LET l_type = '2'
+               ELSE
+                  LET l_type = '1'
+               END IF
+               IF NOT apmp840_chk_num(l_type) THEN
+                  CONTINUE DIALOG
+               END IF
+               UPDATE s_apmp840_tmp
+                  SET pmdn007 = g_detail2_d[l_ac2].pmdn007,
+                      pmdn011 = g_detail2_d[l_ac2].pmdn011,
+                      pmdn202 = g_detail2_d[l_ac2].pmdn202
+                WHERE pmdp003 = g_detail2_d[l_ac2].pmdp003
+                  AND pmdp004 = g_detail2_d[l_ac2].pmdp004
+            END IF
+               
+            LET l_cnt = 0
+            SELECT COUNT(pmdp003) INTO l_cnt
+              FROM s_apmp840_tmp
+            
+            IF l_cnt = 0 THEN
+               #採購底稿中尚未有任何資料！
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'apm-00684'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               CONTINUE DIALOG
+            ELSE
+               CALL s_transaction_begin()
+               CALL cl_err_collect_init()
+               #160225-00040#13 160310 By pomelo add(S)
+               
+               #160225-00040#13 160310 By pomelo add(E)
+               CALL s_apmp840_gen_po(g_parameter.type,g_parameter.pmdldocno)
+                  RETURNING l_success,l_docno_str
+               IF l_success THEN
+                  LET l_success = ''
+                  CALL s_apmp840_del_tmp()
+                     RETURNING l_success
+                  #170218-00001#3 20170218 add by beckxie---S
+                  IF g_do_flag = 'N' THEN
+                     CALL s_transaction_end('Y','0')
+                  ELSE
+                  #170218-00001#3 20170218 add by beckxie---E
+                     CALL s_transaction_end('Y','1')
+                  END IF   #170218-00001#3 20170218 add by beckxie
+                  #160225-00040#13 160310 By pomelo add(S)
+                  LET l_msg = cl_getmsg('std-00012',g_lang)
+                  CALL cl_progress_no_window_ing(l_msg)
+                  #160225-00040#13 160310 By pomelo add(E)
+                  IF cl_null(g_parameter.pmdldocno) AND NOT cl_null(l_docno_str) THEN
+                     LET la_param.prog = 'apmt840'
+                     LET la_param.param[1] = ''
+                     LET la_param.param[2] = l_docno_str
+                     LET ls_js = util.JSON.stringify(la_param)
+                     CALL cl_cmdrun_wait(ls_js)
+                  END IF
+               ELSE
+                  CALL s_transaction_end('N','1')
+               END IF
+               CALL cl_err_collect_show()
+               CALL apmp840_b_fill()
+               CALL apmp840_b_fill2()
+            END IF
+            DISPLAY '',0 TO stagenow,stagecomplete     #160225-00040#13 160310 By pomelo add
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #(ver:22) ---start---
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      
+      #end add-point
+      #(ver:22) --- end ---
+ 
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #(ver:22) ---start---
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         #(ver:22) --- end ---
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp840.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION apmp840_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define name="query.define"
+   
+   #end add-point 
+    
+   #add-point:cs段after_construct name="query.after_construct"
+   DISPLAY 0 TO stagecomplete     #160225-00040#13 160310 By pomelo add
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL apmp840_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   END IF
+   
+   #add-point:cs段after_query name="query.cs_after_query"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp840.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION apmp840_b_fill()
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define name="b_fill.define"
+   DEFINE l_rtka010       LIKE rtka_t.rtka010
+   DEFINE l_date          LIKE pmdb_t.pmdb030
+   DEFINE l_key_date      LIKE pmdb_t.pmdb030
+   DEFINE l_sum_pmdp024   LIKE pmdp_t.pmdp024
+   DEFINE l_pmdn006       LIKE pmdn_t.pmdn006   #採購單位
+   DEFINE l_pmdp024       LIKE pmdp_t.pmdp024   #折合採購量
+   DEFINE l_change        LIKE pmdp_t.pmdp024   #轉需求數量
+   DEFINE l_success       LIKE type_t.num5
+   #150610-00030#1 150612 By sakura add(S)
+   DEFINE l_errno         LIKE type_t.chr10
+   DEFINE l_rtax001       LIKE rtax_t.rtax001   
+   #150610-00030#1 150612 By sakura add(E)
+   #end add-point
+ 
+   LET g_wc = g_wc, cl_sql_auth_filter()   #(ver:21) add cl_sql_auth_filter()
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   LET g_wc = g_wc, " AND pmdb207 = '",g_qbe.pmdb207,"'"
+   IF NOT cl_null(g_qbe.pmdb205) THEN
+      LET g_wc = g_wc, " AND pmdb205 = '",g_qbe.pmdb205,"'"
+   END IF
+   #150610-00030#2 151203 By sakura add(S)
+   #所屬品類
+   IF NOT cl_null(g_parameter.pmda202) THEN
+      LET g_wc = g_wc, " AND EXISTS (SELECT 1 FROM rtaw_t WHERE rtawent = imaaent and rtaw001 = '",g_parameter.pmda202,"'AND rtaw002 = imaa009 )"
+   END IF   
+   #150610-00030#2 151203 By sakura add(E)
+   
+   #取的計算好的日期資料
+   LET g_sql = "SELECT ddate,pdate,pmdn224,pmdb033",    #150506-00013#1 150506 By pomelo add pmdb033
+               "  FROM apmp840_tmp01",                  #160727-00019#28 Mod   s_apmp840_date_tmp -->apmp840_tmp01
+               " WHERE pmdbdocno = ?",
+               "   AND pmdbseq = ?"
+   PREPARE apmp840_sel_date FROM g_sql
+   
+   #計算要貨單位轉採購數量
+   LET g_sql = "SELECT pmdn006,COALESCE(SUM(pmdp024),0)",
+               "  FROM pmdl_t,pmdn_t,pmdp_t",
+               " WHERE pmdlent = pmdpent",
+               "   AND pmdldocno = pmdpdocno",
+               "   AND pmdlent = ",g_enterprise,
+               "   AND pmdlstus != 'X'",
+               "   AND pmdnent = pmdpent",
+               "   AND pmdndocno = pmdpdocno",
+               "   AND pmdnseq = pmdpseq",
+               "   AND pmdp003 = ?",
+               "   AND pmdp004 = ?",
+               "   AND pmdldocno != COALESCE('",g_parameter.pmdldocno,"','-1')",
+               " GROUP BY pmdn006"
+   PREPARE apmp840_sum_pmdp024_pre FROM g_sql
+   DECLARE apmp840_sum_pmdp024_cs CURSOR FOR apmp840_sum_pmdp024_pre
+   
+   #準備抓取供應商預設幣別
+   LET g_sql = "SELECT pmab033,ooail003",
+               "  FROM pmab_t",
+               "  LEFT OUTER JOIN ooail_t ON pmabent = ooailent",
+               "                         AND pmab033 = ooail001",
+               "                         AND ooail002 = '",g_dlang,"'",
+               " WHERE pmabent = ",g_enterprise,
+               "   AND pmabsite = 'ALL'",
+               "   AND pmab001 = ?"
+   PREPARE apmp840_get_pmab033 FROM g_sql
+   
+   #計算到庫日期 採購出單日
+   CALL s_apmp840_calculation_date(g_wc)
+   
+   #DISPLAY 'QBE where = ',g_wc
+   LET g_sql = "SELECT 'N',          pmdasite,    t1.ooefl003,  pmdadocno,",
+               "       pmdbseq,      pmdb200,     pmdb004,      t4.imaal003,",
+               "       t4.imaal004,  pmdb005,",
+               "       '',           '',          imaa009,",   #150610-00030#1 150612 by sakura add
+               "       pmdb227,      pmdb201,     t5.oocal003,",   #150710-00016#8 150713 by sakura add pmdb227
+               "       pmdb202,      pmdb007,     t6.oocal003,  pmdb006,",
+               "       0,            pmdb049,     pmdb030,      '',           '',",  #160604-00009#99 Add By ken 160624 加pmdb049
+               "       pmdb252,      pmdb253,     pmdb254,      pmdb255,",
+               "       pmdb256,      pmdb257,     pmdb015,      t7.pmaal004,",
+               "       '',           '',          pmda002,      t2.ooag011,",
+               "       pmda003,      t3.ooefl003, pmdb206,      t8.ooag001,",
+               "       pmdb207,      pmdb037,     t9.ooefl003,  pmdb260,",
+               "       t10.ooefl003, pmdb203,     t11.ooefl003, pmdb205,",
+               "       t12.ooefl003, pmdb033,     pmdbsite",
+               "  FROM pmda_t ",
+               "  LEFT OUTER JOIN ooefl_t t1 ON pmdaent = t1.ooeflent",   #要貨組織
+               "                            AND pmdasite = t1.ooefl001",
+               "                            AND t1.ooefl002 = '",g_dlang,"'",
+               "  LEFT OUTER JOIN ooag_t  t2 ON pmdaent = t2.ooagent",    #要貨人員
+               "                            AND pmda002 = t2.ooag001",
+               "  LEFT OUTER JOIN ooefl_t t3 ON pmdaent = t3.ooeflent",   #要貨部門
+               "                            AND pmda003 = t3.ooefl001",
+               "                            AND t3.ooefl002 = '",g_dlang,"',",
+               "       pmdb_t",
+               "  LEFT OUTER JOIN imaal_t t4 ON pmdbent = t4.imaalent",   #商品編號
+               "                            AND pmdb004 = t4.imaal001",
+               "                            AND t4.imaal002 = '",g_dlang,"'",
+               "  LEFT OUTER JOIN oocal_t t5 ON pmdbent = t5.oocalent",  #要貨包裝單位
+               "                            AND pmdb201 = t5.oocal001",
+               "                            AND t5.oocal002 = '",g_dlang,"'",
+               "  LEFT OUTER JOIN oocal_t t6 ON pmdbent = t6.oocalent",  #要貨單位
+               "                            AND pmdb007 = t6.oocal001",
+               "                            AND t6.oocal002 = '",g_dlang,"'",
+               "  LEFT OUTER JOIN pmaal_t t7 ON pmdbent = t7.pmaalent",   #供應商簡稱
+               "                            AND pmdb015 = t7.pmaal001",
+               "                            AND t7.pmaal002 = '",g_dlang,"'",
+               "  LEFT OUTER JOIN ooag_t  t8 ON pmdbent = t8.ooagent",    #採購員
+               "                            AND pmdb206 = t8.ooag001",
+               "  LEFT OUTER JOIN ooefl_t t9 ON pmdbent = t9.ooeflent",   #收貨組織
+               "                            AND pmdb037 = t9.ooefl001",
+               "                            AND t9.ooefl002 = '",g_dlang,"'",
+               "  LEFT OUTER JOIN ooefl_t t10 ON pmdbent = t10.ooeflent",  #收貨部門
+               "                             AND pmdb260 = t10.ooefl001",
+               "                             AND t10.ooefl002 = '",g_dlang,"'",
+               "  LEFT OUTER JOIN ooefl_t t11 ON pmdbent = t11.ooeflent",  #配送中心
+               "                             AND pmdb203 = t11.ooefl001",
+               "                             AND t11.ooefl002 = '",g_dlang,"'",
+               "  LEFT OUTER JOIN ooefl_t t12 ON pmdbent = t12.ooeflent",  #採購中心
+               "                             AND pmdb205 = t12.ooefl001",
+               "                             AND t12.ooefl002 = '",g_dlang,"'",
+               "  LEFT OUTER JOIN imaa_t ON pmdbent = imaaent",
+               "                        AND pmdb004 = imaa001",
+               " WHERE pmdaent = pmdbent",
+               "   AND pmdadocno = pmdbdocno",
+               "   AND pmdaent = ?",
+               "   AND pmdastus = 'Y'",   #已確認
+               "   AND pmdb032 = '1'",   #未結案
+               "   AND ",g_wc CLIPPED,
+               " ORDER BY pmdb004,pmdb005,imaa009,pmdb030,pmdadocno,pmdbseq"   #150610-00030#1 150612 by sakura add imaa009
+   #DISPLAY 'apmp840_b_fill SQL = ',g_sql
+   #end add-point
+ 
+   PREPARE apmp840_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR apmp840_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空 name="b_fill.clear"
+   
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into name="b_fill.foreach_into"
+      g_detail_d[l_ac].sel,
+      g_detail_d[l_ac].pmdasite,      g_detail_d[l_ac].pmdasite_desc,
+      g_detail_d[l_ac].pmdadocno,     g_detail_d[l_ac].pmdbseq,
+      g_detail_d[l_ac].pmdb200,       g_detail_d[l_ac].pmdb004,
+      g_detail_d[l_ac].pmdb004_desc,  g_detail_d[l_ac].pmdb004_desc_desc,
+      g_detail_d[l_ac].pmdb005,
+      #150610-00030#1 150612 by sakura add(S)
+      g_detail_d[l_ac].pmda202,       g_detail_d[l_ac].pmda202_desc,
+      g_detail_d[l_ac].l_imaa009,
+      #150610-00030#1 150612 by sakura add(E)
+      g_detail_d[l_ac].pmdb227,   #150710-00016#8 150713 by sakura add
+      g_detail_d[l_ac].pmdb201,
+      g_detail_d[l_ac].pmdb201_desc,  g_detail_d[l_ac].pmdb202,
+      g_detail_d[l_ac].pmdb007,       g_detail_d[l_ac].pmdb007_desc,
+      g_detail_d[l_ac].pmdb006,       g_detail_d[l_ac].l_num,
+      g_detail_d[l_ac].pmdb049,   #160604-00009#99 Add By ken 160624 加pmdb049
+      g_detail_d[l_ac].pmdb030,       g_detail_d[l_ac].l_ddate,
+      g_detail_d[l_ac].l_pdate,       g_detail_d[l_ac].pmdb252,
+      g_detail_d[l_ac].pmdb253,       g_detail_d[l_ac].pmdb254,
+      g_detail_d[l_ac].pmdb255,       g_detail_d[l_ac].pmdb256,
+      g_detail_d[l_ac].pmdb257,       g_detail_d[l_ac].pmdb015,
+      g_detail_d[l_ac].pmdb015_desc,  g_detail_d[l_ac].l_pmdl015,
+      g_detail_d[l_ac].l_pmdl015_desc,g_detail_d[l_ac].pmda002,
+      g_detail_d[l_ac].pmda002_desc,  g_detail_d[l_ac].pmda003,
+      g_detail_d[l_ac].pmda003_desc,  g_detail_d[l_ac].pmdb206,
+      g_detail_d[l_ac].pmdb206_desc,  g_detail_d[l_ac].pmdb207,
+      g_detail_d[l_ac].pmdb037,       g_detail_d[l_ac].pmdb037_desc,
+      g_detail_d[l_ac].pmdb260,       g_detail_d[l_ac].pmdb260_desc,
+      g_detail_d[l_ac].pmdb203,       g_detail_d[l_ac].pmdb203_desc,
+      g_detail_d[l_ac].pmdb205,       g_detail_d[l_ac].pmdb205_desc,
+      g_detail_d[l_ac].pmdn020,       g_detail_d[l_ac].pmdbsite
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充 name="b_fill.foreach_iside"
+      #150610-00030#1 150612 By sakura add(S)
+      #所屬品類
+      CALL s_arti202_search_manage_level(g_detail_d[l_ac].l_imaa009)    
+        RETURNING l_success,l_errno,l_rtax001
+      LET g_detail_d[l_ac].pmda202 = l_rtax001
+      #所屬品類說明
+      CALL s_desc_get_rtaxl003_desc(g_detail_d[l_ac].pmda202) 
+        RETURNING g_detail_d[l_ac].pmda202_desc
+      #150610-00030#1 150612 By sakura add(E)
+      
+      #幣別
+      EXECUTE apmp840_get_pmab033 USING g_detail_d[l_ac].pmdb015
+         INTO g_detail_d[l_ac].l_pmdl015,g_detail_d[l_ac].l_pmdl015_desc
+         
+      #計算要貨單位轉採購數量
+      LET l_pmdp024 = 0
+      LET l_sum_pmdp024 = 0
+      FOREACH apmp840_sum_pmdp024_cs
+        USING g_detail_d[l_ac].pmdadocno,g_detail_d[l_ac].pmdbseq
+        INTO l_pmdn006,l_pmdp024
+      
+         #採購數量轉換成需求數量
+         CALL s_aooi250_convert_qty(g_detail_d[l_ac].pmdb004,l_pmdn006,g_detail_d[l_ac].pmdb007,l_pmdp024)
+            RETURNING l_success,l_change
+         LET l_sum_pmdp024 = l_sum_pmdp024 + l_change
+      END FOREACH
+      LET g_detail_d[l_ac].l_num = g_detail_d[l_ac].pmdb006 - l_sum_pmdp024
+
+      #預計到庫日 採購失效日 採購出單日
+      EXECUTE apmp840_sel_date
+        USING g_detail_d[l_ac].pmdadocno,g_detail_d[l_ac].pmdbseq
+         INTO g_detail_d[l_ac].l_ddate,l_key_date,g_detail_d[l_ac].pmdn224,
+              g_detail_d[l_ac].pmdn020 #150506-00013#1 150506 By pomelo add
+      
+      IF NOT cl_null(g_parameter.pmdldocno) AND cl_null(g_detail_d[l_ac].pmdn224) THEN
+         EXECUTE apmp840_pmdldocdt USING g_parameter.pmdldocno
+            INTO g_detail_d[l_ac].pmdn224
+      END IF
+      
+      IF l_key_date < g_today THEN
+         LET g_detail_d[l_ac].l_pdate = g_today
+         #LET g_detail_d[l_ac].pmdn020 = '2'   #緊急   #150324-00006#16 2015/04/29 By pomelo mark
+      ELSE
+         LET g_detail_d[l_ac].l_pdate = l_key_date
+         #LET g_detail_d[l_ac].pmdn020 = '1'   #一般   #150324-00006#16 2015/04/29 By pomelo mark
+      END IF
+      #end add-point
+      
+      CALL apmp840_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.other_table"
+   #刪除空白行
+   CALL g_detail_d.deleteElement(g_detail_d.getLength())
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE apmp840_sel
+   
+   LET l_ac = 1
+   CALL apmp840_fetch()
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.after_b_fill"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp840.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION apmp840_fetch()
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define name="fetch.define"
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後 name="fetch.after_fill"
+   
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp840.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION apmp840_detail_show()
+   #add-point:show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point
+   #add-point:show段define name="detail_show.define"
+   
+   #end add-point
+   
+   #add-point:detail_show段 name="detail_show.detail_show"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp840.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION apmp840_filter()
+   #add-point:filter段define(客製用) name="filter.define_customerization"
+   
+   #end add-point    
+   #add-point:filter段define name="filter.define"
+   
+   #end add-point
+   
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define name="filter.detail_cnt"
+   
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL apmp840_b_fill()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp840.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION apmp840_filter_parser(ps_field)
+   #add-point:filter段define(客製用) name="filter_parser.define_customerization"
+   
+   #end add-point    
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define name="filter_parser.define"
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp840.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION apmp840_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = apmp840_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp840.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: 欄位開啟
+# Memo...........:
+# Usage..........: CALL apmp840_set_entry()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/12/08 BY pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmp840_set_entry()
+   CALL cl_set_comp_entry("pmdb205",TRUE)   #採購中心
+   CALL cl_set_comp_entry("pmdb015",TRUE)   #供應商
+   CALL cl_set_comp_entry("pmdb206",TRUE)   #採購員
+   CALL cl_set_comp_entry("pmdb207",TRUE)   #採購方式
+   CALL cl_set_comp_entry("pmdb037",TRUE)   #收貨組織
+   CALL cl_set_comp_entry("pmdb260",TRUE)   #收貨部門
+   CALL cl_set_comp_entry("pmdb203",TRUE)   #配送中心
+END FUNCTION
+
+################################################################################
+# Descriptions...: 欄位關閉
+# Memo...........:
+# Usage..........: CALL apmp840_set_no_entry()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/12/08 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmp840_set_no_entry()
+   IF NOT cl_null(g_parameter.pmdldocno) THEN
+      CALL cl_set_comp_entry("pmdb205",FALSE)   #採購中心
+      CALL cl_set_comp_entry("pmdb015",FALSE)   #供應商
+      CALL cl_set_comp_entry("pmdb206",FALSE)   #採購員
+      CALL cl_set_comp_entry("pmdb207",FALSE)   #採購方式
+      CALL cl_set_comp_entry("pmdb037",FALSE)   #收貨組織
+      CALL cl_set_comp_entry("pmdb260",FALSE)   #收貨部門
+      CALL cl_set_comp_entry("pmdb203",FALSE)   #配送中心
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 把選取的資料新增到temp table裡
+# Memo...........:
+# Usage..........: CALL apmp840_ins_tmp(p_ac)
+#                :    RETURNING r_success
+# Input parameter: p_ac           陣列位置
+# Return code....: r_success      True/False
+# Date & Author..: 2014/12/10 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmp840_ins_tmp(p_ac)
+DEFINE p_ac             LIKE type_t.num5
+DEFINE r_success        LIKE type_t.num5
+DEFINE l_success        LIKE type_t.num5
+DEFINE l_pmdn200        LIKE pmdn_t.pmdn200
+DEFINE l_pmdp           RECORD
+       pmdb007          LIKE pmdb_t.pmdb007,   #要貨單位
+       pmdb006          LIKE pmdb_t.pmdb006,   #要貨量
+       num              LIKE type_t.num20_6,   #未轉採購量
+          
+       #採購單單頭
+       pmdldocdt        LIKE pmdl_t.pmdldocdt, #單據日期
+       pmdl004          LIKE pmdl_t.pmdl004,   #供應商
+       pmdl015          LIKE pmdl_t.pmdl015,   #幣別
+       pmdl203          LIKE pmdl_t.pmdl203,   #採購方式
+       pmdl207          LIKE pmdl_t.pmdl207,   #所屬品類   #150610-00030#1 150612 by sakura add
+          
+       #採購單單身
+       pmdnunit         LIKE pmdn_t.pmdnunit,  #收貨組織
+       pmdnorga         LIKE pmdn_t.pmdnorga,  #帳務組織
+       pmdn001          LIKE pmdn_t.pmdn001,   #商品編號
+       pmdn002          LIKE pmdn_t.pmdn002,   #產品特徵
+       l_imaa0091       LIKE imaa_t.imaa009,   #商品品類   #150610-00030#1 150612 by sakura add    
+       pmdn006          LIKE pmdn_t.pmdn006,   #採購單位
+       pmdn007          LIKE pmdn_t.pmdn007,   #採購數量
+       pmdn010          LIKE pmdn_t.pmdn010,   #計價單位
+       pmdn011          LIKE pmdn_t.pmdn011,   #計價數量
+       pmdn014          LIKE pmdn_t.pmdn014,   #到庫日期
+       pmdn015          LIKE pmdn_t.pmdn015,   #單價
+       pmdn016          LIKE pmdn_t.pmdn016,   #稅別
+       pmdn017          LIKE pmdn_t.pmdn017,   #稅率
+       pmdn020          LIKE pmdn_t.pmdn020,   #緊急度
+       pmdn025          LIKE pmdn_t.pmdn025,   #送貨地址碼
+       pmdn028          LIKE pmdn_t.pmdn028,   #庫位
+       pmdn200          LIKE pmdn_t.pmdn200,   #商品條碼
+       pmdn227          LIKE pmdn_t.pmdn227,   #補貨規格說明   #150710-00016#8 150713 by sakura add
+       pmdn201          LIKE pmdn_t.pmdn201,   #包裝單位
+       pmdn202          LIKE pmdn_t.pmdn202,   #採購包裝數量
+       pmdn203          LIKE pmdn_t.pmdn203,   #要貨部門
+       pmdn205          LIKE pmdn_t.pmdn205,   #要貨組織
+       pmdn216          LIKE pmdn_t.pmdn216,   #經營方式
+       pmdn217          LIKE pmdn_t.pmdn217,   #結算方式
+       pmdn218          LIKE pmdn_t.pmdn218,   #合約編號
+       pmdn219          LIKE pmdn_t.pmdn219,   #協議編號
+       pmdn220          LIKE pmdn_t.pmdn220,   #採購人員
+       pmdn221          LIKE pmdn_t.pmdn221,   #採購部門
+       pmdn222          LIKE pmdn_t.pmdn222,   #採購中心
+       pmdn223          LIKE pmdn_t.pmdn223,   #配送中心
+       pmdn224          LIKE pmdn_t.pmdn224,   #採購失效日
+       
+       #採購單關聯單據
+       pmdp003          LIKE pmdp_t.pmdp003,   #要貨單號
+       pmdp004          LIKE pmdp_t.pmdp004,   #要貨項次
+       pmdp021          LIKE pmdp_t.pmdp021    #沖銷順序
+                        END RECORD
+DEFINE l_cnt            LIKE type_t.num5
+DEFINE l_pmdl011        LIKE pmdl_t.pmdl011    #150930-00013#1 Add By Ken 151103 稅別 
+DEFINE l_oodb011        LIKE oodb_t.oodb011    #150930-00013#1 Add By Ken 151103 
+DEFINE l_sql            STRING                 #150930-00013#1 Add By Ken 151103
+
+   LET r_success = TRUE
+   LET l_success = TRUE
+   INITIALIZE l_pmdp.* TO NULL
+   
+   #要貨單
+   LET l_pmdp.pmdb007 = g_detail_d[p_ac].pmdb007      #要貨單位
+   LET l_pmdp.pmdb006 = g_detail_d[p_ac].pmdb006      #要貨量
+   LET l_pmdp.num     = g_detail_d[p_ac].l_num        #未轉採購量
+   IF l_pmdp.num <= 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "apm-00681"
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      LET g_errparam.replace[1] = g_detail_d[p_ac].pmdadocno
+      LET g_errparam.replace[2] = g_detail_d[p_ac].pmdbseq
+      CALL cl_err()
+      LET l_success = FALSE
+   END IF
+   
+   #採購單單頭
+   LET l_pmdp.pmdldocdt = g_detail_d[p_ac].l_pdate    #單據日期 = 採購出單日
+   LET l_pmdp.pmdl004 = g_detail_d[p_ac].pmdb015      #供應商
+   LET l_pmdp.pmdl203 = g_detail_d[p_ac].pmdb207      #採購方式
+   LET l_pmdp.pmdl015 = g_detail_d[p_ac].l_pmdl015    #幣別
+   LET l_pmdp.pmdl207 = g_detail_d[p_ac].pmda202      #所屬品類   #150610-00030#1 150612 by sakura add
+   
+   #EXECUTE apmp840_ooef016 USING g_detail_d[p_ac].pmdbsite
+   #   INTO l_pmdp.pmdl015                             #幣別
+   #IF cl_null(l_pmdp.pmdl015) THEN
+   #   INITIALIZE g_errparam TO NULL
+   #   LET g_errparam.code = "apm-00675"
+   #   LET g_errparam.extend = ''
+   #   LET g_errparam.popup = TRUE
+   #   LET g_errparam.replace[1] = g_detail_d[p_ac].pmdbsite
+   #   CALL cl_err()
+   #   LET l_success = FALSE
+   #END IF
+   
+   #採購單單身
+   LET l_pmdp.pmdnunit = g_detail_d[p_ac].pmdb037     #收貨組織
+   LET l_pmdp.pmdn001 = g_detail_d[p_ac].pmdb004      #商品編號
+   LET l_pmdp.pmdn002 = g_detail_d[p_ac].pmdb005      #產品特徵
+   #避免SQL錯誤
+   IF cl_null(l_pmdp.pmdn002) THEN
+      LET l_pmdp.pmdn002 = ' '
+   END IF
+   LET l_pmdp.pmdn014 = g_detail_d[p_ac].l_ddate      #到庫日期
+   LET l_pmdp.pmdn020 = g_detail_d[p_ac].pmdn020      #緊急度
+   LET l_pmdp.pmdn200 = g_detail_d[p_ac].pmdb200      #商品條碼
+   LET l_pmdp.pmdn203 = g_detail_d[p_ac].pmdb260      #要貨部門
+   LET l_pmdp.pmdn205 = g_detail_d[p_ac].pmdbsite     #收貨組織
+   LET l_pmdp.pmdn222 = g_detail_d[p_ac].pmdb205      #採購中心
+   LET l_pmdp.pmdn223 = g_detail_d[p_ac].pmdb203      #配送中心
+   LET l_pmdp.pmdn224 = g_detail_d[p_ac].pmdn224      #採購失效日
+   #150710-00016#8 150713 by sakura add(S)
+   LET l_pmdp.pmdn227 = g_detail_d[p_ac].pmdb227      #要貨補貨規格說明
+   LET l_pmdp.pmdn201 = g_detail_d[p_ac].pmdb201      #要貨包裝單位
+   #150710-00016#8 150713 by sakura add(E)   
+   #庫位
+   EXECUTE apmp840_pmdb038
+     USING g_detail_d[p_ac].pmdadocno,g_detail_d[p_ac].pmdbseq
+      INTO l_pmdp.pmdn028
+   IF cl_null(l_pmdp.pmdn014) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "apm-00676"
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET l_success = FALSE
+   END IF
+   
+   #採購單關聯單據
+   LET l_pmdp.pmdp003 = g_detail_d[p_ac].pmdadocno    #要貨單號
+   LET l_pmdp.pmdp004 = g_detail_d[p_ac].pmdbseq      #要貨項次
+   
+   IF cl_null(g_detail_d[p_ac].l_pmdl015) THEN
+      #基本資料頁籤中 要貨單號%1+項次%2，幣別為空！
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "apm-00840"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      LET g_errparam.replace[1] = g_detail_d[p_ac].pmdadocno
+      LET g_errparam.replace[2] = g_detail_d[p_ac].pmdbseq
+      CALL cl_err()
+      LET l_success = FALSE
+   ELSE
+      #取協議資料
+      CALL s_apmt840_get_pact(l_pmdp.pmdn222,l_pmdp.pmdl015,
+                              l_pmdp.pmdl004,l_pmdp.pmdldocdt,l_pmdp.pmdn001,l_pmdp.pmdn205)
+         RETURNING l_pmdp.pmdnorga,   #帳務組織
+                   l_pmdp.pmdn006,    #採購單位
+                   l_pmdp.pmdn010,    #計價單位
+                   l_pmdp.pmdn015,    #單價
+                   l_pmdp.pmdn016,    #稅別
+                   l_pmdp.pmdn017,    #稅率
+                   l_pmdp.pmdn216,    #經營方式
+                   l_pmdp.pmdn217,    #結算方式
+                   l_pmdp.pmdn218,    #合約編號
+                   l_pmdp.pmdn219,    #協議編號
+                   l_pmdp.pmdn220,    #採購人員
+                   l_pmdp.pmdn221     #採購部門
+      #帳務組織
+      IF cl_null(l_pmdp.pmdnorga) THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = "apm-00677"
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         LET g_errparam.replace[1] = l_pmdp.pmdn222
+         LET g_errparam.replace[2] = l_pmdp.pmdl015
+         LET g_errparam.replace[3] = l_pmdp.pmdl004
+         LET g_errparam.replace[4] = l_pmdp.pmdldocdt
+         LET g_errparam.replace[5] = l_pmdp.pmdn001
+         CALL cl_err()
+         LET l_success = FALSE
+      END IF
+      #採購單位
+      IF cl_null(l_pmdp.pmdn006) THEN
+         #採購中心 %1 + 幣別 %2 + 供應商 %3 + 日期 %4 + 商品編號%5 取到的採購單位為空！
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = "apm-00700"
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         LET g_errparam.replace[1] = l_pmdp.pmdn222
+         LET g_errparam.replace[2] = l_pmdp.pmdl015
+         LET g_errparam.replace[3] = l_pmdp.pmdl004
+         LET g_errparam.replace[4] = l_pmdp.pmdldocdt
+         LET g_errparam.replace[5] = l_pmdp.pmdn001
+         CALL cl_err()
+         LET l_success = FALSE
+      END IF
+      #計價單位
+      IF cl_null(l_pmdp.pmdn010) THEN
+         #採購中心 %1 + 幣別 %2 + 供應商 %3 + 日期 %4 + 商品編號%5 取到的計價單位為空！
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = "apm-00701"
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         LET g_errparam.replace[1] = l_pmdp.pmdn222
+         LET g_errparam.replace[2] = l_pmdp.pmdl015
+         LET g_errparam.replace[3] = l_pmdp.pmdl004
+         LET g_errparam.replace[4] = l_pmdp.pmdldocdt
+         LET g_errparam.replace[5] = l_pmdp.pmdn001
+         CALL cl_err()
+         LET l_success = FALSE
+      END IF
+      #單價
+      IF cl_null(l_pmdp.pmdn010) THEN
+         #採購中心 %1 + 幣別 %2 + 供應商 %3 + 日期 %4 + 商品編號%5 取到的單價為空！
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = "apm-00702"
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         LET g_errparam.replace[1] = l_pmdp.pmdn222
+         LET g_errparam.replace[2] = l_pmdp.pmdl015
+         LET g_errparam.replace[3] = l_pmdp.pmdl004
+         LET g_errparam.replace[4] = l_pmdp.pmdldocdt
+         LET g_errparam.replace[5] = l_pmdp.pmdn001
+         CALL cl_err()
+         LET l_success = FALSE
+      END IF
+      
+      #150930-00013#1 Add By Ken 151103(S)
+      IF NOT cl_null(g_argv[1]) THEN
+         LET l_sql = " SELECT pmdl011 ",
+                     "   FROM pmdl_t ",
+                     "  WHERE pmdlent = ? ",
+                     "    AND pmdldocno = '",g_argv[1],"' "
+         PREPARE apmp840_pmdl011 FROM l_sql
+         EXECUTE apmp840_pmdl011 USING g_enterprise INTO l_pmdl011
+         
+         IF NOT cl_null(l_pmdl011) THEN
+            CALL s_apmt840_get_oodb011(l_pmdp.pmdn205,l_pmdl011) RETURNING l_oodb011
+            DISPLAY "oodb011:",l_oodb011
+            DISPLAY "pmdn016:",l_pmdp.pmdn016         
+            IF (l_oodb011 = '1') AND (l_pmdl011 <> l_pmdp.pmdn016) THEN
+               #DISPLAY "稅別與單頭不同"
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "apm-01002"
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               LET g_errparam.replace[1] = l_pmdl011
+               LET g_errparam.replace[2] = l_pmdp.pmdn016
+               CALL cl_err()
+               LET l_success = FALSE                           
+            END IF 
+         END IF                  
+      END IF
+      #150930-00013#1 Add By Ken 151103(E)
+   END IF
+   
+   #150710-00016#8 150713 by sakura mark(S)   
+   ##取的門店清單裡的商品條碼及包裝單位
+   #CALL s_apmt840_get_rtdx(g_site,l_pmdp.pmdn001)
+   #   RETURNING l_pmdn200,l_pmdp.pmdn201
+   #IF cl_null(l_pmdp.pmdn201) THEN
+   #   INITIALIZE g_errparam TO NULL
+   #   LET g_errparam.code = "apm-00678"
+   #   LET g_errparam.extend = ''
+   #   LET g_errparam.popup = TRUE
+   #   LET g_errparam.replace[1] = l_pmdp.pmdn001
+   #   LET g_errparam.replace[2] = g_site
+   #   CALL cl_err()
+   #   LET l_success = FALSE
+   #END IF
+   #150710-00016#8 150713 by sakura mark(E)
+   #160304-00021#2 160309 By pomelo add(S)
+   IF cl_null(l_pmdp.pmdn201) THEN
+      #要貨單號%1+項次%2，包裝單位為空！
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "apm-01093"
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      LET g_errparam.replace[1] = g_detail_d[p_ac].pmdadocno
+      LET g_errparam.replace[2] = g_detail_d[p_ac].pmdbseq
+      CALL cl_err()
+      LET l_success = FALSE
+   END IF
+   #160304-00021#2 160309 By pomelo add(E)
+   
+   #當需要的欄位都有值的時候，才可以新增到temp table裡，維護數量
+   IF l_success THEN
+      
+      #要貨單位轉採購單位
+      IF l_pmdp.pmdb007 = l_pmdp.pmdn006 THEN
+         LET l_pmdp.pmdn007 = l_pmdp.num
+      ELSE
+         CALL s_aooi250_convert_qty(l_pmdp.pmdn001,l_pmdp.pmdb007,l_pmdp.pmdn006,l_pmdp.num)
+            RETURNING l_success,l_pmdp.pmdn007
+      END IF
+      
+      #單位間的轉換數量
+      #CALL apmp840_num_change('1',l_pmdp.pmdn001,l_pmdp.pmdn006,l_pmdp.pmdn007,   #170109-00037#8 by sakura mark
+      CALL s_apmp840_num_change('1',l_pmdp.pmdn001,l_pmdp.pmdn006,l_pmdp.pmdn007,  #170109-00037#8 by sakura add #搬到sub供使用
+                              l_pmdp.pmdn010,l_pmdp.pmdn201,l_pmdp.pmdn202)
+      #150903-00007#2 150908 by sakura mark&add(S)                              
+         #RETURNING l_pmdp.pmdn007,l_pmdp.pmdn011,l_pmdp.pmdn202
+         RETURNING l_success,l_pmdp.pmdn007,l_pmdp.pmdn011,l_pmdp.pmdn202
+      IF NOT l_success THEN
+         RETURN
+      END IF
+      #150903-00007#2 150908 by sakura mark&add(E)
+
+      #沖銷順序
+      #當相同 商品編號 產品特徵 採購單位 計價單位 且到庫日期大於此筆資料的到庫日期
+      #沖銷順序往後+1
+      UPDATE s_apmp840_tmp SET pmdp021 = pmdp021 + 1
+       WHERE pmdn001 = l_pmdp.pmdn001
+         AND pmdn002 = l_pmdp.pmdn002
+         AND pmdn006 = l_pmdp.pmdn006
+         AND pmdn010 = l_pmdp.pmdn010
+         AND pmdn014 > l_pmdp.pmdn014
+      
+      #算出相同 商品編號 產品特徵 採購單位 計價單位
+      #且到庫日期小於等於此筆資料的到庫日期 筆數
+      EXECUTE apmp840_max_pmdp021
+        USING l_pmdp.pmdn001,l_pmdp.pmdn002,l_pmdp.pmdn006,
+              l_pmdp.pmdn010,l_pmdp.pmdn014
+         INTO l_pmdp.pmdp021
+
+      INSERT INTO s_apmp840_tmp(l_lock,pmdb007, pmdb006, num,     pmdldocdt,   #170109-00037#8 by sakura add l_lock
+                                pmdl004, pmdl015, pmdl203, pmdnunit,
+                                pmdnorga,pmdn001, pmdn002, pmdn006,
+                                pmdn007, pmdn010, pmdn011, pmdn014,
+                                pmdn015, pmdn016, pmdn017, pmdn020,
+                                pmdn025, pmdn028, pmdn200, pmdn201,
+                                pmdn202, pmdn203, pmdn205, pmdn216,
+                                pmdn217, pmdn218, pmdn219, pmdn220,
+                                pmdn221, pmdn222, pmdn223, pmdn224,
+                                pmdp003, pmdp004, pmdp021, pmdl207,   #150610-00030#1 150612 by sakura add pmdl207
+                                imaa009, pmdn227)   #150610-00030#1 150612 by sakura add imaa009   #150710-00016#8 150713 by sakura add pmdn227
+         VALUES('N',l_pmdp.pmdb007,    l_pmdp.pmdb006, l_pmdp.num,    l_pmdp.pmdldocdt,   #170109-00037#8 by sakura add 'N'
+                l_pmdp.pmdl004,    l_pmdp.pmdl015, l_pmdp.pmdl203,l_pmdp.pmdnunit,
+                l_pmdp.pmdnorga,   l_pmdp.pmdn001, l_pmdp.pmdn002,l_pmdp.pmdn006,
+                l_pmdp.pmdn007,    l_pmdp.pmdn010, l_pmdp.pmdn011,l_pmdp.pmdn014,
+                l_pmdp.pmdn015,    l_pmdp.pmdn016, l_pmdp.pmdn017,l_pmdp.pmdn020,
+                l_pmdp.pmdn025,    l_pmdp.pmdn028, l_pmdp.pmdn200,l_pmdp.pmdn201,
+                l_pmdp.pmdn202,    l_pmdp.pmdn203, l_pmdp.pmdn205,l_pmdp.pmdn216,
+                l_pmdp.pmdn217,    l_pmdp.pmdn218, l_pmdp.pmdn219,l_pmdp.pmdn220,
+                l_pmdp.pmdn221,    l_pmdp.pmdn222, l_pmdp.pmdn223,l_pmdp.pmdn224,
+                l_pmdp.pmdp003,    l_pmdp.pmdp004, l_pmdp.pmdp021,l_pmdp.pmdl207,   #150610-00030#1 150612 by sakura add pmda202
+                l_pmdp.l_imaa0091, l_pmdp.pmdn227)   #150610-00030#1 150612 by sakura add imaa009   #150710-00016#8 150713 by sakura add pmdn227
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'Insert s_apmp840_tmp'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+      END IF
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 撈取單身資料
+# Memo...........:
+# Usage..........: CALL apmp840_b_fill2()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/12/11 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmp840_b_fill2()
+DEFINE l_ac2           LIKE type_t.num5
+
+   LET g_sql = "SELECT pmdp003,pmdp004,pmdn200,pmdn001,",
+               "       '',     '',     pmdn002,",
+               "       pmdl207,'',imaa009,",   #150610-00030#1 150612 by sakura add
+               "       pmdb007,",
+               "       '',     pmdb006,num,    pmdn014,",
+               "       pmdp021,pmdn227,pmdn201,'',     pmdn202,",   #150710-00016#8 150713 by sakura add pmdn227
+               "       pmdn006,'',     pmdn007,pmdn010,",
+               "       '',     pmdn011",
+               "  FROM s_apmp840_tmp",
+               " ORDER BY pmdp003,pmdp004"
+ 
+   PREPARE apmp840_sel2 FROM g_sql
+   DECLARE b_fill2_curs CURSOR FOR apmp840_sel2
+   
+   CALL g_detail2_d.clear()
+   LET l_ac2 = 1
+ 
+   FOREACH b_fill2_curs INTO 
+      g_detail2_d[l_ac2].pmdp003,       g_detail2_d[l_ac2].pmdp004,
+      g_detail2_d[l_ac2].pmdn200,       g_detail2_d[l_ac2].pmdn001,
+      g_detail2_d[l_ac2].pmdn001_desc,  g_detail2_d[l_ac2].pmdn001_desc_desc,
+      g_detail2_d[l_ac2].pmdn002,
+      #150610-00030#1 150612 By sakura add(S)      
+      g_detail2_d[l_ac2].pmdl207,       g_detail2_d[l_ac2].pmdl207_desc,
+      g_detail2_d[l_ac2].l_imaa009,
+      #150610-00030#1 150612 By sakura add(E)
+      g_detail2_d[l_ac2].pmdb007_1,
+      g_detail2_d[l_ac2].pmdb007_1_desc,g_detail2_d[l_ac2].pmdb006_1,
+      g_detail2_d[l_ac2].l_num1,        g_detail2_d[l_ac2].l_ddate1,
+      g_detail2_d[l_ac2].pmdp021,       g_detail2_d[l_ac2].pmdn227,g_detail2_d[l_ac2].pmdn201,   #150710-00016#8 150713 by sakura add pmdn227
+      g_detail2_d[l_ac2].pmdn201_desc,  g_detail2_d[l_ac2].pmdn202,
+      g_detail2_d[l_ac2].pmdn006,       g_detail2_d[l_ac2].pmdn006_desc,
+      g_detail2_d[l_ac2].pmdn007,       g_detail2_d[l_ac2].pmdn010,
+      g_detail2_d[l_ac2].pmdn010_desc,  g_detail2_d[l_ac2].pmdn011
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "Foreach b_fill2_curs" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+      
+      #商品編號
+      CALL s_desc_get_item_desc(g_detail2_d[l_ac2].pmdn001)
+         RETURNING g_detail2_d[l_ac2].pmdn001_desc,g_detail2_d[l_ac2].pmdn001_desc_desc
+      
+      #150610-00030#1 150612 By sakura add(S)
+      #所屬品類說明
+      CALL s_desc_get_rtaxl003_desc(g_detail2_d[l_ac2].pmdl207) 
+        RETURNING g_detail2_d[l_ac2].pmdl207_desc
+      #150610-00030#1 150612 By sakura add(S)
+      
+      #要貨單位
+      CALL s_desc_get_unit_desc(g_detail2_d[l_ac2].pmdb007_1)
+         RETURNING g_detail2_d[l_ac2].pmdb007_1_desc
+      
+      #採購包裝單位
+      CALL s_desc_get_unit_desc(g_detail2_d[l_ac2].pmdn201)
+         RETURNING g_detail2_d[l_ac2].pmdn201_desc
+      
+      #採購單位
+      CALL s_desc_get_unit_desc(g_detail2_d[l_ac2].pmdn006)
+         RETURNING g_detail2_d[l_ac2].pmdn006_desc
+      
+      #計價單位
+      CALL s_desc_get_unit_desc(g_detail2_d[l_ac2].pmdn010)
+         RETURNING g_detail2_d[l_ac2].pmdn010_desc
+ 
+      LET l_ac2 = l_ac2 + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   CALL g_detail2_d.deleteElement(g_detail2_d.getLength())
+    
+   LET g_detail_cnt = l_ac2 - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   
+   CLOSE b_fill2_curs
+   FREE apmp840_sel2
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 單位間的轉換數量
+# Memo...........: 
+# Usage..........: CALL apmp840_num_change(p_type,p_pmdn001,p_pmdn006,p_pmdn007,p_pmdn010,p_pmdn201,p_pmdn202)
+#                :    RETURNING r_pmdn007,r_pmdn011,r_pmdn202
+# Input parameter: p_type         1.由採購數量轉換成包裝數量及計價數量
+#                :                2.由包裝數量轉換成採購數量及計價數量
+#                : p_pmdn001      商品編號
+#                : p_pmdn006      採購單位
+#                : p_pmdn007      採購數量
+#                : p_pmdn010      計價單位
+#                : p_pmdn201      包裝單位
+#                : p_pmdn202      包裝數量
+# Return code....: r_success      True/False  
+#                : r_pmdn007      採購數量
+#                : r_pmdn011      計價數量
+#                : r_pmdn202      包裝數量     
+# Date & Author..: 2014/12/12 By pomelo
+# Modify.........: 2015/09/09 By sakura 新增r_success回傳值
+################################################################################
+PUBLIC FUNCTION apmp840_num_change(p_type,p_pmdn001,p_pmdn006,p_pmdn007,p_pmdn010,p_pmdn201,p_pmdn202)
+DEFINE r_success        LIKE type_t.num5       #150903-00007#2 150908 by sakura add
+DEFINE p_type           LIKE type_t.num5       #轉換方式
+DEFINE p_pmdn001        LIKE pmdn_t.pmdn001    #商品編號
+DEFINE p_pmdn006        LIKE pmdn_t.pmdn006    #採購單位
+DEFINE p_pmdn007        LIKE pmdn_t.pmdn007    #採購數量
+DEFINE p_pmdn010        LIKE pmdn_t.pmdn010    #計價單位
+DEFINE p_pmdn201        LIKE pmdn_t.pmdn201    #包裝單位
+DEFINE p_pmdn202        LIKE pmdn_t.pmdn202    #包裝數量
+DEFINE r_pmdn007        LIKE pmdn_t.pmdn007    #採購數量
+DEFINE r_pmdn011        LIKE pmdn_t.pmdn011    #計價數量
+DEFINE r_pmdn202        LIKE pmdn_t.pmdn202    #包裝數量
+DEFINE l_pmdn007        LIKE pmdn_t.pmdn007    #採購數量
+DEFINE l_pmdn011        LIKE pmdn_t.pmdn011    #計價數量
+DEFINE l_pmdn202        LIKE pmdn_t.pmdn202    #包裝數量
+DEFINE l_success        LIKE type_t.num5
+
+   LET r_success = TRUE   #150903-00007#2 150908 by sakura add
+   LET r_pmdn007 = 0
+   LET r_pmdn011 = 0
+   LET r_pmdn202 = 0
+   
+   #當包裝單位或採購單位都為空，表示無法轉換
+    IF cl_null(p_pmdn201) OR cl_null(p_pmdn006) THEN
+       #150903-00007#2 150908 by sakura mark&add(S)
+       #RETURN r_pmdn007,r_pmdn011,r_pmdn202
+       RETURN r_success,r_pmdn007,r_pmdn011,r_pmdn202
+       #150903-00007#2 150908 by sakura mark&add(E)
+    END IF
+   
+   LET l_pmdn007 = 0
+   LET l_pmdn011 = 0
+   LET l_pmdn202 = 0
+   
+   #由採購數量轉換成包裝數量及計價數量
+   IF p_type = '1' THEN
+      LET l_pmdn007 = p_pmdn007
+      #當採購數量有值，由採購數量轉換成包裝數量
+      CALL s_aooi250_convert_qty(p_pmdn001,p_pmdn006,p_pmdn201,p_pmdn007)
+         RETURNING l_success,l_pmdn202
+      #150903-00007#2 150908 by sakura add(S)
+      IF l_success = FALSE THEN
+         LET r_success = FALSE
+         RETURN r_success,r_pmdn007,r_pmdn011,r_pmdn202
+      END IF      
+      #150903-00007#2 150908 by sakura add(E)         
+   ELSE
+      LET l_pmdn202 = p_pmdn202
+      #當採購數量為空，由包裝數量轉換成採購數量
+      CALL s_aooi250_convert_qty(p_pmdn001,p_pmdn201,p_pmdn006,p_pmdn202)
+         RETURNING l_success,l_pmdn007
+      #150903-00007#2 150908 by sakura add(S)
+      IF l_success = FALSE THEN
+         LET r_success = FALSE
+         RETURN r_success,r_pmdn007,r_pmdn011,r_pmdn202
+      END IF      
+      #150903-00007#2 150908 by sakura add(E)
+   END IF
+
+    #計算計價數量
+    IF NOT cl_null(p_pmdn010) THEN
+       CALL s_aooi250_convert_qty(p_pmdn001,p_pmdn006,p_pmdn010,l_pmdn007)
+          RETURNING l_success,l_pmdn011
+       #150903-00007#2 150908 by sakura add(S)
+       IF l_success = FALSE THEN
+          LET r_success = FALSE
+          RETURN r_success,r_pmdn007,r_pmdn011,r_pmdn202
+       END IF      
+       #150903-00007#2 150908 by sakura add(E)          
+    END IF
+    
+    LET r_pmdn007 = l_pmdn007
+    LET r_pmdn011 = l_pmdn011
+    LET r_pmdn202 = l_pmdn202
+    #150903-00007#2 150908 by sakura mark&add(S)
+    #RETURN r_pmdn007,r_pmdn011,r_pmdn202
+    RETURN r_success,r_pmdn007,r_pmdn011,r_pmdn202
+    #150903-00007#2 150908 by sakura mark&add(E)
+END FUNCTION
+
+################################################################################
+# Descriptions...: 單身欄位開啟
+# Memo...........:
+# Usage..........: CALL apmp840_set_entry_b()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2015/01/26 By pomelo
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmp840_set_entry_b()
+   CALL cl_set_comp_entry("l_pmdl015",TRUE)   #幣別
+END FUNCTION
+
+################################################################################
+# Descriptions...: 單身欄位關閉
+# Memo...........:
+# Usage..........: CALL apmp840_set_no_entry_b()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2015/01/26 By pomelo
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmp840_set_no_entry_b()
+
+   IF g_detail_d[l_ac].sel = 'N' THEN
+      CALL cl_set_comp_entry("l_pmdl015",FALSE)   #幣別
+   END IF
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 採購數量檢查
+# Memo...........:
+# Usage..........: CALL apmp840_chk_num(p_type)
+#                     RETURNING r_success
+# Input parameter: p_type         1.採購數量
+#                                 2.包裝數量
+# Return code....: r_success      True/False
+# Date & Author..: 2015/02/02 By pomelo
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmp840_chk_num(p_type)
+DEFINE p_type           LIKE type_t.num5       #轉換方式
+DEFINE r_success        LIKE type_t.num5
+DEFINE l_success        LIKE type_t.num5       #150903-00007#2 150908 by sakura add
+
+   LET r_success = TRUE
+   
+   #CALL apmp840_num_change(p_type,g_detail2_d[l_ac2].pmdn001,g_detail2_d[l_ac2].pmdn006,   #170109-00037#8 by sakura mark
+   CALL s_apmp840_num_change(p_type,g_detail2_d[l_ac2].pmdn001,g_detail2_d[l_ac2].pmdn006,  #170109-00037#8 by sakura add #搬到sub供使用
+                           g_detail2_d[l_ac2].pmdn007,g_detail2_d[l_ac2].pmdn010,
+                           g_detail2_d[l_ac2].pmdn201,g_detail2_d[l_ac2].pmdn202)
+   #150903-00007#2 150908 by sakura mark&add(S)                           
+      #RETURNING g_detail2_d[l_ac2].pmdn007,g_detail2_d[l_ac2].pmdn011,g_detail2_d[l_ac2].pmdn202
+      RETURNING l_success,g_detail2_d[l_ac2].pmdn007,g_detail2_d[l_ac2].pmdn011,g_detail2_d[l_ac2].pmdn202
+   IF l_success = FALSE THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   #150903-00007#2 150908 by sakura mark&add(E)
+   
+   #檢查輸入採購數量是否大於未轉採購量
+   IF g_detail2_d[l_ac2].pmdn007 > g_detail2_d[l_ac2].l_num1 AND p_type = '1' THEN
+      #輸入的採購數量%1 > 未轉採購量%2！
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "apm-00682"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      LET g_errparam.replace[1] = g_detail2_d[l_ac2].pmdn007
+      LET g_errparam.replace[2] = g_detail2_d[l_ac2].l_num1
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF   
+   
+   #檢查輸入包裝數量轉成採購數量是否大於未轉採購量
+   IF g_detail2_d[l_ac2].pmdn007 > g_detail2_d[l_ac2].l_num1 AND p_type = '2' THEN
+      #輸入的包裝數量轉為採購數量%1 > 未轉採購量%2！
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "apm-00683"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      LET g_errparam.replace[1] = g_detail2_d[l_ac2].pmdn007
+      LET g_errparam.replace[2] = g_detail2_d[l_ac2].l_num1
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢查該筆的xmdb_t是否被lock
+# Memo...........:
+# Usage..........: CALL apmp840_lock_chk()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2017/01/11  By sakura #170109-00037#8
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmp840_lock_chk()
+   DEFINE l_pmdbdocno LIKE pmdb_t.pmdbdocno
+   DEFINE l_pmdbseq   LIKE pmdb_t.pmdbseq
+   
+   LET l_pmdbdocno = ''
+   LET l_pmdbseq = ''
+   
+   EXECUTE apmp840_chk_lock_pmdb USING g_detail_d[l_ac].pmdadocno,g_detail_d[l_ac].pmdbseq
+                                  INTO l_pmdbdocno,l_pmdbseq
+                                  
+   IF cl_null(l_pmdbdocno) OR cl_null(l_pmdbseq) THEN
+      LET g_detail_d[l_ac].sel = 'N'
+      
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = ''
+      LET g_errparam.code   = 'apm-01117'
+      LET g_errparam.replace[1] = g_detail_d[l_ac].pmdadocno
+      LET g_errparam.replace[2] = g_detail_d[l_ac].pmdbseq
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+   END IF
+   
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

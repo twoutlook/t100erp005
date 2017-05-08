@@ -1,0 +1,115 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmt480_01" module="apm" jobmode="N" type="c03a" industry="std" fix_arg="0" crtid="01996" crtdt="2014-01-26 10:02:40" modid="01996" moddt="2014-12-03 10:48:49" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="累計量定價維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pmdydocno,pmdyseq,pmdx005,pmdy002,imaal003(chr500),imaal004(chr500),pmdy003,pmdy004,pmdy006,pmdy006_desc(chr80),pmdy007,pmdysite,pmdy008"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pmdzsite,pmdzseq1,pmdz001,pmdz002,pmdz003,pmdz004,pmdz005"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmt480_01" method="dialog">
+    <section id="input">
+      <input id="head" field="pmdysite"/>
+      <input id="body" page="1" field="pmdzseq1,pmdz001,pmdz002,pmdz003,pmdz004,pmdz005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pmdysite"/>
+      <construct id="body" page="1" field="pmdzseq1,pmdz001,pmdz002,pmdz003,pmdz004,pmdz005"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pmdydocno,pmdyseq"/>
+      <set id="head" type="no_entry" field="pmdydocno,pmdyseq"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="pmdydocno"/>
+      <column id="pmdyseq"/>
+      <column id="pmdx005">
+        <after>
+          <check chkid="v_ooai001" id="isExist"/>
+        </after>
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="pmdy002">
+        <after>
+          <check chkid="v_imaa001" id="isExist"/>
+        </after>
+        <controlp form="q_imaa001" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="imaal003"/>
+      <column id="imaal004"/>
+      <column id="pmdy003"/>
+      <column id="pmdy004">
+        <after>
+          <check chkid="v_imaa001_3" id="isExist"/>
+        </after>
+        <controlp form="q_imaa001_3" state="i"/>
+        <controlp form="q_imaa001_3" state="c"/>
+      </column>
+      <column id="pmdy006">
+        <after>
+          <check chkid="v_oocq002_221" id="isExist"/>
+          <reference field="pmdy006_desc" ref_field="pmdy006" map_field="pmdy006" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pmdy006_desc"/>
+      <column id="pmdy007"/>
+      <column id="pmdysite"/>
+      <column id="pmdy008">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+    </init>
+    <init id="body" page="1">
+      <column id="pmdzsite"/>
+      <column id="pmdzseq1">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pmdz001">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pmdz002">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pmdz003">
+        <after>
+          <check id="range" st="100" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="pmdz004"/>
+      <column id="pmdz005"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pmdy_t" pk="pmdydocno,pmdyseq">
+      <sql id="forupd_sql" type="sql" query="SELECT pmdydocno,pmdyseq,&apos;&apos;,pmdy002,&apos;&apos;,&apos;&apos;,pmdy003,pmdy004,pmdy006,&apos;&apos;,pmdy007,pmdysite,pmdy008 FROM pmdy_t WHERE pmdyent= ? AND pmdydocno=? AND pmdyseq=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pmdydocno,pmdyseq,&apos;&apos;,pmdy002,&apos;&apos;,&apos;&apos;,pmdy003,pmdy004,pmdy006,&apos;&apos;,pmdy007,pmdysite,pmdy008 FROM pmdy_t" order="pmdydocno,pmdyseq"/>
+    </head>
+    <body id="pmdz_t" page="1" linked="" pk="pmdzseq1" fk="pmdzdocno,pmdzseq">
+      <sql id="forupd_sql_detail" query="SELECT pmdzsite,pmdzseq1,pmdz001,pmdz002,pmdz003,pmdz004,pmdz005 FROM pmdz_t WHERE pmdzent=? AND pmdzdocno=? AND pmdzseq=? AND pmdzseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pmdzsite,pmdzseq1,pmdz001,pmdz002,pmdz003,pmdz004,pmdz005 FROM pmdz_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

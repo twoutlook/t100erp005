@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmt832_01" module="apm" jobmode="N" type="c01b" industry="std" crtid="01533" crtdt="2014/03/25" modid="01533" moddt="2014/03/26" sdver="1" tabver="10001" description="...">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pmcp009,pmcp007,pmcp011,pmcp008,pmcp008_desc(chr80),pmcp005"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="modify" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="reproduce" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmt832_01" method="dialog">
+    <section id="input">
+      <input id="head" field="pmcp009,pmcp007,pmcp011,pmcp008,pmcp005"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="pmcp009">
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="pmcp007"/>
+      <column id="pmcp011"/>
+      <column id="pmcp008">
+        <after>
+          <reference field="pmcp008_desc" ref_field="pmcp008" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;274&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pmcp005">
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="pmcp_t" pk="pmcpdocno,pmcpseq">
+      <sql id="forupd_sql" type="sql" query="SELECT pmcp009,pmcp007,pmcp011,pmcp008,&apos;&apos;,pmcp005 FROM pmcp_t WHERE pmcpent= ? AND pmcpdocno=? AND pmcpseq=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="pmcpdocno,pmcpseq"/>
+    </head>
+  </dataset>
+</assembly>
+

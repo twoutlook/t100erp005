@@ -1,0 +1,1523 @@
+<add_points prog="apsp800" std_prog="apsp800" erpver="1.0" module="APS" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.apsp800_psfa001_ref" cite_std="N" status="" ver="1" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 帶出集團MRP版本的說明
+# Memo...........:
+# Usage..........: CALL apsp800_psfa001_ref(p_psfa001)
+#                  
+# Input parameter: p_psfa001      集團MRP版本
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 2014/04/16 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp800_psfa001_ref(p_psfa001)
+DEFINE p_psfa001         LIKE psfa_t.psfa001
+DEFINE l_psfa001_desc    LIKE psfal_t.psfal003
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_psfa001
+   CALL ap_ref_array2(g_ref_fields,"SELECT psfal003 FROM psfal_t WHERE psfalent='"||g_enterprise||"' AND psfal001=? AND psfal002='"||g_dlang||"'","")
+        RETURNING g_rtn_fields
+   LET l_psfa001_desc = '', g_rtn_fields[1] , ''
+   DISPLAY l_psfa001_desc TO psfa001_desc
+END FUNCTION]]>
+</point>
+  <point name="function.apsp800_psfa001_chk" cite_std="N" status="" ver="1" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 檢查集團MRP版本是否存在
+# Memo...........:
+# Usage..........: CALL apsp800_psfa001_chk(p_psfa001)
+#                  RETURNING r_success
+# Input parameter: p_psfa001      集團MRP版本
+#                : 
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/04/16 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp800_psfa001_chk(p_psfa001)
+DEFINE p_psfa001         LIKE psfa_t.psfa001
+DEFINE r_success         LIKE type_t.num5
+
+   LET r_success = TRUE
+   
+   IF cl_null(p_psfa001) THEN
+      RETURN r_success
+   END IF
+
+   INITIALIZE g_chkparam.* TO NULL
+   LET g_chkparam.arg1 = p_psfa001
+   IF NOT cl_chk_exist("v_psfa001") THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <point name="function.apsp800_del_data" cite_std="N" status="" ver="1" src="s" new="Y" order="3" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 刪除集團MRP匯總檔(psga_t)及集團MRP明細檔(psgb_t)
+# Memo...........:
+# Usage..........: CALL apsp800_del_data()
+#                  RETURNING r_success
+# Input parameter: 
+#                : 
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/04/16 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp800_del_data()
+DEFINE r_success         LIKE type_t.num5
+
+   LET r_success = TRUE
+   
+   DELETE FROM psga_t
+    WHERE psgaent = g_enterprise
+      AND psga001 = g_psfa.psfa001
+   IF SQLCA.sqlcode THEN
+      CALL cl_errmsg('del psga',g_psfa.psfa001,'',SQLCA.sqlcode,1)
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   DELETE FROM psgb_t
+    WHERE psgbent = g_enterprise
+      AND psgb001 = g_psfa.psfa001
+   IF SQLCA.sqlcode THEN
+      CALL cl_errmsg('del psgb',g_psfa.psfa001,'',SQLCA.sqlcode,1)
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   DELETE FROM psgc_t
+    WHERE psgcent = g_enterprise
+      AND psgc001 = g_psfa.psfa001
+   IF SQLCA.sqlcode THEN
+      CALL cl_errmsg('del psgc',g_psfa.psfa001,'',SQLCA.sqlcode,1)
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <point name="function.apsp800_transfer" cite_std="N" status="" ver="1" src="s" new="Y" order="4" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 調撥處理
+# Memo...........:
+# Usage..........: CALL apsp800_transfer(p_psgb002,p_psgb003,p_psgb004)
+#                  RETURNING r_success
+# Input parameter: p_psgb002      料件編號
+#                : p_psgb003      產品特徵
+#                : p_psgb004      日期
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/04/17 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp800_transfer(p_psgb002,p_psgb003,p_psgb004)
+DEFINE p_psgb002         LIKE psgb_t.psgb002
+DEFINE p_psgb003         LIKE psgb_t.psgb003
+DEFINE p_psgb004         LIKE psgb_t.psgb004
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_cnt             LIKE type_t.num5
+DEFINE l_psfc002         LIKE psfc_t.psfc002
+
+   LET r_success = TRUE
+ 
+   #若有設定群組，則只能調撥至同群組的據點
+   #若沒設定群組，則可調撥存在於集團MRP版本單身檔(psfb_t)的據點
+   LET l_cnt = 0
+   SELECT COUNT(*) INTO l_cnt
+     FROM psfc_t
+    WHERE psfcent = g_enterprise
+      AND psfc001 = g_psfa.psfa001
+   IF NOT cl_null(l_cnt) AND l_cnt > 0 THEN
+      #判斷同群組內的是否需要調撥
+      DECLARE psfc_cs CURSOR FOR
+       SELECT psfc002 
+         FROM psfc_t
+        WHERE psfcent = g_enterprise
+          AND psfc001 = g_psfa.psfa001
+        ORDER BY psfc002
+      FOREACH psfc_cs INTO l_psfc002
+         DELETE FROM transfer_site_temp
+         INSERT INTO transfer_site_temp
+            SELECT psfd003,psfd004
+              FROM psfd_t
+             WHERE psfdent = g_enterprise
+               AND psfd001 = g_psfa.psfa001
+               AND psfd002 = l_psfc002
+         IF SQLCA.sqlcode THEN
+            CALL cl_errmsg('ins transfer_site_temp','','',SQLCA.sqlcode,1)
+            LET r_success = FALSE
+            EXIT FOREACH
+         END IF
+         
+         CALL apsp800_transfer_1(p_psgb002,p_psgb003,p_psgb004)
+              RETURNING r_success
+         IF NOT r_success THEN
+            EXIT FOREACH
+         END IF
+      END FOREACH
+   ELSE
+      DELETE FROM transfer_site_temp
+      INSERT INTO transfer_site_temp
+         SELECT psfb002,psfb003
+           FROM psfb_t
+          WHERE psfbent = g_enterprise
+            AND psfb001 = g_psfa.psfa001
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg('ins transfer_site_temp','','',SQLCA.sqlcode,1)
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      
+      CALL apsp800_transfer_1(p_psgb002,p_psgb003,p_psgb004)
+           RETURNING r_success  
+      IF NOT r_success THEN
+         RETURN r_success
+      END IF
+   END IF
+   
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <point name="function.apsp800_quantity" cite_std="N" status="" ver="1" src="s" new="Y" order="5" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 計算結存量、可挪動的庫存量、調撥數量、建議採購量、建議生產量及預計結存量
+# Memo...........:
+# Usage..........: CALL apsp800_quantity()
+#                  RETURNING r_success
+# Input parameter: 
+#                : 
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/04/17 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp800_quantity()
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_psgb002         LIKE psgb_t.psgb002
+DEFINE l_psgb003         LIKE psgb_t.psgb003
+DEFINE l_psgb004         LIKE psgb_t.psgb004
+
+   LET r_success = TRUE
+   
+   DECLARE quantity_cs CURSOR FOR
+    SELECT psgb002,psgb003,psgb004 FROM psgb_t
+     WHERE psgbent = g_enterprise
+       AND psgb001 = g_psfa.psfa001
+     GROUP BY psgb002,psgb003,psgb004
+     ORDER BY psgb004
+   FOREACH quantity_cs INTO l_psgb002,l_psgb003,l_psgb004
+      #先依各site去計算結存量及可挪動的庫存量
+      CALL apsp800_psgb020_psgb026(l_psgb002,l_psgb003,l_psgb004)
+           RETURNING r_success
+      IF NOT r_success THEN
+         EXIT FOREACH
+      END IF
+           
+      #調撥處理
+      IF g_psfa.psfa008 = 'Y' THEN
+         CALL apsp800_transfer(l_psgb002,l_psgb003,l_psgb004)
+              RETURNING r_success
+         IF NOT r_success THEN
+            EXIT FOREACH
+         END IF
+      END IF
+      
+      #建議採購量、建議生產量、預計結存量的計算
+      CALL apsp800_other_quantity(l_psgb002,l_psgb003,l_psgb004)
+           RETURNING r_success
+      IF NOT r_success THEN
+         EXIT FOREACH
+      END IF
+      
+      #匯總資料到集團MRP匯總檔(psga_t)
+      CALL apsp800_collect_psga(l_psgb002,l_psgb003,l_psgb004)
+           RETURNING r_success
+      IF NOT r_success THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+    
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <point name="function.apsp800_transfer_1" cite_std="N" status="" ver="1" src="s" new="Y" order="6" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 調撥處理-續(存在於temptable內的據點做調撥)
+# Memo...........:
+# Usage..........: CALL apsp800_transfer_1(p_psgb002,p_psgb003,p_psgb004)
+#                  RETURNING r_success
+# Input parameter: p_psgb002      料件編號
+#                : p_psgb003      產品特徵
+#                : p_psgb004      日期
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/04/17 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp800_transfer_1(p_psgb002,p_psgb003,p_psgb004)
+DEFINE p_psgb002         LIKE psgb_t.psgb002
+DEFINE p_psgb003         LIKE psgb_t.psgb003
+DEFINE p_psgb004         LIKE psgb_t.psgb004
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_psgbsite        LIKE psgb_t.psgbsite
+DEFINE l_psgb026         LIKE psgb_t.psgb026
+DEFINE l_cnt             LIKE type_t.num5
+DEFINE l_imaf101         LIKE imaf_t.imaf101
+DEFINE l_imaf102         LIKE imaf_t.imaf102
+DEFINE l_product         LIKE type_t.num5
+DEFINE l_carry           LIKE type_t.num20_6
+DEFINE l_site            LIKE psgb_t.psgbsite
+DEFINE l_qty             LIKE psgb_t.psgb025
+DEFINE l_psgb024         LIKE psgb_t.psgb024
+DEFINE l_transfer_qty    LIKE psgb_t.psgb024
+DEFINE l_psgcseq         LIKE psgc_t.psgcseq
+DEFINE l_sql             STRING
+
+   LET r_success = TRUE
+   
+   #撥出順序
+   LET l_sql = "SELECT psgbsite,psgb026 ",
+               "  FROM psgb_t,transfer_site_temp ",
+               " WHERE psgbent = ",g_enterprise,
+               "   AND psgb001 = '",g_psfa.psfa001,"'",
+               "   AND psgb002 = '",p_psgb002,"'",
+               "   AND psgb003 = '",p_psgb003,"'",
+               "   AND psgb004 = '",p_psgb004,"'",
+               "   AND psgbsite= site1 "
+   CASE g_psfa.psfa005
+      WHEN '1' 
+           LET l_sql = l_sql," AND psgb026 > 0 ORDER BY psgb026 "
+      WHEN '2' 
+           LET l_sql = l_sql," AND psgb026 > 0 ORDER BY psgb026 DESC "
+      WHEN '3'
+           LET l_sql = l_sql," AND psgb026 > 0 ORDER BY order1 "
+   END CASE
+   PREPARE transfer_out_pre FROM l_sql
+   DECLARE transfer_out_cs CURSOR FOR transfer_out_pre
+   
+   #撥入順序
+   LET l_sql = "SELECT psgbsite,psgb020+psgb025 ",
+               "  FROM psgb_t,transfer_site_temp ",
+               " WHERE psgbent = ",g_enterprise,
+               "   AND psgb001 = '",g_psfa.psfa001,"'",
+               "   AND psgb002 = '",p_psgb002,"'",
+               "   AND psgb003 = '",p_psgb003,"'",
+               "   AND psgb004 = '",p_psgb004,"'",
+               "   AND psgbsite= site1 "
+   CASE g_psfa.psfa004
+      WHEN '1'
+           LET l_sql = l_sql," AND (psgb020+psgb025) < 0 ORDER BY psgb020 "
+      WHEN '2'
+           LET l_sql = l_sql," AND (psgb020+psgb025) < 0 ORDER BY psgb020 DESC "
+      WHEN '3'
+           LET l_sql = l_sql," AND (psgb020+psgb025) < 0 ORDER BY order1 "
+   END CASE
+   PREPARE transfer_in_pre FROM l_sql
+   
+   LET l_sql = "SELECT COUNT(*) FROM (",l_sql,")"
+   PREPARE transfer_in_count_pre FROM l_sql
+   
+   FOREACH transfer_out_cs INTO l_psgbsite,l_psgb026
+   
+      #檢查營運據點是否有需要撥入
+      LET l_cnt = 0
+      EXECUTE transfer_in_count_pre INTO l_cnt
+      IF l_cnt = 0 THEN
+         CONTINUE FOREACH
+      END IF
+      
+      #判斷是否考慮調撥批量與最小調撥數量
+      IF g_psfa.psfa006 = 'Y' THEN
+         LET l_imaf101 = 0
+         LET l_imaf102 = 0
+         #調撥批量、最小調撥數量
+         SELECT imaf101,imaf102 INTO l_imaf101,l_imaf102
+           FROM imaf_t
+          WHERE imafent = g_enterprise
+            AND imafsite= l_psgbsite
+            AND imaf001 = p_psgb002
+         #依調撥批量、最小調撥數量去計算最小調撥數量
+         CALL s_num_round('4',l_imaf102/l_imaf101,0)
+              RETURNING l_product
+         LET l_carry = l_imaf101 * l_product
+      ELSE
+         LET l_carry = 1
+      END IF
+      
+      LET l_psgb024 = 0
+      DECLARE transfer_in_cs CURSOR FOR transfer_in_pre
+      FOREACH transfer_in_cs INTO l_site,l_qty
+         LET l_qty = l_qty * (-1)
+      
+         #調撥數量
+         CASE 
+            #若可挪動庫存量<最小調撥數量，則調撥數量=可挪動的庫存量
+            WHEN l_psgb026 < l_carry
+                 LET l_transfer_qty = l_psgb026
+            #若可挪動庫存量<需求量，則用調撥批量去計算調撥數量
+            WHEN l_psgb026 < l_qty
+                 #無條件捨去
+                 CALL s_num_round('3',l_psgb026/l_carry,0)
+                      RETURNING l_product
+                 LET l_transfer_qty = l_carry * l_product
+            #若可挪動庫存量>需求量
+            WHEN l_psgb026 > l_qty
+                 #先用調撥批量計算應調撥數量
+                 CALL s_num_round('4',l_qty/l_carry,0)
+                      RETURNING l_product
+                 LET l_transfer_qty = l_carry * l_product
+                 #判斷可挪動庫存量與應調撥數量；若應調撥數量>可挪動庫存量，則只調撥可挪動庫存量
+                 IF l_transfer_qty > l_psgb026 THEN
+                    LET l_transfer_qty = l_psgb026
+                 END IF
+         END CASE
+         
+         #更新撥入的營運據點的建議撥入量
+         UPDATE psgb_t SET psgb025 = psgb025 + l_transfer_qty
+          WHERE psgbent = g_enterprise
+            AND psgb001 = g_psfa.psfa001
+            AND psgb002 = p_psgb002
+            AND psgb003 = p_psgb003
+            AND psgb004 = p_psgb004
+            AND psgbsite= l_site
+         IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+            CALL cl_errmsg('upd psgb025','','',SQLCA.sqlcode,1)
+            LET r_success = FALSE
+            EXIT FOREACH
+         END IF
+         
+         #新增集團MRP建議調撥明細檔(psgc_t)
+         SELECT MAX(psgcseq)+1 INTO l_psgcseq 
+           FROM psgc_t
+          WHERE psgcent = g_enterprise
+            AND psgc001 = g_psfa.psfa001
+         IF cl_null(l_psgcseq) THEN
+            LET l_psgcseq = 1
+         END IF
+         
+         INSERT INTO psgc_t(psgcent,psgc001,psgcseq,psgc002,psgc003,psgc004,
+                            psgc005,psgc006,psgc007,psgc008)
+            VALUES(g_enterprise,g_psfa.psfa001,l_psgcseq,p_psgb002,p_psgb003,p_psgb004,
+                   l_psgbsite,l_site,l_transfer_qty,'N')
+         IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+            CALL cl_errmsg('ins psgc_t','','',SQLCA.sqlcode,1)
+            LET r_success = FALSE
+            EXIT FOREACH
+         END IF
+         
+         #撥出量
+         LET l_psgb024 = l_psgb024 + l_transfer_qty
+         
+         #尚可挪動的庫存量
+         LET l_psgb026 = l_psgb026 - l_transfer_qty
+         IF l_psgb026 <= 0 THEN
+            EXIT FOREACH
+         END IF
+      END FOREACH
+      IF NOT r_success THEN
+         EXIT FOREACH
+      END IF
+      
+      #更新建議撥出量
+      UPDATE psgb_t SET psgb024 = l_psgb024
+       WHERE psgbent = g_enterprise
+         AND psgb001 = g_psfa.psfa001
+         AND psgb002 = p_psgb002
+         AND psgb003 = p_psgb003
+         AND psgb004 = p_psgb004
+         AND psgbsite= l_psgbsite
+      IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+         CALL cl_errmsg('upd psgb024','','',SQLCA.sqlcode,1)
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <point name="function.apsp800_psgb020_psgb026" cite_std="N" status="u" ver="1" src="s" new="Y" order="7" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 計算各site的結存量及可挪動的庫存量
+# Memo...........:
+# Usage..........: CALL apsp800_psgb020_psgb026(p_psgb002,p_psgb003,p_psgb004)
+#                  RETURNING r_success
+# Input parameter: p_psgb002      料件編號
+#                : p_psgb003      產品特徵
+#                : p_psgb004      日期
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/04/17 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp800_psgb020_psgb026(p_psgb002,p_psgb003,p_psgb004)
+DEFINE p_psgb002         LIKE psgb_t.psgb002
+DEFINE p_psgb003         LIKE psgb_t.psgb003
+DEFINE p_psgb004         LIKE psgb_t.psgb004
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_psgb            RECORD LIKE psgb_t.*
+DEFINE l_psgb005         LIKE psgb_t.psgb005
+DEFINE l_psgb023         LIKE psgb_t.psgb023
+DEFINE l_psgb020         LIKE psgb_t.psgb020
+DEFINE l_psgb026         LIKE psgb_t.psgb026
+DEFINE l_imaf013         LIKE imaf_t.imaf013
+DEFINE l_imaf171         LIKE imaf_t.imaf171
+DEFINE l_imaf172         LIKE imaf_t.imaf172
+DEFINE l_imaf173         LIKE imaf_t.imaf173
+DEFINE l_imaf174         LIKE imaf_t.imaf174
+DEFINE l_psph026         LIKE psph_t.psph026
+DEFINE l_psph026_1       LIKE psph_t.psph026
+DEFINE l_keep_day        LIKE type_t.num5
+DEFINE l_psgb024         LIKE psgb_t.psgb024
+DEFINE l_storage_qty     LIKE psgb_t.psgb020
+DEFINE l_imae075         LIKE imae_t.imae075
+
+   LET r_success = TRUE
+   
+   DECLARE psgb020_psgb026_cs CURSOR FOR
+    SELECT * FROM psgb_t
+     WHERE psgbent = g_enterprise
+       AND psgb001 = g_psfa.psfa001
+       AND psgb002 = p_psgb002
+       AND psgb003 = p_psgb003
+       AND psgb004 = p_psgb004
+   FOREACH psgb020_psgb026_cs INTO l_psgb.*
+      #結存量：
+      #a.先抓取最近一筆的預計結存量
+      LET l_psgb023 = 0
+      SELECT psgb023 INTO l_psgb023 
+        FROM psgb_t
+       WHERE psgbent = g_enterprise
+         AND psgb001 = g_psfa.psfa001
+         AND psgb002 = p_psgb002
+         AND psgb003 = p_psgb003
+         AND psgb004 = (SELECT MAX(psgb004) FROM psgb_t
+                         WHERE psgbent = g_enterprise
+                           AND psgb001 = g_psfa.psfa001
+                           AND psgb002 = p_psgb002
+                           AND psgb003 = p_psgb003
+                           AND psgb004 < p_psgb004
+                           AND psgbsite= l_psgb.psgbsite)
+         AND psgbsite= l_psgb.psgbsite
+      IF cl_null(l_psgb023) THEN
+         LET l_psgb023 = 0 
+      END IF
+      
+      #b.結存量=將1抓到的預計結存量(psgb023)+庫存量(psgb005)+替代量(psgb006)+請購量(psgb007)+採購量(psgb008)
+      #        +在驗量(psgb009)+在製量(psgb010)+交期重排供給增加量(psgb011)+備料重排需求減少量(psgb012)
+      #        - 安全庫存量(psgb013)-訂單未交量(psgb014)-預測需求量(psgb015)-工單備料量(psgb016)
+      #        - 計畫備料量(psgb017)-交期重排減少量(psgb018)-備料重排增加量(psgb019)
+      LET l_psgb020 = l_psgb023 + l_psgb.psgb005 + l_psgb.psgb006 + l_psgb.psgb007 + l_psgb.psgb008
+                    + l_psgb.psgb009 + l_psgb.psgb010 + l_psgb.psgb011 + l_psgb.psgb012
+                    - l_psgb.psgb013 - l_psgb.psgb014 - l_psgb.psgb015 - l_psgb.psgb016
+                    - l_psgb.psgb017 - l_psgb.psgb018 - l_psgb.psgb019
+      IF cl_null(l_psgb020) THEN
+         LET l_psgb020 = 0
+      END IF
+      
+      #可挪動的庫存量：
+      #a.取得料號+產品特徵的保留天數
+      CASE g_psfa.psfa002
+         WHEN '1'   #依各料件的前置時間
+              SELECT imaf013,imaf171,imaf172,imaf173,imaf174
+                INTO l_imaf013,l_imaf171,l_imaf172,l_imaf173,l_imaf174
+                FROM imaf_t
+               WHERE imafent = g_enterprise
+                 AND imaf001 = p_psgb002
+                 AND imafsite= l_psgb.psgbsite
+              CASE
+                 WHEN l_imaf013 = '1' OR l_imaf013 = '4'   #採購或無
+                      #保留天數=文件前置時間(imaf171)+交貨前置時間(imaf172)+到廠前置時間(imaf173)+入庫前置時間(imaf174)
+                      LET l_keep_day = l_imaf171 + l_imaf172 + l_imaf173 + l_imaf174
+                 WHEN l_imaf013 = '2' OR l_imaf013 = '3'   #自製或委外
+                      #保留天數=累計前置時間(imae075)
+                      LET l_imae075 = ''
+                      SELECT imae075 INTO l_imae075 FROM imae_t
+                       WHERE imaeent = g_enterprise
+                         AND imae001 = p_psgb002
+                         AND imaesite= l_psgb.psgbsite
+                      LET l_keep_day = l_imae075
+              END CASE
+         WHEN '2'   #依固定時間
+              LET l_keep_day = g_psfa.psfa003
+      END CASE
+      
+      #b.保留天數佔用庫存數
+      LET l_psph026 = 0
+      SELECT SUM(NVL(psph026,0)) INTO l_psph026
+        FROM psph_t
+       WHERE psphent = g_enterprise
+         AND psphsite= l_psgb.psgbsite
+         AND psph038 = p_psgb002
+         AND psph039 = p_psgb003
+         AND psph016 = 'I'
+         AND psph019 BETWEEN p_psgb004 AND (p_psgb004+l_keep_day)
+         AND psph001 IN (SELECT psfb004 FROM psfa_t,psfb_t
+                          WHERE psfaent = psfbent
+                            AND psfa001 = psfb001
+                            AND psfaent = g_enterprise
+                            AND psfa001 = g_psfa.psfa001
+                            AND psfb003 = l_psgb.psgbsite)
+      IF cl_null(l_psph026) THEN
+         LET l_psph026 = 0
+      END IF
+         
+      #c.計算日期庫存數
+      #c.1第一天庫存數
+      LET l_psgb005 = 0
+      SELECT psgb005 INTO l_psgb005
+        FROM psgb_t
+       WHERE psgbent = g_enterprise
+         AND psgb001 = g_psfa.psfa001
+         AND psgb002 = p_psgb002
+         AND psgb003 = p_psgb003
+         AND psgb004 = (SELECT MIN(psgb004) FROM psgb_t
+                         WHERE psgbent = g_enterprise
+                           AND psgb001 = g_psfa.psfa001
+                           AND psgb002 = p_psgb002
+                           AND psgb003 = p_psgb003
+                           AND psgbsite= l_psgb.psgbsite)
+         AND psgbsite= l_psgb.psgbsite
+      IF cl_null(l_psgb005) THEN 
+         LET l_psgb005 = 0
+      END IF
+      
+      #c.2該日期以前的可供給量
+      LET l_psph026_1 = 0
+      SELECT SUM(NVL(psph026,0)) INTO l_psph026_1
+        FROM psph_t
+       WHERE psphent = g_enterprise
+         AND psphsite= l_psgb.psgbsite
+         AND psph038 = p_psgb002
+         AND psph039 = p_psgb003
+         AND psph016 = 'I'
+         AND psph019 < p_psgb004
+         AND psph001 IN (SELECT psfb004 FROM psfa_t,psfb_t
+                          WHERE psfaent = psfbent
+                            AND psfa001 = psfb001
+                            AND psfaent = g_enterprise
+                            AND psfa001 = g_psfa.psfa001
+                            AND psfb003 = l_psgb.psgbsite)
+      IF cl_null(l_psph026_1) THEN
+         LET l_psph026_1 = 0
+      END IF
+      
+      #c.3該日期以前的建議撥出量
+      LET l_psgb024 = 0
+      SELECT SUM(psgb024) INTO l_psgb024
+        FROM psgb_t
+       WHERE psgbent = g_enterprise
+         AND psgb001 = g_psfa.psfa001
+         AND psgb002 = p_psgb002
+         AND psgb003 = p_psgb003
+         AND psgb004 < p_psgb004
+         AND psgbsite= l_psgb.psgbsite
+      IF cl_null(l_psgb024) THEN
+         LET l_psgb024 = 0
+      END IF
+      
+      #計算日期庫存數=第一天庫存量-該日期以前的可供給量-該日期以前的建議撥出量
+      LET l_storage_qty = l_psgb005 - l_psph026_1 - l_psgb024
+      
+      #d.可挪動的庫存數=計算日期庫存數-保留天數佔用庫存數
+      LET l_psgb026 = l_storage_qty - l_psph026
+      IF cl_null(l_psgb026) OR l_psgb026 < 0 THEN
+         LET l_psgb026 = 0
+      END IF
+      
+      #更新結存量、可挪動的庫存數
+      UPDATE psgb_t SET psgb020 = l_psgb020,
+                        psgb026 = l_psgb026
+       WHERE psgbent = g_enterprise
+         AND psgb001 = g_psfa.psfa001
+         AND psgb002 = p_psgb002
+         AND psgb003 = p_psgb003
+         AND psgb004 = p_psgb004
+         AND psgbsite= l_psgb.psgbsite
+      IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+         CALL cl_errmsg('upd psgb','','',SQLCA.sqlcode,1)
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <point name="function.apsp800_create_temptable" cite_std="N" status="" ver="1" src="s" new="Y" order="8" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: CREATE TEMP TABLE
+# Memo...........:
+# Usage..........: CALL apsp800_create_temptable()
+#                  RETURNING r_success
+# Input parameter: 
+#                : 
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/04/17 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp800_create_temptable()
+DEFINE r_success         LIKE type_t.num5
+
+   LET r_success = TRUE
+   
+   DROP TABLE transfer_site_temp
+   CREATE TEMP TABLE transfer_site_temp(
+      order1         LIKE psfb_t.psfb002,
+      site1          LIKE psfb_t.psfb003)
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('create transfer_site_temp',SQLCA.sqlcode,1)
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <point name="function.apsp800_other_quantity" cite_std="N" status="" ver="1" src="s" new="Y" order="9" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 計算建議採購量、建議生產量、預計結存量
+# Memo...........:
+# Usage..........: CALL apsp800_other_quantity(p_psgb002,p_psgb003,p_psgb004)
+#                  RETURNING r_success
+# Input parameter: p_psgb002      料件編號
+#                : p_psgb003      產品特徵
+#                : p_psgb004      日期
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/04/21 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp800_other_quantity(p_psgb002,p_psgb003,p_psgb004)
+DEFINE p_psgb002         LIKE psgb_t.psgb002
+DEFINE p_psgb003         LIKE psgb_t.psgb003
+DEFINE p_psgb004         LIKE psgb_t.psgb004
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_psgbsite        LIKE psgb_t.psgbsite
+DEFINE l_psgb020         LIKE psgb_t.psgb020
+DEFINE l_psgb021         LIKE psgb_t.psgb021
+DEFINE l_psgb022         LIKE psgb_t.psgb022
+DEFINE l_psgb023         LIKE psgb_t.psgb023
+DEFINE l_psgb024         LIKE psgb_t.psgb024
+DEFINE l_psgb025         LIKE psgb_t.psgb025
+DEFINE l_quantity        LIKE psgb_t.psgb023
+DEFINE l_imaf013         LIKE imaf_t.imaf013
+DEFINE l_imaf145         LIKE imaf_t.imaf145
+DEFINE l_imaf146         LIKE imaf_t.imaf146
+DEFINE l_imae017         LIKE imae_t.imae017
+DEFINE l_imae018         LIKE imae_t.imae018
+DEFINE l_product         LIKE type_t.num5
+DEFINE l_carry           LIKE type_t.num20_6
+
+   LET r_success = TRUE
+   
+   DECLARE apsp800_other_quantity_cs CURSOR FOR
+    SELECT psgbsite,psgb020,psgb024,psgb025
+      FROM psgb_t
+     WHERE psgbent = g_enterprise
+       AND psgb001 = g_psfa.psfa001
+       AND psgb002 = p_psgb002
+       AND psgb003 = p_psgb003
+       AND psgb004 = p_psgb004
+   FOREACH apsp800_other_quantity_cs INTO l_psgbsite,l_psgb020,l_psgb024,l_psgb025
+      #a.數量
+      LET l_quantity = l_psgb020 - l_psgb024 + l_psgb025
+
+      LET l_psgb021 = 0
+      LET l_psgb022 = 0
+      IF l_quantity < 0 THEN
+         LET l_quantity = l_quantity * (-1)
+         #補貨策略
+         LET l_imaf013 = ''
+         SELECT imaf013,imaf145,imaf146 
+           INTO l_imaf013,l_imaf145,l_imaf146
+           FROM imaf_t
+          WHERE imafent = g_enterprise
+            AND imafsite= l_psgbsite
+            AND imaf001 = p_psgb002
+         #seiichi
+         IF STATUS = 100 THEN
+            LET l_imaf013 = '1'
+            LET l_imaf145 = '1'
+            LET l_imaf146 = '1'
+         END IF
+            
+         CASE 
+            WHEN l_imaf013 = '1' OR l_imaf013 = '4'
+                 #採購或無時，建議採購量=a.數量
+                 #依採購批量、最小採購批量進位
+                 CALL s_num_round('4',l_imaf146/l_imaf145,0)
+                      RETURNING l_product
+                 LET l_carry = l_imaf145 * l_product
+                 CALL s_num_round('4',l_quantity/l_carry,0)
+                      RETURNING l_product
+                 LET l_psgb021 = l_carry * l_product
+            WHEN l_imaf013 = '2' OR l_imaf013 = '3'
+                 #自製或委外時，建議生產量=a.數量
+                 #依生產批量、最小生產數量進位
+                 SELECT imae017,imae018 
+                   INTO l_imae017,l_imae018
+                   FROM imae_t
+                  WHERE imaeent = g_enterprise
+                    AND imaesite= l_psgbsite
+                    AND imae001 = p_psgb002
+                 CALL s_num_round('4',l_imae018/l_imae017,0)
+                      RETURNING l_product
+                 LET l_carry = l_imae017 * l_product
+                 CALL s_num_round('4',l_quantity/l_carry,0)
+                      RETURNING l_product
+                 LET l_psgb022 = l_carry * l_product
+         END CASE
+      END IF
+
+      #預計結存量
+      LET l_psgb023 = l_psgb020 - l_psgb024 + l_psgb025 + l_psgb021 + l_psgb022
+      
+      #更新建議採購量、建議生產量、預計結存量
+      UPDATE psgb_t SET psgb021 = l_psgb021,
+                        psgb022 = l_psgb022,
+                        psgb023 = l_psgb023
+       WHERE psgbent = g_enterprise
+         AND psgb001 = g_psfa.psfa001
+         AND psgb002 = p_psgb002
+         AND psgb003 = p_psgb003
+         AND psgb004 = p_psgb004
+         AND psgbsite= l_psgbsite
+      IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+         CALL cl_errmsg('upd psgb023','','',SQLCA.sqlcode,1)
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <point name="function.apsp800_collect_psga" cite_std="N" status="" ver="1" src="s" new="Y" order="10" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 匯總資料到集團MRP匯總檔(psga_t)
+# Memo...........:
+# Usage..........: CALL apsp800_collect_psga(p_psgb002,p_psgb003,p_psgb004)
+#                  RETURNING r_success
+# Input parameter: p_psgb002      料件編號
+#                : p_psgb003      產品特徵
+#                : p_psgb004      日期
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2014/04/21 By stellar0130
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp800_collect_psga(p_psgb002,p_psgb003,p_psgb004)
+DEFINE p_psgb002         LIKE psgb_t.psgb002
+DEFINE p_psgb003         LIKE psgb_t.psgb003
+DEFINE p_psgb004         LIKE psgb_t.psgb004
+DEFINE r_success         LIKE type_t.num5
+DEFINE l_psga            RECORD LIKE psga_t.*
+
+   LET r_success = TRUE
+   
+   INITIALIZE l_psga.* TO NULL
+   LET l_psga.psgaent = g_enterprise
+   LET l_psga.psga001 = g_psfa.psfa001
+   LET l_psga.psga002 = p_psgb002
+   LET l_psga.psga003 = p_psgb003
+   LET l_psga.psga004 = p_psgb004
+   
+   SELECT SUM(psgb005),SUM(psgb006),SUM(psgb007),SUM(psgb008),SUM(psgb009),
+          SUM(psgb010),SUM(psgb011),SUM(psgb012),SUM(psgb013),SUM(psgb014),
+          SUM(psgb015),SUM(psgb016),SUM(psgb017),SUM(psgb018),SUM(psgb019),
+          SUM(psgb020),SUM(psgb021),SUM(psgb022),SUM(psgb023),SUM(psgb025-psgb024)
+     INTO l_psga.psga005,l_psga.psga006,l_psga.psga007,l_psga.psga008,l_psga.psga009,
+          l_psga.psga010,l_psga.psga011,l_psga.psga012,l_psga.psga013,l_psga.psga014,
+          l_psga.psga015,l_psga.psga016,l_psga.psga017,l_psga.psga018,l_psga.psga019,
+          l_psga.psga020,l_psga.psga021,l_psga.psga022,l_psga.psga023,l_psga.psga024
+     FROM psgb_t
+    WHERE psgbent = g_enterprise
+      AND psgb001 = g_psfa.psfa001
+      AND psgb002 = p_psgb002
+      AND psgb003 = p_psgb003
+      AND psgb004 = p_psgb004
+     
+   INSERT INTO psga_t(psgaent,psga001,psga002,psga003,psga004,psga005,psga006,psga007,
+                      psga008,psga009,psga010,psga011,psga012,psga013,psga014,psga015,
+                      psga016,psga017,psga018,psga019,psga020,psga021,psga022,psga023,
+                      psga024)
+      VALUES(l_psga.psgaent,l_psga.psga001,l_psga.psga002,l_psga.psga003,
+             l_psga.psga004,l_psga.psga005,l_psga.psga006,l_psga.psga007,
+             l_psga.psga008,l_psga.psga009,l_psga.psga010,l_psga.psga011,
+             l_psga.psga012,l_psga.psga013,l_psga.psga014,l_psga.psga015,
+             l_psga.psga016,l_psga.psga017,l_psga.psga018,l_psga.psga019,
+             l_psga.psga020,l_psga.psga021,l_psga.psga022,l_psga.psga023,
+             l_psga.psga024)
+   IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+      CALL cl_errmsg('ins psga_t','','',SQLCA.sqlcode,1)
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <point name="global.parameter" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[        psfa001          LIKE psfa_t.psfa001,]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[DEFINE g_ref_fields      DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars        DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields      DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_psfa            RECORD LIKE psfa_t.*]]>
+</point>
+  <point name="init.init" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   IF cl_null(g_bgjob) THEN
+      LET g_bgjob = 'N'
+   END IF
+   LET g_errshow = 1]]>
+</point>
+  <point name="process.count_progress" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[      LET li_count = 3
+      CALL cl_progress_bar_no_window(li_count)]]>
+</point>
+  <point name="process.define" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   DEFINE l_psoz      RECORD LIKE psoz_t.*
+   DEFINE l_psgb      RECORD LIKE psgb_t.*
+   DEFINE l_day       LIKE type_t.num5
+   DEFINE l_date      LIKE type_t.dat
+   DEFINE l_cnt       LIKE type_t.num5
+   DEFINE l_success   LIKE type_t.num5
+   DEFINE l_msg       STRING
+   DEFINE l_ooef008   LIKE ooef_t.ooef008
+   DEFINE l_ooef009   LIKE ooef_t.ooef009
+   DEFINE l_oogc008   LIKE oogc_t.oogc008
+   DEFINE l_oogc015   LIKE oogc_t.oogc015]]>
+</point>
+  <point name="process.pre_process" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   LET l_success = TRUE
+   SELECT * INTO g_psfa.* 
+     FROM psfa_t
+    WHERE psfaent = g_enterprise
+      AND psfa001 = lc_param.psfa001
+    
+   CALL apsp800_create_temptable()
+        RETURNING l_success
+   IF NOT l_success THEN
+      RETURN 
+   END IF
+   
+   LET ls_sql = "SELECT DISTINCT psoz_t.* FROM psfa_t,psfb_t,psoz_t ",
+                " WHERE psfaent = psfbent ",
+                "   AND psfa001 = psfb001 ",
+                "   AND psfaent = ",g_enterprise,
+                "   AND psfa001 = '",lc_param.psfa001,"'",
+                "   AND psozent = psfaent ",
+                "   AND psoz001 = psfb004 ",
+                "   AND EXISTS(SELECT MAX(psoz002),psozsite FROM psoz_t,psfa_t,psfb_t ",
+                "               WHERE psfaent = psfbent ",
+                "                 AND psfa001 = psfb001 ",
+                "                 AND psfaent = ",g_enterprise,
+                "                 AND psfa001 = '",lc_param.psfa001,"'",
+                "                 AND psozent = psfaent ",
+                "                 AND psoz001 = psfb004 ",
+                "               GROUP BY psozsite)"]]>
+</point>
+  <point name="process.process" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   CALL s_transaction_begin()
+   CALL cl_showmsg_init()
+   LET l_success = TRUE
+   
+   #刪除集團MRP匯總檔(psga_t)、集團MRP明細檔(psgb_t)及集團MRP建議調撥明細檔(psgc_t)
+   #part1
+   IF g_bgjob <> "Y" THEN
+      LET l_msg = cl_getmsg('aps-00095',g_dlang)
+      CALL cl_progress_no_window_ing(l_msg)
+   END IF
+   IF NOT apsp800_del_data() THEN
+      LET l_success = FALSE
+   END IF
+   
+   #抓取各site的MRP結果檔(psoz_t)。(每個site取執行日期時間(psoz002)最大的資料)
+   #將取出的資料，依照合併時距(psfa007)匯總後，寫入集團MRP明細檔(psgb_t)
+   #part2
+   IF g_bgjob <> "Y" THEN
+      LET l_msg = cl_getmsg('aps-00096',g_dlang)
+      CALL cl_progress_no_window_ing(l_msg)
+   END IF
+   DECLARE apsp800_process_cs CURSOR FROM ls_sql
+   FOREACH apsp800_process_cs INTO l_psoz.*
+   
+      CASE g_psfa.psfa007
+         WHEN '1'   #日 
+              LET l_date = l_psoz.psoz004
+         WHEN '2'   #週
+              SELECT ooef008,ooef009 INTO l_ooef008,l_ooef009
+                FROM ooef_t
+               WHERE ooefent = g_enterprise
+                 AND ooef001 = l_psoz.psozsite
+              #本日的週別
+              SELECT oogc008,oogc015 INTO l_oogc008,l_oogc015
+                FROM oogc_t
+               WHERE oogcent = g_enterprise
+                 AND oogc001 = l_ooef008
+                 AND oogc002 = l_ooef009
+                 AND oogc003 = l_psoz.psoz004
+              #本週的第一天
+              SELECT MIN(oogc003)
+                INTO l_date
+                FROM oogc_t
+               WHERE oogcent = g_enterprise
+                 AND oogc001 = l_ooef008
+                 AND oogc002 = l_ooef009
+                 AND oogc008 = l_oogc008
+                 AND oogc015 = l_oogc015
+         WHEN '3'   #旬
+              CALL s_date_get_day(l_psoz.psoz004)
+                   RETURNING l_day
+              CASE 
+                 WHEN l_day <= 10
+                      LET l_date = MDY(MONTH(l_psoz.psoz004),1,YEAR(l_psoz.psoz004))
+                 WHEN l_day > 10 AND l_day <= 20
+                      LET l_date = MDY(MONTH(l_psoz.psoz004),11,YEAR(l_psoz.psoz004))
+                 WHEN l_day > 20
+                      LET l_date = MDY(MONTH(l_psoz.psoz004),21,YEAR(l_psoz.psoz004))
+              END CASE
+         WHEN '4'   #月
+              LET l_date = MDY(MONTH(l_psoz.psoz004),1,YEAR(l_psoz.psoz004))
+      END CASE
+      
+      INITIALIZE l_psgb.* TO NULL
+      LET l_psgb.psgbent = g_enterprise
+      LET l_psgb.psgb001 = g_psfa.psfa001
+      LET l_psgb.psgb002 = l_psoz.psoz038
+      LET l_psgb.psgb003 = l_psoz.psoz039
+      LET l_psgb.psgb004 = l_date
+      LET l_psgb.psgbsite= l_psoz.psozsite
+      LET l_psgb.psgb005 = l_psoz.psoz018
+      LET l_psgb.psgb006 = l_psoz.psoz009 + l_psoz.psoz010 + l_psoz.psoz013 + l_psoz.psoz015
+                         + l_psoz.psoz020 + l_psoz.psoz026 + l_psoz.psoz027 + l_psoz.psoz028
+      LET l_psgb.psgb007 = l_psoz.psoz021
+      LET l_psgb.psgb008 = l_psoz.psoz022
+      LET l_psgb.psgb009 = l_psoz.psoz019
+      LET l_psgb.psgb010 = l_psoz.psoz024 + l_psoz.psoz025
+      LET l_psgb.psgb011 = l_psoz.psoz030
+      LET l_psgb.psgb012 = l_psoz.psoz016
+      LET l_psgb.psgb013 = l_psoz.psoz007
+      LET l_psgb.psgb014 = l_psoz.psoz005
+      LET l_psgb.psgb015 = l_psoz.psoz006
+      LET l_psgb.psgb016 = l_psoz.psoz014
+      LET l_psgb.psgb017 = l_psoz.psoz012
+      LET l_psgb.psgb018 = l_psoz.psoz029
+      LET l_psgb.psgb019 = l_psoz.psoz017
+      LET l_psgb.psgb020 = 0
+      LET l_psgb.psgb021 = 0
+      LET l_psgb.psgb022 = 0
+      LET l_psgb.psgb023 = 0
+      LET l_psgb.psgb024 = 0
+      LET l_psgb.psgb025 = 0
+      LET l_psgb.psgb026 = 0
+      LET l_psgb.psgb027 = 'N'
+      LET l_psgb.psgb028 = 'N'
+      
+      LET l_cnt = 0
+      SELECT COUNT(*) INTO l_cnt 
+        FROM psgb_t
+       WHERE psgbent = l_psgb.psgbent
+         AND psgb001 = l_psgb.psgb001
+         AND psgb002 = l_psgb.psgb002
+         AND psgb003 = l_psgb.psgb003
+         AND psgb004 = l_psgb.psgb004
+         AND psgbsite= l_psgb.psgbsite
+      IF cl_null(l_cnt) OR l_cnt = 0 THEN
+         #新增資料到psgb_t
+         INSERT INTO psgb_t (psgbent,psgb001,psgb002,psgb003,psgb004,psgbsite,psgb005,
+                             psgb006,psgb007,psgb008,psgb009,psgb010,psgb011,psgb012,
+                             psgb013,psgb014,psgb015,psgb016,psgb017,psgb018,psgb019,
+                             psgb020,psgb021,psgb022,psgb023,psgb024,psgb025,psgb026,
+                             psgb027,psgb028)
+            VALUES (l_psgb.psgbent,l_psgb.psgb001,l_psgb.psgb002,l_psgb.psgb003,l_psgb.psgb004,
+                    l_psgb.psgbsite,l_psgb.psgb005,l_psgb.psgb006,l_psgb.psgb007,l_psgb.psgb008,
+                    l_psgb.psgb009,l_psgb.psgb010,l_psgb.psgb011,l_psgb.psgb012,l_psgb.psgb013,
+                    l_psgb.psgb014,l_psgb.psgb015,l_psgb.psgb016,l_psgb.psgb017,l_psgb.psgb018,
+                    l_psgb.psgb019,l_psgb.psgb020,l_psgb.psgb021,l_psgb.psgb022,l_psgb.psgb023,
+                    l_psgb.psgb024,l_psgb.psgb025,l_psgb.psgb026,l_psgb.psgb027,l_psgb.psgb028)
+         IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+            CALL cl_errmsg('ins psgb','','',SQLCA.sqlcode,1)
+            LET l_success = FALSE
+            EXIT FOREACH
+         END IF
+      ELSE
+         UPDATE psgb_t SET psgb005 = psgb005 + l_psgb.psgb005,
+                           psgb006 = psgb006 + l_psgb.psgb006,
+                           psgb007 = psgb007 + l_psgb.psgb007,
+                           psgb008 = psgb008 + l_psgb.psgb008,
+                           psgb009 = psgb009 + l_psgb.psgb009,
+                           psgb010 = psgb010 + l_psgb.psgb010,
+                           psgb011 = psgb011 + l_psgb.psgb011,
+                           psgb012 = psgb012 + l_psgb.psgb012,
+                           psgb013 = psgb013 + l_psgb.psgb013,
+                           psgb014 = psgb014 + l_psgb.psgb014,
+                           psgb015 = psgb015 + l_psgb.psgb015,
+                           psgb016 = psgb016 + l_psgb.psgb016,
+                           psgb017 = psgb017 + l_psgb.psgb017,
+                           psgb018 = psgb018 + l_psgb.psgb018,
+                           psgb019 = psgb019 + l_psgb.psgb019,
+                           psgb020 = psgb020 + l_psgb.psgb020,
+                           psgb021 = psgb021 + l_psgb.psgb021,
+                           psgb022 = psgb022 + l_psgb.psgb022,
+                           psgb023 = psgb023 + l_psgb.psgb023,
+                           psgb024 = psgb024 + l_psgb.psgb024,
+                           psgb025 = psgb025 + l_psgb.psgb025,
+                           psgb026 = psgb026 + l_psgb.psgb026
+          WHERE psgbent = l_psgb.psgbent
+            AND psgb001 = l_psgb.psgb001
+            AND psgb002 = l_psgb.psgb002
+            AND psgb003 = l_psgb.psgb003
+            AND psgb004 = l_psgb.psgb004
+            AND psgbsite= l_psgb.psgbsite
+         IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+            CALL cl_errmsg('upd psgb','','',SQLCA.sqlcode,1)
+            LET l_success = FALSE
+            EXIT FOREACH
+         END IF
+      END IF
+   
+   END FOREACH
+   
+   IF l_success THEN
+      #part3
+      IF g_bgjob <> "Y" THEN
+         LET l_msg = cl_getmsg('aps-00097',g_dlang)
+         CALL cl_progress_no_window_ing(l_msg)
+      END IF
+      #呼叫函式計算各site的結存量、可挪動的庫存量、調撥數量、建議採購量、建議生產量及預計結存量
+      CALL apsp800_quantity()
+           RETURNING l_success
+   END IF
+   
+   CALL cl_showmsg()
+   
+   IF l_success THEN
+      CALL s_transaction_end('Y','0')
+   ELSE
+      CALL s_transaction_end('N','0')
+   END IF]]>
+</point>
+  <point name="transfer.argv.define" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   LET la_cmdrun.param[1] = la_param.psfa001]]>
+</point>
+  <point name="ui_dialog.more_input" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[         INPUT lc_param.psfa001 FROM psfa001
+               ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            AFTER FIELD psfa001
+               CALL apsp800_psfa001_ref(lc_param.psfa001)
+               IF NOT cl_null(lc_param.psfa001) THEN
+                  IF NOT apsp800_psfa001_chk(lc_param.psfa001) THEN
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               
+            ON ACTION controlp INFIELD psfa001
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = lc_param.psfa001
+               CALL q_psfa001()
+               LET lc_param.psfa001 = g_qryparam.return1
+               DISPLAY lc_param.psfa001 TO psfa001
+               CALL apsp800_psfa001_ref(lc_param.psfa001)
+               NEXT FIELD psfa001
+         END INPUT]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.background" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.before_close" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="init.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_construct" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.qbe_select" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_action" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.exit_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.foreground_finish" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.background_finish" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <section id="apsp800.description" ver="31" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000031
+#+ 
+#+ Filename...: apsp800
+#+ Description: 集團MRP計算作業
+#+ Creator....: 01588(2014/04/14)
+#+ Modifier...: 01588(2014/04/18)
+#+ Buildtype..: 應用 p01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="apsp800.global" ver="1" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="apsp800.init" ver="1" status="" src="s">
+<![CDATA[#+ 初始化作業
+PRIVATE FUNCTION apsp800_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+</section>
+  <section id="apsp800.main" ver="1" status="" src="s">
+<![CDATA[MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aps","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+      CALL apsp800_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apsp800 WITH FORM cl_ap_formpath("aps",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL apsp800_init()
+ 
+      #進入選單 Menu (="N")
+      CALL apsp800_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_apsp800
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+</section>
+  <section id="apsp800.other_function" ver="1" status="" src="s">
+<![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+</section>
+  <section id="apsp800.process" ver="1" status="" src="s">
+<![CDATA[#+ 資料處理
+PRIVATE FUNCTION apsp800_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   {<point name="process.define"/>}
+   #end add-point
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE apsp800_process_cs CURSOR FROM ls_sql
+#  FOREACH apsp800_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm("std-00012") RETURNING li_stus
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+   END IF
+END FUNCTION
+]]>
+</section>
+  <section id="apsp800.transfer_argv" ver="1" status="" src="s">
+<![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION apsp800_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+ 
+   CALL util.JSON.parse(ls_js,la_param)
+ 
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+</section>
+  <section id="apsp800.ui_dialog" ver="4" status="" src="s">
+<![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION apsp800_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+ 
+   #add-point:ui_dialog段before dialog
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               LET lc_param.wc = ls_wc
+               #取得條件後需要執行項目,應新增於下方adp
+               #add-point:ui_dialog段qbe_select後
+               {<point name="ui_dialog.qbe_select"/>}
+               #end add-point
+            END IF
+ 
+         ON ACTION qbe_save
+            CALL cl_qbe_save()
+ 
+         ON ACTION batch_execute
+            ACCEPT DIALOG
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE lc_param.*  TO NULL
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION CLOSE 
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         LET g_jobid = g_prog,TODAY USING "yyyymmdd",CURRENT HOUR TO SECOND 
+         LET g_jobid = cl_schedule_trim_colon(g_jobid)
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL apsp800_process(ls_js)
+            WHEN g_schedule.gzpa003 = "1"
+                 CALL cl_schedule_update_data(g_jobid)
+                 LET ls_js = apsp800_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid)
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid)
+         END CASE    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+         INITIALIZE lc_param.*  TO NULL 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+</section>
+</add_points>

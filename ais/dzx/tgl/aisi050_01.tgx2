@@ -1,0 +1,466 @@
+{<section id="aisi050_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0005(2014-07-17 19:32:07), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000405
+#+ Filename...: aisi050_01
+#+ Description: 發票簿調撥
+#+ Creator....: 05016(2014-06-17 11:39:11)
+#+ Modifier...: 05016 -SD/PR-
+{</section>}
+ 
+ 
+ 
+{<section id="aisi050_01.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_isas_d        RECORD
+       isasstus LIKE isas_t.isasstus, 
+   isascomp LIKE isas_t.isascomp, 
+   isassite LIKE isas_t.isassite, 
+   isassite_desc LIKE type_t.chr500, 
+   isas001 LIKE isas_t.isas001, 
+   isas002 LIKE isas_t.isas002, 
+   isas003 LIKE isas_t.isas003, 
+   isas004 LIKE isas_t.isas004, 
+   isas004_desc LIKE type_t.chr500, 
+   isas005 LIKE isas_t.isas005, 
+   isas006 LIKE isas_t.isas006, 
+   isas007 LIKE isas_t.isas007, 
+   isas008 LIKE isas_t.isas008, 
+   isas009 LIKE isas_t.isas009, 
+   isas010 LIKE isas_t.isas010, 
+   isas011 LIKE isas_t.isas011, 
+   isas011_desc LIKE type_t.chr500, 
+   isas012 LIKE isas_t.isas012, 
+   isas013 LIKE isas_t.isas013, 
+   isas014 LIKE isas_t.isas014
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_isas_d          DYNAMIC ARRAY OF type_g_isas_d
+DEFINE g_isas_d_t        type_g_isas_d
+ 
+ 
+DEFINE g_isascomp_t   LIKE isas_t.isascomp    #Key值備份
+DEFINE g_isassite_t      LIKE isas_t.isassite    #Key值備份
+DEFINE g_isas001_t      LIKE isas_t.isas001    #Key值備份
+DEFINE g_isas002_t      LIKE isas_t.isas002    #Key值備份
+DEFINE g_isas003_t      LIKE isas_t.isas003    #Key值備份
+DEFINE g_isas011_t      LIKE isas_t.isas011    #Key值備份
+DEFINE g_isas014_t      LIKE isas_t.isas014    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point    
+{</section>}
+ 
+{<section id="aisi050_01.input" >}    
+#+ 資料輸入
+PUBLIC FUNCTION aisi050_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aisi050_01 WITH FORM cl_ap_formpath("ais","aisi050_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_isas_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isasstus
+            #add-point:BEFORE FIELD isasstus name="input.b.page1.isasstus"
+            {<point name="input.b.page1.isasstus" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isasstus
+            
+            #add-point:AFTER FIELD isasstus name="input.a.page1.isasstus"
+            {<point name="input.a.page1.isasstus" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isasstus
+            #add-point:ON CHANGE isasstus name="input.g.page1.isasstus"
+            {<point name="input.g.page1.isasstus" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isascomp
+            #add-point:BEFORE FIELD isascomp name="input.b.page1.isascomp"
+            {<point name="input.b.page1.isascomp" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isascomp
+            
+            #add-point:AFTER FIELD isascomp name="input.a.page1.isascomp"
+            {<point name="input.a.page1.isascomp" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isascomp
+            #add-point:ON CHANGE isascomp name="input.g.page1.isascomp"
+            {<point name="input.g.page1.isascomp" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isas004
+            
+            #add-point:AFTER FIELD isas004 name="input.a.page1.isas004"
+            {<point name="input.a.page1.isas004" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isas004
+            #add-point:BEFORE FIELD isas004 name="input.b.page1.isas004"
+            {<point name="input.b.page1.isas004" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isas004
+            #add-point:ON CHANGE isas004 name="input.g.page1.isas004"
+            {<point name="input.g.page1.isas004" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isas004_desc
+            #add-point:BEFORE FIELD isas004_desc name="input.b.page1.isas004_desc"
+            {<point name="input.b.page1.isas004_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isas004_desc
+            
+            #add-point:AFTER FIELD isas004_desc name="input.a.page1.isas004_desc"
+            {<point name="input.a.page1.isas004_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isas004_desc
+            #add-point:ON CHANGE isas004_desc name="input.g.page1.isas004_desc"
+            {<point name="input.g.page1.isas004_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isas010
+            #add-point:BEFORE FIELD isas010 name="input.b.page1.isas010"
+            {<point name="input.b.page1.isas010" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isas010
+            
+            #add-point:AFTER FIELD isas010 name="input.a.page1.isas010"
+            {<point name="input.a.page1.isas010" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isas010
+            #add-point:ON CHANGE isas010 name="input.g.page1.isas010"
+            {<point name="input.g.page1.isas010" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isas011
+            
+            #add-point:AFTER FIELD isas011 name="input.a.page1.isas011"
+            {<point name="input.a.page1.isas011" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isas011
+            #add-point:BEFORE FIELD isas011 name="input.b.page1.isas011"
+            {<point name="input.b.page1.isas011" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isas011
+            #add-point:ON CHANGE isas011 name="input.g.page1.isas011"
+            {<point name="input.g.page1.isas011" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isas012
+            #add-point:BEFORE FIELD isas012 name="input.b.page1.isas012"
+            {<point name="input.b.page1.isas012" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isas012
+            
+            #add-point:AFTER FIELD isas012 name="input.a.page1.isas012"
+            {<point name="input.a.page1.isas012" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isas012
+            #add-point:ON CHANGE isas012 name="input.g.page1.isas012"
+            {<point name="input.g.page1.isas012" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isas014
+            #add-point:BEFORE FIELD isas014 name="input.b.page1.isas014"
+            {<point name="input.b.page1.isas014" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isas014
+            
+            #add-point:AFTER FIELD isas014 name="input.a.page1.isas014"
+            {<point name="input.a.page1.isas014" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isas014
+            #add-point:ON CHANGE isas014 name="input.g.page1.isas014"
+            {<point name="input.g.page1.isas014" />}
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.isasstus
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isasstus
+            #add-point:ON ACTION controlp INFIELD isasstus name="input.c.page1.isasstus"
+            {<point name="input.c.page1.isasstus" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.isascomp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isascomp
+            #add-point:ON ACTION controlp INFIELD isascomp name="input.c.page1.isascomp"
+            {<point name="input.c.page1.isascomp" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.isas004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isas004
+            #add-point:ON ACTION controlp INFIELD isas004 name="input.c.page1.isas004"
+            {<point name="input.c.page1.isas004" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.isas004_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isas004_desc
+            #add-point:ON ACTION controlp INFIELD isas004_desc name="input.c.page1.isas004_desc"
+            {<point name="input.c.page1.isas004_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.isas010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isas010
+            #add-point:ON ACTION controlp INFIELD isas010 name="input.c.page1.isas010"
+            {<point name="input.c.page1.isas010" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.isas011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isas011
+            #add-point:ON ACTION controlp INFIELD isas011 name="input.c.page1.isas011"
+            {<point name="input.c.page1.isas011" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.isas012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isas012
+            #add-point:ON ACTION controlp INFIELD isas012 name="input.c.page1.isas012"
+            {<point name="input.c.page1.isas012" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.isas014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isas014
+            #add-point:ON ACTION controlp INFIELD isas014 name="input.c.page1.isas014"
+            {<point name="input.c.page1.isas014" />}
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         {<point name="input.cancel"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aisi050_01 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="aisi050_01.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+{</section>}
+{<section id="aisi050_01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+ 

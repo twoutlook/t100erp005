@@ -1,0 +1,115 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axmt440_01" module="axm" jobmode="N" type="c03a" industry="std" fix_arg="0" crtid="02295" crtdt="2014-01-23 21:58:18" modid="05384" moddt="2015-03-30 14:40:23" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="累計量定價維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xmdydocno,xmdyseq,xmdx005,xmdy002,imaal003(chr500),imaal004(chr500),xmdy003,xmdy004,xmdy006,xmdy006_desc(chr80),xmdy007,xmdysite,xmdy008"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xmdzsite,xmdzseq1,xmdz001,xmdz002,xmdz003,xmdz004,xmdz005"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+    </section>
+  </structure>
+  <form id="0" module="axm" filename="axmt440_01" method="dialog">
+    <section id="input">
+      <input id="head" field="xmdysite"/>
+      <input id="body" page="1" field="xmdzseq1,xmdz001,xmdz002,xmdz003,xmdz004,xmdz005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xmdysite"/>
+      <construct id="body" page="1" field="xmdzseq1,xmdz001,xmdz002,xmdz003,xmdz004,xmdz005"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xmdydocno,xmdyseq"/>
+      <set id="head" type="no_entry" field="xmdydocno,xmdyseq"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xmdydocno"/>
+      <column id="xmdyseq"/>
+      <column id="xmdx005">
+        <after>
+          <check chkid="v_ooai001" id="isExist"/>
+        </after>
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="xmdy002">
+        <after>
+          <check chkid="v_imaa001" id="isExist"/>
+        </after>
+        <controlp form="q_imaa001" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="imaal003"/>
+      <column id="imaal004"/>
+      <column id="xmdy003"/>
+      <column id="xmdy004">
+        <after>
+          <check chkid="v_imaa001_3" id="isExist"/>
+        </after>
+        <controlp form="q_imaa001_3" state="i"/>
+        <controlp form="q_imaa001_3" state="c"/>
+      </column>
+      <column id="xmdy006">
+        <after>
+          <check chkid="v_oocq002_221" id="isExist"/>
+          <reference field="xmdy006_desc" ref_field="xmdy006" map_field="xmdy006" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="xmdy006_desc"/>
+      <column id="xmdy007"/>
+      <column id="xmdysite"/>
+      <column id="xmdy008">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+    </init>
+    <init id="body" page="1">
+      <column id="xmdzsite"/>
+      <column id="xmdzseq1">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmdz001">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmdz002">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmdz003">
+        <after>
+          <check id="range" st="100" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="xmdz004"/>
+      <column id="xmdz005"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xmdy_t" pk="xmdydocno,xmdyseq">
+      <sql id="forupd_sql" type="sql" query="SELECT xmdydocno,xmdyseq,&apos;&apos;,xmdy002,&apos;&apos;,&apos;&apos;,xmdy003,xmdy004,xmdy006,&apos;&apos;,xmdy007,xmdysite,xmdy008 FROM xmdy_t WHERE xmdyent= ? AND xmdydocno=? AND xmdyseq=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xmdydocno,xmdyseq,&apos;&apos;,xmdy002,&apos;&apos;,&apos;&apos;,xmdy003,xmdy004,xmdy006,&apos;&apos;,xmdy007,xmdysite,xmdy008 FROM xmdy_t" order="xmdydocno,xmdyseq"/>
+    </head>
+    <body id="xmdz_t" page="1" linked="" pk="xmdzseq1" fk="xmdzdocno,xmdzseq">
+      <sql id="forupd_sql_detail" query="SELECT xmdzsite,xmdzseq1,xmdz001,xmdz002,xmdz003,xmdz004,xmdz005 FROM xmdz_t WHERE xmdzent=? AND xmdzdocno=? AND xmdzseq=? AND xmdzseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xmdzsite,xmdzseq1,xmdz001,xmdz002,xmdz003,xmdz004,xmdz005 FROM xmdz_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

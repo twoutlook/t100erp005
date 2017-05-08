@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmi560_01" module="afm" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="06821" crtdt="2015-05-27 15:47:39" modid="06821" moddt="2015-05-28 18:44:56" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="資金帳戶科目檔">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="fmnc001,fmnc001_desc(chr500),fmnc003,fmnc003_desc(chr500),fmnc002,fmncsite,fmncstus"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmi560_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="fmnc001,fmnc003,fmnc002,fmncsite,fmncstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="fmnc001,fmnc003,fmnc002,fmncsite,fmncstus"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="fmnc001">
+        <after/>
+      </column>
+      <column id="fmnc001_desc"/>
+      <column id="fmnc003">
+        <after/>
+      </column>
+      <column id="fmnc003_desc"/>
+      <column id="fmnc002"/>
+      <column id="fmncsite"/>
+      <column id="fmncstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <body id="fmnc_t" page="1" linked="" pk="fmncsite,fmnc001,fmnc002">
+      <sql id="forupd_sql_detail" query="SELECT fmnc001,&apos;&apos;,fmnc003,&apos;&apos;,fmnc002,fmncsite,fmncstus FROM fmnc_t WHERE fmncent=? AND fmnc001=? AND fmnc002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT fmnc001,&apos;&apos;,fmnc003,&apos;&apos;,fmnc002,fmncsite,fmncstus FROM fmnc_t WHERE fmncent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

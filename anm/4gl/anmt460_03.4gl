@@ -1,0 +1,978 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="anmt460_03.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2016-07-11 15:27:58), PR版次:0002(2016-07-11 16:16:46)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000028
+#+ Filename...: anmt460_03
+#+ Description: 設定匯款訊息
+#+ Creator....: 01531(2016-06-28 22:07:03)
+#+ Modifier...: 01531 -SD/PR- 01531
+ 
+{</section>}
+ 
+{<section id="anmt460_03.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_nmck_m        RECORD
+       nmckcomp LIKE nmck_t.nmckcomp, 
+   nmckcomp_desc LIKE type_t.chr80, 
+   nmckdocno LIKE nmck_t.nmckdocno, 
+   nmck011 LIKE nmck_t.nmck011, 
+   nmck005 LIKE nmck_t.nmck005, 
+   nmck005_desc LIKE type_t.chr80, 
+   nmck006 LIKE nmck_t.nmck006, 
+   nmck006_desc LIKE type_t.chr80, 
+   nmck013 LIKE nmck_t.nmck013, 
+   nmck013_desc LIKE type_t.chr80, 
+   nmck014 LIKE nmck_t.nmck014, 
+   nmck015 LIKE nmck_t.nmck015, 
+   nmck016 LIKE nmck_t.nmck016
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+DEFINE g_nmck_m        type_g_nmck_m
+ 
+   DEFINE g_nmckcomp_t LIKE nmck_t.nmckcomp
+DEFINE g_nmckdocno_t LIKE nmck_t.nmckdocno
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+DEFINE g_nmck014      LIKE nmck_t.nmck014 
+DEFINE g_nmck015      LIKE nmck_t.nmck015 
+DEFINE g_nmck_m_t     type_g_nmck_m
+DEFINE g_nmck006      LIKE nmck_t.nmck006
+DEFINE g_nmck037      LIKE nmck_t.nmck037
+DEFINE g_nmck004      LIKE nmck_t.nmck004
+DEFINE g_nmck016      LIKE nmck_t.nmck016
+DEFINE g_nmck013      LIKE nmck_t.nmck013
+DEFINE g_nmck002      LIKE nmck_t.nmck002
+DEFINE r_success      LIKE type_t.num5
+DEFINE r_success1     LIKE type_t.num5
+DEFINE g_nmckdocdt    LIKE nmck_t.nmckdocdt
+#end add-point
+ 
+{</section>}
+ 
+{<section id="anmt460_03.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION anmt460_03(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   p_nmckcomp,p_nmckdocno,p_nmck011,p_nmck005
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE p_nmck011        LIKE nmck_t.nmck011
+   DEFINE p_nmck005        LIKE nmck_t.nmck005
+   DEFINE p_nmckcomp       LIKE nmck_t.nmckcomp
+   DEFINE p_nmckdocno      LIKE nmck_t.nmckdocno  
+   DEFINE l_pmaa004        LIKE pmaa_t.pmaa004
+   DEFINE l_pmaa027        LIKE pmaa_t.pmaa027 
+   DEFINE l_n              LIKE type_t.num5   
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_anmt460_03 WITH FORM cl_ap_formpath("anm","anmt460_03")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+   LET r_success1 = TRUE
+
+
+      
+   LET g_nmck_m.nmckcomp  = p_nmckcomp
+   LET g_nmck_m.nmckdocno = p_nmckdocno
+   LET g_nmck_m.nmck011 = p_nmck011
+   LET g_nmck_m.nmck005 = p_nmck005
+   SELECT nmck006,nmck013,nmck014,nmck015,nmck016,nmckdocdt 
+     INTO g_nmck_m.nmck006,g_nmck_m.nmck013,g_nmck_m.nmck014,g_nmck_m.nmck015,g_nmck_m.nmck016,
+          g_nmckdocdt 
+     FROM nmck_t 
+    WHERE nmckent = g_enterprise
+      AND nmckdocno = g_nmck_m.nmckdocno 
+      AND nmckcomp = g_nmck_m.nmckcomp      
+   CALL anmt460_03_get_nmck005() 
+   IF g_nmck_m.nmck005 = 'EMPL' THEN
+      CALL cl_set_comp_visible('nmck006,nmck006_desc',TRUE)
+   ELSE
+      CALL cl_set_comp_visible('nmck006,nmck006_desc',FALSE)
+   END IF   
+
+
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_nmck_m.nmckcomp,g_nmck_m.nmckdocno,g_nmck_m.nmck011,g_nmck_m.nmck005,g_nmck_m.nmck006, 
+          g_nmck_m.nmck013,g_nmck_m.nmck014,g_nmck_m.nmck015,g_nmck_m.nmck016 ATTRIBUTE(WITHOUT DEFAULTS) 
+ 
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            LET g_nmck_m_t.* = g_nmck_m.*
+            IF g_nmck_m.nmck005 != 'EMPL' THEN 
+               CALL cl_set_comp_visible("nmck006,nmck006_desc",FALSE) 
+            ELSE
+               CALL cl_set_comp_visible("nmck006,nmck006_desc",TRUE)
+            END IF  
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmckcomp
+            
+            #add-point:AFTER FIELD nmckcomp name="input.a.nmckcomp"
+            IF NOT cl_null(g_nmck_m.nmckcomp) THEN 
+#應用 a17 樣板自動產生(Version:3)
+               #欄位存在檢查
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+ 
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_nmck_m.nmckcomp
+
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooef001") THEN
+                  #檢查成功時後續處理
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+ 
+
+
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmck_m.nmckcomp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmck_m.nmckcomp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_nmck_m.nmckcomp_desc
+
+            #應用 a05 樣板自動產生(Version:3)
+            #確認資料無重複
+            IF  NOT cl_null(g_nmck_m.nmckcomp) AND NOT cl_null(g_nmck_m.nmckdocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_nmck_m.nmckcomp != g_nmckcomp_t  OR g_nmck_m.nmckdocno != g_nmckdocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM nmck_t WHERE "||"nmckent = '" ||g_enterprise|| "' AND "||"nmckcomp = '"||g_nmck_m.nmckcomp ||"' AND "|| "nmckdocno = '"||g_nmck_m.nmckdocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmckcomp
+            #add-point:BEFORE FIELD nmckcomp name="input.b.nmckcomp"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmckcomp
+            #add-point:ON CHANGE nmckcomp name="input.g.nmckcomp"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmckdocno
+            #add-point:BEFORE FIELD nmckdocno name="input.b.nmckdocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmckdocno
+            
+            #add-point:AFTER FIELD nmckdocno name="input.a.nmckdocno"
+            #應用 a05 樣板自動產生(Version:3)
+            #確認資料無重複
+            IF  NOT cl_null(g_nmck_m.nmckcomp) AND NOT cl_null(g_nmck_m.nmckdocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_nmck_m.nmckcomp != g_nmckcomp_t  OR g_nmck_m.nmckdocno != g_nmckdocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM nmck_t WHERE "||"nmckent = '" ||g_enterprise|| "' AND "||"nmckcomp = '"||g_nmck_m.nmckcomp ||"' AND "|| "nmckdocno = '"||g_nmck_m.nmckdocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmckdocno
+            #add-point:ON CHANGE nmckdocno name="input.g.nmckdocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmck011
+            #add-point:BEFORE FIELD nmck011 name="input.b.nmck011"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmck011
+            
+            #add-point:AFTER FIELD nmck011 name="input.a.nmck011"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmck011
+            #add-point:ON CHANGE nmck011 name="input.g.nmck011"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmck005
+            
+            #add-point:AFTER FIELD nmck005 name="input.a.nmck005"
+             
+            IF NOT cl_null(g_nmck_m.nmck005) THEN
+               IF g_nmck_m.nmck005 != g_nmck_m_t.nmck005 OR g_nmck_m_t.nmck005 IS NULL THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_nmck_m.nmck005
+               IF cl_chk_exist("v_pmaa001_1") THEN
+                  #交易對象之匯款銀行代碼
+                  SELECT pmaf002,pmaf003,pmaf004
+                    INTO g_nmck_m.nmck013,g_nmck_m.nmck014,g_nmck_m.nmck015
+                    FROM pmaf_t
+                   WHERE pmafent = g_enterprise  
+                     AND pmaf009 = 'Y'                  #主要付款帳戶
+                     AND pmaf001 = g_nmck_m.nmck005     #付款對象
+                  
+                  SELECT pmaa027,pmaa004 INTO l_pmaa027,l_pmaa004
+                    FROM pmaa_t
+                   WHERE pmaaent = g_enterprise
+                     AND pmaa001 = g_nmck_m.nmck005
+                  
+                  SELECT oofc012 INTO g_nmck_m.nmck016
+                    FROM oofc_t 
+                   WHERE oofcent = g_enterprise
+                     AND oofc008 = '4'   #電子郵件
+                     AND oofc010 = 'Y' 
+                     AND oofc002 = l_pmaa027
+                  CALL anmt460_03_ref()
+                  IF l_pmaa004 = '2' THEN
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'i'
+	                  LET g_qryparam.reqry = FALSE
+                     LET g_qryparam.arg1 = g_nmck_m.nmck005
+                     CALL q_pmak002()
+                     LET g_nmck_m.nmck006 = g_qryparam.return1
+                     CALL anmt460_03_ref()
+                  ELSE
+                     LET g_nmck_m.nmck006 = ''
+                     CALL anmt460_03_ref()
+                  END IF
+                  
+                  #150825-00004#1 add ------
+                  #如果付款對象是EMPL就顯示
+                  IF g_nmck_m.nmck005 = 'EMPL' THEN
+                     CALL cl_set_comp_visible('nmck006,nmck006_desc',TRUE)
+                  ELSE
+                     CALL cl_set_comp_visible('nmck006,nmck006_desc',FALSE)
+                  END IF
+                  #150825-00004#1 add end---
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_nmck_m.nmck005 = g_nmck_m_t.nmck005
+                  CALL anmt460_03_ref()
+                  NEXT FIELD CURRENT
+               END IF
+               
+               CALL anmt460_03_get_nmck037()
+             END IF  
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmck005
+            #add-point:BEFORE FIELD nmck005 name="input.b.nmck005"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmck005
+            #add-point:ON CHANGE nmck005 name="input.g.nmck005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmck006
+            
+            #add-point:AFTER FIELD nmck006 name="input.a.nmck006"
+            IF NOT cl_null(g_nmck_m.nmck006) THEN
+               IF (g_nmck_m.nmck006 != g_nmck_m_t.nmck006 OR g_nmck_m_t.nmck006 IS NULL ) THEN
+                  CALL s_employee_chk(g_nmck_m.nmck006)RETURNING g_sub_success
+                  IF NOT g_sub_success THEN
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = g_errno
+                      LET g_errparam.extend = ''
+                      LET g_errparam.popup = TRUE
+                      CALL cl_err()
+                     LET g_nmck_m.nmck006 = g_nmck_m_t.nmck006
+                     LET g_nmck_m.nmck006_desc = s_desc_get_person_desc(g_nmck_m.nmck006)
+                     DISPLAY BY NAME g_nmck_m.nmck006_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL anmt460_03_ref()
+               END IF
+            END IF
+            LET g_nmck_m.nmck006_desc = s_desc_get_person_desc(g_nmck_m.nmck006)
+            DISPLAY BY NAME g_nmck_m.nmck006_desc
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmck006
+            #add-point:BEFORE FIELD nmck006 name="input.b.nmck006"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmck006
+            #add-point:ON CHANGE nmck006 name="input.g.nmck006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmck013
+            
+            #add-point:AFTER FIELD nmck013 name="input.a.nmck013"
+ 
+            IF NOT cl_null(g_nmck_m.nmck013) THEN 
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_nmck_m.nmck013
+               LET g_errshow = TRUE   #160318-00025#13
+               LET g_chkparam.err_str[1] = "anm-00012:sub-01302|anmi100|",cl_get_progname("anmi100",g_lang,"2"),"|:EXEPROGanmi100"    #160318-00025#13
+               IF cl_chk_exist("v_nmab001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+                  SELECT nmck002 INTO g_nmck002 FROM nmck_t
+                   WHERE nmckent = g_enterprise
+                     AND nmckdocno = g_nmck_m.nmckdocno 
+                     AND nmckcomp = g_nmck_m.nmckcomp                    
+                  IF g_nmck002 = '1' THEN
+                     SELECT COUNT(*) INTO l_n
+                       FROM nmab_t
+                      WHERE nmabent = g_enterprise
+                        AND nmab001 = g_nmck_m.nmck013
+                        AND nmab008 = g_ooef006
+                     IF l_n = 0 THEN 
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'anm-00128'
+                        LET g_errparam.extend = g_nmck_m.nmck013
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        LET g_nmck_m.nmck013 = g_nmck_m_t.nmck013
+                        CALL anmt460_03_ref()
+                        NEXT FIELD nmck013
+                     END IF
+                  END IF
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_nmck_m.nmck013 = g_nmck_m_t.nmck013
+                  CALL anmt460_03_ref()
+                  NEXT FIELD CURRENT
+               END IF
+               CALL anmt460_03_get_nmck037() 
+            END IF
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmck013
+            #add-point:BEFORE FIELD nmck013 name="input.b.nmck013"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmck013
+            #add-point:ON CHANGE nmck013 name="input.g.nmck013"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmck014
+            #add-point:BEFORE FIELD nmck014 name="input.b.nmck014"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmck014
+            
+            #add-point:AFTER FIELD nmck014 name="input.a.nmck014"
+           IF NOT cl_null(g_nmck_m.nmck014) THEN
+              IF g_nmck_m.nmck014 != g_nmck_m_t.nmck014 OR g_nmck_m_t.nmck014 IS NULL  THEN
+                 CALL anmt460_03_get_nmck037() 
+              END IF                 
+           END IF
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmck014
+            #add-point:ON CHANGE nmck014 name="input.g.nmck014"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmck015
+            #add-point:BEFORE FIELD nmck015 name="input.b.nmck015"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmck015
+            
+            #add-point:AFTER FIELD nmck015 name="input.a.nmck015"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmck015
+            #add-point:ON CHANGE nmck015 name="input.g.nmck015"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmck016
+            #add-point:BEFORE FIELD nmck016 name="input.b.nmck016"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmck016
+            
+            #add-point:AFTER FIELD nmck016 name="input.a.nmck016"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmck016
+            #add-point:ON CHANGE nmck016 name="input.g.nmck016"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.nmckcomp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmckcomp
+            #add-point:ON ACTION controlp INFIELD nmckcomp name="input.c.nmckcomp"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+ 
+            LET g_qryparam.default1 = g_nmck_m.nmckcomp             #給予default值
+            LET g_qryparam.default2 = "" #g_nmck_m.ooef001 #组织编号
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+ 
+            CALL q_ooef001()                                #呼叫開窗
+ 
+            LET g_nmck_m.nmckcomp = g_qryparam.return1              
+            #LET g_nmck_m.ooef001 = g_qryparam.return2 
+            DISPLAY g_nmck_m.nmckcomp TO nmckcomp              #
+            #DISPLAY g_nmck_m.ooef001 TO ooef001 #组织编号
+            NEXT FIELD nmckcomp                          #返回原欄位
+
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmckdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmckdocno
+            #add-point:ON ACTION controlp INFIELD nmckdocno name="input.c.nmckdocno"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+ 
+            LET g_qryparam.default1 = g_nmck_m.nmckdocno             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+ 
+            CALL q_ooba002()                                #呼叫開窗
+ 
+            LET g_nmck_m.nmckdocno = g_qryparam.return1              
+
+            DISPLAY g_nmck_m.nmckdocno TO nmckdocno              #
+
+            NEXT FIELD nmckdocno                          #返回原欄位
+
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmck011
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmck011
+            #add-point:ON ACTION controlp INFIELD nmck011 name="input.c.nmck011"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmck005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmck005
+            #add-point:ON ACTION controlp INFIELD nmck005 name="input.c.nmck005"
+
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_nmck_m.nmck005
+            LET g_qryparam.default2 = "" #g_nmck_m.pmaal004 #交易對象簡稱
+            CALL q_pmaa001_10()
+            LET g_nmck_m.nmck005 = g_qryparam.return1
+            #LET g_nmck_m.pmaal004 = g_qryparam.return2
+            CALL anmt460_03_get_nmck005()
+            DISPLAY g_nmck_m.nmck005 TO nmck005
+            DISPLAY g_nmck_m.nmck005_desc TO nmck005_desc
+            #DISPLAY g_nmck_m.pmaal004 TO pmaal004 #交易對象簡稱
+            NEXT FIELD nmck005
+            #END add-point
+
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmck006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmck006
+            #add-point:ON ACTION controlp INFIELD nmck006 name="input.c.nmck006"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_nmck_m.nmck006
+            CALL q_ooag001()
+            LET g_nmck_m.nmck006 = g_qryparam.return1
+            LET g_nmck_m.nmck006_desc = s_desc_get_person_desc(g_nmck_m.nmck006)
+            SELECT ooag011 INTO g_nmck_m.nmck015
+              FROM ooag_t
+             WHERE ooagent = g_enterprise
+               AND ooag001 = g_nmck_m.nmck006
+            DISPLAY BY NAME g_nmck_m.nmck015            
+            DISPLAY BY NAME g_nmck_m.nmck006,g_nmck_m.nmck006_desc
+            NEXT FIELD nmck006
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmck013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmck013
+            #add-point:ON ACTION controlp INFIELD nmck013 name="input.c.nmck013"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+ 
+            LET g_qryparam.default1 = g_nmck_m.nmck013             #給予default值
+            LET g_qryparam.default2 = "" #g_nmck_m.nmab001 #銀行網點編號
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+ 
+            CALL q_nmab001()                                #呼叫開窗
+ 
+            LET g_nmck_m.nmck013 = g_qryparam.return1              
+            #LET g_nmck_m.nmab001 = g_qryparam.return2 
+            DISPLAY g_nmck_m.nmck013 TO nmck013              #
+            #DISPLAY g_nmck_m.nmab001 TO nmab001 #銀行網點編號
+            NEXT FIELD nmck013                          #返回原欄位
+
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmck014
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmck014
+            #add-point:ON ACTION controlp INFIELD nmck014 name="input.c.nmck014"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmck015
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmck015
+            #add-point:ON ACTION controlp INFIELD nmck015 name="input.c.nmck015"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmck016
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmck016
+            #add-point:ON ACTION controlp INFIELD nmck016 name="input.c.nmck016"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_anmt460_03 
+   
+   #add-point:input段after input name="input.post_input"
+   IF NOT INT_FLAG THEN
+      CALL anmt460_03_upd_nmck() RETURNING r_success 
+      IF r_success = FALSE THEN LET r_success1 = FALSE END IF 
+   ELSE
+      LET INT_FLAG = FALSE
+      LET r_success1 = FALSE
+      LET r_success = TRUE
+   END IF   
+   RETURN r_success,r_success1
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt460_03.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="anmt460_03.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...:  
+# Memo...........:
+# Usage..........: anmt460_03_get_nmck005()
+# Date & Author..: 2016/06/30 By 01531
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt460_03_get_nmck005()
+  INITIALIZE g_ref_fields TO NULL
+  LET g_ref_fields[1] = g_nmck_m.nmck005
+  CALL ap_ref_array2(g_ref_fields,"SELECT pmaal003 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+  LET g_nmck_m.nmck005_desc = '', g_rtn_fields[1] , ''
+  DISPLAY g_nmck_m.nmck005_desc TO nmck005
+
+  
+END FUNCTION
+
+################################################################################
+# Descriptions...:  
+# Memo...........:
+# Usage..........: CALL anmt460_03_upd_nmck()
+# Date & Author..: 2016/06/30 By 01531
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt460_03_upd_nmck()
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+   
+   UPDATE nmck_t SET nmck011 = g_nmck_m.nmck011,
+                     nmck005 = g_nmck_m.nmck005,
+                     nmck015 = g_nmck_m.nmck015,
+                     nmck013 = g_nmck_m.nmck013,
+                     nmck014 = g_nmck_m.nmck014,
+                     nmck016 = g_nmck_m.nmck016,
+                     nmck037 = g_nmck037,
+                     nmck006 = g_nmck_m.nmck006
+           WHERE nmckent = g_enterprise
+             AND nmckdocno = g_nmck_m.nmckdocno 
+             AND nmckcomp = g_nmck_m.nmckcomp             
+      IF SQLCA.SQLcode  THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "upd nmck_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+      END IF 
+   RETURN r_success  
+END FUNCTION
+
+################################################################################
+# Descriptions...:  
+# Memo...........:
+# Usage..........: CALL anmt460_03_ref()
+# Date & Author..: 2016/06/30 By 01531
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt460_03_ref()
+DEFINE l_pmaa004  LIKE pmaa_t.pmaa004   
+   #150825-00004#1 add ------
+   IF g_nmck_m.nmck005 = 'EMPL' THEN
+      LET g_nmck_m.nmck005_desc = ''
+      IF cl_null(g_nmck_m.nmck006) THEN 
+         LET g_nmck_m.nmck006_desc = ''
+      END IF  
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_nmck_m.nmck005
+      CALL ap_ref_array2(g_ref_fields,"SELECT pmaal003 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_nmck_m.nmck005_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_nmck_m.nmck005_desc
+      
+      LET g_nmck_m.nmck013 = ''
+      LET g_nmck_m.nmck014 = ''
+      LET g_nmck_m.nmck015 = ''
+      LET g_nmck_m.nmck016 = ''
+      LET g_nmck_m.nmck013_desc = ''
+      DISPLAY BY NAME g_nmck_m.nmck005_desc,g_nmck_m.nmck013,g_nmck_m.nmck014,g_nmck_m.nmck015,
+                      g_nmck_m.nmck016,g_nmck_m.nmck013_desc,g_nmck_m.nmck006,g_nmck_m.nmck006_desc       
+      #抓該員工的帳戶資料
+      SELECT ooag006,ooag007,ooag011 INTO g_nmck_m.nmck013,g_nmck_m.nmck014,g_nmck_m.nmck015
+        FROM ooag_t
+       WHERE ooagent = g_enterprise
+         AND ooag001 = g_nmck_m.nmck006
+      #E-mail
+      SELECT oofc012 INTO g_nmck_m.nmck016
+        FROM ooag_t
+        LEFT JOIN oofc_t ON ooagent = oofcent AND ooag002 = oofc002 AND oofc010 ='Y' AND oofc008 = '4'
+       WHERE ooagent = g_enterprise
+         AND ooag001 = g_nmck_m.nmck006
+         
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_nmck_m.nmck013
+      CALL ap_ref_array2(g_ref_fields,"SELECT nmabl003 FROM nmabl_t WHERE nmablent='"||g_enterprise||"' AND nmabl001=? AND nmabl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_nmck_m.nmck013_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_nmck_m.nmck013_desc    
+      DISPLAY BY NAME g_nmck_m.nmck013,g_nmck_m.nmck014,g_nmck_m.nmck015,g_nmck_m.nmck016      
+   ELSE
+      SELECT pmaa004 INTO l_pmaa004
+        FROM pmaa_t
+       WHERE pmaaent = g_enterprise
+         AND pmaa001 = g_nmck_m.nmck005
+      IF l_pmaa004 <> '2' THEN 
+         LET g_nmck_m.nmck006 = ''
+      END IF
+      IF cl_null(g_nmck_m.nmck006) THEN
+         INITIALIZE g_ref_fields TO NULL
+         LET g_ref_fields[1] = g_nmck_m.nmck005
+         CALL ap_ref_array2(g_ref_fields,"SELECT pmaal003 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+         LET g_nmck_m.nmck005_desc = '', g_rtn_fields[1] , ''
+         DISPLAY BY NAME g_nmck_m.nmck005_desc
+      ELSE
+         SELECT pmak003 INTO g_nmck_m.nmck005_desc
+           FROM pmak_t
+          WHERE pmakent = g_enterprise
+            AND pmak001 = g_nmck_m.nmck006
+         DISPLAY BY NAME g_nmck_m.nmck005_desc
+      END IF
+      #E-mail
+      SELECT oofc012 INTO g_nmck_m.nmck016
+        FROM ooag_t
+        LEFT JOIN oofc_t ON ooagent = oofcent AND ooag002 = oofc002 AND oofc010 ='Y' AND oofc008 = '4'
+       WHERE ooagent = g_enterprise
+         AND ooag001 = g_nmck_m.nmck006        
+   END IF  
+END FUNCTION
+
+################################################################################
+# Descriptions...:  
+# Memo...........:
+# Usage..........: CALL anmt460_03_get_nmck037()
+# Date & Author..: 2016/06/30 By 01531
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt460_03_get_nmck037()
+DEFINE l_nmaa0042 LIKE nmaa_t.nmaa004
+DEFINE l_nmab003  LIKE nmab_t.nmab003
+DEFINE l_pmaf005  LIKE pmaf_t.pmaf005
+
+   SELECT nmck004 INTO g_nmck004   FROM nmck_t
+    WHERE nmckent = g_enterprise
+      AND nmckdocno = g_nmck_m.nmckdocno 
+      AND nmckcomp = g_nmck_m.nmckcomp      
+    
+   #交易帳戶的對應開戶銀行與swift code
+   LET l_nmaa0042 = NULL
+   LET l_nmab003 = NULL
+   SELECT nmab003  
+     INTO l_nmab003
+     FROM nmab_t , nmaa_t , nmas_t  
+    WHERE nmaa004  = nmab001
+      AND nmas002  =g_nmck004
+      AND nmaa001 = nmas001 
+      AND nmaaent = nmasent
+      AND nmabent = nmaaent
+      AND nmabent = g_enterprise
+      
+   SELECT nmaa004
+     INTO l_nmaa0042
+     FROM nmaa_t , nmas_t  
+    WHERE nmas002  =g_nmck004
+      AND nmaa001 = nmas001 
+      AND nmaaent = nmasent
+      AND nmaaent = g_enterprise
+      
+   IF NOT cl_null(l_nmaa0042) AND NOT cl_null(g_nmck_m.nmck013) AND l_nmaa0042[1,3] = g_nmck_m.nmck013[1,3] THEN #前三碼相同時為本行 (國內)
+      LET g_nmck037 ='1' 
+   ELSE 
+      # 判斷海外銀行用 swift code
+      LET l_pmaf005 = NULL
+      SELECT pmaf005
+        INTO l_pmaf005          
+        FROM pmaf_t 
+       WHERE pmaf001 = g_nmck_m.nmck005 
+         AND pmaf003 = g_nmck_m.nmck014 
+         AND pmafent = g_enterprise
+        
+      IF l_pmaf005 IS NOT NULL AND l_nmab003 IS NOT NULL  THEN 
+         IF l_nmab003[1,4] = l_pmaf005 [1,4] THEN
+            LET g_nmck037 ='1' 
+         ELSE 
+            LET g_nmck037 ='2' 
+         END IF 
+      ELSE 
+         LET g_nmck037 ='2' 
+      END IF 
+   END IF
+
+END FUNCTION
+
+ 
+{</section>}
+ 

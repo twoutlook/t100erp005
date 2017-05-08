@@ -1,0 +1,282 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astt740" module="ast" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="03247" crtdt="2014-11-21 11:03:04" modid="08172" moddt="2016-09-14 17:21:19" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="內部結算單維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="stdgsite,stdgsite_desc(chr80),stdgdocdt,stdgdocno,stdg001,stdg001_desc(chr80),stdg002,stdg002_desc(chr80),stdg006,stdg006_desc(chr80),stdg003,stdg004,stdg005,stdg007,stdg007_desc(chr80),stdgunit,stdgstus,stdgownid,stdgownid_desc(chr80),stdgowndp,stdgowndp_desc(chr80),stdgcrtid,stdgcrtid_desc(chr80),stdgcrtdp,stdgcrtdp_desc(chr80),stdgcrtdt,stdgmodid,stdgmodid_desc(chr80),stdgmoddt,stdgcnfid,stdgcnfid_desc(chr80),stdgcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="stdhseq,stdhsite,stdhsite_desc(chr500),stdh001,stdh002,stdh005,stdh003,stdh004,stdh031,stdh032,stdh006,stdh006_desc(chr500),stdh006_desc_desc(chr500),stdh007,stdh007_desc(chr500),stdh008,stdh008_desc(chr500),stdh009,stdh009_desc(chr500),stdh010,stdh011,stdh012,stdh013,stdh014,stdh015,stdh016,stdh016_desc(chr500),stdh017,stdh017_desc(chr500),stdh018,stdh018_desc(chr500),stdh019,stdh020,stdh020_desc(chr500),stdh021,stdh021_desc(chr500),stdh022,stdh024,stdh023,stdh025,stdh025_desc(chr500),stdh026,stdh026_desc(chr500),stdh027,stdh028,stdh029,stdh030,stdhunit"/>
+      <var id="bs_field" value="stdgsite,stdgsite_desc(chr80),stdgdocdt,stdgdocno,stdg001,stdg001_desc(chr80),stdg002,stdg002_desc(chr80),stdg003,stdg004,stdg005,stdg006,stdg006_desc(chr80),stdg007,stdg007_desc(chr80)" pk="stdgdocno" order=""/>
+      <bs_reference field="stdgsite_desc" ref_field="stdgsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="stdg001_desc" ref_field="stdg001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="stdg002_desc" ref_field="stdg002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="stdg006_desc" ref_field="stdg006" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="stdg007_desc" ref_field="stdg007" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="astt740" method="dialog">
+    <section id="input">
+      <input id="head" field="stdgsite,stdgdocdt,stdgdocno,stdg001,stdg002,stdg006,stdg003,stdg004,stdg005,stdg007,stdgunit,stdgstus"/>
+      <input id="body" page="1" field="stdhseq,stdhsite,stdh001,stdh002,stdh005,stdh003,stdh004,stdh031,stdh032,stdh006,stdh007,stdh008,stdh009,stdh009_desc,stdh010,stdh011,stdh012,stdh013,stdh014,stdh015,stdh016,stdh017,stdh018,stdh019,stdh020,stdh021,stdh022,stdh024,stdh023,stdh025,stdh026,stdh027,stdh028,stdh029,stdh030,stdhunit" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="stdgsite,stdgdocdt,stdgdocno,stdg001,stdg002,stdg006,stdg003,stdg004,stdg005,stdg007,stdgunit,stdgstus,stdgownid,stdgowndp,stdgcrtid,stdgcrtdp,stdgcrtdt,stdgmodid,stdgmoddt,stdgcnfid,stdgcnfdt"/>
+      <construct id="body" page="1" field="stdhseq,stdhsite,stdh001,stdh002,stdh005,stdh003,stdh004,stdh031,stdh032,stdh006,stdh007,stdh008,stdh009,stdh009_desc,stdh010,stdh011,stdh012,stdh013,stdh014,stdh015,stdh016,stdh017,stdh018,stdh019,stdh020,stdh021,stdh022,stdh024,stdh023,stdh025,stdh026,stdh027,stdh028,stdh029,stdh030,stdhunit"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="stdgdocno"/>
+      <set id="head" type="no_entry" field="stdgdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="stdgsite">
+        <after>
+          <check chkid="v_ooef001_31" id="isExist"/>
+          <reference field="stdgsite_desc" ref_field="stdg_t.stdgsite" map_field="stdgsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="stdgsite_desc"/>
+      <column id="stdgdocdt"/>
+      <column id="stdgdocno">
+        <after>
+          <check chkid="v_ooba002" id="isExist"/>
+        </after>
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_stdgdocno" state="c"/>
+      </column>
+      <column id="stdg001">
+        <after>
+          <check chkid="v_ooef001_1" id="isExist"/>
+          <reference field="stdg001_desc" ref_field="stdg_t.stdg001" map_field="stdg001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="stdg001_desc"/>
+      <column id="stdg002">
+        <after>
+          <check chkid="v_ooef001_1" id="isExist"/>
+          <reference field="stdg002_desc" ref_field="stdg_t.stdg002" map_field="stdg002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="stdg002_desc"/>
+      <column id="stdg006">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="stdg006_desc" ref_field="stdg_t.stdg006" map_field="stdg006" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_6" state="i"/>
+        <controlp form="q_ooag001_6" state="c"/>
+      </column>
+      <column id="stdg006_desc"/>
+      <column id="stdg003"/>
+      <column id="stdg004"/>
+      <column id="stdg005"/>
+      <column id="stdg007">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="stdg007_desc" ref_field="stdg_t.stdg007" map_field="stdg007" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="stdg007_desc"/>
+      <column id="stdgunit"/>
+      <column id="stdgstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="stdgownid">
+        <after>
+          <reference field="stdgownid_desc" ref_field="stdg_t.stdgownid" map_field="stdgownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stdgownid_desc"/>
+      <column id="stdgowndp">
+        <after>
+          <reference field="stdgowndp_desc" ref_field="stdg_t.stdgowndp" map_field="stdgowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="stdgowndp_desc"/>
+      <column id="stdgcrtid">
+        <after>
+          <reference field="stdgcrtid_desc" ref_field="stdg_t.stdgcrtid" map_field="stdgcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stdgcrtid_desc"/>
+      <column id="stdgcrtdp">
+        <after>
+          <reference field="stdgcrtdp_desc" ref_field="stdg_t.stdgcrtdp" map_field="stdgcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="stdgcrtdp_desc"/>
+      <column id="stdgcrtdt"/>
+      <column id="stdgmodid">
+        <after>
+          <reference field="stdgmodid_desc" ref_field="stdg_t.stdgmodid" map_field="stdgmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stdgmodid_desc"/>
+      <column id="stdgmoddt"/>
+      <column id="stdgcnfid">
+        <after>
+          <reference field="stdgcnfid_desc" ref_field="stdg_t.stdgcnfid" map_field="stdgcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stdgcnfid_desc"/>
+      <column id="stdgcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="stdhseq"/>
+      <column id="stdhsite">
+        <after>
+          <reference field="stdhsite_desc" ref_field="stdh_t.stdhsite" map_field="stdhsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stdhsite_desc"/>
+      <column id="stdh001" def_scc="6082"/>
+      <column id="stdh002" def_scc="6083"/>
+      <column id="stdh005"/>
+      <column id="stdh003">
+        <controlp form="q_stdh003" state="c"/>
+      </column>
+      <column id="stdh004"/>
+      <column id="stdh031" type="S" default="0"/>
+      <column id="stdh032" type="S" default="0"/>
+      <column id="stdh006">
+        <after>
+          <reference field="stdh006_desc" ref_field="stdh_t.stdh006" map_field="stdh006" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="stdh006_desc">
+        <after>
+          <reference field="stdh006_desc_desc" ref_field="stdh_t.stdh006" map_field="stdh006" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stdh006_desc_desc"/>
+      <column id="stdh007">
+        <after>
+          <reference field="stdh007_desc" ref_field="stdh_t.stdh007" map_field="stdh007" ref_sql="SELECT stael003 FROM stael_t WHERE staelent=$varg_enterprise$var AND stael001=? AND stael002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_stae001" state="c"/>
+      </column>
+      <column id="stdh007_desc"/>
+      <column id="stdh008">
+        <after>
+          <reference field="stdh008_desc" ref_field="stdh_t.stdh008" map_field="stdh008" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooai001_1" state="c"/>
+      </column>
+      <column id="stdh008_desc"/>
+      <column id="stdh009">
+        <after/>
+        <controlp form="q_oodb002" state="c"/>
+      </column>
+      <column id="stdh009_desc"/>
+      <column id="stdh010"/>
+      <column id="stdh011" type="S" default="0"/>
+      <column id="stdh012" type="S" default="0"/>
+      <column id="stdh013" type="S" default="0"/>
+      <column id="stdh014" type="S" default="0"/>
+      <column id="stdh015" type="S" default="0"/>
+      <column id="stdh016">
+        <after>
+          <reference field="stdh016_desc" ref_field="stdh_t.stdh016" map_field="stdh016" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="stdh016_desc"/>
+      <column id="stdh017">
+        <after>
+          <reference field="stdh017_desc" ref_field="stdh_t.stdh017" map_field="stdh017" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="stdh017_desc"/>
+      <column id="stdh018">
+        <after>
+          <reference field="stdh018_desc" ref_field="stdhsite,stdh018" map_field="stdhsite,stdh018" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaasite=? AND inaa001=? "/>
+        </after>
+        <controlp form="q_inaa001_8" state="c"/>
+      </column>
+      <column id="stdh018_desc"/>
+      <column id="stdh019">
+        <controlp form="q_pmaa001_1" state="c"/>
+      </column>
+      <column id="stdh020">
+        <after>
+          <reference field="stdh020_desc" ref_field="stdh_t.stdh020" map_field="stdh020" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="stdh020_desc"/>
+      <column id="stdh021">
+        <after>
+          <reference field="stdh021_desc" ref_field="stdh_t.stdh021" map_field="stdh021" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="stdh021_desc"/>
+      <column id="stdh022"/>
+      <column id="stdh024"/>
+      <column id="stdh023"/>
+      <column id="stdh025">
+        <after>
+          <reference field="stdh025_desc" ref_field="stdh_t.stdh025" map_field="stdh025" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="stdh025_desc"/>
+      <column id="stdh026">
+        <after>
+          <reference field="stdh026_desc" ref_field="stdh_t.stdh026" map_field="stdh026" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="stdh026_desc"/>
+      <column id="stdh027" def_scc="6079"/>
+      <column id="stdh028" type="S" default="0"/>
+      <column id="stdh029" type="S" default="0"/>
+      <column id="stdh030" type="S" default="0"/>
+      <column id="stdhunit"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="stdg_t" pk="stdgdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT stdgsite,&apos;&apos;,stdgdocdt,stdgdocno,stdg001,&apos;&apos;,stdg002,&apos;&apos;,stdg006,&apos;&apos;,stdg003,stdg004,stdg005,stdg007,&apos;&apos;,stdgunit,stdgstus,stdgownid,&apos;&apos;,stdgowndp,&apos;&apos;,stdgcrtid,&apos;&apos;,stdgcrtdp,&apos;&apos;,stdgcrtdt,stdgmodid,&apos;&apos;,stdgmoddt,stdgcnfid,&apos;&apos;,stdgcnfdt FROM stdg_t WHERE stdgent= ? AND stdgdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT stdgsite,&apos;&apos;,stdgdocdt,stdgdocno,stdg001,&apos;&apos;,stdg002,&apos;&apos;,stdg006,&apos;&apos;,stdg003,stdg004,stdg005,stdg007,&apos;&apos;,stdgunit,stdgstus,stdgownid,&apos;&apos;,stdgowndp,&apos;&apos;,stdgcrtid,&apos;&apos;,stdgcrtdp,&apos;&apos;,stdgcrtdt,stdgmodid,&apos;&apos;,stdgmoddt,stdgcnfid,&apos;&apos;,stdgcnfdt FROM stdg_t" order="stdgdocno"/>
+    </head>
+    <body id="stdh_t" page="1" linked="" pk="stdhseq" fk="stdhdocno">
+      <sql id="forupd_sql_detail" query="SELECT stdhseq,stdhsite,&apos;&apos;,stdh001,stdh002,stdh005,stdh003,stdh004,stdh031,stdh032,stdh006,&apos;&apos;,&apos;&apos;,stdh007,&apos;&apos;,stdh008,&apos;&apos;,stdh009,&apos;&apos;,stdh010,stdh011,stdh012,stdh013,stdh014,stdh015,stdh016,&apos;&apos;,stdh017,&apos;&apos;,stdh018,&apos;&apos;,stdh019,stdh020,&apos;&apos;,stdh021,&apos;&apos;,stdh022,stdh024,stdh023,stdh025,&apos;&apos;,stdh026,&apos;&apos;,stdh027,stdh028,stdh029,stdh030,stdhunit FROM stdh_t WHERE stdhent=? AND stdhdocno=? AND stdhseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT stdhseq,stdhsite,&apos;&apos;,stdh001,stdh002,stdh005,stdh003,stdh004,stdh031,stdh032,stdh006,&apos;&apos;,&apos;&apos;,stdh007,&apos;&apos;,stdh008,&apos;&apos;,stdh009,&apos;&apos;,stdh010,stdh011,stdh012,stdh013,stdh014,stdh015,stdh016,&apos;&apos;,stdh017,&apos;&apos;,stdh018,&apos;&apos;,stdh019,stdh020,&apos;&apos;,stdh021,&apos;&apos;,stdh022,stdh024,stdh023,stdh025,&apos;&apos;,stdh026,&apos;&apos;,stdh027,stdh028,stdh029,stdh030,stdhunit FROM stdh_t WHERE stdhent=? AND stdhdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,114 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli090" module="agl" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02295" crtdt="2013-08-15 09:41:03" modid="02295" moddt="2014-06-27 17:35:11" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="傳票額外摘要維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glauld,glauld_desc(chr80),glau001,glau002,glau003"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glau004,glau005,glaustus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="glau004,glaumodid,glaumodid_desc(chr500),glaumoddt,glauownid,glauownid_desc(chr500),glauowndp,glauowndp_desc(chr500),glaucrtid,glaucrtid_desc(chr500),glaucrtdp,glaucrtdp_desc(chr500),glaucrtdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="agli090" method="dialog">
+    <section id="input">
+      <input id="head" field="glauld,glau001,glau002,glau003"/>
+      <input id="body" page="1" field="glau004,glau005,glaustus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="glauld,glau001,glau002,glau003"/>
+      <construct id="body" page="1" field="glau004,glau005,glaustus"/>
+      <construct id="body" page="2" field="glaumodid,glaumoddt,glauownid,glauowndp,glaucrtid,glaucrtdp,glaucrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="glauld,glau001,glau002,glau003"/>
+      <set id="head" type="no_entry" field="glauld,glau001,glau002,glau003"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="glauld">
+        <after>
+          <reference field="glauld_desc" ref_field="glau_t.glauld" map_field="glauent,glauld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_glaa" state="c"/>
+      </column>
+      <column id="glauld_desc"/>
+      <column id="glau001" type="S" default="0" def_scc="8010"/>
+      <column id="glau002">
+        <controlp form="q_glau002" state="c"/>
+      </column>
+      <column id="glau003"/>
+    </init>
+    <init id="body" page="1">
+      <column id="glau004">
+        <after>
+          <check id="range" bt="1" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="glau005"/>
+      <column id="glaustus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="glaumodid">
+        <after>
+          <reference field="glaumodid_desc" ref_field="glau_t.glaumodid" map_field="glaumodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glaumodid_desc"/>
+      <column id="glaumoddt"/>
+      <column id="glauownid">
+        <after>
+          <reference field="glauownid_desc" ref_field="glau_t.glauownid" map_field="glauownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glauownid_desc"/>
+      <column id="glauowndp">
+        <after>
+          <reference field="glauowndp_desc" ref_field="glau_t.glauowndp" map_field="glauowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glauowndp_desc"/>
+      <column id="glaucrtid">
+        <after>
+          <reference field="glaucrtid_desc" ref_field="glau_t.glaucrtid" map_field="glaucrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glaucrtid_desc"/>
+      <column id="glaucrtdp">
+        <after>
+          <reference field="glaucrtdp_desc" ref_field="glau_t.glaucrtdp" map_field="glaucrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glaucrtdp_desc"/>
+      <column id="glaucrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="glau_t" pk="glauld,glau001,glau002,glau003">
+      <sql id="forupd_sql" type="sql" query="SELECT glauld,&apos;&apos;,glau001,glau002,glau003 FROM glau_t WHERE glauent= ? AND glauld=? AND glau001=? AND glau002=? AND glau003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT glauld,&apos;&apos;,glau001,glau002,glau003 FROM glau_t" order="glauld,glau001,glau002,glau003"/>
+    </head>
+    <body id="glau_t" page="1,2" linked="" pk="glau004" fk="glauld,glau001,glau002,glau003">
+      <sql id="forupd_sql_detail" query="SELECT glau004,glau005,glaustus,&apos;&apos;,glaumodid,&apos;&apos;,glaumoddt,glauownid,&apos;&apos;,glauowndp,&apos;&apos;,glaucrtid,&apos;&apos;,glaucrtdp,&apos;&apos;,glaucrtdt FROM glau_t WHERE glauent=? AND glauld=? AND glau001=? AND glau002=? AND glau003=? AND glau004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glau004,glau005,glaustus,&apos;&apos;,glaumodid,&apos;&apos;,glaumoddt,glauownid,&apos;&apos;,glauowndp,&apos;&apos;,glaucrtid,&apos;&apos;,glaucrtdp,&apos;&apos;,glaucrtdt FROM glau_t WHERE glauent= ? AND glauld=? AND glau001=? AND glau002=? AND glau003=?"/>
+    </body>
+  </dataset>
+</assembly>
+

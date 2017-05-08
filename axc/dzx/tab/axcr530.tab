@@ -1,0 +1,83 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcr530" module="axc" jobmode="N" type="r01" industry="std" fix_arg="0" crtid="03297" crtdt="2015-03-10 17:39:30" modid="03297" moddt="2015-03-11 14:57:08" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="庫存進出明細成本列印作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xccccomp(chr10),xccccomp_desc(chr80),xccc004(num5),xcccld(chr5),xcccld_desc(chr80),xccc005(num5),xccc001(chr1),xccc001_desc(chr80),xccc003(chr10),xccc003_desc(chr80),xccc006(chr500),xccc006_desc(chr80),imaa003(chr10),imaa003_desc(chr80),xcccc006_desc_desc(chr80),imag011(chr10),imag011_desc(chr80),xcbb006(num5),a(chr500),b(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="axc" filename="axcr530" method="dialog">
+    <section id="input">
+      <input id="head" field="xccccomp,xccc004,xcccld,xccc005,xccc001,xccc003,a,b"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xccc006,imaa003,imag011,xcbb006"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xccccomp">
+        <after>
+          <reference field="xccccomp_desc" ref_field="xccccomp" map_field="xcccent,xccccomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_8" state="i"/>
+        <controlp form="q_ooef001_8" state="c"/>
+      </column>
+      <column id="xccccomp_desc"/>
+      <column id="xccc004"/>
+      <column id="xcccld">
+        <after>
+          <reference field="xcccld_desc" ref_field="xcccld" map_field="xcccent,xcccld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xcccld_desc"/>
+      <column id="xccc005"/>
+      <column id="xccc001">
+        <after/>
+      </column>
+      <column id="xccc001_desc"/>
+      <column id="xccc003">
+        <after>
+          <reference field="xccc003_desc" ref_field="xccc003" map_field="xcccent,xccc003" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcat001" state="i"/>
+        <controlp form="q_xcat001" state="c"/>
+      </column>
+      <column id="xccc003_desc"/>
+      <column id="xccc006">
+        <after>
+          <reference field="xccc006_desc" ref_field="xccc006" map_field="xcccent,xccc006" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xccc006_desc"/>
+      <column id="imaa003">
+        <after>
+          <reference field="imaa003_desc" ref_field="imaa003" map_field="imaa003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;200&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa003" state="i"/>
+        <controlp form="q_imca001_1" state="c"/>
+      </column>
+      <column id="imaa003_desc"/>
+      <column id="xcccc006_desc_desc"/>
+      <column id="imag011">
+        <after>
+          <reference field="imag011_desc" ref_field="imag011" map_field="imag011" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;206&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imag011_2" state="i"/>
+        <controlp form="q_imag011_1" state="c"/>
+      </column>
+      <column id="imag011_desc"/>
+      <column id="xcbb006"/>
+      <column id="a" type="S" default="Y"/>
+      <column id="b" type="S" default="N"/>
+    </init>
+  </form>
+</assembly>
+

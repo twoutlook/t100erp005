@@ -1,0 +1,79 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astq340" module="ast" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="06540" crtdt="2016-06-30 10:11:40" modid="06540" moddt="2016-06-30 10:11:40" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="自營結算單據批量查詢列印作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="stbdsite,stbddocdt,stbddocno,stbd043,stbd044,stbd001,stbd002,stbd003,stbdunit,stbd021,radiogroup_1,radiogroup_2,checkbox_1"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),stbdsite,stbdsite_desc(chr500),stbddocdt,stbddocno,stbd001,stbd001_desc(chr500),stbd002,stbd002_desc(chr500),stbd003,stbdunit,stbd004,stbd005,stbd006,stbd008,stbd011,stbd012,stbd013,stbd015,stbd040,stbd017,stbd018"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),stbdsite(b_stbdsite),stbdsite_desc(b_stbdsite_desc),stbddocdt(b_stbddocdt),stbddocno(b_stbddocno),stbd001(b_stbd001),stbd001_desc(b_stbd001_desc),stbd002(b_stbd002),stbd002_desc(b_stbd002_desc),stbd003(b_stbd003),stbdunit(b_stbdunit),stbd004(b_stbd004),stbd005(b_stbd005),stbd006(b_stbd006),stbd008(b_stbd008),stbd011(b_stbd011),stbd012(b_stbd012),stbd013(b_stbd013),stbd015(b_stbd015),stbd040(b_stbd040),stbd017(b_stbd017),stbd018(b_stbd018)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="astq340" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="stbdsite,stbddocdt,stbddocno,stbd001,stbd002,stbd003,stbdunit,stbd004,stbd005,stbd006,stbd008,stbd011,stbd012,stbd013,stbd015,stbd040,stbd017,stbd018" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="stbdsite(b_stbdsite),stbddocdt(b_stbddocdt),stbddocno(b_stbddocno),stbd001(b_stbd001),stbd002(b_stbd002),stbd003(b_stbd003),stbdunit(b_stbdunit),stbd004(b_stbd004),stbd005(b_stbd005),stbd006(b_stbd006),stbd008(b_stbd008),stbd011(b_stbd011),stbd012(b_stbd012),stbd013(b_stbd013),stbd015(b_stbd015),stbd040(b_stbd040),stbd017(b_stbd017),stbd018(b_stbd018)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="stbdsite">
+        <after>
+          <reference field="stbdsite_desc" ref_field="stbdsite" map_field="stbdent,stbdsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_3" state="c"/>
+      </column>
+      <column id="stbdsite_desc"/>
+      <column id="stbddocdt"/>
+      <column id="stbddocno">
+        <controlp form="q_stbddocno" state="c"/>
+      </column>
+      <column id="stbd001">
+        <after>
+          <reference field="stbd001_desc" ref_field="stbd001" map_field="stbdent,stbd001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_14" state="c"/>
+      </column>
+      <column id="stbd001_desc"/>
+      <column id="stbd002">
+        <after>
+          <reference field="stbd002_desc" ref_field="stbd002" map_field="stbdent,stbd002" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_10" state="c"/>
+      </column>
+      <column id="stbd002_desc"/>
+      <column id="stbd003" def_scc="6013"/>
+      <column id="stbdunit"/>
+      <column id="stbd004" type="S" default="0"/>
+      <column id="stbd005"/>
+      <column id="stbd006"/>
+      <column id="stbd008" type="S" default="0"/>
+      <column id="stbd011" type="S" default="0"/>
+      <column id="stbd012" type="S" default="0"/>
+      <column id="stbd013" type="S" default="0"/>
+      <column id="stbd015" type="S" default="0"/>
+      <column id="stbd040" type="S" default="0"/>
+      <column id="stbd017" type="S" default="0"/>
+      <column id="stbd018" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="stbd_t" page="1" linked="" pk="stbddocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,stbdsite,&apos;&apos;,stbddocdt,stbddocno,stbd001,&apos;&apos;,stbd002,&apos;&apos;,stbd003,stbdunit,stbd004,stbd005,stbd006,stbd008,stbd011,stbd012,stbd013,stbd015,stbd040,stbd017,stbd018 FROM stbd_t WHERE stbdent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

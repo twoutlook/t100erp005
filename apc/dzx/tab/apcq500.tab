@@ -1,0 +1,68 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apcq500" module="apc" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="03247" crtdt="2015-06-19 16:43:11" modid="03247" moddt="2015-11-18 14:45:09" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="Service差異查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="pcamsite,pcamsite_desc(chr80),pcam012,pcam012_desc(chr80),pcam004"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),pcamsite,pcamsite_desc(chr500),pcam001,pcam015,pcam012,pcam012_desc(chr500),pcam002,pcam003,pcam007,pcam006,pcam004,pcam005,type1(chr500),pcam008,pcam009,pcam010,pcam011,pcam013,pcam014"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),pcamsite(b_pcamsite),pcamsite_desc(b_pcamsite_desc),pcam001(b_pcam001),pcam015(b_pcam015),pcam012(b_pcam012),pcam012_desc(b_pcam012_desc),pcam002(b_pcam002),pcam003(b_pcam003),pcam007(b_pcam007),pcam006(b_pcam006),pcam004(b_pcam004),pcam005(b_pcam005),type1(type1),pcam008(b_pcam008),pcam009(b_pcam009),pcam010(b_pcam010),pcam011(b_pcam011),pcam013(b_pcam013),pcam014(b_pcam014)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+      <action id="ins_pcap"/>
+    </section>
+  </structure>
+  <form id="0" module="apc" filename="apcq500" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="pcamsite,pcam001,pcam015,pcam012,pcam002,pcam003,pcam007,pcam006,pcam004,pcam005,pcam008,pcam009,pcam010,pcam011,pcam013,pcam014" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="pcamsite(b_pcamsite),pcam001(b_pcam001),pcam015(b_pcam015),pcam012(b_pcam012),pcam002(b_pcam002),pcam003(b_pcam003),pcam007(b_pcam007),pcam006(b_pcam006),pcam004(b_pcam004),pcam005(b_pcam005),pcam008(b_pcam008),pcam009(b_pcam009),pcam010(b_pcam010),pcam011(b_pcam011),pcam013(b_pcam013),pcam014(b_pcam014)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="pcamsite">
+        <after>
+          <reference field="pcamsite_desc" ref_field="pcamsite" map_field="b_pcamsite_desc" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pcamsite_desc"/>
+      <column id="pcam001"/>
+      <column id="pcam015"/>
+      <column id="pcam012">
+        <after>
+          <reference field="pcam012_desc" ref_field="pcam012" map_field="pcam012" ref_sql="SELECT pcaal003 FROM pcaal_t WHERE pcaalent=$varg_enterprise$var AND pcaal001=? AND pcaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pcam012_desc"/>
+      <column id="pcam002"/>
+      <column id="pcam003"/>
+      <column id="pcam007"/>
+      <column id="pcam006"/>
+      <column id="pcam004"/>
+      <column id="pcam005"/>
+      <column id="type1"/>
+      <column id="pcam008"/>
+      <column id="pcam009"/>
+      <column id="pcam010"/>
+      <column id="pcam011" type="S" default="0"/>
+      <column id="pcam013" type="S" default="0"/>
+      <column id="pcam014"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="pcam_t" page="1" linked="" pk="pcam001,pcam015">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,pcamsite,&apos;&apos;,pcam001,pcam015,pcam012,&apos;&apos;,pcam002,pcam003,pcam007,pcam006,pcam004,pcam005,&apos;&apos;,pcam008,pcam009,pcam010,pcam011,pcam013,pcam014 FROM pcam_t WHERE pcament= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

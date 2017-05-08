@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apcq811" module="apc" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="04226" crtdt="2016-02-25 16:18:08" modid="06189" moddt="2016-05-19 10:11:53" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="POS暫時離機操作日誌查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="pcaxsite,pcax003,pcax002,pcax004,pcax005,pcax006,pcax009,pcax011"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),pcax001,pcaxsite,pcax001_desc(chr500),pcax002,pcax003,pcax004,pcax005,pcax005_desc(chr500),pcax006,pcax007,pcax008,pcax009,pcax010,pcax011,pcaxacti"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),pcax001(b_pcax001),pcaxsite(b_pcaxsite),pcax001_desc(b_pcax001_desc),pcax002(b_pcax002),pcax003(b_pcax003),pcax004(b_pcax004),pcax005(b_pcax005),pcax005_desc(b_pcax005_desc),pcax006(b_pcax006),pcax007(b_pcax007),pcax008(b_pcax008),pcax009(b_pcax009),pcax010(b_pcax010),pcax011(b_pcax011),pcaxacti(b_pcaxacti)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="apc" filename="apcq811" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="pcax001,pcaxsite,pcax002,pcax003,pcax004,pcax005,pcax006,pcax007,pcax008,pcax009,pcax010,pcax011,pcaxacti" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="pcax001(b_pcax001),pcaxsite(b_pcaxsite),pcax002(b_pcax002),pcax003(b_pcax003),pcax004(b_pcax004),pcax005(b_pcax005),pcax006(b_pcax006),pcax007(b_pcax007),pcax008(b_pcax008),pcax009(b_pcax009),pcax010(b_pcax010),pcax011(b_pcax011),pcaxacti(b_pcaxacti)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="pcax001">
+        <after>
+          <reference field="pcax001_desc" ref_field="pcax001" map_field="pcax001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pcaxsite">
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="pcax001_desc"/>
+      <column id="pcax002"/>
+      <column id="pcax003"/>
+      <column id="pcax004"/>
+      <column id="pcax005">
+        <after>
+          <reference field="pcax005_desc" ref_field="pcax005" map_field="pcax005" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_pcab001_1" state="c"/>
+      </column>
+      <column id="pcax005_desc"/>
+      <column id="pcax006" def_scc="6898"/>
+      <column id="pcax007"/>
+      <column id="pcax008"/>
+      <column id="pcax009"/>
+      <column id="pcax010"/>
+      <column id="pcax011"/>
+      <column id="pcaxacti"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="pcax_t" page="1" linked="" pk="pcaxsite,pcax001">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,pcax001,pcaxsite,&apos;&apos;,pcax002,pcax003,pcax004,pcax005,&apos;&apos;,pcax006,pcax007,pcax008,pcax009,pcax010,pcax011,pcaxacti FROM pcax_t WHERE pcaxent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axcp201" std_prog="axcp201" erpver="1.0" ver="1" module="AXC" type="M" booking="Y" designer_ver="1.0" class="p" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的: 1.按账套、本位币顺序、成本计算类型、年度、期别、成本中心、成本主要素、分摊类型统计费用（人工和制费）
+                2.把统计的人工和制费金额存入到“工时费用统计和维护作业axct202”中，以便查询和修改
+               
+作業功能：
+作業類型：批次作業
+輸入模式： 
+資料來源：人工制费收集维护档()
+          
+          
+
+逻辑处理:
+1.删除旧资料
+   根据"账套xcbjld"、"成本计算类型xcbj001"和"成本年度xcbj002、期别xcbj003"删除“工时费用统计作业axct202”的资料，档案是xcbj_t
+
+2.抓取费用金额
+   根据"账套xcbj"、"成本年度xcbj002"、"期别xcbj003"、"成本中心xcbj004"、"主成本要素xcbj005"和“分摊方式xcbj006”到“人工制费收集作业axct201”，档案为xcbl_t抓取分摊成本SUM(xcbl100\xcbl110\xcbl120)存入费用总额(xcbj101\xcbj111\xcbj121)。
+
+3.抓取分摊指标数
+  根据"账套xcbjld"、"法人组织xcbjcomp"、"成本中心xcbj004"和"成本年度xcbj002、期别xcbj003"从工时收集档(xcbh_t/xcbi_t)抓取实际工时sum(xcbi201)/机时sum(xcbi202)和标准工时sum(xcbi203)/机时(xcbi204).
+  如果"分摊方式xcbj006"="实际工时"，则分摊基础指标总数xcbj020=实际工时SUM（xcbi201）
+  如果"分摊方式xcbj006"="实际机时"，则分摊基础指标总数xcbj020=实际机时SUM（xcbi202）
+  如果"分摊方式xcbj006"="标准工时"，则分摊基础指标总数xcbj020=标准工时SUM（xcbi203）
+  如果"分摊方式xcbj006"="标准机时"，则分摊基础指标总数xcbj020=标准机时SUM（xcbi204）
+  如果"分摊方式xcbj006"="实际工时"，则标准产能xcbj021=标准工时SUM（xcbi203）
+  如果"分摊方式xcbj006"="标准工时"，则标准产能xcbj021=标准工时SUM（xcbi203)
+  如果"分摊方式xcbj006"="实际机时"，则标准产能xcbj021=标准工时SUM（xcbi204)
+  如果"分摊方式xcbj006"="标准机时"，则标准产能xcbj021=标准工时SUM（xcbi204)
+
+4.计算分摊费用和单位成本   
+   4.1固定费用(xcbj102/xcbj112/xcbj122)=0
+   4.2闲置费用(xcbj103/xcbj113/xcbj123)
+        4.2.1标准产能等于0时,闲置费用=0
+        4.2.2若标准产能>0,“标准产能”<“分摊指标总数”,且固定制费>0,则“闲置费用”＝“固定费用”＊（（分摊指标总数－标准产能）／分摊指标总数）
+         4.2.3若“标准产能”>“分摊指标总数”,则闲置费用=0
+   4.3分摊金额(xcbj104/xcbj114/xcbj124)=费用总额(xcbj101/xcbj111/xcbj121)-闲置费用(xcbj103/xcbj113/xcbj123)
+   4.4单位成本(xcbj105/xcbj115/xcbj125)=分摊金额(xcbj104/xcbj114/xcbj124)/分摊基础指标总数(xcbj020)
+
+5.其他字段给值逻辑 
+  5.1制费类别(xcbj010)='2.变动'
+  5.2会计科目(xcbj011)=' '
+   2.3
+
+
+add by wangxia:140708
+一：参数是否启用次要素：
+1.删除旧资料
+   根据"账套xcdrld"、"成本计算类型xcdr001"和"成本年度xcdr002、期别xcdr003"删除“工时费用成本次要素统计作业axct212”的资料，档案是xcdr_t
+
+2.抓取费用金额
+   根据"账套xcdrld"、"成本年度xcdr002"、"期别xcdr003"、"成本中心xcdr004"、"成本次要素xcdr005"和“分摊方式xcdr006”到“人工制费收集作业axct201”，档案为xcbl_t抓取分摊成本SUM(xcbl100\xcbl110\xcbl120)存入费用总额(xcdr101\xcdr111\xcdr121)。
+
+3.抓取分摊指标数
+  根据"账套xcdrld"、"法人组织xcdrcomp"、"成本中心xcdr004"和"成本年度xcdr002、期别xcdr003"从工时收集档(xcbh_t/xcbi_t)抓取实际工时sum(xcbi201)/机时sum(xcbi202)和标准工时sum(xcbi203)/机时(xcbi204).
+  如果"分摊方式xcdr006"="实际工时"，则分摊基础指标总数xcdr020=实际工时SUM（xcbi201）
+  如果"分摊方式xcdr006"="实际机时"，则分摊基础指标总数xcdr020=实际机时SUM（xcbi202）
+  如果"分摊方式xcdr006"="标准工时"，则分摊基础指标总数xcdr020=标准工时SUM（xcbi203）
+  如果"分摊方式xcdr006"="标准机时"，则分摊基础指标总数xcdr020=标准机时SUM（xcbi204）
+  如果"分摊方式xcdr006"="实际工时"，则标准产能xcdr021=标准工时SUM（xcbi203）
+  如果"分摊方式xcdr006"="标准工时"，则标准产能xcdr021=标准工时SUM（xcbi203)
+  如果"分摊方式xcdr006"="实际机时"，则标准产能xcdr021=标准工时SUM（xcbi204)
+  如果"分摊方式xcdr006"="标准机时"，则标准产能xcdr021=标准工时SUM（xcbi204)
+
+4.计算分摊费用和单位成本   
+   4.1固定费用(xcdr102/xcdr112/xcdr122)=0
+   4.2闲置费用(xcdr103/xcdr113/xcdr123)
+        4.2.1标准产能等于0时,闲置费用=0
+        4.2.2若标准产能>0,“标准产能”<“分摊指标总数”,且固定制费>0,则“闲置费用”＝“固定费用”＊（（分摊指标总数－标准产能）／分摊指标总数）
+         4.2.3若“标准产能”>“分摊指标总数”,则闲置费用=0
+   4.3分摊金额(xcdr104/xcdr114/xcdr124)=费用总额(xcdr101/xcdr111/xcdr121)-闲置费用(xcdr103/xcdr113/xcdr123)
+   4.4单位成本(xcdr105/xcdr115/xcdr125)=分摊金额(xcdr104/xcdr114/xcdr124)/分摊基础指标总数(xcdr020)
+
+5.其他字段给值逻辑 
+  5.1制费类别(xcdr010)='2.变动'
+  5.2会计科目(xcdr011)=' '
+   2.3
+
+二,采用工艺成本的判断，如果采用了工艺成本,
+1)  删除旧资料
+  根据"账套xcbjld"、"成本计算类型xcbj001"和"成本年度xcbj002、期别xcbj003"删除“工时费用统计作业axct202”的资料，档案是xcbj_t
+2).抓取费用金额
+   根据"账套xcbjld"、"成本年度xcbj002"、"期别xcbj003"、"成本中心xcbj004"、"主成本要素xcbj005"和“分摊方式xcbj006”到“人工制费收集作业axct201”，档案为xcbl_t抓取分摊成本SUM(xcbl100\xcbl110\xcbl120)存入费用总额(xcbj101\xcbj111\xcbj121)。
+3).抓取分摊指标数
+  根据"账套xcbjld"、"法人组织xcbjcomp"、"成本中心xcbj004"和"成本年度xcbj002、期别xcbj003","从工时收集档(xcbq_t/xcbr_t)抓取实际工时sum(xcbr201)/机时sum(xcbr202)和标准工时sum(xcbr203)/机时(xcbr204).
+  如果"分摊方式xcbj006"="实际工时"，则分摊基础指标总数xcbj020=实际工时SUM（xcbr201）
+  如果"分摊方式xcbj006"="实际机时"，则分摊基础指标总数xcbj020=实际机时SUM（xcbr202）
+  如果"分摊方式xcbj006"="标准工时"，则分摊基础指标总数xcbj020=标准工时SUM（xcbr203）
+  如果"分摊方式xcbj006"="标准机时"，则分摊基础指标总数xcbj020=标准机时SUM（xcbr204）
+  如果"分摊方式xcbj006"="实际工时"，则标准产能xcbj021=标准工时SUM（xcbr203）
+  如果"分摊方式xcbj006"="标准工时"，则标准产能xcbj021=标准工时SUM（xcbr203)
+  如果"分摊方式xcbj006"="实际机时"，则标准产能xcbj021=标准工时SUM（xcbr204)
+  如果"分摊方式xcbj006"="标准机时"，则标准产能xcbj021=标准工时SUM（xcbr204)
+4.计算分摊费用和单位成本   
+   4.1固定费用(xcbj102/xcbj112/xcbj122)=0
+   4.2闲置费用(xcbj103/xcbj113/xcbj123)
+        4.2.1标准产能等于0时,闲置费用=0
+        4.2.2若标准产能>0,“标准产能”<“分摊指标总数”,且固定制费>0,则“闲置费用”＝“固定费用”＊（（分摊指标总数－标准产能）／分摊指标总数）
+         4.2.3若“标准产能”>“分摊指标总数”,则闲置费用=0
+   4.3分摊金额(xcbj104/xcbj114/xcbj124)=费用总额(xcbj101/xcbj111/xcbj121)-闲置费用(xcbj103/xcbj113/xcbj123)
+   4.4单位成本(xcbj105/xcbj115/xcbj125)=分摊金额(xcbj104/xcbj114/xcbj124)/分摊基础指标总数(xcbj020)
+
+5.其他字段给值逻辑 
+  5.1制费类别(xcbj010)='2.变动'
+  5.2会计科目(xcbj011)=' '
+
+三：工艺成本参数是否启用次要素：
+1.删除旧资料
+   根据"账套xcdrld"、"成本计算类型xcdr001"和"成本年度xcdr002、期别xcdr003"删除“工时费用成本次要素统计作业axct212”的资料，档案是xcdr_t
+
+2.抓取费用金额
+   根据"账套xcdrld"、"成本年度xcdr002"、"期别xcdr003"、"成本中心xcdr004"、"成本次要素xcdr005"和“分摊方式xcdr006”到“人工制费收集作业axct201”，档案为xcbl_t抓取分摊成本SUM(xcbl100\xcbl110\xcbl120)存入费用总额(xcdr101\xcdr111\xcdr121)。
+
+3.抓取分摊指标数
+  根据"账套xcdrld"、"法人组织xcdrcomp"、"成本中心xcdr004"和"成本年度xcdr002、期别xcdr003"从工时收集档(xcbq_t/xcbr_t)抓取实际工时sum(xcbr201)/机时sum(xcbr202)和标准工时sum(xcbr203)/机时(xcbr204).
+  如果"分摊方式xcdr006"="实际工时"，则分摊基础指标总数xcdr020=实际工时SUM（xcbr201）
+  如果"分摊方式xcdr006"="实际机时"，则分摊基础指标总数xcdr020=实际机时SUM（xcbr202）
+  如果"分摊方式xcdr006"="标准工时"，则分摊基础指标总数xcdr020=标准工时SUM（xcbr203）
+  如果"分摊方式xcdr006"="标准机时"，则分摊基础指标总数xcdr020=标准机时SUM（xcbr204）
+  如果"分摊方式xcdr006"="实际工时"，则标准产能xcdr021=标准工时SUM（xcbr203）
+  如果"分摊方式xcdr006"="标准工时"，则标准产能xcdr021=标准工时SUM（xcbr203)
+  如果"分摊方式xcdr006"="实际机时"，则标准产能xcdr021=标准工时SUM（xcbr204)
+  如果"分摊方式xcdr006"="标准机时"，则标准产能xcdr021=标准工时SUM（xcbr204)
+
+4.计算分摊费用和单位成本   
+   4.1固定费用(xcdr102/xcdr112/xcdr122)=0
+   4.2闲置费用(xcdr103/xcdr113/xcdr123)
+        4.2.1标准产能等于0时,闲置费用=0
+        4.2.2若标准产能>0,“标准产能”<“分摊指标总数”,且固定制费>0,则“闲置费用”＝“固定费用”＊（（分摊指标总数－标准产能）／分摊指标总数）
+         4.2.3若“标准产能”>“分摊指标总数”,则闲置费用=0
+   4.3分摊金额(xcdr104/xcdr114/xcdr124)=费用总额(xcdr101/xcdr111/xcdr121)-闲置费用(xcdr103/xcdr113/xcdr123)
+   4.4单位成本(xcdr105/xcdr115/xcdr125)=分摊金额(xcdr104/xcdr114/xcdr124)/分摊基础指标总数(xcdr020)
+
+5.其他字段给值逻辑 
+  5.1制费类别(xcdr010)='2.变动'
+  5.2会计科目(xcdr011)=' '
+   2.3
+
+
+
+]]>
+  </all>
+  <field cite_std="N" name="xcbj001" ver="1" src="s" column="xcbj001" table="xcbj_t" attribute="" type="" req="N" i_zoom="q_xcat001" c_zoom="q_xcat001" chk_ref="v_xcat001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcbj002" ver="1" src="s" column="xcbj002" table="xcbj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcbj003" ver="1" src="s" column="xcbj003" table="xcbj_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcbjcomp" ver="1" src="s" column="xcbjcomp" table="xcbj_t" attribute="" type="" req="N" i_zoom="q_ooef001_2" c_zoom="q_ooef001_2" chk_ref="v_ooef001_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[法人組織 ：
+   ●欄位控管：
+     資料欄位:[T:人工制費收集維護檔].[C:法人組織]可Input及Display
+     允許空白:no 
+     預設值:            
+     校驗:.1.输入的资料必須存在于資產組織維護作業[afai010]中,若不存在,則報資料不存在的錯
+           2.輸入的資料必須在資產組織維護作業[afai010]中有效,若無效,則報資料無效的錯]]>
+  </field>
+  <field cite_std="N" name="xcbjld" ver="1" src="s" column="xcbjld" table="xcbj_t" attribute="" type="" req="N" i_zoom="q_authorised_ld" c_zoom="q_authorised_ld" chk_ref="v_glaald" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：帳套
+   ●欄位控管：
+     資料欄位:[T:人工制費收集維護檔].[C:帳套]可Input及Display
+     預設值:無
+     校驗:1.不允許空白: /Yes
+          2.key值,不可重複,若資料重複,則報資料重複的錯
+          3.輸入的資料需存在于[帳別資料檔]中,若不存在,則報資料不存在的錯
+          4.輸入的資料需在[帳別資料檔]中有效,若無效,則報資料無效的錯]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="xcbj001_desc" src="s" depend_field="xcbj001" correspon_key="xcbjent,xcbj001" ref_table="xcatl_t" ref_fk="xcatlent,xcatl001" ref_dlang="xcatl002" ref_rtn="xcatl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xcbjcomp_desc" src="s" depend_field="xcbjcomp" correspon_key="xcbjent,xcbjcomp" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xcbjld_desc" src="s" depend_field="xcbjld" correspon_key="xcbjent,xcbjld" ref_table="glaal_t" ref_fk="glaalent,glaalld" ref_dlang="glaal001" ref_rtn="glaal002" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="xcbj001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcbj002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcbj003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcbjcomp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcbjld" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="group_input" text="條件輸入" lstr=""/>
+    <sfield name="lbl_xcbjcomp" text="法人組織" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_xcbjld" text="帳別" lstr=""/>
+    <sfield name="lbl_glaal002" text="說明" lstr=""/>
+    <sfield name="lbl_xcbj001" text="成本計算類型" lstr=""/>
+    <sfield name="lbl_xcatl003" text="成本類型說明" lstr=""/>
+    <sfield name="lbl_xcbj002" text="成本年度/期別" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

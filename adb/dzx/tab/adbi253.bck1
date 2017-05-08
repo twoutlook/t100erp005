@@ -1,0 +1,115 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adbi253" module="adb" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02749" crtdt="2014-04-29 09:25:59" modid="06137" moddt="2015-01-22 15:45:09" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="站點基本資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="dbadstus,dbad001,dbadl003(chr500),dbadl004(chr500),dbadl005(chr500),dbad002,dbad002_desc(chr500),l_dbac002(chr500),l_dbac002_desc(chr500),dbad003"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="dbad001,dbadownid,dbadownid_desc(chr500),dbadowndp,dbadowndp_desc(chr500),dbadcrtid,dbadcrtid_desc(chr500),dbadcrtdp,dbadcrtdp_desc(chr500),dbadcrtdt,dbadmodid,dbadmodid_desc(chr500),dbadmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="adb" filename="adbi253" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="dbadstus,dbad001,dbadl003,dbadl004,dbadl005,dbad002,dbad003" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="dbadstus,dbad001,dbadl003,dbadl004,dbadl005,dbad002,dbad003"/>
+      <construct id="body" page="2" field="dbadownid,dbadowndp,dbadcrtid,dbadcrtdp,dbadcrtdt,dbadmodid,dbadmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="dbadstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="dbad001">
+        <controlp form="q_dbad001" state="c"/>
+      </column>
+      <column id="dbadl003"/>
+      <column id="dbadl004"/>
+      <column id="dbadl005"/>
+      <column id="dbad002">
+        <after>
+          <check chkid="v_dbac001" id="isExist"/>
+          <reference field="dbad002_desc" ref_field="dbad_t.dbad002" map_field="dbadent,dbad002" ref_sql="SELECT dbacl003 FROM dbacl_t WHERE dbaclent=$varg_enterprise$var AND dbacl001=? AND dbacl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_dbac001_1" state="i"/>
+        <controlp form="q_dbac001" state="c"/>
+      </column>
+      <column id="dbad002_desc"/>
+      <column id="l_dbac002">
+        <after>
+          <reference field="l_dbac002_desc" ref_field="l_dbac002" map_field="dbadent,dbac002" ref_sql="SELECT dbabl003 FROM dbabl_t WHERE dbablent=$varg_enterprise$var AND dbabl001=? AND dbabl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_dbab001" state="c"/>
+      </column>
+      <column id="l_dbac002_desc"/>
+      <column id="dbad003"/>
+    </init>
+    <init id="body" page="2">
+      <column id="dbadownid">
+        <after>
+          <reference field="dbadownid_desc" ref_field="dbad_t.dbadownid" map_field="dbadownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="dbadownid_desc"/>
+      <column id="dbadowndp">
+        <after>
+          <reference field="dbadowndp_desc" ref_field="dbad_t.dbadowndp" map_field="dbadowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="dbadowndp_desc"/>
+      <column id="dbadcrtid">
+        <after>
+          <reference field="dbadcrtid_desc" ref_field="dbad_t.dbadcrtid" map_field="dbadcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="dbadcrtid_desc"/>
+      <column id="dbadcrtdp">
+        <after>
+          <reference field="dbadcrtdp_desc" ref_field="dbad_t.dbadcrtdp" map_field="dbadcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="dbadcrtdp_desc"/>
+      <column id="dbadcrtdt"/>
+      <column id="dbadmodid">
+        <after>
+          <reference field="dbadmodid_desc" ref_field="dbad_t.dbadmodid" map_field="dbadmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="dbadmodid_desc"/>
+      <column id="dbadmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="dbad_t" page="1,2" linked="" pk="dbad001">
+      <sql id="forupd_sql_detail" query="SELECT dbadstus,dbad001,&apos;&apos;,&apos;&apos;,&apos;&apos;,dbad002,&apos;&apos;,&apos;&apos;,&apos;&apos;,dbad003,&apos;&apos;,dbadownid,&apos;&apos;,dbadowndp,&apos;&apos;,dbadcrtid,&apos;&apos;,dbadcrtdp,&apos;&apos;,dbadcrtdt,dbadmodid,&apos;&apos;,dbadmoddt FROM dbad_t WHERE dbadent=? AND dbad001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT dbadstus,dbad001,&apos;&apos;,&apos;&apos;,&apos;&apos;,dbad002,&apos;&apos;,&apos;&apos;,&apos;&apos;,dbad003,&apos;&apos;,dbadownid,&apos;&apos;,dbadowndp,&apos;&apos;,dbadcrtid,&apos;&apos;,dbadcrtdp,&apos;&apos;,dbadcrtdt,dbadmodid,&apos;&apos;,dbadmoddt FROM dbad_t WHERE dbadent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="dbadl003,dbadl004,dbadl005" table="dbadl_t" fk="dbad001" pk="dbadl001,dbadl002" field="dbadl003,dbadl004,dbadl005"/>
+    </body>
+  </dataset>
+</assembly>
+

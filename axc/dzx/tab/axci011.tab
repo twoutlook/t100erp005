@@ -1,0 +1,139 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axci011" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="05426" crtdt="2015-04-24 14:43:50" modid="01727" moddt="2015-12-03 17:51:14" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="成本差異來源科目設定維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcanld,xcanld_desc(chr80),xcan001,xcanl003,xcan003,xcan003_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcan002,lbl_xcan002_desc(chr500),xcan004,xcan005,xcanstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcanownid,xcanownid_desc(chr500),xcanowndp,xcanowndp_desc(chr500),xcancrtid,xcancrtid_desc(chr500),xcancrtdp,xcancrtdp_desc(chr500),xcancrtdt,xcanmodid,xcanmodid_desc(chr500),xcanmoddt,xcancnfid,xcancnfid_desc(chr500),xcancnfdt,xcan002"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axci011" method="dialog">
+    <section id="input">
+      <input id="head" field="xcanld,xcan001,xcanl003,xcan003"/>
+      <input id="body" page="1" field="xcan002,lbl_xcan002_desc,xcan004,xcan005,xcanstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcanld,xcan001,xcanl003,xcan003"/>
+      <construct id="body" page="1" field="xcan002,lbl_xcan002_desc,xcan004,xcan005,xcanstus"/>
+      <construct id="body" page="2" field="xcanownid,xcanowndp,xcancrtid,xcancrtdp,xcancrtdt,xcanmodid,xcanmoddt,xcancnfid,xcancnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcanld,xcan001"/>
+      <set id="head" type="no_entry" field="xcanld,xcan001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcanld">
+        <after>
+          <check chkid="v_glaald" id="isExist"/>
+          <reference field="xcanld_desc" ref_field="xcan_t.xcanld" map_field="xcanent,xcanld" ref_sql="SELECT glaal003 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xcanld_desc"/>
+      <column id="xcan001">
+        <controlp form="q_xcan001" state="c"/>
+      </column>
+      <column id="xcanl003"/>
+      <column id="xcan003">
+        <after>
+          <reference field="xcan003_desc" ref_field="xcanld,xcan001" map_field="xcanld,xcan001" ref_sql="SELECT xcaol003 FROM xcaol_t WHERE xcaolent=$varg_enterprise$var AND xcaolld=? AND xcaol001=? AND xcaol002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcao001" state="i"/>
+        <controlp form="q_xcao001" state="c"/>
+      </column>
+      <column id="xcan003_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcan002">
+        <after/>
+        <controlp form="aglt310_04" state="i"/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="lbl_xcan002_desc"/>
+      <column id="xcan004" type="S" default="2"/>
+      <column id="xcan005" type="S" default="100"/>
+      <column id="xcanstus" scc="50" type="S" default="N">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="xcanownid">
+        <after>
+          <reference field="xcanownid_desc" ref_field="xcan_t.xcanownid" map_field="xcanownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcanownid_desc"/>
+      <column id="xcanowndp">
+        <after>
+          <reference field="xcanowndp_desc" ref_field="xcan_t.xcanowndp" map_field="xcanowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcanowndp_desc"/>
+      <column id="xcancrtid">
+        <after>
+          <reference field="xcancrtid_desc" ref_field="xcan_t.xcancrtid" map_field="xcancrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcancrtid_desc"/>
+      <column id="xcancrtdp">
+        <after>
+          <reference field="xcancrtdp_desc" ref_field="xcan_t.xcancrtdp" map_field="xcancrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcancrtdp_desc"/>
+      <column id="xcancrtdt"/>
+      <column id="xcanmodid">
+        <after>
+          <reference field="xcanmodid_desc" ref_field="xcan_t.xcanmodid" map_field="xcanmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcanmodid_desc"/>
+      <column id="xcanmoddt"/>
+      <column id="xcancnfid">
+        <after>
+          <reference field="xcancnfid_desc" ref_field="xcan_t.xcancnfid" map_field="xcancnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcancnfid_desc"/>
+      <column id="xcancnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcan_t" pk="xcanld,xcan001">
+      <sql id="forupd_sql" type="sql" query="SELECT xcanld,&apos;&apos;,xcan001,&apos;&apos;,xcan003,&apos;&apos; FROM xcan_t WHERE xcanent= ? AND xcanld=? AND xcan001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcanld,&apos;&apos;,xcan001,&apos;&apos;,xcan003,&apos;&apos; FROM xcan_t" order="xcanld,xcan001"/>
+      <sql id="append" type="lang" target="xcanl_t.xcanl003" table="xcanl_t" fk="xcanld,xcan001" pk="xcanlld,xcanl001,xcanl002" field="xcanl003"/>
+    </head>
+    <body id="xcan_t" page="1,2" linked="" pk="xcan002" fk="xcanld,xcan001">
+      <sql id="forupd_sql_detail" query="SELECT xcan002,&apos;&apos;,xcan004,xcan005,xcanstus,xcanownid,&apos;&apos;,xcanowndp,&apos;&apos;,xcancrtid,&apos;&apos;,xcancrtdp,&apos;&apos;,xcancrtdt,xcanmodid,&apos;&apos;,xcanmoddt,xcancnfid,&apos;&apos;,xcancnfdt,&apos;&apos; FROM xcan_t WHERE xcanent=? AND xcanld=? AND xcan001=? AND xcan002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcan002,&apos;&apos;,xcan004,xcan005,xcanstus,xcanownid,&apos;&apos;,xcanowndp,&apos;&apos;,xcancrtid,&apos;&apos;,xcancrtdp,&apos;&apos;,xcancrtdt,xcanmodid,&apos;&apos;,xcanmoddt,xcancnfid,&apos;&apos;,xcancnfdt,&apos;&apos; FROM xcan_t WHERE xcanent= ? AND xcanld=? AND xcan001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

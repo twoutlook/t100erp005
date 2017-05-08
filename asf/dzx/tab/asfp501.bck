@@ -1,0 +1,111 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asfp501" module="asf" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="01258" crtdt="2014-10-20 09:06:14" modid="01258" moddt="2014-10-20 17:33:57" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="工單生管取消結案批次作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr500),sfaadocno,sfaadocno_desc(chr500),sfaa003,sfaa057,sfaa010,sfaa010_desc(chr500),sfaa010_desc_1(chr500),sfaa020,sfaastus,sfaa012,sfaa013,sfaa013_desc(chr500),sfaa009,sfaa009_desc(chr500),sfaa017,sfaa017_desc(chr500),sfaa002,sfaa002_desc(chr500),sfaa046,sfaa047,sfaa048"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="selall_1"/>
+      <action id="re_query"/>
+      <action id="selnone_1"/>
+      <action id="cancel_closed"/>
+    </section>
+  </structure>
+  <form id="0" module="asf" filename="asfp501" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="sel,sfaadocno,sfaa003,sfaa057,sfaa010,sfaa020,sfaastus,sfaa012,sfaa013,sfaa009,sfaa017,sfaa002,sfaa046,sfaa047,sfaa048" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="sfaadocno,sfaa003,sfaa057,sfaa010,sfaa020,sfaastus,sfaa012,sfaa013,sfaa009,sfaa017,sfaa002,sfaa046,sfaa047,sfaa048"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel" type="S" default="N"/>
+      <column id="sfaadocno">
+        <after>
+          <reference field="sfaadocno_desc" ref_field="b_sfaadocno" map_field="b_sfaadocno" ref_sql="SELECT oobal004 FROM oobal_t WHERE oobalent=$varg_enterprise$var AND oobal001=&apos;31&apos; AND oobal002=? AND oobal003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooba002" state="i"/>
+        <controlp form="q_sfaadocno_1" state="c"/>
+      </column>
+      <column id="sfaadocno_desc"/>
+      <column id="sfaa003" def_scc="4007"/>
+      <column id="sfaa057" def_scc="4010"/>
+      <column id="sfaa010">
+        <after>
+          <reference field="sfaa010_desc" ref_field="sfaa_t.sfaa010" map_field="sfaa010" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001_9" state="i"/>
+        <controlp form="q_imaa001_9" state="c"/>
+      </column>
+      <column id="sfaa010_desc"/>
+      <column id="sfaa010_desc_1"/>
+      <column id="sfaa020"/>
+      <column id="sfaastus" scc="13" type="S" default="N">
+        <stus id="C" pic="closed"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="F" pic="released"/>
+        <stus id="M" pic="costing_closed"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="sfaa012">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="sfaa013">
+        <after>
+          <reference field="sfaa013_desc" ref_field="sfaa_t.sfaa013" map_field="sfaa013" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001" state="i"/>
+        <controlp form="q_ooca001" state="c"/>
+      </column>
+      <column id="sfaa013_desc"/>
+      <column id="sfaa009">
+        <after>
+          <reference field="sfaa009_desc" ref_field="sfaa_t.sfaa009" map_field="sfaa009" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_6" state="i"/>
+        <controlp form="q_pmaa001_6" state="c"/>
+      </column>
+      <column id="sfaa009_desc"/>
+      <column id="sfaa017">
+        <after>
+          <reference field="sfaa017_desc" ref_field="sfaa_t.sfaa017" map_field="sfaa017" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_1" state="c"/>
+      </column>
+      <column id="sfaa017_desc"/>
+      <column id="sfaa002">
+        <after>
+          <reference field="sfaa002_desc" ref_field="sfaa_t.sfaa002" map_field="sfaa002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_2" state="i"/>
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="sfaa002_desc"/>
+      <column id="sfaa046"/>
+      <column id="sfaa047"/>
+      <column id="sfaa048"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="sfaa_t" page="1" linked="" pk="sfaadocno">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,sfaadocno,&apos;&apos;,sfaa003,sfaa057,sfaa010,&apos;&apos;,&apos;&apos;,sfaa020,sfaastus,sfaa012,sfaa013,&apos;&apos;,sfaa009,&apos;&apos;,sfaa017,&apos;&apos;,sfaa002,&apos;&apos;,sfaa046,sfaa047,sfaa048 FROM sfaa_t WHERE sfaaent=? AND sfaadocno=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,sfaadocno,&apos;&apos;,sfaa003,sfaa057,sfaa010,&apos;&apos;,&apos;&apos;,sfaa020,sfaastus,sfaa012,sfaa013,&apos;&apos;,sfaa009,&apos;&apos;,sfaa017,&apos;&apos;,sfaa002,&apos;&apos;,sfaa046,sfaa047,sfaa048 FROM sfaa_t WHERE sfaaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

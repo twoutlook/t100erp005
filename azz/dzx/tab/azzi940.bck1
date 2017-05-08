@@ -1,0 +1,110 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi940" module="azz" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="00845" crtdt="2015-10-07 15:49:23" modid="00824" moddt="2016-02-01 10:50:13" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="高頻排程執行作業設定">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzpgstus,gzpg001,gzpg002,gzpg003,gzpg004,gzpg005,gzpg010,gzpg006,gzpg007,gzpg008,gzpg009,gzpg011,gzpg012,gzpg013,gzpg014,gzpg015,gzpg016"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gzpg001,gzpgownid,gzpgownid_desc(chr500),gzpgowndp,gzpgowndp_desc(chr500),gzpgcrtid,gzpgcrtid_desc(chr500),gzpgcrtdp,gzpgcrtdp_desc(chr500),gzpgcrtdt,gzpgmodid,gzpgmodid_desc(chr500),gzpgmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi940" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="gzpgstus,gzpg001,gzpg002,gzpg003,gzpg004,gzpg005,gzpg010,gzpg006,gzpg007,gzpg008,gzpg009,gzpg011,gzpg012,gzpg013,gzpg014,gzpg015,gzpg016" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="gzpgstus,gzpg001,gzpg002,gzpg003,gzpg004,gzpg005,gzpg010,gzpg006,gzpg007,gzpg008,gzpg009,gzpg011,gzpg012,gzpg013,gzpg014,gzpg015,gzpg016"/>
+      <construct id="body" page="2" field="gzpgownid,gzpgowndp,gzpgcrtid,gzpgcrtdp,gzpgcrtdt,gzpgmodid,gzpgmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzpgstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="gzpg001" type="S" default="1"/>
+      <column id="gzpg002">
+        <controlp form="q_gzzz001_1" state="i"/>
+        <controlp form="q_gzzz001_1" state="c"/>
+      </column>
+      <column id="gzpg003" type="S" default="10"/>
+      <column id="gzpg004" type="S" default="00:00:00"/>
+      <column id="gzpg005" type="S" default="23:59:59"/>
+      <column id="gzpg010"/>
+      <column id="gzpg006">
+        <controlp form="q_ooef001_14" state="i"/>
+        <controlp form="q_ooef001_14" state="c"/>
+      </column>
+      <column id="gzpg007">
+        <controlp form="q_gzxa001_2" state="i"/>
+        <controlp form="q_gzxa001_2" state="c"/>
+      </column>
+      <column id="gzpg008"/>
+      <column id="gzpg009" type="S" default="N"/>
+      <column id="gzpg011" type="S" default="0"/>
+      <column id="gzpg012"/>
+      <column id="gzpg013"/>
+      <column id="gzpg014"/>
+      <column id="gzpg015"/>
+      <column id="gzpg016"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gzpgownid">
+        <after>
+          <reference field="gzpgownid_desc" ref_field="gzpg_t.gzpgownid" map_field="gzpgownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzpgownid_desc"/>
+      <column id="gzpgowndp">
+        <after>
+          <reference field="gzpgowndp_desc" ref_field="gzpg_t.gzpgowndp" map_field="gzpgowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzpgowndp_desc"/>
+      <column id="gzpgcrtid">
+        <after>
+          <reference field="gzpgcrtid_desc" ref_field="gzpg_t.gzpgcrtid" map_field="gzpgcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzpgcrtid_desc"/>
+      <column id="gzpgcrtdp">
+        <after>
+          <reference field="gzpgcrtdp_desc" ref_field="gzpg_t.gzpgcrtdp" map_field="gzpgcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzpgcrtdp_desc"/>
+      <column id="gzpgcrtdt"/>
+      <column id="gzpgmodid">
+        <after>
+          <reference field="gzpgmodid_desc" ref_field="gzpg_t.gzpgmodid" map_field="gzpgmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzpgmodid_desc"/>
+      <column id="gzpgmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="gzpg_t" page="1,2" linked="" pk="gzpg001">
+      <sql id="forupd_sql_detail" query="SELECT gzpgstus,gzpg001,gzpg002,gzpg003,gzpg004,gzpg005,gzpg010,gzpg006,gzpg007,gzpg008,gzpg009,gzpg011,gzpg012,gzpg013,gzpg014,gzpg015,gzpg016,&apos;&apos;,gzpgownid,&apos;&apos;,gzpgowndp,&apos;&apos;,gzpgcrtid,&apos;&apos;,gzpgcrtdp,&apos;&apos;,gzpgcrtdt,gzpgmodid,&apos;&apos;,gzpgmoddt FROM gzpg_t WHERE gzpgent=? AND gzpg001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzpgstus,gzpg001,gzpg002,gzpg003,gzpg004,gzpg005,gzpg010,gzpg006,gzpg007,gzpg008,gzpg009,gzpg011,gzpg012,gzpg013,gzpg014,gzpg015,gzpg016,&apos;&apos;,gzpgownid,&apos;&apos;,gzpgowndp,&apos;&apos;,gzpgcrtid,&apos;&apos;,gzpgcrtdp,&apos;&apos;,gzpgcrtdt,gzpgmodid,&apos;&apos;,gzpgmoddt FROM gzpg_t WHERE gzpgent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

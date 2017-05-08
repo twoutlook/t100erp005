@@ -1,0 +1,363 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="armt100" module="arm" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="05423" crtdt="2015-05-06 17:19:41" modid="05795" moddt="2017-02-23 16:56:26" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="RMA維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="rmaadocno,rmaadocno_desc(chr80),rmaa001,rmaa001_desc(chr80),rmaasite,rmaadocdt,rmaa008,rmaa002,rmaa002_desc(chr80),rmaa003,rmaa003_desc(chr80),rmaastus,rmaa004,rmaa005,rmaa006,rmaa007,rmaaownid,rmaaownid_desc(chr80),rmaaowndp,rmaaowndp_desc(chr80),rmaacrtid,rmaacrtid_desc(chr80),rmaacrtdp,rmaacrtdp_desc(chr80),rmaacrtdt,rmaamodid,rmaamodid_desc(chr80),rmaamoddt,rmaacnfid,rmaacnfid_desc(chr80),rmaacnfdt,rmaapstid,rmaapstid_desc(chr80),rmaapstdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="rmabseq,rmab018,rmab019,rmab020,rmab001,rmab002,rmab003,rmab004,rmab005,rmab006,rmab007,rmab008,rmab009,rmab009_desc(chr500),rmab009_desc_1(chr500),rmab010,rmab010_desc(chr500),rmab011,rmab011_desc(chr500),rmab021,rmab022,rmab012,rmab013,rmab014,rmab015,rmab016,rmab017,rmabsite"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="rmacseq,rmacseq1,l_rmab009(chr500),l_rmab009_desc(chr500),l_rmab009_desc_1(chr500),l_rmab010(chr500),l_rmab010_desc(chr500),l_rmab011(chr10),l_rmab011_desc(chr500),rmac001,rmac002,rmac002_desc(chr500),rmac003,rmac003_desc(chr500),rmac004,rmac005,rmac006,rmac007,rmac007_desc(chr500),rmacsite"/>
+      <var id="bs_field" value="rmaadocno,rmaadocdt,rmaa002,rmaa002_desc(chr80),rmaa003,rmaa003_desc(chr80),rmaa001,rmaa001_desc(chr80),rmaa004,rmaa005,rmaa006,rmaasite" pk="rmaadocno" order=""/>
+      <bs_reference field="rmaa002_desc" ref_field="rmaa002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="rmaa003_desc" ref_field="rmaa003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="rmaa001_desc" ref_field="rmaa001" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="count_batch"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="count"/>
+      <action id="query" type="standard"/>
+      <action id="prog_rmaa002" prog="cl_user_contact(&quot;aooi130&quot;," parameter="&quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;)"/>
+      <action id="prog_rmaa005" prog="axmt540" parameter="rmaa005"/>
+      <action id="prog_rmaa006" prog="axmt500" parameter="rmaa006"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="s_lot_sel1"/>
+      <action id="s_lot_ins"/>
+    </section>
+    <section id="detail_show" page="2">
+      <action id="s_lot_sel"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="s_lot_sel1"/>
+      <action id="s_lot_ins"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="s_lot_sel"/>
+    </section>
+  </structure>
+  <form id="0" module="arm" filename="armt100" method="dialog">
+    <section id="input">
+      <input id="head" field="rmaadocno,rmaa001,rmaasite,rmaadocdt,rmaa008,rmaa002,rmaa003,rmaastus,rmaa004,rmaa005,rmaa007"/>
+      <input id="body" page="1" field="rmabseq,rmab018,rmab001,rmab002,rmab003,rmab004,rmab009,rmab010,rmab011,rmab021,rmab022,rmab012,rmab017,rmabsite" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="rmaadocno,rmaa001,rmaasite,rmaadocdt,rmaa008,rmaa002,rmaa003,rmaastus,rmaa004,rmaa005,rmaa006,rmaa007,rmaaownid,rmaaowndp,rmaacrtid,rmaacrtdp,rmaacrtdt,rmaamodid,rmaamoddt,rmaacnfid,rmaacnfdt,rmaapstid,rmaapstdt"/>
+      <construct id="body" page="1" field="rmabseq,rmab018,rmab019,rmab020,rmab001,rmab002,rmab003,rmab004,rmab005,rmab006,rmab007,rmab008,rmab009,rmab010,rmab011,rmab021,rmab022,rmab012,rmab013,rmab014,rmab015,rmab016,rmab017,rmabsite"/>
+      <construct id="body" page="2" field="rmacseq,rmacseq1,l_rmab009,l_rmab010,l_rmab011,rmac001,rmac002,rmac003,rmac004,rmac005,rmac006,rmac007,rmacsite"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="rmaadocno"/>
+      <set id="head" type="no_entry" field="rmaadocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="rmaadocno">
+        <after/>
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_rmaadocno" state="c"/>
+      </column>
+      <column id="rmaadocno_desc"/>
+      <column id="rmaa001">
+        <after>
+          <check chkid="v_pmaa001_7" id="isExist"/>
+          <reference field="rmaa001_desc" ref_field="rmaa_t.rmaa001" map_field="rmaa001" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_6" state="i"/>
+        <controlp form="q_pmaa001_6" state="c"/>
+      </column>
+      <column id="rmaa001_desc"/>
+      <column id="rmaasite"/>
+      <column id="rmaadocdt"/>
+      <column id="rmaa008"/>
+      <column id="rmaa002">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="rmaa002_desc" ref_field="rmaa_t.rmaa002" map_field="rmaa002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rmaa002_desc"/>
+      <column id="rmaa003">
+        <after>
+          <check chkid="v_ooea001_3" id="isExist"/>
+          <reference field="rmaa003_desc" ref_field="rmaa_t.rmaa003" map_field="rmaa003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooea001_3" state="i"/>
+        <controlp form="q_ooea001_3" state="c"/>
+      </column>
+      <column id="rmaa003_desc"/>
+      <column id="rmaastus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="S" pic="posted"/>
+        <stus id="Z" pic="unposted"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="rmaa004">
+        <controlp form="q_xmfodocno" state="i"/>
+        <controlp form="q_xmfodocno" state="c"/>
+      </column>
+      <column id="rmaa005">
+        <after>
+          <check chkid="v_xmdkdocno_6" id="isExist"/>
+        </after>
+        <controlp form="q_xmdkdocno_3" state="i"/>
+        <controlp form="q_xmdkdocno_3" state="c"/>
+      </column>
+      <column id="rmaa006">
+        <controlp form="q_xmdl003_2" state="c"/>
+      </column>
+      <column id="rmaa007"/>
+      <column id="rmaaownid">
+        <after>
+          <reference field="rmaaownid_desc" ref_field="rmaa_t.rmaaownid" map_field="rmaaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rmaaownid_desc"/>
+      <column id="rmaaowndp">
+        <after>
+          <reference field="rmaaowndp_desc" ref_field="rmaa_t.rmaaowndp" map_field="rmaaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rmaaowndp_desc"/>
+      <column id="rmaacrtid">
+        <after>
+          <reference field="rmaacrtid_desc" ref_field="rmaa_t.rmaacrtid" map_field="rmaacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rmaacrtid_desc"/>
+      <column id="rmaacrtdp">
+        <after>
+          <reference field="rmaacrtdp_desc" ref_field="rmaa_t.rmaacrtdp" map_field="rmaacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rmaacrtdp_desc"/>
+      <column id="rmaacrtdt"/>
+      <column id="rmaamodid">
+        <after>
+          <reference field="rmaamodid_desc" ref_field="rmaa_t.rmaamodid" map_field="rmaamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rmaamodid_desc"/>
+      <column id="rmaamoddt"/>
+      <column id="rmaacnfid">
+        <after>
+          <reference field="rmaacnfid_desc" ref_field="rmaa_t.rmaacnfid" map_field="rmaacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rmaacnfid_desc"/>
+      <column id="rmaacnfdt"/>
+      <column id="rmaapstid">
+        <after>
+          <reference field="rmaapstid_desc" ref_field="rmaa_t.rmaapstid" map_field="rmaapstid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rmaapstid_desc"/>
+      <column id="rmaapstdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="rmabseq">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rmab018" type="S" default="0">
+        <controlp form="q_inao009" state="i"/>
+        <controlp form="q_inao009" state="c"/>
+      </column>
+      <column id="rmab019"/>
+      <column id="rmab020"/>
+      <column id="rmab001">
+        <controlp form="q_xmfodocno" state="i"/>
+        <controlp form="q_xmfodocno" state="c"/>
+      </column>
+      <column id="rmab002"/>
+      <column id="rmab003">
+        <after>
+          <check chkid="v_xmdkdocno_1" id="isExist"/>
+        </after>
+        <controlp form="q_xmdldocno" state="i"/>
+        <controlp form="q_xmdldocno" state="c"/>
+      </column>
+      <column id="rmab004">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rmab005">
+        <controlp form="q_xmdadocno_2" state="c"/>
+      </column>
+      <column id="rmab006">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rmab007">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rmab008"/>
+      <column id="rmab009">
+        <after>
+          <check chkid="v_imaf001_1" id="isExist"/>
+          <reference field="rmab009_desc" ref_field="rmab_t.rmab009" map_field="rmab009" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001_15" state="i"/>
+        <controlp form="q_imaf001_15" state="c"/>
+      </column>
+      <column id="rmab009_desc"/>
+      <column id="rmab009_desc_1"/>
+      <column id="rmab010">
+        <after/>
+        <controlp form="q_xmdl009" state="c"/>
+      </column>
+      <column id="rmab010_desc"/>
+      <column id="rmab011">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="rmab011_desc" ref_field="rmab_t.rmab011" map_field="rmab011" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="rmab011_desc"/>
+      <column id="rmab021"/>
+      <column id="rmab022"/>
+      <column id="rmab012" type="S" default="0">
+        <after>
+          <check id="range" bt="1" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rmab013" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rmab014" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rmab015" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rmab016" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rmab017"/>
+      <column id="rmabsite"/>
+    </init>
+    <init id="body" page="2">
+      <column id="rmacseq">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rmacseq1">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="l_rmab009">
+        <after>
+          <reference field="l_rmab009_desc" ref_field="l_rmab009" map_field="rmab009" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001_15" state="c"/>
+      </column>
+      <column id="l_rmab009_desc"/>
+      <column id="l_rmab009_desc_1"/>
+      <column id="l_rmab010">
+        <after/>
+        <controlp form="q_xmdl009" state="c"/>
+      </column>
+      <column id="l_rmab010_desc"/>
+      <column id="l_rmab011">
+        <after>
+          <reference field="l_rmab011_desc" ref_field="l_rmab011" map_field="rmab011" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="l_rmab011_desc"/>
+      <column id="rmac001" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rmac002">
+        <after>
+          <check chkid="v_inaa001_12" id="isExist"/>
+          <reference field="rmac002_desc" ref_field="rmac_t.rmac002" map_field="rmac002" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inaa001_17" state="i"/>
+        <controlp form="q_inaa001_17" state="c"/>
+      </column>
+      <column id="rmac002_desc"/>
+      <column id="rmac003">
+        <after>
+          <check chkid="v_inab002_1" id="isExist"/>
+          <reference field="rmac003_desc" ref_field="rmacsite,rmac002,rmac003" map_field="rmacsite,rmac002,rmac003" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inabsite=? AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inab002_13" state="i"/>
+        <controlp form="q_inab002_5" state="c"/>
+      </column>
+      <column id="rmac003_desc"/>
+      <column id="rmac004">
+        <after>
+          <check chkid="v_inad001_1" id="isExist"/>
+        </after>
+        <controlp form="q_inad003_2" state="i"/>
+        <controlp form="q_inad003" state="c"/>
+      </column>
+      <column id="rmac005">
+        <controlp form="q_rmac005" state="c"/>
+      </column>
+      <column id="rmac006"/>
+      <column id="rmac007">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="rmac007_desc" ref_field="rmac_t.rmac007" map_field="rmac007" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rmac007_desc"/>
+      <column id="rmacsite"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="rmaa_t" pk="rmaadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT rmaadocno,&apos;&apos;,rmaa001,&apos;&apos;,rmaasite,rmaadocdt,rmaa008,rmaa002,&apos;&apos;,rmaa003,&apos;&apos;,rmaastus,rmaa004,rmaa005,rmaa006,rmaa007,rmaaownid,&apos;&apos;,rmaaowndp,&apos;&apos;,rmaacrtid,&apos;&apos;,rmaacrtdp,&apos;&apos;,rmaacrtdt,rmaamodid,&apos;&apos;,rmaamoddt,rmaacnfid,&apos;&apos;,rmaacnfdt,rmaapstid,&apos;&apos;,rmaapstdt FROM rmaa_t WHERE rmaaent= ? AND rmaadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT rmaadocno,&apos;&apos;,rmaa001,&apos;&apos;,rmaasite,rmaadocdt,rmaa008,rmaa002,&apos;&apos;,rmaa003,&apos;&apos;,rmaastus,rmaa004,rmaa005,rmaa006,rmaa007,rmaaownid,&apos;&apos;,rmaaowndp,&apos;&apos;,rmaacrtid,&apos;&apos;,rmaacrtdp,&apos;&apos;,rmaacrtdt,rmaamodid,&apos;&apos;,rmaamoddt,rmaacnfid,&apos;&apos;,rmaacnfdt,rmaapstid,&apos;&apos;,rmaapstdt FROM rmaa_t" order="rmaadocno"/>
+    </head>
+    <body id="rmab_t" page="1" linked="" pk="rmabseq" fk="rmabdocno">
+      <sql id="forupd_sql_detail" query="SELECT rmabseq,rmab018,rmab019,rmab020,rmab001,rmab002,rmab003,rmab004,rmab005,rmab006,rmab007,rmab008,rmab009,&apos;&apos;,&apos;&apos;,rmab010,&apos;&apos;,rmab011,&apos;&apos;,rmab021,rmab022,rmab012,rmab013,rmab014,rmab015,rmab016,rmab017,rmabsite FROM rmab_t WHERE rmabent=? AND rmabdocno=? AND rmabseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rmabseq,rmab018,rmab019,rmab020,rmab001,rmab002,rmab003,rmab004,rmab005,rmab006,rmab007,rmab008,rmab009,&apos;&apos;,&apos;&apos;,rmab010,&apos;&apos;,rmab011,&apos;&apos;,rmab021,rmab022,rmab012,rmab013,rmab014,rmab015,rmab016,rmab017,rmabsite FROM rmab_t WHERE rmabent=? AND rmabdocno=?"/>
+    </body>
+    <body id="rmac_t" page="2" linked="" pk="rmacseq,rmacseq1" fk="rmacdocno">
+      <sql id="forupd_sql_detail" query="SELECT rmacseq,rmacseq1,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,rmac001,rmac002,&apos;&apos;,rmac003,&apos;&apos;,rmac004,rmac005,rmac006,rmac007,&apos;&apos;,rmacsite FROM rmac_t WHERE rmacent=? AND rmacdocno=? AND rmacseq=? AND rmacseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rmacseq,rmacseq1,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,rmac001,rmac002,&apos;&apos;,rmac003,&apos;&apos;,rmac004,rmac005,rmac006,rmac007,&apos;&apos;,rmacsite FROM rmac_t WHERE rmacent=? AND rmacdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,108 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asti205" module="ast" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="03247" crtdt="2014-06-23 16:33:41" modid="03247" moddt="2014-06-27 15:36:58" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="合約計算及條件基準維護作業(分銷)">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="stabstus,stab001,stabl003,stabl004,stab002,stab003,stab004,stab005,stab006,stab007,stab008,stab009,stab010,stab011"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="stab001,stabownid,stabownid_desc(chr500),stabowndp,stabowndp_desc(chr500),stabcrtid,stabcrtid_desc(chr500),stabcrtdp,stabcrtdp_desc(chr500),stabcrtdt,stabmodid,stabmodid_desc(chr500),stabmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="modify" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="asti205" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="stabstus,stab001,stabl003,stabl004,stab002,stab003,stab004,stab005,stab006,stab007,stab008,stab009,stab010,stab011" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="stabstus,stab001,stabl003,stabl004,stab002,stab003,stab004,stab005,stab006,stab007,stab008,stab009,stab010,stab011"/>
+      <construct id="body" page="2" field="stabownid,stabowndp,stabcrtid,stabcrtdp,stabcrtdt,stabmodid,stabmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="stabstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="stab001">
+        <controlp form="q_stab001" state="c"/>
+      </column>
+      <column id="stabl003"/>
+      <column id="stabl004"/>
+      <column id="stab002" type="S" default="N"/>
+      <column id="stab003" type="S" default="N"/>
+      <column id="stab004" type="S" default="N"/>
+      <column id="stab005" type="S" default="N"/>
+      <column id="stab006" type="S" default="N"/>
+      <column id="stab007" type="S" default="N"/>
+      <column id="stab008" type="S" default="N"/>
+      <column id="stab009" type="S" default="N"/>
+      <column id="stab010" type="S" default="N"/>
+      <column id="stab011"/>
+    </init>
+    <init id="body" page="2">
+      <column id="stabownid">
+        <after>
+          <reference field="stabownid_desc" ref_field="stab_t.stabownid" map_field="stabownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stabownid_desc"/>
+      <column id="stabowndp">
+        <after>
+          <reference field="stabowndp_desc" ref_field="stab_t.stabowndp" map_field="stabowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="stabowndp_desc"/>
+      <column id="stabcrtid">
+        <after>
+          <reference field="stabcrtid_desc" ref_field="stab_t.stabcrtid" map_field="stabcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stabcrtid_desc"/>
+      <column id="stabcrtdp">
+        <after>
+          <reference field="stabcrtdp_desc" ref_field="stab_t.stabcrtdp" map_field="stabcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="stabcrtdp_desc"/>
+      <column id="stabcrtdt"/>
+      <column id="stabmodid">
+        <after>
+          <reference field="stabmodid_desc" ref_field="stab_t.stabmodid" map_field="stabmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stabmodid_desc"/>
+      <column id="stabmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="stab_t" page="1,2" linked="" pk="stab001">
+      <sql id="forupd_sql_detail" query="SELECT stabstus,stab001,&apos;&apos;,&apos;&apos;,stab002,stab003,stab004,stab005,stab006,stab007,stab008,stab009,stab010,stab011,&apos;&apos;,stabownid,&apos;&apos;,stabowndp,&apos;&apos;,stabcrtid,&apos;&apos;,stabcrtdp,&apos;&apos;,stabcrtdt,stabmodid,&apos;&apos;,stabmoddt FROM stab_t WHERE stabent=? AND stab001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT stabstus,stab001,&apos;&apos;,&apos;&apos;,stab002,stab003,stab004,stab005,stab006,stab007,stab008,stab009,stab010,stab011,&apos;&apos;,stabownid,&apos;&apos;,stabowndp,&apos;&apos;,stabcrtid,&apos;&apos;,stabcrtdp,&apos;&apos;,stabcrtdt,stabmodid,&apos;&apos;,stabmoddt FROM stab_t WHERE stabent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="stabl_t.stabl003,stabl_t.stabl004" table="stabl_t" fk="stab001" pk="stabl001,stabl002" field="stabl003,stabl004"/>
+    </body>
+  </dataset>
+</assembly>
+

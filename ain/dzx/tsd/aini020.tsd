@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aini020" std_prog="aini020" erpver="1.0" ver="1" module="AIN" booking="Y" class="i" template="Q002_00" env="s" zone="t10dev">
+  <other>
+    <code_template value="Q" status=""/>
+    <free_style value="Y" status=""/>
+  </other>
+  <toolbar items="delete,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="inad_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="inae_t" main="N" head="N" pk="inaeent,inae001,inaesite,inae002,inae003,inae004" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="inag_t" main="N" head="N" pk="inagent,inagsite,inag001,inag002,inag003,inag004,inag005,inag006,inag007" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail3" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="inaj_t" main="N" head="N" pk="inajent,inajsite,inaj001,inaj002,inaj003,inaj004" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail4" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 提供修改批號/製造批序號庫存有效日期及備註修改
+標準作業功能：報表/詳細資料/查詢/篩選/條件查詢/條件儲存/說明/離開/重新整理
+作業類型：查詢作業
+輸入模式：列表模式-Q001_00
+作業資料來源(Detail)：inag_t,inai_t,inad_t,inae_t
+
+補充說明：原"庫存明細檔(inag_t)"中的有效日期(inag018)"及"備註(inag022)"移除，相關程式一併改抓取"料件批號資料檔(inad_t)"相同欄位資料
+
+批號明細資料
+1.此單身除有效日期、備註欄位外，其餘欄位僅顯示不可維護
+2.依查詢條件抓取"料件批號資料檔(inad_t)"符合資料且有庫存者(inag008>0)顯示
+ 
+製造批序號資料
+1.此單身除有效日期、備註欄位外，其餘欄位僅顯示不可維護
+2.依查詢條件抓取"料件製造批序號資料檔(inae_t)"符合資料顯示符合資料且有庫存者(inai010>0)顯示
+
+庫存明細資料
+1.此單身僅顯示不可維護，資料與單身一連動
+2.單身一為批號明細資料時，批號、製造日期欄位不可視
+  資料抓取"庫存明細檔(inag_t)" 料號 = 單身一.料號，產品特徵 = 單身一.產品特徵，批號 = 單身一.批號 符合資料且有庫存者(inag008>0)顯示
+3.單身一為製造批序號資料時，
+  資料抓取"庫存明細檔(inag_t)"及"製造批序號庫存明細檔(inai_t) 料號 = 單身一.料號，產品特徵 = 單身一.產品特徵，
+                                                              製造批號 = 單身一.製造批號，製造序號 = 單身一.製造序號 符合資料且有庫存者(inai010>0)顯示
+
+單據異動資料
+1.此單身僅顯示不可維護，資料與單身一連動
+2.單身一為批號明細資料時，
+  資料抓取"庫存交易明細檔(inaj_t)" 料號 = 單身一.料號，產品特徵 = 單身一.產品特徵，批號 = 單身一.批號 符合資料顯示
+3.單身一為製造批序號資料時，
+  資料抓取"庫存交易明細檔(inaj_t)"及"製造批序號庫存交易明細檔(inal_t) 料號 = 單身一.料號，產品特徵 = 單身一.產品特徵，
+                                                              製造批號 = 單身一.製造批號，製造序號 = 單身一.製造序號 符合資料顯示]]>
+  </all>
+  <field cite_std="N" name="imaa_t.imaa009" ver="1" src="s" column="imaa009" table="imaa_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="q_rtax001" c_zoom="q_rtax001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inaa015" ver="1" src="s" column="inaa015" table="inaa_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inad001" ver="1" src="s" column="inad001" table="inad_t" attribute="C301" type="varchar2(40)" req="N" i_zoom="q_imaf001_2" c_zoom="q_imaf001_2" chk_ref="v_imaf001_1" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inad001m" ver="1" src="s" column="inad001" table="inad_t" attribute="C301" type="varchar2(40)" req="N" i_zoom="" c_zoom="q_imaf001_2" chk_ref="v_imaf001_1" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inad002" ver="1" src="s" column="inad002" table="inad_t" attribute="C508" type="varchar2(256)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inad002m" ver="1" src="s" column="inad002" table="inad_t" attribute="C508" type="varchar2(256)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inad003" ver="1" src="s" column="inad003" table="inad_t" attribute="C304" type="varchar2(30)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inad003m" ver="1" src="s" column="inad003" table="inad_t" attribute="C304" type="varchar2(30)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inad011" ver="1" src="s" column="inad011" table="inad_t" attribute="D001" type="date()" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inad011m" ver="1" src="s" column="inad011" table="inad_t" attribute="D001" type="date()" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inad012" ver="1" src="s" column="inad012" table="inad_t" attribute="C105" type="varchar2(255)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inae001" ver="1" src="s" column="inae001" table="inae_t" attribute="C301" type="varchar2(40)" req="N" i_zoom="q_imaf001_2" c_zoom="q_imaf001_2" chk_ref="v_imaf001_1" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inae002" ver="1" src="s" column="inae002" table="inae_t" attribute="C508" type="varchar2(256)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inae003" ver="1" src="s" column="inae003" table="inae_t" attribute="C304" type="varchar2(30)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inae003m" ver="1" src="s" column="inae003" table="inae_t" attribute="C304" type="varchar2(30)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inae004" ver="1" src="s" column="inae004" table="inae_t" attribute="C304" type="varchar2(30)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inae004m" ver="1" src="s" column="inae004" table="inae_t" attribute="C304" type="varchar2(30)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inae011" ver="1" src="s" column="inae011" table="inae_t" attribute="D001" type="date()" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inae030" ver="1" src="s" column="inae030" table="inae_t" attribute="C105" type="varchar2(255)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inag003" ver="1" src="s" column="inag003" table="inag_t" attribute="C305" type="varchar2(30)" req="Y" i_zoom="" c_zoom="q_inag003" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inag004" ver="1" src="s" column="inag004" table="inag_t" attribute="C303" type="varchar2(10)" req="Y" i_zoom="" c_zoom="q_inag004_2" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inag005" ver="1" src="s" column="inag005" table="inag_t" attribute="C303" type="varchar2(10)" req="Y" i_zoom="" c_zoom="q_inag005_5" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inag006" ver="1" src="s" column="inag006" table="inag_t" attribute="C304" type="varchar2(30)" req="Y" i_zoom="" c_zoom="q_inag006_1" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inag007" ver="1" src="s" column="inag007" table="inag_t" attribute="C009" type="varchar2(10)" req="Y" i_zoom="" c_zoom="q_inag007" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inag009" ver="1" src="s" column="inag009" table="inag_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inag010" ver="1" src="s" column="inag010" table="inag_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inag011" ver="1" src="s" column="inag011" table="inag_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inag012" ver="1" src="s" column="inag012" table="inag_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inag014" ver="1" src="s" column="inag014" table="inag_t" attribute="D001" type="date()" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inag015" ver="1" src="s" column="inag015" table="inag_t" attribute="D001" type="date()" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inag016" ver="1" src="s" column="inag016" table="inag_t" attribute="D001" type="date()" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inag017" ver="1" src="s" column="inag017" table="inag_t" attribute="D001" type="date()" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inag019" ver="1" src="s" column="inag019" table="inag_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inag020" ver="1" src="s" column="inag020" table="inag_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inag026" ver="1" src="s" column="inag026" table="inag_t" attribute="D001" type="date()" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inaj001" ver="1" src="s" column="inaj001" table="inaj_t" attribute="C203" type="varchar2(20)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inaj002" ver="1" src="s" column="inaj002" table="inaj_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inaj003" ver="1" src="s" column="inaj003" table="inaj_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inaj004" ver="1" src="s" column="inaj004" table="inaj_t" attribute="N001" type="number(5,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inaj011" ver="1" src="s" column="inaj011" table="inaj_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inaj012" ver="1" src="s" column="inaj012" table="inaj_t" attribute="C009" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inaj016" ver="1" src="s" column="inaj016" table="inaj_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inaj017" ver="1" src="s" column="inaj017" table="inaj_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inaj018" ver="1" src="s" column="inaj018" table="inaj_t" attribute="C004" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inaj022" ver="1" src="s" column="inaj022" table="inaj_t" attribute="D001" type="date()" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inaj035" ver="1" src="s" column="inaj035" table="inaj_t" attribute="C809" type="varchar2(20)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="inad001_desc" src="s" depend_field="inad001" correspon_key="inad001" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="inad001_desc_1" src="s" depend_field="inad001" correspon_key="inad001" ref_table="imaal_t" ref_fk="" ref_dlang="" ref_rtn="" status=""/>
+    <rfield cite_std="N" ver="1" name="inae001_desc" src="s" depend_field="inae001" correspon_key="inae001" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="inae001_desc_1" src="s" depend_field="inae001" correspon_key="inae001" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="inag004_desc" src="s" depend_field="inag004" correspon_key="inag004" ref_table="inaa_t" ref_fk="inaa001" ref_dlang="" ref_rtn="inaa002" status=""/>
+    <rfield cite_std="N" ver="1" name="inag005_desc" src="s" depend_field="inag005" correspon_key="inag004,inag005" ref_table="inab_t" ref_fk="inab001,inab002" ref_dlang="" ref_rtn="inab003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="imaa_t.imaa009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inaa015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inad001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inad001m" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inad002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inad002m" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inad003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inad003m" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inad011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inad011m" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inad012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inae001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inae002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inae003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inae003m" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inae004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inae004m" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inae011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inae030" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inag003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inag004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inag005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inag006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inag007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inag009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inag010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inag011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inag012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inag014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inag015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inag016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inag017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inag019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inag020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inag026" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inaj001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inaj002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inaj003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inaj004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inaj011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inaj012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inaj016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inaj017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inaj018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inaj022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inaj035" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_master" text="查詢條件" lstr=""/>
+    <sfield name="lbl_imaa009" text="產品分類" lstr=""/>
+    <sfield name="lbl_inad002" text="產品特徵" lstr=""/>
+    <sfield name="lbl_inad003" text="批號" lstr=""/>
+    <sfield name="lbl_inae004" text="製造序號" lstr=""/>
+    <sfield name="lbl_inad001" text="料件編號" lstr=""/>
+    <sfield name="lbl_inad011" text="有效日期" lstr=""/>
+    <sfield name="lbl_inae003" text="製造批號" lstr=""/>
+    <sfield name="bpage_1" text="批號明細資料" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="lbl_inad012" text="備注" lstr=""/>
+    <sfield name="bpage_2" text="製造批序號資料" lstr=""/>
+    <sfield name="lbl_inae001" text="料件編號" lstr=""/>
+    <sfield name="lbl_inae002" text="產品特徵" lstr=""/>
+    <sfield name="lbl_inae011" text="有效日期" lstr=""/>
+    <sfield name="lbl_inae030" text="備註" lstr=""/>
+    <sfield name="aini020.page_1" text="庫存明細資料" lstr=""/>
+    <sfield name="lbl_inag004" text="庫位編號" lstr=""/>
+    <sfield name="lbl_inaa002" text="庫位名稱" lstr=""/>
+    <sfield name="lbl_inag005" text="儲位編號" lstr=""/>
+    <sfield name="lbl_inab003" text="儲位名稱" lstr=""/>
+    <sfield name="lbl_inag006" text="批號" lstr=""/>
+    <sfield name="lbl_inag003" text="庫存管理特徵" lstr=""/>
+    <sfield name="lbl_inag007" text="庫存單位" lstr=""/>
+    <sfield name="lbl_inag009" text="庫存量" lstr=""/>
+    <sfield name="lbl_inag017" text="製造日期" lstr=""/>
+    <sfield name="lbl_inag016" text="呆滯日期" lstr=""/>
+    <sfield name="lbl_inag015" text="最近異動日期" lstr=""/>
+    <sfield name="lbl_inag014" text="最近盤點日期" lstr=""/>
+    <sfield name="lbl_inag026" text="最後檢驗日期" lstr=""/>
+    <sfield name="lbl_inag012" text="成本庫否" lstr=""/>
+    <sfield name="lbl_inag011" text="MRP可用否" lstr=""/>
+    <sfield name="lbl_inag010" text="庫存可用否" lstr=""/>
+    <sfield name="lbl_inaa015" text="保稅否" lstr=""/>
+    <sfield name="lbl_inag019" text="留置否" lstr=""/>
+    <sfield name="lbl_inag020" text="留置原因" lstr=""/>
+    <sfield name="aini020.page_2" text="單據異動資料" lstr=""/>
+    <sfield name="lbl_inaj035" text="異動作業名稱" lstr=""/>
+    <sfield name="lbl_inaj004" text="出入庫碼" lstr=""/>
+    <sfield name="lbl_inaj001" text="單據編號" lstr=""/>
+    <sfield name="lbl_inaj022" text="單據扣帳日期" lstr=""/>
+    <sfield name="lbl_inaj018" text="異動廠商/客戶" lstr=""/>
+    <sfield name="lbl_inaj017" text="異動部門" lstr=""/>
+    <sfield name="lbl_inaj002" text="項次" lstr=""/>
+    <sfield name="lbl_inaj003" text="項序" lstr=""/>
+    <sfield name="lbl_inaj012" text="交易單位" lstr=""/>
+    <sfield name="lbl_inaj011" text="交易數量" lstr=""/>
+    <sfield name="lbl_inaj016" text="理由碼" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_collect_gzze001" text="訊息代碼" lstr=""/>
+    <sfield name="lbl_collect_gzze003" text="訊息內容" lstr=""/>
+    <sfield name="lbl_collect_gzze006" text="進階訊息" lstr=""/>
+    <sfield name="lbl_cl_err_s02_accept" text="確定" lstr=""/>
+    <sfield name="lbl_err_detail" text="進階訊息" lstr=""/>
+    <sfield name="lbl_suggest_exe" text="建議執行" lstr=""/>
+    <sfield name="lbl_err_contact" text="反應問題" lstr=""/>
+    <sfield name="lbl_cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="lbl_group_cl_err_s01" text="進階訊息" lstr=""/>
+    <sfield name="lbl_gzze001" text="訊息代碼:" lstr=""/>
+    <sfield name="lbl_gzze006" text="訊息內容:" lstr=""/>
+    <sfield name="lbl_sqlerrd2" text="SQL錯誤碼:" lstr=""/>
+    <sfield name="lbl_gzxp007_1" text="選擇分類" lstr=""/>
+    <sfield name="add_catalog" text="" lstr=""/>
+    <sfield name="lbl_gzxp007_2" text="自訂分類" lstr=""/>
+    <sfield name="lbl_gzxp008" text="追蹤說明" lstr=""/>
+    <sfield name="accept" text="確定" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="follow_list" text="待追蹤" lstr=""/>
+    <sfield name="signature_list" text="待簽核" lstr=""/>
+    <sfield name="announcement" text="作業公告" lstr=""/>
+    <sfield name="cancelfollow" text="取消追蹤" lstr=""/>
+    <sfield name="assigncatalog" text="指定分類" lstr=""/>
+    <sfield name="cl_user_overview_s01.lbl_name" text="" lstr=""/>
+    <sfield name="lbl_gzxp002" text="作業名稱" lstr=""/>
+    <sfield name="lbl_gzxp006" text="單據日期" lstr=""/>
+    <sfield name="add_favorite_catalog" text="新增目錄" lstr=""/>
+    <sfield name="modify_favorite_desc" text="修改" lstr=""/>
+    <sfield name="favorite_del" text="移除" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_rtax001" text="品類編號" lstr=""/>
+    <sfield name="lbl_rtaxl003" text="說明" lstr=""/>
+    <sfield name="lbl_imaf001" text="料件編號" lstr=""/>
+    <sfield name="lbl_imaa004" text="料件類別" lstr=""/>
+    <sfield name="lbl_imaa010" text="生命週期狀態" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" lstr=""/>
+    <sfield name="page_cl_doc_s01_page1" text="相關文件清單" lstr=""/>
+    <sfield name="lbl_loaa006" text="文件版本" lstr=""/>
+    <sfield name="lbl_loaa007" text="文件序號" lstr=""/>
+    <sfield name="lbl_loaa011" text="文件型態" lstr=""/>
+    <sfield name="lbl_loaa013" text="文件說明" lstr=""/>
+    <sfield name="lbl_loaa010" text="文件原始檔名" lstr=""/>
+    <sfield name="btn_upload" text="本地文件上傳" lstr=""/>
+    <sfield name="btn_crt_text" text="新建純文字紀錄" lstr=""/>
+    <sfield name="btn_doccrt_url" text="新建URL" lstr=""/>
+    <sfield name="btn_docopen" text="文件下載" lstr=""/>
+    <sfield name="btn_docupdate" text="文件資料修改" lstr=""/>
+    <sfield name="btn_docremove" text="文件刪除" lstr=""/>
+    <sfield name="btn_exit" text="關閉功能" lstr=""/>
+    <sfield name="page_cl_doc_s01_page2" text="文件基本資料" lstr=""/>
+    <sfield name="lbl_loaa004" text="用途類別" lstr=""/>
+    <sfield name="lbl_loaa005" text="預設顯示圖片" lstr=""/>
+    <sfield name="lbl_loaa012" text="文件位置(URL)" lstr=""/>
+    <sfield name="page_cl_doc_s01_page4" text="權限設定" lstr=""/>
+    <sfield name="group_read" text="讀取權限" lstr=""/>
+    <sfield name="group_modify" text="修改權限" lstr=""/>
+    <sfield name="page_cl_doc_s01_page3" text="異動資訊" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="btn_doccancel" text="放棄修改" lstr=""/>
+    <sfield name="btn_docmodify" text="資料存檔" lstr=""/>
+    <sfield name="cl_ask_s04_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s03_Test" text="測試" lstr=""/>
+    <sfield name="cl_ask_s03_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s01_Choice" text="選擇" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

@@ -1,0 +1,62 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aloq006" module="alo" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="00544" crtdt="2015-01-12 17:14:41" modid="00544" moddt="2015-01-13 11:33:24" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="查看ETL匯入記錄">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="logv001,logv001_desc(chr500),logv002,logv003(chr20)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="logv002,logv003,logv004,logv005,logv006,logv007,logv008,logv009"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="logv001(b_logv001),logv001_desc(b_logv001_desc),logv002(b_logv002),logv003(logv003)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="logv002_2(logv002_2),logv003(b_logv003),logv004(b_logv004),logv005(b_logv005),logv006(b_logv006),logv007(b_logv007),logv008(b_logv008),logv009(b_logv009)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="alo" filename="aloq006" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="logv001,logv002,logv003" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="logv003,logv004,logv005,logv006,logv007,logv008,logv009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="logv001(b_logv001),logv002(b_logv002)"/>
+      <construct id="body" page="2" field="logv003(b_logv003),logv004(b_logv004),logv005(b_logv005),logv006(b_logv006),logv007(b_logv007),logv008(b_logv008),logv009(b_logv009)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="logv001">
+        <after>
+          <reference field="logv001_desc" ref_field="logv001" map_field="logv001" ref_sql="SELECT gzaal003 FROM gzaal_t WHERE gzaal001=? AND gzaal002=$varg_lang$var"/>
+        </after>
+      </column>
+      <column id="logv001_desc"/>
+      <column id="logv002"/>
+      <column id="logv003"/>
+    </init>
+    <init id="body" page="2">
+      <column id="logv003"/>
+      <column id="logv004"/>
+      <column id="logv005"/>
+      <column id="logv006" type="S" default="1" def_scc="175"/>
+      <column id="logv007"/>
+      <column id="logv008"/>
+      <column id="logv009"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="logv_t" page="1,2" linked="" pk="logv001,logv002">
+      <sql id="b_fill_sql" query="SELECT logv001,&apos;&apos;,logv002,&apos;&apos;,&apos;&apos;,logv003,logv004,logv005,logv006,logv007,logv008,logv009 FROM logv_t WHERE logvent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

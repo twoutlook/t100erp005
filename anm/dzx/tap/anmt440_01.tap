@@ -1,0 +1,3335 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="anmt440_01" std_prog="anmt440_01" erpver="1.0" module="ANM" ver="3" env="s" zone="t10prd" booking="Y" type="S" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <point name="dialog.anmt440_01_display" order="1" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 顯示單身
+# Memo...........:
+# Usage..........: CALL anmt440_01_display()
+# Date & Author..: 2014/6/12 By wangrr
+# Modify.........:
+################################################################################
+DIALOG anmt440_01_display()
+   DEFINE la_param   RECORD
+          prog       STRING,
+          actionid   STRING,
+          background LIKE type_t.chr1,
+          param      DYNAMIC ARRAY OF STRING
+		  END RECORD
+   DEFINE ls_js      STRING
+   
+   DISPLAY ARRAY g_nmcl_d TO s_detail1_anmt440_01.* ATTRIBUTES(COUNT=g_rec_b) 
+      
+      BEFORE ROW
+#         CALL anmt440_01_idx_chk()
+         LET l_ac = DIALOG.getCurrentRow("s_detail1_anmt440_01")
+         LET g_detail_idx = l_ac
+               
+      BEFORE DISPLAY
+         CALL FGL_SET_ARR_CURR(g_detail_idx)
+         LET l_ac = DIALOG.getCurrentRow("s_detail1_anmt440_01")
+         LET g_current_page = 1
+#         CALL anmt440_01_idx_chk()
+      
+      #ON ACTION detail_qrystr
+      #   MENU "" ATTRIBUTE(STYLE="popup")
+      #      #add-point:ON ACTION detail_qrystr相關動作
+      #
+      #      #END add-point
+      #                     #應用 a43 樣板自動產生(Version:2)
+      #   ON ACTION prog_aapt420
+      #      LET g_action_choice="prog_aapt420"
+      #      IF cl_auth_chk_act("prog_aapt420") THEN
+      #         
+      #         #add-point:ON ACTION prog_aapt420
+      #   #應用 a41 樣板自動產生(Version:2)
+      #   #使用JSON格式組合參數與作業編號(串查)
+      #   INITIALIZE la_param.* TO NULL
+      #   LET la_param.prog     = 'aapt420'
+      #   LET la_param.param[1] = g_glaald
+      #   LET la_param.param[2] = g_nmcl_d[l_ac].nmcl001
+      #
+      #   LET ls_js = util.JSON.stringify(la_param)
+      #   CALL cl_cmdrun_wait(ls_js)
+      #
+      #
+      #
+      #         #END add-point
+      #         
+      #      END IF
+      #
+      #
+      #
+      #   END MENU
+
+      AFTER DISPLAY
+         LET g_nmcm2_d.* = g_nmcl_d.*
+      
+   END DISPLAY
+END DIALOG]]>
+  </point>
+  <point name="function.anmt440_01_amt_get" order="1" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 根據來源單號+項次帶出原幣、本幣金額
+# Memo...........:
+# Usage..........: CALL anmt440_01_amt_get()
+# Date & Author..: 2014/6/12 By wangrr
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt440_01_amt_get()
+   IF g_nmck001 = 'AP' THEN 
+      SELECT apde016,apde109,apde119,apde121,apde129,apde131,apde139
+        INTO g_nmcl_d[l_ac].nmcl003,g_nmcl_d[l_ac].nmcl103,g_nmcl_d[l_ac].nmcl113,
+             g_nmcl_d[l_ac].nmcl121,g_nmcl_d[l_ac].nmcl123,g_nmcl_d[l_ac].nmcl131,g_nmcl_d[l_ac].nmcl133
+        FROM apde_t
+       WHERE apdeent = g_enterprise
+         AND apdedocno = g_nmcl_d[l_ac].nmcl001
+         AND apdeseq = g_nmcl_d[l_ac].nmcl002
+         
+      DISPLAY BY NAME g_nmcl_d[l_ac].nmcl003,g_nmcl_d[l_ac].nmcl103,g_nmcl_d[l_ac].nmcl113,
+             g_nmcl_d[l_ac].nmcl121,g_nmcl_d[l_ac].nmcl123,g_nmcl_d[l_ac].nmcl131,g_nmcl_d[l_ac].nmcl133
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="dialog.anmt440_01_construct" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#單身查詢
+DIALOG anmt440_01_construct()
+   #單身根據table分拆construct
+      CONSTRUCT g_wc_source ON nmclseq,nmclorga,nmclorga_desc,nmcl001,nmcl002,nmcl003,nmcl103,nmcl113, 
+          nmcl121,nmcl123,nmcl131,nmcl133
+           FROM s_detail1_anmt440_01[1].nmclseq,s_detail1_anmt440_01[1].nmclorga,s_detail1_anmt440_01[1].nmclorga_desc,
+               s_detail1_anmt440_01[1].nmcl001,s_detail1_anmt440_01[1].nmcl002,s_detail1_anmt440_01[1].nmcl003,
+               s_detail1_anmt440_01[1].nmcl103,s_detail1_anmt440_01[1].nmcl113,s_detail1_anmt440_01[1].nmcl121, 
+               s_detail1_anmt440_01[1].nmcl123,s_detail1_anmt440_01[1].nmcl131,s_detail1_anmt440_01[1].nmcl133
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct
+
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+       #---------------------<  Detail: page1  >---------------------
+         #----<<nmclseq>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmclseq
+            #add-point:BEFORE FIELD nmclseq
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmclseq
+            
+            #add-point:AFTER FIELD nmclseq
+
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.nmclseq
+         ON ACTION controlp INFIELD nmclseq
+            #add-point:ON ACTION controlp INFIELD nmclseq
+
+            #END add-point
+ 
+         #----<<nmclorga>>----
+         #Ctrlp:construct.c.page1.nmclorga
+         ON ACTION controlp INFIELD nmclorga
+            #add-point:ON ACTION controlp INFIELD nmclorga
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooef001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmclorga  #顯示到畫面上
+            NEXT FIELD nmclorga                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmclorga
+            #add-point:BEFORE FIELD nmclorga
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmclorga
+            
+            #add-point:AFTER FIELD nmclorga
+
+            #END add-point
+            
+ 
+         #----<<nmclorga_desc>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmclorga_desc
+            #add-point:BEFORE FIELD nmclorga_desc
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmclorga_desc
+            
+            #add-point:AFTER FIELD nmclorga_desc
+
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.nmclorga_desc
+         ON ACTION controlp INFIELD nmclorga_desc
+            #add-point:ON ACTION controlp INFIELD nmclorga_desc
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooef001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmclorga_desc  #顯示到畫面上
+            NEXT FIELD nmclorga_desc                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #----<<nmcl001>>----
+         #Ctrlp:construct.c.page1.nmcl001
+         ON ACTION controlp INFIELD nmcl001
+            #add-point:ON ACTION controlp INFIELD nmcl001
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_apdadocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmcl001  #顯示到畫面上
+            NEXT FIELD nmcl001                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmcl001
+            #add-point:BEFORE FIELD nmcl001
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmcl001
+            
+            #add-point:AFTER FIELD nmcl001
+
+            #END add-point
+            
+ 
+         #----<<nmcl002>>----
+         #Ctrlp:construct.c.page1.nmcl002
+         ON ACTION controlp INFIELD nmcl002
+            #add-point:ON ACTION controlp INFIELD nmcl002
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmcl002
+            #add-point:BEFORE FIELD nmcl002
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmcl002
+            
+            #add-point:AFTER FIELD nmcl002
+
+            #END add-point
+            
+ 
+         #----<<nmcl003>>----
+         #Ctrlp:construct.c.page1.nmcl003
+         ON ACTION controlp INFIELD nmcl003
+            #add-point:ON ACTION controlp INFIELD nmcl003
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL anmt440_01_get_glaa()
+            LET g_qryparam.where=" glac001 = '",g_glaa004,"' AND  glac003 <>'1' AND glac006 = '1'"
+            CALL aglt310_04()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmcl003  #顯示到畫面上
+            NEXT FIELD nmcl003                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmcl003
+            #add-point:BEFORE FIELD nmcl003
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmcl003
+            
+            #add-point:AFTER FIELD nmcl003
+
+            #END add-point
+            
+ 
+         #----<<nmcl103>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmcl103
+            #add-point:BEFORE FIELD nmcl103
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmcl103
+            
+            #add-point:AFTER FIELD nmcl103
+
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.nmcl103
+         ON ACTION controlp INFIELD nmcl103
+            #add-point:ON ACTION controlp INFIELD nmcl103
+
+            #END add-point
+ 
+         #----<<nmcl113>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmcl113
+            #add-point:BEFORE FIELD nmcl113
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmcl113
+            
+            #add-point:AFTER FIELD nmcl113
+
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.nmcl113
+         ON ACTION controlp INFIELD nmcl113
+            #add-point:ON ACTION controlp INFIELD nmcl113
+
+            #END add-point
+ 
+         #----<<nmcl121>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmcl121
+            #add-point:BEFORE FIELD nmcl121
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmcl121
+            
+            #add-point:AFTER FIELD nmcl121
+
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.nmcl121
+         ON ACTION controlp INFIELD nmcl121
+            #add-point:ON ACTION controlp INFIELD nmcl121
+
+            #END add-point
+ 
+         #----<<nmcl123>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmcl123
+            #add-point:BEFORE FIELD nmcl123
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmcl123
+            
+            #add-point:AFTER FIELD nmcl123
+
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.nmcl123
+         ON ACTION controlp INFIELD nmcl123
+            #add-point:ON ACTION controlp INFIELD nmcl123
+
+            #END add-point
+ 
+         #----<<nmcl131>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmcl131
+            #add-point:BEFORE FIELD nmcl131
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmcl131
+            
+            #add-point:AFTER FIELD nmcl131
+
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.nmcl131
+         ON ACTION controlp INFIELD nmcl131
+            #add-point:ON ACTION controlp INFIELD nmcl131
+
+            #END add-point
+ 
+         #----<<nmcl133>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmcl133
+            #add-point:BEFORE FIELD nmcl133
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmcl133
+            
+            #add-point:AFTER FIELD nmcl133
+
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.nmcl133
+         ON ACTION controlp INFIELD nmcl133
+            #add-point:ON ACTION controlp INFIELD nmcl133
+
+            #END add-point
+ 
+   
+       
+      END CONSTRUCT
+END DIALOG]]>
+  </point>
+  <point name="function.anmt440_01_idx_chk" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 單身筆數變更
+# Memo...........:
+# Usage..........: CALL anmt440_01_idx_chk()
+# Date & Author..: 2014/6/12 By wangrr
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt440_01_idx_chk()
+   IF g_current_page = 1 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail1_anmt440_01")
+      IF g_detail_idx > g_nmcl_d.getLength() THEN
+         LET g_detail_idx = g_nmcl_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_nmcl_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_nmcl_d.getLength() TO FORMONLY.cnt
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="dialog.anmt440_01_input" order="3" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#新增修改单身
+DIALOG anmt440_01_input()
+   DEFINE l_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL  
+   DEFINE g_insert              LIKE type_t.chr5              #是否導到其他page
+   DEFINE l_insert              BOOLEAN
+   DEFINE l_cmd                 LIKE type_t.chr1
+   DEFINE l_n                   LIKE type_t.num5              #檢查重複用
+   DEFINE l_count               LIKE type_t.num5
+   DEFINE l_lock_sw             LIKE type_t.chr1              #單身鎖住否
+   DEFINE lb_reproduce          BOOLEAN
+   DEFINE li_reproduce          LIKE type_t.num5
+   DEFINE li_reproduce_target   LIKE type_t.num5
+   DEFINE l_origin_str          STRING           #2015/01/27 add by qiull
+   #150626-00011#1 add ------
+   DEFINE l_sum_nmcl103          LIKE nmcl_t.nmcl103
+   DEFINE l_sum_nmcl113          LIKE nmcl_t.nmcl113
+   DEFINE l_sum_nmcl123          LIKE nmcl_t.nmcl123
+   DEFINE l_sum_nmcl133          LIKE nmcl_t.nmcl133
+   #150626-00011#1 add end---
+   
+   
+   INPUT ARRAY g_nmcl_d FROM s_detail1_anmt440_01.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = g_detail_insert, 
+                  DELETE ROW = g_detail_delete,
+                  APPEND ROW = g_detail_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT         
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_nmcl_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL anmt440_01_b_fill()
+            LET g_rec_b = g_nmcl_d.getLength()
+            IF g_nmck001 = 'AP' THEN
+               EXIT DIALOG
+            END IF
+            IF g_nmck001 = 'XX' THEN
+               CALL cl_set_comp_required("nmcl001,nmcl002",FALSE)
+               CALL cl_set_comp_entry("nmcl001,nmcl002",FALSE)
+               CALL cl_set_comp_entry("nmcl003,nmcl103,nmcl113",TRUE)
+               CALL cl_set_comp_required("nmcl003,nmcl103,nmcl113",TRUE)
+            ELSE
+               CALL cl_set_comp_entry("nmcl001,nmcl002",TRUE)      
+               CALL cl_set_comp_required("nmcl001,nmcl002",TRUE)  
+               CALL cl_set_comp_entry("nmcl003,nmcl103,nmcl113",FALSE)
+               CALL cl_set_comp_required("nmcl003,nmcl103,nmcl113",FALSE)              
+            END IF
+            CALL anmt440_01_get_glaa() #獲取主帳套
+            #add-point:資料輸入前
+
+            LET l_forupd_sql = "SELECT nmckcomp,nmckdocno,nmck001,nmck005,nmck100 ",
+                               " FROM nmck_t WHERE nmckent= ? AND nmckcomp=? AND nmckdocno=? FOR UPDATE"
+            
+            LET l_forupd_sql = cl_sql_forupd(l_forupd_sql)                #轉換不同資料庫語法
+            DECLARE anmt440_01_cl CURSOR FROM l_forupd_sql                 # LOCK CURSOR
+            
+            LET l_forupd_sql = "SELECT nmclseq,nmclorga,'',nmcl001,nmcl002,nmcl003,'',nmcl103,nmcl113,nmcl121,nmcl123, 
+                nmcl131,nmcl133 FROM nmcl_t WHERE nmclent=? AND nmclcomp=? AND nmcldocno=? AND nmclseq=? FOR  
+                UPDATE"
+            LET l_forupd_sql = cl_sql_forupd(l_forupd_sql)
+            DECLARE anmt440_01_bcl CURSOR FROM l_forupd_sql
+            #end add-point
+         
+         BEFORE ROW
+            #add-point:modify段before row2
+
+            #end add-point              
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN anmt440_01_cl USING g_enterprise,g_nmckcomp,g_nmckdocno
+ 
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  STATUS
+               LET g_errparam.extend = "OPEN anmt440_01_cl:"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               CLOSE anmt440_01_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            FETCH anmt440_01_cl INTO g_nmckcomp,g_nmckdocno,g_nmck001,g_nmck005,g_nmck100
+            #資料被他人LOCK, 或是sql執行時出現錯誤
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "nmck_t"
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               CLOSE anmt440_01_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_nmcl_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND g_nmcl_d[l_ac].nmclseq IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_nmcl_d_t.* = g_nmcl_d[l_ac].*  #BACKUP
+               
+               #add-point:modify段after_set_entry_b
+
+               #end add-point  
+               
+               IF NOT anmt440_01_lock_b("nmcl_t","'1'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH anmt440_01_bcl INTO g_nmcl_d[l_ac].nmclseq,g_nmcl_d[l_ac].nmclorga,g_nmcl_d[l_ac].nmclorga_desc, 
+                      g_nmcl_d[l_ac].nmcl001,g_nmcl_d[l_ac].nmcl002,g_nmcl_d[l_ac].nmcl003,g_nmcl_d[l_ac].nmcl003_desc, 
+                      g_nmcl_d[l_ac].nmcl103,g_nmcl_d[l_ac].nmcl113,g_nmcl_d[l_ac].nmcl121,g_nmcl_d[l_ac].nmcl123, 
+                      g_nmcl_d[l_ac].nmcl131,g_nmcl_d[l_ac].nmcl133
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = g_nmcl_d_t.nmclseq
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET l_lock_sw = "Y"
+                  END IF
+                                    
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row
+            CALL anmt440_01_ref_b()
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+        
+         BEFORE INSERT
+            
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_nmcl_d[l_ac].* TO NULL 
+            
+            LET g_nmcl_d_t.* = g_nmcl_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+
+            #add-point:modify段after_set_entry_b
+            LET g_nmcl_d[l_ac].nmclorga = g_nmckcomp  #來源組織賦初始值
+            #end add-point
+
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_nmcl_d[li_reproduce_target].* = g_nmcl_d[li_reproduce].*
+ 
+               LET g_nmcl_d[li_reproduce_target].nmclseq = NULL
+ 
+            END IF
+            #公用欄位給值(單身)
+            
+            
+            #add-point:modify段before insert
+            IF l_cmd = 'a' THEN 
+               IF cl_null(g_nmcl_d[g_detail_idx].nmclseq) THEN 
+                  SELECT MAX(nmclseq) INTO g_nmcl_d[g_detail_idx].nmclseq
+                    FROM nmcl_t
+                   WHERE nmclent = g_enterprise
+                     AND nmclcomp = g_nmckcomp
+                     AND nmcldocno = g_nmckdocno
+                     
+                  IF cl_null(g_nmcl_d[g_detail_idx].nmclseq) THEN 
+                     LET g_nmcl_d[g_detail_idx].nmclseq = 1
+                  ELSE
+                     LET g_nmcl_d[g_detail_idx].nmclseq = g_nmcl_d[g_detail_idx].nmclseq + 1
+                  END IF
+               END IF
+            END IF
+            #end add-point  
+  
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+#               CANCEL INSERT
+            END IF
+               
+            #add-point:單身新增
+            
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM nmcl_t 
+             WHERE nmclent = g_enterprise AND nmclcomp = g_nmckcomp
+               AND nmcldocno = g_nmckdocno
+ 
+               AND nmclseq = g_nmcl_d[l_ac].nmclseq
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前
+
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_nmckcomp
+               LET gs_keys[2] = g_nmckdocno
+               LET gs_keys[3] = g_nmcl_d[g_detail_idx].nmclseq
+               CALL anmt440_01_insert_b('nmcl_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後
+
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               INITIALIZE g_nmcl_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+#               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "nmcl_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+  
+               CALL s_transaction_end('N','0')                    
+#               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL anmt440_01_b_fill()
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert
+
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' AND g_nmcl_d.getLength() < l_ac THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+               CALL g_nmcl_d.deleteElement(l_ac)
+               NEXT FIELD nmclseq
+            END IF
+         
+            IF g_nmcl_d[l_ac].nmclseq IS NOT NULL
+ 
+               THEN 
+               
+               IF NOT cl_ask_del_detail() THEN
+#                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  -263
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+#                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前
+
+               #end add-point 
+               
+               DELETE FROM nmcl_t
+                WHERE nmclent = g_enterprise AND nmclcomp = g_nmckcomp AND
+                                          nmcldocno = g_nmckdocno AND
+ 
+                      nmclseq = g_nmcl_d_t.nmclseq
+ 
+                  
+               #add-point:單身刪除中
+
+               #end add-point 
+               
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "nmcl_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+                  CALL s_transaction_end('N','0')
+#                  CANCEL DELETE   
+               ELSE
+                  LET g_rec_b = g_rec_b-1
+                  
+                  #add-point:單身刪除後
+
+                  #end add-point
+                  CALL s_transaction_end('Y','0')
+               END IF 
+               CLOSE anmt440_01_bcl
+               LET l_count = g_nmcl_d.getLength()
+            END IF 
+            
+                           INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_nmckcomp
+               LET gs_keys[2] = g_nmckdocno
+               LET gs_keys[3] = g_nmcl_d[g_detail_idx].nmclseq
+ 
+              
+         AFTER DELETE 
+            #add-point:單身刪除後2
+
+            #end add-point
+                           CALL anmt440_01_delete_b('nmcl_t',gs_keys,"'1'")
+ 
+         #---------------------<  Detail: page1  >---------------------
+         #----<<nmclseq>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmclseq
+            #add-point:BEFORE FIELD nmclseq
+            IF cl_null(g_nmcl_d[g_detail_idx].nmclseq) THEN 
+               SELECT MAX(nmclseq) INTO g_nmcl_d[g_detail_idx].nmclseq
+                 FROM nmcl_t
+                WHERE nmclent = g_enterprise
+                  AND nmclcomp = g_nmckcomp
+                  AND nmcldocno = g_nmckdocno
+                  
+               IF cl_null(g_nmcl_d[g_detail_idx].nmclseq) THEN 
+                  LET g_nmcl_d[g_detail_idx].nmclseq = 1
+               ELSE
+                  LET g_nmcl_d[g_detail_idx].nmclseq = g_nmcl_d[g_detail_idx].nmclseq + 1
+               END IF
+            END IF
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmclseq
+            
+            #add-point:AFTER FIELD nmclseq
+            #此段落由子樣板a05產生
+            IF  g_nmckcomp IS NOT NULL AND g_nmckdocno IS NOT NULL AND g_nmcl_d[g_detail_idx].nmclseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_nmckcomp != g_nmckcomp_o OR g_nmckdocno != g_nmckdocno_o OR g_nmcl_d[g_detail_idx].nmclseq != g_nmcl_d_t.nmclseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM nmcl_t WHERE "||"nmclent = '" ||g_enterprise|| "' AND "||"nmclcomp = '"||g_nmckcomp ||"' AND "|| "nmcldocno = '"||g_nmckdocno ||"' AND "|| "nmclseq = '"||g_nmcl_d[g_detail_idx].nmclseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE nmclseq
+            #add-point:ON CHANGE nmclseq
+
+            #END add-point
+ 
+         #----<<nmclorga>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD nmclorga
+            
+            #add-point:AFTER FIELD nmclorga
+            IF NOT cl_null(g_nmcl_d[l_ac].nmclorga) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_nmcl_d[l_ac].nmclorga
+               IF cl_chk_exist("v_ooef001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_nmcl_d[l_ac].nmclorga = g_nmcl_d_t.nmclorga
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmclorga
+            #add-point:BEFORE FIELD nmclorga
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE nmclorga
+            #add-point:ON CHANGE nmclorga
+
+            #END add-point
+ 
+         #----<<nmclorga_desc>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmclorga_desc
+            #add-point:BEFORE FIELD nmclorga_desc
+            LET g_nmcl_d[l_ac].nmclorga_desc = g_nmcl_d[l_ac].nmclorga
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmclorga_desc
+            
+            #add-point:AFTER FIELD nmclorga_desc
+            IF NOT cl_null(g_nmcl_d[l_ac].nmclorga_desc) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_nmcl_d[l_ac].nmclorga_desc
+               IF cl_chk_exist("v_ooef001") THEN
+                  LET g_nmcl_d[l_ac].nmclorga = g_nmcl_d[l_ac].nmclorga_desc
+                  #150626-00011#1 add ------
+                  LET l_n = 0
+                  SELECT COUNT(*) INTO l_n
+                    FROM ooef_t
+                   WHERE ooefent = g_enterprise
+                     AND ooef001 = g_nmcl_d[l_ac].nmclorga_desc
+                     AND ooef017 = g_nmckcomp
+                  IF cl_null(l_n) OR l_n=0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'ais-00023'
+                     LET g_errparam.extend = g_nmcl_d[l_ac].nmclorga_desc
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_nmcl_d[l_ac].nmclorga_desc = g_nmcl_d_t.nmclorga_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  #150626-00011#1 add end---
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_nmcl_d[l_ac].nmclorga = g_nmcl_d_t.nmclorga
+                  LET g_nmcl_d[l_ac].nmclorga_desc = g_nmcl_d_t.nmclorga_desc
+                  CALL anmt440_01_ref_b()
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            CALL anmt440_01_ref_b()
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE nmclorga_desc
+            #add-point:ON CHANGE nmclorga_desc
+
+            #END add-point
+ 
+         #----<<nmcl001>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD nmcl001
+            
+            #add-point:AFTER FIELD nmcl001
+            IF g_nmck001 = 'AP' THEN 
+                IF NOT cl_null(g_nmcl_d[l_ac].nmcl001) THEN 
+#此段落由子樣板a19產生
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_nmcl_d[l_ac].nmcl001
+                  LET g_chkparam.arg2 = g_glaald
+                     
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_apdadocno") THEN
+                     #檢查成功時後續處理
+                     #LET  = g_chkparam.return1
+                     #DISPLAY BY NAME 
+                     LET l_n = 0
+                     SELECT COUNT(*) INTO l_n
+                       FROM nmck_t,nmcl_t
+                      WHERE nmclent = g_enterprise
+                        AND nmckent = nmclent
+                        AND nmckcomp = nmclcomp
+                        AND nmckdocno = nmcldocno
+                        AND nmcl001 = g_nmcl_d[l_ac].nmcl001
+                        AND nmcl002 = g_nmcl_d[l_ac].nmcl002
+                        AND nmckstus <> 'X'
+                        AND nmckdocno <> g_nmckdocno 
+                        
+                     IF l_n > 0 THEN 
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'anm-00137'
+                        LET g_errparam.extend = g_nmcl_d[l_ac].nmcl001
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+
+                        LET g_nmcl_d[l_ac].nmcl001 = g_nmcl_d_t.nmcl001
+                        NEXT FIELD CURRENT
+                     END IF
+                        
+                     
+                     LET l_n = 0
+                     SELECT COUNT(*) INTO l_n
+                       FROM apda_t
+                       LEFT OUTER JOIN apde_t ON apdaent = apdeent AND apdald = apdeld AND apdadocno = apdedocno
+                      WHERE apdaent = g_enterprise
+                        AND apdadocno = g_nmcl_d[l_ac].nmcl001
+                        AND apda001 = '45' 
+                        AND apda005 = g_nmck005
+                        AND (apde006 = '20' OR apde006 = '10')  #票據或現金
+                        AND apde100 = g_nmck100
+                        AND apdeorga = g_nmcl_d[l_ac].nmclorga
+                        AND apde002 IN (select gzcb002 FROM gzcb_t where gzcb001 = '8506' AND gzcb004 = '2' )
+                     
+                     IF l_n = 0 THEN 
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'anm-00131'
+                        LET g_errparam.extend = g_nmcl_d[l_ac].nmcl001
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+
+                        LET g_nmcl_d[l_ac].nmcl001 = g_nmcl_d_t.nmcl001
+                        NEXT FIELD CURRENT
+                     END IF
+                        
+                     IF NOT cl_null(g_nmcl_d[l_ac].nmcl001) AND NOT cl_null(g_nmcl_d[l_ac].nmcl002) THEN 
+                        LET l_n = 0
+                        SELECT COUNT(*) INTO l_n
+                          FROM apda_t
+                          LEFT OUTER JOIN apde_t ON apdaent = apdeent AND apdald = apdeld AND apdadocno = apdedocno
+                         WHERE apdaent = g_enterprise
+                           AND apdadocno = g_nmcl_d[l_ac].nmcl001
+                           AND apda001 = '45' 
+                           AND apda005 = g_nmck005
+                           AND (apde006 = '20' OR apde006 = '10')  #票據或現金
+                           AND apde100 = g_nmck100
+                           AND apdeorga = g_nmcl_d[l_ac].nmclorga
+                           AND apdeseq = g_nmcl_d[l_ac].nmcl002
+                           AND apde002 IN (select gzcb002 FROM gzcb_t where gzcb001 = '8506' AND gzcb004 = '2' )
+                        IF l_n = 0 THEN 
+                           INITIALIZE g_errparam TO NULL
+                           LET g_errparam.code = 'anm-00132'
+                           LET g_errparam.extend = g_nmcl_d[l_ac].nmcl001
+                           LET g_errparam.popup = TRUE
+                           CALL cl_err()
+
+                           LET g_nmcl_d[l_ac].nmcl001 = g_nmcl_d_t.nmcl001
+                           LET g_nmcl_d[l_ac].nmcl002 = g_nmcl_d_t.nmcl002
+                           NEXT FIELD CURRENT
+                        END IF
+                     END IF
+                     
+                     CALL anmt440_01_amt_get()
+                     CALL anmt440_01_ref_b()
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_nmcl_d[l_ac].nmcl001 = g_nmcl_d_t.nmcl001
+                     NEXT FIELD CURRENT
+                  END IF
+               
+               
+               END IF 
+            END IF
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmcl001
+            #add-point:BEFORE FIELD nmcl001
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE nmcl001
+            #add-point:ON CHANGE nmcl001
+
+            #END add-point
+ 
+         #----<<nmcl002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmcl002
+            #add-point:BEFORE FIELD nmcl002
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmcl002
+            
+            #add-point:AFTER FIELD nmcl002
+            IF g_nmck001 = 'AP' THEN 
+                IF NOT cl_null(g_nmcl_d[l_ac].nmcl002) THEN 
+#此段落由子樣板a19產生
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_nmcl_d[l_ac].nmcl001
+                  LET g_chkparam.arg2 = g_nmcl_d[l_ac].nmcl002
+                     
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_apdeseq") THEN
+                     #檢查成功時後續處理
+                     #LET  = g_chkparam.return1
+                     #DISPLAY BY NAME 
+                     LET l_n = 0
+                     SELECT COUNT(*) INTO l_n
+                       FROM nmck_t,nmcl_t
+                      WHERE nmclent = g_enterprise
+                        AND nmckent = nmclent
+                        AND nmckcomp = nmclcomp
+                        AND nmckdocno = nmcldocno
+                        AND nmcl001 = g_nmcl_d[l_ac].nmcl001
+                        AND nmcl002 = g_nmcl_d[l_ac].nmcl002
+                        AND nmckstus <> 'X'
+                        AND nmckdocno <> g_nmckdocno
+                        
+                     IF l_n > 0 THEN 
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'anm-00137'
+                        LET g_errparam.extend = g_nmcl_d[l_ac].nmcl001
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+
+                        LET g_nmcl_d[l_ac].nmcl002 = g_nmcl_d_t.nmcl002
+                        NEXT FIELD CURRENT
+                     END IF
+                     
+                     IF NOT cl_null(g_nmcl_d[l_ac].nmcl001) AND NOT cl_null(g_nmcl_d[l_ac].nmcl002) THEN 
+                        LET l_n = 0
+                        SELECT COUNT(*) INTO l_n
+                          FROM apda_t
+                          LEFT OUTER JOIN apde_t ON apdaent = apdeent AND apdald = apdeld AND apdadocno = apdedocno
+                         WHERE apdaent = g_enterprise
+                           AND apdadocno = g_nmcl_d[l_ac].nmcl001
+                           AND apda001 = '45' 
+                           AND apda005 = g_nmck005
+                           AND (apde006 = '20' OR apde006 = '10')  #票據或現金 
+                           AND apde100 = g_nmck100
+                           AND apdeorga = g_nmcl_d[l_ac].nmclorga
+                           AND apdeseq = g_nmcl_d[l_ac].nmcl002
+                        IF l_n = 0 THEN 
+                           INITIALIZE g_errparam TO NULL
+                           LET g_errparam.code = 'anm-00132'
+                           LET g_errparam.extend = g_nmcl_d[l_ac].nmcl001
+                           LET g_errparam.popup = TRUE
+                           CALL cl_err()
+
+                           LET g_nmcl_d[l_ac].nmcl002 = g_nmcl_d_t.nmcl002
+                           NEXT FIELD CURRENT
+                        END IF
+                     END IF
+                     
+                     CALL anmt440_01_amt_get()
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_nmcl_d[l_ac].nmcl002 = g_nmcl_d_t.nmcl002
+                     NEXT FIELD CURRENT
+                  END IF
+               
+               
+               END IF 
+            END IF
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE nmcl002
+            #add-point:ON CHANGE nmcl002
+
+            #END add-point
+ 
+         #----<<nmcl003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmcl003
+            #add-point:BEFORE FIELD nmcl003
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmcl003
+            
+            #add-point:AFTER FIELD nmcl003
+            IF g_nmck001 = 'XX' THEN
+               IF NOT cl_null(g_nmcl_d[l_ac].nmcl003) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_glaa004
+               LET g_chkparam.arg2 = g_nmcl_d[l_ac].nmcl003
+               IF NOT cl_chk_exist("v_glac002_4") THEN
+                  LET g_nmcl_d[l_ac].nmcl003 = g_nmcl_d_t.nmcl003
+                  CALL anmt440_01_ref_b()
+                  NEXT FIELD CURRENT
+               ELSE
+                  CALL anmt440_01_ref_b()
+               END IF                  
+            END IF   
+            END IF
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE nmcl003
+            #add-point:ON CHANGE nmcl003
+
+            #END add-point
+ 
+         #----<<nmcl103>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmcl103
+            #add-point:BEFORE FIELD nmcl103
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmcl103
+            
+            #add-point:AFTER FIELD nmcl103
+            IF NOT cl_null(g_nmcl_d[l_ac].nmcl103) THEN
+               IF NOT cl_ap_chk_range(g_nmcl_d[l_ac].nmcl103,"0","0","","","azz-00079",1) THEN
+                  NEXT FIELD nmcl103
+               END IF
+               CALL anmt440_01_nmcl103_default()
+               DISPLAY g_nmcl_d[l_ac].nmcl113 TO nmcl113
+            END IF 
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE nmcl103
+            #add-point:ON CHANGE nmcl103
+
+            #END add-point
+ 
+         #----<<nmcl113>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmcl113
+            #add-point:BEFORE FIELD nmcl113
+            IF NOT cl_null(g_nmcl_d[l_ac].nmcl113) THEN
+               IF NOT cl_ap_chk_range(g_nmcl_d[l_ac].nmcl113,"0","0","","","azz-00079",1) THEN
+                  NEXT FIELD nmcl113
+               END IF
+               CALL anmt440_01_nmcl103_default()
+               DISPLAY g_nmcl_d[l_ac].nmcl113 TO nmcl113
+            END IF 
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmcl113
+            
+            #add-point:AFTER FIELD nmcl113
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE nmcl113
+            #add-point:ON CHANGE nmcl113
+
+            #END add-point
+ 
+         #----<<nmcl121>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmcl121
+            #add-point:BEFORE FIELD nmcl121
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmcl121
+            
+            #add-point:AFTER FIELD nmcl121
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE nmcl121
+            #add-point:ON CHANGE nmcl121
+
+            #END add-point
+ 
+         #----<<nmcl123>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmcl123
+            #add-point:BEFORE FIELD nmcl123
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmcl123
+            
+            #add-point:AFTER FIELD nmcl123
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE nmcl123
+            #add-point:ON CHANGE nmcl123
+
+            #END add-point
+ 
+         #----<<nmcl131>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmcl131
+            #add-point:BEFORE FIELD nmcl131
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmcl131
+            
+            #add-point:AFTER FIELD nmcl131
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE nmcl131
+            #add-point:ON CHANGE nmcl131
+
+            #END add-point
+ 
+         #----<<nmcl133>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD nmcl133
+            #add-point:BEFORE FIELD nmcl133
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD nmcl133
+            
+            #add-point:AFTER FIELD nmcl133
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE nmcl133
+            #add-point:ON CHANGE nmcl133
+
+            #END add-point
+ 
+ 
+         #---------------------<  Detail: page1  >---------------------
+         #----<<nmclseq>>----
+         #Ctrlp:input.c.page1.nmclseq
+         ON ACTION controlp INFIELD nmclseq
+            #add-point:ON ACTION controlp INFIELD nmclseq
+
+            #END add-point
+ 
+         #----<<nmclorga>>----
+         #Ctrlp:input.c.page1.nmclorga
+         ON ACTION controlp INFIELD nmclorga
+            #add-point:ON ACTION controlp INFIELD nmclorga
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmcl_d[l_ac].nmclorga             #給予default值
+            LET g_qryparam.default2 = "" #g_nmcl_d[l_ac].ooefl003 #說明(簡稱)
+            #2015/01/27---add---by---qiull(S)
+            CALL s_fin_create_account_center_tmp()
+            CALL s_fin_account_center_sons_query('6',g_nmcksite,g_today,'')
+            CALL s_fin_account_center_comp_str()RETURNING l_origin_str
+            CALL anmt440_01_change_to_sql(l_origin_str)RETURNING l_origin_str
+            LET g_qryparam.where = "ooef001 IN(",l_origin_str CLIPPED,") AND ooef017 = '",g_nmckcomp,"' "
+            #2015/01/27---add---by---qiull(E)
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ooef001()                                #呼叫開窗
+
+            LET g_nmcl_d[l_ac].nmclorga = g_qryparam.return1              
+            #LET g_nmcl_d[l_ac].ooefl003 = g_qryparam.return2 
+            DISPLAY g_nmcl_d[l_ac].nmclorga TO nmclorga              #
+            #DISPLAY g_nmcl_d[l_ac].ooefl003 TO ooefl003 #說明(簡稱)
+            NEXT FIELD nmclorga                          #返回原欄位
+
+
+            #END add-point
+ 
+         #----<<nmclorga_desc>>----
+         #Ctrlp:input.c.page1.nmclorga_desc
+         ON ACTION controlp INFIELD nmclorga_desc
+            #add-point:ON ACTION controlp INFIELD nmclorga_desc
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmcl_d[l_ac].nmclorga            #給予default值
+            LET g_qryparam.default2 = "" #g_nmcl_d[l_ac].ooefl003 #說明(簡稱)
+            #2015/01/27---add---by---qiull(S)
+            CALL s_fin_create_account_center_tmp()
+            CALL s_fin_account_center_sons_query('6',g_nmcksite,g_today,'')
+            CALL s_fin_account_center_comp_str()RETURNING l_origin_str
+            CALL anmt440_01_change_to_sql(l_origin_str)RETURNING l_origin_str
+            LET g_qryparam.where = "ooef001 IN(",l_origin_str CLIPPED,") AND ooef017 = '",g_nmckcomp,"' "
+            #2015/01/27---add---by---qiull(E)
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ooef001()                                #呼叫開窗
+
+            LET g_nmcl_d[l_ac].nmclorga = g_qryparam.return1              
+            #LET g_nmcl_d[l_ac].ooefl003 = g_qryparam.return2 
+            CALL anmt440_01_ref_b()
+            DISPLAY g_nmcl_d[l_ac].nmclorga_desc TO nmclorga_desc              #
+            #DISPLAY g_nmcl_d[l_ac].ooefl003 TO ooefl003 #說明(簡稱)
+            NEXT FIELD nmclorga_desc                          #返回原欄位
+
+
+            #END add-point
+ 
+         #----<<nmcl001>>----
+         #Ctrlp:input.c.page1.nmcl001
+         ON ACTION controlp INFIELD nmcl001
+            #add-point:ON ACTION controlp INFIELD nmcl001
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmcl_d[l_ac].nmcl001             #給予default值
+            LET g_qryparam.default2 = g_nmcl_d[l_ac].nmcl002
+            IF g_nmck001 = 'AP' THEN 
+               LET g_qryparam.where = "     apda001 = '45' AND apda005 = '",g_nmck005,"'",
+                                      " AND (apde006 = '20' OR apde006 = '10') AND apdeorga = '",g_nmcl_d[l_ac].nmclorga,"'",
+                                      " AND apde100 = '",g_nmck100,"'",
+                                      " AND apdald = '",g_glaald,"'",
+                                      " AND (apdastus = 'Y' OR apdastus = 'V')",
+                                      " AND apde002 IN (select gzcb002 FROM gzcb_t where gzcb001 = '8506' AND gzcb004 = '2' )",
+                                      " AND apdedocno||apdeseq NOT IN (",
+                                      " SELECT nmcl001||nmcl002 FROM nmck_t,nmcl_t ",
+                                      "  WHERE nmclent = '",g_enterprise,"'",
+                                      "    AND nmckent = nmclent ",
+                                      "    AND nmckcomp = nmclcomp ",
+                                      "    AND nmckdocno = nmcldocno ",
+                                      "    AND nmckstus <> 'X' )"
+                                      
+               CALL q_apdeseq()                                #呼叫開窗
+            END IF
+
+            LET g_nmcl_d[l_ac].nmcl001 = g_qryparam.return1 
+            LET g_nmcl_d[l_ac].nmcl002 = g_qryparam.return2            
+
+            DISPLAY g_nmcl_d[l_ac].nmcl001,g_nmcl_d[l_ac].nmcl002 TO nmcl001,nmcl002
+
+            NEXT FIELD nmcl001                          #返回原欄位
+
+
+            #END add-point
+ 
+         #----<<nmcl002>>----
+         #Ctrlp:input.c.page1.nmcl002
+         ON ACTION controlp INFIELD nmcl002
+            #add-point:ON ACTION controlp INFIELD nmcl002
+            #此段落由子樣板a07產生            
+            #開窗i段
+#            INITIALIZE g_qryparam.* TO NULL
+#            LET g_qryparam.state = 'i'
+#            LET g_qryparam.reqry = FALSE
+#
+#            LET g_qryparam.default1 = g_nmcl_d[l_ac].nmcl002             #給予default值
+#            IF g_nmck001 = 'AP' THEN
+#               LET g_qryparam.where = "     apdedocno = '",g_nmcl_d[l_ac].nmcl001,"'",
+#                                      " AND apda001 = '45' AND apda005 = '",g_nmck005,"'",
+#                                      " AND apde006 = '20' AND apdeorga = '",g_nmcl_d[l_ac].nmclorga,"'",
+#                                      " AND apdald = '",g_glaald,"'",
+#                                      " AND apdeseq NOT IN (",
+#                                      " SELECT nmcl002 FROM nmck_t,nmcl_t ",
+#                                      "  WHERE nmclent = '",g_enterprise,"'",
+#                                      "    AND nmckent = nmclent ",
+#                                      "    AND nmckcomp = nmclcomp ",
+#                                      "    AND nmckdocno = nmcldocno ",
+#                                      "    AND nmckstus <> 'X' )"
+#               
+#               CALL q_apdeseq()                                #呼叫開窗
+#            END IF
+#
+#            LET g_nmcl_d[l_ac].nmcl002 = g_qryparam.return1              
+#
+#            DISPLAY g_nmcl_d[l_ac].nmcl002 TO nmcl002              #
+#
+#            NEXT FIELD nmcl002                          #返回原欄位
+
+
+            #END add-point
+ 
+         #----<<nmcl003>>----
+         #Ctrlp:input.c.page1.nmcl003
+         ON ACTION controlp INFIELD nmcl003
+            #add-point:ON ACTION controlp INFIELD nmcl003
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmcl_d[l_ac].nmcl003             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            LET g_qryparam.where=" glac001 = '",g_glaa004,"' AND  glac003 <>'1' AND glac006 = '1'"
+            
+            CALL aglt310_04()                                #呼叫開窗
+
+            LET g_nmcl_d[l_ac].nmcl003 = g_qryparam.return1              
+
+            DISPLAY g_nmcl_d[l_ac].nmcl003 TO nmcl003              #
+
+            NEXT FIELD nmcl003                          #返回原欄位
+
+
+            #END add-point
+ 
+         #----<<nmcl103>>----
+         #Ctrlp:input.c.page1.nmcl103
+         ON ACTION controlp INFIELD nmcl103
+            #add-point:ON ACTION controlp INFIELD nmcl103
+
+            #END add-point
+ 
+         #----<<nmcl113>>----
+         #Ctrlp:input.c.page1.nmcl113
+         ON ACTION controlp INFIELD nmcl113
+            #add-point:ON ACTION controlp INFIELD nmcl113
+
+            #END add-point
+ 
+         #----<<nmcl121>>----
+         #Ctrlp:input.c.page1.nmcl121
+         ON ACTION controlp INFIELD nmcl121
+            #add-point:ON ACTION controlp INFIELD nmcl121
+
+            #END add-point
+ 
+         #----<<nmcl123>>----
+         #Ctrlp:input.c.page1.nmcl123
+         ON ACTION controlp INFIELD nmcl123
+            #add-point:ON ACTION controlp INFIELD nmcl123
+
+            #END add-point
+ 
+         #----<<nmcl131>>----
+         #Ctrlp:input.c.page1.nmcl131
+         ON ACTION controlp INFIELD nmcl131
+            #add-point:ON ACTION controlp INFIELD nmcl131
+
+            #END add-point
+ 
+         #----<<nmcl133>>----
+         #Ctrlp:input.c.page1.nmcl133
+         ON ACTION controlp INFIELD nmcl133
+            #add-point:ON ACTION controlp INFIELD nmcl133
+
+            #END add-point
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_nmcl_d[l_ac].* = g_nmcl_d_t.*
+               CLOSE anmt440_01_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = g_nmcl_d[l_ac].nmclseq
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_nmcl_d[l_ac].* = g_nmcl_d_t.*
+            ELSE
+            
+               #add-point:單身修改前
+
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身)
+               
+      
+               UPDATE nmcl_t SET (nmclcomp,nmcldocno,nmclseq,nmclorga,nmcl001,nmcl002,nmcl003,nmcl103, 
+                   nmcl113,nmcl121,nmcl123,nmcl131,nmcl133) = (g_nmckcomp,g_nmckdocno, 
+                   g_nmcl_d[l_ac].nmclseq,g_nmcl_d[l_ac].nmclorga,g_nmcl_d[l_ac].nmcl001,g_nmcl_d[l_ac].nmcl002, 
+                   g_nmcl_d[l_ac].nmcl003,g_nmcl_d[l_ac].nmcl103,g_nmcl_d[l_ac].nmcl113,g_nmcl_d[l_ac].nmcl121, 
+                   g_nmcl_d[l_ac].nmcl123,g_nmcl_d[l_ac].nmcl131,g_nmcl_d[l_ac].nmcl133)
+                WHERE nmclent = g_enterprise AND nmclcomp = g_nmckcomp 
+                  AND nmcldocno = g_nmckdocno 
+ 
+                  AND nmclseq = g_nmcl_d_t.nmclseq #項次   
+ 
+                  
+               #add-point:單身修改中
+
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = "std-00009"
+                     LET g_errparam.extend = "nmcl_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     CALL s_transaction_end('N','0')
+                     LET g_nmcl_d[l_ac].* = g_nmcl_d_t.*
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "nmcl_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+                     LET g_nmcl_d[l_ac].* = g_nmcl_d_t.*                     
+                     CALL s_transaction_end('N','0')
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_nmckcomp
+               LET gs_keys_bak[1] = g_nmckcomp_o
+               LET gs_keys[2] = g_nmckdocno
+               LET gs_keys_bak[2] = g_nmckdocno_o
+               LET gs_keys[3] = g_nmcl_d[g_detail_idx].nmclseq
+               LET gs_keys_bak[3] = g_nmcl_d_t.nmclseq
+               CALL anmt440_01_update_b('nmcl_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                     
+               END CASE
+               
+               #add-point:單身修改後
+
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            #add-point:單身after_row
+
+            #end add-point
+            CALL anmt440_01_unlock_b("nmcl_t","'1'")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            
+            #add-point:單身after_row2
+
+            #end add-point
+ 
+         AFTER INPUT
+            #add-point:input段after input 
+            CALL anmt440_01_ref_b()
+            LET g_nmcm2_d.* = g_nmcl_d.*
+            
+            #150626-00011#1 add ------
+            #檢核金額不一致是否更新至單頭
+            CALL anmt440_01_chk_money() RETURNING g_sub_success
+            IF NOT g_sub_success THEN
+               IF cl_ask_confirm('aap-00210') THEN
+                  CALL s_transaction_begin()
+                  SELECT SUM(nmcl103),SUM(nmcl113),SUM(nmcl123),SUM(nmcl133)
+                    INTO l_sum_nmcl103,l_sum_nmcl113,l_sum_nmcl123,l_sum_nmcl133
+                    FROM nmcl_t
+                   WHERE nmclent = g_enterprise
+                     AND nmcldocno = g_nmckdocno
+                     AND nmclcomp = g_nmckcomp 
+                  IF cl_null(l_sum_nmcl103) THEN LET l_sum_nmcl103 = 0 END IF
+                  IF cl_null(l_sum_nmcl113) THEN LET l_sum_nmcl113 = 0 END IF
+                  IF cl_null(l_sum_nmcl123) THEN LET l_sum_nmcl123 = 0 END IF
+                  IF cl_null(l_sum_nmcl133) THEN LET l_sum_nmcl133 = 0 END IF
+                  UPDATE nmck_t SET nmck103 = l_sum_nmcl103,
+                                    nmck113 = l_sum_nmcl113,
+                                    nmck123 = l_sum_nmcl123,
+                                    nmck133 = l_sum_nmcl133
+                   WHERE nmckent = g_enterprise
+                     AND nmckdocno = g_nmckdocno
+                     AND nmckcomp = g_nmckcomp
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "nmck_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                  ELSE
+                     CALL s_transaction_end('Y','0')
+                  END IF
+               END IF
+            END IF
+            #150626-00011#1 add ------
+            #end add-point 
+ 
+         ON ACTION controlo    
+            CALL FGL_SET_ARR_CURR(g_nmcl_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_nmcl_d.getLength()+1
+            
+         #ON ACTION cancel
+         #   LET INT_FLAG = 1
+         #   LET g_detail_idx = 1
+         #   EXIT DIALOG 
+ 
+      END INPUT 
+END DIALOG]]>
+  </point>
+  <point name="function.anmt440_01_ref_b" order="3" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 抓取單身說明欄位
+# Memo...........:
+# Usage..........: CALL anmt440_01_ref_b()
+# Date & Author..: 2014/5/12 By wangrr
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt440_01_ref_b()
+   #組織說明
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_nmcl_d[l_ac].nmclorga 
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_nmcl_d[l_ac].nmclorga_desc = '', g_rtn_fields[1] , ''
+   LET g_nmcl_d[l_ac].nmclorga_desc = g_nmcl_d[l_ac].nmclorga,g_nmcl_d[l_ac].nmclorga_desc #150626-00011#1
+   DISPLAY g_nmcl_d[l_ac].nmclorga_desc TO nmclorga_desc
+   #科目說明
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_glaa004
+   LET g_ref_fields[2] = g_nmcl_d[l_ac].nmcl003
+   CALL ap_ref_array2(g_ref_fields,"SELECT glacl004 FROM glacl_t WHERE glaclent='"||g_enterprise||"' AND glacl001=? AND glacl002=? AND glacl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_nmcl_d[l_ac].nmcl003_desc = '', g_rtn_fields[1] , ''
+   DISPLAY g_nmcl_d[l_ac].nmcl003_desc TO nmcl003_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.anmt440_01_b_fill" order="4" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 抓取單身
+# Memo...........:
+# Usage..........: CALL anmt440_01_b_fill()
+# Date & Author..: 2014/6/13 By wangrr
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION anmt440_01_b_fill()
+   DEFINE p_wc2      STRING
+   DEFINE l_count    LIKE type_t.num5
+   DEFINE l_i        LIKE type_t.num5
+   
+   LET l_count=g_nmcl_d.getLength()
+   CALL g_nmcl_d.clear()    #g_nmcl_d 單頭及單身 
+   
+   #判斷是否填充
+   IF anmt440_01_fill_chk(1) THEN
+   
+      LET g_sql = "SELECT  UNIQUE nmclseq,nmclorga,'',nmcl001,nmcl002,nmcl003,'',nmcl103,nmcl113,nmcl121, 
+          nmcl123,nmcl131,nmcl133 FROM nmcl_t",   
+                  " INNER JOIN nmck_t ON nmckcomp = nmclcomp ",
+                  " AND nmckdocno = nmcldocno ",
+                  " WHERE nmclent=? AND nmclcomp=? AND nmcldocno=?"
+     
+      IF NOT cl_null(g_wc_source) THEN
+         LET g_sql = g_sql CLIPPED, " AND ", g_wc_source CLIPPED
+      END IF
+      
+      #子單身的WC
+      
+      LET g_sql = g_sql, " ORDER BY nmcl_t.nmclseq"
+      
+      CALL anmt440_01_get_glaa()
+      
+      PREPARE anmt440_01_pb FROM g_sql
+      DECLARE b_fill_cs CURSOR FOR anmt440_01_pb
+      
+      LET g_cnt = l_ac
+      LET l_ac = 1
+      
+      OPEN b_fill_cs USING g_enterprise,g_nmckcomp
+                                               ,g_nmckdocno
+ 
+                                               
+      FOREACH b_fill_cs INTO g_nmcl_d[l_ac].nmclseq,g_nmcl_d[l_ac].nmclorga,g_nmcl_d[l_ac].nmclorga_desc, 
+          g_nmcl_d[l_ac].nmcl001,g_nmcl_d[l_ac].nmcl002,g_nmcl_d[l_ac].nmcl003,g_nmcl_d[l_ac].nmcl003_desc,
+          g_nmcl_d[l_ac].nmcl103,g_nmcl_d[l_ac].nmcl113,g_nmcl_d[l_ac].nmcl121,g_nmcl_d[l_ac].nmcl123, 
+          g_nmcl_d[l_ac].nmcl131,g_nmcl_d[l_ac].nmcl133
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH:"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            EXIT FOREACH
+         END IF
+        
+         CALL anmt440_01_ref_b()
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec THEN
+            IF g_error_show = 1 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  9035
+               LET g_errparam.extend =  ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+            END IF
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+      LET g_error_show = 0
+   
+   END IF
+   
+   CALL g_nmcl_d.deleteElement(g_nmcl_d.getLength())
+   LET g_rec_b = l_ac - 1
+   DISPLAY g_rec_b TO FORMONLY.cnt 
+   LET g_nmcm2_d.* = g_nmcl_d.*
+   LET l_ac = g_cnt
+   LET g_cnt = 0  
+   CLOSE b_fill_cs
+   FREE anmt440_01_pb
+END FUNCTION]]>
+  </point>
+  <point name="function.anmt440_01_fill_chk" order="5" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#+ 單身填充確認
+PRIVATE FUNCTION anmt440_01_fill_chk(ps_idx)
+   DEFINE ps_idx        LIKE type_t.chr10
+   #add-point:fill_chk段define
+
+   #end add-point
+   
+   #add-point:fill_chk段before_chk
+
+   #end add-point
+ 
+   #全部為1=1 or null時回傳true
+   IF (cl_null(g_wc_source) OR g_wc_source.trim() = '1=1') THEN
+      #add-point:fill_chk段other_chk
+
+      #end add-point
+      RETURN TRUE
+   END IF
+   
+   #第一單身
+   IF ps_idx = 1 AND
+      ((NOT cl_null(g_wc_source) AND g_wc_source.trim() <> '1=1')) THEN
+      RETURN TRUE
+   END IF
+   
+   #根據wc判定是否需要填充
+ 
+ 
+   RETURN FALSE
+END FUNCTION]]>
+  </point>
+  <point name="function.anmt440_01_get_glaa" order="6" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#抓取帳套相關資料
+PRIVATE FUNCTION anmt440_01_get_glaa()
+   SELECT glaa001,glaald,glaa005,glaa004,glaa015,
+          glaa016,glaa017,glaa018,glaa019,glaa020,
+          glaa021,glaa022
+     INTO g_glaa001,g_glaald,g_glaa005,g_glaa004,g_glaa015,
+          g_glaa016,g_glaa017,g_glaa018,g_glaa019,g_glaa020,
+          g_glaa021,g_glaa022
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaacomp = g_nmckcomp
+      AND glaa014 = 'Y'
+END FUNCTION]]>
+  </point>
+  <point name="function.anmt440_01_insert_b" order="7" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#+ 新增單身後其他table連動
+PRIVATE FUNCTION anmt440_01_insert_b(ps_table,ps_keys,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE ls_page     STRING
+   #add-point:insert_b段define
+
+   #end add-point     
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前
+
+      #end add-point 
+      INSERT INTO nmcl_t
+                  (nmclent,
+                   nmclcomp,nmcldocno,
+                   nmclseq
+                   ,nmclorga,nmcl001,nmcl002,nmcl003,nmcl103,nmcl113,nmcl121,nmcl123,nmcl131,nmcl133) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2],ps_keys[3]
+                   ,g_nmcl_d[g_detail_idx].nmclorga,g_nmcl_d[g_detail_idx].nmcl001,g_nmcl_d[g_detail_idx].nmcl002, 
+                       g_nmcl_d[g_detail_idx].nmcl003,g_nmcl_d[g_detail_idx].nmcl103,g_nmcl_d[g_detail_idx].nmcl113, 
+                       g_nmcl_d[g_detail_idx].nmcl121,g_nmcl_d[g_detail_idx].nmcl123,g_nmcl_d[g_detail_idx].nmcl131, 
+                       g_nmcl_d[g_detail_idx].nmcl133)
+      #add-point:insert_b段資料新增中
+
+      #end add-point 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "nmcl_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+      END IF
+      #add-point:insert_b段資料新增後
+
+      #end add-point 
+   END IF
+   
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.anmt440_01_delete_b" order="8" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#+ 刪除單身後其他table連動
+PRIVATE FUNCTION anmt440_01_delete_b(ps_table,ps_keys_bak,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:delete_b段define
+
+   #end add-point     
+ 
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前
+
+      #end add-point    
+      DELETE FROM nmcl_t
+       WHERE nmclent = g_enterprise AND
+         nmclcomp = ps_keys_bak[1] AND nmcldocno = ps_keys_bak[2] AND nmclseq = ps_keys_bak[3]
+      #add-point:delete_b段刪除中
+
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = ""
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+      END IF
+      #add-point:delete_b段刪除後
+
+      #end add-point   
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.anmt440_01_update_b" order="9" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#+ 修改單身後其他table連動
+PRIVATE FUNCTION anmt440_01_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   DEFINE ps_table         STRING
+   DEFINE ps_page          STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num5 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define
+
+   #end add-point     
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "nmcl_t" THEN
+      #add-point:update_b段修改前
+
+      #end add-point     
+      UPDATE nmcl_t 
+         SET (nmclcomp,nmcldocno,
+              nmclseq
+              ,nmclorga,nmcl001,nmcl002,nmcl003,nmcl103,nmcl113,nmcl121,nmcl123,nmcl131,nmcl133) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3]
+              ,g_nmcl_d[g_detail_idx].nmclorga,g_nmcl_d[g_detail_idx].nmcl001,g_nmcl_d[g_detail_idx].nmcl002, 
+                  g_nmcl_d[g_detail_idx].nmcl003,g_nmcl_d[g_detail_idx].nmcl103,g_nmcl_d[g_detail_idx].nmcl113, 
+                  g_nmcl_d[g_detail_idx].nmcl121,g_nmcl_d[g_detail_idx].nmcl123,g_nmcl_d[g_detail_idx].nmcl131, 
+                  g_nmcl_d[g_detail_idx].nmcl133) 
+         WHERE nmclent = g_enterprise AND nmclcomp = ps_keys_bak[1] AND nmcldocno = ps_keys_bak[2] AND nmclseq = ps_keys_bak[3]
+      #add-point:update_b段修改中
+
+      #end add-point   
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = "std-00009"
+            LET g_errparam.extend = "nmcl_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "nmcl_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+  
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      #add-point:update_b段修改後
+
+      #end add-point  
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.anmt440_01_unlock_b" order="10" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION anmt440_01_unlock_b(ps_table,ps_page)
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:unlock_b段define
+
+   #end add-point  
+   
+   LET ls_group = "'1',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE anmt440_01_bcl
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.anmt440_01_lock_b" order="11" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#+ 連動lock其他單身table資料
+PRIVATE FUNCTION anmt440_01_lock_b(ps_table,ps_page)
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:lock_b段define
+
+   #end add-point   
+   
+   #先刷新資料
+   #CALL anmt440_01_b_fill()
+   
+   #鎖定整組table
+   #LET ls_group = "'1',"
+   #僅鎖定自身table
+   LET ls_group = "nmcl_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      OPEN anmt440_01_bcl USING g_enterprise,
+                                       g_nmckcomp,g_nmckdocno,g_nmcl_d[g_detail_idx].nmclseq  
+                                               
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "anmt440_01_bcl"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         RETURN FALSE
+      END IF
+   END IF
+                                    
+ 
+   
+ 
+   
+   #add-point:lock_b段other
+
+   #end add-point  
+   
+   RETURN TRUE
+END FUNCTION]]>
+  </point>
+  <point name="function.anmt440_01_nmcl003_desc" order="12" ver="3" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="function.anmt440_01_nmcl103_default" order="12" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[#獲取原幣金額，本幣金額
+PRIVATE FUNCTION anmt440_01_nmcl103_default()
+DEFINE l_nmck101 LIKE nmck_t.nmck101  #匯率
+DEFINE l_nmck100 LIKE nmck_t.nmck100  #幣別
+DEFINE l_ooam003      LIKE ooam_t.ooam003
+ 
+   #IF g_nmcl_d[l_ac].nmcl113 = 0 OR cl_null(g_nmcl_d[l_ac].nmcl113) THEN #150626-00011#1 mark
+      SELECT nmck100,nmck101 INTO l_nmck100,l_nmck101
+        FROM nmck_t
+       WHERE nmckent = g_enterprise
+         AND nmckcomp = g_nmckcomp
+         AND nmckdocno = g_nmckdocno
+      LET g_nmcl_d[l_ac].nmcl113 =  g_nmcl_d[l_ac].nmcl103 * l_nmck101  #本幣金額
+   #END IF #150626-00011#1 mark
+
+   LET l_ooam003 = ''
+   IF g_glaa015 = 'Y' THEN
+      IF g_glaa017 = '1' THEN
+         LET l_ooam003 = l_nmck100
+      ELSE   #表示帳簿幣別
+         LET l_ooam003 = g_glaa001           #帳套使用幣別
+      END IF
+      CALL s_aooi160_get_exrate('2',g_glaald,g_today,l_ooam003,
+                                   #目的幣別; 交易金額; 匯類類型
+                                   g_glaa016,0,g_glaa018)
+         RETURNING g_nmcl_d[l_ac].nmcl121  #匯率二
+      IF g_glaa017 = '1' THEN 
+         LET g_nmcl_d[l_ac].nmcl123 =  g_nmcl_d[l_ac].nmcl121 * g_nmcl_d[l_ac].nmcl103
+      ELSE
+         LET g_nmcl_d[l_ac].nmcl123 =  g_nmcl_d[l_ac].nmcl121 * g_nmcl_d[l_ac].nmcl113
+      END IF
+   ELSE
+      LET g_nmcl_d[l_ac].nmcl121 = 0
+      LET g_nmcl_d[l_ac].nmcl123 = 0
+   END IF
+ 
+ 
+   IF g_glaa019 = 'Y' THEN
+      IF g_glaa021 = '1' THEN
+         LET l_ooam003 = l_nmck100
+      ELSE   #表示帳簿幣別
+         LET l_ooam003 = g_glaa001           #帳套使用幣別
+      END IF
+      CALL s_aooi160_get_exrate('2',g_glaald,g_today,l_ooam003,
+                                #目的幣別; 交易金額; 匯類類型
+                                g_glaa020,0,g_glaa022)
+           RETURNING g_nmcl_d[l_ac].nmcl131  #匯率二
+      IF g_glaa021 = '1' THEN 
+         LET g_nmcl_d[l_ac].nmcl133 =  g_nmcl_d[l_ac].nmcl131 * g_nmcl_d[l_ac].nmcl103
+      ELSE
+         LET g_nmcl_d[l_ac].nmcl133 =  g_nmcl_d[l_ac].nmcl131 * g_nmcl_d[l_ac].nmcl113
+      END IF
+   ELSE
+      LET g_nmcl_d[l_ac].nmcl131 = 0
+      LET g_nmcl_d[l_ac].nmcl133 = 0
+   END IF
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.anmt440_01_change_to_sql" order="13" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt440_01_change_to_sql(p_wc)
+   DEFINE p_wc       STRING
+   DEFINE r_wc       STRING
+   DEFINE tok        base.StringTokenizer
+   DEFINE l_str      STRING
+
+   LET tok = base.StringTokenizer.create(p_wc,",")
+   WHILE tok.hasMoreTokens()
+      IF cl_null(l_str) THEN
+         LET l_str = tok.nextToken()
+      ELSE
+         LET l_str = l_str,"','",tok.nextToken()
+      END IF
+   END WHILE
+   LET r_wc = "'",l_str,"'"
+
+   RETURN r_wc
+END FUNCTION]]>
+  </point>
+  <point name="function.anmt440_01_chk_money" order="14" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 檢核單頭金額跟單身總額是否一樣
+# Memo...........:
+# Usage..........: CALL anmt440_01_chk_money()
+# Date & Author..: 2015/06/29 By Reanna
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION anmt440_01_chk_money()
+DEFINE l_sum_nmck103      LIKE nmck_t.nmck103
+DEFINE l_sum_nmck113      LIKE nmck_t.nmck113
+DEFINE l_sum_nmcl103      LIKE nmcl_t.nmcl103
+DEFINE l_sum_nmcl113      LIKE nmcl_t.nmcl113
+DEFINE r_success          LIKE type_t.num5
+
+   LET r_success = TRUE
+   
+   SELECT nmck103,nmck113 INTO l_sum_nmck103,l_sum_nmck113
+     FROM nmck_t
+    WHERE nmckent = g_enterprise
+      AND nmckcomp = g_nmckcomp
+      AND nmckdocno = g_nmckdocno
+   IF cl_null(l_sum_nmck103) THEN LET l_sum_nmck103 = 0 END IF
+   IF cl_null(l_sum_nmck113) THEN LET l_sum_nmck113 = 0 END IF
+   
+   SELECT SUM(nmcl103),SUM(nmcl113) INTO l_sum_nmcl103,l_sum_nmcl113
+     FROM nmcl_t
+    WHERE nmclent = g_enterprise
+      AND nmclcomp = g_nmckcomp
+      AND nmcldocno = g_nmckdocno
+   IF cl_null(l_sum_nmcl103) THEN LET l_sum_nmcl103 = 0 END IF
+   IF cl_null(l_sum_nmcl113) THEN LET l_sum_nmcl113 = 0 END IF
+   
+   IF l_sum_nmck103 <> l_sum_nmcl103 OR l_sum_nmck113 <> l_sum_nmck113 THEN
+      LET r_success = FALSE
+   END IF
+   
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="construct.c.page1.nmcl001" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_apdadocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmcl001  #顯示到畫面上
+            NEXT FIELD nmcl001                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1.nmcl002" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_apceseq()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmcl002  #顯示到畫面上
+            NEXT FIELD nmcl002                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1.nmcl003" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL aglt310_04()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmcl003  #顯示到畫面上
+            NEXT FIELD nmcl003                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1.nmclorga" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooef001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmclorga  #顯示到畫面上
+            NEXT FIELD nmclorga                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1_anmt440_01.nmcl001" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_apdadocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmcl001  #顯示到畫面上
+            NEXT FIELD nmcl001                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1_anmt440_01.nmcl002" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_apceseq()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmcl002  #顯示到畫面上
+            NEXT FIELD nmcl002                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1_anmt440_01.nmcl003" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL aglt310_04()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmcl003  #顯示到畫面上
+            NEXT FIELD nmcl003                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1_anmt440_01.nmclorga" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooef001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmclorga  #顯示到畫面上
+            NEXT FIELD nmclorga                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="detail_show.reference" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmcl_d[l_ac].nmclorga
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmcl_d[l_ac].nmclorga_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_nmcl_d[l_ac].nmclorga_desc
+]]>
+  </point>
+  <point name="global.import" order="" ver="3" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[IMPORT util]]>
+  </point>
+  <point name="global.memo" order="" ver="3" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[#150626-00011#1  150626 By Reanna bug調整]]>
+  </point>
+  <point name="global.variable" order="" ver="3" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[GLOBALS
+   DEFINE g_wc_source          STRING
+   DEFINE g_nmck001             LIKE nmck_t.nmck001
+   DEFINE g_nmckcomp         LIKE nmck_t.nmckcomp
+   DEFINE g_nmckdocno        LIKE nmck_t.nmckdocno
+   DEFINE g_nmckcomp_o       LIKE nmck_t.nmckcomp
+   DEFINE g_nmckdocno_o      LIKE nmck_t.nmckdocno
+   DEFINE g_nmcksite         LIKE nmck_t.nmcksite       #2015/01/27 add by qiull
+   DEFINE g_detail_insert    LIKE type_t.num5   #單身的新增權限
+   DEFINE g_detail_delete    LIKE type_t.num5   #單身的刪除權限
+   
+   DEFINE g_nmcm2_d          DYNAMIC ARRAY OF type_g_nmcl_d
+END GLOBALS
+
+DEFINE gs_keys               DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak           DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_sql                 STRING
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_error_show          LIKE type_t.num5              #
+
+DEFINE g_nmck005             LIKE nmck_t.nmck005
+DEFINE g_nmck100             LIKE nmck_t.nmck100
+DEFINE g_current_page        LIKE type_t.num5              #目前所在頁數   
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL  
+DEFINE l_allow_insert        LIKE type_t.num5              #可新增否 
+DEFINE l_allow_delete        LIKE type_t.num5              #可刪除否
+DEFINE g_insert              LIKE type_t.chr5              #是否導到其他page
+DEFINE l_insert              BOOLEAN
+DEFINE l_cmd                 LIKE type_t.chr1
+DEFINE l_n                   LIKE type_t.num5              #檢查重複用
+DEFINE l_count               LIKE type_t.num5
+DEFINE l_lock_sw             LIKE type_t.chr1              #單身鎖住否
+DEFINE lb_reproduce          BOOLEAN
+DEFINE li_reproduce          LIKE type_t.num5
+DEFINE li_reproduce_target   LIKE type_t.num5
+DEFINE g_glaa001             LIKE glaa_t.glaa001
+DEFINE g_glaald              LIKE glaa_t.glaald
+DEFINE g_glaa005             LIKE glaa_t.glaa005
+DEFINE g_glaa004             LIKE glaa_t.glaa004
+DEFINE g_ooef006             LIKE ooef_t.ooef006
+DEFINE g_glaa015             LIKE glaa_t.glaa015
+DEFINE g_glaa016             LIKE glaa_t.glaa016
+DEFINE g_glaa017             LIKE glaa_t.glaa017
+DEFINE g_glaa018             LIKE glaa_t.glaa018
+DEFINE g_glaa019             LIKE glaa_t.glaa019
+DEFINE g_glaa020             LIKE glaa_t.glaa020
+DEFINE g_glaa021             LIKE glaa_t.glaa021
+DEFINE g_glaa022             LIKE glaa_t.glaa022]]>
+  </point>
+  <point name="input.a.page1.nmcl001" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_nmcl_d[l_ac].nmcl001) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg2 = '參數2'
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist_and_ref_val("v_apdadocno") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1.nmclcomp" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_nmcl_d[g_detail_idx].nmclcomp IS NOT NULL AND g_nmcl_d[g_detail_idx].nmcldocno IS NOT NULL AND g_nmcl_d[g_detail_idx].nmclseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_nmcl_d[g_detail_idx].nmclcomp != g_nmcl_d_t.nmclcomp OR g_nmcl_d[g_detail_idx].nmcldocno != g_nmcl_d_t.nmcldocno OR g_nmcl_d[g_detail_idx].nmclseq != g_nmcl_d_t.nmclseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM nmcl_t WHERE "||"nmclent = '" ||g_enterprise|| "' AND "||"nmclcomp = '"||g_nmcl_d[g_detail_idx].nmclcomp ||"' AND "|| "nmcldocno = '"||g_nmcl_d[g_detail_idx].nmcldocno ||"' AND "|| "nmclseq = '"||g_nmcl_d[g_detail_idx].nmclseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.nmcldocno" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_nmcl_d[g_detail_idx].nmclcomp IS NOT NULL AND g_nmcl_d[g_detail_idx].nmcldocno IS NOT NULL AND g_nmcl_d[g_detail_idx].nmclseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_nmcl_d[g_detail_idx].nmclcomp != g_nmcl_d_t.nmclcomp OR g_nmcl_d[g_detail_idx].nmcldocno != g_nmcl_d_t.nmcldocno OR g_nmcl_d[g_detail_idx].nmclseq != g_nmcl_d_t.nmclseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM nmcl_t WHERE "||"nmclent = '" ||g_enterprise|| "' AND "||"nmclcomp = '"||g_nmcl_d[g_detail_idx].nmclcomp ||"' AND "|| "nmcldocno = '"||g_nmcl_d[g_detail_idx].nmcldocno ||"' AND "|| "nmclseq = '"||g_nmcl_d[g_detail_idx].nmclseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.nmclorga" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_nmcl_d[l_ac].nmclorga) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist_and_ref_val("v_ooef001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1.nmclseq" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_nmcl_d[g_detail_idx].nmclcomp IS NOT NULL AND g_nmcl_d[g_detail_idx].nmcldocno IS NOT NULL AND g_nmcl_d[g_detail_idx].nmclseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_nmcl_d[g_detail_idx].nmclcomp != g_nmcl_d_t.nmclcomp OR g_nmcl_d[g_detail_idx].nmcldocno != g_nmcl_d_t.nmcldocno OR g_nmcl_d[g_detail_idx].nmclseq != g_nmcl_d_t.nmclseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM nmcl_t WHERE "||"nmclent = '" ||g_enterprise|| "' AND "||"nmclcomp = '"||g_nmcl_d[g_detail_idx].nmclcomp ||"' AND "|| "nmcldocno = '"||g_nmcl_d[g_detail_idx].nmcldocno ||"' AND "|| "nmclseq = '"||g_nmcl_d[g_detail_idx].nmclseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1_anmt440_01.nmcl001" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_nmcl_d[l_ac].nmcl001) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg2 = '參數2'
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist_and_ref_val("v_apdadocno") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1_anmt440_01.nmcl002" order="" ver="3" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_nmcl_d[l_ac].nmcl002) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_nmcl_d[l_ac].nmcl001
+               LET g_chkparam.arg2 = g_nmcl_d[l_ac].nmcl002
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_apdeseq") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1_anmt440_01.nmcl003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_glaa004
+            LET g_ref_fields[2] = g_nmcl_d[l_ac].nmcl003
+            CALL ap_ref_array2(g_ref_fields,"SELECT glacl004 FROM glacl_t WHERE glaclent='"||g_enterprise||"' AND glacl001=? AND glacl002=? AND glacl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmcl_d[l_ac].nmcl003_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_nmcl_d[l_ac].nmcl003_desc
+
+]]>
+  </point>
+  <point name="input.a.page1_anmt440_01.nmclcomp" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_nmcl_d[g_detail_idx].nmclcomp IS NOT NULL AND g_nmcl_d[g_detail_idx].nmcldocno IS NOT NULL AND g_nmcl_d[g_detail_idx].nmclseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_nmcl_d[g_detail_idx].nmclcomp != g_nmcl_d_t.nmclcomp OR g_nmcl_d[g_detail_idx].nmcldocno != g_nmcl_d_t.nmcldocno OR g_nmcl_d[g_detail_idx].nmclseq != g_nmcl_d_t.nmclseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM nmcl_t WHERE "||"nmclent = '" ||g_enterprise|| "' AND "||"nmclcomp = '"||g_nmcl_d[g_detail_idx].nmclcomp ||"' AND "|| "nmcldocno = '"||g_nmcl_d[g_detail_idx].nmcldocno ||"' AND "|| "nmclseq = '"||g_nmcl_d[g_detail_idx].nmclseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1_anmt440_01.nmcldocno" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_nmcl_d[g_detail_idx].nmclcomp IS NOT NULL AND g_nmcl_d[g_detail_idx].nmcldocno IS NOT NULL AND g_nmcl_d[g_detail_idx].nmclseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_nmcl_d[g_detail_idx].nmclcomp != g_nmcl_d_t.nmclcomp OR g_nmcl_d[g_detail_idx].nmcldocno != g_nmcl_d_t.nmcldocno OR g_nmcl_d[g_detail_idx].nmclseq != g_nmcl_d_t.nmclseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM nmcl_t WHERE "||"nmclent = '" ||g_enterprise|| "' AND "||"nmclcomp = '"||g_nmcl_d[g_detail_idx].nmclcomp ||"' AND "|| "nmcldocno = '"||g_nmcl_d[g_detail_idx].nmcldocno ||"' AND "|| "nmclseq = '"||g_nmcl_d[g_detail_idx].nmclseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1_anmt440_01.nmclorga" order="" ver="3" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_nmcl_d[l_ac].nmclorga) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               IF cl_chk_exist_and_ref_val("v_ooef001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmcl_d[l_ac].nmclorga
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmcl_d[l_ac].nmclorga_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_nmcl_d[l_ac].nmclorga_desc]]>
+  </point>
+  <point name="input.a.page1_anmt440_01.nmclseq" order="" ver="3" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF g_nmcl_d[g_detail_idx].nmclseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_nmcl_d[g_detail_idx].nmclseq != g_nmcl_d_t.nmclseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM nmcl_t WHERE "||"nmclent = '" ||g_enterprise|| "' AND "||"nmclcomp = '"||g_nmckcomp ||"' AND "|| "nmcldocno = '"||g_nmckdocno ||"' AND "|| "nmclseq = '"||g_nmcl_d[g_detail_idx].nmclseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.after_input" order="" ver="3" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL anmt440_01_ref_b()
+            LET g_nmcm2_d.* = g_nmcl_d.*]]>
+  </point>
+  <point name="input.before_input" order="" ver="3" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF g_nmck001 = 'XX' THEN
+               CALL cl_set_comp_required("nmcl001,nmcl002",FALSE)
+               CALL cl_set_comp_entry("nmcl001,nmcl002",FALSE)
+               CALL cl_set_comp_entry("nmcl003,nmcl103,nmcl113",TRUE)
+               CALL cl_set_comp_required("nmcl003,nmcl103,nmcl113",TRUE)
+            ELSE
+               CALL cl_set_comp_entry("nmcl001,nmcl002",TRUE)
+               CALL cl_set_comp_required("nmcl001,nmcl002",TRUE)
+               CALL cl_set_comp_entry("nmcl003,nmcl103,nmcl113",FALSE)
+               CALL cl_set_comp_required("nmcl003,nmcl103,nmcl113",FALSE)
+            END IF]]>
+  </point>
+  <point name="input.c.page1.nmcl001" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmcl_d[l_ac].nmcl001             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_apdadocno()                                #呼叫開窗
+
+            LET g_nmcl_d[l_ac].nmcl001 = g_qryparam.return1              
+
+            DISPLAY g_nmcl_d[l_ac].nmcl001 TO nmcl001              #
+
+            NEXT FIELD nmcl001                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.page1.nmcl002" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmcl_d[l_ac].nmcl002             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_apceseq()                                #呼叫開窗
+
+            LET g_nmcl_d[l_ac].nmcl002 = g_qryparam.return1              
+
+            DISPLAY g_nmcl_d[l_ac].nmcl002 TO nmcl002              #
+
+            NEXT FIELD nmcl002                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.page1.nmcl003" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmcl_d[l_ac].nmcl003             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL aglt310_04()                                #呼叫開窗
+
+            LET g_nmcl_d[l_ac].nmcl003 = g_qryparam.return1              
+
+            DISPLAY g_nmcl_d[l_ac].nmcl003 TO nmcl003              #
+
+            NEXT FIELD nmcl003                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.page1.nmclorga" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmcl_d[l_ac].nmclorga             #給予default值
+            LET g_qryparam.default2 = "" #g_nmcl_d[l_ac].ooefl003 #說明(簡稱)
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ooef001()                                #呼叫開窗
+
+            LET g_nmcl_d[l_ac].nmclorga = g_qryparam.return1              
+            #LET g_nmcl_d[l_ac].ooefl003 = g_qryparam.return2 
+            DISPLAY g_nmcl_d[l_ac].nmclorga TO nmclorga              #
+            #DISPLAY g_nmcl_d[l_ac].ooefl003 TO ooefl003 #說明(簡稱)
+            NEXT FIELD nmclorga                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.page1_anmt440_01.nmcl001" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmcl_d[l_ac].nmcl001             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_apdadocno()                                #呼叫開窗
+
+            LET g_nmcl_d[l_ac].nmcl001 = g_qryparam.return1              
+
+            DISPLAY g_nmcl_d[l_ac].nmcl001 TO nmcl001              #
+
+            NEXT FIELD nmcl001                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.page1_anmt440_01.nmcl002" order="" ver="3" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmcl_d[l_ac].nmcl002             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_apdeseq()                                #呼叫開窗
+
+            LET g_nmcl_d[l_ac].nmcl002 = g_qryparam.return1              
+
+            DISPLAY g_nmcl_d[l_ac].nmcl002 TO nmcl002              #
+
+            NEXT FIELD nmcl002                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.page1_anmt440_01.nmcl003" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmcl_d[l_ac].nmcl003             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL aglt310_04()                                #呼叫開窗
+
+            LET g_nmcl_d[l_ac].nmcl003 = g_qryparam.return1              
+
+            DISPLAY g_nmcl_d[l_ac].nmcl003 TO nmcl003              #
+
+            NEXT FIELD nmcl003                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.page1_anmt440_01.nmclorga" order="" ver="3" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmcl_d[l_ac].nmclorga             #給予default值
+            LET g_qryparam.default2 = "" #g_nmcl_d[l_ac].ooefl003 #說明(簡稱)
+            #2015/01/27---add---by---qiull(S)
+            CALL s_fin_create_account_center_tmp()
+            CALL s_fin_account_center_sons_query('6',g_nmcksite,g_today,'')
+            CALL s_fin_account_center_comp_str()RETURNING l_origin_str
+            CALL anmt440_01_change_to_sql(l_origin_str)RETURNING l_origin_str
+            LET g_qryparam.where = "ooef001 IN(",l_origin_str CLIPPED,") AND ooef017 = '",g_nmckcomp,"' "
+            #2015/01/27---add---by---qiull(E)
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ooef001()                                #呼叫開窗
+
+            LET g_nmcl_d[l_ac].nmclorga = g_qryparam.return1              
+            #LET g_nmcl_d[l_ac].ooefl003 = g_qryparam.return2 
+            DISPLAY g_nmcl_d[l_ac].nmclorga TO nmclorga              #
+            #DISPLAY g_nmcl_d[l_ac].ooefl003 TO ooefl003 #說明(簡稱)
+            NEXT FIELD nmclorga                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.define" order="" ver="3" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_origin_str    STRING             #2015/01/27 add by qiull]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   ]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   ]]>
+  </point>
+  <point name="menu.detail_show.page1_sub.prog_aapt420" order="" ver="3" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[               #應用 a41 樣板自動產生(Version:2)
+               #使用JSON格式組合參數與作業編號(串查)
+               INITIALIZE la_param.* TO NULL
+               LET la_param.prog     = 'aapt420'
+               LET la_param.param[1] = g_nmcl_d[l_ac].nmcl001
+
+               LET ls_js = util.JSON.stringify(la_param)
+               CALL cl_cmdrun_wait(ls_js)
+ 
+
+]]>
+  </point>
+  <point name="show.body.reference" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmcl_d[l_ac].nmcl_t.nmclorga
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmcl_d[l_ac].nmclorga_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_nmcl_d[l_ac].nmclorga_desc
+]]>
+  </point>
+  <section id="anmt440_01.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:3,PR版次:3) Build-000213
+#+ 
+#+ Filename...: anmt440_01
+#+ Description: 開票來源
+#+ Creator....: 02599(2014-06-06 16:40:46)
+#+ Modifier...: 04152(2015-06-29 18:01:06) -SD/PR-
+]]>
+  </section>
+  <section id="anmt440_01.global" ver="15" status="" src="s" readonly="">
+    <![CDATA[#應用 c02b 樣板自動產生(Version:5)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_nmcl_d        RECORD
+       nmclseq LIKE nmcl_t.nmclseq, 
+   nmclorga LIKE nmcl_t.nmclorga, 
+   nmclorga_desc LIKE type_t.chr200, 
+   nmcl001 LIKE nmcl_t.nmcl001, 
+   nmcl002 LIKE nmcl_t.nmcl002, 
+   nmcl003 LIKE nmcl_t.nmcl003, 
+   nmcl003_desc LIKE type_t.chr500, 
+   nmcl103 LIKE nmcl_t.nmcl103, 
+   nmcl113 LIKE nmcl_t.nmcl113, 
+   nmcl121 LIKE nmcl_t.nmcl121, 
+   nmcl123 LIKE nmcl_t.nmcl123, 
+   nmcl131 LIKE nmcl_t.nmcl131, 
+   nmcl133 LIKE nmcl_t.nmcl133
+       END RECORD
+ 
+ 
+DEFINE g_nmcl_d          DYNAMIC ARRAY OF type_g_nmcl_d
+DEFINE g_nmcl_d_t        type_g_nmcl_d
+ 
+ 
+DEFINE g_nmclcomp_t   LIKE nmcl_t.nmclcomp    #Key值備份
+DEFINE g_nmcldocno_t      LIKE nmcl_t.nmcldocno    #Key值備份
+DEFINE g_nmclseq_t      LIKE nmcl_t.nmclseq    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+    
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point    
+]]>
+  </section>
+  <section id="anmt440_01.input" ver="12" status="" src="s" readonly="">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION anmt440_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define" edit="s"/>}
+   #end add-point
+   #add-point:input段define
+   {<point name="input.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_anmt440_01 WITH FORM cl_ap_formpath("anm","anmt440_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_nmcl_d FROM s_detail1_anmt440_01.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD nmclseq
+            #add-point:BEFORE FIELD nmclseq
+            {<point name="input.b.page1_anmt440_01.nmclseq" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD nmclseq
+            
+            #add-point:AFTER FIELD nmclseq
+            {<point name="input.a.page1_anmt440_01.nmclseq" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE nmclseq
+            #add-point:ON CHANGE nmclseq
+            {<point name="input.g.page1_anmt440_01.nmclseq" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD nmclorga
+            
+            #add-point:AFTER FIELD nmclorga
+            {<point name="input.a.page1_anmt440_01.nmclorga" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD nmclorga
+            #add-point:BEFORE FIELD nmclorga
+            {<point name="input.b.page1_anmt440_01.nmclorga" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE nmclorga
+            #add-point:ON CHANGE nmclorga
+            {<point name="input.g.page1_anmt440_01.nmclorga" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD nmclorga_desc
+            #add-point:BEFORE FIELD nmclorga_desc
+            {<point name="input.b.page1_anmt440_01.nmclorga_desc" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD nmclorga_desc
+            
+            #add-point:AFTER FIELD nmclorga_desc
+            {<point name="input.a.page1_anmt440_01.nmclorga_desc" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE nmclorga_desc
+            #add-point:ON CHANGE nmclorga_desc
+            {<point name="input.g.page1_anmt440_01.nmclorga_desc" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD nmcl001
+            
+            #add-point:AFTER FIELD nmcl001
+            {<point name="input.a.page1_anmt440_01.nmcl001" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD nmcl001
+            #add-point:BEFORE FIELD nmcl001
+            {<point name="input.b.page1_anmt440_01.nmcl001" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE nmcl001
+            #add-point:ON CHANGE nmcl001
+            {<point name="input.g.page1_anmt440_01.nmcl001" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD nmcl002
+            
+            #add-point:AFTER FIELD nmcl002
+            {<point name="input.a.page1_anmt440_01.nmcl002" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD nmcl002
+            #add-point:BEFORE FIELD nmcl002
+            {<point name="input.b.page1_anmt440_01.nmcl002" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE nmcl002
+            #add-point:ON CHANGE nmcl002
+            {<point name="input.g.page1_anmt440_01.nmcl002" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD nmcl003
+            
+            #add-point:AFTER FIELD nmcl003
+            {<point name="input.a.page1_anmt440_01.nmcl003" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD nmcl003
+            #add-point:BEFORE FIELD nmcl003
+            {<point name="input.b.page1_anmt440_01.nmcl003" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE nmcl003
+            #add-point:ON CHANGE nmcl003
+            {<point name="input.g.page1_anmt440_01.nmcl003" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD nmcl103
+            #add-point:BEFORE FIELD nmcl103
+            {<point name="input.b.page1_anmt440_01.nmcl103" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD nmcl103
+            
+            #add-point:AFTER FIELD nmcl103
+            {<point name="input.a.page1_anmt440_01.nmcl103" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE nmcl103
+            #add-point:ON CHANGE nmcl103
+            {<point name="input.g.page1_anmt440_01.nmcl103" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD nmcl113
+            #add-point:BEFORE FIELD nmcl113
+            {<point name="input.b.page1_anmt440_01.nmcl113" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD nmcl113
+            
+            #add-point:AFTER FIELD nmcl113
+            {<point name="input.a.page1_anmt440_01.nmcl113" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE nmcl113
+            #add-point:ON CHANGE nmcl113
+            {<point name="input.g.page1_anmt440_01.nmcl113" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD nmcl121
+            #add-point:BEFORE FIELD nmcl121
+            {<point name="input.b.page1_anmt440_01.nmcl121" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD nmcl121
+            
+            #add-point:AFTER FIELD nmcl121
+            {<point name="input.a.page1_anmt440_01.nmcl121" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE nmcl121
+            #add-point:ON CHANGE nmcl121
+            {<point name="input.g.page1_anmt440_01.nmcl121" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD nmcl123
+            #add-point:BEFORE FIELD nmcl123
+            {<point name="input.b.page1_anmt440_01.nmcl123" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD nmcl123
+            
+            #add-point:AFTER FIELD nmcl123
+            {<point name="input.a.page1_anmt440_01.nmcl123" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE nmcl123
+            #add-point:ON CHANGE nmcl123
+            {<point name="input.g.page1_anmt440_01.nmcl123" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD nmcl131
+            #add-point:BEFORE FIELD nmcl131
+            {<point name="input.b.page1_anmt440_01.nmcl131" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD nmcl131
+            
+            #add-point:AFTER FIELD nmcl131
+            {<point name="input.a.page1_anmt440_01.nmcl131" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE nmcl131
+            #add-point:ON CHANGE nmcl131
+            {<point name="input.g.page1_anmt440_01.nmcl131" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD nmcl133
+            #add-point:BEFORE FIELD nmcl133
+            {<point name="input.b.page1_anmt440_01.nmcl133" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD nmcl133
+            
+            #add-point:AFTER FIELD nmcl133
+            {<point name="input.a.page1_anmt440_01.nmcl133" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE nmcl133
+            #add-point:ON CHANGE nmcl133
+            {<point name="input.g.page1_anmt440_01.nmcl133" />}
+            #END add-point 
+ 
+ 
+                  #Ctrlp:input.c.page1_anmt440_01.nmclseq
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD nmclseq
+            #add-point:ON ACTION controlp INFIELD nmclseq
+            {<point name="input.c.page1_anmt440_01.nmclseq" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_anmt440_01.nmclorga
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD nmclorga
+            #add-point:ON ACTION controlp INFIELD nmclorga
+            {<point name="input.c.page1_anmt440_01.nmclorga" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_anmt440_01.nmclorga_desc
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD nmclorga_desc
+            #add-point:ON ACTION controlp INFIELD nmclorga_desc
+            {<point name="input.c.page1_anmt440_01.nmclorga_desc" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_anmt440_01.nmcl001
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD nmcl001
+            #add-point:ON ACTION controlp INFIELD nmcl001
+            {<point name="input.c.page1_anmt440_01.nmcl001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_anmt440_01.nmcl002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD nmcl002
+            #add-point:ON ACTION controlp INFIELD nmcl002
+            {<point name="input.c.page1_anmt440_01.nmcl002" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_anmt440_01.nmcl003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD nmcl003
+            #add-point:ON ACTION controlp INFIELD nmcl003
+            {<point name="input.c.page1_anmt440_01.nmcl003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_anmt440_01.nmcl103
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD nmcl103
+            #add-point:ON ACTION controlp INFIELD nmcl103
+            {<point name="input.c.page1_anmt440_01.nmcl103" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_anmt440_01.nmcl113
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD nmcl113
+            #add-point:ON ACTION controlp INFIELD nmcl113
+            {<point name="input.c.page1_anmt440_01.nmcl113" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_anmt440_01.nmcl121
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD nmcl121
+            #add-point:ON ACTION controlp INFIELD nmcl121
+            {<point name="input.c.page1_anmt440_01.nmcl121" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_anmt440_01.nmcl123
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD nmcl123
+            #add-point:ON ACTION controlp INFIELD nmcl123
+            {<point name="input.c.page1_anmt440_01.nmcl123" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_anmt440_01.nmcl131
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD nmcl131
+            #add-point:ON ACTION controlp INFIELD nmcl131
+            {<point name="input.c.page1_anmt440_01.nmcl131" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_anmt440_01.nmcl133
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD nmcl133
+            #add-point:ON ACTION controlp INFIELD nmcl133
+            {<point name="input.c.page1_anmt440_01.nmcl133" />}
+            #END add-point
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...)
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel
+         {<point name="input.cancel"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_anmt440_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="anmt440_01.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="anmt440_01.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

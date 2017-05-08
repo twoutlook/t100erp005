@@ -1,0 +1,233 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="arti040" module="art" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02159" crtdt="2015-03-26 09:17:37" modid="02159" moddt="2015-03-27 16:26:21" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="備用品牌資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="rtdlstus,rtdl001,rtdll003,rtdll004,rtdl021,rtdl002,rtdl002_desc(chr500),rtdl003,rtdl003_desc(chr500),rtdl004,rtdl004_desc(chr500),rtdl005,rtdl005_desc(chr500),rtdl006,rtdl006_desc(chr500),rtdl007,rtdl007_desc(chr500),rtdl008,rtdl008_desc(chr500),rtdl009,rtdl009_desc(chr500),rtdl010,rtdl011,rtdl012,rtdl013,rtdl014,rtdl014_desc(chr500),rtdl015,rtdl016,rtdl017,rtdl017_desc(chr500),rtdl018,rtdl018_desc(chr500),rtdl019,rtdl019_desc(chr500),rtdl020,rtdl025,rtdl026,rtdl027,rtdl028,rtdl022,rtdl023,rtdl023_desc(chr500),rtdl024,rtdl024_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="rtdl001,rtdlownid,rtdlownid_desc(chr500),rtdlowndp,rtdlowndp_desc(chr500),rtdlcrtid,rtdlcrtid_desc(chr500),rtdlcrtdp,rtdlcrtdp_desc(chr500),rtdlcrtdt,rtdlmodid,rtdlmodid_desc(chr500),rtdlmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="update_oocq"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="art" filename="arti040" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="rtdlstus,rtdl001,rtdll003,rtdll004,rtdl021,rtdl002,rtdl003,rtdl004,rtdl005,rtdl006,rtdl007,rtdl008,rtdl009,rtdl010,rtdl011,rtdl012,rtdl013,rtdl014,rtdl015,rtdl016,rtdl017,rtdl018,rtdl019,rtdl020,rtdl025,rtdl026,rtdl027,rtdl028,rtdl022,rtdl023,rtdl024" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="rtdlstus,rtdl001,rtdll003,rtdll004,rtdl021,rtdl002,rtdl003,rtdl004,rtdl005,rtdl006,rtdl007,rtdl008,rtdl009,rtdl010,rtdl011,rtdl012,rtdl013,rtdl014,rtdl015,rtdl016,rtdl017,rtdl018,rtdl019,rtdl020,rtdl025,rtdl026,rtdl027,rtdl028,rtdl022,rtdl023,rtdl024"/>
+      <construct id="body" page="2" field="rtdlownid,rtdlowndp,rtdlcrtid,rtdlcrtdp,rtdlcrtdt,rtdlmodid,rtdlmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="rtdlstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="rtdl001">
+        <controlp form="q_rtdl001" state="c"/>
+      </column>
+      <column id="rtdll003"/>
+      <column id="rtdll004"/>
+      <column id="rtdl021" type="S" default="N"/>
+      <column id="rtdl002">
+        <after>
+          <check chkid="v_rtax001_1" id="isExist"/>
+          <reference field="rtdl002_desc" ref_field="rtdl_t.rtdl002" map_field="rtdlent,rtdl002" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001" state="i"/>
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="rtdl002_desc"/>
+      <column id="rtdl003">
+        <after>
+          <reference field="rtdl003_desc" ref_field="rtdl003" map_field="rtdl003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2119&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="rtdl003_desc"/>
+      <column id="rtdl004">
+        <after>
+          <reference field="rtdl004_desc" ref_field="rtdl004" map_field="rtdl004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2120&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="rtdl004_desc"/>
+      <column id="rtdl005">
+        <after>
+          <reference field="rtdl005_desc" ref_field="rtdl005" map_field="rtdl005" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2121&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="rtdl005_desc"/>
+      <column id="rtdl006">
+        <after>
+          <reference field="rtdl006_desc" ref_field="rtdl005" map_field="rtdl005" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2122&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="rtdl006_desc"/>
+      <column id="rtdl007">
+        <after>
+          <reference field="rtdl007_desc" ref_field="rtdl005" map_field="rtdl005" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2123&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="rtdl007_desc"/>
+      <column id="rtdl008">
+        <after>
+          <reference field="rtdl008_desc" ref_field="rtdl005" map_field="rtdl005" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2124&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="rtdl008_desc"/>
+      <column id="rtdl009">
+        <after>
+          <reference field="rtdl009_desc" ref_field="rtdl005" map_field="rtdl005" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2125&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="rtdl009_desc"/>
+      <column id="rtdl010" type="S" default="N"/>
+      <column id="rtdl011"/>
+      <column id="rtdl012">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtdl013"/>
+      <column id="rtdl014">
+        <after>
+          <check chkid="v_pmaa001_1" id="isExist"/>
+          <reference field="rtdl014_desc" ref_field="rtdl_t.rtdl014" map_field="rtdlent,rtdl014" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_3" state="i"/>
+        <controlp form="q_pmaa001_3" state="c"/>
+      </column>
+      <column id="rtdl014_desc"/>
+      <column id="rtdl015" type="S" default="N"/>
+      <column id="rtdl016"/>
+      <column id="rtdl017">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="rtdl017_desc" ref_field="rtdl_t.rtdl017" map_field="rtdlent,rtdl017" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtdl017_desc"/>
+      <column id="rtdl018">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="rtdl018_desc" ref_field="rtdl_t.rtdl018" map_field="rtdlent,rtdl018" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_4" state="i"/>
+        <controlp form="q_ooeg001_4" state="c"/>
+      </column>
+      <column id="rtdl018_desc"/>
+      <column id="rtdl019">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+          <reference field="rtdl019_desc" ref_field="rtdl_t.rtdl019" map_field="rtdlent,rtdl019" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="rtdl019_desc"/>
+      <column id="rtdl020" type="S" default="2" def_scc="6771"/>
+      <column id="rtdl025"/>
+      <column id="rtdl026"/>
+      <column id="rtdl027"/>
+      <column id="rtdl028"/>
+      <column id="rtdl022"/>
+      <column id="rtdl023">
+        <after>
+          <reference field="rtdl023_desc" ref_field="rtdl_t.rtdl023" map_field="rtdl023" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtdl023_desc"/>
+      <column id="rtdl024">
+        <after>
+          <reference field="rtdl024_desc" ref_field="rtdl_t.rtdl024" map_field="rtdl024" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="rtdl024_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="rtdlownid">
+        <after>
+          <reference field="rtdlownid_desc" ref_field="rtdl_t.rtdlownid" map_field="rtdlownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtdlownid_desc"/>
+      <column id="rtdlowndp">
+        <after>
+          <reference field="rtdlowndp_desc" ref_field="rtdl_t.rtdlowndp" map_field="rtdlowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtdlowndp_desc"/>
+      <column id="rtdlcrtid">
+        <after>
+          <reference field="rtdlcrtid_desc" ref_field="rtdl_t.rtdlcrtid" map_field="rtdlcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtdlcrtid_desc"/>
+      <column id="rtdlcrtdp">
+        <after>
+          <reference field="rtdlcrtdp_desc" ref_field="rtdl_t.rtdlcrtdp" map_field="rtdlcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtdlcrtdp_desc"/>
+      <column id="rtdlcrtdt"/>
+      <column id="rtdlmodid">
+        <after>
+          <reference field="rtdlmodid_desc" ref_field="rtdl_t.rtdlmodid" map_field="rtdlmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtdlmodid_desc"/>
+      <column id="rtdlmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="rtdl_t" page="1,2" linked="" pk="rtdl001">
+      <sql id="forupd_sql_detail" query="SELECT rtdlstus,rtdl001,&apos;&apos;,&apos;&apos;,rtdl021,rtdl002,&apos;&apos;,rtdl003,&apos;&apos;,rtdl004,&apos;&apos;,rtdl005,&apos;&apos;,rtdl006,&apos;&apos;,rtdl007,&apos;&apos;,rtdl008,&apos;&apos;,rtdl009,&apos;&apos;,rtdl010,rtdl011,rtdl012,rtdl013,rtdl014,&apos;&apos;,rtdl015,rtdl016,rtdl017,&apos;&apos;,rtdl018,&apos;&apos;,rtdl019,&apos;&apos;,rtdl020,rtdl025,rtdl026,rtdl027,rtdl028,rtdl022,rtdl023,&apos;&apos;,rtdl024,&apos;&apos;,&apos;&apos;,rtdlownid,&apos;&apos;,rtdlowndp,&apos;&apos;,rtdlcrtid,&apos;&apos;,rtdlcrtdp,&apos;&apos;,rtdlcrtdt,rtdlmodid,&apos;&apos;,rtdlmoddt FROM rtdl_t WHERE rtdlent=? AND rtdl001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rtdlstus,rtdl001,&apos;&apos;,&apos;&apos;,rtdl021,rtdl002,&apos;&apos;,rtdl003,&apos;&apos;,rtdl004,&apos;&apos;,rtdl005,&apos;&apos;,rtdl006,&apos;&apos;,rtdl007,&apos;&apos;,rtdl008,&apos;&apos;,rtdl009,&apos;&apos;,rtdl010,rtdl011,rtdl012,rtdl013,rtdl014,&apos;&apos;,rtdl015,rtdl016,rtdl017,&apos;&apos;,rtdl018,&apos;&apos;,rtdl019,&apos;&apos;,rtdl020,rtdl025,rtdl026,rtdl027,rtdl028,rtdl022,rtdl023,&apos;&apos;,rtdl024,&apos;&apos;,&apos;&apos;,rtdlownid,&apos;&apos;,rtdlowndp,&apos;&apos;,rtdlcrtid,&apos;&apos;,rtdlcrtdp,&apos;&apos;,rtdlcrtdt,rtdlmodid,&apos;&apos;,rtdlmoddt FROM rtdl_t WHERE rtdlent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="rtdll_t.rtdll003,rtdll_t.rtdll004" table="rtdll_t" fk="rtdl001" pk="rtdll001,rtdll002" field="rtdll003,rtdll004"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,134 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="acri007" module="acr" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02296" crtdt="2014-04-22 15:15:15" modid="02296" moddt="2014-06-27 16:10:32" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="客戶提醒資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="crcastus,crca002,crca003,name(chr500),sex(chr500),age(chr500),crca009,crca001,crca001_desc(chr500),crca004,crcaseq,crca010,crca005,crca006,crca007,crca008,crca011,crca012,crca013,crca014,crca015"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="crca001,crca001_2_desc(chr500),crcaseq,crcaownid,crcaownid_desc(chr500),crcaowndp,crcaowndp_desc(chr500),crcacrtid,crcacrtid_desc(chr500),crcacrtdp,crcacrtdp_desc(chr500),crcacrtdt,crcamodid,crcamodid_desc(chr500),crcamoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="acr" filename="acri007" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="crcastus,crca002,crca003,crca009,crca001,crca004,crcaseq,crca010,crca005,crca006,crca007,crca008,crca011,crca012,crca013,crca014,crca015" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="crcastus,crca002,crca003,crca009,crca001,crca004,crcaseq,crca010,crca005,crca006,crca007,crca008,crca011,crca012,crca013,crca014,crca015"/>
+      <construct id="body" page="2" field="crcaownid,crcaowndp,crcacrtid,crcacrtdp,crcacrtdt,crcamodid,crcamoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="crcastus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="crca002">
+        <after>
+          <check chkid="v_mmaq001" id="isExist"/>
+        </after>
+        <controlp form="q_mmaq001_2" state="i"/>
+        <controlp form="q_mmaq001_2" state="c"/>
+      </column>
+      <column id="crca003">
+        <after>
+          <check chkid="v_mmaf001" id="isExist"/>
+        </after>
+        <controlp form="q_mmaf001_1" state="i"/>
+        <controlp form="q_mmaf001_1" state="c"/>
+      </column>
+      <column id="name"/>
+      <column id="sex"/>
+      <column id="age"/>
+      <column id="crca009"/>
+      <column id="crca001">
+        <after>
+          <check chkid="v_pmaa001_3" id="isExist"/>
+          <reference field="crca001_desc" ref_field="crca_t.crca001" map_field="crca001" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_6" state="i"/>
+        <controlp form="q_pmaa001_6" state="c"/>
+      </column>
+      <column id="crca001_desc"/>
+      <column id="crca004"/>
+      <column id="crcaseq">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="crca010" type="S" default="0" def_scc="6056"/>
+      <column id="crca005"/>
+      <column id="crca006"/>
+      <column id="crca007" type="S" default="N"/>
+      <column id="crca008" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="crca011"/>
+      <column id="crca012"/>
+      <column id="crca013"/>
+      <column id="crca014"/>
+      <column id="crca015"/>
+    </init>
+    <init id="body" page="2">
+      <column id="crca001_2_desc"/>
+      <column id="crcaownid">
+        <after>
+          <reference field="crcaownid_desc" ref_field="crca_t.crcaownid" map_field="crcaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="crcaownid_desc"/>
+      <column id="crcaowndp">
+        <after>
+          <reference field="crcaowndp_desc" ref_field="crca_t.crcaowndp" map_field="crcaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="crcaowndp_desc"/>
+      <column id="crcacrtid">
+        <after>
+          <reference field="crcacrtid_desc" ref_field="crca_t.crcacrtid" map_field="crcacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="crcacrtid_desc"/>
+      <column id="crcacrtdp">
+        <after>
+          <reference field="crcacrtdp_desc" ref_field="crca_t.crcacrtdp" map_field="crcacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="crcacrtdp_desc"/>
+      <column id="crcacrtdt"/>
+      <column id="crcamodid">
+        <after>
+          <reference field="crcamodid_desc" ref_field="crca_t.crcamodid" map_field="crcamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="crcamodid_desc"/>
+      <column id="crcamoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="crca_t" page="1,2" linked="" pk="crcaseq,crca001">
+      <sql id="forupd_sql_detail" query="SELECT crcastus,crca002,crca003,&apos;&apos;,&apos;&apos;,&apos;&apos;,crca009,crca001,&apos;&apos;,crca004,crcaseq,crca010,crca005,crca006,crca007,crca008,crca011,crca012,crca013,crca014,crca015,&apos;&apos;,&apos;&apos;,&apos;&apos;,crcaownid,&apos;&apos;,crcaowndp,&apos;&apos;,crcacrtid,&apos;&apos;,crcacrtdp,&apos;&apos;,crcacrtdt,crcamodid,&apos;&apos;,crcamoddt FROM crca_t WHERE crcaent=? AND crcaseq=? AND crca001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT crcastus,crca002,crca003,&apos;&apos;,&apos;&apos;,&apos;&apos;,crca009,crca001,&apos;&apos;,crca004,crcaseq,crca010,crca005,crca006,crca007,crca008,crca011,crca012,crca013,crca014,crca015,&apos;&apos;,&apos;&apos;,&apos;&apos;,crcaownid,&apos;&apos;,crcaowndp,&apos;&apos;,crcacrtid,&apos;&apos;,crcacrtdp,&apos;&apos;,crcacrtdt,crcamodid,&apos;&apos;,crcamoddt FROM crca_t WHERE crcaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

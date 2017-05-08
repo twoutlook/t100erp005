@@ -1,0 +1,1646 @@
+{<section id="artq124.description" >}
+#+ Version..: T100-ERP-1.00.00(版次:1) Build-000024
+#+ 
+#+ Filename...: artq124
+#+ Description: 調價清單查詢
+#+ Creator....: 03247(2014/03/20)
+#+ Modifier...: 03247(2014/03/20)
+#+ Buildtype..: 應用 q02 樣板自動產生
+#+ 以上段落由子樣板a00產生
+
+{</section>}
+
+{<section id="artq124.global" >}
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_prbk_d RECORD
+       #statepic       LIKE type_t.chr1,
+       sel            LIKE type_t.chr1,
+       prbkstus LIKE prbk_t.prbkstus, 
+   prbksite LIKE prbk_t.prbksite, 
+   prbksite_desc LIKE type_t.chr500, 
+   prbk003 LIKE prbk_t.prbk003, 
+   prbk001 LIKE prbk_t.prbk001, 
+   prbk002 LIKE prbk_t.prbk002, 
+   prbk004 LIKE prbk_t.prbk004, 
+   prbk005 LIKE prbk_t.prbk005, 
+   prbk006 LIKE prbk_t.prbk006, 
+   prbk008 LIKE prbk_t.prbk008, 
+   prbk007 LIKE prbk_t.prbk007, 
+   prbk009 LIKE prbk_t.prbk009, 
+   prbk010 LIKE prbk_t.prbk010, 
+   prbk010_desc LIKE type_t.chr500, 
+   prbk010_desc1 LIKE type_t.chr500, 
+   prbk010_desc2 LIKE type_t.chr500, 
+   prbk010_desc2_desc LIKE type_t.chr500, 
+   prbk011 LIKE prbk_t.prbk011, 
+   prbk012 LIKE prbk_t.prbk012, 
+   prbk013 LIKE prbk_t.prbk013, 
+   prbk014 LIKE prbk_t.prbk014, 
+   prbk014_desc LIKE type_t.chr500, 
+   prbk015 LIKE prbk_t.prbk015, 
+   prbk016 LIKE prbk_t.prbk016, 
+   prbk017 LIKE prbk_t.prbk017, 
+   prbk017_desc LIKE type_t.chr500, 
+   prbk018 LIKE prbk_t.prbk018, 
+   prbk019 LIKE prbk_t.prbk019, 
+   prbk019_desc LIKE type_t.chr500, 
+   prbk020 LIKE prbk_t.prbk020, 
+   prbk021 LIKE prbk_t.prbk021, 
+   prbk022 LIKE prbk_t.prbk022, 
+   prbk023 LIKE prbk_t.prbk023, 
+   prbkunit LIKE prbk_t.prbkunit 
+       END RECORD
+ 
+ 
+#模組變數(Module Variables)
+DEFINE g_master                     type_g_prbk_d
+DEFINE g_master_t                   type_g_prbk_d
+DEFINE g_prbk_d          DYNAMIC ARRAY OF type_g_prbk_d
+DEFINE g_prbk_d_t        type_g_prbk_d
+ 
+      
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num5              
+DEFINE l_ac_d               LIKE type_t.num5              #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num5              #目前所在頁數
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num5
+DEFINE g_detail_idx         LIKE type_t.num5
+DEFINE g_detail_idx2        LIKE type_t.num5
+DEFINE g_hyper_url          STRING                        #hyperlink的主要網址
+ 
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+ 
+ 
+DEFINE g_wc_filter_table           STRING
+ 
+ 
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="artq124.main" >}
+#+ 此段落由子樣板a26產生
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("art","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = ""
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   DECLARE artq124_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+ 
+   ELSE
+      
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_artq124 WITH FORM cl_ap_formpath("art",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL artq124_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL artq124_ui_dialog() 
+	  
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_artq124
+      
+   END IF 
+   
+   CLOSE artq124_cl
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+
+{</section>}
+
+{<section id="artq124.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION artq124_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+   
+      CALL cl_set_combo_scc('b_prbk003','6033') 
+ 
+   
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="artq124.ui_dialog" >}
+#+ 功能選單 
+PRIVATE FUNCTION artq124_ui_dialog()
+   {<Local define>}
+   DEFINE li_idx   LIKE type_t.num5
+   {</Local define>}
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point 
+ 
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   CALL artq124_query()
+   
+   WHILE TRUE
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_prbk_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_prbk_d.getLength() TO FORMONLY.h_count
+               LET g_master_idx = l_ac
+               CALL artq124_fetch()
+               #add-point:input段before row
+               {<point name="input.body.before_row"/>}
+               #end add-point  
+            
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY
+      
+ 
+         
+ 
+      
+         #add-point:ui_dialog段define
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         
+         BEFORE DIALOG      
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+ 
+            #add-point:ui_dialog段before dialog
+            {<point name="ui_dialog.bef_dialog"/>}
+            #end add-point
+ 
+            NEXT FIELD sel
+      
+         
+ 
+         ON ACTION datainfo
+ 
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN 
+               #add-point:ON ACTION datainfo
+               {<point name="menu.datainfo" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION query
+ 
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN 
+               CALL artq124_query()
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+            END IF
+ 
+ 
+         ON ACTION output
+ 
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN 
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+      
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_prbk_d.getLength()
+               LET g_prbk_d[li_idx].sel = "Y"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selall
+            {<point name="ui_dialog.onaction_selall"/>}
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_prbk_d.getLength()
+               LET g_prbk_d[li_idx].sel = "N"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selnone
+            {<point name="ui_dialog.onaction_selnone"/>}
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_prbk_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_prbk_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action sel
+            {<point name="ui_dialog.onaction_sel"/>}
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_prbk_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_prbk_d[li_idx].sel = "N"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action unsel
+            {<point name="ui_dialog.onaction_unsel"/>}
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL artq124_filter()
+            #add-point:ON ACTION filter
+            {<point name="menu.filter" />}
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            CALL artq124_b_fill()
+            CALL artq124_fetch()
+            
+         
+      
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="artq124.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION artq124_query()
+   {<Local define>}
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   {</Local define>}
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point 
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_prbk_d.clear()
+   LET g_wc_filter = " 1=1"
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+   
+   LET g_qryparam.state = "c"
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   
+   #wc備份
+   LET ls_wc = g_wc
+   LET g_master_idx = l_ac
+ 
+   
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc_table ON prbkstus,prbksite,prbk003,prbk001,prbk002,prbk004,prbk005,prbk006,prbk008, 
+          prbk007,prbk009,prbk010,prbk011,prbk012,prbk013,prbk014,prbk015,prbk016,prbk017,prbk018,prbk019, 
+          prbk020,prbk021,prbk022,prbk023,prbkunit
+           FROM s_detail1[1].b_prbkstus,s_detail1[1].b_prbksite,s_detail1[1].b_prbk003,s_detail1[1].b_prbk001, 
+               s_detail1[1].b_prbk002,s_detail1[1].b_prbk004,s_detail1[1].b_prbk005,s_detail1[1].b_prbk006, 
+               s_detail1[1].b_prbk008,s_detail1[1].b_prbk007,s_detail1[1].b_prbk009,s_detail1[1].b_prbk010, 
+               s_detail1[1].b_prbk011,s_detail1[1].b_prbk012,s_detail1[1].b_prbk013,s_detail1[1].b_prbk014, 
+               s_detail1[1].b_prbk015,s_detail1[1].b_prbk016,s_detail1[1].b_prbk017,s_detail1[1].b_prbk018, 
+               s_detail1[1].b_prbk019,s_detail1[1].b_prbk020,s_detail1[1].b_prbk021,s_detail1[1].b_prbk022, 
+               s_detail1[1].b_prbk023,s_detail1[1].b_prbkunit
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            {<point name="cs.head.before_construct"/>}
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       #此段落由子樣板a11產生
+         ##----<<prbkownid>>----
+         ##ON ACTION controlp INFIELD prbkownid
+         ##   CALL q_common('','prbkownid',TRUE,FALSE,g_prbk_d[1].prbkownid) RETURNING ls_return
+         ##   DISPLAY ls_return TO prbkownid
+         ##   NEXT FIELD prbkownid  
+         #
+         ##----<<prbkowndp>>----
+         ##ON ACTION controlp INFIELD prbkowndp
+         ##   CALL q_common('','prbkowndp',TRUE,FALSE,g_prbk_d[1].prbkowndp) RETURNING ls_return
+         ##   DISPLAY ls_return TO prbkowndp
+         ##   NEXT FIELD prbkowndp
+         #
+         ##----<<prbkcrtid>>----
+         ##ON ACTION controlp INFIELD prbkcrtid
+         ##   CALL q_common('','prbkcrtid',TRUE,FALSE,g_prbk_d[1].prbkcrtid) RETURNING ls_return
+         ##   DISPLAY ls_return TO prbkcrtid
+         ##   NEXT FIELD prbkcrtid
+         #
+         ##----<<prbkcrtdp>>----
+         ##ON ACTION controlp INFIELD prbkcrtdp
+         ##   CALL q_common('','prbkcrtdp',TRUE,FALSE,g_prbk_d[1].prbkcrtdp) RETURNING ls_return
+         ##   DISPLAY ls_return TO prbkcrtdp
+         ##   NEXT FIELD prbkcrtdp
+         #
+         ##----<<prbkmodid>>----
+         ##ON ACTION controlp INFIELD prbkmodid
+         ##   CALL q_common('','prbkmodid',TRUE,FALSE,g_prbk_d[1].prbkmodid) RETURNING ls_return
+         ##   DISPLAY ls_return TO prbkmodid
+         ##   NEXT FIELD prbkmodid
+         #
+         ##----<<prbkcnfid>>----
+         ##ON ACTION controlp INFIELD prbkcnfid
+         ##   CALL q_common('','prbkcnfid',TRUE,FALSE,g_prbk_d[1].prbkcnfid) RETURNING ls_return
+         ##   DISPLAY ls_return TO prbkcnfid
+         ##   NEXT FIELD prbkcnfid
+         #
+         ##----<<prbkpstid>>----
+         ##ON ACTION controlp INFIELD prbkpstid
+         ##   CALL q_common('','prbkpstid',TRUE,FALSE,g_prbk_d[1].prbkpstid) RETURNING ls_return
+         ##   DISPLAY ls_return TO prbkpstid
+         ##   NEXT FIELD prbkpstid
+         
+         ##----<<prbkcrtdt>>----
+         #AFTER FIELD prbkcrtdt
+         #   CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+         #   IF NOT cl_null(ls_result) THEN
+         #      IF NOT cl_chk_date_symbol(ls_result) THEN
+         #         LET ls_result = cl_add_date_extra_cond(ls_result)
+         #      END IF
+         #   END IF
+         #   CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<prbkmoddt>>----
+         #AFTER FIELD prbkmoddt
+         #   CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+         #   IF NOT cl_null(ls_result) THEN
+         #      IF NOT cl_chk_date_symbol(ls_result) THEN
+         #         LET ls_result = cl_add_date_extra_cond(ls_result)
+         #      END IF
+         #   END IF
+         #   CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<prbkcnfdt>>----
+         #AFTER FIELD prbkcnfdt
+         #   CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+         #   IF NOT cl_null(ls_result) THEN
+         #      IF NOT cl_chk_date_symbol(ls_result) THEN
+         #         LET ls_result = cl_add_date_extra_cond(ls_result)
+         #      END IF
+         #   END IF
+         #   CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<prbkpstdt>>----
+         #AFTER FIELD prbkpstdt
+         #   CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+         #   IF NOT cl_null(ls_result) THEN
+         #      IF NOT cl_chk_date_symbol(ls_result) THEN
+         #         LET ls_result = cl_add_date_extra_cond(ls_result)
+         #      END IF
+         #   END IF
+         #   CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+ 
+         
+       #單身一般欄位開窗相關處理
+       #---------------------<  Detail: page1  >---------------------
+         #----<<b_prbkstus>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbkstus
+            #add-point:BEFORE FIELD b_prbkstus
+            {<point name="construct.b.page1.b_prbkstus" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbkstus
+            
+            #add-point:AFTER FIELD b_prbkstus
+            {<point name="construct.a.page1.b_prbkstus" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_prbkstus
+         ON ACTION controlp INFIELD b_prbkstus
+            #add-point:ON ACTION controlp INFIELD b_prbkstus
+            {<point name="construct.c.page1.b_prbkstus" />}
+            #END add-point
+ 
+         #----<<b_prbksite>>----
+         #Ctrlp:construct.c.page1.b_prbksite
+         ON ACTION controlp INFIELD b_prbksite
+            #add-point:ON ACTION controlp INFIELD b_prbksite
+            {<point name="construct.c.page1.b_prbksite" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbksite
+            #add-point:BEFORE FIELD b_prbksite
+            {<point name="construct.b.page1.b_prbksite" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbksite
+            
+            #add-point:AFTER FIELD b_prbksite
+            {<point name="construct.a.page1.b_prbksite" />}
+            #END add-point
+            
+ 
+         #----<<b_prbk003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbk003
+            #add-point:BEFORE FIELD b_prbk003
+            {<point name="construct.b.page1.b_prbk003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbk003
+            
+            #add-point:AFTER FIELD b_prbk003
+            {<point name="construct.a.page1.b_prbk003" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_prbk003
+         ON ACTION controlp INFIELD b_prbk003
+            #add-point:ON ACTION controlp INFIELD b_prbk003
+            {<point name="construct.c.page1.b_prbk003" />}
+            #END add-point
+ 
+         #----<<b_prbk001>>----
+         #Ctrlp:construct.c.page1.b_prbk001
+         ON ACTION controlp INFIELD b_prbk001
+            #add-point:ON ACTION controlp INFIELD b_prbk001
+            {<point name="construct.c.page1.b_prbk001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbk001
+            #add-point:BEFORE FIELD b_prbk001
+            {<point name="construct.b.page1.b_prbk001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbk001
+            
+            #add-point:AFTER FIELD b_prbk001
+            {<point name="construct.a.page1.b_prbk001" />}
+            #END add-point
+            
+ 
+         #----<<b_prbk002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbk002
+            #add-point:BEFORE FIELD b_prbk002
+            {<point name="construct.b.page1.b_prbk002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbk002
+            
+            #add-point:AFTER FIELD b_prbk002
+            {<point name="construct.a.page1.b_prbk002" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_prbk002
+         ON ACTION controlp INFIELD b_prbk002
+            #add-point:ON ACTION controlp INFIELD b_prbk002
+            {<point name="construct.c.page1.b_prbk002" />}
+            #END add-point
+ 
+         #----<<b_prbk004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbk004
+            #add-point:BEFORE FIELD b_prbk004
+            {<point name="construct.b.page1.b_prbk004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbk004
+            
+            #add-point:AFTER FIELD b_prbk004
+            {<point name="construct.a.page1.b_prbk004" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_prbk004
+         ON ACTION controlp INFIELD b_prbk004
+            #add-point:ON ACTION controlp INFIELD b_prbk004
+            {<point name="construct.c.page1.b_prbk004" />}
+            #END add-point
+ 
+         #----<<b_prbk005>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbk005
+            #add-point:BEFORE FIELD b_prbk005
+            {<point name="construct.b.page1.b_prbk005" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbk005
+            
+            #add-point:AFTER FIELD b_prbk005
+            {<point name="construct.a.page1.b_prbk005" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_prbk005
+         ON ACTION controlp INFIELD b_prbk005
+            #add-point:ON ACTION controlp INFIELD b_prbk005
+            {<point name="construct.c.page1.b_prbk005" />}
+            #END add-point
+ 
+         #----<<b_prbk006>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbk006
+            #add-point:BEFORE FIELD b_prbk006
+            {<point name="construct.b.page1.b_prbk006" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbk006
+            
+            #add-point:AFTER FIELD b_prbk006
+            {<point name="construct.a.page1.b_prbk006" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_prbk006
+         ON ACTION controlp INFIELD b_prbk006
+            #add-point:ON ACTION controlp INFIELD b_prbk006
+            {<point name="construct.c.page1.b_prbk006" />}
+            #END add-point
+ 
+         #----<<b_prbk008>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbk008
+            #add-point:BEFORE FIELD b_prbk008
+            {<point name="construct.b.page1.b_prbk008" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbk008
+            
+            #add-point:AFTER FIELD b_prbk008
+            {<point name="construct.a.page1.b_prbk008" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_prbk008
+         ON ACTION controlp INFIELD b_prbk008
+            #add-point:ON ACTION controlp INFIELD b_prbk008
+            {<point name="construct.c.page1.b_prbk008" />}
+            #END add-point
+ 
+         #----<<b_prbk007>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbk007
+            #add-point:BEFORE FIELD b_prbk007
+            {<point name="construct.b.page1.b_prbk007" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbk007
+            
+            #add-point:AFTER FIELD b_prbk007
+            {<point name="construct.a.page1.b_prbk007" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_prbk007
+         ON ACTION controlp INFIELD b_prbk007
+            #add-point:ON ACTION controlp INFIELD b_prbk007
+            {<point name="construct.c.page1.b_prbk007" />}
+            #END add-point
+ 
+         #----<<b_prbk009>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbk009
+            #add-point:BEFORE FIELD b_prbk009
+            {<point name="construct.b.page1.b_prbk009" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbk009
+            
+            #add-point:AFTER FIELD b_prbk009
+            {<point name="construct.a.page1.b_prbk009" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_prbk009
+         ON ACTION controlp INFIELD b_prbk009
+            #add-point:ON ACTION controlp INFIELD b_prbk009
+            {<point name="construct.c.page1.b_prbk009" />}
+            #END add-point
+ 
+         #----<<b_prbk010>>----
+         #Ctrlp:construct.c.page1.b_prbk010
+         ON ACTION controlp INFIELD b_prbk010
+            #add-point:ON ACTION controlp INFIELD b_prbk010
+            {<point name="construct.c.page1.b_prbk010" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbk010
+            #add-point:BEFORE FIELD b_prbk010
+            {<point name="construct.b.page1.b_prbk010" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbk010
+            
+            #add-point:AFTER FIELD b_prbk010
+            {<point name="construct.a.page1.b_prbk010" />}
+            #END add-point
+            
+ 
+         #----<<b_prbk011>>----
+         #Ctrlp:construct.c.page1.b_prbk011
+         ON ACTION controlp INFIELD b_prbk011
+            #add-point:ON ACTION controlp INFIELD b_prbk011
+            {<point name="construct.c.page1.b_prbk011" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbk011
+            #add-point:BEFORE FIELD b_prbk011
+            {<point name="construct.b.page1.b_prbk011" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbk011
+            
+            #add-point:AFTER FIELD b_prbk011
+            {<point name="construct.a.page1.b_prbk011" />}
+            #END add-point
+            
+ 
+         #----<<b_prbk012>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbk012
+            #add-point:BEFORE FIELD b_prbk012
+            {<point name="construct.b.page1.b_prbk012" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbk012
+            
+            #add-point:AFTER FIELD b_prbk012
+            {<point name="construct.a.page1.b_prbk012" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_prbk012
+         ON ACTION controlp INFIELD b_prbk012
+            #add-point:ON ACTION controlp INFIELD b_prbk012
+            {<point name="construct.c.page1.b_prbk012" />}
+            #END add-point
+ 
+         #----<<b_prbk013>>----
+         #Ctrlp:construct.c.page1.b_prbk013
+         ON ACTION controlp INFIELD b_prbk013
+            #add-point:ON ACTION controlp INFIELD b_prbk013
+            {<point name="construct.c.page1.b_prbk013" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbk013
+            #add-point:BEFORE FIELD b_prbk013
+            {<point name="construct.b.page1.b_prbk013" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbk013
+            
+            #add-point:AFTER FIELD b_prbk013
+            {<point name="construct.a.page1.b_prbk013" />}
+            #END add-point
+            
+ 
+         #----<<b_prbk014>>----
+         #Ctrlp:construct.c.page1.b_prbk014
+         ON ACTION controlp INFIELD b_prbk014
+            #add-point:ON ACTION controlp INFIELD b_prbk014
+            {<point name="construct.c.page1.b_prbk014" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbk014
+            #add-point:BEFORE FIELD b_prbk014
+            {<point name="construct.b.page1.b_prbk014" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbk014
+            
+            #add-point:AFTER FIELD b_prbk014
+            {<point name="construct.a.page1.b_prbk014" />}
+            #END add-point
+            
+ 
+         #----<<b_prbk015>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbk015
+            #add-point:BEFORE FIELD b_prbk015
+            {<point name="construct.b.page1.b_prbk015" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbk015
+            
+            #add-point:AFTER FIELD b_prbk015
+            {<point name="construct.a.page1.b_prbk015" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_prbk015
+         ON ACTION controlp INFIELD b_prbk015
+            #add-point:ON ACTION controlp INFIELD b_prbk015
+            {<point name="construct.c.page1.b_prbk015" />}
+            #END add-point
+ 
+         #----<<b_prbk016>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbk016
+            #add-point:BEFORE FIELD b_prbk016
+            {<point name="construct.b.page1.b_prbk016" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbk016
+            
+            #add-point:AFTER FIELD b_prbk016
+            {<point name="construct.a.page1.b_prbk016" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_prbk016
+         ON ACTION controlp INFIELD b_prbk016
+            #add-point:ON ACTION controlp INFIELD b_prbk016
+            {<point name="construct.c.page1.b_prbk016" />}
+            #END add-point
+ 
+         #----<<b_prbk017>>----
+         #Ctrlp:construct.c.page1.b_prbk017
+         ON ACTION controlp INFIELD b_prbk017
+            #add-point:ON ACTION controlp INFIELD b_prbk017
+            {<point name="construct.c.page1.b_prbk017" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbk017
+            #add-point:BEFORE FIELD b_prbk017
+            {<point name="construct.b.page1.b_prbk017" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbk017
+            
+            #add-point:AFTER FIELD b_prbk017
+            {<point name="construct.a.page1.b_prbk017" />}
+            #END add-point
+            
+ 
+         #----<<b_prbk018>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbk018
+            #add-point:BEFORE FIELD b_prbk018
+            {<point name="construct.b.page1.b_prbk018" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbk018
+            
+            #add-point:AFTER FIELD b_prbk018
+            {<point name="construct.a.page1.b_prbk018" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_prbk018
+         ON ACTION controlp INFIELD b_prbk018
+            #add-point:ON ACTION controlp INFIELD b_prbk018
+            {<point name="construct.c.page1.b_prbk018" />}
+            #END add-point
+ 
+         #----<<b_prbk019>>----
+         #Ctrlp:construct.c.page1.b_prbk019
+         ON ACTION controlp INFIELD b_prbk019
+            #add-point:ON ACTION controlp INFIELD b_prbk019
+            {<point name="construct.c.page1.b_prbk019" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbk019
+            #add-point:BEFORE FIELD b_prbk019
+            {<point name="construct.b.page1.b_prbk019" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbk019
+            
+            #add-point:AFTER FIELD b_prbk019
+            {<point name="construct.a.page1.b_prbk019" />}
+            #END add-point
+            
+ 
+         #----<<b_prbk020>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbk020
+            #add-point:BEFORE FIELD b_prbk020
+            {<point name="construct.b.page1.b_prbk020" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbk020
+            
+            #add-point:AFTER FIELD b_prbk020
+            {<point name="construct.a.page1.b_prbk020" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_prbk020
+         ON ACTION controlp INFIELD b_prbk020
+            #add-point:ON ACTION controlp INFIELD b_prbk020
+            {<point name="construct.c.page1.b_prbk020" />}
+            #END add-point
+ 
+         #----<<b_prbk021>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbk021
+            #add-point:BEFORE FIELD b_prbk021
+            {<point name="construct.b.page1.b_prbk021" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbk021
+            
+            #add-point:AFTER FIELD b_prbk021
+            {<point name="construct.a.page1.b_prbk021" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_prbk021
+         ON ACTION controlp INFIELD b_prbk021
+            #add-point:ON ACTION controlp INFIELD b_prbk021
+            {<point name="construct.c.page1.b_prbk021" />}
+            #END add-point
+ 
+         #----<<b_prbk022>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbk022
+            #add-point:BEFORE FIELD b_prbk022
+            {<point name="construct.b.page1.b_prbk022" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbk022
+            
+            #add-point:AFTER FIELD b_prbk022
+            {<point name="construct.a.page1.b_prbk022" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_prbk022
+         ON ACTION controlp INFIELD b_prbk022
+            #add-point:ON ACTION controlp INFIELD b_prbk022
+            {<point name="construct.c.page1.b_prbk022" />}
+            #END add-point
+ 
+         #----<<b_prbk023>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbk023
+            #add-point:BEFORE FIELD b_prbk023
+            {<point name="construct.b.page1.b_prbk023" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbk023
+            
+            #add-point:AFTER FIELD b_prbk023
+            {<point name="construct.a.page1.b_prbk023" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_prbk023
+         ON ACTION controlp INFIELD b_prbk023
+            #add-point:ON ACTION controlp INFIELD b_prbk023
+            {<point name="construct.c.page1.b_prbk023" />}
+            #END add-point
+ 
+         #----<<b_prbkunit>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_prbkunit
+            #add-point:BEFORE FIELD b_prbkunit
+            {<point name="construct.b.page1.b_prbkunit" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_prbkunit
+            
+            #add-point:AFTER FIELD b_prbkunit
+            {<point name="construct.a.page1.b_prbkunit" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_prbkunit
+         ON ACTION controlp INFIELD b_prbkunit
+            #add-point:ON ACTION controlp INFIELD b_prbkunit
+            {<point name="construct.c.page1.b_prbkunit" />}
+            #END add-point
+ 
+   
+       
+      END CONSTRUCT
+      
+ 
+      
+ 
+  
+      #add-point:query段more_construct
+      {<point name="query.more_construct"/>}
+      #end add-point 
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc = ls_wc
+   ELSE
+      LET g_master_idx = 1
+   END IF
+   
+   LET g_wc = g_wc_table 
+ 
+ 
+        
+   LET g_wc2 = " 1=1"
+ 
+        
+   #add-point:cs段after_construct
+   {<point name="cs.after_construct"/>}
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL artq124_b_fill()
+   LET l_ac = g_master_idx
+   CALL artq124_fetch()
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      CALL cl_err("",-100,1)
+   END IF
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="artq124.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION artq124_b_fill()
+   {<Local define>}
+   DEFINE ls_wc           STRING
+   {</Local define>}
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+   
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter
+   
+   LET g_sql = "SELECT  UNIQUE prbkstus,prbksite,'',prbk003,prbk001,prbk002,prbk004,prbk005,prbk006, 
+       prbk008,prbk007,prbk009,prbk010,'','','','',prbk011,prbk012,prbk013,prbk014,'',prbk015,prbk016, 
+       prbk017,'',prbk018,prbk019,'',prbk020,prbk021,prbk022,prbk023,prbkunit FROM prbk_t",
+ 
+ 
+               "",
+               " WHERE prbkent= ? AND 1=1 AND ", ls_wc
+    
+   LET g_sql = g_sql, " ORDER BY prbk_t.prbksite,prbk_t.prbk001,prbk_t.prbk002"
+  
+   #add-point:b_fill段sql_after
+   {<point name="b_fill.sql_after"/>}
+   #end add-point
+  
+   PREPARE artq124_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR artq124_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_prbk_d.clear()
+ 
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO g_prbk_d[l_ac].prbkstus,g_prbk_d[l_ac].prbksite,g_prbk_d[l_ac].prbksite_desc, 
+       g_prbk_d[l_ac].prbk003,g_prbk_d[l_ac].prbk001,g_prbk_d[l_ac].prbk002,g_prbk_d[l_ac].prbk004,g_prbk_d[l_ac].prbk005, 
+       g_prbk_d[l_ac].prbk006,g_prbk_d[l_ac].prbk008,g_prbk_d[l_ac].prbk007,g_prbk_d[l_ac].prbk009,g_prbk_d[l_ac].prbk010, 
+       g_prbk_d[l_ac].prbk010_desc,g_prbk_d[l_ac].prbk010_desc1,g_prbk_d[l_ac].prbk010_desc2,g_prbk_d[l_ac].prbk010_desc2_desc, 
+       g_prbk_d[l_ac].prbk011,g_prbk_d[l_ac].prbk012,g_prbk_d[l_ac].prbk013,g_prbk_d[l_ac].prbk014,g_prbk_d[l_ac].prbk014_desc, 
+       g_prbk_d[l_ac].prbk015,g_prbk_d[l_ac].prbk016,g_prbk_d[l_ac].prbk017,g_prbk_d[l_ac].prbk017_desc, 
+       g_prbk_d[l_ac].prbk018,g_prbk_d[l_ac].prbk019,g_prbk_d[l_ac].prbk019_desc,g_prbk_d[l_ac].prbk020, 
+       g_prbk_d[l_ac].prbk021,g_prbk_d[l_ac].prbk022,g_prbk_d[l_ac].prbk023,g_prbk_d[l_ac].prbkunit
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      LET g_prbk_d[l_ac].sel = "N"
+      #LET g_prbk_d[l_ac].statepic = cl_get_actipic(g_prbk_d[l_ac].statepic)
+ 
+      
+ 
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.fill"/>}
+      #end add-point
+      
+      CALL artq124_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+ 
+   
+   CALL g_prbk_d.deleteElement(g_prbk_d.getLength())   
+ 
+   
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE artq124_pb
+   
+   LET l_ac = 1
+   CALL artq124_fetch()
+   
+      CALL artq124_filter_show('prbkstus','b_prbkstus')
+   CALL artq124_filter_show('prbksite','b_prbksite')
+   CALL artq124_filter_show('prbk003','b_prbk003')
+   CALL artq124_filter_show('prbk001','b_prbk001')
+   CALL artq124_filter_show('prbk002','b_prbk002')
+   CALL artq124_filter_show('prbk004','b_prbk004')
+   CALL artq124_filter_show('prbk005','b_prbk005')
+   CALL artq124_filter_show('prbk006','b_prbk006')
+   CALL artq124_filter_show('prbk008','b_prbk008')
+   CALL artq124_filter_show('prbk007','b_prbk007')
+   CALL artq124_filter_show('prbk009','b_prbk009')
+   CALL artq124_filter_show('prbk010','b_prbk010')
+   CALL artq124_filter_show('prbk011','b_prbk011')
+   CALL artq124_filter_show('prbk012','b_prbk012')
+   CALL artq124_filter_show('prbk013','b_prbk013')
+   CALL artq124_filter_show('prbk014','b_prbk014')
+   CALL artq124_filter_show('prbk015','b_prbk015')
+   CALL artq124_filter_show('prbk016','b_prbk016')
+   CALL artq124_filter_show('prbk017','b_prbk017')
+   CALL artq124_filter_show('prbk018','b_prbk018')
+   CALL artq124_filter_show('prbk019','b_prbk019')
+   CALL artq124_filter_show('prbk020','b_prbk020')
+   CALL artq124_filter_show('prbk021','b_prbk021')
+   CALL artq124_filter_show('prbk022','b_prbk022')
+   CALL artq124_filter_show('prbk023','b_prbk023')
+   CALL artq124_filter_show('prbkunit','b_prbkunit')
+ 
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="artq124.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION artq124_fetch()
+   {<Local define>}
+   DEFINE li_ac           LIKE type_t.num5
+   {</Local define>}
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point
+   
+ 
+   
+   LET li_ac = l_ac 
+   
+ 
+   
+   #DISPLAY g_detail_cnt TO FORMONLY.cnt
+ 
+   #add-point:單身填充後
+   {<point name="fetch.after_fill" />}
+   #end add-point 
+   
+ 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="artq124.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION artq124_detail_show()
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值page1
+   #此段落由子樣板a12產生
+      ##LET g_prbk_d[l_ac].prbkownid_desc = cl_get_username(g_prbk_d[l_ac].prbkownid)
+      ##LET g_prbk_d[l_ac].prbkowndp_desc = cl_get_deptname(g_prbk_d[l_ac].prbkowndp)
+      ##LET g_prbk_d[l_ac].prbkcrtid_desc = cl_get_username(g_prbk_d[l_ac].prbkcrtid)
+      ##LET g_prbk_d[l_ac].prbkcrtdp_desc = cl_get_deptname(g_prbk_d[l_ac].prbkcrtdp)
+      ##LET g_prbk_d[l_ac].prbkmodid_desc = cl_get_username(g_prbk_d[l_ac].prbkmodid)
+      ##LET g_prbk_d[l_ac].prbkcnfid_desc = cl_get_deptname(g_prbk_d[l_ac].prbkcnfid)
+      ##LET g_prbk_d[l_ac].prbkpstid_desc = cl_get_deptname(g_prbk_d[l_ac].prbkpstid)
+      
+ 
+ 
+    
+ 
+   
+   #讀入ref值
+   #add-point:show段單身reference
+   {<point name="detail_show.body.reference"/>}
+   #end add-point
+   
+ 
+ 
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="artq124.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION artq124_filter()
+   {<Local define>}
+   {</Local define>}
+   #add-point:filter段define
+   {<point name="filter.define"/>}
+   #end add-point    
+   
+   LET l_ac = 1
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON prbkstus,prbksite,prbk003,prbk001,prbk002,prbk004,prbk005,prbk006,prbk008, 
+          prbk007,prbk009,prbk010,prbk011,prbk012,prbk013,prbk014,prbk015,prbk016,prbk017,prbk018,prbk019, 
+          prbk020,prbk021,prbk022,prbk023,prbkunit
+                          FROM s_detail1[1].b_prbkstus,s_detail1[1].b_prbksite,s_detail1[1].b_prbk003, 
+                              s_detail1[1].b_prbk001,s_detail1[1].b_prbk002,s_detail1[1].b_prbk004,s_detail1[1].b_prbk005, 
+                              s_detail1[1].b_prbk006,s_detail1[1].b_prbk008,s_detail1[1].b_prbk007,s_detail1[1].b_prbk009, 
+                              s_detail1[1].b_prbk010,s_detail1[1].b_prbk011,s_detail1[1].b_prbk012,s_detail1[1].b_prbk013, 
+                              s_detail1[1].b_prbk014,s_detail1[1].b_prbk015,s_detail1[1].b_prbk016,s_detail1[1].b_prbk017, 
+                              s_detail1[1].b_prbk018,s_detail1[1].b_prbk019,s_detail1[1].b_prbk020,s_detail1[1].b_prbk021, 
+                              s_detail1[1].b_prbk022,s_detail1[1].b_prbk023,s_detail1[1].b_prbkunit
+ 
+         BEFORE CONSTRUCT
+#saki       CALL cl_qbe_init()
+                     DISPLAY artq124_filter_parser('prbkstus') TO s_detail1[1].b_prbkstus
+            DISPLAY artq124_filter_parser('prbksite') TO s_detail1[1].b_prbksite
+            DISPLAY artq124_filter_parser('prbk003') TO s_detail1[1].b_prbk003
+            DISPLAY artq124_filter_parser('prbk001') TO s_detail1[1].b_prbk001
+            DISPLAY artq124_filter_parser('prbk002') TO s_detail1[1].b_prbk002
+            DISPLAY artq124_filter_parser('prbk004') TO s_detail1[1].b_prbk004
+            DISPLAY artq124_filter_parser('prbk005') TO s_detail1[1].b_prbk005
+            DISPLAY artq124_filter_parser('prbk006') TO s_detail1[1].b_prbk006
+            DISPLAY artq124_filter_parser('prbk008') TO s_detail1[1].b_prbk008
+            DISPLAY artq124_filter_parser('prbk007') TO s_detail1[1].b_prbk007
+            DISPLAY artq124_filter_parser('prbk009') TO s_detail1[1].b_prbk009
+            DISPLAY artq124_filter_parser('prbk010') TO s_detail1[1].b_prbk010
+            DISPLAY artq124_filter_parser('prbk011') TO s_detail1[1].b_prbk011
+            DISPLAY artq124_filter_parser('prbk012') TO s_detail1[1].b_prbk012
+            DISPLAY artq124_filter_parser('prbk013') TO s_detail1[1].b_prbk013
+            DISPLAY artq124_filter_parser('prbk014') TO s_detail1[1].b_prbk014
+            DISPLAY artq124_filter_parser('prbk015') TO s_detail1[1].b_prbk015
+            DISPLAY artq124_filter_parser('prbk016') TO s_detail1[1].b_prbk016
+            DISPLAY artq124_filter_parser('prbk017') TO s_detail1[1].b_prbk017
+            DISPLAY artq124_filter_parser('prbk018') TO s_detail1[1].b_prbk018
+            DISPLAY artq124_filter_parser('prbk019') TO s_detail1[1].b_prbk019
+            DISPLAY artq124_filter_parser('prbk020') TO s_detail1[1].b_prbk020
+            DISPLAY artq124_filter_parser('prbk021') TO s_detail1[1].b_prbk021
+            DISPLAY artq124_filter_parser('prbk022') TO s_detail1[1].b_prbk022
+            DISPLAY artq124_filter_parser('prbk023') TO s_detail1[1].b_prbk023
+            DISPLAY artq124_filter_parser('prbkunit') TO s_detail1[1].b_prbkunit
+ 
+ 
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog
+         {<point name="filter.b_dialog"/>}
+         #end add-point  
+ 
+      ON ACTION accept
+         ACCEPT DIALOG 
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+   
+      CALL artq124_filter_show('prbkstus','b_prbkstus')
+   CALL artq124_filter_show('prbksite','b_prbksite')
+   CALL artq124_filter_show('prbk003','b_prbk003')
+   CALL artq124_filter_show('prbk001','b_prbk001')
+   CALL artq124_filter_show('prbk002','b_prbk002')
+   CALL artq124_filter_show('prbk004','b_prbk004')
+   CALL artq124_filter_show('prbk005','b_prbk005')
+   CALL artq124_filter_show('prbk006','b_prbk006')
+   CALL artq124_filter_show('prbk008','b_prbk008')
+   CALL artq124_filter_show('prbk007','b_prbk007')
+   CALL artq124_filter_show('prbk009','b_prbk009')
+   CALL artq124_filter_show('prbk010','b_prbk010')
+   CALL artq124_filter_show('prbk011','b_prbk011')
+   CALL artq124_filter_show('prbk012','b_prbk012')
+   CALL artq124_filter_show('prbk013','b_prbk013')
+   CALL artq124_filter_show('prbk014','b_prbk014')
+   CALL artq124_filter_show('prbk015','b_prbk015')
+   CALL artq124_filter_show('prbk016','b_prbk016')
+   CALL artq124_filter_show('prbk017','b_prbk017')
+   CALL artq124_filter_show('prbk018','b_prbk018')
+   CALL artq124_filter_show('prbk019','b_prbk019')
+   CALL artq124_filter_show('prbk020','b_prbk020')
+   CALL artq124_filter_show('prbk021','b_prbk021')
+   CALL artq124_filter_show('prbk022','b_prbk022')
+   CALL artq124_filter_show('prbk023','b_prbk023')
+   CALL artq124_filter_show('prbkunit','b_prbkunit')
+ 
+    
+   CALL artq124_b_fill()
+   CALL artq124_fetch()
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="artq124.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION artq124_filter_parser(ps_field)
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+   #add-point:filter段define
+   {<point name="filter_parser.define"/>}
+   #end add-point    
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="artq124.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION artq124_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = artq124_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="artq124.insert" >}
+#+ insert
+PRIVATE FUNCTION artq124_insert()
+   #add-point:insert段define
+   {<point name="insert.define"/>}
+   #end add-point
+ 
+   #add-point:insert段control
+   {<point name="insert.control"/>}
+   #end add-point    
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="artq124.modify" >}
+#+ modify
+PRIVATE FUNCTION artq124_modify()
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point
+ 
+   #add-point:modify段control
+   {<point name="modify.control"/>}
+   #end add-point 
+END FUNCTION
+
+{</section>}
+
+{<section id="artq124.reproduce" >}
+#+ reproduce
+PRIVATE FUNCTION artq124_reproduce()
+   #add-point:reproduce段define
+   {<point name="reproduce.define"/>}
+   #end add-point
+ 
+   #add-point:reproduce段control
+   {<point name="reproduce.control"/>}
+   #end add-point 
+END FUNCTION
+
+{</section>}
+
+{<section id="artq124.delete" >}
+#+ delete
+PRIVATE FUNCTION artq124_delete()
+   #add-point:delete段define
+   {<point name="delete.define"/>}
+   #end add-point
+ 
+   #add-point:delete段control
+   {<point name="delete.control"/>}
+   #end add-point 
+END FUNCTION
+
+{</section>}
+
+{<section id="artq124.other_function" >}
+{<point name="other.function"/>}
+
+{</section>}
+

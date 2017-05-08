@@ -1,0 +1,140 @@
+<spec prog="asrt340_03" std_prog="asrt340_03" erpver="1.0" ver="1" module="ASR" booking="Y" class="T" template="F001_00" env="s" zone="t10dev">
+  <other>
+    <code_template value="F" status="" />
+    <free_style value="Y" status="" />
+  </other>
+  <toolbar items="" />
+  <prog_rel />
+  <ref_field />
+  <multi_lang />
+  <help_code>
+    <hfield cite_std="N" ver="1" name="sfda_t.sfdadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="" />
+  </help_code>
+  <strings>
+    <sfield name="page_1" text="基本資料" lstr="" />
+    <sfield name="lbl_sfdadocno" text="發退料單號" lstr="" />
+    <sfield name="lbl_sfdadocdt" text="單據日期" lstr="" />
+    <sfield name="lbl_hbegin" text="第" lstr="" />
+    <sfield name="lbl_hsep" text="筆(共" lstr="" />
+    <sfield name="lbl_hend" text="筆)" lstr="" />
+    <sact name="delete" text="刪除" lstr="" />
+    <sact name="insert" text="新增" lstr="" />
+    <sact name="modify" text="更改" lstr="" />
+    <sact name="output" text="列印" lstr="" />
+    <sact name="query" text="查詢" lstr="" />
+    <sact name="reproduce" text="複製" lstr="" />
+  </strings>
+  <sa_spec />
+  <table ver="1" cite_std="N">
+    <tbl name="sfda_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status="" def_pk="" def_fk_master="" def_fk_detail="" />
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+<![CDATA[產生倒扣領料單(asrt310)
+入庫的類型是1.一般或2.聯產品時且生產料號在料件基本資料的
+
+發料單頭:
+sfdadocno發料單別:依畫面輸入單別自動編碼
+sfdadocdt單據日期:依畫面輸入的日期
+sfda001扣帳日期:依畫面輸入的日期
+sfda002發料類別=14.倒扣領料
+sfda003生產部門=入庫單的部門sfea003
+sfda004申請人=入庫單的人員sfea004
+sfdastat=N
+sfda006生產料號=入庫的生產料號
+sfda007BOM特性=入庫的BOM特性
+sfda008產品特徵=入庫的產品特徵
+sfda009生管控制組=入庫的生管控制組
+sfda010=null
+sfda011=null
+sfda012庫位=生產料號在料件預設在製庫位
+sfda013套數=入庫數量
+
+發料需求單身:依生產料號+BOM特性找到BOM資料
+sfdcdocno(發料單號)=sfdadocno
+sfdcseq(項次)=自動流水號
+sfdc001(工單單號)=null
+sfdc002(工單項次)=null
+sfdc003(工單項序)=null
+sfdc004(需求料號)=bmba003
+sfdc005(特徵)=見特徵管理說明
+sfdc006(單位)=bmba010
+sfdc007(申請數量)=
+ IF 未使用公式用量 THEN
+   應發基數=bmba011/bmba012*生產數量
+ ELSE 使用公式用量
+   應發基數=依公式計算(呼叫公式用量計算元件)
+ END IF
+ IF BOM損秏型態=外加損秏 AND 發料單別參數"發料是否考慮外加損秏率"=Y THEN
+    損秏量=標準應發數量*(BOM動變損秏率/100)+固定損秏量
+ ELSE
+    損秏量=0
+ END IF
+ 總應發數=標準應發數量+損秏量
+ 申請數量=呼叫建議應發數量元件(料號,總應發數)
+實際數量(sfdc008)=申請數量
+參考單位(sfdc009)=料件基本資料的參考單位
+參考需求數量(sfdc010)=申請數量*單位與參考單位的轉換率
+參考實際數量(sfdc011)=參考需求數量
+指定庫位(sfdc012)=參數發料庫位
+指定儲位(sfdc013)=' '
+指定批號(sfdc014)=' '
+理由碼(sfdc015)=null
+庫存管理特徵(sfdc016)= ' '
+正負(sfdc017)=發料=1， 退料=-1
+同時寫入一筆資料到發料明細的庫儲批明細檔
+
+特徵管理說明：
+特徵管理有分為3種方式：
+1.主件特徴限定用料:當主件的特徵=尺寸時，且尺寸=S時，元件用的A料號，尺寸=L時，元件用B料號
+  此情況元件本身不會記錄特徵，但需要根據主件的特徵判斷需要用哪個元件
+  當BOM的資料為同一項次+部位+作業+製程序，但不同料號時，代表為同一組的資料
+
+2.主件特徵與元件特徵對應:當主件的特徵=紅時，元件則用特徵黑色，主件特徵=藍時，元件特徵用白色，元件的黑色與白色為同一料號
+  此情況元件需記錄特徵
+
+3.限定元件特徵：此情況不需考慮主件的庫存特徵，元件本身指定用哪個特徵，將特徵記錄於發料單身即可
+
+發料明細單身
+sfdddocno=sfdadocno
+sfddseq=sfdcseq
+sfddseq1項序:1
+sfdd001發料料號=sfdc004
+sfdd002替代率=1
+sfdd003庫位=sfdc012
+sfdd004儲位=sfdc013
+sfdd005批號=sfdc014
+sfdd010庫存管理特徵=sfdc016
+sfdd006單位=sfdc006
+sfdd007數量=sfdc007
+sfdd008參考單位=sfdc009
+sfdd009參考數量=sfdc010
+sfdd012正負值=1
+
+]]>
+</all>
+  <field cite_std="N" name="sfda_t.sfdadocno" ver="1" src="s" column="sfdadocno" table="sfda_t" attribute="C203" type="varchar2(20)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+<![CDATA[倒扣领料单别:需存在asrt310单别，不可空白]]>
+</field>
+  <field cite_std="N" name="sfda_t.sfdadocdt" ver="1" src="s" column="sfdadocdt" table="sfda_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+<![CDATA[单据日期:预设当天日期，不可小于关帐日期]]>
+</field>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+<![CDATA[]]>
+</act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+<![CDATA[]]>
+</act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+<![CDATA[]]>
+</act>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+<![CDATA[]]>
+</act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+<![CDATA[]]>
+</act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+<![CDATA[]]>
+</act>
+  <exclude ver="" cite_std="N" src="" />
+</spec>

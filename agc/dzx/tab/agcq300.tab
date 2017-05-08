@@ -1,0 +1,207 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agcq300" module="agc" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02482" crtdt="2014-04-02 13:43:15" modid="06814" moddt="2016-09-12 16:44:46" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="券資料查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gcao001,gcao002,gcao002_desc(chr500),gcao003,gcao003_desc(chr500),gcao037,b_gcao037_desc(chr500),gcao004,gcao005,l_docno(chr20),gcao006,gcao008,gcao009,gcao034,gcao034_desc(chr500),gcao038"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gcao001,gcao005b(chr1),gcao011,gcao011_desc(chr500),gcao012,gcao013,gcao013_desc(chr500),gcao039,gcao014,gcao014_desc(chr500),gcao015,gcao016,gcao016_desc(chr500),gcao040,gcao017,gcao017_desc(chr500),gcao018,gcao019,gcao019_desc(chr500),gcao041,gcao020,gcao020_desc(chr500),gcao021,gcao022,gcao022_desc(chr500),gcao042,gcao023,gcao023_desc(chr500),gcao024,gcao025,gcao025_desc(chr500),gcao043,gcao026,gcao026_desc(chr500),gcao027,gcao028,gcao028_desc(chr500),gcao044,gcao029,gcao029_desc(chr500),gcao030,gcao031,gcao031_desc(chr500),gcao045"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="agc" filename="agcq300" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="gcao001,gcao002,gcao003,gcao037,gcao004,gcao005,gcao006,gcao008,gcao009,gcao034,gcao038" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="gcao011,gcao012,gcao013,gcao039,gcao014,gcao015,gcao016,gcao040,gcao017,gcao018,gcao019,gcao041,gcao020,gcao021,gcao022,gcao042,gcao023,gcao024,gcao025,gcao043,gcao026,gcao027,gcao028,gcao044,gcao029,gcao030,gcao031,gcao045" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="gcao001,gcao002,gcao003,gcao037,gcao004,gcao005,l_docno,gcao006,gcao008,gcao009,gcao034,gcao038"/>
+      <construct id="body" page="2" field="gcao011,gcao012,gcao013,gcao039,gcao014,gcao015,gcao016,gcao040,gcao017,gcao018,gcao019,gcao041,gcao020,gcao021,gcao022,gcao042,gcao023,gcao024,gcao025,gcao043,gcao026,gcao027,gcao028,gcao044,gcao029,gcao030,gcao031,gcao045"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="gcao001">
+        <controlp form="q_gcao001_9" state="c"/>
+      </column>
+      <column id="gcao002">
+        <after>
+          <reference field="gcao002_desc" ref_field="gcao_t.gcao002" map_field="gcao002" ref_sql="SELECT gcafl003 FROM gcafl_t WHERE gcaflent=$varg_enterprise$var AND gcafl001=? AND gcafl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_gcaf001" state="c"/>
+      </column>
+      <column id="gcao002_desc"/>
+      <column id="gcao003">
+        <after>
+          <reference field="gcao003_desc" ref_field="gcao003" map_field="gcao003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2071&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="gcao003_desc"/>
+      <column id="gcao037">
+        <after/>
+        <controlp form="q_oodb002" state="i"/>
+        <controlp form="q_oodb002" state="c"/>
+      </column>
+      <column id="b_gcao037_desc"/>
+      <column id="gcao004"/>
+      <column id="gcao005" def_scc="6551"/>
+      <column id="l_docno"/>
+      <column id="gcao006" def_scc="6559"/>
+      <column id="gcao008"/>
+      <column id="gcao009"/>
+      <column id="gcao034">
+        <after>
+          <reference field="gcao034_desc" ref_field="gcao_t.gcao034" map_field="gcao034" ref_sql="SELECT mmaf008 FROM mmaf_t WHERE mmafent=$varg_enterprise$var AND mmaf001=? "/>
+        </after>
+        <controlp form="q_mmaf001" state="c"/>
+      </column>
+      <column id="gcao034_desc"/>
+      <column id="gcao038"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gcao005b"/>
+      <column id="gcao011">
+        <after>
+          <reference field="gcao011_desc" ref_field="gcao_t.gcao011" map_field="gcao011" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="gcao011_desc"/>
+      <column id="gcao012"/>
+      <column id="gcao013">
+        <after>
+          <reference field="gcao013_desc" ref_field="gcao_t.gcao013" map_field="gcao013" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="gcao013_desc"/>
+      <column id="gcao039">
+        <controlp form="q_gcao039" state="c"/>
+      </column>
+      <column id="gcao014">
+        <after>
+          <reference field="gcao014_desc" ref_field="gcao_t.gcao014" map_field="gcao014" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="gcao014_desc"/>
+      <column id="gcao015"/>
+      <column id="gcao016">
+        <after>
+          <reference field="gcao016_desc" ref_field="gcao_t.gcao016" map_field="gcao016" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="gcao016_desc"/>
+      <column id="gcao040">
+        <controlp form="q_gcao040" state="c"/>
+      </column>
+      <column id="gcao017">
+        <after>
+          <reference field="gcao017_desc" ref_field="gcao_t.gcao017" map_field="gcao017" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="gcao017_desc"/>
+      <column id="gcao018"/>
+      <column id="gcao019">
+        <after>
+          <reference field="gcao019_desc" ref_field="gcao_t.gcao019" map_field="gcao019" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="gcao019_desc"/>
+      <column id="gcao041">
+        <controlp form="q_gcao041" state="c"/>
+      </column>
+      <column id="gcao020">
+        <after>
+          <reference field="gcao020_desc" ref_field="gcao_t.gcao020" map_field="gcao020" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="gcao020_desc"/>
+      <column id="gcao021"/>
+      <column id="gcao022">
+        <after>
+          <reference field="gcao022_desc" ref_field="gcao_t.gcao022" map_field="gcao022" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="gcao022_desc"/>
+      <column id="gcao042">
+        <controlp form="q_gcao042" state="c"/>
+      </column>
+      <column id="gcao023">
+        <after>
+          <reference field="gcao023_desc" ref_field="gcao_t.gcao023" map_field="gcao023" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="gcao023_desc"/>
+      <column id="gcao024"/>
+      <column id="gcao025">
+        <after>
+          <reference field="gcao025_desc" ref_field="gcao_t.gcao025" map_field="gcao025" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="gcao025_desc"/>
+      <column id="gcao043">
+        <controlp form="q_gcao043" state="c"/>
+      </column>
+      <column id="gcao026">
+        <after>
+          <reference field="gcao026_desc" ref_field="gcao_t.gcao026" map_field="gcao026" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="gcao026_desc"/>
+      <column id="gcao027"/>
+      <column id="gcao028">
+        <after>
+          <reference field="gcao028_desc" ref_field="gcao_t.gcao028" map_field="gcao028" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="gcao028_desc"/>
+      <column id="gcao044">
+        <controlp form="q_gcao044" state="c"/>
+      </column>
+      <column id="gcao029">
+        <after>
+          <reference field="gcao029_desc" ref_field="gcao_t.gcao029" map_field="gcao029" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="gcao029_desc"/>
+      <column id="gcao030"/>
+      <column id="gcao031">
+        <after>
+          <reference field="gcao031_desc" ref_field="gcao_t.gcao031" map_field="gcao031" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="gcao031_desc"/>
+      <column id="gcao045">
+        <controlp form="q_gcao045" state="c"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <body id="gcao_t" page="1,2" linked="" pk="gcao001">
+      <sql id="forupd_sql_detail" query="SELECT gcao001,gcao002,&apos;&apos;,gcao003,&apos;&apos;,gcao037,&apos;&apos;,gcao004,gcao005,&apos;&apos;,gcao006,gcao008,gcao009,gcao034,&apos;&apos;,gcao038,&apos;&apos;,&apos;&apos;,gcao011,&apos;&apos;,gcao012,gcao013,&apos;&apos;,gcao039,gcao014,&apos;&apos;,gcao015,gcao016,&apos;&apos;,gcao040,gcao017,&apos;&apos;,gcao018,gcao019,&apos;&apos;,gcao041,gcao020,&apos;&apos;,gcao021,gcao022,&apos;&apos;,gcao042,gcao023,&apos;&apos;,gcao024,gcao025,&apos;&apos;,gcao043,gcao026,&apos;&apos;,gcao027,gcao028,&apos;&apos;,gcao044,gcao029,&apos;&apos;,gcao030,gcao031,&apos;&apos;,gcao045 FROM gcao_t WHERE gcaoent=? AND gcao001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gcao001,gcao002,&apos;&apos;,gcao003,&apos;&apos;,gcao037,&apos;&apos;,gcao004,gcao005,&apos;&apos;,gcao006,gcao008,gcao009,gcao034,&apos;&apos;,gcao038,&apos;&apos;,&apos;&apos;,gcao011,&apos;&apos;,gcao012,gcao013,&apos;&apos;,gcao039,gcao014,&apos;&apos;,gcao015,gcao016,&apos;&apos;,gcao040,gcao017,&apos;&apos;,gcao018,gcao019,&apos;&apos;,gcao041,gcao020,&apos;&apos;,gcao021,gcao022,&apos;&apos;,gcao042,gcao023,&apos;&apos;,gcao024,gcao025,&apos;&apos;,gcao043,gcao026,&apos;&apos;,gcao027,gcao028,&apos;&apos;,gcao044,gcao029,&apos;&apos;,gcao030,gcao031,&apos;&apos;,gcao045 FROM gcao_t WHERE gcaoent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

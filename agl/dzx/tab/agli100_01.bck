@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli100_01" module="agl" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02599" crtdt="2016-06-06 14:25:16" modid="02599" moddt="2016-06-06 14:29:21" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="會計週期產生">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glav001,glav001_desc(chr80),glav002,glav003,glav004_s(dat),glav004_e(dat)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="agli100_01" method="dialog">
+    <section id="input">
+      <input id="head" field="glav001,glav002,glav003,glav004_s,glav004_e"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="glav001">
+        <after>
+          <reference field="glav001_desc" ref_field="glav001" map_field="glav001" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;5&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooal001" state="i"/>
+        <controlp form="q_ooal001" state="c"/>
+      </column>
+      <column id="glav001_desc"/>
+      <column id="glav002"/>
+      <column id="glav003" type="S" default="1" def_scc="9416"/>
+      <column id="glav004_s"/>
+      <column id="glav004_e"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="glav_t" pk="glav001,glav002,glav004">
+      <sql id="forupd_sql" type="sql" query="SELECT glav001,&apos;&apos;,glav002,glav003,&apos;&apos;,&apos;&apos; FROM glav_t WHERE glavent= ? AND glav001=? AND glav002=? AND glav004=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="glav001,glav002,glav004"/>
+    </head>
+  </dataset>
+</assembly>
+

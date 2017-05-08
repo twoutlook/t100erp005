@@ -1,0 +1,4076 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aooi125.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0015(2016-06-08 17:03:31), PR版次:0015(2016-11-02 13:55:25)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000251
+#+ Filename...: aooi125
+#+ Description: 部門維護作業
+#+ Creator....: 02482(2013-08-29 11:24:37)
+#+ Modifier...: 02295 -SD/PR- 07556
+ 
+{</section>}
+ 
+{<section id="aooi125.global" >}
+#應用 i02 樣板自動產生(Version:34)
+#add-point:填寫註解說明
+#+ Modifier...: No.#160324-00001#1   2016/03/29  By  lixiang #若當前部門修改了法人，需同步更新組織檔中的所屬法
+#+ Modifier...: No.#160318-00025#30  2016/04/08  By  07959   將重複內容的錯誤訊息置換為公用錯誤訊息
+#+ Modifier...: No.#160505-00021#1   2016/06/08  By  xianghui 1.增加部门核决层级栏位
+#                                                             2.增加集团参数E-SYS-0723是否启用BPM组织同步，为N时，隐藏核决层级栏位
+#160902-00024#7  16/11/02 By Jessica  移除新舊相容的判斷，直接用新參數
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_ooeg_d RECORD
+       ooegstus LIKE ooeg_t.ooegstus, 
+   ooeg001 LIKE ooeg_t.ooeg001, 
+   ooefl003 LIKE ooefl_t.ooefl003, 
+   ooefl004 LIKE ooefl_t.ooefl004, 
+   ooefl005 LIKE ooefl_t.ooefl005, 
+   ooeg009 LIKE ooeg_t.ooeg009, 
+   ooeg009_desc LIKE type_t.chr500, 
+   ooeg002 LIKE ooeg_t.ooeg002, 
+   ooeg002_desc LIKE type_t.chr500, 
+   ooeg003 LIKE ooeg_t.ooeg003, 
+   ooeg004 LIKE ooeg_t.ooeg004, 
+   ooeg004_desc LIKE type_t.chr500, 
+   ooeg005 LIKE ooeg_t.ooeg005, 
+   ooeg006 LIKE ooeg_t.ooeg006, 
+   ooeg007 LIKE ooeg_t.ooeg007, 
+   ooeg008 LIKE ooeg_t.ooeg008, 
+   ooeg011 LIKE ooeg_t.ooeg011, 
+   ooeg011_desc LIKE type_t.chr500, 
+   ooeg012 LIKE ooeg_t.ooeg012, 
+   ooeg012_desc LIKE type_t.chr500
+       END RECORD
+PRIVATE TYPE type_g_ooeg2_d RECORD
+       ooeg001 LIKE ooeg_t.ooeg001, 
+   ooegmodid LIKE ooeg_t.ooegmodid, 
+   ooegmodid_desc LIKE type_t.chr500, 
+   ooegmoddt DATETIME YEAR TO SECOND, 
+   ooegownid LIKE ooeg_t.ooegownid, 
+   ooegownid_desc LIKE type_t.chr500, 
+   ooegowndp LIKE ooeg_t.ooegowndp, 
+   ooegowndp_desc LIKE type_t.chr500, 
+   ooegcrtid LIKE ooeg_t.ooegcrtid, 
+   ooegcrtid_desc LIKE type_t.chr500, 
+   ooegcrtdp LIKE ooeg_t.ooegcrtdp, 
+   ooegcrtdp_desc LIKE type_t.chr500, 
+   ooegcrtdt DATETIME YEAR TO SECOND
+       END RECORD
+ 
+ 
+DEFINE g_detail_multi_table_t    RECORD
+      ooefl001 LIKE ooefl_t.ooefl001,
+      ooefl002 LIKE ooefl_t.ooefl002,
+      ooefl003 LIKE ooefl_t.ooefl003,
+      ooefl004 LIKE ooefl_t.ooefl004,
+      ooefl005 LIKE ooefl_t.ooefl005
+      END RECORD
+ 
+#add-point:自定義模組變數(Module Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_ooeg_d          DYNAMIC ARRAY OF type_g_ooeg_d #單身變數
+DEFINE g_ooeg_d_t        type_g_ooeg_d                  #單身備份
+DEFINE g_ooeg_d_o        type_g_ooeg_d                  #單身備份
+DEFINE g_ooeg_d_mask_o   DYNAMIC ARRAY OF type_g_ooeg_d #單身變數
+DEFINE g_ooeg_d_mask_n   DYNAMIC ARRAY OF type_g_ooeg_d #單身變數
+DEFINE g_ooeg2_d   DYNAMIC ARRAY OF type_g_ooeg2_d
+DEFINE g_ooeg2_d_t type_g_ooeg2_d
+DEFINE g_ooeg2_d_o type_g_ooeg2_d
+DEFINE g_ooeg2_d_mask_o DYNAMIC ARRAY OF type_g_ooeg2_d
+DEFINE g_ooeg2_d_mask_n DYNAMIC ARRAY OF type_g_ooeg2_d
+ 
+      
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_temp_idx           LIKE type_t.num10             #單身 所在筆數(暫存用)
+DEFINE g_detail_idx         LIKE type_t.num10             #單身 所在筆數(所有資料)
+DEFINE g_detail_cnt         LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_chk                BOOLEAN
+DEFINE g_aw                 STRING                        #確定當下點擊的單身
+DEFINE g_log1               STRING                        #log用
+DEFINE g_log2               STRING                        #log用
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aooi125.main" >}
+#應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aoo","")
+ 
+   #add-point:作業初始化 name="main.init"
+   
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+ 
+ 
+   #add-point:main段define_sql name="main.body.define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = "SELECT ooegstus,ooeg001,ooeg009,ooeg002,ooeg003,ooeg004,ooeg005,ooeg006,ooeg007, 
+       ooeg008,ooeg011,ooeg012,ooeg001,ooegmodid,ooegmoddt,ooegownid,ooegowndp,ooegcrtid,ooegcrtdp,ooegcrtdt  
+       FROM ooeg_t WHERE ooegent=? AND ooeg001=? FOR UPDATE"
+   #add-point:main段define_sql name="main.body.after_define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE aooi125_bcl CURSOR FROM g_forupd_sql
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aooi125 WITH FORM cl_ap_formpath("aoo",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aooi125_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aooi125_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_aooi125
+      
+   END IF 
+   
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aooi125.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION aooi125_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point
+   #add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   DEFINE l_e_sys_0723   LIKE type_t.chr1
+   #end add-point   
+   
+   #add-point:Function前置處理  name="init.pre_function"
+   
+   #end add-point
+   
+   
+      CALL cl_set_combo_scc('ooeg003','47') 
+   CALL cl_set_combo_scc('ooeg008','22') 
+ 
+   LET g_error_show = 1
+   
+   #add-point:畫面資料初始化 name="init.init"
+   #160505-00021#1---add---s
+   CALL cl_set_comp_visible("ooeg012,ooeg012_desc",TRUE)
+     
+   IF NOT s_aooi723_chk_bpm() THEN  #160902-00024#7
+      CALL cl_set_comp_visible("ooeg012,ooeg012_desc",FALSE)
+   END IF
+   #160505-00021#1---add---e
+   #end add-point
+   
+   CALL aooi125_default_search()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi125.ui_dialog" >}
+#+ 功能選單 
+PRIVATE FUNCTION aooi125_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE la_param  RECORD #串查用
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   DEFINE l_cmd_token           base.StringTokenizer   #報表作業cmdrun使用 
+   DEFINE l_cmd_next            STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_cnt             LIKE type_t.num5       #報表作業cmdrun使用
+   DEFINE l_cmd_prog_arg        STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_arg             STRING                 #報表作業cmdrun使用
+   #add-point:ui_dialog段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   
+   #end add-point 
+   
+   #add-point:Function前置處理  name="ui_dialog.pre_function"
+   
+   #end add-point
+   
+   LET g_action_choice = " "  
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()      
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   
+   LET g_detail_idx = 1
+   
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   
+   #end add-point
+   
+   WHILE TRUE
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_ooeg_d.clear()
+         CALL g_ooeg2_d.clear()
+ 
+         LET g_wc2 = ' 1=2'
+         LET g_action_choice = ""
+         CALL aooi125_init()
+      END IF
+   
+      CALL aooi125_b_fill(g_wc2)
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_ooeg_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               #add-point:ui_dialog段before display  name="ui_dialog.body.before_display"
+               
+               #end add-point
+               #讓各頁籤能夠同步指到特定資料
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               #add-point:ui_dialog段before display2 name="ui_dialog.body.before_display2"
+               
+               #end add-point
+               
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               LET g_temp_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont() 
+               #顯示followup圖示
+               #應用 a48 樣板自動產生(Version:3)
+   CALL aooi125_set_pk_array()
+   #add-point:ON ACTION agendum name="show.follow_pic"
+   
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+ 
+               #add-point:display array-before row name="ui_dialog.before_row"
+               
+               #end add-point
+         
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY
+      
+         DISPLAY ARRAY g_ooeg2_d TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               #add-point:ui_dialog段before display  name="ui_dialog.body2.before_display"
+               
+               #end add-point
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               #add-point:ui_dialog段before display2 name="ui_dialog.body2.before_display2"
+               
+               #end add-point
+         
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx
+               LET g_temp_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont() 
+               #顯示followup圖示
+               #應用 a48 樣板自動產生(Version:3)
+   CALL aooi125_set_pk_array()
+   #add-point:ON ACTION agendum name="show.follow_pic"
+   
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+ 
+               #add-point:display array-before row name="ui_dialog.before_row2"
+               
+               #end add-point
+               
+            #自訂ACTION(detail_show,page_2)
+            
+               
+         END DISPLAY
+ 
+      
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+    
+         BEFORE DIALOG
+            IF g_temp_idx > 0 THEN
+               LET l_ac = g_temp_idx
+               CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+               LET g_temp_idx = 1
+            END IF
+            LET g_curr_diag = ui.DIALOG.getCurrent()         
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            CALL DIALOG.setSelectionMode("s_detail2", 1)
+ 
+            #add-point:ui_dialog段before name="ui_dialog.b_dialog"
+            
+            #end add-point
+            NEXT FIELD CURRENT
+      
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL aooi125_modify()
+               #add-point:ON ACTION modify name="menu.modify"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = g_curr_diag.getCurrentItem()
+               CALL aooi125_modify()
+               #add-point:ON ACTION modify_detail name="menu.modify_detail"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL aooi125_delete()
+               #add-point:ON ACTION delete name="menu.delete"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL aooi125_insert()
+               #add-point:ON ACTION insert name="menu.insert"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL aooi125_query()
+               #add-point:ON ACTION query name="menu.query"
+               
+               #END add-point
+               #應用 a59 樣板自動產生(Version:3)  
+               CALL g_curr_diag.setCurrentRow("s_detail1",1)
+               CALL g_curr_diag.setCurrentRow("s_detail2",1)
+ 
+ 
+ 
+ 
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION batch
+            LET g_action_choice="batch"
+            IF cl_auth_chk_act("batch") THEN
+               
+               #add-point:ON ACTION batch name="menu.batch"
+               CALL aooi125_batch()
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+      
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_ooeg_d)
+               LET g_export_id[1]   = "s_detail1"
+               LET g_export_node[2] = base.typeInfo.create(g_ooeg2_d)
+               LET g_export_id[2]   = "s_detail2"
+ 
+               #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+               
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+            
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice="exit"
+            CANCEL DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            CANCEL DIALOG
+            
+         
+         
+         #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL aooi125_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.dialog.related_document"
+               
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL aooi125_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.dialog.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL aooi125_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.dialog.followup"
+            
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+ 
+         
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi125.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION aooi125_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   
+   #end add-point 
+   
+   #add-point:Function前置處理  name="query.pre_function"
+   
+   #end add-point
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_ooeg_d.clear()
+   
+   LET g_qryparam.state = "c"
+   
+   #wc備份
+   LET ls_wc = g_wc2
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      CONSTRUCT g_wc2 ON ooegstus,ooeg001,ooefl003,ooefl004,ooefl005,ooeg009,ooeg002,ooeg003,ooeg004, 
+          ooeg005,ooeg006,ooeg007,ooeg008,ooeg011,ooeg012,ooegmodid,ooegmoddt,ooegownid,ooegowndp,ooegcrtid, 
+          ooegcrtdp,ooegcrtdt 
+ 
+         FROM s_detail1[1].ooegstus,s_detail1[1].ooeg001,s_detail1[1].ooefl003,s_detail1[1].ooefl004, 
+             s_detail1[1].ooefl005,s_detail1[1].ooeg009,s_detail1[1].ooeg002,s_detail1[1].ooeg003,s_detail1[1].ooeg004, 
+             s_detail1[1].ooeg005,s_detail1[1].ooeg006,s_detail1[1].ooeg007,s_detail1[1].ooeg008,s_detail1[1].ooeg011, 
+             s_detail1[1].ooeg012,s_detail2[1].ooegmodid,s_detail2[1].ooegmoddt,s_detail2[1].ooegownid, 
+             s_detail2[1].ooegowndp,s_detail2[1].ooegcrtid,s_detail2[1].ooegcrtdp,s_detail2[1].ooegcrtdt  
+ 
+      
+         #應用 a11 樣板自動產生(Version:3)
+         #共用欄位查詢處理  
+         ##----<<ooegcrtdt>>----
+         AFTER FIELD ooegcrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+         #----<<ooegmoddt>>----
+         AFTER FIELD ooegmoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<ooegcnfdt>>----
+         
+         #----<<ooegpstdt>>----
+ 
+ 
+ 
+      
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooegstus
+            #add-point:BEFORE FIELD ooegstus name="query.b.page1.ooegstus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooegstus
+            
+            #add-point:AFTER FIELD ooegstus name="query.a.page1.ooegstus"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.ooegstus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooegstus
+            #add-point:ON ACTION controlp INFIELD ooegstus name="query.c.page1.ooegstus"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.ooeg001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooeg001
+            #add-point:ON ACTION controlp INFIELD ooeg001 name="construct.c.page1.ooeg001"
+            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooeg001  #顯示到畫面上
+
+            NEXT FIELD ooeg001                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooeg001
+            #add-point:BEFORE FIELD ooeg001 name="query.b.page1.ooeg001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooeg001
+            
+            #add-point:AFTER FIELD ooeg001 name="query.a.page1.ooeg001"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooefl003
+            #add-point:BEFORE FIELD ooefl003 name="query.b.page1.ooefl003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooefl003
+            
+            #add-point:AFTER FIELD ooefl003 name="query.a.page1.ooefl003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.ooefl003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooefl003
+            #add-point:ON ACTION controlp INFIELD ooefl003 name="query.c.page1.ooefl003"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooefl004
+            #add-point:BEFORE FIELD ooefl004 name="query.b.page1.ooefl004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooefl004
+            
+            #add-point:AFTER FIELD ooefl004 name="query.a.page1.ooefl004"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.ooefl004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooefl004
+            #add-point:ON ACTION controlp INFIELD ooefl004 name="query.c.page1.ooefl004"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooefl005
+            #add-point:BEFORE FIELD ooefl005 name="query.b.page1.ooefl005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooefl005
+            
+            #add-point:AFTER FIELD ooefl005 name="query.a.page1.ooefl005"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.ooefl005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooefl005
+            #add-point:ON ACTION controlp INFIELD ooefl005 name="query.c.page1.ooefl005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.ooeg009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooeg009
+            #add-point:ON ACTION controlp INFIELD ooeg009 name="construct.c.page1.ooeg009"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooef001_2()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooeg009  #顯示到畫面上
+            NEXT FIELD ooeg009                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooeg009
+            #add-point:BEFORE FIELD ooeg009 name="query.b.page1.ooeg009"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooeg009
+            
+            #add-point:AFTER FIELD ooeg009 name="query.a.page1.ooeg009"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.ooeg002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooeg002
+            #add-point:ON ACTION controlp INFIELD ooeg002 name="construct.c.page1.ooeg002"
+            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooeg002  #顯示到畫面上
+
+            NEXT FIELD ooeg002                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooeg002
+            #add-point:BEFORE FIELD ooeg002 name="query.b.page1.ooeg002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooeg002
+            
+            #add-point:AFTER FIELD ooeg002 name="query.a.page1.ooeg002"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooeg003
+            #add-point:BEFORE FIELD ooeg003 name="query.b.page1.ooeg003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooeg003
+            
+            #add-point:AFTER FIELD ooeg003 name="query.a.page1.ooeg003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.ooeg003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooeg003
+            #add-point:ON ACTION controlp INFIELD ooeg003 name="query.c.page1.ooeg003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.ooeg004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooeg004
+            #add-point:ON ACTION controlp INFIELD ooeg004 name="construct.c.page1.ooeg004"
+            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooeg004  #顯示到畫面上
+
+            NEXT FIELD ooeg004                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooeg004
+            #add-point:BEFORE FIELD ooeg004 name="query.b.page1.ooeg004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooeg004
+            
+            #add-point:AFTER FIELD ooeg004 name="query.a.page1.ooeg004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooeg005
+            #add-point:BEFORE FIELD ooeg005 name="query.b.page1.ooeg005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooeg005
+            
+            #add-point:AFTER FIELD ooeg005 name="query.a.page1.ooeg005"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.ooeg005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooeg005
+            #add-point:ON ACTION controlp INFIELD ooeg005 name="query.c.page1.ooeg005"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooeg006
+            #add-point:BEFORE FIELD ooeg006 name="query.b.page1.ooeg006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooeg006
+            
+            #add-point:AFTER FIELD ooeg006 name="query.a.page1.ooeg006"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.ooeg006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooeg006
+            #add-point:ON ACTION controlp INFIELD ooeg006 name="query.c.page1.ooeg006"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooeg007
+            #add-point:BEFORE FIELD ooeg007 name="query.b.page1.ooeg007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooeg007
+            
+            #add-point:AFTER FIELD ooeg007 name="query.a.page1.ooeg007"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.ooeg007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooeg007
+            #add-point:ON ACTION controlp INFIELD ooeg007 name="query.c.page1.ooeg007"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooeg008
+            #add-point:BEFORE FIELD ooeg008 name="query.b.page1.ooeg008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooeg008
+            
+            #add-point:AFTER FIELD ooeg008 name="query.a.page1.ooeg008"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.ooeg008
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooeg008
+            #add-point:ON ACTION controlp INFIELD ooeg008 name="query.c.page1.ooeg008"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.ooeg011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooeg011
+            #add-point:ON ACTION controlp INFIELD ooeg011 name="construct.c.page1.ooeg011"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg011()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooeg011  #顯示到畫面上
+            NEXT FIELD ooeg011                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooeg011
+            #add-point:BEFORE FIELD ooeg011 name="query.b.page1.ooeg011"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooeg011
+            
+            #add-point:AFTER FIELD ooeg011 name="query.a.page1.ooeg011"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.ooeg012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooeg012
+            #add-point:ON ACTION controlp INFIELD ooeg012 name="construct.c.page1.ooeg012"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '15'
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooeg012  #顯示到畫面上
+            NEXT FIELD ooeg012                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooeg012
+            #add-point:BEFORE FIELD ooeg012 name="query.b.page1.ooeg012"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooeg012
+            
+            #add-point:AFTER FIELD ooeg012 name="query.a.page1.ooeg012"
+            
+            #END add-point
+            
+ 
+ 
+  
+         
+                  #Ctrlp:construct.c.page2.ooegmodid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooegmodid
+            #add-point:ON ACTION controlp INFIELD ooegmodid name="construct.c.page2.ooegmodid"
+            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooegmodid  #顯示到畫面上
+
+            NEXT FIELD ooegmodid                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooegmodid
+            #add-point:BEFORE FIELD ooegmodid name="query.b.page2.ooegmodid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooegmodid
+            
+            #add-point:AFTER FIELD ooegmodid name="query.a.page2.ooegmodid"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooegmoddt
+            #add-point:BEFORE FIELD ooegmoddt name="query.b.page2.ooegmoddt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page2.ooegownid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooegownid
+            #add-point:ON ACTION controlp INFIELD ooegownid name="construct.c.page2.ooegownid"
+            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooegownid  #顯示到畫面上
+
+            NEXT FIELD ooegownid                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooegownid
+            #add-point:BEFORE FIELD ooegownid name="query.b.page2.ooegownid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooegownid
+            
+            #add-point:AFTER FIELD ooegownid name="query.a.page2.ooegownid"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.ooegowndp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooegowndp
+            #add-point:ON ACTION controlp INFIELD ooegowndp name="construct.c.page2.ooegowndp"
+            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooegowndp  #顯示到畫面上
+
+            NEXT FIELD ooegowndp                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooegowndp
+            #add-point:BEFORE FIELD ooegowndp name="query.b.page2.ooegowndp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooegowndp
+            
+            #add-point:AFTER FIELD ooegowndp name="query.a.page2.ooegowndp"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.ooegcrtid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooegcrtid
+            #add-point:ON ACTION controlp INFIELD ooegcrtid name="construct.c.page2.ooegcrtid"
+            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooegcrtid  #顯示到畫面上
+
+            NEXT FIELD ooegcrtid                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooegcrtid
+            #add-point:BEFORE FIELD ooegcrtid name="query.b.page2.ooegcrtid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooegcrtid
+            
+            #add-point:AFTER FIELD ooegcrtid name="query.a.page2.ooegcrtid"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.ooegcrtdp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooegcrtdp
+            #add-point:ON ACTION controlp INFIELD ooegcrtdp name="construct.c.page2.ooegcrtdp"
+            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooegcrtdp  #顯示到畫面上
+
+            NEXT FIELD ooegcrtdp                     #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooegcrtdp
+            #add-point:BEFORE FIELD ooegcrtdp name="query.b.page2.ooegcrtdp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooegcrtdp
+            
+            #add-point:AFTER FIELD ooegcrtdp name="query.a.page2.ooegcrtdp"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooegcrtdt
+            #add-point:BEFORE FIELD ooegcrtdt name="query.b.page2.ooegcrtdt"
+            
+            #END add-point
+ 
+ 
+  
+ 
+      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct name="cs.before_construct"
+            
+            #end add-point 
+      
+      END CONSTRUCT
+  
+      #add-point:query段more_construct name="query.more_construct"
+      
+      #end add-point 
+  
+      BEFORE DIALOG 
+         CALL cl_qbe_init()
+         #add-point:query段before_dialog name="query.before_dialog"
+         
+         #end add-point 
+      
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+      
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         CANCEL DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+      CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:query段after_construct name="query.after_construct"
+   
+   #end add-point
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      #LET g_wc2 = ls_wc
+      LET g_wc2 = " 1=2"
+      RETURN
+   ELSE
+      LET g_error_show = 1
+      LET g_detail_idx = 1
+   END IF
+    
+   CALL aooi125_b_fill(g_wc2)
+   
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   END IF
+   
+   LET INT_FLAG = FALSE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi125.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION aooi125_insert()
+   #add-point:insert段define(客製用) name="insert.define_customerization"
+   
+   #end add-point
+   #add-point:delete段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   
+   #end add-point                
+   
+   #add-point:Function前置處理  name="insert.pre_function"
+   
+   #end add-point
+   
+   #add-point:單身新增前 name="insert.b_insert"
+   
+   #end add-point
+   
+   LET g_insert = 'Y'
+   CALL aooi125_modify()
+            
+   #add-point:單身新增後 name="insert.a_insert"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi125.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION aooi125_modify()
+   #add-point:modify段define(客製用) name="modify.define_customerization"
+   
+   #end add-point
+   DEFINE  l_cmd                  LIKE type_t.chr1
+   DEFINE  l_ac_t                 LIKE type_t.num10               #未取消的ARRAY CNT 
+   DEFINE  l_n                    LIKE type_t.num10               #檢查重複用  
+   DEFINE  l_cnt                  LIKE type_t.num10               #檢查重複用  
+   DEFINE  l_lock_sw              LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert         LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete         LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count                LIKE type_t.num10
+   DEFINE  l_i                    LIKE type_t.num10
+   DEFINE  ls_return              STRING
+   DEFINE  l_var_keys             DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys           DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                 DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields               DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak         DYNAMIC ARRAY OF STRING
+   DEFINE  li_reproduce           LIKE type_t.num10
+   DEFINE  li_reproduce_target    LIKE type_t.num10
+   DEFINE  lb_reproduce           BOOLEAN
+   DEFINE  l_insert               BOOLEAN
+   #add-point:modify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   DEFINE l_n1             LIKE type_t.num5
+   
+   #150311---earl---mod---s
+   DEFINE l_ooef RECORD
+             ooef201       LIKE ooef_t.ooef201,
+             ooef202       LIKE ooef_t.ooef202,
+             ooef204       LIKE ooef_t.ooef204,
+             ooef205       LIKE ooef_t.ooef205,
+             ooef206       LIKE ooef_t.ooef206,
+             ooef207       LIKE ooef_t.ooef207,
+             ooef208       LIKE ooef_t.ooef208,
+             ooef209       LIKE ooef_t.ooef209,
+             ooef210       LIKE ooef_t.ooef210,
+             ooef211       LIKE ooef_t.ooef211,
+             ooef212       LIKE ooef_t.ooef212,
+             ooef301       LIKE ooef_t.ooef301,
+             ooef302       LIKE ooef_t.ooef302,
+             ooef303       LIKE ooef_t.ooef303,
+             ooef304       LIKE ooef_t.ooef304,
+             ooef305       LIKE ooef_t.ooef305
+                 END RECORD
+   #150311---earl---mod---e
+   
+   DEFINE l_ooef003        LIKE ooef_t.ooef003  #160324-00001#1 add
+   #end add-point 
+   
+   #add-point:Function前置處理  name="modify.pre_function"
+   
+   #end add-point
+   
+   LET g_action_choice = ""
+   
+   LET g_qryparam.state = "i"
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #add-point:modify開始前 name="modify.define_sql"
+   
+   #end add-point
+   
+   LET INT_FLAG = FALSE
+   LET lb_reproduce = FALSE
+   LET l_insert = FALSE
+ 
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+ 
+   #add-point:modify段修改前 name="modify.before_input"
+   LET g_errshow = 1
+   #end add-point
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_ooeg_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_detail_cnt,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION update_item
+            LET g_action_choice="update_item"
+            IF cl_auth_chk_act("update_item") THEN
+               
+               #add-point:ON ACTION update_item name="input.detail_input.page1.update_item"
+               IF NOT cl_null(g_ooeg_d[l_ac].ooeg001)  THEN
+                  CALL n_ooefl(g_ooeg_d[l_ac].ooeg001)
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_ooeg_d[l_ac].ooeg001
+                  CALL ap_ref_array2(g_ref_fields," SELECT ooefl003,ooefl004,ooefl005 FROM ooefl_t WHERE ooeflent = '"||g_enterprise||"' AND ooefl001 = ? AND ooefl002 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+                  LET g_ooeg_d[l_ac].ooefl003 = g_rtn_fields[1] 
+                  LET g_ooeg_d[l_ac].ooefl004 = g_rtn_fields[2] 
+                  LET g_ooeg_d[l_ac].ooefl005 = g_rtn_fields[3] 
+                  
+                  DISPLAY BY NAME g_ooeg_d[l_ac].ooefl003 
+                  DISPLAY BY NAME g_ooeg_d[l_ac].ooefl004
+                  DISPLAY BY NAME g_ooeg_d[l_ac].ooefl005
+               END IF
+               #END add-point
+            END IF
+ 
+ 
+ 
+ 
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_ooeg_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL aooi125_b_fill(g_wc2)
+            LET g_detail_cnt = g_ooeg_d.getLength()
+         
+         BEFORE ROW
+            #add-point:modify段before row name="input.body.before_row2"
+            
+            #end add-point  
+            LET l_insert = FALSE
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            LET l_cmd = ''
+            LET l_ac_t = l_ac 
+            LET l_ac = g_detail_idx
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+            DISPLAY g_ooeg_d.getLength() TO FORMONLY.cnt
+         
+            CALL s_transaction_begin()
+            LET g_detail_cnt = g_ooeg_d.getLength()
+            
+            IF g_detail_cnt >= l_ac 
+               AND g_ooeg_d[l_ac].ooeg001 IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_ooeg_d_t.* = g_ooeg_d[l_ac].*  #BACKUP
+               LET g_ooeg_d_o.* = g_ooeg_d[l_ac].*  #BACKUP
+               IF NOT aooi125_lock_b("ooeg_t") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH aooi125_bcl INTO g_ooeg_d[l_ac].ooegstus,g_ooeg_d[l_ac].ooeg001,g_ooeg_d[l_ac].ooeg009, 
+                      g_ooeg_d[l_ac].ooeg002,g_ooeg_d[l_ac].ooeg003,g_ooeg_d[l_ac].ooeg004,g_ooeg_d[l_ac].ooeg005, 
+                      g_ooeg_d[l_ac].ooeg006,g_ooeg_d[l_ac].ooeg007,g_ooeg_d[l_ac].ooeg008,g_ooeg_d[l_ac].ooeg011, 
+                      g_ooeg_d[l_ac].ooeg012,g_ooeg2_d[l_ac].ooeg001,g_ooeg2_d[l_ac].ooegmodid,g_ooeg2_d[l_ac].ooegmoddt, 
+                      g_ooeg2_d[l_ac].ooegownid,g_ooeg2_d[l_ac].ooegowndp,g_ooeg2_d[l_ac].ooegcrtid, 
+                      g_ooeg2_d[l_ac].ooegcrtdp,g_ooeg2_d[l_ac].ooegcrtdt
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = g_ooeg_d_t.ooeg001,":",SQLERRMESSAGE  
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_ooeg_d_mask_o[l_ac].* =  g_ooeg_d[l_ac].*
+                  CALL aooi125_ooeg_t_mask()
+                  LET g_ooeg_d_mask_n[l_ac].* =  g_ooeg_d[l_ac].*
+                  
+                  CALL aooi125_detail_show()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            CALL aooi125_set_entry_b(l_cmd)
+            CALL aooi125_set_no_entry_b(l_cmd)
+            #add-point:modify段before row name="input.body.before_row"
+            
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+LET g_detail_multi_table_t.ooefl001 = g_ooeg_d[l_ac].ooeg001
+LET g_detail_multi_table_t.ooefl002 = g_dlang
+LET g_detail_multi_table_t.ooefl003 = g_ooeg_d[l_ac].ooefl003
+LET g_detail_multi_table_t.ooefl004 = g_ooeg_d[l_ac].ooefl004
+LET g_detail_multi_table_t.ooefl005 = g_ooeg_d[l_ac].ooefl005
+ 
+ 
+            #其他table進行lock
+            
+            INITIALIZE l_var_keys TO NULL 
+            INITIALIZE l_field_keys TO NULL 
+            LET l_field_keys[01] = 'ooeflent'
+            LET l_var_keys[01] = g_enterprise
+            LET l_field_keys[02] = 'ooefl001'
+            LET l_var_keys[02] = g_ooeg_d[l_ac].ooeg001
+            LET l_field_keys[03] = 'ooefl002'
+            LET l_var_keys[03] = g_dlang
+            IF NOT cl_multitable_lock(l_var_keys,l_field_keys,'ooefl_t') THEN
+               RETURN 
+            END IF 
+ 
+ 
+        
+         BEFORE INSERT
+            
+            LET l_insert = TRUE
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_ooeg_d_t.* TO NULL
+            INITIALIZE g_ooeg_d_o.* TO NULL
+            INITIALIZE g_ooeg_d[l_ac].* TO NULL 
+            #公用欄位給值(單身)
+            #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_ooeg2_d[l_ac].ooegownid = g_user
+      LET g_ooeg2_d[l_ac].ooegowndp = g_dept
+      LET g_ooeg2_d[l_ac].ooegcrtid = g_user
+      LET g_ooeg2_d[l_ac].ooegcrtdp = g_dept 
+      LET g_ooeg2_d[l_ac].ooegcrtdt = cl_get_current()
+      LET g_ooeg2_d[l_ac].ooegmodid = g_user
+      LET g_ooeg2_d[l_ac].ooegmoddt = cl_get_current()
+      LET g_ooeg_d[l_ac].ooegstus = ''
+ 
+ 
+ 
+            #自定義預設值(單身2)
+                  LET g_ooeg_d[l_ac].ooegstus = "Y"
+      LET g_ooeg_d[l_ac].ooeg003 = "0"
+      LET g_ooeg_d[l_ac].ooeg005 = "Y"
+ 
+            #add-point:modify段before備份 name="input.body.before_bak"
+            
+            #end add-point
+            LET g_ooeg_d_t.* = g_ooeg_d[l_ac].*     #新輸入資料
+            LET g_ooeg_d_o.* = g_ooeg_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_ooeg_d[li_reproduce_target].* = g_ooeg_d[li_reproduce].*
+               LET g_ooeg2_d[li_reproduce_target].* = g_ooeg2_d[li_reproduce].*
+ 
+               LET g_ooeg_d[g_ooeg_d.getLength()].ooeg001 = NULL
+ 
+            END IF
+            
+LET g_detail_multi_table_t.ooefl001 = g_ooeg_d[l_ac].ooeg001
+LET g_detail_multi_table_t.ooefl002 = g_dlang
+LET g_detail_multi_table_t.ooefl003 = g_ooeg_d[l_ac].ooefl003
+LET g_detail_multi_table_t.ooefl004 = g_ooeg_d[l_ac].ooefl004
+LET g_detail_multi_table_t.ooefl005 = g_ooeg_d[l_ac].ooefl005
+ 
+ 
+            CALL aooi125_set_entry_b(l_cmd)
+            CALL aooi125_set_no_entry_b(l_cmd)
+            #add-point:modify段before insert name="input.body.before_insert"
+            CALL cl_set_comp_entry("ooeg004",FALSE)
+            IF l_ac = 1 THEN
+               LET g_ooeg_d[l_ac].ooeg006 = g_today
+            END IF
+            IF l_ac >1 THEN
+               LET g_ooeg_d[l_ac].ooeg006 = g_ooeg_d[l_ac-1].ooeg006
+            END IF
+            #end add-point  
+  
+         AFTER INSERT
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(1) INTO l_count FROM ooeg_t 
+             WHERE ooegent = g_enterprise AND ooeg001 = g_ooeg_d[l_ac].ooeg001
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前 name="input.body.b_insert"
+               
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_ooeg_d[g_detail_idx].ooeg001
+               CALL aooi125_insert_b('ooeg_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後 name="input.body.a_insert"
+               CALL aooi125_ins_ooef()
+               #end add-point
+            ELSE    
+               INITIALIZE g_ooeg_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code   = "std-00006" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "ooeg_t:",SQLERRMESSAGE 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL s_transaction_end('N','0')                    
+               CALL cl_err()
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL aooi125_b_fill(g_wc2)
+               #資料多語言用-增/改
+                        INITIALIZE l_var_keys TO NULL 
+         INITIALIZE l_field_keys TO NULL 
+         INITIALIZE l_vars TO NULL 
+         INITIALIZE l_fields TO NULL 
+         INITIALIZE l_var_keys_bak TO NULL 
+         IF g_ooeg_d[l_ac].ooeg001 = g_detail_multi_table_t.ooefl001 AND
+         g_ooeg_d[l_ac].ooefl003 = g_detail_multi_table_t.ooefl003 AND
+         g_ooeg_d[l_ac].ooefl004 = g_detail_multi_table_t.ooefl004 AND
+         g_ooeg_d[l_ac].ooefl005 = g_detail_multi_table_t.ooefl005 THEN
+         ELSE 
+            LET l_var_keys[01] = g_enterprise
+            LET l_field_keys[01] = 'ooeflent'
+            LET l_var_keys_bak[01] = g_enterprise
+            LET l_var_keys[02] = g_ooeg_d[l_ac].ooeg001
+            LET l_field_keys[02] = 'ooefl001'
+            LET l_var_keys_bak[02] = g_detail_multi_table_t.ooefl001
+            LET l_var_keys[03] = g_dlang
+            LET l_field_keys[03] = 'ooefl002'
+            LET l_var_keys_bak[03] = g_detail_multi_table_t.ooefl002
+            LET l_vars[01] = g_ooeg_d[l_ac].ooefl003
+            LET l_fields[01] = 'ooefl003'
+            LET l_vars[02] = g_ooeg_d[l_ac].ooefl004
+            LET l_fields[02] = 'ooefl004'
+            LET l_vars[03] = g_ooeg_d[l_ac].ooefl005
+            LET l_fields[03] = 'ooefl005'
+            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'ooefl_t')
+         END IF 
+ 
+               #add-point:input段-after_insert name="input.body.a_insert2"
+               
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ##ERROR 'INSERT O.K'
+               LET g_detail_cnt = g_detail_cnt + 1
+               
+               LET g_wc2 = g_wc2, " OR (ooeg001 = '", g_ooeg_d[l_ac].ooeg001, "' "
+ 
+                                  ,")"
+            END IF                
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+            ELSE
+               #add-point:單身刪除ask前 name="input.body.b_delete_ask"
+               
+               #end add-point   
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   = -263 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前 name="input.body.b_delete"
+               LET l_n1 = 0  
+               SELECT COUNT(*) INTO l_n1
+                 FROM ooed_t
+                WHERE ooedent = g_enterprise
+                  #150311---earl---mod---s
+                  #AND ooed001 = '6'
+                  AND ooed001 = '8'
+                  #150311---earl---mod---e
+                  AND ooed004 = g_ooeg_d_t.ooeg001
+               IF l_n1 > 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'aoo-00280'
+                  LET g_errparam.extend = g_ooeg_d_t.ooeg001
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CANCEL DELETE
+               END IF
+               #end add-point   
+               
+               DELETE FROM ooeg_t
+                WHERE ooegent = g_enterprise AND 
+                      ooeg001 = g_ooeg_d_t.ooeg001
+ 
+                      
+               #add-point:單身刪除中 name="input.body.m_delete"
+               
+               #end add-point  
+                      
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "ooeg_t:",SQLERRMESSAGE 
+                  LET g_errparam.code   = SQLCA.sqlcode 
+                  LET g_errparam.popup  = TRUE 
+                  CALL s_transaction_end('N','0')
+                  CALL cl_err()
+                  CANCEL DELETE   
+               ELSE
+                  LET g_detail_cnt = g_detail_cnt-1
+                  
+INITIALIZE l_var_keys_bak TO NULL 
+                  INITIALIZE l_field_keys TO NULL 
+                  LET l_field_keys[01] = 'ooeflent'
+                  LET l_var_keys_bak[01] = g_enterprise
+                  LET l_field_keys[02] = 'ooefl001'
+                  LET l_var_keys_bak[02] = g_detail_multi_table_t.ooefl001
+                  CALL cl_multitable_delete(l_field_keys,l_var_keys_bak,'ooefl_t')
+ 
+ 
+                  #add-point:單身刪除後 name="input.body.a_delete"
+                  #150311---earl---mod---s
+                  INITIALIZE l_ooef.* TO NULL
+                  SELECT ooef201,ooef202,ooef204,ooef205,
+                         ooef206,ooef207,ooef208,ooef209,ooef210,
+                         ooef211,ooef212,
+                         ooef301,ooef302,ooef303,ooef304,ooef305
+                    INTO l_ooef.ooef201,l_ooef.ooef202,l_ooef.ooef204,l_ooef.ooef205,
+                         l_ooef.ooef206,l_ooef.ooef207,l_ooef.ooef208,l_ooef.ooef209,l_ooef.ooef210,
+                         l_ooef.ooef211,l_ooef.ooef212,
+                         l_ooef.ooef301,l_ooef.ooef302,l_ooef.ooef303,l_ooef.ooef304,l_ooef.ooef305
+                    FROM ooef_t
+                   WHERE ooefent = g_enterprise
+                     AND ooef001 = g_ooeg_d_t.ooeg001
+                     
+                  IF l_ooef.ooef201 = 'Y' OR
+                     l_ooef.ooef202 = 'Y' OR
+                     l_ooef.ooef204 = 'Y' OR
+                     l_ooef.ooef205 = 'Y' OR
+                     l_ooef.ooef206 = 'Y' OR
+                     l_ooef.ooef207 = 'Y' OR
+                     l_ooef.ooef208 = 'Y' OR
+                     l_ooef.ooef209 = 'Y' OR
+                     l_ooef.ooef210 = 'Y' OR
+                     l_ooef.ooef211 = 'Y' OR
+                     l_ooef.ooef212 = 'Y' OR
+                     l_ooef.ooef301 = 'Y' OR
+                     l_ooef.ooef302 = 'Y' OR
+                     l_ooef.ooef303 = 'Y' OR
+                     l_ooef.ooef304 = 'Y' OR
+                     l_ooef.ooef305 = 'Y' THEN
+                     
+                     UPDATE ooef_t
+                        SET ooef203 = 'N'
+                      WHERE ooefent = g_enterprise
+                        AND ooef001 = g_ooeg_d_t.ooeg001
+                        
+                     IF SQLCA.sqlcode THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = SQLCA.sqlcode
+                        LET g_errparam.extend = "ooef_t"
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                
+                        CALL s_transaction_end('N','0')
+                        CANCEL DELETE
+                     END IF
+                  
+                  ELSE
+                     DELETE FROM ooef_t
+                      WHERE ooefent = g_enterprise
+                        AND ooef001 = g_ooeg_d_t.ooeg001
+                        
+                     IF SQLCA.sqlcode THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = SQLCA.sqlcode
+                        LET g_errparam.extend = "ooef_t"
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                    
+                        CALL s_transaction_end('N','0')
+                        CANCEL DELETE
+                     END IF   
+                                    
+                     DELETE FROM ooefl_t
+                      WHERE ooeflent = g_enterprise
+                        AND ooefl001 = g_ooeg_d_t.ooeg001
+                     IF SQLCA.sqlcode THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = SQLCA.sqlcode
+                        LET g_errparam.extend = "ooefl_t"
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                     
+                        CALL s_transaction_end('N','0')
+                        CANCEL DELETE
+                     END IF 
+                  END IF
+
+#ooee_t已不使用，mark
+#                  DELETE FROM ooee_t
+#                   WHERE ooeeent = g_enterprise
+#                     AND ooee001 = g_ooeg_d_t.ooeg001
+#                     AND ooee002 = '1'
+#                     AND ooee003 = '6'
+#                  IF SQLCA.sqlcode THEN
+#                     INITIALIZE g_errparam TO NULL
+#                     LET g_errparam.code = SQLCA.sqlcode
+#                     LET g_errparam.extend = "ooee_t"
+#                     LET g_errparam.popup = TRUE
+#                     CALL cl_err()
+#
+#                     CALL s_transaction_end('N','0')
+#                     CANCEL DELETE
+#                  END IF  
+#                  DELETE FROM ooee_t
+#                   WHERE ooeeent = g_enterprise
+#                     AND ooee001 = g_ooeg_d_t.ooeg001
+#                     AND ooee002 = '2'
+#                     AND ooee003 = 'H'
+#                  IF SQLCA.sqlcode THEN
+#                     INITIALIZE g_errparam TO NULL
+#                     LET g_errparam.code = SQLCA.sqlcode
+#                     LET g_errparam.extend = "ooee_t"
+#                     LET g_errparam.popup = TRUE
+#                     CALL cl_err()
+#
+#                     CALL s_transaction_end('N','0')
+#                     CANCEL DELETE
+#                  END IF                   
+                  #150311---earl---mod---e
+                  #end add-point
+                  #修改歷程記錄(刪除)
+                  CALL aooi125_set_pk_array()
+                  IF NOT cl_log_modified_record('','') THEN 
+                     CALL s_transaction_end('N','0')
+                  ELSE
+                     CALL s_transaction_end('Y','0')
+                  END IF
+               END IF 
+               CLOSE aooi125_bcl
+               #add-point:單身關閉bcl name="input.body.close"
+               
+               #end add-point
+               LET l_count = g_ooeg_d.getLength()
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_ooeg_d_t.ooeg001
+ 
+               #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL aooi125_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove"
+      
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+ 
+            END IF 
+              
+         AFTER DELETE 
+            IF l_cmd <> 'd' THEN
+               #add-point:單身刪除後2 name="input.body.after_delete"
+ 
+               #end add-point
+                              CALL aooi125_delete_b('ooeg_t',gs_keys,"'1'")
+            END IF
+            #如果是最後一筆
+            IF l_ac = (g_ooeg_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+            #add-point:單身刪除後3 name="input.body.after_delete3"
+            
+            #end add-point
+ 
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooegstus
+            #add-point:BEFORE FIELD ooegstus name="input.b.page1.ooegstus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooegstus
+            
+            #add-point:AFTER FIELD ooegstus name="input.a.page1.ooegstus"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooegstus
+            #add-point:ON CHANGE ooegstus name="input.g.page1.ooegstus"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooeg001
+            #add-point:BEFORE FIELD ooeg001 name="input.b.page1.ooeg001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooeg001
+            
+            #add-point:AFTER FIELD ooeg001 name="input.a.page1.ooeg001"
+            #此段落由子樣板a05產生
+            DISPLAY "" TO s_detail1[l_ac].ooefl003
+            DISPLAY "" TO s_detail1[l_ac].ooefl004
+            DISPLAY "" TO s_detail1[l_ac].ooefl005
+            IF NOT cl_null(g_ooeg_d[l_ac].ooeg001) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_ooeg_d[l_ac].ooeg001 != g_ooeg_d_t.ooeg001))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM ooeg_t WHERE "||"ooegent = '" ||g_enterprise|| "' AND "||"ooeg001 = '"||g_ooeg_d[l_ac].ooeg001 ||"'",'std-00004',0) THEN
+                     LET g_ooeg_d[l_ac].ooeg001 = g_ooeg_d_t.ooeg001
+                     CALL aooi125_desc()                     
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL aooi125_chk_ooeg001()
+                  IF NOT cl_null(g_errno) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_ooeg_d[l_ac].ooeg001
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_ooeg_d[l_ac].ooeg001 = g_ooeg_d_t.ooeg001
+                     CALL aooi125_desc()                     
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL aooi125_desc()
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooeg001
+            #add-point:ON CHANGE ooeg001 name="input.g.page1.ooeg001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooefl003
+            #add-point:BEFORE FIELD ooefl003 name="input.b.page1.ooefl003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooefl003
+            
+            #add-point:AFTER FIELD ooefl003 name="input.a.page1.ooefl003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooefl003
+            #add-point:ON CHANGE ooefl003 name="input.g.page1.ooefl003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooefl004
+            #add-point:BEFORE FIELD ooefl004 name="input.b.page1.ooefl004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooefl004
+            
+            #add-point:AFTER FIELD ooefl004 name="input.a.page1.ooefl004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooefl004
+            #add-point:ON CHANGE ooefl004 name="input.g.page1.ooefl004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooefl005
+            #add-point:BEFORE FIELD ooefl005 name="input.b.page1.ooefl005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooefl005
+            
+            #add-point:AFTER FIELD ooefl005 name="input.a.page1.ooefl005"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooefl005
+            #add-point:ON CHANGE ooefl005 name="input.g.page1.ooefl005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooeg009
+            
+            #add-point:AFTER FIELD ooeg009 name="input.a.page1.ooeg009"
+            CALL aooi125_ooef009_desc()
+            IF NOT cl_null(g_ooeg_d[l_ac].ooeg009) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_ooeg_d[l_ac].ooeg009
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooef001_1") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_ooeg_d[l_ac].ooeg009 = g_ooeg_d_t.ooeg009
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+            
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooeg009
+            #add-point:BEFORE FIELD ooeg009 name="input.b.page1.ooeg009"
+            CALL aooi125_ooef009_desc()
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooeg009
+            #add-point:ON CHANGE ooeg009 name="input.g.page1.ooeg009"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooeg002
+            
+            #add-point:AFTER FIELD ooeg002 name="input.a.page1.ooeg002"
+            DISPLAY "" TO s_detail1[l_ac].ooeg002_desc
+            CALL aooi125_desc1()
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooeg002
+            #add-point:BEFORE FIELD ooeg002 name="input.b.page1.ooeg002"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooeg002
+            #add-point:ON CHANGE ooeg002 name="input.g.page1.ooeg002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooeg003
+            #add-point:BEFORE FIELD ooeg003 name="input.b.page1.ooeg003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooeg003
+            
+            #add-point:AFTER FIELD ooeg003 name="input.a.page1.ooeg003"
+            IF g_ooeg_d[l_ac].ooeg003 = '1' THEN
+               CALL cl_set_comp_entry("ooeg004",TRUE)
+            ELSE
+               CALL cl_set_comp_entry("ooeg004",FALSE)
+               LET g_ooeg_d[l_ac].ooeg004 = ""
+               DISPLAY "" TO s_detail1[l_ac].ooeg004
+               LET g_ooeg_d[l_ac].ooeg004_desc = ""
+               DISPLAY "" TO s_detail1[l_ac].ooeg004_desc
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooeg003
+            #add-point:ON CHANGE ooeg003 name="input.g.page1.ooeg003"
+            IF g_ooeg_d[l_ac].ooeg003 = '1' THEN
+               CALL cl_set_comp_entry("ooeg004",TRUE)
+            ELSE
+               CALL cl_set_comp_entry("ooeg004",FALSE)
+               LET g_ooeg_d[l_ac].ooeg004 = ""
+               DISPLAY "" TO s_detail1[l_ac].ooeg004
+               LET g_ooeg_d[l_ac].ooeg004_desc = ""
+               DISPLAY "" TO s_detail1[l_ac].ooeg004_desc
+            END IF
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooeg004
+            
+            #add-point:AFTER FIELD ooeg004 name="input.a.page1.ooeg004"
+            DISPLAY "" TO s_detail1[l_ac].ooeg004_desc
+            CALL aooi125_desc1()
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooeg004
+            #add-point:BEFORE FIELD ooeg004 name="input.b.page1.ooeg004"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooeg004
+            #add-point:ON CHANGE ooeg004 name="input.g.page1.ooeg004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooeg005
+            #add-point:BEFORE FIELD ooeg005 name="input.b.page1.ooeg005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooeg005
+            
+            #add-point:AFTER FIELD ooeg005 name="input.a.page1.ooeg005"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooeg005
+            #add-point:ON CHANGE ooeg005 name="input.g.page1.ooeg005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooeg006
+            #add-point:BEFORE FIELD ooeg006 name="input.b.page1.ooeg006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooeg006
+            
+            #add-point:AFTER FIELD ooeg006 name="input.a.page1.ooeg006"
+            IF NOT cl_null(g_ooeg_d[l_ac].ooeg006) AND NOT cl_null(g_ooeg_d[l_ac].ooeg007) THEN
+               IF g_ooeg_d[l_ac].ooeg006 >= g_ooeg_d[l_ac].ooeg007 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'aoo-00122'
+                  LET g_errparam.extend = g_ooeg_d[l_ac].ooeg006
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_ooeg_d[l_ac].ooeg006 =  g_ooeg_d_t.ooeg006
+                  NEXT FIELD ooeg006
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooeg006
+            #add-point:ON CHANGE ooeg006 name="input.g.page1.ooeg006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooeg007
+            #add-point:BEFORE FIELD ooeg007 name="input.b.page1.ooeg007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooeg007
+            
+            #add-point:AFTER FIELD ooeg007 name="input.a.page1.ooeg007"
+            IF NOT cl_null(g_ooeg_d[l_ac].ooeg006) AND NOT cl_null(g_ooeg_d[l_ac].ooeg007) THEN
+               IF g_ooeg_d[l_ac].ooeg006 >= g_ooeg_d[l_ac].ooeg007 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'aoo-00122'
+                  LET g_errparam.extend = g_ooeg_d[l_ac].ooeg007
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_ooeg_d[l_ac].ooeg007 =  g_ooeg_d_t.ooeg007
+                  NEXT FIELD ooeg007
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooeg007
+            #add-point:ON CHANGE ooeg007 name="input.g.page1.ooeg007"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooeg008
+            #add-point:BEFORE FIELD ooeg008 name="input.b.page1.ooeg008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooeg008
+            
+            #add-point:AFTER FIELD ooeg008 name="input.a.page1.ooeg008"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooeg008
+            #add-point:ON CHANGE ooeg008 name="input.g.page1.ooeg008"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooeg011
+            
+            #add-point:AFTER FIELD ooeg011 name="input.a.page1.ooeg011"
+            LET g_ooeg_d[l_ac].ooeg011_desc = "" #先清空
+            IF NOT cl_null(g_ooeg_d[l_ac].ooeg011) THEN               
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_errshow = TRUE #是否開窗 #160318-00025#30  add
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_ooeg_d[l_ac].ooeg011
+               LET g_chkparam.err_str[1] = "aim-00070:sub-01302|aooi130|",cl_get_progname("aooi130",g_lang,"2"),"|:EXEPROGaooi130"#要執行的建議程式待補 #160318-00025#30  add
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooag001") THEN
+                  #檢查成功時後續處理
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_ooeg_d[l_ac].ooeg011 = g_ooeg_d_t.ooeg011
+                  LET g_ooeg_d[l_ac].ooeg011_desc = g_ooeg_d_t.ooeg011_desc
+                  NEXT FIELD CURRENT
+               END IF
+               
+               INITIALIZE g_ref_fields TO NULL 
+               LET g_ref_fields[1] = g_ooeg_d[l_ac].ooeg011
+               CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+               LET g_ooeg_d[l_ac].ooeg011_desc = '', g_rtn_fields[1] , ''
+               DISPLAY BY NAME g_ooeg_d[l_ac].ooeg011_desc
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooeg011
+            #add-point:BEFORE FIELD ooeg011 name="input.b.page1.ooeg011"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooeg011
+            #add-point:ON CHANGE ooeg011 name="input.g.page1.ooeg011"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ooeg012
+            
+            #add-point:AFTER FIELD ooeg012 name="input.a.page1.ooeg012"
+            CALL s_desc_get_acc_desc('15',g_ooeg_d[l_ac].ooeg012) RETURNING g_ooeg_d[l_ac].ooeg012_desc
+            DISPLAY BY NAME g_ooeg_d[l_ac].ooeg012_desc
+            IF NOT cl_null(g_ooeg_d[l_ac].ooeg012) THEN 
+               IF NOT s_azzi650_chk_exist('15',g_ooeg_d[l_ac].ooeg012) THEN
+                  LET g_ooeg_d[l_ac].ooeg012 = g_ooeg_d_t.ooeg012
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ooeg012
+            #add-point:BEFORE FIELD ooeg012 name="input.b.page1.ooeg012"
+            CALL s_desc_get_acc_desc('15',g_ooeg_d[l_ac].ooeg012) RETURNING g_ooeg_d[l_ac].ooeg012_desc
+            DISPLAY BY NAME g_ooeg_d[l_ac].ooeg012_desc
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ooeg012
+            #add-point:ON CHANGE ooeg012 name="input.g.page1.ooeg012"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.ooegstus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooegstus
+            #add-point:ON ACTION controlp INFIELD ooegstus name="input.c.page1.ooegstus"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.ooeg001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooeg001
+            #add-point:ON ACTION controlp INFIELD ooeg001 name="input.c.page1.ooeg001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.ooefl003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooefl003
+            #add-point:ON ACTION controlp INFIELD ooefl003 name="input.c.page1.ooefl003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.ooefl004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooefl004
+            #add-point:ON ACTION controlp INFIELD ooefl004 name="input.c.page1.ooefl004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.ooefl005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooefl005
+            #add-point:ON ACTION controlp INFIELD ooefl005 name="input.c.page1.ooefl005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.ooeg009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooeg009
+            #add-point:ON ACTION controlp INFIELD ooeg009 name="input.c.page1.ooeg009"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_ooeg_d[l_ac].ooeg009             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ooef001_2()                                #呼叫開窗
+
+            LET g_ooeg_d[l_ac].ooeg009 = g_qryparam.return1              
+
+            DISPLAY g_ooeg_d[l_ac].ooeg009 TO ooeg009              #
+
+            NEXT FIELD ooeg009                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.ooeg002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooeg002
+            #add-point:ON ACTION controlp INFIELD ooeg002 name="input.c.page1.ooeg002"
+#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_ooeg_d[l_ac].ooeg002             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_today
+            CALL q_ooeg001_4()                                #呼叫開窗
+
+            LET g_ooeg_d[l_ac].ooeg002 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_ooeg_d[l_ac].ooeg002 TO ooeg002              #顯示到畫面上
+            LET g_qryparam.arg1 = ""
+            NEXT FIELD ooeg002                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.ooeg003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooeg003
+            #add-point:ON ACTION controlp INFIELD ooeg003 name="input.c.page1.ooeg003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.ooeg004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooeg004
+            #add-point:ON ACTION controlp INFIELD ooeg004 name="input.c.page1.ooeg004"
+#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = g_today
+            LET g_qryparam.default1 = g_ooeg_d[l_ac].ooeg004             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_today
+            LET g_qryparam.where = " (ooeg003 = '2' OR ooeg003 = '3' OR ooeg003 = '4' OR ooeg003 = '5') " 
+            CALL q_ooeg001_4()                                #呼叫開窗
+
+            LET g_ooeg_d[l_ac].ooeg004 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_ooeg_d[l_ac].ooeg004 TO ooeg004              #顯示到畫面上
+            LET g_qryparam.where = ""
+            LET g_qryparam.arg1 = ""
+            NEXT FIELD ooeg004                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.ooeg005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooeg005
+            #add-point:ON ACTION controlp INFIELD ooeg005 name="input.c.page1.ooeg005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.ooeg006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooeg006
+            #add-point:ON ACTION controlp INFIELD ooeg006 name="input.c.page1.ooeg006"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.ooeg007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooeg007
+            #add-point:ON ACTION controlp INFIELD ooeg007 name="input.c.page1.ooeg007"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.ooeg008
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooeg008
+            #add-point:ON ACTION controlp INFIELD ooeg008 name="input.c.page1.ooeg008"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.ooeg011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooeg011
+            #add-point:ON ACTION controlp INFIELD ooeg011 name="input.c.page1.ooeg011"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_ooeg_d[l_ac].ooeg011             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+
+
+            CALL q_ooag001()                                #呼叫開窗
+
+            LET g_ooeg_d[l_ac].ooeg011 = g_qryparam.return1              
+
+            DISPLAY g_ooeg_d[l_ac].ooeg011 TO ooeg011              #
+
+            NEXT FIELD ooeg011                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.ooeg012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ooeg012
+            #add-point:ON ACTION controlp INFIELD ooeg012 name="input.c.page1.ooeg012"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+ 
+            LET g_qryparam.default1 = g_ooeg_d[l_ac].ooeg012             #給予default值
+            LET g_qryparam.default2 = "" #g_ooeg_d[l_ac].oocq002 #應用分類碼
+            #給予arg
+            LET g_qryparam.arg1 = "15" #s
+
+ 
+            CALL q_oocq002()                                #呼叫開窗
+ 
+            LET g_ooeg_d[l_ac].ooeg012 = g_qryparam.return1              
+            #LET g_ooeg_d[l_ac].oocq002 = g_qryparam.return2 
+            DISPLAY g_ooeg_d[l_ac].ooeg012 TO ooeg012              #
+            #DISPLAY g_ooeg_d[l_ac].oocq002 TO oocq002 #應用分類碼
+            NEXT FIELD ooeg012                          #返回原欄位
+
+
+
+            #END add-point
+ 
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               CLOSE aooi125_bcl
+               CALL s_transaction_end('N','0')
+               LET INT_FLAG = 0
+               LET g_ooeg_d[l_ac].* = g_ooeg_d_t.*
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               #add-point:單身取消時 name="input.body.cancel"
+               
+               #end add-point
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = g_ooeg_d[l_ac].ooeg001 
+               LET g_errparam.code   = -263 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET g_ooeg_d[l_ac].* = g_ooeg_d_t.*
+            ELSE
+               #寫入修改者/修改日期資訊(單身)
+               LET g_ooeg2_d[l_ac].ooegmodid = g_user 
+LET g_ooeg2_d[l_ac].ooegmoddt = cl_get_current()
+LET g_ooeg2_d[l_ac].ooegmodid_desc = cl_get_username(g_ooeg2_d[l_ac].ooegmodid)
+            
+               #add-point:單身修改前 name="input.body.b_update"
+               
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL aooi125_ooeg_t_mask_restore('restore_mask_o')
+ 
+               UPDATE ooeg_t SET (ooegstus,ooeg001,ooeg009,ooeg002,ooeg003,ooeg004,ooeg005,ooeg006,ooeg007, 
+                   ooeg008,ooeg011,ooeg012,ooegmodid,ooegmoddt,ooegownid,ooegowndp,ooegcrtid,ooegcrtdp, 
+                   ooegcrtdt) = (g_ooeg_d[l_ac].ooegstus,g_ooeg_d[l_ac].ooeg001,g_ooeg_d[l_ac].ooeg009, 
+                   g_ooeg_d[l_ac].ooeg002,g_ooeg_d[l_ac].ooeg003,g_ooeg_d[l_ac].ooeg004,g_ooeg_d[l_ac].ooeg005, 
+                   g_ooeg_d[l_ac].ooeg006,g_ooeg_d[l_ac].ooeg007,g_ooeg_d[l_ac].ooeg008,g_ooeg_d[l_ac].ooeg011, 
+                   g_ooeg_d[l_ac].ooeg012,g_ooeg2_d[l_ac].ooegmodid,g_ooeg2_d[l_ac].ooegmoddt,g_ooeg2_d[l_ac].ooegownid, 
+                   g_ooeg2_d[l_ac].ooegowndp,g_ooeg2_d[l_ac].ooegcrtid,g_ooeg2_d[l_ac].ooegcrtdp,g_ooeg2_d[l_ac].ooegcrtdt) 
+ 
+                WHERE ooegent = g_enterprise AND
+                  ooeg001 = g_ooeg_d_t.ooeg001 #項次   
+ 
+                  
+               #add-point:單身修改中 name="input.body.m_update"
+               
+               #end add-point
+                  
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL s_transaction_end('N','0')
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "ooeg_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "ooeg_t:",SQLERRMESSAGE 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_ooeg_d[g_detail_idx].ooeg001
+               LET gs_keys_bak[1] = g_ooeg_d_t.ooeg001
+               CALL aooi125_update_b('ooeg_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                              INITIALIZE l_var_keys TO NULL 
+         INITIALIZE l_field_keys TO NULL 
+         INITIALIZE l_vars TO NULL 
+         INITIALIZE l_fields TO NULL 
+         INITIALIZE l_var_keys_bak TO NULL 
+         IF g_ooeg_d[l_ac].ooeg001 = g_detail_multi_table_t.ooefl001 AND
+         g_ooeg_d[l_ac].ooefl003 = g_detail_multi_table_t.ooefl003 AND
+         g_ooeg_d[l_ac].ooefl004 = g_detail_multi_table_t.ooefl004 AND
+         g_ooeg_d[l_ac].ooefl005 = g_detail_multi_table_t.ooefl005 THEN
+         ELSE 
+            LET l_var_keys[01] = g_enterprise
+            LET l_field_keys[01] = 'ooeflent'
+            LET l_var_keys_bak[01] = g_enterprise
+            LET l_var_keys[02] = g_ooeg_d[l_ac].ooeg001
+            LET l_field_keys[02] = 'ooefl001'
+            LET l_var_keys_bak[02] = g_detail_multi_table_t.ooefl001
+            LET l_var_keys[03] = g_dlang
+            LET l_field_keys[03] = 'ooefl002'
+            LET l_var_keys_bak[03] = g_detail_multi_table_t.ooefl002
+            LET l_vars[01] = g_ooeg_d[l_ac].ooefl003
+            LET l_fields[01] = 'ooefl003'
+            LET l_vars[02] = g_ooeg_d[l_ac].ooefl004
+            LET l_fields[02] = 'ooefl004'
+            LET l_vars[03] = g_ooeg_d[l_ac].ooefl005
+            LET l_fields[03] = 'ooefl005'
+            CALL cl_multitable(l_var_keys,l_field_keys,l_vars,l_fields,l_var_keys_bak,'ooefl_t')
+         END IF 
+ 
+                     #修改歷程記錄(修改)
+                     LET g_log1 = util.JSON.stringify(g_ooeg_d_t)
+                     LET g_log2 = util.JSON.stringify(g_ooeg_d[l_ac])
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                        CALL s_transaction_end('N','0')
+                     END IF
+               END CASE
+               
+               #將遮罩欄位進行遮蔽
+               CALL aooi125_ooeg_t_mask_restore('restore_mask_n')
+               
+               #add-point:單身修改後 name="input.body.a_update"
+               UPDATE ooef_t SET ooefstus = g_ooeg_d[l_ac].ooegstus
+                WHERE ooefent = g_enterprise
+                  AND ooef001 = g_ooeg_d[l_ac].ooeg001
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "upd ooef_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+  
+                  CALL s_transaction_end('N','0')
+               END IF
+               CALL aooi125_ins_ooef()
+               #160324-00001#1---add--begin--
+               #若當前部門修改了法人，需同步更新組織檔中的所屬法人
+               SELECT ooef003 INTO l_ooef003 FROM ooef_t WHERE ooefent = g_enterprise AND ooef001 = g_ooeg_d[l_ac].ooeg001
+               IF g_ooeg_d[l_ac].ooeg009 <> g_ooeg_d[l_ac].ooeg001 THEN
+                  LET l_ooef003 = 'N'
+               END IF
+               UPDATE ooef_t SET ooef017 = g_ooeg_d[l_ac].ooeg009,
+                                 ooef003 = l_ooef003
+                    WHERE ooefent = g_enterprise
+                      AND ooef001 = g_ooeg_d[l_ac].ooeg001
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "upd ooef_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+  
+                  CALL s_transaction_end('N','0')
+               END IF
+               #160324-00001#1---add--end--
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            CALL aooi125_unlock_b("ooeg_t")
+            IF INT_FLAG THEN
+               CALL s_transaction_end('N','0')
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_ooeg_d[l_ac].* = g_ooeg_d_t.*
+               END IF
+               #add-point:單身after row name="input.body.a_close"
+               
+               #end add-point
+            ELSE
+               CALL s_transaction_end('Y','0')
+            END IF
+            #其他table進行unlock
+            CALL cl_multitable_unlock()
+             #add-point:單身after row name="input.body.a_row"
+            
+            #end add-point
+            
+         AFTER INPUT
+            #add-point:單身input後 name="input.body.a_input"
+            
+            #end add-point
+            #錯誤訊息統整顯示
+            #CALL cl_err_collect_show()
+            #CALL cl_showmsg()
+            
+         ON ACTION controlo   
+            IF l_insert THEN
+               LET li_reproduce = l_ac_t
+               LET li_reproduce_target = l_ac
+               LET g_ooeg_d[li_reproduce_target].* = g_ooeg_d[li_reproduce].*
+               LET g_ooeg2_d[li_reproduce_target].* = g_ooeg2_d[li_reproduce].*
+ 
+               LET g_ooeg_d[li_reproduce_target].ooeg001 = NULL
+ 
+            ELSE
+               CALL FGL_SET_ARR_CURR(g_ooeg_d.getLength()+1)
+               LET lb_reproduce = TRUE
+               LET li_reproduce = l_ac
+               LET li_reproduce_target = g_ooeg_d.getLength()+1
+            END IF
+            
+      END INPUT
+      
+ 
+      
+      DISPLAY ARRAY g_ooeg2_d TO s_detail2.*
+         ATTRIBUTES(COUNT=g_detail_cnt)  
+      
+         BEFORE DISPLAY 
+            CALL aooi125_b_fill(g_wc2)
+            CALL FGL_SET_ARR_CURR(g_detail_idx)
+      
+         BEFORE ROW
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+            LET l_ac = g_detail_idx
+            LET g_temp_idx = l_ac
+            DISPLAY g_detail_idx TO FORMONLY.idx
+            CALL cl_show_fld_cont() 
+            
+         #add-point:page2自定義行為 name="input.body2.action"
+         
+         #end add-point
+            
+      END DISPLAY
+ 
+      
+      #add-point:before_more_input name="input.more_input"
+      
+      #end add-point
+      
+      BEFORE DIALOG
+         #CALL cl_err_collect_init()      
+         IF g_temp_idx > 0 THEN
+            LET l_ac = g_temp_idx
+            CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+            LET g_temp_idx = 1
+         END IF
+         #LET g_curr_diag = ui.DIALOG.getCurrent()
+         #add-point:before_dialog name="input.before_dialog"
+         
+         #end add-point
+         CASE g_aw
+            WHEN "s_detail1"
+               NEXT FIELD ooegstus
+            WHEN "s_detail2"
+               NEXT FIELD ooeg001_2
+ 
+         END CASE
+   
+      ON ACTION accept
+         ACCEPT DIALOG
+      
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         CANCEL DIALOG
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) 
+              RETURNING g_fld_name,g_frm_name 
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang) 
+           
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   
+   END DIALOG 
+    
+   #新增後取消
+   IF l_cmd = 'a' THEN
+      #當取消或無輸入資料按確定時刪除對應資料
+      IF INT_FLAG OR cl_null(g_ooeg_d[g_detail_idx].ooeg001) THEN
+         CALL g_ooeg_d.deleteElement(g_detail_idx)
+         CALL g_ooeg2_d.deleteElement(g_detail_idx)
+ 
+      END IF
+   END IF
+   
+   #修改後取消
+   IF l_cmd = 'u' AND INT_FLAG THEN
+      LET g_ooeg_d[g_detail_idx].* = g_ooeg_d_t.*
+   END IF
+   
+   #add-point:modify段修改後 name="modify.after_input"
+   
+   #end add-point
+ 
+   CLOSE aooi125_bcl
+   CALL s_transaction_end('Y','0')
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi125.delete" >}
+#+ 資料刪除
+PRIVATE FUNCTION aooi125_delete()
+   #add-point:delete段define(客製用) name="delete.define_customerization"
+   
+   #end add-point
+   DEFINE li_idx          LIKE type_t.num10
+   DEFINE li_ac_t         LIKE type_t.num10
+   DEFINE li_detail_tmp   LIKE type_t.num10
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:delete段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+ 
+   #end add-point 
+   
+   #add-point:Function前置處理  name="delete.body.before_delete"
+   
+   #end add-point
+   
+   CALL s_transaction_begin()
+   
+   LET li_ac_t = l_ac
+   
+   LET li_detail_tmp = g_detail_idx
+    
+   #lock所有所選資料
+   FOR li_idx = 1 TO g_ooeg_d.getLength()
+      LET g_detail_idx = li_idx
+      #已選擇的資料
+      IF g_curr_diag.isRowSelected(g_curr_diag.getCurrentItem(), li_idx) THEN 
+         #確定是否有被鎖定
+         IF NOT aooi125_lock_b("ooeg_t") THEN
+            #已被他人鎖定
+            CALL s_transaction_end('N','0')
+            RETURN
+         END IF
+      END IF
+   END FOR
+   
+   #add-point:單身刪除詢問前 name="delete.body.b_delete_ask"
+   
+   #end add-point  
+   
+   #詢問是否確定刪除所選資料
+   IF NOT cl_ask_del_detail() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   FOR li_idx = 1 TO g_ooeg_d.getLength()
+      IF g_ooeg_d[li_idx].ooeg001 IS NOT NULL
+ 
+         AND g_curr_diag.isRowSelected(g_curr_diag.getCurrentItem(), li_idx) THEN 
+         
+         #add-point:單身刪除前 name="delete.body.b_delete"
+         
+         #end add-point   
+         
+         DELETE FROM ooeg_t
+          WHERE ooegent = g_enterprise AND 
+                ooeg001 = g_ooeg_d[li_idx].ooeg001
+ 
+         #add-point:單身刪除中 name="delete.body.m_delete"
+         
+         #end add-point  
+                
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "ooeg_t:",SQLERRMESSAGE 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            RETURN
+         ELSE
+            LET g_detail_cnt = g_detail_cnt-1
+            LET l_ac = li_idx
+            
+LET g_detail_multi_table_t.ooefl001 = g_ooeg_d[l_ac].ooeg001
+LET g_detail_multi_table_t.ooefl002 = g_dlang
+LET g_detail_multi_table_t.ooefl003 = g_ooeg_d[l_ac].ooefl003
+LET g_detail_multi_table_t.ooefl004 = g_ooeg_d[l_ac].ooefl004
+LET g_detail_multi_table_t.ooefl005 = g_ooeg_d[l_ac].ooefl005
+ 
+ 
+            
+LET g_detail_multi_table_t.ooefl001 = g_ooeg_d[l_ac].ooeg001
+LET g_detail_multi_table_t.ooefl002 = g_dlang
+LET g_detail_multi_table_t.ooefl003 = g_ooeg_d[l_ac].ooefl003
+LET g_detail_multi_table_t.ooefl004 = g_ooeg_d[l_ac].ooefl004
+LET g_detail_multi_table_t.ooefl005 = g_ooeg_d[l_ac].ooefl005
+ 
+ 
+ 
+            
+INITIALIZE l_var_keys_bak TO NULL 
+                  INITIALIZE l_field_keys TO NULL 
+                  LET l_field_keys[01] = 'ooeflent'
+                  LET l_var_keys_bak[01] = g_enterprise
+                  LET l_field_keys[02] = 'ooefl001'
+                  LET l_var_keys_bak[02] = g_detail_multi_table_t.ooefl001
+                  CALL cl_multitable_delete(l_field_keys,l_var_keys_bak,'ooefl_t')
+ 
+ 
+            
+INITIALIZE l_var_keys_bak TO NULL 
+                  INITIALIZE l_field_keys TO NULL 
+                  LET l_field_keys[01] = 'ooeflent'
+                  LET l_var_keys_bak[01] = g_enterprise
+                  LET l_field_keys[02] = 'ooefl001'
+                  LET l_var_keys_bak[02] = g_detail_multi_table_t.ooefl001
+                  CALL cl_multitable_delete(l_field_keys,l_var_keys_bak,'ooefl_t')
+ 
+ 
+ 
+            #add-point:單身同步刪除前(同層table) name="delete.body.a_delete"
+            
+            #end add-point
+            LET g_detail_idx = li_idx
+                           INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_ooeg_d_t.ooeg001
+ 
+            #add-point:單身同步刪除中(同層table) name="delete.body.a_delete2"
+            
+            #end add-point
+                           CALL aooi125_delete_b('ooeg_t',gs_keys,"'1'")
+            #add-point:單身同步刪除後(同層table) name="delete.body.a_delete3"
+            
+            #end add-point
+            #刪除相關文件
+            #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL aooi125_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove.func"
+      
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+ 
+            
+         END IF 
+      END IF 
+    
+   END FOR
+   CALL s_transaction_end('Y','0')
+   
+   LET g_detail_idx = li_detail_tmp
+            
+   #add-point:單身刪除後 name="delete.after"
+   
+   #end add-point  
+   
+   LET l_ac = li_ac_t
+   
+   #刷新資料
+   CALL aooi125_b_fill(g_wc2)
+            
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi125.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION aooi125_b_fill(p_wc2)              #BODY FILL UP
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE p_wc2    STRING
+   #add-point:b_fill段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="b_fill.pre_function"
+   
+   #end add-point
+   
+   IF cl_null(p_wc2) THEN
+      LET p_wc2 = " 1=1"
+   END IF
+   
+   #add-point:b_fill段sql之前 name="b_fill.sql_before"
+   LET p_wc2 = cl_replace_str(p_wc2,'ooefl003','t9.ooefl003')
+   LET p_wc2 = cl_replace_str(p_wc2,'ooefl004','t9.ooefl004')
+   LET p_wc2 = cl_replace_str(p_wc2,'ooefl005','t9.ooefl005')
+   #end add-point
+ 
+   LET g_sql = "SELECT  DISTINCT t0.ooegstus,t0.ooeg001,t0.ooeg009,t0.ooeg002,t0.ooeg003,t0.ooeg004, 
+       t0.ooeg005,t0.ooeg006,t0.ooeg007,t0.ooeg008,t0.ooeg011,t0.ooeg012,t0.ooeg001,t0.ooegmodid,t0.ooegmoddt, 
+       t0.ooegownid,t0.ooegowndp,t0.ooegcrtid,t0.ooegcrtdp,t0.ooegcrtdt ,t1.ooefl003 ,t2.ooefl003 ,t3.ooefl003 , 
+       t4.ooag011 ,t5.oocql004 ,t6.ooag011 ,t7.ooag011 ,t8.ooefl003 ,t9.ooag011 ,t10.ooefl003 FROM ooeg_t t0", 
+ 
+               " LEFT JOIN ooefl_t ON ooeflent = "||g_enterprise||" AND ooeg001 = ooefl001 AND ooefl002 = '",g_dlang,"'",
+                              " LEFT JOIN ooefl_t t1 ON t1.ooeflent="||g_enterprise||" AND t1.ooefl001=t0.ooeg009 AND t1.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t2 ON t2.ooeflent="||g_enterprise||" AND t2.ooefl001=t0.ooeg002 AND t2.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t3 ON t3.ooeflent="||g_enterprise||" AND t3.ooefl001=t0.ooeg004 AND t3.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t4 ON t4.ooagent="||g_enterprise||" AND t4.ooag001=t0.ooeg011  ",
+               " LEFT JOIN oocql_t t5 ON t5.oocqlent="||g_enterprise||" AND t5.oocql001='15' AND t5.oocql002=t0.ooeg012 AND t5.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t6 ON t6.ooagent="||g_enterprise||" AND t6.ooag001=t0.ooegmodid  ",
+               " LEFT JOIN ooag_t t7 ON t7.ooagent="||g_enterprise||" AND t7.ooag001=t0.ooegownid  ",
+               " LEFT JOIN ooefl_t t8 ON t8.ooeflent="||g_enterprise||" AND t8.ooefl001=t0.ooegowndp AND t8.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t9 ON t9.ooagent="||g_enterprise||" AND t9.ooag001=t0.ooegcrtid  ",
+               " LEFT JOIN ooefl_t t10 ON t10.ooeflent="||g_enterprise||" AND t10.ooefl001=t0.ooegcrtdp AND t10.ooefl002='"||g_dlang||"' ",
+ 
+               " WHERE t0.ooegent= ?  AND  1=1 AND (", p_wc2, ") " 
+   #add-point:b_fill段sql wc name="b_fill.sql_wc"
+#160505-00021#1---mark---s
+#   LET g_sql = "SELECT  UNIQUE t0.ooegstus,t0.ooeg001,t0.ooeg009,t0.ooeg002,t0.ooeg003,t0.ooeg004,t0.ooeg005, 
+#       t0.ooeg006,t0.ooeg007,t0.ooeg008,t0.ooeg011,t0.ooeg012,t0.ooeg001,t0.ooegmodid,t0.ooegmoddt,t0.ooegownid,                 
+#       t0.ooegowndp,t0.ooegcrtid,t0.ooegcrtdp,t0.ooegcrtdt ,t1.ooefl003 ,t2.ooefl003 ,t3.ooefl003 ,t4.ooag011 , 
+#       t5.ooag011 ,t6.ooefl003 ,t7.ooag011 ,t8.ooefl003 FROM ooeg_t t0",
+#               " LEFT JOIN ooefl_t t9 ON t9.ooeflent = '"||g_enterprise||"' AND t0.ooeg001 = t9.ooefl001 AND t9.ooefl002 = '",g_dlang,"'",
+#               " LEFT JOIN ooefl_t t1 ON t1.ooeflent='"||g_enterprise||"' AND t1.ooefl001=t0.ooeg009 AND t1.ooefl002='"||g_dlang||"' ",
+#               " LEFT JOIN ooefl_t t2 ON t2.ooeflent='"||g_enterprise||"' AND t2.ooefl001=t0.ooeg002 AND t2.ooefl002='"||g_dlang||"' ",
+#               " LEFT JOIN ooefl_t t3 ON t3.ooeflent='"||g_enterprise||"' AND t3.ooefl001=t0.ooeg004 AND t3.ooefl002='"||g_dlang||"' ",
+#               " LEFT JOIN ooag_t t4 ON t4.ooagent='"||g_enterprise||"' AND t4.ooag001=t0.ooegmodid  ",
+#               " LEFT JOIN ooag_t t5 ON t5.ooagent='"||g_enterprise||"' AND t5.ooag001=t0.ooegownid  ",
+#               " LEFT JOIN ooefl_t t6 ON t6.ooeflent='"||g_enterprise||"' AND t6.ooefl001=t0.ooegowndp AND t6.ooefl002='"||g_dlang||"' ",
+#               " LEFT JOIN ooag_t t7 ON t7.ooagent='"||g_enterprise||"' AND t7.ooag001=t0.ooegcrtid  ",
+#               " LEFT JOIN ooefl_t t8 ON t8.ooeflent='"||g_enterprise||"' AND t8.ooefl001=t0.ooegcrtdp AND t8.ooefl002='"||g_dlang||"' ",
+# 
+#               " WHERE t0.ooegent= ?  AND  1=1 AND (", p_wc2, ") " 
+#160505-00021#1---mark---e
+   #end add-point
+   LET g_sql = g_sql, cl_sql_add_filter("ooeg_t"),
+                      " ORDER BY t0.ooeg001"
+   
+   #add-point:b_fill段sql之後 name="b_fill.sql_after"
+ 
+   #end add-point
+   
+   #LET g_sql = cl_sql_add_tabid(g_sql,"ooeg_t")            #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE aooi125_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR aooi125_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_ooeg_d.clear()
+   CALL g_ooeg2_d.clear()   
+ 
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO g_ooeg_d[l_ac].ooegstus,g_ooeg_d[l_ac].ooeg001,g_ooeg_d[l_ac].ooeg009,g_ooeg_d[l_ac].ooeg002, 
+       g_ooeg_d[l_ac].ooeg003,g_ooeg_d[l_ac].ooeg004,g_ooeg_d[l_ac].ooeg005,g_ooeg_d[l_ac].ooeg006,g_ooeg_d[l_ac].ooeg007, 
+       g_ooeg_d[l_ac].ooeg008,g_ooeg_d[l_ac].ooeg011,g_ooeg_d[l_ac].ooeg012,g_ooeg2_d[l_ac].ooeg001, 
+       g_ooeg2_d[l_ac].ooegmodid,g_ooeg2_d[l_ac].ooegmoddt,g_ooeg2_d[l_ac].ooegownid,g_ooeg2_d[l_ac].ooegowndp, 
+       g_ooeg2_d[l_ac].ooegcrtid,g_ooeg2_d[l_ac].ooegcrtdp,g_ooeg2_d[l_ac].ooegcrtdt,g_ooeg_d[l_ac].ooeg009_desc, 
+       g_ooeg_d[l_ac].ooeg002_desc,g_ooeg_d[l_ac].ooeg004_desc,g_ooeg_d[l_ac].ooeg011_desc,g_ooeg_d[l_ac].ooeg012_desc, 
+       g_ooeg2_d[l_ac].ooegmodid_desc,g_ooeg2_d[l_ac].ooegownid_desc,g_ooeg2_d[l_ac].ooegowndp_desc, 
+       g_ooeg2_d[l_ac].ooegcrtid_desc,g_ooeg2_d[l_ac].ooegcrtdp_desc
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+  
+      #add-point:b_fill段資料填充 name="b_fill.fill"
+      
+      #end add-point
+      
+      CALL aooi125_detail_show()      
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code   = 9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+ 
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+ 
+   LET g_error_show = 0
+   
+ 
+   
+   CALL g_ooeg_d.deleteElement(g_ooeg_d.getLength())   
+   CALL g_ooeg2_d.deleteElement(g_ooeg2_d.getLength())
+ 
+   
+   #將key欄位填到每個page
+   FOR l_ac = 1 TO g_ooeg_d.getLength()
+      LET g_ooeg2_d[l_ac].ooeg001 = g_ooeg_d[l_ac].ooeg001 
+ 
+      #add-point:b_fill段key值相關欄位 name="b_fill.keys.fill"
+      
+      #end add-point
+   END FOR
+   
+   IF g_cnt > g_ooeg_d.getLength() THEN
+      LET l_ac = g_ooeg_d.getLength()
+   ELSE
+      LET l_ac = g_cnt
+   END IF
+   LET g_cnt = l_ac
+ 
+   #遮罩相關處理
+   FOR l_ac = 1 TO g_ooeg_d.getLength()
+      LET g_ooeg_d_mask_o[l_ac].* =  g_ooeg_d[l_ac].*
+      CALL aooi125_ooeg_t_mask()
+      LET g_ooeg_d_mask_n[l_ac].* =  g_ooeg_d[l_ac].*
+   END FOR
+   
+   LET g_ooeg2_d_mask_o.* =  g_ooeg2_d.*
+   FOR l_ac = 1 TO g_ooeg2_d.getLength()
+      LET g_ooeg2_d_mask_o[l_ac].* =  g_ooeg2_d[l_ac].*
+      CALL aooi125_ooeg_t_mask()
+      LET g_ooeg2_d_mask_n[l_ac].* =  g_ooeg2_d[l_ac].*
+   END FOR
+ 
+   
+   LET l_ac = g_cnt
+ 
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.others.fill"
+   
+   #end add-point
+   
+   ERROR "" 
+ 
+   LET g_detail_cnt = g_ooeg_d.getLength()
+   DISPLAY g_detail_idx TO FORMONLY.idx
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   
+   CLOSE b_fill_curs
+   FREE aooi125_pb
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi125.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION aooi125_detail_show()
+   #add-point:detail_show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point
+   #add-point:show段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="detail_show.before"
+   
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值page1
+   
+    
+   #帶出公用欄位reference值page2
+   #應用 a12 樣板自動產生(Version:4)
+ 
+ 
+ 
+ 
+   
+   #讀入ref值
+   #add-point:show段單身reference name="detail_show.reference"
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_ooeg_d[l_ac].ooeg002
+#            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_ooeg_d[l_ac].ooeg002_desc = g_rtn_fields[1] 
+#            DISPLAY BY NAME g_ooeg_d[l_ac].ooeg002_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_ooeg_d[l_ac].ooeg004
+#            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_ooeg_d[l_ac].ooeg004_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_ooeg_d[l_ac].ooeg004_desc
+
+#            CALL aooi125_ooef009_desc()
+
+            INITIALIZE g_ref_fields TO NULL 
+            LET g_ref_fields[1] = g_ooeg_d[l_ac].ooeg001
+            CALL ap_ref_array2(g_ref_fields," SELECT ooefl003,ooefl004,ooefl005 FROM ooefl_t WHERE ooeflent = '"||g_enterprise||"' AND ooefl001 = ? AND ooefl002 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+            LET g_ooeg_d[l_ac].ooefl003 = g_rtn_fields[1] 
+            LET g_ooeg_d[l_ac].ooefl004 = g_rtn_fields[2] 
+            LET g_ooeg_d[l_ac].ooefl005 = g_rtn_fields[3] 
+            DISPLAY BY NAME g_ooeg_d[l_ac].ooefl003,g_ooeg_d[l_ac].ooefl004,g_ooeg_d[l_ac].ooefl005
+            
+#            INITIALIZE g_ref_fields TO NULL 
+#            LET g_ref_fields[1] = g_ooeg_d[l_ac].ooeg011
+#            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+#            LET g_ooeg_d[l_ac].ooeg011_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_ooeg_d[l_ac].ooeg011_desc
+   #end add-point
+   
+   #add-point:show段單身reference name="detail_show.body2.reference"
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_ooeg2_d[l_ac].ooegownid
+#            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+#            LET g_ooeg2_d[l_ac].ooegownid_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_ooeg2_d[l_ac].ooegownid_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_ooeg2_d[l_ac].ooegowndp
+#            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_ooeg2_d[l_ac].ooegowndp_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_ooeg2_d[l_ac].ooegowndp_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_ooeg2_d[l_ac].ooegcrtid
+#            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+#            LET g_ooeg2_d[l_ac].ooegcrtid_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_ooeg2_d[l_ac].ooegcrtid_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_ooeg2_d[l_ac].ooegcrtdp
+#            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_ooeg2_d[l_ac].ooegcrtdp_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_ooeg2_d[l_ac].ooegcrtdp_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_ooeg2_d[l_ac].ooegmodid
+#            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+#            LET g_ooeg2_d[l_ac].ooegmodid_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_ooeg2_d[l_ac].ooegmodid_desc
+
+   #end add-point
+ 
+   #add-point:detail_show段之後 name="detail_show.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi125.set_entry_b" >}
+#+ 單身欄位開啟設定
+PRIVATE FUNCTION aooi125_set_entry_b(p_cmd)                                                  
+   #add-point:set_entry_b段define(客製用) name="set_entry_b.define_customerization"
+   
+   #end add-point
+   DEFINE p_cmd   LIKE type_t.chr1         
+   #add-point:set_entry_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry_b.define"
+   
+   #end add-point
+ 
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("",TRUE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry_b段欄位控制 name="set_entry_b.field_control"
+      
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry_b段control name="set_entry_b.set_entry_b"
+   
+   #end add-point                                                                   
+                                                                                
+END FUNCTION                                                                 
+ 
+{</section>}
+ 
+{<section id="aooi125.set_no_entry_b" >}
+#+ 單身欄位關閉設定
+PRIVATE FUNCTION aooi125_set_no_entry_b(p_cmd)                                               
+   #add-point:set_no_entry_b段define(客製用) name="set_no_entry_b.define_customerization"
+   
+   #end add-point   
+   DEFINE p_cmd   LIKE type_t.chr1           
+   #add-point:set_no_entry_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry_b.define"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry_b段欄位控制 name="set_no_entry_b.field_control"
+      
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry_b段control name="set_no_entry_b.set_no_entry_b"
+   
+   #end add-point       
+                                                                                
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi125.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION aooi125_default_search()
+   #add-point:default_search段define(客製用) name="default_search.define_customerization"
+   
+   #end add-point
+   DEFINE li_idx  LIKE type_t.num10
+   DEFINE li_cnt  LIKE type_t.num10
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="default_search.before"
+   
+   #end add-point  
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " ooeg001 = '", g_argv[01], "' AND "
+   END IF
+   
+ 
+   
+   #add-point:default_search段after sql name="default_search.after_sql"
+   
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET ls_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_wc2 = ls_wc
+   ELSE
+      LET g_wc2 = " 1=1"
+      #預設查詢條件
+      LET g_wc2 = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc2) THEN
+         LET g_wc2 = " 1=1"
+      END IF
+   END IF
+ 
+   #add-point:default_search段結束前 name="default_search.after"
+   
+   #end add-point  
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi125.delete_b" >}
+#+ 刪除單身後其他table連動
+PRIVATE FUNCTION aooi125_delete_b(ps_table,ps_keys_bak,ps_page)
+   #add-point:delete_b段define(客製用) name="delete_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:delete_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="delete_b.pre_function"
+   
+   #end add-point
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "ooeg_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      IF ps_table <> 'ooeg_t' THEN
+         #add-point:delete_b段刪除前 name="delete_b.b_delete"
+         
+         #end add-point     
+         
+         DELETE FROM ooeg_t
+          WHERE ooegent = g_enterprise AND
+            ooeg001 = ps_keys_bak[1]
+         
+         #add-point:delete_b段刪除中 name="delete_b.m_delete"
+         
+         #end add-point  
+            
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = ":",SQLERRMESSAGE 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = FALSE 
+            CALL cl_err()
+         END IF
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_ooeg_d.deleteElement(li_idx) 
+      END IF 
+      IF ps_page <> "'2'" THEN 
+         CALL g_ooeg2_d.deleteElement(li_idx) 
+      END IF 
+ 
+      
+      #add-point:delete_b段刪除後 name="delete_b.a_delete"
+      
+      #end add-point
+      
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi125.insert_b" >}
+#+ 新增單身後其他table連動
+PRIVATE FUNCTION aooi125_insert_b(ps_table,ps_keys,ps_page)
+   #add-point:insert_b段define(客製用) name="insert_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:insert_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="insert_b.pre_function"
+   
+   #end add-point
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "ooeg_t,"
+   #IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      
+      #add-point:insert_b段新增前 name="insert_b.b_insert"
+      
+      #end add-point    
+      INSERT INTO ooeg_t
+                  (ooegent,
+                   ooeg001
+                   ,ooegstus,ooeg009,ooeg002,ooeg003,ooeg004,ooeg005,ooeg006,ooeg007,ooeg008,ooeg011,ooeg012,ooegmodid,ooegmoddt,ooegownid,ooegowndp,ooegcrtid,ooegcrtdp,ooegcrtdt) 
+            VALUES(g_enterprise,
+                   ps_keys[1]
+                   ,g_ooeg_d[l_ac].ooegstus,g_ooeg_d[l_ac].ooeg009,g_ooeg_d[l_ac].ooeg002,g_ooeg_d[l_ac].ooeg003, 
+                       g_ooeg_d[l_ac].ooeg004,g_ooeg_d[l_ac].ooeg005,g_ooeg_d[l_ac].ooeg006,g_ooeg_d[l_ac].ooeg007, 
+                       g_ooeg_d[l_ac].ooeg008,g_ooeg_d[l_ac].ooeg011,g_ooeg_d[l_ac].ooeg012,g_ooeg2_d[l_ac].ooegmodid, 
+                       g_ooeg2_d[l_ac].ooegmoddt,g_ooeg2_d[l_ac].ooegownid,g_ooeg2_d[l_ac].ooegowndp, 
+                       g_ooeg2_d[l_ac].ooegcrtid,g_ooeg2_d[l_ac].ooegcrtdp,g_ooeg2_d[l_ac].ooegcrtdt) 
+ 
+      #add-point:insert_b段新增中 name="insert_b.m_insert"
+      
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "ooeg_t:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+      END IF
+      #add-point:insert_b段新增後 name="insert_b.a_insert"
+      
+      #end add-point    
+   #END IF
+   
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi125.update_b" >}
+#+ 修改單身後其他table連動
+PRIVATE FUNCTION aooi125_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   #add-point:update_b段define(客製用) name="update_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_page          STRING
+   DEFINE ps_table         STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num10
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="update_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="update_b.pre_function"
+   
+   #end add-point
+   
+   #比對新舊值, 判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #若key無變動, 不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+    
+   #若key有變動, 則連動其他table的資料   
+   #判斷是否是同一群組的table
+   LET ls_group = "ooeg_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 AND ps_table <> "ooeg_t" THEN
+      #add-point:update_b段修改前 name="update_b.b_update"
+      
+      #end add-point     
+      UPDATE ooeg_t 
+         SET (ooeg001
+              ,ooegstus,ooeg009,ooeg002,ooeg003,ooeg004,ooeg005,ooeg006,ooeg007,ooeg008,ooeg011,ooeg012,ooegmodid,ooegmoddt,ooegownid,ooegowndp,ooegcrtid,ooegcrtdp,ooegcrtdt) 
+              = 
+             (ps_keys[1]
+              ,g_ooeg_d[l_ac].ooegstus,g_ooeg_d[l_ac].ooeg009,g_ooeg_d[l_ac].ooeg002,g_ooeg_d[l_ac].ooeg003, 
+                  g_ooeg_d[l_ac].ooeg004,g_ooeg_d[l_ac].ooeg005,g_ooeg_d[l_ac].ooeg006,g_ooeg_d[l_ac].ooeg007, 
+                  g_ooeg_d[l_ac].ooeg008,g_ooeg_d[l_ac].ooeg011,g_ooeg_d[l_ac].ooeg012,g_ooeg2_d[l_ac].ooegmodid, 
+                  g_ooeg2_d[l_ac].ooegmoddt,g_ooeg2_d[l_ac].ooegownid,g_ooeg2_d[l_ac].ooegowndp,g_ooeg2_d[l_ac].ooegcrtid, 
+                  g_ooeg2_d[l_ac].ooegcrtdp,g_ooeg2_d[l_ac].ooegcrtdt) 
+         WHERE ooegent = g_enterprise AND ooeg001 = ps_keys_bak[1]
+      #add-point:update_b段修改中 name="update_b.m_update"
+      
+      #end add-point 
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            CALL s_transaction_end('N','0')
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "ooeg_t" 
+            LET g_errparam.code   = "std-00009" 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "ooeg_t:",SQLERRMESSAGE 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+         OTHERWISE
+            
+      END CASE
+      #add-point:update_b段修改後 name="update_b.a_update"
+      
+      #end add-point 
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi125.lock_b" >}
+#+ 連動lock其他單身table資料
+PRIVATE FUNCTION aooi125_lock_b(ps_table)
+   #add-point:lock_b段define(客製用) name="lock_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:lock_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="lock_b.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="lock_b.pre_function"
+   
+   #end add-point
+   
+   #先刷新資料
+   #CALL aooi125_b_fill(g_wc2)
+   
+   #鎖定整組table
+   #LET ls_group = ""
+   #僅鎖定自身table
+   LET ls_group = "ooeg_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN aooi125_bcl USING g_enterprise,
+                                       g_ooeg_d[g_detail_idx].ooeg001
+                                       
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "aooi125_bcl:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   
+   END IF
+                                    
+ 
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi125.unlock_b" >}
+#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION aooi125_unlock_b(ps_table)
+   #add-point:unlock_b段define(客製用) name="unlock_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:unlock_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="unlock_b.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="unlock_b.pre_function"
+   
+   #end add-point
+   
+   LET ls_group = ""
+   
+   #IF ls_group.getIndexOf(ps_table,1) THEN
+      CLOSE aooi125_bcl
+   #END IF
+   
+ 
+   
+   #add-point:unlock_b段結束前 name="unlock_b.after"
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi125.modify_detail_chk" >}
+#+ 單身輸入判定(因應modify_detail)
+PRIVATE FUNCTION aooi125_modify_detail_chk(ps_record)
+   #add-point:modify_detail_chk段define(客製用) name="modify_detail_chk.define_customerization"
+   
+   #end add-point
+   DEFINE ps_record STRING
+   DEFINE ls_return STRING
+   #add-point:modify_detail_chk段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify_detail_chk.define"
+   
+   #end add-point
+   
+   #add-point:modify_detail_chk段開始前 name="modify_detail_chk.before"
+   
+   #end add-point
+   
+   #根據sr名稱確定該page第一個欄位的名稱
+   CASE ps_record
+      WHEN "s_detail1" 
+         LET ls_return = "ooegstus"
+      WHEN "s_detail2"
+         LET ls_return = "ooeg001_2"
+ 
+      #add-point:modify_detail_chk段自訂page控制 name="modify_detail_chk.page_control"
+      
+      #end add-point
+   END CASE
+    
+   #add-point:modify_detail_chk段結束前 name="modify_detail_chk.after"
+   
+   #end add-point
+   
+   RETURN ls_return
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi125.mask_functions" >}
+&include "erp/aoo/aooi125_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="aooi125.set_pk_array" >}
+   #應用 a51 樣板自動產生(Version:8)
+#+ 給予pk_array內容
+PRIVATE FUNCTION aooi125_set_pk_array()
+   #add-point:set_pk_array段define name="set_pk_array.define_customerization"
+   
+   #end add-point
+   #add-point:set_pk_array段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_pk_array.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="set_pk_array.before"
+   
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_ooeg_d[l_ac].ooeg001
+   LET g_pk_array[1].column = 'ooeg001'
+ 
+   
+   #add-point:set_pk_array段之後 name="set_pk_array.after"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aooi125.state_change" >}
+   
+ 
+{</section>}
+ 
+{<section id="aooi125.other_dialog" readonly="Y" >}
+ 
+ 
+{</section>}
+ 
+{<section id="aooi125.other_function" readonly="Y" >}
+#參考欄位顯示
+PRIVATE FUNCTION aooi125_desc1()
+   INITIALIZE g_ref_fields TO NULL 
+   LET g_ref_fields[1] = g_ooeg_d[l_ac].ooeg002
+   CALL ap_ref_array2(g_ref_fields," SELECT ooefl003 FROM ooefl_t WHERE ooeflent = '"||g_enterprise||"' AND ooefl001 = ? AND ooefl002 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_ooeg_d[l_ac].ooeg002_desc = g_rtn_fields[1] 
+   DISPLAY BY NAME g_ooeg_d[l_ac].ooeg002_desc
+   INITIALIZE g_ref_fields TO NULL 
+   
+   INITIALIZE g_ref_fields TO NULL 
+   LET g_ref_fields[1] = g_ooeg_d[l_ac].ooeg004
+   CALL ap_ref_array2(g_ref_fields," SELECT ooefl003 FROM ooefl_t WHERE ooeflent = '"||g_enterprise||"' AND ooefl001 = ? AND ooefl002 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_ooeg_d[l_ac].ooeg004_desc = g_rtn_fields[1] 
+   DISPLAY BY NAME g_ooeg_d[l_ac].ooeg004_desc
+   INITIALIZE g_ref_fields TO NULL 
+END FUNCTION
+#新增組織基本資料維護作業
+PRIVATE FUNCTION aooi125_ins_ooef()
+DEFINE l_time       DATETIME YEAR TO SECOND 
+DEFINE l_n          LIKE type_t.num5
+
+   LET l_time = cl_get_current()
+   LET l_n = 0
+   SELECT COUNT(*) INTO l_n
+     FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_ooeg_d[l_ac].ooeg001
+   IF l_n = 0  THEN
+      INSERT INTO ooef_t (ooefent,ooef001,ooef003,ooef017,ooefstus,
+                          ooefownid,ooefowndp,ooefcrtid,ooefcrtdp,ooefcrtdt,ooefmodid,ooefmoddt,
+                          ooef201,ooef202,ooef203,ooef204,ooef205,ooef206,ooef207,ooef208,ooef209,ooef210,ooef211,ooef212,
+                          ooef301,ooef302,ooef303,ooef304,ooef305)
+                  VALUES (g_enterprise,g_ooeg_d[l_ac].ooeg001,'N',g_ooeg_d[l_ac].ooeg009,g_ooeg_d[l_ac].ooegstus,
+                          g_user,g_dept,g_user,g_dept,l_time,g_user,l_time,
+                          'N','N','Y','N','N','N','N','N','N','N','N','N',
+                          'N','N','N','N','N')
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "ins ooef_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+         CALL s_transaction_end('N','0') 
+      END IF  
+   END IF 
+END FUNCTION
+#參考欄位顯示
+PRIVATE FUNCTION aooi125_desc()
+   
+   INITIALIZE g_ref_fields TO NULL 
+   LET g_ref_fields[1] = g_ooeg_d[l_ac].ooeg001
+   CALL ap_ref_array2(g_ref_fields," SELECT ooefl003 FROM ooefl_t WHERE ooeflent = '"||g_enterprise||"' AND ooefl001 = ? AND ooefl002 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_ooeg_d[l_ac].ooefl003 = g_rtn_fields[1] 
+   DISPLAY BY NAME g_ooeg_d[l_ac].ooefl003
+   INITIALIZE g_ref_fields TO NULL 
+   
+   LET g_ref_fields[1] = g_ooeg_d[l_ac].ooeg001
+   CALL ap_ref_array2(g_ref_fields," SELECT ooefl004 FROM ooefl_t WHERE ooeflent = '"||g_enterprise||"' AND ooefl001 = ? AND ooefl002 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_ooeg_d[l_ac].ooefl004 = g_rtn_fields[1] 
+   DISPLAY BY NAME g_ooeg_d[l_ac].ooefl004
+   
+   INITIALIZE g_ref_fields TO NULL 
+   LET g_ref_fields[1] = g_ooeg_d[l_ac].ooeg001
+   CALL ap_ref_array2(g_ref_fields," SELECT ooefl005 FROM ooefl_t WHERE ooeflent = '"||g_enterprise||"' AND ooefl001 = ? AND ooefl002 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_ooeg_d[l_ac].ooefl005 = g_rtn_fields[1] 
+   DISPLAY BY NAME g_ooeg_d[l_ac].ooefl005
+   
+END FUNCTION
+################################################################################
+# Descriptions...: 檢查部門編號不可以存在ooef_t
+# Memo...........:
+# Usage..........: CALL aooi125_chk_ooeg001()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/01/14 By xumm
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aooi125_chk_ooeg001()
+DEFINE l_n          LIKE type_t.num5
+   
+   LET g_errno = ''
+   LET l_n = 0
+   SELECT COUNT(*) INTO l_n
+     FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_ooeg_d[l_ac].ooeg001
+   IF l_n > 0 THEN
+      LET g_errno = 'aoo-00279'
+   END IF 
+END FUNCTION
+################################################################################
+# Descriptions...: 組織編號整批產生
+# Memo...........:
+# Usage..........: CALL aooi125_batch()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/01/14 By xumm
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aooi125_batch()
+DEFINE l_sql           STRING
+DEFINE l_ooeg001       LIKE ooeg_t.ooeg001
+   
+   CALL s_transaction_begin()
+   LET l_sql = " SELECT ooeg001",
+               "   FROM ooeg_t",
+               "  WHERE ooegent = '",g_enterprise,"'",
+               "    AND ooeg001 NOT IN (SELECT ooef001 ", 
+               "                          FROM ooef_t ",
+               "                         WHERE ooefent = '",g_enterprise,"')"
+   PREPARE aooi125_sel_ooeg001_pr FROM l_sql
+   DECLARE aooi125_sel_ooeg001_cs CURSOR FOR aooi125_sel_ooeg001_pr
+   FOREACH aooi125_sel_ooeg001_cs INTO l_ooeg001
+      IF NOT aooi125_batch_ins(l_ooeg001) THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'sub-00034'
+         LET g_errparam.extend = l_ooeg001
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         CALL s_transaction_end('N','0') 
+         RETURN
+      END IF
+   END FOREACH
+   INITIALIZE g_errparam TO NULL
+   LET g_errparam.code = 'sub-00033'
+   LET g_errparam.extend = ''
+   LET g_errparam.popup = TRUE
+   CALL cl_err()
+
+   CALL s_transaction_end('Y','0') 
+END FUNCTION
+################################################################################
+# Descriptions...: 組織資料新增
+# Memo...........:
+# Usage..........: CALL aooi125_batch_ins(p_ooeg001)
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/01/14 By xumm
+# Modify.........: 2014/09/03 By sarah 增加多語言檔的寫入
+################################################################################
+PRIVATE FUNCTION aooi125_batch_ins(p_ooeg001)
+DEFINE l_time       DATETIME YEAR TO SECOND 
+DEFINE l_n          LIKE type_t.num5
+DEFINE p_ooeg001    LIKE ooeg_t.ooeg001
+DEFINE l_ooeg       RECORD LIKE ooeg_t.*
+DEFINE l_lang       LIKE gzxa_t.gzxa010
+
+   INITIALIZE l_ooeg.* TO NULL
+   SELECT * INTO l_ooeg.*
+     FROM ooeg_t
+    WHERE ooegent = g_enterprise
+      AND ooeg001 = p_ooeg001
+   LET l_time = cl_get_current()
+   LET l_n = 0
+   SELECT COUNT(*) INTO l_n
+     FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = l_ooeg.ooeg001
+   IF l_n = 0  THEN
+      INSERT INTO ooef_t (ooefent,ooef001,ooef003,ooef017,ooefstus,
+                          ooefownid,ooefowndp,ooefcrtid,ooefcrtdp,ooefcrtdt,ooefmodid,ooefmoddt,
+                          ooef201,ooef202,ooef203,ooef204,ooef205,ooef206,ooef207,ooef208,ooef209,ooef210,ooef211,ooef212,
+                          ooef301,ooef302,ooef303,ooef304,ooef305)
+                  VALUES (g_enterprise,l_ooeg.ooeg001,'N',l_ooeg.ooeg009,l_ooeg.ooegstus,
+                          g_user,g_dept,g_user,g_dept,l_time,g_user,l_time,
+                          'N','N','Y','N','N','N','N','N','N','N','N','N',
+                          'N','N','N','N','N')
+      IF SQLCA.sqlcode THEN
+         RETURN FALSE
+      END IF  
+   END IF
+   
+   LET l_n = 0
+   LET l_lang = ''   #抓取g_account的使用語言別
+   SELECT gzxa010 INTO l_lang
+     FROM gzxa_t
+    WHERE gzxaent = g_enterprise
+      AND gzxa001 = g_account
+   SELECT COUNT(*) INTO l_n
+     FROM ooefl_t   
+    WHERE ooeflent = g_enterprise
+      AND ooefl001 = l_ooeg.ooeg001
+      AND ooefl002 = l_lang
+   IF l_n = 0  THEN
+      INSERT INTO ooefl_t (ooeflent,ooefl001,ooefl002,ooefl003)
+                   VALUES (g_enterprise,l_ooeg.ooeg001,l_lang,l_ooeg.ooeg010)
+      IF SQLCA.sqlcode THEN
+         RETURN FALSE
+      END IF  
+   END IF 
+   RETURN TRUE
+END FUNCTION
+
+PRIVATE FUNCTION aooi125_ooef009_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_ooeg_d[l_ac].ooeg009
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_ooeg_d[l_ac].ooeg009_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_ooeg_d[l_ac].ooeg009_desc
+END FUNCTION
+
+ 
+{</section>}
+ 

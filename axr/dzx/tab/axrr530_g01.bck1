@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrr530_g01" module="axr" jobmode="N" type="g01" industry="std" crtid="02097" crtdt="2016-05-06 10:27:01" modid="03080" moddt="2016-08-16 16:28:15" sdver="2" tabver="10001" description="銷售信用狀押匯憑證列印">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="xrgf001,xrgf002,xrgf003,xrgf004,xrgf005,xrgf006,xrgf007,xrgf008,xrgf009,xrgf010,xrgf100,xrgf101,xrgf103,xrgf113,l_xrgadocdt(xrgadocdt|NULL),l_xrga001(chr100|NULL),l_xrga003(xrga003|NULL),l_xrga004(xrga004|NULL),l_xrga004_desc(chr100|NULL),l_xrga005_desc(chr100|NULL),l_xrga006_desc(chr100|NULL),l_xrga011(xrga011|NULL),l_xrga007_desc(chr100|NULL),l_xmdo051(xmdo051|NULL),l_xrga103(xrga103|NULL),l_xrga113(xrga113|NULL),l_xrgf004_desc(chr100|NULL),xrgfcomp,xrgfdocdt,xrgfdocno,xrgfent,xrgfstus,apgc001,apgc004,apgc006,apgc007,apgc008,apgc009,apgc010,apgc011,apgc013,apgc014,apgc015,apgc016,apgc100,apgc101,apgc103,apgc104,apgc105,apgc113,apgc114,apgc115,apgcorga,apgcseq,l_apgc001_desc(chr100|NULL),l_apgc006_desc(chr30|NULL),l_xrgf006_desc(chr100|&apos;&apos;)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="xrgf001(xrgf001|xrgf001),xrgf002(xrgf002|xrgf002),xrgf003(xrgf003|xrgf003),xrgf004(xrgf004|xrgf004),xrgf005(xrgf005|xrgf005),xrgf006(xrgf006|xrgf006),xrgf007(xrgf007|xrgf007),xrgf008(xrgf008|xrgf008),xrgf009(xrgf009|xrgf009),xrgf010(xrgf010|xrgf010),xrgf100(xrgf100|xrgf100),xrgf101(xrgf101|xrgf101),xrgf103(xrgf103|xrgf103),xrgf113(xrgf113|xrgf113),l_xrgadocdt(xrgadocdt|NULL),l_xrga001(chr100|NULL),l_xrga003(xrga003|NULL),l_xrga004(xrga004|NULL),l_xrga004_desc(chr100|NULL),l_xrga005_desc(chr100|NULL),l_xrga006_desc(chr100|NULL),l_xrga011(xrga011|NULL),l_xrga007_desc(chr100|NULL),l_xmdo051(xmdo051|NULL),l_xrga103(xrga103|NULL),l_xrga113(xrga113|NULL),l_xrgf004_desc(chr100|NULL),xrgfcomp(xrgfcomp|xrgfcomp),xrgfdocdt(xrgfdocdt|xrgfdocdt),xrgfdocno(xrgfdocno|xrgfdocno),xrgfent(xrgfent|xrgfent),xrgfstus(xrgfstus|xrgfstus),apgc001(apgc001|apgc001),apgc004(apgc004|apgc004),apgc006(apgc006|apgc006),apgc007(apgc007|apgc007),apgc008(apgc008|apgc008),apgc009(apgc009|apgc009),apgc010(apgc010|apgc010),apgc011(apgc011|apgc011),apgc013(apgc013|apgc013),apgc014(apgc014|apgc014),apgc015(apgc015|apgc015),apgc016(apgc016|apgc016),apgc100(apgc100|apgc100),apgc101(apgc101|apgc101),apgc103(apgc103|apgc103),apgc104(apgc104|apgc104),apgc105(apgc105|apgc105),apgc113(apgc113|apgc113),apgc114(apgc114|apgc114),apgc115(apgc115|apgc115),apgcorga(apgcorga|apgcorga),apgcseq(apgcseq|apgcseq),l_apgc001_desc(chr100|NULL),l_apgc006_desc(chr30|NULL),l_xrgf006_desc(chr100|&apos;&apos;)"/>
+    <sql id="g_from" query=" xrgf_t  LEFT OUTER JOIN ( SELECT apgc_t.* FROM apgc_t  ) x  ON xrgf_t.xrgfent = x.apgcent AND xrgf_t.xrgfcomp = x.apgccomp AND xrgf_t.xrgfdocno = x.apgcdocno AND xrgf_t.xrgf001 = x.apgc900"/>
+    <sql id="g_where" query="" maintable="xrgf_t"/>
+    <sql id="g_order" query="xrgfdocno,apgcseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="xrgfdocno,apgcseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="xrgfdocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff002" where="xrgfent,xrgfdocno"/>
+      <rep type="apgcseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff002,ooff003" where="xrgfent,xrgfdocno,apgcseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff002,ooff003" where="xrgfent,xrgfdocno,apgcseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="xrgfdocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff002" where="xrgfent,xrgfdocno"/>
+      <rep type="apgcseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

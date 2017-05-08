@@ -1,0 +1,85 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi915_01" module="azz" jobmode="N" type="c04a" industry="std" fix_arg="0" crtid="00413" crtdt="2014-12-29 09:21:02" modid="00413" moddt="2014-12-30 10:34:49" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="其他使用者分享的查詢方案">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzxm003,gzxm003_desc(chr500),gzxm001,gzxml005,gzxm002,gzxm007"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gzxn004,gzxn005,gzxn005_desc(chr500),gzxn009,gzxn007"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="detail_qrystr" mode="popup">
+        <action id="prog_azzi800" prog="azzi800" parameter="gzxm003"/>
+        <action id="prog_azzi915" prog="azzi915" parameter="gzxm001"/>
+        <action id="prog_azzi900" prog="azzi900" parameter="gzxm002"/>
+      </action>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi915_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="gzxm003,gzxm001,gzxml005,gzxm002,gzxm007" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="gzxn004,gzxn005,gzxn009,gzxn007" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="gzxm003,gzxm001,gzxml005,gzxm002,gzxm007"/>
+      <construct id="body" page="2" field="gzxn004,gzxn005,gzxn009,gzxn007"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzxm003">
+        <after>
+          <reference field="gzxm003_desc" ref_field="gzxm_t.gzxm003" map_field="gzxm003" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_gzxa003" state="i"/>
+        <controlp form="q_gzxa003" state="c"/>
+      </column>
+      <column id="gzxm003_desc"/>
+      <column id="gzxm001">
+        <controlp form="q_gzxm001" state="i"/>
+        <controlp form="q_gzxm001" state="c"/>
+      </column>
+      <column id="gzxml005"/>
+      <column id="gzxm002">
+        <controlp form="q_gzzz001_1" state="i"/>
+        <controlp form="q_gzzz001_1" state="c"/>
+      </column>
+      <column id="gzxm007"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gzxn004"/>
+      <column id="gzxn005">
+        <after>
+          <reference field="gzxn005_desc" ref_field="gzxn_t.gzxn005" map_field="gzxn005" ref_sql="SELECT dzebl003 FROM dzebl_t WHERE dzebl001=? AND dzebl002=$varg_lang$var"/>
+        </after>
+      </column>
+      <column id="gzxn005_desc"/>
+      <column id="gzxn009"/>
+      <column id="gzxn007"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="gzxm_t" page="1" linked="" pk="gzxm001,gzxm002,gzxm003">
+      <sql id="forupd_sql_detail" query="SELECT gzxm003,&apos;&apos;,gzxm001,&apos;&apos;,gzxm002,gzxm007 FROM gzxm_t WHERE gzxment=? AND gzxm001=? AND gzxm002=? AND gzxm003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzxm003,&apos;&apos;,gzxm001,&apos;&apos;,gzxm002,gzxm007 FROM gzxm_t WHERE gzxment= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="gzxml_t.gzxml005" table="gzxml_t" fk="gzxm001,gzxm002,gzxm003" pk="gzxml001,gzxml002,gzxml003,gzxml004" field="gzxml005"/>
+    </body>
+    <body id="gzxn_t" page="2" linked="" pk="gzxn004" fk="gzxn001,gzxn002,gzxn003" detail="Y">
+      <sql id="forupd_sql_detail" query="SELECT gzxn004,gzxn005,&apos;&apos;,gzxn009,gzxn007 FROM gzxn_t WHERE gzxnent=? AND gzxn001=? AND gzxn002=? AND gzxn003=? AND gzxn004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzxn004,gzxn005,&apos;&apos;,gzxn009,gzxn007 FROM gzxn_t WHERE gzxnent=? AND gzxn001=? AND gzxn002=? AND gzxn003=?"/>
+    </body>
+  </dataset>
+</assembly>
+

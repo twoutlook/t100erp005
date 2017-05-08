@@ -1,0 +1,129 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abgi010" module="abg" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02298" crtdt="2013-07-01 00:00:00" modid="05016" moddt="2016-10-11 09:24:15" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="預算編號維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bgaastus,bgaa001,bgaal003,bgaa002,bgaa003,bgaa004,bgaa005,bgaa006,bgaa007,bgaa012,bgaa008,bgaa009,bgaa011,bgaa011_desc(chr500),bgaa010"/>
+      <var id="body" page="2" record="s_detail1_info" page_id="1_info" value="bgaa001_s_detail1_info(chr500),bgaaownid,bgaaownid_desc(chr500),bgaaowndp,bgaaowndp_desc(chr500),bgaacrtid,bgaacrtid_desc(chr500),bgaacrtdp,bgaacrtdp_desc(chr500),bgaacrtdt,bgaamodid,bgaamodid_desc(chr500),bgaamoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="abg" filename="abgi010" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="bgaastus,bgaa001,bgaal003,bgaa002,bgaa003,bgaa004,bgaa005,bgaa006,bgaa007,bgaa012,bgaa008,bgaa009,bgaa011,bgaa010" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="bgaastus,bgaa001,bgaal003,bgaa002,bgaa003,bgaa004,bgaa005,bgaa006,bgaa007,bgaa012,bgaa008,bgaa009,bgaa011,bgaa010"/>
+      <construct id="body" page="2" field="bgaaownid,bgaaowndp,bgaacrtid,bgaacrtdp,bgaacrtdt,bgaamodid,bgaamoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="bgaastus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="bgaa001">
+        <controlp form="q_bgaa001" state="c"/>
+      </column>
+      <column id="bgaal003"/>
+      <column id="bgaa002">
+        <controlp form="q_bgac001" state="i"/>
+        <controlp form="q_bgac001" state="c"/>
+      </column>
+      <column id="bgaa003">
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="bgaa004" type="S" default="3" def_scc="9401"/>
+      <column id="bgaa005" type="S" default="3" def_scc="9401"/>
+      <column id="bgaa006" type="S" default="2" def_scc="9402"/>
+      <column id="bgaa007" type="S" default="1" def_scc="9403"/>
+      <column id="bgaa012" type="S" default="N"/>
+      <column id="bgaa008">
+        <controlp form="q_bgae006" state="i"/>
+        <controlp form="q_bgae006" state="c"/>
+      </column>
+      <column id="bgaa009">
+        <controlp form="q_nmai001" state="i"/>
+        <controlp form="q_nmai001" state="c"/>
+      </column>
+      <column id="bgaa011">
+        <after>
+          <check chkid="v_ooeb005" id="isExist"/>
+          <reference field="bgaa011_desc" ref_field="bgaa_t.bgaa011" map_field="bgaaent,bgaa011" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeb005_1" state="i"/>
+        <controlp form="q_ooeb005_1" state="c"/>
+      </column>
+      <column id="bgaa011_desc"/>
+      <column id="bgaa010">
+        <controlp form="q_ooeb006_1" state="i"/>
+        <controlp form="q_ooeb006_1" state="c"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="bgaa001_s_detail1_info"/>
+      <column id="bgaaownid">
+        <after>
+          <reference field="bgaaownid_desc" ref_field="bgaa_t.bgaaownid" map_field="bgaaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgaaownid_desc"/>
+      <column id="bgaaowndp">
+        <after>
+          <reference field="bgaaowndp_desc" ref_field="bgaa_t.bgaaowndp" map_field="bgaaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgaaowndp_desc"/>
+      <column id="bgaacrtid">
+        <after>
+          <reference field="bgaacrtid_desc" ref_field="bgaa_t.bgaacrtid" map_field="bgaacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgaacrtid_desc"/>
+      <column id="bgaacrtdp">
+        <after>
+          <reference field="bgaacrtdp_desc" ref_field="bgaa_t.bgaacrtdp" map_field="bgaacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgaacrtdp_desc"/>
+      <column id="bgaacrtdt"/>
+      <column id="bgaamodid">
+        <after>
+          <reference field="bgaamodid_desc" ref_field="bgaa_t.bgaamodid" map_field="bgaamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgaamodid_desc"/>
+      <column id="bgaamoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="bgaa_t" page="1,2" linked="" pk="bgaa001">
+      <sql id="forupd_sql_detail" query="SELECT bgaastus,bgaa001,&apos;&apos;,bgaa002,bgaa003,bgaa004,bgaa005,bgaa006,bgaa007,bgaa012,bgaa008,bgaa009,bgaa011,&apos;&apos;,bgaa010,&apos;&apos;,bgaaownid,&apos;&apos;,bgaaowndp,&apos;&apos;,bgaacrtid,&apos;&apos;,bgaacrtdp,&apos;&apos;,bgaacrtdt,bgaamodid,&apos;&apos;,bgaamoddt FROM bgaa_t WHERE bgaaent=? AND bgaa001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bgaastus,bgaa001,&apos;&apos;,bgaa002,bgaa003,bgaa004,bgaa005,bgaa006,bgaa007,bgaa012,bgaa008,bgaa009,bgaa011,&apos;&apos;,bgaa010,&apos;&apos;,bgaaownid,&apos;&apos;,bgaaowndp,&apos;&apos;,bgaacrtid,&apos;&apos;,bgaacrtdp,&apos;&apos;,bgaacrtdt,bgaamodid,&apos;&apos;,bgaamoddt FROM bgaa_t WHERE bgaaent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="bgaal_t.bgaal003" table="bgaal_t" fk="bgaa001" pk="bgaal001,bgaal002" field="bgaal003"/>
+    </body>
+  </dataset>
+</assembly>
+

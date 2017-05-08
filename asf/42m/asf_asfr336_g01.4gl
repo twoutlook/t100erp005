@@ -1,0 +1,1224 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="asfr336_g01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:5(2016-11-14 15:26:56), PR版次:0005(1900-01-01 00:00:00)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000169
+#+ Filename...: asfr336_g01
+#+ Description: ...
+#+ Creator....: 05293(2014-05-23 09:32:39)
+#+ Modifier...: 08993 -SD/PR- 00000
+ 
+{</section>}
+ 
+{<section id="asfr336_g01.global" readonly="Y" >}
+#報表 g01 樣板自動產生(Version:13)
+#add-point:填寫註解說明 name="global.memo"
+
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+PRIVATE TYPE sr1_r RECORD
+   sffb001 LIKE sffb_t.sffb001, 
+   sffb002 LIKE sffb_t.sffb002, 
+   sffb003 LIKE sffb_t.sffb003, 
+   sffb004 LIKE sffb_t.sffb004, 
+   sffb005 LIKE sffb_t.sffb005, 
+   sffb006 LIKE sffb_t.sffb006, 
+   sffb007 LIKE sffb_t.sffb007, 
+   sffb008 LIKE sffb_t.sffb008, 
+   sffb009 LIKE sffb_t.sffb009, 
+   sffb010 LIKE sffb_t.sffb010, 
+   sffb011 LIKE sffb_t.sffb011, 
+   sffb012 LIKE sffb_t.sffb012, 
+   sffb013 LIKE sffb_t.sffb013, 
+   sffb014 LIKE sffb_t.sffb014, 
+   sffb015 LIKE sffb_t.sffb015, 
+   sffb016 LIKE sffb_t.sffb016, 
+   sffb017 LIKE sffb_t.sffb017, 
+   sffb018 LIKE sffb_t.sffb018, 
+   sffb019 LIKE sffb_t.sffb019, 
+   sffb020 LIKE sffb_t.sffb020, 
+   sffb024 LIKE sffb_t.sffb024, 
+   sffbdocdt LIKE sffb_t.sffbdocdt, 
+   sffbdocno LIKE sffb_t.sffbdocno, 
+   sffbent LIKE sffb_t.sffbent, 
+   sffbseq LIKE sffb_t.sffbseq, 
+   sffbsite LIKE sffb_t.sffbsite, 
+   sffbstus LIKE sffb_t.sffbstus, 
+   sffc001 LIKE sffc_t.sffc001, 
+   sffc002 LIKE sffc_t.sffc002, 
+   sffc003 LIKE sffc_t.sffc003, 
+   sffc004 LIKE sffc_t.sffc004, 
+   sffc005 LIKE sffc_t.sffc005, 
+   sffc006 LIKE sffc_t.sffc006, 
+   ooag_t_ooag011 LIKE ooag_t.ooag011, 
+   ooefl_t_ooefl003 LIKE ooefl_t.ooefl003, 
+   oogd_t_oogd002 LIKE oogd_t.oogd002, 
+   oocql_t_oocql004 LIKE oocql_t.oocql004, 
+   x_t1_oocql004 LIKE oocql_t.oocql004, 
+   ecaa_t_ecaa002 LIKE ecaa_t.ecaa002, 
+   mrba_t_mrba004 LIKE mrba_t.mrba004, 
+   ooge_t_ooge002 LIKE ooge_t.ooge002, 
+   oobal_t_oobal004 LIKE oobal_t.oobal004, 
+   l_sffbdocno_oobal004 LIKE type_t.chr200, 
+   l_sffb002_ooag011 LIKE type_t.chr300, 
+   l_sffb003_ooefl003 LIKE type_t.chr1000, 
+   l_sfaa010 LIKE sfaa_t.sfaa010, 
+   l_imaal003 LIKE imaal_t.imaal003, 
+   l_imaal004 LIKE imaal_t.imaal004, 
+   l_sfia007 LIKE sfia_t.sfia007, 
+   l_sffb017_sum LIKE sffb_t.sffb017, 
+   l_sffb018_sum LIKE sffb_t.sffb018, 
+   l_sffb019_sum LIKE sffb_t.sffb019, 
+   l_sfia007_sum LIKE sfia_t.sfia007, 
+   l_sffb014_sum LIKE sffb_t.sffb014, 
+   l_sffb015_sum LIKE sffb_t.sffb015, 
+   l_sffb011_sum LIKE sffb_t.sffb011, 
+   l_sffb001_desc LIKE type_t.chr30, 
+   l_sffb010_desc LIKE mrba_t.mrba004, 
+   l_sffb005_sffb006 LIKE type_t.chr30, 
+   l_sffb007_sffb008 LIKE type_t.chr1000, 
+   l_order LIKE type_t.chr80
+END RECORD
+ 
+PRIVATE TYPE sr2_r RECORD
+   ooff013 LIKE ooff_t.ooff013
+END RECORD
+ 
+ 
+DEFINE tm RECORD
+       wc STRING,                  #where condition 
+       a1 LIKE type_t.chr1,         #部門 
+       a2 LIKE type_t.chr1,         #工作站 
+       a3 LIKE type_t.chr1,         #機器 
+       a4 LIKE type_t.chr1,         #班別 
+       a5 LIKE type_t.chr1,         #組別 
+       a6 LIKE type_t.chr1          #作業編號
+       END RECORD
+DEFINE sr DYNAMIC ARRAY OF sr1_r                   #宣告sr為sr1_t資料結構的動態陣列
+DEFINE g_select        STRING
+DEFINE g_from          STRING
+DEFINE g_where         STRING
+DEFINE g_order         STRING
+DEFINE g_sql           STRING                         #report_select_prep,REPORT段使用
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asfr336_g01.main" readonly="Y" >}
+PUBLIC FUNCTION asfr336_g01(p_arg1,p_arg2,p_arg3,p_arg4,p_arg5,p_arg6,p_arg7)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition 
+DEFINE  p_arg2 LIKE type_t.chr1         #tm.a1  部門 
+DEFINE  p_arg3 LIKE type_t.chr1         #tm.a2  工作站 
+DEFINE  p_arg4 LIKE type_t.chr1         #tm.a3  機器 
+DEFINE  p_arg5 LIKE type_t.chr1         #tm.a4  班別 
+DEFINE  p_arg6 LIKE type_t.chr1         #tm.a5  組別 
+DEFINE  p_arg7 LIKE type_t.chr1         #tm.a6  作業編號
+#add-point:init段define (客製用) name="component_name.define_customerization"
+
+#end add-point
+#add-point:init段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component_name.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.a1 = p_arg2
+   LET tm.a2 = p_arg3
+   LET tm.a3 = p_arg4
+   LET tm.a4 = p_arg5
+   LET tm.a5 = p_arg6
+   LET tm.a6 = p_arg7
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   #報表元件代號
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'   
+   
+   LET g_rep_code = "asfr336_g01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #主報表select子句準備
+   CALL asfr336_g01_sel_prep()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料存入array
+   CALL asfr336_g01_ins_data()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料印出
+   CALL asfr336_g01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asfr336_g01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION asfr336_g01_sel_prep()
+   #add-point:sel_prep段define (客製用) name="sel_prep.define_customerization"
+   
+   #end add-point
+   #add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+   DEFINE l_order LIKE type_t.chr200
+   #end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   IF tm.a1 = 'N' AND tm.a2 = 'N' AND tm.a3 = 'N' AND tm.a4 = 'N' AND tm.a5 = 'N' AND tm.a6 = 'N' THEN
+      LET l_order = "trim(sffbdocno)"
+   ELSE
+      LET l_order = ''
+   END IF
+   
+   IF tm.a1 = 'Y' THEN
+      IF cl_null(l_order) THEN
+         LET l_order =  "trim(sffb003)"
+      ELSE
+         LET l_order = l_order,"||trim(sffb003)"
+      END IF  
+   END IF
+   
+   IF tm.a2 = 'Y' THEN
+      IF cl_null(l_order) THEN
+         LET l_order =  "trim(sffb009)"
+      ELSE
+         LET l_order = l_order,"||trim(sffb009)"
+      END IF  
+   END IF
+   
+   IF tm.a3 = 'Y' THEN
+      IF cl_null(l_order) THEN
+         LET l_order =  "trim(sffb010)"
+      ELSE
+         LET l_order = l_order,"||trim(sffb010)"
+      END IF  
+   END IF
+   
+   IF tm.a4 = 'Y' THEN
+      IF cl_null(l_order) THEN
+         LET l_order =  "trim(sffb004)"
+      ELSE
+         LET l_order = l_order,"||trim(sffb004)"
+      END IF  
+   END IF
+   
+   IF tm.a5 = 'Y' THEN
+      IF cl_null(l_order) THEN
+         LET l_order =  "trim(sffb024)"
+      ELSE
+         LET l_order = l_order,"||trim(sffb024)"
+      END IF  
+   END IF
+   
+   IF tm.a6 = 'Y' THEN
+      IF cl_null(l_order) THEN
+         LET l_order =  "trim(sffb007)"
+      ELSE
+         LET l_order = l_order,"||trim(sffb007)"
+      END IF  
+   END IF
+   #end add-point
+   
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   LET g_select = " SELECT sffb001,sffb002,sffb003,sffb004,sffb005,sffb006,sffb007,sffb008,sffb009,sffb010, 
+       sffb011,sffb012,sffb013,sffb014,sffb015,sffb016,sffb017,sffb018,sffb019,sffb020,sffb024,sffbdocdt, 
+       sffbdocno,sffbent,sffbseq,sffbsite,sffbstus,sffc001,sffc002,sffc003,sffc004,sffc005,sffc006,ooag_t.ooag011, 
+       ooefl_t.ooefl003,oogd_t.oogd002,oocql_t.oocql004,x.t1_oocql004,ecaa_t.ecaa002,mrba_t.mrba004, 
+       ooge_t.ooge002,oobal_t.oobal004,trim(sffbdocno)||'.'||trim(oobal_t.oobal004),trim(sffb002)||'.'||trim(ooag_t.ooag011), 
+       trim(sffb003)||'.'||trim(ooefl_t.ooefl003),'','','','','','','','','','','','','','','',",l_order
+#   #end add-point
+#   LET g_select = " SELECT sffb001,sffb002,sffb003,sffb004,sffb005,sffb006,sffb007,sffb008,sffb009,sffb010, 
+#       sffb011,sffb012,sffb013,sffb014,sffb015,sffb016,sffb017,sffb018,sffb019,sffb020,sffb024,sffbdocdt, 
+#       sffbdocno,sffbent,sffbseq,sffbsite,sffbstus,sffc001,sffc002,sffc003,sffc004,sffc005,sffc006,( SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = sffb_t.sffb002 AND ooag_t.ooagent = sffb_t.sffbent), 
+#       ( SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = sffb_t.sffb003 AND ooefl_t.ooeflent = sffb_t.sffbent AND ooefl_t.ooefl002 = '" , 
+#       g_dlang,"'" ,"),( SELECT oogd002 FROM oogd_t WHERE oogd_t.oogdsite = sffb_t.sffbsite AND oogd_t.oogd001 = sffb_t.sffb004 AND oogd_t.oogdent = sffb_t.sffbent), 
+#       ( SELECT oocql004 FROM oocql_t WHERE oocql_t.oocql001 = '221' AND oocql_t.oocql002 = sffb_t.sffb007 AND oocql_t.oocqlent = sffb_t.sffbent AND oocql_t.oocql003 = '" , 
+#       g_dlang,"'" ,"),x.t1_oocql004,( SELECT ecaa002 FROM ecaa_t WHERE ecaa_t.ecaasite = sffb_t.sffbsite AND ecaa_t.ecaa001 = sffb_t.sffb009 AND ecaa_t.ecaaent = sffb_t.sffbent), 
+#       ( SELECT mrba004 FROM mrba_t WHERE mrba_t.mrba001 = sffb_t.sffb010 AND mrba_t.mrbasite = sffb_t.sffbsite AND mrba_t.mrbaent = sffb_t.sffbent), 
+#       ( SELECT ooge002 FROM ooge_t WHERE ooge_t.oogesite = sffb_t.sffbsite AND ooge_t.ooge001 = sffb_t.sffb024 AND ooge_t.oogeent = sffb_t.sffbent), 
+#       ( SELECT oobal004 FROM oobal_t WHERE oobal_t.oobal002 = sffb_t.sffbdocno AND oobal_t.oobalent = sffb_t.sffbent AND oobal_t.oobal003 = '" , 
+#       g_dlang,"'" ,"),trim(sffbdocno)||'.'||trim((SELECT oobal004 FROM oobal_t WHERE oobal_t.oobal002 = sffb_t.sffbdocno AND oobal_t.oobalent = sffb_t.sffbent AND oobal_t.oobal003 = '" , 
+#       g_dlang,"'" ,")),trim(sffb002)||'.'||trim((SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = sffb_t.sffb002 AND ooag_t.ooagent = sffb_t.sffbent)), 
+#       trim(sffb003)||'.'||trim((SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = sffb_t.sffb003 AND ooefl_t.ooeflent = sffb_t.sffbent AND ooefl_t.ooefl002 = '" , 
+#       g_dlang,"'" ,")),'','','','','','','','','','','','','','','',''"
+# 
+#   #add-point:sel_prep g_from name="sel_prep.g_from"
+   
+   #end add-point
+    LET g_from = " FROM sffb_t LEFT OUTER JOIN ( SELECT sffc_t.*,( SELECT oocql004 FROM oocql_t WHERE oocql_t.oocql001 = '223' AND oocql_t.oocql002 = sffc_t.sffc001 AND oocql_t.oocqlent = sffc_t.sffcent AND oocql_t.oocql003 = '" , 
+        g_dlang,"'" ,") t1_oocql004 FROM sffc_t ) x  ON sffb_t.sffbent = x.sffcent AND sffb_t.sffbdocno  
+        = x.sffcdocno AND sffb_t.sffbseq = x.sffcseq"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+ 
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED 
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   IF tm.a1 = 'N' AND tm.a2 = 'N' AND tm.a3 = 'N' AND tm.a4 = 'N' AND tm.a5 = 'N' AND tm.a6 = 'N' THEN
+      LET g_order = " ORDER BY sffbdocno"
+   ELSE
+      LET g_order = ''
+   END IF
+   
+   IF tm.a1 = 'Y' THEN
+      IF cl_null(g_order) THEN
+         LET g_order =  "ORDER BY sffb003"
+      ELSE
+         LET g_order = g_order,",sffb003"
+      END IF  
+   END IF
+   
+   IF tm.a2 = 'Y' THEN
+      IF cl_null(g_order) THEN
+         LET g_order =  "ORDER BY sffb009"
+      ELSE
+         LET g_order = g_order,",sffb009"
+      END IF  
+   END IF
+   
+   IF tm.a3 = 'Y' THEN
+      IF cl_null(g_order) THEN
+         LET g_order =  "ORDER BY sffb010"
+      ELSE
+         LET g_order = g_order,",sffb010"
+      END IF  
+   END IF
+   
+   IF tm.a4 = 'Y' THEN
+      IF cl_null(g_order) THEN
+         LET g_order =  "ORDER BY sffb004"
+      ELSE
+         LET g_order = g_order,",sffb004"
+      END IF  
+   END IF
+   
+   IF tm.a5 = 'Y' THEN
+      IF cl_null(g_order) THEN
+         LET g_order =  "ORDER BY sffb024"
+      ELSE
+         LET g_order = g_order,",sffb024"
+      END IF  
+   END IF
+   
+   IF tm.a6 = 'Y' THEN
+      IF cl_null(g_order) THEN
+         LET g_order =  "ORDER BY sffb007"
+      ELSE
+         LET g_order = g_order,",sffb007"
+      END IF  
+   END IF
+#   #end add-point
+#    LET g_order = " ORDER BY sffbdocno"
+# 
+#   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("sffb_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED ," ",g_order CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段 
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   
+   #end add-point
+   PREPARE asfr336_g01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()   
+      LET g_rep_success = 'N'    
+   END IF
+   DECLARE asfr336_g01_curs CURSOR FOR asfr336_g01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asfr336_g01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION asfr336_g01_ins_data()
+#主報表record(用於select子句)
+   DEFINE sr_s RECORD 
+   sffb001 LIKE sffb_t.sffb001, 
+   sffb002 LIKE sffb_t.sffb002, 
+   sffb003 LIKE sffb_t.sffb003, 
+   sffb004 LIKE sffb_t.sffb004, 
+   sffb005 LIKE sffb_t.sffb005, 
+   sffb006 LIKE sffb_t.sffb006, 
+   sffb007 LIKE sffb_t.sffb007, 
+   sffb008 LIKE sffb_t.sffb008, 
+   sffb009 LIKE sffb_t.sffb009, 
+   sffb010 LIKE sffb_t.sffb010, 
+   sffb011 LIKE sffb_t.sffb011, 
+   sffb012 LIKE sffb_t.sffb012, 
+   sffb013 LIKE sffb_t.sffb013, 
+   sffb014 LIKE sffb_t.sffb014, 
+   sffb015 LIKE sffb_t.sffb015, 
+   sffb016 LIKE sffb_t.sffb016, 
+   sffb017 LIKE sffb_t.sffb017, 
+   sffb018 LIKE sffb_t.sffb018, 
+   sffb019 LIKE sffb_t.sffb019, 
+   sffb020 LIKE sffb_t.sffb020, 
+   sffb024 LIKE sffb_t.sffb024, 
+   sffbdocdt LIKE sffb_t.sffbdocdt, 
+   sffbdocno LIKE sffb_t.sffbdocno, 
+   sffbent LIKE sffb_t.sffbent, 
+   sffbseq LIKE sffb_t.sffbseq, 
+   sffbsite LIKE sffb_t.sffbsite, 
+   sffbstus LIKE sffb_t.sffbstus, 
+   sffc001 LIKE sffc_t.sffc001, 
+   sffc002 LIKE sffc_t.sffc002, 
+   sffc003 LIKE sffc_t.sffc003, 
+   sffc004 LIKE sffc_t.sffc004, 
+   sffc005 LIKE sffc_t.sffc005, 
+   sffc006 LIKE sffc_t.sffc006, 
+   ooag_t_ooag011 LIKE ooag_t.ooag011, 
+   ooefl_t_ooefl003 LIKE ooefl_t.ooefl003, 
+   oogd_t_oogd002 LIKE oogd_t.oogd002, 
+   oocql_t_oocql004 LIKE oocql_t.oocql004, 
+   x_t1_oocql004 LIKE oocql_t.oocql004, 
+   ecaa_t_ecaa002 LIKE ecaa_t.ecaa002, 
+   mrba_t_mrba004 LIKE mrba_t.mrba004, 
+   ooge_t_ooge002 LIKE ooge_t.ooge002, 
+   oobal_t_oobal004 LIKE oobal_t.oobal004, 
+   l_sffbdocno_oobal004 LIKE type_t.chr200, 
+   l_sffb002_ooag011 LIKE type_t.chr300, 
+   l_sffb003_ooefl003 LIKE type_t.chr1000, 
+   l_sfaa010 LIKE sfaa_t.sfaa010, 
+   l_imaal003 LIKE imaal_t.imaal003, 
+   l_imaal004 LIKE imaal_t.imaal004, 
+   l_sfia007 LIKE sfia_t.sfia007, 
+   l_sffb017_sum LIKE sffb_t.sffb017, 
+   l_sffb018_sum LIKE sffb_t.sffb018, 
+   l_sffb019_sum LIKE sffb_t.sffb019, 
+   l_sfia007_sum LIKE sfia_t.sfia007, 
+   l_sffb014_sum LIKE sffb_t.sffb014, 
+   l_sffb015_sum LIKE sffb_t.sffb015, 
+   l_sffb011_sum LIKE sffb_t.sffb011, 
+   l_sffb001_desc LIKE type_t.chr30, 
+   l_sffb010_desc LIKE mrba_t.mrba004, 
+   l_sffb005_sffb006 LIKE type_t.chr30, 
+   l_sffb007_sffb008 LIKE type_t.chr1000, 
+   l_order LIKE type_t.chr80
+ END RECORD
+   DEFINE l_cnt           LIKE type_t.num10
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point   
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+
+#DEFINE l_str          STRING   
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+ 
+    #end add-point
+ 
+    CALL sr.clear()                                  #rep sr
+    LET l_cnt = 1
+    FOREACH asfr336_g01_curs INTO sr_s.*
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()       
+          LET g_rep_success = 'N'    
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       #生產料號              
+       SELECT sfaa010 INTO sr_s.l_sfaa010
+         FROM sfaa_t
+        WHERE sfaaent = sr_s.sffbent 
+          AND sfaadocno = sr_s.sffb005
+       #生產料號的品名、規格           
+       SELECT imaal003,imaal004 INTO sr_s.l_imaal003,sr_s.l_imaal004
+         FROM imaal_t
+        WHERE imaalent = sr_s.sffbent 
+          AND imaal001 = sr_s.l_sfaa010
+          AND imaal002 = g_dlang
+       #重工轉出
+       IF sr_s.sffb001 = '3' THEN       
+          SELECT SUM(sfia007) INTO sr_s.l_sfia007
+            FROM sfia_t LEFT OUTER JOIN sffb_t 
+              ON sffbent = sfiaent AND sffb005 = sfia003 AND sffb006 = sfia004 AND sffb001 = '3' 
+           WHERE sfiaent = sr_s.sffbent 
+             AND sfia003 = sr_s.sffb005 
+             AND sfia004 = sr_s.sffb006
+       ELSE
+          LET sr_s.l_sfia007 = 0
+       END IF          
+       #機器名稱   
+       SELECT mrba004 INTO sr_s.l_sffb010_desc
+         FROM mrba_t
+        WHERE mrbaent = sr_s.sffbent 
+          AND mrbasite = sr_s.sffbsite
+          AND mrba001 = sr_s.sffb010 
+       #取報工類別項目
+       SELECT gzcbl004 INTO sr_s.l_sffb001_desc
+        FROM gzcbl_t 
+        WHERE gzcbl001 = 4020 
+          AND gzcbl002 = sr_s.sffb001 
+          AND gzcbl003 = g_dlang
+       
+       #如果工時、機時、人數=NULL,則給它0
+       IF cl_null(sr_s.sffb011) THEN
+          LET  sr_s.sffb011 = 0
+       END IF
+       IF cl_null(sr_s.sffb014) THEN
+          LET  sr_s.sffb014 = 0
+       END IF
+       IF cl_null(sr_s.sffb015) THEN
+          LET  sr_s.sffb015 = 0
+       END IF
+       
+       
+       
+              
+       #組合欄位
+       #LET l_str = sr_s.sffb006 
+       IF cl_null(sr_s.sffb005) OR cl_null(sr_s.sffb006) THEN
+          LET sr_s.l_sffb005_sffb006 = sr_s.sffb005 , '/' , sr_s.sffb006
+       ELSE
+          LET sr_s.l_sffb005_sffb006 = sr_s.sffb005 || '/' || sr_s.sffb006
+       END IF
+       IF  cl_null(sr_s.oocql_t_oocql004) OR cl_null(sr_s.sffb008) THEN
+          LET sr_s.l_sffb007_sffb008 = sr_s.oocql_t_oocql004 , '/' , sr_s.sffb008 
+       ELSE
+          LET sr_s.l_sffb007_sffb008 = sr_s.oocql_t_oocql004 || '/' || sr_s.sffb008 
+       END IF
+       #end add-point
+ 
+       #add-point:ins_data段before_arr name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #set rep array value
+       LET sr[l_cnt].sffb001 = sr_s.sffb001
+       LET sr[l_cnt].sffb002 = sr_s.sffb002
+       LET sr[l_cnt].sffb003 = sr_s.sffb003
+       LET sr[l_cnt].sffb004 = sr_s.sffb004
+       LET sr[l_cnt].sffb005 = sr_s.sffb005
+       LET sr[l_cnt].sffb006 = sr_s.sffb006
+       LET sr[l_cnt].sffb007 = sr_s.sffb007
+       LET sr[l_cnt].sffb008 = sr_s.sffb008
+       LET sr[l_cnt].sffb009 = sr_s.sffb009
+       LET sr[l_cnt].sffb010 = sr_s.sffb010
+       LET sr[l_cnt].sffb011 = sr_s.sffb011
+       LET sr[l_cnt].sffb012 = sr_s.sffb012
+       LET sr[l_cnt].sffb013 = sr_s.sffb013
+       LET sr[l_cnt].sffb014 = sr_s.sffb014
+       LET sr[l_cnt].sffb015 = sr_s.sffb015
+       LET sr[l_cnt].sffb016 = sr_s.sffb016
+       LET sr[l_cnt].sffb017 = sr_s.sffb017
+       LET sr[l_cnt].sffb018 = sr_s.sffb018
+       LET sr[l_cnt].sffb019 = sr_s.sffb019
+       LET sr[l_cnt].sffb020 = sr_s.sffb020
+       LET sr[l_cnt].sffb024 = sr_s.sffb024
+       LET sr[l_cnt].sffbdocdt = sr_s.sffbdocdt
+       LET sr[l_cnt].sffbdocno = sr_s.sffbdocno
+       LET sr[l_cnt].sffbent = sr_s.sffbent
+       LET sr[l_cnt].sffbseq = sr_s.sffbseq
+       LET sr[l_cnt].sffbsite = sr_s.sffbsite
+       LET sr[l_cnt].sffbstus = sr_s.sffbstus
+       LET sr[l_cnt].sffc001 = sr_s.sffc001
+       LET sr[l_cnt].sffc002 = sr_s.sffc002
+       LET sr[l_cnt].sffc003 = sr_s.sffc003
+       LET sr[l_cnt].sffc004 = sr_s.sffc004
+       LET sr[l_cnt].sffc005 = sr_s.sffc005
+       LET sr[l_cnt].sffc006 = sr_s.sffc006
+       LET sr[l_cnt].ooag_t_ooag011 = sr_s.ooag_t_ooag011
+       LET sr[l_cnt].ooefl_t_ooefl003 = sr_s.ooefl_t_ooefl003
+       LET sr[l_cnt].oogd_t_oogd002 = sr_s.oogd_t_oogd002
+       LET sr[l_cnt].oocql_t_oocql004 = sr_s.oocql_t_oocql004
+       LET sr[l_cnt].x_t1_oocql004 = sr_s.x_t1_oocql004
+       LET sr[l_cnt].ecaa_t_ecaa002 = sr_s.ecaa_t_ecaa002
+       LET sr[l_cnt].mrba_t_mrba004 = sr_s.mrba_t_mrba004
+       LET sr[l_cnt].ooge_t_ooge002 = sr_s.ooge_t_ooge002
+       LET sr[l_cnt].oobal_t_oobal004 = sr_s.oobal_t_oobal004
+       LET sr[l_cnt].l_sffbdocno_oobal004 = sr_s.l_sffbdocno_oobal004
+       LET sr[l_cnt].l_sffb002_ooag011 = sr_s.l_sffb002_ooag011
+       LET sr[l_cnt].l_sffb003_ooefl003 = sr_s.l_sffb003_ooefl003
+       LET sr[l_cnt].l_sfaa010 = sr_s.l_sfaa010
+       LET sr[l_cnt].l_imaal003 = sr_s.l_imaal003
+       LET sr[l_cnt].l_imaal004 = sr_s.l_imaal004
+       LET sr[l_cnt].l_sfia007 = sr_s.l_sfia007
+       LET sr[l_cnt].l_sffb017_sum = sr_s.l_sffb017_sum
+       LET sr[l_cnt].l_sffb018_sum = sr_s.l_sffb018_sum
+       LET sr[l_cnt].l_sffb019_sum = sr_s.l_sffb019_sum
+       LET sr[l_cnt].l_sfia007_sum = sr_s.l_sfia007_sum
+       LET sr[l_cnt].l_sffb014_sum = sr_s.l_sffb014_sum
+       LET sr[l_cnt].l_sffb015_sum = sr_s.l_sffb015_sum
+       LET sr[l_cnt].l_sffb011_sum = sr_s.l_sffb011_sum
+       LET sr[l_cnt].l_sffb001_desc = sr_s.l_sffb001_desc
+       LET sr[l_cnt].l_sffb010_desc = sr_s.l_sffb010_desc
+       LET sr[l_cnt].l_sffb005_sffb006 = sr_s.l_sffb005_sffb006
+       LET sr[l_cnt].l_sffb007_sffb008 = sr_s.l_sffb007_sffb008
+       LET sr[l_cnt].l_order = sr_s.l_order
+ 
+ 
+       #add-point:ins_data段after_arr name="ins_data.after.save"
+      
+       #end add-point
+       LET l_cnt = l_cnt + 1
+    END FOREACH
+    CALL sr.deleteElement(l_cnt)
+ 
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asfr336_g01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION asfr336_g01_rep_data()
+   DEFINE HANDLER         om.SaxDocumentHandler
+   DEFINE l_i             INTEGER
+ 
+    #判斷是否有報表資料，若回彈出訊息視窗
+    IF sr.getLength() = 0 THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = "adz-00285"
+       LET g_errparam.extend = NULL
+       LET g_errparam.popup  = FALSE
+       LET g_errparam.replace[1] = ''
+       CALL cl_err()  
+       RETURN 
+    END IF
+    WHILE TRUE   
+       #add-point:rep_data段印前 name="rep_data.before"
+       
+       #end add-point     
+       LET handler = cl_gr_handler()
+       IF handler IS NOT NULL THEN
+          START REPORT asfr336_g01_rep TO XML HANDLER handler
+          FOR l_i = 1 TO sr.getLength()
+             OUTPUT TO REPORT asfr336_g01_rep(sr[l_i].*)
+             #報表中斷列印時，顯示錯誤訊息
+             IF fgl_report_getErrorStatus() THEN
+                DISPLAY "FGL: STOPPING REPORT msg=\"",fgl_report_getErrorString(),"\""
+                EXIT FOR
+             END IF                  
+          END FOR
+          FINISH REPORT asfr336_g01_rep
+       END IF
+       #add-point:rep_data段印完 name="rep_data.after"
+       
+       #end add-point       
+       IF g_rep_flag = TRUE THEN
+          LET g_rep_flag = FALSE
+          EXIT WHILE
+       END IF
+    END WHILE
+    #add-point:rep_data段離開while印完前 name="rep_data.end.before"
+    
+    #end add-point
+    CALL cl_gr_close_report()
+    #add-point:rep_data段離開while印完後 name="rep_data.end.after"
+    
+    #end add-point    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asfr336_g01.rep" readonly="Y" >}
+PRIVATE REPORT asfr336_g01_rep(sr1)
+DEFINE sr1 sr1_r
+DEFINE sr2 sr2_r
+DEFINE l_subrep01_show  LIKE type_t.chr1,
+       l_subrep02_show  LIKE type_t.chr1,
+       l_subrep03_show  LIKE type_t.chr1,
+       l_subrep04_show  LIKE type_t.chr1
+DEFINE l_cnt           LIKE type_t.num10
+DEFINE l_sub_sql       STRING
+#add-point:rep段define  (客製用) name="rep.define_customerization"
+
+#end add-point
+#add-point:rep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep.define"
+DEFINE l_sffb003_show  LIKE type_t.chr1    #sffb003 備註 單頭
+DEFINE l_sffb009_show  LIKE type_t.chr1    #sffb009 備註 單頭
+DEFINE l_sffb010_show  LIKE type_t.chr1    #sffb010 備註 單頭
+DEFINE l_sffb004_show  LIKE type_t.chr1    #sffb004 備註 單頭
+DEFINE l_sffb024_show  LIKE type_t.chr1    #sffb024 備註 單頭
+DEFINE l_sffb019_show  LIKE type_t.chr1    #sffb019 備註 單身
+DEFINE l_sfia007_show  LIKE type_t.chr1    #sfia007 備註 單身
+DEFINE l_sffb007_show  LIKE type_t.chr1    #sffb007 備註 單頭
+DEFINE l_sffb017_sum LIKE sffb_t.sffb017   #良品量總計
+DEFINE l_sffb018_sum LIKE sffb_t.sffb018   #報廢量總計
+DEFINE l_sffb019_sum LIKE sffb_t.sffb019   #當站下線數總計
+DEFINE l_sfia007_sum LIKE sfia_t.sfia007   #重工轉出總計
+DEFINE l_sffb014_sum LIKE sffb_t.sffb014　 #工時小計
+DEFINE l_sffb015_sum LIKE sffb_t.sffb015   #機時小計
+DEFINE l_sffb011_sum LIKE sffb_t.sffb011   #作業人數小計
+#end add-point
+ 
+    #add-point:rep段ORDER_before name="rep.order.before"
+    
+    #end add-point
+    ORDER  BY sr1.l_order
+    #add-point:rep段ORDER_after name="rep.order.after"
+    
+    #end add-point
+    
+    FORMAT
+       FIRST PAGE HEADER          
+          PRINTX g_user,g_pdate,g_rep_code,g_company,g_ptime,g_user_name,g_date_fmt
+          PRINTX tm.*
+          PRINTX g_grNumFmt.*
+          PRINTX g_rep_wcchp
+ 
+          #讀取beforeGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.l_order
+            #報表 d05 樣板自動產生(Version:6)
+            CALL cl_gr_title_clear()  #清除title變數值 
+            #add-point:rep.header  #公司資訊(不在公用變數內) name="rep.header"
+            CALL cl_gr_init_pageheader() #表頭資訊
+            PRINTX g_grPageHeader.*
+            PRINTX g_grPageFooter.*   #add--2015/11/03 By shiun
+            CALL cl_gr_init_apr(sr1.sffbdocno)
+#            #end add-point:rep.header 
+#            LET g_rep_docno = sr1.l_order
+#            CALL cl_gr_init_pageheader() #表頭資訊
+#            PRINTX g_grPageHeader.*
+#            PRINTX g_grPageFooter.*
+#            #add-point:rep.apr.signstr.before name="rep.apr.signstr.before"
+                          
+            #end add-point:rep.apr.signstr.before   
+            LET g_doc_key = 'sffbent=' ,sr1.sffbent,'{+}sffbdocno=' ,sr1.sffbdocno,'{+}sffbseq=' ,sr1.sffbseq         
+            CALL cl_gr_init_apr(sr1.l_order)
+            #add-point:rep.apr.signstr name="rep.apr.signstr"
+                          
+            #end add-point:rep.apr.signstr
+            PRINTX g_grSign.*
+ 
+ 
+ 
+           #add-point:rep.b_group.l_order.before name="rep.b_group.l_order.before"
+                      #單頭 部門隱藏否
+           INITIALIZE l_sffb003_show TO NULL
+           IF tm.a1 = "N" THEN
+              LET l_sffb003_show = "N"
+           ELSE
+              LET l_sffb003_show = "Y"
+           END IF
+           
+           PRINTX l_sffb003_show
+           #單頭 工作站隱藏否
+           INITIALIZE l_sffb009_show TO NULL
+           IF tm.a2 = "N" THEN
+              LET l_sffb009_show = "N"
+           ELSE
+              LET l_sffb009_show = "Y"
+           END IF
+           
+           PRINTX l_sffb009_show
+           #單頭 機器隱藏否
+           INITIALIZE l_sffb010_show TO NULL
+           IF tm.a3 = "N" THEN
+              LET l_sffb010_show = "N"
+           ELSE
+              LET l_sffb010_show = "Y"
+           END IF
+           
+           PRINTX l_sffb010_show
+           #單頭 班別隱藏否
+           INITIALIZE l_sffb004_show TO NULL
+           IF tm.a4 = "N" THEN
+              LET l_sffb004_show = "N"
+           ELSE
+              LET l_sffb004_show = "Y"
+           END IF
+           
+           PRINTX l_sffb004_show
+           #單頭 組別隱藏否
+           INITIALIZE l_sffb024_show TO NULL
+           IF tm.a5 = "N" THEN
+              LET l_sffb024_show = "N"
+           ELSE
+              LET l_sffb024_show = "Y"
+           END IF
+           
+           PRINTX l_sffb024_show
+           
+           #單頭 作業編號隱藏否
+           INITIALIZE l_sffb007_show TO NULL
+           IF tm.a6 = "N" THEN
+              LET l_sffb007_show = "N"
+           ELSE
+              LET l_sffb007_show = "Y"
+           END IF
+           
+           PRINTX l_sffb007_show
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub01.before name="rep.sub01.before"
+           
+           #end add-point:rep.sub01.before
+ 
+           #add-point:rep.sub01.sql name="rep.sub01.sql"
+           
+           #end add-point:rep.sub01.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='2' AND ooff004=0 AND ooffent = '", 
+                sr1.sffbent CLIPPED ,"'", " AND  ooff003 = '", sr1.l_order CLIPPED ,"'"
+ 
+           #add-point:rep.sub01.afsql name="rep.sub01.afsql"
+           
+           #end add-point:rep.sub01.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep01_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE asfr336_g01_repcur01_cnt_pre FROM l_sub_sql
+           EXECUTE asfr336_g01_repcur01_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep01_show ="Y"
+           END IF
+           PRINTX l_subrep01_show
+           START REPORT asfr336_g01_subrep01
+           DECLARE asfr336_g01_repcur01 CURSOR FROM g_sql
+           FOREACH asfr336_g01_repcur01 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "asfr336_g01_repcur01:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub01.foreach name="rep.sub01.foreach"
+              
+              #end add-point:rep.sub01.foreach
+              OUTPUT TO REPORT asfr336_g01_subrep01(sr2.*)
+           END FOREACH
+           FINISH REPORT asfr336_g01_subrep01
+           #add-point:rep.sub01.after name="rep.sub01.after"
+           
+           #end add-point:rep.sub01.after
+ 
+ 
+ 
+           #add-point:rep.b_group.l_order.after name="rep.b_group.l_order.after"
+           
+           #end add-point:
+ 
+ 
+ 
+ 
+       ON EVERY ROW
+          #add-point:rep.everyrow.before name="rep.everyrow.before"
+          
+          #end add-point:rep.everyrow.before
+ 
+          #單身前備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub02.before name="rep.sub02.before"
+           
+           #end add-point:rep.sub02.before
+ 
+           #add-point:rep.sub02.sql name="rep.sub02.sql"
+           
+           #end add-point:rep.sub02.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='2' AND ooffent = '", 
+                sr1.sffbent CLIPPED ,"'", " AND  ooff003 = '", sr1.l_order CLIPPED ,"'"
+ 
+           #add-point:rep.sub02.afsql name="rep.sub02.afsql"
+           
+           #end add-point:rep.sub02.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep02_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE asfr336_g01_repcur02_cnt_pre FROM l_sub_sql
+           EXECUTE asfr336_g01_repcur02_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep02_show ="Y"
+           END IF
+           PRINTX l_subrep02_show
+           START REPORT asfr336_g01_subrep02
+           DECLARE asfr336_g01_repcur02 CURSOR FROM g_sql
+           FOREACH asfr336_g01_repcur02 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "asfr336_g01_repcur02:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub02.foreach name="rep.sub02.foreach"
+              
+              #end add-point:rep.sub02.foreach
+              OUTPUT TO REPORT asfr336_g01_subrep02(sr2.*)
+           END FOREACH
+           FINISH REPORT asfr336_g01_subrep02
+           #add-point:rep.sub02.after name="rep.sub02.after"
+           
+           #end add-point:rep.sub02.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.beforerow name="rep.everyrow.beforerow"
+            #單身 當站下線隱藏否
+            INITIALIZE l_sffb019_show TO NULL
+            IF sr1.sffb019 != 0 THEN
+               LET l_sffb019_show = "Y"
+            ELSE
+               LET l_sffb019_show = "N"
+            END IF
+            
+            PRINTX l_sffb019_show
+            #單身 重工數量隱藏否
+            INITIALIZE l_sfia007_show TO NULL
+            IF sr1.l_sfia007 != 0 THEN
+               LET l_sfia007_show = "Y"
+            ELSE
+               LET l_sfia007_show = "N"
+            END IF
+            
+            PRINTX l_sfia007_show
+          #end add-point:rep.everyrow.beforerow
+            
+          PRINTX sr1.*
+ 
+          #add-point:rep.everyrow.afterrow name="rep.everyrow.afterrow"
+          
+          #end add-point:rep.everyrow.afterrow
+ 
+          #單身後備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub03.before name="rep.sub03.before"
+           
+           #end add-point:rep.sub03.before
+ 
+           #add-point:rep.sub03.sql name="rep.sub03.sql"
+           
+           #end add-point:rep.sub03.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='1' AND ooff003 = '", 
+                sr1.sffbent CLIPPED ,"'"
+ 
+           #add-point:rep.sub03.afsql name="rep.sub03.afsql"
+           
+           #end add-point:rep.sub03.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep03_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE asfr336_g01_repcur03_cnt_pre FROM l_sub_sql
+           EXECUTE asfr336_g01_repcur03_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep03_show ="Y"
+           END IF
+           PRINTX l_subrep03_show
+           START REPORT asfr336_g01_subrep03
+           DECLARE asfr336_g01_repcur03 CURSOR FROM g_sql
+           FOREACH asfr336_g01_repcur03 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "asfr336_g01_repcur03:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub03.foreach name="rep.sub03.foreach"
+              
+              #end add-point:rep.sub03.foreach
+              OUTPUT TO REPORT asfr336_g01_subrep03(sr2.*)
+           END FOREACH
+           FINISH REPORT asfr336_g01_subrep03
+           #add-point:rep.sub03.after name="rep.sub03.after"
+           
+           #end add-point:rep.sub03.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.after name="rep.everyrow.after"
+          
+          #end add-point:rep.everyrow.after        
+ 
+          #讀取afterGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.l_order
+ 
+           #add-point:rep.a_group.l_order.before name="rep.a_group.l_order.before"
+           
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub04.before name="rep.sub04.before"
+           
+           #end add-point:rep.sub04.before
+ 
+           #add-point:rep.sub04.sql name="rep.sub04.sql"
+           
+           #end add-point:rep.sub04.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='1' AND ooff004=0 AND ooffent = '", 
+                sr1.sffbent CLIPPED ,"'", " AND  ooff003 = '", sr1.l_order CLIPPED ,"'"
+ 
+           #add-point:rep.sub04.afsql name="rep.sub04.afsql"
+           
+           #end add-point:rep.sub04.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep04_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE asfr336_g01_repcur04_cnt_pre FROM l_sub_sql
+           EXECUTE asfr336_g01_repcur04_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep04_show ="Y"
+           END IF
+           PRINTX l_subrep04_show
+           START REPORT asfr336_g01_subrep04
+           DECLARE asfr336_g01_repcur04 CURSOR FROM g_sql
+           FOREACH asfr336_g01_repcur04 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "asfr336_g01_repcur04:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub04.foreach name="rep.sub04.foreach"
+              
+              #end add-point:rep.sub04.foreach
+              OUTPUT TO REPORT asfr336_g01_subrep04(sr2.*)
+           END FOREACH
+           FINISH REPORT asfr336_g01_subrep04
+           #add-point:rep.sub04.after name="rep.sub04.after"
+           
+           #end add-point:rep.sub04.after
+ 
+ 
+ 
+           #add-point:rep.a_group.l_order.after name="rep.a_group.l_order.after"
+           LET  l_sffb017_sum = GROUP SUM(sr1.sffb017)
+           LET  l_sffb018_sum = GROUP SUM(sr1.sffb018)
+           LET  l_sffb019_sum = GROUP SUM(sr1.sffb019)
+           LET  l_sfia007_sum = GROUP SUM(sr1.l_sfia007)
+           LET  l_sffb014_sum = GROUP SUM(sr1.sffb014)
+           IF cl_null(l_sffb014_sum) THEN
+              LET  l_sffb014_sum = 0
+           END IF
+           LET  l_sffb015_sum = GROUP SUM(sr1.sffb015)
+           IF cl_null(l_sffb015_sum) THEN
+              LET  l_sffb015_sum = 0
+           END IF
+           LET  l_sffb011_sum = GROUP SUM(sr1.sffb011)
+           IF cl_null(l_sffb011_sum) THEN
+              LET  l_sffb011_sum = 0
+           END IF
+           PRINTX l_sffb017_sum,l_sffb018_sum,l_sffb019_sum,l_sfia007_sum,l_sffb014_sum,
+                  l_sffb015_sum,l_sffb011_sum  
+           #end add-point:
+ 
+ 
+ 
+       ON LAST ROW
+            #add-point:rep.lastrow.before name="rep.lastrow.before"  
+                    
+            #end add-point :rep.lastrow.before
+ 
+            #add-point:rep.lastrow.after name="rep.lastrow.after"
+            
+            #end add-point :rep.lastrow.after
+END REPORT
+ 
+{</section>}
+ 
+{<section id="asfr336_g01.subrep_str" readonly="Y" >}
+#讀取子報表樣板
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT asfr336_g01_subrep01(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub01.define_customerization" 
+
+#end add-point
+#add-point:sub01.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub01.define" 
+
+#end add-point:sub01.define
+ 
+    #add-point:sub01.order.before name="sub01.order.before" 
+    
+    #end add-point:sub01.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub01.everyrow.before name="sub01.everyrow.before" 
+                          
+            #end add-point:sub01.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub01.everyrow.after name="sub01.everyrow.after" 
+            
+            #end add-point:sub01.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT asfr336_g01_subrep02(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub02.define_customerization" 
+
+#end add-point
+#add-point:sub02.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub02.define" 
+
+#end add-point:sub02.define
+ 
+    #add-point:sub02.order.before name="sub02.order.before" 
+    
+    #end add-point:sub02.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub02.everyrow.before name="sub02.everyrow.before" 
+                          
+            #end add-point:sub02.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub02.everyrow.after name="sub02.everyrow.after" 
+            
+            #end add-point:sub02.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT asfr336_g01_subrep03(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub03.define_customerization" 
+
+#end add-point
+#add-point:sub03.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub03.define" 
+
+#end add-point:sub03.define
+ 
+    #add-point:sub03.order.before name="sub03.order.before" 
+    
+    #end add-point:sub03.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub03.everyrow.before name="sub03.everyrow.before" 
+                          
+            #end add-point:sub03.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub03.everyrow.after name="sub03.everyrow.after" 
+            
+            #end add-point:sub03.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT asfr336_g01_subrep04(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub04.define_customerization" 
+
+#end add-point
+#add-point:sub04.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub04.define" 
+
+#end add-point:sub04.define
+ 
+    #add-point:sub04.order.before name="sub04.order.before" 
+    
+    #end add-point:sub04.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub04.everyrow.before name="sub04.everyrow.before" 
+                          
+            #end add-point:sub04.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub04.everyrow.after name="sub04.everyrow.after" 
+            
+            #end add-point:sub04.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="asfr336_g01.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="asfr336_g01.other_report" readonly="Y" >}
+
+ 
+{</section>}
+ 

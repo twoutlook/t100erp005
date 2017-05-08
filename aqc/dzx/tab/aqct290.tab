@@ -1,0 +1,181 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aqct290" module="aqc" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="02294" crtdt="2016-05-30 11:13:36" modid="02294" moddt="2016-05-30 16:59:25" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="倉庫檢驗申請單維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="qcbndocno,qcbndocno_desc(chr80),qcbndocdt,qcbn001,qcbn001_desc(chr80),qcbn002,qcbn002_desc(chr80),qcbnstus,qcbnsite,qcbn003,qcbn004,qcbn003_desc(chr500),qcbn003_desc_1(chr500),qcbn005,qcbn005_desc(chr80),qcbn006,qcbn006_desc(chr80),qcbn007,qcbn008,qcbn009,qcbn009_desc(chr80),qcbn010,qcbn010_desc(chr80),qcbn011,qcbn012,qcbn013,qcbnownid,qcbnownid_desc(chr80),qcbnowndp,qcbnowndp_desc(chr80),qcbncrtid,qcbncrtid_desc(chr80),qcbncrtdp,qcbncrtdp_desc(chr80),qcbncrtdt,qcbnmodid,qcbnmodid_desc(chr80),qcbnmoddt,qcbncnfid,qcbncnfid_desc(chr80),qcbncnfdt"/>
+      <var id="bs_field" value="qcbndocno,qcbndocdt,qcbn001,qcbn002" pk="qcbndocno" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aqc" filename="aqct290" method="dialog">
+    <section id="input">
+      <input id="head" field="qcbndocno,qcbndocdt,qcbn001,qcbn002,qcbnstus,qcbnsite,qcbn003,qcbn004,qcbn005,qcbn006,qcbn007,qcbn008,qcbn009,qcbn010,qcbn011,qcbn012,qcbn013"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="qcbndocno,qcbndocdt,qcbn001,qcbn002,qcbnstus,qcbnsite,qcbn003,qcbn004,qcbn005,qcbn006,qcbn007,qcbn008,qcbn009,qcbn010,qcbn011,qcbn012,qcbn013,qcbnownid,qcbnowndp,qcbncrtid,qcbncrtdp,qcbncrtdt,qcbnmodid,qcbnmoddt,qcbncnfid,qcbncnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="qcbndocno"/>
+      <set id="head" type="no_entry" field="qcbndocno"/>
+    </init>
+    <init id="head">
+      <column id="qcbndocno">
+        <after/>
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_qcbndocno" state="c"/>
+      </column>
+      <column id="qcbndocno_desc"/>
+      <column id="qcbndocdt"/>
+      <column id="qcbn001">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="qcbn001_desc" ref_field="qcbn_t.qcbn001" map_field="qcbn001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="qcbn001_desc"/>
+      <column id="qcbn002">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="qcbn002_desc" ref_field="qcbn_t.qcbn002" map_field="qcbn002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="qcbn002_desc"/>
+      <column id="qcbnstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="qcbnsite"/>
+      <column id="qcbn003">
+        <after>
+          <check chkid="v_imaf001_1" id="isExist"/>
+        </after>
+        <controlp form="q_inag001_6" state="i"/>
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="qcbn004">
+        <controlp form="q_inag001_6" state="i"/>
+        <controlp form="q_inag001_6" state="c"/>
+      </column>
+      <column id="qcbn003_desc"/>
+      <column id="qcbn003_desc_1"/>
+      <column id="qcbn005">
+        <after>
+          <check chkid="v_inaa001_2" id="isExist"/>
+          <reference field="qcbn005_desc" ref_field="qcbn_t.qcbn005" map_field="qcbn005" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inag001_6" state="i"/>
+        <controlp form="q_inaa001" state="c"/>
+      </column>
+      <column id="qcbn005_desc"/>
+      <column id="qcbn006">
+        <after>
+          <check chkid="v_inab002" id="isExist"/>
+          <reference field="qcbn006_desc" ref_field="qcbnsite,qcbn005,qcbn006" map_field="qcbnsite,qcbn005,qcbn006" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inabsite=? AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inag001_6" state="i"/>
+        <controlp form="q_inab002" state="c"/>
+      </column>
+      <column id="qcbn006_desc"/>
+      <column id="qcbn007">
+        <controlp form="q_inag001_6" state="i"/>
+        <controlp form="q_inag001_6" state="c"/>
+      </column>
+      <column id="qcbn008">
+        <controlp form="q_inag001_6" state="i"/>
+        <controlp form="q_inag001_6" state="c"/>
+      </column>
+      <column id="qcbn009">
+        <after>
+          <check chkid="v_pmaa001_2" id="isExist"/>
+          <reference field="qcbn009_desc" ref_field="qcbn_t.qcbn009" map_field="qcbn009" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001" state="i"/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="qcbn009_desc"/>
+      <column id="qcbn010">
+        <after>
+          <check chkid="v_imao002" id="isExist"/>
+          <reference field="qcbn010_desc" ref_field="qcbn_t.qcbn010" map_field="qcbn010" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inag001_6" state="i"/>
+        <controlp form="q_ooca001" state="c"/>
+      </column>
+      <column id="qcbn010_desc"/>
+      <column id="qcbn011">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="qcbn012" type="S" default="C" def_scc="5074"/>
+      <column id="qcbn013"/>
+      <column id="qcbnownid">
+        <after>
+          <reference field="qcbnownid_desc" ref_field="qcbn_t.qcbnownid" map_field="qcbnownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="qcbnownid_desc"/>
+      <column id="qcbnowndp">
+        <after>
+          <reference field="qcbnowndp_desc" ref_field="qcbn_t.qcbnowndp" map_field="qcbnowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="qcbnowndp_desc"/>
+      <column id="qcbncrtid">
+        <after>
+          <reference field="qcbncrtid_desc" ref_field="qcbn_t.qcbncrtid" map_field="qcbncrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="qcbncrtid_desc"/>
+      <column id="qcbncrtdp">
+        <after>
+          <reference field="qcbncrtdp_desc" ref_field="qcbn_t.qcbncrtdp" map_field="qcbncrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="qcbncrtdp_desc"/>
+      <column id="qcbncrtdt"/>
+      <column id="qcbnmodid">
+        <after>
+          <reference field="qcbnmodid_desc" ref_field="qcbn_t.qcbnmodid" map_field="qcbnmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="qcbnmodid_desc"/>
+      <column id="qcbnmoddt"/>
+      <column id="qcbncnfid">
+        <after>
+          <reference field="qcbncnfid_desc" ref_field="qcbn_t.qcbncnfid" map_field="qcbncnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="qcbncnfid_desc"/>
+      <column id="qcbncnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="qcbn_t" pk="qcbndocno">
+      <sql id="forupd_sql" type="sql" query="SELECT qcbndocno,&apos;&apos;,qcbndocdt,qcbn001,&apos;&apos;,qcbn002,&apos;&apos;,qcbnstus,qcbnsite,qcbn003,qcbn004,&apos;&apos;,&apos;&apos;,qcbn005,&apos;&apos;,qcbn006,&apos;&apos;,qcbn007,qcbn008,qcbn009,&apos;&apos;,qcbn010,&apos;&apos;,qcbn011,qcbn012,qcbn013,qcbnownid,&apos;&apos;,qcbnowndp,&apos;&apos;,qcbncrtid,&apos;&apos;,qcbncrtdp,&apos;&apos;,qcbncrtdt,qcbnmodid,&apos;&apos;,qcbnmoddt,qcbncnfid,&apos;&apos;,qcbncnfdt FROM qcbn_t WHERE qcbnent= ? AND qcbndocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT qcbndocno FROM qcbn_t" order="qcbndocno"/>
+    </head>
+  </dataset>
+</assembly>
+

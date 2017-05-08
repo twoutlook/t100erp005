@@ -1,0 +1,130 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmi160" module="apm" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="04226" crtdt="2014-07-24 15:25:19" modid="04543" moddt="2014-08-27 10:37:42" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="供應商績效評核綜合得分調整作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pmbqsite,pmbq001,pmbq002,pmbq003,pmbq003_desc(chr80),pmbq004,pmbq004_desc(chr80),pmbq007,pmbq007_desc(chr80),pmbk008(num20_6),pmbk009(num20_6),pmbq005,pmbq006,pmbq012,pmbq012_desc(chr80),pmbq010,pmbq010_desc(chr80),pmbq011,pmbq009"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pmbr005,pmbr006,pmbr006_desc(chr500),pmbr007,pmbr008,pmbr010,pmbr010_desc(chr500),pmbm003(num20_6),pmbr009"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmi160" method="dialog">
+    <section id="input">
+      <input id="head" field="pmbq006,pmbq012,pmbq010"/>
+      <input id="body" page="1" field="pmbr008,pmbr010" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pmbqsite,pmbq001,pmbq002,pmbq003,pmbq004,pmbq007,pmbq005,pmbq006,pmbq012,pmbq010,pmbq011,pmbq009"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pmbqsite,pmbq001,pmbq002,pmbq003,pmbq004"/>
+      <set id="head" type="no_entry" field="pmbqsite,pmbq001,pmbq002,pmbq003,pmbq004"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="pmbqsite"/>
+      <column id="pmbq001"/>
+      <column id="pmbq002"/>
+      <column id="pmbq003">
+        <after>
+          <reference field="pmbq003_desc" ref_field="pmbq_t.pmbq003" map_field="pmbq003" ref_sql="SELECT pmbk002 FROM pmbk_t WHERE pmbkent=$varg_enterprise$var AND pmbk001=? "/>
+        </after>
+        <controlp form="q_pmbk001" state="c"/>
+      </column>
+      <column id="pmbq003_desc"/>
+      <column id="pmbq004">
+        <after>
+          <reference field="pmbq004_desc" ref_field="pmbq_t.pmbq004" map_field="pmbq004" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="pmbq004_desc"/>
+      <column id="pmbq007">
+        <after>
+          <reference field="pmbq007_desc" ref_field="pmbq007" map_field="pmbq007" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2053&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pmbq007_desc"/>
+      <column id="pmbk008" type="S" default="50">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="pmbk009" type="S" default="50">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="pmbq005"/>
+      <column id="pmbq006">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="pmbq012">
+        <after>
+          <reference field="pmbq012_desc" ref_field="pmbq012" map_field="pmbq012" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;301&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pmbq012_desc"/>
+      <column id="pmbq010">
+        <after>
+          <check chkid="q_ooag001" id="isExist"/>
+          <reference field="pmbq010_desc" ref_field="pmbq_t.pmbq010" map_field="pmbq010" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmbq010_desc"/>
+      <column id="pmbq011"/>
+      <column id="pmbq009"/>
+    </init>
+    <init id="body" page="1">
+      <column id="pmbr005" def_scc="6002"/>
+      <column id="pmbr006">
+        <after/>
+      </column>
+      <column id="pmbr006_desc"/>
+      <column id="pmbr007"/>
+      <column id="pmbr008">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="pmbr010">
+        <after>
+          <reference field="pmbr010_desc" ref_field="pmbr010" map_field="pmbr010" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;301&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pmbr010_desc"/>
+      <column id="pmbm003">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="pmbr009"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pmbq_t" pk="pmbqsite,pmbq001,pmbq002,pmbq003,pmbq004">
+      <sql id="forupd_sql" type="sql" query="SELECT pmbqsite,pmbq001,pmbq002,pmbq003,&apos;&apos;,pmbq004,&apos;&apos;,pmbq007,&apos;&apos;,&apos;&apos;,&apos;&apos;,pmbq005,pmbq006,pmbq012,&apos;&apos;,pmbq010,&apos;&apos;,pmbq011,pmbq009 FROM pmbq_t WHERE pmbqent= ? AND pmbqsite=? AND pmbq001=? AND pmbq002=? AND pmbq003=? AND pmbq004=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pmbqsite,pmbq001,pmbq002,pmbq003,&apos;&apos;,pmbq004,&apos;&apos;,pmbq007,&apos;&apos;,&apos;&apos;,&apos;&apos;,pmbq005,pmbq006,pmbq012,&apos;&apos;,pmbq010,&apos;&apos;,pmbq011,pmbq009 FROM pmbq_t" order="pmbqsite,pmbq001,pmbq002,pmbq003,pmbq004"/>
+    </head>
+    <body id="pmbr_t" page="1" linked="" pk="pmbr005,pmbr006" fk="pmbrsite,pmbr001,pmbr002,pmbr003,pmbr004">
+      <sql id="forupd_sql_detail" query="SELECT pmbr005,pmbr006,&apos;&apos;,pmbr007,pmbr008,pmbr010,&apos;&apos;,&apos;&apos;,pmbr009 FROM pmbr_t WHERE pmbrent=? AND pmbrsite=? AND pmbr001=? AND pmbr002=? AND pmbr003=? AND pmbr004=? AND pmbr005=? AND pmbr006=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pmbr005,pmbr006,&apos;&apos;,pmbr007,pmbr008,pmbr010,&apos;&apos;,&apos;&apos;,pmbr009 FROM pmbr_t WHERE pmbrent=? AND pmbrsite=? AND pmbr001=? AND pmbr002=? AND pmbr003=? AND pmbr004=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,1593 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="apmq820.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:4(2016-10-21 14:09:30), PR版次:0004(2016-10-21 14:01:16)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000150
+#+ Filename...: apmq820
+#+ Description: 供應商證照查詢作業
+#+ Creator....: 01752(2014-04-22 15:54:51)
+#+ Modifier...: 02159 -SD/PR- 02159
+ 
+{</section>}
+ 
+{<section id="apmq820.global" >}
+#應用 q04 樣板自動產生(Version:32)
+#add-point:填寫註解說明 name="global.memo"
+#161006-00008#11   2016/10/21 by sakura 整批修改組織
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_master        RECORD
+       pmaa001 LIKE pmaa_t.pmaa001, 
+   pmaal004 LIKE type_t.chr500, 
+   pmaal003 LIKE type_t.chr500, 
+   pmaastus LIKE pmaa_t.pmaastus, 
+   pmaa083 LIKE pmaa_t.pmaa083, 
+   pmaa083_desc LIKE type_t.chr80
+       END RECORD
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_detail RECORD
+       
+       sel LIKE type_t.chr1, 
+   pmag002 LIKE pmag_t.pmag002, 
+   pmag002_desc LIKE type_t.chr500, 
+   pmag003 LIKE pmag_t.pmag003, 
+   pmag004 LIKE pmag_t.pmag004, 
+   pmag005 LIKE pmag_t.pmag005, 
+   prog_b_pmag005 STRING, 
+   pmag005_desc LIKE type_t.chr500, 
+   pmag006 LIKE pmag_t.pmag006, 
+   prog_b_pmag006 STRING, 
+   pmag006_desc LIKE type_t.chr500, 
+   pmag007 LIKE pmag_t.pmag007, 
+   pmag008 LIKE pmag_t.pmag008, 
+   pmagstus LIKE pmag_t.pmagstus, 
+   pmag009 LIKE pmag_t.pmag009, 
+   pmag009_desc LIKE type_t.chr500
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數-標準(Module Variable)  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_master            type_g_master
+DEFINE g_master_t          type_g_master
+ 
+   
+ 
+DEFINE g_detail            DYNAMIC ARRAY OF type_g_detail
+DEFINE g_detail_t          type_g_detail
+ 
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                 STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_cnt_sql             STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE l_ac                  LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_current_page        LIKE type_t.num5              #目前所在頁數
+DEFINE g_current_row         LIKE type_t.num10             #目前所在筆數
+DEFINE g_current_idx         LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_master_idx          LIKE type_t.num10
+DEFINE g_detail_idx          LIKE type_t.num10             #單身 所在筆數(所有資料)
+DEFINE g_detail_idx2         LIKE type_t.num10
+DEFINE g_hyper_url           STRING                        #hyperlink的主要網址
+DEFINE g_msg                 STRING
+DEFINE g_jump                LIKE type_t.num10
+DEFINE g_no_ask              LIKE type_t.num5
+DEFINE g_row_count           LIKE type_t.num10
+DEFINE g_qbe_hidden          LIKE type_t.num5              #qbe頁籤折疊
+DEFINE g_tot_cnt             LIKE type_t.num10             #計算總筆數
+DEFINE g_num_in_page         LIKE type_t.num10             #每頁筆數
+DEFINE g_page_act_list       STRING                        #分頁ACTION清單
+DEFINE g_current_row_tot     LIKE type_t.num10             #目前所在總筆數
+DEFINE g_page_start_num      LIKE type_t.num10             #目前頁面起始筆數
+DEFINE g_page_end_num        LIKE type_t.num10             #目前頁面結束筆數
+DEFINE g_master_row_move     LIKE type_t.chr1              #是否為單頭筆數更動
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+DEFINE g_detail_page_action STRING
+DEFINE g_pagestart          LIKE type_t.num10
+ 
+ 
+ 
+DEFINE g_wc_filter_table           STRING
+ 
+ 
+ 
+#add-point:自定義模組變數-客製(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apmq820.main" >}
+ #應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   DEFINE l_success LIKE type_t.num5   #161006-00008#11 by sakura add
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("apm","")
+ 
+   #add-point:作業初始化 name="main.init"
+   
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = " ", 
+                      " FROM ",
+                      " "
+   #add-point:SQL_define name="main.after_define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE apmq820_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT  ",
+               " FROM  t0",
+               
+               " WHERE  "
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   #150302-00004#8 150311 by lori522612 mark 效能調整---(S)
+   #LET g_sql = " SELECT UNIQUE pmaa001,pmaastus,pmaa083",
+   #            "   FROM pmaa_t",
+   #            "  WHERE pmaaent = '" ||g_enterprise|| "' AND pmaa001 = ?"
+   #150302-00004#8 150311 by lori522612 mark 效能調整---(E)
+   
+   #150302-00004#8 150311 by lori522612 add 效能調整---(S)             
+   #150826-00013# 20160308 mark by beckxie---S   
+   #LET g_sql = " SELECT UNIQUE pmaa001,pmaal003,pmaal004,pmaastus,pmaa083,oocql004 ",
+   #            "   FROM pmaa_t ",
+   #            "        LEFT JOIN pmaal_t ON pmaalent = pmaaent AND pmaal001 = pmaa001 AND pmaal002 = '",g_dlang,"' ",
+   #            "        LEFT JOIN oocql_t ON oocqlent = pmaaent AND oocql001 = '255' AND oocql002 = pmaa083 AND oocql003 = '",g_dlang,"' ",
+   #            "  WHERE pmaaent = ",g_enterprise," AND pmaa001 = ? "
+   #150826-00013# 20160308 mark by beckxie---E
+   #150826-00013# 20160308 add by beckxie---S   
+   LET g_sql = " SELECT UNIQUE pmaa001,pmaal003,pmaal004,pmaastus,pmaa083, ",
+               "               (SELECT oocql004 ",
+               "                  FROM oocql_t ",
+               "                 WHERE oocqlent = pmaaent AND oocql001 = '255' AND oocql002 = pmaa083 AND oocql003 = '",g_dlang,"') ",
+               "   FROM pmaa_t ",
+               "        LEFT JOIN pmaal_t ON pmaalent = pmaaent AND pmaal001 = pmaa001 AND pmaal002 = '",g_dlang,"' ",
+               "  WHERE pmaaent = ",g_enterprise," AND pmaa001 = ? "
+   #150826-00013# 20160308 add by beckxie---E
+   LET g_sql = cl_sql_add_mask(g_sql)      #遮蔽特定資料            
+   #150302-00004#8 150311 by lori522612 add 效能調整---(E)
+   #end add-point
+   PREPARE apmq820_master_referesh FROM g_sql
+ 
+   #add-point:main段define_sql name="main.body.define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = ""
+   #add-point:main段define_sql name="main.body.after_define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE apmq820_bcl CURSOR FROM g_forupd_sql
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apmq820 WITH FORM cl_ap_formpath("apm",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL apmq820_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL apmq820_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_apmq820
+      
+   END IF 
+   
+   CLOSE apmq820_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   CALL s_aooi500_drop_temp() RETURNING l_success   #161006-00008#11 by sakura add
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="apmq820.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION apmq820_init()
+   #add-point:init段define-客製 name="init.define_customerization"
+   
+   #end add-point
+   #add-point:init段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   DEFINE l_success LIKE type_t.num5   #161006-00008#11 by sakura add   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="init.before_function"
+   
+   #end add-point
+ 
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1" 
+   LET g_error_show  = 1
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_master_row_move = "Y"
+   
+     
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL s_aooi500_create_temp() RETURNING l_success   #161006-00008#11 by sakura add
+   CALL cl_set_combo_scc('pmaastus','50')   
+   CALL cl_set_combo_scc('b_pmaastus','50')   
+   CALL cl_set_combo_scc('pmagstus','17')   
+   CALL cl_set_combo_scc('b_pmagstus','17')    
+   #end add-point
+ 
+   CALL apmq820_default_search()
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmq820.default_search" >}
+PRIVATE FUNCTION apmq820_default_search()
+   #add-point:default_search段define-客製 name="default_search.define_customerization"
+   
+   #end add-point
+   #add-point:default_search段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point
+ 
+ 
+   #add-point:default_search段開始前 name="default_search.before"
+   
+   #end add-point
+ 
+   
+ 
+   IF NOT cl_null(g_wc) THEN
+      LET g_wc = g_wc.subString(1,g_wc.getLength()-5)
+   ELSE
+      #預設查詢條件
+      LET g_wc = " 1=2"
+   END IF
+ 
+   #add-point:default_search段結束前 name="default_search.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmq820.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION apmq820_ui_dialog() 
+   #add-point:ui_dialog段define-客製 name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num10
+   DEFINE ls_result STRING
+   DEFINE la_param  RECORD
+                    prog       STRING,
+                    actionid   STRING,
+                    background LIKE type_t.chr1,
+                    param      DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   DEFINE ls_wc     STRING
+   DEFINE lc_action_choice_old    STRING
+   #add-point:ui_dialog段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="ui_dialog.before_function"
+   
+   #end add-point
+ 
+   CLEAR FORM  
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   CALL cl_get_num_in_page() RETURNING g_num_in_page
+ 
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   LET g_current_idx = 1
+   LET g_action_choice = " "
+   LET lc_action_choice_old = ""
+   LET g_current_row_tot = 0
+   LET g_page_start_num = 1
+   LET g_page_end_num = g_num_in_page
+   LET g_master_row_move = "Y"
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   LET l_ac = 1
+ 
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   CALL apmq820_b_fill()   
+   #end add-point
+ 
+   #應用 qs03 樣板自動產生(Version:3) 
+   # 若有做串查功能，在CONSTRUCT後，需先將顯示欄位開啟、查詢欄位隱藏 
+   CALL gfrm_curr.setFieldHidden('b_pmag005', TRUE) 
+   CALL gfrm_curr.setFieldHidden('prog_b_pmag005', FALSE) 
+   CALL gfrm_curr.setFieldHidden('b_pmag006', TRUE)
+   CALL gfrm_curr.setFieldHidden('prog_b_pmag006', FALSE)
+ 
+  
+ 
+ 
+ 
+ 
+   IF NOT cl_null(g_wc) AND g_wc != " 1=2" THEN
+      CALL apmq820_cs()
+   END IF
+ 
+   WHILE li_exit = FALSE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         INITIALIZE g_master.* TO NULL
+         CALL g_detail.clear()
+ 
+         LET g_wc  = " 1=2"
+         LET g_wc2 = " 1=1"
+         LET g_action_choice = ""
+         LET g_detail_page_action = "detail_first"
+         LET g_pagestart = 1
+         LET g_current_row_tot = 0
+         LET g_page_start_num = 1
+         LET g_page_end_num = g_num_in_page
+         LET g_master_row_move = "Y"
+         LET g_detail_idx = 1
+         LET g_detail_idx2 = 1
+ 
+         CALL apmq820_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:input段落 name="ui_dialog.input"
+         
+         #end add-point
+ 
+         #add-point:construct段落 name="ui_dialog.construct"
+         CONSTRUCT BY NAME g_wc ON pmaa001,pmaastus,pmaa083
+            ON ACTION controlp
+               CASE
+                  WHEN INFIELD(pmaa001)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_pmaa001_3()                     #呼叫開窗
+                     DISPLAY g_qryparam.return1 TO pmaa001  #顯示到畫面上
+                     NEXT FIELD CURRENT
+
+                  WHEN INFIELD(pmaa083)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     LET g_qryparam.arg1 = '255'
+                     CALL q_oocq002()
+                     DISPLAY g_qryparam.return1 TO pmaa083  #顯示到畫面上
+                     NEXT FIELD CURRENT
+               END CASE
+         END CONSTRUCT
+
+         CONSTRUCT BY NAME g_wc2 ON pmag002,pmag003,pmag005,pmag006,pmag007,pmag008,pmagstus,pmag009 
+
+
+               
+            ON ACTION controlp
+               CASE
+                  WHEN INFIELD(pmag002)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     LET g_qryparam.arg1 = '2036'
+                     CALL q_oocq002()
+                     DISPLAY g_qryparam.return1 TO pmag002  #顯示到畫面上
+                     NEXT FIELD CURRENT
+ 
+                  WHEN INFIELD(pmag003)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_pmag003()
+                     DISPLAY g_qryparam.return1 TO pmag003  #顯示到畫面上
+                     NEXT FIELD CURRENT
+
+                  WHEN INFIELD(pmag005)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_rtax001_1()
+                     DISPLAY g_qryparam.return1 TO pmag005  #顯示到畫面上
+                     NEXT FIELD CURRENT
+
+                  WHEN INFIELD(pmag006)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_imaa001()
+                     DISPLAY g_qryparam.return1 TO pmag006  #顯示到畫面上
+                     NEXT FIELD CURRENT
+
+                  WHEN INFIELD(pmag009)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     #CALL q_ooef001()   #161006-00008#11 by sakura mark
+                     #161006-00008#11 by sakura add(S)
+                     IF s_aooi500_setpoint(g_prog,'pmag009') THEN
+                        LET g_qryparam.where = s_aooi500_q_where(g_prog,'pmag009',g_site,'c')
+                        CALL q_ooef001_24()
+                     ELSE
+                        CALL q_ooef001()  
+                     END IF
+                     #161006-00008#11 by sakura add(E)                     
+                     DISPLAY g_qryparam.return1 TO pmag009  #顯示到畫面上
+                     NEXT FIELD CURRENT
+               END CASE
+
+         END CONSTRUCT
+         #end add-point
+     
+         DISPLAY ARRAY g_detail TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               CALL apmq820_detail_action_trans()
+               LET g_master_idx = l_ac
+               CALL apmq820_b_fill2()
+ 
+               #add-point:input段before row name="input.body.before_row"
+               
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION detail_qrystr
+               MENU "" ATTRIBUTE(STYLE="popup")
+                  #add-point:ON ACTION 相關動作 name="menu.detail_show.page1_sub."
+                  
+                  #END add-point
+                                 #應用 a43 樣板自動產生(Version:4)
+               ON ACTION prog_arti202
+                  LET g_action_choice="prog_arti202"
+                  IF cl_auth_chk_act("prog_arti202") THEN
+                     
+                     #add-point:ON ACTION prog_arti202 name="menu.detail_show.page1_sub.prog_arti202"
+               #應用 a41 樣板自動產生(Version:2)
+               #使用JSON格式組合參數與作業編號(串查)
+               INITIALIZE la_param.* TO NULL
+               LET la_param.prog     = 'arti202'
+               #LET la_param.param[1] = 請自行調整傳入參數
+
+               LET ls_js = util.JSON.stringify(la_param)
+               CALL cl_cmdrun_wait(ls_js)
+ 
+
+
+                     #END add-point
+                     
+                     
+                  END IF
+ 
+ 
+ 
+               #應用 a43 樣板自動產生(Version:4)
+               ON ACTION prog_artm300
+                  LET g_action_choice="prog_artm300"
+                  IF cl_auth_chk_act("prog_artm300") THEN
+                     
+                     #add-point:ON ACTION prog_artm300 name="menu.detail_show.page1_sub.prog_artm300"
+               #應用 a41 樣板自動產生(Version:2)
+               #使用JSON格式組合參數與作業編號(串查)
+               INITIALIZE la_param.* TO NULL
+               LET la_param.prog     = 'artm300'
+               #LET la_param.param[1] = 請自行調整傳入參數
+
+               LET ls_js = util.JSON.stringify(la_param)
+               CALL cl_cmdrun_wait(ls_js)
+ 
+
+
+                     #END add-point
+                     
+                     
+                  END IF
+ 
+ 
+ 
+ 
+               END MENU
+ 
+ 
+ 
+               #add-point:ON ACTION detail_qrystr name="menu.detail_show.page1.detail_qrystr"
+               
+               #END add-point
+               
+ 
+ 
+ 
+ 
+ 
+            #add-point:page1自定義行為 name="ui_dialog.body.page1.action"
+            
+            #end add-point
+ 
+         END DISPLAY
+ 
+ 
+ 
+         #add-point:ui_dialog段define name="ui_dialog.more_displayarray"
+         
+         #end add-point
+    
+         BEFORE DIALOG
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            CALL apmq820_fetch('')
+ 
+            #add-point:ui_dialog段before dialog name="ui_dialog.bef_dialog"
+            CALL cl_set_act_visible("selall,selnone,sel,unsel", FALSE) #sakura add 
+            CALL cl_set_comp_visible("sel", FALSE)                     #sakura add
+            #end add-point
+            NEXT FIELD pmaa001
+ 
+         AFTER DIALOG
+            #add-point:ui_dialog段 after dialog name="ui_dialog.after_dialog"
+            #如果使用者沒有按放棄，讓使用者持續在此DIALOG進行查詢的操作
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT DIALOG
+            ELSE
+               NEXT FIELD pmaa001
+            END IF
+            #end add-point
+            
+         ON ACTION exit
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            INITIALIZE g_wc_filter TO NULL
+            IF cl_null(g_wc) THEN
+               LET g_wc = " 1=1"
+            END IF
+ 
+ 
+   
+            IF cl_null(g_wc2) THEN
+               LET g_wc2 = " 1=1"
+            END IF
+ 
+ 
+ 
+            #add-point:ON ACTION accept name="ui_dialog.accept"
+            
+            #end add-point
+ 
+            CALL apmq820_cs()
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum name="ui_dialog.agendum"
+            
+            #end add-point
+            CALL cl_user_overview()
+ 
+         ON ACTION exporttoexcel   #匯出excel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_detail)
+               LET g_export_id[1]   = "s_detail1"
+ 
+               #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+               
+               #end add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+ 
+ 
+         ON ACTION datarefresh   # 重新整理
+            #為避免按上下筆影響效能，所以有作一些處理
+            LET lc_action_choice_old = g_action_choice
+            LET g_action_choice = "fetch"
+            CALL apmq820_fetch('F')
+            LET g_action_choice = lc_action_choice_old
+ 
+         ON ACTION qbehidden     #qbe頁籤折疊
+            IF g_qbe_hidden THEN
+               CALL gfrm_curr.setElementHidden("qbe",0)
+               CALL gfrm_curr.setElementImage("qbehidden","16/mainhidden.png")
+               LET g_qbe_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("qbe",1)
+               CALL gfrm_curr.setElementImage("qbehidden","16/worksheethidden.png")
+               LET g_qbe_hidden = 1     #hidden
+            END IF
+ 
+         ON ACTION datainfo   #串查至主維護程式
+            #add-point:ON ACTION datainfo name="ui_dialog.datainfo"
+            
+            #end add-point
+            CALL apmq820_maintain_prog()
+ 
+         ON ACTION first   # 第一筆
+            #為避免按上下筆影響效能，所以有作一些處理
+            LET lc_action_choice_old = g_action_choice
+            LET g_action_choice = "fetch"
+            CALL apmq820_fetch('F')
+            LET g_action_choice = lc_action_choice_old
+ 
+         ON ACTION previous   # 上一筆
+            #為避免按上下筆影響效能，所以有作一些處理
+            LET lc_action_choice_old = g_action_choice
+            LET g_action_choice = "fetch"
+            CALL apmq820_fetch('P')
+            LET g_action_choice = lc_action_choice_old
+ 
+         ON ACTION jump   # 跳至第幾筆
+            #為避免按上下筆影響效能，所以有作一些處理
+            LET lc_action_choice_old = g_action_choice
+            LET g_action_choice = "fetch"
+            CALL apmq820_fetch('/')
+            LET g_action_choice = lc_action_choice_old
+ 
+         ON ACTION next   # 下一筆
+            #為避免按上下筆影響效能，所以有作一些處理
+            LET lc_action_choice_old = g_action_choice
+            LET g_action_choice = "fetch"
+            CALL apmq820_fetch('N')
+            LET g_action_choice = lc_action_choice_old
+ 
+         ON ACTION last   # 最後一筆
+            #為避免按上下筆影響效能，所以有作一些處理
+            LET lc_action_choice_old = g_action_choice
+            LET g_action_choice = "fetch"
+            CALL apmq820_fetch('L')
+            LET g_action_choice = lc_action_choice_old
+ 
+         ON ACTION detail_first               #page first
+            LET g_action_choice = "detail_first"
+            LET g_detail_page_action = "detail_first"
+            LET g_master_row_move = "N"
+            CALL apmq820_b_fill()
+ 
+         ON ACTION detail_previous                #page previous
+            LET g_action_choice = "detail_previous"
+            LET g_detail_page_action = "detail_previous"
+            LET g_master_row_move = "N"
+            CALL apmq820_b_fill()
+ 
+         ON ACTION detail_next                #page next
+            LET g_action_choice = "detail_next"
+            LET g_detail_page_action = "detail_next"
+            LET g_master_row_move = "N"
+            CALL apmq820_b_fill()
+ 
+         ON ACTION detail_last                #page last
+            LET g_action_choice = "detail_last"
+            LET g_detail_page_action = "detail_last"
+            LET g_master_row_move = "N"
+            CALL apmq820_b_fill()
+ 
+         
+         #應用 qs19 樣板自動產生(Version:3)
+         #有關於sel欄位選取的action段落
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_detail.getLength()
+               LET g_detail[li_idx].sel = "Y"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selall name="ui_dialog.onaction_selall"
+            
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail.getLength()
+               LET g_detail[li_idx].sel = "N"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selnone name="ui_dialog.onaction_selnone"
+            
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail[li_idx].sel = "Y"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action sel name="ui_dialog.onaction_sel"
+            
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail[li_idx].sel = "N"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action unsel name="ui_dialog.onaction_unsel"
+            
+            #end add-point
+ 
+ 
+ 
+ 
+ 
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+      
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+ 
+         #add-point:查詢方案相關ACTION設定前 name="ui_dialog.set_qbe_action_before"
+         
+         #end add-point
+ 
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+            #add-point:條件清除後 name="ui_dialog.qbeclear"
+            
+            #end add-point 
+ 
+         #add-point:查詢方案相關ACTION設定後 name="ui_dialog.set_qbe_action_after"
+         
+         #end add-point 
+ 
+      END DIALOG 
+   
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmq820.cs" >}
+#+ 組單頭CURSOR
+PRIVATE FUNCTION apmq820_cs()
+   #add-point:cs段define-客製 name="cs.define_customerization"
+   
+   #end add-point
+   #add-point:cs段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="cs.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="cs.before_function"
+   
+   #end add-point
+ 
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+ 
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+   IF g_wc2 = " 1=1" THEN
+      #add-point:cs段單頭sql組成(未下單身條件) name="cs.sql_define_1"
+      LET g_sql = " SELECT UNIQUE pmaa001 ",
+                  "   FROM pmaa_t",
+                  "  WHERE pmaaent = '" ||g_enterprise|| "' AND ",g_wc CLIPPED,
+                  "    AND pmaa002 IN ('1','3')"
+      #end add-point
+   ELSE
+      #add-point:cs段單頭sql組成(有下單身條件) name="cs.sql_define_2"
+      LET g_sql = " SELECT UNIQUE pmaa001 ",
+                  "   FROM pmaa_t,pmag_t ",
+                  "  WHERE pmaaent = '" ||g_enterprise|| "' AND ",g_wc CLIPPED, " AND ",g_wc2 CLIPPED,
+                  "    AND pmaaent = pmagent  AND pmaa001 = pmag001 ",
+                  "    AND pmaa002 IN ('1','3')"
+      #end add-point
+   END IF
+ 
+   PREPARE apmq820_pre FROM g_sql
+   DECLARE apmq820_curs SCROLL CURSOR WITH HOLD FOR apmq820_pre
+   OPEN apmq820_curs
+ 
+   #add-point:cs段單頭總筆數計算 name="cs.head_total_row_count"
+   IF g_wc2 = " 1=1" THEN
+      #(未下單身條件)
+      LET g_cnt_sql = " SELECT COUNT(UNIQUE pmaa001) ",
+                      "   FROM pmaa_t",
+                      "  WHERE pmaaent = '" ||g_enterprise|| "' AND ",g_wc CLIPPED,
+                      "    AND pmaa002 IN ('1','3')"
+   ELSE
+      #(有下單身條件)
+      LET g_cnt_sql = " SELECT COUNT(UNIQUE pmaa001) ",
+                      "   FROM pmaa_t,pmag_t ",
+                      "  WHERE pmaaent = '" ||g_enterprise|| "' AND ",g_wc CLIPPED, " AND ",g_wc2 CLIPPED,
+                      "    AND pmaaent = pmagent  AND pmaa001 = pmag001 ",
+                      "    AND pmaa002 IN ('1','3')"
+   END IF
+   #end add-point
+   PREPARE apmq820_precount FROM g_cnt_sql
+   EXECUTE apmq820_precount INTO g_row_count
+ 
+   IF SQLCA.SQLCODE THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = '' 
+      LET g_errparam.code   = SQLCA.SQLCODE 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+ 
+   ELSE
+      CALL apmq820_fetch("F")
+   END IF
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmq820.fetch" >}
+#+ 抓取單頭資料
+PRIVATE FUNCTION apmq820_fetch(p_flag)
+   #add-point:fetch段define-客製 name="fetch.define_customerization"
+   
+   #end add-point
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="fetch.before_function"
+   
+   #end add-point
+ 
+   MESSAGE ""
+ 
+   #FETCH段CURSOR移動
+   #應用 qs18 樣板自動產生(Version:3)
+   #add-point:fetch段CURSOR移動 name="fetch.cursor_action"
+   CASE p_flag
+      WHEN 'N' FETCH NEXT      apmq820_curs INTO g_master.pmaa001
+      WHEN 'P' FETCH PREVIOUS  apmq820_curs INTO g_master.pmaa001
+      WHEN 'F' FETCH FIRST     apmq820_curs INTO g_master.pmaa001
+      WHEN 'L' FETCH LAST      apmq820_curs INTO g_master.pmaa001
+      WHEN '/'
+         IF (NOT g_no_ask) THEN
+            CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+            CALL cl_getmsg('azz-00658',g_dlang) RETURNING ls_msg
+            LET INT_FLAG = 0
+            PROMPT ls_msg CLIPPED,':' FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl"
+            END PROMPT
+            IF INT_FLAG THEN
+                LET INT_FLAG = 0
+                EXIT CASE
+            END IF
+         END IF
+         
+         IF g_jump > g_row_count  OR g_jump <= 0 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'azz-00659'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            LET g_jump = g_current_idx
+         END IF
+         
+         IF cl_null(g_jump) THEN
+            LET g_jump = g_current_idx
+         END IF 
+         
+         FETCH ABSOLUTE g_jump apmq820_curs INTO g_master.pmaa001
+         LET g_no_ask = FALSE
+   END CASE
+   #end add-point
+ 
+ 
+ 
+ 
+ 
+   IF SQLCA.sqlcode THEN
+      # 清空右側畫面欄位值，但須保留左側qbe查詢條件
+      INITIALIZE g_master.* TO NULL
+      DISPLAY g_master.* TO b_pmaa001,b_pmaal004,b_pmaal003,b_pmaastus,b_pmaa083,b_pmaa083_desc
+      CALL g_detail.clear()
+ 
+      #add-point:陣列清空 name="fetch.array_clear"
+      
+      #end add-point
+      DISPLAY '' TO FORMONLY.h_index
+      DISPLAY '' TO FORMONLY.h_count
+      DISPLAY '' TO FORMONLY.idx
+      DISPLAY '' TO FORMONLY.cnt
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = '' 
+      LET g_errparam.code   = '-100' 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+      RETURN
+   ELSE
+      CASE p_flag
+         WHEN 'F' LET g_current_idx = 1
+         WHEN 'P' LET g_current_idx = g_current_idx - 1
+         WHEN 'N' LET g_current_idx = g_current_idx + 1
+         WHEN 'L' LET g_current_idx = g_row_count
+         WHEN '/' LET g_current_idx = g_jump
+      END CASE
+      DISPLAY g_current_idx TO FORMONLY.h_index
+      DISPLAY g_row_count TO FORMONLY.h_count
+      CALL cl_navigator_setting( g_current_idx, g_row_count )
+   END IF
+ 
+   #add-point:fetch結束前 name="fetch.after"
+   #150302-00004#8 150311 by lori522612 mark 效能調整---(S)
+   #EXECUTE apmq820_master_referesh USING g_master.pmaa001 
+   #   INTO g_master.pmaa001,g_master.pmaastus,g_master.pmaa083
+   #150302-00004#8 150311 by lori522612 mark 效能調整---(E)
+   
+   #150302-00004#8 150311 by lori522612 add 效能調整---(S)   
+   EXECUTE apmq820_master_referesh USING g_master.pmaa001 
+      INTO g_master.pmaa001,g_master.pmaal003,g_master.pmaal004,
+          g_master.pmaastus,g_master.pmaa083,g_master.pmaa083_desc       
+   #150302-00004#8 150311 by lori522612 add 效能調整---(E)
+   #end add-point
+ 
+   LET g_master_row_move = "Y"
+   #重新顯示
+   CALL apmq820_show()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmq820.show" >}
+PRIVATE FUNCTION apmq820_show()
+   #add-point:show段define-客製 name="show.define_customerization"
+   
+   #end add-point
+   DEFINE ls_sql    STRING
+   #add-point:show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="show.before_function"
+   
+   #end add-point
+ 
+   DISPLAY g_master.* TO b_pmaa001,b_pmaal004,b_pmaal003,b_pmaastus,b_pmaa083,b_pmaa083_desc
+ 
+   #讀入ref值
+   #add-point:show段單身reference name="show.head.reference"
+   #150302-00004#8 150311 by lori522612 mark 效能調整---(S)
+   #INITIALIZE g_ref_fields TO NULL
+   #LET g_ref_fields[1] = g_master.pmaa001
+   #CALL ap_ref_array2(g_ref_fields," SELECT pmaal003,pmaal004 FROM pmaal_t WHERE pmaalent = '"||g_enterprise||"'  AND pmaal001 = ? AND pmaal002 = '"||g_dlang||"'","") RETURNING g_rtn_fields
+   #LET g_master.pmaal003 = g_rtn_fields[1]
+   #LET g_master.pmaal004 = g_rtn_fields[2]
+   #DISPLAY g_master.pmaal003 TO b_pmaal003
+   #DISPLAY g_master.pmaal004 TO b_pmaal004
+   #
+   #INITIALIZE g_ref_fields TO NULL
+   #LET g_ref_fields[1] = g_master.pmaa083
+   #CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='255' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   #LET g_master.pmaa083_desc = '', g_rtn_fields[1] , ''
+   #DISPLAY g_master.pmaa083_desc TO b_pmaa083_desc
+   #150302-00004#8 150311 by lori522612 mark 效能調整---(E)
+   #end add-point
+ 
+   LET g_detail_page_action = "detail_first"
+   LET g_pagestart = 1
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   CALL apmq820_b_fill()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmq820.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION apmq820_b_fill()
+   #add-point:b_fill段define-客製 name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc           STRING
+   DEFINE ls_sql_rank     STRING
+   #add-point:b_fill段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   
+   #end add-point
+ 
+   LET g_wc = g_wc, cl_sql_auth_filter()   #(ver:32) add cl_sql_auth_filter()
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   
+   #end add-point
+ 
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+   CALL g_detail.clear()
+ 
+   #add-point:陣列清空 name="b_fill.array_clear"
+   
+   #end add-point
+ 
+   LET l_ac = 1
+ 
+   # b_fill段sql組成及FOREACH撰寫
+   #應用 qs09 樣板自動產生(Version:3)
+   #+ b_fill段資料取得(包含sql組成及FOREACH段撰寫)
+   #add-point:b_fill段sql name="b_fill.sql"
+   #150302-00004#8 150311 by lori522612 mark 效能調整---(S)
+   #LET g_sql = "SELECT UNIQUE 'N',pmag002,'',pmag003,pmag004,pmag005,'',",
+   #            "               pmag006,'',pmag007,pmag008,pmagstus,pmag009,'' ",
+   #            "  FROM pmag_t",
+   #            " WHERE pmagent = ? AND pmag001 = ? "
+   #150302-00004#8 150311 by lori522612 mark 效能調整---(E)
+   
+   #150826-00013#1 效能調整 20150904 mark by beckxie---S
+   #150302-00004#8 150311 by lori522612 add 效能調整---(S)
+   #LET g_sql = "SELECT UNIQUE 'N',pmag002,oocql004,pmag003,pmag004,pmag005,rtaxl003,",
+   #            "               pmag006,imaal003,pmag007,pmag008,pmagstus,pmag009,'' ",
+   #            "  FROM pmag_t ",
+   #            "       LEFT JOIN oocql_t ON oocqlent = pmagent AND oocql001 = '2036' AND oocql002 = pmag002 AND oocql003 = '",g_dlang,"' ",
+   #            "       LEFT JOIN rtaxl_t ON rtaxlent = pmagent AND rtaxl001 = pmag005 AND rtaxl002 = '",g_dlang,"' ",
+   #            "       LEFT JOIN imaal_t ON imaalent = pmagent AND imaal001 = pmag006 AND imaal002 = '",g_dlang,"' ",
+   #            "       LEFT JOIN ooefl_t ON ooeflent = pmagent AND ooefl001 = pmag009 AND ooefl002 = '",g_dlang,"' ",
+   #            " WHERE pmagent = ? AND pmag001 = ? "
+   #150302-00004#8 150311 by lori522612 add 效能調整---(E)
+   #150826-00013#1 效能調整 20150904 mark by beckxie---E
+   #150826-00013#1 效能調整 20150904 add by beckxie---S
+   LET g_sql = "SELECT UNIQUE 'N',pmag002,",
+               "       (SELECT oocql004",
+               "          FROM oocql_t",
+               "         WHERE oocqlent = pmagent ",
+               "           AND oocql001 = '2036' AND oocql002 = pmag002 AND oocql003 = '",g_dlang,"') pmag002_desc,",
+               "        pmag003,pmag004,pmag005,",
+               "        (SELECT rtaxl003",
+               "           FROM rtaxl_t",
+               "          WHERE rtaxlent = pmagent AND rtaxl001 = pmag005 AND rtaxl002 = '",g_dlang,"') pmag005_desc,",
+               "               pmag006,",
+               "        (SELECT imaal003",
+               "           FROM imaal_t",
+               "          WHERE imaalent = pmagent AND imaal001 = pmag006 AND imaal002 = '",g_dlang,"') pmag006_desc,",
+               "         pmag007,pmag008,pmagstus,pmag009,",
+               "        (SELECT ooefl003",
+               "           FROM ooefl_t",
+               "          WHERE ooeflent = pmagent AND ooefl001 = pmag009 AND ooefl002 = '",g_dlang,"') pmag009_desc ",
+               "  FROM pmag_t ",
+               " WHERE pmagent = ? AND pmag001 = ? "
+   #150826-00013#1 效能調整 20150904 add by beckxie---E
+   IF NOT cl_null(g_wc2) THEN
+      LET g_sql = g_sql CLIPPED, " AND ", g_wc2 CLIPPED
+   END IF
+
+   LET g_sql = g_sql, " ORDER BY pmag002,pmag003"
+
+   PREPARE apmq820_pb FROM g_sql
+   DECLARE b_fill_cs CURSOR FOR apmq820_pb
+
+   OPEN b_fill_cs USING g_enterprise,g_master.pmaa001
+
+   FOREACH b_fill_cs INTO g_detail[l_ac].sel,
+                          g_detail[l_ac].pmag002,g_detail[l_ac].pmag002_desc,
+                          g_detail[l_ac].pmag003,g_detail[l_ac].pmag004,
+                          g_detail[l_ac].pmag005,g_detail[l_ac].pmag005_desc,
+                          g_detail[l_ac].pmag006,g_detail[l_ac].pmag006_desc,
+                          g_detail[l_ac].pmag007,g_detail[l_ac].pmag008,g_detail[l_ac].pmagstus,
+                          g_detail[l_ac].pmag009,g_detail[l_ac].pmag009_desc 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      LET g_hyper_url = apmq820_get_hyper_data("prog_b_pmag005")
+      LET g_detail[l_ac].prog_b_pmag005 = "<a href = '",g_hyper_url,"'>",g_detail[l_ac].pmag005,"</a>"
+      
+      LET g_hyper_url = apmq820_get_hyper_data("prog_b_pmag006")
+      LET g_detail[l_ac].prog_b_pmag006 = "<a href = '",g_hyper_url,"'>",g_detail[l_ac].pmag006,"</a>"
+      
+      CALL apmq820_detail_show("'1'")
+      
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  9035
+            LET g_errparam.extend =  ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+         END IF
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   LET g_error_show = 0
+   #end add-point
+ 
+ 
+ 
+ 
+ 
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.others.fill"
+   
+   #end add-point
+ 
+   CALL g_detail.deleteElement(g_detail.getLength())
+ 
+   #add-point:陣列長度調整 name="b_fill.array_deleteElement"
+   
+   #end add-point
+ 
+   LET g_error_show = 0
+ 
+   #單身總筆數顯示
+   LET g_detail_cnt = g_detail.getLength()
+ 
+   #調整單身index指標，避免翻頁後指到空白筆數
+   CALL apmq820_detail_index_setting()
+ 
+   #重新計算單身筆數並呈現
+   CALL apmq820_detail_action_trans()
+ 
+   CALL apmq820_b_fill2()
+ 
+   
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmq820.b_fill2" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION apmq820_b_fill2()
+   #add-point:b_fill2段define-客製 name="b_fill2.define_customerization"
+   
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:b_fill2段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill2.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="b_fill2.before_function"
+   
+   #end add-point
+ 
+   LET li_ac = 1
+ 
+   #單身組成
+   #應用 qs11 樣板自動產生(Version:3)
+   #+ b_fill2段table資料取得(包含sql組成及資料填充)
+   #add-point:sql組成 name="b_fill2.fill"
+   
+   #end add-point
+ 
+ 
+ 
+ 
+ 
+ 
+   #add-point:單身填充後 name="b_fill2.after_fill"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmq820.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION apmq820_detail_show(ps_page)
+   #add-point:show段define-客製 name="detail_show.define_customerization"
+   
+   #end add-point
+   DEFINE ps_page    STRING
+   DEFINE ls_sql     STRING
+   #add-point:show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   
+   #end add-point
+ 
+   #add-point:detail_show段之前 name="detail_show.before"
+   
+   #end add-point
+ 
+   
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      
+ 
+      #add-point:show段單身reference name="detail_show.body.reference"
+      #150302-00004#8 150311 by lori522612 mark---(S)  
+      #INITIALIZE g_ref_fields TO NULL
+      #LET g_ref_fields[1] = g_detail[l_ac].pmag002
+      #CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2036'  AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      #LET g_detail[l_ac].pmag002_desc = '', g_rtn_fields[1] , ''
+      #
+      #INITIALIZE g_ref_fields TO NULL
+      #LET g_ref_fields[1] = g_detail[l_ac].pmag005
+      #CALL ap_ref_array2(g_ref_fields,"SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent='"||g_enterprise||"' AND rtaxl001=?  AND rtaxl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      #LET g_detail[l_ac].pmag005_desc = '', g_rtn_fields[1] , ''
+      #
+      #INITIALIZE g_ref_fields TO NULL
+      #LET g_ref_fields[1] = g_detail[l_ac].pmag006
+      #CALL ap_ref_array2(g_ref_fields,"SELECT imaal003 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      #LET g_detail[l_ac].pmag006_desc = '', g_rtn_fields[1] , ''
+      #
+      #INITIALIZE g_ref_fields TO NULL
+      #LET g_ref_fields[1] = g_detail[l_ac].pmag009
+      #CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      #LET g_detail[l_ac].pmag009_desc = '', g_rtn_fields[1] , ''
+      #150302-00004#8 150311 by lori522612 mark---(E)        
+      #end add-point
+   END IF
+ 
+ 
+ 
+   #add-point:detail_show段之後 name="detail_show.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmq820.maintain_prog" >}
+#+ 串查至主維護程式
+PRIVATE FUNCTION apmq820_maintain_prog()
+   #add-point:maintain_prog段define-客製 name="maintain_prog.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js      STRING
+   DEFINE la_param   RECORD
+                     prog       STRING,
+                     actionid   STRING,
+                     background LIKE type_t.chr1,
+                     param      DYNAMIC ARRAY OF STRING
+                     END RECORD
+   DEFINE ls_j       LIKE type_t.num5
+   #add-point:maintain_prog段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="maintain_prog.define"
+   
+   #end add-point
+ 
+ 
+   #add-point:maintain_prog段開始前 name="maintain_prog.before"
+   
+   #end add-point
+ 
+   LET la_param.prog = ""
+ 
+ 
+ 
+   IF NOT cl_null(la_param.prog) THEN
+      LET ls_js = util.JSON.stringify(la_param)
+      CALL cl_cmdrun_wait(ls_js)
+   END IF
+ 
+   #add-point:maintain_prog段結束前 name="maintain_prog.after"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmq820.get_hyper_data" >}
+#應用 qs01 樣板自動產生(Version:9) 
+#+ 取得單身串查網址(包含程式代號及參數) 
+PRIVATE FUNCTION apmq820_get_hyper_data(ps_field_name) 
+   #add-point:get_hyper_data段define-客製 name="get_hyper_data.define_customerization" 
+   
+   #end add-point 
+   DEFINE ps_field_name    STRING 
+   DEFINE ps_url           STRING 
+   DEFINE ls_js            STRING 
+   DEFINE la_param         RECORD 
+                           prog       STRING, 
+                           actionid   STRING, 
+                           background LIKE type_t.chr1, 
+                           param      DYNAMIC ARRAY OF STRING 
+                           END RECORD 
+   DEFINE ps_type          LIKE type_t.chr10 
+   #add-point:get_hyper_data段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="get_hyper_data.define" 
+   
+   #end add-point 
+  
+  
+   #add-point:FUNCTION前置處理 name="get_hyper_data.before_function" 
+   
+   #end add-point 
+  
+   LET ps_url = NULL 
+  
+   # 設定要做串查的程式代碼 
+   CASE 
+      WHEN ps_field_name = "prog_b_pmag005" 
+         LET la_param.prog = "arti202" 
+  
+         # 設定傳入參數，請依序放置於 la_param.param[1]、la_param.param[2]、... 
+         #應用 qs25 樣板自動產生(Version:3)
+         #+ 產生串查功能傳入參數部分
+ 
+ 
+ 
+         LET la_param.param[1] = g_detail[l_ac].pmag005 
+         #add-point:傳入參數設定 name="get_hyper_data.set_parameter_prog_b_pmag005" 
+         
+         #end add-point 
+  
+      WHEN ps_field_name = "prog_b_pmag006"
+         LET la_param.prog = "artm300"
+ 
+         # 設定傳入參數，請依序放置於 la_param.param[1]、la_param.param[2]、...
+         #應用 qs25 樣板自動產生(Version:3)
+         #+ 產生串查功能傳入參數部分
+ 
+ 
+ 
+         LET la_param.param[1] = g_detail[l_ac].pmag006
+         #add-point:傳入參數設定 name="get_hyper_data.set_parameter_prog_b_pmag006"
+         
+         #end add-point
+ 
+   END CASE 
+  
+   # 設定傳入參數，請依序放置於 la_param.param[1]、la_param.param[2]、... 
+   #add-point:傳入參數設定 name="get_hyper_data.set_parameter" 
+   
+   #end add-point 
+  
+   #將陣列資料組合成一個string字串 
+   LET ls_js = util.JSON.stringify(la_param) 
+  
+   #依環境設定要走GDC或GWC模式 (""表示會依據目前的環境判斷，若有自行定義，會依據所定義的模式去執行) 
+   LET ps_type = "" 
+   #add-point:定義執行模式 name="get_hyper_data.set_env" 
+   
+   #end add-point 
+  
+   #呼叫lib，取得完整的url資訊 
+   CALL cl_ap_url(ps_type,ls_js) RETURNING ps_url 
+ 
+   LET ps_url = cl_replace_str(ps_url, "&", "&amp;")  
+   RETURN ps_url 
+  
+END FUNCTION 
+ 
+{</section>}
+ 
+{<section id="apmq820.detail_action_trans" >}
+#+ 單身分頁筆數顯示及action圖片顯示切換功能
+PRIVATE FUNCTION apmq820_detail_action_trans()
+   #add-point:detail_action_trans段define-客製 name="detail_action_trans.define_customerization"
+   
+   #end add-point
+   #add-point:detail_action_trans段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_action_trans.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="detail_action_trans.before_function"
+   
+   #end add-point
+ 
+   #因應單身切頁功能，筆數計算方式調整
+   LET g_current_row_tot = g_pagestart + g_detail_idx - 1
+   DISPLAY g_current_row_tot TO FORMONLY.idx
+   DISPLAY g_tot_cnt TO FORMONLY.cnt
+ 
+   #顯示單身頁面的起始與結束筆數
+   LET g_page_start_num = g_pagestart
+   LET g_page_end_num = g_pagestart + g_num_in_page - 1
+   DISPLAY g_page_start_num TO FORMONLY.p_start
+   DISPLAY g_page_end_num TO FORMONLY.p_end
+ 
+   #目前不支援跳頁功能
+   LET g_page_act_list = "detail_first,detail_previous,'',detail_next,detail_last"
+   CALL cl_navigator_detail_page_setting(g_page_act_list,g_current_row_tot,g_pagestart,g_num_in_page,g_tot_cnt)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmq820.detail_index_setting" >}
+#+ 單身切頁後，index重新調整，避免翻頁後指到空白筆數
+PRIVATE FUNCTION apmq820_detail_index_setting()
+   #add-point:detail_index_setting段define-客製 name="detail_index_setting.define_customerization"
+   
+   #end add-point
+   DEFINE li_redirect     BOOLEAN
+   DEFINE ldig_curr       ui.Dialog
+   #add-point:detail_index_setting段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_index_setting.define"
+   
+   #end add-point
+ 
+ 
+   #add-point:FUNCTION前置處理 name="detail_index_setting.before_function"
+   
+   #end add-point
+ 
+   IF g_master_row_move = "Y" THEN
+      LET g_detail_idx = 1
+      LET li_redirect = TRUE
+   ELSE
+      IF g_curr_diag IS NOT NULL THEN
+         CASE
+            WHEN g_curr_diag.getCurrentRow("s_detail1") <= "0"
+               LET g_detail_idx = 1
+               IF g_detail.getLength() THEN
+                  LET li_redirect = TRUE
+               END IF
+            WHEN g_curr_diag.getCurrentRow("s_detail1") > g_detail.getLength() AND g_detail.getLength() > 0
+               LET g_detail_idx = g_detail.getLength()
+               LET li_redirect = TRUE
+            WHEN g_curr_diag.getCurrentRow("s_detail1") != g_detail_idx
+               IF g_detail_idx > g_detail.getLength() THEN
+                  LET g_detail_idx = g_detail.getLength()
+               END IF
+               LET li_redirect = TRUE
+         END CASE
+      END IF
+   END IF
+ 
+   IF li_redirect THEN
+      LET ldig_curr = ui.Dialog.getCurrent()
+      CALL ldig_curr.setCurrentRow("s_detail1", g_detail_idx)
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmq820.mask_functions" >}
+ &include "erp/apm/apmq820_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="apmq820.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

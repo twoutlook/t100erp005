@@ -1,0 +1,767 @@
+<add_points prog="azzi001" std_prog="azzi001" erpver="1.0" module="AZZ" ver="2" env="s" zone="t10dev" booking="Y" type="M" identity="s">
+  <other>
+    <code_template value="F" status="" />
+    <free_style value="Y" status="" />
+  </other>
+  <point name="main.define_sql" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[
+   LET g_forupd_sql = "SELECT gzxd001,'',gzxd002,'','','' FROM gzxd_t WHERE gzxdent= ? AND gzxd001=?"]]>
+</point>
+  <point name="function.azzi001_init" cite_std="N" status="" ver="1" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION azzi001_init()
+   DEFINE   ls_tmp        STRING
+   DEFINE   l_wcpath      STRING   # WebComponent路徑
+   DEFINE   lc_ooef001    LIKE ooef_t.ooef001
+   DEFINE   ls_logs       STRING
+
+   LET g_startmenu_hidden = 1   #是否隱藏startmenu
+   #CLOSE WINDOW screen
+   # 首頁的style setting
+   CALL ui.Interface.loadStyles(FGL_GETENV("ERP")||os.Path.separator()||"cfg"||os.Path.separator()||"4st"||os.Path.separator()||"homepage.4st")
+
+   # CALL cl_ui_wintitle(1)
+
+   #CALL cl_set_act_lang(NULL)
+   #CALL cl_load_4ad_interface(NULL)
+   #CALL cl_load_4ad_formlevel(NULL)
+   #檢查登入狀態
+
+   # 設定哪些搜尋或執行元件可以放入command line使用, 先寫死啦...都沒有資料結構可用
+   # 可以用gcn_file來延伸
+   CALL cl_set_combo_items("formonly.cmd_type","1,2,3,4,5","執行程式,單據搜尋,客戶搜尋,料號搜尋,廠商搜尋")
+   LET g_cmdtype = "1"
+
+   # 2012/05/24 應用決定增加User UI Setting畫面, 將佈景主題選擇移進去
+
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+
+   CALL azzi001_chg_lang()#依據多語言轉換畫面上的圖片與文字
+   
+   # 資料準備
+   CALL azzi001_start_menu()                 # 整體目錄
+   CALL azzi001_show()
+
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_ui_dialog" cite_std="N" status="" ver="2" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION azzi001_ui_dialog()
+   DEFINE   g_plant_t         LIKE type_t.chr20
+   DEFINE   li_result         LIKE type_t.num5
+   DEFINE   li_tree_idx       LIKE type_t.num5
+   DEFINE   li_open           LIKE type_t.num5
+   DEFINE   li_function       LIKE type_t.num5
+   DEFINE   li_cnt            LIKE type_t.num5
+   # 搜尋用
+   DEFINE   lc_gzza001           LIKE gzza_t.gzza001
+   # 行事曆月曆模式
+   DEFINE   ls_sel_date       STRING
+   DEFINE   ls_year           STRING
+   DEFINE   ls_month          STRING
+   # 跑馬燈
+   #DEFINE   ls_marquee_wc     STRING
+   # 程式集
+   DEFINE   ls_apps_wc        STRING
+   # 首頁類portal的WebComponent
+   DEFINE   l_wc              STRING
+   DEFINE   l_url             STRING
+   DEFINE   l_mode            STRING
+   DEFINE   la_param          RECORD
+               prog           STRING,
+               param          DYNAMIC ARRAY OF STRING
+            END RECORD
+   DEFINE   l_wc_exeinfo      RECORD
+               type           STRING,  #小區塊的類型
+               program        STRING,  #程式代號
+               param_str      STRING,  #程式參數
+               msie           BOOLEAN  #是否為 IE
+            END RECORD
+   LET l_wc = azz_azzi001_01.azzi001_01_wc_init()  
+   
+   DIALOG ATTRIBUTES(UNBUFFERED)
+
+      # 首頁上整體欄位
+      INPUT g_search, g_cmdtype #, g_plant
+       FROM formonly.searchstr, formonly.cmd_type #, formonly.logistics
+         ATTRIBUTES(WITHOUT DEFAULTS)
+         BEFORE INPUT
+            CALL azzi001_marquee()
+      END INPUT
+
+      # 首頁類portal
+      INPUT l_wc FROM wc ATTRIBUTES(WITHOUT DEFAULTS=TRUE)
+
+         BEFORE INPUT
+            
+            #將WebComponent本身會用到的Action隱藏
+            CALL Dialog.setActionHidden("wc_init", TRUE)
+            CALL Dialog.setActionHidden("wc_exec", TRUE)
+      END INPUT
+      
+      # 系統跑馬燈
+      #INPUT ls_marquee_wc FROM marquee_wc
+      #END INPUT
+
+      DISPLAY ARRAY g_startmenu TO s_startmenu.*
+         BEFORE DISPLAY
+            CALL azzi001_marquee()
+         ON EXPAND (li_tree_idx)
+            # 打開時才建立, 此節點若是作業或下一個節點若是Child就不需要重建
+            IF NOT g_startmenu[li_tree_idx].execute THEN
+               #以下兩個判斷式不能寫在一起, 會展不出來
+               IF (li_tree_idx = g_startmenu.getLength()) THEN
+                  CALL azzi001_create_start_menu_child(li_tree_idx)
+               ELSE
+                  IF (g_startmenu[li_tree_idx+1].pid != g_startmenu[li_tree_idx].id) THEN
+                     CALL azzi001_create_start_menu_child(li_tree_idx)
+                  END IF
+               END IF
+            END IF
+      END DISPLAY
+      
+             
+      #當WebComponent的document.ready時，會呼叫此Action表示WebComponent已經準備好了
+      #此時開始進行資料的初始化
+      ON ACTION wc_init
+         LET l_wc = azz_azzi001_01.azzi001_01_wc_init()  
+             
+      #從區塊中點擊連結
+      ON ACTION wc_exec
+         INITIALIZE la_param.param TO NULL
+         LET l_url = NULL
+         TRY
+            #LET l_wc = URLDecoder.decode(l_wc, "UTF-8")
+            CALL util.JSON.parse(l_wc, l_wc_exeinfo)
+            LET la_param.prog = l_wc_exeinfo.program
+         CATCH
+            LET la_param.prog = l_wc
+         END TRY
+         
+         CASE l_wc_exeinfo.program
+            WHEN "more"
+               CASE l_wc_exeinfo.type
+                  WHEN "query"
+                     LET l_url = cl_ap_url("", util.JSON.stringify(la_param))
+                     IF l_url.getIndexOf("?", 1) > 0 THEN
+                        LET l_url = l_url, "&"
+                     ELSE
+                        LET l_url = l_url, "?"
+                     END IF
+                     LET l_url = l_url, "QUERYPLANID=", l_wc_exeinfo.param_str
+                     #CALL FGL_SETENV("QUERYPLANID", l_wc_exeinfo.param_str)
+               
+                  WHEN "tracks"
+                     CALL cl_user_overview()
+                     
+                  WHEN "favorite"
+                     CALL cl_user_favorite_list()
+               END CASE
+               
+            OTHERWISE
+               LET la_param.param[1] = l_wc_exeinfo.param_str
+               
+               #LET l_mode = cl_get_para(g_enterprise,g_site,'A-SYS-0024')
+               #IF l_mode.trim() == "0" THEN
+               #   LET l_mode = "GWC"
+               #ELSE
+               #   LET l_mode = "GDC"
+               #END IF
+
+               #如果非IE瀏覽器且運行GDC模式，則自動轉為GWC
+               IF l_wc_exeinfo.msie == FALSE AND l_mode == "GDC" THEN
+                  LET l_mode = "GWC"
+               END IF
+               LET l_url = cl_ap_url(l_mode , util.JSON.stringify(la_param))
+         END CASE
+         
+         IF l_url IS NOT NULL THEN
+            IF ui.Interface.getFrontEndName() == "GWC" THEN
+               CALL ui.interface.frontCall("standard","launchurl",[l_url, ""],[])
+            ELSE
+               #LET l_url = l_wc_exeinfo.program, " " , URLDecoder.decode(l_wc_exeinfo.param_str, "UTF-8")
+               CASE l_wc_exeinfo.type
+                  WHEN "query"
+                     CALL FGL_SETENV("QUERYPLANID", l_wc_exeinfo.param_str)
+               END CASE
+
+               CALL cl_cmdrun(l_wc_exeinfo.program)
+            END IF
+         END IF
+      #ON ACTION userprofile  # 使用者設定
+
+      ON ACTION execute   # 任何一處的執行程式
+         CASE DIALOG.getCurrentItem()
+            WHEN "s_startmenu"
+               IF g_startmenu[DIALOG.getCurrentRow("s_startmenu")].execute THEN
+                  #CALL cl_cmdrun(g_startmenu[DIALOG.getCurrentRow("s_startmenu")].id)
+                  #22778: Tree不支援HTML code
+                  IF ui.interface.getFrontEndName() == "GWC" THEN
+                     CALL ui.Interface.frontCall( "standard", "launchurl", [g_startmenu[DIALOG.getCurrentRow("s_startmenu")].url], [] )
+                  ELSE
+                     CALL cl_cmdrun(g_startmenu[DIALOG.getCurrentRow("s_startmenu")].id)
+                  END IF
+               ELSE
+                  #如果有子節點，就展開它吧...
+                  IF g_startmenu[DIALOG.getCurrentRow("s_startmenu")].isnode == TRUE THEN
+                     #因為是dynamic-filled tree，所以要動態展子節點
+                  END IF
+               END IF
+            OTHERWISE
+               IF g_search IS NOT NULL THEN
+                  CASE g_cmdtype
+                     WHEN "1"    # 程式執行
+                        LET la_param.prog = g_search
+                        INITIALIZE la_param.param TO NULL
+                        LET l_url = cl_ap_url("", util.JSON.stringify(la_param))
+                        IF ui.Interface.getFrontEndName() == "GWC" THEN
+                           CALL ui.interface.frontCall("standard","launchurl",[l_url, ""],[])
+                        ELSE
+                           CALL cl_cmdrun(g_search)
+                        END IF
+                  END CASE
+               END IF
+         END CASE
+         CALL azzi001_marquee()
+         
+      ON ACTION show_startmenu   #顯示startmenu
+         IF g_startmenu_hidden THEN
+            LET g_startmenu_hidden = 0
+         ELSE
+            LET g_startmenu_hidden = 1
+         END IF
+         CALL gfrm_curr.setElementHidden("s_startmenu",g_startmenu_hidden)
+         
+      ON ACTION btn_personalwork   #
+         CALL azzi000_02()
+         LET l_wc = azz_azzi001_01.azzi001_01_wc_init() 
+         
+      ON ACTION palette   #
+      
+      ON ACTION exit
+         IF ui.Interface.getChildCount() > 0 THEN
+            CALL cl_err_msg("請先關閉其他作業, 再關掉主視窗", "!", "", 0)
+         ELSE
+            CALL azz_azzi001_01.azzi001_01_logout()
+            IF ui.interface.getFrontEndName() == "GWC" THEN
+               INITIALIZE la_param TO NULL
+               LET la_param.prog = "azzi001"
+               LET l_url = cl_ap_url("GWC", util.JSON.stringify(la_param))
+               CALL ui.interface.frontCall("standard","launchurl",[l_url, "replace"],[])              
+            END IF
+            EXIT DIALOG
+         END IF
+         
+      ON ACTION close
+         IF ui.Interface.getChildCount() > 0 THEN
+            CALL cl_err_msg("請先關閉其他作業, 再關掉主視窗", "!", "", 0)
+         ELSE
+            CALL azz_azzi001_01.azzi001_01_logout() 
+            IF ui.interface.getFrontEndName() == "GWC" THEN
+               INITIALIZE la_param TO NULL
+               LET la_param.prog = "azzi001"
+               LET l_url = cl_ap_url("GWC", util.JSON.stringify(la_param))
+               CALL ui.interface.frontCall("standard","launchurl",[l_url, "replace"],[]) 
+            END IF
+            EXIT DIALOG
+         END IF
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_start_menu" cite_std="N" status="" ver="1" src="s" new="Y" order="3" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi001_start_menu()
+  CALL g_startmenu.clear()
+   CALL azzi001_create_start_menu_child(0)
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_create_start_menu_child" cite_std="N" status="" ver="1" src="s" new="Y" order="4" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi001_create_start_menu_child(pi_index)
+   DEFINE   pi_index     LIKE type_t.num5
+   DEFINE   lc_gzwe001   LIKE gzwe_t.gzwe001
+   DEFINE   lr_gzwe      DYNAMIC ARRAY OF RECORD
+             gzwe002     LIKE gzwe_t.gzwe002,
+             gzwe004     LIKE gzwe_t.gzwe004
+                         END RECORD
+   DEFINE   li_i         LIKE type_t.num5
+   DEFINE   li_cnt       LIKE type_t.num5
+   DEFINE   li_c_cnt     LIKE type_t.num5
+   DEFINE   lc_gzza002   LIKE gzza_t.gzza002
+   DEFINE la_param  RECORD
+            prog     STRING,
+            param    DYNAMIC ARRAY OF STRING
+          END RECORD
+   DEFINE ls_json   STRING
+
+
+   # 預設Root節點為MENU, 進入畫面只產生第一層目錄
+   IF pi_index = 0 THEN
+      #2013/12/11 使用個人azzi800設定的目錄結構
+      LET g_sql = "SELECT gzxa011 FROM gzxa_t WHERE gzxa001 = '", g_account,"'"
+      PREPARE get_account_menuroot_pre FROM g_sql
+      EXECUTE get_account_menuroot_pre INTO lc_gzwe001
+      IF cl_null(lc_gzwe001) THEN
+         LET lc_gzwe001 = "MENU"
+      END IF
+   ELSE
+      LET lc_gzwe001 = g_startmenu[pi_index].id
+   END IF
+   
+   # 需要程式類型
+   LET g_sql = "SELECT gzza002 FROM gzza_t, gzzz_t WHERE gzzz001 = ? AND gzzz002 = gzza001"
+   PREPARE azzi001_get_progtype FROM g_sql
+   
+   # 檢查有沒有下層節點
+   LET g_sql = "SELECT COUNT(*) FROM gzwe_t WHERE gzwe001 = ? AND gzwe001 != gzwe002"
+   PREPARE azzi001_startmenu_childcnt_pre FROM g_sql
+
+   # 展出下一層目錄, 每次指定只多產生一層目錄:azzi880選單維護
+   LET g_sql = "SELECT gzwe002, gzwe004 FROM gzwe_t WHERE gzwe001 = '", lc_gzwe001 CLIPPED,"' AND gzwe001 != gzwe002 ORDER BY gzwe003"
+   PREPARE azzi001_startmenu_pre FROM g_sql
+   DECLARE azzi001_startmenu_curs CURSOR FOR azzi001_startmenu_pre
+   LET li_i = 1
+   FOREACH azzi001_startmenu_curs INTO lr_gzwe[li_i].*
+      LET li_i = li_i + 1
+   END FOREACH
+   CALL lr_gzwe.deleteElement(li_i)
+   
+   LET li_cnt = pi_index + 1
+   FOR li_i = 1 TO lr_gzwe.getLength()      
+      CALL g_startmenu.insertElement(li_cnt)
+      INITIALIZE g_ref_fields TO NULL
+      INITIALIZE la_param TO NULL
+      LET g_ref_fields[1] = lr_gzwe[li_i].gzwe002
+      CASE lr_gzwe[li_i].gzwe004
+         WHEN "0"
+            CALL ap_ref_array2(g_ref_fields," SELECT gzwel003 FROM gzwel_t WHERE gzwel001 = ? AND gzwel002 = '"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_startmenu[li_cnt].execute = FALSE
+            EXECUTE azzi001_startmenu_childcnt_pre INTO li_c_cnt USING lr_gzwe[li_i].gzwe002
+            IF li_c_cnt > 0 THEN
+               LET g_startmenu[li_cnt].image = "24/closefolder-24.png"
+               LET g_startmenu[li_cnt].isnode = TRUE
+            ELSE
+               LET g_startmenu[li_cnt].image = "24/folder_lock-24.png"
+               LET g_startmenu[li_cnt].isnode = FALSE
+            END IF
+         WHEN "1"
+            CALL ap_ref_array2(g_ref_fields," SELECT gzzal003 FROM gzzal_t WHERE gzzal001 = ? AND gzzal002 = '"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_startmenu[li_cnt].isnode = FALSE
+            LET g_startmenu[li_cnt].execute = TRUE
+            #程式網址
+            LET la_param.prog = lr_gzwe[li_i].gzwe002 CLIPPED
+            #LET la_param.param[1] = "p1參數"
+            #LET la_param.param[2] = "p2中文"
+            LET ls_json = util.JSON.stringify(la_param) #範例：{"prog":"aiti993","param":["p1參數","p2中文"]}
+            CALL cl_ap_url("",ls_json) RETURNING g_startmenu[li_cnt].url  #範例：http://10.40.40.18/wt10dit/wa/r/app/gwc_aiti993?Arg=99&Arg=p1%E5%8F%83%E6%95%B8&Arg=p2%E4%B8%AD%E6%96%87
+
+            EXECUTE azzi001_get_progtype INTO lc_gzza002 USING lr_gzwe[li_i].gzwe002
+            CASE lc_gzza002
+               WHEN "I" LET g_startmenu[li_cnt].image = "16/prog_i.png"
+               WHEN "M" LET g_startmenu[li_cnt].image = "16/prog_i.png"
+               WHEN "T" LET g_startmenu[li_cnt].image = "16/prog_t.png"
+               WHEN "S" LET g_startmenu[li_cnt].image = "16/prog_s.png"
+               WHEN "R" LET g_startmenu[li_cnt].image = "16/prog_r.png"
+               WHEN "Q" LET g_startmenu[li_cnt].image = "16/prog_q.png"
+               WHEN "P" LET g_startmenu[li_cnt].image = "16/prog_p.png"
+            END CASE
+      END CASE
+      
+      LET g_startmenu[li_cnt].menuname = g_rtn_fields[1] #,'(',lr_gzwe[li_i].gzwe002 CLIPPED,')'
+      LET g_startmenu[li_cnt].menu_id  = lr_gzwe[li_i].gzwe002 CLIPPED
+      LET g_startmenu[li_cnt].id       = lr_gzwe[li_i].gzwe002
+      LET g_startmenu[li_cnt].pid      = lc_gzwe001
+      
+      # 是否預設打開資料夾, 目前無此功能, 預設為關
+      LET g_startmenu[li_cnt].expanded = FALSE
+      LET li_cnt = li_cnt + 1
+   END FOR
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_show" cite_std="N" status="" ver="1" src="s" new="Y" order="5" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi001_show()
+   # TopBar 公司logo圖
+   #DISPLAY "logo/TS.gif" TO formonly.company_logo
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_marquee" cite_std="N" status="" ver="1" src="s" new="Y" order="6" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi001_marquee()
+    DEFINE   ls_value   STRING
+
+   # 組出訊息列表
+   # 到底要去哪裡撈資料呢?
+   #LET ls_value = "2013/10 選單已經由azzi880維護作業抓取資訊, 請移駕建立資料","||",
+   #               "現在時間是 ", TIME
+   #
+   #CALL cl_marquee("marquee_wc",ls_value,"700","16","left","1","#FBFFF9","color: #325685; font-size: 10pt; font-weight: bold; margin-top: 2px;")
+
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_dbchange" cite_std="N" status="" ver="1" src="s" new="Y" order="7" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi001_dbchange(pc_plant)
+   DEFINE  pc_plant   LIKE ooaa_t.ooaa001
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_dbchange_topBar" cite_std="N" status="" ver="1" src="s" new="Y" order="8" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi001_dbchange_topBar()
+   DEFINE lnode_root om.DomNode
+   DEFINE lnode_tb om.DomNode
+   DEFINE lnode_tblist om.NodeList
+   DEFINE lnode_item om.DomNode
+   DEFINE lnode_itemlist om.NodeList
+   DEFINE li_i SMALLINT
+
+   CASE g_toolbar_idx
+      WHEN 0 LET g_toolbar_idx = 1
+      WHEN 1 LET g_toolbar_idx = 0
+   END CASE
+
+   LET lnode_item = gfrm_curr.findNode("HBox","topbar")
+   IF lnode_item IS NOT NULL THEN
+      CASE g_toolbar_idx
+         WHEN 0 CALL lnode_item.setAttribute("style","topBar")
+         WHEN 1 CALL lnode_item.setAttribute("style","topBar1")
+      END CASE
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_custom_program_list" cite_std="N" status="" ver="1" src="s" new="Y" order="9" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi001_custom_program_list()
+   DEFINE   ls_progdesc   STRING
+   DEFINE   ls_progimage  STRING
+   DEFINE   ls_data       STRING
+   DEFINE   ls_value      STRING
+
+
+   LET ls_value = "{'prog_id':'adzi140','prog_name':'表格設計器','prog_image':''},",
+                  "{'prog_id':'adzp168','prog_name':'畫面設計器','prog_image':''}"
+
+   IF cl_null(ls_value) THEN
+      # 目的是為了要清空畫面, 不然會殘留已經刪除的program
+      LET ls_value = "{'prog_id':'','prog_name':'','prog_image':''},"
+   END IF
+   LET ls_value = ls_value.subString(1, ls_value.getLength()-1)
+   LET ls_value = "[", ls_value, "]"
+   CALL cl_marquee_property_comp("cprogs_wc", "values", ls_value)
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_custom_program_add" cite_std="N" status="" ver="1" src="s" new="Y" order="10" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi001_custom_program_add(pc_progid)
+   DEFINE   pc_progid   LIKE gzza_t.gzza001
+   DEFINE   li_cnt      LIKE type_t.num5
+
+
+   ERROR "尚未產生規格"
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_custom_program_remove" cite_std="N" status="" ver="1" src="s" new="Y" order="11" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi001_custom_program_remove(pc_progid)
+    DEFINE   pc_progid   LIKE gzza_t.gzza001
+
+   ERROR "尚未產生規格"
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_chg_lang" cite_std="N" status="" ver="1" src="s" new="Y" order="12" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 依據多語言轉換畫面上的圖片與文字
+# Memo...........:
+# Usage..........: CALLazzi001_chg_lang()
+#                  RETURNING none
+# Input parameter: none
+# Return code....: none
+# Date & Author..: 2014/06/05 By 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_chg_lang()
+   DEFINE l_logo   STRING
+   DEFINE l_lang   LIKE gzzy_t.gzzy001
+   LET l_lang = g_lang
+   IF l_lang IS NULL THEN LET l_lang = "zh_TW" END IF
+   LET l_logo = "logo/mainpage_name_", l_lang, ".png"
+   CALL gfrm_curr.setElementImage("image_2", l_logo)
+END FUNCTION]]>
+</point>
+  <point name="free_style.variable" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[GLOBALS
+   DEFINE   g_tryerr            LIKE type_t.num5
+   DEFINE   g_validate_err      STRING
+END GLOBALS
+DEFINE   g_forupd_sql          STRING
+DEFINE   gwin_curr           ui.Window
+DEFINE   gfrm_curr           ui.Form
+DEFINE   g_sql               STRING
+DEFINE   g_cnt               LIKE type_t.num5
+DEFINE   g_adjust            LIKE type_t.chr1
+DEFINE   g_cmdtype           STRING
+DEFINE   g_search            STRING
+DEFINE   g_toolbar_idx       SMALLINT
+DEFINE   l_wcpath            STRING   # WebComponent路徑]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[IMPORT FGL azz_azzi001_01
+IMPORT JAVA java.net.URLDecoder]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[IMPORT util   #for cl_ap_url()]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[DEFINE   g_startmenu         DYNAMIC ARRAY OF RECORD
+            menuname         STRING,
+            menu_id          STRING,  
+            id               LIKE gzwe_t.gzwe002,
+            pid              LIKE gzwe_t.gzwe001,
+            image            STRING,
+            isnode           LIKE type_t.num5,
+            expanded         LIKE type_t.num5,
+            execute          LIKE type_t.num5,
+            url              STRING                 #程式網址
+                             END RECORD
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_startmenu_hidden    LIKE type_t.num5   #是否隱藏startmenu 0:否/1:是]]>
+</point>
+  <point name="main.define" cite_std="N" status="u" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[
+   IF cl_null(FGL_GETENV("GUIMODE")) OR FGL_GETENV("GUIMODE") = "GDC" THEN
+      # webComponent需在開啟視窗前設定路徑
+      LET l_wcpath = FGL_GETENV("FGLASIP"),"/components"
+      CALL ui.interface.frontCall("standard", "setwebcomponentpath",[l_wcpath],[])   #不支援GWC
+   END IF
+   CLOSE WINDOW screen
+   #為了能讓登入頁重疊在首頁上，所以先開首頁畫面
+   OPEN WINDOW w_azzi001 WITH FORM cl_ap_formpath("azz","azzi001")
+
+   #檢查登入狀態
+   #IF ui.interface.getFrontEndName() == "GWC" THEN
+
+   #IF FGL_GETENV("WEBUSER") THEN
+   IF TRUE THEN
+      IF NOT azz_azzi001_01.azzi001_01_is_login() THEN
+         CALL azz_azzi001_01.azzi001_01_login()
+      END IF
+   ELSE
+      #CALL azzi001_setenv()
+   END IF
+]]>
+</point>
+  <point name="main.init" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[
+]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <section id="azzi001.description" ver="86" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(版次:1) Build-000115
+#+ 
+#+ Filename...: azzi001
+#+ Description: GWC登入作業
+#+ Creator....: 01274(2014/04/14)
+#+ Modifier...: 01274(2014/04/18)
+#+ Buildtype..: 應用 i00 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="azzi001.global" ver="1" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+</section>
+  <section id="azzi001.main" ver="1" status="" src="m">
+<![CDATA[#+ 作業開始
+MAIN
+   #add-point:main段define
+{<point name="main.define"/>}
+   #end add-point    
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("azz","")
+ 
+   #add-point:作業初始化
+{<point name="main.init"/>}
+   #end add-point
+ 
+   #add-point:SQL_define
+{<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE azzi001_cl CURSOR FROM g_forupd_sql 
+
+{<point name="main.servicecall" />}
+   
+
+   
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   #程式初始化
+   CALL azzi001_init()   #移到cl_ui_init之後
+   
+   #進入選單 Menu (='N')
+   CALL azzi001_ui_dialog()
+   
+   #畫面關閉
+   CLOSE WINDOW w_azzi001
+
+ 
+   #add-point:作業離開前
+{<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+]]>
+</section>
+  <section id="azzi001.other_function" ver="1" status="" src="s">
+<![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+</section>
+</add_points>

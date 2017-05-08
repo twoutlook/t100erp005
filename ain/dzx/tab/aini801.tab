@@ -1,0 +1,132 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aini801" module="ain" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="01251" crtdt="2014-01-27 14:01:56" modid="02159" moddt="2016-10-19 11:11:32" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="盤點流程與進度配置作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="ined001,ined001_desc(chr80),inedunit,inedunit_desc(chr80),ined002,inedsite,inedsite_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="ined004,ined003,ined005,ined006,ined006_desc(chr500),ined007,ined008"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="inventory(chr10),inedownid,inedownid_desc(chr500),inedowndp,inedowndp_desc(chr500),inedcrtid,inedcrtid_desc(chr500),inedcrtdp,inedcrtdp_desc(chr500),inedcrtdt,inedmodid,inedmodid_desc(chr500),inedmoddt"/>
+      <var id="bs_field" value="inedunit,inedunit_desc(chr80),inedsite,inedsite_desc(chr80),ined001,ined001_desc(chr80),ined002,ined003_1(ined_t.ined003),ined003_2(ined_t.ined003)" pk="inedsite,ined001" order=""/>
+      <bs_reference field="inedunit_desc" ref_field="inedunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="inedsite_desc" ref_field="inedsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="ined001_desc" ref_field="ined001" ref_sql="SELECT inea001 FROM inea_t WHERE ineaent=$varg_enterprise$var AND ineadocno=? "/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="prog_aint800" prog="aint800" parameter="ined001"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="set_schedule"/>
+      <action id="set_pro"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="aini801" method="dialog">
+    <section id="input">
+      <input id="head" field="ined001,inedunit,ined002,inedsite"/>
+      <input id="body" page="1" field="ined004,ined003,ined005,ined006,ined007,ined008" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="ined001,inedunit,ined002,inedsite"/>
+      <construct id="body" page="1" field="ined004,ined003,ined005,ined006,ined007,ined008"/>
+      <construct id="body" page="2" field="inedownid,inedowndp,inedcrtid,inedcrtdp,inedcrtdt,inedmodid,inedmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="inedsite,ined001"/>
+      <set id="head" type="no_entry" field="inedsite,ined001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="ined001">
+        <after>
+          <reference field="ined001_desc" ref_field="ined_t.ined001" map_field="inedent,ined001" ref_sql="SELECT inea001 FROM inea_t WHERE ineaent=$varg_enterprise$var AND ineadocno=? "/>
+        </after>
+        <controlp form="q_ineadocno" state="c"/>
+      </column>
+      <column id="ined001_desc"/>
+      <column id="inedunit">
+        <after>
+          <reference field="inedunit_desc" ref_field="ined_t.inedunit" map_field="inedent,inedunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="inedunit_desc"/>
+      <column id="ined002"/>
+      <column id="inedsite">
+        <after>
+          <reference field="inedsite_desc" ref_field="ined_t.inedsite" map_field="inedent,inedunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="inedsite_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="ined004"/>
+      <column id="ined003"/>
+      <column id="ined005"/>
+      <column id="ined006">
+        <after>
+          <reference field="ined006_desc" ref_field="ined_t.ined006" map_field="ined006" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="ined006_desc"/>
+      <column id="ined007"/>
+      <column id="ined008"/>
+    </init>
+    <init id="body" page="2">
+      <column id="inventory"/>
+      <column id="inedownid">
+        <after>
+          <reference field="inedownid_desc" ref_field="ined_t.inedownid" map_field="inedownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inedownid_desc"/>
+      <column id="inedowndp">
+        <after>
+          <reference field="inedowndp_desc" ref_field="ined_t.inedowndp" map_field="inedent,inedowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_9" state="c"/>
+      </column>
+      <column id="inedowndp_desc"/>
+      <column id="inedcrtid">
+        <after>
+          <reference field="inedcrtid_desc" ref_field="ined_t.inedcrtid" map_field="inedcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inedcrtid_desc"/>
+      <column id="inedcrtdp">
+        <after>
+          <reference field="inedcrtdp_desc" ref_field="ined_t.inedcrtdp" map_field="inedent,inedcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_9" state="c"/>
+      </column>
+      <column id="inedcrtdp_desc"/>
+      <column id="inedcrtdt"/>
+      <column id="inedmodid">
+        <after>
+          <reference field="inedmodid_desc" ref_field="ined_t.inedmodid" map_field="inedmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inedmodid_desc"/>
+      <column id="inedmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="ined_t" pk="inedsite,ined001">
+      <sql id="forupd_sql" type="sql" query="SELECT ined001,&apos;&apos;,inedunit,&apos;&apos;,ined002,inedsite,&apos;&apos; FROM ined_t WHERE inedent= ? AND inedsite=? AND ined001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT ined001,&apos;&apos;,inedunit,&apos;&apos;,ined002,inedsite,&apos;&apos; FROM ined_t" order="inedsite,ined001"/>
+    </head>
+    <body id="ined_t" page="1,2" linked="" pk="ined003" fk="inedsite,ined001">
+      <sql id="forupd_sql_detail" query="SELECT ined004,ined003,ined005,ined006,&apos;&apos;,ined007,ined008,&apos;&apos;,inedownid,&apos;&apos;,inedowndp,&apos;&apos;,inedcrtid,&apos;&apos;,inedcrtdp,&apos;&apos;,inedcrtdt,inedmodid,&apos;&apos;,inedmoddt FROM ined_t WHERE inedent=? AND inedsite=? AND ined001=? AND ined003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT ined004,ined003,ined005,ined006,&apos;&apos;,ined007,ined008,&apos;&apos;,inedownid,&apos;&apos;,inedowndp,&apos;&apos;,inedcrtid,&apos;&apos;,inedcrtdp,&apos;&apos;,inedcrtdt,inedmodid,&apos;&apos;,inedmoddt FROM ined_t WHERE inedent= ? AND inedsite=? AND ined001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

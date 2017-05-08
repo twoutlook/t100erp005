@@ -1,0 +1,101 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmi127" module="apm" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="01996" crtdt="2014-01-27 10:21:52" modid="07024" moddt="2015-06-08 14:20:02" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="彈性採購價格畫面設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pmas001,gzzz001(chr500),gzzal003(chr500),gzzz001_1(chr500),gzzal003_1(chr500),pmas011,pmas003,pmas007,pmas002,pmas004,pmas008,pmas012,pmas005,pmas009,pmas013,pmas006,pmas010,pmasstus,pmasownid,pmasownid_desc(chr80),pmasowndp,pmasowndp_desc(chr80),pmascrtid,pmascrtid_desc(chr80),pmascrtdp,pmascrtdp_desc(chr80),pmascrtdt,pmasmodid,pmasmodid_desc(chr80),pmasmoddt"/>
+      <var id="bs_field" value="pmas001,gzzz001(chr80),gzzal003(chr80),gzzz001_1(chr80),gzzal003_1(chr80)" pk="pmas001" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="open_azzi910"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmi127" method="dialog">
+    <section id="input">
+      <input id="head" field="pmas001,pmas011,pmas003,pmas007,pmas002,pmas004,pmas008,pmas012,pmas005,pmas009,pmas013,pmas006,pmas010,pmasstus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pmas001,pmas011,pmas003,pmas007,pmas002,pmas004,pmas008,pmas012,pmas005,pmas009,pmas013,pmas006,pmas010,pmasstus,pmasownid,pmasowndp,pmascrtid,pmascrtdp,pmascrtdt,pmasmodid,pmasmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pmas001"/>
+      <set id="head" type="no_entry" field="pmas001"/>
+    </init>
+    <init id="head">
+      <column id="pmas001"/>
+      <column id="gzzz001"/>
+      <column id="gzzal003"/>
+      <column id="gzzz001_1"/>
+      <column id="gzzal003_1"/>
+      <column id="pmas011" type="S" default="N"/>
+      <column id="pmas003" type="S" default="N"/>
+      <column id="pmas007" type="S" default="N"/>
+      <column id="pmas002" type="S" default="N"/>
+      <column id="pmas004" type="S" default="N"/>
+      <column id="pmas008" type="S" default="N"/>
+      <column id="pmas012" type="S" default="N"/>
+      <column id="pmas005" type="S" default="N"/>
+      <column id="pmas009" type="S" default="N"/>
+      <column id="pmas013" type="S" default="N"/>
+      <column id="pmas006" type="S" default="N"/>
+      <column id="pmas010" type="S" default="N"/>
+      <column id="pmasstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pmasownid">
+        <after>
+          <reference field="pmasownid_desc" ref_field="pmas_t.pmasownid" map_field="pmasownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmasownid_desc"/>
+      <column id="pmasowndp">
+        <after>
+          <reference field="pmasowndp_desc" ref_field="pmas_t.pmasowndp" map_field="pmasowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pmasowndp_desc"/>
+      <column id="pmascrtid">
+        <after>
+          <reference field="pmascrtid_desc" ref_field="pmas_t.pmascrtid" map_field="pmascrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmascrtid_desc"/>
+      <column id="pmascrtdp">
+        <after>
+          <reference field="pmascrtdp_desc" ref_field="pmas_t.pmascrtdp" map_field="pmascrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pmascrtdp_desc"/>
+      <column id="pmascrtdt"/>
+      <column id="pmasmodid">
+        <after>
+          <reference field="pmasmodid_desc" ref_field="pmas_t.pmasmodid" map_field="pmasmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmasmodid_desc"/>
+      <column id="pmasmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pmas_t" pk="pmas001">
+      <sql id="forupd_sql" type="sql" query="SELECT pmas001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,pmas011,pmas003,pmas007,pmas002,pmas004,pmas008,pmas012,pmas005,pmas009,pmas013,pmas006,pmas010,pmasstus,pmasownid,&apos;&apos;,pmasowndp,&apos;&apos;,pmascrtid,&apos;&apos;,pmascrtdp,&apos;&apos;,pmascrtdt,pmasmodid,&apos;&apos;,pmasmoddt FROM pmas_t WHERE pmasent= ? AND pmas001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pmas001 FROM pmas_t" order="pmas001"/>
+    </head>
+  </dataset>
+</assembly>
+

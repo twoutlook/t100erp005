@@ -1,0 +1,167 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcq730" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="03297" crtdt="2014-10-10 15:49:58" modid="06816" moddt="2015-05-11 16:51:20" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="庫存成本次要素多筆查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcdccomp,xcdccomp_desc(chr80),xcdc004,xcdc001,xcdc001_desc(chr80),xcdcld,xcdcld_desc(chr80),xcdc005,xcdc003,xcdc003_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcdc002,xcdc002_desc(chr500),xcdc006,xcdc006_desc(chr500),xcdc006_desc_desc(chr500),xcdc007,xcdc008,xcdc009,xcdc009_desc(chr500),xcbb005(chr10),xcdc101,l_xcdc103(num20_6),xcdc102,xcdc201,xcdc202,xcdc280,xcdc301,xcdc302,xcdc901,xcdc902,xcdc903"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcdc002,xcdc002_2_desc(chr500),xcdc006,xcdc006_2_desc(chr500),xcdc006_2_desc_desc(chr500),xcbb005,xcdc007,xcdc008,xcdc009,xcdc009_2_desc(chr500),xcdc101,l_xcdc103_2(num20_6),xcdc102,xcdc201,xcdc202,xcdc203,xcdc204,xcdc205,xcdc206,xcdc207,xcdc208,xcdc209,xcdc210,xcdc211,xcdc212,xcdc213,xcdc214,xcdc215,xcdc216,xcdc217,xcdc218,xcdc301,xcdc302,xcdc303,xcdc304,xcdc305,xcdc306,xcdc307,xcdc308,xcdc309,xcdc310,xcdc311,xcdc312,xcdc313,xcdc314,xcdc901,xcdc902,xcdc903"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axcq730" method="dialog">
+    <section id="input">
+      <input id="head" field="xcdccomp,xcdc004,xcdc001,xcdcld,xcdc005,xcdc003"/>
+      <input id="body" page="1" field="xcdc002,xcdc006,xcdc007,xcdc008,xcdc009,xcbb005,xcdc101,l_xcdc103,xcdc102,xcdc201,xcdc202,xcdc280,xcdc301,xcdc302,xcdc901,xcdc902,xcdc903" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="l_xcdc103_2,xcdc203,xcdc204,xcdc205,xcdc206,xcdc207,xcdc208,xcdc209,xcdc210,xcdc211,xcdc212,xcdc213,xcdc214,xcdc215,xcdc216,xcdc217,xcdc218,xcdc303,xcdc304,xcdc305,xcdc306,xcdc307,xcdc308,xcdc309,xcdc310,xcdc311,xcdc312,xcdc313,xcdc314" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcdccomp,xcdc004,xcdc001,xcdcld,xcdc005,xcdc003"/>
+      <construct id="body" page="1" field="xcdc002,xcdc006,xcdc007,xcdc008,xcdc009"/>
+      <construct id="body" page="2" field="l_xcdc103_2,xcdc203,xcdc204,xcdc205,xcdc206,xcdc207,xcdc208,xcdc209,xcdc210,xcdc211,xcdc212,xcdc213,xcdc214,xcdc215,xcdc216,xcdc217,xcdc218,xcdc303,xcdc304,xcdc305,xcdc306,xcdc307,xcdc308,xcdc309,xcdc310,xcdc311,xcdc312,xcdc313,xcdc314"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcdcld,xcdc001,xcdc003,xcdc004,xcdc005"/>
+      <set id="head" type="no_entry" field="xcdcld,xcdc001,xcdc003,xcdc004,xcdc005"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcdccomp">
+        <after>
+          <check chkid="v_ooef001_1" id="isExist"/>
+          <reference field="xcdccomp_desc" ref_field="xcdc_t.xcdccomp" map_field="xcdcent,xcdccomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="xcdccomp_desc"/>
+      <column id="xcdc004"/>
+      <column id="xcdc001">
+        <after/>
+      </column>
+      <column id="xcdc001_desc"/>
+      <column id="xcdcld">
+        <after>
+          <check chkid="v_glaald" id="isExist"/>
+          <reference field="xcdcld_desc" ref_field="xcdc_t.xcdcld" map_field="xcdcent,xcdcld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xcdcld_desc"/>
+      <column id="xcdc005"/>
+      <column id="xcdc003">
+        <after>
+          <check chkid="v_xcat001" id="isExist"/>
+          <reference field="xcdc003_desc" ref_field="xcdc_t.xcdc003" map_field="xcdcent,xcdc003" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcat001" state="c"/>
+      </column>
+      <column id="xcdc003_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcdc002">
+        <after>
+          <reference field="xcdc002_desc" ref_field="xcdccomp,xcdc002" map_field="xcdccomp,xcdc002" ref_sql="SELECT xcbfl003 FROM xcbfl_t WHERE xcbflent=$varg_enterprise$var AND xcbflcomp=? AND xcbfl001=? AND xcbfl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcbf001" state="c"/>
+      </column>
+      <column id="xcdc002_desc"/>
+      <column id="xcdc006">
+        <after>
+          <reference field="xcdc006_desc" ref_field="xcdc_t.xcdc006" map_field="xcdcent,xcdc006" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imag001_2" state="c"/>
+      </column>
+      <column id="xcdc006_desc">
+        <after>
+          <reference field="xcdc006_desc_desc" ref_field="xcdc_t.xcdc006" map_field="xcdcent,xcdc006" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcdc006_desc_desc"/>
+      <column id="xcdc007">
+        <controlp form="q_bmaa002_1" state="c"/>
+      </column>
+      <column id="xcdc008">
+        <controlp form="q_inag006_2" state="c"/>
+      </column>
+      <column id="xcdc009">
+        <after>
+          <check chkid="v_xcau001" id="isExist"/>
+          <reference field="xcdc009_desc" ref_field="xcdc_t.xcdc009" map_field="xcdcent,xcdc009" ref_sql="SELECT xcaul003 FROM xcaul_t WHERE xcaulent=$varg_enterprise$var AND xcaul001=? AND xcaul002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcau001" state="c"/>
+      </column>
+      <column id="xcdc009_desc"/>
+      <column id="xcbb005">
+        <controlp form="q_imac003" state="c"/>
+      </column>
+      <column id="xcdc101"/>
+      <column id="l_xcdc103"/>
+      <column id="xcdc102"/>
+      <column id="xcdc201"/>
+      <column id="xcdc202"/>
+      <column id="xcdc280"/>
+      <column id="xcdc301"/>
+      <column id="xcdc302"/>
+      <column id="xcdc901"/>
+      <column id="xcdc902"/>
+      <column id="xcdc903"/>
+    </init>
+    <init id="body" page="2">
+      <column id="xcdc002_2_desc"/>
+      <column id="xcdc006_2_desc">
+        <after>
+          <reference field="xcdc006_2_desc_desc" ref_field="xcdc006_2" map_field="xcdcent,xcdc006" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcdc006_2_desc_desc"/>
+      <column id="xcdc009_2_desc"/>
+      <column id="l_xcdc103_2"/>
+      <column id="xcdc203"/>
+      <column id="xcdc204"/>
+      <column id="xcdc205"/>
+      <column id="xcdc206"/>
+      <column id="xcdc207"/>
+      <column id="xcdc208"/>
+      <column id="xcdc209"/>
+      <column id="xcdc210"/>
+      <column id="xcdc211"/>
+      <column id="xcdc212"/>
+      <column id="xcdc213"/>
+      <column id="xcdc214"/>
+      <column id="xcdc215"/>
+      <column id="xcdc216"/>
+      <column id="xcdc217"/>
+      <column id="xcdc218"/>
+      <column id="xcdc303"/>
+      <column id="xcdc304"/>
+      <column id="xcdc305"/>
+      <column id="xcdc306"/>
+      <column id="xcdc307"/>
+      <column id="xcdc308"/>
+      <column id="xcdc309"/>
+      <column id="xcdc310"/>
+      <column id="xcdc311"/>
+      <column id="xcdc312"/>
+      <column id="xcdc313"/>
+      <column id="xcdc314"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcdc_t" pk="xcdcld,xcdc001,xcdc003,xcdc004,xcdc005">
+      <sql id="forupd_sql" type="sql" query="SELECT xcdccomp,&apos;&apos;,xcdc004,xcdc001,&apos;&apos;,xcdcld,&apos;&apos;,xcdc005,xcdc003,&apos;&apos; FROM xcdc_t WHERE xcdcent= ? AND xcdcld=? AND xcdc001=? AND xcdc003=? AND xcdc004=? AND xcdc005=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcdccomp,&apos;&apos;,xcdc004,xcdc001,&apos;&apos;,xcdcld,&apos;&apos;,xcdc005,xcdc003,&apos;&apos; FROM xcdc_t" order="xcdcld,xcdc001,xcdc003,xcdc004,xcdc005"/>
+    </head>
+    <body id="xcdc_t" page="1,2" linked="" pk="xcdc002,xcdc006,xcdc007,xcdc008,xcdc009" fk="xcdcld,xcdc001,xcdc003,xcdc004,xcdc005">
+      <sql id="forupd_sql_detail" query="SELECT xcdc002,&apos;&apos;,xcdc006,&apos;&apos;,&apos;&apos;,xcdc007,xcdc008,xcdc009,&apos;&apos;,&apos;&apos;,xcdc101,&apos;&apos;,xcdc102,xcdc201,xcdc202,xcdc280,xcdc301,xcdc302,xcdc901,xcdc902,xcdc903,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcdc203,xcdc204,xcdc205,xcdc206,xcdc207,xcdc208,xcdc209,xcdc210,xcdc211,xcdc212,xcdc213,xcdc214,xcdc215,xcdc216,xcdc217,xcdc218,&apos;&apos;,&apos;&apos;,xcdc303,xcdc304,xcdc305,xcdc306,xcdc307,xcdc308,xcdc309,xcdc310,xcdc311,xcdc312,xcdc313,xcdc314,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xcdc_t WHERE xcdcent=? AND xcdcld=? AND xcdc001=? AND xcdc003=? AND xcdc004=? AND xcdc005=? AND xcdc002=? AND xcdc006=? AND xcdc007=? AND xcdc008=? AND xcdc009=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcdc002,&apos;&apos;,xcdc006,&apos;&apos;,&apos;&apos;,xcdc007,xcdc008,xcdc009,&apos;&apos;,&apos;&apos;,xcdc101,&apos;&apos;,xcdc102,xcdc201,xcdc202,xcdc280,xcdc301,xcdc302,xcdc901,xcdc902,xcdc903,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcdc203,xcdc204,xcdc205,xcdc206,xcdc207,xcdc208,xcdc209,xcdc210,xcdc211,xcdc212,xcdc213,xcdc214,xcdc215,xcdc216,xcdc217,xcdc218,&apos;&apos;,&apos;&apos;,xcdc303,xcdc304,xcdc305,xcdc306,xcdc307,xcdc308,xcdc309,xcdc310,xcdc311,xcdc312,xcdc313,xcdc314,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xcdc_t WHERE xcdcent= ? AND xcdcld=? AND xcdc001=? AND xcdc003=? AND xcdc004=? AND xcdc005=?"/>
+    </body>
+  </dataset>
+</assembly>
+

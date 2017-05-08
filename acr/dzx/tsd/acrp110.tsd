@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="acrp110" std_prog="acrp110" erpver="1.0" ver="1" module="ACR" booking="Y" class="p" template="P001_00" env="s" zone="t10dev">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 会员生命周期评估作业
+作業功能：說明/離開
+作業類型：批次作業
+輸入模式： 
+作業資料來源(Master)：
+ 資料來源表：decc_t(会员日结档)
+                        oocq_t 会员生命周期编号维护作业   应用分类码 2112
+                       
+       寫入: crdd_t 会员生命周期评估记录档
+  
+
+资料处理:
+0.会员生命周期评估作业 (acrp110)
+
+0-2.注意效能问题
+   (1)先将会员日结数据依条件存放至temp table中，再由temp table 捞取资料计算统计
+   (2)TEMP TABLE 必须要建立INDEX 效率才能提升
+   (3)INDEX 会影响 INSERT 的效能，所以temp table 建立时先不建立INDEX，待明细数据都INSERT完毕后，于SELECT/UPDATE前再建立INDEX
+   (4)SQL 语法中，勿使用<>及IN，此2个条件式会让SQL效能变差
+   (5)数据处理应避免用FOREACH 一笔一笔处理，数据量大时会让效能整个拖垮，能以SQL让数据库处理尽量就让数据库处理
+   (6)尽量避免重复一直SELECT 大量资料的TABLE,如料件/门店清单
+   (7)将来写入实体汇总表如速度变慢(PK字段多时会造成写入的效能变差)，可在写入前先将PK删除后，于写入完后再将PK建立来起来
+
+
+1.校验:
+(1)年度/期别默认为当前年度/期别的上一个年度期别
+(2)年度/期别不可大于当前年度/期别
+
+2.批处理顺序:
+  (1)建立TEMP TABLE 存放会员日结档相关信息 (先将会员日结相关信息写入TEMP TABLE后，再直接针对TEMP TABLE处理，效能比直接抓实体明细TABLE处理好)
+  (2)依条件将会员日结档 资料写入TEMP TABLE <--包成一个共享FUNCTION
+  (3)建立TEMP TABLE INDEX
+  (4)不同统计维度的程序处理段写成不同的统计汇总FUNCTION，各自计算写入相关的统计档中
+  (4.1)先将要写入的实体统计文件建成temp table (以Temp Table处理可避免用FOREACH循环一笔一笔处理)
+  (4.2)以SQL 语法 INSERT INTO 目的Temp Table SELECT 来源temp table GROUP BY 汇总维度
+  (4.3)处理目的Temp Table中的Reference相关字段
+  (4.4)INSERT INTO 实体Table SELECT * FROM 目的TEMP TABLE
+  (5)依传入参数CALL统计汇总FUNCTION处理统计信息
+
+3.抓取销售数据储存于TEMP TABLE 供后续统计使用
+  3-1.CREATE TEMP TABLE  #先不建INDEX, (INDEX于将数据都存入Temp Table后再建,语法勿用<> / IN)
+      1） 建立 "会员生命周期记录档" TEMP TABLE
+        crdd_temp 表结构 like crdd_t
+
+  3-2.抓取日结资料数据至TempTable中供后续处理:
+    
+   1） INSERT INTO crdd_tmp 
+       SELECT 对应的decc 字段 FROM 会员资料档，left join 会员日结档decc_t    #有可能某些会员无日结档，没有都当成0处理
+        WHERE table关联
+          AND 画面QBE条件
+      注意：统计日期范围是办卡日期开始到该统计周期的期末
+       比如统计2014年第4期  则最后一天为 14/04/30
+ 
+
+   3-3. 建立TempTable Index
+
+   3-4. UPDATE 销售明细TEMP TABLE的属性相关字段(不可用FOREACH方式)
+  ---------------------acrp110 会员生命周期评估-begin----------------------------------------------------   
+    注意： 办卡月数指会员注册日期截至到统计周期末期的间距月数
+           购物次数：sum（单据数) 
+           会员生命周期：参考作业acri008
+           根据办卡月数和购物次数来评定属于哪个会员生命周期，尽量用批量更新的方式进行处理
+  ---------------------acrp110 会员生命周期评估-end----------------------------------------------------       
+      
+
+4.回写资料到会员基本资料档-主档 mmaf_t
+     先判断crdc_t中是否存在比（画面上处理条件）年度/期别大的会员生命周期评估记录资料，如果存在则不更新，否则更新到会员基本资料档-主档 mmaf_t.mmaf021 (此判断可以保证会员基本资料档为最新评估的资料）
+
+5.依传入参数作业类型，抓取TEMP TABLE 资料做统计，写入对应的作业统计档 
+  参数值: 
+
+         (1):会员生命周期评估记录档
+            写入:crdd_t 会员生命周期评估记录档
+
+
+
+   ※4-1.先判断会员编号是否已存在对应周期内的数据，如已存在，判断参数是否可重复产生
+         参数设定不可重复产生，则 STEP 下一个 会员编号+统计周期
+     
+     4-2.INSERT INTO crdd_t SELECT * FROM crdd_tmp
+
+
+
+]]>
+  </all>
+  <field cite_std="N" name="check11" ver="1" src="s" column="chr1" table="type_t" attribute="T001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default=" Y" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[默认为Y
+可以修改，不可为空
+]]>
+  </field>
+  <field cite_std="N" name="mmaf_t.mmaf001" ver="1" src="s" column="mmaf001" table="mmaf_t" attribute="C602" type="varchar2(30)" req="N" i_zoom="" c_zoom="q_mmaf001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[开窗参考：q_mmaf001  多值回传 
+可为空，为空则表示统计全部会员]]>
+  </field>
+  <field cite_std="N" name="month11" ver="1" src="s" column="num5" table="type_t" attribute="T051" type="number(5,0)" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[默认为上一个期别，如果当前为第一期别，则年度减1 期别为上一年度最后一期别
+]]>
+  </field>
+  <field cite_std="N" name="year11" ver="1" src="s" column="num5" table="type_t" attribute="T051" type="number(5,0)" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[
+要根据月份/期别来显示年度
+]]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="check11" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmaf_t.mmaf001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="month11" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="year11" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="group_qbe" text="QBE條件" lstr=""/>
+    <sfield name="lbl_mmaf001" text="會員編號" lstr=""/>
+    <sfield name="acrp110.group_1" text="處理條件" lstr=""/>
+    <sfield name="lbl_year11" text="年度" lstr=""/>
+    <sfield name="lbl_month11" text="期別" lstr=""/>
+    <sfield name="lbl_check11" text="已存在評估資料刪除重新評估" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_collect_gzze001" text="訊息代碼" lstr=""/>
+    <sfield name="lbl_collect_gzze003" text="訊息內容" lstr=""/>
+    <sfield name="lbl_collect_gzze006" text="進階訊息" lstr=""/>
+    <sfield name="lbl_cl_err_s02_accept" text="確定" lstr=""/>
+    <sfield name="lbl_err_detail" text="進階訊息" lstr=""/>
+    <sfield name="lbl_suggest_exe" text="建議執行" lstr=""/>
+    <sfield name="lbl_err_contact" text="反應問題" lstr=""/>
+    <sfield name="lbl_cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="lbl_group_cl_err_s01" text="進階訊息" lstr=""/>
+    <sfield name="lbl_gzze001" text="訊息代碼:" lstr=""/>
+    <sfield name="lbl_gzze006" text="訊息內容:" lstr=""/>
+    <sfield name="lbl_sqlerrd2" text="SQL錯誤碼:" lstr=""/>
+    <sfield name="lbl_gzpd001" text="排程執行序號" lstr=""/>
+    <sfield name="lbl_gzpd002" text="排程編號" lstr=""/>
+    <sfield name="lbl_gzpd003" text="序號" lstr=""/>
+    <sfield name="lbl_gzpd004" text="執行作業" lstr=""/>
+    <sfield name="lbl_gzpd005" text="傳入參數" lstr=""/>
+    <sfield name="lbl_gzpc006" text="執行結束時間" lstr=""/>
+    <sfield name="lbl_gzpd007" text="作業執行狀態" lstr=""/>
+    <sfield name="lbl_gzpd008" text="作業執行時間" lstr=""/>
+    <sfield name="lbl_gzpd009" text="執行使用者編號" lstr=""/>
+    <sfield name="lbl_gzpd010" text="作業完成時間" lstr=""/>
+    <sfield name="btn_schedule_reexec" text="重新執行" lstr=""/>
+    <sfield name="btn_view" text="重新查看" lstr=""/>
+    <sfield name="btn_schedule_adv" text="進階查詢" lstr=""/>
+    <sfield name="lbl_gzpa003" text="執行類型" lstr=""/>
+    <sfield name="lbl_gzpa002" text="排程說明" lstr=""/>
+    <sfield name="lbl_asign" text="指定時間執行" lstr=""/>
+    <sfield name="lbl_gzpa007" text="預定執行時間" lstr=""/>
+    <sfield name="lbl_exec" text="執行時間設定" lstr=""/>
+    <sfield name="lbl_wk1" text="第一週" lstr=""/>
+    <sfield name="lbl_wk2" text="第二週" lstr=""/>
+    <sfield name="lbl_wk3" text="第三週" lstr=""/>
+    <sfield name="lbl_wk4" text="第四週" lstr=""/>
+    <sfield name="lbl_wk5" text="第五週" lstr=""/>
+    <sfield name="lbl_wd0" text="週日" lstr=""/>
+    <sfield name="lbl_wd1" text="週一" lstr=""/>
+    <sfield name="lbl_wd2" text="週二" lstr=""/>
+    <sfield name="lbl_wd3" text="週三" lstr=""/>
+    <sfield name="lbl_wd4" text="週四" lstr=""/>
+    <sfield name="lbl_wd5" text="週五" lstr=""/>
+    <sfield name="lbl_wd6" text="週六" lstr=""/>
+    <sfield name="lbl_dayend" text="月底" lstr=""/>
+    <sfield name="lbl_sc1" text="時段一" lstr=""/>
+    <sfield name="lbl_to" text="至" lstr=""/>
+    <sfield name="lbl_per" text="每" lstr=""/>
+    <sfield name="lbl_times" text="執行一次" lstr=""/>
+    <sfield name="lbl_sc2" text="時段二" lstr=""/>
+    <sfield name="lbl_sc3" text="時段三" lstr=""/>
+    <sfield name="lbl_spec" text="特殊指定" lstr=""/>
+    <sfield name="lbl_gzpa029" text="執行日遇到假日" lstr=""/>
+    <sfield name="lbl_gzpa031" text="前一程序未完成時不執行新程序" lstr=""/>
+    <sfield name="lbl_end_call" text="執行結束通知人員" lstr=""/>
+    <sfield name="lbl_gzpe003" text="執行狀況" lstr=""/>
+    <sfield name="lbl_gzpe004" text="收件人員工編號" lstr=""/>
+    <sfield name="lbl_gzpe004_desc" text="員工姓名" lstr=""/>
+    <sfield name="lbl_addr" text="收件人信件位址" lstr=""/>
+    <sfield name="lbl_gzpe005" text="信件主旨" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_mmaf008" text="會員姓名" lstr=""/>
+    <sfield name="lbl_mmaf015" text="會員出生日期" lstr=""/>
+    <sfield name="lbl_mmaf014" text="會員手機號碼" lstr=""/>
+    <sfield name="lbl_gzxm001" text="QBE編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm005" text="設為首頁-自動查詢方案" lstr=""/>
+    <sfield name="lbl_gzxm002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxm003" text="員工編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm004" text="設為預設查詢條件" lstr=""/>
+    <sfield name="cl_qbe_s02.bpage_1" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn005" text="欄位說明" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="cl_qbe_s02_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s02_Cancel" text="取消" lstr=""/>
+    <sfield name="lbl_funid" text="函式代碼" lstr=""/>
+    <sfield name="lbl_fundesc" text="函式說明" lstr=""/>
+    <sfield name="cl_qbe_s01_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s01_Cancel" text="取消" lstr=""/>
+    <sfield name="cl_qbe_s03.bpage_1" text="查詢方案列表" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxmstus" text="有效" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm004" text="預設" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm005" text="顯示於首頁" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm009" text="順序" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxml005" text="查詢方案說明" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm007" text="自設SQL條件" lstr=""/>
+    <sfield name="cl_qbe_s03.page_2" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn004" text="序號" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn005" text="條件欄位" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="add_favorite_catalog" text="新增目錄" lstr=""/>
+    <sfield name="modify_favorite_desc" text="修改" lstr=""/>
+    <sfield name="favorite_del" text="移除" lstr=""/>
+    <sfield name="add_catalog" text="" lstr=""/>
+    <sfield name="accept" text="確定" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" lstr=""/>
+    <sfield name="cl_ask_s04_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s03_Test" text="測試" lstr=""/>
+    <sfield name="cl_ask_s03_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s01_Choice" text="選擇" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_ooag001" text="員工編號" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

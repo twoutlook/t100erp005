@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapp832" module="aap" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="02114" crtdt="2016-01-07 18:29:31" modid="02114" moddt="2016-01-08 10:13:31" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="供應商費用分攤作業(零售)">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="apddsite,apddsite_desc(chr80),apddcomp,apddcomp_desc(chr80),stbadocno,stbadocdt,apdd001,apdd002,apdddocno,stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="aap" filename="aapp832" method="dialog">
+    <section id="input">
+      <input id="head" field="apddsite,apddcomp,stbadocno,stbadocdt"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="apdd001,apdd002,apdddocno"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="apddsite">
+        <after>
+          <reference field="apddsite_desc" ref_field="apdd_t.apddsite" map_field="apddsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="apddsite_desc"/>
+      <column id="apddcomp">
+        <after>
+          <reference field="apddcomp_desc" ref_field="apdd_t.apddcomp" map_field="apddcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="apddcomp_desc"/>
+      <column id="stbadocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_stbadocno" state="c"/>
+      </column>
+      <column id="stbadocdt"/>
+      <column id="apdd001"/>
+      <column id="apdd002"/>
+      <column id="apdddocno"/>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

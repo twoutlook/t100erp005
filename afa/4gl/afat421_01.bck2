@@ -1,0 +1,532 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="afat421_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2016-05-25 17:44:15), PR版次:0004(1900-01-01 00:00:00)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000069
+#+ Filename...: afat421_01
+#+ Description: 自動產生
+#+ Creator....: 02003(2015-02-05 16:39:32)
+#+ Modifier...: 06821 -SD/PR- 00000
+ 
+{</section>}
+ 
+{<section id="afat421_01.global" >}
+#應用 c01c 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#+ Modifier...: 160318-00025#28  2016/04/05  By pengxin  修正azzi920重复定义之错误讯息
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+DEFINE g_rec_b               LIKE type_t.num10
+DEFINE g_wc                  STRING
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_fabadocno           LIKE faba_t.fabadocno
+DEFINE g_faba001             LIKE faba_t.faba001
+DEFINE g_faba003             LIKE faba_t.faba003
+DEFINE g_faba     RECORD LIKE faba_t.*
+DEFINE g_faah025             LIKE faah_t.faah025
+DEFINE g_faah026             LIKE faah_t.faah026
+DEFINE g_faah027             LIKE faah_t.faah027
+DEFINE g_faah025_desc        LIKE type_t.chr50
+DEFINE g_faah026_desc        LIKE type_t.chr50
+DEFINE g_faah027_desc        LIKE type_t.chr50
+DEFINE g_fabb013             LIKE fabb_t.fabb013
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point  
+ 
+{</section>}
+ 
+{<section id="afat421_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION afat421_01(--)
+   #add-point:construct段變數傳入
+   p_fabadocno,p_faba001,p_faba003
+   #end add-point
+   )
+   #add-point:construct段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   #add-point:construct段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE p_fabadocno     LIKE faba_t.fabadocno
+   DEFINE p_faba001       LIKE faba_t.faba001
+   DEFINE p_faba003       LIKE faba_t.faba003
+   DEFINE l_origin_str    STRING
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_afat421_01 WITH FORM cl_ap_formpath("afa","afat421_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   LET g_fabadocno = p_fabadocno
+   LET g_faba001 = p_faba001
+   LET g_faba003 = p_faba003
+   LET g_fabb013 = 'N'
+   SELECT * INTO g_faba.* FROM faba_t WHERE fabaent = g_enterprise AND fabadocno = g_fabadocno
+   CALL s_fin_create_account_center_tmp() 
+   CALL s_fin_account_center_sons_query('5',g_faba.fabasite,g_faba.fabadocdt,'1')
+   CALL s_fin_account_center_comp_str() RETURNING l_origin_str
+   CALL afat421_01_change_to_sql(l_origin_str)RETURNING l_origin_str
+   LET l_origin_str = "(",l_origin_str,")"   
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      CONSTRUCT BY NAME g_wc ON faah001,faah003,faah004,faah026,faah025,faah027 
+      
+            #add-point:自定義action
+            ON ACTION controlp INFIELD faah001
+               #此段落由子樣板a08產生
+               #開窗c段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+			      LET g_qryparam.reqry = FALSE
+		         LET g_qryparam.where = " faahstus = 'Y' AND faah028 IN ( SELECT ooef001 FROM ooef_t ",
+		                                "                                  WHERE ooefent = ",g_enterprise,
+		                                "                                    AND ooef017 = '",g_faba.fabacomp,"'",
+		                                "                                    AND ooef001 IN ",l_origin_str,")",
+		                                " AND faah015 NOT IN ('5','6','10')"
+               CALL q_faah001()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO faah001  #顯示到畫面上
+               
+               NEXT FIELD faah001                     #返回原欄位
+            
+            ON ACTION controlp INFIELD faah003
+               #此段落由子樣板a08產生
+               #開窗c段
+			      INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.where = " faahstus = 'Y' AND faah028 IN ( SELECT ooef001 FROM ooef_t ",
+		                                "                                  WHERE ooefent = ",g_enterprise,
+		                                "                                    AND ooef017 = '",g_faba.fabacomp,"'",
+		                                "                                    AND ooef001 IN ",l_origin_str,")",
+		                                " AND faah015 NOT IN ('5','6','10')"
+               CALL q_faah003()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO faah003  #顯示到畫面上
+               
+               NEXT FIELD faah003                     #返回原欄位
+               
+            ON ACTION controlp INFIELD faah004
+               #此段落由子樣板a08產生
+               #開窗c段
+			      INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.where = " faahstus = 'Y' AND faah028 IN ( SELECT ooef001 FROM ooef_t ",
+		                                "                                  WHERE ooefent = ",g_enterprise,
+		                                "                                    AND ooef017 = '",g_faba.fabacomp,"'",
+		                                "                                    AND ooef001 IN ",l_origin_str,")",
+		                                " AND faah015 NOT IN ('5','6','10')"
+               CALL q_faah004()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO faah004  #顯示到畫面上
+               
+               NEXT FIELD faah004                     #返回原欄位
+            
+           ON ACTION controlp INFIELD faah025
+			     INITIALIZE g_qryparam.* TO NULL
+              LET g_qryparam.state = 'c'
+			     LET g_qryparam.reqry = FALSE
+              CALL q_ooag001()                           #呼叫開窗
+              DISPLAY g_qryparam.return1 TO faah025 
+              NEXT FIELD faah025                     #返回原欄位
+               
+           ON ACTION controlp INFIELD faah026
+			     INITIALIZE g_qryparam.* TO NULL
+              LET g_qryparam.state = 'c'
+			     LET g_qryparam.reqry = FALSE
+              LET g_qryparam.arg1 = g_today
+              CALL q_ooeg001_4()
+              DISPLAY g_qryparam.return1 TO faah026
+              NEXT FIELD faah026
+              
+           ON ACTION controlp INFIELD faah027
+			     INITIALIZE g_qryparam.* TO NULL
+              LET g_qryparam.state = 'c'
+			     LET g_qryparam.reqry = FALSE
+			     LET g_qryparam.arg1 = '3900'
+              CALL q_oocq002()                           #呼叫開窗
+              DISPLAY g_qryparam.return1 TO faah027  #顯示到畫面上
+              NEXT FIELD faah027
+            #end add-point
+      
+         BEFORE CONSTRUCT
+            #add-point:單頭輸入前處理
+            
+            #end add-point
+            
+         AFTER CONSTRUCT
+            #add-point:單頭輸入後處理
+            IF NOT INT_FLAG THEN
+               IF g_wc = " 1=1" THEN 
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'afa-00417'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err() 
+                  NEXT FIELD faah001
+               END IF
+            END IF 
+            #end add-point
+            
+         
+ 
+         
+       
+      END CONSTRUCT
+ 
+      #add-point:自定義construct
+      INPUT g_faah026,g_faah025,g_faah027,g_fabb013 FROM b_faah026,b_faah025,b_faah027,fabb013 ATTRIBUTE(WITHOUT DEFAULTS)
+      
+         AFTER FIELD b_faah025
+            IF NOT cl_null(g_faah025) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_errshow = TRUE #是否開窗 #160318-00025#28  add
+               LET g_chkparam.arg1 = g_faah025
+               LET g_chkparam.err_str[1] = "aim-00070:sub-01302|aooi130|",cl_get_progname("aooi130",g_lang,"2"),"|:EXEPROGaooi130"#要執行的建議程式待補#160318-00025#28  add
+               IF cl_chk_exist("v_ooag001") THEN
+               ELSE
+                  LET g_faah025 = ''
+                  DISPLAY g_faah025 TO b_faah025
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_faah025
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_faah025_desc = '', g_rtn_fields[1] , ''
+            DISPLAY g_faah025_desc TO b_faah025_desc
+            
+         AFTER FIELD b_faah026
+            IF NOT cl_null(g_faah026) THEN 
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_errshow = TRUE #是否開窗 #160318-00025#28  add
+               LET g_chkparam.arg1 = g_faah026
+               LET g_chkparam.arg2 = g_today
+               LET g_chkparam.err_str[1] = "aoo-00029:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"#要執行的建議程式待補#160318-00025#28  add
+               IF cl_chk_exist("v_ooeg001_3") THEN
+               ELSE
+                  LET g_faah026 =''
+                  DISPLAY g_faah026 TO b_faah026
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            LET g_ref_fields[1] = g_faah026
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_faah026_desc = '', g_rtn_fields[1] , ''
+            DISPLAY g_faah026_desc TO b_faah026_desc
+
+         AFTER FIELD b_faah027
+            IF NOT cl_null(g_faah027) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_faah027
+               IF cl_chk_exist("v_oocq002_3900") THEN
+               ELSE
+                  LET g_faah027 = ''
+                  DISPLAY g_faah027 TO b_faah027
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_faah027
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='3900' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_faah027_desc = '', g_rtn_fields[1] , ''
+            DISPLAY g_faah027_desc TO b_faah027_desc
+            
+            
+         ON ACTION controlp INFIELD b_faah026
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_faah026
+            #給予arg
+            LET g_qryparam.arg1 = g_today
+            CALL q_ooeg001_4()
+            LET g_faah026 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_faah026
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_faah026_desc = '', g_rtn_fields[1] , ''
+            DISPLAY g_faah026 TO b_faah026              #顯示到畫面上
+            DISPLAY g_faah026_desc TO b_faah026_desc
+            NEXT FIELD b_faah026                          #返回原欄位
+
+         ON ACTION controlp INFIELD b_faah025
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_faah025             #給予default值
+            CALL q_ooag001()
+            LET g_faah025 = g_qryparam.return1              
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_faah025
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_faah025_desc = '', g_rtn_fields[1] , ''
+            DISPLAY g_faah025 TO b_faah025              #
+            DISPLAY g_faah025_desc TO b_faah025_desc  
+            NEXT FIELD b_faah025 
+            
+         ON ACTION controlp INFIELD b_faah027
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_faah027
+            LET g_qryparam.arg1 = "3900" 
+            CALL q_oocq002()          
+            LET g_faah027 = g_qryparam.return1              
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_faah027
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='3900' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_faah027_desc = '', g_rtn_fields[1] , ''
+            DISPLAY g_faah027 TO b_faah027
+            DISPLAY g_faah027_desc TO b_faah027_desc
+            NEXT FIELD b_faah027    
+            
+      END INPUT 
+      #end add-point
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+         
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+   ELSE
+      CALL afat421_01_fabb_ins()
+   END IF
+   #end add-point 
+   
+   #畫面關閉
+   CLOSE WINDOW w_afat421_01 
+   
+   #add-point:construct段after construct 
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afat421_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="afat421_01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 整批自動生成到單身
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afat421_01_fabb_ins()
+DEFINE  l_sql        STRING
+DEFINE  l_faah       RECORD LIKE faah_t.*
+DEFINE  l_fabb       RECORD LIKE fabb_t.*
+DEFINE  l_ooag004    LIKE ooag_t.ooag004
+DEFINE  l_origin_str  STRING
+DEFINE  tok        base.StringTokenizer
+DEFINE  l_str      STRING
+DEFINE  l_n        LIKE type_t.num5
+DEFINE  l_glaald   LIKE glaa_t.glaald
+
+   SELECT * INTO g_faba.* FROM faba_t WHERE fabaent = g_enterprise AND fabadocno = g_fabadocno
+   #獲取主帳套
+   SELECT glaald INTO l_glaald
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaacomp = g_faba.fabacomp
+      AND glaa014 = 'Y' 
+   CALL s_fin_create_account_center_tmp() 
+   CALL s_fin_account_center_sons_query('5',g_faba.fabasite,g_faba.fabadocdt,'1')
+   CALL s_fin_account_center_comp_str() RETURNING l_origin_str
+   
+   CALL afat421_01_change_to_sql(l_origin_str)RETURNING l_origin_str
+   LET l_origin_str = "(",l_origin_str,")"
+   LET l_sql = " SELECT * FROM faah_t",
+               "  WHERE faahent = ",g_enterprise," AND faahstus = 'Y' ",
+               "    AND faah028 IN ( SELECT ooef001 FROM ooef_t WHERE ooefent = ",g_enterprise,
+               "    AND ooef017 = '",g_faba.fabacomp,"' AND ooef001 IN ",l_origin_str,")",
+               "    AND faah015 NOT IN ('5','6','10') ",
+               "    AND ",g_wc CLIPPED
+   PREPARE afat421_01_faah_prep FROM l_sql
+   DECLARE afat421_01_faah_curs CURSOR FOR afat421_01_faah_prep
+   
+   FOREACH afat421_01_faah_curs INTO l_faah.*
+      LET l_n = 0
+      #检查是否已存在未审核的faab资料档中
+      SELECT COUNT(*) INTO l_n FROM faba_t,fabb_t
+       WHERE fabaent = fabbent 
+         AND fabadocno = fabbdocno
+         AND fabbent = g_enterprise
+         AND fabbdocno <> g_faba.fabadocno
+         AND faba003 = '27'
+         AND fabb001 = l_faah.faah003
+         AND fabb002 = l_faah.faah004
+         AND fabb000 = l_faah.faah001
+         AND fabastus = 'N'
+      IF l_n > 0 THEN 
+         CONTINUE FOREACH 
+      END IF 
+      SELECT MAX(fabbseq) INTO l_fabb.fabbseq   FROM fabb_t
+       WHERE fabbent = g_enterprise AND fabbdocno = g_fabadocno
+      IF cl_null(l_fabb.fabbseq) THEN
+         LET l_fabb.fabbseq = 1
+      ELSE
+         LET l_fabb.fabbseq = l_fabb.fabbseq +1
+      END IF
+      LET l_fabb.fabbent = g_enterprise
+      LET l_fabb.fabbcomp = g_faba.fabacomp
+      LET l_fabb.fabbdocno = g_fabadocno
+      LET l_fabb.fabblegl = l_faah.faah031
+      LET l_fabb.fabb000 = l_faah.faah001
+      LET l_fabb.fabb001 = l_faah.faah003
+      LET l_fabb.fabb002 = l_faah.faah004
+      #部門、人員、存放位置舊值
+      LET l_fabb.fabb010 = l_faah.faah026
+      LET l_fabb.fabb011 = l_faah.faah025
+      LET l_fabb.fabb012 = l_faah.faah027
+      IF NOT cl_null(g_faah025) THEN 
+         LET l_fabb.fabb004 = g_faah025
+      ELSE
+         LET l_fabb.fabb004 = l_fabb.fabb011
+      END IF 
+      IF NOT cl_null(g_faah026) THEN 
+         LET l_fabb.fabb003 = g_faah026
+      ELSE
+         LET l_fabb.fabb003 = l_fabb.fabb010
+      END IF 
+      IF NOT cl_null(g_faah027) THEN 
+         LET l_fabb.fabb009 = g_faah027
+      ELSE
+         LET l_fabb.fabb009 = l_fabb.fabb012
+      END IF 
+      LET l_fabb.fabb013 = g_fabb013
+      
+      #獲取科目舊值
+      SELECT faaj023,faaj024,faaj025,faaj026
+        INTO l_fabb.fabb014,l_fabb.fabb016,l_fabb.fabb018,l_fabb.fabb020
+        FROM faaj_t
+       WHERE faajent = g_enterprise
+         AND faaj001 = l_faah.faah003
+         AND faaj002 = l_faah.faah004
+         AND faaj037 = l_faah.faah001
+         AND faajld = l_glaald
+         
+      LET l_fabb.fabb015 = l_fabb.fabb014
+      LET l_fabb.fabb017 = l_fabb.fabb016
+      LET l_fabb.fabb019 = l_fabb.fabb018
+      LET l_fabb.fabb021 = l_fabb.fabb020
+      LET l_fabb.fabb023 = l_faah.faah028
+      LET l_fabb.fabb024 = l_faah.faah028
+      LET l_fabb.fabb025 = l_faah.faah030
+      LET l_fabb.fabb026 = l_faah.faah030
+      LET l_fabb.fabb027 = l_faah.faah031
+      LET l_fabb.fabb028 = l_faah.faah031
+      INSERT INTO fabb_t VALUES(l_fabb.*)
+   END FOREACH
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION afat421_01_change_to_sql(p_wc)
+   DEFINE p_wc       STRING
+   DEFINE r_wc       STRING
+   DEFINE tok        base.StringTokenizer
+   DEFINE l_str      STRING
+
+   LET tok = base.StringTokenizer.create(p_wc,",")
+   WHILE tok.hasMoreTokens()
+      IF cl_null(l_str) THEN
+         LET l_str = tok.nextToken()
+      ELSE
+         LET l_str = l_str,"','",tok.nextToken()
+      END IF
+   END WHILE
+   LET r_wc = "'",l_str,"'"
+
+   RETURN r_wc
+
+END FUNCTION
+
+ 
+{</section>}
+ 

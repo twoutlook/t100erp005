@@ -1,0 +1,166 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcq802" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="03297" crtdt="2014-11-07 15:44:53" modid="02040" moddt="2016-12-28 16:09:30" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="在製貨齡查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcflcomp,xcflcomp_desc(chr80),xcfl003,xcfl004,xccc001(chr1),xccc001_desc(chr80),xcfc013(chr10),xcfc013_desc(chr80),xcflld,xcflld_desc(chr80),xcfl002,xcfl002_desc(chr80),xcfa004(chr1)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xccd007(chr500),xcfl005,xcfl006,xcfl006_desc(chr500),xcfl006_desc_desc(chr500),xcfl007,xcfl008,xcfl001,xcfl001_desc(chr500),xcfb010(chr10),xcfb010_desc(chr500),xcfl009,xcce901(num20_6),xccc280(num20_6),l_amount(num20_6),l_idle(num20_6),l_qty1(chr20),l_amt1(num20_6),l_rate1(num20_6),l_idle1(num20_6),l_qty2(chr20),l_amt2(num20_6),l_rate2(num20_6),l_idle2(num20_6),l_qty3(chr20),l_amt3(num20_6),l_rate3(num20_6),l_idle3(num20_6),l_qty4(chr20),l_amt4(num20_6),l_rate4(num20_6),l_idle4(num20_6),l_qty5(chr20),l_amt5(num20_6),l_rate5(num20_6),l_idle5(num20_6),l_qty6(chr20),l_amt6(num20_6),l_rate6(num20_6),l_idle6(num20_6),l_qty7(chr20),l_amt7(num20_6),l_rate7(num20_6),l_idle7(num20_6),l_qty8(chr20),l_amt8(num20_6),l_rate8(num20_6),l_idle8(num20_6),l_qty9(chr20),l_amt9(num20_6),l_rate9(num20_6),l_idle9(num20_6),l_qty10(chr20),l_amt10(num20_6),l_rate10(num20_6),l_idle10(num20_6)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axcq802" method="dialog">
+    <section id="input">
+      <input id="head" field="xcflcomp,xcfl003,xcfl004,xccc001,xcfc013,xcflld,xcfl002,xcfa004"/>
+      <input id="body" page="1" field="xccd007,xcfl005,xcfl006,xcfl007,xcfl008,xcfl001,xcfb010,xcfl009,xcce901,xccc280,l_amount,l_idle,l_qty1,l_amt1,l_rate1,l_idle1,l_qty2,l_amt2,l_rate2,l_idle2,l_qty3,l_amt3,l_rate3,l_idle3,l_qty4,l_amt4,l_rate4,l_idle4,l_qty5,l_amt5,l_rate5,l_idle5,l_qty6,l_amt6,l_rate6,l_idle6,l_qty7,l_amt7,l_rate7,l_idle7,l_qty8,l_amt8,l_rate8,l_idle8,l_qty9,l_amt9,l_rate9,l_idle9,l_qty10,l_amt10,l_rate10,l_idle10" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcflcomp,xcfl003,xcfl004,xcflld,xcfl002"/>
+      <construct id="body" page="1" field="xccd007,xcfl005,xcfl006,xcfl007,xcfl008,xcfl001,xcfb010,xcfl009,l_qty1,l_amt1,l_rate1,l_idle1,l_qty2,l_amt2,l_rate2,l_idle2,l_qty3,l_amt3,l_rate3,l_idle3,l_qty4,l_amt4,l_rate4,l_idle4,l_qty5,l_amt5,l_rate5,l_idle5,l_qty6,l_amt6,l_rate6,l_idle6,l_qty7,l_amt7,l_rate7,l_idle7,l_qty8,l_amt8,l_rate8,l_idle8,l_qty9,l_amt9,l_rate9,l_idle9,l_qty10,l_amt10,l_rate10,l_idle10"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcflld,xcfl002,xcfl003,xcfl004"/>
+      <set id="head" type="no_entry" field="xcflld,xcfl002,xcfl003,xcfl004"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcflcomp">
+        <after>
+          <reference field="xcflcomp_desc" ref_field="xcfl_t.xcflcomp" map_field="xcflent,xcflcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="xcflcomp_desc"/>
+      <column id="xcfl003"/>
+      <column id="xcfl004"/>
+      <column id="xccc001">
+        <after/>
+      </column>
+      <column id="xccc001_desc"/>
+      <column id="xcfc013">
+        <after>
+          <reference field="xcfc013_desc" ref_field="xcfc013" map_field="xcfc013" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;201&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002_02" state="i"/>
+        <controlp form="q_oocq002_02" state="c"/>
+      </column>
+      <column id="xcfc013_desc"/>
+      <column id="xcflld">
+        <after>
+          <reference field="xcflld_desc" ref_field="xcfl_t.xcflld" map_field="xcflent,xcflld" ref_sql="SELECT glaal003 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaal001=? AND glaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xcflld_desc"/>
+      <column id="xcfl002">
+        <after>
+          <reference field="xcfl002_desc" ref_field="xcfl_t.xcfl002" map_field="xcflent,xcfl002" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcat001" state="c"/>
+      </column>
+      <column id="xcfl002_desc"/>
+      <column id="xcfa004" type="S" default="1"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xccd007"/>
+      <column id="xcfl005">
+        <controlp form="q_xccd006" state="c"/>
+      </column>
+      <column id="xcfl006">
+        <after>
+          <reference field="xcfl006_desc" ref_field="xcfl_t.xcfl006" map_field="xcflent,xcfl006" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imag001_2" state="c"/>
+      </column>
+      <column id="xcfl006_desc">
+        <after>
+          <reference field="xcfl006_desc_desc" ref_field="xcfl_t.xcfl006" map_field="xcflent,xcfl006" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcfl006_desc_desc"/>
+      <column id="xcfl007">
+        <controlp form="q_bmaa002_1" state="c"/>
+      </column>
+      <column id="xcfl008">
+        <controlp form="q_inaj010" state="c"/>
+      </column>
+      <column id="xcfl001">
+        <after>
+          <reference field="xcfl001_desc" ref_field="xcflcomp,xcfl001" map_field="xcflcomp,xcfl001" ref_sql="SELECT xcbfl003 FROM xcbfl_t WHERE xcbflent=$varg_enterprise$var AND xcbflcomp=? AND xcbfl001=? AND xcbfl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcbf001" state="c"/>
+      </column>
+      <column id="xcfl001_desc"/>
+      <column id="xcfb010">
+        <after>
+          <reference field="xcfb010_desc" ref_field="xcfb010" map_field="xcfb010" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;201&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002_02" state="c"/>
+      </column>
+      <column id="xcfb010_desc"/>
+      <column id="xcfl009"/>
+      <column id="xcce901"/>
+      <column id="xccc280" type="S" default="0"/>
+      <column id="l_amount"/>
+      <column id="l_idle" type="S" default="0"/>
+      <column id="l_qty1" type="S" default="0"/>
+      <column id="l_amt1" type="S" default="0"/>
+      <column id="l_rate1"/>
+      <column id="l_idle1" type="S" default="0"/>
+      <column id="l_qty2" type="S" default="0"/>
+      <column id="l_amt2" type="S" default="0"/>
+      <column id="l_rate2"/>
+      <column id="l_idle2" type="S" default="0"/>
+      <column id="l_qty3" type="S" default="0"/>
+      <column id="l_amt3" type="S" default="0"/>
+      <column id="l_rate3"/>
+      <column id="l_idle3" type="S" default="0"/>
+      <column id="l_qty4" type="S" default="0"/>
+      <column id="l_amt4" type="S" default="0"/>
+      <column id="l_rate4"/>
+      <column id="l_idle4" type="S" default="0"/>
+      <column id="l_qty5" type="S" default="0"/>
+      <column id="l_amt5" type="S" default="0"/>
+      <column id="l_rate5"/>
+      <column id="l_idle5" type="S" default="0"/>
+      <column id="l_qty6" type="S" default="0"/>
+      <column id="l_amt6" type="S" default="0"/>
+      <column id="l_rate6"/>
+      <column id="l_idle6" type="S" default="0"/>
+      <column id="l_qty7" type="S" default="0"/>
+      <column id="l_amt7" type="S" default="0"/>
+      <column id="l_rate7"/>
+      <column id="l_idle7" type="S" default="0"/>
+      <column id="l_qty8" type="S" default="0"/>
+      <column id="l_amt8" type="S" default="0"/>
+      <column id="l_rate8"/>
+      <column id="l_idle8" type="S" default="0"/>
+      <column id="l_qty9" type="S" default="0"/>
+      <column id="l_amt9" type="S" default="0"/>
+      <column id="l_rate9"/>
+      <column id="l_idle9" type="S" default="0"/>
+      <column id="l_qty10" type="S" default="0"/>
+      <column id="l_amt10" type="S" default="0"/>
+      <column id="l_rate10"/>
+      <column id="l_idle10" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcfl_t" pk="xcflld,xcfl002,xcfl003,xcfl004">
+      <sql id="forupd_sql" type="sql" query="SELECT xcflcomp,&apos;&apos;,xcfl003,xcfl004,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcflld,&apos;&apos;,xcfl002,&apos;&apos;,&apos;&apos; FROM xcfl_t WHERE xcflent= ? AND xcflld=? AND xcfl002=? AND xcfl003=? AND xcfl004=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcflcomp,&apos;&apos;,xcfl003,xcfl004,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcflld,&apos;&apos;,xcfl002,&apos;&apos;,&apos;&apos; FROM xcfl_t" order="xcflld,xcfl002,xcfl003,xcfl004"/>
+    </head>
+    <body id="xcfl_t" page="1" linked="" pk="xcfl001,xcfl005,xcfl006,xcfl007,xcfl008,xcfl009" fk="xcflld,xcfl002,xcfl003,xcfl004">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,xcfl005,xcfl006,&apos;&apos;,&apos;&apos;,xcfl007,xcfl008,xcfl001,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcfl009,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xcfl_t WHERE xcflent=? AND xcflld=? AND xcfl002=? AND xcfl003=? AND xcfl004=? AND xcfl001=? AND xcfl005=? AND xcfl006=? AND xcfl007=? AND xcfl008=? AND xcfl009=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,xcfl005,xcfl006,&apos;&apos;,&apos;&apos;,xcfl007,xcfl008,xcfl001,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcfl009,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xcfl_t WHERE xcflent= ? AND xcflld=? AND xcfl002=? AND xcfl003=? AND xcfl004=?"/>
+    </body>
+  </dataset>
+</assembly>
+

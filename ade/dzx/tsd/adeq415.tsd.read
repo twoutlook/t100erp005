@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="adeq415" std_prog="adeq415" erpver="1.0" ver="2" module="ADE" type="M" booking="N" class="q" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="Q" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items="datainfo,insert,output,query"/>
+  <table ver="1" cite_std="N">
+    <tbl name="deah_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="gcbj_t" main="N" head="N" pk="" fk_detail="" parent="deah_t" fk_master="" src="s" status="">
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[式說明及目的： 券審核核銷資訊維護
+標準作業功能取消：無
+狀態功能：產生營業款調整單
+作業類型：統計檔
+輸入模式：列表模式-Q001_00
+作業資料來源(Master)：
+ 資料來源表：deag_t(門店收銀繳款單單頭檔)
+                        deah_t(門店收銀繳款單身檔-收銀資料)
+                        rtif_t(銷售交易收款明細檔)
+                        gcbj_t(券核銷審核資料檔）
+ 
+補充說明：
+1.繳款單單身檔加入一個審帳完成日期
+2.抓取繳款單身檔中款別類型=40.有價券(禮券)
+3.核帳人員依實際收到的券核對,如果沒有問題即勾選2.審核-核銷
+　　　　　　　　　　　　　　如果真確認有缺單則押3.審核-缺單並輸入缺單理由
+                                                        如果不確定則1.不審核
+4.系統提供全選審核,全選不審核
+5.最後可批次勾選進行批次確認或取消確認
+  若存在差異時則必須進行差異處理才可以確認(程式需 check)
+6.執行審核時,程式會將券流轉狀態(gcao005)更新及審核狀態更新並寫入核銷檔
+  當一段式核銷,即POS 收取時即更新為核銷  =>不更新券狀態,更新審核狀態為=2.審核-核銷/3.審核-缺單,及gcbj_t相關資訊
+  當二段式核銷,即POS 收取時即更新為已使用=>更新券狀態=核銷,更新審核狀態=2.審核-核銷/3.審核-缺單,及gcbj_t相關資訊
+  當事後核銷,即POS 收取時不更新任何狀態  =>更新券狀態=核銷,更新審核狀態=2.審核-核銷/3.審核-缺單,及gcbj_t相關資訊
+  即審核時gcao005='7',未審核時gcao005=審核前券狀態(gcbj003)
+6.確認時則更新審帳完成日
+7.加入一個 action  For 差錯處理.串至adet416
+]]>
+  </all>
+  <field cite_std="N" name="b_deag001" ver="1" src="s" column="deag001" table="deag_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[功能暫緩]]>
+  </field>
+  <field cite_std="N" name="b_deag002" ver="1" src="s" column="deag002" table="deag_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_oogd001_01" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_deag003" ver="1" src="s" column="deag003" table="deag_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_pcaa001_1" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_deag004" ver="1" src="s" column="deag004" table="deag_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_pcab001_1" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_deagdocdt" ver="1" src="s" column="deagdocdt" table="deag_t" attribute="D001" type="date()" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_deagsite" ver="1" src="s" column="deagsite" table="deag_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooed004_3" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[營運組織
+開窗傳入參數
+arg1 = g_site
+arg2 = "2" 營運據點]]>
+  </field>
+  <field cite_std="N" name="b_deah002" ver="1" src="s" column="deah002" table="deah_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_gcaf001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_deah003" ver="1" src="s" column="deah003" table="deah_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_oocq002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[面額編號
+ACC 2071]]>
+  </field>
+  <field cite_std="N" name="b_deah004" ver="1" src="s" column="deah004" table="deah_t" attribute="N202" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;=,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_deah007" ver="1" src="s" column="deah007" table="deah_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_deah014" ver="1" src="s" column="deah014" table="deah_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_deah015" ver="1" src="s" column="deah015" table="deah_t" attribute="N202" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[差異金額
+單位金額 * 差異張數]]>
+  </field>
+  <field cite_std="N" name="b_deahdif" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[差異張數
+繳回張數-系統收款張數]]>
+  </field>
+  <field cite_std="N" name="b_deahdocno" ver="1" src="s" column="deahdocno" table="deah_t" attribute="C203" type="varchar2(20)" req="Y" i_zoom="" c_zoom="q_deagdocno" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_deahrt" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[繳回張數
+COUNT(gcbj_t) WHERE gcbjdocno=繳款單號 AND gcbjseq = 項次AND 審核狀態='2'
+沒有則顯示 0
+    ]]>
+  </field>
+  <field cite_std="N" name="b_deahseq" ver="1" src="s" column="deahseq" table="deah_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_gcbj001" ver="1" src="s" column="gcbj001" table="gcbj_t" attribute="C602" type="varchar2(30)" req="N" i_zoom="" c_zoom="q_gcao001_9" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_gcbj002" ver="1" src="s" column="gcbj002" table="gcbj_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_gcaf001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_gcbj003" ver="1" src="s" column="gcbj003" table="gcbj_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[券狀態
+SCC6551]]>
+  </field>
+  <field cite_std="N" name="b_gcbj004" ver="1" src="s" column="gcbj004" table="gcbj_t" attribute="N202" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_gcbj005" ver="1" src="s" column="gcbj005" table="gcbj_t" attribute="N301" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_gcbj006" ver="1" src="s" column="gcbj006" table="gcbj_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_oocq002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[缺單理由
+ACC 2104]]>
+  </field>
+  <field cite_std="N" name="b_gcbj007" ver="1" src="s" column="gcbj007" table="gcbj_t" attribute="C105" type="varchar2(255)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_gcbj008" ver="1" src="s" column="gcbj008" table="gcbj_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[審核狀態
+SCC6050]]>
+  </field>
+  <field cite_std="N" name="b_gcbjcnt" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[核銷次數
+COUNT(gcbj_t) WHERE gcbj002=券號 and gcbj008 = '2']]>
+  </field>
+  <field cite_std="N" name="b_gcbjseq1" ver="1" src="s" column="gcbjseq1" table="gcbj_t" attribute="N004" type="number(10,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_deag002_desc" src="s" depend_field="b_deag002" correspon_key="deagent,deagsite,deag002" ref_table="oogd_t" ref_fk="oogdent,oogdsite,oogd001" ref_dlang="" ref_rtn="oogd002" status=""/>
+    <rfield cite_std="N" ver="1" name="b_deag003_desc" src="s" depend_field="b_deag003" correspon_key="deagent,deag003" ref_table="pcaal_t" ref_fk="pcaalent,pcaal001" ref_dlang="pcaal002" ref_rtn="pcaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_deag004_desc" src="s" depend_field="b_deag004" correspon_key="deagent,deag004" ref_table="pcab_t" ref_fk="pcabent,pcab001" ref_dlang="" ref_rtn="pcab003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_deagsite_desc" src="s" depend_field="b_deagsite" correspon_key="deagent,deagsite" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_deah002_desc" src="s" depend_field="b_deah002" correspon_key="deahent,deah002" ref_table="gcafl_t" ref_fk="gcaflent,gcafl001" ref_dlang="gcafl002" ref_rtn="gcafl003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_deah003_desc" src="s" depend_field="b_deah003" correspon_key="deahent,&apos;2071&apos;,deah003" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="b_gcbj002_desc" src="s" depend_field="b_gcbj002" correspon_key="gcbjent,gcbj002" ref_table="gcafl_t" ref_fk="gcaflent,gcafl001" ref_dlang="gcafl002" ref_rtn="gcafl003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_gcbj006_desc" src="s" depend_field="b_gcbj006" correspon_key="gcbjent,gcbj006" ref_table="oocql_t" ref_fk="oocqlent,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_deag001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_deag002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_deag003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_deag004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_deagdocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_deagsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_deah002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_deah003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_deah004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_deah007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_deah014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_deah015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_deahdif" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_deahdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_deahrt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_deahseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_gcbj001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_gcbj002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_gcbj003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_gcbj004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_gcbj005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_gcbj006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_gcbj007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_gcbj008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_gcbjcnt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_gcbjseq1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="confirm" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="lost_sel" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[1.程式需判斷對應繳款單審帳完成日=Null 才允許執行
+2.可選擇多筆
+2.點選圈單,開啟畫面輸入缺單理由、備註
+  Y.缺單,則預設該繳款單+項次對應的缺單理由,備註資料
+  N.則不執行]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="run_adeq415_01" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[審核明細資料產生
+CALL adet415_01]]>
+  </act>
+  <act cite_std="N" id="run_adet416" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[差錯處理
+CALL adet416]]>
+  </act>
+  <act cite_std="N" id="unconfirm" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="unverify_all" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[1.程式需判斷對應繳款單審帳完成日=Null 才允許執行
+2.點選全部未審核,畫面顯示提示訊息"缺單理由,備註資料將被清空,確認全部更新為未審核(Y/N)?"
+  Y.全部未審核,則清空該繳款單+項次對應的缺單理由,備註資料
+  N.不更新
+]]>
+  </act>
+  <act cite_std="N" id="unverify_sel" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[未審核
+1.程式需判斷對應繳款單審帳完成日=Null 才允許執行
+2.可選擇多筆
+3.點選未審核,畫面顯示提示訊息"缺單理由,備註資料將被清空,確認全部更新為未審核(Y/N)?"
+  Y.未審核,則清空該繳款單+項次對應的缺單理由,備註資料
+  N.不更新]]>
+  </act>
+  <act cite_std="N" id="verify_all" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[1.程式需判斷對應繳款單審帳完成日=Null 才允許執行
+2.點選全部審核,畫面顯示提示訊息"若存在缺單理由,備註資料將被清空,確認全部更新為已審核(Y/N)?"
+  Y.全部已審核,則清空該繳款單+項次對應的缺單理由,備註資料
+  N.則不執行]]>
+  </act>
+  <act cite_std="N" id="verify_sel" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[審核
+1.程式需判斷對應繳款單審帳完成日=Null 才允許執行
+2.可選擇多筆
+3.點選審核,畫面顯示提示訊息"若存在缺單理由,備註資料將被清空,確認全部更新為已審核(Y/N)?"
+  Y.已審核,則清空該繳款單+項次對應的缺單理由,備註資料
+  N.則不執行]]>
+  </act>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="group_qbe" text="缺單理由" lstr=""/>
+    <sfield name="lbl_gcbj006" text="缺單理由" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="accept" text="確認" lstr=""/>
+    <sfield name="lbl_gcbj007" text="備註" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="bpage_1" text="券繳款資料" lstr=""/>
+    <sfield name="lbl_sel" text="選取項目" lstr=""/>
+    <sfield name="lbl_deagsite" text="營運組織" lstr=""/>
+    <sfield name="lbl_ooefl003" text="組織說明" lstr=""/>
+    <sfield name="lbl_deahdocno" text="繳款單號" lstr=""/>
+    <sfield name="lbl_deahseq" text="項次" lstr=""/>
+    <sfield name="lbl_deagdocdt" text="收銀日期" lstr=""/>
+    <sfield name="lbl_deag001" text="專櫃編號" lstr=""/>
+    <sfield name="lbl_deag002" text="班別" lstr=""/>
+    <sfield name="lbl_oogd002" text="班別說明" lstr=""/>
+    <sfield name="lbl_deag003" text="收銀機編號" lstr=""/>
+    <sfield name="lbl_pcaal003" text="收銀機說明" lstr=""/>
+    <sfield name="lbl_deag004" text="收銀員" lstr=""/>
+    <sfield name="lbl_pcab003" text="收銀員名稱" lstr=""/>
+    <sfield name="lbl_deah002" text="券種編號" lstr=""/>
+    <sfield name="lbl_gcafl003" text="券種說明" lstr=""/>
+    <sfield name="lbl_deah003" text="面額編號" lstr=""/>
+    <sfield name="lbl_deah004" text="單位金額" lstr=""/>
+    <sfield name="lbl_deahrt" text="繳回張數" lstr=""/>
+    <sfield name="lbl_deah007" text="系統收款張數" lstr=""/>
+    <sfield name="lbl_deahdif" text="差異張數" lstr=""/>
+    <sfield name="lbl_deah015" text="差異金額" lstr=""/>
+    <sfield name="lbl_deah014" text="審帳完成日" lstr=""/>
+    <sfield name="page_2" text="券明細資料" lstr=""/>
+    <sfield name="verify_all" text="全部審核" lstr=""/>
+    <sfield name="unverify_all" text="全部未審核" lstr=""/>
+    <sfield name="verify_sel" text="審核" lstr=""/>
+    <sfield name="unverify_sel" text="未審核" lstr=""/>
+    <sfield name="lost_sel" text="缺單" lstr=""/>
+    <sfield name="lbl_gcbjseq1" text="序號" lstr=""/>
+    <sfield name="lbl_gcbj008" text="審核狀態" lstr=""/>
+    <sfield name="lbl_gcbj001" text="券號" lstr=""/>
+    <sfield name="lbl_gcbj002" text="券種" lstr=""/>
+    <sfield name="lbl_gcbj003" text="券狀態" lstr=""/>
+    <sfield name="lbl_gcbj004" text="售券實收金額" lstr=""/>
+    <sfield name="lbl_gcbj005" text="折扣率" lstr=""/>
+    <sfield name="lbl_gcbjcnt" text="核銷次數" lstr=""/>
+    <sfield name="lbl_gcbj006_desc" text="理由說明" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_collect_gzze001" text="訊息代碼" lstr=""/>
+    <sfield name="lbl_collect_gzze003" text="訊息內容" lstr=""/>
+    <sfield name="lbl_collect_gzze006" text="進階訊息" lstr=""/>
+    <sfield name="lbl_cl_err_s02_accept" text="確定" lstr=""/>
+    <sfield name="lbl_err_detail" text="進階訊息" lstr=""/>
+    <sfield name="lbl_suggest_exe" text="建議執行" lstr=""/>
+    <sfield name="lbl_err_contact" text="反應問題" lstr=""/>
+    <sfield name="lbl_cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="lbl_group_cl_err_s01" text="進階訊息" lstr=""/>
+    <sfield name="lbl_gzze001" text="訊息代碼:" lstr=""/>
+    <sfield name="lbl_gzze006" text="訊息內容:" lstr=""/>
+    <sfield name="lbl_sqlerrd2" text="SQL錯誤碼:" lstr=""/>
+    <sfield name="cl_ask_s04_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s03_Test" text="測試" lstr=""/>
+    <sfield name="cl_ask_s03_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s01_Choice" text="選擇" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="group01" text="QBE選項" lstr=""/>
+    <sfield name="lbl_rtjfsite" text="營運組織" lstr=""/>
+    <sfield name="lbl_rtjfdocno" text="繳款單號" lstr=""/>
+    <sfield name="lbl_rtjf025" text="繳款日期" lstr=""/>
+    <sfield name="group02" text="條件選項" lstr=""/>
+    <sfield name="lbl_regen" text="未審核明細資料已存在是否重新產生(Y/N)?" lstr=""/>
+    <sfield name="lbl_gzxp007_1" text="選擇分類" lstr=""/>
+    <sfield name="add_catalog" text="" lstr=""/>
+    <sfield name="lbl_gzxp007_2" text="自訂分類" lstr=""/>
+    <sfield name="lbl_gzxp008" text="追蹤說明" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="follow_list" text="待追蹤" lstr=""/>
+    <sfield name="signature_list" text="待簽核" lstr=""/>
+    <sfield name="announcement" text="作業公告" lstr=""/>
+    <sfield name="cancelfollow" text="取消追蹤" lstr=""/>
+    <sfield name="assigncatalog" text="指定分類" lstr=""/>
+    <sfield name="cl_user_overview_s01.lbl_name" text="" lstr=""/>
+    <sfield name="lbl_gzxp002" text="作業名稱" lstr=""/>
+    <sfield name="lbl_gzxp006" text="單據日期" lstr=""/>
+    <sfield name="add_favorite_catalog" text="新增目錄" lstr=""/>
+    <sfield name="modify_favorite_desc" text="修改" lstr=""/>
+    <sfield name="favorite_del" text="移除" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_ooed004" text="組織編號" lstr=""/>
+    <sfield name="lbl_deagdocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_oogd001" text="班別編號" lstr=""/>
+    <sfield name="lbl_oogd003" text="上班時間" lstr=""/>
+    <sfield name="lbl_oogd004" text="下班時間" lstr=""/>
+    <sfield name="lbl_pcaa001" text="收銀機編號" lstr=""/>
+    <sfield name="lbl_pcab001" text="收銀人員編號" lstr=""/>
+    <sfield name="lbl_mman001" text="卡種編號" lstr=""/>
+    <sfield name="lbl_mmanl003" text="說明" lstr=""/>
+    <sfield name="lbl_oocq002" text="應用分類碼" lstr=""/>
+    <sfield name="lbl_gcao001" text="券編號" lstr=""/>
+    <sfield name="lbl_gcao002" text="券種編號" lstr=""/>
+    <sfield name="lbl_gcao008" text="生效日期" lstr=""/>
+    <sfield name="lbl_gcao009" text="失效日期" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" lstr=""/>
+    <sfield name="page_cl_doc_s01_page1" text="相關文件清單" lstr=""/>
+    <sfield name="lbl_loaa006" text="文件版本" lstr=""/>
+    <sfield name="lbl_loaa007" text="文件序號" lstr=""/>
+    <sfield name="lbl_loaa011" text="文件型態" lstr=""/>
+    <sfield name="lbl_loaa013" text="文件說明" lstr=""/>
+    <sfield name="lbl_loaa010" text="文件原始檔名" lstr=""/>
+    <sfield name="btn_upload" text="本地文件上傳" lstr=""/>
+    <sfield name="btn_crt_text" text="新建純文字紀錄" lstr=""/>
+    <sfield name="btn_doccrt_url" text="新建URL" lstr=""/>
+    <sfield name="btn_docopen" text="文件下載" lstr=""/>
+    <sfield name="btn_docupdate" text="文件資料修改" lstr=""/>
+    <sfield name="btn_docremove" text="文件刪除" lstr=""/>
+    <sfield name="btn_exit" text="關閉功能" lstr=""/>
+    <sfield name="page_cl_doc_s01_page2" text="文件基本資料" lstr=""/>
+    <sfield name="lbl_loaa004" text="用途類別" lstr=""/>
+    <sfield name="lbl_loaa005" text="預設顯示圖片" lstr=""/>
+    <sfield name="lbl_loaa012" text="文件位置(URL)" lstr=""/>
+    <sfield name="page_cl_doc_s01_page4" text="權限設定" lstr=""/>
+    <sfield name="group_read" text="讀取權限" lstr=""/>
+    <sfield name="group_modify" text="修改權限" lstr=""/>
+    <sfield name="page_cl_doc_s01_page3" text="異動資訊" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="btn_doccancel" text="放棄修改" lstr=""/>
+    <sfield name="btn_docmodify" text="資料存檔" lstr=""/>
+    <sact name="confirm" text="確認" lstr=""/>
+    <sact name="lost_sel" text="缺單" lstr=""/>
+    <sact name="run_adeq415_01" text="審核明細資料產生" lstr=""/>
+    <sact name="run_adet416" text="差錯處理" lstr=""/>
+    <sact name="unconfirm" text="取消確認" lstr=""/>
+    <sact name="unverify_all" text="全部未審核" lstr=""/>
+    <sact name="unverify_sel" text="未審核" lstr=""/>
+    <sact name="verify_all" text="全部審核" lstr=""/>
+    <sact name="verify_sel" text="審核" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

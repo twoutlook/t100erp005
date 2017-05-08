@@ -1,0 +1,500 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axrr920_x01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:2(2015-10-21 10:22:53), PR版次:0002(2015-10-21 13:59:33)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000042
+#+ Filename...: axrr920_x01
+#+ Description: 調匯月報表列印
+#+ Creator....: 02291(2015-09-25 15:18:15)
+#+ Modifier...: 02159 -SD/PR- 02159
+ 
+{</section>}
+ 
+{<section id="axrr920_x01.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:7)
+#add-point:填寫註解說明
+
+#end add-point
+#add-point:填寫註解說明
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #condition:where 
+       a1 LIKE type_t.chr1,         #source 
+       a2 LIKE type_t.chr1          #collect
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axrr920_x01.main" readonly="Y" >}
+PUBLIC FUNCTION axrr920_x01(p_arg1,p_arg2,p_arg3)
+DEFINE  p_arg1 STRING                  #tm.wc  condition:where 
+DEFINE  p_arg2 LIKE type_t.chr1         #tm.a1  source 
+DEFINE  p_arg3 LIKE type_t.chr1         #tm.a2  collect
+#add-point:init段define(客製用) name="component.define_customerization"
+
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.a1 = p_arg2
+   LET tm.a2 = p_arg3
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+#   CASE tm.a2 
+#      WHEN '0' LET g_template = 'axrr920_x01'
+#      WHEN '0' LET g_template = 'axrr920_x01_01'
+#      WHEN '0' LET g_template = 'axrr920_x01_02'
+#   END CASE
+    
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "axrr920_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL axrr920_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL axrr920_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL axrr920_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL axrr920_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL axrr920_x01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrr920_x01.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION axrr920_x01_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "xregdocdt.xreg_t.xregdocdt,xregdocno.xreg_t.xregdocno,l_xregld_desc.type_t.chr500,xreg001.xreg_t.xreg001,xreg002.xreg_t.xreg002,l_xreg004_desc.type_t.chr500,xrehseq.xreh_t.xrehseq,l_xreh009_desc.type_t.chr500,xreh005.xreh_t.xreh005,xreh006.xreh_t.xreh006,xreh007.xreh_t.xreh007,xreh008.xreh_t.xreh008,xreh100.xreh_t.xreh100,xreh102.xreh_t.xreh102,xreh101.xreh_t.xreh101,xreh103.xreh_t.xreh103,xreh113.xreh_t.xreh113,xreh114.xreh_t.xreh114,l_last_xreh115.xreh_t.xreh115,xreh115.xreh_t.xreh115,xreh116.xreh_t.xreh116" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   
+   #end add-point:create_tmp.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrr920_x01.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION axrr920_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrr920_x01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION axrr920_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+DEFINE g_where1      STRING
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   
+   #end add-point
+   LET g_select = " SELECT xregdocdt,xregdocno,NULL,xreg001,xreg002,NULL,xrehseq,NULL,xreh005,xreh006, 
+       xreh007,xreh008,xreh100,xreh102,xreh101,xreh103,xreh113,xreh114,NULL,xreh115,xreh116"
+ 
+   #add-point:sel_prep g_from name="sel_prep.g_from"
+ 
+   #end add-point
+    LET g_from = " FROM xreg_t,xreh_t"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+   
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("xreg_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   #匯總條件
+   CASE tm.a2 
+      WHEN '0'  #不匯總
+         LET g_select = " SELECT xregdocdt,xregdocno,xregld,xreg001,xreg002,xreg004,xrehseq,xreh009, 
+             xreh005,xreh006,xreh007,xreh008,xreh100,xreh102,xreh101,xreh103,xreh113,xreh114,NULL,xreh115, 
+             xreh116"
+      WHEN '1'  #幣別匯總
+         LET g_select = " SELECT xregdocdt,xregdocno,xregld,xreg001,xreg002,xreg004,0,'', 
+             '','','','',xreh100,xreh102,xreh101,SUM(xreh103),SUM(xreh113),SUM(xreh114),NULL,SUM(xreh115), 
+             SUM(xreh116) "
+      WHEN '2'  #客戶+幣別匯總
+         LET g_select = " SELECT xregdocdt,xregdocno,xregld,xreg001,xreg002,xreg004,0,xreh009, 
+             '','','','',xreh100,xreh102,xreh101,SUM(xreh103),SUM(xreh113),SUM(xreh114),NULL,SUM(xreh115), 
+             SUM(xreh116) "
+   END CASE
+   LET g_from = " FROM xreg_t,xreh_t"
+   #151020-00003#1 151021 by sakura mark(E)
+   ##資料來源
+   #IF tm.a1 = '0' THEN  #應收
+   #   LET g_where = " WHERE " ,tm.wc CLIPPED,
+   #                 " AND xregent = xrehent AND xregdocno = xrehdocno ",
+   #                 " AND xregld = xrehld AND xregent = ",g_enterprise,
+   #                 " AND xreg003 = 'AR' "
+   #ELSE   #應付
+   #   LET g_where = " WHERE " ,tm.wc CLIPPED,
+   #                 " AND xregent = xrehent AND xregdocno = xrehdocno ",
+   #                 " AND xregld = xrehld AND xregent = ",g_enterprise,
+   #                 " AND xreg003 = 'AP' "
+   #END IF
+   #151020-00003#1 151021 by sakura mark(E)
+   #151020-00003#1 151021 by sakura add(S)
+   #資料來源
+   CASE tm.a1
+      WHEN '0'   #應收帳款
+         LET g_where = " WHERE " ,tm.wc CLIPPED,
+                       " AND xregent = xrehent AND xregdocno = xrehdocno ",
+                       " AND xregld = xrehld AND xregent = ",g_enterprise,
+                       " AND xreg003 = 'AR' "      
+      WHEN '1'   #應付帳款
+         LET g_where = " WHERE " ,tm.wc CLIPPED,
+                       " AND xregent = xrehent AND xregdocno = xrehdocno ",
+                       " AND xregld = xrehld AND xregent = ",g_enterprise,
+                       " AND xreg003 = 'AP' "      
+      WHEN '2'   #應收票據
+         LET g_where = " WHERE " ,tm.wc CLIPPED,
+                       " AND xregent = xrehent AND xregdocno = xrehdocno ",
+                       " AND xregld = xrehld AND xregent = ",g_enterprise,
+                       " AND xreg003 = 'NM' ",
+                       " AND xreh004 = 'NR' "                       
+      WHEN '3'   #應付票據
+         LET g_where = " WHERE " ,tm.wc CLIPPED,
+                       " AND xregent = xrehent AND xregdocno = xrehdocno ",
+                       " AND xregld = xrehld AND xregent = ",g_enterprise,
+                       " AND xreg003 = 'NM' ",
+                       " AND xreh004 = 'NP' "      
+   END CASE
+   #151020-00003#1 151021 by sakura add(E)
+   LET g_where = g_where CLIPPED," AND xregstus = 'Y' "
+   #匯總條件
+   CASE tm.a2 
+      WHEN '0'  #不匯總
+         LET g_where1 = g_where CLIPPED," ORDER BY xregdocno,xrehseq,xreh009"
+      WHEN '1'  #幣別+匯率匯總
+         LET g_where1 = g_where CLIPPED," GROUP BY xregdocno,xreg001,xregld,xregdocdt,xreg002,xreg004,xreh100,xreh102,xreh101 ",
+                       " ORDER BY xregdocno,xreg001,xregld,xregdocdt,xreg002,xreg004,xreh100,xreh102,xreh101"
+      WHEN '2'  #交易對象+幣別+匯率匯總
+         LET g_where1 = g_where CLIPPED," GROUP BY xregdocno,xreg001,xregld,xregdocdt,xreg002,xreg004,xreh009,xreh100,xreh102,xreh101 ",
+                       " ORDER BY xregdocno,xreg001,xregld,xregdocdt,xreg002,xreg004,xreh009,xreh100,xreh102,xreh101 "
+   END CASE
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where1 CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+   #end add-point
+   PREPARE axrr920_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE axrr920_x01_curs CURSOR FOR axrr920_x01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrr920_x01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION axrr920_x01_ins_data()
+DEFINE sr RECORD 
+   xregdocdt LIKE xreg_t.xregdocdt, 
+   xregdocno LIKE xreg_t.xregdocno, 
+   l_xregld_desc LIKE type_t.chr500, 
+   xreg001 LIKE xreg_t.xreg001, 
+   xreg002 LIKE xreg_t.xreg002, 
+   l_xreg004_desc LIKE type_t.chr500, 
+   xrehseq LIKE xreh_t.xrehseq, 
+   l_xreh009_desc LIKE type_t.chr500, 
+   xreh005 LIKE xreh_t.xreh005, 
+   xreh006 LIKE xreh_t.xreh006, 
+   xreh007 LIKE xreh_t.xreh007, 
+   xreh008 LIKE xreh_t.xreh008, 
+   xreh100 LIKE xreh_t.xreh100, 
+   xreh102 LIKE xreh_t.xreh102, 
+   xreh101 LIKE xreh_t.xreh101, 
+   xreh103 LIKE xreh_t.xreh103, 
+   xreh113 LIKE xreh_t.xreh113, 
+   xreh114 LIKE xreh_t.xreh114, 
+   l_last_xreh115 LIKE xreh_t.xreh115, 
+   xreh115 LIKE xreh_t.xreh115, 
+   xreh116 LIKE xreh_t.xreh116
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+DEFINE l_xreh001        LIKE xreh_t.xreh001
+DEFINE l_xreh002        LIKE xreh_t.xreh002
+DEFINE l_ooag011        LIKE ooag_t.ooag011
+DEFINE l_pmaal004       LIKE pmaal_t.pmaal004
+DEFINE l_n              LIKE type_t.num10
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    LET l_n = 1
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH axrr920_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       IF sr.xreg002 = 1 THEN
+          LET l_xreh001 = sr.xreg001 - 1
+          LET l_xreh002 = 12
+       ELSE
+          LET l_xreh001 = sr.xreg001
+          LET l_xreh002 = sr.xreg002 - 1
+       END IF
+       LET l_ooag011 = ''
+       LET l_pmaal004 = ''
+       #取前期匯差調整數
+       CASE tm.a2 
+          WHEN '0'  #不匯總
+             SELECT xreh115 INTO sr.l_last_xreh115 FROM xreh_t
+              WHERE xrehent = g_enterprise  AND xreh005 = sr.xreh005
+                AND xrehld = sr.l_xregld_desc
+                AND xreh001 = l_xreh001 AND xreh002 = l_xreh002
+                AND xreh006 = sr.xreh006 AND xreh007 = sr.xreh007
+          WHEN '1'  #幣別+匯率匯總
+             IF tm.a1 = '0' THEN  #應收
+                SELECT SUM(xreh115) INTO sr.l_last_xreh115 FROM xreh_t
+                 WHERE xrehent = g_enterprise 
+                   AND xrehld = sr.l_xregld_desc
+                   AND xreh001 = l_xreh001 AND xreh002 = l_xreh002
+                   AND xreh100 = sr.xreh100 AND xreh003 = 'AR'
+             ELSE   #應付
+                SELECT SUM(xreh115) INTO sr.l_last_xreh115 FROM xreh_t
+                 WHERE xrehent = g_enterprise 
+                   AND xrehld = sr.l_xregld_desc
+                   AND xreh001 = l_xreh001 AND xreh002 = l_xreh002
+                   AND xreh100 = sr.xreh100 AND xreh003 = 'AP'
+             END IF
+             
+          WHEN '2'  #交易對象+幣別+匯率匯總
+             IF tm.a1 = '0' THEN  #應收
+                SELECT SUM(xreh115) INTO sr.l_last_xreh115 FROM xreh_t
+                 WHERE xrehent = g_enterprise 
+                   AND xrehld = sr.l_xregld_desc
+                   AND xreh001 = l_xreh001 AND xreh002 = l_xreh002
+                   AND xreh009 = sr.l_xreh009_desc
+                   AND xreh100 = sr.xreh100 AND xreh003 = 'AR'
+             ELSE 
+                SELECT SUM(xreh115) INTO sr.l_last_xreh115 FROM xreh_t
+                 WHERE xrehent = g_enterprise 
+                   AND xrehld = sr.l_xregld_desc
+                   AND xreh001 = l_xreh001 AND xreh002 = l_xreh002
+                   AND xreh009 = sr.l_xreh009_desc
+                   AND xreh100 = sr.xreh100 AND xreh003 = 'AP'
+             END IF
+       END CASE
+       IF cl_null(sr.l_last_xreh115) THEN LET sr.l_last_xreh115 = 0 END IF
+       LET sr.l_xregld_desc = sr.l_xregld_desc," ",s_desc_get_ld_desc(sr.l_xregld_desc)
+       SELECT ooag011 INTO l_ooag011 FROM ooag_t WHERE ooagent=g_enterprise AND ooag001 = sr.l_xreg004_desc
+       LET sr.l_xreg004_desc = sr.l_xreg004_desc," ",l_ooag011
+       SELECT pmaal004 INTO l_pmaal004 FROM pmaal_t 
+        WHERE pmaalent=g_enterprise 
+          AND pmaal001 = sr.l_xreh009_desc AND pmaal002 = g_dlang
+       LET sr.l_xreh009_desc = sr.l_xreh009_desc," ",l_pmaal004
+       LET sr.xrehseq = l_n
+       LET l_n = l_n + 1
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.xregdocdt,sr.xregdocno,sr.l_xregld_desc,sr.xreg001,sr.xreg002,sr.l_xreg004_desc,sr.xrehseq,sr.l_xreh009_desc,sr.xreh005,sr.xreh006,sr.xreh007,sr.xreh008,sr.xreh100,sr.xreh102,sr.xreh101,sr.xreh103,sr.xreh113,sr.xreh114,sr.l_last_xreh115,sr.xreh115,sr.xreh116
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "axrr920_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    LET g_xgrid.visible_column = NULL
+
+    IF tm.a2 = '1' THEN #幣別匯總
+       LET g_xgrid.visible_column="l_xreh009_desc|xreh005|xreh006|xreh007|xreh008"
+    END IF
+    IF tm.a2 = '2' THEN #帳款科目+幣別匯總
+       LET g_xgrid.visible_column="xreh005|xreh006|xreh007|xreh008"
+    END IF
+    #151020-00003#1 151021 by sakura add(S)
+    IF (tm.a1 = '2' AND tm.a2 = '0') OR (tm.a1 = '3' AND tm.a2 = '0') THEN
+       LET g_xgrid.visible_column="xreh007"
+    END IF
+    #151020-00003#1 151021 by sakura add(E)    
+    #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrr920_x01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION axrr920_x01_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    
+    #end add-point:rep_data.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrr920_x01.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

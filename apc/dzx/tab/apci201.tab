@@ -1,0 +1,153 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apci201" module="apc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02749" crtdt="2014-11-03 16:45:43" modid="03247" moddt="2016-05-10 09:27:15" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="門店收銀機資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pcaasite,pcaasite_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pcaastus,pcaa001,pcaal003,pcaal004,pcaastamp(timestamp),pcaaunit,pcaaunit_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="pcaa001,pcaaownid,pcaaownid_desc(chr500),pcaaowndp,pcaaowndp_desc(chr500),pcaacrtid,pcaacrtid_desc(chr500),pcaacrtdp,pcaacrtdp_desc(chr500),pcaacrtdt,pcaamodid,pcaamodid_desc(chr500),pcaamoddt"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="pcaostus,pcao002,pcao002_desc(chr500),pcaostamp(timestamp),pcaounit"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="3">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="apc" filename="apci201" method="dialog">
+    <section id="input">
+      <input id="head" field="pcaasite"/>
+      <input id="body" page="1" field="pcaastus,pcaa001,pcaal003,pcaal004,pcaastamp,pcaaunit" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="pcaostus,pcao002,pcaostamp,pcaounit" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pcaasite"/>
+      <construct id="body" page="1" field="pcaastus,pcaa001,pcaal003,pcaal004,pcaastamp,pcaaunit"/>
+      <construct id="body" page="2" field="pcaaownid,pcaaowndp,pcaacrtid,pcaacrtdp,pcaacrtdt,pcaamodid,pcaamoddt"/>
+      <construct id="body" page="3" field="pcaostus,pcao002,pcaostamp,pcaounit"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pcaasite"/>
+      <set id="head" type="no_entry" field="pcaasite"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="pcaasite">
+        <after>
+          <reference field="pcaasite_desc" ref_field="pcaa_t.pcaasite" map_field="pcaasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="pcaasite_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="pcaastus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pcaa001">
+        <controlp form="q_pcaa001" state="c"/>
+      </column>
+      <column id="pcaal003"/>
+      <column id="pcaal004"/>
+      <column id="pcaastamp"/>
+      <column id="pcaaunit">
+        <after>
+          <reference field="pcaaunit_desc" ref_field="pcaa_t.pcaaunit" map_field="pcaaent,pcaaunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="i"/>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="pcaaunit_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="pcaaownid">
+        <after>
+          <reference field="pcaaownid_desc" ref_field="pcaa_t.pcaaownid" map_field="pcaaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcaaownid_desc"/>
+      <column id="pcaaowndp">
+        <after>
+          <reference field="pcaaowndp_desc" ref_field="pcaa_t.pcaaowndp" map_field="pcaaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pcaaowndp_desc"/>
+      <column id="pcaacrtid">
+        <after>
+          <reference field="pcaacrtid_desc" ref_field="pcaa_t.pcaacrtid" map_field="pcaacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcaacrtid_desc"/>
+      <column id="pcaacrtdp">
+        <after>
+          <reference field="pcaacrtdp_desc" ref_field="pcaa_t.pcaacrtdp" map_field="pcaacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pcaacrtdp_desc"/>
+      <column id="pcaacrtdt"/>
+      <column id="pcaamodid">
+        <after>
+          <reference field="pcaamodid_desc" ref_field="pcaa_t.pcaamodid" map_field="pcaamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcaamodid_desc"/>
+      <column id="pcaamoddt"/>
+    </init>
+    <init id="body" page="3">
+      <column id="pcaostus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pcao002">
+        <after>
+          <check chkid="v_inaa001" id="isExist"/>
+          <reference field="pcao002_desc" ref_field="pcao_t.pcao002" map_field="pcao002" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inaa001_4" state="i"/>
+        <controlp form="q_inaa001_4" state="c"/>
+      </column>
+      <column id="pcao002_desc"/>
+      <column id="pcaostamp"/>
+      <column id="pcaounit"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pcaa_t" pk="pcaasite">
+      <sql id="forupd_sql" type="sql" query="SELECT pcaasite,&apos;&apos; FROM pcaa_t WHERE pcaaent= ? AND pcaasite=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pcaasite,&apos;&apos; FROM pcaa_t" order="pcaasite"/>
+    </head>
+    <body id="pcaa_t" page="1,2" linked="" pk="pcaa001" fk="pcaasite">
+      <sql id="forupd_sql_detail" query="SELECT pcaastus,pcaa001,&apos;&apos;,&apos;&apos;,pcaastamp,pcaaunit,&apos;&apos;,&apos;&apos;,pcaaownid,&apos;&apos;,pcaaowndp,&apos;&apos;,pcaacrtid,&apos;&apos;,pcaacrtdp,&apos;&apos;,pcaacrtdt,pcaamodid,&apos;&apos;,pcaamoddt FROM pcaa_t WHERE pcaaent=? AND pcaasite=? AND pcaa001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pcaastus,pcaa001,&apos;&apos;,&apos;&apos;,pcaastamp,pcaaunit,&apos;&apos;,&apos;&apos;,pcaaownid,&apos;&apos;,pcaaowndp,&apos;&apos;,pcaacrtid,&apos;&apos;,pcaacrtdp,&apos;&apos;,pcaacrtdt,pcaamodid,&apos;&apos;,pcaamoddt FROM pcaa_t WHERE pcaaent= ? AND pcaasite=?"/>
+      <sql id="detail_append" type="lang" target="pcaal_t.pcaal003,pcaal_t.pcaal004" table="pcaal_t" fk="pcaasite,pcaa001" pk="pcaalsite,pcaal001,pcaal002" field="pcaal003,pcaal004"/>
+    </body>
+    <body id="pcao_t" page="3" linked="" detail="Y" master="pcaa_t" pk="pcao002" fk="pcaosite,pcao001">
+      <sql id="forupd_sql_detail" query="SELECT pcaostus,pcao002,&apos;&apos;,pcaostamp,pcaounit FROM pcao_t WHERE pcaoent=? AND pcaosite=? AND pcao001=? AND pcao002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pcaostus,pcao002,&apos;&apos;,pcaostamp,pcaounit FROM pcao_t WHERE pcaoent=? AND pcaosite=? AND pcao001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

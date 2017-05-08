@@ -1,0 +1,43 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrr330_g01" module="axr" jobmode="N" type="g01" industry="std" crtid="01727" crtdt="2015-03-17 15:51:59" modid="07900" moddt="2016-07-26 13:39:54" sdver="6" tabver="10001" description="應收帳款對帳單">
+  <define arg="tm.wc(STRING|where condition),tm.a1(STRING|帳務中心),tm.a2(dat|帳款期間起),tm.a3(dat|帳款期間迄),tm.a4(STRING|狀態碼),tm.a5(STRING|据点)">
+    <var seq="1" value="pmaal_t_pmaal003(pmaal003|pmaal_t.pmaal003),xrca004,xrca100,xrcacomp,xrcadocdt,xrcadocno,xrcaent,pmaa016(chr1000|NULL),l_date1(dat|NULL),oofc012_1(chr1000|NULL),oofc012_3(chr1000|NULL),l_date2(dat|NULL),l_xrcb001_gzcbl004(chr1000|NULL),xrcb100(chr20|NULL),l_xrca109(num20_6|NULL),l_xrcc108(num20_6|NULL),l_xrca004_pmaal004(chr1000|NULL),xrcb051(chr1000|NULL),xrcb047(chr1000|NULL),l_order(chr1000|NULL),l_line(chr2|NULL),l_order1(chr10|NULL),l_memo(chr1000|NULL),orders(chr30|NULL),xrcald,l_isat004(isat004|NULL),xrca010"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="pmaal_t_pmaal003(pmaal003|( SELECT pmaal003 FROM pmaal_t WHERE pmaal_t.pmaalent = xrca_t.xrcaent AND pmaal_t.pmaal001 = xrca_t.xrca004 AND pmaal_t.pmaal002 = g_dlang)),xrca004,xrca100,xrcacomp,xrcadocdt,xrcadocno,xrcaent,pmaa016(chr1000|NULL),l_date1(dat|NULL),oofc012_1(chr1000|NULL),oofc012_3(chr1000|NULL),l_date2(dat|NULL),l_xrcb001_gzcbl004(chr1000|NULL),xrcb100(chr20|NULL),l_xrca109(num20_6|NULL),l_xrcc108(num20_6|NULL),l_xrca004_pmaal004(chr1000|NULL),xrcb051(chr1000|NULL),xrcb047(chr1000|NULL),l_order(chr1000|NULL),l_line(chr2|NULL),l_order1(chr10|NULL),l_memo(chr1000|NULL),orders(chr30|NULL),xrcald,l_isat004(isat004|NULL),xrca010"/>
+    <sql id="g_from" query="xrca_t"/>
+    <sql id="g_where" query="" maintable="xrca_t"/>
+    <sql id="g_order" query="xrcacomp,xrca004"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="l_order,l_order1,l_xrcb001_gzcbl004,xrcadocdt,xrcadocno,xrca100"/>
+    <section id="b_group" reptype="d01">
+      <rep type="l_order" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff002" where="xrcaent,l_order"/>
+      <rep type="l_order1"/>
+      <rep type="l_xrcb001_gzcbl004"/>
+      <rep type="xrcadocdt"/>
+      <rep type="xrcadocno"/>
+      <rep type="xrca100"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff002" where="xrcaent,l_order,l_order1,l_xrcb001_gzcbl004,xrcadocdt,xrcadocno,xrca100"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff002" where="xrcaent,l_order,l_order1,l_xrcb001_gzcbl004,xrcadocdt,xrcadocno,xrca100"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="l_order" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff002" where="xrcaent,l_order"/>
+      <rep type="l_order1"/>
+      <rep type="l_xrcb001_gzcbl004"/>
+      <rep type="xrcadocdt"/>
+      <rep type="xrcadocno"/>
+      <rep type="xrca100"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

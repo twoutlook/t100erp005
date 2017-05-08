@@ -1,0 +1,81 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrr300" module="axr" jobmode="N" type="r01" industry="std" fix_arg="1" crtid="01251" crtdt="2014-12-11 15:03:56" modid="01727" moddt="2015-05-29 14:45:52" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="應收帳款憑單列印作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xrcasite,xrcasite_desc(chr80),xrca001,xrcald,xrcald_desc(chr80),xrcacomp,xrcacomp_desc(chr80),xrcadocno,xrca014,xrca004,xrca015,xrca005,xrca003,xrcadocdt,xrca063,xrcastus,xrca052,comb(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="axr" filename="axrr300" method="dialog">
+    <section id="input">
+      <input id="head" field="xrcasite,xrca001,xrcald,xrcacomp,xrcastus,xrca052,comb"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xrcadocno,xrca014,xrca004,xrca015,xrca005,xrca003,xrcadocdt,xrca063"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xrcasite">
+        <after>
+          <reference field="xrcasite_desc" ref_field="xrca_t.xrcasite" map_field="xrcaent,xrcasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+      </column>
+      <column id="xrcasite_desc"/>
+      <column id="xrca001" type="S" default="19" def_scc="8302"/>
+      <column id="xrcald">
+        <after>
+          <reference field="xrcald_desc" ref_field="xrca_t.xrcald" map_field="xrcaent,xrcald" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaald=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+      </column>
+      <column id="xrcald_desc"/>
+      <column id="xrcacomp">
+        <after>
+          <reference field="xrcacomp_desc" ref_field="xrca_t.xrcacomp" map_field="xrcaent,xrcacomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xrcacomp_desc"/>
+      <column id="xrcadocno">
+        <controlp form="q_xrcadocno" state="c"/>
+      </column>
+      <column id="xrca014">
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xrca004">
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="xrca015">
+        <controlp form="q_ooeg001_4" state="c"/>
+      </column>
+      <column id="xrca005">
+        <controlp form="q_pmac002_1" state="c"/>
+      </column>
+      <column id="xrca003">
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xrcadocdt"/>
+      <column id="xrca063">
+        <controlp form="q_xrca063" state="c"/>
+      </column>
+      <column id="xrcastus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="xrca052" type="S" default="0"/>
+      <column id="comb"/>
+    </init>
+  </form>
+</assembly>
+

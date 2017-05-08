@@ -1,0 +1,97 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi802" module="azz" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="00845" crtdt="2015-08-27 10:06:18" modid="00845" moddt="2015-08-27 10:06:18" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="畫面元件依需求隱藏設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzyf001"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzyf002,gzyf005"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gzyf002,gzyfownid,gzyfownid_desc(chr500),gzyfowndp,gzyfowndp_desc(chr500),gzyfcrtid,gzyfcrtid_desc(chr500),gzyfcrtdp,gzyfcrtdp_desc(chr500),gzyfcrtdt,gzyfmodid,gzyfmodid_desc(chr500),gzyfmoddt"/>
+      <var id="bs_field" value="gzyf001" pk="gzyf001" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi802" method="dialog">
+    <section id="input">
+      <input id="head" field="gzyf001"/>
+      <input id="body" page="1" field="gzyf002,gzyf005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzyf001"/>
+      <construct id="body" page="1" field="gzyf002,gzyf005"/>
+      <construct id="body" page="2" field="gzyfownid,gzyfowndp,gzyfcrtid,gzyfcrtdp,gzyfcrtdt,gzyfmodid,gzyfmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzyf001"/>
+      <set id="head" type="no_entry" field="gzyf001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gzyf001"/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzyf002"/>
+      <column id="gzyf005"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gzyfownid">
+        <after>
+          <reference field="gzyfownid_desc" ref_field="gzyf_t.gzyfownid" map_field="gzyfownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzyfownid_desc"/>
+      <column id="gzyfowndp">
+        <after>
+          <reference field="gzyfowndp_desc" ref_field="gzyf_t.gzyfowndp" map_field="gzyfowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzyfowndp_desc"/>
+      <column id="gzyfcrtid">
+        <after>
+          <reference field="gzyfcrtid_desc" ref_field="gzyf_t.gzyfcrtid" map_field="gzyfcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzyfcrtid_desc"/>
+      <column id="gzyfcrtdp">
+        <after>
+          <reference field="gzyfcrtdp_desc" ref_field="gzyf_t.gzyfcrtdp" map_field="gzyfcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzyfcrtdp_desc"/>
+      <column id="gzyfcrtdt"/>
+      <column id="gzyfmodid">
+        <after>
+          <reference field="gzyfmodid_desc" ref_field="gzyf_t.gzyfmodid" map_field="gzyfmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzyfmodid_desc"/>
+      <column id="gzyfmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzyf_t" pk="gzyf001">
+      <sql id="forupd_sql" type="sql" query="SELECT gzyf001 FROM gzyf_t WHERE gzyfent= ? AND gzyf001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzyf001 FROM gzyf_t" order="gzyf001"/>
+    </head>
+    <body id="gzyf_t" page="1,2" linked="" pk="gzyf002" fk="gzyf001">
+      <sql id="forupd_sql_detail" query="SELECT gzyf002,gzyf005,&apos;&apos;,gzyfownid,&apos;&apos;,gzyfowndp,&apos;&apos;,gzyfcrtid,&apos;&apos;,gzyfcrtdp,&apos;&apos;,gzyfcrtdt,gzyfmodid,&apos;&apos;,gzyfmoddt FROM gzyf_t WHERE gzyfent=? AND gzyf001=? AND gzyf002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzyf002,gzyf005,&apos;&apos;,gzyfownid,&apos;&apos;,gzyfowndp,&apos;&apos;,gzyfcrtid,&apos;&apos;,gzyfcrtdp,&apos;&apos;,gzyfcrtdt,gzyfmodid,&apos;&apos;,gzyfmoddt FROM gzyf_t WHERE gzyfent= ? AND gzyf001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

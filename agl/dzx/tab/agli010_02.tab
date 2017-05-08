@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli010_02" module="agl" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="02299" crtdt="2013-10-17 00:00:00" modid="02299" moddt="2013-10-17 00:00:00" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="部門設限">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glbbld,glbb001,glbb001_desc(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="agl" filename="agli010_02" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="glbbld,glbb001" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="glbbld"/>
+      <column id="glbb001">
+        <after>
+          <reference field="glbb001_desc" ref_field="glbb_t.glbb001" map_field="glbb001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="glbb001_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="glbb_t" page="1" linked="" pk="glbbld,glbb001">
+      <sql id="forupd_sql_detail" query="SELECT glbbld,glbb001,&apos;&apos; FROM glbb_t WHERE glbbent=? AND glbbld=? AND glbb001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glbbld,glbb001,&apos;&apos; FROM glbb_t WHERE glbbent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

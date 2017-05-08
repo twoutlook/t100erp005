@@ -1,0 +1,288 @@
+<add_points prog="aglt400_01" std_prog="aglt400_01" erpver="1.0" module="AGL" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="input.a.glax013" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_glax_m.glax013) THEN
+               CALL aglt400_01_glax013_chk(g_glax_m.glax013) 
+               IF NOT cl_null(g_errno) THEN
+                  CALL cl_err(g_glax_m.glax013,g_errno,0)
+                  LET g_glax_m.glax013 = g_glax_m.glax013_desc
+                  CALL aglt400_01_glax013_desc(g_glax_m.glax013) RETURNING g_glax_m.glax013_desc
+                  DISPLAY BY NAME g_glax_m.glax013_desc
+                  NEXT FIELD glax013
+               END IF 
+            END IF 
+            CALL aglt400_01_glax013_desc(g_glax_m.glax013) RETURNING g_glax_m.glax013_desc
+            DISPLAY BY NAME g_glax_m.glax013_desc         
+]]>
+</point>
+  <point name="input.a.glaxdocno" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_glax_m.glaxld) AND NOT cl_null(g_glax_m.glaxdocno) AND NOT cl_null(g_glax_m.glaxseq) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_glax_m.glaxld != g_glaxld_t  OR g_glax_m.glaxdocno != g_glaxdocno_t  OR g_glax_m.glaxseq != g_glaxseq_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glax_t WHERE "||"glaxent = '" ||g_enterprise|| "' AND "||"glaxld = '"||g_glax_m.glaxld ||"' AND "|| "glaxdocno = '"||g_glax_m.glaxdocno ||"' AND "|| "glaxseq = '"||g_glax_m.glaxseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.glaxld" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_glax_m.glaxld) AND NOT cl_null(g_glax_m.glaxdocno) AND NOT cl_null(g_glax_m.glaxseq) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_glax_m.glaxld != g_glaxld_t  OR g_glax_m.glaxdocno != g_glaxdocno_t  OR g_glax_m.glaxseq != g_glaxseq_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glax_t WHERE "||"glaxent = '" ||g_enterprise|| "' AND "||"glaxld = '"||g_glax_m.glaxld ||"' AND "|| "glaxdocno = '"||g_glax_m.glaxdocno ||"' AND "|| "glaxseq = '"||g_glax_m.glaxseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_glax_m.glaxld
+            CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_glax_m.glaxld_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_glax_m.glaxld_desc
+]]>
+</point>
+  <point name="input.a.glaxseq" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_glax_m.glaxld) AND NOT cl_null(g_glax_m.glaxdocno) AND NOT cl_null(g_glax_m.glaxseq) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_glax_m.glaxld != g_glaxld_t  OR g_glax_m.glaxdocno != g_glaxdocno_t  OR g_glax_m.glaxseq != g_glaxseq_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glax_t WHERE "||"glaxent = '" ||g_enterprise|| "' AND "||"glaxld = '"||g_glax_m.glaxld ||"' AND "|| "glaxdocno = '"||g_glax_m.glaxdocno ||"' AND "|| "glaxseq = '"||g_glax_m.glaxseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.c.glax013" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glax_m.glax013             #給予default值
+            LET g_qryparam.default2 = "" #g_glax_m.oofa011 #全名
+
+            #給予arg
+
+            CALL q_ooag001_2()                                     #呼叫開窗
+
+            LET g_glax_m.glax013 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            LET g_glax_m.glax013_desc = g_qryparam.return2 #全名
+
+            DISPLAY g_glax_m.glax013 TO glax013                    #顯示到畫面上
+            #DISPLAY g_glax_m.glax013_desc TO glax013_desc         #全名
+
+            NEXT FIELD glax013                                     #返回原欄位
+
+]]>
+</point>
+  <point name="input.c.glaxdocno" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glax_m.glaxdocno             #給予default值
+
+            #給予arg
+
+            CALL q_ooba002_4()                                #呼叫開窗
+
+            LET g_glax_m.glaxdocno = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_glax_m.glaxdocno TO glaxdocno              #顯示到畫面上
+
+            NEXT FIELD glaxdocno                          #返回原欄位
+
+]]>
+</point>
+  <point name="show.head.reference" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_glax_m.glaxld
+            CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_glax_m.glaxld_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_glax_m.glaxld_desc
+]]>
+</point>
+  <point name="function.aglt400_01_glax013_desc" cite_std="N" status="" ver="1" src="s" new="Y" order="1" cite_ver="" mark_hard="N">
+<![CDATA[#人员姓名
+PRIVATE FUNCTION aglt400_01_glax013_desc(p_glax013)
+    DEFINE l_oogf002_desc        LIKE oofa_t.oofa011
+    DEFINE p_glax013             LIKE glax_t.glax013
+
+    LET  l_oogf002_desc = ''
+    SELECT oofa011 INTO l_oogf002_desc FROM oofa_t
+     WHERE oofaent = g_enterprise
+       AND oofa001 IN (SELECT ooag002 FROM ooag_t
+                        WHERE ooagent = g_enterprise
+                          AND ooag001 = p_glax013)
+     RETURN l_oogf002_desc
+END FUNCTION]]>
+</point>
+  <point name="function.aglt400_01_glax013_chk" cite_std="N" status="" ver="1" src="s" new="Y" order="2" cite_ver="" mark_hard="N">
+<![CDATA[#人员检查
+PRIVATE FUNCTION aglt400_01_glax013_chk(p_glax013)
+   DEFINE p_glax013    LIKE glax_t.glax013 
+   DEFINE  l_ooagstus  LIKE ooag_t.ooagstus
+
+
+   LET g_errno=''
+   SELECT ooagstus INTO l_ooagstus FROM ooag_t
+    WHERE ooagent = g_enterprise
+      AND ooag001 = p_glax013
+
+   CASE
+      WHEN SQLCA.SQLCODE=100   LET g_errno = 'aoo-00074'
+      WHEN l_ooagstus ='N'     LET g_errno = 'aoo-00071'
+   END CASE
+END FUNCTION]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[DEFINE g_glax_m_t       type_g_glax_m]]>
+</point>
+  <point name="input.before_input" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            IF p_flag = 'a' THEN
+               LET g_glax_m.glax013 = g_user
+               LET g_glax_m.glax012 = g_today
+               LET g_glax_m.glax015 = '10'
+            ELSE
+               SELECT glax011,glax012,glax013,glax014,glax015,glax016
+                 INTO g_glax_m.glax011,g_glax_m.glax012,g_glax_m.glax013,g_glax_m.glax014,g_glax_m.glax015,g_glax_m.glax016
+                 FROM glax_t
+                WHERE glaxent = g_enterprise
+                  AND glaxld = p_glaxld
+                  AND glaxdocno = p_glaxdocno
+                  AND glaxseq = p_seq                
+            END IF 
+         
+          #旧值备份            
+            LET g_glax_m_t.* = g_glax_m.* 
+            CALL aglt400_01_glax013_desc(g_glax_m.glax013) RETURNING g_glax_m.glax013_desc            
+            DISPLAY BY NAME 
+            g_glax_m.glax011,g_glax_m.glax012,g_glax_m.glax013,g_glax_m.glax013_desc,g_glax_m.glax014,g_glax_m.glax015,g_glax_m.glax016]]>
+</point>
+  <point name="input.define" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   DEFINE p_flag          LIKE type_t.chr5       #资料状态
+   DEFINE p_glaxld        LIKE glax_t.glaxld     #帳別
+   DEFINE p_glaxdocno     LIKE glax_t.glaxdocno  #傳票编号
+   DEFINE p_glaxdocdt     LIKE glax_t.glaxdocdt  #傳票日期
+   DEFINE p_glaq002       LIKE glax_t.glax002    #科目     
+   DEFINE p_seq           LIKE glax_t.glaxseq    #项次]]>
+</point>
+  <point name="input.get_var" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[    p_flag,p_glaxld,p_glaxdocno,p_glaxdocdt,p_glaq002,p_seq]]>
+</point>
+  <point name="input.post_input" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[    IF INT_FLAG THEN
+      LET INT_FLAG = FALSE
+      IF p_flag = 'a' THEN
+         RETURN '','','','','',''
+      ELSE
+         RETURN g_glax_m_t.glax011,g_glax_m_t.glax012,g_glax_m_t.glax013,g_glax_m_t.glax014,g_glax_m_t.glax015,g_glax_m_t.glax016
+      END IF 
+   END IF
+ 
+   RETURN g_glax_m.glax011,g_glax_m.glax012,g_glax_m.glax013,g_glax_m.glax014,g_glax_m.glax015,g_glax_m.glax016]]>
+</point>
+  <point name="input.pre_input" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   INITIALIZE g_glax_m.* TO NULL
+   INITIALIZE g_glax_m_t.* TO NULL
+   #結算方式下拉
+   CALL cl_set_combo_scc('glax015','8310')   ]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.action" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.glax011" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.glax011" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.glax011" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.glax012" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.glax012" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.glax012" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.glax013" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.glax013" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.glax014" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.glax014" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.glax014" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.glax015" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.glax015" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.glax015" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.glax016" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.glax016" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.glax016" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.glax011" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.glax012" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.glax014" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.glax015" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.glax016" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.after_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.more_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.before_close" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+</add_points>

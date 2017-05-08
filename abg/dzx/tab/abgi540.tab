@@ -1,0 +1,140 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abgi540" module="abg" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="07904" crtdt="2016-10-17 09:49:09" modid="07904" moddt="2016-10-17 09:49:09" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="採購提前期設置">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bged001,bged001_desc(chr80),l_bgac001(chr5),l_bgac001_desc(chr80),bged002,bged002_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bged003,bged003_desc(chr500),bged004,bged004_desc(chr500),bged005,bged005_desc(chr500),bged006,bged007"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="bged003,bged004,bged005,bgedownid,bgedownid_desc(chr500),bgedowndp,bgedowndp_desc(chr500),bgedcrtid,bgedcrtid_desc(chr500),bgedcrtdp,bgedcrtdp_desc(chr500),bgedcrtdt,bgedmodid,bgedmodid_desc(chr500),bgedmoddt"/>
+      <var id="bs_field" value="bged001,bged002" pk="bged001,bged002" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abg" filename="abgi540" method="dialog">
+    <section id="input">
+      <input id="head" field="bged001,bged002"/>
+      <input id="body" page="1" field="bged003,bged004,bged005,bged006,bged007" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bged001,bged002"/>
+      <construct id="body" page="1" field="bged003,bged004,bged005,bged006,bged007"/>
+      <construct id="body" page="2" field="bgedownid,bgedowndp,bgedcrtid,bgedcrtdp,bgedcrtdt,bgedmodid,bgedmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bged001,bged002"/>
+      <set id="head" type="no_entry" field="bged001,bged002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bged001">
+        <after>
+          <reference field="bged001_desc" ref_field="bged_t.bged001" map_field="bged001" ref_sql="SELECT bgaal003 FROM bgaal_t WHERE bgaalent=$varg_enterprise$var AND bgaal001=? AND bgaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_bgaa001" state="i"/>
+        <controlp form="q_bgaa001" state="c"/>
+      </column>
+      <column id="bged001_desc"/>
+      <column id="l_bgac001">
+        <after>
+          <reference field="l_bgac001_desc" ref_field="l_bgac001" map_field="bgac001" ref_sql="SELECT bgacl003 FROM bgacl_t WHERE bgaclent=$varg_enterprise$var AND bgacl001=? AND bgacl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_bgac001" state="c"/>
+      </column>
+      <column id="l_bgac001_desc"/>
+      <column id="bged002">
+        <after>
+          <reference field="bged002_desc" ref_field="bged_t.bged002" map_field="bged002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="bged002_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="bged003">
+        <after>
+          <reference field="bged003_desc" ref_field="bged_t.bged003" map_field="bged003" ref_sql="SELECT bgapl005 FROM bgapl_t WHERE bgaplent=$varg_enterprise$var AND bgapl001=? AND bgapl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_bgap001" state="i"/>
+        <controlp form="q_bgap001" state="c"/>
+      </column>
+      <column id="bged003_desc"/>
+      <column id="bged004">
+        <after>
+          <reference field="bged004_desc" ref_field="bged004" map_field="bged004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;200&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bged004_desc"/>
+      <column id="bged005">
+        <after>
+          <reference field="bged005_desc" ref_field="bged_t.bged005" map_field="bged005" ref_sql="SELECT bgasl003 FROM bgasl_t WHERE bgaslent=$varg_enterprise$var AND bgasl001=? AND bgasl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_bgas001" state="i"/>
+        <controlp form="q_bgas001" state="c"/>
+      </column>
+      <column id="bged005_desc"/>
+      <column id="bged006"/>
+      <column id="bged007" type="S" default="0"/>
+    </init>
+    <init id="body" page="2">
+      <column id="bgedownid">
+        <after>
+          <reference field="bgedownid_desc" ref_field="bged_t.bgedownid" map_field="bgedownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgedownid_desc"/>
+      <column id="bgedowndp">
+        <after>
+          <reference field="bgedowndp_desc" ref_field="bged_t.bgedowndp" map_field="bgedowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgedowndp_desc"/>
+      <column id="bgedcrtid">
+        <after>
+          <reference field="bgedcrtid_desc" ref_field="bged_t.bgedcrtid" map_field="bgedcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgedcrtid_desc"/>
+      <column id="bgedcrtdp">
+        <after>
+          <reference field="bgedcrtdp_desc" ref_field="bged_t.bgedcrtdp" map_field="bgedcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgedcrtdp_desc"/>
+      <column id="bgedcrtdt"/>
+      <column id="bgedmodid">
+        <after>
+          <reference field="bgedmodid_desc" ref_field="bged_t.bgedmodid" map_field="bgedmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgedmodid_desc"/>
+      <column id="bgedmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bged_t" pk="bged001,bged002">
+      <sql id="forupd_sql" type="sql" query="SELECT bged001,&apos;&apos;,&apos;&apos;,&apos;&apos;,bged002,&apos;&apos; FROM bged_t WHERE bgedent= ? AND bged001=? AND bged002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bged001,&apos;&apos;,&apos;&apos;,&apos;&apos;,bged002,&apos;&apos; FROM bged_t" order="bged001,bged002"/>
+    </head>
+    <body id="bged_t" page="1,2" linked="" pk="bged003,bged004,bged005" fk="bged001,bged002">
+      <sql id="forupd_sql_detail" query="SELECT bged003,&apos;&apos;,bged004,&apos;&apos;,bged005,&apos;&apos;,bged006,bged007,&apos;&apos;,&apos;&apos;,&apos;&apos;,bgedownid,&apos;&apos;,bgedowndp,&apos;&apos;,bgedcrtid,&apos;&apos;,bgedcrtdp,&apos;&apos;,bgedcrtdt,bgedmodid,&apos;&apos;,bgedmoddt FROM bged_t WHERE bgedent=? AND bged001=? AND bged002=? AND bged003=? AND bged004=? AND bged005=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bged003,&apos;&apos;,bged004,&apos;&apos;,bged005,&apos;&apos;,bged006,bged007,&apos;&apos;,&apos;&apos;,&apos;&apos;,bgedownid,&apos;&apos;,bgedowndp,&apos;&apos;,bgedcrtid,&apos;&apos;,bgedcrtdp,&apos;&apos;,bgedcrtdt,bgedmodid,&apos;&apos;,bgedmoddt FROM bged_t WHERE bgedent= ? AND bged001=? AND bged002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

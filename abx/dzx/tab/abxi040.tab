@@ -1,0 +1,97 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abxi040" module="abx" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="06814" crtdt="2016-07-14 15:58:36" modid="06814" moddt="2016-07-14 16:05:24" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="委外加工核准函維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bxadsite,bxad001,bxad002,bxad002_desc(chr80),bxad003,bxad004,bxad005,bxadstus,bxadownid,bxadownid_desc(chr80),bxadowndp,bxadowndp_desc(chr80),bxadcrtid,bxadcrtid_desc(chr80),bxadcrtdp,bxadcrtdp_desc(chr80),bxadcrtdt,bxadmodid,bxadmodid_desc(chr80),bxadmoddt"/>
+      <var id="bs_field" value="bxadsite,bxad001,bxad002,bxad003,bxad004,bxad005" pk="bxadsite,bxad001" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abx" filename="abxi040" method="dialog">
+    <section id="input">
+      <input id="head" field="bxadsite,bxad001,bxad002,bxad003,bxad004,bxad005,bxadstus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bxadsite,bxad001,bxad002,bxad003,bxad004,bxad005,bxadstus,bxadownid,bxadowndp,bxadcrtid,bxadcrtdp,bxadcrtdt,bxadmodid,bxadmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bxadsite,bxad001"/>
+      <set id="head" type="no_entry" field="bxadsite,bxad001"/>
+    </init>
+    <init id="head">
+      <column id="bxadsite">
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="bxad001"/>
+      <column id="bxad002">
+        <after>
+          <check chkid="v_pmaa001_23" id="isExist"/>
+          <reference field="bxad002_desc" ref_field="bxad_t.bxad002" map_field="bxad002" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_10" state="i"/>
+        <controlp form="q_pmaa001_10" state="c"/>
+      </column>
+      <column id="bxad002_desc"/>
+      <column id="bxad003"/>
+      <column id="bxad004"/>
+      <column id="bxad005" type="S" default="N"/>
+      <column id="bxadstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="bxadownid">
+        <after>
+          <reference field="bxadownid_desc" ref_field="bxad_t.bxadownid" map_field="bxadownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxadownid_desc"/>
+      <column id="bxadowndp">
+        <after>
+          <reference field="bxadowndp_desc" ref_field="bxad_t.bxadowndp" map_field="bxadowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bxadowndp_desc"/>
+      <column id="bxadcrtid">
+        <after>
+          <reference field="bxadcrtid_desc" ref_field="bxad_t.bxadcrtid" map_field="bxadcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxadcrtid_desc"/>
+      <column id="bxadcrtdp">
+        <after>
+          <reference field="bxadcrtdp_desc" ref_field="bxad_t.bxadcrtdp" map_field="bxadcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bxadcrtdp_desc"/>
+      <column id="bxadcrtdt"/>
+      <column id="bxadmodid">
+        <after>
+          <reference field="bxadmodid_desc" ref_field="bxad_t.bxadmodid" map_field="bxadmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxadmodid_desc"/>
+      <column id="bxadmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bxad_t" pk="bxadsite,bxad001">
+      <sql id="forupd_sql" type="sql" query="SELECT bxadsite,bxad001,bxad002,&apos;&apos;,bxad003,bxad004,bxad005,bxadstus,bxadownid,&apos;&apos;,bxadowndp,&apos;&apos;,bxadcrtid,&apos;&apos;,bxadcrtdp,&apos;&apos;,bxadcrtdt,bxadmodid,&apos;&apos;,bxadmoddt FROM bxad_t WHERE bxadent= ? AND bxadsite=? AND bxad001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bxadsite,bxad001 FROM bxad_t" order="bxadsite,bxad001"/>
+    </head>
+  </dataset>
+</assembly>
+

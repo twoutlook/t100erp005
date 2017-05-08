@@ -1,0 +1,92 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmi980" module="anm" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="04152" crtdt="2014-07-29 11:48:31" modid="06821" moddt="2015-07-15 17:46:42" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="內部資金調度項目維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmbnstus,nmbn001,nmbnl003"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="nmbn001,nmbnownid,nmbnownid_desc(chr500),nmbnowndp,nmbnowndp_desc(chr500),nmbncrtid,nmbncrtid_desc(chr500),nmbncrtdp,nmbncrtdp_desc(chr500),nmbncrtdt,nmbnmodid,nmbnmodid_desc(chr500),nmbnmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmi980" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="nmbnstus,nmbn001,nmbnl003" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="nmbnstus,nmbn001,nmbnl003"/>
+      <construct id="body" page="2" field="nmbnownid,nmbnowndp,nmbncrtid,nmbncrtdp,nmbncrtdt,nmbnmodid,nmbnmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="nmbnstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="nmbn001"/>
+      <column id="nmbnl003"/>
+    </init>
+    <init id="body" page="2">
+      <column id="nmbnownid">
+        <after>
+          <reference field="nmbnownid_desc" ref_field="nmbn_t.nmbnownid" map_field="nmbnownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbnownid_desc"/>
+      <column id="nmbnowndp">
+        <after>
+          <reference field="nmbnowndp_desc" ref_field="nmbn_t.nmbnowndp" map_field="nmbnowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmbnowndp_desc"/>
+      <column id="nmbncrtid">
+        <after>
+          <reference field="nmbncrtid_desc" ref_field="nmbn_t.nmbncrtid" map_field="nmbncrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbncrtid_desc"/>
+      <column id="nmbncrtdp">
+        <after>
+          <reference field="nmbncrtdp_desc" ref_field="nmbn_t.nmbncrtdp" map_field="nmbncrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmbncrtdp_desc"/>
+      <column id="nmbncrtdt"/>
+      <column id="nmbnmodid">
+        <after>
+          <reference field="nmbnmodid_desc" ref_field="nmbn_t.nmbnmodid" map_field="nmbnmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbnmodid_desc"/>
+      <column id="nmbnmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="nmbn_t" page="1,2" linked="" pk="nmbn001">
+      <sql id="forupd_sql_detail" query="SELECT nmbnstus,nmbn001,&apos;&apos;,&apos;&apos;,nmbnownid,&apos;&apos;,nmbnowndp,&apos;&apos;,nmbncrtid,&apos;&apos;,nmbncrtdp,&apos;&apos;,nmbncrtdt,nmbnmodid,&apos;&apos;,nmbnmoddt FROM nmbn_t WHERE nmbnent=? AND nmbn001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmbnstus,nmbn001,&apos;&apos;,&apos;&apos;,nmbnownid,&apos;&apos;,nmbnowndp,&apos;&apos;,nmbncrtid,&apos;&apos;,nmbncrtdp,&apos;&apos;,nmbncrtdt,nmbnmodid,&apos;&apos;,nmbnmoddt FROM nmbn_t WHERE nmbnent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="nmbnl_t.nmbnl003" table="nmbnl_t" fk="nmbn001" pk="nmbnl001,nmbnl002" field="nmbnl003"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,173 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi420" module="aoo" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="01996" crtdt="2013-07-01 00:00:00" modid="02295" moddt="2016-08-01 09:36:08" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="行事曆維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="oogc001,oogc001_desc(chr80),oogc015,oogc002"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="oogcstus,oogc003,lbl_week_desc(chr500),oogc003_desc(chr500),oogc004,oogc004_desc(chr500),oogc005,oogc008,oogc006,oogc007,oogc016,oogc017,oogc009,oogc010,oogc010_desc(chr500),oogc011,oogc011_desc(chr500),oogc012,oogc012_desc(chr500),oogc013,oogc013_desc(chr500),oogc014,oogc014_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail1_info" page_id="1_info" value="oogc003_s_detail1_info(chr500),oogcmodid,oogcmodid_desc(chr500),oogcmoddt,oogcownid,oogcownid_desc(chr500),oogcowndp,oogcowndp_desc(chr500),oogccrtid,oogccrtid_desc(chr500),oogccrtdp,oogccrtdp_desc(chr500),oogccrtdt"/>
+      <var id="bs_field" value="oogc001,oogc001_desc(chr80),oogc002,oogc015" pk="oogc001,oogc002,oogc015" order=""/>
+      <bs_reference field="oogc001_desc" ref_field="oogc001" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;4&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="aooi420_01"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi420" method="dialog">
+    <section id="input">
+      <input id="head" field="oogc001,oogc015,oogc002"/>
+      <input id="body" page="1" field="oogc003,oogc004,oogc005,oogc008,oogc006,oogc007,oogc016,oogc009,oogc010,oogc011,oogc012,oogc013,oogc014" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="oogc015,oogc002"/>
+      <construct id="body" page="1" field="oogc003,oogc004,oogc005,oogc008,oogc006,oogc007,oogc016,oogc009,oogc010,oogc011,oogc012,oogc013,oogc014"/>
+      <construct id="body" page="2" field="oogcmodid,oogcmoddt,oogcownid,oogcowndp,oogccrtid,oogccrtdp,oogccrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="oogc001,oogc002,oogc015"/>
+      <set id="head" type="no_entry" field="oogc001,oogc002,oogc015"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="oogc001">
+        <after>
+          <reference field="oogc001_desc" ref_field="oogc001" map_field="oogc001" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;4&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooal002" state="i"/>
+        <controlp form="q_ooal002" state="c"/>
+      </column>
+      <column id="oogc001_desc"/>
+      <column id="oogc015"/>
+      <column id="oogc002" type="S" default="2" def_scc="25"/>
+    </init>
+    <init id="body" page="1">
+      <column id="oogcstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="oogc003">
+        <after>
+          <reference field="oogc003_desc" ref_field="oogc_t.oogc003" map_field="oogc003" ref_sql="SELECT ooga003 FROM ooga_t WHERE oogaent=$varg_enterprise$var AND ooga001=? "/>
+        </after>
+      </column>
+      <column id="lbl_week_desc"/>
+      <column id="oogc003_desc"/>
+      <column id="oogc004">
+        <after>
+          <reference field="oogc004_desc" ref_field="oogc004" map_field="oogc004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;6&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="oogc004_desc"/>
+      <column id="oogc005"/>
+      <column id="oogc008"/>
+      <column id="oogc006"/>
+      <column id="oogc007"/>
+      <column id="oogc016"/>
+      <column id="oogc017"/>
+      <column id="oogc009"/>
+      <column id="oogc010">
+        <after>
+          <reference field="oogc010_desc" ref_field="oogc010" map_field="oogc010" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;7&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="oogc010_desc"/>
+      <column id="oogc011">
+        <after>
+          <reference field="oogc011_desc" ref_field="oogc011" map_field="oogc011" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;8&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="oogc011_desc"/>
+      <column id="oogc012">
+        <after>
+          <reference field="oogc012_desc" ref_field="oogc012" map_field="oogc012" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;9&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="oogc012_desc"/>
+      <column id="oogc013">
+        <after>
+          <reference field="oogc013_desc" ref_field="oogc013" map_field="oogc013" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;10&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="oogc013_desc"/>
+      <column id="oogc014">
+        <after>
+          <reference field="oogc014_desc" ref_field="oogc014" map_field="oogc014" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;11&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oogb009_1" state="i"/>
+        <controlp form="q_oogc014" state="c"/>
+      </column>
+      <column id="oogc014_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="oogc003_s_detail1_info"/>
+      <column id="oogcmodid">
+        <after>
+          <reference field="oogcmodid_desc" ref_field="oogc_t.oogcmodid" map_field="oogcmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oogcmodid_desc"/>
+      <column id="oogcmoddt"/>
+      <column id="oogcownid">
+        <after>
+          <reference field="oogcownid_desc" ref_field="oogc_t.oogcownid" map_field="oogcownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oogcownid_desc"/>
+      <column id="oogcowndp">
+        <after>
+          <reference field="oogcowndp_desc" ref_field="oogc_t.oogcowndp" map_field="oogcowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oogcowndp_desc"/>
+      <column id="oogccrtid">
+        <after>
+          <reference field="oogccrtid_desc" ref_field="oogc_t.oogccrtid" map_field="oogccrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oogccrtid_desc"/>
+      <column id="oogccrtdp">
+        <after>
+          <reference field="oogccrtdp_desc" ref_field="oogc_t.oogccrtdp" map_field="oogccrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oogccrtdp_desc"/>
+      <column id="oogccrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="oogc_t" pk="oogc001,oogc002,oogc015">
+      <sql id="forupd_sql" type="sql" query="SELECT oogc001,&apos;&apos;,oogc015,oogc002 FROM oogc_t WHERE oogcent= ? AND oogc001=? AND oogc002=? AND oogc015=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT oogc001,&apos;&apos;,oogc015,oogc002 FROM oogc_t" order="oogc001,oogc002,oogc015"/>
+    </head>
+    <body id="oogc_t" page="1,2" linked="" pk="oogc003" fk="oogc001,oogc002,oogc015">
+      <sql id="forupd_sql_detail" query="SELECT oogcstus,oogc003,&apos;&apos;,&apos;&apos;,oogc004,&apos;&apos;,oogc005,oogc008,oogc006,oogc007,oogc016,oogc017,oogc009,oogc010,&apos;&apos;,oogc011,&apos;&apos;,oogc012,&apos;&apos;,oogc013,&apos;&apos;,oogc014,&apos;&apos;,&apos;&apos;,oogcmodid,&apos;&apos;,oogcmoddt,oogcownid,&apos;&apos;,oogcowndp,&apos;&apos;,oogccrtid,&apos;&apos;,oogccrtdp,&apos;&apos;,oogccrtdt FROM oogc_t WHERE oogcent=? AND oogc001=? AND oogc002=? AND oogc015=? AND oogc003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT oogcstus,oogc003,&apos;&apos;,&apos;&apos;,oogc004,&apos;&apos;,oogc005,oogc008,oogc006,oogc007,oogc016,oogc017,oogc009,oogc010,&apos;&apos;,oogc011,&apos;&apos;,oogc012,&apos;&apos;,oogc013,&apos;&apos;,oogc014,&apos;&apos;,&apos;&apos;,oogcmodid,&apos;&apos;,oogcmoddt,oogcownid,&apos;&apos;,oogcowndp,&apos;&apos;,oogccrtid,&apos;&apos;,oogccrtdp,&apos;&apos;,oogccrtdt FROM oogc_t WHERE oogcent= ? AND oogc001=? AND oogc002=? AND oogc015=?"/>
+    </body>
+  </dataset>
+</assembly>
+

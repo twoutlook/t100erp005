@@ -1,0 +1,137 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli530" module="agl" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="06821" crtdt="2015-05-12 15:05:31" modid="06821" moddt="2015-05-13 17:53:47" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="合併報表揭露事項維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gldzld,gldzld_desc(chr80),gldz001,gldz001_desc(chr80),glaa001,glaa016,glaa020,gldz003,gldz004,gldz002"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gldz005,gldz006,gldz007,gldz008,gldz009,gldz010,gldz011,gldzstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gldz005,gldzownid,gldzownid_desc(chr500),gldzowndp,gldzowndp_desc(chr500),gldzcrtid,gldzcrtid_desc(chr500),gldzcrtdp,gldzcrtdp_desc(chr500),gldzcrtdt,gldzmodid,gldzmodid_desc(chr500),gldzmoddt"/>
+      <var id="bs_field" value="gldzld,gldz001,gldz002,gldz004,gldz003" pk="gldzld,gldz001,gldz002,gldz003,gldz004" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="agli530" method="dialog">
+    <section id="input">
+      <input id="head" field="gldzld,gldz001,gldz003,gldz004,gldz002"/>
+      <input id="body" page="1" field="gldz005,gldz006,gldz007,gldz008,gldz009,gldz010,gldz011,gldzstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gldzld,gldz001,gldz003,gldz004,gldz002"/>
+      <construct id="body" page="1" field="gldz005,gldz006,gldz007,gldz008,gldz009,gldz010,gldz011,gldzstus"/>
+      <construct id="body" page="2" field="gldzownid,gldzowndp,gldzcrtid,gldzcrtdp,gldzcrtdt,gldzmodid,gldzmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gldzld,gldz001,gldz002,gldz003,gldz004"/>
+      <set id="head" type="no_entry" field="gldzld,gldz001,gldz002,gldz003,gldz004"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gldzld">
+        <after/>
+      </column>
+      <column id="gldzld_desc"/>
+      <column id="gldz001">
+        <after/>
+      </column>
+      <column id="gldz001_desc"/>
+      <column id="glaa001"/>
+      <column id="glaa016"/>
+      <column id="glaa020"/>
+      <column id="gldz003"/>
+      <column id="gldz004"/>
+      <column id="gldz002" def_scc="8029"/>
+    </init>
+    <init id="body" page="1">
+      <column id="gldz005"/>
+      <column id="gldz006"/>
+      <column id="gldz007" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="gldz008" type="S" default="1">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="gldz009" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="gldz010" type="S" default="1">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="gldz011" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="gldzstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="gldzownid">
+        <after>
+          <reference field="gldzownid_desc" ref_field="gldz_t.gldzownid" map_field="gldzownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gldzownid_desc"/>
+      <column id="gldzowndp">
+        <after>
+          <reference field="gldzowndp_desc" ref_field="gldz_t.gldzowndp" map_field="gldzowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gldzowndp_desc"/>
+      <column id="gldzcrtid">
+        <after>
+          <reference field="gldzcrtid_desc" ref_field="gldz_t.gldzcrtid" map_field="gldzcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gldzcrtid_desc"/>
+      <column id="gldzcrtdp">
+        <after>
+          <reference field="gldzcrtdp_desc" ref_field="gldz_t.gldzcrtdp" map_field="gldzcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gldzcrtdp_desc"/>
+      <column id="gldzcrtdt"/>
+      <column id="gldzmodid">
+        <after>
+          <reference field="gldzmodid_desc" ref_field="gldz_t.gldzmodid" map_field="gldzmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gldzmodid_desc"/>
+      <column id="gldzmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gldz_t" pk="gldzld,gldz001,gldz002,gldz003,gldz004">
+      <sql id="forupd_sql" type="sql" query="SELECT gldzld,&apos;&apos;,gldz001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,gldz003,gldz004,gldz002 FROM gldz_t WHERE gldzent= ? AND gldzld=? AND gldz001=? AND gldz002=? AND gldz003=? AND gldz004=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gldzld,&apos;&apos;,gldz001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,gldz003,gldz004,gldz002 FROM gldz_t" order="gldzld,gldz001,gldz002,gldz003,gldz004"/>
+    </head>
+    <body id="gldz_t" page="1,2" linked="" pk="gldz005" fk="gldzld,gldz001,gldz002,gldz003,gldz004">
+      <sql id="forupd_sql_detail" query="SELECT gldz005,gldz006,gldz007,gldz008,gldz009,gldz010,gldz011,gldzstus,&apos;&apos;,gldzownid,&apos;&apos;,gldzowndp,&apos;&apos;,gldzcrtid,&apos;&apos;,gldzcrtdp,&apos;&apos;,gldzcrtdt,gldzmodid,&apos;&apos;,gldzmoddt FROM gldz_t WHERE gldzent=? AND gldzld=? AND gldz001=? AND gldz002=? AND gldz003=? AND gldz004=? AND gldz005=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gldz005,gldz006,gldz007,gldz008,gldz009,gldz010,gldz011,gldzstus,&apos;&apos;,gldzownid,&apos;&apos;,gldzowndp,&apos;&apos;,gldzcrtid,&apos;&apos;,gldzcrtdp,&apos;&apos;,gldzcrtdt,gldzmodid,&apos;&apos;,gldzmoddt FROM gldz_t WHERE gldzent= ? AND gldzld=? AND gldz001=? AND gldz002=? AND gldz003=? AND gldz004=?"/>
+    </body>
+  </dataset>
+</assembly>
+

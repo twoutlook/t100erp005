@@ -1,0 +1,110 @@
+---------------------------------------------------------------------------------- 
+-- File created from /u1/topprd/erp/anm/42f/anmp802.4fd by Genero Studio
+-- WARNING! All changes made in this file will be lost!
+----------------------------------------------------------------------------------
+
+SCHEMA ds
+
+LAYOUT (tag="P001_00", minWidth=0, minHeight=0, spacing=compact, text=%"anmp802")
+VBox mainlayout(tag="CantDel_FormRoot", splitter)
+Folder condition
+Page condition_page(action=condition_input, text=%"condition_page")
+VBox vb_qbe(tag="CantDel", splitter)
+Group group_qbe(text=%"group_qbe")
+HBox group_qbe_hbox(tag="")
+Grid group_qbe_hbox_grid(tag="insW")
+{
+
+[lbl_nmbc00|nmbc002           ]
+
+
+}
+END -- group_qbe_hbox_grid
+END -- group_qbe_hbox
+END -- group_qbe
+Group group_input(text=%"group_input", comment=%"")
+HBox group_input_hbox(tag="")
+Grid group_input_hbox_grid(tag="insW")
+{
+
+[lbl_bdate |bdate     |l|edate     ]
+[lbl_ar    |ar        |lb]
+[lbl_day   |d         ]
+[lbl_in    |cin       |cin_desc                 ]
+[lbl_out   |tout      |tout_desc                ]
+[lbl_nmbado|nmbadocno ]
+
+}
+END -- group_input_hbox_grid
+END -- group_input_hbox
+END -- group_input
+Group group_progress(text=%"group_progress")
+Grid grid1
+{
+[lbl_stagen][stagenow                                ]
+[lbl_stagec][stagecomplete                           ]
+}
+END -- grid1
+END -- group_progress
+END -- vb_qbe
+END -- condition_page
+Page scheduling_page(tag="CantDel", action=scheduling_setting, text=%"scheduling_page")
+Grid scheduling_grid(tag="CantDel")
+{
+
+
+
+
+
+}
+END -- scheduling_grid
+END -- scheduling_page
+Page history_page(action=history_fill, text=%"history_page")
+Grid executehistory_grid
+{
+
+
+
+
+
+}
+END -- executehistory_grid
+END -- history_page
+END -- condition
+END -- mainlayout
+END -- anmp802
+
+TABLES
+nmba_t,
+nmbc_t,
+type_t
+ATTRIBUTES
+Label lbl_nmbc00:lbl_nmbc002, tag="", text=%"lbl_nmbc002", color = black, sizePolicy=initial, comment=%"cmt_nmbc002";
+ButtonEdit nmbc002=nmbc_t.nmbc002, tag="", action=controlp, default = "", not null, required, INCLUDE = (NULL), color = black, image="16/openwindow.png", upShift, program="", scroll, sizePolicy=initial, style="required", century="R", comment=%"cmt_nmbc002";
+Label lbl_bdate:lbl_bdate, tag="", text=%"lbl_bdate", color = black, sizePolicy=initial, comment=%"cmt_bdate";
+DateEdit bdate=formonly.bdate type like type_t.dat, tag="", default = "", not null, required, INCLUDE = (NULL), color = black, sizePolicy=initial, style="required", century="R", comment=%"cmt_bdate";
+Label l:lbl_edate, tag="", text=%"lbl_edate", color = black, sizePolicy=initial, comment=%"cmt_edate";
+DateEdit edate=formonly.edate type like type_t.dat, tag="", default = "", not null, required, INCLUDE = (NULL), color = black, sizePolicy=initial, style="required", century="R", comment=%"cmt_edate";
+Label lbl_ar:lbl_ar, tag="", text=%"lbl_ar", color = black, sizePolicy=initial, comment=%"cmt_ar";
+Edit ar=formonly.ar type like type_t.num20_6, tag="", default = "", noEntry, INCLUDE = (NULL), color = black, program="", scroll, sizePolicy=initial, century="R", format="---&.&&&", comment=%"cmt_ar";
+Label lb:lbl_ar1, tag="", text=%"lbl_ar1", color = black, sizePolicy=initial, comment=%"cmt_ar1";
+Label lbl_day:lbl_day, tag="", text=%"lbl_day", color = black, sizePolicy=initial, comment=%"cmt_day";
+Edit d=formonly.d type like type_t.num10, tag="", default = "", noEntry, INCLUDE = (NULL), color = black, program="", scroll, sizePolicy=initial, century="R", comment=%"cmt_day";
+Label lbl_in:lbl_in, tag="", text=%"lbl_in", color = black, sizePolicy=initial, comment=%"cmt_in";
+ButtonEdit cin=formonly.cin type like type_t.chr10, tag="", action=controlp, default = "", not null, required, INCLUDE = (NULL), color = black, image="16/openwindow.png", program="", scroll, sizePolicy=initial, style="required", century="R", format="11", comment=%"cmt_cin";
+LABEL cin_desc=formonly.cin_desc type CHAR, tag="", color = black, sizePolicy=initial, comment=%"cmt_cin_desc";
+Label lbl_out:lbl_out, tag="", text=%"lbl_out", color = black, sizePolicy=initial, comment=%"cmt_out";
+ButtonEdit tout=formonly.tout type like type_t.chr10, tag="", action=controlp, default = "", not null, required, INCLUDE = (NULL), color = black, image="16/openwindow.png", program="", scroll, sizePolicy=initial, style="required", century="R", format="11", comment=%"cmt_tout";
+LABEL tout_desc=formonly.tout_desc type CHAR, tag="", color = black, sizePolicy=initial, comment=%"cmt_tout_desc";
+Label lbl_nmbado:lbl_nmbadocno, tag="", text=%"lbl_nmbadocno", color = black, sizePolicy=initial, comment=%"cmt_nmbadocno";
+ButtonEdit nmbadocno=nmba_t.nmbadocno, tag="", action=controlp, default = "", not null, required, INCLUDE = (NULL), color = black, image="16/openwindow.png", upShift, program="", scroll, sizePolicy=initial, style="required", century="R", comment=%"cmt_nmbadocno";
+Label lbl_stagen:lbl_stagenow, text=%"lbl_stagenow", color = black, sizePolicy=initial;
+LABEL stagenow=formonly.stagenow type CHAR, color = black, sizePolicy=initial;
+Label lbl_stagec:lbl_stagecomplete, text=%"lbl_stagecomplete", color = black, sizePolicy=initial;
+ProgressBar stagecomplete=formonly.stagecomplete type CHAR, valueMin=0, valueMax=100, color = black, sizePolicy=initial;
+END -- ATTRIBUTES
+
+INSTRUCTIONS
+SCREEN RECORD Undefined(nmbc_t.nmbc002,formonly.bdate,formonly.edate,formonly.ar,formonly.d,formonly.cin,formonly.cin_desc,formonly.tout,formonly.tout_desc,nmba_t.nmbadocno,formonly.stagenow,formonly.stagecomplete)
+END -- INSTRUCTIONS
+

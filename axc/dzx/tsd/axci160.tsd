@@ -1,0 +1,270 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axci160" std_prog="axci160" erpver="1.0" ver="3" module="AXC" type="M" booking="Y" designer_ver="1.0" class="i" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="sfaa_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 用于工单状态的查询与维护
+標準作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：(基本資料/交易單據)維護作業
+輸入模式：假雙檔(子作業)無搭配任何方案F003_00
+作業資料來源(Master)：
+ 資料來源表：xcbg_t
+
+
+此處描述非各別欄位控卡的邏輯段
+
+此作业无table:
+单头成本计算年度与期别读取成本参数档中数据
+单身读取工单档数据，
+仅"返工"及"成会结案日"允许更改，更改后，回写工单档
+(数据显示过滤掉工单档的工单类型=预测工单　或审核码=作废的工单)
+更改限制:
+在此作业录入的成会结案日不可小于当前最后的出入库异动日
+成会结案日或小于成本结算年月的数据，不可再异动。如当前年度期别为2013/09,结案日<2013/09/01的数据，不允许进行结案日的更改
+]]>
+  </all>
+  <field cite_std="N" name="lastday" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[显示该期别月份最后一天
+]]>
+  </field>
+  <field cite_std="N" name="mm" ver="2" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[期别：
+现行成本计算期别
+]]>
+  </field>
+  <field cite_std="N" name="ooef001" ver="2" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="q_ooef001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[法人组织：
+必录项
+   ●欄位控管：
+     資料欄位:[T:组织档].[C:组织编号]
+              輸入值須存在[T:组织档].[C:组织编号]且為有效資料
+             组织类型“法人组织”
+]]>
+  </field>
+  <field cite_std="N" name="sfaa_t.sfaa003" ver="1" src="s" column="sfaa003" table="sfaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="4007" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[类型：
+读取工单主档数据
+]]>
+  </field>
+  <field cite_std="N" name="sfaa_t.sfaa010" ver="1" src="s" column="sfaa010" table="sfaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_imaa001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[产品编号：
+读取工单主档数据
+]]>
+  </field>
+  <field cite_std="N" name="sfaa_t.sfaa012" ver="1" src="s" column="sfaa012" table="sfaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[预计产量：
+读取工单主档数据
+]]>
+  </field>
+  <field cite_std="N" name="sfaa_t.sfaa042" ver="1" src="s" column="sfaa042" table="sfaa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[返工：
+读取工单主档数据，允许更改，更改后回写工单主档
+]]>
+  </field>
+  <field cite_std="N" name="sfaa_t.sfaa048" ver="1" src="s" column="sfaa048" table="sfaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[成会结案日：
+允许更改，更改后回写工单主档
+更改后的成会结案日不可小于当前最后的出入库异动日
+成会结案日或小于成本结算年月的数据，不可再异动。如当前年度期别为2013/09,结案日<2013/09/01的数据，不允许进行结案日的更改
+]]>
+  </field>
+  <field cite_std="N" name="sfaa_t.sfaacnfdt" ver="1" src="s" column="sfaacnfdt" table="sfaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfaa_t.sfaacnfid" ver="1" src="s" column="sfaacnfid" table="sfaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfaa_t.sfaacrtdp" ver="1" src="s" column="sfaacrtdp" table="sfaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfaa_t.sfaacrtdt" ver="1" src="s" column="sfaacrtdt" table="sfaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfaa_t.sfaacrtid" ver="1" src="s" column="sfaacrtid" table="sfaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfaa_t.sfaadocdt" ver="1" src="s" column="sfaadocdt" table="sfaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[开单日期：
+读取工单主档数据]]>
+  </field>
+  <field cite_std="N" name="sfaa_t.sfaadocno" ver="2" src="s" column="sfaadocno" table="sfaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_sfaadocno_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[工单编号：
+读取工单主档数据
+]]>
+  </field>
+  <field cite_std="N" name="sfaa_t.sfaamoddt" ver="1" src="s" column="sfaamoddt" table="sfaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfaa_t.sfaamodid" ver="1" src="s" column="sfaamodid" table="sfaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfaa_t.sfaaowndp" ver="1" src="s" column="sfaaowndp" table="sfaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfaa_t.sfaaownid" ver="1" src="s" column="sfaaownid" table="sfaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfaa_t.sfaapstdt" ver="1" src="s" column="sfaapstdt" table="sfaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfaa_t.sfaapstid" ver="1" src="s" column="sfaapstid" table="sfaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sfaa_t.sfaasite" ver="1" src="s" column="sfaasite" table="sfaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooef001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[营运据点：
+不允许空白
+选项值为单头"法人组织"的下属营运据点，来源于组织档，组织类型为“营运组织”or“核算组织”]]>
+  </field>
+  <field cite_std="N" name="sfaa_t.sfaastus" ver="1" src="s" column="sfaastus" table="sfaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[状态：
+读取工单主档数据]]>
+  </field>
+  <field cite_std="N" name="sfaadocno_2" ver="1" src="s" column="sfaadocno" table="sfaa_t" attribute="" type="" req="Y" i_zoom="q_ooba002" c_zoom="q_sfaadocno_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="tot" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[月底累计入库数量：
+读取工单主档数据
+]]>
+  </field>
+  <field cite_std="N" name="xcbg004" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="yy" ver="2" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[年度：
+现行计算年度
+]]>
+  </field>
+  <field cite_std="N" name="edit_1" ver="3" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcbg_t.xcbg004" ver="3" src="s" column="xcbg004" table="xcbg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="ooef001_desc" src="s" depend_field="ooef001" correspon_key="ooef001" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="sfaa010_desc" src="s" depend_field="sfaa_t.sfaa010" correspon_key="sfaa010" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="sfaa010_desc_desc" src="s" depend_field="sfaa010_desc" correspon_key="sfaa010" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="sfaacnfid_desc" src="s" depend_field="sfaa_t.sfaacnfid" correspon_key="sfaacnfid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="sfaacrtdp_desc" src="s" depend_field="sfaa_t.sfaacrtdp" correspon_key="sfaacrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="sfaacrtid_desc" src="s" depend_field="sfaa_t.sfaacrtid" correspon_key="sfaacrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="sfaamodid_desc" src="s" depend_field="sfaa_t.sfaamodid" correspon_key="sfaamodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="sfaaowndp_desc" src="s" depend_field="sfaa_t.sfaaowndp" correspon_key="sfaaowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="sfaaownid_desc" src="s" depend_field="sfaa_t.sfaaownid" correspon_key="sfaaownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="sfaapstid_desc" src="s" depend_field="sfaa_t.sfaapstid" correspon_key="sfaapstid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="sfaasite_desc" src="s" depend_field="sfaa_t.sfaasite" correspon_key="sfaasite" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="3" name="edit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="lastday" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="mm" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="ooef001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa_t.sfaa003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa_t.sfaa010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa_t.sfaa012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa_t.sfaa042" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa_t.sfaa048" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa_t.sfaacnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa_t.sfaacnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa_t.sfaacrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa_t.sfaacrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa_t.sfaacrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa_t.sfaadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="sfaa_t.sfaadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa_t.sfaamoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa_t.sfaamodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa_t.sfaaowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa_t.sfaaownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa_t.sfaapstdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa_t.sfaapstid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa_t.sfaasite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaa_t.sfaastus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sfaadocno_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="tot" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="xcbg004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="3" name="xcbg_t.xcbg004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="2" name="yy" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="page2" text="基本資料" lstr=""/>
+    <sfield name="lbl_ooef001" text="法人組織" lstr=""/>
+    <sfield name="lbl_ooefl003" text="營運據點名稱" lstr=""/>
+    <sfield name="lbl_yy" text="現行成本計算年度期別" lstr=""/>
+    <sfield name="bpage_1" text="項目" lstr=""/>
+    <sfield name="lbl_sfaasite" text="營運據點" lstr=""/>
+    <sfield name="lbl_sfaadocno" text="工單編號" lstr=""/>
+    <sfield name="lbl_sfaadocdt" text="開單日期" lstr=""/>
+    <sfield name="lbl_sfaa003" text="類型" lstr=""/>
+    <sfield name="lbl_sfaastus" text="狀態" lstr=""/>
+    <sfield name="lbl_sfaa010" text="產品編號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="lbl_sfaa012" text="預計產量" lstr=""/>
+    <sfield name="lbl_tot" text="月底累計入庫數量" lstr=""/>
+    <sfield name="lbl_xcbg004" text="成套數量" lstr=""/>
+    <sfield name="lbl_sfaa042" text="返工" lstr=""/>
+    <sfield name="lbl_sfaa048" text="成本結案日" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="ownid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="owndp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="crtid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="crtdp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="modid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="cnfid_desc" text="確認者名稱" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="lbl_pstid" text="資料過帳者" lstr=""/>
+    <sfield name="pstid_desc" text="過賬者名稱" lstr=""/>
+    <sfield name="lbl_pstdt" text="過賬日期" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

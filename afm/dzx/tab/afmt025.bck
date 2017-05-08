@@ -1,0 +1,219 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmt025" module="afm" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="02291" crtdt="2015-11-05 10:48:20" modid="02291" moddt="2015-11-09 16:54:25" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="融資申請確認維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="fmagsite,fmagsite_desc(chr80),fmagdocdt,fmagdocno,fmagstus,fmagownid,fmagownid_desc(chr80),fmagowndp,fmagowndp_desc(chr80),fmagcrtid,fmagcrtid_desc(chr80),fmagcrtdp,fmagcrtdp_desc(chr80),fmagcrtdt,fmagmodid,fmagmodid_desc(chr80),fmagmoddt,fmagcnfid,fmagcnfid_desc(chr80),fmagcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="fmahseq,fmah001,fmah001_desc(chr500),fmah002,fmah002_desc(chr500),ooef001(chr500),ooef001_desc(chr500),fmah003,fmah004,fmah005,fmah005_desc(chr500),fmah006,fmah007,fmah008,fmah009,fmah010"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="fmaiseq2,fmai001,fmai001_desc(chr500),glaacomp(chr500),glaacomp_desc(chr500),fmai002,fmai003,fmcf002(chr500),fmcf003(chr500),fmaiseq,fmah001_1(chr500),fmah001_1_desc(chr500),fmah006_1(chr500),fmai004"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmt025" method="dialog">
+    <section id="input">
+      <input id="head" field="fmagsite,fmagdocdt,fmagdocno,fmagstus"/>
+      <input id="body" page="1" field="fmahseq,fmah001,fmah002,ooef001,fmah003,fmah004,fmah005,fmah006,fmah007,fmah008,fmah009,fmah010" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="fmaiseq2,fmai001,glaacomp,fmai002,fmai003,fmcf002,fmcf003,fmaiseq,fmah001_1,fmah006_1,fmai004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="fmagsite,fmagdocdt,fmagdocno,fmagstus,fmagownid,fmagowndp,fmagcrtid,fmagcrtdp,fmagcrtdt,fmagmodid,fmagmoddt,fmagcnfid,fmagcnfdt"/>
+      <construct id="body" page="1" field="fmahseq,fmah001,fmah002,ooef001,fmah003,fmah004,fmah005,fmah006,fmah007,fmah008,fmah009,fmah010"/>
+      <construct id="body" page="2" field="fmaiseq2,fmai001,glaacomp,fmai002,fmai003,fmcf002,fmcf003,fmaiseq,fmah001_1,fmah006_1,fmai004"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="fmagdocno"/>
+      <set id="head" type="no_entry" field="fmagdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="fmagsite">
+        <after>
+          <check chkid="v_ooef001_42" id="isExist"/>
+          <reference field="fmagsite_desc" ref_field="fmag_t.fmagsite" map_field="fmagsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="fmagsite_desc"/>
+      <column id="fmagdocdt"/>
+      <column id="fmagdocno">
+        <controlp form="q_ooba002_4" state="i"/>
+        <controlp form="q_fmagdocno" state="c"/>
+      </column>
+      <column id="fmagstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="fmagownid">
+        <after>
+          <reference field="fmagownid_desc" ref_field="fmag_t.fmagownid" map_field="fmagownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmagownid_desc"/>
+      <column id="fmagowndp">
+        <after>
+          <reference field="fmagowndp_desc" ref_field="fmag_t.fmagowndp" map_field="fmagowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmagowndp_desc"/>
+      <column id="fmagcrtid">
+        <after>
+          <reference field="fmagcrtid_desc" ref_field="fmag_t.fmagcrtid" map_field="fmagcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmagcrtid_desc"/>
+      <column id="fmagcrtdp">
+        <after>
+          <reference field="fmagcrtdp_desc" ref_field="fmag_t.fmagcrtdp" map_field="fmagcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmagcrtdp_desc"/>
+      <column id="fmagcrtdt"/>
+      <column id="fmagmodid">
+        <after>
+          <reference field="fmagmodid_desc" ref_field="fmag_t.fmagmodid" map_field="fmagmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmagmodid_desc"/>
+      <column id="fmagmoddt"/>
+      <column id="fmagcnfid">
+        <after>
+          <reference field="fmagcnfid_desc" ref_field="fmag_t.fmagcnfid" map_field="fmagcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmagcnfid_desc"/>
+      <column id="fmagcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="fmahseq"/>
+      <column id="fmah001">
+        <after>
+          <check chkid="v_fmaa001" id="isExist"/>
+          <reference field="fmah001_desc" ref_field="fmah_t.fmah001" map_field="fmah001" ref_sql="SELECT fmaal003 FROM fmaal_t WHERE fmaalent=$varg_enterprise$var AND fmaal001=? AND fmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_fmaa001_1" state="i"/>
+        <controlp form="q_fmaa001_1" state="c"/>
+      </column>
+      <column id="fmah001_desc"/>
+      <column id="fmah002">
+        <after>
+          <check chkid="v_ooef001_42" id="isExist"/>
+          <reference field="fmah002_desc" ref_field="fmah_t.fmah002" map_field="fmah002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="fmah002_desc"/>
+      <column id="ooef001">
+        <after>
+          <reference field="ooef001_desc" ref_field="ooef001" map_field="ooefent,ooef001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="ooef001_desc"/>
+      <column id="fmah003">
+        <controlp form="q_fmac001" state="i"/>
+        <controlp form="q_fmac001" state="c"/>
+      </column>
+      <column id="fmah004"/>
+      <column id="fmah005">
+        <after>
+          <check chkid="v_fmac003" id="isExist"/>
+          <reference field="fmah005_desc" ref_field="fmah_t.fmah005" map_field="fmah005" ref_sql="SELECT nmabl003 FROM nmabl_t WHERE nmablent=$varg_enterprise$var AND nmabl001=? AND nmabl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmab001" state="i"/>
+        <controlp form="q_nmab001" state="c"/>
+      </column>
+      <column id="fmah005_desc"/>
+      <column id="fmah006">
+        <after>
+          <check chkid="v_ooai001" id="isExist"/>
+        </after>
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="fmah007" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmah008"/>
+      <column id="fmah009"/>
+      <column id="fmah010">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="fmaiseq2"/>
+      <column id="fmai001">
+        <after>
+          <check chkid="v_ooef001_42" id="isExist"/>
+          <reference field="fmai001_desc" ref_field="fmai_t.fmai001" map_field="fmai001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_fmcf007" state="i"/>
+        <controlp form="q_fmcf007" state="c"/>
+      </column>
+      <column id="fmai001_desc"/>
+      <column id="glaacomp">
+        <after>
+          <reference field="glaacomp_desc" ref_field="glaacomp" map_field="glaaent,glaacomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="glaacomp_desc"/>
+      <column id="fmai002">
+        <controlp form="q_fmcedocno" state="i"/>
+        <controlp form="q_fmcedocno" state="c"/>
+      </column>
+      <column id="fmai003"/>
+      <column id="fmcf002"/>
+      <column id="fmcf003"/>
+      <column id="fmaiseq"/>
+      <column id="fmah001_1">
+        <after>
+          <reference field="fmah001_1_desc" ref_field="fmah001_1" map_field="fmahent,fmah001" ref_sql="SELECT fmaal003 FROM fmaal_t WHERE fmaalent=$varg_enterprise$var AND fmaal001=? AND fmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="fmah001_1_desc"/>
+      <column id="fmah006_1"/>
+      <column id="fmai004"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="fmag_t" pk="fmagdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT fmagsite,&apos;&apos;,fmagdocdt,fmagdocno,fmagstus,fmagownid,&apos;&apos;,fmagowndp,&apos;&apos;,fmagcrtid,&apos;&apos;,fmagcrtdp,&apos;&apos;,fmagcrtdt,fmagmodid,&apos;&apos;,fmagmoddt,fmagcnfid,&apos;&apos;,fmagcnfdt FROM fmag_t WHERE fmagent= ? AND fmagdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT fmagsite,&apos;&apos;,fmagdocdt,fmagdocno,fmagstus,fmagownid,&apos;&apos;,fmagowndp,&apos;&apos;,fmagcrtid,&apos;&apos;,fmagcrtdp,&apos;&apos;,fmagcrtdt,fmagmodid,&apos;&apos;,fmagmoddt,fmagcnfid,&apos;&apos;,fmagcnfdt FROM fmag_t" order="fmagdocno"/>
+    </head>
+    <body id="fmah_t" page="1" linked="" pk="fmahseq" fk="fmahdocno">
+      <sql id="forupd_sql_detail" query="SELECT fmahseq,fmah001,&apos;&apos;,fmah002,&apos;&apos;,&apos;&apos;,&apos;&apos;,fmah003,fmah004,fmah005,&apos;&apos;,fmah006,fmah007,fmah008,fmah009,fmah010 FROM fmah_t WHERE fmahent=? AND fmahdocno=? AND fmahseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT fmahseq,fmah001,&apos;&apos;,fmah002,&apos;&apos;,&apos;&apos;,&apos;&apos;,fmah003,fmah004,fmah005,&apos;&apos;,fmah006,fmah007,fmah008,fmah009,fmah010 FROM fmah_t WHERE fmahent=? AND fmahdocno=?"/>
+    </body>
+    <body id="fmai_t" page="2" linked="" pk="fmaiseq,fmaiseq2" fk="fmaidocno">
+      <sql id="forupd_sql_detail" query="SELECT fmaiseq2,fmai001,&apos;&apos;,&apos;&apos;,&apos;&apos;,fmai002,fmai003,&apos;&apos;,&apos;&apos;,fmaiseq,&apos;&apos;,&apos;&apos;,&apos;&apos;,fmai004 FROM fmai_t WHERE fmaient=? AND fmaidocno=? AND fmaiseq=? AND fmaiseq2=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT fmaiseq2,fmai001,&apos;&apos;,&apos;&apos;,&apos;&apos;,fmai002,fmai003,&apos;&apos;,&apos;&apos;,fmaiseq,&apos;&apos;,&apos;&apos;,&apos;&apos;,fmai004 FROM fmai_t WHERE fmaient=? AND fmaidocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

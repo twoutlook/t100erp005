@@ -1,0 +1,185 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abmi500" module="abm" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02295" crtdt="2014-07-02 17:21:10" modid="02295" moddt="2014-07-02 17:43:15" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="ECR模板維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bmja001,bmjal003,bmjasite,bmjastus,bmjaownid,bmjaownid_desc(chr80),bmjaowndp,bmjaowndp_desc(chr80),bmjacrtid,bmjacrtid_desc(chr80),bmjacrtdp,bmjacrtdp_desc(chr80),bmjacrtdt,bmjamodid,bmjamodid_desc(chr80),bmjamoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bmjbseq,bmjb002,bmjb002_desc(chr500),bmjbseq1,bmjb003,bmjb003_desc(chr500),bmjb004,bmjbsite"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="bmjcseq,bmjc002,bmjcsite"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="bmjdseq,bmjd002,bmjd002_desc(chr500),bmjdseq1,bmjd003,bmjd003_desc(chr500),bmjd004,bmjdsite"/>
+      <var id="bs_field" value="bmja001,bmja001_desc(chr80)" pk="bmja001" order=""/>
+      <bs_reference field="bmja001_desc" ref_field="bmja001" ref_sql="SELECT bmjal003 FROM bmjal_t WHERE bmjalent=$varg_enterprise$var AND bmjal001=? AND bmjal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="abm" filename="abmi500" method="dialog">
+    <section id="input">
+      <input id="head" field="bmja001,bmjal003,bmjasite,bmjastus"/>
+      <input id="body" page="1" field="bmjbseq,bmjb002,bmjbseq1,bmjb003,bmjb004,bmjbsite" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="bmjcseq,bmjc002,bmjcsite" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="bmjdseq,bmjd002,bmjdseq1,bmjd003,bmjd004,bmjdsite" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bmja001,bmjal003,bmjasite,bmjastus,bmjaownid,bmjaowndp,bmjacrtid,bmjacrtdp,bmjacrtdt,bmjamodid,bmjamoddt"/>
+      <construct id="body" page="1" field="bmjbseq,bmjb002,bmjbseq1,bmjb003,bmjb004,bmjbsite"/>
+      <construct id="body" page="2" field="bmjcseq,bmjc002,bmjcsite"/>
+      <construct id="body" page="3" field="bmjdseq,bmjd002,bmjdseq1,bmjd003,bmjd004,bmjdsite"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bmja001"/>
+      <set id="head" type="no_entry" field="bmja001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bmja001">
+        <controlp form="q_bmja001" state="c"/>
+      </column>
+      <column id="bmjal003"/>
+      <column id="bmjasite"/>
+      <column id="bmjastus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="bmjaownid">
+        <after>
+          <reference field="bmjaownid_desc" ref_field="bmja_t.bmjaownid" map_field="bmjaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bmjaownid_desc"/>
+      <column id="bmjaowndp">
+        <after>
+          <reference field="bmjaowndp_desc" ref_field="bmja_t.bmjaowndp" map_field="bmjaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bmjaowndp_desc"/>
+      <column id="bmjacrtid">
+        <after>
+          <reference field="bmjacrtid_desc" ref_field="bmja_t.bmjacrtid" map_field="bmjacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bmjacrtid_desc"/>
+      <column id="bmjacrtdp">
+        <after>
+          <reference field="bmjacrtdp_desc" ref_field="bmja_t.bmjacrtdp" map_field="bmjacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bmjacrtdp_desc"/>
+      <column id="bmjacrtdt"/>
+      <column id="bmjamodid">
+        <after>
+          <reference field="bmjamodid_desc" ref_field="bmja_t.bmjamodid" map_field="bmjamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bmjamodid_desc"/>
+      <column id="bmjamoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="bmjbseq">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bmjb002">
+        <after>
+          <reference field="bmjb002_desc" ref_field="bmjb002" map_field="bmjb002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1117&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bmjb002_desc"/>
+      <column id="bmjbseq1">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bmjb003">
+        <after>
+          <reference field="bmjb003_desc" ref_field="bmjb003" map_field="bmjb003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1118&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bmjb003_desc"/>
+      <column id="bmjb004" type="S" default="1" def_scc="5447"/>
+      <column id="bmjbsite"/>
+    </init>
+    <init id="body" page="2">
+      <column id="bmjcseq">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bmjc002" def_scc="5446"/>
+      <column id="bmjcsite"/>
+    </init>
+    <init id="body" page="3">
+      <column id="bmjdseq">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bmjd002">
+        <after>
+          <reference field="bmjd002_desc" ref_field="bmjd002" map_field="bmjd002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1119&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bmjd002_desc"/>
+      <column id="bmjdseq1">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bmjd003">
+        <after>
+          <reference field="bmjd003_desc" ref_field="bmjd003" map_field="bmjd003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1120&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bmjd003_desc"/>
+      <column id="bmjd004" type="S" default="1" def_scc="5447"/>
+      <column id="bmjdsite"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bmja_t" pk="bmja001">
+      <sql id="forupd_sql" type="sql" query="SELECT bmja001,&apos;&apos;,bmjasite,bmjastus,bmjaownid,&apos;&apos;,bmjaowndp,&apos;&apos;,bmjacrtid,&apos;&apos;,bmjacrtdp,&apos;&apos;,bmjacrtdt,bmjamodid,&apos;&apos;,bmjamoddt FROM bmja_t WHERE bmjaent= ? AND bmja001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bmja001,&apos;&apos;,bmjasite,bmjastus,bmjaownid,&apos;&apos;,bmjaowndp,&apos;&apos;,bmjacrtid,&apos;&apos;,bmjacrtdp,&apos;&apos;,bmjacrtdt,bmjamodid,&apos;&apos;,bmjamoddt FROM bmja_t" order="bmja001"/>
+      <sql id="append" type="lang" target="bmjal_t.bmjal003" table="bmjal_t" fk="bmja001" pk="bmjal001,bmjal002" field="bmjal003"/>
+    </head>
+    <body id="bmjb_t" page="1" linked="" pk="bmjbseq,bmjbseq1" fk="bmjb001">
+      <sql id="forupd_sql_detail" query="SELECT bmjbseq,bmjb002,&apos;&apos;,bmjbseq1,bmjb003,&apos;&apos;,bmjb004,bmjbsite FROM bmjb_t WHERE bmjbent=? AND bmjb001=? AND bmjbseq=? AND bmjbseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bmjbseq,bmjb002,&apos;&apos;,bmjbseq1,bmjb003,&apos;&apos;,bmjb004,bmjbsite FROM bmjb_t WHERE bmjbent=? AND bmjb001=?"/>
+    </body>
+    <body id="bmjc_t" page="2" linked="" pk="bmjcseq" fk="bmjc001">
+      <sql id="forupd_sql_detail" query="SELECT bmjcseq,bmjc002,bmjcsite FROM bmjc_t WHERE bmjcent=? AND bmjc001=? AND bmjcseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bmjcseq,bmjc002,bmjcsite FROM bmjc_t WHERE bmjcent=? AND bmjc001=?"/>
+    </body>
+    <body id="bmjd_t" page="3" linked="" pk="bmjdseq,bmjdseq1" fk="bmjd001">
+      <sql id="forupd_sql_detail" query="SELECT bmjdseq,bmjd002,&apos;&apos;,bmjdseq1,bmjd003,&apos;&apos;,bmjd004,bmjdsite FROM bmjd_t WHERE bmjdent=? AND bmjd001=? AND bmjdseq=? AND bmjdseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bmjdseq,bmjd002,&apos;&apos;,bmjdseq1,bmjd003,&apos;&apos;,bmjd004,bmjdsite FROM bmjd_t WHERE bmjdent=? AND bmjd001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

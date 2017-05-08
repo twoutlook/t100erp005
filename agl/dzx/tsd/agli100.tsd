@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="agli100" std_prog="agli100" erpver="1.0" ver="1" module="AGL" type="M" booking="Y" class="i" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items="delete,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="glav_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：維護企業底下不同參照表號的會計週期，以供後續作業使用
+作業功能：新增/修改/刪除/查詢/匯出Excel/列印…
+作業類型：基本資料維護作業
+輸入模式：標準假雙檔
+作業資料來源(Master)：
+ 資料來源表：glav_t(會計週期資料檔)
+ 關聯資料表：ooam_t(參照表多語言檔)
+
+左方資料瀏覽設定：
+ (1)快速查詢下拉選項：
+    glav001(參照表號)
+    glav002(年度)
+    glav003(週期種類)
+ (2)瀏覽Browser/樹狀顯示欄位及型態：
+    glav001(參照表號)：Edit
+    ooam001(參照表號名稱)：Edit
+    glav002(年度)：Edit
+    glav003(週期種類)：Combobox]]>
+  </all>
+  <field cite_std="N" name="b_glav001" ver="1" src="s" column="glav001" table="glav_t" attribute="C812" type="varchar2(5)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_glav001_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_glav002" ver="1" src="s" column="glav002" table="glav_t" attribute="N401" type="number(5,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_glav003" ver="1" src="s" column="glav003" table="glav_t" attribute="C001" type="varchar2(1)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="9416" default="1" max="" min="" can_edit="N" can_query="N" widget="RadioGroup" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glav004_2" ver="1" src="s" column="glav004" table="glav_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glav_t.glav001" ver="1" src="s" column="glav001" table="glav_t" attribute="C812" type="varchar2(5)" req="Y" i_zoom="q_ooal001" c_zoom="q_ooal001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[參照表號：
+   ●欄位控管：
+     資料欄位:[T:會計週期資料檔].[C:會計週期參照表號]/可Display可Input
+     校驗:1.不允許空白
+          2.輸入值須存在[T:參照表資料檔].[C:參照表編號]且ooal001='13'的有效ooal002值]]>
+  </field>
+  <field cite_std="N" name="glav_t.glav002" ver="1" src="s" column="glav002" table="glav_t" attribute="N401" type="number(5,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[年度：
+   ●欄位控管：
+     資料欄位:[T:會計週期資料檔].[C:年度]/可Display可Input
+     校驗:1.不允許空白
+          2.參照表號+年度為key值,需判斷是否重複]]>
+  </field>
+  <field cite_std="N" name="glav_t.glav003" ver="1" src="s" column="glav003" table="glav_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="9416" default="1" max="" min="" can_edit="Y" can_query="Y" widget="RadioGroup" status="">
+    <![CDATA[週期種類：
+   ●欄位控管：
+     資料欄位:[T:會計週期資料檔].[C:週期種類]/可Display可Input
+     校驗:1.不允許空白
+            2.參照表號+年度只能有一種週期種類,需判斷是否有多筆不同週期種類的資料存在
+     計算或處理:1.月：以月為單位,一年12期
+                       2.週：以週為單位,每4週為1期,一年13期
+                       3.445式：每年的第1期是第1~4週,第2期是第5~8週,第3期是第9~13週,一季為4週+4週+5週,一年12期
+                       4.離開單頭時,詢問用戶：是否自動產生全年度明細資料? IF 'Y' 自動依規格裡的邏輯產生 IF 'N' 表示單身由user自行輸入]]>
+  </field>
+  <field cite_std="N" name="glav_t.glav004" ver="1" src="s" column="glav004" table="glav_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[日期：
+   ●欄位控管：
+     資料欄位:[T:會計週期資料檔].[C:日期]/可Display可Input
+     校驗:1.不允許空白
+            2.參照表號+年度+週期種類+日期為Key值,應判斷是否重複
+            3.一週的資料是從星期日~星期六
+     計算或處理:
+  可使用WEEKDAY(g_glac004)來判斷是一週裡的哪一天(整數0~6代表星期日~星期六)
+  第一週的日期資料COUNT起來有可能少於七天,
+  3-1.以2011/01/01(六)來舉例,在日期輸入2011/01/01,應該展出像下面這樣的資料
+      日期       歸屬季別 歸屬期別 歸屬週別
+      ---------- -------- -------- --------
+      2011/01/01 1        1        1
+      2011/01/02 1        1        2
+      2011/01/03 1        1        2
+      2011/01/04 1        1        2
+      2011/01/05 1        1        2
+      2011/01/06 1        1        2
+      2011/01/07 1        1        2
+      2011/01/08 1        1        2
+      2011/01/09 1        1        3
+      ...
+  3-2.有些國家的會計週期不是從1/1開始的,
+      以菲律賓為例,其會計週期是從7/1~次年6/30,
+      所以在日期輸入2012/07/01,應該展出像下面這樣的資料
+      日期       歸屬季別 歸屬期別 歸屬週別 年度
+      ---------- -------- -------- -------- ----
+      2012/07/01 1        1        1        2012
+      2012/07/02 1        1        1        2012
+      2012/07/03 1        1        1        2012
+      2012/07/04 1        1        1        2012
+      2012/07/05 1        1        1        2012
+      2012/07/06 1        1        1        2012
+      2012/07/07 1        1        1        2012
+      2012/07/08 1        1        2        2012
+      2012/07/09 1        1        2        2012
+      ...
+      2012/07/31 1        1        5        2012
+      2012/08/01 1        2        5        2012
+      ...
+      2013/06/29 4        12       52       2012
+      2013/06/30 4        12       52       2012
+4.由此欄位輸入值推算出後面一整年(產生資料範圍從輸入日期~輸入日期+1年-1)各季、各期、各週的資料
+  (1)當週期種類=1.月時(一年12期)
+     季--
+     第1季:輸入日期~輸入日期+3個月-1天
+     第2季:輸入日期+3個月~輸入日期+6個月-1天
+     第3季:輸入日期+6個月~輸入日期+9個月-1天
+     第4季:輸入日期+9個月~輸入日期+1年-1天
+     期--
+     第1期:輸入日期~輸入日期+1個月-1天
+     第2期:輸入日期+1個月~輸入日期+2個月-1天
+     第3期:輸入日期+2個月~輸入日期+3個月-1天
+     ...
+     第12期:輸入日期+11個月~輸入日期+1年-1天
+     週--
+     第1週:輸入日期~輸入日期後第1個碰到的星期六
+     第2週:輸入日期後第1個碰到的星期日~輸入日期後第1個碰到的星期日+7天*1-1天
+     第3週:輸入日期後第1個碰到的星期日+7天*1~輸入日期後第1個碰到的星期日+7天*2-1天
+     ...
+     第52週:輸入日期後第1個碰到的星期日+7天*50~輸入日期+1年-1天
+  (2)當週期種類=2.週時(一年13期)
+     季--
+     第1季:輸入日期~輸入日期+7天*4週*3月-1天
+     第2季:輸入日期+7天*4週*3月~輸入日期+7天*4週*6月-1天
+     第3季:輸入日期+7天*4週*6月~輸入日期+7天*4週*9月-1天
+     第4季:輸入日期+7天*4週*9月~輸入日期+1年-1天
+     期--
+     第1期:輸入日期~輸入日期+7天*4週*1月-1天
+     第2期:輸入日期+7天*4週*1月~輸入日期+7天*4週*2月-1天
+     第3期:輸入日期+7天*4週*2月~輸入日期+7天*4週*3月-1天
+     ...
+     第12期:輸入日期+7天*4週*11月~輸入日期+7天*4週*12月-1天
+     第13期:輸入日期+7天*4週*12月~輸入日期+1年-1天
+     週--
+     第1週:輸入日期~輸入日期後第1個碰到的星期六
+     第2週:輸入日期後第1個碰到的星期日~輸入日期後第1個碰到的星期日+7天*1週-1天
+     第3週:輸入日期後第1個碰到的星期日+7天*1週~輸入日期後第1個碰到的星期日+7天*2週-1天
+     ...
+     第52週:輸入日期後第1個碰到的星期日+7天*50~輸入日期+1年-1天
+  (3)當週期種類=3.445式時(一年12期)
+     ps.每年的第1期是第1~4週,第2期是第5~8週,第3期是第9~13週,一季為4週+4週+5週
+     季--
+     第1季:輸入日期~輸入日期+7天*(4+4+5)週-1天
+     第2季:輸入日期+7天*(4+4+5)週~輸入日期+7天*((4+4+5)*2)週-1天
+     第3季:輸入日期+7天*((4+4+5)*2)週~輸入日期+7天*((4+4+5)*3)週-1天
+     第4季:輸入日期+7天*((4+4+5)*3)週~輸入日期+1年-1天
+     期--
+     第1期:輸入日期~輸入日期+7天*4週-1天
+     第2期:輸入日期+7天*4週~輸入日期+7天*(4+4)週-1天
+     第3期:輸入日期+7天*(4+4)週~輸入日期+7天*(4+4+5)週-1天  -->3,6,9,12期的日期數都是35天
+     第4期:輸入日期+7天*(4+4+5)週~輸入日期+7天*(4+4+5+4)週-1天
+     第5期:輸入日期+7天*(4+4+5+4)週~輸入日期+7天*(4+4+5+4+4)週-1天
+     第6期:輸入日期+7天*(4+4+5+4+4)週~輸入日期+7天*(4+4+5+4+4+5)週-1天
+     ...
+     第12期:輸入日期+7天*(4+4+5+4+4+5+4+4+5+4+4)週~輸入日期+1年-1天
+     週--
+     第1週:輸入日期~輸入日期後第1個碰到的星期六
+     第2週:輸入日期後第1個碰到的星期日~輸入日期後第1個碰到的星期日+7天*1週-1天
+     第3週:輸入日期後第1個碰到的星期日+7天*1週~輸入日期後第1個碰到的星期日+7天*2週-1天
+     ...
+     第52週:輸入日期後第1個碰到的星期日+7天*50週~輸入日期+1年-1天]]>
+  </field>
+  <field cite_std="N" name="glav_t.glav005" ver="1" src="s" column="glav005" table="glav_t" attribute="N001" type="number(5,0)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="&lt;=4" min="&gt;=1" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glav_t.glav006" ver="1" src="s" column="glav006" table="glav_t" attribute="N001" type="number(5,0)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="&lt;=13" min="&gt;=1" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glav_t.glav007" ver="1" src="s" column="glav007" table="glav_t" attribute="N001" type="number(5,0)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="&lt;=54" min="&gt;=1" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glav_t.glavcrtdp" ver="1" src="s" column="glavcrtdp" table="glav_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glav_t.glavcrtdt" ver="1" src="s" column="glavcrtdt" table="glav_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glav_t.glavcrtid" ver="1" src="s" column="glavcrtid" table="glav_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glav_t.glavmoddt" ver="1" src="s" column="glavmoddt" table="glav_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glav_t.glavmodid" ver="1" src="s" column="glavmodid" table="glav_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glav_t.glavowndp" ver="1" src="s" column="glavowndp" table="glav_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glav_t.glavownid" ver="1" src="s" column="glavownid" table="glav_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glav_t.glavstus" ver="1" src="s" column="glavstus" table="glav_t" attribute="C822" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="glav001_desc" src="s" depend_field="glav_t.glav001" correspon_key="glavent,&apos;5&apos;,glav001" ref_table="ooall_t" ref_fk="ooallent,ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield cite_std="N" ver="1" name="glavcrtdp_desc" src="s" depend_field="glav_t.glavcrtdp" correspon_key="glavcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="glavcrtid_desc" src="s" depend_field="glav_t.glavcrtid" correspon_key="glavcrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="glavmodid_desc" src="s" depend_field="glav_t.glavmodid" correspon_key="glavmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="glavowndp_desc" src="s" depend_field="glav_t.glavowndp" correspon_key="glavowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="glavownid_desc" src="s" depend_field="glav_t.glavownid" correspon_key="glavownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_glav001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_glav001_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_glav002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_glav003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glav004_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glav_t.glav001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glav_t.glav002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glav_t.glav003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glav_t.glav004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glav_t.glav005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glav_t.glav006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glav_t.glav007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glav_t.glavcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glav_t.glavcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glav_t.glavcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glav_t.glavmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glav_t.glavmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glav_t.glavowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glav_t.glavownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glav_t.glavstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="lbl_vaild" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_glav001" text="參照表號" lstr=""/>
+    <sfield name="lbl_b_glav001_desc" text="參照表號名稱" lstr=""/>
+    <sfield name="lbl_glav002" text="年度" lstr=""/>
+    <sfield name="lbl_glav003" text="週期種類" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_ooall004" text="參照表號名稱" lstr=""/>
+    <sfield name="lbl_vaild" text="資料有效" lstr=""/>
+    <sfield name="bpage_1" text="項目" lstr=""/>
+    <sfield name="lbl_glavstus" text="有效" lstr=""/>
+    <sfield name="lbl_glav004" text="日期" lstr=""/>
+    <sfield name="lbl_glav005" text="歸屬季別" lstr=""/>
+    <sfield name="lbl_glav006" text="歸屬期別" lstr=""/>
+    <sfield name="lbl_glav007" text="歸屬週別" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="ownid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="owndp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="crtid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="crtdp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="modid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_collect_gzze001" text="訊息代碼" lstr=""/>
+    <sfield name="lbl_collect_gzze003" text="訊息內容" lstr=""/>
+    <sfield name="lbl_collect_gzze006" text="進階訊息" lstr=""/>
+    <sfield name="lbl_cl_err_s02_accept" text="確定" lstr=""/>
+    <sfield name="lbl_err_detail" text="進階訊息" lstr=""/>
+    <sfield name="lbl_suggest_exe" text="建議執行" lstr=""/>
+    <sfield name="lbl_err_contact" text="反應問題" lstr=""/>
+    <sfield name="lbl_cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="lbl_group_cl_err_s01" text="進階訊息" lstr=""/>
+    <sfield name="lbl_gzze001" text="訊息代碼:" lstr=""/>
+    <sfield name="lbl_gzze006" text="訊息內容:" lstr=""/>
+    <sfield name="lbl_sqlerrd2" text="SQL錯誤碼:" lstr=""/>
+    <sfield name="lbl_gzxm001" text="QBE編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm005" text="設為首頁-自動查詢方案" lstr=""/>
+    <sfield name="lbl_gzxm002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxm003" text="員工編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm004" text="設為預設查詢條件" lstr=""/>
+    <sfield name="cl_qbe_s02.bpage_1" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn005" text="欄位說明" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="cl_qbe_s02_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s02_Cancel" text="取消" lstr=""/>
+    <sfield name="lbl_funid" text="函式代碼" lstr=""/>
+    <sfield name="lbl_fundesc" text="函式說明" lstr=""/>
+    <sfield name="cl_qbe_s01_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s01_Cancel" text="取消" lstr=""/>
+    <sfield name="cl_qbe_s03.bpage_1" text="查詢方案列表" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxmstus" text="有效" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm004" text="預設" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm005" text="顯示於首頁" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm009" text="順序" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxml005" text="查詢方案說明" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm007" text="自設SQL條件" lstr=""/>
+    <sfield name="cl_qbe_s03.page_2" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn004" text="序號" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn005" text="條件欄位" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="page_cl_doc_s01_page1" text="相關文件清單" lstr=""/>
+    <sfield name="lbl_loaa006" text="文件版本" lstr=""/>
+    <sfield name="lbl_loaa007" text="文件序號" lstr=""/>
+    <sfield name="lbl_loaa011" text="文件型態" lstr=""/>
+    <sfield name="lbl_loaa013" text="文件說明" lstr=""/>
+    <sfield name="lbl_loaa010" text="文件原始檔名" lstr=""/>
+    <sfield name="btn_upload" text="本地文件上傳" lstr=""/>
+    <sfield name="btn_crt_text" text="新建純文字紀錄" lstr=""/>
+    <sfield name="btn_doccrt_url" text="新建URL" lstr=""/>
+    <sfield name="btn_docopen" text="文件下載" lstr=""/>
+    <sfield name="btn_docupdate" text="文件資料修改" lstr=""/>
+    <sfield name="btn_docremove" text="文件刪除" lstr=""/>
+    <sfield name="btn_exit" text="關閉功能" lstr=""/>
+    <sfield name="page_cl_doc_s01_page2" text="文件基本資料" lstr=""/>
+    <sfield name="lbl_loaa004" text="用途類別" lstr=""/>
+    <sfield name="lbl_loaa005" text="預設顯示圖片" lstr=""/>
+    <sfield name="lbl_loaa012" text="文件位置(URL)" lstr=""/>
+    <sfield name="page_cl_doc_s01_page4" text="權限設定" lstr=""/>
+    <sfield name="group_read" text="讀取權限" lstr=""/>
+    <sfield name="group_modify" text="修改權限" lstr=""/>
+    <sfield name="page_cl_doc_s01_page3" text="異動資訊" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="btn_doccancel" text="放棄修改" lstr=""/>
+    <sfield name="btn_docmodify" text="資料存檔" lstr=""/>
+    <sfield name="lbl_gzxp007_1" text="選擇分類" lstr=""/>
+    <sfield name="add_catalog" text="" lstr=""/>
+    <sfield name="lbl_gzxp007_2" text="自訂分類" lstr=""/>
+    <sfield name="lbl_gzxp008" text="追蹤說明" lstr=""/>
+    <sfield name="accept" text="確定" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="follow_list" text="待追蹤" lstr=""/>
+    <sfield name="signature_list" text="待簽核" lstr=""/>
+    <sfield name="announcement" text="作業公告" lstr=""/>
+    <sfield name="cancelfollow" text="取消追蹤" lstr=""/>
+    <sfield name="assigncatalog" text="指定分類" lstr=""/>
+    <sfield name="cl_user_overview_s01.lbl_name" text="" lstr=""/>
+    <sfield name="lbl_gzxp002" text="作業名稱" lstr=""/>
+    <sfield name="lbl_gzxp006" text="單據日期" lstr=""/>
+    <sfield name="add_favorite_catalog" text="新增目錄" lstr=""/>
+    <sfield name="modify_favorite_desc" text="修改" lstr=""/>
+    <sfield name="favorite_del" text="移除" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_ooal002" text="參照表編號" lstr=""/>
+    <sfield name="lbl_ooall005" text="助記碼" lstr=""/>
+    <sfield name="lbl_ooag001" text="員工編號" lstr=""/>
+    <sfield name="lbl_ooea001" text="組織編號" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="cl_ask_s04_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s03_Test" text="測試" lstr=""/>
+    <sfield name="cl_ask_s03_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s01_Choice" text="選擇" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="cl_progress_bar_Current" text="目前進度" lstr=""/>
+    <sfield name="cl_progress_bar_Total" text="全部" lstr=""/>
+    <sfield name="cl_progress_bar_%" text="%" lstr=""/>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="lbl_select" text="選擇" lstr=""/>
+    <sfield name="lbl_gzgdl002" text="樣板說明" lstr=""/>
+    <sfield name="lbl_gzgd003" text="客製否" lstr=""/>
+    <sfield name="lbl_gzgd007" text="樣板名稱(4rp)" lstr=""/>
+    <sfield name="lbl_outputformat" text="輸出格式" lstr=""/>
+    <sfield name="lbl_outputformat_1" text="預覽與列印(SVG)" lstr=""/>
+    <sfield name="lbl_outputformat_2" text="Adobe Acrobat (PDF)" lstr=""/>
+    <sfield name="lbl_outputformat_3" text="Microsoft Excel (XLS)" lstr=""/>
+    <sfield name="lbl_outputformat_4" text="Microsoft Excel (XLS) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_5" text="Microsoft Excel (XLSX)" lstr=""/>
+    <sfield name="lbl_outputformat_6" text="Microsoft Excel (XLSX) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_7" text="Microsoft Word (RTF)" lstr=""/>
+    <sfield name="lbl_outputformat_8" text="網頁 (HTML)" lstr=""/>
+    <sfield name="lbl_outputformat_9" text="郵件 (Mail)" lstr=""/>
+    <sfield name="lbl_set_default" text="設為預設樣版" lstr=""/>
+    <sfield name="lbl_btn_accept" text="確定" lstr=""/>
+    <sfield name="lbl_btn_cancel" text="放棄" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_gzza003" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzza001" text="程式編號" lstr=""/>
+    <sfield name="lbl_gzza002" text="程式類別" lstr=""/>
+    <sfield name="lbl_gzde002" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzde001" text="規格編號" lstr=""/>
+    <sfield name="lbl_gzdel003" text="說明" lstr=""/>
+    <sfield name="lbl_gzdf002" text="子畫面規格編號" lstr=""/>
+    <sfield name="lbl_gzdfl003" text="子畫面檔案名稱" lstr=""/>
+    <sfield name="lbl_gzcbl004" text="說明" lstr=""/>
+    <sfield name="lbl_gzde003" text="規格類別" lstr=""/>
+    <sfield name="lbl_dzfv004" text="畫面代號" lstr=""/>
+    <sfield name="lbl_dzfv005" text="主/子程式" lstr=""/>
+    <sact name="lbl_vaild" text="資料有效" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

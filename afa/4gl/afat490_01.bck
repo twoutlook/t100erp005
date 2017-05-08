@@ -1,0 +1,350 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="afat490_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2015-10-12 17:57:49), PR版次:0002(1900-01-01 00:00:00)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000012
+#+ Filename...: afat490_01
+#+ Description: 自動產生撥入單據
+#+ Creator....: 02114(2015-10-12 17:43:25)
+#+ Modifier...: 02114 -SD/PR- 00000
+ 
+{</section>}
+ 
+{<section id="afat490_01.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_faba_m        RECORD
+       fabasite LIKE faba_t.fabasite, 
+   fabasite_desc LIKE type_t.chr80, 
+   fabadocno LIKE faba_t.fabadocno, 
+   fabadocdt LIKE faba_t.fabadocdt
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+
+#end add-point
+ 
+DEFINE g_faba_m        type_g_faba_m
+ 
+   DEFINE g_fabadocno_t LIKE faba_t.fabadocno
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="afat490_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION afat490_01(--)
+   #add-point:input段變數傳入
+   p_site,p_docdt
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE p_site          LIKE faba_t.fabasite
+   DEFINE p_docdt         LIKE faba_t.fabadocdt
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_afat490_01 WITH FORM cl_ap_formpath("afa","afat490_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_faba_m.fabasite,g_faba_m.fabadocno,g_faba_m.fabadocdt ATTRIBUTE(WITHOUT DEFAULTS) 
+ 
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabasite
+            
+            #add-point:AFTER FIELD fabasite name="input.a.fabasite"
+            IF NOT cl_null(g_faba_m.fabasite) THEN 
+#應用 a17 樣板自動產生(Version:2)
+               #欄位存在檢查
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_faba_m.fabasite
+               LET g_chkparam.arg2 = '參數2'
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_faab002") THEN
+                  #檢查成功時後續處理
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+
+
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_faba_m.fabasite
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_faba_m.fabasite_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_faba_m.fabasite_desc
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabasite
+            #add-point:BEFORE FIELD fabasite name="input.b.fabasite"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabasite
+            #add-point:ON CHANGE fabasite name="input.g.fabasite"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabadocno
+            #add-point:BEFORE FIELD fabadocno name="input.b.fabadocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabadocno
+            
+            #add-point:AFTER FIELD fabadocno name="input.a.fabadocno"
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  NOT cl_null(g_faba_m.fabadocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_faba_m.fabadocno != g_fabadocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM faba_t WHERE "||"fabaent = '" ||g_enterprise|| "' AND "||"fabadocno = '"||g_faba_m.fabadocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabadocno
+            #add-point:ON CHANGE fabadocno name="input.g.fabadocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fabadocdt
+            #add-point:BEFORE FIELD fabadocdt name="input.b.fabadocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fabadocdt
+            
+            #add-point:AFTER FIELD fabadocdt name="input.a.fabadocdt"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fabadocdt
+            #add-point:ON CHANGE fabadocdt name="input.g.fabadocdt"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.fabasite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabasite
+            #add-point:ON ACTION controlp INFIELD fabasite name="input.c.fabasite"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_faba_m.fabasite             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+
+
+            CALL q_faab001()                                #呼叫開窗
+
+            LET g_faba_m.fabasite = g_qryparam.return1              
+
+            DISPLAY g_faba_m.fabasite TO fabasite              #
+
+            NEXT FIELD fabasite                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fabadocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabadocno
+            #add-point:ON ACTION controlp INFIELD fabadocno name="input.c.fabadocno"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_faba_m.fabadocno             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+            LET g_qryparam.arg2 = "" #s
+
+            CALL q_ooba002_3()                                #呼叫開窗
+
+            LET g_faba_m.fabadocno = g_qryparam.return1              
+
+            DISPLAY g_faba_m.fabadocno TO fabadocno              #
+
+            NEXT FIELD fabadocno                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fabadocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fabadocdt
+            #add-point:ON ACTION controlp INFIELD fabadocdt name="input.c.fabadocdt"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_afat490_01 
+   
+   #add-point:input段after input 
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afat490_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="afat490_01.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

@@ -1,0 +1,2616 @@
+<add_points prog="azzi001_01" std_prog="azzi001_01" erpver="1.0" module="AZZ" ver="2" env="s" zone="t10dev" booking="Y" type="S" identity="s">
+  <other>
+    <code_template value="F" status="" />
+    <free_style value="Y" status="" />
+  </other>
+  <point name="function.azzi001_01_login" cite_std="N" status="" ver="1" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi001_01_login()
+   DEFINE l_4st STRING
+   DEFINE l_sql STRING
+   
+   #連線到預設資料庫
+   IF NOT cl_set_default_dbs() THEN
+      ERROR "Can't not connec to default database"
+   END IF
+   
+   CALL ui.Interface.loadStyles(FGL_GETENV("ERP")||os.Path.separator()||"cfg"||os.Path.separator()||"4st"||os.Path.separator()||"homepage.4st")
+
+   LET l_sql = "SELECT gzzd005 FROM gzzd_t WHERE gzzd001 = 'azzi001_01' AND gzzd002 = ? AND gzzd003 = ? AND gzzd004 = ? "
+   PREPARE azzi001_01_lang_text_pre FROM l_sql
+
+   LET l_sql = "UPDATE gzxa_t SET gzxa010 = ? WHERE gzxa001 = ? AND gzxaent = ? AND gzxastus = 'Y' "
+   PREPARE azzi001_01_gzxa010_pre FROM l_sql
+   
+   OPEN WINDOW azzi001_01_win WITH FORM cl_ap_formpath("azz","azzi001_01")
+                         
+   CALL azzi001_01_init()
+
+      #進入選單 Menu (='N')
+   CALL azzi001_01_ui_dialog()
+   
+   CLOSE WINDOW azzi001_01_win
+   
+   FREE azzi001_01_lang_text_pre   
+   FREE azzi001_01_gzxa010_pre
+   
+   CALL cl_db_disconnect_current()
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_init" cite_std="N" status="" ver="1" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi001_01_init()
+   LET g_pid = FGL_GETPID()
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+   LET g_enterprise = FGL_GETENV("TOPENT")
+   #預設繁體語系
+   LET g_gzxd_m.gzzy001 = "zh_TW" #azzi001_01_default_lang() #"zh_TW"   
+   
+   #測試用，AD Server啟用否需從系統設定中抓取
+   LET g_ad_server = "Y"
+   
+   #初始化另外二種登入按鈕的狀態
+   LET gc_status = "T"
+   
+   #設定介面多語言ComboBox
+   CALL cl_set_combo_lang("gzzy001")
+   
+   #取得"記住我"
+   CALL azzi001_01_get_remember()   
+   
+   #換成相關語系
+   CALL azzi001_01_img_lang()
+   
+   #設定背景圖
+   CALL azzi001_01_chg_bgimage()
+   
+   #CALL azzi001_01_set_visible()
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_set_visible" cite_std="N" status="" ver="1" src="s" new="Y" order="3" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 待廢棄不用了 - 顯示隱藏某些欄位
+# Memo...........:
+# Usage..........: CALL azzi001_01_set_visible()
+#                  RETURNING none
+# Input parameter: none
+# Return code....: none
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_set_visible()
+   DEFINE lc_field    STRING 
+   DEFINE lc_status   LIKE type_t.chr1 
+   DEFINE ls_value    STRING 
+
+   CASE 
+      WHEN gc_status = "T"   #傳統TIPTOP帳號密碼登入
+         CALL cl_set_comp_visible("domain",FALSE)    
+         LET ls_value = cl_getmsg("azz-00103",g_lang) 
+
+      WHEN gc_status = "A"   #MS Windows AD/LDAP方式登入
+         CALL cl_set_comp_visible("domain",TRUE)
+         LET ls_value = cl_getmsg("azz-00103",g_lang)
+
+      WHEN gc_status = "M"   #Mail check檢核方式登入
+         CALL cl_set_comp_visible("domain",FALSE)
+         LET ls_value = cl_getmsg("azz-00103",g_lang) 
+
+   END CASE 
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_ui_dialog" cite_std="N" status="" ver="1" src="s" new="Y" order="4" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi001_01_ui_dialog()
+   DEFINE l_4st  string
+   #把原生的style蓋掉
+   
+   #CALL azzi001_01_hide_toolbar()
+   #CALL azzi001_01_hide_topmenu()
+   CALL azzi001_01_input("a")
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_input" cite_std="N" status="" ver="1" src="s" new="Y" order="5" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi001_01_input(p_cmd)
+   DEFINE p_cmd           LIKE type_t.chr1
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT
+   DEFINE l_n             LIKE type_t.num5        #檢查重複用
+   DEFINE l_cnt           LIKE type_t.num5        #檢查重複用
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:input段define
+   DEFINE li_chk          LIKE type_t.num5
+   DEFINE l_field         STRING
+   DEFINE l_msg_title     STRING
+   DEFINE l_msg           STRING
+   DEFINE l_errmsg        STRING
+   DEFINE lc_gzxd001      LIKE gzxd_t.gzxd001
+   #end add-point
+
+   #切換畫面
+
+   CALL cl_set_head_visible("","YES")
+
+   IF p_cmd = 'r' THEN
+      #此段落的r動作等同於a
+      LET p_cmd = 'a'
+   END IF
+   
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+
+   LET g_qryparam.state = "i"
+
+   #建立新驗證碼
+   CALL azzi001_01_refresh_vimg()
+   
+   DISPLAY BY NAME g_gzxd_m.gzxd001,g_gzxd_m.gzxd002,g_gzxd_m.remember,
+                   g_gzxd_m.gzxa007,g_gzxd_m.gzzy001 #,g_gzxd_m.domain
+
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+      #單頭段
+      INPUT BY NAME g_gzxd_m.gzxd001, g_gzxd_m.gzxd002, g_gzxd_m.remember,#g_gzxd_m.domain,
+                    g_gzxd_m.gzxa007, g_gzxd_m.gzzy001, g_gzxd_m.vcode,   g_gzxd_m.vimage
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         BEFORE INPUT
+            NEXT FIELD gzxd001
+            
+         ON CHANGE gzzy001
+            LET g_lang = g_gzxd_m.gzzy001
+            CALL azzi001_01_img_lang()
+            
+         ON ACTION accept
+            IF azzi001_01_valid_input() == TRUE THEN
+               CALL cl_log_login(FGL_GETENV("FGL_WEBSERVER_REMOTE_ADDR"),TRUE)
+               EXIT DIALOG               
+            ELSE
+               CALL cl_log_login(FGL_GETENV("FGL_WEBSERVER_REMOTE_ADDR"),FALSE)
+            END IF            
+            
+         #AFTER INPUT
+         #   IF INT_FLAG THEN
+         #      EXIT DIALOG
+         #   END IF
+
+           #controlp
+      END INPUT
+      
+      BEFORE DIALOG
+         #DISPLAY azzi001_01_default_lang()      
+         IF ui.interface.getFrontEndName() == "GWC" THEN
+            CALL DIALOG.setActionActive( "close", FALSE )
+         END IF
+
+      ON ACTION login
+         IF azzi001_01_valid_input() == TRUE THEN
+            CALL cl_log_login(FGL_GETENV("FGL_WEBSERVER_REMOTE_ADDR"),TRUE)
+            EXIT DIALOG               
+         ELSE
+            CALL cl_log_login(FGL_GETENV("FGL_WEBSERVER_REMOTE_ADDR"),FALSE)
+         END IF
+         
+      #重設驗證碼圖片
+      ON ACTION refresh_vimg
+         CALL azzi001_01_refresh_vimg()
+         
+      #忘記密碼
+      ON ACTION send_mail
+         IF cl_null(g_gzxd_m.gzxd001) THEN
+            ERROR cl_getmsg("azz-00217", g_gzxd_m.gzzy001)
+            NEXT FIELD gzxd001
+         END IF
+         LET l_msg_title = cl_getmsg("azz-00207", g_gzxd_m.gzxd001) 
+         LET l_msg = cl_getmsg("azz-00201", g_gzxd_m.gzzy001)
+         
+         MENU l_msg_title ATTRIBUTES(STYLE="dialog", COMMENT=l_msg)
+         
+              ON ACTION send
+                  CALL azzi001_01_send_mail()
+                  CALL azzi001_01_chg_btn("T")
+                  EXIT MENU
+                  
+              ON ACTION cancel
+                 EXIT MENU
+            
+         END MENU         
+         
+      #使用AD帳號登入
+      ON ACTION wad_login
+         CALL azzi001_01_switch_login()
+
+
+      #使用TIPTOP帳號登入
+      #ON ACTION tt_login
+      #   CALL azzi001_01_chg_btn("T")
+       
+      ON ACTION close       #在dialog 右上角 (X)
+         EXIT DIALOG
+        
+      ON ACTION login_width_tiptop
+         call fgl_setenv("WEBUSER", "tiptop")
+         exit dialog
+         
+      ON ACTION exit        #toolbar 離開
+         EXIT DIALOG
+
+   END DIALOG
+
+   FREE g_gzxd_m.vimage
+#   IF li_chk THEN 
+#      CASE ui.interface.getFrontEndName()
+#         WHEN "GDC"
+#            RUN "r.r azzi000 99"
+#         WHEN "GWC"
+#            CALL ui.interface.frontCall("standard","launchurl",
+#                                            ["http://10.40.40.18/wt10dev/wa/r/app/gwc_azzi000?Arg=99", "replace"],
+#                                            []
+#                                       )
+#      END CASE
+#   END IF  
+
+
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_send_mail" cite_std="N" status="" ver="1" src="s" new="Y" order="6" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi001_01_send_mail()
+   DEFINE lc_channel  base.Channel 
+   DEFINE lc_gzxa004   LIKE gzxa_t.gzxa004
+   DEFINE ls_file      STRING
+   DEFINE ls_tmp       STRING
+   DEFINE ls_text      STRING
+   DEFINE li_max       LIKE type_t.num5
+   DEFINE li_random1   LIKE type_t.num5
+   DEFINE li_random2   LIKE type_t.num5
+   DEFINE lc_pw        LIKE gzxf_t.gzxf004 
+   DEFINE l_gzxf RECORD 
+            gzxf002 DATETIME YEAR TO SECOND,
+            gzxf003 DATETIME YEAR TO SECOND,
+            gzxf004 LIKE gzxf_t.gzxf004
+                     END RECORD 
+   DEFINE l_interval_time   INTERVAL MINUTE TO SECOND
+   DEFINE li_cnt  LIKE type_t.num5
+
+   INITIALIZE g_xml.* TO NULL
+   INITIALIZE l_gzxf.* TO NULL
+
+   LET l_interval_time = 10 UNITS MINUTE  #轉成分鐘
+
+   #先產生亂數
+   CALL util.Math.srand()
+
+   LET lc_pw = util.Math.rand( 32767 ) USING "<<<<<", util.Math.rand( 32767 ) USING "<<<<<"
+
+   #寫入臨時密碼紀錄表
+   LET l_gzxf.gzxf002 = cl_get_current() 
+   LET l_gzxf.gzxf003 = cl_get_current() + l_interval_time
+   LET l_gzxf.gzxf004 = lc_pw
+
+   SELECT COUNT(*) INTO li_cnt
+     FROM gzxf_t 
+    WHERE gzxfent = g_enterprise AND gzxf001 = g_gzxd_m.gzxd001
+
+   IF li_cnt > 0 THEN
+      DELETE FROM gzxf_t
+       WHERE gzxfent = g_enterprise 
+         AND gzxf001 = g_gzxd_m.gzxd001
+   END IF
+    
+   INSERT INTO gzxf_t(gzxfent,gzxf001,gzxf002,gzxf003,gzxf004)
+     VALUES(g_enterprise,g_gzxd_m.gzxd001,l_gzxf.gzxf002,l_gzxf.gzxf003,l_gzxf.gzxf004) # DISK WRITE
+   IF SQLCA.SQLCODE THEN
+      display SQLCA.SQLCODE
+   END IF
+
+   #信件暫存檔案路徑
+   LET ls_file = os.Path.join(FGL_GETENV("TEMPDIR"),"chkmail_"),FGL_GETPID() USING "<<<<<",".txt"
+   IF os.Path.delete(ls_file) THEN END IF
+
+   #信件檔案
+   LET lc_channel = base.Channel.create()
+   CALL lc_channel.openFile( ls_file CLIPPED, "a" )
+   CALL lc_channel.setDelimiter("")
+   LET ls_text = "T100 ERP用戶您好,\n您的臨時登入密碼為", lc_pw,"\n密碼於10分鐘內有效\n",
+                 "若密碼非為您本人申請,請立即刪除本信,並通知資管人員\n",
+                 "謝謝您的協助\n"
+   CALL lc_channel.write(ls_text)
+   CALL lc_channel.close()
+   #信件主旨
+   LET g_xml.subject = "寄送密碼信函"
+   #信件本文
+   LET g_xml.body = ls_file
+   #寄信人
+   LET g_xml.sender = "top18@digiwin.biz:TOP18_Admin"
+   #收件者
+   IF g_gzxd_m.gzxd001 IS NOT NULL THEN
+      SELECT gzxa004 INTO lc_gzxa004
+        FROM gzxa_t
+       WHERE gzxaent = g_enterprise
+         AND gzxa001 = g_gzxd_m.gzxd001
+         AND gzxastus = "Y"
+      IF NOT SQLCA.SQLCODE AND lc_gzxa004 IS NOT NULL THEN
+         LET g_xml.recipient = lc_gzxa004
+
+         #寄發mail
+         CALL cl_jmail() RETURNING ls_tmp
+         #IF ls_tmp.getIndexOf("successfully",1) THEN
+         MESSAGE "密碼信件已寄出,請依照信件密碼登入!"
+         #ELSE  
+         #   CALL cl_err_msg('', "std-00008", ls_tmp CLIPPED, 1)
+         #END IF 
+         IF os.Path.delete( ls_file CLIPPED) THEN END IF
+      ELSE
+         ERROR "帳號資料不足,無法寄發"
+      END IF
+   ELSE
+      ERROR "帳號資料不足,無法寄發"
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_login_javaad" cite_std="N" status="" ver="1" src="s" new="Y" order="7" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi001_01_login_javaad()
+  DEFINE l_gzze001  LIKE gzze_t.gzze001
+   DEFINE l_cmd      STRING
+   DEFINE lch_cmd    base.Channel
+   DEFINE l_status   STRING
+   DEFINE l_str      STRING
+   DEFINE l_xml      STRING
+   DEFINE l_err_str  STRING
+   DEFINE l_ch       base.Channel,
+          l_xmlFile  STRING,
+          l_doc      om.DomDocument,
+          l_root     om.DomNode,
+          l_list     om.NodeList,
+          l_node     om.DomNode
+   DEFINE l_ip       STRING
+   DEFINE l_port     STRING
+   DEFINE l_domain   STRING
+   DEFINE l_account  STRING
+   DEFINE l_file     STRING
+   DEFINE channel    base.Channel
+   DEFINE l_desc     STRING
+
+   LET l_ip = g_ad_addr
+   LET l_domain = g_gzxd_m.domain
+   LET l_account = azzi001_01_parse_account(g_gzxd_m.gzxd001)
+   IF cl_null(g_gzxd_m.domain) THEN 
+      LET l_domain = g_ad_domain
+   END IF
+
+   #抓取AD server port
+   LET l_port = l_ip.subString(l_ip.getIndexOf(':', 1) + 1, l_ip.getLength())
+   #抓取AD server IP
+   LET l_ip = l_ip.subString(1, l_ip.getIndexOf(':', 1) - 1)
+   
+   IF cl_null(l_ip) OR cl_null(l_port) OR cl_null(l_domain) THEN
+      LET l_err_str = 'seiichi'
+   ELSE
+     
+      #階層式AD Server驗證
+      LET l_xmlFile = fgl_getenv("TEMPDIR"), "/",
+                      "ldap_login_", FGL_GETPID() USING '<<<<<<<<<<', ".xml"
+
+      #LET l_cmd = "p_ldap_login '", g_acct001, "' '", g_acct006, "' '", l_xmlFile, "'"
+
+      #執行呼叫ldap驗證程序
+      #不使用 cl_cmdrun_wait 改用 呼叫 sub 方式呼叫
+      #CALL cl_cmdrun_wait(l_cmd)
+
+      CALL s_azzi010(l_account, g_gzxd_m.gzxd002, l_xmlFile)
+      #CALL cl_ldap_login(g_gzxd_m.gzxd001, g_gzxd_m.gzxd002, l_xmlFile)
+
+      IF NOT cl_null(l_xmlFile) THEN 
+         # 讀取 XML 文件
+         LET l_doc = om.DomDocument.createFromXmlFile(l_xmlFile)
+         RUN "rm -f " || l_xmlFile || " >/dev/null 2>&1"
+
+         INITIALIZE l_root TO NULL
+         IF l_doc IS NULL THEN
+            LET l_err_str = cl_getmsg('azz-00105', g_lang)     #讀取XML檔錯誤
+         ELSE
+            LET l_root = l_doc.getDocumentElement()
+            LET l_list = l_root.selectByTagName("status")
+            IF l_list.getLength() > 0 THEN
+               LET l_node = l_list.item(1)
+               LET l_node = l_node.getFirstChild()
+               LET l_status = l_node.getattribute("@chars")
+            END IF
+            
+            LET l_list = l_root.selectByTagName("description")
+            IF l_list.getLength() > 0 THEN
+               LET l_node = l_list.item(1)
+               LET l_node = l_node.getFirstChild()
+               IF l_node IS NOT NULL THEN
+                  LET l_desc = l_node.getattribute("@chars")
+               END IF
+            END IF
+
+            #l_status驗證回傳結果:(1)0:失敗. (2)1:成功. (3)還有其他錯誤代碼
+            #帳號驗證成功
+            display sfmt("ad result:%1", l_status)
+            IF l_status = '1' THEN
+               RETURN ''
+            END IF
+
+            CASE l_status
+                 WHEN '0'
+                      LET l_gzze001 = 'azz-00106'     #AD帳號驗證失敗
+                 WHEN '2'
+                      LET l_gzze001 = 'azz-00107'     #呼叫java程式參數不足或過多
+                 WHEN '3'
+                      LET l_gzze001 = 'azz-00108'     #AD Server Connection refused
+                 WHEN '525'
+                      LET l_gzze001 = 'azz-00109'     #user not found
+                 WHEN '52e'
+                      LET l_gzze001 = 'azz-00110'     #nvalid credentials(密碼錯誤)
+                 WHEN '530'
+                      LET l_gzze001 = 'azz-00111'     #not permitted to logon at this time
+                 WHEN '532'
+                      LET l_gzze001 = 'azz-00112'     #password expired
+                 WHEN '533'
+                      LET l_gzze001 = 'azz-00113'     #account disabled
+                 WHEN '701'
+                      LET l_gzze001 = 'azz-00114'     #account expired
+                 WHEN '773'
+                      LET l_gzze001 = 'azz-00115'     #user must reset password
+                 # 下面訊息還沒設定 azzi920
+                 WHEN '4'
+                      LET l_gzze001 = 'azz-00116'     #AD Server port指定錯誤
+                 WHEN '5'
+                      LET l_gzze001 = 'azz-00117'     #LDAP 管理帳號DN未輸入
+                 WHEN '6'
+                      LET l_gzze001 = 'azz-00118'     #LDAP Base DN未指定
+                 WHEN '7'
+                      LET l_gzze001 = 'azz-00119'     #java取得SSL Class失敗.
+                 WHEN '8'
+                      LET l_gzze001 = 'azz-00120'     #LDAP 管理者帳號DN連接失敗
+                 WHEN '9'
+                      LET l_gzze001 = 'azz-00121'     #LDAP管理者帳號輸入錯誤
+                 WHEN '10'
+                      LET l_gzze001 = 'azz-00122'     #LDAP管理者密碼輸入錯誤
+                 WHEN '11'
+                      LET l_gzze001 = 'azz-00123'     #LDAP 搜尋使用者帳號時發生錯誤
+                 WHEN '12'
+                      LET l_gzze001 = 'azz-00124'     #儲存AD Server管理者密碼的acct_t帳號不存在
+                 WHEN '13'
+                      LET l_gzze001 = 'azz-00125'     #使用者帳號或密碼未傳遞.
+                 OTHERWISE
+                     LET l_gzze001 = l_status
+                     LET l_list = l_root.selectByTagName("status")
+                     IF l_list.getLength() > 0 THEN
+                        LET l_node = l_list.item(1)
+                        LET l_err_str = l_node.getattribute("description")
+                     END IF
+            END CASE
+
+            IF cl_null(l_err_str) THEN
+               LET l_err_str = cl_getmsg(l_gzze001, g_gzxd_m.gzzy001)
+               IF cl_null(l_err_str) THEN
+                  LET l_err_str = l_gzze001
+               END IF
+            END IF
+
+            IF cl_null(l_err_str) THEN
+               #LET l_err_str = "azzi010 no error message description.\n(appi900:", l_gzze001, "; lang: ", g_lang, "; User account: ", g_acct001, ")"
+            END IF
+
+            IF l_status = "525" THEN
+               LET l_err_str = l_err_str, " ", l_desc.substring(l_desc.getindexof("filter:", 1), l_desc.getindexof("))", 1) + 1)
+            END IF
+         END IF
+      END IF
+   END IF
+
+   #理論上執行到這裡應該要有err msg,如果沒有則是可能FUNCTION有什麼地方出錯
+
+   IF cl_null(l_err_str) THEN
+      LET l_err_str = 'web_javaad run failed!'
+      DISPLAY l_err_str
+   END IF
+
+   RETURN l_err_str
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_chk_login" cite_std="N" status="" ver="1" src="s" new="Y" order="8" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi001_01_chk_login()
+   DEFINE lc_gzxd001    LIKE gzxd_t.gzxd001
+   DEFINE li_ok         LIKE type_t.num5  
+   DEFINE ls_ad_server  STRING
+   DEFINE ls_err_str    STRING 
+   DEFINE li_cnt        LIKE type_t.num5
+   DEFINE ld_login_time DATETIME YEAR TO SECOND 
+   DEFINE l_gzxdent     LIKE gzxd_t.gzxdent
+   DEFINE l_tmpstr      STRING
+   LET l_gzxdent = g_enterprise
+   #CALL cl_db_connect("ds",FALSE)
+   
+   LET li_ok = FALSE 
+
+   CASE 
+      WHEN gc_status = "T"
+         #1. 傳統TIPTOP帳號登入，若
+         #   正確：正常
+         #   失敗：有可能是臨時密碼方式登入
+         
+         #先驗傳統TT證帳號密碼
+         SELECT gzxd001 INTO lc_gzxd001 FROM gzxd_t 
+          WHERE gzxd001 = g_gzxd_m.gzxd001
+            AND gzxd002 = g_gzxd_m.gzxd002
+            AND gzxdstus = "Y"
+            AND gzxdent = l_gzxdent
+            
+         IF NOT cl_null(lc_gzxd001) THEN 
+            LET li_ok = TRUE 
+         ELSE
+         #驗證臨時密碼
+            LET ld_login_time = cl_get_current()
+            SELECT COUNT(*) INTO li_cnt  FROM gzxf_t
+              WHERE gzxfent = g_enterprise 
+                AND gzxf001 = g_gzxd_m.gzxd001
+                AND gzxf004 = g_gzxd_m.gzxd002
+                AND gzxf002 <=  ld_login_time 
+                AND gzxf003 >=  ld_login_time
+            IF li_cnt > 0 THEN 
+               LET li_ok = TRUE
+            ELSE 
+               LET li_ok = FALSE    
+            END IF
+         END IF 
+    
+      WHEN gc_status = "A"   #window ad 
+         #截取帳號
+         LET lc_gzxd001 = azzi001_01_parse_account(g_gzxd_m.gzxd001)
+         #截取domain
+         LET g_gzxd_m.domain = azzi001_01_parse_domain(g_gzxd_m.gzxd001)
+
+         IF g_ad_server = "Y" AND g_gzxd_m.domain IS NOT NULL THEN
+
+            LET g_account_domain = "@", g_gzxd_m.domain CLIPPED           
+            IF g_account_domain = "@digiwin.biz" THEN
+               LET g_error_show = 1
+               LET g_ad_server = "Y"  
+               LET g_ad_addr = "10.20.96.6:389"
+               LET g_ad_domain  = "DC=digiwin,DC=biz"
+                        
+               CALL azzi001_01_login_javaad() RETURNING ls_err_str #透過AD SERVER驗證帳號、密碼
+               IF cl_null(ls_err_str) THEN 
+                  LET li_ok = TRUE  
+               #ELSE 
+               #   ERROR ls_err_str
+               #   LET li_ok = FALSE 
+               END IF
+            END IF
+         END IF
+
+   END CASE 
+   
+   IF li_ok == TRUE THEN
+      LET lc_gzxd001 = azzi001_01_parse_account(g_gzxd_m.gzxd001)
+      CALL azzi001_01_save_login_info()  #將登入資訊存到COOKIE中
+   END IF
+   RETURN li_ok,lc_gzxd001
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_refresh_vimg" cite_std="N" status="" ver="1" src="s" new="Y" order="9" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 更新驗證碼圖片
+# Memo...........:
+# Usage..........: CALL azzi001_01_refresh_vimg()
+#                  RETURNING none
+# Input parameter: none
+# Return code....: none
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_refresh_vimg()
+   DEFINE l_channel   base.Channel
+   DEFINE l_vcode     STRING
+   DEFINE l_img_path  STRING
+   DEFINE l_cmd       STRING
+   
+   #先釋放
+   FREE g_gzxd_m.vimage
+   LET g_curr_vcode = ""
+   LET l_channel = base.Channel.create()
+   LET l_vcode = g_pid
+   LET l_img_path = FGL_GETENV("TEMPDIR"),os.Path.separator(),l_vcode.trim(),".jpg"
+   #關不掉log...再想辦法
+   LET l_cmd = "cd $ERP; java \"com.dsc.net.captcha.TestMain\" \"", l_vcode.trim(), "\" \"", l_img_path, "\" \"render\""
+   CALL l_channel.openPipe(l_cmd, "r")
+   WHILE NOT l_channel.isEof()
+      LET g_curr_vcode = l_channel.readLine()
+      IF g_curr_vcode.getLength() == 5 THEN
+         EXIT WHILE
+      END IF
+   END WHILE
+   CALL l_channel.close()
+   LOCATE g_gzxd_m.vimage IN FILE l_img_path
+   DISPLAY BY NAME g_gzxd_m.vimage
+   
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_chk_vcode" cite_std="N" status="" ver="1" src="s" new="Y" order="10" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 回傳驗證碼正確否
+# Memo...........:
+# Usage..........: CALL azzi001_01_chk_vcode()
+#                  RETURNING l_chk
+# Input parameter: none
+# Return code....: none
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_chk_vcode()
+   DEFINE l_chk  BOOLEAN
+   IF g_gzxd_m.vcode == g_curr_vcode THEN
+      LET l_chk = TRUE 
+   ELSE
+      LET l_chk = FALSE
+   END IF
+   RETURN l_chk
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_is_login" cite_std="N" status="" ver="1" src="s" new="Y" order="11" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi001_01_is_login()
+   DEFINE l_logname   STRING 
+       
+   CALL azzi001_01_get_login_info()
+   IF g_cookie_info.lang IS NOT NULL THEN
+      CALL FGL_SETENV("LANG", g_cookie_info.lang)
+   END IF
+   LET l_logname = FGL_GETENV("WEBUSER")
+   #CALL FGL_SETENV("LOGNAME", "tiptop")
+   IF l_logname IS NULL THEN
+      RETURN FALSE
+   END IF
+   RETURN TRUE
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_set_cookie" cite_std="N" status="" ver="1" src="s" new="Y" order="12" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_set_cookie(p_k,p_v)
+   DEFINE p_k   STRING   #cookie key
+   DEFINE p_v   STRING   #cookie value
+   DEFINE l_result   BOOLEAN
+   IF ui.interface.getFrontEndName() == "GWC" THEN
+      CALL ui.interface.FrontCall("session", "setvar", [p_k, p_v], l_result)
+      CALL ui.interface.Refresh()
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_get_cookie" cite_std="N" status="" ver="1" src="s" new="Y" order="13" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_get_cookie(p_k)
+   DEFINE p_k   STRING #cookie key
+   DEFINE l_v   STRING #cookie value
+   LET l_v  = ""
+   IF ui.interface.getFrontEndName() == "GWC" THEN
+      CALL ui.interface.FrontCall("session", "getvar", p_k, l_v)
+   END IF
+   RETURN URLDecoder.decode(l_v, "UTF-8")
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_wc_init" cite_std="N" status="" ver="1" src="s" new="Y" order="14" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 初始化Web Component資料
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING STRING
+# Input parameter: none
+# Return code....: STRING JSON格式字串
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi001_01_wc_init()
+    DEFINE l_sb   base.StringBuffer
+    DEFINE l_bgimg  STRING
+    DEFINE l_sql    STRING
+    
+    LET l_sql = "SELECT COUNT(gzcb003) FROM gzcb_t INNER JOIN gzcbl_t ON gzcb001 = gzcbl001 ",
+               "AND gzcb002 = gzcbl002 AND gzcb001 = '118' AND gzcb002 = ? AND gzcbl003 = ? AND gzcb013 = ?"
+    PREPARE azzi001_01_gzcb_cnt_pre FROM l_sql
+    
+    LET l_sql = "SELECT gzcb003, gzcb004,gzcbl004 FROM gzcb_t INNER JOIN gzcbl_t ON gzcb001 = gzcbl001 ",
+               "AND gzcb002 = gzcbl002 AND gzcb001 = '118' AND gzcb002 = ? AND gzcbl003 = ? AND gzcb013 = ?"
+    PREPARE azzi001_01_gzcb_pre FROM l_sql
+   
+    LET l_bgimg = cl_get_para(g_enterprise,"",'E-SYS-0033')
+    LET l_bgimg = azzi001_01_image_uri(l_bgimg)
+    #LET l_bgimg = azzi001_01_image_uri("TW-wp2.jpg")
+    IF l_bgimg IS NULL THEN LET l_bgimg = " " END IF
+    LET l_sb = base.StringBuffer.create()
+    CALL l_sb.append("{'bgImage':'"|| l_bgimg ||"','refresh':'重新整理', 'blocks':")
+    #因為每種JSON不太一樣，所以手動將每個JSON串成JSON ARRAY
+    CALL l_sb.append("[")
+    CALL l_sb.append(azzi001_01_gen_news())#公告
+    CALL l_sb.append(",")
+    CALL l_sb.append(azzi001_01_gen_tracks())#待簽核事項
+    CALL l_sb.append(",")
+    CALL l_sb.append(azzi001_01_gen_bpm())#待追蹤事項    
+    CALL l_sb.append(",")
+#    CALL l_sb.append(azzi001_01_gen_bpm())#待追蹤事項    
+#    CALL l_sb.append(",")
+    CALL l_sb.append(azzi001_01_gen_calendar())#行事曆
+    CALL l_sb.append(",")
+    CALL l_sb.append(azzi001_01_gen_chart())#圖表
+    CALL l_sb.append(",")
+    CALL l_sb.append(azzi001_01_gen_reports())#常用報表
+    CALL l_sb.append(",")
+    CALL l_sb.append(azzi001_01_gen_query())#自動查詢方案
+    CALL l_sb.append(",")
+    CALL l_sb.append(azzi001_01_gen_favorite())#我的最愛/常用功能
+    CALL l_sb.append(",")
+    CALL l_sb.append(azzi001_01_gen_add())#快速新增
+    CALL l_sb.append(",")
+    CALL l_sb.append(azzi001_01_gen_lastexe())#最後執行作業
+    CALL l_sb.append(",")
+    CALL l_sb.append(azzi001_01_gen_summary())#動態總覽
+    CALL l_sb.append(",")
+    CALL l_sb.append(azzi001_01_gen_flow())#流程導覽
+    #CALL l_sb.append(",")
+    #CALL l_sb.append(azzi001_01_gen_help())#Help
+    CALL l_sb.append("]")
+    CALL l_sb.append("}")
+    
+    FREE azzi001_01_gzcb_pre
+    FREE azzi001_01_gzcb_cnt_pre
+    
+    RETURN l_sb.toString()
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_gen_news" cite_std="N" status="" ver="1" src="s" new="Y" order="15" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 公告
+# Memo...........:
+# Usage..........: CALL azzi001_01_gen_news()
+#                  RETURNING STRING
+# Input parameter: none
+# Return code....: JSON格式字串
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_gen_news()
+    DEFINE l_portal  RECORD
+        link         STRING,   #連結
+        type         STRING,   #區塊類型
+        title        STRING,   #標題
+        json_data    STRING,
+        seq          INTEGER,
+		  config       wc_config #設定
+        END RECORD
+    DEFINE l_gzcb    type_gzcb
+    DEFINE l_gzcb002 LIKE gzcb_t.gzcb002
+    
+    LET l_gzcb002 = "news"
+    CALL azzi001_01_get_gzcb(l_gzcb002) RETURNING l_portal.config.*
+    
+    LET l_portal.config.row_span    = 1
+    LET l_portal.config.column_span = 4
+    #LET l_portal.config.icon        = l_gzcb.gzcb003
+    #LET l_portal.config.bg_color    = l_gzcb.gzcb004
+    #LET l_portal.config.title       = l_gzcb.gzcbl004
+    LET l_portal.type  = l_gzcb002    
+    LET l_portal.link  = "axxx001"
+    LET l_portal.seq   = 1
+
+    LET l_portal.json_data = cl_notice_getlist("SYSTEM")
+
+    RETURN util.JSON.stringify(l_portal)
+
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_gen_tracks" cite_std="N" status="" ver="1" src="s" new="Y" order="16" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 待追蹤事項
+# Memo...........:
+# Usage..........: CALL azzi001_01_gen_tracks()
+#                  RETURNING STRING
+# Input parameter: none
+# Return code....: JSON格式字串
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_gen_tracks()
+    DEFINE l_portal  RECORD
+        link         STRING,   #連結
+        type         STRING,   #區塊類型
+        title        STRING,   #標題
+        json_data    STRING,
+        seq          INTEGER,
+        more         STRING,
+		  config       wc_config #設定
+        END RECORD
+    DEFINE l_gzcb    type_gzcb
+    DEFINE l_gzcb002 LIKE gzcb_t.gzcb002
+    
+    LET l_gzcb002 = "tracks"
+    CALL azzi001_01_get_gzcb(l_gzcb002) RETURNING l_portal.config.*
+    
+    LET l_portal.config.row_span    = 1
+    LET l_portal.config.column_span = 2
+    #LET l_portal.config.icon        = l_gzcb.gzcb003
+    #LET l_portal.config.bg_color    = l_gzcb.gzcb004
+    #LET l_portal.config.title       = l_gzcb.gzcbl004
+
+    LET l_portal.type  = l_gzcb002   
+    LET l_portal.link  = "axxx002"
+    LET l_portal.seq   = 3
+    LET l_portal.more  = cl_getmsg("azz-00218", g_lang)
+    LET l_portal.json_data = cl_user_overview_getfollowlist(4)
+    
+    RETURN util.JSON.stringify(l_portal)
+#    LET l_portal.items[1].updateDate = "2014/03/05"
+#    LET l_portal.items[1].link = "axxx002?arg=xxx001" 
+#    LET l_portal.items[1].title = "請購單1"
+#    LET l_portal.items[2].updateDate = "2014/04/09"
+#    LET l_portal.items[2].link = "axxx002?arg=xxx002" 
+#    LET l_portal.items[2].title = "請購單2"
+#    RETURN util.JSON.stringify(l_portal)
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_gen_calendar" cite_std="N" status="" ver="1" src="s" new="Y" order="17" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 行事曆
+# Memo...........:
+# Usage..........: CALL azzi001_01_gen_calendar()
+#                  RETURNING STRING
+# Input parameter: none
+# Return code....: JSON格式字串
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_gen_calendar()
+    DEFINE l_portal  RECORD
+        link         STRING,   #連結
+        type         STRING,   #區塊類型
+        title        STRING,   #標題
+        seq          INTEGER,
+        items        DYNAMIC ARRAY OF RECORD
+             updateDate  STRING,
+             link        STRING,
+             title       STRING
+             END RECORD,  #子項目
+		  config       wc_config #設定
+        END RECORD
+    DEFINE l_gzcb    type_gzcb
+    DEFINE l_gzcb002 LIKE gzcb_t.gzcb002
+    
+    LET l_gzcb002 = "calendar"
+    CALL azzi001_01_get_gzcb(l_gzcb002) RETURNING l_portal.config.*
+    
+    LET l_portal.config.row_span    = 2
+    LET l_portal.config.column_span = 2
+    #LET l_portal.config.icon        = l_gzcb.gzcb003
+    #LET l_portal.config.bg_color    = l_gzcb.gzcb004
+    #LET l_portal.config.title       = l_gzcb.gzcbl004
+    LET l_portal.type  = l_gzcb002   
+    LET l_portal.link   = "axxx003"
+    LET l_portal.seq    = 4
+    
+    LET l_portal.items[1].updateDate = "2014/04/01"
+    LET l_portal.items[1].link = "axxx003?arg=xxx001" 
+    LET l_portal.items[1].title = "行事曆1"
+    LET l_portal.items[2].updateDate = "2014/04/03"
+    LET l_portal.items[2].link = "axxx003?arg=xxx002" 
+    LET l_portal.items[2].title = "行事曆2"
+    RETURN util.JSON.stringify(l_portal)
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_gen_chart" cite_std="N" status="" ver="1" src="s" new="Y" order="18" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 常用報表
+# Memo...........:
+# Usage..........: CALL azzi001_01_gen_chart()
+#                  RETURNING STRING
+# Input parameter: none
+# Return code....: JSON格式字串
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_gen_chart()
+    DEFINE l_portal  RECORD
+        link         STRING,      #連結
+        type         STRING,      #區塊類型
+        title        STRING,      #標題
+        seq          INTEGER,
+        config       wc_config,    #設定
+        items        RECORD
+             data     DYNAMIC ARRAY OF INTEGER,  #整數
+             tooltips DYNAMIC ARRAY OF STRING,   #提示文字
+             labels   DYNAMIC ARRAY OF STRING    #各項目的標題
+             END RECORD
+        END RECORD
+    DEFINE l_gzcb    type_gzcb
+    DEFINE l_gzcb002 LIKE gzcb_t.gzcb002
+    
+    LET l_gzcb002 = "chart"
+    CALL azzi001_01_get_gzcb(l_gzcb002) RETURNING l_portal.config.*
+    
+    LET l_portal.config.row_span    = 1
+    LET l_portal.config.column_span = 2
+    #LET l_portal.config.icon        = l_gzcb.gzcb003
+    #LET l_portal.config.bg_color    = l_gzcb.gzcb004
+    #LET l_portal.config.title       = l_gzcb.gzcbl004
+    LET l_portal.type  = l_gzcb002   
+    LET l_portal.link   = "axxx004"
+    LET l_portal.seq    = 5
+    
+    LET l_portal.items.data[1] = util.Math.rand(10)
+    LET l_portal.items.data[2] = util.Math.rand(10)
+    LET l_portal.items.data[3] = util.Math.rand(10)
+    LET l_portal.items.tooltips[1] = "項目1"
+    LET l_portal.items.tooltips[2] = "項目2"
+    LET l_portal.items.tooltips[3] = "項目3"
+    LET l_portal.items.labels[1] = "項目1"
+    LET l_portal.items.labels[2] = "項目2"
+    LET l_portal.items.labels[3] = "項目3"
+  
+    RETURN util.JSON.stringify(l_portal)
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_gen_summary" cite_std="N" status="" ver="1" src="s" new="Y" order="19" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 動態總覽
+# Memo...........:
+# Usage..........: CALL azzi001_01_gen_summary()
+#                  RETURNING STRING
+# Input parameter: none
+# Return code....: JSON格式字串
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_gen_summary()
+    DEFINE l_portal  RECORD
+        link         STRING,   #連結
+        type         STRING,   #區塊類型
+        title        STRING,   #標題
+        seq          INTEGER,
+        items        DYNAMIC ARRAY OF RECORD
+             updateDate  STRING,
+             link        STRING,
+             title       STRING
+             END RECORD,  #子項目
+		  config       wc_config #設定
+        END RECORD
+    DEFINE l_gzcb    type_gzcb
+    DEFINE l_gzcb002 LIKE gzcb_t.gzcb002
+    
+    LET l_gzcb002 = "summary"
+    CALL azzi001_01_get_gzcb(l_gzcb002) RETURNING l_portal.config.*
+    
+    LET l_portal.config.row_span    = 1
+    LET l_portal.config.column_span = 1
+    #LET l_portal.config.icon        = l_gzcb.gzcb003
+    #LET l_portal.config.bg_color    = l_gzcb.gzcb004
+    #LET l_portal.config.title       = l_gzcb.gzcbl004
+    LET l_portal.type  = l_gzcb002   
+    LET l_portal.link   = "axxx005"
+    LET l_portal.seq    = 11
+    
+    LET l_portal.items[1].updateDate = "2014/04/01"
+    LET l_portal.items[1].link = "axxx005?arg=xxx001" 
+    LET l_portal.items[1].title = "收件匣(3)"
+    LET l_portal.items[2].updateDate = "2014/04/03"
+    LET l_portal.items[2].link = "axxx005?arg=xxx002" 
+    LET l_portal.items[2].title = "待簽核(5)"
+    LET l_portal.items[3].updateDate = "2014/04/03"
+    LET l_portal.items[3].link = "axxx005?arg=xxx003" 
+    LET l_portal.items[3].title = "待追蹤事項(2)"
+    RETURN util.JSON.stringify(l_portal)
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_gen_reports" cite_std="N" status="" ver="1" src="s" new="Y" order="20" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 常用報表
+# Memo...........:
+# Usage..........: CALL azzi001_01_gen_reports()
+#                  RETURNING STRING
+# Input parameter: none
+# Return code....: JSON格式字串
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_gen_reports()
+    DEFINE l_portal  RECORD
+        link         STRING,
+        type         STRING,
+        title        STRING,
+        json_data    STRING,
+        seq          INTEGER,
+        config       wc_config
+        END record
+    DEFINE l_gzcb    type_gzcb
+    DEFINE l_gzcb002 LIKE gzcb_t.gzcb002
+    
+    LET l_gzcb002 = "reports"
+    CALL azzi001_01_get_gzcb(l_gzcb002) RETURNING l_portal.config.*
+    
+    LET l_portal.config.row_span    = 1
+    LET l_portal.config.column_span = 2
+    #LET l_portal.config.icon        = l_gzcb.gzcb003
+    #LET l_portal.config.bg_color    = l_gzcb.gzcb004
+    #LET l_portal.config.title       = l_gzcb.gzcbl004
+    LET l_portal.type  = l_gzcb002   
+    LET l_portal.seq    = 6
+    
+    LET l_portal.json_data = cl_user_favorite_getrptlist(4)
+    #LET l_portal.items[1].icon = "bar.png"
+    #LET l_portal.items[1].link = "axxx006?arg=xxx001" 
+    #LET l_portal.items[1].title = "已開立未核准一般訂單..."
+    #LET l_portal.items[2].icon = "line.png"
+    #LET l_portal.items[2].link = "axxx006?arg=xxx002" 
+    #LET l_portal.items[2].title = "本季採購訂單"
+    #LET l_portal.items[3].icon = "bar.png"
+    #LET l_portal.items[3].link = "axxx006?arg=xxx003" 
+    #LET l_portal.items[3].title = "本年度出貨總計"
+    #LET l_portal.items[4].icon = "pie.png"
+    #LET l_portal.items[4].link = "axxx006?arg=xxx004" 
+    #LET l_portal.items[4].title = "內銷統計"
+    RETURN util.JSON.stringify(l_portal)
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_gen_query" cite_std="N" status="" ver="1" src="s" new="Y" order="21" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 自動查詢方案
+# Memo...........:
+# Usage..........: CALL azzi001_01_gen_query()
+#                  RETURNING STRING
+# Input parameter: none
+# Return code....: JSON格式字串
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_gen_query()
+    DEFINE l_portal  RECORD
+        link         STRING,
+        type         STRING,
+        title        STRING,
+        seq          INTEGER,
+        json_data    STRING,
+		  config       wc_config
+        END RECORD
+    DEFINE l_gzcb    type_gzcb
+    DEFINE l_gzcb002 LIKE gzcb_t.gzcb002
+    
+    LET l_gzcb002 = "query"
+    CALL azzi001_01_get_gzcb(l_gzcb002) RETURNING l_portal.config.*
+    
+    LET l_portal.config.row_span    = 1
+    LET l_portal.config.column_span = 2
+    #LET l_portal.config.icon        = l_gzcb.gzcb003
+    #LET l_portal.config.bg_color    = l_gzcb.gzcb004
+    #LET l_portal.config.title       = l_gzcb.gzcbl004
+    LET l_portal.type  = l_gzcb002   
+    LET l_portal.link   = "axxx007"
+    LET l_portal.seq    = 7
+    LET l_portal.json_data = cl_qbe_queryplan_getlist(5)
+    RETURN util.JSON.stringify(l_portal)
+    
+    #LET l_portal.items[1].updateDate = "2014/04/01"
+    #LET l_portal.items[1].link = "axxx007?arg=xxx001" 
+    #LET l_portal.items[1].title = "目標客戶列表"
+    #LET l_portal.items[2].updateDate = "2014/04/03"
+    #LET l_portal.items[2].link = "axxx007?arg=xxx002" 
+    #LET l_portal.items[2].title = "潛在客戶"
+    #LET l_portal.items[3].updateDate = "2014/04/03"
+    #LET l_portal.items[3].link = "axxx007?arg=xxx002" 
+    #LET l_portal.items[3].title = "中南部客戶"
+    #LET l_portal.items[4].updateDate = "2014/04/03"
+    #LET l_portal.items[4].link = "axxx007?arg=xxx002" 
+    #LET l_portal.items[4].title = "北部客戶"
+    #RETURN util.JSON.stringify(l_portal)
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_gen_favorite" cite_std="N" status="" ver="1" src="s" new="Y" order="22" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 我的最愛
+# Memo...........:
+# Usage..........: CALL azzi001_01_gen_favorite()
+#                  RETURNING STRING
+# Input parameter: none
+# Return code....: JSON格式字串
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_gen_favorite()
+    DEFINE l_portal  RECORD
+        link         STRING,
+        type         STRING,
+        title        STRING,
+        seq          INTEGER,
+        json_data    STRING,
+        more         STRING,
+		  config       wc_config
+        END RECORD
+    DEFINE l_gzcb    type_gzcb
+    DEFINE l_gzcb002 LIKE gzcb_t.gzcb002
+    
+    LET l_gzcb002 = "favorite"
+    CALL azzi001_01_get_gzcb(l_gzcb002) RETURNING l_portal.config.*
+    
+    LET l_portal.config.row_span    = 1
+    LET l_portal.config.column_span = 2
+    #LET l_portal.config.icon        = l_gzcb.gzcb003
+    #LET l_portal.config.bg_color    = l_gzcb.gzcb004
+    #LET l_portal.config.title       = l_gzcb.gzcbl004
+    LET l_portal.type  = l_gzcb002   
+    LET l_portal.more  = cl_getmsg("azz-00218", g_lang)
+    LET l_portal.link   = "axxx008"
+    LET l_portal.seq    = 8
+    
+    LET l_portal.json_data = cl_user_favorite_getlist(4)
+    RETURN util.JSON.stringify(l_portal)
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_gen_add" cite_std="N" status="" ver="1" src="s" new="Y" order="23" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 快速新增
+# Memo...........:
+# Usage..........: CALL azzi001_01_gen_add()
+#                  RETURNING STRING
+# Input parameter: none
+# Return code....: JSON格式字串
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_gen_add()
+    DEFINE l_portal  RECORD
+        link         STRING,
+        type         STRING,
+        title        STRING,
+        seq          INTEGER,
+        items        DYNAMIC ARRAY OF RECORD
+             updateDate  STRING,
+             link        STRING,
+             title       STRING
+             END RECORD,  #子項目
+		config       wc_config
+        END RECORD
+    DEFINE l_gzcb    type_gzcb
+    DEFINE l_gzcb002 LIKE gzcb_t.gzcb002
+    
+    LET l_gzcb002 = "add"
+    CALL azzi001_01_get_gzcb(l_gzcb002) RETURNING l_portal.config.*
+    
+    LET l_portal.config.row_span    = 1
+    LET l_portal.config.column_span = 2
+    #LET l_portal.config.icon        = l_gzcb.gzcb003
+    #LET l_portal.config.bg_color    = l_gzcb.gzcb004
+    #LET l_portal.config.title       = l_gzcb.gzcbl004
+    LET l_portal.type  = l_gzcb002   
+    LET l_portal.link   = "axxx009"
+    LET l_portal.seq    = 9
+    
+    LET l_portal.items[1].updateDate = "2014/04/01"
+    LET l_portal.items[1].link = "axxx009?arg=xxx001" 
+    LET l_portal.items[1].title = "新增採購單"
+    LET l_portal.items[2].updateDate = "2014/04/03"
+    LET l_portal.items[2].link = "axxx009?arg=xxx002" 
+    LET l_portal.items[2].title = "新增客戶"
+    LET l_portal.items[3].updateDate = "2014/04/03"
+    LET l_portal.items[3].link = "axxx009?arg=xxx003" 
+    LET l_portal.items[3].title = "新增訊息"
+    RETURN util.JSON.stringify(l_portal)
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_gen_lastexe" cite_std="N" status="" ver="1" src="s" new="Y" order="24" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 最後執行作業
+# Memo...........:
+# Usage..........: CALL azzi001_01_gen_lastexe()
+#                  RETURNING STRING
+# Input parameter: none
+# Return code....: JSON格式字串
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_gen_lastexe()
+    DEFINE l_portal  RECORD
+        link         STRING,
+        type         STRING,
+        title        STRING,
+        seq          INTEGER,
+        json_data    STRING,
+		  config       wc_config
+        END RECORD
+    DEFINE l_gzcb    type_gzcb
+    DEFINE l_gzcb002 LIKE gzcb_t.gzcb002
+    
+    LET l_gzcb002 = "lastexe"
+    CALL azzi001_01_get_gzcb(l_gzcb002) RETURNING l_portal.config.*
+    
+    LET l_portal.config.row_span    = 1
+    LET l_portal.config.column_span = 2
+    #LET l_portal.config.icon        = l_gzcb.gzcb003
+    #LET l_portal.config.bg_color    = l_gzcb.gzcb004
+    #LET l_portal.config.title       = l_gzcb.gzcbl004
+    LET l_portal.type  = l_gzcb002   
+    LET l_portal.link   = "axxx010"
+    LET l_portal.seq    = 10
+    
+    LET l_portal.json_data = cl_log_getlastexelist(5)
+    RETURN util.JSON.stringify(l_portal)
+    
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_gen_flow" cite_std="N" status="" ver="1" src="s" new="Y" order="25" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 流程導覽
+# Memo...........:
+# Usage..........: CALL azzi001_01_gen_flow()
+#                  RETURNING STRING
+# Input parameter: none
+# Return code....: JSON格式字串
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_gen_flow()
+    DEFINE l_portal  RECORD
+        link         STRING,
+        type         STRING,
+        title        STRING,
+        seq          INTEGER,
+        items        DYNAMIC ARRAY OF RECORD
+             updateDate  STRING,
+             link        STRING,
+             title       STRING
+             END RECORD,  #子項目
+		config       wc_config
+        END RECORD
+    DEFINE l_gzcb    type_gzcb
+    DEFINE l_gzcb002 LIKE gzcb_t.gzcb002
+    
+    LET l_gzcb002 = "flow"
+    CALL azzi001_01_get_gzcb(l_gzcb002) RETURNING l_portal.config.*
+    
+    LET l_portal.config.row_span    = 1
+    LET l_portal.config.column_span = 1
+    #LET l_portal.config.icon        = l_gzcb.gzcb003
+    #LET l_portal.config.bg_color    = l_gzcb.gzcb004
+    #LET l_portal.config.title       = l_gzcb.gzcbl004
+    LET l_portal.type  = l_gzcb002   
+    LET l_portal.link   = "axxx011"
+    LET l_portal.seq    = 12
+    
+    LET l_portal.items[1].updateDate = "2014/04/01"
+    LET l_portal.items[1].link = "axxx011?arg=xxx001" 
+    LET l_portal.items[1].title = "傳票作業"
+    LET l_portal.items[2].updateDate = "2014/04/03"
+    LET l_portal.items[2].link = "axxx011?arg=xxx002" 
+    LET l_portal.items[2].title = "採購作業"
+    LET l_portal.items[3].updateDate = "2014/04/03"
+    LET l_portal.items[3].link = "axxx011?arg=xxx002" 
+    LET l_portal.items[3].title = "發票作業"
+    LET l_portal.items[4].updateDate = "2014/04/03"
+    LET l_portal.items[4].link = "axxx011?arg=xxx002" 
+    LET l_portal.items[4].title = "支票收款"
+    RETURN util.JSON.stringify(l_portal)
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_gen_help" cite_std="N" status="" ver="1" src="s" new="Y" order="26" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 取得Help區塊的資料
+# Memo...........:
+# Usage..........: CALL azzi001_01_gen_help()
+#                  RETURNING STRING
+# Input parameter: none
+# Return code....: JSON格式字串
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_gen_help()
+    DEFINE l_portal  RECORD
+        link         STRING,
+        type         STRING,
+        title        STRING,
+        seq          INTEGER,
+		  config       wc_config
+        END RECORD
+    DEFINE l_gzcb    type_gzcb
+    DEFINE l_gzcb002 LIKE gzcb_t.gzcb002
+    
+    LET l_gzcb002 = "help"
+    CALL azzi001_01_get_gzcb(l_gzcb002) RETURNING l_portal.config.*
+    
+    LET l_portal.config.row_span = 1
+    LET l_portal.config.column_span = 1
+    #LET l_portal.config.icon        = l_gzcb.gzcb003
+    #LET l_portal.config.bg_color    = l_gzcb.gzcb004
+    #LET l_portal.config.title       = l_gzcb.gzcbl004
+    LET l_portal.type  = l_gzcb002   
+    LET l_portal.link = "axxx012"
+    LET l_portal.seq = 13
+    RETURN util.JSON.stringify(l_portal)
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_img_lang" cite_std="N" status="" ver="1" src="s" new="Y" order="27" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 畫面多語言的圖片顯示
+# Memo...........:
+# Usage..........: CALL azzi001_01_img_lang()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2014/05/07 By tsai_yen
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi001_01_img_lang()
+   DEFINE l_topbanner   STRING
+   DEFINE l_copyright   STRING
+   DEFINE l_form_logo   STRING
+   DEFINE l_ck_node     om.DomNode
+   DEFINE l_lang        STRING
+   LET l_ck_node = gfrm_curr.findNode("FormField", "formonly.remember")
+   LET l_ck_node = l_ck_node.getFirstChild()
+
+   LET l_lang = g_gzxd_m.gzzy001
+   LET l_lang = l_lang.trim()
+   LET l_topbanner = "logo/"
+   LET l_form_logo = "logo/"
+   
+   LET l_topbanner = l_topbanner CLIPPED, SFMT("topbanner_%1", l_lang)
+   LET l_form_logo = l_form_logo CLIPPED,SFMT("type_%1", l_lang)
+   LET l_copyright = SFMT("copyright_%1", l_lang)
+   CALL l_ck_node.setAttribute("text", azzi001_01_get_lang_text("lbl_remember", g_gzxd_m.gzzy001))
+   #4js 建議ui.Form.setElementText()不要用在FormField
+   #CALL gfrm_curr.setElementText("formonly.remember",LSTR(SFMT("lbl_remember_%1", l_lang)))
+
+   CALL azzi001_01_chg_lbl_gzxd001()
+   CALL gfrm_curr.setElementText("wad_login",       azzi001_01_get_reverse_txt(gc_status))
+   CALL gfrm_curr.setElementText("send_mail",       azzi001_01_get_lang_text("send_mail",        g_gzxd_m.gzzy001))
+   CALL gfrm_curr.setElementText("lbl_gzxd002",     azzi001_01_get_lang_text("lbl_gzxd002",      g_gzxd_m.gzzy001))
+   CALL gfrm_curr.setElementText("lbl_lang",        azzi001_01_get_lang_text("lbl_lang",         g_gzxd_m.gzzy001))
+   CALL gfrm_curr.setElementText("lbl_gzxa007",     azzi001_01_get_lang_text("lbl_gzxa007",      g_gzxd_m.gzzy001))
+   CALL gfrm_curr.setElementText("lbl_vcode",       azzi001_01_get_lang_text("lbl_vcode",        g_gzxd_m.gzzy001))
+   CALL gfrm_curr.setElementText("login",           azzi001_01_get_lang_text("login",            g_gzxd_m.gzzy001))
+   CALL gfrm_curr.setElementText("lbl_mail_gzxd001",azzi001_01_get_lang_text("lbl_mail_gzxd001", g_gzxd_m.gzzy001))
+   CALL gfrm_curr.setElementText("lbl_ad_gzxd001",  azzi001_01_get_lang_text("lbl_ad_gzxd001",   g_gzxd_m.gzzy001))
+   CALL gfrm_curr.setElementText("lbl_by",          azzi001_01_get_lang_text("lbl_by",           g_gzxd_m.gzzy001))
+   CALL gfrm_curr.setElementText("lbl_or",          azzi001_01_get_lang_text("lbl_or",           g_gzxd_m.gzzy001))
+
+   DISPLAY l_topbanner TO formonly.topbanner
+   DISPLAY l_form_logo TO formonly.form_logo
+   DISPLAY l_copyright TO formonly.copyright   #formonly.img_copyright
+   
+   CASE g_gzxd_m.gzzy001
+      WHEN "zh_TW"
+         DISPLAY "Copyright © Data Systems Consulting Co., Ltd. All rights reserved." TO formonly.ff_copyright
+      OTHERWISE
+         DISPLAY "Copyright © Digiwin Software. All rights reserved." TO formonly.ff_copyright
+   END CASE
+   
+   
+   CALL FGL_SETENV("LANG", g_gzxd_m.gzzy001)
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_to_rgb" cite_std="N" status="" ver="1" src="s" new="Y" order="28" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 將RGB轉成16進位格式
+# Memo...........:
+# Usage..........: CALL azzi001_01_to_rgb(p_r,p_g,p_b)
+#                  RETURNING STRING
+# Input parameter: p_r 紅 0~255
+#                : p_g 綠 0~255
+#                : p_b 藍 0~255
+# Return code....: #xxxxxx 16進位格式
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_to_rgb(p_r,p_g,p_b)
+   DEFINE p_r, p_g, p_b INTEGER
+   TRY
+      return SFMT("#%1%2%3", 
+                  Integer.toString(p_r,16), 
+                  Integer.toString(p_g,16), 
+                  Integer.toString(p_b,16))
+   CATCH
+      return "#000000"
+   END TRY
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_save_login_info" cite_std="N" status="" ver="2" src="s" new="Y" order="29" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 將登入資訊寫入cookie
+# Memo...........:
+# Usage..........: CALL azzi001_01_save_login_info()
+# Input parameter: none
+# Return code....: none
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_save_login_info()
+   DEFINE l_cookie_json    STRING
+   DEFINE l_gzxaent        LIKE gzxa_t.gzxaent
+   DEFINE l_gwcui          STRING
+   DEFINE l_vi             STRING
+   INITIALIZE g_cookie_info.* TO NULL
+   
+   
+   LET l_gzxaent = g_enterprise
+   LET g_cookie_info.account = azzi001_01_parse_account(g_gzxd_m.gzxd001)
+   LET g_cookie_info.lang = g_gzxd_m.gzzy001
+   LET g_cookie_info.valid = "Y"
+  # LET g_cookie_info.loc = g_gzxd_m.gzxa007
+   TRY
+      LET l_cookie_json = util.JSON.stringify(g_cookie_info)
+   CATCH
+      DISPLAY "1543: json.stringify error!"
+   END TRY
+   #將登入資訊加密
+   TRY
+      LET l_cookie_json = security.Base64.FromString(l_cookie_json)
+   CATCH
+      DISPLAY "1549: base64.formstring error:", l_cookie_json
+   END TRY
+#   LET l_cookie_json = security.Base64.ToHexBinary(l_cookie_json)
+#   LET l_cookie_json = security.Base64.ToHexBinary(l_cookie_json)
+   CALL azzi001_01_set_cookie("u", l_cookie_json)
+ 
+   CALL azzi001_01_set_cookie("webuser", g_cookie_info.account)
+   #記得我
+   CALL azzi001_01_set_remember()
+   
+   LET gkey = azzi001_01_create_key()
+   CALL azzi001_01_encrypt_gwcui() RETURNING l_gwcui
+   CALL azzi001_01_encrypt_vi()    RETURNING l_vi
+   CALL azzi001_01_set_cookie("gwcui", l_gwcui)
+   CALL azzi001_01_set_cookie("vi", l_vi)
+   EXECUTE azzi001_01_gzxa010_pre USING g_gzxd_m.gzzy001, g_gzxd_m.gzxd001, l_gzxaent
+   
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_get_remember" cite_std="N" status="" ver="1" src="s" new="Y" order="30" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzi001_01_get_remember()
+# Input parameter: none
+# Return code....: none
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_get_remember()
+   DEFINE l_cookie  STRING
+   LET g_gzxd_m.remember = "N"
+
+   TRY
+      #取得cookie的"記得我"
+      LET l_cookie = azzi001_01_get_cookie("r")
+      #轉成string
+      LET l_cookie = security.Base64.ToString(l_cookie)
+      #轉成RECORD g_cookie_remember
+      CALL util.JSON.parse(l_cookie, g_cookie_remember)
+      LET g_gzxd_m.remember = "Y"
+      LET g_gzxd_m.gzxd001 = g_cookie_remember.account
+      LET g_gzxd_m.gzxa007 = g_cookie_remember.local
+      LET g_gzxd_m.gzzy001 = g_cookie_remember.lang
+      LET gc_status = g_cookie_remember.status
+      
+      IF gc_status IS NULL THEN LET gc_status = "T" END IF
+      
+   CATCH
+   END TRY
+   
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_set_remember" cite_std="N" status="" ver="1" src="s" new="Y" order="31" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 將"記得我"寫入cookie
+# Memo...........:
+# Usage..........: CALL azzi001_01_set_remember()
+# Input parameter: none
+# Return code....: none
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_set_remember()
+   DEFINE l_cookie_json    STRING
+   
+   #記得我
+   LET l_cookie_json = ""
+   INITIALIZE g_cookie_remember.* TO NULL
+   IF g_gzxd_m.remember == "Y" THEN
+   
+      LET g_cookie_remember.status  = gc_status
+      
+      IF NOT cl_null(g_gzxd_m.gzxd001) THEN
+         LET g_cookie_remember.account = g_gzxd_m.gzxd001
+      END IF
+      IF NOT cl_null(g_gzxd_m.gzzy001) THEN
+         LET g_cookie_remember.lang = g_gzxd_m.gzzy001
+      END IF
+      IF NOT cl_null(g_gzxd_m.gzxa007) THEN
+         LET g_cookie_remember.local = g_gzxd_m.gzxa007
+      END IF    
+      
+      TRY
+         LET l_cookie_json = util.JSON.stringify(g_cookie_remember)      
+         LET l_cookie_json = security.Base64.FromString(l_cookie_json)
+      CATCH
+      END TRY
+   END IF
+   CALL azzi001_01_set_cookie("r", l_cookie_json)
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_get_lang_text" cite_std="N" status="" ver="1" src="s" new="Y" order="32" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 傳入欄位名稱取得多語言資料
+# Memo...........:
+# Usage..........: CALL azzi001_01_get_lang_text(p_field, p_lang)
+#                  RETURNING l_gzzd005
+# Input parameter: p_field    欄位代號
+#                : p_lang     語言別
+# Return code....: l_gzzd005  多語言資料
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_get_lang_text(p_field,p_lang)
+   DEFINE p_field      LIKE gzzd_t.gzzd003  #欄位代號
+   DEFINE p_lang       LIKE gzzd_t.gzzd002
+   DEFINE l_gzzd005    LIKE gzzd_t.gzzd005  #多語言文字
+   
+   EXECUTE azzi001_01_lang_text_pre USING p_lang, p_field, "c" INTO l_gzzd005
+   
+   IF cl_null(l_gzzd005) THEN   
+      EXECUTE azzi001_01_lang_text_pre USING p_lang, p_field, "s" INTO l_gzzd005
+   END IF
+   IF cl_null(l_gzzd005) THEN LET l_gzzd005 = p_field END IF
+   
+   RETURN l_gzzd005
+   
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_chg_btn" cite_std="N" status="" ver="1" src="s" new="Y" order="33" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 改變登入按鈕的圖示與文字
+# Memo...........:
+# Usage..........: CALL azzi001_01_chg_btn(p_status)
+#                  RETURNING none
+# Input parameter: p_status   登入類型
+# Return code....: none
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_chg_btn(p_status)
+   DEFINE p_status CHAR(1)
+   DEFINE p_btn    STRING  #按鈕代號
+   DEFINE l_txt    STRING  
+   DEFINE l_icon   STRING
+   DEFINE l_tmp    STRING
+   DEFINE l_dialog ui.Dialog
+   
+   CALL ui.Dialog.getCurrent() RETURNING l_dialog
+
+   LET gc_status = p_status
+   LET l_txt = azzi001_01_get_reverse_txt(gc_status)
+   CASE gc_status
+      WHEN "A"
+         #僅限T100帳號能補寄密碼
+         CALL l_dialog.setActionActive("send_mail", FALSE)
+      WHEN "T"
+         #僅限T100帳號能補寄密碼
+         CALL l_dialog.setActionActive("send_mail", TRUE)
+   END CASE   
+   
+   CALL gfrm_curr.setElementText("wad_login", l_txt)   
+   CALL azzi001_01_chg_lbl_gzxd001()
+           
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_valid_input" cite_std="N" status="" ver="1" src="s" new="Y" order="34" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 驗證欄位及登入資訊
+# Memo...........:
+# Usage..........: CALL azzi001_01_valid_input()
+#                  RETURNING l_result
+# Input parameter: none
+# Return code....: l_result 驗證及登入成功
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_valid_input()
+   DEFINE l_dialog    ui.Dialog
+   DEFINE li_chk      BOOLEAN
+   DEFINE lc_gzxd001  LIKE gzxd_t.gzxd001
+   DEFINE l_address   STRING
+   DEFINE l_field     STRING
+   DEFINE l_errmsg    STRING
+   
+   CALL ui.Dialog.getCurrent() RETURNING l_dialog
+   
+   #檢查欄位必填、格式
+   CALL azzi001_01_valid_fields() RETURNING li_chk, l_field, l_errmsg
+   IF li_chk == FALSE THEN
+      CALL l_dialog.nextField(l_field)
+      ERROR l_errmsg
+      RETURN FALSE
+   END IF
+   
+   IF NOT azzi001_01_chk_vcode() THEN
+      #ERROR "驗證碼錯誤! 正確：", g_curr_vcode
+      ERROR cl_getmsg("azz-00206", g_gzxd_m.gzzy001)
+      CALL l_dialog.nextField("vcode")
+      RETURN FALSE
+   END IF
+   
+   #驗證登入帳號、密碼
+   CALL azzi001_01_chk_login() RETURNING li_chk,lc_gzxd001
+   IF li_chk THEN 
+      CALL FGL_SETENV("WEBUSER",lc_gzxd001)
+      
+   ELSE 
+      CALL FGL_SETENV("WEBUSER","") 
+      #DISPLAY FGL_GETENV("LOGNAME")
+      CASE gc_status
+         WHEN "T"
+            ERROR cl_getmsg("azz-00204", g_gzxd_m.gzzy001)
+         WHEN "A"
+            ERROR cl_getmsg("azz-00205", g_gzxd_m.gzzy001)
+      END CASE
+      CALL l_dialog.nextField("gzxd001")
+      #CALL cl_err("","azz-00104",1)
+   END IF 
+   RETURN li_chk
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_default_lang" cite_std="N" status="" ver="1" src="s" new="Y" order="35" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 從request header中抓client可接受的第一個語系
+# Memo...........:
+# Usage..........: CALL azzi001_01_default_lang()
+#                  RETURNING none
+# Input parameter: none
+# Return code....: none
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_default_lang()
+   DEFINE l_lang     STRING
+   DEFINE l_st       base.StringTokenizer
+   DEFINE l_gzzy003  LIKE gzzy_t.gzzy003
+   DEFINE ls_gzzy003 STRING
+   
+   
+   #這時call front call，好像會有問題，還是使用4js內建的環境變數吧...
+   #底下的front call待砍掉
+   IF ui.interface.getFrontEndName() != "GWC" THEN
+      RETURN "zh_TW"
+   END IF
+   
+   CALL ui.interface.frontcall("browser", "language", [], [l_lang]);
+
+   DECLARE azzi001_01_gzzy003_cs CURSOR FOR
+      SELECT DISTINCT gzzy003 FROM gzzy_t    #此處指的是資料多語言,因此為gzzy003
+      WHERE gzzystus = "Y"
+      ORDER BY gzzy003
+      
+   FOREACH azzi001_01_gzzy003_cs INTO l_gzzy003
+      LET ls_gzzy003 = l_gzzy003
+      IF ls_gzzy003.getIndexOf(l_lang, 1) != -1 THEN
+         LET l_lang = ls_gzzy003
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   RETURN l_lang
+   #取得Browser的語系
+   # javascript: navigator.language || navigator.userLanguage
+   # 4js:        FGL_GETENV("FGL_WEBSERVER_HTTP_ACCEPT_LANGUAGE")  => 拿Request.Header的Accept-Language
+   #             => zh-TW,zh;q=0.8,en-US;q=0.6,en;q=0.4,ja;q=0.2
+   # 方式：
+   #   將-轉成_與gzzy_t比對
+   #   SELECT gzzy001, gzzy002 FROM gzzy_t WHERE gzzystus = 'Y'
+   #
+   # 重點放在zh(中文)上：
+   #     繁體：zh-hant(繁), zh-tw(台灣), zh-hk(香港), zh-mo(澳門)
+   #     簡體：zh-hans(簡), zh-cn(中國大陸), zh-sg(新加坡), zh-my(馬來西亞)
+   #
+   #   
+   #
+   
+   
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_gen_bpm" cite_std="N" status="" ver="1" src="s" new="Y" order="36" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 待簽核事項
+# Memo...........:
+# Usage..........: CALL azzi001_01_gen_bpm()
+#                  RETURNING STRING
+# Input parameter: none
+# Return code....: JSON格式字串
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_gen_bpm()
+    DEFINE l_portal  RECORD
+        link         STRING,   #連結
+        type         STRING,   #區塊類型
+        title        STRING,   #標題
+        json_data    STRING,
+        seq        INTEGER,
+#        items        DYNAMIC ARRAY OF RECORD
+#             updateDate  STRING,
+#             link        STRING,
+#             title       STRING
+#             END RECORD,  #子項目
+		  config       wc_config #設定
+        END RECORD
+    DEFINE l_gzcb    type_gzcb
+    DEFINE l_gzcb002 LIKE gzcb_t.gzcb002
+    
+    LET l_gzcb002 = "bpm"
+    CALL azzi001_01_get_gzcb(l_gzcb002) RETURNING l_portal.config.*
+    
+    LET l_portal.config.row_span    = 1
+    LET l_portal.config.column_span = 2
+    #LET l_portal.config.icon        = l_gzcb.gzcb003
+    #LET l_portal.config.bg_color    = l_gzcb.gzcb004
+    #LET l_portal.config.title       = l_gzcb.gzcbl004
+    LET l_portal.type  = l_gzcb002   
+    LET l_portal.link   = "axxx002"    
+    LET l_portal.seq    = 2
+    LET l_portal.json_data = "[]"
+    
+    RETURN util.JSON.stringify(l_portal)
+#    LET l_portal.items[1].updateDate = "2014/03/05"
+#    LET l_portal.items[1].link = "axxx002?arg=xxx001" 
+#    LET l_portal.items[1].title = "請購單1"
+#    LET l_portal.items[2].updateDate = "2014/04/09"
+#    LET l_portal.items[2].link = "axxx002?arg=xxx002" 
+#    LET l_portal.items[2].title = "請購單2"
+#    RETURN util.JSON.stringify(l_portal)
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_get_login_info" cite_std="N" status="" ver="1" src="s" new="Y" order="37" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 取得使用者登入資訊
+# Memo...........:
+# Usage..........: CALL azzi001_01_get_login_info()
+#                  RETURNING g_cookie_info.*
+# Input parameter: none
+# Return code....: g_cookie_info.*
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_get_login_info()
+   DEFINE l_cookie_json    STRING
+   DEFINE l_gzxaent        LIKE gzxa_t.gzxaent
+   INITIALIZE g_cookie_info.* TO NULL
+
+   TRY
+      CALL azzi001_01_get_cookie("u") RETURNING l_cookie_json
+      CALL security.Base64.ToString(l_cookie_json) RETURNING l_cookie_json
+      CALL util.JSON.parse(l_cookie_json, g_cookie_info)
+   CATCH
+   END TRY   
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_logout" cite_std="N" status="u" ver="1" src="s" new="Y" order="38" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 登出，清除cookie資訊
+# Memo...........:
+# Usage..........: CALL azzi001_01_logout()
+#                  RETURNING none
+# Input parameter: none
+# Return code....: none
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi001_01_logout()
+   CALL azzi001_01_set_cookie("u", "")
+   CALL azzi001_01_set_cookie("webuser", "")
+   CALL azzi001_01_set_cookie("gwcui", "")
+   CALL azzi001_01_set_cookie("vi", "")
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_image_uri" cite_std="N" status="" ver="1" src="s" new="Y" order="39" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 取得GAS的ImageURI格式
+# Memo...........: http://10.40.40.18/wt10dev/wa/i/azzi001/DUA_HTML5/Image/aaa.png
+# Usage..........: CALL azzi001_01_image_uri(p_filename)
+#                  RETURNING l_l_imguri
+# Input parameter: p_fieldname   檔案名稱
+# Return code....: l_imguri         ImageUri
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_image_uri(p_filename)
+  DEFINE p_filename    STRING  #檔案名稱
+  DEFINE l_sb          base.StringBuffer
+   DEFINE l_appurl      STRING
+   DEFINE l_imguri     STRING
+   DEFINE l_idf        INTEGER
+   DEFINE la_param               RECORD
+          prog     STRING,
+          param    DYNAMIC ARRAY OF STRING
+       END RECORD
+   IF p_filename IS NOT NULL THEN
+      LET l_sb = base.StringBuffer.create()
+      LET la_param.prog = "azzi001"
+      LET l_appurl = cl_ap_url("GWC", util.JSON.stringify(la_param))
+      LET l_idf =l_appurl.getIndexOf("?", 1) 
+      IF l_idf > 0 THEN
+         LET l_appurl = l_appurl.subString(1, l_idf-1)
+      END IF      
+      CALL l_sb.append(l_appurl)
+      CALL l_sb.replace("/wa/r/","/wa/i/",1)
+      LET l_imguri = l_sb.toString(), "/DUA_HTML5/Image/", p_filename
+   ELSE
+      LET l_imguri = ""
+   END IF
+   RETURN l_imguri
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_chg_bgimage" cite_std="N" status="" ver="1" src="s" new="Y" order="40" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 設定背景圖
+# Memo...........:
+# Usage..........: CALL azzi001_01_chg_bgimage()
+#                  RETURNING none
+# Input parameter: none
+# Return code....: none
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_chg_bgimage()
+   DEFINE l_hbox   om.DomNode
+   DEFINE l_bgimg  STRING
+
+   #要設定背景圖的控件為hbox2
+   LET l_hbox = gfrm_curr.findNode("HBox", "hbox2")
+   IF l_hbox IS NOT NULL THEN
+      LET l_bgimg = cl_get_para(g_enterprise,"",'E-SYS-2001')
+
+      IF l_bgimg IS NOT NULL THEN
+         CALL azzi001_01_image_uri(l_bgimg) RETURNING l_bgimg
+      END IF
+      CALL l_hbox.setAttribute("tag", SFMT("{\"bgImg\":\"%1\"}",l_bgimg))
+      #CALL l_hbox.setAttribute("tag", l_bgimg)
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_valid_fields" cite_std="N" status="" ver="1" src="s" new="Y" order="41" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 驗證欄位的格式、必填等等
+# Memo...........:
+# Usage..........: CALL azzi001_01_valid_fields()
+#                  RETURNING l_result
+# Input parameter: none
+# Return code....: l_result   驗證結果(Boolean)
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_valid_fields()
+   DEFINE li_chk      BOOLEAN  #檢查結果
+   DEFINE l_field     STRING   #驗證欄位代號
+   DEFINE l_errmsg    STRING   #驗證訊息
+   DEFINE l_account   STRING
+   
+   LET li_chk = TRUE
+   #檢查帳號、密碼
+   IF cl_null(g_gzxd_m.gzxd001) OR cl_null(g_gzxd_m.gzxd002) THEN 
+      #DISPLAY "ERROR: 帳號或密碼錯誤"
+      CASE 
+         WHEN cl_null(g_gzxd_m.gzxd001) 
+            LET li_chk = FALSE
+            LET l_field = "gzxd001"
+            CASE gc_status
+               WHEN "M"
+                  LET l_errmsg = cl_getmsg("azz-00217", g_gzxd_m.gzzy001)  
+               OTHERWISE
+                  LET l_errmsg = cl_getmsg("azz-00200", g_gzxd_m.gzzy001)   
+            END CASE
+         WHEN cl_null(g_gzxd_m.gzxd002)
+            LET li_chk = FALSE
+            LET l_field = "gzxd002"
+            LET l_errmsg = cl_getmsg("azz-00200", g_gzxd_m.gzzy001)
+      END CASE
+   ELSE
+      IF gc_status == "A" THEN
+         LET l_account = g_gzxd_m.gzxd001
+         IF l_account NOT LIKE "%@%" THEN
+            LET li_chk = FALSE
+            LET l_field = "gzxd001"
+            LET l_errmsg = cl_getmsg("azz-00202", g_gzxd_m.gzzy001)
+         END IF
+      END IF
+   END IF 
+   #檢查驗證碼
+   IF li_chk THEN
+      IF cl_null(g_gzxd_m.vcode) THEN
+         LET li_chk = FALSE
+         LET l_field = "vcode"
+         LET l_errmsg = cl_getmsg("azz-00203", g_gzxd_m.gzzy001)
+      END IF
+   END IF
+   RETURN li_chk, l_field, l_errmsg
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_get_reverse_txt" cite_std="N" status="" ver="1" src="s" new="Y" order="42" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 取得反轉登入狀態的文字說明
+# Memo...........:
+# Usage..........: CALL azzi001_01_get_reverse_txt(p_status)
+#                  RETURNING l_txt
+# Input parameter: p_status   狀態
+# Return code....: l_txt      文字說明
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_get_reverse_txt(p_status)
+   DEFINE p_status   STRING
+   DEFINE l_txt      STRING
+   CASE p_status
+      WHEN "T"
+         LET l_txt = azzi001_01_get_lang_text("wad_login", g_gzxd_m.gzzy001)
+      WHEN "A"
+         LET l_txt = azzi001_01_get_lang_text("tt_login", g_gzxd_m.gzzy001)
+   END CASE
+   RETURN l_txt
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_chg_lbl_gzxd001" cite_std="N" status="" ver="1" src="s" new="Y" order="43" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 變更帳號、密碼的說明文字
+# Memo...........:
+# Usage..........: CALL azzi001_01_chg_lbl_gzxd001()
+#                  RETURNING none
+# Input parameter: none
+# Return code....: none
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_chg_lbl_gzxd001()
+ CASE gc_status
+      WHEN "A"
+         CALL gfrm_curr.setElementText("lbl_gzxd001",azzi001_01_get_lang_text("lbl_ad_gzxd001", g_gzxd_m.gzzy001))
+         CALL gfrm_curr.setElementText("lbl_gzxd002",azzi001_01_get_lang_text("lbl_gzxd002", g_gzxd_m.gzzy001))
+      WHEN "T"
+         CALL gfrm_curr.setElementText("lbl_gzxd001",azzi001_01_get_lang_text("lbl_gzxd001", g_gzxd_m.gzzy001))
+         CALL gfrm_curr.setElementText("lbl_gzxd002",azzi001_01_get_lang_text("lbl_gzxd002", g_gzxd_m.gzzy001))
+      #WHEN "M"
+      #   CALL gfrm_curr.setElementText("lbl_gzxd001",azzi001_01_get_lang_text("lbl_gzxd001", g_gzxd_m.gzzy001))
+      #   CALL gfrm_curr.setElementText("lbl_gzxd002",azzi001_01_get_lang_text("lbl_tmp_gzxd002", g_gzxd_m.gzzy001))
+   END CASE
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_parse_account" cite_std="N" status="" ver="1" src="s" new="Y" order="44" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 解析ad、mail帳號後去除domain name
+# Memo...........:
+# Usage..........: CALL azzi001_01_parse_account(p_gzxd001)
+#                  RETURNING l_gzxd001
+# Input parameter: p_gzxd001      帳號(可能包含domain name)
+# Return code....: l_gzxd001      帳號，不包含domain name
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_parse_account(p_gzxd001)
+   DEFINE p_gzxd001      STRING
+   DEFINE l_gzxd001      STRING
+   DEFINE l_idx          INTEGER
+   
+   LET l_gzxd001 = p_gzxd001.trim()
+   LET l_idx = p_gzxd001.getIndexOf("@", 1)
+   IF l_idx > 0 THEN
+      LET l_gzxd001 = l_gzxd001.subString(1, l_idx - 1)
+   END IF
+
+   RETURN l_gzxd001
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_parse_domain" cite_std="N" status="" ver="1" src="s" new="Y" order="45" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 解析domain name
+# Memo...........:
+# Usage..........: CALL azzi001_01_parse_domain(p_gzxd001)
+#                  RETURNING l_domain
+# Input parameter: p_gzxd001      ad, mail帳號
+# Return code....: l_domain       domain name
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_parse_domain(p_gzxd001)
+   DEFINE p_gzxd001      STRING
+   DEFINE l_gzxd001      STRING
+   DEFINE l_domain       STRING
+   DEFINE l_idx          INTEGER
+   
+   LET l_gzxd001 = p_gzxd001.trim()
+   LET l_idx = l_gzxd001.getIndexOf("@", 1)
+   IF l_idx > 0 THEN
+      LET l_domain = l_gzxd001.subString(l_idx + 1, l_gzxd001.getLength())
+   END IF
+
+   RETURN l_domain
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_get_gzcb" cite_std="N" status="" ver="1" src="s" new="Y" order="46" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 從gzcb_t中抓取相對的首頁小區塊資訊
+# Memo...........:
+# Usage..........: CALL azzi001_01_get_gzcb(p_gzcb002)
+#                  RETURNING l_gzcb
+# Input parameter: p_gzcb002      分類碼
+# Return code....: l_gzcb         gzcb003, gzcb004, gzcbl004
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_get_gzcb(p_gzcb002)
+   DEFINE p_gzcb002    LIKE gzcb_t.gzcb002
+   DEFINE l_gzcb013    LIKE gzcb_t.gzcb013
+   DEFINE l_gzcb       type_gzcb
+   DEFINE l_cnt        INTEGER
+   DEFINE l_config     wc_config
+   LET l_gzcb013 = "N"
+   EXECUTE azzi001_01_gzcb_cnt_pre USING p_gzcb002, g_lang , l_gzcb013 INTO l_cnt
+   IF l_cnt > 0 THEN
+      EXECUTE azzi001_01_gzcb_pre 
+        USING p_gzcb002, g_lang , l_gzcb013 
+         INTO l_gzcb.gzcb003, l_gzcb.gzcb004, l_gzcb.gzcbl004
+   ELSE
+      LET l_gzcb013 = "Y"
+      EXECUTE azzi001_01_gzcb_pre 
+        USING p_gzcb002, g_lang , l_gzcb013 
+         INTO l_gzcb.gzcb003, l_gzcb.gzcb004, l_gzcb.gzcbl004
+   END IF
+   
+   LET l_config.icon        = azzi001_01_image_uri(l_gzcb.gzcb003)
+   LET l_config.bg_color    = l_gzcb.gzcb004
+   LET l_config.title       = l_gzcb.gzcbl004
+   LET l_config.row_span    = 1
+   LET l_config.column_span = 1
+   RETURN l_config.*
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_switch_login" cite_std="N" status="" ver="1" src="s" new="Y" order="47" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 切換登入方式
+# Memo...........:
+# Usage..........: CALL azzi001_01_switch_login()
+#                  RETURNING none
+# Input parameter: none
+# Return code....: none
+# Date & Author..: 劉偉先
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_switch_login()
+   CASE gc_status
+      WHEN "A"
+         CALL azzi001_01_chg_btn("T")
+      WHEN "T"
+         CALL azzi001_01_chg_btn("A")
+   END CASE
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_create_key" cite_std="N" status="" ver="2" src="s" new="Y" order="48" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_create_key()
+   DEFINE l_key xml.CryptoKey
+   LET l_key = xml.CryptoKey.Create("http://www.w3.org/2001/04/xmlenc#aes128-cbc")
+   CALL l_key.setKey("t100_aswp000_key")
+   RETURN l_key
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_encrypt_gwcui" cite_std="N" status="u" ver="2" src="s" new="Y" order="49" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_encrypt_gwcui()
+   DEFINE l_gwcui    STRING
+   LET l_gwcui = SFMT("WEBUSER=%1&TOPENT=%2", g_cookie_info.account, FGL_GETENV("TOPENT"))
+   RETURN xml.Encryption.EncryptString(gkey, l_gwcui)
+END FUNCTION]]>
+</point>
+  <point name="function.azzi001_01_encrypt_vi" cite_std="N" status="" ver="2" src="s" new="Y" order="50" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi001_01_encrypt_vi()
+   RETURN xml.Encryption.EncryptString(gkey, FGL_GETPID())
+END FUNCTION]]>
+</point>
+  <point name="free_style.variable" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[### 給首頁的WebComponent用的變數
+TYPE wc_config  RECORD  #首頁個別的區塊設定
+        column_span   INTEGER,  #區塊寬度
+        row_span      INTEGER,  #區塊高度
+        bg_color      STRING,   #背景顏色
+        icon          STRING,   #圖示
+        title         STRING
+        END RECORD        
+        
+TYPE type_gzcb  RECORD
+         gzcb003   LIKE gzcb_t.gzcb003,  #圖示名稱
+         gzcb004   LIKE gzcb_t.gzcb004,  #背景色
+         gzcbl004  LIKE gzcbl_t.gzcbl004 #文字說明
+             END RECORD
+             
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE gc_status             LIKE type_t.chr1 #T:tiptop A:window ad  Q:QQ
+DEFINE g_pid                 INTEGER #給驗證碼用的唯一值
+DEFINE g_curr_vcode          STRING  #動態產生的圖片驗證碼
+DEFINE g_gzxd_m   RECORD
+            gzxd001  LIKE type_t.chr80,    #帳號
+            gzxd002  LIKE gzxd_t.gzxd002,  #密碼
+            domain   LIKE type_t.chr30,    #AD網域
+            remember STRING,               #記住我
+            gzxa007  STRING,               #據點
+            gzzy001  LIKE gzzy_t.gzzy001,  #語言
+            vcode    LIKE type_t.chr6,     #驗證碼
+            vimage   BYTE                  #驗證碼圖片
+       END RECORD
+DEFINE g_cookie_info  RECORD
+            account   LIKE type_t.chr80 ,  #帳號
+            lang      LIKE gzzy_t.gzzy001 ,  #語系
+            valid     LIKE type_t.chr1#,      #是否已登入
+            #loc       LIKE gzxa_t.gzxa007
+       END RECORD
+DEFINE g_cookie_remember  RECORD
+            account  STRING, #帳號
+            lang     STRING, #語言
+            local    STRING, #據點
+            status   LIKE type_t.chr1 #登入類型 (T: T100, A: AD, M:mail)
+       END RECORD
+DEFINE gkey  xml.CryptoKey]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[GLOBALS
+   DEFINE g_ad_server      LIKE  type_t.chr30
+   DEFINE g_ad_addr        LIKE  type_t.chr30 
+   DEFINE g_ad_domain      LIKE  type_t.chr30
+   DEFINE g_account_domain LIKE  type_t.chr30
+END GLOBALS]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="input.a.gzxd001" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_gzxd_m.gzxd001) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_gzxd_m.gzxd001 != g_gzxd001_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzxd_t WHERE "||"gzxdent = '" ||g_enterprise|| "' AND "||"gzxd001 = '"||g_gzxd_m.gzxd001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="main.import" cite_std="N" status="" ver="2" src="s" new="N" mark_hard="N">
+<![CDATA[IMPORT util
+IMPORT security
+IMPORT xml
+IMPORT JAVA java.lang.Integer
+IMPORT JAVA java.net.URLDecoder]]>
+</point>
+  <point name="main.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <section id="azzi001.free_style_variable" ver="1" status="" src="s">
+<![CDATA[#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+]]>
+</section>
+  <section id="azzi001.global" ver="1" status="" src="s">
+<![CDATA[#add-point:註解編寫項目
+{<point name="main.memo" />}
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="main.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+]]>
+</section>
+  <section id="azzi001.global_variable" ver="1" status="" src="s">
+<![CDATA[#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+</section>
+  <section id="azzi001.other_dialog" ver="1" status="" src="s">
+<![CDATA[{<point name="other.dialog"/>}
+]]>
+</section>
+  <section id="azzi001.other_function" ver="1" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+  <section id="azzi001_01.description" ver="266" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000524
+#+ 
+#+ Filename...: azzi001_01
+#+ Description: ...
+#+ Creator....: 01274(2014/04/18)
+#+ Modifier...: 01274(2014/05/08)
+#+ Buildtype..: 應用 p00 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="azzi001_01.free_style_variable" ver="1" status="" src="s">
+<![CDATA[#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+]]>
+</section>
+  <section id="azzi001_01.global" ver="2" status="" src="s">
+<![CDATA[#add-point:註解編寫項目
+{<point name="main.memo" />}
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="main.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+]]>
+</section>
+  <section id="azzi001_01.global_variable" ver="1" status="" src="s">
+<![CDATA[#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+</section>
+  <section id="azzi001_01.input" ver="1" status="" src="s">
+<![CDATA[#+ 資料輸入
+PUBLIC FUNCTION azzi001_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_azzi001_01 WITH FORM cl_ap_formpath("azz","azzi001_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_gzxd_m.gzxd001 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+         #---------------------------<  Master  >---------------------------
+         #----<<gzxd001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzxd001
+            #add-point:BEFORE FIELD gzxd001
+            {<point name="input.b.gzxd001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzxd001
+            
+            #add-point:AFTER FIELD gzxd001
+            {<point name="input.a.gzxd001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gzxd001
+            #add-point:ON CHANGE gzxd001
+            {<point name="input.g.gzxd001" />}
+            #END add-point
+ 
+ #欄位檢查
+         #---------------------------<  Master  >---------------------------
+         #----<<gzxd001>>----
+         #Ctrlp:input.c.gzxd001
+         ON ACTION controlp INFIELD gzxd001
+            #add-point:ON ACTION controlp INFIELD gzxd001
+            {<point name="input.c.gzxd001" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_azzi001_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+</section>
+  <section id="azzi001_01.other_dialog" ver="1" status="" src="s">
+<![CDATA[{<point name="other.dialog"/>}
+]]>
+</section>
+  <section id="azzi001_01.other_function" ver="1" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+</add_points>

@@ -1,0 +1,177 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aist411" module="ais" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="05016" crtdt="2015-06-03 15:13:02" modid="04152" moddt="2016-03-11 15:38:42" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="媒體申報銷項資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="isaj003,isaj003_desc(chr80),isajcomp,isajcomp_desc(chr80),isaj019,isaj020"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isaj004,isaj018,isaj005,isaj006,isaj015,isaj007,isaj009,isaj010,isaj012,isaj016,isaj103,isaj104,isaj105,isaj017,isaj014,isaj032,isaj008,isaj029,isajsite,isajsite_desc(chr500),isaj021,isaj021_desc(chr500),isaj001,isaj002,isaj031,isajdocdt,isaj037,isajstus,isaj033"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="isajsite,isajownid,isajownid_desc(chr500),isajowndp,isajowndp_desc(chr500),isajcrtid,isajcrtid_desc(chr500),isajcrtdp,isajcrtdp_desc(chr500),isajcrtdt,isajmodid,isajmodid_desc(chr500),isajmoddt"/>
+      <var id="bs_field" value="isaj003,isaj003_desc(chr80),isajcomp,isaj019,isaj020" pk="isajcomp,isaj003,isaj019,isaj020" order=""/>
+      <bs_reference field="isaj003_desc" ref_field="isaj003" ref_sql="SELECT ooefl004 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="open_aist410_01"/>
+    </section>
+  </structure>
+  <form id="0" module="ais" filename="aist411" method="dialog">
+    <section id="input">
+      <input id="head" field="isaj003,isaj019,isaj020"/>
+      <input id="body" page="1" field="isaj004,isaj018,isaj005,isaj006,isaj015,isaj007,isaj009,isaj010,isaj012,isaj016,isaj103,isaj104,isaj105,isaj017,isaj014,isaj032,isaj008,isaj029,isajsite,isaj021,isaj001,isaj002,isaj031,isajdocdt,isaj037,isajstus,isaj033" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="isaj003,isajcomp_desc,isaj019,isaj020"/>
+      <construct id="body" page="1" field="isaj004,isaj018,isaj005,isaj006,isaj015,isaj007,isaj009,isaj010,isaj012,isaj016,isaj103,isaj104,isaj105,isaj017,isaj014,isaj032,isaj008,isaj029,isajsite,isaj021,isaj001,isaj002,isaj031,isajdocdt,isaj037,isajstus,isaj033"/>
+      <construct id="body" page="2" field="isajownid,isajowndp,isajcrtid,isajcrtdp,isajcrtdt,isajmodid,isajmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="isajcomp,isaj003,isaj019,isaj020"/>
+      <set id="head" type="no_entry" field="isajcomp,isaj003,isaj019,isaj020"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="isaj003">
+        <after>
+          <check chkid="v_isaa001" id="isExist"/>
+          <reference field="isaj003_desc" ref_field="isaj_t.isaj003" map_field="isajent,isaj003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_isaa001" state="i"/>
+        <controlp form="q_isaj003" state="c"/>
+      </column>
+      <column id="isaj003_desc"/>
+      <column id="isajcomp">
+        <after/>
+      </column>
+      <column id="isajcomp_desc"/>
+      <column id="isaj019"/>
+      <column id="isaj020">
+        <after>
+          <check id="range" st="12.000" st_type="1" errno="azz-00087" bt="1.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="1">
+      <column id="isaj004"/>
+      <column id="isaj018">
+        <after>
+          <check chkid="v_isap002" id="isExist"/>
+        </after>
+        <controlp form="q_isap002" state="i"/>
+        <controlp form="q_isap002" state="c"/>
+      </column>
+      <column id="isaj005"/>
+      <column id="isaj006"/>
+      <column id="isaj015" def_scc="9708"/>
+      <column id="isaj007"/>
+      <column id="isaj009"/>
+      <column id="isaj010"/>
+      <column id="isaj012"/>
+      <column id="isaj016"/>
+      <column id="isaj103">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="isaj104" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="isaj105" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="isaj017"/>
+      <column id="isaj014" def_scc="9719"/>
+      <column id="isaj032" def_scc="9745"/>
+      <column id="isaj008"/>
+      <column id="isaj029"/>
+      <column id="isajsite">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+          <reference field="isajsite_desc" ref_field="isaj_t.isajsite" map_field="isajent,isajsite" ref_sql="SELECT ooefl004 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="isajsite_desc"/>
+      <column id="isaj021">
+        <after>
+          <check chkid="v_pmaa001_3" id="isExist"/>
+          <reference field="isaj021_desc" ref_field="isaj_t.isaj021" map_field="isajent,isaj021" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_13" state="i"/>
+        <controlp form="q_pmaa001_13" state="c"/>
+      </column>
+      <column id="isaj021_desc"/>
+      <column id="isaj001" def_scc="9720"/>
+      <column id="isaj002"/>
+      <column id="isaj031"/>
+      <column id="isajdocdt"/>
+      <column id="isaj037"/>
+      <column id="isajstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="isaj033"/>
+    </init>
+    <init id="body" page="2">
+      <column id="isajownid">
+        <after>
+          <reference field="isajownid_desc" ref_field="isaj_t.isajownid" map_field="isajownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isajownid_desc"/>
+      <column id="isajowndp">
+        <after>
+          <reference field="isajowndp_desc" ref_field="isaj_t.isajowndp" map_field="isajowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="isajowndp_desc"/>
+      <column id="isajcrtid">
+        <after>
+          <reference field="isajcrtid_desc" ref_field="isaj_t.isajcrtid" map_field="isajcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isajcrtid_desc"/>
+      <column id="isajcrtdp">
+        <after>
+          <reference field="isajcrtdp_desc" ref_field="isaj_t.isajcrtdp" map_field="isajcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="isajcrtdp_desc"/>
+      <column id="isajcrtdt"/>
+      <column id="isajmodid">
+        <after>
+          <reference field="isajmodid_desc" ref_field="isaj_t.isajmodid" map_field="isajmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isajmodid_desc"/>
+      <column id="isajmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="isaj_t" pk="isajcomp,isaj003,isaj019,isaj020">
+      <sql id="forupd_sql" type="sql" query="SELECT isaj003,&apos;&apos;,isajcomp,&apos;&apos;,isaj019,isaj020 FROM isaj_t WHERE isajent= ? AND isajcomp=? AND isaj003=? AND isaj019=? AND isaj020=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT isaj003,&apos;&apos;,isajcomp,&apos;&apos;,isaj019,isaj020 FROM isaj_t" order="isajcomp,isaj003,isaj019,isaj020"/>
+    </head>
+    <body id="isaj_t" page="1,2" linked="" pk="isaj001,isaj005,isaj006,isaj007" fk="isajcomp,isaj003,isaj019,isaj020">
+      <sql id="forupd_sql_detail" query="SELECT isaj004,isaj018,isaj005,isaj006,isaj015,isaj007,isaj009,isaj010,isaj012,isaj016,isaj103,isaj104,isaj105,isaj017,isaj014,isaj032,isaj008,isaj029,isajsite,&apos;&apos;,isaj021,&apos;&apos;,isaj001,isaj002,isaj031,isajdocdt,isaj037,isajstus,isaj033,&apos;&apos;,isajownid,&apos;&apos;,isajowndp,&apos;&apos;,isajcrtid,&apos;&apos;,isajcrtdp,&apos;&apos;,isajcrtdt,isajmodid,&apos;&apos;,isajmoddt FROM isaj_t WHERE isajent=? AND isajcomp=? AND isaj003=? AND isaj019=? AND isaj020=? AND isaj001=? AND isaj005=? AND isaj006=? AND isaj007=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT isaj004,isaj018,isaj005,isaj006,isaj015,isaj007,isaj009,isaj010,isaj012,isaj016,isaj103,isaj104,isaj105,isaj017,isaj014,isaj032,isaj008,isaj029,isajsite,&apos;&apos;,isaj021,&apos;&apos;,isaj001,isaj002,isaj031,isajdocdt,isaj037,isajstus,isaj033,&apos;&apos;,isajownid,&apos;&apos;,isajowndp,&apos;&apos;,isajcrtid,&apos;&apos;,isajcrtdp,&apos;&apos;,isajcrtdt,isajmodid,&apos;&apos;,isajmoddt FROM isaj_t WHERE isajent= ? AND isajcomp=? AND isaj003=? AND isaj019=? AND isaj020=?"/>
+    </body>
+  </dataset>
+</assembly>
+

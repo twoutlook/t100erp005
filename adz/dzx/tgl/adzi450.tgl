@@ -1,0 +1,1801 @@
+#+ Version..: T6-ERP-1.00.00 Build-000007
+#+ 
+#+ Filename...: adzi450
+#+ Buildtype..: 應用 i02 樣板自動產生
+#+ Memo.......: 
+#+ 以上段落由子樣板a00產生
+
+
+{<point name="global.memo" />}
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+{<Module define>}
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_dzde_d RECORD
+       dzdestus LIKE dzde_t.dzdestus, 
+   dzde001 LIKE dzde_t.dzde001, 
+   dzde002 LIKE dzde_t.dzde002, 
+   dzde003 LIKE dzde_t.dzde003, 
+   dzde004 LIKE dzde_t.dzde004, 
+   dzde005 LIKE dzde_t.dzde005, 
+   dzdemodu LIKE dzde_t.dzdemodu, 
+   dzdemodu_desc LIKE type_t.chr80, 
+   dzdedate DATETIME YEAR TO SECOND, 
+   dzdeoriu LIKE dzde_t.dzdeoriu, 
+   dzdeoriu_desc LIKE type_t.chr80, 
+   dzdeorid LIKE dzde_t.dzdeorid, 
+   dzdeorid_desc LIKE type_t.chr80, 
+   dzdeuser LIKE dzde_t.dzdeuser, 
+   dzdeuser_desc LIKE type_t.chr80, 
+   dzdedept LIKE dzde_t.dzdedept, 
+   dzdedept_desc LIKE type_t.chr80, 
+   dzdebuid DATETIME YEAR TO SECOND
+       END RECORD
+
+ 
+#無單身append欄位定義
+ 
+#模組變數(Module Variables)
+DEFINE g_dzde_d          DYNAMIC ARRAY OF type_g_dzde_d
+DEFINE g_dzde_d_t        type_g_dzde_d
+
+      
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num5              #目前處理的ARRAY CNT 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_temp_idx           LIKE type_t.num5              #單身 所在筆數(暫存用)
+DEFINE g_detail_idx         LIKE type_t.num5              #單身 所在筆數(所有資料)
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+ 
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+
+ 
+{</Module define>}
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#+ 作業開始
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("adz","N")
+   
+   #add-point:作業初始化
+   {<point name="main.init"/>}
+   #end add-point
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+ 
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_adzi450 WITH FORM cl_ap_formpath("adz",g_code)
+ 
+      CALL adzi450_init()   
+         
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      CALL adzi450_default_search()
+   
+      #進入選單 Menu (="N")
+      CALL adzi450_ui_dialog() 
+ 
+      #畫面關閉
+      CLOSE WINDOW w_adzi450
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")     
+   
+END MAIN
+ 
+ 
+#+ 畫面資料初始化
+PRIVATE FUNCTION adzi450_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point   
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+   
+   
+   
+END FUNCTION
+ 
+ 
+#+ 功能選單 
+PRIVATE FUNCTION adzi450_ui_dialog()
+   {<Local define>}
+   DEFINE li_idx   LIKE type_t.num5
+   {</Local define>}
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point 
+ 
+   LET g_action_choice = " "  
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()      
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   
+   LET g_detail_idx = 1
+   
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE
+   
+      CALL adzi450_b_fill(g_wc2)
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_dzde_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+      
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               LET g_temp_idx = l_ac
+               
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont() 
+               
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY
+      
+
+      
+         #add-point:ui_dialog段define
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         
+         BEFORE DIALOG
+            IF g_temp_idx > 0 THEN
+               LET l_ac = g_temp_idx
+               CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+               LET g_temp_idx = 1
+            END IF
+            LET g_curr_diag = ui.DIALOG.getCurrent()         
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            NEXT FIELD CURRENT
+      
+         
+
+         ON ACTION output
+
+            LET g_action_choice="output"
+            IF cl_chk_act_auth() THEN 
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+                EXIT DIALOG
+            END IF
+
+
+
+         ON ACTION query
+
+            LET g_action_choice="query"
+            IF cl_chk_act_auth() THEN 
+               CALL adzi450_query()
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+            END IF
+
+
+
+         ON ACTION modify
+
+            LET g_action_choice="modify"
+            IF cl_chk_act_auth() THEN 
+               CALL adzi450_modify()
+               #add-point:ON ACTION modify
+               {<point name="menu.modify" />}
+               #END add-point
+                EXIT DIALOG
+            END IF
+
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice="exit"
+            EXIT WHILE
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT WHILE
+      
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+ 
+#+ QBE資料查詢
+PRIVATE FUNCTION adzi450_query()
+   {<Local define>}
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   {</Local define>}
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point 
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_dzde_d.clear()
+   
+   LET g_qryparam.state = "c"
+   
+   #wc備份
+   LET ls_wc = g_wc2
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      CONSTRUCT g_wc2 ON dzdestus,dzde001,dzde002,dzde003,dzde004,dzde005,dzdemodu,dzdedate,dzdeoriu,dzdeorid,dzdeuser,dzdedept,dzdebuid 
+ 
+         FROM s_detail1[1].dzdestus,s_detail1[1].dzde001,s_detail1[1].dzde002,s_detail1[1].dzde003,s_detail1[1].dzde004,s_detail1[1].dzde005,s_detail1[1].dzdemodu,s_detail1[1].dzdedate,s_detail1[1].dzdeoriu,s_detail1[1].dzdeorid,s_detail1[1].dzdeuser,s_detail1[1].dzdedept,s_detail1[1].dzdebuid 
+      
+         #此段落由子樣板a11產生---
+         ##----<<dzdeoriu>>----
+         #ON ACTION controlp INFIELD dzdeoriu
+         #   CALL q_common('','dzdeoriu',TRUE,FALSE,g_dzde_d[1].dzdeoriu) RETURNING ls_return
+         #   DISPLAY ls_return TO dzdeoriu
+         #   NEXT FIELD dzdeoriu  
+         #
+         ##----<<dzdeorid>>----
+         #ON ACTION controlp INFIELD dzdeorid
+         #   CALL q_common('','dzdeorid',TRUE,FALSE,g_dzde_d[1].dzdeorid) RETURNING ls_return
+         #   DISPLAY ls_return TO dzdeorid
+         #   NEXT FIELD dzdeorid
+         #
+         ##----<<dzdeuser>>----
+         #ON ACTION controlp INFIELD dzdeuser
+         #   CALL q_common('','dzdeuser',TRUE,FALSE,g_dzde_d[1].dzdeuser) RETURNING ls_return
+         #   DISPLAY ls_return TO dzdeuser
+         #   NEXT FIELD dzdeuser
+		 #
+         ##----<<dzdedept>>----
+         #ON ACTION controlp INFIELD dzdedept
+         #   CALL q_common('','dzdedept',TRUE,FALSE,g_dzde_d[1].dzdedept) RETURNING ls_return
+         #   DISPLAY ls_return TO dzdedept
+         #   NEXT FIELD dzdedept
+         #
+         ##----<<dzdemodu>>----
+         #ON ACTION controlp INFIELD dzdemodu
+         #   CALL q_common('','dzdemodu',TRUE,FALSE,g_dzde_d[1].dzdemodu) RETURNING ls_return
+         #   DISPLAY ls_return TO dzdemodu
+         #   NEXT FIELD dzdemodu
+		 #
+         ##----<<dzde>>----
+         ##ON ACTION controlp INFIELD dzde
+         ##   CALL q_common('','dzde',TRUE,FALSE,g_dzde_d[1].dzde) RETURNING ls_return
+         ##   DISPLAY ls_return TO dzde
+         ##   NEXT FIELD dzde
+		 #
+         ##----<<dzde>>----
+         ##ON ACTION controlp INFIELD dzde
+         ##   CALL q_common('','dzde',TRUE,FALSE,g_dzde_d[1].dzde) RETURNING ls_return
+         ##   DISPLAY ls_return TO dzde
+         ##   NEXT FIELD dzde
+		 
+         ##----<<dzdebuid>>----
+         #AFTER FIELD dzdebuid
+         #   CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+         #   IF NOT cl_null(ls_result) THEN
+         #      IF NOT cl_chk_date_symbol(ls_result) THEN
+         #         LET ls_result = cl_add_date_extra_cond(ls_result)
+         #      END IF
+         #   END IF
+         #   CALL FGL_DIALOG_SETBUFFER(ls_result)
+         #
+         ##----<<dzdedate>>----
+         #AFTER FIELD dzdedate
+         #   CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+         #   IF NOT cl_null(ls_result) THEN
+         #      IF NOT cl_chk_date_symbol(ls_result) THEN
+         #         LET ls_result = cl_add_date_extra_cond(ls_result)
+         #      END IF
+         #   END IF
+         #   CALL FGL_DIALOG_SETBUFFER(ls_result)
+         #
+		 ##----<<dzde>>----
+         ##AFTER FIELD dzde
+         ##   CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+         ##   IF NOT cl_null(ls_result) THEN
+         ##      IF NOT cl_chk_date_symbol(ls_result) THEN
+         ##         LET ls_result = cl_add_date_extra_cond(ls_result)
+         ##      END IF
+         ##   END IF
+         ##   CALL FGL_DIALOG_SETBUFFER(ls_result)
+		 #
+         ##----<<dzde>>----
+         ##AFTER FIELD dzde
+         ##   CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+         ##   IF NOT cl_null(ls_result) THEN
+         ##      IF NOT cl_chk_date_symbol(ls_result) THEN
+         ##         LET ls_result = cl_add_date_extra_cond(ls_result)
+         ##      END IF
+         ##   END IF
+         ##   CALL FGL_DIALOG_SETBUFFER(ls_result)
+
+
+      
+         #---------------------<  Detail: page1  >---------------------
+         #----<<dzdestus>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdestus
+            #add-point:BEFORE FIELD dzdestus
+            {<point name="query.b.page1.dzdestus" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdestus
+            
+            #add-point:AFTER FIELD dzdestus
+            {<point name="query.a.page1.dzdestus" />}
+            #END add-point
+            
+
+         #Ctrlp:query.c.dzdestus
+         ON ACTION controlp INFIELD dzdestus
+            #add-point:ON ACTION controlp INFIELD dzdestus
+            {<point name="query.c.page1.dzdestus" />}
+            #END add-point
+
+         #----<<dzde001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzde001
+            #add-point:BEFORE FIELD dzde001
+            {<point name="query.b.page1.dzde001" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzde001
+            
+            #add-point:AFTER FIELD dzde001
+            {<point name="query.a.page1.dzde001" />}
+            #END add-point
+            
+
+         #Ctrlp:query.c.dzde001
+         ON ACTION controlp INFIELD dzde001
+            #add-point:ON ACTION controlp INFIELD dzde001
+            {<point name="query.c.page1.dzde001" />}
+            #END add-point
+
+         #----<<dzde002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzde002
+            #add-point:BEFORE FIELD dzde002
+            {<point name="query.b.page1.dzde002" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzde002
+            
+            #add-point:AFTER FIELD dzde002
+            {<point name="query.a.page1.dzde002" />}
+            #END add-point
+            
+
+         #Ctrlp:query.c.dzde002
+         ON ACTION controlp INFIELD dzde002
+            #add-point:ON ACTION controlp INFIELD dzde002
+            {<point name="query.c.page1.dzde002" />}
+            #END add-point
+
+         #----<<dzde003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzde003
+            #add-point:BEFORE FIELD dzde003
+            {<point name="query.b.page1.dzde003" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzde003
+            
+            #add-point:AFTER FIELD dzde003
+            {<point name="query.a.page1.dzde003" />}
+            #END add-point
+            
+
+         #Ctrlp:query.c.dzde003
+         ON ACTION controlp INFIELD dzde003
+            #add-point:ON ACTION controlp INFIELD dzde003
+            {<point name="query.c.page1.dzde003" />}
+            #END add-point
+
+         #----<<dzde004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzde004
+            #add-point:BEFORE FIELD dzde004
+            {<point name="query.b.page1.dzde004" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzde004
+            
+            #add-point:AFTER FIELD dzde004
+            {<point name="query.a.page1.dzde004" />}
+            #END add-point
+            
+
+         #Ctrlp:query.c.dzde004
+         ON ACTION controlp INFIELD dzde004
+            #add-point:ON ACTION controlp INFIELD dzde004
+            {<point name="query.c.page1.dzde004" />}
+            #END add-point
+
+         #----<<dzde005>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzde005
+            #add-point:BEFORE FIELD dzde005
+            {<point name="query.b.page1.dzde005" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzde005
+            
+            #add-point:AFTER FIELD dzde005
+            {<point name="query.a.page1.dzde005" />}
+            #END add-point
+            
+
+         #Ctrlp:query.c.dzde005
+         ON ACTION controlp INFIELD dzde005
+            #add-point:ON ACTION controlp INFIELD dzde005
+            {<point name="query.c.page1.dzde005" />}
+            #END add-point
+
+         #----<<dzdemodu>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdemodu
+            #add-point:BEFORE FIELD dzdemodu
+            {<point name="query.b.page1.dzdemodu" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdemodu
+            
+            #add-point:AFTER FIELD dzdemodu
+            {<point name="query.a.page1.dzdemodu" />}
+            #END add-point
+            
+
+         #Ctrlp:query.c.dzdemodu
+         ON ACTION controlp INFIELD dzdemodu
+            #add-point:ON ACTION controlp INFIELD dzdemodu
+            {<point name="query.c.page1.dzdemodu" />}
+            #END add-point
+
+         #----<<dzdedate>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdedate
+            #add-point:BEFORE FIELD dzdedate
+            {<point name="query.b.page1.dzdedate" />}
+            #END add-point
+
+         #----<<dzdeoriu>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdeoriu
+            #add-point:BEFORE FIELD dzdeoriu
+            {<point name="query.b.page1.dzdeoriu" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdeoriu
+            
+            #add-point:AFTER FIELD dzdeoriu
+            {<point name="query.a.page1.dzdeoriu" />}
+            #END add-point
+            
+
+         #Ctrlp:query.c.dzdeoriu
+         ON ACTION controlp INFIELD dzdeoriu
+            #add-point:ON ACTION controlp INFIELD dzdeoriu
+            {<point name="query.c.page1.dzdeoriu" />}
+            #END add-point
+
+         #----<<dzdeorid>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdeorid
+            #add-point:BEFORE FIELD dzdeorid
+            {<point name="query.b.page1.dzdeorid" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdeorid
+            
+            #add-point:AFTER FIELD dzdeorid
+            {<point name="query.a.page1.dzdeorid" />}
+            #END add-point
+            
+
+         #Ctrlp:query.c.dzdeorid
+         ON ACTION controlp INFIELD dzdeorid
+            #add-point:ON ACTION controlp INFIELD dzdeorid
+            {<point name="query.c.page1.dzdeorid" />}
+            #END add-point
+
+         #----<<dzdeuser>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdeuser
+            #add-point:BEFORE FIELD dzdeuser
+            {<point name="query.b.page1.dzdeuser" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdeuser
+            
+            #add-point:AFTER FIELD dzdeuser
+            {<point name="query.a.page1.dzdeuser" />}
+            #END add-point
+            
+
+         #Ctrlp:query.c.dzdeuser
+         ON ACTION controlp INFIELD dzdeuser
+            #add-point:ON ACTION controlp INFIELD dzdeuser
+            {<point name="query.c.page1.dzdeuser" />}
+            #END add-point
+
+         #----<<dzdedept>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdedept
+            #add-point:BEFORE FIELD dzdedept
+            {<point name="query.b.page1.dzdedept" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdedept
+            
+            #add-point:AFTER FIELD dzdedept
+            {<point name="query.a.page1.dzdedept" />}
+            #END add-point
+            
+
+         #Ctrlp:query.c.dzdedept
+         ON ACTION controlp INFIELD dzdedept
+            #add-point:ON ACTION controlp INFIELD dzdedept
+            {<point name="query.c.page1.dzdedept" />}
+            #END add-point
+
+         #----<<dzdebuid>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdebuid
+            #add-point:BEFORE FIELD dzdebuid
+            {<point name="query.b.page1.dzdebuid" />}
+            #END add-point
+
+  
+         
+
+      
+         BEFORE CONSTRUCT
+            CALL cl_qbe_init()
+            #add-point:cs段more_construct
+            {<point name="cs.before_construct"/>}
+            #end add-point 
+      
+         ON ACTION qbe_select
+            CALL cl_qbe_select()
+      
+         ON ACTION qbe_save
+            CALL cl_qbe_save()
+      
+      END CONSTRUCT
+  
+      #add-point:query段more_construct
+      {<point name="query.more_construct"/>}
+      #end add-point 
+      
+      ON ACTION accept
+         EXIT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #LET g_wc2 = g_wc2 CLIPPED, cl_get_extra_cond("g_dzde_d[l_ac].dzdeuser", "")
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      #LET g_wc2 = ls_wc
+      LET g_wc2 = " 1=1"
+   END IF
+  
+   CALL adzi450_b_fill(g_wc2)
+   
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      CALL cl_err("",-100,1)
+   END IF
+   
+   LET INT_FLAG = FALSE
+   
+END FUNCTION
+ 
+#+ 資料新增
+PRIVATE FUNCTION adzi450_insert()
+   {<Local define>}
+   DEFINE li_ac LIKE type_t.num5
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   {</Local define>}
+   
+   #輸入前動作  
+   LET li_ac = l_ac 
+   LET l_ac = 1   
+   LET g_before_input_done = FALSE                                        
+   CALL adzi450_set_entry_b("a")                                             
+   CALL adzi450_set_no_entry_b("a")                                          
+   LET g_before_input_done = TRUE                                            
+   
+   #append欄位         
+      
+ 
+
+   
+   #add-point:modify段before insert
+   {<point name="insert.before_insert"/>}
+   #end add-point  
+ 
+   #資料輸入
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM) 
+      INPUT g_dzde_d[1].* FROM s_detail1[1].*
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         BEFORE INPUT
+         
+      END INPUT
+      
+
+      
+      BEFORE DIALOG 
+   
+   END DIALOG
+   
+   #輸入後動作
+   IF INT_FLAG THEN
+      CALL cl_err("",9001,0)
+      LET INT_FLAG = 1
+      RETURN
+   END IF
+   
+   BEGIN WORK                    
+   
+   #add-point:單身新增前
+   {<point name="insert.b_insert"/>}
+   #end add-point
+   
+   
+   #add-point:單身新增後
+   {<point name="insert.a_insert"/>}
+   #end add-point
+ 
+END FUNCTION
+ 
+#+ 資料刪除
+PRIVATE FUNCTION adzi450_delete()
+   DEFINE li_ac LIKE type_t.num5
+   
+   IF NOT cl_ask_delete() THEN
+      LET INT_FLAG = 1 #不刪除
+   ELSE
+      LET INT_FLAG = 0 #要刪除
+   END IF
+   
+   LET li_ac = ARR_CURR()
+   
+   BEGIN WORK  
+   
+   DELETE FROM dzde_t 
+         WHERE dzde001 = g_dzde_d[li_ac].dzde001
+           AND dzde002 = g_dzde_d[li_ac].dzde002
+
+
+           
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("dzde_t",SQLCA.sqlcode,1) 
+      ROLLBACK WORK
+   ELSE
+      COMMIT WORK
+   END IF
+           
+END FUNCTION
+ 
+#+ 資料修改
+PRIVATE FUNCTION adzi450_modify()
+   {<Local define>}
+   DEFINE  p_cmd           LIKE type_t.chr1
+   DEFINE  l_cmd           LIKE type_t.chr1
+   DEFINE  l_ac_t          LIKE type_t.num5                #未取消的ARRAY CNT 
+   DEFINE  l_n             LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_cnt           LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_lock_sw       LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert  LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete  LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count         LIKE type_t.num5
+   DEFINE  l_i             LIKE type_t.num5
+   DEFINE  ls_return       STRING
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   {</Local define>}
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point 
+   
+   LET g_action_choice = ""
+   
+   LET g_qryparam.state = "i"
+ 
+   LET l_allow_insert = cl_detail_input_auth("insert")
+   LET l_allow_delete = cl_detail_input_auth("delete")
+ 
+   LET g_forupd_sql = "SELECT dzdestus,dzde001,dzde002,dzde003,dzde004,dzde005,dzdemodu,'',dzdedate,dzdeoriu,'',dzdeorid,'',dzdeuser,'',dzdedept,'',dzdebuid FROM dzde_t WHERE dzde001=? AND dzde002=? FOR UPDATE"
+   LET g_forupd_sql = cl_forupd_sql(g_forupd_sql)
+   DECLARE adzi450_bcl CURSOR FROM g_forupd_sql      # LOCK CURSOR
+   
+
+   
+   LET INT_FLAG = FALSE
+ 
+   #add-point:modify段修改前
+   {<point name="modify.before_input"/>}
+   #end add-point
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_dzde_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            CALL adzi450_b_fill(g_wc2)
+            LET g_detail_cnt = g_dzde_d.getLength()
+         
+         BEFORE ROW
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_n TO FORMONLY.idx
+         
+            BEGIN WORK
+            LET g_detail_cnt = g_dzde_d.getLength()
+            
+            IF g_detail_cnt >= l_ac 
+               AND NOT cl_null(g_dzde_d[l_ac].dzde001) 
+               AND NOT cl_null(g_dzde_d[l_ac].dzde002) 
+
+
+            THEN
+               LET l_cmd='u'
+               LET g_dzde_d_t.* = g_dzde_d[l_ac].*  #BACKUP
+               IF NOT adzi450_lock_b("dzde_t") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH adzi450_bcl INTO g_dzde_d[l_ac].dzdestus,g_dzde_d[l_ac].dzde001,g_dzde_d[l_ac].dzde002,g_dzde_d[l_ac].dzde003,g_dzde_d[l_ac].dzde004,g_dzde_d[l_ac].dzde005,g_dzde_d[l_ac].dzdemodu,g_dzde_d[l_ac].dzdemodu_desc,g_dzde_d[l_ac].dzdedate,g_dzde_d[l_ac].dzdeoriu,g_dzde_d[l_ac].dzdeoriu_desc,g_dzde_d[l_ac].dzdeorid,g_dzde_d[l_ac].dzdeorid_desc,g_dzde_d[l_ac].dzdeuser,g_dzde_d[l_ac].dzdeuser_desc,g_dzde_d[l_ac].dzdedept,g_dzde_d[l_ac].dzdedept_desc,g_dzde_d[l_ac].dzdebuid
+                  IF SQLCA.sqlcode THEN
+                     CALL cl_err(g_dzde_d_t.dzde001,SQLCA.sqlcode,1)
+                     LET l_lock_sw = "Y"
+                  END IF
+                  CALL adzi450_detail_show()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row
+            {<point name="input.body.before_row"/>}
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+        
+         BEFORE INSERT
+            BEGIN WORK
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_dzde_d_t.* TO NULL
+            INITIALIZE g_dzde_d[l_ac].* TO NULL 
+            
+            LET g_dzde_d_t.* = g_dzde_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL adzi450_set_entry_b("a")
+            CALL adzi450_set_no_entry_b("a")
+            #公用欄位給值(單身)
+            #此段落由子樣板a14產生    
+      #LET g_dzde_d[l_ac].dzdeoriu = g_user
+      #LET g_dzde_d[l_ac].dzdeorid = g_dept
+      #LET g_dzde_d[l_ac].dzdeuser = g_user
+      #LET g_dzde_d[l_ac].dzdedept = g_dept 
+      #LET g_dzde_d[l_ac].dzdebuid = cl_get_current()
+      #LET g_dzde_d[l_ac].dzdemodu = g_user
+      #LET g_dzde_d[l_ac].dzdedate = cl_get_current()
+      #LET g_dzde_d[l_ac].dzdestus = "Y"
+
+
+            
+            #add-point:modify段before insert
+            {<point name="input.body.before_insert"/>}
+            #end add-point  
+  
+         AFTER INSERT
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM dzde_t 
+             WHERE  dzde001 = g_dzde_d[l_ac].dzde001
+                                       AND dzde002 = g_dzde_d[l_ac].dzde002
+
+
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前
+               {<point name="input.body.b_insert"/>}
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_dzde_d[l_ac].dzde001
+               LET gs_keys[2] = g_dzde_d[l_ac].dzde002
+               CALL adzi450_insert_b('dzde_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後
+               {<point name="input.body.a_insert"/>}
+               #end add-point
+            ELSE    
+               CALL cl_err('INSERT',"std-00006",1)
+               INITIALIZE g_dzde_d[l_ac].* TO NULL
+               ROLLBACK WORK
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("dzde_t",SQLCA.sqlcode,1)  
+               ROLLBACK WORK                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL adzi450_b_fill(g_wc2)
+               #資料多語言用-增/改
+               
+               COMMIT WORK
+               #add-point:input段-after_insert
+               {<point name="input.body.a_insert2"/>}
+               #end add-point
+               ERROR 'INSERT O.K'
+               LET g_detail_cnt = g_detail_cnt + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF NOT cl_null(g_dzde_d[l_ac].dzde001) 
+               AND NOT cl_null(g_dzde_d_t.dzde002) 
+
+
+               THEN
+               
+               #add-point:單身刪除前
+               {<point name="input.body.b_delete"/>}
+               #end add-point        
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  CALL cl_err("", -263, 1)
+                  CANCEL DELETE
+               END IF
+               DELETE FROM dzde_t
+                WHERE  
+                      dzde001 = g_dzde_d_t.dzde001
+                      AND dzde002 = g_dzde_d_t.dzde002
+
+
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("dzde_t",SQLCA.sqlcode,1)
+                  ROLLBACK WORK
+                  CANCEL DELETE   
+               ELSE
+                  LET g_detail_cnt = g_detail_cnt-1
+                  
+                  COMMIT WORK
+               END IF 
+               CLOSE adzi450_bcl
+               LET l_count = g_dzde_d.getLength()
+            END IF 
+            #add-point:單身刪除後
+            {<point name="input.body.a_delete"/>}
+            #end add-point
+            
+                           INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_dzde_d[l_ac].dzde001
+               LET gs_keys[2] = g_dzde_d[l_ac].dzde002
+
+              
+         AFTER DELETE 
+            #add-point:單身刪除後2
+            {<point name="input.body.after_delete"/>}
+            #end add-point
+                           CALL adzi450_delete_b('dzde_t',gs_keys)
+ 
+         #---------------------<  Detail: page1  >---------------------
+         #----<<dzdestus>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdestus
+            #add-point:BEFORE FIELD dzdestus
+            {<point name="input.b.page1.dzdestus" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdestus
+            
+            #add-point:AFTER FIELD dzdestus
+            {<point name="input.a.page1.dzdestus" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE dzdestus
+            #add-point:ON CHANGE dzdestus
+            {<point name="input.g.page1.dzdestus" />}
+            #END add-point
+
+         #----<<dzde001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzde001
+            #add-point:BEFORE FIELD dzde001
+            {<point name="input.b.page1.dzde001" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzde001
+            
+            #add-point:AFTER FIELD dzde001
+            {<point name="input.a.page1.dzde001" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE dzde001
+            #add-point:ON CHANGE dzde001
+            {<point name="input.g.page1.dzde001" />}
+            #END add-point
+
+         #----<<dzde002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzde002
+            #add-point:BEFORE FIELD dzde002
+            {<point name="input.b.page1.dzde002" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzde002
+            
+            #add-point:AFTER FIELD dzde002
+            {<point name="input.a.page1.dzde002" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE dzde002
+            #add-point:ON CHANGE dzde002
+            {<point name="input.g.page1.dzde002" />}
+            #END add-point
+
+         #----<<dzde003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzde003
+            #add-point:BEFORE FIELD dzde003
+            {<point name="input.b.page1.dzde003" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzde003
+            
+            #add-point:AFTER FIELD dzde003
+            {<point name="input.a.page1.dzde003" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE dzde003
+            #add-point:ON CHANGE dzde003
+            {<point name="input.g.page1.dzde003" />}
+            #END add-point
+
+         #----<<dzde004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzde004
+            #add-point:BEFORE FIELD dzde004
+            {<point name="input.b.page1.dzde004" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzde004
+            
+            #add-point:AFTER FIELD dzde004
+            {<point name="input.a.page1.dzde004" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE dzde004
+            #add-point:ON CHANGE dzde004
+            {<point name="input.g.page1.dzde004" />}
+            #END add-point
+
+         #----<<dzde005>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzde005
+            #add-point:BEFORE FIELD dzde005
+            {<point name="input.b.page1.dzde005" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzde005
+            
+            #add-point:AFTER FIELD dzde005
+            {<point name="input.a.page1.dzde005" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE dzde005
+            #add-point:ON CHANGE dzde005
+            {<point name="input.g.page1.dzde005" />}
+            #END add-point
+
+         #----<<dzdemodu>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdemodu
+            #add-point:BEFORE FIELD dzdemodu
+            {<point name="input.b.page1.dzdemodu" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdemodu
+            
+            #add-point:AFTER FIELD dzdemodu
+            {<point name="input.a.page1.dzdemodu" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE dzdemodu
+            #add-point:ON CHANGE dzdemodu
+            {<point name="input.g.page1.dzdemodu" />}
+            #END add-point
+
+         #----<<dzdedate>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdedate
+            #add-point:BEFORE FIELD dzdedate
+            {<point name="input.b.page1.dzdedate" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdedate
+            
+            #add-point:AFTER FIELD dzdedate
+            {<point name="input.a.page1.dzdedate" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE dzdedate
+            #add-point:ON CHANGE dzdedate
+            {<point name="input.g.page1.dzdedate" />}
+            #END add-point
+
+         #----<<dzdeoriu>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdeoriu
+            #add-point:BEFORE FIELD dzdeoriu
+            {<point name="input.b.page1.dzdeoriu" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdeoriu
+            
+            #add-point:AFTER FIELD dzdeoriu
+            {<point name="input.a.page1.dzdeoriu" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE dzdeoriu
+            #add-point:ON CHANGE dzdeoriu
+            {<point name="input.g.page1.dzdeoriu" />}
+            #END add-point
+
+         #----<<dzdeorid>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdeorid
+            #add-point:BEFORE FIELD dzdeorid
+            {<point name="input.b.page1.dzdeorid" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdeorid
+            
+            #add-point:AFTER FIELD dzdeorid
+            {<point name="input.a.page1.dzdeorid" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE dzdeorid
+            #add-point:ON CHANGE dzdeorid
+            {<point name="input.g.page1.dzdeorid" />}
+            #END add-point
+
+         #----<<dzdeuser>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdeuser
+            #add-point:BEFORE FIELD dzdeuser
+            {<point name="input.b.page1.dzdeuser" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdeuser
+            
+            #add-point:AFTER FIELD dzdeuser
+            {<point name="input.a.page1.dzdeuser" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE dzdeuser
+            #add-point:ON CHANGE dzdeuser
+            {<point name="input.g.page1.dzdeuser" />}
+            #END add-point
+
+         #----<<dzdedept>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdedept
+            #add-point:BEFORE FIELD dzdedept
+            {<point name="input.b.page1.dzdedept" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdedept
+            
+            #add-point:AFTER FIELD dzdedept
+            {<point name="input.a.page1.dzdedept" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE dzdedept
+            #add-point:ON CHANGE dzdedept
+            {<point name="input.g.page1.dzdedept" />}
+            #END add-point
+
+         #----<<dzdebuid>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD dzdebuid
+            #add-point:BEFORE FIELD dzdebuid
+            {<point name="input.b.page1.dzdebuid" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD dzdebuid
+            
+            #add-point:AFTER FIELD dzdebuid
+            {<point name="input.a.page1.dzdebuid" />}
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE dzdebuid
+            #add-point:ON CHANGE dzdebuid
+            {<point name="input.g.page1.dzdebuid" />}
+            #END add-point
+
+
+         #---------------------<  Detail: page1  >---------------------
+         #----<<dzdestus>>----
+         #Ctrlp:input.c.dzdestus
+         ON ACTION controlp INFIELD dzdestus
+            #add-point:ON ACTION controlp INFIELD dzdestus
+            {<point name="input.c.page1.dzdestus" />}
+            #END add-point
+
+         #----<<dzde001>>----
+         #Ctrlp:input.c.dzde001
+         ON ACTION controlp INFIELD dzde001
+            #add-point:ON ACTION controlp INFIELD dzde001
+            {<point name="input.c.page1.dzde001" />}
+            #END add-point
+
+         #----<<dzde002>>----
+         #Ctrlp:input.c.dzde002
+         ON ACTION controlp INFIELD dzde002
+            #add-point:ON ACTION controlp INFIELD dzde002
+            {<point name="input.c.page1.dzde002" />}
+            #END add-point
+
+         #----<<dzde003>>----
+         #Ctrlp:input.c.dzde003
+         ON ACTION controlp INFIELD dzde003
+            #add-point:ON ACTION controlp INFIELD dzde003
+            {<point name="input.c.page1.dzde003" />}
+            #END add-point
+
+         #----<<dzde004>>----
+         #Ctrlp:input.c.dzde004
+         ON ACTION controlp INFIELD dzde004
+            #add-point:ON ACTION controlp INFIELD dzde004
+            {<point name="input.c.page1.dzde004" />}
+            #END add-point
+
+         #----<<dzde005>>----
+         #Ctrlp:input.c.dzde005
+         ON ACTION controlp INFIELD dzde005
+            #add-point:ON ACTION controlp INFIELD dzde005
+            {<point name="input.c.page1.dzde005" />}
+            #END add-point
+
+         #----<<dzdemodu>>----
+         #Ctrlp:input.c.dzdemodu
+         ON ACTION controlp INFIELD dzdemodu
+            #add-point:ON ACTION controlp INFIELD dzdemodu
+            {<point name="input.c.page1.dzdemodu" />}
+            #END add-point
+
+         #----<<dzdedate>>----
+         #Ctrlp:input.c.dzdedate
+         ON ACTION controlp INFIELD dzdedate
+            #add-point:ON ACTION controlp INFIELD dzdedate
+            {<point name="input.c.page1.dzdedate" />}
+            #END add-point
+
+         #----<<dzdeoriu>>----
+         #Ctrlp:input.c.dzdeoriu
+         ON ACTION controlp INFIELD dzdeoriu
+            #add-point:ON ACTION controlp INFIELD dzdeoriu
+            {<point name="input.c.page1.dzdeoriu" />}
+            #END add-point
+
+         #----<<dzdeorid>>----
+         #Ctrlp:input.c.dzdeorid
+         ON ACTION controlp INFIELD dzdeorid
+            #add-point:ON ACTION controlp INFIELD dzdeorid
+            {<point name="input.c.page1.dzdeorid" />}
+            #END add-point
+
+         #----<<dzdeuser>>----
+         #Ctrlp:input.c.dzdeuser
+         ON ACTION controlp INFIELD dzdeuser
+            #add-point:ON ACTION controlp INFIELD dzdeuser
+            {<point name="input.c.page1.dzdeuser" />}
+            #END add-point
+
+         #----<<dzdedept>>----
+         #Ctrlp:input.c.dzdedept
+         ON ACTION controlp INFIELD dzdedept
+            #add-point:ON ACTION controlp INFIELD dzdedept
+            {<point name="input.c.page1.dzdedept" />}
+            #END add-point
+
+         #----<<dzdebuid>>----
+         #Ctrlp:input.c.dzdebuid
+         ON ACTION controlp INFIELD dzdebuid
+            #add-point:ON ACTION controlp INFIELD dzdebuid
+            {<point name="input.c.page1.dzdebuid" />}
+            #END add-point
+
+
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               LET g_dzde_d[l_ac].* = g_dzde_d_t.*
+               CLOSE adzi450_bcl
+               ROLLBACK WORK
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               CALL cl_err(g_dzde_d[l_ac].dzde001,-263,1)
+               LET g_dzde_d[l_ac].* = g_dzde_d_t.*
+            ELSE
+            
+               #add-point:單身修改前
+               {<point name="input.body.b_update"/>}
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身)
+               LET g_dzde_d[l_ac].dzdemodu = g_user 
+LET g_dzde_d[l_ac].dzdedate = cl_get_current()
+
+      
+               UPDATE dzde_t SET (dzdestus,dzde001,dzde002,dzde003,dzde004,dzde005,dzdemodu,dzdedate,dzdeoriu,dzdeorid,dzdeuser,dzdedept,dzdebuid) = (g_dzde_d[l_ac].dzdestus,g_dzde_d[l_ac].dzde001,g_dzde_d[l_ac].dzde002,g_dzde_d[l_ac].dzde003,g_dzde_d[l_ac].dzde004,g_dzde_d[l_ac].dzde005,g_dzde_d[l_ac].dzdemodu,g_dzde_d[l_ac].dzdedate,g_dzde_d[l_ac].dzdeoriu,g_dzde_d[l_ac].dzdeorid,g_dzde_d[l_ac].dzdeuser,g_dzde_d[l_ac].dzdedept,g_dzde_d[l_ac].dzdebuid)
+                WHERE 
+                  dzde001 = g_dzde_d_t.dzde001 #項次   
+                  AND dzde002 = g_dzde_d_t.dzde002  
+
+
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("dzde_t",SQLCA.sqlcode,1)   
+                  LET g_dzde_d[l_ac].* = g_dzde_d_t.*
+               ELSE
+                                 INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_dzde_d[l_ac].dzde001
+               LET gs_keys_bak[1] = g_dzde_d_t.dzde001
+               LET gs_keys[2] = g_dzde_d[l_ac].dzde002
+               LET gs_keys_bak[2] = g_dzde_d_t.dzde002
+               CALL adzi450_update_b('dzde_t',gs_keys,gs_keys_bak)
+                  #資料多語言用-增/改
+                  
+               END IF
+               
+               #add-point:單身修改後
+               {<point name="input.body.a_update"/>}
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            CALL adzi450_unlock_b("dzde_t")
+            COMMIT WORK
+            #其他table進行unlock
+            
+              
+      END INPUT
+      
+
+      
+      BEFORE DIALOG 
+         LET g_curr_diag = ui.DIALOG.getCurrent()
+   
+      ON ACTION accept
+         ACCEPT DIALOG
+      
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+         
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) 
+              RETURNING g_fld_name,g_frm_name 
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang) 
+           
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   
+   END DIALOG 
+   
+   #add-point:modify段修改後
+   {<point name="modify.after_input"/>}
+   #end add-point
+ 
+   CLOSE adzi450_bcl
+   COMMIT WORK
+   
+END FUNCTION
+ 
+ 
+#+ 單身陣列填充
+PRIVATE FUNCTION adzi450_b_fill(p_wc2)              #BODY FILL UP
+   {<Local define>}
+   DEFINE p_wc2           STRING
+   {</Local define>}
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point
+ 
+   LET g_sql = "SELECT  UNIQUE dzdestus,dzde001,dzde002,dzde003,dzde004,dzde005,dzdemodu,'',dzdedate,dzdeoriu,'',dzdeorid,'',dzdeuser,'',dzdedept,'',dzdebuid FROM dzde_t",
+               "",
+               " WHERE 1=1 AND ", p_wc2
+    
+   LET g_sql = g_sql, " ORDER BY dzde_t.dzde001"
+  
+   PREPARE adzi450_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR adzi450_pb
+   
+   
+ 
+   CALL g_dzde_d.clear()
+
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO g_dzde_d[l_ac].dzdestus,g_dzde_d[l_ac].dzde001,g_dzde_d[l_ac].dzde002,g_dzde_d[l_ac].dzde003,g_dzde_d[l_ac].dzde004,g_dzde_d[l_ac].dzde005,g_dzde_d[l_ac].dzdemodu,g_dzde_d[l_ac].dzdemodu_desc,g_dzde_d[l_ac].dzdedate,g_dzde_d[l_ac].dzdeoriu,g_dzde_d[l_ac].dzdeoriu_desc,g_dzde_d[l_ac].dzdeorid,g_dzde_d[l_ac].dzdeorid_desc,g_dzde_d[l_ac].dzdeuser,g_dzde_d[l_ac].dzdeuser_desc,g_dzde_d[l_ac].dzdedept,g_dzde_d[l_ac].dzdedept_desc,g_dzde_d[l_ac].dzdebuid
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+  
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.fill"/>}
+      #end add-point
+      
+      CALL adzi450_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         #CALL cl_err( "", 9035, 0 )
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   
+
+   
+   CALL g_dzde_d.deleteElement(g_dzde_d.getLength())   
+
+   
+   #將key欄位填到每個page
+   FOR l_ac = 1 TO g_dzde_d.getLength()
+
+   END FOR
+   
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+ 
+   LET g_detail_cnt = l_ac - 1
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE adzi450_pb
+   
+END FUNCTION
+ 
+#+ 顯示相關資料
+PRIVATE FUNCTION adzi450_detail_show()
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值page1
+   #此段落由子樣板a12產生
+      #LET g_dzde_d[l_ac].dzdeoriu_desc = cl_get_username(g_dzde_d[l_ac].dzdeoriu)
+      #LET g_dzde_d[l_ac].dzdeorid_desc = cl_get_deptname(g_dzde_d[l_ac].dzdeorid)
+      #LET g_dzde_d[l_ac].dzdeuser_desc = cl_get_username(g_dzde_d[l_ac].dzdeuser)
+      #LET g_dzde_d[l_ac].dzdedept_desc = cl_get_deptname(g_dzde_d[l_ac].dzdedept)
+      #LET g_dzde_d[l_ac].dzdemodu_desc = cl_get_username(g_dzde_d[l_ac].dzdemodu)
+      ##LET g_dzde_d[l_ac].dzde_desc = cl_get_deptname(g_dzde_d[l_ac].dzde)
+      ##LET g_dzde_d[l_ac].dzde_desc = cl_get_deptname(g_dzde_d[l_ac].dzde)
+      
+
+
+    
+
+   
+   #讀入ref值
+   #add-point:show段單身reference
+   {<point name="detail_show.reference"/>}
+   #end add-point
+   
+
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+ 
+ 
+#+ 單身欄位開啟設定
+PRIVATE FUNCTION adzi450_set_entry_b(p_cmd)                                                  
+   {<Local define>}
+   DEFINE p_cmd   LIKE type_t.chr1         
+   {</Local define>}
+   #add-point:set_entry_b段define
+   {<point name="set_entry_b.define"/>}
+   #end add-point                                                                   
+                                                                                
+END FUNCTION                                                                    
+                                                                                
+ 
+#+ 單身欄位關閉設定
+PRIVATE FUNCTION adzi450_set_no_entry_b(p_cmd)                                               
+   {<Local define>}
+   DEFINE p_cmd   LIKE type_t.chr1           
+   {</Local define>}
+   #add-point:set_no_entry_b段define
+   {<point name="set_no_entry_b.define"/>}
+   #end add-point                                                                  
+                                                                                
+END FUNCTION  
+ 
+#+ 外部參數搜尋, 施工中
+PRIVATE FUNCTION adzi450_default_search()
+   {<Local define>}
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   {</Local define>}
+   #add-point:default_search段define
+   {<point name="default_search.define"/>}
+   #end add-point  
+   
+   IF NOT cl_null(g_argv[1]) THEN
+      LET ls_wc = ls_wc, " dzde001 = '", g_argv[1], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " dzde002 = ", g_argv[02], " AND "
+   END IF
+
+
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET ls_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_wc2 = ls_wc
+   ELSE
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+END FUNCTION
+ 
+#+ 刪除單身後其他table連動
+PRIVATE FUNCTION adzi450_delete_b(ps_table,ps_keys_bak)
+   {<Local define>}
+   DEFINE ps_table    STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   {</Local define>}
+   #add-point:delete_b段define
+   {<point name="delete_b.define"/>}
+   #end add-point     
+ 
+   #判斷是否是同一群組的table
+   LET ls_group = "dzde_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      DELETE FROM dzde_t
+       WHERE 
+         dzde001 = ps_keys_bak[1] AND dzde002 = ps_keys_bak[2]
+ 
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("",SQLCA.sqlcode,0)
+      END IF
+      
+      RETURN
+   END IF
+   
+
+   
+END FUNCTION
+ 
+#+ 新增單身後其他table連動
+PRIVATE FUNCTION adzi450_insert_b(ps_table,ps_keys,ps_page)
+   {<Local define>}
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   {</Local define>}
+   #add-point:insert_b段define
+   {<point name="insert_b.define"/>}
+   #end add-point     
+ 
+   #判斷是否是同一群組的table
+   LET ls_group = "dzde_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      
+      INSERT INTO dzde_t
+                  (
+                   dzde001,dzde002
+                   ,dzdestus,dzde003,dzde004,dzde005,dzdemodu,dzdedate,dzdeoriu,dzdeorid,dzdeuser,dzdedept,dzdebuid) 
+            VALUES(
+                   ps_keys[1],ps_keys[2]
+                   ,g_dzde_d[l_ac].dzdestus,g_dzde_d[l_ac].dzde003,g_dzde_d[l_ac].dzde004,g_dzde_d[l_ac].dzde005,g_dzde_d[l_ac].dzdemodu,g_dzde_d[l_ac].dzdedate,g_dzde_d[l_ac].dzdeoriu,g_dzde_d[l_ac].dzdeorid,g_dzde_d[l_ac].dzdeuser,g_dzde_d[l_ac].dzdedept,g_dzde_d[l_ac].dzdebuid)
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("dzde_t",SQLCA.sqlcode,0)
+      END IF
+   END IF
+   
+
+   
+END FUNCTION
+ 
+    
+#+ 修改單身後其他table連動
+PRIVATE FUNCTION adzi450_update_b(ps_table,ps_keys,ps_keys_bak)
+   {<Local define>}
+   DEFINE ps_table         STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num5 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   {</Local define>}
+   #add-point:update_b段define
+   {<point name="update_b.define"/>}
+   #end add-point     
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "dzde_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      UPDATE dzde_t 
+         SET (dzde001,dzde002
+              ,dzdestus,dzde003,dzde004,dzde005,dzdemodu,dzdedate,dzdeoriu,dzdeorid,dzdeuser,dzdedept,dzdebuid) 
+              = 
+             (ps_keys[1],ps_keys[2]
+              ,g_dzde_d[l_ac].dzdestus,g_dzde_d[l_ac].dzde003,g_dzde_d[l_ac].dzde004,g_dzde_d[l_ac].dzde005,g_dzde_d[l_ac].dzdemodu,g_dzde_d[l_ac].dzdedate,g_dzde_d[l_ac].dzdeoriu,g_dzde_d[l_ac].dzdeorid,g_dzde_d[l_ac].dzdeuser,g_dzde_d[l_ac].dzdedept,g_dzde_d[l_ac].dzdebuid) 
+         WHERE dzde001 = ps_keys_bak[1] AND dzde002 = ps_keys_bak[2]
+ 
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("",SQLCA.sqlcode,0)
+      ELSE
+         
+      END IF
+      RETURN
+   END IF
+   
+
+   
+END FUNCTION
+ 
+#+ 連動lock其他單身table資料
+PRIVATE FUNCTION adzi450_lock_b(ps_table)
+ 
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:lock_b段define
+   {<point name="lock_b.define"/>}
+   #end add-point   
+   
+   #先刷新資料
+   #CALL adzi450_b_fill(g_wc2)
+   
+   #鎖定整組table
+   #LET ls_group = ""
+   #僅鎖定自身table
+   LET ls_group = "dzde_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN adzi450_bcl USING 
+                                       g_dzde_d[l_ac].dzde001,g_dzde_d[l_ac].dzde002
+                                       
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("adzi450_bcl",SQLCA.sqlcode,1)
+         RETURN FALSE
+      END IF
+   
+   END IF
+                                    
+
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION adzi450_unlock_b(ps_table)
+ 
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:unlock_b段define
+   {<point name="unlock_b.define"/>}
+   #end add-point  
+   
+   LET ls_group = ""
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      CLOSE adzi450_bcl
+   END IF
+   
+
+ 
+END FUNCTION
+ 
+
+ 
+ 
+{<point name="other.function"/>}
+

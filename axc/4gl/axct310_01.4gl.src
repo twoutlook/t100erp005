@@ -1,0 +1,1090 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axct310_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2016-12-05 20:01:16), PR版次:0001(2017-01-09 09:46:24)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000006
+#+ Filename...: axct310_01
+#+ Description: 拆讓金額批次產生
+#+ Creator....: 05384(2016-12-01 16:18:28)
+#+ Modifier...: 05384 -SD/PR- 05384
+ 
+{</section>}
+ 
+{<section id="axct310_01.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_xcco_m        RECORD
+       xcco004 LIKE xcco_t.xcco004, 
+   xcco005 LIKE xcco_t.xcco005, 
+   xccocomp LIKE xcco_t.xccocomp, 
+   xccocomp_desc LIKE type_t.chr80, 
+   xccold LIKE xcco_t.xccold, 
+   xccold_desc LIKE type_t.chr80, 
+   xcco003 LIKE xcco_t.xcco003, 
+   xcco003_desc LIKE type_t.chr80, 
+   pmds011 LIKE pmds_t.pmds011, 
+   xcco102_type LIKE type_t.chr500, 
+   exclude LIKE type_t.chr500, 
+   pmdsdocno LIKE pmds_t.pmdsdocno, 
+   pmdt006 LIKE pmdt_t.pmdt006, 
+   pmds007 LIKE pmds_t.pmds007, 
+   pmdt001 LIKE pmdt_t.pmdt001
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_wc         STRING
+DEFINE g_xccocomp_t LIKE xcco_t.xccocomp
+DEFINE g_wc_cs_ld            STRING
+DEFINE g_wc_cs_comp          STRING
+#end add-point
+ 
+DEFINE g_xcco_m        type_g_xcco_m
+ 
+   DEFINE g_xcco004_t LIKE xcco_t.xcco004
+DEFINE g_xcco005_t LIKE xcco_t.xcco005
+DEFINE g_xccold_t LIKE xcco_t.xccold
+DEFINE g_xcco003_t LIKE xcco_t.xcco003
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axct310_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axct310_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_error         LIKE gzze_t.gzze001
+   DEFINE l_sql           STRING
+   DEFINE l_site          LIKE ooef_t.ooef001
+   DEFINE l_comp_site     STRING
+   DEFINE l_date_s        LIKE pmds_t.pmds001
+   DEFINE l_date_e        LIKE pmds_t.pmds001
+   DEFINE l_date          DATE
+   DEFINE l_glaa003       LIKE glaa_t.glaa003
+   DEFINE l_exclude       STRING
+   DEFINE l_xcat002       LIKE xcat_t.xcat002
+   DEFINE l_xcat005       LIKE xcat_t.xcat005
+   DEFINE l_sys_6002      LIKE ooab_t.ooab002   #系统参数[S-FIN-6002]:成本域類型
+   DEFINE l_cnt           LIKE type_t.num5
+   DEFINE l_amount        LIKE pmdt_t.pmdt038
+   DEFINE l_xcaz010       LIKE xcaz_t.xcaz010   #成本含稅否
+   DEFINE l_glaa001       LIKE glaa_t.glaa001   #匯率參照表號
+   DEFINE l_glaa002       LIKE glaa_t.glaa002   #使用幣別
+   DEFINE l_glaa025       LIKE glaa_t.glaa025   #匯率採用
+   DEFINE l_glaa028       LIKE glaa_t.glaa028   #匯率來源
+   DEFINE l_rate          LIKE apca_t.apca121   #匯率
+   DEFINE l_errno         LIKE gzze_t.gzze001   #錯誤訊息
+   DEFINE l_pmdt          RECORD
+      pmds037      LIKE pmds_t.pmds037,   #幣別
+      pmdtsite     LIKE pmdt_t.pmdtsite,  #據點
+      pmdtdocno    LIKE pmdt_t.pmdtdocno, #單號
+      pmdtseq      LIKE pmdt_t.pmdtseq,   #項次
+      pmdt006      LIKE pmdt_t.pmdt006,   #料號
+      pmdt007      LIKE pmdt_t.pmdt007,   #產品特徵
+      pmdt016      LIKE pmdt_t.pmdt016,   #庫位
+      pmdt018      LIKE pmdt_t.pmdt018,   #批號
+      pmdt038      LIKE pmdt_t.pmdt038,   #未稅金額
+      pmdt039      LIKE pmdt_t.pmdt039,   #含稅金額
+      pmdt051_desc LIKE oocql_t.oocql004, 
+      pmdt063      LIKE pmdt_t.pmdt063
+   END RECORD
+   DEFINE l_xcco          RECORD  #本期庫存成本調整檔
+       xccoent     LIKE xcco_t.xccoent,   #企業編號
+       xccold      LIKE xcco_t.xccold,    #帳套
+       xccocomp    LIKE xcco_t.xccocomp,  #法人組織
+       xcco001     LIKE xcco_t.xcco001,   #帳套本位幣順序
+       xcco002     LIKE xcco_t.xcco002,   #成本域
+       xcco003     LIKE xcco_t.xcco003,   #成本計算類型
+       xcco004     LIKE xcco_t.xcco004,   #年度
+       xcco005     LIKE xcco_t.xcco005,   #期別
+       xcco006     LIKE xcco_t.xcco006,   #料件編號
+       xcco007     LIKE xcco_t.xcco007,   #特性
+       xcco008     LIKE xcco_t.xcco008,   #批號
+       xcco009     LIKE xcco_t.xcco009,   #參考單號
+       xcco010     LIKE xcco_t.xcco010,   #資料來源
+       xcco011     LIKE xcco_t.xcco011,   #調整說明
+       xcco102     LIKE xcco_t.xcco102,   #當月調整金額-金額合計
+       xcco102a    LIKE xcco_t.xcco102a,  #當月調整金額-材料
+       xcco102b    LIKE xcco_t.xcco102b,  #當月調整金額-人工
+       xcco102c    LIKE xcco_t.xcco102c,  #當月調整金額-委外加工
+       xcco102d    LIKE xcco_t.xcco102d,  #當月調整金額-制費一
+       xcco102e    LIKE xcco_t.xcco102e,  #當月調整金額-制費二
+       xcco102f    LIKE xcco_t.xcco102f,  #當月調整金額-制費三
+       xcco102g    LIKE xcco_t.xcco102g,  #當月調整金額-制費四
+       xcco102h    LIKE xcco_t.xcco102h,  #當月調整金額-制費五
+       xccoownid   LIKE xcco_t.xccoownid, #資料所有者
+       xccoowndp   LIKE xcco_t.xccoowndp, #資料所屬部門
+       xccocrtid   LIKE xcco_t.xccocrtid, #資料建立者
+       xccocrtdp   LIKE xcco_t.xccocrtdp, #資料建立部門
+       xccocrtdt   LIKE xcco_t.xccocrtdt, #資料創建日
+       xccomodid   LIKE xcco_t.xccomodid, #資料修改者
+       xccomoddt   LIKE xcco_t.xccomoddt, #最近修改日
+       xccocnfid   LIKE xcco_t.xccocnfid, #資料確認者
+       xccocnfdt   LIKE xcco_t.xccocnfdt, #資料確認日
+       xccopstid   LIKE xcco_t.xccopstid, #資料過帳者
+       xccopstdt   LIKE xcco_t.xccopstdt, #資料過帳日
+       xccostus    LIKE xcco_t.xccostus,  #狀態碼
+       xccoud001   LIKE xcco_t.xccoud001, #自定義欄位(文字)001
+       xccoud002   LIKE xcco_t.xccoud002, #自定義欄位(文字)002
+       xccoud003   LIKE xcco_t.xccoud003, #自定義欄位(文字)003
+       xccoud004   LIKE xcco_t.xccoud004, #自定義欄位(文字)004
+       xccoud005   LIKE xcco_t.xccoud005, #自定義欄位(文字)005
+       xccoud006   LIKE xcco_t.xccoud006, #自定義欄位(文字)006
+       xccoud007   LIKE xcco_t.xccoud007, #自定義欄位(文字)007
+       xccoud008   LIKE xcco_t.xccoud008, #自定義欄位(文字)008
+       xccoud009   LIKE xcco_t.xccoud009, #自定義欄位(文字)009
+       xccoud010   LIKE xcco_t.xccoud010, #自定義欄位(文字)010
+       xccoud011   LIKE xcco_t.xccoud011, #自定義欄位(數字)011
+       xccoud012   LIKE xcco_t.xccoud012, #自定義欄位(數字)012
+       xccoud013   LIKE xcco_t.xccoud013, #自定義欄位(數字)013
+       xccoud014   LIKE xcco_t.xccoud014, #自定義欄位(數字)014
+       xccoud015   LIKE xcco_t.xccoud015, #自定義欄位(數字)015
+       xccoud016   LIKE xcco_t.xccoud016, #自定義欄位(數字)016
+       xccoud017   LIKE xcco_t.xccoud017, #自定義欄位(數字)017
+       xccoud018   LIKE xcco_t.xccoud018, #自定義欄位(數字)018
+       xccoud019   LIKE xcco_t.xccoud019, #自定義欄位(數字)019
+       xccoud020   LIKE xcco_t.xccoud020, #自定義欄位(數字)020
+       xccoud021   LIKE xcco_t.xccoud021, #自定義欄位(日期時間)021
+       xccoud022   LIKE xcco_t.xccoud022, #自定義欄位(日期時間)022
+       xccoud023   LIKE xcco_t.xccoud023, #自定義欄位(日期時間)023
+       xccoud024   LIKE xcco_t.xccoud024, #自定義欄位(日期時間)024
+       xccoud025   LIKE xcco_t.xccoud025, #自定義欄位(日期時間)025
+       xccoud026   LIKE xcco_t.xccoud026, #自定義欄位(日期時間)026
+       xccoud027   LIKE xcco_t.xccoud027, #自定義欄位(日期時間)027
+       xccoud028   LIKE xcco_t.xccoud028, #自定義欄位(日期時間)028
+       xccoud029   LIKE xcco_t.xccoud029, #自定義欄位(日期時間)029
+       xccoud030   LIKE xcco_t.xccoud030  #自定義欄位(日期時間)030
+END RECORD
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axct310_01 WITH FORM cl_ap_formpath("axc","axct310_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   CALL s_fin_create_account_center_tmp()                      #展組織下階成員所需之暫存檔 
+   CALL s_fin_azzi800_sons_query(g_today)
+   CALL s_fin_account_center_ld_str() RETURNING g_wc_cs_ld
+   CALL s_fin_get_wc_str(g_wc_cs_ld)  RETURNING g_wc_cs_ld
+   CALL s_axc_get_authcomp() RETURNING g_wc_cs_comp            #抓取使用者有拜訪權限據點的對應法人  
+   CALL cl_set_combo_scc("pmds011",'2061')   
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_xcco_m.xcco004,g_xcco_m.xcco005,g_xcco_m.xccocomp,g_xcco_m.xccold,g_xcco_m.xcco003, 
+          g_xcco_m.pmds011,g_xcco_m.xcco102_type,g_xcco_m.exclude ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            LET g_xcco_m.exclude = 'Y'
+            LET g_xcco_m.pmds011 = '1'
+            LET g_xcco_m.xcco102_type = '1'
+            CALL s_axc_set_site_default() RETURNING g_xcco_m.xccocomp,g_xcco_m.xccold,g_xcco_m.xcco004,g_xcco_m.xcco005,g_xcco_m.xcco003
+            DISPLAY BY NAME g_xcco_m.xccocomp,g_xcco_m.xccold,g_xcco_m.xcco004,g_xcco_m.xcco005,g_xcco_m.xcco003
+            CALL axct310_01_xcco003_desc()
+            CALL axct310_01_xccold_desc()
+            CALL axct310_01_xccocomp_desc()
+            LET g_xcco004_t = g_xcco_m.xcco004
+            LET g_xcco005_t = g_xcco_m.xcco005
+            LET g_xccold_t = g_xcco_m.xccold
+            LET g_xcco003_t = g_xcco_m.xcco003
+            LET g_xccocomp_t = g_xcco_m.xccocomp
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcco004
+            #add-point:BEFORE FIELD xcco004 name="input.b.xcco004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcco004
+            
+            #add-point:AFTER FIELD xcco004 name="input.a.xcco004"
+            #應用 a05 樣板自動產生(Version:3)
+            IF NOT cl_null(g_xcco_m.xcco004) THEN  
+               IF NOT s_fin_date_chk_year(g_xcco_m.xcco004) THEN
+                  LET g_xcco_m.xcco004 = g_xcco004_t
+                  DISPLAY BY NAME g_xcco_m.xcco004
+#                  INITIALIZE g_errparam TO NULL
+#                  LET g_errparam.code = 'aoo-00113'
+#                  LET g_errparam.extend = g_xcco_m.xcco004
+#                  LET g_errparam.popup = TRUE
+#                  CALL cl_err()
+#
+                  NEXT FIELD CURRENT                          
+               END IF            
+            END IF
+            
+            IF NOT cl_null(g_xcco_m.xcco004) AND NOT cl_null(g_xcco_m.xccocomp) THEN  
+                  #檢查年度不小於成本關賬日期的年度
+                  CALL cl_get_para(g_enterprise,g_xcco_m.xccocomp,'S-FIN-6012') RETURNING l_date 
+                  IF g_xcco_m.xcco004 < YEAR(l_date) THEN 
+                     LET g_xcco_m.xcco004 = g_xcco004_t
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'axc-00226'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  END IF     
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcco004
+            #add-point:ON CHANGE xcco004 name="input.g.xcco004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcco005
+            #add-point:BEFORE FIELD xcco005 name="input.b.xcco005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcco005
+            
+            #add-point:AFTER FIELD xcco005 name="input.a.xcco005"
+            #應用 a05 樣板自動產生(Version:3)
+            IF NOT cl_null(g_xcco_m.xcco005) THEN 
+               IF g_xcco_m.xcco005 < 1 OR g_xcco_m.xcco005 > 13 THEN
+                  LET g_xcco_m.xcco005 = g_xcco005_t
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'amm-00106'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  NEXT FIELD CURRENT          
+               END IF
+            END IF
+            IF NOT cl_null(g_xcco_m.xcco005) AND NOT cl_null(g_xcco_m.xccold) THEN  
+               SELECT glaa003 INTO l_glaa003 FROM glaa_t WHERE glaaent = g_enterprise AND glaald = g_xcco_m.xccold 
+               
+               IF NOT s_fin_date_chk_period(l_glaa003,g_xcco_m.xcco004,g_xcco_m.xcco005) THEN
+#                  INITIALIZE g_errparam TO NULL
+#                  LET g_errparam.code = 'afa-00119'
+#                  LET g_errparam.extend = g_xcco_m.xcco005
+#                  LET g_errparam.popup = TRUE
+#                  CALL cl_err()
+                  LET g_xcco_m.xcco005 = g_xcco005_t
+                  DISPLAY BY NAME g_xcco_m.xcco005
+                  NEXT FIELD CURRENT                    
+               END IF
+            END IF
+            
+            IF NOT cl_null(g_xcco_m.xcco005) AND NOT cl_null(g_xcco_m.xccocomp) THEN  
+                  #檢查期別不小於成本關賬日期的月份
+                  CALL cl_get_para(g_enterprise,g_xcco_m.xccocomp,'S-FIN-6012') RETURNING l_date 
+                  IF g_xcco_m.xcco004 = YEAR(l_date) THEN
+                     IF g_xcco_m.xcco005 <= MONTH(l_date) THEN 
+                        LET g_xcco_m.xcco005 = g_xcco005_t
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'axc-00226'
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                     
+                        NEXT FIELD CURRENT
+                     END IF 
+                  END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcco005
+            #add-point:ON CHANGE xcco005 name="input.g.xcco005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xccocomp
+            
+            #add-point:AFTER FIELD xccocomp name="input.a.xccocomp"
+            IF NOT cl_null(g_xcco_m.xccocomp) THEN 
+               #檢查是否存在 組織基礎資料檔 中
+               IF NOT ap_chk_isExist(g_xcco_m.xccocomp,"SELECT COUNT(*) FROM ooef_t WHERE "||"ooefent = '" ||g_enterprise|| "' AND "||"ooef001 = ? ",'aoo-00094',1) THEN
+                  LET g_xcco_m.xccocomp = g_xccocomp_t
+                  CALL axct310_01_xccocomp_desc()                  
+                  NEXT FIELD CURRENT
+               END IF    
+               
+               #檢查是否 有效
+               IF NOT ap_chk_isExist(g_xcco_m.xccocomp,"SELECT COUNT(*) FROM ooef_t WHERE "||"ooefent = '" ||g_enterprise|| "' AND "||"ooef001 = ? AND ooefstus = 'Y'",'sub-01302','aooi125') THEN   #160318-00005#47  add
+                  LET g_xcco_m.xccocomp = g_xccocomp_t
+                  CALL axct310_01_xccocomp_desc()                  
+                  NEXT FIELD CURRENT
+               END IF 
+               
+               #檢查是否為 法人
+               IF NOT ap_chk_isExist(g_xcco_m.xccocomp,"SELECT COUNT(*) FROM ooef_t WHERE "||"ooefent = '" ||g_enterprise|| "' AND "||"ooef001 = ? AND ooefstus = 'Y' AND ooef003 = 'Y'",'sub-01302','aooi125') THEN   #160318-00005#47  add
+                  LET g_xcco_m.xccocomp = g_xccocomp_t
+                  CALL axct310_01_xccocomp_desc()                  
+                  NEXT FIELD CURRENT
+               END IF              
+               
+               #帳套不為空時，檢查該法人下是否有此帳套
+               IF NOT cl_null(g_xcco_m.xccold) THEN
+                  IF NOT ap_chk_isExist(g_xcco_m.xccocomp,"SELECT COUNT(*) FROM glaa_t WHERE "||"glaaent = '" ||g_enterprise|| "' AND "||"glaacomp = ? AND glaastus = 'Y' AND glaald = '" ||g_xcco_m.xccold|| "'",'axc-00224',1) THEN
+                     LET g_xcco_m.xccocomp = g_xccocomp_t
+                     CALL axct310_01_xccocomp_desc()                  
+                     NEXT FIELD CURRENT
+                  END IF   
+               END IF               
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xccocomp
+            #add-point:BEFORE FIELD xccocomp name="input.b.xccocomp"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xccocomp
+            #add-point:ON CHANGE xccocomp name="input.g.xccocomp"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xccold
+            
+            #add-point:AFTER FIELD xccold name="input.a.xccold"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xcco_m.xccold
+            CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent="||g_enterprise||" AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xcco_m.xccold_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xcco_m.xccold_desc
+
+            #應用 a05 樣板自動產生(Version:3)
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xccold
+            #add-point:BEFORE FIELD xccold name="input.b.xccold"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xccold
+            #add-point:ON CHANGE xccold name="input.g.xccold"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcco003
+            
+            #add-point:AFTER FIELD xcco003 name="input.a.xcco003"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xcco_m.xcco003
+            CALL ap_ref_array2(g_ref_fields,"SELECT xcatl003 FROM xcatl_t WHERE xcatlent="||g_enterprise||" AND xcatl001=? AND xcatl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xcco_m.xcco003_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xcco_m.xcco003_desc
+
+            #應用 a05 樣板自動產生(Version:3)
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcco003
+            #add-point:BEFORE FIELD xcco003 name="input.b.xcco003"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcco003
+            #add-point:ON CHANGE xcco003 name="input.g.xcco003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmds011
+            #add-point:BEFORE FIELD pmds011 name="input.b.pmds011"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmds011
+            
+            #add-point:AFTER FIELD pmds011 name="input.a.pmds011"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmds011
+            #add-point:ON CHANGE pmds011 name="input.g.pmds011"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xcco102_type
+            #add-point:BEFORE FIELD xcco102_type name="input.b.xcco102_type"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xcco102_type
+            
+            #add-point:AFTER FIELD xcco102_type name="input.a.xcco102_type"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xcco102_type
+            #add-point:ON CHANGE xcco102_type name="input.g.xcco102_type"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD exclude
+            #add-point:BEFORE FIELD exclude name="input.b.exclude"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD exclude
+            
+            #add-point:AFTER FIELD exclude name="input.a.exclude"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE exclude
+            #add-point:ON CHANGE exclude name="input.g.exclude"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.xcco004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcco004
+            #add-point:ON ACTION controlp INFIELD xcco004 name="input.c.xcco004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xcco005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcco005
+            #add-point:ON ACTION controlp INFIELD xcco005 name="input.c.xcco005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xccocomp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xccocomp
+            #add-point:ON ACTION controlp INFIELD xccocomp name="input.c.xccocomp"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+ 
+            LET g_qryparam.default1 = g_xcco_m.xccocomp             #給予default值
+            LET g_qryparam.default2 = "" #g_xcco_m.ooef001 #组织编号
+            #給予arg
+            LET g_qryparam.arg1 = "" # 
+             #帳套不為空時，法人組織開窗開帳套歸屬法人的法人組織
+            IF NOT cl_null(g_xcco_m.xccold) THEN
+               LET g_qryparam.where = " ooef017 = (SELECT glaacomp FROM glaa_t",
+                                      "  WHERE glaaent = '",g_enterprise,"' AND glaald = '",g_xcco_m.xccold,"' )"
+            END IF
+            #增加法人過濾條件
+            IF NOT cl_null(g_wc_cs_comp) THEN
+               LET g_qryparam.where = g_qryparam.where," AND ooef001 IN ",g_wc_cs_comp
+            END IF
+            CALL q_ooef001_2()                                #呼叫開窗 
+            LET g_xcco_m.xccocomp = g_qryparam.return1              
+            #LET g_xcco_m.ooef001 = g_qryparam.return2 
+            DISPLAY g_xcco_m.xccocomp TO xccocomp              #
+            #DISPLAY g_xcco_m.ooef001 TO ooef001 #组织编号
+            NEXT FIELD xccocomp                          #返回原欄位
+
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xccold
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xccold
+            #add-point:ON ACTION controlp INFIELD xccold name="input.c.xccold"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE 
+            LET g_qryparam.default1 = g_xcco_m.xccold             #給予default值
+            #給予arg
+            LET g_qryparam.arg1 = g_user
+            LET g_qryparam.arg2 = g_dept
+            
+            #法人不為空時，帳套開窗開此法人的下屬帳套
+            IF NOT cl_null(g_xcco_m.xccocomp) THEN
+               LET g_qryparam.where = " glaacomp = '",g_xcco_m.xccocomp,"'"
+            END IF 
+            #增加帳套權限控制
+            IF NOT cl_null(g_wc_cs_ld) THEN
+               LET g_qryparam.where = " glaald IN ",g_wc_cs_ld
+            END IF
+            CALL q_authorised_ld()                                #呼叫開窗 
+            LET g_xcco_m.xccold = g_qryparam.return1              
+            DISPLAY g_xcco_m.xccold TO xccold              #
+            NEXT FIELD xccold                          #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xcco003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcco003
+            #add-point:ON ACTION controlp INFIELD xcco003 name="input.c.xcco003"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+ 
+            LET g_qryparam.default1 = g_xcco_m.xcco003             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+
+ 
+            CALL q_xcat001()                                #呼叫開窗
+ 
+            LET g_xcco_m.xcco003 = g_qryparam.return1              
+
+            DISPLAY g_xcco_m.xcco003 TO xcco003              #
+
+            NEXT FIELD xcco003                          #返回原欄位
+
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmds011
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmds011
+            #add-point:ON ACTION controlp INFIELD pmds011 name="input.c.pmds011"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xcco102_type
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xcco102_type
+            #add-point:ON ACTION controlp INFIELD xcco102_type name="input.c.xcco102_type"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.exclude
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD exclude
+            #add-point:ON ACTION controlp INFIELD exclude name="input.c.exclude"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            LET l_date_s = MDY(g_xcco_m.xcco005,1,g_xcco_m.xcco004)
+            CALL s_date_get_last_date(l_date_s) RETURNING l_date_e
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      CONSTRUCT BY NAME g_wc ON pmdsdocno,pmds007,pmdt001,pmdt006
+      
+          BEFORE CONSTRUCT
+            
+          
+          ON ACTION controlp INFIELD pmdsdocno
+            #add-point:ON ACTION controlp INFIELD xcan001
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = g_xcco_m.xccocomp
+            LET g_qryparam.arg2 = l_date_s
+            LET g_qryparam.arg3 = l_date_e
+            LET g_qryparam.arg4 = g_xcco_m.pmds011
+            CALL q_pmdsdocno_12()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmdsdocno  #顯示到畫面上
+            NEXT FIELD pmdsdocno                     #返回原欄位
+    
+         ON ACTION controlp INFIELD pmds007
+            #add-point:ON ACTION controlp INFIELD xcan001
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmds007  #顯示到畫面上
+            NEXT FIELD pmds007                     #返回原欄位   
+            
+         ON ACTION controlp INFIELD pmdt001
+            #add-point:ON ACTION controlp INFIELD xcan001
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = g_xcco_m.xccocomp
+            LET g_qryparam.arg2 = l_date_s
+            LET g_qryparam.arg3 = l_date_e
+            LET g_qryparam.arg4 = g_xcco_m.pmds011
+            CALL q_pmdldocno_12()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmdt001  #顯示到畫面上
+            NEXT FIELD pmdt001                     #返回原欄位
+            
+         ON ACTION controlp INFIELD pmdt006
+            #add-point:ON ACTION controlp INFIELD xcan001
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = g_xcco_m.xccocomp
+            LET g_qryparam.arg2 = l_date_s
+            LET g_qryparam.arg3 = l_date_e
+            LET g_qryparam.arg4 = g_xcco_m.pmds011
+            CALL q_pmdt006()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmdt006  #顯示到畫面上
+            NEXT FIELD pmdt006                     #返回原欄位
+      END CONSTRUCT
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axct310_01 
+   
+   #add-point:input段after input name="input.post_input"
+   IF INT_FLAG THEN
+      RETURN 
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1 "
+   END IF
+   LET l_success = TRUE
+   CALL s_transaction_begin()
+   LET l_sql = " SELECT pmds037,pmdtsite,pmdtdocno,pmdtseq,pmdt006,pmdt007,pmdt016,pmdt018,pmdt038,pmdt039, ",
+               "        (SELECT oocql004 FROM oocql_t WHERE oocqlent = pmdtent AND oocql001 = '313' AND oocql002 = pmdt051 AND oocql003 = '",g_dlang,"'), ",
+               "        pmdt063 ",
+               "   FROM pmds_t,pmdt_t ",
+               "  WHERE pmdsent = pmdtent ",
+               "    AND pmdsdocno = pmdtdocno ",
+               "    AND pmdsent = '",g_enterprise,"' ",
+               "    AND pmds001 BETWEEN '",l_date_s,"' AND '",l_date_e,"' ",
+               "    AND (SELECT ooef017 FROM ooef_t WHERE ooefent = pmdsent AND ooef001 = pmdssite) = '",g_xcco_m.xccocomp,"' ",
+               "    AND pmds011 = '",g_xcco_m.pmds011,"' ",
+               "    AND pmds100 = '4' ",
+               "    AND ",g_wc
+   IF g_xcco_m.exclude = 'Y' THEN
+      LET l_sql = l_sql," AND pmdt006 IN (SELECT DISTINCT inaj005 ",
+                        "                   FROM inaj_t ",
+                        "                   WHERE inajent = pmdsent ",
+                        "                     AND inajsite = pmdssite ",
+                        "                     AND inaj001 = pmdsdocno ",
+                        "                     AND inaj002 = pmdtseq ",
+                        "                     AND inaj022 BETWEEN '",l_date_s,"' AND '",l_date_e,"' ",
+                        "                     AND inaj036 IN ('102','103','104','105','106','107')) "                        
+   END IF
+   PREPARE axct310_01_pmdt_p FROM l_sql
+   DECLARE axct310_01_pmdt_c CURSOR FOR axct310_01_pmdt_p
+   
+   LET l_count = 0
+   
+   #帳套法人取匯率相關設定
+   SELECT glaa001,glaa002,glaa025,glaa028 INTO l_glaa001,l_glaa002,l_glaa025,l_glaa028
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald = g_xcco_m.xccold
+      AND glaacomp = g_xcco_m.xccocomp
+   
+   FOREACH axct310_01_pmdt_c INTO l_pmdt.pmds037,l_pmdt.pmdtsite,l_pmdt.pmdtdocno,l_pmdt.pmdtseq,l_pmdt.pmdt006,
+                                  l_pmdt.pmdt007,l_pmdt.pmdt016,l_pmdt.pmdt018,l_pmdt.pmdt038,l_pmdt.pmdt039,
+                                  l_pmdt.pmdt051_desc,l_pmdt.pmdt063
+      INITIALIZE l_xcco.* TO NULL
+      LET l_xcco.xccoent = g_enterprise
+      LET l_xcco.xccold = g_xcco_m.xccold
+      LET l_xcco.xccocomp = g_xcco_m.xccocomp
+      LET l_xcco.xcco001 = '1'
+      LET l_xcco.xcco003 = g_xcco_m.xcco003
+      LET l_xcco.xcco004 = g_xcco_m.xcco004
+      LET l_xcco.xcco005 = g_xcco_m.xcco005
+      LET l_xcco.xcco006 = l_pmdt.pmdt006
+      LET l_xcco.xcco007 = l_pmdt.pmdt007
+      LET l_xcco.xcco008 = l_pmdt.pmdt018
+      LET l_xcco.xcco009 = l_pmdt.pmdtdocno
+      LET l_xcco.xcco010 = '1'
+      LET l_xcco.xcco011 = l_pmdt.pmdt051_desc
+      LET l_xcco.xccoownid = g_user
+      LET l_xcco.xccoowndp = g_dept
+      LET l_xcco.xccocrtid = g_user
+      LET l_xcco.xccocrtdp = g_dept 
+      LET l_xcco.xccocrtdt = cl_get_current()
+      LET l_xcco.xccomodid = ""
+      LET l_xcco.xccomoddt = ""
+      LET l_xcco.xccocnfid = g_user
+      LET l_xcco.xccocnfdt = cl_get_current()
+      LET l_xcco.xccopstid = ""
+      LET l_xcco.xccopstdt = "" 
+      LET l_xcco.xccostus = "Y"
+      
+      SELECT xcaz010 INTO l_xcaz010
+        FROM xcaz_t 
+       WHERE xcazent = g_enterprise
+         AND xcazld = l_xcco.xccold
+         AND xcaz001 = l_xcco.xcco003
+      
+      IF cl_null(l_xcaz010) THEN
+         LET l_xcaz010 = 'N'
+      END IF
+      
+      #根據匯率來源取匯率
+      CASE l_glaa028
+         WHEN '1'   #日匯率
+            CALL s_aooi160_get_exrate('2',g_xcco_m.xccold,l_date_e,l_pmdt.pmds037,l_glaa001,0,l_glaa025)
+                 RETURNING l_rate
+         WHEN '2'   #月匯率
+            CALL s_aooi160_get_exrate_avg('2',g_xcco_m.xccold,l_date_e,l_pmdt.pmds037,l_glaa001,0,l_glaa025)
+                 RETURNING l_success,l_errno,l_rate
+         OTHERWISE
+            CALL s_aooi160_get_exrate('2',g_xcco_m.xccold,l_date_e,l_pmdt.pmds037,l_glaa001,0,l_glaa025)
+                 RETURNING l_rate
+      END CASE
+      
+      IF l_xcaz010 = 'N' THEN
+         LET l_amount = l_pmdt.pmdt038 * l_rate
+      ELSE
+         LET l_amount = l_pmdt.pmdt039 * l_rate
+      END IF
+      
+      CASE g_xcco_m.xcco102_type
+         WHEN '1'
+            LET l_xcco.xcco102a = l_amount
+         WHEN '2'
+            LET l_xcco.xcco102b = l_amount
+         WHEN '3'
+            LET l_xcco.xcco102c = l_amount
+         WHEN '4'
+            LET l_xcco.xcco102d = l_amount
+         WHEN '5'
+            LET l_xcco.xcco102e = l_amount
+         WHEN '6'
+            LET l_xcco.xcco102f = l_amount
+         WHEN '7'
+            LET l_xcco.xcco102g = l_amount
+         WHEN '8'
+            LET l_xcco.xcco102h = l_amount
+      END CASE
+      
+      LET l_sys_6002 = cl_get_para(g_enterprise,g_xcco_m.xccocomp,'S-FIN-6002')   #系统参数[S-FIN-6002]:成本域類型
+      #成本域      
+      CASE l_sys_6002
+           WHEN '1'  #组织
+              SELECT xcbf001 INTO l_xcco.xcco002
+                FROM xcbf_t 
+                WHERE xcbfent  = g_enterprise
+                  AND xcbfcomp = g_xcco_m.xccocomp
+                  AND xcbf002  = l_pmdt.pmdtsite
+           WHEN '2'  #仓库
+              SELECT xcbf001 INTO l_xcco.xcco002
+                FROM xcbf_t 
+                WHERE xcbfent  = g_enterprise
+                  AND xcbfcomp = g_xcco_m.xccocomp
+                  AND xcbf002  = l_pmdt.pmdt016
+           WHEN '3'  #库存管理特征
+              LET l_xcco.xcco002 = l_pmdt.pmdt063
+           OTHERWISE
+              LET l_xcco.xcco002 = ' '
+      END CASE
+      IF cl_null(l_xcco.xcco002) THEN
+         LET l_xcco.xcco002 = ' '
+      END IF
+      SELECT COUNT(1) INTO l_cnt
+        FROM apca_t,apcb_t
+       WHERE apcaent = apcbent
+         AND apcald = apcbld
+         AND apcadocno = apcbdocno
+         AND apcaent = g_enterprise
+         AND apcald = g_xcco_m.xccold
+         AND apcastus <> 'X'
+         AND apcb002 = l_pmdt.pmdtdocno
+         AND apcb003 = l_pmdt.pmdtseq
+
+      IF l_cnt = 0 THEN
+         LET l_xcco.xcco102 = l_amount
+      ELSE
+         SELECT SUM(apcb113) INTO l_xcco.xcco102
+           FROM apca_t,apcb_t
+          WHERE apcaent = apcbent
+            AND apcald = apcbld
+            AND apcadocno = apcbdocno
+            AND apcaent = g_enterprise
+            AND apcald = g_xcco_m.xccold
+            AND apcastus <> 'X'
+            AND apcb002 = l_pmdt.pmdtdocno
+            AND apcb003 = l_pmdt.pmdtseq
+      END IF
+      INSERT INTO xcco_t(xccoent,xccold,xccocomp,xcco001,xcco002,
+                         xcco003,xcco004,xcco005,xcco006,xcco007,
+                         xcco008,xcco009,xcco010,xcco011,xcco102,
+                         xcco102a,xcco102b,xcco102c,xcco102d,xcco102e,
+                         xcco102f,xcco102g,xcco102h,xccoownid,xccoowndp,
+                         xccocrtid,xccocrtdp,xccocrtdt,xccomodid,xccomoddt,
+                         xccocnfid,xccocnfdt,xccopstid,xccopstdt,xccostus,
+                         xccoud001,xccoud002,xccoud003,xccoud004,xccoud005,
+                         xccoud006,xccoud007,xccoud008,xccoud009,xccoud010,
+                         xccoud011,xccoud012,xccoud013,xccoud014,xccoud015,
+                         xccoud016,xccoud017,xccoud018,xccoud019,xccoud020,
+                         xccoud021,xccoud022,xccoud023,xccoud024,xccoud025,
+                         xccoud026,xccoud027,xccoud028,xccoud029,xccoud030)
+                  VALUES(l_xcco.xccoent,l_xcco.xccold,l_xcco.xccocomp,l_xcco.xcco001,l_xcco.xcco002,
+                         l_xcco.xcco003,l_xcco.xcco004,l_xcco.xcco005,l_xcco.xcco006,l_xcco.xcco007,
+                         l_xcco.xcco008,l_xcco.xcco009,l_xcco.xcco010,l_xcco.xcco011,l_xcco.xcco102,
+                         l_xcco.xcco102a,l_xcco.xcco102b,l_xcco.xcco102c,l_xcco.xcco102d,l_xcco.xcco102e,
+                         l_xcco.xcco102f,l_xcco.xcco102g,l_xcco.xcco102h,l_xcco.xccoownid,l_xcco.xccoowndp,
+                         l_xcco.xccocrtid,l_xcco.xccocrtdp,l_xcco.xccocrtdt,l_xcco.xccomodid,l_xcco.xccomoddt,
+                         l_xcco.xccocnfid,l_xcco.xccocnfdt,l_xcco.xccopstid,l_xcco.xccopstdt,l_xcco.xccostus,
+                         l_xcco.xccoud001,l_xcco.xccoud002,l_xcco.xccoud003,l_xcco.xccoud004,l_xcco.xccoud005,
+                         l_xcco.xccoud006,l_xcco.xccoud007,l_xcco.xccoud008,l_xcco.xccoud009,l_xcco.xccoud010,
+                         l_xcco.xccoud011,l_xcco.xccoud012,l_xcco.xccoud013,l_xcco.xccoud014,l_xcco.xccoud015,
+                         l_xcco.xccoud016,l_xcco.xccoud017,l_xcco.xccoud018,l_xcco.xccoud019,l_xcco.xccoud020,
+                         l_xcco.xccoud021,l_xcco.xccoud022,l_xcco.xccoud023,l_xcco.xccoud024,l_xcco.xccoud025,
+                         l_xcco.xccoud026,l_xcco.xccoud027,l_xcco.xccoud028,l_xcco.xccoud029,l_xcco.xccoud030)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "ins xcco"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()  
+         LET l_success = FALSE
+         EXIT FOREACH
+      END IF
+      LET l_count = l_count + 1
+   END FOREACH
+   IF l_success THEN
+      CALL s_transaction_end('Y','0')
+   ELSE
+      CALL s_transaction_end('N','0')
+      LET l_count = 0
+   END IF
+   IF l_count = 0 THEN
+      LET l_error = 'axc-00821'
+   ELSE
+      LET l_error = 'axc-00820'
+   END IF
+   INITIALIZE g_errparam TO NULL
+   LET g_errparam.code = l_error
+   LET g_errparam.popup = TRUE
+   CALL cl_err()  
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axct310_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="axct310_01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 法人組織说明
+# Memo...........:
+# Usage..........: axct310_01_xccocomp_desc()
+# Input parameter: 
+# Return code....:
+# Date & Author..: 2016/12/02 By shiun
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axct310_01_xccocomp_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xcco_m.xccocomp
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent="||g_enterprise||" AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xcco_m.xccocomp_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xcco_m.xccocomp_desc
+END FUNCTION
+
+################################################################################
+# Descriptions...: 帳套说明
+# Memo...........:
+# Usage..........: CALL axct310_01_xccold_desc()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axct310_01_xccold_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xcco_m.xccold
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent="||g_enterprise||" AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xcco_m.xccold_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xcco_m.xccold_desc
+END FUNCTION
+
+################################################################################
+# Descriptions...: 成本計算類型说明
+# Memo...........:
+# Usage..........: CALL axct310_01_xcco003_desc()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2016/12/02 By shiun
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axct310_01_xcco003_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xcco_m.xcco003
+   CALL ap_ref_array2(g_ref_fields,"SELECT xcatl003 FROM xcatl_t WHERE xcatlent="||g_enterprise||" AND xcatl001=? AND xcatl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xcco_m.xcco003_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xcco_m.xcco003_desc
+END FUNCTION
+
+################################################################################
+# Descriptions...: 帳套取法人
+# Memo...........:
+# Usage..........: CALL axct310_01_get_xccocomp()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2016/12/02 By shiun
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axct310_01_get_xccocomp()
+   SELECT glaacomp INTO g_xcco_m.xccocomp FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald = g_xcco_m.xccold
+   CALL axct310_01_xccocomp_desc()   
+   DISPLAY BY NAME g_xcco_m.xccocomp,g_xcco_m.xccocomp_desc   
+END FUNCTION
+
+ 
+{</section>}
+ 

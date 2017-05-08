@@ -1,0 +1,40 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asrt339_01" module="asr" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="05947" crtdt="2015-07-14 17:49:23" modid="05947" moddt="2015-07-16 10:47:47" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="重複性生產下階料報廢子作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="inbadocno,inbadocno_desc(chr80),sfdadocno,sfdadocno_desc(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="asr" filename="asrt339_01" method="dialog">
+    <section id="input">
+      <input id="head" field="inbadocno,sfdadocno"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="inbadocno">
+        <after/>
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_inbadocno" state="c"/>
+      </column>
+      <column id="inbadocno_desc"/>
+      <column id="sfdadocno">
+        <after/>
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_sfdadocno" state="c"/>
+      </column>
+      <column id="sfdadocno_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="inba_t" pk="inbadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT inbadocno,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM inba_t WHERE inbaent= ? AND inbadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="inbadocno"/>
+    </head>
+  </dataset>
+</assembly>
+

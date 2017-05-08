@@ -1,0 +1,233 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="artt412" module="art" jobmode="N" type="t01" industry="std" crtid="02296" crtdt="2014/01/09" modid="02296" moddt="2014/01/10" sdver="1" page="1" tabver="10001" description="市場調查單維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="rtedunit,rtedunit_desc(chr80),rteddocdt,rteddocno,rted001,rted002,rted002_desc(chr80),rted003,rted003_desc(chr80),rtedsite,rted004,rted005,rted006,rted007,rted007_desc(chr80),rted008,rtedstus,rtedownid,rtedownid_desc(chr80),rtedowndp,rtedowndp_desc(chr80),rtedcrtid,rtedcrtid_desc(chr80),rtedcrtdp,rtedcrtdp_desc(chr80),rtedcrtdt(datetime),rtedmodid,rtedmodid_desc(chr80),rtedmoddt(datetime),rtedcnfid,rtedcnfid_desc(chr80),rtedcnfdt(datetime)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="rteeseq,rtee001,rtee002,rtee001_desc(chr500),imaal004(chr500),imaa009(chr10),imaa009_desc(chr500),imaa105(chr10),imaa105_desc(chr500),rtee004,rtee005,rtee006,rtee007,rtee008,rtee009,rtee010,rtee011,rtee012,rtee013,rtee014,rtee014_desc(chr500),rteesite,rteesite_desc(chr500),rteeunit,rtee003"/>
+      <var id="bs_field" value="rtedunit,rtedunit_desc(chr80),rteddocdt,rteddocno,rted001,rted002,rted002_desc(chr80),rted003,rted003_desc(chr80),rted004,rted005,rted006,rted007,rted007_desc(chr80),rted008,rtedsite" pk="rteddocno" order=""/>
+      <bs_reference field="rtedunit_desc" ref_field="rtedunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_lang$var"/>
+      <bs_reference field="rted002_desc" ref_field="rted002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_lang$var"/>
+      <bs_reference field="rted003_desc" ref_field="rted002,rted003" ref_sql="SELECT rtea003 FROM rtea_t WHERE rteaent=$varg_enterprise$var AND rtea001=? AND rtea002=? "/>
+      <bs_reference field="rted007_desc" ref_field="rted007" ref_sql="SELECT oofa011 FROM oofa_t WHERE oofaent=$varg_enterprise$var AND oofa002=&apos;2&apos; AND oofa003=? "/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="modify" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="reproduce" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="art" filename="artt412" method="dialog">
+    <section id="input">
+      <input id="head" field="rtedunit,rteddocdt,rteddocno,rted001,rted002,rted003,rtedsite,rted004,rted005,rted006,rted007,rted008,rtedstus"/>
+      <input id="body" page="1" field="rteeseq,rtee001,rtee002,rtee004,rtee005,rtee006,rtee007,rtee008,rtee009,rtee010,rtee011,rtee012,rtee013,rtee014,rteesite,rteeunit,rtee003" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="rtedunit,rteddocdt,rteddocno,rted001,rted002,rted003,rtedsite,rted004,rted005,rted006,rted007,rted008,rtedstus,rtedownid,rtedowndp,rtedcrtid,rtedcrtdp,rtedcrtdt,rtedmodid,rtedmoddt,rtedcnfid,rtedcnfdt"/>
+      <construct id="body" page="1" field="rteeseq,rtee001,rtee002,rtee004,rtee005,rtee006,rtee007,rtee008,rtee009,rtee010,rtee011,rtee012,rtee013,rtee014,rteesite,rteeunit,rtee003"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="rteddocno"/>
+      <set id="head" type="no_entry" field="rteddocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="rtedunit">
+        <after>
+          <check chkid="v_ooef001" id="chkandReturn"/>
+          <reference field="rtedunit_desc" ref_field="rtedunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="rtedunit_desc"/>
+      <column id="rteddocdt"/>
+      <column id="rteddocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_rteddocno" state="c"/>
+      </column>
+      <column id="rted001">
+        <controlp form="q_rtebdocno" state="i"/>
+        <controlp form="q_rtebdocno" state="c"/>
+      </column>
+      <column id="rted002">
+        <after>
+          <reference field="rted002_desc" ref_field="rted002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtea001" state="i"/>
+        <controlp form="q_rtea001" state="c"/>
+      </column>
+      <column id="rted002_desc"/>
+      <column id="rted003">
+        <after>
+          <check chkid="v_rtea002" id="chkandReturn"/>
+          <reference field="rted003_desc" ref_field="rted002,rted003" ref_sql="SELECT rtea003 FROM rtea_t WHERE rteaent=$varg_enterprise$var AND rtea001=? AND rtea002=? "/>
+        </after>
+        <controlp form="q_rtea002" state="i"/>
+        <controlp form="q_rtea002" state="c"/>
+      </column>
+      <column id="rted003_desc"/>
+      <column id="rtedsite"/>
+      <column id="rted004" def_scc="6017"/>
+      <column id="rted005"/>
+      <column id="rted006"/>
+      <column id="rted007">
+        <after>
+          <check chkid="v_ooag001" id="chkandReturn"/>
+          <reference field="rted007_desc" ref_field="rted007" ref_sql="SELECT oofa011 FROM oofa_t WHERE oofaent=$varg_enterprise$var AND oofa002=&apos;2&apos; AND oofa003=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rted007_desc"/>
+      <column id="rted008"/>
+      <column id="rtedstus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+      </column>
+      <column id="rtedownid">
+        <after>
+          <reference field="rtedownid_desc" ref_field="rtedownid" ref_sql="SELECT oofa011 FROM oofa_t WHERE oofaent=$varg_enterprise$var AND oofa002=&apos;2&apos; AND oofa003=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtedownid_desc"/>
+      <column id="rtedowndp">
+        <after>
+          <reference field="rtedowndp_desc" ref_field="rtedowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooea001_1" state="c"/>
+      </column>
+      <column id="rtedowndp_desc"/>
+      <column id="rtedcrtid">
+        <after>
+          <reference field="rtedcrtid_desc" ref_field="rtedcrtid" ref_sql="SELECT oofa011 FROM oofa_t WHERE oofaent=$varg_enterprise$var AND oofa002=&apos;2&apos; AND oofa003=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtedcrtid_desc"/>
+      <column id="rtedcrtdp">
+        <after>
+          <reference field="rtedcrtdp_desc" ref_field="rtedcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooea001_1" state="c"/>
+      </column>
+      <column id="rtedcrtdp_desc"/>
+      <column id="rtedcrtdt"/>
+      <column id="rtedmodid">
+        <after>
+          <reference field="rtedmodid_desc" ref_field="rtedmodid" ref_sql="SELECT oofa011 FROM oofa_t WHERE oofaent=$varg_enterprise$var AND oofa002=&apos;2&apos; AND oofa003=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtedmodid_desc"/>
+      <column id="rtedmoddt"/>
+      <column id="rtedcnfid">
+        <after>
+          <reference field="rtedcnfid_desc" ref_field="rtedcnfid" ref_sql="SELECT oofa011 FROM oofa_t WHERE oofaent=$varg_enterprise$var AND oofa002=&apos;2&apos; AND oofa003=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtedcnfid_desc"/>
+      <column id="rtedcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="rteeseq">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtee001">
+        <after>
+          <check chkid="v_rtdx001_1" id="chkandReturn"/>
+          <reference field="rtee001_desc" ref_field="rtee001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtdx001_3" state="i"/>
+        <controlp form="q_rtdx001_2" state="c"/>
+      </column>
+      <column id="rtee002">
+        <after>
+          <check chkid="v_rtdx002" id="chkandReturn"/>
+        </after>
+        <controlp form="q_rtdx002" state="i"/>
+        <controlp form="q_rtdx002" state="c"/>
+      </column>
+      <column id="rtee001_desc"/>
+      <column id="imaal004"/>
+      <column id="imaa009">
+        <after>
+          <reference field="imaa009_desc" ref_field="imaa009" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001" state="i"/>
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="imaa009_desc"/>
+      <column id="imaa105">
+        <after>
+          <reference field="imaa105_desc" ref_field="imaa105" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="imaa105_desc"/>
+      <column id="rtee004"/>
+      <column id="rtee005"/>
+      <column id="rtee006"/>
+      <column id="rtee007" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtee008" type="S" default="N"/>
+      <column id="rtee009"/>
+      <column id="rtee010" type="S" default="N"/>
+      <column id="rtee011" type="S" default="N"/>
+      <column id="rtee012" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtee013"/>
+      <column id="rtee014">
+        <after>
+          <check chkid="v_oocq002_2075" id="chkandReturn"/>
+          <reference field="rtee014_desc" ref_field="rtee014" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2075&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="rtee014_desc"/>
+      <column id="rteesite">
+        <after>
+          <reference field="rteesite_desc" ref_field="rteesite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="rteesite_desc"/>
+      <column id="rteeunit">
+        <after>
+          <check chkid="v_ooef001" id="chkandReturn"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="rtee003"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="rted_t" pk="rteddocno">
+      <sql id="forupd_sql" type="sql" query="SELECT rtedunit,&apos;&apos;,rteddocdt,rteddocno,rted001,rted002,&apos;&apos;,rted003,&apos;&apos;,rtedsite,rted004,rted005,rted006,rted007,&apos;&apos;,rted008,rtedstus,rtedownid,&apos;&apos;,rtedowndp,&apos;&apos;,rtedcrtid,&apos;&apos;,rtedcrtdp,&apos;&apos;,rtedcrtdt,rtedmodid,&apos;&apos;,rtedmoddt,rtedcnfid,&apos;&apos;,rtedcnfdt FROM rted_t WHERE rtedent= ? AND rteddocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT rtedunit,&apos;&apos;,rteddocdt,rteddocno,rted001,rted002,&apos;&apos;,rted003,&apos;&apos;,rtedsite,rted004,rted005,rted006,rted007,&apos;&apos;,rted008,rtedstus,rtedownid,&apos;&apos;,rtedowndp,&apos;&apos;,rtedcrtid,&apos;&apos;,rtedcrtdp,&apos;&apos;,rtedcrtdt,rtedmodid,&apos;&apos;,rtedmoddt,rtedcnfid,&apos;&apos;,rtedcnfdt FROM rted_t" order="rteddocno"/>
+    </head>
+    <body id="rtee_t" page="1" linked="" pk="rteeseq" fk="rteedocno">
+      <sql id="forupd_sql_detail" query="SELECT rteeseq,rtee001,rtee002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,rtee004,rtee005,rtee006,rtee007,rtee008,rtee009,rtee010,rtee011,rtee012,rtee013,rtee014,&apos;&apos;,rteesite,&apos;&apos;,rteeunit,rtee003 FROM rtee_t WHERE rteeent=? AND rteedocno=? AND rteeseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rteeseq,rtee001,rtee002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,rtee004,rtee005,rtee006,rtee007,rtee008,rtee009,rtee010,rtee011,rtee012,rtee013,rtee014,&apos;&apos;,rteesite,&apos;&apos;,rteeunit,rtee003 FROM rtee_t WHERE rteeent=? AND rteedocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

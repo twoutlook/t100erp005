@@ -1,0 +1,622 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axmr002_x01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:7(2016-09-23 23:26:39), PR版次:0007(2016-09-26 10:48:50)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000083
+#+ Filename...: axmr002_x01
+#+ Description: 銷售金額統計表
+#+ Creator....: 05231(2014-07-03 11:10:42)
+#+ Modifier...: 00593 -SD/PR- 00593
+ 
+{</section>}
+ 
+{<section id="axmr002_x01.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:7)
+#add-point:填寫註解說明
+#160527-00014#1  2016/05/30  By  dorislai  更改WHERE的過濾條件 ((xmdk000 IN (1,2,3) AND xmdk002=1) OR (xmdk000=6))
+#                                                        改為 ((xmdk000 IN (1,2) AND xmdk002=1) OR (xmdk000 IN (4,6))
+#160503-00030#14 2016/06/14  By  06821     效能調整
+#160923-00040#1  2016/09/23  By  Sarah     日期條件應該是抓過帳日期非單據日期
+#end add-point
+#add-point:填寫註解說明
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #where condtion 
+       a1 LIKE type_t.chr5,         #立帳狀況 
+       a2 LIKE type_t.chr5          #金額顯示
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axmr002_x01.main" readonly="Y" >}
+PUBLIC FUNCTION axmr002_x01(p_arg1,p_arg2,p_arg3)
+DEFINE  p_arg1 STRING                  #tm.wc  where condtion 
+DEFINE  p_arg2 LIKE type_t.chr5         #tm.a1  立帳狀況 
+DEFINE  p_arg3 LIKE type_t.chr5         #tm.a2  金額顯示
+#add-point:init段define(客製用) name="component.define_customerization"
+
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.a1 = p_arg2
+   LET tm.a2 = p_arg3
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "axmr002_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL axmr002_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL axmr002_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL axmr002_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL axmr002_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL axmr002_x01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmr002_x01.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION axmr002_x01_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "l_xmdk007_pmaal003.type_t.chr1000,l_xmdk009_pmaal003.type_t.chr1000,l_xmdk008_pmaal003.type_t.chr1000,l_xmdk003_ooag011.type_t.chr1000,l_xmdk004_ooefl003.type_t.chr1000,l_xmdk031_desc.type_t.chr1000,l_xmdk030_desc.type_t.chr1000,l_imaa009_desc.type_t.chr1000,l_imaa127_desc.type_t.chr1000,l_year.type_t.chr1000,l_season.type_t.chr1000,l_month.type_t.chr1000,xmdl008.xmdl_t.xmdl008,l_imaal003.type_t.chr1000,l_imaal004.type_t.chr30,l_qty01.type_t.num20_6,l_qty02.type_t.num20_6,l_qty03.type_t.num20_6,l_count01.type_t.num20_6,l_count02.type_t.num20_6,l_count03.type_t.num20_6,xmdkdocno.xmdk_t.xmdkdocno,xmdkent.xmdk_t.xmdkent,xmdksite.xmdk_t.xmdksite,l_imaa009.type_t.chr1000,l_imaa127.type_t.chr1000,l_imaaent.type_t.num5,l_imaa127desc.type_t.chr1000" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   
+   #end add-point:create_tmp.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmr002_x01.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION axmr002_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmr002_x01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION axmr002_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   #160503-00030#14 --s mark
+   #LET g_select =
+   #   " SELECT a.xmdk007||'.'||e.pmaal003,a.xmdk009||'.'||f.pmaal003,a.xmdk008||'.'||g.pmaal003,a.xmdk003||'.'||h.ooag011,a.xmdk004||'.'||i.ooefl003,k.oocql004, ",
+   #   "        l.oocql004,'','',to_char(a.xmdkdocdt,'YYYY'),to_char(a.xmdkdocdt,'q'),to_char(a.xmdkdocdt,'MM'),xmdl008, ",
+   #   "        d.imaal003,d.imaal004,'','','','','','',a.xmdkdocno,a.xmdkent,a.xmdksite,c.imaa009,c.imaa127,c.imaaent,'' "
+   #160503-00030#14 --e mark
+      
+   #160503-00030#14 --s add
+   LET g_select =
+      " SELECT xmdk007||'.'||(SELECT pmaal003 FROM pmaal_t WHERE pmaal001 = xmdk007 AND pmaalent = xmdkent AND pmaal002 ='",g_dlang,"' ),",
+      "        xmdk009||'.'||(SELECT pmaal003 FROM pmaal_t WHERE pmaal001 = xmdk009 AND pmaalent = xmdkent AND pmaal002 ='",g_dlang,"' ),",
+      "        xmdk008||'.'||(SELECT pmaal003 FROM pmaal_t WHERE pmaal001 = xmdk008 AND pmaalent = xmdkent AND pmaal002 ='",g_dlang,"' ),",
+      "        xmdk003||'.'||(SELECT ooag011 FROM ooag_t WHERE ooag001  = xmdk003 AND ooagent = xmdkent), ",
+      "        xmdk004||'.'||(SELECT ooefl003 FROM ooefl_t WHERE ooefl001 = xmdk004 AND ooeflent = xmdkent AND ooefl002 ='",g_dlang,"'), ",
+      "        (SELECT oocql004 FROM oocql_t WHERE oocqlent = xmdkent AND oocql001 ='295' AND oocql002= xmdk031 AND oocql003='",g_dlang,"'), ",
+     #160621-00003#6 160629 by lori mark and add---(S)   
+     #"        (SELECT oocql004 FROM oocql_t WHERE oocqlent = xmdkent AND oocql001 ='275' AND oocql002= xmdk030 AND oocql003='",g_dlang,"'), ",     
+      "        (SELECT oojdl003 FROM oojdl_t WHERE oojdlent = xmdkent AND oojdl001 = xmdk030 AND oojdl002 ='",g_dlang,"'), ",
+     #160621-00003#6 160629 by lori mark and add---(E) 
+      #產品分類說明
+      "        (SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent = c.imaaent AND rtaxl001 = c.imaa009 AND rtaxl002 ='",g_dlang,"'), ", 
+      "        (SELECT oocql004 FROM oocql_t WHERE oocqlent = xmdkent AND oocql001 = '2003' AND oocql002 = c.imaa127 AND oocql003 ='",g_dlang,"'), ",
+#160923-00040#1-s mod
+     #日期條件應該是抓過帳日期(xmdk001)非單據日期(xmdkdocdt)
+     #"        to_char(xmdkdocdt,'YYYY'),to_char(xmdkdocdt,'q'),to_char(xmdkdocdt,'MM'),xmdl008, ",
+      "        to_char(xmdk001,'YYYY'),to_char(xmdk001,'q'),to_char(xmdk001,'MM'),xmdl008, ",
+#160923-00040#1-e mod
+      "        (SELECT imaal003 FROM imaal_t WHERE imaalent = xmdlent AND imaal002 = '",g_dlang,"' AND imaal001 = xmdl008), ",
+      "        (SELECT imaal004 FROM imaal_t WHERE imaalent = xmdlent AND imaal002 = '",g_dlang,"' AND imaal001 = xmdl008), ",
+      "        '','','','','','',xmdkdocno,xmdkent,xmdksite,c.imaa009,c.imaa127,c.imaaent,",
+      #系列說明
+      "        CASE WHEN(SELECT oocql004 FROM oocql_t WHERE oocqlent = xmdkent AND oocql001 = '2003' AND oocql002 = c.imaa127 AND oocql003 ='",g_dlang,"') IS NOT NULL ", 
+      "             THEN c.imaa127||'.'||(SELECT oocql004 FROM oocql_t WHERE oocqlent = xmdkent AND oocql001 = '2003' AND oocql002 = c.imaa127 AND oocql003 ='",g_dlang,"') ",
+      "             ELSE '' END "
+   #160503-00030#14 --e add
+#   #end add-point
+#   LET g_select = " SELECT '','','','','','','','','','','','',xmdl008,'','',NULL,NULL,NULL,NULL,NULL, 
+#       NULL,xmdkdocno,xmdkent,xmdksite,'','',NULL,''"
+# 
+#   #add-point:sel_prep g_from name="sel_prep.g_from"
+   #160503-00030#14 --s mark
+   #LET g_from =
+   #   " FROM xmdk_t a LEFT JOIN pmaal_t e ON e.pmaal001 =a.xmdk007 AND e.pmaalent =a.xmdkent  AND e.pmaal002 ='",g_dlang,"'   ",
+   #   "               LEFT JOIN pmaal_t f ON f.pmaal001 =a.xmdk009 AND f.pmaalent =a.xmdkent  AND f.pmaal002 ='",g_dlang,"'   ",
+   #   "               LEFT JOIN pmaal_t g ON g.pmaal001 =a.xmdk008 AND g.pmaalent =a.xmdkent  AND g.pmaal002 ='",g_dlang,"'   ", 
+   #   "               LEFT JOIN ooag_t  h ON h.ooag001  =a.xmdk003 AND h.ooagent = a.xmdkent      ",
+   #   "               LEFT JOIN ooefl_t i ON i.ooefl001 =a.xmdk004 AND i.ooeflent =a.xmdkent  AND i.ooefl002 ='",g_dlang,"'   ",
+   #   "               LEFT JOIN pmaa_t  h ON h.pmaaent  =a.xmdkent AND h.pmaa001  =a.xmdk007                                 ",
+   #   "               LEFT JOIN oocql_t k ON k.oocqlent =a.xmdkent AND k.oocql001 ='295' AND k.oocql002=a.xmdk031 AND k.oocql003='",g_dlang,"'   ",
+   #   "               LEFT JOIN oocql_t l ON l.oocqlent =a.xmdkent AND l.oocql001 ='275' AND l.oocql002=a.xmdk030 AND l.oocql003='",g_dlang,"' , ",     
+   #   "     xmdl_t b  LEFT JOIN imaa_t  c ON c.imaaent  =b.xmdlent AND c.imaa001  =b.xmdl008                                ",
+   #   "               LEFT JOIN imaal_t d ON d.imaalent =b.xmdlent AND d.imaal002 = '",g_dlang,"' AND d.imaal001 = b.xmdl008      "
+   #160503-00030#14 --e mark
+   
+   #160503-00030#14 --s add   
+   LET g_from = " FROM xmdk_t,xmdl_t LEFT JOIN imaa_t c ON c.imaaent = xmdlent AND c.imaa001 = xmdl008                                "
+   #160503-00030#14 --e add    
+   
+#   #end add-point
+#    LET g_from = " FROM  xmdk_t  LEFT OUTER JOIN ( SELECT xmdl_t.* FROM xmdl_t  ) x  ON xmdk_t.xmdkent  
+#        = x.xmdlent AND xmdk_t.xmdkdocno = x.xmdldocno"
+# 
+#   #add-point:sel_prep g_where name="sel_prep.g_where"
+   #160527-00014#1-mod-(S)
+#   LET g_where = " WHERE xmdkent = xmdlent AND xmdksite = xmdlsite AND xmdkdocno = xmdldocno AND ((xmdk000 IN (1,2,3) AND xmdk002= 1) OR (xmdk000 = 6)) AND " ,tm.wc CLIPPED," "
+   LET g_where = " WHERE xmdkent = xmdlent AND xmdksite = xmdlsite AND xmdkdocno = xmdldocno ",
+                 "   AND ( (xmdk000 IN ('1','2') AND xmdk002='1') OR (xmdk000 IN ('4','6')) ) AND " ,tm.wc CLIPPED," "
+   #160527-00014#1-mod-(E)
+#   #end add-point
+#    LET g_where = " WHERE xmdk_t.xmdk002 = '7' AND " ,tm.wc CLIPPED
+# 
+#   #add-point:sel_prep g_order name="sel_prep.g_order"
+   
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("xmdk_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   DISPLAY "g_sql:",g_sql
+   #end add-point
+   PREPARE axmr002_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE axmr002_x01_curs CURSOR FOR axmr002_x01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmr002_x01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION axmr002_x01_ins_data()
+DEFINE sr RECORD 
+   l_xmdk007_pmaal003 LIKE type_t.chr1000, 
+   l_xmdk009_pmaal003 LIKE type_t.chr1000, 
+   l_xmdk008_pmaal003 LIKE type_t.chr1000, 
+   l_xmdk003_ooag011 LIKE type_t.chr1000, 
+   l_xmdk004_ooefl003 LIKE type_t.chr1000, 
+   l_xmdk031_desc LIKE type_t.chr1000, 
+   l_xmdk030_desc LIKE type_t.chr1000, 
+   l_imaa009_desc LIKE type_t.chr1000, 
+   l_imaa127_desc LIKE type_t.chr1000, 
+   l_year LIKE type_t.chr1000, 
+   l_season LIKE type_t.chr1000, 
+   l_month LIKE type_t.chr1000, 
+   xmdl008 LIKE xmdl_t.xmdl008, 
+   l_imaal003 LIKE type_t.chr1000, 
+   l_imaal004 LIKE type_t.chr30, 
+   l_qty01 LIKE type_t.num20_6, 
+   l_qty02 LIKE type_t.num20_6, 
+   l_qty03 LIKE type_t.num20_6, 
+   l_count01 LIKE type_t.num20_6, 
+   l_count02 LIKE type_t.num20_6, 
+   l_count03 LIKE type_t.num20_6, 
+   xmdkdocno LIKE xmdk_t.xmdkdocno, 
+   xmdkent LIKE xmdk_t.xmdkent, 
+   xmdksite LIKE xmdk_t.xmdksite, 
+   l_imaa009 LIKE type_t.chr1000, 
+   l_imaa127 LIKE type_t.chr1000, 
+   l_imaaent LIKE type_t.num5, 
+   l_imaa127desc LIKE type_t.chr1000
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+DEFINE r_qty01      LIKE type_t.num20_6
+DEFINE r_qty02      LIKE type_t.num20_6
+DEFINE r_count01    LIKE type_t.num20_6
+DEFINE r_count02    LIKE type_t.num20_6
+#160923-00040#1-s add
+DEFINE l_sql        STRING
+DEFINE l_amt1_1     LIKE xmdl_t.xmdl028   #含稅銷售金額
+DEFINE l_amt2_1     LIKE xmdl_t.xmdl028   #未稅銷售金額
+DEFINE l_amt3_1     LIKE xmdl_t.xmdl028   #已立應收銷售金額
+DEFINE l_qty1_1     LIKE xmdl_t.xmdl018   #銷售數量
+DEFINE l_qty2_1     LIKE xmdl_t.xmdl018   #已立應收銷售數量
+DEFINE l_amt1_2     LIKE xmdl_t.xmdl028   #含稅銷退金額
+DEFINE l_amt2_2     LIKE xmdl_t.xmdl028   #未稅銷退金額
+DEFINE l_amt3_2     LIKE xmdl_t.xmdl028   #已立應收銷退金額
+DEFINE l_qty1_2     LIKE xmdl_t.xmdl018   #銷退數量
+DEFINE l_qty2_2     LIKE xmdl_t.xmdl018   #已立應收銷退數量
+#160923-00040#1-e add
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+#160923-00040#1-s add
+    #日期條件應該是抓過帳日期(xmdk001)非單據日期(xmdkdocdt)
+    
+    #含稅銷售金額(l_amt1_1)、未稅銷售金額(l_amt2_1)、銷售數量(l_qty1_1)
+    #已立應收銷售金額(l_amt3_1)、已立應收銷售數量(l_qty2_1)
+    LET l_sql = "SELECT COALESCE(SUM(xmdl028*xmdk017),0),COALESCE(SUM(xmdl027*xmdk017),0),COALESCE(SUM(xmdl018),0),",
+                "       COALESCE(SUM(xmdl038*xmdl024*xmdk017),0),COALESCE(SUM(xmdl038),0)",
+                "  FROM xmdk_t",
+                "  LEFT JOIN xmdl_t ON xmdlent=xmdkent AND xmdlsite=xmdksite AND xmdldocno=xmdkdocno AND xmdl008=?",
+                " WHERE ((xmdk000 IN ('1','2') AND xmdk002='1') OR xmdk000='4')",
+                "   AND xmdkdocno=? AND xmdksite=? AND xmdkent=?",
+                "   AND to_char(xmdk001,'YYYY')=? AND to_char(xmdk001,'q')=? AND to_char(xmdk001,'MM')=?"
+    PREPARE sele_prep FROM l_sql
+
+    #含稅銷退金額(l_amt1_2)、未稅銷退金額(l_amt2_2)、銷退數量(l_qty1_2)
+    #已立應收銷退金額(l_amt3_2)、已立應收銷退數量(l_qty2_2)
+    LET l_sql = "SELECT COALESCE(SUM(xmdl028*xmdk017),0),COALESCE(SUM(xmdl027*xmdk017),0),COALESCE(SUM(xmdl018),0),",
+                "       COALESCE(SUM(xmdl038*xmdl024*xmdk017),0),COALESCE(SUM(xmdl038),0)",
+                "  FROM xmdk_t",
+                "  LEFT JOIN xmdl_t ON xmdlent=xmdkent AND xmdlsite=xmdksite AND xmdldocno=xmdkdocno AND xmdl008=?",
+                " WHERE xmdk000='6'",
+                "   AND xmdkdocno=? AND xmdksite=? AND xmdkent=?",
+                "   AND to_char(xmdk001,'YYYY')=? AND to_char(xmdk001,'q')=? AND to_char(xmdk001,'MM')=?"
+    PREPARE sele_return_prep FROM l_sql
+#160923-00040#1-e add
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH axmr002_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       #160503-00030#14 --s mark
+       ##產品分類說明
+       #SELECT  rtaxl003 INTO sr.l_imaa009_desc
+       #  FROM  rtaxl_t
+       # WHERE rtaxlent = sr.l_imaaent
+       #   AND rtaxl001 = sr.l_imaa009
+       #   AND rtaxl002 = g_dlang
+       #160503-00030#14 --e mark       
+
+#160923-00040#1-s add
+       EXECUTE sele_prep USING sr.xmdl008,sr.xmdkdocno,sr.xmdksite,sr.xmdkent,sr.l_year,sr.l_season,sr.l_month
+                          INTO l_amt1_1,l_amt2_1,l_qty1_1,l_amt3_1,l_qty2_1
+       EXECUTE sele_return_prep USING sr.xmdl008,sr.xmdkdocno,sr.xmdksite,sr.xmdkent,sr.l_year,sr.l_season,sr.l_month
+                                 INTO l_amt1_2,l_amt2_2,l_qty1_2,l_amt3_2,l_qty2_2
+       IF tm.a1 = '0' THEN
+          IF tm.a2 = '0' THEN   #含稅
+             LET sr.l_qty01 = l_amt1_1
+             LET sr.l_qty02 = l_amt1_2
+          ELSE                  #未稅
+             LET sr.l_qty01 = l_amt2_1
+             LET sr.l_qty02 = l_amt2_2
+          END IF
+          LET sr.l_count01 = l_qty1_1
+          LET sr.l_count02 = l_qty1_2
+       ELSE    #已立應收
+          LET sr.l_qty01 = l_amt3_1
+          LET sr.l_qty02 = l_amt3_2
+          LET sr.l_count01 = l_qty2_1
+          LET sr.l_count02 = l_qty2_2
+       END IF
+#160923-00040#1-e add
+#160923-00040#1-s mark
+#底下寫法效能不好，將SQL往FOREACH外面拉，將值抓到變數中再判斷要抓哪一組值進來
+#       IF tm.a1 = '0' THEN 
+#          #含税否
+#          IF tm.a2 = '0' THEN
+#             #銷售金額       
+#             SELECT SUM( xmdl028 * xmdk017 ) INTO sr.l_qty01 
+#               FROM xmdk_t LEFT JOIN  xmdl_t ON xmdlent =xmdkent  AND xmdlsite = xmdksite AND xmdldocno = xmdkdocno AND xmdl008 = sr.xmdl008
+#              WHERE xmdk000 IN (1,2,3) AND xmdk002 = 1 AND xmdkdocno = sr.xmdkdocno AND xmdksite  = sr.xmdksite AND xmdkent   = sr.xmdkent
+#                AND to_char(xmdkdocdt,'YYYY') = sr.l_year AND to_char(xmdkdocdt,'q') = sr.l_season AND to_char(xmdkdocdt,'MM') = sr.l_month
+#             #銷退金額
+#             SELECT SUM( xmdl028 * xmdk017 ) INTO sr.l_qty02 
+#               FROM xmdk_t LEFT JOIN  xmdl_t ON xmdlent =xmdkent  AND xmdlsite = xmdksite AND xmdldocno = xmdkdocno AND xmdl008 = sr.xmdl008
+#              WHERE xmdk000 = 6 AND xmdkdocno = sr.xmdkdocno AND xmdksite  = sr.xmdksite AND xmdkent   = sr.xmdkent
+#                AND to_char(xmdkdocdt,'YYYY') = sr.l_year AND to_char(xmdkdocdt,'q') = sr.l_season AND to_char(xmdkdocdt,'MM') = sr.l_month
+#          ELSE
+#             #銷售金額       
+#             SELECT SUM( xmdl027 * xmdk017 ) INTO sr.l_qty01 
+#               FROM xmdk_t LEFT JOIN  xmdl_t ON xmdlent =xmdkent  AND xmdlsite = xmdksite AND xmdldocno = xmdkdocno AND xmdl008 = sr.xmdl008
+#              WHERE xmdk000 IN (1,2,3) AND xmdk002 = 1 AND xmdkdocno = sr.xmdkdocno AND xmdksite  = sr.xmdksite AND xmdkent   = sr.xmdkent
+#                AND to_char(xmdkdocdt,'YYYY') = sr.l_year AND to_char(xmdkdocdt,'q') = sr.l_season AND to_char(xmdkdocdt,'MM') = sr.l_month
+#             #銷退金額
+#             SELECT SUM( xmdl027 * xmdk017 ) INTO sr.l_qty02 
+#               FROM xmdk_t LEFT JOIN  xmdl_t ON xmdlent =xmdkent  AND xmdlsite = xmdksite AND xmdldocno = xmdkdocno AND xmdl008 = sr.xmdl008
+#              WHERE xmdk000 = 6 AND xmdkdocno = sr.xmdkdocno AND xmdksite  = sr.xmdksite AND xmdkent   = sr.xmdkent
+#                AND to_char(xmdkdocdt,'YYYY') = sr.l_year AND to_char(xmdkdocdt,'q') = sr.l_season AND to_char(xmdkdocdt,'MM') = sr.l_month
+#          END IF
+#          #銷售數量
+#          SELECT  SUM(xmdl018) INTO sr.l_count01
+#            FROM xmdk_t LEFT JOIN  xmdl_t ON xmdlent =xmdkent  AND xmdlsite = xmdksite AND xmdldocno = xmdkdocno AND xmdl008 = sr.xmdl008
+#           WHERE xmdk000 IN (1,2,3) AND xmdk002 = 1 AND xmdkdocno = sr.xmdkdocno AND xmdksite  = sr.xmdksite AND xmdkent   = sr.xmdkent    
+#             AND to_char(xmdkdocdt,'YYYY') = sr.l_year AND to_char(xmdkdocdt,'q') = sr.l_season AND to_char(xmdkdocdt,'MM') = sr.l_month
+#          #銷售退量
+#          SELECT  SUM(xmdl018) INTO sr.l_count02
+#            FROM xmdk_t LEFT JOIN  xmdl_t ON xmdlent =xmdkent  AND xmdlsite = xmdksite AND xmdldocno = xmdkdocno AND xmdl008 = sr.xmdl008
+#           WHERE xmdk000 = 6 AND xmdkdocno = sr.xmdkdocno AND xmdksite  = sr.xmdksite  AND xmdkent   = sr.xmdkent               
+#             AND to_char(xmdkdocdt,'YYYY') = sr.l_year AND to_char(xmdkdocdt,'q') = sr.l_season AND to_char(xmdkdocdt,'MM') = sr.l_month
+#       ELSE
+#          #銷售金額
+#          SELECT SUM( xmdl038 * xmdl024 * xmdk017 ) INTO sr.l_qty01 
+#            FROM xmdk_t LEFT JOIN  xmdl_t ON xmdlent =xmdkent  AND xmdlsite = xmdksite AND xmdldocno = xmdkdocno AND xmdl008 = sr.xmdl008
+#           WHERE xmdk000 IN (1,2,3) AND xmdk002 = 1 AND xmdkdocno = sr.xmdkdocno AND xmdksite  = sr.xmdksite AND xmdkent   = sr.xmdkent 
+#             AND to_char(xmdkdocdt,'YYYY') = sr.l_year AND to_char(xmdkdocdt,'q') = sr.l_season AND to_char(xmdkdocdt,'MM') = sr.l_month
+#          #銷退金額 
+#          SELECT SUM( xmdl038 * xmdl024 * xmdk017 ) INTO sr.l_qty02 
+#            FROM xmdk_t LEFT JOIN  xmdl_t ON xmdlent =xmdkent  AND xmdlsite = xmdksite AND xmdldocno = xmdkdocno AND xmdl008 = sr.xmdl008
+#           WHERE xmdk000 =6 AND xmdkdocno = sr.xmdkdocno AND xmdksite  = sr.xmdksite AND xmdkent  = sr.xmdkent 
+#             AND to_char(xmdkdocdt,'YYYY') = sr.l_year AND to_char(xmdkdocdt,'q') = sr.l_season AND to_char(xmdkdocdt,'MM') = sr.l_month
+#          #銷售數量             
+#          SELECT SUM(xmdl038) INTO sr.l_count01
+#            FROM xmdk_t LEFT JOIN  xmdl_t ON xmdlent =xmdkent  AND xmdlsite = xmdksite AND xmdldocno = xmdkdocno AND xmdl008 = sr.xmdl008
+#           WHERE xmdk000 IN (1,2,3) AND xmdk002 = 1 AND xmdkdocno = sr.xmdkdocno AND xmdksite = sr.xmdksite AND xmdkent = sr.xmdkent
+#             AND to_char(xmdkdocdt,'YYYY') = sr.l_year AND to_char(xmdkdocdt,'q') = sr.l_season AND to_char(xmdkdocdt,'MM') = sr.l_month
+#          #銷售退量             
+#          SELECT SUM(xmdl038) INTO sr.l_count02
+#            FROM xmdk_t LEFT JOIN  xmdl_t ON xmdlent =xmdkent  AND xmdlsite = xmdksite AND xmdldocno = xmdkdocno AND xmdl008 = sr.xmdl008
+#           WHERE xmdk000 = 6 AND xmdkdocno = sr.xmdkdocno AND xmdksite  = sr.xmdksite AND xmdkent   = sr.xmdkent             
+#             AND to_char(xmdkdocdt,'YYYY') = sr.l_year AND to_char(xmdkdocdt,'q') = sr.l_season AND to_char(xmdkdocdt,'MM') = sr.l_month
+#       END IF
+#160923-00040#1-e mark
+       #銷售淨額
+#160923-00040#1-s mod
+#       CALL axmr002_x01_ifnull(sr.l_qty01) RETURNING r_qty01
+#       CALL axmr002_x01_ifnull(sr.l_qty02) RETURNING r_qty02
+#       LET sr.l_qty03 = r_qty01 - r_qty02
+       LET sr.l_qty03 = sr.l_qty01 - sr.l_qty02
+#160923-00040#1-e mod
+       #銷售淨量
+#160923-00040#1-s mod
+#       CALL axmr002_x01_ifnull(sr.l_count01) RETURNING r_count01
+#       CALL axmr002_x01_ifnull(sr.l_count02) RETURNING r_count02
+#       LET sr.l_count03 = r_count01 - r_count02
+       LET sr.l_count03 = sr.l_count01 - sr.l_count02
+#160923-00040#1-e mod
+       
+       CASE sr.l_month
+          WHEN '01'
+             CALL cl_getmsg('axm-00447',g_dlang) RETURNING sr.l_month
+          WHEN '02'
+             CALL cl_getmsg('axm-00448',g_dlang) RETURNING sr.l_month
+          WHEN '03'
+             CALL cl_getmsg('axm-00449',g_dlang) RETURNING sr.l_month
+          WHEN '04'
+             CALL cl_getmsg('axm-00450',g_dlang) RETURNING sr.l_month
+          WHEN '05'
+             CALL cl_getmsg('axm-00451',g_dlang) RETURNING sr.l_month
+          WHEN '06'
+             CALL cl_getmsg('axm-00452',g_dlang) RETURNING sr.l_month
+          WHEN '07'
+             CALL cl_getmsg('axm-00453',g_dlang) RETURNING sr.l_month
+          WHEN '08'
+             CALL cl_getmsg('axm-00454',g_dlang) RETURNING sr.l_month
+          WHEN '09'
+             CALL cl_getmsg('axm-00455',g_dlang) RETURNING sr.l_month
+          WHEN '10'
+             CALL cl_getmsg('axm-00456',g_dlang) RETURNING sr.l_month
+          WHEN '11'
+             CALL cl_getmsg('axm-00457',g_dlang) RETURNING sr.l_month
+          WHEN '12'
+             CALL cl_getmsg('axm-00458',g_dlang) RETURNING sr.l_month
+       END CASE
+       CASE sr.l_season
+          WHEN '1'
+             CALL cl_getmsg('axm-00459',g_dlang) RETURNING sr.l_season
+          WHEN '2'
+             CALL cl_getmsg('axm-00460',g_dlang) RETURNING sr.l_season
+          WHEN '3'
+             CALL cl_getmsg('axm-00461',g_dlang) RETURNING sr.l_season
+          WHEN '4'
+             CALL cl_getmsg('axm-00462',g_dlang) RETURNING sr.l_season
+       END CASE
+       #160503-00030#14 --s mark
+       ##系列號             dorislai-20150819-add----(S)
+       #  #用料號抓取系列
+       #SELECT imaa127 INTO sr.l_imaa127 FROM imaa_t
+       # WHERE imaa001 = sr.xmdl008
+       #   AND imaaent = g_enterprise
+       #  #抓取系列說明
+       #CALL s_desc_get_acc_desc('2003',sr.l_imaa127)  RETURNING sr.l_imaa127_desc  
+       #IF NOT cl_null(sr.l_imaa127_desc) THEN
+       #   LET sr.l_imaa127desc = sr.l_imaa127,'.',sr.l_imaa127_desc
+       #ELSE
+       #   LET sr.l_imaa127desc = ''
+       #END IF
+       #                   dorislai-20150819-add----(E)
+       #160503-00030#14 --e mark
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.l_xmdk007_pmaal003,sr.l_xmdk009_pmaal003,sr.l_xmdk008_pmaal003,sr.l_xmdk003_ooag011,sr.l_xmdk004_ooefl003,sr.l_xmdk031_desc,sr.l_xmdk030_desc,sr.l_imaa009_desc,sr.l_imaa127_desc,sr.l_year,sr.l_season,sr.l_month,sr.xmdl008,sr.l_imaal003,sr.l_imaal004,sr.l_qty01,sr.l_qty02,sr.l_qty03,sr.l_count01,sr.l_count02,sr.l_count03,sr.xmdkdocno,sr.xmdkent,sr.xmdksite,sr.l_imaa009,sr.l_imaa127,sr.l_imaaent,sr.l_imaa127desc
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "axmr002_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmr002_x01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION axmr002_x01_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    
+    #end add-point:rep_data.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmr002_x01.other_function" readonly="Y" >}
+
+PRIVATE FUNCTION axmr002_x01_ifnull(p_param)
+   DEFINE p_param  LIKE type_t.num20_6
+   IF cl_null(p_param)THEN
+      RETURN 0
+   ELSE
+      RETURN p_param
+   END IF
+END FUNCTION
+
+ 
+{</section>}
+ 

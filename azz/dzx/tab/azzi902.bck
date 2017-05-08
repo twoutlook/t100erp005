@@ -1,0 +1,115 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi902" module="azz" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="01856" crtdt="2013-08-08 14:49:55" modid="01856" moddt="2015-06-16 15:43:30" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="程式畫面多語言維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzzd001,gzzd001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzzdstus,gzzd002,gzzd003,gzzd004,gzzd005,gzzd006"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gzzd002,gzzd003,gzzd004,gzzdmodid,gzzdmodid_desc(chr500),gzzdmoddt,gzzdownid,gzzdownid_desc(chr500),gzzdowndp,gzzdowndp_desc(chr500),gzzdcrtid,gzzdcrtid_desc(chr500),gzzdcrtdp,gzzdcrtdp_desc(chr500),gzzdcrtdt"/>
+      <var id="bs_field" value="gzzd001,gzzd001_desc(chr80)" pk="gzzd001" order=""/>
+      <bs_reference field="gzzd001_desc" ref_field="gzzd001" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="gen_one_str"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="get_other_rel_lang"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi902" method="dialog">
+    <section id="input">
+      <input id="head" field="gzzd001"/>
+      <input id="body" page="1" field="gzzdstus,gzzd002,gzzd003,gzzd004,gzzd005,gzzd006" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzzd001"/>
+      <construct id="body" page="1" field="gzzdstus,gzzd002,gzzd003,gzzd004,gzzd005,gzzd006"/>
+      <construct id="body" page="2" field="gzzdmodid,gzzdmoddt,gzzdownid,gzzdowndp,gzzdcrtid,gzzdcrtdp,gzzdcrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzzd001"/>
+      <set id="head" type="no_entry" field="gzzd001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gzzd001">
+        <after>
+          <reference field="gzzd001_desc" ref_field="gzzd_t.gzzd001" map_field="gzzd001" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzzd001" state="c"/>
+      </column>
+      <column id="gzzd001_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzzdstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="gzzd002"/>
+      <column id="gzzd003"/>
+      <column id="gzzd004" def_scc="98"/>
+      <column id="gzzd005"/>
+      <column id="gzzd006"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gzzdmodid">
+        <after>
+          <reference field="gzzdmodid_desc" ref_field="gzzd_t.gzzdmodid" map_field="gzzdmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzzdmodid_desc"/>
+      <column id="gzzdmoddt"/>
+      <column id="gzzdownid">
+        <after>
+          <reference field="gzzdownid_desc" ref_field="gzzd_t.gzzdownid" map_field="gzzdownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzzdownid_desc"/>
+      <column id="gzzdowndp">
+        <after>
+          <reference field="gzzdowndp_desc" ref_field="gzzd_t.gzzdowndp" map_field="gzzdowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzzdowndp_desc"/>
+      <column id="gzzdcrtid">
+        <after>
+          <reference field="gzzdcrtid_desc" ref_field="gzzd_t.gzzdcrtid" map_field="gzzdcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzzdcrtid_desc"/>
+      <column id="gzzdcrtdp">
+        <after>
+          <reference field="gzzdcrtdp_desc" ref_field="gzzd_t.gzzdcrtdp" map_field="gzzdcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzzdcrtdp_desc"/>
+      <column id="gzzdcrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzzd_t" pk="gzzd001">
+      <sql id="forupd_sql" type="sql" query="SELECT gzzd001,&apos;&apos; FROM gzzd_t WHERE gzzd001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzzd001,&apos;&apos; FROM gzzd_t" order="gzzd001"/>
+    </head>
+    <body id="gzzd_t" page="1,2" linked="" pk="gzzd002,gzzd003,gzzd004" fk="gzzd001">
+      <sql id="forupd_sql_detail" query="SELECT gzzdstus,gzzd002,gzzd003,gzzd004,gzzd005,gzzd006,&apos;&apos;,&apos;&apos;,&apos;&apos;,gzzdmodid,&apos;&apos;,gzzdmoddt,gzzdownid,&apos;&apos;,gzzdowndp,&apos;&apos;,gzzdcrtid,&apos;&apos;,gzzdcrtdp,&apos;&apos;,gzzdcrtdt FROM gzzd_t WHERE gzzd001=? AND gzzd002=? AND gzzd003=? AND gzzd004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzzdstus,gzzd002,gzzd003,gzzd004,gzzd005,gzzd006,&apos;&apos;,&apos;&apos;,&apos;&apos;,gzzdmodid,&apos;&apos;,gzzdmoddt,gzzdownid,&apos;&apos;,gzzdowndp,&apos;&apos;,gzzdcrtid,&apos;&apos;,gzzdcrtdp,&apos;&apos;,gzzdcrtdt FROM gzzd_t WHERE gzzd001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

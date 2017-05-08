@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapt510_03" module="aap" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="03080" crtdt="2016-03-04 10:35:55" modid="03080" moddt="2016-03-04 10:37:31" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="自備款轉預付購料">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="apdadocno,apdadocdt(dat),apda003,apda003_desc(chr80),l_apde008(chr20),l_apcadocno(chr20),l_apde011(chr10),l_apde012(chr10),apdald"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="aap" filename="aapt510_03" method="dialog">
+    <section id="input">
+      <input id="head" field="apdadocno,apdadocdt,apda003,l_apde008,l_apcadocno,l_apde011,l_apde012,apdald"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="apdadocno"/>
+      <column id="apdadocdt"/>
+      <column id="apda003">
+        <after>
+          <reference field="apda003_desc" ref_field="apda_t.apda003" map_field="apdaent,apda003" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="apda003_desc"/>
+      <column id="l_apde008"/>
+      <column id="l_apcadocno"/>
+      <column id="l_apde011"/>
+      <column id="l_apde012"/>
+      <column id="apdald"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="apda_t" pk="apdald,apdadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT apdadocno,&apos;&apos;,apda003,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,apdald FROM apda_t WHERE apdaent= ? AND apdald=? AND apdadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="apdald,apdadocno"/>
+    </head>
+  </dataset>
+</assembly>
+

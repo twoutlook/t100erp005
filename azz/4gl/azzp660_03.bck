@@ -1,0 +1,1456 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="azzp660_03.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0006(2016-03-03 10:56:16), PR版次:0006(1900-01-01 00:00:00)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000047
+#+ Filename...: azzp660_03
+#+ Description: 選擇匯出欄位
+#+ Creator....: 03079(2016-03-02 15:31:59)
+#+ Modifier...: 03079 -SD/PR- 00000
+ 
+{</section>}
+ 
+{<section id="azzp660_03.global" >}
+#應用 p00 樣板自動產生(Version:5)
+#add-point:填寫註解說明 name="main.memo"
+#160620-00026#1  2016/06/28  By ming   dzeb003改成dzebl003
+#end add-point
+#add-point:填寫註解說明(客製用) name="main.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="main.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔 name="global.inc"
+GLOBALS "../../azz/4gl/azzp660.inc"
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzp660_03.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+
+DEFINE g_sheet_num      LIKE type_t.num5     #表示現在的sheet開到幾個 
+
+DEFINE g_source         STRING
+DEFINE g_dnd            ui.DragDrop
+DEFINE g_n              LIKE type_t.num10
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzp660_03.global_variable" >}
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzp660_03.other_dialog" >}
+
+################################################################################
+# Descriptions...: Table Tree的顯示
+# Memo...........:
+# Usage..........: CALL azzp660_03_display01()
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+DIALOG azzp660_03_display01()
+   DISPLAY ARRAY g_table_tree TO s_p660_03_table.*
+           ATTRIBUTE(COUNT = g_table_tree.getLength())
+
+      BEFORE DISPLAY
+
+      BEFORE ROW
+         LET g_table_tree_idx = DIALOG.getCurrentRow("s_p660_03_table")
+
+         CALL azzp660_03_field_b_fill()
+   END DISPLAY
+END DIALOG
+
+################################################################################
+# Descriptions...: Table的field顯示
+# Memo...........:
+# Usage..........: CALL azzp660_03_display02()
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+DIALOG azzp660_03_display02()
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE l_detail   STRING 
+   DEFINE l_success  LIKE type_t.num5 
+   
+   DISPLAY ARRAY g_dzeb TO s_field_detail1.*
+           ATTRIBUTE(COUNT = g_dzeb.getLength())
+      BEFORE DISPLAY
+      BEFORE ROW 
+      
+      ON DRAG_START(g_dnd)
+         LET g_source = "LEFT"
+         LET g_n = ARR_CURR()
+
+      ON DRAG_OVER(g_dnd)
+         IF g_source == "LEFT" THEN
+            CALL g_dnd.setOperation(NULL)
+         ELSE
+            CALL g_dnd.setOperation("move") 
+            CALL g_dnd.setFeedback("insert")
+         END IF
+
+      ON DROP(g_dnd) 
+         LET l_success = TRUE 
+         IF FGL_GETENV("DGENV") = 's' THEN 
+            IF g_gzal.gzal002 != "standard" THEN 
+               LET l_success = FALSE 
+            END IF 
+         ELSE 
+            IF g_gzal.gzal002 = "standard" THEN 
+               LET l_success = FALSE 
+            END IF 
+         END IF 
+      
+         IF g_source == 'RIGHT' AND g_n > 0 AND l_success THEN
+            CASE g_now_rd_num
+               WHEN 1
+                  LET l_detail = "s_azzp660_03_right_detail1"
+               WHEN 2
+                  LET l_detail = "s_azzp660_03_right_detail2"
+               WHEN 3
+                  LET l_detail = "s_azzp660_03_right_detail3"
+               WHEN 4
+                  LET l_detail = "s_azzp660_03_right_detail4"
+               WHEN 5
+                  LET l_detail = "s_azzp660_03_right_detail5"
+               WHEN 6
+                  LET l_detail = "s_azzp660_03_right_detail6"
+               WHEN 7
+                  LET l_detail = "s_azzp660_03_right_detail7"
+               WHEN 8
+                  LET l_detail = "s_azzp660_03_right_detail8"
+               WHEN 9
+                  LET l_detail = "s_azzp660_03_right_detail9"
+               WHEN 10
+                  LET l_detail = "s_azzp660_03_right_detail10"
+            END CASE 
+            
+            FOR li_idx = 1 TO g_rd_array[g_now_rd_num].rd.getLength()
+               IF DIALOG.isRowSelected(l_detail,li_idx) THEN
+                  #更新匯出的狀態 
+                  UPDATE gzan_t SET gzan005 = 'N',
+                                    gzan006 = '',
+                                    gzan007 = ''
+                   WHERE gzan001 = g_gzal.gzal001
+                     AND gzan002 = g_gzal.gzal002
+                     AND gzan004 = g_rd_array[g_now_rd_num].rd[li_idx].gzan004
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = ''
+                     LET g_errparam.code   = SQLCA.sqlcode
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+                  END IF
+               END IF
+            END FOR
+            CALL azzp660_03_right_b_fill()
+            CALL azzp660_03_field_b_fill()
+         END IF
+   END DISPLAY
+END DIALOG
+
+################################################################################
+# Descriptions...: 顯示sheet1
+# Memo...........:
+# Usage..........: CALLazzp660_03_display03()
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+DIALOG azzp660_03_display03()
+   DEFINE li_idx     LIKE type_t.num5
+   DEFINE l_gzan007  LIKE gzan_t.gzan007
+   DEFINE l_success  LIKE type_t.num5 
+   
+   DISPLAY ARRAY g_rd_array[1].rd TO s_azzp660_03_right_detail1.*
+           ATTRIBUTE(COUNT = g_rd_array[1].rd.getLength())
+
+      BEFORE DISPLAY
+
+      BEFORE ROW
+         LET g_fieldsel_idx = DIALOG.getCurrentRow("s_azzp660_03_right_detail1") 
+         
+      ON DRAG_START(g_dnd)
+         LET g_source = "RIGHT"
+         LET g_n = ARR_CURR()
+
+      ON DRAG_OVER(g_dnd)
+         IF g_source == "RIGHT" THEN
+            CALL g_dnd.setOperation(NULL)
+         ELSE
+            CALL g_dnd.setOPeration("move")
+            CALL g_dnd.setFeedback("insert")
+         END IF
+
+      ON DROP(g_dnd) 
+         LET l_success = TRUE 
+         IF FGL_GETENV("DGENV") = 's' THEN 
+            IF g_gzal.gzal002 != "standard" THEN 
+               LET l_success = FALSE 
+            END IF 
+         ELSE 
+            IF g_gzal.gzal002 = "standard" then 
+               LET l_success = FALSE 
+            END IF 
+         END IF 
+      
+         IF g_source == "LEFT" AND g_n > 0 AND l_success THEN
+            SELECT MAX(gzan007) INTO l_gzan007
+              FROM gzan_t
+             WHERE gzan001 = g_gzal.gzal001
+               AND gzan002 = g_gzal.gzal002
+               AND gzan006 = g_now_rd_num
+            IF cl_null(l_gzan007) THEN
+               LET l_gzan007 = 0
+            END IF
+
+            FOR li_idx = 1 TO g_dzeb.getLength()
+               IF DIALOG.isRowSelected("s_field_detail1",li_idx) THEN
+                  LET l_gzan007 = l_gzan007 + 1
+
+                  UPDATE gzan_t SET gzan005 = 'Y',
+                                    gzan006 = g_now_rd_num,
+                                    gzan007 = l_gzan007
+                   WHERE gzan001 = g_gzal.gzal001
+                     AND gzan002 = g_gzal.gzal002
+                     AND gzan004 = g_dzeb[li_idx].dzeb002
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = 'upd gzan_t'
+                     LET g_errparam.code   = SQLCA.sqlcode
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+
+                     EXIT FOR
+                  END IF
+               END IF
+            END FOR 
+            
+            CALL azzp660_03_right_b_fill()
+            CALL azzp660_03_field_b_fill()
+         END IF
+   END DISPLAY
+END DIALOG
+
+################################################################################
+# Descriptions...: 顯示sheet2
+# Memo...........:
+# Usage..........: CALL azzp660_03_display04()
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+DIALOG azzp660_03_display04()
+   DEFINE l_gzan007     LIKE gzan_t.gzan007
+   DEFINE li_idx        LIKE type_t.num5 
+   DEFINE l_success     LIKE type_t.num5 
+   
+   DISPLAY ARRAY g_rd_array[2].rd TO s_azzp660_03_right_detail2.*
+           ATTRIBUTE(COUNT = g_rd_array[2].rd.getLength())
+      BEFORE DISPLAY
+
+      BEFORE ROW 
+         LET g_fieldsel_idx = DIALOG.getCurrentRow("s_azzp660_03_right_detail2")
+      
+      ON DRAG_START(g_dnd)
+         LET g_source = "RIGHT"
+         LET g_n      = ARR_CURR()
+
+      ON DRAG_OVER(g_dnd)
+         IF g_source == "RIGHT" THEN
+            CALL g_dnd.setOperation(NULL)
+         ELSE
+            CALL g_dnd.setOperation("move")
+            CALL g_dnd.setFeedback("insert")
+         END IF
+
+      ON DROP(g_dnd) 
+         LET l_success = TRUE 
+         IF FGL_GETENV("DGENV") = 's' THEN 
+            IF g_gzal.gzal002 != "standard" THEN 
+               LET l_success = FALSE 
+            END IF 
+         ELSE 
+            IF g_gzal.gzal002 = "standard" THEN 
+               LET l_success = FALSE 
+            END IF 
+         END IF 
+      
+         IF g_source == "LEFT" AND g_n > 0 AND l_success THEN
+            SELECT MAX(gzan007) INTO l_gzan007
+              FROM gzan_t
+             WHERE gzan001 = g_gzal.gzal001
+               AND gzan002 = g_gzal.gzal002
+               AND gzan006 = g_now_rd_num
+            IF cl_null(l_gzan007) THEN
+               LET l_gzan007 = 0
+            END IF
+
+            FOR li_idx = 1 TO g_dzeb.getLength()
+               IF DIALOG.isRowSelected("s_field_detail1",li_idx) THEN
+                  LET l_gzan007 = l_gzan007 + 1
+
+                  UPDATE gzan_t SET gzan005 = 'Y',
+                                    gzan006 = g_now_rd_num,
+                                    gzan007 = l_gzan007
+                   WHERE gzan001 = g_gzal.gzal001
+                     AND gzan002 = g_gzal.gzal002
+                     AND gzan004 = g_dzeb[li_idx].dzeb002
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = 'upd gzan_t'
+                     LET g_errparam.code   = SQLCA.sqlcode
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+
+                     EXIT FOR
+                  END IF
+               END IF
+            END FOR
+
+            CALL azzp660_03_right_b_fill()
+            CALL azzp660_03_field_b_fill()
+         END IF
+   END DISPLAY
+END DIALOG
+
+################################################################################
+# Descriptions...: 顯示sheet3
+# Memo...........:
+# Usage..........: CALL azzp660_03_display05()
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+DIALOG azzp660_03_display05()
+   DEFINE l_gzan007     LIKE gzan_t.gzan007
+   DEFINE li_idx        LIKE type_t.num5 
+   DEFINE l_success     LIKE type_t.num5 
+   
+   DISPLAY ARRAY g_rd_array[3].rd TO s_azzp660_03_right_detail3.*
+           ATTRIBUTE(COUNT = g_rd_array[3].rd.getLength())
+      BEFORE DISPLAY
+
+      BEFORE ROW 
+         LET g_fieldsel_idx = DIALOG.getCurrentRow("s_azzp660_03_right_detail3")  
+         
+      ON DRAG_START(g_dnd)
+         LET g_source = "RIGHT"
+         LET g_n = ARR_CURR()
+
+      ON DRAG_OVER(g_dnd)
+         IF g_source == "RIGHT" THEN
+            CALL g_dnd.setOperation(NULL)
+         ELSE
+            CALL g_dnd.setOperation("move")
+            CALL g_dnd.setFeedback("insert")
+         END IF
+
+      ON DROP(g_dnd) 
+         LET l_success = TRUE 
+         IF FGL_GETENV("DGENV") = "s" THEN 
+            IF g_gzal.gzal002 != "standard" THEN 
+               LET l_success = FALSE 
+            END IF 
+         ELSE 
+            IF g_gzal.gzal002 = "standard" THEN 
+               LET l_success = FALSE 
+            END IF 
+         END IF 
+         
+         IF g_source == "LEFT" AND g_n > 0 AND l_success THEN
+            SELECT MAX(gzan007) INTO l_gzan007
+              FROM gzan_t
+             WHERE gzan001 = g_gzal.gzal001
+               AND gzan002 = g_gzal.gzal002
+               AND gzan006 = g_now_rd_num
+            IF cl_null(l_gzan007) THEN
+               LET l_gzan007 = 0
+            END IF
+
+            FOR li_idx = 1 TO g_dzeb.getLength()
+               IF DIALOG.isRowSelected("s_field_detail1",li_idx) THEN
+                  LET l_gzan007 = l_gzan007 + 1
+
+                  UPDATE gzan_t SET gzan005 = 'Y',
+                                    gzan006 = g_now_rd_num, 
+                                    gzan007 = l_gzan007
+                   WHERE gzan001 = g_gzal.gzal001
+                     AND gzan002 = g_gzal.gzal002
+                     AND gzan004 = g_dzeb[li_idx].dzeb002
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = 'upd gzan_t'
+                     LET g_errparam.code   = SQLCA.sqlcode
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+
+                     EXIT FOR
+                  END IF
+               END IF
+            END FOR
+
+            CALL azzp660_03_right_b_fill()
+            CALL azzp660_03_field_b_fill()
+         END IF
+   END DISPLAY
+END DIALOG
+
+################################################################################
+# Descriptions...: 顯示sheet4
+# Memo...........:
+# Usage..........: CALL azzp660_03_display06()
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+DIALOG azzp660_03_display06()
+   DEFINE l_gzan007     LIKE gzan_t.gzan007
+   DEFINE li_idx        LIKE type_t.num5 
+   DEFINE l_success     LIKE type_t.num5    
+   
+   DISPLAY ARRAY g_rd_array[4].rd TO s_azzp660_03_right_detail4.*
+           ATTRIBUTE(COUNT = g_rd_array[4].rd.getLength())
+      BEFORE DISPLAY
+
+      BEFORE ROW 
+         LET g_fieldsel_idx = DIALOG.getCurrentRow("s_azzp660_03_right_detail4") 
+         
+      ON DRAG_START(g_dnd)
+         LET g_source = "RIGHT"
+         LET g_n = ARR_CURR()
+
+      ON DRAG_OVER(g_dnd)
+         IF g_source == "RIGHT" THEN
+            CALL g_dnd.setOperation(NULL)
+         ELSE
+            CALL g_dnd.setOperation("move")
+            CALL g_dnd.setFeedback("insert")
+         END IF
+
+      ON DROP(g_dnd) 
+         LET l_success = TRUE 
+         IF FGL_GETENV("DGENV") = 's' THEN 
+            IF g_gzal.gzal002 != "standard" THEN 
+               LET l_success = FALSE 
+            END IF 
+         ELSE 
+            IF g_gzal.gzal002 = "standard" THEN 
+               LET l_success = FALSE 
+            END IF 
+         END IF 
+      
+         IF g_source == "LEFT" AND g_n > 0 AND l_success THEN
+            SELECT MAX(gzan007) INTO l_gzan007
+              FROM gzan_t
+             WHERE gzan001 = g_gzal.gzal001
+               AND gzan002 = g_gzal.gzal002
+               AND gzan006 = g_now_rd_num
+            IF cl_null(l_gzan007) THEN
+               LET l_gzan007 = 0
+            END IF
+
+            FOR li_idx = 1 TO g_dzeb.getLength()
+               IF DIALOG.isRowSelected("s_field_detail1",li_idx) THEN
+                  LET l_gzan007 = l_gzan007 + 1
+
+                  UPDATE gzan_t SET gzan005 = 'Y',
+                                    gzan006 = g_now_rd_num, 
+                                    gzan007 = l_gzan007
+                   WHERE gzan001 = g_gzal.gzal001
+                     AND gzan002 = g_gzal.gzal002
+                     AND gzan004 = g_dzeb[li_idx].dzeb002
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = 'upd gzan_t'
+                     LET g_errparam.code   = SQLCA.sqlcode
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+
+                     EXIT FOR
+                  END IF
+               END IF
+            END FOR
+
+            CALL azzp660_03_right_b_fill()
+            CALL azzp660_03_field_b_fill()
+         END IF
+   END DISPLAY
+END DIALOG
+
+################################################################################
+# Descriptions...: 顯示sheet5
+# Memo...........:
+# Usage..........: CALL azzp660_03_display07()
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+DIALOG azzp660_03_display07()
+   DEFINE l_gzan007     LIKE gzan_t.gzan007
+   DEFINE li_idx        LIKE type_t.num5 
+   DEFINE l_success     LIKE type_t.num5 
+   
+   DISPLAY ARRAY g_rd_array[5].rd TO s_azzp660_03_right_detail5.*
+           ATTRIBUTE(COUNT = g_rd_array[5].rd.getLength())
+      BEFORE DISPLAY
+
+      BEFORE ROW 
+         LET g_fieldsel_idx = DIALOG.getCurrentRow("s_azzp660_03_right_detail5") 
+         
+      ON DRAG_START(g_dnd)
+         LET g_source = "RIGHT"
+         LET g_n = ARR_CURR()
+
+      ON DRAG_OVER(g_dnd)
+         IF g_source == "RIGHT" THEN
+            CALL g_dnd.setOperation(NULL)
+         ELSE
+            CALL g_dnd.setOPeration("move")
+            CALL g_dnd.setFeedback("insert")
+         END IF
+
+      ON DROP(g_dnd) 
+         LET l_success= TRUE 
+         IF FGL_GETENV("DGENV") = 's' THEN 
+            IF g_gzal.gzal002 != "standard" THEN 
+               LET l_success = FALSE 
+            END IF 
+         ELSE 
+            IF g_gzal.gzal002 = "standard" THEN 
+               LET l_success = FALSE 
+            END IF 
+         END IF 
+      
+         IF g_source == "LEFT" AND g_n > 0 AND l_success THEN
+            SELECT MAX(gzan007) INTO l_gzan007
+              FROM gzan_t
+             WHERE gzan001 = g_gzal.gzal001
+               AND gzan002 = g_gzal.gzal002
+               AND gzan006 = g_now_rd_num
+            IF cl_null(l_gzan007) THEN
+               LET l_gzan007 = 0
+            END IF
+
+            FOR li_idx = 1 TO g_dzeb.getLength()
+               IF DIALOG.isRowSelected("s_field_detail1",li_idx) THEN
+                  LET l_gzan007 = l_gzan007 + 1
+
+                  UPDATE gzan_t SET gzan005 = 'Y',
+                                    gzan006 = g_now_rd_num, 
+                                    gzan007 = l_gzan007
+                   WHERE gzan001 = g_gzal.gzal001
+                     AND gzan002 = g_gzal.gzal002
+                     AND gzan004 = g_dzeb[li_idx].dzeb002
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = 'upd gzan_t'
+                     LET g_errparam.code   = SQLCA.sqlcode
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+
+                     EXIT FOR
+                  END IF
+               END IF
+            END FOR
+
+            CALL azzp660_03_right_b_fill()
+            CALL azzp660_03_field_b_fill()
+         END IF
+   END DISPLAY
+END DIALOG
+
+################################################################################
+# Descriptions...: 顯示sheet6
+# Memo...........:
+# Usage..........: CALL azzp660_03_display08()
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+DIALOG azzp660_03_display08()
+   DEFINE l_gzan007     LIKE gzan_t.gzan007
+   DEFINE li_idx        LIKE type_t.num5 
+   DEFINE l_success     LIKE type_t.num5 
+   
+   DISPLAY ARRAY g_rd_array[6].rd TO s_azzp660_03_right_detail6.*
+           ATTRIBUTE(COUNT = g_rd_array[6].rd.getLength())
+      BEFORE DISPLAY
+
+      BEFORE ROW 
+         LET g_fieldsel_idx = DIALOG.getCurrentRow("s_azzp660_03_right_detail6") 
+         
+      ON DRAG_START(g_dnd)
+         LET g_source = "RIGHT"
+         LET g_n = ARR_CURR()
+
+      ON DRAG_OVER(g_dnd)
+         IF g_source == "RIGHT" THEN
+            CALL g_dnd.setOperation(NULL)
+         ELSE
+            CALL g_dnd.setOperation("move")
+            CALL g_dnd.setFeedback("insert")
+         END IF
+
+      ON DROP(g_dnd)
+         LET l_success = TRUE 
+         IF FGL_GETENV("DGENV") = 's' THEN 
+            IF g_gzal.gzal002 != "standard" THEN 
+               LET l_success = FALSE 
+            END IF 
+         ELSE 
+            IF g_gzal.gzal002 = "standard" THEN 
+               LET l_success = FALSE 
+            END IF 
+         END IF 
+         
+         IF g_source == "LEFT" AND g_n > 0 AND l_success THEN
+            SELECT MAX(gzn007) INTO l_gzan007
+              FROM gzan_t
+             WHERE gzan001 = g_gzal.gzal001
+               AND gzan002 = g_gzal.gzal002
+               AND gzan006 = g_now_rd_num
+            IF cl_null(l_gzan007) THEN
+               LET l_gzan007 = 0
+            END IF
+
+            FOR li_idx = 1 TO g_dzeb.getLength()
+               IF DIALOG.isRowSelected("s_field_detail1",li_idx) THEN
+                  LET l_gzan007 = l_gzan007 + 1
+
+                  UPDATE gzan_t SET gzan005 = 'Y',
+                                    gzan006 = g_now_rd_num, 
+                                    gzan007 = l_gzan007
+                   WHERE gzan001 = g_gzal.gzal001
+                     AND gzan002 = g_gzal.gzal002
+                     AND gzan004 = g_dzeb[li_idx].dzeb002
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = 'upd gzan_t'
+                     LET g_errparam.code   = SQLCA.sqlcode
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+
+                     EXIT FOR
+                  END IF
+               END IF
+            END FOR
+
+            CALL azzp660_03_right_b_fill()
+            CALL azzp660_03_field_b_fill()
+         END IF 
+   END DISPLAY
+END DIALOG
+
+################################################################################
+# Descriptions...: 顯示sheet7
+# Memo...........:
+# Usage..........: CALL azzp660_03_display09()
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+DIALOG azzp660_03_display09()
+   DEFINE l_gzan007     LIKE gzan_t.gzan007
+   DEFINE li_idx        LIKE type_t.num5 
+   DEFINE l_success     LIKE type_t.num5 
+   
+   DISPLAY ARRAY g_rd_array[7].rd TO s_azzp660_03_right_detail7.*
+           ATTRIBUTE(COUNT = g_rd_array[7].rd.getLength())
+      BEFORE DISPLAY
+
+      BEFORE ROW 
+         LET g_fieldsel_idx = DIALOG.getCurrentRow("s_azzp660_03_right_detail7")  
+         
+      ON DRAG_START(g_dnd)
+         LET g_source = "RIGHT"
+         LET g_n = ARR_CURR()
+
+      ON DRAG_OVER(g_dnd)
+         IF g_source == "RIGHT" THEN
+            CALL g_dnd.setOperation(NULL)
+         ELSE
+            CALL g_dnd.setOperation("move")
+            CALL g_dnd.setFeedback("insert")
+         END IF
+
+      ON DROP(g_dnd) 
+         LET l_success = TRUE 
+         IF FGL_GETENV("DGENV") = 's' THEN 
+            IF g_gzal.gzal002 != "standard" THEN 
+               LET l_success = FALSE 
+            END IF 
+         ELSE 
+            IF g_gzal.gzal002 = "standard" THEN 
+               LET l_success = FALSE 
+            END IF 
+         END IF  
+      
+         IF g_source == "LEFT" AND g_n > 0 AND l_success THEN
+            SELECT MAX(gzan007) INTO l_gzan007
+              FROM gzan_t
+             WHERE gzan001 = g_gzal.gzal001
+               AND gzan002 = g_gzal.gzal002
+               AND gzan006 = g_now_rd_num
+            IF cl_null(l_gzan007) THEN
+               LET l_gzan007 = 0
+            END IF
+
+            FOR li_idx = 1 TO g_dzeb.getLength()
+               IF DIALOG.isRowSelected("s_field_detail1",li_idx) THEN
+                  LET l_gzan007 = l_gzan007 + 1
+
+                  UPDATE gzan_t SET gzan005 = 'Y',
+                                    gzan006 = g_now_rd_num, 
+                                    gzan007 = l_gzan007
+                   WHERE gzan001 = g_gzal.gzal001
+                     AND gzan002 = g_gzal.gzal002
+                     AND gzan004 = g_dzeb[li_idx].dzeb002
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = 'upd gzan_t'
+                     LET g_errparam.code   = SQLCA.sqlcode
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+
+                     EXIT FOR
+                  END IF
+               END IF
+            END FOR
+
+            CALL azzp660_03_right_b_fill()
+            CALL azzp660_03_field_b_fill()
+         END IF 
+   END DISPLAY
+END DIALOG
+
+################################################################################
+# Descriptions...: 顯示sheet8
+# Memo...........:
+# Usage..........: CALL azzp660_03_display10()
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+DIALOG azzp660_03_display10()
+   DEFINE l_gzan007     LIKE gzan_t.gzan007
+   DEFINE li_idx        LIKE type_t.num5 
+   DEFINE l_success     LIKE type_t.num5 
+   
+   DISPLAY ARRAY g_rd_array[8].rd TO s_azzp660_03_right_detail8.*
+           ATTRIBUTE(COUNT = g_rd_array[8].rd.getLength())
+      BEFORE DISPLAY
+
+      BEFORE ROW 
+         LET g_fieldsel_idx = DIALOG.getCurrentRow("s_azzp660_03_right_detail8") 
+         
+      ON DRAG_START(g_dnd)
+         LET g_source = "RIGHT"
+         LET g_n      = ARR_CURR()
+
+      ON DRAG_OVER(g_dnd)
+         IF g_source == "RIGHT" THEN
+            CALL g_dnd.setOperation(NULL)
+         ELSE
+            CALL g_dnd.setOperation("move")
+            CALL g_dnd.setFeedback("insert")
+         END IF
+
+      ON DROP(g_dnd) 
+         LET l_success = TRUE 
+         IF FGL_GETENV("DGENV") = "s" THEN 
+            IF g_gzal.gzal002 != "standard" THEN 
+               LET l_success = FALSE 
+            END IF 
+         ELSE 
+            IF g_gzal.gzal002 = "standard" THEN 
+               LET l_success = FALSE 
+            END IF 
+         END IF 
+         
+         IF g_source == "LEFT" AND g_n > 0 AND l_success THEN
+            SELECT MAX(gzan007) INTO l_gzan007
+              FROM gzan_t
+             WHERE gzan001 = g_gzal.gzal001
+               AND gzan002 = g_gzal.gzal002
+               AND gzan006 = g_now_rd_num
+            IF cl_null(l_gzan007) THEN
+               LET l_gzan007 = 0
+            END IF
+
+            FOR li_idx = 1 TO g_dzeb.getLength()
+               IF DIALOG.isRowSelected("s_field_detail1",li_idx) THEN
+                  LET l_gzan007 = l_gzan007 + 1
+
+                  UPDATE gzan_t SET gzan005 = 'Y',
+                                    gzan006 = g_now_rd_num, 
+                                    gzan007 = l_gzan007
+                   WHERE gzan001 = g_gzal.gzal001
+                     AND gzan002 = g_gzal.gzal002
+                     AND gzan004 = g_dzeb[li_idx].dzeb002
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = 'upd gzan_t'
+                     LET g_errparam.code   = SQLCA.sqlcode
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+
+                     EXIT FOR
+                  END IF
+               END IF
+            END FOR
+
+            CALL azzp660_03_right_b_fill()
+            CALL azzp660_03_field_b_fill()
+         END IF
+   END DISPLAY
+END DIALOG
+
+################################################################################
+# Descriptions...: 顯示sheet9
+# Memo...........:
+# Usage..........: CALL azzp660_03_display11()
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+DIALOG azzp660_03_display11()
+   DEFINE l_gzan007     LIKE gzan_t.gzan007
+   DEFINE li_idx        LIKE type_t.num5 
+   DEFINE l_success     LIKE type_t.num5 
+   
+   DISPLAY ARRAY g_rd_array[9].rd TO s_azzp660_03_right_detail9.*
+           ATTRIBUTE(COUNT = g_rd_array[9].rd.getLength())
+      BEFORE DISPLAY
+
+      BEFORE ROW 
+         LET g_fieldsel_idx = DIALOG.getCurrentRow("s_azzp660_03_right_detail9") 
+         
+      ON DRAG_START(g_dnd)
+         LET g_source = "RIGHT"
+         LET g_n = ARR_CURR()
+
+      ON DRAG_OVER(g_dnd)
+         IF g_source == "RIGHT" THEN
+            CALL g_dnd.setOperation(NULL)
+         ELSE
+            CALL g_dnd.setOperation("move")
+            CALL g_dnd.setFeedback("insert")
+         END IF
+
+      ON DROP(g_dnd) 
+         LET l_success = TRUE 
+         IF FGL_GETENV("DGENV") = 's' THEN 
+            IF g_gzal.gzal002 != "standard" THEN 
+               LET l_success = FALSE 
+            END IF 
+         ELSE 
+            IF g_gzal.gzal002 = "standard" THEN 
+               LET l_success = FALSE 
+            END IF 
+         END IF 
+         
+         IF g_source == "LEFT" AND g_n > 0 AND l_success THEN
+            SELECT MAX(gzan007) INTO l_gzan007
+              FROM gzan_t
+             WHERE gzan001 = g_gzal.gzal001
+               AND gzan002 = g_gzal.gzal002
+               AND gzan006 = g_now_rd_num
+            IF cl_null(l_gzan007) THEN
+               LET l_gzan007 = 0
+            END IF
+
+            FOR li_idx = 1 TO g_dzeb.getLength()
+               IF DIALOG.isRowSelected("s_field_detail1",li_idx) THEN
+                  LET l_gzan007 = l_gzan007 + 1
+
+                  UPDATE gzan_t SET gzan005 = 'Y',
+                                    gzan006 = g_now_rd_num, 
+                                    gzan007 = l_gzan007
+                   WHERE gzan001 = g_gzal.gzal001
+                     AND gzan002 = g_gzal.gzal002
+                     AND gzan004 = g_dzeb[li_idx].dzeb002
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = 'upd gzan_t'
+                     LET g_errparam.code   = SQLCA.sqlcode
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+
+                     EXIT FOR
+                  END IF
+               END IF
+            END FOR
+
+            CALL azzp660_03_right_b_fill()
+            CALL azzp660_03_field_b_fill()
+         END IF
+   END DISPLAY
+END DIALOG
+
+################################################################################
+# Descriptions...: 顯示sheet10 
+# Memo...........:
+# Usage..........: CALL azzp660_03_display12()
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+DIALOG azzp660_03_display12()
+   DEFINE l_gzan007     LIKE gzan_t.gzan007
+   DEFINE li_idx        LIKE type_t.num5 
+   DEFINE l_success     LIKE type_t.num5 
+   
+   DISPLAY ARRAY g_rd_array[10].rd TO s_azzp660_03_right_detail10.*
+           ATTRIBUTE(COUNT = g_rd_array[10].rd.getLength())
+      BEFORE DISPLAY
+
+      BEFORE ROW 
+         LET g_fieldsel_idx = DIALOG.getCurrentRow("s_azzp660_03_right_detail10") 
+         
+      ON DRAG_START(g_dnd)
+         LET g_source = "RIGHT"
+         LET g_n = ARR_CURR()
+
+      ON DRAG_OVER(g_dnd)
+         IF g_source == "RIGHT" THEN
+            CALL g_dnd.setOperation(NULL)
+         ELSE
+            CALL g_dnd.setOperation("move")
+            CALL g_dnd.setFeedback("insert")
+         END IF
+
+      ON DROP(g_dnd)
+         LET l_success = TRUE 
+         IF FGL_GETENV("DGENV") = 's' THEN 
+            IF g_gzal.gzal002 != "standard" THEN 
+               LET l_success = FALSE 
+            END IF 
+         ELSE 
+            IF g_gzal.gzal002 = "standard" THEN 
+               LET l_success = FALSE 
+            END IF 
+         END IF 
+      
+         IF g_source == "LEFT" AND g_n > 0 AND l_success THEN
+            SELECT MAX(gzan007) INTO l_gzan007
+              FROM gzan_t
+             WHERE gzan001 = g_gzal.gzal001
+               AND gzan002 = g_gzal.gzal002
+               AND gzan006 = g_now_rd_num
+            IF cl_null(l_gzan007) THEN
+               LET l_gzan007 = 0
+            END IF
+
+            FOR li_idx =1 TO g_dzeb.getLength()
+               IF DIALOG.isRowSelected("s_field_detail1",li_idx) THEN
+                  LET l_gzan007 = l_gzan007 + 1
+
+                  UPDATE gzan_t SET gzan005 = 'Y',
+                                    gzan006 = g_now_rd_num, 
+                                    gzan007 = l_gzan007
+                   WHERE gzan001 = g_gzal.gzal001
+                     AND gzan002 = g_gzal.gzal002
+                     AND gzan004 = g_dzeb[li_idx].dzeb002
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = 'upd gzan_t'
+                     LET g_errparam.code   = SQLCA.sqlcode
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+
+                     EXIT FOR
+                  END IF
+               END IF
+            END FOR
+
+            CALL azzp660_03_right_b_fill()
+            CALL azzp660_03_field_b_fill()
+         END IF
+   END DISPLAY
+END DIALOG
+
+ 
+{</section>}
+ 
+{<section id="azzp660_03.other_function" readonly="Y" >}
+
+PUBLIC FUNCTION azzp660_03_init()
+   LET g_sheet_num    = 1
+   LET g_now_rd_num   = 1 
+   LET g_fieldsel_idx = 0 
+   
+   CALL cl_set_combo_scc("p660_03_table_type","256")
+
+   CALL cl_set_comp_visible("page02,page03,page04,page05",FALSE)
+   CALL cl_set_comp_visible("page06,page07,page08,page09,page10",FALSE)
+END FUNCTION
+
+PUBLIC FUNCTION azzp660_03_set_entry(p_cmd)
+   DEFINE p_cmd LIKE type_t.chr1
+
+   CALL cl_set_comp_visible("add_field",TRUE)
+   CALL cl_set_comp_visible("del_field",TRUE)
+   CALL cl_set_comp_visible("up_field",TRUE)
+   CALL cl_set_comp_visible("down_field",TRUE)
+   CALL cl_set_comp_visible("add_sheet",TRUE)
+   CALL cl_set_comp_visible("sub_sheet",TRUE)
+END FUNCTION
+
+PUBLIC FUNCTION azzp660_03_set_no_entry(p_cmd)
+   DEFINE p_cmd LIKE type_t.chr1
+   
+   IF FGL_GETENV("DGENV") = 's' THEN
+      IF g_gzal.gzal002 != "standard" THEN
+         CALL cl_set_comp_visible("add_field",FALSE)
+         CALL cl_set_comp_visible("del_field",FALSE)
+         CALL cl_set_comp_visible("up_field",FALSE)
+         CALL cl_set_comp_visible("down_field",FALSE)
+         CALL cl_set_comp_visible("add_sheet",FALSE)
+         CALL cl_set_comp_visible("sub_sheet",FALSE)
+      END IF
+   ELSE
+      IF g_gzal.gzal002 = "standard" THEN
+         CALL cl_set_comp_visible("add_field",FALSE)
+         CALL cl_set_comp_visible("del_field",FALSE)
+         CALL cl_set_comp_visible("up_field",FALSE)
+         CALL cl_set_comp_visible("down_field",FALSE)
+         CALL cl_set_comp_visible("add_sheet",FALSE)
+         CALL cl_set_comp_visible("sub_sheet",FALSE)
+      END IF
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 抓取Table Tree的資料
+# Memo...........:
+# Usage..........: CALL azzp660_03_table_tree_b_fill()
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzp660_03_table_tree_b_fill()
+   DEFINE l_sql     STRING
+   DEFINE l_gzam    RECORD
+                       gzam001     LIKE gzam_t.gzam001,
+                       gzam002     LIKE gzam_t.gzam002,
+                       gzam003     LIKE gzam_t.gzam003,
+                       gzam004     LIKE gzam_t.gzam004,
+                       gzam005     LIKE gzam_t.gzam005,
+                       gzam006     LIKE gzam_t.gzam006,
+                       gzam007     LIKE gzam_t.gzam007
+                    END RECORD
+   DEFINE l_num     LIKE type_t.num10 
+   DEFINE l_cnt     LIKE type_t.num10 
+   
+   LET l_cnt = 0
+   SELECT COUNT(*) INTO l_cnt
+     FROM gzam_t 
+    WHERE gzam001 = g_gzal.gzal001
+      AND gzam002 = g_gzal.gzal002
+   IF cl_null(l_cnt) OR l_cnt <= 0 THEN
+      RETURN
+   END IF
+
+   CALL g_table_tree.clear()
+
+   LET l_sql = "SELECT gzam001,gzam002,gzam003,gzam004,",
+               "       gzam005,gzam006,gzam007 ",
+               "  FROM gzam_t ", 
+               " WHERE gzam001 = '",g_gzal.gzal001,"' ",
+               "   AND gzam002 = '",g_gzal.gzal002,"' ",
+               "   AND gzam004 IS NULL "
+   PREPARE azzp660_03_table_tree_root_prep FROM l_sql
+   DECLARE azzp660_03_table_tree_root_curs CURSOR FOR azzp660_03_table_tree_root_prep
+
+   LET l_num = 1
+   FOREACH azzp660_03_table_tree_root_curs INTO l_gzam.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'foreach'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      LET g_table_tree[l_num].tableid = l_gzam.gzam003 
+      #取得table的說明
+      CALL azzp660_03_get_table_name(g_table_tree[l_num].tableid)
+           RETURNING g_table_tree[l_num].tablename
+      #取得table的類型 
+      CALL azzp660_03_get_table_type(g_table_tree[l_num].tableid)
+           RETURNING g_table_tree[l_num].table_type
+      LET g_table_tree[l_num].pid = '0'
+      LET g_table_tree[l_num].id  = '0.1'
+      LET g_table_tree[l_num].hasc = FALSE
+      LET g_table_tree[l_num].exp  = FALSE
+      LET g_table_tree[l_num].level = 1
+
+      CALL  azzp660_03_table_tree_hasc(l_gzam.gzam003,l_num)
+
+      #LET l_num = l_num + 1 
+      LET l_num = g_table_tree.getLength() + 1
+
+   END FOREACH
+END FUNCTION
+
+################################################################################
+# Descriptions...: 找Table Tree的子節點
+# Memo...........:
+# Usage..........: CALL azzp660_03_table_tree_hasc(p_tablename,p_num)
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzp660_03_table_tree_hasc(p_tablename,p_num)
+   DEFINE p_tablename     LIKE gzam_t.gzam003
+   DEFINE p_num           LIKE type_t.num10
+   DEFINE l_sql           STRING
+   DEFINE l_cnt           LIKE type_t.num10
+   DEFINE l_num           LIKE type_t.num10
+   DEFINE l_gzam          RECORD
+                             gzam001     LIKE gzam_t.gzam001,
+                             gzam002     LIKE gzam_t.gzam002,
+                             gzam003     LIKE gzam_t.gzam003,
+                             gzam004     LIKE gzam_t.gzam004,
+                             gzam005     LIKE gzam_t.gzam005,
+                             gzam006     LIKE gzam_t.gzam006,
+                             gzam007     LIKE gzam_t.gzam007
+                          END RECORD
+   DEFINE l_pid           STRING
+   DEFINE l_seq           LIKE type_t.num5
+   DEFINE l_temp_tree     DYNAMIC ARRAY OF RECORD
+                             tableid       LIKE dzea_t.dzea001,     #節點名稱：資料表代號 
+                             pid           LIKE type_t.chr100,      #父節點id 
+                             id            LIKE type_t.chr100,      #節點id 
+                             hasc          BOOLEAN,                 #是否有子節點 0:否 1:是 
+                             exp           BOOLEAN,                 #是否展開 0:不展開 1:展開 
+                             level         LIKE type_t.num5,        #階層 
+                             tablename     LIKE dzeal_t.dzeal003    #資料表名稱 
+                          END RECORD
+   DEFINE l_i             LIKE type_t.num10
+
+   IF cl_null(p_tablename) OR cl_null(p_num) THEN
+      RETURN
+   END IF 
+   
+   SELECT COUNT(*) INTO l_cnt
+     FROM gzam_t 
+    WHERE gzam001 = g_gzal.gzal001
+      AND gzam002 = g_gzal.gzal002
+      AND gzam004 = p_tablename
+   IF cl_null(l_cnt) OR l_cnt <= 0 THEN
+      RETURN
+   END IF
+
+   LET l_sql = "SELECT gzam001,gzam002,gzam003,gzam004, ",
+               "       gzam005,gzam006,gzam007 ",
+               "  FROM gzam_t ", 
+               " WHERE gzam001 = '",g_gzal.gzal001,"' ",
+               "   AND gzam002 = '",g_gzal.gzal002,"' ",
+               "   AND gzam004 = '",p_tablename,"' "
+   PREPARE azzp660_03_find_hasc_prep FROM l_sql
+   DECLARE azzp660_03_find_hasc_curs CURSOR FOR azzp660_03_find_hasc_prep
+
+   LET l_num = p_num + 1
+   LET l_pid = g_table_tree[p_num].id
+   LET l_seq = 1
+
+   LET g_table_tree[p_num].hasc = TRUE
+   LET g_table_tree[p_num].exp  = TRUE
+
+   FOREACH azzp660_03_find_hasc_curs INTO l_gzam.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'foreach'
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      LET l_temp_tree[l_seq].tableid = l_gzam.gzam003
+      LET l_temp_tree[l_seq].pid     = l_pid
+      LET l_temp_tree[l_seq].id      = l_pid CLIPPED || "." || l_seq CLIPPED
+      LET l_temp_tree[l_seq].hasc    = FALSE
+      LET l_temp_tree[l_seq].exp     = FALSE
+      LET l_temp_tree[l_seq].level   = g_table_tree[p_num].level + 1
+
+      LET l_seq = l_seq + 1
+
+   END FOREACH
+
+   FOR l_i = 1 TO l_temp_tree.getLength()
+      LET g_table_tree[l_num].tableid = l_temp_tree[l_i].tableid 
+      #取得table的說明
+      CALL azzp660_03_get_table_name(g_table_tree[l_num].tableid)
+           RETURNING g_table_tree[l_num].tablename
+      #取得table的類型 
+      CALL azzp660_03_get_table_type(g_table_tree[l_num].tableid)
+           RETURNING g_table_tree[l_num].table_type
+      LET g_table_tree[l_num].pid     = l_temp_tree[l_i].pid
+      LET g_table_tree[l_num].id      = l_temp_tree[l_i].id
+      LET g_table_tree[l_num].hasc    = l_temp_tree[l_i].hasc
+      LET g_table_tree[l_num].exp     = l_temp_tree[l_i].exp
+      LET g_table_tree[l_num].level   = l_temp_tree[l_i].level
+
+      CALL azzp660_03_table_tree_hasc(g_table_tree[l_num].tableid,l_num)
+
+      LET l_num = g_table_tree.getLength() + 1
+   END FOR
+         
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取得Table的欄位 
+# Memo...........:
+# Usage..........: CALL azzp660_03_field_b_fill()
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzp660_03_field_b_fill()
+   DEFINE l_sql     STRING
+   DEFINE l_i       LIKE type_t.num10
+
+   CALL g_dzeb.clear()
+
+   #160620-00026#1 20160628 modify -----(S) 
+   #LET l_sql = "SELECT dzeb002,dzeb003 ", 
+   LET l_sql = "SELECT dzeb002,(SELECT dzebl003 FROM dzebl_t ", 
+               "                 WHERE dzebl001 = dzeb002 ",
+               "                   AND dzebl002 = '",g_dlang,"') ", 
+   #160620-00026#1 20160628 modify -----(E) 
+               "  FROM dzeb_t ",
+               " WHERE dzeb001 = '",g_table_tree[g_table_tree_idx].tableid,"' ", 
+               "   AND NOT EXISTS(SELECT 1 FROM gzan_t ",
+               "                   WHERE gzan001 = '",g_gzal.gzal001,"' ",
+               "                     AND gzan002 = '",g_gzal.gzal002,"' ",
+               "                     AND gzan004 = dzeb002 ", 
+               "                     AND gzan005 = 'Y' ) ",
+               " ORDER BY dzeb021 "
+   PREPARE azzp660_03_field_prep FROM l_sql
+   DECLARE azzp660_03_field_curs CURSOR FOR azzp660_03_field_prep
+
+   LET l_i = 1
+   FOREACH azzp660_03_field_curs INTO g_dzeb[l_i].dzeb002,g_dzeb[l_i].dzeb002_desc 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'foreach'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF 
+      
+      LET l_i = l_i + 1
+   END FOREACH 
+   
+   CALL g_dzeb.deleteElement(l_i) 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 顯示sheet
+# Memo...........:
+# Usage..........: CALL azzp660_03_add_sheet()
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzp660_03_add_sheet()
+
+   #160829-00003#15-s
+   #取得目前最大的頁數 
+   SELECT MAX(gzan006) INTO g_sheet_num 
+     FROM gzan_t
+    WHERE gzan001 = g_gzal.gzal001 
+      AND gzan002 = g_gzal.gzal002  
+      AND gzan005 = 'Y'
+   #160829-00003#15-e
+
+   IF g_sheet_num >= 10 THEN
+      RETURN
+   END IF
+
+   LET g_sheet_num = g_sheet_num + 1
+
+   IF g_sheet_num = 1  THEN CALL cl_set_comp_visible("page01",TRUE) END IF
+   IF g_sheet_num = 2  THEN CALL cl_set_comp_visible("page02",TRUE) END IF
+   IF g_sheet_num = 3  THEN CALL cl_set_comp_visible("page03",TRUE) END IF
+   IF g_sheet_num = 4  THEN CALL cl_set_comp_visible("page04",TRUE) END IF
+   IF g_sheet_num = 5  THEN CALL cl_set_comp_visible("page05",TRUE) END IF
+   IF g_sheet_num = 6  THEN CALL cl_set_comp_visible("page06",TRUE) END IF
+   IF g_sheet_num = 7  THEN CALL cl_set_comp_visible("page07",TRUE) END IF
+   IF g_sheet_num = 8  THEN CALL cl_set_comp_visible("page08",TRUE) END IF
+   IF g_sheet_num = 9  THEN CALL cl_set_comp_visible("page09",TRUE) END IF
+   IF g_sheet_num = 10 THEN CALL cl_set_comp_visible("page10",TRUE) END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 減少sheet
+# Memo...........:
+# Usage..........: CALL azzp660_03_sub_sheet()
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzp660_03_sub_sheet()
+
+   #160829-00003#15-s
+   #取得目前最大的頁數 
+   SELECT MAX(gzan006) INTO g_sheet_num 
+     FROM gzan_t
+    WHERE gzan001 = g_gzal.gzal001 
+      AND gzan002 = g_gzal.gzal002  
+      AND gzan005 = 'Y'
+   #160829-00003#15-e
+
+   IF g_sheet_num <= 1 THEN
+      RETURN
+   END IF
+
+   IF g_sheet_num = 1  THEN CALL cl_set_comp_visible("page01",FALSE) END IF
+   IF g_sheet_num = 2  THEN CALL cl_set_comp_visible("page02",FALSE) END IF
+   IF g_sheet_num = 3  THEN CALL cl_set_comp_visible("page03",FALSE) END IF
+   IF g_sheet_num = 4  THEN CALL cl_set_comp_visible("page04",FALSE) END IF
+   IF g_sheet_num = 5  THEN CALL cl_set_comp_visible("page05",FALSE) END IF
+   IF g_sheet_num = 6  THEN CALL cl_set_comp_visible("page06",FALSE) END IF
+   IF g_sheet_num = 7  THEN CALL cl_set_comp_visible("page07",FALSE) END IF
+   IF g_sheet_num = 8  THEN CALL cl_set_comp_visible("page08",FALSE) END IF
+   IF g_sheet_num = 9  THEN CALL cl_set_comp_visible("page09",FALSE) END IF
+   IF g_sheet_num = 10 THEN CALL cl_set_comp_visible("page10",FALSE) END IF
+
+   LET g_sheet_num = g_sheet_num - 1
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取得Table名稱
+# Memo...........:
+# Usage..........: CALL azzp660_03_get_table_name(p_dzea001)
+#                  RETURNING r_dzeal003
+# Input parameter: p_dzea001:Table代號
+# Return code....: r_dzeal003:表格名稱 
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzp660_03_get_table_name(p_dzea001)
+   DEFINE p_dzea001     LIKE dzea_t.dzea001
+   DEFINE r_dzeal003    LIKE dzeal_t.dzeal003
+
+   LET r_dzeal003 = ''
+
+   IF cl_null(p_dzea001) THEN
+      RETURN r_dzeal003
+   END IF
+
+   SELECT dzeal003 INTO r_dzeal003
+     FROM dzeal_t
+    WHERE dzeal001 = p_dzea001
+      AND dzeal002 = g_dlang
+
+   RETURN r_dzeal003
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取得Table的型態
+# Memo...........:
+# Usage..........: CALL azzp660_03_get_table_type(p_dzea001)
+#                  RETURNING r_dzea004 
+# Input parameter: p_dzea001:Table代號
+# Return code....: r_dzea004:表格型態 
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzp660_03_get_table_type(p_dzea001)
+   DEFINE p_dzea001     LIKE dzea_t.dzea001
+   DEFINE r_dzea004     LIKE dzea_t.dzea004
+
+   LET r_dzea004 = ''
+
+   IF cl_null(p_dzea001) THEN
+      RETURN r_dzea004
+   END IF
+
+   SELECT dzea004 INTO r_dzea004
+     FROM dzea_t
+    WHERE dzea001 = p_dzea001
+
+   RETURN r_dzea004
+END FUNCTION
+
+################################################################################
+# Descriptions...: 右方單身的重新顯示
+# Memo...........:
+# Usage..........: CALL azzp660_03_right_b_fill()
+# Date & Author..: 2016/03/31 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp660_03_right_b_fill()
+   DEFINE l_sql     STRING
+   DEFINE l_i       LIKE type_t.num10
+
+   CALL g_rd_array[g_now_rd_num].rd.clear()
+
+   #160620-00026#1 20160628 modify -----(S) 
+   #LET l_sql = "SELECT '',gzan004,(SELECT dzeb003 FROM dzeb_t ",
+   #            "                    WHERE dzeb002 = gzan004), ",
+   #            "       gzan007 ",
+   LET l_sql = "SELECT '',gzan004,(SELECT dzebl003 FROM dzebl_t ",
+               "                    WHERE dzebl001 = gzan004 ", 
+               "                      AND dzebl002 = '",g_dlang,"'), ",
+               "       gzan007 ",               
+   #160620-00026#1 20160628 modify -----(E) 
+               "  FROM gzan_t ",
+               " WHERE gzan001 = '",g_gzal.gzal001,"' ",
+               "   AND gzan002 = '",g_gzal.gzal002,"' ",
+               "   AND gzan005 = 'Y' ",
+               "   AND gzan006 = '",g_now_rd_num,"' ",
+               " ORDER BY gzan007 "
+   PREPARE azzp660_03_right_b_fill_prep FROM l_sql
+   DECLARE azzp660_03_right_b_fill_curs CURSOR FOR azzp660_03_right_b_fill_prep
+
+   LET l_i = 1
+   FOREACH azzp660_03_right_b_fill_curs INTO g_rd_array[g_now_rd_num].rd[l_i].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'foreach'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF 
+      
+      UPDATE gzan_t SET gzan007 = l_i
+       WHERE gzan001 = g_gzal.gzal001
+         AND gzan002 = g_gzal.gzal002
+         AND gzan004 = g_rd_array[g_now_rd_num].rd[l_i].gzan004
+         AND gzan007 = g_rd_array[g_now_rd_num].rd[l_i].gzan007
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'upd gzan_t'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      LET g_rd_array[g_now_rd_num].rd[l_i].gzan007 = l_i
+
+      LET l_i = l_i + 1
+
+   END FOREACH
+
+   CALL g_rd_array[g_now_rd_num].rd.deleteElement(l_i)
+   
+   
+END FUNCTION
+
+ 
+{</section>}
+ 

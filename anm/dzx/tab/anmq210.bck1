@@ -1,0 +1,105 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmq210" module="anm" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="04152" crtdt="2014-07-30 14:37:40" modid="07673" moddt="2016-04-01 16:36:06" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="銀行交易明細查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="nmaa001,nmas003,nmaa002,nmaa003,nmbc005,nmbcorga"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),nmaa001,nmaa002,nmaa002_desc(chr500),nmaa003,nmaa003_desc(chr500),nmas002,nmas002_desc(chr500),nmas003,nmbcorga"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="nmbc005,nmbcdocno,prog_nmbcdocno(string),nmbcseq,nmbc006,nmbc007,l_nmbc007_desc(chr500),nmbc003,l_nmbc003_desc(chr500),nmbc012,nmbc013,l_average(num26_10),nmbc101(chr500),nmbc103,l_nmbc1031(num20_6),nmbc113,l_nmbc1131(num20_6),nmbc011,nmbc010"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),nmaa001(b_nmaa001),nmaa002(b_nmaa002),nmaa002_desc(b_nmaa002_desc),nmaa003(b_nmaa003),nmaa003_desc(b_nmaa003_desc),nmas002(b_nmas002),nmas002_desc(nmas002_desc),nmas003(b_nmas003),nmbcorga(b_nmbcorga)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="nmbc005(b_nmbc005),nmbcdocno(b_nmbcdocno),prog_nmbcdocno(prog_nmbcdocno),nmbcseq(b_nmbcseq),nmbc006(b_nmbc006),nmbc007(b_nmbc007),l_nmbc007_desc(l_nmbc007_desc),nmbc003(b_nmbc003),l_nmbc003_desc(l_nmbc003_desc),nmbc012(b_nmbc012),nmbc013(b_nmbc013),l_average(l_average),nmbc101(nmbc101),nmbc103(b_nmbc103),l_nmbc1031(l_nmbc1031),nmbc113(b_nmbc113),l_nmbc1131(l_nmbc1131),nmbc011(b_nmbc011),nmbc010(b_nmbc010)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+    <section id="detail_show" page="2">
+      <cluster id="prog_nmbcdocno" qry_field="nmbcdocno" prog="anmt310" parameter="nmbcdocno"/>
+      <action id="detail_qrystr" mode="popup">
+        <action id="prog_anmt310" prog="anmt310" parameter="nmbcdocno"/>
+      </action>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmq210" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="nmaa001,nmaa002,nmaa003,nmas002,nmas003,nmbcorga" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="nmbc005,nmbcdocno,nmbcseq,nmbc006,nmbc007,nmbc003,nmbc012,nmbc013,nmbc103,nmbc113,nmbc011,nmbc010" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="nmaa001(b_nmaa001),nmaa002(b_nmaa002),nmaa003(b_nmaa003),nmas002(b_nmas002),nmas003(b_nmas003),nmbcorga(b_nmbcorga)"/>
+      <construct id="body" page="2" field="nmbc005(b_nmbc005),nmbcdocno(b_nmbcdocno),nmbcseq(b_nmbcseq),nmbc006(b_nmbc006),nmbc007(b_nmbc007),nmbc003(b_nmbc003),nmbc012(b_nmbc012),nmbc013(b_nmbc013),nmbc103(b_nmbc103),nmbc113(b_nmbc113),nmbc011(b_nmbc011),nmbc010(b_nmbc010)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="nmaa001">
+        <controlp form="q_nmaa001" state="c"/>
+      </column>
+      <column id="nmaa002">
+        <after>
+          <reference field="nmaa002_desc" ref_field="nmaa002" map_field="nmaaent,nmaa002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooea" state="c"/>
+      </column>
+      <column id="nmaa002_desc"/>
+      <column id="nmaa003">
+        <after>
+          <reference field="nmaa003_desc" ref_field="nmaa003" map_field="nmaaent,nmaa003" ref_sql="SELECT nmagl003 FROM nmagl_t WHERE nmaglent=$varg_enterprise$var AND nmagl001=? AND nmagl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="nmaa003_desc"/>
+      <column id="nmas002">
+        <after/>
+      </column>
+      <column id="nmas002_desc"/>
+      <column id="nmas003">
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="nmbcorga">
+        <controlp form="q_nmbcorga_02" state="i"/>
+        <controlp form="q_nmbcorga_02" state="c"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="nmbc005"/>
+      <column id="nmbcdocno"/>
+      <column id="prog_nmbcdocno"/>
+      <column id="nmbcseq"/>
+      <column id="nmbc006"/>
+      <column id="nmbc007">
+        <after/>
+      </column>
+      <column id="l_nmbc007_desc"/>
+      <column id="nmbc003">
+        <after/>
+      </column>
+      <column id="l_nmbc003_desc"/>
+      <column id="nmbc012"/>
+      <column id="nmbc013"/>
+      <column id="l_average"/>
+      <column id="nmbc101"/>
+      <column id="nmbc103"/>
+      <column id="l_nmbc1031"/>
+      <column id="nmbc113"/>
+      <column id="l_nmbc1131"/>
+      <column id="nmbc011"/>
+      <column id="nmbc010"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="nmaa_t" page="1" linked="" pk="nmaa001">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,nmaa001,nmaa002,&apos;&apos;,nmaa003,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM nmaa_t WHERE nmaaent= ? AND 1=1 "/>
+    </body>
+    <body id="nmbc_t" page="2" linked="" pk="nmbc002" fk="" detail="Y">
+      <sql id="b_fill_sql" query="SELECT nmbc005,nmbcdocno,nmbcseq,nmbc006,nmbc007,&apos;&apos;,nmbc003,&apos;&apos;,nmbc012,nmbc013,&apos;&apos;,&apos;&apos;,nmbc103,&apos;&apos;,nmbc113,&apos;&apos;,nmbc011,nmbc010 FROM nmbc_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

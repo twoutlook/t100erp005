@@ -1,0 +1,3108 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="acri007" std_prog="acri007" erpver="1.0" module="ACR" ver="2" env="s" zone="t10dev" booking="N" type="M" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="function.acri007_create_crcaseq" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+#ceate seq
+PRIVATE FUNCTION acri007_create_crcaseq(p_cmd)
+   DEFINE p_cmd    LIKE type_t.chr1
+   IF p_cmd='u' THEN
+      IF g_crca_d[l_ac].crca001<>g_crca_d_t.crca001 THEN
+         SELECT max(crcaseq)+1 INTO g_crca_d[l_ac].crcaseq
+           FROM crca_t
+          WHERE crca001 = g_crca_d[l_ac].crca001
+            AND crcaent = g_enterprise
+      END IF
+   END IF   
+   IF p_cmd='a' THEN
+      SELECT max(crcaseq)+1 INTO g_crca_d[l_ac].crcaseq
+        FROM crca_t
+       WHERE crca001 = g_crca_d[l_ac].crca001
+         AND crcaent = g_enterprise
+   END IF    
+   IF cl_null(g_crca_d[l_ac].crcaseq) THEN
+      LET g_crca_d[l_ac].crcaseq=1
+   END IF   
+END FUNCTION]]>
+  </point>
+  <point name="function.acri007_null_crca002" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+#null crca002
+PRIVATE FUNCTION acri007_null_crca002()
+   
+   LET g_crca_d[l_ac].name = NULL
+   LET g_crca_d[l_ac].sex = NULL
+   LET g_crca_d[l_ac].age = NULL
+END FUNCTION]]>
+  </point>
+  <point name="function.acri007_crca002_ref" order="3" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+##display crca002
+PRIVATE FUNCTION acri007_crca002_ref()
+   DEFINE l_mmaf015   LIKE mmaf_t.mmaf015
+   
+   SELECT mmaq003 INTO g_crca_d[l_ac].crca003 FROM mmaq_t
+    WHERE mmaqent = g_enterprise AND mmaq001 = g_crca_d[l_ac].crca002
+   
+   DISPLAY g_crca_d[l_ac].crca003 TO s_detail1[l_ac].crca003  
+    
+END FUNCTION]]>
+  </point>
+  <point name="function.acri007_crca003_ref" order="4" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+#disply crca003
+PRIVATE FUNCTION acri007_crca003_ref(p_cmd)
+   DEFINE l_mmag004  LIKE mmag_t.mmag004
+   DEFINE l_mmaf015  LIKE mmaf_t.mmaf015
+   DEFINE l_mmaf016  LIKE mmaf_t.mmaf016
+   DEFINE l_mmaf014  LIKE mmaf_t.mmaf014
+   DEFINE p_cmd      LIKE type_t.chr1
+   
+   SELECT mmaf008,mmaf015,mmaf014 
+     INTO g_crca_d[l_ac].name,l_mmaf015,g_crca_d[l_ac].crca009
+     FROM mmaf_t
+    WHERE mmafent = g_enterprise AND mmaf001 = g_crca_d[l_ac].crca003
+   
+   SELECT mmaf016 
+     INTO l_mmaf016
+     FROM mmaf_t,pmaa_t
+    WHERE mmaf016=pmaa001 AND (pmaa002 ='2' OR pmaa002='3') AND mmafent = g_enterprise AND mmaf001 = g_crca_d[l_ac].crca003   
+   if not cl_null( g_crca_d[l_ac].crca003) AND not cl_null(l_mmaf015) then
+      SELECT round((to_number(sysdate-to_date(l_mmaf015,'yyyy-mm-dd hh24:mi:ss'))/365)) INTO g_crca_d[l_ac].age
+        FROM dual 
+   END IF 
+   SELECT mmag004 INTO l_mmag004 FROM mmag_t
+    WHERE mmagent = g_enterprise
+      AND mmag001 = g_crca_d[l_ac].crca003 AND mmag002= '01'
+      AND mmag003 = '2016'      
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = '2016'
+   LET g_ref_fields[2] = l_mmag004
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001=? AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_crca_d[l_ac].sex = '', g_rtn_fields[1] , ''
+   DISPLAY  g_crca_d[l_ac].name,g_crca_d[l_ac].sex,g_crca_d[l_ac].age,g_crca_d[l_ac].crca009
+        TO s_detail1[l_ac].name,s_detail1[l_ac].sex,s_detail1[l_ac].age,s_detail1[l_ac].crca009
+   IF NOT cl_null(l_mmaf016) THEN
+      LET g_crca_d[l_ac].crca001 = l_mmaf016
+      CALL acri007_crca001_ref()
+      CALL acri007_create_crcaseq(p_cmd)
+      DISPLAY g_crca_d[l_ac].crca001,g_crca_d[l_ac].crcaseq
+           TO s_detail1[l_ac].crca001,s_detail1[l_ac].crcaseq
+   END IF   
+END FUNCTION]]>
+  </point>
+  <point name="function.acri007_check_crca002" order="5" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+#check crca002
+PRIVATE FUNCTION acri007_check_crca002()
+   DEFINE l_cnt   LIKE type_t.num5
+   
+   LET l_cnt = 0
+   LET g_errno = NULL
+   IF NOT cl_null(g_crca_d[l_ac].crca003) AND NOT cl_null(g_crca_d[l_ac].crca002) THEN
+      SELECT count(*) INTO l_cnt FROM mmaq_t
+       WHERE mmaq001 = g_crca_d[l_ac].crca002 AND mmaq003=g_crca_d[l_ac].crca003
+         AND mmaqent = g_enterprise
+      IF l_cnt <= 0 THEN
+         LET g_errno = "acr-00011"
+      END IF      
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.acri007_crca001_ref" order="6" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+#display crca001
+PRIVATE FUNCTION acri007_crca001_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_crca_d[l_ac].crca001
+   CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_crca_d[l_ac].crca001_desc = '', g_rtn_fields[1] , ''
+   DISPLAY g_crca_d[l_ac].crca001_desc to s_detail1[l_ac].crca001_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.acri007_crca003_display" order="7" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+#display
+PRIVATE FUNCTION acri007_crca003_display()
+   DEFINE l_mmag004  LIKE mmag_t.mmag004
+   DEFINE l_mmaf015  LIKE mmaf_t.mmaf015
+   DEFINE l_mmaf016  LIKE mmaf_t.mmaf016
+   DEFINE l_mmaf014  LIKE mmaf_t.mmaf014
+   
+   SELECT mmaf008,mmaf015 
+     INTO g_crca_d[l_ac].name,l_mmaf015
+     FROM mmaf_t
+    WHERE mmafent = g_enterprise AND mmaf001 = g_crca_d[l_ac].crca003
+  
+   if not cl_null( g_crca_d[l_ac].crca003) AND not cl_null(l_mmaf015) then
+      SELECT round((to_number(sysdate-to_date(l_mmaf015,'yyyy-mm-dd hh24:mi:ss'))/365),0) INTO g_crca_d[l_ac].age
+        FROM dual 
+   END IF 
+   SELECT mmag004 INTO l_mmag004 FROM mmag_t
+    WHERE mmagent = g_enterprise
+      AND mmag001 = g_crca_d[l_ac].crca003 AND mmag002= '01'
+      AND mmag003 = '2016'      
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = '2016'
+   LET g_ref_fields[2] = l_mmag004
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001=? AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_crca_d[l_ac].sex = '', g_rtn_fields[1] , ''
+   DISPLAY  g_crca_d[l_ac].name,g_crca_d[l_ac].sex,g_crca_d[l_ac].age
+        TO s_detail1[l_ac].name,s_detail1[l_ac].sex,s_detail1[l_ac].age
+     
+END FUNCTION]]>
+  </point>
+  <point name="construct.c.page1.crca001" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001_6()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO crca001  #顯示到畫面上
+            NEXT FIELD crca001                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1.crca002" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_mmaq001_2()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO crca002  #顯示到畫面上
+            NEXT FIELD crca002                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1.crca003" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_mmaf001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO crca003  #顯示到畫面上
+            NEXT FIELD crca003                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page2.crcacrtdp" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO crcacrtdp  #顯示到畫面上
+            NEXT FIELD crcacrtdp                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page2.crcacrtid" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO crcacrtid  #顯示到畫面上
+            NEXT FIELD crcacrtid                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page2.crcamodid" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO crcamodid  #顯示到畫面上
+            NEXT FIELD crcamodid                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page2.crcaowndp" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO crcaowndp  #顯示到畫面上
+            NEXT FIELD crcaowndp                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page2.crcaownid" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO crcaownid  #顯示到畫面上
+            NEXT FIELD crcaownid                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="detail_show.body2.reference" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_crca2_d[l_ac].crca001
+            CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_crca2_d[l_ac].crca001_2_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_crca2_d[l_ac].crca001_2_desc
+            
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_crca2_d[l_ac].crcaownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_crca2_d[l_ac].crcaownid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_crca2_d[l_ac].crcaownid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_crca2_d[l_ac].crcaowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_crca2_d[l_ac].crcaowndp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_crca2_d[l_ac].crcaowndp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_crca2_d[l_ac].crcacrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_crca2_d[l_ac].crcacrtid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_crca2_d[l_ac].crcacrtid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_crca2_d[l_ac].crcacrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_crca2_d[l_ac].crcacrtdp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_crca2_d[l_ac].crcacrtdp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_crca2_d[l_ac].crcamodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_crca2_d[l_ac].crcamodid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_crca2_d[l_ac].crcamodid_desc
+]]>
+  </point>
+  <point name="detail_show.reference" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL acri007_crca003_display()
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_crca_d[l_ac].crca001
+            CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_crca_d[l_ac].crca001_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_crca_d[l_ac].crca001_desc
+]]>
+  </point>
+  <point name="input.a.page1.crca001" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            LET g_crca_d[l_ac].crca001_desc = NULL
+            DISPLAY g_crca_d[l_ac].crca001_desc TO s_detail1[l_ac].crca001_desc
+            IF NOT cl_null(g_crca_d[l_ac].crca001) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_crca_d[g_detail_idx].crcaseq != g_crca_d_t.crcaseq OR g_crca_d[g_detail_idx].crca001 != g_crca_d_t.crca001 OR g_crca_d_t.crca001 IS null)) THEN 
+                  CALL acri007_create_crcaseq(l_cmd)
+                  DISPLAY g_crca_d[l_ac].crcaseq TO s_detail1[l_ac].crcaseq
+                  IF  g_crca_d[g_detail_idx].crcaseq IS NOT NULL AND g_crca_d[g_detail_idx].crca001 IS NOT NULL THEN 
+                     IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM crca_t WHERE "||"crcaent = '" ||g_enterprise|| "' AND "||"crcaseq = '"||g_crca_d[g_detail_idx].crcaseq ||"' AND "|| "crca001 = '"||g_crca_d[g_detail_idx].crca001 ||"'",'std-00004',0) THEN 
+                        LET g_crca_d[l_ac].crca001 = g_crca_d_t.crca001
+                        LET g_crca_d[l_ac].crcaseq = g_crca_d_t.crcaseq
+                        CALL acri007_crca001_ref()
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+               
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1=g_crca_d[l_ac].crca001
+                   
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_pmaa001_3") THEN
+                  ELSE
+                      #檢查失敗時後續處理
+                     LET g_crca_d[l_ac].crca001 = g_crca_d_t.crca001
+                     LET g_crca_d[l_ac].crcaseq = g_crca_d_t.crcaseq
+                     CALL acri007_crca001_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+            
+               END IF
+               
+            END IF 
+            CALL acri007_crca001_ref() 
+]]>
+  </point>
+  <point name="input.a.page1.crca002" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL acri007_null_crca002()
+            let g_crca_d[l_ac].crca003 = null
+            DISPLAY g_crca_d[l_ac].name,g_crca_d[l_ac].sex,g_crca_d[l_ac].age,g_crca_d[l_ac].crca003
+                 TO s_detail1[l_ac].name,s_detail1[l_ac].sex,s_detail1[l_ac].age,s_detail1[l_ac].crca003
+            IF NOT cl_null(g_crca_d[l_ac].crca002) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( g_crca_d[l_ac].crca002 != g_crca_d_t.crca002 OR g_crca_d_t.crca002 IS null)) THEN 
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+               
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_crca_d[l_ac].crca002
+                  
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_mmaq001") THEN
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_crca_d[l_ac].crca002 = g_crca_d_t.crca002
+                     CALL acri007_crca002_ref()
+                     CALL acri007_crca003_display()
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL acri007_check_crca002()
+                  IF NOT cl_null(g_errno) THEN
+                     CALL cl_err(g_crca_d[l_ac].crca002,g_errno,1)
+                     LET g_crca_d[l_ac].crca002 = g_crca_d_t.crca002
+                     CALL acri007_crca002_ref()
+                     CALL acri007_crca003_display()
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL acri007_crca002_ref()
+                  CALL acri007_crca003_ref(l_cmd)
+               END IF
+               
+            END IF
+            CALL acri007_crca002_ref()            
+            CALL acri007_crca003_display()
+]]>
+  </point>
+  <point name="input.a.page1.crca003" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL acri007_null_crca002()
+            DISPLAY g_crca_d[l_ac].name,g_crca_d[l_ac].sex,g_crca_d[l_ac].age
+                 TO s_detail1[l_ac].name,s_detail1[l_ac].sex,s_detail1[l_ac].age
+            IF NOT cl_null(g_crca_d[l_ac].crca003) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( g_crca_d[l_ac].crca003 != g_crca_d_t.crca003 OR g_crca_d_t.crca003 IS null)) THEN 
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+               
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_crca_d[l_ac].crca003
+                  
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_mmaf001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+                  ELSE
+                     LET g_crca_d[l_ac].crca003 = g_crca_d_t.crca003
+                     CALL acri007_crca003_display()
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL acri007_check_crca002()
+                  IF NOT cl_null(g_errno) THEN
+                     CALL cl_err(g_crca_d[l_ac].crca003,g_errno,1)
+                     LET g_crca_d[l_ac].crca003 = g_crca_d_t.crca003
+                     CALL acri007_crca003_display()
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL acri007_crca003_ref(l_cmd)
+               END IF
+
+            END IF 
+            CALL acri007_crca003_display()
+]]>
+  </point>
+  <point name="input.a.page1.crca008" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_crca_d[l_ac].crca008) THEN 
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.page1.crcaseq" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_crca_d[l_ac].crcaseq) THEN 
+            END IF 
+
+
+            #此段落由子樣板a05產生
+            IF  g_crca_d[g_detail_idx].crcaseq IS NOT NULL AND g_crca_d[g_detail_idx].crca001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_crca_d[g_detail_idx].crcaseq != g_crca_d_t.crcaseq OR g_crca_d[g_detail_idx].crca001 != g_crca_d_t.crca001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM crca_t WHERE "||"crcaent = '" ||g_enterprise|| "' AND "||"crcaseq = '"||g_crca_d[g_detail_idx].crcaseq ||"' AND "|| "crca001 = '"||g_crca_d[g_detail_idx].crca001 ||"'",'std-00004',0) THEN 
+                     LET g_crca_d[l_ac].crcaseq = g_crca_d_t.crcaseq
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.crca001_2" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_crca2_d[g_detail_idx].crcaseq IS NOT NULL AND g_crca2_d[g_detail_idx].crca001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_crca2_d[g_detail_idx].crcaseq != g_crca2_d_t.crcaseq OR g_crca2_d[g_detail_idx].crca001 != g_crca2_d_t.crca001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM crca_t WHERE "||"crcaent = '" ||g_enterprise|| "' AND "||"crcaseq = '"||g_crca2_d[g_detail_idx].crcaseq ||"' AND "|| "crca001 = '"||g_crca2_d[g_detail_idx].crca001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page2.crcaseq_2" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_crca2_d[g_detail_idx].crcaseq IS NOT NULL AND g_crca2_d[g_detail_idx].crca001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_crca2_d[g_detail_idx].crcaseq != g_crca2_d_t.crcaseq OR g_crca2_d[g_detail_idx].crca001 != g_crca2_d_t.crca001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM crca_t WHERE "||"crcaent = '" ||g_enterprise|| "' AND "||"crcaseq = '"||g_crca2_d[g_detail_idx].crcaseq ||"' AND "|| "crca001 = '"||g_crca2_d[g_detail_idx].crca001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.body.before_insert" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            LET g_crca_d[l_ac].crcastus = "Y"
+            CALL acri007_create_crcaseq(l_cmd)            ]]>
+  </point>
+  <point name="input.c.page1.crca001" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_crca_d[l_ac].crca001             #給予default值
+
+            #給予arg
+            
+            CALL q_pmaa001_6()                                #呼叫開窗
+
+            LET g_crca_d[l_ac].crca001 = g_qryparam.return1              
+
+            DISPLAY g_crca_d[l_ac].crca001 TO crca001              #
+            CALL acri007_crca001_ref() 
+            NEXT FIELD crca001                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.page1.crca002" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_crca_d[l_ac].crca002             #給予default值
+
+            #給予arg
+            IF NOT cl_null(g_crca_d[l_ac].crca003) THEN
+               LET g_qryparam.where = "mmaq003='",g_crca_d[l_ac].crca003,"'"
+            END IF
+            
+            CALL q_mmaq001_2()                                #呼叫開窗
+
+            LET g_crca_d[l_ac].crca002 = g_qryparam.return1              
+
+            DISPLAY g_crca_d[l_ac].crca002 TO crca002              #
+            IF cl_null(g_crca_d[l_ac].crca003) THEN
+               CALL acri007_crca002_ref()
+               CALL acri007_crca003_ref(l_cmd)
+            END IF 
+            NEXT FIELD crca002                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.page1.crca003" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_crca_d[l_ac].crca003             #給予default值
+
+            #給予arg          
+            CALL q_mmaf001_1()                                #呼叫開窗
+
+            LET g_crca_d[l_ac].crca003 = g_qryparam.return1              
+
+            DISPLAY g_crca_d[l_ac].crca003 TO crca003              #
+            CALL acri007_crca003_ref(l_cmd)
+            NEXT FIELD crca003                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.g.page1.crca007" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF g_crca_d[l_ac].crca007='Y' THEN
+               LET g_crca_d[l_ac].crca008=g_crca_d[l_ac].crca008+1
+            END IF
+            IF g_crca_d[l_ac].crca007='N' THEN
+               LET g_crca_d[l_ac].crca008=0
+            END IF
+            DISPLAY g_crca_d[l_ac].crca008 TO s_detail1[l_ac].crca008]]>
+  </point>
+  <point name="modify.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_errshow=1]]>
+  </point>
+  <section id="acri007.b_fill" ver="3" status="" src="s">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION acri007_b_fill(p_wc2)              #BODY FILL UP
+   DEFINE p_wc2    STRING
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point
+   
+   IF cl_null(p_wc2) THEN
+      LET p_wc2 = " 1=1"
+   END IF
+   
+   #add-point:b_fill段sql之前
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   LET g_sql = "SELECT  UNIQUE crcastus,crca002,crca003,crca009,crca001,crca004,crcaseq,crca010,crca005, 
+       crca006,crca007,crca008,crca011,crca012,crca013,crca014,crca015,crca001,crcaseq,crcaownid,crcaowndp, 
+       crcacrtid,crcacrtdp,crcacrtdt,crcamodid,crcamoddt ,t1.pmaal004 ,t2.oofa011 ,t3.ooefl003 ,t4.oofa011 , 
+       t5.ooefl003 ,t6.oofa011 FROM crca_t",
+               "",
+                              " LEFT JOIN pmaal_t t1 ON t1.pmaalent='"||g_enterprise||"' AND t1.pmaal001=crca001 AND t1.pmaal002='"||g_dlang||"' ",
+               " LEFT JOIN oofa_t t2 ON t2.oofaent='"||g_enterprise||"' AND t2.oofa002='2' AND t2.oofa003=crcaownid  ",
+               " LEFT JOIN ooefl_t t3 ON t3.ooeflent='"||g_enterprise||"' AND t3.ooefl001=crcaowndp AND t3.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN oofa_t t4 ON t4.oofaent='"||g_enterprise||"' AND t4.oofa002='2' AND t4.oofa003=crcacrtid  ",
+               " LEFT JOIN ooefl_t t5 ON t5.ooeflent='"||g_enterprise||"' AND t5.ooefl001=crcacrtdp AND t5.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN oofa_t t6 ON t6.oofaent='"||g_enterprise||"' AND t6.oofa002='2' AND t6.oofa003=crcamodid  ",
+ 
+               " WHERE crcaent= ? AND 1=1 AND ", p_wc2 
+    
+   LET g_sql = g_sql, cl_sql_add_filter("crca_t"),
+                      " ORDER BY crca_t.crcaseq,crca_t.crca001"
+   
+   #add-point:b_fill段sql之後
+   {<point name="b_fill.sql_after"/>}
+   #end add-point
+   
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE acri007_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR acri007_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_crca_d.clear()
+   CALL g_crca2_d.clear()   
+ 
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO g_crca_d[l_ac].crcastus,g_crca_d[l_ac].crca002,g_crca_d[l_ac].crca003,g_crca_d[l_ac].crca009, 
+       g_crca_d[l_ac].crca001,g_crca_d[l_ac].crca004,g_crca_d[l_ac].crcaseq,g_crca_d[l_ac].crca010,g_crca_d[l_ac].crca005, 
+       g_crca_d[l_ac].crca006,g_crca_d[l_ac].crca007,g_crca_d[l_ac].crca008,g_crca_d[l_ac].crca011,g_crca_d[l_ac].crca012, 
+       g_crca_d[l_ac].crca013,g_crca_d[l_ac].crca014,g_crca_d[l_ac].crca015,g_crca2_d[l_ac].crca001, 
+       g_crca2_d[l_ac].crcaseq,g_crca2_d[l_ac].crcaownid,g_crca2_d[l_ac].crcaowndp,g_crca2_d[l_ac].crcacrtid, 
+       g_crca2_d[l_ac].crcacrtdp,g_crca2_d[l_ac].crcacrtdt,g_crca2_d[l_ac].crcamodid,g_crca2_d[l_ac].crcamoddt, 
+       g_crca_d[l_ac].crca001_desc,g_crca2_d[l_ac].crcaownid_desc,g_crca2_d[l_ac].crcaowndp_desc,g_crca2_d[l_ac].crcacrtid_desc, 
+       g_crca2_d[l_ac].crcacrtdp_desc,g_crca2_d[l_ac].crcamodid_desc
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+  
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.fill"/>}
+      #end add-point
+      
+      CALL acri007_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   
+   IF l_ac > g_max_rec THEN
+      IF g_error_show = 1 THEN
+         CALL cl_err("crca_t",9035,1)
+      END IF
+   END IF 
+   LET g_error_show = 0
+   
+ 
+   
+   CALL g_crca_d.deleteElement(g_crca_d.getLength())   
+   CALL g_crca2_d.deleteElement(g_crca2_d.getLength())
+ 
+   
+   #將key欄位填到每個page
+   FOR l_ac = 1 TO g_crca_d.getLength()
+      LET g_crca2_d[l_ac].crcaseq = g_crca_d[l_ac].crcaseq 
+      LET g_crca2_d[l_ac].crca001 = g_crca_d[l_ac].crca001 
+ 
+   END FOR
+   
+   IF g_cnt > g_crca_d.getLength() THEN
+      LET l_ac = g_crca_d.getLength()
+   ELSE
+      LET l_ac = g_cnt
+   END IF
+   LET g_cnt = l_ac
+ 
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+   
+   ERROR "" 
+ 
+   LET g_detail_cnt = g_crca_d.getLength()
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   
+   CLOSE b_fill_curs
+   FREE acri007_pb
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="acri007.default_search" ver="3" status="" src="s">
+    <![CDATA[#+ 外部參數搜尋
+PRIVATE FUNCTION acri007_default_search()
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define
+   {<point name="default_search.define"/>}
+   #end add-point  
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " crcaseq = '", g_argv[01], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " crca001 = ", g_argv[02], " AND "
+   END IF
+ 
+   
+   #add-point:default_search段after sql
+   {<point name="default_search.after_sql"/>}
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET ls_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_wc2 = ls_wc
+   ELSE
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="acri007.delete" ver="2" status="" src="s">
+    <![CDATA[#+ 資料刪除
+PRIVATE FUNCTION acri007_delete()
+   DEFINE li_idx           LIKE type_t.num5
+   DEFINE li_detail_tmp    LIKE type_t.num5
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:delete段define
+   {<point name="delete.define"/>}
+   #end add-point 
+   
+   #add-point:單身刪除前
+   {<point name="delete.body.before_delete"/>}
+   #end add-point
+   
+   CALL s_transaction_begin()
+   
+   LET li_detail_tmp = g_detail_idx
+    
+   #lock所有所選資料
+   FOR li_idx = 1 TO g_crca_d.getLength()
+      LET g_detail_idx = li_idx
+      #已選擇的資料
+      IF g_curr_diag.isRowSelected(g_curr_diag.getCurrentItem(), li_idx) THEN 
+         #確定是否有被鎖定
+         IF NOT acri007_lock_b("crca_t") THEN
+            #已被他人鎖定
+            CALL s_transaction_end('N','0')
+            RETURN
+         END IF
+      END IF
+   END FOR
+   
+   #add-point:單身刪除詢問前
+   {<point name="delete.body.b_delete_ask"/>}
+   #end add-point  
+   
+   #詢問是否確定刪除所選資料
+   IF NOT cl_ask_del_detail() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   FOR li_idx = 1 TO g_crca_d.getLength()
+      IF g_crca_d[li_idx].crcaseq IS NOT NULL
+         AND g_crca_d_t.crca001 IS NOT NULL
+ 
+         AND g_curr_diag.isRowSelected(g_curr_diag.getCurrentItem(), li_idx) THEN 
+         
+         #add-point:單身刪除前
+         {<point name="delete.body.b_delete" mark="Y"/>}
+         #end add-point   
+         
+         DELETE FROM crca_t
+          WHERE crcaent = g_enterprise AND 
+                crcaseq = g_crca_d[li_idx].crcaseq
+                AND crca001 = g_crca_d[li_idx].crca001
+ 
+         #add-point:單身刪除中
+         {<point name="delete.body.m_delete"/>}
+         #end add-point  
+                
+         IF SQLCA.sqlcode THEN
+            CALL cl_err("crca_t",SQLCA.sqlcode,1)
+            CALL s_transaction_end('N','0')
+            RETURN
+         ELSE
+            LET g_detail_cnt = g_detail_cnt-1
+            
+            #add-point:單身同步刪除前(同層table)
+            {<point name="delete.body.a_delete"/>}
+            #end add-point
+            LET g_detail_idx = li_idx
+                           INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_crca_d[g_detail_idx].crcaseq
+               LET gs_keys[2] = g_crca_d[g_detail_idx].crca001
+ 
+            #add-point:單身同步刪除中(同層table)
+            {<point name="delete.body.a_delete2"/>}
+            #end add-point
+                           CALL acri007_delete_b('crca_t',gs_keys,"'1'")
+            #add-point:單身同步刪除後(同層table)
+            {<point name="delete.body.a_delete3"/>}
+            #end add-point
+         END IF 
+      END IF 
+    
+   END FOR
+   CALL s_transaction_end('Y','0')
+   
+   LET g_detail_idx = li_detail_tmp
+            
+   #add-point:單身刪除後
+   {<point name="delete.after"/>}
+   #end add-point  
+   
+   #刷新資料
+   CALL acri007_b_fill(g_wc2)
+            
+END FUNCTION
+]]>
+  </section>
+  <section id="acri007.delete_b" ver="2" status="" src="s">
+    <![CDATA[#+ 刪除單身後其他table連動
+PRIVATE FUNCTION acri007_delete_b(ps_table,ps_keys_bak,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:delete_b段define
+   {<point name="delete_b.define"/>}
+   #end add-point     
+ 
+   #判斷是否是同一群組的table
+   LET ls_group = "crca_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 AND ps_table <> 'crca_t' THEN
+   
+      #add-point:delete_b段刪除前
+      {<point name="delete_b.b_delete" mark="Y"/>}
+      #end add-point     
+   
+      DELETE FROM crca_t
+       WHERE crcaent = g_enterprise AND
+         crcaseq = ps_keys_bak[1] AND crca001 = ps_keys_bak[2]
+ 
+      #add-point:delete_b段刪除中
+      {<point name="delete_b.m_delete"/>}
+      #end add-point  
+         
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("",SQLCA.sqlcode,0)
+      END IF
+      
+      #add-point:delete_b段刪除後
+      {<point name="delete_b.a_delete"/>}
+      #end add-point
+      
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="acri007.description" ver="41" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000044
+#+ 
+#+ Filename...: acri007
+#+ Description: 客戶提醒資料維護作業
+#+ Creator....: 02296(2014/04/22)
+#+ Modifier...: 02296(2014/06/27)
+#+ Buildtype..: 應用 i02 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="acri007.detail_show" ver="2" status="" src="s">
+    <![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION acri007_detail_show()
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值page1
+   
+    
+   #帶出公用欄位reference值page2
+   #此段落由子樣板a12產生
+      #LET g_crca2_d[l_ac].crcaownid_desc = cl_get_username(g_crca2_d[l_ac].crcaownid)
+      #LET g_crca2_d[l_ac].crcaowndp_desc = cl_get_deptname(g_crca2_d[l_ac].crcaowndp)
+      #LET g_crca2_d[l_ac].crcacrtid_desc = cl_get_username(g_crca2_d[l_ac].crcacrtid)
+      #LET g_crca2_d[l_ac].crcacrtdp_desc = cl_get_deptname(g_crca2_d[l_ac].crcacrtdp)
+      #LET g_crca2_d[l_ac].crcamodid_desc = cl_get_username(g_crca2_d[l_ac].crcamodid)
+      
+ 
+ 
+ 
+   
+   #讀入ref值
+   #add-point:show段單身reference
+   {<point name="detail_show.reference"/>}
+   #end add-point
+   
+   #add-point:show段單身reference
+   {<point name="detail_show.body2.reference"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="acri007.global" ver="3" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_crca_d RECORD
+       crcastus LIKE crca_t.crcastus, 
+   crca002 LIKE crca_t.crca002, 
+   crca003 LIKE crca_t.crca003, 
+   name LIKE type_t.chr500, 
+   sex LIKE type_t.chr80, 
+   age LIKE type_t.chr80, 
+   crca009 LIKE crca_t.crca009, 
+   crca001 LIKE crca_t.crca001, 
+   crca001_desc LIKE type_t.chr500, 
+   crca004 LIKE crca_t.crca004, 
+   crcaseq LIKE crca_t.crcaseq, 
+   crca010 LIKE crca_t.crca010, 
+   crca005 LIKE crca_t.crca005, 
+   crca006 LIKE crca_t.crca006, 
+   crca007 LIKE crca_t.crca007, 
+   crca008 LIKE crca_t.crca008, 
+   crca011 LIKE crca_t.crca011, 
+   crca012 LIKE crca_t.crca012, 
+   crca013 LIKE crca_t.crca013, 
+   crca014 LIKE crca_t.crca014, 
+   crca015 LIKE crca_t.crca015
+       END RECORD
+PRIVATE TYPE type_g_crca2_d RECORD
+       crca001 LIKE crca_t.crca001, 
+   crca001_2_desc LIKE type_t.chr500, 
+   crcaseq LIKE crca_t.crcaseq, 
+   crcaownid LIKE crca_t.crcaownid, 
+   crcaownid_desc LIKE type_t.chr500, 
+   crcaowndp LIKE crca_t.crcaowndp, 
+   crcaowndp_desc LIKE type_t.chr500, 
+   crcacrtid LIKE crca_t.crcacrtid, 
+   crcacrtid_desc LIKE type_t.chr500, 
+   crcacrtdp LIKE crca_t.crcacrtdp, 
+   crcacrtdp_desc LIKE type_t.chr500, 
+   crcacrtdt DATETIME YEAR TO SECOND, 
+   crcamodid LIKE crca_t.crcamodid, 
+   crcamodid_desc LIKE type_t.chr500, 
+   crcamoddt DATETIME YEAR TO SECOND
+       END RECORD
+ 
+ 
+ 
+#模組變數(Module Variables)
+DEFINE g_crca_d          DYNAMIC ARRAY OF type_g_crca_d
+DEFINE g_crca_d_t        type_g_crca_d
+DEFINE g_crca2_d   DYNAMIC ARRAY OF type_g_crca2_d
+DEFINE g_crca2_d_t type_g_crca2_d
+ 
+      
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num5              #目前處理的ARRAY CNT 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_temp_idx           LIKE type_t.num5              #單身 所在筆數(暫存用)
+DEFINE g_detail_idx         LIKE type_t.num5              #單身 所在筆數(所有資料)
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_chk                BOOLEAN
+DEFINE g_aw                 STRING                        #確定當下點擊的單身
+DEFINE g_log1               STRING                        #log用
+DEFINE g_log2               STRING                        #log用
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="acri007.init" ver="1" status="" src="s">
+    <![CDATA[#+ 畫面資料初始化
+PRIVATE FUNCTION acri007_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point   
+   
+   
+      CALL cl_set_combo_scc('crca010','6056') 
+ 
+   LET g_error_show = 1
+   
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+   CALL acri007_default_search()
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="acri007.insert" ver="2" status="" src="s">
+    <![CDATA[#+ 資料新增
+PRIVATE FUNCTION acri007_insert()
+   #add-point:delete段define
+   {<point name="insert.define"/>}
+   #end add-point                
+   
+   #add-point:單身新增前
+   {<point name="insert.b_insert"/>}
+   #end add-point
+   
+   LET g_insert = 'Y'
+   CALL acri007_modify()
+            
+   #add-point:單身新增後
+   {<point name="insert.a_insert"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="acri007.insert_b" ver="1" status="" src="s">
+    <![CDATA[#+ 新增單身後其他table連動
+PRIVATE FUNCTION acri007_insert_b(ps_table,ps_keys,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:insert_b段define
+   {<point name="insert_b.define"/>}
+   #end add-point     
+ 
+   #判斷是否是同一群組的table
+   LET ls_group = "crca_t,"
+   #IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      
+      #add-point:insert_b段新增前
+      {<point name="insert_b.b_insert" mark="Y"/>}
+      #end add-point    
+      INSERT INTO crca_t
+                  (crcaent,
+                   crcaseq,crca001
+                   ,crcastus,crca002,crca003,crca009,crca004,crca010,crca005,crca006,crca007,crca008,crca011,crca012,crca013,crca014,crca015,crcaownid,crcaowndp,crcacrtid,crcacrtdp,crcacrtdt,crcamodid,crcamoddt) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2]
+                   ,g_crca_d[l_ac].crcastus,g_crca_d[l_ac].crca002,g_crca_d[l_ac].crca003,g_crca_d[l_ac].crca009, 
+                       g_crca_d[l_ac].crca004,g_crca_d[l_ac].crca010,g_crca_d[l_ac].crca005,g_crca_d[l_ac].crca006, 
+                       g_crca_d[l_ac].crca007,g_crca_d[l_ac].crca008,g_crca_d[l_ac].crca011,g_crca_d[l_ac].crca012, 
+                       g_crca_d[l_ac].crca013,g_crca_d[l_ac].crca014,g_crca_d[l_ac].crca015,g_crca2_d[l_ac].crcaownid, 
+                       g_crca2_d[l_ac].crcaowndp,g_crca2_d[l_ac].crcacrtid,g_crca2_d[l_ac].crcacrtdp, 
+                       g_crca2_d[l_ac].crcacrtdt,g_crca2_d[l_ac].crcamodid,g_crca2_d[l_ac].crcamoddt) 
+
+      #add-point:insert_b段新增中
+      {<point name="insert_b.m_insert"/>}
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("crca_t",SQLCA.sqlcode,0)
+      END IF
+      #add-point:insert_b段新增後
+      {<point name="insert_b.a_insert"/>}
+      #end add-point    
+   #END IF
+   
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="acri007.link_b" ver="1" status="" src="s">
+    <![CDATA[#+ 連動單身idx
+PRIVATE FUNCTION acri007_link_b(ps_table,pi_idx)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   DEFINE pi_idx   INTEGER
+   #add-point:link_b段define
+   {<point name="link_b.define"/>}
+   #end add-point  
+   
+   LET ls_group = ""
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+ 
+   END IF
+   
+ 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="acri007.lock_b" ver="1" status="" src="s">
+    <![CDATA[#+ 連動lock其他單身table資料
+PRIVATE FUNCTION acri007_lock_b(ps_table)
+ 
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:lock_b段define
+   {<point name="lock_b.define"/>}
+   #end add-point   
+   
+   #先刷新資料
+   #CALL acri007_b_fill(g_wc2)
+   
+   #鎖定整組table
+   #LET ls_group = ""
+   #僅鎖定自身table
+   LET ls_group = "crca_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN acri007_bcl USING g_enterprise,
+                                       g_crca_d[g_detail_idx].crcaseq,g_crca_d[g_detail_idx].crca001
+                                       
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("acri007_bcl",SQLCA.sqlcode,1)
+         RETURN FALSE
+      END IF
+   
+   END IF
+                                    
+ 
+   
+   RETURN TRUE
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="acri007.main" ver="4" status="" src="s">
+    <![CDATA[#+ 此段落由子樣板a26產生
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("acr","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+ 
+ 
+   #add-point:main段define_sql
+   {<point name="main.body.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = "SELECT crcastus,crca002,crca003,crca009,crca001,crca004,crcaseq,crca010,crca005, 
+       crca006,crca007,crca008,crca011,crca012,crca013,crca014,crca015,crca001,crcaseq,crcaownid,crcaowndp, 
+       crcacrtid,crcacrtdp,crcacrtdt,crcamodid,crcamoddt FROM crca_t WHERE crcaent=? AND crcaseq=? AND  
+       crca001=? FOR UPDATE"
+   #add-point:main段define_sql
+   {<point name="main.body.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE acri007_bcl CURSOR FROM g_forupd_sql
+ 
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_acri007 WITH FORM cl_ap_formpath("acr",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL acri007_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL acri007_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_acri007
+      
+   END IF 
+   
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+]]>
+  </section>
+  <section id="acri007.modify" ver="4" status="" src="s">
+    <![CDATA[#+ 資料修改
+PRIVATE FUNCTION acri007_modify()
+   DEFINE  l_cmd                  LIKE type_t.chr1
+   DEFINE  l_ac_t                 LIKE type_t.num5                #未取消的ARRAY CNT 
+   DEFINE  l_n                    LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_cnt                  LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_lock_sw              LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert         LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete         LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count                LIKE type_t.num5
+   DEFINE  l_i                    LIKE type_t.num5
+   DEFINE  ls_return              STRING
+   DEFINE  l_var_keys             DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys           DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                 DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields               DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak         DYNAMIC ARRAY OF STRING
+   DEFINE  li_reproduce           LIKE type_t.num5
+   DEFINE  li_reproduce_target    LIKE type_t.num5
+   DEFINE  lb_reproduce           BOOLEAN
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point 
+   
+   LET g_action_choice = ""
+   
+   LET g_qryparam.state = "i"
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #add-point:modify開始前
+   {<point name="modify.define_sql" mark="Y"/>}
+   #end add-point
+   
+   LET INT_FLAG = FALSE
+   LET lb_reproduce = FALSE
+ 
+   #add-point:modify段修改前
+   {<point name="modify.before_input"/>}
+   #end add-point
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_crca_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_crca_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL acri007_b_fill(g_wc2)
+            LET g_detail_cnt = g_crca_d.getLength()
+         
+         BEFORE ROW
+            #add-point:modify段before row
+            {<point name="input.body.before_row2"/>}
+            #end add-point  
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            LET l_cmd = ''
+            LET l_ac = g_detail_idx
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+            DISPLAY g_crca_d.getLength() TO FORMONLY.cnt
+         
+            CALL s_transaction_begin()
+            LET g_detail_cnt = g_crca_d.getLength()
+            
+            IF g_detail_cnt >= l_ac 
+               AND g_crca_d[l_ac].crcaseq IS NOT NULL
+               AND g_crca_d[l_ac].crca001 IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_crca_d_t.* = g_crca_d[l_ac].*  #BACKUP
+               IF NOT acri007_lock_b("crca_t") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH acri007_bcl INTO g_crca_d[l_ac].crcastus,g_crca_d[l_ac].crca002,g_crca_d[l_ac].crca003, 
+                      g_crca_d[l_ac].crca009,g_crca_d[l_ac].crca001,g_crca_d[l_ac].crca004,g_crca_d[l_ac].crcaseq, 
+                      g_crca_d[l_ac].crca010,g_crca_d[l_ac].crca005,g_crca_d[l_ac].crca006,g_crca_d[l_ac].crca007, 
+                      g_crca_d[l_ac].crca008,g_crca_d[l_ac].crca011,g_crca_d[l_ac].crca012,g_crca_d[l_ac].crca013, 
+                      g_crca_d[l_ac].crca014,g_crca_d[l_ac].crca015
+                  IF SQLCA.sqlcode THEN
+                     CALL cl_err(g_crca_d_t.crcaseq,SQLCA.sqlcode,1)
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  CALL acri007_detail_show()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row
+            {<point name="input.body.before_row"/>}
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+        
+         BEFORE INSERT
+            
+            CALL s_transaction_begin()
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_crca_d_t.* TO NULL
+            INITIALIZE g_crca_d[l_ac].* TO NULL 
+            #公用欄位給值(單身)
+            #此段落由子樣板a14產生    
+      LET g_crca2_d[l_ac].crcaownid = g_user
+      LET g_crca2_d[l_ac].crcaowndp = g_dept
+      LET g_crca2_d[l_ac].crcacrtid = g_user
+      LET g_crca2_d[l_ac].crcacrtdp = g_dept 
+      LET g_crca2_d[l_ac].crcacrtdt = cl_get_current()
+      LET g_crca2_d[l_ac].crcamodid = ""
+      LET g_crca2_d[l_ac].crcamoddt = ""
+      LET g_crca_d[l_ac].crcastus = ""
+ 
+ 
+                  LET g_crca_d[l_ac].crca010 = "0"
+      LET g_crca_d[l_ac].crca007 = "N"
+      LET g_crca_d[l_ac].crca008 = "0"
+ 
+            LET g_crca_d_t.* = g_crca_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL acri007_set_entry_b("a")
+            CALL acri007_set_no_entry_b("a")
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_crca_d[li_reproduce_target].* = g_crca_d[li_reproduce].*
+               LET g_crca2_d[li_reproduce_target].* = g_crca2_d[li_reproduce].*
+ 
+               LET g_crca_d[g_crca_d.getLength()].crcaseq = NULL
+               LET g_crca_d[g_crca_d.getLength()].crca001 = NULL
+ 
+            END IF
+            
+            #add-point:modify段before insert
+            {<point name="input.body.before_insert"/>}
+            #end add-point  
+  
+         AFTER INSERT
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM crca_t 
+             WHERE crcaent = g_enterprise AND crcaseq = g_crca_d[l_ac].crcaseq
+                                       AND crca001 = g_crca_d[l_ac].crca001
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前
+               {<point name="input.body.b_insert"/>}
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_crca_d[g_detail_idx].crcaseq
+               LET gs_keys[2] = g_crca_d[g_detail_idx].crca001
+               CALL acri007_insert_b('crca_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後
+               {<point name="input.body.a_insert"/>}
+               #end add-point
+            ELSE    
+               CALL cl_err('INSERT',"std-00006",1)
+               INITIALIZE g_crca_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("crca_t",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL acri007_b_fill(g_wc2)
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert
+               {<point name="input.body.a_insert2"/>}
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ERROR 'INSERT O.K'
+               LET g_detail_cnt = g_detail_cnt + 1
+               
+               LET g_wc2 = g_wc2, " OR (crcaseq = '", g_crca_d[l_ac].crcaseq, "' "
+                                  ," AND crca001 = '", g_crca_d[l_ac].crca001, "' "
+ 
+                                  ,")"
+            END IF                
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' AND g_crca_d.getLength() < l_ac THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+               CALL g_crca_d.deleteElement(l_ac)
+               NEXT FIELD crcaseq
+            END IF
+            IF g_crca_d[l_ac].crcaseq IS NOT NULL
+               AND g_crca_d_t.crca001 IS NOT NULL
+ 
+               THEN     
+            
+               #add-point:單身刪除ask前
+               {<point name="input.body.b_delete_ask"/>}
+               #end add-point   
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  CALL cl_err("", -263, 1)
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前
+               {<point name="input.body.b_delete" mark="Y"/>}
+               #end add-point   
+               
+               DELETE FROM crca_t
+                WHERE crcaent = g_enterprise AND 
+                      crcaseq = g_crca_d_t.crcaseq
+                      AND crca001 = g_crca_d_t.crca001
+ 
+                      
+               #add-point:單身刪除中
+               {<point name="input.body.m_delete"/>}
+               #end add-point  
+                      
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("crca_t",SQLCA.sqlcode,1)
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_detail_cnt = g_detail_cnt-1
+                  
+                  #add-point:單身刪除後
+                  {<point name="input.body.a_delete"/>}
+                  #end add-point
+                  CALL s_transaction_end('Y','0')
+               END IF 
+               CLOSE acri007_bcl
+               LET l_count = g_crca_d.getLength()
+            END IF 
+                           INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_crca_d[g_detail_idx].crcaseq
+               LET gs_keys[2] = g_crca_d[g_detail_idx].crca001
+ 
+              
+         AFTER DELETE 
+            #add-point:單身刪除後2
+            {<point name="input.body.after_delete"/>}
+            #end add-point
+                           CALL acri007_delete_b('crca_t',gs_keys,"'1'")
+ 
+                  #此段落由子樣板a01產生
+         BEFORE FIELD crcastus
+            #add-point:BEFORE FIELD crcastus
+            {<point name="input.b.page1.crcastus" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crcastus
+            
+            #add-point:AFTER FIELD crcastus
+            {<point name="input.a.page1.crcastus" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE crcastus
+            #add-point:ON CHANGE crcastus
+            {<point name="input.g.page1.crcastus" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca002
+            
+            #add-point:AFTER FIELD crca002
+            {<point name="input.a.page1.crca002" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca002
+            #add-point:BEFORE FIELD crca002
+            {<point name="input.b.page1.crca002" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE crca002
+            #add-point:ON CHANGE crca002
+            {<point name="input.g.page1.crca002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca003
+            
+            #add-point:AFTER FIELD crca003
+            {<point name="input.a.page1.crca003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca003
+            #add-point:BEFORE FIELD crca003
+            {<point name="input.b.page1.crca003" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE crca003
+            #add-point:ON CHANGE crca003
+            {<point name="input.g.page1.crca003" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca009
+            #add-point:BEFORE FIELD crca009
+            {<point name="input.b.page1.crca009" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca009
+            
+            #add-point:AFTER FIELD crca009
+            {<point name="input.a.page1.crca009" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE crca009
+            #add-point:ON CHANGE crca009
+            {<point name="input.g.page1.crca009" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca001
+            
+            #add-point:AFTER FIELD crca001
+            {<point name="input.a.page1.crca001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca001
+            #add-point:BEFORE FIELD crca001
+            {<point name="input.b.page1.crca001" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE crca001
+            #add-point:ON CHANGE crca001
+            {<point name="input.g.page1.crca001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca004
+            #add-point:BEFORE FIELD crca004
+            {<point name="input.b.page1.crca004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca004
+            
+            #add-point:AFTER FIELD crca004
+            {<point name="input.a.page1.crca004" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE crca004
+            #add-point:ON CHANGE crca004
+            {<point name="input.g.page1.crca004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crcaseq
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_crca_d[l_ac].crcaseq,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD crcaseq
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD crcaseq
+            {<point name="input.a.page1.crcaseq" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crcaseq
+            #add-point:BEFORE FIELD crcaseq
+            {<point name="input.b.page1.crcaseq" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE crcaseq
+            #add-point:ON CHANGE crcaseq
+            {<point name="input.g.page1.crcaseq" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca010
+            #add-point:BEFORE FIELD crca010
+            {<point name="input.b.page1.crca010" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca010
+            
+            #add-point:AFTER FIELD crca010
+            {<point name="input.a.page1.crca010" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE crca010
+            #add-point:ON CHANGE crca010
+            {<point name="input.g.page1.crca010" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca005
+            #add-point:BEFORE FIELD crca005
+            {<point name="input.b.page1.crca005" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca005
+            
+            #add-point:AFTER FIELD crca005
+            {<point name="input.a.page1.crca005" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE crca005
+            #add-point:ON CHANGE crca005
+            {<point name="input.g.page1.crca005" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca006
+            #add-point:BEFORE FIELD crca006
+            {<point name="input.b.page1.crca006" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca006
+            
+            #add-point:AFTER FIELD crca006
+            {<point name="input.a.page1.crca006" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE crca006
+            #add-point:ON CHANGE crca006
+            {<point name="input.g.page1.crca006" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca007
+            #add-point:BEFORE FIELD crca007
+            {<point name="input.b.page1.crca007" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca007
+            
+            #add-point:AFTER FIELD crca007
+            {<point name="input.a.page1.crca007" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE crca007
+            #add-point:ON CHANGE crca007
+            {<point name="input.g.page1.crca007" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca008
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_crca_d[l_ac].crca008,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD crca008
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD crca008
+            {<point name="input.a.page1.crca008" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca008
+            #add-point:BEFORE FIELD crca008
+            {<point name="input.b.page1.crca008" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE crca008
+            #add-point:ON CHANGE crca008
+            {<point name="input.g.page1.crca008" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca011
+            #add-point:BEFORE FIELD crca011
+            {<point name="input.b.page1.crca011" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca011
+            
+            #add-point:AFTER FIELD crca011
+            {<point name="input.a.page1.crca011" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE crca011
+            #add-point:ON CHANGE crca011
+            {<point name="input.g.page1.crca011" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca012
+            #add-point:BEFORE FIELD crca012
+            {<point name="input.b.page1.crca012" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca012
+            
+            #add-point:AFTER FIELD crca012
+            {<point name="input.a.page1.crca012" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE crca012
+            #add-point:ON CHANGE crca012
+            {<point name="input.g.page1.crca012" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca013
+            #add-point:BEFORE FIELD crca013
+            {<point name="input.b.page1.crca013" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca013
+            
+            #add-point:AFTER FIELD crca013
+            {<point name="input.a.page1.crca013" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE crca013
+            #add-point:ON CHANGE crca013
+            {<point name="input.g.page1.crca013" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca014
+            #add-point:BEFORE FIELD crca014
+            {<point name="input.b.page1.crca014" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca014
+            
+            #add-point:AFTER FIELD crca014
+            {<point name="input.a.page1.crca014" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE crca014
+            #add-point:ON CHANGE crca014
+            {<point name="input.g.page1.crca014" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca015
+            #add-point:BEFORE FIELD crca015
+            {<point name="input.b.page1.crca015" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca015
+            
+            #add-point:AFTER FIELD crca015
+            {<point name="input.a.page1.crca015" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE crca015
+            #add-point:ON CHANGE crca015
+            {<point name="input.g.page1.crca015" />}
+            #END add-point
+ 
+ 
+                  #Ctrlp:input.c.page1.crcastus
+         ON ACTION controlp INFIELD crcastus
+            #add-point:ON ACTION controlp INFIELD crcastus
+            {<point name="input.c.page1.crcastus" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.crca002
+         ON ACTION controlp INFIELD crca002
+            #add-point:ON ACTION controlp INFIELD crca002
+            {<point name="input.c.page1.crca002" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.crca003
+         ON ACTION controlp INFIELD crca003
+            #add-point:ON ACTION controlp INFIELD crca003
+            {<point name="input.c.page1.crca003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.crca009
+         ON ACTION controlp INFIELD crca009
+            #add-point:ON ACTION controlp INFIELD crca009
+            {<point name="input.c.page1.crca009" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.crca001
+         ON ACTION controlp INFIELD crca001
+            #add-point:ON ACTION controlp INFIELD crca001
+            {<point name="input.c.page1.crca001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.crca004
+         ON ACTION controlp INFIELD crca004
+            #add-point:ON ACTION controlp INFIELD crca004
+            {<point name="input.c.page1.crca004" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.crcaseq
+         ON ACTION controlp INFIELD crcaseq
+            #add-point:ON ACTION controlp INFIELD crcaseq
+            {<point name="input.c.page1.crcaseq" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.crca010
+         ON ACTION controlp INFIELD crca010
+            #add-point:ON ACTION controlp INFIELD crca010
+            {<point name="input.c.page1.crca010" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.crca005
+         ON ACTION controlp INFIELD crca005
+            #add-point:ON ACTION controlp INFIELD crca005
+            {<point name="input.c.page1.crca005" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.crca006
+         ON ACTION controlp INFIELD crca006
+            #add-point:ON ACTION controlp INFIELD crca006
+            {<point name="input.c.page1.crca006" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.crca007
+         ON ACTION controlp INFIELD crca007
+            #add-point:ON ACTION controlp INFIELD crca007
+            {<point name="input.c.page1.crca007" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.crca008
+         ON ACTION controlp INFIELD crca008
+            #add-point:ON ACTION controlp INFIELD crca008
+            {<point name="input.c.page1.crca008" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.crca011
+         ON ACTION controlp INFIELD crca011
+            #add-point:ON ACTION controlp INFIELD crca011
+            {<point name="input.c.page1.crca011" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.crca012
+         ON ACTION controlp INFIELD crca012
+            #add-point:ON ACTION controlp INFIELD crca012
+            {<point name="input.c.page1.crca012" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.crca013
+         ON ACTION controlp INFIELD crca013
+            #add-point:ON ACTION controlp INFIELD crca013
+            {<point name="input.c.page1.crca013" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.crca014
+         ON ACTION controlp INFIELD crca014
+            #add-point:ON ACTION controlp INFIELD crca014
+            {<point name="input.c.page1.crca014" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.crca015
+         ON ACTION controlp INFIELD crca015
+            #add-point:ON ACTION controlp INFIELD crca015
+            {<point name="input.c.page1.crca015" />}
+            #END add-point
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               LET g_crca_d[l_ac].* = g_crca_d_t.*
+               CLOSE acri007_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               CALL cl_err(g_crca_d[l_ac].crcaseq,-263,1)
+               LET g_crca_d[l_ac].* = g_crca_d_t.*
+            ELSE
+               
+               #寫入修改者/修改日期資訊(單身)
+               LET g_crca2_d[l_ac].crcamodid = g_user 
+LET g_crca2_d[l_ac].crcamoddt = cl_get_current()
+ 
+            
+               #add-point:單身修改前
+               {<point name="input.body.b_update" mark="Y"/>}
+               #end add-point
+               
+               UPDATE crca_t SET (crcastus,crca002,crca003,crca009,crca001,crca004,crcaseq,crca010,crca005, 
+                   crca006,crca007,crca008,crca011,crca012,crca013,crca014,crca015,crcaownid,crcaowndp, 
+                   crcacrtid,crcacrtdp,crcacrtdt,crcamodid,crcamoddt) = (g_crca_d[l_ac].crcastus,g_crca_d[l_ac].crca002, 
+                   g_crca_d[l_ac].crca003,g_crca_d[l_ac].crca009,g_crca_d[l_ac].crca001,g_crca_d[l_ac].crca004, 
+                   g_crca_d[l_ac].crcaseq,g_crca_d[l_ac].crca010,g_crca_d[l_ac].crca005,g_crca_d[l_ac].crca006, 
+                   g_crca_d[l_ac].crca007,g_crca_d[l_ac].crca008,g_crca_d[l_ac].crca011,g_crca_d[l_ac].crca012, 
+                   g_crca_d[l_ac].crca013,g_crca_d[l_ac].crca014,g_crca_d[l_ac].crca015,g_crca2_d[l_ac].crcaownid, 
+                   g_crca2_d[l_ac].crcaowndp,g_crca2_d[l_ac].crcacrtid,g_crca2_d[l_ac].crcacrtdp,g_crca2_d[l_ac].crcacrtdt, 
+                   g_crca2_d[l_ac].crcamodid,g_crca2_d[l_ac].crcamoddt)
+                WHERE crcaent = g_enterprise AND
+                  crcaseq = g_crca_d_t.crcaseq #項次   
+                  AND crca001 = g_crca_d_t.crca001  
+ 
+                  
+               #add-point:單身修改中
+               {<point name="input.body.m_update"/>}
+               #end add-point
+                  
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL cl_err("crca_t","std-00009",1)
+                     CALL s_transaction_end('N','0')
+                    WHEN SQLCA.sqlcode #其他錯誤
+                     CALL cl_err("crca_t",SQLCA.sqlcode,1)  
+                     CALL s_transaction_end('N','0')
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_crca_d[g_detail_idx].crcaseq
+               LET gs_keys_bak[1] = g_crca_d_t.crcaseq
+               LET gs_keys[2] = g_crca_d[g_detail_idx].crca001
+               LET gs_keys_bak[2] = g_crca_d_t.crca001
+               CALL acri007_update_b('crca_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                     
+                     LET g_log1 = util.JSON.stringify(g_crca_d_t)
+                     LET g_log2 = util.JSON.stringify(g_crca_d[l_ac])
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                        CALL s_transaction_end('N','0')
+                     END IF
+               END CASE
+               
+               #add-point:單身修改後
+               {<point name="input.body.a_update"/>}
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            CALL acri007_unlock_b("crca_t")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            
+             #add-point:單身after row
+            {<point name="input.body.a_row"/>}
+            #end add-point
+            
+         AFTER INPUT
+            #add-point:單身input後
+            {<point name="input.body.a_input"/>}
+            #end add-point
+            
+         ON ACTION controlo   
+            CALL FGL_SET_ARR_CURR(g_crca_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_crca_d.getLength()+1
+            
+      END INPUT
+      
+ 
+      
+      DISPLAY ARRAY g_crca2_d TO s_detail2.*
+         ATTRIBUTES(COUNT=g_detail_cnt)  
+      
+         BEFORE DISPLAY 
+            CALL acri007_b_fill(g_wc2)
+            CALL FGL_SET_ARR_CURR(g_detail_idx)
+      
+         BEFORE ROW
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+            LET l_ac = g_detail_idx
+            LET g_temp_idx = l_ac
+            DISPLAY g_detail_idx TO FORMONLY.idx
+            CALL cl_show_fld_cont() 
+            
+         #add-point:page2自定義行為
+         {<point name="input.body2.action"/>}
+         #end add-point
+            
+      END DISPLAY
+ 
+      
+      #add-point:before_more_input
+      {<point name="input.more_input"/>}
+      #end add-point
+      
+      BEFORE DIALOG 
+         IF g_temp_idx > 0 THEN
+            LET l_ac = g_temp_idx
+            CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+            LET g_temp_idx = 1
+         END IF
+         LET g_curr_diag = ui.DIALOG.getCurrent()
+         #add-point:before_dialog
+         {<point name="input.before_dialog"/>}
+         #end add-point
+         CASE g_aw
+            WHEN "s_detail1"
+               NEXT FIELD crcastus
+            WHEN "s_detail2"
+               NEXT FIELD crca001_2
+ 
+         END CASE
+   
+      ON ACTION accept
+         ACCEPT DIALOG
+      
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) 
+              RETURNING g_fld_name,g_frm_name 
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang) 
+           
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   
+   END DIALOG 
+   
+   #add-point:modify段修改後
+   {<point name="modify.after_input"/>}
+   #end add-point
+ 
+   CLOSE acri007_bcl
+   CALL s_transaction_end('Y','0')
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="acri007.modify_detail_chk" ver="1" status="" src="s">
+    <![CDATA[#+ 單身輸入判定
+PRIVATE FUNCTION acri007_modify_detail_chk(ps_record)
+   DEFINE ps_record STRING
+   DEFINE ls_return STRING
+   #add-point:modify_detail_chk段define
+   {<point name="modify_detail_chk.define"/>}
+   #end add-point
+   
+   #add-point:modify_detail_chk段開始前
+   {<point name="modify_detail_chk.before"/>}
+   #end add-point
+   
+   CASE ps_record
+      WHEN "s_detail1" 
+         LET ls_return = "crcastus"
+      WHEN "s_detail2"
+         LET ls_return = "crca001_2"
+ 
+      #add-point:modify_detail_chk段自訂page控制
+      {<point name="modify_detail_chk.page_control"/>}
+      #end add-point
+   END CASE
+    
+   #add-point:modify_detail_chk段結束前
+   {<point name="modify_detail_chk.after"/>}
+   #end add-point
+   
+   RETURN ls_return
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="acri007.other_dialog" ver="1" status="" src="s">
+    <![CDATA[ 
+]]>
+  </section>
+  <section id="acri007.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="acri007.query" ver="2" status="" src="s">
+    <![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION acri007_query()
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point 
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_crca_d.clear()
+   
+   LET g_qryparam.state = "c"
+   
+   #wc備份
+   LET ls_wc = g_wc2
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      CONSTRUCT g_wc2 ON crcastus,crca002,crca003,crca009,crca001,crca004,crcaseq,crca010,crca005,crca006, 
+          crca007,crca008,crca011,crca012,crca013,crca014,crca015,crcaownid,crcaowndp,crcacrtid,crcacrtdp, 
+          crcacrtdt,crcamodid,crcamoddt 
+ 
+         FROM s_detail1[1].crcastus,s_detail1[1].crca002,s_detail1[1].crca003,s_detail1[1].crca009,s_detail1[1].crca001, 
+             s_detail1[1].crca004,s_detail1[1].crcaseq,s_detail1[1].crca010,s_detail1[1].crca005,s_detail1[1].crca006, 
+             s_detail1[1].crca007,s_detail1[1].crca008,s_detail1[1].crca011,s_detail1[1].crca012,s_detail1[1].crca013, 
+             s_detail1[1].crca014,s_detail1[1].crca015,s_detail2[1].crcaownid,s_detail2[1].crcaowndp, 
+             s_detail2[1].crcacrtid,s_detail2[1].crcacrtdp,s_detail2[1].crcacrtdt,s_detail2[1].crcamodid, 
+             s_detail2[1].crcamoddt 
+      
+         #此段落由子樣板a11產生
+         ##----<<crcacrtdt>>----
+         AFTER FIELD crcacrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<crcamoddt>>----
+         AFTER FIELD crcamoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<crcacnfdt>>----
+         
+         #----<<crcapstdt>>----
+ 
+ 
+      
+                  #此段落由子樣板a01產生
+         BEFORE FIELD crcastus
+            #add-point:BEFORE FIELD crcastus
+            {<point name="query.b.page1.crcastus" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crcastus
+            
+            #add-point:AFTER FIELD crcastus
+            {<point name="query.a.page1.crcastus" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.crcastus
+         ON ACTION controlp INFIELD crcastus
+            #add-point:ON ACTION controlp INFIELD crcastus
+            {<point name="query.c.page1.crcastus" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.page1.crca002
+         ON ACTION controlp INFIELD crca002
+            #add-point:ON ACTION controlp INFIELD crca002
+            {<point name="construct.c.page1.crca002" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca002
+            #add-point:BEFORE FIELD crca002
+            {<point name="query.b.page1.crca002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca002
+            
+            #add-point:AFTER FIELD crca002
+            {<point name="query.a.page1.crca002" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.crca003
+         ON ACTION controlp INFIELD crca003
+            #add-point:ON ACTION controlp INFIELD crca003
+            {<point name="construct.c.page1.crca003" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca003
+            #add-point:BEFORE FIELD crca003
+            {<point name="query.b.page1.crca003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca003
+            
+            #add-point:AFTER FIELD crca003
+            {<point name="query.a.page1.crca003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca009
+            #add-point:BEFORE FIELD crca009
+            {<point name="query.b.page1.crca009" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca009
+            
+            #add-point:AFTER FIELD crca009
+            {<point name="query.a.page1.crca009" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.crca009
+         ON ACTION controlp INFIELD crca009
+            #add-point:ON ACTION controlp INFIELD crca009
+            {<point name="query.c.page1.crca009" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.page1.crca001
+         ON ACTION controlp INFIELD crca001
+            #add-point:ON ACTION controlp INFIELD crca001
+            {<point name="construct.c.page1.crca001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca001
+            #add-point:BEFORE FIELD crca001
+            {<point name="query.b.page1.crca001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca001
+            
+            #add-point:AFTER FIELD crca001
+            {<point name="query.a.page1.crca001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca004
+            #add-point:BEFORE FIELD crca004
+            {<point name="query.b.page1.crca004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca004
+            
+            #add-point:AFTER FIELD crca004
+            {<point name="query.a.page1.crca004" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.crca004
+         ON ACTION controlp INFIELD crca004
+            #add-point:ON ACTION controlp INFIELD crca004
+            {<point name="query.c.page1.crca004" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crcaseq
+            #add-point:BEFORE FIELD crcaseq
+            {<point name="query.b.page1.crcaseq" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crcaseq
+            
+            #add-point:AFTER FIELD crcaseq
+            {<point name="query.a.page1.crcaseq" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.crcaseq
+         ON ACTION controlp INFIELD crcaseq
+            #add-point:ON ACTION controlp INFIELD crcaseq
+            {<point name="query.c.page1.crcaseq" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca010
+            #add-point:BEFORE FIELD crca010
+            {<point name="query.b.page1.crca010" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca010
+            
+            #add-point:AFTER FIELD crca010
+            {<point name="query.a.page1.crca010" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.crca010
+         ON ACTION controlp INFIELD crca010
+            #add-point:ON ACTION controlp INFIELD crca010
+            {<point name="query.c.page1.crca010" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca005
+            #add-point:BEFORE FIELD crca005
+            {<point name="query.b.page1.crca005" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca005
+            
+            #add-point:AFTER FIELD crca005
+            {<point name="query.a.page1.crca005" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.crca005
+         ON ACTION controlp INFIELD crca005
+            #add-point:ON ACTION controlp INFIELD crca005
+            {<point name="query.c.page1.crca005" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca006
+            #add-point:BEFORE FIELD crca006
+            {<point name="query.b.page1.crca006" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca006
+            
+            #add-point:AFTER FIELD crca006
+            {<point name="query.a.page1.crca006" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.crca006
+         ON ACTION controlp INFIELD crca006
+            #add-point:ON ACTION controlp INFIELD crca006
+            {<point name="query.c.page1.crca006" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca007
+            #add-point:BEFORE FIELD crca007
+            {<point name="query.b.page1.crca007" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca007
+            
+            #add-point:AFTER FIELD crca007
+            {<point name="query.a.page1.crca007" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.crca007
+         ON ACTION controlp INFIELD crca007
+            #add-point:ON ACTION controlp INFIELD crca007
+            {<point name="query.c.page1.crca007" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca008
+            #add-point:BEFORE FIELD crca008
+            {<point name="query.b.page1.crca008" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca008
+            
+            #add-point:AFTER FIELD crca008
+            {<point name="query.a.page1.crca008" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.crca008
+         ON ACTION controlp INFIELD crca008
+            #add-point:ON ACTION controlp INFIELD crca008
+            {<point name="query.c.page1.crca008" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca011
+            #add-point:BEFORE FIELD crca011
+            {<point name="query.b.page1.crca011" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca011
+            
+            #add-point:AFTER FIELD crca011
+            {<point name="query.a.page1.crca011" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.crca011
+         ON ACTION controlp INFIELD crca011
+            #add-point:ON ACTION controlp INFIELD crca011
+            {<point name="query.c.page1.crca011" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca012
+            #add-point:BEFORE FIELD crca012
+            {<point name="query.b.page1.crca012" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca012
+            
+            #add-point:AFTER FIELD crca012
+            {<point name="query.a.page1.crca012" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.crca012
+         ON ACTION controlp INFIELD crca012
+            #add-point:ON ACTION controlp INFIELD crca012
+            {<point name="query.c.page1.crca012" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca013
+            #add-point:BEFORE FIELD crca013
+            {<point name="query.b.page1.crca013" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca013
+            
+            #add-point:AFTER FIELD crca013
+            {<point name="query.a.page1.crca013" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.crca013
+         ON ACTION controlp INFIELD crca013
+            #add-point:ON ACTION controlp INFIELD crca013
+            {<point name="query.c.page1.crca013" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca014
+            #add-point:BEFORE FIELD crca014
+            {<point name="query.b.page1.crca014" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca014
+            
+            #add-point:AFTER FIELD crca014
+            {<point name="query.a.page1.crca014" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.crca014
+         ON ACTION controlp INFIELD crca014
+            #add-point:ON ACTION controlp INFIELD crca014
+            {<point name="query.c.page1.crca014" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crca015
+            #add-point:BEFORE FIELD crca015
+            {<point name="query.b.page1.crca015" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crca015
+            
+            #add-point:AFTER FIELD crca015
+            {<point name="query.a.page1.crca015" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.crca015
+         ON ACTION controlp INFIELD crca015
+            #add-point:ON ACTION controlp INFIELD crca015
+            {<point name="query.c.page1.crca015" />}
+            #END add-point
+ 
+  
+         
+                  #Ctrlp:construct.c.page2.crcaownid
+         ON ACTION controlp INFIELD crcaownid
+            #add-point:ON ACTION controlp INFIELD crcaownid
+            {<point name="construct.c.page2.crcaownid" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crcaownid
+            #add-point:BEFORE FIELD crcaownid
+            {<point name="query.b.page2.crcaownid" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crcaownid
+            
+            #add-point:AFTER FIELD crcaownid
+            {<point name="query.a.page2.crcaownid" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.crcaowndp
+         ON ACTION controlp INFIELD crcaowndp
+            #add-point:ON ACTION controlp INFIELD crcaowndp
+            {<point name="construct.c.page2.crcaowndp" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crcaowndp
+            #add-point:BEFORE FIELD crcaowndp
+            {<point name="query.b.page2.crcaowndp" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crcaowndp
+            
+            #add-point:AFTER FIELD crcaowndp
+            {<point name="query.a.page2.crcaowndp" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.crcacrtid
+         ON ACTION controlp INFIELD crcacrtid
+            #add-point:ON ACTION controlp INFIELD crcacrtid
+            {<point name="construct.c.page2.crcacrtid" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crcacrtid
+            #add-point:BEFORE FIELD crcacrtid
+            {<point name="query.b.page2.crcacrtid" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crcacrtid
+            
+            #add-point:AFTER FIELD crcacrtid
+            {<point name="query.a.page2.crcacrtid" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.crcacrtdp
+         ON ACTION controlp INFIELD crcacrtdp
+            #add-point:ON ACTION controlp INFIELD crcacrtdp
+            {<point name="construct.c.page2.crcacrtdp" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crcacrtdp
+            #add-point:BEFORE FIELD crcacrtdp
+            {<point name="query.b.page2.crcacrtdp" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crcacrtdp
+            
+            #add-point:AFTER FIELD crcacrtdp
+            {<point name="query.a.page2.crcacrtdp" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crcacrtdt
+            #add-point:BEFORE FIELD crcacrtdt
+            {<point name="query.b.page2.crcacrtdt" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.page2.crcamodid
+         ON ACTION controlp INFIELD crcamodid
+            #add-point:ON ACTION controlp INFIELD crcamodid
+            {<point name="construct.c.page2.crcamodid" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crcamodid
+            #add-point:BEFORE FIELD crcamodid
+            {<point name="query.b.page2.crcamodid" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD crcamodid
+            
+            #add-point:AFTER FIELD crcamodid
+            {<point name="query.a.page2.crcamodid" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD crcamoddt
+            #add-point:BEFORE FIELD crcamoddt
+            {<point name="query.b.page2.crcamoddt" />}
+            #END add-point
+ 
+  
+ 
+      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            {<point name="cs.before_construct"/>}
+            #end add-point 
+      
+      END CONSTRUCT
+  
+      #add-point:query段more_construct
+      {<point name="query.more_construct"/>}
+      #end add-point 
+  
+      BEFORE DIALOG 
+         CALL cl_qbe_init()
+         #add-point:query段before_dialog
+         {<point name="query.before_dialog"/>}
+         #end add-point 
+      
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+      
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:query段after_construct
+   {<point name="query.after_construct"/>}
+   #end add-point
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc2 = ls_wc
+   END IF
+    
+   LET g_error_show = 1
+   CALL acri007_b_fill(g_wc2)
+   
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      CALL cl_err("",-100,1)
+   END IF
+   
+   LET INT_FLAG = FALSE
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="acri007.set_entry_b" ver="1" status="" src="s">
+    <![CDATA[#+ 單身欄位開啟設定
+PRIVATE FUNCTION acri007_set_entry_b(p_cmd)                                                  
+   DEFINE p_cmd   LIKE type_t.chr1         
+   #add-point:set_entry_b段define
+   {<point name="set_entry_b.define"/>}
+   #end add-point     
+   
+   #add-point:set_entry_b段control
+   {<point name="set_entry_b.set_entry_b"/>}
+   #end add-point                                                                   
+                                                                                
+END FUNCTION                                                                    
+]]>
+  </section>
+  <section id="acri007.set_no_entry_b" ver="1" status="" src="s">
+    <![CDATA[#+ 單身欄位關閉設定
+PRIVATE FUNCTION acri007_set_no_entry_b(p_cmd)                                               
+   DEFINE p_cmd   LIKE type_t.chr1           
+   #add-point:set_no_entry_b段define
+   {<point name="set_no_entry_b.define"/>}
+   #end add-point  
+ 
+   #add-point:set_no_entry_b段control
+   {<point name="set_no_entry_b.set_no_entry_b"/>}
+   #end add-point       
+                                                                                
+END FUNCTION  
+]]>
+  </section>
+  <section id="acri007.state_change" ver="1" status="" src="s">
+    <![CDATA[   
+]]>
+  </section>
+  <section id="acri007.ui_dialog" ver="12" status="" src="s">
+    <![CDATA[#+ 功能選單 
+PRIVATE FUNCTION acri007_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE la_param  RECORD
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point 
+ 
+   LET g_action_choice = " "  
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()      
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   
+   LET g_detail_idx = 1
+   
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE
+   
+      CALL acri007_b_fill(g_wc2)
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_crca_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               #add-point:ui_dialog段before display 
+               {<point name="ui_dialog.body.before_display" mark="Y"/>}
+               #end add-point
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               #add-point:ui_dialog段before display2
+               {<point name="ui_dialog.body.before_display2"/>}
+               #end add-point
+               
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               LET g_temp_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont() 
+               #add-point:display array-before row
+               {<point name="ui_dialog.before_row"/>}
+               #end add-point
+         
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY
+      
+         DISPLAY ARRAY g_crca2_d TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               #add-point:ui_dialog段before display 
+               {<point name="ui_dialog.body2.before_display" mark="Y"/>}
+               #end add-point
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               #add-point:ui_dialog段before display2
+               {<point name="ui_dialog.body2.before_display2"/>}
+               #end add-point
+         
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx
+               LET g_temp_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont() 
+               #add-point:display array-before row
+               {<point name="ui_dialog.before_row2"/>}
+               #end add-point
+               
+            #自訂ACTION(detail_show,page_2)
+            
+               
+         END DISPLAY
+ 
+      
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+    
+         BEFORE DIALOG
+            IF g_temp_idx > 0 THEN
+               LET l_ac = g_temp_idx
+               CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+               LET g_temp_idx = 1
+            END IF
+            LET g_curr_diag = ui.DIALOG.getCurrent()         
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            CALL DIALOG.setSelectionMode("s_detail2", 1)
+ 
+            #add-point:ui_dialog段before
+            {<point name="ui_dialog.b_dialog"/>}
+            #end add-point
+            NEXT FIELD CURRENT
+      
+         
+         #+ 此段落由子樣板a43產生
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL acri007_modify()
+               #add-point:ON ACTION modify
+               {<point name="menu.modify" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = g_curr_diag.getCurrentItem()
+               CALL acri007_modify()
+               #add-point:ON ACTION modify_detail
+               {<point name="menu.modify_detail" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL acri007_delete()
+               #add-point:ON ACTION delete
+               {<point name="menu.delete" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL acri007_insert()
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               
+               #add-point:ON ACTION reproduce
+               {<point name="menu.reproduce" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL acri007_query()
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice="exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+            
+         
+         
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="acri007.unlock_b" ver="1" status="" src="s">
+    <![CDATA[#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION acri007_unlock_b(ps_table)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:unlock_b段define
+   {<point name="unlock_b.define"/>}
+   #end add-point  
+   
+   LET ls_group = ""
+   
+   #IF ls_group.getIndexOf(ps_table,1) THEN
+      CLOSE acri007_bcl
+   #END IF
+   
+ 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="acri007.update_b" ver="1" status="" src="s">
+    <![CDATA[#+ 修改單身後其他table連動
+PRIVATE FUNCTION acri007_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   DEFINE ps_page          STRING
+   DEFINE ps_table         STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num5 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define
+   {<point name="update_b.define"/>}
+   #end add-point     
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+    
+   #判斷是否是同一群組的table
+   LET ls_group = "crca_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 AND ps_table <> "crca_t" THEN
+      #add-point:update_b段修改前
+      {<point name="update_b.b_update" mark="Y"/>}
+      #end add-point     
+      UPDATE crca_t 
+         SET (crcaseq,crca001
+              ,crcastus,crca002,crca003,crca009,crca004,crca010,crca005,crca006,crca007,crca008,crca011,crca012,crca013,crca014,crca015,crcaownid,crcaowndp,crcacrtid,crcacrtdp,crcacrtdt,crcamodid,crcamoddt) 
+              = 
+             (ps_keys[1],ps_keys[2]
+              ,g_crca_d[l_ac].crcastus,g_crca_d[l_ac].crca002,g_crca_d[l_ac].crca003,g_crca_d[l_ac].crca009, 
+                  g_crca_d[l_ac].crca004,g_crca_d[l_ac].crca010,g_crca_d[l_ac].crca005,g_crca_d[l_ac].crca006, 
+                  g_crca_d[l_ac].crca007,g_crca_d[l_ac].crca008,g_crca_d[l_ac].crca011,g_crca_d[l_ac].crca012, 
+                  g_crca_d[l_ac].crca013,g_crca_d[l_ac].crca014,g_crca_d[l_ac].crca015,g_crca2_d[l_ac].crcaownid, 
+                  g_crca2_d[l_ac].crcaowndp,g_crca2_d[l_ac].crcacrtid,g_crca2_d[l_ac].crcacrtdp,g_crca2_d[l_ac].crcacrtdt, 
+                  g_crca2_d[l_ac].crcamodid,g_crca2_d[l_ac].crcamoddt) 
+         WHERE crcaseq = ps_keys_bak[1] AND crca001 = ps_keys_bak[2]
+      #add-point:update_b段修改中
+      {<point name="update_b.m_update"/>}
+      #end add-point 
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            CALL cl_err("crca_t","std-00009",1)
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            CALL cl_err("crca_t",SQLCA.sqlcode,1)  
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      #add-point:update_b段修改後
+      {<point name="update_b.a_update"/>}
+      #end add-point 
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+]]>
+  </section>
+</add_points>

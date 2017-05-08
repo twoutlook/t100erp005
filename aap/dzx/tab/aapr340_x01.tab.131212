@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapr340_x01" module="aap" jobmode="N" type="x01" industry="std" crtid="02716" crtdt="2013/12/04" modid="02716" moddt="2013/10/17" sdver="1" tabver="10001" description="XG測試程式" >
+  <define arg="tm.wc(STRING|condition),tm.sw21(chr1|退貨折讓沖帳),tm.sw22(chr1|預付沖帳),tm.sw23(chr1|DM沖帳),tm.z(chr1|Print UNAP  暫估帳款),tm.h(chr1|狀態),tm.more(chr1|Input more condition)" >
+       <var seq="1" value="itap003,itap011,itap006,itge002,itap007,itap001,itap008,itap009,itap000,itap002,itpc004,pay,pay1,itpc013,itap0201(|''),mark,itap012,itap004,itaz004,itaz005,itaz004"/> 
+  </define> 
+  <selprep>
+       <sql id="l_select" query ="plant(ooabsite|''),itap000,itap001,itap002,itap003,itap004,itpc004,itap005,itap006,itap007,itap008,itap009,pay(itap018|itpc005-itpc006-itpc007-itpc008),pay1(itap018|itpc009-itpc010-itpc011-itpc008*itap010),itap011,itap012,itpm002,itpm003,itpc013,itaz003,itaz004,itaz005,itpa002(|''),itge002(|''),mark(itap005|'')"/>
+       <sql id="l_from" query ="itap_t LEFT OUTER JOIN itpm_t ON itpm001 = itap003  LEFT OUTER JOIN itge_t ON itge001 = itap006  LEFT OUTER JOIN itpa_t ON itpa001 = itap004,itpc_t,itaz_t"/>
+       <sql id="l_where" query ="itaz_t.itaz001 = itap_t.itap005 AND itap003!='EMPL' AND itap001 =itpc001 AND itap013 = 'N' AND itap014 > (itap015+itap016) AND " />
+  </selprep>  
+
+</assembly>
+

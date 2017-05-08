@@ -1,0 +1,1231 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aooi400_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2013-12-16 09:45:47), PR版次:0001(2013-12-23 14:32:29)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000171
+#+ Filename...: aooi400_01
+#+ Description: 週期月季資料產生
+#+ Creator....: 02482(2013-12-09 09:33:52)
+#+ Modifier...: 02482 -SD/PR- 02482
+ 
+{</section>}
+ 
+{<section id="aooi400_01.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_oogc_m        RECORD
+       oogc015 LIKE oogc_t.oogc015, 
+   bdate LIKE type_t.dat, 
+   edate LIKE type_t.dat, 
+   type LIKE type_t.chr500, 
+   season LIKE type_t.chr500, 
+   week LIKE type_t.chr500, 
+   mw1b LIKE type_t.num5, 
+   mw1e LIKE type_t.num5, 
+   mw2b LIKE type_t.num5, 
+   mw2e LIKE type_t.num5, 
+   mw3b LIKE type_t.num5, 
+   mw3e LIKE type_t.num5, 
+   mw4b LIKE type_t.num5, 
+   mw4e LIKE type_t.num5, 
+   mw5b LIKE type_t.num5, 
+   mw5e LIKE type_t.num5
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE l_mw1e_t        LIKE type_t.num5
+DEFINE l_mw2e_t        LIKE type_t.num5
+DEFINE l_mw3e_t        LIKE type_t.num5
+DEFINE l_mw4e_t        LIKE type_t.num5
+#end add-point
+ 
+DEFINE g_oogc_m        type_g_oogc_m
+ 
+   DEFINE g_oogc015_t LIKE oogc_t.oogc015
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aooi400_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aooi400_01(--)
+   #add-point:input段變數傳入
+   
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aooi400_01 WITH FORM cl_ap_formpath("aoo","aooi400_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_oogc_m.oogc015,g_oogc_m.bdate,g_oogc_m.edate,g_oogc_m.type,g_oogc_m.season,g_oogc_m.week, 
+          g_oogc_m.mw1b,g_oogc_m.mw1e,g_oogc_m.mw2b,g_oogc_m.mw2e,g_oogc_m.mw3b,g_oogc_m.mw3e,g_oogc_m.mw4b, 
+          g_oogc_m.mw4e,g_oogc_m.mw5b,g_oogc_m.mw5e ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            LET g_oogc_m.oogc015 = YEAR(g_today)
+            LET g_oogc_m.bdate = MDY(1,1,g_oogc_m.oogc015)
+            LET g_oogc_m.edate = MDY(12,31,g_oogc_m.oogc015)
+            DISPLAY BY NAME g_oogc_m.bdate,g_oogc_m.edate
+            LET g_oogc_m.season = 'N'
+            LET g_oogc_m.week = 'N'
+            DISPLAY BY NAME g_oogc_m.season
+            DISPLAY BY NAME g_oogc_m.week
+            LET g_oogc_m.mw1b = 1
+            LET g_oogc_m.mw1e = ''
+            LET g_oogc_m.mw2b = ''
+            LET g_oogc_m.mw2e = ''
+            LET g_oogc_m.mw3b = ''
+            LET g_oogc_m.mw3e = ''
+            LET g_oogc_m.mw4b = ''
+            LET g_oogc_m.mw4e = ''
+            LET g_oogc_m.mw5b = ''
+            LET g_oogc_m.mw5e = ''
+            CALL aooi400_01_set_entry()
+            CALL aooi400_01_set_no_entry()
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD oogc015
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_oogc_m.oogc015,"2000","1","2100","1","azz-00087",1) THEN
+               NEXT FIELD oogc015
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD oogc015 name="input.a.oogc015"
+            IF NOT cl_null(g_oogc_m.oogc015) THEN 
+               IF g_oogc_m.oogc015 > '2100' OR g_oogc_m.oogc015 < '2000' THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'aoo-00259'
+                  LET g_errparam.extend = g_oogc_m.oogc015
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_oogc_m.oogc015 = ''
+                  NEXT FIELD oogc015
+               END IF
+               LET g_oogc_m.bdate = MDY(1,1,g_oogc_m.oogc015)
+               LET g_oogc_m.edate = MDY(12,31,g_oogc_m.oogc015)
+               DISPLAY BY NAME g_oogc_m.bdate,g_oogc_m.edate
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD oogc015
+            #add-point:BEFORE FIELD oogc015 name="input.b.oogc015"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE oogc015
+            #add-point:ON CHANGE oogc015 name="input.g.oogc015"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bdate
+            #add-point:BEFORE FIELD bdate name="input.b.bdate"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bdate
+            
+            #add-point:AFTER FIELD bdate name="input.a.bdate"
+            IF NOT cl_null(g_oogc_m.bdate) THEN
+               LET g_oogc_m.edate = s_date_get_date(g_oogc_m.bdate,12,-1)
+               DISPLAY BY NAME g_oogc_m.edate
+               LET g_oogc_m.oogc015 = YEAR(g_oogc_m.bdate)
+               DISPLAY BY NAME g_oogc_m.oogc015
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bdate
+            #add-point:ON CHANGE bdate name="input.g.bdate"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD edate
+            #add-point:BEFORE FIELD edate name="input.b.edate"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD edate
+            
+            #add-point:AFTER FIELD edate name="input.a.edate"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE edate
+            #add-point:ON CHANGE edate name="input.g.edate"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD type
+            #add-point:BEFORE FIELD type name="input.b.type"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD type
+            
+            #add-point:AFTER FIELD type name="input.a.type"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE type
+            #add-point:ON CHANGE type name="input.g.type"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD season
+            #add-point:BEFORE FIELD season name="input.b.season"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD season
+            
+            #add-point:AFTER FIELD season name="input.a.season"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE season
+            #add-point:ON CHANGE season name="input.g.season"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD week
+            #add-point:BEFORE FIELD week name="input.b.week"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD week
+            
+            #add-point:AFTER FIELD week name="input.a.week"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE week
+            #add-point:ON CHANGE week name="input.g.week"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mw1b
+            #add-point:BEFORE FIELD mw1b name="input.b.mw1b"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mw1b
+            
+            #add-point:AFTER FIELD mw1b name="input.a.mw1b"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mw1b
+            #add-point:ON CHANGE mw1b name="input.g.mw1b"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mw1e
+            #add-point:BEFORE FIELD mw1e name="input.b.mw1e"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mw1e
+            
+            #add-point:AFTER FIELD mw1e name="input.a.mw1e"
+            IF NOT cl_null(g_oogc_m.mw1e) THEN
+               IF NOT aooi400_01_chk_mw(g_oogc_m.mw1e) THEN
+                  LET g_oogc_m.mw1e = ''
+                  NEXT FIELD CURRENT
+               END IF
+               IF g_oogc_m.mw1e < g_oogc_m.mw1b THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'aoo-00257'
+                  LET g_errparam.extend = g_oogc_m.mw1e
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_oogc_m.mw1e = ''
+                  NEXT FIELD CURRENT
+               END IF
+               IF g_oogc_m.mw1e != l_mw1e_t AND l_mw1e_t != 0 THEN
+                  LET g_oogc_m.mw2b = ""
+                  LET g_oogc_m.mw2e = ""
+                  DISPLAY BY NAME g_oogc_m.mw2b,g_oogc_m.mw2e
+               END IF
+               IF g_oogc_m.mw1e != 31 THEN
+                  LET g_oogc_m.mw2b = g_oogc_m.mw1e + 1
+                  DISPLAY BY NAME g_oogc_m.mw2b
+               END IF
+               LET l_mw1e_t = g_oogc_m.mw1e
+            END IF
+            CALL aooi400_01_set_entry()
+            CALL aooi400_01_set_no_entry()
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mw1e
+            #add-point:ON CHANGE mw1e name="input.g.mw1e"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mw2b
+            #add-point:BEFORE FIELD mw2b name="input.b.mw2b"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mw2b
+            
+            #add-point:AFTER FIELD mw2b name="input.a.mw2b"
+            IF cl_null(g_oogc_m.mw1e) THEN
+               LET g_oogc_m.mw2b = ''
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mw2b
+            #add-point:ON CHANGE mw2b name="input.g.mw2b"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mw2e
+            #add-point:BEFORE FIELD mw2e name="input.b.mw2e"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mw2e
+            
+            #add-point:AFTER FIELD mw2e name="input.a.mw2e"
+            IF NOT cl_null(g_oogc_m.mw2e) THEN
+               IF NOT aooi400_01_chk_mw(g_oogc_m.mw2e) THEN
+                  LET g_oogc_m.mw2e = ''
+                  NEXT FIELD CURRENT
+               END IF
+               IF g_oogc_m.mw2e < g_oogc_m.mw2b THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'aoo-00257'
+                  LET g_errparam.extend = g_oogc_m.mw2e
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_oogc_m.mw2e = ''
+                  NEXT FIELD CURRENT
+               END IF
+               IF g_oogc_m.mw2e != l_mw2e_t AND l_mw2e_t != 0 THEN
+                  LET g_oogc_m.mw3b = ""
+                  LET g_oogc_m.mw3e = ""
+                  DISPLAY BY NAME g_oogc_m.mw3b,g_oogc_m.mw3e
+               END IF
+               IF g_oogc_m.mw2e != 31 THEN
+                  LET g_oogc_m.mw3b = g_oogc_m.mw2e + 1
+                  DISPLAY BY NAME g_oogc_m.mw3b
+               END IF
+               LET l_mw2e_t = g_oogc_m.mw2e
+            END IF
+            CALL aooi400_01_set_entry()
+            CALL aooi400_01_set_no_entry()
+            IF cl_null(g_oogc_m.mw2b) THEN
+               LET g_oogc_m.mw2e = ''
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mw2e
+            #add-point:ON CHANGE mw2e name="input.g.mw2e"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mw3b
+            #add-point:BEFORE FIELD mw3b name="input.b.mw3b"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mw3b
+            
+            #add-point:AFTER FIELD mw3b name="input.a.mw3b"
+            IF cl_null(g_oogc_m.mw2e) THEN
+               LET g_oogc_m.mw3b = ''
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mw3b
+            #add-point:ON CHANGE mw3b name="input.g.mw3b"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mw3e
+            #add-point:BEFORE FIELD mw3e name="input.b.mw3e"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mw3e
+            
+            #add-point:AFTER FIELD mw3e name="input.a.mw3e"
+            IF NOT cl_null(g_oogc_m.mw3e) THEN
+               IF NOT aooi400_01_chk_mw(g_oogc_m.mw3e) THEN
+                  LET g_oogc_m.mw3e = ''
+                  NEXT FIELD CURRENT
+               END IF
+               IF g_oogc_m.mw3e < g_oogc_m.mw3b THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'aoo-00257'
+                  LET g_errparam.extend = g_oogc_m.mw3e
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_oogc_m.mw3e = ''
+                  NEXT FIELD CURRENT
+               END IF
+               IF g_oogc_m.mw3e != l_mw3e_t AND l_mw3e_t != 0 THEN
+                  LET g_oogc_m.mw4b = ""
+                  LET g_oogc_m.mw4e = ""
+                  DISPLAY BY NAME g_oogc_m.mw4b,g_oogc_m.mw4e
+               END IF
+               IF g_oogc_m.mw3e != 31 THEN
+                  LET g_oogc_m.mw4b = g_oogc_m.mw3e + 1
+                  DISPLAY BY NAME g_oogc_m.mw4b
+               END IF
+               LET l_mw3e_t = g_oogc_m.mw3e
+            END IF
+            CALL aooi400_01_set_entry()
+            CALL aooi400_01_set_no_entry()
+            IF cl_null(g_oogc_m.mw3b) THEN
+               LET g_oogc_m.mw3e = ''
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mw3e
+            #add-point:ON CHANGE mw3e name="input.g.mw3e"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mw4b
+            #add-point:BEFORE FIELD mw4b name="input.b.mw4b"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mw4b
+            
+            #add-point:AFTER FIELD mw4b name="input.a.mw4b"
+            IF cl_null(g_oogc_m.mw3e) THEN
+               LET g_oogc_m.mw4b = ''
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mw4b
+            #add-point:ON CHANGE mw4b name="input.g.mw4b"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mw4e
+            #add-point:BEFORE FIELD mw4e name="input.b.mw4e"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mw4e
+            
+            #add-point:AFTER FIELD mw4e name="input.a.mw4e"
+            IF NOT cl_null(g_oogc_m.mw4e) THEN
+               IF NOT aooi400_01_chk_mw(g_oogc_m.mw4e) THEN
+                  LET g_oogc_m.mw4e = ''
+                  NEXT FIELD CURRENT
+               END IF
+               IF g_oogc_m.mw4e < g_oogc_m.mw4b THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'aoo-00257'
+                  LET g_errparam.extend = g_oogc_m.mw4e
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_oogc_m.mw4e = ''
+                  NEXT FIELD CURRENT
+               END IF
+               IF g_oogc_m.mw4e != l_mw4e_t AND l_mw4e_t != 0 THEN
+                  LET g_oogc_m.mw5b = ""
+                  LET g_oogc_m.mw5e = ""
+                  DISPLAY BY NAME g_oogc_m.mw5b,g_oogc_m.mw5e
+               END IF
+               IF g_oogc_m.mw4e != 41 THEN
+                  LET g_oogc_m.mw5b = g_oogc_m.mw4e + 1
+                  DISPLAY BY NAME g_oogc_m.mw5b
+               END IF
+               LET l_mw4e_t = g_oogc_m.mw4e
+            END IF
+            CALL aooi400_01_set_entry()
+            CALL aooi400_01_set_no_entry()
+            IF cl_null(g_oogc_m.mw4b) THEN
+               LET g_oogc_m.mw4e = ''
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mw4e
+            #add-point:ON CHANGE mw4e name="input.g.mw4e"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mw5b
+            #add-point:BEFORE FIELD mw5b name="input.b.mw5b"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mw5b
+            
+            #add-point:AFTER FIELD mw5b name="input.a.mw5b"
+            IF cl_null(g_oogc_m.mw4e) THEN
+               LET g_oogc_m.mw5b = ''
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mw5b
+            #add-point:ON CHANGE mw5b name="input.g.mw5b"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mw5e
+            #add-point:BEFORE FIELD mw5e name="input.b.mw5e"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mw5e
+            
+            #add-point:AFTER FIELD mw5e name="input.a.mw5e"
+            IF NOT cl_null(g_oogc_m.mw5e) THEN
+               IF g_oogc_m.mw5e < g_oogc_m.mw5b THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'aoo-00257'
+                  LET g_errparam.extend = g_oogc_m.mw5e
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_oogc_m.mw5e = ''
+                  NEXT FIELD CURRENT
+               END IF
+               IF NOT aooi400_01_chk_mw(g_oogc_m.mw5e) THEN
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            IF cl_null(g_oogc_m.mw5b) THEN
+               LET g_oogc_m.mw5e = ''
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mw5e
+            #add-point:ON CHANGE mw5e name="input.g.mw5e"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.oogc015
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD oogc015
+            #add-point:ON ACTION controlp INFIELD oogc015 name="input.c.oogc015"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.bdate
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bdate
+            #add-point:ON ACTION controlp INFIELD bdate name="input.c.bdate"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.edate
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD edate
+            #add-point:ON ACTION controlp INFIELD edate name="input.c.edate"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.type
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD type
+            #add-point:ON ACTION controlp INFIELD type name="input.c.type"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.season
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD season
+            #add-point:ON ACTION controlp INFIELD season name="input.c.season"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.week
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD week
+            #add-point:ON ACTION controlp INFIELD week name="input.c.week"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mw1b
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mw1b
+            #add-point:ON ACTION controlp INFIELD mw1b name="input.c.mw1b"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mw1e
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mw1e
+            #add-point:ON ACTION controlp INFIELD mw1e name="input.c.mw1e"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mw2b
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mw2b
+            #add-point:ON ACTION controlp INFIELD mw2b name="input.c.mw2b"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mw2e
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mw2e
+            #add-point:ON ACTION controlp INFIELD mw2e name="input.c.mw2e"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mw3b
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mw3b
+            #add-point:ON ACTION controlp INFIELD mw3b name="input.c.mw3b"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mw3e
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mw3e
+            #add-point:ON ACTION controlp INFIELD mw3e name="input.c.mw3e"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mw4b
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mw4b
+            #add-point:ON ACTION controlp INFIELD mw4b name="input.c.mw4b"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mw4e
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mw4e
+            #add-point:ON ACTION controlp INFIELD mw4e name="input.c.mw4e"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mw5b
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mw5b
+            #add-point:ON ACTION controlp INFIELD mw5b name="input.c.mw5b"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mw5e
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mw5e
+            #add-point:ON ACTION controlp INFIELD mw5e name="input.c.mw5e"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   IF NOT INT_FLAG THEN
+      CALL aooi400_01_ins()
+   END IF
+   LET INT_FLAG = FALSE
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aooi400_01 
+   
+   #add-point:input段after input 
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aooi400_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aooi400_01.other_function" readonly="Y" >}
+################################################################################
+# Descriptions...: 檢查值在1~31內
+# Memo...........:
+# Usage..........: CALL aooi400_01_chk_mw(p_mw1b)
+# Input parameter: p_mw1b         需要檢查的值
+# Return code....: 無
+# Date & Author..: 2013/12/09 By xumm
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aooi400_01_chk_mw(p_mw1b)
+DEFINE p_mw1b     LIKE type_t.num5
+
+   IF p_mw1b > 31 OR p_mw1b < 1 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'aoo-00256'
+      LET g_errparam.extend = p_mw1b
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN FALSE
+   END IF
+   RETURN TRUE
+END FUNCTION
+################################################################################
+# Descriptions...: 欄位開啟
+# Memo...........:
+# Usage..........: CALL aooi400_01_set_entry()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2013/12/10 By xumm
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aooi400_01_set_entry()
+   CALL cl_set_comp_entry("mw1e",TRUE)
+   CALL cl_set_comp_entry("mw2e",TRUE)
+   CALL cl_set_comp_entry("mw3e",TRUE)
+   CALL cl_set_comp_entry("mw4e",TRUE)
+   CALL cl_set_comp_entry("mw5e",TRUE)
+END FUNCTION
+################################################################################
+# Descriptions...: 欄位關閉
+# Memo...........:
+# Usage..........: CALL aooi400_01_set_no_entry()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2013/12/09 By xumm
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aooi400_01_set_no_entry()
+   IF cl_null(g_oogc_m.mw1e) OR g_oogc_m.mw1e = 31 THEN
+      LET g_oogc_m.mw2b = ""
+      LET g_oogc_m.mw2e = ""
+      DISPLAY BY NAME g_oogc_m.mw2b,g_oogc_m.mw2e
+      CALL cl_set_comp_entry("mw2e",FALSE)
+   END IF
+   IF cl_null(g_oogc_m.mw2e) OR g_oogc_m.mw2e = 31 THEN
+      LET g_oogc_m.mw3b = ""
+      LET g_oogc_m.mw3e = ""
+      DISPLAY BY NAME g_oogc_m.mw3b,g_oogc_m.mw3e
+      CALL cl_set_comp_entry("mw3e",FALSE)
+   END IF
+
+   IF cl_null(g_oogc_m.mw3e) OR g_oogc_m.mw3e = 31 THEN
+      LET g_oogc_m.mw4b = ""
+      LET g_oogc_m.mw4e = ""
+      DISPLAY BY NAME g_oogc_m.mw4b,g_oogc_m.mw4e
+      CALL cl_set_comp_entry("mw4e",FALSE)
+   END IF
+
+   IF cl_null(g_oogc_m.mw4e) OR g_oogc_m.mw4e = 31 THEN
+      LET g_oogc_m.mw5b = ""
+      LET g_oogc_m.mw5e = ""
+      DISPLAY BY NAME g_oogc_m.mw5b,g_oogc_m.mw5e
+      CALL cl_set_comp_entry("mw5e",FALSE)
+   END IF
+END FUNCTION
+################################################################################
+# Descriptions...: 整批新增數據
+# Memo...........:
+# Usage..........: CALL aooi400_01_ins()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2013/12/10 By xumm
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aooi400_01_ins()
+DEFINE l_sql           STRING
+DEFINE l_success       LIKE type_t.chr1
+DEFINE l_date          LIKE type_t.dat
+DEFINE b_date1         LIKE type_t.dat
+DEFINE b_date2         LIKE type_t.dat
+DEFINE l_yy            LIKE type_t.num5
+DEFINE l_mm            LIKE type_t.num5
+DEFINE l_ss            LIKE type_t.num5
+DEFINE l_dd            LIKE type_t.num5
+DEFINE l_week          LIKE type_t.num5
+DEFINE l_days          LIKE type_t.num5
+DEFINE l_month         LIKE type_t.num5
+DEFINE i               LIKE type_t.num5
+DEFINE l_i             LIKE type_t.num5
+DEFINE l_d             LIKE type_t.num5
+DEFINE l_time          DATETIME YEAR TO SECOND
+DEFINE l_date1 ARRAY[12] OF LIKE type_t.dat,          
+       l_date2 ARRAY[12] OF LIKE type_t.dat 
+   
+      LET l_success = 'Y'
+      CALL s_transaction_begin()
+      #1.先抓取符合日期起迄範圍的ooga_t資料,將ooga009~ooga013欄位值清空
+      UPDATE ooga_t SET ooga009 = '',
+                        ooga010 = '',
+                        ooga011 = '',
+                        ooga012 = '',
+                        ooga013 = ''
+       WHERE oogaent = g_enterprise
+         AND ooga001 BETWEEN g_oogc_m.bdate AND g_oogc_m.edate
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "upd_ooga_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET l_success = 'N'
+      END IF   
+      
+      LET l_sql = "SELECT ooga001 FROM ooga_t ",
+                  " WHERE oogaent = '",g_enterprise,"'",
+                  "   AND ooga001 BETWEEN '",g_oogc_m.bdate,"' AND '",g_oogc_m.edate,"'"
+      PREPARE aooi400_01_pre FROM l_sql
+      DECLARE aooi400_01_cur CURSOR FOR aooi400_01_pre
+      FOREACH aooi400_01_cur INTO l_date
+         FOR i= 1 TO 12
+             LET l_date1[i] = s_date_get_date(g_oogc_m.bdate,i,0)
+             LET l_date2[i] = l_date1[i] -1
+         END FOR
+         #2.期別(ooga009)計算
+         #若期別計算方式選擇
+         #(1)12期(1月為1期)
+         #   bdate       ~bdate+1個月-1天  =>期別1
+         #   bdate+1個月 ~bdate+2個月-1天  =>期別2
+         #   bdate+2個月 ~bdate+3個月-1天  =>期別3
+         #   ...
+         #   bdate+11個月~bdate+12個月-1天 =>期別12
+         #(2)13期(4週為1期)
+         #   bdate        ~bdate+28*1天-1天    =>期別1
+         #   bdate+28*1天 ~bdate+28*2天-1天    =>期別2
+         #   bdate+28*2天 ~bdate+28*3天-1天    =>期別3
+         #   ...
+         #   bdate+28*12天~bdate+28*13個月-1天 =>期別13
+         #12期(1月為1期)
+         IF g_oogc_m.type = '1' THEN
+            IF l_date <= l_date2[1] THEN
+               LET l_mm = 1
+            END IF
+            IF l_date >= l_date1[1] AND l_date <= l_date2[2] THEN
+               LET l_mm = 2
+            END IF
+	          IF l_date >= l_date1[2] AND l_date <= l_date2[3] THEN
+               LET l_mm = 3
+            END IF
+            IF l_date >= l_date1[3] AND l_date <= l_date2[4] THEN
+               LET l_mm = 4
+            END IF
+    	      IF l_date >= l_date1[4] AND l_date <= l_date2[5] THEN
+               LET l_mm = 5
+            END IF
+	          IF l_date >= l_date1[5] AND l_date <= l_date2[6] THEN
+               LET l_mm = 6
+            END IF
+            IF l_date >= l_date1[6] AND l_date <= l_date2[7] THEN
+               LET l_mm = 7
+            END IF
+	          IF l_date >= l_date1[7] AND l_date <= l_date2[8] THEN
+               LET l_mm = 8
+            END IF
+	          IF l_date >= l_date1[8] AND l_date <= l_date2[9] THEN
+               LET l_mm = 9
+            END IF
+            IF l_date >= l_date1[9] AND l_date <= l_date2[10] THEN
+               LET l_mm = 10
+            END IF
+	          IF l_date >= l_date1[10] AND l_date <= l_date2[11] THEN
+               LET l_mm = 11
+            END IF
+	          IF l_date >= l_date1[11] AND l_date <= l_date2[12] THEN
+               LET l_mm = 12
+            END IF
+         ELSE
+           #13期(4週為1期)
+           IF l_date <= g_oogc_m.bdate +27 THEN
+              LET l_mm = 1
+           END IF 
+	         IF l_date <= g_oogc_m.bdate +55 AND l_date >= g_oogc_m.bdate +28 THEN
+	          LET l_mm = 2
+           END IF
+	         IF l_date <= g_oogc_m.bdate +83 AND l_date >= g_oogc_m.bdate +56 THEN
+	          LET l_mm = 3
+           END IF
+           IF l_date <= g_oogc_m.bdate +111 AND l_date >= g_oogc_m.bdate + 84 THEN
+	            LET l_mm = 4
+           END IF 
+	         IF l_date <= g_oogc_m.bdate +139 AND l_date >= g_oogc_m.bdate +112 THEN
+	            LET l_mm = 5
+           END IF
+	         IF l_date <= g_oogc_m.bdate +167 AND l_date >= g_oogc_m.bdate +140 THEN
+  	          LET l_mm = 6
+           END IF
+           IF l_date <= g_oogc_m.bdate + 195 AND l_date >= g_oogc_m.bdate + 168 THEN
+	            LET l_mm = 7
+           END IF 
+	         IF l_date <= g_oogc_m.bdate + 223 AND l_date >= g_oogc_m.bdate + 196 THEN
+	            LET l_mm = 8
+           END IF
+	         IF l_date <= g_oogc_m.bdate + 251 AND l_date >= g_oogc_m.bdate + 224 THEN
+	            LET l_mm = 9
+           END IF
+           IF l_date <= g_oogc_m.bdate + 279 AND l_date >= g_oogc_m.bdate + 252 THEN
+	            LET l_mm = 10
+           END IF 
+	         IF l_date <= g_oogc_m.bdate + 307 AND l_date >= g_oogc_m.bdate + 280 THEN
+	            LET l_mm = 11
+           END IF
+	         IF l_date <= g_oogc_m.bdate + 335 AND l_date >= g_oogc_m.bdate + 308 THEN
+	            LET l_mm = 12
+           END IF
+	         IF l_date >= g_oogc_m.bdate + 336 THEN
+	            LET l_mm = 13
+           END IF
+         END IF
+         #3.季別(ooga010)資料的寫入是依據畫面上[C:第一季從1/1開始]有沒有勾選來決定計算方式
+         #(1)勾選表示1、2、3月是第一季，4、5、6月是第二季，7、8、9月是第三季，10、11、12月是第四季
+         #(2)不勾表示以bdate所在月份為第一季的起始月份，例：bdate=2013/4/1,則4、5、6月是第一季，7、8、9月是第二季，10、11、12月是第三季，次年1、2、3月是第四季     
+         IF g_oogc_m.season = 'Y' THEN
+            LET b_date1 = MDY(1,1,YEAR(l_date))
+         ELSE
+            LET b_date1 = g_oogc_m.bdate
+         END IF
+         FOR i= 1 TO 12
+             LET l_date1[i] = s_date_get_date(b_date1,i,0)
+             LET l_date2[i] = l_date1[i] -1
+         END FOR
+         #第一季度
+         IF l_date <= l_date2[3] THEN
+            LET l_ss = 1
+         END IF 
+         #第二季度
+         IF l_date <= l_date2[6] AND l_date >= l_date1[3] THEN
+            LET l_ss = 2      	    
+         END IF
+         #第三季度
+         IF l_date <= l_date2[9] AND l_date >= l_date1[6] THEN
+            LET l_ss = 3	        
+         END IF
+         #第四季度
+         IF l_date <= l_date2[12] AND l_date >= l_date1[9] THEN
+            LET l_ss = 4
+         END IF
+         #4.週別(ooga011)資料的寫入是依據畫面上[C:第一週從1/1開始]有沒有勾選來決定計算方式，
+         #(1)勾選表示1/1那天是第一週，以2013/1/1(二)為例，則1/1(二)~1/5(六)是第一週，1/6(日)~1/12(六)是第二週...
+         #(2)不勾表示以bdate為第一週的起始日期，例：bdate=2013/4/1(一),則4/1(一)~4/6(六)是第一週,4/7(日)~4/13(六)是第二週...
+         #計算週期
+         LET l_days = 0
+         IF g_oogc_m.week = 'Y' THEN
+            LET b_date2 = MDY(1,1,YEAR(l_date))
+         ELSE
+            LET b_date2 = g_oogc_m.bdate
+         END IF
+         LET l_days = l_date - b_date2
+         IF l_days=0 THEN LET l_days=1 END IF
+         LET l_week = 0
+         FOR l_i = 1 TO l_days
+             IF WEEKDAY(g_oogc_m.bdate + l_i) = 0 THEN
+                LET l_week = l_week +1
+             END IF
+             IF l_week = 0 THEN 
+                LET l_week = l_week +1
+             END IF 
+         END FOR 
+         #5.月份(ooga012)=Month(日期)
+         LET l_month = MONTH(l_date)
+         #6.月週(ooga013)計算：
+         #依據畫面設定值,給予月週值
+         #(1)例如：
+         #   月週1是 1~ 8,則每一個月的 1~ 8日,ooga013= 1
+         #   月週2是 9~15,則每一個月的 9~15日,ooga013= 2
+         #   月週3是16~23,則每一個月的16~23日,ooga013= 3
+         #   月週4是24~  ,則每一個月的24~最後一天(沒輸入表示到月底),ooga013= 4 
+         #(2)若月週4設定為24~30,則每一個月的24~30,ooga013= 4但當月有31日時,則31的ooga013= 5 
+         LET l_d = DAY(l_date)
+         IF cl_null(g_oogc_m.mw1e) THEN LET g_oogc_m.mw1e = 31 END IF
+         IF NOT cl_null(g_oogc_m.mw2b) AND cl_null(g_oogc_m.mw2e) THEN LET g_oogc_m.mw2e = 31 END IF
+         IF NOT cl_null(g_oogc_m.mw3b) AND cl_null(g_oogc_m.mw3e) THEN LET g_oogc_m.mw3e = 31 END IF
+         IF NOT cl_null(g_oogc_m.mw4b) AND cl_null(g_oogc_m.mw4e) THEN LET g_oogc_m.mw4e = 31 END IF
+         IF NOT cl_null(g_oogc_m.mw5b) AND cl_null(g_oogc_m.mw5e) THEN LET g_oogc_m.mw5e = 31 END IF
+         IF l_d >= g_oogc_m.mw1b AND l_d <= g_oogc_m.mw1e THEN
+            LET l_dd = 1
+         END IF
+         IF l_d >= g_oogc_m.mw2b AND l_d <= g_oogc_m.mw2e THEN
+            LET l_dd = 2
+         END IF
+         IF l_d >= g_oogc_m.mw3b AND l_d <= g_oogc_m.mw3e THEN
+            LET l_dd = 3
+         END IF
+         IF l_d >= g_oogc_m.mw4b AND l_d <= g_oogc_m.mw4e THEN
+            LET l_dd = 4
+         END IF
+         IF l_d >= g_oogc_m.mw5b AND l_d <= g_oogc_m.mw5e THEN
+            LET l_dd = 5
+         END IF
+         LET l_time = cl_get_current()
+         UPDATE ooga_t SET ooga009 = l_mm,
+                           ooga010 = l_ss,
+                           ooga011 = l_week,
+                           ooga012 = l_month,
+                           ooga013 = l_dd,
+                           oogamodid = g_user,
+                           oogamoddt = l_time
+          WHERE oogaent = g_enterprise
+            AND ooga001 = l_date
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "upd_ooga_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+            LET l_success = 'N'
+            EXIT FOREACH
+         END IF 
+      END FOREACH
+      
+      #7.若產生成功,則顯示"產生完成"訊息;若產生失敗,則顯示"產生失敗"訊息 
+      IF l_success = 'Y' THEN
+         CALL s_transaction_end('Y','0')
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'sub-00033'
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+      ELSE
+         CALL s_transaction_end('N','0')
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'sub-00034'
+         LET g_errparam.extend = l_date
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+      END IF
+END FUNCTION
+
+ 
+{</section>}
+ 

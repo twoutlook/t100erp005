@@ -1,0 +1,549 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="ammt302_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2016-05-19 15:13:55), PR版次:0004(2016-11-11 15:55:10)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000176
+#+ Filename...: ammt302_01
+#+ Description: 會員等級批次變更
+#+ Creator....: 01533(2014-01-02 00:05:57)
+#+ Modifier...: 02159 -SD/PR- 02481
+ 
+{</section>}
+ 
+{<section id="ammt302_01.global" >}
+#應用 p00 樣板自動產生(Version:5)
+#add-point:填寫註解說明 name="main.memo"
+#161111-00028#1   2016/11/11 BY 02481    标准程式定义采用宣告模式,弃用.*写法
+#end add-point
+#add-point:填寫註解說明(客製用) name="main.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="main.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="ammt302_01.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+
+{<Module define>}
+#單頭 type 宣告
+
+ type type_tm           RECORD
+   wc1   STRING,
+   wc2   STRING
+       END RECORD
+       
+ type type_g_mmcx_m        RECORD
+   mmcx002  LIKE mmcx_t.mmcx002,
+   mmcxsite LIKE mmcx_t.mmcxsite
+       END RECORD
+
+DEFINE tm              type_tm
+DEFINE g_mmcx_m        type_g_mmcx_m
+
+DEFINE g_mmcxdocno     LIKE mmcx_t.mmcxdocno  
+DEFINE g_mmcxdocno_t   LIKE mmcx_t.mmcxdocno    #Key值備份
+
+
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+{</Module define>}
+#end add-point
+ 
+{</section>}
+ 
+{<section id="ammt302_01.global_variable" >}
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="ammt302_01.other_dialog" >}
+
+ 
+{</section>}
+ 
+{<section id="ammt302_01.other_function" readonly="Y" >}
+
+PUBLIC FUNCTION ammt302_01(--)
+   #add-point:input段變數傳入
+   p_mmcxdocno
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   {<Local define>}
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   DEFINE tok            base.StringTokenizer
+   
+   {</Local define>}
+   #add-point:input段define
+   {<point name="input.define"/>}
+   DEFINE p_mmcxdocno     LIKE mmcx_t.mmcxdocno
+   DEFINE l_stus          LIKE mmcx_t.mmcxstus
+   #end add-point
+
+   WHENEVER ERROR CONTINUE
+   
+   IF cl_null(p_mmcxdocno) THEN
+      RETURN 
+   END IF
+   
+   SELECT mmcxstus INTO l_stus FROM mmcx_t
+    WHERE mmcxent = g_enterprise AND mmcxdocno = p_mmcxdocno
+    
+   IF l_stus <> 'N' THEN
+      RETURN
+   END IF
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_ammt302_01 WITH FORM cl_ap_formpath("amm","ammt302_01")
+
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   CALL s_ammt302_create_mmcztmp()
+   LET g_mmcxdocno = p_mmcxdocno
+   #end add-point
+
+   WHILE TRUE
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      CONSTRUCT tm.wc1 ON mmag001,mmag004 FROM mmag001,mmag004_1
+         
+          BEFORE CONSTRUCT
+           
+          
+          AFTER FIELD mmag001
+             
+             
+          
+          AFTER FIELD mmag004_1
+          
+          
+          ON ACTION controlp INFIELD mmag001
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_mmaf001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mmag001  #顯示到畫面上
+
+            NEXT FIELD mmag001                     #返回原欄位
+            
+
+          ON ACTION controlp INFIELD mmag004_1
+
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+			LET g_qryparam.arg1 = '2025'
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mmag004_1  #顯示到畫面上
+
+            NEXT FIELD mmag004_1     
+           
+      END CONSTRUCT
+      
+      CONSTRUCT tm.wc2 ON mmag004 FROM mmag004_2
+         
+          BEFORE CONSTRUCT
+           
+
+          AFTER FIELD mmag004_2
+          
+          ON ACTION controlp INFIELD mmag004_2
+
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+			LET g_qryparam.arg1 = '2024'
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mmag004_2  #顯示到畫面上
+
+            NEXT FIELD mmag004_2     
+                      
+      END CONSTRUCT
+       
+
+      #輸入開始
+      INPUT BY NAME g_mmcx_m.mmcx002,g_mmcx_m.mmcxsite ATTRIBUTE(WITHOUT DEFAULTS)
+
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+
+         #自訂ACTION(master_input)
+
+
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+
+         #---------------------------<  Master  >---------------------------
+   
+         #----<<mmcx002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD mmcx002
+            #add-point:BEFORE FIELD mmcx002
+            {<point name="input.b.mmcx002" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD mmcx002
+
+            #add-point:AFTER FIELD mmcx002
+            {<point name="input.a.mmcx002" />}
+            IF g_mmcx_m.mmcx002 > g_today THEN
+               LET g_mmcx_m.mmcx002 = g_today
+               NEXT FIELD mmcx002
+            END IF
+            #END add-point
+
+
+         #此段落由子樣板a04產生
+         ON CHANGE mmcx002
+            #add-point:ON CHANGE mmcx002
+            {<point name="input.g.mmcx002" />}
+            #END add-point
+
+         #----<<mmcxunit>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD mmcxsite
+            #add-point:BEFORE FIELD mmcxunit
+            {<point name="input.b.mmcxunit" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD mmcxsite
+
+            #add-point:AFTER FIELD mmcxunit
+            {<point name="input.a.mmcxunit" />}
+            IF NOT cl_null( g_mmcx_m.mmcxsite) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_errshow = '1'
+               LET g_chkparam.arg1 = g_mmcx_m.mmcxsite
+               LET g_chkparam.arg2 = '8'
+               LET g_chkparam.arg3 = g_site
+               IF NOT cl_chk_exist("v_ooed004") THEN
+                  LET g_mmcx_m.mmcxsite = ''
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            
+            #END add-point
+
+
+         #此段落由子樣板a04產生
+         ON CHANGE mmcxsite
+            #add-point:ON CHANGE mmcxunit
+            {<point name="input.g.mmcxunit" />}
+            #END add-point
+
+ #欄位檢查
+         #---------------------------<  Master  >---------------------------
+         #----<<mmcxdocno>>----
+         #Ctrlp:input.c.mmcxdocno
+#         ON ACTION controlp INFIELD mmcxdocno
+            #add-point:ON ACTION controlp INFIELD mmcxdocno
+            {<point name="input.c.mmcxdocno" />}
+            #END add-point
+
+         #----<<mmcx002>>----
+         #Ctrlp:input.c.mmcx002
+         #ON ACTION controlp INFIELD mmcx002
+            #add-point:ON ACTION controlp INFIELD mmcx002
+            {<point name="input.c.mmcx002" />}
+            #END add-point
+
+         #----<<mmcxunit>>----
+         #Ctrlp:input.c.mmcxunit
+          ON ACTION controlp INFIELD mmcxsite
+            #add-point:ON ACTION controlp INFIELD mmcxsite
+            {<point name="input.c.mmcxunit" />}
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_mmcx_m.mmcxsite       #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_site #
+            LET g_qryparam.arg2 = "8" #
+
+            CALL q_ooed004()                                   #呼叫開窗
+
+            LET g_mmcx_m.mmcxsite = g_qryparam.return1              
+
+            DISPLAY g_mmcx_m.mmcxsite  TO mmcxsite              #顯示到畫面上
+
+            NEXT FIELD mmcxsite                                 #返回原欄位
+            
+            
+            #END add-point
+
+ #欄位開窗
+
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+
+      END INPUT
+
+      BEFORE DIALOG
+         LET g_mmcx_m.mmcx002 = g_today
+         LET g_mmcx_m.mmcxsite = g_site
+         DISPLAY BY NAME g_mmcx_m.mmcx002,g_mmcx_m.mmcxsite
+         NEXT FIELD mmag001
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION close
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION exit
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0   
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 9001
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      DROP TABLE mmcz_01_tmp
+     #畫面關閉
+      CLOSE WINDOW w_ammt302_01
+      RETURN
+   END IF
+   
+   IF cl_null(tm.wc1) THEN
+      LET tm.wc1 = " 1=1"
+   END IF
+
+   IF cl_null(tm.wc2) THEN
+      LET tm.wc2 = " 1=1"
+   END IF
+
+   CALL cl_err_showmsg_init()
+   CALL s_transaction_begin()
+   
+   IF ammt302_01_insert_b() THEN
+      CALL s_transaction_end('Y','0')
+      CALL cl_showmsg()
+      EXIT WHILE      
+   ELSE
+      CALL s_transaction_end('N','0')
+      CALL cl_showmsg()
+      CONTINUE WHILE    
+   END IF
+
+   END WHILE
+   #畫面關閉
+   CLOSE WINDOW w_ammt302_01
+   #add-point:input段after input
+   {<point name="input.post_input"/>}
+   #end add-point
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION ammt302_01_insert_b()
+DEFINE l_sql      STRING 
+DEFINE l_mmaf001  LIKE mmaf_t.mmaf001
+#DEFINE l_mmcy     RECORD LIKE mmcy_t.*  #161111-00028#1--mark
+#161111-00028#1----add------begin---------------
+DEFINE l_mmcy RECORD  #會員等級變更單身檔
+       mmcyent LIKE mmcy_t.mmcyent, #企業編號
+       mmcyunit LIKE mmcy_t.mmcyunit, #應用組織
+       mmcysite LIKE mmcy_t.mmcysite, #營運據點
+       mmcydocno LIKE mmcy_t.mmcydocno, #單號
+       mmcy001 LIKE mmcy_t.mmcy001, #會員編號
+       mmcy002 LIKE mmcy_t.mmcy002, #原會員等級
+       mmcy003 LIKE mmcy_t.mmcy003, #新會員等級
+       mmcy004 LIKE mmcy_t.mmcy004, #會員類型
+       mmcy005 LIKE mmcy_t.mmcy005, #理由碼
+       mmcy006 LIKE mmcy_t.mmcy006, #升降等策略編號
+       mmcy007 LIKE mmcy_t.mmcy007 #版本
+       END RECORD
+#161111-00028#1----add-----end-----------------
+DEFINE l_oocq009  LIKE oocq_t.oocq009
+DEFINE l_success  LIKE type_t.num5
+DEFINE l_n        LIKE type_t.num5
+DEFINE l_flag     LIKE type_t.chr1
+DEFINE l_mmcy006  LIKE mmcy_t.mmcy006   #160511-00011#2 160519 by sakura add
+
+    LET l_flag = 'N'
+    SELECT COUNT(*) INTO l_n FROM mmcy_t WHERE mmcyent = g_enterprise AND mmcydocno = g_mmcxdocno
+    IF l_n > 0 THEN
+       IF cl_ask_confirm('amm-00308') THEN
+          LET l_flag = 'Y'
+       END IF       
+    END IF
+    LET l_sql = " SELECT mmaf001 FROM mmaf_t LEFT OUTER JOIN mmag_t ON mmag001 = mmaf001 AND mmafent = mmagent AND  mmag003 = '2025'  ",
+                "  WHERE mmafstus = 'Y' AND ",tm.wc1,
+                " INTERSECT ",
+                " SELECT mmaf001 FROM mmaf_t LEFT OUTER JOIN mmag_t ON mmag001 = mmaf001 AND mmafent = mmagent AND  mmag003 = '2024'  ",
+                 "  WHERE mmafstus = 'Y' AND ",tm.wc2
+
+    PREPARE sel_mmaf FROM l_sql
+    DECLARE mmaf_cur CURSOR FOR sel_mmaf
+    LET l_mmaf001 = NULL
+    FOREACH mmaf_cur INTO l_mmaf001
+    
+         SELECT COUNT(*) INTO l_n FROM mmcy_t INNER JOIN mmcx_t ON mmcxent = mmcyent AND mmcxdocno = mmcydocno
+          WHERE mmcy001 = l_mmaf001 AND mmcxstus = 'N' AND mmcyent = g_enterprise AND mmcxdocno<>g_mmcxdocno
+         IF l_n > 0 THEN 
+            CALL cl_errmsg('mmcy001',l_mmaf001,'','amm-00309',1)
+            CONTINUE FOREACH
+         END IF         
+         
+         SELECT COUNT(*) INTO l_n FROM mmcy_t WHERE mmcyent = g_enterprise AND mmcydocno = g_mmcxdocno AND mmcy001 = l_mmaf001
+         IF l_n > 0 THEN
+            IF l_flag = 'Y' THEN
+               DELETE FROM mmcy_t WHERE mmcyent = g_enterprise AND mmcydocno = g_mmcxdocno AND mmcy001 = l_mmaf001
+               DELETE FROM mmcz_t WHERE mmczent = g_enterprise AND mmczdocno = g_mmcxdocno AND mmcz001 = l_mmaf001
+            ELSE
+               CONTINUE FOREACH
+            END IF
+         END IF
+       
+         LET l_mmcy.mmcy001 = l_mmaf001
+         LET l_mmcy.mmcyent = g_enterprise 
+         LET l_mmcy.mmcydocno = g_mmcxdocno
+         LET l_mmcy.mmcysite = g_mmcx_m.mmcxsite
+         LET l_mmcy.mmcyunit =  g_mmcx_m.mmcxsite
+         #抓会员等级
+         SELECT DISTINCT mmag004 INTO l_mmcy.mmcy002 FROM mmag_t
+          WHERE mmagent = g_enterprise AND mmag001 = l_mmaf001 and mmag003 = '2024'
+         IF cl_null(l_mmcy.mmcy002) THEN
+            #CALL cl_errmsg('mmcy001',l_mmaf001,'','amm-00304',1)  #160511-00011#3 160615 by sakura mark
+          #160511-00011#3 160615 by sakura add(S)
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.code = 'amm-00304'  
+          LET g_errparam.extend = ''
+          LET g_errparam.popup = TRUE
+          LET g_errparam.replace[1] = l_mmaf001
+          CALL cl_err()
+          #160511-00011#3 160615 by sakura add(E)            
+            CONTINUE FOREACH
+         END IF
+         #抓会员类型        
+         SELECT DISTINCT mmag004 INTO l_mmcy.mmcy004 FROM mmag_t
+          WHERE mmagent = g_enterprise AND mmag001 = l_mmaf001 and mmag003 = '2025'  
+         IF cl_null(l_mmcy.mmcy004) THEN
+            CALL cl_errmsg('mmcy001',l_mmaf001,'','amm-00305',1)
+            CONTINUE FOREACH
+         END IF
+         #抓会员等级序  
+         SELECT oocq009 INTO l_oocq009 FROM oocq_t 
+          WHERE oocqent = g_enterprise AND oocq001 = '2024' AND oocq002 = l_mmcy.mmcy002 
+          
+          #抓升降等策略
+          SELECT oocq004 INTO l_mmcy.mmcy006 FROM oocq_t 
+           WHERE oocqent = g_enterprise AND oocq001 = '2025' AND oocq002 = l_mmcy.mmcy004
+         #160511-00011#2 160519 by sakura add(S)
+         LET l_mmcy006 = ''
+         IF cl_null(l_mmcy.mmcy006) THEN
+            LET l_mmcy006 = cl_get_para(g_enterprise,g_site,'E-CIR-0063')
+            LET l_mmcy.mmcy006 = l_mmcy006            
+         END IF
+         #160511-00011#2 160519 by sakura add(E)         
+         IF cl_null(l_mmcy.mmcy006) THEN
+            CALL cl_errmsg('mmcy001',l_mmaf001,'','amm-00306',1)
+            CONTINUE FOREACH
+         END IF 
+         
+         SELECT mmcu002 INTO l_mmcy.mmcy007 FROM mmcu_t
+          WHERE mmcuent =  g_enterprise AND mmcu001 = l_mmcy.mmcy006  
+   
+        #CALL ammt302_01_gen(l_mmaf001,l_mmcy.mmcy002,l_oocq009,l_mmcy.mmcy006) RETURNING l_success,l_mmcy.mmcy003
+         CALL s_ammt302_chk_mmcv(g_mmcxdocno,l_mmcy.mmcy001,g_mmcx_m.mmcx002,'2') RETURNING l_success,l_mmcy.mmcy003
+          
+         IF l_success THEN
+           #INSERT INTO mmcy_t VALUES(l_mmcy.*)  #161111-00028#1--mark
+           #161111-00028#1---add-----begin----------
+            INSERT INTO mmcy_t (mmcyent,mmcyunit,mmcysite,mmcydocno,mmcy001,mmcy002,mmcy003,mmcy004,mmcy005,mmcy006,mmcy007)
+               VALUES (l_mmcy.mmcyent,l_mmcy.mmcyunit,l_mmcy.mmcysite,l_mmcy.mmcydocno,l_mmcy.mmcy001,l_mmcy.mmcy002,
+                       l_mmcy.mmcy003,l_mmcy.mmcy004,l_mmcy.mmcy005,l_mmcy.mmcy006,l_mmcy.mmcy007)
+            ##161111-00028#1---add----end----------
+            IF SQLCA.sqlcode THEN
+               CALL cl_errmsg('mmcy_t','ins','',SQLCA.sqlcode,1)
+               RETURN FALSE
+            ELSE
+               IF NOT s_ammt302_ins_mmcz() THEN
+                  RETURN FALSE
+               END IF
+            END IF
+         END IF
+    END FOREACH
+    IF cl_null(l_mmaf001) THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = 'amm-00446'
+       LET g_errparam.extend = ''
+       LET g_errparam.popup = TRUE
+       CALL cl_err()
+
+       RETURN FALSE
+    ELSE
+       RETURN TRUE
+    END IF
+END FUNCTION
+
+ 
+{</section>}
+ 

@@ -1,0 +1,2381 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="abmp100.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2015-10-21 10:29:13), PR版次:0003(2016-07-11 16:13:40)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000071
+#+ Filename...: abmp100
+#+ Description: 工程BOM 轉正式BOM作業
+#+ Creator....: 01534(2015-02-03 12:32:08)
+#+ Modifier...: 02295 -SD/PR- 01534
+ 
+{</section>}
+ 
+{<section id="abmp100.global" >}
+#應用 p02 樣板自動產生(Version:19)
+#add-point:填寫註解說明
+#Memos
+#160706-00020#1   2016/07/11 By lixh  临时表的定义改为参照资料库直接定义
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+#add-point:增加匯入變數檔
+#
+##end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10             #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num10             #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)  #注意要在add-point內寫入END RECORD
+    sel     LIKE type_t.chr1,
+   bmba001 LIKE bmba_t.bmba001,
+   bmba001_desc LIKE type_t.chr500,
+   bmba001_desc_1 LIKE type_t.chr500,   
+   bmba005 LIKE bmba_t.bmba005,
+   bmba009 LIKE bmba_t.bmba009,
+   bmba004 LIKE bmba_t.bmba004,
+   bmba004_desc LIKE type_t.chr500, 
+   bmba007 LIKE bmba_t.bmba007, 
+   bmba007_desc LIKE type_t.chr500,
+   bmba008 LIKE bmba_t.bmba008,   
+   bmba003 LIKE bmba_t.bmba003, 
+   bmba003_desc LIKE type_t.chr500,
+   bmba003_desc_1 LIKE type_t.chr500,   
+   imaa038 LIKE imaa_t.imaa038,
+   imaa039 LIKE imaa_t.imaa039,
+   imaa039_desc LIKE type_t.chr500,
+   imaa039_desc_1 LIKE type_t.chr500
+END RECORD
+
+ TYPE type_g_bmab_d RECORD
+   bmab003 LIKE bmab_t.bmab003, 
+   bmab003_desc LIKE type_t.chr500, 
+   bmab003_desc_1 LIKE type_t.chr500, 
+   imaa038 LIKE imaa_t.imaa038, 
+   imaa039 LIKE imaa_t.imaa039, 
+   imaa039_desc LIKE type_t.chr500, 
+   imaa039_desc_1 LIKE type_t.chr500
+       END RECORD
+DEFINE g_bmab_d          DYNAMIC ARRAY OF type_g_bmab_d
+DEFINE g_bmab_d_t        type_g_bmab_d      
+
+ TYPE type_g_bmac_d RECORD
+   bmac003 LIKE bmac_t.bmac003, 
+   bmac003_desc LIKE type_t.chr500, 
+   bmac003_desc_1 LIKE type_t.chr500, 
+   imaa038 LIKE imaa_t.imaa038, 
+   imaa039 LIKE imaa_t.imaa039, 
+   imaa039_desc LIKE type_t.chr500, 
+   imaa039_desc_1 LIKE type_t.chr500
+       END RECORD
+DEFINE g_bmac_d          DYNAMIC ARRAY OF type_g_bmac_d
+DEFINE g_bmac_d_t        type_g_bmac_d 
+
+ TYPE type_g_bmad_d RECORD
+   bmad003 LIKE bmad_t.bmad003, 
+   bmad003_desc LIKE type_t.chr500, 
+   bmad003_desc_1 LIKE type_t.chr500, 
+   imaa038 LIKE imaa_t.imaa038, 
+   imaa039 LIKE imaa_t.imaa039, 
+   imaa039_desc LIKE type_t.chr500, 
+   imaa039_desc_1 LIKE type_t.chr500
+       END RECORD
+DEFINE g_bmad_d          DYNAMIC ARRAY OF type_g_bmad_d
+DEFINE g_bmad_d_t        type_g_bmad_d        
+
+ TYPE type_g_bmea_d RECORD
+   bmea003 LIKE bmea_t.bmea003,
+   bmea003_desc LIKE type_t.chr500,
+   bmea003_desc_1 LIKE type_t.chr500,   
+   bmea007 LIKE bmea_t.bmea007, 
+   bmea008 LIKE bmea_t.bmea008, 
+   bmea008_desc LIKE type_t.chr500, 
+   bmea008_desc_1 LIKE type_t.chr500, 
+   bmea019 LIKE bmea_t.bmea019, 
+   bmea019_desc LIKE type_t.chr500,
+   imaa038 LIKE imaa_t.imaa038, 
+   imaa039 LIKE imaa_t.imaa039, 
+   imaa039_desc LIKE type_t.chr500, 
+   imaa039_desc_1 LIKE type_t.chr500
+       END RECORD
+DEFINE g_bmea_d   DYNAMIC ARRAY OF type_g_bmea_d
+DEFINE g_bmea_d_t type_g_bmea_d
+
+ type type_g_bmaa_m        RECORD
+   bmaa001 LIKE bmaa_t.bmaa001, 
+   bmaa002 LIKE bmaa_t.bmaa002,  
+   imaal003 LIKE type_t.chr500, 
+   imaal004 LIKE type_t.chr500,
+   bmaa001_n LIKE bmaa_t.bmaa001, 
+   bmaa002_n LIKE bmaa_t.bmaa002,   
+   imaal003_n LIKE type_t.chr500, 
+   imaal004_n LIKE type_t.chr500, 
+   date DATETIME YEAR TO SECOND, 
+   class LIKE type_t.chr1,
+   auto LIKE type_t.chr1,
+   bmaaownid LIKE bmaa_t.bmaaownid, 
+   bmaaownid_desc LIKE type_t.chr80, 
+   bmaaowndp LIKE bmaa_t.bmaaowndp, 
+   bmaaowndp_desc LIKE type_t.chr80, 
+   bmaacrtid LIKE bmaa_t.bmaacrtid, 
+   bmaacrtid_desc LIKE type_t.chr80, 
+   bmaacrtdp LIKE bmaa_t.bmaacrtdp, 
+   bmaacrtdp_desc LIKE type_t.chr80, 
+   bmaacrtdt LIKE bmaa_t.bmaacrtdt, 
+   bmaamodid LIKE bmaa_t.bmaamodid, 
+   bmaamodid_desc LIKE type_t.chr80, 
+   bmaamoddt LIKE bmaa_t.bmaamoddt, 
+   bmaacnfid LIKE bmaa_t.bmaacnfid, 
+   bmaacnfid_desc LIKE type_t.chr80, 
+   bmaacnfdt LIKE bmaa_t.bmaacnfdt
+       END RECORD
+DEFINE g_bmaa_m          type_g_bmaa_m
+DEFINE g_bmaa_m_t        type_g_bmaa_m  
+DEFINE g_bmaa_m_o        type_g_bmaa_m 
+DEFINE g_rec_b   LIKE type_t.num5
+DEFINE g_detail_idx LIKE type_t.num5
+DEFINE g_bmaasite   LIKE bmaa_t.bmaasite
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num10              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明
+DEFINE g_detail_d_t  type_g_detail_d
+#end add-point
+ 
+{</section>}
+ 
+{<section id="abmp100.main" >}
+#+ 作業開始 
+MAIN
+   DEFINE ls_js  STRING
+   #add-point:main段define
+   
+   #end add-point   
+   #add-point:main段define
+   
+   #end add-point   
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("abm","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   LET g_bmaasite = 'ALL'
+   LET g_site = 'ALL'
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_abmp100 WITH FORM cl_ap_formpath("abm",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL abmp100_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL abmp100_ui_dialog() 
+ 
+      #add-point:畫面關閉前
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_abmp100
+   END IF 
+   
+   #add-point:作業離開前
+   DROP TABLE abmp100_bmaa;   
+   DROP TABLE abmp100_bmba; 
+   DROP TABLE abmp100_bmea;
+   DROP TABLE abmp100_bmab;
+   DROP TABLE abmp100_bmac;
+   DROP TABLE abmp100_bmad; 
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="abmp100.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION abmp100_init()
+   #add-point:init段define
+   DEFINE ls_sql STRING
+   #end add-point   
+   #add-point:init段define
+   
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化
+   CALL cl_set_combo_scc('bmea007','1103')
+   LET g_bmaa_m.date = cl_get_current() 
+   LET g_bmaa_m.class = 'N'
+   LET g_bmaa_m.auto = 'N'
+   #CALL abmp100_create_table() #160706-00020#1
+
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmp100.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION abmp100_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num10
+   #add-point:ui_dialog段define
+   DEFINE l_imaa038 LIKE imaa_t.imaa038 
+   DEFINE l_flag    LIKE type_t.chr1
+   DEFINE i    LIKE type_t.num5
+   DEFINE l_auto LIKE type_t.chr1
+   #end add-point 
+   #add-point:ui_dialog段define
+   
+   #end add-point 
+   
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog 
+   LET l_auto = 'N'
+   LET g_bmaa_m.bmaa002 = ' '
+   LET g_bmaa_m.bmaa002_n = ' '
+   LET g_bmaa_m_t.* = g_bmaa_m.*
+   LET g_bmaa_m_o.* = g_bmaa_m.*
+   LET g_errshow = 1
+   
+   #end add-point
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_detail_d.clear()
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL abmp100_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct
+         
+         #end add-point
+         #add-point:ui_dialog段input
+         INPUT BY NAME g_bmaa_m.bmaa001,g_bmaa_m.bmaa002,g_bmaa_m.bmaa001_n,g_bmaa_m.bmaa002_n,
+                       g_bmaa_m.date,g_bmaa_m.class,g_bmaa_m.auto 
+            ATTRIBUTE(WITHOUT DEFAULTS) 
+         
+            BEFORE INPUT
+               DISPLAY BY NAME g_bmaa_m.bmaa001,g_bmaa_m.bmaa002,g_bmaa_m.bmaa001_n,g_bmaa_m.bmaa002_n,
+                       g_bmaa_m.date,g_bmaa_m.class,g_bmaa_m.auto
+                       
+            BEFORE FIELD bmaa001 
+               CALL s_desc_get_item_desc(g_bmaa_m.bmaa001) RETURNING g_bmaa_m.imaal003,g_bmaa_m.imaal004
+               DISPLAY BY NAME g_bmaa_m.imaal003,g_bmaa_m.imaal004             
+            AFTER FIELD bmaa001
+               CALL s_desc_get_item_desc(g_bmaa_m.bmaa001) RETURNING g_bmaa_m.imaal003,g_bmaa_m.imaal004
+               DISPLAY BY NAME g_bmaa_m.imaal003,g_bmaa_m.imaal004 
+               IF NOT cl_null(g_bmaa_m.bmaa001) THEN 
+                  IF NOT abmp100_bmaa001_chk() THEN 
+                     LET g_bmaa_m.bmaa001 = g_bmaa_m_t.bmaa001
+                     NEXT FIELD bmaa001 
+                  END IF                
+                  IF NOT abmp100_bmaa_check(g_bmaa_m.bmaa001,g_bmaa_m.bmaa002,'Y') THEN
+                     LET g_bmaa_m.bmaa001 = g_bmaa_m_t.bmaa001
+                     NEXT FIELD bmaa001
+                  END IF
+                  IF g_bmaa_m_o.bmaa001 <> g_bmaa_m.bmaa001 OR cl_null(g_bmaa_m_o.bmaa001) THEN 
+                     SELECT imaa038,imaa039 INTO l_imaa038,g_bmaa_m.bmaa001_n FROM imaa_t
+                      WHERE imaaent = g_enterprise
+                        AND imaa001 = g_bmaa_m.bmaa001
+                     IF l_imaa038 <> 'Y' THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'ain-00350'
+                        LET g_errparam.extend = g_bmaa_m.bmaa001
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()                  
+                        LET g_bmaa_m.bmaa001 = g_bmaa_m_t.bmaa001
+                        NEXT FIELD bmaa001                   
+                     END IF
+                     CALL abmp100_set_entry()
+                     CALL abmp100_set_no_entry()
+                     IF NOT cl_null(g_bmaa_m.bmaa001_n) THEN
+                        CALL s_desc_get_item_desc(g_bmaa_m.bmaa001_n) RETURNING g_bmaa_m.imaal003_n,g_bmaa_m.imaal004_n
+                        DISPLAY BY NAME g_bmaa_m.bmaa001_n,g_bmaa_m.imaal003_n,g_bmaa_m.imaal004_n
+                     END IF
+                     CALL abmp100_bmaa_ref()
+                     LET l_auto = 'Y'
+                  END IF                  
+               END IF
+               LET g_bmaa_m_o.bmaa001 = g_bmaa_m.bmaa001
+               
+            AFTER FIELD bmaa002 
+               IF NOT cl_null(g_bmaa_m.bmaa002)  THEN 
+                  IF NOT abmp100_bmaa_check(g_bmaa_m.bmaa001,g_bmaa_m.bmaa002,'Y') THEN
+                     LET g_bmaa_m.bmaa002 = g_bmaa_m_t.bmaa002 
+                     NEXT FIELD bmaa002
+                  END IF 
+               ELSE
+                  LET g_bmaa_m.bmaa002 = ' '               
+               END IF
+               IF g_bmaa_m.bmaa002 IS NULL THEN
+                  IF g_bmaa_m_o.bmaa002<>g_bmaa_m.bmaa002 OR g_bmaa_m_o.bmaa002 IS NULL THEN 
+                     LET l_auto = 'Y'
+                  END IF
+               END IF   
+               LET g_bmaa_m_o.bmaa002 = g_bmaa_m.bmaa002
+               
+            BEFORE FIELD bmaa001_n 
+               CALL s_desc_get_item_desc(g_bmaa_m.bmaa001_n) RETURNING g_bmaa_m.imaal003_n,g_bmaa_m.imaal004_n
+               DISPLAY BY NAME g_bmaa_m.imaal003_n,g_bmaa_m.imaal004_n              
+            AFTER FIELD bmaa001_n
+               CALL s_desc_get_item_desc(g_bmaa_m.bmaa001_n) RETURNING g_bmaa_m.imaal003_n,g_bmaa_m.imaal004_n
+               DISPLAY BY NAME g_bmaa_m.imaal003_n,g_bmaa_m.imaal004_n 
+               IF NOT cl_null(g_bmaa_m.bmaa001_n) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_bmaa_m.bmaa001_n
+                  IF cl_chk_exist("v_imaa039") THEN
+                     #檢查成功時後續處理
+                     #LET  = g_chkparam.return1
+                     #DISPLAY BY NAME 
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_bmaa_m.bmaa001_n = g_bmaa_m_t.bmaa001_n
+                     NEXT FIELD CURRENT
+                  END IF                  
+                  
+                  IF NOT abmp100_bmaa_check(g_bmaa_m.bmaa001_n,g_bmaa_m.bmaa002_n,'N') THEN
+                     LET g_bmaa_m.bmaa001_n = g_bmaa_m_t.bmaa001_n
+                     NEXT FIELD bmaa001_n                     
+                  END IF
+               END IF
+
+            AFTER FIELD bmaa002_n 
+               IF NOT cl_null(g_bmaa_m.bmaa002_n) THEN            
+                  IF NOT abmp100_bmaa_check(g_bmaa_m.bmaa001_n,g_bmaa_m.bmaa002_n,'N') THEN
+                     LET g_bmaa_m.bmaa002_n = g_bmaa_m_t.bmaa002_n
+                     NEXT FIELD bmaa002_n                     
+                  END IF
+               ELSE
+                  LET g_bmaa_m.bmaa002_n = ' '               
+               END IF
+
+            ON ACTION controlp INFIELD bmaa001   #料件
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_bmaa_m.bmaa001             #給予default值
+               #給予arg
+               CALL q_bmaa002_4()
+               LET g_bmaa_m.bmaa001 = g_qryparam.return1              #將開窗取得的值回傳到變數
+               LET g_bmaa_m.bmaa002 = g_qryparam.return2
+               DISPLAY g_bmaa_m.bmaa001 TO bmaa001              #顯示到畫面上
+               DISPLAY g_bmaa_m.bmaa002 TO bmaa002  
+               NEXT FIELD bmaa001   
+               
+            ON ACTION controlp INFIELD bmaa001_n   #正式料件
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_bmaa_m.bmaa001_n             #給予default值
+               #給予arg
+               CALL q_imaa039_1()                                #呼叫開窗
+               LET g_bmaa_m.bmaa001_n = g_qryparam.return1              #將開窗取得的值回傳到變數
+               DISPLAY g_bmaa_m.bmaa001_n TO bmaa001_n              #顯示到畫面上
+               NEXT FIELD bmaa001_n      
+ 
+            AFTER INPUT
+               IF cl_null(g_bmaa_m.bmaa001) THEN NEXT FIELD bmaa001 END IF
+               IF cl_null(g_bmaa_m.bmaa002) THEN LET g_bmaa_m.bmaa002 = ' ' END IF            
+               IF NOT abmp100_bmaa_check2(g_bmaa_m.bmaa001,g_bmaa_m.bmaa002,'Y') THEN
+                  LET g_bmaa_m.bmaa001 = g_bmaa_m_t.bmaa001
+                  LET g_bmaa_m.bmaa002 = g_bmaa_m_t.bmaa002
+                  NEXT FIELD bmaa001
+               END IF
+               IF cl_null(g_bmaa_m.bmaa001_n) THEN NEXT FIELD bmaa001 END IF
+               IF cl_null(g_bmaa_m.bmaa002_n) THEN LET g_bmaa_m.bmaa002_n = ' ' END IF                
+               IF NOT abmp100_bmaa_check2(g_bmaa_m.bmaa001_n,g_bmaa_m.bmaa002_n,'N') THEN
+                  LET g_bmaa_m.bmaa001_n = g_bmaa_m_t.bmaa001_n
+                  LET g_bmaa_m.bmaa002_n = g_bmaa_m_t.bmaa002_n
+                  NEXT FIELD bmaa001_n
+               END IF                
+               IF l_auto = 'Y' THEN
+                  CALL abmp100_query()
+                  LET l_auto = 'N'
+               END IF   
+         END INPUT 
+         
+         INPUT ARRAY g_detail_d FROM s_detail1.*
+             ATTRIBUTE(COUNT = g_rec_b,WITHOUT DEFAULTS,
+                     INSERT ROW = FALSE, 
+                     DELETE ROW = FALSE,
+                     APPEND ROW = FALSE)
+            BEFORE INPUT
+               LET l_flag = 'N'
+               FOR i = 1 TO g_detail_d.getLength()
+                  IF g_detail_d[i].imaa038 = 'N' OR cl_null(g_detail_d[i].imaa038) THEN
+                     CONTINUE FOR
+                  END IF   
+                  IF abmp100_chk_imaa039(g_detail_d[i].bmba003) THEN
+                     CONTINUE FOR
+                  END IF
+                  LET l_flag = 'Y'
+               END FOR
+               IF l_flag = 'N' THEN 
+                  ACCEPT DIALOG
+               END IF            
+            BEFORE ROW         
+               LET l_ac = ARR_CURR()
+               DISPLAY l_ac TO FORMONLY.idx 
+               LET g_detail_d_t.* = g_detail_d[l_ac].* 
+               CALL abmp100_set_entry_b()
+               CALL abmp100_set_no_entry_b('1')
+               LET g_rec_b = g_detail_d.getLength()
+               IF g_detail_d[l_ac].imaa038 = 'N' OR (g_detail_d[l_ac].imaa038 = 'Y' AND abmp100_chk_imaa039(g_detail_d[l_ac].bmba003)) THEN
+                  IF l_ac < g_rec_b THEN 
+                     CALL FGL_SET_ARR_CURR(l_ac+1)
+                  ELSE   
+                     CALL FGL_SET_ARR_CURR(1)
+                  END IF   
+               END IF               
+               
+            BEFORE FIELD b_imaa039
+               CALL s_desc_get_item_desc(g_detail_d[l_ac].imaa039) RETURNING g_detail_d[l_ac].imaa039_desc,g_detail_d[l_ac].imaa039_desc_1          
+            AFTER FIELD b_imaa039
+               IF NOT cl_null(g_detail_d[l_ac].imaa039) THEN 
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_detail_d[l_ac].imaa039
+                  IF cl_chk_exist("v_imaa039") THEN
+                     #檢查成功時後續處理
+                     #LET  = g_chkparam.return1
+                     #DISPLAY BY NAME 
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_detail_d[l_ac].imaa039 = g_detail_d_t.imaa039
+                     NEXT FIELD CURRENT
+                  END IF          
+               END IF  
+            ON ACTION controlp INFIELD b_imaa039
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_detail_d[l_ac].imaa039     
+               CALL q_imaa039_1()                               
+               LET g_detail_d[l_ac].imaa039 = g_qryparam.return1              
+               DISPLAY g_detail_d[l_ac].imaa039 TO b_imaa039  
+               NEXT FIELD b_imaa039                      
+
+         END INPUT
+         INPUT ARRAY g_bmea_d FROM s_detail2.*
+             ATTRIBUTE(COUNT = g_rec_b,WITHOUT DEFAULTS,
+                     INSERT ROW = FALSE, 
+                     DELETE ROW = FALSE,
+                     APPEND ROW = FALSE)
+            BEFORE INPUT
+               LET l_flag = 'N'
+               FOR i = 1 TO g_bmea_d.getLength()
+                  IF g_bmea_d[i].imaa038 = 'N' OR cl_null(g_bmea_d[i].imaa038) THEN
+                     CONTINUE FOR
+                  END IF   
+                  IF abmp100_chk_imaa039(g_bmea_d[i].bmea008) THEN
+                     CONTINUE FOR
+                  END IF
+                  LET l_flag = 'Y'
+               END FOR
+               IF l_flag = 'N' THEN 
+                  IF g_bmea_d.getLength() = 0 THEN 
+                     CONTINUE DIALOG
+                  ELSE                     
+                     ACCEPT DIALOG
+                  END IF
+               END IF 
+               
+            BEFORE ROW         
+               LET l_ac = ARR_CURR()
+               DISPLAY l_ac TO FORMONLY.idx 
+               LET g_bmea_d_t.* = g_bmea_d[l_ac].* 
+               CALL abmp100_set_entry_b()
+               CALL abmp100_set_no_entry_b('2')               
+               LET g_rec_b = g_bmea_d.getLength()
+               IF g_bmea_d[l_ac].imaa038 = 'N' OR (g_bmea_d[l_ac].imaa038 = 'Y' AND abmp100_chk_imaa039(g_bmea_d[l_ac].bmea008)) THEN
+                  IF l_ac < g_rec_b THEN 
+                     CALL FGL_SET_ARR_CURR(l_ac+1)
+                  ELSE   
+                     CALL FGL_SET_ARR_CURR(1)
+                  END IF   
+               END IF
+               
+            BEFORE FIELD imaa039_e
+               CALL s_desc_get_item_desc(g_bmea_d[l_ac].imaa039) RETURNING g_bmea_d[l_ac].imaa039_desc,g_bmea_d[l_ac].imaa039_desc_1          
+            AFTER FIELD imaa039_e
+               IF NOT cl_null(g_bmea_d[l_ac].imaa039) THEN 
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_bmea_d[l_ac].imaa039
+                  IF cl_chk_exist("v_imaa039") THEN
+                     #檢查成功時後續處理
+                     #LET  = g_chkparam.return1
+                     #DISPLAY BY NAME 
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_bmea_d[l_ac].imaa039 = g_bmea_d_t.imaa039
+                     NEXT FIELD CURRENT
+                  END IF          
+               END IF  
+            ON ACTION controlp INFIELD imaa039_e
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_bmea_d[l_ac].imaa039     
+               CALL q_imaa039_1()                               
+               LET g_bmea_d[l_ac].imaa039 = g_qryparam.return1              
+               DISPLAY g_bmea_d[l_ac].imaa039 TO imaa039_e  
+               NEXT FIELD imaa039_e                      
+               
+         END INPUT 
+         INPUT ARRAY g_bmab_d FROM s_detail3.*
+             ATTRIBUTE(COUNT = g_rec_b,WITHOUT DEFAULTS,
+                     INSERT ROW = FALSE, 
+                     DELETE ROW = FALSE,
+                     APPEND ROW = FALSE)
+            BEFORE INPUT
+               LET l_flag = 'N'
+               FOR i = 1 TO g_bmab_d.getLength()
+                  IF g_bmab_d[i].imaa038 = 'N' OR cl_null(g_bmab_d[i].imaa038) THEN
+                     CONTINUE FOR
+                  END IF   
+                  IF abmp100_chk_imaa039(g_bmab_d[i].bmab003) THEN
+                     CONTINUE FOR
+                  END IF
+                  LET l_flag = 'Y'
+               END FOR
+               IF l_flag = 'N' THEN 
+                  IF g_bmab_d.getLength() = 0 THEN 
+                     CONTINUE DIALOG
+                  ELSE                     
+                     ACCEPT DIALOG
+                  END IF
+               END IF                      
+            BEFORE ROW         
+               LET l_ac = ARR_CURR()
+               DISPLAY l_ac TO FORMONLY.idx 
+               LET g_bmab_d_t.* = g_bmab_d[l_ac].* 
+               CALL abmp100_set_entry_b()
+               CALL abmp100_set_no_entry_b('3')
+               LET g_rec_b = g_bmab_d.getLength()
+               IF g_bmab_d[l_ac].imaa038 = 'N' OR (g_bmab_d[l_ac].imaa038 = 'Y' AND abmp100_chk_imaa039(g_bmab_d[l_ac].bmab003)) THEN
+                  IF l_ac < g_rec_b THEN 
+                     CALL FGL_SET_ARR_CURR(l_ac+1)
+                  ELSE   
+                     CALL FGL_SET_ARR_CURR(1)
+                  END IF   
+               END IF
+               
+            BEFORE FIELD imaa039_b
+               CALL s_desc_get_item_desc(g_bmab_d[l_ac].imaa039) RETURNING g_bmab_d[l_ac].imaa039_desc,g_bmab_d[l_ac].imaa039_desc_1          
+            AFTER FIELD imaa039_b
+               IF NOT cl_null(g_bmab_d[l_ac].imaa039) THEN 
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_bmab_d[l_ac].imaa039
+                  IF cl_chk_exist("v_imaa039") THEN
+                     #檢查成功時後續處理
+                     #LET  = g_chkparam.return1
+                     #DISPLAY BY NAME 
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_bmab_d[l_ac].imaa039 = g_bmab_d_t.imaa039
+                     NEXT FIELD CURRENT
+                  END IF          
+               END IF  
+            ON ACTION controlp INFIELD imaa039_b
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_bmab_d[l_ac].imaa039     
+               CALL q_imaa039_1()                               
+               LET g_bmab_d[l_ac].imaa039 = g_qryparam.return1              
+               DISPLAY g_bmab_d[l_ac].imaa039 TO imaa039_b  
+               NEXT FIELD imaa039_b                     
+               
+         END INPUT
+         INPUT ARRAY g_bmac_d FROM s_detail4.*
+             ATTRIBUTE(COUNT = g_rec_b,WITHOUT DEFAULTS,
+                     INSERT ROW = FALSE, 
+                     DELETE ROW = FALSE,
+                     APPEND ROW = FALSE)
+            BEFORE INPUT
+               LET l_flag = 'N'
+               FOR i = 1 TO g_bmac_d.getLength()
+                  IF g_bmac_d[i].imaa038 = 'N' OR cl_null(g_bmac_d[i].imaa038) THEN
+                     CONTINUE FOR
+                  END IF   
+                  IF abmp100_chk_imaa039(g_bmac_d[i].bmac003) THEN
+                     CONTINUE FOR
+                  END IF
+                  LET l_flag = 'Y'
+               END FOR
+               IF l_flag = 'N' THEN 
+                  IF g_bmac_d.getLength() = 0 THEN 
+                     CONTINUE DIALOG
+                  ELSE                     
+                     ACCEPT DIALOG
+                  END IF
+               END IF                      
+            BEFORE ROW         
+               LET l_ac = ARR_CURR()
+               DISPLAY l_ac TO FORMONLY.idx 
+               LET g_bmac_d_t.* = g_bmac_d[l_ac].* 
+               CALL abmp100_set_entry_b()
+               CALL abmp100_set_no_entry_b('4')
+               LET g_rec_b = g_bmac_d.getLength()
+               IF g_bmac_d[l_ac].imaa038 = 'N' OR (g_bmac_d[l_ac].imaa038 = 'Y' AND abmp100_chk_imaa039(g_bmac_d[l_ac].bmac003)) THEN
+                  IF l_ac < g_rec_b THEN 
+                     CALL FGL_SET_ARR_CURR(l_ac+1)
+                  ELSE   
+                     CALL FGL_SET_ARR_CURR(1)
+                  END IF   
+               END IF
+               
+            BEFORE FIELD imaa039_c
+               CALL s_desc_get_item_desc(g_bmac_d[l_ac].imaa039) RETURNING g_bmac_d[l_ac].imaa039_desc,g_bmac_d[l_ac].imaa039_desc_1          
+            AFTER FIELD imaa039_c
+               IF NOT cl_null(g_bmac_d[l_ac].imaa039) THEN 
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_bmac_d[l_ac].imaa039
+                  IF cl_chk_exist("v_imaa039") THEN
+                     #檢查成功時後續處理
+                     #LET  = g_chkparam.return1
+                     #DISPLAY BY NAME 
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_bmac_d[l_ac].imaa039 = g_bmac_d_t.imaa039
+                     NEXT FIELD CURRENT
+                  END IF          
+               END IF  
+            ON ACTION controlp INFIELD imaa039_c
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_bmac_d[l_ac].imaa039     
+               CALL q_imaa039_1()                               
+               LET g_bmac_d[l_ac].imaa039 = g_qryparam.return1              
+               DISPLAY g_bmac_d[l_ac].imaa039 TO imaa039_c  
+               NEXT FIELD imaa039_c 
+               
+         END INPUT 
+         INPUT ARRAY g_bmad_d FROM s_detail5.*
+             ATTRIBUTE(COUNT = g_rec_b,WITHOUT DEFAULTS,
+                     INSERT ROW = FALSE, 
+                     DELETE ROW = FALSE,
+                     APPEND ROW = FALSE)
+            BEFORE INPUT
+               LET l_flag = 'N'
+               FOR i = 1 TO g_bmad_d.getLength()
+                  IF g_bmad_d[i].imaa038 = 'N' OR cl_null(g_bmad_d[i].imaa038) THEN
+                     CONTINUE FOR
+                  END IF   
+                  IF abmp100_chk_imaa039(g_bmad_d[i].bmad003) THEN
+                     CONTINUE FOR
+                  END IF
+                  LET l_flag = 'Y'
+               END FOR
+               IF l_flag = 'N' THEN
+                  IF g_bmad_d.getLength() = 0 THEN 
+                     CONTINUE DIALOG
+                  ELSE                     
+                     ACCEPT DIALOG
+                  END IF
+               END IF                      
+            BEFORE ROW         
+               LET l_ac = ARR_CURR()
+               DISPLAY l_ac TO FORMONLY.idx 
+               LET g_bmad_d_t.* = g_bmad_d[l_ac].* 
+               CALL abmp100_set_entry_b()
+               CALL abmp100_set_no_entry_b('5')
+               LET g_rec_b = g_bmad_d.getLength()
+               IF g_bmad_d[l_ac].imaa038 = 'N' OR (g_bmad_d[l_ac].imaa038 = 'Y' AND abmp100_chk_imaa039(g_bmad_d[l_ac].bmad003)) THEN
+                  IF l_ac < g_rec_b THEN 
+                     CALL FGL_SET_ARR_CURR(l_ac+1)
+                  ELSE   
+                     CALL FGL_SET_ARR_CURR(1)
+                  END IF   
+               END IF
+               
+            BEFORE FIELD imaa039_d
+               CALL s_desc_get_item_desc(g_bmad_d[l_ac].imaa039) RETURNING g_bmad_d[l_ac].imaa039_desc,g_bmad_d[l_ac].imaa039_desc_1          
+            AFTER FIELD imaa039_d
+               IF NOT cl_null(g_bmad_d[l_ac].imaa039) THEN 
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_bmad_d[l_ac].imaa039
+                  IF cl_chk_exist("v_imaa039") THEN
+                     #檢查成功時後續處理
+                     #LET  = g_chkparam.return1
+                     #DISPLAY BY NAME 
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_bmad_d[l_ac].imaa039 = g_bmad_d_t.imaa039
+                     NEXT FIELD CURRENT
+                  END IF          
+               END IF  
+            ON ACTION controlp INFIELD imaa039_d
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_bmad_d[l_ac].imaa039     
+               CALL q_imaa039_1()                               
+               LET g_bmad_d[l_ac].imaa039 = g_qryparam.return1              
+               DISPLAY g_bmad_d[l_ac].imaa039 TO imaa039_d  
+               NEXT FIELD imaa039_d 
+
+         END INPUT              
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         
+         #end add-point
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2
+            CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+            CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            LET g_bmaa_m_t.* = g_bmaa_m.*
+            LET g_bmaa_m_o.* = g_bmaa_m.*
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            #add-point:ui_dialog段on action selall
+            
+            #end add-point            
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+               #add-point:ui_dialog段on action selall
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selall
+            
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+               #add-point:ui_dialog段on action selnone
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selnone
+            
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel
+            
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel
+            
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL abmp100_filter()
+            #add-point:ON ACTION filter
+            
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            #add-point:ui_dialog段accept之前
+            IF cl_null(g_bmaa_m.bmaa001) THEN NEXT FIELD bmaa001 END IF
+            IF cl_null(g_bmaa_m.bmaa002) THEN LET g_bmaa_m.bmaa002 = ' ' END IF            
+            IF NOT abmp100_bmaa_check2(g_bmaa_m.bmaa001,g_bmaa_m.bmaa002,'Y') THEN
+               LET g_bmaa_m.bmaa001 = g_bmaa_m_t.bmaa001
+               LET g_bmaa_m.bmaa002 = g_bmaa_m_t.bmaa002
+               NEXT FIELD bmaa001
+            END IF           
+            #end add-point
+            CALL abmp100_query()
+             
+         # 條件清除
+         ON ACTION qbeclear
+            #add-point:ui_dialog段
+            CLEAR FORM
+            CALL g_detail_d.clear()
+            CALL g_bmea_d.clear()
+            CALL g_bmab_d.clear()
+            CALL g_bmac_d.clear()
+            CALL g_bmad_d.clear()
+            INITIALIZE g_bmaa_m.* TO NULL
+            LET g_bmaa_m.date = cl_get_current() 
+            LET g_bmaa_m.class = 'N'
+            LET g_bmaa_m.auto = 'N'            
+            #end add-point
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            #add-point:ui_dialog段datarefresh
+            
+            #end add-point
+            CALL abmp100_b_fill()
+ 
+         #add-point:ui_dialog段action
+         ON ACTION batch_execute
+            IF cl_null(g_bmaa_m.bmaa001) THEN NEXT FIELD bmaa001 END IF
+            IF cl_null(g_bmaa_m.bmaa002) THEN LET g_bmaa_m.bmaa002 = ' ' END IF            
+            IF NOT abmp100_bmaa_check2(g_bmaa_m.bmaa001,g_bmaa_m.bmaa002,'Y') THEN
+               LET g_bmaa_m.bmaa001 = g_bmaa_m_t.bmaa001
+               LET g_bmaa_m.bmaa002 = g_bmaa_m_t.bmaa002
+               NEXT FIELD bmaa001
+            END IF             
+            IF cl_null(g_bmaa_m.bmaa001_n) THEN NEXT FIELD bmaa001_n END IF
+            IF cl_null(g_bmaa_m.bmaa002_n) THEN LET g_bmaa_m.bmaa002_n = ' ' END IF
+            IF NOT abmp100_bmaa_check2(g_bmaa_m.bmaa001_n,g_bmaa_m.bmaa002_n,'N') THEN
+               LET g_bmaa_m.bmaa001_n = g_bmaa_m_t.bmaa001_n
+               LET g_bmaa_m.bmaa002_n = g_bmaa_m_t.bmaa002_n
+               NEXT FIELD bmaa001_n                     
+            END IF
+            IF g_detail_d.getlength() = 0 THEN 
+               CALL abmp100_query()
+            END IF
+            CALL abmp100_batch_execute()
+            CLEAR FORM
+            CALL g_detail_d.clear()
+            CALL g_bmea_d.clear()
+            CALL g_bmab_d.clear()
+            CALL g_bmac_d.clear()
+            CALL g_bmad_d.clear()
+            INITIALIZE g_bmaa_m.* TO NULL
+            LET g_bmaa_m.date = cl_get_current() 
+            LET g_bmaa_m.class = 'N'
+            LET g_bmaa_m.auto = 'N'
+            ACCEPT DIALOG            
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmp100.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION abmp100_query()
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+   DEFINE l_cnt LIKE type_t.num5
+   #end add-point 
+   #add-point:query段define
+   
+   #end add-point 
+    
+   #add-point:cs段after_construct
+   CALL abmp100_bmaa_ref()
+   DELETE FROM abmp100_bmba;
+   DROP TABLE abmp100_bmba #160706-00020#1 add
+   IF g_bmaa_m.class = 'Y' THEN 
+     # LET g_sql = " INSERT INTO abmp100_bmba ",     
+     LET g_sql =  " SELECT DISTINCT * FROM bmba_t",    #160706-00020#1 mark
+                  " WHERE bmbaent='",g_enterprise,"' AND bmbasite='",g_site,"' ",
+                  " AND bmba005 <= to_date('",g_bmaa_m.date,"','YYYY-MM-DD hh24:mi:ss') ",
+                  " AND (bmba006 >= to_date('",g_bmaa_m.date,"','YYYY-MM-DD hh24:mi:ss') OR bmba006 IS NULL) ",
+                  " START WITH bmba001='",g_bmaa_m.bmaa001,"' AND bmba002='",g_bmaa_m.bmaa002,"'",
+                  " CONNECT BY bmba001 = PRIOR bmba003 AND bmba002 = PRIOR bmba002 ",
+                  " INTO TEMP abmp100_bmba "    #160706-00020#1 add
+   ELSE
+      #LET g_sql = " INSERT INTO abmp100_bmba ",       #160706-00020#1 mark
+      LET g_sql = " SELECT DISTINCT * FROM bmba_t",   
+                  " WHERE bmbaent='",g_enterprise,"' AND bmbasite='",g_site,"' AND bmba001='",g_bmaa_m.bmaa001,"' AND bmba002='",g_bmaa_m.bmaa002,"'",
+                  " AND bmba005 <= to_date('",g_bmaa_m.date,"','YYYY-MM-DD hh24:mi:ss') ",
+                  " AND (bmba006 >= to_date('",g_bmaa_m.date,"','YYYY-MM-DD hh24:mi:ss') OR bmba006 IS NULL) ",
+                  " INTO TEMP abmp100_bmba "    #160706-00020#1 add
+   END IF
+   PREPARE abmp100_ins_bmba FROM g_sql
+   EXECUTE abmp100_ins_bmba
+ 
+   DELETE FROM abmp100_bmaa;
+   DROP TABLE abmp100_bmaa    #160706-00020#1 add
+   #LET g_sql = " INSERT INTO abmp100_bmaa ",   #160706-00020#1 mark
+   LET g_sql = " SELECT DISTINCT * FROM bmaa_t ",
+               "  WHERE EXISTS(",
+               "    SELECT * FROM abmp100_bmba",                   
+               "    WHERE bmbaent=bmaaent AND bmbasite=bmaasite ",                 
+               "      AND bmba001=bmaa001 AND bmba002=bmaa002 )",
+               " INTO TEMP abmp100_bmaa "  #160706-00020#1 add
+               
+#               "  WHERE bmaaent='",g_enterprise,"' AND bmaasite='",g_site,"' ",
+#               "    AND bmaa001='",g_bmaa_m.bmaa001,"' AND bmaa002='",g_bmaa_m.bmaa002,"'"
+   PREPARE abmp100_ins_bmaa FROM g_sql
+   EXECUTE abmp100_ins_bmaa  
+   
+   DELETE FROM abmp100_bmea;
+   DROP TABLE abmp100_bmea   #160706-00020#1 add
+   #LET g_sql = " INSERT INTO abmp100_bmea ",   
+   LET g_sql = " SELECT DISTINCT * ",
+               "  FROM bmea_t",
+               "  WHERE EXISTS(",
+               "    SELECT * FROM abmp100_bmba",                   
+               "    WHERE bmbaent=bmeaent AND bmbasite=bmeasite ",                 
+               "      AND bmba001=bmea001 AND bmba002=bmea002 ",
+               "      AND bmba003=bmea003 AND bmba004=bmea004 ",
+               "      AND bmba007=bmea005 AND bmba008=bmea006 )",
+               " INTO TEMP abmp100_bmea"  #160706-00020#1 add
+   PREPARE abmp100_ins_bmea FROM g_sql
+   EXECUTE abmp100_ins_bmea
+
+   DELETE FROM abmp100_bmab;
+   DROP TABLE abmp100_bmab    #160706-00020#1 add
+   #LET g_sql = " INSERT INTO abmp100_bmab ",
+   LET g_sql = " SELECT DISTINCT * ",
+               "  FROM bmab_t",
+               "  WHERE EXISTS(",
+               "    SELECT * FROM abmp100_bmba",                   
+               "    WHERE bmbaent=bmabent AND bmbasite=bmabsite ",                 
+               "      AND bmba001=bmab001 AND bmba002=bmab002 ) ",
+               " INTO TEMP abmp100_bmab "   #160706-00020#1 add
+   PREPARE abmp100_ins_bmab FROM g_sql
+   EXECUTE abmp100_ins_bmab
+
+   DELETE FROM abmp100_bmac;
+   DROP TABLE abmp100_bmac    #160706-00020#1 add
+   #LET g_sql = " INSERT INTO abmp100_bmac ",   #160706-00020#1 mark
+   LET g_sql = " SELECT DISTINCT * ",
+               "  FROM bmac_t",
+               "  WHERE EXISTS(",
+               "    SELECT * FROM abmp100_bmba",                   
+               "    WHERE bmbaent=bmacent AND bmbasite=bmacsite ",                 
+               "      AND bmba001=bmac001 AND bmba002=bmac002 )",
+               " INTO TEMP abmp100_bmac " #160706-00020#1 add
+   PREPARE abmp100_ins_bmac FROM g_sql
+   EXECUTE abmp100_ins_bmac
+   
+   DELETE FROM abmp100_bmad;
+   DROP TABLE abmp100_bmad   #160706-00020#1 add  
+   #LET g_sql = " INSERT INTO abmp100_bmad ",
+   LET g_sql = " SELECT DISTINCT * ",
+               "  FROM bmad_t",
+               "  WHERE EXISTS(",
+               "    SELECT * FROM abmp100_bmba",                   
+               "    WHERE bmbaent=bmadent AND bmbasite=bmadsite ",                 
+               "      AND bmba001=bmad001 AND bmba002=bmad002 )",
+               " INTO TEMP abmp100_bmad"
+   PREPARE abmp100_ins_bmad FROM g_sql
+   EXECUTE abmp100_ins_bmad   
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL abmp100_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   END IF
+   
+   #add-point:cs段after_query
+ 
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmp100.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION abmp100_b_fill()
+ 
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define
+   
+   #end add-point
+   #add-point:b_fill段define
+   
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   CALL g_detail_d.clear()
+   CALL g_bmea_d.clear()
+   CALL g_bmab_d.clear()
+   CALL g_bmac_d.clear()
+   CALL g_bmad_d.clear()
+   
+ 
+   LET g_sql = "SELECT  UNIQUE 'N',bmba001,t5.imaal003,t5.imaal004,bmba005,bmba009,bmba004,t1.oocql004,bmba007,t2.oocql004,bmba008,bmba003, 
+                               t3.imaal003 ,t4.imaal004 FROM abmp100_bmba ",   
+               " LEFT JOIN oocql_t t1 ON t1.oocqlent='"||g_enterprise||"' AND t1.oocql001='215' AND t1.oocql002=bmba004 AND t1.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN oocql_t t2 ON t2.oocqlent='"||g_enterprise||"' AND t2.oocql001='221' AND t2.oocql002=bmba007 AND t2.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN imaal_t t3 ON t3.imaalent='"||g_enterprise||"' AND t3.imaal001=bmba003 AND t3.imaal002='"||g_dlang||"' ",
+               " LEFT JOIN imaal_t t4 ON t4.imaalent='"||g_enterprise||"' AND t4.imaal001=bmba003 AND t4.imaal002='"||g_dlang||"' ",
+               " LEFT JOIN imaal_t t5 ON t5.imaalent='"||g_enterprise||"' AND t5.imaal001=bmba001 AND t5.imaal002='"||g_dlang||"' ",
+               " WHERE bmbaent=? ",                 
+               " ORDER BY bmba001,bmba003,bmba004,bmba005,bmba007,bmba008"
+
+   #end add-point
+ 
+   PREPARE abmp100_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR abmp100_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空
+   
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into
+        g_detail_d[l_ac].*
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充
+      SELECT imaa038 INTO g_detail_d[l_ac].imaa038 FROM imaa_t
+       WHERE imaaent = g_enterprise
+         AND imaa001 = g_detail_d[l_ac].bmba003
+      IF g_detail_d[l_ac].imaa038 = 'N' THEN
+         LET g_detail_d[l_ac].imaa039 = g_detail_d[l_ac].bmba003
+         CALL s_desc_get_item_desc(g_detail_d[l_ac].imaa039) RETURNING g_detail_d[l_ac].imaa039_desc,g_detail_d[l_ac].imaa039_desc_1
+         DISPLAY BY NAME g_detail_d[l_ac].imaa039_desc,g_detail_d[l_ac].imaa039_desc_1
+      END IF
+      #end add-point
+      
+      CALL abmp100_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身)
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+
+   LET l_ac = 1
+   LET g_sql = "SELECT  UNIQUE bmea003,t2.imaal003,t2.imaal004,bmea007,bmea008,t1.imaal003,t1.imaal004,bmea019 ",
+               "  FROM abmp100_bmea",    
+               " LEFT JOIN imaal_t t1 ON t1.imaalent='"||g_enterprise||"' AND t1.imaal001=bmea008 AND t1.imaal002='"||g_dlang||"' ",
+               " LEFT JOIN imaal_t t2 ON t2.imaalent='"||g_enterprise||"' AND t2.imaal001=bmea003 AND t2.imaal002='"||g_dlang||"' ",
+               " ORDER BY bmea007,bmea008,bmea019" 
+   PREPARE abmp100_pb5 FROM g_sql
+   DECLARE b_fill_cs5 CURSOR FOR abmp100_pb5 
+   FOREACH b_fill_cs5 INTO g_bmea_d[l_ac].bmea003,g_bmea_d[l_ac].bmea003_desc,g_bmea_d[l_ac].bmea003_desc_1,
+                           g_bmea_d[l_ac].bmea007,g_bmea_d[l_ac].bmea008,g_bmea_d[l_ac].bmea008_desc,
+                           g_bmea_d[l_ac].bmea008_desc_1,g_bmea_d[l_ac].bmea019
+                            
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充
+      SELECT imaa038 INTO g_bmea_d[l_ac].imaa038 FROM imaa_t
+       WHERE imaaent = g_enterprise
+         AND imaa001 = g_bmea_d[l_ac].bmea008
+      IF g_bmea_d[l_ac].imaa038 = 'N' THEN
+         LET g_bmea_d[l_ac].imaa039 = g_bmea_d[l_ac].bmea008
+         CALL s_desc_get_item_desc(g_bmea_d[l_ac].imaa039) RETURNING g_bmea_d[l_ac].imaa039_desc,g_bmea_d[l_ac].imaa039_desc_1
+      END IF
+      CALL s_feature_description(g_bmea_d[l_ac].bmea008,g_bmea_d[l_ac].bmea019) 
+        RETURNING g_success,g_bmea_d[l_ac].bmea019_desc      
+      #end add-point
+     
+      IF l_ac > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = l_ac
+         LET g_errparam.code   = 9035 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+      
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+
+   LET l_ac = 1
+   LET g_sql = "SELECT  UNIQUE bmab003,t1.imaal003,t1.imaal004 FROM abmp100_bmab ",   
+               " LEFT JOIN imaal_t t1 ON t1.imaalent='"||g_enterprise||"' AND t1.imaal001=bmab003 AND t1.imaal002='"||g_dlang||"' ",
+               " LEFT JOIN imaal_t t2 ON t2.imaalent='"||g_enterprise||"' AND t2.imaal001=bmab003 AND t2.imaal002='"||g_dlang||"' ",   
+               " ORDER BY bmab003"
+   PREPARE abmp100_pb2 FROM g_sql
+   DECLARE b_fill_cs2 CURSOR FOR abmp100_pb2
+   FOREACH b_fill_cs2 INTO g_bmab_d[l_ac].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      SELECT imaa038 INTO g_bmab_d[l_ac].imaa038 FROM imaa_t
+       WHERE imaaent = g_enterprise
+         AND imaa001 = g_bmab_d[l_ac].bmab003
+      IF g_bmab_d[l_ac].imaa038 = 'N' THEN
+         LET g_bmab_d[l_ac].imaa039 = g_bmab_d[l_ac].bmab003
+         CALL s_desc_get_item_desc(g_bmab_d[l_ac].imaa039) RETURNING g_bmab_d[l_ac].imaa039_desc,g_bmab_d[l_ac].imaa039_desc_1
+         DISPLAY BY NAME g_bmab_d[l_ac].imaa039_desc,g_bmab_d[l_ac].imaa039_desc_1
+      END IF      
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF      
+   END FOREACH
+   
+   LET l_ac = 1
+   LET g_sql = "SELECT  UNIQUE bmac003 ,t11.imaal003 ,t12.imaal004 FROM abmp100_bmac",                 
+               " LEFT JOIN imaal_t t11 ON t11.imaalent='"||g_enterprise||"' AND t11.imaal001=bmac003 AND t11.imaal002='"||g_dlang||"' ",
+               " LEFT JOIN imaal_t t12 ON t12.imaalent='"||g_enterprise||"' AND t12.imaal001=bmac003 AND t12.imaal002='"||g_dlang||"' ",
+               " ORDER BY bmac003 "               
+   PREPARE abmp100_pb3 FROM g_sql
+   DECLARE b_fill_cs3 CURSOR FOR abmp100_pb3  
+   FOREACH b_fill_cs3 INTO g_bmac_d[l_ac].bmac003,g_bmac_d[l_ac].bmac003_desc,g_bmac_d[l_ac].bmac003_desc_1 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+
+      SELECT imaa038 INTO g_bmac_d[l_ac].imaa038 FROM imaa_t
+       WHERE imaaent = g_enterprise
+         AND imaa001 = g_bmac_d[l_ac].bmac003
+      IF g_bmac_d[l_ac].imaa038 = 'N' THEN
+         LET g_bmac_d[l_ac].imaa039 = g_bmac_d[l_ac].bmac003
+         CALL s_desc_get_item_desc(g_bmac_d[l_ac].imaa039) RETURNING g_bmac_d[l_ac].imaa039_desc,g_bmac_d[l_ac].imaa039_desc_1
+      END IF         
+   
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = l_ac
+         LET g_errparam.code   = 9035 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+   END FOREACH  
+
+   LET l_ac = 1
+   LET g_sql = "SELECT  UNIQUE bmad003 ,t15.imaal003 ,t16.imaal004 FROM abmp100_bmad ",   
+               " LEFT JOIN imaal_t t15 ON t15.imaalent='"||g_enterprise||"' AND t15.imaal001=bmad003 AND t15.imaal002='"||g_dlang||"' ",
+               " LEFT JOIN imaal_t t16 ON t16.imaalent='"||g_enterprise||"' AND t16.imaal001=bmad003 AND t16.imaal002='"||g_dlang||"' ",
+               " ORDER BY bmad003"
+   PREPARE abmp100_pb4 FROM g_sql
+   DECLARE b_fill_cs4 CURSOR FOR abmp100_pb4
+   FOREACH b_fill_cs4 INTO g_bmad_d[l_ac].bmad003,g_bmad_d[l_ac].bmad003_desc,g_bmad_d[l_ac].bmad003_desc_1 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+
+      SELECT imaa038 INTO g_bmad_d[l_ac].imaa038 FROM imaa_t
+       WHERE imaaent = g_enterprise
+         AND imaa001 = g_bmad_d[l_ac].bmad003
+      IF g_bmad_d[l_ac].imaa038 = 'N' THEN
+         LET g_bmad_d[l_ac].imaa039 = g_bmad_d[l_ac].bmad003
+         CALL s_desc_get_item_desc(g_bmad_d[l_ac].imaa039) RETURNING g_bmad_d[l_ac].imaa039_desc,g_bmad_d[l_ac].imaa039_desc_1
+      END IF         
+   
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = l_ac
+         LET g_errparam.code   = 9035 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+   END FOREACH 
+   CALL g_detail_d.deleteElement(g_detail_d.getLength())
+   CALL g_bmab_d.deleteElement(g_bmab_d.getLength())
+   CALL g_bmac_d.deleteElement(g_bmac_d.getLength())
+   CALL g_bmad_d.deleteElement(g_bmad_d.getLength())
+   CALL g_bmea_d.deleteElement(g_bmea_d.getLength()) 
+ 
+   CLOSE b_fill_curs
+   FREE abmp100_sel
+
+   CLOSE b_fill_cs2
+   FREE abmp100_pb2 
+   CLOSE b_fill_cs3
+   FREE abmp100_pb3    
+   CLOSE b_fill_cs4
+   FREE abmp100_pb4 
+   CLOSE b_fill_cs5
+   FREE abmp100_pb5
+   
+   RETURN   
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE abmp100_sel
+   
+   LET l_ac = 1
+   CALL abmp100_fetch()
+   #add-point:b_fill段資料填充(其他單身)
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmp100.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION abmp100_fetch()
+ 
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define
+   
+   #end add-point
+   #add-point:fetch段define
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後
+ 
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmp100.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION abmp100_detail_show()
+   #add-point:show段define
+   
+   #end add-point
+   #add-point:show段define
+   
+   #end add-point
+   
+   #add-point:detail_show段
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmp100.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION abmp100_filter()
+   #add-point:filter段define
+   
+   #end add-point    
+   #add-point:filter段define
+   
+   #end add-point    
+   
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define
+   
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL abmp100_b_fill()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmp100.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION abmp100_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define
+   
+   #end add-point    
+   #add-point:filter段define
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmp100.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION abmp100_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = abmp100_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abmp100.other_function" readonly="Y" >}
+#add-point:自定義元件(Function)
+
+PRIVATE FUNCTION abmp100_bmaa001_chk()
+DEFINE l_cnt  LIKE type_t.num5
+
+   LET l_cnt = 0
+   SELECT COUNT(*) INTO l_cnt
+     FROM bmaa_t
+    WHERE bmaaent = g_enterprise
+      AND bmaa001 = g_bmaa_m.bmaa001
+   IF l_cnt = 0 THEN 
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = g_bmaa_m.bmaa001
+      LET g_errparam.code   = 'abm-00247' 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      RETURN FALSE
+   END IF
+   RETURN TRUE
+END FUNCTION
+
+PRIVATE FUNCTION abmp100_bmaa_check(p_bmaa001,p_bmaa002,p_flag)
+DEFINE   l_cnt         LIKE type_t.num5 
+DEFINE   p_bmaa001     LIKE bmaa_t.bmaa001
+DEFINE   p_bmaa002     LIKE bmaa_t.bmaa002
+DEFINE   p_flag        LIKE type_t.chr1
+
+   LET l_cnt = 0
+   IF NOT cl_null(p_bmaa001) AND NOT cl_null(p_bmaa002) THEN  
+      SELECT COUNT(*) INTO l_cnt FROM bmaa_t
+       WHERE bmaaent = g_enterprise
+         AND bmaasite = g_site
+         AND bmaa001 = p_bmaa001
+         AND bmaa002 = p_bmaa002
+      IF cl_null(l_cnt) THEN LET l_cnt = 0 END IF      
+
+      IF l_cnt > 0 THEN
+         IF p_flag = 'N' THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = p_bmaa001
+            LET g_errparam.code   = 'abm-00248'
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            RETURN FALSE             
+         END IF       
+      ELSE
+         IF p_flag = 'Y' THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = p_bmaa001
+            LET g_errparam.code   = 'abm-00227'
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            RETURN FALSE         
+         END IF           
+      END IF  
+   END IF 
+   RETURN TRUE
+END FUNCTION
+
+PRIVATE FUNCTION abmp100_create_table()
+ DROP TABLE abmp100_bmaa;
+ CREATE TEMP TABLE abmp100_bmaa(
+ bmaaent				    decimal(5),
+ bmaasite				 VARCHAR(10),
+ bmaastus				 VARCHAR(10),
+ bmaa001				    VARCHAR(40),
+ bmaa002				    VARCHAR(30),
+ bmaa003					 decimal(20,6),
+ bmaa004					 VARCHAR(10),
+ bmaaownid			    VARCHAR(20),
+ bmaaowndp			    VARCHAR(10),
+ bmaacrtid			    VARCHAR(20),
+ bmaacrtdp			    VARCHAR(10),
+ bmaacrtdt			    DATETIME YEAR TO SECOND,
+ bmaamodid			    VARCHAR(20),
+ bmaamoddt			    DATETIME YEAR TO SECOND,
+ bmaacnfid			    VARCHAR(20),
+ bmaacnfdt			    DATETIME YEAR TO SECOND,
+ bmaaud001			    VARCHAR(40),
+ bmaaud002			    VARCHAR(40),
+ bmaaud003			    VARCHAR(40),
+ bmaaud004			    VARCHAR(40),
+ bmaaud005			    VARCHAR(40),
+ bmaaud006			    VARCHAR(40),
+ bmaaud007			    VARCHAR(40),
+ bmaaud008			    VARCHAR(40),
+ bmaaud009			    VARCHAR(40),
+ bmaaud010			    VARCHAR(40),
+ bmaaud011			    decimal(20,6),
+ bmaaud012			    decimal(20,6),
+ bmaaud013			    decimal(20,6),
+ bmaaud014			    decimal(20,6),
+ bmaaud015			    decimal(20,6),
+ bmaaud016			    decimal(20,6),
+ bmaaud017			    decimal(20,6),
+ bmaaud018			    decimal(20,6),
+ bmaaud019			    decimal(20,6),
+ bmaaud020			    decimal(20,6),
+ bmaaud021			    DATETIME YEAR TO SECOND,
+ bmaaud022			    DATETIME YEAR TO SECOND,
+ bmaaud023			    DATETIME YEAR TO SECOND,
+ bmaaud024			    DATETIME YEAR TO SECOND,
+ bmaaud025			    DATETIME YEAR TO SECOND,
+ bmaaud026			    DATETIME YEAR TO SECOND,
+ bmaaud027			    DATETIME YEAR TO SECOND,
+ bmaaud028			    DATETIME YEAR TO SECOND,
+ bmaaud029			    DATETIME YEAR TO SECOND,
+ bmaaud030			    DATETIME YEAR TO SECOND
+ );
+ DROP TABLE abmp100_bmba;     
+ CREATE TEMP TABLE abmp100_bmba(
+ bmbaent			   decimal(5),
+ bmbasite			varchar(10),
+ bmba001				varchar(40),
+ bmba002				varchar(30),
+ bmba003				varchar(40),
+ bmba004				varchar(10),
+ bmba005				DATETIME YEAR TO SECOND,
+ bmba006				DATETIME YEAR TO SECOND,
+ bmba007				varchar(10),
+ bmba008				varchar(10),
+ bmba009				decimal(10,0),
+ bmba010				varchar(10),		   
+ bmba011				decimal(20,6),		   
+ bmba012				decimal(20,6),		   
+ bmba013				varchar(10),		   
+ bmba014				varchar(1),		   
+ bmba015				varchar(10),		   
+ bmba016				varchar(10),		   
+ bmba017				varchar(10),		   
+ bmba018				varchar(1),		   
+ bmba019				varchar(10),		   
+ bmba020				varchar(1),		   
+ bmba021				varchar(10),		   
+ bmba022				varchar(1),		   
+ bmba023				decimal(15,3),		   
+ bmba024				varchar(40),		   
+ bmba025				varchar(1),		   
+ bmba026				varchar(20),		   
+ bmba027				varchar(1),		   
+ bmba028				varchar(10),		   
+ bmba029				varchar(10),		   
+ bmba030				varchar(1),		   
+ bmba031				varchar(1),		   
+ bmba032				varchar(30),		
+ bmbaud001			varchar(40),	
+ bmbaud002			varchar(40),	
+ bmbaud003			varchar(40),	
+ bmbaud004			varchar(40),	
+ bmbaud005			varchar(40),	
+ bmbaud006			varchar(40),	
+ bmbaud007			varchar(40),	
+ bmbaud008			varchar(40),	
+ bmbaud009			varchar(40),	
+ bmbaud010			varchar(40),	
+ bmbaud011			decimal(20,6),	
+ bmbaud012			decimal(20,6),	
+ bmbaud013			decimal(20,6),	
+ bmbaud014			decimal(20,6),	
+ bmbaud015			decimal(20,6),	
+ bmbaud016			decimal(20,6),	
+ bmbaud017			decimal(20,6),	
+ bmbaud018			decimal(20,6),	
+ bmbaud019			decimal(20,6),	
+ bmbaud020			decimal(20,6),	
+ bmbaud021			DATETIME YEAR TO SECOND,	
+ bmbaud022			DATETIME YEAR TO SECOND,	
+ bmbaud023			DATETIME YEAR TO SECOND,	
+ bmbaud024			DATETIME YEAR TO SECOND,	
+ bmbaud025			DATETIME YEAR TO SECOND,	
+ bmbaud026			DATETIME YEAR TO SECOND,	
+ bmbaud027			DATETIME YEAR TO SECOND,	
+ bmbaud028			DATETIME YEAR TO SECOND,	
+ bmbaud029			DATETIME YEAR TO SECOND,	
+ bmbaud030			DATETIME YEAR TO SECOND,
+ bmba033          varchar(1),
+ bmba034          varchar(10));
+
+ DROP TABLE abmp100_bmea;
+ CREATE TEMP TABLE abmp100_bmea(
+ bmeaent				    decimal(5),
+ bmeasite				 VARCHAR(10),
+ bmea001				    VARCHAR(40),
+ bmea002				    VARCHAR(30),
+ bmea003				    VARCHAR(40),
+ bmea004				    VARCHAR(10),
+ bmea005				    VARCHAR(10),
+ bmea006				    VARCHAR(10),
+ bmea007				    VARCHAR(10),
+ bmea008				    VARCHAR(40),
+ bmea009					 DATE,
+ bmea010					 DATE,
+ bmea011					 decimal(20,6),
+ bmea012					 decimal(20,6),
+ bmea013					 VARCHAR(10),
+ bmea014					 VARCHAR(1),
+ bmea015					 decimal(5),
+ bmea016					 VARCHAR(10),
+ bmea017					 decimal(20,6),
+ bmea018					 VARCHAR(10),
+ bmea019				    VARCHAR(30),
+ bmeaud001				 VARCHAR(40),
+ bmeaud002				 VARCHAR(40),
+ bmeaud003				 VARCHAR(40),
+ bmeaud004				 VARCHAR(40),
+ bmeaud005				 VARCHAR(40),
+ bmeaud006				 VARCHAR(40),
+ bmeaud007				 VARCHAR(40),
+ bmeaud008				 VARCHAR(40),
+ bmeaud009				 VARCHAR(40),
+ bmeaud010				 VARCHAR(40),
+ bmeaud011				 decimal(20,6),
+ bmeaud012				 decimal(20,6),
+ bmeaud013				 decimal(20,6),
+ bmeaud014				 decimal(20,6),
+ bmeaud015				 decimal(20,6),
+ bmeaud016				 decimal(20,6),
+ bmeaud017				 decimal(20,6),
+ bmeaud018				 decimal(20,6),
+ bmeaud019				 decimal(20,6),
+ bmeaud020				 decimal(20,6),
+ bmeaud021				 DATETIME YEAR TO SECOND,
+ bmeaud022				 DATETIME YEAR TO SECOND,
+ bmeaud023				 DATETIME YEAR TO SECOND,
+ bmeaud024				 DATETIME YEAR TO SECOND,
+ bmeaud025				 DATETIME YEAR TO SECOND,
+ bmeaud026				 DATETIME YEAR TO SECOND,
+ bmeaud027				 DATETIME YEAR TO SECOND,
+ bmeaud028				 DATETIME YEAR TO SECOND,
+ bmeaud029				 DATETIME YEAR TO SECOND,
+ bmeaud030				 DATETIME YEAR TO SECOND
+ );
+ DROP TABLE abmp100_bmab;  
+ CREATE TEMP TABLE abmp100_bmab(
+ BMABENT				    decimal(5),
+ BMABSITE				 VARCHAR(10),
+ BMAB001				    VARCHAR(40),
+ BMAB002				    VARCHAR(30),
+ BMAB003				    VARCHAR(40),
+ BMAB004					 decimal(20,6),
+ BMAB005					 DATE,
+ BMAB006					 DATE,
+ BMABUD001				 VARCHAR(40),
+ BMABUD002				 VARCHAR(40),
+ BMABUD003				 VARCHAR(40),
+ BMABUD004				 VARCHAR(40),
+ BMABUD005				 VARCHAR(40),
+ BMABUD006				 VARCHAR(40),
+ BMABUD007				 VARCHAR(40),
+ BMABUD008				 VARCHAR(40),
+ BMABUD009				 VARCHAR(40),
+ BMABUD010				 VARCHAR(40),
+ BMABUD011				 decimal(20,6),
+ BMABUD012				 decimal(20,6),
+ BMABUD013				 decimal(20,6),
+ BMABUD014				 decimal(20,6),
+ BMABUD015				 decimal(20,6),
+ BMABUD016				 decimal(20,6),
+ BMABUD017				 decimal(20,6),
+ BMABUD018				 decimal(20,6),
+ BMABUD019				 decimal(20,6),
+ BMABUD020				 decimal(20,6),
+ BMABUD021				 DATETIME YEAR TO SECOND,
+ BMABUD022				 DATETIME YEAR TO SECOND,
+ BMABUD023				 DATETIME YEAR TO SECOND,
+ BMABUD024				 DATETIME YEAR TO SECOND,
+ BMABUD025				 DATETIME YEAR TO SECOND,
+ BMABUD026				 DATETIME YEAR TO SECOND,
+ BMABUD027				 DATETIME YEAR TO SECOND,
+ BMABUD028				 DATETIME YEAR TO SECOND,
+ BMABUD029				 DATETIME YEAR TO SECOND,
+ BMABUD030				 DATETIME YEAR TO SECOND
+ );
+ DROP TABLE abmp100_bmac;
+ CREATE TEMP TABLE abmp100_bmac(
+ BMACENT				   decimal(5),
+ BMACSITE				VARCHAR(10),
+ BMAC001				   VARCHAR(40),
+ BMAC002				   VARCHAR(30),
+ BMAC003				   VARCHAR(40),
+ BMAC004					VARCHAR(10),
+ BMAC005					decimal(20,6),
+ BMAC006					decimal(20,6),
+ BMAC007					DATE,
+ BMAC008					DATE,
+ BMACUD001				VARCHAR(40),
+ BMACUD002				VARCHAR(40),
+ BMACUD003				VARCHAR(40),
+ BMACUD004				VARCHAR(40),
+ BMACUD005				VARCHAR(40),
+ BMACUD006				VARCHAR(40),
+ BMACUD007				VARCHAR(40),
+ BMACUD008				VARCHAR(40),
+ BMACUD009				VARCHAR(40),
+ BMACUD010				VARCHAR(40),
+ BMACUD011				decimal(20,6),
+ BMACUD012				decimal(20,6),
+ BMACUD013				decimal(20,6),
+ BMACUD014				decimal(20,6),
+ BMACUD015				decimal(20,6),
+ BMACUD016				decimal(20,6),
+ BMACUD017				decimal(20,6),
+ BMACUD018				decimal(20,6),
+ BMACUD019				decimal(20,6),
+ BMACUD020				decimal(20,6),
+ BMACUD021				DATETIME YEAR TO SECOND,
+ BMACUD022				DATETIME YEAR TO SECOND,
+ BMACUD023				DATETIME YEAR TO SECOND,
+ BMACUD024				DATETIME YEAR TO SECOND,
+ BMACUD025				DATETIME YEAR TO SECOND,
+ BMACUD026				DATETIME YEAR TO SECOND,
+ BMACUD027				DATETIME YEAR TO SECOND,
+ BMACUD028				DATETIME YEAR TO SECOND,
+ BMACUD029				DATETIME YEAR TO SECOND,
+ BMACUD030				DATETIME YEAR TO SECOND
+ );
+ DROP TABLE abmp100_bmad;
+ CREATE TEMP TABLE abmp100_bmad(
+ BMADENT				   decimal(5),
+ BMADSITE				VARCHAR(10),
+ BMAD001				   VARCHAR(40),
+ BMAD002				   VARCHAR(30),
+ BMAD003				   VARCHAR(40),
+ BMAD004					decimal(20,6),
+ BMAD005					VARCHAR(10),
+ BMAD006					DATE,
+ BMAD007					DATE,
+ BMADUD001				VARCHAR(40),
+ BMADUD002				VARCHAR(40),
+ BMADUD003				VARCHAR(40),
+ BMADUD004				VARCHAR(40),
+ BMADUD005				VARCHAR(40),
+ BMADUD006				VARCHAR(40),
+ BMADUD007				VARCHAR(40),
+ BMADUD008				VARCHAR(40),
+ BMADUD009				VARCHAR(40),
+ BMADUD010				VARCHAR(40),
+ BMADUD011				decimal(20,6),
+ BMADUD012				decimal(20,6),
+ BMADUD013				decimal(20,6),
+ BMADUD014				decimal(20,6),
+ BMADUD015				decimal(20,6),
+ BMADUD016				decimal(20,6),
+ BMADUD017				decimal(20,6),
+ BMADUD018				decimal(20,6),
+ BMADUD019				decimal(20,6),
+ BMADUD020				decimal(20,6),
+ BMADUD021				DATETIME YEAR TO SECOND,
+ BMADUD022				DATETIME YEAR TO SECOND,
+ BMADUD023				DATETIME YEAR TO SECOND,
+ BMADUD024				DATETIME YEAR TO SECOND,
+ BMADUD025				DATETIME YEAR TO SECOND,
+ BMADUD026				DATETIME YEAR TO SECOND,
+ BMADUD027				DATETIME YEAR TO SECOND,
+ BMADUD028				DATETIME YEAR TO SECOND,
+ BMADUD029				DATETIME YEAR TO SECOND,
+ BMADUD030				DATETIME YEAR TO SECOND
+ );
+END FUNCTION
+
+PRIVATE FUNCTION abmp100_batch_execute()
+DEFINE  i           LIKE type_t.num10
+DEFINE  j           LIKE type_t.num10
+DEFINE  l_cnt       LIKE type_t.num5
+DEFINE  l_success   LIKE type_t.num5
+DEFINE  ls_sql      STRING 
+DEFINE  l_rtn       LIKE type_t.num5
+
+
+   CALL cl_err_collect_init()
+   LET l_rtn = TRUE
+   FOR i = 1 TO g_detail_d.getLength()
+      IF g_detail_d[i].imaa038 = 'N' THEN
+         CONTINUE FOR
+      END IF   
+      IF g_detail_d[i].imaa038 = 'Y' AND cl_null(g_detail_d[i].imaa039) THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = g_detail_d[i].bmba003
+         LET g_errparam.code   = 'abm-00249'
+         LET g_errparam.popup  = TRUE
+         CALL cl_err() 
+         LET l_rtn = FALSE         
+     END IF     
+   END FOR
+   
+   FOR i = 1 TO g_bmea_d.getLength()
+      IF g_bmea_d[i].imaa038 = 'N' THEN
+         CONTINUE FOR
+      END IF  
+      IF g_bmea_d[i].imaa038 = 'Y' AND cl_null(g_bmea_d[i].imaa039) THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = g_bmea_d[i].bmea008
+         LET g_errparam.code   = 'abm-00249'
+         LET g_errparam.popup  = TRUE  
+         CALL cl_err()
+         LET l_rtn = FALSE         
+      END IF         
+   END FOR
+   
+   FOR i = 1 TO g_bmab_d.getLength()
+      IF g_bmab_d[i].imaa038 = 'N' THEN
+         CONTINUE FOR
+      END IF  
+      IF g_bmab_d[i].imaa038 = 'Y' AND cl_null(g_bmab_d[i].imaa039) THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = g_bmab_d[i].bmab003
+         LET g_errparam.code   = 'abm-00249'
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         LET l_rtn = FALSE          
+      END IF             
+   END FOR  
+
+   FOR i = 1 TO g_bmac_d.getLength()
+      IF g_bmac_d[i].imaa038 = 'N' THEN
+         CONTINUE FOR
+      END IF  
+      IF g_bmac_d[i].imaa038 = 'Y' AND cl_null(g_bmac_d[i].imaa039) THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = g_bmac_d[i].bmac003
+         LET g_errparam.code   = 'abm-00249'
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         LET l_rtn = FALSE          
+      END IF          
+   END FOR   
+
+   FOR i = 1 TO g_bmad_d.getLength()
+      IF g_bmad_d[i].imaa038 = 'N' THEN
+         CONTINUE FOR
+      END IF  
+      IF g_bmad_d[i].imaa038 = 'Y' AND cl_null(g_bmad_d[i].imaa039) THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = g_bmad_d[i].bmad003
+         LET g_errparam.code   = 'abm-00249'
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         LET l_rtn = FALSE          
+      END IF          
+   END FOR
+   
+#   CALL cl_err_collect_show()     #add by lixh 20150311
+   IF l_rtn = FALSE THEN RETURN END IF
+   
+   LET l_cnt = 0 
+   SELECT COUNT(*) INTO l_cnt FROM bmaa_t
+    WHERE bmaaent = g_enterprise
+      AND bmaa001 = g_bmaa_m.bmaa001_n
+      AND bmaa002 = g_bmaa_m.bmaa002_n
+   IF cl_null(l_cnt) THEN LET l_cnt = 0 END IF
+   IF l_cnt = 0 THEN #複製到abmm200
+      
+      FOR i = 1 TO g_detail_d.getLength()  
+         IF g_detail_d[i].imaa038 = 'Y' AND NOT cl_null(g_detail_d[i].imaa039) THEN
+            UPDATE abmp100_bmba
+               SET bmba003 = g_detail_d[i].imaa039
+             WHERE bmba003 = g_detail_d[i].bmba003         
+        END IF     
+      END FOR
+      
+      FOR i = 1 TO g_bmea_d.getLength()  
+         IF g_bmea_d[i].imaa038 = 'Y' AND NOT cl_null(g_bmea_d[i].imaa039) THEN
+            UPDATE abmp100_bmea
+               SET bmea008 = g_bmea_d[i].imaa039
+             WHERE bmea008 = g_bmea_d[i].bmea008          
+         END IF         
+      END FOR
+      
+      FOR i = 1 TO g_bmab_d.getLength()
+         IF g_bmab_d[i].imaa038 = 'Y' AND NOT cl_null(g_bmab_d[i].imaa039) THEN
+            UPDATE abmp100_bmab
+               SET bmab003 = g_bmab_d[i].imaa039
+             WHERE bmab003 = g_bmab_d[i].bmab003       
+         END IF             
+      END FOR  
+   
+      FOR i = 1 TO g_bmac_d.getLength() 
+         IF g_bmac_d[i].imaa038 = 'Y' AND NOT cl_null(g_bmac_d[i].imaa039) THEN
+            UPDATE abmp100_bmac
+               SET bmac003 = g_bmac_d[i].imaa039
+             WHERE bmac003 = g_bmac_d[i].bmac003          
+         END IF          
+      END FOR   
+   
+      FOR i = 1 TO g_bmad_d.getLength()
+         IF g_bmad_d[i].imaa038 = 'Y' AND NOT cl_null(g_bmad_d[i].imaa039) THEN
+            UPDATE abmp100_bmad
+               SET bmad003 = g_bmad_d[i].imaa039
+             WHERE bmad003 = g_bmad_d[i].bmad003        
+         END IF          
+      END FOR
+       
+      FOR i = 1 TO g_detail_d.getLength()  
+         ##根据下阶料件更新bmaa_t的其它资料的主件料号和特性
+         UPDATE abmp100_bmaa
+            SET bmaa001 = g_bmaa_m.bmaa001_n,
+                bmaa002 = g_bmaa_m.bmaa002_n,
+                bmaastus = 'N'           
+          WHERE bmaa001 = g_bmaa_m.bmaa001 
+
+         UPDATE abmp100_bmaa
+            SET bmaa001 = g_detail_d[i].imaa039,
+                bmaa002 = g_bmaa_m.bmaa002_n,
+                bmaastus = 'N'           
+          WHERE bmaa001 = g_detail_d[i].bmba003 
+          
+         UPDATE abmp100_bmba
+            SET bmba001 = g_detail_d[i].imaa039,
+                bmba002 = g_bmaa_m.bmaa002_n
+          WHERE bmba001 = g_detail_d[i].bmba003 
+
+         UPDATE abmp100_bmea
+            SET bmea002 = g_bmaa_m.bmaa002_n,
+                bmea003 = g_detail_d[i].imaa039
+          WHERE bmea003 = g_detail_d[i].bmba003
+
+         UPDATE abmp100_bmea
+            SET bmea001 = g_detail_d[i].imaa039,
+                bmea002 = g_bmaa_m.bmaa002_n
+          WHERE bmea001 = g_detail_d[i].bmba003
+            
+         UPDATE abmp100_bmab
+            SET bmab001 = g_detail_d[i].imaa039,
+                bmab002 = g_bmaa_m.bmaa002_n
+          WHERE bmab001 = g_detail_d[i].bmba003 
+
+         UPDATE abmp100_bmac
+            SET bmac001 = g_detail_d[i].imaa039,
+                bmac002 = g_bmaa_m.bmaa002_n
+          WHERE bmac001 = g_detail_d[i].bmba003
+          
+         UPDATE abmp100_bmad
+            SET bmad001 = g_detail_d[i].imaa039,
+                bmad002 = g_bmaa_m.bmaa002_n
+          WHERE bmad001 = g_detail_d[i].bmba003
+          
+      END FOR
+
+      UPDATE abmp100_bmaa
+         SET bmaa001 = g_bmaa_m.bmaa001_n,
+             bmaa002 = g_bmaa_m.bmaa002_n,
+             bmaastus = 'N' 
+       WHERE bmaa001 = g_bmaa_m.bmaa001
+         AND bmaa002 = g_bmaa_m.bmaa002        
+
+      UPDATE abmp100_bmba
+         SET bmba001 = g_bmaa_m.bmaa001_n,
+             bmba002 = g_bmaa_m.bmaa002_n
+       WHERE bmba001 = g_bmaa_m.bmaa001
+         AND bmba002 = g_bmaa_m.bmaa002 
+         
+      UPDATE abmp100_bmea
+         SET bmea001 = g_bmaa_m.bmaa001_n
+       WHERE bmea001 = g_bmaa_m.bmaa001  
+
+      UPDATE abmp100_bmab
+         SET bmab001 = g_bmaa_m.bmaa001_n,
+             bmab002 = g_bmaa_m.bmaa002_n
+       WHERE bmab001 = g_bmaa_m.bmaa001 
+
+      UPDATE abmp100_bmac
+         SET bmac001 = g_bmaa_m.bmaa001_n,
+             bmac002 = g_bmaa_m.bmaa002_n
+       WHERE bmac001 = g_bmaa_m.bmaa001
+       
+      UPDATE abmp100_bmad
+         SET bmad001 = g_bmaa_m.bmaa001_n,
+             bmad002 = g_bmaa_m.bmaa002_n
+       WHERE bmad001 = g_bmaa_m.bmaa001
+
+      CALL s_transaction_begin()
+      #將資料塞回实体table                            
+      INSERT INTO bmaa_t SELECT * FROM abmp100_bmaa
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "reproduce" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF 
+
+      INSERT INTO bmba_t SELECT * FROM abmp100_bmba
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "reproduce" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF 
+      
+      INSERT INTO bmea_t SELECT * FROM abmp100_bmea
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "reproduce" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF 
+
+      INSERT INTO bmab_t SELECT * FROM abmp100_bmab
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "reproduce" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF 
+
+      INSERT INTO bmac_t SELECT * FROM abmp100_bmac
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "reproduce" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF 
+
+      INSERT INTO bmad_t SELECT * FROM abmp100_bmad
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "reproduce" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF    
+     
+   END IF
+   #更新料件主档
+  IF g_bmaa_m.bmaa001 <> g_bmaa_m.bmaa001_n THEN 
+     UPDATE imaa_t
+        SET imaa039 = g_bmaa_m.bmaa001_n,
+            imaa040 = g_today
+      WHERE imaaent = g_enterprise
+        AND imaa001 = g_bmaa_m.bmaa001          
+  END IF
+  FOR i = 1 TO g_detail_d.getLength() 
+     IF g_detail_d[i].bmba003 = g_detail_d[i].imaa039 THEN
+        CONTINUE FOR
+     END IF 
+     IF g_detail_d[i].imaa038 = 'Y' AND NOT cl_null(g_detail_d[i].imaa039) THEN
+        UPDATE imaa_t
+           SET imaa039 = g_detail_d[i].imaa039,
+               imaa040 = g_today
+         WHERE imaaent = g_enterprise
+           AND imaa001 = g_detail_d[i].bmba003         
+    END IF     
+  END FOR
+  
+  FOR i = 1 TO g_bmea_d.getLength()
+     IF g_bmea_d[i].bmea008 = g_bmea_d[i].imaa039 THEN
+        CONTINUE FOR
+     END IF       
+     IF g_bmea_d[i].imaa038 = 'Y' AND NOT cl_null(g_bmea_d[i].imaa039) THEN
+        UPDATE imaa_t
+           SET imaa039 = g_bmea_d[i].imaa039,
+               imaa040 = g_today
+         WHERE imaaent = g_enterprise
+           AND imaa001 = g_bmea_d[i].bmea008            
+     END IF         
+  END FOR
+  
+  FOR i = 1 TO g_bmab_d.getLength()
+     IF g_bmab_d[i].bmab003 = g_bmab_d[i].imaa039 THEN
+        CONTINUE FOR
+     END IF       
+     IF g_bmab_d[i].imaa038 = 'Y' AND NOT cl_null(g_bmab_d[i].imaa039) THEN
+        UPDATE imaa_t
+           SET imaa039 = g_bmab_d[i].imaa039,
+               imaa040 = g_today
+         WHERE imaaent = g_enterprise
+           AND imaa001 = g_bmab_d[i].bmab003    
+     END IF             
+  END FOR  
+
+  FOR i = 1 TO g_bmac_d.getLength()
+     IF g_bmac_d[i].bmac003 = g_bmac_d[i].imaa039 THEN
+        CONTINUE FOR
+     END IF       
+     IF g_bmac_d[i].imaa038 = 'Y' AND NOT cl_null(g_bmac_d[i].imaa039) THEN
+        UPDATE imaa_t
+           SET imaa039 = g_bmac_d[i].imaa039,
+               imaa040 = g_today
+         WHERE imaaent = g_enterprise
+           AND imaa001 = g_bmac_d[i].bmac003          
+     END IF          
+  END FOR
+  FOR i = 1 TO g_bmad_d.getLength()
+     IF g_bmad_d[i].bmad003 = g_bmad_d[i].imaa039 THEN
+        CONTINUE FOR
+     END IF       
+     IF g_bmad_d[i].imaa038 = 'Y' AND NOT cl_null(g_bmad_d[i].imaa039) THEN
+        UPDATE imaa_t
+           SET imaa039 = g_bmad_d[i].imaa039,
+               imaa040 = g_today
+         WHERE imaaent = g_enterprise
+           AND imaa001 = g_bmad_d[i].bmad003          
+     END IF          
+  END FOR    
+   IF g_bmaa_m.auto = 'Y' THEN   #自動確認
+      CALL s_abmm200_confirm(g_site,g_bmaa_m.bmaa001_n,g_bmaa_m.bmaa002_n) RETURNING l_success
+      IF l_success = FALSE THEN
+         CALL s_transaction_end('N','0')          
+         RETURN
+      END IF       
+   END IF
+   CALL s_transaction_end('Y','0')
+   CALL cl_err_collect_show()     #add by lixh 20150311
+   CALL cl_ask_confirm3("std-00012","")
+END FUNCTION
+
+PRIVATE FUNCTION abmp100_set_entry_b()
+   CALL cl_set_comp_entry("imaa039_b,imaa039_c,imaa039_d,b_imaa039,imaa039_e",TRUE)
+END FUNCTION
+
+PRIVATE FUNCTION abmp100_set_no_entry_b(p_i)
+DEFINE p_i  LIKE type_t.chr1
+   
+   CASE p_i
+      WHEN '1'
+         IF g_detail_d[l_ac].imaa038 = 'N' THEN
+            CALL cl_set_comp_entry("b_imaa039",FALSE)  
+         END IF
+      WHEN '3'
+         IF g_bmab_d[l_ac].imaa038 = 'N' THEN
+            CALL cl_set_comp_entry("imaa039_b",FALSE)  
+         END IF
+      WHEN '4'   
+         IF g_bmac_d[l_ac].imaa038 = 'N' THEN
+            CALL cl_set_comp_entry("imaa039_c",FALSE)  
+         END IF  
+      WHEN '5'   
+         IF g_bmad_d[l_ac].imaa038 = 'N' THEN
+            CALL cl_set_comp_entry("imaa039_d",FALSE)  
+         END IF
+      WHEN '2'
+         IF g_bmea_d[l_ac].imaa038 = 'N' THEN
+            CALL cl_set_comp_entry("imaa039_e",FALSE)  
+         END IF 
+   END CASE   
+END FUNCTION
+
+PRIVATE FUNCTION abmp100_chk_imaa039(p_imaa001)
+DEFINE p_imaa001 LIKE imaa_t.imaa001
+DEFINE l_imaa039  LIKE imaa_t.imaa039
+
+   SELECT imaa039 INTO l_imaa039
+     FROM imaa_t
+    WHERE imaaent = g_enterprise
+      AND imaa001 = p_imaa001
+   IF NOT cl_null(l_imaa039) THEN 
+      RETURN TRUE
+   END IF
+   RETURN FALSE
+END FUNCTION
+
+PRIVATE FUNCTION abmp100_bmaa_ref()
+   SELECT UNIQUE bmaaownid,bmaaowndp,bmaacrtid, 
+                 bmaacrtdp,bmaacrtdt,bmaamodid,bmaamoddt,bmaacnfid,bmaacnfdt,
+                 t1.ooag011,t2.ooefl003,t3.ooag011,t4.ooefl003,t5.ooag011,t6.ooag011
+     INTO g_bmaa_m.bmaaownid,g_bmaa_m.bmaaowndp,g_bmaa_m.bmaacrtid,g_bmaa_m.bmaacrtdp,g_bmaa_m.bmaacrtdt,
+          g_bmaa_m.bmaamodid,g_bmaa_m.bmaamoddt,g_bmaa_m.bmaacnfid,g_bmaa_m.bmaacnfdt,
+          g_bmaa_m.bmaaownid_desc,g_bmaa_m.bmaaowndp_desc,g_bmaa_m.bmaacrtid_desc,g_bmaa_m.bmaacrtdp_desc,
+          g_bmaa_m.bmaamodid_desc,g_bmaa_m.bmaacnfid_desc
+     FROM bmaa_t t0
+          LEFT JOIN ooag_t t1 ON t1.ooagent=g_enterprise AND t1.ooag001=bmaaownid
+          LEFT JOIN ooefl_t t2 ON t2.ooeflent=g_enterprise AND t2.ooefl001=bmaaowndp AND t2.ooefl002=g_dlang
+          LEFT JOIN ooag_t t3 ON t3.ooagent=g_enterprise AND t3.ooag001=bmaacrtid 
+          LEFT JOIN ooefl_t t4 ON t4.ooeflent=g_enterprise AND t4.ooefl001=bmaacrtdp AND t4.ooefl002=g_dlang
+          LEFT JOIN ooag_t t5 ON t5.ooagent=g_enterprise AND t5.ooag001=bmaamodid  
+          LEFT JOIN ooag_t t6 ON t6.ooagent=g_enterprise AND t6.ooag001=bmaacnfid  
+    WHERE bmaaent = g_enterprise 
+    AND bmaasite = g_site 
+    AND bmaa001 = g_bmaa_m.bmaa001 
+    AND bmaa002 = g_bmaa_m.bmaa002
+    DISPLAY BY NAME g_bmaa_m.bmaaownid,g_bmaa_m.bmaaowndp,g_bmaa_m.bmaacrtid,g_bmaa_m.bmaacrtdp,g_bmaa_m.bmaacrtdt,
+          g_bmaa_m.bmaamodid,g_bmaa_m.bmaamoddt,g_bmaa_m.bmaacnfid,g_bmaa_m.bmaacnfdt,
+          g_bmaa_m.bmaaownid_desc,g_bmaa_m.bmaaowndp_desc,g_bmaa_m.bmaacrtid_desc,g_bmaa_m.bmaacrtdp_desc,
+          g_bmaa_m.bmaamodid_desc,g_bmaa_m.bmaacnfid_desc 
+END FUNCTION
+
+PRIVATE FUNCTION abmp100_set_entry()
+   CALL cl_set_comp_entry("bmaa001_n",TRUE)
+END FUNCTION
+
+PRIVATE FUNCTION abmp100_set_no_entry()
+   IF abmp100_chk_imaa039(g_bmaa_m.bmaa001) THEN 
+      CALL cl_set_comp_entry("bmaa001_n",FALSE)
+   END IF
+END FUNCTION
+
+PRIVATE FUNCTION abmp100_bmaa_check2(p_bmaa001,p_bmaa002,p_flag)
+DEFINE   l_cnt         LIKE type_t.num5 
+DEFINE   p_bmaa001     LIKE bmaa_t.bmaa001
+DEFINE   p_bmaa002     LIKE bmaa_t.bmaa002
+DEFINE   p_flag        LIKE type_t.chr1
+
+   LET l_cnt = 0
+   IF NOT cl_null(p_bmaa001) AND p_bmaa002 IS NOT NULL THEN  
+      SELECT COUNT(*) INTO l_cnt FROM bmaa_t
+       WHERE bmaaent = g_enterprise
+         AND bmaasite = g_site
+         AND bmaa001 = p_bmaa001
+         AND bmaa002 = p_bmaa002
+      IF cl_null(l_cnt) THEN LET l_cnt = 0 END IF      
+
+      IF l_cnt > 0 THEN
+         IF p_flag = 'N' THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = p_bmaa001
+            LET g_errparam.code   = 'abm-00248'
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            RETURN FALSE             
+         END IF       
+      ELSE
+         IF p_flag = 'Y' THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = p_bmaa001
+            LET g_errparam.code   = 'abm-00227'
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            RETURN FALSE         
+         END IF           
+      END IF  
+   END IF 
+   RETURN TRUE
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

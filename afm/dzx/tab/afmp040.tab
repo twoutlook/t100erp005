@@ -1,0 +1,54 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmp040" module="afm" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="01727" crtdt="2016-02-17 17:30:52" modid="01727" moddt="2016-02-18 15:38:53" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="融資系統重評價作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="site,site_desc(chr80),fmdf001,fmdf002"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),fmdfdocno,glaald(chr5),glaald_desc(chr500),glaacomp(chr10),glaacomp_desc(chr500),glaa001,glca002(chr500),glca003(chr500),fmdf003(chr20)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),fmdfdocno(b_fmdfdocno),glaald(b_glaald),glaald_desc(b_glaald_desc),glaacomp(b_glaacomp),glaacomp_desc(b_glaacomp_desc),glaa001(b_glaa001),glca002(b_glca002),glca003(b_glca003),fmdf003(fmdf003)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmp040" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="fmdfdocno,glaald,glaald_desc,glaacomp,glaacomp_desc,glaa001,glca002,glca003" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="fmdfdocno(b_fmdfdocno),glaa001(b_glaa001)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="fmdfdocno"/>
+      <column id="glaald">
+        <after/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="glaald_desc"/>
+      <column id="glaacomp">
+        <after/>
+      </column>
+      <column id="glaacomp_desc"/>
+      <column id="glaa001">
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="glca002" def_scc="8317"/>
+      <column id="glca003" def_scc="40"/>
+      <column id="fmdf003"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="fmdf_t" page="1" linked="" pk="fmdfld,fmdfdocno,fmdf001,fmdf002">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,fmdfdocno,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM fmdf_t WHERE fmdfent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

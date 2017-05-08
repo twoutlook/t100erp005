@@ -1,0 +1,855 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="azzi800_g01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:1(2016-05-06 18:30:29), PR版次:0001(2016-05-06 18:37:15)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000025
+#+ Filename...: azzi800_g01
+#+ Description: ...
+#+ Creator....: 08108(2016-03-28 15:50:33)
+#+ Modifier...: 08108 -SD/PR- 08108
+ 
+{</section>}
+ 
+{<section id="azzi800_g01.global" readonly="Y" >}
+#報表 g01 樣板自動產生(Version:13)
+#add-point:填寫註解說明 name="global.memo"
+
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+PRIVATE TYPE sr1_r RECORD
+   gzxaent LIKE gzxa_t.gzxaent, 
+   l_gzyal003 LIKE type_t.chr200, 
+   ooag_t_ooag011 LIKE ooag_t.ooag011, 
+   gzxa003 LIKE gzxa_t.gzxa003, 
+   gzxa001 LIKE gzxa_t.gzxa001, 
+   gzxb002 LIKE gzxb_t.gzxb002, 
+   gzxb003 LIKE gzxb_t.gzxb003, 
+   gzxh_t_gzxh003 LIKE gzxh_t.gzxh003, 
+   l_gzcbl004_01 LIKE gzcbl_t.gzcbl004, 
+   l_gzcbl004_02 LIKE gzcbl_t.gzcbl004, 
+   l_gzcbl004_03 LIKE gzcbl_t.gzcbl004, 
+   gzxc_t_gzxc007 LIKE gzxc_t.gzxc007, 
+   l_ocdc LIKE type_t.chr30
+END RECORD
+ 
+PRIVATE TYPE sr2_r RECORD
+   ooff013 LIKE ooff_t.ooff013
+END RECORD
+ 
+ 
+DEFINE tm RECORD
+       wc STRING                   #where condition
+       END RECORD
+DEFINE sr DYNAMIC ARRAY OF sr1_r                   #宣告sr為sr1_t資料結構的動態陣列
+DEFINE g_select        STRING
+DEFINE g_from          STRING
+DEFINE g_where         STRING
+DEFINE g_order         STRING
+DEFINE g_sql           STRING                         #report_select_prep,REPORT段使用
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE l_flag LIKE type_t.chr10
+DEFINE l_gzxb003 LIKE gzxb_t.gzxb003
+DEFINE l_sql1     STRING
+DEFINE l_sql2     STRING
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzi800_g01.main" readonly="Y" >}
+PUBLIC FUNCTION azzi800_g01(p_arg1)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition
+#add-point:init段define (客製用) name="component_name.define_customerization"
+
+#end add-point
+#add-point:init段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component_name.define"
+ 
+#end add-point
+ 
+   LET tm.wc = p_arg1
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   #報表元件代號
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'   
+   
+   LET g_rep_code = "azzi800_g01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #主報表select子句準備
+   CALL azzi800_g01_sel_prep()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料存入array
+   CALL azzi800_g01_ins_data()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料印出
+   CALL azzi800_g01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="azzi800_g01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION azzi800_g01_sel_prep()
+   #add-point:sel_prep段define (客製用) name="sel_prep.define_customerization"
+   
+   #end add-point
+   #add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+   
+   #end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+   
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+
+{LET g_select = "SELECT gzxaent,(select gzzal003 FROM gzxa_t
+LEFT JOIN gzxb_t ON gzxb001=gzxa003 AND gzxbent=gzxaent AND gzxb002='0'
+LEFT JOIN gzzal_t ON gzxb003=gzzal001 AND gzzal002='",g_dlang,"'
+WHERE gzxa001=tm.wc AND gzxastus='Y'
+UNION
+SELECT gzyal003 FROM gzxa_t
+LEFT JOIN gzxb_t ON gzxbstus='Y' AND gzxa003=gzxb001 AND gzxaent=gzxbent AND gzxb002='1'
+LEFT JOIN gzyal_t ON gzyalent=gzxaent AND gzyal001=gzxb003 AND gzyal002='",g_dlang,"'
+WHERE gzxa001=tm.wc AND gzxastus='Y'),ooag_t.ooag011,gzxa003,gzxa001,gzxb002,gzxb003,gzxh_t.gzxh003,T1.gzcbl004, T2.gzcbl004,T3.gzcbl004,gzxc_t.gzxc007,trim(gzxc004)||''||trim(ooefl003),NULL"}
+    LET g_select="SELECT gzxaent,(select NAME FROM 
+    (select gzzal003 AS NAME FROM gzzal_t
+    WHERE gzxb003=gzzal001 AND gzzal002='",g_dlang,"'
+    UNION
+    SELECT gzyal003 AS NAME FROM gzyal_t
+    WHERE gzyalent=gzxaent AND gzyal001=gzxb003 AND gzyal002='",g_dlang,"')) NAME ,
+    ooag_t.ooag011,gzxa003,gzxa001,gzxb002,gzxb003,gzxh_t.gzxh003,T1.gzcbl004, T2.gzcbl004,T3.gzcbl004,gzxc_t.gzxc007,trim(gzxc004)||''||trim(ooefl003),NULL"
+
+#   #end add-point
+#   LET g_select = " SELECT gzxaent,NULL,ooag_t.ooag011,gzxa003,gzxa001,gzxb002,gzxb003,gzxh_t.gzxh003, 
+#       NULL,NULL,NULL,gzxc_t.gzxc007,trim(gzxc004)||trim(ooefl003)"
+# 
+#   #add-point:sel_prep g_from name="sel_prep.g_from"
+  LET  g_from = " FROM gzxa_t ",
+       " LEFT OUTER JOIN gzxb_t ON gzxbent=gzxaent AND gzxbstus='Y' AND gzxa003=gzxb001 ",   
+       " LEFT OUTER JOIN ooag_t ON ooagent=gzxaent AND gzxa003=ooag001 " , 
+       " LEFT OUTER JOIN gzyal_t ON gzyalent = gzxbent AND gzxb003 = gzyal001 AND gzyal002='",g_dlang,"'",   
+       " LEFT OUTER JOIN gzxh_t  ON gzxhent=gzxaent AND gzxa003=gzxh001 AND gzxh004='Y' AND gzxh002=gzxb003", 
+       " LEFT OUTER JOIN gzxc_t ON gzxcent=gzxbent AND gzxcstus='Y' AND gzxb001=gzxc001 AND gzxb002=gzxc002 AND gzxb003=gzxc003",  
+       " LEFT OUTER JOIN ooefl_t ON  ooeflent=gzxaent AND ooefl001=gzxc004 AND ooefl002 = '",g_dlang,"'",
+       " LEFT OUTER JOIN gzcbl_t T1 ON T1.gzcbl001 = '154' AND T1.gzcbl002 = gzxb006 AND T1.gzcbl003 = '",g_dlang,"'",
+       " LEFT OUTER JOIN gzcbl_t T2 ON T2.gzcbl001 = '155' AND T2.gzcbl002 = gzxb007 AND T2.gzcbl003 = '",g_dlang,"'",
+       " LEFT OUTER JOIN gzcbl_t T3 ON T3.gzcbl001 = '156' AND T3.gzcbl002 = gzxb008 AND T3.gzcbl003 = '",g_dlang,"'",
+       " LEFT OUTER JOIN gzzal_t ON gzzal001=gzxb003 AND gzzal002='",g_dlang,"'"
+      
+#   #end add-point
+#    LET g_from = " FROM gzxa_t,gzxb_t,gzxc_t,ooag_t,ooefl_t,gzxh_t,gzyal_t"
+# 
+#   #add-point:sel_prep g_where name="sel_prep.g_where"
+  LET g_where = " WHERE gzxaent=",g_enterprise USING "<<<<<",
+                   " AND ",tm.wc CLIPPED 
+#   #end add-point
+#    LET g_where = " WHERE " ,tm.wc CLIPPED 
+# 
+#   #add-point:sel_prep g_order name="sel_prep.g_order"
+  LET g_order = " ORDER BY gzxb003"
+#   #end add-point
+#    LET g_order = " ORDER BY gzxa001,gzxb003"
+# 
+#   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("gzxa_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED ," ",g_order CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段 
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   
+   #end add-point
+   PREPARE azzi800_g01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()   
+      LET g_rep_success = 'N'    
+   END IF
+   DECLARE azzi800_g01_curs CURSOR FOR azzi800_g01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="azzi800_g01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION azzi800_g01_ins_data()
+#主報表record(用於select子句)
+   DEFINE sr_s RECORD 
+   gzxaent LIKE gzxa_t.gzxaent, 
+   l_gzyal003 LIKE type_t.chr200, 
+   ooag_t_ooag011 LIKE ooag_t.ooag011, 
+   gzxa003 LIKE gzxa_t.gzxa003, 
+   gzxa001 LIKE gzxa_t.gzxa001, 
+   gzxb002 LIKE gzxb_t.gzxb002, 
+   gzxb003 LIKE gzxb_t.gzxb003, 
+   gzxh_t_gzxh003 LIKE gzxh_t.gzxh003, 
+   l_gzcbl004_01 LIKE gzcbl_t.gzcbl004, 
+   l_gzcbl004_02 LIKE gzcbl_t.gzcbl004, 
+   l_gzcbl004_03 LIKE gzcbl_t.gzcbl004, 
+   gzxc_t_gzxc007 LIKE gzxc_t.gzxc007, 
+   l_ocdc LIKE type_t.chr30
+ END RECORD
+   DEFINE l_cnt           LIKE type_t.num10
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point   
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+ 
+    #end add-point
+ 
+    CALL sr.clear()                                  #rep sr
+    LET l_cnt = 1
+    FOREACH azzi800_g01_curs INTO sr_s.*
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()       
+          LET g_rep_success = 'N'    
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+
+{LET l_sql="SELECT gzxh001, gzxh002, gzxh003
+                  FROM gzxh_t
+                  LEFT JOIN gzxa_t
+                  ON gzxaent = gzxhent
+                  AND gzxa003 = gzxh003
+                  AND gzxastus = 'Y'
+                  WHERE gzxhent = '",g_enterprise,"'
+                  AND gzxh001 = '",sr_s.gzxa003,"'
+                  AND gzxh004 = 'Y'
+                  AND gzxh002='",sr_s.gzxb003,"'
+      LET gzxh004 = ""  
+      PREPARE gzxh004_pre FROM l_sql  
+      DECLARE gzxh004_cus CURSOR FOR gzxh004_pre  
+      FOREACH gzxh004_cus INTO sr_s.gzxh004 
+      LET gzxh004 = sr_s.gzxh004,',',gzxh004 "}
+      
+       #end add-point
+ 
+       #add-point:ins_data段before_arr name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #set rep array value
+       LET sr[l_cnt].gzxaent = sr_s.gzxaent
+       LET sr[l_cnt].l_gzyal003 = sr_s.l_gzyal003
+       LET sr[l_cnt].ooag_t_ooag011 = sr_s.ooag_t_ooag011
+       LET sr[l_cnt].gzxa003 = sr_s.gzxa003
+       LET sr[l_cnt].gzxa001 = sr_s.gzxa001
+       LET sr[l_cnt].gzxb002 = sr_s.gzxb002
+       LET sr[l_cnt].gzxb003 = sr_s.gzxb003
+       LET sr[l_cnt].gzxh_t_gzxh003 = sr_s.gzxh_t_gzxh003
+       LET sr[l_cnt].l_gzcbl004_01 = sr_s.l_gzcbl004_01
+       LET sr[l_cnt].l_gzcbl004_02 = sr_s.l_gzcbl004_02
+       LET sr[l_cnt].l_gzcbl004_03 = sr_s.l_gzcbl004_03
+       LET sr[l_cnt].gzxc_t_gzxc007 = sr_s.gzxc_t_gzxc007
+       LET sr[l_cnt].l_ocdc = sr_s.l_ocdc
+ 
+ 
+       #add-point:ins_data段after_arr name="ins_data.after.save"
+ 
+       #end add-point
+       LET l_cnt = l_cnt + 1
+    END FOREACH
+    CALL sr.deleteElement(l_cnt)
+ 
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="azzi800_g01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION azzi800_g01_rep_data()
+   DEFINE HANDLER         om.SaxDocumentHandler
+   DEFINE l_i             INTEGER
+ 
+    #判斷是否有報表資料，若回彈出訊息視窗
+    IF sr.getLength() = 0 THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = "adz-00285"
+       LET g_errparam.extend = NULL
+       LET g_errparam.popup  = FALSE
+       LET g_errparam.replace[1] = ''
+       CALL cl_err()  
+       RETURN 
+    END IF
+    WHILE TRUE   
+       #add-point:rep_data段印前 name="rep_data.before"
+       
+       #end add-point     
+       LET handler = cl_gr_handler()
+       IF handler IS NOT NULL THEN
+          START REPORT azzi800_g01_rep TO XML HANDLER handler
+          FOR l_i = 1 TO sr.getLength()
+             OUTPUT TO REPORT azzi800_g01_rep(sr[l_i].*)
+             #報表中斷列印時，顯示錯誤訊息
+             IF fgl_report_getErrorStatus() THEN
+                DISPLAY "FGL: STOPPING REPORT msg=\"",fgl_report_getErrorString(),"\""
+                EXIT FOR
+             END IF                  
+          END FOR
+          FINISH REPORT azzi800_g01_rep
+       END IF
+       #add-point:rep_data段印完 name="rep_data.after"
+       
+       #end add-point       
+       IF g_rep_flag = TRUE THEN
+          LET g_rep_flag = FALSE
+          EXIT WHILE
+       END IF
+    END WHILE
+    #add-point:rep_data段離開while印完前 name="rep_data.end.before"
+    
+    #end add-point
+    CALL cl_gr_close_report()
+    #add-point:rep_data段離開while印完後 name="rep_data.end.after"
+    
+    #end add-point    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="azzi800_g01.rep" readonly="Y" >}
+PRIVATE REPORT azzi800_g01_rep(sr1)
+DEFINE sr1 sr1_r
+DEFINE sr2 sr2_r
+DEFINE l_subrep01_show  LIKE type_t.chr1,
+       l_subrep02_show  LIKE type_t.chr1,
+       l_subrep03_show  LIKE type_t.chr1,
+       l_subrep04_show  LIKE type_t.chr1
+DEFINE l_cnt           LIKE type_t.num10
+DEFINE l_sub_sql       STRING
+#add-point:rep段define  (客製用) name="rep.define_customerization"
+
+#end add-point
+#add-point:rep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep.define"
+
+#end add-point
+ 
+    #add-point:rep段ORDER_before name="rep.order.before"
+    
+    #end add-point
+    ORDER EXTERNAL BY sr1.gzxa001,sr1.gzxb003
+    #add-point:rep段ORDER_after name="rep.order.after"
+    
+    #end add-point
+    
+    FORMAT
+       FIRST PAGE HEADER          
+          PRINTX g_user,g_pdate,g_rep_code,g_company,g_ptime,g_user_name,g_date_fmt
+          PRINTX tm.*
+          PRINTX g_grNumFmt.*
+          PRINTX g_rep_wcchp
+ 
+          #讀取beforeGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.gzxa001
+            #報表 d05 樣板自動產生(Version:6)
+            CALL cl_gr_title_clear()  #清除title變數值 
+            #add-point:rep.header  #公司資訊(不在公用變數內) name="rep.header"
+            
+            #end add-point:rep.header 
+            LET g_rep_docno = sr1.gzxa001
+            CALL cl_gr_init_pageheader() #表頭資訊
+            PRINTX g_grPageHeader.*
+            PRINTX g_grPageFooter.*
+            #add-point:rep.apr.signstr.before name="rep.apr.signstr.before"
+                          
+            #end add-point:rep.apr.signstr.before   
+            LET g_doc_key = 'gzxaent=' ,sr1.gzxaent,'{+}gzxa001=' ,sr1.gzxa001         
+            CALL cl_gr_init_apr(sr1.gzxa001)
+            #add-point:rep.apr.signstr name="rep.apr.signstr"
+                          
+            #end add-point:rep.apr.signstr
+            PRINTX g_grSign.*
+ 
+ 
+ 
+           #add-point:rep.b_group.gzxa001.before name="rep.b_group.gzxa001.before"
+           
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub01.before name="rep.sub01.before"
+           
+           #end add-point:rep.sub01.before
+ 
+           #add-point:rep.sub01.sql name="rep.sub01.sql"
+ 
+           #end add-point:rep.sub01.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='2' AND ooff004=0 AND ooffent = '", 
+                sr1.gzxaent CLIPPED ,"'", " AND  ooff003 = '", sr1.gzxa001 CLIPPED ,"'"
+ 
+           #add-point:rep.sub01.afsql name="rep.sub01.afsql"
+           
+           #end add-point:rep.sub01.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep01_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE azzi800_g01_repcur01_cnt_pre FROM l_sub_sql
+           EXECUTE azzi800_g01_repcur01_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep01_show ="Y"
+           END IF
+           PRINTX l_subrep01_show
+           START REPORT azzi800_g01_subrep01
+           DECLARE azzi800_g01_repcur01 CURSOR FROM g_sql
+           FOREACH azzi800_g01_repcur01 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "azzi800_g01_repcur01:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub01.foreach name="rep.sub01.foreach"
+              
+              #end add-point:rep.sub01.foreach
+              OUTPUT TO REPORT azzi800_g01_subrep01(sr2.*)
+           END FOREACH
+           FINISH REPORT azzi800_g01_subrep01
+           #add-point:rep.sub01.after name="rep.sub01.after"
+           
+           #end add-point:rep.sub01.after
+ 
+ 
+ 
+           #add-point:rep.b_group.gzxa001.after name="rep.b_group.gzxa001.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.gzxb003
+ 
+           #add-point:rep.b_group.gzxb003.before name="rep.b_group.gzxb003.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.b_group.gzxb003.after name="rep.b_group.gzxb003.after"
+           
+           #end add-point:
+ 
+ 
+ 
+ 
+       ON EVERY ROW
+          #add-point:rep.everyrow.before name="rep.everyrow.before"
+          
+          #end add-point:rep.everyrow.before
+ 
+          #單身前備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub02.before name="rep.sub02.before"
+           
+           #end add-point:rep.sub02.before
+ 
+           #add-point:rep.sub02.sql name="rep.sub02.sql"
+           
+           #end add-point:rep.sub02.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='2' AND ooffent = '", 
+                sr1.gzxaent CLIPPED ,"'", " AND  ooff003 = '", sr1.gzxa001 CLIPPED ,"'", " AND  ooff004 = ", 
+                sr1.gzxb003 CLIPPED ,""
+ 
+           #add-point:rep.sub02.afsql name="rep.sub02.afsql"
+           
+           #end add-point:rep.sub02.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep02_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE azzi800_g01_repcur02_cnt_pre FROM l_sub_sql
+           EXECUTE azzi800_g01_repcur02_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep02_show ="Y"
+           END IF
+           PRINTX l_subrep02_show
+           START REPORT azzi800_g01_subrep02
+           DECLARE azzi800_g01_repcur02 CURSOR FROM g_sql
+           FOREACH azzi800_g01_repcur02 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "azzi800_g01_repcur02:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub02.foreach name="rep.sub02.foreach"
+              
+              #end add-point:rep.sub02.foreach
+              OUTPUT TO REPORT azzi800_g01_subrep02(sr2.*)
+           END FOREACH
+           FINISH REPORT azzi800_g01_subrep02
+           #add-point:rep.sub02.after name="rep.sub02.after"
+           
+           #end add-point:rep.sub02.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.beforerow name="rep.everyrow.beforerow"
+          IF cl_null(l_gzxb003) OR l_gzxb003 <> sr1.gzxb003 THEN 
+             LET l_gzxb003 =  sr1.gzxb003
+             LET l_flag = 'Y'
+          ELSE
+             LET l_flag = 'N'
+          END IF
+          PRINTX l_flag 
+          #end add-point:rep.everyrow.beforerow
+            
+          PRINTX sr1.*
+ 
+          #add-point:rep.everyrow.afterrow name="rep.everyrow.afterrow"
+          
+          #end add-point:rep.everyrow.afterrow
+ 
+          #單身後備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub03.before name="rep.sub03.before"
+           
+           #end add-point:rep.sub03.before
+ 
+           #add-point:rep.sub03.sql name="rep.sub03.sql"
+           
+           #end add-point:rep.sub03.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='1' AND ooffent = '", 
+                sr1.gzxaent CLIPPED ,"'", " AND  ooff003 = '", sr1.gzxa001 CLIPPED ,"'", " AND  ooff004 = ", 
+                sr1.gzxb003 CLIPPED ,""
+ 
+           #add-point:rep.sub03.afsql name="rep.sub03.afsql"
+           
+           #end add-point:rep.sub03.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep03_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE azzi800_g01_repcur03_cnt_pre FROM l_sub_sql
+           EXECUTE azzi800_g01_repcur03_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep03_show ="Y"
+           END IF
+           PRINTX l_subrep03_show
+           START REPORT azzi800_g01_subrep03
+           DECLARE azzi800_g01_repcur03 CURSOR FROM g_sql
+           FOREACH azzi800_g01_repcur03 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "azzi800_g01_repcur03:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub03.foreach name="rep.sub03.foreach"
+              
+              #end add-point:rep.sub03.foreach
+              OUTPUT TO REPORT azzi800_g01_subrep03(sr2.*)
+           END FOREACH
+           FINISH REPORT azzi800_g01_subrep03
+           #add-point:rep.sub03.after name="rep.sub03.after"
+           
+           #end add-point:rep.sub03.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.after name="rep.everyrow.after"
+          
+          #end add-point:rep.everyrow.after        
+ 
+          #讀取afterGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.gzxa001
+ 
+           #add-point:rep.a_group.gzxa001.before name="rep.a_group.gzxa001.before"
+           
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub04.before name="rep.sub04.before"
+           
+           #end add-point:rep.sub04.before
+ 
+           #add-point:rep.sub04.sql name="rep.sub04.sql"
+           
+           #end add-point:rep.sub04.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='1' AND ooff004=0 AND ooffent = '", 
+                sr1.gzxaent CLIPPED ,"'", " AND  ooff003 = '", sr1.gzxa001 CLIPPED ,"'"
+ 
+           #add-point:rep.sub04.afsql name="rep.sub04.afsql"
+           
+           #end add-point:rep.sub04.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep04_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE azzi800_g01_repcur04_cnt_pre FROM l_sub_sql
+           EXECUTE azzi800_g01_repcur04_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep04_show ="Y"
+           END IF
+           PRINTX l_subrep04_show
+           START REPORT azzi800_g01_subrep04
+           DECLARE azzi800_g01_repcur04 CURSOR FROM g_sql
+           FOREACH azzi800_g01_repcur04 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "azzi800_g01_repcur04:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub04.foreach name="rep.sub04.foreach"
+              
+              #end add-point:rep.sub04.foreach
+              OUTPUT TO REPORT azzi800_g01_subrep04(sr2.*)
+           END FOREACH
+           FINISH REPORT azzi800_g01_subrep04
+           #add-point:rep.sub04.after name="rep.sub04.after"
+           
+           #end add-point:rep.sub04.after
+ 
+ 
+ 
+           #add-point:rep.a_group.gzxa001.after name="rep.a_group.gzxa001.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.gzxb003
+ 
+           #add-point:rep.a_group.gzxb003.before name="rep.a_group.gzxb003.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.a_group.gzxb003.after name="rep.a_group.gzxb003.after"
+           
+           #end add-point:
+ 
+ 
+ 
+       ON LAST ROW
+            #add-point:rep.lastrow.before name="rep.lastrow.before"  
+                    
+            #end add-point :rep.lastrow.before
+ 
+            #add-point:rep.lastrow.after name="rep.lastrow.after"
+            
+            #end add-point :rep.lastrow.after
+END REPORT
+ 
+{</section>}
+ 
+{<section id="azzi800_g01.subrep_str" readonly="Y" >}
+#讀取子報表樣板
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT azzi800_g01_subrep01(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub01.define_customerization" 
+
+#end add-point
+#add-point:sub01.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub01.define" 
+
+#end add-point:sub01.define
+ 
+    #add-point:sub01.order.before name="sub01.order.before" 
+    
+    #end add-point:sub01.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub01.everyrow.before name="sub01.everyrow.before" 
+                          
+            #end add-point:sub01.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub01.everyrow.after name="sub01.everyrow.after" 
+            
+            #end add-point:sub01.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT azzi800_g01_subrep02(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub02.define_customerization" 
+
+#end add-point
+#add-point:sub02.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub02.define" 
+
+#end add-point:sub02.define
+ 
+    #add-point:sub02.order.before name="sub02.order.before" 
+    
+    #end add-point:sub02.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub02.everyrow.before name="sub02.everyrow.before" 
+                          
+            #end add-point:sub02.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub02.everyrow.after name="sub02.everyrow.after" 
+            
+            #end add-point:sub02.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT azzi800_g01_subrep03(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub03.define_customerization" 
+
+#end add-point
+#add-point:sub03.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub03.define" 
+
+#end add-point:sub03.define
+ 
+    #add-point:sub03.order.before name="sub03.order.before" 
+    
+    #end add-point:sub03.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub03.everyrow.before name="sub03.everyrow.before" 
+                          
+            #end add-point:sub03.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub03.everyrow.after name="sub03.everyrow.after" 
+            
+            #end add-point:sub03.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT azzi800_g01_subrep04(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub04.define_customerization" 
+
+#end add-point
+#add-point:sub04.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub04.define" 
+
+#end add-point:sub04.define
+ 
+    #add-point:sub04.order.before name="sub04.order.before" 
+    
+    #end add-point:sub04.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub04.everyrow.before name="sub04.everyrow.before" 
+                          
+            #end add-point:sub04.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub04.everyrow.after name="sub04.everyrow.after" 
+            
+            #end add-point:sub04.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="azzi800_g01.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="azzi800_g01.other_report" readonly="Y" >}
+
+ 
+{</section>}
+ 

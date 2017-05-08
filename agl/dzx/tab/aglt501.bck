@@ -1,0 +1,177 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglt501" module="agl" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="03080" crtdt="2015-03-03 18:20:08" modid="03080" moddt="2015-03-18 14:32:30" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="合併報表公司科目餘額暫存資料維護作業-非T100公司">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glfg001,glfg001_desc(chr80),glfg002,glfg002_desc(chr80),glfg005,glfg006,glfg007,glfg008,glfg009,glfgstus,glfgownid,glfgownid_desc(chr80),glfgowndp,glfgowndp_desc(chr80),glfgcrtid,glfgcrtid_desc(chr80),glfgcrtdp,glfgcrtdp_desc(chr80),glfgcrtdt,glfgmodid,glfgmodid_desc(chr80),glfgmoddt,glfgcnfid,glfgcnfid_desc(chr80),glfgcnfdt,l_gldh008(chr100),l_gldh009(chr100),l_gldh010(chr100),l_gldh011(chr100),l_gldh012(chr100),l_gldh013(chr100),l_gldh014(chr100),l_gldh015(chr100),l_gldh016(chr100),l_gldh017(chr100),l_gldh018(chr100),l_gldh019(chr100),l_gldh020(chr100),l_gldh021(chr100)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gldh007,gldh003,gldh004,gldh025,gldh026,gldh028,gldh029,gldh031,gldh032,gldh008,gldh009,gldh010,gldh011,gldh012,gldh013,gldh014,gldh015,gldh016,gldh017,gldh018,gldh019,gldh020,gldh021,gldh022,gldh023,gldh024,gldh027,gldh030"/>
+      <var id="bs_field" value="glfg001,glfg002,glfg005,glfg006" pk="glfg001,glfg002,glfg005,glfg006" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="open_aglt501"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="open_aglt501"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="aglt501" method="dialog">
+    <section id="input">
+      <input id="head" field="glfg001,glfg002,glfg005,glfg006,glfg007,glfg008,glfg009,glfgstus,l_gldh008,l_gldh009,l_gldh010,l_gldh011,l_gldh012,l_gldh013,l_gldh014,l_gldh015,l_gldh016,l_gldh017,l_gldh018,l_gldh019,l_gldh020,l_gldh021"/>
+      <input id="body" page="1" field="gldh007,gldh003,gldh004,gldh025,gldh026,gldh028,gldh029,gldh031,gldh032,gldh008,gldh009,gldh010,gldh011,gldh012,gldh013,gldh014,gldh015,gldh016,gldh017,gldh018,gldh019,gldh020,gldh021,gldh022,gldh023,gldh024,gldh027,gldh030" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="glfg001,glfg002,glfg005,glfg006,glfg007,glfg008,glfg009,glfgstus,glfgownid,glfgowndp,glfgcrtid,glfgcrtdp,glfgcrtdt,glfgmodid,glfgmoddt,glfgcnfid,glfgcnfdt"/>
+      <construct id="body" page="1" field="gldh003,gldh004,gldh025,gldh026,gldh028,gldh029,gldh031,gldh032,gldh008,gldh009,gldh010,gldh011,gldh012,gldh013,gldh014,gldh015,gldh016,gldh017,gldh018,gldh019,gldh020,gldh021,gldh022,gldh023,gldh024,gldh027,gldh030"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="glfg001,glfg002,glfg005,glfg006"/>
+      <set id="head" type="no_entry" field="glfg001,glfg002,glfg005,glfg006"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="glfg001">
+        <after/>
+      </column>
+      <column id="glfg001_desc"/>
+      <column id="glfg002">
+        <after/>
+      </column>
+      <column id="glfg002_desc"/>
+      <column id="glfg005" type="S" default="0"/>
+      <column id="glfg006" type="S" default="0"/>
+      <column id="glfg007"/>
+      <column id="glfg008"/>
+      <column id="glfg009"/>
+      <column id="glfgstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+      </column>
+      <column id="glfgownid">
+        <after>
+          <reference field="glfgownid_desc" ref_field="glfg_t.glfgownid" map_field="glfgownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glfgownid_desc"/>
+      <column id="glfgowndp">
+        <after>
+          <reference field="glfgowndp_desc" ref_field="glfg_t.glfgowndp" map_field="glfgowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glfgowndp_desc"/>
+      <column id="glfgcrtid">
+        <after>
+          <reference field="glfgcrtid_desc" ref_field="glfg_t.glfgcrtid" map_field="glfgcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glfgcrtid_desc"/>
+      <column id="glfgcrtdp">
+        <after>
+          <reference field="glfgcrtdp_desc" ref_field="glfg_t.glfgcrtdp" map_field="glfgcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glfgcrtdp_desc"/>
+      <column id="glfgcrtdt"/>
+      <column id="glfgmodid">
+        <after>
+          <reference field="glfgmodid_desc" ref_field="glfg_t.glfgmodid" map_field="glfgmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glfgmodid_desc"/>
+      <column id="glfgmoddt"/>
+      <column id="glfgcnfid">
+        <after>
+          <reference field="glfgcnfid_desc" ref_field="glfg_t.glfgcnfid" map_field="glfgcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glfgcnfid_desc"/>
+      <column id="glfgcnfdt"/>
+      <column id="l_gldh008"/>
+      <column id="l_gldh009"/>
+      <column id="l_gldh010"/>
+      <column id="l_gldh011"/>
+      <column id="l_gldh012"/>
+      <column id="l_gldh013"/>
+      <column id="l_gldh014"/>
+      <column id="l_gldh015"/>
+      <column id="l_gldh016"/>
+      <column id="l_gldh017"/>
+      <column id="l_gldh018"/>
+      <column id="l_gldh019"/>
+      <column id="l_gldh020"/>
+      <column id="l_gldh021"/>
+    </init>
+    <init id="body" page="1">
+      <column id="gldh007"/>
+      <column id="gldh003"/>
+      <column id="gldh004"/>
+      <column id="gldh025" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="gldh026" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="gldh028" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="gldh029" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="gldh031" type="S" default="0"/>
+      <column id="gldh032" type="S" default="0"/>
+      <column id="gldh008"/>
+      <column id="gldh009"/>
+      <column id="gldh010"/>
+      <column id="gldh011"/>
+      <column id="gldh012"/>
+      <column id="gldh013"/>
+      <column id="gldh014"/>
+      <column id="gldh015"/>
+      <column id="gldh016"/>
+      <column id="gldh017"/>
+      <column id="gldh018"/>
+      <column id="gldh019"/>
+      <column id="gldh020"/>
+      <column id="gldh021"/>
+      <column id="gldh022" type="S" default="0"/>
+      <column id="gldh023" type="S" default="0"/>
+      <column id="gldh024"/>
+      <column id="gldh027"/>
+      <column id="gldh030"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="glfg_t" pk="glfg001,glfg002,glfg005,glfg006">
+      <sql id="forupd_sql" type="sql" query="SELECT glfg001,&apos;&apos;,glfg002,&apos;&apos;,glfg005,glfg006,glfg007,glfg008,glfg009,glfgstus,glfgownid,&apos;&apos;,glfgowndp,&apos;&apos;,glfgcrtid,&apos;&apos;,glfgcrtdp,&apos;&apos;,glfgcrtdt,glfgmodid,&apos;&apos;,glfgmoddt,glfgcnfid,&apos;&apos;,glfgcnfdt,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM glfg_t WHERE glfgent= ? AND glfg001=? AND glfg002=? AND glfg005=? AND glfg006=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT glfg001,&apos;&apos;,glfg002,&apos;&apos;,glfg005,glfg006,glfg007,glfg008,glfg009,glfgstus,glfgownid,&apos;&apos;,glfgowndp,&apos;&apos;,glfgcrtid,&apos;&apos;,glfgcrtdp,&apos;&apos;,glfgcrtdt,glfgmodid,&apos;&apos;,glfgmoddt,glfgcnfid,&apos;&apos;,glfgcnfdt,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM glfg_t" order="glfg001,glfg002,glfg005,glfg006"/>
+    </head>
+    <body id="gldh_t" page="1" linked="" pk="gldh003,gldh007" fk="gldh001,gldh002,gldh005,gldh006">
+      <sql id="forupd_sql_detail" query="SELECT gldh007,gldh003,gldh004,gldh025,gldh026,gldh028,gldh029,gldh031,gldh032,gldh008,gldh009,gldh010,gldh011,gldh012,gldh013,gldh014,gldh015,gldh016,gldh017,gldh018,gldh019,gldh020,gldh021,gldh022,gldh023,gldh024,gldh027,gldh030 FROM gldh_t WHERE gldhent=? AND gldh001=? AND gldh002=? AND gldh005=? AND gldh006=? AND gldh003=? AND gldh007=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gldh007,gldh003,gldh004,gldh025,gldh026,gldh028,gldh029,gldh031,gldh032,gldh008,gldh009,gldh010,gldh011,gldh012,gldh013,gldh014,gldh015,gldh016,gldh017,gldh018,gldh019,gldh020,gldh021,gldh022,gldh023,gldh024,gldh027,gldh030 FROM gldh_t WHERE gldhent=? AND gldh001=? AND gldh002=? AND gldh005=? AND gldh006=?"/>
+    </body>
+  </dataset>
+</assembly>
+

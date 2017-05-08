@@ -1,0 +1,984 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axmr203_x01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:3(2016-06-30 03:02:07), PR版次:0003(2016-06-30 03:04:18)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000038
+#+ Filename...: axmr203_x01
+#+ Description: ...
+#+ Creator....: 07024(2015-09-04 16:13:27)
+#+ Modifier...: 02749 -SD/PR- 02749
+ 
+{</section>}
+ 
+{<section id="axmr203_x01.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:8)
+#add-point:填寫註解說明 name="global.memo"
+
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #where condition 
+       argv2 STRING                   #site
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE  g_site_t   LIKE type_t.chr10 #紀錄集團級site All值
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axmr203_x01.main" readonly="Y" >}
+PUBLIC FUNCTION axmr203_x01(p_arg1,p_arg2)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition 
+DEFINE  p_arg2 STRING                  #tm.argv2  site
+#add-point:init段define(客製用) name="component.define_customerization"
+
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.argv2 = p_arg2
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "axmr203_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL axmr203_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL axmr203_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL axmr203_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL axmr203_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL axmr203_x01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmr203_x01.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION axmr203_x01_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "pmaa001.pmaa_t.pmaa001,pmaal_t_pmaal004.pmaal_t.pmaal004,pmaal_t_pmaal003.pmaal_t.pmaal003,pmaal_t_pmaal006.pmaal_t.pmaal006,pmaa003.pmaa_t.pmaa003,l_pmaa004_gzcbl004.type_t.chr500,l_pmaa005_pmaal004.type_t.chr500,l_pmaa006_oocql004.type_t.chr500,l_pmaa007_oocgl003.type_t.chr500,pmaa008.pmaa_t.pmaa008,l_pmaa011_ooail003.type_t.chr500,pmaa017.pmaa_t.pmaa017,pmaa016.pmaa_t.pmaa016,pmaa018.pmaa_t.pmaa018,pmaa019.pmaa_t.pmaa019,l_pmaa019_ooail003.type_t.chr500,pmaa021.pmaa_t.pmaa021,pmaa022.pmaa_t.pmaa022,l_pmaa022_ooail003.type_t.chr500,pmaa020.pmaa_t.pmaa020,l_pmaa023_oocql004.type_t.chr500,l_pmaa024_oocql004.type_t.chr500,pmaa025.pmaa_t.pmaa025,l_pmaa026_oocql004.type_t.chr500,l_pmaa090_oocql004.type_t.chr500,l_pmaa091_oocql004.type_t.chr500,l_pmaa092_gzcbl004.type_t.chr500,l_pmaa094_oocql004.type_t.chr500,l_pmaa093_oocql004.type_t.chr500,l_pmaa095_ooefl003.type_t.chr500,l_pmaa096_ooag011.type_t.chr500,l_pmaa097_ooefl003.type_t.chr500,pmaa047.pmaa_t.pmaa047,l_pmaa037_gzcbl004.type_t.chr500,pmaa036.pmaa_t.pmaa036,pmaa038.pmaa_t.pmaa038,pmaa039.pmaa_t.pmaa039,pmaa040.pmaa_t.pmaa040,pmaa041.pmaa_t.pmaa041,pmaa042.pmaa_t.pmaa042,pmaa043.pmaa_t.pmaa043,pmaa044.pmaa_t.pmaa044,pmaa045.pmaa_t.pmaa045,pmaa046.pmaa_t.pmaa046,pmaa068.pmaa_t.pmaa068,pmaa069.pmaa_t.pmaa069,pmaa072.pmaa_t.pmaa072,pmaa070.pmaa_t.pmaa070,pmaa071.pmaa_t.pmaa071,l_pmaa073_gzcbl004.type_t.chr500,l_pmaa051_gzcbl004.type_t.chr500,l_pmaa052_pmaal004.type_t.chr500,l_pmaa053_xmajl003.type_t.chr500,l_pmaa054_ooail003.type_t.chr500,pmaa055.pmaa_t.pmaa055,pmaa056.pmaa_t.pmaa056,pmaa057.pmaa_t.pmaa057,pmaa058.pmaa_t.pmaa058,pmaa074.pmaa_t.pmaa074,pmaa059.pmaa_t.pmaa059,pmaa075.pmaa_t.pmaa075,l_pmaa291_oocql004.type_t.chr500,l_pmaa292_oocql004.type_t.chr500,l_pmaa293_oocql004.type_t.chr500,l_pmaa294_oocql004.type_t.chr500,l_pmaa295_oocql004.type_t.chr500,l_pmaa296_oocql004.type_t.chr500,l_pmaa297_oocql004.type_t.chr500,l_pmaa298_oocql004.type_t.chr500,l_pmaa299_oocql004.type_t.chr500,l_pmaa300_oocql004.type_t.chr500,l_pmaa_ooff013.ooff_t.ooff013,l_oofb017_1.type_t.chr1000,l_oofb017_2.type_t.chr1000,l_oofb017_3.type_t.chr1000,l_oofb017_4.type_t.chr1000,l_oofc012_1.type_t.chr100,l_oofc012_2.type_t.chr100,l_oofc012_3.type_t.chr100,l_oofc012_4.type_t.chr100,l_pmaj012.type_t.chr100,l_pmaastus_desc.type_t.chr30,l_pmab080_gzcbl004.type_t.chr500,l_pmab081_ooag011.type_t.chr500,l_pmab109_ooefl003.type_t.chr500,l_pmab082_gzzy002.type_t.chr30,pmab111.pmab_t.pmab111,l_pmab083_ooail003.type_t.chr500,l_pmab084_oodbl004.type_t.chr500,l_pmab103_oocql004.type_t.chr500,l_pmab104_xmahl003.type_t.chr500,l_pmab085_gzcbl004.type_t.chr500,l_pmab086_gzcbl004.type_t.chr500,l_pmab106_isacl004.type_t.chr500,l_pmab087_ooibl004.type_t.chr500,l_pmab105_oocql004.type_t.chr500,l_pmab088_oocql004.type_t.chr500,l_pmab089_oocql004.type_t.chr500,l_pmab107_gzcbl004.type_t.chr500,l_pmab108_gzcbl004.type_t.chr500,l_pmab090_oocql004.type_t.chr500,l_pmab091_oocql004.type_t.chr500,l_pmab092_oocql004.type_t.chr500,l_pmab093_oocql004.type_t.chr500,pmab094.pmab_t.pmab094,pmab095.pmab_t.pmab095,pmab096.pmab_t.pmab096,l_pmab097_pmaal004.type_t.chr500,pmab098.pmab_t.pmab098,pmab099.pmab_t.pmab099,pmab100.pmab_t.pmab100,pmab101.pmab_t.pmab101,pmab102.pmab_t.pmab102,l_pmab002_gzcbl004.type_t.chr500,l_pmab003_pmaal004.type_t.chr500,l_pmab004_xmajl003.type_t.chr500,l_pmab005_ooail003.type_t.chr500,pmab006.pmab_t.pmab006,pmab007.pmab_t.pmab007,pmab008.pmab_t.pmab008,pmab009.pmab_t.pmab009,pmab019.pmab_t.pmab019,pmab010.pmab_t.pmab010,pmab020.pmab_t.pmab020,l_pmab_ooff013.ooff_t.ooff013" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   
+   #end add-point:create_tmp.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmr203_x01.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION axmr203_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmr203_x01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION axmr203_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+DEFINE l_ooef019     LIKE ooef_t.ooef019   #20151021 by stellar add
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   #20151021 by stellar add ----- (S)
+   #判斷是集團級，還是據點級
+   IF cl_null(tm.argv2) THEN
+      LET g_site_t = g_site
+   ELSE
+      LET g_site_t = tm.argv2
+   END IF
+   #稅區
+   LET l_ooef019 = ''
+   SELECT ooef019 INTO l_ooef019 FROM ooef_t 
+    WHERE ooefent = g_enterprise AND ooef001 = g_site_t
+   #20151021 by stellar add ----- (E)
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   #20151021 by stellar modify ----- (S)
+   LET g_select = " SELECT pmaa001,I0.pmaal004,I0.pmaal003,I0.pmaal006,pmaa003, ",
+                  "        pmaa004,trim(pmaa004)||'.'||trim(S1.gzcbl004),pmaa005,trim(pmaa005)||'.'||trim(I1.pmaal004),pmaa006, ",
+                  "        trim(pmaa006)||'.'||trim(A1.oocql004),pmaa007,trim(pmaa007)||'.'||trim(E1.oocgl003),pmaa008,pmaa011, ",
+                  "        trim(pmaa011)||'.'||trim(D1.ooail003),pmaa017,pmaa016,pmaa018,pmaa019, ",
+                  "        trim(pmaa019)||'.'||trim(D2.ooail003),pmaa021,pmaa022,trim(pmaa022)||'.'||trim(D3.ooail003),pmaa020, ",
+                  "        pmaa023,trim(pmaa023)||'.'||trim(A2.oocql004),pmaa024,trim(pmaa024)||'.'||trim(A3.oocql004),pmaa025, ",
+                  "        pmaa026,trim(pmaa026)||'.'||trim(A4.oocql004),pmaa027,pmaa090,trim(pmaa090)||'.'||trim(A5.oocql004), ",
+                  "        pmaa091,trim(pmaa091)||'.'||trim(A6.oocql004),pmaa092,trim(pmaa092)||'.'||trim(S2.gzcbl004),pmaa094, ",
+                  "        trim(pmaa094)||'.'||trim(A7.oocql004),pmaa093,trim(pmaa093)||'.'||trim(A8.oocql004),pmaa095,trim(pmaa095)||'.'||trim(G1.ooefl003), ",
+                  "        pmaa096,trim(pmaa096)||'.'||trim(C1.ooag011),pmaa097,trim(pmaa097)||'.'||trim(G2.ooefl003),pmaa047, ",
+                  "        pmaa037,trim(pmaa037)||'.'||trim(S3.gzcbl004),pmaa036,pmaa038,pmaa039, ",
+                  "        pmaa040,pmaa041,pmaa042,pmaa043,pmaa044, ",
+                  "        pmaa045,pmaa046,pmaa068,pmaa069,pmaa072, ",
+                  "        pmaa070,pmaa071,pmaa073,trim(pmaa073)||'.'||trim(S4.gzcbl004),pmaa051, ",
+                  "        trim(pmaa051)||'.'||trim(S5.gzcbl004),pmaa052,trim(pmaa052)||'.'||trim(I2.pmaal004),pmaa053,trim(pmaa053)||'.'||trim(K1.xmajl003), ",
+                  "        pmaa054,trim(pmaa054)||'.'||trim(D4.ooail003),pmaa055,pmaa056/100,pmaa057, ",
+                  "        pmaa058,pmaa074,pmaa059,pmaa075,pmaa291, ",
+                  "        trim(pmaa291)||'.'||trim(A9.oocql004),pmaa292,trim(pmaa292)||'.'||trim(A10.oocql004),pmaa293,trim(pmaa293)||'.'||trim(A11.oocql004), ",
+                  "        pmaa294,trim(pmaa294)||'.'||trim(A12.oocql004),pmaa295,trim(pmaa295)||'.'||trim(A13.oocql004),pmaa296, ",
+                  "        trim(pmaa296)||'.'||trim(A14.oocql004),pmaa297,trim(pmaa297)||'.'||trim(A15.oocql004),pmaa298,trim(pmaa298)||'.'||trim(A16.oocql004), ",
+                  "        pmaa299,trim(pmaa299)||'.'||trim(A17.oocql004),pmaa300,trim(pmaa300)||'.'||trim(A18.oocql004),NULL, ",
+                  "        NULL,NULL,NULL,NULL,NULL, ",
+                  "        NULL,NULL,NULL,NULL,pmaastus, ",
+                  "        trim(pmaastus)||'.'||trim(S6.gzcbl004), ",
+                  " ",
+                  "        x.pmab001,x.pmab080,trim(x.pmab080)||'.'||trim(x.S7_gzcbl004),x.pmab081,trim(x.pmab081)||'.'||trim(x.C2_ooag011), ",
+                  "        x.pmab109,trim(x.pmab109)||'.'||trim(x.G3_ooefl003),x.pmab082,NULL,x.pmab111, ",
+                  "        x.pmab083,trim(x.pmab083)||'.'||trim(x.D5_ooail003),x.pmab084,trim(x.pmab084)||'.'||trim(x.F1_oodbl004),x.pmab103, ",
+                  "        trim(x.pmab103)||'.'||trim(x.A19_oocql004),x.pmab104,trim(x.pmab104)||'.'||trim(x.J1_xmahl003),x.pmab085,trim(x.pmab085)||'.'||trim(x.S8_gzcbl004), ",
+                  "        x.pmab086,trim(x.pmab086)||'.'||trim(x.S9_gzcbl004),x.pmab106,trim(x.pmab106)||'.'||trim(x.B1_isacl004),x.pmab087, ",
+                  "        trim(x.pmab087)||'.'||trim(x.H1_ooibl004),x.pmab105,trim(x.pmab105)||'.'||trim(x.A20_oocql004),x.pmab088,trim(x.pmab088)||'.'||trim(x.A21_oocql004), ",
+                  "        x.pmab089,trim(x.pmab089)||'.'||trim(x.A22_oocql004),x.pmab107,trim(x.pmab107)||'.'||trim(x.S10_gzcbl004),x.pmab108, ",
+                  "        trim(x.pmab108)||'.'||trim(x.S11_gzcbl004),x.pmab090,trim(x.pmab090)||'.'||trim(x.A23_oocql004),x.pmab091,trim(x.pmab091)||'.'||trim(x.A25_oocql004_1), ",
+                  "        x.pmab092,trim(x.pmab092)||'.'||trim(x.A25_oocql004_2),x.pmab093,trim(x.pmab093)||'.'||trim(x.A24_oocql004),x.pmab094, ",
+                  "        x.pmab095/100,x.pmab096/100,x.pmab097,trim(x.pmab097)||'.'||trim(x.I3_pmaal004),x.pmab098, ",
+                  "        x.pmab099,x.pmab100,x.pmab101,x.pmab102,x.pmab002, ",
+                  "        trim(x.pmab002)||'.'||trim(x.S12_gzcbl004),x.pmab003,trim(x.pmab003)||'.'||trim(x.I4_pmaal004),x.pmab004,trim(x.pmab004)||'.'||trim(x.K2_xmajl003), ",
+                  "        x.pmab005,trim(x.pmab005)||'.'||trim(x.D6_ooail003),x.pmab006,x.pmab007/100,x.pmab008, ",
+                  "        x.pmab009,x.pmab019,x.pmab010,x.pmab020,NULL "
+   #20151021 by stellar modify ----- (E)
+#   #end add-point
+#   LET g_select = " SELECT pmaa001,pmaal_t.pmaal004,pmaal_t.pmaal003,pmaal_t.pmaal006,pmaa003,pmaa004, 
+#       NULL,pmaa005,NULL,pmaa006,NULL,pmaa007,NULL,pmaa008,pmaa011,NULL,pmaa017,pmaa016,pmaa018,pmaa019, 
+#       NULL,pmaa021,pmaa022,NULL,pmaa020,pmaa023,NULL,pmaa024,NULL,pmaa025,pmaa026,NULL,pmaa027,pmaa090, 
+#       NULL,pmaa091,NULL,pmaa092,NULL,pmaa094,NULL,pmaa093,NULL,pmaa095,NULL,pmaa096,NULL,pmaa097,NULL, 
+#       pmaa047,pmaa037,NULL,pmaa036,pmaa038,pmaa039,pmaa040,pmaa041,pmaa042,pmaa043,pmaa044,pmaa045, 
+#       pmaa046,pmaa068,pmaa069,pmaa072,pmaa070,pmaa071,pmaa073,NULL,pmaa051,NULL,pmaa052,NULL,pmaa053, 
+#       NULL,pmaa054,NULL,pmaa055,pmaa056,pmaa057,pmaa058,pmaa074,pmaa059,pmaa075,pmaa291,NULL,pmaa292, 
+#       NULL,pmaa293,NULL,pmaa294,NULL,pmaa295,NULL,pmaa296,NULL,pmaa297,NULL,pmaa298,NULL,pmaa299,NULL, 
+#       pmaa300,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,pmaastus,NULL,pmab001,pmab080, 
+#       NULL,pmab081,NULL,pmab109,NULL,pmab082,NULL,pmab111,pmab083,NULL,pmab084,NULL,pmab103,NULL,pmab104, 
+#       NULL,pmab085,NULL,pmab086,NULL,pmab106,NULL,pmab087,NULL,pmab105,NULL,pmab088,NULL,pmab089,NULL, 
+#       pmab107,NULL,pmab108,NULL,pmab090,NULL,pmab091,NULL,pmab092,NULL,pmab093,NULL,pmab094,pmab095, 
+#       pmab096,pmab097,NULL,pmab098,pmab099,pmab100,pmab101,pmab102,pmab002,NULL,pmab003,NULL,pmab004, 
+#       NULL,pmab005,NULL,pmab006,pmab007,pmab008,pmab009,pmab019,pmab010,pmab020,NULL"
+# 
+#   #add-point:sel_prep g_from name="sel_prep.g_from"
+   #20151021 by stellar modify ----- (S)
+#   LET g_from = " FROM pmaa_t ",
+#                " LEFT OUTER JOIN pmab_t ON pmab_t.pmab001 = pmaa_t.pmaa001 AND pmab_t.pmabent = pmaa_t.pmaaent ",
+#                " LEFT OUTER JOIN pmaal_t ON pmaal_t.pmaal001 = pmaa_t.pmaa001 AND pmaal_t.pmaalent = pmaa_t.pmaaent AND pmaal_t.pmaal002 = '",g_dlang,"'"
+   LET g_from = " FROM pmaa_t ",
+                #ACC
+                " LEFT OUTER JOIN oocql_t A1 ON A1.oocqlent = pmaaent AND A1.oocql001 = '261' AND A1.oocql002 = pmaa006 AND A1.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A2 ON A2.oocqlent = pmaaent AND A2.oocql001 = '254' AND A2.oocql002 = pmaa023 AND A2.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A3 ON A3.oocqlent = pmaaent AND A3.oocql001 = '260' AND A3.oocql002 = pmaa024 AND A3.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A4 ON A4.oocqlent = pmaaent AND A4.oocql001 = '250' AND A4.oocql002 = pmaa026 AND A4.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A5 ON A5.oocqlent = pmaaent AND A5.oocql001 = '281' AND A5.oocql002 = pmaa090 AND A5.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A6 ON A6.oocqlent = pmaaent AND A6.oocql001 = '283' AND A6.oocql002 = pmaa091 AND A6.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A7 ON A7.oocqlent = pmaaent AND A7.oocql001 = '286' AND A7.oocql002 = pmaa094 AND A7.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A8 ON A8.oocqlent = pmaaent AND A8.oocql001 = '285' AND A8.oocql002 = pmaa093 AND A8.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A9 ON A9.oocqlent = pmaaent AND A9.oocql001 = '2061' AND A9.oocql002 = pmaa291 AND A9.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A10 ON A10.oocqlent = pmaaent AND A10.oocql001 = '2062' AND A10.oocql002 = pmaa292 AND A10.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A11 ON A11.oocqlent = pmaaent AND A11.oocql001 = '2063' AND A11.oocql002 = pmaa293 AND A11.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A12 ON A12.oocqlent = pmaaent AND A12.oocql001 = '2064' AND A12.oocql002 = pmaa294 AND A12.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A13 ON A13.oocqlent = pmaaent AND A13.oocql001 = '2065' AND A13.oocql002 = pmaa295 AND A13.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A14 ON A14.oocqlent = pmaaent AND A14.oocql001 = '2066' AND A14.oocql002 = pmaa296 AND A14.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A15 ON A15.oocqlent = pmaaent AND A15.oocql001 = '2067' AND A15.oocql002 = pmaa297 AND A15.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A16 ON A16.oocqlent = pmaaent AND A16.oocql001 = '2068' AND A16.oocql002 = pmaa298 AND A16.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A17 ON A17.oocqlent = pmaaent AND A17.oocql001 = '2069' AND A17.oocql002 = pmaa299 AND A17.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A18 ON A18.oocqlent = pmaaent AND A18.oocql001 = '2070' AND A18.oocql002 = pmaa300 AND A18.oocql003 = '",g_dlang,"'",
+                #SCC
+                " LEFT OUTER JOIN gzcbl_t S1 ON S1.gzcbl001 = '2015' AND S1.gzcbl002 = pmaa004 AND S1.gzcbl003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN gzcbl_t S2 ON S2.gzcbl001 = '2040' AND S2.gzcbl002 = pmaa092 AND S2.gzcbl003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN gzcbl_t S3 ON S3.gzcbl001 = '2012' AND S3.gzcbl002 = pmaa037 AND S3.gzcbl003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN gzcbl_t S4 ON S4.gzcbl001 = '8312' AND S4.gzcbl002 = pmaa073 AND S4.gzcbl003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN gzcbl_t S5 ON S5.gzcbl001 = '2033' AND S5.gzcbl002 = pmaa051 AND S5.gzcbl003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN gzcbl_t S6 ON S6.gzcbl001 = '13' AND S6.gzcbl002 = pmaastus AND S6.gzcbl003 = '",g_dlang,"'",
+                #ooag_t
+                " LEFT OUTER JOIN ooag_t C1 ON C1.ooagent = pmaaent AND C1.ooag001 = pmaa096 ",
+                #ooail_t
+                " LEFT OUTER JOIN ooail_t D1 ON D1.ooailent = pmaaent AND D1.ooail001 = pmaa011 AND D1.ooail002 = '",g_dlang,"'",
+                " LEFT OUTER JOIN ooail_t D2 ON D2.ooailent = pmaaent AND D2.ooail001 = pmaa019 AND D2.ooail002 = '",g_dlang,"'",
+                " LEFT OUTER JOIN ooail_t D3 ON D3.ooailent = pmaaent AND D3.ooail001 = pmaa022 AND D3.ooail002 = '",g_dlang,"'",
+                " LEFT OUTER JOIN ooail_t D4 ON D4.ooailent = pmaaent AND D4.ooail001 = pmaa054 AND D4.ooail002 = '",g_dlang,"'",
+                #oocgl_t
+                " LEFT OUTER JOIN oocgl_t E1 ON E1.oocglent = pmaaent AND E1.oocgl001 = pmaa007 AND E1.oocgl002 = '",g_dlang,"'",
+                #ooefl_t 
+                " LEFT OUTER JOIN ooefl_t G1 ON G1.ooeflent = pmaaent AND G1.ooefl001 = pmaa095 AND G1.ooefl002 = '",g_dlang,"'",
+                " LEFT OUTER JOIN ooefl_t G2 ON G2.ooeflent = pmaaent AND G2.ooefl001 = pmaa097 AND G2.ooefl002 = '",g_dlang,"'",
+                #pmaal_t
+                " LEFT OUTER JOIN pmaal_t I0 ON I0.pmaalent = pmaaent AND I0.pmaal001 = pmaa001 AND I0.pmaal002 = '",g_dlang,"'",
+                " LEFT OUTER JOIN pmaal_t I1 ON I1.pmaalent = pmaaent AND I1.pmaal001 = pmaa005 AND I1.pmaal002 = '",g_dlang,"'",
+                " LEFT OUTER JOIN pmaal_t I2 ON I2.pmaalent = pmaaent AND I2.pmaal001 = pmaa052 AND I2.pmaal002 = '",g_dlang,"'",
+                #xmajl_t
+                " LEFT OUTER JOIN xmajl_t K1 ON K1.xmajlent = pmaaent AND K1.xmajl001 = pmaa053 AND K1.xmajl002 = '",g_dlang,"'",
+                "  ",
+                " LEFT OUTER JOIN (SELECT pmab_t.*,S7.gzcbl004 S7_gzcbl004,C2.ooag011 C2_ooag011, ",
+                "                         G3.ooefl003 G3_ooefl003,D5.ooail003 D5_ooail003,F1.oodbl004 F1_oodbl004, ",
+                "                         A19.oocql004 A19_oocql004,J1.xmahl003 J1_xmahl003,S8.gzcbl004 S8_gzcbl004, ",
+                "                         S9.gzcbl004 S9_gzcbl004,B1.isacl004 B1_isacl004,H1.ooibl004 H1_ooibl004, ",
+               #160621-00003#6 160629 by lori mark and add---(S)   
+               #"                         A20.oocql004 A20_oocql004,A21.oocql004 A21_oocql004,A22.oocql004 A22_oocql004, ",
+                "                         A20.oocql004 A20_oocql004,A21.oojdl003 A21_oocql004,A22.oocql004 A22_oocql004, ",
+               #160621-00003#6 160629 by lori mark and add---(E)  
+                "                         S10.gzcbl004 S10_gzcbl004,S11.gzcbl004 S11_gzcbl004,A23.oocql004 A23_oocql004, ",
+                "                         A24.oocql004 A24_oocql004,I3.pmaal004 I3_pmaal004,S12.gzcbl004 S12_gzcbl004, ",
+                "                         I4.pmaal004 I4_pmaal004,K2.xmajl003 K2_xmajl003,D6.ooail003 D6_ooail003, ",
+                "                         (CASE WHEN A25.oocq019 = '1' OR A25.oocq019 = '4' THEN A26.oocql004 ",
+                "                               WHEN A25.oocq019 = '2' THEN A27.oocql004",
+                "                               WHEN A25.oocq019 = '3' THEN A28.oocql004 END) A25_oocql004_1, ",
+                "                         (CASE WHEN A25.oocq019 = '1' OR A25.oocq019 = '4' THEN A29.oocql004 ",
+                "                               WHEN A25.oocq019 = '2' THEN A30.oocql004",
+                "                               WHEN A25.oocq019 = '3' THEN A31.oocql004 END) A25_oocql004_2 ",
+                "                    FROM pmab_t ",
+                #ACC
+                " LEFT OUTER JOIN oocql_t A19 ON A19.oocqlent = pmabent AND A19.oocql001 = '238' AND A19.oocql002 = pmab103 AND A19.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A20 ON A20.oocqlent = pmabent AND A20.oocql001 = '3111' AND A20.oocql002 = pmab105 AND A20.oocql003 = '",g_dlang,"'",
+               #160621-00003#6 160629 by lori mark and add---(S)  
+               #" LEFT OUTER JOIN oocql_t A21 ON A21.oocqlent = pmabent AND A21.oocql001 = '275' AND A21.oocql002 = pmab088 AND A21.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oojdl_t A21 ON A21.oojdlent = pmabent AND A21.oojdl001 = pmab088 AND A21.oojdl002 = '",g_dlang,"'",
+               #160621-00003#6 160629 by lori mark and add---(E) 
+                " LEFT OUTER JOIN oocql_t A22 ON A22.oocqlent = pmabent AND A22.oocql001 = '295' AND A22.oocql002 = pmab089 AND A22.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A23 ON A23.oocqlent = pmabent AND A23.oocql001 = '263' AND A23.oocql002 = pmab090 AND A23.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A24 ON A24.oocqlent = pmabent AND A24.oocql001 = '262' AND A24.oocql002 = pmab093 AND A24.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocq_t A25 ON A25.oocqent = pmabent AND A25.oocq001 = '263' AND A25.oocq002 = pmab090 ",
+                " LEFT OUTER JOIN oocql_t A26 ON A26.oocqlent = pmabent AND A26.oocql001 = '315' AND A26.oocql002 = pmab091 AND A26.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A27 ON A27.oocqlent = pmabent AND A27.oocql001 = '262' AND A27.oocql002 = pmab091 AND A27.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A28 ON A28.oocqlent = pmabent AND A28.oocql001 = '276' AND A28.oocql002 = pmab091 AND A28.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A29 ON A29.oocqlent = pmabent AND A29.oocql001 = '315' AND A29.oocql002 = pmab092 AND A29.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A30 ON A30.oocqlent = pmabent AND A30.oocql001 = '262' AND A30.oocql002 = pmab092 AND A30.oocql003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN oocql_t A31 ON A31.oocqlent = pmabent AND A31.oocql001 = '276' AND A31.oocql002 = pmab092 AND A31.oocql003 = '",g_dlang,"'",
+                #SCC
+                " LEFT OUTER JOIN gzcbl_t S7 ON S7.gzcbl001 = '36' AND S7.gzcbl002 = pmab080 AND S7.gzcbl003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN gzcbl_t S8 ON S8.gzcbl001 = '8322' AND S8.gzcbl002 = pmab085 AND S8.gzcbl003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN gzcbl_t S9 ON S9.gzcbl001 = '8334' AND S9.gzcbl002 = pmab086 AND S9.gzcbl003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN gzcbl_t S10 ON S10.gzcbl001 = '2085' AND S10.gzcbl002 = pmab107 AND S10.gzcbl003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN gzcbl_t S11 ON S11.gzcbl001 = '2084' AND S11.gzcbl002 = pmab108 AND S11.gzcbl003 = '",g_dlang,"'",
+                " LEFT OUTER JOIN gzcbl_t S12 ON S12.gzcbl001 = '2033' AND S12.gzcbl002 = pmab002 AND S12.gzcbl003 = '",g_dlang,"'",
+                #isacl_t
+                " LEFT OUTER JOIN isacl_t B1 ON B1.isaclent = pmabent AND B1.isacl001 = '",l_ooef019,"' AND B1.isacl002 = pmab106 AND B1.isacl003 = '",g_dlang,"'",
+                #ooag_t
+                " LEFT OUTER JOIN ooag_t C2 ON C2.ooagent = pmabent AND C2.ooag001 = pmab081 ",
+                #ooail_t
+                " LEFT OUTER JOIN ooail_t D5 ON D5.ooailent = pmabent AND D5.ooail001 = pmab083 AND D5.ooail002 = '",g_dlang,"'",
+                " LEFT OUTER JOIN ooail_t D6 ON D6.ooailent = pmabent AND D6.ooail001 = pmab005 AND D6.ooail002 = '",g_dlang,"'",
+                #oodbl_t
+                " LEFT OUTER JOIN oodbl_t F1 ON F1.oodblent = pmabent AND F1.oodbl001 = '",l_ooef019,"' AND F1.oodbl002 = pmab084 AND F1.oodbl003 = '",g_dlang,"'",
+                #ooefl_t 
+                " LEFT OUTER JOIN ooefl_t G3 ON G3.ooeflent = pmabent AND G3.ooefl001 = pmab109 AND G3.ooefl002 = '",g_dlang,"'",
+                #ooibl_t
+                " LEFT OUTER JOIN ooibl_t H1 ON H1.ooiblent = pmabent AND H1.ooibl002 = pmab087 AND H1.ooibl003 = '",g_dlang,"'",
+                #pmaal_t
+                " LEFT OUTER JOIN pmaal_t I3 ON I3.pmaalent = pmabent AND I3.pmaal001 = pmab097 AND I3.pmaal002 = '",g_dlang,"'",
+                " LEFT OUTER JOIN pmaal_t I4 ON I4.pmaalent = pmabent AND I4.pmaal001 = pmab003 AND I4.pmaal002 = '",g_dlang,"'",
+                #xmahl_t
+                " LEFT OUTER JOIN xmahl_t J1 ON J1.xmahlent = pmabent AND J1.xmahl001 = pmab104 AND J1.xmahl002 = '",g_dlang,"'",
+                #xmajl_t
+                " LEFT OUTER JOIN xmajl_t K2 ON K2.xmajlent = pmabent AND K2.xmajl001 = pmab004 AND K2.xmajl002 = '",g_dlang,"'",
+                "                  ) x ON x.pmabent = pmaa_t.pmaaent AND x.pmab001 = pmaa_t.pmaa001 AND x.pmabsite = '",g_site_t,"'"
+   #20151021 by stellar modify ----- (E)
+#   #end add-point
+#    LET g_from = " FROM pmaa_t,pmab_t,pmaal_t"
+# 
+#   #add-point:sel_prep g_where name="sel_prep.g_where"
+   
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("pmaa_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   DISPLAY g_sql
+   #end add-point
+   PREPARE axmr203_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE axmr203_x01_curs CURSOR FOR axmr203_x01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmr203_x01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION axmr203_x01_ins_data()
+DEFINE sr RECORD 
+   pmaa001 LIKE pmaa_t.pmaa001, 
+   pmaal_t_pmaal004 LIKE pmaal_t.pmaal004, 
+   pmaal_t_pmaal003 LIKE pmaal_t.pmaal003, 
+   pmaal_t_pmaal006 LIKE pmaal_t.pmaal006, 
+   pmaa003 LIKE pmaa_t.pmaa003, 
+   pmaa004 LIKE pmaa_t.pmaa004, 
+   l_pmaa004_gzcbl004 LIKE type_t.chr500, 
+   pmaa005 LIKE pmaa_t.pmaa005, 
+   l_pmaa005_pmaal004 LIKE type_t.chr500, 
+   pmaa006 LIKE pmaa_t.pmaa006, 
+   l_pmaa006_oocql004 LIKE type_t.chr500, 
+   pmaa007 LIKE pmaa_t.pmaa007, 
+   l_pmaa007_oocgl003 LIKE type_t.chr500, 
+   pmaa008 LIKE pmaa_t.pmaa008, 
+   pmaa011 LIKE pmaa_t.pmaa011, 
+   l_pmaa011_ooail003 LIKE type_t.chr500, 
+   pmaa017 LIKE pmaa_t.pmaa017, 
+   pmaa016 LIKE pmaa_t.pmaa016, 
+   pmaa018 LIKE pmaa_t.pmaa018, 
+   pmaa019 LIKE pmaa_t.pmaa019, 
+   l_pmaa019_ooail003 LIKE type_t.chr500, 
+   pmaa021 LIKE pmaa_t.pmaa021, 
+   pmaa022 LIKE pmaa_t.pmaa022, 
+   l_pmaa022_ooail003 LIKE type_t.chr500, 
+   pmaa020 LIKE pmaa_t.pmaa020, 
+   pmaa023 LIKE pmaa_t.pmaa023, 
+   l_pmaa023_oocql004 LIKE type_t.chr500, 
+   pmaa024 LIKE pmaa_t.pmaa024, 
+   l_pmaa024_oocql004 LIKE type_t.chr500, 
+   pmaa025 LIKE pmaa_t.pmaa025, 
+   pmaa026 LIKE pmaa_t.pmaa026, 
+   l_pmaa026_oocql004 LIKE type_t.chr500, 
+   pmaa027 LIKE pmaa_t.pmaa027, 
+   pmaa090 LIKE pmaa_t.pmaa090, 
+   l_pmaa090_oocql004 LIKE type_t.chr500, 
+   pmaa091 LIKE pmaa_t.pmaa091, 
+   l_pmaa091_oocql004 LIKE type_t.chr500, 
+   pmaa092 LIKE pmaa_t.pmaa092, 
+   l_pmaa092_gzcbl004 LIKE type_t.chr500, 
+   pmaa094 LIKE pmaa_t.pmaa094, 
+   l_pmaa094_oocql004 LIKE type_t.chr500, 
+   pmaa093 LIKE pmaa_t.pmaa093, 
+   l_pmaa093_oocql004 LIKE type_t.chr500, 
+   pmaa095 LIKE pmaa_t.pmaa095, 
+   l_pmaa095_ooefl003 LIKE type_t.chr500, 
+   pmaa096 LIKE pmaa_t.pmaa096, 
+   l_pmaa096_ooag011 LIKE type_t.chr500, 
+   pmaa097 LIKE pmaa_t.pmaa097, 
+   l_pmaa097_ooefl003 LIKE type_t.chr500, 
+   pmaa047 LIKE pmaa_t.pmaa047, 
+   pmaa037 LIKE pmaa_t.pmaa037, 
+   l_pmaa037_gzcbl004 LIKE type_t.chr500, 
+   pmaa036 LIKE pmaa_t.pmaa036, 
+   pmaa038 LIKE pmaa_t.pmaa038, 
+   pmaa039 LIKE pmaa_t.pmaa039, 
+   pmaa040 LIKE pmaa_t.pmaa040, 
+   pmaa041 LIKE pmaa_t.pmaa041, 
+   pmaa042 LIKE pmaa_t.pmaa042, 
+   pmaa043 LIKE pmaa_t.pmaa043, 
+   pmaa044 LIKE pmaa_t.pmaa044, 
+   pmaa045 LIKE pmaa_t.pmaa045, 
+   pmaa046 LIKE pmaa_t.pmaa046, 
+   pmaa068 LIKE pmaa_t.pmaa068, 
+   pmaa069 LIKE pmaa_t.pmaa069, 
+   pmaa072 LIKE pmaa_t.pmaa072, 
+   pmaa070 LIKE pmaa_t.pmaa070, 
+   pmaa071 LIKE pmaa_t.pmaa071, 
+   pmaa073 LIKE pmaa_t.pmaa073, 
+   l_pmaa073_gzcbl004 LIKE type_t.chr500, 
+   pmaa051 LIKE pmaa_t.pmaa051, 
+   l_pmaa051_gzcbl004 LIKE type_t.chr500, 
+   pmaa052 LIKE pmaa_t.pmaa052, 
+   l_pmaa052_pmaal004 LIKE type_t.chr500, 
+   pmaa053 LIKE pmaa_t.pmaa053, 
+   l_pmaa053_xmajl003 LIKE type_t.chr500, 
+   pmaa054 LIKE pmaa_t.pmaa054, 
+   l_pmaa054_ooail003 LIKE type_t.chr500, 
+   pmaa055 LIKE pmaa_t.pmaa055, 
+   pmaa056 LIKE pmaa_t.pmaa056, 
+   pmaa057 LIKE pmaa_t.pmaa057, 
+   pmaa058 LIKE pmaa_t.pmaa058, 
+   pmaa074 LIKE pmaa_t.pmaa074, 
+   pmaa059 LIKE pmaa_t.pmaa059, 
+   pmaa075 LIKE pmaa_t.pmaa075, 
+   pmaa291 LIKE pmaa_t.pmaa291, 
+   l_pmaa291_oocql004 LIKE type_t.chr500, 
+   pmaa292 LIKE pmaa_t.pmaa292, 
+   l_pmaa292_oocql004 LIKE type_t.chr500, 
+   pmaa293 LIKE pmaa_t.pmaa293, 
+   l_pmaa293_oocql004 LIKE type_t.chr500, 
+   pmaa294 LIKE pmaa_t.pmaa294, 
+   l_pmaa294_oocql004 LIKE type_t.chr500, 
+   pmaa295 LIKE pmaa_t.pmaa295, 
+   l_pmaa295_oocql004 LIKE type_t.chr500, 
+   pmaa296 LIKE pmaa_t.pmaa296, 
+   l_pmaa296_oocql004 LIKE type_t.chr500, 
+   pmaa297 LIKE pmaa_t.pmaa297, 
+   l_pmaa297_oocql004 LIKE type_t.chr500, 
+   pmaa298 LIKE pmaa_t.pmaa298, 
+   l_pmaa298_oocql004 LIKE type_t.chr500, 
+   pmaa299 LIKE pmaa_t.pmaa299, 
+   l_pmaa299_oocql004 LIKE type_t.chr500, 
+   pmaa300 LIKE pmaa_t.pmaa300, 
+   l_pmaa300_oocql004 LIKE type_t.chr500, 
+   l_pmaa_ooff013 LIKE ooff_t.ooff013, 
+   l_oofb017_1 LIKE type_t.chr1000, 
+   l_oofb017_2 LIKE type_t.chr1000, 
+   l_oofb017_3 LIKE type_t.chr1000, 
+   l_oofb017_4 LIKE type_t.chr1000, 
+   l_oofc012_1 LIKE type_t.chr100, 
+   l_oofc012_2 LIKE type_t.chr100, 
+   l_oofc012_3 LIKE type_t.chr100, 
+   l_oofc012_4 LIKE type_t.chr100, 
+   l_pmaj012 LIKE type_t.chr100, 
+   pmaastus LIKE pmaa_t.pmaastus, 
+   l_pmaastus_desc LIKE type_t.chr30, 
+   pmab001 LIKE pmab_t.pmab001, 
+   pmab080 LIKE pmab_t.pmab080, 
+   l_pmab080_gzcbl004 LIKE type_t.chr500, 
+   pmab081 LIKE pmab_t.pmab081, 
+   l_pmab081_ooag011 LIKE type_t.chr500, 
+   pmab109 LIKE pmab_t.pmab109, 
+   l_pmab109_ooefl003 LIKE type_t.chr500, 
+   pmab082 LIKE pmab_t.pmab082, 
+   l_pmab082_gzzy002 LIKE type_t.chr30, 
+   pmab111 LIKE pmab_t.pmab111, 
+   pmab083 LIKE pmab_t.pmab083, 
+   l_pmab083_ooail003 LIKE type_t.chr500, 
+   pmab084 LIKE pmab_t.pmab084, 
+   l_pmab084_oodbl004 LIKE type_t.chr500, 
+   pmab103 LIKE pmab_t.pmab103, 
+   l_pmab103_oocql004 LIKE type_t.chr500, 
+   pmab104 LIKE pmab_t.pmab104, 
+   l_pmab104_xmahl003 LIKE type_t.chr500, 
+   pmab085 LIKE pmab_t.pmab085, 
+   l_pmab085_gzcbl004 LIKE type_t.chr500, 
+   pmab086 LIKE pmab_t.pmab086, 
+   l_pmab086_gzcbl004 LIKE type_t.chr500, 
+   pmab106 LIKE pmab_t.pmab106, 
+   l_pmab106_isacl004 LIKE type_t.chr500, 
+   pmab087 LIKE pmab_t.pmab087, 
+   l_pmab087_ooibl004 LIKE type_t.chr500, 
+   pmab105 LIKE pmab_t.pmab105, 
+   l_pmab105_oocql004 LIKE type_t.chr500, 
+   pmab088 LIKE pmab_t.pmab088, 
+   l_pmab088_oocql004 LIKE type_t.chr500, 
+   pmab089 LIKE pmab_t.pmab089, 
+   l_pmab089_oocql004 LIKE type_t.chr500, 
+   pmab107 LIKE pmab_t.pmab107, 
+   l_pmab107_gzcbl004 LIKE type_t.chr500, 
+   pmab108 LIKE pmab_t.pmab108, 
+   l_pmab108_gzcbl004 LIKE type_t.chr500, 
+   pmab090 LIKE pmab_t.pmab090, 
+   l_pmab090_oocql004 LIKE type_t.chr500, 
+   pmab091 LIKE pmab_t.pmab091, 
+   l_pmab091_oocql004 LIKE type_t.chr500, 
+   pmab092 LIKE pmab_t.pmab092, 
+   l_pmab092_oocql004 LIKE type_t.chr500, 
+   pmab093 LIKE pmab_t.pmab093, 
+   l_pmab093_oocql004 LIKE type_t.chr500, 
+   pmab094 LIKE pmab_t.pmab094, 
+   pmab095 LIKE pmab_t.pmab095, 
+   pmab096 LIKE pmab_t.pmab096, 
+   pmab097 LIKE pmab_t.pmab097, 
+   l_pmab097_pmaal004 LIKE type_t.chr500, 
+   pmab098 LIKE pmab_t.pmab098, 
+   pmab099 LIKE pmab_t.pmab099, 
+   pmab100 LIKE pmab_t.pmab100, 
+   pmab101 LIKE pmab_t.pmab101, 
+   pmab102 LIKE pmab_t.pmab102, 
+   pmab002 LIKE pmab_t.pmab002, 
+   l_pmab002_gzcbl004 LIKE type_t.chr500, 
+   pmab003 LIKE pmab_t.pmab003, 
+   l_pmab003_pmaal004 LIKE type_t.chr500, 
+   pmab004 LIKE pmab_t.pmab004, 
+   l_pmab004_xmajl003 LIKE type_t.chr500, 
+   pmab005 LIKE pmab_t.pmab005, 
+   l_pmab005_ooail003 LIKE type_t.chr500, 
+   pmab006 LIKE pmab_t.pmab006, 
+   pmab007 LIKE pmab_t.pmab007, 
+   pmab008 LIKE pmab_t.pmab008, 
+   pmab009 LIKE pmab_t.pmab009, 
+   pmab019 LIKE pmab_t.pmab019, 
+   pmab010 LIKE pmab_t.pmab010, 
+   pmab020 LIKE pmab_t.pmab020, 
+   l_pmab_ooff013 LIKE ooff_t.ooff013
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+   DEFINE l_success LIKE type_t.num5
+   DEFINE l_oofa001 LIKE oofa_t.oofa001     #聯絡對象識別碼
+   DEFINE l_oofb008 LIKE oofb_t.oofb008     #地址類型
+   DEFINE l_oofb001 LIKE oofb_t.oofb001     #聯絡地址識別碼
+   DEFINE l_oofb019 LIKE oofb_t.oofb019     #簡要代碼
+   DEFINE l_oofc008 LIKE oofc_t.oofc008     #通訊內容
+   DEFINE l_oofc012 LIKE oofc_t.oofc012     #通訊內容
+   DEFINE l_ooef019 LIKE ooef_t.ooef019     #稅區
+   DEFINE l_address String
+   DEFINE l_sql     String
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+#20151021 by stellar mark ----- (S)
+#    #判斷是集團級，還是據點級
+#    IF cl_null(tm.argv2) THEN
+#       LET g_site_t = g_site
+#    ELSE
+#       LET g_site_t = tm.argv2
+#    END IF
+#    #稅區
+#    LET l_ooef019 = ''
+#    SELECT ooef019 INTO l_ooef019 FROM ooef_t 
+#     WHERE ooefent = g_enterprise AND ooef001 = g_site_t 
+#20151021 by stellar mark ----- (E)
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH axmr203_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       #集團資料備註	   
+       CALL s_aooi360_sel('2',sr.pmaa001,'','','','','','','','','','4') RETURNING l_success,sr.l_pmaa_ooff013
+       #據點備註	   
+       CALL s_aooi360_sel('2',sr.pmab001,'ALL','','','','','','','','','4') RETURNING l_success,sr.l_pmab_ooff013 
+       #----地址類型 oofb008
+       LET l_sql = " SELECT oofb008,oofb019 FROM oofb_t ",
+                   "  WHERE oofbent = '",g_enterprise,"'",
+                   "    AND oofb002 = '",sr.pmaa027,"'",
+                   "    AND oofb010 = 'Y'"
+       PREPARE sel_oofb_pre FROM l_sql
+       DECLARE sel_oofb_cur CURSOR FOR sel_oofb_pre
+       FOREACH sel_oofb_cur INTO l_oofb008,l_oofb019    
+          #抓地址
+          CALL s_aooi350_get_address(sr.pmaa027,l_oofb019,g_dlang)  RETURNING l_success,l_address
+          CASE l_oofb008
+             WHEN 1 #主要登記地址
+                LET sr.l_oofb017_1 = l_address
+             WHEN 2 #主要聯絡地址
+                LET sr.l_oofb017_2 = l_address
+             WHEN 3 #主要送貨地址
+                LET sr.l_oofb017_3 = l_address
+             WHEN 5 #主要帳款地址
+                LET sr.l_oofb017_4 = l_address
+          END CASE
+       END FOREACH
+       LET l_sql = " SELECT oofc008,oofc012 FROM oofc_t", 
+                   "  WHERE oofcent = '",g_enterprise,"'",
+                   "    AND oofc002 = '",sr.pmaa027,"'",
+                   "    AND oofc010 = 'Y'"
+       PREPARE sel_oofc_pre FROM l_sql
+       DECLARE sel_oofc_cur CURSOR FOR sel_oofc_pre
+       FOREACH sel_oofc_cur INTO l_oofc008,l_oofc012  
+          CASE l_oofc008        
+             WHEN 1 #主要電話地址	   
+             LET sr.l_oofc012_1 = l_oofc012 
+             WHEN 2 #主要行動電話	   
+             LET sr.l_oofc012_2 = l_oofc012 
+             WHEN 3 #主要傳真	   
+             LET sr.l_oofc012_3 = l_oofc012 
+             WHEN 4 #主要電子郵件	   
+             LET sr.l_oofc012_4 = l_oofc012  
+          END CASE
+       END FOREACH
+#20151021 by stellar mark ----- (S)
+#       #主要聯絡人	   
+#       SELECT pmaj012 INTO sr.l_pmaj012 FROM pmaj_t
+#        WHERE pmajent = g_enterprise AND pmaj001 = sr.pmaa001 AND pmaj004 = 'Y'
+#       #狀態
+#       CALL s_desc_gzcbl004_desc('13',sr.pmaastus) RETURNING sr.l_pmaastus_desc
+#       LET sr.l_pmaastus_desc = sr.pmaastus,'.',sr.l_pmaastus_desc
+#       #慣用報表語言
+#       SELECT gzzy002 INTO sr.l_pmab082_gzzy002 FROM gzzy_t WHERE gzzy001 = sr.pmab082
+#       #慣用佣金率
+#       LET sr.pmab095 = sr.pmab095/100
+#       #折扣率
+#       LET sr.pmab096 = sr.pmab096/100
+#
+#       #法人類型	
+#       LET sr.l_pmaa004_gzcbl004 = s_desc_gzcbl004_desc('2015',sr.pmaa004)
+#       LET sr.l_pmaa004_gzcbl004 = axmr203_x01_compose(sr.pmaa004,sr.l_pmaa004_gzcbl004)
+#       #所屬法人	
+#       LET sr.l_pmaa005_pmaal004 = s_desc_get_trading_partner_abbr_desc(sr.pmaa005)
+#       LET sr.l_pmaa005_pmaal004 = axmr203_x01_compose(sr.pmaa005,sr.l_pmaa005_pmaal004)
+#       #所屬集團	
+#       LET sr.l_pmaa006_oocql004 = s_desc_get_acc_desc('261',sr.pmaa006)
+#       LET sr.l_pmaa006_oocql004 = axmr203_x01_compose(sr.pmaa006,sr.l_pmaa006_oocql004)
+#       #註冊國家	
+#       SELECT oocgl003 INTO sr.l_pmaa007_oocgl003 FROM oocgl_t 
+#        WHERE oocglent = g_enterprise
+#          AND oocgl001 = sr.pmaa007 
+#          AND oocgl002 = g_dlang
+#       LET sr.l_pmaa007_oocgl003 = axmr203_x01_compose(sr.pmaa007,sr.l_pmaa007_oocgl003)
+#       #統計幣別	
+#       LET sr.l_pmaa011_ooail003 = s_desc_get_currency_desc(sr.pmaa011)
+#       LET sr.l_pmaa011_ooail003 = axmr203_x01_compose(sr.pmaa011,sr.l_pmaa011_ooail003)
+#       #資本額計算幣別	
+#       LET sr.l_pmaa019_ooail003 = s_desc_get_currency_desc(sr.pmaa019)
+#       LET sr.l_pmaa019_ooail003 = axmr203_x01_compose(sr.pmaa019,sr.l_pmaa019_ooail003)
+#       #年營業額計算幣別	
+#       LET sr.l_pmaa022_ooail003 = s_desc_get_currency_desc(sr.pmaa022)
+#       LET sr.l_pmaa022_ooail003 = axmr203_x01_compose(sr.pmaa022,sr.l_pmaa022_ooail003)
+#       #產業分類	
+#       LET sr.l_pmaa023_oocql004 = s_desc_get_acc_desc('254',sr.pmaa023)
+#       LET sr.l_pmaa023_oocql004 = axmr203_x01_compose(sr.pmaa023,sr.l_pmaa023_oocql004)
+#       #規模分類	
+#       LET sr.l_pmaa024_oocql004 = s_desc_get_acc_desc('260',sr.pmaa024)
+#       LET sr.l_pmaa024_oocql004 = axmr203_x01_compose(sr.pmaa024,sr.l_pmaa024_oocql004)
+#       #資料來源	
+#       LET sr.l_pmaa026_oocql004 = s_desc_get_acc_desc('250',sr.pmaa026)
+#       LET sr.l_pmaa026_oocql004 = axmr203_x01_compose(sr.pmaa026,sr.l_pmaa026_oocql004)
+#       #客戶分類	
+#       LET sr.l_pmaa090_oocql004 = s_desc_get_acc_desc('281',sr.pmaa090)
+#       LET sr.l_pmaa090_oocql004 = axmr203_x01_compose(sr.pmaa090,sr.l_pmaa090_oocql004)
+#       #客戶價格群組	
+#       LET sr.l_pmaa091_oocql004 = s_desc_get_acc_desc('283',sr.pmaa091)
+#       LET sr.l_pmaa091_oocql004 = axmr203_x01_compose(sr.pmaa091,sr.l_pmaa091_oocql004)
+#       #客戶經營類型
+#       LET sr.l_pmaa092_gzcbl004 = s_desc_gzcbl004_desc('2040',sr.pmaa092)
+#       LET sr.l_pmaa092_gzcbl004 = axmr203_x01_compose(sr.pmaa092,sr.l_pmaa092_gzcbl004)
+#       #客戶重要性等級	
+#       LET sr.l_pmaa094_oocql004 = s_desc_get_acc_desc('286',sr.pmaa094)
+#       LET sr.l_pmaa094_oocql004 = axmr203_x01_compose(sr.pmaa094,sr.l_pmaa094_oocql004)
+#       #客戶生命週期	
+#       LET sr.l_pmaa093_oocql004 = s_desc_get_acc_desc('285',sr.pmaa093)
+#       LET sr.l_pmaa093_oocql004 = axmr203_x01_compose(sr.pmaa093,sr.l_pmaa093_oocql004)
+#       #客戶制定組織	
+#       LET sr.l_pmaa095_ooefl003 = s_desc_get_department_desc(sr.pmaa095)
+#       LET sr.l_pmaa095_ooefl003 = axmr203_x01_compose(sr.pmaa095,sr.l_pmaa095_ooefl003)
+#       #預設業務員	
+#       LET sr.l_pmaa096_ooag011 = s_desc_get_person_desc(sr.pmaa096)
+#       LET sr.l_pmaa096_ooag011 = axmr203_x01_compose(sr.pmaa096,sr.l_pmaa096_ooag011)
+#       #預設業務部門	
+#       LET sr.l_pmaa097_ooefl003 = s_desc_get_department_desc(sr.pmaa097)
+#       LET sr.l_pmaa097_ooefl003 = axmr203_x01_compose(sr.pmaa097,sr.l_pmaa097_ooefl003)
+#       #結帳方式	
+#       LET sr.l_pmaa037_gzcbl004 = s_desc_gzcbl004_desc('2012',sr.pmaa037)
+#       LET sr.l_pmaa037_gzcbl004 = axmr203_x01_compose(sr.pmaa037,sr.l_pmaa037_gzcbl004)
+#       #帳齡計算基準	
+#       LET sr.l_pmaa073_gzcbl004 = s_desc_gzcbl004_desc('8312',sr.pmaa073)
+#       LET sr.l_pmaa073_gzcbl004 = axmr203_x01_compose(sr.pmaa073,sr.l_pmaa073_gzcbl004)
+#       #信用額度查核方式	
+#       LET sr.l_pmaa051_gzcbl004 = s_desc_gzcbl004_desc('2033',sr.pmaa051)
+#       LET sr.l_pmaa051_gzcbl004 = axmr203_x01_compose(sr.pmaa051,sr.l_pmaa051_gzcbl004)
+#       #額度企業	
+#       LET sr.l_pmaa052_pmaal004 = s_desc_get_trading_partner_abbr_desc(sr.pmaa052)
+#       LET sr.l_pmaa052_pmaal004 = axmr203_x01_compose(sr.pmaa052,sr.l_pmaa052_pmaal004)
+#       #信用評核等級	
+#       SELECT xmajl003 INTO sr.l_pmaa053_xmajl003
+#         FROM xmajl_t
+#        WHERE xmajlent = g_enterprise
+#          AND xmajl001 = sr.pmaa053
+#          AND xmajl002 = g_dlang
+#       LET sr.l_pmaa053_xmajl003 = axmr203_x01_compose(sr.pmaa053,sr.l_pmaa053_xmajl003)
+#       #額度計算幣別	
+#       LET sr.l_pmaa054_ooail003 = s_desc_get_currency_desc(sr.pmaa054 )
+#       LET sr.l_pmaa054_ooail003 = axmr203_x01_compose(sr.pmaa054,sr.l_pmaa054_ooail003)
+#       #客戶其他屬性一	
+#       LET sr.l_pmaa291_oocql004 = s_desc_get_acc_desc('2061',sr.pmaa291)
+#       LET sr.l_pmaa291_oocql004 = axmr203_x01_compose(sr.pmaa291,sr.l_pmaa291_oocql004)
+#       #客戶其他屬性二	
+#       LET sr.l_pmaa292_oocql004 = s_desc_get_acc_desc('2062',sr.pmaa292)
+#       LET sr.l_pmaa292_oocql004 = axmr203_x01_compose(sr.pmaa292,sr.l_pmaa292_oocql004)
+#       #客戶其他屬性三	
+#       LET sr.l_pmaa293_oocql004 = s_desc_get_acc_desc('2063',sr.pmaa293)
+#       LET sr.l_pmaa293_oocql004 = axmr203_x01_compose(sr.pmaa293,sr.l_pmaa293_oocql004)
+#       #客戶其他屬性四	
+#       LET sr.l_pmaa294_oocql004 = s_desc_get_acc_desc('2064',sr.pmaa294)
+#       LET sr.l_pmaa294_oocql004 = axmr203_x01_compose(sr.pmaa294,sr.l_pmaa294_oocql004)
+#       #客戶其他屬性五	
+#       LET sr.l_pmaa295_oocql004 = s_desc_get_acc_desc('2065',sr.pmaa295)
+#       LET sr.l_pmaa295_oocql004 = axmr203_x01_compose(sr.pmaa295,sr.l_pmaa295_oocql004)
+#       #客戶其他屬性六	
+#       LET sr.l_pmaa296_oocql004 = s_desc_get_acc_desc('2066',sr.pmaa296)
+#       LET sr.l_pmaa296_oocql004 = axmr203_x01_compose(sr.pmaa296,sr.l_pmaa296_oocql004)
+#       #客戶其他屬性七	
+#       LET sr.l_pmaa297_oocql004 = s_desc_get_acc_desc('2067',sr.pmaa297)
+#       LET sr.l_pmaa297_oocql004 = axmr203_x01_compose(sr.pmaa297,sr.l_pmaa297_oocql004)
+#       #客戶其他屬性八	
+#       LET sr.l_pmaa298_oocql004 = s_desc_get_acc_desc('2068',sr.pmaa298)
+#       LET sr.l_pmaa298_oocql004 = axmr203_x01_compose(sr.pmaa298,sr.l_pmaa298_oocql004)
+#       #客戶其他屬性九	
+#       LET sr.l_pmaa299_oocql004 = s_desc_get_acc_desc('2069',sr.pmaa299)
+#       LET sr.l_pmaa299_oocql004 = axmr203_x01_compose(sr.pmaa299,sr.l_pmaa299_oocql004)
+#       #客戶其他屬性十	
+#       LET sr.l_pmaa300_oocql004 = s_desc_get_acc_desc('2070',sr.pmaa300)
+#       LET sr.l_pmaa300_oocql004 = axmr203_x01_compose(sr.pmaa300,sr.l_pmaa300_oocql004)
+#
+#       #客戶ABC分類
+#       LET sr.l_pmab080_gzcbl004 = s_desc_gzcbl004_desc('36',sr.pmab080)
+#       LET sr.l_pmab080_gzcbl004 = axmr203_x01_compose(sr.pmab080,sr.l_pmab080_gzcbl004)
+#       #負責業務人員
+#       LET sr.l_pmab081_ooag011 = s_desc_get_person_desc(sr.pmab081)
+#       LET sr.l_pmab081_ooag011 = axmr203_x01_compose(sr.pmab081,sr.l_pmab081_ooag011)
+#       #負責業務部門	
+#       LET sr.l_pmab109_ooefl003 = s_desc_get_department_desc(sr.pmab109)
+#       LET sr.l_pmab109_ooefl003 = axmr203_x01_compose(sr.pmab109,sr.l_pmab109_ooefl003)
+#       #客戶慣用交易幣別	
+#       LET sr.l_pmab083_ooail003 = s_desc_get_currency_desc(sr.pmab083)
+#       LET sr.l_pmab083_ooail003 = axmr203_x01_compose(sr.pmab083,sr.l_pmab083_ooail003)
+#       #客戶慣用交易稅別	
+#       LET sr.l_pmab084_oodbl004 = s_desc_get_tax_desc1(g_site,sr.pmab084)
+#       LET sr.l_pmab084_oodbl004 = axmr203_x01_compose(sr.pmab084,sr.l_pmab084_oodbl004)
+#       #慣用交易條件
+#       LET sr.l_pmab103_oocql004 = s_desc_get_acc_desc('238',sr.pmab103)
+#       LET sr.l_pmab103_oocql004 = axmr203_x01_compose(sr.pmab103,sr.l_pmab103_oocql004)
+#       #慣用取價方式	
+#       LET sr.l_pmab104_xmahl003 = s_desc_get_xmah001_desc(sr.pmab104)
+#       LET sr.l_pmab104_xmahl003 = axmr203_x01_compose(sr.pmab104,sr.l_pmab104_xmahl003)
+#       #客戶慣用發票開立方式	
+#       LET sr.l_pmab085_gzcbl004 = s_desc_gzcbl004_desc('8322',sr.pmab085)
+#       LET sr.l_pmab085_gzcbl004 = axmr203_x01_compose(sr.pmab085,sr.l_pmab085_gzcbl004)
+#       #客戶慣用立帳方式	
+#       LET sr.l_pmab086_gzcbl004 = s_desc_gzcbl004_desc('8334',sr.pmab086)
+#       LET sr.l_pmab086_gzcbl004 = axmr203_x01_compose(sr.pmab086,sr.l_pmab086_gzcbl004)
+#       #客戶慣用發票類型    
+#       SELECT isacl004 INTO sr.l_pmab106_isacl004 FROM isacl_t 
+#        WHERE isaclent = g_enterprise AND isacl001 = l_ooef019
+#          AND isacl002 = sr.pmab106 AND isacl003 = g_dlang
+#       LET sr.l_pmab106_isacl004 = axmr203_x01_compose(sr.pmab106,sr.l_pmab106_isacl004)
+#       #客戶慣用收款條件	
+#       LET sr.l_pmab087_ooibl004 = s_desc_get_ooib002_desc(sr.pmab087)
+#       LET sr.l_pmab087_ooibl004 = axmr203_x01_compose(sr.pmab087,sr.l_pmab087_ooibl004)
+#       #應收帳款類別	
+#       LET sr.l_pmab105_oocql004 = s_desc_get_acc_desc('3111',sr.pmab105)
+#       LET sr.l_pmab105_oocql004 = axmr203_x01_compose(sr.pmab105,sr.l_pmab105_oocql004)
+#       #客戶慣用銷售通路	
+#       LET sr.l_pmab088_oocql004 = s_desc_get_acc_desc('275',sr.pmab088)
+#       LET sr.l_pmab088_oocql004 = axmr203_x01_compose(sr.pmab088,sr.l_pmab088_oocql004)
+#       #客戶慣用銷售分類	
+#       LET sr.l_pmab089_oocql004 = s_desc_get_acc_desc('295',sr.pmab089)
+#       LET sr.l_pmab089_oocql004 = axmr203_x01_compose(sr.pmab089,sr.l_pmab089_oocql004)
+#       #客戶慣用內外購	
+#       LET sr.l_pmab107_gzcbl004 = s_desc_gzcbl004_desc('2085',sr.pmab107)
+#       LET sr.l_pmab107_gzcbl004 = axmr203_x01_compose(sr.pmab107,sr.l_pmab107_gzcbl004)
+#       #客戶慣用匯率計算基準	
+#       LET sr.l_pmab108_gzcbl004 = s_desc_gzcbl004_desc('2084',sr.pmab108)
+#       LET sr.l_pmab108_gzcbl004 = axmr203_x01_compose(sr.pmab108,sr.l_pmab108_gzcbl004)
+#       #客戶慣用交運方式	
+#       LET sr.l_pmab090_oocql004 = s_desc_get_acc_desc('263',sr.pmab090)
+#       LET sr.l_pmab090_oocql004 = axmr203_x01_compose(sr.pmab090,sr.l_pmab090_oocql004)
+#       #客戶慣用交運起點	
+#       LET sr.l_pmab091_oocql004 = s_apmi011_location_ref(sr.pmab090,sr.pmab091) 
+#       LET sr.l_pmab091_oocql004 = axmr203_x01_compose(sr.pmab091,sr.l_pmab091_oocql004)
+#       #客戶慣用交運終點	
+#       LET sr.l_pmab092_oocql004 = s_apmi011_location_ref(sr.pmab090,sr.pmab092) 
+#       LET sr.l_pmab092_oocql004 = axmr203_x01_compose(sr.pmab092,sr.l_pmab092_oocql004)
+#       #客戶慣用卸貨港	
+#       LET sr.l_pmab093_oocql004 = s_desc_get_acc_desc('262',sr.pmab093)
+#       LET sr.l_pmab093_oocql004 = axmr203_x01_compose(sr.pmab093,sr.l_pmab093_oocql004)
+#       #客戶慣用Forwarder	
+#       LET sr.l_pmab097_pmaal004 = s_desc_get_trading_partner_abbr_desc(sr.pmab097)
+#       LET sr.l_pmab097_pmaal004 = axmr203_x01_compose(sr.pmab097,sr.l_pmab097_pmaal004)
+#       #信用額度查核	       
+#       LET sr.l_pmab002_gzcbl004 = s_desc_gzcbl004_desc('2033',sr.pmab002)
+#       LET sr.l_pmab002_gzcbl004 = axmr203_x01_compose(sr.pmab002,sr.l_pmab002_gzcbl004)
+#       #額度交易對象	       
+#       LET sr.l_pmab003_pmaal004 = s_desc_get_trading_partner_abbr_desc(sr.pmab003)
+#       LET sr.l_pmab003_pmaal004 = axmr203_x01_compose(sr.pmab003,sr.l_pmab003_pmaal004)
+#       #信用評核等級	
+#       SELECT xmajl003 INTO sr.l_pmab004_xmajl003
+#         FROM xmajl_t
+#        WHERE xmajlent = g_enterprise
+#          AND xmajl001 = sr.pmab004
+#          AND xmajl002 = g_dlang
+#       LET sr.l_pmab004_xmajl003 = axmr203_x01_compose(sr.pmab004,sr.l_pmab004_xmajl003)
+#       #額度計算幣別	
+#       LET sr.l_pmab005_ooail003 = s_desc_get_currency_desc(sr.pmab005)
+#       LET sr.l_pmab005_ooail003 = axmr203_x01_compose(sr.pmab005,sr.l_pmab005_ooail003)
+#20151021 by stellar mark ----- (E)
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.pmaa001,sr.pmaal_t_pmaal004,sr.pmaal_t_pmaal003,sr.pmaal_t_pmaal006,sr.pmaa003,sr.l_pmaa004_gzcbl004,sr.l_pmaa005_pmaal004,sr.l_pmaa006_oocql004,sr.l_pmaa007_oocgl003,sr.pmaa008,sr.l_pmaa011_ooail003,sr.pmaa017,sr.pmaa016,sr.pmaa018,sr.pmaa019,sr.l_pmaa019_ooail003,sr.pmaa021,sr.pmaa022,sr.l_pmaa022_ooail003,sr.pmaa020,sr.l_pmaa023_oocql004,sr.l_pmaa024_oocql004,sr.pmaa025,sr.l_pmaa026_oocql004,sr.l_pmaa090_oocql004,sr.l_pmaa091_oocql004,sr.l_pmaa092_gzcbl004,sr.l_pmaa094_oocql004,sr.l_pmaa093_oocql004,sr.l_pmaa095_ooefl003,sr.l_pmaa096_ooag011,sr.l_pmaa097_ooefl003,sr.pmaa047,sr.l_pmaa037_gzcbl004,sr.pmaa036,sr.pmaa038,sr.pmaa039,sr.pmaa040,sr.pmaa041,sr.pmaa042,sr.pmaa043,sr.pmaa044,sr.pmaa045,sr.pmaa046,sr.pmaa068,sr.pmaa069,sr.pmaa072,sr.pmaa070,sr.pmaa071,sr.l_pmaa073_gzcbl004,sr.l_pmaa051_gzcbl004,sr.l_pmaa052_pmaal004,sr.l_pmaa053_xmajl003,sr.l_pmaa054_ooail003,sr.pmaa055,sr.pmaa056,sr.pmaa057,sr.pmaa058,sr.pmaa074,sr.pmaa059,sr.pmaa075,sr.l_pmaa291_oocql004,sr.l_pmaa292_oocql004,sr.l_pmaa293_oocql004,sr.l_pmaa294_oocql004,sr.l_pmaa295_oocql004,sr.l_pmaa296_oocql004,sr.l_pmaa297_oocql004,sr.l_pmaa298_oocql004,sr.l_pmaa299_oocql004,sr.l_pmaa300_oocql004,sr.l_pmaa_ooff013,sr.l_oofb017_1,sr.l_oofb017_2,sr.l_oofb017_3,sr.l_oofb017_4,sr.l_oofc012_1,sr.l_oofc012_2,sr.l_oofc012_3,sr.l_oofc012_4,sr.l_pmaj012,sr.l_pmaastus_desc,sr.l_pmab080_gzcbl004,sr.l_pmab081_ooag011,sr.l_pmab109_ooefl003,sr.l_pmab082_gzzy002,sr.pmab111,sr.l_pmab083_ooail003,sr.l_pmab084_oodbl004,sr.l_pmab103_oocql004,sr.l_pmab104_xmahl003,sr.l_pmab085_gzcbl004,sr.l_pmab086_gzcbl004,sr.l_pmab106_isacl004,sr.l_pmab087_ooibl004,sr.l_pmab105_oocql004,sr.l_pmab088_oocql004,sr.l_pmab089_oocql004,sr.l_pmab107_gzcbl004,sr.l_pmab108_gzcbl004,sr.l_pmab090_oocql004,sr.l_pmab091_oocql004,sr.l_pmab092_oocql004,sr.l_pmab093_oocql004,sr.pmab094,sr.pmab095,sr.pmab096,sr.l_pmab097_pmaal004,sr.pmab098,sr.pmab099,sr.pmab100,sr.pmab101,sr.pmab102,sr.l_pmab002_gzcbl004,sr.l_pmab003_pmaal004,sr.l_pmab004_xmajl003,sr.l_pmab005_ooail003,sr.pmab006,sr.pmab007,sr.pmab008,sr.pmab009,sr.pmab019,sr.pmab010,sr.pmab020,sr.l_pmab_ooff013
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "axmr203_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmr203_x01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION axmr203_x01_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    
+    #end add-point:rep_data.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmr203_x01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 判斷是否要組成XXX.CCC
+# Memo...........:
+# Usage..........: CALL axmr203_x01_compose(p_field_value,p_field_explain)
+#                  RETURNING r_compose
+# Input parameter: p_field_value    欄位值
+#                : p_field_explain  欄位值的說明
+# Return code....: r_compose   組完的值(XXX.CCC或XXX)
+# Date & Author..: 20150908 By dorislai
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmr203_x01_compose(p_field_value,p_field_explain)
+   DEFINE p_field_value    LIKE  type_t.chr1000 
+   DEFINE p_field_explain  LIKE  type_t.chr1000
+   DEFINE r_compose        LIKE  type_t.chr1000
+   
+   IF cl_null(p_field_explain) THEN
+      LET r_compose = p_field_value
+   ELSE
+      LET r_compose = p_field_value,'.',p_field_explain
+   END IF
+   
+   RETURN r_compose
+END FUNCTION
+
+ 
+{</section>}
+ 

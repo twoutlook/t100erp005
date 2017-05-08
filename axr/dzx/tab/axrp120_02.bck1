@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrp120_02" module="axr" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="01727" crtdt="2014-05-22 10:06:14" modid="01727" moddt="2014-05-23 15:17:17" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="整批確認立帳">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xrcadocno,xrca063,lbl_ra1(chr500),lbl_ra2(chr500),xrcadocdt,xrcald"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axrp120_02" method="dialog">
+    <section id="input">
+      <input id="head" field="xrcadocno,xrca063,lbl_ra1,lbl_ra2,xrcadocdt,xrcald"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="xrcadocno">
+        <controlp form="q_ooba002_3" state="i"/>
+        <controlp form="q_xrcadocno" state="c"/>
+      </column>
+      <column id="xrca063"/>
+      <column id="lbl_ra1" type="S" default="1"/>
+      <column id="lbl_ra2" type="S" default="1"/>
+      <column id="xrcadocdt"/>
+      <column id="xrcald">
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="xrca_t" pk="xrcald,xrcadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT xrcadocno,xrca063,&apos;&apos;,&apos;&apos;,xrcadocdt,xrcald FROM xrca_t WHERE xrcaent= ? AND xrcald=? AND xrcadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="xrcald,xrcadocno"/>
+    </head>
+  </dataset>
+</assembly>
+

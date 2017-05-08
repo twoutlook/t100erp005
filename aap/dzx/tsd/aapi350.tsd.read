@@ -1,0 +1,840 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aapi350" std_prog="aapi350" erpver="1.0" ver="2" module="AAP" type="M" booking="N" class="i" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items="delete,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="apac_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+    <tbl name="apad_t" main="N" head="N" pk="" fk_detail="" parent="apac_t" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 
+ 零用金帳戶設置及管理作業。
+ １。設定該零用金之關連帳戶，例如銀存帳戶、現金帳戶等。
+ ２。帳戶負責人員及歸屬營運據點。
+ ３。零用金之上、下限金額設定。
+標準作業功能取消：無
+狀態功能：[有效/無效] 
+作業類型：(基本資料)維護作業
+輸入模式：雙檔(子程式)無搭配任何方案F003_00
+作業資料來源(Master)：
+ 資料來源表：apac_t零用金主檔　　　　(資料檔)
+             apacl_t零用金多語言檔　(多語言資料檔)
+作業資料來源(Detail)：
+ 資料來源表：apad_t零用金明細檔　(單身檔)
+
+
+
+補充說明：(輸入此作的補充說明事項)
+
+============================================================================================
+●作業說明：
+。新增：default 各欄位內容
+　　。設置日期：　TODAY
+    。管理歸屬營運據點：登錄ＳＩＴＥ
+　　。保管人員：登錄人員
+　　。保管部門：登錄人員歸屬部門
+　　。帳務中心：歸屬ＳＩＴＥ所屬"應付帳務中心"
+ 依所屬SITE至aapi020設定作業， 取目前執行版axah007='Y'，且SITE歸屬的應付帳務中心xrah001 = '2' AND axrah004=SITE; 多筆者取第一筆。
+ 參考aapt310元件應用。
+　　。有效碼＝’Ｙ’
+。狀態變更：
+　　。無效改有效：確認訊息"原無效資料變更為有效資效否?(Y/N)"
+ 檢核單身各交易帳號，　是否為有效資料(anmi120)。
+　　。有效改無效：確認訊息"有效資料變更為無效資效，則該零用金帳戶無法再交易使用，是否確認變更?(Y/N)"
+ 單身各交易帳號全數改為無效(apadstuts='N')，失效日期空白者update TODAY。
+。刪除：
+　　。提示標準訊息。
+
+●欄位說明：
+。零用金帳戶apac001：
+ 。不可空白／不可重覆
+ 。開窗：　新增無開窗。
+ 　　　　　查詢時之開窗取現有帳戶資料　q_apacxxx
+  零用金帳戶　　名稱　  管理人員　　　管理部門　歸屬帳中心
+  －－－－－－　－－－　－－－　  　　－－－－　－－－－－
+ 　　　　　　　代碼　　　　名稱　　代碼(名稱)  代碼(名稱)  代碼(名稱)
+。帳戶說明（多語言檔apacl_t）
+ 。標準作業處理
+。設置日期(apac002)：
+ 。可空白／default TODAY
+ 。日期型態開窗。
+。換算本幣留存上限金額apac007：
+ 。可為０
+ 。金額顯示依管理[歸屬營運據點]控制小數位數。
+。收支表應報告日期apac006：
+ 。可空白，自行輸入
+。營運據點apacsite：
+ 。不可空白
+ 。檢核資料合理性（取標準元件）
+ 。開窗：取標準據點應用開窗　（條件：為營運據點或法人者）
+。保管人員apac003：
+ 。不可空白
+ 。檢核：人員資料合理性（標準元件）
+ 。帶值：人員資料變更時，依變更後的人員歸屬部門，更新update [保管部門]。
+ 。開窗：人員標準開窗
+。保管部門apac004：
+ 。不可空白
+ 。檢核：部門資料合理性（標準元件）
+ 。帶值：無
+ 。開窗：部門標準開窗
+。帳務中心apac005：
+ 。可空白
+ 。參考aapt310，應付帳中心之處理原則，　請採共用元件處理
+]]>
+  </all>
+  <di_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[●單身操作作業：
+。資料刪除：
+ 須檢核該筆有無異動記錄（ＡＰ沖帳明細apce_t.apce008付款帳戶), 已有記錄者，提示訊息且不可刪除，只允許作失效。
+。啟用否：
+ Ｙ改Ｎ：失效日期　default TODAY，失效日期須有設定日期。
+ Ｎ改Ｙ：提示確認訊息 message　＂是否將已失效啟用之帳號重新啟用？（Y/N）"; 
+        　Y　者：檢核該帳戶號，在企業銀存資料中，是否為有效資料（nmaa_t），
+      己無效者不可"啟用"，提示message"無效銀存帳戶不可啟用。"
+      否則 失效日期＝空白、啟用否='Y'
+。新增：
+ default啟用否欄位＝’Ｙ’
+
+●欄位說明：
+。交易帳戶號碼(apad002)：
+ 。不可空白／edit ／ link nmas002
+ 。顯示：代碼（名稱）
+ 。檢核：
+   1.須存在於"企業銀存帳(anmi120)"且為有效帳戶。nmas_t.nmas002 -->nmaa_t.nmaastuts='Y'
+   2.不可重覆於其他零用金帳戶, 除非該零用金帳戶已有設定該交易帳號失效不啟用apad005=N,且失效日期<=TODAY
+     t_duplic='N" #重覆否
+     SELECT apad....  FROM apad_t WHERE apad002= t.apad002 AND apad001<> t.apad001 AND =ENT
+                FOREACH apad...
+  IF apda005='N' 
+  THEN
+    EXIT FOREACH
+  ELSE
+    IF apda006 <= TODAY
+    THEN 
+        EXIT FOREACH
+    ELSE
+       LET t_duplic='Y'
+    ENDIF
+  END IF
+     END FOREACH
+   3.帶值：
+  顯示　帳號名稱、交易幣別、帳戶類型、開戶銀行、ＰＯＳ收銀帳戶否
+ 　4.開窗：　q_nmasxxxx   
+  。參數:
+       參一: 歸屬管理據點apcasite
+       參二: apcasit據點歸屬法人ooef017
+  。顯示:
+ 　　 　　交易帳戶號碼　名稱　　　幣別　　 開戶銀行　    POS收銀帳戶否　有效碼
+  　　－－－－－－　－－－－　－－　  －－－－－　  －－－－　　　　－－－－
+  　　nmas002       nmaal_t   nams003 nmaa004(名稱)  nmas004         nmaastuts
+          　　　FROM nmaa_t,nmag_t,nmas_t,nmaal_t
+          　　　WHERE .....   nmaastuts='Y'  #有效
+     　    AND (nmaa002=參一 OR nmaa002=參二) #開戶人同歸屬法人或SITE者
+。交易幣別(nmas003)：
+ 。 display only
+。目前餘額：
+ 。 即時運算（運算方式待資金月結檔完成）／display only
+。應備底下限額度（apad003）：
+ 。不可為null,default 0,可 edit
+ 。金額登錄及顯示方式依帳號幣別取位及小數點控制。
+。留存上限金額（apad004）：
+ 。不可為null,default 0,可 edit
+ 。金額登錄及顯示方式依帳號幣別取位及小數點控制。
+ 。檢核：不可＜apad003留底金額
+。帳戶類型（nmaa003）
+ 。display only／顯示代碼及名稱
+。開戶銀行（nmaa004）
+ 。display only／顯示代碼及名稱
+。POS收銀帳戶否（nmas004）
+ 。display only
+。啟用否（apad005）
+ 。default 'Y'／不可空白
+ 。異動時，須檢核資料，參考第一段操作說明。
+ 。帶值：
+ 　Y：noentry apad006
+   N：entry apad006
+。失效日期（apad006）
+ 。default 為noentry 狀態；該筆資料有異動時，才依apad005值判斷是否可edit。
+ 。檢核：　apad005='N',則　失效日期應有值，不可為空白。
+]]>
+  </di_all>
+  <mi_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[●作業說明：
+。新增：default 各欄位內容
+　　。設置日期：　TODAY
+    。管理歸屬營運據點：登錄ＳＩＴＥ
+　　。保管人員：登錄人員
+　　。保管部門：登錄人員歸屬部門
+　　。帳務中心：歸屬ＳＩＴＥ所屬"應付帳務中心"
+ 依所屬SITE至aapi020設定作業， 取目前執行版axah007='Y'，且SITE歸屬的應付帳務中心xrah001 = '2' AND axrah004=SITE; 多筆者取第一筆。
+ 參考aapt310元件應用。
+　　。有效碼＝’Ｙ’
+。狀態變更：
+　　。無效改有效：確認訊息"原無效資料變更為有效資效否?(Y/N)"
+ 檢核單身各交易帳號，　是否為有效資料(anmi120)。
+　　。有效改無效：確認訊息"有效資料變更為無效資效，則該零用金帳戶無法再交易使用，是否確認變更?(Y/N)"
+ 單身各交易帳號全數改為無效(apadstuts='N')，失效日期空白者update TODAY。
+。刪除：
+　　。提示標準訊息。
+
+●欄位說明：
+。零用金帳戶apac001：
+ 。不可空白／不可重覆
+ 。開窗：　新增無開窗。
+ 　　　　　查詢時之開窗取現有帳戶資料　q_apacxxx
+  零用金帳戶　　名稱　  管理人員　　　管理部門　歸屬帳中心
+  －－－－－－　－－－　－－－　  　　－－－－　－－－－－
+ 　　　　　　　代碼　　　　名稱　　代碼(名稱)  代碼(名稱)  代碼(名稱)
+。帳戶說明（多語言檔apacl_t）
+ 。標準作業處理
+。設置日期(apac002)：
+ 。可空白／default TODAY
+ 。日期型態開窗。
+。換算本幣留存上限金額apac007：
+ 。可為０
+ 。金額顯示依管理[歸屬營運據點]控制小數位數。
+。收支表應報告日期apac006：
+ 。可空白，自行輸入
+。營運據點apacsite：
+ 。不可空白
+ 。檢核資料合理性（取標準元件）
+ 。開窗：取標準據點應用開窗　（條件：為營運據點或法人者）
+。保管人員apac003：
+ 。不可空白
+ 。檢核：人員資料合理性（標準元件）
+ 。帶值：人員資料變更時，依變更後的人員歸屬部門，更新update [保管部門]。
+ 。開窗：人員標準開窗
+。保管部門apac004：
+ 。不可空白
+ 。檢核：部門資料合理性（標準元件）
+ 。帶值：無
+ 。開窗：部門標準開窗
+。帳務中心apac005：
+ 。可空白
+ 。參考aapt310，應付帳中心之處理原則，　請採共用元件處理
+]]>
+  </mi_all>
+  <field cite_std="N" name="apac003_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apac004_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apac005_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apac_t.apac001" ver="1" src="s" column="apac001" table="apac_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="" c_zoom="q_apac001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[零用金帳戶(apac001)
+。不可空白／不可重覆]]>
+  </field>
+  <field cite_std="N" name="apac_t.apac002" ver="1" src="s" column="apac002" table="apac_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[。可空白／default TODAY
+ 。日期型態開窗。]]>
+  </field>
+  <field cite_std="N" name="apac_t.apac003" ver="1" src="s" column="apac003" table="apac_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設為登入人員
+保管人員apac003：
+ 。不可空白
+ 。檢核：人員資料合理性（標準元件）
+ 。帶值：人員資料變更時，依變更後的人員歸屬部門，更新update [保管部門]。
+ 。開窗：人員標準開窗]]>
+  </field>
+  <field cite_std="N" name="apac_t.apac004" ver="1" src="s" column="apac004" table="apac_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="q_ooea001_1" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設為登錄人員歸屬部門
+保管部門apac004：
+ 。不可空白
+ 。檢核：部門資料合理性（標準元件）
+ 。帶值：無
+ 。開窗：部門標準開窗]]>
+  </field>
+  <field cite_std="N" name="apac_t.apac005" ver="1" src="s" column="apac005" table="apac_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="q_xrah002_3" c_zoom="q_xrah002_3" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[歸屬ＳＩＴＥ所屬"應付帳務中心"
+ 依所屬SITE至aapi020設定作業， 取目前執行版axah007='Y'，且SITE歸屬的應付帳務中心xrah001 = '2' AND axrah004=SITE; 多筆者取第一筆。
+ 參考aapt310元件應用。]]>
+  </field>
+  <field cite_std="N" name="apac_t.apac006" ver="1" src="s" column="apac006" table="apac_t" attribute="C003" type="varchar2(40)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[輸入日期序列。例："30,10,20"]]>
+  </field>
+  <field cite_std="N" name="apac_t.apac007" ver="1" src="s" column="apac007" table="apac_t" attribute="N202" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[可為０
+ 。金額顯示依管理[歸屬營運據點]控制小數位數。
+
+
+換算本幣留存上限金額(apac007) 和 留存上限金額（apad004）加總 沒關係
+ 因為幣別可能不同 所以換了匯率以後 可能會卡住，因此兩個上限金額 互不控卡
+]]>
+  </field>
+  <field cite_std="N" name="apac_t.apaccrtdp" ver="1" src="s" column="apaccrtdp" table="apac_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apac_t.apaccrtdt" ver="1" src="s" column="apaccrtdt" table="apac_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apac_t.apaccrtid" ver="1" src="s" column="apaccrtid" table="apac_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apac_t.apacmoddt" ver="1" src="s" column="apacmoddt" table="apac_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apac_t.apacmodid" ver="1" src="s" column="apacmodid" table="apac_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apac_t.apacowndp" ver="1" src="s" column="apacowndp" table="apac_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apac_t.apacownid" ver="1" src="s" column="apacownid" table="apac_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apac_t.apacsite" ver="1" src="s" column="apacsite" table="apac_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="q_ooef001_01" c_zoom="q_ooef001_01" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設登入人員營運據點]]>
+  </field>
+  <field cite_std="N" name="apac_t.apacstus" ver="1" src="s" column="apacstus" table="apac_t" attribute="C822" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[有效碼＝’Ｙ’
+。狀態變更：
+　　。無效改有效：確認訊息"原無效資料變更為有效資效否?(Y/N)"
+ 檢核單身各交易帳號，　是否為有效資料(anmi120)。
+　　。有效改無效：確認訊息"有效資料變更為無效資效，則該零用金帳戶無法再交易使用，是否確認變更?(Y/N)"
+ 單身各交易帳號全數改為無效(apadstuts='N')，失效日期空白者update TODAY。]]>
+  </field>
+  <field cite_std="N" name="apacsite_desc" ver="1" src="s" column="" table="" attribute="C817" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="apad_t.apad002" ver="1" src="s" column="apad002" table="apad_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="q_nmas002_2" c_zoom="q_nmas002_2" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[。交易帳戶號碼(apad002)：
+ 。不可空白／edit ／ link nmas002
+ 。顯示：代碼（名稱）
+ 。檢核：
+   1.須存在於"企業銀存帳(anmi120)"且為有效帳戶。nmas_t.nmas002 -->nmaa_t.nmaastuts='Y'
+   2.不可重覆於其他零用金帳戶, 除非該零用金帳戶已有設定該交易帳號失效不啟用apad005=N,且失效日期<=TODAY
+     t_duplic='N" #重覆否
+     SELECT apad....  FROM apad_t WHERE apad002= t.apad002 AND apad001<> t.apad001 AND =ENT
+                FOREACH apad...
+  IF apda005='N' 
+  THEN
+    EXIT FOREACH
+  ELSE
+    IF apda006 <= TODAY
+    THEN 
+        EXIT FOREACH
+    ELSE
+       LET t_duplic='Y'
+    ENDIF
+  END IF
+     END FOREACH
+   3.帶值：
+  顯示　帳號名稱、交易幣別、帳戶類型、開戶銀行、ＰＯＳ收銀帳戶否
+ 　4.開窗：　q_nmasxxxx   
+  。參數:
+       參一: 歸屬管理據點apcasite
+       參二: apcasit據點歸屬法人ooef017
+  。顯示:
+ 　　 　　交易帳戶號碼　名稱　　　幣別　　 開戶銀行　    POS收銀帳戶否　有效碼
+  　　－－－－－－　－－－－　－－　  －－－－－　  －－－－　　　　－－－－
+  　　nmas002       nmaal_t   nams003 nmaa004(名稱)  nmas004         nmaastuts
+          　　　FROM nmaa_t,nmag_t,nmas_t,nmaal_t
+          　　　WHERE .....   nmaastuts='Y'  #有效
+     　    AND (nmaa002=參一 OR nmaa002=參二) #開戶人同歸屬法人或SITE者]]>
+  </field>
+  <field cite_std="N" name="apad_t.apad003" ver="1" src="s" column="apad003" table="apad_t" attribute="N202" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max="" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[應備底下限額度（apad003）：
+ 。不可為null,default 0,可 edit
+ 。金額登錄及顯示方式依帳號幣別取位及小數點控制]]>
+  </field>
+  <field cite_std="N" name="apad_t.apad004" ver="1" src="s" column="apad004" table="apad_t" attribute="N202" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max="" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[留存上限金額（apad004）：
+ 。不可為null,default 0,可 edit
+ 。金額登錄及顯示方式依帳號幣別取位及小數點控制。
+ 。檢核：不可＜apad003留底金額]]>
+  </field>
+  <field cite_std="N" name="apad_t.apad005" ver="1" src="s" column="apad005" table="apad_t" attribute="C822" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[啟用否（apad005）
+ 。default 'Y'／不可空白
+ 。異動時，須檢核資料，參考第一段操作說明。
+ 。帶值：
+ 　Y：noentry apad006
+   N：entry apad006]]>
+  </field>
+  <field cite_std="N" name="apad_t.apad006" ver="1" src="s" column="apad006" table="apad_t" attribute="D001" type="date()" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[失效日期（apad006）
+ 。default 為noentry 狀態；該筆資料有異動時，才依apad005值判斷是否可edit。
+ 。檢核：　apad005='N',則　失效日期應有值，不可為空白。]]>
+  </field>
+  <field cite_std="N" name="b_apac001" ver="1" src="s" column="apac001" table="apac_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="" c_zoom="q_apac001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="nmaa003" ver="1" src="s" column="nmaa003" table="nmaa_t" attribute="C012" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[帳戶類型（nmaa003）
+ 。display only／顯示代碼及名稱]]>
+  </field>
+  <field cite_std="N" name="nmaa003_desc" ver="1" src="s" column="chr500" table="type_t" attribute="T022" type="varchar2(500)" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="nmaa004" ver="1" src="s" column="nmaa004" table="nmaa_t" attribute="C503" type="varchar2(15)" req="N" i_zoom="q_nmab001" c_zoom="q_nmab001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[開戶銀行（nmaa004）
+ 。display only／顯示代碼及名稱]]>
+  </field>
+  <field cite_std="N" name="nmaa004_desc" ver="1" src="s" column="chr500" table="type_t" attribute="T022" type="varchar2(500)" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="nmaal003" ver="1" src="s" column="nmaal003" table="nmaal_t" attribute="C817" type="varchar2(500)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="nmas003" ver="1" src="s" column="nmas003" table="nmas_t" attribute="C008" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooai001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[交易幣別(nmas003)：
+ 。 display only]]>
+  </field>
+  <field cite_std="N" name="nmas004" ver="1" src="s" column="nmas004" table="nmas_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[POS收銀帳戶否（nmas004）
+ 。display only]]>
+  </field>
+  <field cite_std="N" name="sum" ver="1" src="s" column="num20_6" table="type_t" attribute="T055" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[目前餘額：
+ 。 即時運算（運算方式待資金月結檔完成）／display only]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="apaccrtdp_desc" src="s" depend_field="apac_t.apaccrtdp" correspon_key="apaccrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="apaccrtid_desc" src="s" depend_field="apac_t.apaccrtid" correspon_key="&apos;2&apos;,apaccrtid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="apacmodid_desc" src="s" depend_field="apac_t.apacmodid" correspon_key="&apos;2&apos;,apacmodid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="apacowndp_desc" src="s" depend_field="apac_t.apacowndp" correspon_key="apacowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="apacownid_desc" src="s" depend_field="apac_t.apacownid" correspon_key="&apos;2&apos;,apacownid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+  </ref_field>
+  <multi_lang>
+    <mfield cite_std="N" ver="1" name="apacl_t.apacl003" src="s" depend_field="apac_t.apac001" correspon_key="apacent,apac001" lang_table="apacl_t" lang_fk="apaclent,apacl001" lang_dlang="apacl002" lang_rtn="apacl003" status="">
+      <![CDATA[帳戶說明（多語言檔apacl_t）
+ 。標準作業處理]]>
+    </mfield>
+  </multi_lang>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="apac003_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apac004_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apac005_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apac_t.apac001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apac_t.apac002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apac_t.apac003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apac_t.apac004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apac_t.apac005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apac_t.apac006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apac_t.apac007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apac_t.apaccrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apac_t.apaccrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apac_t.apaccrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apac_t.apacmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apac_t.apacmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apac_t.apacowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apac_t.apacownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apac_t.apacsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apac_t.apacstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apacsite_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apad_t.apad002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apad_t.apad003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apad_t.apad004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apad_t.apad005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="apad_t.apad006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_apac001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="nmaa003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="nmaa003_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="nmaa004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="nmaa004_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="nmaal003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="nmas003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="nmas004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sum" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_apac001" text="零用金帳戶" lstr=""/>
+    <sfield name="lbl_label2" text="帳戶說明" lstr=""/>
+    <sfield name="aapi350.group4" text="設置" lstr=""/>
+    <sfield name="lbl_apac002" text="設置日期" lstr=""/>
+    <sfield name="lbl_apac007" text="換算本幣留存上限金額" lstr=""/>
+    <sfield name="lbl_apac006" text="收支表應報告日期" lstr=""/>
+    <sfield name="aapi350.group5" text="管理歸屬" lstr=""/>
+    <sfield name="lbl_apacsite" text="營運據點" lstr=""/>
+    <sfield name="lbl_apac003" text="保管人員" lstr=""/>
+    <sfield name="lbl_apac004" text="保管部門" lstr=""/>
+    <sfield name="lbl_apac005" text="帳務中心" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_apad002" text="交易帳戶號碼" lstr=""/>
+    <sfield name="lbl_nmaal003" text="銀行帳戶說明" lstr=""/>
+    <sfield name="lbl_nmas003" text="交易幣別" lstr=""/>
+    <sfield name="lbl_sum" text="目前餘額" lstr=""/>
+    <sfield name="lbl_apad003" text="應備底下限額度" lstr=""/>
+    <sfield name="lbl_apad004" text="留存上限金額" lstr=""/>
+    <sfield name="lbl_nmaa003" text="類型" lstr=""/>
+    <sfield name="lbl_nmaa003_desc" text="類型" lstr=""/>
+    <sfield name="lbl_nmaa004" text="開戶銀行" lstr=""/>
+    <sfield name="lbl_nmaa004_desc" text="開戶銀行" lstr=""/>
+    <sfield name="lbl_nmas004" text="POS收銀帳戶否" lstr=""/>
+    <sfield name="lbl_apad005" text="啟用否" lstr=""/>
+    <sfield name="lbl_apad006" text="失效日期" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_collect_gzze001" text="訊息代碼" lstr=""/>
+    <sfield name="lbl_collect_gzze003" text="訊息內容" lstr=""/>
+    <sfield name="lbl_collect_gzze006" text="進階訊息" lstr=""/>
+    <sfield name="lbl_cl_err_s02_accept" text="確定" lstr=""/>
+    <sfield name="lbl_err_detail" text="進階訊息" lstr=""/>
+    <sfield name="lbl_suggest_exe" text="建議執行" lstr=""/>
+    <sfield name="lbl_err_contact" text="反應問題" lstr=""/>
+    <sfield name="lbl_cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="lbl_group_cl_err_s01" text="進階訊息" lstr=""/>
+    <sfield name="lbl_gzze001" text="訊息代碼:" lstr=""/>
+    <sfield name="lbl_gzze006" text="訊息內容:" lstr=""/>
+    <sfield name="lbl_sqlerrd2" text="SQL錯誤碼:" lstr=""/>
+    <sfield name="lbl_gzxm001" text="QBE編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm005" text="設為首頁-自動查詢方案" lstr=""/>
+    <sfield name="lbl_gzxm002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxm003" text="員工編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm004" text="設為預設查詢條件" lstr=""/>
+    <sfield name="cl_qbe_s02.bpage_1" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn005" text="欄位說明" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="cl_qbe_s02_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s02_Cancel" text="取消" lstr=""/>
+    <sfield name="lbl_funid" text="函式代碼" lstr=""/>
+    <sfield name="lbl_fundesc" text="函式說明" lstr=""/>
+    <sfield name="cl_qbe_s01_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s01_Cancel" text="取消" lstr=""/>
+    <sfield name="cl_qbe_s03.bpage_1" text="查詢方案列表" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxmstus" text="有效" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm004" text="預設" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm005" text="顯示於首頁" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm009" text="順序" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxml005" text="查詢方案說明" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm007" text="自設SQL條件" lstr=""/>
+    <sfield name="cl_qbe_s03.page_2" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn004" text="序號" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn005" text="條件欄位" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="page_cl_doc_s01_page1" text="相關文件清單" lstr=""/>
+    <sfield name="lbl_loaa006" text="文件版本" lstr=""/>
+    <sfield name="lbl_loaa007" text="文件序號" lstr=""/>
+    <sfield name="lbl_loaa011" text="文件型態" lstr=""/>
+    <sfield name="lbl_loaa013" text="文件說明" lstr=""/>
+    <sfield name="lbl_loaa010" text="文件原始檔名" lstr=""/>
+    <sfield name="btn_upload" text="本地文件上傳" lstr=""/>
+    <sfield name="btn_crt_text" text="新建純文字紀錄" lstr=""/>
+    <sfield name="btn_doccrt_url" text="新建URL" lstr=""/>
+    <sfield name="btn_docopen" text="文件下載" lstr=""/>
+    <sfield name="btn_docupdate" text="文件資料修改" lstr=""/>
+    <sfield name="btn_docremove" text="文件刪除" lstr=""/>
+    <sfield name="btn_exit" text="關閉功能" lstr=""/>
+    <sfield name="page_cl_doc_s01_page2" text="文件基本資料" lstr=""/>
+    <sfield name="lbl_loaa004" text="用途類別" lstr=""/>
+    <sfield name="lbl_loaa005" text="預設顯示圖片" lstr=""/>
+    <sfield name="lbl_loaa012" text="文件位置(URL)" lstr=""/>
+    <sfield name="page_cl_doc_s01_page4" text="權限設定" lstr=""/>
+    <sfield name="group_read" text="讀取權限" lstr=""/>
+    <sfield name="group_modify" text="修改權限" lstr=""/>
+    <sfield name="page_cl_doc_s01_page3" text="異動資訊" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="btn_doccancel" text="放棄修改" lstr=""/>
+    <sfield name="btn_docmodify" text="資料存檔" lstr=""/>
+    <sfield name="lbl_gzxp007_1" text="選擇分類" lstr=""/>
+    <sfield name="add_catalog" text="" lstr=""/>
+    <sfield name="lbl_gzxp007_2" text="自訂分類" lstr=""/>
+    <sfield name="lbl_gzxp008" text="追蹤說明" lstr=""/>
+    <sfield name="accept" text="確定" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="follow_list" text="待追蹤" lstr=""/>
+    <sfield name="signature_list" text="待簽核" lstr=""/>
+    <sfield name="announcement" text="作業公告" lstr=""/>
+    <sfield name="cancelfollow" text="取消追蹤" lstr=""/>
+    <sfield name="assigncatalog" text="指定分類" lstr=""/>
+    <sfield name="cl_user_overview_s01.lbl_name" text="" lstr=""/>
+    <sfield name="lbl_gzxp002" text="作業名稱" lstr=""/>
+    <sfield name="lbl_gzxp006" text="單據日期" lstr=""/>
+    <sfield name="add_favorite_catalog" text="新增目錄" lstr=""/>
+    <sfield name="modify_favorite_desc" text="修改" lstr=""/>
+    <sfield name="favorite_del" text="移除" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_apacl003" text="說明" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_ooef001" text="組織編號" lstr=""/>
+    <sfield name="lbl_ooag001" text="員工編號" lstr=""/>
+    <sfield name="lbl_ooea001" text="組織編號" lstr=""/>
+    <sfield name="lbl_xrah002" text="帳務中心" lstr=""/>
+    <sfield name="lbl_nmas002" text="交易帳戶編碼" lstr=""/>
+    <sfield name="lbl_nmagl003" text="說明" lstr=""/>
+    <sfield name="lbl_nmabl004" text="全稱" lstr=""/>
+    <sfield name="lbl_nmaastus" text="狀態碼" lstr=""/>
+    <sfield name="lbl_ooai001" text="幣別編號" lstr=""/>
+    <sfield name="lbl_ooail003" text="說明" lstr=""/>
+    <sfield name="lbl_nmab001" text="銀行編號" lstr=""/>
+    <sfield name="lbl_nmabl003" text="簡稱" lstr=""/>
+    <sfield name="cl_ask_s04_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s03_Test" text="測試" lstr=""/>
+    <sfield name="cl_ask_s03_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s01_Choice" text="選擇" lstr=""/>
+    <sfield name="lbl_apacl001" text="零用金帳戶代碼" lstr=""/>
+    <sfield name="lbl_apacl002" text="語言別" lstr=""/>
+    <sfield name="lbl_apacl004" text="助記碼" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="cl_progress_bar_Current" text="目前進度" lstr=""/>
+    <sfield name="cl_progress_bar_Total" text="全部" lstr=""/>
+    <sfield name="cl_progress_bar_%" text="%" lstr=""/>
+    <sfield name="lbl_select" text="選擇" lstr=""/>
+    <sfield name="lbl_gzgdl002" text="樣版說明" lstr=""/>
+    <sfield name="lbl_gzgd003" text="客製否" lstr=""/>
+    <sfield name="lbl_gzgd007" text="樣版名稱(4rp)" lstr=""/>
+    <sfield name="lbl_rep_fmt" text="輸出格式" lstr=""/>
+    <sfield name="lbl_outputformat_1" text="預覽與列印(SVG)" lstr=""/>
+    <sfield name="lbl_outputformat_2" text="Adobe Acrobat (PDF)" lstr=""/>
+    <sfield name="lbl_outputformat_3" text="Microsoft Excel (XLS)" lstr=""/>
+    <sfield name="lbl_outputformat_4" text="Microsoft Excel (XLS) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_5" text="Microsoft Excel (XLSX)" lstr=""/>
+    <sfield name="lbl_outputformat_6" text="Microsoft Excel (XLSX) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_7" text="Microsoft Word (RTF)" lstr=""/>
+    <sfield name="lbl_outputformat_8" text="網頁 (HTML)" lstr=""/>
+    <sfield name="lbl_outputformat_9" text="郵件 (Mail)" lstr=""/>
+    <sfield name="lbl_set_default" text="設為預設樣版" lstr=""/>
+    <sfield name="lbl_btn_accept" text="確定" lstr=""/>
+    <sfield name="lbl_btn_cancel" text="放棄" lstr=""/>
+    <sfield name="lbl_gzza003" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzza001" text="程式編號" lstr=""/>
+    <sfield name="lbl_gzza002" text="程式類別" lstr=""/>
+    <sfield name="lbl_gzde002" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzde001" text="規格編號" lstr=""/>
+    <sfield name="lbl_gzdel003" text="說明" lstr=""/>
+    <sfield name="lbl_gzdf002" text="子畫面規格編號" lstr=""/>
+    <sfield name="lbl_gzdfl003" text="子畫面檔案名稱" lstr=""/>
+    <sfield name="lbl_gzcbl004" text="說明" lstr=""/>
+    <sfield name="lbl_gzde003" text="規格類別" lstr=""/>
+    <sfield name="lbl_dzfv004" text="畫面代號" lstr=""/>
+    <sfield name="lbl_dzfv005" text="主/子程式" lstr=""/>
+  </strings>
+  <sa_spec>
+    <sa_field name="ComboBoxRole1">
+      <![CDATA[資料狀態碼：
+	[有效/無效] 
+　。default 有效。
+　。異動為無效時：檢核單身
+]]>
+    </sa_field>
+    <sa_field name="TextFieldRole7">
+      <![CDATA[。輸入日期序列。例："30,10,20"
+]]>
+    </sa_field>
+    <sa_field name="apac001">
+      <![CDATA[零用金帳戶(apac001)
+。不可空白／不可重覆
+	
+]]>
+    </sa_field>
+    <sa_field name="apacl">
+      <![CDATA[dsafdsaf
+]]>
+    </sa_field>
+    <sa_field name="s_apad">
+      <![CDATA[●單身操作作業：
+。資料刪除：
+	須檢核該筆有無異動記錄（ＡＰ沖帳明細apce_t.apce008付款帳戶), 已有記錄者，提示訊息且不可刪除，只允許作失效。
+。啟用否：
+	Ｙ改Ｎ：失效日期　default TODAY，失效日期須有設定日期。
+	Ｎ改Ｙ：提示確認訊息 message　＂是否將已失效啟用之帳號重新啟用？（Y/N）"; 
+	       　Y　者：檢核該帳戶號，在企業銀存資料中，是否為有效資料（nmaa_t），
+		    己無效者不可"啟用"，提示message"無效銀存帳戶不可啟用。"
+		    否則 失效日期＝空白、啟用否='Y'
+。新增：
+	default啟用否欄位＝’Ｙ’
+
+●欄位說明：
+。交易帳戶號碼(apad002)：
+	。不可空白／edit ／ link nmas002
+	。顯示：代碼（名稱）
+	。檢核：
+	  1.須存在於"企業銀存帳(anmi120)"且為有效帳戶。nmas_t.nmas002 -->nmaa_t.nmaastuts='Y'
+	  2.不可重覆於其他零用金帳戶, 除非該零用金帳戶已有設定該交易帳號失效不啟用apad005=N,且失效日期<=TODAY
+	    t_duplic='N"	#重覆否
+	    SELECT apad....  FROM apad_t WHERE apad002= t.apad002 AND apad001<> t.apad001 AND =ENT
+                FOREACH apad...
+		IF apda005='N' 
+		THEN
+		  EXIT FOREACH
+		ELSE
+		  IF apda006 <= TODAY
+		  THEN 
+ 		     EXIT FOREACH
+		  ELSE
+		     LET t_duplic='Y'
+		  ENDIF
+		END IF
+	    END FOREACH
+	  3.帶值：
+		顯示　帳號名稱、交易幣別、帳戶類型、開戶銀行、ＰＯＳ收銀帳戶否
+	　4.開窗：　q_nmasxxxx   
+		。參數:
+		     參一: 歸屬管理據點apcasite
+		     參二: apcasit據點歸屬法人ooef017
+		。顯示:
+	　　	　　交易帳戶號碼　名稱　　　幣別　　 開戶銀行　    POS收銀帳戶否　有效碼
+		　　－－－－－－　－－－－　－－　  －－－－－　  －－－－　　　　－－－－
+		　　nmas002       nmaal_t   nams003 nmaa004(名稱)  nmas004         nmaastuts
+	         　　　FROM nmaa_t,nmag_t,nmas_t,nmaal_t
+	         　　　WHERE .....   nmaastuts='Y'		#有效
+		   　    AND (nmaa002=參一 OR nmaa002=參二)	#開戶人同歸屬法人或SITE者
+。交易幣別(nmas003)：
+	。 display only
+。目前餘額：
+	。 即時運算（運算方式待資金月結檔完成）／display only
+。應備底下限額度（apad003）：
+	。不可為null,default 0,可 edit
+	。金額登錄及顯示方式依帳號幣別取位及小數點控制。
+。留存上限金額（apad004）：
+	。不可為null,default 0,可 edit
+	。金額登錄及顯示方式依帳號幣別取位及小數點控制。
+	。檢核：不可＜apad003留底金額
+。帳戶類型（nmaa003）
+	。display only／顯示代碼及名稱
+。開戶銀行（nmaa004）
+	。display only／顯示代碼及名稱
+。POS收銀帳戶否（nmas004）
+	。display only
+。啟用否（apad005）
+	。default 'Y'／不可空白
+	。異動時，須檢核資料，參考第一段操作說明。
+	。帶值：
+	　Y：noentry apad006
+	  N：entry apad006
+。失效日期（apad006）
+	。default 為noentry 狀態；該筆資料有異動時，才依apad005值判斷是否可edit。
+	。檢核：　apad005='N',則　失效日期應有值，不可為空白。
+]]>
+    </sa_field>
+    <sa_field name="stus">
+      <![CDATA[下拉選項來自 SCC13(單據狀態碼) / SCC17(基本資料狀態碼) / SCC50(主檔狀態碼)
+]]>
+    </sa_field>
+    <sa_all name="ALL">
+      <![CDATA[程式說明及目的： 
+	零用金帳戶設置及管理作業。
+	１。設定該零用金之關連帳戶，例如銀存帳戶、現金帳戶等。
+	２。帳戶負責人員及歸屬營運據點。
+	３。零用金之上、下限金額設定。
+標準作業功能取消：無
+狀態功能：[有效/無效] 
+作業類型：(基本資料)維護作業
+輸入模式：雙檔(子程式)無搭配任何方案F003_00
+作業資料來源(Master)：
+	資料來源表：apac_t零用金主檔　　　　(資料檔)
+	            apacl_t零用金多語言檔　(多語言資料檔)
+作業資料來源(Detail)：
+	資料來源表：apad_t零用金明細檔　(單身檔)
+
+
+
+補充說明：(輸入此作的補充說明事項)
+
+============================================================================================
+●作業說明：
+。新增：default 各欄位內容
+　　。設置日期：　TODAY
+    。管理歸屬營運據點：登錄ＳＩＴＥ
+　　。保管人員：登錄人員
+　　。保管部門：登錄人員歸屬部門
+　　。帳務中心：歸屬ＳＩＴＥ所屬"應付帳務中心"
+	依所屬SITE至aapi020設定作業， 取目前執行版axah007='Y'，且SITE歸屬的應付帳務中心xrah001 = '2' AND axrah004=SITE; 多筆者取第一筆。
+	參考aapt310元件應用。
+　　。有效碼＝’Ｙ’
+。狀態變更：
+　　。無效改有效：確認訊息"原無效資料變更為有效資效否?(Y/N)"
+	檢核單身各交易帳號，　是否為有效資料(anmi120)。
+　　。有效改無效：確認訊息"有效資料變更為無效資效，則該零用金帳戶無法再交易使用，是否確認變更?(Y/N)"
+	單身各交易帳號全數改為無效(apadstuts='N')，失效日期空白者update TODAY。
+。刪除：
+　　。提示標準訊息。
+
+●欄位說明：
+。零用金帳戶apac001：
+	。不可空白／不可重覆
+	。開窗：　新增無開窗。
+	　　　　　查詢時之開窗取現有帳戶資料　q_apacxxx
+		零用金帳戶　　名稱　  管理人員　　　管理部門　歸屬帳中心
+		－－－－－－　－－－　－－－　  　　－－－－　－－－－－
+	　　　　　　　代碼　　　　名稱　　代碼(名稱)  代碼(名稱)  代碼(名稱)
+。帳戶說明（多語言檔apacl_t）
+	。標準作業處理
+。設置日期(apac002)：
+	。可空白／default TODAY
+	。日期型態開窗。
+。換算本幣留存上限金額apac007：
+	。可為０
+	。金額顯示依管理[歸屬營運據點]控制小數位數。
+。收支表應報告日期apac006：
+	。可空白，自行輸入
+。營運據點apacsite：
+	。不可空白
+	。檢核資料合理性（取標準元件）
+	。開窗：取標準據點應用開窗　（條件：為營運據點或法人者）
+。保管人員apac003：
+	。不可空白
+	。檢核：人員資料合理性（標準元件）
+	。帶值：人員資料變更時，依變更後的人員歸屬部門，更新update [保管部門]。
+	。開窗：人員標準開窗
+。保管部門apac004：
+	。不可空白
+	。檢核：部門資料合理性（標準元件）
+	。帶值：無
+	。開窗：部門標準開窗
+。帳務中心apac005：
+	。可空白
+	。參考aapt310，應付帳中心之處理原則，　請採共用元件處理
+]]>
+    </sa_all>
+  </sa_spec>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

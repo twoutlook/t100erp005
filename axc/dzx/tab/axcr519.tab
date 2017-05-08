@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcr519" module="axc" jobmode="N" type="r01" industry="std" fix_arg="0" crtid="05426" crtdt="2015-04-14 09:46:45" modid="05426" moddt="2015-04-14 14:52:50" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="當站下線成本明細列印">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcckcomp,xcckcomp_desc(chr80),xcck004,xcckld,xcckld_desc(chr80),xcck005,xcck001,xcck001_desc(chr80),xcck003,xcck003_desc(chr80),xcck006,imag011,xcck010,imaa003,chk1(chr500),chk2(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="axc" filename="axcr519" method="dialog">
+    <section id="input">
+      <input id="head" field="xcckcomp,xcck004,xcckld,xcck005,xcck001,xcck003,chk1,chk2"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcck006,imag011,xcck010,imaa003"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcckcomp">
+        <after>
+          <reference field="xcckcomp_desc" ref_field="xcck_t.xcckcomp" map_field="xcckent,xcckcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="xcckcomp_desc"/>
+      <column id="xcck004"/>
+      <column id="xcckld">
+        <after>
+          <check chkid="v_glaald" id="isExist"/>
+          <reference field="xcckld_desc" ref_field="xcck_t.xcckld" map_field="xcckent,xcckld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xcckld_desc"/>
+      <column id="xcck005"/>
+      <column id="xcck001">
+        <after>
+          <reference field="xcck001_desc" ref_field="xcck_t.xcck001" map_field="xcck001" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? "/>
+        </after>
+      </column>
+      <column id="xcck001_desc"/>
+      <column id="xcck003">
+        <after>
+          <check chkid="v_xcat001" id="isExist"/>
+          <reference field="xcck003_desc" ref_field="xcck_t.xcck003" map_field="xcckent,xcck003" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcat001" state="i"/>
+        <controlp form="q_xcat001" state="c"/>
+      </column>
+      <column id="xcck003_desc"/>
+      <column id="xcck006">
+        <controlp form="q_xccd006" state="c"/>
+      </column>
+      <column id="imag011">
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_imag011" state="c"/>
+      </column>
+      <column id="xcck010">
+        <controlp form="q_xcck010" state="c"/>
+      </column>
+      <column id="imaa003">
+        <controlp form="q_imck001" state="i"/>
+        <controlp form="q_imck001" state="c"/>
+      </column>
+      <column id="chk1"/>
+      <column id="chk2"/>
+    </init>
+  </form>
+</assembly>
+

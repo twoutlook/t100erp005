@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="adeq214" std_prog="adeq214" erpver="1.0" ver="1" module="ADE" type="M" booking="Y" designer_ver="1.0" class="q" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="Q" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="datainfo,insert,output,query"/>
+  <table ver="1" cite_std="N">
+    <tbl name="deag_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 收銀差錯統計查詢
+標準作業功能：新增/報表/詳細資料/查詢/篩選/條件查詢/條件儲存/說明/離開/重新整理
+作業類型：查詢作業
+輸入模式：列表模式-Q001_00
+作業資料來源(Detail)：資料來源表：deag_t,deaf_t,rtjf_t
+補充說明：
+門店編號預代g_site
+收銀日期預代g_today，从deag_t,deaf_t抓取对应字段（门店、收银日期、收银员）显示,根据收银员带出对应的部门
+只显示有差异的部分(有差错处理方式)]]>
+  </all>
+  <field cite_std="N" name="b_deag004" ver="1" src="s" column="deag004" table="deag_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_pcab001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_deagdocdt" ver="1" src="s" column="deagdocdt" table="deag_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default=":TODAY" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[預代g_today
+開窗：
+查詢,q_ooef001_24,條件where = s_aooi500_q_where(g_prog,'deagdocdt',g_site,'c')]]>
+  </field>
+  <field cite_std="N" name="b_deagdocno" ver="1" src="s" column="deagdocno" table="deag_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_deagdocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_deagsite" ver="1" src="s" column="deagsite" table="deag_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooef001_24" chk_ref="" items="" default=":SITE" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預代g_site
+開窗：
+查詢,q_ooef001_24,條件where = s_aooi500_q_where(g_prog,'deagsite',g_site,'c')]]>
+  </field>
+  <field cite_std="N" name="b_pcab005" ver="1" src="s" column="pcab005" table="pcab_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooef001_13" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="l_docdtcount" ver="1" src="s" column="num10" table="type_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[基本资料
+select unique deafsite 门店,deagdocdt 收银日期,deag004 收银员  from deag_t,deaf_t
+where deafent=deagent and deafdocno=deagdocno and deagstus='Y' 
+客单量
+select count(*) 客单量 from rtjf_t 
+where rtjfsite=门店 and rtjf025=收银日期 and rtjf030=收银员]]>
+  </field>
+  <field cite_std="N" name="l_mistakecount" ver="1" src="s" column="num10" table="type_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[差错笔数=差错笔数1+差错笔数2
+select count(*)  差错笔数1  from deag_t,deaf_t                       /*串币差错*/
+where deafent=deagent and deafdocno=deagdocno and deagstus='Y' 
+and deafsite=门店 and deagdocdt= 收银日期 and deag004=收银员
+and deaf016 is not null  and deaf015<>0
+select count(*)  差错笔数2  from deag_t,deaf_t                       /*差异*/
+where deafent=deagent and deafdocno=deagdocno and deagstus='Y' 
+and deafsite=门店 and deagdocdt= 收银日期 and deag004=收银员
+and deaf016 is not null  and deaf008<>0
+]]>
+  </field>
+  <field cite_std="N" name="l_mistakeratio" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[计算出 差错比率=差错笔数/客单量*100]]>
+  </field>
+  <field cite_std="N" name="b" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_count" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_docdtcount" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="d">
+    <![CDATA[基本资料
+select unique deafsite 门店,deagdocdt 收银日期,deag004 收银员  from deag_t,deaf_t
+where deafent=deagent and deafdocno=deagdocno and deagstus='Y' 
+客单量
+select count(*) 客单量 from rtjf_t 
+where rtjfsite=门店 and rtjf025=收银日期 and rtjf030=收银员]]>
+  </field>
+  <field cite_std="N" name="b_mistakecount" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="d">
+    <![CDATA[差错笔数=差错笔数1+差错笔数2
+select count(*)  差错笔数1  from deag_t,deaf_t                       /*串币差错*/
+where deafent=deagent and deafdocno=deagdocno and deagstus='Y' 
+and deafsite=门店 and deagdocdt= 收银日期 and deag004=收银员
+and deaf016 is not null  and deaf015<>0
+select count(*)  差错笔数2  from deag_t,deaf_t                       /*差异*/
+where deafent=deagent and deafdocno=deagdocno and deagstus='Y' 
+and deafsite=门店 and deagdocdt= 收银日期 and deag004=收银员
+and deaf016 is not null  and deaf008<>0
+]]>
+  </field>
+  <field cite_std="N" name="b_mistakeratio" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="d">
+    <![CDATA[计算出 差错比率=差错笔数/客单量*100]]>
+  </field>
+  <field cite_std="N" name="edit_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_deag004_desc" src="s" depend_field="b_deag004" correspon_key="deagent,deag004" ref_table="pcab_t" ref_fk="pcabent,pcab001" ref_dlang="" ref_rtn="pcab003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_deagsite_desc" src="s" depend_field="b_deagsite" correspon_key="deagent,deagsite" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_pcab005_desc" src="s" depend_field="b_pcab005" correspon_key="pcab005" ref_table="itkal_t" ref_fk="itkal001" ref_dlang="itkal002" ref_rtn="itkal003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="b_count" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="b_deag004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_deagdocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_deagdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_deagsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_docdtcount" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="b_mistakecount" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="b_mistakeratio" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="b_pcab005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="edit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="l_docdtcount" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_mistakecount" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_mistakeratio" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="datainfo" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="bpage_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_sel" text="選取項目" lstr=""/>
+    <sfield name="lbl_deagsite" text="門店編號" lstr=""/>
+    <sfield name="lbl_deagsite_desc" text="門店說明" lstr=""/>
+    <sfield name="lbl_deagdocdt" text="收銀日期" lstr=""/>
+    <sfield name="lbl_deag004" text="收銀員編號" lstr=""/>
+    <sfield name="lbl_deag004_desc" text="收銀員名稱" lstr=""/>
+    <sfield name="lbl_pcab005" text="部門編號" lstr=""/>
+    <sfield name="lbl_pcab005_desc" text="部門名稱" lstr=""/>
+    <sfield name="lbl_sum" text="合計：" lstr=""/>
+    <sfield name="lbl_docdtcount" text="客單量" lstr=""/>
+    <sfield name="lbl_mistakecount" text="差錯筆數" lstr=""/>
+    <sfield name="lbl_mistakeratio" text="差錯比率(%)" lstr=""/>
+    <sfield name="lbl_deagdocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

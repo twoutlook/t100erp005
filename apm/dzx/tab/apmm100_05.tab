@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmm100_05" module="apm" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="02294" crtdt="2014-10-20 14:54:34" modid="02294" moddt="2014-11-13 18:08:19" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="交易對象允許付款條件維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1_apmm100_05" page_id="1_apmm100_05" value="chk(chr500),pmad001_1(chr500),pmad002_1(chr500),pmad002_1_desc(chr500),pmad003_1(chr500),pmad004_1(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="apm" filename="apmm100_05" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="chk,pmad001_1,pmad002_1,pmad003_1,pmad004_1" insert="N" append="Y" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="chk" type="S" default="Y"/>
+      <column id="pmad001_1"/>
+      <column id="pmad002_1">
+        <after>
+          <reference field="pmad002_1_desc" ref_field="pmad002_1" map_field="pmad002" ref_sql="SELECT ooibl004 FROM ooibl_t WHERE ooiblent=$varg_enterprise$var AND ooibl002=? AND ooibl003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pmad002_1_desc"/>
+      <column id="pmad003_1"/>
+      <column id="pmad004_1" type="S" default="N"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="pmad_t" page="1" linked="" pk="pmad001,pmad002">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM pmad_t WHERE pmadent=? AND pmad001=? AND pmad002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM pmad_t WHERE pmadent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aprr280_g01" module="apr" jobmode="N" type="g01" industry="std" crtid="05948" crtdt="2016-09-01 13:09:17" modid="05948" moddt="2016-09-06 11:50:45" sdver="4" tabver="10001" description="...">
+  <define arg=",tm.wc(STRING|where condition)">
+    <var seq="1" value="l_name2(chr30|NULL),rtja060,rtja059,rtja007,rtja108,rtjasite,rtjadocdt,l_name5(chr30|NULL),l_name4(chr30|NULL),rtjadocno,rtja001,rtjb_t_rtjbent(rtjbent|rtjb_t.rtjbent),rtjb_t_rtjb042(rtjb042|rtjb_t.rtjb042),l_name3(chr30|NULL),rtjb_t_rtjb013(rtjb013|rtjb_t.rtjb013),rtjb_t_rtjb012(rtjb012|rtjb_t.rtjb012),rtjb_t_rtjb010(rtjb010|rtjb_t.rtjb010),rtjb_t_rtjb004(rtjb004|rtjb_t.rtjb004),rtjb_t_rtjb035(rtjb035|rtjb_t.rtjb035),l_num(num5|NULL),l_sum(num20_6|NULL),rtjb_t_rtjbdocno(rtjbdocno|rtjb_t.rtjbdocno),rtjaent,prekent,prekdocno,l_name(chr30|NULL),prek005,prek004,prek003,prek002,prek001"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="l_name2(chr30|NULL),rtja060,rtja059,rtja007,rtja108,rtjasite,rtjadocdt,l_name5(chr30|NULL),l_name4(chr30|NULL),rtjadocno,rtja001,rtjb_t_rtjbent(rtjbent|rtjb_t.rtjbent),rtjb_t_rtjb042(rtjb042|rtjb_t.rtjb042),l_name3(chr30|NULL),rtjb_t_rtjb013(rtjb013|rtjb_t.rtjb013),rtjb_t_rtjb012(rtjb012|rtjb_t.rtjb012),rtjb_t_rtjb010(rtjb010|rtjb_t.rtjb010),rtjb_t_rtjb004(rtjb004|rtjb_t.rtjb004),rtjb_t_rtjb035(rtjb035|rtjb_t.rtjb035),l_num(num5|NULL),l_sum(num20_6|NULL),rtjb_t_rtjbdocno(rtjbdocno|rtjb_t.rtjbdocno),rtjaent,prekent,prekdocno,l_name(chr30|NULL),prek005,prek004,prek003,prek002,prek001"/>
+    <sql id="g_from" query="rtja_t,prek_t,rtjb_t"/>
+    <sql id="g_where" query="rtja_t.rtja000 = &apos;aprt280&apos; AND rtja_t.rtjastus = &apos;S&apos; AND " maintable="rtja_t"/>
+    <sql id="g_order" query="rtjadocno"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="rtjadocno"/>
+    <section id="b_group" reptype="d01">
+      <rep type="rtjadocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="rtjaent,rtjadocno"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="rtjaent,rtjadocno"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="rtjaent,rtjadocno"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="rtjadocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="rtjaent,rtjadocno"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

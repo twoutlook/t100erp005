@@ -1,0 +1,367 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axcq210_x01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:1(2015-03-25 09:10:18), PR版次:
+#+ Customerized Version.: SD版次:(), PR版次:
+#+ Build......: 000045
+#+ Filename...: axcq210_x01
+#+ Description: ...
+#+ Creator....: 05426(2015-03-17 14:28:26)
+#+ Modifier...: 05426 -SD/PR-
+
+{</section>}
+
+{<section id="axcq210_x01.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:8)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #QBE 
+       tmp STRING                   #暂存档
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+
+{</section>}
+
+{<section id="axcq210_x01.main" readonly="Y" >}
+PUBLIC FUNCTION axcq210_x01(p_arg1,p_arg2)
+DEFINE  p_arg1 STRING                  #tm.wc  QBE 
+DEFINE  p_arg2 STRING                  #tm.tmp  暂存档
+#add-point:init段define(客製用) name="component.define_customerization"
+{<point name="component.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+{<point name="component.define"/>}
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.tmp = p_arg2
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   {<point name="component.arg.prep" />}
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "axcq210_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL axcq210_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL axcq210_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL axcq210_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL axcq210_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL axcq210_x01_rep_data()
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="axcq210_x01.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION axcq210_x01_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   {<point name="create_tmp.before"/>}
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "xcbzcomp.xcbz_t.xcbzcomp,xcbzcomp_desc.type_t.chr100,xcbzld.xcbz_t.xcbzld,xcbzld_desc.type_t.chr30,xcbz001.xcbz_t.xcbz001,xcbz002.xcbz_t.xcbz002,xcbzsite.xcbz_t.xcbzsite,lbl_xcbzsite_desc.type_t.chr30,xcbz003.xcbz_t.xcbz003,imaal_t_imaal003.imaal_t.imaal003,imaal_t_imaal004.imaal_t.imaal004,xcbz004.xcbz_t.xcbz004,xcbz005.xcbz_t.xcbz005,xcbz006.xcbz_t.xcbz006,lbl_xcbz006_desc.type_t.chr30,xcbz007.xcbz_t.xcbz007,xcbz008.xcbz_t.xcbz008,xcbz009.xcbz_t.xcbz009,xcbz101.xcbz_t.xcbz101,xcbz201.xcbz_t.xcbz201,xcbz202.xcbz_t.xcbz202,xcbz203.xcbz_t.xcbz203,xcbz204.xcbz_t.xcbz204,xcbz205.xcbz_t.xcbz205,xcbz206.xcbz_t.xcbz206,xcbz207.xcbz_t.xcbz207,xcbz208.xcbz_t.xcbz208,xcbz209.xcbz_t.xcbz209,xcbz301.xcbz_t.xcbz301,xcbz302.xcbz_t.xcbz302,xcbz303.xcbz_t.xcbz303,xcbz304.xcbz_t.xcbz304,xcbz305.xcbz_t.xcbz305,xcbz306.xcbz_t.xcbz306,xcbz901.xcbz_t.xcbz901,xcbzent.xcbz_t.xcbzent,mainkey.type_t.chr1000" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   {<point name="create_tmp.after"/>}
+   #end add-point:create_tmp.after
+END FUNCTION
+
+{</section>}
+
+{<section id="axcq210_x01.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION axcq210_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+{<point name="ins_prep.define_customerization" edit="c" mark="Y"/>}
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+{<point name="ins_prep.define"/>}
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         {<point name="insert_prep"/>}
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+
+{</section>}
+
+{<section id="axcq210_x01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION axcq210_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+{<point name="sel_prep.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+{<point name="sel_prep.define"/>}
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   {<point name="sel_prep.before" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   {<point name="sel_prep.g_select" mark="Y"/>}
+   #end add-point
+   LET g_select = " SELECT xcbzcomp,NULL,xcbzld,NULL,xcbz001,xcbz002,xcbzsite,NULL,xcbz003,( SELECT imaal003 FROM imaal_t WHERE imaal_t.imaalent = xcbz_t.xcbzent AND imaal_t.imaal001 = xcbz_t.xcbz003 AND imaal_t.imaal002 = '" , 
+       g_dlang,"'" ,"),( SELECT imaal004 FROM imaal_t WHERE imaal_t.imaalent = xcbz_t.xcbzent AND imaal_t.imaal001 = xcbz_t.xcbz003 AND imaal_t.imaal002 = '" , 
+       g_dlang,"'" ,"),xcbz004,xcbz005,xcbz006,NULL,xcbz007,xcbz008,xcbz009,xcbz101,xcbz201,xcbz202, 
+       xcbz203,xcbz204,xcbz205,xcbz206,xcbz207,xcbz208,xcbz209,xcbz301,xcbz302,xcbz303,xcbz304,xcbz305, 
+       xcbz306,xcbz901,xcbzent,NULL"
+ 
+   #add-point:sel_prep g_from name="sel_prep.g_from"
+   {<point name="sel_prep.g_from" mark="Y"/>}
+   #end add-point
+    LET g_from = " FROM xcbz_t"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+   {<point name="sel_prep.g_where" mark="Y"/>}
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   {<point name="sel_prep.g_order" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   {<point name="sel_prep.sql.before" mark="Y"/>}
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("xcbz_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   {<point name="sel_prep.sql.after" mark="Y"/>}
+   #end add-point
+   PREPARE axcq210_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE axcq210_x01_curs CURSOR FOR axcq210_x01_prepare
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="axcq210_x01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION axcq210_x01_ins_data()
+DEFINE sr RECORD 
+   xcbzcomp LIKE xcbz_t.xcbzcomp, 
+   xcbzcomp_desc LIKE type_t.chr100, 
+   xcbzld LIKE xcbz_t.xcbzld, 
+   xcbzld_desc LIKE type_t.chr30, 
+   xcbz001 LIKE xcbz_t.xcbz001, 
+   xcbz002 LIKE xcbz_t.xcbz002, 
+   xcbzsite LIKE xcbz_t.xcbzsite, 
+   lbl_xcbzsite_desc LIKE type_t.chr30, 
+   xcbz003 LIKE xcbz_t.xcbz003, 
+   imaal_t_imaal003 LIKE imaal_t.imaal003, 
+   imaal_t_imaal004 LIKE imaal_t.imaal004, 
+   xcbz004 LIKE xcbz_t.xcbz004, 
+   xcbz005 LIKE xcbz_t.xcbz005, 
+   xcbz006 LIKE xcbz_t.xcbz006, 
+   lbl_xcbz006_desc LIKE type_t.chr30, 
+   xcbz007 LIKE xcbz_t.xcbz007, 
+   xcbz008 LIKE xcbz_t.xcbz008, 
+   xcbz009 LIKE xcbz_t.xcbz009, 
+   xcbz101 LIKE xcbz_t.xcbz101, 
+   xcbz201 LIKE xcbz_t.xcbz201, 
+   xcbz202 LIKE xcbz_t.xcbz202, 
+   xcbz203 LIKE xcbz_t.xcbz203, 
+   xcbz204 LIKE xcbz_t.xcbz204, 
+   xcbz205 LIKE xcbz_t.xcbz205, 
+   xcbz206 LIKE xcbz_t.xcbz206, 
+   xcbz207 LIKE xcbz_t.xcbz207, 
+   xcbz208 LIKE xcbz_t.xcbz208, 
+   xcbz209 LIKE xcbz_t.xcbz209, 
+   xcbz301 LIKE xcbz_t.xcbz301, 
+   xcbz302 LIKE xcbz_t.xcbz302, 
+   xcbz303 LIKE xcbz_t.xcbz303, 
+   xcbz304 LIKE xcbz_t.xcbz304, 
+   xcbz305 LIKE xcbz_t.xcbz305, 
+   xcbz306 LIKE xcbz_t.xcbz306, 
+   xcbz901 LIKE xcbz_t.xcbz901, 
+   xcbzent LIKE xcbz_t.xcbzent, 
+   mainkey LIKE type_t.chr1000
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+{<point name="ins_data.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+{<point name="ins_data.define"/>}
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    {<point name="ins_data.before"/>}
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH axcq210_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       {<point name="ins_data.foreach"/>}
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       {<point name="ins_data.before.save"/>}
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.xcbzcomp,sr.xcbzcomp_desc,sr.xcbzld,sr.xcbzld_desc,sr.xcbz001,sr.xcbz002,sr.xcbzsite,sr.lbl_xcbzsite_desc,sr.xcbz003,sr.imaal_t_imaal003,sr.imaal_t_imaal004,sr.xcbz004,sr.xcbz005,sr.xcbz006,sr.lbl_xcbz006_desc,sr.xcbz007,sr.xcbz008,sr.xcbz009,sr.xcbz101,sr.xcbz201,sr.xcbz202,sr.xcbz203,sr.xcbz204,sr.xcbz205,sr.xcbz206,sr.xcbz207,sr.xcbz208,sr.xcbz209,sr.xcbz301,sr.xcbz302,sr.xcbz303,sr.xcbz304,sr.xcbz305,sr.xcbz306,sr.xcbz901,sr.xcbzent,sr.mainkey
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "axcq210_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       {<point name="ins_data.after.save"/>}
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    {<point name="ins_data.after"/>}
+    #end add-point
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="axcq210_x01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION axcq210_x01_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+{<point name="rep_data.define_customerization" edit="c" mark="Y"/>}
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+{<point name="rep_data.define"/>}
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    {<point name="rep_data.before"/>}
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    {<point name="rep_data.after"/>}
+    #end add-point:rep_data.after
+END FUNCTION
+
+{</section>}
+
+{<section id="axcq210_x01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

@@ -1,0 +1,117 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apji010" module="apj" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="01996" crtdt="2013-12-19 16:52:51" modid="01996" moddt="2015-08-03 10:47:06" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="專案類型設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pjaa001,pjaal003,pjaal004,pjaa002,pjaa002_desc(chr80),pjaa003,pjaa004,pjaa005,pjaa013,pjaa006,pjaa007,pjaa007_desc(chr80),pjaa008,pjaa009,pjaa010,pjaa011,pjaa012,pjaa014,pjaastus,pjaaownid,pjaaownid_desc(chr80),pjaaowndp,pjaaowndp_desc(chr80),pjaacrtid,pjaacrtid_desc(chr80),pjaacrtdp,pjaacrtdp_desc(chr80),pjaacrtdt,pjaamodid,pjaamodid_desc(chr80),pjaamoddt"/>
+      <var id="bs_field" value="pjaa001,pjaa001_desc(chr80),pjaa002,pjaa002_desc(chr80),pjaa003,pjaa004,pjaa005,pjaa006" pk="pjaa001" order=""/>
+      <bs_reference field="pjaa001_desc" ref_field="pjaa001" ref_sql="SELECT pjaal003 FROM pjaal_t WHERE pjaalent=$varg_enterprise$var AND pjaal001=? AND pjaal002=$varg_dlang$var"/>
+      <bs_reference field="pjaa002_desc" ref_field="pjaa002" ref_sql="SELECT pjbal003 FROM pjbal_t WHERE pjbalent=$varg_enterprise$var AND pjbal001=? AND pjbal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="apj" filename="apji010" method="dialog">
+    <section id="input">
+      <input id="head" field="pjaa001,pjaal003,pjaal004,pjaa002,pjaa003,pjaa004,pjaa005,pjaa013,pjaa006,pjaa007,pjaa008,pjaa009,pjaa010,pjaa011,pjaa012,pjaa014,pjaastus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pjaa001,pjaal003,pjaal004,pjaa002,pjaa003,pjaa004,pjaa005,pjaa013,pjaa006,pjaa007,pjaa008,pjaa009,pjaa010,pjaa011,pjaa012,pjaa014,pjaastus,pjaaownid,pjaaowndp,pjaacrtid,pjaacrtdp,pjaacrtdt,pjaamodid,pjaamoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pjaa001"/>
+      <set id="head" type="no_entry" field="pjaa001"/>
+    </init>
+    <init id="head">
+      <column id="pjaa001">
+        <controlp form="q_pjaa001" state="c"/>
+      </column>
+      <column id="pjaal003"/>
+      <column id="pjaal004"/>
+      <column id="pjaa002">
+        <after>
+          <check chkid="v_pjba001" id="isExist"/>
+          <reference field="pjaa002_desc" ref_field="pjaa_t.pjaa002" map_field="pjaa002" ref_sql="SELECT pjbal003 FROM pjbal_t WHERE pjbalent=$varg_enterprise$var AND pjbal001=? AND pjbal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pjba001" state="i"/>
+        <controlp form="q_pjba001" state="c"/>
+      </column>
+      <column id="pjaa002_desc"/>
+      <column id="pjaa003" type="S" default="N"/>
+      <column id="pjaa004" type="S" default="N"/>
+      <column id="pjaa005" type="S" default="N"/>
+      <column id="pjaa013" type="S" default="N"/>
+      <column id="pjaa006" type="S" default="1" def_scc="16004"/>
+      <column id="pjaa007">
+        <after>
+          <check chkid="v_oofg001" id="isExist"/>
+          <reference field="pjaa007_desc" ref_field="pjaa007" map_field="pjaa007" ref_sql="SELECT oofgl004 FROM oofgl_t WHERE oofglent=$varg_enterprise$var AND oofgl001=&apos; &apos; AND oofgl002=? AND oofgl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oofg001_1" state="i"/>
+        <controlp form="q_oofg001_1" state="c"/>
+      </column>
+      <column id="pjaa007_desc"/>
+      <column id="pjaa008" type="S" default="1" def_scc="16005"/>
+      <column id="pjaa009">
+        <after>
+          <check id="range" st="30.000" st_type="1" errno="azz-00087" bt="1.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="pjaa010" type="S" default="N"/>
+      <column id="pjaa011" def_scc="16006"/>
+      <column id="pjaa012" def_scc="16007"/>
+      <column id="pjaa014" type="S" default="2" def_scc="4065"/>
+      <column id="pjaastus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pjaaownid">
+        <after/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pjaaownid_desc"/>
+      <column id="pjaaowndp">
+        <after/>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pjaaowndp_desc"/>
+      <column id="pjaacrtid">
+        <after/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pjaacrtid_desc"/>
+      <column id="pjaacrtdp">
+        <after/>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pjaacrtdp_desc"/>
+      <column id="pjaacrtdt"/>
+      <column id="pjaamodid">
+        <after/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pjaamodid_desc"/>
+      <column id="pjaamoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pjaa_t" pk="pjaa001">
+      <sql id="forupd_sql" type="sql" query="SELECT pjaa001,&apos;&apos;,&apos;&apos;,pjaa002,&apos;&apos;,pjaa003,pjaa004,pjaa005,pjaa013,pjaa006,pjaa007,&apos;&apos;,pjaa008,pjaa009,pjaa010,pjaa011,pjaa012,pjaa014,pjaastus,pjaaownid,&apos;&apos;,pjaaowndp,&apos;&apos;,pjaacrtid,&apos;&apos;,pjaacrtdp,&apos;&apos;,pjaacrtdt,pjaamodid,&apos;&apos;,pjaamoddt FROM pjaa_t WHERE pjaaent= ? AND pjaa001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pjaa001 FROM pjaa_t" order="pjaa001"/>
+      <sql id="append" type="lang" target="pjaal_t.pjaal003,pjaal_t.pjaal004" table="pjaal_t" fk="pjaa001" pk="pjaal001,pjaal002" field="pjaal003,pjaal004"/>
+    </head>
+  </dataset>
+</assembly>
+

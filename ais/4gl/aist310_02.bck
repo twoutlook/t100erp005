@@ -1,0 +1,1086 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aist310_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2015-10-27 13:11:48), PR版次:0002(2016-12-14 14:09:52)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000221
+#+ Filename...: aist310_02
+#+ Description: 換開及作廢發票
+#+ Creator....: 06821(2015-10-27 11:36:54)
+#+ Modifier...: 06821 -SD/PR- 03080
+ 
+{</section>}
+ 
+{<section id="aist310_02.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#161214-00021#2   161214 By albireo   銷退發票換開發票時,原發票日期欄位應取發票號對應正項發票開立時發票日期
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_isat_d        RECORD
+       isatcomp LIKE isat_t.isatcomp, 
+   isatseq LIKE isat_t.isatseq, 
+   l_sel LIKE type_t.chr500, 
+   isat003 LIKE isat_t.isat003, 
+   isat004 LIKE isat_t.isat004, 
+   isat007 LIKE isat_t.isat007, 
+   isat103 LIKE isat_t.isat103, 
+   isat104 LIKE isat_t.isat104, 
+   isat105 LIKE isat_t.isat105, 
+   isat106 LIKE isat_t.isat106, 
+   isat107 LIKE isat_t.isat107, 
+   l_isat003 LIKE type_t.chr20, 
+   l_isat004 LIKE type_t.chr20, 
+   l_isat007 LIKE type_t.dat
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_sub_success   LIKE type_t.num5
+#end add-point
+ 
+DEFINE g_isat_d          DYNAMIC ARRAY OF type_g_isat_d
+DEFINE g_isat_d_t        type_g_isat_d
+ 
+ 
+DEFINE g_isatcomp_t   LIKE isat_t.isatcomp    #Key值備份
+DEFINE g_isatseq_t      LIKE isat_t.isatseq    #Key值備份
+DEFINE g_isat003_t      LIKE isat_t.isat003    #Key值備份
+DEFINE g_isat004_t      LIKE isat_t.isat004    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point    
+ 
+{</section>}
+ 
+{<section id="aist310_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aist310_02(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   p_docno,p_comp
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE g_isatcomp      LIKE isat_t.isatcomp
+   DEFINE g_isatdocno     LIKE isat_t.isatdocno
+   DEFINE p_docno         LIKE isat_t.isatdocno
+   DEFINE p_comp          LIKE isat_t.isatcomp
+   DEFINE l_isai002       LIKE isai_t.isai002
+   DEFINE g_sql           STRING
+   DEFINE l_n             LIKE type_t.num5    
+   DEFINE l_j             LIKE type_t.num5    
+   DEFINE l_wc            STRING  
+   DEFINE g_maxac         LIKE type_t.num10
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aist310_02 WITH FORM cl_ap_formpath("ais","aist310_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   WHENEVER ERROR CONTINUE
+   LET g_isatcomp  = p_comp
+   LET g_isatdocno = p_docno
+   LET g_detail_idx = 0
+   CALL g_isat_d.clear()
+   LET g_sql = " SELECT isatcomp,isatseq,'',isat003,isat004,isat007,isat103,isat104,   ",
+               "        isat105,isat106,isat107,'','','' ",
+               "   FROM isat_t  ",
+               "  WHERE isatent = ? AND isatcomp = ? AND isatdocno = ? ",
+               "    AND isat025 NOT IN ('12','22') ", # 最終狀態 <> 作廢
+               "    AND isat014 IN ('11','21') AND isat106 = 0 ",
+               "  ORDER BY isatseq,isat003,isat004 "
+   
+   PREPARE aist310_02_pb FROM g_sql
+   DECLARE b_fill_cs CURSOR FOR aist310_02_pb
+   LET l_ac = 1
+   OPEN b_fill_cs USING g_enterprise,g_isatcomp,g_isatdocno
+                          
+   FOREACH b_fill_cs INTO g_isat_d[l_ac].*
+   
+      LET g_isat_d[l_ac].l_isat007 = g_today
+ 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+    
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+   END FOREACH
+   CALL g_isat_d.deleteElement(g_isat_d.getLength())
+   CALL cl_set_combo_scc('l_sel',9996)
+
+   #若為台灣稅區，則不需輸入發票代碼
+   SELECT isai002 INTO l_isai002 
+   FROM ooef_t 
+   LEFT JOIN isai_t ON ooefent = isaient AND ooef019 = isai001 
+   WHERE ooefent = g_enterprise AND ooef001 = p_comp
+   IF l_isai002 <> 2 THEN
+      LET g_isat_d[l_ac].l_isat003 = NULL
+      CALL cl_set_comp_entry('isat003',FALSE) 
+      CALL cl_set_comp_visible('isat003',FALSE)
+      CALL cl_set_comp_entry('l_isat003',FALSE) 
+      CALL cl_set_comp_visible('l_isat003',FALSE)
+   END IF
+   LET l_ac = l_ac -1   
+   LET g_maxac = l_ac
+   #WHILE TRUE
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_isat_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+         BEFORE ROW
+           LET l_ac = ARR_CURR()
+           IF l_ac > g_maxac THEN
+              LET l_ac = g_maxac
+              CALL FGL_SET_ARR_CURR(g_maxac)
+           END IF
+           IF cl_null(l_ac) OR l_ac = 0 THEN
+              LET l_ac = g_maxac
+           END IF
+           CALL aist310_02_set_entry(l_ac)
+           CALL aist310_02_set_no_entry(l_ac)
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+ 
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isatcomp
+            #add-point:BEFORE FIELD isatcomp name="input.b.page1.isatcomp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isatcomp
+            
+            #add-point:AFTER FIELD isatcomp name="input.a.page1.isatcomp"
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_isat_d[g_detail_idx].isatcomp IS NOT NULL AND g_isat_d[g_detail_idx].isatseq IS NOT NULL AND g_isat_d[g_detail_idx].isat003 IS NOT NULL AND g_isat_d[g_detail_idx].isat004 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_isat_d[g_detail_idx].isatcomp != g_isat_d_t.isatcomp OR g_isat_d[g_detail_idx].isatseq != g_isat_d_t.isatseq OR g_isat_d[g_detail_idx].isat003 != g_isat_d_t.isat003 OR g_isat_d[g_detail_idx].isat004 != g_isat_d_t.isat004)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM isat_t WHERE "||"isatent = '" ||g_enterprise|| "' AND "||"isatcomp = '"||g_isat_d[g_detail_idx].isatcomp ||"' AND "|| "isatseq = '"||g_isat_d[g_detail_idx].isatseq ||"' AND "|| "isat003 = '"||g_isat_d[g_detail_idx].isat003 ||"' AND "|| "isat004 = '"||g_isat_d[g_detail_idx].isat004 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isatcomp
+            #add-point:ON CHANGE isatcomp name="input.g.page1.isatcomp"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isatseq
+            #add-point:BEFORE FIELD isatseq name="input.b.page1.isatseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isatseq
+            
+            #add-point:AFTER FIELD isatseq name="input.a.page1.isatseq"
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_isat_d[g_detail_idx].isatcomp IS NOT NULL AND g_isat_d[g_detail_idx].isatseq IS NOT NULL AND g_isat_d[g_detail_idx].isat003 IS NOT NULL AND g_isat_d[g_detail_idx].isat004 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_isat_d[g_detail_idx].isatcomp != g_isat_d_t.isatcomp OR g_isat_d[g_detail_idx].isatseq != g_isat_d_t.isatseq OR g_isat_d[g_detail_idx].isat003 != g_isat_d_t.isat003 OR g_isat_d[g_detail_idx].isat004 != g_isat_d_t.isat004)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM isat_t WHERE "||"isatent = '" ||g_enterprise|| "' AND "||"isatcomp = '"||g_isat_d[g_detail_idx].isatcomp ||"' AND "|| "isatseq = '"||g_isat_d[g_detail_idx].isatseq ||"' AND "|| "isat003 = '"||g_isat_d[g_detail_idx].isat003 ||"' AND "|| "isat004 = '"||g_isat_d[g_detail_idx].isat004 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isatseq
+            #add-point:ON CHANGE isatseq name="input.g.page1.isatseq"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_sel
+            #add-point:BEFORE FIELD l_sel name="input.b.page1.l_sel"
+ 
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_sel
+            
+            #add-point:AFTER FIELD l_sel name="input.a.page1.l_sel"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_sel
+            #add-point:ON CHANGE l_sel name="input.g.page1.l_sel"
+            IF l_ac>0 THEN
+               IF g_isat_d[l_ac].l_sel = '2' THEN
+                  CALL aist310_02_set_no_entry(l_ac)
+                  NEXT FIELD l_isat007   
+               ELSE
+                  CALL aist310_02_set_entry(l_ac)
+                  NEXT FIELD l_isat004
+               END IF
+            END IF
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isat003
+            #add-point:BEFORE FIELD isat003 name="input.b.page1.isat003"
+ 
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isat003
+            
+            #add-point:AFTER FIELD isat003 name="input.a.page1.isat003"
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_isat_d[g_detail_idx].isatcomp IS NOT NULL AND g_isat_d[g_detail_idx].isatseq IS NOT NULL AND g_isat_d[g_detail_idx].isat003 IS NOT NULL AND g_isat_d[g_detail_idx].isat004 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_isat_d[g_detail_idx].isatcomp != g_isat_d_t.isatcomp OR g_isat_d[g_detail_idx].isatseq != g_isat_d_t.isatseq OR g_isat_d[g_detail_idx].isat003 != g_isat_d_t.isat003 OR g_isat_d[g_detail_idx].isat004 != g_isat_d_t.isat004)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM isat_t WHERE "||"isatent = '" ||g_enterprise|| "' AND "||"isatcomp = '"||g_isat_d[g_detail_idx].isatcomp ||"' AND "|| "isatseq = '"||g_isat_d[g_detail_idx].isatseq ||"' AND "|| "isat003 = '"||g_isat_d[g_detail_idx].isat003 ||"' AND "|| "isat004 = '"||g_isat_d[g_detail_idx].isat004 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isat003
+            #add-point:ON CHANGE isat003 name="input.g.page1.isat003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isat004
+            #add-point:BEFORE FIELD isat004 name="input.b.page1.isat004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isat004
+            
+            #add-point:AFTER FIELD isat004 name="input.a.page1.isat004"
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_isat_d[g_detail_idx].isatcomp IS NOT NULL AND g_isat_d[g_detail_idx].isatseq IS NOT NULL AND g_isat_d[g_detail_idx].isat003 IS NOT NULL AND g_isat_d[g_detail_idx].isat004 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_isat_d[g_detail_idx].isatcomp != g_isat_d_t.isatcomp OR g_isat_d[g_detail_idx].isatseq != g_isat_d_t.isatseq OR g_isat_d[g_detail_idx].isat003 != g_isat_d_t.isat003 OR g_isat_d[g_detail_idx].isat004 != g_isat_d_t.isat004)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM isat_t WHERE "||"isatent = '" ||g_enterprise|| "' AND "||"isatcomp = '"||g_isat_d[g_detail_idx].isatcomp ||"' AND "|| "isatseq = '"||g_isat_d[g_detail_idx].isatseq ||"' AND "|| "isat003 = '"||g_isat_d[g_detail_idx].isat003 ||"' AND "|| "isat004 = '"||g_isat_d[g_detail_idx].isat004 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isat004
+            #add-point:ON CHANGE isat004 name="input.g.page1.isat004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isat007
+            #add-point:BEFORE FIELD isat007 name="input.b.page1.isat007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isat007
+            
+            #add-point:AFTER FIELD isat007 name="input.a.page1.isat007"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isat007
+            #add-point:ON CHANGE isat007 name="input.g.page1.isat007"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isat103
+            #add-point:BEFORE FIELD isat103 name="input.b.page1.isat103"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isat103
+            
+            #add-point:AFTER FIELD isat103 name="input.a.page1.isat103"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isat103
+            #add-point:ON CHANGE isat103 name="input.g.page1.isat103"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isat104
+            #add-point:BEFORE FIELD isat104 name="input.b.page1.isat104"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isat104
+            
+            #add-point:AFTER FIELD isat104 name="input.a.page1.isat104"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isat104
+            #add-point:ON CHANGE isat104 name="input.g.page1.isat104"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isat105
+            #add-point:BEFORE FIELD isat105 name="input.b.page1.isat105"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isat105
+            
+            #add-point:AFTER FIELD isat105 name="input.a.page1.isat105"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isat105
+            #add-point:ON CHANGE isat105 name="input.g.page1.isat105"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_isat003
+            #add-point:BEFORE FIELD l_isat003 name="input.b.page1.l_isat003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_isat003
+            
+            #add-point:AFTER FIELD l_isat003 name="input.a.page1.l_isat003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_isat003
+            #add-point:ON CHANGE l_isat003 name="input.g.page1.l_isat003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_isat004
+            #add-point:BEFORE FIELD l_isat004 name="input.b.page1.l_isat004"
+ 
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_isat004
+            
+            #add-point:AFTER FIELD l_isat004 name="input.a.page1.l_isat004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_isat004
+            #add-point:ON CHANGE l_isat004 name="input.g.page1.l_isat004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_isat007
+            #add-point:BEFORE FIELD l_isat007 name="input.b.page1.l_isat007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_isat007
+            
+            #add-point:AFTER FIELD l_isat007 name="input.a.page1.l_isat007"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_isat007
+            #add-point:ON CHANGE l_isat007 name="input.g.page1.l_isat007"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.isatcomp
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isatcomp
+            #add-point:ON ACTION controlp INFIELD isatcomp name="input.c.page1.isatcomp"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.isatseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isatseq
+            #add-point:ON ACTION controlp INFIELD isatseq name="input.c.page1.isatseq"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.l_sel
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_sel
+            #add-point:ON ACTION controlp INFIELD l_sel name="input.c.page1.l_sel"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.isat003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isat003
+            #add-point:ON ACTION controlp INFIELD isat003 name="input.c.page1.isat003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.isat004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isat004
+            #add-point:ON ACTION controlp INFIELD isat004 name="input.c.page1.isat004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.isat007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isat007
+            #add-point:ON ACTION controlp INFIELD isat007 name="input.c.page1.isat007"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.isat103
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isat103
+            #add-point:ON ACTION controlp INFIELD isat103 name="input.c.page1.isat103"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.isat104
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isat104
+            #add-point:ON ACTION controlp INFIELD isat104 name="input.c.page1.isat104"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.isat105
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isat105
+            #add-point:ON ACTION controlp INFIELD isat105 name="input.c.page1.isat105"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.l_isat003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_isat003
+            #add-point:ON ACTION controlp INFIELD l_isat003 name="input.c.page1.l_isat003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.l_isat004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_isat004
+            #add-point:ON ACTION controlp INFIELD l_isat004 name="input.c.page1.l_isat004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.l_isat007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_isat007
+            #add-point:ON ACTION controlp INFIELD l_isat007 name="input.c.page1.l_isat007"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   IF NOT INT_FLAG THEN
+      CALL cl_err_collect_init()
+      CALL s_transaction_begin()
+      FOR l_j = 1 TO g_isat_d.getLength()
+         CASE g_isat_d[l_j].l_sel
+            WHEN 1  #換開發票
+               IF l_isai002 <> 2 THEN
+                  #台灣
+                  IF NOT cl_null(g_isat_d[l_j].l_isat004) THEN
+                     CALL aist310_02_ins(g_isatdocno,g_isatcomp,g_isat_d[l_j].isatseq,g_isat_d[l_j].isat004,l_j,'1') RETURNING g_sub_success    
+                  END IF
+               ELSE 
+                  #大陸 (判斷稅區如果是大陸，發票代碼+發票號碼有值才寫入)
+                  IF NOT cl_null(g_isat_d[l_j].l_isat004) AND NOT cl_null(g_isat_d[l_j].l_isat003) THEN
+                     CALL aist310_02_ins(g_isatdocno,g_isatcomp,g_isat_d[l_j].isatseq,g_isat_d[l_j].isat004,l_j,'1') RETURNING g_sub_success   
+                  END IF
+
+               END IF
+               
+            WHEN 2  #作廢發票
+               CALL aist310_02_ins(g_isatdocno,g_isatcomp,g_isat_d[l_j].isatseq,g_isat_d[l_j].isat004,l_j,'2') RETURNING g_sub_success    
+         END CASE
+      END FOR
+            
+      CALL cl_err_collect_show()
+      IF g_sub_success THEN      
+         CALL s_transaction_end('Y','0')  #執行成功
+      ELSE   
+         CALL s_transaction_end('N','0')  #執行失敗
+      END IF
+   END IF
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aist310_02 
+   
+   #add-point:input段after input name="input.post_input"
+ 
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist310_02.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aist310_02.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 換開發票異動
+# Memo...........:
+# Usage..........: CALL aist310_02_ins(p_docno,p_comp,p_isatseq,p_isat004,l_j,p_type)
+# Date & Author..: 151028 By Jessy
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aist310_02_ins(p_docno,p_comp,p_isatseq,p_isat004,l_j,p_type)
+DEFINE p_docno     LIKE isat_t.isatdocno
+DEFINE p_comp      LIKE isat_t.isatcomp
+DEFINE p_isat004   LIKE isat_t.isat004
+DEFINE p_isatseq   LIKE isat_t.isatseq
+DEFINE p_type      LIKE type_t.chr1
+DEFINE l_j         LIKE type_t.num5  
+DEFINE l_isat025   LIKE isat_t.isat025
+DEFINE l_isaf056   LIKE isaf_t.isaf056
+DEFINE l_isat014   LIKE isat_t.isat014
+DEFINE l_isatseq   LIKE isat_t.isatseq
+DEFINE l_isafmoddt LIKE isaf_t.isafmoddt
+DEFINE l_isat      RECORD 
+                   isatent LIKE isat_t.isatent,
+                   isatcomp LIKE isat_t.isatcomp,
+                   isatdocno LIKE isat_t.isatdocno,
+                   isatseq   LIKE isat_t.isatseq,
+                   isat001   LIKE isat_t.isat001,
+                   isat002   LIKE isat_t.isat002,
+                   isat003   LIKE isat_t.isat003,
+                   isat004   LIKE isat_t.isat004,
+                   isat005   LIKE isat_t.isat005,
+                   isat006   LIKE isat_t.isat006,
+                   isat007   LIKE isat_t.isat007,
+                   isat008   LIKE isat_t.isat008,
+                   isat009   LIKE isat_t.isat009,
+                   isat010   LIKE isat_t.isat010,
+                   isat011   LIKE isat_t.isat011,
+                   isat012   LIKE isat_t.isat012,
+                   isat013   LIKE isat_t.isat013,
+                   isat014   LIKE isat_t.isat014,
+                   isat015   LIKE isat_t.isat015,
+                   isat016   LIKE isat_t.isat016,
+                   isat017   LIKE isat_t.isat017,
+                   isat018   LIKE isat_t.isat018,
+                   isat019   LIKE isat_t.isat019,
+                   isat020   LIKE isat_t.isat020,
+                   isat021   LIKE isat_t.isat021,
+                   isat022   LIKE isat_t.isat022,
+                   isat023   LIKE isat_t.isat023,
+                   isat100   LIKE isat_t.isat100,
+                   isat101   LIKE isat_t.isat101,
+                   isat103   LIKE isat_t.isat103,
+                   isat104   LIKE isat_t.isat104,
+                   isat105   LIKE isat_t.isat105,
+                   isat106   LIKE isat_t.isat106,
+                   isat107   LIKE isat_t.isat107,
+                   isat113   LIKE isat_t.isat113,
+                   isat114   LIKE isat_t.isat114,
+                   isat115   LIKE isat_t.isat115,
+                   isat201   LIKE isat_t.isat201,
+                   isat202   LIKE isat_t.isat202,
+                   isat203   LIKE isat_t.isat203,
+                   isat204   LIKE isat_t.isat204,
+                   isat205   LIKE isat_t.isat205,
+                   isat206   LIKE isat_t.isat206,
+                   isat207   LIKE isat_t.isat207,
+                   isat208   LIKE isat_t.isat208,
+                   isat209   LIKE isat_t.isat209,
+                   isatsite  LIKE isat_t.isatsite,
+                   isatdocdt LIKE isat_t.isatdocdt,
+                   isat025   LIKE isat_t.isat025,
+                   isat027   LIKE isat_t.isat027      #161214-00021#2 add
+                   END RECORD
+DEFINE r_success   LIKE type_t.num5
+DEFINE l_sql       STRING                             #161214-00021#2 add
+
+WHENEVER ERROR CONTINUE   #161214-00021#2
+
+   LET r_success = TRUE
+
+   #161214-00021#2-----s
+   LET l_sql = "SELECT isat007 FROM isat_t,isaf_t ",
+               " WHERE isatent = ",g_enterprise," ",
+               "   AND isat003 = ? ",
+               "   AND isat004 = ? ",
+               "   AND isat014 = '11' ",
+               "   AND isafent = isatent ",
+               "   AND isafcomp = isatcomp ",
+               "   AND isafdocno = isatdocno ",
+               "   AND isafstus <> 'X' "
+   PREPARE sel_isat007p FROM l_sql
+   #161214-00021#2-----e
+
+   LET l_isafmoddt = cl_get_current()
+   SELECT isaf056 INTO l_isaf056 FROM isaf_t WHERE isafent = g_enterprise AND isafcomp = p_comp AND isafdocno = p_docno
+   
+   LET l_isat025 = ''
+   IF l_isaf056 = 1 THEN
+      LET l_isat014 = 11
+      LET l_isat025 = 12
+   ELSE
+      LET l_isat014 = 21
+      LET l_isat025 = 22
+   END IF
+   
+   #抓取此筆要作廢的發票資訊
+   SELECT isatent,isatcomp,isatdocno,isatseq,isat001,isat002,isat003,isat004,
+          isat005,isat006,isat007,isat008,isat009,isat010,isat011,isat012,isat013,
+          isat014,isat015,isat016,isat017,isat018,isat019,isat020,isat021,isat022,
+          isat023,isat100,isat101,isat103,isat104,isat105,isat106,isat107,isat113,
+          isat114,isat115,isat201,isat202,isat203,isat204,isat205,isat206,isat207,
+          isat208,isat209,isatsite,isatdocdt,isat025
+     INTO l_isat.isatent,l_isat.isatcomp,l_isat.isatdocno,l_isat.isatseq,l_isat.isat001,l_isat.isat002,l_isat.isat003,l_isat.isat004,
+          l_isat.isat005,l_isat.isat006,l_isat.isat007,l_isat.isat008,l_isat.isat009,l_isat.isat010,l_isat.isat011,l_isat.isat012,l_isat.isat013,
+          l_isat.isat014,l_isat.isat015,l_isat.isat016,l_isat.isat017,l_isat.isat018,l_isat.isat019,l_isat.isat020,l_isat.isat021,l_isat.isat022,
+          l_isat.isat023,l_isat.isat100,l_isat.isat101,l_isat.isat103,l_isat.isat104,l_isat.isat105,l_isat.isat106,l_isat.isat107,l_isat.isat113,
+          l_isat.isat114,l_isat.isat115,l_isat.isat201,l_isat.isat202,l_isat.isat203,l_isat.isat204,l_isat.isat205,l_isat.isat206,l_isat.isat207,
+          l_isat.isat208,l_isat.isat209,l_isat.isatsite,l_isat.isatdocdt,l_isat.isat025
+     FROM isat_t 
+    WHERE isatent = g_enterprise AND isatcomp = p_comp AND isatdocno = p_docno 
+      AND isatseq = p_isatseq AND isat004 = p_isat004
+   
+   IF cl_null(p_isat004) THEN
+      INITIALIZE g_errparam.* TO NULL
+      LET g_errparam.code = 'amr-00066'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #161214-00021#2-----s
+   IF l_isat014 = '21' THEN
+      LET l_isat.isat027 = NULL
+      EXECUTE sel_isat007p USING l_isat.isat003,l_isat.isat004
+         INTO l_isat.isat027
+   ELSE
+      LET l_isat.isat027 = NULL
+   END IF
+   #161214-00021#2-----e
+   
+   #作廢舊的發票   
+   UPDATE isat_t
+      SET isat025 = l_isat025   #最終狀態碼
+    WHERE isatent = g_enterprise
+      AND isatcomp = p_comp
+      AND isatdocno = p_docno
+      AND isat004 = p_isat004
+      AND isatseq = p_isatseq
+   
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'UPDATE isat_t wrong'
+      LET g_errparam.popup = TRUE
+      LET g_errparam.sqlerr = SQLCA.SQLCODE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF 
+      
+   UPDATE isaf_t
+      SET isafmodid = g_user,
+          isafmoddt = l_isafmoddt
+    WHERE isafent = g_enterprise
+      AND isafcomp = p_comp
+      AND isafdocno = p_docno
+      
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'UPDATE isaf_t wrong'
+      LET g_errparam.popup = TRUE
+      LET g_errparam.sqlerr = SQLCA.SQLCODE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF 
+   
+   CASE p_type
+      WHEN 1 #換開發票
+         #寫入一筆新的作廢發票 
+         LET l_isatseq = ""
+         #SELECT MAX(isatseq+1) INTO l_isatseq FROM isat_t WHERE isatent = g_enterprise AND isatcomp = p_comp AND isatdocno = p_docno 
+         SELECT MAX(isatseq+1) INTO l_isatseq FROM isat_t WHERE isatent = g_enterprise AND isatcomp = p_comp AND isat003 = l_isat.isat003 AND isat004 = l_isat.isat004
+         IF cl_null(l_isatseq) THEN LET l_isatseq = 1 END IF
+         LET l_isat.isatseq = l_isatseq
+         LET l_isat.isat003 = l_isat.isat003
+         IF cl_null(l_isat.isat003) THEN LET l_isat.isat003 = " " END IF
+         LET l_isat.isat004 = l_isat.isat004
+         LET l_isat.isat014 = l_isat025
+         LET l_isat.isat025 = l_isat025 
+         LET l_isat.isat007 = g_isat_d[l_j].l_isat007
+         IF cl_null(l_isat.isat007) THEN LET l_isat.isat007 = g_today END IF
+         LET l_isat.isat017 = g_today
+         LET l_isat.isat018 = cl_get_time()
+         LET l_isat.isat019 = g_user
+
+         INSERT INTO isat_t
+               (isatent,isatcomp,isatdocno,isatseq,isat001,isat002,isat003,isat004,
+                isat005,isat006,isat007,isat008,isat009,isat010,isat011,isat012,isat013,
+                isat014,isat015,isat016,isat017,isat018,isat019,isat020,isat021,isat022,
+                isat023,isat100,isat101,isat103,isat104,isat105,isat106,isat107,isat113,
+                isat114,isat115,isat201,isat202,isat203,isat204,isat205,isat206,isat207,
+                isat027,      #161214-00021#2
+                isat208,isat209,isatsite,isatdocdt,isat025)      
+         VALUES(g_enterprise,l_isat.isatcomp,l_isat.isatdocno,l_isat.isatseq,l_isat.isat001,l_isat.isat002,l_isat.isat003,l_isat.isat004,
+                l_isat.isat005,l_isat.isat006,l_isat.isat007,l_isat.isat008,l_isat.isat009,l_isat.isat010,l_isat.isat011,l_isat.isat012,l_isat.isat013,
+                l_isat.isat014,l_isat.isat015,l_isat.isat016,l_isat.isat017,l_isat.isat018,l_isat.isat019,l_isat.isat020,'0',l_isat.isat022,
+                l_isat.isat023,l_isat.isat100,l_isat.isat101,l_isat.isat103,l_isat.isat104,l_isat.isat105,l_isat.isat106,l_isat.isat107,l_isat.isat113,
+                l_isat.isat114,l_isat.isat115,l_isat.isat201,l_isat.isat202,l_isat.isat203,l_isat.isat204,l_isat.isat205,l_isat.isat206,l_isat.isat207,
+                l_isat.isat027,    #161214-00021#2
+                l_isat.isat208,l_isat.isat209,l_isat.isatsite,l_isat.isatdocdt,l_isat.isat025)
+         
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "INSERT isat_t wrong" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = FALSE 
+            CALL cl_err()
+            LET r_success = FALSE
+            RETURN r_success
+         END IF 
+         
+         #寫入一筆新的換開發票 
+         LET l_isatseq = ""
+         SELECT MAX(isatseq+1) INTO l_isatseq FROM isat_t WHERE isatent = g_enterprise AND isatcomp = p_comp AND isat003 = l_isat.isat003 AND isat004 = l_isat.isat004
+         #SELECT MAX(isatseq+1) INTO l_isatseq FROM isat_t WHERE isatent = g_enterprise AND isatcomp = p_comp AND isat003 = g_isat_d[l_j].l_isat003 AND isat004 = g_isat_d[l_j].l_isat004
+         IF cl_null(l_isatseq) THEN LET l_isatseq = 1 END IF
+         LET l_isat.isatseq = l_isatseq
+         LET l_isat.isat003 = g_isat_d[l_j].l_isat003
+         IF cl_null(l_isat.isat003) THEN LET l_isat.isat003 = " " END IF
+         LET l_isat.isat004 = g_isat_d[l_j].l_isat004
+         LET l_isat.isat014 = l_isat014
+         LET l_isat.isat025 = l_isat014 
+         LET l_isat.isat007 = g_isat_d[l_j].l_isat007
+         IF cl_null(l_isat.isat007) THEN LET l_isat.isat007 = g_today END IF
+         LET l_isat.isat017 = g_today
+         LET l_isat.isat018 = cl_get_time()
+         LET l_isat.isat019 = g_user
+         
+         INSERT INTO isat_t
+               (isatent,isatcomp,isatdocno,isatseq,isat001,isat002,isat003,isat004,
+                isat005,isat006,isat007,isat008,isat009,isat010,isat011,isat012,isat013,
+                isat014,isat015,isat016,isat017,isat018,isat019,isat020,isat021,isat022,
+                isat023,isat100,isat101,isat103,isat104,isat105,isat106,isat107,isat113,
+                isat114,isat115,isat201,isat202,isat203,isat204,isat205,isat206,isat207,
+                isat027,    #161214-00021#2
+                isat208,isat209,isatsite,isatdocdt,isat025)      
+         VALUES(g_enterprise,l_isat.isatcomp,l_isat.isatdocno,l_isat.isatseq,l_isat.isat001,l_isat.isat002,l_isat.isat003,l_isat.isat004,
+                l_isat.isat005,l_isat.isat006,l_isat.isat007,l_isat.isat008,l_isat.isat009,l_isat.isat010,l_isat.isat011,l_isat.isat012,l_isat.isat013,
+                l_isat.isat014,l_isat.isat015,l_isat.isat016,l_isat.isat017,l_isat.isat018,l_isat.isat019,l_isat.isat020,'0',l_isat.isat022,
+                l_isat.isat023,l_isat.isat100,l_isat.isat101,l_isat.isat103,l_isat.isat104,l_isat.isat105,l_isat.isat106,l_isat.isat107,l_isat.isat113,
+                l_isat.isat114,l_isat.isat115,l_isat.isat201,l_isat.isat202,l_isat.isat203,l_isat.isat204,l_isat.isat205,l_isat.isat206,l_isat.isat207,
+                l_isat.isat027,   #161214-00021#2
+                l_isat.isat208,l_isat.isat209,l_isat.isatsite,l_isat.isatdocdt,l_isat.isat025)
+
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "INSERT isat_t_new wrong" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = FALSE 
+            CALL cl_err()
+            LET r_success = FALSE
+            RETURN r_success
+         END IF   
+         
+      WHEN 2 #作廢發票
+         LET l_isatseq = ""
+         SELECT MAX(isatseq+1) INTO l_isatseq FROM isat_t WHERE isatent = g_enterprise AND isatcomp = p_comp AND isat003 = l_isat.isat003 AND isat004 = l_isat.isat004
+         #SELECT MAX(isatseq+1) INTO l_isatseq FROM isat_t WHERE isatent = g_enterprise AND isatcomp = p_comp AND isatdocno = p_docno 
+         IF cl_null(l_isatseq) THEN LET l_isatseq = 1 END IF
+         LET l_isat.isatseq = l_isatseq
+         LET l_isat.isat003 = l_isat.isat003
+         IF cl_null(l_isat.isat003) THEN LET l_isat.isat003 = " " END IF
+         LET l_isat.isat004 = l_isat.isat004
+         IF cl_null(l_isat.isat004) THEN LET l_isat.isat004 = " " END IF
+         LET l_isat.isat014 = l_isat025
+         LET l_isat.isat025 = l_isat025 
+         LET l_isat.isat007 = g_today 
+         LET l_isat.isat017 = g_today
+         LET l_isat.isat018 = cl_get_time()
+         LET l_isat.isat019 = g_user
+
+         INSERT INTO isat_t
+               (isatent,isatcomp,isatdocno,isatseq,isat001,isat002,isat003,isat004,
+                isat005,isat006,isat007,isat008,isat009,isat010,isat011,isat012,isat013,
+                isat014,isat015,isat016,isat017,isat018,isat019,isat020,isat021,isat022,
+                isat023,isat100,isat101,isat103,isat104,isat105,isat106,isat107,isat113,
+                isat114,isat115,isat201,isat202,isat203,isat204,isat205,isat206,isat207,
+                isat027,     #161214-00021#2
+                isat208,isat209,isatsite,isatdocdt,isat025)      
+         VALUES(g_enterprise,l_isat.isatcomp,l_isat.isatdocno,l_isat.isatseq,l_isat.isat001,l_isat.isat002,l_isat.isat003,l_isat.isat004,
+                l_isat.isat005,l_isat.isat006,l_isat.isat007,l_isat.isat008,l_isat.isat009,l_isat.isat010,l_isat.isat011,l_isat.isat012,l_isat.isat013,
+                l_isat.isat014,l_isat.isat015,l_isat.isat016,l_isat.isat017,l_isat.isat018,l_isat.isat019,l_isat.isat020,'0',l_isat.isat022,
+                l_isat.isat023,l_isat.isat100,l_isat.isat101,l_isat.isat103,l_isat.isat104,l_isat.isat105,l_isat.isat106,l_isat.isat107,l_isat.isat113,
+                l_isat.isat114,l_isat.isat115,l_isat.isat201,l_isat.isat202,l_isat.isat203,l_isat.isat204,l_isat.isat205,l_isat.isat206,l_isat.isat207,
+                l_isat.isat027,     #161214-00021#2
+                l_isat.isat208,l_isat.isat209,l_isat.isatsite,l_isat.isatdocdt,l_isat.isat025)
+
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "INSERT isat_t wrong" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = FALSE 
+            CALL cl_err()
+            LET r_success = FALSE
+            RETURN r_success
+         END IF  
+   END CASE
+
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 控制欄位輸入否
+# Memo...........:
+# Usage..........: CALL aist310_02_set_no_entry(p_cmd)
+# Date & Author..: 160107 By Jessy
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aist310_02_set_no_entry(p_cmd)
+DEFINE p_cmd   LIKE type_t.chr1  
+
+   IF cl_null(p_cmd) OR p_cmd = 0 THEN
+      RETURN
+   END IF
+   
+   IF g_isat_d[p_cmd].l_sel = '2' THEN
+      LET g_isat_d[p_cmd].l_isat004 = ''
+      CALL cl_set_comp_entry("l_isat004,l_isat007",FALSE)
+   END IF
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 控制欄位輸入否
+# Memo...........:
+# Usage..........: CALL aist310_02_set_entry(p_cmd)
+# Date & Author..: 160107 By Jessy
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aist310_02_set_entry(p_cmd)
+DEFINE p_cmd   LIKE type_t.chr1  
+
+   IF cl_null(p_cmd) OR p_cmd = 0 THEN
+      RETURN
+   END IF
+
+   CALL cl_set_comp_entry("l_isat004,l_isat007",TRUE)
+
+END FUNCTION
+
+ 
+{</section>}
+ 

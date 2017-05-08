@@ -1,0 +1,1021 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="axmp140" std_prog="axmp140" erpver="1.0" module="AXM" ver="5" env="s" zone="t10prd" booking="Y" type="M" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="construct.c.pmab003" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE               
+            CALL q_pmaa001()                         #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmab003    #顯示到畫面上
+            NEXT FIELD pmab003                       #返回原欄位  ]]>
+  </point>
+  <point name="construct.c.pmab004" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '296'
+            CALL q_oocq002()                         #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmab004    #顯示到畫面上
+            NEXT FIELD pmab004                       #返回原欄位        ]]>
+  </point>
+  <point name="cs.head.before_construct" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[               CALL cl_qbe_init()
+]]>
+  </point>
+  <point name="global.parameter" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[        y          LIKE  type_t.num5,
+        p          LIKE  type_t.num5,]]>
+  </point>
+  <point name="global.variable" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE g_pmab_d DYNAMIC ARRAY OF RECORD
+       pmab003     LIKE pmab_t.pmab003,         #額度客戶
+       pmabsite    LIKE pmab_t.pmabsite,        #營業據點
+       pmab004     LIKE pmab_t.pmab004,         #信用評核等級
+       pmab005     LIKE pmab_t.pmab005          #額度幣別
+    END RECORD 
+DEFINE g_xmab_d DYNAMIC ARRAY OF RECORD
+       xmab001     LIKE xmab_t.xmab001,          #計算項目
+       xmab005     LIKE xmab_t.xmab005,          #交易據點
+       xmab006     LIKE xmab_t.xmab006,          #交易客戶
+       xmab008     LIKE xmab_t.xmab008,          #額度客戶
+       xmab007     LIKE xmab_t.xmab007,          #交易幣別
+       xmab012     LIKE xmab_t.xmab012,          #額度幣別
+       xmab013     LIKE xmab_t.xmab013,          #匯率
+       xmab009     LIKE xmab_t.xmab009,          #交易含稅金額
+       xmab010     LIKE xmab_t.xmab010           #沖銷金額
+    END RECORD    
+]]>
+  </point>
+  <point name="init.init" order="" ver="3" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[     ]]>
+  </point>
+  <point name="input.a.p" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.a.y" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="main.background" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET lc_param.y = g_argv[1]
+   LET lc_param.p = g_argv[2]
+   LET g_master.wc = g_argv[3]
+   LET ls_js = util.JSON.stringify(lc_param) ]]>
+  </point>
+  <point name="process.count_progress" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      LET ls_sql = "SELECT COUNT(*) ",
+                   "  FROM pmab_t ",
+                   " WHERE pmabent = '",g_enterprise,"' ",
+                   "   AND pmab002 NOT IN ('1','4') ",
+                   "   AND ",g_master.wc
+      PREPARE axmp140_process_count FROM ls_sql
+      LET li_count = 0
+      EXECUTE axmp140_process_count INTO li_count
+      CALL cl_progress_bar_no_window(li_count)]]>
+  </point>
+  <point name="process.define" order="" ver="5" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE ls_value    STRING
+   DEFINE l_cnt       LIKE type_t.num5
+   DEFINE l_success   LIKE type_t.num5
+   DEFINE l_sql       STRING
+   DEFINE l_ooef008   LIKE ooef_t.ooef008          #行事歷參照表號
+   DEFINE l_ooef009   LIKE ooef_t.ooef009          #製造行事歷對應類別
+   DEFINE l_max_p     LIKE xmad_t.xmad003          #最大期別
+   DEFINE l_s_y       LIKE xmad_t.xmad002          #計算年度
+   DEFINE l_s_p       LIKE xmad_t.xmad003          #計算期別
+   DEFINE l_s_d       LIKE oogc_t.oogc003          #起始日期
+   DEFINE l_amount    LIKE xmab_t.xmab009
+   DEFINE l_pmab  RECORD
+       pmabsite   LIKE pmab_t.pmabsite,            #營運據點
+       pmab001    LIKE pmab_t.pmab001,             #交易對象編號
+       pmab003    LIKE pmab_t.pmab003,             #額度交易對象
+       pmab004    LIKE pmab_t.pmab004,             #信用評核等級
+       pmab005    LIKE pmab_t.pmab005,             #額度計算幣別
+       pmab006    LIKE pmab_t.pmab006              #企業額度
+              END RECORD
+   DEFINE l_xmab  RECORD
+       xmab001    LIKE xmab_t.xmab001,             #計算項目
+       xmab002    LIKE xmab_t.xmab002,             #異動類型
+       xmab007    LIKE xmab_t.xmab007,             #交易幣別
+       xmab009    LIKE xmab_t.xmab009,             #交易含稅金額
+       xmab010    LIKE xmab_t.xmab010              #已沖銷金額
+              END RECORD
+   DEFINE l_xmad  RECORD
+       xmad011    LIKE xmad_t.xmad011,             #訂單未出貨金額
+       xmad012    LIKE xmad_t.xmad012,             #出通單金額
+       xmad013    LIKE xmad_t.xmad013,             #出貨未開發票金額
+       xmad014    LIKE xmad_t.xmad014,             #銷退折讓金額
+       xmad015    LIKE xmad_t.xmad015,             #發票應收帳款
+       xmad016    LIKE xmad_t.xmad016,             #未兌現應收票據金額
+       xmad017    LIKE xmad_t.xmad017,             #已沖帳未確認金額
+       xmad018    LIKE xmad_t.xmad018,             #LC收狀金額
+       xmad019    LIKE xmad_t.xmad019,             #待抵帳款金額
+       xmad041    LIKE xmad_t.xmad041,             #採購未收貨金額
+       xmad042    LIKE xmad_t.xmad042,             #收貨未入庫金額
+       xmad043    LIKE xmad_t.xmad043,             #入庫未立應付金額
+       xmad044    LIKE xmad_t.xmad044,             #倉退金額
+       xmad045    LIKE xmad_t.xmad045,             #發票應付金額
+       xmad046    LIKE xmad_t.xmad046,             #應付待抵金額
+       xmad047    LIKE xmad_t.xmad047,             #已沖帳金額
+       xmad048    LIKE xmad_t.xmad048              #未兌現應付票據金額       
+              END RECORD
+ ]]>
+  </point>
+  <point name="process.exit_dialog" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF    
+      IF g_master.wc = ' 1=1' THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'apm-00379'
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+         CONTINUE WHILE
+      ELSE
+         LET g_bgjob = "N"      
+      END IF 
+]]>
+  </point>
+  <point name="process.pre_process" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+   CALL s_transaction_begin()
+   CALL cl_err_collect_init()
+   LET li_stus = TRUE
+   LET l_success = TRUE
+]]>
+  </point>
+  <point name="process.process" order="" ver="5" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+   LET l_ooef008 = ''
+   LET l_ooef009 = ''
+   SELECT ooef008,ooef009 INTO l_ooef008,l_ooef009
+     FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_site
+   #抓取計算年度期別
+   LET l_max_p = ''
+   SELECT MAX(oogc006) INTO l_max_p
+     FROM oogc_t
+    WHERE oogcent = g_enterprise
+      AND oogc001 = l_ooef008
+      AND oogc002 = l_ooef009
+      AND oogc015 = g_master.y
+   IF g_master.p = l_max_p THEN
+      LET l_s_y = g_master.y + 1
+      LET l_s_p = 1
+   ELSE
+      LET l_s_y = g_master.y
+      LET l_s_p = g_master.p + 1
+   END IF
+   #依年度期別抓取起始日期
+   LET l_s_d = ''
+   SELECT MIN(oogc003) INTO l_s_d
+     FROM oogc_t
+    WHERE oogcent = g_enterprise
+      AND oogc001 = l_ooef008
+      AND oogc002 = l_ooef009
+      AND oogc015 = l_s_y
+      AND oogc006 = l_s_p
+
+   LET l_sql = " SELECT COUNT(*) ",
+               "   FROM xmaa_t ",
+               "  WHERE xmaaent = '",g_enterprise,"' ",
+               "    AND xmaa001 = ? ",
+               "    AND xmaa002 = ? "
+   PREPARE axmp140_process_sel_xmaa_count FROM l_sql
+   
+   #依據UI畫面的額度對象與信用評等QBE條件，且pmab002不等於'1:不查核'或'4:依據集團設置'
+   #抓取符合條件的交易對象據點資料進行計算，並將相同額度對象與信用評等的資料放在一起計算
+   LET l_sql = " SELECT pmabsite,pmab001,pmab003,pmab004,pmab005,pmab006 ",
+               "   FROM pmab_t ",
+               "  WHERE pmabent = '",g_enterprise,"' ",
+               "    AND pmab002 NOT IN ('1','4') ",
+               "    AND ",g_master.wc,
+               "  ORDER BY pmab003,pmab004 "
+   PREPARE axmp140_process_sel_pmab_pr FROM l_sql
+   DECLARE axmp140_process_sel_pmab_cs CURSOR FOR axmp140_process_sel_pmab_pr
+
+   INITIALIZE l_pmab.* TO NULL
+   FOREACH axmp140_process_sel_pmab_cs INTO l_pmab.pmabsite,l_pmab.pmab001,l_pmab.pmab003,
+                                            l_pmab.pmab004,l_pmab.pmab005,l_pmab.pmab006
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'axmp140_process_sel_pmab_cs'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET l_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      IF NOT l_success THEN
+         LET li_stus = FALSE
+         LET l_success = TRUE
+      END IF
+      
+      IF g_bgjob <> "Y" THEN
+         #讀取交易對像月結檔：
+         LET ls_value = cl_getmsg('axm-00546',g_lang)," ",l_pmab.pmab003
+         CALL cl_progress_no_window_ing(ls_value)
+      END IF
+   
+      #依據UI畫面輸入的上期年度期別抓取該額度對象各計算項目的結存餘額資料
+      #取出的結存餘額做為計算的期出餘額，若抓取不到上期結存資料時，則各項目的上期結存餘額預設為0
+      LET l_cnt = 0
+      SELECT COUNT(*) INTO l_cnt
+        FROM xmad_t
+       WHERE xmadent = g_enterprise
+         AND xmadsite = l_pmab.pmabsite
+         AND xmad001 = l_pmab.pmab003
+         AND xmad002 = g_master.y
+         AND xmad003 = g_master.p
+      IF cl_null(l_cnt) OR l_cnt = 0 THEN
+         LET l_xmad.xmad011 = 0
+         LET l_xmad.xmad012 = 0
+         LET l_xmad.xmad013 = 0
+         LET l_xmad.xmad014 = 0
+         LET l_xmad.xmad015 = 0
+         LET l_xmad.xmad016 = 0
+         LET l_xmad.xmad017 = 0
+         LET l_xmad.xmad018 = 0
+         LET l_xmad.xmad019 = 0
+         LET l_xmad.xmad041 = 0
+         LET l_xmad.xmad042 = 0
+         LET l_xmad.xmad043 = 0
+         LET l_xmad.xmad044 = 0
+         LET l_xmad.xmad045 = 0
+         LET l_xmad.xmad046 = 0
+         LET l_xmad.xmad047 = 0
+         LET l_xmad.xmad048 = 0         
+      ELSE
+         INITIALIZE l_xmad.* TO NULL
+         SELECT COALESCE(xmad011,0),COALESCE(xmad012,0),COALESCE(xmad013,0),COALESCE(xmad014,0),
+                COALESCE(xmad015,0),COALESCE(xmad016,0),COALESCE(xmad017,0),COALESCE(xmad018,0),
+                COALESCE(xmad019,0),COALESCE(xmad041,0),COALESCE(xmad042,0),COALESCE(xmad043,0),
+                COALESCE(xmad044,0),COALESCE(xmad045,0),COALESCE(xmad046,0),COALESCE(xmad047,0),
+                COALESCE(xmad048,0)
+           INTO l_xmad.xmad011,l_xmad.xmad012,
+                l_xmad.xmad013,l_xmad.xmad014,l_xmad.xmad015,l_xmad.xmad016,l_xmad.xmad017,
+                l_xmad.xmad018,l_xmad.xmad019,l_xmad.xmad041,l_xmad.xmad042,l_xmad.xmad043,
+                l_xmad.xmad044,l_xmad.xmad045,l_xmad.xmad046,l_xmad.xmad047,l_xmad.xmad048
+           FROM xmad_t
+          WHERE xmadent = g_enterprise
+            AND xmadsite = l_pmab.pmabsite
+            AND xmad001 = l_pmab.pmab003
+            AND xmad002 = g_master.y
+            AND xmad003 = g_master.p
+      END IF
+      LET l_cnt = 0
+      SELECT COUNT(*) INTO l_cnt
+        FROM xmac_t
+       WHERE xmacent = g_enterprise
+         AND xmacsite = l_pmab.pmabsite
+         AND xmac001 = l_pmab.pmab003
+      IF cl_null(l_cnt) OR l_cnt = 0 THEN
+         INSERT INTO xmac_t(xmacent,xmacsite,xmac001,xmac011,xmac012,
+                            xmac013, xmac014,xmac015,xmac016,xmac017,
+                            xmac018, xmac019,xmac041,xmac042,xmac043,
+                            xmac044, xmac045,xmac046,xmac047,xmac048)
+              VALUES(  g_enterprise,l_pmab.pmabsite,l_pmab.pmab003,l_xmad.xmad011,l_xmad.xmad012,
+                     l_xmad.xmad013, l_xmad.xmad014,l_xmad.xmad015,l_xmad.xmad016,l_xmad.xmad017,
+                     l_xmad.xmad018, l_xmad.xmad019,l_xmad.xmad041,l_xmad.xmad042,l_xmad.xmad043,
+                     l_xmad.xmad044, l_xmad.xmad045,l_xmad.xmad046,l_xmad.xmad047,l_xmad.xmad048)
+      ELSE
+         UPDATE xmac_t
+            SET xmac011 = l_xmad.xmad011,
+                xmac012 = l_xmad.xmad012,
+                xmac013 = l_xmad.xmad013,
+                xmac014 = l_xmad.xmad014,
+                xmac015 = l_xmad.xmad015,
+                xmac016 = l_xmad.xmad016,
+                xmac017 = l_xmad.xmad017,
+                xmac018 = l_xmad.xmad018,
+                xmac019 = l_xmad.xmad019,
+                xmac041 = l_xmad.xmad041,
+                xmac042 = l_xmad.xmad042,
+                xmac043 = l_xmad.xmad043,
+                xmac044 = l_xmad.xmad044,
+                xmac045 = l_xmad.xmad045,
+                xmac046 = l_xmad.xmad046,
+                xmac047 = l_xmad.xmad047,
+                xmac048 = l_xmad.xmad048
+          WHERE xmacent = g_enterprise
+            AND xmacsite = l_pmab.pmabsite
+            AND xmac001 = l_pmab.pmab003
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'UPDATE xmac_t'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET l_success = FALSE
+            EXIT FOREACH
+         END IF
+      END IF
+
+      #取得的交易對象與畫面上輸入的上期年度與上期期別的下期第一天
+      #取出所有符合條件的信用評核異動明細資料
+      #依據相同的計算項目、異動類型與交易幣別對交易金額進行匯總
+      LET l_sql = " SELECT xmab001,xmab002,xmab007,SUM(xmab009),SUM(xmab010) ",
+                  "   FROM xmab_t ",
+                  "  WHERE xmabent = '",g_enterprise,"' ",
+                  "    AND xmab006 = '",l_pmab.pmab001,"' ",
+                  "    AND xmab008 = '",l_pmab.pmab003,"' ",
+                  #150629 by whitney add start
+                  "    AND xmab017 = 'N' ",
+                  "    AND (xmab009 - xmab010) > 0 ",
+                  #150629 by whitney add end
+                  "    AND xmab011 >= '",l_s_d,"' "
+      #當下營運據點
+      IF l_pmab.pmabsite <> 'ALL' THEN
+         LET l_sql = l_sql," AND xmab005 = '",l_pmab.pmabsite,"' "
+      END IF
+      LET l_sql = l_sql," GROUP BY xmab001,xmab002,xmab007 "
+      PREPARE axmp140_process_sel_xmab_pr FROM l_sql
+      DECLARE axmp140_process_sel_xmab_cs CURSOR FOR axmp140_process_sel_xmab_pr
+
+      INITIALIZE l_xmab.* TO NULL
+      OPEN axmp140_process_sel_xmab_cs
+      FOREACH axmp140_process_sel_xmab_cs INTO l_xmab.xmab001,l_xmab.xmab002,l_xmab.xmab007,
+                                               l_xmab.xmab009,l_xmab.xmab010
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'axmp140_process_sel_pmab_cs'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+
+         #若異動明細的計算項目在信用評等的公式中找不到有設置該計算項目時，則此異動明細不需要計算
+         LET l_cnt = 0
+         EXECUTE axmp140_process_sel_xmaa_count USING l_pmab.pmab004,l_xmab.xmab001 INTO l_cnt
+         IF cl_null(l_cnt) OR l_cnt = 0 THEN
+            EXIT FOREACH
+         END IF
+
+         IF g_bgjob <> "Y" THEN
+            #更新交易對像信用餘額檔：
+            LET ls_value = cl_getmsg('axm-00547',g_lang)," ",l_pmab.pmab003
+            CALL cl_progress_no_window_ing(ls_value)
+         END IF      
+
+         #計算該項目的信用耗用金額
+         #(交易金額-已沖銷金額)*百分比*加減項*交易幣別與額度幣別匯率)
+         LET l_amount = l_xmab.xmab009 - l_xmab.xmab010
+      
+         IF NOT s_credit_upd_xmac_count(g_site,l_xmab.xmab007,l_amount,l_xmab.xmab001,'1','1',l_pmab.pmabsite,l_pmab.pmab003,l_pmab.pmab004,l_pmab.pmab005,l_pmab.pmab006,'') THEN
+            LET l_success = FALSE
+            EXIT FOREACH
+         END IF
+
+         INITIALIZE l_xmab.* TO NULL
+      END FOREACH
+      CLOSE axmp140_process_sel_xmab_cs
+            
+      INITIALIZE l_pmab.* TO NULL
+   END FOREACH
+
+   IF NOT l_success OR NOT li_stus THEN
+      CALL s_transaction_end('N',0)
+   END IF
+   CALL s_transaction_end('Y',0)
+   CALL cl_err_collect_show()
+  ]]>
+  </point>
+  <point name="ui_dialog.more_construct" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="ui_dialog.more_input" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <section id="axmp140.description" ver="15" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:5,PR版次:5) Build-000072
+#+ 
+#+ Filename...: axmp140
+#+ Description: 信用評核重新計算作業
+#+ Creator....: 02040(2014-04-30 13:34:37)
+#+ Modifier...: 02040(2015-04-21 09:47:28) -SD/PR-
+]]>
+  </section>
+  <section id="axmp140.get_buffer" ver="2" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION axmp140_get_buffer(p_dialog)
+   DEFINE p_dialog   ui.DIALOG
+   
+   LET g_master.y = p_dialog.getFieldBuffer('y')
+   LET g_master.p = p_dialog.getFieldBuffer('p')
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理
+   {<point name="get_buffer.others"/>}
+   #end add-point
+END FUNCTION
+]]>
+  </section>
+  <section id="axmp140.global" ver="11" status="" src="s" readonly="">
+    <![CDATA[#應用 p01 樣板自動產生(Version:10)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       pmab003 LIKE pmab_t.pmab003, 
+   pmab004 LIKE pmab_t.pmab004, 
+   y LIKE type_t.chr500, 
+   p LIKE type_t.chr500, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="axmp140.init" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 初始化作業
+PRIVATE FUNCTION axmp140_init()
+   #add-point:init段define 
+   {<point name="init.define" edit="s"/>}
+   #end add-point
+   #add-point:init段define (客製用)
+   {<point name="init.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="axmp140.main" ver="4" status="" src="s" readonly="">
+    <![CDATA[MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define 
+   {<point name="main.define" edit="s"/>}
+   #end add-point 
+   #add-point:main段define (客製用)
+   {<point name="main.define_customerization" edit="c"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("axm","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+      CALL axmp140_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_axmp140 WITH FORM cl_ap_formpath("axm",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL axmp140_init()
+ 
+      #進入選單 Menu (="N")
+      CALL axmp140_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_axmp140
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+  </section>
+  <section id="axmp140.msgcentre_notify" ver="1" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION axmp140_msgcentre_notify()
+ 
+   DEFINE lc_state LIKE type_t.chr5
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知
+   {<point name="msg_centre.process"/>}
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="axmp140.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="axmp140.process" ver="5" status="" src="s" readonly="">
+    <![CDATA[#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION axmp140_process(ls_js)
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define 
+   {<point name="process.define" edit="s"/>}
+   #end add-point
+   #add-point:process段define (客製用)
+   {<point name="process.define_customerization" edit="c"/>}
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE axmp140_process_cs CURSOR FROM ls_sql
+#  FOREACH axmp140_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL axmp140_msgcentre_notify()
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="axmp140.transfer_argv" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION axmp140_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define 
+   {<point name="transfer_agrv.define" edit="s"/>}
+   #end add-point
+   #add-point:transfer_agrv段define (客製用)
+   {<point name="transfer_agrv.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+  </section>
+  <section id="axmp140.ui_dialog" ver="15" status="" src="s" readonly="">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION axmp140_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define 
+   {<point name="ui_dialog.define" edit="s"/>}
+   #end add-point
+   #add-point:ui_dialog段define (客製用)
+   {<point name="ui_dialog.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2
+      {<point name="ui_dialog.before_dialog2"/>}
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #應用 a57 樣板自動產生(Version:2)
+         INPUT BY NAME g_master.y,g_master.p 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前
+               {<point name="input.m.before_input"/>}
+               #end add-point
+         
+                     #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD y
+            #應用 a15 樣板自動產生(Version:2)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_master.y,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD y
+            END IF 
+ 
+ 
+            #add-point:AFTER FIELD y
+            {<point name="input.a.y" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD y
+            #add-point:BEFORE FIELD y
+            {<point name="input.b.y" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE y
+            #add-point:ON CHANGE y
+            {<point name="input.g.y" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD p
+            #應用 a15 樣板自動產生(Version:2)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_master.p,"1","1","12","1","azz-00087",1) THEN
+               NEXT FIELD p
+            END IF 
+ 
+ 
+            #add-point:AFTER FIELD p
+            {<point name="input.a.p" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD p
+            #add-point:BEFORE FIELD p
+            {<point name="input.b.p" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE p
+            #add-point:ON CHANGE p
+            {<point name="input.g.p" />}
+            #END add-point 
+ 
+ 
+                     #Ctrlp:input.c.y
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD y
+            #add-point:ON ACTION controlp INFIELD y
+            {<point name="input.c.y" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.p
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD p
+            #add-point:ON ACTION controlp INFIELD p
+            {<point name="input.c.p" />}
+            #END add-point
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後
+               {<point name="input.m.after_input"/>}
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...)
+            {<point name="input.other"/>}
+            #end add-point
+         END INPUT
+ 
+ 
+         
+         #應用 a58 樣板自動產生(Version:2)
+         CONSTRUCT BY NAME g_master.wc ON pmab003,pmab004
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct
+               {<point name="cs.head.before_construct"/>}
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #Ctrlp:construct.c.pmab003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD pmab003
+            #add-point:ON ACTION controlp INFIELD pmab003
+            {<point name="construct.c.pmab003" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmab003
+            #add-point:BEFORE FIELD pmab003
+            {<point name="construct.b.pmab003" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmab003
+            
+            #add-point:AFTER FIELD pmab003
+            {<point name="construct.a.pmab003" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.pmab004
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD pmab004
+            #add-point:ON ACTION controlp INFIELD pmab004
+            {<point name="construct.c.pmab004" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD pmab004
+            #add-point:BEFORE FIELD pmab004
+            {<point name="construct.b.pmab004" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD pmab004
+            
+            #add-point:AFTER FIELD pmab004
+            {<point name="construct.a.pmab004" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD p
+            #add-point:BEFORE FIELD p
+            {<point name="construct.b.p" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD p
+            
+            #add-point:AFTER FIELD p
+            {<point name="construct.a.p" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.p
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD p
+            #add-point:ON ACTION controlp INFIELD p
+            {<point name="construct.c.p" />}
+            #END add-point
+ 
+ 
+            
+            #add-point:其他管控
+            {<point name="cs.other"/>}
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+      
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL axmp140_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog
+            {<point name="ui_dialog.before_dialog3"/>}
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear
+         {<point name="ui_dialog.before_qbeclear" mark="Y"/>}
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear
+            {<point name="ui_dialog.qbeclear"/>}
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL axmp140_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL axmp140_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = axmp140_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule
+         {<point name="process.after_schedule"/>}
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

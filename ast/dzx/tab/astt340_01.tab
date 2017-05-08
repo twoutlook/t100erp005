@@ -1,0 +1,82 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astt340_01" module="ast" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="06189" crtdt="2015-07-09 11:32:05" modid="06189" moddt="2015-07-09 21:59:12" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="結算單批量產生單身元件">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="stbc001,stbc001_desc(chr500),sel(chr500),stbcsite,stbcsite_desc(chr500),stbc002,stbc003,stbc004,stbc005,stbc008,stbc008_desc(chr500),stbc012,stbc012_desc(chr500),stbc018,stbc020,stbc019"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="check_no_all"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query_data"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="produce_data"/>
+      <action id="reproduce" type="standard"/>
+      <action id="check_all"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="astt340_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="sel" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="stbc001">
+        <after>
+          <reference field="stbc001_desc" ref_field="stbc_t.stbc001" map_field="stbcent,stbc001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_3" state="c"/>
+      </column>
+      <column id="stbc001_desc"/>
+      <column id="sel"/>
+      <column id="stbcsite">
+        <after>
+          <reference field="stbcsite_desc" ref_field="stbc_t.stbcsite" map_field="stbcent,stbcsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_14" state="c"/>
+      </column>
+      <column id="stbcsite_desc"/>
+      <column id="stbc002"/>
+      <column id="stbc003" def_scc="6703"/>
+      <column id="stbc004">
+        <controlp form="q_stbc003" state="c"/>
+      </column>
+      <column id="stbc005"/>
+      <column id="stbc008">
+        <after>
+          <reference field="stbc008_desc" ref_field="stbc_t.stbc008" map_field="stbcent,stbc008" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_10" state="c"/>
+      </column>
+      <column id="stbc008_desc"/>
+      <column id="stbc012">
+        <after>
+          <reference field="stbc012_desc" ref_field="stbc_t.stbc012" map_field="stbcent,stbc011" ref_sql="SELECT stael003 FROM stael_t WHERE staelent=$varg_enterprise$var AND stael001=? AND stael002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_stae001" state="c"/>
+      </column>
+      <column id="stbc012_desc"/>
+      <column id="stbc018" type="S" default="0"/>
+      <column id="stbc020" type="S" default="0"/>
+      <column id="stbc019" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="stbc_t" page="1" linked="" pk="stbc001,stbc004,stbc005">
+      <sql id="forupd_sql_detail" query="SELECT stbc001,&apos;&apos;,&apos;&apos;,stbcsite,&apos;&apos;,stbc002,stbc003,stbc004,stbc005,stbc008,&apos;&apos;,stbc012,&apos;&apos;,stbc018,stbc020,stbc019 FROM stbc_t WHERE stbcent=? AND stbc001=? AND stbc004=? AND stbc005=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT stbc001,&apos;&apos;,&apos;&apos;,stbcsite,&apos;&apos;,stbc002,stbc003,stbc004,stbc005,stbc008,&apos;&apos;,stbc012,&apos;&apos;,stbc018,stbc020,stbc019 FROM stbc_t WHERE stbcent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

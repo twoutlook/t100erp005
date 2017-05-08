@@ -1,0 +1,982 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="astt340_01" std_prog="astt340_01" erpver="1.0" module="AST" ver="1" env="s" zone="t10prd" booking="Y" type="S" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="function.astt340_init" order="1" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 初始化
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION astt340_init()
+   CALL g_stbc_d.clear()
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+   LET g_error_show = 1
+END FUNCTION]]>
+  </point>
+  <point name="function.astt340_01_query" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 查詢方法
+# Memo...........:
+# Usage..........: CALL astt340_01_query()
+#                  RETURNING 回传参数
+# Date & Author..: geza By 20150709
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION astt340_01_query()
+DEFINE l_cnt        LIKE type_t.num5
+DEFINE l_success    LIKE type_t.num5
+DEFINE l_where      STRING
+DEFINE l_sql        STRING
+DEFINE l_sys        LIKE type_t.num5   
+DEFINE l_n          LIKE type_t.num5
+DEFINE li_idx       LIKE type_t.num10
+DEFINE  l_cmd                  LIKE type_t.chr1
+   CLEAR FORM
+   CALL g_stbc_d.clear()
+
+   INITIALIZE g_wc TO NULL
+
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+      
+      CONSTRUCT BY NAME g_wc ON stbdsite
+         BEFORE CONSTRUCT 
+            DISPLAY g_stbdsite TO stbdsite  #By shi 20150710
+         #一般欄位開窗相關處理
+         #---------------------------<  Master  >---------------------------
+         ON ACTION controlp INFIELD stbdsite
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = s_aooi500_q_where(g_prog,'stbdsite',g_stbdsite,'c')
+            CALL q_ooef001_24()
+            DISPLAY g_qryparam.return1 TO stbdsite  #顯示到畫面上
+            NEXT FIELD stbdsite                     #返回原欄位
+            
+      END CONSTRUCT
+      
+      CONSTRUCT BY NAME g_wc2 ON stbc025
+         BEFORE CONSTRUCT 
+
+         #一般欄位開窗相關處理
+         #---------------------------<  Master  >---------------------------
+         ON ACTION controlp INFIELD stbc025
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = cl_get_para(g_enterprise,g_site,'E-CIR-0001')
+            CALL q_rtax001_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO stbc025  #顯示到畫面上
+            NEXT FIELD stbc025                        #返回原欄位
+            
+      END CONSTRUCT
+      
+      INPUT ARRAY g_stbc_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE, 
+                  DELETE ROW = FALSE,
+                  APPEND ROW = TRUE)  #By shi 20150710
+         
+         BEFORE INPUT
+            IF g_stbc_d.getLength() = 0  THEN
+               NEXT FIELD stbdsite
+            END IF
+            CALL astt340_01_b_fill()           
+            LET g_rec_b = g_stbc_d.getLength()
+            DISPLAY "g_rec_b:",g_rec_b
+            
+         BEFORE ROW
+            LET l_ac = ARR_CURR()
+                             
+            IF g_detail_cnt >= l_ac 
+               AND g_stbc_d[l_ac].sel IS NOT NULL
+               AND g_stbc_d[l_ac].stbcsite IS NOT NULL
+            THEN
+               LET l_cmd='u'
+               LET g_stbc_d_t.* = g_stbc_d[l_ac].*   
+            ELSE
+               LET l_cmd='a'
+            END IF   
+            IF l_cmd = 'a' THEN               
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+            
+            
+         AFTER FIELD sel
+         
+         BEFORE FIELD sel
+         
+         ON CHANGE sel
+            #費用單分開顯示一筆一筆更新，其他單子匯總顯示批量更新   
+            IF g_stbc_d[l_ac].stbc003 != '3' THEN
+               UPDATE astt340_01_tmp SET sel = g_stbc_d[l_ac].sel WHERE stbc004 = g_stbc_d[l_ac].stbc004  
+            ELSE
+               UPDATE astt340_01_tmp SET sel = g_stbc_d[l_ac].sel WHERE stbc004 = g_stbc_d[l_ac].stbc004 AND stbc005 = g_stbc_d[l_ac].stbc005 #By shi Mod 20150710
+            END IF
+            
+
+      END INPUT
+      
+      ON ACTION check_all
+         #單身全選
+         CALL astt340_01_check_all() 
+      
+      ON ACTION check_no_all
+         #單身全不選
+         CALL astt340_01_check_no_all()
+      
+      ON ACTION query_data
+         #查詢資料
+         CALL astt340_01_gen_stbd()      
+                  
+         
+      ON ACTION produce_data
+         ##產生結算單單身
+         
+         IF g_rec_b > 0 THEN                             
+             LET g_success = TRUE
+             IF NOT astt340_01_gen_detail() THEN
+                IF NOT cl_ask_confirm('apm-00284') THEN #產生失敗，是否繼續
+                   LET g_success = FALSE                 
+                   RETURN
+                END IF
+             ELSE
+                IF cl_ask_confirm('apm-00285') THEN #產生成功，是否繼續
+                   CALL g_stbc_d.clear()
+                   DELETE FROM astt340_01_tmp
+                   IF SQLCA.sqlcode THEN
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = SQLCA.sqlcode
+                      LET g_errparam.extend = 'Del astt340_01_tmp'
+                      LET g_errparam.popup = TRUE
+                      CALL cl_err()
+                   END IF
+                   CALL astt340_01_query()                               
+                ELSE
+                   LET INT_FLAG = TRUE 
+                   EXIT DIALOG
+                END IF
+             END IF
+         ELSE
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'axr-00241'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()      
+         END IF
+          
+      ON ACTION accept
+         ##產生結算單單身
+         IF g_rec_b > 0 THEN                             
+             LET g_success = TRUE
+             IF NOT astt340_01_gen_detail() THEN
+                IF NOT cl_ask_confirm('apm-00284') THEN #產生失敗，是否繼續
+                   LET g_success = FALSE                 
+                   RETURN
+                END IF
+             ELSE
+                IF cl_ask_confirm('apm-00285') THEN #產生成功，是否繼續
+                   CALL g_stbc_d.clear()
+                   DELETE FROM astt340_01_tmp
+                   IF SQLCA.sqlcode THEN
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = SQLCA.sqlcode
+                      LET g_errparam.extend = 'Del astt340_01_tmp'
+                      LET g_errparam.popup = TRUE
+                      CALL cl_err()
+                   END IF
+                   CALL astt340_01_query()                               
+                ELSE
+                   LET INT_FLAG = TRUE 
+                   EXIT DIALOG
+                END IF
+             END IF
+         ELSE
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'axr-00241'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()      
+         END IF
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+         
+   END DIALOG
+   
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.astt340_01_gen_stbd" order="3" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 按查詢後把資料寫到tmp
+# Memo...........:
+# Usage..........: CALL astt340_01_gen_stbd()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2015/07/09 By geza
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION astt340_01_gen_stbd()
+DEFINE l_sql             STRING
+DEFINE l_where           STRING
+DEFINE l_success         LIKE type_t.num5
+DEFINE l_stan030     LIKE stan_t.stan030
+
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF g_wc.getIndexOf("stbdsite",1) THEN
+      LET g_wc = cl_replace_str(g_wc,"stbdsite","stbcsite")
+   END IF
+   
+   DELETE FROM astt340_01_tmp
+   
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'Del astt340_01_tmp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+   END IF
+   
+   INITIALIZE l_stan030 TO NULL
+   SELECT stan030 INTO l_stan030
+     FROM stan_t  
+    WHERE stanent = g_enterprise  
+      AND stan001 = g_stbd001
+   
+   LET l_where = " stbcsite IN (SELECT ooed004 FROM ooed_t ",
+                 "               START WITH ooed005 = '",g_stbdsite,"' AND ooed001='12' AND ooed006<='",g_today,"' AND (ooed007>='",g_today,"' OR ooed007 IS NULL) ",
+                 "             CONNECT BY  nocycle PRIOR ooed004=ooed005 AND ooed001='12' AND ooed006<='",g_today,"' AND (ooed007>='",g_today,"' OR ooed007 IS NULL) ",
+                 "               UNION SELECT ooed004 FROM ooed_t WHERE ooed004 ='",g_stbdsite,"') "
+
+
+   LET l_sql = "INSERT INTO astt340_01_tmp(sel,       stbcsite,      stbc001,      stbc002,      stbc003,",       
+               "                           stbc004,   stbc008,      stbc012, ",
+               "                           stbc018,   stbc020,       stbc019,      stbc005,  ",
+               "                           stbc013,   stbc014,       stbc015,      stbc016,  ",
+               "                           stbc017,   stbc010,       stbc011,      stbc025,  ",
+               "                           stbc026,   stbc033,       stbc034,      stbc035,  ",
+               "                           stbc036,   stbc037,       stbc038,      stbc039 ) ",
+               "SELECT DISTINCT            'Y',       stbcsite,      stbc001,      stbc002,      stbc003,",       
+               "                           stbc004,   stbc008,      stbc012, ",
+               "                           stbc018,   stbc020,       stbc019,      stbc005,  ",
+               "                           stbc013,   stbc014,       stbc015,      stbc016, ",
+               "                           stbc017,   stbc010,       stbc011,      stbc025,  ",
+               "                           stbc026,   stbc033,       stbc034,      stbc035,  ",
+               "                           stbc036,   stbc037,       stbc038,      stbc039  ",
+               "  FROM stbc_t",
+               " WHERE stbcent =",g_enterprise,
+               "   AND stbc001 ='",g_stbdunit,"'",
+               "   AND ",l_where,  
+               "   AND stbc008 ='",g_stbd002,"'",
+               "   AND stbc009 ='",g_stbd003,"'",
+               "   AND (stbcstus ='1' OR stbcstus ='3')",
+               #"   AND stbc002 <='",g_stbd006,"'",                             #By shi 20150710
+               "   AND (stbc040 BETWEEN '",g_stbd005,"' AND '",g_stbd006,"') ", #By shi 20150710
+               "   AND stbc037 = 'Y' ",  #By shi Add 20150710
+               "   AND (stbc003 ='1' OR stbc003='2' OR stbc003='3' OR stbc003 = '8'  OR stbc003 = '9' OR stbc003 = '10' OR stbc003 = '11' )", #add by geza 20150714 加类型11 供应商往来调整
+               "   AND ",g_wc,
+               "   AND ",g_wc2
+   IF NOT cl_null(l_stan030) THEN
+      LET l_sql = l_sql,"   AND (stbc030 ='",g_stbd001,"' OR stbc030 = '",l_stan030,"')"
+   ELSE
+      LET l_sql = l_sql,"   AND (stbc030 ='",g_stbd001,"')"
+   END IF
+
+   LET l_sql = l_sql ," ORDER BY stbc003 ASC,stbc015 DESC  "
+
+   PREPARE astt340_01_ins_tmp FROM l_sql
+   EXECUTE astt340_01_ins_tmp
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'Ins astt340_01_tmp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+   END IF
+ 
+   
+   CALL astt340_01_b_fill()
+   
+   LET g_rec_b = g_stbc_d.getLength()
+   IF g_rec_b = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'apm-00294'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.astt340_01_b_fill" order="4" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 畫面顯示
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 20150709 By geza
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION astt340_01_b_fill()
+DEFINE l_sql          STRING
+DEFINE l_success      LIKE type_t.num5
+
+    CALL g_stbc_d.clear()
+    LET l_ac = 1
+ 
+    LET l_sql = "SELECT sel,         stbcsite,     t1.ooefl003,   ",
+                "       stbc002,     stbc003,      stbc004, stbc005,  ",
+                "       stbc008,     t2.pmaal004,      ",          #rtdx002
+                "       stbc012,     t3.stael003,     stbc018, ",  
+                "       stbc020,     stbc019 ",  
+                "  FROM astt340_01_tmp ",
+                "  LEFT OUTER JOIN ooefl_t t1 ON t1.ooeflent = ",g_enterprise,
+                "                            AND t1.ooefl001 = stbcsite",
+                "                            AND t1.ooefl002 = '",g_dlang,"'",
+                "  LEFT OUTER JOIN pmaal_t t2 ON t2.pmaalent = ",g_enterprise,
+                "                            AND t2.pmaal001 = stbc008",
+                "                            AND t2.pmaal002 = '",g_dlang,"'",
+                "  LEFT OUTER JOIN stael_t t3 ON t3.staelent = ",g_enterprise,
+                "                            AND t3.stael001 = stbc012",
+                "                            AND t3.stael002 = '",g_dlang,"'",
+                " WHERE stbc003 = '3'",
+                " UNION ALL ",
+                " (SELECT sel,        stbcsite,     t1.ooefl003,   ",
+                "       stbc002,     stbc003,      stbc004,  0 AS stbc005, ",
+                "       stbc008,     t2.pmaal004,      ",          #rtdx002
+                "       stbc012,     t3.stael003,     SUM(stbc018), ",  
+                "       SUM(stbc020),     SUM(stbc019) ",  
+                "  FROM astt340_01_tmp ",
+                "  LEFT OUTER JOIN ooefl_t t1 ON t1.ooeflent = ",g_enterprise,
+                "                            AND t1.ooefl001 = stbcsite",
+                "                            AND t1.ooefl002 = '",g_dlang,"'",
+                "  LEFT OUTER JOIN pmaal_t t2 ON t2.pmaalent = ",g_enterprise,
+                "                            AND t2.pmaal001 = stbc008",
+                "                            AND t2.pmaal002 = '",g_dlang,"'",
+                "  LEFT OUTER JOIN stael_t t3 ON t3.staelent = ",g_enterprise,
+                "                            AND t3.stael001 = stbc012",
+                "                            AND t3.stael002 = '",g_dlang,"'",
+                " WHERE stbc003 != '3'",
+                "  GROUP BY sel,stbcsite,t1.ooefl003,stbc002,stbc003,stbc004,stbc005,stbc008,t2.pmaal004,stbc012,t3.stael003) "
+        #        "  ORDER BY stbcsite,stbc002,stbc003,stbc004 "
+    PREPARE astt340_01_stbc_pb FROM l_sql
+    DECLARE astt340_01_stbc_cs CURSOR FOR astt340_01_stbc_pb
+    FOREACH astt340_01_stbc_cs
+       INTO g_stbc_d[l_ac].sel,                  g_stbc_d[l_ac].stbcsite,            g_stbc_d[l_ac].stbcsite_desc,                   
+            g_stbc_d[l_ac].stbc002,              g_stbc_d[l_ac].stbc003,             g_stbc_d[l_ac].stbc004,  
+            g_stbc_d[l_ac].stbc005,              g_stbc_d[l_ac].stbc008,              g_stbc_d[l_ac].stbc008_desc,    
+            g_stbc_d[l_ac].stbc012,              g_stbc_d[l_ac].stbc012_desc,             g_stbc_d[l_ac].stbc018, 
+            g_stbc_d[l_ac].stbc020,              g_stbc_d[l_ac].stbc019
+                        
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.code = SQLCA.sqlcode
+          LET g_errparam.extend = "Foreach astt340_01_stbc_cs"
+          LET g_errparam.popup = TRUE
+          CALL cl_err()
+          EXIT FOREACH
+       END IF
+             
+       LET l_ac = l_ac + 1
+       IF l_ac > g_max_rec AND g_error_show = 1 THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.code =  9035
+          LET g_errparam.extend =  ''
+          LET g_errparam.popup = TRUE
+          CALL cl_err()
+          EXIT FOREACH
+       END IF
+    END FOREACH
+    
+    CALL g_stbc_d.deleteElement(g_stbc_d.getLength()) 
+    LET l_ac = g_stbc_d.getLength() 
+    LET g_rec_b = g_stbc_d.getLength() #By shi 20150710    
+END FUNCTION]]>
+  </point>
+  <point name="function.astt340_01_gen_detail" order="5" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 產生結算單明細資料
+# Memo...........:
+# Usage..........: CALL astt340_01_gen_detail()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2015/07/09 By geza
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION astt340_01_gen_detail()
+DEFINE l_i               LIKE type_t.num5
+DEFINE l_stbc004         LIKE stbc_t.stbc004
+DEFINE l_sql     STRING
+DEFINE l_stbc            RECORD 
+        stbcsite LIKE stbc_t.stbcsite,
+        stbc001 LIKE stbc_t.stbc001,          
+        stbc002 LIKE stbc_t.stbc002, 
+        stbc003 LIKE stbc_t.stbc003, 
+        stbc004 LIKE stbc_t.stbc004, 
+        stbc008 LIKE stbc_t.stbc008, 
+        stbc012 LIKE stbc_t.stbc012, 
+        stbc018 LIKE stbc_t.stbc018, 
+        stbc020 LIKE stbc_t.stbc020, 
+        stbc019 LIKE stbc_t.stbc019,
+        stbc005 LIKE stbc_t.stbc005, 
+        stbc013 LIKE stbc_t.stbc013, 
+        stbc014 LIKE stbc_t.stbc014, 
+        stbc015 LIKE stbc_t.stbc015, 
+        stbc016 LIKE stbc_t.stbc016, 
+        stbc017 LIKE stbc_t.stbc017, 
+        stbc010 LIKE stbc_t.stbc010, 
+        stbc011 LIKE stbc_t.stbc011,
+        stbc025 LIKE stbc_t.stbc025, 
+        stbc026 LIKE stbc_t.stbc026,
+        stbc033 LIKE stbc_t.stbc033, 
+        stbc034 LIKE stbc_t.stbc034, 
+        stbc035 LIKE stbc_t.stbc035, 
+        stbc036 LIKE stbc_t.stbc036, 
+        stbc037 LIKE stbc_t.stbc037, 
+        stbc038 LIKE stbc_t.stbc038, 
+        stbc039 LIKE stbc_t.stbc039
+                         END RECORD
+DEFINE l_stbe RECORD LIKE stbe_t.*
+DEFINE r_success   LIKE type_t.num5
+DEFINE l_success   LIKE type_t.num5
+DEFINE l_rtka010   LIKE rtka_t.rtka010    #訂單有效期
+DEFINE l_ooef001   LIKE ooef_t.ooef001
+DEFINE l_errno     LIKE type_t.chr20
+
+   LET r_success = TRUE
+   CALL s_transaction_begin()
+   CALL cl_err_collect_init()
+  
+   INITIALIZE l_stbc.* TO NULL
+   LET l_sql = " SELECT    stbcsite,  stbc001,       stbc002,      stbc003,",       
+               "           stbc004,   stbc008,       stbc012, ",
+               "           stbc018,   stbc020,       stbc019,      stbc005,  ",
+               "           stbc013,   stbc014,       stbc015,      stbc016,  ",
+               "           stbc017,   stbc010,       stbc011,      stbc025,  ",
+               "           stbc026,   stbc033,       stbc034,      stbc035,  ",
+               "           stbc036,   stbc037,       stbc038,      stbc039  ",
+               "   FROM astt340_01_tmp ",
+               "  WHERE sel='Y' ",
+               "  ORDER BY  stbc003,stbc004,stbc005"
+   PREPARE astt340_01_ins_pre FROM l_sql
+   DECLARE astt340_01_ins_cs CURSOR FOR astt340_01_ins_pre
+   FOREACH astt340_01_ins_cs
+      INTO l_stbc.stbcsite,      l_stbc.stbc001,       l_stbc.stbc002,       l_stbc.stbc003,      l_stbc.stbc004,       
+           l_stbc.stbc008,       l_stbc.stbc012,       l_stbc.stbc018,      l_stbc.stbc020,
+           l_stbc.stbc019,       l_stbc.stbc005,       l_stbc.stbc013,      l_stbc.stbc014,
+           l_stbc.stbc015,       l_stbc.stbc016,       l_stbc.stbc017,      l_stbc.stbc010,
+           l_stbc.stbc011,       l_stbc.stbc025,       l_stbc.stbc026,      l_stbc.stbc033,
+           l_stbc.stbc034,       l_stbc.stbc035,       l_stbc.stbc036,      l_stbc.stbc037,
+           l_stbc.stbc038,       l_stbc.stbc039
+   
+   
+   INITIALIZE l_stbe.* TO NULL
+   LET l_stbe.stbeent=g_enterprise
+   LET l_stbe.stbesite=l_stbc.stbcsite
+   SELECT ooef017 INTO l_stbe.stbecomp
+     FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_stbdsite
+   LET l_stbe.stbedocno=g_stbddocno
+         
+   SELECT MAX(stbeseq)+1 INTO l_stbe.stbeseq
+     FROM stbe_t
+    WHERE stbeent=g_enterprise
+      AND stbedocno=g_stbddocno
+   IF cl_null(l_stbe.stbeseq) THEN
+      LET l_stbe.stbeseq=1
+   END IF               
+  
+   LET l_stbe.stbe001=l_stbc.stbc003
+   LET l_stbe.stbe002=l_stbc.stbc004
+   LET l_stbe.stbe003=l_stbc.stbc005
+   LET l_stbe.stbe004=l_stbc.stbc002
+   LET l_stbe.stbe005=l_stbc.stbc012
+   LET l_stbe.stbe006=g_stbd005
+   LET l_stbe.stbe007=g_stbd006
+   LET l_stbe.stbe008=l_stbc.stbc013
+   LET l_stbe.stbe009=l_stbc.stbc014
+   LET l_stbe.stbe010=l_stbc.stbc015
+   LET l_stbe.stbe011=l_stbc.stbc016
+   LET l_stbe.stbe012=l_stbc.stbc017
+   LET l_stbe.stbe013=l_stbc.stbc018
+   LET l_stbe.stbe014=l_stbc.stbc019
+   LET l_stbe.stbe015=l_stbc.stbc020
+   LET l_stbe.stbe016=l_stbc.stbc019
+   LET l_stbe.stbe017=l_stbc.stbc010
+   LET l_stbe.stbe018=l_stbc.stbc011
+   LET l_stbe.stbe019=l_stbc.stbc025
+   LET l_stbe.stbe020=l_stbc.stbc026
+   LET l_stbe.stbe021='0'   #add  by geza 20150604
+   LET l_stbe.stbe022='0'   #add  by geza 20150604  
+   LET l_stbe.stbe023='0'   #add  by geza 20150604
+   LET l_stbe.stbe028=l_stbc.stbc033   #add  by geza 20150604
+   #本次結算數量=底稿中的數量-已立帳數量，單價=底稿中單價---huangrh add 20150604---
+   LET l_stbe.stbe026=l_stbc.stbc034-l_stbc.stbc035
+   LET l_stbe.stbe027=l_stbc.stbc036
+   #本次結算單納入結算單否，票扣否---geza add 20150609---
+   LET l_stbe.stbe024=l_stbc.stbc037
+   LET l_stbe.stbe025=l_stbc.stbc038
+   LET l_stbe.stbe031=l_stbc.stbc039  #结算扣率---geza add 20150706---
+   
+   
+   INSERT INTO stbe_t VALUES (l_stbe.*)  
+        
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "Ins stbe_t"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      EXIT FOREACH
+   END IF
+   
+   UPDATE stbc_t SET stbcstus='2'
+     WHERE stbcent=g_enterprise
+      #AND stbc001=l_stbc.stbc001 #By shi Mark 20150710
+       AND stbc004=l_stbc.stbc004
+       AND stbc005=l_stbc.stbc005   
+    IF SQLCA.sqlcode THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = SQLCA.sqlcode
+       LET g_errparam.extend = "update stbc_t"
+       LET g_errparam.popup = TRUE
+       CALL cl_err()
+  
+       LET r_success=FALSE
+       RETURN r_success    
+    END IF       
+   
+   END FOREACH
+
+   
+   IF r_success THEN
+      CALL s_transaction_end('Y',0)
+   ELSE
+      CALL s_transaction_end('N',0)
+   END IF
+   CALL cl_err_collect_show()
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.astt340_01_check_all" order="6" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 全选
+# Memo...........:
+# Usage..........: CALL astt340_01_check_all()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 20150710 By geza
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION astt340_01_check_all()
+   UPDATE astt340_01_tmp SET sel = 'Y'  
+   CALL astt340_01_b_fill()
+END FUNCTION]]>
+  </point>
+  <point name="function.astt340_01_check_no_all" order="7" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 全不选
+# Memo...........:
+# Usage..........: CALL astt340_01_check_no_all()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 20150710 By geza
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION astt340_01_check_no_all()
+   UPDATE astt340_01_tmp SET sel = 'N'    
+   CALL astt340_01_b_fill()
+END FUNCTION]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE g_stbdsite      LIKE stbd_t.stbdsite
+DEFINE g_stbdunit      LIKE stbd_t.stbdunit       
+DEFINE g_stbd006       LIKE stbd_t.stbd006   
+DEFINE g_stbd005       LIKE stbd_t.stbd005 
+DEFINE g_stbd001       LIKE stbd_t.stbd001  
+DEFINE g_stbd002       LIKE stbd_t.stbd002
+DEFINE g_stbd003       LIKE stbd_t.stbd003
+DEFINE g_stbddocno     LIKE stbd_t.stbddocno
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_wc                 STRING
+DEFINE g_wc2                STRING 
+DEFINE g_detail_cnt          LIKE type_t.num10]]>
+  </point>
+  <point name="input.a.page1.stbc001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_stbc_d[g_detail_idx].stbc001 IS NOT NULL AND g_stbc_d[g_detail_idx].stbc004 IS NOT NULL AND g_stbc_d[g_detail_idx].stbc005 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_stbc_d[g_detail_idx].stbc001 != g_stbc_d_t.stbc001 OR g_stbc_d[g_detail_idx].stbc004 != g_stbc_d_t.stbc004 OR g_stbc_d[g_detail_idx].stbc005 != g_stbc_d_t.stbc005)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM stbc_t WHERE "||"stbcent = '" ||g_enterprise|| "' AND "||"stbc001 = '"||g_stbc_d[g_detail_idx].stbc001 ||"' AND "|| "stbc004 = '"||g_stbc_d[g_detail_idx].stbc004 ||"' AND "|| "stbc005 = '"||g_stbc_d[g_detail_idx].stbc005 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.stbc004" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_stbc_d[g_detail_idx].stbc001 IS NOT NULL AND g_stbc_d[g_detail_idx].stbc004 IS NOT NULL AND g_stbc_d[g_detail_idx].stbc005 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_stbc_d[g_detail_idx].stbc001 != g_stbc_d_t.stbc001 OR g_stbc_d[g_detail_idx].stbc004 != g_stbc_d_t.stbc004 OR g_stbc_d[g_detail_idx].stbc005 != g_stbc_d_t.stbc005)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM stbc_t WHERE "||"stbcent = '" ||g_enterprise|| "' AND "||"stbc001 = '"||g_stbc_d[g_detail_idx].stbc001 ||"' AND "|| "stbc004 = '"||g_stbc_d[g_detail_idx].stbc004 ||"' AND "|| "stbc005 = '"||g_stbc_d[g_detail_idx].stbc005 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.stbc005" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_stbc_d[g_detail_idx].stbc001 IS NOT NULL AND g_stbc_d[g_detail_idx].stbc004 IS NOT NULL AND g_stbc_d[g_detail_idx].stbc005 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_stbc_d[g_detail_idx].stbc001 != g_stbc_d_t.stbc001 OR g_stbc_d[g_detail_idx].stbc004 != g_stbc_d_t.stbc004 OR g_stbc_d[g_detail_idx].stbc005 != g_stbc_d_t.stbc005)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM stbc_t WHERE "||"stbcent = '" ||g_enterprise|| "' AND "||"stbc001 = '"||g_stbc_d[g_detail_idx].stbc001 ||"' AND "|| "stbc004 = '"||g_stbc_d[g_detail_idx].stbc004 ||"' AND "|| "stbc005 = '"||g_stbc_d[g_detail_idx].stbc005 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.before_close" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   ]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[           ]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE p_stbddocno      LIKE stbd_t.stbddocno 
+   CREATE TEMP TABLE astt340_01_tmp (
+        sel LIKE type_t.chr500, 
+        stbcsite LIKE stbc_t.stbcsite, 
+        stbc001 LIKE stbc_t.stbc001,
+        stbc002 LIKE stbc_t.stbc002, 
+        stbc003 LIKE stbc_t.stbc003, 
+        stbc004 LIKE stbc_t.stbc004,       
+        stbc008 LIKE stbc_t.stbc008, 
+        stbc012 LIKE stbc_t.stbc012, 
+        stbc018 LIKE stbc_t.stbc018, 
+        stbc020 LIKE stbc_t.stbc020, 
+        stbc019 LIKE stbc_t.stbc019,
+        stbc005 LIKE stbc_t.stbc005, 
+        stbc013 LIKE stbc_t.stbc013, 
+        stbc014 LIKE stbc_t.stbc014, 
+        stbc015 LIKE stbc_t.stbc015, 
+        stbc016 LIKE stbc_t.stbc016, 
+        stbc017 LIKE stbc_t.stbc017, 
+        stbc010 LIKE stbc_t.stbc010, 
+        stbc011 LIKE stbc_t.stbc011,
+        stbc025 LIKE stbc_t.stbc025, 
+        stbc026 LIKE stbc_t.stbc026,
+        stbc033 LIKE stbc_t.stbc033, 
+        stbc034 LIKE stbc_t.stbc034, 
+        stbc035 LIKE stbc_t.stbc035, 
+        stbc036 LIKE stbc_t.stbc036, 
+        stbc037 LIKE stbc_t.stbc037, 
+        stbc038 LIKE stbc_t.stbc038, 
+        stbc039 LIKE stbc_t.stbc039);  
+]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   p_stbddocno]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL cl_set_combo_scc('stbc003','6703')
+   LET g_stbddocno = p_stbddocno
+   SELECT stbdunit,stbdsite,stbd001,stbd002,stbd003,stbd005,stbd006 INTO g_stbdunit,g_stbdsite,g_stbd001,g_stbd002,g_stbd003,g_stbd005,g_stbd006
+    FROM stbd_t
+   WHERE stbdent = g_enterprise
+     AND stbddocno = g_stbddocno
+   CALL cl_set_act_visible("modify,delete,modify_detail,insert,reproduce", FALSE)  
+   CALL astt340_01_query()
+   DROP TABLE astt340_01_tmp
+   CLOSE WINDOW w_astt340_01    
+   RETURN]]>
+  </point>
+  <section id="astt340_01.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000008
+#+ 
+#+ Filename...: astt340_01
+#+ Description: 結算單批量產生單身元件
+#+ Creator....: 06189(2015-07-09 11:32:05)
+#+ Modifier...: 06189(2015-07-09 21:59:12) -SD/PR-
+]]>
+  </section>
+  <section id="astt340_01.global" ver="4" status="" src="s" readonly="">
+    <![CDATA[#應用 c02b 樣板自動產生(Version:5)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_stbc_d        RECORD
+       stbc001 LIKE stbc_t.stbc001, 
+   stbc001_desc LIKE type_t.chr500, 
+   sel LIKE type_t.chr500, 
+   stbcsite LIKE stbc_t.stbcsite, 
+   stbcsite_desc LIKE type_t.chr500, 
+   stbc002 LIKE stbc_t.stbc002, 
+   stbc003 LIKE stbc_t.stbc003, 
+   stbc004 LIKE stbc_t.stbc004, 
+   stbc005 LIKE stbc_t.stbc005, 
+   stbc008 LIKE stbc_t.stbc008, 
+   stbc008_desc LIKE type_t.chr500, 
+   stbc012 LIKE stbc_t.stbc012, 
+   stbc012_desc LIKE type_t.chr500, 
+   stbc018 LIKE stbc_t.stbc018, 
+   stbc020 LIKE stbc_t.stbc020, 
+   stbc019 LIKE stbc_t.stbc019
+       END RECORD
+ 
+ 
+DEFINE g_stbc_d          DYNAMIC ARRAY OF type_g_stbc_d
+DEFINE g_stbc_d_t        type_g_stbc_d
+ 
+ 
+DEFINE g_stbc001_t   LIKE stbc_t.stbc001    #Key值備份
+DEFINE g_stbc004_t      LIKE stbc_t.stbc004    #Key值備份
+DEFINE g_stbc005_t      LIKE stbc_t.stbc005    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+    
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point    
+]]>
+  </section>
+  <section id="astt340_01.input" ver="4" status="" src="s" readonly="">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION astt340_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define" edit="s"/>}
+   #end add-point
+   #add-point:input段define
+   {<point name="input.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_astt340_01 WITH FORM cl_ap_formpath("ast","astt340_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_stbc_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD sel
+            #add-point:BEFORE FIELD sel
+            {<point name="input.b.page1.sel" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD sel
+            
+            #add-point:AFTER FIELD sel
+            {<point name="input.a.page1.sel" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE sel
+            #add-point:ON CHANGE sel
+            {<point name="input.g.page1.sel" />}
+            #END add-point 
+ 
+ 
+                  #Ctrlp:input.c.page1.sel
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD sel
+            #add-point:ON ACTION controlp INFIELD sel
+            {<point name="input.c.page1.sel" />}
+            #END add-point
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...)
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel
+         {<point name="input.cancel"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_astt340_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="astt340_01.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="astt340_01.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

@@ -1,0 +1,90 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astt840_01" module="ast" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="06814" crtdt="2016-06-03 15:07:26" modid="06189" moddt="2016-08-03 17:45:42" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="租賃結算單元件">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),stbc001,stbc001_desc(chr500),stbcsite,stbcsite_desc(chr500),stbc002,stbc003,stbc004,stbc005,stbc033,stbc033_desc(chr500),stbc012,stbc012_desc(chr500),stbc059,stbc060,stbc060_desc(chr500),stbc034,stbc036,stbc017,stbc018,l_stbc019(num20_6),stbc020"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="check_all" chk="N"/>
+      <action id="produce_data" chk="N"/>
+      <action id="query_data" chk="N"/>
+      <action id="check_no_all" chk="N"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="astt840_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="sel,l_stbc019" insert="N" append="N" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel" type="S" default="N"/>
+      <column id="stbc001">
+        <after>
+          <reference field="stbc001_desc" ref_field="stbc_t.stbc001" map_field="stbcent,stbc001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_3" state="c"/>
+      </column>
+      <column id="stbc001_desc"/>
+      <column id="stbcsite">
+        <after>
+          <reference field="stbcsite_desc" ref_field="stbc_t.stbcsite" map_field="stbcent,stbcsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_14" state="c"/>
+      </column>
+      <column id="stbcsite_desc"/>
+      <column id="stbc002"/>
+      <column id="stbc003" def_scc="6703"/>
+      <column id="stbc004">
+        <controlp form="q_stbc003" state="c"/>
+      </column>
+      <column id="stbc005"/>
+      <column id="stbc033">
+        <after>
+          <reference field="stbc033_desc" ref_field="stbc_t.stbc033" map_field="stbc033" ref_sql="SELECT mhbel003 FROM mhbel_t WHERE mhbelent=$varg_enterprise$var AND mhbel001=? AND mhbel002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stbc033_desc"/>
+      <column id="stbc012">
+        <after>
+          <reference field="stbc012_desc" ref_field="stbc_t.stbc012" map_field="stbcent,stbc011" ref_sql="SELECT stael003 FROM stael_t WHERE staelent=$varg_enterprise$var AND stael001=? AND stael002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_stae001" state="c"/>
+      </column>
+      <column id="stbc012_desc"/>
+      <column id="stbc059" def_scc="6932"/>
+      <column id="stbc060">
+        <after>
+          <reference field="stbc060_desc" ref_field="stbc_t.stbc060" map_field="stbc060" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="stbc060_desc"/>
+      <column id="stbc034" type="S" default="0"/>
+      <column id="stbc036" type="S" default="0"/>
+      <column id="stbc017" type="S" default="0"/>
+      <column id="stbc018" type="S" default="0"/>
+      <column id="l_stbc019" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="stbc020" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="stbc_t" page="1" linked="" pk="stbc001,stbc004,stbc005">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,stbc001,&apos;&apos;,stbcsite,&apos;&apos;,stbc002,stbc003,stbc004,stbc005,stbc033,&apos;&apos;,stbc012,&apos;&apos;,stbc059,stbc060,&apos;&apos;,stbc034,stbc036,stbc017,stbc018,&apos;&apos;,stbc020 FROM stbc_t WHERE stbcent=? AND stbc001=? AND stbc004=? AND stbc005=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,stbc001,&apos;&apos;,stbcsite,&apos;&apos;,stbc002,stbc003,stbc004,stbc005,stbc033,&apos;&apos;,stbc012,&apos;&apos;,stbc059,stbc060,&apos;&apos;,stbc034,stbc036,stbc017,stbc018,&apos;&apos;,stbc020 FROM stbc_t WHERE stbcent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

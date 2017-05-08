@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi410_01" module="aoo" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="01258" crtdt="2013-08-16 10:53:43" modid="01534" moddt="2015-08-18 18:02:40" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="例假日產生">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="oogb001,oogb001_desc(chr80),bdate(chr500),edate(chr500),lbl_ooga002_1(chr500),lbl_ooga002_2(chr500),lbl_ooga002_3(chr500),lbl_ooga002_4(chr500),lbl_ooga002_5(chr500),lbl_ooga002_6(chr500),lbl_ooga002_7(chr500),oogb003,oogb003_desc(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="aoo" filename="aooi410_01" method="dialog">
+    <section id="input">
+      <input id="head" field="bdate,edate,lbl_ooga002_1,lbl_ooga002_2,lbl_ooga002_3,lbl_ooga002_4,lbl_ooga002_5,lbl_ooga002_6,lbl_ooga002_7,oogb003"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="oogb001">
+        <after>
+          <reference field="oogb001_desc" ref_field="oogb_t.oogb001" map_field="oogbent,oogb001" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall002=? AND ooall003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooal002" state="i"/>
+      </column>
+      <column id="oogb001_desc"/>
+      <column id="bdate"/>
+      <column id="edate"/>
+      <column id="lbl_ooga002_1"/>
+      <column id="lbl_ooga002_2"/>
+      <column id="lbl_ooga002_3"/>
+      <column id="lbl_ooga002_4"/>
+      <column id="lbl_ooga002_5"/>
+      <column id="lbl_ooga002_6"/>
+      <column id="lbl_ooga002_7"/>
+      <column id="oogb003">
+        <after>
+          <reference field="oogb003_desc" ref_field="oogb003" map_field="oogb003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;6&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oogb003" state="c"/>
+      </column>
+      <column id="oogb003_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="oogb_t" pk="oogb001,oogb002,oogb010">
+      <sql id="forupd_sql" type="sql" query="SELECT oogb001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,oogb003,&apos;&apos; FROM oogb_t WHERE oogbent= ? AND oogb001=? AND oogb002=? AND oogb010=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="oogb001,oogb002,oogb010"/>
+    </head>
+  </dataset>
+</assembly>
+

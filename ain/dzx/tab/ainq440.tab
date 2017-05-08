@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ainq440" module="ain" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="06189" crtdt="2015-02-05 09:38:48" modid="02159" moddt="2016-10-19 17:14:02" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="商品貨架庫存查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="infksite,oocq019,infc002,infk003,imaa009,infk001"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),infksite,infksite_desc(chr500),infk001,infk001_desc(chr500),infk001_desc_1(chr500),infk001_desc_1_desc(chr500),infk004,infk003,infk003_desc(chr10),infk005"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="infksite,infksite_2_desc(chr500),infk001,infk001_2_desc(chr500),infk001_2_desc_1(chr500),infk001_2_desc_1_desc(chr500),infk004,infk005"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),infksite(b_infksite),infksite_desc(b_infksite_desc),infk001(b_infk001),infk001_desc(b_infk001_desc),infk001_desc_1(b_infk001_desc_1),infk001_desc_1_desc(b_infk001_desc_1_desc),infk004(b_infk004),infk003(b_infk003),infk003_desc(b_infk003_desc),infk005(b_infk005)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="infksite_2(infksite_2),infksite_2_desc(infksite_2_desc),infk001_2(infk001_2),infk001_2_desc(infk001_2_desc),infk001_2_desc_1(infk001_2_desc_1),infk001_2_desc_1_desc(infk001_2_desc_1_desc),infk004_2(infk004_2),infk005_2(infk005_2)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="ainq440" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="infksite,infk001,infk004,infk003,infk005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="infksite(b_infksite),infk001(b_infk001),infk004(b_infk004),infk003(b_infk003),infk005(b_infk005)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="infksite">
+        <after>
+          <reference field="infksite_desc" ref_field="infksite" map_field="infkent,infksite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="infksite_desc"/>
+      <column id="infk001">
+        <after>
+          <reference field="infk001_desc" ref_field="infk001" map_field="infkent,infk001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="infk001_desc"/>
+      <column id="infk001_desc_1">
+        <after>
+          <reference field="infk001_desc_1_desc" ref_field="infk001_desc_1" map_field="infkent,b_infk001_desc_1" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="infk001_desc_1_desc"/>
+      <column id="infk004"/>
+      <column id="infk003">
+        <after>
+          <reference field="infk003_desc" ref_field="infk003,infksite" map_field="infk003,infksite" ref_sql="SELECT infc002 FROM infc_t WHERE infcent=$varg_enterprise$var AND infc001=? AND infcsite=? "/>
+        </after>
+      </column>
+      <column id="infk003_desc"/>
+      <column id="infk005" type="S" default="0"/>
+    </init>
+    <init id="body" page="2">
+      <column id="infksite_2">
+        <after/>
+      </column>
+      <column id="infksite_2_desc"/>
+      <column id="infk001_2">
+        <after/>
+      </column>
+      <column id="infk001_2_desc"/>
+      <column id="infk001_2_desc_1">
+        <after/>
+      </column>
+      <column id="infk001_2_desc_1_desc"/>
+      <column id="infk004_2"/>
+      <column id="infk005_2"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="infk_t" page="1,2" linked="" pk="infksite,infk001,infk002,infk003">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,infksite,&apos;&apos;,infk001,&apos;&apos;,&apos;&apos;,&apos;&apos;,infk004,infk003,&apos;&apos;,infk005,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM infk_t WHERE infkent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

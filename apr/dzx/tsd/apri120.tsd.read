@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="apri120" std_prog="apri120" erpver="1.0" ver="5" module="APR" type="M" booking="N" designer_ver="1.0" class="i" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="prbh_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：设定生效PLU码与商品对照表，应用电子秤称重标识
+標準作業功能：无
+作業類型：(基本資料)維護作業
+輸入模式：假雙檔無搭配任何方案F003_00
+作業資料來源(Master)：
+ 資料來源表：prbh_t(门店生鲜PLU对照表)
+
+一PLU码对应一条码
+一商品对应多条码]]>
+  </all>
+  <field cite_std="N" name="imay006" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[noentry]]>
+  </field>
+  <field cite_std="N" name="prbh001_2" ver="1" src="s" column="prbh001" table="prbh_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbh001" ver="1" src="s" column="prbh001" table="prbh_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[PLU码：
+   ●欄位控管：
+     資料欄位:可Display可Input
+     校驗:1.不允許空白
+          2.输入必须是数字[0~9]
+          3.门店+PLU 不允许重复]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbh002" ver="1" src="s" column="prbh002" table="prbh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbh003" ver="1" src="s" column="prbh003" table="prbh_t" attribute="" type="" req="N" i_zoom="q_rtdx001_11" c_zoom="q_rtdx001_11" chk_ref="v_rtdx001_6" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[商品编号
+   ●欄位控管：
+     資料欄位:可Display可Input
+     校驗:1.不允許空白
+          2.輸入值須存在门店商品清单并有效
+          3.商品品类归属生鲜品类(品類編號存在於apri002中)
+     帶值:自動帶出   商品主档：商品编号、品名、规格、品类
+                     门店清单：主商品条码
+                     多条码档：主条码否，包装单位、整包件数、价格因子
+
+   ●開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：商品编号、商品条码、品名、规格、品类
+     新增/修改過濾條件： “商品门店清单”关联“商品主档”关联“商品条码档”AND 品类是生鲜类的 且有效的]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbh004" ver="1" src="s" column="prbh004" table="prbh_t" attribute="" type="" req="N" i_zoom="q_rtdx001_11" c_zoom="q_rtdx001_11" chk_ref="v_imay003_3" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[商品条码
+   ●欄位控管：
+     資料欄位:可Display可Input
+     校驗:1.不允許空白
+          2.不允许重复，即同一门店条码只可在此表中出现一次
+          3.存在于条码档中，且有效 ,并关联 商品主档，门店清单，且 商品的品类为生鲜品类(品類編號存在於apri002中)
+     帶值:自動帶出  多条码档：商品编号、主条码否、包装单位、整包件数、价格因子
+                    商品主档：品名、规格、品类 
+   ●開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：商品编号、商品条码、品名、规格、品类
+     新增/修改過濾條件： “商品门店清单”关联“商品主档”关联“商品条码档”  AND  品类是生鲜类的 且有效的]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbh005" ver="1" src="s" column="prbh005" table="prbh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位隱藏]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbh006" ver="1" src="s" column="prbh006" table="prbh_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooca001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[noentry]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbh007" ver="1" src="s" column="prbh007" table="prbh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[noentry]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbh008" ver="1" src="s" column="prbh008" table="prbh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[noentry]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbh009" ver="1" src="s" column="prbh009" table="prbh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位隱藏]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbh010" ver="1" src="s" column="prbh010" table="prbh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位隱藏]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbh011" ver="1" src="s" column="prbh011" table="prbh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位隱藏]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbh012" ver="1" src="s" column="prbh012" table="prbh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位隱藏]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbh013" ver="1" src="s" column="prbh013" table="prbh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位隱藏]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbh014" ver="1" src="s" column="prbh014" table="prbh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位隱藏]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbh015" ver="1" src="s" column="prbh015" table="prbh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位隱藏]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbhcrtdp" ver="1" src="s" column="prbhcrtdp" table="prbh_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbhcrtdt" ver="1" src="s" column="prbhcrtdt" table="prbh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbhcrtid" ver="1" src="s" column="prbhcrtid" table="prbh_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbhmoddt" ver="1" src="s" column="prbhmoddt" table="prbh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbhmodid" ver="1" src="s" column="prbhmodid" table="prbh_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbhowndp" ver="1" src="s" column="prbhowndp" table="prbh_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbhownid" ver="1" src="s" column="prbhownid" table="prbh_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbhsite" ver="4" src="s" column="prbhsite" table="prbh_t" attribute="" type="" req="Y" i_zoom="q_ooed004_3" c_zoom="q_ooef001" chk_ref="v_ooed004" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[门店编号：
+  ●欄位控管：
+    資料欄位:可DISPLAY 可INPUT
+    預設值:g_site
+    校驗:有效的组织资料
+    帶值:组织说明
+  ●開窗和校驗根據aooi500設置動態控制]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbhstus" ver="1" src="s" column="prbhstus" table="prbh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="prbh_t.prbhunit" ver="1" src="s" column="prbhunit" table="prbh_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設值：g_site
+欄位隱藏]]>
+  </field>
+  <field cite_std="N" name="rtaxl003" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="prbh003_desc" src="s" depend_field="prbh_t.prbh003" correspon_key="prbhent,prbh003" ref_table="imaal_t" ref_fk="imaalent,imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="2" name="prbh003_desc_desc" src="s" depend_field="prbh_t.prbh003" correspon_key="prbhent,prbh003" ref_table="imaal_t" ref_fk="imaalent,imaal001" ref_dlang="imaal002" ref_rtn="imaal004" status=""/>
+    <rfield cite_std="N" ver="2" name="prbh003_desc_desc_desc" src="s" depend_field="prbh_t.prbh003" correspon_key="prbhent,prbh003" ref_table="imaa_t" ref_fk="imaaent,imaa001" ref_dlang="" ref_rtn="imaa009" status=""/>
+    <rfield cite_std="N" ver="1" name="prbhcrtdp_desc" src="s" depend_field="prbh_t.prbhcrtdp" correspon_key="prbhcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="prbhcrtid_desc" src="s" depend_field="prbh_t.prbhcrtid" correspon_key="prbhcrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="prbhmodid_desc" src="s" depend_field="prbh_t.prbhmodid" correspon_key="prbhmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="prbhowndp_desc" src="s" depend_field="prbh_t.prbhowndp" correspon_key="prbhowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="prbhownid_desc" src="s" depend_field="prbh_t.prbhownid" correspon_key="prbhownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="prbhsite_desc" src="s" depend_field="prbh_t.prbhsite" correspon_key="prbhent,prbhsite" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="imay006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh001_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh_t.prbh001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh_t.prbh002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh_t.prbh003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh_t.prbh004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh_t.prbh005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh_t.prbh006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh_t.prbh007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh_t.prbh008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh_t.prbh009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh_t.prbh010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh_t.prbh011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh_t.prbh012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh_t.prbh013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh_t.prbh014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh_t.prbh015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh_t.prbhcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh_t.prbhcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh_t.prbhcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh_t.prbhmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh_t.prbhmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh_t.prbhowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh_t.prbhownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="prbh_t.prbhsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh_t.prbhstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="prbh_t.prbhunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="rtaxl003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_prbhsite" text="門店編號" lstr=""/>
+    <sfield name="lbl_prbhunit" text="應用組織" lstr=""/>
+    <sfield name="bpage_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_prbhstus" text="狀態" lstr=""/>
+    <sfield name="lbl_prbh001" text="PLU編碼" lstr=""/>
+    <sfield name="lbl_prbh002" text="PLU說明" lstr=""/>
+    <sfield name="lbl_prbh004" text="商品條碼" lstr=""/>
+    <sfield name="lbl_prbh003" text="商品編碼" lstr=""/>
+    <sfield name="lbl_prbh003_desc" text="品名" lstr=""/>
+    <sfield name="lbl_prbh003_desc_desc" text="規格" lstr=""/>
+    <sfield name="lbl_prbh003_desc_desc_desc" text="品類" lstr=""/>
+    <sfield name="lbl_rtaxl003" text="品類說明" lstr=""/>
+    <sfield name="lbl_imay006" text="主條碼否" lstr=""/>
+    <sfield name="lbl_prbh005" text="商品特征" lstr=""/>
+    <sfield name="lbl_prbh006" text="包裝單位" lstr=""/>
+    <sfield name="lbl_prbh007" text="整包件數" lstr=""/>
+    <sfield name="lbl_prbh008" text="傳秤因子" lstr=""/>
+    <sfield name="lbl_prbh009" text="進項稅別" lstr=""/>
+    <sfield name="lbl_prbh010" text="進價" lstr=""/>
+    <sfield name="lbl_prbh011" text="銷項稅別" lstr=""/>
+    <sfield name="lbl_prbh012" text="售價" lstr=""/>
+    <sfield name="lbl_prbh013" text="會員價1" lstr=""/>
+    <sfield name="lbl_prbh014" text="會員價2" lstr=""/>
+    <sfield name="lbl_prbh015" text="會員價3" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="ownid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="owndp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="crtid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="crtdp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="modid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

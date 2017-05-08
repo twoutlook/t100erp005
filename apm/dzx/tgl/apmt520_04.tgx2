@@ -1,0 +1,435 @@
+{<section id="apmt520_04.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2014-07-31 10:45:55), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000028
+#+ Filename...: apmt520_04
+#+ Description: 委外拆件收貨料件明細
+#+ Creator....: 02294(2014-07-31 09:34:01)
+#+ Modifier...: 02294 -SD/PR-
+{</section>}
+ 
+ 
+ 
+{<section id="apmt520_04.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_pmdt_d        RECORD
+       pmdtdocno LIKE pmdt_t.pmdtdocno, 
+   pmdtseq LIKE pmdt_t.pmdtseq, 
+   pmdt006 LIKE pmdt_t.pmdt006, 
+   pmdt006_desc LIKE type_t.chr500, 
+   imaal004 LIKE type_t.chr500, 
+   pmdt019 LIKE pmdt_t.pmdt019, 
+   pmdt019_desc LIKE type_t.chr500, 
+   pmdt020 LIKE pmdt_t.pmdt020, 
+   pmdt021 LIKE pmdt_t.pmdt021, 
+   pmdt021_desc LIKE type_t.chr500, 
+   pmdt022 LIKE pmdt_t.pmdt022
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_pmdt_d          DYNAMIC ARRAY OF type_g_pmdt_d
+DEFINE g_pmdt_d_t        type_g_pmdt_d
+ 
+ 
+DEFINE g_pmdtdocno_t   LIKE pmdt_t.pmdtdocno    #Key值備份
+DEFINE g_pmdtseq_t      LIKE pmdt_t.pmdtseq    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point    
+{</section>}
+ 
+{<section id="apmt520_04.input" >}    
+#+ 資料輸入
+PUBLIC FUNCTION apmt520_04(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_apmt520_04 WITH FORM cl_ap_formpath("apm","apmt520_04")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_pmdt_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdtdocno
+            #add-point:BEFORE FIELD pmdtdocno name="input.b.page1.pmdtdocno"
+            {<point name="input.b.page1.pmdtdocno" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdtdocno
+            
+            #add-point:AFTER FIELD pmdtdocno name="input.a.page1.pmdtdocno"
+            {<point name="input.a.page1.pmdtdocno" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdtdocno
+            #add-point:ON CHANGE pmdtdocno name="input.g.page1.pmdtdocno"
+            {<point name="input.g.page1.pmdtdocno" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdtseq
+            #add-point:BEFORE FIELD pmdtseq name="input.b.page1.pmdtseq"
+            {<point name="input.b.page1.pmdtseq" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdtseq
+            
+            #add-point:AFTER FIELD pmdtseq name="input.a.page1.pmdtseq"
+            {<point name="input.a.page1.pmdtseq" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdtseq
+            #add-point:ON CHANGE pmdtseq name="input.g.page1.pmdtseq"
+            {<point name="input.g.page1.pmdtseq" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdt006
+            
+            #add-point:AFTER FIELD pmdt006 name="input.a.page1.pmdt006"
+            {<point name="input.a.page1.pmdt006" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdt006
+            #add-point:BEFORE FIELD pmdt006 name="input.b.page1.pmdt006"
+            {<point name="input.b.page1.pmdt006" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdt006
+            #add-point:ON CHANGE pmdt006 name="input.g.page1.pmdt006"
+            {<point name="input.g.page1.pmdt006" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdt019
+            
+            #add-point:AFTER FIELD pmdt019 name="input.a.page1.pmdt019"
+            {<point name="input.a.page1.pmdt019" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdt019
+            #add-point:BEFORE FIELD pmdt019 name="input.b.page1.pmdt019"
+            {<point name="input.b.page1.pmdt019" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdt019
+            #add-point:ON CHANGE pmdt019 name="input.g.page1.pmdt019"
+            {<point name="input.g.page1.pmdt019" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdt020
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pmdt_d[l_ac].pmdt020,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD pmdt020
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pmdt020 name="input.a.page1.pmdt020"
+            {<point name="input.a.page1.pmdt020" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdt020
+            #add-point:BEFORE FIELD pmdt020 name="input.b.page1.pmdt020"
+            {<point name="input.b.page1.pmdt020" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdt020
+            #add-point:ON CHANGE pmdt020 name="input.g.page1.pmdt020"
+            {<point name="input.g.page1.pmdt020" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdt021
+            
+            #add-point:AFTER FIELD pmdt021 name="input.a.page1.pmdt021"
+            {<point name="input.a.page1.pmdt021" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdt021
+            #add-point:BEFORE FIELD pmdt021 name="input.b.page1.pmdt021"
+            {<point name="input.b.page1.pmdt021" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdt021
+            #add-point:ON CHANGE pmdt021 name="input.g.page1.pmdt021"
+            {<point name="input.g.page1.pmdt021" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdt022
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pmdt_d[l_ac].pmdt022,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD pmdt022
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pmdt022 name="input.a.page1.pmdt022"
+            {<point name="input.a.page1.pmdt022" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdt022
+            #add-point:BEFORE FIELD pmdt022 name="input.b.page1.pmdt022"
+            {<point name="input.b.page1.pmdt022" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdt022
+            #add-point:ON CHANGE pmdt022 name="input.g.page1.pmdt022"
+            {<point name="input.g.page1.pmdt022" />}
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.pmdtdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdtdocno
+            #add-point:ON ACTION controlp INFIELD pmdtdocno name="input.c.page1.pmdtdocno"
+            {<point name="input.c.page1.pmdtdocno" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pmdtseq
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdtseq
+            #add-point:ON ACTION controlp INFIELD pmdtseq name="input.c.page1.pmdtseq"
+            {<point name="input.c.page1.pmdtseq" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pmdt006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdt006
+            #add-point:ON ACTION controlp INFIELD pmdt006 name="input.c.page1.pmdt006"
+            {<point name="input.c.page1.pmdt006" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pmdt019
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdt019
+            #add-point:ON ACTION controlp INFIELD pmdt019 name="input.c.page1.pmdt019"
+            {<point name="input.c.page1.pmdt019" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pmdt020
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdt020
+            #add-point:ON ACTION controlp INFIELD pmdt020 name="input.c.page1.pmdt020"
+            {<point name="input.c.page1.pmdt020" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pmdt021
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdt021
+            #add-point:ON ACTION controlp INFIELD pmdt021 name="input.c.page1.pmdt021"
+            {<point name="input.c.page1.pmdt021" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.pmdt022
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdt022
+            #add-point:ON ACTION controlp INFIELD pmdt022 name="input.c.page1.pmdt022"
+            {<point name="input.c.page1.pmdt022" />}
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         {<point name="input.cancel"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_apmt520_04 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="apmt520_04.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+{</section>}
+{<section id="apmt520_04.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+ 

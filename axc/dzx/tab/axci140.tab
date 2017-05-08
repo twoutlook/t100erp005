@@ -1,0 +1,127 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axci140" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02114" crtdt="2014-02-27 14:42:31" modid="02291" moddt="2014-07-17 15:54:00" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="在製產品標準約當值設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcbesite,xcbesite_desc(chr80),xcbe001,xcbe002"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcbestus,xcbe003,xcbe004,xcbe005,xcbe006,ecbb004(chr100),ecbb004_desc(chr500),xcbe007"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcbe003,xcbe004_1(chr500),xcbe005,xcbe006,xcbeownid,xcbeownid_desc(chr500),xcbeowndp,xcbeowndp_desc(chr500),xcbecrtid,xcbecrtid_desc(chr500),xcbecrtdp,xcbecrtdp_desc(chr500),xcbecrtdt,xcbemodid,xcbemodid_desc(chr500),xcbemoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="open_axci140_02"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="copy"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="open_axci140_01"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axci140" method="dialog">
+    <section id="input">
+      <input id="head" field="xcbesite,xcbe001,xcbe002"/>
+      <input id="body" page="1" field="xcbestus,xcbe003,xcbe004,xcbe005,xcbe006,ecbb004,ecbb004_desc,xcbe007" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="xcbe004_1" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcbesite,xcbe001,xcbe002"/>
+      <construct id="body" page="1" field="xcbestus,xcbe003,xcbe004,xcbe005,xcbe006,ecbb004,ecbb004_desc,xcbe007"/>
+      <construct id="body" page="2" field="xcbe004_1,xcbeownid,xcbeowndp,xcbecrtid,xcbecrtdp,xcbecrtdt,xcbemodid,xcbemoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcbesite,xcbe001,xcbe002"/>
+      <set id="head" type="no_entry" field="xcbesite,xcbe001,xcbe002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcbesite">
+        <after>
+          <check chkid="v_ooef001_11" id="isExist"/>
+          <reference field="xcbesite_desc" ref_field="xcbe_t.xcbesite" map_field="xcbeent,xcbesite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_10" state="i"/>
+        <controlp form="q_ooef001_10" state="c"/>
+      </column>
+      <column id="xcbesite_desc"/>
+      <column id="xcbe001"/>
+      <column id="xcbe002"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcbestus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="xcbe003">
+        <controlp form="q_ecba001_2" state="i"/>
+        <controlp form="q_ecba001_2" state="c"/>
+      </column>
+      <column id="xcbe004">
+        <controlp form="q_xcbe004" state="c"/>
+      </column>
+      <column id="xcbe005"/>
+      <column id="xcbe006"/>
+      <column id="ecbb004">
+        <after/>
+      </column>
+      <column id="ecbb004_desc"/>
+      <column id="xcbe007"/>
+    </init>
+    <init id="body" page="2">
+      <column id="xcbe004_1"/>
+      <column id="xcbeownid">
+        <after>
+          <reference field="xcbeownid_desc" ref_field="xcbe_t.xcbeownid" map_field="xcbeownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcbeownid_desc"/>
+      <column id="xcbeowndp">
+        <after>
+          <reference field="xcbeowndp_desc" ref_field="xcbe_t.xcbeowndp" map_field="xcbeowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcbeowndp_desc"/>
+      <column id="xcbecrtid">
+        <after>
+          <reference field="xcbecrtid_desc" ref_field="xcbe_t.xcbecrtid" map_field="xcbecrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcbecrtid_desc"/>
+      <column id="xcbecrtdp">
+        <after>
+          <reference field="xcbecrtdp_desc" ref_field="xcbe_t.xcbecrtdp" map_field="xcbecrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcbecrtdp_desc"/>
+      <column id="xcbecrtdt"/>
+      <column id="xcbemodid">
+        <after>
+          <reference field="xcbemodid_desc" ref_field="xcbe_t.xcbemodid" map_field="xcbemodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcbemodid_desc"/>
+      <column id="xcbemoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcbe_t" pk="xcbesite,xcbe001,xcbe002">
+      <sql id="forupd_sql" type="sql" query="SELECT xcbesite,&apos;&apos;,xcbe001,xcbe002 FROM xcbe_t WHERE xcbeent= ? AND xcbesite=? AND xcbe001=? AND xcbe002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcbesite,&apos;&apos;,xcbe001,xcbe002 FROM xcbe_t" order="xcbesite,xcbe001,xcbe002"/>
+    </head>
+    <body id="xcbe_t" page="1,2" linked="" pk="xcbe003,xcbe004,xcbe005,xcbe006" fk="xcbesite,xcbe001,xcbe002">
+      <sql id="forupd_sql_detail" query="SELECT xcbestus,xcbe003,xcbe004,xcbe005,xcbe006,&apos;&apos;,&apos;&apos;,xcbe007,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcbeownid,&apos;&apos;,xcbeowndp,&apos;&apos;,xcbecrtid,&apos;&apos;,xcbecrtdp,&apos;&apos;,xcbecrtdt,xcbemodid,&apos;&apos;,xcbemoddt FROM xcbe_t WHERE xcbeent=? AND xcbesite=? AND xcbe001=? AND xcbe002=? AND xcbe003=? AND xcbe004=? AND xcbe005=? AND xcbe006=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcbestus,xcbe003,xcbe004,xcbe005,xcbe006,&apos;&apos;,&apos;&apos;,xcbe007,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xcbeownid,&apos;&apos;,xcbeowndp,&apos;&apos;,xcbecrtid,&apos;&apos;,xcbecrtdp,&apos;&apos;,xcbecrtdt,xcbemodid,&apos;&apos;,xcbemoddt FROM xcbe_t WHERE xcbeent= ? AND xcbesite=? AND xcbe001=? AND xcbe002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

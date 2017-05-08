@@ -1,0 +1,99 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axci100" module="axc" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02299" crtdt="2013-10-22 17:41:57" modid="02299" moddt="2013-10-22 18:13:34" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="成本類型設定">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcatstus,xcat001,xcatl003,xcat002,xcat003,xcat004,xcat005"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcat001,xcatownid,xcatownid_desc(chr500),xcatowndp,xcatowndp_desc(chr500),xcatcrtid,xcatcrtid_desc(chr500),xcatcrtdp,xcatcrtdp_desc(chr500),xcatcrtdt,xcatmodid,xcatmodid_desc(chr500),xcatmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axci100" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="xcatstus,xcat001,xcatl003,xcat002,xcat003,xcat004,xcat005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="xcatstus,xcat001,xcatl003,xcat002,xcat003,xcat004,xcat005"/>
+      <construct id="body" page="2" field="xcatownid,xcatowndp,xcatcrtid,xcatcrtdp,xcatcrtdt,xcatmodid,xcatmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcatstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="xcat001">
+        <controlp form="q_xcat001" state="c"/>
+      </column>
+      <column id="xcatl003"/>
+      <column id="xcat002" def_scc="8903"/>
+      <column id="xcat003" def_scc="8904"/>
+      <column id="xcat004" type="S" default="1" def_scc="8905"/>
+      <column id="xcat005" def_scc="8907"/>
+    </init>
+    <init id="body" page="2">
+      <column id="xcatownid">
+        <after>
+          <reference field="xcatownid_desc" ref_field="xcat_t.xcatownid" map_field="xcatownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcatownid_desc"/>
+      <column id="xcatowndp">
+        <after>
+          <reference field="xcatowndp_desc" ref_field="xcat_t.xcatowndp" map_field="xcatowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcatowndp_desc"/>
+      <column id="xcatcrtid">
+        <after>
+          <reference field="xcatcrtid_desc" ref_field="xcat_t.xcatcrtid" map_field="xcatcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcatcrtid_desc"/>
+      <column id="xcatcrtdp">
+        <after>
+          <reference field="xcatcrtdp_desc" ref_field="xcat_t.xcatcrtdp" map_field="xcatcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcatcrtdp_desc"/>
+      <column id="xcatcrtdt"/>
+      <column id="xcatmodid">
+        <after>
+          <reference field="xcatmodid_desc" ref_field="xcat_t.xcatmodid" map_field="xcatmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcatmodid_desc"/>
+      <column id="xcatmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="xcat_t" page="1,2" linked="" pk="xcat001">
+      <sql id="forupd_sql_detail" query="SELECT xcatstus,xcat001,&apos;&apos;,xcat002,xcat003,xcat004,xcat005,&apos;&apos;,xcatownid,&apos;&apos;,xcatowndp,&apos;&apos;,xcatcrtid,&apos;&apos;,xcatcrtdp,&apos;&apos;,xcatcrtdt,xcatmodid,&apos;&apos;,xcatmoddt FROM xcat_t WHERE xcatent=? AND xcat001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcatstus,xcat001,&apos;&apos;,xcat002,xcat003,xcat004,xcat005,&apos;&apos;,xcatownid,&apos;&apos;,xcatowndp,&apos;&apos;,xcatcrtid,&apos;&apos;,xcatcrtdp,&apos;&apos;,xcatcrtdt,xcatmodid,&apos;&apos;,xcatmoddt FROM xcat_t WHERE xcatent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="xcatl_t.xcatl003" table="xcatl_t" fk="xcat001" pk="xcatl001,xcatl002" field="xcatl003"/>
+    </body>
+  </dataset>
+</assembly>
+

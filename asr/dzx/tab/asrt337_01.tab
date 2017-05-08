@@ -1,0 +1,114 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asrt337_01" module="asr" jobmode="N" type="c04a" industry="std" fix_arg="0" crtid="00537" crtdt="2014-06-06 14:50:04" modid="02295" moddt="2016-03-18 14:53:04" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="重覆性生產工單當站下線子作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sfhbdocno,sfhbseq,sfhb001,sfhb001_desc(chr500),sfhb001_desc1(chr500),sfhb002,sfhb003,sfhb003_desc(chr500),sfhb004,sfhb004_desc(chr500),sfhb005,sfhb006,sfhb007,sfhb007_desc(chr500),sfhb008,sfhb009,sfhb009_desc(chr500),sfhb010,sfhb011,sfhb012"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="sfhcseq1(num10),sfhc003(chr10),sfhc003_desc(chr500),sfhc004(chr10),sfhc004_desc(chr500),sfhc005(chr30),sfhc006,sfhc008(num20_6),sfhc010(num20_6)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="asr" filename="asrt337_01" method="dialog">
+    <section id="input">
+      <input id="body" page="2" field="sfhcseq1,sfhc003,sfhc004,sfhc005,sfhc006,sfhc008,sfhc010" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="sfhbdocno,sfhbseq,sfhb001,sfhb002,sfhb003,sfhb004,sfhb005,sfhb006,sfhb007,sfhb008,sfhb009,sfhb010,sfhb011,sfhb012"/>
+      <construct id="body" page="2" field="sfhcseq1,sfhc003,sfhc004,sfhc005,sfhc006,sfhc008,sfhc010"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sfhbdocno"/>
+      <column id="sfhbseq">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="sfhb001">
+        <after>
+          <check chkid="v_imaa001" id="isExist"/>
+          <reference field="sfhb001_desc" ref_field="sfhb_t.sfhb001" map_field="sfhb001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="sfhb001_desc"/>
+      <column id="sfhb001_desc1"/>
+      <column id="sfhb002"/>
+      <column id="sfhb003">
+        <after>
+          <reference field="sfhb003_desc" ref_field="sfhb_t.sfhb003" map_field="sfhb003" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaa001=? "/>
+        </after>
+        <controlp form="q_inaa001_1" state="i"/>
+        <controlp form="q_inaa001_1" state="c"/>
+      </column>
+      <column id="sfhb003_desc"/>
+      <column id="sfhb004">
+        <after>
+          <reference field="sfhb004_desc" ref_field="sfhb003,sfhb004" map_field="sfhb003,sfhb004" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inab001=? AND inab002=? "/>
+        </after>
+      </column>
+      <column id="sfhb004_desc"/>
+      <column id="sfhb005"/>
+      <column id="sfhb006"/>
+      <column id="sfhb007">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="sfhb007_desc" ref_field="sfhb_t.sfhb007" map_field="sfhb007" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="sfhb007_desc"/>
+      <column id="sfhb008"/>
+      <column id="sfhb009">
+        <after>
+          <reference field="sfhb009_desc" ref_field="sfhb_t.sfhb009" map_field="sfhb009" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="sfhb009_desc"/>
+      <column id="sfhb010"/>
+      <column id="sfhb011"/>
+      <column id="sfhb012"/>
+    </init>
+    <init id="body" page="2">
+      <column id="sfhcseq1"/>
+      <column id="sfhc003">
+        <after>
+          <reference field="sfhc003_desc" ref_field="sfhc003" map_field="sfhc003" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaa001=? "/>
+        </after>
+        <controlp form="q_inaa001_1" state="i"/>
+        <controlp form="q_inaa001_1" state="c"/>
+      </column>
+      <column id="sfhc003_desc"/>
+      <column id="sfhc004">
+        <after>
+          <reference field="sfhc004_desc" ref_field="sfhc003,sfhc004" map_field="sfhc003,sfhc004" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inab001=? AND inab002=? "/>
+        </after>
+      </column>
+      <column id="sfhc004_desc"/>
+      <column id="sfhc005"/>
+      <column id="sfhc006"/>
+      <column id="sfhc008"/>
+      <column id="sfhc010"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="sfhb_t" page="1" linked="" pk="sfhbdocno,sfhbseq">
+      <sql id="forupd_sql_detail" query="SELECT sfhbdocno,sfhbseq,sfhb001,&apos;&apos;,&apos;&apos;,sfhb002,sfhb003,&apos;&apos;,sfhb004,&apos;&apos;,sfhb005,sfhb006,sfhb007,&apos;&apos;,sfhb008,sfhb009,&apos;&apos;,sfhb010,sfhb011,sfhb012 FROM sfhb_t WHERE sfhbent=? AND sfhbdocno=? AND sfhbseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT sfhbdocno,sfhbseq,sfhb001,&apos;&apos;,&apos;&apos;,sfhb002,sfhb003,&apos;&apos;,sfhb004,&apos;&apos;,sfhb005,sfhb006,sfhb007,&apos;&apos;,sfhb008,sfhb009,&apos;&apos;,sfhb010,sfhb011,sfhb012 FROM sfhb_t WHERE sfhbent= ? AND 1=1 "/>
+    </body>
+    <body id="sfhc_t" page="2" linked="" pk="sfhcseq1" fk="sfhcdocno,sfhcseq" detail="Y">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,sfhc006,&apos;&apos;,&apos;&apos; FROM sfhc_t WHERE sfhcent=? AND sfhcdocno=? AND sfhcseq=? AND sfhcseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,sfhc006,&apos;&apos;,&apos;&apos; FROM sfhc_t WHERE sfhcent=? AND sfhcdocno=? AND sfhcseq=?"/>
+    </body>
+  </dataset>
+</assembly>
+

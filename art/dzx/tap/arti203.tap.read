@@ -1,0 +1,3901 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="arti203" std_prog="arti203" erpver="1.0" module="ART" ver="2" env="s" zone="t10prd" booking="N" type="M" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <point name="function.arti203_def_rtaj007" order="1" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 自定義條碼格式預設值
+# Memo...........:
+# Usage..........: CALL arti203_def_rtaj007()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/02/18 By xumm
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION arti203_def_rtaj007()
+DEFINE l_str            STRING
+DEFINE l_rtaj002        STRING
+DEFINE l_rtaj003        STRING
+DEFINE l_num            LIKE type_t.num5   
+   
+   IF cl_null(g_rtaj_d[l_ac].rtaj003) OR cl_null(g_rtaj_d[l_ac].rtaj002) THEN
+      RETURN
+   END IF
+   IF g_rtaj_d[l_ac].rtaj003 = '0' THEN
+      LET l_rtaj003 = 'XXXXXXXXXX'
+      LET l_num = 10
+   END IF
+   IF g_rtaj_d[l_ac].rtaj003 = '1' THEN
+      LET l_rtaj003 = 'XXXXXXXXXXXXXXX'
+      LET l_num = 15
+   END IF
+   CASE g_rtaj_d[l_ac].rtaj002
+      WHEN '0'  LET l_rtaj002 = '20'
+      WHEN '1'  LET l_rtaj002 = '21'
+      WHEN '2'  LET l_rtaj002 = '22'
+      WHEN '3'  LET l_rtaj002 = '23'
+      WHEN '4'  LET l_rtaj002 = '24'
+   END CASE
+   LET l_str = l_rtaj002,l_rtaj003,'C'
+   IF g_rtaj_d[l_ac].rtaj001 = '1' OR g_rtaj_d[l_ac].rtaj001 = '2' OR g_rtaj_d[l_ac].rtaj001 = '3' THEN
+      LET g_rtaj_d[l_ac].rtaj007 = l_str
+      LET g_rtaj_d[l_ac].rtaj009 = 1
+      LET g_rtaj_d[l_ac].rtaj010 = 2
+      LET g_rtaj_d[l_ac].rtaj011 = 3
+      LET g_rtaj_d[l_ac].rtaj012 = l_num+2
+      LET g_rtaj_d[l_ac].rtaj013 = 0
+      LET g_rtaj_d[l_ac].rtaj014 = 0
+      LET g_rtaj_d[l_ac].rtaj015 = 0
+      LET g_rtaj_d[l_ac].rtaj016 = 0
+      LET g_rtaj_d[l_ac].rtaj017 = 0
+      LET g_rtaj_d[l_ac].rtaj018 = 0     
+      LET g_rtaj_d[l_ac].rtaj019 = l_num+3
+      LET g_rtaj_d[l_ac].rtaj020 = l_num+3    
+   END IF
+   CALL arti203_rtaj007_apart()
+END FUNCTION]]>
+  </point>
+  <point name="function.arti203_rtaj007_apart" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 自定義條碼格式拆分存儲
+# Memo...........:
+# Usage..........: CALL arti203_rtaj007_apart
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2013/02/18 By xumm
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION arti203_rtaj007_apart()
+DEFINE l_rtaj007            STRING
+DEFINE l_i                  LIKE type_t.num5
+DEFINE l_length             LIKE type_t.num5
+DEFINE l_x                  LIKE type_t.chr1
+DEFINE l_m                  LIKE type_t.chr1
+DEFINE l_w                  LIKE type_t.chr1
+DEFINE l_p                  LIKE type_t.chr1
+
+   LET l_rtaj007 = g_rtaj_d[l_ac].rtaj007 
+   LET l_length = l_rtaj007.getLength()
+   LET g_rtaj_d[l_ac].rtaj009 = 1
+   LET g_rtaj_d[l_ac].rtaj010 = 2
+   LET g_rtaj_d[l_ac].rtaj011 = l_rtaj007.getIndexOf('X',1)
+   LET g_rtaj_d[l_ac].rtaj012 = g_rtaj_d[l_ac].rtaj011 
+   FOR l_i = g_rtaj_d[l_ac].rtaj011+1 TO l_length
+       LET l_x = l_rtaj007.subString(l_i,l_i)
+       IF l_x = 'X' THEN
+          LET g_rtaj_d[l_ac].rtaj012 = g_rtaj_d[l_ac].rtaj012 +1
+       END IF
+   END FOR
+   LET g_rtaj_d[l_ac].rtaj013 = l_rtaj007.getIndexOf('M',1)
+   LET g_rtaj_d[l_ac].rtaj014 = g_rtaj_d[l_ac].rtaj013 
+   IF g_rtaj_d[l_ac].rtaj013 > 0 THEN
+      FOR l_i = g_rtaj_d[l_ac].rtaj013+1 TO l_length
+          LET l_m = l_rtaj007.subString(l_i,l_i)
+          IF l_m = 'M' THEN
+             LET g_rtaj_d[l_ac].rtaj014 = g_rtaj_d[l_ac].rtaj014 +1
+          END IF
+      END FOR
+   ELSE
+      LET g_rtaj_d[l_ac].rtaj014 = 0
+   END IF
+   LET g_rtaj_d[l_ac].rtaj015 = l_rtaj007.getIndexOf('W',1)
+   LET g_rtaj_d[l_ac].rtaj016 = g_rtaj_d[l_ac].rtaj015 
+   IF g_rtaj_d[l_ac].rtaj015 > 0 THEN
+      FOR l_i = g_rtaj_d[l_ac].rtaj015+1 TO l_length
+          LET l_w = l_rtaj007.subString(l_i,l_i)
+          IF l_w = 'W' THEN
+             LET g_rtaj_d[l_ac].rtaj016 = g_rtaj_d[l_ac].rtaj016 +1
+          END IF
+      END FOR
+   ELSE
+      LET g_rtaj_d[l_ac].rtaj016 = 0
+   END IF
+   LET g_rtaj_d[l_ac].rtaj017 = l_rtaj007.getIndexOf('P',1)
+   LET g_rtaj_d[l_ac].rtaj018 = g_rtaj_d[l_ac].rtaj017
+   IF g_rtaj_d[l_ac].rtaj017 > 0 THEN
+      FOR l_i = g_rtaj_d[l_ac].rtaj017+1 TO l_length
+          LET l_p = l_rtaj007.subString(l_i,l_i)
+          IF l_p = 'P' THEN
+             LET g_rtaj_d[l_ac].rtaj018 = g_rtaj_d[l_ac].rtaj018 +1
+          END IF
+      END FOR
+   ELSE
+      LET g_rtaj_d[l_ac].rtaj018 = 0
+   END IF   
+   LET g_rtaj_d[l_ac].rtaj019 = l_length
+   LET g_rtaj_d[l_ac].rtaj020 = l_length
+END FUNCTION]]>
+  </point>
+  <point name="function.arti203_chk_rtaj007" order="3" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 自定義條碼格式檢查
+# Memo...........:
+# Usage..........: CALL arti203_chk_rtaj007()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/02/18 By xumm
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION arti203_chk_rtaj007()
+DEFINE l_rtaj007            STRING
+DEFINE l_i                  LIKE type_t.num5
+DEFINE l_length             LIKE type_t.num5
+DEFINE l_chr                LIKE type_t.chr80
+DEFINE l_n                  LIKE type_t.num5
+DEFINE l_n1                 LIKE type_t.num5
+DEFINE l_n2                 LIKE type_t.num5
+DEFINE l_n3                 LIKE type_t.num5
+DEFINE l_s                  LIKE type_t.chr1
+DEFINE l_x                  LIKE type_t.num5
+DEFINE l_m                  LIKE type_t.num5
+DEFINE l_w                  LIKE type_t.num5
+DEFINE l_p                  LIKE type_t.num5
+DEFINE l_rtaj002            LIKE type_t.chr2
+
+   LET g_errno = ''
+   IF cl_null(g_rtaj_d[l_ac].rtaj001) OR cl_null(g_rtaj_d[l_ac].rtaj003) OR cl_null(g_rtaj_d[l_ac].rtaj002) THEN
+      RETURN
+   END IF
+   LET g_rtaj_d[l_ac].rtaj007 = UPSHIFT(g_rtaj_d[l_ac].rtaj007)
+   LET l_rtaj007 = g_rtaj_d[l_ac].rtaj007 
+   LET l_length = l_rtaj007.getLength()
+   LET l_chr = l_rtaj007.subString(1,2)
+   CASE g_rtaj_d[l_ac].rtaj002
+      WHEN '0'  LET l_rtaj002 = '20'
+      WHEN '1'  LET l_rtaj002 = '21'
+      WHEN '2'  LET l_rtaj002 = '22'
+      WHEN '3'  LET l_rtaj002 = '23'
+      WHEN '4'  LET l_rtaj002 = '24'
+   END CASE
+   IF l_chr <> l_rtaj002 THEN
+      LET g_errno = 'art-00240'
+      RETURN
+   END IF
+   LET l_chr = l_rtaj007.subString(l_length,l_length)
+   IF l_chr <> 'C' THEN
+      LET g_errno = 'art-00240'
+      RETURN
+   END IF
+   IF g_rtaj_d[l_ac].rtaj003 = '0' THEN
+      IF l_length <> 13 THEN
+         LET g_errno = 'art-00241'
+         RETURN
+      END IF
+   END IF
+   IF g_rtaj_d[l_ac].rtaj003 = '1' THEN
+      IF l_length <> 18 THEN
+         LET g_errno = 'art-00241'
+         RETURN
+      END IF
+   END IF
+   
+   LET l_n = 0
+   LET l_n1 = 0
+   LET l_n2 = 0
+   LET l_n3 = 0
+   FOR l_i = 3 TO l_length-1
+       LET l_s = l_rtaj007.subString(l_i,l_i)
+       IF l_s <> 'X' AND l_s <> 'M' AND  l_s <> 'W' AND l_s <> 'P' THEN
+          LET g_errno = 'art-00242'
+          RETURN
+       END IF
+       IF l_s = 'X' THEN
+          LET l_n = l_n + 1
+       END IF
+       IF l_s = 'M' THEN
+          IF g_rtaj_d[l_ac].rtaj004 = '0' THEN
+             LET g_errno = 'art-00247'
+             RETURN
+          END IF
+          LET l_n1 = l_n1 + 1
+       END IF
+       IF l_s = 'W' THEN
+          IF g_rtaj_d[l_ac].rtaj005 = '0' THEN
+             LET g_errno = 'art-00248'
+             RETURN
+          END IF
+          LET l_n2 = l_n2 + 1
+       END IF
+       IF l_s = 'P' THEN
+          IF g_rtaj_d[l_ac].rtaj006 = '0' THEN
+             LET g_errno = 'art-00249'
+             RETURN
+          END IF
+          LET l_n3 = l_n3 + 1
+       END IF
+   END FOR
+   IF l_n < 5 THEN
+      LET g_errno = 'art-00243'
+      RETURN
+   END IF
+   LET l_x = l_rtaj007.getIndexOf('X',1)
+   LET l_chr = l_rtaj007.subString(l_x,l_x+l_n-1)
+   FOR l_i = l_x TO l_x+l_n-1
+      LET l_s = l_rtaj007.subString(l_i,l_i) 
+      IF l_s <> 'X' THEN
+         LET g_errno = 'art-00244'
+         RETURN
+      END IF
+   END FOR 
+   LET l_m = l_rtaj007.getIndexOf('M',1)
+   LET l_chr = l_rtaj007.subString(l_m,l_m+l_n1-1)
+   FOR l_i = l_m TO l_m+l_n1-1
+      LET l_s = l_rtaj007.subString(l_i,l_i) 
+      IF l_s <> 'M' THEN
+         LET g_errno = 'art-00244'
+         RETURN
+      END IF
+   END FOR
+   LET l_w = l_rtaj007.getIndexOf('W',1)
+   LET l_chr = l_rtaj007.subString(l_w,l_w+l_n2-1)
+   FOR l_i = l_w TO l_w+l_n2-1
+      LET l_s = l_rtaj007.subString(l_i,l_i) 
+      IF l_s <> 'W' THEN
+         LET g_errno = 'art-00244'
+         RETURN
+      END IF
+   END FOR
+   LET l_p = l_rtaj007.getIndexOf('P',1)
+   LET l_chr = l_rtaj007.subString(l_p,l_p+l_n3-1)
+   FOR l_i = l_p TO l_p+l_n3-1
+      LET l_s = l_rtaj007.subString(l_i,l_i) 
+      IF l_s <> 'P' THEN
+         LET g_errno = 'art-00244'
+         RETURN
+      END IF
+   END FOR
+END FUNCTION]]>
+  </point>
+  <point name="b_fill.fill" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      LET g_rtaj_d[l_ac].pos = 'N'
+      LET g_rtaj2_d[l_ac].rtaj001 = g_rtaj_d[l_ac].rtaj001]]>
+  </point>
+  <point name="construct.c.page2.rtajcrtdp" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtajcrtdp  #顯示到畫面上
+            NEXT FIELD rtajcrtdp                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page2.rtajcrtid" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtajcrtid  #顯示到畫面上
+            NEXT FIELD rtajcrtid                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page2.rtajmodid" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtajmodid  #顯示到畫面上
+            NEXT FIELD rtajmodid                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page2.rtajowndp" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtajowndp  #顯示到畫面上
+            NEXT FIELD rtajowndp                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page2.rtajownid" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtajownid  #顯示到畫面上
+            NEXT FIELD rtajownid                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="detail_show.body2.reference" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_rtaj2_d[l_ac].rtajmodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_rtaj2_d[l_ac].rtajmodid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_rtaj2_d[l_ac].rtajmodid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_rtaj2_d[l_ac].rtajownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_rtaj2_d[l_ac].rtajownid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_rtaj2_d[l_ac].rtajownid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_rtaj2_d[l_ac].rtajowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_rtaj2_d[l_ac].rtajowndp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_rtaj2_d[l_ac].rtajowndp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_rtaj2_d[l_ac].rtajcrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_rtaj2_d[l_ac].rtajcrtid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_rtaj2_d[l_ac].rtajcrtid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_rtaj2_d[l_ac].rtajcrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_rtaj2_d[l_ac].rtajcrtdp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_rtaj2_d[l_ac].rtajcrtdp_desc
+]]>
+  </point>
+  <point name="detail_show.reference" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_rtaj_d[l_ac].pos = 'N'
+   LET g_rtaj2_d[l_ac].rtaj001 = g_rtaj_d[l_ac].rtaj001
+   IF NOT cl_null(g_rtaj2_d[l_ac].rtajownid) THEN
+      LET g_rtaj2_d[l_ac].rtajownid_desc = cl_get_username(g_rtaj2_d[l_ac].rtajownid)
+   END IF
+   IF NOT cl_null(g_rtaj2_d[l_ac].rtajowndp) THEN
+      LET g_rtaj2_d[l_ac].rtajowndp_desc = cl_get_deptname(g_rtaj2_d[l_ac].rtajowndp)
+   END IF
+   IF NOT cl_null(g_rtaj2_d[l_ac].rtajcrtid) THEN
+      LET g_rtaj2_d[l_ac].rtajcrtid_desc = cl_get_username(g_rtaj2_d[l_ac].rtajcrtid)
+   END IF
+   IF NOT cl_null(g_rtaj2_d[l_ac].rtajcrtdp) THEN
+      LET g_rtaj2_d[l_ac].rtajcrtdp_desc = cl_get_deptname(g_rtaj2_d[l_ac].rtajcrtdp)
+   END IF
+   IF NOT cl_null(g_rtaj2_d[l_ac].rtajmodid) THEN
+      LET g_rtaj2_d[l_ac].rtajmodid_desc = cl_get_username(g_rtaj2_d[l_ac].rtajmodid)
+   END IF]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL cl_set_combo_scc('rtaj001_2','6553')]]>
+  </point>
+  <point name="input.a.page1.rtaj001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF g_rtaj_d[g_detail_idx].rtaj001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_rtaj_d[g_detail_idx].rtaj001 != g_rtaj_d_t.rtaj001)) THEN 
+                  IF NOT ap_chk_notDup(g_rtaj_d[g_detail_idx].rtaj001,"SELECT COUNT(*) FROM rtaj_t WHERE "||"rtajent = '" ||g_enterprise|| "' AND "||"rtaj001 = '"||g_rtaj_d[g_detail_idx].rtaj001 ||"'",'std-00004',1) THEN 
+                     LET g_rtaj_d[g_detail_idx].rtaj001 = g_rtaj_d_t.rtaj001
+                     NEXT FIELD CURRENT
+                  END IF
+                  IF g_rtaj_d[l_ac].rtaj001 != g_rtaj_d_t.rtaj001 THEN
+                     IF g_rtaj_d[l_ac].rtaj001 = '4' OR g_rtaj_d[l_ac].rtaj001 = '5' OR g_rtaj_d[l_ac].rtaj001 = '6' OR g_rtaj_d[l_ac].rtaj001 = '7' THEN
+                        LET g_rtaj_d[l_ac].rtaj007 = ''
+                        DISPLAY g_rtaj_d[l_ac].rtaj007
+                     END IF
+                     IF g_rtaj_d[l_ac].rtaj001 = '1' OR g_rtaj_d[l_ac].rtaj001 = '2' OR g_rtaj_d[l_ac].rtaj001 = '3' OR g_rtaj_d[l_ac].rtaj001 = '4' OR g_rtaj_d[l_ac].rtaj001 = '5' THEN
+                        LET g_rtaj_d[l_ac].rtaj003 = '0'
+                        DISPLAY g_rtaj_d[l_ac].rtaj003
+                     END IF
+                     IF g_rtaj_d[l_ac].rtaj001 = '1' OR g_rtaj_d[l_ac].rtaj001 = '2' OR g_rtaj_d[l_ac].rtaj001 = '3' OR g_rtaj_d[l_ac].rtaj001 = '4' THEN
+                        LET g_rtaj_d[l_ac].rtaj004 = '0'
+                        LET g_rtaj_d[l_ac].rtaj006 = '0'
+                     ELSE
+                        LET g_rtaj_d[l_ac].rtaj004 = '1'
+                        LET g_rtaj_d[l_ac].rtaj006 = '1'            
+                     END IF
+                     IF g_rtaj_d[l_ac].rtaj001 = '1' OR g_rtaj_d[l_ac].rtaj001 = '2' OR g_rtaj_d[l_ac].rtaj001 = '3' OR g_rtaj_d[l_ac].rtaj001 = '5' THEN
+                        LET g_rtaj_d[l_ac].rtaj005 = '0'
+                     ELSE
+                        LET g_rtaj_d[l_ac].rtaj005 = '1'
+                     END IF 
+                  END IF                     
+               END IF
+               CALL arti203_set_entry_b(l_cmd)
+               CALL arti203_set_no_entry_b(l_cmd)
+               CALL arti203_def_rtaj007()
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.rtaj002" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_rtaj_d[l_ac].rtaj002) THEN
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND g_rtaj_d[l_ac].rtaj002 != g_rtaj_d_t.rtaj002) THEN 
+                  IF NOT cl_null(g_rtaj_d[l_ac].rtaj003) THEN 
+                     IF NOT ap_chk_notDup(g_rtaj_d[l_ac].rtaj002,"SELECT COUNT(*) FROM rtaj_t WHERE "||"rtajent = '" ||g_enterprise|| "' AND "||" rtaj002 = '"||g_rtaj_d[l_ac].rtaj002 ||"' AND "||"rtaj003 = '"||g_rtaj_d[l_ac].rtaj003 ||"'",'art-00239',1) THEN 
+                        LET g_rtaj_d[l_ac].rtaj002 = g_rtaj_d_t.rtaj002
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+                  IF g_rtaj_d[l_ac].rtaj002 != g_rtaj_d_t.rtaj002 THEN
+                     IF g_rtaj_d[l_ac].rtaj001 = '4' OR g_rtaj_d[l_ac].rtaj001 = '5' OR g_rtaj_d[l_ac].rtaj001 = '6' OR g_rtaj_d[l_ac].rtaj001 = '7' THEN
+                        LET g_rtaj_d[l_ac].rtaj007 = ''
+                        DISPLAY g_rtaj_d[l_ac].rtaj007
+                     END IF
+                  END IF
+                  LET g_rtaj_d[l_ac].rtaj021 = ''                               #qiaozy
+                  DISPLAY g_rtaj_d[l_ac].rtaj021 TO s_detail1[l_ac].rtaj021     #qiaozy
+               END IF
+#               IF NOT cl_null(g_rtaj_d[l_ac].rtaj007) THEN
+#                  CALL arti203_chk_rtaj007()
+#                  IF NOT cl_null(g_errno) THEN
+#                     CALL cl_err(g_rtaj_d[l_ac].rtaj007,g_errno,1)
+#                     LET g_rtaj_d[l_ac].rtaj002 = g_rtaj_d_t.rtaj002
+#                     NEXT FIELD rtaj002
+#                  END IF
+#               END IF
+               CALL arti203_def_rtaj007()
+            END IF]]>
+  </point>
+  <point name="input.a.page1.rtaj003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_rtaj_d[l_ac].rtaj003) THEN
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND g_rtaj_d[l_ac].rtaj003 != g_rtaj_d_t.rtaj003) THEN 
+                  IF NOT cl_null(g_rtaj_d[l_ac].rtaj002) THEN 
+                     IF NOT ap_chk_notDup(g_rtaj_d[l_ac].rtaj003,"SELECT COUNT(*) FROM rtaj_t WHERE "||"rtajent = '" ||g_enterprise|| "' AND "||" rtaj002 = '"||g_rtaj_d[l_ac].rtaj002 ||"' AND "||"rtaj003 = '"||g_rtaj_d[l_ac].rtaj003 ||"'",'art-00239',1) THEN 
+                        LET g_rtaj_d[l_ac].rtaj003 = g_rtaj_d_t.rtaj003
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+                  IF g_rtaj_d[l_ac].rtaj003 != g_rtaj_d_t.rtaj003 THEN
+                     IF g_rtaj_d[l_ac].rtaj001 = '4' OR g_rtaj_d[l_ac].rtaj001 = '5' OR g_rtaj_d[l_ac].rtaj001 = '6' OR g_rtaj_d[l_ac].rtaj001 = '7' THEN
+                        LET g_rtaj_d[l_ac].rtaj007 = ''
+                        DISPLAY g_rtaj_d[l_ac].rtaj007
+                     END IF
+                  END IF
+                  LET g_rtaj_d[l_ac].rtaj021 = ''                               #qiaozy
+                  DISPLAY g_rtaj_d[l_ac].rtaj021 TO s_detail1[l_ac].rtaj021     #qiaozy
+               END IF
+#               IF NOT cl_null(g_rtaj_d[l_ac].rtaj007) THEN
+#                  CALL arti203_chk_rtaj007()
+#                  IF NOT cl_null(g_errno) THEN
+#                     CALL cl_err(g_rtaj_d[l_ac].rtaj007,g_errno,1)
+#                     LET g_rtaj_d[l_ac].rtaj003 = g_rtaj_d_t.rtaj003
+#                     NEXT FIELD rtaj003
+#                  END IF
+#               END IF
+               CALL arti203_def_rtaj007()
+            END IF]]>
+  </point>
+  <point name="input.a.page1.rtaj004" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_rtaj_d[l_ac].rtaj004) THEN   
+               IF NOT cl_null(g_rtaj_d[l_ac].rtaj007) THEN
+                  CALL arti203_chk_rtaj007()
+                  IF NOT cl_null(g_errno) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_rtaj_d[l_ac].rtaj007
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_rtaj_d[l_ac].rtaj004 = g_rtaj_d_t.rtaj004
+                     NEXT FIELD rtaj004
+                  END IF
+               END IF
+               IF g_rtaj_d[l_ac].rtaj004 = '0' THEN
+                  IF g_rtaj_d[l_ac].rtaj001 = '5' OR g_rtaj_d[l_ac].rtaj001 = '6' OR g_rtaj_d[l_ac].rtaj001 = '7'THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'art-00314'
+                     LET g_errparam.extend = g_rtaj_d[l_ac].rtaj004
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_rtaj_d[l_ac].rtaj004 = g_rtaj_d_t.rtaj004
+                     NEXT FIELD rtaj004                     
+                  END IF
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.a.page1.rtaj005" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_rtaj_d[l_ac].rtaj005) THEN   
+               IF NOT cl_null(g_rtaj_d[l_ac].rtaj007) THEN
+                  CALL arti203_chk_rtaj007()
+                  IF NOT cl_null(g_errno) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_rtaj_d[l_ac].rtaj007
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_rtaj_d[l_ac].rtaj005 = g_rtaj_d_t.rtaj005
+                     NEXT FIELD rtaj005
+                  END IF
+               END IF
+               IF g_rtaj_d[l_ac].rtaj005 = '0' THEN
+                  IF g_rtaj_d[l_ac].rtaj001 = '4' OR g_rtaj_d[l_ac].rtaj001 = '6' OR g_rtaj_d[l_ac].rtaj001 = '7'THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'art-00315'
+                     LET g_errparam.extend = g_rtaj_d[l_ac].rtaj005
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_rtaj_d[l_ac].rtaj005 = g_rtaj_d_t.rtaj005
+                     NEXT FIELD rtaj005                     
+                  END IF
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.a.page1.rtaj006" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_rtaj_d[l_ac].rtaj006) THEN   
+               IF NOT cl_null(g_rtaj_d[l_ac].rtaj007) THEN
+                  CALL arti203_chk_rtaj007()
+                  IF NOT cl_null(g_errno) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = g_rtaj_d[l_ac].rtaj007
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_rtaj_d[l_ac].rtaj006 = g_rtaj_d_t.rtaj006
+                     NEXT FIELD rtaj006
+                  END IF
+               END IF
+               IF g_rtaj_d[l_ac].rtaj006 = '0' THEN
+                  IF g_rtaj_d[l_ac].rtaj001 = '5' OR g_rtaj_d[l_ac].rtaj001 = '6' OR g_rtaj_d[l_ac].rtaj001 = '7'THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'art-00314'
+                     LET g_errparam.extend = g_rtaj_d[l_ac].rtaj006
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_rtaj_d[l_ac].rtaj006 = g_rtaj_d_t.rtaj006
+                     NEXT FIELD rtaj006                     
+                  END IF
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.a.page1.rtaj007" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_rtaj_d[l_ac].rtaj007) THEN
+               CALL arti203_chk_rtaj007()
+               IF NOT cl_null(g_errno) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = g_rtaj_d[l_ac].rtaj007
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_rtaj_d[l_ac].rtaj007 = g_rtaj_d_t.rtaj007
+                  NEXT FIELD rtaj007
+               END IF
+               CALL arti203_rtaj007_apart()
+            END IF]]>
+  </point>
+  <point name="input.a.page2.rtaj001_2" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_rtaj2_d[g_detail_idx].rtaj001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_rtaj2_d[g_detail_idx].rtaj001 != g_rtaj2_d_t.rtaj001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM rtaj_t WHERE "||"rtajent = '" ||g_enterprise|| "' AND "||"rtaj001 = '"||g_rtaj2_d[g_detail_idx].rtaj001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.b.page1.rtaj007" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF l_cmd = 'a' AND  cl_null(g_rtaj_d[l_ac].rtaj007) THEN
+               CASE g_rtaj_d[l_ac].rtaj002
+                  WHEN '0'  LET g_rtaj_d[l_ac].rtaj007 = '20'
+                  WHEN '1'  LET g_rtaj_d[l_ac].rtaj007 = '21'
+                  WHEN '2'  LET g_rtaj_d[l_ac].rtaj007 = '22'
+                  WHEN '3'  LET g_rtaj_d[l_ac].rtaj007 = '23'
+                  WHEN '4'  LET g_rtaj_d[l_ac].rtaj007 = '24'
+               END CASE
+            END IF]]>
+  </point>
+  <point name="input.body.before_insert" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF g_rtaj_d[l_ac].rtaj001 = '1' OR g_rtaj_d[l_ac].rtaj001 = '2' OR g_rtaj_d[l_ac].rtaj001 = '3' OR g_rtaj_d[l_ac].rtaj001 = '4' THEN
+               LET g_rtaj_d[l_ac].rtaj004 = '0'
+               LET g_rtaj_d[l_ac].rtaj006 = '0'
+            ELSE
+               LET g_rtaj_d[l_ac].rtaj004 = '1'
+               LET g_rtaj_d[l_ac].rtaj006 = '1'            
+            END IF
+            IF g_rtaj_d[l_ac].rtaj001 = '1' OR g_rtaj_d[l_ac].rtaj001 = '2' OR g_rtaj_d[l_ac].rtaj001 = '3' OR g_rtaj_d[l_ac].rtaj001 = '5' THEN
+               LET g_rtaj_d[l_ac].rtaj005 = '0'
+            ELSE
+               LET g_rtaj_d[l_ac].rtaj005 = '1'
+            END IF            
+            LET g_rtaj_d[l_ac].pos = 'N'
+            LET g_rtaj_d[l_ac].rtajstamp = cl_get_current()]]>
+  </point>
+  <point name="input.body.before_row" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL arti203_set_entry_b("a")
+            CALL arti203_set_no_entry_b("a")]]>
+  </point>
+  <point name="input.g.page1.rtaj001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            ]]>
+  </point>
+  <point name="input.g.page1.rtaj002" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.g.page1.rtaj003" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[           ]]>
+  </point>
+  <point name="set_entry_b.set_entry_b" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL cl_set_comp_entry("rtaj003,rtaj004,rtaj005,rtaj006,rtaj007",TRUE)]]>
+  </point>
+  <point name="set_no_entry_b.set_no_entry_b" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   IF g_rtaj_d[l_ac].rtaj001 = '1' OR g_rtaj_d[l_ac].rtaj001 = '2' OR g_rtaj_d[l_ac].rtaj001 = '3' OR g_rtaj_d[l_ac].rtaj001 = '4' OR  g_rtaj_d[l_ac].rtaj001 = '5' THEN
+      CALL cl_set_comp_entry("rtaj003",FALSE)
+      LET g_rtaj_d[l_ac].rtaj003 = '0'
+      DISPLAY g_rtaj_d[l_ac].rtaj003
+   END IF
+   IF g_rtaj_d[l_ac].rtaj001 = '1' OR g_rtaj_d[l_ac].rtaj001 = '2' OR g_rtaj_d[l_ac].rtaj001 = '3' THEN
+      CALL cl_set_comp_entry("rtaj004,rtaj005,rtaj006,rtaj007",FALSE)
+      LET g_rtaj_d[l_ac].rtaj004 = '0'
+      LET g_rtaj_d[l_ac].rtaj005 = '0'
+      LET g_rtaj_d[l_ac].rtaj006 = '0'
+      CALL arti203_def_rtaj007()
+   END IF
+   ]]>
+  </point>
+  <section id="arti203.b_fill" ver="16" status="" src="s" readonly="">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION arti203_b_fill(p_wc2)              #BODY FILL UP
+   DEFINE p_wc2    STRING
+   #add-point:b_fill段define
+   {<point name="b_fill.define" edit="s"/>}
+   #end add-point
+   #add-point:b_fill段define(客製用)
+   {<point name="b_fill.define_customerization" edit="c"/>}
+   #end add-point
+   
+   IF cl_null(p_wc2) THEN
+      LET p_wc2 = " 1=1"
+   END IF
+   
+   #add-point:b_fill段sql之前
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   LET g_sql = "SELECT  UNIQUE t0.rtajstus,t0.rtaj001,t0.rtaj002,t0.rtaj003,t0.rtaj004,t0.rtaj005,t0.rtaj006, 
+       t0.rtaj007,t0.rtaj008,t0.rtaj009,t0.rtaj010,t0.rtaj011,t0.rtaj012,t0.rtaj013,t0.rtaj014,t0.rtaj015, 
+       t0.rtaj016,t0.rtaj017,t0.rtaj018,t0.rtaj019,t0.rtaj020,t0.rtaj021,t0.rtajstamp,t0.rtaj001,t0.rtajmodid, 
+       t0.rtajmoddt,t0.rtajownid,t0.rtajowndp,t0.rtajcrtid,t0.rtajcrtdp,t0.rtajcrtdt ,t1.ooag011 ,t2.ooag011 , 
+       t3.ooefl003 ,t4.ooag011 ,t5.ooefl003 FROM rtaj_t t0",
+               "",
+                              " LEFT JOIN ooag_t t1 ON t1.ooagent='"||g_enterprise||"' AND t1.ooag001=t0.rtajmodid  ",
+               " LEFT JOIN ooag_t t2 ON t2.ooagent='"||g_enterprise||"' AND t2.ooag001=t0.rtajownid  ",
+               " LEFT JOIN ooefl_t t3 ON t3.ooeflent='"||g_enterprise||"' AND t3.ooefl001=t0.rtajowndp AND t3.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t4 ON t4.ooagent='"||g_enterprise||"' AND t4.ooag001=t0.rtajcrtid  ",
+               " LEFT JOIN ooefl_t t5 ON t5.ooeflent='"||g_enterprise||"' AND t5.ooefl001=t0.rtajcrtdp AND t5.ooefl002='"||g_dlang||"' ",
+ 
+               " WHERE t0.rtajent= ?  AND  1=1 AND (", p_wc2, ") " 
+   #add-point:b_fill段sql wc
+   {<point name="b_fill.sql_wc"/>}
+   #end add-point
+   LET g_sql = g_sql, cl_sql_add_filter("rtaj_t"),
+                      " ORDER BY t0.rtaj001"
+   
+   #add-point:b_fill段sql之後
+   {<point name="b_fill.sql_after"/>}
+   #end add-point
+   
+   #LET g_sql = cl_sql_add_tabid(g_sql,"rtaj_t")            #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE arti203_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR arti203_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_rtaj_d.clear()
+   CALL g_rtaj2_d.clear()   
+ 
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO g_rtaj_d[l_ac].rtajstus,g_rtaj_d[l_ac].rtaj001,g_rtaj_d[l_ac].rtaj002,g_rtaj_d[l_ac].rtaj003, 
+       g_rtaj_d[l_ac].rtaj004,g_rtaj_d[l_ac].rtaj005,g_rtaj_d[l_ac].rtaj006,g_rtaj_d[l_ac].rtaj007,g_rtaj_d[l_ac].rtaj008, 
+       g_rtaj_d[l_ac].rtaj009,g_rtaj_d[l_ac].rtaj010,g_rtaj_d[l_ac].rtaj011,g_rtaj_d[l_ac].rtaj012,g_rtaj_d[l_ac].rtaj013, 
+       g_rtaj_d[l_ac].rtaj014,g_rtaj_d[l_ac].rtaj015,g_rtaj_d[l_ac].rtaj016,g_rtaj_d[l_ac].rtaj017,g_rtaj_d[l_ac].rtaj018, 
+       g_rtaj_d[l_ac].rtaj019,g_rtaj_d[l_ac].rtaj020,g_rtaj_d[l_ac].rtaj021,g_rtaj_d[l_ac].rtajstamp, 
+       g_rtaj2_d[l_ac].rtaj001,g_rtaj2_d[l_ac].rtajmodid,g_rtaj2_d[l_ac].rtajmoddt,g_rtaj2_d[l_ac].rtajownid, 
+       g_rtaj2_d[l_ac].rtajowndp,g_rtaj2_d[l_ac].rtajcrtid,g_rtaj2_d[l_ac].rtajcrtdp,g_rtaj2_d[l_ac].rtajcrtdt, 
+       g_rtaj2_d[l_ac].rtajmodid_desc,g_rtaj2_d[l_ac].rtajownid_desc,g_rtaj2_d[l_ac].rtajowndp_desc, 
+       g_rtaj2_d[l_ac].rtajcrtid_desc,g_rtaj2_d[l_ac].rtajcrtdp_desc
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+  
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.fill"/>}
+      #end add-point
+      
+      CALL arti203_detail_show()      
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code   = 9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+ 
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+ 
+   LET g_error_show = 0
+   
+ 
+   
+   CALL g_rtaj_d.deleteElement(g_rtaj_d.getLength())   
+   CALL g_rtaj2_d.deleteElement(g_rtaj2_d.getLength())
+ 
+   
+   #將key欄位填到每個page
+   FOR l_ac = 1 TO g_rtaj_d.getLength()
+      LET g_rtaj2_d[l_ac].rtaj001 = g_rtaj_d[l_ac].rtaj001 
+ 
+      #add-point:b_fill段key值相關欄位
+      {<point name="b_fill.keys.fill"/>}
+      #end add-point
+   END FOR
+   
+   IF g_cnt > g_rtaj_d.getLength() THEN
+      LET l_ac = g_rtaj_d.getLength()
+   ELSE
+      LET l_ac = g_cnt
+   END IF
+   LET g_cnt = l_ac
+ 
+   #遮罩相關處理
+   FOR l_ac = 1 TO g_rtaj_d.getLength()
+      LET g_rtaj_d_mask_o[l_ac].* =  g_rtaj_d[l_ac].*
+      CALL arti203_rtaj_t_mask()
+      LET g_rtaj_d_mask_n[l_ac].* =  g_rtaj_d[l_ac].*
+   END FOR
+   
+   LET g_rtaj2_d_mask_o.* =  g_rtaj2_d.*
+   FOR l_ac = 1 TO g_rtaj2_d.getLength()
+      LET g_rtaj2_d_mask_o[l_ac].* =  g_rtaj2_d[l_ac].*
+      CALL arti203_rtaj_t_mask()
+      LET g_rtaj2_d_mask_n[l_ac].* =  g_rtaj2_d[l_ac].*
+   END FOR
+ 
+ 
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+   
+   ERROR "" 
+ 
+   LET g_detail_cnt = g_rtaj_d.getLength()
+   DISPLAY g_detail_idx TO FORMONLY.idx
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   
+   CLOSE b_fill_curs
+   FREE arti203_pb
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="arti203.default_search" ver="9" status="" src="s" readonly="">
+    <![CDATA[#+ 外部參數搜尋
+PRIVATE FUNCTION arti203_default_search()
+   DEFINE li_idx  LIKE type_t.num10
+   DEFINE li_cnt  LIKE type_t.num10
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define
+   {<point name="default_search.define" edit="s"/>}
+   #end add-point  
+   #add-point:default_search段define(客製用)
+   {<point name="default_search.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:default_search段開始前
+   {<point name="default_search.before"/>}
+   #end add-point  
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " rtaj001 = '", g_argv[01], "' AND "
+   END IF
+   
+ 
+   
+   #add-point:default_search段after sql
+   {<point name="default_search.after_sql"/>}
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET ls_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_wc2 = ls_wc
+   ELSE
+      LET g_wc2 = " 1=1"
+      #預設查詢條件
+      LET g_wc2 = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc2) THEN
+         LET g_wc2 = " 1=1"
+      END IF
+   END IF
+ 
+   #add-point:default_search段結束前
+   {<point name="default_search.after"/>}
+   #end add-point  
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="arti203.delete" ver="6" status="" src="s" readonly="">
+    <![CDATA[#+ 資料刪除
+PRIVATE FUNCTION arti203_delete()
+   DEFINE li_idx          LIKE type_t.num10
+   DEFINE li_ac_t         LIKE type_t.num10
+   DEFINE li_detail_tmp   LIKE type_t.num10
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:delete段define
+   {<point name="delete.define" edit="s"/>}
+   #end add-point 
+   #add-point:delete段define(客製用)
+   {<point name="delete.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:單身刪除前
+   {<point name="delete.body.before_delete"/>}
+   #end add-point
+   
+   CALL s_transaction_begin()
+   
+   LET li_ac_t = l_ac
+   
+   LET li_detail_tmp = g_detail_idx
+    
+   #lock所有所選資料
+   FOR li_idx = 1 TO g_rtaj_d.getLength()
+      LET g_detail_idx = li_idx
+      #已選擇的資料
+      IF g_curr_diag.isRowSelected(g_curr_diag.getCurrentItem(), li_idx) THEN 
+         #確定是否有被鎖定
+         IF NOT arti203_lock_b("rtaj_t") THEN
+            #已被他人鎖定
+            CALL s_transaction_end('N','0')
+            RETURN
+         END IF
+      END IF
+   END FOR
+   
+   #add-point:單身刪除詢問前
+   {<point name="delete.body.b_delete_ask"/>}
+   #end add-point  
+   
+   #詢問是否確定刪除所選資料
+   IF NOT cl_ask_del_detail() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   FOR li_idx = 1 TO g_rtaj_d.getLength()
+      IF g_rtaj_d[li_idx].rtaj001 IS NOT NULL
+ 
+         AND g_curr_diag.isRowSelected(g_curr_diag.getCurrentItem(), li_idx) THEN 
+         
+         #add-point:單身刪除前
+         {<point name="delete.body.b_delete" mark="Y"/>}
+         #end add-point   
+         
+         DELETE FROM rtaj_t
+          WHERE rtajent = g_enterprise AND 
+                rtaj001 = g_rtaj_d[li_idx].rtaj001
+ 
+         #add-point:單身刪除中
+         {<point name="delete.body.m_delete"/>}
+         #end add-point  
+                
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "rtaj_t" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            CALL s_transaction_end('N','0')
+            RETURN
+         ELSE
+            LET g_detail_cnt = g_detail_cnt-1
+            LET l_ac = li_idx
+            
+            
+ 
+            
+            
+ 
+            #add-point:單身同步刪除前(同層table)
+            {<point name="delete.body.a_delete"/>}
+            #end add-point
+            LET g_detail_idx = li_idx
+                           INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_rtaj_d_t.rtaj001
+ 
+            #add-point:單身同步刪除中(同層table)
+            {<point name="delete.body.a_delete2"/>}
+            #end add-point
+                           CALL arti203_delete_b('rtaj_t',gs_keys,"'1'")
+            #add-point:單身同步刪除後(同層table)
+            {<point name="delete.body.a_delete3"/>}
+            #end add-point
+         END IF 
+      END IF 
+    
+   END FOR
+   CALL s_transaction_end('Y','0')
+   
+   LET g_detail_idx = li_detail_tmp
+            
+   #add-point:單身刪除後
+   {<point name="delete.after"/>}
+   #end add-point  
+   
+   LET l_ac = li_ac_t
+   
+   #刷新資料
+   CALL arti203_b_fill(g_wc2)
+            
+END FUNCTION
+]]>
+  </section>
+  <section id="arti203.delete_b" ver="6" status="" src="s" readonly="">
+    <![CDATA[#+ 刪除單身後其他table連動
+PRIVATE FUNCTION arti203_delete_b(ps_table,ps_keys_bak,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:delete_b段define
+   {<point name="delete_b.define" edit="s"/>}
+   #end add-point     
+   #add-point:delete_b段define(客製用)
+   {<point name="delete_b.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "rtaj_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      IF ps_table <> 'rtaj_t' THEN
+         #add-point:delete_b段刪除前
+         {<point name="delete_b.b_delete" mark="Y"/>}
+         #end add-point     
+         
+         DELETE FROM rtaj_t
+          WHERE rtajent = g_enterprise AND
+            rtaj001 = ps_keys_bak[1]
+         
+         #add-point:delete_b段刪除中
+         {<point name="delete_b.m_delete"/>}
+         #end add-point  
+            
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = FALSE 
+            CALL cl_err()
+         END IF
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_rtaj_d.deleteElement(li_idx) 
+      END IF 
+      IF ps_page <> "'2'" THEN 
+         CALL g_rtaj2_d.deleteElement(li_idx) 
+      END IF 
+ 
+      
+      #add-point:delete_b段刪除後
+      {<point name="delete_b.a_delete"/>}
+      #end add-point
+      
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="arti203.description" ver="25" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000126
+#+ 
+#+ Filename...: arti203
+#+ Description: 條碼規則解析維護作業
+#+ Creator....: 02482(2014-02-17 16:36:02)
+#+ Modifier...: 06189(2015-06-03 09:24:19) -SD/PR-
+]]>
+  </section>
+  <section id="arti203.detail_show" ver="7" status="" src="s" readonly="">
+    <![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION arti203_detail_show()
+   #add-point:show段define
+   {<point name="detail_show.define" edit="s"/>}
+   #end add-point
+   #add-point:detail_show段define(客製用)
+   {<point name="detail_show.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值page1
+   
+    
+   #帶出公用欄位reference值page2
+   #應用 a12 樣板自動產生(Version:3)
+ 
+ 
+ 
+   
+   #讀入ref值
+   #add-point:show段單身reference
+   {<point name="detail_show.reference"/>}
+   #end add-point
+   
+   #add-point:show段單身reference
+   {<point name="detail_show.body2.reference"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="arti203.global" ver="11" status="" src="s" readonly="">
+    <![CDATA[#應用 i02 樣板自動產生(Version:13)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_rtaj_d RECORD
+       rtajstus LIKE rtaj_t.rtajstus, 
+   rtaj001 LIKE rtaj_t.rtaj001, 
+   rtaj002 LIKE rtaj_t.rtaj002, 
+   rtaj003 LIKE rtaj_t.rtaj003, 
+   rtaj004 LIKE rtaj_t.rtaj004, 
+   rtaj005 LIKE rtaj_t.rtaj005, 
+   rtaj006 LIKE rtaj_t.rtaj006, 
+   rtaj007 LIKE rtaj_t.rtaj007, 
+   rtaj008 LIKE rtaj_t.rtaj008, 
+   rtaj009 LIKE rtaj_t.rtaj009, 
+   rtaj010 LIKE rtaj_t.rtaj010, 
+   rtaj011 LIKE rtaj_t.rtaj011, 
+   rtaj012 LIKE rtaj_t.rtaj012, 
+   rtaj013 LIKE rtaj_t.rtaj013, 
+   rtaj014 LIKE rtaj_t.rtaj014, 
+   rtaj015 LIKE rtaj_t.rtaj015, 
+   rtaj016 LIKE rtaj_t.rtaj016, 
+   rtaj017 LIKE rtaj_t.rtaj017, 
+   rtaj018 LIKE rtaj_t.rtaj018, 
+   rtaj019 LIKE rtaj_t.rtaj019, 
+   rtaj020 LIKE rtaj_t.rtaj020, 
+   rtaj021 LIKE rtaj_t.rtaj021, 
+   rtajstamp DATETIME YEAR TO FRACTION(5), 
+   pos LIKE type_t.chr500
+       END RECORD
+PRIVATE TYPE type_g_rtaj2_d RECORD
+       rtaj001 LIKE rtaj_t.rtaj001, 
+   rtajmodid LIKE rtaj_t.rtajmodid, 
+   rtajmodid_desc LIKE type_t.chr500, 
+   rtajmoddt DATETIME YEAR TO SECOND, 
+   rtajownid LIKE rtaj_t.rtajownid, 
+   rtajownid_desc LIKE type_t.chr500, 
+   rtajowndp LIKE rtaj_t.rtajowndp, 
+   rtajowndp_desc LIKE type_t.chr500, 
+   rtajcrtid LIKE rtaj_t.rtajcrtid, 
+   rtajcrtid_desc LIKE type_t.chr500, 
+   rtajcrtdp LIKE rtaj_t.rtajcrtdp, 
+   rtajcrtdp_desc LIKE type_t.chr500, 
+   rtajcrtdt DATETIME YEAR TO SECOND
+       END RECORD
+ 
+ 
+ 
+#模組變數(Module Variables)
+DEFINE g_rtaj_d          DYNAMIC ARRAY OF type_g_rtaj_d #單身變數
+DEFINE g_rtaj_d_t        type_g_rtaj_d                  #單身備份
+DEFINE g_rtaj_d_o        type_g_rtaj_d                  #單身備份
+DEFINE g_rtaj_d_mask_o   DYNAMIC ARRAY OF type_g_rtaj_d #單身變數
+DEFINE g_rtaj_d_mask_n   DYNAMIC ARRAY OF type_g_rtaj_d #單身變數
+DEFINE g_rtaj2_d   DYNAMIC ARRAY OF type_g_rtaj2_d
+DEFINE g_rtaj2_d_t type_g_rtaj2_d
+DEFINE g_rtaj2_d_o type_g_rtaj2_d
+DEFINE g_rtaj2_d_mask_o DYNAMIC ARRAY OF type_g_rtaj2_d
+DEFINE g_rtaj2_d_mask_n DYNAMIC ARRAY OF type_g_rtaj2_d
+ 
+      
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_temp_idx           LIKE type_t.num10             #單身 所在筆數(暫存用)
+DEFINE g_detail_idx         LIKE type_t.num10             #單身 所在筆數(所有資料)
+DEFINE g_detail_cnt         LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_chk                BOOLEAN
+DEFINE g_aw                 STRING                        #確定當下點擊的單身
+DEFINE g_log1               STRING                        #log用
+DEFINE g_log2               STRING                        #log用
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="arti203.init" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 畫面資料初始化
+PRIVATE FUNCTION arti203_init()
+   #add-point:init段define
+   {<point name="init.define" edit="s"/>}
+   #end add-point   
+   #add-point:init段define(客製用)
+   {<point name="init.define_customerization" edit="c"/>}
+   #end add-point
+   
+   
+      CALL cl_set_combo_scc('rtaj001','6553') 
+   CALL cl_set_combo_scc('rtaj002','6554') 
+   CALL cl_set_combo_scc('rtaj003','6555') 
+   CALL cl_set_combo_scc('rtaj004','6556') 
+   CALL cl_set_combo_scc('rtaj005','6557') 
+   CALL cl_set_combo_scc('rtaj006','6556') 
+ 
+   LET g_error_show = 1
+   
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+   CALL arti203_default_search()
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="arti203.insert" ver="7" status="" src="s" readonly="">
+    <![CDATA[#+ 資料新增
+PRIVATE FUNCTION arti203_insert()
+   #add-point:delete段define
+   {<point name="insert.define" edit="s"/>}
+   #end add-point                
+   #add-point:insert段define(客製用)
+   {<point name="insert.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:單身新增前
+   {<point name="insert.b_insert"/>}
+   #end add-point
+   
+   LET g_insert = 'Y'
+   CALL arti203_modify()
+            
+   #add-point:單身新增後
+   {<point name="insert.a_insert"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="arti203.insert_b" ver="5" status="" src="s" readonly="">
+    <![CDATA[#+ 新增單身後其他table連動
+PRIVATE FUNCTION arti203_insert_b(ps_table,ps_keys,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:insert_b段define
+   {<point name="insert_b.define" edit="s"/>}
+   #end add-point     
+   #add-point:insert_b段define(客製用)
+   {<point name="insert_b.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "rtaj_t,"
+   #IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      
+      #add-point:insert_b段新增前
+      {<point name="insert_b.b_insert" mark="Y"/>}
+      #end add-point    
+      INSERT INTO rtaj_t
+                  (rtajent,
+                   rtaj001
+                   ,rtajstus,rtaj002,rtaj003,rtaj004,rtaj005,rtaj006,rtaj007,rtaj008,rtaj009,rtaj010,rtaj011,rtaj012,rtaj013,rtaj014,rtaj015,rtaj016,rtaj017,rtaj018,rtaj019,rtaj020,rtaj021,rtajstamp,rtajmodid,rtajmoddt,rtajownid,rtajowndp,rtajcrtid,rtajcrtdp,rtajcrtdt) 
+            VALUES(g_enterprise,
+                   ps_keys[1]
+                   ,g_rtaj_d[l_ac].rtajstus,g_rtaj_d[l_ac].rtaj002,g_rtaj_d[l_ac].rtaj003,g_rtaj_d[l_ac].rtaj004, 
+                       g_rtaj_d[l_ac].rtaj005,g_rtaj_d[l_ac].rtaj006,g_rtaj_d[l_ac].rtaj007,g_rtaj_d[l_ac].rtaj008, 
+                       g_rtaj_d[l_ac].rtaj009,g_rtaj_d[l_ac].rtaj010,g_rtaj_d[l_ac].rtaj011,g_rtaj_d[l_ac].rtaj012, 
+                       g_rtaj_d[l_ac].rtaj013,g_rtaj_d[l_ac].rtaj014,g_rtaj_d[l_ac].rtaj015,g_rtaj_d[l_ac].rtaj016, 
+                       g_rtaj_d[l_ac].rtaj017,g_rtaj_d[l_ac].rtaj018,g_rtaj_d[l_ac].rtaj019,g_rtaj_d[l_ac].rtaj020, 
+                       g_rtaj_d[l_ac].rtaj021,g_rtaj_d[l_ac].rtajstamp,g_rtaj2_d[l_ac].rtajmodid,g_rtaj2_d[l_ac].rtajmoddt, 
+                       g_rtaj2_d[l_ac].rtajownid,g_rtaj2_d[l_ac].rtajowndp,g_rtaj2_d[l_ac].rtajcrtid, 
+                       g_rtaj2_d[l_ac].rtajcrtdp,g_rtaj2_d[l_ac].rtajcrtdt)
+      #add-point:insert_b段新增中
+      {<point name="insert_b.m_insert"/>}
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "rtaj_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+      END IF
+      #add-point:insert_b段新增後
+      {<point name="insert_b.a_insert"/>}
+      #end add-point    
+   #END IF
+   
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="arti203.lock_b" ver="5" status="" src="s" readonly="">
+    <![CDATA[#+ 連動lock其他單身table資料
+PRIVATE FUNCTION arti203_lock_b(ps_table)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:lock_b段define
+   {<point name="lock_b.define" edit="s"/>}
+   #end add-point   
+   #add-point:lock_b段define(客製用)
+   {<point name="lock_b.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #先刷新資料
+   #CALL arti203_b_fill(g_wc2)
+   
+   #鎖定整組table
+   #LET ls_group = ""
+   #僅鎖定自身table
+   LET ls_group = "rtaj_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN arti203_bcl USING g_enterprise,
+                                       g_rtaj_d[g_detail_idx].rtaj001
+                                       
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "arti203_bcl" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   
+   END IF
+                                    
+ 
+   
+   RETURN TRUE
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="arti203.main" ver="8" status="" src="s" readonly="">
+    <![CDATA[#應用 a26 樣板自動產生(Version:4)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define
+   {<point name="main.define" edit="s"/>}
+   #end add-point   
+   #add-point:main段define(客製用)
+   {<point name="main.define_customerization" edit="c"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("art","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+ 
+ 
+   #add-point:main段define_sql
+   {<point name="main.body.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = "SELECT rtajstus,rtaj001,rtaj002,rtaj003,rtaj004,rtaj005,rtaj006,rtaj007,rtaj008, 
+       rtaj009,rtaj010,rtaj011,rtaj012,rtaj013,rtaj014,rtaj015,rtaj016,rtaj017,rtaj018,rtaj019,rtaj020, 
+       rtaj021,rtajstamp,rtaj001,rtajmodid,rtajmoddt,rtajownid,rtajowndp,rtajcrtid,rtajcrtdp,rtajcrtdt  
+       FROM rtaj_t WHERE rtajent=? AND rtaj001=? FOR UPDATE"
+   #add-point:main段define_sql
+   {<point name="main.body.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE arti203_bcl CURSOR FROM g_forupd_sql
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_arti203 WITH FORM cl_ap_formpath("art",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL arti203_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL arti203_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_arti203
+      
+   END IF 
+   
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+]]>
+  </section>
+  <section id="arti203.mask_functions" ver="1" status="" src="s" readonly="">
+    <![CDATA[&include "erp/art/arti203_mask.4gl"
+]]>
+  </section>
+  <section id="arti203.modify" ver="21" status="" src="s" readonly="">
+    <![CDATA[#+ 資料修改
+PRIVATE FUNCTION arti203_modify()
+   DEFINE  l_cmd                  LIKE type_t.chr1
+   DEFINE  l_ac_t                 LIKE type_t.num10               #未取消的ARRAY CNT 
+   DEFINE  l_n                    LIKE type_t.num10               #檢查重複用  
+   DEFINE  l_cnt                  LIKE type_t.num10               #檢查重複用  
+   DEFINE  l_lock_sw              LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert         LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete         LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count                LIKE type_t.num10
+   DEFINE  l_i                    LIKE type_t.num10
+   DEFINE  ls_return              STRING
+   DEFINE  l_var_keys             DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys           DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                 DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields               DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak         DYNAMIC ARRAY OF STRING
+   DEFINE  li_reproduce           LIKE type_t.num10
+   DEFINE  li_reproduce_target    LIKE type_t.num10
+   DEFINE  lb_reproduce           BOOLEAN
+   #add-point:modify段define
+   {<point name="modify.define" edit="s"/>}
+   #end add-point 
+   #add-point:modify段define(客製用)
+   {<point name="modify.define_customerization" edit="c"/>}
+   #end add-point
+   LET g_action_choice = ""
+   
+   LET g_qryparam.state = "i"
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #add-point:modify開始前
+   {<point name="modify.define_sql" mark="Y"/>}
+   #end add-point
+   
+   LET INT_FLAG = FALSE
+   LET lb_reproduce = FALSE
+ 
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+ 
+   #add-point:modify段修改前
+   {<point name="modify.before_input"/>}
+   #end add-point
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_rtaj_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_detail_cnt,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_rtaj_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL arti203_b_fill(g_wc2)
+            LET g_detail_cnt = g_rtaj_d.getLength()
+         
+         BEFORE ROW
+            #add-point:modify段before row
+            {<point name="input.body.before_row2"/>}
+            #end add-point  
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            LET l_cmd = ''
+            LET l_ac = g_detail_idx
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+            DISPLAY g_rtaj_d.getLength() TO FORMONLY.cnt
+         
+            CALL s_transaction_begin()
+            LET g_detail_cnt = g_rtaj_d.getLength()
+            
+            IF g_detail_cnt >= l_ac 
+               AND g_rtaj_d[l_ac].rtaj001 IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_rtaj_d_t.* = g_rtaj_d[l_ac].*  #BACKUP
+               LET g_rtaj_d_o.* = g_rtaj_d[l_ac].*  #BACKUP
+               IF NOT arti203_lock_b("rtaj_t") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH arti203_bcl INTO g_rtaj_d[l_ac].rtajstus,g_rtaj_d[l_ac].rtaj001,g_rtaj_d[l_ac].rtaj002, 
+                      g_rtaj_d[l_ac].rtaj003,g_rtaj_d[l_ac].rtaj004,g_rtaj_d[l_ac].rtaj005,g_rtaj_d[l_ac].rtaj006, 
+                      g_rtaj_d[l_ac].rtaj007,g_rtaj_d[l_ac].rtaj008,g_rtaj_d[l_ac].rtaj009,g_rtaj_d[l_ac].rtaj010, 
+                      g_rtaj_d[l_ac].rtaj011,g_rtaj_d[l_ac].rtaj012,g_rtaj_d[l_ac].rtaj013,g_rtaj_d[l_ac].rtaj014, 
+                      g_rtaj_d[l_ac].rtaj015,g_rtaj_d[l_ac].rtaj016,g_rtaj_d[l_ac].rtaj017,g_rtaj_d[l_ac].rtaj018, 
+                      g_rtaj_d[l_ac].rtaj019,g_rtaj_d[l_ac].rtaj020,g_rtaj_d[l_ac].rtaj021,g_rtaj_d[l_ac].rtajstamp, 
+                      g_rtaj2_d[l_ac].rtaj001,g_rtaj2_d[l_ac].rtajmodid,g_rtaj2_d[l_ac].rtajmoddt,g_rtaj2_d[l_ac].rtajownid, 
+                      g_rtaj2_d[l_ac].rtajowndp,g_rtaj2_d[l_ac].rtajcrtid,g_rtaj2_d[l_ac].rtajcrtdp, 
+                      g_rtaj2_d[l_ac].rtajcrtdt
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = g_rtaj_d_t.rtaj001 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_rtaj_d_mask_o[l_ac].* =  g_rtaj_d[l_ac].*
+                  CALL arti203_rtaj_t_mask()
+                  LET g_rtaj_d_mask_n[l_ac].* =  g_rtaj_d[l_ac].*
+                  
+                  CALL arti203_detail_show()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row
+            {<point name="input.body.before_row"/>}
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+        
+         BEFORE INSERT
+            
+            CALL s_transaction_begin()
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_rtaj_d_t.* TO NULL
+            INITIALIZE g_rtaj_d_o.* TO NULL
+            INITIALIZE g_rtaj_d[l_ac].* TO NULL 
+            #公用欄位給值(單身)
+            #應用 a14 樣板自動產生(Version:4)    
+      #公用欄位新增給值  
+      LET g_rtaj2_d[l_ac].rtajownid = g_user
+      LET g_rtaj2_d[l_ac].rtajowndp = g_dept
+      LET g_rtaj2_d[l_ac].rtajcrtid = g_user
+      LET g_rtaj2_d[l_ac].rtajcrtdp = g_dept 
+      LET g_rtaj2_d[l_ac].rtajcrtdt = cl_get_current()
+      LET g_rtaj2_d[l_ac].rtajmodid = g_user
+      LET g_rtaj2_d[l_ac].rtajmoddt = cl_get_current()
+      LET g_rtaj_d[l_ac].rtajstus = ''
+ 
+ 
+            #自定義預設值(單身2)
+                  LET g_rtaj_d[l_ac].rtajstus = "Y"
+ 
+            #add-point:modify段before備份
+            {<point name="input.body.before_bak"/>}
+            #end add-point
+            LET g_rtaj_d_t.* = g_rtaj_d[l_ac].*     #新輸入資料
+            LET g_rtaj_d_o.* = g_rtaj_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL arti203_set_entry_b("a")
+            CALL arti203_set_no_entry_b("a")
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_rtaj_d[li_reproduce_target].* = g_rtaj_d[li_reproduce].*
+               LET g_rtaj2_d[li_reproduce_target].* = g_rtaj2_d[li_reproduce].*
+ 
+               LET g_rtaj_d[g_rtaj_d.getLength()].rtaj001 = NULL
+ 
+            END IF
+            
+            #add-point:modify段before insert
+            {<point name="input.body.before_insert"/>}
+            #end add-point  
+  
+         AFTER INSERT
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM rtaj_t 
+             WHERE rtajent = g_enterprise AND rtaj001 = g_rtaj_d[l_ac].rtaj001
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前
+               {<point name="input.body.b_insert"/>}
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_rtaj_d[g_detail_idx].rtaj001
+               CALL arti203_insert_b('rtaj_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後
+               {<point name="input.body.a_insert"/>}
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code   = "std-00006" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               INITIALIZE g_rtaj_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "rtaj_t" 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL arti203_b_fill(g_wc2)
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert
+               {<point name="input.body.a_insert2"/>}
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ##ERROR 'INSERT O.K'
+               LET g_detail_cnt = g_detail_cnt + 1
+               
+               LET g_wc2 = g_wc2, " OR (rtaj001 = '", g_rtaj_d[l_ac].rtaj001, "' "
+ 
+                                  ,")"
+            END IF                
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+            ELSE
+               #add-point:單身刪除ask前
+               {<point name="input.body.b_delete_ask"/>}
+               #end add-point   
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   = -263 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前
+               {<point name="input.body.b_delete" mark="Y"/>}
+               #end add-point   
+               
+               DELETE FROM rtaj_t
+                WHERE rtajent = g_enterprise AND 
+                      rtaj001 = g_rtaj_d_t.rtaj001
+ 
+                      
+               #add-point:單身刪除中
+               {<point name="input.body.m_delete"/>}
+               #end add-point  
+                      
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "rtaj_t" 
+                  LET g_errparam.code   = SQLCA.sqlcode 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_detail_cnt = g_detail_cnt-1
+                  
+                  #add-point:單身刪除後
+                  {<point name="input.body.a_delete"/>}
+                  #end add-point
+                  #修改歷程記錄(刪除)
+                  CALL arti203_set_pk_array()
+                  IF NOT cl_log_modified_record('','') THEN 
+                     CALL s_transaction_end('N','0')
+                  ELSE
+                     CALL s_transaction_end('Y','0')
+                  END IF
+               END IF 
+               CLOSE arti203_bcl
+               #add-point:單身關閉bcl
+               {<point name="input.body.close"/>}
+               #end add-point
+               LET l_count = g_rtaj_d.getLength()
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_rtaj_d_t.rtaj001
+ 
+               #應用 a47 樣板自動產生(Version:2)
+      #刪除相關文件
+      CALL arti203_set_pk_array()
+      #add-point:相關文件刪除前
+      {<point name="delete.befroe.related_document_remove"/>}
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+            END IF 
+              
+         AFTER DELETE 
+            IF l_cmd <> 'd' THEN
+               #add-point:單身刪除後2
+               {<point name="input.body.after_delete"/>}
+               #end add-point
+                              CALL arti203_delete_b('rtaj_t',gs_keys,"'1'")
+            END IF
+            #如果是最後一筆
+            IF l_ac = (g_rtaj_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtajstus
+            #add-point:BEFORE FIELD rtajstus
+            {<point name="input.b.page1.rtajstus" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtajstus
+            
+            #add-point:AFTER FIELD rtajstus
+            {<point name="input.a.page1.rtajstus" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtajstus
+            #add-point:ON CHANGE rtajstus
+            {<point name="input.g.page1.rtajstus" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj001
+            #add-point:BEFORE FIELD rtaj001
+            {<point name="input.b.page1.rtaj001" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj001
+            
+            #add-point:AFTER FIELD rtaj001
+            {<point name="input.a.page1.rtaj001" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtaj001
+            #add-point:ON CHANGE rtaj001
+            {<point name="input.g.page1.rtaj001" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj002
+            #add-point:BEFORE FIELD rtaj002
+            {<point name="input.b.page1.rtaj002" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj002
+            
+            #add-point:AFTER FIELD rtaj002
+            {<point name="input.a.page1.rtaj002" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtaj002
+            #add-point:ON CHANGE rtaj002
+            {<point name="input.g.page1.rtaj002" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj003
+            #add-point:BEFORE FIELD rtaj003
+            {<point name="input.b.page1.rtaj003" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj003
+            
+            #add-point:AFTER FIELD rtaj003
+            {<point name="input.a.page1.rtaj003" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtaj003
+            #add-point:ON CHANGE rtaj003
+            {<point name="input.g.page1.rtaj003" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj004
+            #add-point:BEFORE FIELD rtaj004
+            {<point name="input.b.page1.rtaj004" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj004
+            
+            #add-point:AFTER FIELD rtaj004
+            {<point name="input.a.page1.rtaj004" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtaj004
+            #add-point:ON CHANGE rtaj004
+            {<point name="input.g.page1.rtaj004" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj005
+            #add-point:BEFORE FIELD rtaj005
+            {<point name="input.b.page1.rtaj005" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj005
+            
+            #add-point:AFTER FIELD rtaj005
+            {<point name="input.a.page1.rtaj005" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtaj005
+            #add-point:ON CHANGE rtaj005
+            {<point name="input.g.page1.rtaj005" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj006
+            #add-point:BEFORE FIELD rtaj006
+            {<point name="input.b.page1.rtaj006" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj006
+            
+            #add-point:AFTER FIELD rtaj006
+            {<point name="input.a.page1.rtaj006" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtaj006
+            #add-point:ON CHANGE rtaj006
+            {<point name="input.g.page1.rtaj006" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj007
+            #add-point:BEFORE FIELD rtaj007
+            {<point name="input.b.page1.rtaj007" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj007
+            
+            #add-point:AFTER FIELD rtaj007
+            {<point name="input.a.page1.rtaj007" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtaj007
+            #add-point:ON CHANGE rtaj007
+            {<point name="input.g.page1.rtaj007" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj008
+            #add-point:BEFORE FIELD rtaj008
+            {<point name="input.b.page1.rtaj008" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj008
+            
+            #add-point:AFTER FIELD rtaj008
+            {<point name="input.a.page1.rtaj008" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtaj008
+            #add-point:ON CHANGE rtaj008
+            {<point name="input.g.page1.rtaj008" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj009
+            #add-point:BEFORE FIELD rtaj009
+            {<point name="input.b.page1.rtaj009" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj009
+            
+            #add-point:AFTER FIELD rtaj009
+            {<point name="input.a.page1.rtaj009" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtaj009
+            #add-point:ON CHANGE rtaj009
+            {<point name="input.g.page1.rtaj009" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj010
+            #add-point:BEFORE FIELD rtaj010
+            {<point name="input.b.page1.rtaj010" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj010
+            
+            #add-point:AFTER FIELD rtaj010
+            {<point name="input.a.page1.rtaj010" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtaj010
+            #add-point:ON CHANGE rtaj010
+            {<point name="input.g.page1.rtaj010" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj011
+            #add-point:BEFORE FIELD rtaj011
+            {<point name="input.b.page1.rtaj011" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj011
+            
+            #add-point:AFTER FIELD rtaj011
+            {<point name="input.a.page1.rtaj011" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtaj011
+            #add-point:ON CHANGE rtaj011
+            {<point name="input.g.page1.rtaj011" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj012
+            #add-point:BEFORE FIELD rtaj012
+            {<point name="input.b.page1.rtaj012" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj012
+            
+            #add-point:AFTER FIELD rtaj012
+            {<point name="input.a.page1.rtaj012" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtaj012
+            #add-point:ON CHANGE rtaj012
+            {<point name="input.g.page1.rtaj012" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj013
+            #add-point:BEFORE FIELD rtaj013
+            {<point name="input.b.page1.rtaj013" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj013
+            
+            #add-point:AFTER FIELD rtaj013
+            {<point name="input.a.page1.rtaj013" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtaj013
+            #add-point:ON CHANGE rtaj013
+            {<point name="input.g.page1.rtaj013" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj014
+            #add-point:BEFORE FIELD rtaj014
+            {<point name="input.b.page1.rtaj014" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj014
+            
+            #add-point:AFTER FIELD rtaj014
+            {<point name="input.a.page1.rtaj014" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtaj014
+            #add-point:ON CHANGE rtaj014
+            {<point name="input.g.page1.rtaj014" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj015
+            #add-point:BEFORE FIELD rtaj015
+            {<point name="input.b.page1.rtaj015" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj015
+            
+            #add-point:AFTER FIELD rtaj015
+            {<point name="input.a.page1.rtaj015" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtaj015
+            #add-point:ON CHANGE rtaj015
+            {<point name="input.g.page1.rtaj015" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj016
+            #add-point:BEFORE FIELD rtaj016
+            {<point name="input.b.page1.rtaj016" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj016
+            
+            #add-point:AFTER FIELD rtaj016
+            {<point name="input.a.page1.rtaj016" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtaj016
+            #add-point:ON CHANGE rtaj016
+            {<point name="input.g.page1.rtaj016" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj017
+            #add-point:BEFORE FIELD rtaj017
+            {<point name="input.b.page1.rtaj017" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj017
+            
+            #add-point:AFTER FIELD rtaj017
+            {<point name="input.a.page1.rtaj017" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtaj017
+            #add-point:ON CHANGE rtaj017
+            {<point name="input.g.page1.rtaj017" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj018
+            #add-point:BEFORE FIELD rtaj018
+            {<point name="input.b.page1.rtaj018" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj018
+            
+            #add-point:AFTER FIELD rtaj018
+            {<point name="input.a.page1.rtaj018" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtaj018
+            #add-point:ON CHANGE rtaj018
+            {<point name="input.g.page1.rtaj018" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj019
+            #add-point:BEFORE FIELD rtaj019
+            {<point name="input.b.page1.rtaj019" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj019
+            
+            #add-point:AFTER FIELD rtaj019
+            {<point name="input.a.page1.rtaj019" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtaj019
+            #add-point:ON CHANGE rtaj019
+            {<point name="input.g.page1.rtaj019" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj020
+            #add-point:BEFORE FIELD rtaj020
+            {<point name="input.b.page1.rtaj020" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj020
+            
+            #add-point:AFTER FIELD rtaj020
+            {<point name="input.a.page1.rtaj020" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtaj020
+            #add-point:ON CHANGE rtaj020
+            {<point name="input.g.page1.rtaj020" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj021
+            #add-point:BEFORE FIELD rtaj021
+            {<point name="input.b.page1.rtaj021" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj021
+            
+            #add-point:AFTER FIELD rtaj021
+            {<point name="input.a.page1.rtaj021" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtaj021
+            #add-point:ON CHANGE rtaj021
+            {<point name="input.g.page1.rtaj021" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtajstamp
+            #add-point:BEFORE FIELD rtajstamp
+            {<point name="input.b.page1.rtajstamp" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtajstamp
+            
+            #add-point:AFTER FIELD rtajstamp
+            {<point name="input.a.page1.rtajstamp" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE rtajstamp
+            #add-point:ON CHANGE rtajstamp
+            {<point name="input.g.page1.rtajstamp" />}
+            #END add-point 
+ 
+ 
+                  #Ctrlp:input.c.page1.rtajstus
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtajstus
+            #add-point:ON ACTION controlp INFIELD rtajstus
+            {<point name="input.c.page1.rtajstus" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.rtaj001
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj001
+            #add-point:ON ACTION controlp INFIELD rtaj001
+            {<point name="input.c.page1.rtaj001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.rtaj002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj002
+            #add-point:ON ACTION controlp INFIELD rtaj002
+            {<point name="input.c.page1.rtaj002" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.rtaj003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj003
+            #add-point:ON ACTION controlp INFIELD rtaj003
+            {<point name="input.c.page1.rtaj003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.rtaj004
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj004
+            #add-point:ON ACTION controlp INFIELD rtaj004
+            {<point name="input.c.page1.rtaj004" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.rtaj005
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj005
+            #add-point:ON ACTION controlp INFIELD rtaj005
+            {<point name="input.c.page1.rtaj005" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.rtaj006
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj006
+            #add-point:ON ACTION controlp INFIELD rtaj006
+            {<point name="input.c.page1.rtaj006" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.rtaj007
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj007
+            #add-point:ON ACTION controlp INFIELD rtaj007
+            {<point name="input.c.page1.rtaj007" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.rtaj008
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj008
+            #add-point:ON ACTION controlp INFIELD rtaj008
+            {<point name="input.c.page1.rtaj008" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.rtaj009
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj009
+            #add-point:ON ACTION controlp INFIELD rtaj009
+            {<point name="input.c.page1.rtaj009" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.rtaj010
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj010
+            #add-point:ON ACTION controlp INFIELD rtaj010
+            {<point name="input.c.page1.rtaj010" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.rtaj011
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj011
+            #add-point:ON ACTION controlp INFIELD rtaj011
+            {<point name="input.c.page1.rtaj011" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.rtaj012
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj012
+            #add-point:ON ACTION controlp INFIELD rtaj012
+            {<point name="input.c.page1.rtaj012" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.rtaj013
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj013
+            #add-point:ON ACTION controlp INFIELD rtaj013
+            {<point name="input.c.page1.rtaj013" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.rtaj014
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj014
+            #add-point:ON ACTION controlp INFIELD rtaj014
+            {<point name="input.c.page1.rtaj014" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.rtaj015
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj015
+            #add-point:ON ACTION controlp INFIELD rtaj015
+            {<point name="input.c.page1.rtaj015" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.rtaj016
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj016
+            #add-point:ON ACTION controlp INFIELD rtaj016
+            {<point name="input.c.page1.rtaj016" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.rtaj017
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj017
+            #add-point:ON ACTION controlp INFIELD rtaj017
+            {<point name="input.c.page1.rtaj017" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.rtaj018
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj018
+            #add-point:ON ACTION controlp INFIELD rtaj018
+            {<point name="input.c.page1.rtaj018" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.rtaj019
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj019
+            #add-point:ON ACTION controlp INFIELD rtaj019
+            {<point name="input.c.page1.rtaj019" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.rtaj020
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj020
+            #add-point:ON ACTION controlp INFIELD rtaj020
+            {<point name="input.c.page1.rtaj020" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.rtaj021
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj021
+            #add-point:ON ACTION controlp INFIELD rtaj021
+            {<point name="input.c.page1.rtaj021" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.rtajstamp
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtajstamp
+            #add-point:ON ACTION controlp INFIELD rtajstamp
+            {<point name="input.c.page1.rtajstamp" />}
+            #END add-point
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               LET g_rtaj_d[l_ac].* = g_rtaj_d_t.*
+               CLOSE arti203_bcl
+               #add-point:單身取消時
+               {<point name="input.body.cancel"/>}
+               #end add-point
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = g_rtaj_d[l_ac].rtaj001 
+               LET g_errparam.code   = -263 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET g_rtaj_d[l_ac].* = g_rtaj_d_t.*
+            ELSE
+               #寫入修改者/修改日期資訊(單身)
+               LET g_rtaj2_d[l_ac].rtajmodid = g_user 
+LET g_rtaj2_d[l_ac].rtajmoddt = cl_get_current()
+LET g_rtaj2_d[l_ac].rtajmodid_desc = cl_get_username(g_rtaj2_d[l_ac].rtajmodid)
+            
+               #add-point:單身修改前
+               {<point name="input.body.b_update" mark="Y"/>}
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL arti203_rtaj_t_mask_restore('restore_mask_o')
+ 
+               UPDATE rtaj_t SET (rtajstus,rtaj001,rtaj002,rtaj003,rtaj004,rtaj005,rtaj006,rtaj007,rtaj008, 
+                   rtaj009,rtaj010,rtaj011,rtaj012,rtaj013,rtaj014,rtaj015,rtaj016,rtaj017,rtaj018,rtaj019, 
+                   rtaj020,rtaj021,rtajstamp,rtajmodid,rtajmoddt,rtajownid,rtajowndp,rtajcrtid,rtajcrtdp, 
+                   rtajcrtdt) = (g_rtaj_d[l_ac].rtajstus,g_rtaj_d[l_ac].rtaj001,g_rtaj_d[l_ac].rtaj002, 
+                   g_rtaj_d[l_ac].rtaj003,g_rtaj_d[l_ac].rtaj004,g_rtaj_d[l_ac].rtaj005,g_rtaj_d[l_ac].rtaj006, 
+                   g_rtaj_d[l_ac].rtaj007,g_rtaj_d[l_ac].rtaj008,g_rtaj_d[l_ac].rtaj009,g_rtaj_d[l_ac].rtaj010, 
+                   g_rtaj_d[l_ac].rtaj011,g_rtaj_d[l_ac].rtaj012,g_rtaj_d[l_ac].rtaj013,g_rtaj_d[l_ac].rtaj014, 
+                   g_rtaj_d[l_ac].rtaj015,g_rtaj_d[l_ac].rtaj016,g_rtaj_d[l_ac].rtaj017,g_rtaj_d[l_ac].rtaj018, 
+                   g_rtaj_d[l_ac].rtaj019,g_rtaj_d[l_ac].rtaj020,g_rtaj_d[l_ac].rtaj021,g_rtaj_d[l_ac].rtajstamp, 
+                   g_rtaj2_d[l_ac].rtajmodid,g_rtaj2_d[l_ac].rtajmoddt,g_rtaj2_d[l_ac].rtajownid,g_rtaj2_d[l_ac].rtajowndp, 
+                   g_rtaj2_d[l_ac].rtajcrtid,g_rtaj2_d[l_ac].rtajcrtdp,g_rtaj2_d[l_ac].rtajcrtdt)
+                WHERE rtajent = g_enterprise AND
+                  rtaj001 = g_rtaj_d_t.rtaj001 #項次   
+ 
+                  
+               #add-point:單身修改中
+               {<point name="input.body.m_update"/>}
+               #end add-point
+                  
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "rtaj_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                    WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "rtaj_t" 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_rtaj_d[g_detail_idx].rtaj001
+               LET gs_keys_bak[1] = g_rtaj_d_t.rtaj001
+               CALL arti203_update_b('rtaj_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                     
+                     #修改歷程記錄(修改)
+                     LET g_log1 = util.JSON.stringify(g_rtaj_d_t)
+                     LET g_log2 = util.JSON.stringify(g_rtaj_d[l_ac])
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                        CALL s_transaction_end('N','0')
+                     END IF
+               END CASE
+               
+               #將遮罩欄位進行遮蔽
+               CALL arti203_rtaj_t_mask_restore('restore_mask_n')
+               
+               #add-point:單身修改後
+               {<point name="input.body.a_update"/>}
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            CALL arti203_unlock_b("rtaj_t")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            
+             #add-point:單身after row
+            {<point name="input.body.a_row"/>}
+            #end add-point
+            
+         AFTER INPUT
+            #add-point:單身input後
+            {<point name="input.body.a_input"/>}
+            #end add-point
+            #錯誤訊息統整顯示
+            #CALL cl_err_collect_show()
+            #CALL cl_showmsg()
+            
+         ON ACTION controlo   
+            CALL FGL_SET_ARR_CURR(g_rtaj_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_rtaj_d.getLength()+1
+            
+      END INPUT
+      
+ 
+      
+      DISPLAY ARRAY g_rtaj2_d TO s_detail2.*
+         ATTRIBUTES(COUNT=g_detail_cnt)  
+      
+         BEFORE DISPLAY 
+            CALL arti203_b_fill(g_wc2)
+            CALL FGL_SET_ARR_CURR(g_detail_idx)
+      
+         BEFORE ROW
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+            LET l_ac = g_detail_idx
+            LET g_temp_idx = l_ac
+            DISPLAY g_detail_idx TO FORMONLY.idx
+            CALL cl_show_fld_cont() 
+            
+         #add-point:page2自定義行為
+         {<point name="input.body2.action"/>}
+         #end add-point
+            
+      END DISPLAY
+ 
+      
+      #add-point:before_more_input
+      {<point name="input.more_input"/>}
+      #end add-point
+      
+      BEFORE DIALOG
+         #CALL cl_err_collect_init()      
+         IF g_temp_idx > 0 THEN
+            LET l_ac = g_temp_idx
+            CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+            LET g_temp_idx = 1
+         END IF
+         #LET g_curr_diag = ui.DIALOG.getCurrent()
+         #add-point:before_dialog
+         {<point name="input.before_dialog"/>}
+         #end add-point
+         CASE g_aw
+            WHEN "s_detail1"
+               NEXT FIELD rtajstus
+            WHEN "s_detail2"
+               NEXT FIELD rtaj001_2
+ 
+         END CASE
+   
+      ON ACTION accept
+         ACCEPT DIALOG
+      
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         CANCEL DIALOG
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) 
+              RETURNING g_fld_name,g_frm_name 
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang) 
+           
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   
+   END DIALOG 
+    
+   #新增後取消
+   IF l_cmd = 'a' THEN
+      #當取消或無輸入資料按確定時刪除對應資料
+      IF INT_FLAG OR cl_null(g_rtaj_d[g_detail_idx].rtaj001) THEN
+         CALL g_rtaj_d.deleteElement(g_detail_idx)
+         CALL g_rtaj2_d.deleteElement(g_detail_idx)
+ 
+      END IF
+   END IF
+   
+   #修改後取消
+   IF l_cmd = 'u' AND INT_FLAG THEN
+      LET g_rtaj_d[g_detail_idx].* = g_rtaj_d_t.*
+   END IF
+   
+   #add-point:modify段修改後
+   {<point name="modify.after_input"/>}
+   #end add-point
+ 
+   CLOSE arti203_bcl
+   CALL s_transaction_end('Y','0')
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="arti203.modify_detail_chk" ver="6" status="" src="s" readonly="">
+    <![CDATA[#+ 單身輸入判定(因應modify_detail)
+PRIVATE FUNCTION arti203_modify_detail_chk(ps_record)
+   DEFINE ps_record STRING
+   DEFINE ls_return STRING
+   #add-point:modify_detail_chk段define
+   {<point name="modify_detail_chk.define" edit="s"/>}
+   #end add-point
+   #add-point:modify_detail_chk段define(客製用)
+   {<point name="modify_detail_chk.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:modify_detail_chk段開始前
+   {<point name="modify_detail_chk.before"/>}
+   #end add-point
+   
+   #根據sr名稱確定該page第一個欄位的名稱
+   CASE ps_record
+      WHEN "s_detail1" 
+         LET ls_return = "rtajstus"
+      WHEN "s_detail2"
+         LET ls_return = "rtaj001_2"
+ 
+      #add-point:modify_detail_chk段自訂page控制
+      {<point name="modify_detail_chk.page_control"/>}
+      #end add-point
+   END CASE
+    
+   #add-point:modify_detail_chk段結束前
+   {<point name="modify_detail_chk.after"/>}
+   #end add-point
+   
+   RETURN ls_return
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="arti203.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[ 
+]]>
+  </section>
+  <section id="arti203.other_function" ver="2" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="arti203.query" ver="12" status="" src="s" readonly="">
+    <![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION arti203_query()
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+   {<point name="query.define" edit="s"/>}
+   #end add-point 
+   #add-point:query段define(客製用)
+   {<point name="query.define_customerization" edit="c"/>}
+   #end add-point
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_rtaj_d.clear()
+   
+   LET g_qryparam.state = "c"
+   
+   #wc備份
+   LET ls_wc = g_wc2
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      CONSTRUCT g_wc2 ON rtajstus,rtaj001,rtaj002,rtaj003,rtaj004,rtaj005,rtaj006,rtaj007,rtaj008,rtaj009, 
+          rtaj010,rtaj011,rtaj012,rtaj013,rtaj014,rtaj015,rtaj016,rtaj017,rtaj018,rtaj019,rtaj020,rtaj021, 
+          rtajstamp,rtajmodid,rtajmoddt,rtajownid,rtajowndp,rtajcrtid,rtajcrtdp,rtajcrtdt 
+ 
+         FROM s_detail1[1].rtajstus,s_detail1[1].rtaj001,s_detail1[1].rtaj002,s_detail1[1].rtaj003,s_detail1[1].rtaj004, 
+             s_detail1[1].rtaj005,s_detail1[1].rtaj006,s_detail1[1].rtaj007,s_detail1[1].rtaj008,s_detail1[1].rtaj009, 
+             s_detail1[1].rtaj010,s_detail1[1].rtaj011,s_detail1[1].rtaj012,s_detail1[1].rtaj013,s_detail1[1].rtaj014, 
+             s_detail1[1].rtaj015,s_detail1[1].rtaj016,s_detail1[1].rtaj017,s_detail1[1].rtaj018,s_detail1[1].rtaj019, 
+             s_detail1[1].rtaj020,s_detail1[1].rtaj021,s_detail1[1].rtajstamp,s_detail2[1].rtajmodid, 
+             s_detail2[1].rtajmoddt,s_detail2[1].rtajownid,s_detail2[1].rtajowndp,s_detail2[1].rtajcrtid, 
+             s_detail2[1].rtajcrtdp,s_detail2[1].rtajcrtdt 
+      
+         #應用 a11 樣板自動產生(Version:2)
+         #共用欄位查詢處理  
+         ##----<<rtajcrtdt>>----
+         AFTER FIELD rtajcrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+         #----<<rtajmoddt>>----
+         AFTER FIELD rtajmoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<rtajcnfdt>>----
+         
+         #----<<rtajpstdt>>----
+ 
+ 
+      
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtajstus
+            #add-point:BEFORE FIELD rtajstus
+            {<point name="query.b.page1.rtajstus" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtajstus
+            
+            #add-point:AFTER FIELD rtajstus
+            {<point name="query.a.page1.rtajstus" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtajstus
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtajstus
+            #add-point:ON ACTION controlp INFIELD rtajstus
+            {<point name="query.c.page1.rtajstus" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj001
+            #add-point:BEFORE FIELD rtaj001
+            {<point name="query.b.page1.rtaj001" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj001
+            
+            #add-point:AFTER FIELD rtaj001
+            {<point name="query.a.page1.rtaj001" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtaj001
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj001
+            #add-point:ON ACTION controlp INFIELD rtaj001
+            {<point name="query.c.page1.rtaj001" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj002
+            #add-point:BEFORE FIELD rtaj002
+            {<point name="query.b.page1.rtaj002" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj002
+            
+            #add-point:AFTER FIELD rtaj002
+            {<point name="query.a.page1.rtaj002" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtaj002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj002
+            #add-point:ON ACTION controlp INFIELD rtaj002
+            {<point name="query.c.page1.rtaj002" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj003
+            #add-point:BEFORE FIELD rtaj003
+            {<point name="query.b.page1.rtaj003" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj003
+            
+            #add-point:AFTER FIELD rtaj003
+            {<point name="query.a.page1.rtaj003" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtaj003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj003
+            #add-point:ON ACTION controlp INFIELD rtaj003
+            {<point name="query.c.page1.rtaj003" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj004
+            #add-point:BEFORE FIELD rtaj004
+            {<point name="query.b.page1.rtaj004" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj004
+            
+            #add-point:AFTER FIELD rtaj004
+            {<point name="query.a.page1.rtaj004" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtaj004
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj004
+            #add-point:ON ACTION controlp INFIELD rtaj004
+            {<point name="query.c.page1.rtaj004" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj005
+            #add-point:BEFORE FIELD rtaj005
+            {<point name="query.b.page1.rtaj005" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj005
+            
+            #add-point:AFTER FIELD rtaj005
+            {<point name="query.a.page1.rtaj005" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtaj005
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj005
+            #add-point:ON ACTION controlp INFIELD rtaj005
+            {<point name="query.c.page1.rtaj005" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj006
+            #add-point:BEFORE FIELD rtaj006
+            {<point name="query.b.page1.rtaj006" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj006
+            
+            #add-point:AFTER FIELD rtaj006
+            {<point name="query.a.page1.rtaj006" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtaj006
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj006
+            #add-point:ON ACTION controlp INFIELD rtaj006
+            {<point name="query.c.page1.rtaj006" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj007
+            #add-point:BEFORE FIELD rtaj007
+            {<point name="query.b.page1.rtaj007" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj007
+            
+            #add-point:AFTER FIELD rtaj007
+            {<point name="query.a.page1.rtaj007" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtaj007
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj007
+            #add-point:ON ACTION controlp INFIELD rtaj007
+            {<point name="query.c.page1.rtaj007" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj008
+            #add-point:BEFORE FIELD rtaj008
+            {<point name="query.b.page1.rtaj008" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj008
+            
+            #add-point:AFTER FIELD rtaj008
+            {<point name="query.a.page1.rtaj008" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtaj008
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj008
+            #add-point:ON ACTION controlp INFIELD rtaj008
+            {<point name="query.c.page1.rtaj008" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj009
+            #add-point:BEFORE FIELD rtaj009
+            {<point name="query.b.page1.rtaj009" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj009
+            
+            #add-point:AFTER FIELD rtaj009
+            {<point name="query.a.page1.rtaj009" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtaj009
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj009
+            #add-point:ON ACTION controlp INFIELD rtaj009
+            {<point name="query.c.page1.rtaj009" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj010
+            #add-point:BEFORE FIELD rtaj010
+            {<point name="query.b.page1.rtaj010" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj010
+            
+            #add-point:AFTER FIELD rtaj010
+            {<point name="query.a.page1.rtaj010" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtaj010
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj010
+            #add-point:ON ACTION controlp INFIELD rtaj010
+            {<point name="query.c.page1.rtaj010" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj011
+            #add-point:BEFORE FIELD rtaj011
+            {<point name="query.b.page1.rtaj011" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj011
+            
+            #add-point:AFTER FIELD rtaj011
+            {<point name="query.a.page1.rtaj011" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtaj011
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj011
+            #add-point:ON ACTION controlp INFIELD rtaj011
+            {<point name="query.c.page1.rtaj011" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj012
+            #add-point:BEFORE FIELD rtaj012
+            {<point name="query.b.page1.rtaj012" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj012
+            
+            #add-point:AFTER FIELD rtaj012
+            {<point name="query.a.page1.rtaj012" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtaj012
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj012
+            #add-point:ON ACTION controlp INFIELD rtaj012
+            {<point name="query.c.page1.rtaj012" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj013
+            #add-point:BEFORE FIELD rtaj013
+            {<point name="query.b.page1.rtaj013" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj013
+            
+            #add-point:AFTER FIELD rtaj013
+            {<point name="query.a.page1.rtaj013" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtaj013
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj013
+            #add-point:ON ACTION controlp INFIELD rtaj013
+            {<point name="query.c.page1.rtaj013" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj014
+            #add-point:BEFORE FIELD rtaj014
+            {<point name="query.b.page1.rtaj014" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj014
+            
+            #add-point:AFTER FIELD rtaj014
+            {<point name="query.a.page1.rtaj014" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtaj014
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj014
+            #add-point:ON ACTION controlp INFIELD rtaj014
+            {<point name="query.c.page1.rtaj014" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj015
+            #add-point:BEFORE FIELD rtaj015
+            {<point name="query.b.page1.rtaj015" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj015
+            
+            #add-point:AFTER FIELD rtaj015
+            {<point name="query.a.page1.rtaj015" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtaj015
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj015
+            #add-point:ON ACTION controlp INFIELD rtaj015
+            {<point name="query.c.page1.rtaj015" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj016
+            #add-point:BEFORE FIELD rtaj016
+            {<point name="query.b.page1.rtaj016" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj016
+            
+            #add-point:AFTER FIELD rtaj016
+            {<point name="query.a.page1.rtaj016" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtaj016
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj016
+            #add-point:ON ACTION controlp INFIELD rtaj016
+            {<point name="query.c.page1.rtaj016" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj017
+            #add-point:BEFORE FIELD rtaj017
+            {<point name="query.b.page1.rtaj017" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj017
+            
+            #add-point:AFTER FIELD rtaj017
+            {<point name="query.a.page1.rtaj017" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtaj017
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj017
+            #add-point:ON ACTION controlp INFIELD rtaj017
+            {<point name="query.c.page1.rtaj017" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj018
+            #add-point:BEFORE FIELD rtaj018
+            {<point name="query.b.page1.rtaj018" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj018
+            
+            #add-point:AFTER FIELD rtaj018
+            {<point name="query.a.page1.rtaj018" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtaj018
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj018
+            #add-point:ON ACTION controlp INFIELD rtaj018
+            {<point name="query.c.page1.rtaj018" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj019
+            #add-point:BEFORE FIELD rtaj019
+            {<point name="query.b.page1.rtaj019" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj019
+            
+            #add-point:AFTER FIELD rtaj019
+            {<point name="query.a.page1.rtaj019" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtaj019
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj019
+            #add-point:ON ACTION controlp INFIELD rtaj019
+            {<point name="query.c.page1.rtaj019" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj020
+            #add-point:BEFORE FIELD rtaj020
+            {<point name="query.b.page1.rtaj020" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj020
+            
+            #add-point:AFTER FIELD rtaj020
+            {<point name="query.a.page1.rtaj020" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtaj020
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj020
+            #add-point:ON ACTION controlp INFIELD rtaj020
+            {<point name="query.c.page1.rtaj020" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtaj021
+            #add-point:BEFORE FIELD rtaj021
+            {<point name="query.b.page1.rtaj021" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtaj021
+            
+            #add-point:AFTER FIELD rtaj021
+            {<point name="query.a.page1.rtaj021" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtaj021
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtaj021
+            #add-point:ON ACTION controlp INFIELD rtaj021
+            {<point name="query.c.page1.rtaj021" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtajstamp
+            #add-point:BEFORE FIELD rtajstamp
+            {<point name="query.b.page1.rtajstamp" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtajstamp
+            
+            #add-point:AFTER FIELD rtajstamp
+            {<point name="query.a.page1.rtajstamp" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1.rtajstamp
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtajstamp
+            #add-point:ON ACTION controlp INFIELD rtajstamp
+            {<point name="query.c.page1.rtajstamp" />}
+            #END add-point
+ 
+  
+         
+                  #Ctrlp:construct.c.page2.rtajmodid
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtajmodid
+            #add-point:ON ACTION controlp INFIELD rtajmodid
+            {<point name="construct.c.page2.rtajmodid" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtajmodid
+            #add-point:BEFORE FIELD rtajmodid
+            {<point name="query.b.page2.rtajmodid" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtajmodid
+            
+            #add-point:AFTER FIELD rtajmodid
+            {<point name="query.a.page2.rtajmodid" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtajmoddt
+            #add-point:BEFORE FIELD rtajmoddt
+            {<point name="query.b.page2.rtajmoddt" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.page2.rtajownid
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtajownid
+            #add-point:ON ACTION controlp INFIELD rtajownid
+            {<point name="construct.c.page2.rtajownid" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtajownid
+            #add-point:BEFORE FIELD rtajownid
+            {<point name="query.b.page2.rtajownid" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtajownid
+            
+            #add-point:AFTER FIELD rtajownid
+            {<point name="query.a.page2.rtajownid" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.rtajowndp
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtajowndp
+            #add-point:ON ACTION controlp INFIELD rtajowndp
+            {<point name="construct.c.page2.rtajowndp" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtajowndp
+            #add-point:BEFORE FIELD rtajowndp
+            {<point name="query.b.page2.rtajowndp" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtajowndp
+            
+            #add-point:AFTER FIELD rtajowndp
+            {<point name="query.a.page2.rtajowndp" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.rtajcrtid
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtajcrtid
+            #add-point:ON ACTION controlp INFIELD rtajcrtid
+            {<point name="construct.c.page2.rtajcrtid" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtajcrtid
+            #add-point:BEFORE FIELD rtajcrtid
+            {<point name="query.b.page2.rtajcrtid" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtajcrtid
+            
+            #add-point:AFTER FIELD rtajcrtid
+            {<point name="query.a.page2.rtajcrtid" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.rtajcrtdp
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD rtajcrtdp
+            #add-point:ON ACTION controlp INFIELD rtajcrtdp
+            {<point name="construct.c.page2.rtajcrtdp" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtajcrtdp
+            #add-point:BEFORE FIELD rtajcrtdp
+            {<point name="query.b.page2.rtajcrtdp" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD rtajcrtdp
+            
+            #add-point:AFTER FIELD rtajcrtdp
+            {<point name="query.a.page2.rtajcrtdp" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD rtajcrtdt
+            #add-point:BEFORE FIELD rtajcrtdt
+            {<point name="query.b.page2.rtajcrtdt" />}
+            #END add-point
+ 
+  
+ 
+      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            {<point name="cs.before_construct"/>}
+            #end add-point 
+      
+      END CONSTRUCT
+  
+      #add-point:query段more_construct
+      {<point name="query.more_construct"/>}
+      #end add-point 
+  
+      BEFORE DIALOG 
+         CALL cl_qbe_init()
+         #add-point:query段before_dialog
+         {<point name="query.before_dialog"/>}
+         #end add-point 
+      
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+      
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         CANCEL DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+      CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:query段after_construct
+   {<point name="query.after_construct"/>}
+   #end add-point
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc2 = ls_wc
+   ELSE
+      LET g_error_show = 1
+      LET g_detail_idx = 1
+   END IF
+    
+   CALL arti203_b_fill(g_wc2)
+   
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   END IF
+   
+   LET INT_FLAG = FALSE
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="arti203.set_entry_b" ver="4" status="" src="s" readonly="">
+    <![CDATA[#+ 單身欄位開啟設定
+PRIVATE FUNCTION arti203_set_entry_b(p_cmd)                                                  
+   DEFINE p_cmd   LIKE type_t.chr1         
+   #add-point:set_entry_b段define
+   {<point name="set_entry_b.define" edit="s"/>}
+   #end add-point     
+   #add-point:set_entry_b段define(客製用)
+   {<point name="set_entry_b.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:set_entry_b段control
+   {<point name="set_entry_b.set_entry_b"/>}
+   #end add-point                                                                   
+                                                                                
+END FUNCTION                                                                    
+]]>
+  </section>
+  <section id="arti203.set_no_entry_b" ver="4" status="" src="s" readonly="">
+    <![CDATA[#+ 單身欄位關閉設定
+PRIVATE FUNCTION arti203_set_no_entry_b(p_cmd)                                               
+   DEFINE p_cmd   LIKE type_t.chr1           
+   #add-point:set_no_entry_b段define
+   {<point name="set_no_entry_b.define" edit="s"/>}
+   #end add-point
+   #add-point:set_no_entry_b段define(客製用)
+   {<point name="set_no_entry_b.define_customerization" edit="c"/>}
+   #end add-point   
+ 
+   #add-point:set_no_entry_b段control
+   {<point name="set_no_entry_b.set_no_entry_b"/>}
+   #end add-point       
+                                                                                
+END FUNCTION  
+]]>
+  </section>
+  <section id="arti203.set_pk_array" ver="3" status="" src="s" readonly="">
+    <![CDATA[   #應用 a51 樣板自動產生(Version:5)
+#+ 給予pk_array內容
+PRIVATE FUNCTION arti203_set_pk_array()
+   #add-point:set_pk_array段define
+   {<point name="set_pk_array.define" edit="s"/>}
+   #end add-point
+   #add-point:set_pk_array段define
+   {<point name="set_pk_array.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:set_pk_array段之前
+   {<point name="set_pk_array.before"/>}
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_rtaj_d[l_ac].rtaj001
+   LET g_pk_array[1].column = 'rtaj001'
+ 
+   
+   #add-point:set_pk_array段之後
+   {<point name="set_pk_array.after"/>}
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+]]>
+  </section>
+  <section id="arti203.state_change" ver="1" status="" src="s" readonly="">
+    <![CDATA[   
+]]>
+  </section>
+  <section id="arti203.ui_dialog" ver="18" status="" src="s" readonly="">
+    <![CDATA[#+ 功能選單 
+PRIVATE FUNCTION arti203_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE la_param  RECORD #串查用
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define" edit="s"/>}
+   #end add-point 
+   #add-point:ui_dialog段define(客製用)
+   {<point name="ui_dialog.define_customerization" edit="c"/>}
+   #end add-point
+   
+   LET g_action_choice = " "  
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()      
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   
+   LET g_detail_idx = 1
+   
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_rtaj_d.clear()
+         CALL g_rtaj2_d.clear()
+ 
+         LET g_wc2 = ' 1=2'
+         LET g_action_choice = ""
+         CALL arti203_init()
+      END IF
+   
+      CALL arti203_b_fill(g_wc2)
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_rtaj_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               #add-point:ui_dialog段before display 
+               {<point name="ui_dialog.body.before_display" mark="Y"/>}
+               #end add-point
+               #讓各頁籤能夠同步指到特定資料
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               #add-point:ui_dialog段before display2
+               {<point name="ui_dialog.body.before_display2"/>}
+               #end add-point
+               
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               LET g_temp_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont() 
+               #顯示followup圖示
+               #應用 a48 樣板自動產生(Version:2)
+   CALL arti203_set_pk_array()
+   #add-point:ON ACTION agendum
+   {<point name="show.follow_pic"/>}
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+               #add-point:display array-before row
+               {<point name="ui_dialog.before_row"/>}
+               #end add-point
+         
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY
+      
+         DISPLAY ARRAY g_rtaj2_d TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               #add-point:ui_dialog段before display 
+               {<point name="ui_dialog.body2.before_display" mark="Y"/>}
+               #end add-point
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               #add-point:ui_dialog段before display2
+               {<point name="ui_dialog.body2.before_display2"/>}
+               #end add-point
+         
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx
+               LET g_temp_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont() 
+               #顯示followup圖示
+               #應用 a48 樣板自動產生(Version:2)
+   CALL arti203_set_pk_array()
+   #add-point:ON ACTION agendum
+   {<point name="show.follow_pic"/>}
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+               #add-point:display array-before row
+               {<point name="ui_dialog.before_row2"/>}
+               #end add-point
+               
+            #自訂ACTION(detail_show,page_2)
+            
+               
+         END DISPLAY
+ 
+      
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+    
+         BEFORE DIALOG
+            IF g_temp_idx > 0 THEN
+               LET l_ac = g_temp_idx
+               CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+               LET g_temp_idx = 1
+            END IF
+            LET g_curr_diag = ui.DIALOG.getCurrent()         
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            CALL DIALOG.setSelectionMode("s_detail2", 1)
+ 
+            #add-point:ui_dialog段before
+            {<point name="ui_dialog.b_dialog"/>}
+            #end add-point
+            NEXT FIELD CURRENT
+      
+         
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL arti203_modify()
+               #add-point:ON ACTION modify
+               {<point name="menu.modify" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = g_curr_diag.getCurrentItem()
+               CALL arti203_modify()
+               #add-point:ON ACTION modify_detail
+               {<point name="menu.modify_detail" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL arti203_delete()
+               #add-point:ON ACTION delete
+               {<point name="menu.delete" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL arti203_insert()
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               
+               #add-point:ON ACTION reproduce
+               {<point name="menu.reproduce" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL arti203_query()
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+               #應用 a59 樣板自動產生(Version:2)  
+               CALL g_curr_diag.setCurrentRow("s_detail1",1)
+               CALL g_curr_diag.setCurrentRow("s_detail2",1)
+ 
+ 
+ 
+            END IF
+ 
+ 
+ 
+      
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_rtaj_d)
+               LET g_export_id[1]   = "s_detail1"
+               LET g_export_node[2] = base.typeInfo.create(g_rtaj2_d)
+               LET g_export_id[2]   = "s_detail2"
+ 
+               #add-point:ON ACTION exporttoexcel
+               {<point name="menu.exporttoexcel" />}
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+            
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice="exit"
+            CANCEL DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            CANCEL DIALOG
+            
+         
+         
+         #應用 a46 樣板自動產生(Version:2)
+         #新增相關文件
+         ON ACTION related_document
+            CALL arti203_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document
+               {<point name="ui_dialog.dialog.related_document"/>}
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL arti203_set_pk_array()
+            #add-point:ON ACTION agendum
+            {<point name="ui_dialog.dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL arti203_set_pk_array()
+            #add-point:ON ACTION followup
+            {<point name="ui_dialog.dialog.followup"/>}
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+         
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #add-point:ui_dialog段離開dialog前
+         {<point name="ui_dialog.b_exit"/>}
+         #end add-point
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="arti203.unlock_b" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION arti203_unlock_b(ps_table)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:unlock_b段define
+   {<point name="unlock_b.define" edit="s"/>}
+   #end add-point  
+   #add-point:unlock_b段define(客製用)
+   {<point name="unlock_b.define_customerization" edit="c"/>}
+   #end add-point
+   
+   LET ls_group = ""
+   
+   #IF ls_group.getIndexOf(ps_table,1) THEN
+      CLOSE arti203_bcl
+   #END IF
+   
+ 
+   
+   #add-point:unlock_b段結束前
+   {<point name="unlock_b.after"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="arti203.update_b" ver="6" status="" src="s" readonly="">
+    <![CDATA[#+ 修改單身後其他table連動
+PRIVATE FUNCTION arti203_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   DEFINE ps_page          STRING
+   DEFINE ps_table         STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num10
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define
+   {<point name="update_b.define" edit="s"/>}
+   #end add-point     
+   #add-point:update_b段define(客製用)
+   {<point name="update_b.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #比對新舊值, 判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #若key無變動, 不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+    
+   #若key有變動, 則連動其他table的資料   
+   #判斷是否是同一群組的table
+   LET ls_group = "rtaj_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 AND ps_table <> "rtaj_t" THEN
+      #add-point:update_b段修改前
+      {<point name="update_b.b_update" mark="Y"/>}
+      #end add-point     
+      UPDATE rtaj_t 
+         SET (rtaj001
+              ,rtajstus,rtaj002,rtaj003,rtaj004,rtaj005,rtaj006,rtaj007,rtaj008,rtaj009,rtaj010,rtaj011,rtaj012,rtaj013,rtaj014,rtaj015,rtaj016,rtaj017,rtaj018,rtaj019,rtaj020,rtaj021,rtajstamp,rtajmodid,rtajmoddt,rtajownid,rtajowndp,rtajcrtid,rtajcrtdp,rtajcrtdt) 
+              = 
+             (ps_keys[1]
+              ,g_rtaj_d[l_ac].rtajstus,g_rtaj_d[l_ac].rtaj002,g_rtaj_d[l_ac].rtaj003,g_rtaj_d[l_ac].rtaj004, 
+                  g_rtaj_d[l_ac].rtaj005,g_rtaj_d[l_ac].rtaj006,g_rtaj_d[l_ac].rtaj007,g_rtaj_d[l_ac].rtaj008, 
+                  g_rtaj_d[l_ac].rtaj009,g_rtaj_d[l_ac].rtaj010,g_rtaj_d[l_ac].rtaj011,g_rtaj_d[l_ac].rtaj012, 
+                  g_rtaj_d[l_ac].rtaj013,g_rtaj_d[l_ac].rtaj014,g_rtaj_d[l_ac].rtaj015,g_rtaj_d[l_ac].rtaj016, 
+                  g_rtaj_d[l_ac].rtaj017,g_rtaj_d[l_ac].rtaj018,g_rtaj_d[l_ac].rtaj019,g_rtaj_d[l_ac].rtaj020, 
+                  g_rtaj_d[l_ac].rtaj021,g_rtaj_d[l_ac].rtajstamp,g_rtaj2_d[l_ac].rtajmodid,g_rtaj2_d[l_ac].rtajmoddt, 
+                  g_rtaj2_d[l_ac].rtajownid,g_rtaj2_d[l_ac].rtajowndp,g_rtaj2_d[l_ac].rtajcrtid,g_rtaj2_d[l_ac].rtajcrtdp, 
+                  g_rtaj2_d[l_ac].rtajcrtdt) 
+         WHERE rtaj001 = ps_keys_bak[1]
+      #add-point:update_b段修改中
+      {<point name="update_b.m_update"/>}
+      #end add-point 
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "rtaj_t" 
+            LET g_errparam.code   = "std-00009" 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "rtaj_t" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      #add-point:update_b段修改後
+      {<point name="update_b.a_update"/>}
+      #end add-point 
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+]]>
+  </section>
+</add_points>

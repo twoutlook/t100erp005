@@ -1,0 +1,99 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmi140" module="anm" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02295" crtdt="2013-07-01 00:00:00" modid="06821" moddt="2015-07-15 15:29:08" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="銀行帳戶類型設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmag001,nmagl003,nmag002,nmag003,nmagstus"/>
+      <var id="body" page="2" record="s_detail1_info" page_id="1_info" value="nmag001_s_detail1_info(chr500),nmagmodid,nmagmodid_desc(chr500),nmagmoddt,nmagownid,nmagownid_desc(chr500),nmagowndp,nmagowndp_desc(chr500),nmagcrtid,nmagcrtid_desc(chr500),nmagcrtdp,nmagcrtdp_desc(chr500),nmagcrtdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmi140" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="nmagl003,nmag002,nmag003,nmagstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="nmag001,nmagl003,nmag002,nmag003,nmagstus"/>
+      <construct id="body" page="2" field="nmagmodid,nmagmoddt,nmagownid,nmagowndp,nmagcrtid,nmagcrtdp,nmagcrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="nmag001"/>
+      <column id="nmagl003"/>
+      <column id="nmag002" type="S" default="1"/>
+      <column id="nmag003">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="nmagstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="nmag001_s_detail1_info"/>
+      <column id="nmagmodid">
+        <after>
+          <reference field="nmagmodid_desc" ref_field="nmag_t.nmagmodid" map_field="nmagmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmagmodid_desc"/>
+      <column id="nmagmoddt"/>
+      <column id="nmagownid">
+        <after>
+          <reference field="nmagownid_desc" ref_field="nmag_t.nmagownid" map_field="nmagownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmagownid_desc"/>
+      <column id="nmagowndp">
+        <after>
+          <reference field="nmagowndp_desc" ref_field="nmag_t.nmagowndp" map_field="nmagowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmagowndp_desc"/>
+      <column id="nmagcrtid">
+        <after>
+          <reference field="nmagcrtid_desc" ref_field="nmag_t.nmagcrtid" map_field="nmagcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmagcrtid_desc"/>
+      <column id="nmagcrtdp">
+        <after>
+          <reference field="nmagcrtdp_desc" ref_field="nmag_t.nmagcrtdp" map_field="nmagcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmagcrtdp_desc"/>
+      <column id="nmagcrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="nmag_t" page="1,2" linked="" pk="nmag001">
+      <sql id="forupd_sql_detail" query="SELECT nmag001,&apos;&apos;,nmag002,nmag003,nmagstus,&apos;&apos;,nmagmodid,&apos;&apos;,nmagmoddt,nmagownid,&apos;&apos;,nmagowndp,&apos;&apos;,nmagcrtid,&apos;&apos;,nmagcrtdp,&apos;&apos;,nmagcrtdt FROM nmag_t WHERE nmagent=? AND nmag001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmag001,&apos;&apos;,nmag002,nmag003,nmagstus,&apos;&apos;,nmagmodid,&apos;&apos;,nmagmoddt,nmagownid,&apos;&apos;,nmagowndp,&apos;&apos;,nmagcrtid,&apos;&apos;,nmagcrtdp,&apos;&apos;,nmagcrtdt FROM nmag_t WHERE nmagent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="nmagl_t.nmagl003" table="nmagl_t" fk="nmag001" pk="nmagl001,nmagl002" field="nmagl003"/>
+    </body>
+  </dataset>
+</assembly>
+

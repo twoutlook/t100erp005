@@ -1,0 +1,179 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmt080" module="afm" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="00810" crtdt="2014-10-20 16:37:06" modid="00810" moddt="2014-10-30 10:14:23" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="(取消)計提利息維護">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="fmaz002,fmaz003,fmaz012,fmaz013,b_stus(chr500)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="fmaz014,fmaz001,fmaz001_desc(chr500),fmaz001_desc_1(chr500),fmaz004,fmaz011,fmaz006,fmaz006_desc(chr500),sumday(chr500),fmaz011_desc(num20_6),fmaz008,fmaz001_desc_2(chr500),fmaz010"/>
+      <var id="body" page="2" record="s_detail3" page_id="3" value="fmaz014_1(num10),fmazownid,fmazownid_desc(chr500),fmazowndp,fmazowndp_desc(chr500),fmazcrtid,fmazcrtid_desc(chr500),fmazcrtdp,fmazcrtdp_desc(chr500),fmazcrtdt,fmazmodid,fmazmodid_desc(chr500),fmazmoddt,fmazcnfid,fmazcnfid_desc(chr500),fmazcnfdt,fmazpstid,fmazpstid_desc(chr500),fmazpstdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="open_afmt080_1"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="open_afmp010"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="open_afmt080_2"/>
+      <action id="statechange"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmt080" method="dialog">
+    <section id="input">
+      <input id="head" field="fmaz002,fmaz003,fmaz012"/>
+      <input id="body" page="1" field="fmaz001,fmaz004,fmaz011,fmaz006,sumday,fmaz008,fmaz010" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="fmaz014_1" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="fmaz002,fmaz003,fmaz012"/>
+      <construct id="body" page="1" field="fmaz001,fmaz004,fmaz006,sumday,fmaz008,fmaz010"/>
+      <construct id="body" page="2" field="fmaz014_1,fmazownid,fmazowndp,fmazcrtid,fmazcrtdp,fmazcrtdt,fmazmodid,fmazmoddt,fmazcnfid,fmazcnfdt,fmazpstid,fmazpstdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="fmaz002,fmaz003"/>
+      <set id="head" type="no_entry" field="fmaz002,fmaz003"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="fmaz002">
+        <controlp form="q_glav001_1" state="i"/>
+        <controlp form="q_glav001_1" state="c"/>
+      </column>
+      <column id="fmaz003">
+        <controlp form="q_glav001_2" state="i"/>
+        <controlp form="q_glav001_2" state="c"/>
+      </column>
+      <column id="fmaz012">
+        <after>
+          <check chkid="v_fmar009" id="isExist"/>
+        </after>
+        <controlp form="q_ooed005" state="i"/>
+        <controlp form="q_ooed005" state="c"/>
+      </column>
+      <column id="fmaz013" type="S" default="1"/>
+      <column id="b_stus" type="S" default="N"/>
+    </init>
+    <init id="body" page="1">
+      <column id="fmaz014"/>
+      <column id="fmaz001">
+        <after>
+          <check chkid="v_fmar003" id="isExist"/>
+          <reference field="fmaz001_desc" ref_field="fmaz_t.fmaz001" map_field="fmazent,fmaz001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004_7" state="i"/>
+        <controlp form="q_fmaw004" state="c"/>
+      </column>
+      <column id="fmaz001_desc"/>
+      <column id="fmaz001_desc_1"/>
+      <column id="fmaz004">
+        <after>
+          <check chkid="v_fmar002" id="isExist"/>
+        </after>
+        <controlp form="q_fmaj001_1" state="i"/>
+        <controlp form="q_fmaw003" state="c"/>
+      </column>
+      <column id="fmaz011">
+        <after>
+          <check chkid="v_fmaw010" id="isExist"/>
+          <reference field="fmaz011_desc" ref_field="fmaz004,fmaz011" map_field="fmaz004,fmaz011" ref_sql="SELECT fmam005 FROM fmam_t WHERE fmament=$varg_enterprise$var AND fmam001=? AND fmam006=? "/>
+        </after>
+        <controlp form="q_fmak011" state="i"/>
+        <controlp form="q_fmaw010" state="c"/>
+      </column>
+      <column id="fmaz006">
+        <after>
+          <check chkid="v_ooaj002" id="isExist"/>
+          <reference field="fmaz006_desc" ref_field="fmaz_t.fmaz006" map_field="fmaz006" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooaj002" state="i"/>
+        <controlp form="q_ooaj002" state="c"/>
+      </column>
+      <column id="fmaz006_desc"/>
+      <column id="sumday"/>
+      <column id="fmaz011_desc"/>
+      <column id="fmaz008">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmaz001_desc_2"/>
+      <column id="fmaz010">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="fmaz014_1"/>
+      <column id="fmazownid">
+        <after>
+          <reference field="fmazownid_desc" ref_field="fmaz_t.fmazownid" map_field="fmazownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmazownid_desc"/>
+      <column id="fmazowndp">
+        <after>
+          <reference field="fmazowndp_desc" ref_field="fmaz_t.fmazowndp" map_field="fmazowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmazowndp_desc"/>
+      <column id="fmazcrtid">
+        <after>
+          <reference field="fmazcrtid_desc" ref_field="fmaz_t.fmazcrtid" map_field="fmazcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmazcrtid_desc"/>
+      <column id="fmazcrtdp">
+        <after>
+          <reference field="fmazcrtdp_desc" ref_field="fmaz_t.fmazcrtdp" map_field="fmazcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmazcrtdp_desc"/>
+      <column id="fmazcrtdt"/>
+      <column id="fmazmodid">
+        <after>
+          <reference field="fmazmodid_desc" ref_field="fmaz_t.fmazmodid" map_field="fmazmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmazmodid_desc"/>
+      <column id="fmazmoddt"/>
+      <column id="fmazcnfid">
+        <after>
+          <reference field="fmazcnfid_desc" ref_field="fmaz_t.fmazcnfid" map_field="fmazcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmazcnfid_desc"/>
+      <column id="fmazcnfdt"/>
+      <column id="fmazpstid">
+        <after>
+          <reference field="fmazpstid_desc" ref_field="fmaz_t.fmazpstid" map_field="fmazpstid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmazpstid_desc"/>
+      <column id="fmazpstdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="fmaz_t" pk="fmaz002,fmaz003">
+      <sql id="forupd_sql" type="sql" query="SELECT fmaz002,fmaz003,fmaz012,fmaz013,&apos;&apos; FROM fmaz_t WHERE fmazent= ? AND fmaz002=? AND fmaz003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT fmaz002,fmaz003,fmaz012,fmaz013,&apos;&apos; FROM fmaz_t" order="fmaz002,fmaz003"/>
+    </head>
+    <body id="fmaz_t" page="1,2" linked="" pk="fmaz014" fk="fmaz002,fmaz003">
+      <sql id="forupd_sql_detail" query="SELECT fmaz014,fmaz001,&apos;&apos;,&apos;&apos;,fmaz004,fmaz011,fmaz006,&apos;&apos;,&apos;&apos;,&apos;&apos;,fmaz008,&apos;&apos;,fmaz010,&apos;&apos;,fmazownid,&apos;&apos;,fmazowndp,&apos;&apos;,fmazcrtid,&apos;&apos;,fmazcrtdp,&apos;&apos;,fmazcrtdt,fmazmodid,&apos;&apos;,fmazmoddt,fmazcnfid,&apos;&apos;,fmazcnfdt,fmazpstid,&apos;&apos;,fmazpstdt FROM fmaz_t WHERE fmazent=? AND fmaz002=? AND fmaz003=? AND fmaz014=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT fmaz014,fmaz001,&apos;&apos;,&apos;&apos;,fmaz004,fmaz011,fmaz006,&apos;&apos;,&apos;&apos;,&apos;&apos;,fmaz008,&apos;&apos;,fmaz010,&apos;&apos;,fmazownid,&apos;&apos;,fmazowndp,&apos;&apos;,fmazcrtid,&apos;&apos;,fmazcrtdp,&apos;&apos;,fmazcrtdt,fmazmodid,&apos;&apos;,fmazmoddt,fmazcnfid,&apos;&apos;,fmazcnfdt,fmazpstid,&apos;&apos;,fmazpstdt FROM fmaz_t WHERE fmazent= ? AND fmaz002=? AND fmaz003=?"/>
+    </body>
+  </dataset>
+</assembly>
+

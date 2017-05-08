@@ -1,0 +1,2135 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aisp330.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0010(2016-02-18 11:35:24), PR版次:0010(2017-02-23 19:16:54)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000039
+#+ Filename...: aisp330
+#+ Description: 電子計算機發票批次列印作業
+#+ Creator....: 06821(2016-02-18 10:51:51)
+#+ Modifier...: 06821 -SD/PR- 06821
+ 
+{</section>}
+ 
+{<section id="aisp330.global" >}
+#應用 p02 樣板自動產生(Version:22)
+#add-point:填寫註解說明 name="global.memo"
+#160321-00016#34 2016/03/25 By Jessy  修正azzi920重複定義之錯誤訊息
+#160318-00025#44 2016/04/19 By 07959  將重複內容的錯誤訊息置換為公用錯誤訊息(r.v)
+#160704-00017#1  2016/08/18 By 08171  topmenu call aisp330 / aisp350 時傳入當前的單據資訊並帶出在單身
+#                                     1.對帳單號 2.發票類型 3.發票日期 當前若無資料,則不可執行 topmenu 發票列印
+#160920-00019#6  2016/09/20 By 08732  交易對象開窗調整為q_pmaa001_13
+#                                     發票簿檢核,比照發票簿開窗, 用生效日和失效日做為檢核依據
+#161006-00005#26 2016/10/21 By Reanna 1.帳務中心(isafsite)開窗改用q_ooef001_46()
+#                                     2.開票部門(isaf006)開窗後顯示的資料需存在aisi090
+#161101-00037#1  2016/11/01 By Reanna 發票簿檢核移除年度&起始月&結束月的檢核
+#161209-00037#1  2016/12/09 By Reanna 本幣取位
+#161226-00013#1  2016/12/26 By Reanna 調整取得glaa001的位置
+#170120-00040#1  2017/01/23 By Reanna 更新發票簿資料檔(isae_t)時，需一併更新：資料修改者(isaemodid)、最近修改日(isaemoddt)
+#170220-00041#1  2017/02/23 By 06821  aist310 整單操作執行發票列印aisp330時，判斷傳入 發票類型(是否需輸入發票簿條件) 對發票簿條件區塊隱顯控制，如發票簿條件區塊 顯示，加判斷傳入的單據有發票簿資訊則帶入，發票簿條件區塊隱藏，若無發票簿資訊則發票簿條件必輸,不得為空
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+#add-point:增加匯入變數檔 name="global.inc"
+ 
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10             #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num10             #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+        isafsite       LIKE isaf_t.isafsite, #發票條件--- 
+        isafsite_desc  LIKE type_t.chr500,
+        isafcomp       LIKE isaf_t.isafcomp, 
+        isafcomp_desc  LIKE type_t.chr500,
+        isafdocno      LIKE isaf_t.isafdocno, 
+        isaf008        LIKE isaf_t.isaf008,
+        isaf008_desc   LIKE type_t.chr500,
+        l_isaf014_s    LIKE isaf_t.isaf014,  #發票日期範圍起
+        l_isaf014_e    LIKE isaf_t.isaf014,  #發票日期範圍迄
+        isaf052        LIKE isaf_t.isaf052,  #發票簿條件---
+        isaf052_desc   LIKE type_t.chr500,   #營運據點說明
+        isaf051        LIKE isaf_t.isaf051,  #發票簿號
+        l_isae014      LIKE isae_t.isae014,  #已開發票日期
+        l_isae008      LIKE isae_t.isae008,  #發票代碼
+        l_isae012      LIKE isae_t.isae012,  #起始列印發票號碼
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)  #注意要在add-point內寫入END RECORD name="global.variable"
+        sel          LIKE type_t.chr1,
+        isafdocno    LIKE isaf_t.isafdocno,
+        isaf014      LIKE isaf_t.isaf014,  
+        isaf002      LIKE isaf_t.isaf002,  
+        isaf021      LIKE isaf_t.isaf021,  
+        isat003      LIKE isat_t.isat003,  
+        isat004      LIKE isat_t.isat004,  
+        isat021      LIKE isat_t.isat021,  
+        isat113      LIKE isat_t.isat113,  
+        isat114      LIKE isat_t.isat114,  
+        isat115      LIKE isat_t.isat115,  
+        isafcomp     LIKE isaf_t.isafcomp,  #暫不使用
+        isaf008      LIKE isaf_t.isaf008,   #暫不使用
+        isafsite     LIKE isaf_t.isafsite,  #暫不使用
+        isaf051      LIKE isaf_t.isaf051    #暫不使用
+                     END RECORD
+
+DEFINE g_master      type_parameter 
+DEFINE g_master_t    type_parameter
+
+DEFINE g_isai002     LIKE isai_t.isai002
+DEFINE g_ooef019     LIKE ooef_t.ooef019
+DEFINE g_glaald      LIKE glaa_t.glaald
+DEFINE g_ctl_where   STRING                #交易對象控制組WHERE CON
+DEFINE g_wc_isafcomp STRING
+DEFINE g_master_wc   STRING
+DEFINE g_glaa001     LIKE glaa_t.glaa001   #161209-00037#1
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num10              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aisp330.main" >}
+#+ 作業開始 
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   DEFINE ls_js  STRING
+   #add-point:main段define name="main.define"
+   
+   #end add-point   
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("ais","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aisp330 WITH FORM cl_ap_formpath("ais",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aisp330_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aisp330_ui_dialog() 
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_aisp330
+   END IF 
+   
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="aisp330.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION aisp330_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point   
+   #add-point:init段define name="init.define"
+   
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL s_fin_create_account_center_tmp()
+   CALL aisp330_qbe_clear()
+   LET g_ctl_where = NULL
+   CALL s_control_get_customer_sql('2',g_master.isafcomp,g_user,g_dept,'') RETURNING g_sub_success,g_ctl_where
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aisp330.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aisp330_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point 
+   DEFINE li_idx   LIKE type_t.num10
+   #add-point:ui_dialog段define name="init.init"
+   DEFINE l_isae002   LIKE isae_t.isae002
+   DEFINE l_isae003   LIKE isae_t.isae003
+   DEFINE l_isac008   LIKE isac_t.isac008
+   DEFINE l_isae010   LIKE isae_t.isae010
+   DEFINE l_isae012   LIKE isae_t.isae012
+   DEFINE l_isae016   LIKE isae_t.isae016
+   DEFINE l_isae017   LIKE isae_t.isae017
+   DEFINE l_isac003   LIKE isac_t.isac003
+   DEFINE l_ooef003   LIKE ooef_t.ooef003
+   DEFINE l_cnt       LIKE type_t.num10
+   #end add-point 
+   
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   CALL aisp330_qbe_clear()
+   #end add-point
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_detail_d.clear()
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL aisp330_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         CONSTRUCT BY NAME g_master.wc ON isafdocno,isaf002,isaf005,isaf010,isaf011,isaf006
+         
+            BEFORE CONSTRUCT
+               CALL cl_qbe_init()
+            AFTER CONSTRUCT
+         
+            ON ACTION controlp INFIELD isafdocno
+               #開窗c段
+			      INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+			      LET g_qryparam.reqry = FALSE
+			      LET g_qryparam.where = " isafsite = '",g_master.isafsite,"' ",
+			                             " AND isafcomp = '",g_master.isafcomp,"' ",
+			                             " AND isaf008 = '",g_master.isaf008,"' ",
+			                             " AND (isaf014 BETWEEN '",g_master.l_isaf014_s,"' AND '",g_master.l_isaf014_e,"') ",
+                                      " AND isaf056 = '1' ",     #交易發票
+                                      " AND isafstus = 'Y' "     #確認狀態
+               IF NOT cl_null(g_ctl_where) AND NOT g_ctl_where = ' 1=1'  THEN
+                  LET g_qryparam.where = g_qryparam.where," AND EXISTS (SELECT 1 FROM pmaa_t ",
+                                                          "              WHERE pmaaent = ",g_enterprise,
+                                                          "                AND ",g_ctl_where,
+                                                          "                AND pmaaent = isafent ",
+                                                          "                AND pmaa001 = isaf002 )"
+               END IF
+               CALL q_isafdocno()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO isafdocno  #顯示到畫面上
+               NEXT FIELD isafdocno                     #返回原欄位
+
+            ON ACTION controlp INFIELD isaf002
+               #開窗c段
+			      INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+			      LET g_qryparam.reqry = FALSE
+               IF NOT cl_null(g_ctl_where) AND NOT g_ctl_where = ' 1=1'  THEN
+               LET g_qryparam.where = g_ctl_where
+               END IF
+               #CALL q_pmaa001()  #呼叫開窗   #160920-00019#6--mark
+               CALL q_pmaa001_13()           #160920-00019#6--add
+               DISPLAY g_qryparam.return1 TO isaf002    #顯示到畫面上
+               NEXT FIELD isaf002 
+            
+            ON ACTION controlp INFIELD isaf005
+               #開窗c段
+			      INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+			      LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()
+               DISPLAY g_qryparam.return1 TO isaf005
+               NEXT FIELD isaf005
+            
+            ON ACTION controlp INFIELD isaf010
+            
+            ON ACTION controlp INFIELD isaf011
+            
+            ON ACTION controlp INFIELD isaf006
+               #開窗c段
+			      INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+			      LET g_qryparam.reqry = FALSE
+			      #161006-00005#26 add ------
+			      LET g_qryparam.where = " ooef001 IN (SELECT isaosite FROM isao_t",
+			                             "              WHERE isaoent = ",g_enterprise," AND isaostus = 'Y')"
+			      #161006-00005#26 add end---
+               CALL q_ooef001()
+               DISPLAY g_qryparam.return1 TO isaf006
+               NEXT FIELD isaf006
+         
+         END CONSTRUCT
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         INPUT g_master.isafsite,g_master.isafcomp,g_master.isaf008,g_master.l_isaf014_s,g_master.l_isaf014_e,g_master.isaf052, 
+               g_master.isaf051,g_master.l_isae014,g_master.l_isae008,g_master.l_isae012   
+          FROM isafsite,isafcomp,isaf008,l_isaf014_s,l_isaf014_e,isaf052,
+               isaf051,l_isae014,l_isae008,l_isae012 
+               
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            BEFORE INPUT
+               LET g_master_t.* = g_master.*
+               CALL aisp330_qbe_clear() #160726-00020#14 
+            
+            AFTER FIELD isafsite
+               LET g_master.isafsite_desc = ''
+               LET g_master.isafcomp_desc = ''
+               DISPLAY BY NAME g_master.isafsite_desc,g_master.isafcomp_desc
+               IF NOT cl_null(g_master.isafsite) THEN
+                  IF g_master.isafsite != g_master_t.isafsite OR g_master_t.isafsite IS NULL THEN
+                     CALL s_fin_account_center_sons_query('3',g_master.isafsite,g_today,'1')
+                     CALL s_fin_account_center_chk(g_master.isafsite,'','3',g_today) RETURNING g_sub_success,g_errno
+                     IF NOT g_sub_success THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = g_errno
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        LET g_master.isafsite = ''
+                        LET g_master.isafcomp = ''
+                        LET g_master.isafsite_desc = s_desc_get_department_desc(g_master.isafsite)
+                        LET g_master.isafcomp_desc = s_desc_get_department_desc(g_master.isafcomp)               
+                        CALL aisp330_clear_isae()
+                        DISPLAY BY NAME g_master.isafsite,g_master.isafsite_desc,g_master.isafcomp,g_master.isafcomp_desc
+                        NEXT FIELD CURRENT
+                     END IF
+                     
+                     CALL s_fin_orga_get_comp_ld(g_master.isafsite) RETURNING g_sub_success,g_errno,g_master.isafcomp,g_glaald
+                     IF NOT g_sub_success THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = g_errno
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        LET g_master.isafsite = ''
+                        LET g_master.isafcomp = ''
+                        LET g_master.isafsite_desc = s_desc_get_department_desc(g_master.isafsite)
+                        LET g_master.isafcomp_desc = s_desc_get_department_desc(g_master.isafcomp)               
+                        CALL aisp330_clear_isae()
+                        DISPLAY BY NAME g_master.isafsite,g_master.isafsite_desc,g_master.isafcomp,g_master.isafcomp_desc
+                        NEXT FIELD CURRENT
+                     END IF
+                     
+                     CALL s_ld_sel_glaa(g_glaald,'glaa001') RETURNING g_sub_success,g_glaa001 #161209-00037#1
+                      
+                     IF NOT cl_null(g_master.isafcomp)THEN
+                        CALL s_fin_account_center_with_ld_chk(g_master.isafsite,g_glaald,g_user,'3','Y','',g_today) RETURNING g_sub_success,g_errno
+                        IF NOT g_sub_success THEN
+                           INITIALIZE g_errparam TO NULL
+                           LET g_errparam.code = g_errno
+                           LET g_errparam.extend = ''
+                           LET g_errparam.popup = TRUE
+                           CALL cl_err()
+                           LET g_master.isafsite = ''
+                           LET g_master.isafsite_desc = s_desc_get_department_desc(g_master.isafsite)           
+                           DISPLAY BY NAME g_master.isafsite,g_master.isafsite_desc
+                           NEXT FIELD CURRENT
+                        END IF
+                     END IF
+                     CALL aisp330_clear_isae()
+                  END IF
+                  LET g_master_t.isafsite = g_master.isafsite
+               END IF
+               CALL s_fin_account_center_sons_query('3',g_master.isafsite,g_today,'1')
+               LET g_master.isafsite_desc = s_desc_get_department_desc(g_master.isafsite)
+               LET g_master.isafcomp_desc = s_desc_get_department_desc(g_master.isafcomp)
+               DISPLAY BY NAME g_master.isafsite,g_master.isafsite_desc,g_master.isafcomp,g_master.isafcomp_desc
+               
+            
+            AFTER FIELD isafcomp
+               LET g_master.isafcomp_desc = ''
+               DISPLAY BY NAME g_master.isafcomp_desc
+               IF NOT cl_null(g_master.isafcomp) THEN
+                  IF g_master.isafcomp != g_master_t.isafcomp OR g_master_t.isafcomp IS NULL THEN
+                     CALL s_fin_comp_chk(g_master.isafcomp) RETURNING g_sub_success,g_errno
+                     IF NOT g_sub_success THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = g_errno
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        #160321-00016#34 --s add
+                        LET g_errparam.replace[1] = 'aooi100'
+                        LET g_errparam.replace[2] = cl_get_progname('aooi100',g_lang,"2")
+                        LET g_errparam.exeprog = 'aooi100'
+                        #160321-00016#34 --e add
+                        CALL cl_err()
+                        LET g_master.isafcomp = ''
+                        LET g_master.isafcomp_desc = s_desc_get_department_desc(g_master.isafcomp) 
+                        CALL aisp330_clear_isae()
+                        DISPLAY BY NAME g_master.isafcomp,g_master.isafcomp_desc                   
+                        NEXT FIELD CURRENT
+                     END IF
+                     IF NOT cl_null(g_master.isafsite)THEN
+                        CALL s_fin_account_center_with_ld_chk(g_master.isafsite,g_glaald,g_user,'3','Y','',g_today) 
+                           RETURNING g_sub_success,g_errno
+                        IF NOT g_sub_success THEN
+                           INITIALIZE g_errparam TO NULL
+                           LET g_errparam.code = 'aap-00127'
+                           LET g_errparam.extend = ''
+                           LET g_errparam.popup = TRUE
+                           CALL cl_err()
+                           LET g_master.isafcomp = ''
+                           LET g_master.isafcomp_desc = s_desc_get_department_desc(g_master.isafcomp) 
+                           CALL aisp330_clear_isae()
+                           DISPLAY BY NAME g_master.isafcomp,g_master.isafcomp_desc
+                           NEXT FIELD CURRENT
+                        END IF   
+                     END IF
+                     CALL s_fin_account_center_sons_query('3',g_master.isafsite,g_today,'')
+                     CALL s_fin_account_center_comp_str() RETURNING g_wc_isafcomp
+                     CALL s_fin_get_wc_str(g_wc_isafcomp) RETURNING g_wc_isafcomp
+                     #檢查輸入帳套是否存在帳務中心下帳套範圍內
+                     IF s_chr_get_index_of(g_wc_isafcomp,g_master.isafcomp,1) = 0 THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'aap-00033'
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        LET g_master.isafcomp = ''
+                        LET g_master.isafcomp_desc = s_desc_get_department_desc(g_master.isafcomp) 
+                        CALL aisp330_clear_isae()
+                        DISPLAY BY NAME g_master.isafcomp,g_master.isafcomp_desc
+                        NEXT FIELD CURRENT
+                     END IF
+                     CALL aisp330_clear_isae()
+                     IF NOT cl_null(g_master.isaf008) THEN
+                        CALL aisp330_isae_visible(g_master.isafcomp,g_master.isaf008)
+                     END IF
+                  END IF
+                  LET g_master_t.isafcomp = g_master.isafcomp
+               END IF
+              
+               #取得稅區
+               SELECT ooef019 INTO g_ooef019 FROM ooef_t
+                WHERE ooefent = g_enterprise AND ooef001 = g_master.isafcomp AND ooefstus = 'Y'
+               #發票編碼方式
+               SELECT isai002 INTO g_isai002 FROM isai_t 
+               WHERE isaient = g_enterprise AND isai001 = g_ooef019
+               #控制組範圍
+               LET g_ctl_where = NULL
+               CALL s_control_get_customer_sql('2',g_master.isafcomp,g_user,g_dept,'') RETURNING g_sub_success,g_ctl_where
+               LET g_master.isafcomp_desc = s_desc_get_department_desc(g_master.isafcomp)               
+               DISPLAY BY NAME g_master.isafcomp,g_master.isafcomp_desc
+            
+            AFTER FIELD isaf008
+               LET g_master.isaf008_desc = ''
+               DISPLAY BY NAME g_master.isaf008_desc
+               IF NOT cl_null(g_master.isaf008) THEN  
+                  IF g_master.isaf008 != g_master_t.isaf008 OR g_master_t.isaf008 IS NULL THEN
+                     INITIALIZE g_chkparam.* TO NULL      
+                     LET g_chkparam.arg1 = g_ooef019
+                     LET g_chkparam.arg2 = g_master.isaf008
+                     IF cl_chk_exist("v_isac002_2") THEN
+                        #檢查成功時後續處理
+                        SELECT isac003,isac008 INTO l_isac003,l_isac008  #發票歸屬進銷項
+                          FROM isac_t
+                         WHERE isacent = g_enterprise
+                           AND isac001 = g_ooef019
+                           AND isac002 = g_master.isaf008
+                        
+                        IF l_isac003 <> '2' THEN 
+                           INITIALIZE g_errparam TO NULL
+                           LET g_errparam.code = 'ais-00157'
+                           LET g_errparam.extend = ''
+                           LET g_errparam.popup = TRUE
+                           CALL cl_err()
+                           LET g_master.isaf008 = ''
+                           LET g_master.isaf008_desc = s_desc_get_invoice_type_desc1(g_master.isafcomp,g_master.isaf008)
+                           DISPLAY BY NAME g_master.isaf008,g_master.isaf008_desc                     #顯示到畫面上
+                           CALL aisp330_clear_isae()
+                           NEXT FIELD CURRENT
+                        END IF    
+                        
+                        #排除收據類聯別
+                        IF l_isac008 ='0' OR l_isac008 ='4' THEN 
+                           INITIALIZE g_errparam TO NULL
+                           LET g_errparam.code = 'ais-00289'
+                           LET g_errparam.extend = ''
+                           LET g_errparam.popup = TRUE
+                           CALL cl_err()
+                           LET g_master.isaf008 = ''
+                           LET g_master.isaf008_desc = s_desc_get_invoice_type_desc1(g_master.isafcomp,g_master.isaf008)
+                           DISPLAY BY NAME g_master.isaf008,g_master.isaf008_desc                     #顯示到畫面上
+                           CALL aisp330_clear_isae()
+                           NEXT FIELD CURRENT
+                        END IF  
+                     ELSE
+                        #檢查失敗時後續處理
+                        LET g_master.isaf008 = ''
+                        LET g_master.isaf008_desc = s_desc_get_invoice_type_desc1(g_master.isafcomp,g_master.isaf008)
+                        DISPLAY BY NAME g_master.isaf008,g_master.isaf008_desc                     #顯示到畫面上
+                        CALL aisp330_clear_isae()
+                        NEXT FIELD CURRENT
+                     END IF
+                     CALL aisp330_clear_isae()
+                     CALL aisp330_isae_visible(g_master.isafcomp,g_master.isaf008)
+                  END IF
+                  LET g_master_t.isaf008 = g_master.isaf008 
+               END IF 
+               LET g_master.isaf008_desc = s_desc_get_invoice_type_desc1(g_master.isafcomp,g_master.isaf008)
+               DISPLAY BY NAME g_master.isaf008,g_master.isaf008_desc
+            
+            AFTER FIELD l_isaf014_s
+               IF NOT cl_null(g_master.l_isaf014_s) AND NOT cl_null(g_master.l_isaf014_e) THEN
+                  IF g_master.l_isaf014_s > g_master.l_isaf014_e THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'aap-00336'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_master.l_isaf014_s = ''
+                     DISPLAY BY NAME g_master.l_isaf014_s
+                     NEXT FIELD l_isaf014_s 
+                  END IF
+               END IF
+            
+            AFTER FIELD l_isaf014_e
+               IF NOT cl_null(g_master.l_isaf014_e) THEN
+                  IF g_master.l_isaf014_s > g_master.l_isaf014_e THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'aap-00336'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_master.l_isaf014_e = ''
+                     DISPLAY BY NAME g_master.l_isaf014_e
+                     NEXT FIELD l_isaf014_e 
+                  END IF
+               END IF
+            
+            AFTER FIELD isaf052
+               LET g_master.isaf052_desc = ''
+               DISPLAY g_master.isaf052_desc TO isaf052_desc
+               IF NOT cl_null(g_master.isaf052) THEN  
+                  IF g_master.isaf052 != g_master_t.isaf052 OR g_master_t.isaf052 IS NULL THEN
+                     INITIALIZE g_chkparam.* TO NULL      
+                     LET g_chkparam.arg1 = g_master.isaf052
+                     #160318-00025#44  2016/04/26  by pengxin  add(S)
+                     LET g_errshow = TRUE #是否開窗 
+                     LET g_chkparam.err_str[1] = "aoo-00095:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"
+                     #160318-00025#44  2016/04/26  by pengxin  add(E)
+                     IF cl_chk_exist("v_ooef001") THEN
+                        #檢查成功時後續處理
+                        CALL s_fin_site_belong_to_comp_chk(g_master.isaf052,g_master.isafcomp) RETURNING g_sub_success,g_errno
+                        IF NOT g_sub_success THEN                  
+                           INITIALIZE g_errparam TO NULL
+                           IF g_errno = 'aap-00034' THEN LET g_errno = 'axr-00024' END IF
+                           LET g_errparam.code = g_errno
+                           LET g_errparam.extend = ''
+                           #160321-00016#34 --s add
+                           LET g_errparam.replace[1] = 'aooi125'
+                           LET g_errparam.replace[2] = cl_get_progname('aooi125',g_lang,"2")
+                           LET g_errparam.exeprog = 'aooi125'
+                           #160321-00016#34 --e add
+                           LET g_errparam.popup = TRUE
+                           CALL cl_err()
+                           LET g_master.isaf052 = ''
+                           LET g_master.isaf051 = ''
+                           CALL s_desc_get_department_desc(g_master.isaf052) RETURNING g_master.isaf052_desc
+                           CALL aisp330_clear_isae()
+                           DISPLAY g_master.isaf052 TO isaf052
+                           DISPLAY g_master.isaf052_desc TO isaf052_desc
+                           DISPLAY g_master.isaf051 TO isaf051
+                           NEXT FIELD CURRENT                  
+                        END IF
+                     ELSE
+                        #檢查失敗時後續處理
+                        LET g_master.isaf052 = ''
+                        LET g_master.isaf051 = ''
+                        CALL s_desc_get_department_desc(g_master.isaf052) RETURNING g_master.isaf052_desc
+                        CALL aisp330_clear_isae()
+                        DISPLAY g_master.isaf052 TO isaf052
+                        DISPLAY g_master.isaf052_desc TO isaf052_desc
+                        DISPLAY g_master.isaf051 TO isaf051
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+                  LET g_master_t.isaf052 = g_master.isaf052
+               END IF 
+               CALL aisp330_isaf051_get() 
+               CALL s_desc_get_department_desc(g_master.isaf052) RETURNING g_master.isaf052_desc
+               DISPLAY g_master.isaf052_desc TO isaf052_desc
+           
+            AFTER FIELD isaf051
+               CALL aisp330_isaf051_get()
+               IF NOT cl_null(g_master.isaf051) THEN  
+                  INITIALIZE g_chkparam.* TO NULL      
+                  LET g_chkparam.arg1 = g_master.isaf052
+                  LET g_chkparam.arg2 = g_master.isaf051
+                  IF cl_chk_exist("v_isae001") THEN
+                     #檢查成功時後續處理
+                     LET l_cnt = 0
+                     SELECT COUNT(*) INTO l_cnt
+                       FROM isaf_t 
+                      WHERE isafent = g_enterprise
+                        AND isaf051  = g_master.isaf051
+                        AND isafstus = 'N' 
+                        AND isafcomp = g_master.isafcomp 
+                        
+                     IF l_cnt > 0 THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = "ais-00160"
+                        LET g_errparam.extend = g_master.isaf051
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        LET g_master.isaf051 = ''
+                        LET g_master.l_isae014 = ''
+                        LET g_master.l_isae008 = ''
+                        LET g_master.l_isae012 = ''
+                        NEXT FIELD CURRENT
+                     END IF  
+                     
+                     LET l_isae002 = ''                             #生效日期
+                     LET l_isae003 = ''                             #失效日期
+                     LET l_isae016 = ''                             #年度                    
+                     LET l_isae017 = ''                             #起始月份                 
+                     LET l_isae016 = YEAR(g_master.l_isaf014_s)  
+                     LET l_isae017 = MONTH(g_master.l_isaf014_s)                  
+                     SELECT isae002,isae003  INTO l_isae002,l_isae003
+                       FROM isae_t
+                      WHERE isaeent = g_enterprise
+                        AND isaecomp = g_master.isafcomp
+                        AND isaesite = g_master.isaf052
+                        AND isae001 = g_master.isaf051
+                        AND isae004 = g_master.isaf008
+                        #AND isae016 =  l_isae016                           #161101-00037#1 mark
+                        #AND (isae017 = l_isae017 OR isae018 =  l_isae017)  #161101-00037#1 mark
+                        AND isae002 <= g_master.l_isaf014_s #160920-00019#6 add
+                        AND isae003 >= g_master.l_isaf014_e #160920-00019#6 add                    
+                     
+                     IF cl_null(l_isae002) OR cl_null(l_isae003) THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = "ais-00284" 
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        LET g_master.isaf051 = ''
+                        LET g_master.l_isae014 = ''
+                        LET g_master.l_isae008 = ''
+                        LET g_master.l_isae012 = ''
+                        NEXT FIELD CURRENT
+                     END IF
+                     
+                     IF g_master.l_isaf014_s < l_isae002 OR g_master.l_isaf014_s > l_isae003 THEN 
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'ais-00151'
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        LET g_master.isaf051 = ''
+                        LET g_master.l_isae014 = ''
+                        LET g_master.l_isae008 = ''
+                        LET g_master.l_isae012 = ''
+                        NEXT FIELD CURRENT
+                     END IF
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_master.isaf051 = ''
+                     LET g_master.l_isae014 = ''
+                     LET g_master.l_isae008 = ''
+                     LET g_master.l_isae012 = ''
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               CALL aisp330_isaf051_get()
+            
+            AFTER FIELD l_isae012
+               IF NOT cl_null(g_master.l_isae012) THEN
+                 SELECT isae012,isae010 INTO l_isae012,l_isae010
+                   FROM isae_t
+                  WHERE isaeent = g_enterprise
+                    AND isaecomp = g_master.isafcomp
+                    AND isaesite = g_master.isaf052
+                    AND isae001 = g_master.isaf051
+                    AND isae002 <= g_master.l_isaf014_s
+                    AND isae003 >= g_master.l_isaf014_e
+                    AND isae004 = g_master.isaf008
+                    
+                  #若本欄值為非下次列印號碼時(即被 user 異動過本欄時)顯示再次確認訊息
+                  IF l_isae012 <> g_master.l_isae012 THEN
+                     IF NOT cl_ask_confirm('ais-00218') THEN    
+                        LET g_master.l_isae012 = l_isae012
+                        NEXT FIELD l_isae012
+                     END IF
+                  END IF
+                  
+                  IF g_master.l_isae012 > l_isae010 THEN
+                     INITIALIZE g_errparam.* TO NULL
+                     LET g_errparam.code = 'ais-00234'
+                     LET g_errparam.extend = g_master.l_isae012,">",l_isae010
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_master.l_isae012 = l_isae012
+                     NEXT FIELD l_isae012
+                  END IF 
+               END IF
+            
+            #帳務中心
+            ON ACTION controlp INFIELD isafsite
+               #開窗i段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master.isafsite
+               #CALL q_ooef001()      #161006-00005#26 mark
+               CALL q_ooef001_46()    #161006-00005#26
+               LET g_master.isafsite = g_qryparam.return1
+               DISPLAY BY NAME g_master.isafsite
+               LET g_master.isafsite_desc = s_desc_get_department_desc(g_master.isafsite)
+               NEXT FIELD isafsite
+
+            #法人代碼
+            ON ACTION controlp INFIELD isafcomp 
+               #開窗i段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master.isafcomp
+               CALL s_fin_account_center_sons_query('3',g_master.isafsite,g_today,'')
+               CALL s_fin_account_center_comp_str() RETURNING g_wc_isafcomp
+               CALL s_fin_get_wc_str(g_wc_isafcomp) RETURNING g_wc_isafcomp
+               LET g_qryparam.where = "ooef003 = 'Y' AND ooef001 IN ",g_wc_isafcomp CLIPPED," "
+               CALL q_ooef001()
+               LET g_master.isafcomp = g_qryparam.return1
+               LET g_master.isafcomp_desc = s_desc_get_department_desc(g_master.isafcomp)
+               DISPLAY BY NAME g_master.isafcomp,g_master.isafcomp_desc
+               NEXT FIELD isafcomp
+
+            #發票類型
+            ON ACTION controlp INFIELD isaf008
+               #開窗i段
+               SELECT ooef019 INTO g_ooef019 FROM ooef_t              #稅區
+                WHERE ooefent = g_enterprise AND ooef001 = g_master.isafcomp AND ooefstus = 'Y'
+               SELECT isai002 INTO g_isai002 FROM isai_t              #發票編碼方式
+               WHERE isaient = g_enterprise AND isai001 = g_ooef019
+			      INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+		    	   LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master.isaf008                                #給予default值
+               LET g_qryparam.where = " isac001 = '",g_ooef019,"' AND isac003 = '2' AND isac008 NOT IN ('0','4')"
+               CALL q_isac002()                                                         #呼叫開窗
+               LET g_master.isaf008 = g_qryparam.return1                                 #將開窗取得的值回傳到變數
+               LET g_master.isaf008_desc = s_desc_get_invoice_type_desc1(g_master.isafcomp,g_master.isaf008)
+               CALL aisp330_isae_visible(g_master.isafcomp,g_master.isaf008)
+               DISPLAY g_master.isaf008_desc TO isaf008_desc 
+               NEXT FIELD isaf008  
+               
+            #營運據點
+            ON ACTION controlp INFIELD isaf052
+               #開窗i段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master.isaf052
+               LET g_qryparam.default2 = g_master.isaf051
+               LET g_qryparam.where = "   isaesite IN ('",g_master.isaf052,"','",g_master.isafcomp,"' ) ",
+                                      "   AND isae004  = '",g_master.isaf008,"'",
+                                      "   AND isae002 <= '",g_master.l_isaf014_s,"'",
+                                      "   AND isae003 >= '",g_master.l_isaf014_e,"'",
+                                      "   AND isac001 = '",g_ooef019,"'"
+               CALL q_isaesite_3()
+               LET g_master.isaf052 = g_qryparam.return1
+               LET g_master.isaf051 = g_qryparam.return2
+               CALL s_desc_get_department_desc(g_master.isaf052) RETURNING g_master.isaf052_desc
+               DISPLAY g_master.isaf052 TO isaf052
+               DISPLAY g_master.isaf052_desc TO isaf052_desc
+               CALL aisp330_isaf051_get()
+               NEXT FIELD isaf052
+               
+            #發票簿號
+            ON ACTION controlp INFIELD isaf051
+               #開窗i段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master.isaf052             #給予default值
+               LET g_qryparam.default2 = g_master.isaf051             #給予default值
+               LET g_qryparam.where = "   isaesite IN ('",g_master.isaf052,"','",g_master.isafcomp,"' ) ",
+                                      "   AND isae004  = '",g_master.isaf008,"'",
+                                      "   AND isae002 <= '",g_master.l_isaf014_s,"'",
+                                      "   AND isae003 >= '",g_master.l_isaf014_e,"'",
+                                      "   AND isac001 = '",g_ooef019,"'"            
+               CALL q_isaesite_3()                                    #呼叫開窗
+               LET g_master.isaf052 = g_qryparam.return1
+               LET g_master.isaf051 = g_qryparam.return2 
+               CALL s_desc_get_department_desc(g_master.isaf052) RETURNING g_master.isaf052_desc
+               DISPLAY BY NAME g_master.isaf051,g_master.isaf052
+               CALL aisp330_isaf051_get()
+               NEXT FIELD isaf051                          #返回原欄位  
+         END INPUT
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         INPUT ARRAY g_detail_d FROM s_detail1.*
+            ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                       INSERT ROW = FALSE,
+                       DELETE ROW = FALSE,
+                       APPEND ROW = FALSE)
+            BEFORE ROW
+               LET l_ac = ARR_CURR()
+               DISPLAY l_ac TO FORMONLY.h_index
+         END INPUT
+         #end add-point
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2 name="ui_dialog.before_dialog2"
+            
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            #add-point:ui_dialog段on action selall name="ui_dialog.selall.befroe"
+            
+            #end add-point            
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+               #add-point:ui_dialog段on action selall name="ui_dialog.for.onaction_selall"
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selall name="ui_dialog.onaction_selall"
+            
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+               #add-point:ui_dialog段on action selnone name="ui_dialog.for.onaction_selnone"
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selnone name="ui_dialog.onaction_selnone"
+            
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel name="ui_dialog.onaction_sel"
+            
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel name="ui_dialog.onaction_unsel"
+            
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL aisp330_filter()
+            #add-point:ON ACTION filter name="menu.filter"
+            
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            #add-point:ui_dialog段accept之前 name="menu.filter"
+            
+            #end add-point
+            CALL aisp330_query()
+             
+         # 條件清除
+         ON ACTION qbeclear
+            #add-point:ui_dialog段 name="ui_dialog.qbeclear"
+            CALL aisp330_qbe_clear()
+            #end add-point
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            #add-point:ui_dialog段datarefresh name="ui_dialog.datarefresh"
+            
+            #end add-point
+            CALL aisp330_b_fill()
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         ON ACTION batch_execute
+            CALL aisp330_process()
+            CALL aisp330_isaf051_get()
+            CALL aisp330_b_fill()
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #(ver:22) ---start---
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      
+      #end add-point
+      #(ver:22) --- end ---
+ 
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #(ver:22) ---start---
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         #(ver:22) --- end ---
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aisp330.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION aisp330_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define name="query.define"
+   DEFINE l_isaq005  LIKE isaq_t.isaq005
+   #end add-point 
+    
+   #add-point:cs段after_construct name="query.after_construct"
+   IF cl_null(g_master.isafsite) OR 
+      cl_null(g_master.isafcomp) OR
+      cl_null(g_master.isaf008) OR 
+      cl_null(g_master.l_isaf014_s) OR 
+      cl_null(g_master.l_isaf014_e) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'acr-00015'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN 
+   END IF
+
+   #發票取得時機點
+   LET l_isaq005 = ''
+   SELECT isaq005 INTO l_isaq005
+     FROM isaq_t 
+    WHERE isaqent = g_enterprise AND isaqsite = g_master.isafcomp AND isaq001 = g_master.isaf008
+   
+   #若1.列印時回寫,則發票簿條件必輸
+   IF l_isaq005 = '1' THEN
+      IF cl_null(g_master.isaf052) OR 
+         cl_null(g_master.isaf051) OR
+         cl_null(g_master.l_isae008) OR 
+         cl_null(g_master.l_isae012) THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'acr-00015'
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         RETURN 
+      END IF
+   END IF
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL aisp330_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   END IF
+   
+   #add-point:cs段after_query name="query.cs_after_query"
+ 
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aisp330.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION aisp330_b_fill()
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define name="b_fill.define"
+   DEFINE l_cnt           LIKE type_t.num10
+   DEFINE l_isaq005       LIKE isaq_t.isaq005  #發票取得時機點
+   #end add-point
+ 
+   LET g_wc = g_wc, cl_sql_auth_filter()   #(ver:21) add cl_sql_auth_filter()
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   IF cl_null(g_master.wc) THEN
+      LET g_master.wc =" 1=1 "
+   END IF
+   
+   LET g_sql = " SELECT DISTINCT 'N',isafdocno,isaf014,isaf002,isaf021,isat003,isat004,",
+               "        (CASE WHEN isat021 IS NULL THEN 0 ELSE isat021 END), ",       #若無列印次數則給0
+               "        (CASE WHEN isat004 IS NULL THEN isaf113 ELSE isat113 END), ", #若無isat資料則取isaf金額來補上
+               "        (CASE WHEN isat004 IS NULL THEN isaf114 ELSE isat114 END), ", #若無isat資料則取isaf金額來補上
+               "        (CASE WHEN isat004 IS NULL THEN isaf115 ELSE isat115 END), ", #若無isat資料則取isaf金額來補上
+               "        isafcomp,isaf008,isafsite,isaf051 ",
+               "   FROM isaf_t ",  
+               "   LEFT OUTER JOIN isat_t ON isafent = isatent AND isafcomp = isatcomp AND isafdocno = isatdocno AND isat014 = '11' AND isat025 = '11' ", #isat025 = '11 未作廢發票才可列印
+               "  ,isah_t ",              #若發票明細檔isah 沒有資料則不可以列印                 
+               "  WHERE isafent = ? ",
+               "    AND isafent = isahent AND isafcomp = isahcomp AND isafdocno = isahdocno ",
+               "    AND isafsite = '",g_master.isafsite,"' ",
+               "    AND isafcomp = '",g_master.isafcomp,"' ",
+               "    AND isaf008 = '",g_master.isaf008,"' ",
+               "    AND (isaf014 BETWEEN '",g_master.l_isaf014_s,"' AND '",g_master.l_isaf014_e,"') ",
+               "    AND isaf056 = '1' ",  #交易發票
+               "    AND isafstus = 'Y' ", #確認狀態
+               "    AND ",g_master.wc
+               
+ 
+   IF NOT cl_null(g_ctl_where) AND NOT g_ctl_where = '1=1' THEN
+      LET g_sql = g_sql," AND EXISTS (SELECT 1 FROM pmaa_t ",
+                        "              WHERE pmaaent = ",g_enterprise,
+                        "                AND ",g_ctl_where,
+                        "                AND pmaaent = isafent ",
+                        "                AND pmaa001 = isaf002 )"    #控制組
+   END IF
+
+   LET g_sql = g_sql," ORDER BY isafdocno,isat004 " 
+   #end add-point
+ 
+   PREPARE aisp330_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR aisp330_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空 name="b_fill.clear"
+   
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into name="b_fill.foreach_into"
+   g_detail_d[l_ac].*
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充 name="b_fill.foreach_iside"
+      
+      #end add-point
+      
+      CALL aisp330_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.other_table"
+   IF g_detail_d.getLength() > 0 THEN
+      CALL g_detail_d.deleteElement(g_detail_d.getLength())
+   END IF
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE aisp330_sel
+   
+   LET l_ac = 1
+   CALL aisp330_fetch()
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.after_b_fill"
+   DISPLAY l_ac TO FORMONLY.h_index
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aisp330.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION aisp330_fetch()
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define name="fetch.define"
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後 name="fetch.after_fill"
+   
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aisp330.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION aisp330_detail_show()
+   #add-point:show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point
+   #add-point:show段define name="detail_show.define"
+   
+   #end add-point
+   
+   #add-point:detail_show段 name="detail_show.detail_show"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aisp330.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION aisp330_filter()
+   #add-point:filter段define(客製用) name="filter.define_customerization"
+   
+   #end add-point    
+   #add-point:filter段define name="filter.define"
+   
+   #end add-point
+   
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define name="filter.detail_cnt"
+   
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL aisp330_b_fill()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aisp330.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION aisp330_filter_parser(ps_field)
+   #add-point:filter段define(客製用) name="filter_parser.define_customerization"
+   
+   #end add-point    
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define name="filter_parser.define"
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aisp330.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION aisp330_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = aisp330_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aisp330.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: 預帶發票簿資料
+# Memo...........:
+# Usage..........: CALL aisp330_isaf051_get()
+# Date & Author..: 160218 By Jessy
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aisp330_isaf051_get()
+DEFINE l_isae007  LIKE isae_t.isae007
+DEFINE l_isae008  LIKE isae_t.isae008
+DEFINE l_isai008  LIKE isai_t.isai008
+DEFINE l_isae010  LIKE isae_t.isae010
+DEFINE l_msg      STRING
+
+  SELECT isae014,isae007,isae008,isae012,isae010
+     INTO g_master.l_isae014,l_isae007,l_isae008,g_master.l_isae012,l_isae010
+     FROM isae_t
+    WHERE isaeent = g_enterprise
+      AND isaecomp = g_master.isafcomp
+      AND isaesite = g_master.isaf052
+      AND isae001 = g_master.isaf051
+      AND isae002 <= g_master.l_isaf014_s
+      AND isae003 >= g_master.l_isaf014_e
+      AND isae004 = g_master.isaf008
+
+   IF g_isai002 = '2' THEN   
+      LET g_master.l_isae008 = l_isae008
+      LET l_msg = cl_getmsg('ais-00113',g_dlang)
+      CALL cl_set_comp_att_text('lbl_isae008',l_msg)
+   ELSE
+      LET g_master.l_isae008 = l_isae007
+      LET l_msg = cl_getmsg('ais-00112',g_dlang)
+      CALL cl_set_comp_att_text('lbl_isae008',l_msg)
+   END IF
+
+   LET l_isai008 = NULL
+   SELECT isai008 INTO l_isai008 FROM isai_t
+    WHERE isaient = g_enterprise
+      AND isai001 = g_ooef019
+
+  IF g_master.l_isae012 > l_isae010 THEN
+     INITIALIZE g_errparam.* TO NULL
+     LET g_errparam.code = 'ais-00234'
+     LET g_errparam.extend = g_master.l_isae012,">",l_isae010
+     LET g_errparam.popup = TRUE
+     CALL cl_err()
+     LET g_master.l_isae012 = ''
+  END IF 
+   
+   DISPLAY g_master.l_isae008 TO l_isae008
+   DISPLAY g_master.l_isae014 TO l_isae014
+   DISPLAY g_master.l_isae012 TO l_isae012
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 發票簿條件區塊隱藏否
+# Memo...........:
+# Usage..........: CALL aisp330_isae_visible(p_comp,p_isaf008)
+# Date & Author..: 160218 By Jessy
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aisp330_isae_visible(p_comp,p_isaf008)
+DEFINE p_comp    LIKE isaf_t.isafcomp
+DEFINE p_isaf008 LIKE isaf_t.isaf008
+DEFINE l_isaq005 LIKE isaq_t.isaq005  #發票取得時機點
+
+   #發票簿條件
+   CALL cl_set_comp_visible('group_2',TRUE)
+    
+   #發票取得時機點
+   LET l_isaq005 = ''
+   SELECT isaq005 INTO l_isaq005
+     FROM isaq_t 
+    WHERE isaqent = g_enterprise AND isaqsite = p_comp AND isaq001 = p_isaf008
+   
+   #若1.列印時回寫,則發票簿條件必輸
+   IF l_isaq005 = '1' THEN
+      LET g_master.isaf052 = p_comp
+      LET g_master.isaf052_desc = s_desc_get_department_desc(g_master.isaf052) 
+      DISPLAY BY NAME g_master.isaf052,g_master.isaf052_desc
+      CALL aisp330_isaf051_get()   #預帶發票簿號
+   ELSE
+      CALL cl_set_comp_visible('group_2',FALSE)
+      CALL aisp330_clear_isae()
+   END IF
+
+   #發票編碼方式
+   SELECT isai002 INTO g_isai002
+     FROM isai_t
+    WHERE isaient = g_enterprise
+      AND isai001 = g_ooef019
+   
+   #發票代碼隱顯
+   IF g_isai002 = '1' THEN 
+      CALL cl_set_comp_visible('isaf010,b_isat003',FALSE)
+   ELSE
+      CALL cl_set_comp_visible('isaf010,b_isat003',TRUE)
+   END IF
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 資料處理
+# Memo...........:
+# Usage..........: CALL aisp330_process()
+# Date & Author..: 160218 By Jessy
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aisp330_process()
+DEFINE l_i           LIKE type_t.num5  
+DEFINE l_wc          STRING 
+DEFINE l_print       STRING
+DEFINE l_sql         STRING 
+DEFINE l_isafdocno   LIKE isaf_t.isafdocno
+DEFINE l_isafstus    LIKE isaf_t.isafstus
+DEFINE l_isat004     LIKE isat_t.isat004
+DEFINE l_rtn_isat004 LIKE isat_t.isat004
+DEFINE l_success     LIKE type_t.num10
+DEFINE l_count       LIKE type_t.num5
+   
+   LET l_success = TRUE
+   LET l_rtn_isat004 = ''
+   LET l_isafdocno = ''  
+   LET l_isat004 = ''    
+   
+   #取得有勾選的開票單號
+   FOR l_i = 1 TO g_detail_cnt
+      IF g_detail_d[l_i].sel = 'N' THEN
+         CONTINUE FOR 
+      ELSE
+         #重撈狀態碼,避免b_fill有此筆,但實際上已被取消確認
+         SELECT isafstus INTO l_isafstus FROM isaf_t 
+          WHERE isafent = g_enterprise 
+          AND isafcomp = g_master.isafcomp 
+          AND isafdocno = g_detail_d[l_i].isafdocno
+         
+         IF l_isafstus <> 'Y' THEN CONTINUE FOR END IF
+         
+         IF cl_null(l_wc) THEN
+            LET l_wc = g_detail_d[l_i].isafdocno
+         ELSE
+            LET l_wc = l_wc,"','",g_detail_d[l_i].isafdocno
+         END IF       
+      END IF
+   END FOR
+   #如未勾選任何一筆資料
+   IF cl_null(l_wc) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'axr-00159'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()       
+      LET g_success = 'N'
+      RETURN
+   ELSE
+      LET l_wc = "('",l_wc,"')"      
+      CALL cl_progress_bar_no_window(l_count+1)   #給予總次數
+   END IF
+   
+   CALL s_transaction_begin()
+   #依發票號碼是否為空，選擇寫入或更新isat_t
+   LET l_sql = " SELECT isafdocno,isat004 ",
+               "   FROM isaf_t ",
+               "   LEFT OUTER JOIN isat_t ON isafent = isatent AND isafcomp = isatcomp AND isafdocno = isatdocno AND isat025 = '11' AND isat014 = '11'", #未作廢發票才可列印
+               "  WHERE isafent = ",g_enterprise,
+               "    AND isafsite = '",g_master.isafsite,"' ",
+               "    AND isafcomp = '",g_master.isafcomp,"' ",
+               "    AND isaf008 = '",g_master.isaf008,"' ",
+               "    AND isafdocno IN ",l_wc CLIPPED,
+               "    AND isafstus = 'Y'",
+               "  ORDER BY isafdocno,isat004 "
+   
+   PREPARE aisp330_pre FROM l_sql
+   DECLARE aisp330_cs CURSOR FOR aisp330_pre
+   FOREACH aisp330_cs INTO l_isafdocno,l_isat004
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET l_success = FALSE
+         EXIT FOREACH
+      END IF 
+      
+      #分兩途徑列印 1.無發票號碼列印時取號 2.有發票號碼做補印
+      IF cl_null(l_isat004) THEN
+         #無發票號碼(發票在列印時取號)
+         #CALL aisp330_isat_ins(g_master.isafcomp,l_isafdocno,g_master.isaf052,g_master.isaf051,g_master.l_isae014,g_master.l_isae008,g_master.l_isae012)RETURNING g_sub_success,l_rtn_isat004  #法人/單號/營運據點/發票簿號/發票簿日期/發票簿發票代碼/發票簿發票號碼
+         CALL aisp330_isat_ins(g_master.isafcomp,l_isafdocno,g_master.isaf052,g_master.isaf051)RETURNING g_sub_success,l_rtn_isat004  #法人/單號/營運據點/發票簿號
+         IF NOT g_sub_success THEN
+            LET l_success = FALSE
+         END IF
+         
+         #把發票號碼串起來
+         IF cl_null(l_print) THEN
+            LET l_print = l_rtn_isat004
+         ELSE
+            LET l_print = l_print,"','",l_rtn_isat004
+         END IF
+      ELSE
+         #有發票號碼(補印)
+         UPDATE isat_t
+            SET isat021 = isat021+1 
+          WHERE isatent = g_enterprise 
+            AND isatcomp = g_master.isafcomp
+            AND isatdocno = l_isafdocno
+            AND isat004 = l_isat004
+            AND isat025 = '11' 
+            AND isat014 = '11'
+            
+         IF SQLCA.sqlerrd[3] = 0 OR SQLCA.SQLcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "upd_isat021"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+          
+            LET l_success = FALSE          
+         END IF
+         CALL cl_progress_no_window_ing("")   #每次執行推進
+         
+         #把發票號碼串起來
+         IF cl_null(l_print) THEN
+            LET l_print = l_isat004
+         ELSE
+            LET l_print = l_print,"','",l_isat004
+         END IF
+         
+      END IF
+   END FOREACH
+   
+   IF NOT cl_null(l_print) THEN
+      LET l_print = "('",l_print,"')"      
+   END IF
+   
+   IF l_success THEN
+      CALL s_transaction_end('Y','0')
+      CALL cl_progress_no_window_ing("")        #成功:最後一次次執行推進
+   ELSE
+      CALL s_transaction_end('N','0')
+      DISPLAY '' ,0 TO stagenow,stagecomplete   #失敗:清空進度條
+      RETURN
+   END IF
+
+   #列印
+   LET g_master_wc = " isatent = ",g_enterprise," AND isatcomp = '",g_master.isafcomp,"' AND isat004 IN ",l_print CLIPPED 
+   CALL aisp330_g01(g_master_wc)
+  
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 預設值
+# Memo...........:
+# Usage..........: CALL aisp330_qbe_clear()
+# Date & Author..: 160219 By Jessy
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aisp330_qbe_clear()
+DEFINE l_isaq005 LIKE isaq_t.isaq005    #170220-00041#1 add
+   
+   CLEAR FORM
+   CALL g_detail_d.clear()
+
+   CALL aisp330_clear_isae()
+
+   #取得預設的帳務中心,因新增階段的時候,並不會知道site,所以以登入人員做為依據
+   CALL s_fin_get_account_center('',g_user,'3',g_today) RETURNING g_sub_success,g_master.isafsite,g_errno
+   
+   #161226-00013#1 add ------
+   CALL s_fin_orga_get_comp_ld(g_master.isafsite) RETURNING g_sub_success,g_errno,g_master.isafcomp,g_glaald
+   CALL s_ld_sel_glaa(g_glaald,'glaa001') RETURNING g_sub_success,g_glaa001
+   #161226-00013#1 add end---
+   
+   #法人
+   SELECT ooef017 INTO g_master.isafcomp 
+     FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_master.isafsite
+   
+   #取得稅區
+   SELECT ooef019 INTO g_ooef019 FROM ooef_t
+    WHERE ooefent = g_enterprise AND ooef001 = g_master.isafcomp AND ooefstus = 'Y'
+   
+   #發票編碼方式
+   SELECT isai002 INTO g_isai002 FROM isai_t 
+   WHERE isaient = g_enterprise AND isai001 = g_ooef019
+      
+   #單頭說明   
+   LET g_master.isafsite_desc = s_desc_get_department_desc(g_master.isafsite)
+   LET g_master.isafcomp_desc = s_desc_get_department_desc(g_master.isafcomp) 
+   LET g_master.isaf008 = ''
+   LET g_master.isaf008_desc = s_desc_get_invoice_type_desc1(g_master.isafcomp,g_master.isaf008)
+   LET g_master.isaf052 = g_master.isafcomp
+   LET g_master.isaf052_desc = s_desc_get_department_desc(g_master.isaf052)
+   DISPLAY BY NAME g_master.isafsite,g_master.isafsite_desc,g_master.isafcomp,g_master.isafcomp_desc,g_master.isaf052,g_master.isaf052_desc,
+                   g_master.isaf008,g_master.isaf008_desc
+   
+   #發票日期
+   LET g_master.l_isaf014_s = g_today
+   LET g_master.l_isaf014_e = g_today
+   LET g_master.l_isae014 = ''
+   
+   DISPLAY g_master.l_isaf014_s TO l_isaf014_s
+   DISPLAY g_master.l_isaf014_e TO l_isaf014_e
+   DISPLAY g_master.l_isae014   TO l_isae014
+   
+   #160704-00017#1 ---(S)
+   IF NOT cl_null(g_argv[1]) AND NOT cl_null(g_argv[2]) AND NOT cl_null(g_argv[3])THEN
+      LET g_master.isafdocno  = g_argv[1]
+      LET g_master.isaf008  = g_argv[2]
+      LET g_master.l_isaf014_s  = g_argv[3]
+      LET g_master.l_isaf014_e  = g_argv[3]
+      LET g_master.wc = "isafdocno='",g_master.isafdocno,"'" 
+      DISPLAY g_master.isafdocno TO isafdocno
+
+      #170220-00041#1 --s add
+      IF NOT cl_null(g_argv[6]) AND NOT cl_null(g_argv[7]) THEN
+         LET g_master.isafsite  = g_argv[6]
+         LET g_master.isafcomp  = g_argv[7]
+         LET g_master.isafsite_desc = s_desc_get_department_desc(g_master.isafsite)
+         LET g_master.isafcomp_desc = s_desc_get_department_desc(g_master.isafcomp)    
+         DISPLAY BY NAME g_master.isafsite,g_master.isafsite_desc,g_master.isafcomp,g_master.isafcomp_desc
+      END IF
+      #170220-00041#1 --e add
+
+      #發票類型說明
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_ooef019
+      LET g_ref_fields[2] = g_master.isaf008
+      CALL ap_ref_array2(g_ref_fields,"SELECT isacl004 FROM isacl_t WHERE isaclent='"||g_enterprise||"' AND isacl001=? AND isacl002 = ? AND isacl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_master.isaf008_desc = '', g_rtn_fields[1] , ''  
+      DISPLAY BY NAME g_master.isaf008,g_master.isaf008_desc
+      
+      DISPLAY g_master.l_isaf014_s TO l_isaf014_s
+      DISPLAY g_master.l_isaf014_e TO l_isaf014_e
+      
+      #170220-00041#1 --s add
+      #判斷傳入 發票類型(是否需輸入發票簿條件) 對發票簿條件區塊隱顯控制 
+      #發票取得時機點
+      LET l_isaq005 = ''
+      SELECT isaq005 INTO l_isaq005
+        FROM isaq_t 
+       WHERE isaqent = g_enterprise AND isaqsite = g_master.isafcomp AND isaq001 = g_master.isaf008
+       
+      CALL cl_set_comp_entry("group_2",TRUE)
+      #若1.列印時回寫,則發票簿條件必輸
+      IF l_isaq005 = '1' THEN
+         #加判斷傳入的單據有發票簿資訊則帶入，欄位no_entry不可輸入，若無發票簿資訊則發票簿條件必輸,不得為空
+         IF NOT cl_null(g_argv[4]) AND NOT cl_null(g_argv[5]) THEN
+            CALL cl_set_comp_visible('group_2',FALSE)
+            LET g_master.isaf051 = g_argv[4]    
+            LET g_master.l_isae014 = g_master.l_isaf014_s  
+            LET g_master.l_isae008 = g_argv[5] 
+            LET g_master.l_isae012 = g_argv[5]           
+            DISPLAY BY NAME g_master.isaf052,g_master.isaf052_desc,g_master.isaf051,
+                            g_master.l_isae014,g_master.l_isae008,g_master.l_isae012
+         ELSE
+            CALL aisp330_isaf051_get()   #預帶發票簿號  
+         END IF         
+      ELSE
+         CALL cl_set_comp_visible('group_2',FALSE)
+         CALL aisp330_clear_isae()
+      END IF   
+      #170220-00041#1 --e add
+   END IF
+   #160704-00017#1 ---(E)
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 寫入發票歷程檔isat_t
+# Memo...........:
+# Usage..........: CALL aisp330_isat_ins(p_isafcomp,p_isafdocno,p_isaf052,p_isaf051)
+# Date & Author..: 160222 By Jessy
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aisp330_isat_ins(p_isafcomp,p_isafdocno,p_isaf052,p_isaf051)
+DEFINE p_isafcomp        LIKE isaf_t.isafcomp   #法人代碼
+DEFINE p_isafdocno       LIKE isaf_t.isafdocno  #開票單號
+DEFINE p_isaf052         LIKE isaf_t.isaf052    #營運據點
+DEFINE p_isaf051         LIKE isaf_t.isaf051    #發票簿號
+DEFINE l_isae007         LIKE isae_t.isae007    #發票字軌           
+DEFINE l_isae008         LIKE isae_t.isae008    #發票代碼           
+DEFINE l_isae012         LIKE isae_t.isae012    #起始列印發票號碼    
+DEFINE l_isae014         LIKE isae_t.isae014    #已開發票日期       
+DEFINE l_isah001         LIKE isah_t.isah001  
+DEFINE l_isah002         LIKE isah_t.isah002
+DEFINE l_isah103         LIKE isah_t.isah103
+DEFINE l_isah104         LIKE isah_t.isah104
+DEFINE l_isah105         LIKE isah_t.isah105
+DEFINE l_isaf            RECORD 
+         isafdocdt       LIKE isaf_t.isafdocdt, #錄入日期
+         isaf002	       LIKE isaf_t.isaf002,	 #發票客戶
+         isaf008	       LIKE isaf_t.isaf008,	 #發票類型
+         isaf009	       LIKE isaf_t.isaf009,	 #電子發票否
+         isaf014	       LIKE isaf_t.isaf014,	 #發票日期
+         isaf016	       LIKE isaf_t.isaf016,	 #稅別
+         isaf017	       LIKE isaf_t.isaf017,	 #含稅否
+         isaf018	       LIKE isaf_t.isaf018,	 #稅率
+         isaf021	       LIKE isaf_t.isaf021,	 #購貨方名稱
+         isaf022	       LIKE isaf_t.isaf022,	 #購貨方稅務編號
+         isaf023	       LIKE isaf_t.isaf023,	 #購貨方地址
+         isaf028	       LIKE isaf_t.isaf028,	 #銷方稅務編號
+         isaf034	       LIKE isaf_t.isaf034,	 #POS單號
+         isaf037	       LIKE isaf_t.isaf037,	 #異動理由碼
+         isaf038	       LIKE isaf_t.isaf038,	 #異動備註
+         isaf039	       LIKE isaf_t.isaf039,	 #異動日期
+         isaf040	       LIKE isaf_t.isaf040,	 #異動時間
+         isaf041	       LIKE isaf_t.isaf041,	 #異動人員
+         isaf042	       LIKE isaf_t.isaf042,	 #專案作廢核准文號
+         isaf052	       LIKE isaf_t.isaf052,	 #發票簿號對應的營運據點
+         isaf053	       LIKE isaf_t.isaf053,	 #發票聯數
+         isaf054	       LIKE isaf_t.isaf054,	 #課稅別
+         isaf100	       LIKE isaf_t.isaf100,	 #幣別
+         isaf101	       LIKE isaf_t.isaf101,	 #匯率
+         isaf201	       LIKE isaf_t.isaf201,	 #愛心碼
+         isaf202	       LIKE isaf_t.isaf202,	 #載具類別號碼
+         isaf203	       LIKE isaf_t.isaf203,	 #載具顯碼 ID
+         isaf204	       LIKE isaf_t.isaf204	    #載具隱碼 ID
+                         END RECORD 
+DEFINE l_isat            RECORD
+         isatent         LIKE isat_t.isatent,	
+         isatcomp        LIKE isat_t.isatcomp,	
+         isatdocno       LIKE isat_t.isatdocno,
+         isatseq         LIKE isat_t.isatseq,	
+         isat001         LIKE isat_t.isat001,	
+         isat002         LIKE isat_t.isat002,	
+         isat003         LIKE isat_t.isat003,	
+         isat004         LIKE isat_t.isat004,	
+         isat005         LIKE isat_t.isat005,	
+         isat006         LIKE isat_t.isat006,	
+         isat007         LIKE isat_t.isat007,	
+         isat008         LIKE isat_t.isat008,	
+         isat009         LIKE isat_t.isat009,	
+         isat010         LIKE isat_t.isat010,	
+         isat011         LIKE isat_t.isat011,	
+         isat012         LIKE isat_t.isat012,	
+         isat013         LIKE isat_t.isat013,	
+         isat014         LIKE isat_t.isat014,	
+         isat015         LIKE isat_t.isat015,	
+         isat016         LIKE isat_t.isat016,	
+         isat017         LIKE isat_t.isat017,	
+         isat018         LIKE isat_t.isat018,	
+         isat019         LIKE isat_t.isat019,	
+         isat020         LIKE isat_t.isat020,	
+         isat021         LIKE isat_t.isat021,	
+         isat022         LIKE isat_t.isat022,	
+         isat023         LIKE isat_t.isat023,	
+         isat024         LIKE isat_t.isat024,	
+         isat100         LIKE isat_t.isat100,	
+         isat101         LIKE isat_t.isat101,	
+         isat103         LIKE isat_t.isat103,	
+         isat104         LIKE isat_t.isat104,	
+         isat105         LIKE isat_t.isat105,	
+         isat106         LIKE isat_t.isat106,	
+         isat107         LIKE isat_t.isat107,	
+         isat113         LIKE isat_t.isat113,	
+         isat114         LIKE isat_t.isat114,	
+         isat115         LIKE isat_t.isat115,	
+         isat201         LIKE isat_t.isat201,	
+         isat202         LIKE isat_t.isat202,	
+         isat203         LIKE isat_t.isat203,	
+         isat204         LIKE isat_t.isat204,	
+         isat205         LIKE isat_t.isat205,	
+         isat206         LIKE isat_t.isat206,	
+         isat207         LIKE isat_t.isat207,	
+         isat208         LIKE isat_t.isat208,	
+         isat209         LIKE isat_t.isat209,	
+         isatsite        LIKE isat_t.isatsite,
+         isatdocdt       LIKE isat_t.isatdocdt,
+         isat025         LIKE isat_t.isat025,	
+         isat026         LIKE isat_t.isat026,	
+         isat027         LIKE isat_t.isat027,	
+         isat028         LIKE isat_t.isat028,	
+         isat029         LIKE isat_t.isat029  	
+                         END RECORD
+DEFINE l_isai004         LIKE isai_t.isai004
+DEFINE l_len             LIKE type_t.num5
+DEFINE l_isae012_n       LIKE isae_t.isae012       #下次列印號碼
+DEFINE l_cnt             LIKE type_t.num5
+DEFINE l_isae012_str     STRING
+DEFINE l_sql             STRING
+DEFINE r_success         LIKE type_t.num10
+DEFINE r_isat004         LIKE isat_t.isat004
+DEFINE l_date            DATETIME YEAR TO SECOND   #170120-00040#1
+   
+   LET r_success = TRUE
+   LET r_isat004 = ''
+   
+   SELECT isafdocdt,isaf002,isaf008,isaf009,isaf014,isaf016,isaf017,isaf018,
+          isaf021,isaf022,isaf023,isaf028,isaf034,isaf037,isaf038,isaf039,
+          isaf040,isaf041,isaf042,isaf052,isaf053,isaf054,isaf100,isaf101,
+          isaf201,isaf202,isaf203,isaf204 
+     INTO l_isaf.*
+     FROM isaf_t
+    WHERE isafent = g_enterprise AND isafcomp = p_isafcomp AND isafdocno = p_isafdocno
+
+   DELETE FROM isat_t WHERE isatent = g_enterprise
+                        AND isatcomp = p_isafcomp
+                        AND isatdocno = p_isafdocno
+   
+   LET g_sql = " SELECT isah001,isah002,SUM(isah103*isah010),SUM(isah104*isah010),SUM(isah105*isah010)",
+               "   FROM isah_t ",
+               "  WHERE isahent = '",g_enterprise,"'",
+               "    AND isahcomp = '",p_isafcomp,"'",
+               "    AND isahdocno = '",p_isafdocno,"'",
+               "  GROUP BY isah001,isah002 ",
+               "  ORDER BY isah002"
+               
+   PREPARE isat_pre FROM g_sql
+   DECLARE isat_cus CURSOR FOR isat_pre
+   
+   FOREACH isat_cus INTO l_isah001,l_isah002,l_isah103,l_isah104,l_isah105
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF 
+            
+      LET l_isat.isatent   = g_enterprise
+      LET l_isat.isatcomp  = p_isafcomp
+      LET l_isat.isatdocno = p_isafdocno 
+      LET l_isat.isat001 = l_isaf.isaf008
+      LET l_isat.isat002 = l_isaf.isaf009
+      IF l_isat.isat002 = 'Y' THEN
+         SELECT isak003 INTO l_isat.isat026
+           FROM isak_t WHERE isakent = g_enterprise
+            AND isak001 = l_isaf.isaf002 AND isak002 = g_ooef019
+      END IF
+      
+      #重撈發票簿資料
+      LET l_isae007 = ''
+      LET l_isae008 = ''
+      LET l_isae012 = ''
+      LET l_isae014 = ''
+      SELECT isae007,isae008,isae012,isae014
+        INTO l_isae007,l_isae008,l_isae012,l_isae014
+        FROM isae_t
+       WHERE isaeent = g_enterprise
+         AND isaecomp = p_isafcomp
+         AND isaesite = p_isaf052
+         AND isae001 = p_isaf051
+         AND isae002 <= g_master.l_isaf014_s
+         AND isae003 >= g_master.l_isaf014_e
+         AND isae004 = g_master.isaf008
+      
+      #使用發票代碼或字軌
+      IF g_isai002 = '1' THEN 
+         LET l_isat.isat003 = " "
+         LET l_isat.isat004 = l_isae007,l_isae012 
+      ELSE
+         LET l_isat.isat003 = l_isae008  
+         LET l_isat.isat004 = l_isae012 
+      END IF
+      
+      #使用發票代碼或字軌
+      IF g_isai002 = '1' THEN 
+         SELECT MAX(isatseq) + 1 INTO l_isat.isatseq FROM isat_t 
+          WHERE isatent = g_enterprise 
+            AND isatcomp = p_isafcomp  
+            AND isat004 = l_isat.isat004
+      ELSE
+         SELECT MAX(isatseq) + 1 INTO l_isat.isatseq FROM isat_t 
+          WHERE isatent = g_enterprise 
+            AND isatcomp = p_isafcomp 
+            AND isatcomp = l_isat.isat003 
+            AND isat004 = l_isat.isat004
+      END IF
+      IF cl_null(l_isat.isatseq) THEN 
+         LET l_isat.isatseq = 1
+      END IF
+      
+      LET l_isat.isat005 = l_isaf.isaf053
+      LET l_isat.isat006 = ''
+      LET l_isat.isat007 = l_isaf.isaf014
+
+      IF cl_null(l_isae014) THEN LET l_isae014 = g_today END IF 
+      #若單頭發票日期 isaf014 小於發票簿已開發票日期,則要以發票簿日期為主
+      IF l_isaf.isaf014 < l_isae014 THEN  
+         LET l_isat.isat007 = l_isae014   
+      END IF
+      LET l_isat.isat008 = cl_get_current()
+      LET l_isat.isat009 = l_isaf.isaf021
+      LET l_isat.isat010 = l_isaf.isaf022
+      LET l_isat.isat011 = l_isaf.isaf023
+      LET l_isat.isat012 = l_isaf.isaf028
+      LET l_isat.isat013 = l_isaf.isaf034
+      LET l_isat.isat014 = '11' 
+      LET l_isat.isat015 = l_isaf.isaf037
+      LET l_isat.isat016 = l_isaf.isaf038 
+      LET l_isat.isat017 = l_isaf.isaf039
+      LET l_isat.isat018 = l_isaf.isaf040
+      LET l_isat.isat019 = l_isaf.isaf041
+      LET l_isat.isat020 = l_isaf.isaf042 	
+      LET l_isat.isat021 = '1'               #表示首次列印發票號碼, isat021 列印次數= 1
+      LET l_isat.isat022 = l_isaf.isaf054
+      LET l_isat.isat023 = l_isaf.isaf018
+      LET l_isat.isat024 = s_invoice_get_chkcode(l_isat.isat004)  #檢查碼
+      LET l_isat.isat100 = l_isaf.isaf100
+      LET l_isat.isat101 = l_isaf.isaf101
+      LET l_isat.isat103 = l_isah103         
+      LET l_isat.isat104 = l_isah104      
+      LET l_isat.isat105 = l_isah105     
+      LET l_isat.isat106 = 0
+      LET l_isat.isat107 = 0
+      LET l_isat.isat113 = l_isat.isat103 * l_isaf.isaf101
+      LET l_isat.isat114 = l_isat.isat104 * l_isaf.isaf101
+      LET l_isat.isat115 = l_isat.isat105 * l_isaf.isaf101
+      
+      #161209-00037#1 add ------
+      LET l_isat.isat113 = s_curr_round(p_isafcomp,g_glaa001,l_isat.isat113,2)
+      LET l_isat.isat114 = s_curr_round(p_isafcomp,g_glaa001,l_isat.isat114,2)
+      LET l_isat.isat115 = s_curr_round(p_isafcomp,g_glaa001,l_isat.isat115,2)
+      #161209-00037#1 add end---
+      
+      SELECT isai004 INTO l_isai004 FROM isai_t WHERE isaient = g_enterprise AND isai001 = g_ooef019
+      
+      IF l_isai004 = '1' THEN 
+         IF l_isat.isat103 < 0 THEN 
+            LET l_isat.isat103 = l_isat.isat103 * -1
+         END IF
+         IF l_isat.isat104 < 0 THEN 
+            LET l_isat.isat104 = l_isat.isat104 * -1
+         END IF
+         IF l_isat.isat105 < 0 THEN 
+            LET l_isat.isat105 = l_isat.isat105 * -1
+         END IF
+         IF l_isat.isat113 < 0 THEN 
+            LET l_isat.isat113 = l_isat.isat113 * -1
+         END IF
+         IF l_isat.isat114 < 0 THEN 
+            LET l_isat.isat114 = l_isat.isat114 * -1
+         END IF
+         IF l_isat.isat115 < 0 THEN 
+            LET l_isat.isat115 = l_isat.isat115 * -1
+         END IF
+      END IF
+      
+      IF l_isat.isat022 = '1' THEN 
+         LET l_isat.isat201 = l_isat.isat105
+      ELSE
+         LET l_isat.isat201 = 0
+      END IF
+      
+      IF l_isat.isat022 = '2' THEN 
+         LET l_isat.isat202 = l_isat.isat105
+      ELSE
+         LET l_isat.isat202 = 0
+      END IF
+      
+      IF l_isat.isat022 = '3' THEN 
+         LET l_isat.isat203 = l_isat.isat105
+      ELSE
+         LET l_isat.isat203 = 0
+      END IF
+      LET l_isat.isat204 = l_isaf.isaf201
+      LET l_isat.isat205 = l_isaf.isaf202
+      LET l_isat.isat206 = l_isaf.isaf203
+      LET l_isat.isat207 = l_isaf.isaf204
+      LET l_isat.isat208 = ''
+      LET l_isat.isat209 = ''
+      LET l_isat.isat025 = l_isat.isat014     
+      LET l_isat.isatsite = p_isaf052
+      LET l_isat.isatdocdt = l_isaf.isafdocdt
+      LET l_isat.isat028 = l_isaf.isaf016     #稅別
+      LET l_isat.isat029 = l_isaf.isaf017     #含稅否
+      
+      INSERT INTO isat_t(isatent,isatcomp,isatdocno,isatseq,isat001,isat002,isat003,isat004,	
+                         isat005,isat006,isat007,isat008,isat009,isat010,isat011,isat012,	
+                         isat013,isat014,isat015,isat016,isat017,isat018,isat019,isat020,	
+                         isat021,isat022,isat023,isat024,isat100,isat101,isat103,isat104,	
+                         isat105,isat106,isat107,isat113,isat114,isat115,isat201,isat202,
+                         isat203,isat204,isat205,isat206,isat207,isat208,isat209,isatsite,
+                         isatdocdt,isat025,isat026,isat027,isat028,isat029
+                        ) VALUES(l_isat.*)	
+
+      IF SQLCA.SQLcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "isat_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+  
+         LET r_success = FALSE   
+         EXIT FOREACH         
+      END IF  
+      
+      #[更新aist310單頭]__發票代碼/發票號碼/發票簿號/發票日期(若isaf014小於發票簿已開發票日期)
+      IF l_isaf.isaf014 < l_isae014 THEN 
+         UPDATE isaf_t SET (isaf010,isaf011,isaf051,isaf014) = (l_isat.isat003,l_isat.isat004,p_isaf051,l_isat.isat007)
+          WHERE isafent = g_enterprise AND isafcomp = p_isafcomp AND isafdocno = p_isafdocno
+      ELSE
+         UPDATE isaf_t SET (isaf010,isaf011,isaf051) = (l_isat.isat003,l_isat.isat004,p_isaf051)
+          WHERE isafent = g_enterprise AND isafcomp = p_isafcomp AND isafdocno = p_isafdocno
+      END IF
+      
+      IF SQLCA.sqlerrd[3] = 0 OR SQLCA.SQLcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "upd_isaf_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+       
+         LET r_success = FALSE        
+         EXIT FOREACH    
+      END IF
+         
+      #[更新aist310發票明細]_發票代碼/發票號碼
+      UPDATE isah_t SET (isah001,isah002) = (l_isat.isat003,l_isat.isat004)
+       WHERE isahent = g_enterprise AND isahcomp = p_isafcomp AND isahdocno = p_isafdocno      
+         
+      IF SQLCA.sqlerrd[3] = 0 OR SQLCA.SQLcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "upd_isah_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+       
+         LET r_success = FALSE  
+         EXIT FOREACH          
+      END IF
+      
+      #[更新發票簿資料]---------------   
+      #計算下次列印號碼
+      LET l_isae012_str = l_isae012  
+      LET l_len = l_isae012_str.getLength()
+      LET l_sql = "SELECT lpad('",l_isae012,"'+1,",l_len,",'0') FROM dual"  
+      PREPARE isae012_pre2 FROM l_sql
+      EXECUTE isae012_pre2 INTO l_isae012_n
+      
+      LET l_date = cl_get_current()   #170120-00040#1
+      
+      #更新發票簿
+      UPDATE isae_t SET isae012 = l_isae012_n,      #發票簿下次列印號碼
+                        isae013 = isae013+1,        #已開張數 
+                        isae014 = l_isat.isat007    #已開發票日期
+                       ,isaemodid = g_user          #170120-00040#1
+                       ,isaemoddt = l_date          #170120-00040#1
+       WHERE isaeent = g_enterprise
+         AND isaecomp = p_isafcomp
+         AND isaesite = p_isaf052
+         AND isae001 = p_isaf051
+         AND isae002 <= g_master.l_isaf014_s
+         AND isae003 >= g_master.l_isaf014_e
+         AND isae004 = g_master.isaf008
+      IF SQLCA.sqlerrd[3] = 0 OR SQLCA.SQLcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "upd_isae_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+       
+         LET r_success = FALSE   
+         EXIT FOREACH          
+      END IF
+      
+   END FOREACH 
+      
+   LET r_isat004 = l_isat.isat004
+   RETURN r_success,r_isat004        
+END FUNCTION
+
+################################################################################
+# Descriptions...: 清空發票簿條件
+# Memo...........:
+# Usage..........: CALL aisp330_clear_isae()
+# Date & Author..: 160317 By Jessy
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aisp330_clear_isae()
+DEFINE l_isaq005 LIKE isaq_t.isaq005
+
+   LET g_master.isaf052 = ''  
+   LET g_master.isaf052_desc = ''
+   LET g_master.isaf051 = ''      
+   LET g_master.l_isae014 = ''    
+   LET g_master.l_isae008 = ''    
+   LET g_master.l_isae012 = ''    
+
+   IF NOT cl_null(g_master.isafcomp) AND NOT cl_null(g_master.isaf008) THEN
+      #發票取得時機點
+      LET l_isaq005 = ''
+      SELECT isaq005 INTO l_isaq005
+        FROM isaq_t 
+       WHERE isaqent = g_enterprise AND isaqsite = g_master.isafcomp AND isaq001 = g_master.isaf008
+      
+      #若1.列印時回寫,則發票簿條件必輸
+      IF l_isaq005 = '1' THEN
+         LET g_master.isaf052 = g_master.isafcomp
+         LET g_master.isaf052_desc = s_desc_get_department_desc(g_master.isaf052) 
+      END IF
+   END IF
+
+   DISPLAY BY NAME g_master.isaf052,g_master.isaf052_desc,g_master.isaf051,
+                   g_master.l_isae014,g_master.l_isae008,g_master.l_isae012
+
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

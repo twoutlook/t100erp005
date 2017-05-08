@@ -1,0 +1,315 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="axri020_01" std_prog="axri020_01" erpver="1.0" module="AXR" ver="1" env="s" zone="t10dev" normal_style="Y" booking="Y">
+  <point name="construct.c.page1.ooea001" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = "c"
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooea001  #顯示到畫面上
+
+            NEXT FIELD ooea001                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page1.ooea002" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = "c"
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooea002  #顯示到畫面上
+
+            NEXT FIELD ooea002                     #返回原欄位
+
+]]>
+  </point>
+  <point name="input.a.page1.ooea001" order="0" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_ooea_d[g_detail_idx].ooea001) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_ooea_d[g_detail_idx].ooea001 != g_ooea_d_t.ooea001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM ooea_t WHERE "||"ooeaent = '" ||g_enterprise|| "' AND "||"ooea001 = '"||g_ooea_d[g_detail_idx].ooea001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.c.page1.ooea002" order="0" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_ooea_d[l_ac].ooea002             #給予default值
+
+            #給予arg
+
+            CALL q_ooea()                                #呼叫開窗
+
+            LET g_ooea_d[l_ac].ooea002 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_ooea_d[l_ac].ooea002 TO ooea002              #顯示到畫面上
+
+            NEXT FIELD ooea002                          #返回原欄位
+
+]]>
+  </point>
+  <point name="show.body.reference" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+   INITIALIZE g_ref_fields TO NULL 
+   LET g_ref_fields[1] = g_ooea_d[l_ac].ooea001
+   CALL ap_ref_array2(g_ref_fields," SELECT ooeal003 FROM ooeal_t WHERE ooealent = '"||g_enterprise||"' AND ooeal001 = ? AND ooeal002 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_ooea_d[l_ac].ooeal003 = g_rtn_fields[1] 
+   DISPLAY BY NAME g_ooea_d[l_ac].ooeal003]]>
+  </point>
+  <point name="function.axri020_01_b_fill" order="1" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 資料填充
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axri020_01_b_fill(p_wc)
+DEFINE p_wc    STRING
+DEFINE l_sql   STRING
+
+   IF p_wc IS NULL THEN LET p_wc = " 1=1" END IF
+   LET g_cnt = 1
+   LET l_sql = "SELECT 'N',ooea001,ooeal003,ooea002,ooea009,ooea016 ",
+               "  FROM ooea_t LEFT JOIN ooeal_t ON ooeaent = ooealent AND ooea001 = ooeal001 AND ooeal002 = '",g_lang,"'",
+               " WHERE ooeaent = '",g_enterprise,"' AND ooeastus = 'Y' AND ",p_wc,
+               "   AND ooea001 NOT IN (SELECT xrah004 FROM xrah_t WHERE xrahent = '",g_enterprise,"'",
+               "                        AND xrah001 = '",g_xrah001,"' AND xrah002 = '",g_xrah002,"' AND xrah003 = ",g_xrah003,")"               
+   PREPARE ooea_pre FROM l_sql
+   DECLARE ooea_cur CURSOR FOR ooea_pre
+   FOREACH ooea_cur INTO g_ooea_d[g_cnt].*
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   LET g_rec_b = g_cnt - 1
+   CALL g_ooea_d.deleteElement(g_ooea_d.getLength())
+   DISPLAY g_rec_b TO cnt
+   
+   DELETE FROM axri020_01_tmp 
+   LET l_sql = "SELECT 'N',ooea001 ",
+               "  FROM ooea_t ",
+               " WHERE ooeaent = '",g_enterprise,"' AND ooeastus = 'Y' AND ",p_wc,
+               "   AND ooea001 NOT IN (SELECT xrah004 FROM xrah_t WHERE xrahent = '",g_enterprise,"'",
+               "                        AND xrah001 = '",g_xrah001,"' AND xrah002 = '",g_xrah002,"' AND xrah003 = ",g_xrah003,")"   
+   LET l_sql = "INSERT INTO axri020_01_tmp ",l_sql
+   PREPARE ins_tmp FROM l_sql
+   EXECUTE ins_tmp
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.axri020_01_construct" order="2" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 重新查詢資料
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axri020_01_construct()
+   CLEAR FORM                
+   CALL g_ooea_d.clear()          
+   INITIALIZE g_wc TO NULL
+   
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+      #單頭
+      CONSTRUCT BY NAME g_wc ON ooea001,ooea002,ooea009,ooea016
+         BEFORE CONSTRUCT
+            CALL cl_qbe_init()
+ 
+         ON ACTION controlp INFIELD ooea001
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooea()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooea001   #顯示到畫面上
+            NEXT FIELD ooea001                      #返回原欄位
+ 
+         ON ACTION controlp INFIELD ooea002
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooea()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooea002   #顯示到畫面上
+            NEXT FIELD ooea002                      #返回原欄位         
+      END CONSTRUCT
+      
+      BEFORE DIALOG  
+ 
+    # ON ACTION qbe_select     #條件查詢
+    #    CALL cl_qbe_list() RETURNING lc_qbe_sn
+    #    CALL cl_qbe_display_condition(lc_qbe_sn)
+# 
+    # ON ACTION qbe_save       #條件儲存
+    #    CALL cl_qbe_save()
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   END DIALOG
+   
+   #組合g_wc2
+  
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+   CALL axri020_01_b_fill(g_wc)
+END FUNCTION]]>
+  </point>
+  <point name="function.axri020_01_ins_xrah" order="3" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: INSERT xrah_t資料
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axri020_01_ins_xrah()
+DEFINE l_xrah      RECORD 
+         xrahent   LIKE xrah_t.xrahent,
+         xrahownid   LIKE xrah_t.xrahownid,
+         xrahowndp   LIKE xrah_t.xrahowndp,
+         xrahcrtid   LIKE xrah_t.xrahcrtid,
+         xrahcrtdp   LIKE xrah_t.xrahcrtdp,
+         xrahcrtdt   DATETIME YEAR TO SECOND,
+         xrahmodid   LIKE xrah_t.xrahmodid,
+         xrahmoddt   DATETIME YEAR TO SECOND,
+         xrahstus   LIKE xrah_t.xrahstus,
+         xrah001   LIKE xrah_t.xrah001,
+         xrah002   LIKE xrah_t.xrah002,
+         xrah003   LIKE xrah_t.xrah003,
+         xrah004   LIKE xrah_t.xrah004,
+         xrah005   LIKE xrah_t.xrah005,
+         xrah006   LIKE xrah_t.xrah006,
+         xrah007   LIKE xrah_t.xrah007
+                   END RECORD
+DEFINE l_xrah004   LIKE xrah_t.xrah004
+DEFINE l_sql       STRING
+
+   SELECT * INTO l_xrah.* FROM xrah_t 
+    WHERE xrahent = g_enterprise AND xrah001 = g_xrah001
+      AND xrah002 = g_xrah002 AND xrah003 = g_xrah003
+      AND xrah004 = xrah005 AND xrah004 = xrah002 
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("SEL",SQLCA.sqlcode,1)
+      RETURN
+   END IF  
+      
+   LET l_sql = "SELECT ooea001_tmp FROM axri020_01_tmp WHERE check_tmp = 'Y' ORDER BY ooea001_tmp"
+   PREPARE ins_xrah_pre FROM l_sql
+   DECLARE ins_xrah_cur CURSOR FOR ins_xrah_pre
+   FOREACH ins_xrah_cur INTO l_xrah004
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      LET l_xrah.xrah004 = l_xrah004
+      INSERT INTO xrah_t VALUES (l_xrah.*)
+   END FOREACH
+
+   
+END FUNCTION]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_cnt                  LIKE type_t.num5
+DEFINE g_xrah001       LIKE xrah_t.xrah001
+DEFINE g_xrah002       LIKE xrah_t.xrah002
+DEFINE g_xrah003       LIKE xrah_t.xrah003
+DEFINE g_wc            STRING]]>
+  </point>
+  <point name="input.before_close" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL axri020_01_ins_xrah()]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL FGL_SET_ARR_CURR(1) 
+
+            #end add-point
+            
+         BEFORE ROW
+            #add-point:單身輸入前處理
+            LET l_ac = ARR_CURR()
+            DISPLAY l_ac TO FORMONLY.idx             
+ ]]>
+  </point>
+  <point name="input.c.page1.ooea016" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #END add-point
+            
+            
+         ON CHANGE check
+            #add-point:AFTER FIELD check
+            UPDATE axri020_01_tmp SET check_tmp = g_ooea_d[l_ac].check
+             WHERE ooea001_tmp = g_ooea_d[l_ac].ooea001
+            ]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE p_xrah001       LIKE xrah_t.xrah001
+   DEFINE p_xrah002       LIKE xrah_t.xrah002
+   DEFINE p_xrah003       LIKE xrah_t.xrah003]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   p_xrah001,p_xrah002,p_xrah003]]>
+  </point>
+  <point name="input.more_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      ON ACTION query
+         CALL axri020_01_construct()
+         CONTINUE DIALOG]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DROP TABLE axri020_01_tmp
+   CALL s_transaction_end('Y','0')]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   
+   CREATE TEMP TABLE axri020_01_tmp(
+             check_tmp     varchar(5),
+             ooea001_tmp   varchar(10))   
+             
+   LET g_xrah001 = p_xrah001
+   LET g_xrah002 = p_xrah002
+   LET g_xrah003 = p_xrah003
+   
+   CALL axri020_01_b_fill('')
+   CALL s_transaction_begin()]]>
+  </point>
+</add_points>

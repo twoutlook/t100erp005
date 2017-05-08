@@ -1,0 +1,1425 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="aicp800" std_prog="aicp800" erpver="1.0" module="AIC" ver="2" env="s" zone="t10prd" booking="N" type="M" identity="s" section_flag="Y" designer_ver="1.0">
+  <other>
+    <code_template value="W" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="function.aicp800_process" order="1" ver="2" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 將來源據點之多角倉退單拋轉至各站據點
+# Memo...........:
+# Usage..........: CALL aicp800_process()
+# Input parameter: no
+# Return code....: no
+# Date & Author..: 141105 By whitney
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aicp800_process()
+DEFINE ls_js          STRING
+DEFINE lc_param       type_parameter
+DEFINE l_success      LIKE type_t.num5      #回傳執行結果
+DEFINE l_success1     LIKE type_t.num5
+DEFINE l_pmds  RECORD
+    pmdsdocno      LIKE pmds_t.pmdsdocno,
+    pmdsdocdt      LIKE pmds_t.pmdsdocdt,
+    pmds000        LIKE pmds_t.pmds000,
+    pmds007        LIKE pmds_t.pmds007,
+    pmds002        LIKE pmds_t.pmds002,
+    pmds003        LIKE pmds_t.pmds003,
+    pmds053        LIKE pmds_t.pmds053
+             END RECORD
+DEFINE l_trino        LIKE pmdl_t.pmdl031   #多角流程序號
+DEFINE l_returndocno  LIKE sfaa_t.sfaadocno #回傳產生之單號
+DEFINE l_icaa003      LIKE icaa_t.icaa003   #流程類型
+DEFINE l_icac009      LIKE icac_t.icac009   #銷退單別
+DEFINE l_icab002_now  LIKE icab_t.icab002   #當站站別
+DEFINE l_icab003_now  LIKE icab_t.icab003   #當站營運據點
+DEFINE l_icab002_next LIKE icab_t.icab002   #下站站別
+DEFINE l_icab003_next LIKE icab_t.icab003   #下站營運據點
+DEFINE l_cnt          LIKE type_t.num5
+DEFINE l_site         LIKE icab_t.icab003   #前站營運據點
+
+   CALL util.JSON.parse(ls_js,lc_param)
+
+   #預先計算progressbar迴圈次數
+
+   CALL s_tax_recount_tmp()
+   CALL s_aic_carry_create_temp_table_ship() RETURNING l_success
+   IF NOT l_success THEN
+      RETURN
+   END IF
+
+   CALL cl_err_collect_init()
+   CALL s_azzi902_get_gzzd('aicp800',"lbl_pmdsdocno") RETURNING g_coll_title[1],g_coll_title[1]  #倉退單號
+   CALL g_detail3_d.clear()
+   CALL g_detail4_d.clear()
+
+   LET g_success_cnt = 1
+   LET g_fail_cnt = 0
+   
+   #有選擇的倉退單
+   LET g_sql = " SELECT pmdsdocno,pmdsdocdt,pmds000,pmds007,pmds002,pmds003,pmds053 ",
+               "   FROM aicp800_tmp ",
+               "  WHERE sel = 'Y' ",
+               "  ORDER BY pmdsdocno,pmdsdocdt "
+   PREPARE aicp800_process_pre FROM g_sql
+   DECLARE aicp800_process_cur CURSOR WITH HOLD FOR aicp800_process_pre
+   
+   #當站多角貿易營運據點
+   LET g_sql = " SELECT icab002,icab003 ",
+               "   FROM icab_t ",
+               "  WHERE icabent = '",g_enterprise,"' ",
+               "    AND icab001 = ? ",
+               "  ORDER BY icab002 "
+   PREPARE aicp800_process_icab_pre FROM g_sql
+   DECLARE aicp800_process_icab_cur CURSOR FOR aicp800_process_icab_pre
+
+   #下站多角貿易營運據點
+   LET g_sql = " SELECT icab002,icab003 ",
+               "   FROM icab_t ",
+               "  WHERE icabent = '",g_enterprise,"' ",
+               "    AND icab001 = ? ",
+               "    AND icab002 > ? ",
+               "  ORDER BY icab002 "
+   PREPARE aicp800_process_icab_next_pre FROM g_sql
+   DECLARE aicp800_process_icab_next_cur CURSOR FOR aicp800_process_icab_next_pre
+
+   #計算後面有幾站
+   LET g_sql = " SELECT COUNT(*) ",
+               "   FROM icab_t ",
+               "  WHERE icabent = '",g_enterprise,"' ",
+               "    AND icab001 = ? ",
+               "    AND icab002 > ? ",
+               "  ORDER BY icab002 "
+   PREPARE aicp800_process_next_cnt FROM g_sql
+
+   #[T:多角貿易單據別設定檔].[C:銷退單別]
+   LET g_sql = " SELECT icac009 ",
+               "   FROM icac_t ",
+               "  WHERE icacent = '",g_enterprise,"' ",
+               "    AND icac001 = ? ",
+               "    AND icac002 = ? "
+   PREPARE aicp800_process_icac009 FROM g_sql
+
+   #[T:多角貿易流程設定檔].[C:流程類型]
+   LET g_sql = " SELECT icaa003 ",
+               "   FROM icaa_t ",
+               "  WHERE icaaent = '",g_enterprise,"' ",
+               "    AND icaa001 = ? "
+   PREPARE aicp800_process_icaa003 FROM g_sql
+
+   INITIALIZE l_pmds.* TO NULL
+   FOREACH aicp800_process_cur INTO l_pmds.pmdsdocno,l_pmds.pmdsdocdt,l_pmds.pmds000,
+                                    l_pmds.pmds007,l_pmds.pmds002,l_pmds.pmds003,l_pmds.pmds053
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'process_cur'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+      
+      CALL s_transaction_begin()
+      #先取得錯誤訊息的長度，大於此長度的表示是這張單子的錯誤訊息
+      LET g_fail_cnt = g_errcollect.getLength()
+      LET l_success = TRUE
+      LET l_trino = ''
+      LET l_returndocno = ''
+      
+      #呼叫產生多角序號元件取得多角流程序號
+      CALL s_aic_carry_gettrino(l_pmds.pmds053,'6',g_today,g_site)
+           RETURNING l_success1,l_trino
+      IF NOT l_success1 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'amm-00001'
+         LET g_errparam.coll_vals[1] = l_pmds.pmdsdocno
+         CALL cl_err()
+         LET l_success = FALSE
+         CALL s_transaction_end('N',0)
+         CALL aicp800_fail(l_pmds.pmdsdocno,l_pmds.pmdsdocdt,l_pmds.pmds007,l_pmds.pmds002,l_pmds.pmds003,l_pmds.pmds053)
+         CONTINUE FOREACH
+      END IF
+      
+      #並回寫倉退單單頭"多角流程序"欄位,並更新g_site倉退單單頭"多角貿易拋轉"='Y'
+      UPDATE pmds_t SET pmds050 = 'Y',
+                        pmds041 = l_trino
+       WHERE pmdsent = g_enterprise
+         AND pmdsdocno = l_pmds.pmdsdocno
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'update pmds_t'
+         LET g_errparam.coll_vals[1] = l_pmds.pmdsdocno
+         CALL cl_err()
+         LET l_success = FALSE
+         CALL s_transaction_end('N',0)
+         CALL aicp800_fail(l_pmds.pmdsdocno,l_pmds.pmdsdocdt,l_pmds.pmds007,l_pmds.pmds002,l_pmds.pmds003,l_pmds.pmds053)
+         CONTINUE FOREACH
+      END IF
+      
+      LET l_site = g_site
+      #跑站(當站)
+      LET l_icab002_now = ''
+      LET l_icab003_now = ''
+      OPEN aicp800_process_icab_cur USING l_pmds.pmds053
+      FOREACH aicp800_process_icab_cur INTO l_icab002_now,l_icab003_now
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'update pmds_t'
+            LET g_errparam.coll_vals[1] = l_pmds.pmdsdocno
+            CALL cl_err()
+            LET l_success = FALSE
+            EXIT FOREACH
+         END IF
+         
+         #取下站
+         LET l_icab002_next = ''
+         LET l_icab003_next = ''
+         OPEN aicp800_process_icab_next_cur USING l_pmds.pmds053,l_icab002_now
+         FOREACH aicp800_process_icab_next_cur INTO l_icab002_next,l_icab003_next
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.coll_vals[1] = l_pmds.pmdsdocno
+               CALL cl_err()
+               LET l_success = FALSE
+               EXIT FOREACH
+            END IF            
+            EXIT FOREACH
+         END FOREACH
+         
+         IF NOT l_success THEN
+            EXIT FOREACH
+         END IF
+
+         #第0站不用產生單據
+         IF l_icab002_now = 0 THEN
+            CONTINUE FOREACH
+         END IF
+
+         IF cl_null(l_returndocno) THEN
+            LET l_returndocno = l_pmds.pmdsdocno
+         END IF
+         
+         #銷退單別
+         LET l_icac009 = ''
+         EXECUTE aicp800_process_icac009 USING l_pmds.pmds053,l_icab002_now INTO l_icac009
+         
+         #呼叫s_gen_tri_bs產生第1站多角銷退單
+         CALL s_aic_carry_gen_tri_bs(l_site,l_returndocno,'',l_icab003_now,l_pmds.pmds000,l_pmds.pmdsdocno,l_pmds.pmdsdocdt,l_icac009,'',l_pmds.pmds053,l_icab002_now,'')
+              RETURNING l_success,l_returndocno
+              
+         #l_cnt = 1 表示下一站為最終站
+         LET l_cnt = 0
+         EXECUTE aicp800_process_next_cnt USING l_pmds.pmds053,l_icab002_now INTO l_cnt
+      
+         #流程類型，'3'代採買指定最終供應商
+         LET l_icaa003 = ''
+         EXECUTE aicp800_process_icaa003 USING l_pmds.pmds053 INTO l_icaa003
+         
+         IF l_success AND ( (l_cnt > 0 AND l_icaa003 = '2') OR l_icaa003 = '3' ) THEN
+            #呼叫s_gen_tri_mr產生第1站多角倉退單
+            CALL s_aic_carry_gen_tri_mr(l_icab003_now,l_returndocno,l_icab003_now,l_pmds.pmdsdocdt,l_pmds.pmds053,l_icab002_now,'','','')
+                 RETURNING l_success,l_returndocno
+         END IF
+
+         IF NOT l_success THEN
+            EXIT FOREACH
+         END IF
+         
+         LET l_site = l_icab003_now
+         LET l_icab002_now = ''
+         LET l_icab003_now = ''
+      END FOREACH
+      
+      IF g_bgjob = 'N' THEN
+         IF l_success THEN
+            CALL s_transaction_end('Y',0)
+            CALL aicp800_success(l_pmds.pmdsdocno,l_pmds.pmdsdocdt,l_pmds.pmds007,l_pmds.pmds002,l_pmds.pmds003,l_trino)
+         ELSE
+            CALL s_transaction_end('N',0)
+            CALL aicp800_fail(l_pmds.pmdsdocno,l_pmds.pmdsdocdt,l_pmds.pmds007,l_pmds.pmds002,l_pmds.pmds003,l_pmds.pmds053)
+         END IF
+      ELSE
+         IF l_success THEN
+            #成功
+            CALL s_transaction_end('Y',0)
+            CALL cl_ask_pressanykey("aic-00176")    #多角流程拋轉成功！
+         ELSE
+            #失敗
+            CALL s_transaction_end('N',0)
+            CALL cl_ask_pressanykey("aic-00177")    #多角流程拋轉失敗！
+         END IF
+      END IF
+      
+      INITIALIZE l_pmds.* TO NULL
+   END FOREACH
+   
+   CALL cl_err_collect_show()
+
+   IF g_bgjob = 'N' THEN
+      CALL cl_ask_pressanykey("std-00012")
+   END IF
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aicp800_fail" order="2" ver="2" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 失敗記錄
+# Memo...........:
+# Usage..........: CALL aicp800_fail(p_pmdsdocno,p_pmdsdocdt,p_pmds007,p_pmds002,p_pmds003,p_pmds053)
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 141106 By whitney
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aicp800_fail(p_pmdsdocno,p_pmdsdocdt,p_pmds007,p_pmds002,p_pmds003,p_pmds053)
+DEFINE p_pmdsdocno       LIKE pmds_t.pmdsdocno
+DEFINE p_pmdsdocdt       LIKE pmds_t.pmdsdocdt
+DEFINE p_pmds007         LIKE pmds_t.pmds007
+DEFINE p_pmds002         LIKE pmds_t.pmds002
+DEFINE p_pmds003         LIKE pmds_t.pmds003
+DEFINE p_pmds053         LIKE pmds_t.pmds053
+DEFINE l_errcode         LIKE gzze_t.gzze001
+DEFINE l_i               LIKE type_t.num5
+
+   IF g_bgjob = 'N' THEN
+      IF cl_null(g_fail_cnt) THEN
+         LET g_fail_cnt = 0
+      END IF
+      
+      FOR l_i = g_fail_cnt+1 TO g_errcollect.getLength()
+         LET g_detail4_d[l_i].pmdsdocno2 = p_pmdsdocno
+         LET g_detail4_d[l_i].pmdsdocdt2 = p_pmdsdocdt
+         LET g_detail4_d[l_i].pmds0072   = p_pmds007 
+         LET g_detail4_d[l_i].pmds0022   = p_pmds002 
+         LET g_detail4_d[l_i].pmds0032   = p_pmds003 
+         LET g_detail4_d[l_i].pmds0532   = p_pmds053 
+      
+         #錯誤訊息
+#         LET l_errcode = g_errcollect[l_i].code
+#         LET g_detail4_d[l_i].reason = cl_getmsg(l_errcode,g_dlang)
+         LET g_detail4_d[l_i].reason = g_errcollect[l_i].message
+      
+         #說明
+         CALL s_desc_get_trading_partner_abbr_desc(g_detail4_d[l_i].pmds0072)
+              RETURNING g_detail4_d[l_i].pmds0072_desc
+         CALL s_desc_get_person_desc(g_detail4_d[l_i].pmds0022)
+              RETURNING g_detail4_d[l_i].pmds0022_desc
+         CALL s_desc_get_department_desc(g_detail4_d[l_i].pmds0032)
+              RETURNING g_detail4_d[l_i].pmds0032_desc
+         CALL aicp800_get_icaal003(g_detail4_d[l_i].pmds0532)
+              RETURNING g_detail4_d[l_i].pmds0532_desc
+      END FOR
+   END IF
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aicp800_get_icaal" order="3" ver="2" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="function.aicp800_get_icaal003" order="3" ver="2" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 多角流程代碼說明
+# Memo...........:
+# Usage..........: CALL aicp800_get_icaal003(p_icaal001)
+#                  RETURNING r_icaal003
+# Input parameter: p_icaal001   多角流程代碼
+# Return code....: r_icaal003   多角流程代碼說明
+# Date & Author..: 141106 By whitney
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aicp800_get_icaal003(p_icaal001)
+DEFINE p_icaal001  LIKE icaal_t.icaal001
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_icaal001
+   CALL ap_ref_array2(g_ref_fields," SELECT icaal003 FROM icaal_t WHERE icaalent = '"||g_enterprise||"' AND icaal001 = ? AND icaal002 = '"||g_dlang||"'","")
+        RETURNING g_rtn_fields
+   RETURN g_rtn_fields[1]
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aicp800_success" order="4" ver="2" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 成功記錄
+# Memo...........:
+# Usage..........: CALL aicp800_success(p_pmdsdocno,p_pmdsdocdt,p_pmds007,p_pmds002,p_pmds003,p_pmds041)
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 141106 By whitney
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aicp800_success(p_pmdsdocno,p_pmdsdocdt,p_pmds007,p_pmds002,p_pmds003,p_pmds041)
+DEFINE p_pmdsdocno        LIKE pmds_t.pmdsdocno
+DEFINE p_pmdsdocdt        LIKE pmds_t.pmdsdocdt
+DEFINE p_pmds007          LIKE pmds_t.pmds007
+DEFINE p_pmds002          LIKE pmds_t.pmds002
+DEFINE p_pmds003          LIKE pmds_t.pmds003
+DEFINE p_pmds041          LIKE pmds_t.pmds041
+
+   IF cl_null(g_success_cnt) THEN
+      LET g_success_cnt = 1
+   END IF
+   
+   LET g_detail3_d[g_success_cnt].pmdsdocno1 = p_pmdsdocno
+   LET g_detail3_d[g_success_cnt].pmdsdocdt1 = p_pmdsdocdt
+   LET g_detail3_d[g_success_cnt].pmds0071   = p_pmds007
+   LET g_detail3_d[g_success_cnt].pmds0021   = p_pmds002
+   LET g_detail3_d[g_success_cnt].pmds0031   = p_pmds003
+   LET g_detail3_d[g_success_cnt].pmds0411   = p_pmds041
+   
+   #說明
+   CALL s_desc_get_trading_partner_abbr_desc(g_detail3_d[g_success_cnt].pmds0071)
+        RETURNING g_detail3_d[g_success_cnt].pmds0071_desc
+   CALL s_desc_get_person_desc(g_detail3_d[g_success_cnt].pmds0021)
+        RETURNING g_detail3_d[g_success_cnt].pmds0021_desc
+   CALL s_desc_get_department_desc(g_detail3_d[g_success_cnt].pmds0031)
+        RETURNING g_detail3_d[g_success_cnt].pmds0031_desc
+   
+   LET g_success_cnt = g_success_cnt +  1
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aicp800_create_temp_table" order="5" ver="2" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#Temp table
+PRIVATE FUNCTION aicp800_create_temp_table()
+   
+   DROP TABLE aicp800_tmp;
+   CREATE TEMP TABLE aicp800_tmp( 
+       sel            LIKE type_t.chr1,
+       pmdsdocno      LIKE pmds_t.pmdsdocno, 
+       pmdsdocdt      LIKE pmds_t.pmdsdocdt,
+       pmds000        LIKE pmds_t.pmds000,
+       pmds007        LIKE pmds_t.pmds007,
+       pmds002        LIKE pmds_t.pmds002,
+       pmds003        LIKE pmds_t.pmds003,
+       pmdsownid      LIKE pmds_t.pmdsownid,
+       pmdscrtid      LIKE pmds_t.pmdscrtid,
+       pmds053        LIKE pmds_t.pmds053
+       );
+END FUNCTION]]>
+  </point>
+  <point name="function.aicp800_sel" order="6" ver="2" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#單號過濾條件
+PRIVATE FUNCTION aicp800_sel()
+   LET g_aicp800_sel = "pmdsent = '",g_enterprise,"' AND pmdssite = '",g_site,"'",
+                       " AND pmdsstus = 'S' AND pmds000 = '7' ",
+                       " AND pmds041 IS NULL AND pmds053 IS NOT NULL"
+END FUNCTION]]>
+  </point>
+  <point name="b_fill.clear" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_master_idx = 1   ]]>
+  </point>
+  <point name="b_fill.foreach_into" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   g_detail_d[l_ac].sel,g_detail_d[l_ac].pmdsdocno,g_detail_d[l_ac].pmdsdocdt,
+   g_detail_d[l_ac].pmds000,g_detail_d[l_ac].pmds007,g_detail_d[l_ac].pmds007_desc,
+   g_detail_d[l_ac].pmds002,g_detail_d[l_ac].pmds002_desc,
+   g_detail_d[l_ac].pmds003,g_detail_d[l_ac].pmds003_desc,
+   g_detail_d[l_ac].pmdsownid,g_detail_d[l_ac].pmdsownid_desc,
+   g_detail_d[l_ac].pmdscrtid,g_detail_d[l_ac].pmdscrtid_desc,
+   g_detail_d[l_ac].pmds053,g_detail_d[l_ac].pmds053_desc
+  ]]>
+  </point>
+  <point name="b_fill.other_table" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL g_detail_d.deleteElement(g_detail_d.getLength())]]>
+  </point>
+  <point name="b_fill.sql_before" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_sql = "SELECT DISTINCT sel,pmdsdocno,pmdsdocdt,pmds000,pmds007,pmaal004,pmds002,a.oofa011, ",
+               "                pmds003,ooefl003,pmdsownid,b.oofa011,pmdscrtid,c.oofa011,pmds053,icaal003 ",
+               "  FROM aicp800_tmp ",
+               "       LEFT OUTER JOIN pmaal_t ON pmaalent = '",g_enterprise,"' AND pmds007 = pmaal001 AND pmaal002 = '",g_dlang,"' ",
+               "       LEFT OUTER JOIN oofa_t a ON a.oofaent = '",g_enterprise,"' AND a.oofa002 = '2' AND a.oofa003 = pmds002 ",
+               "       LEFT OUTER JOIN ooefl_t ON ooeflent = '",g_enterprise,"' AND ooefl001 = pmds003 AND ooefl002 = '",g_dlang,"' ",
+               "       LEFT OUTER JOIN oofa_t b ON b.oofaent = '",g_enterprise,"' AND b.oofa002 = '2' AND b.oofa003 = pmdsownid ",
+               "       LEFT OUTER JOIN oofa_t c ON c.oofaent = '",g_enterprise,"' AND c.oofa002 = '2' AND c.oofa003 = pmdscrtid ",
+               "       LEFT OUTER JOIN icaal_t ON icaalent = '",g_enterprise,"' AND icaal001 = pmds053 AND icaal002 = '",g_dlang,"' ",
+               " WHERE ",g_wc_filter,
+               " ORDER BY pmdsdocno,pmdsdocdt "
+               ]]>
+  </point>
+  <point name="fetch.after_fill" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   IF g_detail_d.getLength() = 0 THEN
+      RETURN
+   END IF
+   
+   LET g_sql = "SELECT pmdtseq,pmdt001,pmdt002,pmdt003,pmdt004,pmdt005,pmdt006,imaal003,imaal004,pmdt007,pmdt019,a.oocal003, ",
+               "       pmdt020,pmdt021,b.oocal003,pmdt022,pmdt008,pmdt023,c.oocal003,pmdt024,pmdt059 ",
+               "  FROM pmdt_t ",
+               "       LEFT OUTER JOIN imaal_t ON pmdtent = imaalent AND pmdt006 = imaal001 AND imaal002 = '",g_dlang,"' ",
+               "       LEFT OUTER JOIN oocal_t a ON pmdtent = a.oocalent AND pmdt019 = a.oocal001 AND a.oocal002 = '",g_dlang,"' ",
+               "       LEFT OUTER JOIN oocal_t b ON pmdtent = b.oocalent AND pmdt021 = b.oocal001 AND b.oocal002 = '",g_dlang,"' ",
+               "       LEFT OUTER JOIN oocal_t c ON pmdtent = c.oocalent AND pmdt023 = c.oocal001 AND c.oocal002 = '",g_dlang,"' ",
+               " WHERE pmdtent = '",g_enterprise,"'",
+               "   AND pmdtdocno = '",g_detail_d[g_master_idx].pmdsdocno,"'"
+   PREPARE pmdt_fill_pre FROM g_sql
+   DECLARE pmdt_fill_cur CURSOR FOR pmdt_fill_pre
+   
+   CALL g_detail2_d.clear()
+   LET l_ac = 1
+   
+   FOREACH pmdt_fill_cur INTO g_detail2_d[l_ac].pmdtseq,g_detail2_d[l_ac].pmdt001,g_detail2_d[l_ac].pmdt002,
+                              g_detail2_d[l_ac].pmdt003,g_detail2_d[l_ac].pmdt004,g_detail2_d[l_ac].pmdt005,
+                              g_detail2_d[l_ac].pmdt006,g_detail2_d[l_ac].pmdt006_desc,g_detail2_d[l_ac].pmdt006_desc_desc,
+                              g_detail2_d[l_ac].pmdt007,g_detail2_d[l_ac].pmdt019,g_detail2_d[l_ac].pmdt019_desc,
+                              g_detail2_d[l_ac].pmdt020,g_detail2_d[l_ac].pmdt021,g_detail2_d[l_ac].pmdt021_desc,
+                              g_detail2_d[l_ac].pmdt022,g_detail2_d[l_ac].pmdt008,g_detail2_d[l_ac].pmdt023,
+                              g_detail2_d[l_ac].pmdt023_desc,g_detail2_d[l_ac].pmdt024,g_detail2_d[l_ac].pmdt059
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  9035
+            LET g_errparam.extend =  ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   CALL g_detail2_d.deleteElement(g_detail2_d.getLength())
+   LET g_detail2_cnt = l_ac - 1 
+   DISPLAY g_detail2_cnt TO FORMONLY.cnt   ]]>
+  </point>
+  <point name="fetch.define" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="filter.detail_cnt" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   
+   CLEAR FORM 
+   CALL g_detail_d.clear()
+   CALL g_detail2_d.clear()
+   
+   CONSTRUCT g_wc_filter ON pmdsdocno,pmdsdocdt,pmds007,pmds002,pmds003,pmdsownid,pmdscrtid,pmds053
+        FROM s_detail1[1].b_pmdsdocno,s_detail1[1].b_pmdsdocdt,s_detail1[1].b_pmds007,
+             s_detail1[1].b_pmds002,s_detail1[1].b_pmds003,
+             s_detail1[1].b_pmdsownid,s_detail1[1].b_pmdscrtid,s_detail1[1].pmds053
+           
+      BEFORE CONSTRUCT
+      
+            ON ACTION controlp INFIELD pmdsdocno
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = '7'                #倉退
+               CALL q_pmdsdocno()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmdsdocno  #顯示到畫面上
+               NEXT FIELD pmdsdocno                     #返回原欄位    
+               
+            ON ACTION controlp INFIELD pmds007
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_pmaa001_3()                     #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmds007  #顯示到畫面上
+               NEXT FIELD pmds007                     #返回原欄位
+   
+            ON ACTION controlp INFIELD pmds002
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmds002  #顯示到畫面上
+               NEXT FIELD pmds002                     #返回原欄位
+               
+            ON ACTION controlp INFIELD pmds003
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooeg001()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmds003  #顯示到畫面上
+               NEXT FIELD pmds003                     #返回原欄位
+               
+            ON ACTION controlp INFIELD pmdsownid
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()                         #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmdsownid  #顯示到畫面上
+               NEXT FIELD pmdsownid                     #返回原欄位
+   
+            ON ACTION controlp INFIELD pmdscrtid
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()                          #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmdscrtid  #顯示到畫面上
+               NEXT FIELD pmdscrtid                     #返回原欄位
+            
+            ON ACTION controlp INFIELD pmds053
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = '1'
+               LET g_qryparam.arg2 = '0'
+               CALL q_icaa001_1()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmds053    #顯示到畫面上
+               NEXT FIELD pmds053                       #返回原欄位
+
+   END CONSTRUCT]]>
+  </point>
+  <point name="global.variable" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[       sel               LIKE type_t.chr1,
+       pmdsdocno         LIKE pmds_t.pmdsdocno, 
+       pmdsdocdt         LIKE pmds_t.pmdsdocdt,
+       pmds000           LIKE pmds_t.pmds000,
+       pmds007           LIKE pmds_t.pmds007,
+       pmds007_desc      LIKE type_t.chr80,
+       pmds002           LIKE pmds_t.pmds002,
+       pmds002_desc      LIKE type_t.chr80,
+       pmds003           LIKE pmds_t.pmds003,
+       pmds003_desc      LIKE type_t.chr80,
+       pmdsownid         LIKE pmds_t.pmdsownid,
+       pmdsownid_desc    LIKE type_t.chr80,
+       pmdscrtid         LIKE pmds_t.pmdscrtid,
+       pmdscrtid_desc    LIKE type_t.chr80,
+       pmds053           LIKE pmds_t.pmds053,
+       pmds053_desc      LIKE type_t.chr80
+                     END RECORD
+
+TYPE type_g_detail2_d RECORD
+       pmdtseq           LIKE pmdt_t.pmdtseq, 
+       pmdt001           LIKE pmdt_t.pmdt001,
+       pmdt002           LIKE pmdt_t.pmdt002,
+       pmdt003           LIKE pmdt_t.pmdt003,
+       pmdt004           LIKE pmdt_t.pmdt004,
+       pmdt005           LIKE pmdt_t.pmdt005,
+       pmdt006           LIKE pmdt_t.pmdt006,
+       pmdt006_desc      LIKE type_t.chr80,
+       pmdt006_desc_desc LIKE type_t.chr80,
+       pmdt007           LIKE pmdt_t.pmdt007,
+       pmdt019           LIKE pmdt_t.pmdt019,
+       pmdt019_desc      LIKE type_t.chr80,
+       pmdt020           LIKE pmdt_t.pmdt020,
+       pmdt021           LIKE pmdt_t.pmdt021,
+       pmdt021_desc      LIKE type_t.chr80,
+       pmdt022           LIKE pmdt_t.pmdt022,
+       pmdt008           LIKE pmdt_t.pmdt008,
+       pmdt023           LIKE pmdt_t.pmdt023,
+       pmdt023_desc      LIKE type_t.chr80,
+       pmdt024           LIKE pmdt_t.pmdt024,
+       pmdt059           LIKE pmdt_t.pmdt059
+                      END RECORD
+
+TYPE type_g_detail3_d RECORD
+       pmdsdocno1        LIKE pmds_t.pmdsdocno, 
+       pmdsdocdt1        LIKE pmds_t.pmdsdocdt,
+       pmds0071          LIKE pmds_t.pmds007,
+       pmds0071_desc     LIKE type_t.chr80,
+       pmds0021          LIKE pmds_t.pmds002,
+       pmds0021_desc     LIKE type_t.chr80,
+       pmds0031          LIKE pmds_t.pmds003,
+       pmds0031_desc     LIKE type_t.chr80,
+       pmds0411          LIKE pmds_t.pmds041
+                      END RECORD
+
+TYPE type_g_detail4_d RECORD
+       pmdsdocno2        LIKE pmds_t.pmdsdocno, 
+       pmdsdocdt2        LIKE pmds_t.pmdsdocdt,
+       pmds0072          LIKE pmds_t.pmds007,
+       pmds0072_desc     LIKE type_t.chr80,
+       pmds0022          LIKE pmds_t.pmds002,
+       pmds0022_desc     LIKE type_t.chr80,
+       pmds0032          LIKE pmds_t.pmds003,
+       pmds0032_desc     LIKE type_t.chr80,
+       pmds0532          LIKE pmds_t.pmds053,
+       pmds0532_desc     LIKE type_t.chr80,
+       reason            LIKE type_t.chr500
+                      END RECORD
+
+DEFINE g_detail2_d  DYNAMIC ARRAY OF type_g_detail2_d
+DEFINE g_detail3_d  DYNAMIC ARRAY OF type_g_detail3_d
+DEFINE g_detail4_d  DYNAMIC ARRAY OF type_g_detail4_d
+DEFINE g_detail2_idx     LIKE type_t.num5
+DEFINE g_detail3_idx     LIKE type_t.num5
+DEFINE g_detail4_idx     LIKE type_t.num5
+DEFINE g_detail2_cnt     LIKE type_t.num5
+DEFINE g_detail3_cnt     LIKE type_t.num5
+DEFINE g_detail4_cnt     LIKE type_t.num5
+
+DEFINE g_success_cnt     LIKE type_t.num5
+DEFINE g_fail_cnt        LIKE type_t.num5
+
+DEFINE g_aicp800_sel     STRING
+]]>
+  </point>
+  <point name="init.define" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_success  LIKE type_t.num5]]>
+  </point>
+  <point name="init.init" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL cl_set_combo_scc('b_pmdt005','2055')
+   
+   IF cl_null(g_bgjob) THEN
+      LET g_bgjob = 'N'
+   END IF
+   ]]>
+  </point>
+  <point name="main.background" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   
+   CALL aicp800_create_temp_table()
+   
+   CALL aicp800_sel()
+   
+   IF NOT cl_null(g_argv[1]) THEN
+      LET g_bgjob = 'Y'
+   END IF]]>
+  </point>
+  <point name="main.exit" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DROP TABLE aicp800_tmp
+   CALL s_aic_carry_drop_temp_table_ship()]]>
+  </point>
+  <point name="main.servicecall" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[      IF NOT cl_null(g_argv[1]) THEN
+         LET g_wc = " pmdsdocno = '",g_argv[1],"' "
+         CALL aicp800_query()
+         UPDATE aicp800_tmp
+            SET sel = 'Y'
+         CALL aicp800_process()
+      END IF]]>
+  </point>
+  <point name="menu.filter" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="query.after_construct" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DELETE FROM aicp800_tmp;
+   LET g_sql = "SELECT DISTINCT 'N',pmdsdocno,pmdsdocdt,pmds000,pmds007,pmds002,pmds003,pmdsownid,pmdscrtid,pmds053 ",
+               "  FROM pmds_t ",
+               " WHERE ",g_aicp800_sel,
+               "   AND ",g_wc
+               
+   LET g_sql = "INSERT INTO aicp800_tmp ",g_sql
+   PREPARE tmp_ins_pre FROM g_sql
+   EXECUTE tmp_ins_pre
+
+   LET g_wc_filter = " 1=1"]]>
+  </point>
+  <point name="ui_dialog.before_dialog" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_wc = "1=1"]]>
+  </point>
+  <point name="ui_dialog.before_dialog2" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+            CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            
+            CALL aicp800_sel()
+            ]]>
+  </point>
+  <point name="ui_dialog.define" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_cnt    LIKE type_t.num5
+]]>
+  </point>
+  <point name="ui_dialog.more_action" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[         ON ACTION batch_execute
+            #變更此筆資料後，直接按執行
+            IF l_ac > 0 THEN
+               UPDATE aicp800_tmp
+                  SET sel = g_detail_d[l_ac].sel
+                WHERE pmdsdocno = g_detail_d[l_ac].pmdsdocno
+            END IF
+            
+            LET l_cnt = ''
+            SELECT COUNT(*) INTO l_cnt
+              FROM aicp800_tmp
+             WHERE sel = 'Y'
+            IF cl_null(l_cnt) OR l_cnt = 0 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = '-400'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               CONTINUE DIALOG
+            ELSE
+               CALL aicp800_process()
+               CALL aicp800_query()
+            END IF
+            ACCEPT DIALOG]]>
+  </point>
+  <point name="ui_dialog.more_construct" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[         CONSTRUCT BY NAME g_wc ON pmdsdocno,pmdsdocdt,pmds007,pmds002,pmds003,pmdsownid,pmdscrtid,pmds053
+
+            BEFORE CONSTRUCT
+            
+            ON ACTION controlp INFIELD pmdsdocno
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = '7'                #倉退
+               LET g_qryparam.where = " pmdsstus = 'S' AND pmds053 IS NOT NULL AND pmds041 IS NULL AND pmdsdocno IN (SELECT pmdtdocno FROM pmdt_t WHERE pmdtent = pmdsent AND pmdtdocno = pmdsdocno) "
+               CALL q_pmdsdocno()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmdsdocno  #顯示到畫面上
+               NEXT FIELD pmdsdocno                     #返回原欄位    
+               
+            ON ACTION controlp INFIELD pmds007
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_pmaa001_3()                     #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmds007  #顯示到畫面上
+               NEXT FIELD pmds007                     #返回原欄位
+   
+            ON ACTION controlp INFIELD pmds002
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmds002  #顯示到畫面上
+               NEXT FIELD pmds002                     #返回原欄位
+               
+            ON ACTION controlp INFIELD pmds003
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooeg001()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmds003  #顯示到畫面上
+               NEXT FIELD pmds003                     #返回原欄位
+               
+            ON ACTION controlp INFIELD pmdsownid
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()                         #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmdsownid  #顯示到畫面上
+               NEXT FIELD pmdsownid                     #返回原欄位
+   
+            ON ACTION controlp INFIELD pmdscrtid
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()                          #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmdscrtid  #顯示到畫面上
+               NEXT FIELD pmdscrtid                     #返回原欄位
+            
+            ON ACTION controlp INFIELD pmds053
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = '1'
+               LET g_qryparam.arg2 = '0'
+               CALL q_icaa001_1()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmds053    #顯示到畫面上
+               NEXT FIELD pmds053                       #返回原欄位
+   
+         END CONSTRUCT         ]]>
+  </point>
+  <point name="ui_dialog.more_displayarray" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[         DISPLAY ARRAY g_detail2_d TO s_detail2.* ATTRIBUTE(COUNT=g_detail2_cnt)
+            BEFORE DISPLAY
+              
+            BEFORE ROW
+               CALL FGL_SET_ARR_CURR(g_detail2_idx)
+               LET g_detail2_idx = DIALOG.getCurrentRow("s_detail2")
+               DISPLAY g_detail2_idx TO FORMONLY.idx
+              
+         END DISPLAY
+
+         DISPLAY ARRAY g_detail3_d TO s_detail3.* ATTRIBUTE(COUNT=g_detail3_cnt)
+            BEFORE DISPLAY
+              
+            BEFORE ROW
+               CALL FGL_SET_ARR_CURR(g_detail3_idx)
+               LET g_detail3_idx = DIALOG.getCurrentRow("s_detail3")
+               DISPLAY g_detail3_idx TO FORMONLY.idx
+              
+         END DISPLAY
+
+         DISPLAY ARRAY g_detail4_d TO s_detail4.* ATTRIBUTE(COUNT=g_detail4_cnt)
+            BEFORE DISPLAY
+              
+            BEFORE ROW
+               CALL FGL_SET_ARR_CURR(g_detail4_idx)
+               LET g_detail4_idx = DIALOG.getCurrentRow("s_detail4")
+               DISPLAY g_detail4_idx TO FORMONLY.idx
+              
+         END DISPLAY
+]]>
+  </point>
+  <point name="ui_dialog.more_input" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[         INPUT ARRAY g_detail_d FROM s_detail1.*
+            ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                      INSERT ROW = FALSE,
+                      DELETE ROW = FALSE,
+                      APPEND ROW = FALSE)
+
+            BEFORE INPUT
+               LET g_detail_cnt = g_detail_d.getLength()
+             
+            BEFORE ROW
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_master_idx = l_ac
+               DISPLAY l_ac TO FORMONLY.h_index
+               CALL aicp800_fetch()               
+               
+            ON CHANGE b_sel
+               UPDATE aicp800_tmp 
+                  SET sel = g_detail_d[l_ac].sel 
+                WHERE pmdsdocno = g_detail_d[l_ac].pmdsdocno 
+                  
+         END INPUT               ]]>
+  </point>
+  <point name="ui_dialog.onaction_sel" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  UPDATE aicp800_tmp 
+                     SET sel = 'Y' 
+                   WHERE pmdsdocno = g_detail_d[li_idx].pmdsdocno 
+               END IF
+            END FOR]]>
+  </point>
+  <point name="ui_dialog.onaction_selall" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            UPDATE aicp800_tmp 
+               SET sel = 'Y']]>
+  </point>
+  <point name="ui_dialog.onaction_selnone" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            UPDATE aicp800_tmp 
+               SET sel = 'N']]>
+  </point>
+  <point name="ui_dialog.onaction_unsel" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  UPDATE aicp800_tmp 
+                     SET sel = 'N' 
+                   WHERE pmdsdocno = g_detail_d[li_idx].pmdsdocno
+               END IF
+            END FOR]]>
+  </point>
+  <section id="aicp800.b_fill" ver="1" status="" src="m" readonly="">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION aicp800_b_fill()
+ 
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define
+{<point name="b_fill.define"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+{<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   PREPARE aicp800_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR aicp800_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空
+{<point name="b_fill.clear"/>}
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO 
+   #add-point:b_fill段foreach_into
+{<point name="b_fill.foreach_into"/>}
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充
+{<point name="b_fill.foreach_iside"/>}
+      #end add-point
+      
+      CALL aicp800_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  9035
+            LET g_errparam.extend =  ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身)
+{<point name="b_fill.other_table"/>}
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE aicp800_sel
+   
+   LET l_ac = 1
+   CALL aicp800_fetch()
+   #add-point:b_fill段資料填充(其他單身)
+{<point name="b_fill.after_b_fill"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="aicp800.description" ver="22" status="" src="s" readonly="">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000055
+#+ 
+#+ Filename...: aicp800
+#+ Description: 多角貿易出貨通知單拋轉作業
+#+ Creator....: 02295(2014/05/08)
+#+ Modifier...: 02295(2014/05/08)
+#+ Buildtype..: 應用 p02 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="aicp800.detail_show" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION aicp800_detail_show()
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段
+   {<point name="detail_show.detail_show"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="aicp800.fetch" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION aicp800_fetch()
+ 
+   DEFINE li_ac           LIKE type_t.num5
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後
+   {<point name="fetch.after_fill" />}
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aicp800.filter" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION aicp800_filter()
+   #add-point:filter段define
+   {<point name="filter.define"/>}
+   #end add-point    
+ 
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define
+   {<point name="filter.detail_cnt"/>}
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL aicp800_b_fill()
+   CALL aicp800_fetch()
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aicp800.filter_parser" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ filter欄位解析
+PRIVATE FUNCTION aicp800_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   #add-point:filter段define
+   {<point name="filter_parser.define"/>}
+   #end add-point    
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="aicp800.filter_show" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION aicp800_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = aicp800_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="aicp800.global" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num5              
+DEFINE l_ac_d               LIKE type_t.num5              #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num5              #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num5
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="aicp800.init" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 畫面資料初始化
+PRIVATE FUNCTION aicp800_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point   
+ 
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aicp800.main" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 作業開始 
+MAIN
+   DEFINE ls_js  STRING
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aic","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aicp800 WITH FORM cl_ap_formpath("aic",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aicp800_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aicp800_ui_dialog() 
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_aicp800
+   END IF 
+   
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+  </section>
+  <section id="aicp800.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="aicp800.query" ver="1" status="" src="m" readonly="">
+    <![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION aicp800_query()
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+{<point name="query.define" />}
+   #end add-point 
+   
+   #add-point:cs段after_construct
+{<point name="query.after_construct" />}
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL aicp800_b_fill()
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aicp800.ui_dialog" ver="1" status="u" src="m" readonly="">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION aicp800_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num5
+   #add-point:ui_dialog段define
+{<point name="ui_dialog.define"/>}
+   #end add-point 
+ 
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog 
+{<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE
+ 
+      CALL cl_dlg_query_bef_disp()  #相關查詢
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct
+{<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+{<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+{<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2
+{<point name="ui_dialog.before_dialog2"/>}
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+            END FOR
+            #add-point:ui_dialog段on action selall
+{<point name="ui_dialog.onaction_selall"/>}
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+            END FOR
+            #add-point:ui_dialog段on action selnone
+{<point name="ui_dialog.onaction_selnone"/>}
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel
+{<point name="ui_dialog.onaction_sel"/>}
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel
+{<point name="ui_dialog.onaction_unsel"/>}
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL aicp800_filter()
+            #add-point:ON ACTION filter
+{<point name="menu.filter" />}
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            CALL aicp800_query()
+ 
+         # 條件清除
+         ON ACTION qbeclear
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            CALL aicp800_b_fill()
+            CALL aicp800_fetch()
+ 
+         #add-point:ui_dialog段action
+{<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

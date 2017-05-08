@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="ammt450_01" std_prog="ammt450_01" erpver="1.0" ver="3" module="AMM" type="S" booking="N" designer_ver="1.0" class="T" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="mmfe_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[一、剛進入子程式時給值
+　　兌換商品清單依規則編號+版次抓取兌換商品資料
+　　均展到最細項商品維度.ex:當資料類型=5.商品分類
+　　則取[T:料件主檔][C:產品分類]=換贈規則指定商品分類且需存在於該門店商品清單內資料顯示
+    mmfe011 #組別
+        給值：mmcj003 換贈組別
+    mmfe001 #商品編號
+        (01)當資料類型(mmfe012) = 4.商品編號
+         給值：資料編號(mmfe013)
+        (02)當資料類型(mmfe012) = 5.商品分類(imaa009)
+            用商品分類(imaa009)抓出此[商品分類]的商品編號(imaa001)
+        (03)當資料類型(mmfe012) = 6.產地分類(imaa122)
+            用產地分類(imaa122)抓出此[產地分類]的商品編號(imaa001)
+        (04)當資料類型(mmfe012) = 7.價格帶(imaa131)
+            用價格帶(imaa131)抓出此[價格帶]的商品編號(imaa001)
+        (05)當資料類型(mmfe012) = 8.品牌(imaa126)
+            用品牌(imaa126)抓出此[品牌]的商品編號(imaa001)
+        (06)當資料類型(mmfe012) = 9.系列(imaa127)
+            用系列(imaa127)抓出此[系列]的商品編號(imaa001)
+        (07)當資料類型(mmfe012) = A.型別(imaa128)
+            用型別imaa128)抓出此[型別]的商品編號(imaa001)
+        (08)當資料類型(mmfe012) = B.功能(imaa129)
+            用功能(imaa129)抓出此[功能]的商品編號(imaa001)
+        (09)當資料類型(mmfe012) = C.其他屬性一(imaa132)
+            用其他屬性一(imaa132)抓出此[其他屬性一]的商品編號(imaa001)
+        (10)當資料類型(mmfe012) = D.其他屬性二(imaa133)
+            用其他屬性二(imaa133)抓出此[其他屬性二]的商品編號(imaa001)
+        (11)當資料類型(mmfe012) = E.其他屬性三(imaa134)
+            用其他屬性三(imaa134)抓出此[其他屬性三]的商品編號(imaa001)
+        (12)當資料類型(mmfe012) = F.其他屬性四(imaa135)
+            用其他屬性四(imaa135)抓出此[其他屬性四]的商品編號(imaa001)
+        (13)當資料類型(mmfe012) = G.其他屬性五(imaa136)
+            用其他屬性五(imaa136)抓出此[其他屬性五]的商品編號(imaa001)
+        (14)當資料類型(mmfe012) = H.其他屬性六(imaa137)
+            用其他屬性六(imaa137)抓出此[其他屬性六]的商品編號(imaa001)
+        (15)當資料類型(mmfe012) = I.其他屬性七(imaa138)
+            用其他屬性七(imaa138)抓出此[其他屬性七]的商品編號(imaa001)
+        (16)當資料類型(mmfe012) = J.其他屬性八(imaa139)
+            用其他屬性八(imaa139)抓出此[其他屬性八]的商品編號(imaa001)
+        (17)當資料類型(mmfe012) = K.其他屬性九(imaa140)
+            用其他屬性九(imaa140)抓出此[其他屬性九]的商品編號(imaa001)
+        (18)當資料類型(mmfe012) = L.其他屬性十(imaa141)
+            用其他屬性十(imaa141)抓出此[其他屬性十]的商品編號(imaa001)
+        (19)當資料類型(mmfe012) = M.卡(mman001)
+               給卡種編號
+        (20)當資料類型(mmfe012) = N.券(gcaf001)抓券對應商品編號(gcaf013)和券面額編號(gcaf012)
+            用券(gcaf001)抓出此[卡]的券對應商品編號(gcaf013)和券面額編號(gcaf012)
+            給券種編號
+        (21)當資料類型(mmfe012) = O.積點
+        (22)當資料類型(mmfe012) = P.送抵現值(mman001) 抓儲值金額對應商品編號(mman054)
+            用送抵現值(mman001)抓出此[卡]的卡種對應商品編號(mman054)
+    mmfe003 #券面額編號
+        給值：
+    mmfe006 #加價/加積點
+        給值：mmcj009 #加價/加積點
+    mmfe004 #起始券號
+    mmfe005 #截止券號
+    mmfe007 #兌換品種數
+    mmfe010 #換贈庫位
+        Default 門店對應預設庫位
+        給值：用門店關聯抓ooef124(預設出貨倉)
+    mmfe012 #資料類型
+        給值：mmcj004 #資料類型
+    mmfe013 #資料編號
+        給值：mmcj004 #資料編號
+    mmcj011 #上限名額
+        給值：mmcj011 #上限名額
+    mmcj012 #上線時間範圍
+        給值：mmcj012 #上線時間範圍
+    mmcj007 #贈送數量
+        給值：mmcj007 #贈送數量
+
+
+二、兌換要勾選的商品後，塞到贈品兌換單身檔(mmfe_t)
+　　使用者勾選按確認則依序寫到[T:贈品兌換單身檔]並更新此次兌換積點及兌換後剩餘積點
+　　[T:贈品兌換單身檔][C:項次]　　　　=　同單據編號最大項次+1
+        [T:贈品兌換單身檔][C:項次]                =   
+        (1)當資料類型(mmfe012) = M.卡(mman001)抓卡種對應商品編號(mman053)
+            用卡(mman001)抓出此[卡]的卡種對應商品編號(mman053)
+        (2)當資料類型(mmfe012) = N.券(gcaf001)抓券對應商品編號(gcaf013)和券面額編號(gcaf012)
+            用券(gcaf001)抓出此[卡]的券對應商品編號(gcaf013)和券面額編號(gcaf012)
+        (3)當資料類型(mmfe012) = O.積點
+        (4)當資料類型(mmfe012) = P.送抵現值(mman001) 抓儲值金額對應商品編號(mman054)
+            用送抵現值(mman001)抓出此[卡]的卡種對應商品編號(mman054)
+        [T:贈品兌換單身檔][C:總兌換數量]　=　兌換份數 * 贈送數量
+        [T:贈品兌換單身檔][C:加價總金額]　=　兌換份數 * 加價
+　　其他畫面上值相同
+
+三、兌換要勾選的商品後，塞到銷售交易商品明細檔(rtib_t)
+　　rtib004　[T:流通銷售單身檔][C:商品編號]　=　[T:贈品兌換單身檔].[C:商品編號]
+　　rtib006　[T:流通銷售單身檔][C:稅別]　　　=　依營運組織,商品編號抓取[T:門店商品清單檔].[C:稅別]
+　　rtib008　[T:流通銷售單身檔][C:標準售價]　=　依標準方式取價(規則目前未訂)，若取不到則=[T:贈品兌換單身檔][C:加價總金額]/[C:總兌換數量]
+　　rtib009　[T:流通銷售單身檔][C:促銷價]　　=　[T:贈品兌換單身檔][C:加價總金額]/[C:總兌換數量]
+　　rtib010　[T:流通銷售單身檔][C:交易價]　　=　[T:贈品兌換單身檔][C:加價總金額]/[C:總兌換數量]                                             
+　　rtib012　[T:流通銷售單身檔][C:數量]　　　=　[T:贈品兌換單身檔][C:總兌換數量]
+　　rtib013　[T:流通銷售單身檔][C:銷售單位]　=　[T:料件主檔].[C:銷售單位]  
+　　rtib018　[T:流通銷售單身檔][C:計價單位]　=　[T:門店商品清單].[C:計價單位]     
+　　rtib015　[T:流通銷售單身檔][C:庫存單位]　=　[T:料件主檔].[C:庫存單位]
+　　rtib016　[T:流通銷售單身檔][C:銷售庫存單位換算率] 先取[T:料件單位換算檔]取不到則取[T:單位換算檔] 
+　　rtib019　[T:流通銷售單身檔][C:銷售計價單位換算率] 先取[T:料件單位換算檔]取不到則取[T:單位換算檔] 　　　
+　　rtib020　[T:流通銷售單身檔][C:折扣金額]　=　([C:標準售價]-[C:交易價])* 數量
+　　rtib021　[T:流通銷售單身檔][C:應收金額]　=　[C:數量]*[C:交易價]
+　　rtib022　[T:流通銷售單身檔][C:未稅金額]　=　應收金額 - 同項次 sum([T:流通銷售稅額檔][C:稅額],若無資料則 Default 0 ,不允許空白
+　　rtib025　[T:流通銷售單身檔][C:庫區]　　　=　[T:會員卡發卡資料檔][C:庫區]
+　　rtib030　[T:流通銷售單身檔][C:對應卡券換贈項次]　=　[T:贈品兌換單身檔][C:項次]
+　　=>卡銷售不走促銷取價元件除標準價外其餘直接由兌換加價金額抓取價格
+]]>
+  </all>
+  <field cite_std="N" name="mmby_t.mmby009" ver="1" src="s" column="mmby009" table="mmby_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6534" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmby_t.mmby010" ver="1" src="s" column="mmby010" table="mmby_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6535" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmby_t.mmby011" ver="1" src="s" column="mmby011" table="mmby_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6536" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmby_t.mmby012" ver="1" src="s" column="mmby012" table="mmby_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmci_t.mmci003" ver="1" src="s" column="mmci003" table="mmci_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmci_t.mmci004" ver="1" src="s" column="mmci004" table="mmci_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmci_t.mmci005" ver="1" src="s" column="mmci005" table="mmci_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmcj007" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmcj011" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmcj012" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmfe013_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[(01)當資料類型(mmfe012) = 4.商品編號
+       抓料件多語言檔(imaal_t)
+(02)當資料類型(mmfe012) = 5.商品分類
+       抓品類基本資料檔多語言檔(rtaxl_t)
+(03)當資料類型(mmfe012) = 6.產地分類
+       應用分類(oocql001) = '2000'
+(04)當資料類型(mmfe012) = 7.價格帶
+       應用分類(oocql001) = '2001'
+(05)當資料類型(mmfe012) = 8.品牌
+       應用分類(oocql001) = '2002'
+(06)當資料類型(mmfe012) = 9.系列
+       應用分類(oocql001) = '2003'
+(07)當資料類型(mmfe012) = A.型別
+       應用分類(oocql001) = '2004'
+(08)當資料類型(mmfe012) = B.功能
+       應用分類(oocql001) = '2005'
+(09)當資料類型(mmfe012) = C.其他屬性一
+       應用分類(oocql001) = '2006'
+(10)當資料類型(mmfe012) = D.其他屬性二
+       應用分類(oocql001) = '2007'
+(11)當資料類型(mmfe012) = E.其他屬性三
+       應用分類(oocql001) = '2008'
+(12)當資料類型(mmfe012) = F.其他屬性四
+       應用分類(oocql001) = '2009'
+(13)當資料類型(mmfe012) = G.其他屬性五
+       應用分類(oocql001) = '2010'
+(14)當資料類型(mmfe012) = H.其他屬性六
+       應用分類(oocql001) = '2011'
+(15)當資料類型(mmfe012) = I.其他屬性七
+       應用分類(oocql001) = '2012'
+(16)當資料類型(mmfe012) = J.其他屬性八
+       應用分類(oocql001) = '2013'
+(17)當資料類型(mmfe012) = K.其他屬性九
+       應用分類(oocql001) = '2014'
+(18)當資料類型(mmfe012) = L.其他屬性十
+       應用分類(oocql001) = '2015'
+(19)當資料類型(mmfe012) = M.卡
+       抓會員卡種資料檔多語言檔(mmanl_t)
+(20)當資料類型(mmfe012) = N.券
+       抓券種基本資料檔多語言檔(gcafl_t)
+(21)當資料類型(mmfe012) = O.積點
+(22)當資料類型(mmfe012) = P.送抵現值
+       抓會員卡種資料檔多語言檔(mmanl_t)]]>
+  </field>
+  <field cite_std="N" name="mmfe_t.mmfe001" ver="1" src="s" column="mmfe001" table="mmfe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmfe_t.mmfe003" ver="1" src="s" column="mmfe003" table="mmfe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmfe_t.mmfe004" ver="1" src="s" column="mmfe004" table="mmfe_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[起始券號
+    當資料類型=3.券時才允許輸入
+卡資料類型的控卡：
+　1.開始卡號不可大於結束卡號
+　2.卡種編號檢查
+　3.卡號的長度
+　4.固定代碼不相同
+　5.流水號中含有非數字字符
+　6.檢查卡號是否已存在，開卡狀態=1發卡
+券資料類型的控卡：
+　1.開始券號不可大於結束券號
+　2.券種編號檢查
+　3.固定代碼不相同
+　4.券號介於起始券號
+　5.檢查券號是否已存在，券狀態=1發行]]>
+  </field>
+  <field cite_std="N" name="mmfe_t.mmfe005" ver="1" src="s" column="mmfe005" table="mmfe_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[截止券號
+    當資料類型=3.券時才允許輸入
+    LET 截止券號= 起始券號
+   自動計算換張數並更新換份數  ]]>
+  </field>
+  <field cite_std="N" name="mmfe_t.mmfe006" ver="1" src="s" column="mmfe006" table="mmfe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmfe_t.mmfe007" ver="1" src="s" column="mmfe007" table="mmfe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmfe_t.mmfe010" ver="1" src="s" column="mmfe010" table="mmfe_t" attribute="" type="" req="Y" i_zoom="q_inaa001_6" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[換贈庫位
+　開窗　參數一：rtiasite]]>
+  </field>
+  <field cite_std="N" name="mmfe_t.mmfe011" ver="1" src="s" column="mmfe011" table="mmfe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmfe_t.mmfe012" ver="1" src="s" column="mmfe012" table="mmfe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6517" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmfe_t.mmfe013" ver="1" src="s" column="mmfe013" table="mmfe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmfe_t.mmfeseq" ver="1" src="s" column="mmfeseq" table="mmfe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtia0461" ver="1" src="s" column="num15_3" table="type_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtia0471" ver="1" src="s" column="num15_3" table="type_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia046" ver="1" src="s" column="rtia046" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia047" ver="1" src="s" column="rtia047" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="sel" ver="1" src="s" column="chr1" table="type_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[1.選擇時相關判斷如下:
+  1.1 判斷總兌換份數是否大於設定限制
+      勾選時,程式需依規則上限統計時間範圍(每天或活動生失效日期區間) SUM 總兌換份數(依同 [T:贈品兌換單頭檔][C:營運據點]+[T:贈品兌換單頭檔][C:兌換規則編號]+
+                                                                                        [T:贈品兌換單頭檔][C:版本]+
+                                                                                        [T:贈品兌換商品清單檔][C:換贈組別]+  
+                                                                                        [T:贈品兌換商品清單檔][C:資料編號]但不包括作廢單據資料)
+
+      如果總兌換份數+勾選份數 > 上限名額,則顯示error."已超出上限名額,是否確認兌換(Y/N)?",當為'Y'時往下進行.(門店有可能仍以現埸是否有實物為主,所以先不控卡)
+
+  1.2 單一兌換比例時不允許勾選別的組別
+      若換贈方式=單一兌換比例時,則勾選時若組別不相同則顯示error message,必須限制單一組別
+
+  1.3 不論是單一兌換比例或分段兌換比例時,只允許勾選小於等於該規則符合換贈組別商品]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="2" name="mmfe001_desc" src="s" depend_field="mmfe_t.mmfe001" correspon_key="mmfe001" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmfe003_desc" src="s" depend_field="" correspon_key="&apos;2071&apos;,mmfe003" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="mmfe010_desc" src="s" depend_field="mmfe_t.mmfe010" correspon_key="mmfe010" ref_table="inaa_t" ref_fk="inaa001" ref_dlang="" ref_rtn="inaa002" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="mmby_t.mmby009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmby_t.mmby010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmby_t.mmby011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmby_t.mmby012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmci_t.mmci003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmci_t.mmci004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmci_t.mmci005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmcj007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmcj011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmcj012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmfe013_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmfe_t.mmfe001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmfe_t.mmfe003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmfe_t.mmfe004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmfe_t.mmfe005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmfe_t.mmfe006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmfe_t.mmfe007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmfe_t.mmfe010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmfe_t.mmfe011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmfe_t.mmfe012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmfe_t.mmfe013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmfe_t.mmfeseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia0461" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia0471" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia046" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia047" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="sel" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="ammt450_01.group1" text="兌換方案資訊" lstr=""/>
+    <sfield name="lbl_mmby009" text="累計方式" lstr=""/>
+    <sfield name="lbl_mmby010" text="換贈方式" lstr=""/>
+    <sfield name="lbl_mmby011" text="規則兌換限制" lstr=""/>
+    <sfield name="lbl_mmby012" text="規則兌換次數" lstr=""/>
+    <sfield name="ammt450_01.group2" text="卡點數資訊" lstr=""/>
+    <sfield name="lbl_rtia046" text="該規則計算總積點" lstr=""/>
+    <sfield name="lbl_rtia0461" text="該規則已兌換份數" lstr=""/>
+    <sfield name="lbl_rtia047" text="此次兌換積點" lstr=""/>
+    <sfield name="lbl_rtia0471" text="兌換後剩餘積點" lstr=""/>
+    <sfield name="ammt450_01.page1" text="符合換贈組別" lstr=""/>
+    <sfield name="lbl_mmci003" text="組別" lstr=""/>
+    <sfield name="lbl_mmci004" text="換贈積點/累計消費額" lstr=""/>
+    <sfield name="lbl_mmci005" text="兌換份數" lstr=""/>
+    <sfield name="bpage_1" text="兌換商品清單" lstr=""/>
+    <sfield name="lbl_sel" text="選擇" lstr=""/>
+    <sfield name="lbl_mmfeseq" text="項次" lstr=""/>
+    <sfield name="lbl_mmfe011" text="組別" lstr=""/>
+    <sfield name="lbl_mmfe001" text="商品編號" lstr=""/>
+    <sfield name="lbl_imaal003" text="商品名稱" lstr=""/>
+    <sfield name="lbl_mmfe003" text="券面額編號" lstr=""/>
+    <sfield name="lbl_oocql004" text="券面額說明" lstr=""/>
+    <sfield name="lbl_mmfe006" text="加價/加積點" lstr=""/>
+    <sfield name="lbl_mmfe004" text="起始卡/券號" lstr=""/>
+    <sfield name="lbl_mmfe005" text="截止卡/券號" lstr=""/>
+    <sfield name="lbl_mmfe007" text="兌換份數" lstr=""/>
+    <sfield name="lbl_mmfe010" text="換贈庫位" lstr=""/>
+    <sfield name="lbl_inaa002" text="庫位名稱" lstr=""/>
+    <sfield name="lbl_mmfe012" text="資料類型" lstr=""/>
+    <sfield name="lbl_mmfe013" text="資料編號" lstr=""/>
+    <sfield name="lbl_mmfe013_desc" text="資料編號說明" lstr=""/>
+    <sfield name="lbl_mmcj011" text="上限名額" lstr=""/>
+    <sfield name="lbl_mmcj012" text="上線時間範圍" lstr=""/>
+    <sfield name="lbl_mmcj007" text="贈換數量" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sact name="delete" text="刪除" lstr=""/>
+    <sact name="insert" text="新增" lstr=""/>
+    <sact name="modify" text="更改" lstr=""/>
+    <sact name="output" text="列印" lstr=""/>
+    <sact name="query" text="查詢" lstr=""/>
+    <sact name="reproduce" text="複製" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="3" cite_std="N" src="s">
+    <widget name="mmby_t.mmby009" status="u"/>
+    <widget name="mmby_t.mmby010" status="u"/>
+    <widget name="mmby_t.mmby011" status="u"/>
+    <widget name="rtia_t.rtia046" status="u"/>
+    <widget name="rtia_t.rtia047" status="u"/>
+    <widget name="s_detail2" status="u"/>
+  </exclude>
+</spec>

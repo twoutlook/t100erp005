@@ -1,0 +1,6011 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="apri126" std_prog="apri126" erpver="1.0" module="APR" ver="2" env="s" zone="t10prd" booking="N" type="M" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <point name="function.apri126_prbl004_path" order="1" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 開窗選擇本地路徑
+# Memo...........:
+# Usage..........: CALL apri126_prbl004_path()
+# Date & Author..: 2014/03/25 By dongsz
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apri126_prbl004_path()
+DEFINE l_dzeb003             LIKE dzeb_t.dzeb003
+DEFINE ls_location           STRING
+DEFINE ls_file               STRING
+   
+   LET gs_location = NULL   
+#   SELECT dzeb003 INTO l_dzeb003 FROM dzeb_t
+#    WHERE dzeb001 = 'prbl_t'
+#      AND dzeb002 = 'prbl004'
+#   WHILE TRUE
+#      LET ls_location = gs_location
+#      PROMPT l_dzeb003 CLIPPED FOR gs_location
+#         ATTRIBUTE(WITHOUT DEFAULTS)
+#
+#         ON ACTION accept
+#            EXIT WHILE
+#
+#         ON ACTION cancel
+#            LET gs_location = ''
+#            EXIT WHILE
+
+#         ON ACTION browse_document
+            LET ls_file = cl_client_browse_dir()
+            IF ls_file IS NOT NULL THEN
+               LET gs_location = ls_file
+            END IF
+
+#         ON IDLE g_idle_seconds
+#            CALL cl_on_idle()
+#            LET gs_location = ls_location
+#            RETURN gs_location
+#
+#      END PROMPT
+#   END WHILE
+   RETURN gs_location
+
+END FUNCTION]]>
+  </point>
+  <point name="function.apri126_display_prbm008" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 動態顯示來源字段
+# Memo...........:
+# Usage..........: CALL apri126_display_prbm008()
+# Date & Author..: 2014/03/25 By dongsz
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apri126_display_prbm008()
+DEFINE l_dzeb002      LIKE dzeb_t.dzeb002
+DEFINE l_dzeb003      LIKE dzeb_t.dzeb003
+DEFINE l_cnt          LIKE type_t.num5
+DEFINE l_sql          STRING
+DEFINE cb004          ui.ComboBox
+
+   LET cb004 = ui.ComboBox.forName("prbm008")
+   CALL cb004.clear()
+   
+   LET l_sql = " SELECT DISTINCT dzeb002,dzeb003 FROM dzeb_t ",
+               "  WHERE dzeb001 = 'prbh_t' "
+   PREPARE sel_dzeb_pre FROM l_sql
+   DECLARE sel_dzeb_cs  CURSOR FOR sel_dzeb_pre
+   LET l_cnt = 1
+   FOREACH sel_dzeb_cs  INTO l_dzeb002,l_dzeb003
+      LET l_dzeb003 = l_dzeb002,':',l_dzeb003
+      IF cl_null(l_dzeb003) THEN
+         CALL cb004.addItem(l_dzeb002,l_dzeb002)
+      ELSE
+         CALL cb004.addItem(l_dzeb002,l_dzeb003)
+      END IF
+      LET l_cnt = l_cnt+1
+   END FOREACH
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.apri126_aooi390_default" order="3" ver="2" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 自動編碼並預帶連動欄位值
+# Memo...........:
+# Usage..........: CALL apri126_aooi390_default()
+#                  
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 150310 By earl
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apri126_aooi390_default()
+   DEFINE l_sql                STRING
+   DEFINE l_i                  LIKE type_t.num5
+   DEFINE l_success            LIKE type_t.num5
+   DEFINE l_oofg_return    DYNAMIC ARRAY OF RECORD
+                   oofg019     LIKE oofg_t.oofg019,   #field
+                   oofg020     LIKE oofg_t.oofg020    #value
+                           END RECORD
+
+   CALL s_aooi390_auto_no('19') RETURNING l_success,g_prbl_m.prbl001,l_oofg_return
+   DISPLAY BY NAME g_prbl_m.prbl001
+   
+   IF NOT l_success THEN
+      RETURN
+   END IF
+
+   CALL s_transaction_begin()   #因為s_aooi390_auto_no中有commit
+   
+   DELETE FROM apri126_prbl_tmp
+   
+   INSERT INTO apri126_prbl_tmp (prblent,prbl001,prbl002,prblunit,prbl003,prbl004,prbl005,prbl006, 
+                                 prblstus,prblownid,prblowndp,prblcrtid,prblcrtdp,prblcrtdt,prblmodid,prblmoddt)
+   VALUES (g_enterprise,g_prbl_m.prbl001,g_prbl_m.prbl002,g_prbl_m.prblunit,g_prbl_m.prbl003, 
+           g_prbl_m.prbl004,g_prbl_m.prbl005,g_prbl_m.prbl006,g_prbl_m.prblstus,g_prbl_m.prblownid, 
+           g_prbl_m.prblowndp,g_prbl_m.prblcrtid,g_prbl_m.prblcrtdp,g_prbl_m.prblcrtdt,g_prbl_m.prblmodid, 
+           g_prbl_m.prblmoddt) 
+           
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "apri126_prbl_tmp" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+
+      RETURN
+   END IF
+
+   FOR l_i = 1 TO l_oofg_return.getLength()
+      #無設定
+      IF cl_null(l_oofg_return[l_i].oofg019) THEN
+         CONTINUE FOR
+      END IF
+      
+      LET l_sql = "UPDATE apri126_prbl_tmp",
+                  "   SET ",l_oofg_return[l_i].oofg019," = '",l_oofg_return[l_i].oofg020,"'"
+      PREPARE apri126_aooi390_pre02 FROM l_sql
+      EXECUTE apri126_aooi390_pre02
+      FREE apri126_aooi390_pre02
+
+   END FOR
+
+   LET l_sql = " SELECT UNIQUE t0.prbl001,t0.prbl002,t0.prblunit,
+                               t0.prbl003,t0.prbl004,t0.prbl005,
+                               t0.prbl006,t0.prblstus,t0.prblownid,t0.prblowndp,t0.prblcrtid,t0.prblcrtdp,t0.prblcrtdt,t0.prblmodid,t0.prblmoddt, 
+                               t1.ooag011 ,t2.ooefl003 ,t3.ooag011 ,t4.ooefl003 ,t5.ooag011",
+               " FROM apri126_prbl_tmp t0",
+               " LEFT JOIN ooag_t t1 ON t1.ooagent='"||g_enterprise||"' AND t1.ooag001=t0.prblownid  ",
+               " LEFT JOIN ooefl_t t2 ON t2.ooeflent='"||g_enterprise||"' AND t2.ooefl001=t0.prblowndp AND t2.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t3 ON t3.ooagent='"||g_enterprise||"' AND t3.ooag001=t0.prblcrtid  ",
+               " LEFT JOIN ooefl_t t4 ON t4.ooeflent='"||g_enterprise||"' AND t4.ooefl001=t0.prblcrtdp AND t4.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t5 ON t5.ooagent='"||g_enterprise||"' AND t5.ooag001=t0.prblmodid  "
+   PREPARE apri126_aooi390_pre03 FROM l_sql
+
+   EXECUTE apri126_aooi390_pre03 INTO g_prbl_m.prbl001,g_prbl_m.prbl002,g_prbl_m.prblunit, 
+       g_prbl_m.prbl003,g_prbl_m.prbl004,g_prbl_m.prbl005,g_prbl_m.prbl006,g_prbl_m.prblstus,g_prbl_m.prblownid, 
+       g_prbl_m.prblowndp,g_prbl_m.prblcrtid,g_prbl_m.prblcrtdp,g_prbl_m.prblcrtdt,g_prbl_m.prblmodid, 
+       g_prbl_m.prblmoddt,g_prbl_m.prblownid_desc,g_prbl_m.prblowndp_desc,g_prbl_m.prblcrtid_desc,g_prbl_m.prblcrtdp_desc, 
+       g_prbl_m.prblmodid_desc
+
+   FREE apri126_aooi390_pre03
+   
+   CALL apri126_show()
+
+END FUNCTION]]>
+  </point>
+  <point name="function.apri126_prbm008_ref" order="4" ver="2" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+
+################################################################################
+PRIVATE FUNCTION apri126_prbm008_ref()
+   SELECT dzeb003 INTO g_prbm_d[l_ac].prbm008_desc
+     FROM dzeb_t
+    WHERE dzeb001 = g_prbm_d[l_ac].prbm007
+      AND dzeb002 = g_prbm_d[l_ac].prbm008
+END FUNCTION]]>
+  </point>
+  <point name="b_fill.fill" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[         CALL apri126_prbm008_ref()]]>
+  </point>
+  <point name="construct.c.page1.prbm008" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_dzeb001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO prbm008  #顯示到畫面上
+            NEXT FIELD prbm008                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.prbl001" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_prbl001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO prbl001  #顯示到畫面上
+               #DISPLAY g_qryparam.return2 TO prbl002 #電子秤說明 
+
+            NEXT FIELD prbl001                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.prblcrtdp" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO prblcrtdp  #顯示到畫面上
+
+            NEXT FIELD prblcrtdp                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.prblcrtid" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO prblcrtid  #顯示到畫面上
+
+            NEXT FIELD prblcrtid                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.prblmodid" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO prblmodid  #顯示到畫面上
+
+            NEXT FIELD prblmodid                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.prblowndp" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO prblowndp  #顯示到畫面上
+
+            NEXT FIELD prblowndp                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.prblownid" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO prblownid  #顯示到畫面上
+
+            NEXT FIELD prblownid                     #返回原欄位
+
+]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE g_location      STRING
+DEFINE gs_location     STRING]]>
+  </point>
+  <point name="init.define" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_sql          STRING   #150310---earl---add]]>
+  </point>
+  <point name="init.init" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   #CALL apri126_display_prbm008()
+   LET g_errshow = '1'
+   
+#150310---earl---add---s
+   #建立temp table
+   DROP TABLE apri126_prbl_tmp
+   
+   LET l_sql = "CREATE GLOBAL TEMPORARY TABLE apri126_prbl_tmp AS ",
+               "SELECT * FROM prbl_t "
+   PREPARE apri126_aooi390_pre01 FROM l_sql
+   EXECUTE apri126_aooi390_pre01
+   FREE apri126_aooi390_pre01
+#150310---earl---add---e]]>
+  </point>
+  <point name="input.a.page1.prbm002" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_prbl_m.prbl001 IS NOT NULL AND g_prbm_d[g_detail_idx].prbm002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_prbl_m.prbl001 != g_prbl001_t OR g_prbm_d[g_detail_idx].prbm002 != g_prbm_d_t.prbm002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM prbm_t WHERE "||"prbment = '" ||g_enterprise|| "' AND "||"prbm001 = '"||g_prbl_m.prbl001 ||"' AND "|| "prbm002 = '"||g_prbm_d[g_detail_idx].prbm002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.prbm004" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+            IF NOT cl_null(g_prbm_d[l_ac].prbm004) THEN 
+            END IF 
+]]>
+  </point>
+  <point name="input.a.page1.prbm007" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_prbm_d[l_ac].prbm008) THEN
+               SELECT COUNT(*) INTO l_n FROM dzeb_t
+                WHERE dzeb001 = g_prbm_d[l_ac].prbm007
+                  AND dzeb002 = g_prbm_d[l_ac].prbm008
+               IF l_n < 1 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'apr-00409'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_prbm_d[l_ac].prbm007 = g_prbm_d_t.prbm007
+                  DISPLAY BY NAME g_prbm_d[l_ac].prbm007
+                  NEXT FIELD prbm007
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.a.page1.prbm008" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_prbm_d[l_ac].prbm008) THEN
+               IF NOT cl_null(g_prbm_d[l_ac].prbm007) THEN
+                  SELECT COUNT(*) INTO l_n FROM dzeb_t
+                   WHERE dzeb001 = g_prbm_d[l_ac].prbm007
+                     AND dzeb002 = g_prbm_d[l_ac].prbm008
+                  IF l_n < 1 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'apr-00409'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_prbm_d[l_ac].prbm008 = g_prbm_d_t.prbm008
+                     CALL apri126_prbm008_ref()
+                     DISPLAY BY NAME g_prbm_d[l_ac].prbm008
+                     NEXT FIELD prbm008
+                  END IF
+               END IF
+               SELECT dzeb007,dzeb008 INTO g_prbm_d[l_ac].prbm009,l_dzeb008
+                 FROM dzeb_t
+                WHERE dzeb001 = g_prbm_d[l_ac].prbm007
+                  AND dzeb002 = g_prbm_d[l_ac].prbm008
+               IF g_prbm_d[l_ac].prbm009 <> 'date' THEN
+                  LET g_prbm_d[l_ac].prbm009 = g_prbm_d[l_ac].prbm009,'(',l_dzeb008,')'
+               END IF
+               DISPLAY BY NAME g_prbm_d[l_ac].prbm009
+               
+               IF NOT cl_null(g_prbm_d[l_ac].prbm010) THEN
+                  SELECT dzeb007,dzeb008 INTO l_dzeb007,l_dzeb008 FROM dzeb_t
+                   WHERE dzeb001 = g_prbm_d[l_ac].prbm007
+                     AND dzeb002 = g_prbm_d[l_ac].prbm008              
+                  IF l_dzeb007 = 'number' THEN
+                     LET l_str = l_dzeb008
+                     LET l_num = l_str.getIndexOf(",",1)
+                     IF l_num > 1 THEN
+                        LET l_dzeb008 = l_dzeb008[1,l_num-1]
+                     END IF
+                  END IF
+                  LET l_prbm010 = Length(g_prbm_d[l_ac].prbm010)
+                  IF l_prbm010 > l_dzeb008 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'apr-00186'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_prbm_d[l_ac].prbm008 = g_prbm_d_t.prbm008
+                     CALL apri126_prbm008_ref()
+                     DISPLAY BY NAME g_prbm_d[l_ac].prbm008
+                     NEXT FIELD prbm008
+                  END IF
+               END IF
+            END IF
+            CALL apri126_prbm008_ref()]]>
+  </point>
+  <point name="input.a.page1.prbm010" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_prbm_d[l_ac].prbm010) AND NOT cl_null(g_prbm_d[l_ac].prbm008) THEN
+               SELECT dzeb007,dzeb008 INTO l_dzeb007,l_dzeb008 FROM dzeb_t
+                WHERE dzeb001 = g_prbm_d[l_ac].prbm007
+                  AND dzeb002 = g_prbm_d[l_ac].prbm008              
+               IF l_dzeb007 = 'number' THEN
+                  LET l_str = l_dzeb008
+                  LET l_num = l_str.getIndexOf(",",1)
+                  IF l_num > 1 THEN
+                     LET l_dzeb008 = l_dzeb008[1,l_num-1]
+                  END IF
+               END IF
+               LET l_prbm010 = Length(g_prbm_d[l_ac].prbm010)
+               IF l_prbm010 > l_dzeb008 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'apr-00186'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_prbm_d[l_ac].prbm010 = g_prbm_d_t.prbm010
+                  DISPLAY BY NAME g_prbm_d[l_ac].prbm010
+                  NEXT FIELD prbm010
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.a.prbl001" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_prbl_m.prbl001) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_prbl_m.prbl001 != g_prbl001_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM prbl_t WHERE "||"prblent = '" ||g_enterprise|| "' AND "||"prbl001 = '"||g_prbl_m.prbl001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.a.prbl005" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL apri126_set_entry(p_cmd)
+            CALL apri126_set_no_entry(p_cmd)]]>
+  </point>
+  <point name="input.after_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   ]]>
+  </point>
+  <point name="input.b.page1.prbm002" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF l_cmd = 'a' THEN
+               SELECT MAX(prbm002)+1 INTO g_prbm_d[l_ac].prbm002 FROM prbm_t
+                WHERE prbment = g_enterprise AND prbm001 = g_prbl_m.prbl001
+               IF cl_null(g_prbm_d[l_ac].prbm002) THEN
+                  LET g_prbm_d[l_ac].prbm002 = 1
+               END IF
+               DISPLAY BY NAME g_prbm_d[l_ac].prbm002
+            END IF]]>
+  </point>
+  <point name="input.b.prbl001" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF p_cmd='a' THEN
+               #150310---earl---mod---s
+               #CALL s_aooi390("19") RETURNING l_success,g_prbl_m.prbl001
+               
+               CALL apri126_aooi390_default()
+               #150310---earl---mod---e
+               IF g_action_choice = "exit" THEN
+                  LET g_action_choice = ""
+               END IF
+               IF INT_FLAG THEN
+                  LET INT_FLAG = FALSE
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.body.a_update" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[               UPDATE prbl_t SET prblmodid = g_prbl_m.prblmodid,
+                                 prblmoddt = g_prbl_m.prblmoddt
+                WHERE prblent = g_enterprise
+                  AND prbl001 = g_prbl_m.prbl001
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "prbl_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_prbm_d[l_ac].* = g_prbm_d_t.*                     
+                  CALL s_transaction_end('N','0')
+               END IF]]>
+  </point>
+  <point name="input.body.before_insert" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            LET g_prbm_d[l_ac].prbmunit = g_site
+            NEXT FIELD prbm002]]>
+  </point>
+  <point name="input.c.page1.prbm008" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_prbm_d[l_ac].prbm008             #給予default值
+            LET g_qryparam.default2 = g_prbm_d[l_ac].prbm008_desc #欄位名稱
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            LET g_qryparam.where = " dzeb001 = '",g_prbm_d[l_ac].prbm007,"' "
+
+            CALL q_dzeb001()                                #呼叫開窗
+
+            LET g_prbm_d[l_ac].prbm008 = g_qryparam.return1              
+            LET g_prbm_d[l_ac].prbm008_desc = g_qryparam.return2 
+            DISPLAY g_prbm_d[l_ac].prbm008 TO prbm008              #
+            DISPLAY g_prbm_d[l_ac].prbm008_desc TO prbm008_desc #欄位名稱
+            NEXT FIELD prbm008                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.prbl004" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL apri126_prbl004_path() RETURNING g_location
+            LET g_prbl_m.prbl004 = g_location
+            DISPLAY BY NAME g_prbl_m.prbl004]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE  l_prbm010             LIKE type_t.num5
+   DEFINE  l_dzeb007             LIKE dzeb_t.dzeb007
+   DEFINE  l_dzeb008             LIKE dzeb_t.dzeb008
+   DEFINE  l_success             LIKE type_t.num5
+   DEFINE  l_num                 LIKE type_t.num5
+   DEFINE  l_str                 STRING]]>
+  </point>
+  <point name="input.g.page1.prbm007" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            ]]>
+  </point>
+  <point name="insert.default" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      LET g_prbl_m.prblunit = g_site
+      LET g_prbl_m.prblstus = 'Y']]>
+  </point>
+  <point name="main.define" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_success    LIKE type_t.num5   #add--2015/03/20 By shiun]]>
+  </point>
+  <point name="main.exit" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL s_aooi390_drop_tmp_table()   #add--2015/03/20 By shiun]]>
+  </point>
+  <point name="main.init" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL s_aooi390_cre_tmp_table() RETURNING l_success   #add--2015/03/20 By shiun]]>
+  </point>
+  <point name="set_entry.after_control" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL cl_set_comp_entry("prbl006",TRUE)]]>
+  </point>
+  <point name="set_entry_b.set_entry_b" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   ]]>
+  </point>
+  <point name="set_no_entry.after_control" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   IF g_prbl_m.prbl005 = '2' THEN
+      LET g_prbl_m.prbl006 = '4'
+      CALL cl_set_comp_entry("prbl006",FALSE)
+   END IF]]>
+  </point>
+  <point name="set_no_entry_b.set_no_entry_b" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   ]]>
+  </point>
+  <point name="show.head.reference" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_prbl_m.prblownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_prbl_m.prblownid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_prbl_m.prblownid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_prbl_m.prblowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_prbl_m.prblowndp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_prbl_m.prblowndp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_prbl_m.prblcrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_prbl_m.prblcrtid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_prbl_m.prblcrtid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_prbl_m.prblcrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_prbl_m.prblcrtdp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_prbl_m.prblcrtdp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_prbl_m.prblmodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+            LET g_prbl_m.prblmodid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_prbl_m.prblmodid_desc
+]]>
+  </point>
+  <section id="apri126.action_chk" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 修改/刪除前行為檢查(是否可允許此動作), 若有其他行為須管控也可透過此段落
+PRIVATE FUNCTION apri126_action_chk()
+   #add-point:action_chk段define
+   {<point name="action_chk.define" edit="s"/>}
+   #end add-point
+   #add-point:action_chk段define(客製用)
+   {<point name="action_chk.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:action_chk段action_chk
+   {<point name="action_chk.action_chk"/>}
+   #end add-point
+   
+   RETURN TRUE
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.b_fill" ver="10" status="" src="s" readonly="">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION apri126_b_fill()
+   DEFINE p_wc2      STRING
+   DEFINE li_idx     LIKE type_t.num10
+   #add-point:b_fill段define
+   {<point name="b_fill.define" edit="s"/>}
+   #end add-point     
+   #add-point:b_fill段define(客製用)
+   {<point name="b_fill.define_customerization" edit="c"/>}
+   #end add-point     
+ 
+   CALL g_prbm_d.clear()    #g_prbm_d 單頭及單身 
+ 
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+   
+   #判斷是否填充
+   IF apri126_fill_chk(1) THEN
+      #切換上下筆時不重組SQL
+      IF g_action_choice <> 'fetch' OR cl_null(g_action_choice) THEN
+         LET g_sql = "SELECT  UNIQUE prbmstus,prbm002,prbm003,prbm004,prbm005,prbm006,prbm007,prbm008, 
+             prbm009,prbm010,prbmunit  FROM prbm_t",   
+                     " INNER JOIN prbl_t ON prbl001 = prbm001 ",
+ 
+                     #"",
+                     
+                     "",
+                     
+                     " WHERE prbment=? AND prbm001=?"
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         #add-point:b_fill段sql_before
+         {<point name="b_fill.body.fill_sql"/>}
+         #end add-point
+         IF NOT cl_null(g_wc2_table1) THEN
+            LET g_sql = g_sql CLIPPED, " AND ", g_wc2_table1 CLIPPED
+         END IF
+         
+         #子單身的WC
+         
+         
+         LET g_sql = g_sql, " ORDER BY prbm_t.prbm002"
+         
+         #add-point:單身填充控制
+         {<point name="b_fill.sql"/>}
+         #end add-point
+         
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         PREPARE apri126_pb FROM g_sql
+         DECLARE b_fill_cs CURSOR FOR apri126_pb
+      END IF
+      
+      LET g_cnt = l_ac
+      LET l_ac = 1
+      
+      OPEN b_fill_cs USING g_enterprise,g_prbl_m.prbl001
+                                               
+      FOREACH b_fill_cs INTO g_prbm_d[l_ac].prbmstus,g_prbm_d[l_ac].prbm002,g_prbm_d[l_ac].prbm003,g_prbm_d[l_ac].prbm004, 
+          g_prbm_d[l_ac].prbm005,g_prbm_d[l_ac].prbm006,g_prbm_d[l_ac].prbm007,g_prbm_d[l_ac].prbm008, 
+          g_prbm_d[l_ac].prbm009,g_prbm_d[l_ac].prbm010,g_prbm_d[l_ac].prbmunit
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充
+         {<point name="b_fill.fill"/>}
+         #end add-point
+      
+         IF l_ac > g_max_rec THEN
+            IF g_error_show = 1 THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = l_ac
+               LET g_errparam.code   = 9035 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+            END IF
+            EXIT FOREACH
+         END IF
+         
+         LET l_ac = l_ac + 1
+      END FOREACH
+      LET g_error_show = 0
+   
+   END IF
+   
+ 
+   
+   #add-point:browser_fill段其他table處理
+   {<point name="browser_fill.other_fill"/>}
+   #end add-point
+   
+   CALL g_prbm_d.deleteElement(g_prbm_d.getLength())
+ 
+   
+ 
+   LET l_ac = g_cnt
+   LET g_cnt = 0  
+   
+   FREE apri126_pb
+ 
+   
+   LET li_idx = l_ac
+   
+   #遮罩相關處理
+   FOR l_ac = 1 TO g_prbm_d.getLength()
+      LET g_prbm_d_mask_o[l_ac].* =  g_prbm_d[l_ac].*
+      CALL apri126_prbm_t_mask()
+      LET g_prbm_d_mask_n[l_ac].* =  g_prbm_d[l_ac].*
+   END FOR
+   
+ 
+   
+   LET l_ac = li_idx
+   
+   CALL cl_ap_performance_next_end()
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.b_fill2" ver="5" status="" src="s" readonly="">
+    <![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION apri126_b_fill2(pi_idx)
+   DEFINE pi_idx          LIKE type_t.num10
+   DEFINE li_ac           LIKE type_t.num10
+   DEFINE ls_chk          LIKE type_t.chr1
+   #add-point:b_fill2段define
+   {<point name="b_fill2.define" edit="s"/>}
+   #end add-point
+   #add-point:b_fill2段define(客製用)
+   {<point name="b_fill2.define_customerization" edit="c"/>}
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   IF g_detail_idx <= 0 THEN
+      RETURN
+   END IF
+   
+ 
+      
+ 
+      
+   #add-point:單身填充後
+   {<point name="b_fill2.after_fill" />}
+   #end add-point
+    
+   LET l_ac = li_ac
+   
+   CALL apri126_detail_show()
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.browser_fill" ver="20" status="" src="s" readonly="">
+    <![CDATA[#+ 瀏覽頁簽資料填充
+PRIVATE FUNCTION apri126_browser_fill(ps_page_action)
+   DEFINE ps_page_action    STRING
+   DEFINE l_wc              STRING
+   DEFINE l_wc2             STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sub_sql         STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define
+   {<point name="browser_fill.define" edit="s"/>}
+   #end add-point   
+   #add-point:browser_fill段define(客製用)
+   {<point name="browser_fill.define_customerization" edit="c"/>}
+   #end add-point   
+   
+   #add-point:browser_fill段動作開始前
+   {<point name="browser_fill.before_browser_fill"/>}
+   #end add-point
+   
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   LET l_wc  = g_wc.trim() 
+   LET l_wc2 = g_wc2.trim()
+ 
+   #add-point:browser_fill,foreach前
+   {<point name="browser_fill.before_foreach"/>}
+   #end add-point
+   
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件                      
+      LET l_sub_sql = " SELECT UNIQUE prbl001 ",
+                      " FROM prbl_t ",
+                      " ",
+                      " LEFT JOIN prbm_t ON prbment = prblent AND prbl001 = prbm001 ", "  ",
+                      #add-point:browser_fill段sql(prbm_t1)
+                      {<point name="browser_fill.cnt.join.}"/>}
+                      #end add-point
+ 
+ 
+                      " ", 
+                      " ", 
+                      " WHERE prblent = '" ||g_enterprise|| "' AND prbment = '" ||g_enterprise|| "' AND ",l_wc, " AND ", l_wc2, cl_sql_add_filter("prbl_t")
+   ELSE
+      #單身未輸入搜尋條件
+      LET l_sub_sql = " SELECT UNIQUE prbl001 ",
+                      " FROM prbl_t ", 
+                      "  ",
+                      "  ",
+                      " WHERE prblent = '" ||g_enterprise|| "' AND ",l_wc CLIPPED, cl_sql_add_filter("prbl_t")
+   END IF
+   
+   #add-point:browser_fill,cnt wc
+   {<point name="browser_fill.cnt_sqlwc"/>}
+   #end add-point
+   
+   LET g_sql = " SELECT COUNT(*) FROM (",l_sub_sql,")"
+   
+   #add-point:browser_fill,count前
+   {<point name="browser_fill.before_count"/>}
+   #end add-point
+   
+   PREPARE header_cnt_pre FROM g_sql
+   EXECUTE header_cnt_pre INTO g_browser_cnt   #總筆數
+   FREE header_cnt_pre
+    
+   IF g_browser_cnt > g_max_browse THEN
+      IF g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_browser_cnt
+         LET g_errparam.code   = 9035 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+      END IF
+      LET g_browser_cnt = g_max_browse
+   END IF
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+ 
+   #根據行為確定資料填充位置及WC
+   IF cl_null(g_add_browse) THEN
+      #清除畫面
+      CLEAR FORM                
+      INITIALIZE g_prbl_m.* TO NULL
+      CALL g_prbm_d.clear()        
+ 
+      #add-point:browser_fill g_add_browse段額外處理
+      {<point name="browser_fill.add_browse.other"/>}
+      #end add-point   
+      CALL g_browser.clear()
+      LET g_cnt = 1
+   ELSE
+      LET l_wc  = g_add_browse
+      LET l_wc2 = " 1=1" 
+      LET g_cnt = g_current_idx
+   END IF
+ 
+   #依照t0.prbl001 Browser欄位定義(取代原本bs_sql功能)
+   #考量到單身可能下條件, 所以此處需join單身所有table
+   #DISTINCT是為了避免在join時出現重複的資料(如果不加DISTINCT則須在程式中過濾)
+   LET g_sql = " SELECT DISTINCT t0.prblstus,t0.prbl001 ",
+               " FROM prbl_t t0",
+               "  ",
+               "  LEFT JOIN prbm_t ON prbment = prblent AND prbl001 = prbm001 ", "  ", 
+               #add-point:browser_fill段sql(prbm_t1)
+               {<point name="browser_fill.join.prbm_t1"/>}
+               #end add-point
+ 
+ 
+               "  ",
+               
+               " WHERE t0.prblent = '" ||g_enterprise|| "' AND ",l_wc," AND ",l_wc2, cl_sql_add_filter("prbl_t")
+   #add-point:browser_fill,sql wc
+   {<point name="browser_fill.fill_sqlwc"/>}
+   #end add-point
+   LET g_sql = g_sql, " ORDER BY prbl001 ",g_order
+ 
+   #add-point:browser_fill,before_prepare
+   {<point name="browser_fill.before_prepare"/>}
+   #end add-point
+        
+   #LET g_sql = cl_sql_add_tabid(g_sql,"prbl_t") #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql) #遮蔽特定資料
+   PREPARE browse_pre FROM g_sql
+   DECLARE browse_cur CURSOR FOR browse_pre
+   
+   #add-point:browser_fill段open cursor
+   {<point name="browser_fill.open"/>}
+   #end add-point
+   
+   FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_prbl001
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = 'foreach:' 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+  
+      #add-point:browser_fill段reference
+      {<point name="browser_fill.reference"/>}
+      #end add-point
+  
+  
+            #應用 a24 樣板自動產生(Version:2)
+      #browser顯示圖片
+      CASE g_browser[g_cnt].b_statepic
+         WHEN "N"
+            LET g_browser[g_cnt].b_statepic = "stus/16/open.png"
+         WHEN "Y"
+            LET g_browser[g_cnt].b_statepic = "stus/16/valid.png"
+         WHEN "X"
+            LET g_browser[g_cnt].b_statepic = "stus/16/void.png"
+         
+      END CASE
+ 
+ 
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_browse THEN
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   
+   #清空g_add_browse, 並指定指標位置
+   IF NOT cl_null(g_add_browse) THEN
+      LET g_add_browse = ""
+      CALL g_curr_diag.setCurrentRow("s_browse",g_current_idx)
+   END IF
+   
+   IF cl_null(g_browser[g_cnt].b_prbl001) THEN
+      CALL g_browser.deleteElement(g_cnt)
+   END IF
+   
+   LET g_header_cnt  = g_browser.getLength()
+   LET g_browser_cnt = g_browser.getLength()
+   
+   #筆數顯示
+   IF g_browser_cnt > 0 THEN
+      DISPLAY g_browser_idx TO FORMONLY.b_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.b_count #總筆數
+      DISPLAY g_browser_idx TO FORMONLY.h_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.h_count #總筆數
+      DISPLAY g_detail_idx  TO FORMONLY.idx     #單身當下筆數
+      DISPLAY g_detail_cnt  TO FORMONLY.cnt     #單身總筆數
+   ELSE
+      DISPLAY '' TO FORMONLY.b_index #當下筆數
+      DISPLAY '' TO FORMONLY.b_count #總筆數
+      DISPLAY '' TO FORMONLY.h_index #當下筆數
+      DISPLAY '' TO FORMONLY.h_count #總筆數
+      DISPLAY '' TO FORMONLY.idx     #單身當下筆數
+      DISPLAY '' TO FORMONLY.cnt     #單身總筆數
+   END IF
+ 
+   LET g_rec_b = g_cnt - 1
+   LET g_detail_cnt = g_rec_b
+   LET g_cnt = 0
+   
+   FREE browse_pre
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+                  
+   
+   #add-point:browser_fill段結束前
+   {<point name="browser_fill.after"/>}
+   #end add-point   
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.construct" ver="10" status="" src="s" readonly="">
+    <![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION apri126_construct()
+   DEFINE ls_return   STRING
+   DEFINE ls_result   STRING 
+   DEFINE ls_wc       STRING 
+   DEFINE la_wc       DYNAMIC ARRAY OF RECORD
+          tableid     STRING,
+          wc          STRING
+          END RECORD
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:cs段define
+   {<point name="cs.define" edit="s"/>}
+   #end add-point    
+   #add-point:cs段define(客製用)
+   {<point name="cs.define_customerization" edit="c"/>}
+   #end add-point    
+    
+   #清除畫面
+   CLEAR FORM                
+   INITIALIZE g_prbl_m.* TO NULL
+   CALL g_prbm_d.clear()        
+ 
+   
+   LET g_action_choice = ""
+    
+   INITIALIZE g_wc TO NULL
+   INITIALIZE g_wc2 TO NULL
+   
+   INITIALIZE g_wc2_table1 TO NULL
+ 
+    
+   LET g_qryparam.state = 'c'
+   
+   #add-point:cs段開始前
+   {<point name="cs.before_construct"/>}
+   #end add-point 
+   
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+      #單頭
+      CONSTRUCT BY NAME g_wc ON prbl001,prbl002,prblunit,prbl003,prbl004,prbl005,prbl006,prblstus,prblownid, 
+          prblowndp,prblcrtid,prblcrtdp,prblcrtdt,prblmodid,prblmoddt
+ 
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct
+            {<point name="cs.head.before_construct"/>}
+            #end add-point 
+            
+         #公用欄位開窗相關處理
+         #應用 a11 樣板自動產生(Version:2)
+         #共用欄位查詢處理  
+         ##----<<prblcrtdt>>----
+         AFTER FIELD prblcrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+         #----<<prblmoddt>>----
+         AFTER FIELD prblmoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<prblcnfdt>>----
+         
+         #----<<prblpstdt>>----
+ 
+ 
+            
+         #一般欄位開窗相關處理    
+                  #Ctrlp:construct.c.prbl001
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbl001
+            #add-point:ON ACTION controlp INFIELD prbl001
+            {<point name="construct.c.prbl001" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbl001
+            #add-point:BEFORE FIELD prbl001
+            {<point name="construct.b.prbl001" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbl001
+            
+            #add-point:AFTER FIELD prbl001
+            {<point name="construct.a.prbl001" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbl002
+            #add-point:BEFORE FIELD prbl002
+            {<point name="construct.b.prbl002" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbl002
+            
+            #add-point:AFTER FIELD prbl002
+            {<point name="construct.a.prbl002" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.prbl002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbl002
+            #add-point:ON ACTION controlp INFIELD prbl002
+            {<point name="construct.c.prbl002" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prblunit
+            #add-point:BEFORE FIELD prblunit
+            {<point name="construct.b.prblunit" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prblunit
+            
+            #add-point:AFTER FIELD prblunit
+            {<point name="construct.a.prblunit" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.prblunit
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prblunit
+            #add-point:ON ACTION controlp INFIELD prblunit
+            {<point name="construct.c.prblunit" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbl003
+            #add-point:BEFORE FIELD prbl003
+            {<point name="construct.b.prbl003" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbl003
+            
+            #add-point:AFTER FIELD prbl003
+            {<point name="construct.a.prbl003" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.prbl003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbl003
+            #add-point:ON ACTION controlp INFIELD prbl003
+            {<point name="construct.c.prbl003" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbl004
+            #add-point:BEFORE FIELD prbl004
+            {<point name="construct.b.prbl004" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbl004
+            
+            #add-point:AFTER FIELD prbl004
+            {<point name="construct.a.prbl004" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.prbl004
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbl004
+            #add-point:ON ACTION controlp INFIELD prbl004
+            {<point name="construct.c.prbl004" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbl005
+            #add-point:BEFORE FIELD prbl005
+            {<point name="construct.b.prbl005" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbl005
+            
+            #add-point:AFTER FIELD prbl005
+            {<point name="construct.a.prbl005" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.prbl005
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbl005
+            #add-point:ON ACTION controlp INFIELD prbl005
+            {<point name="construct.c.prbl005" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbl006
+            #add-point:BEFORE FIELD prbl006
+            {<point name="construct.b.prbl006" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbl006
+            
+            #add-point:AFTER FIELD prbl006
+            {<point name="construct.a.prbl006" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.prbl006
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbl006
+            #add-point:ON ACTION controlp INFIELD prbl006
+            {<point name="construct.c.prbl006" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prblstus
+            #add-point:BEFORE FIELD prblstus
+            {<point name="construct.b.prblstus" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prblstus
+            
+            #add-point:AFTER FIELD prblstus
+            {<point name="construct.a.prblstus" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.prblstus
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prblstus
+            #add-point:ON ACTION controlp INFIELD prblstus
+            {<point name="construct.c.prblstus" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.prblownid
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prblownid
+            #add-point:ON ACTION controlp INFIELD prblownid
+            {<point name="construct.c.prblownid" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prblownid
+            #add-point:BEFORE FIELD prblownid
+            {<point name="construct.b.prblownid" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prblownid
+            
+            #add-point:AFTER FIELD prblownid
+            {<point name="construct.a.prblownid" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.prblowndp
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prblowndp
+            #add-point:ON ACTION controlp INFIELD prblowndp
+            {<point name="construct.c.prblowndp" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prblowndp
+            #add-point:BEFORE FIELD prblowndp
+            {<point name="construct.b.prblowndp" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prblowndp
+            
+            #add-point:AFTER FIELD prblowndp
+            {<point name="construct.a.prblowndp" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.prblcrtid
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prblcrtid
+            #add-point:ON ACTION controlp INFIELD prblcrtid
+            {<point name="construct.c.prblcrtid" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prblcrtid
+            #add-point:BEFORE FIELD prblcrtid
+            {<point name="construct.b.prblcrtid" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prblcrtid
+            
+            #add-point:AFTER FIELD prblcrtid
+            {<point name="construct.a.prblcrtid" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.prblcrtdp
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prblcrtdp
+            #add-point:ON ACTION controlp INFIELD prblcrtdp
+            {<point name="construct.c.prblcrtdp" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prblcrtdp
+            #add-point:BEFORE FIELD prblcrtdp
+            {<point name="construct.b.prblcrtdp" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prblcrtdp
+            
+            #add-point:AFTER FIELD prblcrtdp
+            {<point name="construct.a.prblcrtdp" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prblcrtdt
+            #add-point:BEFORE FIELD prblcrtdt
+            {<point name="construct.b.prblcrtdt" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.prblmodid
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prblmodid
+            #add-point:ON ACTION controlp INFIELD prblmodid
+            {<point name="construct.c.prblmodid" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prblmodid
+            #add-point:BEFORE FIELD prblmodid
+            {<point name="construct.b.prblmodid" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prblmodid
+            
+            #add-point:AFTER FIELD prblmodid
+            {<point name="construct.a.prblmodid" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prblmoddt
+            #add-point:BEFORE FIELD prblmoddt
+            {<point name="construct.b.prblmoddt" />}
+            #END add-point
+ 
+ 
+         
+      END CONSTRUCT
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc2_table1 ON prbmstus,prbm002,prbm003,prbm004,prbm005,prbm006,prbm007,prbm008,prbm009, 
+          prbm010,prbmunit
+           FROM s_detail1[1].prbmstus,s_detail1[1].prbm002,s_detail1[1].prbm003,s_detail1[1].prbm004, 
+               s_detail1[1].prbm005,s_detail1[1].prbm006,s_detail1[1].prbm007,s_detail1[1].prbm008,s_detail1[1].prbm009, 
+               s_detail1[1].prbm010,s_detail1[1].prbmunit
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct
+            {<point name="cs.body.before_construct"/>}
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       #應用 a11 樣板自動產生(Version:2)
+         #共用欄位查詢處理  
+         ##----<<prbmcrtdt>>----
+ 
+         #----<<prbmmoddt>>----
+         
+         #----<<prbmcnfdt>>----
+         
+         #----<<prbmpstdt>>----
+ 
+ 
+         
+       #單身一般欄位開窗相關處理
+                #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbmstus
+            #add-point:BEFORE FIELD prbmstus
+            {<point name="construct.b.page1.prbmstus" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbmstus
+            
+            #add-point:AFTER FIELD prbmstus
+            {<point name="construct.a.page1.prbmstus" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prbmstus
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbmstus
+            #add-point:ON ACTION controlp INFIELD prbmstus
+            {<point name="construct.c.page1.prbmstus" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbm002
+            #add-point:BEFORE FIELD prbm002
+            {<point name="construct.b.page1.prbm002" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbm002
+            
+            #add-point:AFTER FIELD prbm002
+            {<point name="construct.a.page1.prbm002" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prbm002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbm002
+            #add-point:ON ACTION controlp INFIELD prbm002
+            {<point name="construct.c.page1.prbm002" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbm003
+            #add-point:BEFORE FIELD prbm003
+            {<point name="construct.b.page1.prbm003" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbm003
+            
+            #add-point:AFTER FIELD prbm003
+            {<point name="construct.a.page1.prbm003" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prbm003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbm003
+            #add-point:ON ACTION controlp INFIELD prbm003
+            {<point name="construct.c.page1.prbm003" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbm004
+            #add-point:BEFORE FIELD prbm004
+            {<point name="construct.b.page1.prbm004" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbm004
+            
+            #add-point:AFTER FIELD prbm004
+            {<point name="construct.a.page1.prbm004" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prbm004
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbm004
+            #add-point:ON ACTION controlp INFIELD prbm004
+            {<point name="construct.c.page1.prbm004" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbm005
+            #add-point:BEFORE FIELD prbm005
+            {<point name="construct.b.page1.prbm005" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbm005
+            
+            #add-point:AFTER FIELD prbm005
+            {<point name="construct.a.page1.prbm005" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prbm005
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbm005
+            #add-point:ON ACTION controlp INFIELD prbm005
+            {<point name="construct.c.page1.prbm005" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbm006
+            #add-point:BEFORE FIELD prbm006
+            {<point name="construct.b.page1.prbm006" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbm006
+            
+            #add-point:AFTER FIELD prbm006
+            {<point name="construct.a.page1.prbm006" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prbm006
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbm006
+            #add-point:ON ACTION controlp INFIELD prbm006
+            {<point name="construct.c.page1.prbm006" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbm007
+            #add-point:BEFORE FIELD prbm007
+            {<point name="construct.b.page1.prbm007" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbm007
+            
+            #add-point:AFTER FIELD prbm007
+            {<point name="construct.a.page1.prbm007" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prbm007
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbm007
+            #add-point:ON ACTION controlp INFIELD prbm007
+            {<point name="construct.c.page1.prbm007" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.page1.prbm008
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbm008
+            #add-point:ON ACTION controlp INFIELD prbm008
+            {<point name="construct.c.page1.prbm008" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbm008
+            #add-point:BEFORE FIELD prbm008
+            {<point name="construct.b.page1.prbm008" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbm008
+            
+            #add-point:AFTER FIELD prbm008
+            {<point name="construct.a.page1.prbm008" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbm009
+            #add-point:BEFORE FIELD prbm009
+            {<point name="construct.b.page1.prbm009" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbm009
+            
+            #add-point:AFTER FIELD prbm009
+            {<point name="construct.a.page1.prbm009" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prbm009
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbm009
+            #add-point:ON ACTION controlp INFIELD prbm009
+            {<point name="construct.c.page1.prbm009" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbm010
+            #add-point:BEFORE FIELD prbm010
+            {<point name="construct.b.page1.prbm010" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbm010
+            
+            #add-point:AFTER FIELD prbm010
+            {<point name="construct.a.page1.prbm010" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prbm010
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbm010
+            #add-point:ON ACTION controlp INFIELD prbm010
+            {<point name="construct.c.page1.prbm010" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbmunit
+            #add-point:BEFORE FIELD prbmunit
+            {<point name="construct.b.page1.prbmunit" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbmunit
+            
+            #add-point:AFTER FIELD prbmunit
+            {<point name="construct.a.page1.prbmunit" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prbmunit
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbmunit
+            #add-point:ON ACTION controlp INFIELD prbmunit
+            {<point name="construct.c.page1.prbmunit" />}
+            #END add-point
+ 
+   
+       
+      END CONSTRUCT
+      
+ 
+      
+ 
+      
+      #add-point:cs段add_cs(本段內只能出現新的CONSTRUCT指令)
+      {<point name="cs.add_cs"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog
+         {<point name="cs.b_dialog"/>}
+         #end add-point  
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+         IF NOT cl_null(ls_wc) THEN
+            CALL util.JSON.parse(ls_wc, la_wc)
+            INITIALIZE g_wc, g_wc2, g_wc2_table1, g_wc2_extend TO NULL
+ 
+            FOR li_idx = 1 TO la_wc.getLength()
+               CASE
+                  WHEN la_wc[li_idx].tableid = "prbl_t" 
+                     LET g_wc = la_wc[li_idx].wc
+                  WHEN la_wc[li_idx].tableid = "prbm_t" 
+                     LET g_wc2_table1 = la_wc[li_idx].wc
+ 
+               END CASE
+            END FOR
+         END IF
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   END DIALOG
+   
+   #組合g_wc2
+   LET g_wc2 = g_wc2_table1
+ 
+ 
+ 
+   
+   #add-point:cs段結束前
+   {<point name="cs.after_construct"/>}
+   #end add-point    
+ 
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.default_search" ver="10" status="" src="s" readonly="">
+    <![CDATA[#+ 外部參數搜尋
+PRIVATE FUNCTION apri126_default_search()
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE li_cnt     LIKE type_t.num10
+   DEFINE ls_wc      STRING
+   DEFINE la_wc      DYNAMIC ARRAY OF RECORD
+          tableid    STRING,
+          wc         STRING
+          END RECORD
+   DEFINE ls_where   STRING
+   #add-point:default_search段define
+   {<point name="default_search.define" edit="s"/>}
+   #end add-point  
+   #add-point:default_search段define(客製用)
+   {<point name="default_search.define_customerization" edit="c"/>}
+   #end add-point  
+   
+   #add-point:default_search段開始前
+   {<point name="default_search.before"/>}
+   #end add-point  
+   
+   LET g_pagestart = 1
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " prbl001 = '", g_argv[01], "' AND "
+   END IF
+   
+ 
+   
+   #add-point:default_search段after sql
+   {<point name="default_search.after_sql"/>}
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      #若無外部參數則預設為1=2
+      LET g_default = FALSE
+      
+      #預設查詢條件
+      CALL cl_qbe_get_default_qryplan() RETURNING ls_where
+      IF NOT cl_null(ls_where) THEN
+         CALL util.JSON.parse(ls_where, la_wc)
+         INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+ 
+         FOR li_idx = 1 TO la_wc.getLength()
+            CASE
+               WHEN la_wc[li_idx].tableid = "prbl_t" 
+                  LET g_wc = la_wc[li_idx].wc
+               WHEN la_wc[li_idx].tableid = "prbm_t" 
+                  LET g_wc2_table1 = la_wc[li_idx].wc
+ 
+               WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                  LET g_wc2_extend = la_wc[li_idx].wc
+            END CASE
+         END FOR
+         IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1) 
+ 
+            OR NOT cl_null(g_wc2_extend)
+            THEN
+            #組合g_wc2
+            IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+               LET g_wc2 = g_wc2_table1
+            END IF
+ 
+            IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+               LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+            END IF
+         
+            IF g_wc2.subString(1,5) = " AND " THEN
+               LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+            END IF
+         END IF
+      END IF
+    
+      IF cl_null(g_wc) AND cl_null(g_wc2) THEN
+         LET g_wc = " 1=2"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前
+   {<point name="default_search.after"/>}
+   #end add-point  
+ 
+   IF g_wc.getIndexOf(" 1=2", 1) THEN
+      LET g_default = TRUE
+   END IF
+ 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.delete" ver="16" status="" src="s" readonly="">
+    <![CDATA[#+ 資料刪除
+PRIVATE FUNCTION apri126_delete()
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define
+   {<point name="delete.define" edit="s"/>}
+   #end add-point     
+   #add-point:delete段define(客製用)
+   {<point name="delete.define_customerization" edit="c"/>}
+   #end add-point     
+   
+   IF g_prbl_m.prbl001 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   
+   
+   CALL s_transaction_begin()
+ 
+   OPEN apri126_cl USING g_enterprise,g_prbl_m.prbl001
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN apri126_cl:" 
+      LET g_errparam.code   = STATUS 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      CLOSE apri126_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE apri126_master_referesh USING g_prbl_m.prbl001 INTO g_prbl_m.prbl001,g_prbl_m.prbl002,g_prbl_m.prblunit, 
+       g_prbl_m.prbl003,g_prbl_m.prbl004,g_prbl_m.prbl005,g_prbl_m.prbl006,g_prbl_m.prblstus,g_prbl_m.prblownid, 
+       g_prbl_m.prblowndp,g_prbl_m.prblcrtid,g_prbl_m.prblcrtdp,g_prbl_m.prblcrtdt,g_prbl_m.prblmodid, 
+       g_prbl_m.prblmoddt,g_prbl_m.prblownid_desc,g_prbl_m.prblowndp_desc,g_prbl_m.prblcrtid_desc,g_prbl_m.prblcrtdp_desc, 
+       g_prbl_m.prblmodid_desc
+   
+   #檢查是否允許此動作
+   IF NOT apri126_action_chk() THEN
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_prbl_m_mask_o.* =  g_prbl_m.*
+   CALL apri126_prbl_t_mask()
+   LET g_prbl_m_mask_n.* =  g_prbl_m.*
+   
+   CALL apri126_show()
+   
+   #add-point:delete段before ask
+   {<point name="delete.before_ask"/>}
+   #end add-point 
+ 
+   IF cl_ask_del_master() THEN              #確認一下
+   
+      #add-point:單頭刪除前
+      {<point name="delete.head.b_delete" mark="Y"/>}
+      #end add-point   
+      
+      #應用 a47 樣板自動產生(Version:2)
+      #刪除相關文件
+      CALL apri126_set_pk_array()
+      #add-point:相關文件刪除前
+      {<point name="delete.befroe.related_document_remove"/>}
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+  
+  
+      #資料備份
+      LET g_prbl001_t = g_prbl_m.prbl001
+ 
+ 
+      DELETE FROM prbl_t
+       WHERE prblent = g_enterprise AND prbl001 = g_prbl_m.prbl001
+ 
+       
+      #add-point:單頭刪除中
+      {<point name="delete.head.m_delete"/>}
+      #end add-point
+       
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_prbl_m.prbl001 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      
+      #add-point:單頭刪除後
+      {<point name="delete.head.a_delete"/>}
+      #end add-point
+  
+      #add-point:單身刪除前
+      {<point name="delete.body.b_delete" mark="Y"/>}
+      #end add-point
+      
+      DELETE FROM prbm_t
+       WHERE prbment = g_enterprise AND prbm001 = g_prbl_m.prbl001
+ 
+ 
+      #add-point:單身刪除中
+      {<point name="delete.body.m_delete"/>}
+      #end add-point
+         
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "prbm_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF    
+ 
+      #add-point:單身刪除後
+      {<point name="delete.body.a_delete"/>}
+      #end add-point
+      
+            
+                                                               
+ 
+ 
+ 
+      
+      #修改歷程記錄(刪除)
+      IF NOT cl_log_modified_record('','') THEN 
+         CLOSE apri126_cl
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+             
+      CLEAR FORM
+      CALL g_prbm_d.clear() 
+ 
+     
+      CALL apri126_ui_browser_refresh()  
+      #CALL apri126_ui_headershow()  
+      #CALL apri126_ui_detailshow()
+      
+      IF g_browser_cnt > 0 THEN 
+         #CALL apri126_browser_fill("")
+         CALL apri126_fetch('P')
+         DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+         DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+      ELSE
+         CLEAR FORM
+      END IF
+ 
+      #add-point:多語言刪除
+      {<point name="delete.lang.before_delete"/>}
+      #end add-point
+      
+      #單頭多語言刪除
+      
+      
+      #單身多語言刪除
+      
+ 
+ 
+   
+      #add-point:多語言刪除
+      {<point name="delete.lang.delete"/>}
+      #end add-point
+   
+   END IF
+ 
+   CALL s_transaction_end('Y','0')
+   CLOSE apri126_cl
+ 
+   #功能已完成,通報訊息中心
+   CALL apri126_msgcentre_notify('delete')
+    
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.delete_b" ver="6" status="" src="s" readonly="">
+    <![CDATA[#+ 刪除單身後其他table連動
+PRIVATE FUNCTION apri126_delete_b(ps_table,ps_keys_bak,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:delete_b段define
+   {<point name="delete_b.define" edit="s"/>}
+   #end add-point     
+   #add-point:delete_b段define(客製用)
+   {<point name="delete_b.define_customerization" edit="c"/>}
+   #end add-point     
+ 
+   LET g_update = TRUE  
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前
+      {<point name="delete_b.b_delete" mark="Y"/>}
+      #end add-point    
+      DELETE FROM prbm_t
+       WHERE prbment = g_enterprise AND
+         prbm001 = ps_keys_bak[1] AND prbm002 = ps_keys_bak[2]
+      #add-point:delete_b段刪除中
+      {<point name="delete_b.m_delete"/>}
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_prbm_d.deleteElement(li_idx) 
+      END IF 
+ 
+   END IF
+   
+ 
+   
+ 
+   
+   #add-point:delete_b段other
+   {<point name="delete_b.other"/>}
+   #end add-point  
+   
+   RETURN TRUE
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.description" ver="51" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000098
+#+ 
+#+ Filename...: apri126
+#+ Description: 傳電子秤文件格式定義
+#+ Creator....: 03247(2014-03-24 21:55:47)
+#+ Modifier...: 03247(2015-06-25 21:18:37) -SD/PR-
+]]>
+  </section>
+  <section id="apri126.detail_reproduce" ver="8" status="" src="s" readonly="">
+    <![CDATA[#+ 單身自動複製
+PRIVATE FUNCTION apri126_detail_reproduce()
+   DEFINE ls_sql      STRING
+   DEFINE ld_date     DATETIME YEAR TO SECOND
+   DEFINE l_detail    RECORD LIKE prbm_t.*
+ 
+ 
+   #add-point:delete段define
+   {<point name="detail_reproduce.define" edit="s"/>}
+   #end add-point    
+   #add-point:delete段define(客製用)
+   {<point name="detail_reproduce.define_customerization" edit="c"/>}
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   
+   LET ld_date = cl_get_current()
+   
+   DROP TABLE apri126_detail
+   
+   #add-point:單身複製前1
+   {<point name="detail_reproduce.body.table1.b_insert" mark="Y"/>}
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   LET ls_sql = "CREATE GLOBAL TEMPORARY TABLE apri126_detail AS ",
+                "SELECT * FROM prbm_t "
+   PREPARE repro_tbl FROM ls_sql
+   EXECUTE repro_tbl
+   FREE repro_tbl
+                
+   #將符合條件的資料丟入TEMP TABLE
+   INSERT INTO apri126_detail SELECT * FROM prbm_t 
+                                         WHERE prbment = g_enterprise AND prbm001 = g_prbl001_t
+ 
+   
+   #將key修正為調整後   
+   UPDATE apri126_detail 
+      #更新key欄位
+      SET prbm001 = g_prbl_m.prbl001
+ 
+      #更新共用欄位
+      #應用 a13 樣板自動產生(Version:3)
+      #, prbmstus = "Y" 
+ 
+ 
+ 
+   #add-point:單身修改前
+   {<point name="detail_reproduce.body.table1.b_update"/>}
+   #end add-point                                       
+  
+   #將資料塞回原table   
+   INSERT INTO prbm_t SELECT * FROM apri126_detail
+   
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "reproduce" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #add-point:單身複製中1
+   {<point name="detail_reproduce.body.table1.m_insert"/>}
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE apri126_detail
+   
+   #add-point:單身複製後1
+   {<point name="detail_reproduce.body.table1.a_insert"/>}
+   #end add-point
+ 
+ 
+   
+ 
+   
+   #多語言複製段落
+   
+   
+   CALL s_transaction_end('Y','0')
+   
+   #已新增完, 調整資料內容(修改時使用)
+   LET g_prbl001_t = g_prbl_m.prbl001
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.detail_show" ver="4" status="" src="s" readonly="">
+    <![CDATA[#+ 第二階單身reference
+PRIVATE FUNCTION apri126_detail_show()
+   #add-point:detail_show段define
+   {<point name="detail_show.define" edit="s"/>}
+   #end add-point  
+   #add-point:detail_show段define(客製用)
+   {<point name="detail_show.define_customerization" edit="c"/>}
+   #end add-point  
+   
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+   
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.fetch" ver="15" status="" src="s" readonly="">
+    <![CDATA[#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION apri126_fetch(p_flag)
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define
+   {<point name="fetch.define" edit="s"/>}
+   #end add-point    
+   #add-point:fetch段define(客製用)
+   {<point name="fetch.define_customerization" edit="c"/>}
+   #end add-point    
+   
+   IF g_browser_cnt = 0 THEN
+      RETURN
+   END IF
+ 
+   CALL cl_ap_performance_next_start()
+   CASE p_flag
+      WHEN 'F' 
+         LET g_current_idx = 1
+      WHEN 'L'  
+         LET g_current_idx = g_browser.getLength()              
+      WHEN 'P'
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN 'N'
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN '/'
+         IF (NOT g_no_ask) THEN    
+            CALL cl_set_act_visible("accept,cancel", TRUE)    
+            CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,':' FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl" 
+            END PROMPT
+ 
+            CALL cl_set_act_visible("accept,cancel", FALSE)    
+            IF INT_FLAG THEN
+                LET INT_FLAG = 0
+                EXIT CASE  
+            END IF           
+         END IF
+         
+         IF g_jump > 0 AND g_jump <= g_browser.getLength() THEN
+             LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE  
+   END CASE 
+ 
+   
+   LET g_current_row = g_current_idx
+   LET g_detail_cnt = g_header_cnt                  
+   
+   #單身總筆數顯示
+   IF g_detail_cnt > 0 THEN
+      #若單身有資料時, idx至少為1
+      IF g_detail_idx <= 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx  
+   ELSE
+      LET g_detail_idx = 0
+      DISPLAY '' TO FORMONLY.idx    
+   END IF
+   
+   #瀏覽頁筆數顯示
+   LET g_pagestart = g_current_idx
+   DISPLAY g_pagestart TO FORMONLY.b_index   #當下筆數
+   DISPLAY g_pagestart TO FORMONLY.h_index   #當下筆數
+   
+   CALL cl_navigator_setting( g_pagestart, g_browser_cnt )
+ 
+   #代表沒有資料
+   IF g_current_idx = 0 OR g_browser.getLength() = 0 THEN
+      RETURN
+   END IF
+   
+   #超出範圍
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   LET g_prbl_m.prbl001 = g_browser[g_current_idx].b_prbl001
+ 
+   
+   #重讀DB,因TEMP有不被更新特性
+   EXECUTE apri126_master_referesh USING g_prbl_m.prbl001 INTO g_prbl_m.prbl001,g_prbl_m.prbl002,g_prbl_m.prblunit, 
+       g_prbl_m.prbl003,g_prbl_m.prbl004,g_prbl_m.prbl005,g_prbl_m.prbl006,g_prbl_m.prblstus,g_prbl_m.prblownid, 
+       g_prbl_m.prblowndp,g_prbl_m.prblcrtid,g_prbl_m.prblcrtdp,g_prbl_m.prblcrtdt,g_prbl_m.prblmodid, 
+       g_prbl_m.prblmoddt,g_prbl_m.prblownid_desc,g_prbl_m.prblowndp_desc,g_prbl_m.prblcrtid_desc,g_prbl_m.prblcrtdp_desc, 
+       g_prbl_m.prblmodid_desc
+   
+   #遮罩相關處理
+   LET g_prbl_m_mask_o.* =  g_prbl_m.*
+   CALL apri126_prbl_t_mask()
+   LET g_prbl_m_mask_n.* =  g_prbl_m.*
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL apri126_set_act_visible()   
+   CALL apri126_set_act_no_visible()
+   
+   #add-point:fetch段action控制
+   {<point name="fetch.action_control"/>}
+   #end add-point  
+   
+   
+   
+   #add-point:fetch結束前
+   {<point name="fetch.after" />}
+   #end add-point
+   
+   #保存單頭舊值
+   LET g_prbl_m_t.* = g_prbl_m.*
+   LET g_prbl_m_o.* = g_prbl_m.*
+   
+   LET g_data_owner = g_prbl_m.prblownid      
+   LET g_data_dept  = g_prbl_m.prblowndp
+   
+   #重新顯示   
+   CALL apri126_show()
+ 
+   
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.fill_chk" ver="7" status="" src="s" readonly="">
+    <![CDATA[#+ 單身填充確認
+PRIVATE FUNCTION apri126_fill_chk(ps_idx)
+   DEFINE ps_idx        LIKE type_t.chr10
+   #add-point:fill_chk段define
+   {<point name="fill_chk.define" edit="s"/>}
+   #end add-point
+   #add-point:fill_chk段define(客製用)
+   {<point name="fill_chk.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:fill_chk段before_chk
+   {<point name="fill_chk.before_chk"/>}
+   #end add-point
+   
+   #此funtion功能暫時停用(2015/1/12)
+   #無論傳入值為何皆回傳true(代表要填充該單身)
+ 
+   #全部為1=1 or null時回傳true
+   IF (cl_null(g_wc2_table1) OR g_wc2_table1.trim() = '1=1') THEN
+      #add-point:fill_chk段other_chk
+      {<point name="fill_chk.other_chk"/>}
+      #end add-point
+      RETURN TRUE
+   END IF
+   
+   #add-point:fill_chk段after_chk
+   {<point name="fill_chk.after_chk"/>}
+   #end add-point
+   
+   RETURN TRUE
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.global" ver="13" status="" src="s" readonly="">
+    <![CDATA[#應用 t01 樣板自動產生(Version:38)
+{<point name="global.memo" />}
+        
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds 
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_prbl_m        RECORD
+       prbl001 LIKE prbl_t.prbl001, 
+   prbl002 LIKE prbl_t.prbl002, 
+   prblunit LIKE prbl_t.prblunit, 
+   prbl003 LIKE prbl_t.prbl003, 
+   prbl004 LIKE prbl_t.prbl004, 
+   prbl005 LIKE prbl_t.prbl005, 
+   prbl006 LIKE prbl_t.prbl006, 
+   prblstus LIKE prbl_t.prblstus, 
+   prblownid LIKE prbl_t.prblownid, 
+   prblownid_desc LIKE type_t.chr80, 
+   prblowndp LIKE prbl_t.prblowndp, 
+   prblowndp_desc LIKE type_t.chr80, 
+   prblcrtid LIKE prbl_t.prblcrtid, 
+   prblcrtid_desc LIKE type_t.chr80, 
+   prblcrtdp LIKE prbl_t.prblcrtdp, 
+   prblcrtdp_desc LIKE type_t.chr80, 
+   prblcrtdt LIKE prbl_t.prblcrtdt, 
+   prblmodid LIKE prbl_t.prblmodid, 
+   prblmodid_desc LIKE type_t.chr80, 
+   prblmoddt LIKE prbl_t.prblmoddt
+       END RECORD
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_prbm_d        RECORD
+       prbmstus LIKE prbm_t.prbmstus, 
+   prbm002 LIKE prbm_t.prbm002, 
+   prbm003 LIKE prbm_t.prbm003, 
+   prbm004 LIKE prbm_t.prbm004, 
+   prbm005 LIKE prbm_t.prbm005, 
+   prbm006 LIKE prbm_t.prbm006, 
+   prbm007 LIKE prbm_t.prbm007, 
+   prbm008 LIKE prbm_t.prbm008, 
+   prbm008_desc LIKE type_t.chr500, 
+   prbm009 LIKE prbm_t.prbm009, 
+   prbm010 LIKE prbm_t.prbm010, 
+   prbmunit LIKE prbm_t.prbmunit
+       END RECORD
+ 
+ 
+PRIVATE TYPE type_browser RECORD
+         b_statepic     LIKE type_t.chr50,
+            b_prbl001 LIKE prbl_t.prbl001
+       END RECORD
+       
+#模組變數(Module Variables)
+DEFINE g_prbl_m          type_g_prbl_m
+DEFINE g_prbl_m_t        type_g_prbl_m
+DEFINE g_prbl_m_o        type_g_prbl_m
+DEFINE g_prbl_m_mask_o   type_g_prbl_m #轉換遮罩前資料
+DEFINE g_prbl_m_mask_n   type_g_prbl_m #轉換遮罩後資料
+ 
+   DEFINE g_prbl001_t LIKE prbl_t.prbl001
+ 
+ 
+DEFINE g_prbm_d          DYNAMIC ARRAY OF type_g_prbm_d
+DEFINE g_prbm_d_t        type_g_prbm_d
+DEFINE g_prbm_d_o        type_g_prbm_d
+DEFINE g_prbm_d_mask_o   DYNAMIC ARRAY OF type_g_prbm_d #轉換遮罩前資料
+DEFINE g_prbm_d_mask_n   DYNAMIC ARRAY OF type_g_prbm_d #轉換遮罩後資料
+ 
+ 
+DEFINE g_browser         DYNAMIC ARRAY OF type_browser
+DEFINE g_browser_f       DYNAMIC ARRAY OF type_browser
+ 
+ 
+DEFINE g_wc                  STRING
+DEFINE g_wc_t                STRING
+DEFINE g_wc2                 STRING                          #單身CONSTRUCT結果
+DEFINE g_wc2_table1          STRING
+ 
+ 
+DEFINE g_wc2_extend          STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+ 
+DEFINE g_sql                 STRING
+DEFINE g_forupd_sql          STRING
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_current_idx         LIKE type_t.num10     
+DEFINE g_jump                LIKE type_t.num10        
+DEFINE g_no_ask              LIKE type_t.num5        
+DEFINE g_rec_b               LIKE type_t.num10           
+DEFINE l_ac                  LIKE type_t.num10    
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog
+    
+DEFINE g_pagestart           LIKE type_t.num10           
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_state               STRING       
+DEFINE g_header_cnt          LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10              #單身總筆數
+DEFINE g_detail_idx          LIKE type_t.num10              #單身目前所在筆數
+DEFINE g_detail_idx2         LIKE type_t.num10              #單身2目前所在筆數
+DEFINE g_browser_cnt         LIKE type_t.num10              #Browser總筆數
+DEFINE g_browser_idx         LIKE type_t.num10              #Browser目前所在筆數
+DEFINE g_temp_idx            LIKE type_t.num10              #Browser目前所在筆數(暫存用)
+DEFINE g_order               STRING                        #查詢排序欄位
+                                                        
+DEFINE g_current_row         LIKE type_t.num10              #Browser所在筆數
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_current_page        LIKE type_t.num10              #目前所在頁數
+DEFINE g_insert              LIKE type_t.chr5              #是否導到其他page
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys               DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak           DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_bfill               LIKE type_t.chr5              #是否刷新單身
+DEFINE g_error_show          LIKE type_t.num5              #是否顯示筆數提示訊息
+DEFINE g_master_insert       BOOLEAN                       #確認單頭資料是否寫入
+ 
+DEFINE g_wc_frozen           STRING                        #凍結欄位使用
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_aw                  STRING                        #確定當下點擊的單身
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+DEFINE g_log1                STRING                        #log用
+DEFINE g_log2                STRING                        #log用
+DEFINE g_loc                 LIKE type_t.chr5              #判斷游標所在位置
+DEFINE g_add_browse          STRING                        #新增填充用WC
+DEFINE g_update              BOOLEAN                       #確定單頭/身是否異動過
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="apri126.idx_chk" ver="4" status="" src="s" readonly="">
+    <![CDATA[#+ 顯示正確的單身資料筆數
+PRIVATE FUNCTION apri126_idx_chk()
+   #add-point:idx_chk段define
+   {<point name="idx_chk.define" edit="s"/>}
+   #end add-point  
+   #add-point:idx_chk段define(客製用)
+   {<point name="idx_chk.define_customerization" edit="c"/>}
+   #end add-point  
+   
+   IF g_current_page = 1 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail1")
+      IF g_detail_idx > g_prbm_d.getLength() THEN
+         LET g_detail_idx = g_prbm_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_prbm_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_prbm_d.getLength() TO FORMONLY.cnt
+   END IF
+   
+ 
+   
+   #add-point:idx_chk段other
+   {<point name="idx_chk.other"/>}
+   #end add-point  
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.init" ver="5" status="" src="s" readonly="">
+    <![CDATA[#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION apri126_init()
+   #add-point:init段define
+   {<point name="init.define" edit="s"/>}
+   #end add-point    
+   #add-point:init段define(客製用)
+   {<point name="init.define_customerization" edit="c"/>}
+   #end add-point    
+ 
+   LET g_bfill       = "Y"
+   LET g_detail_idx  = 1 #第一層單身指標
+   LET g_detail_idx2 = 1 #第二層單身指標
+   LET g_error_show  = 1
+   LET l_ac = 1 #單身指標
+      CALL cl_set_combo_scc_part('prblstus','50','N,Y,X')
+ 
+      CALL cl_set_combo_scc('prbl003','6036') 
+   CALL cl_set_combo_scc('prbl005','6037') 
+   CALL cl_set_combo_scc('prbl006','6038') 
+   CALL cl_set_combo_scc('prbm005','6039') 
+   CALL cl_set_combo_scc('prbm006','6040') 
+   CALL cl_set_combo_scc('prbm007','6041') 
+ 
+   LET gwin_curr = ui.Window.getCurrent()  #取得現行畫面
+   LET gfrm_curr = gwin_curr.getForm()     #取出物件化後的畫面物件
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init"/>}
+   #end add-point
+   
+   #初始化搜尋條件
+   CALL apri126_default_search()
+    
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.input" ver="7" status="" src="s" readonly="">
+    <![CDATA[#+ 資料輸入
+PRIVATE FUNCTION apri126_input(p_cmd)
+   DEFINE  p_cmd                 LIKE type_t.chr1
+   DEFINE  l_cmd_t               LIKE type_t.chr1
+   DEFINE  l_cmd                 LIKE type_t.chr1
+   DEFINE  l_n                   LIKE type_t.num10                #檢查重複用  
+   DEFINE  l_cnt                 LIKE type_t.num10                #檢查重複用  
+   DEFINE  l_lock_sw             LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert        LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete        LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count               LIKE type_t.num10
+   DEFINE  l_i                   LIKE type_t.num10
+   DEFINE  l_insert              BOOLEAN
+   DEFINE  ls_return             STRING
+   DEFINE  l_var_keys            DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys          DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields              DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak        DYNAMIC ARRAY OF STRING
+   DEFINE  lb_reproduce          BOOLEAN
+   DEFINE  li_reproduce          LIKE type_t.num10
+   DEFINE  li_reproduce_target   LIKE type_t.num10
+   DEFINE  ls_keys               DYNAMIC ARRAY OF VARCHAR(500)
+   #add-point:input段define
+   {<point name="input.define" edit="s"/>}
+   #end add-point  
+   #add-point:input段define(客製用)
+   {<point name="input.define_customerization" edit="c"/>}
+   #end add-point  
+   
+   #先做狀態判定
+   IF p_cmd = 'r' THEN
+      LET l_cmd_t = 'r'
+      LET p_cmd   = 'a'
+   ELSE
+      LET l_cmd_t = p_cmd
+   END IF   
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_prbl_m.prbl001,g_prbl_m.prbl002,g_prbl_m.prblunit,g_prbl_m.prbl003,g_prbl_m.prbl004, 
+       g_prbl_m.prbl005,g_prbl_m.prbl006,g_prbl_m.prblstus,g_prbl_m.prblownid,g_prbl_m.prblownid_desc, 
+       g_prbl_m.prblowndp,g_prbl_m.prblowndp_desc,g_prbl_m.prblcrtid,g_prbl_m.prblcrtid_desc,g_prbl_m.prblcrtdp, 
+       g_prbl_m.prblcrtdp_desc,g_prbl_m.prblcrtdt,g_prbl_m.prblmodid,g_prbl_m.prblmodid_desc,g_prbl_m.prblmoddt 
+
+   
+   #切換畫面
+ 
+   CALL cl_set_head_visible("","YES")  
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   #add-point:input段define_sql
+   {<point name="input.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = "SELECT prbmstus,prbm002,prbm003,prbm004,prbm005,prbm006,prbm007,prbm008,prbm009, 
+       prbm010,prbmunit FROM prbm_t WHERE prbment=? AND prbm001=? AND prbm002=? FOR UPDATE"
+   #add-point:input段define_sql
+   {<point name="input.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE apri126_bcl CURSOR FROM g_forupd_sql
+   
+ 
+   
+ 
+ 
+   #add-point:input段define_sql
+   {<point name="input.other_sql"/>}
+   #end add-point 
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   LET g_qryparam.state = 'i'
+   
+   #控制key欄位可否輸入
+   CALL apri126_set_entry(p_cmd)
+   #add-point:set_entry後
+   {<point name="input.after_set_entry"/>}
+   #end add-point
+   CALL apri126_set_no_entry(p_cmd)
+ 
+   DISPLAY BY NAME g_prbl_m.prbl001,g_prbl_m.prbl002,g_prbl_m.prblunit,g_prbl_m.prbl003,g_prbl_m.prbl004, 
+       g_prbl_m.prbl005,g_prbl_m.prbl006,g_prbl_m.prblstus
+   
+   LET lb_reproduce = FALSE
+   
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+   
+   #add-point:資料輸入前
+   {<point name="input.before_input"/>}
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+]]>
+  </section>
+  <section id="apri126.input.body" ver="20" status="" src="s" readonly="">
+    <![CDATA[   
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_prbm_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            #add-point:資料輸入前
+            {<point name="input.body.before_input2"/>}
+            #end add-point
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_prbm_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL apri126_b_fill()
+            #如果一直都在單身1則控制筆數位置
+            IF g_loc = 'm' AND g_rec_b != 0 THEN
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+            END IF
+            LET g_loc = 'm'
+            LET g_rec_b = g_prbm_d.getLength()
+            #add-point:資料輸入前
+            {<point name="input.d.before_input"/>}
+            #end add-point
+         
+         BEFORE ROW
+            #add-point:modify段before row2
+            {<point name="input.body.before_row2"/>}
+            #end add-point  
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET g_current_page = 1
+            
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN apri126_cl USING g_enterprise,g_prbl_m.prbl001
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN apri126_cl:" 
+               LET g_errparam.code   = STATUS 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CLOSE apri126_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_prbm_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND g_prbm_d[l_ac].prbm002 IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_prbm_d_t.* = g_prbm_d[l_ac].*  #BACKUP
+               LET g_prbm_d_o.* = g_prbm_d[l_ac].*  #BACKUP
+               CALL apri126_set_entry_b(l_cmd)
+               #add-point:modify段after_set_entry_b
+               {<point name="input.body.after_set_entry_b"/>}
+               #end add-point  
+               CALL apri126_set_no_entry_b(l_cmd)
+               IF NOT apri126_lock_b("prbm_t","'1'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH apri126_bcl INTO g_prbm_d[l_ac].prbmstus,g_prbm_d[l_ac].prbm002,g_prbm_d[l_ac].prbm003, 
+                      g_prbm_d[l_ac].prbm004,g_prbm_d[l_ac].prbm005,g_prbm_d[l_ac].prbm006,g_prbm_d[l_ac].prbm007, 
+                      g_prbm_d[l_ac].prbm008,g_prbm_d[l_ac].prbm009,g_prbm_d[l_ac].prbm010,g_prbm_d[l_ac].prbmunit 
+
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = g_prbm_d_t.prbm002 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_prbm_d_mask_o[l_ac].* =  g_prbm_d[l_ac].*
+                  CALL apri126_prbm_t_mask()
+                  LET g_prbm_d_mask_n[l_ac].* =  g_prbm_d[l_ac].*
+                  
+                  LET g_bfill = "N"
+                  CALL apri126_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row
+            {<point name="input.body.before_row"/>}
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+        
+         BEFORE INSERT
+            
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_prbm_d[l_ac].* TO NULL 
+            INITIALIZE g_prbm_d_t.* TO NULL 
+            INITIALIZE g_prbm_d_o.* TO NULL 
+            #公用欄位給值(單身)
+            #應用 a14 樣板自動產生(Version:4)    
+      #公用欄位新增給值  
+      LET g_prbm_d[l_ac].prbmstus = 'N'
+ 
+ 
+            #自定義預設值
+                  LET g_prbm_d[l_ac].prbmstus = "Y"
+      LET g_prbm_d[l_ac].prbm005 = "1"
+      LET g_prbm_d[l_ac].prbm006 = "1"
+      LET g_prbm_d[l_ac].prbm007 = "prbh_t"
+ 
+            #add-point:modify段before備份
+            {<point name="input.body.insert.before_bak"/>}
+            #end add-point
+            LET g_prbm_d_t.* = g_prbm_d[l_ac].*     #新輸入資料
+            LET g_prbm_d_o.* = g_prbm_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL apri126_set_entry_b(l_cmd)
+            #add-point:modify段after_set_entry_b
+            {<point name="input.body.insert.after_set_entry_b"/>}
+            #end add-point
+            CALL apri126_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_prbm_d[li_reproduce_target].* = g_prbm_d[li_reproduce].*
+ 
+               LET g_prbm_d[li_reproduce_target].prbm002 = NULL
+ 
+            END IF
+            
+            #add-point:modify段before insert
+            {<point name="input.body.before_insert"/>}
+            #end add-point  
+  
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            #add-point:單身新增
+            {<point name="input.body.b_a_insert"/>}
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM prbm_t 
+             WHERE prbment = g_enterprise AND prbm001 = g_prbl_m.prbl001
+ 
+               AND prbm002 = g_prbm_d[l_ac].prbm002
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前
+               {<point name="input.body.b_insert"/>}
+               #end add-point
+            
+               #同步新增到同層的table
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_prbl_m.prbl001
+               LET gs_keys[2] = g_prbm_d[g_detail_idx].prbm002
+               CALL apri126_insert_b('prbm_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後
+               {<point name="input.body.a_insert"/>}
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code   = "std-00006" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               INITIALIZE g_prbm_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "prbm_t" 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL apri126_b_fill()
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert
+               {<point name="input.body.a_insert2"/>}
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               #ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+               #add-point:單身刪除後(=d)
+               {<point name="input.body.after_delete_d"/>}
+               #end add-point
+            ELSE
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   = -263 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前
+               {<point name="input.body.b_delete" mark="Y"/>}
+               #end add-point 
+               
+               #取得該筆資料key值
+               INITIALIZE gs_keys TO NULL
+               LET gs_keys[01] = g_prbl_m.prbl001
+ 
+               LET gs_keys[gs_keys.getLength()+1] = g_prbm_d_t.prbm002
+ 
+            
+               #刪除同層單身
+               IF NOT apri126_delete_b('prbm_t',gs_keys,"'1'") THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE apri126_bcl
+                  CANCEL DELETE
+               END IF
+    
+               #刪除下層單身
+               IF NOT apri126_key_delete_b(gs_keys,'prbm_t') THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE apri126_bcl
+                  CANCEL DELETE
+               END IF
+               
+               #刪除多語言
+               
+               
+               #add-point:單身刪除中
+               {<point name="input.body.m_delete"/>}
+               #end add-point 
+               
+               CALL s_transaction_end('Y','0')
+               CLOSE apri126_bcl
+            
+               LET g_rec_b = g_rec_b-1
+               #add-point:單身刪除後
+               {<point name="input.body.a_delete"/>}
+               #end add-point
+               LET l_count = g_prbm_d.getLength()
+               
+               #add-point:單身刪除後(<>d)
+               {<point name="input.body.after_delete"/>}
+               #end add-point
+            END IF
+ 
+         AFTER DELETE
+            #如果是最後一筆
+            IF l_ac = (g_prbm_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbmstus
+            #add-point:BEFORE FIELD prbmstus
+            {<point name="input.b.page1.prbmstus" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbmstus
+            
+            #add-point:AFTER FIELD prbmstus
+            {<point name="input.a.page1.prbmstus" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbmstus
+            #add-point:ON CHANGE prbmstus
+            {<point name="input.g.page1.prbmstus" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbm002
+            #應用 a15 樣板自動產生(Version:2)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_prbm_d[l_ac].prbm002,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD prbm002
+            END IF 
+ 
+ 
+            #add-point:AFTER FIELD prbm002
+            {<point name="input.a.page1.prbm002" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbm002
+            #add-point:BEFORE FIELD prbm002
+            {<point name="input.b.page1.prbm002" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbm002
+            #add-point:ON CHANGE prbm002
+            {<point name="input.g.page1.prbm002" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbm003
+            #add-point:BEFORE FIELD prbm003
+            {<point name="input.b.page1.prbm003" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbm003
+            
+            #add-point:AFTER FIELD prbm003
+            {<point name="input.a.page1.prbm003" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbm003
+            #add-point:ON CHANGE prbm003
+            {<point name="input.g.page1.prbm003" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbm004
+            #應用 a15 樣板自動產生(Version:2)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_prbm_d[l_ac].prbm004,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD prbm004
+            END IF 
+ 
+ 
+            #add-point:AFTER FIELD prbm004
+            {<point name="input.a.page1.prbm004" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbm004
+            #add-point:BEFORE FIELD prbm004
+            {<point name="input.b.page1.prbm004" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbm004
+            #add-point:ON CHANGE prbm004
+            {<point name="input.g.page1.prbm004" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbm005
+            #add-point:BEFORE FIELD prbm005
+            {<point name="input.b.page1.prbm005" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbm005
+            
+            #add-point:AFTER FIELD prbm005
+            {<point name="input.a.page1.prbm005" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbm005
+            #add-point:ON CHANGE prbm005
+            {<point name="input.g.page1.prbm005" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbm006
+            #add-point:BEFORE FIELD prbm006
+            {<point name="input.b.page1.prbm006" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbm006
+            
+            #add-point:AFTER FIELD prbm006
+            {<point name="input.a.page1.prbm006" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbm006
+            #add-point:ON CHANGE prbm006
+            {<point name="input.g.page1.prbm006" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbm007
+            #add-point:BEFORE FIELD prbm007
+            {<point name="input.b.page1.prbm007" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbm007
+            
+            #add-point:AFTER FIELD prbm007
+            {<point name="input.a.page1.prbm007" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbm007
+            #add-point:ON CHANGE prbm007
+            {<point name="input.g.page1.prbm007" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbm008
+            
+            #add-point:AFTER FIELD prbm008
+            {<point name="input.a.page1.prbm008" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbm008
+            #add-point:BEFORE FIELD prbm008
+            {<point name="input.b.page1.prbm008" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbm008
+            #add-point:ON CHANGE prbm008
+            {<point name="input.g.page1.prbm008" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbm009
+            #add-point:BEFORE FIELD prbm009
+            {<point name="input.b.page1.prbm009" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbm009
+            
+            #add-point:AFTER FIELD prbm009
+            {<point name="input.a.page1.prbm009" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbm009
+            #add-point:ON CHANGE prbm009
+            {<point name="input.g.page1.prbm009" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbm010
+            #add-point:BEFORE FIELD prbm010
+            {<point name="input.b.page1.prbm010" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbm010
+            
+            #add-point:AFTER FIELD prbm010
+            {<point name="input.a.page1.prbm010" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbm010
+            #add-point:ON CHANGE prbm010
+            {<point name="input.g.page1.prbm010" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbmunit
+            #add-point:BEFORE FIELD prbmunit
+            {<point name="input.b.page1.prbmunit" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbmunit
+            
+            #add-point:AFTER FIELD prbmunit
+            {<point name="input.a.page1.prbmunit" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbmunit
+            #add-point:ON CHANGE prbmunit
+            {<point name="input.g.page1.prbmunit" />}
+            #END add-point 
+ 
+ 
+                  #Ctrlp:input.c.page1.prbmstus
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbmstus
+            #add-point:ON ACTION controlp INFIELD prbmstus
+            {<point name="input.c.page1.prbmstus" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbm002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbm002
+            #add-point:ON ACTION controlp INFIELD prbm002
+            {<point name="input.c.page1.prbm002" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbm003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbm003
+            #add-point:ON ACTION controlp INFIELD prbm003
+            {<point name="input.c.page1.prbm003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbm004
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbm004
+            #add-point:ON ACTION controlp INFIELD prbm004
+            {<point name="input.c.page1.prbm004" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbm005
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbm005
+            #add-point:ON ACTION controlp INFIELD prbm005
+            {<point name="input.c.page1.prbm005" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbm006
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbm006
+            #add-point:ON ACTION controlp INFIELD prbm006
+            {<point name="input.c.page1.prbm006" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbm007
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbm007
+            #add-point:ON ACTION controlp INFIELD prbm007
+            {<point name="input.c.page1.prbm007" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbm008
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbm008
+            #add-point:ON ACTION controlp INFIELD prbm008
+            {<point name="input.c.page1.prbm008" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbm009
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbm009
+            #add-point:ON ACTION controlp INFIELD prbm009
+            {<point name="input.c.page1.prbm009" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbm010
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbm010
+            #add-point:ON ACTION controlp INFIELD prbm010
+            {<point name="input.c.page1.prbm010" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.prbmunit
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbmunit
+            #add-point:ON ACTION controlp INFIELD prbmunit
+            {<point name="input.c.page1.prbmunit" />}
+            #END add-point
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               LET g_prbm_d[l_ac].* = g_prbm_d_t.*
+               CLOSE apri126_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = g_prbm_d[l_ac].prbm002 
+               LET g_errparam.code   = -263 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET g_prbm_d[l_ac].* = g_prbm_d_t.*
+            ELSE
+            
+               #add-point:單身修改前
+               {<point name="input.body.b_update" mark="Y"/>}
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身)
+      
+               #將遮罩欄位還原
+               CALL apri126_prbm_t_mask_restore('restore_mask_o')
+      
+               UPDATE prbm_t SET (prbm001,prbmstus,prbm002,prbm003,prbm004,prbm005,prbm006,prbm007,prbm008, 
+                   prbm009,prbm010,prbmunit) = (g_prbl_m.prbl001,g_prbm_d[l_ac].prbmstus,g_prbm_d[l_ac].prbm002, 
+                   g_prbm_d[l_ac].prbm003,g_prbm_d[l_ac].prbm004,g_prbm_d[l_ac].prbm005,g_prbm_d[l_ac].prbm006, 
+                   g_prbm_d[l_ac].prbm007,g_prbm_d[l_ac].prbm008,g_prbm_d[l_ac].prbm009,g_prbm_d[l_ac].prbm010, 
+                   g_prbm_d[l_ac].prbmunit)
+                WHERE prbment = g_enterprise AND prbm001 = g_prbl_m.prbl001 
+ 
+                  AND prbm002 = g_prbm_d_t.prbm002 #項次   
+ 
+                  
+               #add-point:單身修改中
+               {<point name="input.body.m_update"/>}
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "prbm_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                     LET g_prbm_d[l_ac].* = g_prbm_d_t.*
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "prbm_t" 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()                   
+                     CALL s_transaction_end('N','0')
+                     LET g_prbm_d[l_ac].* = g_prbm_d_t.*  
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_prbl_m.prbl001
+               LET gs_keys_bak[1] = g_prbl001_t
+               LET gs_keys[2] = g_prbm_d[g_detail_idx].prbm002
+               LET gs_keys_bak[2] = g_prbm_d_t.prbm002
+               CALL apri126_update_b('prbm_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                     
+               END CASE
+ 
+               #將遮罩欄位進行遮蔽
+               CALL apri126_prbm_t_mask_restore('restore_mask_n')
+               
+               #判斷key是否有改變
+               INITIALIZE gs_keys TO NULL
+               IF NOT(g_prbm_d[g_detail_idx].prbm002 = g_prbm_d_t.prbm002 
+ 
+                  ) THEN
+                  LET gs_keys[01] = g_prbl_m.prbl001
+ 
+                  LET gs_keys[gs_keys.getLength()+1] = g_prbm_d_t.prbm002
+ 
+                  CALL apri126_key_update_b(gs_keys,'prbm_t')
+               END IF
+               
+               #修改歷程記錄(單身修改)
+               LET g_log1 = util.JSON.stringify(g_prbl_m),util.JSON.stringify(g_prbm_d_t)
+               LET g_log2 = util.JSON.stringify(g_prbl_m),util.JSON.stringify(g_prbm_d[l_ac])
+               IF NOT cl_log_modified_record_d(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               END IF
+               
+               #add-point:單身修改後
+               {<point name="input.body.a_update"/>}
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            #add-point:單身after_row
+            {<point name="input.body.after_row"/>}
+            #end add-point
+            CALL apri126_unlock_b("prbm_t","'1'")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            #add-point:單身after_row2
+            {<point name="input.body.after_row2"/>}
+            #end add-point
+              
+         AFTER INPUT
+            #add-point:input段after input 
+            {<point name="input.body.after_input"/>}
+            #end add-point 
+ 
+         ON ACTION controlo    
+            CALL FGL_SET_ARR_CURR(g_prbm_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_prbm_d.getLength()+1
+            
+         #ON ACTION cancel
+         #   LET INT_FLAG = 1
+         #   LET g_detail_idx = 1
+         #   EXIT DIALOG 
+ 
+      END INPUT
+      
+ 
+      
+ 
+ 
+ 
+]]>
+  </section>
+  <section id="apri126.input.head" ver="19" status="" src="s" readonly="">
+    <![CDATA[      #單頭段
+      INPUT BY NAME g_prbl_m.prbl001,g_prbl_m.prbl002,g_prbl_m.prblunit,g_prbl_m.prbl003,g_prbl_m.prbl004, 
+          g_prbl_m.prbl005,g_prbl_m.prbl006,g_prbl_m.prblstus 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+     
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            OPEN apri126_cl USING g_enterprise,g_prbl_m.prbl001
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN apri126_cl:" 
+               LET g_errparam.code   = STATUS 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CLOSE apri126_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            
+            IF l_cmd_t = 'r' THEN
+               
+            END IF
+            #因應離開單頭後已寫入資料庫, 若重新回到單頭則視為修改
+            #因此需於此處開啟/關閉欄位
+            CALL apri126_set_entry(p_cmd)
+            #add-point:資料輸入前
+            {<point name="input.m.before_input"/>}
+            #end add-point
+            CALL apri126_set_no_entry(p_cmd)
+    
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbl001
+            #add-point:BEFORE FIELD prbl001
+            {<point name="input.b.prbl001" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbl001
+            
+            #add-point:AFTER FIELD prbl001
+            {<point name="input.a.prbl001" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbl001
+            #add-point:ON CHANGE prbl001
+            {<point name="input.g.prbl001" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbl002
+            #add-point:BEFORE FIELD prbl002
+            {<point name="input.b.prbl002" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbl002
+            
+            #add-point:AFTER FIELD prbl002
+            {<point name="input.a.prbl002" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbl002
+            #add-point:ON CHANGE prbl002
+            {<point name="input.g.prbl002" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prblunit
+            #add-point:BEFORE FIELD prblunit
+            {<point name="input.b.prblunit" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prblunit
+            
+            #add-point:AFTER FIELD prblunit
+            {<point name="input.a.prblunit" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prblunit
+            #add-point:ON CHANGE prblunit
+            {<point name="input.g.prblunit" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbl003
+            #add-point:BEFORE FIELD prbl003
+            {<point name="input.b.prbl003" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbl003
+            
+            #add-point:AFTER FIELD prbl003
+            {<point name="input.a.prbl003" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbl003
+            #add-point:ON CHANGE prbl003
+            {<point name="input.g.prbl003" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbl004
+            #add-point:BEFORE FIELD prbl004
+            {<point name="input.b.prbl004" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbl004
+            
+            #add-point:AFTER FIELD prbl004
+            {<point name="input.a.prbl004" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbl004
+            #add-point:ON CHANGE prbl004
+            {<point name="input.g.prbl004" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbl005
+            #add-point:BEFORE FIELD prbl005
+            {<point name="input.b.prbl005" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbl005
+            
+            #add-point:AFTER FIELD prbl005
+            {<point name="input.a.prbl005" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbl005
+            #add-point:ON CHANGE prbl005
+            {<point name="input.g.prbl005" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prbl006
+            #add-point:BEFORE FIELD prbl006
+            {<point name="input.b.prbl006" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prbl006
+            
+            #add-point:AFTER FIELD prbl006
+            {<point name="input.a.prbl006" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prbl006
+            #add-point:ON CHANGE prbl006
+            {<point name="input.g.prbl006" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD prblstus
+            #add-point:BEFORE FIELD prblstus
+            {<point name="input.b.prblstus" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD prblstus
+            
+            #add-point:AFTER FIELD prblstus
+            {<point name="input.a.prblstus" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE prblstus
+            #add-point:ON CHANGE prblstus
+            {<point name="input.g.prblstus" />}
+            #END add-point 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.prbl001
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbl001
+            #add-point:ON ACTION controlp INFIELD prbl001
+            {<point name="input.c.prbl001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.prbl002
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbl002
+            #add-point:ON ACTION controlp INFIELD prbl002
+            {<point name="input.c.prbl002" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.prblunit
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prblunit
+            #add-point:ON ACTION controlp INFIELD prblunit
+            {<point name="input.c.prblunit" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.prbl003
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbl003
+            #add-point:ON ACTION controlp INFIELD prbl003
+            {<point name="input.c.prbl003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.prbl004
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbl004
+            #add-point:ON ACTION controlp INFIELD prbl004
+            {<point name="input.c.prbl004" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.prbl005
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbl005
+            #add-point:ON ACTION controlp INFIELD prbl005
+            {<point name="input.c.prbl005" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.prbl006
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prbl006
+            #add-point:ON ACTION controlp INFIELD prbl006
+            {<point name="input.c.prbl006" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.prblstus
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD prblstus
+            #add-point:ON ACTION controlp INFIELD prblstus
+            {<point name="input.c.prblstus" />}
+            #END add-point
+ 
+ #欄位開窗
+            
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+ 
+            #CALL cl_err_collect_show()      #錯誤訊息統整顯示
+            #CALL cl_showmsg()
+            DISPLAY BY NAME g_prbl_m.prbl001
+                        
+            #add-point:單頭INPUT後
+            {<point name="input.head.after_input"/>}
+            #end add-point
+                        
+            IF p_cmd <> 'u' THEN
+    
+               CALL s_transaction_begin()
+               
+               #add-point:單頭新增前
+               {<point name="input.head.b_insert" mark="Y"/>}
+               #end add-point
+               
+               INSERT INTO prbl_t (prblent,prbl001,prbl002,prblunit,prbl003,prbl004,prbl005,prbl006, 
+                   prblstus,prblownid,prblowndp,prblcrtid,prblcrtdp,prblcrtdt,prblmodid,prblmoddt)
+               VALUES (g_enterprise,g_prbl_m.prbl001,g_prbl_m.prbl002,g_prbl_m.prblunit,g_prbl_m.prbl003, 
+                   g_prbl_m.prbl004,g_prbl_m.prbl005,g_prbl_m.prbl006,g_prbl_m.prblstus,g_prbl_m.prblownid, 
+                   g_prbl_m.prblowndp,g_prbl_m.prblcrtid,g_prbl_m.prblcrtdp,g_prbl_m.prblcrtdt,g_prbl_m.prblmodid, 
+                   g_prbl_m.prblmoddt) 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "g_prbl_m" 
+                  LET g_errparam.code   = SQLCA.sqlcode 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CALL s_transaction_end('N','0')
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #add-point:單頭新增中
+               {<point name="input.head.m_insert"/>}
+               #end add-point
+               
+               
+               
+               
+               #add-point:單頭新增後
+               {<point name="input.head.a_insert"/>}
+               #end add-point
+               CALL s_transaction_end('Y','0') 
+               
+               IF l_cmd_t = 'r' AND p_cmd = 'a' THEN
+                  CALL apri126_detail_reproduce()
+                  #因應特定程式需求, 重新刷新單身資料
+                  CALL apri126_b_fill()
+               END IF
+               
+               #add-point:單頭新增後
+               {<point name="input.head.a_insert2"/>}
+               #end add-point
+               
+               LET g_master_insert = TRUE
+               
+               LET p_cmd = 'u'
+            ELSE
+               CALL s_transaction_begin()
+            
+               #add-point:單頭修改前
+               {<point name="input.head.b_update" mark="Y"/>}
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL apri126_prbl_t_mask_restore('restore_mask_o')
+               
+               UPDATE prbl_t SET (prbl001,prbl002,prblunit,prbl003,prbl004,prbl005,prbl006,prblstus, 
+                   prblownid,prblowndp,prblcrtid,prblcrtdp,prblcrtdt,prblmodid,prblmoddt) = (g_prbl_m.prbl001, 
+                   g_prbl_m.prbl002,g_prbl_m.prblunit,g_prbl_m.prbl003,g_prbl_m.prbl004,g_prbl_m.prbl005, 
+                   g_prbl_m.prbl006,g_prbl_m.prblstus,g_prbl_m.prblownid,g_prbl_m.prblowndp,g_prbl_m.prblcrtid, 
+                   g_prbl_m.prblcrtdp,g_prbl_m.prblcrtdt,g_prbl_m.prblmodid,g_prbl_m.prblmoddt)
+                WHERE prblent = g_enterprise AND prbl001 = g_prbl001_t
+ 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "prbl_t" 
+                  LET g_errparam.code   = SQLCA.sqlcode 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CALL s_transaction_end('N','0')
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #add-point:單頭修改中
+               {<point name="input.head.m_update"/>}
+               #end add-point
+               
+               
+               
+               
+               #將遮罩欄位進行遮蔽
+               CALL apri126_prbl_t_mask_restore('restore_mask_n')
+               
+               #修改歷程記錄(單頭修改)
+               LET g_log1 = util.JSON.stringify(g_prbl_m_t)
+               LET g_log2 = util.JSON.stringify(g_prbl_m)
+               IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF
+               
+               #add-point:單頭修改後
+               {<point name="input.head.a_update"/>}
+               #end add-point
+            END IF
+            
+            LET g_prbl001_t = g_prbl_m.prbl001
+ 
+            
+      END INPUT
+   
+]]>
+  </section>
+  <section id="apri126.input.other" ver="8" status="" src="s" readonly="">
+    <![CDATA[      
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      BEFORE DIALOG 
+         #CALL cl_err_collect_init()    
+         #add-point:input段before dialog
+         {<point name="input.before_dialog"/>}
+         #end add-point    
+         #重新導回資料到正確位置上
+         CALL DIALOG.setCurrentRow("s_detail1",g_detail_idx)      
+ 
+         #新增時強制從單頭開始填
+         IF p_cmd = 'a' THEN
+            #add-point:input段next_field
+            {<point name="input.next_field"/>}
+            #end add-point  
+            NEXT FIELD prbl001
+         ELSE
+            CASE g_aw
+               WHEN "s_detail1"
+                  NEXT FIELD prbmstus
+ 
+               #add-point:input段modify_detail 
+               {<point name="input.modify_detail.other"/>}
+               #end add-point  
+            END CASE
+         END IF
+      
+      AFTER DIALOG
+         #add-point:input段after_dialog
+         {<point name="input.after_dialog"/>}
+         #end add-point    
+         
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         #add-point:input段accept 
+         {<point name="input.accept"/>}
+         #end add-point    
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         #add-point:input段cancel
+         {<point name="input.cancel"/>}
+         #end add-point  
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         #add-point:input段close
+         {<point name="input.close"/>}
+         #end add-point  
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         #add-point:input段exit
+         {<point name="input.exit"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input 
+   {<point name="input.after_input"/>}
+   #end add-point    
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.insert" ver="16" status="" src="s" readonly="">
+    <![CDATA[#+ 資料新增
+PRIVATE FUNCTION apri126_insert()
+   #add-point:insert段define
+   {<point name="insert.define" edit="s"/>}
+   #end add-point    
+   #add-point:insert段define(客製用)
+   {<point name="insert.define_customerization" edit="c"/>}
+   #end add-point    
+   
+   #清畫面欄位內容
+   CLEAR FORM                    
+   CALL g_prbm_d.clear()   
+ 
+ 
+   INITIALIZE g_prbl_m.* LIKE prbl_t.*             #DEFAULT 設定
+   
+   LET g_prbl001_t = NULL
+ 
+   
+   LET g_master_insert = FALSE
+   
+   #add-point:insert段before
+   {<point name="insert.before"/>}
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   WHILE TRUE
+      #公用欄位給值(單頭)
+      #應用 a14 樣板自動產生(Version:4)    
+      #公用欄位新增給值  
+      LET g_prbl_m.prblownid = g_user
+      LET g_prbl_m.prblowndp = g_dept
+      LET g_prbl_m.prblcrtid = g_user
+      LET g_prbl_m.prblcrtdp = g_dept 
+      LET g_prbl_m.prblcrtdt = cl_get_current()
+      LET g_prbl_m.prblmodid = g_user
+      LET g_prbl_m.prblmoddt = cl_get_current()
+      LET g_prbl_m.prblstus = 'N'
+ 
+ 
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+            LET g_prbl_m.prbl003 = "1"
+      LET g_prbl_m.prbl005 = "1"
+      LET g_prbl_m.prbl006 = "1"
+ 
+  
+      #add-point:單頭預設值
+      {<point name="insert.default"/>}
+      #end add-point 
+      
+      #保存單頭舊值(用於資料輸入錯誤還原預設值時使用)
+      LET g_prbl_m_t.* = g_prbl_m.*
+      LET g_prbl_m_o.* = g_prbl_m.*
+      
+      #顯示狀態(stus)圖片
+            #應用 a21 樣板自動產生(Version:2)
+	  #根據當下狀態碼顯示圖片
+      CASE g_prbl_m.prblstus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/open.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/valid.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/void.png")
+         
+      END CASE
+ 
+ 
+    
+      CALL apri126_input("a")
+      
+      #add-point:單頭輸入後
+      {<point name="insert.after_insert"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         LET INT_FLAG = 0
+      END IF
+      
+      IF NOT g_master_insert THEN
+         DISPLAY g_detail_cnt  TO FORMONLY.h_count    #總筆數
+         DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+         INITIALIZE g_prbl_m.* TO NULL
+         INITIALIZE g_prbm_d TO NULL
+ 
+         #add-point:取消新增後
+         {<point name="insert.cancel"/>}
+         #end add-point 
+         CALL apri126_show()
+         RETURN
+      END IF
+      
+      LET INT_FLAG = 0
+      #CALL g_prbm_d.clear()
+ 
+ 
+      LET g_rec_b = 0
+      CALL s_transaction_end('Y','0')
+      EXIT WHILE
+        
+   END WHILE
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL apri126_set_act_visible()   
+   CALL apri126_set_act_no_visible()
+   
+   #將新增的資料併入搜尋條件中
+   LET g_prbl001_t = g_prbl_m.prbl001
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " prblent = '" ||g_enterprise|| "' AND",
+                      " prbl001 = '", g_prbl_m.prbl001, "' "
+ 
+                      
+   #add-point:組合新增資料的條件後
+   {<point name="insert.after.add_browse"/>}
+   #end add-point
+      
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL apri126_browser_fill("")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   CLOSE apri126_cl
+   
+   CALL apri126_idx_chk()
+   
+   #撈取異動後的資料(主要是帶出reference)
+   EXECUTE apri126_master_referesh USING g_prbl_m.prbl001 INTO g_prbl_m.prbl001,g_prbl_m.prbl002,g_prbl_m.prblunit, 
+       g_prbl_m.prbl003,g_prbl_m.prbl004,g_prbl_m.prbl005,g_prbl_m.prbl006,g_prbl_m.prblstus,g_prbl_m.prblownid, 
+       g_prbl_m.prblowndp,g_prbl_m.prblcrtid,g_prbl_m.prblcrtdp,g_prbl_m.prblcrtdt,g_prbl_m.prblmodid, 
+       g_prbl_m.prblmoddt,g_prbl_m.prblownid_desc,g_prbl_m.prblowndp_desc,g_prbl_m.prblcrtid_desc,g_prbl_m.prblcrtdp_desc, 
+       g_prbl_m.prblmodid_desc
+   
+   #遮罩相關處理
+   LET g_prbl_m_mask_o.* =  g_prbl_m.*
+   CALL apri126_prbl_t_mask()
+   LET g_prbl_m_mask_n.* =  g_prbl_m.*
+   
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_prbl_m.prbl001,g_prbl_m.prbl002,g_prbl_m.prblunit,g_prbl_m.prbl003,g_prbl_m.prbl004, 
+       g_prbl_m.prbl005,g_prbl_m.prbl006,g_prbl_m.prblstus,g_prbl_m.prblownid,g_prbl_m.prblownid_desc, 
+       g_prbl_m.prblowndp,g_prbl_m.prblowndp_desc,g_prbl_m.prblcrtid,g_prbl_m.prblcrtid_desc,g_prbl_m.prblcrtdp, 
+       g_prbl_m.prblcrtdp_desc,g_prbl_m.prblcrtdt,g_prbl_m.prblmodid,g_prbl_m.prblmodid_desc,g_prbl_m.prblmoddt 
+
+   
+   #add-point:新增結束後
+   {<point name="insert.after"/>}
+   #end add-point 
+   
+   #功能已完成,通報訊息中心
+   CALL apri126_msgcentre_notify('insert')
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.insert_b" ver="6" status="" src="s" readonly="">
+    <![CDATA[#+ 新增單身後其他table連動
+PRIVATE FUNCTION apri126_insert_b(ps_table,ps_keys,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE ls_page     STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:insert_b段define
+   {<point name="insert_b.define" edit="s"/>}
+   #end add-point     
+   #add-point:insert_b段define(客製用)
+   {<point name="insert_b.define_customerization" edit="c"/>}
+   #end add-point     
+   
+   LET g_update = TRUE  
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前
+      {<point name="insert_b.before_insert" mark="Y"/>}
+      #end add-point 
+      INSERT INTO prbm_t
+                  (prbment,
+                   prbm001,
+                   prbm002
+                   ,prbmstus,prbm003,prbm004,prbm005,prbm006,prbm007,prbm008,prbm009,prbm010,prbmunit) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2]
+                   ,g_prbm_d[g_detail_idx].prbmstus,g_prbm_d[g_detail_idx].prbm003,g_prbm_d[g_detail_idx].prbm004, 
+                       g_prbm_d[g_detail_idx].prbm005,g_prbm_d[g_detail_idx].prbm006,g_prbm_d[g_detail_idx].prbm007, 
+                       g_prbm_d[g_detail_idx].prbm008,g_prbm_d[g_detail_idx].prbm009,g_prbm_d[g_detail_idx].prbm010, 
+                       g_prbm_d[g_detail_idx].prbmunit)
+      #add-point:insert_b段資料新增中
+      {<point name="insert_b.m_insert"/>}
+      #end add-point 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "prbm_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_prbm_d.insertElement(li_idx) 
+      END IF 
+ 
+      #add-point:insert_b段資料新增後
+      {<point name="insert_b.after_insert"/>}
+      #end add-point 
+   END IF
+   
+ 
+   
+ 
+   
+   #add-point:insert_b段other
+   {<point name="insert_b.other"/>}
+   #end add-point     
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.key_delete_b" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 上層單身刪除後, 連帶刪除下層單身key欄位
+PRIVATE FUNCTION apri126_key_delete_b(ps_keys_bak,ps_table)
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_table    STRING
+   #add-point:delete_b段define
+   {<point name="key_delete_b.define" edit="s"/>}
+   #end add-point
+   #add-point:delete_b段define(客製用)
+   {<point name="key_delete_b.define_customerization" edit="c"/>}
+   #end add-point
+   
+ 
+   
+   RETURN TRUE
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.key_update_b" ver="2" status="" src="s" readonly="">
+    <![CDATA[#+ 上層單身key欄位變動後, 連帶修正下層單身key欄位
+PRIVATE FUNCTION apri126_key_update_b(ps_keys_bak,ps_table)
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_table    STRING
+   #add-point:update_b段define
+   {<point name="key_update_b.define" edit="s"/>}
+   #end add-point
+   #add-point:update_b段define(客製用)
+   {<point name="key_update_b.define_customerization" edit="c"/>}
+   #end add-point
+   
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.lock_b" ver="5" status="" src="s" readonly="">
+    <![CDATA[#+ 連動lock其他單身table資料
+PRIVATE FUNCTION apri126_lock_b(ps_table,ps_page)
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:lock_b段define
+   {<point name="lock_b.define" edit="s"/>}
+   #end add-point   
+   #add-point:lock_b段define(客製用)
+   {<point name="lock_b.define_customerization" edit="c"/>}
+   #end add-point   
+    
+   #先刷新資料
+   #CALL apri126_b_fill()
+   
+   #鎖定整組table
+   #LET ls_group = "'1',"
+   #僅鎖定自身table
+   LET ls_group = "prbm_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      OPEN apri126_bcl USING g_enterprise,
+                                       g_prbl_m.prbl001,g_prbm_d[g_detail_idx].prbm002     
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "apri126_bcl" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+                                    
+ 
+   
+ 
+   
+   #add-point:lock_b段other
+   {<point name="lock_b.other"/>}
+   #end add-point  
+   
+   RETURN TRUE
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.main" ver="12" status="" src="s" readonly="">
+    <![CDATA[#應用 a26 樣板自動產生(Version:4)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define
+   {<point name="main.define" edit="s"/>}
+   #end add-point   
+   #add-point:main段define(客製用)
+   {<point name="main.define_customerization" edit="c"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("apr","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = " SELECT prbl001,prbl002,prblunit,prbl003,prbl004,prbl005,prbl006,prblstus,prblownid, 
+       '',prblowndp,'',prblcrtid,'',prblcrtdp,'',prblcrtdt,prblmodid,'',prblmoddt", 
+                      " FROM prbl_t",
+                      " WHERE prblent= ? AND prbl001=? FOR UPDATE"
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE apri126_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT UNIQUE t0.prbl001,t0.prbl002,t0.prblunit,t0.prbl003,t0.prbl004,t0.prbl005,t0.prbl006, 
+       t0.prblstus,t0.prblownid,t0.prblowndp,t0.prblcrtid,t0.prblcrtdp,t0.prblcrtdt,t0.prblmodid,t0.prblmoddt, 
+       t1.ooag011 ,t2.ooefl003 ,t3.ooag011 ,t4.ooefl003 ,t5.ooag011",
+               " FROM prbl_t t0",
+                              " LEFT JOIN ooag_t t1 ON t1.ooagent='"||g_enterprise||"' AND t1.ooag001=t0.prblownid  ",
+               " LEFT JOIN ooefl_t t2 ON t2.ooeflent='"||g_enterprise||"' AND t2.ooefl001=t0.prblowndp AND t2.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t3 ON t3.ooagent='"||g_enterprise||"' AND t3.ooag001=t0.prblcrtid  ",
+               " LEFT JOIN ooefl_t t4 ON t4.ooeflent='"||g_enterprise||"' AND t4.ooefl001=t0.prblcrtdp AND t4.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t5 ON t5.ooagent='"||g_enterprise||"' AND t5.ooag001=t0.prblmodid  ",
+ 
+               " WHERE t0.prblent = '" ||g_enterprise|| "' AND t0.prbl001 = ?"
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define
+   {<point name="main.after_refresh_sql"/>}
+   #end add-point
+   PREPARE apri126_master_referesh FROM g_sql
+ 
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apri126 WITH FORM cl_ap_formpath("apr",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL apri126_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL apri126_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_apri126
+      
+   END IF 
+   
+   CLOSE apri126_cl
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+]]>
+  </section>
+  <section id="apri126.mask_functions" ver="1" status="" src="s" readonly="">
+    <![CDATA[&include "erp/apr/apri126_mask.4gl"
+]]>
+  </section>
+  <section id="apri126.modify" ver="16" status="" src="s" readonly="">
+    <![CDATA[#+ 資料修改
+PRIVATE FUNCTION apri126_modify()
+   DEFINE l_new_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key  DYNAMIC ARRAY OF STRING
+   DEFINE l_wc2_table1          STRING
+ 
+ 
+   #add-point:modify段define
+   {<point name="modify.define" edit="s"/>}
+   #end add-point    
+   #add-point:modify段define(客製用)
+   {<point name="modify.define_customerization" edit="c"/>}
+   #end add-point    
+   
+   #保存單頭舊值
+   LET g_prbl_m_t.* = g_prbl_m.*
+   LET g_prbl_m_o.* = g_prbl_m.*
+   
+   IF g_prbl_m.prbl001 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   ERROR ""
+  
+   LET g_prbl001_t = g_prbl_m.prbl001
+ 
+   CALL s_transaction_begin()
+   
+   OPEN apri126_cl USING g_enterprise,g_prbl_m.prbl001
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN apri126_cl:" 
+      LET g_errparam.code   = STATUS 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      CLOSE apri126_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE apri126_master_referesh USING g_prbl_m.prbl001 INTO g_prbl_m.prbl001,g_prbl_m.prbl002,g_prbl_m.prblunit, 
+       g_prbl_m.prbl003,g_prbl_m.prbl004,g_prbl_m.prbl005,g_prbl_m.prbl006,g_prbl_m.prblstus,g_prbl_m.prblownid, 
+       g_prbl_m.prblowndp,g_prbl_m.prblcrtid,g_prbl_m.prblcrtdp,g_prbl_m.prblcrtdt,g_prbl_m.prblmodid, 
+       g_prbl_m.prblmoddt,g_prbl_m.prblownid_desc,g_prbl_m.prblowndp_desc,g_prbl_m.prblcrtid_desc,g_prbl_m.prblcrtdp_desc, 
+       g_prbl_m.prblmodid_desc
+   
+   #檢查是否允許此動作
+   IF NOT apri126_action_chk() THEN
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_prbl_m_mask_o.* =  g_prbl_m.*
+   CALL apri126_prbl_t_mask()
+   LET g_prbl_m_mask_n.* =  g_prbl_m.*
+   
+   
+   
+   #add-point:modify段show之前
+   {<point name="modify.before_show"/>}
+   #end add-point  
+   
+   #LET l_wc2_table1 = g_wc2_table1
+   #LET g_wc2_table1 = " 1=1"
+ 
+ 
+   
+   CALL apri126_show()
+   #add-point:modify段show之後
+   {<point name="modify.after_show"/>}
+   #end add-point
+   
+   #LET g_wc2_table1 = l_wc2_table1
+ 
+ 
+    
+   WHILE TRUE
+      LET g_prbl001_t = g_prbl_m.prbl001
+ 
+      
+      #寫入修改者/修改日期資訊(單頭)
+      LET g_prbl_m.prblmodid = g_user 
+LET g_prbl_m.prblmoddt = cl_get_current()
+LET g_prbl_m.prblmodid_desc = cl_get_username(g_prbl_m.prblmodid)
+      
+      #add-point:modify段修改前
+      {<point name="modify.before_input"/>}
+      #end add-point
+      
+      #欄位更改
+      LET g_loc = 'n'
+      LET g_update = FALSE
+      CALL apri126_input("u")
+      LET g_loc = 'n'
+ 
+      #add-point:modify段修改後
+      {<point name="modify.after_input"/>}
+      #end add-point
+      
+      IF g_update OR NOT INT_FLAG THEN
+         #若有modid跟moddt則進行update
+         UPDATE prbl_t SET (prblmodid,prblmoddt) = (g_prbl_m.prblmodid,g_prbl_m.prblmoddt)
+          WHERE prblent = g_enterprise AND prbl001 = g_prbl001_t
+ 
+      END IF
+    
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_prbl_m.* = g_prbl_m_t.*
+         CALL apri126_show()
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF 
+                  
+      #若單頭key欄位有變更
+      IF g_prbl_m.prbl001 != g_prbl001_t 
+ 
+      THEN
+         CALL s_transaction_begin()
+         
+         #add-point:單身fk修改前
+         {<point name="modify.body.b_fk_update" mark="Y"/>}
+         #end add-point
+         
+         #更新單身key值
+         UPDATE prbm_t SET prbm001 = g_prbl_m.prbl001
+ 
+          WHERE prbment = g_enterprise AND prbm001 = g_prbl001_t
+ 
+            
+         #add-point:單身fk修改中
+         {<point name="modify.body.m_fk_update"/>}
+         #end add-point
+ 
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "prbm_t" 
+               LET g_errparam.code   = "std-00009" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+            WHEN SQLCA.sqlcode #其他錯誤
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "prbm_t" 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+         END CASE
+         
+         #add-point:單身fk修改後
+         {<point name="modify.body.a_fk_update"/>}
+         #end add-point
+         
+ 
+         
+ 
+         
+         #UPDATE 多語言table key值
+         
+ 
+         CALL s_transaction_end('Y','0')
+      END IF
+    
+      EXIT WHILE
+   END WHILE
+ 
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL apri126_set_act_visible()   
+   CALL apri126_set_act_no_visible()
+ 
+   #組合新增資料的條件
+   LET g_add_browse = " prblent = '" ||g_enterprise|| "' AND",
+                      " prbl001 = '", g_prbl_m.prbl001, "' "
+ 
+   #填到對應位置
+   CALL apri126_browser_fill("")
+ 
+   CLOSE apri126_cl
+   
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL apri126_msgcentre_notify('modify')
+ 
+END FUNCTION   
+]]>
+  </section>
+  <section id="apri126.msgcentre_notify" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a66 樣板自動產生(Version:3)
+PRIVATE FUNCTION apri126_msgcentre_notify(lc_state)
+   DEFINE lc_state LIKE type_t.chr80
+   #add-point:msgcentre_notify段define
+   {<point name="msgcentre_notify.define" edit="s"/>}
+   #end add-point
+   #add-point:msgcentre_notify段define
+   {<point name="msgcentre_notify.define_customerization" edit="c"/>}
+   #end add-point   
+   
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = lc_state
+ 
+   #PK資料填寫
+   CALL apri126_set_pk_array()
+   #單頭資料填寫
+   LET g_msgparam.data[1] = util.JSON.stringify(g_prbl_m)
+ 
+   #add-point:msgcentre其他通知
+   {<point name="msgcentre_notify.process"/>}
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+ 
+]]>
+  </section>
+  <section id="apri126.other_dialog" ver="2" status="" src="s" readonly="">
+    <![CDATA[   
+]]>
+  </section>
+  <section id="apri126.other_function" ver="2" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="apri126.query" ver="7" status="" src="s" readonly="">
+    <![CDATA[#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION apri126_query()
+   DEFINE ls_wc STRING
+   #add-point:query段define
+   {<point name="query.define" edit="s"/>}
+   #end add-point   
+   #add-point:query段define(客製用)
+   {<point name="query.define_customerization" edit="c"/>}
+   #end add-point   
+   
+   #切換畫面
+   
+   LET ls_wc = g_wc
+   
+   LET INT_FLAG = 0
+   CALL cl_navigator_setting( g_current_idx, g_detail_cnt )
+   ERROR ""
+   
+   #清除畫面及相關資料
+   CLEAR FORM
+   CALL g_browser.clear()       
+   CALL g_prbm_d.clear()
+ 
+   
+   #add-point:query段other
+   {<point name="query.other"/>}
+   #end add-point   
+   
+   DISPLAY '' TO FORMONLY.idx
+   DISPLAY '' TO FORMONLY.cnt
+   DISPLAY '' TO FORMONLY.b_index
+   DISPLAY '' TO FORMONLY.b_count
+   DISPLAY '' TO FORMONLY.h_index
+   DISPLAY '' TO FORMONLY.h_count
+   
+   CALL apri126_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      LET g_wc = ls_wc
+      CALL apri126_browser_fill("")
+      CALL apri126_fetch("")
+      RETURN
+   END IF
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||") AND ("||g_wc2||")")
+   
+   #搜尋後資料初始化 
+   LET g_detail_cnt  = 0
+   LET g_current_idx = 1
+   LET g_current_row = 0
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_error_show  = 1
+   LET g_wc_filter   = ""
+   LET l_ac = 1
+   CALL FGL_SET_ARR_CURR(1)
+   CALL apri126_browser_fill("F")
+         
+   IF g_browser_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "-100" 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   ELSE
+      CALL apri126_fetch("F") 
+      #顯示單身筆數
+      CALL apri126_idx_chk()
+   END IF
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.reproduce" ver="17" status="" src="s" readonly="">
+    <![CDATA[#+ 資料複製
+PRIVATE FUNCTION apri126_reproduce()
+   DEFINE l_newno     LIKE prbl_t.prbl001 
+   DEFINE l_oldno     LIKE prbl_t.prbl001 
+ 
+   DEFINE l_master    RECORD LIKE prbl_t.*
+   DEFINE l_detail    RECORD LIKE prbm_t.*
+ 
+ 
+   DEFINE l_cnt       LIKE type_t.num10
+   #add-point:reproduce段define
+   {<point name="reproduce.define" edit="s"/>}
+   #end add-point   
+   #add-point:reproduce段define(客製用)
+   {<point name="reproduce.define_customerization" edit="c"/>}
+   #end add-point   
+   
+   #切換畫面
+   
+   LET g_master_insert = FALSE
+   
+   IF g_prbl_m.prbl001 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+    
+   LET g_prbl001_t = g_prbl_m.prbl001
+ 
+    
+   LET g_prbl_m.prbl001 = ""
+ 
+ 
+   CALL cl_set_head_visible("","YES")
+ 
+   #公用欄位給予預設值
+   #應用 a14 樣板自動產生(Version:4)    
+      #公用欄位新增給值  
+      LET g_prbl_m.prblownid = g_user
+      LET g_prbl_m.prblowndp = g_dept
+      LET g_prbl_m.prblcrtid = g_user
+      LET g_prbl_m.prblcrtdp = g_dept 
+      LET g_prbl_m.prblcrtdt = cl_get_current()
+      LET g_prbl_m.prblmodid = g_user
+      LET g_prbl_m.prblmoddt = cl_get_current()
+      LET g_prbl_m.prblstus = 'N'
+ 
+ 
+   
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前
+   {<point name="reproduce.head.b_input"/>}
+   #end add-point
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:2)
+	  #根據當下狀態碼顯示圖片
+      CASE g_prbl_m.prblstus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/open.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/valid.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/void.png")
+         
+      END CASE
+ 
+ 
+   
+   #清空key欄位的desc
+   
+   
+   CALL apri126_input("r")
+   
+   IF INT_FLAG AND NOT g_master_insert THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = '' 
+      LET g_errparam.code   = 9001 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      CALL s_transaction_end('N','0')
+      LET INT_FLAG = 0
+      DISPLAY g_detail_cnt  TO FORMONLY.h_count    #總筆數
+      DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+      LET INT_FLAG = 0
+      INITIALIZE g_prbl_m.* TO NULL
+      INITIALIZE g_prbm_d TO NULL
+ 
+      #add-point:複製取消後
+      {<point name="reproduce.cancel" />}
+      #end add-point
+      CALL apri126_show()
+      RETURN
+   END IF
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL apri126_set_act_visible()   
+   CALL apri126_set_act_no_visible()
+   
+   #將新增的資料併入搜尋條件中
+   LET g_prbl001_t = g_prbl_m.prbl001
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " prblent = '" ||g_enterprise|| "' AND",
+                      " prbl001 = '", g_prbl_m.prbl001, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL apri126_browser_fill("")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   #add-point:完成複製段落後
+   {<point name="reproduce.after_reproduce" />}
+   #end add-point
+   
+   CALL apri126_idx_chk()
+   
+   #功能已完成,通報訊息中心
+   CALL apri126_msgcentre_notify('reproduce')
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.set_act_no_visible" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 單頭權限關閉
+PRIVATE FUNCTION apri126_set_act_no_visible()
+   #add-point:set_act_no_visible段define
+   {<point name="set_act_no_visible.define" edit="s"/>}
+   #end add-point   
+   #add-point:set_act_no_visible段define(客製用)
+   {<point name="set_act_no_visible.define_customerization" edit="c"/>}
+   #end add-point   
+   #add-point:set_act_no_visible段
+   {<point name="set_act_no_visible.set_act_no_visible"/>}
+   #end add-point   
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.set_act_no_visible_b" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 單身權限關閉
+PRIVATE FUNCTION apri126_set_act_no_visible_b()
+   #add-point:set_act_no_visible_b段define
+   {<point name="set_act_no_visible_b.define" edit="s"/>}
+   #end add-point   
+   #add-point:set_act_no_visible_b段define(客製用)
+   {<point name="set_act_no_visible_b.define_customerization" edit="c"/>}
+   #end add-point   
+   #add-point:set_act_no_visible_b段
+   {<point name="set_act_no_visible_b.set_act_no_visible_b"/>}
+   #end add-point   
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.set_act_visible" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 單頭權限開啟
+PRIVATE FUNCTION apri126_set_act_visible()
+   #add-point:set_act_visible段define
+   {<point name="set_act_visible.define" edit="s"/>}
+   #end add-point   
+   #add-point:set_act_visible段define(客製用)
+   {<point name="set_act_visible.define_customerization" edit="c"/>}
+   #end add-point   
+   #add-point:set_act_visible段
+   {<point name="set_act_visible.set_act_visible"/>}
+   #end add-point   
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.set_act_visible_b" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 單身權限開啟
+PRIVATE FUNCTION apri126_set_act_visible_b()
+   #add-point:set_act_visible_b段define
+   {<point name="set_act_visible_b.define" edit="s"/>}
+   #end add-point   
+   #add-point:set_act_visible_b段define(客製用)
+   {<point name="set_act_visible_b.define_customerization" edit="c"/>}
+   #end add-point   
+   #add-point:set_act_visible_b段
+   {<point name="set_act_visible_b.set_act_visible_b"/>}
+   #end add-point   
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.set_entry" ver="5" status="" src="s" readonly="">
+    <![CDATA[#+ 單頭欄位開啟設定
+PRIVATE FUNCTION apri126_set_entry(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1  
+   #add-point:set_entry段define
+   {<point name="set_entry.define" edit="s"/>}
+   #end add-point       
+   #add-point:set_entry段define(客製用)
+   {<point name="set_entry.define_customerization" edit="c"/>}
+   #end add-point       
+   
+   CALL cl_set_comp_entry("",TRUE)
+   
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("prbl001",TRUE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry段欄位控制
+      {<point name="set_entry.field_control"/>}
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry段欄位控制後
+   {<point name="set_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.set_entry_b" ver="4" status="" src="s" readonly="">
+    <![CDATA[#+ 單身欄位開啟設定
+PRIVATE FUNCTION apri126_set_entry_b(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_entry_b段define
+   {<point name="set_entry_b.define" edit="s"/>}
+   #end add-point     
+   #add-point:set_entry_b段define(客製用)
+   {<point name="set_entry_b.define_customerization" edit="c"/>}
+   #end add-point     
+    
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("",TRUE)
+      #add-point:set_entry段欄位控制
+      {<point name="set_entry_b.field_control"/>}
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry_b段
+   {<point name="set_entry_b.set_entry_b"/>}
+   #end add-point  
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.set_no_entry" ver="6" status="" src="s" readonly="">
+    <![CDATA[#+ 單頭欄位關閉設定
+PRIVATE FUNCTION apri126_set_no_entry(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry段define
+   {<point name="set_no_entry.define" edit="s"/>}
+   #end add-point     
+   #add-point:set_no_entry段define(客製用)
+   {<point name="set_no_entry.define_customerization" edit="c"/>}
+   #end add-point     
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("prbl001",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry段欄位控制
+      {<point name="set_no_entry.field_control"/>}
+      #end add-point 
+   END IF 
+   
+   IF p_cmd = 'u' THEN
+      CALL cl_set_comp_entry("",FALSE)
+   END IF 
+   
+   #add-point:set_no_entry段欄位控制後
+   {<point name="set_no_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.set_no_entry_b" ver="4" status="" src="s" readonly="">
+    <![CDATA[#+ 單身欄位關閉設定
+PRIVATE FUNCTION apri126_set_no_entry_b(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry_b段define
+   {<point name="set_no_entry_b.define" edit="s"/>}
+   #end add-point    
+   #add-point:set_no_entry_b段define(客製用)
+   {<point name="set_no_entry_b.define_customerization" edit="c"/>}
+   #end add-point    
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("",FALSE)
+      #add-point:set_no_entry_b段欄位控制
+      {<point name="set_no_entry_b.field_control"/>}
+      #end add-point 
+   END IF 
+   
+   #add-point:set_no_entry_b段
+   {<point name="set_no_entry_b.set_no_entry_b"/>}
+   #end add-point     
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.set_pk_array" ver="3" status="" src="s" readonly="">
+    <![CDATA[   #應用 a51 樣板自動產生(Version:5)
+#+ 給予pk_array內容
+PRIVATE FUNCTION apri126_set_pk_array()
+   #add-point:set_pk_array段define
+   {<point name="set_pk_array.define" edit="s"/>}
+   #end add-point
+   #add-point:set_pk_array段define
+   {<point name="set_pk_array.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:set_pk_array段之前
+   {<point name="set_pk_array.before"/>}
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_prbl_m.prbl001
+   LET g_pk_array[1].column = 'prbl001'
+ 
+   
+   #add-point:set_pk_array段之後
+   {<point name="set_pk_array.after"/>}
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+]]>
+  </section>
+  <section id="apri126.show" ver="11" status="" src="s" readonly="">
+    <![CDATA[#+ 單頭資料重新顯示及單身資料重抓
+PRIVATE FUNCTION apri126_show()
+   DEFINE l_ac_t    LIKE type_t.num10
+   #add-point:show段define
+   {<point name="show.define" edit="s"/>}
+   #end add-point  
+   #add-point:show段define(客製用)
+   {<point name="show.define_customerization" edit="c"/>}
+   #end add-point  
+   
+   #add-point:show段之前
+   {<point name="show.before"/>}
+   #end add-point
+   
+   
+   
+   IF g_bfill = "Y" THEN
+      CALL apri126_b_fill() #單身填充
+      CALL apri126_b_fill2('0') #單身填充
+   END IF
+     
+   #帶出公用欄位reference值
+   #應用 a12 樣板自動產生(Version:3)
+ 
+ 
+   
+   #顯示followup圖示
+   #應用 a48 樣板自動產生(Version:2)
+   CALL apri126_set_pk_array()
+   #add-point:ON ACTION agendum
+   {<point name="show.follow_pic"/>}
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+   
+   LET l_ac_t = l_ac
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference
+   {<point name="show.head.reference"/>}
+   #end add-point
+   
+   #遮罩相關處理
+   LET g_prbl_m_mask_o.* =  g_prbl_m.*
+   CALL apri126_prbl_t_mask()
+   LET g_prbl_m_mask_n.* =  g_prbl_m.*
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_prbl_m.prbl001,g_prbl_m.prbl002,g_prbl_m.prblunit,g_prbl_m.prbl003,g_prbl_m.prbl004, 
+       g_prbl_m.prbl005,g_prbl_m.prbl006,g_prbl_m.prblstus,g_prbl_m.prblownid,g_prbl_m.prblownid_desc, 
+       g_prbl_m.prblowndp,g_prbl_m.prblowndp_desc,g_prbl_m.prblcrtid,g_prbl_m.prblcrtid_desc,g_prbl_m.prblcrtdp, 
+       g_prbl_m.prblcrtdp_desc,g_prbl_m.prblcrtdt,g_prbl_m.prblmodid,g_prbl_m.prblmodid_desc,g_prbl_m.prblmoddt 
+
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:2)
+	  #根據當下狀態碼顯示圖片
+      CASE g_prbl_m.prblstus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/open.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/valid.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/void.png")
+         
+      END CASE
+ 
+ 
+   
+   #讀入ref值(單身)
+   FOR l_ac = 1 TO g_prbm_d.getLength()
+      #add-point:show段單身reference
+      {<point name="show.body.reference"/>}
+      #end add-point
+   END FOR
+   
+ 
+   
+    
+   
+   #add-point:show段other
+   {<point name="show.other"/>}
+   #end add-point  
+   
+   LET l_ac = l_ac_t
+   
+   #移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()     
+ 
+   CALL apri126_detail_show()
+ 
+   #add-point:show段之後
+   {<point name="show.after"/>}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.signature" ver="1" status="" src="s" readonly="">
+    <![CDATA[   
+]]>
+  </section>
+  <section id="apri126.state_change" ver="8" status="" src="s" readonly="">
+    <![CDATA[   #應用 a09 樣板自動產生(Version:12)
+#+ 確認碼變更 
+PRIVATE FUNCTION apri126_statechange()
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:statechange段define
+   {<point name="statechange.define" edit="s"/>}
+   #end add-point  
+   #add-point:statechange段define(客製用)
+   {<point name="statechange.define_customerization" edit="c"/>}
+   #end add-point  
+   
+   #add-point:statechange段開始前
+   {<point name="statechange.before"/>}
+   #end add-point  
+   
+   ERROR ""     #清空畫面右下側ERROR區塊
+ 
+   IF g_prbl_m.prbl001 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   CALL s_transaction_begin()
+   
+   OPEN apri126_cl USING g_enterprise,g_prbl_m.prbl001
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN apri126_cl:" 
+      LET g_errparam.code   = STATUS 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      CLOSE apri126_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #顯示最新的資料
+   EXECUTE apri126_master_referesh USING g_prbl_m.prbl001 INTO g_prbl_m.prbl001,g_prbl_m.prbl002,g_prbl_m.prblunit, 
+       g_prbl_m.prbl003,g_prbl_m.prbl004,g_prbl_m.prbl005,g_prbl_m.prbl006,g_prbl_m.prblstus,g_prbl_m.prblownid, 
+       g_prbl_m.prblowndp,g_prbl_m.prblcrtid,g_prbl_m.prblcrtdp,g_prbl_m.prblcrtdt,g_prbl_m.prblmodid, 
+       g_prbl_m.prblmoddt,g_prbl_m.prblownid_desc,g_prbl_m.prblowndp_desc,g_prbl_m.prblcrtid_desc,g_prbl_m.prblcrtdp_desc, 
+       g_prbl_m.prblmodid_desc
+ 
+   #檢查是否允許此動作
+   IF NOT apri126_action_chk() THEN
+      CLOSE apri126_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_prbl_m.prbl001,g_prbl_m.prbl002,g_prbl_m.prblunit,g_prbl_m.prbl003,g_prbl_m.prbl004, 
+       g_prbl_m.prbl005,g_prbl_m.prbl006,g_prbl_m.prblstus,g_prbl_m.prblownid,g_prbl_m.prblownid_desc, 
+       g_prbl_m.prblowndp,g_prbl_m.prblowndp_desc,g_prbl_m.prblcrtid,g_prbl_m.prblcrtid_desc,g_prbl_m.prblcrtdp, 
+       g_prbl_m.prblcrtdp_desc,g_prbl_m.prblcrtdt,g_prbl_m.prblmodid,g_prbl_m.prblmodid_desc,g_prbl_m.prblmoddt 
+
+ 
+   CASE g_prbl_m.prblstus
+      WHEN "N"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/open.png")
+      WHEN "Y"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/valid.png")
+      WHEN "X"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/void.png")
+      
+   END CASE
+ 
+   #add-point:資料刷新後
+   {<point name="statechange.after_refresh"/>}
+   #end add-point
+ 
+   MENU "" ATTRIBUTES (STYLE="popup")
+      BEFORE MENU
+         HIDE OPTION "approved"
+         HIDE OPTION "rejection"
+         CASE g_prbl_m.prblstus
+            
+            WHEN "N"
+               HIDE OPTION "open"
+            WHEN "Y"
+               HIDE OPTION "valid"
+            WHEN "X"
+               HIDE OPTION "void"
+         END CASE
+     
+      #add-point:menu前
+      {<point name="statechange.before_menu"/>}
+      #end add-point
+      
+      
+	  
+      ON ACTION open
+         IF cl_auth_chk_act("open") THEN
+            LET lc_state = "N"
+            #add-point:action控制
+            {<point name="statechange.open"/>}
+            #end add-point
+         END IF
+         EXIT MENU
+      ON ACTION valid
+         IF cl_auth_chk_act("valid") THEN
+            LET lc_state = "Y"
+            #add-point:action控制
+            {<point name="statechange.valid"/>}
+            #end add-point
+         END IF
+         EXIT MENU
+      ON ACTION void
+         IF cl_auth_chk_act("void") THEN
+            LET lc_state = "X"
+            #add-point:action控制
+            {<point name="statechange.void"/>}
+            #end add-point
+         END IF
+         EXIT MENU
+ 
+      #add-point:stus控制
+      {<point name="statechange.more_control"/>}
+      #end add-point
+      
+   END MENU
+   
+   #確認被選取的狀態碼在清單中
+   IF (lc_state <> "N" 
+      AND lc_state <> "Y"
+      AND lc_state <> "X"
+      ) OR 
+      g_prbl_m.prblstus = lc_state OR cl_null(lc_state) THEN
+      CLOSE apri126_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:stus修改前
+   {<point name="statechange.b_update"/>}
+   #end add-point
+   
+   LET g_prbl_m.prblmodid = g_user
+   LET g_prbl_m.prblmoddt = cl_get_current()
+   LET g_prbl_m.prblstus = lc_state
+   
+   #異動狀態碼欄位/修改人/修改日期
+   UPDATE prbl_t 
+      SET (prblstus,prblmodid,prblmoddt) 
+        = (g_prbl_m.prblstus,g_prbl_m.prblmodid,g_prbl_m.prblmoddt)     
+    WHERE prblent = g_enterprise AND prbl001 = g_prbl_m.prbl001
+ 
+    
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+   ELSE
+      CASE lc_state
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/open.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/valid.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/void.png")
+         
+      END CASE
+    
+      #撈取異動後的資料
+      EXECUTE apri126_master_referesh USING g_prbl_m.prbl001 INTO g_prbl_m.prbl001,g_prbl_m.prbl002, 
+          g_prbl_m.prblunit,g_prbl_m.prbl003,g_prbl_m.prbl004,g_prbl_m.prbl005,g_prbl_m.prbl006,g_prbl_m.prblstus, 
+          g_prbl_m.prblownid,g_prbl_m.prblowndp,g_prbl_m.prblcrtid,g_prbl_m.prblcrtdp,g_prbl_m.prblcrtdt, 
+          g_prbl_m.prblmodid,g_prbl_m.prblmoddt,g_prbl_m.prblownid_desc,g_prbl_m.prblowndp_desc,g_prbl_m.prblcrtid_desc, 
+          g_prbl_m.prblcrtdp_desc,g_prbl_m.prblmodid_desc
+      
+      #將資料顯示到畫面上
+      DISPLAY BY NAME g_prbl_m.prbl001,g_prbl_m.prbl002,g_prbl_m.prblunit,g_prbl_m.prbl003,g_prbl_m.prbl004, 
+          g_prbl_m.prbl005,g_prbl_m.prbl006,g_prbl_m.prblstus,g_prbl_m.prblownid,g_prbl_m.prblownid_desc, 
+          g_prbl_m.prblowndp,g_prbl_m.prblowndp_desc,g_prbl_m.prblcrtid,g_prbl_m.prblcrtid_desc,g_prbl_m.prblcrtdp, 
+          g_prbl_m.prblcrtdp_desc,g_prbl_m.prblcrtdt,g_prbl_m.prblmodid,g_prbl_m.prblmodid_desc,g_prbl_m.prblmoddt 
+
+   END IF
+ 
+   #add-point:stus修改後
+   {<point name="statechange.a_update"/>}
+   #end add-point
+ 
+   #add-point:statechange段結束前
+   {<point name="statechange.after"/>}
+   #end add-point  
+ 
+   CLOSE apri126_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL apri126_msgcentre_notify('statechange:'||lc_state)
+   
+END FUNCTION
+ 
+ 
+]]>
+  </section>
+  <section id="apri126.status_show" ver="1" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION apri126_status_show()
+   #add-point:status_show段define
+   {<point name="status_show.define" edit="s"/>}
+   #end add-point
+   #add-point:status_show段define(客製用)
+   {<point name="status_show.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:status_show段status_show
+   {<point name="status_show.status_show"/>}
+   #end add-point
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.ui_browser_refresh" ver="7" status="" src="s" readonly="">
+    <![CDATA[#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION apri126_ui_browser_refresh()
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define
+   {<point name="ui_browser_refresh.define" edit="s"/>}
+   #end add-point    
+   #add-point:ui_browser_refresh段define(客製用)
+   {<point name="ui_browser_refresh.define_customerization" edit="c"/>}
+   #end add-point    
+   
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_header_cnt  = g_browser.getLength()
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_prbl001 = g_prbl_m.prbl001 
+ 
+         THEN
+         CALL g_browser.deleteElement(l_i)
+         EXIT FOR
+      END IF
+   END FOR
+   LET g_browser_cnt = g_browser_cnt - 1
+   LET g_header_cnt = g_header_cnt - 1
+    
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+      CLEAR FORM
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+   
+   #add-point:ui_browser_refresh段after
+   {<point name="ui_browser_refresh.after"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.ui_detailshow" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 單身資料重新顯示
+PRIVATE FUNCTION apri126_ui_detailshow()
+   #add-point:ui_detailshow段define
+   {<point name="ui_detailshow.define" edit="s"/>}
+   #end add-point    
+   #add-point:ui_detailshow段define(客製用)
+   {<point name="ui_detailshow.define_customerization" edit="c"/>}
+   #end add-point    
+   
+   #add-point:ui_detailshow段before
+   {<point name="ui_detailshow.before"/>}
+   #end add-point    
+   
+   IF g_curr_diag IS NOT NULL THEN
+      CALL g_curr_diag.setCurrentRow("s_detail1",g_detail_idx)      
+ 
+   END IF
+   
+   #add-point:ui_detailshow段after
+   {<point name="ui_detailshow.after"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.ui_dialog" ver="21" status="" src="s" readonly="">
+    <![CDATA[#+ 功能選單
+PRIVATE FUNCTION apri126_ui_dialog()
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE ls_wc      STRING
+   DEFINE lb_first   BOOLEAN
+   DEFINE la_wc      DYNAMIC ARRAY OF RECORD
+          tableid    STRING,
+          wc         STRING
+          END RECORD
+   DEFINE la_param   RECORD
+          prog       STRING,
+          actionid   STRING,
+          background LIKE type_t.chr1,
+          param      DYNAMIC ARRAY OF STRING
+          END RECORD
+   DEFINE ls_js      STRING
+   DEFINE la_output  DYNAMIC ARRAY OF STRING   #報表元件鬆耦合使用
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define" edit="s"/>}
+   #end add-point
+   #add-point:ui_dialog段define(客製用)
+   {<point name="ui_dialog.define_customerization" edit="c"/>}
+   #end add-point
+   
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+ 
+   
+   #action default動作
+   #應用 a42 樣板自動產生(Version:2)
+   #進入程式時預設執行的動作
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice="insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL apri126_insert()
+            #add-point:ON ACTION insert
+            {<point name="menu.default.insert" />}
+            #END add-point
+         END IF
+ 
+      #add-point:action default自訂
+      {<point name="ui_dialog.action_default"/>}
+      #end add-point
+      OTHERWISE
+   END CASE
+ 
+ 
+   
+   LET lb_first = TRUE
+   
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE 
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_browser.clear()       
+         INITIALIZE g_prbl_m.* TO NULL
+         CALL g_prbm_d.clear()
+ 
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL apri126_init()
+      END IF
+   
+            
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+    
+         DISPLAY ARRAY g_prbm_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+    
+            BEFORE ROW
+               #顯示單身筆數
+               CALL apri126_idx_chk()
+               #確定當下選擇的筆數
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_detail_idx = l_ac
+               
+               #add-point:page1, before row動作
+               {<point name="ui_dialog.page1.before_row"/>}
+               #end add-point
+               
+            BEFORE DISPLAY
+               #如果一直都在單身1則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_detail_idx)
+               END IF
+               LET g_loc = 'm'
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_current_page = 1
+               #顯示單身筆數
+               CALL apri126_idx_chk()
+               #add-point:page1自定義行為
+               {<point name="ui_dialog.page1.before_display"/>}
+               #end add-point
+               
+            #自訂ACTION(detail_show,page_1)
+            
+               
+            #add-point:page1自定義行為
+            {<point name="ui_dialog.page1.action"/>}
+            #end add-point
+               
+         END DISPLAY
+        
+ 
+         
+ 
+         
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         
+      
+         BEFORE DIALOG
+            #先填充browser資料
+            CALL apri126_browser_fill("")
+            CALL cl_notice()
+            CALL cl_navigator_setting(g_current_idx, g_detail_cnt)
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            LET g_current_sw = FALSE
+            #回歸舊筆數位置 (回到當時異動的筆數)
+            
+            #確保g_current_idx位於正常區間內
+            #小於,等於0則指到第1筆
+            IF g_current_idx <= 0 THEN
+               LET g_current_idx = 1
+            END IF
+            #超過最大筆數則指到最後1筆
+            IF g_current_idx > g_browser.getLength() THEN
+               LEt g_current_idx = g_browser.getLength()
+            END IF 
+            
+            LET g_current_sw = TRUE
+            LET g_current_row = g_current_idx #目前指標
+            
+            #有資料才進行fetch
+            IF g_current_idx <> 0 THEN
+               CALL apri126_fetch('') # reload data
+            END IF
+            #LET g_detail_idx = 1
+            CALL apri126_ui_detailshow() #Setting the current row 
+            
+            #筆數顯示
+            LET g_current_page = 1
+            CALL apri126_idx_chk()
+            CALL cl_ap_performance_cal()
+            #add-point:ui_dialog段before_dialog2
+            {<point name="ui_dialog.before_dialog2"/>}
+            #end add-point
+ 
+         #狀態碼切換
+         ON ACTION statechange
+            LET g_action_choice = "statechange"
+            CALL apri126_statechange()
+            #根據資料狀態切換action狀態
+            CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+            CALL apri126_set_act_visible()   
+            CALL apri126_set_act_no_visible()
+            IF NOT (g_prbl_m.prbl001 IS NULL
+ 
+              ) THEN
+               #組合條件
+               LET g_add_browse = " prblent = '" ||g_enterprise|| "' AND",
+                                  " prbl001 = '", g_prbl_m.prbl001, "' "
+ 
+               #填到對應位置
+               CALL apri126_browser_fill("")
+            END IF
+         
+          
+         #查詢方案選擇 
+         ON ACTION queryplansel
+            CALL cl_dlg_qryplan_select() RETURNING ls_wc
+            #不是空條件才寫入g_wc跟重新找資料
+            IF NOT cl_null(ls_wc) THEN
+               CALL util.JSON.parse(ls_wc, la_wc)
+               INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+ 
+               FOR li_idx = 1 TO la_wc.getLength()
+                  CASE
+                     WHEN la_wc[li_idx].tableid = "prbl_t" 
+                        LET g_wc = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "prbm_t" 
+                        LET g_wc2_table1 = la_wc[li_idx].wc
+ 
+                     WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                        LET g_wc2_extend = la_wc[li_idx].wc
+                  END CASE
+               END FOR
+               IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1) 
+ 
+                  OR NOT cl_null(g_wc2_extend)
+                  THEN
+                  #組合g_wc2
+                  IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+                     LET g_wc2 = g_wc2_table1
+                  END IF
+ 
+                  IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+                  END IF
+ 
+                  IF g_wc2.subString(1,5) = " AND " THEN
+                     LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+                  END IF
+               END IF
+               CALL apri126_browser_fill("F")   #browser_fill()會將notice區塊清空
+            END IF
+         
+         #查詢方案選擇
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               CALL util.JSON.parse(ls_wc, la_wc)
+               INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+ 
+               FOR li_idx = 1 TO la_wc.getLength()
+                  CASE
+                     WHEN la_wc[li_idx].tableid = "prbl_t" 
+                        LET g_wc = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "prbm_t" 
+                        LET g_wc2_table1 = la_wc[li_idx].wc
+ 
+                     WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                        LET g_wc2_extend = la_wc[li_idx].wc
+                  END CASE
+               END FOR
+               IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1)
+ 
+                  OR NOT cl_null(g_wc2_extend)
+                  THEN
+                  IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+                     LET g_wc2 = g_wc2_table1
+                  END IF
+ 
+                  IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+                  END IF
+                  IF g_wc2.subString(1,5) = " AND " THEN
+                     LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+                  END IF
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL apri126_browser_fill("F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "-100" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL apri126_fetch("F")
+                  END IF
+               END IF
+            END IF
+            #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+          
+         
+         
+         ON ACTION first
+            LET g_action_choice = "fetch"
+            CALL apri126_fetch('F')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL apri126_idx_chk()
+            
+         ON ACTION previous
+            LET g_action_choice = "fetch"
+            CALL apri126_fetch('P')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL apri126_idx_chk()
+            
+         ON ACTION jump
+            LET g_action_choice = "fetch"
+            CALL apri126_fetch('/')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL apri126_idx_chk()
+            
+         ON ACTION next
+            LET g_action_choice = "fetch"
+            CALL apri126_fetch('N')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL apri126_idx_chk()
+            
+         ON ACTION last
+            LET g_action_choice = "fetch"
+            CALL apri126_fetch('L')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL apri126_idx_chk()
+          
+         #excel匯出功能          
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               #browser
+               CALL g_export_node.clear()
+               IF g_main_hidden = 1 THEN
+                  LET g_export_node[1] = base.typeInfo.create(g_browser)
+                  LET g_export_id[1]   = "s_browse"
+                  CALL cl_export_to_excel()
+               #非browser
+               ELSE
+                  LET g_export_node[1] = base.typeInfo.create(g_prbm_d)
+                  LET g_export_id[1]   = "s_detail1"
+ 
+                  #add-point:ON ACTION exporttoexcel
+                  {<point name="menu.exporttoexcel" />}
+                  #END add-point
+                  CALL cl_export_to_excel_getpage()
+                  CALL cl_export_to_excel()
+               END IF
+            END IF
+        
+         ON ACTION close
+            LET INT_FLAG = FALSE
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+          
+         ON ACTION exit
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+    
+         #主頁摺疊
+         ON ACTION mainhidden       
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+               CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+               CALL cl_notice()
+            END IF
+            
+       
+         #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+         ON ACTION controls     
+            IF g_header_hidden THEN
+               CALL gfrm_curr.setElementHidden("vb_master",0)
+               CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+               LET g_header_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("vb_master",1)
+               CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+               LET g_header_hidden = 1     #hidden     
+            END IF
+    
+         
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL apri126_modify()
+               #add-point:ON ACTION modify
+               {<point name="menu.modify" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = g_curr_diag.getCurrentItem()
+               CALL apri126_modify()
+               #add-point:ON ACTION modify_detail
+               {<point name="menu.modify_detail" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL apri126_delete()
+               #add-point:ON ACTION delete
+               {<point name="menu.delete" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL apri126_insert()
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL apri126_reproduce()
+               #add-point:ON ACTION reproduce
+               {<point name="menu.reproduce" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL apri126_query()
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+               #應用 a59 樣板自動產生(Version:2)  
+               CALL g_curr_diag.setCurrentRow("s_detail1",1)
+ 
+ 
+ 
+            END IF
+ 
+ 
+ 
+         
+         #應用 a46 樣板自動產生(Version:2)
+         #新增相關文件
+         ON ACTION related_document
+            CALL apri126_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document
+               {<point name="ui_dialog.dialog.related_document"/>}
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL apri126_set_pk_array()
+            #add-point:ON ACTION agendum
+            {<point name="ui_dialog.dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL apri126_set_pk_array()
+            #add-point:ON ACTION followup
+            {<point name="ui_dialog.dialog.followup"/>}
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+         
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+    
+         #交談指令共用ACTION
+         &include "common_action.4gl" 
+            CONTINUE DIALOG
+      END DIALOG
+    
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #add-point:ui_dialog段離開dialog前
+         {<point name="ui_dialog.b_exit"/>}
+         #end add-point
+         EXIT WHILE
+      END IF
+    
+   END WHILE    
+      
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+    
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.ui_headershow" ver="6" status="" src="s" readonly="">
+    <![CDATA[#+ 單頭資料重新顯示
+PRIVATE FUNCTION apri126_ui_headershow()
+   #add-point:ui_headershow段define
+   {<point name="ui_headershow.define" edit="s"/>}
+   #end add-point    
+   #add-point:ui_headershow段define(客製用)
+   {<point name="ui_headershow.define_customerization" edit="c"/>}
+   #end add-point    
+   
+   LET g_prbl_m.prbl001 = g_browser[g_current_idx].b_prbl001   
+ 
+   EXECUTE apri126_master_referesh USING g_prbl_m.prbl001 INTO g_prbl_m.prbl001,g_prbl_m.prbl002,g_prbl_m.prblunit, 
+       g_prbl_m.prbl003,g_prbl_m.prbl004,g_prbl_m.prbl005,g_prbl_m.prbl006,g_prbl_m.prblstus,g_prbl_m.prblownid, 
+       g_prbl_m.prblowndp,g_prbl_m.prblcrtid,g_prbl_m.prblcrtdp,g_prbl_m.prblcrtdt,g_prbl_m.prblmodid, 
+       g_prbl_m.prblmoddt,g_prbl_m.prblownid_desc,g_prbl_m.prblowndp_desc,g_prbl_m.prblcrtid_desc,g_prbl_m.prblcrtdp_desc, 
+       g_prbl_m.prblmodid_desc
+   CALL apri126_prbl_t_mask()
+   CALL apri126_show()
+      
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.unlock_b" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION apri126_unlock_b(ps_table,ps_page)
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:unlock_b段define
+   {<point name="unlock_b.define" edit="s"/>}
+   #end add-point  
+   #add-point:unlock_b段define(客製用)
+   {<point name="unlock_b.define_customerization" edit="c"/>}
+   #end add-point  
+    
+   LET ls_group = "'1',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE apri126_bcl
+   END IF
+   
+ 
+   
+ 
+ 
+   #add-point:unlock_b段other
+   {<point name="unlock_b.other"/>}
+   #end add-point  
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apri126.update_b" ver="7" status="" src="s" readonly="">
+    <![CDATA[#+ 修改單身後其他table連動
+PRIVATE FUNCTION apri126_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   DEFINE ps_table         STRING
+   DEFINE ps_page          STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num10 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define
+   {<point name="update_b.define" edit="s"/>}
+   #end add-point   
+   #add-point:update_b段define(客製用)
+   {<point name="update_b.define_customerization" edit="c"/>}
+   #end add-point   
+   
+   LET g_update = TRUE   
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "prbm_t" THEN
+      #add-point:update_b段修改前
+      {<point name="update_b.before_update" mark="Y"/>}
+      #end add-point 
+      
+      #將遮罩欄位還原
+      CALL apri126_prbm_t_mask_restore('restore_mask_o')
+               
+      UPDATE prbm_t 
+         SET (prbm001,
+              prbm002
+              ,prbmstus,prbm003,prbm004,prbm005,prbm006,prbm007,prbm008,prbm009,prbm010,prbmunit) 
+              = 
+             (ps_keys[1],ps_keys[2]
+              ,g_prbm_d[g_detail_idx].prbmstus,g_prbm_d[g_detail_idx].prbm003,g_prbm_d[g_detail_idx].prbm004, 
+                  g_prbm_d[g_detail_idx].prbm005,g_prbm_d[g_detail_idx].prbm006,g_prbm_d[g_detail_idx].prbm007, 
+                  g_prbm_d[g_detail_idx].prbm008,g_prbm_d[g_detail_idx].prbm009,g_prbm_d[g_detail_idx].prbm010, 
+                  g_prbm_d[g_detail_idx].prbmunit) 
+         WHERE prbment = g_enterprise AND prbm001 = ps_keys_bak[1] AND prbm002 = ps_keys_bak[2]
+      #add-point:update_b段修改中
+      {<point name="update_b.m_update"/>}
+      #end add-point   
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "prbm_t" 
+            LET g_errparam.code   = "std-00009" 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "prbm_t" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      
+      #將遮罩欄位進行遮蔽
+      CALL apri126_prbm_t_mask_restore('restore_mask_n')
+               
+      #add-point:update_b段修改後
+      {<point name="update_b.after_update"/>}
+      #end add-point  
+   END IF
+   
+ 
+   
+ 
+   
+   #add-point:update_b段other
+   {<point name="update_b.other"/>}
+   #end add-point  
+   
+END FUNCTION
+]]>
+  </section>
+</add_points>

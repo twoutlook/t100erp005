@@ -1,0 +1,72 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmq200" module="apm" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="03079" crtdt="2014-09-09 09:29:22" modid="03079" moddt="2015-01-19 10:40:15" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="供應商狀況匯總查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="pmaa001,pmaa086,pmaa080,pmaa005,pmaa047,radio,bdate,edate"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),pmaa001,pmaa001_desc(chr500),pmaa080,pmaa080_desc(chr500),pmaa047,pmaa086,pmaa086_desc(chr500),pmaa005,pmaa005_desc(chr500)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),pmaa001(b_pmaa001),pmaa001_desc(b_pmaa001_desc),pmaa080(b_pmaa080),pmaa080_desc(b_pmaa080_desc),pmaa047(b_pmaa047),pmaa086(b_pmaa086),pmaa086_desc(b_pmaa086_desc),pmaa005(b_pmaa005),pmaa005_desc(b_pmaa005_desc)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmq200" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="pmaa001,pmaa080,pmaa047,pmaa086,pmaa005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="pmaa001(b_pmaa001),pmaa080(b_pmaa080),pmaa047(b_pmaa047),pmaa086(b_pmaa086),pmaa005(b_pmaa005)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="pmaa001">
+        <after>
+          <reference field="pmaa001_desc" ref_field="pmaa001" map_field="pmaa001" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_5" state="c"/>
+      </column>
+      <column id="pmaa001_desc"/>
+      <column id="pmaa080">
+        <after>
+          <reference field="pmaa080_desc" ref_field="pmaa080" map_field="pmaa080" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;251&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pmaa080_desc"/>
+      <column id="pmaa047" type="S" default="N"/>
+      <column id="pmaa086">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="pmaa086_desc" ref_field="pmaa086" map_field="pmaa086" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="pmaa086_desc"/>
+      <column id="pmaa005">
+        <after>
+          <check chkid="v_ooed004_1" id="isExist"/>
+          <reference field="pmaa005_desc" ref_field="pmaa005" map_field="pmaa005" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_4" state="c"/>
+      </column>
+      <column id="pmaa005_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="pmaa_t" page="1" linked="" pk="pmaa001">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,pmaa001,&apos;&apos;,pmaa080,&apos;&apos;,pmaa047,pmaa086,&apos;&apos;,pmaa005,&apos;&apos; FROM pmaa_t WHERE pmaaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

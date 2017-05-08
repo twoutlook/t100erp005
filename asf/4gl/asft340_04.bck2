@@ -1,0 +1,944 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="asft340_04.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2015-09-10 16:30:33), PR版次:0004(2016-05-28 10:07:11)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000037
+#+ Filename...: asft340_04
+#+ Description: 拆件工單入庫明細快速產生
+#+ Creator....: 01258(2015-08-04 21:56:38)
+#+ Modifier...: 01588 -SD/PR- 03079
+ 
+{</section>}
+ 
+{<section id="asft340_04.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#160512-00016#16     2016/05/28 By ming  s_asft300_02_bom增加傳入參數 
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_sfea_m        RECORD
+       rd LIKE type_t.chr500, 
+   sfeb013 LIKE sfeb_t.sfeb013, 
+   sfeb013_desc LIKE type_t.chr80, 
+   sfeb014 LIKE sfeb_t.sfeb014, 
+   sfeb014_desc LIKE type_t.chr80
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_sfeadocno           LIKE sfea_t.sfeadocno
+DEFINE g_sfaadocno           LIKE sfaa_t.sfaadocno
+#end add-point
+ 
+DEFINE g_sfea_m        type_g_sfea_m
+ 
+   
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asft340_04.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION asft340_04(--)
+   #add-point:input段變數傳入
+   p_sfeadocno,p_sfaadocno
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE p_sfeadocno     LIKE sfea_t.sfeadocno
+   DEFINE p_sfaadocno     LIKE sfaa_t.sfaadocno
+   DEFINE l_success       LIKE type_t.num5
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_asft340_04 WITH FORM cl_ap_formpath("asf","asft340_04")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   LET g_sfeadocno = p_sfeadocno
+   LET g_sfaadocno = p_sfaadocno
+   LET g_errshow = 1   #2015/09/10 by stellar add
+   INITIALIZE g_sfea_m.* TO NULL   #2015/09/10 Sarah add
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_sfea_m.rd,g_sfea_m.sfeb013,g_sfea_m.sfeb014 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            LET g_sfea_m.rd = '1'
+            DISPLAY BY NAME g_sfea_m.rd
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rd
+            #add-point:BEFORE FIELD rd name="input.b.rd"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rd
+            
+            #add-point:AFTER FIELD rd name="input.a.rd"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rd
+            #add-point:ON CHANGE rd name="input.g.rd"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfeb013
+            
+            #add-point:AFTER FIELD sfeb013 name="input.a.sfeb013"
+            #2015/09/10 by stellar add ----- (S)
+            LET g_sfea_m.sfeb013_desc = ''
+            DISPLAY BY NAME g_sfea_m.sfeb013_desc
+            
+            IF NOT cl_null(g_sfea_m.sfeb013) THEN
+               IF NOT asft340_04_chk_warehouses() THEN
+                  NEXT FIELD CURRENT
+               END IF
+               
+               CALL s_desc_get_stock_desc(g_site,g_sfea_m.sfeb013)
+                    RETURNING g_sfea_m.sfeb013_desc
+               DISPLAY BY NAME g_sfea_m.sfeb013_desc
+            END IF
+            #2015/09/10 by stellar add ----- (E)
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfeb013
+            #add-point:BEFORE FIELD sfeb013 name="input.b.sfeb013"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfeb013
+            #add-point:ON CHANGE sfeb013 name="input.g.sfeb013"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfeb014
+            
+            #add-point:AFTER FIELD sfeb014 name="input.a.sfeb014"
+            #2015/09/10 by stellar add ----- (S)
+            LET g_sfea_m.sfeb014_desc = ''
+            DISPLAY BY NAME g_sfea_m.sfeb014_desc
+            
+            IF NOT cl_null(g_sfea_m.sfeb014) THEN
+               IF NOT asft340_04_chk_warehouses() THEN
+                  NEXT FIELD CURRENT
+               END IF
+            
+               CALL s_desc_get_locator_desc(g_site,g_sfea_m.sfeb013,g_sfea_m.sfeb014)
+                    RETURNING g_sfea_m.sfeb014_desc
+               DISPLAY BY NAME g_sfea_m.sfeb014_desc
+            ELSE
+               LET g_sfea_m.sfeb014 = ' '
+            END IF
+            #2015/09/10 by stellar add ----- (E)
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfeb014
+            #add-point:BEFORE FIELD sfeb014 name="input.b.sfeb014"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfeb014
+            #add-point:ON CHANGE sfeb014 name="input.g.sfeb014"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.rd
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rd
+            #add-point:ON ACTION controlp INFIELD rd name="input.c.rd"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sfeb013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfeb013
+            #add-point:ON ACTION controlp INFIELD sfeb013 name="input.c.sfeb013"
+            #2015/09/10 by stellar add ----- (S)
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_sfea_m.sfeb013
+
+            CALL q_inaa001_2()
+            LET g_sfea_m.sfeb013 = g_qryparam.return1    
+            
+            CALL s_desc_get_stock_desc(g_site,g_sfea_m.sfeb013)
+                 RETURNING g_sfea_m.sfeb013_desc
+            DISPLAY BY NAME g_sfea_m.sfeb013_desc
+            
+            NEXT FIELD sfeb013
+            #2015/09/10 by stellar add ----- (E)
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.sfeb014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfeb014
+            #add-point:ON ACTION controlp INFIELD sfeb014 name="input.c.sfeb014"
+            #2015/09/10 by stellar add ----- (S)
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 =  g_sfea_m.sfeb014
+            LET g_qryparam.arg1 =  g_sfea_m.sfeb013
+            CALL q_inab002_3()
+            LET g_sfea_m.sfeb014 = g_qryparam.return1     #將開窗取得的值回傳到變數
+            
+            CALL s_desc_get_locator_desc(g_site,g_sfea_m.sfeb013,g_sfea_m.sfeb014)
+                 RETURNING g_sfea_m.sfeb014_desc
+            DISPLAY BY NAME g_sfea_m.sfeb014_desc
+               
+            NEXT FIELD sfeb014
+            #2015/09/10 by stellar add ----- (E)
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   CALL asft340_04_gen() RETURNING l_success
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_asft340_04 
+   
+   #add-point:input段after input 
+   RETURN l_success
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asft340_04.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="asft340_04.other_function" readonly="Y" >}
+
+#根据画面条件产生相应入库明细资料
+PRIVATE FUNCTION asft340_04_gen()
+DEFINE r_success              LIKE type_t.num5
+DEFINE l_n                    LIKE type_t.num5
+                              
+   LET r_success = FALSE
+   SELECT COUNT(*) INTO l_n FROM sfeb_t 
+    WHERE sfebent = g_enterprise AND sfebsite = g_site 
+      AND sfebdocno = g_sfeadocno AND sfeb001 = g_sfaadocno
+   IF l_n > 0 THEN
+      IF cl_ask_confirm('asf-00479') THEN
+         DELETE FROM sfeb_t 
+          WHERE sfebent = g_enterprise AND sfebsite = g_site 
+            AND sfebdocno = g_sfeadocno AND sfeb001 = g_sfaadocno   
+         DELETE FROM sfec_t 
+          WHERE sfecent = g_enterprise AND sfecsite = g_site 
+            AND sfecdocno = g_sfeadocno AND sfec001 = g_sfaadocno            
+         IF NOT asft340_04_gen_sfeb_sfec() THEN
+            RETURN r_success
+         END IF
+      END IF
+   ELSE
+      IF NOT asft340_04_gen_sfeb_sfec() THEN
+         RETURN r_success
+      END IF
+   END IF
+   
+   LET r_success = TRUE
+   RETURN r_success
+END FUNCTION
+
+##根据sfac资料或者BOM资料产生入库明细资料
+PRIVATE FUNCTION asft340_04_gen_sfeb_sfec()
+DEFINE r_success              LIKE type_t.num5
+DEFINE l_i                    LIKE type_t.num5
+DEFINE l_j                    LIKE type_t.num5
+DEFINE l_k                    LIKE type_t.num5
+DEFINE l_bmba                 DYNAMIC ARRAY OF RECORD #回传数组
+       bmba001                LIKE bmba_t.bmba001,    #bom相关资料都可以通过回传的key值抓取
+       bmba002                LIKE bmba_t.bmba002,
+       bmba003                LIKE bmba_t.bmba003,
+       bmba004                LIKE bmba_t.bmba004,
+       bmba005                DATETIME YEAR TO SECOND,
+       bmba007                LIKE bmba_t.bmba007,
+       bmba008                LIKE bmba_t.bmba008,
+       #160512-00016#16 20160528 add by ming -----(S) 
+       bmba035                LIKE bmba_t.bmba035,     #保稅否  
+       #160512-00016#16 20160528 add by ming -----(E) 
+       l_bmba011              LIKE bmba_t.bmba011,     #QPA 分子，对应于原始的主件料号
+       l_bmba012              LIKE bmba_t.bmba012,     #QPA 分母，对应于原始的主件料号
+       l_inam002              LIKE inam_t.inam002      #元件对应特征
+                              END RECORD
+DEFINE l_bmba_qty             DYNAMIC ARRAY OF RECORD #回传数组
+       bmba001                LIKE bmba_t.bmba001,    #bom相关资料都可以通过回传的key值抓取
+       bmba002                LIKE bmba_t.bmba002,
+       bmba003                LIKE bmba_t.bmba003,
+       bmba004                LIKE bmba_t.bmba004,
+       bmba005                DATETIME YEAR TO SECOND,
+       bmba007                LIKE bmba_t.bmba007,
+       bmba008                LIKE bmba_t.bmba008,
+       #160512-00016#16 20160528 add by ming -----(S) 
+       bmba035                LIKE bmba_t.bmba035,     #保稅否 
+       #160512-00016#16 20160528 add by ming -----(E) 
+       l_bmba011              LIKE bmba_t.bmba011,     #QPA 分子，对应于原始的主件料号
+       l_bmba012              LIKE bmba_t.bmba012,     #QPA 分母，对应于原始的主件料号
+       l_inam002              LIKE inam_t.inam002,     #元件对应特征
+       l_qty                  LIKE sfaa_t.sfaa012      #对应数量
+                              END RECORD
+DEFINE l_inam                 DYNAMIC ARRAY OF RECORD   #記錄產品特徵
+        inam001               LIKE inam_t.inam001,
+        inam002               LIKE inam_t.inam002,
+        inam004               LIKE inam_t.inam004
+                              END RECORD
+DEFINE l_sql                  STRING
+DEFINE l_sfaa                 RECORD LIKE sfaa_t.*
+DEFINE l_sfac                 RECORD LIKE sfac_t.*
+DEFINE l_sfeb                 RECORD LIKE sfeb_t.*
+DEFINE l_sfec                 RECORD LIKE sfec_t.*
+DEFINE l_type                 LIKE type_t.chr1
+DEFINE l_flag                 LIKE type_t.chr1
+DEFINE l_sfeadocdt            LIKE sfea_t.sfeadocdt
+DEFINE l_bmba005_1            LIKE ooff_t.ooff007
+DEFINE l_success              LIKE type_t.num5
+DEFINE l_imaa005              LIKE imaa_t.imaa005
+   
+   LET r_success = FALSE
+   
+   #日期
+   SELECT sfeadocdt INTO l_sfeadocdt FROM sfea_t
+    WHERE sfeaent = g_enterprise AND sfeasite = g_site
+      AND sfeadocno = g_sfeadocno
+            
+   IF g_sfea_m.rd = '1' THEN
+      DECLARE asft340_04_sfec_cs CURSOR FOR 
+       SELECT * FROM sfac_t
+        WHERE sfacent = g_enterprise AND sfacsite = g_site
+          AND sfacdocno = g_sfaadocno
+      FOREACH asft340_04_sfec_cs INTO l_sfac.*
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'foreach:'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()        
+            EXIT FOREACH
+         END IF
+         
+         INITIALIZE l_sfeb.* TO NULL
+         LET l_sfeb.sfebent   = g_enterprise        #企业编号
+         LET l_sfeb.sfebsite  = g_site              #营运据点
+         LET l_sfeb.sfebdocno = g_sfeadocno         #完工入库单号
+         #项次
+         SELECT MAX(sfebseq) INTO l_sfeb.sfebseq FROM sfeb_t 
+          WHERE sfebent = g_enterprise AND sfebsite = g_site 
+            AND sfebdocno = g_sfeadocno
+         IF cl_null(l_sfeb.sfebseq) THEN
+            LET l_sfeb.sfebseq = 1
+         ELSE 
+            LET l_sfeb.sfebseq = l_sfeb.sfebseq + 1
+         END IF
+         LET l_sfeb.sfeb001 = g_sfaadocno           #工单单号
+         #FQC/专案代号/WBS/活动代号
+         SELECT sfaa044,sfaa028,sfaa029,sfaa030 INTO l_sfeb.sfeb002,l_sfeb.sfeb017,l_sfeb.sfeb018,l_sfeb.sfeb019 FROM sfaa_t
+          WHERE sfaaent = g_enterprise AND sfaasite = g_site
+            AND sfaadocno = g_sfaadocno
+         LET l_sfeb.sfeb003 = l_sfac.sfac002        #入库类型
+         LET l_sfeb.sfeb004 = l_sfac.sfac001        #料件编号
+         LET l_sfeb.sfeb005 = l_sfac.sfac006        #产品特征
+         LET l_sfeb.sfeb006   = ''                  #包装容器
+         LET l_sfeb.sfeb007 = l_sfac.sfac004        #单位
+         LET l_sfeb.sfeb008 = l_sfac.sfac003        #申请数量
+         #实际数量
+         IF l_sfeb.sfeb002 = 'N' THEN
+            LET l_sfeb.sfeb009 = l_sfeb.sfeb008
+            LET l_sfeb.sfeb027 = l_sfeb.sfeb008
+         ELSE
+            LET l_sfeb.sfeb009 = 0
+            LET l_sfeb.sfeb027 = 0
+         END IF
+         
+         #参考单位
+         SELECT imaf015 INTO l_sfeb.sfeb010 FROM imaf_t
+          WHERE imafent = g_enterprise AND imafsite = g_site
+            AND imaf001 = l_sfeb.sfeb004
+            
+         #申请参考数量/#实际参考数量
+         #若没有参考单位时,参考数量DEFAULT NULL
+         IF cl_null(l_sfeb.sfeb010) THEN
+            LET l_sfeb.sfeb011 = NULL
+            LET l_sfeb.sfeb012 = NULL
+         ELSE
+            CALL s_aooi250_convert_qty(l_sfeb.sfeb004,l_sfeb.sfeb007,l_sfeb.sfeb010,l_sfeb.sfeb008)
+                 RETURNING l_success,l_sfeb.sfeb011
+            IF NOT l_success THEN
+               LET l_sfeb.sfeb011 = l_sfeb.sfeb008
+            END IF
+    
+            IF l_sfeb.sfeb002 = 'N' THEN
+               LET l_sfeb.sfeb012 = l_sfeb.sfeb011
+            ELSE
+               LET l_sfeb.sfeb012 = 0
+            END IF
+         END IF
+         
+        #指定库位/指定储位/指定批号
+        #2015/09/10 by stellar add ----- (S)
+        IF NOT cl_null(g_sfea_m.sfeb013) THEN
+           LET l_sfeb.sfeb013 = g_sfea_m.sfeb013
+           LET l_sfeb.sfeb014 = g_sfea_m.sfeb014
+        ELSE
+        #2015/09/10 by stellar add ----- (E) 
+         CALL s_asft340_set_warehouses(l_sfeb.sfeb001,l_sfeb.sfeb004,'','','')
+              RETURNING l_sfeb.sfeb013,l_sfeb.sfeb014,l_sfeb.sfeb015
+        END IF   #2015/09/10 by stellar add
+    
+         LET l_sfeb.sfeb016   = ' '                #库存管理特征
+    
+         LET l_sfeb.sfeb020   = ' '               #理由码
+    
+         #库存有效日期
+         CALL s_aini010_calculate_effdt(g_site,l_sfeb.sfeb004,l_sfeb.sfeb005,l_sfeb.sfeb015,l_sfeadocdt)
+              RETURNING l_sfeb.sfeb021
+         LET l_sfeb.sfeb022   = ' '               #库存备注
+         LET l_sfeb.sfeb023   = ''                #生产料号
+         LET l_sfeb.sfeb024   = ''                #生产料号BOM特性
+         LET l_sfeb.sfeb025   = ''                #生产料号特征
+         
+         #RUN CARD
+         #取工单的第一笔RUN CARD号
+         LET l_sql = " SELECT sfcb001 FROM sfcb_t ",
+                     "  WHERE sfcbent   = ",g_enterprise,
+                     "    AND sfcbdocno = ? ",
+                     " ORDER BY sfcb001 "
+         PREPARE asft340_04_get_run_card_p1 FROM l_sql
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code   = SQLCA.sqlcode
+            LET g_errparam.extend = "PREPARE asft340_04_get_run_card_p1"
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            LET r_success = FALSE
+            RETURN r_success
+         END IF     
+         DECLARE asft340_04_get_run_card_cs1 SCROLL CURSOR FOR asft340_04_get_run_card_p1
+         OPEN asft340_04_get_run_card_cs1 USING l_sfeb.sfeb001
+         FETCH FIRST asft340_04_get_run_card_cs1 INTO l_sfeb.sfeb026
+         IF cl_null(l_sfeb.sfeb026) THEN
+            LET l_sfeb.sfeb026 = 0
+         END IF
+   
+         INSERT INTO sfeb_t VALUES l_sfeb.*
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'insert sfeb'
+            LET g_errparam.popup = FALSE
+            CALL cl_err()
+            RETURN r_success
+         END IF
+      
+         IF l_sfeb.sfeb002 = 'Y' THEN
+            CONTINUE FOREACH
+         END IF
+               
+         LET l_sfec.sfecent = g_enterprise 
+         LET l_sfec.sfecsite = g_site
+         LET l_sfec.sfecdocno = g_sfeadocno
+         LET l_sfec.sfecseq = l_sfeb.sfebseq
+         LET l_sfec.sfecseq1 = 1
+         LET l_sfec.sfec001   = l_sfeb.sfeb001           #工單單號
+         LET l_sfec.sfec002   = ''                       #FQC單號
+         LET l_sfec.sfec003   = ''                       #判定項次
+         LET l_sfec.sfec004   = l_sfeb.sfeb003           #入庫類型
+         LET l_sfec.sfec005   = l_sfeb.sfeb004           #料件編號
+         LET l_sfec.sfec006   = l_sfeb.sfeb005           #特徵
+         LET l_sfec.sfec007   = l_sfeb.sfeb006           #包裝容器
+         LET l_sfec.sfec008   = l_sfeb.sfeb007           #單位
+         LET l_sfec.sfec009   = l_sfeb.sfeb008           #數量
+         LET l_sfec.sfec010   = l_sfeb.sfeb010           #參考單位
+         LET l_sfec.sfec011   = l_sfeb.sfeb011           #參考數量
+         LET l_sfec.sfec012   = l_sfeb.sfeb013           #庫位
+         LET l_sfec.sfec013   = l_sfeb.sfeb014           #儲位
+         LET l_sfec.sfec014   = l_sfeb.sfeb015           #批號
+         LET l_sfec.sfec015   = l_sfeb.sfeb016           #庫存管理特徵
+         LET l_sfec.sfec016   = l_sfeb.sfeb021           #有效日期
+         LET l_sfec.sfec017   = l_sfeb.sfeb022           #庫存備註
+         LET l_sfec.sfec021   = l_sfeb.sfeb026           #RUN CARD
+         LET l_sfec.sfec022   = l_sfeb.sfeb017           #專案編號
+         LET l_sfec.sfec023   = l_sfeb.sfeb018           #WBS
+         LET l_sfec.sfec024   = l_sfeb.sfeb019           #活動編號
+
+         INSERT INTO sfec_t VALUES l_sfec.*
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "ins sfec_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            RETURN r_success
+         END IF   
+      END FOREACH
+   END IF 
+   
+   IF g_sfea_m.rd = '2' OR g_sfea_m.rd = '3' THEN
+      SELECT * INTO l_sfaa.* FROM sfaa_t
+       WHERE sfaaent = g_enterprise AND sfaasite = g_site
+         AND sfaadocno = g_sfaadocno
+     #料号是否做特征管理
+      CALL l_inam.clear()
+      SELECT imaa005 INTO l_imaa005 FROM imaa_t
+       WHERE imaaent = g_enterprise AND imaa001 = l_sfaa.sfaa010
+      IF NOT cl_null(l_imaa005) THEN
+         CALL s_feature_multi(l_sfaa.sfaa010,'','',g_site,l_sfaa.sfaadocno) RETURNING l_success,l_inam
+         IF NOT l_success THEN
+            RETURN r_success
+         END IF
+      END IF 
+      IF g_sfea_m.rd = '2' THEN
+         LET l_type = 'S'
+      END IF
+      IF g_sfea_m.rd = '3' THEN
+         LET l_type = 'Y' 
+      END IF
+      IF l_inam.getLength() > 0 AND l_inam[1].inam004 > 0 THEN
+         FOR l_i = 1 TO l_inam.getLength()
+            #160512-00016#16 20160528 modify by ming -----(S) 
+            #CALL s_asft300_02_bom(0,l_sfaa.sfaa010,l_sfaa.sfaa011,l_sfaa.sfaa013,1,1,l_sfaa.sfaa015,l_type,'',l_inam[l_i].inam002,'N') RETURNING l_bmba
+            CALL s_asft300_02_bom(0,l_sfaa.sfaa010,l_sfaa.sfaa011,l_sfaa.sfaa013,1,1,l_sfaa.sfaa015,l_type,'',l_inam[l_i].inam002,'N',l_sfaa.sfaa072) 
+                 RETURNING l_bmba
+            #160512-00016#16 20160528 modify by ming -----(E)  
+            IF l_bmba_qty.getLength() = 0 THEN
+               FOR l_j = 1 TO l_bmba.getLength()
+                  LET l_bmba_qty[l_j].bmba001    =  l_bmba[l_j].bmba001
+                  LET l_bmba_qty[l_j].bmba002    =  l_bmba[l_j].bmba002  
+                  LET l_bmba_qty[l_j].bmba003    =  l_bmba[l_j].bmba003  
+                  LET l_bmba_qty[l_j].bmba004    =  l_bmba[l_j].bmba004  
+                  LET l_bmba_qty[l_j].bmba005    =  l_bmba[l_j].bmba005  
+                  LET l_bmba_qty[l_j].bmba007    =  l_bmba[l_j].bmba007  
+                  LET l_bmba_qty[l_j].bmba008    =  l_bmba[l_j].bmba008  
+                  #160512-00016#16 20160528 add by ming -----(S) 
+                  LET l_bmba_qty[l_j].bmba035    =  l_bmba[l_j].bmba035
+                  #160512-00016#16 20160528 add by ming -----(E) 
+                  LET l_bmba_qty[l_j].l_bmba011  =  l_bmba[l_j].l_bmba011
+                  LET l_bmba_qty[l_j].l_bmba012  =  l_bmba[l_j].l_bmba012
+                  LET l_bmba_qty[l_j].l_inam002  =  l_bmba[l_j].l_inam002
+                  LET l_bmba_qty[l_j].l_qty      =  l_inam[l_i].inam004
+               END FOR
+            ELSE
+               FOR l_j = 1 TO l_bmba.getLength()
+                  LET l_flag = 'N'
+                  FOR l_k = 1 TO l_bmba_qty.getLength()
+                     IF l_bmba_qty[l_k].bmba001    =  l_bmba[l_j].bmba001 AND 
+                        l_bmba_qty[l_k].bmba002    =  l_bmba[l_j].bmba002 AND
+                        l_bmba_qty[l_k].bmba003    =  l_bmba[l_j].bmba003 AND
+                        l_bmba_qty[l_k].bmba004    =  l_bmba[l_j].bmba004 AND
+                        l_bmba_qty[l_k].bmba005    =  l_bmba[l_j].bmba005 AND
+                        l_bmba_qty[l_k].bmba007    =  l_bmba[l_j].bmba007 AND
+                        l_bmba_qty[l_k].bmba008    =  l_bmba[l_j].bmba008 AND
+                        l_bmba_qty[l_k].l_inam002  =  l_bmba[l_j].l_inam002 THEN
+                        LET l_bmba_qty[l_k].l_qty  =  l_bmba_qty[l_k].l_qty + l_inam[l_i].inam004
+                        LET l_flag = 'Y'
+                        EXIT FOR
+                     END IF
+                  END FOR
+                  IF l_flag = 'N' THEN
+                     LET l_k = l_bmba_qty.getLength() + 1
+                     LET l_bmba_qty[l_k].bmba001    =  l_bmba[l_j].bmba001
+                     LET l_bmba_qty[l_k].bmba002    =  l_bmba[l_j].bmba002  
+                     LET l_bmba_qty[l_k].bmba003    =  l_bmba[l_j].bmba003  
+                     LET l_bmba_qty[l_k].bmba004    =  l_bmba[l_j].bmba004  
+                     LET l_bmba_qty[l_k].bmba005    =  l_bmba[l_j].bmba005  
+                     LET l_bmba_qty[l_k].bmba007    =  l_bmba[l_j].bmba007  
+                     LET l_bmba_qty[l_k].bmba008    =  l_bmba[l_j].bmba008  
+                     #160512-00016#16 20160528 add by ming -----(S) 
+                     LET l_bmba_qty[l_k].bmba035    =  l_bmba[l_j].bmba035 
+                     #160512-00016#16 20160528 add by ming -----(E) 
+                     LET l_bmba_qty[l_k].l_bmba011  =  l_bmba[l_j].l_bmba011
+                     LET l_bmba_qty[l_k].l_bmba012  =  l_bmba[l_j].l_bmba012
+                     LET l_bmba_qty[l_k].l_inam002  =  l_bmba[l_j].l_inam002
+                     LET l_bmba_qty[l_k].l_qty      =  l_inam[l_i].inam004
+                  END IF
+               END FOR 
+            END IF   
+         END FOR
+      ELSE
+         #160512-00016#16 20160528 modify by ming -----(S) 
+         #CALL s_asft300_02_bom(0,l_sfaa.sfaa010,l_sfaa.sfaa011,l_sfaa.sfaa013,1,1,l_sfaa.sfaa015,l_type,'',' ','N') RETURNING l_bmba
+         CALL s_asft300_02_bom(0,l_sfaa.sfaa010,l_sfaa.sfaa011,l_sfaa.sfaa013,1,1,l_sfaa.sfaa015,l_type,'',' ','N',l_sfaa.sfaa072) 
+              RETURNING l_bmba
+         #160512-00016#16 20160528 modify by ming -----(E) 
+         FOR l_i = 1 TO l_bmba.getLength()
+            LET l_bmba_qty[l_i].bmba001    =  l_bmba[l_i].bmba001
+            LET l_bmba_qty[l_i].bmba002    =  l_bmba[l_i].bmba002  
+            LET l_bmba_qty[l_i].bmba003    =  l_bmba[l_i].bmba003  
+            LET l_bmba_qty[l_i].bmba004    =  l_bmba[l_i].bmba004  
+            LET l_bmba_qty[l_i].bmba005    =  l_bmba[l_i].bmba005  
+            LET l_bmba_qty[l_i].bmba007    =  l_bmba[l_i].bmba007  
+            LET l_bmba_qty[l_i].bmba008    =  l_bmba[l_i].bmba008  
+            #160512-00016#16 20160528 add by ming -----(S) 
+            LET l_bmba_qty[l_i].bmba035    =  l_bmba[l_i].bmba035 
+            #160512-00016#16 20160528 add by ming -----(E) 
+            LET l_bmba_qty[l_i].l_bmba011  =  l_bmba[l_i].l_bmba011
+            LET l_bmba_qty[l_i].l_bmba012  =  l_bmba[l_i].l_bmba012
+            LET l_bmba_qty[l_i].l_inam002  =  l_bmba[l_i].l_inam002
+            LET l_bmba_qty[l_i].l_qty      =  l_sfaa.sfaa012
+         END FOR
+      END IF
+    
+      FOR l_i = 1 TO l_bmba_qty.getLength()
+         INITIALIZE l_sfeb.* TO NULL
+         LET l_sfeb.sfebent   = g_enterprise        #企业编号
+         LET l_sfeb.sfebsite  = g_site              #营运据点
+         LET l_sfeb.sfebdocno = g_sfeadocno         #完工入库单号
+         #项次
+         SELECT MAX(sfebseq) INTO l_sfeb.sfebseq FROM sfeb_t 
+          WHERE sfebent = g_enterprise AND sfebsite = g_site 
+            AND sfebdocno = g_sfeadocno
+         IF cl_null(l_sfeb.sfebseq) THEN
+            LET l_sfeb.sfebseq = 1
+         ELSE 
+            LET l_sfeb.sfebseq = l_sfeb.sfebseq + 1
+         END IF
+         LET l_sfeb.sfeb001 = g_sfaadocno           #工单单号
+         #FQC/专案代号/WBS/活动代号
+         SELECT sfaa044,sfaa028,sfaa029,sfaa030 INTO l_sfeb.sfeb002,l_sfeb.sfeb017,l_sfeb.sfeb018,l_sfeb.sfeb019 FROM sfaa_t
+          WHERE sfaaent = g_enterprise AND sfaasite = g_site
+            AND sfaadocno = g_sfaadocno
+         LET l_sfeb.sfeb003 = '4'                   #入库类型
+         LET l_sfeb.sfeb004 = l_bmba_qty[l_i].bmba003
+         LET l_sfeb.sfeb005 = l_bmba_qty[l_i].l_inam002
+         LET l_sfeb.sfeb006   = ''                  
+        #单位
+         LET l_bmba005_1 = l_bmba_qty[l_i].bmba005
+         LET l_sql="SELECT bmba010 FROM bmba_t WHERE bmbaent='",g_enterprise,"' AND bmbasite='",g_site,"'",
+            "  AND bmba001='",l_bmba_qty[l_i].bmba001,"' AND bmba002='",l_bmba_qty[l_i].bmba002,"' AND bmba003='",l_bmba_qty[l_i].bmba003,"'",
+            "  AND bmba004='",l_bmba_qty[l_i].bmba004,"' AND bmba007='",l_bmba_qty[l_i].bmba007,"' AND bmba008='",l_bmba_qty[l_i].bmba008,"'", 
+            "  AND to_char(bmba005,'yyyy-mm-dd hh24:mi:ss')='",l_bmba005_1,"'"
+         PREPARE asft340_04_gen_sfeb_pre FROM l_sql
+         EXECUTE asft340_04_gen_sfeb_pre INTO l_sfeb.sfeb007
+         IF cl_null(l_sfeb.sfeb007) THEN
+            SELECT imae081 INTO l_sfeb.sfeb007 FROM imae_t WHERE imaeent=g_enterprise AND imaesite=g_site AND imae001=l_bmba_qty[l_i].bmba003
+            IF cl_null(l_sfeb.sfeb007) THEN
+               SELECT imaa006 INTO l_sfeb.sfeb007 FROM imaa_t WHERE imaaent=g_enterprise AND imaa001=l_bmba_qty[l_i].bmba003
+            END IF
+         END IF
+         LET l_sfeb.sfeb008 = l_bmba_qty[l_i].l_qty * l_bmba_qty[l_i].l_bmba011 / l_bmba_qty[l_i].l_bmba012
+         
+         #实际数量
+         IF l_sfeb.sfeb002 = 'N' THEN
+            LET l_sfeb.sfeb009 = l_sfeb.sfeb008
+            LET l_sfeb.sfeb027 = l_sfeb.sfeb008
+         ELSE
+            LET l_sfeb.sfeb009 = 0
+            LET l_sfeb.sfeb027 = 0
+         END IF
+         
+         #参考单位
+         SELECT imaf015 INTO l_sfeb.sfeb010 FROM imaf_t
+          WHERE imafent = g_enterprise AND imafsite = g_site
+            AND imaf001 = l_sfeb.sfeb004
+            
+         #申请参考数量/#实际参考数量
+         #若没有参考单位时,参考数量DEFAULT NULL
+         IF cl_null(l_sfeb.sfeb010) THEN
+            LET l_sfeb.sfeb011 = NULL
+            LET l_sfeb.sfeb012 = NULL
+         ELSE
+            CALL s_aooi250_convert_qty(l_sfeb.sfeb004,l_sfeb.sfeb007,l_sfeb.sfeb010,l_sfeb.sfeb008)
+                 RETURNING l_success,l_sfeb.sfeb011
+            IF NOT l_success THEN
+               LET l_sfeb.sfeb011 = l_sfeb.sfeb008
+            END IF
+    
+            IF l_sfeb.sfeb002 = 'N' THEN
+               LET l_sfeb.sfeb012 = l_sfeb.sfeb011
+            ELSE
+               LET l_sfeb.sfeb012 = 0
+            END IF
+         END IF
+         
+         #指定库位/指定储位/指定批号
+        #2015/09/10 by stellar add ----- (S)
+        IF NOT cl_null(g_sfea_m.sfeb013) THEN
+           LET l_sfeb.sfeb013 = g_sfea_m.sfeb013
+           LET l_sfeb.sfeb014 = g_sfea_m.sfeb014
+        ELSE
+        #2015/09/10 by stellar add ----- (E) 
+         CALL s_asft340_set_warehouses(l_sfeb.sfeb001,l_sfeb.sfeb004,'','','')
+              RETURNING l_sfeb.sfeb013,l_sfeb.sfeb014,l_sfeb.sfeb015
+        END IF   #2015/09/10 by stellar add
+    
+         LET l_sfeb.sfeb016   = ' '                #库存管理特征
+    
+         LET l_sfeb.sfeb020   = ' '               #理由码
+    
+         #库存有效日期
+         CALL s_aini010_calculate_effdt(g_site,l_sfeb.sfeb004,l_sfeb.sfeb005,l_sfeb.sfeb015,l_sfeadocdt)
+              RETURNING l_sfeb.sfeb021
+         LET l_sfeb.sfeb022   = ' '               #库存备注
+         LET l_sfeb.sfeb023   = ''                #生产料号
+         LET l_sfeb.sfeb024   = ''                #生产料号BOM特性
+         LET l_sfeb.sfeb025   = ''                #生产料号特征
+         
+         #RUN CARD
+         #取工单的第一笔RUN CARD号
+         LET l_sql = " SELECT sfcb001 FROM sfcb_t ",
+                     "  WHERE sfcbent   = ",g_enterprise,
+                     "    AND sfcbdocno = ? ",
+                     " ORDER BY sfcb001 "
+         PREPARE asft340_04_get_run_card_p2 FROM l_sql
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code   = SQLCA.sqlcode
+            LET g_errparam.extend = "PREPARE asft340_04_get_run_card_p1"
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            LET r_success = FALSE
+            RETURN r_success
+         END IF     
+         DECLARE asft340_04_get_run_card_cs2 SCROLL CURSOR FOR asft340_04_get_run_card_p2
+         OPEN asft340_04_get_run_card_cs2 USING l_sfeb.sfeb001
+         FETCH FIRST asft340_04_get_run_card_cs2 INTO l_sfeb.sfeb026
+         IF cl_null(l_sfeb.sfeb026) THEN
+            LET l_sfeb.sfeb026 = 0
+         END IF
+   
+         INSERT INTO sfeb_t VALUES l_sfeb.*
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'insert sfeb'
+            LET g_errparam.popup = FALSE
+            CALL cl_err()
+            RETURN r_success
+         END IF
+      
+         IF l_sfeb.sfeb002 = 'Y' THEN
+            CONTINUE FOR
+         END IF
+               
+         LET l_sfec.sfecent = g_enterprise 
+         LET l_sfec.sfecsite = g_site
+         LET l_sfec.sfecdocno = g_sfeadocno
+         LET l_sfec.sfecseq = l_sfeb.sfebseq
+         LET l_sfec.sfecseq1 = 1
+         LET l_sfec.sfec001   = l_sfeb.sfeb001           #工單單號
+         LET l_sfec.sfec002   = ''                       #FQC單號
+         LET l_sfec.sfec003   = ''                       #判定項次
+         LET l_sfec.sfec004   = l_sfeb.sfeb003           #入庫類型
+         LET l_sfec.sfec005   = l_sfeb.sfeb004           #料件編號
+         LET l_sfec.sfec006   = l_sfeb.sfeb005           #特徵
+         LET l_sfec.sfec007   = l_sfeb.sfeb006           #包裝容器
+         LET l_sfec.sfec008   = l_sfeb.sfeb007           #單位
+         LET l_sfec.sfec009   = l_sfeb.sfeb008           #數量
+         LET l_sfec.sfec010   = l_sfeb.sfeb010           #參考單位
+         LET l_sfec.sfec011   = l_sfeb.sfeb011           #參考數量
+         LET l_sfec.sfec012   = l_sfeb.sfeb013           #庫位
+         LET l_sfec.sfec013   = l_sfeb.sfeb014           #儲位
+         LET l_sfec.sfec014   = l_sfeb.sfeb015           #批號
+         LET l_sfec.sfec015   = l_sfeb.sfeb016           #庫存管理特徵
+         LET l_sfec.sfec016   = l_sfeb.sfeb021           #有效日期
+         LET l_sfec.sfec017   = l_sfeb.sfeb022           #庫存備註
+         LET l_sfec.sfec021   = l_sfeb.sfeb026           #RUN CARD
+         LET l_sfec.sfec022   = l_sfeb.sfeb017           #專案編號
+         LET l_sfec.sfec023   = l_sfeb.sfeb018           #WBS
+         LET l_sfec.sfec024   = l_sfeb.sfeb019           #活動編號
+
+         INSERT INTO sfec_t VALUES l_sfec.*
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "ins sfec_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            RETURN r_success
+         END IF   
+      END FOR 
+   END IF
+   
+   LET r_success = TRUE
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢查庫位sfeb013/儲位sfeb014 值的合理性
+# Memo...........:
+# Usage..........: CALL asft340_04_chk_warehouses()
+#                  RETURNING r_success
+# Input parameter: 
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2015/09/10 by stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asft340_04_chk_warehouses()
+DEFINE r_success      LIKE type_t.num5
+DEFINE l_sfaa005      LIKE sfaa_t.sfaa005
+DEFINE l_sfaa010      LIKE sfaa_t.sfaa010
+DEFINE l_inaa010      LIKE inaa_t.inaa010
+   
+   LET r_success = TRUE
+
+   #檢查庫位資料
+   IF NOT cl_null(g_sfea_m.sfeb013) THEN
+      INITIALIZE g_chkparam.* TO NULL
+      LET g_chkparam.arg1 = g_sfea_m.sfeb013
+      IF NOT cl_chk_exist("v_inaa001_2") THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF
+   
+   #檢查儲位
+   IF NOT cl_null(g_sfea_m.sfeb014) THEN
+      INITIALIZE g_chkparam.* TO NULL
+      LET g_chkparam.arg1 = g_site
+      LET g_chkparam.arg2 = g_sfea_m.sfeb013
+      LET g_chkparam.arg3 = g_sfea_m.sfeb014
+      IF NOT cl_chk_exist("v_inab002") THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF
+   
+   SELECT sfaa005,sfaa010 INTO l_sfaa005,l_sfaa010
+     FROM sfaa_t
+    WHERE sfaaent = g_enterprise
+      AND sfaadocno = g_sfaadocno
+   IF l_sfaa005 = '5' THEN
+      SELECT inaa010 INTO l_inaa010 
+        FROM inaa_t
+       WHERE inaaent = g_enterprise
+         AND inaasite = g_site
+         AND inaa001 = g_sfea_m.sfeb013
+      IF l_inaa010 <> 'N' THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'arm-00013'
+         LET g_errparam.extend = ""
+         LET g_errparam.popup = TRUE
+         LET g_errparam.replace[1] = g_sfaadocno
+         LET g_errparam.replace[2] = g_sfea_m.sfeb013
+         
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+ 
+{</section>}
+ 

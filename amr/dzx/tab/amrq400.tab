@@ -1,0 +1,95 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="amrq400" module="amr" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="02210" crtdt="2015-06-09 10:02:09" modid="02210" moddt="2015-06-09 14:32:46" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="資源履歷查詢">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="mrba001,mrba008,mrba011,mrba100,mrba016,mrba017"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),mrba001,mrba004,mrba008,mrba011,mrba011_desc(chr500),mrba100,mrba016,mrba016_desc(chr500),mrba017,mrba017_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="mrza003,mrza001,mrza002,mrza007,mrza005,l_ooag01(chr500),l_ooag01_desc(chr500),l_ooge01(chr500),l_ooge01_desc(chr500),mrza006,l_memo(chr500)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),mrba001(b_mrba001),mrba004(b_mrba004),mrba008(b_mrba008),mrba011(b_mrba011),mrba011_desc(b_mrba011_desc),mrba100(b_mrba100),mrba016(b_mrba016),mrba016_desc(b_mrba016_desc),mrba017(b_mrba017),mrba017_desc(b_mrba017_desc)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="mrza003(b_mrza003),mrza001(b_mrza001),mrza002(b_mrza002),mrza007(b_mrza007),mrza005(b_mrza005),l_ooag01(l_ooag01),l_ooag01_desc(l_ooag01_desc),l_ooge01(l_ooge01),l_ooge01_desc(l_ooge01_desc),mrza006(b_mrza006),l_memo(l_memo)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="amr" filename="amrq400" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="mrba001,mrba004,mrba008,mrba011,mrba100,mrba016,mrba017" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="mrza003,mrza001,mrza002,mrza007,mrza005,mrza006" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="mrba001(b_mrba001),mrba004(b_mrba004),mrba008(b_mrba008),mrba011(b_mrba011),mrba100(b_mrba100),mrba016(b_mrba016),mrba017(b_mrba017)"/>
+      <construct id="body" page="2" field="mrza003(b_mrza003),mrza001(b_mrza001),mrza002(b_mrza002),mrza007(b_mrza007),mrza005(b_mrza005),mrza006(b_mrza006)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="mrba001">
+        <controlp form="q_mrba001_1" state="c"/>
+      </column>
+      <column id="mrba004"/>
+      <column id="mrba008"/>
+      <column id="mrba011">
+        <after>
+          <check chkid="v_oocq002_4" id="isExist"/>
+          <reference field="mrba011_desc" ref_field="mrba011" map_field="mrba011" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1102&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mrba011_desc"/>
+      <column id="mrba100" type="S" default="0" def_scc="5203"/>
+      <column id="mrba016">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="mrba016_desc" ref_field="mrba016" map_field="mrba016" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mrba016_desc"/>
+      <column id="mrba017">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="mrba017_desc" ref_field="mrba017" map_field="mrba017" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="mrba017_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="mrza003"/>
+      <column id="mrza001"/>
+      <column id="mrza002"/>
+      <column id="mrza007"/>
+      <column id="mrza005"/>
+      <column id="l_ooag01">
+        <after/>
+      </column>
+      <column id="l_ooag01_desc"/>
+      <column id="l_ooge01">
+        <after/>
+      </column>
+      <column id="l_ooge01_desc"/>
+      <column id="mrza006"/>
+      <column id="l_memo"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="mrba_t" page="1" linked="" pk="mrba001">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,mrba001,mrba004,mrba008,mrba011,&apos;&apos;,mrba100,mrba016,&apos;&apos;,mrba017,&apos;&apos; FROM mrba_t WHERE mrbaent= ? AND mrbasite= ? AND 1=1 "/>
+    </body>
+    <body id="mrza_t" page="2" linked="" pk="mrza001,mrza002" fk="" detail="Y">
+      <sql id="b_fill_sql" query="SELECT mrza003,mrza001,mrza002,mrza007,mrza005,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,mrza006,&apos;&apos; FROM mrza_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

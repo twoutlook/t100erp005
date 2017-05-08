@@ -1,0 +1,116 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmq814" module="apm" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="02748" crtdt="2014-04-02 17:38:12" modid="02159" moddt="2015-02-26 15:16:16" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="供應商績效評核結果查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),pmck003,pmck003_desc(chr500),pmck001,pmck002,pmck002_desc(chr500),pmck004,pmck005,pmck006,pmck006_desc(chr500),pmck007,pmck007_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="pmcj004,pmcj004_desc(chr500),pmcj001,pmcj002,pmcj002_desc(chr500),pmcj003,pmcj005,pmcj005_desc(chr500),pmcj006,pmcj006_desc(chr500),pmcj007"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),pmck003(b_pmck003),pmck003_desc(b_pmck003_desc),pmck001(b_pmck001),pmck002(b_pmck002),pmck002_desc(b_pmck002_desc),pmck004(b_pmck004),pmck005(b_pmck005),pmck006(b_pmck006),pmck006_desc(b_pmck006_desc),pmck007(b_pmck007),pmck007_desc(b_pmck007_desc)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="pmcj004(b_pmcj004),pmcj004_desc(b_pmcj004_desc),pmcj001(b_pmcj001),pmcj002(b_pmcj002),pmcj002_desc(b_pmcj002_desc),pmcj003(b_pmcj003),pmcj005(b_pmcj005),pmcj005_desc(b_pmcj005_desc),pmcj006(b_pmcj006),pmcj006_desc(b_pmcj006_desc),pmcj007(b_pmcj007)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="gen_apmt814"/>
+      <action id="open_apmt814"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmq814" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="pmck003,pmck001,pmck002,pmck004,pmck005,pmck006,pmck007" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="pmcj004,pmcj001,pmcj002,pmcj003,pmcj005,pmcj006,pmcj007" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="pmck003(b_pmck003),pmck001(b_pmck001),pmck002(b_pmck002),pmck004(b_pmck004),pmck005(b_pmck005),pmck006(b_pmck006),pmck007(b_pmck007)"/>
+      <construct id="body" page="2" field="pmcj004(b_pmcj004),pmcj001(b_pmcj001),pmcj002(b_pmcj002),pmcj003(b_pmcj003),pmcj005(b_pmcj005),pmcj006(b_pmcj006),pmcj007(b_pmcj007)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="pmck003">
+        <after>
+          <reference field="pmck003_desc" ref_field="pmck003" map_field="pmckent,pmck003" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_10" state="c"/>
+      </column>
+      <column id="pmck003_desc"/>
+      <column id="pmck001">
+        <controlp form="q_pmcc001" state="c"/>
+      </column>
+      <column id="pmck002">
+        <after>
+          <reference field="pmck002_desc" ref_field="pmck002" map_field="pmckent,pmck002" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="pmck002_desc"/>
+      <column id="pmck004"/>
+      <column id="pmck005"/>
+      <column id="pmck006">
+        <after>
+          <reference field="pmck006_desc" ref_field="pmck006" map_field="pmck006" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2053&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pmck006_desc"/>
+      <column id="pmck007">
+        <after>
+          <reference field="pmck007_desc" ref_field="pmck007" map_field="pmck007" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2054&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pmck007_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="pmcj004">
+        <after>
+          <reference field="pmcj004_desc" ref_field="pmcj004" map_field="pmcjent,pmcj004" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal004=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_10" state="c"/>
+      </column>
+      <column id="pmcj004_desc"/>
+      <column id="pmcj001">
+        <controlp form="q_pmcc001" state="c"/>
+      </column>
+      <column id="pmcj002">
+        <after>
+          <reference field="pmcj002_desc" ref_field="pmcj002" map_field="pmcjent,pmcj002" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="pmcj002_desc"/>
+      <column id="pmcj003"/>
+      <column id="pmcj005">
+        <after/>
+        <controlp form="q_pmcj005" state="c"/>
+      </column>
+      <column id="pmcj005_desc"/>
+      <column id="pmcj006">
+        <after>
+          <reference field="pmcj006_desc" ref_field="pmcj006" map_field="pmcjent,pmcj006" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="pmcj006_desc"/>
+      <column id="pmcj007"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="pmck_t" page="1" linked="" pk="pmck001,pmck002,pmck003">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,pmck003,&apos;&apos;,pmck001,pmck002,&apos;&apos;,pmck004,pmck005,pmck006,&apos;&apos;,pmck007,&apos;&apos; FROM pmck_t WHERE pmckent= ? AND 1=1 "/>
+    </body>
+    <body id="pmcj_t" page="2" linked="" pk="pmcj003,pmcj005" fk="pmcj001,pmcj002,pmcj004" detail="Y">
+      <sql id="b_fill_sql" query="SELECT pmcj004,&apos;&apos;,pmcj001,pmcj002,&apos;&apos;,pmcj003,pmcj005,&apos;&apos;,pmcj006,&apos;&apos;,pmcj007 FROM pmcj_t WHERE pmcjent=? AND pmcj001=? AND pmcj002=? AND pmcj004=?"/>
+    </body>
+  </dataset>
+</assembly>
+

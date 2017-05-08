@@ -1,0 +1,34 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aist340_02" module="ais" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="04152" crtdt="2016-05-18 17:22:21" modid="04152" moddt="2016-05-18 17:25:36" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="收款單單號">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="l_memo(chr100),nmbadocno,nmbadocdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="ais" filename="aist340_02" method="dialog">
+    <section id="input">
+      <input id="head" field="nmbadocno,nmbadocdt"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="l_memo"/>
+      <column id="nmbadocno">
+        <controlp form="q_ooba002_4" state="i"/>
+        <controlp form="q_nmbadocno" state="c"/>
+      </column>
+      <column id="nmbadocdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="nmba_t" pk="nmbacomp,nmbadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT &apos;&apos;,nmbadocno,nmbadocdt FROM nmba_t WHERE nmbaent= ? AND nmbacomp=? AND nmbadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="nmbacomp,nmbadocno"/>
+    </head>
+  </dataset>
+</assembly>
+

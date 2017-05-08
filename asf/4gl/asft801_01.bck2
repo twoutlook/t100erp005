@@ -1,0 +1,768 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="asft801_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2014-09-01 06:21:14), PR版次:0002(2016-07-15 16:06:54)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000066
+#+ Filename...: asft801_01
+#+ Description: 多上站作業維護
+#+ Creator....: 01258(2014-08-30 19:26:47)
+#+ Modifier...: 01258 -SD/PR- 02159
+ 
+{</section>}
+ 
+{<section id="asft801_01.global" >}
+#應用 p00 樣板自動產生(Version:4)
+#add-point:填寫註解說明
+#160705-00042#12  2016/07/15  By 02159    把gzcb002=固定寫死的作業代號改成g_prog,然後gzcb_t要多JOIN gzzz_t
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asft801_01.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable)
+DEFINE g_sfocdocno            LIKE sfoc_t.sfocdocno
+DEFINE g_sfoc001              LIKE sfoc_t.sfoc001
+DEFINE g_sfoc900              LIKE sfoc_t.sfoc900
+DEFINE g_sfoc002              LIKE sfoc_t.sfoc002
+DEFINE g_sfob003              LIKE sfob_t.sfob003
+DEFINE g_sfob004              LIKE sfob_t.sfob004
+DEFINE g_sfob003_desc         LIKE oocql_t.oocql004
+DEFINE g_sql                  STRING
+DEFINE g_forupd_sql           STRING
+DEFINE l_ac                   LIKE type_t.num5
+DEFINE g_rec_b                LIKE type_t.num5
+DEFINE g_sfoc                 DYNAMIC ARRAY OF RECORD
+       sfoc003                LIKE sfoc_t.sfoc003,
+       sfoc003_desc           LIKE oocql_t.oocql004,
+       sfoc004                LIKE sfoc_t.sfoc004,
+       sfoc901                LIKE sfoc_t.sfoc901,
+       sfoc905                LIKE sfoc_t.sfoc905,
+       sfoc905_desc           LIKE type_t.chr80,
+       sfoc906                LIKE sfoc_t.sfoc906,
+       sfoc902                DATETIME YEAR TO SECOND,
+       sfocseq                LIKE sfoc_t.sfocseq
+                              END RECORD
+DEFINE g_sfoc_t               RECORD
+       sfoc003                LIKE sfoc_t.sfoc003,
+       sfoc003_desc           LIKE oocql_t.oocql004,
+       sfoc004                LIKE sfoc_t.sfoc004,
+       sfoc901                LIKE sfoc_t.sfoc901,
+       sfoc905                LIKE sfoc_t.sfoc905,
+       sfoc905_desc           LIKE type_t.chr80,
+       sfoc906                LIKE sfoc_t.sfoc906,
+       sfoc902                DATETIME YEAR TO SECOND,
+       sfocseq                LIKE sfoc_t.sfocseq
+                              END RECORD 
+DEFINE g_ref_fields           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列    
+DEFINE g_acc                  LIKE gzcb_t.gzcb007
+DEFINE g_sfoc_color           DYNAMIC ARRAY OF RECORD
+       sfoc003                STRING,
+       sfoc003_desc           STRING,
+       sfoc004                STRING,
+       sfoc901                STRING,
+       sfoc905                STRING,
+       sfoc905_desc           STRING,
+       sfoc906                STRING,
+       sfoc902                STRING,
+       sfocseq                STRING
+                              END RECORD
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asft801_01.global_variable" >}
+#add-point:自定義模組變數(Module Variable)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asft801_01.other_dialog" >}
+
+ 
+{</section>}
+ 
+{<section id="asft801_01.other_function" readonly="Y" >}
+################################################################################
+# Descriptions...: 多上站作业资料维护
+# Memo...........:
+# Usage..........: CALL asft801_01(p_sfocdocno,p_sfoc001,p_sfoc900,p_sfoc002,p_sfob003,p_sfob004,p_type)
+# Input parameter: 1.p_sfocdocno               LIKE sfoc_t.sfocdocno
+#                : 2.p_sfoc001                 LIKE sfoc_t.sfoc001
+#                : 3.p_sfoc900                 LIKE sfoc_t.sfoc900
+#                : 4.p_sfoc002                 LIKE sfoc_t.sfoc002
+#                : 5.p_sfob003                 LIKE sfob_t.sfob003
+#                : 6.p_sfob004                 LIKE sfob_t.sfob004
+#                : 7.p_type                    LIKE type_t.chr1
+# Date & Author..: 2014/2/13 By wuxja
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION asft801_01(p_sfocdocno,p_sfoc001,p_sfoc900,p_sfoc002,p_sfob003,p_sfob004,p_type)
+DEFINE p_sfocdocno               LIKE sfoc_t.sfocdocno
+DEFINE p_sfoc001                 LIKE sfoc_t.sfoc001
+DEFINE p_sfoc900                 LIKE sfoc_t.sfoc900
+DEFINE p_sfoc002                 LIKE sfoc_t.sfoc002
+DEFINE p_sfob003                 LIKE sfob_t.sfob003
+DEFINE p_sfob004                 LIKE sfob_t.sfob004
+DEFINE p_type                    LIKE type_t.chr1
+DEFINE l_count                   LIKE type_t.num5
+DEFINE l_n                       LIKE type_t.num5
+DEFINE l_cmd                     LIKE type_t.chr5
+DEFINE l_lock_sw                 LIKE type_t.chr1
+DEFINE l_allow_insert            LIKE type_t.num5        #可新增否 
+DEFINE l_allow_delete            LIKE type_t.num5        #可刪除否
+DEFINE l_flag                    LIKE type_t.chr1
+DEFINE l_success                 LIKE type_t.num5
+DEFINE l_flag1                   LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+   IF cl_null(p_sfocdocno) OR cl_null(p_sfoc001) OR cl_null(p_sfoc900) OR cl_null(p_sfoc002) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'sub-00001'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN
+   END IF
+   
+   LET g_acc = ''
+   #抓取[T:系統分類值檔].[C:系統分類碼]=24且[T:系統分類值檔].[C:系統分類碼]=g_prog 的[T:系統分類值檔].[C:參考欄位>
+   #SELECT gzcb004 INTO g_acc FROM gzcb_t WHERE gzcb001 = '24' AND gzcb002 = 'asft801'                            #160705-00042#12 160715 by sakura mark
+   SELECT gzcb004 INTO g_acc FROM gzcb_t,gzzz_t WHERE gzcb001 = '24' AND gzcb002 = gzzz006 AND gzzz001 = g_prog   #160705-00042#12 160715 by sakura add
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_asft801_01 WITH FORM cl_ap_formpath("asf","asft801_01")
+
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   CALL cl_set_combo_scc('sfoc901','5448')
+   CLEAR FORM
+   CALL g_sfoc.clear()
+   
+   LET g_qryparam.state = "i"
+
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   LET g_sfocdocno = p_sfocdocno
+   LET g_sfoc001 = p_sfoc001
+   LET g_sfoc900 = p_sfoc900
+   LET g_sfoc002 = p_sfoc002
+   LET g_sfob003 = p_sfob003
+   LET g_sfob004 = p_sfob004
+   
+   #作业编号说明
+   INITIALIZE g_chkparam.* TO NULL
+   LET g_chkparam.arg1 = '221'
+   LET g_chkparam.arg2 = g_sfob003
+   CALL cl_ref_val("v_oocql002")
+   LET g_sfob003_desc = g_chkparam.return1
+   
+   DISPLAY g_sfoc002,g_sfob003,g_sfob004 TO sfoc002,sfob003_1,sfob004_1
+   DISPLAY g_sfob003_desc TO sfob003_1_desc
+   CALL asft801_01_sfob_color()
+   
+   LET g_forupd_sql = " SELECT sfoc003,'',sfoc004,sfoc901,sfoc905,'',sfoc906,sfoc902,sfocseq FROM sfoc_t ",
+                   "  WHERE sfocent = '",g_enterprise,"' AND sfocsite = '",g_site,"'",
+                   "    AND sfocdocno='",g_sfocdocno,"' AND sfoc001='",g_sfoc001,"' AND sfoc900='",g_sfoc900,"'",
+                   "    AND sfoc002='",g_sfoc002,"' AND sfoc003 = ? AND sfoc004 = ? FOR UPDATE"
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   PREPARE asft801_01_pre FROM g_forupd_sql
+   DECLARE asft801_01_cs CURSOR FOR asft801_01_pre
+   
+   CALL asft801_01_b_fill()
+   
+   IF p_type = 'N' THEN
+      DISPLAY ARRAY g_sfoc TO s_detail1.*
+         BEFORE ROW
+            LET l_ac = DIALOG.getCurrentRow("s_detail1")
+            CALL s_hint_show('sfoe_t','sfoc_t','sfcc_t',g_sfocdocno,g_sfoc900,g_sfoc001,g_sfoc002,g_sfoc[l_ac].sfocseq)
+          
+         BEFORE DISPLAY
+            CALL DIALOG.setCellAttributes(g_sfoc_color)
+            
+         ON ACTION accept
+            LET INT_FLAG = TRUE
+            EXIT DISPLAY
+
+         ON ACTION cancel
+            LET INT_FLAG = TRUE
+            EXIT DISPLAY
+
+         ON ACTION exit
+           LET INT_FLAG = TRUE
+           EXIT DISPLAY
+
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DISPLAY
+      END DISPLAY
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         CLOSE WINDOW w_asft801_01
+         RETURN
+      END IF
+   END IF
+   
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      INPUT ARRAY g_sfoc FROM s_detail1.*
+         ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                 INSERT ROW = l_allow_insert,
+                 DELETE ROW = l_allow_delete,
+                 APPEND ROW = l_allow_insert)
+         
+         BEFORE ROW 
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET l_lock_sw = 'N'            #DEFAULT
+            DISPLAY l_ac TO FORMONLY.idx
+            CALL cl_set_comp_entry("sfoc004",TRUE)
+            CALL s_transaction_begin()
+
+            IF g_rec_b >= l_ac THEN
+               LET l_cmd='u'
+               LET g_sfoc_t.* = g_sfoc[l_ac].*  #BACKUP
+               OPEN asft801_01_cs USING g_sfoc[l_ac].sfoc003,g_sfoc[l_ac].sfoc004
+
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "asft801_01_cs"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH asft801_01_cs INTO g_sfoc[l_ac].*
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_sfoc[l_ac].sfoc003
+                  CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent = '"||g_enterprise||"' AND oocql001 = '221' AND oocql002 = ? AND oocql003 = '"||g_lang||"'","") RETURNING g_rtn_fields
+                  LET g_sfoc[l_ac].sfoc003_desc = g_rtn_fields[1]
+                  DISPLAY g_sfoc[l_ac].sfoc003_desc TO s_detail1[l_ac].sfoc003_desc
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            
+         BEFORE INSERT
+            CALL s_transaction_begin()
+            LET l_cmd = 'a'
+            INITIALIZE g_sfoc[l_ac].* TO NULL
+            LET g_sfoc[l_ac].sfoc901 = '3'
+            SELECT MAX(sfocseq) INTO g_sfoc[l_ac].sfocseq FROM sfoc_t 
+             WHERE sfocent = g_enterprise AND sfocsite = g_site
+               AND sfocdocno = g_sfocdocno AND sfoc001 = g_sfoc001 AND sfoc900 = g_sfoc900
+               AND sfoc002 = g_sfoc002
+            IF cl_null(g_sfoc[l_ac].sfocseq) THEN
+               LET g_sfoc[l_ac].sfocseq = 1
+            ELSE
+               LET g_sfoc[l_ac].sfocseq = g_sfoc[l_ac].sfocseq + 1
+            END IF
+            LET g_sfoc[l_ac].sfoc902 = cl_get_current()
+            LET g_sfoc_t.* = g_sfoc[l_ac].*         
+            CALL cl_show_fld_cont()
+
+         AFTER INSERT
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+            SELECT COUNT(*) INTO l_count FROM sfoc_t WHERE sfocent=g_enterprise AND sfocsite=g_site AND sfocdocno=g_sfocdocno
+               AND sfoc001=g_sfoc001 AND sfoc002=g_sfoc002 AND sfoc003=g_sfoc[l_ac].sfoc003 AND sfoc004=g_sfoc[l_ac].sfoc004
+               AND sfoc900=g_sfoc900
+            IF l_count = 0 THEN
+               INSERT INTO sfoc_t(sfocent,sfocsite,sfocdocno,sfoc001,sfoc002,sfoc003,sfoc004,sfoc900,sfoc901,sfoc902,sfoc905,sfoc906,sfocseq)
+                           VALUES(g_enterprise,g_site,g_sfocdocno,g_sfoc001,g_sfoc002,g_sfoc[l_ac].sfoc003,g_sfoc[l_ac].sfoc004,g_sfoc900,g_sfoc[l_ac].sfoc901,g_sfoc[l_ac].sfoc902,g_sfoc[l_ac].sfoc905,g_sfoc[l_ac].sfoc906,g_sfoc[l_ac].sfocseq)
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "INSERT sfoc_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CALL s_transaction_end('N',0)
+                  CANCEL INSERT
+               ELSE
+                  IF NOT asft801_upd_sfoc_sfoe(g_sfocdocno,g_sfoc001,g_sfoc002,g_sfoc[l_ac].sfocseq,g_sfoc900) THEN
+                     INITIALIZE g_sfoc[l_ac].* TO NULL
+                     CALL s_transaction_end('N','0')
+                     CANCEL INSERT
+                  END IF
+                  CALL s_transaction_end('Y',0)
+                  ERROR 'INSERT O.K'
+                  LET g_rec_b = g_rec_b + 1
+               END IF
+            ELSE
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               INITIALIZE g_sfoc[l_ac].* TO NULL
+               CALL s_transaction_end('N',0)
+               CANCEL INSERT
+            END IF
+            
+         BEFORE DELETE                            #是否取消單身
+            IF NOT cl_null(g_sfoc[l_ac].sfoc003) AND NOT cl_null(g_sfoc[l_ac].sfoc004)THEN
+
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  -263
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CANCEL DELETE
+               END IF
+               IF g_sfoc[l_ac].sfoc901 = '4' THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = g_sfoc[l_ac].sfoc003
+                  LET g_errparam.code   = 'asf-00037' 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err() 
+                  CANCEL DELETE
+               END IF
+               
+               IF NOT asft801_sfoc_delete(g_sfocdocno,g_sfoc001,g_sfoc900,g_sfoc002,g_sfoc[l_ac].sfocseq) THEN
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE
+               END IF
+               
+               CALL s_transaction_end('Y','0')
+               CLOSE asft801_01_cs
+            END IF
+            
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_sfoc[l_ac].* = g_sfoc_t.*
+               CLOSE asft801_01_cs
+               CALL s_transaction_end('N',0)
+               EXIT DIALOG
+            END IF
+
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_sfoc[l_ac].* = g_sfoc_t.*
+            ELSE
+               IF g_sfoc[l_ac].sfoc901 = '1' THEN
+                  LET g_sfoc[l_ac].sfoc901 = '2'
+               END IF
+               LET g_sfoc[l_ac].sfoc902 = cl_get_current()
+               UPDATE sfoc_t SET (sfoc003,sfoc004,sfoc901,sfoc902,sfoc905,sfoc906) 
+                               = (g_sfoc[l_ac].sfoc003,g_sfoc[l_ac].sfoc004,g_sfoc[l_ac].sfoc901,g_sfoc[l_ac].sfoc902,g_sfoc[l_ac].sfoc905,g_sfoc[l_ac].sfoc906)
+                WHERE sfocent=g_enterprise AND sfocsite=g_site AND sfocdocno=g_sfocdocno AND sfoc900 = g_sfoc900
+                  AND sfoc001=g_sfoc001 AND sfoc002=g_sfoc002 AND sfoc003=g_sfoc_t.sfoc003 AND sfoc004=g_sfoc_t.sfoc004
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "UPDATE sfoc_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_sfoc[l_ac].* = g_sfoc_t.*
+                  CALL s_transaction_end('N',0)
+               ELSE
+                  IF NOT asft801_upd_sfoc_sfoe(g_sfocdocno,g_sfoc001,g_sfoc002,g_sfoc[l_ac].sfocseq,g_sfoc900) THEN
+                     INITIALIZE g_sfoc[l_ac].* TO NULL
+                     CALL s_transaction_end('N','0')
+                  END IF
+                  CALL s_transaction_end('Y',0)
+               END IF
+            END IF
+            
+         AFTER ROW
+            CLOSE asft801_01_cs          {#ADP版次:1#}
+            
+         AFTER FIELD sfoc003
+            IF NOT cl_null(g_sfoc[l_ac].sfoc003) AND (cl_null(g_sfoc_t.sfoc003) OR g_sfoc[l_ac].sfoc003 != g_sfoc_t.sfoc003) THEN
+               #排除INIT,群组编号
+               IF g_sfoc[l_ac].sfoc003 = 'INIT' THEN
+                  LET g_sfoc[l_ac].sfoc004 = 0
+               ELSE
+                  SELECT COUNT(*) INTO l_n FROM sfob_t WHERE sfobent=g_enterprise AND sfobsite=g_site 
+                     AND sfobdocno=g_sfocdocno AND sfob001=g_sfoc001 AND sfob006=g_sfoc[l_ac].sfoc003
+                     AND sfob900 = g_sfoc900
+                  IF l_n > 0 THEN
+                     LET g_sfoc[l_ac].sfoc004 = 0
+                  ELSE                                    
+                     #是否存在本站作业
+                     IF NOT cl_null(g_sfoc[l_ac].sfoc004) THEN
+                        SELECT COUNT(*) INTO l_n FROM sfob_t WHERE sfobent=g_enterprise AND sfobsite=g_site
+                        AND sfobdocno=g_sfocdocno AND sfob001=g_sfoc001 AND sfob003=g_sfoc[l_ac].sfoc003 AND sfob004=g_sfoc[l_ac].sfoc004
+                        AND sfob900=g_sfoc900
+                     ELSE
+                        SELECT COUNT(*) INTO l_n FROM sfob_t WHERE sfobent=g_enterprise AND sfobsite=g_site
+                        AND sfobdocno=g_sfocdocno AND sfob001=g_sfoc001 AND sfob003=g_sfoc[l_ac].sfoc003
+                        AND sfob900=g_sfoc900                        
+                     END IF
+                     IF l_n = 0 THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'asf-00132'
+                        LET g_errparam.extend = g_sfoc[l_ac].sfoc003
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+
+                        LET g_sfoc[l_ac].sfoc003 = g_sfoc_t.sfoc003
+                        INITIALIZE g_chkparam.* TO NULL
+                        LET g_chkparam.arg1 = '221'
+                        LET g_chkparam.arg2 = g_sfoc[l_ac].sfoc003
+                        CALL cl_ref_val("v_oocql002")
+                        LET g_sfoc[l_ac].sfoc003_desc = g_chkparam.return1
+                        DISPLAY BY NAME g_sfoc[l_ac].sfoc003_desc
+                        NEXT FIELD sfoc003
+                     END IF
+                  END IF
+               END IF                  
+
+               IF NOT cl_null(g_sfoc[l_ac].sfoc004) THEN
+                  IF NOT ap_chk_notDup(g_sfoc[l_ac].sfoc003,"SELECT COUNT(*) FROM sfoc_t WHERE sfocent = '" ||g_enterprise|| "' AND sfocsite = '"||g_site ||"' AND sfocdocno ='"||g_sfocdocno||"' AND sfoc001='"||g_sfoc001||"' AND sfoc900="||g_sfoc900||" AND sfoc002='"||g_sfoc002||"' AND sfoc003 = '"||g_sfoc[l_ac].sfoc003 ||"' AND sfoc004 = '"||g_sfoc[l_ac].sfoc004||"'",'std-00004',1) THEN
+                     LET g_sfoc[l_ac].sfoc003 = g_sfoc_t.sfoc003
+                     LET g_sfoc[l_ac].sfoc004 = g_sfoc_t.sfoc004
+                     INITIALIZE g_chkparam.* TO NULL
+                     LET g_chkparam.arg1 = '221'
+                     LET g_chkparam.arg2 = g_sfoc[l_ac].sfoc003
+                     CALL cl_ref_val("v_oocql002")
+                     LET g_sfoc[l_ac].sfoc003_desc = g_chkparam.return1
+                     DISPLAY BY NAME g_sfoc[l_ac].sfoc003_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  #上站作業+上站製程序不可與同項次的本站作業、製程序相同
+                  IF g_sfoc[l_ac].sfoc003 = g_sfob003 AND g_sfoc[l_ac].sfoc004 = g_sfob004 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'asf-00132'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_sfoc[l_ac].sfoc003 = g_sfoc_t.sfoc003
+                     LET g_sfoc[l_ac].sfoc004 = g_sfoc_t.sfoc004
+                     INITIALIZE g_chkparam.* TO NULL
+                     LET g_chkparam.arg1 = '221'
+                     LET g_chkparam.arg2 = g_sfoc[l_ac].sfoc003
+                     CALL cl_ref_val("v_oocql002")
+                     LET g_sfoc[l_ac].sfoc003_desc = g_chkparam.return1
+                     DISPLAY BY NAME g_sfoc[l_ac].sfoc003_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  #本站作业为群组，上站作业群组不可维护成同本站作业群组的
+                  SELECT COUNT(*) INTO l_n FROM sfob_t WHERE sfobent=g_enterprise AND sfobsite=g_site
+                     AND sfobdocno=g_sfocdocno AND sfob001=g_sfoc001 AND sfob002=g_sfoc002 AND sfob006=g_sfoc[l_ac].sfoc003
+                     AND sfob900=g_sfoc900
+                  IF l_n > 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'asf-00194'
+                     LET g_errparam.extend = g_sfoc[l_ac].sfoc003
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_sfoc[l_ac].sfoc003 = g_sfoc_t.sfoc003
+                     LET g_sfoc[l_ac].sfoc004 = g_sfoc_t.sfoc004
+                     INITIALIZE g_chkparam.* TO NULL
+                     LET g_chkparam.arg1 = '221'
+                     LET g_chkparam.arg2 = g_sfoc[l_ac].sfoc003
+                     CALL cl_ref_val("v_oocql002")
+                     LET g_sfoc[l_ac].sfoc003_desc = g_chkparam.return1
+                     DISPLAY BY NAME g_sfoc[l_ac].sfoc003_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = '221'
+               LET g_chkparam.arg2 = g_sfoc[l_ac].sfoc003
+               CALL cl_ref_val("v_oocql002")
+               LET g_sfoc[l_ac].sfoc003_desc = g_chkparam.return1
+               DISPLAY BY NAME g_sfoc[l_ac].sfoc003_desc 
+            END IF
+         
+         BEFORE FIELD sfoc004
+            IF NOT cl_null(g_sfoc[l_ac].sfoc003) THEN
+               SELECT COUNT(*) INTO l_n FROM sfob_t WHERE sfobent=g_enterprise AND sfobsite=g_site
+                  AND sfobdocno=g_sfocdocno AND sfob001=g_sfoc001 AND sfob006=g_sfoc[l_ac].sfoc003
+                  AND sfob900 = g_sfoc900
+               IF g_sfoc[l_ac].sfoc003 = 'INIT' OR l_n > 0 THEN
+                  CALL cl_set_comp_entry("sfoc004",FALSE)
+                  LET l_flag = 'N'
+               ELSE
+                  CALL cl_set_comp_entry("sfoc004",TRUE)
+                  LET l_flag = 'Y'
+               END IF
+              # LET g_sfoc_t.sfoc004 = g_sfoc[l_ac].sfoc004
+            END IF
+            
+         AFTER FIELD sfoc004
+            IF NOT cl_null(g_sfoc[l_ac].sfoc004) AND (cl_null(g_sfoc_t.sfoc004) OR g_sfoc[l_ac].sfoc004 != g_sfoc_t.sfoc004) AND l_flag = 'Y' THEN
+                  IF NOT cl_null(g_sfoc[l_ac].sfoc003) THEN
+                     IF NOT ap_chk_notDup(g_sfoc[l_ac].sfoc004,"SELECT COUNT(*) FROM sfoc_t WHERE sfocent = '" ||g_enterprise|| "' AND sfocsite = '"||g_site ||"' AND sfocdocno ='"||g_sfocdocno||"' AND sfoc001='"||g_sfoc001||"' AND sfoc900="||g_sfoc900||" AND sfoc002='"||g_sfoc002||"' AND sfoc003 = '"||g_sfoc[l_ac].sfoc003 ||"' AND sfoc004 = '"||g_sfoc[l_ac].sfoc004||"'",'std-00004',1) THEN
+                        LET g_sfoc[l_ac].sfoc004 = g_sfoc_t.sfoc004
+                        NEXT FIELD CURRENT
+                     END IF
+                     #是否存在本站作业+制程序
+                     SELECT COUNT(*) INTO l_n FROM sfob_t WHERE sfobent=g_enterprise AND sfobsite=g_site
+                        AND sfobdocno=g_sfocdocno AND sfob001=g_sfoc001 AND sfob003=g_sfoc[l_ac].sfoc003 AND sfob004=g_sfoc[l_ac].sfoc004
+                        AND sfob900=g_sfoc900                        
+                     IF l_n = 0 THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'asf-00132'
+                        LET g_errparam.extend = g_sfoc[l_ac].sfoc004
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+
+                        LET g_sfoc[l_ac].sfoc004 = g_sfoc_t.sfoc004
+                        NEXT FIELD sfoc004
+                     END IF 
+                     #上站作業+上站製程序不可與同項次的本站作業、製程序相同
+                     IF g_sfoc[l_ac].sfoc003 = g_sfob003 AND g_sfoc[l_ac].sfoc004 = g_sfob004 THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'asf-00132'
+                        LET g_errparam.extend = g_sfoc[l_ac].sfoc004
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+
+                        LET g_sfoc[l_ac].sfoc004 = g_sfoc_t.sfoc004
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+            END IF
+            
+         AFTER FIELD sfoc905
+            IF NOT cl_null(g_sfoc[l_ac].sfoc905) AND (g_sfoc[l_ac].sfoc905 != g_sfoc_t.sfoc905 OR cl_null(g_sfoc_t.sfoc905)) THEN
+               IF NOT s_azzi650_chk_exist(g_acc,g_sfoc[l_ac].sfoc905) THEN
+                  LET g_sfoc[l_ac].sfoc905 = g_sfoc_t.sfoc905
+                  NEXT FIELD sfoc905
+               END IF
+
+               #檢核輸入的理由碼是否在單據別限制範圍內，若不在限制內則不允許使用此理由碼
+               CALL s_control_chk_doc('8',g_sfocdocno,g_sfoc[l_ac].sfoc905,'','','','') RETURNING l_success,l_flag1
+               IF NOT l_success THEN
+                  LET g_sfoc[l_ac].sfoc905 = g_sfoc_t.sfoc905
+                  NEXT FIELD sfoc905
+               ELSE
+                  IF NOT l_flag1 THEN
+                     LET g_sfoc[l_ac].sfoc905 = g_sfoc_t.sfoc905
+                     NEXT FIELD sfoc905
+                  END IF
+               END IF
+            END IF
+            
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_sfoc[l_ac].sfoc905
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001= '"||g_acc||"' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_sfoc[l_ac].sfoc905_desc = '', g_rtn_fields[1] , ''
+            
+         ON ACTION controlp INFIELD sfoc003
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_sfoc[l_ac].sfoc003
+            LET g_qryparam.arg1 = g_site
+            LET g_qryparam.arg2 = g_sfocdocno
+            LET g_qryparam.arg3 = g_sfoc001
+            CALL q_sfcb003_1()
+            LET g_sfoc[l_ac].sfoc003 = g_qryparam.return1 
+            LET g_sfoc[l_ac].sfoc004 = g_qryparam.return2 
+            DISPLAY g_sfoc[l_ac].sfoc003 TO sfoc003
+            DISPLAY g_sfoc[l_ac].sfoc004 TO sfoc004
+            NEXT FIELD sfoc003 
+            
+         ON ACTION controlp INFIELD sfoc905
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_sfoc[l_ac].sfoc905             #給予default值
+
+            LET g_qryparam.arg1 = g_acc
+            
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_sfoc[l_ac].sfoc905 = g_qryparam.return1    
+            DISPLAY g_sfoc[l_ac].sfoc905 TO sfoc905    
+            NEXT FIELD sfoc905                          #返回原欄位
+      END INPUT
+      
+      BEFORE DIALOG
+         CALL DIALOG.setCurrentRow("s_detail1",l_ac)                {#ADP版次:1#}
+
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION close
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION exit
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+   END DIALOG
+   
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+   END IF
+   CLOSE asft801_01_cs
+   CLOSE WINDOW w_asft801_01
+END FUNCTION
+################################################################################
+# Descriptions...: 单身显示
+# Memo...........:
+# Usage..........: CALL asft801_01_b_fill()
+# Date & Author..: 2014/2/13 By wuxja
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asft801_01_b_fill()
+   LET g_sql="SELECT sfoc003,'',sfoc004,sfoc901,sfoc905,'',sfoc906,sfoc902,sfocseq FROM sfoc_t WHERE sfocent='",g_enterprise,"' AND sfocsite='",g_site,"'",
+             "   AND sfocdocno='",g_sfocdocno,"' AND sfoc001='",g_sfoc001,"' AND sfoc002='",g_sfoc002,"' AND sfoc900='",g_sfoc900,"'"
+   PREPARE asft801_01_pre1 FROM g_sql
+   DECLARE asft801_01_cs1 CURSOR FOR asft801_01_pre1
+   LET l_ac = 1
+   FOREACH asft801_01_cs1 INTO g_sfoc[l_ac].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      #作业编号说明
+      INITIALIZE g_chkparam.* TO NULL
+      LET g_chkparam.arg1 = '221'
+      LET g_chkparam.arg2 = g_sfoc[l_ac].sfoc003
+      CALL cl_ref_val("v_oocql002")
+      LET g_sfoc[l_ac].sfoc003_desc = g_chkparam.return1
+      
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_sfoc[l_ac].sfoc905
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001= '"||g_acc||"' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_sfoc[l_ac].sfoc905_desc = '', g_rtn_fields[1] , ''
+      
+      CALL asft801_01_sfoc_color()
+   
+      LET l_ac = l_ac + 1
+   END FOREACH
+   CALL g_sfoc.deleteElement(g_sfoc.getLength())
+   LET g_rec_b = l_ac - 1
+END FUNCTION
+
+#工单制程多上站单头颜色显示
+PRIVATE FUNCTION asft801_01_sfob_color()
+DEFINE l_sfoe002         LIKE sfoe_t.sfoe002
+
+   CALL cl_set_comp_font_color("sfob002,sfob003_1,sfob003_1_desc,sfob004_1","black")
+   DECLARE sel_sfob_sfoe_cs1 CURSOR FOR
+    SELECT sfoe002 FROM sfoe_t WHERE sfoeent = g_enterprise AND sfoesite = g_site 
+      AND sfoedocno = g_sfocdocno AND sfoeseq = g_sfoc001 AND sfoeseq1 = g_sfoc002 AND sfoeseq2 = 0
+      AND sfoe001 = g_sfoc900 AND (sfoe002 = 'sfcb002' OR sfoe002 = 'sfcb003' OR sfoe002 = 'sfcb004')
+   FOREACH sel_sfob_sfoe_cs1 INTO l_sfoe002
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      IF l_sfoe002 = 'sfcb002' THEN
+         CALL cl_set_comp_font_color('sfoc002',"red")
+      END IF
+      IF l_sfoe002 = 'sfcb003' THEN
+         CALL cl_set_comp_font_color('sfob003_1',"red")
+         CALL cl_set_comp_font_color('sfob003_1_desc',"red")
+      END IF
+      IF l_sfoe002 = 'sfcb004' THEN
+         CALL cl_set_comp_font_color('sfob004_1',"red")
+      END IF
+   END FOREACH  
+END FUNCTION
+
+#制程多上站单身color显示
+PRIVATE FUNCTION asft801_01_sfoc_color()
+DEFINE l_sfoe002         LIKE sfoe_t.sfoe002
+
+   LET g_sfoc_color[l_ac].sfoc003       = 'black'
+   LET g_sfoc_color[l_ac].sfoc003_desc  = 'black'
+   LET g_sfoc_color[l_ac].sfoc004       = 'black'
+   
+   DECLARE sel_sfoc_sfoe_cs CURSOR FOR
+    SELECT sfoe002 FROM sfoe_t
+     WHERE sfoeent   = g_enterprise AND sfoesite = g_site
+       AND sfoedocno = g_sfocdocno AND sfoeseq   = g_sfoc001
+       AND sfoeseq1  = g_sfoc002 AND sfoeseq2 = g_sfoc[l_ac].sfocseq
+       AND sfoe001 = g_sfoc900 AND sfoe002 LIKE 'sfcc%'
+   FOREACH sel_sfoc_sfoe_cs INTO l_sfoe002
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      LET l_sfoe002 = cl_replace_str(l_sfoe002,'sfcc','sfoc')
+
+      CASE l_sfoe002
+         WHEN 'sfoc003' 
+            LET g_sfoc_color[l_ac].sfoc003       = 'red'
+            LET g_sfoc_color[l_ac].sfoc003_desc  = 'red'
+         WHEN 'sfoc004' 
+            LET g_sfoc_color[l_ac].sfoc004       = 'red'
+      END CASE
+   END FOREACH
+END FUNCTION
+
+ 
+{</section>}
+ 

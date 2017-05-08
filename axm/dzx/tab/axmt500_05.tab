@@ -1,0 +1,79 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axmt500_05" module="axm" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="02040" crtdt="2014-05-12 18:32:44" modid="02040" moddt="2015-02-05 17:46:35" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="維護訂單附屬零件明細子作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr500),xmdqdocno,xmdqseq,xmdqseq1,xmdq012,xmdq001,xmdq001_desc(chr500),imaal0041(chr500),xmdq010,xmdq011,xmdq006,xmdq007,xmdq008,xmdq008_desc(chr500),xmdq009,xmdq002,xmdq002_desc(chr500),imaal0042(chr500),xmdq004,xmdq005"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="modify" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axm" filename="axmt500_05" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="sel,xmdq006,xmdq007" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel" type="S" default="N"/>
+      <column id="xmdqdocno"/>
+      <column id="xmdqseq"/>
+      <column id="xmdqseq1"/>
+      <column id="xmdq012" def_scc="2055"/>
+      <column id="xmdq001">
+        <after>
+          <reference field="xmdq001_desc" ref_field="xmdq_t.xmdq001" map_field="xmdq001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmdq001_desc"/>
+      <column id="imaal0041"/>
+      <column id="xmdq010" type="S" default="0"/>
+      <column id="xmdq011" type="S" default="0"/>
+      <column id="xmdq006" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmdq007" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmdq008">
+        <after>
+          <reference field="xmdq008_desc" ref_field="xmdq_t.xmdq008" map_field="xmdq008" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmdq008_desc"/>
+      <column id="xmdq009" type="S" default="0"/>
+      <column id="xmdq002">
+        <after>
+          <reference field="xmdq002_desc" ref_field="xmdq_t.xmdq002" map_field="xmdq002" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmdq002_desc"/>
+      <column id="imaal0042"/>
+      <column id="xmdq004"/>
+      <column id="xmdq005"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="xmdq_t" page="1" linked="" pk="xmdqdocno,xmdqseq,xmdqseq1">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,xmdqdocno,xmdqseq,xmdqseq1,xmdq012,xmdq001,&apos;&apos;,&apos;&apos;,xmdq010,xmdq011,xmdq006,xmdq007,xmdq008,&apos;&apos;,xmdq009,xmdq002,&apos;&apos;,&apos;&apos;,xmdq004,xmdq005 FROM xmdq_t WHERE xmdqent=? AND xmdqdocno=? AND xmdqseq=? AND xmdqseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,xmdqdocno,xmdqseq,xmdqseq1,xmdq012,xmdq001,&apos;&apos;,&apos;&apos;,xmdq010,xmdq011,xmdq006,xmdq007,xmdq008,&apos;&apos;,xmdq009,xmdq002,&apos;&apos;,&apos;&apos;,xmdq004,xmdq005 FROM xmdq_t WHERE xmdqent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

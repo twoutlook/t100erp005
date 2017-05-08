@@ -1,0 +1,470 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axcr508_x01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:2(2016-06-06 11:08:54), PR版次:0002(2016-06-17 16:33:02)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000046
+#+ Filename...: axcr508_x01
+#+ Description: ...
+#+ Creator....: 05947(2015-04-14 11:01:10)
+#+ Modifier...: 05423 -SD/PR- 05423
+ 
+{</section>}
+ 
+{<section id="axcr508_x01.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:8)
+#add-point:填寫註解說明 name="global.memo"
+#160523-00041#3    2016/06/06 By zhujing     委外採購應包含委外重工類型者
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #where condition 
+       comp LIKE xcck_t.xcckcomp,         #法人组织 
+       ld LIKE xcck_t.xcckld,         #账套 
+       year LIKE xcck_t.xcck004,         #年度 
+       month LIKE xcck_t.xcck005,         #期别 
+       order LIKE xcck_t.xcck001,         #本位币顺序 
+       type LIKE xcck_t.xcck003,         #成本计算类型 
+       chk1 LIKE type_t.chr1,         #打印明细否 
+       chk2 LIKE type_t.chr1          #仅打印未立账
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_range  LIKE type_t.chr1  #成本域
+DEFINE g_spec   LIKE type_t.chr1  #特性
+DEFINE g_chk1   LIKE type_t.chr1
+DEFINE g_chk2   LIKE type_t.chr1
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axcr508_x01.main" readonly="Y" >}
+PUBLIC FUNCTION axcr508_x01(p_arg1,p_arg2,p_arg3,p_arg4,p_arg5,p_arg6,p_arg7,p_arg8,p_arg9)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition 
+DEFINE  p_arg2 LIKE xcck_t.xcckcomp         #tm.comp  法人组织 
+DEFINE  p_arg3 LIKE xcck_t.xcckld         #tm.ld  账套 
+DEFINE  p_arg4 LIKE xcck_t.xcck004         #tm.year  年度 
+DEFINE  p_arg5 LIKE xcck_t.xcck005         #tm.month  期别 
+DEFINE  p_arg6 LIKE xcck_t.xcck001         #tm.order  本位币顺序 
+DEFINE  p_arg7 LIKE xcck_t.xcck003         #tm.type  成本计算类型 
+DEFINE  p_arg8 LIKE type_t.chr1         #tm.chk1  打印明细否 
+DEFINE  p_arg9 LIKE type_t.chr1         #tm.chk2  仅打印未立账
+#add-point:init段define(客製用) name="component.define_customerization"
+
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.comp = p_arg2
+   LET tm.ld = p_arg3
+   LET tm.year = p_arg4
+   LET tm.month = p_arg5
+   LET tm.order = p_arg6
+   LET tm.type = p_arg7
+   LET tm.chk1 = p_arg8
+   LET tm.chk2 = p_arg9
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   CALL cl_get_para(g_enterprise,g_site,'S-FIN-6001') RETURNING g_range   #采用成本域否
+   CALL cl_get_para(g_enterprise,g_site,'S-FIN-6013') RETURNING g_spec  #采用特性否
+   LET g_chk1 = tm.chk1
+   LET g_chk2 = tm.chk2
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "axcr508_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL axcr508_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL axcr508_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL axcr508_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL axcr508_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL axcr508_x01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcr508_x01.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION axcr508_x01_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "xccksite.xcck_t.xccksite,xcck002.xcck_t.xcck002,xcck022.xcck_t.xcck022,xcck022_desc.type_t.chr100,xcck013.xcck_t.xcck013,xcck006.xcck_t.xcck006,xcck007.xcck_t.xcck007,xcck008.xcck_t.xcck008,xcck015.xcck_t.xcck015,xcck015_desc.type_t.chr100,xcck021.xcck_t.xcck021,xcck021_desc.type_t.chr100,xcck010.xcck_t.xcck010,xcck010_desc.type_t.chr100,xcck010_desc2.type_t.chr100,xcck011.xcck_t.xcck011,xcck017.xcck_t.xcck017,xcck044.xcck_t.xcck044,xcck044_desc.type_t.chr100,xcck009.xcck_t.xcck009,xcck201.xcck_t.xcck201,xcck040.xcck_t.xcck040,xcck042.xcck_t.xcck042,xcck282.xcck_t.xcck282,xcck202.xcck_t.xcck202" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   
+   #end add-point:create_tmp.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcr508_x01.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION axcr508_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcr508_x01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION axcr508_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+DEFINE l_wc          STRING
+DEFINE l_str         STRING
+DEFINE l_type        LIKE type_t.chr2  #160523-00041#3 add
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   
+   #end add-point
+   LET g_select = " SELECT xccksite,xcck002,xcck022,NULL,xcck013,xcck006,xcck007,xcck008,xcck015,NULL, 
+       xcck021,NULL,xcck010,NULL,NULL,xcck011,xcck017,xcck044,NULL,xcck009,xcck201,xcck040,xcck042,xcck282, 
+       xcck202"
+ 
+   #add-point:sel_prep g_from name="sel_prep.g_from"
+   LET g_select = " SELECT UNIQUE xccksite,xcck002,xcck022,t1.pmaal004,xcck013,xcck006,xcck007,xcck008,xcck015,NULL,xcck021, 
+       t3.oocql004,xcck010,t2.imaal003,t2.imaal004,xcck011,xcck017,xcck044,t4.oocal003,xcck009,xcck201,xcck040,xcck042,xcck282,xcck202"
+       
+   #IF g_chk1='N' THEN
+   #   LET g_select = " SELECT UNIQUE NULL,xcck002,xcck022,t1.pmaal004,NULL,NULL,NULL,NULL,NULL,NULL,NULL, 
+   #       NULL,xcck010,t2.imaal003,t2.imaal004,xcck011,NULL,xcck044,t4.oocal003,NULL,SUM(xcck201*xcck009),NULL,NULL,NULL,SUM(xcck202*xcck009)"
+   #END IF
+
+   #end add-point
+    LET g_from = " FROM xcck_t"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+   LET l_wc=tm.wc
+   LET g_from  = g_from CLIPPED,
+                 " LEFT JOIN pmaal_t t1 ON t1.pmaalent='"||g_enterprise||"' AND t1.pmaal001=xcck022 AND t1.pmaal002='"||g_dlang||"' ",
+                 " LEFT JOIN imaal_t t2 ON t2.imaalent='"||g_enterprise||"' AND t2.imaal001=xcck010 AND t2.imaal002='"||g_dlang||"' ",
+                 " LEFT JOIN oocql_t t3 ON t3.oocqlent='"||g_enterprise||"' AND t3.oocql002=xcck021 AND t3.oocql003='"||g_dlang||"' ",
+                 " LEFT JOIN oocal_t t4 ON t4.oocalent='"||g_enterprise||"' AND t4.oocal001=xcck044 AND t4.oocal002='"||g_dlang||"' "
+
+   IF l_wc.getIndexOf("imag011",1) THEN
+       LET g_from  = g_from CLIPPED,
+                 " LEFT JOIN imag_t ON imagent=xcckent AND imagsite=xcckcomp AND imag001=xcck010"
+   END IF
+   IF l_wc.getIndexOf("xcbb006",1) THEN
+      LET g_from  = g_from CLIPPED,
+                " LEFT JOIN xcbb_t ON xcbbent=xcckent AND xcbbcomp=xcckcomp AND xcbb001=xcck004 AND xcbb002=xcck005 AND xcbb003=xcck010 AND xcbb004=xcck011 "
+   END IF
+   IF l_wc.getIndexOf("imaa003",1) THEN
+      LET g_from  = g_from CLIPPED,
+                " LEFT JOIN imaa_t ON imaaent=xcckent AND imaa001=xcck010"
+   END IF
+   #IF l_wc.getIndexOf("cmt_type",1) THEN
+   #   LET g_from  = g_from CLIPPED,
+   #             " LEFT JOIN pmdl_t ON pmdlent=xcckent"
+   #END IF
+    
+   #IF g_chk2='Y' THEN
+   #   LET g_from = g_from CLIPPED,
+   #                " LEFT JOIN pmdt_t ON pmdtent=xcckent AND pmdtdocno=xcck006 AND pmdt006=xcck010 AND pmdt016=xcck015"
+   #END IF
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   LET g_where =  g_where CLIPPED," AND xcckent='",g_enterprise,"'"
+   IF NOT cl_null(tm.ld) THEN
+      LET g_where = g_where CLIPPED," AND xcckld ='",tm.ld,"' "
+   END IF
+   IF NOT cl_null(tm.order) THEN
+      LET g_where = g_where CLIPPED," AND xcck001 ='",tm.order,"' "
+   END IF   
+   IF NOT cl_null(tm.type) THEN
+      LET g_where = g_where CLIPPED," AND xcck003 ='",tm.type,"' "
+   END IF   
+   IF NOT cl_null(tm.year) THEN
+      LET g_where = g_where CLIPPED," AND xcck004 ='",tm.year,"' "
+   END IF   
+   IF NOT cl_null(tm.month) THEN
+      LET g_where = g_where CLIPPED," AND xcck005 ='",tm.month,"' "
+   END IF
+   LET l_type = NULL     #160523-00041#3 add
+   IF l_wc.getIndexOf("cmt_type='0'",1) THEN
+      LET l_type = '0' #160523-00041#3 add
+#      LET l_str=cl_replace_str(g_where,"cmt_type='0'","xcck055 = '201'")
+      LET l_str=cl_replace_str(g_where,"cmt_type='0'","(xcck055 = '201')") #160523-00041#3 mod
+      LET g_where = l_str CLIPPED
+   END IF
+   IF l_wc.getIndexOf("cmt_type='1'",1) THEN
+#      LET l_str=cl_replace_str(g_where,"cmt_type='1'","xcck055 = '203'")  #160523-00041#3 marked
+      LET l_type = '1'     #160523-00041#3 add
+      LET l_str=cl_replace_str(g_where,"cmt_type='1'","(xcck055 = '203' OR (xcck020 = '103' AND xcck055 = '209')) ")   #160523-00041#3 mod
+      LET g_where = l_str CLIPPED
+   END IF
+   IF l_wc.getIndexOf("cmt_type='2'",1) THEN
+#      LET l_str=cl_replace_str(g_where,"cmt_type='2'","(xcck055 = '203' OR xcck055 = '201')")     #160523-00041#3 marked
+      LET l_type = '2'     #160523-00041#3 add
+      LET l_str=cl_replace_str(g_where,"cmt_type='2'","(xcck055 = '203' OR (xcck020 = '103' AND xcck055 = '209') OR xcck055 = '201')") #160523-00041#3 mod
+      LET g_where = l_str CLIPPED
+    END IF     #160523-00041#3 add
+#   ELSE     #160523-00041#3 marked
+    IF cl_null(l_type) THEN   #160523-00041#3 add
+      LET l_str=g_where CLIPPED
+#      LET g_where = l_str CLIPPED," AND (xcck055 = '203' OR xcck055 = '201')"   #160523-00041#3 marked
+      LET g_where = l_str CLIPPED," AND (xcck055 = '203' OR xcck055 = '201' OR (xcck020 = '103' AND xcck055 = '209'))"  #160523-00041#3 mod
+   END IF
+   IF g_chk2='Y' THEN
+      LET g_where = g_where CLIPPED,
+                   "  and xcck006 not in(select apcb002 from apcb_t where apcbent=xcckent and apcbld=xcckld)"
+   END IF
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("xcck_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   
+   #end add-point
+   PREPARE axcr508_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE axcr508_x01_curs CURSOR FOR axcr508_x01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcr508_x01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION axcr508_x01_ins_data()
+DEFINE sr RECORD 
+   xccksite LIKE xcck_t.xccksite, 
+   xcck002 LIKE xcck_t.xcck002, 
+   xcck022 LIKE xcck_t.xcck022, 
+   xcck022_desc LIKE type_t.chr100, 
+   xcck013 LIKE xcck_t.xcck013, 
+   xcck006 LIKE xcck_t.xcck006, 
+   xcck007 LIKE xcck_t.xcck007, 
+   xcck008 LIKE xcck_t.xcck008, 
+   xcck015 LIKE xcck_t.xcck015, 
+   xcck015_desc LIKE type_t.chr100, 
+   xcck021 LIKE xcck_t.xcck021, 
+   xcck021_desc LIKE type_t.chr100, 
+   xcck010 LIKE xcck_t.xcck010, 
+   xcck010_desc LIKE type_t.chr100, 
+   xcck010_desc2 LIKE type_t.chr100, 
+   xcck011 LIKE xcck_t.xcck011, 
+   xcck017 LIKE xcck_t.xcck017, 
+   xcck044 LIKE xcck_t.xcck044, 
+   xcck044_desc LIKE type_t.chr100, 
+   xcck009 LIKE xcck_t.xcck009, 
+   xcck201 LIKE xcck_t.xcck201, 
+   xcck040 LIKE xcck_t.xcck040, 
+   xcck042 LIKE xcck_t.xcck042, 
+   xcck282 LIKE xcck_t.xcck282, 
+   xcck202 LIKE xcck_t.xcck202
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH axcr508_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       CALL s_desc_get_stock_desc(g_site,sr.xcck015) RETURNING sr.xcck015_desc
+
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.xccksite,sr.xcck002,sr.xcck022,sr.xcck022_desc,sr.xcck013,sr.xcck006,sr.xcck007,sr.xcck008,sr.xcck015,sr.xcck015_desc,sr.xcck021,sr.xcck021_desc,sr.xcck010,sr.xcck010_desc,sr.xcck010_desc2,sr.xcck011,sr.xcck017,sr.xcck044,sr.xcck044_desc,sr.xcck009,sr.xcck201,sr.xcck040,sr.xcck042,sr.xcck282,sr.xcck202
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "axcr508_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcr508_x01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION axcr508_x01_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+
+
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    IF g_range = 'N' THEN
+      LET g_xgrid.visible_column = "xccksite|xcck002"
+    END IF
+    IF g_spec = 'N' THEN
+      LET g_xgrid.visible_column = g_xgrid.visible_column CLIPPED,"|xcck011|xcck017"
+    END IF
+    IF g_chk1 = 'N' THEN
+      LET g_xgrid.visible_column = g_xgrid.visible_column CLIPPED,"|xcck013|xccd006|xcck006|xcck007|xcck008|xcck015"
+    END IF
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    
+    #end add-point:rep_data.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axcr508_x01.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

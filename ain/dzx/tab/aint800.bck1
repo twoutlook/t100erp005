@@ -1,0 +1,192 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aint800" module="ain" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="01251" crtdt="2014-01-29 15:25:08" modid="08172" moddt="2016-10-24 14:22:33" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="盤點計劃維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="ineaunit,ineaunit_desc(chr80),inea002,inea006,inea006_desc(chr80),ineadocdt,inea003,inea007,inea007_desc(chr80),ineadocno,inea004,inea017,inea018,inea001,inea005,inea021,inea022,inea019,inea020,ineastus,inea008,inea011,inea014,inea009,inea012,inea015,inea010,inea013,inea016,ineaownid,ineaownid_desc(chr80),ineaowndp,ineaowndp_desc(chr80),ineacrtid,ineacrtid_desc(chr80),ineacrtdp,ineacrtdp_desc(chr80),ineacrtdt,ineamodid,ineamodid_desc(chr80),ineamoddt,ineacnfid,ineacnfid_desc(chr80),ineacnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="inebstus,ineb001,ineb001_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="inecstus,inec001,inec002,inec003,inec003_desc(chr500)"/>
+      <var id="bs_field" value="ineaunit,ineaunit_desc(chr80),ineadocno,inea001,inea002,inea006,inea006_desc(chr80)" pk="ineadocno" order=""/>
+      <bs_reference field="ineaunit_desc" ref_field="ineaunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="inea006_desc" ref_field="inea006" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="aint800" method="dialog">
+    <section id="input">
+      <input id="head" field="ineaunit,inea002,inea006,ineadocdt,inea003,inea007,ineadocno,inea004,inea017,inea018,inea001,inea005,inea021,inea022,inea019,inea020,ineastus,inea012,inea013,inea016"/>
+      <input id="body" page="1" field="inebstus,ineb001" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="inecstus,inec001,inec002,inec003" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="ineaunit,inea002,inea006,ineadocdt,inea003,inea007,ineadocno,inea004,inea017,inea018,inea001,inea005,inea021,inea022,inea019,inea020,ineastus,ineaownid,ineaowndp,ineacrtid,ineacrtdp,ineacrtdt,ineamodid,ineamoddt,ineacnfid,ineacnfdt"/>
+      <construct id="body" page="1" field="inebstus,ineb001"/>
+      <construct id="body" page="2" field="inecstus,inec001,inec002,inec003"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="ineadocno"/>
+      <set id="head" type="no_entry" field="ineadocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="ineaunit">
+        <after>
+          <reference field="ineaunit_desc" ref_field="inea_t.ineaunit" map_field="ineaent,ineaunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004_3" state="c"/>
+      </column>
+      <column id="ineaunit_desc"/>
+      <column id="inea002"/>
+      <column id="inea006">
+        <after>
+          <reference field="inea006_desc" ref_field="inea_t.inea006" map_field="inea006" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inea006_desc"/>
+      <column id="ineadocdt"/>
+      <column id="inea003" type="S" default="1"/>
+      <column id="inea007">
+        <after>
+          <reference field="inea007_desc" ref_field="inea_t.inea007" map_field="ineaent,inea007" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_4" state="i"/>
+        <controlp form="q_ooeg001_4" state="c"/>
+      </column>
+      <column id="inea007_desc"/>
+      <column id="ineadocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_ineadocno" state="c"/>
+      </column>
+      <column id="inea004" type="S" default="1"/>
+      <column id="inea017" type="S" default="Y"/>
+      <column id="inea018" type="S" default="N"/>
+      <column id="inea001"/>
+      <column id="inea005" type="S" default="N"/>
+      <column id="inea021" type="S" default="N"/>
+      <column id="inea022" type="S" default="N"/>
+      <column id="inea019" type="S" default="N"/>
+      <column id="inea020" type="S" default="N"/>
+      <column id="ineastus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="inea008" type="S" default="Y"/>
+      <column id="inea011" type="S" default="Y"/>
+      <column id="inea014" type="S" default="Y"/>
+      <column id="inea009" type="S" default="Y"/>
+      <column id="inea012" type="S" default="N"/>
+      <column id="inea015" type="S" default="Y"/>
+      <column id="inea010" type="S" default="Y"/>
+      <column id="inea013" type="S" default="N"/>
+      <column id="inea016" type="S" default="N"/>
+      <column id="ineaownid">
+        <after>
+          <reference field="ineaownid_desc" ref_field="inea_t.ineaownid" map_field="ineaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ineaownid_desc"/>
+      <column id="ineaowndp">
+        <after>
+          <reference field="ineaowndp_desc" ref_field="inea_t.ineaowndp" map_field="ineaent,ineaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="ineaowndp_desc"/>
+      <column id="ineacrtid">
+        <after>
+          <reference field="ineacrtid_desc" ref_field="inea_t.ineacrtid" map_field="ineacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ineacrtid_desc"/>
+      <column id="ineacrtdp">
+        <after>
+          <reference field="ineacrtdp_desc" ref_field="inea_t.ineacrtdp" map_field="ineaent,ineacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="ineacrtdp_desc"/>
+      <column id="ineacrtdt"/>
+      <column id="ineamodid">
+        <after>
+          <reference field="ineamodid_desc" ref_field="inea_t.ineamodid" map_field="ineamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ineamodid_desc"/>
+      <column id="ineamoddt"/>
+      <column id="ineacnfid">
+        <after>
+          <reference field="ineacnfid_desc" ref_field="inea_t.ineacnfid" map_field="ineacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ineacnfid_desc"/>
+      <column id="ineacnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="inebstus" scc="50" type="S" default="Y">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="ineb001">
+        <after>
+          <reference field="ineb001_desc" ref_field="ineb_t.ineb001" map_field="ineaent,ineb001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004_3" state="i"/>
+        <controlp form="q_ooed004_3" state="c"/>
+      </column>
+      <column id="ineb001_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="inecstus" scc="50" type="S" default="Y">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="inec001">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="inec002" type="S" default="11"/>
+      <column id="inec003">
+        <after/>
+      </column>
+      <column id="inec003_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="inea_t" pk="ineadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT ineaunit,&apos;&apos;,inea002,inea006,&apos;&apos;,ineadocdt,inea003,inea007,&apos;&apos;,ineadocno,inea004,inea017,inea018,inea001,inea005,inea021,inea022,inea019,inea020,ineastus,inea008,inea011,inea014,inea009,inea012,inea015,inea010,inea013,inea016,ineaownid,&apos;&apos;,ineaowndp,&apos;&apos;,ineacrtid,&apos;&apos;,ineacrtdp,&apos;&apos;,ineacrtdt,ineamodid,&apos;&apos;,ineamoddt,ineacnfid,&apos;&apos;,ineacnfdt FROM inea_t WHERE ineaent= ? AND ineadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT ineaunit,&apos;&apos;,inea002,inea006,&apos;&apos;,ineadocdt,inea003,inea007,&apos;&apos;,ineadocno,inea004,inea017,inea018,inea001,inea005,inea021,inea022,inea019,inea020,ineastus,inea008,inea011,inea014,inea009,inea012,inea015,inea010,inea013,inea016,ineaownid,&apos;&apos;,ineaowndp,&apos;&apos;,ineacrtid,&apos;&apos;,ineacrtdp,&apos;&apos;,ineacrtdt,ineamodid,&apos;&apos;,ineamoddt,ineacnfid,&apos;&apos;,ineacnfdt FROM inea_t" order="ineadocno"/>
+    </head>
+    <body id="ineb_t" page="1" linked="" pk="ineb001" fk="inebdocno">
+      <sql id="forupd_sql_detail" query="SELECT inebstus,ineb001,&apos;&apos; FROM ineb_t WHERE inebent=? AND inebdocno=? AND ineb001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT inebstus,ineb001,&apos;&apos; FROM ineb_t WHERE inebent=? AND inebdocno=?"/>
+    </body>
+    <body id="inec_t" page="2" linked="" pk="inec001,inec002,inec003" fk="inecdocno">
+      <sql id="forupd_sql_detail" query="SELECT inecstus,inec001,inec002,inec003,&apos;&apos; FROM inec_t WHERE inecent=? AND inecdocno=? AND inec001=? AND inec002=? AND inec003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT inecstus,inec001,inec002,inec003,&apos;&apos; FROM inec_t WHERE inecent=? AND inecdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

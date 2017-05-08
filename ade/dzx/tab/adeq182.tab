@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adeq182" module="ade" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="06540" crtdt="2016-07-22 13:57:30" modid="06540" moddt="2016-07-22 13:57:30" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="收銀員專櫃供應商收銀對照表">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="rtjasite,bdate,edate,rtja037,rtja036,rtjb028,stfa010"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),rtjadocdt,rtjasite,l_ooefl003(chr500),rtja036,rtja037,l_pcab003(chr500),l_imaf153(chr10),l_pmaal004(chr500),rtjb028,l_mhael023(chr500),l_count(num10),rtjb031"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),rtjadocdt(b_rtjadocdt),rtjasite(b_rtjasite),l_ooefl003(l_ooefl003),rtja036(b_rtja036),rtja037(b_rtja037),l_pcab003(l_pcab003),l_imaf153(l_imaf153),l_pmaal004(l_pmaal004),rtjb028(b_rtjb028),l_mhael023(l_mhael023),l_count(l_count),rtjb031(b_rtjb031)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adeq182" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="rtjadocdt,rtjasite,rtja036,rtja037,rtjb028,rtjb031" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="rtjadocdt(b_rtjadocdt),rtjasite(b_rtjasite),rtja036(b_rtja036),rtja037(b_rtja037),rtjb028(b_rtjb028),rtjb031(b_rtjb031)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="rtjadocdt"/>
+      <column id="rtjasite">
+        <after>
+          <check chkid="v_ooed004" id="isExist"/>
+        </after>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="l_ooefl003"/>
+      <column id="rtja036"/>
+      <column id="rtja037"/>
+      <column id="l_pcab003"/>
+      <column id="l_imaf153"/>
+      <column id="l_pmaal004"/>
+      <column id="rtjb028">
+        <controlp form="q_inaa120" state="c"/>
+      </column>
+      <column id="l_mhael023"/>
+      <column id="l_count"/>
+      <column id="rtjb031" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="rtja_t" page="1" linked="" pk="rtjadocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,rtjadocdt,rtjasite,&apos;&apos;,rtja036,rtja037,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM rtja_t WHERE rtjaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,91 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="awsq003" module="aws" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="00544" crtdt="2016-10-03 17:45:17" modid="00544" moddt="2016-10-03 17:45:17" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="集成模塊服務清單查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="wsfd001,wsfd002,gzja004"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),wsfd001,wsfd002,wsfd002_desc(chr500),wsfd002_desc_1(chr500),wsfdstus,wsfdmoddt,wsfdownid,wsfdownid_desc(chr500),wsfdowndp,wsfdowndp_desc(chr500),wsfdcrtid,wsfdcrtid_desc(chr500),wsfdcrtdp,wsfdcrtdp_desc(chr500),wsfdcrtdt,wsfdmodid,wsfdmodid_desc(chr500)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),wsfd001(b_wsfd001),wsfd002(b_wsfd002),wsfd002_desc(b_wsfd002_desc),wsfd002_desc_1(b_wsfd002_desc_1),wsfdstus(b_wsfdstus),wsfdmoddt(b_wsfdmoddt),wsfdownid(b_wsfdownid),wsfdownid_desc(b_wsfdownid_desc),wsfdowndp(b_wsfdowndp),wsfdowndp_desc(b_wsfdowndp_desc),wsfdcrtid(b_wsfdcrtid),wsfdcrtid_desc(b_wsfdcrtid_desc),wsfdcrtdp(b_wsfdcrtdp),wsfdcrtdp_desc(b_wsfdcrtdp_desc),wsfdcrtdt(b_wsfdcrtdt),wsfdmodid(b_wsfdmodid),wsfdmodid_desc(b_wsfdmodid_desc)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="aws" filename="awsq003" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="wsfd001,wsfd002,wsfdstus,wsfdmoddt" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="wsfd001(b_wsfd001),wsfd002(b_wsfd002),wsfdstus(b_wsfdstus),wsfdmoddt(b_wsfdmoddt),wsfdownid(b_wsfdownid),wsfdowndp(b_wsfdowndp),wsfdcrtid(b_wsfdcrtid),wsfdcrtdp(b_wsfdcrtdp),wsfdcrtdt(b_wsfdcrtdt),wsfdmodid(b_wsfdmodid)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="wsfd001" def_scc="250"/>
+      <column id="wsfd002">
+        <after>
+          <reference field="wsfd002_desc" ref_field="wsfd002" map_field="wsfd002" ref_sql="SELECT gzjal003 FROM gzjal_t WHERE gzjal001=? AND gzjal002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_wsfd001" state="c"/>
+      </column>
+      <column id="wsfd002_desc"/>
+      <column id="wsfd002_desc_1"/>
+      <column id="wsfdstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="wsfdmoddt"/>
+      <column id="wsfdownid">
+        <after>
+          <reference field="wsfdownid_desc" ref_field="wsfdownid" map_field="wsfdownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="wsfdownid_desc"/>
+      <column id="wsfdowndp">
+        <after>
+          <reference field="wsfdowndp_desc" ref_field="wsfdowndp" map_field="wsfdowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="wsfdowndp_desc"/>
+      <column id="wsfdcrtid">
+        <after>
+          <reference field="wsfdcrtid_desc" ref_field="wsfdcrtid" map_field="wsfdcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="wsfdcrtid_desc"/>
+      <column id="wsfdcrtdp">
+        <after>
+          <reference field="wsfdcrtdp_desc" ref_field="wsfdcrtdp" map_field="wsfdcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="wsfdcrtdp_desc"/>
+      <column id="wsfdcrtdt"/>
+      <column id="wsfdmodid">
+        <after>
+          <reference field="wsfdmodid_desc" ref_field="wsfdmodid" map_field="wsfdmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="wsfdmodid_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="wsfd_t" page="1" linked="" pk="wsfd001,wsfd002">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,wsfd001,wsfd002,&apos;&apos;,&apos;&apos;,wsfdstus,wsfdmoddt,wsfdownid,&apos;&apos;,wsfdowndp,&apos;&apos;,wsfdcrtid,&apos;&apos;,wsfdcrtdp,&apos;&apos;,wsfdcrtdt,wsfdmodid,&apos;&apos; FROM wsfd_t WHERE 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

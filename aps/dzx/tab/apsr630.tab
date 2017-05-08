@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apsr630" module="aps" jobmode="N" type="r01" industry="std" fix_arg="0" crtid="05231" crtdt="2014-07-18 09:11:59" modid="07024" moddt="2016-04-29 16:19:30" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="APS工單變更建議表">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="psos054,imae012,psos012,psos011,imaa009,imae011,imaf013,psca001(chr500),psca001_desc(chr80),stus(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="aps" filename="apsr630" method="dialog">
+    <section id="input">
+      <input id="head" field="psca001,stus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="psos054,imae012,psos012,psos011,imaa009,imae011,imaf013"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="psos054">
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="imae012">
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="psos012"/>
+      <column id="psos011"/>
+      <column id="imaa009">
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="imae011">
+        <controlp form="q_imcf011" state="c"/>
+      </column>
+      <column id="imaf013" type="S" default="1" def_scc="2022"/>
+      <column id="psca001">
+        <after>
+          <check chkid="v_psca001" id="isExist"/>
+          <reference field="psca001_desc" ref_field="pscasite,psca001" map_field="pscasite,psca001" ref_sql="SELECT pscal003 FROM pscal_t WHERE pscalent=$varg_enterprise$var AND pscalsite=? AND pscal001=? AND pscal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_psca001" state="i"/>
+      </column>
+      <column id="psca001_desc"/>
+      <column id="stus"/>
+    </init>
+  </form>
+</assembly>
+

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axrt400_06" std_prog="axrt400_06" erpver="1.0" ver="1" module="AXR" booking="Y" class="i" template="F002_00" normal_style="N" env="s" zone="t10dev">
+  <toolbar items="insert,modify,delete,output,query"/>
+  <table ver="1">
+    <tbl name="isaf_t" parent="" main="Y" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" status=""/>
+    </tbl>
+  </table>
+  <all src="s" ver="1" cite_std="" cite_ver="" status="">
+    <![CDATA[接收參數：
+ 。帳務中心
+ 。核銷客戶
+ 。收付款客戶
+ 。來源組織
+
+。開窗挑選，回傳勾選後之發票編號（可字串組合方式）。
+。選取時，加總金額勾選之金額，合計數下方表達。
+。傳回符合勾選之資料。
+。寫入　沖帳明細檔(xrce_t)
+　因為多帳期檔(xrcc_t)由應收單身項對應產生，應收單身可拆可併開立發票，與發票號碼有多對多關係。
+  因此以發票號碼為主，以先進先出方式沖銷應收帳款單。
+  1. 須先依"發票號碼(isaf010)" 取得, 開立發票的"發票來源明細檔(isag_t)"; 其記錄的交易單號是共通的。
+  2. 以來源業務單據號串連（xrcb002=isag003 AND xrcb003=isag004)，取得尚未沖銷的帳款資料(xrcc_t)
+        SELECT xrccdocno,xrccseq,xrcc001,(xrcc108-xrcc109),xrcb002.... 
+ FROM isaf_t,isag_t,xrcc_t,
+      xrcb_t,xrca_t
+ WHERE isaf010=發票號碼 
+   AND isagdocno = isafdocno #取發票來源檔
+   AND isag003=xrcb002 AND isag004=xrcb003 #業務來源單號相同
+   AND xrcbdocno=xrcadocno AND xrcastus='Y' #判斷應收單有效單
+   AND xrcbdocno=xrccdocno AND xrcbseq=xrcc001 AND (xrcc108-xrcc109)>0 #多帳期檔為未沖銷完者
+   AND xrcaLD=xrcbLD AND xrcbLD=xrccLD AND xrccLD=帳套 #帳套別
+ ORDER BY xrccdocno,xrcc001 #先進先出排列
+  3.　取得之資料，逐筆寫入"沖銷明細檔(xrce_t)"; 沖銷總金額 ＜＝ 該發票之可沖銷金額
+ l_total = (isag012-isag016) #可沖銷發票金額
+ l_subtotal = 0 #累計己寫入之沖銷金額
+ 每筆寫入前判別
+ IF l_subtotal >= l_total #表示已沖銷滿額
+  結束此筆發票處理
+ ELSE
+  IF (xrcc108-xrcc109) <= (l_total-l_subtotal) #判斷即將要寫入的值, 超出否
+    LET xrce109 = xrcc108-xrcc109 
+  ELSE
+    LET xrce109 = l_total - l_subtotal #寫入剩餘可沖銷數
+ END  
+
+
+
+資料來源：
+ 發票主檔（isaf_t)
+ 發票來源明細檔(isag_t)
+ 發票類型檔(isac_t)  
+    WHERE 稅區=帳套法人所屬稅區
+  　　
+。接收參數：
+　　帳務中心
+　　帳套
+　　核銷客戶 
+。依帳套別顯示及檢核未沖銷之金額。
+    。預沖未確認額(n1)=合計於收款沖銷作業尚未確認者(非作廢單)，且同來源單及項次單。
+ (n1)= sum(xrce109)
+ (n2)= sum(xrce119)
+　　。帳套別為　［主帳套者glaa014]='Y': 未沖金額計算　＝　(原幣應收isag012－已沖isag016)（本幣應收isag015－已沖isag017)　
+　　。輔助帳套者：
+　　　１。取法人級SITE AND 參數ooab001='S-FIN-001'；ooab002=帳套者，
+ 則　未沖金額計算　＝　(原幣應收isag012－已沖isag01９-n1)（本幣應收isag015－已沖isag0２０-n2)
+　　　２。取法人級SITE AND 參數ooab001='S-FIN-002'；ooab002=帳套者，
+ 則　未沖金額計算　＝　(原幣應收isag012－已沖isag022-n1)（本幣應收isag015－已沖isag023-n2)　
+      ３。以上併行帳套判別，可另製共用元件。
+。條件：
+        原幣未沖金額 > 0   AND 發票號碼己成立, 狀能不為作廢
+        AND 發票類型isaf008=isac002 AND isac003='2'(銷項發票) AND 稅區=法人所屬稅區
+        AND 發票客戶isaf002 ＝ 核銷客戶xrda004
+        AND 發票日期 <= 沖銷單日期.xrdadocdt 
+。group 發票號碼：　合計同group的金額
+
+]]>
+  </all>
+  <field column="" name="check" ver="1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="isaf002" name="isaf_t.isaf002" ver="1" table="isaf_t" attribute="C004" type="varchar2(10)" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="isaf008" name="isaf_t.isaf008" ver="1" table="isaf_t" attribute="C550" type="varchar2(2)" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="isaf010" name="isaf_t.isaf010" ver="1" table="isaf_t" attribute="C552" type="varchar2(20)" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="isaf011" name="isaf_t.isaf011" ver="1" table="isaf_t" attribute="D001" type="date()" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="DateEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="isaf014" name="isaf_t.isaf014" ver="1" table="isaf_t" attribute="C008" type="varchar2(10)" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="isaf025" name="isaf_t.isaf025" ver="1" table="isaf_t" attribute="N202" type="number(20,6)" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="isaf028" name="isaf_t.isaf028" ver="1" table="isaf_t" attribute="N202" type="number(20,6)" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="isag012" name="isag_t.isag012" ver="1" table="isag_t" attribute="N202" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="isag015" name="isag_t.isag015" ver="1" table="isag_t" attribute="N202" type="number(20,6)" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="" name="lbl_amt1" ver="1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[。勾選時，合計勾選資料之＂未沖金額＂合計值。
+。原幣不考慮幣別不同之問題
+]]>
+  </field>
+  <field column="" name="lbl_n1" ver="1" table="" attribute="" type="varchar2(10)" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="" name="lbl_tot1" ver="1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[。符合條件之＂未沖金額＂計算後的合計值。故若有重新ＱＢＥ，則應重新計算顯示合計值。
+。原幣不考慮幣別不同之問題。
+]]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code/>
+  <strings>
+    <sfield name="lbl_isaf011" text="開立日期" comment="" lstr=""/>
+    <sfield name="lbl_isaf010" text="銷項發票號碼" comment="" lstr=""/>
+    <sfield name="lbl_isaf014" text="原幣" comment="" lstr=""/>
+    <sfield name="lbl_isaf025" text="發票原幣金額" comment="" lstr=""/>
+    <sfield name="lbl_isaf028" text="發票本幣金額" comment="" lstr=""/>
+    <sfield name="lbl_isag012" text="未沖銷原幣帳款" comment="" lstr=""/>
+    <sfield name="lbl_isag015" text="未沖銷本幣帳款" comment="" lstr=""/>
+    <sfield name="lbl_isaf008" text="發票類型" comment="" lstr=""/>
+    <sfield name="lbl_isaf002" text="發票對象" comment="" lstr=""/>
+    <sfield name="lbl_n1" text="預沖未確認額" comment="" lstr=""/>
+    <sfield name="lbl_group1" text="發票總金額" comment="" lstr=""/>
+    <sfield name="lbl_tot_1" text="原幣金額" comment="" lstr=""/>
+    <sfield name="lbl_tot_2" text="本幣金額" comment="" lstr=""/>
+    <sfield name="lbl_group2" text="選取沖銷合計金額" comment="" lstr=""/>
+    <sfield name="lbl_amt_1" text="原幣金額" comment="" lstr=""/>
+    <sfield name="lbl_amt_2" text="本幣金額" comment="" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="1"/>
+</spec>

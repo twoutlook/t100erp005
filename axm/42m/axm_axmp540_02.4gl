@@ -1,0 +1,4455 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axmp540_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0031(2015-07-17 10:54:02), PR版次:0031(2017-05-05 16:24:59)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000255
+#+ Filename...: axmp540_02
+#+ Description: 出貨調整
+#+ Creator....: 02040(2014-06-09 11:19:48)
+#+ Modifier...: 02040 -SD/PR- TOPSTD
+ 
+{</section>}
+ 
+{<section id="axmp540_02.global" >}
+#應用 p00 樣板自動產生(Version:5)
+#add-point:填寫註解說明 name="main.memo"
+#160105-00012#1   160106   By  Polly    來源為出通單時，需帶出通單的多庫儲批資料；產生出貨單單號改傳「單據日期」產生單號
+#160318-00005#48  160401   By  pengxin  修正azzi920重复定义之错误讯息
+#160524-00032#1   160602   By  catmoon  計價數量(xmdl022)填入數值錯誤時應該要NEXTFIELD給自己 
+#160630-00005#1   160706   By  dorislai 依aimm212撿貨策略預帶庫、儲、批、庫存管理特徵 (原先程式預帶的部分，移至當撿貨策略為4.人工決定)
+#160801-00042#1   160810   By  02097    當D-BAS-0060參數為'1'時,請將訂單單號寫入單頭的xmdk006
+#160808-00020#1   160810   By  02097    判斷單身有沒有參考單位才決定要不要檢核參考數量
+#160727-00019#23   2016/08/15 By 08742     系统中定义的临时表名称超过15码在执行时会出错,所以需要将系统中定义的临时表长度超过15码的全部改掉	
+#                                          Mod   p540_02_xmdk_temp --> p540_tmp02  ，  p540_02_xmdl_temp --> p540_tmp03
+#                                          Mod   p540_02_xmdm_temp --> p540_tmp04
+#160727-00019#24   2016/08/15 By 08742     系统中定义的临时表名称超过15码在执行时会出错,所以需要将系统中定义的临时表长度超过15码的全部改掉	
+#                                          Mod   axmp580_02_temp_d3--> axmp580_tmp03
+#160809-00005#1   2016/08/16  By 02097    修正价格信息中的税前金额，含税金额，税额有误
+#160831-00027#1   2016/09/01  By 02097    新增xmdk_t時也要寫入xmdk202
+#160809-00002#1   2016/09/08  By 02097    第二步：出货调整时，库位、储位开窗功能现在不可用，应同出货单库位、储位开窗
+#160901-00036#1   2016/09/08  By 02097    参考数量应该控卡大于等于0
+#160901-00037#1   2016/09/08  By 02097    預設帶訂單库存管理特征的設置
+#160901-00040#1   2016/09/10  By 02097    取价方式/优惠条件 也需拋轉
+#160913-00019#1   2016/09/13  By 02097    生成的出货单，订单单号为空
+#160901-00040#1   2016/09/20  By 02097    l_xmdk.xmdkowndp /l_xmdk.xmdkcrtdp的值應為g_dept 而非g_grup
+#161013-00032#1   2016/10/13  By 06948    調整s_axmt540_xmdl016_chk()傳遞參數，應傳料件編號及產品特徵，而非庫位及儲位
+#160706-00037#5   2016/10/24  By shiun    檢查來源單據的狀態碼(例如可拋轉的單據狀態碼應該是Y.已確認)，若為不可拋轉的資料提示"單據編號OOO單據狀態碼非Y.已確認不可拋轉"
+#161109-00085#10  2016/11/10  By lienjunqi    整批調整系統星號寫法
+#161129-00034#1   2016/11/30  By ouhz     调整单击出货调整按钮后会把库存管理特征栏位清空
+#161205-00030#1   2016/12/06  By ouhz     调整1.限定批号有值，仓库开窗只显示限定批号库存信息，2.单击完成按钮生成的出货单库存管理特征会还原成修改之前的数据
+#161006-00018#25  2016/12/26  By lixh     增加参数D-MFG-0085(來源單據指定庫儲後，是否允許修改
+#161229-00049#1   2016/12/30  By ouhz     调整多角流程设定为2(代采购),产生的出货单多角性质有误问题
+#170104-00066#3   2017/01/06  By Rainy    筆數相關變數由num5放大至num10
+#161208-00028#1   2017/01/17  By lixh     xmdl019 = xmdd024 抓不到值直接抓取imaf015
+#161230-00019#5   2017/02/02  By shiun    引導式作業一次性交易對象處理，需加上對象識別碼為匯總條件，一次性交易對象不同識別碼者需拆單
+#161205-00025#15  2017/02/09  By shiun    效能調整
+#170324-00113#1   2017/03/30  By 05599    參考axmt540邏輯，若檢驗否為Y則檢驗合格量為0，若為N則=xmdl018
+#end add-point
+#add-point:填寫註解說明(客製用) name="main.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="main.import"
+IMPORT util
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔 name="global.inc"
+GLOBALS "../../axm/4gl/axmp540_01.inc"
+GLOBALS "../../axm/4gl/axmp540_02.inc"
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axmp540_02.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+ TYPE type_g_xmdk_d        RECORD
+   linkno       LIKE type_t.num10,         
+   docno        LIKE xmdk_t.xmdkdocno,
+   source       LIKE type_t.chr10,         #來源單據1訂單2出貨通知單
+   xmdk002      LIKE xmdk_t.xmdk002, 
+   xmdk007      LIKE xmdk_t.xmdk007, 
+   xmdk007_desc LIKE type_t.chr500, 
+   xmdk010      LIKE xmdk_t.xmdk010, 
+   xmdk010_desc LIKE type_t.chr500, 
+   xmdk011      LIKE xmdk_t.xmdk011, 
+   xmdk011_desc LIKE type_t.chr500, 
+   xmdk012      LIKE xmdk_t.xmdk012, 
+   xmdk012_desc LIKE type_t.chr500, 
+   xmdk013      LIKE xmdk_t.xmdk013, 
+   xmdk014      LIKE xmdk_t.xmdk014, 
+   xmdk015      LIKE xmdk_t.xmdk015,
+   xmdk015_desc LIKE type_t.chr500,   
+   xmdk016      LIKE xmdk_t.xmdk016, 
+   xmdk016_desc LIKE type_t.chr500, 
+   xmdk017      LIKE xmdk_t.xmdk017, 
+   xmdk008      LIKE xmdk_t.xmdk008,
+   xmdk008_desc LIKE type_t.chr500,
+   xmdk009      LIKE xmdk_t.xmdk009,
+   xmdk009_desc LIKE type_t.chr500,
+   xmdk021      LIKE xmdk_t.xmdk021,
+   result       LIKE type_t.chr500 
+       END RECORD
+ TYPE type_g_xmdk2_d RECORD
+   linkno_02       LIKE type_t.num10, 
+   source_02       LIKE type_t.chr10,         #來源單據1訂單2出貨通知單
+   docno_02        LIKE xmdl_t.xmdldocno,
+   xmdlseq_02      LIKE xmdl_t.xmdlseq, 
+   xmdl001_02      LIKE xmdl_t.xmdl001, 
+   xmdl002_02      LIKE xmdl_t.xmdl002, 
+   xmdl003_02      LIKE xmdl_t.xmdl003, 
+   xmdl004_02      LIKE xmdl_t.xmdl004, 
+   xmdl005_02      LIKE xmdl_t.xmdl005, 
+   xmdl006_02      LIKE xmdl_t.xmdl006, 
+   xmdl007_02      LIKE xmdl_t.xmdl007, 
+   xmdl008_02      LIKE xmdl_t.xmdl008, 
+   xmdl008_02_desc LIKE type_t.chr500,
+   imaal004_02     LIKE imaal_t.imaal004, 
+   xmdl009_02      LIKE xmdl_t.xmdl009, 
+   xmdl009_02_desc LIKE type_t.chr500,
+   xmdl011_02      LIKE xmdl_t.xmdl011, 
+   xmdl011_02_desc LIKE type_t.chr500, 
+   xmdl012_02      LIKE xmdl_t.xmdl012, 
+   xmdl017_02      LIKE xmdl_t.xmdl017, 
+   xmdl017_02_desc LIKE type_t.chr500, 
+   xmdl018_02      LIKE xmdl_t.xmdl018, 
+   xmdl019_02      LIKE xmdl_t.xmdl019, 
+   xmdl019_02_desc LIKE type_t.chr500, 
+   xmdl020_02      LIKE xmdl_t.xmdl020, 
+   xmdl013_02      LIKE xmdl_t.xmdl013, 
+   xmdl014_02      LIKE xmdl_t.xmdl014, 
+   xmdl014_02_desc LIKE type_t.chr500, 
+   xmdl015_02      LIKE xmdl_t.xmdl015, 
+   xmdl015_02_desc LIKE type_t.chr500, 
+   xmdl016_02      LIKE xmdl_t.xmdl016, 
+   xmdl052_02      LIKE xmdl_t.xmdl052,
+   xmdl021_02      LIKE xmdl_t.xmdl021, 
+   xmdl021_02_desc LIKE type_t.chr500, 
+   xmdl022_02      LIKE xmdl_t.xmdl022, 
+   xmdl023_02      LIKE xmdl_t.xmdl023
+       END RECORD
+ TYPE type_g_xmdk3_d RECORD
+   xmdmseq_03 LIKE xmdm_t.xmdmseq, 
+   xmdmseq1_03 LIKE xmdm_t.xmdmseq1, 
+   xmdm001_03 LIKE xmdm_t.xmdm001, 
+   xmdm001_03_desc LIKE type_t.chr500, 
+   imaal004_03  LIKE imaal_t.imaal004,
+   xmdm002_03 LIKE xmdm_t.xmdm002, 
+   xmdm002_03_desc LIKE type_t.chr500,
+   xmdm003_03 LIKE xmdm_t.xmdm003, 
+   xmdm003_03_desc LIKE type_t.chr500,
+   xmdm004_03 LIKE xmdm_t.xmdm004, 
+   xmdm005_03 LIKE xmdm_t.xmdm005, 
+   xmdm005_03_desc LIKE type_t.chr500, 
+   xmdm006_03 LIKE xmdm_t.xmdm006, 
+   xmdm006_03_desc LIKE type_t.chr500, 
+   xmdm007_03 LIKE xmdm_t.xmdm007, 
+   xmdm033_03 LIKE xmdm_t.xmdm033,
+   xmdm008_03 LIKE xmdm_t.xmdm008, 
+   xmdm008_03_desc LIKE type_t.chr500, 
+   xmdm009_03 LIKE xmdm_t.xmdm009, 
+   xmdm010_03 LIKE xmdm_t.xmdm010, 
+   xmdm010_03_desc LIKE type_t.chr500, 
+   xmdm011_03 LIKE xmdm_t.xmdm011
+       END RECORD
+ TYPE type_g_xmdk4_d RECORD
+   xmdlseq_04 LIKE xmdl_t.xmdlseq,  
+   xmdl007_04 LIKE xmdl_t.xmdl007, 
+   xmdl008_04 LIKE xmdl_t.xmdl008, 
+   xmdl008_04_desc LIKE type_t.chr500,
+   imaal004_04  LIKE imaal_t.imaal004,
+   xmdl009_04 LIKE xmdl_t.xmdl009,
+   xmdl009_04_desc LIKE type_t.chr500,
+   xmdl011_04 LIKE xmdl_t.xmdl011, 
+   xmdl011_04_desc LIKE type_t.chr500, 
+   xmdl012_04 LIKE xmdl_t.xmdl012, 
+   xmdl017_04 LIKE xmdl_t.xmdl017, 
+   xmdl017_04_desc LIKE type_t.chr500, 
+   xmdl018_04 LIKE xmdl_t.xmdl018, 
+   xmdl021_04 LIKE xmdl_t.xmdl021, 
+   xmdl021_04_desc LIKE type_t.chr500, 
+   xmdl022_04 LIKE xmdl_t.xmdl022,        
+   xmdl024_04 LIKE xmdl_t.xmdl024, 
+   xmdl025_04 LIKE xmdl_t.xmdl025, 
+   xmdl025_04_desc LIKE type_t.chr500, 
+   xmdl026_04 LIKE xmdl_t.xmdl026, 
+   xmdl027_04 LIKE xmdl_t.xmdl027, 
+   xmdl028_04 LIKE xmdl_t.xmdl028, 
+   xmdl029_04 LIKE xmdl_t.xmdl029, 
+   xmdl042_04 LIKE xmdl_t.xmdl042, 
+   xmdl043_04 LIKE xmdl_t.xmdl043, 
+   xmdl044_04 LIKE xmdl_t.xmdl044, 
+   xmdl045_04 LIKE xmdl_t.xmdl045, 
+   xmdl046_04 LIKE xmdl_t.xmdl046
+       END RECORD
+ TYPE type_g_xmdl_d  RECORD
+   xmdlent LIKE xmdl_t.xmdlent,
+   xmdlsite LIKE xmdl_t.xmdlsite,
+   xmdldocno LIKE xmdl_t.xmdldocno,
+   xmdlseq LIKE xmdl_t.xmdlseq,
+   xmdl001 LIKE xmdl_t.xmdl001,
+   xmdl002 LIKE xmdl_t.xmdl002,
+   xmdl003 LIKE xmdl_t.xmdl003,
+   xmdl004 LIKE xmdl_t.xmdl004,
+   xmdl005 LIKE xmdl_t.xmdl005,
+   xmdl006 LIKE xmdl_t.xmdl006,
+   xmdl007 LIKE xmdl_t.xmdl007,
+   xmdl008 LIKE xmdl_t.xmdl008,
+   xmdl009 LIKE xmdl_t.xmdl009,
+   xmdl010 LIKE xmdl_t.xmdl010,
+   xmdl011 LIKE xmdl_t.xmdl011,
+   xmdl012 LIKE xmdl_t.xmdl012,
+   xmdl013 LIKE xmdl_t.xmdl013,
+   xmdl014 LIKE xmdl_t.xmdl014,
+   xmdl015 LIKE xmdl_t.xmdl015,
+   xmdl016 LIKE xmdl_t.xmdl016,
+   xmdl017 LIKE xmdl_t.xmdl017,
+   xmdl018 LIKE xmdl_t.xmdl018,
+   xmdl019 LIKE xmdl_t.xmdl019,
+   xmdl020 LIKE xmdl_t.xmdl020,
+   xmdl021 LIKE xmdl_t.xmdl021,
+   xmdl022 LIKE xmdl_t.xmdl022,
+   xmdl023 LIKE xmdl_t.xmdl023,
+   xmdl024 LIKE xmdl_t.xmdl024,
+   xmdl025 LIKE xmdl_t.xmdl025,
+   xmdl026 LIKE xmdl_t.xmdl026,
+   xmdl027 LIKE xmdl_t.xmdl027,
+   xmdl028 LIKE xmdl_t.xmdl028,
+   xmdl029 LIKE xmdl_t.xmdl029,
+   xmdl030 LIKE xmdl_t.xmdl030,
+   xmdl031 LIKE xmdl_t.xmdl031,
+   xmdl032 LIKE xmdl_t.xmdl032,
+   xmdl033 LIKE xmdl_t.xmdl033,
+   xmdl034 LIKE xmdl_t.xmdl034, 
+   xmdl035 LIKE xmdl_t.xmdl035,
+   xmdl036 LIKE xmdl_t.xmdl036,
+   xmdl037 LIKE xmdl_t.xmdl037,
+   xmdl038 LIKE xmdl_t.xmdl038,
+   xmdl039 LIKE xmdl_t.xmdl039,
+   xmdl040 LIKE xmdl_t.xmdl040,
+   xmdl041 LIKE xmdl_t.xmdl041,
+   xmdl042 LIKE xmdl_t.xmdl042,
+   xmdl043 LIKE xmdl_t.xmdl043,
+   xmdl044 LIKE xmdl_t.xmdl044,
+   xmdl045 LIKE xmdl_t.xmdl045,
+   xmdl046 LIKE xmdl_t.xmdl046,
+   xmdl047 LIKE xmdl_t.xmdl047,
+   xmdl048 LIKE xmdl_t.xmdl048,
+   xmdl049 LIKE xmdl_t.xmdl049,
+   xmdl050 LIKE xmdl_t.xmdl050,
+   xmdl051 LIKE xmdl_t.xmdl051,
+   xmdl052 LIKE xmdl_t.xmdl052,
+   xmdl087 LIKE xmdl_t.xmdl087,
+   xmdl088 LIKE xmdl_t.xmdl088,
+   xmdl056 LIKE xmdl_t.xmdl056           #160807-00006#2 
+       END RECORD  
+DEFINE l_ac         LIKE type_t.num10     #170104-00066#3 num5->num10  17/01/06 mod by rainy  
+DEFINE g_xmdk_d     DYNAMIC ARRAY OF type_g_xmdk_d
+DEFINE g_xmdk_d_t   type_g_xmdk_d
+DEFINE g_xmdk2_d    DYNAMIC ARRAY OF type_g_xmdk2_d
+DEFINE g_xmdk2_d_t  type_g_xmdk2_d
+DEFINE g_xmdk2_d_o  type_g_xmdk2_d
+DEFINE g_xmdk3_d    DYNAMIC ARRAY OF type_g_xmdk3_d
+DEFINE g_xmdk3_d_t  type_g_xmdk3_d
+DEFINE g_xmdk4_d    DYNAMIC ARRAY OF type_g_xmdk4_d
+DEFINE g_xmdk4_d_t  type_g_xmdk4_d
+DEFINE g_result_str LIKE type_t.chr1000        #執行結果
+DEFINE g_gather     LIKE type_t.chr1
+DEFINE g_xmda028    LIKE xmda_t.xmda028   #161230-00019#5
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axmp540_02.global_variable" >}
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+ 
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axmp540_02.other_dialog" >}
+
+DIALOG axmp540_02_display01()
+
+   DISPLAY ARRAY g_xmdk_d TO s_detail1_axmp540_02.* ATTRIBUTE(COUNT=g_detail_02_cnt)
+         
+      BEFORE DISPLAY
+         CALL axmp540_02_fetch()
+
+      BEFORE ROW  
+         LET l_ac = DIALOG.getCurrentRow("s_detail1_axmp540_02")   
+         LET g_detail_02_idx = l_ac
+         CALL axmp540_02_fetch()  
+                
+       
+   END DISPLAY    
+END DIALOG
+
+DIALOG axmp540_02_display02()
+   DISPLAY ARRAY g_xmdk2_d TO s_detail2_axmp540_02.* ATTRIBUTES(COUNT = g_detail2_02_cnt)
+      BEFORE DISPLAY
+         
+   END DISPLAY
+END DIALOG
+
+DIALOG axmp540_02_display03()
+  DISPLAY ARRAY g_xmdk3_d TO s_detail3_axmp540_02.* ATTRIBUTES(COUNT = g_detail3_02_cnt)
+     BEFORE DISPLAY
+        
+  END DISPLAY
+END DIALOG
+
+DIALOG axmp540_02_display04()
+  DISPLAY ARRAY g_xmdk4_d TO s_detail4_axmp540_02.* ATTRIBUTES(COUNT = g_detail4_02_cnt)
+     BEFORE DISPLAY
+        
+  END DISPLAY
+END DIALOG
+
+DIALOG axmp540_02_input()
+   DEFINE l_success   LIKE type_t.num5
+   DEFINE l_rollback  LIKE type_t.num5
+   DEFINE l_xmdl014   LIKE xmdl_t.xmdl014
+   DEFINE l_xmdl015   LIKE xmdl_t.xmdl015
+   DEFINE l_xmdl016   LIKE xmdl_t.xmdl016
+   DEFINE l_xmdl052   LIKE xmdl_t.xmdl052
+   DEFINE l_docno     LIKE xmdl_t.xmdldocno
+   DEFINE l_seq       LIKE xmdl_t.xmdlseq
+   
+
+   INPUT ARRAY g_xmdk2_d FROM s_detail2_axmp540_02.*
+         ATTRIBUTE(COUNT = g_detail2_02_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                   INSERT ROW = FALSE,
+                   DELETE ROW = FALSE,
+                   APPEND ROW = FALSE)
+         BEFORE INPUT
+
+         BEFORE ROW
+           LET l_ac = ARR_CURR()
+           LET g_xmdk2_d_t.* = g_xmdk2_d[l_ac].*
+           LET g_xmdk2_d_o.* = g_xmdk2_d[l_ac].*
+           IF g_xmdk2_d[l_ac].source_02  = '1' THEN     #訂單
+              LET l_docno = ''
+              LET l_seq = ''
+           ELSE
+              LET l_docno = g_xmdk2_d[l_ac].xmdl001_02
+              LET l_seq = g_xmdk2_d[l_ac].xmdl002_02
+           END IF
+           CALL axmp540_02_set_entry_b()
+           ##161006-00018#23-S
+           CALL axmp540_02_set_no_required_b()
+           CALL axmp540_02_set_required_b()
+           ##161006-00018#23-E
+           CALL axmp540_02_set_no_entry_b()
+
+         AFTER FIELD xmdl018_02
+           IF NOT cl_ap_chk_Range(g_xmdk2_d[l_ac].xmdl018_02,"0","0","","","azz-00079",1) THEN
+              NEXT FIELD xmdl018_02
+           END IF         
+           IF g_xmdk2_d[l_ac].xmdl018_02 != g_xmdk2_d_t.xmdl018_02 OR g_xmdk2_d_t.xmdl018_02 IS NULL THEN
+              IF NOT axmp540_02_xmdl018_chk() THEN
+                 LET g_xmdk2_d[l_ac].xmdl018_02 = g_xmdk2_d_t.xmdl018_02
+                 DISPLAY BY NAME g_xmdk2_d[l_ac].xmdl018_02
+                 NEXT FIELD CURRENT
+              END IF
+              #對出貨數量進行取位
+              IF NOT cl_null(g_xmdk2_d[l_ac].xmdl017_02) THEN   #161208-00028#1
+                 CALL s_aooi250_take_decimals(g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl018_02)
+                   RETURNING l_success,g_xmdk2_d[l_ac].xmdl018_02
+              END IF     #161208-00028#1               
+              #若料號有設置使用參考單位時且出貨單位與參考單位有設置換算率時，則應自動推算參考數量
+              IF NOT cl_null(g_xmdk2_d[l_ac].xmdl019_02) THEN
+                 CALL s_aooi250_convert_qty(g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl019_02,g_xmdk2_d[l_ac].xmdl018_02)
+                   RETURNING l_success,g_xmdk2_d[l_ac].xmdl020_02
+                 #對參考數量進行取位
+                 CALL s_aooi250_take_decimals(g_xmdk2_d[l_ac].xmdl019_02,g_xmdk2_d[l_ac].xmdl020_02)
+                   RETURNING l_success,g_xmdk2_d[l_ac].xmdl020_02                 
+              END IF
+              #若料號有使用銷售計價單位時，則輸入[C:出貨數量]時則應自動推算計價數量
+              IF NOT cl_null(g_xmdk2_d[l_ac].xmdl021_02) THEN
+                 CALL s_aooi250_convert_qty(g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl021_02,g_xmdk2_d[l_ac].xmdl018_02)
+                   RETURNING l_success,g_xmdk2_d[l_ac].xmdl022_02
+                 #對計價數量進行取位
+                 CALL s_aooi250_take_decimals(g_xmdk2_d[l_ac].xmdl021_02,g_xmdk2_d[l_ac].xmdl022_02)
+                   RETURNING l_success,g_xmdk2_d[l_ac].xmdl022_02                                      
+                 #重新計算[C:未稅金額]、[C:含稅金額]、[稅額] 
+                 CALL axmp540_02_get_amount(g_xmdk2_d[l_ac].linkno_02,g_xmdk2_d[l_ac].xmdl022_02,g_xmdk4_d[l_ac].xmdl024_04,g_xmdk4_d[l_ac].xmdl025_04)
+                   RETURNING g_xmdk4_d[l_ac].xmdl027_04,g_xmdk4_d[l_ac].xmdl028_04,g_xmdk4_d[l_ac].xmdl029_04
+              END IF  
+             
+           END IF
+           LET g_xmdk2_d_t.xmdl018_02 = g_xmdk2_d[l_ac].xmdl018_02
+          
+        AFTER FIELD xmdl020_02
+           #160901-00036#1--s
+           IF cl_null(g_xmdk2_d[l_ac].xmdl020_02) THEN
+              LET g_xmdk2_d[l_ac].xmdl020_02 = 0
+           END IF           
+           #160901-00036#1--e
+           IF NOT cl_ap_chk_Range(g_xmdk2_d[l_ac].xmdl020_02,"0.000","0","","","azz-00079",1) THEN
+              NEXT FIELD xmdl020_02
+           END IF
+           #對參考數量進行取位
+           IF NOT cl_null(g_xmdk2_d[l_ac].xmdl019_02) THEN   #161208-00028#1
+              CALL s_aooi250_take_decimals(g_xmdk2_d[l_ac].xmdl019_02,g_xmdk2_d[l_ac].xmdl020_02)
+                RETURNING l_success,g_xmdk2_d[l_ac].xmdl020_02 
+           END IF #161208-00028#1
+        AFTER FIELD xmdl022_02
+           IF NOT cl_ap_chk_Range(g_xmdk2_d[l_ac].xmdl022_02,"0.000","0","","","azz-00079",1) THEN
+             #NEXT FIELD xmdl020_02 #160524-00032#1 mark
+              NEXT FIELD xmdl022_02 #160524-00032#1 add
+           END IF
+           IF g_xmdk2_d[l_ac].xmdl022_02 != g_xmdk2_d_t.xmdl022_02 OR g_xmdk2_d_t.xmdl022_02 IS NULL THEN
+              #對計價數量進行取位
+              IF NOT cl_null(g_xmdk2_d[l_ac].xmdl021_02) THEN   #161208-00028#1
+                 CALL s_aooi250_take_decimals(g_xmdk2_d[l_ac].xmdl021_02,g_xmdk2_d[l_ac].xmdl022_02)
+                   RETURNING l_success,g_xmdk2_d[l_ac].xmdl022_02 
+              END IF  #161208-00028#1  
+              #重新計算[C:未稅金額]、[C:含稅金額]、[稅額] 
+              CALL axmp540_02_get_amount(g_xmdk2_d[l_ac].linkno_02,g_xmdk2_d[l_ac].xmdl022_02,g_xmdk4_d[l_ac].xmdl024_04,g_xmdk4_d[l_ac].xmdl025_04)                
+                RETURNING g_xmdk4_d[l_ac].xmdl027_04,g_xmdk4_d[l_ac].xmdl028_04,g_xmdk4_d[l_ac].xmdl029_04
+           END IF
+           
+        ON CHANGE xmdl013_02
+           IF g_xmdk2_d[l_ac].xmdl013_02 = 'Y' THEN
+              CALL axmp540_03('1',g_site,'',g_xmdk2_d[l_ac].linkno_02,g_xmdk_m.xmdkdocno,
+                              g_xmdk2_d[l_ac].xmdlseq_02,g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl009_02,
+                              g_xmdk2_d[l_ac].xmdl011_02,g_xmdk2_d[l_ac].xmdl012_02,
+                              g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl018_02,'',
+                              g_xmdk2_d[l_ac].xmdl019_02,g_xmdk2_d[l_ac].xmdl020_02,'',
+                              g_xmdk2_d[l_ac].xmdl001_02,g_xmdk2_d[l_ac].xmdl002_02,
+                              g_xmdk2_d[l_ac].xmdl003_02,g_xmdk2_d[l_ac].xmdl004_02)
+                   RETURNING l_success,l_rollback,l_xmdl014,l_xmdl015,l_xmdl016,l_xmdl052
+              IF l_rollback THEN   #多庫儲批資料錯誤必須rollback
+                 EXIT DIALOG
+              END IF
+              
+              IF l_success THEN
+                 IF NOT cl_null(l_xmdl014) THEN
+                    LET g_xmdk2_d[l_ac].xmdl013_02 = 'N'
+                    LET g_xmdk2_d[l_ac].xmdl014_02 = l_xmdl014
+                    LET g_xmdk2_d[l_ac].xmdl015_02 = l_xmdl015
+                    LET g_xmdk2_d[l_ac].xmdl016_02 = l_xmdl016
+                    LET g_xmdk2_d[l_ac].xmdl052_02 = l_xmdl052
+                 ELSE
+                    LET g_xmdk2_d[l_ac].xmdl013_02 = 'Y'
+                    LET g_xmdk2_d[l_ac].xmdl014_02 = ' '
+                    LET g_xmdk2_d[l_ac].xmdl015_02 = ' '
+                    LET g_xmdk2_d[l_ac].xmdl016_02 = ' '
+                    LET g_xmdk2_d[l_ac].xmdl052_02 = ' '
+                 END IF
+                 
+                 CALL s_desc_get_stock_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02) 
+                   RETURNING g_xmdk2_d[l_ac].xmdl014_02_desc
+                 CALL s_desc_get_locator_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02,g_xmdk2_d[l_ac].xmdl015_02)
+                   RETURNING g_xmdk2_d[l_ac].xmdl015_02_desc
+
+               ELSE
+                  LET g_xmdk2_d[l_ac].xmdl013_02 = g_xmdk2_d_o.xmdl013_02
+
+                  NEXT FIELD CURRENT
+               END IF
+
+            ELSE
+               #檢查是否可多庫儲批若為"N"刪除舊值
+               IF NOT axmp540_03_xmdm_delete('1',g_xmdk2_d[l_ac].linkno_02,g_xmdk2_d[l_ac].xmdlseq_02,'Y') THEN
+                  LET g_xmdk2_d[l_ac].xmdl013_02 = g_xmdk2_d_o.xmdl013_02
+                  NEXT FIELD CURRENT
+               END IF
+
+            END IF
+            CALL axmp540_02_fetch_xmdm()
+            LET g_xmdk2_d_o.xmdl013_02 = g_xmdk2_d[l_ac].xmdl013_02
+            CALL axmp540_02_set_entry_b()
+           ##161006-00018#23-S 
+            CALL axmp540_02_set_no_required_b()
+            CALL axmp540_02_set_required_b()
+           ##161006-00018#23-E            
+            CALL axmp540_02_set_no_entry_b()
+
+        AFTER FIELD xmdl014_02
+           CALL s_desc_get_stock_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02) RETURNING g_xmdk2_d[l_ac].xmdl014_02_desc
+           IF NOT cl_null(g_xmdk2_d[l_ac].xmdl014_02) THEN
+              IF g_xmdk2_d[l_ac].xmdl014_02 != g_xmdk2_d_t.xmdl014_02 OR g_xmdk2_d_t.xmdl014_02 IS NULL THEN
+                 #庫位check
+                 IF NOT s_axmt540_xmdl014_chk(g_xmdk2_d[l_ac].xmdl013_02,l_docno,l_seq,g_xmdk2_d[l_ac].xmdl014_02,g_xmdk_m.xmdkdocno) THEN
+                    LET g_xmdk2_d[l_ac].xmdl014_02 = g_xmdk2_d_t.xmdl014_02
+                    CALL s_desc_get_stock_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02) RETURNING g_xmdk2_d[l_ac].xmdl014_02_desc
+                    NEXT FIELD CURRENT
+                 END IF
+                 #在揀量check
+                 #160408-00035#9-add-g_xmdk2_d[l_ac].xmdl003_02,g_xmdk2_d[l_ac].xmdl004_02
+                 IF NOT axmp540_01_inan_chk(g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl009_02,g_xmdk2_d[l_ac].xmdl014_02,
+                                            g_xmdk2_d[l_ac].xmdl015_02,g_xmdk2_d[l_ac].xmdl016_02,g_xmdk2_d[l_ac].xmdl052_02,
+                                            g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl018_02,g_xmdk2_d[l_ac].xmdl003_02,
+                                            g_xmdk2_d[l_ac].xmdl004_02) THEN
+                    LET g_xmdk2_d[l_ac].xmdl014_02 = g_xmdk2_d_t.xmdl014_02
+                    CALL s_desc_get_stock_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02) RETURNING g_xmdk2_d[l_ac].xmdl014_02_desc
+                    NEXT FIELD CURRENT
+                 END IF                 
+              END IF
+           END IF
+           ##161006-00018#23-S
+           CALL axmp540_02_set_entry_b()           
+           CALL axmp540_02_set_no_required_b()
+           CALL axmp540_02_set_required_b()           
+           CALL axmp540_02_set_no_entry_b()  
+           ##161006-00018#23-E           
+           LET g_xmdk2_d_t.xmdl014_02 = g_xmdk2_d[l_ac].xmdl014_02
+        
+        AFTER FIELD xmdl015_02
+           CALL s_desc_get_locator_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02,g_xmdk2_d[l_ac].xmdl015_02) 
+             RETURNING g_xmdk2_d[l_ac].xmdl015_02_desc
+           IF NOT cl_null(g_xmdk2_d[l_ac].xmdl015_02) THEN
+              IF g_xmdk2_d[l_ac].xmdl015_02 != g_xmdk2_d_t.xmdl015_02 OR g_xmdk2_d_t.xmdl015_02 IS NULL THEN
+                 #儲位檢查
+                 IF NOT s_axmt540_xmdl015_chk(g_xmdk2_d[l_ac].xmdl013_02,l_docno,l_seq,g_xmdk2_d[l_ac].xmdl014_02,g_xmdk2_d[l_ac].xmdl015_02) THEN
+                    LET g_xmdk2_d[l_ac].xmdl015_02 = g_xmdk2_d_t.xmdl015_02
+                    CALL s_desc_get_locator_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02,g_xmdk2_d[l_ac].xmdl015_02) 
+                      RETURNING g_xmdk2_d[l_ac].xmdl015_02_desc
+                    NEXT FIELD CURRENT
+                 END IF
+                 #在揀量檢查
+                 #160408-00035#9-add-g_xmdk2_d[l_ac].xmdl003_02,g_xmdk2_d[l_ac].xmdl004_02
+                 IF NOT axmp540_01_inan_chk(g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl009_02,g_xmdk2_d[l_ac].xmdl014_02,
+                                            g_xmdk2_d[l_ac].xmdl015_02,g_xmdk2_d[l_ac].xmdl016_02,g_xmdk2_d[l_ac].xmdl052_02,
+                                            g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl018_02,g_xmdk2_d[l_ac].xmdl003_02,
+                                            g_xmdk2_d[l_ac].xmdl004_02) THEN
+                    LET g_xmdk2_d[l_ac].xmdl015_02 = g_xmdk2_d_t.xmdl015_02
+                    CALL s_desc_get_locator_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02,g_xmdk2_d[l_ac].xmdl015_02) 
+                      RETURNING g_xmdk2_d[l_ac].xmdl015_02_desc
+                    NEXT FIELD CURRENT
+                 END IF                  
+              END IF
+           END IF            
+           LET g_xmdk2_d_t.xmdl015_02 = g_xmdk2_d[l_ac].xmdl015_02
+        
+        AFTER FIELD xmdl016_02
+           IF NOT cl_null(g_xmdk2_d[l_ac].xmdl016_02) THEN
+              #批號檢查
+              IF g_xmdk2_d[l_ac].xmdl016_02 != g_xmdk2_d_t.xmdl016_02 OR g_xmdk2_d_t.xmdl016_02 IS NULL THEN 
+                 IF NOT s_axmt540_xmdl016_chk(g_xmdk2_d[l_ac].xmdl013_02,l_docno,l_seq,g_xmdk2_d[l_ac].xmdl014_02,
+                                             #g_xmdk2_d[l_ac].xmdl015_02,g_xmdk2_d[l_ac].xmdl016_02) THEN    #161013-00032#1 mark
+                                              g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl009_02) THEN    #161013-00032#1 add
+                    LET g_xmdk2_d[l_ac].xmdl016_02 = g_xmdk2_d_t.xmdl016_02
+                    NEXT FIELD CURRENT                                              
+                 END IF
+                 #在揀量檢查
+                 #160408-00035#9-add-g_xmdk2_d[l_ac].xmdl003_02,g_xmdk2_d[l_ac].xmdl004_02
+                 IF NOT axmp540_01_inan_chk(g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl009_02,g_xmdk2_d[l_ac].xmdl014_02,
+                                            g_xmdk2_d[l_ac].xmdl015_02,g_xmdk2_d[l_ac].xmdl016_02,g_xmdk2_d[l_ac].xmdl052_02,
+                                            g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl018_02,g_xmdk2_d[l_ac].xmdl003_02,
+                                            g_xmdk2_d[l_ac].xmdl004_02) THEN
+                    LET g_xmdk2_d[l_ac].xmdl016_02 = g_xmdk2_d_t.xmdl016_02
+                    NEXT FIELD CURRENT  
+                 END IF                 
+              END IF
+           END IF
+           LET g_xmdk2_d_t.xmdl016_02 = g_xmdk2_d[l_ac].xmdl016_02
+           
+        AFTER FIELD xmdl052_02
+           IF NOT cl_null(g_xmdk2_d[l_ac].xmdl052_02) THEN
+              IF g_xmdk2_d[l_ac].xmdl052_02 != g_xmdk2_d_t.xmdl052_02 OR g_xmdk2_d_t.xmdl052_02 IS NULL THEN 
+                 IF NOT s_axmt540_xmdl052_chk(g_xmdk2_d[l_ac].xmdl013_02,l_docno,l_seq,g_xmdk2_d[l_ac].xmdl052_02) THEN                                                
+                    LET g_xmdk2_d[l_ac].xmdl052_02 = g_xmdk2_d_t.xmdl052_02
+                    NEXT FIELD CURRENT                                              
+                 END IF
+                 #在揀量檢查
+                 #160408-00035#9-add-g_xmdk2_d[l_ac].xmdl003_02,g_xmdk2_d[l_ac].xmdl004_02
+                 IF NOT axmp540_01_inan_chk(g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl009_02,g_xmdk2_d[l_ac].xmdl014_02,
+                                            g_xmdk2_d[l_ac].xmdl015_02,g_xmdk2_d[l_ac].xmdl016_02,g_xmdk2_d[l_ac].xmdl052_02,
+                                            g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl018_02,g_xmdk2_d[l_ac].xmdl003_02,
+                                            g_xmdk2_d[l_ac].xmdl004_02) THEN
+                    LET g_xmdk2_d[l_ac].xmdl052_02 = g_xmdk2_d_t.xmdl052_02
+                    NEXT FIELD CURRENT
+                 END IF                 
+              END IF
+           END IF
+           LET g_xmdk2_d_t.xmdl052_02 = g_xmdk2_d[l_ac].xmdl052_02  
+
+        
+        
+        ON ROW CHANGE
+           IF INT_FLAG THEN
+              INITIALIZE g_errparam TO NULL
+              LET g_errparam.code = 9001
+              LET g_errparam.extend = ''
+              LET g_errparam.popup = FALSE
+              CALL cl_err()
+              LET INT_FLAG = 0
+              LET g_xmdk2_d[l_ac].* = g_xmdk2_d_t.*
+              EXIT DIALOG
+           ELSE
+              UPDATE  p540_tmp03                 #160727-00019#23 Mod   p540_02_xmdl_temp --> p540_tmp03
+                 SET  xmdl018 = g_xmdk2_d[l_ac].xmdl018_02,
+                      xmdl020 = g_xmdk2_d[l_ac].xmdl020_02,
+                      xmdl022 = g_xmdk2_d[l_ac].xmdl022_02,
+                      xmdl013 = g_xmdk2_d[l_ac].xmdl013_02,
+                      xmdl014 = g_xmdk2_d[l_ac].xmdl014_02,
+                      xmdl015 = g_xmdk2_d[l_ac].xmdl015_02,
+                      xmdl016 = g_xmdk2_d[l_ac].xmdl016_02 
+               WHERE  linkno =  g_xmdk2_d[l_ac].linkno_02
+                 AND  xmdlseq = g_xmdk2_d[l_ac].xmdlseq_02                  
+
+
+              #2014/10/24 by stellar add ----------------------(S)
+              CALL axmp540_03_xmdm_modify('1',g_xmdk2_d[l_ac].xmdlseq_02,g_site,g_xmdk2_d[l_ac].linkno_02,g_xmdk2_d[l_ac].xmdlseq_02,
+                                          g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl009_02,g_xmdk2_d[l_ac].xmdl011_02,g_xmdk2_d[l_ac].xmdl012_02,
+                                          g_xmdk2_d[l_ac].xmdl014_02,g_xmdk2_d[l_ac].xmdl015_02,g_xmdk2_d[l_ac].xmdl016_02,g_xmdk2_d[l_ac].xmdl052_02,
+                                          g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl018_02,g_xmdk2_d[l_ac].xmdl019_02,g_xmdk2_d[l_ac].xmdl020_02,
+                                          '','') RETURNING l_success
+              CALL axmp540_02_fetch_xmdm()
+              #2014/10/24 by stellar add ----------------------(E)
+                                          
+           END IF
+
+        ON ACTION controlp INFIELD xmdl014_02
+           INITIALIZE g_qryparam.* TO NULL
+           LET g_qryparam.state = 'i'
+           LET g_qryparam.reqry = FALSE  
+           LET g_qryparam.default1 = g_xmdk2_d[l_ac].xmdl014_02             #給予default值
+           LET g_qryparam.default2 = g_xmdk2_d[l_ac].xmdl015_02
+           LET g_qryparam.default3 = g_xmdk2_d[l_ac].xmdl016_02
+           LET g_qryparam.default4 = g_xmdk2_d[l_ac].xmdl052_02  
+           IF NOT cl_null(g_xmdk2_d[l_ac].xmdl001_02) AND NOT cl_null(g_xmdk2_d[l_ac].xmdl002_02) THEN
+              IF g_xmdk2_d[l_ac].xmdl013_02 = 'Y' THEN
+                 LET g_qryparam.arg1 = g_xmdk2_d[l_ac].xmdl001_02                   #出通單單號
+                 LET g_qryparam.arg2 = g_xmdk2_d[l_ac].xmdl002_02                   #出通單項次 
+                 CALL q_xmdi005()                                                   #呼叫開窗              
+              END IF
+           ELSE
+              LET g_qryparam.arg1 = g_xmdk2_d[l_ac].xmdl008_02                      #料件
+              LET g_qryparam.arg2 = g_xmdk2_d[l_ac].xmdl009_02                      #產品特徵
+              CALL q_inag004_13()               
+           END IF
+           LET g_xmdk2_d[l_ac].xmdl014_02 = g_qryparam.return1                      #將開窗取得的值回傳到變數
+           LET g_xmdk2_d[l_ac].xmdl015_02 = g_qryparam.return2
+           LET g_xmdk2_d[l_ac].xmdl016_02 = g_qryparam.return3
+           LET g_xmdk2_d[l_ac].xmdl052_02 = g_qryparam.return4                 
+           DISPLAY g_xmdk2_d[l_ac].xmdl014_02 TO xmdl014_02                         #顯示到畫面上
+           DISPLAY g_xmdk2_d[l_ac].xmdl015_02 TO xmdl015_02
+           DISPLAY g_xmdk2_d[l_ac].xmdl016_02 TO xmdl016_02
+           DISPLAY g_xmdk2_d[l_ac].xmdl052_02 TO xmdl052_02           
+           CALL s_desc_get_stock_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02) RETURNING g_xmdk2_d[l_ac].xmdl014_02_desc
+           CALL s_desc_get_locator_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02,g_xmdk2_d[l_ac].xmdl015_02) RETURNING g_xmdk2_d[l_ac].xmdl015_02_desc
+           NEXT FIELD xmdl014_02 
+
+        ON ACTION controlp INFIELD xmdl015_02
+           INITIALIZE g_qryparam.* TO NULL
+           LET g_qryparam.state = 'i'
+           LET g_qryparam.reqry = FALSE  
+           LET g_qryparam.default1 = g_xmdk2_d[l_ac].xmdl014_02             #給予default值
+           LET g_qryparam.default2 = g_xmdk2_d[l_ac].xmdl015_02
+           LET g_qryparam.default3 = g_xmdk2_d[l_ac].xmdl016_02
+           LET g_qryparam.default4 = g_xmdk2_d[l_ac].xmdl052_02   
+           IF NOT cl_null(g_xmdk2_d[l_ac].xmdl001_02) AND NOT cl_null(g_xmdk2_d[l_ac].xmdl002_02) THEN
+              IF g_xmdk2_d[l_ac].xmdl013_02 = 'Y' THEN
+                 LET g_qryparam.arg1 = g_xmdk2_d[l_ac].xmdl001_02                   #出通單單號
+                 LET g_qryparam.arg2 = g_xmdk2_d[l_ac].xmdl002_02                   #出通單項次 
+                 CALL q_xmdi005()                                                   #呼叫開窗              
+              END IF
+           ELSE
+              LET g_qryparam.arg1 = g_xmdk2_d[l_ac].xmdl008_02                      #料件
+              LET g_qryparam.arg2 = g_xmdk2_d[l_ac].xmdl009_02                      #產品特徵
+              CALL q_inag004_13()               
+           END IF
+           LET g_xmdk2_d[l_ac].xmdl014_02 = g_qryparam.return1                      #將開窗取得的值回傳到變數
+           LET g_xmdk2_d[l_ac].xmdl015_02 = g_qryparam.return2
+           LET g_xmdk2_d[l_ac].xmdl016_02 = g_qryparam.return3
+           LET g_xmdk2_d[l_ac].xmdl052_02 = g_qryparam.return4                 
+           DISPLAY g_xmdk2_d[l_ac].xmdl014_02 TO xmdl014_02                         #顯示到畫面上
+           DISPLAY g_xmdk2_d[l_ac].xmdl015_02 TO xmdl015_02
+           DISPLAY g_xmdk2_d[l_ac].xmdl016_02 TO xmdl016_02
+           DISPLAY g_xmdk2_d[l_ac].xmdl052_02 TO xmdl052_02           
+           CALL s_desc_get_stock_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02) RETURNING g_xmdk2_d[l_ac].xmdl014_02_desc
+           CALL s_desc_get_locator_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02,g_xmdk2_d[l_ac].xmdl015_02) RETURNING g_xmdk2_d[l_ac].xmdl015_02_desc
+           NEXT FIELD xmdl015_02 
+
+        
+   END INPUT
+   
+END DIALOG
+
+################################################################################
+# Descriptions...: 於第二頁資料調整的最上面增加一個欄位"匯總方式"
+# Memo...........:
+# Usage..........: SUBDIALOG axm_axmp540_01.axmp540_01_input
+#                  
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2014/10/21 By stellar
+# Modify.........:
+################################################################################
+DIALOG axmp540_02_input05()
+
+   INPUT g_gather FROM l_gather ATTRIBUTE(WITHOUT DEFAULTS)
+      ON CHANGE l_gather
+         #匯總資料時，錯誤訊息先匯總後再顯示
+         CALL cl_err_collect_init()
+         
+         CALL axmp540_02()
+         CALL axmp540_02_b_fill()
+         CALL axmp540_02_fetch()
+         
+         #匯總資料時，錯誤訊息先匯總後再顯示
+         CALL cl_err_collect_show()
+   END INPUT
+END DIALOG
+
+ 
+{</section>}
+ 
+{<section id="axmp540_02.other_function" readonly="Y" >}
+
+PUBLIC FUNCTION axmp540_02(--)
+   #add-point:input段變數傳入
+
+   #end add-point
+   )
+   DEFINE l_sql      STRING
+   DEFINE l_linkno   LIKE type_t.num10
+   DEFINE i          LIKE type_t.num10
+   DEFINE l_xmdk_d   RECORD   
+                     linkno         LIKE type_t.num10,        #暫時單號
+                     source         LIKE type_t.chr10,        #來源單據1訂單2出通單
+                     xmdk007        LIKE xmdk_t.xmdk007,      #客戶
+                     xmdk010        LIKE xmdk_t.xmdk010,      #收款條件
+                     xmdk011        LIKE xmdk_t.xmdk011,      #交易條件
+                     xmdk012        LIKE xmdk_t.xmdk012,      #稅別
+                     xmdk016        LIKE xmdk_t.xmdk016,      #幣別
+                     xmdk017        LIKE xmdk_t.xmdk017,      #匯率
+                     xmdk009        LIKE xmdk_t.xmdk009,      #收貨客戶
+                     xmdk008        LIKE xmdk_t.xmdk008,      #收款客戶
+                     xmdk015        LIKE xmdk_t.xmdk015,      #發票類型
+                     xmdk002        LIKE xmdk_t.xmdk002,      #訂單/出通單性質
+                     xmdk028        LIKE xmdk_t.xmdk028,      #包裝單製作
+                     xmdk029        LIKE xmdk_t.xmdk029,      #Invoice製作
+                     xmdk021        LIKE xmdk_t.xmdk021,      #收貨地址
+                     xmdkdocno      LIKE xmdk_t.xmdkdocno,    #出貨單號                     
+                     result         LIKE type_t.chr500        #執行結果
+                     END RECORD 
+  
+   DEFINE l_tmp_d   RECORD                     
+                     docno   LIKE xmdl_t.xmdldocno,
+                     seq     LIKE xmdl_t.xmdlseq,
+                     xmdl005 LIKE xmdl_t.xmdl005,
+                     xmdl006 LIKE xmdl_t.xmdl006,
+                     xmdl008 LIKE xmdl_t.xmdl008,
+                     xmdl014 LIKE xmdl_t.xmdl014,
+                     xmdl015 LIKE xmdl_t.xmdl015,
+                     xmdl016 LIKE xmdl_t.xmdl016,
+                     xmdl052 LIKE xmdl_t.xmdl052
+                    END RECORD                     
+
+   DEFINE l_xmdl_d  RECORD
+                     linkno  LIKE type_t.num5,
+                     source  LIKE type_t.chr10,
+                     xmdldocno LIKE xmdl_t.xmdldocno,
+                     xmdlseq LIKE xmdl_t.xmdlseq,
+                     xmdl001 LIKE xmdl_t.xmdl001,
+                     xmdl002 LIKE xmdl_t.xmdl002,
+                     xmdl003 LIKE xmdl_t.xmdl003,
+                     xmdl004 LIKE xmdl_t.xmdl004,
+                     xmdl005 LIKE xmdl_t.xmdl005,
+                     xmdl006 LIKE xmdl_t.xmdl006,
+                     xmdl007 LIKE xmdl_t.xmdl007,
+                     xmdl008 LIKE xmdl_t.xmdl008,
+                     xmdl009 LIKE xmdl_t.xmdl009,
+                     xmdl010 LIKE xmdl_t.xmdl010,
+                     xmdl011 LIKE xmdl_t.xmdl011,
+                     xmdl012 LIKE xmdl_t.xmdl012,
+                     xmdl013 LIKE xmdl_t.xmdl013,
+                     xmdl014 LIKE xmdl_t.xmdl014,
+                     xmdl015 LIKE xmdl_t.xmdl015,
+                     xmdl016 LIKE xmdl_t.xmdl016,
+                     xmdl017 LIKE xmdl_t.xmdl017,
+                     xmdl018 LIKE xmdl_t.xmdl018,
+                     xmdl019 LIKE xmdl_t.xmdl019,
+                     xmdl020 LIKE xmdl_t.xmdl020,
+                     xmdl021 LIKE xmdl_t.xmdl021,
+                     xmdl022 LIKE xmdl_t.xmdl022,
+                     xmdl023 LIKE xmdl_t.xmdl023,
+                     xmdl024 LIKE xmdl_t.xmdl024,
+                     xmdl025 LIKE xmdl_t.xmdl025,
+                     xmdl026 LIKE xmdl_t.xmdl026,
+                     xmdl027 LIKE xmdl_t.xmdl027,
+                     xmdl028 LIKE xmdl_t.xmdl028,
+                     xmdl029 LIKE xmdl_t.xmdl029,
+                     xmdl030 LIKE xmdl_t.xmdl030,
+                     xmdl031 LIKE xmdl_t.xmdl031,
+                     xmdl032 LIKE xmdl_t.xmdl032,
+                     xmdl033 LIKE xmdl_t.xmdl033,
+                     xmdl034 LIKE xmdl_t.xmdl034, 
+                     xmdl035 LIKE xmdl_t.xmdl035,
+                     xmdl036 LIKE xmdl_t.xmdl036,
+                     xmdl037 LIKE xmdl_t.xmdl037,
+                     xmdl038 LIKE xmdl_t.xmdl038,
+                     xmdl039 LIKE xmdl_t.xmdl039,
+                     xmdl040 LIKE xmdl_t.xmdl040,
+                     xmdl041 LIKE xmdl_t.xmdl041,
+                     xmdl042 LIKE xmdl_t.xmdl042,
+                     xmdl043 LIKE xmdl_t.xmdl043,
+                     xmdl044 LIKE xmdl_t.xmdl044,
+                     xmdl045 LIKE xmdl_t.xmdl045,
+                     xmdl046 LIKE xmdl_t.xmdl046,
+                     xmdl047 LIKE xmdl_t.xmdl047,
+                     xmdl048 LIKE xmdl_t.xmdl048,
+                     xmdl049 LIKE xmdl_t.xmdl049,
+                     xmdl050 LIKE xmdl_t.xmdl050,
+                     xmdl051 LIKE xmdl_t.xmdl051,
+                     xmdl052 LIKE xmdl_t.xmdl052,
+                     xmdl087 LIKE xmdl_t.xmdl087,
+                     xmdl088 LIKE xmdl_t.xmdl088,
+                     xmdl056 LIKE xmdl_t.xmdl056  #170324-00113#1 add                     
+                    END RECORD  
+   DEFINE l_success  LIKE type_t.num5
+   DEFINE l_oodbl004 LIKE oodbL_t.oodbl004
+   DEFINE l_oodb005  LIKE oodb_t.oodb005
+   DEFINE l_oodb006  LIKE oodb_t.oodb006
+   DEFINE l_oodb011  LIKE oodb_t.oodb011  
+   DEFINE l_docno    LIKE xmdl_t.xmdldocno   #來源單號   #20141021 by stellar add
+   DEFINE l_seq      LIKE xmdl_t.xmdlseq     #項次       #20141021 by stellar add
+   DEFINE l_ref_unit LIKE type_t.chr1        #20141024 by stellar add
+   DEFINE l_xmda028  LIKE xmda_t.xmda028     #161230-00019#5
+
+   #20141021 stellar add ----------------(S)
+   #匯總方式為空時，預設1.依客戶匯總
+   IF cl_null(g_gather) THEN
+      LET g_gather = 1
+   END IF
+   
+   #判斷據點參數若不使用參考單位時，則參考單位、數量不可給值
+   CALL cl_get_para(g_enterprise,g_site,'S-BAS-0028') RETURNING l_ref_unit
+   #20141021 stellar add ----------------(E)
+   
+   #清空tmptable
+   DELETE FROM p540_tmp02              #160727-00019#23 Mod   p540_02_xmdk_temp --> p540_tmp02
+   DELETE FROM p540_tmp03              #160727-00019#23 Mod   p540_02_xmdl_temp --> p540_tmp03
+   DELETE FROM p540_tmp04              #160727-00019#23 Mod   p540_02_xmdm_temp --> p540_tmp04
+ 
+   LET l_linkno = ''
+   SELECT MAX(linkno) INTO l_linkno
+     FROM p540_tmp02                   #160727-00019#23 Mod   p540_02_xmdk_temp --> p540_tmp02
+   IF cl_null(l_linkno) THEN
+      LET l_linkno = 1
+   ELSE 
+      LET l_linkno = l_linkno + 1   
+   END IF  
+   
+   #抓取已選取單據來源為【訂單】的資料做匯總
+   #依客戶、收款條件、交易條件、稅別、幣別、匯率、收貨客戶、收款客戶、發票類型、訂單性質，條件做匯總  
+   INITIALIZE l_xmdk_d.* TO NULL
+ 
+   
+   #依不同的匯總方式進行匯總
+   CASE g_gather
+      WHEN '1'   #依客戶匯總
+           LET l_sql = "SELECT a.xmda004,a.xmda009,a.xmda010,a.xmda011,a.xmda015, ",
+                       "       a.xmda016,a.xmda022,a.xmda021,a.xmda035,a.xmda005, ",
+                       "       a.xmda025,'','' ",
+                       "      ,a.xmda028 ",   #161230-00019#5
+                       "  FROM xmda_t a,p540_01_tmp b",
+                       " WHERE a.xmdaent = '",g_enterprise,"' ",
+                       "   AND a.xmdasite = '",g_site,"' ",
+                       "   AND a.xmdadocno = b.docno ",
+                       "   AND b.source = '1' ",              #來源單據：訂單
+                       #161230-00019#5-s-mod
+#                       " GROUP BY a.xmda004,a.xmda009,a.xmda010,a.xmda011,a.xmda015,a.xmda016,a.xmda022,a.xmda021,a.xmda035,a.xmda005,a.xmda025 ",
+                       " GROUP BY a.xmda004,a.xmda009,a.xmda010,a.xmda011,a.xmda015,a.xmda016,a.xmda022,a.xmda021,a.xmda035,a.xmda005,a.xmda025,a.xmda028 ",
+                       #161230-00019#5-e-mod
+                       " ORDER BY a.xmda004 "
+
+      WHEN '2'   #依來源單號匯總
+           LET l_sql = "SELECT a.xmda004,a.xmda009,a.xmda010,a.xmda011,a.xmda015, ",
+                       "       a.xmda016,a.xmda022,a.xmda021,a.xmda035,a.xmda005, ",
+                       "       a.xmda025,b.docno,'' ",
+                       "      ,a.xmda028 ",   #161230-00019#5
+                       "  FROM xmda_t a,p540_01_tmp b",
+                       " WHERE a.xmdaent = '",g_enterprise,"' ",
+                       "   AND a.xmdasite = '",g_site,"' ",
+                       "   AND a.xmdadocno = b.docno ",
+                       "   AND b.source = '1' ",              #來源單據：訂單
+                       #161230-00019#5-s-mod
+#                       " GROUP BY a.xmda004,a.xmda009,a.xmda010,a.xmda011,a.xmda015,a.xmda016,a.xmda022,a.xmda021,a.xmda035,a.xmda005,a.xmda025,b.docno ",
+                       " GROUP BY a.xmda004,a.xmda009,a.xmda010,a.xmda011,a.xmda015,a.xmda016,a.xmda022,a.xmda021,a.xmda035,a.xmda005,a.xmda025,b.docno,a.xmda028 ",
+                       #161230-00019#5-e-mod
+                       " ORDER BY a.xmda004 "
+            
+      WHEN '3'   #依來源單號+項次匯總
+           LET l_sql = "SELECT a.xmda004,a.xmda009,a.xmda010,a.xmda011,a.xmda015, ",
+                       "       a.xmda016,a.xmda022,a.xmda021,a.xmda035,a.xmda005, ",
+                       "       a.xmda025,b.docno,b.seq ",
+                       "      ,a.xmda028 ",   #161230-00019#5
+                       "  FROM xmda_t a,p540_01_tmp b",
+                       " WHERE a.xmdaent = '",g_enterprise,"' ",
+                       "   AND a.xmdasite = '",g_site,"' ",
+                       "   AND a.xmdadocno = b.docno ",
+                       "   AND b.source = '1' ",              #來源單據：訂單
+                       #161230-00019#5-s-mod
+#                       " GROUP BY a.xmda004,a.xmda009,a.xmda010,a.xmda011,a.xmda015,a.xmda016,a.xmda022,a.xmda021,a.xmda035,a.xmda005,a.xmda025,b.docno,b.seq ",
+                       " GROUP BY a.xmda004,a.xmda009,a.xmda010,a.xmda011,a.xmda015,a.xmda016,a.xmda022,a.xmda021,a.xmda035,a.xmda005,a.xmda025,b.docno,b.seq,a.xmda028 ",
+                       #161230-00019#5-e-mod
+                       " ORDER BY a.xmda004 "
+         
+   END CASE
+
+               
+   PREPARE p540_02_xmda_pr FROM l_sql
+   DECLARE p540_02_xmda_cs CURSOR FOR p540_02_xmda_pr                      
+
+     
+   FOREACH p540_02_xmda_cs INTO l_xmdk_d.xmdk007,l_xmdk_d.xmdk010,l_xmdk_d.xmdk011,l_xmdk_d.xmdk012,l_xmdk_d.xmdk016,
+                                l_xmdk_d.xmdk017,l_xmdk_d.xmdk009,l_xmdk_d.xmdk008,l_xmdk_d.xmdk015,l_xmdk_d.xmdk002,
+                                l_xmdk_d.xmdk021,l_docno,l_seq,   #20141021 by stellar add
+                                l_xmda028   #161230-00019#5 add
+      
+      LET l_xmdk_d.linkno = l_linkno
+      LET l_xmdk_d.source = '1'
+
+      #mod--161109-00085#10-s
+      #INSERT INTO p540_tmp02 VALUES (l_xmdk_d.*)            #160727-00019#23 Mod   p540_02_xmdk_temp --> p540_tmp02      
+      INSERT INTO p540_tmp02(linkno,source,xmdk007,xmdk010,xmdk011,
+                             xmdk012,xmdk016,xmdk017,xmdk009,xmdk008,
+                             #161230-00019#5-s-mod
+#                             xmdk015,xmdk002,xmdk028,xmdk029,xmdk021,xmdkdocno,result) 
+                             xmdk015,xmdk002,xmdk028,xmdk029,xmdk021,xmdkdocno,result,xmda028) 
+                             #161230-00019#5-e-mod
+      VALUES (l_xmdk_d.linkno,l_xmdk_d.source,l_xmdk_d.xmdk007,l_xmdk_d.xmdk010,l_xmdk_d.xmdk011,
+              l_xmdk_d.xmdk012,l_xmdk_d.xmdk016,l_xmdk_d.xmdk017,l_xmdk_d.xmdk009,l_xmdk_d.xmdk008,
+              l_xmdk_d.xmdk015,l_xmdk_d.xmdk002,l_xmdk_d.xmdk028,l_xmdk_d.xmdk029,l_xmdk_d.xmdk021,
+              #161230-00019#5-s-mod
+#              l_xmdk_d.xmdkdocno,l_xmdk_d.result)
+              l_xmdk_d.xmdkdocno,l_xmdk_d.result,l_xmda028)
+              #161230-00019#5-e-mod
+      #mod--161109-00085#10-e
+      LET i = 1   
+      #將訂單單身寫入
+     
+      #依不同方式進行匯總
+      CASE g_gather
+         WHEN '1'   #依客戶匯總
+              LET l_sql = "SELECT   a.docno,    a.seq,a.xmdl005,a.xmdl006,a.xmdl008, ",
+                          "       a.xmdl014,a.xmdl015,a.xmdl016,a.xmdl052 ",
+                          "  FROM p540_01_tmp a,xmda_t b ",
+                          " WHERE b.xmdaent = '",g_enterprise,"' ",
+                          "   AND b.xmdasite = '",g_site,"' ",
+                          "   AND a.docno = b.xmdadocno ",
+                          "   AND a.source = '1' ",          #來源單據：訂單
+                          "   AND b.xmda004 = ? ",
+                          "   AND b.xmda009 = ? ",
+                          "   AND b.xmda010 = ? ",
+                          "   AND b.xmda011 = ? ",
+                          "   AND b.xmda015 = ? ",
+                          "   AND b.xmda016 = ? ",
+                          "   AND b.xmda022 = ? ",
+                          "   AND b.xmda021 = ? ",
+                          "   AND b.xmda035 = ? ",
+                          "   AND b.xmda005 = ? "
+              #送貨地址            
+              IF cl_null(l_xmdk_d.xmdk021) THEN
+                 LET l_sql = l_sql , "AND (b.xmda025 = '' OR b.xmda025 IS NULL) "#,
+#                             " ORDER BY a.docno,a.seq,a.xmdl005,a.xmdl006 "   #161230-00019#5-mark
+              ELSE
+                 LET l_sql = l_sql , "   AND b.xmda025 = ? "#,
+#                             " ORDER BY a.docno,a.seq,a.xmdl005,a.xmdl006 "   #161230-00019#5-mark
+              END IF 
+              #161230-00019#5-s-add
+              #一次性交易識別碼
+              IF cl_null(l_xmda028) THEN
+                 LET l_sql = l_sql , "AND (b.xmda028 = '' OR b.xmda028 IS NULL) "
+              ELSE
+                 LET l_sql = l_sql , "   AND b.xmda028 = ? "
+              END IF 
+              LET l_sql = l_sql ," ORDER BY a.docno,a.seq,a.xmdl005,a.xmdl006 "
+              #161230-00019#5-e-add
+              
+         WHEN '2'   #依來源單號匯總
+              LET l_sql = "SELECT   a.docno,    a.seq,a.xmdl005,a.xmdl006,a.xmdl008, ",
+                          "       a.xmdl014,a.xmdl015,a.xmdl016,a.xmdl052 ",
+                          "  FROM p540_01_tmp a,xmda_t b ",
+                          " WHERE b.xmdaent = '",g_enterprise,"' ",
+                          "   AND b.xmdasite = '",g_site,"' ",
+                          "   AND a.docno = b.xmdadocno ",
+                          "   AND a.source = '1' ",          #來源單據：訂單
+                          "   AND a.docno = ? ",
+                          " ORDER BY a.docno,a.seq,a.xmdl005,a.xmdl006 "  
+         WHEN '3'   #依來源單號+項次匯總
+              LET l_sql = "SELECT   a.docno,    a.seq,a.xmdl005,a.xmdl006,a.xmdl008, ",
+                          "       a.xmdl014,a.xmdl015,a.xmdl016,a.xmdl052 ",
+                          "  FROM p540_01_tmp a,xmda_t b ",
+                          " WHERE b.xmdaent = '",g_enterprise,"' ",
+                          "   AND b.xmdasite = '",g_site,"' ",
+                          "   AND a.docno = b.xmdadocno ",
+                          "   AND a.source = '1' ",          #來源單據：訂單
+                          "   AND a.docno = ? ",
+                          "   AND a.seq = ? ",
+                          " ORDER BY a.docno,a.seq,a.xmdl005,a.xmdl006 "  
+      END CASE      
+      PREPARE p540_02_tmp_pr FROM l_sql
+      DECLARE p540_02_tmp_cs CURSOR FOR p540_02_tmp_pr        
+
+      
+      CASE g_gather
+         WHEN '1'   #依客戶匯總
+              #161230-00019#5-s-mark
+              #送貨地址
+#              IF cl_null(l_xmdk_d.xmdk021) THEN   
+#                 OPEN p540_02_tmp_cs USING l_xmdk_d.xmdk007,l_xmdk_d.xmdk010,l_xmdk_d.xmdk011,l_xmdk_d.xmdk012,l_xmdk_d.xmdk016,
+#                                           l_xmdk_d.xmdk017,l_xmdk_d.xmdk009,l_xmdk_d.xmdk008,l_xmdk_d.xmdk015,l_xmdk_d.xmdk002
+#                                                   
+#              ELSE
+#                 OPEN p540_02_tmp_cs USING l_xmdk_d.xmdk007,l_xmdk_d.xmdk010,l_xmdk_d.xmdk011,l_xmdk_d.xmdk012,l_xmdk_d.xmdk016,
+#                                           l_xmdk_d.xmdk017,l_xmdk_d.xmdk009,l_xmdk_d.xmdk008,l_xmdk_d.xmdk015,l_xmdk_d.xmdk002,
+#                                           l_xmdk_d.xmdk021
+#              END IF                          
+              #161230-00019#5-e-mark
+              #161230-00019#5-s-add
+              CASE
+                 WHEN (cl_null(l_xmdk_d.xmdk021) AND cl_null(l_xmda028))
+                    OPEN p540_02_tmp_cs USING l_xmdk_d.xmdk007,l_xmdk_d.xmdk010,l_xmdk_d.xmdk011,l_xmdk_d.xmdk012,l_xmdk_d.xmdk016,
+                                              l_xmdk_d.xmdk017,l_xmdk_d.xmdk009,l_xmdk_d.xmdk008,l_xmdk_d.xmdk015,l_xmdk_d.xmdk002
+                 WHEN (NOT cl_null(l_xmdk_d.xmdk021) AND cl_null(l_xmda028))
+                    OPEN p540_02_tmp_cs USING l_xmdk_d.xmdk007,l_xmdk_d.xmdk010,l_xmdk_d.xmdk011,l_xmdk_d.xmdk012,l_xmdk_d.xmdk016,
+                                              l_xmdk_d.xmdk017,l_xmdk_d.xmdk009,l_xmdk_d.xmdk008,l_xmdk_d.xmdk015,l_xmdk_d.xmdk002,
+                                              l_xmdk_d.xmdk021
+                 WHEN (cl_null(l_xmdk_d.xmdk021) AND NOT cl_null(l_xmda028))
+                    OPEN p540_02_tmp_cs USING l_xmdk_d.xmdk007,l_xmdk_d.xmdk010,l_xmdk_d.xmdk011,l_xmdk_d.xmdk012,l_xmdk_d.xmdk016,
+                                              l_xmdk_d.xmdk017,l_xmdk_d.xmdk009,l_xmdk_d.xmdk008,l_xmdk_d.xmdk015,l_xmdk_d.xmdk002,
+                                              l_xmda028
+                 OTHERWISE
+                    OPEN p540_02_tmp_cs USING l_xmdk_d.xmdk007,l_xmdk_d.xmdk010,l_xmdk_d.xmdk011,l_xmdk_d.xmdk012,l_xmdk_d.xmdk016,
+                                              l_xmdk_d.xmdk017,l_xmdk_d.xmdk009,l_xmdk_d.xmdk008,l_xmdk_d.xmdk015,l_xmdk_d.xmdk002,
+                                              l_xmdk_d.xmdk021,l_xmda028
+              END CASE
+              #161230-00019#5-e-add
+         WHEN '2'   #依來源單號匯總
+              OPEN p540_02_tmp_cs USING l_docno
+         WHEN '3'   #依來源單號+項次匯總
+              OPEN p540_02_tmp_cs USING l_docno,l_seq
+      END CASE
+
+
+
+
+      INITIALIZE l_tmp_d.* TO NULL      
+      #161109-00085#10-s      
+      #FOREACH p540_02_tmp_cs INTO l_tmp_d.*
+      FOREACH p540_02_tmp_cs 
+      INTO l_tmp_d.docno,l_tmp_d.seq,l_tmp_d.xmdl005,l_tmp_d.xmdl006,l_tmp_d.xmdl008,
+           l_tmp_d.xmdl014,l_tmp_d.xmdl015,l_tmp_d.xmdl016,l_tmp_d.xmdl052                                        
+      #161109-00085#10-e
+         INITIALIZE l_xmdl_d.* TO NULL
+         SELECT xmdddocno,xmddseq,xmddseq1,xmddseq2,xmdd003,
+                  xmdd001,xmdd002, xmdc003, xmdc004,xmdc005,
+                  xmdd004,xmdd024, xmdd026, xmdc052,xmdc015,
+                  xmdd019,xmdc036, xmdc037, xmdc038,xmdc027,
+                  xmdd008, xmdc021, xmdc040,xmdc041,xmdc042,
+                  xmdc043, xmdc044, xmdc049,xmdc050
+           INTO l_xmdl_d.xmdl003,l_xmdl_d.xmdl004,l_xmdl_d.xmdl005,l_xmdl_d.xmdl006,l_xmdl_d.xmdl007,
+                l_xmdl_d.xmdl008,l_xmdl_d.xmdl009,l_xmdl_d.xmdl010,l_xmdl_d.xmdl011,l_xmdl_d.xmdl012,
+                l_xmdl_d.xmdl017,l_xmdl_d.xmdl019,l_xmdl_d.xmdl021,l_xmdl_d.xmdl023,l_xmdl_d.xmdl024,
+                l_xmdl_d.xmdl025,l_xmdl_d.xmdl030,l_xmdl_d.xmdl031,l_xmdl_d.xmdl032,l_xmdl_d.xmdl033,
+                l_xmdl_d.xmdl034,l_xmdl_d.xmdl041,l_xmdl_d.xmdl042,l_xmdl_d.xmdl043,l_xmdl_d.xmdl044,
+                l_xmdl_d.xmdl045,l_xmdl_d.xmdl046,l_xmdl_d.xmdl050,l_xmdl_d.xmdl051
+           FROM xmdc_t,xmdd_t
+          WHERE xmdcent = g_enterprise
+            AND xmdcsite = g_site
+            AND xmdcent = xmddent
+            AND xmdcsite = xmddsite
+            AND xmdcdocno = xmdddocno
+            AND xmdcseq = xmddseq
+            AND xmdddocno = l_tmp_d.docno
+            AND xmddseq = l_tmp_d.seq
+            AND xmddseq1 = l_tmp_d.xmdl005
+            AND xmddseq2 = l_tmp_d.xmdl006
+            
+         #161208-00028#1-S
+         IF cl_null(l_xmdl_d.xmdl019) THEN 
+            SELECT imaf015 INTO l_xmdl_d.xmdl019 FROM imaf_t 
+             WHERE imafent = g_enterprise
+               AND imafsite = g_site
+               AND imaf001 = l_xmdl_d.xmdl008
+         END IF
+         #161208-00028#1-E         
+         LET l_xmdl_d.linkno = l_xmdk_d.linkno 
+         LET l_xmdl_d.source = l_xmdk_d.source          
+         LET l_xmdl_d.xmdlseq = i                       #項次         
+         LET l_xmdl_d.xmdl001 = ''                      #出通單單號                  
+         LET l_xmdl_d.xmdl002 = ''                      #出通單項次                  
+         LET l_xmdl_d.xmdl013 = 'N'                     #多庫儲批出貨 
+         #160630-00005#1-mod-(S)
+#         IF cl_null(l_tmp_d.xmdl014) THEN
+#            #抓取預設庫儲
+#            SELECT imaf091,imaf092 
+#              INTO l_xmdl_d.xmdl014,l_xmdl_d.xmdl015
+#              FROM imaf_t
+#             WHERE imafent = g_enterprise
+#               AND imafsite = g_site
+#               AND imaf001 = l_xmdl_d.xmdl008  
+#         ELSE         
+#            LET l_xmdl_d.xmdl014 = l_tmp_d.xmdl014         #庫位         
+#            LET l_xmdl_d.xmdl015 = l_tmp_d.xmdl015         #儲位         
+#            LET l_xmdl_d.xmdl016 = l_tmp_d.xmdl016         #批號    
+#         END IF
+#         LET l_xmdl_d.xmdl052 = l_tmp_d.xmdl052         #庫存管理特徵
+#         LET l_xmdl_d.xmdl018 = l_tmp_d.xmdl008         #出貨數量
+         IF cl_null(l_tmp_d.xmdl014) THEN
+            CALL axmp540_02_materials_default(l_xmdl_d.xmdl008,l_xmdl_d.xmdl009,l_tmp_d.xmdl016,l_tmp_d.xmdl008,
+                                              l_xmdl_d.xmdl003,l_xmdl_d.xmdl004,l_xmdl_d.xmdl005,l_tmp_d.xmdl052,
+                                              l_xmdl_d.xmdl017)
+               RETURNING l_xmdl_d.xmdl052,l_xmdl_d.xmdl014,l_xmdl_d.xmdl015,l_xmdl_d.xmdl016
+            #160901-00037#1--s
+            IF cl_null(l_xmdl_d.xmdl052) THEN
+               LET l_xmdl_d.xmdl052 = l_tmp_d.xmdl052         #庫存管理特徵
+            END IF
+            #160901-00037#1--e
+         ELSE         
+            LET l_xmdl_d.xmdl014 = l_tmp_d.xmdl014         #庫位         
+            LET l_xmdl_d.xmdl015 = l_tmp_d.xmdl015         #儲位         
+            LET l_xmdl_d.xmdl016 = l_tmp_d.xmdl016         #批號    
+            LET l_xmdl_d.xmdl052 = l_tmp_d.xmdl052         #庫存管理特徵
+         END IF
+         LET l_xmdl_d.xmdl018 = l_tmp_d.xmdl008            #出貨數量
+         #160630-00005#1-mod-(E) 
+         
+
+         #推算參考數量             
+         IF l_ref_unit = 'Y' THEN
+            IF NOT cl_null(l_xmdl_d.xmdl019) THEN          
+               CALL s_aooi250_convert_qty(l_xmdl_d.xmdl008,l_xmdl_d.xmdl017,l_xmdl_d.xmdl019,l_xmdl_d.xmdl018)
+                 RETURNING l_success,l_xmdl_d.xmdl020
+            END IF
+         ELSE
+            LET l_xmdl_d.xmdl019 = ''
+            LET l_xmdl_d.xmdl020 = ''
+         END IF
+         
+         #若料號有使用銷售計價單位時，自動推算計價數量
+         IF NOT cl_null(l_xmdl_d.xmdl021) THEN          
+            CALL s_aooi250_convert_qty(l_xmdl_d.xmdl008,l_xmdl_d.xmdl017,l_xmdl_d.xmdl021,l_xmdl_d.xmdl018)
+              RETURNING l_success,l_xmdl_d.xmdl022
+         END IF
+
+         #稅率
+         LET l_oodb006 = ''
+         CALL s_tax_chk(g_site,l_xmdl_d.xmdl025)
+           RETURNING l_success,l_oodbl004,l_oodb005,l_oodb006,l_oodb011
+         IF l_success THEN
+            LET l_xmdl_d.xmdl026 = l_oodb006
+         END IF         
+
+         #金額都預設給零，等真正單號產生時，在算金額
+         LET l_xmdl_d.xmdl027 = 0    #未稅金額
+         LET l_xmdl_d.xmdl028 = 0    #含稅金額
+         LET l_xmdl_d.xmdl029 = 0    #稅額        
+                       
+         LET l_xmdl_d.xmdl035 = 0    #已簽收量
+         LET l_xmdl_d.xmdl036 = 0    #已簽退量
+         LET l_xmdl_d.xmdl037 = 0    #已銷退量 
+         LET l_xmdl_d.xmdl038 = 0    #主帳套已立帳數量
+         LET l_xmdl_d.xmdl039 = 0    #帳套二已立帳數量
+         LET l_xmdl_d.xmdl040 = 0    #帳套三已立帳數量
+         LET l_xmdl_d.xmdl087 = 'Y'  #需自立應收否          
+         #帶出訂單多角流程代碼xmda050
+         SELECT xmda050
+           INTO l_xmdl_d.xmdl088
+           FROM xmda_t
+          WHERE xmdaent = g_enterprise
+            AND xmdasite = g_site
+            AND xmdadocno = l_xmdl_d.xmdl003
+
+         #170324-00113 ---add (s)---
+         IF l_xmdl_d.xmdl023 = 'N' THEN
+            LET l_xmdl_d.xmdl056 = l_xmdl_d.xmdl018
+         ELSE
+            LET l_xmdl_d.xmdl056 = 0
+         END IF
+         #170324-00113 ---add (e)---
+
+         #161109-00085#10-s   
+         #INSERT INTO p540_tmp03 VALUES (l_xmdl_d.*)    #160727-00019#23 Mod   p540_02_xmdl_temp --> p540_tmp03
+         INSERT INTO p540_tmp03(linkno,source,xmdldocno,xmdlseq,xmdl001,
+                                xmdl002,xmdl003,xmdl004,xmdl005,xmdl006,
+                                xmdl007,xmdl008,xmdl009,xmdl010,xmdl011,
+                                xmdl012,xmdl013,xmdl014,xmdl015,xmdl016,
+                                xmdl017,xmdl018,xmdl019,xmdl020,xmdl021,
+                                xmdl022,xmdl023,xmdl024,xmdl025,xmdl026,
+                                xmdl027,xmdl028,xmdl029,xmdl030,xmdl031,
+                                xmdl032,xmdl033,xmdl034,xmdl035,xmdl036,
+                                xmdl037,xmdl038,xmdl039,xmdl040,xmdl041,
+                                xmdl042,xmdl043,xmdl044,xmdl045,xmdl046,
+                                xmdl047,xmdl048,xmdl049,xmdl050,xmdl051,
+                                xmdl052,xmdl087,xmdl088,xmdl056) #170324-00113#1 add xmdl056 
+                        VALUES (l_xmdl_d.linkno,l_xmdl_d.source,l_xmdl_d.xmdldocno,l_xmdl_d.xmdlseq,l_xmdl_d.xmdl001,
+                                l_xmdl_d.xmdl002,l_xmdl_d.xmdl003,l_xmdl_d.xmdl004,l_xmdl_d.xmdl005,l_xmdl_d.xmdl006,
+                                l_xmdl_d.xmdl007,l_xmdl_d.xmdl008,l_xmdl_d.xmdl009,l_xmdl_d.xmdl010,l_xmdl_d.xmdl011,
+                                l_xmdl_d.xmdl012,l_xmdl_d.xmdl013,l_xmdl_d.xmdl014,l_xmdl_d.xmdl015,l_xmdl_d.xmdl016,
+                                l_xmdl_d.xmdl017,l_xmdl_d.xmdl018,l_xmdl_d.xmdl019,l_xmdl_d.xmdl020,l_xmdl_d.xmdl021,
+                                l_xmdl_d.xmdl022,l_xmdl_d.xmdl023,l_xmdl_d.xmdl024,l_xmdl_d.xmdl025,l_xmdl_d.xmdl026,
+                                l_xmdl_d.xmdl027,l_xmdl_d.xmdl028,l_xmdl_d.xmdl029,l_xmdl_d.xmdl030,l_xmdl_d.xmdl031,
+                                l_xmdl_d.xmdl032,l_xmdl_d.xmdl033,l_xmdl_d.xmdl034,l_xmdl_d.xmdl035,l_xmdl_d.xmdl036,
+                                l_xmdl_d.xmdl037,l_xmdl_d.xmdl038,l_xmdl_d.xmdl039,l_xmdl_d.xmdl040,l_xmdl_d.xmdl041,
+                                l_xmdl_d.xmdl042,l_xmdl_d.xmdl043,l_xmdl_d.xmdl044,l_xmdl_d.xmdl045,l_xmdl_d.xmdl046,
+                                l_xmdl_d.xmdl047,l_xmdl_d.xmdl048,l_xmdl_d.xmdl049,l_xmdl_d.xmdl050,l_xmdl_d.xmdl051,
+                                l_xmdl_d.xmdl052,l_xmdl_d.xmdl087,l_xmdl_d.xmdl088,l_xmdl_d.xmdl056) #170324-00113#1 add xmdl056               
+         #161109-00085#10-e
+         #2014/10/24 by stellar add -----------------------(S)
+         #有指定庫儲批，先新增一筆多庫儲批明細
+         IF NOT cl_null(l_xmdl_d.xmdl014) THEN
+            CALL axmp540_03_xmdm_modify('1',l_xmdl_d.xmdlseq,g_site,l_xmdl_d.linkno,l_xmdl_d.xmdlseq,
+                                        l_xmdl_d.xmdl008,l_xmdl_d.xmdl009,l_xmdl_d.xmdl011,l_xmdl_d.xmdl012,
+                                        l_xmdl_d.xmdl014,l_xmdl_d.xmdl015,l_xmdl_d.xmdl016,l_xmdl_d.xmdl052,
+                                        l_xmdl_d.xmdl017,l_xmdl_d.xmdl018,l_xmdl_d.xmdl019,l_xmdl_d.xmdl020,
+                                        '','') RETURNING l_success
+         END IF
+         #2014/10/24 by stellar add -----------------------(E)
+
+         LET i = i + 1
+      END FOREACH                                  
+      LET l_linkno = l_linkno + 1                                
+   END FOREACH   
+        
+   CLOSE p540_02_xmda_cs
+   FREE p540_02_xmda_pr
+   CLOSE p540_02_tmp_cs
+   FREE p540_02_tmp_pr 
+    
+    
+   #抓取已選取單據來源為【出通單】的資料做匯總
+   #依客戶、收款條件、交易條件、稅別、幣別、匯率、收貨客戶、收款客戶、發票類型、出通性質、包裝單製作、Invoice製作，條件做匯總        
+   INITIALIZE l_xmdk_d.* TO NULL
+   
+   #依不同的匯總方式進行匯總
+   CASE g_gather
+      WHEN '1'   #依客戶匯總
+        LET l_sql = "SELECT a.xmdg005,a.xmdg008,a.xmdg009,a.xmdg010,a.xmdg014, ",
+                    "       a.xmdg015,a.xmdg007,a.xmdg006,a.xmdg013,a.xmdg001, ",
+                    "       a.xmdg024,a.xmdg025,a.xmdg017,       '',       ''  ",
+                    "      ,c.xmda028 ",   #161230-00019#5
+                    #161230-00019#5-s-mod
+#                    "  FROM xmdg_t a,p540_01_tmp b ",
+                    "  FROM xmdg_t a LEFT OUTER JOIN xmda_t c ON c.xmdaent = a.xmdgent AND c.xmdadocno = a.xmdg004,p540_01_tmp b ",
+                    #161230-00019#5-e-mod
+                    " WHERE a.xmdgent = '",g_enterprise,"' ",
+                    "   AND a.xmdgsite = '",g_site,"' ",
+                    "   AND a.xmdgdocno = b.docno ",
+                    "   AND b.source = '2' ",                   #來源單據：出貨通知單                          
+                    #161230-00019#5-s-mod
+#                    " GROUP BY a.xmdg005,a.xmdg008,a.xmdg009,a.xmdg010,a.xmdg014,a.xmdg015,a.xmdg007,a.xmdg006,a.xmdg013,a.xmdg001,a.xmdg024,a.xmdg025,a.xmdg017 ",
+                    " GROUP BY a.xmdg005,a.xmdg008,a.xmdg009,a.xmdg010,a.xmdg014,a.xmdg015,a.xmdg007,a.xmdg006,a.xmdg013,a.xmdg001,a.xmdg024,a.xmdg025,a.xmdg017,c.xmda028 ",
+                    #161230-00019#5-e-mod
+                    " ORDER BY a.xmdg005 "
+                     
+      WHEN '2'   #依來源單號匯總
+        LET l_sql = "SELECT a.xmdg005,a.xmdg008,a.xmdg009,a.xmdg010,a.xmdg014, ",
+                    "       a.xmdg015,a.xmdg007,a.xmdg006,a.xmdg013,a.xmdg001, ",
+                    "       a.xmdg024,a.xmdg025,a.xmdg017,b.docno,'' ",
+                    "      ,c.xmda028 ",   #161230-00019#5
+                    #161230-00019#5-s-mod
+#                    "  FROM xmdg_t a,p540_01_tmp b ",
+                    "  FROM xmdg_t a LEFT OUTER JOIN xmda_t c ON c.xmdaent = a.xmdgent AND c.xmdadocno = a.xmdg004,p540_01_tmp b ",
+                    #161230-00019#5-e-mod
+                    " WHERE a.xmdgent = '",g_enterprise,"' ",
+                    "   AND a.xmdgsite = '",g_site,"' ",
+                    "   AND a.xmdgdocno = b.docno ",
+                    "   AND b.source = '2' ",                   #來源單據：出貨通知單                          
+                    #161230-00019#5-s-mod
+#                    " GROUP BY a.xmdg005,a.xmdg008,a.xmdg009,a.xmdg010,a.xmdg014,a.xmdg015,a.xmdg007,a.xmdg006,a.xmdg013,a.xmdg001,a.xmdg024,a.xmdg025,a.xmdg017,b.docno ",
+                    " GROUP BY a.xmdg005,a.xmdg008,a.xmdg009,a.xmdg010,a.xmdg014,a.xmdg015,a.xmdg007,a.xmdg006,a.xmdg013,a.xmdg001,a.xmdg024,a.xmdg025,a.xmdg017,b.docno,c.xmda028 ",
+                    #161230-00019#5-e-mod
+                    " ORDER BY a.xmdg005 "
+                      
+      WHEN '3'   #依來源單號+項次匯總
+        LET l_sql = "SELECT a.xmdg005,a.xmdg008,a.xmdg009,a.xmdg010,a.xmdg014, ",
+                    "       a.xmdg015,a.xmdg007,a.xmdg006,a.xmdg013,a.xmdg001, ",
+                    "       a.xmdg024,a.xmdg025,a.xmdg017,b.docno,b.seq ",
+                    "      ,c.xmda028 ",   #161230-00019#5
+                    #161230-00019#5-s-mod
+#                    "  FROM xmdg_t a,p540_01_tmp b ",
+                    "  FROM xmdg_t a LEFT OUTER JOIN xmda_t c ON c.xmdaent = a.xmdgent AND c.xmdadocno = a.xmdg004,p540_01_tmp b ",
+                    #161230-00019#5-e-mod
+                    " WHERE a.xmdgent = '",g_enterprise,"' ",
+                    "   AND a.xmdgsite = '",g_site,"' ",
+                    "   AND a.xmdgdocno = b.docno ",
+                    "   AND b.source = '2' ",                   #來源單據：出貨通知單                          
+                    #161230-00019#5-s-mod
+#                    " GROUP BY a.xmdg005,a.xmdg008,a.xmdg009,a.xmdg010,a.xmdg014,a.xmdg015,a.xmdg007,a.xmdg006,a.xmdg013,a.xmdg001,a.xmdg024,a.xmdg025,a.xmdg017,b.docno,b.seq ",
+                    " GROUP BY a.xmdg005,a.xmdg008,a.xmdg009,a.xmdg010,a.xmdg014,a.xmdg015,a.xmdg007,a.xmdg006,a.xmdg013,a.xmdg001,a.xmdg024,a.xmdg025,a.xmdg017,b.docno,b.seq,c.xmda028 ",
+                    #161230-00019#5-e-mod
+                    " ORDER BY a.xmdg005 "
+                      
+   END CASE
+               
+   PREPARE p540_02_xmdg_pr FROM l_sql
+   DECLARE p540_02_xmdg_cs CURSOR FOR p540_02_xmdg_pr 
+   
+ 
+  
+   LET l_linkno = ''
+   SELECT MAX(linkno) INTO l_linkno
+     FROM p540_tmp02          #160727-00019#23 Mod   p540_02_xmdk_temp --> p540_tmp02
+   IF cl_null(l_linkno) THEN
+      LET l_linkno = 1
+   ELSE 
+      LET l_linkno = l_linkno + 1   
+   END IF 
+   #LET i = 1                      #160105-00012#1 mark
+   FOREACH p540_02_xmdg_cs INTO l_xmdk_d.xmdk007,l_xmdk_d.xmdk010,l_xmdk_d.xmdk011,l_xmdk_d.xmdk012,l_xmdk_d.xmdk016,
+                                l_xmdk_d.xmdk017,l_xmdk_d.xmdk009,l_xmdk_d.xmdk008,l_xmdk_d.xmdk015,l_xmdk_d.xmdk002,
+                                l_xmdk_d.xmdk028,l_xmdk_d.xmdk029,l_xmdk_d.xmdk021,l_docno,l_seq,
+                                l_xmda028   #161230-00019#5 add
+                                
+      LET l_xmdk_d.linkno = l_linkno
+      LET l_xmdk_d.source = '2'
+      #mod--161109-00085#10-s
+      #INSERT INTO p540_tmp02 VALUES (l_xmdk_d.*)           #160727-00019#23 Mod   p540_02_xmdk_temp --> p540_tmp02      
+      INSERT INTO p540_tmp02 (linkno,source,xmdk007,xmdk010,xmdk011,
+                              xmdk012,xmdk016,xmdk017,xmdk009,xmdk008,
+                              #161230-00019#5-s-mod
+#                              xmdk015,xmdk002,xmdk028,xmdk029,xmdk021,xmdkdocno,result) 
+                              xmdk015,xmdk002,xmdk028,xmdk029,xmdk021,xmdkdocno,result,xmda028)
+                              #161230-00019#5-e-mod
+      VALUES (l_xmdk_d.linkno,l_xmdk_d.source,l_xmdk_d.xmdk007,l_xmdk_d.xmdk010,l_xmdk_d.xmdk011,
+              l_xmdk_d.xmdk012,l_xmdk_d.xmdk016,l_xmdk_d.xmdk017,l_xmdk_d.xmdk009,l_xmdk_d.xmdk008,
+              #161230-00019#5-s-mod
+#              l_xmdk_d.xmdk015,l_xmdk_d.xmdk002,l_xmdk_d.xmdk028,l_xmdk_d.xmdk029,l_xmdk_d.xmdk021,l_xmdk_d.xmdkdocno,l_xmdk_d.result)
+              l_xmdk_d.xmdk015,l_xmdk_d.xmdk002,l_xmdk_d.xmdk028,l_xmdk_d.xmdk029,l_xmdk_d.xmdk021,l_xmdk_d.xmdkdocno,l_xmdk_d.result,l_xmda028)
+              #161230-00019#5-e-mod
+      #mod--161109-00085#10-e
+      #將出通單單身寫入
+      #依不同的匯總方式進行匯總
+
+      CASE g_gather
+         WHEN '1'   #依客戶匯總
+            #--160105-00012#1--add--(s)
+             #LET l_sql = "SELECT a.docno,a.seq,a.xmdl005,a.xmdl006 ",
+              LET l_sql = "SELECT   a.docno,    a.seq,a.xmdl005,a.xmdl006,a.xmdl008, ",
+                          "       a.xmdl014,a.xmdl015,a.xmdl016,a.xmdl052 ",           
+             #--160105-00012#1--add--(e)             
+                          #161230-00019#5-s-mod
+#                          "  FROM p540_01_tmp a,xmdg_t b ",
+                          "  FROM p540_01_tmp a,xmdg_t b LEFT OUTER JOIN xmda_t c ON c.xmdaent = b.xmdgent AND c.xmdadocno = b.xmdg004 ",
+                          #161230-00019#5-s-mod
+                          " WHERE b.xmdgent = '",g_enterprise,"' ",
+                          "   AND b.xmdgsite = '",g_site,"' ",
+                          "   AND a.docno = b.xmdgdocno ",
+                          "   AND a.source = '2' ",                #來源單據：出貨通知單
+                          "   AND b.xmdg005 = ? ",
+                          "   AND b.xmdg008 = ? ",
+                          "   AND b.xmdg009 = ? ",
+                          "   AND b.xmdg010 = ? ",
+                          "   AND b.xmdg014 = ? ",
+                          "   AND b.xmdg015 = ? ",
+                          "   AND b.xmdg007 = ? ",
+                          "   AND b.xmdg006 = ? ",
+                          "   AND b.xmdg013 = ? ",
+                          "   AND b.xmdg001 = ? ",
+                          "   AND b.xmdg024 = ? ",
+                          "   AND b.xmdg025 = ? "
+              #送貨地址            
+              IF cl_null(l_xmdk_d.xmdk021) THEN
+                 LET l_sql = l_sql , " AND (b.xmdg017 = '' OR b.xmdg017 IS NULL) "#,
+                             #161230-00019#5-s-mark
+#                             " ORDER BY a.docno,a.seq,a.xmdl005,a.xmdl006 " 
+                             #161230-00019#5-e-mark
+              ELSE
+                 LET l_sql = l_sql , "   AND b.xmdg017 = ? "#,
+                             #161230-00019#5-s-mark
+#                             " ORDER BY a.docno,a.seq,a.xmdl005,a.xmdl006 " 
+                             #161230-00019#5-e-mark
+              END IF           
+              #161230-00019#5-s-add
+              IF cl_null(l_xmda028) THEN
+                 LET l_sql = l_sql , "AND (c.xmda028 = '' OR c.xmda028 IS NULL) "
+              ELSE
+                 LET l_sql = l_sql , "AND c.xmda028 = ? "
+              END IF
+              LET l_sql = l_sql," ORDER BY a.docno,a.seq,a.xmdl005,a.xmdl006 " 
+              #161230-00019#5-e-add
+
+         WHEN '2'   #依來源單號匯總
+            #--160105-00012#1--add--(s)
+             #LET l_sql = "SELECT a.docno,a.seq,a.xmdl005,a.xmdl006 ",
+              LET l_sql = "SELECT   a.docno,    a.seq,a.xmdl005,a.xmdl006,a.xmdl008, ",
+                          "       a.xmdl014,a.xmdl015,a.xmdl016,a.xmdl052 ",           
+             #--160105-00012#1--add--(e)           
+                          "  FROM p540_01_tmp a,xmdg_t b ",
+                          " WHERE b.xmdgent = '",g_enterprise,"' ",
+                          "   AND b.xmdgsite = '",g_site,"' ",
+                          "   AND a.docno = b.xmdgdocno ",
+                          "   AND a.source = '2' ",                #來源單據：出貨通知單
+                          "   AND a.docno = ? ",
+                          " ORDER BY a.docno,a.seq,a.xmdl005,a.xmdl006 " 
+         WHEN '3'   #依來源單號+項次匯總
+            #--160105-00012#1--add--(s)
+             #LET l_sql = "SELECT a.docno,a.seq,a.xmdl005,a.xmdl006 ",
+              LET l_sql = "SELECT   a.docno,    a.seq,a.xmdl005,a.xmdl006,a.xmdl008, ",
+                          "       a.xmdl014,a.xmdl015,a.xmdl016,a.xmdl052 ",           
+             #--160105-00012#1--add--(e)       
+                          "  FROM p540_01_tmp a,xmdg_t b ",
+                          " WHERE b.xmdgent = '",g_enterprise,"' ",
+                          "   AND b.xmdgsite = '",g_site,"' ",
+                          "   AND a.docno = b.xmdgdocno ",
+                          "   AND a.source = '2' ",                #來源單據：出貨通知單
+                          "   AND a.docno = ? ",
+                          "   AND a.seq = ? ",
+                          " ORDER BY a.docno,a.seq,a.xmdl005,a.xmdl006 " 
+      END CASE
+                   
+      PREPARE p540_02_tmp2_pr FROM l_sql
+      DECLARE p540_02_tmp2_cs CURSOR FOR p540_02_tmp2_pr  
+    
+      CASE g_gather
+         WHEN '1'   #依客戶匯總
+              #161230-00019#5-s-mark
+              #送貨地址            
+#              IF cl_null(l_xmdk_d.xmdk021) THEN
+#                 OPEN p540_02_tmp2_cs USING l_xmdk_d.xmdk007,l_xmdk_d.xmdk010,l_xmdk_d.xmdk011,l_xmdk_d.xmdk012,l_xmdk_d.xmdk016,
+#                                            l_xmdk_d.xmdk017,l_xmdk_d.xmdk009,l_xmdk_d.xmdk008,l_xmdk_d.xmdk015,l_xmdk_d.xmdk002,
+#                                            l_xmdk_d.xmdk028,l_xmdk_d.xmdk029
+#              ELSE
+#                 OPEN p540_02_tmp2_cs USING l_xmdk_d.xmdk007,l_xmdk_d.xmdk010,l_xmdk_d.xmdk011,l_xmdk_d.xmdk012,l_xmdk_d.xmdk016,
+#                                            l_xmdk_d.xmdk017,l_xmdk_d.xmdk009,l_xmdk_d.xmdk008,l_xmdk_d.xmdk015,l_xmdk_d.xmdk002,                                           
+#                                            l_xmdk_d.xmdk028,l_xmdk_d.xmdk029,l_xmdk_d.xmdk021
+#              END IF          
+              #161230-00019#5-e-mark
+              #161230-00019#5-s-add
+              CASE
+                 WHEN (cl_null(l_xmdk_d.xmdk021) AND cl_null(l_xmda028))
+                    OPEN p540_02_tmp2_cs USING l_xmdk_d.xmdk007,l_xmdk_d.xmdk010,l_xmdk_d.xmdk011,l_xmdk_d.xmdk012,l_xmdk_d.xmdk016,
+                                               l_xmdk_d.xmdk017,l_xmdk_d.xmdk009,l_xmdk_d.xmdk008,l_xmdk_d.xmdk015,l_xmdk_d.xmdk002,
+                                               l_xmdk_d.xmdk028,l_xmdk_d.xmdk029
+                 WHEN (NOT cl_null(l_xmdk_d.xmdk021) AND cl_null(l_xmda028))
+                    OPEN p540_02_tmp2_cs USING l_xmdk_d.xmdk007,l_xmdk_d.xmdk010,l_xmdk_d.xmdk011,l_xmdk_d.xmdk012,l_xmdk_d.xmdk016,
+                                               l_xmdk_d.xmdk017,l_xmdk_d.xmdk009,l_xmdk_d.xmdk008,l_xmdk_d.xmdk015,l_xmdk_d.xmdk002,
+                                               l_xmdk_d.xmdk028,l_xmdk_d.xmdk029,l_xmdk_d.xmdk021
+                 WHEN (cl_null(l_xmdk_d.xmdk021) AND NOT cl_null(l_xmda028))
+                    OPEN p540_02_tmp2_cs USING l_xmdk_d.xmdk007,l_xmdk_d.xmdk010,l_xmdk_d.xmdk011,l_xmdk_d.xmdk012,l_xmdk_d.xmdk016,
+                                               l_xmdk_d.xmdk017,l_xmdk_d.xmdk009,l_xmdk_d.xmdk008,l_xmdk_d.xmdk015,l_xmdk_d.xmdk002,
+                                               l_xmdk_d.xmdk028,l_xmdk_d.xmdk029,l_xmda028
+                 OTHERWISE
+                    OPEN p540_02_tmp2_cs USING l_xmdk_d.xmdk007,l_xmdk_d.xmdk010,l_xmdk_d.xmdk011,l_xmdk_d.xmdk012,l_xmdk_d.xmdk016,
+                                               l_xmdk_d.xmdk017,l_xmdk_d.xmdk009,l_xmdk_d.xmdk008,l_xmdk_d.xmdk015,l_xmdk_d.xmdk002,
+                                               l_xmdk_d.xmdk028,l_xmdk_d.xmdk029,l_xmdk_d.xmdk021,l_xmda028
+              END CASE
+              #161230-00019#5-e-add
+
+         WHEN '2'   #依來源單號匯總
+              OPEN p540_02_tmp2_cs USING l_docno
+         WHEN '3'   #依來源單號+項次匯總
+              OPEN p540_02_tmp2_cs USING l_docno,l_seq
+      END CASE
+   
+      INITIALIZE l_tmp_d.* TO NULL   
+      LET i = 1                       #160105-00012#1 add 
+      #161109-00085#10-s      
+      #FOREACH p540_02_tmp2_cs INTO l_tmp_d.*
+      FOREACH p540_02_tmp2_cs 
+      INTO l_tmp_d.docno,l_tmp_d.seq,l_tmp_d.xmdl005,l_tmp_d.xmdl006,l_tmp_d.xmdl008,
+           l_tmp_d.xmdl014,l_tmp_d.xmdl015,l_tmp_d.xmdl016,l_tmp_d.xmdl052                
+      #161109-00085#10-e
+         INITIALIZE l_xmdl_d.* TO NULL
+
+         SELECT xmdhdocno,xmdhseq,xmdh001,xmdh002,xmdh003,
+                  xmdh004,xmdh005,xmdh006,xmdh007,xmdh008,
+                  xmdh009,xmdh010,xmdh011,xmdh012,xmdh013,
+                  xmdh014,xmdh015,xmdh018,xmdh019,xmdh020,
+                  xmdh021,xmdh022,xmdh023,xmdh025,xmdh026,
+                  xmdh027,xmdh028,xmdh031,xmdh032,xmdh033,
+                  xmdh034,xmdh035,xmdh036,xmdc040,xmdc041,
+                  xmdc042,xmdc043,xmdc044,xmdc049,xmdh050,
+                  xmdh029,                                     #161129-00034#1 add 
+                  xmdh024                                      #160105-00012#1 add xmdh024
+           INTO l_xmdl_d.xmdl001,l_xmdl_d.xmdl002,l_xmdl_d.xmdl003,l_xmdl_d.xmdl004,l_xmdl_d.xmdl005,
+                l_xmdl_d.xmdl006,l_xmdl_d.xmdl007,l_xmdl_d.xmdl008,l_xmdl_d.xmdl009,l_xmdl_d.xmdl010,
+                l_xmdl_d.xmdl011,l_xmdl_d.xmdl012,l_xmdl_d.xmdl013,l_xmdl_d.xmdl014,l_xmdl_d.xmdl015,
+                l_xmdl_d.xmdl016,l_xmdl_d.xmdl017,l_xmdl_d.xmdl019,l_xmdl_d.xmdl020,l_xmdl_d.xmdl021,
+                l_xmdl_d.xmdl022,l_xmdl_d.xmdl023,l_xmdl_d.xmdl024,l_xmdl_d.xmdl026,l_xmdl_d.xmdl027,
+                l_xmdl_d.xmdl028,l_xmdl_d.xmdl029,l_xmdl_d.xmdl030,l_xmdl_d.xmdl031,l_xmdl_d.xmdl032,
+                l_xmdl_d.xmdl033,l_xmdl_d.xmdl034,l_xmdl_d.xmdl041,l_xmdl_d.xmdl042,l_xmdl_d.xmdl043,
+                l_xmdl_d.xmdl044,l_xmdl_d.xmdl045,l_xmdl_d.xmdl046,l_xmdl_d.xmdl050,l_xmdl_d.xmdl051,
+                l_xmdl_d.xmdl052,                                       #161129-00034#1
+                l_xmdl_d.xmdl025                               #160105-00012#1 add xmdl025
+                
+           FROM xmdh_t,xmdc_t
+          WHERE xmdhent = g_enterprise
+            AND xmdhsite = g_site
+            AND xmdhent = xmdcent
+            AND xmdhsite = xmdcsite
+            AND xmdh001 = xmdcdocno
+            AND xmdh002 = xmdcseq
+            AND xmdhdocno = l_tmp_d.docno
+            AND xmdhseq = l_tmp_d.seq            
+            
+         LET l_xmdl_d.linkno = l_xmdk_d.linkno  
+         LET l_xmdl_d.source = l_xmdk_d.source          
+         LET l_xmdl_d.xmdlseq = i                            #項次 
+         LET l_xmdl_d.xmdl018 = l_tmp_d.xmdl008              #出貨數量
+         IF cl_null(l_xmdl_d.xmdl013) THEN LET l_xmdl_d.xmdl013 = 'N' END IF  
+         #--160105-00012#1--mark--(s)
+         #IF cl_null(l_tmp_d.xmdl014) THEN
+         #   #抓取預設庫儲
+         #   SELECT imaf091,imaf092 
+         #     INTO l_xmdl_d.xmdl014,l_xmdl_d.xmdl015
+         #     FROM imaf_t
+         #    WHERE imafent = g_enterprise
+         #      AND imafsite = g_site
+         #      AND imaf001 = l_xmdl_d.xmdl008               
+         #ELSE         
+         #   LET l_xmdl_d.xmdl014 = l_tmp_d.xmdl014         #庫位         
+         #   LET l_xmdl_d.xmdl015 = l_tmp_d.xmdl015         #儲位         
+         #   LET l_xmdl_d.xmdl016 = l_tmp_d.xmdl016         #批號   
+         #
+         #END IF
+         #--160105-00012#1--mark--(e)
+         #--160105-00012#1--add--(s)
+         IF l_xmdl_d.xmdl013 = 'N' THEN                     #多庫儲批         
+            IF cl_null(l_tmp_d.xmdl014) THEN
+               #抓取預設庫儲
+               SELECT imaf091,imaf092 
+                 INTO l_xmdl_d.xmdl014,l_xmdl_d.xmdl015
+                 FROM imaf_t
+                WHERE imafent = g_enterprise
+                  AND imafsite = g_site
+                  AND imaf001 = l_xmdl_d.xmdl008    
+               IF NOT cl_null(l_xmdl_d.xmdl014) THEN
+                  CALL axmp540_03_xmdm_modify('1',l_xmdl_d.xmdlseq,g_site,l_xmdl_d.linkno,l_xmdl_d.xmdlseq,
+                                              l_xmdl_d.xmdl008,l_xmdl_d.xmdl009,l_xmdl_d.xmdl011,l_xmdl_d.xmdl012,
+                                              l_xmdl_d.xmdl014,l_xmdl_d.xmdl015,l_xmdl_d.xmdl016,l_xmdl_d.xmdl052,
+                                              l_xmdl_d.xmdl017,l_xmdl_d.xmdl018,l_xmdl_d.xmdl019,l_xmdl_d.xmdl020,
+                                              '','') RETURNING l_success
+               ELSE
+                  CALL axmp540_02_xmdi_ins_xmdm(l_xmdl_d.linkno,l_xmdl_d.xmdlseq,l_xmdl_d.xmdl001,l_xmdl_d.xmdl002)
+                    RETURNING l_success
+               END IF               
+            ELSE         
+               LET l_xmdl_d.xmdl014 = l_tmp_d.xmdl014         #庫位         
+               LET l_xmdl_d.xmdl015 = l_tmp_d.xmdl015         #儲位         
+               LET l_xmdl_d.xmdl016 = l_tmp_d.xmdl016         #批號   
+               #161129-00034#1-----add-----begin----------------
+               IF cl_null(l_xmdl_d.xmdl052) THEN
+               LET l_xmdl_d.xmdl052 = l_tmp_d.xmdl052        #库存管理特征 
+               END IF 
+               #161129-00034#1------add-----end-----------------
+               CALL axmp540_02_xmdi_ins_xmdm(l_xmdl_d.linkno,l_xmdl_d.xmdlseq,l_xmdl_d.xmdl001,l_xmdl_d.xmdl002)
+                 RETURNING l_success           
+            END IF  
+          ELSE
+            CALL axmp540_02_xmdi_ins_xmdm(l_xmdl_d.linkno,l_xmdl_d.xmdlseq,l_xmdl_d.xmdl001,l_xmdl_d.xmdl002)
+              RETURNING l_success          
+          END IF         
+         #--160105-00012#1--add--(e)
+         #推算參考數量                  
+         IF NOT cl_null(l_xmdl_d.xmdl019) THEN          
+            CALL s_aooi250_convert_qty(l_xmdl_d.xmdl008,l_xmdl_d.xmdl017,l_xmdl_d.xmdl019,l_xmdl_d.xmdl018)
+              RETURNING l_success,l_xmdl_d.xmdl020
+         END IF
+         
+         #若料號有使用銷售計價單位時，自動推算計價數量
+         IF NOT cl_null(l_xmdl_d.xmdl021) THEN          
+            CALL s_aooi250_convert_qty(l_xmdl_d.xmdl008,l_xmdl_d.xmdl017,l_xmdl_d.xmdl021,l_xmdl_d.xmdl018)
+              RETURNING l_success,l_xmdl_d.xmdl022
+         END IF
+         #稅率
+         LET l_oodb006 = ''
+         CALL s_tax_chk(g_site,l_xmdl_d.xmdl025)
+           RETURNING l_success,l_oodbl004,l_oodb005,l_oodb006,l_oodb011
+         IF l_success THEN
+            LET l_xmdl_d.xmdl026 = l_oodb006
+         END IF           
+
+         #金額都預設給零，等真正單號產生時，在算金額
+         LET l_xmdl_d.xmdl027 = 0    #未稅金額
+         LET l_xmdl_d.xmdl028 = 0    #含稅金額
+         LET l_xmdl_d.xmdl029 = 0    #稅額
+         
+         LET l_xmdl_d.xmdl035 = 0    #已簽收量
+         LET l_xmdl_d.xmdl036 = 0    #已簽退量
+         LET l_xmdl_d.xmdl037 = 0    #已銷退量 
+         LET l_xmdl_d.xmdl038 = 0    #主帳套已立帳數量
+         LET l_xmdl_d.xmdl039 = 0    #帳套二已立帳數量
+         LET l_xmdl_d.xmdl040 = 0    #帳套三已立帳數量
+         LET l_xmdl_d.xmdl087 = 'Y'  #需自立應收否          
+
+         #帶出訂單多角流程代碼xmda050
+         SELECT xmda050
+           INTO l_xmdl_d.xmdl088
+           FROM xmda_t
+          WHERE xmdaent = g_enterprise
+            AND xmdasite = g_site
+            AND xmdadocno = l_xmdl_d.xmdl003
+
+         #170324-00113 ---add (s)---
+         IF l_xmdl_d.xmdl023 = 'N' THEN
+            LET l_xmdl_d.xmdl056 = l_xmdl_d.xmdl018
+         ELSE
+            LET l_xmdl_d.xmdl056 = 0
+         END IF
+         #170324-00113 ---add (e)---
+         
+         #161109-00085#10-s   
+         #INSERT INTO p540_tmp03 VALUES (l_xmdl_d.*)            #160727-00019#23 Mod   p540_02_xmdl_temp --> p540_tmp03
+         INSERT INTO p540_tmp03(linkno,source,xmdldocno,xmdlseq,xmdl001,
+                                xmdl002,xmdl003,xmdl004,xmdl005,xmdl006,
+                                xmdl007,xmdl008,xmdl009,xmdl010,xmdl011,
+                                xmdl012,xmdl013,xmdl014,xmdl015,xmdl016,
+                                xmdl017,xmdl018,xmdl019,xmdl020,xmdl021,
+                                xmdl022,xmdl023,xmdl024,xmdl025,xmdl026,
+                                xmdl027,xmdl028,xmdl029,xmdl030,xmdl031,
+                                xmdl032,xmdl033,xmdl034,xmdl035,xmdl036,
+                                xmdl037,xmdl038,xmdl039,xmdl040,xmdl041,
+                                xmdl042,xmdl043,xmdl044,xmdl045,xmdl046,
+                                xmdl047,xmdl048,xmdl049,xmdl050,xmdl051,
+                                xmdl052,xmdl087,xmdl088,xmdl056) #170324-00113#1 ad xmdl056  
+                        VALUES (l_xmdl_d.linkno,l_xmdl_d.source,l_xmdl_d.xmdldocno,l_xmdl_d.xmdlseq,l_xmdl_d.xmdl001,
+                                l_xmdl_d.xmdl002,l_xmdl_d.xmdl003,l_xmdl_d.xmdl004,l_xmdl_d.xmdl005,l_xmdl_d.xmdl006,
+                                l_xmdl_d.xmdl007,l_xmdl_d.xmdl008,l_xmdl_d.xmdl009,l_xmdl_d.xmdl010,l_xmdl_d.xmdl011,
+                                l_xmdl_d.xmdl012,l_xmdl_d.xmdl013,l_xmdl_d.xmdl014,l_xmdl_d.xmdl015,l_xmdl_d.xmdl016,
+                                l_xmdl_d.xmdl017,l_xmdl_d.xmdl018,l_xmdl_d.xmdl019,l_xmdl_d.xmdl020,l_xmdl_d.xmdl021,
+                                l_xmdl_d.xmdl022,l_xmdl_d.xmdl023,l_xmdl_d.xmdl024,l_xmdl_d.xmdl025,l_xmdl_d.xmdl026,
+                                l_xmdl_d.xmdl027,l_xmdl_d.xmdl028,l_xmdl_d.xmdl029,l_xmdl_d.xmdl030,l_xmdl_d.xmdl031,
+                                l_xmdl_d.xmdl032,l_xmdl_d.xmdl033,l_xmdl_d.xmdl034,l_xmdl_d.xmdl035,l_xmdl_d.xmdl036,
+                                l_xmdl_d.xmdl037,l_xmdl_d.xmdl038,l_xmdl_d.xmdl039,l_xmdl_d.xmdl040,l_xmdl_d.xmdl041,
+                                l_xmdl_d.xmdl042,l_xmdl_d.xmdl043,l_xmdl_d.xmdl044,l_xmdl_d.xmdl045,l_xmdl_d.xmdl046,
+                                l_xmdl_d.xmdl047,l_xmdl_d.xmdl048,l_xmdl_d.xmdl049,l_xmdl_d.xmdl050,l_xmdl_d.xmdl051,
+                                l_xmdl_d.xmdl052,l_xmdl_d.xmdl087,l_xmdl_d.xmdl088,l_xmdl_d.xmdl056) #170324-00113#1 ad xmdl056               
+         #161109-00085#10-e         
+         LET i = i + 1
+
+      END FOREACH                              
+      LET l_linkno = l_linkno + 1
+   END FOREACH   
+   CLOSE p540_02_xmdg_cs
+   FREE p540_02_xmdg_pr
+   CLOSE p540_02_tmp2_cs
+   FREE p540_02_tmp2_pr      
+   
+END FUNCTION
+
+PUBLIC FUNCTION axmp540_02_create_temp_table()
+  DEFINE r_success         LIKE type_t.num5 
+  
+   WHENEVER ERROR CONTINUE
+
+   LET r_success = TRUE  
+      
+   CREATE TEMP TABLE p540_tmp02(           #160727-00019#23 Mod   p540_02_xmdk_temp --> p540_tmp02
+                   linkno          INTEGER,             #暫時單號
+                   source          VARCHAR(10),             #來源單據1訂單2出通單
+                   xmdk007         VARCHAR(10),           #客戶
+                   xmdk010         VARCHAR(10),           #收款條件
+                   xmdk011         VARCHAR(10),           #交易條件
+                   xmdk012         VARCHAR(10),           #稅別
+                   xmdk016         VARCHAR(10),           #幣別
+                   xmdk017         DECIMAL(20,10),           #匯率
+                   xmdk009         VARCHAR(10),           #收貨客戶
+                   xmdk008         VARCHAR(10),           #收款客戶
+                   xmdk015         VARCHAR(2),           #發票類型
+                   xmdk002         VARCHAR(10),           #訂單/出通單性質
+                   xmdk028         VARCHAR(10),           #包裝單製作
+                   xmdk029         VARCHAR(10),           #Invoice製作
+                   xmdk021         VARCHAR(10),           #收貨地址
+                   xmdkdocno       VARCHAR(20),         #出貨單號
+                   result          VARCHAR(500),            #執行結果
+                   xmda028         VARCHAR(20)     #一次性交易對性編碼   #161230-00019#5
+                   )  
+                   
+   IF SQLCA.sqlcode != 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create p540_tmp02'       #160727-00019#23 Mod   p540_02_xmdk_temp --> p540_tmp02
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF                   
+ 
+   CREATE TEMP TABLE p540_tmp03(              #160727-00019#23 Mod   p540_02_xmdl_temp --> p540_tmp03 
+                   linkno     SMALLINT, 
+                   source     VARCHAR(10),                 
+                   xmdldocno  VARCHAR(20),                   
+                   xmdlseq  INTEGER,
+                   xmdl001  VARCHAR(20),
+                   xmdl002  INTEGER,
+                   xmdl003  VARCHAR(20),
+                   xmdl004  INTEGER,
+                   xmdl005  INTEGER,
+                   xmdl006  INTEGER,
+                   xmdl007  VARCHAR(10),
+                   xmdl008  VARCHAR(40),
+                   xmdl009  VARCHAR(256),
+                   xmdl010  VARCHAR(40),
+                   xmdl011  VARCHAR(10),
+                   xmdl012  VARCHAR(10),
+                   xmdl013  VARCHAR(1),
+                   xmdl014  VARCHAR(10),
+                   xmdl015  VARCHAR(10),
+                   xmdl016  VARCHAR(30),
+                   xmdl017  VARCHAR(10),
+                   xmdl018  DECIMAL(20,6),
+                   xmdl019  VARCHAR(10),
+                   xmdl020  DECIMAL(20,6),
+                   xmdl021  VARCHAR(10),
+                   xmdl022  DECIMAL(20,6),
+                   xmdl023  VARCHAR(1),
+                   xmdl024  DECIMAL(20,6),
+                   xmdl025  VARCHAR(10),
+                   xmdl026  DECIMAL(5,2),
+                   xmdl027  DECIMAL(20,6),
+                   xmdl028  DECIMAL(20,6),
+                   xmdl029  DECIMAL(20,6),
+                   xmdl030  VARCHAR(20),
+                   xmdl031  VARCHAR(30),
+                   xmdl032  VARCHAR(30),
+                   xmdl033  VARCHAR(40),
+                   xmdl034  DECIMAL(20,6), 
+                   xmdl035  DECIMAL(20,6),
+                   xmdl036  DECIMAL(20,6),
+                   xmdl037  DECIMAL(20,6),
+                   xmdl038  DECIMAL(20,6),
+                   xmdl039  DECIMAL(20,6),
+                   xmdl040  DECIMAL(20,6),
+                   xmdl041  VARCHAR(1),
+                   xmdl042  VARCHAR(10),
+                   xmdl043  VARCHAR(20),
+                   xmdl044  INTEGER,
+                   xmdl045  DECIMAL(20,6),
+                   xmdl046  DECIMAL(20,6),
+                   xmdl047  DECIMAL(20,6),
+                   xmdl048  VARCHAR(20),
+                   xmdl049  VARCHAR(20),
+                   xmdl050  VARCHAR(10),
+                   xmdl051  VARCHAR(255),
+                   xmdl052  VARCHAR(30),
+                   xmdl087  VARCHAR(1),
+                   xmdl088  VARCHAR(10),
+                   xmdl056  DECIMAL(20,6)     #170324-00113#1 add xmdl056                   
+                   ) 
+                   
+    IF SQLCA.sqlcode != 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create p540_tmp03'      #160727-00019#23 Mod   p540_02_xmdl_temp --> p540_tmp03 
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF       
+
+   CREATE TEMP TABLE p540_tmp04(           #160727-00019#23 Mod   p540_02_xmdm_temp --> p540_tmp04
+      linkno          SMALLINT,
+      xmdmseq         INTEGER,
+      xmdmseq1        INTEGER,
+      xmdm001         VARCHAR(40),
+      xmdm002         VARCHAR(256),
+      xmdm003         VARCHAR(10),
+      xmdm004         VARCHAR(10),
+      xmdm005         VARCHAR(10),
+      xmdm006         VARCHAR(10),
+      xmdm007         VARCHAR(30),
+      xmdm008         VARCHAR(10),
+      xmdm009         DECIMAL(20,6),
+      xmdm010         VARCHAR(10),
+      xmdm011         DECIMAL(20,6),
+      xmdm012         DECIMAL(20,6),
+      xmdm013         DECIMAL(20,6),
+      xmdm014         DECIMAL(20,6),
+      xmdm031         DECIMAL(20,6),
+      xmdm032         DECIMAL(20,6),
+      xmdm033         VARCHAR(30)
+      )    
+    IF SQLCA.sqlcode != 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create p540_tmp04'    #160727-00019#23 Mod   p540_02_xmdm_temp --> p540_tmp04
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF   
+   
+   RETURN r_success                
+
+END FUNCTION
+
+PUBLIC FUNCTION axmp540_02_drop_temp_table()
+   DEFINE r_success          LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+
+   LET r_success = TRUE
+    
+   DROP TABLE p540_tmp02;                          #160727-00019#23 Mod   p540_02_xmdk_temp --> p540_tmp02
+   IF NOT (SQLCA.sqlcode = 0 OR SQLCA.sqlcode = -206) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'drop p540_tmp02'    #160727-00019#23 Mod   p540_02_xmdk_temp --> p540_tmp02
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   DROP TABLE p540_tmp03;            #160727-00019#23 Mod   p540_02_xmdl_temp --> p540_tmp03
+   IF NOT (SQLCA.sqlcode = 0 OR SQLCA.sqlcode = -206) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'drop p540_tmp03'         #160727-00019#23 Mod   p540_02_xmdl_temp --> p540_tmp03
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF  
+   
+   DROP TABLE p540_tmp04;                            #160727-00019#23 Mod   p540_02_xmdm_temp --> p540_tmp04
+   IF NOT (SQLCA.sqlcode = 0 OR SQLCA.sqlcode = -206) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'drop p540_tmp04'      #160727-00019#23 Mod   p540_02_xmdm_temp --> p540_tmp04
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF 
+   RETURN r_success   
+END FUNCTION
+
+PUBLIC FUNCTION axmp540_02_b_fill()
+   DEFINE l_sql          STRING
+   DEFINE l_ac_t         LIKE type_t.num10   #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+   DEFINE i              LIKE type_t.num10   #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+   
+    LET l_sql = "SELECT source,xmdk002,xmdk007,xmdk010,xmdk011, ",
+                "       xmdk012,xmdk016,xmdk017,xmdk008,xmdk009, ",
+                "       xmdk015,xmdk021,result,xmdkdocno,linkno ",
+                "      ,xmda028 ",   #161230-00019#5
+                #161205-00025#15-s-add
+                ",(SELECT pmaal004 FROM pmaal_t WHERE pmaalent = ",g_enterprise," AND pmaal001 = xmdk007 AND pmaal002 = '",g_dlang,"'), ",
+                "(SELECT pmaal004 FROM pmaal_t WHERE pmaalent = ",g_enterprise," AND pmaal001 = xmdk008 AND pmaal002 = '",g_dlang,"'), ",
+                "(SELECT pmaal004 FROM pmaal_t WHERE pmaalent = ",g_enterprise," AND pmaal001 = xmdk009 AND pmaal002 = '",g_dlang,"'), ",
+                "(SELECT ooibl004 FROM ooibl_t WHERE ooiblent = ",g_enterprise," AND ooibl002 = xmdk010 AND ooibl003 = '",g_dlang,"'), ",
+                "(SELECT oocql004 FROM oocql_t WHERE oocqlent = ",g_enterprise," AND oocql001 = '238' AND oocql002 = xmdk011 AND oocql003 = '",g_dlang,"'), ",
+                "(SELECT oodbl004 FROM oodbl_t,ooef_t WHERE oodblent = ",g_enterprise," AND ooefent = oodblent AND ooef001  = '",g_site,"' AND ooef019  = oodbl001 AND oodbl002 = xmdk012 AND oodbl003 = '",g_dlang,"'), ",
+                "(SELECT isacl004 FROM isacl_t,ooef_t WHERE ooefent = ",g_enterprise," AND ooef001 = '",g_site,"' AND isacl001 = ooef019 AND isaclent = ooefent AND isacl002 = xmdk015 AND isacl003 = '",g_dlang,"'), ",
+                "(SELECT ooail003 FROM ooail_t WHERE ooailent = ",g_enterprise," AND ooail001 = xmdk016 AND ooail002 = '",g_dlang,"') ",
+                #161205-00025#15-e-add
+                "  FROM p540_tmp02 ",                #160727-00019#23 Mod   p540_02_xmdk_temp --> p540_tmp02
+                " ORDER BY source,xmdk002,xmdk007 "
+                
+    PREPARE axmp540_sel_xmdk_pr FROM l_sql
+    DECLARE axmp540_sel_xmdk_cs CURSOR FOR axmp540_sel_xmdk_pr
+    
+    LET g_detail_02_idx = 1
+    LET l_ac_t = l_ac
+    LET l_ac = 1
+   
+    CALL g_xmdk_d.clear()
+    FOREACH axmp540_sel_xmdk_cs INTO g_xmdk_d[l_ac].source,g_xmdk_d[l_ac].xmdk002,g_xmdk_d[l_ac].xmdk007,g_xmdk_d[l_ac].xmdk010,g_xmdk_d[l_ac].xmdk011,
+                                     g_xmdk_d[l_ac].xmdk012,g_xmdk_d[l_ac].xmdk016,g_xmdk_d[l_ac].xmdk017,g_xmdk_d[l_ac].xmdk008,g_xmdk_d[l_ac].xmdk009,
+                                     g_xmdk_d[l_ac].xmdk015,g_xmdk_d[l_ac].xmdk021,g_xmdk_d[l_ac].result,g_xmdk_d[l_ac].docno,g_xmdk_d[l_ac].linkno,
+                                     g_xmda028   #161230-00019#5
+                                     #161205-00025#15-s-add
+                                    ,g_xmdk_d[l_ac].xmdk007_desc,g_xmdk_d[l_ac].xmdk008_desc,g_xmdk_d[l_ac].xmdk009_desc,g_xmdk_d[l_ac].xmdk010_desc,
+                                     g_xmdk_d[l_ac].xmdk011_desc,g_xmdk_d[l_ac].xmdk012_desc,g_xmdk_d[l_ac].xmdk015_desc,g_xmdk_d[l_ac].xmdk016_desc
+                                     #161205-00025#15-e-add
+                                     
+        CALL axmp540_02_detail_show("'1'")
+        
+        LET l_ac = l_ac + 1
+    END FOREACH   
+    CALL g_xmdk_d.deleteElement(l_ac)
+    LET l_ac = l_ac_t
+    LET g_detail_02_cnt = l_ac - 1
+    CLOSE axmp540_sel_xmdk_cs
+    FREE axmp540_sel_xmdk_pr  
+
+    IF l_ac > 0 THEN
+       LET g_detail_02_idx = l_ac
+    END IF
+END FUNCTION
+#畫面初始設定
+PUBLIC FUNCTION axmp540_02_init()
+     CALL cl_set_combo_scc("source","3020") 
+     CALL cl_set_combo_scc("xmdk002","2063") 
+     CALL cl_set_combo_scc("xmdl007_02","2055")
+     CALL cl_set_combo_scc("xmdl007_04","2055")
+     
+   #2014/10/24 by stellar add ----------------(S)
+   #判斷據點參數若不使用產品特徵時，則產品特徵需隱藏不可以維護(據點參數:S-BAS-0036)
+   IF cl_get_para(g_enterprise,g_site,'S-BAS-0036') = 'N' THEN
+      CALL cl_set_comp_visible("xmdl009_02,xmdl009_02_desc",FALSE)
+      CALL cl_set_comp_visible("xmdm002_03,xmdm002_03_desc",FALSE)
+      CALL cl_set_comp_visible("xmdl009_04,xmdl009_04_desc",FALSE)
+   END IF
+
+   #判斷據點參數若不使用參考單位時，則參考單位、數量需隱藏不可以維護(據點參數:S-BAS-0028)
+   IF cl_get_para(g_enterprise,g_site,'S-BAS-0028') = 'N' THEN
+      CALL cl_set_comp_visible("xmdl019_02,xmdl019_02_desc,xmdl020_02",FALSE)
+      CALL cl_set_comp_visible("xmdm010_03,xmdm010_03_desc,xmdm011_03",FALSE)
+   END IF
+   #2014/10/24 by stellar add ----------------(E)
+END FUNCTION
+#單身陣列填充
+PUBLIC FUNCTION axmp540_02_fetch()
+  DEFINE l_sql     STRING
+  DEFINE l_ac_t    LIKE type_t.num10     #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+
+    IF cl_null(g_detail_02_idx) OR g_detail_02_idx <=0 THEN
+       RETURN
+    END IF
+    
+    IF g_detail_02_idx > g_xmdk_d.getLength() THEN
+       LET g_detail_02_idx = g_xmdk_d.getLength()
+    END IF
+   
+    INITIALIZE g_xmdk2_d TO NULL
+    INITIALIZE g_xmdk4_d TO NULL
+    LET l_sql = "SELECT xmdldocno,xmdlseq,xmdl001,xmdl002,xmdl003, ",
+                "       xmdl004,xmdl005,xmdl006,xmdl007,xmdl008, ",
+                "       xmdl009,xmdl011,xmdl012,xmdl017,xmdl018, ",
+                "       xmdl019,xmdl020,xmdl013,xmdl014,xmdl015, ",
+                "       xmdl016,xmdl052,xmdl021,xmdl022,xmdl023,xmdl024, ",
+                "       xmdl025,xmdl026,xmdl027,xmdl028,xmdl029, ",
+                "       xmdl042,xmdl043,xmdl044,xmdl045,xmdl046, ",
+                "       linkno,source ",
+                #161205-00025#15-s-add                
+                ",(SELECT imaal003 FROM imaal_t WHERE imaalent = ",g_enterprise," AND imaal001 = xmdl008 AND imaal002 = '",g_dlang,"'), ",
+                "(SELECT imaal004 FROM imaal_t WHERE imaalent = ",g_enterprise," AND imaal001 = xmdl008 AND imaal002 = '",g_dlang,"'), ",
+                "(SELECT inaml004 FROM inaml_t WHERE inamlent = ",g_enterprise," AND inaml001 = xmdl008 AND inaml002 = xmdl009 AND inaml003 = '",g_dlang,"'), ",
+                "(SELECT oocql004 FROM oocql_t WHERE oocqlent = ",g_enterprise," AND oocql001 = '221' AND oocql002 = xmdl011 AND oocql003 = '",g_dlang,"'), ",
+                "(SELECT oocal004 FROM oocal_t WHERE oocalent = ",g_enterprise," AND oocal001 = xmdl017 AND oocal002 = '",g_dlang,"'), ",
+                "(SELECT oocal004 FROM oocal_t WHERE oocalent = ",g_enterprise," AND oocal001 = xmdl019 AND oocal002 = '",g_dlang,"'), ",
+                "(SELECT oocal004 FROM oocal_t WHERE oocalent = ",g_enterprise," AND oocal001 = xmdl021 AND oocal002 = '",g_dlang,"'), ",
+                "(SELECT inayl003 FROM inayl_t WHERE inaylent = ",g_enterprise," AND inayl001 = xmdl014 AND inayl002 = '",g_dlang,"'), ",
+                "(SELECT inab003 FROM inab_t WHERE inabent = ",g_enterprise," AND inabsite = '",g_site,"' AND inab001 = xmdl014 AND inab002 = xmdl015), ",
+                "(SELECT oodbl004 FROM oodbl_t,ooef_t WHERE oodblent = ",g_enterprise," AND ooefent = oodblent AND ooef001  = '",g_site,"' AND ooef019  = oodbl001 AND oodbl002 = xmdl025 AND oodbl003 = '",g_dlang,"') ",
+                #161205-00025#15-e-add
+                "  FROM p540_tmp03 ",         #160727-00019#23 Mod   p540_02_xmdl_temp --> p540_tmp03
+                " WHERE linkno = '",g_xmdk_d[g_detail_02_idx].linkno,"'" ,
+                " ORDER BY xmdldocno,xmdlseq,xmdl001,xmdl002,xmdl003 "
+    PREPARE axmp540_sel_xmdl_pr FROM l_sql
+    DECLARE axmp540_sel_xmdl_cs CURSOR FOR axmp540_sel_xmdl_pr 
+    LET l_ac_t = l_ac
+    LET l_ac = 1
+    
+    CALL g_xmdk2_d.clear()
+    CALL g_xmdk4_d.clear()
+    FOREACH  axmp540_sel_xmdl_cs INTO g_xmdk2_d[l_ac].docno_02,g_xmdk2_d[l_ac].xmdlseq_02,g_xmdk2_d[l_ac].xmdl001_02,g_xmdk2_d[l_ac].xmdl002_02,g_xmdk2_d[l_ac].xmdl003_02,
+                                      g_xmdk2_d[l_ac].xmdl004_02,g_xmdk2_d[l_ac].xmdl005_02,g_xmdk2_d[l_ac].xmdl006_02,g_xmdk2_d[l_ac].xmdl007_02,g_xmdk2_d[l_ac].xmdl008_02,
+                                      g_xmdk2_d[l_ac].xmdl009_02,g_xmdk2_d[l_ac].xmdl011_02,g_xmdk2_d[l_ac].xmdl012_02,g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl018_02,
+                                      g_xmdk2_d[l_ac].xmdl019_02,g_xmdk2_d[l_ac].xmdl020_02,g_xmdk2_d[l_ac].xmdl013_02,g_xmdk2_d[l_ac].xmdl014_02,g_xmdk2_d[l_ac].xmdl015_02,
+                                      g_xmdk2_d[l_ac].xmdl016_02,g_xmdk2_d[l_ac].xmdl052_02,g_xmdk2_d[l_ac].xmdl021_02,g_xmdk2_d[l_ac].xmdl022_02,g_xmdk2_d[l_ac].xmdl023_02,g_xmdk4_d[l_ac].xmdl024_04,
+                                      g_xmdk4_d[l_ac].xmdl025_04,g_xmdk4_d[l_ac].xmdl026_04,g_xmdk4_d[l_ac].xmdl027_04,g_xmdk4_d[l_ac].xmdl028_04,g_xmdk4_d[l_ac].xmdl029_04,
+                                      g_xmdk4_d[l_ac].xmdl042_04,g_xmdk4_d[l_ac].xmdl043_04,g_xmdk4_d[l_ac].xmdl044_04,g_xmdk4_d[l_ac].xmdl045_04,g_xmdk4_d[l_ac].xmdl046_04,
+                                      g_xmdk2_d[l_ac].linkno_02,g_xmdk2_d[l_ac].source_02                                      
+                                      #161205-00025#15-s-add
+                                     ,g_xmdk2_d[l_ac].xmdl008_02_desc,g_xmdk2_d[l_ac].imaal004_02,g_xmdk2_d[l_ac].xmdl009_02_desc,g_xmdk2_d[l_ac].xmdl011_02_desc,g_xmdk2_d[l_ac].xmdl017_02_desc,
+                                      g_xmdk2_d[l_ac].xmdl019_02_desc,g_xmdk2_d[l_ac].xmdl021_02_desc,g_xmdk2_d[l_ac].xmdl014_02_desc,g_xmdk2_d[l_ac].xmdl015_02_desc,g_xmdk4_d[l_ac].xmdl025_04_desc
+                                      #161205-00025#15-e-add
+       
+#       CALL axmp540_02_detail_show("'2'")   #161205-00025#15 mark
+       LET g_xmdk4_d[l_ac].xmdlseq_04 = g_xmdk2_d[l_ac].xmdlseq_02
+       LET g_xmdk4_d[l_ac].xmdl007_04 = g_xmdk2_d[l_ac].xmdl007_02
+       LET g_xmdk4_d[l_ac].xmdl008_04 = g_xmdk2_d[l_ac].xmdl008_02
+       LET g_xmdk4_d[l_ac].xmdl008_04_desc = g_xmdk2_d[l_ac].xmdl008_02_desc
+       LET g_xmdk4_d[l_ac].imaal004_04 = g_xmdk2_d[l_ac].imaal004_02       
+       LET g_xmdk4_d[l_ac].xmdl009_04 = g_xmdk2_d[l_ac].xmdl009_02
+       LET g_xmdk4_d[l_ac].xmdl009_04_desc = g_xmdk2_d[l_ac].xmdl009_02_desc
+       LET g_xmdk4_d[l_ac].xmdl011_04 = g_xmdk2_d[l_ac].xmdl011_02 
+       LET g_xmdk4_d[l_ac].xmdl011_04_desc = g_xmdk2_d[l_ac].xmdl011_02_desc
+       LET g_xmdk4_d[l_ac].xmdl012_04 = g_xmdk2_d[l_ac].xmdl012_02
+       LET g_xmdk4_d[l_ac].xmdl017_04 = g_xmdk2_d[l_ac].xmdl017_02
+       LET g_xmdk4_d[l_ac].xmdl017_04_desc = g_xmdk2_d[l_ac].xmdl017_02_desc
+       LET g_xmdk4_d[l_ac].xmdl018_04 = g_xmdk2_d[l_ac].xmdl018_02
+       LET g_xmdk4_d[l_ac].xmdl021_04 = g_xmdk2_d[l_ac].xmdl021_02 
+       LET g_xmdk4_d[l_ac].xmdl021_04_desc = g_xmdk2_d[l_ac].xmdl021_02_desc 
+       LET g_xmdk4_d[l_ac].xmdl022_04 = g_xmdk2_d[l_ac].xmdl022_02         
+       #160809-00005#1--(S)
+       CALL axmp540_02_get_amount(g_xmdk2_d[l_ac].linkno_02,g_xmdk2_d[l_ac].xmdl022_02,g_xmdk4_d[l_ac].xmdl024_04,g_xmdk4_d[l_ac].xmdl025_04)                
+                RETURNING g_xmdk4_d[l_ac].xmdl027_04,g_xmdk4_d[l_ac].xmdl028_04,g_xmdk4_d[l_ac].xmdl029_04
+       #160809-00005#1--(E)
+       LET l_ac = l_ac + 1
+    END FOREACH
+    CALL g_xmdk2_d.deleteElement(l_ac)
+    CALL g_xmdk4_d.deleteElement(l_ac)
+    LET l_ac = l_ac_t
+    LET g_detail2_02_cnt = l_ac - 1 
+    LET g_detail4_02_cnt = l_ac - 1    
+    CLOSE axmp540_sel_xmdl_cs
+    FREE axmp540_sel_xmdl_pr
+    
+    #多庫儲批明細
+    CALL axmp540_02_fetch_xmdm()
+    
+END FUNCTION
+################################################################################
+# Descriptions...: 產生出貨單單單頭檔
+# Memo...........: 
+# Usage..........: CALL axmp540_02_ins_xmdk()
+#                  
+# Input parameter:  
+#                :  
+# Return code....:  
+#                :   
+# Date & Author..: 2014/06/30 By Polly
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmp540_02_ins_xmdk()
+  DEFINE  l_source       LIKE type_t.num5          #來源單據1訂單2出通單
+  DEFINE  l_linkno       LIKE type_t.num5
+  DEFINE  l_no           LIKE type_t.num5
+  DEFINE  l_cnt          LIKE type_t.num10   #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+  #mod--161109-00085#10-s
+  #DEFINE  l_xmdk         RECORD LIKE xmdk_t.*  
+  DEFINE l_xmdk RECORD  #出貨/簽收/銷退單單頭檔
+       xmdkent LIKE xmdk_t.xmdkent, #企業編號
+       xmdksite LIKE xmdk_t.xmdksite, #營運據點
+       xmdkunit LIKE xmdk_t.xmdkunit, #應用組織
+       xmdkdocno LIKE xmdk_t.xmdkdocno, #單據單號
+       xmdkdocdt LIKE xmdk_t.xmdkdocdt, #單據日期
+       xmdk000 LIKE xmdk_t.xmdk000, #單據性質
+       xmdk001 LIKE xmdk_t.xmdk001, #扣帳日期
+       xmdk002 LIKE xmdk_t.xmdk002, #出貨性質
+       xmdk003 LIKE xmdk_t.xmdk003, #業務人員
+       xmdk004 LIKE xmdk_t.xmdk004, #業務部門
+       xmdk005 LIKE xmdk_t.xmdk005, #出通/出貨單號
+       xmdk006 LIKE xmdk_t.xmdk006, #訂單單號
+       xmdk007 LIKE xmdk_t.xmdk007, #訂單客戶
+       xmdk008 LIKE xmdk_t.xmdk008, #收款客戶
+       xmdk009 LIKE xmdk_t.xmdk009, #收貨客戶
+       xmdk010 LIKE xmdk_t.xmdk010, #收款條件
+       xmdk011 LIKE xmdk_t.xmdk011, #交易條件
+       xmdk012 LIKE xmdk_t.xmdk012, #稅別
+       xmdk013 LIKE xmdk_t.xmdk013, #稅率
+       xmdk014 LIKE xmdk_t.xmdk014, #單價含稅否
+       xmdk015 LIKE xmdk_t.xmdk015, #發票類型
+       xmdk016 LIKE xmdk_t.xmdk016, #幣別
+       xmdk017 LIKE xmdk_t.xmdk017, #匯率
+       xmdk018 LIKE xmdk_t.xmdk018, #取價方式
+       xmdk019 LIKE xmdk_t.xmdk019, #優惠條件
+       xmdk020 LIKE xmdk_t.xmdk020, #送貨供應商
+       xmdk021 LIKE xmdk_t.xmdk021, #送貨地址
+       xmdk022 LIKE xmdk_t.xmdk022, #運輸方式
+       xmdk023 LIKE xmdk_t.xmdk023, #交運起點
+       xmdk024 LIKE xmdk_t.xmdk024, #交運終點
+       xmdk025 LIKE xmdk_t.xmdk025, #航次/航班/車號
+       xmdk026 LIKE xmdk_t.xmdk026, #起運日期
+       xmdk027 LIKE xmdk_t.xmdk027, #嘜頭編號
+       xmdk028 LIKE xmdk_t.xmdk028, #包裝單製作
+       xmdk029 LIKE xmdk_t.xmdk029, #Invoice製作
+       xmdk030 LIKE xmdk_t.xmdk030, #銷售通路
+       xmdk031 LIKE xmdk_t.xmdk031, #銷售分類
+       xmdk032 LIKE xmdk_t.xmdk032, #結關日期
+       xmdk033 LIKE xmdk_t.xmdk033, #額外品名規格
+       xmdk034 LIKE xmdk_t.xmdk034, #留置原因
+       xmdk035 LIKE xmdk_t.xmdk035, #多角序號
+       xmdk036 LIKE xmdk_t.xmdk036, #整合單號
+       xmdk037 LIKE xmdk_t.xmdk037, #發票號碼
+       xmdk038 LIKE xmdk_t.xmdk038, #運輸狀態
+       xmdk039 LIKE xmdk_t.xmdk039, #在途成本庫位
+       xmdk040 LIKE xmdk_t.xmdk040, #在途非成本庫位
+       xmdk041 LIKE xmdk_t.xmdk041, #發票編號
+       xmdk042 LIKE xmdk_t.xmdk042, #內外銷
+       xmdk043 LIKE xmdk_t.xmdk043, #匯率計算基準
+       xmdk044 LIKE xmdk_t.xmdk044, #多角流程編號
+       xmdk045 LIKE xmdk_t.xmdk045, #多角性質
+       xmdk051 LIKE xmdk_t.xmdk051, #總未稅金額
+       xmdk052 LIKE xmdk_t.xmdk052, #總含稅金額
+       xmdk053 LIKE xmdk_t.xmdk053, #總稅額
+       xmdk054 LIKE xmdk_t.xmdk054, #備註
+       xmdk055 LIKE xmdk_t.xmdk055, #客戶收貨日
+       xmdk081 LIKE xmdk_t.xmdk081, #對應的簽收單號
+       xmdk082 LIKE xmdk_t.xmdk082, #銷退方式
+       xmdk083 LIKE xmdk_t.xmdk083, #多角貿易已拋轉
+       xmdk084 LIKE xmdk_t.xmdk084, #折讓證明單開立否
+       xmdk200 LIKE xmdk_t.xmdk200, #調貨經銷商編號
+       xmdk201 LIKE xmdk_t.xmdk201, #代送商編號
+       xmdk202 LIKE xmdk_t.xmdk202, #發票客戶
+       xmdk203 LIKE xmdk_t.xmdk203, #促銷方案編號
+       xmdk204 LIKE xmdk_t.xmdk204, #整單折扣
+       xmdk205 LIKE xmdk_t.xmdk205, #送貨站點編號
+       xmdk206 LIKE xmdk_t.xmdk206, #運輸路線編號
+       xmdk207 LIKE xmdk_t.xmdk207, #銷售組織
+       xmdk208 LIKE xmdk_t.xmdk208, #調貨出貨單號
+       xmdk209 LIKE xmdk_t.xmdk209, #No Use
+       xmdk210 LIKE xmdk_t.xmdk210, #No Use
+       xmdk211 LIKE xmdk_t.xmdk211, #No Use
+       xmdk212 LIKE xmdk_t.xmdk212, #No Use
+       xmdk213 LIKE xmdk_t.xmdk213, #本幣含稅總金額
+       xmdk214 LIKE xmdk_t.xmdk214, #收款完成否
+       xmdkownid LIKE xmdk_t.xmdkownid, #資料所屬者
+       xmdkowndp LIKE xmdk_t.xmdkowndp, #資料所有部門
+       xmdkcrtid LIKE xmdk_t.xmdkcrtid, #資料建立者
+       xmdkcrtdp LIKE xmdk_t.xmdkcrtdp, #資料建立部門
+       xmdkcrtdt LIKE xmdk_t.xmdkcrtdt, #資料創建日
+       xmdkmodid LIKE xmdk_t.xmdkmodid, #資料修改者
+       xmdkmoddt LIKE xmdk_t.xmdkmoddt, #最近修改日
+       xmdkcnfid LIKE xmdk_t.xmdkcnfid, #資料確認者
+       xmdkcnfdt LIKE xmdk_t.xmdkcnfdt, #資料確認日
+       xmdkpstid LIKE xmdk_t.xmdkpstid, #資料過帳者
+       xmdkpstdt LIKE xmdk_t.xmdkpstdt, #資料過帳日
+       xmdkstus LIKE xmdk_t.xmdkstus, #狀態碼
+       xmdk085 LIKE xmdk_t.xmdk085, #資料來源(銷退)
+       xmdk086 LIKE xmdk_t.xmdk086, #來源單號(銷退)
+       xmdk046 LIKE xmdk_t.xmdk046, #整合來源
+       xmdk087 LIKE xmdk_t.xmdk087, #出貨走發票倉調撥
+       xmdk047 LIKE xmdk_t.xmdk047, #一次性交易對象識別碼
+       xmdk088 LIKE xmdk_t.xmdk088, #來源類型
+       xmdk089 LIKE xmdk_t.xmdk089 #來源單號
+               END RECORD
+  #mod--161109-00085#10-e
+  DEFINE  l_sql          STRING
+  DEFINE  l_errno        LIKE type_t.chr10          #錯誤訊息代碼 
+  DEFINE  l_ooef019      LIKE ooef_t.ooef019
+  DEFINE  l_success      LIKE type_t.num5
+  DEFINE  l_oodbl004     LIKE oodbl_t.oodbl004  #稅別名稱
+  DEFINE  l_oodb005      LIKE oodb_t.oodb005    #含稅否
+  DEFINE  l_oodb006      LIKE oodb_t.oodb006    #稅率
+  DEFINE  l_oodb011      LIKE oodb_t.oodb011    #取得稅別類型1:正常稅率2:依料件設定
+  DEFINE  l_xmdk003      LIKE xmdk_t.xmdk003
+  DEFINE  l_xmdk004      LIKE xmdk_t.xmdk004
+  DEFINE  l_pmaa027      LIKE pmaa_t.pmaa027    #150623-00017#1
+  DEFINE  l_xmdl003      LIKE xmdl_t.xmdl003    #160807-00008#1
+  DEFINE  l_xmdk030      LIKE xmdk_t.xmdk030    #160807-00008#1
+  DEFINE  l_xmdg004      LIKE xmdg_t.xmdg004    #160831-00027#1
+  DEFINE  l_xmdk018      LIKE xmdk_t.xmdk018    #160901-00040#1
+  #add--#160706-00037#5 By shiun--(S)
+  DEFINE  l_xmdastus     LIKE xmda_t.xmdastus
+  DEFINE  l_xmdgstus     LIKE xmdg_t.xmdgstus
+  #add--#160706-00037#5 By shiun--(E)
+
+  LET l_linkno = ''
+  SELECT MAX(linkno) INTO l_linkno
+    FROM p540_tmp02            #160727-00019#23 Mod   p540_02_xmdk_temp --> p540_tmp02
+
+  
+  #獲得當前營運據點的所屬稅區
+  LET l_ooef019 = ''
+  SELECT ooef019 INTO l_ooef019
+    FROM ooef_t
+   WHERE ooefent = g_enterprise
+     AND ooef001 = g_site  
+
+
+ 
+  FOR l_no = 1 TO l_linkno
+      INITIALIZE l_xmdk.* TO NULL
+      LET g_success = 'Y' 
+      
+      SELECT  source,xmdk007,xmdk010,xmdk011,xmdk012,
+             xmdk016,xmdk017,xmdk009,xmdk008,xmdk015,
+             xmdk002,xmdk028,xmdk029,xmdk021
+            ,xmda028   #一次性交易對象識別碼   #161205-00025#15
+        INTO       l_source,l_xmdk.xmdk007,l_xmdk.xmdk010,l_xmdk.xmdk011,l_xmdk.xmdk012,
+             l_xmdk.xmdk016,l_xmdk.xmdk017,l_xmdk.xmdk009,l_xmdk.xmdk008,l_xmdk.xmdk015,
+             l_xmdk.xmdk002,l_xmdk.xmdk028,l_xmdk.xmdk029,l_xmdk.xmdk021
+            ,l_xmdk.xmdk047   #一次性交易對象識別碼   #161205-00025#15
+        FROM p540_tmp02          #160727-00019#23 Mod   p540_02_xmdk_temp --> p540_tmp02
+       WHERE linkno = l_no
+
+      LET g_result_str = ''
+      CALL s_transaction_begin() 
+ 
+      #公用欄位給值
+      LET l_xmdk.xmdkownid = g_user
+      LET l_xmdk.xmdkowndp = g_dept    #160901-00040#1 g_grup-->g_dept
+      LET l_xmdk.xmdkcrtid = g_user
+      LET l_xmdk.xmdkcrtdp = g_dept    #160901-00040#1 g_grup-->g_dept
+      LET l_xmdk.xmdkcrtdt = cl_get_current()
+      LET l_xmdk.xmdkmodid = ''
+      LET l_xmdk.xmdkmoddt = ''
+
+      #一般欄位給值
+      LET l_xmdk.xmdk000 = "1"              #單據性質：1出貨單
+      IF cl_null(g_xmdk_m.xmdkdocdt) THEN   #單據日期/出貨日期/扣帳日期
+         LET l_xmdk.xmdkdocdt = g_today  
+         LET l_xmdk.xmdk026 = g_today       
+         LET l_xmdk.xmdk001 = g_today             
+      ELSE
+         LET l_xmdk.xmdkdocdt = g_xmdk_m.xmdkdocdt 
+         LET l_xmdk.xmdk026 = g_xmdk_m.xmdkdocdt       
+         LET l_xmdk.xmdk001 = g_xmdk_m.xmdkdocdt         
+      END IF         
+      LET l_xmdk.xmdk032 = g_today          #結關日期      
+      LET l_xmdk.xmdk083 = 'N'              #多角貿易已拋轉   
+      LET l_xmdk.xmdk028 = 'N'              #包裝單製作
+      LET l_xmdk.xmdk029 = 'N'              #Invoice製作  
+      LET l_xmdk.xmdk045 = '1'              #多角性質
+      
+      #--20150408--POLLY--ADD--業務人員抓INPUT條件--(S)
+      IF NOT cl_null(g_xmdk_m.xmdk003) THEN     #業務人員/業務部門
+         LET l_xmdk.xmdk003 = g_xmdk_m.xmdk003
+         SELECT ooag003 INTO l_xmdk.xmdk004
+           FROM ooag_t
+          WHERE ooagent = g_enterprise
+            AND ooag001 = l_xmdk.xmdk003         
+      END IF    
+      #--20150408--POLLY--ADD--業務人員抓INPUT條件--(E)
+      
+     #回寫單頭出通單OR出貨單單號
+      LET l_cnt = 0 
+      LET l_xmdk.xmdk005 = ''
+      LET l_xmdk.xmdk006 = ''
+
+      CASE l_source
+        WHEN '1'               #訂單
+          SELECT COUNT(DISTINCT(xmdl003)) INTO l_cnt
+            FROM p540_tmp03              #160727-00019#23 Mod   p540_02_xmdl_temp --> p540_tmp03
+           WHERE linkno = l_no
+          IF NOT cl_null(l_cnt) AND l_cnt = 1 THEN
+             SELECT DISTINCT xmdl003 INTO l_xmdk.xmdk006  #訂單單號 
+               FROM p540_tmp03           #160727-00019#23 Mod   p540_02_xmdl_temp --> p540_tmp03
+              WHERE linkno = l_no    
+             #--20150408--POLLY--ADD--業務人員回抓原單據--(S)
+             IF cl_null(l_xmdk.xmdk003) THEN
+                SELECT xmda002,xmda003 
+                  INTO l_xmdk.xmdk003,l_xmdk.xmdk004
+                  FROM xmda_t
+                 WHERE xmdaent = g_enterprise
+                   AND xmdadocno = l_xmdk.xmdk006               
+             END IF
+             #--20150408--POLLY--ADD--業務人員回抓原單據--(E)         
+             #160831-00027#1--s
+             SELECT xmda203,xmda017,xmda018 INTO l_xmdk.xmdk202,l_xmdk.xmdk018,l_xmdk.xmdk019      #160901-00040#1 add xmdk018/xmdk019
+               FROM xmda_t
+              WHERE xmdaent = g_enterprise AND xmdadocno = l_xmdk.xmdk006
+             #160831-00027#1--e             
+          END IF
+          #add--160706-00037#5 By shiun--(S)
+          #檢查來源單據的狀態碼(例如可拋轉的單據狀態碼應該是Y.已確認)，若為不可拋轉的資料提示"單據編號OOO單據狀態碼非Y.已確認不可拋轉"
+          SELECT xmdastus INTO l_xmdastus
+            FROM xmda_t
+           WHERE xmdaent   = g_enterprise
+             AND xmdadocno = l_xmdk.xmdk006
+          IF l_xmdastus <> 'Y' THEN
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.extend = ''
+             LET g_errparam.code   = 'apm-01119'
+             LET g_errparam.popup  = TRUE
+             LET g_errparam.replace[1] = l_xmdk.xmdk006
+             CALL cl_err()
+             CONTINUE FOR
+          END IF
+          #add--160706-00037#5 By shiun--(E)
+          #161229-00049#1--add----begin----
+          SELECT xmda006 INTO l_xmdk.xmdk045 FROM xmda_t 
+             WHERE  xmdaent  = g_enterprise
+               AND  xmdadocno = l_xmdk.xmdk006 
+           #多角處理
+          CALL axmp540_02_xmdk045_default('1',l_xmdk.xmdk045,l_xmdk.xmdk044,l_xmdk.xmdk031) RETURNING l_xmdk.xmdk045        
+          #161229-00049#1--add----end------
+
+        WHEN '2'               #出通單
+          SELECT COUNT(DISTINCT(xmdl001)) INTO l_cnt
+            FROM p540_tmp03            #160727-00019#23 Mod   p540_02_xmdl_temp --> p540_tmp03
+           WHERE linkno = l_no
+          IF NOT cl_null(l_cnt) AND l_cnt = 1 THEN
+             SELECT DISTINCT xmdl001 INTO l_xmdk.xmdk005  #出通單單號 
+               FROM p540_tmp03         #160727-00019#23 Mod   p540_02_xmdl_temp --> p540_tmp03
+              WHERE linkno = l_no   
+             #160831-00027#1--s
+             SELECT xmdg004 INTO l_xmdg004
+               FROM xmdg_t
+              WHERE xmdgent = g_enterprise
+                AND xmdgdocno = l_xmdk.xmdk005
+             SELECT xmda203,xmda017,xmda018 INTO l_xmdk.xmdk202,l_xmdk.xmdk018,l_xmdk.xmdk019      #160901-00040#1 add xmdk018/xmdk019
+               FROM xmda_t
+              WHERE xmdaent = g_enterprise AND xmdadocno = l_xmdg004
+             #160831-00027#1--e 
+             #--20150408--POLLY--ADD--業務人員回抓原單據--(S)
+             IF cl_null(l_xmdk.xmdk003) THEN
+                SELECT xmdg002,xmdg003 
+                  INTO l_xmdk.xmdk003,l_xmdk.xmdk004
+                  FROM xmdg_t
+                 WHERE xmdgent = g_enterprise
+                   AND xmdgdocno = l_xmdk.xmdk005                 
+             END IF
+             #--20150408--POLLY--ADD--業務人員回抓原單據--(E)    
+             #160913-00019#1-s
+             SELECT xmdg004 INTO l_xmdk.xmdk006
+                FROM xmdg_t
+               WHERE xmdgent = g_enterprise
+                 AND xmdgdocno = l_xmdk.xmdk005                
+             #160913-00019#1-e                
+          END IF
+          #160913-00019#1-s-mark          
+          #160801-00042#1--(S)
+          #IF cl_get_doc_para(g_enterprise,g_site,g_xmdk_m.xmdkdocno,'D-BAS-0060') = '1' THEN
+          #   SELECT xmdg004 INTO l_xmdk.xmdk006
+          #     FROM xmdg_t
+          #    WHERE xmdgent = g_enterprise
+          #      AND xmdgdocno = l_xmdk.xmdk005       
+          #END IF
+          #160801-00042#1--(E)
+          #160913-00019#1-e-mark
+          #add--160706-00037#5 By shiun--(S)
+          #檢查來源單據的狀態碼(例如可拋轉的單據狀態碼應該是Y.已確認)，若為不可拋轉的資料提示"單據編號OOO單據狀態碼非Y.已確認不可拋轉"
+          SELECT xmdgstus INTO l_xmdgstus
+            FROM xmdg_t
+           WHERE xmdgent   = g_enterprise
+             AND xmdgdocno = l_xmdk.xmdk005
+          IF l_xmdgstus <> 'Y' THEN
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.extend = ''
+             LET g_errparam.code   = 'apm-01119'
+             LET g_errparam.popup  = TRUE
+             LET g_errparam.replace[1] = l_xmdk.xmdk005
+             CALL cl_err()
+             CONTINUE FOR
+          END IF
+          #add--160706-00037#5 By shiun--(E)
+          #161229-00049#1--add----begin----
+          SELECT xmdg034 INTO l_xmdk.xmdk045 FROM xmdg_t 
+             WHERE  xmdgent  = g_enterprise
+               AND  xmdgdocno = l_xmdk.xmdk005
+          #多角處理
+          CALL axmp540_02_xmdk045_default('2',l_xmdk.xmdk045,l_xmdk.xmdk044,l_xmdk.xmdk031) RETURNING l_xmdk.xmdk045  
+          #161229-00049#1--add----end------
+      END CASE
+      #160831-00027#1--s
+      IF cl_null(l_xmdk.xmdk202) THEN 
+         LET l_xmdk.xmdk202 = l_xmdk.xmdk008
+      END IF 
+      #160831-00027#1--e       
+      #取得稅別、單價含稅否
+      CALL s_tax_chk(g_site,l_xmdk.xmdk012)
+        RETURNING l_success,l_oodbl004,l_oodb005,l_oodb006,l_oodb011
+      LET l_xmdk.xmdk013 = l_oodb006
+      LET l_xmdk.xmdk014 = l_oodb005
+     
+      #依客戶帶出取價方式、運輸方式、交運起點、交運終點、銷售通路、銷售分類、內外銷、取匯率方式、業務人員、業務部門    
+      CALL axmp540_02_xmdk007_default(l_xmdk.xmdk003,l_xmdk.xmdk004,l_xmdk.xmdk007)
+        RETURNING l_xmdk003,l_xmdk004,l_xmdk018,l_xmdk.xmdk022,l_xmdk.xmdk023,                  #160901-00040#1 xmdk018 以前端來源單據為主
+                  l_xmdk.xmdk024,l_xmdk.xmdk030,l_xmdk.xmdk031,l_xmdk.xmdk042,l_xmdk.xmdk043     
+      #160901-00040#1-s
+      IF cl_null(l_xmdk.xmdk018) THEN
+         LET l_xmdk.xmdk018 = l_xmdk018
+      END IF
+      #160901-00040#1-e
+      #--20150408--POLLY--ADD--業務人員依客戶帶出預設--(S)                  
+      IF cl_null(l_xmdk.xmdk003) THEN
+         IF NOT cl_null(l_xmdk003) THEN
+            LET l_xmdk.xmdk003 = l_xmdk003
+            LET l_xmdk.xmdk004 = l_xmdk004         
+         ELSE
+            LET l_xmdk.xmdk003 = g_user
+            LET l_xmdk.xmdk004 = g_dept        
+         END IF
+      END IF
+      #--20150408--POLLY--ADD--業務人員依客戶帶出預設--(E)                  
+      LET l_xmdk.xmdkent  = g_enterprise
+      LET l_xmdk.xmdksite  = g_site
+      LET l_xmdk.xmdkstus = 'N'      
+      #送货地址    ------#150623-00017#1--ADD--b
+      IF cl_null(l_xmdk.xmdk021) THEN
+         CALL s_axmt500_get_pmaa027(l_xmdk.xmdk009) RETURNING l_pmaa027
+          DECLARE axmp540_02_cs SCROLL CURSOR FOR
+           SELECT oofb019 FROM oofb_t
+            WHERE oofbent  = g_enterprise
+              AND oofb002  = l_pmaa027
+      #       AND oofb008  = '6'
+              AND oofbstus = 'Y'
+            ORDER BY oofb010 DESC
+          OPEN axmp540_02_cs
+          FETCH FIRST axmp540_02_cs INTO l_xmdk.xmdk021
+      END IF
+      ------#150623-00017#1--ADD----e    
+
+      #add by lixiang 2015/12/30--begin---
+      #若aoos020参数S-FIN-1003='3',出貨走發票倉調撥 xmdk087='Y';
+      #若S-FIN-1003<>'3',xmdk087='N'
+      IF cl_get_para(g_enterprise,g_site,'S-FIN-1003') = '3' THEN
+         LET l_xmdk.xmdk087 = "Y"
+      ELSE
+         LET l_xmdk.xmdk087 = "N"
+      END IF
+      #add by lixiang 2015/12/30--end---
+      
+      #取單號
+     #CALL s_aooi200_gen_docno(g_site,g_xmdk_m.xmdkdocno,g_today,'axmt540') RETURNING l_success,l_xmdk.xmdkdocno  #160105-00012#1 mark
+      CALL s_aooi200_gen_docno(g_site,g_xmdk_m.xmdkdocno,l_xmdk.xmdkdocdt,'axmt540') RETURNING l_success,l_xmdk.xmdkdocno    #160105-00012#1 add
+     
+      IF NOT l_success THEN
+         LET g_success = 'N'
+         LET l_errno = 'apm-00003'
+         LET g_result_str = g_result_str,",",cl_getmsg(l_errno,g_lang)
+      END IF   
+      IF g_success = 'Y' THEN
+         #寫入單頭檔
+         INSERT INTO xmdk_t (xmdkent,xmdk000,xmdksite,xmdkdocno,xmdkdocdt,xmdk001,xmdk003,xmdk004,
+             xmdkstus,xmdk005,xmdk006,xmdk007,xmdk009,xmdk008,xmdk002,xmdk032,xmdk030,xmdk028,
+             xmdk029,xmdk037,xmdk034,xmdk054,xmdk039,xmdk040,xmdk021,xmdk022,xmdk023,xmdk024,xmdk020,
+             xmdk025,xmdk026,xmdk027,xmdk038,xmdk010,xmdk011,xmdk012,xmdk013,xmdk014,xmdk015,xmdk016,
+             xmdk042,xmdk043,   #150623-00017#1
+             xmdk047,   #一次性交易對象識別碼   #161205-00025#15
+             xmdk087,    #add by lixiang 2015/12/30
+             xmdk202,   #160831-00027#1
+             xmdk017,xmdk018,xmdk019,xmdk031,xmdk033,xmdk035,xmdk036,xmdk083,xmdk045,xmdkownid,
+             xmdkowndp,xmdkcrtid,xmdkcrtdp,xmdkcrtdt,xmdkcnfid,xmdkcnfdt,xmdkpstid,xmdkpstdt)
+         VALUES (g_enterprise,l_xmdk.xmdk000,l_xmdk.xmdksite,l_xmdk.xmdkdocno,l_xmdk.xmdkdocdt,
+             l_xmdk.xmdk001,l_xmdk.xmdk003,l_xmdk.xmdk004,l_xmdk.xmdkstus,l_xmdk.xmdk005,
+             l_xmdk.xmdk006,l_xmdk.xmdk007,l_xmdk.xmdk009,l_xmdk.xmdk008,l_xmdk.xmdk002,
+             l_xmdk.xmdk032,l_xmdk.xmdk030,l_xmdk.xmdk028,l_xmdk.xmdk029,l_xmdk.xmdk037,
+             l_xmdk.xmdk034,l_xmdk.xmdk054,l_xmdk.xmdk039,l_xmdk.xmdk040,l_xmdk.xmdk021,
+             l_xmdk.xmdk022,l_xmdk.xmdk023,l_xmdk.xmdk024,l_xmdk.xmdk020,l_xmdk.xmdk025,
+             l_xmdk.xmdk026,l_xmdk.xmdk027,l_xmdk.xmdk038,l_xmdk.xmdk010,l_xmdk.xmdk011,
+             l_xmdk.xmdk012,l_xmdk.xmdk013,l_xmdk.xmdk014,l_xmdk.xmdk015,l_xmdk.xmdk016,
+             l_xmdk.xmdk042,l_xmdk.xmdk043, #150623-00017#1
+             l_xmdk.xmdk047,   #一次性交易對象識別碼   #161205-00025#15
+             l_xmdk.xmdk087,   #add by lixiang 2015/12/30
+             l_xmdk.xmdk202,   #160831-00027#1
+             l_xmdk.xmdk017,l_xmdk.xmdk018,l_xmdk.xmdk019,l_xmdk.xmdk031,l_xmdk.xmdk033,
+             l_xmdk.xmdk035,l_xmdk.xmdk036,l_xmdk.xmdk083,l_xmdk.xmdk045,l_xmdk.xmdkownid,
+             l_xmdk.xmdkowndp,l_xmdk.xmdkcrtid,l_xmdk.xmdkcrtdp,l_xmdk.xmdkcrtdt,l_xmdk.xmdkcnfid,
+             l_xmdk.xmdkcnfdt,l_xmdk.xmdkpstid,l_xmdk.xmdkpstdt)
+         IF SQLCA.sqlcode THEN
+             LET l_errno = SQLCA.sqlcode
+             LET g_result_str = g_result_str,",INSERT INTO xmdk_t",cl_getmsg(l_errno,g_lang)
+             LET g_success = 'N'
+         END IF         
+      END IF
+      IF g_success = 'Y' THEN
+         #寫入單身檔
+          CALL axmp540_02_ins_xmdl(l_no,l_xmdk.xmdkdocno)   
+          #160807-00008#1--(S)
+          LET l_xmdl003 = ''
+          LET l_xmdk030 = ''
+          SELECT xmdl003 INTO l_xmdl003
+            FROM xmdl_t
+           WHERE xmdlent = g_enterprise AND xmdldocno = l_xmdk.xmdkdocno
+             AND xmdlseq = 1
+          IF NOT cl_null(l_xmdl003) THEN
+            SELECT xmda023 INTO l_xmdk030
+              FROM xmda_t
+             WHERE xmdaent = g_enterprise AND xmdadocno = l_xmdl003
+            IF NOT cl_null(l_xmdk030) THEN
+               UPDATE xmdk_t SET xmdk030 = l_xmdk030
+                WHERE xmdkent = g_enterprise AND xmdkdocno = l_xmdk.xmdkdocno               
+            END IF
+          END IF    
+          #160807-00008#1--(E)
+      END IF
+      IF g_success = 'Y' THEN
+         #寫入多庫儲批  
+          CALL axmp540_02_ins_xmdm(l_no,l_xmdk.xmdkdocno)  
+      END IF
+      IF g_success = 'Y' THEN
+         CALL s_transaction_end('Y','0')
+         LET g_result_str = cl_getmsg('apm-00538',g_lang)        #建立成功   
+      ELSE
+         CALL s_transaction_end('N','0')
+         #因為執行失敗 所以不給予單號 
+          LET l_xmdk.xmdkdocno = ''        
+      END IF
+      #寫入顯示結果是成功或錯誤訊息
+      UPDATE p540_tmp02           #160727-00019#23 Mod   p540_02_xmdk_temp --> p540_tmp02
+         SET xmdkdocno = l_xmdk.xmdkdocno,
+             result = g_result_str
+       WHERE linkno = l_no        
+               
+  END FOR  
+      
+      
+END FUNCTION
+################################################################################
+# Descriptions...: 客戶編號帶值
+# Memo...........: 自動帶出客戶預設資料
+# Usage..........: CALL axmp540_02_xmdk007_default(p_xmdk003,p_xmdk004,p_xmdk007)
+#                  
+# Input parameter:  p_xmdk003    業務人員
+#                :  p_xmdk004    業務部門
+#                :  p_xmdk007    訂單客戶
+# Return code....:  r_xmdk003    業務人員
+#                :  r_xmdk004    業務部門
+#                :  r_xmdk018    取價方式 
+#                :  r_xmdk022    運輸方式
+#                :  r_xmdk023    交運起點
+#                :  r_xmdk024    交運終點
+#                :  r_xmdk030    銷售通路
+#                :  r_xmdk031    銷售分類
+#                : 
+# Date & Author..: 2014/06/30 By Polly
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmp540_02_xmdk007_default(p_xmdk003,p_xmdk004,p_xmdk007)
+   DEFINE p_xmdk003 LIKE xmdk_t.xmdk003
+   DEFINE p_xmdk004 LIKE xmdk_t.xmdk004
+   DEFINE p_xmdk007 LIKE xmdk_t.xmdk007
+   DEFINE r_xmdk       RECORD
+      xmdk003             LIKE xmdk_t.xmdk003,   #業務人員   
+      xmdk004             LIKE xmdk_t.xmdk004,   #業務部門   
+      xmdk010             LIKE xmdk_t.xmdk010,   #收款條件
+      xmdk011             LIKE xmdk_t.xmdk011,   #交易條件
+      xmdk012             LIKE xmdk_t.xmdk012,   #稅別
+      xmdk015             LIKE xmdk_t.xmdk015,   #發票類型
+      xmdk016             LIKE xmdk_t.xmdk016,   #幣別
+      xmdk018             LIKE xmdk_t.xmdk018,   #取價方式
+      xmdk022             LIKE xmdk_t.xmdk022,   #運輸方式
+      xmdk023             LIKE xmdk_t.xmdk023,   #交運起點
+      xmdk024             LIKE xmdk_t.xmdk024,   #交運終點
+      xmdk030             LIKE xmdk_t.xmdk030,   #銷售通路
+      xmdk031             LIKE xmdk_t.xmdk031,   #銷售分類
+      xmdk042             LIKE xmdk_t.xmdk042,   #內外銷
+      xmdk043             LIKE xmdk_t.xmdk043    #取匯率方式      
+                       END RECORD              
+
+   WHENEVER ERROR CONTINUE
+
+   IF NOT cl_null(p_xmdk007) THEN
+      #161109-00085#10-s
+      #CALL s_axmt540_client_default(p_xmdk007,p_xmdk003,p_xmdk004) RETURNING r_xmdk.*    
+      CALL s_axmt540_client_default(p_xmdk007,p_xmdk003,p_xmdk004) 
+      RETURNING  r_xmdk.xmdk003,r_xmdk.xmdk004,r_xmdk.xmdk010,r_xmdk.xmdk011,r_xmdk.xmdk012,
+                 r_xmdk.xmdk015,r_xmdk.xmdk016,r_xmdk.xmdk018,r_xmdk.xmdk022,r_xmdk.xmdk023,
+                 r_xmdk.xmdk024,r_xmdk.xmdk030,r_xmdk.xmdk031,r_xmdk.xmdk042,r_xmdk.xmdk043
+      #161109-00085#10-e      
+   END IF
+  
+   RETURN r_xmdk.xmdk003,r_xmdk.xmdk004,r_xmdk.xmdk018,r_xmdk.xmdk022,r_xmdk.xmdk023,
+          r_xmdk.xmdk024,r_xmdk.xmdk030,r_xmdk.xmdk031,r_xmdk.xmdk042,r_xmdk.xmdk043
+   
+END FUNCTION
+#寫入出貨/簽收/銷退單單身明細檔
+PRIVATE FUNCTION axmp540_02_ins_xmdl(p_no,p_xmdkdocno)
+   DEFINE p_no         LIKE type_t.num10
+   DEFINE p_xmdkdocno  LIKE xmdk_t.xmdkdocno
+   DEFINE l_xmdl_d     type_g_xmdl_d
+   DEFINE l_xmdk016    LIKE xmdk_t.xmdk016
+   DEFINE l_xmdk017    LIKE xmdk_t.xmdk017
+   DEFINE l_sql        STRING
+   DEFINE l_xmdk030    LIKE xmdk_t.xmdk030    #160807-00008#1
+
+   IF cl_null(p_no) OR cl_null(p_xmdkdocno) THEN
+   END IF
+   
+   #幣別、匯率
+   SELECT xmdk016,xmdk017
+     INTO l_xmdk016,l_xmdk017
+     FROM xmdk_t
+    WHERE xmdkent = g_enterprise
+      AND xmdkdocno = p_xmdkdocno
+      
+
+
+   LET l_sql = "   SELECT xmdlseq,xmdl001, ",
+               "          xmdl002, xmdl003,xmdl004,xmdl005,xmdl006, ",
+               "          xmdl007, xmdl008,xmdl009,xmdl010,xmdl011, ",
+               "          xmdl012, xmdl013,xmdl014,xmdl015,xmdl016, ",
+               "          xmdl017, xmdl018,xmdl019,xmdl020,xmdl021, ",
+               "          xmdl022, xmdl023,xmdl024,xmdl025,xmdl026, ",
+               "          xmdl027, xmdl028,xmdl029,xmdl030,xmdl031, ",
+               "          xmdl032, xmdl033,xmdl034,xmdl035,xmdl036, ",
+               "          xmdl037, xmdl038,xmdl039,xmdl040,xmdl041, ",
+               "          xmdl042, xmdl043,xmdl044,xmdl045,xmdl046, ",
+               "          xmdl048,xmdl049,xmdl050,xmdl051, ",
+               "          xmdl052, xmdl087,xmdl088,xmdl056 ", #170324-00113#1 add xmdl056
+               "     FROM p540_tmp03 ",           #160727-00019#23 Mod   p540_02_xmdl_temp --> p540_tmp03
+               "    WHERE linkno = '",p_no,"' ",
+               "    ORDER BY xmdlseq "               
+               
+               
+   PREPARE p540_02_xmdl_pr FROM l_sql
+   DECLARE p540_02_xmdl_cs CURSOR FOR p540_02_xmdl_pr
+   
+   FOREACH p540_02_xmdl_cs INTO l_xmdl_d.xmdlseq,l_xmdl_d.xmdl001,
+                                l_xmdl_d.xmdl002, l_xmdl_d.xmdl003,l_xmdl_d.xmdl004,l_xmdl_d.xmdl005,l_xmdl_d.xmdl006,
+                                l_xmdl_d.xmdl007, l_xmdl_d.xmdl008,l_xmdl_d.xmdl009,l_xmdl_d.xmdl010,l_xmdl_d.xmdl011,
+                                l_xmdl_d.xmdl012, l_xmdl_d.xmdl013,l_xmdl_d.xmdl014,l_xmdl_d.xmdl015,l_xmdl_d.xmdl016,
+                                l_xmdl_d.xmdl017, l_xmdl_d.xmdl018,l_xmdl_d.xmdl019,l_xmdl_d.xmdl020,l_xmdl_d.xmdl021,
+                                l_xmdl_d.xmdl022, l_xmdl_d.xmdl023,l_xmdl_d.xmdl024,l_xmdl_d.xmdl025,l_xmdl_d.xmdl026,
+                                l_xmdl_d.xmdl027, l_xmdl_d.xmdl028,l_xmdl_d.xmdl029,l_xmdl_d.xmdl030,l_xmdl_d.xmdl031,
+                                l_xmdl_d.xmdl032, l_xmdl_d.xmdl033,l_xmdl_d.xmdl034,l_xmdl_d.xmdl035,l_xmdl_d.xmdl036,
+                                l_xmdl_d.xmdl037, l_xmdl_d.xmdl038,l_xmdl_d.xmdl039,l_xmdl_d.xmdl040,l_xmdl_d.xmdl041,
+                                l_xmdl_d.xmdl042, l_xmdl_d.xmdl043,l_xmdl_d.xmdl044,l_xmdl_d.xmdl045,l_xmdl_d.xmdl046,
+                                l_xmdl_d.xmdl048,l_xmdl_d.xmdl049,l_xmdl_d.xmdl050,l_xmdl_d.xmdl051,
+                                l_xmdl_d.xmdl052, l_xmdl_d.xmdl087,l_xmdl_d.xmdl088,l_xmdl_d.xmdl056 #170324-00113#1 add xmdl056 
+
+        
+        LET l_xmdl_d.xmdldocno = p_xmdkdocno      #給予真正的單號
+      
+        #稅額計算
+        CALL s_axmt540_tax_count('',l_xmdl_d.xmdldocno,l_xmdl_d.xmdlseq,g_site,l_xmdl_d.xmdl025,l_xmdl_d.xmdl022,l_xmdl_d.xmdl024,l_xmdk016,l_xmdk017,
+                                 l_xmdl_d.xmdl003,l_xmdl_d.xmdl004,l_xmdl_d.xmdl018)
+          RETURNING l_xmdl_d.xmdl027,l_xmdl_d.xmdl028,l_xmdl_d.xmdl029         
+        
+        #寫入xmdl_t中
+        IF g_success = 'Y' THEN
+           INSERT INTO xmdl_t(xmdlent,xmdlsite,xmdldocno,xmdlseq,xmdl001,
+                              xmdl002, xmdl003,  xmdl004,xmdl005,xmdl006,
+                              xmdl007, xmdl008,  xmdl009,xmdl010,xmdl011,
+                              xmdl012, xmdl013,  xmdl014,xmdl015,xmdl016,
+                              xmdl017, xmdl018,  xmdl019,xmdl020,xmdl021,
+                              xmdl022, xmdl023,  xmdl024,xmdl025,xmdl026,
+                              xmdl027, xmdl028,  xmdl029,xmdl030,xmdl031,
+                              xmdl032, xmdl033,  xmdl034,xmdl035,xmdl036,
+                              xmdl037, xmdl038,  xmdl039,xmdl040,xmdl041,
+                              xmdl042, xmdl043,  xmdl044,xmdl045,xmdl046,
+                              xmdl048,  xmdl049,xmdl050,xmdl051,
+                              xmdl052, xmdl087,  xmdl088,xmdl056) #170324-00113#1 add xmdl056
+                VALUES (g_enterprise    ,g_site          ,l_xmdl_d.xmdldocno,l_xmdl_d.xmdlseq,l_xmdl_d.xmdl001,
+                        l_xmdl_d.xmdl002,l_xmdl_d.xmdl003,l_xmdl_d.xmdl004  ,l_xmdl_d.xmdl005,l_xmdl_d.xmdl006,
+                        l_xmdl_d.xmdl007,l_xmdl_d.xmdl008,l_xmdl_d.xmdl009  ,l_xmdl_d.xmdl010,l_xmdl_d.xmdl011,
+                        l_xmdl_d.xmdl012,l_xmdl_d.xmdl013,l_xmdl_d.xmdl014  ,l_xmdl_d.xmdl015,l_xmdl_d.xmdl016,
+                        l_xmdl_d.xmdl017,l_xmdl_d.xmdl018,l_xmdl_d.xmdl019  ,l_xmdl_d.xmdl020,l_xmdl_d.xmdl021,
+                        l_xmdl_d.xmdl022,l_xmdl_d.xmdl023,l_xmdl_d.xmdl024  ,l_xmdl_d.xmdl025,l_xmdl_d.xmdl026,
+                        l_xmdl_d.xmdl027,l_xmdl_d.xmdl028,l_xmdl_d.xmdl029  ,l_xmdl_d.xmdl030,l_xmdl_d.xmdl031,
+                        l_xmdl_d.xmdl032,l_xmdl_d.xmdl033,l_xmdl_d.xmdl034  ,l_xmdl_d.xmdl035,l_xmdl_d.xmdl036,
+                        l_xmdl_d.xmdl037,l_xmdl_d.xmdl038,l_xmdl_d.xmdl039  ,l_xmdl_d.xmdl040,l_xmdl_d.xmdl041,
+                        l_xmdl_d.xmdl042,l_xmdl_d.xmdl043,l_xmdl_d.xmdl044  ,l_xmdl_d.xmdl045,l_xmdl_d.xmdl046,
+                        l_xmdl_d.xmdl048,l_xmdl_d.xmdl049,l_xmdl_d.xmdl050  ,l_xmdl_d.xmdl051,
+                        l_xmdl_d.xmdl052,l_xmdl_d.xmdl087,l_xmdl_d.xmdl088,l_xmdl_d.xmdl056) #170324-00113#1 add xmdl056       
+           IF SQLCA.sqlcode THEN
+              LET g_result_str = g_result_str,",INSERT INTO xmdl_t",cl_getmsg(SQLCA.sqlcode,g_lang)
+              LET g_success = 'N'         
+           END IF
+           
+        END IF    
+   END FOREACH
+END FUNCTION
+#欄位說明顯示
+PRIVATE FUNCTION axmp540_02_detail_show(p_page)
+   DEFINE p_page      STRING
+   DEFINE l_success   LIKE type_t.num5
+   DEFINE l_oodbl004 LIKE oodbL_t.oodbl004
+   DEFINE l_oodb005  LIKE oodb_t.oodb005
+   DEFINE l_oodb006  LIKE oodb_t.oodb006
+   DEFINE l_oodb011  LIKE oodb_t.oodb011
+   DEFINE l_pmak003  LIKE pmak_t.pmak003   #161230-00019#5
+   
+      IF p_page.getIndexOf("'1'",1) > 0 THEN
+         #161205-00025#15-s-mark
+#         #客戶
+#         CALL s_desc_get_trading_partner_abbr_desc(g_xmdk_d[l_ac].xmdk007)   
+#           RETURNING g_xmdk_d[l_ac].xmdk007_desc         
+#         #收款客戶
+#         CALL s_desc_get_trading_partner_abbr_desc(g_xmdk_d[l_ac].xmdk008)   
+#           RETURNING g_xmdk_d[l_ac].xmdk008_desc         
+#         #收貨客戶
+#         CALL s_desc_get_trading_partner_abbr_desc(g_xmdk_d[l_ac].xmdk009)   
+#           RETURNING g_xmdk_d[l_ac].xmdk009_desc                  
+#         
+#         #付款條件
+#         CALL s_desc_get_ooib002_desc(g_xmdk_d[l_ac].xmdk010)   
+#           RETURNING g_xmdk_d[l_ac].xmdk010_desc  
+#
+#         #稅別
+#         CALL s_desc_get_tax_desc1(g_site,g_xmdk_d[l_ac].xmdk012)
+#           RETURNING g_xmdk_d[l_ac].xmdk012_desc
+         #161205-00025#15-e-add
+         #稅率、含稅否
+         CALL s_tax_chk(g_site,g_xmdk_d[l_ac].xmdk012)
+           RETURNING l_success,l_oodbl004,l_oodb005,l_oodb006,l_oodb011
+         IF l_success THEN
+           LET g_xmdk_d[l_ac].xmdk013 = l_oodb006
+           LET g_xmdk_d[l_ac].xmdk014 = l_oodb005 
+         END IF
+         #161205-00025#15-s-mark
+#         #交易條件
+#         CALL s_desc_get_acc_desc('238',g_xmdk_d[l_ac].xmdk011) 
+#           RETURNING g_xmdk_d[l_ac].xmdk011_desc
+#           
+#        #發票類別
+#         CALL s_desc_get_invoice_type_desc1(g_site,g_xmdk_d[l_ac].xmdk015) 
+#           RETURNING g_xmdk_d[l_ac].xmdk015_desc
+#        
+#        #幣別
+#        CALL s_desc_get_currency_desc(g_xmdk_d[l_ac].xmdk016) 
+#          RETURNING g_xmdk_d[l_ac].xmdk016_desc        
+        #161205-00025#15-e-mark
+        #161230-00019#5-s-add
+        IF NOT cl_null(g_xmda028) THEN
+           LET l_pmak003 = ''
+           CALL s_desc_get_oneturn_guest_desc(g_xmda028) 
+             RETURNING l_pmak003
+           
+           IF NOT cl_null(l_pmak003) THEN
+              LET g_xmdk_d[l_ac].xmdk007_desc = l_pmak003
+           END IF
+        END IF
+        
+        IF g_xmdk_d[l_ac].xmdk007 = g_xmdk_d[l_ac].xmdk008 THEN
+           IF NOT cl_null(l_pmak003) THEN
+              LET g_xmdk_d[l_ac].xmdk008_desc = l_pmak003
+           END IF
+        END IF         
+        IF g_xmdk_d[l_ac].xmdk007 = g_xmdk_d[l_ac].xmdk009 THEN
+           IF NOT cl_null(l_pmak003) THEN
+              LET g_xmdk_d[l_ac].xmdk009_desc = l_pmak003
+           END IF
+        END IF
+        #161230-00019#5-e-add      
+      END IF
+
+   IF p_page.getIndexOf("'2'",1) > 0 THEN
+      #品名、規格
+      CALL s_desc_get_item_desc(g_xmdk2_d[l_ac].xmdl008_02)      
+        RETURNING g_xmdk2_d[l_ac].xmdl008_02_desc,g_xmdk2_d[l_ac].imaal004_02
+      #產品特徵
+      CALL s_feature_description(g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl009_02)
+           RETURNING l_success,g_xmdk2_d[l_ac].xmdl009_02_desc
+      #作業編號
+      CALL s_desc_get_acc_desc('221',g_xmdk2_d[l_ac].xmdl011_02)
+        RETURNING g_xmdk2_d[l_ac].xmdl011_02_desc      
+      #出貨單位、參考單位、計價單位
+      CALL s_desc_get_unit_desc(g_xmdk2_d[l_ac].xmdl017_02)   
+        RETURNING g_xmdk2_d[l_ac].xmdl017_02_desc
+      CALL s_desc_get_unit_desc(g_xmdk2_d[l_ac].xmdl019_02)   
+        RETURNING g_xmdk2_d[l_ac].xmdl019_02_desc
+      CALL s_desc_get_unit_desc(g_xmdk2_d[l_ac].xmdl021_02)   
+        RETURNING g_xmdk2_d[l_ac].xmdl021_02_desc        
+      #庫位
+      CALL s_desc_get_stock_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02)  #庫位
+        RETURNING g_xmdk2_d[l_ac].xmdl014_02_desc
+      #儲位     
+      CALL s_desc_get_locator_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02,g_xmdk2_d[l_ac].xmdl015_02) #儲位
+        RETURNING g_xmdk2_d[l_ac].xmdl015_02_desc              
+      #稅別
+      CALL s_desc_get_tax_desc1(g_site,g_xmdk4_d[l_ac].xmdl025_04)
+        RETURNING g_xmdk4_d[l_ac].xmdl025_04_desc  
+   END IF
+
+   IF p_page.getIndexOf("'3'",1) > 0 THEN
+      #品名、規格
+      CALL s_desc_get_item_desc(g_xmdk3_d[l_ac].xmdm001_03)      
+        RETURNING g_xmdk3_d[l_ac].xmdm001_03_desc,g_xmdk3_d[l_ac].imaal004_03
+      #產品特徵
+      CALL s_feature_description(g_xmdk3_d[l_ac].xmdm001_03,g_xmdk3_d[l_ac].xmdm002_03)
+           RETURNING l_success,g_xmdk3_d[l_ac].xmdm002_03_desc
+      #作業編號
+      CALL s_desc_get_acc_desc('221',g_xmdk3_d[l_ac].xmdm003_03)
+        RETURNING g_xmdk3_d[l_ac].xmdm003_03_desc      
+      #單位、參考單位
+      CALL s_desc_get_unit_desc(g_xmdk3_d[l_ac].xmdm008_03)   
+        RETURNING g_xmdk3_d[l_ac].xmdm008_03_desc
+      CALL s_desc_get_unit_desc(g_xmdk3_d[l_ac].xmdm010_03)   
+        RETURNING g_xmdk3_d[l_ac].xmdm010_03_desc      
+      #庫位
+      CALL s_desc_get_stock_desc(g_site,g_xmdk3_d[l_ac].xmdm005_03)  #庫位
+        RETURNING g_xmdk3_d[l_ac].xmdm005_03_desc
+      #儲位     
+      CALL s_desc_get_locator_desc(g_site,g_xmdk3_d[l_ac].xmdm005_03,g_xmdk3_d[l_ac].xmdm006_03) #儲位
+        RETURNING g_xmdk3_d[l_ac].xmdm006_03_desc              
+   END IF
+END FUNCTION
+
+PRIVATE FUNCTION axmp540_02_set_entry_b()
+    CALL cl_set_comp_entry("xmdl018_02,xmdl020_02,xmdl022_02",TRUE)                #出貨數量、參考數量、計價數量
+    CALL cl_set_comp_entry("xmdl013_02,xmdl014_02,xmdl015_02,xmdl016_02,xmdl052_02",TRUE)     #多倉儲批、庫位、儲位、批號、庫存管理特徵
+END FUNCTION
+
+PRIVATE FUNCTION axmp540_02_set_no_entry_b()
+DEFINE l_flag      LIKE type_t.chr1        #是否可分批出貨
+DEFINE l_xmdl013   LIKE xmdl_t.xmdl013
+DEFINE l_xmdl014   LIKE xmdl_t.xmdl014
+DEFINE l_xmdl015   LIKE xmdl_t.xmdl015
+DEFINE l_xmdl016   LIKE xmdl_t.xmdl016
+DEFINE l_xmdl052   LIKE xmdl_t.xmdl052
+DEFINE l_imaf015   LIKE imaf_t.imaf015
+DEFINE l_imaf061   LIKE imaf_t.imaf061
+DEFINE l_imaf113   LIKE imaf_t.imaf113
+DEFINE l_imaf055   LIKE imaf_t.imaf055
+#161006-00018#25-S
+DEFINE l_flag2     LIKE type_t.num5
+DEFINE l_ooac002   LIKE ooac_t.ooac002
+DEFINE l_ooac004   LIKE ooac_t.ooac004
+#161006-00018#25-E
+
+    LET l_flag = ''
+    LET l_xmdl013 = ''
+    LET l_xmdl014 = '' 
+    LET l_xmdl015 = '' 
+    LET l_xmdl016 = ''  
+    
+    #161006-00018#25-S
+    CALL s_aooi200_get_slip(g_xmdk_m.xmdkdocno) RETURNING l_flag2,l_ooac002
+    CALL cl_get_doc_para(g_enterprise,g_site,l_ooac002,'D-MFG-0085') RETURNING l_ooac004         
+    #161006-00018#25-E
+    IF g_xmdk2_d[l_ac].source_02 = '1'  THEN    #單據來源：訂單
+       CALL axmp540_01_get_xmdc_xmdh('1',g_xmdk2_d[l_ac].xmdl003_02,g_xmdk2_d[l_ac].xmdl004_02)
+         RETURNING l_flag,l_xmdl013,l_xmdl014,l_xmdl015,l_xmdl016,l_xmdl052
+       #不允許部分交貨，則不能修改數量  
+       IF l_flag = 'N' THEN                                         
+          CALL cl_set_comp_entry("xmdl018_02",FALSE)
+       END IF
+       #訂單已經有指定出貨的庫儲批時，則出貨單就不能再勾選多庫儲批出貨
+       IF l_xmdl013 = 'Y' THEN
+          CALL cl_set_comp_entry("xmdl014_02,xmdl015_02,xmdl016_02",FALSE)    
+       END IF 
+
+       #是否已有限定庫儲批   
+       #160803-00042 by whitney modify start
+       IF NOT cl_null(l_xmdl014) THEN
+          #CALL cl_set_comp_entry("xmdl013_02,xmdl014_02",FALSE)  #161006-00018#25 mark          
+          #161006-00018#25-S
+          CALL cl_set_comp_entry("xmdl013_02",FALSE)
+          IF l_ooac004 = 'N' THEN
+             CALL cl_set_comp_entry("xmdl014_02",FALSE) 
+          END IF
+          #161006-00018#25-E
+          IF NOT cl_null(l_xmdl015) THEN
+             IF l_ooac004 = 'N' THEN  #161006-00018#25
+                CALL cl_set_comp_entry("xmdl015_02",FALSE)
+             END IF                   #161006-00018#25
+             IF NOT cl_null(l_xmdl016) THEN
+                IF l_ooac004 = 'N' THEN  #161006-00018#25
+                   CALL cl_set_comp_entry("xmdl016_02",FALSE)
+                END IF                   #161006-00018#25     
+             END IF
+          END IF
+       END IF
+       #160803-00042 by whitney modify end
+       IF NOT cl_null(l_xmdl052) THEN
+          CALL cl_set_comp_entry("xmdl052_02",FALSE)
+       END IF
+    ELSE                                        #單據來源：出通單
+       CALL axmp540_01_get_xmdc_xmdh('2',g_xmdk2_d[l_ac].xmdl001_02,g_xmdk2_d[l_ac].xmdl002_02)
+         RETURNING l_flag,l_xmdl013,l_xmdl014,l_xmdl015,l_xmdl016,l_xmdl052
+       #出貨單控管為"一對一"，則不能修改數量  
+       IF l_flag = 'N' THEN                             
+           CALL cl_set_comp_entry("xmdl018_02",FALSE)
+       END IF      
+       #若使用多倉儲批，不能限定庫儲批       
+       IF l_xmdl013 = 'Y' THEN                         
+          CALL cl_set_comp_entry("xmdl014_02,xmdl015_02,xmdl016_02",FALSE)    
+       END IF 
+       #是否已有限定庫儲批   
+       #160803-00042 by whitney modify start
+       IF NOT cl_null(l_xmdl014) THEN
+          #CALL cl_set_comp_entry("xmdl013_02,xmdl014_02",FALSE)  #161006-00018#25 add
+          #161006-00018#25-S
+          CALL cl_set_comp_entry("xmdl013_02",FALSE)
+          IF l_ooac004 = 'N' THEN
+             CALL cl_set_comp_entry("xmdl014_02",FALSE)
+          END IF
+          #161006-00018#25-E
+          IF NOT cl_null(l_xmdl015) THEN
+             IF l_ooac004 = 'N' THEN   #161006-00018#25    
+                CALL cl_set_comp_entry("xmdl015_02",FALSE)
+             END IF                    #161006-00018#25
+             IF NOT cl_null(l_xmdl016) THEN
+                IF l_ooac004 = 'N' THEN   #161006-00018#25
+                   CALL cl_set_comp_entry("xmdl016_02",FALSE)
+                END IF                    #161006-00018#25   
+             END IF
+          END IF
+       END IF 
+       #160803-00042 by whitney modify end
+       IF NOT cl_null(l_xmdl052) THEN
+          CALL cl_set_comp_entry("xmdl052_02",FALSE)
+       END IF      
+    END IF
+
+    #若為多庫儲批出貨
+    IF g_xmdk2_d[l_ac].xmdl013_02 = 'Y' THEN
+       CALL cl_set_comp_entry("xmdl014_02,xmdl015_02,xmdl016_02,xmdl052_02",FALSE)
+    END IF
+    
+    CALL axmp540_01_get_imaf(g_xmdk2_d[l_ac].xmdl008_02)     
+      RETURNING l_imaf015,l_imaf061,l_imaf113,l_imaf055
+      
+    #[T:料件據點進銷存檔].[C:批號控管]=1或3時才可輸入
+    IF l_imaf061 NOT MATCHES '[13]' THEN
+       LET g_xmdk2_d[l_ac].xmdl016_02 = ' '
+       CALL cl_set_comp_entry("xmdl016_02",FALSE)
+    END IF      
+    #[T:料件據點進銷存檔]未設參考單位，參考數量不允許輸入
+    IF cl_null(l_imaf015) THEN
+       CALL cl_set_comp_entry("xmdl020_02",FALSE)
+    END IF
+    #[T:料件據點進銷存檔]未設計價單位，計價數量不允許輸入
+    IF cl_null(l_imaf113) THEN
+       CALL cl_set_comp_entry("xmdl022_02",FALSE)
+    END IF    
+
+    IF l_imaf055 = '2' THEN
+       CALL cl_set_comp_entry("xmdl052_02",FALSE)
+    END IF
+END FUNCTION
+
+PRIVATE FUNCTION axmp540_02_xmdl018_chk()
+  DEFINE r_success       LIKE type_t.num5
+  DEFINE l_xmdl018       LIKE xmdl_t.xmdl018   #待出貨數量
+  DEFINE l_ship          LIKE xmdl_t.xmdl018   #未出貨數量
+
+  WHENEVER ERROR CONTINUE
+  LET r_success = TRUE
+  
+  LET l_xmdl018 = 0     #待出貨數量
+  LET l_ship = 0        #未出貨數量
+  IF g_xmdk2_d[l_ac].source_02 = '2' THEN             #來源為出通單
+     CALL s_axmt540_get_max_ship_qty('1','','',g_xmdk2_d[l_ac].xmdl001_02,g_xmdk2_d[l_ac].xmdl002_02,'','')
+        RETURNING l_ship,l_xmdl018     
+  ELSE                                                                                            #來源為訂單
+     CALL s_axmt540_get_max_ship_qty('2','','',g_xmdk2_d[l_ac].xmdl003_02,g_xmdk2_d[l_ac].xmdl004_02,g_xmdk2_d[l_ac].xmdl005_02,g_xmdk2_d[l_ac].xmdl006_02)
+       RETURNING l_ship,l_xmdl018    
+  END IF
+  IF cl_null(l_xmdl018) THEN LET l_xmdl018 = 0 END IF
+  IF g_xmdk2_d[l_ac].xmdl018_02 > l_xmdl018 THEN
+     INITIALIZE g_errparam TO NULL
+     LET g_errparam.code = 'axm-00364'
+     LET g_errparam.extend = g_xmdk2_d[l_ac].xmdl018_02 USING '<<<<<<<<<<','>',l_xmdl018 USING '<<<<<<<<<<'
+     LET g_errparam.popup = TRUE
+     CALL cl_err()
+
+     LET r_success = FALSE  
+  END IF
+  
+  RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取得未稅金額、含稅金額、稅額
+# Memo...........: 
+# Usage..........: CALL axmp540_02_get_amount(p_linkno,p_xmdl022,p_xmdl024,p_xmdl025)
+# Input parameter:  p_linkno                       
+#                :  p_xmdl022    計價數量
+#                :  p_xmdl024    單價
+#                :  p_xmdl025    稅別
+# Return code....:  r_xmdl027    未稅金額 
+#                :  r_xmdl028    含稅金額
+#                :  r_xmdl029    稅額
+# Date & Author..: 2014/06/30 By Polly
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp540_02_get_amount(p_linkno,p_xmdl022,p_xmdl024,p_xmdl025)
+DEFINE p_linkno          LIKE type_t.num10      #暫時單號
+DEFINE p_xmdl022         LIKE xmdl_t.xmdl022
+DEFINE p_xmdl024         LIKE xmdl_t.xmdl024
+DEFINE p_xmdl025         LIKE xmdl_t.xmdl025
+DEFINE r_xmdl027         LIKE xmdl_t.xmdl027
+DEFINE r_xmdl028         LIKE xmdl_t.xmdl028
+DEFINE r_xmdl029         LIKE xmdl_t.xmdl029
+DEFINE l_money           LIKE xrcd_t.xrcd113
+DEFINE l_xmdk016         LIKE xmdk_t.xmdk016    #幣別
+DEFINE l_xmdk017         LIKE xmdk_t.xmdk017    #匯率
+DEFINE l_xrcd113         LIKE xrcd_t.xrcd113
+DEFINE l_xrcd114         LIKE xrcd_t.xrcd114
+DEFINE l_xrcd115         LIKE xrcd_t.xrcd115
+
+   LET r_xmdl027 = 0
+   LET r_xmdl028 = 0
+   LET r_xmdl029 = 0
+   
+   IF cl_null(p_linkno) OR cl_null(p_xmdl022) OR cl_null(p_xmdl024) OR cl_null(p_xmdl025) THEN
+      RETURN r_xmdl027,r_xmdl028,r_xmdl029
+   END IF   
+      
+   #抓取幣別、匯率
+   SELECT xmdk016,xmdk017 INTO l_xmdk016,l_xmdk017
+     FROM p540_tmp02           #160727-00019#23 Mod   p540_02_xmdk_temp --> p540_tmp02
+    WHERE linkno = p_linkno
+    
+   LET l_money = p_xmdl022 * p_xmdl024
+   
+   CALL s_tax_count(g_site,p_xmdl025,l_money,p_xmdl022,l_xmdk016,l_xmdk017)
+     RETURNING r_xmdl027,r_xmdl029,r_xmdl028,l_xrcd113,l_xrcd114,l_xrcd115
+
+   IF cl_null(r_xmdl027) THEN LET r_xmdl027 = 0 END IF
+   IF cl_null(r_xmdl028) THEN LET r_xmdl028 = 0 END IF
+   IF cl_null(r_xmdl029) THEN LET r_xmdl029 = 0 END IF  
+
+   RETURN r_xmdl027,r_xmdl028,r_xmdl029
+END FUNCTION
+
+PRIVATE FUNCTION axmp540_02_set_required_b()
+DEFINE l_imaf015   LIKE imaf_t.imaf015
+DEFINE l_imaf061   LIKE imaf_t.imaf061
+DEFINE l_imaf113   LIKE imaf_t.imaf113
+DEFINE l_imaf055   LIKE imaf_t.imaf055
+DEFINE l_inaa007   LIKE inaa_t.inaa007
+
+   IF l_ac <> 0 THEN #161006-00018
+      CALL axmp540_01_get_imaf(g_xmdk2_d[l_ac].xmdl008_02)     
+         RETURNING l_imaf015,l_imaf061,l_imaf113,l_imaf055
+      IF l_imaf055 = '1' THEN
+         CALL cl_set_comp_required("xmdl052_02",TRUE)
+      END IF
+   #161006-00018#25-S
+      SELECT inaa007 INTO l_inaa007 FROM inaa_t 
+       WHERE inaaent = g_enterprise
+         AND inaasite = g_site
+         AND inaa001 = g_xmdk2_d[l_ac].xmdl014_02
+      IF l_inaa007 <> '5' THEN
+         CALL cl_set_comp_required("xmdl015_02",TRUE) 
+      END IF      
+   END IF
+   #161006-00018#25-E
+END FUNCTION
+
+PRIVATE FUNCTION axmp540_02_set_no_required_b()
+   CALL cl_set_comp_required("xmdl052_02,xmdl015_02",FALSE)   #161006-00018#25 add xmdl015_02
+END FUNCTION
+
+PRIVATE FUNCTION axmp540_02_fetch_xmdm()
+DEFINE l_sql     STRING
+DEFINE l_ac_t    LIKE type_t.num10     #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+  
+   INITIALIZE g_xmdk3_d TO NULL
+   LET l_sql = "SELECT xmdmseq,xmdmseq1, ",
+               "       xmdm001,xmdm002,xmdm003,xmdm004,xmdm005, ",
+               "       xmdm006,xmdm007,xmdm008,xmdm009,xmdm010, ",
+               "       xmdm011,xmdm033 ",
+               #161205-00025#15-s-add
+               ",(SELECT imaal003 FROM imaal_t WHERE imaalent = ",g_enterprise," AND imaal001 = xmdm001 AND imaal002 = '",g_dlang,"'), ",
+               "(SELECT imaal004 FROM imaal_t WHERE imaalent = ",g_enterprise," AND imaal001 = xmdm001 AND imaal002 = '",g_dlang,"'), ",
+               "(SELECT inaml004 FROM inaml_t WHERE inamlent = ",g_enterprise," AND inaml001 = xmdm001 AND inaml002 = xmdm002 AND inaml003 = '",g_dlang,"'), ",
+               "(SELECT oocql004 FROM oocql_t WHERE oocqlent = ",g_enterprise," AND oocql001 = '221' AND oocql002 = xmdm003 AND oocql003 = '",g_dlang,"'), ",
+               "(SELECT oocal004 FROM oocal_t WHERE oocalent = ",g_enterprise," AND oocal001 = xmdm008 AND oocal002 = '",g_dlang,"'), ",
+               "(SELECT oocal004 FROM oocal_t WHERE oocalent = ",g_enterprise," AND oocal001 = xmdm010 AND oocal002 = '",g_dlang,"'), ",
+               "(SELECT inayl003 FROM inayl_t WHERE inaylent = ",g_enterprise," AND inayl001 = xmdm005 AND inayl002 = '",g_dlang,"'), ",
+               "(SELECT inab003 FROM inab_t WHERE inabent = ",g_enterprise," AND inabsite = '",g_site,"' AND inab001 = xmdm005 AND inab002 = xmdm006) ",
+               #161205-00025#15-e-add
+               "  FROM p540_tmp04 ",           #160727-00019#23 Mod   p540_02_xmdm_temp --> p540_tmp04
+               " WHERE linkno = '",g_xmdk_d[g_detail_02_idx].linkno,"'",
+               " ORDER BY xmdmseq,xmdmseq1 "
+   PREPARE axmp540_sel_xmdm_pr FROM l_sql
+   DECLARE axmp540_sel_xmdm_cs CURSOR FOR axmp540_sel_xmdm_pr
+   LET l_ac_t = l_ac
+   LET l_ac = 1
+    
+   CALL g_xmdk3_d.clear()
+   FOREACH axmp540_sel_xmdm_cs INTO g_xmdk3_d[l_ac].xmdmseq_03,g_xmdk3_d[l_ac].xmdmseq1_03,
+                                    g_xmdk3_d[l_ac].xmdm001_03,g_xmdk3_d[l_ac].xmdm002_03,g_xmdk3_d[l_ac].xmdm003_03,g_xmdk3_d[l_ac].xmdm004_03,g_xmdk3_d[l_ac].xmdm005_03,
+                                    g_xmdk3_d[l_ac].xmdm006_03,g_xmdk3_d[l_ac].xmdm007_03,g_xmdk3_d[l_ac].xmdm008_03,g_xmdk3_d[l_ac].xmdm009_03,g_xmdk3_d[l_ac].xmdm010_03,
+                                    g_xmdk3_d[l_ac].xmdm011_03,g_xmdk3_d[l_ac].xmdm033_03
+                                    #161205-00025#15-s-add
+                                    ,g_xmdk3_d[l_ac].xmdm001_03_desc,g_xmdk3_d[l_ac].imaal004_03,g_xmdk3_d[l_ac].xmdm002_03_desc,g_xmdk3_d[l_ac].xmdm003_03_desc,
+                                     g_xmdk3_d[l_ac].xmdm008_03_desc,g_xmdk3_d[l_ac].xmdm010_03_desc,g_xmdk3_d[l_ac].xmdm005_03_desc,g_xmdk3_d[l_ac].xmdm006_03_desc
+                                    #161205-00025#15-e-add
+#      CALL axmp540_02_detail_show("'3'")   #161205-00025#15 mark
+      
+      LET l_ac = l_ac + 1
+   END FOREACH
+   CALL g_xmdk3_d.deleteElement(l_ac)
+   LET l_ac = l_ac_t
+   LET g_detail3_02_cnt = l_ac - 1
+   CLOSE axmp540_sel_xmdm_cs
+   FREE axmp540_sel_xmdm_pr
+END FUNCTION
+
+################################################################################
+# Descriptions...: 完成時，檢查欄位是否都有輸入
+# Memo...........:
+# Usage..........: CALL axmp540_02_check_field()
+#                  RETURNING r_success
+# Input parameter: 
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 2014/10/24 By stellar
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmp540_02_check_field()
+DEFINE r_success        LIKE type_t.num5
+DEFINE l_xmdl_d         type_g_xmdk2_d
+DEFINE l_xmdm009        LIKE xmdm_t.xmdm009
+DEFINE l_n              LIKE type_t.num10  #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+
+   LET r_success = TRUE
+  #--160105-00012#1--add--(s) 
+   IF cl_null(l_ac) OR l_ac = 0 THEN
+      LET l_ac = 1
+   END IF
+  #--160105-00012#1--add--(e) 
+   #先更新目前筆的資料
+   UPDATE p540_tmp03            #160727-00019#23 Mod   p540_02_xmdl_temp --> p540_tmp03
+      SET xmdl018 = g_xmdk2_d[l_ac].xmdl018_02,
+          xmdl020 = g_xmdk2_d[l_ac].xmdl020_02,
+          xmdl022 = g_xmdk2_d[l_ac].xmdl022_02,
+          xmdl013 = g_xmdk2_d[l_ac].xmdl013_02,
+          xmdl014 = g_xmdk2_d[l_ac].xmdl014_02,
+          xmdl015 = g_xmdk2_d[l_ac].xmdl015_02,
+          xmdl052 = g_xmdk2_d[l_ac].xmdl052_02,  #161205-00030#1 add
+          xmdl016 = g_xmdk2_d[l_ac].xmdl016_02 
+    WHERE linkno =  g_xmdk2_d[l_ac].linkno_02
+      AND xmdlseq = g_xmdk2_d[l_ac].xmdlseq_02                  
+
+   CALL axmp540_03_xmdm_modify('1',g_xmdk2_d[l_ac].xmdlseq_02,g_site,g_xmdk2_d[l_ac].linkno_02,g_xmdk2_d[l_ac].xmdlseq_02,
+                               g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl009_02,g_xmdk2_d[l_ac].xmdl011_02,g_xmdk2_d[l_ac].xmdl012_02,
+                               g_xmdk2_d[l_ac].xmdl014_02,g_xmdk2_d[l_ac].xmdl015_02,g_xmdk2_d[l_ac].xmdl016_02,g_xmdk2_d[l_ac].xmdl052_02,
+                               g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl018_02,g_xmdk2_d[l_ac].xmdl019_02,g_xmdk2_d[l_ac].xmdl020_02,
+                               '','') RETURNING r_success
+   IF NOT r_success THEN
+      RETURN r_success
+   END IF
+   
+   CALL cl_err_collect_init()
+   
+   DECLARE axmp540_02_check_field_cs CURSOR FOR
+    SELECT linkno,xmdlseq,xmdl013,xmdl014,xmdl018,xmdl020,xmdl022,xmdl052     #161205-00030#1 mod 增加xmdl052
+      FROM p540_tmp03         #160727-00019#23 Mod   p540_02_xmdl_temp --> p540_tmp03
+     ORDER BY linkno,xmdlseq
+   
+   FOREACH axmp540_02_check_field_cs INTO l_xmdl_d.linkno_02,l_xmdl_d.xmdlseq_02,l_xmdl_d.xmdl013_02,l_xmdl_d.xmdl014_02,
+                                          l_xmdl_d.xmdl018_02,l_xmdl_d.xmdl020_02,l_xmdl_d.xmdl022_02,l_xmdl_d.xmdl052_02  #161205-00030#1 mod 增加xmdl052
+      #庫位
+      IF l_xmdl_d.xmdl013_02 = 'Y' THEN
+         LET l_n = 0
+         SELECT COUNT(*) INTO l_n 
+           FROM p540_tmp04         #160727-00019#23 Mod   p540_02_xmdm_temp --> p540_tmp04
+          WHERE linkno = l_xmdl_d.linkno_02
+            AND xmdmseq = l_xmdl_d.xmdlseq_02
+         IF cl_null(l_n) OR l_n <= 0 THEN
+            INITIALIZE g_errparam TO NULL
+#            LET g_errparam.code = 'axm-00493'     #160318-00005#48  mark
+            LET g_errparam.code = 'sub-01326'      #160318-00005#46  add
+            LET g_errparam.extend = l_xmdl_d.xmdlseq_02
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            
+            LET r_success = FALSE
+            CONTINUE FOREACH
+         END IF
+      ELSE
+         IF cl_null(l_xmdl_d.xmdl014_02) THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'sub-00126'
+            LET g_errparam.extend = l_xmdl_d.xmdlseq_02
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            
+            LET r_success = FALSE
+            CONTINUE FOREACH
+         END IF
+      END IF
+      
+      #數量
+      IF cl_null(l_xmdl_d.xmdl018_02) THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'axm-00200'
+         LET g_errparam.extend = l_xmdl_d.xmdlseq_02
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         
+         LET r_success = FALSE
+         CONTINUE FOREACH
+      ELSE
+         LET l_xmdm009 = 0
+         SELECT SUM(xmdm009) INTO l_xmdm009 
+           FROM p540_tmp04             #160727-00019#23 Mod   p540_02_xmdm_temp --> p540_tmp04
+          WHERE linkno = l_xmdl_d.linkno_02
+            AND xmdmseq = l_xmdl_d.xmdlseq_02
+         IF cl_null(l_xmdm009) THEN LET l_xmdm009 = 0 END IF
+         
+         IF l_xmdl_d.xmdl018_02 <> l_xmdm009 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'axm-00492'
+            LET g_errparam.extend = l_xmdl_d.xmdlseq_02
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            
+            LET r_success = FALSE
+            CONTINUE FOREACH
+         END IF
+      END IF
+      
+   END FOREACH
+   
+   CALL cl_err_collect_show()
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL axmp540_02_ins_xmdm(p_no,p_xmdkdocno)
+#                  
+# Input parameter: p_no           暫存檔之key
+#                : p_xmdkdocno    出貨單單號
+# Return code....: 
+# Date & Author..: 2014/10/24 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp540_02_ins_xmdm(p_no,p_xmdkdocno)
+   DEFINE p_no         LIKE type_t.num10
+   DEFINE p_xmdkdocno  LIKE xmdk_t.xmdkdocno
+   DEFINE l_sql        STRING
+   #mod--161109-00085#10-s
+   #DEFINE l_xmdm       RECORD LIKE xmdm_t.*   
+   DEFINE l_xmdm RECORD  #出貨/簽收/銷退單多庫儲批出貨明細檔
+          xmdment LIKE xmdm_t.xmdment, #企業編號
+          xmdmsite LIKE xmdm_t.xmdmsite, #營運據點
+          xmdmdocno LIKE xmdm_t.xmdmdocno, #出貨單號
+          xmdmseq LIKE xmdm_t.xmdmseq, #項次
+          xmdmseq1 LIKE xmdm_t.xmdmseq1, #項序
+          xmdm001 LIKE xmdm_t.xmdm001, #料件編號
+          xmdm002 LIKE xmdm_t.xmdm002, #產品特徵
+          xmdm003 LIKE xmdm_t.xmdm003, #作業編號
+          xmdm004 LIKE xmdm_t.xmdm004, #作業序
+          xmdm005 LIKE xmdm_t.xmdm005, #限定庫位
+          xmdm006 LIKE xmdm_t.xmdm006, #限定儲位
+          xmdm007 LIKE xmdm_t.xmdm007, #限定批號
+          xmdm008 LIKE xmdm_t.xmdm008, #單位
+          xmdm009 LIKE xmdm_t.xmdm009, #出貨數量
+          xmdm010 LIKE xmdm_t.xmdm010, #參考單位
+          xmdm011 LIKE xmdm_t.xmdm011, #參考數量
+          xmdm012 LIKE xmdm_t.xmdm012, #已簽收數量
+          xmdm013 LIKE xmdm_t.xmdm013, #已簽退數量
+          xmdm014 LIKE xmdm_t.xmdm014, #已銷退數量
+          xmdm031 LIKE xmdm_t.xmdm031, #簽退數量
+          xmdm032 LIKE xmdm_t.xmdm032, #簽退參考數量
+          xmdm033 LIKE xmdm_t.xmdm033, #庫存管理特徵
+          xmdm034 LIKE xmdm_t.xmdm034, #備置量
+          xmdm035 LIKE xmdm_t.xmdm035  #在揀量
+   END RECORD
+   #mod--161109-00085#10-e
+   DEFINE l_success    LIKE type_t.num5      #160105-00012#1 add
+   DEFINE l_xmdl001    LIKE xmdl_t.xmdl001,  #20150914--xianghui
+          l_xmdl002    LIKE xmdl_t.xmdl002,  #20150914--xianghui
+          l_cnt        LIKE type_t.num20_6   #20150914--xianghui
+          
+          
+   IF cl_null(p_no) OR cl_null(p_xmdkdocno) THEN
+      RETURN 
+   END IF
+
+   LET l_sql = " SELECT xmdmseq,xmdmseq1, ",
+               "        xmdm001,xmdm002,xmdm003,xmdm004,xmdm005, ",
+               "        xmdm006,xmdm007,xmdm008,xmdm009,xmdm010, ",
+               "        xmdm011,xmdm012,xmdm013,xmdm014, ",
+               "        xmdm031,xmdm032,xmdm033 ",
+               "   FROM p540_tmp04 ",          #160727-00019#23 Mod   p540_02_xmdm_temp --> p540_tmp04
+               "  WHERE linkno = ",p_no,
+               "  ORDER BY xmdmseq,xmdmseq1 "          
+   PREPARE p540_02_xmdm_pr FROM l_sql
+   DECLARE p540_02_xmdm_cs CURSOR FOR p540_02_xmdm_pr
+   
+   FOREACH p540_02_xmdm_cs INTO l_xmdm.xmdmseq,l_xmdm.xmdmseq1,
+                                l_xmdm.xmdm001,l_xmdm.xmdm002,l_xmdm.xmdm003,l_xmdm.xmdm004,l_xmdm.xmdm005,
+                                l_xmdm.xmdm006,l_xmdm.xmdm007,l_xmdm.xmdm008,l_xmdm.xmdm009,l_xmdm.xmdm010,
+                                l_xmdm.xmdm011,l_xmdm.xmdm012,l_xmdm.xmdm013,l_xmdm.xmdm014,
+                                l_xmdm.xmdm031,l_xmdm.xmdm032,l_xmdm.xmdm033
+      LET l_xmdm.xmdment = g_enterprise
+      LET l_xmdm.xmdmsite = g_site
+      LET l_xmdm.xmdmdocno = p_xmdkdocno
+
+      INSERT INTO xmdm_t(xmdment,xmdmsite,xmdmdocno,xmdmseq,xmdmseq1,
+                         xmdm001,xmdm002,xmdm003,xmdm004,xmdm005,
+                         xmdm006,xmdm007,xmdm008,xmdm009,xmdm010,
+                         xmdm011,xmdm012,xmdm013,xmdm014,
+                         xmdm031,xmdm032,xmdm033)
+         VALUES(l_xmdm.xmdment,l_xmdm.xmdmsite,l_xmdm.xmdmdocno,l_xmdm.xmdmseq,l_xmdm.xmdmseq1,
+                l_xmdm.xmdm001,l_xmdm.xmdm002,l_xmdm.xmdm003,l_xmdm.xmdm004,l_xmdm.xmdm005,
+                l_xmdm.xmdm006,l_xmdm.xmdm007,l_xmdm.xmdm008,l_xmdm.xmdm009,l_xmdm.xmdm010,
+                l_xmdm.xmdm011,l_xmdm.xmdm012,l_xmdm.xmdm013,l_xmdm.xmdm014,
+                l_xmdm.xmdm031,l_xmdm.xmdm032,l_xmdm.xmdm033) 
+      IF SQLCA.sqlcode THEN
+         LET g_result_str = g_result_str,",INSERT INTO xmdl_t",cl_getmsg(SQLCA.sqlcode,g_lang)
+         LET g_success = 'N'         
+         EXIT FOREACH
+      END IF   
+      #20150914--xianghui--add--b
+      IF g_success = 'Y' THEN
+         LET l_success = TRUE  #160126-00034 by whitney add
+         SELECT xmdl001,xmdl002 INTO l_xmdl001,l_xmdl002
+           FROM xmdl_t
+          WHERE xmdlent = l_xmdm.xmdment
+            AND xmdldocno = l_xmdm.xmdmdocno
+            AND xmdlseq = l_xmdm.xmdmseq       
+         IF cl_get_para(g_enterprise,g_site,'S-BAS-0048') = 'Y' AND NOT cl_null(l_xmdl001) AND NOT cl_null(l_xmdl002) THEN 
+            CALL s_lot_auto_sel('2',l_xmdm.xmdmdocno,l_xmdm.xmdmseq,l_xmdm.xmdmseq1,l_xmdm.xmdm009,
+                                '-1','axmt540',l_xmdl001,l_xmdl002)
+             #RETURNING g_success  #160105-00012#1  mark
+              RETURNING l_success  #160105-00012#1  add            
+         ELSE             
+            IF NOT cl_null(l_xmdm.xmdm005) THEN 
+               IF cl_null(l_xmdm.xmdm006) THEN LET l_xmdm.xmdm006 = ' ' END IF
+               IF cl_null(l_xmdm.xmdm007) THEN LET l_xmdm.xmdm007 = ' ' END IF
+               SELECT COUNT(*) INTO l_cnt 
+                 FROM inai_t
+                WHERE inaient = l_xmdm.xmdment
+                  AND inaisite = l_xmdm.xmdmsite
+                  AND inai001 = l_xmdm.xmdm001
+                  AND inai002 = l_xmdm.xmdm002
+                  AND inai003 = l_xmdm.xmdm033  
+                  AND inai004 = l_xmdm.xmdm005
+                  AND inai005 = l_xmdm.xmdm006
+                  AND inai006 = l_xmdm.xmdm007
+               IF l_cnt > 0 THEN 
+                  CALL s_lot_auto_sel('1',l_xmdm.xmdmdocno,l_xmdm.xmdmseq,l_xmdm.xmdmseq1,l_xmdm.xmdm009,
+                                      '-1','axmt540','','')
+                      #RETURNING g_success  #160105-00012#1  mark
+                       RETURNING l_success  #160105-00012#1  add
+               END IF
+            END IF        
+         END IF    
+        #--160105-00012#1--add--(s) 
+         IF NOT l_success THEN 
+            LET g_success = 'N'
+         END IF
+        #--160105-00012#1--add--(e) 
+      END IF
+      #20150914--xianghui--add--e       
+   END FOREACH
+END FUNCTION
+
+################################################################################
+# Descriptions...: 自動帶所有此次產生的出貨單資料
+# Memo...........:
+# Usage..........: CALL axmp540_02_open_axmt540()
+#                  
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 20150115 By Polly
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmp540_02_open_axmt540()
+   DEFINE la_param  RECORD
+                       prog   STRING,
+                       param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE i         LIKE type_t.num10  #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+   DEFINE ls_js     STRING
+   DEFINE l_str     STRING
+   
+   LET l_str = ''
+
+   FOR i = 1 TO g_xmdk_d.getLength()
+       IF cl_null(l_str) THEN
+          LET l_str = g_xmdk_d[i].docno,"','"
+       ELSE
+          LET l_str = l_str,g_xmdk_d[i].docno,"','"
+       END IF
+   END FOR
+
+   LET l_str = l_str.subString(1,l_str.getLength()-3)
+
+   IF NOT cl_null(l_str) THEN
+      LET la_param.prog = 'axmt540'
+      LET la_param.param[1] = l_str
+      LET ls_js = util.JSON.stringify( la_param )
+      CALL cl_cmdrun(ls_js)
+   END IF
+
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 出通單多庫儲批寫入xmdm
+# Memo...........:
+# Usage..........: CALL axmp540_02_xmdi_ins_xmdm(p_linkdocno,p_linkseq,p_xmdidocno,p_xmdiseq)
+#                  RETURNING r_success
+# Input parameter: p_linkdocno    暫存檔之key 單號
+#                : p_linkseq      暫存檔之key 項次
+#                : p_xmdidocno    出通單單號
+#                : p_xmdiseq      項次
+# Return code....: r_success      TRUE/FALSE
+# Date & Author..: 160105-00012#1 160106 By Polly
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp540_02_xmdi_ins_xmdm(p_linkdocno,p_linkseq,p_xmdidocno,p_xmdiseq)
+DEFINE  p_linkdocno   LIKE xmdm_t.xmdmdocno
+DEFINE  p_linkseq     LIKE xmdm_t.xmdmseq
+DEFINE  p_xmdidocno   LIKE xmdi_t.xmdidocno
+DEFINE  p_xmdiseq     LIKE xmdi_t.xmdiseq
+#mod--161109-00085#10-s
+#DEFINE  l_xmdi        RECORD LIKE xmdi_t.*
+DEFINE l_xmdi RECORD  #出通單多庫儲批出貨明細檔
+       xmdient LIKE xmdi_t.xmdient, #企業編號
+       xmdisite LIKE xmdi_t.xmdisite, #營運據點
+       xmdidocno LIKE xmdi_t.xmdidocno, #出通單號
+       xmdiseq LIKE xmdi_t.xmdiseq, #項次
+       xmdiseq1 LIKE xmdi_t.xmdiseq1, #項序
+       xmdi001 LIKE xmdi_t.xmdi001, #料件編號
+       xmdi002 LIKE xmdi_t.xmdi002, #產品特徵
+       xmdi003 LIKE xmdi_t.xmdi003, #作業編號
+       xmdi004 LIKE xmdi_t.xmdi004, #製程式
+       xmdi005 LIKE xmdi_t.xmdi005, #限定庫位
+       xmdi006 LIKE xmdi_t.xmdi006, #限定儲位
+       xmdi007 LIKE xmdi_t.xmdi007, #限定批號
+       xmdi008 LIKE xmdi_t.xmdi008, #單位
+       xmdi009 LIKE xmdi_t.xmdi009, #出貨數量
+       xmdi010 LIKE xmdi_t.xmdi010, #參考單位
+       xmdi011 LIKE xmdi_t.xmdi011, #參考數量
+       xmdi012 LIKE xmdi_t.xmdi012, #已轉出貨量
+       xmdi013 LIKE xmdi_t.xmdi013 #庫存管理特徵
+END RECORD
+#mod--161109-00085#10-e
+DEFINE  l_sql         STRING
+DEFINE  r_success     LIKE type_t.num5
+
+
+   LET r_success = TRUE
+    
+   LET l_sql = "SELECT xmdiseq1, ",
+               "       xmdi001,xmdi002,xmdi003,xmdi004,xmdi005, ",
+               "       xmdi006,xmdi007,xmdi008,xmdi009,xmdi010, ",
+               "       xmdi011,xmdi013 ",
+               "  FROM xmdi_t ",
+               " WHERE xmdient = ",g_enterprise,
+               "   AND xmdidocno = '",p_xmdidocno,"' ",
+               "   AND xmdiseq = '",p_xmdiseq,"' ",
+               " ORDER BY xmdiseq1 "                           
+               
+   PREPARE p540_02_xmdi_pr FROM l_sql
+   DECLARE p540_02_xmdi_cs CURSOR FOR p540_02_xmdi_pr    
+    
+   FOREACH p540_02_xmdi_cs INTO l_xmdi.xmdiseq1, 
+                                l_xmdi.xmdi001,l_xmdi.xmdi002,l_xmdi.xmdi003,l_xmdi.xmdi004,l_xmdi.xmdi005, 
+                                l_xmdi.xmdi006,l_xmdi.xmdi007,l_xmdi.xmdi008,l_xmdi.xmdi009,l_xmdi.xmdi010, 
+                                l_xmdi.xmdi011,l_xmdi.xmdi013 
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "p540_02_xmdi_cs"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET r_success = FALSE
+            RETURN r_success
+         END IF 
+         INSERT INTO p540_tmp04( linkno,xmdmseq,xmdmseq1,           #160727-00019#23 Mod   p540_02_xmdm_temp --> p540_tmp04
+                                       xmdm001,xmdm002,xmdm003,xmdm004,xmdm005,
+                                       xmdm006,xmdm007,xmdm008,xmdm009,xmdm010,
+                                       xmdm011,xmdm033)                      
+                VALUES(p_linkdocno,p_linkseq,l_xmdi.xmdiseq1,     
+                       l_xmdi.xmdi001,l_xmdi.xmdi002,l_xmdi.xmdi003,l_xmdi.xmdi004,l_xmdi.xmdi005, 
+                       l_xmdi.xmdi006,l_xmdi.xmdi007,l_xmdi.xmdi008,l_xmdi.xmdi009,l_xmdi.xmdi010, 
+                       l_xmdi.xmdi011,l_xmdi.xmdi013)
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "INTO p540_tmp04"               #160727-00019#23 Mod   p540_02_xmdm_temp --> p540_tmp04
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET r_success = FALSE
+            RETURN r_success
+         END IF                       
+   END FOREACH                             
+    
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL axmp540_02_b()
+# Date & Author..: 20160226 BY s983961
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmp540_02_b()
+DEFINE l_success   LIKE type_t.num5
+DEFINE l_rollback  LIKE type_t.num5
+DEFINE l_xmdl014   LIKE xmdl_t.xmdl014
+DEFINE l_xmdl015   LIKE xmdl_t.xmdl015
+DEFINE l_xmdl016   LIKE xmdl_t.xmdl016
+DEFINE l_xmdl052   LIKE xmdl_t.xmdl052
+DEFINE l_docno     LIKE xmdl_t.xmdldocno
+DEFINE l_seq       LIKE xmdl_t.xmdlseq
+DEFINE l_del_xmdm  LIKE type_t.num5  #151118-00029 20160310 s983961--ADD
+
+WHENEVER ERROR CONTINUE 
+
+   DIALOG ATTRIBUTES(UNBUFFERED)
+   
+   INPUT ARRAY g_xmdk2_d FROM s_detail2_axmp540_02.*
+         ATTRIBUTE(COUNT = g_detail2_02_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                   INSERT ROW = FALSE,
+                   DELETE ROW = FALSE,
+                   APPEND ROW = FALSE)
+         BEFORE INPUT
+
+         BEFORE ROW
+           LET l_ac = ARR_CURR()
+           LET g_xmdk2_d_t.* = g_xmdk2_d[l_ac].*
+           LET g_xmdk2_d_o.* = g_xmdk2_d[l_ac].*
+           IF g_xmdk2_d[l_ac].source_02  = '1' THEN     #訂單
+              LET l_docno = ''
+              LET l_seq = ''
+           ELSE
+              LET l_docno = g_xmdk2_d[l_ac].xmdl001_02
+              LET l_seq = g_xmdk2_d[l_ac].xmdl002_02
+           END IF
+           CALL axmp540_02_set_entry_b()
+           ##161006-00018#23-S 
+           CALL axmp540_02_set_no_required_b()
+           CALL axmp540_02_set_required_b()
+           ##161006-00018#23-E             
+           CALL axmp540_02_set_no_entry_b()
+
+         AFTER FIELD xmdl018_02
+           IF NOT cl_ap_chk_Range(g_xmdk2_d[l_ac].xmdl018_02,"0","0","","","azz-00079",1) THEN
+              NEXT FIELD xmdl018_02
+           END IF         
+           IF g_xmdk2_d[l_ac].xmdl018_02 != g_xmdk2_d_t.xmdl018_02 OR g_xmdk2_d_t.xmdl018_02 IS NULL THEN
+              IF NOT axmp540_02_xmdl018_chk() THEN
+                 LET g_xmdk2_d[l_ac].xmdl018_02 = g_xmdk2_d_t.xmdl018_02
+                 DISPLAY BY NAME g_xmdk2_d[l_ac].xmdl018_02
+                 NEXT FIELD CURRENT
+              END IF
+              #對出貨數量進行取位
+              IF NOT cl_null(g_xmdk2_d[l_ac].xmdl017_02) THEN   #161208-00028#1
+                 CALL s_aooi250_take_decimals(g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl018_02)
+                    RETURNING l_success,g_xmdk2_d[l_ac].xmdl018_02 
+              END IF    #161208-00028#1             
+              #若料號有設置使用參考單位時且出貨單位與參考單位有設置換算率時，則應自動推算參考數量
+              IF NOT cl_null(g_xmdk2_d[l_ac].xmdl019_02) THEN
+                 CALL s_aooi250_convert_qty(g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl019_02,g_xmdk2_d[l_ac].xmdl018_02)
+                   RETURNING l_success,g_xmdk2_d[l_ac].xmdl020_02
+                 #對參考數量進行取位
+                 CALL s_aooi250_take_decimals(g_xmdk2_d[l_ac].xmdl019_02,g_xmdk2_d[l_ac].xmdl020_02)
+                   RETURNING l_success,g_xmdk2_d[l_ac].xmdl020_02                 
+              END IF
+              #若料號有使用銷售計價單位時，則輸入[C:出貨數量]時則應自動推算計價數量
+              IF NOT cl_null(g_xmdk2_d[l_ac].xmdl021_02) THEN
+                 CALL s_aooi250_convert_qty(g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl021_02,g_xmdk2_d[l_ac].xmdl018_02)
+                   RETURNING l_success,g_xmdk2_d[l_ac].xmdl022_02
+                 #對計價數量進行取位
+                 CALL s_aooi250_take_decimals(g_xmdk2_d[l_ac].xmdl021_02,g_xmdk2_d[l_ac].xmdl022_02)
+                   RETURNING l_success,g_xmdk2_d[l_ac].xmdl022_02                                      
+                 #重新計算[C:未稅金額]、[C:含稅金額]、[稅額] 
+                 CALL axmp540_02_get_amount(g_xmdk2_d[l_ac].linkno_02,g_xmdk2_d[l_ac].xmdl022_02,g_xmdk4_d[l_ac].xmdl024_04,g_xmdk4_d[l_ac].xmdl025_04)
+                   RETURNING g_xmdk4_d[l_ac].xmdl027_04,g_xmdk4_d[l_ac].xmdl028_04,g_xmdk4_d[l_ac].xmdl029_04
+              END IF  
+             
+           END IF
+           LET g_xmdk2_d_t.xmdl018_02 = g_xmdk2_d[l_ac].xmdl018_02
+          
+        AFTER FIELD xmdl020_02
+           #160901-00036#1--s
+           IF cl_null(g_xmdk2_d[l_ac].xmdl020_02) THEN
+              LET g_xmdk2_d[l_ac].xmdl020_02 = 0
+           END IF           
+           #160901-00036#1--e
+           IF NOT cl_ap_chk_Range(g_xmdk2_d[l_ac].xmdl020_02,"0.000","0","","","azz-00079",1) THEN
+              NEXT FIELD xmdl020_02
+           END IF
+           IF NOT cl_null(g_xmdk2_d[l_ac].xmdl019_02) THEN #161208-00028#1
+              #對參考數量進行取位
+              CALL s_aooi250_take_decimals(g_xmdk2_d[l_ac].xmdl019_02,g_xmdk2_d[l_ac].xmdl020_02)
+                RETURNING l_success,g_xmdk2_d[l_ac].xmdl020_02 
+           END IF   #161208-00028#1
+           
+        AFTER FIELD xmdl022_02
+           IF NOT cl_ap_chk_Range(g_xmdk2_d[l_ac].xmdl022_02,"0.000","0","","","azz-00079",1) THEN
+             #NEXT FIELD xmdl020_02 #160524-00032#1 mark
+              NEXT FIELD xmdl022_02 #160524-00032#1 add 
+           END IF
+           IF g_xmdk2_d[l_ac].xmdl022_02 != g_xmdk2_d_t.xmdl022_02 OR g_xmdk2_d_t.xmdl022_02 IS NULL THEN
+              #對計價數量進行取位
+              IF NOT cl_null(g_xmdk2_d[l_ac].xmdl021_02) THEN   #161208-00028#1
+                 CALL s_aooi250_take_decimals(g_xmdk2_d[l_ac].xmdl021_02,g_xmdk2_d[l_ac].xmdl022_02)
+                   RETURNING l_success,g_xmdk2_d[l_ac].xmdl022_02 
+              END IF     #161208-00028#1
+              #重新計算[C:未稅金額]、[C:含稅金額]、[稅額] 
+              CALL axmp540_02_get_amount(g_xmdk2_d[l_ac].linkno_02,g_xmdk2_d[l_ac].xmdl022_02,g_xmdk4_d[l_ac].xmdl024_04,g_xmdk4_d[l_ac].xmdl025_04)                
+                RETURNING g_xmdk4_d[l_ac].xmdl027_04,g_xmdk4_d[l_ac].xmdl028_04,g_xmdk4_d[l_ac].xmdl029_04
+           END IF
+           
+        ON CHANGE xmdl013_02
+           IF g_xmdk2_d[l_ac].xmdl013_02 = 'Y' THEN
+              CALL axmp540_03('1',g_site,'',g_xmdk2_d[l_ac].linkno_02,g_xmdk_m.xmdkdocno,
+                              g_xmdk2_d[l_ac].xmdlseq_02,g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl009_02,
+                              g_xmdk2_d[l_ac].xmdl011_02,g_xmdk2_d[l_ac].xmdl012_02,
+                              g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl018_02,'',
+                              g_xmdk2_d[l_ac].xmdl019_02,g_xmdk2_d[l_ac].xmdl020_02,'',
+                              g_xmdk2_d[l_ac].xmdl001_02,g_xmdk2_d[l_ac].xmdl002_02,
+                              g_xmdk2_d[l_ac].xmdl003_02,g_xmdk2_d[l_ac].xmdl004_02)
+                   RETURNING l_success,l_rollback,l_xmdl014,l_xmdl015,l_xmdl016,l_xmdl052
+              IF l_rollback THEN   #多庫儲批資料錯誤必須rollback
+                 EXIT DIALOG
+              END IF
+              
+              IF l_success THEN
+                 IF NOT cl_null(l_xmdl014) THEN
+                    LET g_xmdk2_d[l_ac].xmdl013_02 = 'N'
+                    LET g_xmdk2_d[l_ac].xmdl014_02 = l_xmdl014
+                    LET g_xmdk2_d[l_ac].xmdl015_02 = l_xmdl015
+                    LET g_xmdk2_d[l_ac].xmdl016_02 = l_xmdl016
+                    LET g_xmdk2_d[l_ac].xmdl052_02 = l_xmdl052
+                 ELSE
+                    LET g_xmdk2_d[l_ac].xmdl013_02 = 'Y'
+                    LET g_xmdk2_d[l_ac].xmdl014_02 = ' '
+                    LET g_xmdk2_d[l_ac].xmdl015_02 = ' '
+                    LET g_xmdk2_d[l_ac].xmdl016_02 = ' '
+                    LET g_xmdk2_d[l_ac].xmdl052_02 = ' '
+                 END IF
+                 
+                 CALL s_desc_get_stock_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02) 
+                   RETURNING g_xmdk2_d[l_ac].xmdl014_02_desc
+                 CALL s_desc_get_locator_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02,g_xmdk2_d[l_ac].xmdl015_02)
+                   RETURNING g_xmdk2_d[l_ac].xmdl015_02_desc
+
+               ELSE
+                  LET g_xmdk2_d[l_ac].xmdl013_02 = g_xmdk2_d_o.xmdl013_02
+
+                  NEXT FIELD CURRENT
+               END IF
+
+            ELSE
+               CALL axmp540_02_xmdm_delete('1',g_xmdk2_d[l_ac].linkno_02,g_xmdk2_d[l_ac].xmdlseq_02,'Y') RETURNING l_success,l_del_xmdm  #151118-00029#5 20160310 s983961--ADD
+               #IF NOT axmp540_03_xmdm_delete('1',g_xmdk2_d[l_ac].linkno_02,g_xmdk2_d[l_ac].xmdlseq_02,'Y') THEN  #151118-00029#5 20160310 s983961--MARK
+               IF NOT l_success THEN 
+                  LET g_xmdk2_d[l_ac].xmdl013_02 = g_xmdk2_d_o.xmdl013_02
+                  NEXT FIELD CURRENT
+               END IF
+
+            END IF
+            CALL axmp540_02_fetch_xmdm()
+            LET g_xmdk2_d_o.xmdl013_02 = g_xmdk2_d[l_ac].xmdl013_02
+            CALL axmp540_02_set_entry_b()
+           ##161006-00018#23-S 
+            CALL axmp540_02_set_no_required_b()
+            CALL axmp540_02_set_required_b()
+           ##161006-00018#23-E              
+            CALL axmp540_02_set_no_entry_b()
+
+        AFTER FIELD xmdl014_02
+           CALL s_desc_get_stock_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02) RETURNING g_xmdk2_d[l_ac].xmdl014_02_desc
+           IF NOT cl_null(g_xmdk2_d[l_ac].xmdl014_02) THEN
+              IF g_xmdk2_d[l_ac].xmdl014_02 != g_xmdk2_d_t.xmdl014_02 OR g_xmdk2_d_t.xmdl014_02 IS NULL THEN
+                 #庫位check
+                 IF NOT s_axmt540_xmdl014_chk(g_xmdk2_d[l_ac].xmdl013_02,l_docno,l_seq,g_xmdk2_d[l_ac].xmdl014_02,g_xmdk_m.xmdkdocno) THEN
+                    LET g_xmdk2_d[l_ac].xmdl014_02 = g_xmdk2_d_t.xmdl014_02
+                    CALL s_desc_get_stock_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02) RETURNING g_xmdk2_d[l_ac].xmdl014_02_desc
+                    NEXT FIELD CURRENT
+                 END IF
+                 #在揀量check
+                 #160408-00035#9-add-g_xmdk2_d[l_ac].xmdl003_02,g_xmdk2_d[l_ac].xmdl004_02
+                 IF NOT axmp540_01_inan_chk(g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl009_02,g_xmdk2_d[l_ac].xmdl014_02,
+                                            g_xmdk2_d[l_ac].xmdl015_02,g_xmdk2_d[l_ac].xmdl016_02,g_xmdk2_d[l_ac].xmdl052_02,
+                                            g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl018_02,g_xmdk2_d[l_ac].xmdl003_02,
+                                            g_xmdk2_d[l_ac].xmdl004_02) THEN
+                    LET g_xmdk2_d[l_ac].xmdl014_02 = g_xmdk2_d_t.xmdl014_02
+                    CALL s_desc_get_stock_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02) RETURNING g_xmdk2_d[l_ac].xmdl014_02_desc
+                    NEXT FIELD CURRENT
+                 END IF                 
+              END IF
+           END IF
+           LET g_xmdk2_d_t.xmdl014_02 = g_xmdk2_d[l_ac].xmdl014_02
+        
+        AFTER FIELD xmdl015_02
+           CALL s_desc_get_locator_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02,g_xmdk2_d[l_ac].xmdl015_02) 
+             RETURNING g_xmdk2_d[l_ac].xmdl015_02_desc
+           IF NOT cl_null(g_xmdk2_d[l_ac].xmdl015_02) THEN
+              IF g_xmdk2_d[l_ac].xmdl015_02 != g_xmdk2_d_t.xmdl015_02 OR g_xmdk2_d_t.xmdl015_02 IS NULL THEN
+                 #儲位檢查
+                 IF NOT s_axmt540_xmdl015_chk(g_xmdk2_d[l_ac].xmdl013_02,l_docno,l_seq,g_xmdk2_d[l_ac].xmdl014_02,g_xmdk2_d[l_ac].xmdl015_02) THEN
+                    LET g_xmdk2_d[l_ac].xmdl015_02 = g_xmdk2_d_t.xmdl015_02
+                    CALL s_desc_get_locator_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02,g_xmdk2_d[l_ac].xmdl015_02) 
+                      RETURNING g_xmdk2_d[l_ac].xmdl015_02_desc
+                    NEXT FIELD CURRENT
+                 END IF
+                 #在揀量檢查
+                 #160408-00035#9-add-g_xmdk2_d[l_ac].xmdl003_02,g_xmdk2_d[l_ac].xmdl004_02
+                 IF NOT axmp540_01_inan_chk(g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl009_02,g_xmdk2_d[l_ac].xmdl014_02,
+                                            g_xmdk2_d[l_ac].xmdl015_02,g_xmdk2_d[l_ac].xmdl016_02,g_xmdk2_d[l_ac].xmdl052_02,
+                                            g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl018_02,g_xmdk2_d[l_ac].xmdl003_02,
+                                            g_xmdk2_d[l_ac].xmdl004_02) THEN
+                    LET g_xmdk2_d[l_ac].xmdl015_02 = g_xmdk2_d_t.xmdl015_02
+                    CALL s_desc_get_locator_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02,g_xmdk2_d[l_ac].xmdl015_02) 
+                      RETURNING g_xmdk2_d[l_ac].xmdl015_02_desc
+                    NEXT FIELD CURRENT
+                 END IF                  
+              END IF
+           END IF            
+           LET g_xmdk2_d_t.xmdl015_02 = g_xmdk2_d[l_ac].xmdl015_02
+        
+        AFTER FIELD xmdl016_02
+           IF NOT cl_null(g_xmdk2_d[l_ac].xmdl016_02) THEN
+              #批號檢查
+              IF g_xmdk2_d[l_ac].xmdl016_02 != g_xmdk2_d_t.xmdl016_02 OR g_xmdk2_d_t.xmdl016_02 IS NULL THEN 
+                 IF NOT s_axmt540_xmdl016_chk(g_xmdk2_d[l_ac].xmdl013_02,l_docno,l_seq,g_xmdk2_d[l_ac].xmdl014_02,
+                                             #g_xmdk2_d[l_ac].xmdl015_02,g_xmdk2_d[l_ac].xmdl016_02) THEN    #161013-00032#1 mark
+                                              g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl009_02) THEN    #161013-00032#1 add
+                    LET g_xmdk2_d[l_ac].xmdl016_02 = g_xmdk2_d_t.xmdl016_02
+                    NEXT FIELD CURRENT                                              
+                 END IF
+                 #在揀量檢查
+                 #160408-00035#9-add-g_xmdk2_d[l_ac].xmdl003_02,g_xmdk2_d[l_ac].xmdl004_02
+                 IF NOT axmp540_01_inan_chk(g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl009_02,g_xmdk2_d[l_ac].xmdl014_02,
+                                            g_xmdk2_d[l_ac].xmdl015_02,g_xmdk2_d[l_ac].xmdl016_02,g_xmdk2_d[l_ac].xmdl052_02,
+                                            g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl018_02,g_xmdk2_d[l_ac].xmdl003_02,
+                                            g_xmdk2_d[l_ac].xmdl004_02) THEN
+                    LET g_xmdk2_d[l_ac].xmdl016_02 = g_xmdk2_d_t.xmdl016_02
+                    NEXT FIELD CURRENT  
+                 END IF                 
+              END IF
+           END IF
+           LET g_xmdk2_d_t.xmdl016_02 = g_xmdk2_d[l_ac].xmdl016_02
+           
+        AFTER FIELD xmdl052_02
+           IF NOT cl_null(g_xmdk2_d[l_ac].xmdl052_02) THEN
+              IF g_xmdk2_d[l_ac].xmdl052_02 != g_xmdk2_d_t.xmdl052_02 OR g_xmdk2_d_t.xmdl052_02 IS NULL THEN 
+                 IF NOT s_axmt540_xmdl052_chk(g_xmdk2_d[l_ac].xmdl013_02,l_docno,l_seq,g_xmdk2_d[l_ac].xmdl052_02) THEN                                                
+                    LET g_xmdk2_d[l_ac].xmdl052_02 = g_xmdk2_d_t.xmdl052_02
+                    NEXT FIELD CURRENT                                              
+                 END IF
+                 #在揀量檢查
+                 #160408-00035#9-add-g_xmdk2_d[l_ac].xmdl003_02,g_xmdk2_d[l_ac].xmdl004_02
+                 IF NOT axmp540_01_inan_chk(g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl009_02,g_xmdk2_d[l_ac].xmdl014_02,
+                                            g_xmdk2_d[l_ac].xmdl015_02,g_xmdk2_d[l_ac].xmdl016_02,g_xmdk2_d[l_ac].xmdl052_02,
+                                            g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl018_02,g_xmdk2_d[l_ac].xmdl003_02,
+                                            g_xmdk2_d[l_ac].xmdl004_02) THEN
+                    LET g_xmdk2_d[l_ac].xmdl052_02 = g_xmdk2_d_t.xmdl052_02
+                    NEXT FIELD CURRENT
+                 END IF                 
+              END IF
+           END IF
+           LET g_xmdk2_d_t.xmdl052_02 = g_xmdk2_d[l_ac].xmdl052_02  
+
+        
+        
+        ON ROW CHANGE
+           IF INT_FLAG THEN
+              INITIALIZE g_errparam TO NULL
+              LET g_errparam.code = 9001
+              LET g_errparam.extend = ''
+              LET g_errparam.popup = FALSE
+              CALL cl_err()
+              LET INT_FLAG = 0
+              LET g_xmdk2_d[l_ac].* = g_xmdk2_d_t.*
+              EXIT DIALOG
+           ELSE
+              UPDATE  p540_tmp03          #160727-00019#23 Mod   p540_02_xmdl_temp --> p540_tmp03
+                 SET  xmdl018 = g_xmdk2_d[l_ac].xmdl018_02,
+                      xmdl020 = g_xmdk2_d[l_ac].xmdl020_02,
+                      xmdl022 = g_xmdk2_d[l_ac].xmdl022_02,
+                      xmdl013 = g_xmdk2_d[l_ac].xmdl013_02,
+                      xmdl014 = g_xmdk2_d[l_ac].xmdl014_02,
+                      xmdl015 = g_xmdk2_d[l_ac].xmdl015_02,
+                      xmdl052 = g_xmdk2_d[l_ac].xmdl052_02,  #161205-00030#1 add 增加xmdl052
+                      xmdl016 = g_xmdk2_d[l_ac].xmdl016_02 
+               WHERE  linkno =  g_xmdk2_d[l_ac].linkno_02
+                 AND  xmdlseq = g_xmdk2_d[l_ac].xmdlseq_02                  
+
+              #是否刪除多庫除批資料 20160310
+              IF NOT cl_null(l_del_xmdm) THEN     
+                IF l_del_xmdm THEN
+                
+                  LET l_del_xmdm = FALSE               
+                  DELETE FROM p540_tmp04            #160727-00019#23 Mod   p540_02_xmdm_temp --> p540_tmp04
+                   WHERE linkno = g_xmdk2_d[l_ac].linkno_02
+                     AND xmdmseq = g_xmdk2_d[l_ac].xmdlseq_02               
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "p540_tmp04"     #160727-00019#23 Mod   p540_02_xmdm_temp --> p540_tmp04
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()                  
+                  END IF
+                  
+                END IF  
+              END IF
+
+              #2014/10/24 by stellar add ----------------------(S)
+              CALL axmp540_03_xmdm_modify('1',g_xmdk2_d[l_ac].xmdlseq_02,g_site,g_xmdk2_d[l_ac].linkno_02,g_xmdk2_d[l_ac].xmdlseq_02,
+                                          g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl009_02,g_xmdk2_d[l_ac].xmdl011_02,g_xmdk2_d[l_ac].xmdl012_02,
+                                          g_xmdk2_d[l_ac].xmdl014_02,g_xmdk2_d[l_ac].xmdl015_02,g_xmdk2_d[l_ac].xmdl016_02,g_xmdk2_d[l_ac].xmdl052_02,
+                                          g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl018_02,g_xmdk2_d[l_ac].xmdl019_02,g_xmdk2_d[l_ac].xmdl020_02,
+                                          '','') RETURNING l_success
+              CALL axmp540_02_fetch_xmdm()
+              #2014/10/24 by stellar add ----------------------(E)
+                                          
+           END IF
+
+        ON ACTION controlp INFIELD xmdl014_02
+           INITIALIZE g_qryparam.* TO NULL
+           LET g_qryparam.state = 'i'
+           LET g_qryparam.reqry = FALSE  
+           LET g_qryparam.default1 = g_xmdk2_d[l_ac].xmdl014_02             #給予default值
+           LET g_qryparam.default2 = g_xmdk2_d[l_ac].xmdl015_02
+           LET g_qryparam.default3 = g_xmdk2_d[l_ac].xmdl016_02
+           LET g_qryparam.default4 = g_xmdk2_d[l_ac].xmdl052_02
+           IF NOT cl_null(g_xmdk2_d[l_ac].xmdl001_02) AND NOT cl_null(g_xmdk2_d[l_ac].xmdl002_02) AND g_xmdk2_d[l_ac].xmdl013_02 = 'Y' THEN  #160809-00002#1 add xmdl013_02
+             #IF g_xmdk2_d[l_ac].xmdl013_02 = 'Y' THEN #160809-00002#1 mark
+                #LET g_qryparam.arg1 = g_xmdk2_d[l_ac].xmdl001_02                   #出通單單號      #160809-00002#1 mark
+                #LET g_qryparam.arg2 = g_xmdk2_d[l_ac].xmdl002_02                   #出通單項次      #160809-00002#1 mark
+                 LET g_qryparam.arg1 = g_site                                                       #160809-00002#1
+                 LET g_qryparam.arg2 = g_xmdk2_d[l_ac].xmdl001_02                   #出通單單號      #160809-00002#1
+                 LET g_qryparam.arg3 = g_xmdk2_d[l_ac].xmdl002_02                   #出通單項次      #160809-00002#1
+                 CALL q_xmdi005()                                                   #呼叫開窗              
+              #END IF      #160809-00002#1 mark
+           ELSE
+          
+              LET g_qryparam.arg1 = g_xmdk2_d[l_ac].xmdl008_02                      #料件
+              LET g_qryparam.arg2 = g_xmdk2_d[l_ac].xmdl009_02                      #產品特徵
+              #161205-00030#1--add---begin----
+              IF NOT cl_null(g_xmdk2_d[l_ac].xmdl016_02) THEN
+                 LET g_qryparam.where = " inag006 = '",g_xmdk2_d[l_ac].xmdl016_02, "' "
+              END IF 
+              #161205-00030#1--add---end----
+              CALL q_inag004_13()               
+           END IF
+           LET g_xmdk2_d[l_ac].xmdl014_02 = g_qryparam.return1                      #將開窗取得的值回傳到變數
+           LET g_xmdk2_d[l_ac].xmdl015_02 = g_qryparam.return2
+           LET g_xmdk2_d[l_ac].xmdl016_02 = g_qryparam.return3
+           LET g_xmdk2_d[l_ac].xmdl052_02 = g_qryparam.return4                 
+           DISPLAY g_xmdk2_d[l_ac].xmdl014_02 TO xmdl014_02                         #顯示到畫面上
+           DISPLAY g_xmdk2_d[l_ac].xmdl015_02 TO xmdl015_02
+           DISPLAY g_xmdk2_d[l_ac].xmdl016_02 TO xmdl016_02
+           DISPLAY g_xmdk2_d[l_ac].xmdl052_02 TO xmdl052_02           
+           CALL s_desc_get_stock_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02) RETURNING g_xmdk2_d[l_ac].xmdl014_02_desc
+           CALL s_desc_get_locator_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02,g_xmdk2_d[l_ac].xmdl015_02) RETURNING g_xmdk2_d[l_ac].xmdl015_02_desc
+           NEXT FIELD xmdl014_02 
+
+        ON ACTION controlp INFIELD xmdl015_02
+           INITIALIZE g_qryparam.* TO NULL
+           LET g_qryparam.state = 'i'
+           LET g_qryparam.reqry = FALSE  
+           LET g_qryparam.default1 = g_xmdk2_d[l_ac].xmdl014_02             #給予default值
+           LET g_qryparam.default2 = g_xmdk2_d[l_ac].xmdl015_02
+           LET g_qryparam.default3 = g_xmdk2_d[l_ac].xmdl016_02
+           LET g_qryparam.default4 = g_xmdk2_d[l_ac].xmdl052_02 
+           IF NOT cl_null(g_xmdk2_d[l_ac].xmdl001_02) AND NOT cl_null(g_xmdk2_d[l_ac].xmdl002_02) AND g_xmdk2_d[l_ac].xmdl013_02 = 'Y' THEN #160809-00002#1 add
+              #IF g_xmdk2_d[l_ac].xmdl013_02 = 'Y' THEN #160809-00002#1 mark
+                #LET g_qryparam.arg1 = g_xmdk2_d[l_ac].xmdl001_02                   #出通單單號      #160809-00002#1 mark
+                #LET g_qryparam.arg2 = g_xmdk2_d[l_ac].xmdl002_02                   #出通單項次      #160809-00002#1 mark
+                 LET g_qryparam.arg1 = g_site                                                       #160809-00002#1
+                 LET g_qryparam.arg2 = g_xmdk2_d[l_ac].xmdl001_02                   #出通單單號      #160809-00002#1
+                 LET g_qryparam.arg3 = g_xmdk2_d[l_ac].xmdl002_02                   #出通單項次      #160809-00002#1
+                 CALL q_xmdi005()                                                   #呼叫開窗              
+              #END IF      #160809-00002#1 mark
+           ELSE
+          
+              LET g_qryparam.arg1 = g_xmdk2_d[l_ac].xmdl008_02                      #料件
+              LET g_qryparam.arg2 = g_xmdk2_d[l_ac].xmdl009_02                      #產品特徵
+              #161205-00030#1--add---begin----
+              IF NOT cl_null(g_xmdk2_d[l_ac].xmdl016_02) THEN
+                 LET g_qryparam.where = " inag006 = '",g_xmdk2_d[l_ac].xmdl016_02, "' "
+              END IF 
+              #161205-00030#1--add---end----
+              CALL q_inag004_13()               
+           END IF
+           LET g_xmdk2_d[l_ac].xmdl014_02 = g_qryparam.return1                      #將開窗取得的值回傳到變數
+           LET g_xmdk2_d[l_ac].xmdl015_02 = g_qryparam.return2
+           LET g_xmdk2_d[l_ac].xmdl016_02 = g_qryparam.return3
+           LET g_xmdk2_d[l_ac].xmdl052_02 = g_qryparam.return4                 
+           DISPLAY g_xmdk2_d[l_ac].xmdl014_02 TO xmdl014_02                         #顯示到畫面上
+           DISPLAY g_xmdk2_d[l_ac].xmdl015_02 TO xmdl015_02
+           DISPLAY g_xmdk2_d[l_ac].xmdl016_02 TO xmdl016_02
+           DISPLAY g_xmdk2_d[l_ac].xmdl052_02 TO xmdl052_02           
+           CALL s_desc_get_stock_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02) RETURNING g_xmdk2_d[l_ac].xmdl014_02_desc
+           CALL s_desc_get_locator_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02,g_xmdk2_d[l_ac].xmdl015_02) RETURNING g_xmdk2_d[l_ac].xmdl015_02_desc
+           NEXT FIELD xmdl015_02 
+           
+           
+        ON ACTION accept
+        ----------
+           #是否刪除多庫除批資料 20160310
+           IF NOT cl_null(l_del_xmdm) THEN     
+             IF l_del_xmdm THEN
+             
+               LET l_del_xmdm = FALSE               
+               DELETE FROM p540_tmp04                    #160727-00019#23 Mod   p540_02_xmdm_temp --> p540_tmp04
+                WHERE linkno = g_xmdk2_d[l_ac].linkno_02
+                  AND xmdmseq = g_xmdk2_d[l_ac].xmdlseq_02               
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "p540_tmp04"    #160727-00019#23 Mod   p540_02_xmdm_temp --> p540_tmp04
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()                  
+               END IF
+               
+             END IF  
+           END IF
+           
+           IF NOT cl_ap_chk_Range(g_xmdk2_d[l_ac].xmdl018_02,"0","0","","","azz-00079",1) THEN
+              NEXT FIELD xmdl018_02
+           END IF         
+           IF g_xmdk2_d[l_ac].xmdl018_02 != g_xmdk2_d_t.xmdl018_02 OR g_xmdk2_d_t.xmdl018_02 IS NULL THEN
+              IF NOT axmp540_02_xmdl018_chk() THEN
+                 LET g_xmdk2_d[l_ac].xmdl018_02 = g_xmdk2_d_t.xmdl018_02
+                 DISPLAY BY NAME g_xmdk2_d[l_ac].xmdl018_02
+                 NEXT FIELD CURRENT
+              END IF
+              IF NOT cl_null(g_xmdk2_d[l_ac].xmdl017_02) THEN #161208-00028#1
+                 #對出貨數量進行取位
+                 CALL s_aooi250_take_decimals(g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl018_02)
+                   RETURNING l_success,g_xmdk2_d[l_ac].xmdl018_02  
+              END IF   #161208-00028#1    
+              #若料號有設置使用參考單位時且出貨單位與參考單位有設置換算率時，則應自動推算參考數量
+              IF NOT cl_null(g_xmdk2_d[l_ac].xmdl019_02) THEN
+                 CALL s_aooi250_convert_qty(g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl019_02,g_xmdk2_d[l_ac].xmdl018_02)
+                   RETURNING l_success,g_xmdk2_d[l_ac].xmdl020_02
+                 #對參考數量進行取位
+                 CALL s_aooi250_take_decimals(g_xmdk2_d[l_ac].xmdl019_02,g_xmdk2_d[l_ac].xmdl020_02)
+                   RETURNING l_success,g_xmdk2_d[l_ac].xmdl020_02                 
+              END IF
+              #若料號有使用銷售計價單位時，則輸入[C:出貨數量]時則應自動推算計價數量
+              IF NOT cl_null(g_xmdk2_d[l_ac].xmdl021_02) THEN
+                 CALL s_aooi250_convert_qty(g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl021_02,g_xmdk2_d[l_ac].xmdl018_02)
+                   RETURNING l_success,g_xmdk2_d[l_ac].xmdl022_02
+                 #對計價數量進行取位
+                 CALL s_aooi250_take_decimals(g_xmdk2_d[l_ac].xmdl021_02,g_xmdk2_d[l_ac].xmdl022_02)
+                   RETURNING l_success,g_xmdk2_d[l_ac].xmdl022_02                                      
+                 #重新計算[C:未稅金額]、[C:含稅金額]、[稅額] 
+                 CALL axmp540_02_get_amount(g_xmdk2_d[l_ac].linkno_02,g_xmdk2_d[l_ac].xmdl022_02,g_xmdk4_d[l_ac].xmdl024_04,g_xmdk4_d[l_ac].xmdl025_04)
+                   RETURNING g_xmdk4_d[l_ac].xmdl027_04,g_xmdk4_d[l_ac].xmdl028_04,g_xmdk4_d[l_ac].xmdl029_04
+              END IF  
+             
+           END IF
+           LET g_xmdk2_d_t.xmdl018_02 = g_xmdk2_d[l_ac].xmdl018_02
+        ----------
+           IF NOT cl_null(g_xmdk2_d[l_ac].xmdl019_02) THEN     #160808-00020#1
+              IF NOT cl_ap_chk_Range(g_xmdk2_d[l_ac].xmdl020_02,"0.000","0","","","azz-00079",1) THEN
+                 NEXT FIELD xmdl020_02
+              END IF
+              #對參考數量進行取位
+              CALL s_aooi250_take_decimals(g_xmdk2_d[l_ac].xmdl019_02,g_xmdk2_d[l_ac].xmdl020_02)
+                RETURNING l_success,g_xmdk2_d[l_ac].xmdl020_02
+            END IF                                             #160808-00020#1
+        ----------
+           IF NOT cl_null(g_xmdk2_d[l_ac].xmdl019_02) THEN     #160808-00020#1
+              IF NOT cl_ap_chk_Range(g_xmdk2_d[l_ac].xmdl022_02,"0.000","0","","","azz-00079",1) THEN
+                #NEXT FIELD xmdl020_02 #160524-00032#1 mark
+                 NEXT FIELD xmdl022_02 #160524-00032#1 add
+              END IF
+           END IF                                     #160808-00020#1
+           IF g_xmdk2_d[l_ac].xmdl022_02 != g_xmdk2_d_t.xmdl022_02 OR g_xmdk2_d_t.xmdl022_02 IS NULL THEN
+              #對計價數量進行取位
+              IF NOT cl_null(g_xmdk2_d[l_ac].xmdl021_02) THEN   #161208-00028#1
+                 CALL s_aooi250_take_decimals(g_xmdk2_d[l_ac].xmdl021_02,g_xmdk2_d[l_ac].xmdl022_02)
+                   RETURNING l_success,g_xmdk2_d[l_ac].xmdl022_02 
+              END IF  #161208-00028#1
+              #重新計算[C:未稅金額]、[C:含稅金額]、[稅額] 
+              CALL axmp540_02_get_amount(g_xmdk2_d[l_ac].linkno_02,g_xmdk2_d[l_ac].xmdl022_02,g_xmdk4_d[l_ac].xmdl024_04,g_xmdk4_d[l_ac].xmdl025_04)                
+                RETURNING g_xmdk4_d[l_ac].xmdl027_04,g_xmdk4_d[l_ac].xmdl028_04,g_xmdk4_d[l_ac].xmdl029_04
+           END IF
+        ----------
+           IF NOT cl_null(g_xmdk2_d[l_ac].xmdl014_02) THEN
+              IF g_xmdk2_d[l_ac].xmdl014_02 != g_xmdk2_d_t.xmdl014_02 OR g_xmdk2_d_t.xmdl014_02 IS NULL THEN
+                 #庫位check
+                 IF NOT s_axmt540_xmdl014_chk(g_xmdk2_d[l_ac].xmdl013_02,l_docno,l_seq,g_xmdk2_d[l_ac].xmdl014_02,g_xmdk_m.xmdkdocno) THEN
+                    LET g_xmdk2_d[l_ac].xmdl014_02 = g_xmdk2_d_t.xmdl014_02
+                    CALL s_desc_get_stock_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02) RETURNING g_xmdk2_d[l_ac].xmdl014_02_desc
+                    NEXT FIELD CURRENT
+                 END IF
+                 #在揀量check
+                 #160408-00035#9-add-g_xmdk2_d[l_ac].xmdl003_02,g_xmdk2_d[l_ac].xmdl004_02
+                 IF NOT axmp540_01_inan_chk(g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl009_02,g_xmdk2_d[l_ac].xmdl014_02,
+                                            g_xmdk2_d[l_ac].xmdl015_02,g_xmdk2_d[l_ac].xmdl016_02,g_xmdk2_d[l_ac].xmdl052_02,
+                                            g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl018_02,g_xmdk2_d[l_ac].xmdl003_02,
+                                            g_xmdk2_d[l_ac].xmdl004_02) THEN
+                    LET g_xmdk2_d[l_ac].xmdl014_02 = g_xmdk2_d_t.xmdl014_02
+                    CALL s_desc_get_stock_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02) RETURNING g_xmdk2_d[l_ac].xmdl014_02_desc
+                    NEXT FIELD CURRENT
+                 END IF                 
+              END IF
+           END IF
+           LET g_xmdk2_d_t.xmdl014_02 = g_xmdk2_d[l_ac].xmdl014_02
+        ----------
+           IF NOT cl_null(g_xmdk2_d[l_ac].xmdl015_02) THEN
+              IF g_xmdk2_d[l_ac].xmdl015_02 != g_xmdk2_d_t.xmdl015_02 OR g_xmdk2_d_t.xmdl015_02 IS NULL THEN
+                 #儲位檢查
+                 IF NOT s_axmt540_xmdl015_chk(g_xmdk2_d[l_ac].xmdl013_02,l_docno,l_seq,g_xmdk2_d[l_ac].xmdl014_02,g_xmdk2_d[l_ac].xmdl015_02) THEN
+                    LET g_xmdk2_d[l_ac].xmdl015_02 = g_xmdk2_d_t.xmdl015_02
+                    CALL s_desc_get_locator_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02,g_xmdk2_d[l_ac].xmdl015_02) 
+                      RETURNING g_xmdk2_d[l_ac].xmdl015_02_desc
+                    NEXT FIELD CURRENT
+                 END IF
+                 #在揀量檢查
+                 #160408-00035#9-add-g_xmdk2_d[l_ac].xmdl003_02,g_xmdk2_d[l_ac].xmdl004_02
+                 IF NOT axmp540_01_inan_chk(g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl009_02,g_xmdk2_d[l_ac].xmdl014_02,
+                                            g_xmdk2_d[l_ac].xmdl015_02,g_xmdk2_d[l_ac].xmdl016_02,g_xmdk2_d[l_ac].xmdl052_02,
+                                            g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl018_02,g_xmdk2_d[l_ac].xmdl003_02,
+                                            g_xmdk2_d[l_ac].xmdl004_02) THEN
+                    LET g_xmdk2_d[l_ac].xmdl015_02 = g_xmdk2_d_t.xmdl015_02
+                    CALL s_desc_get_locator_desc(g_site,g_xmdk2_d[l_ac].xmdl014_02,g_xmdk2_d[l_ac].xmdl015_02) 
+                      RETURNING g_xmdk2_d[l_ac].xmdl015_02_desc
+                    NEXT FIELD CURRENT
+                 END IF                  
+              END IF
+           END IF            
+           LET g_xmdk2_d_t.xmdl015_02 = g_xmdk2_d[l_ac].xmdl015_02
+        ----------
+           IF NOT cl_null(g_xmdk2_d[l_ac].xmdl016_02) THEN
+              #批號檢查
+              IF g_xmdk2_d[l_ac].xmdl016_02 != g_xmdk2_d_t.xmdl016_02 OR g_xmdk2_d_t.xmdl016_02 IS NULL THEN 
+                 IF NOT s_axmt540_xmdl016_chk(g_xmdk2_d[l_ac].xmdl013_02,l_docno,l_seq,g_xmdk2_d[l_ac].xmdl014_02,
+                                             #g_xmdk2_d[l_ac].xmdl015_02,g_xmdk2_d[l_ac].xmdl016_02) THEN    #161013-00032#1 mark
+                                              g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl009_02) THEN    #161013-00032#1 add
+                    LET g_xmdk2_d[l_ac].xmdl016_02 = g_xmdk2_d_t.xmdl016_02
+                    NEXT FIELD CURRENT                                              
+                 END IF
+                 #在揀量檢查
+                 #160408-00035#9-add-g_xmdk2_d[l_ac].xmdl003_02,g_xmdk2_d[l_ac].xmdl004_02
+                 IF NOT axmp540_01_inan_chk(g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl009_02,g_xmdk2_d[l_ac].xmdl014_02,
+                                            g_xmdk2_d[l_ac].xmdl015_02,g_xmdk2_d[l_ac].xmdl016_02,g_xmdk2_d[l_ac].xmdl052_02,
+                                            g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl018_02,g_xmdk2_d[l_ac].xmdl003_02,
+                                            g_xmdk2_d[l_ac].xmdl004_02) THEN
+                    LET g_xmdk2_d[l_ac].xmdl016_02 = g_xmdk2_d_t.xmdl016_02
+                    NEXT FIELD CURRENT  
+                 END IF                 
+              END IF
+           END IF
+           LET g_xmdk2_d_t.xmdl016_02 = g_xmdk2_d[l_ac].xmdl016_02
+        ----------
+           IF NOT cl_null(g_xmdk2_d[l_ac].xmdl052_02) THEN
+              IF g_xmdk2_d[l_ac].xmdl052_02 != g_xmdk2_d_t.xmdl052_02 OR g_xmdk2_d_t.xmdl052_02 IS NULL THEN 
+                 IF NOT s_axmt540_xmdl052_chk(g_xmdk2_d[l_ac].xmdl013_02,l_docno,l_seq,g_xmdk2_d[l_ac].xmdl052_02) THEN                                                
+                    LET g_xmdk2_d[l_ac].xmdl052_02 = g_xmdk2_d_t.xmdl052_02
+                    NEXT FIELD CURRENT                                              
+                 END IF
+                 #在揀量檢查
+                 #160408-00035#9-add-g_xmdk2_d[l_ac].xmdl003_02,g_xmdk2_d[l_ac].xmdl004_02
+                 IF NOT axmp540_01_inan_chk(g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl009_02,g_xmdk2_d[l_ac].xmdl014_02,
+                                            g_xmdk2_d[l_ac].xmdl015_02,g_xmdk2_d[l_ac].xmdl016_02,g_xmdk2_d[l_ac].xmdl052_02,
+                                            g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl018_02,g_xmdk2_d[l_ac].xmdl003_02,
+                                            g_xmdk2_d[l_ac].xmdl004_02) THEN
+                    LET g_xmdk2_d[l_ac].xmdl052_02 = g_xmdk2_d_t.xmdl052_02
+                    NEXT FIELD CURRENT
+                 END IF                 
+              END IF
+           END IF
+           LET g_xmdk2_d_t.xmdl052_02 = g_xmdk2_d[l_ac].xmdl052_02  
+           ----------     
+           UPDATE  p540_tmp03       #160727-00019#23 Mod   p540_02_xmdl_temp --> p540_tmp03
+              SET  xmdl018 = g_xmdk2_d[l_ac].xmdl018_02,
+                   xmdl020 = g_xmdk2_d[l_ac].xmdl020_02,
+                   xmdl022 = g_xmdk2_d[l_ac].xmdl022_02,
+                   xmdl013 = g_xmdk2_d[l_ac].xmdl013_02,
+                   xmdl014 = g_xmdk2_d[l_ac].xmdl014_02,
+                   xmdl015 = g_xmdk2_d[l_ac].xmdl015_02,
+                   xmdl052 = g_xmdk2_d[l_ac].xmdl052_02,  #161205-00030#1 add 
+                   xmdl016 = g_xmdk2_d[l_ac].xmdl016_02 
+            WHERE  linkno =  g_xmdk2_d[l_ac].linkno_02
+              AND  xmdlseq = g_xmdk2_d[l_ac].xmdlseq_02                                    
+           #2014/10/24 by stellar add ----------------------(S)
+           CALL axmp540_03_xmdm_modify('1',g_xmdk2_d[l_ac].xmdlseq_02,g_site,g_xmdk2_d[l_ac].linkno_02,g_xmdk2_d[l_ac].xmdlseq_02,
+                                       g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl009_02,g_xmdk2_d[l_ac].xmdl011_02,g_xmdk2_d[l_ac].xmdl012_02,
+                                       g_xmdk2_d[l_ac].xmdl014_02,g_xmdk2_d[l_ac].xmdl015_02,g_xmdk2_d[l_ac].xmdl016_02,g_xmdk2_d[l_ac].xmdl052_02,
+                                       g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl018_02,g_xmdk2_d[l_ac].xmdl019_02,g_xmdk2_d[l_ac].xmdl020_02,
+                                       '','') RETURNING l_success
+           CALL axmp540_02_fetch_xmdm()
+           #2014/10/24 by stellar add ----------------------(E)
+           EXIT DIALOG         
+                
+        ON ACTION cancel 
+              LET g_xmdk2_d[l_ac].*  = g_xmdk2_d_t.*
+              CALL axmp540_02_xmdm_delete2('1',g_xmdk2_d[l_ac].linkno_02,g_xmdk2_d[l_ac].xmdlseq_02) 
+              CALL axmp540_03_xmdm_modify('1',g_xmdk2_d[l_ac].xmdlseq_02,g_site,g_xmdk2_d[l_ac].linkno_02,g_xmdk2_d[l_ac].xmdlseq_02,
+                                          g_xmdk2_d[l_ac].xmdl008_02,g_xmdk2_d[l_ac].xmdl009_02,g_xmdk2_d[l_ac].xmdl011_02,g_xmdk2_d[l_ac].xmdl012_02,
+                                          g_xmdk2_d[l_ac].xmdl014_02,g_xmdk2_d[l_ac].xmdl015_02,g_xmdk2_d[l_ac].xmdl016_02,g_xmdk2_d[l_ac].xmdl052_02,
+                                          g_xmdk2_d[l_ac].xmdl017_02,g_xmdk2_d[l_ac].xmdl018_02,g_xmdk2_d[l_ac].xmdl019_02,g_xmdk2_d[l_ac].xmdl020_02,
+                                          '','') RETURNING l_success
+              CALL axmp540_02_fetch_xmdm()
+              EXIT DIALOG             
+   END INPUT
+  END DIALOG    
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢查是否需要刪除 多庫除批資料
+# Memo...........:
+# Usage..........: CALL axmp540_02_xmdm_delete(p_control,p_linkno,p_xmdlseq,p_pop)
+#                  RETURNING r_success,r_del_xmdm
+# Input parameter: p_control       #呼叫此子程式之程式 1.axmt540或axmt541  出貨單
+#                                                     2.axmt520          出通單
+#                                                     4.axmt580          簽收單
+#                                                     5.axmt590          簽退單
+#                                                     6.axmt600          銷退單 
+#                : p_linkno    暫存檔之key
+#                : p_xmdlseq   項次
+#                : p_pop       是否彈出視窗詢問Y,N
+# Return code....: r_success   執行狀態
+#                : r_del_xmdm  是否需要刪除
+# Date & Author..: 20160310 By s983961
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp540_02_xmdm_delete(p_control,p_linkno,p_xmdlseq,p_pop)
+   DEFINE p_control     LIKE type_t.chr5
+   DEFINE p_linkno       LIKE type_t.num5
+   DEFINE p_xmdlseq     LIKE xmdl_t.xmdlseq
+   DEFINE p_pop         LIKE type_t.chr1
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE r_del_xmdm    LIKE type_t.num5  #151118-00029 20160310 s983961--ADD
+   DEFINE l_n           LIKE type_t.num10  #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+   
+   
+   LET r_success = TRUE
+   LET r_del_xmdm = FALSE   #151118-00029 20160310 s983961--ADD
+   
+   IF NOT cl_null(p_xmdlseq) AND NOT cl_null(p_linkno) THEN
+   
+      #檢查有無多庫儲批資料
+      LET l_n = 0      
+      CASE p_control
+         WHEN '2'  #出通單
+
+         WHEN '4'  #簽收單
+            SELECT COUNT(xmdmseq1) INTO l_n
+              FROM axmp580_tmp03          #160727-00019#24 Mod  axmp580_02_temp_d3--> axmp580_tmp03
+             WHERE keyno = p_linkno
+               AND xmdmseq = p_xmdlseq         
+
+         OTHERWISE #出貨單、簽退單、銷退單
+            SELECT COUNT(xmdmseq1) INTO l_n
+              FROM p540_tmp04       #160727-00019#23 Mod   p540_02_xmdm_temp --> p540_tmp04
+             WHERE linkno = p_linkno
+               AND xmdmseq = p_xmdlseq
+               
+      END CASE
+   
+      #詢問是否刪除多庫儲批
+      IF p_pop = 'Y' AND l_n > 1 THEN
+         IF NOT cl_ask_confirm('axm-00194') THEN   #是否取消多庫儲批出貨，且刪除對應的出通單多庫儲批出貨明細檔？
+            LET r_success = FALSE
+            LET r_del_xmdm = FALSE  #151118-00029 20160310 s983961--ADD
+            RETURN r_success,r_del_xmdm
+         END IF
+      END IF
+      
+      LET r_del_xmdm = TRUE         #151118-00029 20160310 s983961--ADD
+      
+      CASE p_control
+         WHEN '2'  #出通單
+
+         WHEN '4'  #簽收單
+            #151118-00029 20160310 s983961--mark(s) 刪除動作改寫在accept段
+            #DELETE FROM axmp580_02_temp_d3
+            # WHERE keyno = p_linkno
+            #   AND xmdmseq = p_xmdlseq
+            #
+            #IF SQLCA.sqlcode THEN
+            #   INITIALIZE g_errparam TO NULL
+            #   LET g_errparam.code = SQLCA.sqlcode
+            #   LET g_errparam.extend = "axmp580_02_temp_d3"
+            #   LET g_errparam.popup = TRUE
+            #   CALL cl_err()
+            #
+            #   LET r_success = FALSE
+            #   RETURN r_success
+            #END IF
+            #151118-00029 20160310 s983961--mark(e)
+
+         OTHERWISE #出貨單、簽退單、銷退單
+            #151118-00029 20160310 s983961--mark(s)  刪除動作改寫在accept段
+            #DELETE FROM p540_02_xmdm_temp
+            # WHERE linkno = p_linkno
+            #   AND xmdmseq = p_xmdlseq
+            #
+            #IF SQLCA.sqlcode THEN
+            #   INITIALIZE g_errparam TO NULL
+            #   LET g_errparam.code = SQLCA.sqlcode
+            #   LET g_errparam.extend = "p540_02_xmdm_temp"
+            #   LET g_errparam.popup = TRUE
+            #   CALL cl_err()
+            #
+            #   LET r_success = FALSE
+            #   RETURN r_success
+            #END IF
+            #151118-00029 20160310 s983961--mark(e)
+            
+      END CASE
+   END IF
+   
+   RETURN r_success,r_del_xmdm   #151118-00029 20160310 s983961--ADD r_del_xmdm
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取消時檢查是否需要刪除多庫除批資料
+# Memo...........:
+# Usage..........: CALL axmp540_02_xmdm_delete2(p_control,p_linkno,p_xmdlseq)
+#                  RETURNING 回传参数
+# Input parameter: # Input parameter: p_control       #呼叫此子程式之程式 1.axmt540或axmt541  出貨單
+#                                                     2.axmt520          出通單
+#                                                     4.axmt580          簽收單
+#                                                     5.axmt590          簽退單
+#                                                     6.axmt600          銷退單 
+#                : p_linkno    暫存檔之key
+#                : p_xmdlseq   項次
+# Return code....: 
+# Date & Author..: 20160310 By s983961
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp540_02_xmdm_delete2(p_control,p_linkno,p_xmdlseq)
+   DEFINE p_control     LIKE type_t.chr5
+   DEFINE p_linkno       LIKE type_t.num5
+   DEFINE p_xmdlseq     LIKE xmdl_t.xmdlseq
+   DEFINE p_pop         LIKE type_t.chr1
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE r_del_xmdm    LIKE type_t.num5  #151118-00029 20160310 s983961--ADD
+   DEFINE l_n           LIKE type_t.num10  #170104-00066#3 num5->num10  17/01/06 mod by rainy 
+   
+   
+   LET r_success = TRUE
+   LET r_del_xmdm = FALSE   #151118-00029 20160310 s983961--ADD
+   
+   IF NOT cl_null(p_xmdlseq) AND NOT cl_null(p_linkno) THEN
+   
+      #檢查有無多庫儲批資料
+      LET l_n = 0      
+      CASE p_control
+         WHEN '2'  #出通單
+
+         WHEN '4'  #簽收單
+            SELECT COUNT(xmdmseq1) INTO l_n
+              FROM axmp580_tmp03        #160727-00019#24 Mod  axmp580_02_temp_d3--> axmp580_tmp03
+             WHERE keyno = p_linkno
+               AND xmdmseq = p_xmdlseq         
+
+         OTHERWISE #出貨單、簽退單、銷退單
+            SELECT COUNT(xmdmseq1) INTO l_n
+              FROM p540_tmp04          #160727-00019#23 Mod   p540_02_xmdm_temp --> p540_tmp04
+             WHERE linkno = p_linkno
+               AND xmdmseq = p_xmdlseq
+               
+      END CASE
+   
+      #刪除多庫儲批
+      IF l_n > 1 AND g_xmdk2_d_t.xmdl013_02 = 'N' THEN        
+         CASE p_control
+            WHEN '2'  #出通單
+         
+            WHEN '4'  #簽收單
+               DELETE FROM axmp580_tmp03          #160727-00019#24 Mod  axmp580_02_temp_d3--> axmp580_tmp03
+                WHERE keyno = p_linkno
+                  AND xmdmseq = p_xmdlseq
+               
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "axmp580_tmp03"          #160727-00019#24 Mod  axmp580_02_temp_d3--> axmp580_tmp03
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+               
+                  LET r_success = FALSE
+                  RETURN r_success
+               END IF
+         
+            OTHERWISE #出貨單、簽退單、銷退單
+               DELETE FROM p540_tmp04         #160727-00019#23 Mod   p540_02_xmdm_temp --> p540_tmp04
+                WHERE linkno = p_linkno
+                  AND xmdmseq = p_xmdlseq
+               
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "p540_tmp04"           #160727-00019#23 Mod   p540_02_xmdm_temp --> p540_tmp04
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()               
+                  LET r_success = FALSE
+                  RETURN r_success
+               END IF
+               
+         END CASE      
+      END IF
+      
+   END IF
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 依aimm212撿貨策略，預帶庫、儲、批、庫存管理特徵
+# Memo...........:
+# Usage..........: axmp540_02_materials_default(p_xmdl008,p_xmdl009,p_xmdl016,
+#                    p_xmdl018,p_xmdl003,p_xmdl004,p_xmdl005,p_xmdl052,p_xmdl017)
+#                  RETURNING r_xmdl.xmdl052,r_xmdl.xmdl014,r_xmdl.xmdl015,r_xmdl.xmdl016
+# Input parameter: p_xmdl008      料件編號
+#                : p_xmdl009      產品特徵
+#                : p_xmdl016      批號
+#                : p_xmdl018      異動數量
+#                : p_xmdl003      單據
+#                : p_xmdl004      項次
+#                : p_xmdl005      項序
+#                : p_xmdl052      庫存管理特徵
+#                : p_xmdl017      單位
+# Return code....: r_xmdl.xmdl014      庫位
+#                : r_xmdl.xmdl015      儲位
+#                : r_xmdl.xmdl016      批號
+#                : r_xmdl.xmdl052      庫存管理特徵
+# Date & Author..: 2016/07/05 By dorislai (#160630-00005#1)
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp540_02_materials_default(p_xmdl008,p_xmdl009,p_xmdl016,p_xmdl018,p_xmdl003,p_xmdl004,p_xmdl005,p_xmdl052,p_xmdl017)
+   DEFINE   p_xmdl008  LIKE xmdl_t.xmdl008   #料件編號
+   DEFINE   p_xmdl009  LIKE xmdl_t.xmdl009   #產品特徵
+   DEFINE   p_xmdl016  LIKE xmdl_t.xmdl016   #批號
+   DEFINE   p_xmdl018  LIKE xmdl_t.xmdl018   #異動數量
+   DEFINE   p_xmdl003  LIKE xmdl_t.xmdl003   #單據
+   DEFINE   p_xmdl004  LIKE xmdl_t.xmdl004   #項次
+   DEFINE   p_xmdl005  LIKE xmdl_t.xmdl005   #項序
+   DEFINE   p_xmdl052  LIKE xmdl_t.xmdl052   #庫存管理特徵
+   DEFINE   p_xmdl017  LIKE xmdl_t.xmdl017   #單位
+   DEFINE   l_imaf059  LIKE imaf_t.imaf059
+   DEFINE   l_success  LIKE type_t.num5
+   DEFINE   l_flag     LIKE type_t.num5
+   DEFINE   l_sql      STRING
+   DEFINE   l_inag     RECORD                         
+                       inag003  LIKE inag_t.inag003,   #庫存管理特徵
+                       inag004  LIKE inag_t.inag004,   #庫位
+                       inag005  LIKE inag_t.inag005,   #儲位
+                       inag006  LIKE inag_t.inag006    #批號
+                       END RECORD
+   DEFINE   r_xmdl     RECORD
+                       xmdl052  LIKE xmdl_t.xmdl052,   #庫存管理特徵
+                       xmdl014  LIKE xmdl_t.xmdl014,   #庫位
+                       xmdl015  LIKE xmdl_t.xmdl015,   #儲位
+                       xmdl016  LIKE xmdl_t.xmdl016    #批號
+                       END RECORD
+   
+   #抓aimm212撿貨策略
+   SELECT imaf059 INTO l_imaf059
+     FROM imaf_t
+    WHERE imafent = g_enterprise
+      AND imafsite = g_site
+      AND imaf001 = p_xmdl008 
+      
+   #抓取預設庫儲
+   IF l_imaf059 MATCHES '[123]' THEN
+      #先依aimm212撿貨策略抓出料號、產品特徵、批號
+       LET l_sql = "SELECT inad003 FROM inad_t",
+                   " WHERE inadent = ",g_enterprise," AND inadsite = '",g_site,"'",
+                   "   AND inad001 = '",p_xmdl008,"' AND inad002 = '",p_xmdl009,"'"
+       CASE l_imaf059
+         WHEN '1' #先進先出(依製造日期)
+            LET l_sql = l_sql CLIPPED," AND inad014=(SELECT MIN(inad014) FROM inad_t ",
+                                      "               WHERE inadent = ",g_enterprise," AND inadsite = '",g_site,"'",
+                                      "                 AND inad001 = '",p_xmdl008,"' AND inad002 = '",p_xmdl009,"' "
+                                      
+         WHEN '2' #先進先出(依有效日期)
+            LET l_sql = l_sql CLIPPED," AND inad011=(SELECT MIN(inad011) FROM inad_t ",
+                                      "               WHERE inadent = ",g_enterprise," AND inadsite = '",g_site,"'",
+                                      "                 AND inad001 = '",p_xmdl008,"' AND inad002 = '",p_xmdl009,"' "
+         WHEN '3' #後進先出(依製造日期)
+            LET l_sql = l_sql CLIPPED," AND inad014=(SELECT MAX(inad014) FROM inad_t ",
+                                      "               WHERE inadent = ",g_enterprise," AND inadsite = '",g_site,"'",
+                                      "                 AND inad001 = '",p_xmdl008,"' AND inad002 = '",p_xmdl009,"' "
+       END CASE
+       
+       #---若批號有值，要組進去l_sql中            
+       IF cl_null(p_xmdl016) THEN
+          LET l_sql = l_sql CLIPPED," )"
+       ELSE
+          LET l_sql = l_sql CLIPPED," AND inad003 = '",p_xmdl016,"')"
+       END IF
+       LET l_sql = "SELECT inag003,inag004,inag005,inag006 FROM inag_t ",
+                   " WHERE inagent = '",g_enterprise,"' AND inagsite = '",g_site,"'",
+                   "   AND inag001 = '",p_xmdl008,"' AND inag002 = '",p_xmdl009,"'",
+                   "   AND inag004 IS NOT NULL ",
+                   "   AND inag008 >= ",p_xmdl018," AND inag006 IN (",l_sql,") ",
+                   " ORDER BY inag004,inag005,inag006 "
+       PREPARE axmp540_01_pre_1 FROM l_sql
+       DECLARE axmp540_01_cs_1  CURSOR FOR axmp540_01_pre_1
+       
+       
+       INITIALIZE l_inag.* TO NULL
+       #161109-00085#10-s
+       #FOREACH axmp540_01_cs_1 INTO l_inag.*
+       FOREACH axmp540_01_cs_1 
+       INTO l_inag.inag003,l_inag.inag004,l_inag.inag005,l_inag.inag006
+       #161109-00085#10-e
+          #檢查庫存是否足夠
+                                       #  ,料件編號  ,產品特徵 ,  庫存管理特徵 ,       庫位    ,      儲位    ,     批號     ,
+          CALL s_inventory_check_inag008(1,p_xmdl008,p_xmdl009,l_inag.inag003,l_inag.inag004,l_inag.inag005,l_inag.inag006,
+                                       #   異動數量     ,  單據   ,   項次  ,  項序    ,  單位  ,營運據點
+                                         p_xmdl018     ,p_xmdl003,p_xmdl004,p_xmdl005,p_xmdl017,g_site)
+               RETURNING l_success,l_flag
+          #庫存量足夠 ; 不足，需將庫儲批拿掉
+          IF l_success AND l_flag = '1'THEN
+             EXIT FOREACH   #因可能會多筆適合的，但僅需一筆，固有抓到就可以不用在跑FOREACH
+          ELSE
+             LET l_inag.inag003 = ' '
+             LET l_inag.inag004 = ' '
+             LET l_inag.inag005 = ' '
+             LET l_inag.inag006 = ' '
+          END IF
+       END FOREACH
+       FREE axmp540_01_pre_1
+   ELSE
+      SELECT imaf091,imaf092 
+        INTO l_inag.inag004,l_inag.inag005
+        FROM imaf_t
+       WHERE imafent = g_enterprise
+         AND imafsite = g_site
+         AND imaf001 = l_xmdl_d.xmdl008 
+      LET l_inag.inag003 = p_xmdl052         #庫存管理特徵
+   END IF
+   
+   LET r_xmdl.* = l_inag.*
+   #161109-00085#10-s
+   #RETURN r_xmdl.*
+   RETURN r_xmdl.xmdl052,r_xmdl.xmdl014,r_xmdl.xmdl015,r_xmdl.xmdl016   
+   #161109-00085#10-e
+END FUNCTION
+
+################################################################################
+# Descriptions...: 帶出發起站多角性質
+# Memo...........: 
+# Usage..........: CALL axmp540_02_xmdk045_default(p_type,p_xmdk045,p_xmdk044,p_xmdk035)
+#                  
+#                  RETURNING r_xmdk045
+# Input parameter: p_type      #來源類型 1.出通 2.出貨
+#                : p_xmdk045   #多角性質
+#                : p_xmdk044   #多角代碼
+#                : p_xmdk035   #多角序號
+# Return code....: r_xmdk045   #多角性質
+#                : 
+# Date & Author..: 2016/12/30  by ouhz
+# Modify.........: #161229-00049#1 add
+################################################################################
+PRIVATE FUNCTION axmp540_02_xmdk045_default(p_type,p_xmdk045,p_xmdk044,p_xmdk035)
+   DEFINE p_type        LIKE type_t.chr1     #1.出通 2.出貨
+   DEFINE p_xmdk045     LIKE xmdk_t.xmdk045  #多角性質
+   DEFINE p_xmdk044     LIKE xmdk_t.xmdk044  #多角代碼
+   DEFINE p_xmdk035     LIKE xmdk_t.xmdk035  #多角序號
+   DEFINE r_xmdk045     LIKE xmdk_t.xmdk045  #多角性質   
+   DEFINE l_icaa003     LIKE icaa_t.icaa003  #流程類型
+   DEFINE l_icaa011     LIKE icaa_t.icaa011  #出通單開立點
+   
+   LET r_xmdk045 = p_xmdk045
+   
+   #多角性質
+   IF NOT cl_null(p_xmdk044) AND NOT cl_null(p_xmdk035) THEN
+     LET l_icaa003 = ''
+     LET l_icaa011 = ''
+     SELECT icaa003,icaa011 INTO l_icaa003,l_icaa011  FROM icaa_t
+      WHERE icaaent = g_enterprise
+        AND icaa001 = p_xmdk044
+     
+     LET r_xmdk045 = ''
+     CASE p_type
+        WHEN '1' #出通單
+           IF l_icaa011 = '1' THEN  #出通單正拋
+              #改抓第0站之多角性質
+              SELECT xmdg034  INTO r_xmdk045   FROM xmdg_t
+               WHERE xmdgent = g_enterprise
+                 AND xmdg055 = p_xmdk035
+                 AND xmdgsite = (SELECT icab003  FROM icab_t
+                                  WHERE icabent = g_enterprise
+                                    AND icab001 = p_xmdk044
+                                    AND icab002 = 0)
+           ELSE #出通單逆拋
+              #改抓最終站之多角性質
+              SELECT xmdg034  INTO r_xmdk045 FROM xmdg_t
+               WHERE xmdgent = g_enterprise
+                 AND xmdg055 = p_xmdk035
+                 AND xmdgsite = (SELECT icab003  FROM icab_t
+                                  WHERE icabent = g_enterprise
+                                    AND icab001 = p_xmdk044
+                                    AND icab002 = (SELECT MAX(icab002)       FROM icab_t
+                                                    WHERE icabent = g_enterprise
+                                                      AND icab001 = p_xmdk044))
+           END IF           
+        WHEN '2' #訂單
+           IF l_icaa003 = '1' THEN
+              #改抓第0站之多角性質
+              SELECT xmda006    INTO r_xmdk045  FROM xmda_t
+               WHERE xmdaent = g_enterprise
+                 AND xmda031 = p_xmdk035
+                 AND xmdasite = (SELECT icab003       FROM icab_t
+                                  WHERE icabent = g_enterprise
+                                    AND icab001 = p_xmdk044
+                                    AND icab002 = 0)
+           END IF           
+     END CASE
+        
+     IF cl_null(r_xmdk045) THEN
+        LET r_xmdk045 = '7'   #7:代採購出貨
+     END IF
+   END IF
+   RETURN r_xmdk045
+END FUNCTION
+
+ 
+{</section>}
+ 

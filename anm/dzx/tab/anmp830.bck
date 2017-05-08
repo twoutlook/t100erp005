@@ -1,0 +1,50 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmp830" module="anm" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="03538" crtdt="2014-07-28 13:54:20" modid="07900" moddt="2016-08-19 15:34:54" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="銀行系統期末統計作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="nmbxcomp,nmbxcomp_desc(chr80),nmbx001,nmbx002,nmbc002,nmbc100,nmaa002,nmaa003,stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="anm" filename="anmp830" method="dialog">
+    <section id="input">
+      <input id="head" field="nmbxcomp,nmbx001,nmbx002"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="nmbc002,nmbc100,nmaa002,nmaa003"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="nmbxcomp">
+        <after>
+          <reference field="nmbxcomp_desc" ref_field="nmbx_t.nmbxcomp" map_field="nmbxent,nmbxcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="nmbxcomp_desc"/>
+      <column id="nmbx001"/>
+      <column id="nmbx002"/>
+      <column id="nmbc002">
+        <controlp form="q_nmas_01" state="c"/>
+      </column>
+      <column id="nmbc100">
+        <controlp form="q_aooi001_1" state="c"/>
+      </column>
+      <column id="nmaa002">
+        <controlp form="q_ooed004_8" state="c"/>
+      </column>
+      <column id="nmaa003">
+        <controlp form="q_nmag001" state="c"/>
+      </column>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

@@ -1,0 +1,100 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi360" module="aoo" jobmode="N" type="i10" industry="std" fix_arg="0" crtid="02482" crtdt="2013-08-12 16:38:54" modid="02295" moddt="2016-05-16 14:04:13" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="備註維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="ooff001,ooff014,ooff012,ooff002,ooff003,ooff004,ooff005,ooff006,ooff007,ooff008,ooff009,ooff010,ooff011,ooff013,ooffstus,ooffownid,ooffownid_desc(chr80),ooffowndp,ooffowndp_desc(chr80),ooffcrtid,ooffcrtid_desc(chr80),ooffcrtdp,ooffcrtdp_desc(chr80),ooffcrtdt,ooffmodid,ooffmodid_desc(chr80),ooffmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="define"/>
+      <action id="comme"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi360" method="dialog">
+    <section id="input">
+      <input id="head" field="ooff001,ooff014,ooff012,ooff002,ooff003,ooff004,ooff005,ooff006,ooff007,ooff008,ooff009,ooff010,ooff011,ooff013,ooffstus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="ooff001,ooff014,ooff012,ooff002,ooff003,ooff004,ooff005,ooff006,ooff007,ooff008,ooff009,ooff010,ooff011,ooff013,ooffstus,ooffownid,ooffowndp,ooffcrtid,ooffcrtdp,ooffcrtdt,ooffmodid,ooffmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="ooff001,ooff002,ooff003,ooff004,ooff005,ooff006,ooff007,ooff008,ooff009,ooff010,ooff011,ooff012"/>
+      <set id="head" type="no_entry" field="ooff001,ooff002,ooff003,ooff004,ooff005,ooff006,ooff007,ooff008,ooff009,ooff010,ooff011,ooff012"/>
+    </init>
+    <init id="head">
+      <column id="ooff001" def_scc="3"/>
+      <column id="ooff014"/>
+      <column id="ooff012" def_scc="11"/>
+      <column id="ooff002"/>
+      <column id="ooff003"/>
+      <column id="ooff004"/>
+      <column id="ooff005"/>
+      <column id="ooff006"/>
+      <column id="ooff007"/>
+      <column id="ooff008"/>
+      <column id="ooff009"/>
+      <column id="ooff010"/>
+      <column id="ooff011"/>
+      <column id="ooff013"/>
+      <column id="ooffstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="ooffownid">
+        <after>
+          <reference field="ooffownid_desc" ref_field="ooff_t.ooffownid" map_field="ooffownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ooffownid_desc"/>
+      <column id="ooffowndp">
+        <after>
+          <reference field="ooffowndp_desc" ref_field="ooff_t.ooffowndp" map_field="ooffowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="ooffowndp_desc"/>
+      <column id="ooffcrtid">
+        <after>
+          <reference field="ooffcrtid_desc" ref_field="ooff_t.ooffcrtid" map_field="ooffcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ooffcrtid_desc"/>
+      <column id="ooffcrtdp">
+        <after>
+          <reference field="ooffcrtdp_desc" ref_field="ooff_t.ooffcrtdp" map_field="ooffcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="ooffcrtdp_desc"/>
+      <column id="ooffcrtdt"/>
+      <column id="ooffmodid">
+        <after>
+          <reference field="ooffmodid_desc" ref_field="ooff_t.ooffmodid" map_field="ooffmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ooffmodid_desc"/>
+      <column id="ooffmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="ooff_t" pk="ooff001,ooff002,ooff003,ooff004,ooff005,ooff006,ooff007,ooff008,ooff009,ooff010,ooff011,ooff012">
+      <sql id="forupd_sql" type="sql" query="SELECT ooff001,ooff014,ooff012,ooff002,ooff003,ooff004,ooff005,ooff006,ooff007,ooff008,ooff009,ooff010,ooff011,ooff013,ooffstus,ooffownid,&apos;&apos;,ooffowndp,&apos;&apos;,ooffcrtid,&apos;&apos;,ooffcrtdp,&apos;&apos;,ooffcrtdt,ooffmodid,&apos;&apos;,ooffmoddt FROM ooff_t WHERE ooffent= ? AND ooff001=? AND ooff002=? AND ooff003=? AND ooff004=? AND ooff005=? AND ooff006=? AND ooff007=? AND ooff008=? AND ooff009=? AND ooff010=? AND ooff011=? AND ooff012=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT ooff001,ooff002,ooff003,ooff004,ooff005,ooff006,ooff007,ooff008,ooff009,ooff010,ooff011,ooff012 FROM ooff_t" order="ooff001,ooff002,ooff003,ooff004,ooff005,ooff006,ooff007,ooff008,ooff009,ooff010,ooff011,ooff012"/>
+    </head>
+  </dataset>
+</assembly>
+

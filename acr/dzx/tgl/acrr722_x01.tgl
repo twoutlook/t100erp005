@@ -1,0 +1,389 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="acrr722_x01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:1(2016-03-03 16:48:19), PR版次:
+#+ Customerized Version.: SD版次:(), PR版次:
+#+ Build......: 000028
+#+ Filename...: acrr722_x01
+#+ Description: ...
+#+ Creator....: 03247(2015-04-02 17:09:21)
+#+ Modifier...: 03247 -SD/PR-
+
+{</section>}
+
+{<section id="acrr722_x01.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:8)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING                   #where condition
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+
+{</section>}
+
+{<section id="acrr722_x01.main" readonly="Y" >}
+PUBLIC FUNCTION acrr722_x01(p_arg1)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition
+#add-point:init段define(客製用) name="component.define_customerization"
+{<point name="component.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+{<point name="component.define"/>}
+#end add-point
+ 
+   LET tm.wc = p_arg1
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   {<point name="component.arg.prep" />}
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "acrr722_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL acrr722_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL acrr722_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL acrr722_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL acrr722_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL acrr722_x01_rep_data()
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="acrr722_x01.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION acrr722_x01_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   {<point name="create_tmp.before"/>}
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "rtjadocdt.rtja_t.rtjadocdt,l_mmaq003.type_t.chr500,rtja001.rtja_t.rtja001,l_rtja002.type_t.chr500,l_rtja004.type_t.chr500,l_rtja005.type_t.chr500,l_rtab001.type_t.chr500,l_rtjasite.type_t.chr500,l_rtja017.type_t.chr500,l_rtja018.type_t.chr500,l_rtja023.type_t.chr500,l_rtja024.type_t.chr500,l_rtja032.type_t.chr500,rtja033.rtja_t.rtja033,rtja034.rtja_t.rtja034,rtja035.rtja_t.rtja035,rtjb_t_rtjb001.rtjb_t.rtjb001,rtjb_t_rtjb002.rtjb_t.rtjb002,rtjadocno.rtja_t.rtjadocno,rtjb_t_rtjbseq.rtjb_t.rtjbseq,l_sum.type_t.num20_6,rtjb_t_rtjb021.rtjb_t.rtjb021,l_discount.type_t.num20_6,rtjb_t_rtjb004.rtjb_t.rtjb004,imaal_t_imaal003.imaal_t.imaal003,imaal_t_imaal004.imaal_t.imaal004,l_imaa004.type_t.chr500,l_imaa009.type_t.chr500,l_imaa126.type_t.chr500,rtjb_t_rtjb012.rtjb_t.rtjb012,l_rtjb013.type_t.chr500,rtjb_t_rtjb008.rtjb_t.rtjb008,rtjb_t_rtjb009.rtjb_t.rtjb009,rtjb_t_rtjb010.rtjb_t.rtjb010,l_point.type_t.num20_6,l_rtjb021.type_t.num20_6,rtjb_t_rtjb029.rtjb_t.rtjb029" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   {<point name="create_tmp.after"/>}
+   #end add-point:create_tmp.after
+END FUNCTION
+
+{</section>}
+
+{<section id="acrr722_x01.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION acrr722_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+{<point name="ins_prep.define_customerization" edit="c" mark="Y"/>}
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+{<point name="ins_prep.define"/>}
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         {<point name="insert_prep"/>}
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+
+{</section>}
+
+{<section id="acrr722_x01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION acrr722_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+{<point name="sel_prep.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+{<point name="sel_prep.define"/>}
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   {<point name="sel_prep.before" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   {<point name="sel_prep.g_select" mark="Y"/>}
+   #end add-point
+   LET g_select = " SELECT rtjadocdt,mmaq003,mmaf_t.mmaf008,NULL,rtja001,rtja002,pmaal_t.pmaal004,NULL, 
+       rtja004,ooag_t.ooag011,NULL,rtja005,ooefl_t.ooefl003,NULL,rtab_t.rtab001,rtaal_t.rtaal003,NULL, 
+       rtjasite,NULL,rtja017,NULL,rtja018,NULL,rtja023,NULL,rtja024,NULL,rtja032,NULL,rtja033,rtja034, 
+       rtja035,rtjb_t.rtjb001,rtjb_t.rtjb002,rtjadocno,rtjb_t.rtjbseq,NULL,rtjb_t.rtjb021,NULL,rtjb_t.rtjb004, 
+       imaal_t.imaal003,imaal_t.imaal004,imaa_t.imaa004,NULL,imaa_t.imaa009,rtaxl_t.rtaxl003,NULL,imaa_t.imaa126, 
+       oocql_t.oocql004,NULL,rtjb_t.rtjb012,rtjb_t.rtjb013,NULL,rtjb_t.rtjb008,rtjb_t.rtjb009,rtjb_t.rtjb010, 
+       NULL,NULL,rtjb_t.rtjb029"
+ 
+   #add-point:sel_prep g_from name="sel_prep.g_from"
+   {<point name="sel_prep.g_from" mark="Y"/>}
+   #end add-point
+    LET g_from = " FROM mmaq_t,rtja_t,rtjb_t,rtab_t,imaa_t,mmaf_t,pmaal_t,ooag_t,ooefl_t,rtaal_t,imaal_t, 
+        rtaxl_t,oocql_t"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+   {<point name="sel_prep.g_where" mark="Y"/>}
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   {<point name="sel_prep.g_order" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   {<point name="sel_prep.sql.before" mark="Y"/>}
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("mmaq_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   {<point name="sel_prep.sql.after" mark="Y"/>}
+   #end add-point
+   PREPARE acrr722_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE acrr722_x01_curs CURSOR FOR acrr722_x01_prepare
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="acrr722_x01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION acrr722_x01_ins_data()
+DEFINE sr RECORD 
+   rtjadocdt LIKE rtja_t.rtjadocdt, 
+   mmaq003 LIKE mmaq_t.mmaq003, 
+   mmaf_t_mmaf008 LIKE mmaf_t.mmaf008, 
+   l_mmaq003 LIKE type_t.chr500, 
+   rtja001 LIKE rtja_t.rtja001, 
+   rtja002 LIKE rtja_t.rtja002, 
+   pmaal_t_pmaal004 LIKE pmaal_t.pmaal004, 
+   l_rtja002 LIKE type_t.chr500, 
+   rtja004 LIKE rtja_t.rtja004, 
+   ooag_t_ooag011 LIKE ooag_t.ooag011, 
+   l_rtja004 LIKE type_t.chr500, 
+   rtja005 LIKE rtja_t.rtja005, 
+   ooefl_t_ooefl003 LIKE ooefl_t.ooefl003, 
+   l_rtja005 LIKE type_t.chr500, 
+   rtab_t_rtab001 LIKE rtab_t.rtab001, 
+   rtaal_t_rtaal003 LIKE rtaal_t.rtaal003, 
+   l_rtab001 LIKE type_t.chr500, 
+   rtjasite LIKE rtja_t.rtjasite, 
+   l_rtjasite LIKE type_t.chr500, 
+   rtja017 LIKE rtja_t.rtja017, 
+   l_rtja017 LIKE type_t.chr500, 
+   rtja018 LIKE rtja_t.rtja018, 
+   l_rtja018 LIKE type_t.chr500, 
+   rtja023 LIKE rtja_t.rtja023, 
+   l_rtja023 LIKE type_t.chr500, 
+   rtja024 LIKE rtja_t.rtja024, 
+   l_rtja024 LIKE type_t.chr500, 
+   rtja032 LIKE rtja_t.rtja032, 
+   l_rtja032 LIKE type_t.chr500, 
+   rtja033 LIKE rtja_t.rtja033, 
+   rtja034 LIKE rtja_t.rtja034, 
+   rtja035 LIKE rtja_t.rtja035, 
+   rtjb_t_rtjb001 LIKE rtjb_t.rtjb001, 
+   rtjb_t_rtjb002 LIKE rtjb_t.rtjb002, 
+   rtjadocno LIKE rtja_t.rtjadocno, 
+   rtjb_t_rtjbseq LIKE rtjb_t.rtjbseq, 
+   l_sum LIKE type_t.num20_6, 
+   rtjb_t_rtjb021 LIKE rtjb_t.rtjb021, 
+   l_discount LIKE type_t.num20_6, 
+   rtjb_t_rtjb004 LIKE rtjb_t.rtjb004, 
+   imaal_t_imaal003 LIKE imaal_t.imaal003, 
+   imaal_t_imaal004 LIKE imaal_t.imaal004, 
+   imaa_t_imaa004 LIKE imaa_t.imaa004, 
+   l_imaa004 LIKE type_t.chr500, 
+   imaa_t_imaa009 LIKE imaa_t.imaa009, 
+   rtaxl_t_rtaxl003 LIKE rtaxl_t.rtaxl003, 
+   l_imaa009 LIKE type_t.chr500, 
+   imaa_t_imaa126 LIKE imaa_t.imaa126, 
+   oocql_t_oocql004 LIKE oocql_t.oocql004, 
+   l_imaa126 LIKE type_t.chr500, 
+   rtjb_t_rtjb012 LIKE rtjb_t.rtjb012, 
+   rtjb_t_rtjb013 LIKE rtjb_t.rtjb013, 
+   l_rtjb013 LIKE type_t.chr500, 
+   rtjb_t_rtjb008 LIKE rtjb_t.rtjb008, 
+   rtjb_t_rtjb009 LIKE rtjb_t.rtjb009, 
+   rtjb_t_rtjb010 LIKE rtjb_t.rtjb010, 
+   l_point LIKE type_t.num20_6, 
+   l_rtjb021 LIKE type_t.num20_6, 
+   rtjb_t_rtjb029 LIKE rtjb_t.rtjb029
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+{<point name="ins_data.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+{<point name="ins_data.define"/>}
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    {<point name="ins_data.before"/>}
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH acrr722_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       {<point name="ins_data.foreach"/>}
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       {<point name="ins_data.before.save"/>}
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.rtjadocdt,sr.l_mmaq003,sr.rtja001,sr.l_rtja002,sr.l_rtja004,sr.l_rtja005,sr.l_rtab001,sr.l_rtjasite,sr.l_rtja017,sr.l_rtja018,sr.l_rtja023,sr.l_rtja024,sr.l_rtja032,sr.rtja033,sr.rtja034,sr.rtja035,sr.rtjb_t_rtjb001,sr.rtjb_t_rtjb002,sr.rtjadocno,sr.rtjb_t_rtjbseq,sr.l_sum,sr.rtjb_t_rtjb021,sr.l_discount,sr.rtjb_t_rtjb004,sr.imaal_t_imaal003,sr.imaal_t_imaal004,sr.l_imaa004,sr.l_imaa009,sr.l_imaa126,sr.rtjb_t_rtjb012,sr.l_rtjb013,sr.rtjb_t_rtjb008,sr.rtjb_t_rtjb009,sr.rtjb_t_rtjb010,sr.l_point,sr.l_rtjb021,sr.rtjb_t_rtjb029
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "acrr722_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       {<point name="ins_data.after.save"/>}
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    {<point name="ins_data.after"/>}
+    #end add-point
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="acrr722_x01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION acrr722_x01_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+{<point name="rep_data.define_customerization" edit="c" mark="Y"/>}
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+{<point name="rep_data.define"/>}
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    {<point name="rep_data.before"/>}
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    {<point name="rep_data.after"/>}
+    #end add-point:rep_data.after
+END FUNCTION
+
+{</section>}
+
+{<section id="acrr722_x01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

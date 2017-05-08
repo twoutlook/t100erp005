@@ -1,0 +1,937 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="awsp300.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(1900-01-01 00:00:00), PR版次:0004(2016-01-05 14:45:47)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000043
+#+ Filename...: awsp300
+#+ Description: 查詢報表排程中介程式
+#+ Creator....: 04010(2014-12-25 10:11:30)
+#+ Modifier...: 00000 -SD/PR- 04010
+ 
+{</section>}
+ 
+{<section id="awsp300.global" >}
+#應用 i00 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#+ Modifier...: No.151102-00034#3 15/11/02 Cynthia  報表環境變數入資料庫
+#+ Modifier...: No.151216-00001#1 15/12/24 Cynthia  排程問題修正
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+IMPORT FGL WSHelper
+IMPORT com
+IMPORT xml
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+&include "../../aws/4gl/awsp300.inc" 
+GLOBALS "../../cfg/top_schedule.inc"
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+TYPE type_g_attribute DYNAMIC ARRAY OF RECORD
+                name         STRING,      #屬性名稱
+                value        STRING       #屬性值
+             END RECORD
+DEFINE awsp300_SetTaskHTTPReq          com.HTTPRequest
+DEFINE awsp300_SetTaskHTTPResp         com.HTTPResponse
+DEFINE g_ip                            LIKE type_t.chr100
+
+ TYPE type_parameter RECORD
+        wc1              LIKE gzgh_t.gzgh001,   
+        wc2              LIKE gzpe_t.gzpe001,   #排程ID
+        wc3              LIKE gzpe_t.gzpe002,   #排程序號
+        wc               STRING
+                     END RECORD
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="awsp300.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define name="main.define"
+   DEFINE ls_js                  STRING
+   DEFINE lc_param               type_parameter  
+   DEFINE l_wsstatus             INTEGER
+   DEFINE l_result               STRING
+   
+
+   DEFINE l_req_doc              xml.DomDocument
+   DEFINE l_request_root         xml.DomNode           #Request XML Node
+   DEFINE l_service_attr         type_g_attribute
+   DEFINE l_serverip             STRING
+   DEFINE l_service_name         STRING
+   DEFINE l_key                  STRING
+   DEFINE l_strStart             STRING
+   DEFINE l_strEnd               STRING
+   DEFINE l_start_time           DATETIME YEAR TO SECOND
+   DEFINE l_end_time             DATETIME YEAR TO SECOND   
+   DEFINE l_time                 STRING
+   DEFINE l_node_str             STRING
+   DEFINE l_res_doc              xml.DomDocument
+   DEFINE l_response             STRING
+   DEFINE la_param     RECORD
+          prog            STRING,
+          param           DYNAMIC ARRAY OF STRING
+                       END RECORD
+   DEFINE ls_run_cmd   STRING,
+          lb_run_result BOOLEAN,
+          ls_err_msg    STRING   
+   
+   #end add-point    
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   LET g_bgjob = "Y"
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aws","")
+ 
+   #add-point:作業初始化 name="main.init"
+   
+   #end add-point
+ 
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE awsp300_cl CURSOR FROM g_forupd_sql 
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_awsp300 WITH FORM cl_ap_formpath("aws",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL awsp300_init()
+ 
+      #進入選單 Menu (='N')
+      CALL awsp300_ui_dialog()
+   
+      #畫面關閉
+      CLOSE WINDOW w_awsp300
+   END IF
+ 
+   #add-point:作業離開前 name="main.exit"
+   LET lc_param.wc1 = g_argv[1]
+   LET lc_param.wc2 = g_argv[2]
+   LET lc_param.wc3 = g_argv[3]
+   
+   LET l_start_time = cl_get_current()
+   LET l_strStart = "Begin Time at ", l_start_time, "\n"
+
+   #建立 Request XML Document
+   LET l_service_attr[1].name = "prod"
+   LET l_service_attr[1].value = "T100_xg"
+   
+   LET l_service_name = "awsp300_SetTask"   #待修改 
+   LET l_service_attr[2].name = "name"
+   LET l_service_attr[2].value = l_service_name.trim()
+
+   LET l_service_attr[3].name = "srvver"
+   LET l_service_attr[3].value = ""
+
+   LET l_serverip = cl_xg_get_serverip("XTRAGRIDIP")      
+   LET l_service_attr[4].name = "ip"
+   LET l_service_attr[4].value = l_serverip
+
+   LET l_service_attr[5].name = "id"
+   LET l_service_attr[5].value = ""    #FGL_GETENV("ZONE")
+   
+   CALL cl_ws_create_request_head("",l_service_attr) RETURNING l_req_doc, l_request_root
+   
+   #建立datakey
+   LET l_key = lc_param.wc3
+   LET l_key = lc_param.wc2,"|",l_key.trim(),"|",lc_param.wc1
+   CALL cl_ws_create_node(l_req_doc,l_request_root,"datakey","",l_key) RETURNING l_req_doc, l_request_root 
+  
+   #建立payload(空白)
+#   CALL cl_ws_create_node(l_req_doc,l_request_root,"payload",""," ") RETURNING l_req_doc, l_request_root   
+   
+   IF l_req_doc IS NULL THEN
+      RETURN FALSE
+   END IF   
+ 
+   LET l_end_time = cl_get_current()
+   LET l_strEnd = "End time at ", l_end_time, "\n"
+   LET l_time = "time-consuming: ", l_end_time - l_start_time 
+   CALL l_req_doc.setFeature("format-pretty-print", true)      
+   LET l_node_str = l_req_doc.saveToString()
+   LET l_node_str=cl_str_replace(l_node_str,"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>","")
+   CALL awsp300_cli(l_node_str) RETURNING l_wsstatus,l_result
+#   CALL awsp300_01_schedule(l_node_str) RETURNING l_wsstatus,l_result
+   
+#   CALL cl_ws_get_response(l_wsstatus) RETURNING l_res_doc
+#   LET l_res_str = l_res_doc.saveToString()
+#   LET l_node_str = l_node_str,"\r\n\r\n",l_encode_str
+#   CALL l_req_doc.setFeature("format-pretty-print", true)
+   CALL cl_ws_write_log_file("xgcli",l_node_str,l_result,l_strStart,l_strEnd,l_time)
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+ 
+{</section>}
+ 
+{<section id="awsp300.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING wsstatus
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: wsstatus       回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2015/01/12 By Cynthia
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsp300_SetTask_g()
+  DEFINE wsstatus   INTEGER
+  DEFINE retryAuth  INTEGER
+  DEFINE retryProxy INTEGER
+  DEFINE retry      INTEGER
+  DEFINE nb         INTEGER
+  DEFINE uri        STRING
+  DEFINE setcookie  STRING
+  DEFINE mustUnderstand INTEGER
+  DEFINE request    com.HTTPRequest
+  DEFINE response   com.HTTPResponse
+  DEFINE writer     xml.StaxWriter
+  DEFINE reader     xml.StaxReader
+  DEFINE l_response STRING
+
+  #
+  # INIT VARIABLES
+  #
+  LET wsstatus = -1
+  LET retryAuth = FALSE
+  LET retryProxy = FALSE
+  LET retry = TRUE
+  LET uri = com.WebServiceEngine.GetOption("SoapModuleURI")
+
+  IF PrintService_PrintServiceSoap12Endpoint.Address.Uri IS NULL THEN
+#    LET PrintService_PrintServiceSoap12Endpoint.Address.Uri = "http://10.40.40.24/PrintService/PrintService.asmx"
+    LET PrintService_PrintServiceSoap12Endpoint.Address.Uri = g_ip,"/PrintService/PrintService.asmx"    
+  END IF
+
+  #
+  # CREATE REQUEST
+  #
+  TRY
+    LET request = com.HTTPRequest.Create(PrintService_PrintServiceSoap12Endpoint.Address.Uri)
+    CALL request.setMethod("POST")
+    CALL request.setCharset("UTF-8")
+    CALL request.setHeader("Content-Type","application/soap+xml; action=\"http://tempuri.org/T100/ReportServiceGateWay/awsp300_SetTask\"")
+    CALL WSHelper_SetRequestHeaders(request, PrintService_PrintServiceSoap12Endpoint.Binding.Request.Headers)
+    IF PrintService_PrintServiceSoap12Endpoint.Binding.Version IS NOT NULL THEN
+      CALL request.setVersion(PrintService_PrintServiceSoap12Endpoint.Binding.Version)
+    END IF
+    IF PrintService_PrintServiceSoap12Endpoint.Binding.Cookie IS NOT NULL THEN
+      CALL request.setHeader("Cookie",PrintService_PrintServiceSoap12Endpoint.Binding.Cookie)
+    END IF
+    IF PrintService_PrintServiceSoap12Endpoint.Binding.ConnectionTimeout <> 0 THEN
+      CALL request.setConnectionTimeout(PrintService_PrintServiceSoap12Endpoint.Binding.ConnectionTimeout)
+    END IF
+    IF PrintService_PrintServiceSoap12Endpoint.Binding.ReadWriteTimeout <> 0 THEN
+      CALL request.setTimeout(PrintService_PrintServiceSoap12Endpoint.Binding.ReadWriteTimeout)
+    END IF
+    IF PrintService_PrintServiceSoap12Endpoint.Binding.CompressRequest IS NOT NULL THEN
+      CALL request.setHeader("Content-Encoding",PrintService_PrintServiceSoap12Endpoint.Binding.CompressRequest)
+    END IF
+    CALL request.setHeader("Accept-Encoding","gzip, deflate")
+  CATCH
+    LET wsstatus = STATUS
+    CALL WSHelper_FillSOAP12WSError("Sender","Cannot create HTTPRequest")
+    RETURN wsstatus
+  END TRY
+
+  # START LOOP
+  WHILE retry
+    LET retry = FALSE
+
+    #
+    # Stax request
+    #
+    TRY
+      LET writer = request.beginXmlRequest()
+      CALL WSHelper_WriteStaxSOAP12StartEnvelope(writer)
+      CALL WSHelper_WriteStaxSOAP12StartBody(writer)
+      #
+      # STAX SOAP REQUEST SERIALIZE
+      #
+      CALL xml.Serializer.VariableToStax(awsp300_SetTask,writer)
+      CALL WSHelper_WriteStaxSOAP12EndBody(writer)
+      CALL WSHelper_WriteStaxSOAP12EndEnvelope(writer)
+      CALL request.endXmlRequest(writer)
+    CATCH
+      LET wsstatus = STATUS
+      CALL WSHelper_FillSOAP12WSError("Sender",SQLCA.SQLERRM)
+      RETURN wsstatus
+    END TRY
+
+    #
+    # PROCESS RESPONSE
+    #
+    TRY
+      LET response = request.getResponse()
+#      LET l_response = response.toString()  #150112
+      #
+      # RETRIEVE SERVICE SESSION COOKIE
+      #
+      LET setcookie = response.getHeader("Set-Cookie")
+      IF setcookie IS NOT NULL THEN
+        LET PrintService_PrintServiceSoap12Endpoint.Binding.Cookie = WSHelper_ExtractServerCookie(setcookie,PrintService_PrintServiceSoap12Endpoint.Address.Uri)
+      END IF
+
+      #
+      # RETRIEVE HTTP RESPONSE Headers
+      #
+      CALL WSHelper_SetResponseHeaders(response, PrintService_PrintServiceSoap12Endpoint.Binding.Response.Headers)
+      CASE response.getStatusCode()
+
+        WHEN 500 # SOAP Fault
+          #
+          # Check SOAP 1.2 MimeType
+          #
+          IF NOT WSHelper_CheckSOAP12HttpMimeType(response) THEN
+            EXIT CASE
+          END IF
+          #
+          # STAX SOAP FAULT
+          #
+          LET reader = response.beginXmlResponse() # Begin Streaming Response
+          IF NOT WSHelper_ReadStaxSOAP12StartEnvelope(reader) THEN
+            EXIT CASE
+          END IF
+          # Process SOAP headers 
+          IF WSHelper_CheckStaxSOAP12Header(reader) AND NOT reader.isEmptyElement() THEN
+            CALL reader.nextTag()
+            WHILE (reader.getEventType()=="START_ELEMENT")
+              IF WSHelper_CheckStaxSOAP12HeaderRole(reader,uri) THEN
+                LET mustUnderstand = WSHelper_GetStaxSOAP12HeaderMustUnderstand(reader)
+                IF mustUnderstand = -1 THEN
+                  CALL WSHelper_FillSOAP11WSError("Sender","Invalid mustUnderstand value")
+                  EXIT CASE
+                END IF
+                IF mustUnderstand THEN
+                  CALL WSHelper_FillSOAP12WSError("MustUnderstand","Mandatory header block not understood")
+                  EXIT CASE
+                ELSE
+                  CALL reader.nextSibling() # Skip header, not necessary
+                END IF
+              ELSE
+                CALL reader.nextSibling() # Skip header, not intended to us
+              END IF
+            END WHILE
+            IF NOT WSHelper_CheckStaxSOAP12Header(reader) THEN
+              CALL WSHelper_FillSOAP11WSError("Sender","No ending header tag found")
+              EXIT CASE
+            ELSE
+              CALL reader.nextTag()
+            END IF
+          ELSE
+            IF WSHelper_CheckStaxSOAP12Header(reader) THEN
+              CALL reader.nextSibling() # Skip SOAP headers
+            END IF
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12StartBody(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12StartFault(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12FaultUntilDetail(reader) THEN
+            EXIT CASE
+          END IF
+          IF WSHelper_CheckStaxSOAP12FaultDetail(reader) THEN
+            #
+            # STAX SOAP FAULT DESERIALIZE
+            #
+            CALL reader.nextSibling() # Skip SOAP detail
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12EndFault(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12EndBody(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12EndEnvelope(reader) THEN
+            EXIT CASE
+          END IF
+          # End Streaming Response
+          CALL response.endXmlResponse(reader)
+
+        WHEN 200 # SOAP Result
+          #
+          # Check SOAP 1.2 MimeType
+          #
+          IF NOT WSHelper_CheckSOAP12HttpMimeType(response) THEN
+            EXIT CASE
+          END IF
+          #
+          # STAX SOAP RESPONSE
+          #
+          LET reader = response.beginXmlResponse() # Begin Streaming Response
+          IF NOT WSHelper_ReadStaxSOAP12StartEnvelope(reader) THEN
+            EXIT CASE
+          END IF
+          # Process SOAP headers 
+          IF WSHelper_CheckStaxSOAP12Header(reader) AND NOT reader.isEmptyElement() THEN
+            LET nb = 0
+            CALL reader.nextTag()
+            WHILE (reader.getEventType()=="START_ELEMENT")
+              IF WSHelper_CheckStaxSOAP12HeaderRole(reader,uri) THEN
+                LET mustUnderstand = WSHelper_GetStaxSOAP12HeaderMustUnderstand(reader)
+                IF mustUnderstand = -1 THEN
+                  CALL WSHelper_FillSOAP12WSError("Sender","Invalid mustUnderstand value")
+                  EXIT CASE
+                END IF
+                #
+                # STAX SOAP RESPONSE HEADER DESERIALIZE
+                #
+                IF mustUnderstand THEN
+                  CALL WSHelper_FillSOAP12WSError("MustUnderstand","Mandatory header block not understood")
+                  EXIT CASE
+                ELSE
+                  CALL reader.nextSibling() # Skip header, not necessary
+                END IF
+              ELSE
+                CALL reader.nextSibling() # Skip header, not intended to us
+              END IF
+            END WHILE
+            IF NOT WSHelper_CheckStaxSOAP12Header(reader) THEN
+              CALL WSHelper_FillSOAP12WSError("Sender","No ending header tag found")
+              EXIT CASE
+            ELSE
+              IF nb != 0 THEN
+                CALL WSHelper_FillSOAP12WSError("Sender","One or more headers are missing")
+                EXIT CASE
+              ELSE
+                CALL reader.nextTag()
+              END IF
+            END IF
+          ELSE
+           IF reader.isEmptyElement() THEN
+             CALL reader.nextTag()
+           END IF
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12StartBody(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_RetrieveStaxSOAP12Message(reader) THEN
+            EXIT CASE
+          END IF
+          #
+          # STAX SOAP RESPONSE DESERIALIZE
+          #
+          CALL xml.Serializer.StaxToVariable(reader,awsp300_SetTaskResponse)
+          IF NOT WSHelper_ReadStaxSOAP12EndBody(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12EndEnvelope(reader) THEN
+            EXIT CASE
+          END IF
+          # End Streaming Response
+          CALL response.endXmlResponse(reader)
+          LET wsstatus = 0
+
+        WHEN 401 # HTTP Authentication
+          IF retryAuth THEN
+            CALL WSHelper_FillSOAP12WSError("Receiver","HTTP Error 401 ("||response.getStatusDescription()||")")
+          ELSE
+            LET retryAuth = TRUE
+            LET retry = TRUE
+          END IF
+
+        WHEN 407 # Proxy Authentication
+          IF retryProxy THEN
+            CALL WSHelper_FillSOAP12WSError("Receiver","HTTP Error 407 ("||response.getStatusDescription()||")")
+          ELSE
+            LET retryProxy = TRUE
+            LET retry = TRUE
+          END IF
+
+        OTHERWISE
+          CALL WSHelper_FillSOAP12WSError("Receiver","HTTP Error "||response.getStatusCode()||" ("||response.getStatusDescription()||")")
+
+      END CASE
+    CATCH
+      LET wsstatus = status
+      CALL WSHelper_FillSOAP12WSError("Receiver",SQLCA.SQLERRM)
+      RETURN wsstatus
+    END TRY
+
+  # END LOOP
+  END WHILE
+
+  RETURN wsstatus
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2015/01/12 By Cynthia
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsp300_SetTaskRequest_g()
+  DEFINE wsstatus   INTEGER
+  DEFINE writer     xml.StaxWriter
+
+  #
+  # CHECK PREVIOUS CALL  
+  #
+  IF awsp300_SetTaskHTTPReq IS NOT NULL AND awsp300_SetTaskHTTPResp IS NULL THEN
+    # Request was sent but there was no response yet
+    CALL WSHelper_FillSOAP12WSError("Sender","Cannot issue a new request until previous response was received")
+    RETURN -2 # waiting for the response
+  ELSE
+    IF PrintService_PrintServiceSoap12Endpoint.Address.Uri IS NULL THEN
+#      LET PrintService_PrintServiceSoap12Endpoint.Address.Uri = "http://10.40.40.24/PrintService/PrintService.asmx"
+      LET PrintService_PrintServiceSoap12Endpoint.Address.Uri =g_ip,"/PrintService/PrintService.asmx"      
+    END IF
+  END IF
+
+  #
+  # CREATE REQUEST
+  #
+  TRY
+    LET awsp300_SetTaskHTTPReq = com.HTTPRequest.Create(PrintService_PrintServiceSoap12Endpoint.Address.Uri)
+    CALL awsp300_SetTaskHTTPReq.setMethod("POST")
+    CALL awsp300_SetTaskHTTPReq.setCharset("UTF-8")
+    CALL awsp300_SetTaskHTTPReq.setHeader("Content-Type","application/soap+xml; action=\"http://tempuri.org/T100/ReportServiceGateWay/awsp300_SetTask\"")
+    CALL WSHelper_SetRequestHeaders(awsp300_SetTaskHTTPReq, PrintService_PrintServiceSoap12Endpoint.Binding.Request.Headers)
+    IF PrintService_PrintServiceSoap12Endpoint.Binding.Version IS NOT NULL THEN
+      CALL awsp300_SetTaskHTTPReq.setVersion(PrintService_PrintServiceSoap12Endpoint.Binding.Version)
+    END IF
+    IF PrintService_PrintServiceSoap12Endpoint.Binding.Cookie IS NOT NULL THEN
+      CALL awsp300_SetTaskHTTPReq.setHeader("Cookie",PrintService_PrintServiceSoap12Endpoint.Binding.Cookie)
+    END IF
+    IF PrintService_PrintServiceSoap12Endpoint.Binding.ConnectionTimeout <> 0 THEN
+      CALL awsp300_SetTaskHTTPReq.setConnectionTimeout(PrintService_PrintServiceSoap12Endpoint.Binding.ConnectionTimeout)
+    END IF
+    IF PrintService_PrintServiceSoap12Endpoint.Binding.ReadWriteTimeout <> 0 THEN
+      CALL awsp300_SetTaskHTTPReq.setTimeout(PrintService_PrintServiceSoap12Endpoint.Binding.ReadWriteTimeout)
+    END IF
+    IF PrintService_PrintServiceSoap12Endpoint.Binding.CompressRequest IS NOT NULL THEN
+      CALL awsp300_SetTaskHTTPReq.setHeader("Content-Encoding",PrintService_PrintServiceSoap12Endpoint.Binding.CompressRequest)
+    END IF
+    CALL awsp300_SetTaskHTTPReq.setHeader("Accept-Encoding","gzip, deflate")
+  CATCH
+    LET wsstatus = STATUS
+    CALL WSHelper_FillSOAP12WSError("Sender","Cannot create HTTPRequest")
+    LET awsp300_SetTaskHTTPReq = NULL
+    RETURN wsstatus
+  END TRY
+
+    #
+    # Stax request
+    #
+    TRY
+      LET writer = awsp300_SetTaskHTTPReq.beginXmlRequest()
+      CALL WSHelper_WriteStaxSOAP12StartEnvelope(writer)
+      CALL WSHelper_WriteStaxSOAP12StartBody(writer)
+      #
+      # STAX SOAP REQUEST SERIALIZE
+      #
+      CALL xml.Serializer.VariableToStax(awsp300_SetTask,writer)
+      CALL WSHelper_WriteStaxSOAP12EndBody(writer)
+      CALL WSHelper_WriteStaxSOAP12EndEnvelope(writer)
+      CALL awsp300_SetTaskHTTPReq.endXmlRequest(writer)
+    CATCH
+      LET wsstatus = STATUS
+      CALL WSHelper_FillSOAP12WSError("Sender",SQLCA.SQLERRM)
+      LET awsp300_SetTaskHTTPReq = NULL
+      RETURN wsstatus
+    END TRY
+
+  #
+  # PROCESS RESPONSE
+  #
+  TRY
+    LET awsp300_SetTaskHTTPResp = awsp300_SetTaskHTTPReq.getAsyncResponse()
+    RETURN 0 # SUCCESS
+  CATCH
+    LET wsstatus = STATUS
+    CALL WSHelper_FillSOAP12WSError("Receiver",SQLCA.SQLERRM)
+    LET awsp300_SetTaskHTTPReq = NULL
+    RETURN wsstatus
+  END TRY
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2015/01/12 By Cynthia
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsp300_SetTaskResponse_g()
+  DEFINE wsstatus        INTEGER
+  DEFINE nb              INTEGER
+  DEFINE uri             STRING
+  DEFINE setcookie       STRING
+  DEFINE mustUnderstand  INTEGER
+  DEFINE reader          xml.StaxReader
+
+  LET wsstatus = -1
+
+  LET uri = com.WebServiceEngine.GetOption("SoapModuleURI")
+  #
+  # CHECK PREVIOUS CALL  
+  #
+  IF awsp300_SetTaskHTTPReq IS NULL THEN
+    # No request was sent
+    CALL WSHelper_FillSOAP12WSError("Sender","No request has been sent")
+    RETURN -1
+  END IF
+
+  TRY
+    #
+    # PROCESS RESPONSE
+    #
+    IF awsp300_SetTaskHTTPResp IS NULL THEN
+      # Still no response, try again
+      LET awsp300_SetTaskHTTPResp = awsp300_SetTaskHTTPReq.getAsyncResponse()
+    END IF
+
+    IF awsp300_SetTaskHTTPResp IS NULL THEN
+      # We got no response, still waiting for
+      CALL WSHelper_FillSOAP12WSError("Sender","Response was not yet received")
+      RETURN -2
+    END IF
+
+      #
+      # RETRIEVE SERVICE SESSION COOKIE
+      #
+      LET setcookie = awsp300_SetTaskHTTPResp.getHeader("Set-Cookie")
+      IF setcookie IS NOT NULL THEN
+        LET PrintService_PrintServiceSoap12Endpoint.Binding.Cookie = WSHelper_ExtractServerCookie(setcookie,PrintService_PrintServiceSoap12Endpoint.Address.Uri)
+      END IF
+
+      #
+      # RETRIEVE HTTP RESPONSE Headers
+      #
+      CALL WSHelper_SetResponseHeaders(awsp300_SetTaskHTTPResp, PrintService_PrintServiceSoap12Endpoint.Binding.Response.Headers)
+      CASE awsp300_SetTaskHTTPResp.getStatusCode()
+
+        WHEN 500 # SOAP Fault
+          #
+          # Check SOAP 1.2 MimeType
+          #
+          IF NOT WSHelper_CheckSOAP12HttpMimeType(awsp300_SetTaskHTTPResp) THEN
+            EXIT CASE
+          END IF
+          #
+          # STAX SOAP FAULT
+          #
+          LET reader = awsp300_SetTaskHTTPResp.beginXmlResponse() # Begin Streaming Response
+          IF NOT WSHelper_ReadStaxSOAP12StartEnvelope(reader) THEN
+            EXIT CASE
+          END IF
+          # Process SOAP headers 
+          IF WSHelper_CheckStaxSOAP12Header(reader) AND NOT reader.isEmptyElement() THEN
+            CALL reader.nextTag()
+            WHILE (reader.getEventType()=="START_ELEMENT")
+              IF WSHelper_CheckStaxSOAP12HeaderRole(reader,uri) THEN
+                LET mustUnderstand = WSHelper_GetStaxSOAP12HeaderMustUnderstand(reader)
+                IF mustUnderstand = -1 THEN
+                  CALL WSHelper_FillSOAP11WSError("Sender","Invalid mustUnderstand value")
+                  EXIT CASE
+                END IF
+                IF mustUnderstand THEN
+                  CALL WSHelper_FillSOAP12WSError("MustUnderstand","Mandatory header block not understood")
+                  EXIT CASE
+                ELSE
+                  CALL reader.nextSibling() # Skip header, not necessary
+                END IF
+              ELSE
+                CALL reader.nextSibling() # Skip header, not intended to us
+              END IF
+            END WHILE
+            IF NOT WSHelper_CheckStaxSOAP12Header(reader) THEN
+              CALL WSHelper_FillSOAP11WSError("Sender","No ending header tag found")
+              EXIT CASE
+            ELSE
+              CALL reader.nextTag()
+            END IF
+          ELSE
+            IF WSHelper_CheckStaxSOAP12Header(reader) THEN
+              CALL reader.nextSibling() # Skip SOAP headers
+            END IF
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12StartBody(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12StartFault(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12FaultUntilDetail(reader) THEN
+            EXIT CASE
+          END IF
+          IF WSHelper_CheckStaxSOAP12FaultDetail(reader) THEN
+            #
+            # STAX SOAP FAULT DESERIALIZE
+            #
+            CALL reader.nextSibling() # Skip SOAP detail
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12EndFault(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12EndBody(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12EndEnvelope(reader) THEN
+            EXIT CASE
+          END IF
+          # End Streaming Response
+          CALL awsp300_SetTaskHTTPResp.endXmlResponse(reader)
+
+        WHEN 200 # SOAP Result
+          #
+          # Check SOAP 1.2 MimeType
+          #
+          IF NOT WSHelper_CheckSOAP12HttpMimeType(awsp300_SetTaskHTTPResp) THEN
+            EXIT CASE
+          END IF
+          #
+          # STAX SOAP RESPONSE
+          #
+          LET reader = awsp300_SetTaskHTTPResp.beginXmlResponse() # Begin Streaming Response
+          IF NOT WSHelper_ReadStaxSOAP12StartEnvelope(reader) THEN
+            EXIT CASE
+          END IF
+          # Process SOAP headers 
+          IF WSHelper_CheckStaxSOAP12Header(reader) AND NOT reader.isEmptyElement() THEN
+            LET nb = 0
+            CALL reader.nextTag()
+            WHILE (reader.getEventType()=="START_ELEMENT")
+              IF WSHelper_CheckStaxSOAP12HeaderRole(reader,uri) THEN
+                LET mustUnderstand = WSHelper_GetStaxSOAP12HeaderMustUnderstand(reader)
+                IF mustUnderstand = -1 THEN
+                  CALL WSHelper_FillSOAP12WSError("Sender","Invalid mustUnderstand value")
+                  EXIT CASE
+                END IF
+                #
+                # STAX SOAP RESPONSE HEADER DESERIALIZE
+                #
+                IF mustUnderstand THEN
+                  CALL WSHelper_FillSOAP12WSError("MustUnderstand","Mandatory header block not understood")
+                  EXIT CASE
+                ELSE
+                  CALL reader.nextSibling() # Skip header, not necessary
+                END IF
+              ELSE
+                CALL reader.nextSibling() # Skip header, not intended to us
+              END IF
+            END WHILE
+            IF NOT WSHelper_CheckStaxSOAP12Header(reader) THEN
+              CALL WSHelper_FillSOAP12WSError("Sender","No ending header tag found")
+              EXIT CASE
+            ELSE
+              IF nb != 0 THEN
+                CALL WSHelper_FillSOAP12WSError("Sender","One or more headers are missing")
+                EXIT CASE
+              ELSE
+                CALL reader.nextTag()
+              END IF
+            END IF
+          ELSE
+           IF reader.isEmptyElement() THEN
+             CALL reader.nextTag()
+           END IF
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12StartBody(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_RetrieveStaxSOAP12Message(reader) THEN
+            EXIT CASE
+          END IF
+          #
+          # STAX SOAP RESPONSE DESERIALIZE
+          #
+          CALL xml.Serializer.StaxToVariable(reader,awsp300_SetTaskResponse)
+          IF NOT WSHelper_ReadStaxSOAP12EndBody(reader) THEN
+            EXIT CASE
+          END IF
+          IF NOT WSHelper_ReadStaxSOAP12EndEnvelope(reader) THEN
+            EXIT CASE
+          END IF
+          # End Streaming Response
+          CALL awsp300_SetTaskHTTPResp.endXmlResponse(reader)
+          LET wsstatus = 0
+
+        OTHERWISE
+          CALL WSHelper_FillSOAP12WSError("Receiver","HTTP Error "||awsp300_SetTaskHTTPResp.getStatusCode()||" ("||awsp300_SetTaskHTTPResp.getStatusDescription()||")")
+
+      END CASE
+    CATCH
+      LET wsstatus = status
+      CALL WSHelper_FillSOAP12WSError("Receiver",SQLCA.SQLERRM)
+    END TRY
+
+  #
+  # RESET VARIABLES
+  #
+  LET awsp300_SetTaskHTTPReq = NULL
+  LET awsp300_SetTaskHTTPResp = NULL
+  RETURN wsstatus
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2015/01/12 By Cynthia
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsp300_cli(p_str)
+   DEFINE p_str        STRING
+   DEFINE l_wsstatus   INTEGER
+   DEFINE l_result     STRING
+   DEFINE l_response   STRING
+   DEFINE l_n          LIKE type_t.num5 
+   DEFINE l_str        STRING
+   DEFINE la_param     RECORD
+          prog            STRING,
+          param           DYNAMIC ARRAY OF STRING
+                       END RECORD
+   DEFINE ls_js        STRING
+   
+#   LET l_str = FGL_GETENV("XTRAGRIDIP")             #151102-00034#3 mark
+   LET l_str = cl_rpt_get_env_global("XTRAGRIDIP")   #151102-00034#3 add
+   LET l_n = l_str.getIndexOf("/",8)
+   LET g_ip = l_str
+   LET g_ip = g_ip[1,l_n-1]
+   
+   LET l_response = ""
+ 
+#   LET awsp300_SetTask.xmlString = p_str
+   CALL awsp300_SetTask(p_str) RETURNING l_wsstatus, awsp300_SetTaskResponse.awsp300_SetTaskResult 
+#   CALL awsp300_SetTask_g() RETURNING l_wsstatus
+
+   IF l_wsstatus <>0 THEN
+      DISPLAY "Error ("||wsError.code||") :",wsError.description
+#   ELSE
+#      IF awsp300_SetTaskResponse.awsp300_SetTaskResult.srvcode = 0 THEN
+#         DISPLAY "Run Failed!"
+#         DISPLAY "Run Succeed!"
+#      ELSE
+#         DISPLAY "Run Succeed!"
+#         DISPLAY "Run Failed!"
+#      END IF 
+   END IF
+  
+   LET l_result = awsp300_SetTaskResponse.awsp300_SetTaskResult
+   RETURN l_wsstatus,l_result
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2015/01/13 By Cynthia
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsp300_SetTask(p_xmlString)
+  DEFINE	p_xmlString		STRING
+  DEFINE	soapStatus		INTEGER
+
+
+  LET awsp300_SetTask.xmlString = p_xmlString
+
+  LET soapStatus = awsp300_SetTask_g()
+
+  RETURN soapStatus, awsp300_SetTaskResponse.awsp300_SetTaskResult
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsp300_init()
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsp300_ui_dialog()
+
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

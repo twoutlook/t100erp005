@@ -1,0 +1,1096 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axct300_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2014-04-08 00:00:00), PR版次:0004(2016-11-25 17:20:14)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000150
+#+ Filename...: axct300_02
+#+ Description: 整批導入
+#+ Creator....: 02291(2014-04-08 16:39:04)
+#+ Modifier...: 02291 -SD/PR- 08993
+ 
+{</section>}
+ 
+{<section id="axct300_02.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#160318-00025#11   2016/04/25 By 07675       將重複內容的錯誤訊息置換為公用錯誤訊息(r.v）
+#161109-00085#21   2016/11/17 By 08993       整批調整系統星號寫法
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_xcca_m        RECORD
+       xccacomp LIKE xcca_t.xccacomp, 
+   xccacomp_desc LIKE type_t.chr80, 
+   xccald LIKE xcca_t.xccald, 
+   xccald_desc LIKE type_t.chr80, 
+   format LIKE type_t.chr500, 
+   mold LIKE type_t.chr2, 
+   way LIKE type_t.chr500
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_xcca_m_t      type_g_xcca_m
+DEFINE l_success       LIKE type_t.num5
+DEFINE g_glaa015       LIKE glaa_t.glaa015
+DEFINE g_glaa019       LIKE glaa_t.glaa019
+#end add-point
+ 
+DEFINE g_xcca_m        type_g_xcca_m
+ 
+   DEFINE g_xccald_t LIKE xcca_t.xccald
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axct300_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axct300_02(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE l_excel         STRING 
+   DEFINE ls_str          STRING
+   DEFINE l_chr           LIKE type_t.chr1   
+   DEFINE l_chr1          LIKE type_t.chr1   
+   DEFINE l_num           LIKE type_t.num5
+   DEFINE l_n             LIKE type_t.num5
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axct300_02 WITH FORM cl_ap_formpath("axc","axct300_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   LET g_xcca_m.xccacomp = ' '
+   LET g_xcca_m.xccald = '' 
+   LET g_xcca_m.format = ''
+   LET g_xcca_m.mold = ''
+   LET g_xcca_m.way = ''
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_xcca_m.xccacomp,g_xcca_m.xccald,g_xcca_m.format,g_xcca_m.mold,g_xcca_m.way ATTRIBUTE(WITHOUT  
+          DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            CALL cl_set_combo_scc('format','8915')
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xccacomp
+            
+            #add-point:AFTER FIELD xccacomp name="input.a.xccacomp"
+            IF NOT cl_null(g_xcca_m.xccacomp) THEN
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_xcca_m.xccacomp
+               #160318-00025#11--add--str
+               LET g_errshow = TRUE 
+               LET g_chkparam.err_str[1] = "aoo-00095:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"
+               #160318-00025#11--add--end 
+               #呼叫檢查存在並帶值的library
+               IF NOT cl_chk_exist('v_ooef001_15') THEN
+                  #檢查失敗時後續處理
+                  LET g_xcca_m.xccacomp = g_xcca_m_t.xccacomp
+                  CALL axct300_02_xccacomp_desc() 
+                  NEXT FIELD xccacomp
+               END IF
+               IF NOT cl_null(g_xcca_m.xccald) THEN
+                  LET l_n = 0
+                  SELECT COUNT(*) INTO l_n FROM glaa_t 
+                   WHERE glaaent = g_enterprise AND glaald = g_xcca_m.xccald
+                     AND glaacomp = g_xcca_m.xccacomp
+                  IF l_n = 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'axc-00224'
+                     LET g_errparam.extend = g_xcca_m_t.xccacomp
+                     LET g_errparam.popup = FALSE
+                     CALL cl_err()
+
+                     CALL axct300_02_xccacomp_desc() 
+                     NEXT FIELD xccald
+                  END IF
+               END IF
+               INITIALIZE g_ref_fields TO NULL
+               LET g_ref_fields[1] = g_xcca_m.xccacomp
+               CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+               LET g_xcca_m.xccacomp_desc = '', g_rtn_fields[1] , ''
+               DISPLAY BY NAME g_xcca_m.xccacomp_desc
+               
+               
+                                                    
+            END IF 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xccacomp
+            #add-point:BEFORE FIELD xccacomp name="input.b.xccacomp"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xccacomp
+            #add-point:ON CHANGE xccacomp name="input.g.xccacomp"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xccald
+            
+            #add-point:AFTER FIELD xccald name="input.a.xccald"
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xcca_m.xccald
+            CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xcca_m.xccald_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xcca_m.xccald_desc
+
+            IF NOT cl_null(g_xcca_m.xccald) THEN
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_xcca_m.xccald
+               #160318-00025#11--add--str
+               LET g_errshow = TRUE 
+               LET g_chkparam.err_str[1] = "agl-00051:sub-01302|agli010|",cl_get_progname("agli010",g_lang,"2"),"|:EXEPROGagli010"
+               #160318-00025#11--add--end
+               #呼叫檢查存在並帶值的library
+               IF NOT cl_chk_exist('v_glaald') THEN
+                  #檢查失敗時後續處理
+                  LET g_xcca_m.xccald = g_xcca_m_t.xccald
+                  CALL axct300_02_xccald_desc()
+                  NEXT FIELD xccald
+               END IF
+               
+               IF NOT cl_null(g_xcca_m.xccacomp) THEN
+                  LET l_n = 0
+                  SELECT COUNT(*) INTO l_n FROM glaa_t 
+                   WHERE glaaent = g_enterprise AND glaacomp = g_xcca_m.xccacomp
+                     AND glaald = g_xcca_m.xccald
+                  IF l_n = 0 THEN
+                     CALL axct300_02_xccald_desc()
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'axc-00225'
+                     LET g_errparam.extend = g_xcca_m.xccald
+                     LET g_errparam.popup = FALSE
+                     CALL cl_err()
+
+                     NEXT FIELD xccald
+                  END IF
+               END IF
+               
+               IF NOT s_ld_chk_authorization(g_user,g_xcca_m.xccald) THEN
+                  CALL axct300_02_xccald_desc()
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'agl-00165'
+                  LET g_errparam.extend = g_xcca_m.xccacomp
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+
+                  NEXT FIELD xccacomp
+               END IF
+               CALL axct300_02_xccald_desc()                               
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xccald
+            #add-point:BEFORE FIELD xccald name="input.b.xccald"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xccald
+            #add-point:ON CHANGE xccald name="input.g.xccald"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD format
+            #add-point:BEFORE FIELD format name="input.b.format"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD format
+            
+            #add-point:AFTER FIELD format name="input.a.format"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE format
+            #add-point:ON CHANGE format name="input.g.format"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mold
+            #add-point:BEFORE FIELD mold name="input.b.mold"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mold
+            
+            #add-point:AFTER FIELD mold name="input.a.mold"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mold
+            #add-point:ON CHANGE mold name="input.g.mold"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD way
+            #add-point:BEFORE FIELD way name="input.b.way"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD way
+            
+            #add-point:AFTER FIELD way name="input.a.way"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE way
+            #add-point:ON CHANGE way name="input.g.way"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.xccacomp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xccacomp
+            #add-point:ON ACTION controlp INFIELD xccacomp name="input.c.xccacomp"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xcca_m.xccacomp             #給予default值
+            LET g_qryparam.default2 = "" #g_xcca_m.ooefl003 #說明(簡稱)
+            #給予arg
+           #LET g_qryparam.arg1 = "" #
+           IF NOT cl_null(g_xcca_m.xccald) THEN
+              LET g_qryparam.where = "ooef003 = 'Y' AND ooef017 = (SELECT glaacomp FROM glaa_t",
+                      "  WHERE glaaent = '",g_enterprise,"' AND glaald = '",g_xcca_m.xccald,"' )"
+            END IF
+
+            
+            CALL q_ooef001()                                #呼叫開窗
+
+            LET g_xcca_m.xccacomp = g_qryparam.return1              
+            #LET g_xcca_m.ooefl003 = g_qryparam.return2 
+            DISPLAY g_xcca_m.xccacomp TO xccacomp              #
+            #DISPLAY g_xcca_m.ooefl003 TO ooefl003 #說明(簡稱)
+            LET g_qryparam.where = NULL
+            NEXT FIELD xccacomp                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xccald
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xccald
+            #add-point:ON ACTION controlp INFIELD xccald name="input.c.xccald"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xcca_m.xccald             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_user
+            LET g_qryparam.arg2 = g_dept
+            IF NOT cl_null(g_xcca_m.xccacomp) THEN
+               LET g_qryparam.where = " glaacomp = '",g_xcca_m.xccacomp,"'"
+            END IF
+            
+            CALL q_authorised_ld()                                #呼叫開窗
+
+            LET g_xcca_m.xccald = g_qryparam.return1              
+
+            DISPLAY g_xcca_m.xccald TO xccald              #
+            LET g_qryparam.where = NULL
+
+            NEXT FIELD xccald                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.format
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD format
+            #add-point:ON ACTION controlp INFIELD format name="input.c.format"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mold
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mold
+            #add-point:ON ACTION controlp INFIELD mold name="input.c.mold"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.way
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD way
+            #add-point:ON ACTION controlp INFIELD way name="input.c.way"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      ON ACTION browser
+         CALL cl_client_browse_file() RETURNING g_xcca_m.way
+         LET ls_str = g_xcca_m.way
+         #抓取目录斜杆
+         LET l_num =ls_str.getIndexOf(':',1)                                    #抓取：后的字符位置
+         LET l_chr = ls_str.substring(l_num+1,l_num+1)                        #截取冒号后的字符 
+         LET l_chr1 = ls_str.substring(ls_str.getLength(),ls_str.getLength())    #判断是否为根目录
+#         IF l_chr <> l_chr1  THEN         
+#            LET g_xcca_m.way = g_xcca_m.way||l_chr
+#         ELSE
+            LET g_xcca_m.way = g_xcca_m.way
+#         END IF 
+         DISPLAY BY NAME g_xcca_m.way
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axct300_02 
+   
+   #add-point:input段after input name="input.post_input"
+   CALL axct300_02_ins_excel(g_xcca_m.way) RETURNING l_success
+   RETURN l_success
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axct300_02.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="axct300_02.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axct300_02_xccacomp_desc()
+   SELECT ooefl003 INTO g_xcca_m.xccacomp_desc FROM ooefl_t 
+    WHERE ooeflent=g_enterprise AND ooefl001=g_xcca_m.xccacomp AND ooefl002=g_dlang
+
+   DISPLAY BY NAME g_xcca_m.xccacomp_desc
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axct300_02_ins_excel(p_excelname)
+DEFINE p_excelname LIKE type_t.chr1000  #excel档名
+DEFINE r_success   LIKE type_t.num5
+DEFINE l_excelname STRING               #excel档名
+DEFINE l_count     LIKE type_t.num10
+DEFINE li_i        LIKE type_t.num10
+DEFINE li_j        LIKE type_t.num10
+DEFINE xlapp,iRes,iRow    LIKE type_t.num5
+#161109-00085#21-s mod
+#DEFINE l_xcca      RECORD LIKE xcca_t.*   #161109-00085#21-s mark
+DEFINE l_xcca      RECORD  #期初庫存數量成本開帳檔
+       xccaent LIKE xcca_t.xccaent, #企業編號
+       xccald LIKE xcca_t.xccald, #帳套
+       xccacomp LIKE xcca_t.xccacomp, #法人組織
+       xcca001 LIKE xcca_t.xcca001, #帳套本位幣順序
+       xcca002 LIKE xcca_t.xcca002, #成本域
+       xcca003 LIKE xcca_t.xcca003, #成本計算類型
+       xcca004 LIKE xcca_t.xcca004, #年度
+       xcca005 LIKE xcca_t.xcca005, #期別
+       xcca006 LIKE xcca_t.xcca006, #料號
+       xcca007 LIKE xcca_t.xcca007, #特性
+       xcca008 LIKE xcca_t.xcca008, #批號
+       xcca101 LIKE xcca_t.xcca101, #當月期末數量
+       xcca102 LIKE xcca_t.xcca102, #當月期末金額-金額合計
+       xcca102a LIKE xcca_t.xcca102a, #當月期末金額-材料
+       xcca102b LIKE xcca_t.xcca102b, #當月期末金額-人工
+       xcca102c LIKE xcca_t.xcca102c, #當月期末金額-委外加工
+       xcca102d LIKE xcca_t.xcca102d, #當月期末金額-制費一
+       xcca102e LIKE xcca_t.xcca102e, #當月期末金額-制費二
+       xcca102f LIKE xcca_t.xcca102f, #當月期末金額-制費三
+       xcca102g LIKE xcca_t.xcca102g, #當月期末金額-制費四
+       xcca102h LIKE xcca_t.xcca102h, #當月期末金額-制費五
+       xcca110 LIKE xcca_t.xcca110, #當月期末金額-平均單價
+       xcca110a LIKE xcca_t.xcca110a, #當月期末金額-材料平均單價
+       xcca110b LIKE xcca_t.xcca110b, #當月期末金額-人工平均單價
+       xcca110c LIKE xcca_t.xcca110c, #當月期末金額-委外加工平均單
+       xcca110d LIKE xcca_t.xcca110d, #當月期末金額-制費一平均單價
+       xcca110e LIKE xcca_t.xcca110e, #當月期末金額-制費二平均單價
+       xcca110f LIKE xcca_t.xcca110f, #當月期末金額-制費三平均單價
+       xcca110g LIKE xcca_t.xcca110g, #當月期末金額-制費四平均單價
+       xcca110h LIKE xcca_t.xcca110h, #當月期末金額-制費五平均單價
+       xccaownid LIKE xcca_t.xccaownid, #資料所有者
+       xccaowndp LIKE xcca_t.xccaowndp, #資料所屬部門
+       xccacrtid LIKE xcca_t.xccacrtid, #資料建立者
+       xccacrtdp LIKE xcca_t.xccacrtdp, #資料建立部門
+       xccacrtdt LIKE xcca_t.xccacrtdt, #資料創建日
+       xccamodid LIKE xcca_t.xccamodid, #資料修改者
+       xccamoddt LIKE xcca_t.xccamoddt, #最近修改日
+       xccacnfid LIKE xcca_t.xccacnfid, #資料確認者
+       xccacnfdt LIKE xcca_t.xccacnfdt, #資料確認日
+       xccapstid LIKE xcca_t.xccapstid, #資料過帳者
+       xccapstdt LIKE xcca_t.xccapstdt, #資料過帳日
+       xccastus LIKE xcca_t.xccastus, #狀態碼
+       xccaud001 LIKE xcca_t.xccaud001, #自定義欄位(文字)001
+       xccaud002 LIKE xcca_t.xccaud002, #自定義欄位(文字)002
+       xccaud003 LIKE xcca_t.xccaud003, #自定義欄位(文字)003
+       xccaud004 LIKE xcca_t.xccaud004, #自定義欄位(文字)004
+       xccaud005 LIKE xcca_t.xccaud005, #自定義欄位(文字)005
+       xccaud006 LIKE xcca_t.xccaud006, #自定義欄位(文字)006
+       xccaud007 LIKE xcca_t.xccaud007, #自定義欄位(文字)007
+       xccaud008 LIKE xcca_t.xccaud008, #自定義欄位(文字)008
+       xccaud009 LIKE xcca_t.xccaud009, #自定義欄位(文字)009
+       xccaud010 LIKE xcca_t.xccaud010, #自定義欄位(文字)010
+       xccaud011 LIKE xcca_t.xccaud011, #自定義欄位(數字)011
+       xccaud012 LIKE xcca_t.xccaud012, #自定義欄位(數字)012
+       xccaud013 LIKE xcca_t.xccaud013, #自定義欄位(數字)013
+       xccaud014 LIKE xcca_t.xccaud014, #自定義欄位(數字)014
+       xccaud015 LIKE xcca_t.xccaud015, #自定義欄位(數字)015
+       xccaud016 LIKE xcca_t.xccaud016, #自定義欄位(數字)016
+       xccaud017 LIKE xcca_t.xccaud017, #自定義欄位(數字)017
+       xccaud018 LIKE xcca_t.xccaud018, #自定義欄位(數字)018
+       xccaud019 LIKE xcca_t.xccaud019, #自定義欄位(數字)019
+       xccaud020 LIKE xcca_t.xccaud020, #自定義欄位(數字)020
+       xccaud021 LIKE xcca_t.xccaud021, #自定義欄位(日期時間)021
+       xccaud022 LIKE xcca_t.xccaud022, #自定義欄位(日期時間)022
+       xccaud023 LIKE xcca_t.xccaud023, #自定義欄位(日期時間)023
+       xccaud024 LIKE xcca_t.xccaud024, #自定義欄位(日期時間)024
+       xccaud025 LIKE xcca_t.xccaud025, #自定義欄位(日期時間)025
+       xccaud026 LIKE xcca_t.xccaud026, #自定義欄位(日期時間)026
+       xccaud027 LIKE xcca_t.xccaud027, #自定義欄位(日期時間)027
+       xccaud028 LIKE xcca_t.xccaud028, #自定義欄位(日期時間)028
+       xccaud029 LIKE xcca_t.xccaud029, #自定義欄位(日期時間)029
+       xccaud030 LIKE xcca_t.xccaud030  #自定義欄位(日期時間)030
+                 END RECORD
+#161109-00085#21-e mod
+#161109-00085#21-s mod
+#DEFINE l_xcca1      RECORD LIKE xcca_t.*   #161109-00085#21-s mark
+DEFINE l_xcca1      RECORD  #期初庫存數量成本開帳檔
+       xccaent LIKE xcca_t.xccaent, #企業編號
+       xccald LIKE xcca_t.xccald, #帳套
+       xccacomp LIKE xcca_t.xccacomp, #法人組織
+       xcca001 LIKE xcca_t.xcca001, #帳套本位幣順序
+       xcca002 LIKE xcca_t.xcca002, #成本域
+       xcca003 LIKE xcca_t.xcca003, #成本計算類型
+       xcca004 LIKE xcca_t.xcca004, #年度
+       xcca005 LIKE xcca_t.xcca005, #期別
+       xcca006 LIKE xcca_t.xcca006, #料號
+       xcca007 LIKE xcca_t.xcca007, #特性
+       xcca008 LIKE xcca_t.xcca008, #批號
+       xcca101 LIKE xcca_t.xcca101, #當月期末數量
+       xcca102 LIKE xcca_t.xcca102, #當月期末金額-金額合計
+       xcca102a LIKE xcca_t.xcca102a, #當月期末金額-材料
+       xcca102b LIKE xcca_t.xcca102b, #當月期末金額-人工
+       xcca102c LIKE xcca_t.xcca102c, #當月期末金額-委外加工
+       xcca102d LIKE xcca_t.xcca102d, #當月期末金額-制費一
+       xcca102e LIKE xcca_t.xcca102e, #當月期末金額-制費二
+       xcca102f LIKE xcca_t.xcca102f, #當月期末金額-制費三
+       xcca102g LIKE xcca_t.xcca102g, #當月期末金額-制費四
+       xcca102h LIKE xcca_t.xcca102h, #當月期末金額-制費五
+       xcca110 LIKE xcca_t.xcca110, #當月期末金額-平均單價
+       xcca110a LIKE xcca_t.xcca110a, #當月期末金額-材料平均單價
+       xcca110b LIKE xcca_t.xcca110b, #當月期末金額-人工平均單價
+       xcca110c LIKE xcca_t.xcca110c, #當月期末金額-委外加工平均單
+       xcca110d LIKE xcca_t.xcca110d, #當月期末金額-制費一平均單價
+       xcca110e LIKE xcca_t.xcca110e, #當月期末金額-制費二平均單價
+       xcca110f LIKE xcca_t.xcca110f, #當月期末金額-制費三平均單價
+       xcca110g LIKE xcca_t.xcca110g, #當月期末金額-制費四平均單價
+       xcca110h LIKE xcca_t.xcca110h, #當月期末金額-制費五平均單價
+       xccaownid LIKE xcca_t.xccaownid, #資料所有者
+       xccaowndp LIKE xcca_t.xccaowndp, #資料所屬部門
+       xccacrtid LIKE xcca_t.xccacrtid, #資料建立者
+       xccacrtdp LIKE xcca_t.xccacrtdp, #資料建立部門
+       xccacrtdt LIKE xcca_t.xccacrtdt, #資料創建日
+       xccamodid LIKE xcca_t.xccamodid, #資料修改者
+       xccamoddt LIKE xcca_t.xccamoddt, #最近修改日
+       xccacnfid LIKE xcca_t.xccacnfid, #資料確認者
+       xccacnfdt LIKE xcca_t.xccacnfdt, #資料確認日
+       xccapstid LIKE xcca_t.xccapstid, #資料過帳者
+       xccapstdt LIKE xcca_t.xccapstdt, #資料過帳日
+       xccastus LIKE xcca_t.xccastus, #狀態碼
+       xccaud001 LIKE xcca_t.xccaud001, #自定義欄位(文字)001
+       xccaud002 LIKE xcca_t.xccaud002, #自定義欄位(文字)002
+       xccaud003 LIKE xcca_t.xccaud003, #自定義欄位(文字)003
+       xccaud004 LIKE xcca_t.xccaud004, #自定義欄位(文字)004
+       xccaud005 LIKE xcca_t.xccaud005, #自定義欄位(文字)005
+       xccaud006 LIKE xcca_t.xccaud006, #自定義欄位(文字)006
+       xccaud007 LIKE xcca_t.xccaud007, #自定義欄位(文字)007
+       xccaud008 LIKE xcca_t.xccaud008, #自定義欄位(文字)008
+       xccaud009 LIKE xcca_t.xccaud009, #自定義欄位(文字)009
+       xccaud010 LIKE xcca_t.xccaud010, #自定義欄位(文字)010
+       xccaud011 LIKE xcca_t.xccaud011, #自定義欄位(數字)011
+       xccaud012 LIKE xcca_t.xccaud012, #自定義欄位(數字)012
+       xccaud013 LIKE xcca_t.xccaud013, #自定義欄位(數字)013
+       xccaud014 LIKE xcca_t.xccaud014, #自定義欄位(數字)014
+       xccaud015 LIKE xcca_t.xccaud015, #自定義欄位(數字)015
+       xccaud016 LIKE xcca_t.xccaud016, #自定義欄位(數字)016
+       xccaud017 LIKE xcca_t.xccaud017, #自定義欄位(數字)017
+       xccaud018 LIKE xcca_t.xccaud018, #自定義欄位(數字)018
+       xccaud019 LIKE xcca_t.xccaud019, #自定義欄位(數字)019
+       xccaud020 LIKE xcca_t.xccaud020, #自定義欄位(數字)020
+       xccaud021 LIKE xcca_t.xccaud021, #自定義欄位(日期時間)021
+       xccaud022 LIKE xcca_t.xccaud022, #自定義欄位(日期時間)022
+       xccaud023 LIKE xcca_t.xccaud023, #自定義欄位(日期時間)023
+       xccaud024 LIKE xcca_t.xccaud024, #自定義欄位(日期時間)024
+       xccaud025 LIKE xcca_t.xccaud025, #自定義欄位(日期時間)025
+       xccaud026 LIKE xcca_t.xccaud026, #自定義欄位(日期時間)026
+       xccaud027 LIKE xcca_t.xccaud027, #自定義欄位(日期時間)027
+       xccaud028 LIKE xcca_t.xccaud028, #自定義欄位(日期時間)028
+       xccaud029 LIKE xcca_t.xccaud029, #自定義欄位(日期時間)029
+       xccaud030 LIKE xcca_t.xccaud030  #自定義欄位(日期時間)030
+                 END RECORD
+#161109-00085#21-e mod
+#161109-00085#21-s mod
+#DEFINE l_xcca2      RECORD LIKE xcca_t.*   #161109-00085#21-s mark
+DEFINE l_xcca2      RECORD  #期初庫存數量成本開帳檔
+       xccaent LIKE xcca_t.xccaent, #企業編號
+       xccald LIKE xcca_t.xccald, #帳套
+       xccacomp LIKE xcca_t.xccacomp, #法人組織
+       xcca001 LIKE xcca_t.xcca001, #帳套本位幣順序
+       xcca002 LIKE xcca_t.xcca002, #成本域
+       xcca003 LIKE xcca_t.xcca003, #成本計算類型
+       xcca004 LIKE xcca_t.xcca004, #年度
+       xcca005 LIKE xcca_t.xcca005, #期別
+       xcca006 LIKE xcca_t.xcca006, #料號
+       xcca007 LIKE xcca_t.xcca007, #特性
+       xcca008 LIKE xcca_t.xcca008, #批號
+       xcca101 LIKE xcca_t.xcca101, #當月期末數量
+       xcca102 LIKE xcca_t.xcca102, #當月期末金額-金額合計
+       xcca102a LIKE xcca_t.xcca102a, #當月期末金額-材料
+       xcca102b LIKE xcca_t.xcca102b, #當月期末金額-人工
+       xcca102c LIKE xcca_t.xcca102c, #當月期末金額-委外加工
+       xcca102d LIKE xcca_t.xcca102d, #當月期末金額-制費一
+       xcca102e LIKE xcca_t.xcca102e, #當月期末金額-制費二
+       xcca102f LIKE xcca_t.xcca102f, #當月期末金額-制費三
+       xcca102g LIKE xcca_t.xcca102g, #當月期末金額-制費四
+       xcca102h LIKE xcca_t.xcca102h, #當月期末金額-制費五
+       xcca110 LIKE xcca_t.xcca110, #當月期末金額-平均單價
+       xcca110a LIKE xcca_t.xcca110a, #當月期末金額-材料平均單價
+       xcca110b LIKE xcca_t.xcca110b, #當月期末金額-人工平均單價
+       xcca110c LIKE xcca_t.xcca110c, #當月期末金額-委外加工平均單
+       xcca110d LIKE xcca_t.xcca110d, #當月期末金額-制費一平均單價
+       xcca110e LIKE xcca_t.xcca110e, #當月期末金額-制費二平均單價
+       xcca110f LIKE xcca_t.xcca110f, #當月期末金額-制費三平均單價
+       xcca110g LIKE xcca_t.xcca110g, #當月期末金額-制費四平均單價
+       xcca110h LIKE xcca_t.xcca110h, #當月期末金額-制費五平均單價
+       xccaownid LIKE xcca_t.xccaownid, #資料所有者
+       xccaowndp LIKE xcca_t.xccaowndp, #資料所屬部門
+       xccacrtid LIKE xcca_t.xccacrtid, #資料建立者
+       xccacrtdp LIKE xcca_t.xccacrtdp, #資料建立部門
+       xccacrtdt LIKE xcca_t.xccacrtdt, #資料創建日
+       xccamodid LIKE xcca_t.xccamodid, #資料修改者
+       xccamoddt LIKE xcca_t.xccamoddt, #最近修改日
+       xccacnfid LIKE xcca_t.xccacnfid, #資料確認者
+       xccacnfdt LIKE xcca_t.xccacnfdt, #資料確認日
+       xccapstid LIKE xcca_t.xccapstid, #資料過帳者
+       xccapstdt LIKE xcca_t.xccapstdt, #資料過帳日
+       xccastus LIKE xcca_t.xccastus, #狀態碼
+       xccaud001 LIKE xcca_t.xccaud001, #自定義欄位(文字)001
+       xccaud002 LIKE xcca_t.xccaud002, #自定義欄位(文字)002
+       xccaud003 LIKE xcca_t.xccaud003, #自定義欄位(文字)003
+       xccaud004 LIKE xcca_t.xccaud004, #自定義欄位(文字)004
+       xccaud005 LIKE xcca_t.xccaud005, #自定義欄位(文字)005
+       xccaud006 LIKE xcca_t.xccaud006, #自定義欄位(文字)006
+       xccaud007 LIKE xcca_t.xccaud007, #自定義欄位(文字)007
+       xccaud008 LIKE xcca_t.xccaud008, #自定義欄位(文字)008
+       xccaud009 LIKE xcca_t.xccaud009, #自定義欄位(文字)009
+       xccaud010 LIKE xcca_t.xccaud010, #自定義欄位(文字)010
+       xccaud011 LIKE xcca_t.xccaud011, #自定義欄位(數字)011
+       xccaud012 LIKE xcca_t.xccaud012, #自定義欄位(數字)012
+       xccaud013 LIKE xcca_t.xccaud013, #自定義欄位(數字)013
+       xccaud014 LIKE xcca_t.xccaud014, #自定義欄位(數字)014
+       xccaud015 LIKE xcca_t.xccaud015, #自定義欄位(數字)015
+       xccaud016 LIKE xcca_t.xccaud016, #自定義欄位(數字)016
+       xccaud017 LIKE xcca_t.xccaud017, #自定義欄位(數字)017
+       xccaud018 LIKE xcca_t.xccaud018, #自定義欄位(數字)018
+       xccaud019 LIKE xcca_t.xccaud019, #自定義欄位(數字)019
+       xccaud020 LIKE xcca_t.xccaud020, #自定義欄位(數字)020
+       xccaud021 LIKE xcca_t.xccaud021, #自定義欄位(日期時間)021
+       xccaud022 LIKE xcca_t.xccaud022, #自定義欄位(日期時間)022
+       xccaud023 LIKE xcca_t.xccaud023, #自定義欄位(日期時間)023
+       xccaud024 LIKE xcca_t.xccaud024, #自定義欄位(日期時間)024
+       xccaud025 LIKE xcca_t.xccaud025, #自定義欄位(日期時間)025
+       xccaud026 LIKE xcca_t.xccaud026, #自定義欄位(日期時間)026
+       xccaud027 LIKE xcca_t.xccaud027, #自定義欄位(日期時間)027
+       xccaud028 LIKE xcca_t.xccaud028, #自定義欄位(日期時間)028
+       xccaud029 LIKE xcca_t.xccaud029, #自定義欄位(日期時間)029
+       xccaud030 LIKE xcca_t.xccaud030  #自定義欄位(日期時間)030
+                 END RECORD
+#161109-00085#21-e mod
+DEFINE l_today     LIKE type_t.dat       #zll g_today 没有了
+DEFINE l_n         LIKE type_t.num5
+DEFINE l_xccastus  LIKE xcca_t.xccastus
+DEFINE l_xccacrtdt    DATETIME YEAR TO SECOND
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+
+   LET l_today= cl_get_current()
+   LET l_count = LENGTH(p_excelname CLIPPED)
+   #转换路径分隔符
+   FOR li_i = 1 TO l_count
+       IF p_excelname[li_i,li_i] ="/" THEN
+          LET l_excelname = l_excelname CLIPPED,'\\'
+       ELSE
+          LET l_excelname = l_excelname CLIPPED,p_excelname[li_i,li_i]
+       END IF
+   END FOR
+
+   CALL ui.interface.frontCall('WinCOM','CreateInstance',
+                               ['Excel.Application'],[xlApp])
+   IF xlApp <> -1 THEN
+      CALL ui.interface.frontCall('WinCOM','CallMethod',
+                                  [xlApp,'WorkBooks.Open',l_excelname],[iRes])
+      IF iRes <> -1 THEN
+         CALL ui.interface.frontCall('WinCOM','GetProperty',
+              [xlApp,'ActiveSheet.UsedRange.Rows.Count'],[iRow])
+         IF iRow > 1 THEN
+            FOR li_i = 2 TO iRow
+                INITIALIZE l_xcca.* TO NULL
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',1).Value'],[l_xcca.xccaent])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',2).Value'],[l_xcca.xccald])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',3).Value'],[l_xcca.xccacomp])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',4).Value'],[l_xcca.xcca001])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',5).Value'],[l_xcca.xcca002])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',6).Value'],[l_xcca.xcca003])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',7).Value'],[l_xcca.xcca004])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',8).Value'],[l_xcca.xcca005])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',9).Value'],[l_xcca.xcca006])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',10).Value'],[l_xcca.xcca007])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',11).Value'],[l_xcca.xcca008])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',12).Value'],[l_xcca.xcca101])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',13).Value'],[l_xcca.xcca110a])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',14).Value'],[l_xcca.xcca110b])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',15).Value'],[l_xcca.xcca110c])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',16).Value'],[l_xcca.xcca110d])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',17).Value'],[l_xcca.xcca110e])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',18).Value'],[l_xcca.xcca110f])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',19).Value'],[l_xcca.xcca110g])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',20).Value'],[l_xcca.xcca110h])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',21).Value'],[l_xcca.xcca110])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',22).Value'],[l_xcca.xcca102a])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',23).Value'],[l_xcca.xcca102b])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',24).Value'],[l_xcca.xcca102c])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',25).Value'],[l_xcca.xcca102d])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',26).Value'],[l_xcca.xcca102e])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',27).Value'],[l_xcca.xcca102f])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',28).Value'],[l_xcca.xcca102g])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',29).Value'],[l_xcca.xcca102h])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',30).Value'],[l_xcca.xcca102])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',31).Value'],[l_xcca1.xcca110a])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',32).Value'],[l_xcca1.xcca110b])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',33).Value'],[l_xcca1.xcca110c])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',34).Value'],[l_xcca1.xcca110d])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',35).Value'],[l_xcca1.xcca110e])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',36).Value'],[l_xcca1.xcca110f])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',37).Value'],[l_xcca1.xcca110g])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',38).Value'],[l_xcca1.xcca110h])
+#                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',39).Value'],[l_xcca.xcca110])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',39).Value'],[l_xcca1.xcca110])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',40).Value'],[l_xcca1.xcca102a])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',41).Value'],[l_xcca1.xcca102b])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',42).Value'],[l_xcca1.xcca102c])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',43).Value'],[l_xcca1.xcca102d])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',44).Value'],[l_xcca1.xcca102e])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',45).Value'],[l_xcca1.xcca102f])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',46).Value'],[l_xcca1.xcca102g])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',47).Value'],[l_xcca1.xcca102h])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',48).Value'],[l_xcca1.xcca102])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',49).Value'],[l_xcca2.xcca110a])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',50).Value'],[l_xcca2.xcca110b])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',51).Value'],[l_xcca2.xcca110c])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',52).Value'],[l_xcca2.xcca110d])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',53).Value'],[l_xcca2.xcca110e])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',54).Value'],[l_xcca2.xcca110f])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',55).Value'],[l_xcca2.xcca110g])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',56).Value'],[l_xcca2.xcca110h])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',57).Value'],[l_xcca2.xcca110])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',58).Value'],[l_xcca2.xcca102a])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',59).Value'],[l_xcca2.xcca102b])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',60).Value'],[l_xcca2.xcca102c])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',61).Value'],[l_xcca2.xcca102d])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',62).Value'],[l_xcca2.xcca102e])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',63).Value'],[l_xcca2.xcca102f])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',64).Value'],[l_xcca2.xcca102g])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',65).Value'],[l_xcca2.xcca102h])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',66).Value'],[l_xcca2.xcca102])
+
+                #如果excel中存在不在畫面上的法人或者帳套CONTINUE
+                IF l_xcca.xccald != g_xcca_m.xccald OR l_xcca.xccacomp != g_xcca_m.xccacomp THEN
+                 #fengmy150122---begin
+                  #CONTINUE FOR
+                  #匯出畫面中帳套不一致的，提示檢核訊息，不予新增
+                   INITIALIZE g_errparam TO NULL
+                   LET g_errparam.code = 'axc-00514'
+                   LET g_errparam.extend = ''
+                   LET g_errparam.popup = TRUE
+                   CALL cl_err()
+
+                   LET r_success = FALSE
+                   EXIT FOR
+                   #fengmy150122---end
+                END IF
+                #fengmy150120--begin
+                IF cl_null(l_xcca.xcca002) THEN LET l_xcca.xcca002 = ' ' END IF
+                IF cl_null(l_xcca.xcca007) THEN LET l_xcca.xcca007 = ' ' END IF
+                IF cl_null(l_xcca.xcca008) THEN LET l_xcca.xcca008 = ' ' END IF
+                #fengmy150120--end
+                #赋默认值
+                LET l_xcca1.xccaent = l_xcca.xccaent
+                LET l_xcca1.xccald = l_xcca.xccald
+                LET l_xcca1.xccacomp = l_xcca.xccacomp
+                LET l_xcca1.xcca002 = l_xcca.xcca002
+                LET l_xcca1.xcca003 = l_xcca.xcca003
+                LET l_xcca1.xcca004 = l_xcca.xcca004
+                LET l_xcca1.xcca005 = l_xcca.xcca005
+                LET l_xcca1.xcca006 = l_xcca.xcca006
+                LET l_xcca1.xcca007 = l_xcca.xcca007
+                LET l_xcca1.xcca008 = l_xcca.xcca008
+                LET l_xcca1.xcca101 = l_xcca.xcca101
+                LET l_xcca2.xccaent = l_xcca.xccaent
+                LET l_xcca2.xccald = l_xcca.xccald
+                LET l_xcca2.xccacomp = l_xcca.xccacomp
+                LET l_xcca2.xcca002 = l_xcca.xcca002
+                LET l_xcca2.xcca003 = l_xcca.xcca003
+                LET l_xcca2.xcca004 = l_xcca.xcca004
+                LET l_xcca2.xcca005 = l_xcca.xcca005
+                LET l_xcca2.xcca006 = l_xcca.xcca006
+                LET l_xcca2.xcca007 = l_xcca.xcca007
+                LET l_xcca2.xcca008 = l_xcca.xcca008
+                LET l_xcca2.xcca101 = l_xcca.xcca101
+                LET l_xcca.xcca001 = '1'
+                LET l_xcca.xccaownid = g_user
+                LET l_xcca.xccaowndp = g_dept
+                LET l_xcca.xccacrtid = g_user
+                LET l_xcca.xccacrtdp = g_dept 
+                LET l_xccacrtdt = cl_get_current()
+                LET l_xcca.xccamodid = ""
+                LET l_xcca.xccamoddt = ""
+                LET l_xcca.xccacnfid = ""
+                LET l_xcca.xccacnfdt = "" 
+                LET l_xcca.xccapstid = ""
+                LET l_xcca.xccapstdt = "" 
+                LET l_xcca.xccapstdt = ""
+                LET l_xcca1.xcca001 = '2'
+                LET l_xcca1.xccaownid = g_user
+                LET l_xcca1.xccaowndp = g_dept
+                LET l_xcca1.xccacrtid = g_user
+                LET l_xcca1.xccacrtdp = g_dept 
+                LET l_xcca1.xccamodid = ""
+                LET l_xcca1.xccamoddt = ""
+                LET l_xcca1.xccacnfid = ""
+                LET l_xcca1.xccacnfdt = "" 
+                LET l_xcca1.xccapstid = ""
+                LET l_xcca1.xccapstdt = "" 
+                LET l_xcca1.xccapstdt = ""
+                LET l_xcca2.xcca001 = '3'
+                LET l_xcca2.xccaownid = g_user
+                LET l_xcca2.xccaowndp = g_dept
+                LET l_xcca2.xccacrtid = g_user
+                LET l_xcca2.xccacrtdp = g_dept 
+                LET l_xcca2.xccamodid = ""
+                LET l_xcca2.xccamoddt = ""
+                LET l_xcca2.xccacnfid = ""
+                LET l_xcca2.xccacnfdt = "" 
+                LET l_xcca2.xccapstid = ""
+                LET l_xcca2.xccapstdt = "" 
+                LET l_xcca2.xccapstdt = ""
+
+               #161109-00085#21-s mod    
+#               INSERT INTO xcca_t VALUES l_xcca.*   #161109-00085#21-s mark
+               INSERT INTO xcca_t (xccaent,xccald,xccacomp,xcca001,xcca002,xcca003,xcca004,xcca005,xcca006,xcca007,
+                                   xcca008,xcca101,xcca102,xcca102a,xcca102b,xcca102c,xcca102d,xcca102e,xcca102f,xcca102g,
+                                   xcca102h,xcca110,xcca110a,xcca110b,xcca110c,xcca110d,xcca110e,xcca110f,xcca110g,xcca110h,
+                                   xccaownid,xccaowndp,xccacrtid,xccacrtdp,xccacrtdt,xccamodid,xccamoddt,xccacnfid,xccacnfdt,xccapstid,
+                                   xccapstdt,xccastus,xccaud001,xccaud002,xccaud003,xccaud004,xccaud005,xccaud006,xccaud007,xccaud008,
+                                   xccaud009,xccaud010,xccaud011,xccaud012,xccaud013,xccaud014,xccaud015,xccaud016,xccaud017,xccaud018,
+                                   xccaud019,xccaud020,xccaud021,xccaud022,xccaud023,xccaud024,xccaud025,xccaud026,xccaud027,xccaud028,
+                                   xccaud029,xccaud030)
+                           VALUES (l_xcca.xccaent,l_xcca.xccald,l_xcca.xccacomp,l_xcca.xcca001,l_xcca.xcca002,
+                                   l_xcca.xcca003,l_xcca.xcca004,l_xcca.xcca005,l_xcca.xcca006,l_xcca.xcca007,
+                                   l_xcca.xcca008,l_xcca.xcca101,l_xcca.xcca102,l_xcca.xcca102a,l_xcca.xcca102b,
+                                   l_xcca.xcca102c,l_xcca.xcca102d,l_xcca.xcca102e,l_xcca.xcca102f,l_xcca.xcca102g,
+                                   l_xcca.xcca102h,l_xcca.xcca110,l_xcca.xcca110a,l_xcca.xcca110b,l_xcca.xcca110c,
+                                   l_xcca.xcca110d,l_xcca.xcca110e,l_xcca.xcca110f,l_xcca.xcca110g,l_xcca.xcca110h,
+                                   l_xcca.xccaownid,l_xcca.xccaowndp,l_xcca.xccacrtid,l_xcca.xccacrtdp,l_xcca.xccacrtdt,
+                                   l_xcca.xccamodid,l_xcca.xccamoddt,l_xcca.xccacnfid,l_xcca.xccacnfdt,l_xcca.xccapstid,
+                                   l_xcca.xccapstdt,l_xcca.xccastus,l_xcca.xccaud001,l_xcca.xccaud002,l_xcca.xccaud003,
+                                   l_xcca.xccaud004,l_xcca.xccaud005,l_xcca.xccaud006,l_xcca.xccaud007,l_xcca.xccaud008,
+                                   l_xcca.xccaud009,l_xcca.xccaud010,l_xcca.xccaud011,l_xcca.xccaud012,l_xcca.xccaud013,
+                                   l_xcca.xccaud014,l_xcca.xccaud015,l_xcca.xccaud016,l_xcca.xccaud017,l_xcca.xccaud018,
+                                   l_xcca.xccaud019,l_xcca.xccaud020,l_xcca.xccaud021,l_xcca.xccaud022,l_xcca.xccaud023,
+                                   l_xcca.xccaud024,l_xcca.xccaud025,l_xcca.xccaud026,l_xcca.xccaud027,l_xcca.xccaud028,
+                                   l_xcca.xccaud029,l_xcca.xccaud030)
+               #161109-00085#21-e mod
+               IF g_glaa015 = 'Y' THEN
+                  #161109-00085#21-s mod    
+#                  INSERT INTO xcca_t VALUES l_xcca1.*   #161109-00085#21-s mark
+                  INSERT INTO xcca_t (xccaent,xccald,xccacomp,xcca001,xcca002,xcca003,xcca004,xcca005,xcca006,xcca007,
+                                      xcca008,xcca101,xcca102,xcca102a,xcca102b,xcca102c,xcca102d,xcca102e,xcca102f,xcca102g,
+                                      xcca102h,xcca110,xcca110a,xcca110b,xcca110c,xcca110d,xcca110e,xcca110f,xcca110g,xcca110h,
+                                      xccaownid,xccaowndp,xccacrtid,xccacrtdp,xccacrtdt,xccamodid,xccamoddt,xccacnfid,xccacnfdt,xccapstid,
+                                      xccapstdt,xccastus,xccaud001,xccaud002,xccaud003,xccaud004,xccaud005,xccaud006,xccaud007,xccaud008,
+                                      xccaud009,xccaud010,xccaud011,xccaud012,xccaud013,xccaud014,xccaud015,xccaud016,xccaud017,xccaud018,
+                                      xccaud019,xccaud020,xccaud021,xccaud022,xccaud023,xccaud024,xccaud025,xccaud026,xccaud027,xccaud028,
+                                      xccaud029,xccaud030)
+                              VALUES (l_xcca1.xccaent,l_xcca1.xccald,l_xcca1.xccacomp,l_xcca1.xcca001,l_xcca1.xcca002,
+                                      l_xcca1.xcca003,l_xcca1.xcca004,l_xcca1.xcca005,l_xcca1.xcca006,l_xcca1.xcca007,
+                                      l_xcca1.xcca008,l_xcca1.xcca101,l_xcca1.xcca102,l_xcca1.xcca102a,l_xcca1.xcca102b,
+                                      l_xcca1.xcca102c,l_xcca1.xcca102d,l_xcca1.xcca102e,l_xcca1.xcca102f,l_xcca1.xcca102g,
+                                      l_xcca1.xcca102h,l_xcca1.xcca110,l_xcca1.xcca110a,l_xcca1.xcca110b,l_xcca1.xcca110c,
+                                      l_xcca1.xcca110d,l_xcca1.xcca110e,l_xcca1.xcca110f,l_xcca1.xcca110g,l_xcca1.xcca110h,
+                                      l_xcca1.xccaownid,l_xcca1.xccaowndp,l_xcca1.xccacrtid,l_xcca1.xccacrtdp,l_xcca1.xccacrtdt,
+                                      l_xcca1.xccamodid,l_xcca1.xccamoddt,l_xcca1.xccacnfid,l_xcca1.xccacnfdt,l_xcca1.xccapstid,
+                                      l_xcca1.xccapstdt,l_xcca1.xccastus,l_xcca1.xccaud001,l_xcca1.xccaud002,l_xcca1.xccaud003,
+                                      l_xcca1.xccaud004,l_xcca1.xccaud005,l_xcca1.xccaud006,l_xcca1.xccaud007,l_xcca1.xccaud008,
+                                      l_xcca1.xccaud009,l_xcca1.xccaud010,l_xcca1.xccaud011,l_xcca1.xccaud012,l_xcca1.xccaud013,
+                                      l_xcca1.xccaud014,l_xcca1.xccaud015,l_xcca1.xccaud016,l_xcca1.xccaud017,l_xcca1.xccaud018,
+                                      l_xcca1.xccaud019,l_xcca1.xccaud020,l_xcca1.xccaud021,l_xcca1.xccaud022,l_xcca1.xccaud023,
+                                      l_xcca1.xccaud024,l_xcca1.xccaud025,l_xcca1.xccaud026,l_xcca1.xccaud027,l_xcca1.xccaud028,
+                                      l_xcca1.xccaud029,l_xcca1.xccaud030)
+                  #161109-00085#21-e mod
+               END IF
+               IF g_glaa019 = 'Y' THEN
+                  #161109-00085#21-s mod    
+#                  INSERT INTO xcca_t VALUES l_xcca2.*   #161109-00085#21-s mark
+                  INSERT INTO xcca_t (xccaxccaent,xccald,xccacomp,xcca001,xcca002,xcca003,xcca004,xcca005,xcca006,xcca007,
+                                      xcca008,xcca101,xcca102,xcca102a,xcca102b,xcca102c,xcca102d,xcca102e,xcca102f,xcca102g,
+                                      xcca102h,xcca110,xcca110a,xcca110b,xcca110c,xcca110d,xcca110e,xcca110f,xcca110g,xcca110h,
+                                      xccaownid,xccaowndp,xccacrtid,xccacrtdp,xccacrtdt,xccamodid,xccamoddt,xccacnfid,xccacnfdt,xccapstid,
+                                      xccapstdt,xccastus,xccaud001,xccaud002,xccaud003,xccaud004,xccaud005,xccaud006,xccaud007,xccaud008,
+                                      xccaud009,xccaud010,xccaud011,xccaud012,xccaud013,xccaud014,xccaud015,xccaud016,xccaud017,xccaud018,
+                                      xccaud019,xccaud020,xccaud021,xccaud022,xccaud023,xccaud024,xccaud025,xccaud026,xccaud027,xccaud028,
+                                      xccaud029,xccaud030)
+                              VALUES (l_xcca2.xccaent,l_xcca2.xccald,l_xcca2.xccacomp,l_xcca2.xcca001,l_xcca2.xcca002,
+                                      l_xcca2.xcca003,l_xcca2.xcca004,l_xcca2.xcca005,l_xcca2.xcca006,l_xcca2.xcca007,
+                                      l_xcca2.xcca008,l_xcca2.xcca101,l_xcca2.xcca102,l_xcca2.xcca102a,l_xcca2.xcca102b,
+                                      l_xcca2.xcca102c,l_xcca2.xcca102d,l_xcca2.xcca102e,l_xcca2.xcca102f,l_xcca2.xcca102g,
+                                      l_xcca2.xcca102h,l_xcca2.xcca110,l_xcca2.xcca110a,l_xcca2.xcca110b,l_xcca2.xcca110c,
+                                      l_xcca2.xcca110d,l_xcca2.xcca110e,l_xcca2.xcca110f,l_xcca2.xcca110g,l_xcca2.xcca110h,
+                                      l_xcca2.xccaownid,l_xcca2.xccaowndp,l_xcca2.xccacrtid,l_xcca2.xccacrtdp,l_xcca2.xccacrtdt,
+                                      l_xcca2.xccamodid,l_xcca2.xccamoddt,l_xcca2.xccacnfid,l_xcca2.xccacnfdt,l_xcca2.xccapstid,
+                                      l_xcca2.xccapstdt,l_xcca2.xccastus,l_xcca2.xccaud001,l_xcca2.xccaud002,l_xcca2.xccaud003,
+                                      l_xcca2.xccaud004,l_xcca2.xccaud005,l_xcca2.xccaud006,l_xcca2.xccaud007,l_xcca2.xccaud008,
+                                      l_xcca2.xccaud009,l_xcca2.xccaud010,l_xcca2.xccaud011,l_xcca2.xccaud012,l_xcca2.xccaud013,
+                                      l_xcca2.xccaud014,l_xcca2.xccaud015,l_xcca2.xccaud016,l_xcca2.xccaud017,l_xcca2.xccaud018,
+                                      l_xcca2.xccaud019,l_xcca2.xccaud020,l_xcca2.xccaud021,l_xcca2.xccaud022,l_xcca2.xccaud023,
+                                      l_xcca2.xccaud024,l_xcca2.xccaud025,l_xcca2.xccaud026,l_xcca2.xccaud027,l_xcca2.xccaud028,
+                                      l_xcca2.xccaud029,l_xcca2.xccaud030)
+                  #161109-00085#21-e mod
+               END IF
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = 'ins xcca'
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+
+                  LET r_success = FALSE
+                  EXIT FOR
+               END IF
+               #END IF
+            END FOR
+         END IF
+      ELSE
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = ''
+         LET g_errparam.extend = 'NO FILE'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+      END IF
+   ELSE
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = ''
+      LET g_errparam.extend = 'NO EXCEL'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+   END IF
+
+   CALL ui.interface.frontCall('WinCOM','CallMethod',[xlApp,'Quit'],[iRes])
+   CALL ui.interface.frontCall('WinCOM','ReleaseInstance',[xlApp],[iRes])
+
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axct300_02_xccald_desc()
+   SELECT glaa015,glaa019 INTO g_glaa015,g_glaa019 FROM glaa_t
+    WHERE glaaent = g_enterprise AND glaald = g_xcca_m.xccald
+    
+   SELECT glaal003 INTO g_xcca_m.xccald_desc FROM glaal_t 
+    WHERE glaalent=g_enterprise AND glaal001=g_xcca_m.xccald AND glaal002=g_dlang
+
+   DISPLAY BY NAME g_xcca_m.xccald_desc
+END FUNCTION
+
+ 
+{</section>}
+ 

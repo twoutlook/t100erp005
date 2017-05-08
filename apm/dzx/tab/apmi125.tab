@@ -1,0 +1,186 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmi125" module="apm" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02294" crtdt="2013-11-05 15:26:05" modid="02294" moddt="2014-10-23 18:20:13" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="供應商料件一般採購價格維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pmar000,pmar001,pmaal004,pmaal003,pmaa003"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pmarstus,pmar002,pmar002_desc(chr500),imaal004(chr500),pmar003,pmar003_desc(chr500),pmar004,pmar004_desc(chr500),pmar005,pmar006,pmar006_desc(chr500),pmar007,pmar007_desc(chr500),pmar008,pmar009,pmar009_desc(chr500),pmar010,pmar011,pmar012,pmar013,pmar014,pmar014_desc(chr500),pmar015,pmar016,pmar017,pmar018,pmar019,pmar020,pmar020_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="pmar002,pmar003,pmar004,pmar005,pmar006,pmar007,pmar009,pmarownid,pmarownid_desc(chr500),pmarowndp,pmarowndp_desc(chr500),pmarcrtid,pmarcrtid_desc(chr500),pmarcrtdp,pmarcrtdp_desc(chr500),pmarcrtdt,pmarmodid,pmarmodid_desc(chr500),pmarmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmi125" method="dialog">
+    <section id="input">
+      <input id="head" field="pmar000,pmar001"/>
+      <input id="body" page="1" field="pmarstus,pmar002,pmar003,pmar004,pmar005,pmar006,pmar007,pmar008,pmar009,pmar010,pmar011,pmar012,pmar013,pmar014,pmar015,pmar016,pmar017,pmar018,pmar019,pmar020" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pmar000,pmar001"/>
+      <construct id="body" page="1" field="pmarstus,pmar002,pmar003,pmar004,pmar005,pmar006,pmar007,pmar008,pmar009,pmar010,pmar011,pmar012,pmar013,pmar014,pmar015,pmar016,pmar017,pmar018,pmar019,pmar020"/>
+      <construct id="body" page="2" field="pmarownid,pmarowndp,pmarcrtid,pmarcrtdp,pmarcrtdt,pmarmodid,pmarmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pmar000,pmar001"/>
+      <set id="head" type="no_entry" field="pmar000,pmar001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="pmar000"/>
+      <column id="pmar001">
+        <after>
+          <check chkid="v_pmaa001_1" id="isExist"/>
+        </after>
+        <controlp form="q_pmaa001_3" state="i"/>
+        <controlp form="q_pmaa001_3" state="c"/>
+      </column>
+      <column id="pmaal004"/>
+      <column id="pmaal003"/>
+      <column id="pmaa003"/>
+    </init>
+    <init id="body" page="1">
+      <column id="pmarstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pmar002">
+        <after>
+          <check chkid="v_imaf001_1" id="isExist"/>
+          <reference field="pmar002_desc" ref_field="pmar_t.pmar002" map_field="pmar002" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001" state="i"/>
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="pmar002_desc"/>
+      <column id="imaal004"/>
+      <column id="pmar003">
+        <after/>
+      </column>
+      <column id="pmar003_desc"/>
+      <column id="pmar004">
+        <after>
+          <check chkid="v_oocq002_221" id="isExist"/>
+          <reference field="pmar004_desc" ref_field="pmar004" map_field="pmar004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pmar004_desc"/>
+      <column id="pmar005"/>
+      <column id="pmar006">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="pmar006_desc" ref_field="pmar_t.pmar006" map_field="pmar006" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="pmar006_desc"/>
+      <column id="pmar007">
+        <after>
+          <check chkid="v_ooaj002" id="isExist"/>
+          <reference field="pmar007_desc" ref_field="pmar_t.pmar007" map_field="pmar007" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooaj002_1" state="i"/>
+        <controlp form="q_ooaj002_1" state="c"/>
+      </column>
+      <column id="pmar007_desc"/>
+      <column id="pmar008"/>
+      <column id="pmar009">
+        <after>
+          <check chkid="v_oodb002" id="isExist"/>
+        </after>
+        <controlp form="q_oodb002_2" state="i"/>
+        <controlp form="q_oodb002_2" state="c"/>
+      </column>
+      <column id="pmar009_desc"/>
+      <column id="pmar010"/>
+      <column id="pmar011"/>
+      <column id="pmar012">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pmar013"/>
+      <column id="pmar014">
+        <after>
+          <reference field="pmar014_desc" ref_field="pmar_t.pmar014" map_field="pmar014" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="pmar014_desc"/>
+      <column id="pmar015"/>
+      <column id="pmar016"/>
+      <column id="pmar017"/>
+      <column id="pmar018"/>
+      <column id="pmar019"/>
+      <column id="pmar020">
+        <after>
+          <reference field="pmar020_desc" ref_field="pmar_t.pmar020" map_field="pmar020" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmar020_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="pmarownid">
+        <after>
+          <reference field="pmarownid_desc" ref_field="pmar_t.pmarownid" map_field="pmarownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmarownid_desc"/>
+      <column id="pmarowndp">
+        <after>
+          <reference field="pmarowndp_desc" ref_field="pmar_t.pmarowndp" map_field="pmarowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pmarowndp_desc"/>
+      <column id="pmarcrtid">
+        <after>
+          <reference field="pmarcrtid_desc" ref_field="pmar_t.pmarcrtid" map_field="pmarcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmarcrtid_desc"/>
+      <column id="pmarcrtdp">
+        <after>
+          <reference field="pmarcrtdp_desc" ref_field="pmar_t.pmarcrtdp" map_field="pmarcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pmarcrtdp_desc"/>
+      <column id="pmarcrtdt"/>
+      <column id="pmarmodid">
+        <after>
+          <reference field="pmarmodid_desc" ref_field="pmar_t.pmarmodid" map_field="pmarmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pmarmodid_desc"/>
+      <column id="pmarmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pmar_t" pk="pmar000,pmar001">
+      <sql id="forupd_sql" type="sql" query="SELECT pmar000,pmar001,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM pmar_t WHERE pmarent= ? AND pmarsite= ? AND pmar000=? AND pmar001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pmar000,pmar001,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM pmar_t" order="pmar000,pmar001"/>
+    </head>
+    <body id="pmar_t" page="1,2" linked="" pk="pmar002,pmar003,pmar004,pmar005,pmar006,pmar007,pmar009" fk="pmar000,pmar001">
+      <sql id="forupd_sql_detail" query="SELECT pmarstus,pmar002,&apos;&apos;,&apos;&apos;,pmar003,&apos;&apos;,pmar004,&apos;&apos;,pmar005,pmar006,&apos;&apos;,pmar007,&apos;&apos;,pmar008,pmar009,&apos;&apos;,pmar010,pmar011,pmar012,pmar013,pmar014,&apos;&apos;,pmar015,pmar016,pmar017,pmar018,pmar019,pmar020,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,pmarownid,&apos;&apos;,pmarowndp,&apos;&apos;,pmarcrtid,&apos;&apos;,pmarcrtdp,&apos;&apos;,pmarcrtdt,pmarmodid,&apos;&apos;,pmarmoddt FROM pmar_t WHERE pmarent=? AND pmarsite=? AND pmar000=? AND pmar001=? AND pmar002=? AND pmar003=? AND pmar004=? AND pmar005=? AND pmar006=? AND pmar007=? AND pmar009=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pmarstus,pmar002,&apos;&apos;,&apos;&apos;,pmar003,&apos;&apos;,pmar004,&apos;&apos;,pmar005,pmar006,&apos;&apos;,pmar007,&apos;&apos;,pmar008,pmar009,&apos;&apos;,pmar010,pmar011,pmar012,pmar013,pmar014,&apos;&apos;,pmar015,pmar016,pmar017,pmar018,pmar019,pmar020,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,pmarownid,&apos;&apos;,pmarowndp,&apos;&apos;,pmarcrtid,&apos;&apos;,pmarcrtdp,&apos;&apos;,pmarcrtdt,pmarmodid,&apos;&apos;,pmarmoddt FROM pmar_t WHERE pmarent= ? AND pmarsite= ? AND pmar000=? AND pmar001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

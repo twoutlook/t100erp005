@@ -1,0 +1,359 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axrq910_x04.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:2(2016-05-31 13:31:54), PR版次:0002(2016-05-31 13:59:58)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000044
+#+ Filename...: axrq910_x04
+#+ Description: ...
+#+ Creator....: 02599(2015-03-19 15:11:10)
+#+ Modifier...: 01531 -SD/PR- 01531
+ 
+{</section>}
+ 
+{<section id="axrq910_x04.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:8)
+#add-point:填寫註解說明 name="global.memo"
+#160505-00007#23 2016/05/30 By 01531       效能优化
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       table LIKE type_t.chr100,         #temp table 
+       wc STRING                   #where condition
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axrq910_x04.main" readonly="Y" >}
+PUBLIC FUNCTION axrq910_x04(p_arg1,p_arg2)
+DEFINE  p_arg1 LIKE type_t.chr100         #tm.table  temp table 
+DEFINE  p_arg2 STRING                  #tm.wc  where condition
+#add-point:init段define(客製用) name="component.define_customerization"
+
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+
+#end add-point
+ 
+   LET tm.table = p_arg1
+   LET tm.wc = p_arg2
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "axrq910_x04"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL axrq910_x04_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL axrq910_x04_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL axrq910_x04_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL axrq910_x04_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL axrq910_x04_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrq910_x04.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION axrq910_x04_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "xreaent.xrea_t.xreaent,xreaorga.xrea_t.xreaorga,xreasite.xrea_t.xreasite,xreacomp.xrea_t.xreacomp,xreacomp_desc.ooefl_t.ooefl003,xreald.xrea_t.xreald,ld.type_t.chr200,xreald_desc.glaal_t.glaal002,xrea009.xrea_t.xrea009,xrea009_desc.type_t.chr200,pmab031.pmab_t.pmab031,pmab031_desc.type_t.chr200,xrea019.xrea_t.xrea019,xrea019_desc.glacl_t.glacl004,xrea113.xrea_t.xrea113,xrea1131.xrea_t.xrea113,xrea1132.xrea_t.xrea113,xrea1133.xrea_t.xrea113" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   
+   #end add-point:create_tmp.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrq910_x04.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION axrq910_x04_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrq910_x04.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION axrq910_x04_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   
+   #end add-point
+   LET g_select = " SELECT xreaent,xreaorga,xreasite,xreacomp,'',xreald,'','',xrea009,'','','',xrea019, 
+       '',xrea113,0,0,0"
+ 
+   #add-point:sel_prep g_from name="sel_prep.g_from"
+#160505-00007#23
+#   LET g_select = " SELECT '','','',xreacomp,'','',xreald,xreald_desc,xrea009,xrea009_desc,pmab031,
+#                           pmab031_desc,xrea019,xrea019_desc,xrea113,xrea1131,xrea1132,xrea1133"
+   LET g_select = " SELECT '','','',xreacomp,",
+                  "         (SELECT ooefl003 FROM ooefl_t WHERE ooeflent = '",g_enterprise,"' AND ooefl001 = xreacomp AND ooefl002 = '",g_dlang,"'),",
+                  "         '',xreald,xreald_desc,xrea009,xrea009_desc,pmab031,",
+                  "         pmab031_desc,xrea019,xrea019_desc,xrea113,xrea1131,xrea1132,xrea1133"
+#160505-00007#23
+   #end add-point
+    LET g_from = " FROM xrea_t"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+   LET g_from = " FROM ",tm.table
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("xrea_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   LET g_sql = g_sql," ORDER BY odr "
+   #end add-point
+   PREPARE axrq910_x04_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE axrq910_x04_curs CURSOR FOR axrq910_x04_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrq910_x04.ins_data" readonly="Y" >}
+PRIVATE FUNCTION axrq910_x04_ins_data()
+DEFINE sr RECORD 
+   xreaent LIKE xrea_t.xreaent, 
+   xreaorga LIKE xrea_t.xreaorga, 
+   xreasite LIKE xrea_t.xreasite, 
+   xreacomp LIKE xrea_t.xreacomp, 
+   xreacomp_desc LIKE ooefl_t.ooefl003, 
+   xreald LIKE xrea_t.xreald, 
+   ld LIKE type_t.chr200, 
+   xreald_desc LIKE glaal_t.glaal002, 
+   xrea009 LIKE xrea_t.xrea009, 
+   xrea009_desc LIKE type_t.chr200, 
+   pmab031 LIKE pmab_t.pmab031, 
+   pmab031_desc LIKE type_t.chr200, 
+   xrea019 LIKE xrea_t.xrea019, 
+   xrea019_desc LIKE glacl_t.glacl004, 
+   xrea113 LIKE xrea_t.xrea113, 
+   xrea1131 LIKE xrea_t.xrea113, 
+   xrea1132 LIKE xrea_t.xrea113, 
+   xrea1133 LIKE xrea_t.xrea113
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH axrq910_x04_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+#160505-00007#23
+#       #法人名称
+#       LET sr.xreacomp_desc = s_desc_get_department_desc(sr.xreacomp)
+#       #交易對象
+#       LET sr.xrea009_desc = s_desc_get_trading_partner_abbr_desc(sr.xrea009)
+#       #科目名稱
+#       LET sr.xrea019_desc = s_desc_get_account_desc(sr.ld,sr.xrea019)
+#160505-00007#23
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.xreaent,sr.xreaorga,sr.xreasite,sr.xreacomp,sr.xreacomp_desc,sr.xreald,sr.ld,sr.xreald_desc,sr.xrea009,sr.xrea009_desc,sr.pmab031,sr.pmab031_desc,sr.xrea019,sr.xrea019_desc,sr.xrea113,sr.xrea1131,sr.xrea1132,sr.xrea1133
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "axrq910_x04_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrq910_x04.rep_data" readonly="Y" >}
+PRIVATE FUNCTION axrq910_x04_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    
+    #end add-point:rep_data.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrq910_x04.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

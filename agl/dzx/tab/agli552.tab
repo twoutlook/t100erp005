@@ -1,0 +1,132 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli552" module="agl" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="06821" crtdt="2016-04-20 11:40:11" modid="06821" moddt="2016-04-20 11:40:11" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="合併現金流量表直接法抵消維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glegld,glegld_desc(chr80),gleg001,gleg001_desc(chr80),gleg002,gleg003,gleg007,gleg009,gleg011"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glegstus,gleg004,gleg004_desc(chr500),l_gleg004_ld(chr500),gleg005,gleg005_desc(chr500),gleg006,gleg008,gleg010,gleg012,gleg013,gleg013_desc(chr500),l_gleg013_ld(chr500),gleg014,gleg014_desc(chr500),gleg015"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gleg004,gleg005,gleg013,gleg014,glegownid,glegownid_desc(chr500),glegowndp,glegowndp_desc(chr500),glegcrtid,glegcrtid_desc(chr500),glegcrtdp,glegcrtdp_desc(chr500),glegcrtdt,glegmodid,glegmodid_desc(chr500),glegmoddt"/>
+      <var id="bs_field" value="glegld,gleg001,gleg002,gleg003" pk="glegld,gleg001,gleg002,gleg003" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="agli552" method="dialog">
+    <section id="input">
+      <input id="head" field="glegld,gleg001,gleg002,gleg003"/>
+      <input id="body" page="1" field="glegstus,gleg004,gleg005,gleg006,gleg008,gleg010,gleg012,gleg013,gleg014,gleg015" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="glegld,gleg001,gleg002,gleg003,gleg007,gleg009,gleg011"/>
+      <construct id="body" page="1" field="glegstus,gleg004,gleg005,gleg006,gleg013,gleg014,gleg015"/>
+      <construct id="body" page="2" field="glegownid,glegowndp,glegcrtid,glegcrtdp,glegcrtdt,glegmodid,glegmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="glegld,gleg001,gleg002,gleg003"/>
+      <set id="head" type="no_entry" field="glegld,gleg001,gleg002,gleg003"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="glegld">
+        <after/>
+      </column>
+      <column id="glegld_desc"/>
+      <column id="gleg001">
+        <after/>
+      </column>
+      <column id="gleg001_desc"/>
+      <column id="gleg002"/>
+      <column id="gleg003"/>
+      <column id="gleg007"/>
+      <column id="gleg009"/>
+      <column id="gleg011"/>
+    </init>
+    <init id="body" page="1">
+      <column id="glegstus" scc="17" type="S" default="Y">
+        <stus id="Y" pic="active"/>
+        <stus id="N" pic="inactive"/>
+      </column>
+      <column id="gleg004">
+        <after/>
+      </column>
+      <column id="gleg004_desc"/>
+      <column id="l_gleg004_ld"/>
+      <column id="gleg005">
+        <after/>
+      </column>
+      <column id="gleg005_desc"/>
+      <column id="gleg006" type="S" default="+"/>
+      <column id="gleg008" type="S" default="0"/>
+      <column id="gleg010" type="S" default="0"/>
+      <column id="gleg012" type="S" default="0"/>
+      <column id="gleg013">
+        <after/>
+      </column>
+      <column id="gleg013_desc"/>
+      <column id="l_gleg013_ld"/>
+      <column id="gleg014">
+        <after/>
+      </column>
+      <column id="gleg014_desc"/>
+      <column id="gleg015" type="S" default="+"/>
+    </init>
+    <init id="body" page="2">
+      <column id="glegownid">
+        <after>
+          <reference field="glegownid_desc" ref_field="gleg_t.glegownid" map_field="glegownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glegownid_desc"/>
+      <column id="glegowndp">
+        <after>
+          <reference field="glegowndp_desc" ref_field="gleg_t.glegowndp" map_field="glegowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glegowndp_desc"/>
+      <column id="glegcrtid">
+        <after>
+          <reference field="glegcrtid_desc" ref_field="gleg_t.glegcrtid" map_field="glegcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glegcrtid_desc"/>
+      <column id="glegcrtdp">
+        <after>
+          <reference field="glegcrtdp_desc" ref_field="gleg_t.glegcrtdp" map_field="glegcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glegcrtdp_desc"/>
+      <column id="glegcrtdt"/>
+      <column id="glegmodid">
+        <after>
+          <reference field="glegmodid_desc" ref_field="gleg_t.glegmodid" map_field="glegmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glegmodid_desc"/>
+      <column id="glegmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gleg_t" pk="glegld,gleg001,gleg002,gleg003">
+      <sql id="forupd_sql" type="sql" query="SELECT glegld,&apos;&apos;,gleg001,&apos;&apos;,gleg002,gleg003,gleg007,gleg009,gleg011 FROM gleg_t WHERE glegent= ? AND glegld=? AND gleg001=? AND gleg002=? AND gleg003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT glegld,&apos;&apos;,gleg001,&apos;&apos;,gleg002,gleg003,gleg007,gleg009,gleg011 FROM gleg_t" order="glegld,gleg001,gleg002,gleg003"/>
+    </head>
+    <body id="gleg_t" page="1,2" linked="" pk="gleg004,gleg005,gleg013,gleg014" fk="glegld,gleg001,gleg002,gleg003">
+      <sql id="forupd_sql_detail" query="SELECT glegstus,gleg004,&apos;&apos;,&apos;&apos;,gleg005,&apos;&apos;,gleg006,gleg008,gleg010,gleg012,gleg013,&apos;&apos;,&apos;&apos;,gleg014,&apos;&apos;,gleg015,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,glegownid,&apos;&apos;,glegowndp,&apos;&apos;,glegcrtid,&apos;&apos;,glegcrtdp,&apos;&apos;,glegcrtdt,glegmodid,&apos;&apos;,glegmoddt FROM gleg_t WHERE glegent=? AND glegld=? AND gleg001=? AND gleg002=? AND gleg003=? AND gleg004=? AND gleg005=? AND gleg013=? AND gleg014=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glegstus,gleg004,&apos;&apos;,&apos;&apos;,gleg005,&apos;&apos;,gleg006,gleg008,gleg010,gleg012,gleg013,&apos;&apos;,&apos;&apos;,gleg014,&apos;&apos;,gleg015,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,glegownid,&apos;&apos;,glegowndp,&apos;&apos;,glegcrtid,&apos;&apos;,glegcrtdp,&apos;&apos;,glegcrtdt,glegmodid,&apos;&apos;,glegmoddt FROM gleg_t WHERE glegent= ? AND glegld=? AND gleg001=? AND gleg002=? AND gleg003=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,121 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axci170" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02291" crtdt="2013-12-13 16:42:47" modid="02291" moddt="2014-08-26 15:11:19" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="成本分群成本階範圍設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcbc001,xcbc001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcbcstus,xcbc002,xcbc002_desc(chr500),xcbc003,xcbc004"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcbc002,xcbcownid,xcbcownid_desc(chr500),xcbcowndp,xcbcowndp_desc(chr500),xcbccrtid,xcbccrtid_desc(chr500),xcbccrtdp,xcbccrtdp_desc(chr500),xcbccrtdt,xcbcmodid,xcbcmodid_desc(chr500),xcbcmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axci170" method="dialog">
+    <section id="input">
+      <input id="head" field="xcbc001"/>
+      <input id="body" page="1" field="xcbcstus,xcbc002,xcbc003,xcbc004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcbc001"/>
+      <construct id="body" page="1" field="xcbcstus,xcbc002,xcbc003,xcbc004"/>
+      <construct id="body" page="2" field="xcbcownid,xcbcowndp,xcbccrtid,xcbccrtdp,xcbccrtdt,xcbcmodid,xcbcmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcbc001"/>
+      <set id="head" type="no_entry" field="xcbc001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcbc001">
+        <after>
+          <reference field="xcbc001_desc" ref_field="xcbc_t.xcbc001" map_field="xcbc001,xcbcent" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooea001" state="i"/>
+        <controlp form="q_ooea001" state="c"/>
+      </column>
+      <column id="xcbc001_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcbcstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="xcbc002">
+        <after/>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="xcbc002_desc"/>
+      <column id="xcbc003">
+        <after>
+          <check id="range" st="99" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="xcbc004">
+        <after>
+          <check id="range" st="99" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="xcbcownid">
+        <after>
+          <reference field="xcbcownid_desc" ref_field="xcbc_t.xcbcownid" map_field="xcbcownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcbcownid_desc"/>
+      <column id="xcbcowndp">
+        <after>
+          <reference field="xcbcowndp_desc" ref_field="xcbc_t.xcbcowndp" map_field="xcbcowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcbcowndp_desc"/>
+      <column id="xcbccrtid">
+        <after>
+          <reference field="xcbccrtid_desc" ref_field="xcbc_t.xcbccrtid" map_field="xcbccrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcbccrtid_desc"/>
+      <column id="xcbccrtdp">
+        <after>
+          <reference field="xcbccrtdp_desc" ref_field="xcbc_t.xcbccrtdp" map_field="xcbccrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcbccrtdp_desc"/>
+      <column id="xcbccrtdt"/>
+      <column id="xcbcmodid">
+        <after>
+          <reference field="xcbcmodid_desc" ref_field="xcbc_t.xcbcmodid" map_field="xcbcmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcbcmodid_desc"/>
+      <column id="xcbcmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcbc_t" pk="xcbc001">
+      <sql id="forupd_sql" type="sql" query="SELECT xcbc001,&apos;&apos; FROM xcbc_t WHERE xcbcent= ? AND xcbc001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcbc001,&apos;&apos; FROM xcbc_t" order="xcbc001"/>
+    </head>
+    <body id="xcbc_t" page="1,2" linked="" pk="xcbc002" fk="xcbc001">
+      <sql id="forupd_sql_detail" query="SELECT xcbcstus,xcbc002,&apos;&apos;,xcbc003,xcbc004,&apos;&apos;,xcbcownid,&apos;&apos;,xcbcowndp,&apos;&apos;,xcbccrtid,&apos;&apos;,xcbccrtdp,&apos;&apos;,xcbccrtdt,xcbcmodid,&apos;&apos;,xcbcmoddt FROM xcbc_t WHERE xcbcent=? AND xcbc001=? AND xcbc002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcbcstus,xcbc002,&apos;&apos;,xcbc003,xcbc004,&apos;&apos;,xcbcownid,&apos;&apos;,xcbcowndp,&apos;&apos;,xcbccrtid,&apos;&apos;,xcbccrtdp,&apos;&apos;,xcbccrtdt,xcbcmodid,&apos;&apos;,xcbcmoddt FROM xcbc_t WHERE xcbcent= ? AND xcbc001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

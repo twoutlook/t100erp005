@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmr008_g01" module="apm" jobmode="N" type="g01" industry="std" crtid="01996" crtdt="2014-12-04 15:06:30" modid="08734" moddt="2016-11-01 21:14:16" sdver="3" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|条件),tm.man(STRING|关系人),tm.adres(STRING|地址选项),tm.col(STRING|每页列数),tm.hofic(STRING|敬语),tm.other(STRING|其他),tm.a1(chr1|執行之程式)">
+    <var seq="1" value="pmaa001,pmaal003,l_address(chr1000|&apos;&apos;),l_pmaj012(chr1000|&apos;&apos;),l_honorific(chr1000|&apos;&apos;),pmaaent"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="pmaa001(pmaa001|pmaa001),pmaal003(pmaal003|pmaal003),l_address(chr1000|&apos;&apos;),l_pmaj012(chr1000|&apos;&apos;),l_honorific(chr1000|&apos;&apos;),pmaaent(pmaaent|pmaaent)"/>
+    <sql id="g_from" query="pmaa_t,pmaal_t"/>
+    <sql id="g_where" query="" maintable="pmaa_t"/>
+    <sql id="g_order" query=""/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="pmaaent"/>
+    <section id="b_group" reptype="d01">
+      <rep type="pmaaent" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="pmaaent,pmaaent"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="pmaaent,pmaaent"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="pmaaent,pmaaent"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="pmaaent" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="pmaaent,pmaaent"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

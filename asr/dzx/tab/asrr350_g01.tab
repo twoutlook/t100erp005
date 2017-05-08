@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asrr350_g01" module="asr" jobmode="N" type="g01" industry="std" crtid="05423" crtdt="2015-01-15 14:37:00" modid="05423" moddt="2015-01-15 14:59:24" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.pr(chr2|pr)">
+    <var seq="1" value="srbadocno,srbadocdt,srba003,l_srba003_desc(chr50|NULL),srba005,l_srba005_desc(inayl003|NULL),srba006,l_srba006_desc(inab003|NULL),srbb001,imaal_t_imaal003(imaal003|imaal_t.imaal003),imaal_t_imaal004(imaal004|imaal_t.imaal004),srbb002,l_srbb002_show(chr2|NULL),srbb005,srbb006,l_srbb006_show(chr2|NULL),srbb007,srbb009,srbb008,srbaent"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="srbadocno,srbadocdt,srba003,l_srba003_desc(chr50|NULL),srba005,l_srba005_desc(inayl003|NULL),srba006,l_srba006_desc(inab003|NULL),srbb001,imaal_t_imaal003(imaal003|imaal_t.imaal003),imaal_t_imaal004(imaal004|imaal_t.imaal004),srbb002,l_srbb002_show(chr2|NULL),srbb005,srbb006,l_srbb006_show(chr2|NULL),srbb007,srbb009,srbb008,srbaent"/>
+    <sql id="g_from" query="srba_t,srbb_t,imaal_t"/>
+    <sql id="g_where" query="" maintable="srba_t"/>
+    <sql id="g_order" query="srbadocno,srbb001"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="srbadocno,srbb001"/>
+    <section id="b_group" reptype="d01">
+      <rep type="srbadocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="srbaent,srbadocno"/>
+      <rep type="srbb001"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="srbaent,srbadocno,srbb001"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="srbaent,srbadocno,srbb001"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="srbadocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="srbaent,srbadocno"/>
+      <rep type="srbb001"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

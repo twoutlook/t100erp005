@@ -1,0 +1,116 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aint700_01" module="ain" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="01752" crtdt="2014-12-30 19:57:13" modid="01752" moddt="2015-01-07 15:28:04" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="多庫儲批分配作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="indkdocno,indkseq,indksite,indkunit,indk001,indk002,indkseq1,indk003,indk003_desc(chr500),indk004,indk005,indk005_desc(chr500),indk006,indk007,indk007_desc(chr500),indk008,indk008_desc(chr500),indk009,indk009_desc(chr500),indk010,indk015,indk011,indk011_desc(chr500),indk012,indk012_desc(chr500),indk013,indk013_desc(chr500),indk014"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="aint700_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="indkdocno,indkseq,indksite,indkunit,indk001,indk002,indkseq1,indk003,indk004,indk005,indk006,indk007,indk008,indk009,indk010,indk015,indk011,indk012,indk013,indk014" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="indkdocno"/>
+      <column id="indkseq"/>
+      <column id="indksite"/>
+      <column id="indkunit"/>
+      <column id="indk001"/>
+      <column id="indk002"/>
+      <column id="indkseq1"/>
+      <column id="indk003">
+        <after>
+          <reference field="indk003_desc" ref_field="indk_t.indk003" map_field="indk003" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="indk003_desc"/>
+      <column id="indk004">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="indk005">
+        <after>
+          <reference field="indk005_desc" ref_field="indk_t.indk005" map_field="indk005" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="indk005_desc"/>
+      <column id="indk006">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="indk007">
+        <after>
+          <reference field="indk007_desc" ref_field="indk_t.indk007" map_field="indk007" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="indk007_desc"/>
+      <column id="indk008">
+        <after>
+          <check chkid="v_inaa001_18" id="isExist"/>
+          <reference field="indk008_desc" ref_field="indk_t.indk008" map_field="indk008" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inag004_18" state="i"/>
+        <controlp form="q_inaa001_23" state="c"/>
+      </column>
+      <column id="indk008_desc"/>
+      <column id="indk009">
+        <after>
+          <check chkid="v_inab002_4" id="isExist"/>
+          <reference field="indk009_desc" ref_field="indk007,indk008,indk009" map_field="indk007,indk008,indk009" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inabsite=? AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inag004_18" state="i"/>
+        <controlp form="q_inab002_6" state="c"/>
+      </column>
+      <column id="indk009_desc"/>
+      <column id="indk010"/>
+      <column id="indk015"/>
+      <column id="indk011">
+        <after>
+          <reference field="indk011_desc" ref_field="indk_t.indk011" map_field="indk011" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="indk011_desc"/>
+      <column id="indk012">
+        <after>
+          <reference field="indk012_desc" ref_field="indk_t.indk012" map_field="indk012" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="indk012_desc"/>
+      <column id="indk013">
+        <after>
+          <check chkid="v_inab002_4" id="isExist"/>
+          <reference field="indk013_desc" ref_field="indk011,indk012,indk013" map_field="indk011,indk012,indk013" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inabsite=? AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inab002_6" state="i"/>
+        <controlp form="q_inab002_6" state="c"/>
+      </column>
+      <column id="indk013_desc"/>
+      <column id="indk014"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="indk_t" page="1" linked="" pk="indkdocno,indkseq,indkseq1">
+      <sql id="forupd_sql_detail" query="SELECT indkdocno,indkseq,indksite,indkunit,indk001,indk002,indkseq1,indk003,&apos;&apos;,indk004,indk005,&apos;&apos;,indk006,indk007,&apos;&apos;,indk008,&apos;&apos;,indk009,&apos;&apos;,indk010,indk015,indk011,&apos;&apos;,indk012,&apos;&apos;,indk013,&apos;&apos;,indk014 FROM indk_t WHERE indkent=? AND indkdocno=? AND indkseq=? AND indkseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT indkdocno,indkseq,indksite,indkunit,indk001,indk002,indkseq1,indk003,&apos;&apos;,indk004,indk005,&apos;&apos;,indk006,indk007,&apos;&apos;,indk008,&apos;&apos;,indk009,&apos;&apos;,indk010,indk015,indk011,&apos;&apos;,indk012,&apos;&apos;,indk013,&apos;&apos;,indk014 FROM indk_t WHERE indkent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,73 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisr310" module="ais" jobmode="N" type="r01" industry="std" fix_arg="0" crtid="08732" crtdt="2016-11-11 17:36:06" modid="08732" moddt="2016-11-11 17:36:06" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="客戶貨款對帳憑證單列印">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="isafsite,l_isafsite_desc(chr80),isafcomp,l_isafcomp_desc(chr80),isaf001,isafdocno,isafdocdt,isaf057,isaf004,isaf003,isaf044,isafstus"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="ais" filename="aisr310" method="dialog">
+    <section id="input">
+      <input id="head" field="isafsite,isafcomp,isaf001,isaf044,isafstus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="isafdocno,isafdocdt,isaf057,isaf004,isaf003"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="isafsite">
+        <after/>
+        <controlp form="q_ooef001_46" state="i"/>
+        <controlp form="q_ooef001_46" state="c"/>
+      </column>
+      <column id="l_isafsite_desc"/>
+      <column id="isafcomp">
+        <after/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="l_isafcomp_desc"/>
+      <column id="isaf001" type="S" default="1" def_scc="9715"/>
+      <column id="isafdocno">
+        <after>
+          <check chkid="v_ooba002" id="isExist"/>
+        </after>
+        <controlp form="q_ooba002" state="i"/>
+        <controlp form="q_isafdocno" state="c"/>
+      </column>
+      <column id="isafdocdt"/>
+      <column id="isaf057"/>
+      <column id="isaf004">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="isaf003">
+        <after>
+          <check chkid="v_pmaa001_2" id="isExist"/>
+        </after>
+        <controlp form="q_pmaa001" state="i"/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="isaf044"/>
+      <column id="isafstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="S" pic="posted"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+    </init>
+  </form>
+</assembly>
+

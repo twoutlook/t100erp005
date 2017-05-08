@@ -1,0 +1,2569 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aglp730.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2015-11-19 14:11:19), PR版次:0002(2016-11-29 11:08:19)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000041
+#+ Filename...: aglp730
+#+ Description: 合併報表沖銷資料產生作業
+#+ Creator....: 03538(2015-11-16 16:58:20)
+#+ Modifier...: 03538 -SD/PR- 02481
+ 
+{</section>}
+ 
+{<section id="aglp730.global" >}
+#應用 p01 樣板自動產生(Version:19)
+#add-point:填寫註解說明 name="global.memo" name="global.memo"
+#161128-00061#1   2016/11/29  by 02481  标准程式定义采用宣告模式,弃用.*写法
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       gldtld LIKE gldt_t.gldtld, 
+   gldtld_desc LIKE type_t.chr80, 
+   gldt001 LIKE gldt_t.gldt001, 
+   gldt001_desc LIKE type_t.chr80, 
+   gldt005 LIKE gldt_t.gldt005, 
+   chk3 LIKE type_t.chr500, 
+   gldt006 LIKE gldt_t.gldt006, 
+   chk1 LIKE type_t.chr500, 
+   chk2 LIKE type_t.chr500, 
+   docno LIKE type_t.chr500, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+DEFINE g_glaa001        LIKE glaa_t.glaa001
+DEFINE g_glaa003        LIKE glaa_t.glaa003
+DEFINE g_glaa016        LIKE glaa_t.glaa016
+DEFINE g_glaa020        LIKE glaa_t.glaa020
+DEFINE g_glaa024        LIKE glaa_t.glaa024
+DEFINE g_glaa138        LIKE glaa_t.glaa138
+#161128-00061#1----modify------begin-----------
+#DEFINE g_gldj           RECORD LIKE gldj_t.*
+DEFINE g_gldj RECORD  #合併報表會計科目沖銷規則資料檔
+       gldjent LIKE gldj_t.gldjent, #企業編號
+       gldj001 LIKE gldj_t.gldj001, #下層/上層公司(來源公司)
+       gldj002 LIKE gldj_t.gldj002, #帳套/合併帳套(來源公司)
+       gldj003 LIKE gldj_t.gldj003, #下層/上層公司(對沖公司)
+       gldj004 LIKE gldj_t.gldj004, #帳套/合併帳套(對沖公司)
+       gldj005 LIKE gldj_t.gldj005, #上層公司(合併主體)
+       gldj006 LIKE gldj_t.gldj006, #合併帳套(合併主體)
+       gldj007 LIKE gldj_t.gldj007, #沖銷組別序號
+       gldj008 LIKE gldj_t.gldj008, #股本沖銷否
+       gldj009 LIKE gldj_t.gldj009, #彙總方式(來源公司)
+       gldj010 LIKE gldj_t.gldj010, #會計科目編號 (來源公司)
+       gldj011 LIKE gldj_t.gldj011, #彙總方式(對沖公司)
+       gldj012 LIKE gldj_t.gldj012, #會計科目編號 (對沖公司)
+       gldj013 LIKE gldj_t.gldj013, #核算項對沖方式(來源公司)
+       gldj014 LIKE gldj_t.gldj014, #核算項對沖方式(對沖公司)
+       gldj015 LIKE gldj_t.gldj015, #差額處理方式
+       gldj016 LIKE gldj_t.gldj016, #借方差額科目
+       gldj017 LIKE gldj_t.gldj017, #貸方差額科目
+       gldjownid LIKE gldj_t.gldjownid, #資料所有者
+       gldjowndp LIKE gldj_t.gldjowndp, #資料所屬部門
+       gldjcrtid LIKE gldj_t.gldjcrtid, #資料建立者
+       gldjcrtdp LIKE gldj_t.gldjcrtdp, #資料建立部門
+       gldjcrtdt LIKE gldj_t.gldjcrtdt, #資料創建日
+       gldjmodid LIKE gldj_t.gldjmodid, #資料修改者
+       gldjmoddt LIKE gldj_t.gldjmoddt, #最近修改日
+       gldjstus LIKE gldj_t.gldjstus, #狀態碼
+       gldj018 LIKE gldj_t.gldj018, #核算項(來源公司)
+       gldj019 LIKE gldj_t.gldj019  #核算項(對沖公司)
+       END RECORD
+
+#161128-00061#1----modify------end-----------
+DEFINE g_gldt           RECORD
+                        type1     LIKE type_t.chr1,      #來源A/對沖B
+                        gldtld    LIKE gldt_t.gldtld,    #來源/對沖帳別
+                        gldt005   LIKE gldt_t.gldt005,   #會計年度
+                        gldt006   LIKE gldt_t.gldt006,   #期別
+                        gldt007   LIKE gldt_t.gldt007,   #會計科目
+                        gldt001   LIKE gldt_t.gldt001,   #上層公司
+                        gldt003   LIKE gldt_t.gldt003,   #下層公司
+                        gldt010   LIKE gldt_t.gldt010,   #金額(記帳幣)
+                        gldt009   LIKE gldt_t.gldt009,   #幣別(記帳幣)     
+                        gldt026   LIKE gldt_t.gldt026,   #金額(功能幣)
+                        gldt025   LIKE gldt_t.gldt025,   #幣別(功能幣)
+                        gldt029   LIKE gldt_t.gldt029,   #金額(報告幣)
+                        gldt028   LIKE gldt_t.gldt028,   #幣別(報告幣)                        
+                        dc        LIKE type_t.chr1,      #借貸
+                        odr       LIKE type_t.num5,      #本次處理組別
+                        gldt014	 LIKE gldt_t.gldt014,   #營運據點
+                        gldt015	 LIKE gldt_t.gldt015,   #部門
+                        gldt016	 LIKE gldt_t.gldt016,   #利潤/成本中心
+                        gldt017	 LIKE gldt_t.gldt017,   #區域
+                        gldt018	 LIKE gldt_t.gldt018,   #交易客商
+                        gldt019	 LIKE gldt_t.gldt019,   #帳款客商
+                        gldt020	 LIKE gldt_t.gldt020,   #客群
+                        gldt021	 LIKE gldt_t.gldt021,   #產品類別
+                        gldt022	 LIKE gldt_t.gldt022,   #人員
+                        gldt023	 LIKE gldt_t.gldt023,   #專案編號
+                        gldt024	 LIKE gldt_t.gldt024,   #WBS
+                        gldt036	 LIKE gldt_t.gldt036,   #經營方式
+                        gldt037	 LIKE gldt_t.gldt037,   #渠道
+                        gldt038	 LIKE gldt_t.gldt038    #品牌                        
+                        END RECORD
+DEFINE g_em             LIKE glaa_t.glaa011              #取餘額實際期別
+DEFINE g_pdate_e        LIKE glav_t.glav004              #實際期別最後一天
+DEFINE g_gldpdocno      LIKE gldp_t.gldpdocno            #產生傳票單號
+DEFINE g_success        LIKE type_t.num5
+DEFINE g_gldw011_wc     STRING                           #核算項條件
+DEFINE g_odr            LIKE type_t.num5                 #本次處理組別
+
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aglp730.main" >}
+MAIN
+   #add-point:main段define (客製用) name="main.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define name="main.define"
+   
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("agl","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+      CALL aglp730_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aglp730 WITH FORM cl_ap_formpath("agl",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL aglp730_init()
+ 
+      #進入選單 Menu (="N")
+      CALL aglp730_ui_dialog()
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_aglp730
+   END IF
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="aglp730.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION aglp730_init()
+ 
+   #add-point:init段define (客製用) name="init.define_customerization"
+   
+   #end add-point
+   #add-point:ui_dialog段define name="init.define"
+   
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL cl_set_combo_scc("chk3","9998")
+   CALL aglp730_cre_tmp()
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglp730.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aglp730_ui_dialog()
+ 
+   #add-point:ui_dialog段define (客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define name="ui_dialog.define"
+   
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   CALL aglp730_qbe_clear()
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2 name="ui_dialog.before_dialog2"
+      
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #應用 a57 樣板自動產生(Version:3)
+         INPUT BY NAME g_master.gldtld,g_master.gldt001,g_master.gldt005,g_master.chk3,g_master.gldt006, 
+             g_master.chk1,g_master.chk2,g_master.docno 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前 name="input.m.before_input"
+               
+               #end add-point
+         
+                     #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gldtld
+            
+            #add-point:AFTER FIELD gldtld name="input.a.gldtld"
+            #合併帳別
+            LET g_master.gldtld_desc = ' '
+            DISPLAY BY NAME g_master.gldtld_desc
+            IF NOT cl_null(g_master.gldtld) THEN
+               CALL s_merge_ld_with_comp_chk(g_master.gldtld,g_master.gldt001,g_user,1)RETURNING g_sub_success,g_errno
+               IF NOT g_sub_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_master.gldtld = ''
+                  LET g_master.gldtld_desc = ''
+                  CALL aglp730_get_ld_info('1') 
+                  DISPLAY BY NAME g_master.gldtld,g_master.gldtld_desc    
+                  NEXT FIELD CURRENT
+               END IF             
+               CALL aglp730_get_ld_info('1')               
+            END IF
+            CALL s_desc_get_ld_desc(g_master.gldtld) RETURNING g_master.gldtld_desc
+            DISPLAY BY NAME g_master.gldtld,g_master.gldtld_desc                        
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gldtld
+            #add-point:BEFORE FIELD gldtld name="input.b.gldtld"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gldtld
+            #add-point:ON CHANGE gldtld name="input.g.gldtld"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gldt001
+            
+            #add-point:AFTER FIELD gldt001 name="input.a.gldt001"
+            #上層公司
+            LET g_master.gldt001_desc = ' '
+            DISPLAY BY NAME g_master.gldt001_desc
+            IF NOT cl_null(g_master.gldt001) THEN
+               CALL s_merge_ld_with_comp_chk(g_master.gldtld,g_master.gldt001,g_user,1)RETURNING g_sub_success,g_errno
+               IF NOT g_sub_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_master.gldt001 = ''
+                  LET g_master.gldt001_desc = ''
+                  DISPLAY BY NAME g_master.gldt001,g_master.gldt001_desc 
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            LET g_master.gldt001_desc = s_desc_glda001_desc(g_master.gldt001)
+            DISPLAY BY NAME g_master.gldt001,g_master.gldt001_desc,g_master.gldtld,g_master.gldtld_desc
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gldt001
+            #add-point:BEFORE FIELD gldt001 name="input.b.gldt001"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gldt001
+            #add-point:ON CHANGE gldt001 name="input.g.gldt001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gldt005
+            #add-point:BEFORE FIELD gldt005 name="input.b.gldt005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gldt005
+            
+            #add-point:AFTER FIELD gldt005 name="input.a.gldt005"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gldt005
+            #add-point:ON CHANGE gldt005 name="input.g.gldt005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD chk3
+            #add-point:BEFORE FIELD chk3 name="input.b.chk3"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD chk3
+            
+            #add-point:AFTER FIELD chk3 name="input.a.chk3"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE chk3
+            #add-point:ON CHANGE chk3 name="input.g.chk3"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gldt006
+            #add-point:BEFORE FIELD gldt006 name="input.b.gldt006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gldt006
+            
+            #add-point:AFTER FIELD gldt006 name="input.a.gldt006"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gldt006
+            #add-point:ON CHANGE gldt006 name="input.g.gldt006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD chk1
+            #add-point:BEFORE FIELD chk1 name="input.b.chk1"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD chk1
+            
+            #add-point:AFTER FIELD chk1 name="input.a.chk1"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE chk1
+            #add-point:ON CHANGE chk1 name="input.g.chk1"
+ 
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD chk2
+            #add-point:BEFORE FIELD chk2 name="input.b.chk2"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD chk2
+            
+            #add-point:AFTER FIELD chk2 name="input.a.chk2"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE chk2
+            #add-point:ON CHANGE chk2 name="input.g.chk2"
+ 
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD docno
+            #add-point:BEFORE FIELD docno name="input.b.docno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD docno
+            
+            #add-point:AFTER FIELD docno name="input.a.docno"
+            #沖銷單別
+            IF NOT cl_null(g_master.docno) THEN
+               IF NOT s_aooi200_fin_chk_docno(g_master.gldtld,'','',g_master.docno,g_today,'aglt530') THEN
+                  LET g_master.docno = ''
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE docno
+            #add-point:ON CHANGE docno name="input.g.docno"
+            
+            #END add-point 
+ 
+ 
+ 
+                     #Ctrlp:input.c.gldtld
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gldtld
+            #add-point:ON ACTION controlp INFIELD gldtld name="input.c.gldtld"
+            #應用 a07 樣板自動產生(Version:2)   
+            #合併帳別
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL                                                
+            LET g_qryparam.state = 'i'                                                     
+            LET g_qryparam.reqry = FALSE                                                   
+            LET g_qryparam.default1 = g_master.gldtld                                     
+            LET g_qryparam.arg1 = g_user                                 #人員權限         
+            LET g_qryparam.arg2 = g_dept                                 #部門權限         
+            LET g_qryparam.where = " glaald IN (SELECT DISTINCT gldbld FROM gldb_t ",              
+                                               "  WHERE gldbstus = 'Y' ",                                    
+                                               "   AND gldbent = '",g_enterprise,"') "                          
+            CALL q_authorised_ld()                                                         
+            LET g_master.gldtld = g_qryparam.return1                                      
+            CALL s_desc_get_ld_desc(g_master.gldtld) RETURNING g_master.gldtld_desc      
+            DISPLAY BY NAME g_master.gldtld,g_master.gldtld_desc                         
+            NEXT FIELD gldtld                                                             
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.gldt001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gldt001
+            #add-point:ON ACTION controlp INFIELD gldt001 name="input.c.gldt001"
+            #應用 a07 樣板自動產生(Version:2)   
+            #上層公司
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_master.gldt001
+            LET g_qryparam.where = "gldc009 = 'Y' AND gldbstus = 'Y' ",
+                                   " AND gldcld = '",g_master.gldtld,"' "  
+            CALL q_gldc001()    
+            LET g_master.gldt001 = g_qryparam.return1
+            CALL s_desc_glda001_desc(g_master.gldt001) RETURNING g_master.gldt001_desc
+            DISPLAY BY NAME g_master.gldt001,g_master.gldt001_desc
+            NEXT FIELD gldt001
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.gldt005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gldt005
+            #add-point:ON ACTION controlp INFIELD gldt005 name="input.c.gldt005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.chk3
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD chk3
+            #add-point:ON ACTION controlp INFIELD chk3 name="input.c.chk3"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.gldt006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gldt006
+            #add-point:ON ACTION controlp INFIELD gldt006 name="input.c.gldt006"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.chk1
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD chk1
+            #add-point:ON ACTION controlp INFIELD chk1 name="input.c.chk1"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.chk2
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD chk2
+            #add-point:ON ACTION controlp INFIELD chk2 name="input.c.chk2"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.docno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD docno
+            #add-point:ON ACTION controlp INFIELD docno name="input.c.docno"
+            #應用 a07 樣板自動產生(Version:2)   
+            #沖銷單別
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_master.docno
+            LET g_qryparam.arg1 = g_glaa024
+            LET g_qryparam.arg2 = 'aglt530'
+            CALL q_ooba002_1()
+            LET g_master.docno = g_qryparam.return1
+            DISPLAY BY NAME g_master.docno
+            NEXT FIELD docno
+
+
+            #END add-point
+ 
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後 name="input.m.after_input"
+               
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...) name="input.other"
+            
+            #end add-point
+         END INPUT
+ 
+ 
+ 
+         
+         
+      
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL aglp730_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog3"
+            
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear name="ui_dialog.before_qbeclear"
+         
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear name="ui_dialog.qbeclear"
+            CALL aglp730_qbe_clear()
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL aglp730_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog name="process.exit_dialog"
+      
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL aglp730_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = aglp730_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule name="process.after_schedule"
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglp730.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION aglp730_transfer_argv(ls_js)
+ 
+   #add-point:transfer_agrv段define (客製用) name="transfer_agrv.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define name="transfer_agrv.define"
+   
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容 name="transfer.argv.define"
+   
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglp730.process" >}
+#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION aglp730_process(ls_js)
+ 
+   #add-point:process段define (客製用) name="process.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define name="process.define"
+   DEFINE l_sql         STRING     
+   DEFINE l_gldk009     LIKE gldk_t.gldk009   
+   DEFINE l_gldl009     LIKE gldl_t.gldl009 
+   DEFINE l_gldl010     LIKE gldl_t.gldl010 
+   DEFINE l_cnt         LIKE type_t.num5
+   DEFINE l_cnt_success LIKE type_t.num5
+   DEFINE l_gzzd005     LIKE gzzd_t.gzzd005
+   DEFINE l_nouse       LIKE gzzd_t.gzzd005
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+   LET li_p01_status = 1
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理 name="process.pre_process"
+   #執行步驟:
+   #step1.撈取合併報表沖銷前各期科目餘額檔
+   #step2.產生合併報表沖銷資料
+   LET li_count = 2  
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress name="process.count_progress"
+      CALL cl_progress_bar_no_window(li_count)
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE aglp730_process_cs CURSOR FROM ls_sql
+#  FOREACH aglp730_process_cs INTO
+   #add-point:process段process name="process.process"
+   LET g_success = TRUE
+   INITIALIZE g_gldj TO NULL
+   LET g_gldpdocno = ''
+   LET g_odr = 1
+   
+   CALL cl_err_collect_init()     
+   
+   #取得期別與當期最後一天日期
+   CALL aglp730_get_ld_info('2')  
+
+   #刪除當期已存在傳票
+   CALL aglp730_del_voucher()
+   IF NOT g_success THEN
+      CALL cl_err_collect_show()
+      RETURN
+   END IF         
+
+   #取得agli520沖銷科目設定
+   #161128-00061#1----modify------begin-----------
+   #LET ls_sql = " SELECT * FROM gldj_t ",
+   LET ls_sql = " SELECT gldjent,gldj001,gldj002,gldj003,gldj004,gldj005,gldj006,gldj007,gldj008,",
+                "gldj009,gldj010,gldj011,gldj012,gldj013,gldj014,gldj015,gldj016,gldj017,gldjownid,",
+                "gldjowndp,gldjcrtid,gldjcrtdp,gldjcrtdt,gldjmodid,gldjmoddt,gldjstus,gldj018,gldj019 FROM gldj_t ",
+   #161128-00061#1----modify------end-----------
+                "  WHERE gldjent = '",g_enterprise,"'",
+                "    AND gldj006 = '",g_master.gldtld,"' ",
+                "    AND gldj005 = '",g_master.gldt001,"' ",
+                "  ORDER BY gldj002,gldj001,gldj004,gldj003,gldj007 "
+   DECLARE aglp730_gldj_c CURSOR FROM ls_sql
+
+   #取得單一科目核算項設定(來源/對沖)
+   LET ls_sql = " SELECT gldy010 FROM gldy_t",
+                 " WHERE gldyent= '",g_enterprise,"' ",
+                 "   AND gldy001= ?  AND gldy002= ? ",
+                 "   AND gldy003= ?  AND gldy004= ? ",
+                 "   AND gldy005= ?  AND gldy006= ? ",
+                 "   AND gldy007= ?  AND gldy008= ? ",
+                 "   AND gldy009= ? "
+   DECLARE aglp730_gldy_c CURSOR FROM ls_sql     
+   
+   #取得MULTI科目設定(來源)
+   LET ls_sql = " SELECT gldk009 FROM gldk_t ",
+                "  WHERE gldkent= '",g_enterprise,"' ",
+                "    AND gldk001= ?  AND gldk002= ? ",
+                "    AND gldk003= ?  AND gldk004= ? ",
+                "    AND gldk005= ?  AND gldk006= ? ",
+                "    AND gldk007= ?  AND gldk008= ? "
+   DECLARE aglp730_gldk_c CURSOR FROM ls_sql
+   
+   #取得MULTI科目核算項設定(來源)
+   LET ls_sql = " SELECT gldw011 FROM gldw_t",
+                 " WHERE gldwent= '",g_enterprise,"' ",
+                 "   AND gldw001= ?  AND gldw002= ? ",
+                 "   AND gldw003= ?  AND gldw004= ? ",
+                 "   AND gldw005= ?  AND gldw006= ? ",
+                 "   AND gldw007= ?  AND gldw008= ? ",
+                 "   AND gldw009= ?  AND gldw010= ? "
+   DECLARE aglp730_gldw_c CURSOR FROM ls_sql                  
+   
+   #取得MULTI科目設定(對沖)
+   LET ls_sql = " SELECT gldl009,gldl010 FROM gldl_t ",
+                "  WHERE gldlent= '",g_enterprise,"' ",
+                "    AND gldl001= ?  AND gldl002= ? ",
+                "    AND gldl003= ?  AND gldl004= ? ",
+                "    AND gldl005= ?  AND gldl006= ? ",
+                "    AND gldl007= ?  AND gldl008= ? "
+   DECLARE aglp730_gldl_c CURSOR FROM ls_sql            
+
+   #取得MULTI科目設定(對沖) + 科目條件
+   LET ls_sql = " SELECT gldl010 FROM gldl_t ",
+                "  WHERE gldlent= '",g_enterprise,"' ",
+                "    AND gldl001= ?  AND gldl002= ? ",
+                "    AND gldl003= ?  AND gldl004= ? ",
+                "    AND gldl005= ?  AND gldl006= ? ",
+                "    AND gldl007= ?  AND gldl008= ? ",
+                "    AND gldl009= ? "
+   DECLARE aglp730_gldl_c2 CURSOR FROM ls_sql      
+
+   #抓取暫存檔值
+   LET ls_sql = " SELECT type1,gldtld,gldt005,gldt006,gldt007,gldt001,gldt003,",
+                "        SUM(gldt010),gldt009,SUM(gldt026),gldt025,SUM(gldt029),gldt028,",
+                "        dc,odr, ",
+                "        gldt014,gldt015,gldt016,gldt017,gldt018,",
+                "        gldt019,gldt020,gldt021,gldt022,gldt023,",
+                "        gldt024,gldt036,gldt037,gldt038 ",
+                "   FROM aglp730_tmp ",
+                "  WHERE odr = ? ",
+                "  GROUP BY type1,gldtld,gldt005,gldt006,gldt007,gldt001,gldt003,",
+                "           gldt009,gldt025,gldt028,dc,odr, ",
+                "           gldt014,gldt015,gldt016,gldt017,gldt018,",
+                "           gldt019,gldt020,gldt021,gldt022,gldt023,",
+                "           gldt024,gldt036,gldt037,gldt038 ",                
+                "  ORDER BY gldtld,gldt005,gldt006,gldt007,gldt001,gldt003,gldt009,dc,odr "  
+   DECLARE aglp730_tmp_c CURSOR FROM ls_sql             
+
+   #寫入aglp730_tmp2 CURSOR
+   LET ls_sql = " INSERT INTO aglp730_tmp2 VALUES(?,?,?,?,?)"
+   PREPARE insert_tmp2_prep FROM ls_sql
+
+   CALL s_azzi902_get_gzzd('aglp730',"lbl_step1") RETURNING l_gzzd005,l_nouse
+   CALL cl_progress_no_window_ing(l_gzzd005)
+   
+   CALL s_transaction_begin()
+   #清除暫存檔
+   DELETE FROM aglp730_tmp       
+   FOREACH aglp730_gldj_c INTO g_gldj.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = "FOREACH:aglp730_gldj_c"
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         LET g_success = 'N'
+         EXIT FOREACH
+      END IF      
+      
+      LET g_gldw011_wc = " AND 1=1 "
+      
+      #1.來源公司餘額抓取
+      IF g_gldj.gldj010[1,5] <> 'MULTI' THEN
+         CALL aglp730_gldj001_get_gldt_sql(g_gldj.gldj010) RETURNING l_sql  
+         CALL aglp730_ins_temp(l_sql)                                  
+      ELSE
+         FOREACH aglp730_gldk_c USING g_gldj.gldj001,g_gldj.gldj002,g_gldj.gldj003,g_gldj.gldj004,
+                                      g_gldj.gldj005,g_gldj.gldj006,g_gldj.gldj007,g_gldj.gldj010
+                                 INTO l_gldk009
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = "FOREACH:aglp730_gldk_c"
+               LET g_errparam.code   = SQLCA.sqlcode
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+               LET g_success = 'N'
+               EXIT FOREACH
+            END IF                                    
+            CALL aglp730_gldj001_get_gldt_sql(l_gldk009) RETURNING l_sql   
+            CALL aglp730_ins_temp(l_sql)            
+         END FOREACH
+      END IF      
+      #2.對沖公司餘額抓取
+      IF g_gldj.gldj012[1,5] <> 'MULTI' THEN
+         CALL aglp730_gldj003_get_gldt_sql(g_gldj.gldj012) RETURNING l_sql  
+         CALL aglp730_ins_temp(l_sql)        
+      ELSE
+         FOREACH aglp730_gldl_c USING g_gldj.gldj001,g_gldj.gldj002,g_gldj.gldj003,g_gldj.gldj004,
+                                      g_gldj.gldj005,g_gldj.gldj006,g_gldj.gldj007,g_gldj.gldj012
+                                 INTO l_gldl009,l_gldl010
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = "FOREACH:aglp730_gldl_c"
+               LET g_errparam.code   = SQLCA.sqlcode
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+               LET g_success = 'N'
+               EXIT FOREACH
+            END IF                                   
+            IF l_gldl010 = 'N' THEN
+               #無公式設定
+               CALL aglp730_gldj003_get_gldt_sql(l_gldl009) RETURNING l_sql               
+            ELSE
+               #依公式設定
+               CALL aglp730_gldj003_get_gldt_sql2(l_gldl009) RETURNING l_sql             
+            END IF
+            CALL aglp730_ins_temp(l_sql)
+         END FOREACH      
+      END IF        
+      #3.產生沖銷傳票
+      FOREACH aglp730_tmp_c USING g_odr INTO g_gldt.*
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = "FOREACH:aglp730_tmp_c"
+            LET g_errparam.code   = SQLCA.sqlcode
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            LET g_success = 'N'
+            EXIT FOREACH
+         END IF        
+
+         #判斷是否已存在單頭
+         LET l_cnt = 0
+         SELECT COUNT(*) INTO l_cnt FROM gldp_t  
+          WHERE gldpent = g_enterprise
+            AND gldpld  = g_master.gldtld   #合併帳別(批次條件)
+            AND gldp001 = g_master.gldt001  #上層公司(批次條件)
+            AND gldp003 = g_master.gldt005  #調整年度
+            AND gldp004 = g_em              #調整月份
+            AND gldp005 = '2'               #來源碼-2.沖銷
+            AND gldp006 = '7'               #類型-7.內部往來交易-系統自動產生   
+            AND gldp007 = 'N'               #換匯差額調整否
+         IF l_cnt = 0 THEN
+            #3-1寫入傳票單頭
+            CALL aglp730_ins_gldp()
+         END IF
+         #3-2寫入傳票單身
+         CALL aglp730_ins_gldq()
+      END FOREACH
+      
+      #3-3寫入差異單身
+      CALL aglp730_ins_diff()
+      LET g_odr = g_odr + 1
+   END FOREACH
+
+   LET l_cnt_success = 0 
+   SELECT COUNT(gldqseq) INTO l_cnt_success FROM gldq_t
+    WHERE gldqent = g_enterprise
+      AND gldqdocno = g_gldpdocno
+   IF cl_null(l_cnt_success) THEN LET l_cnt_success = 0 END IF
+   IF l_cnt_success > 0 THEN
+      #3-4回寫單頭借貸金額
+      CALL aglp730_upd_gldp()
+   ELSE
+      #3-4沒有任何單身,則刪除單頭
+      CALL aglp730_del_voucher()         
+   END IF      
+   
+   IF NOT g_success OR l_cnt_success = 0 THEN
+      IF g_success AND l_cnt_success = 0 THEN
+         #寫入合併報表各公司執行階段記錄檔
+         CALL s_merge_ins_glec(g_master.gldtld,g_master.gldt001,g_prog) RETURNING g_sub_success           
+      END IF
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'sub-00491'   #單據產生失敗
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()      
+      CALL s_transaction_end('N','0') 
+      #清空進度條
+      DISPLAY '' ,0 TO stagenow,stagecomplete
+      CALL cl_err_collect_show()
+      RETURN      
+   ELSE
+      #4.寫入合併報表各公司執行階段記錄檔
+      CALL s_merge_ins_glec(g_master.gldtld,g_master.gldt001,g_prog) RETURNING g_sub_success  
+      IF NOT g_sub_success THEN
+         CALL s_transaction_end('N','0') 
+         #清空進度條
+         DISPLAY '' ,0 TO stagenow,stagecomplete
+         CALL cl_err_collect_show()
+         RETURN      
+      END IF      
+      CALL s_azzi902_get_gzzd('aglp730',"lbl_step2") RETURNING l_gzzd005,l_nouse
+      CALL cl_progress_no_window_ing(l_gzzd005)   
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'aap-00125'   #成功產生單號
+      LET g_errparam.replace[1] = g_gldpdocno
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()   
+      CALL s_transaction_end('Y','0') 
+      CALL cl_err_collect_show()
+   END IF   
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理 name="process.foreground_finish"
+      
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理 name="process.background_finish"
+      
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL aglp730_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglp730.get_buffer" >}
+PRIVATE FUNCTION aglp730_get_buffer(p_dialog)
+ 
+   #add-point:process段define (客製用) name="get_buffer.define_customerization"
+   
+   #end add-point
+   DEFINE p_dialog   ui.DIALOG
+   #add-point:process段define name="get_buffer.define"
+   
+   #end add-point
+ 
+   
+   LET g_master.gldtld = p_dialog.getFieldBuffer('gldtld')
+   LET g_master.gldt001 = p_dialog.getFieldBuffer('gldt001')
+   LET g_master.gldt005 = p_dialog.getFieldBuffer('gldt005')
+   LET g_master.chk3 = p_dialog.getFieldBuffer('chk3')
+   LET g_master.gldt006 = p_dialog.getFieldBuffer('gldt006')
+   LET g_master.chk1 = p_dialog.getFieldBuffer('chk1')
+   LET g_master.chk2 = p_dialog.getFieldBuffer('chk2')
+   LET g_master.docno = p_dialog.getFieldBuffer('docno')
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理 name="get_buffer.others"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglp730.msgcentre_notify" >}
+PRIVATE FUNCTION aglp730_msgcentre_notify()
+ 
+   #add-point:process段define (客製用) name="msgcentre_notify.define_customerization"
+   
+   #end add-point
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:process段define name="msgcentre_notify.define"
+   
+   #end add-point
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知 name="msg_centre.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglp730.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+PRIVATE FUNCTION aglp730_get_ld_info(p_type)
+DEFINE p_type          LIKE type_t.chr1      #1:取參數+帶預設(期別)/2.只取參數
+#以下僅承接不使用
+DEFINE l_pdate_s       LIKE glav_t.glav004   
+DEFINE l_pdate_e       LIKE glav_t.glav004   
+DEFINE l_flag          LIKE type_t.chr1
+DEFINE l_errno         LIKE type_t.chr100
+DEFINE l_glav002       LIKE glav_t.glav002  
+DEFINE l_glav005       LIKE glav_t.glav005  
+DEFINE l_sdate_s       LIKE glav_t.glav004
+DEFINE l_sdate_e       LIKE glav_t.glav004
+DEFINE l_glav006       LIKE glav_t.glav006
+DEFINE l_glav007       LIKE glav_t.glav007
+DEFINE l_wdate_s       LIKE glav_t.glav004
+DEFINE l_wdate_e       LIKE glav_t.glav004   
+   
+   CALL s_ld_sel_glaa(g_master.gldtld,'glaa001|glaa003|glaa016|glaa020|glaa024|glaa138')
+    RETURNING g_sub_success,g_glaa001,g_glaa003,g_glaa016,g_glaa020,g_glaa024,g_glaa138 
+         
+   IF p_type = '1' THEN
+      #依帳別取得今天日期對應的會計年度期別當預設
+      LET g_master.chk3 = g_glaa138
+      CALL aglp730_set_entry()   
+      IF g_master.chk3 = '0' AND NOT cl_null(g_glaa003) THEN
+         #依年度+期別取得會計週期起迄日
+         CALL s_get_accdate(g_glaa003,g_today,'','')
+         RETURNING l_flag,l_errno,l_glav002,l_glav005,l_sdate_s,l_sdate_e,
+                   l_glav006,l_pdate_s,l_pdate_e,l_glav007,l_wdate_s,l_wdate_e
+         LET g_master.gldt005 = l_glav002   #會計年度
+         IF cl_null(g_master.gldt006) THEN 
+            LET g_master.gldt006 = l_glav006   #會計期別
+         END IF
+         DISPLAY BY NAME g_master.gldt005,g_master.gldt006
+      END IF
+   ELSE
+      #依畫面輸入條件取得撈取餘額條件期別
+      LET g_em = ''
+      LET g_pdate_e = ''
+      CASE 
+         WHEN g_master.chk3 = '0'  #期
+            LET g_em = g_master.gldt006
+         WHEN g_master.chk3 = '1'  #季
+            CALL s_merge_get_glav006(g_glaa003,g_master.gldt005,'1',g_master.chk1) RETURNING g_sub_success,g_errno,g_em
+         WHEN g_master.chk3 = '2'  #半年
+            CALL s_merge_get_glav006(g_glaa003,g_master.gldt005,'2',g_master.chk2) RETURNING g_sub_success,g_errno,g_em            
+      END CASE
+      #依年度+期別取得會計週期起迄日
+      CALL s_get_accdate(g_glaa003,'',g_master.gldt005,g_em)
+      RETURNING l_flag,l_errno,l_glav002,l_glav005,l_sdate_s,l_sdate_e,
+                l_glav006,l_pdate_s,g_pdate_e,l_glav007,l_wdate_s,l_wdate_e    
+  END IF                 
+END FUNCTION
+
+PRIVATE FUNCTION aglp730_qbe_clear()
+   INITIALIZE g_master.* TO NULL
+   CALL cl_set_comp_entry("gldt006,chk1,chk2",TRUE)
+   LET g_master.chk1 = '0'
+   LET g_master.chk2 = '0'
+   LET g_master.gldt005 = YEAR(g_today)
+   LET g_master.gldt006 = MONTH(g_today)
+   DISPLAY BY NAME g_master.chk1,g_master.chk2,g_master.gldt005,g_master.gldt006   
+END FUNCTION
+
+PRIVATE FUNCTION aglp730_set_entry()
+   CALL cl_set_comp_entry("gldt006,chk1,chk2",FALSE)
+   CASE g_master.chk3
+      WHEN '0' 
+         CALL cl_set_comp_entry("gldt006",TRUE)
+         LET g_master.chk1 = '0'
+         LET g_master.chk2 = '0'
+      WHEN '1' 
+         CALL cl_set_comp_entry("chk1",TRUE)
+         LET g_master.chk2 = '0'
+         LET g_master.gldt006 = ''
+      WHEN '2' 
+         CALL cl_set_comp_entry("chk2",TRUE)
+         LET g_master.chk1 = '0'
+         LET g_master.gldt006 = ''
+   END CASE  
+   DISPLAY BY NAME g_master.chk1,g_master.chk2,g_master.gldt006
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取得來源公司取gldt_t餘額之sql
+# Memo...........:
+# Usage..........: CALL aglp730_gldj001_get_gldt_sql(p_gldt007)
+#                  RETURNING r_sql
+# Input parameter: p_gldt007      科目
+# Return code....: r_sql          回傳sql
+# Date & Author..: 15/11/19 by 03538
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglp730_gldj001_get_gldt_sql(p_gldt007)
+DEFINE p_gldt007  LIKE gldt_t.gldt007
+DEFINE r_sql      STRING
+DEFINE l_cnt      LIKE type_t.num5
+DEFINE l_gldc001  LIKE gldc_t.gldc001
+DEFINE l_gldw011  LIKE gldw_t.gldw011
+
+   LET r_sql = ''
+   LET r_sql =" SELECT 'A','1',gldtld,gldt005,gldt006,gldt007,",
+              "         gldt001,gldt003,",
+              "        (gldt010-gldt011),gldt009,(gldt026-gldt027),gldt025,(gldt029-gldt030),gldt028,",
+              "        '2',",g_odr,",",
+              "         gldt014,gldt015,gldt016,gldt017,gldt018,",
+              "         gldt019,gldt020,gldt021,gldt022,gldt023,",
+              "         gldt024,gldt036,gldt037,gldt038 ",              
+              "   FROM gldt_t ",
+              "  WHERE gldtent = '",g_enterprise,"' ",
+              "    AND gldtld  = '",g_gldj.gldj002,"' ",      #合併帳別(來源)
+              "    AND gldt003 = '",g_gldj.gldj001,"' ",      #公司編號(來源)
+              "    AND gldt005 = '",g_master.gldt005,"' ",    #年度
+              "    AND gldt006 = '",g_em,"'" ,                #只抓截止期別的金額
+              "    AND gldt007 = '",p_gldt007,"'"             #科目
+#由於TT也不串上層,故此處先mark
+#   LET l_cnt = 0 
+#   SELECT COUNT(*) INTO l_cnt
+#     FROM gldb_t
+#    WHERE gldbent = g_enterprise
+#      AND gldb001 = g_gldj.gldj001
+#      AND gldbstus = 'Y'
+#      
+#   IF l_cnt > 0 THEN   #非最下層
+#      LET r_sql = r_sql,
+#                  " AND gldt001 = '",g_gldj.gldj001,"' ",
+#                  " AND gldt031 = '",g_gldj.gldj001,"' "
+#       
+#   ELSE                #最下層
+#      SELECT gldc001 INTO l_gldc001
+#        FROM gldc_t 
+#       WHERE gldcent = g_enterprise
+#         AND gldcld = g_gldj.gldj002
+#         AND gldc003 = g_gldj.gldj001
+#      LET r_sql = r_sql,
+#                  " AND gldt001 = '",l_gldc001,"' "
+#   END IF
+   #彙總方式:2.科目+核算項,增加撈取核算項條件
+   IF g_gldj.gldj009 = '2' AND g_gldj.gldj018 <> '0' THEN
+      CALL aglp730_get_accitem_wc('1',g_gldj.gldj010,p_gldt007,g_gldj.gldj018) RETURNING g_gldw011_wc   
+      LET r_sql = r_sql,g_gldw011_wc
+   END IF   
+    
+   RETURN r_sql
+END FUNCTION
+################################################################################
+# Descriptions...: 取得對沖公司取gldt_t餘額之sql
+# Memo...........:
+# Usage..........: CALL aglp730_gldj003_get_gldt_sql(p_gldt007)
+#                  RETURNING r_sql
+# Input parameter: p_gldt007      科目
+# Return code....: r_sql          回傳sql
+# Date & Author..: 15/11/19 by 03538
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglp730_gldj003_get_gldt_sql(p_gldt007)
+DEFINE p_gldt007  LIKE gldt_t.gldt007
+DEFINE r_sql      STRING
+DEFINE l_cnt      LIKE type_t.num5
+DEFINE l_gldc001  LIKE gldc_t.gldc001
+DEFINE l_gldw011  LIKE gldw_t.gldw011
+
+   LET r_sql = ''
+   LET r_sql =" SELECT 'B','1',gldtld,gldt005,gldt006,gldt007,",
+              "         gldt001,gldt003,",
+              "        (gldt010-gldt011)*-1,gldt009,(gldt026-gldt027)*-1,gldt025,(gldt029-gldt030)*-1,gldt028,",
+              "        '1',",g_odr,",",
+              "         gldt014,gldt015,gldt016,gldt017,gldt018,",
+              "         gldt019,gldt020,gldt021,gldt022,gldt023,",
+              "         gldt024,gldt036,gldt037,gldt038 ",              
+              "   FROM gldt_t ",
+              "  WHERE gldtent = '",g_enterprise,"' ",
+              "    AND gldtld  = '",g_gldj.gldj004,"' ",      #合併帳別(對沖)
+              "    AND gldt003 = '",g_gldj.gldj003,"' ",      #公司編號(對沖)
+              "    AND gldt005 = '",g_master.gldt005,"' ",    #年度
+              "    AND gldt006 = '",g_em,"'" ,                #只抓截止期別的金額
+              "    AND gldt007 = '",p_gldt007,"'"             #科目
+
+#由於TT也不串上層,故此處先mark
+#   LET l_cnt = 0 
+#   SELECT COUNT(*) INTO l_cnt
+#     FROM gldb_t
+#    WHERE gldbent = g_enterprise
+#      AND gldb001 = g_gldj.gldj001
+#      AND gldbstus = 'Y'
+#      
+#   IF l_cnt > 0 THEN   #非最下層
+#      LET r_sql = r_sql,
+#                  " AND gldt001 = '",g_gldj.gldj003,"' ",
+#                  " AND gldt031 = '",g_gldj.gldj003,"' "
+#       
+#   ELSE                #最下層
+#      SELECT gldc001 INTO l_gldc001
+#        FROM gldc_t 
+#       WHERE gldcent = g_enterprise
+#         AND gldcld = g_gldj.gldj004
+#         AND gldc003 = g_gldj.gldj003
+#      LET r_sql = r_sql,
+#                  " AND gldt001 = '",l_gldc001,"' "
+#   END IF
+   #彙總方式:2.科目+核算項,增加撈取核算項條件
+   IF g_gldj.gldj011 = '2' AND g_gldj.gldj019 <> '0'THEN
+      #當來源公司設定為:
+      #1.依科目+核算項彙總
+      #2.且核算項有啟用時
+      #3.且對沖方式是一對一
+      #則沿用來源公司之核算項條件不重新組條件
+      IF NOT (g_gldj.gldj009 = '2' AND g_gldj.gldj018 <> '0' AND g_gldj.gldj013 = '1') THEN
+         CALL aglp730_get_accitem_wc('2',g_gldj.gldj012,p_gldt007,g_gldj.gldj019) RETURNING g_gldw011_wc      
+      END IF
+      LET r_sql = r_sql,g_gldw011_wc
+   END IF   
+
+   RETURN r_sql
+END FUNCTION
+################################################################################
+# Descriptions...: 取得對沖公司取gldt_t餘額之sql(使用公式設定)
+# Memo...........:
+# Usage..........: CALL aglp730_gldj003_get_gldt_sql2(p_gldl009)
+#                  RETURNING r_sql
+# Input parameter: p_gldl009      科目
+# Return code....: r_sql          回傳sql
+# Date & Author..: 15/12/10 by 03538
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglp730_gldj003_get_gldt_sql2(p_gldl009)
+DEFINE p_gldl009     LIKE gldl_t.gldl009
+DEFINE r_sql         STRING
+
+   #彙總方式:2.科目+核算項,增加撈取核算項條件
+   IF g_gldj.gldj011 = '2' AND g_gldj.gldj019 <> '0' THEN
+      #當來源公司設定為:
+      #1.依科目+核算項彙總
+      #2.且核算項有啟用時
+      #3.且對沖方式是一對一
+      #則沿用來源公司之核算項條件不重新組條件
+      IF NOT (g_gldj.gldj009 = '2' AND g_gldj.gldj018 <> '0' AND g_gldj.gldj013 = '1') THEN   
+         CALL aglp730_get_accitem_wc('2',g_gldj.gldj012,p_gldl009,g_gldj.gldj019) RETURNING g_gldw011_wc 
+      END IF
+   END IF
+   LET r_sql = ''
+   LET r_sql =" SELECT 'B','1',gldtld,gldt005,gldt006,'",p_gldl009,"',",
+              "         gldt001,gldt003,",
+              "        (gldt010-gldt011),gldt009,(gldt026-gldt027),gldt025,(gldt029-gldt030),gldt028,",
+              "        '2',",g_odr,",",
+              "         gldt014,gldt015,gldt016,gldt017,gldt018,",
+              "         gldt019,gldt020,gldt021,gldt022,gldt023,",
+              "         gldt024,gldt036,gldt037,gldt038 ",              
+              "   FROM gldt_t ",
+              "  WHERE gldtent = '",g_enterprise,"' ",
+              "    AND gldtld  = '",g_gldj.gldj004,"' ",      #合併帳別(對沖)
+              "    AND gldt003 = '",g_gldj.gldj003,"' ",      #公司編號(對沖)
+              "    AND gldt005 = '",g_master.gldt005,"' ",    #年度
+              "    AND gldt006 = '",g_em,"'" ,                #只抓截止期別的金額
+              "    AND gldt007 IN ",                          #科目
+              "(SELECT DISTINCT gldm009 FROM gldm_t ",
+              "  WHERE gldment= '",g_enterprise,"' ",
+              "    AND gldm001= '",g_gldj.gldj001,"' ",
+              "    AND gldm002= '",g_gldj.gldj002,"' ",
+              "    AND gldm003= '",g_gldj.gldj003,"' ",
+              "    AND gldm004= '",g_gldj.gldj004,"' ",
+              "    AND gldm005= '",g_gldj.gldj005,"' ",
+              "    AND gldm006= '",g_gldj.gldj006,"' ",
+              "    AND gldm007= '",g_gldj.gldj007,"' ",
+              "    AND gldm008= '",g_gldj.gldj012,"' ",
+              "    AND gldm010 = '1') ",g_gldw011_wc,
+              "  UNION ALL ",
+              " SELECT 'B','1',gldtld,gldt005,gldt006,'",p_gldl009,"',",
+              "         gldt001,gldt003,",
+              "        (gldt010-gldt011)*-1,gldt009,(gldt026-gldt027)*-1,gldt025,(gldt029-gldt030)*-1,gldt028,",
+              "        '2',",g_odr,",",
+              "         gldt014,gldt015,gldt016,gldt017,gldt018,",
+              "         gldt019,gldt020,gldt021,gldt022,gldt023,",
+              "         gldt024,gldt036,gldt037,gldt038 ",              
+              "   FROM gldt_t ",
+              "  WHERE gldtent = '",g_enterprise,"' ",
+              "    AND gldtld  = '",g_gldj.gldj004,"' ",      #合併帳別(對沖)
+              "    AND gldt003 = '",g_gldj.gldj003,"' ",      #公司編號(對沖)
+              "    AND gldt005 = '",g_master.gldt005,"' ",    #年度
+              "    AND gldt006 = '",g_em,"'" ,                #只抓截止期別的金額
+              "    AND gldt007 IN ",                          #科目
+              "(SELECT DISTINCT gldm009 FROM gldm_t ",
+              "  WHERE gldment= '",g_enterprise,"' ",
+              "    AND gldm001= '",g_gldj.gldj001,"' ",
+              "    AND gldm002= '",g_gldj.gldj002,"' ",
+              "    AND gldm003= '",g_gldj.gldj003,"' ",
+              "    AND gldm004= '",g_gldj.gldj004,"' ",
+              "    AND gldm005= '",g_gldj.gldj005,"' ",
+              "    AND gldm006= '",g_gldj.gldj006,"' ",
+              "    AND gldm007= '",g_gldj.gldj007,"' ",
+              "    AND gldm008= '",g_gldj.gldj012,"' ",
+              "    AND gldm010 = '2') ",g_gldw011_wc
+                                          
+   RETURN r_sql
+END FUNCTION
+
+PRIVATE FUNCTION aglp730_cre_tmp()
+DEFINE l_session  LIKE type_t.chr80
+
+   DROP TABLE aglp730_tmp
+   CREATE TEMP TABLE aglp730_tmp(
+      type1     LIKE type_t.chr1,      #A:來源/B:對沖
+      type2     LIKE type_t.chr1,      #1:科目/2:科目+核算項   
+      gldtld    LIKE gldt_t.gldtld,    #來源/對沖帳別
+      gldt005   LIKE gldt_t.gldt005,   #會計年度
+      gldt006   LIKE gldt_t.gldt006,   #期別
+      gldt007   LIKE gldt_t.gldt007,   #會計科目
+      gldt001   LIKE gldt_t.gldt001,   #上層公司
+      gldt003   LIKE gldt_t.gldt003,   #下層公司
+      gldt010   LIKE gldt_t.gldt010,   #金額(記帳幣)
+      gldt009   LIKE gldt_t.gldt009,   #幣別(記帳幣)     
+      gldt026   LIKE gldt_t.gldt026,   #金額(功能幣)
+      gldt025   LIKE gldt_t.gldt025,   #幣別(功能幣)
+      gldt029   LIKE gldt_t.gldt029,   #金額(報告幣)
+      gldt028   LIKE gldt_t.gldt028,   #幣別(報告幣)
+      dc        LIKE type_t.chr1,      #借貸
+      odr       LIKE type_t.num5,      #本次處理組別
+      gldt014	LIKE gldt_t.gldt014,    #營運據點
+      gldt015	LIKE gldt_t.gldt015,    #部門
+      gldt016	LIKE gldt_t.gldt016,    #利潤/成本中心
+      gldt017	LIKE gldt_t.gldt017,    #區域
+      gldt018	LIKE gldt_t.gldt018,    #交易客商
+      gldt019	LIKE gldt_t.gldt019,    #帳款客商
+      gldt020	LIKE gldt_t.gldt020,    #客群
+      gldt021	LIKE gldt_t.gldt021,    #產品類別
+      gldt022	LIKE gldt_t.gldt022,    #人員
+      gldt023	LIKE gldt_t.gldt023,    #專案編號
+      gldt024	LIKE gldt_t.gldt024,    #WBS
+      gldt036	LIKE gldt_t.gldt036,    #經營方式
+      gldt037	LIKE gldt_t.gldt037,    #渠道
+      gldt038	LIKE gldt_t.gldt038     #品牌      
+      );
+   
+    DROP TABLE aglp730_tmp2
+    CREATE TEMP TABLE aglp730_tmp2(
+      yy       LIKE gldt_t.gldt005,    #年度
+      mm       LIKE gldt_t.gldt006,    #期別
+      amt1     LIKE gldt_t.gldt010,    #金額(記帳幣)
+      amt2     LIKE gldt_t.gldt010,    #金額(功能幣)
+      amt3     LIKE gldt_t.gldt010     #金額(報告幣)
+      );
+      
+END FUNCTION
+
+################################################################################
+# Descriptions...: 將傳入sql撈取資料後,寫入temp中
+# Memo...........:
+# Usage..........: CALL aglp730_ins_temp(p_sql)
+# Date & Author..: 15/11/19 By 03538
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglp730_ins_temp(p_sql)
+DEFINE p_sql          STRING
+DEFINE l_tmp          RECORD
+                      type1     LIKE type_t.chr1,      #A:來源/B:對沖
+                      type2     LIKE type_t.chr1,      #1:科目/2:科目+核算項
+                      gldtld    LIKE gldt_t.gldtld,    #來源/對沖帳別
+                      gldt005   LIKE gldt_t.gldt005,   #會計年度
+                      gldt006   LIKE gldt_t.gldt006,   #期別
+                      gldt007   LIKE gldt_t.gldt007,   #會計科目
+                      gldt001   LIKE gldt_t.gldt001,   #上層公司
+                      gldt003   LIKE gldt_t.gldt003,   #下層公司    
+                      gldt010   LIKE gldt_t.gldt010,   #金額(記帳幣)
+                      gldt009   LIKE gldt_t.gldt009,   #幣別(記帳幣)     
+                      gldt026   LIKE gldt_t.gldt026,   #金額(功能幣)
+                      gldt025   LIKE gldt_t.gldt025,   #幣別(功能幣)
+                      gldt029   LIKE gldt_t.gldt029,   #金額(報告幣)
+                      gldt028   LIKE gldt_t.gldt028,   #幣別(報告幣)                       
+                      dc        LIKE type_t.chr1,      #借貸
+                      odr       LIKE type_t.num5,      #本次處理組別
+                      gldt014	LIKE gldt_t.gldt014,     #營運據點
+                      gldt015	LIKE gldt_t.gldt015,     #部門
+                      gldt016	LIKE gldt_t.gldt016,     #利潤/成本中心
+                      gldt017	LIKE gldt_t.gldt017,     #區域
+                      gldt018	LIKE gldt_t.gldt018,     #交易客商
+                      gldt019	LIKE gldt_t.gldt019,     #帳款客商
+                      gldt020	LIKE gldt_t.gldt020,     #客群
+                      gldt021	LIKE gldt_t.gldt021,     #產品類別
+                      gldt022	LIKE gldt_t.gldt022,     #人員
+                      gldt023	LIKE gldt_t.gldt023,     #專案編號
+                      gldt024	LIKE gldt_t.gldt024,     #WBS
+                      gldt036	LIKE gldt_t.gldt036,     #經營方式
+                      gldt037	LIKE gldt_t.gldt037,     #渠道
+                      gldt038	LIKE gldt_t.gldt038      #品牌                      
+                      END RECORD
+
+   DECLARE aglp730_ins_tmp_c CURSOR FROM p_sql
+   FOREACH aglp730_ins_tmp_c INTO l_tmp.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = "FOREACH:aglp730_ins_tmp_c"
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         LET g_success = 'N'
+         EXIT FOREACH
+      END IF      
+      IF l_tmp.gldt010 = 0 AND l_tmp.gldt026 = 0 AND l_tmp.gldt029 =0 THEN
+         CONTINUE FOREACH
+      END IF
+      INSERT INTO aglp730_tmp VALUES(l_tmp.*)
+      
+   END FOREACH
+END FUNCTION
+
+################################################################################
+# Descriptions...: 刪除當期已存在傳票
+# Memo...........:
+# Usage..........: CALL aglp730_del_voucher()
+#                  RETURNING 回传参数
+# Return code....: r_success
+# Date & Author..: 15/11/24 By 03538
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglp730_del_voucher()
+DEFINE ls_sql        STRING
+#161128-00061#1----modify------begin-----------
+#DEFINE l_gldp        RECORD LIKE gldp_t.*
+DEFINE l_gldp RECORD  #調整與銷除傳票單頭檔
+       gldpent LIKE gldp_t.gldpent, #企業編號
+       gldpownid LIKE gldp_t.gldpownid, #資料所有者
+       gldpowndp LIKE gldp_t.gldpowndp, #資料所屬部門
+       gldpcrtid LIKE gldp_t.gldpcrtid, #資料建立者
+       gldpcrtdp LIKE gldp_t.gldpcrtdp, #資料建立部門
+       gldpcrtdt LIKE gldp_t.gldpcrtdt, #資料創建日
+       gldpmodid LIKE gldp_t.gldpmodid, #資料修改者
+       gldpmoddt LIKE gldp_t.gldpmoddt, #最近修改日
+       gldpcnfid LIKE gldp_t.gldpcnfid, #資料確認者
+       gldpcnfdt LIKE gldp_t.gldpcnfdt, #資料確認日
+       gldppstid LIKE gldp_t.gldppstid, #資料過帳者
+       gldppstdt LIKE gldp_t.gldppstdt, #資料過帳日
+       gldpstus LIKE gldp_t.gldpstus, #狀態碼
+       gldpdocno LIKE gldp_t.gldpdocno, #傳票編號
+       gldpdocdt LIKE gldp_t.gldpdocdt, #單據日期
+       gldpld LIKE gldp_t.gldpld, #合併帳套
+       gldp001 LIKE gldp_t.gldp001, #上層公司/個體公司
+       gldp002 LIKE gldp_t.gldp002, #帳套
+       gldp003 LIKE gldp_t.gldp003, #會計年度
+       gldp004 LIKE gldp_t.gldp004, #會計期別
+       gldp005 LIKE gldp_t.gldp005, #來源碼
+       gldp006 LIKE gldp_t.gldp006, #調整/沖銷類型
+       gldp007 LIKE gldp_t.gldp007, #換匯差額調整否
+       gldp008 LIKE gldp_t.gldp008, #幣別(記帳幣)
+       gldp009 LIKE gldp_t.gldp009, #借方金額合計(記帳幣)
+       gldp010 LIKE gldp_t.gldp010, #貸方金額合計(記帳幣)
+       gldp011 LIKE gldp_t.gldp011, #幣別(功能幣)
+       gldp012 LIKE gldp_t.gldp012, #借方金額合計(功能幣)
+       gldp013 LIKE gldp_t.gldp013, #貸方金額合計(功能幣)
+       gldp014 LIKE gldp_t.gldp014, #幣別(報告幣)
+       gldp015 LIKE gldp_t.gldp015, #借方金額合計(報告幣)
+       gldp016 LIKE gldp_t.gldp016  #貸方金額合計(報告幣)
+       END RECORD
+#161128-00061#1----modify------end-----------       
+   #抓取已存在的沖銷傳票/損益結轉傳票
+   #161128-00061#1----modify------begin----------- 
+   #LET ls_sql = " SELECT * FROM gldp_t ",  
+   LET ls_sql = " SELECT gldpent,gldpownid,gldpowndp,gldpcrtid,gldpcrtdp,gldpcrtdt,gldpmodid,gldpmoddt,gldpcnfid,",
+                "gldpcnfdt,gldppstid,gldppstdt,gldpstus,gldpdocno,gldpdocdt,gldpld,gldp001,gldp002,gldp003,gldp004,",
+                "gldp005,gldp006,gldp007,gldp008,gldp009,gldp010,gldp011,gldp012,gldp013,gldp014,gldp015,gldp016 FROM gldp_t ",  
+   #161128-00061#1----modify------end----------- 
+                "  WHERE gldpent = '",g_enterprise,"' ",
+                "    AND gldpld  = '",g_master.gldtld,"' ",   #合併帳別(批次條件)
+                "    AND gldp001 = '",g_master.gldt001,"' ",  #上層公司(批次條件)
+                "    AND gldp003 = '",g_master.gldt005,"' ",  #調整年度
+                "    AND gldp004 = '",g_em,"' ",              #調整月份
+                "    AND gldp005 = '2' ",                     #來源碼-2.沖銷
+                "    AND gldp006 = '7' ",                     #類型-7.內部往來交易-系統自動產生   
+                "    AND gldp007 = 'N' "                      #換匯差額調整否   
+   DECLARE aglp730_gldp_c CURSOR FROM ls_sql
+
+   CALL s_transaction_begin()
+   FOREACH aglp730_gldp_c INTO l_gldp.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = "FOREACH:aglp730_gldp_c"
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         LET g_success = FALSE
+         EXIT FOREACH
+      END IF
+      IF l_gldp.gldpstus NOT MATCHES '[NX]' THEN    
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'axr-00076'
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err() 
+         LET g_success = FALSE
+         CONTINUE FOREACH  
+      END IF         
+      
+      LET g_prog = 'aglt530'
+      IF NOT s_aooi200_fin_del_docno(l_gldp.gldpld,l_gldp.gldpdocno,l_gldp.gldpdocdt) THEN
+         UPDATE gldp_t SET gldpstus = 'X'
+          WHERE gldpent = g_enterprise
+            AND gldpdocno= l_gldp.gldpdocno
+   
+      ELSE
+         DELETE FROM gldp_t
+          WHERE gldpent = g_enterprise
+            AND gldpdocno= l_gldp.gldpdocno   
+      
+         DELETE FROM gldq_t
+          WHERE gldqent = g_enterprise 
+            AND gldqdocno= l_gldp.gldpdocno 
+            
+      END IF      
+   END FOREACH   
+   LET g_prog = 'aglp730'
+   IF NOT g_success THEN
+      CALL s_transaction_end('N','0') 
+   ELSE
+      CALL s_transaction_end('Y','0') 
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 寫入調整傳票單頭
+# Memo...........:
+# Usage..........: CALL aglp730_ins_gldp()
+# Date & Author..: 15/11/24 By 03538
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglp730_ins_gldp()
+DEFINE ls_js            STRING
+DEFINE lc_param         RECORD
+       prog             LIKE type_t.chr30,      #單別程式代號
+       gldpstus         LIKE gldp_t.gldpstus,   #狀態碼
+       gldpdocno        LIKE gldp_t.gldpdocno,  #單別
+       gldpdocdt        LIKE gldp_t.gldpdocdt,  #單據日期
+       gldpld           LIKE gldp_t.gldpld,     #合併帳別
+       gldp001          LIKE gldp_t.gldp001,    #上層公司
+       gldp003          LIKE gldp_t.gldp003,    #會計年度
+       gldp004          LIKE gldp_t.gldp004,    #會計期別
+       gldp005          LIKE gldp_t.gldp005,    #來源碼
+       gldp006          LIKE gldp_t.gldp006,    #調整/沖銷類型
+       gldp007          LIKE gldp_t.gldp007     #換匯差額調整否
+                        END RECORD
+
+   LET lc_param.prog      = 'aglt530'           #單別程式代號
+   LET lc_param.gldpstus  = 'N'                 #狀態碼
+   LET lc_param.gldpdocno = g_master.docno      #單別
+   LET lc_param.gldpdocdt = g_pdate_e           #單據日期
+   LET lc_param.gldpld    = g_master.gldtld     #合併帳別
+   LET lc_param.gldp001   = g_master.gldt001    #上層公司
+   LET lc_param.gldp003   = g_master.gldt005    #會計年度
+   LET lc_param.gldp004   = g_em                #會計期別
+   LET lc_param.gldp005   = '2'                 #來源碼
+   LET lc_param.gldp006   = '7'                 #調整/沖銷類型
+   LET lc_param.gldp007   = 'N'                 #換匯差額調整否   
+   
+   LET ls_js = util.JSON.stringify(lc_param)
+   CALL s_merge_ins_gldp(ls_js) RETURNING g_sub_success,g_gldpdocno
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 寫入調整傳票單身
+# Memo...........:
+# Usage..........: CALL aglp730_ins_gldq()
+# Date & Author..: 15/12/08 By 03538
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglp730_ins_gldq()
+#161128-00061#1----modify-----begin-----------
+#DEFINE l_gldq        RECORD LIKE gldq_t.*
+DEFINE l_gldq RECORD  #調整與銷除傳票單身檔
+       gldqent LIKE gldq_t.gldqent, #企業編號
+       gldqdocno LIKE gldq_t.gldqdocno, #傳票編號
+       gldqseq LIKE gldq_t.gldqseq, #項次
+       gldq001 LIKE gldq_t.gldq001, #科目編號
+       gldq003 LIKE gldq_t.gldq003, #營運據點
+       gldq004 LIKE gldq_t.gldq004, #部門
+       gldq005 LIKE gldq_t.gldq005, #利潤/成本中心
+       gldq006 LIKE gldq_t.gldq006, #區域
+       gldq007 LIKE gldq_t.gldq007, #收付款客商
+       gldq008 LIKE gldq_t.gldq008, #帳款客商
+       gldq009 LIKE gldq_t.gldq009, #客群
+       gldq010 LIKE gldq_t.gldq010, #產品類別
+       gldq011 LIKE gldq_t.gldq011, #經營方式
+       gldq012 LIKE gldq_t.gldq012, #渠道
+       gldq013 LIKE gldq_t.gldq013, #品牌
+       gldq014 LIKE gldq_t.gldq014, #人員
+       gldq015 LIKE gldq_t.gldq015, #專案編號
+       gldq016 LIKE gldq_t.gldq016, #WBS
+       gldq017 LIKE gldq_t.gldq017, #借方金額(記帳幣)
+       gldq018 LIKE gldq_t.gldq018, #貸方金額(記帳幣)
+       gldq019 LIKE gldq_t.gldq019, #借方金額(功能幣)
+       gldq020 LIKE gldq_t.gldq020, #貸方金額(功能幣)
+       gldq021 LIKE gldq_t.gldq021, #借方金額(報告幣)
+       gldq022 LIKE gldq_t.gldq022, #貸方金額(報告幣)
+       gldq023 LIKE gldq_t.gldq023  #摘要
+       END RECORD
+#161128-00061#1----modify------end-----------
+   
+DEFINE ls_js            STRING
+DEFINE lc_param         RECORD
+         up_ld          LIKE gldt_t.gldtld,       #合併帳別(合併主體)
+         up_comp        LIKE gldt_t.gldt001,      #上層公司
+         dn_ld          LIKE gldt_t.gldtld,       #下層帳別
+         dn_comp        LIKE gldt_t.gldt001,      #下層公司
+         yy             LIKE gldt_t.gldt005,      #年度
+         mm             LIKE gldt_t.gldt006,      #期別
+         acc            LIKE gldt_t.gldt007,      #科目
+         tabname        LIKE type_t.chr80,        #餘額來源table
+         curr1          LIKE gldt_t.gldt009,      #幣別(記帳幣)         
+         curr2          LIKE gldt_t.gldt009,      #幣別(功能幣)         
+         curr3          LIKE gldt_t.gldt009,      #幣別(報告幣)         
+         amt1           LIKE gldt_t.gldt010,      #換匯前金額(記帳幣)
+         amt2           LIKE gldt_t.gldt010,      #換匯前金額(功能幣)
+         amt3           LIKE gldt_t.gldt010,      #換匯前金額(報告幣)
+         source         LIKE type_t.chr1          #來源A/對沖B
+                    END RECORD
+DEFINE lc_param2    RECORD
+         r_amt1         LIKE gldt_t.gldt010,      #換匯後金額(記帳幣)          
+         r_amt2         LIKE gldt_t.gldt010,      #換匯後金額(功能幣)         
+         r_amt3         LIKE gldt_t.gldt010       #換匯後金額(報告幣)         
+                    END RECORD
+DEFINE l_glab005_1  LIKE glab_t.glab005           #少數股權科目
+DEFINE l_glab005_2  LIKE glab_t.glab005           #少數股權淨利科目
+DEFINE l_gldl010    LIKE gldl_t.gldl010           #使用公式否
+
+   
+   #少數股權科目
+   CALL s_fin_get_account(g_master.gldtld,'12','9929','9929_05') RETURNING g_sub_success,l_glab005_1,g_errno  
+   #少數股權淨利科目
+   CALL s_fin_get_account(g_master.gldtld,'12','9929','9929_06') RETURNING g_sub_success,l_glab005_2,g_errno  
+   IF (g_gldt.gldt007 = l_glab005_1) OR (g_gldt.gldt007 = l_glab005_2) THEN
+       #取得科目是否依公式設定
+       OPEN aglp730_gldl_c2 USING g_gldj.gldj001,g_gldj.gldj002,g_gldj.gldj003,g_gldj.gldj004,
+                                  g_gldj.gldj005,g_gldj.gldj006,g_gldj.gldj007,g_gldj.gldj012,
+                                  g_gldt.gldt007
+       FETCH aglp730_gldl_c2 INTO l_gldl010   
+       IF cl_null(l_gldl010) THEN LET l_gldl010 = 'N' END IF
+       IF l_gldl010 = 'Y' THEN
+          #少數股權淨利科目計算
+          IF g_gldt.gldt007 = l_glab005_2 THEN
+             DELETE FROM aglp730_tmp2
+             CALL aglp730_get_minority_interest() RETURNING g_gldt.gldt010,g_gldt.gldt026,g_gldt.gldt029             
+          END IF
+          #少數股權科目計算
+          IF g_gldt.gldt007 = l_glab005_1 THEN
+             CALL aglp730_get_minority() RETURNING g_gldt.gldt010,g_gldt.gldt026,g_gldt.gldt029                         
+          END IF
+          #取位
+          CALL s_curr_round_ld('1',g_master.gldtld,g_glaa001,g_gldt.gldt010,2) RETURNING g_sub_success,g_errno,g_gldt.gldt010
+          IF NOT cl_null(g_glaa016) THEN
+             CALL s_curr_round_ld('1',g_master.gldtld,g_glaa016,g_gldt.gldt026,2) RETURNING g_sub_success,g_errno,g_gldt.gldt026
+          END IF
+          IF NOT cl_null(g_glaa020) <> 0 THEN
+             CALL s_curr_round_ld('1',g_master.gldtld,g_glaa020,g_gldt.gldt029,2) RETURNING g_sub_success,g_errno,g_gldt.gldt029
+          END IF
+                    
+          IF g_gldt.gldt010 < 0 OR g_gldt.gldt026 < 0 OR g_gldt.gldt029 < 0 THEN
+              LET g_gldt.dc = '2'
+              LET g_gldt.gldt010 = g_gldt.gldt010 * -1
+              LET g_gldt.gldt026 = g_gldt.gldt026 * -1
+              LET g_gldt.gldt029 = g_gldt.gldt029 * -1                 
+          ELSE
+              LET g_gldt.dc = '1'
+          END IF               
+       END IF
+   
+   END IF
+   #來源/對沖合併帳別與合併主體別不同需要換匯
+   IF g_gldt.gldtld <> g_master.gldtld THEN
+      LET lc_param.up_ld   = g_master.gldtld   #合併帳別(合併主體)
+      LET lc_param.up_comp = g_master.gldt001  #上層公司
+      LET lc_param.dn_ld   = g_gldt.gldtld     #下層帳別
+      LET lc_param.dn_comp = g_gldt.gldt003    #下層公司
+      LET lc_param.yy      = g_gldt.gldt005    #年度
+      LET lc_param.mm      = g_gldt.gldt006    #期別
+      LET lc_param.acc     = g_gldt.gldt007    #科目
+      LET lc_param.tabname = 'gldt_t'          #餘額來源table
+      LET lc_param.curr1   = g_gldt.gldt009    #幣別(記帳幣)         
+      LET lc_param.curr2   = g_gldt.gldt025    #幣別(功能幣)         
+      LET lc_param.curr3   = g_gldt.gldt028    #幣別(報告幣)         
+      LET lc_param.amt1    = g_gldt.gldt010    #換匯前金額(記帳幣)
+      LET lc_param.amt2    = g_gldt.gldt026    #換匯前金額(功能幣)
+      LET lc_param.amt3    = g_gldt.gldt029    #換匯前金額(報告幣)
+      LET lc_param.source  = g_gldt.type1      #來源A/對沖B   
+      LET ls_js = util.JSON.stringify(lc_param)      
+      CALL s_merge_get_examt(ls_js) RETURNING ls_js  
+      CALL util.JSON.parse(ls_js,lc_param2)
+      LET g_gldt.gldt010 = lc_param2.r_amt1
+      LET g_gldt.gldt026 = lc_param2.r_amt2
+      LET g_gldt.gldt029 = lc_param2.r_amt3
+   END IF
+   LET l_gldq.gldqent  = g_enterprise
+   LET l_gldq.gldqdocno= g_gldpdocno
+   #項次
+   LET l_gldq.gldqseq = NULL
+   SELECT MAX(gldqseq) INTO l_gldq.gldqseq FROM gldq_t
+    WHERE gldqent = g_enterprise
+      AND gldqdocno = l_gldq.gldqdocno
+   IF cl_null(l_gldq.gldqseq) THEN
+      LET l_gldq.gldqseq = 0
+   END IF
+   LET l_gldq.gldqseq  = l_gldq.gldqseq + 1
+   LET l_gldq.gldq001  = g_gldt.gldt007   #會計科目
+
+   #金額是負數,將借貸相反
+   IF g_gldt.gldt010 < 0 OR g_gldt.gldt026 < 0 OR g_gldt.gldt029 < 0 THEN
+      IF g_gldt.dc='1' THEN LET g_gldt.dc='2' ELSE LET g_gldt.dc='1' END IF
+      LET g_gldt.gldt010 = g_gldt.gldt010 * -1
+      LET g_gldt.gldt026 = g_gldt.gldt026 * -1
+      LET g_gldt.gldt029 = g_gldt.gldt029 * -1
+   END IF
+   IF g_gldt.dc = '1' THEN   #落在借方
+      LET l_gldq.gldq017 = g_gldt.gldt010
+      LET l_gldq.gldq018 = 0
+      LET l_gldq.gldq019 = g_gldt.gldt026
+      LET l_gldq.gldq020 = 0
+      LET l_gldq.gldq021 = g_gldt.gldt029
+      LET l_gldq.gldq022 = 0
+   ELSE                      #落在貸方      
+      LET l_gldq.gldq017 = 0   
+      LET l_gldq.gldq018 = g_gldt.gldt010    
+      LET l_gldq.gldq019 = 0
+      LET l_gldq.gldq020 = g_gldt.gldt026
+      LET l_gldq.gldq021 = 0
+      LET l_gldq.gldq022 = g_gldt.gldt029      
+   END IF
+   
+   LET l_gldq.gldq003 = g_gldt.gldt014   #營運據點
+   LET l_gldq.gldq004 = g_gldt.gldt015   #部門
+   LET l_gldq.gldq005 = g_gldt.gldt016   #利潤/成本中心
+   LET l_gldq.gldq006 = g_gldt.gldt017   #區域
+   LET l_gldq.gldq007 = g_gldt.gldt018   #交易客商
+   LET l_gldq.gldq008 = g_gldt.gldt019   #帳款客商
+   LET l_gldq.gldq009 = g_gldt.gldt020   #客群
+   LET l_gldq.gldq010 = g_gldt.gldt021   #產品類別
+   LET l_gldq.gldq014 = g_gldt.gldt022   #人員
+   LET l_gldq.gldq015 = g_gldt.gldt023   #專案編號
+   LET l_gldq.gldq016 = g_gldt.gldt024   #WBS
+   LET l_gldq.gldq011 = g_gldt.gldt036   #經營方式
+   LET l_gldq.gldq012 = g_gldt.gldt037   #渠道
+   LET l_gldq.gldq013 = g_gldt.gldt038   #品牌   
+
+   IF l_gldq.gldq017 <> 0 OR l_gldq.gldq018 <> 0 OR
+      l_gldq.gldq019 <> 0 OR l_gldq.gldq020 <> 0 OR
+      l_gldq.gldq021 <> 0 OR l_gldq.gldq022 <> 0 THEN
+      #161128-00061#1----modify------begin-----------
+      #INSERT INTO gldq_t VALUES(l_gldq.*)
+      INSERT INTO gldq_t (gldqent,gldqdocno,gldqseq,gldq001,gldq003,gldq004,gldq005,gldq006,gldq007,
+                          gldq008,gldq009,gldq010,gldq011,gldq012,gldq013,gldq014,gldq015,gldq016,
+                          gldq017,gldq018,gldq019,gldq020,gldq021,gldq022,gldq023)
+       VALUES(l_gldq.gldqent,l_gldq.gldqdocno,l_gldq.gldqseq,l_gldq.gldq001,l_gldq.gldq003,l_gldq.gldq004,l_gldq.gldq005,l_gldq.gldq006,l_gldq.gldq007,
+              l_gldq.gldq008,l_gldq.gldq009,l_gldq.gldq010,l_gldq.gldq011,l_gldq.gldq012,l_gldq.gldq013,l_gldq.gldq014,l_gldq.gldq015,l_gldq.gldq016,
+              l_gldq.gldq017,l_gldq.gldq018,l_gldq.gldq019,l_gldq.gldq020,l_gldq.gldq021,l_gldq.gldq022,l_gldq.gldq023)
+      #161128-00061#1----modify------end-----------
+         
+      IF SQLCA.SQLcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "ins gldq_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET g_success= 'N'
+      END IF    
+   END IF    
+
+END FUNCTION
+################################################################################
+# Descriptions...: 寫入調整傳票差額科目
+# Memo...........:
+# Usage..........: CALL aglp730_ins_diff()
+# Date & Author..: 15/12/08 By 03538
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglp730_ins_diff()
+#161128-00061#1----modify-----begin-----------
+#DEFINE l_gldq        RECORD LIKE gldq_t.*
+DEFINE l_gldq RECORD  #調整與銷除傳票單身檔
+       gldqent LIKE gldq_t.gldqent, #企業編號
+       gldqdocno LIKE gldq_t.gldqdocno, #傳票編號
+       gldqseq LIKE gldq_t.gldqseq, #項次
+       gldq001 LIKE gldq_t.gldq001, #科目編號
+       gldq003 LIKE gldq_t.gldq003, #營運據點
+       gldq004 LIKE gldq_t.gldq004, #部門
+       gldq005 LIKE gldq_t.gldq005, #利潤/成本中心
+       gldq006 LIKE gldq_t.gldq006, #區域
+       gldq007 LIKE gldq_t.gldq007, #收付款客商
+       gldq008 LIKE gldq_t.gldq008, #帳款客商
+       gldq009 LIKE gldq_t.gldq009, #客群
+       gldq010 LIKE gldq_t.gldq010, #產品類別
+       gldq011 LIKE gldq_t.gldq011, #經營方式
+       gldq012 LIKE gldq_t.gldq012, #渠道
+       gldq013 LIKE gldq_t.gldq013, #品牌
+       gldq014 LIKE gldq_t.gldq014, #人員
+       gldq015 LIKE gldq_t.gldq015, #專案編號
+       gldq016 LIKE gldq_t.gldq016, #WBS
+       gldq017 LIKE gldq_t.gldq017, #借方金額(記帳幣)
+       gldq018 LIKE gldq_t.gldq018, #貸方金額(記帳幣)
+       gldq019 LIKE gldq_t.gldq019, #借方金額(功能幣)
+       gldq020 LIKE gldq_t.gldq020, #貸方金額(功能幣)
+       gldq021 LIKE gldq_t.gldq021, #借方金額(報告幣)
+       gldq022 LIKE gldq_t.gldq022, #貸方金額(報告幣)
+       gldq023 LIKE gldq_t.gldq023  #摘要
+       END RECORD
+#161128-00061#1----modify------end-----------
+DEFINE l_sum_dc1   LIKE type_t.num20_6   #記帳幣(借-貸)
+DEFINE l_sum_dc2   LIKE type_t.num20_6   #功能幣(借-貸)
+DEFINE l_sum_dc3   LIKE type_t.num20_6   #報告幣(借-貸)
+
+   #取出目前借-貸差異金額
+   SELECT SUM(COALESCE(gldq017-gldq018,0)),SUM(COALESCE(gldq019-gldq020,0)),SUM(COALESCE(gldq021-gldq022,0))
+     INTO l_sum_dc1,l_sum_dc2,l_sum_dc3
+     FROM gldq_t
+    WHERE gldqent   = g_enterprise
+      AND gldqdocno = g_gldpdocno
+   IF cl_null(l_sum_dc1) THEN LET l_sum_dc1 = 0 END IF    
+   IF cl_null(l_sum_dc2) THEN LET l_sum_dc2 = 0 END IF    
+   IF cl_null(l_sum_dc3) THEN LET l_sum_dc3 = 0 END IF    
+
+   #無差額不處理
+   IF l_sum_dc1 = 0 AND l_sum_dc2 = 0 AND l_sum_dc3 = 0 THEN RETURN END IF
+   
+   LET l_gldq.gldqent  = g_enterprise
+   LET l_gldq.gldqdocno= g_gldpdocno
+   #項次
+   LET l_gldq.gldqseq = NULL
+   SELECT MAX(gldqseq) INTO l_gldq.gldqseq FROM gldq_t
+    WHERE gldqent = g_enterprise
+      AND gldqdocno = l_gldq.gldqdocno
+   IF cl_null(l_gldq.gldqseq) THEN
+      LET l_gldq.gldqseq = 0
+   END IF
+   LET l_gldq.gldqseq  = l_gldq.gldqseq + 1
+
+   #依差異處理方式決定科目
+   CASE g_gldj.gldj015 
+      WHEN '1'   #1:依大金額抵消
+         SELECT gldt007 INTO l_gldq.gldq001 FROM aglp730_tmp
+          WHERE odr = g_odr
+            AND (ABS(gldt010) = (SELECT MIN(abs(gldt010)) FROM aglp730_tmp) OR 
+                 ABS(gldt026) = (SELECT MIN(abs(gldt026)) FROM aglp730_tmp) OR
+                 ABS(gldt029) = (SELECT MIN(abs(gldt029)) FROM aglp730_tmp))
+      WHEN '2'   #2:依小金額抵消
+         SELECT gldt007 INTO l_gldq.gldq001 FROM aglp730_tmp
+          WHERE odr = g_odr
+            AND (ABS(gldt010) = (SELECT MAX(abs(gldt010)) FROM aglp730_tmp) OR 
+                 ABS(gldt026) = (SELECT MAX(abs(gldt026)) FROM aglp730_tmp) OR
+                 ABS(gldt029) = (SELECT MAX(abs(gldt029)) FROM aglp730_tmp))            
+      WHEN '3'   #3:依差額科目抵消
+         IF l_sum_dc1 > 0 OR l_sum_dc2 > 0 OR l_sum_dc3 > 0THEN
+            #目前借方金額>貸方金額   
+            #補一筆在貸方
+            LET l_gldq.gldq001 = g_gldj.gldj017   #貸方差額科目
+         ELSE
+            #目前貸方金額>借方金額      
+            LET l_gldq.gldq001 = g_gldj.gldj016   #借方差額科目
+         END IF      
+   END CASE     
+
+   IF l_sum_dc1 > 0 OR l_sum_dc2 > 0 OR l_sum_dc3 > 0THEN
+      #目前借方金額>貸方金額   
+      #補一筆在貸方
+      LET l_gldq.gldq017 = 0        
+      LET l_gldq.gldq018 = l_sum_dc1 
+      LET l_gldq.gldq019 = 0        
+      LET l_gldq.gldq020 = l_sum_dc2
+      LET l_gldq.gldq021 = 0
+      LET l_gldq.gldq022 = l_sum_dc3
+   ELSE
+      #目前貸方金額>借方金額      
+      #補一筆在借方
+      LET l_gldq.gldq017 = l_sum_dc1 * -1
+      LET l_gldq.gldq018 = 0      
+      LET l_gldq.gldq019 = l_sum_dc2 * -1        
+      LET l_gldq.gldq020 = 0
+      LET l_gldq.gldq021 = l_sum_dc3 * -1     
+      LET l_gldq.gldq022 = 0
+   END IF
+   LET l_gldq.gldq003 = g_site   #營運據點
+   LET l_gldq.gldq004 = ' '      #部門
+   LET l_gldq.gldq005 = ' '      #利潤/成本中心
+   LET l_gldq.gldq006 = ' '      #區域
+   LET l_gldq.gldq007 = ' '      #交易客商
+   LET l_gldq.gldq008 = ' '      #帳款客商
+   LET l_gldq.gldq009 = ' '      #客群
+   LET l_gldq.gldq010 = ' '      #產品類別
+   LET l_gldq.gldq014 = ' '      #人員
+   LET l_gldq.gldq015 = ' '      #專案編號
+   LET l_gldq.gldq016 = ' '      #WBS
+   LET l_gldq.gldq011 = ' '      #經營方式
+   LET l_gldq.gldq012 = ' '      #渠道
+   LET l_gldq.gldq013 = ' '      #品牌   
+
+   #161128-00061#1----modify------begin-----------
+   #INSERT INTO gldq_t VALUES(l_gldq.*)
+   INSERT INTO gldq_t (gldqent,gldqdocno,gldqseq,gldq001,gldq003,gldq004,gldq005,gldq006,gldq007,
+                       gldq008,gldq009,gldq010,gldq011,gldq012,gldq013,gldq014,gldq015,gldq016,
+                       gldq017,gldq018,gldq019,gldq020,gldq021,gldq022,gldq023)
+    VALUES(l_gldq.gldqent,l_gldq.gldqdocno,l_gldq.gldqseq,l_gldq.gldq001,l_gldq.gldq003,l_gldq.gldq004,l_gldq.gldq005,l_gldq.gldq006,l_gldq.gldq007,
+           l_gldq.gldq008,l_gldq.gldq009,l_gldq.gldq010,l_gldq.gldq011,l_gldq.gldq012,l_gldq.gldq013,l_gldq.gldq014,l_gldq.gldq015,l_gldq.gldq016,
+           l_gldq.gldq017,l_gldq.gldq018,l_gldq.gldq019,l_gldq.gldq020,l_gldq.gldq021,l_gldq.gldq022,l_gldq.gldq023)
+   #161128-00061#1----modify------end-----------
+   IF SQLCA.SQLcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "ins gldq_t"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET g_success= 'N'
+   END IF       
+   
+END FUNCTION
+################################################################################
+# Descriptions...: 回寫單頭金額
+# Memo...........:
+# Usage..........: CALL aglp730_upd_gldp()
+# Date & Author..: 15/12/08 By 03538
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglp730_upd_gldp()
+DEFINE l_gldp009     LIKE gldp_t.gldp009
+DEFINE l_gldp010     LIKE gldp_t.gldp010
+DEFINE l_gldp012     LIKE gldp_t.gldp012
+DEFINE l_gldp013     LIKE gldp_t.gldp013
+DEFINE l_gldp015     LIKE gldp_t.gldp015
+DEFINE l_gldp016     LIKE gldp_t.gldp016
+
+   #單身資料借貸合計金額
+   SELECT SUM(gldq017),SUM(gldq018),
+          SUM(gldq019),SUM(gldq020),
+          SUM(gldq021),SUM(gldq022)
+     INTO l_gldp009,l_gldp010,
+          l_gldp012,l_gldp013,
+          l_gldp015,l_gldp016
+     FROM gldq_t
+    WHERE gldqent = g_enterprise  AND gldqdocno = g_gldpdocno
+
+   IF cl_null(l_gldp009) THEN LET l_gldp009 = 0 END IF
+   IF cl_null(l_gldp010) THEN LET l_gldp010 = 0 END IF
+   IF cl_null(l_gldp012) THEN LET l_gldp012 = 0 END IF
+   IF cl_null(l_gldp013) THEN LET l_gldp013 = 0 END IF
+   IF cl_null(l_gldp015) THEN LET l_gldp015 = 0 END IF
+   IF cl_null(l_gldp016) THEN LET l_gldp016 = 0 END IF
+   
+   UPDATE gldp_t SET (gldp009,gldp010,gldp012,gldp013,gldp015,gldp016)
+                    =(l_gldp009,l_gldp010,l_gldp012,l_gldp013,l_gldp015,l_gldp015)
+    WHERE gldpent = g_enterprise
+      AND gldpdocno = g_gldpdocno
+   IF SQLCA.SQLcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "upd gldp_t"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET g_success= 'N'
+   END IF             
+END FUNCTION
+
+################################################################################
+# Descriptions...: 依設定取得核算項條件式
+# Memo...........:
+# Usage..........: CALL aglp730_get_accitem_wc(p_type,p_acct1,p_acct2,p_acctype)
+#                  RETURNING r_wc
+# Input parameter: p_type      類型:1來源/2對沖
+#                  p_acct1     agli520科目
+#                  p_axcct2    MISC設定科目
+#                  p_acctype   核算項類型
+# Return code....: r_wc
+# Date & Author..: 15/12/10 By 03538
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglp730_get_accitem_wc(p_type,p_acct1,p_acct2,p_acctype)
+DEFINE p_type     LIKE type_t.chr1
+DEFINE p_acct1    LIKE gldj_t.gldj010
+DEFINE p_acct2    LIKE gldj_t.gldj010
+DEFINE p_acctype  LIKE gldj_t.gldj019
+DEFINE r_wc       STRING
+DEFINE l_gldw011  LIKE gldw_t.gldw011
+
+      IF p_acct1[1,5] <> 'MULTI' THEN
+         FOREACH aglp730_gldy_c USING g_gldj.gldj001,g_gldj.gldj002,g_gldj.gldj003,g_gldj.gldj004,g_gldj.gldj005,
+                                      g_gldj.gldj006,g_gldj.gldj007,p_type,p_acct2 
+                                 INTO l_gldw011
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = "FOREACH:aglp730_gldy_c"
+               LET g_errparam.code   = SQLCA.sqlcode
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+               LET g_success = 'N'
+               EXIT FOREACH         
+            END IF         
+            LET r_wc = r_wc,",",l_gldw011      
+         END FOREACH       
+      ELSE
+         FOREACH aglp730_gldw_c USING g_gldj.gldj001,g_gldj.gldj002,g_gldj.gldj003,g_gldj.gldj004,g_gldj.gldj005,
+                                      g_gldj.gldj006,g_gldj.gldj007,p_type,p_acct1,p_acct2  
+                                 INTO l_gldw011
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = "FOREACH:aglp730_gldw_c"
+               LET g_errparam.code   = SQLCA.sqlcode
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+               LET g_success = 'N'
+               EXIT FOREACH         
+            END IF         
+            LET r_wc = r_wc,",",l_gldw011      
+         END FOREACH                                     
+      END IF   
+      LET r_wc = s_fin_get_wc_str(r_wc)
+      CASE p_acctype
+         WHEN '1'  LET r_wc = " AND gldt014 IN ",r_wc   #營運據點
+         WHEN '2'  LET r_wc = " AND gldt015 IN ",r_wc   #部門
+         WHEN '3'  LET r_wc = " AND gldt016 IN ",r_wc   #利潤/成本中心
+         WHEN '4'  LET r_wc = " AND gldt017 IN ",r_wc   #區域
+         WHEN '5'  LET r_wc = " AND gldt018 IN ",r_wc   #交易客商
+         WHEN '6'  LET r_wc = " AND gldt019 IN ",r_wc   #帳款客商
+         WHEN '7'  LET r_wc = " AND gldt020 IN ",r_wc   #客群
+         WHEN '8'  LET r_wc = " AND gldt021 IN ",r_wc   #產品類別
+         WHEN '9'  LET r_wc = " AND gldt036 IN ",r_wc   #經營方式
+         WHEN '10' LET r_wc = " AND gldt037 IN ",r_wc   #渠道
+         WHEN '11' LET r_wc = " AND gldt038 IN ",r_wc   #品牌
+         WHEN '12' LET r_wc = " AND gldt022 IN ",r_wc   #人員
+         WHEN '13' LET r_wc = " AND gldt023 IN ",r_wc   #專案編號
+         WHEN '14' LET r_wc = " AND gldt024 IN ",r_wc   #WBS
+         OTHERWISE LET r_wc = " AND 1=1 "
+      END CASE
+   
+      RETURN r_wc
+END FUNCTION
+
+################################################################################
+# Descriptions...: 少數股權淨利分段計算
+# Memo...........:
+# Usage..........: CALL aglp730_get_minority_interest()
+#                  RETURNING r_amt1,r_amt2,r_amt3
+# Input parameter: 
+# Return code....: r_amt1         記帳幣金額
+#                : r_amt2         功能幣金額
+#                : r_amt3         報告幣金額
+# Date & Author..: 15/01/22 By 03538
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglp730_get_minority_interest()
+DEFINE l_amt1      LIKE gldt_t.gldt010   #金額(記帳幣)
+DEFINE l_amt2      LIKE gldt_t.gldt026   #金額(功能幣)
+DEFINE l_amt3      LIKE gldt_t.gldt029   #金額(報告幣) 
+DEFINE l_amt1_t    LIKE gldt_t.gldt010   #金額(記帳幣)
+DEFINE l_amt2_t    LIKE gldt_t.gldt026   #金額(功能幣)
+DEFINE l_amt3_t    LIKE gldt_t.gldt029   #金額(報告幣) 
+DEFINE r_amt1      LIKE gldt_t.gldt010   #金額(記帳幣)
+DEFINE r_amt2      LIKE gldt_t.gldt026   #金額(功能幣)
+DEFINE r_amt3      LIKE gldt_t.gldt029   #金額(報告幣) 
+DEFINE l_sql       STRING
+DEFINE l_i         LIKE type_t.num5
+DEFINE l_mm        LIKE gldt_t.gldt006
+DEFINE l_date      DYNAMIC ARRAY OF RECORD
+                   mm       LIKE gldt_t.gldt006,
+                   bdate    LIKE glav_t.glav004,
+                   glfj005  LIKE glfj_t.glfj005,
+                   period   LIKE gldt_t.gldt006,
+                   min      LIKE gldt_t.gldt006 
+                   END RECORD
+DEFINE l_bdate     LIKE glav_t.glav004
+DEFINE l_edate     LIKE glav_t.glav004
+DEFINE l_day1      LIKE type_t.num5
+DEFINE l_day2      LIKE type_t.num5
+DEFINE l_min       LIKE type_t.num5
+DEFINE l_period    LIKE type_t.num5
+DEFINE l_glfj005   LIKE glfj_t.glfj005
+DEFINE l_glfj009   LIKE glfj_t.glfj009
+DEFINE l_dd1       LIKE glav_t.glav004
+DEFINE l_dd2       LIKE glav_t.glav004
+
+   LET r_amt1 = 0
+   LET r_amt2 = 0
+   LET r_amt3 = 0
+
+   #撈取少數股權淨利科目gldt餘額 
+   LET l_sql =" SELECT (gldt010-gldt011),(gldt026-gldt027),(gldt029-gldt030) ",
+              "   FROM gldt_t ",
+              "  WHERE gldtent = '",g_enterprise,"' ",
+              "    AND gldtld  = '",g_gldj.gldj004,"' ",      #合併帳別(對沖)
+              "    AND gldt003 = '",g_gldj.gldj003,"' ",      #公司編號(對沖)
+              "    AND gldt005 = '",g_master.gldt005,"' ",    #年度
+              "    AND gldt006 = ? " ,                        #期別
+              "    AND gldt007 IN ",                          #科目
+              "(SELECT DISTINCT gldm009 FROM gldm_t ",
+              "  WHERE gldment= '",g_enterprise,"' ",
+              "    AND gldm001= '",g_gldj.gldj001,"' ",
+              "    AND gldm002= '",g_gldj.gldj002,"' ",
+              "    AND gldm003= '",g_gldj.gldj003,"' ",
+              "    AND gldm004= '",g_gldj.gldj004,"' ",
+              "    AND gldm005= '",g_gldj.gldj005,"' ",
+              "    AND gldm006= '",g_gldj.gldj006,"' ",
+              "    AND gldm007= '",g_gldj.gldj007,"' ",
+              "    AND gldm008= '",g_gldj.gldj012,"' ",
+              "    AND gldm010 = '1') ",g_gldw011_wc,
+              "  UNION ALL ",
+              " SELECT (gldt010-gldt011)*-1,(gldt026-gldt027)*-1,(gldt029-gldt030)*-1 ",
+              "   FROM gldt_t ",
+              "  WHERE gldtent = '",g_enterprise,"' ",
+              "    AND gldtld  = '",g_gldj.gldj004,"' ",      #合併帳別(對沖)
+              "    AND gldt003 = '",g_gldj.gldj003,"' ",      #公司編號(對沖)
+              "    AND gldt005 = '",g_master.gldt005,"' ",    #年度
+              "    AND gldt006 = ? " ,                        #期別
+              "    AND gldt007 IN ",                          #科目
+              "(SELECT DISTINCT gldm009 FROM gldm_t ",
+              "  WHERE gldment= '",g_enterprise,"' ",
+              "    AND gldm001= '",g_gldj.gldj001,"' ",
+              "    AND gldm002= '",g_gldj.gldj002,"' ",
+              "    AND gldm003= '",g_gldj.gldj003,"' ",
+              "    AND gldm004= '",g_gldj.gldj004,"' ",
+              "    AND gldm005= '",g_gldj.gldj005,"' ",
+              "    AND gldm006= '",g_gldj.gldj006,"' ",
+              "    AND gldm007= '",g_gldj.gldj007,"' ",
+              "    AND gldm008= '",g_gldj.gldj012,"' ",
+              "    AND gldm010 = '2') ",g_gldw011_wc   
+
+   DECLARE aglp730_gldt_c CURSOR FROM l_sql    
+   
+   #本期合計數
+   LET l_sql = " SELECT SUM(amt1),SUM(amt2),SUM(amt3) FROM aglp730_tmp2"
+              ,"  WHERE yy = ? AND mm = ?"
+   DECLARE aglp730_tmp2_c CURSOR FROM l_sql 
+   #上期合計數
+   LET l_sql = " SELECT SUM(amt1),SUM(amt2),SUM(amt3) FROM aglp730_tmp2"
+              ,"  WHERE yy = ? AND mm = (SELECT MAX(mm)"
+              ,                           "FROM aglp730_tmp2"
+              ,"                          WHERE yy = ? AND mm < ?)"
+   DECLARE aglp730_tmp2_c2 CURSOR FROM l_sql   
+      
+   #將各期gldt餘額預備好
+   FOR l_i = 1 TO g_em   
+     FOREACH aglp730_gldt_c USING l_i,l_i INTO l_amt1,l_amt2,l_amt3
+        EXECUTE insert_tmp2_prep USING g_master.gldt005,l_i,l_amt1,l_amt2,l_amt3
+     END FOREACH
+   END FOR
+
+  #計算持股比例的月份寫入l_date陣列
+   FOR l_i=1  TO g_em
+      #當期起始日和截止日
+      SELECT MIN(glav004),MAX(glav004) INTO l_bdate,l_edate FROM glav_t
+       WHERE glavent=g_enterprise 
+         AND glav001=g_glaa003
+         AND glav002=g_master.gldt005    
+         AND glav006=l_i     
+      CALL l_date.appendElement()
+      LET l_date[l_date.getLength()].mm = l_i
+      LET l_date[l_date.getLength()].bdate = l_bdate     #第一筆寫入本年度第一天
+      LET l_date[l_date.getLength()].glfj005 = 0
+
+     #依據g_master.chk3寫入期別
+      CASE                   #編制合併期別 0.期 1.季 2.半年
+         WHEN g_master.chk3='0'   
+            LET l_period = l_i                                 
+            LET l_date[l_date.getLength()].period = l_period   
+            LET l_date[l_date.getLength()].min = l_period      
+         WHEN g_master.chk3='1'   
+            LET l_sql = " SELECT MAX(glav004),MIN(glav004) ",  
+                        "   FROM glav_t ",
+                        "  WHERE glavent = '",g_enterprise,"'",
+                        "    AND glav001 = '",g_glaa003,"'",
+                        "    AND glav002 = '",g_master.gldt005,"'",
+                        "    AND glav005 = (SELECT MAX(glav005) FROM glav_t ",
+                        "                   WHERE glavent = '",g_enterprise,"'",
+                        "                     AND glav001 = '",g_glaa003,"'",
+                        "                     AND glav002 = '",g_master.gldt005,"'",
+                        "                     AND glav006 = '",l_i,"')"
+            DECLARE aglp730_glav_c CURSOR FROM l_sql  
+            OPEN aglp730_glav_c
+            FETCH aglp730_glav_c INTO l_dd1,l_dd2    
+            LET l_period = MONTH(l_dd1)
+            LET l_min = MONTH(l_dd2)
+            LET l_date[l_date.getLength()].period = l_period
+            LET l_date[l_date.getLength()].min = l_min 
+         WHEN g_master.chk3='2'   
+            LET l_sql = " SELECT MAX(glav004) ,MIN(glav004)",  
+                        "   FROM glav_t ",
+                        "  WHERE glavent = '",g_enterprise,"'",
+                        "    AND glav001 = '",g_glaa003,"'",
+                        "    AND glav002 = '",g_master.gldt005,"'"
+            IF g_master.chk2 = '1' THEN
+               LET l_sql = l_sql CLIPPED, " AND glav005 < 3 "
+            ELSE
+               LET l_sql = l_sql CLIPPED, " AND glav005 >= 3 "
+            END IF
+            DECLARE aglp730_glav_c2 CURSOR FROM l_sql  
+            OPEN aglp730_glav_c2
+            FETCH aglp730_glav_c2 INTO l_dd1,l_dd2     
+            LET l_period = MONTH(l_dd1)
+            LET l_min = MONTH(l_dd2)            
+            LET l_date[l_date.getLength()].period = l_period
+            LET l_date[l_date.getLength()].min = l_min  
+
+      END CASE
+
+      IF l_i = 1 THEN
+         SELECT glfj009,glfj005 INTO l_glfj009,l_glfj005
+           FROM glfj_t
+          WHERE glfjent = g_enterprise
+            AND glfjld  = g_master.gldtld 
+            AND glfj001 = g_gldt.gldt001 
+            AND glfj003 = g_gldt.gldt003
+            AND glfj009 = (SELECT MAX(glfj009) FROM glfj_t
+                            WHERE glfjent = g_enterprise
+                              AND glfjld  = g_master.gldtld
+                              AND glfj001 = g_gldt.gldt001 
+                              AND glfj003 = g_gldt.gldt003
+                              AND glfj009 < l_bdate)
+          IF NOT cl_null(l_glfj009) THEN
+             LET l_date[l_date.getLength()].glfj005 = l_glfj005
+          END IF
+      ELSE
+         LET l_date[l_date.getLength()].glfj005 = l_date[l_date.getLength()-1].glfj005
+      END IF
+      LET l_sql = " SELECT glfj009,glfj005 FROM glfj_t",
+                  "  WHERE glfjent = '",g_enterprise,"'",
+                  "    AND glfjld  = '",g_master.gldtld,"'",
+                  "    AND glfj001 = '",g_gldt.gldt001,"'",
+                  "    AND glfj003 = '",g_gldt.gldt003,"'",
+                  "    AND glfj009 BETWEEN '",l_bdate,"' AND '",l_edate,"'",
+                  "  ORDER BY glfj009,glfj005 "
+      DECLARE aglp730_glfj_c CURSOR FROM l_sql      
+      FOREACH aglp730_glfj_c INTO l_glfj009,l_glfj005
+         IF l_bdate = l_glfj009 THEN
+            LET l_date[l_date.getLength()].bdate = l_glfj009
+            LET l_date[l_date.getLength()].glfj005 = l_glfj005
+         ELSE
+            CALL l_date.appendElement()
+            LET l_date[l_date.getLength()].mm = l_i
+            LET l_date[l_date.getLength()].bdate = l_glfj009
+            LET l_date[l_date.getLength()].glfj005 = l_glfj005
+            LET l_date[l_date.getLength()].period = l_period   
+            LET l_date[l_date.getLength()].min = l_date[l_date.getLength()-1].min
+         END IF
+      END FOREACH
+   END FOR
+   
+   LET l_amt1 = 0
+   LET l_amt2 = 0
+   LET l_amt3 = 0
+
+   FOR l_i = 1 TO l_date.getLength()
+      
+      #當期起始日和截止日
+      SELECT MIN(glav004),MAX(glav004) INTO l_bdate,l_edate FROM glav_t
+       WHERE glavent=g_enterprise 
+         AND glav001=g_glaa003
+         AND glav002=g_master.gldt005    
+         AND glav006=l_date[l_i].mm          
+      #計算期間的總天數
+      #編制合併期別 0.期 1.季 2.半年 
+      CASE                   
+         WHEN g_master.chk3='0'   
+            LET l_day2 = l_edate - l_bdate+1       #該月份的總天數
+         WHEN g_master.chk3='1'   
+            SELECT MIN(glav004),MAX(glav004) INTO l_bdate,l_edate
+              FROM glav_t
+             WHERE glavent = g_enterprise 
+               AND glav001 = g_glaa003                                         
+               AND glav002 = g_master.gldt005                                 
+               AND glav005 = (SELECT MAX(glav005) FROM glav_t
+                               WHERE glavent = g_enterprise 
+                                 AND glav001 = g_glaa003                            
+                                 AND glav002 = g_master.gldt005                      
+                                 AND glav004 = l_bdate)                              
+
+            LET l_day2 = l_edate - l_bdate + 1       #該月份的總天數
+         WHEN g_master.chk3='2'   
+            IF g_master.chk2 = '1' THEN
+               SELECT MIN(glav004),MAX(glav004) INTO l_bdate,l_edate
+                 FROM glav_t
+                WHERE glavent = g_enterprise 
+                  AND glav001 = g_glaa003 AND glav002 = g_master.gldt005 AND glav005 < 3     
+            ELSE
+               SELECT MIN(glav004),MAX(glav004) INTO l_bdate,l_edate
+                 FROM glav_t
+                WHERE glavent = g_enterprise 
+                  AND glav001 = g_glaa003 AND glav002 = g_master.gldt005 AND glav005 >= 3     
+            END IF
+
+      END CASE
+      
+      #本期合計數
+      OPEN aglp730_tmp2_c USING g_master.gldt005,l_date[l_i].period
+      FETCH aglp730_tmp2_c INTO l_amt1,l_amt2,l_amt3
+      #上期合計數
+      OPEN aglp730_tmp2_c2 USING g_master.gldt005,g_master.gldt005,l_date[l_i].min           
+      FETCH aglp730_tmp2_c2 INTO l_amt1_t,l_amt2_t,l_amt3_t
+      IF cl_null(l_amt1) THEN LET l_amt1 = 0 END IF
+      IF cl_null(l_amt2) THEN LET l_amt2 = 0 END IF
+      IF cl_null(l_amt3) THEN LET l_amt3 = 0 END IF
+      IF cl_null(l_amt1_t) THEN LET l_amt1_t = 0 END IF
+      IF cl_null(l_amt2_t) THEN LET l_amt2_t = 0 END IF
+      IF cl_null(l_amt3_t) THEN LET l_amt3_t = 0 END IF
+      LET l_amt1 = l_amt1-l_amt1_t
+      LET l_amt2 = l_amt2-l_amt2_t
+      LET l_amt3 = l_amt3-l_amt3_t
+      IF l_i < l_date.getLength() THEN
+         LET l_day1 = l_date[l_i+1].bdate - l_date[l_i].bdate                      #該期間持股天數
+      ELSE
+         IF l_date[l_i].mm=12 THEN
+            LET l_day1 = (MDY(1,1,g_master.gldt005+1)-1) - l_date[l_i].bdate +1
+         ELSE 
+            LET l_day1 = (MDY(l_date[l_i].mm+1,1,g_master.gldt005)-1) - l_date[l_i].bdate +1     #該期間持股天數 
+         END IF   
+      END IF
+      LET l_amt1 = l_amt1 * l_day1/l_day2 * (1-(l_date[l_i].glfj005/100))
+      LET l_amt2 = l_amt2 * l_day1/l_day2 * (1-(l_date[l_i].glfj005/100))
+      LET l_amt3 = l_amt3 * l_day1/l_day2 * (1-(l_date[l_i].glfj005/100))
+      IF cl_null(l_amt1) THEN LET l_amt1 = 0 END IF
+      IF cl_null(l_amt2) THEN LET l_amt2 = 0 END IF
+      IF cl_null(l_amt3) THEN LET l_amt3 = 0 END IF
+      LET r_amt1 = r_amt1 + l_amt1 
+      LET r_amt2 = r_amt2 + l_amt2 
+      LET r_amt3 = r_amt3 + l_amt3 
+   END FOR  
+   
+   RETURN r_amt1,r_amt2,r_amt3
+
+END FUNCTION
+################################################################################
+# Descriptions...: 少數股權計算
+# Memo...........:
+# Usage..........: CALL aglp730_get_minority()
+#                  RETURNING r_amt1,r_amt2,r_amt3
+# Input parameter: 
+# Return code....: r_amt1         記帳幣金額
+#                : r_amt2         功能幣金額
+#                : r_amt3         報告幣金額
+# Date & Author..: 15/01/22 By 03538
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglp730_get_minority()
+DEFINE l_rate      LIKE glfj_t.glfj005            #持股比率
+DEFINE r_amt1      LIKE gldt_t.gldt010            #金額(記帳幣)
+DEFINE r_amt2      LIKE gldt_t.gldt026            #金額(功能幣)
+DEFINE r_amt3      LIKE gldt_t.gldt029            #金額(報告幣) 
+
+   LET l_rate = 0
+   LET r_amt1 = 0
+   LET r_amt2 = 0
+   LET r_amt3 = 0
+   #取小於截止期別最後一天且最近一次持股比率
+   SELECT glfj005 INTO l_rate FROM glfj_t
+    WHERE glfjent = g_enterprise
+      AND glfjld  = g_master.gldtld   #用什麼帳套?
+      AND glfj001 = g_gldt.gldt001
+      AND glfj003 = g_gldt.gldt003
+      AND glfj009 = 
+  (SELECT MAX(glfj009) FROM glfj_t
+    WHERE glfjent = g_enterprise
+      AND glfjld  = g_master.gldtld
+      AND glfj001 = g_gldt.gldt001
+      AND glfj003 = g_gldt.gldt003
+      AND glfj009<= g_pdate_e)
+   IF SQLCA.sqlcode=100 THEN LET l_rate = 0 END IF
+   LET l_rate = l_rate/100
+   LET r_amt1 = g_gldt.gldt010 * (1 - l_rate)
+   LET r_amt2 = g_gldt.gldt026 * (1 - l_rate)
+   LET r_amt3 = g_gldt.gldt029 * (1 - l_rate)
+   
+   RETURN r_amt1,r_amt2,r_amt3
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="afai010_01" std_prog="afai010_01" erpver="1.0" module="AFA" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="construct.c.page1.ooea001" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = "c"
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooea001  #顯示到畫面上
+
+            NEXT FIELD ooea001                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page1.ooea002" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = "c"
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooea002  #顯示到畫面上
+
+            NEXT FIELD ooea002                     #返回原欄位
+
+]]>
+  </point>
+  <point name="input.a.page1.ooea001" order="0" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_ooea_d[g_detail_idx].ooea001) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_ooea_d[g_detail_idx].ooea001 != g_ooea_d_t.ooea001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM ooea_t WHERE "||"ooeaent = '" ||g_enterprise|| "' AND "||"ooea001 = '"||g_ooea_d[g_detail_idx].ooea001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.c.page1.ooea002" order="0" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_ooea_d[l_ac].ooea002             #給予default值
+
+            #給予arg
+
+            CALL q_ooea()                                #呼叫開窗
+
+            LET g_ooea_d[l_ac].ooea002 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_ooea_d[l_ac].ooea002 TO ooea002              #顯示到畫面上
+
+            NEXT FIELD ooea002                          #返回原欄位
+
+]]>
+  </point>
+  <point name="show.body.reference" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+   INITIALIZE g_ref_fields TO NULL 
+   LET g_ref_fields[1] = g_ooea_d[l_ac].ooea001
+   CALL ap_ref_array2(g_ref_fields," SELECT ooeal003 FROM ooeal_t WHERE ooealent = '"||g_enterprise||"' AND ooeal001 = ? AND ooeal002 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_ooea_d[l_ac].ooeal003 = g_rtn_fields[1] 
+   DISPLAY BY NAME g_ooea_d[l_ac].ooeal003]]>
+  </point>
+  <point name="function.afai010_01_b_fill" order="1" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 資料填充
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afai010_01_b_fill(p_wc)
+DEFINE p_wc    STRING
+DEFINE l_sql   STRING
+
+   IF p_wc IS NULL THEN LET p_wc = " 1=1" END IF
+   LET g_cnt = 1
+   LET l_sql = "SELECT 'N',ooea001,ooeal003,ooea002,ooea009,ooea016 ",
+               "  FROM ooea_t LEFT JOIN ooeal_t ON ooeaent = ooealent AND ooea001 = ooeal001 AND ooeal002 = '",g_lang,"'",
+               " WHERE ooeaent = '",g_enterprise,"' AND ooeastus = 'Y' AND ",p_wc,
+               "   AND ooea001 NOT IN (SELECT faab004 FROM faab_t WHERE faabent = '",g_enterprise,"'",
+               "                        AND faab001 = '",g_faab001,"' AND faab002 = '",g_faab002,"' AND faab003 = ",g_faab003,")"               
+   PREPARE ooea_pre FROM l_sql
+   DECLARE ooea_cur CURSOR FOR ooea_pre
+   FOREACH ooea_cur INTO g_ooea_d[g_cnt].*
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   LET g_rec_b = g_cnt - 1
+   CALL g_ooea_d.deleteElement(g_ooea_d.getLength())
+   DISPLAY g_rec_b TO cnt
+   
+   DELETE FROM afai010_01_tmp 
+   LET l_sql = "SELECT 'N',ooea001 ",
+               "  FROM ooea_t ",
+               " WHERE ooeaent = '",g_enterprise,"' AND ooeastus = 'Y' AND ",p_wc,
+               "   AND ooea001 NOT IN (SELECT faab004 FROM faab_t WHERE faabent = '",g_enterprise,"'",
+               "                        AND faab001 = '",g_faab001,"' AND faab002 = '",g_faab002,"' AND faab003 = ",g_faab003," AND faab004 = '",g_faab004,"')"   
+   LET l_sql = "INSERT INTO afai010_01_tmp ",l_sql
+   PREPARE ins_tmp FROM l_sql
+   EXECUTE ins_tmp
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.afai010_01_construct" order="2" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 重新查詢資料
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afai010_01_construct()
+   CLEAR FORM                
+   CALL g_ooea_d.clear()          
+   INITIALIZE g_wc TO NULL
+   
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+      #單頭
+      CONSTRUCT BY NAME g_wc ON ooea001,ooea002,ooea009,ooea016
+         BEFORE CONSTRUCT
+            CALL cl_qbe_init()
+ 
+         ON ACTION controlp INFIELD ooea001
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooea()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooea001   #顯示到畫面上
+            NEXT FIELD ooea001                      #返回原欄位
+ 
+         ON ACTION controlp INFIELD ooea002
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooea()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooea002   #顯示到畫面上
+            NEXT FIELD ooea002                      #返回原欄位         
+      END CONSTRUCT
+      
+      BEFORE DIALOG  
+ 
+    # ON ACTION qbe_select     #條件查詢
+    #    CALL cl_qbe_list() RETURNING lc_qbe_sn
+    #    CALL cl_qbe_display_condition(lc_qbe_sn)
+# 
+    # ON ACTION qbe_save       #條件儲存
+    #    CALL cl_qbe_save()
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   END DIALOG
+   
+   #組合g_wc2
+  
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+   CALL afai010_01_b_fill(g_wc)
+END FUNCTION]]>
+  </point>
+  <point name="function.afai010_01_ins_faab" order="3" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: insert into faab_t描述说明
+# Memo...........:
+# Usage..........: CALL afai010_01_ins_faab()
+#                  RETURNING 回传参数
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 14/01/23 By yuhuabao
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afai010_01_ins_faab()
+DEFINE l_faab      RECORD 
+         faabent   LIKE faab_t.faabent,
+         faabownid   LIKE faab_t.faabownid,
+         faabowndp   LIKE faab_t.faabowndp,
+         faabcrtid   LIKE faab_t.faabcrtid,
+         faabcrtdp   LIKE faab_t.faabcrtdp,
+         faabcrtdt   DATETIME YEAR TO SECOND,
+         faabmodid   LIKE faab_t.faabmodid,
+         faabmoddt   DATETIME YEAR TO SECOND,
+         faabstus   LIKE faab_t.faabstus,
+         faab001   LIKE faab_t.faab001,
+         faab002   LIKE faab_t.faab002,
+         faab003   LIKE faab_t.faab003,
+         faab004   LIKE faab_t.faab004,
+         faab005   LIKE faab_t.faab005,
+         faab006   LIKE faab_t.faab006,
+         faab007   LIKE faab_t.faab007
+                   END RECORD
+DEFINE l_faab004   LIKE faab_t.faab004
+DEFINE l_sql       STRING
+
+   SELECT * INTO l_faab.* FROM faab_t 
+    WHERE faabent = g_enterprise AND faab001 = g_faab001
+      AND faab002 = g_faab002 AND faab003 = g_faab003
+      AND faab004 = g_faab004
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("SEL",SQLCA.sqlcode,1)
+      RETURN
+   END IF  
+      
+   LET l_sql = "SELECT ooea001_tmp FROM afai010_01_tmp WHERE check_tmp = 'Y' ORDER BY ooea001_tmp"
+   PREPARE ins_faab_pre FROM l_sql
+   DECLARE ins_faab_cur CURSOR FOR ins_faab_pre
+   FOREACH ins_faab_cur INTO l_faab004
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      LET l_faab.faab004 = l_faab004
+      LET l_faab.faab005 = g_faab004
+      INSERT INTO faab_t VALUES (l_faab.*)
+   END FOREACH
+
+END FUNCTION]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_cnt                  LIKE type_t.num5
+DEFINE g_faab001       LIKE faab_t.faab001
+DEFINE g_faab002       LIKE faab_t.faab002
+DEFINE g_faab003       LIKE faab_t.faab003
+DEFINE g_faab004       LIKE faab_t.faab004
+DEFINE g_wc            STRING]]>
+  </point>
+  <point name="input.before_close" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL afai010_01_ins_faab()]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL FGL_SET_ARR_CURR(1) 
+
+            #end add-point
+            
+         BEFORE ROW
+            #add-point:單身輸入前處理
+            LET l_ac = ARR_CURR()
+            DISPLAY l_ac TO FORMONLY.idx             
+ ]]>
+  </point>
+  <point name="input.c.page1.ooea016" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #END add-point
+            
+            
+         ON CHANGE check
+            #add-point:AFTER FIELD check
+            UPDATE afai010_01_tmp SET check_tmp = g_ooea_d[l_ac].check
+             WHERE ooea001_tmp = g_ooea_d[l_ac].ooea001
+            ]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE p_faab001       LIKE faab_t.faab001
+   DEFINE p_faab002       LIKE faab_t.faab002
+   DEFINE p_faab003       LIKE faab_t.faab003
+   DEFINE p_faab004       LIKE faab_t.faab004]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   p_faab001,p_faab002,p_faab003,p_faab004]]>
+  </point>
+  <point name="input.more_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      ON ACTION query
+         CALL afai010_01_construct()
+         CONTINUE DIALOG]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DROP TABLE afai010_01_tmp
+   CALL s_transaction_end('Y','0')]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   
+   CREATE TEMP TABLE afai010_01_tmp(
+             check_tmp     varchar(5),
+             ooea001_tmp   varchar(10))   
+             
+   LET g_faab001 = p_faab001
+   LET g_faab002 = p_faab002
+   LET g_faab003 = p_faab003
+   LET g_faab004 = p_faab004
+   
+   CALL afai010_01_b_fill('')
+   CALL s_transaction_begin()]]>
+  </point>
+</add_points>

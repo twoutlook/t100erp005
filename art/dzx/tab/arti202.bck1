@@ -1,0 +1,126 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="arti202" module="art" jobmode="N" type="i05" industry="std" fix_arg="0" crtid="01752" crtdt="2013-07-01 00:00:00" modid="02749" moddt="2016-04-22 16:49:29" sdver="0008" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="品類維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="rtax001,rtaxl003,rtaxl004,rtax002,rtax003,rtax003_desc(chr80),rtax004,rtax005,rtax006,rtax006_desc(chr80),rtax007,rtax007_desc(chr80),rtaxunit,rtaxunit_desc(chr80),rtax009,rtaxstus,rtaxownid,rtaxownid_desc(chr80),rtaxowndp,rtaxowndp_desc(chr80),rtaxcrtid,rtaxcrtid_desc(chr80),rtaxcrtdt,rtaxcrtdp,rtaxcrtdp_desc(chr80),rtaxmodid,rtaxmodid_desc(chr80),rtaxmoddt"/>
+      <var id="bs_field" value="rtax004,rtax002,rtax005,rtax006,rtax006_desc(chr80),rtax007,rtax001,rtax003" pk="rtax001" order=""/>
+      <bs_reference field="rtax006_desc" ref_field="rtax006" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="compute_rtaw"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="art" filename="arti202" method="dialog">
+    <section id="input">
+      <input id="head" field="rtax001,rtaxl003,rtaxl004,rtax002,rtax003,rtax004,rtax005,rtax006,rtax007,rtaxunit,rtaxstus,rtaxownid,rtaxowndp,rtaxcrtid,rtaxcrtdt,rtaxcrtdp,rtaxmodid,rtaxmoddt"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="rtax001,rtaxl003,rtaxl004,rtax002,rtax003,rtax004,rtax005,rtax006,rtax007,rtaxunit,rtax009,rtaxstus,rtaxownid,rtaxowndp,rtaxcrtid,rtaxcrtdt,rtaxcrtdp,rtaxmodid,rtaxmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="rtax001"/>
+      <set id="head" type="no_entry" field="rtax001"/>
+    </init>
+    <init id="head">
+      <column id="rtax001">
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="rtaxl003"/>
+      <column id="rtaxl004"/>
+      <column id="rtax002" type="S" default="1" def_scc="6925"/>
+      <column id="rtax003">
+        <after>
+          <reference field="rtax003_desc" ref_field="rtax_t.rtax003" map_field="rtaxent,rtax003" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001_1" state="i"/>
+        <controlp form="q_rtax003" state="c"/>
+      </column>
+      <column id="rtax003_desc"/>
+      <column id="rtax004"/>
+      <column id="rtax005" type="S" default="0"/>
+      <column id="rtax006">
+        <after>
+          <reference field="rtax006_desc" ref_field="rtax_t.rtax006" map_field="rtaxent,rtax006" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax006" state="c"/>
+      </column>
+      <column id="rtax006_desc"/>
+      <column id="rtax007">
+        <after>
+          <reference field="rtax007_desc" ref_field="rtax007" map_field="rtax007" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;200&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="rtax007_desc"/>
+      <column id="rtaxunit">
+        <after>
+          <reference field="rtaxunit_desc" ref_field="rtax_t.rtaxunit" map_field="rtaxent,rtaxunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="rtaxunit_desc"/>
+      <column id="rtax009" type="S" default="N"/>
+      <column id="rtaxstus" scc="17" type="S" default="Y">
+        <stus id="Y" pic="active"/>
+        <stus id="N" pic="inactive"/>
+      </column>
+      <column id="rtaxownid">
+        <after>
+          <reference field="rtaxownid_desc" ref_field="rtax_t.rtaxownid" map_field="rtaxownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtaxownid_desc"/>
+      <column id="rtaxowndp">
+        <after>
+          <reference field="rtaxowndp_desc" ref_field="rtax_t.rtaxowndp" map_field="rtaxowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtaxowndp_desc"/>
+      <column id="rtaxcrtid">
+        <after>
+          <reference field="rtaxcrtid_desc" ref_field="rtax_t.rtaxcrtid" map_field="rtaxcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtaxcrtid_desc"/>
+      <column id="rtaxcrtdt"/>
+      <column id="rtaxcrtdp">
+        <after>
+          <reference field="rtaxcrtdp_desc" ref_field="rtax_t.rtaxcrtdp" map_field="rtaxcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtaxcrtdp_desc"/>
+      <column id="rtaxmodid">
+        <after>
+          <reference field="rtaxmodid_desc" ref_field="rtax_t.rtaxmodid" map_field="rtaxmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtaxmodid_desc"/>
+      <column id="rtaxmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="rtax_t" lid="rtax001" pid="rtax003" type="" desc="" speed="rtaxs_t" stype="" slid="rtaxs001" spid="rtaxs002" pk="rtax001">
+      <sql id="forupd_sql" type="sql" query="SELECT rtax001,&apos;&apos;,&apos;&apos;,rtax002,rtax003,&apos;&apos;,rtax004,rtax005,rtax006,&apos;&apos;,rtax007,&apos;&apos;,rtaxunit,&apos;&apos;,rtax009,rtaxstus,rtaxownid,&apos;&apos;,rtaxowndp,&apos;&apos;,rtaxcrtid,&apos;&apos;,rtaxcrtdt,rtaxcrtdp,&apos;&apos;,rtaxmodid,&apos;&apos;,rtaxmoddt FROM rtax_t WHERE rtaxent= ? AND rtax001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT rtax001,&apos;&apos;,&apos;&apos;,rtax002,rtax003,&apos;&apos;,rtax004,rtax005,rtax006,&apos;&apos;,rtax007,&apos;&apos;,rtaxunit,&apos;&apos;,rtax009,rtaxstus,rtaxownid,&apos;&apos;,rtaxowndp,&apos;&apos;,rtaxcrtid,&apos;&apos;,rtaxcrtdt,rtaxcrtdp,&apos;&apos;,rtaxmodid,&apos;&apos;,rtaxmoddt FROM rtax_t" order="rtax001"/>
+      <sql id="append" type="lang" target="rtaxl_t.rtaxl003,rtaxl_t.rtaxl004" table="rtaxl_t" fk="rtax001" pk="rtaxl001,rtaxl002" field="rtaxl003,rtaxl004"/>
+    </head>
+  </dataset>
+</assembly>
+

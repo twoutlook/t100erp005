@@ -1,0 +1,51 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi310_03" module="azz" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="02286" crtdt="2015-06-26 11:22:13" modid="02286" moddt="2015-07-31 15:58:24" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="自定義資料轉換">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzif001,gzif002,gzif003,gzif004,gzif005,gzif006,gzif006_desc(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi310_03" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="gzif001,gzif002,gzif003,gzif004,gzif005,gzif006,gzif006_desc" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="gzif001,gzif002,gzif003,gzif004,gzif005,gzif006,gzif006_desc"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzif001"/>
+      <column id="gzif002"/>
+      <column id="gzif003"/>
+      <column id="gzif004"/>
+      <column id="gzif005"/>
+      <column id="gzif006">
+        <after/>
+        <controlp form="q_gzze001" state="i"/>
+      </column>
+      <column id="gzif006_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="gzif_t" page="1" linked="" pk="gzif001,gzif002,gzif004">
+      <sql id="forupd_sql_detail" query="SELECT gzif001,gzif002,gzif003,gzif004,gzif005,gzif006,&apos;&apos; FROM gzif_t WHERE gzif001=? AND gzif002=? AND gzif004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzif001,gzif002,gzif003,gzif004,gzif005,gzif006,&apos;&apos; FROM gzif_t WHERE 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

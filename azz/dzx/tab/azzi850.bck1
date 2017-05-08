@@ -1,0 +1,198 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi850" module="azz" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="00845" crtdt="2013-10-21 10:24:02" modid="01856" moddt="2016-10-13 18:10:33" sdver="0014" cusdt="1900-01-01 00:00:00" cusver="0000" page="4" tabver="10001" description="職能角色與權限維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzya001,gzyal003(chr500),gzya003,gzyastus,gzyaownid,gzyaownid_desc(chr80),gzyaowndp,gyzaowndp_desc(chr80),gzyacrtid,gzyacrtid_desc(chr80),gzyacrtdp,gzyacrtdp_desc(chr80),gzyacrtdt,gzyamodid,gzyamodid_desc(chr80),gzyamoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzyb002,gzyb002_desc(chr500),gzzol003_desc(chr500),gzza001_desc(chr500),gzyb003,gzyb004,gzyb005,gzyb006,gzyb007"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gzyb002,gzybownid,gzybownid_desc(chr500),gzybowndp,gzybowndp_desc(chr500),gzybcrtid,gzybcrtid_desc(chr500),gzybcrtdp,gzybcrtdp_desc(chr500),gzybcrtdt,gzybmodid,gzybmodid_desc(chr500),gzybmoddt"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="gzyc004,gzyc003,gzyc003_desc(chr500),gzyc005"/>
+      <var id="body" page="4" record="s_detail4" page_id="4" value="gzyd003,gzyd003_desc(chr500),gzyd004,gzyd005"/>
+      <var id="bs_field" value="gzya001,gzya001_desc(chr80)" pk="gzya001" order=""/>
+      <bs_reference field="gzya001_desc" ref_field="gzya001" ref_sql="SELECT gzyal003 FROM gzyal_t WHERE gzyalent=$varg_enterprise$var AND gzyal001=? AND gzyal002=$varg_lang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="add_by_qbe"/>
+      <action id="check_all_work"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="upd_action_batch"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi850" method="dialog">
+    <section id="input">
+      <input id="head" field="gzya001,gzyal003,gzya003,gzyastus,gzyaownid,gzyaowndp,gzyacrtid,gzyacrtdp,gzyacrtdt,gzyamodid,gzyamoddt"/>
+      <input id="body" page="1" field="gzyb002,gzyb003,gzyb004,gzyb005,gzyb006,gzyb007" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="gzyc004,gzyc003,gzyc005" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="4" field="gzyd003,gzyd004,gzyd005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzya001,gzyal003,gzya003,gzyastus,gzyaownid,gzyaowndp,gzyacrtid,gzyacrtdp,gzyacrtdt,gzyamodid,gzyamoddt"/>
+      <construct id="body" page="1" field="gzyb002,gzyb003,gzyb004,gzyb005,gzyb006,gzyb007"/>
+      <construct id="body" page="2" field="gzybownid,gzybowndp,gzybcrtid,gzybcrtdp,gzybcrtdt,gzybmodid,gzybmoddt"/>
+      <construct id="body" page="3" field="gzyc004,gzyc003,gzyc005"/>
+      <construct id="body" page="4" field="gzyd003,gzyd004,gzyd005"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzya001"/>
+      <set id="head" type="no_entry" field="gzya001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gzya001">
+        <controlp form="q_gzya001" state="c"/>
+      </column>
+      <column id="gzyal003"/>
+      <column id="gzya003" type="S" default="N"/>
+      <column id="gzyastus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="gzyaownid">
+        <after>
+          <reference field="gzyaownid_desc" ref_field="gzya_t.gzyaownid" map_field="gzyaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzyaownid_desc"/>
+      <column id="gzyaowndp">
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gyzaowndp_desc"/>
+      <column id="gzyacrtid">
+        <after>
+          <reference field="gzyacrtid_desc" ref_field="gzya_t.gzyacrtid" map_field="gzyacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzyacrtid_desc"/>
+      <column id="gzyacrtdp">
+        <after>
+          <reference field="gzyacrtdp_desc" ref_field="gzya_t.gzyacrtdp" map_field="gzyacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzyacrtdp_desc"/>
+      <column id="gzyacrtdt"/>
+      <column id="gzyamodid">
+        <after>
+          <reference field="gzyamodid_desc" ref_field="gzya_t.gzyamodid" map_field="gzyamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzyamodid_desc"/>
+      <column id="gzyamoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzyb002">
+        <after>
+          <check chkid="v_gzza001_3" id="isExist"/>
+          <reference field="gzyb002_desc" ref_field="gzyb_t.gzyb002" map_field="gzyb002" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzzz001_1" state="i"/>
+        <controlp form="q_gzyb002" state="c"/>
+      </column>
+      <column id="gzyb002_desc"/>
+      <column id="gzzol003_desc"/>
+      <column id="gzza001_desc"/>
+      <column id="gzyb003" def_scc="154"/>
+      <column id="gzyb004" def_scc="155"/>
+      <column id="gzyb005" def_scc="156"/>
+      <column id="gzyb006" type="S" default="0" def_scc="54"/>
+      <column id="gzyb007" type="S" default="0" def_scc="54"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gzybownid">
+        <after>
+          <reference field="gzybownid_desc" ref_field="gzyb_t.gzybownid" map_field="gzybownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzybownid_desc"/>
+      <column id="gzybowndp">
+        <after>
+          <reference field="gzybowndp_desc" ref_field="gzyb_t.gzybowndp" map_field="gzybowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzybowndp_desc"/>
+      <column id="gzybcrtid">
+        <after>
+          <reference field="gzybcrtid_desc" ref_field="gzyb_t.gzybcrtid" map_field="gzybcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzybcrtid_desc"/>
+      <column id="gzybcrtdp">
+        <after>
+          <reference field="gzybcrtdp_desc" ref_field="gzyb_t.gzybcrtdp" map_field="gzybcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzybcrtdp_desc"/>
+      <column id="gzybcrtdt"/>
+      <column id="gzybmodid">
+        <after>
+          <reference field="gzybmodid_desc" ref_field="gzyb_t.gzybmodid" map_field="gzybmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzybmodid_desc"/>
+      <column id="gzybmoddt"/>
+    </init>
+    <init id="body" page="3">
+      <column id="gzyc004" type="S" default="Y"/>
+      <column id="gzyc003">
+        <after/>
+        <controlp form="q_gzyc003_1" state="i"/>
+        <controlp form="q_gzyc003" state="c"/>
+      </column>
+      <column id="gzyc003_desc"/>
+      <column id="gzyc005" def_scc="84"/>
+    </init>
+    <init id="body" page="4">
+      <column id="gzyd003">
+        <after>
+          <reference field="gzyd003_desc" ref_field="gzyd_t.gzyd003" map_field="gzyd003" ref_sql="SELECT dzebl003 FROM dzebl_t WHERE dzebl001=? AND dzebl002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_dzeb002_8" state="i"/>
+        <controlp form="q_gzyd003" state="c"/>
+      </column>
+      <column id="gzyd003_desc"/>
+      <column id="gzyd004" def_scc="85"/>
+      <column id="gzyd005"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzya_t" pk="gzya001">
+      <sql id="forupd_sql" type="sql" query="SELECT gzya001,&apos;&apos;,gzya003,gzyastus,gzyaownid,&apos;&apos;,gzyaowndp,&apos;&apos;,gzyacrtid,&apos;&apos;,gzyacrtdp,&apos;&apos;,gzyacrtdt,gzyamodid,&apos;&apos;,gzyamoddt FROM gzya_t WHERE gzyaent= ? AND gzya001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzya001,&apos;&apos;,gzya003,gzyastus,gzyaownid,&apos;&apos;,gzyaowndp,&apos;&apos;,gzyacrtid,&apos;&apos;,gzyacrtdp,&apos;&apos;,gzyacrtdt,gzyamodid,&apos;&apos;,gzyamoddt FROM gzya_t" order="gzya001"/>
+      <sql id="append" type="lang" target="gzyal003" table="gzyal_t" fk="gzya001" pk="gzyal001,gzyal002" field="gzyal003"/>
+    </head>
+    <body id="gzyb_t" page="1,2" linked="" pk="gzyb002" fk="gzyb001">
+      <sql id="forupd_sql_detail" query="SELECT gzyb002,&apos;&apos;,&apos;&apos;,&apos;&apos;,gzyb003,gzyb004,gzyb005,gzyb006,gzyb007,&apos;&apos;,gzybownid,&apos;&apos;,gzybowndp,&apos;&apos;,gzybcrtid,&apos;&apos;,gzybcrtdp,&apos;&apos;,gzybcrtdt,gzybmodid,&apos;&apos;,gzybmoddt FROM gzyb_t WHERE gzybent=? AND gzyb001=? AND gzyb002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzyb002,&apos;&apos;,&apos;&apos;,&apos;&apos;,gzyb003,gzyb004,gzyb005,gzyb006,gzyb007,&apos;&apos;,gzybownid,&apos;&apos;,gzybowndp,&apos;&apos;,gzybcrtid,&apos;&apos;,gzybcrtdp,&apos;&apos;,gzybcrtdt,gzybmodid,&apos;&apos;,gzybmoddt FROM gzyb_t WHERE gzybent=? AND gzyb001=?"/>
+    </body>
+    <body id="gzyc_t" page="3" linked="" detail="Y" master="gzyb_t" default_site="N" pk="gzyc003" fk="gzyc001,gzyc002">
+      <sql id="forupd_sql_detail" query="SELECT gzyc004,gzyc003,&apos;&apos;,gzyc005 FROM gzyc_t WHERE gzycent=? AND gzyc001=? AND gzyc002=? AND gzyc003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzyc004,gzyc003,&apos;&apos;,gzyc005 FROM gzyc_t WHERE gzycent=? AND gzyc001=? AND gzyc002=?"/>
+    </body>
+    <body id="gzyd_t" page="4" linked="" detail="Y" master="gzyb_t" default_site="N" pk="gzyd003" fk="gzyd001,gzyd002">
+      <sql id="forupd_sql_detail" query="SELECT gzyd003,&apos;&apos;,gzyd004,gzyd005 FROM gzyd_t WHERE gzydent=? AND gzyd001=? AND gzyd002=? AND gzyd003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzyd003,&apos;&apos;,gzyd004,gzyd005 FROM gzyd_t WHERE gzydent=? AND gzyd001=? AND gzyd002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

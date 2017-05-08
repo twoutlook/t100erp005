@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axct312_03" module="axc" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="03297" crtdt="2014-09-03 17:40:04" modid="02040" moddt="2016-07-29 16:07:43" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="資料批次產生">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xccwld,xccwld_desc(chr80),xccwcomp,xccwcomp_desc(chr80),xccw003,xccw003_desc(chr80),xcat003,xccw004,xccw005"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axct312_03" method="dialog">
+    <section id="input">
+      <input id="head" field="xccwld,xccwcomp,xccw003,xcat003,xccw004,xccw005"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="xccwld">
+        <after>
+          <check chkid="v_glaald" id="isExist"/>
+          <reference field="xccwld_desc" ref_field="xccw_t.xccwld" map_field="xccwent,xccwld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+      </column>
+      <column id="xccwld_desc"/>
+      <column id="xccwcomp">
+        <after>
+          <reference field="xccwcomp_desc" ref_field="xccw_t.xccwcomp" map_field="xccwent,xccwcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xccwcomp_desc"/>
+      <column id="xccw003">
+        <after>
+          <check chkid="v_xcat001" id="isExist"/>
+          <reference field="xccw003_desc" ref_field="xccw_t.xccw003" map_field="xccwent,xccw003" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcat001" state="i"/>
+      </column>
+      <column id="xccw003_desc"/>
+      <column id="xcat003" def_scc="8904"/>
+      <column id="xccw004"/>
+      <column id="xccw005"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="inba_t" pk="inbadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM inba_t WHERE inbaent= ? AND inbadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="inbadocno"/>
+    </head>
+  </dataset>
+</assembly>
+

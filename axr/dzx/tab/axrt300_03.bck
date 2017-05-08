@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrt300_03" module="axr" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02295" crtdt="2013-10-22 00:00:00" modid="02295" moddt="2013-12-03 16:48:40" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="發票資訊">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xrcadocno,xrcald,xrca023,pmaa003(chr20),xrca025,xrca011,xrca011_desc(chr80),xrca013,xrca012,xrca028,xrca028_desc(chr80),xrca060,xrca029,xrca061,xrca030,xrca031,xrca032,xrca030_2(num20_6),xrca031_2(num20_6),xrca032_2(num20_6)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="axr" filename="axrt300_03" method="dialog">
+    <section id="input">
+      <input id="head" field="xrcadocno,xrcald,xrca023,pmaa003,xrca025,xrca011,xrca013,xrca012,xrca028,xrca060,xrca029,xrca061,xrca030,xrca031,xrca032,xrca030_2,xrca031_2,xrca032_2"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="xrcadocno"/>
+      <column id="xrcald"/>
+      <column id="xrca023">
+        <controlp form="q_pmaa001" state="i"/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="pmaa003"/>
+      <column id="xrca025"/>
+      <column id="xrca011">
+        <after>
+          <reference field="xrca011_desc" ref_field="xrca011" map_field="xrca011" ref_sql="SELECT oodbl004 FROM oodbl_t WHERE oodblent=$varg_enterprise$var AND oodbl001=&apos;&apos; AND oodbl002=? AND oodbl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oodb002_5" state="i"/>
+      </column>
+      <column id="xrca011_desc"/>
+      <column id="xrca013"/>
+      <column id="xrca012"/>
+      <column id="xrca028">
+        <after>
+          <reference field="xrca028_desc" ref_field="xrca028" map_field="xrca028" ref_sql="SELECT isacl004 FROM isacl_t WHERE isaclent=$varg_enterprise$var AND isacl001=&apos;&apos; AND isacl002=? AND isacl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_isac002" state="i"/>
+      </column>
+      <column id="xrca028_desc"/>
+      <column id="xrca060" type="S" default="1" def_scc="8321"/>
+      <column id="xrca029"/>
+      <column id="xrca061"/>
+      <column id="xrca030" type="S" default="0"/>
+      <column id="xrca031" type="S" default="0"/>
+      <column id="xrca032" type="S" default="0"/>
+      <column id="xrca030_2" type="S" default="0"/>
+      <column id="xrca031_2" type="S" default="0"/>
+      <column id="xrca032_2" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xrca_t" pk="xrcald,xrcadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT xrcadocno,xrcald,xrca023,&apos;&apos;,xrca025,xrca011,&apos;&apos;,xrca013,xrca012,xrca028,&apos;&apos;,xrca060,xrca029,xrca061,xrca030,xrca031,xrca032,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xrca_t WHERE xrcaent= ? AND xrcald=? AND xrcadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="xrcald,xrcadocno"/>
+    </head>
+  </dataset>
+</assembly>
+

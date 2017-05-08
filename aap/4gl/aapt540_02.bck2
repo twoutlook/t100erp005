@@ -1,0 +1,571 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aapt540_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2016-06-14 11:20:00), PR版次:0002(2016-09-10 15:32:03)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000029
+#+ Filename...: aapt540_02
+#+ Description: 融資還款
+#+ Creator....: 03080(2016-06-13 20:11:18)
+#+ Modifier...: 03080 -SD/PR- 03080
+ 
+{</section>}
+ 
+{<section id="aapt540_02.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+IMPORT util
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_fmcv_m        RECORD
+       fmcvdocno LIKE fmcv_t.fmcvdocno, 
+   fmcvdocdt LIKE fmcv_t.fmcvdocdt, 
+   l_fmcw009 LIKE type_t.chr10, 
+   l_fmcw009_desc LIKE type_t.chr80, 
+   l_fmcw016 LIKE type_t.chr10, 
+   l_fmcw016_desc LIKE type_t.chr80, 
+   l_fmcw010 LIKE type_t.num26_10
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_apgkcomp   LIKE apgk_t.apgkcomp
+DEFINE g_apgkdocno  LIKE apgk_t.apgkdocno
+#end add-point
+ 
+DEFINE g_fmcv_m        type_g_fmcv_m
+ 
+   DEFINE g_fmcvdocno_t LIKE fmcv_t.fmcvdocno
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aapt540_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aapt540_02(--)
+   #add-point:input段變數傳入
+   p_lsjs
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE p_lsjs   STRING
+   DEFINE lc_param        RECORD
+                       apgkcomp LIKE apgk_t.apgkcomp,
+                       apgkdocno LIKE apgk_t.apgkdocno
+                             END RECORD
+   DEFINE r_success   LIKE type_t.num5
+   DEFINE r_afmt170   LIKE fmcv_t.fmcvdocno
+   DEFINE l_ld         LIKE glaa_t.glaald
+   DEFINE l_glaa024    LIKE glaa_t.glaa024
+   DEFINE l_apga007    LIKE apga_t.apga007
+   DEFINE l_glaa005    LIKE glaa_t.glaa005
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aapt540_02 WITH FORM cl_ap_formpath("aap","aapt540_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   LET r_success = TRUE LET r_afmt170 = NULL
+   
+   CALL util.JSON.parse(p_lsjs,lc_param)
+   LET g_apgkdocno = lc_param.apgkdocno
+   LET g_apgkcomp  = lc_param.apgkcomp
+   #給予預設-----s
+   SELECT apgkdocdt,apgk101
+     INTO g_fmcv_m.fmcvdocdt,g_fmcv_m.l_fmcw010
+     FROM apgk_t
+    WHERE apgkent   = g_enterprise
+      AND apgkcomp  = g_apgkcomp
+      AND apgkdocno = g_apgkdocno
+   #給予預設-----e   
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_fmcv_m.fmcvdocno,g_fmcv_m.fmcvdocdt,g_fmcv_m.l_fmcw009,g_fmcv_m.l_fmcw016,g_fmcv_m.l_fmcw010  
+          ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmcvdocno
+            #add-point:BEFORE FIELD fmcvdocno name="input.b.fmcvdocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmcvdocno
+            
+            #add-point:AFTER FIELD fmcvdocno name="input.a.fmcvdocno"
+            #應用 a05 樣板自動產生(Version:3)
+            LET l_ld = NULL   LET l_glaa024 = NULL
+            SELECT glaald,glaa024 INTO l_ld,l_glaa024 FROM glaa_t
+             WHERE glaaent = g_enterprise
+               AND glaacomp = g_apgkcomp
+               AND glaa014=  'Y'
+            IF NOT cl_null(g_fmcv_m.fmcvdocno) THEN 
+               IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM fmcv_t WHERE "||"fmcvent = '" ||g_enterprise|| "' AND "||"fmcvdocno = '"||g_fmcv_m.fmcvdocno ||"'",'std-00004',0) THEN 
+                  NEXT FIELD CURRENT
+               END IF
+               CALL s_aooi200_fin_chk_slip(l_ld,l_glaa024,g_fmcv_m.fmcvdocno,'afmt170') RETURNING g_sub_success
+               IF NOT g_sub_success THEN
+                  LET g_fmcv_m.fmcvdocno = ''
+                  NEXT FIELD fmcvdocno
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmcvdocno
+            #add-point:ON CHANGE fmcvdocno name="input.g.fmcvdocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmcvdocdt
+            #add-point:BEFORE FIELD fmcvdocdt name="input.b.fmcvdocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmcvdocdt
+            
+            #add-point:AFTER FIELD fmcvdocdt name="input.a.fmcvdocdt"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmcvdocdt
+            #add-point:ON CHANGE fmcvdocdt name="input.g.fmcvdocdt"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_fmcw009
+            
+            #add-point:AFTER FIELD l_fmcw009 name="input.a.l_fmcw009"
+            LET g_fmcv_m.l_fmcw009_desc = ''
+            IF NOT cl_null(g_fmcv_m.l_fmcw009) THEN
+               LET l_glaa005 = NULL
+               SELECT glaa005 INTO l_glaa005 FROM glaa_t
+                WHERE glaaent  = g_enterprise
+                  AND glaacomp = g_apgkcomp
+                  AND glaa014  = 'Y'
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = l_glaa005
+               LET g_chkparam.arg2 = g_fmcv_m.l_fmcw009
+               LET g_errshow = TRUE
+               LET g_chkparam.err_str[1] = "agl-00149:sub-01302|anmi172|",cl_get_progname("anmi172",g_lang,"2"),"|:EXEPROGanmi172"
+               IF cl_chk_exist("v_nmad002") THEN
+                  IF cl_null(g_fmcv_m.l_fmcw009) THEN
+                     SELECT nmad003 INTO g_fmcv_m.l_fmcw016
+                       FROM nmad_t
+                      WHERE nmadent = g_enterprise
+                        AND nmad001 = l_glaa005
+                        AND nmad002 = g_fmcv_m.l_fmcw009
+                     CALL s_desc_get_nmail004_desc(l_glaa005,g_fmcv_m.l_fmcw016) RETURNING g_fmcv_m.l_fmcw016_desc
+                     DISPLAY BY NAME g_fmcv_m.l_fmcw016,g_fmcv_m.l_fmcw016_desc
+                  END IF
+               ELSE
+                  LET g_fmcv_m.l_fmcw009 = NULL
+                  CALL s_desc_get_nmajl003_desc(g_fmcv_m.l_fmcw009) RETURNING g_fmcv_m.l_fmcw009_desc
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            CALL s_desc_get_nmajl003_desc(g_fmcv_m.l_fmcw009) RETURNING g_fmcv_m.l_fmcw009_desc
+            DISPLAY BY NAME g_fmcv_m.l_fmcw009_desc   
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_fmcw009
+            #add-point:BEFORE FIELD l_fmcw009 name="input.b.l_fmcw009"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_fmcw009
+            #add-point:ON CHANGE l_fmcw009 name="input.g.l_fmcw009"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_fmcw016
+            
+            #add-point:AFTER FIELD l_fmcw016 name="input.a.l_fmcw016"
+            IF NOT cl_null(g_fmcv_m.l_fmcw016) THEN
+               LET l_glaa005 = NULL
+               SELECT glaa005 INTO l_glaa005 FROM glaa_t
+                WHERE glaaent  = g_enterprise
+                  AND glaacomp = g_apgkcomp
+                  AND glaa014  = 'Y'
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_fmcv_m.l_fmcw016
+               LET g_chkparam.arg2 = l_glaa005
+               IF cl_chk_exist("v_nmai002") THEN
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_fmcv_m.l_fmcw016 = ''
+                  CALL s_desc_get_nmail004_desc(l_glaa005,g_fmcv_m.l_fmcw016 ) RETURNING g_fmcv_m.l_fmcw016_desc
+                  DISPLAY BY NAME g_fmcv_m.l_fmcw016_desc
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            INITIALIZE g_ref_fields TO NULL
+            CALL s_desc_get_nmail004_desc(l_glaa005,g_fmcv_m.l_fmcw016 ) RETURNING g_fmcv_m.l_fmcw016_desc
+            DISPLAY BY NAME g_fmcv_m.l_fmcw016_desc
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_fmcw016
+            #add-point:BEFORE FIELD l_fmcw016 name="input.b.l_fmcw016"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_fmcw016
+            #add-point:ON CHANGE l_fmcw016 name="input.g.l_fmcw016"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_fmcw010
+            #add-point:BEFORE FIELD l_fmcw010 name="input.b.l_fmcw010"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_fmcw010
+            
+            #add-point:AFTER FIELD l_fmcw010 name="input.a.l_fmcw010"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_fmcw010
+            #add-point:ON CHANGE l_fmcw010 name="input.g.l_fmcw010"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.fmcvdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmcvdocno
+            #add-point:ON ACTION controlp INFIELD fmcvdocno name="input.c.fmcvdocno"
+            LET l_glaa024 = NULL
+            SELECT glaa024 INTO l_glaa024 FROM glaa_t
+             WHERE glaaent = g_enterprise
+               AND glaacomp = g_apgkcomp
+               AND glaa014 = 'Y'
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_fmcv_m.fmcvdocno             #給予default值
+            LET g_qryparam.where = "ooba001 = '",l_glaa024,"' AND oobx003 = 'afmt170'"
+            CALL q_ooba002_4()                             
+            LET g_fmcv_m.fmcvdocno = g_qryparam.return1
+            DISPLAY g_fmcv_m.fmcvdocno TO fmcvdocno             
+            NEXT FIELD fmcvdocno   
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmcvdocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmcvdocdt
+            #add-point:ON ACTION controlp INFIELD fmcvdocdt name="input.c.fmcvdocdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.l_fmcw009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_fmcw009
+            #add-point:ON ACTION controlp INFIELD l_fmcw009 name="input.c.l_fmcw009"
+            LET l_glaa005 = NULL
+            SELECT glaa005 INTO l_glaa005 FROM glaa_t
+             WHERE glaaent  = g_enterprise
+               AND glaacomp = g_apgkcomp
+               AND glaa014  = 'Y'
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_fmcv_m.l_fmcw009             #給予default值
+            LET g_qryparam.arg1 = l_glaa005
+            LET g_qryparam.where = " nmad002 IN (SELECT nmaj001 FROM nmaj_t WHERE nmaj002='2'AND nmajstus='Y' AND nmajent = ",g_enterprise," )"
+            CALL q_nmad002()
+            LET g_fmcv_m.l_fmcw009 = g_qryparam.return1
+            DISPLAY BY NAME g_fmcv_m.l_fmcw009
+            NEXT FIELD l_fmcw009
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.l_fmcw016
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_fmcw016
+            #add-point:ON ACTION controlp INFIELD l_fmcw016 name="input.c.l_fmcw016"
+            LET l_glaa005 = NULL
+            SELECT glaa005 INTO l_glaa005 FROM glaa_t
+             WHERE glaaent  = g_enterprise
+               AND glaacomp = g_apgkcomp
+               AND glaa014  = 'Y'
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_fmcv_m.l_fmcw016 
+            LET g_qryparam.arg1 = ""
+            LET g_qryparam.where = " nmai001='",l_glaa005,"' "
+            CALL q_nmai002()
+            LET g_fmcv_m.l_fmcw016  = g_qryparam.return1
+            DISPLAY BY NAME g_fmcv_m.l_fmcw016 
+            NEXT FIELD l_fmcw016
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.l_fmcw010
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_fmcw010
+            #add-point:ON ACTION controlp INFIELD l_fmcw010 name="input.c.l_fmcw010"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aapt540_02 
+   
+   #add-point:input段after input 
+   IF INT_FLAG THEN
+      LET r_success = FALSE
+   ELSE
+      CALL aapt540_02_ins_afm() RETURNING g_sub_success,r_afmt170
+      IF NOT g_sub_success THEN
+         LET r_success = FALSE
+         LET r_afmt170 = ''
+      END IF
+   END IF
+
+   RETURN r_success,r_afmt170
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapt540_02.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aapt540_02.other_function" readonly="Y" >}
+
+PRIVATE FUNCTION aapt540_02_ins_afm()
+   DEFINE r_success LIKE type_t.num5
+   DEFINE r_afmt170 LIKE fmcv_t.fmcvdocno
+   DEFINE l_fmcv    RECORD LIKE fmcv_t.*
+   DEFINE l_fmcw    RECORD LIKE fmcw_t.*
+   DEFINE l_apga    RECORD LIKE apga_t.*
+   DEFINE l_apgk    RECORD LIKE apgk_t.*
+   DEFINE l_ld      LIKE glaa_t.glaald
+   DEFINE lc_param      RECORD
+            apca004     LIKE apca_t.apca004,
+            ooib001     LIKE ooib_t.ooib001        
+                    END RECORD
+   DEFINE ls_js         STRING   
+   DEFINE l_dummy1   LIKE type_t.num20_6
+   
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE LET r_afmt170 = NULL
+   INITIALIZE l_apgk.* TO NULL
+   SELECT * INTO l_apgk.* FROM apgk_t
+    WHERE apgkent = g_enterprise
+      AND apgkcomp = g_apgkcomp
+      AND apgkdocno = g_apgkdocno
+   
+   INITIALIZE l_apga.* TO NULL
+   SELECT * INTO l_apga.* FROM apga_t
+    WHERE apgaent = g_enterprise
+      AND apgacomp = g_apgkcomp
+      AND apgadocno = l_apgk.apgk005
+   
+   LET l_ld = NULL
+   SELECT glaald INTO l_ld FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaacomp = l_apgk.apgkcomp
+      AND glaa014 = 'Y'   
+   INITIALIZE l_fmcv.* TO NULL
+   LET l_fmcv.fmcvent   = g_enterprise
+   LET l_fmcv.fmcvdocno = g_fmcv_m.fmcvdocno
+   LET l_fmcv.fmcvdocdt = g_fmcv_m.fmcvdocdt
+   LET g_prog = 'afmt170'
+   CALL s_aooi200_fin_gen_docno(l_ld,'','',l_fmcv.fmcvdocno ,l_fmcv.fmcvdocdt ,g_prog)
+      RETURNING g_sub_success,l_fmcv.fmcvdocno
+   IF NOT g_sub_success THEN
+      LET r_success = FALSE
+   END IF
+   LET g_prog = 'aapt540'   
+   LET l_fmcv.fmcvcomp  = l_apgk.apgkcomp   
+   LET l_fmcv.fmcvsite  = l_apgk.apgkcomp
+   LET l_fmcv.fmcvstus = 'N'
+   INSERT INTO fmcv_t VALUES(l_fmcv.*)
+   
+   INITIALIZE l_fmcw.* TO NULL
+   LET l_fmcw.fmcwent = g_enterprise
+   LET l_fmcw.fmcwdocno = l_fmcv.fmcvdocno
+   LET l_fmcw.fmcwseq   = 1
+   LET l_fmcw.fmcw001   = l_apgk.apgkcomp
+   LET l_fmcw.fmcw002 = l_apga.apga018   #融資合約號,(融資到帳單號相關)
+   LET l_fmcw.fmcw003 = 1                #融資合約項次,(融資到帳單號相關)
+   LET l_fmcw.fmcw004 = '1'
+   LET l_fmcw.fmcw005 = l_apgk.apgk100
+   LET l_fmcw.fmcw006 = l_apga.apga105   #融資合同貸款金額
+   #LET l_fmcw.fmcw007 = 還款帳戶,(融資到帳單號相關)
+   #LET l_fmcw.fmcw018 = 取到帳(afmt140)的匯率
+   #LET l_fmcw.fmcw019 = 取到帳(afmt140)的匯率
+   #LET l_fmcw.fmcw020 = 取到帳(afmt140)的匯率
+   SELECT fmcs004,fmcs009,fmcs011,fmcs013
+     INTO l_fmcw.fmcw007,l_fmcw.fmcw018,l_fmcw.fmcw019,l_fmcw.fmcw020
+     FROM fmcs_t
+    WHERE fmcsent = g_enterprise
+      AND fmcscomp = l_apgk.apgkcomp
+      AND fmcsdocno = l_apgk.apgkdocno
+   LET l_fmcw.fmcw008 = '2'
+   LET l_fmcw.fmcw009 = g_fmcv_m.l_fmcw009
+   LET l_fmcw.fmcw010 = g_fmcv_m.l_fmcw010
+   LET l_fmcw.fmcw011 = l_fmcw.fmcw006 * l_fmcw.fmcw010
+   #多幣別
+   LET lc_param.apca004 = l_apgk.apgk001
+   LET ls_js = util.JSON.stringify(lc_param)   
+   CALL s_fin_get_curr_rate(l_apgk.apgkcomp,l_ld,l_apgk.apgkdocdt,l_apgk.apgk100,ls_js)
+       RETURNING l_dummy1, l_fmcw.fmcw012 , l_fmcw.fmcw014
+       
+   LET l_fmcw.fmcw013 = l_fmcw.fmcw006 * l_fmcw.fmcw012
+   LET l_fmcw.fmcw015 = l_fmcw.fmcw006 * l_fmcw.fmcw014
+   LET l_fmcw.fmcw016 = g_fmcv_m.l_fmcw016
+   #LET l_fmcw.fmcw017 = 已計提未支付利息(依到帳單號取afmt180未還利息fmcz007合計)
+
+   LET l_fmcw.fmcw021 = l_apgk.apgk010
+   LET l_fmcw.fmcw022 = 1
+   LET l_fmcw.fmcw023 = l_fmcw.fmcw006 * (l_fmcw.fmcw010-l_fmcw.fmcw018)
+   LET l_fmcw.fmcw024 = l_fmcw.fmcw006 * (l_fmcw.fmcw012-l_fmcw.fmcw019)
+   LET l_fmcw.fmcw025 = l_fmcw.fmcw006 * (l_fmcw.fmcw014-l_fmcw.fmcw020)
+   INSERT INTO fmcw_t VALUES(l_fmcw.*)
+   
+   LET r_afmt170 = l_fmcw.fmcwdocno
+   RETURN r_success,r_afmt170
+END FUNCTION
+
+ 
+{</section>}
+ 

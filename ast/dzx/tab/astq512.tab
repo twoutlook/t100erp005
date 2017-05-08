@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astq512" module="ast" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="06254" crtdt="2015-09-01 10:00:46" modid="08742" moddt="2016-09-14 13:47:42" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="專櫃會員折扣明細查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="stfdsite,stfdsite_desc(chr500),stfd001,stfa002,stfa010,stfa010_desc(chr500),stfdseq,stfdseq1,stfa005,stfal004,stfd003,stfd003_desc(chr500),stfd004,stfd004_desc(chr500),stfd005,stfd006,stfd007,stfd008,stfd009"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="stfdsite(b_stfdsite),stfdsite_desc(b_stfdsite_desc),stfd001(b_stfd001),stfa002(b_stfa002),stfa010(b_stfa010),stfa010_desc(b_stfa010_desc),stfdseq(b_stfdseq),stfdseq1(b_stfdseq1),stfa005(b_stfa005),stfal004(b_stfal004),stfd003(b_stfd003),stfd003_desc(b_stfd003_desc),stfd004(b_stfd004),stfd004_desc(b_stfd004_desc),stfd005(b_stfd005),stfd006(b_stfd006),stfd007(b_stfd007),stfd008(b_stfd008),stfd009(b_stfd009)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="astq512" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="stfdsite" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="stfdsite(b_stfdsite)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="stfdsite">
+        <after>
+          <reference field="stfdsite_desc" ref_field="stfdsite" map_field="stfdsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stfdsite_desc"/>
+      <column id="stfd001"/>
+      <column id="stfa002"/>
+      <column id="stfa010">
+        <after>
+          <reference field="stfa010_desc" ref_field="stfa010" map_field="stfa010" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stfa010_desc"/>
+      <column id="stfdseq"/>
+      <column id="stfdseq1" type="S" default="0"/>
+      <column id="stfa005"/>
+      <column id="stfal004"/>
+      <column id="stfd003">
+        <after>
+          <reference field="stfd003_desc" ref_field="stfd003" map_field="stfd003" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stfd003_desc"/>
+      <column id="stfd004">
+        <after>
+          <reference field="stfd004_desc" ref_field="stfd004" map_field="stfd004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=? AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stfd004_desc"/>
+      <column id="stfd005" type="S" default="0"/>
+      <column id="stfd006"/>
+      <column id="stfd007"/>
+      <column id="stfd008" type="S" default="0"/>
+      <column id="stfd009" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="stfd_t" page="1" linked="" pk="stfd001,stfdseq,stfdseq1">
+      <sql id="b_fill_sql" query="SELECT stfdsite,&apos;&apos;,stfd001,&apos;&apos;,&apos;&apos;,&apos;&apos;,stfdseq,stfdseq1,&apos;&apos;,&apos;&apos;,stfd003,&apos;&apos;,stfd004,&apos;&apos;,stfd005,stfd006,stfd007,stfd008,stfd009 FROM stfd_t WHERE stfdent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

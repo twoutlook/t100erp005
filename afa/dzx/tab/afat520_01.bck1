@@ -1,0 +1,54 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afat520_01" module="afa" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02114" crtdt="2015-07-02 21:51:59" modid="01531" moddt="2016-09-19 16:43:32" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="資產盤盈虧產生">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="fabgld,fabgld_desc(chr80),fabgdocno,docno_1(chr20),fabgdocdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="afa" filename="afat520_01" method="dialog">
+    <section id="input">
+      <input id="head" field="fabgld,fabgdocno,docno_1,fabgdocdt"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="fabgld">
+        <after>
+          <check chkid="v_fabgld" id="isExist"/>
+          <reference field="fabgld_desc" ref_field="fabg_t.fabgld" map_field="fabgent,fabgld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="fabgld_desc"/>
+      <column id="fabgdocno">
+        <controlp form="q_ooba002_3" state="i"/>
+        <controlp form="q_fabgdocno" state="c"/>
+      </column>
+      <column id="docno_1">
+        <controlp form="q_ooba002_3" state="i"/>
+        <controlp form="q_fabgdocno" state="c"/>
+      </column>
+      <column id="fabgdocdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="fabg_t" pk="fabgld,fabgdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT fabgld,&apos;&apos;,fabgdocno,&apos;&apos;,fabgdocdt FROM fabg_t WHERE fabgent= ? AND fabgld=? AND fabgdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="fabgld,fabgdocno"/>
+    </head>
+  </dataset>
+</assembly>
+

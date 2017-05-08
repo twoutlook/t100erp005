@@ -1,0 +1,112 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="armt400_01" module="arm" jobmode="N" type="c03b" industry="std" fix_arg="0" crtid="05423" crtdt="2015-08-07 17:06:02" modid="05423" moddt="2015-08-13 10:13:06" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="多庫儲批資料維護">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="rmdbdocno,rmdbseq,rmdbsite,rmdb003,rmdb003_desc(chr500),rmdb003_desc1(chr500),rmdb004,rmdb004_desc(chr80),rmdb005,rmdb005_desc(chr80),rmdb006"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="rmdcseq1,rmdc001,rmdc002,rmdc005,rmdc005_desc(chr500),rmdc006,rmdc006_desc(chr500),rmdc007,rmdc008,rmdc003,rmdc003_desc(chr500),rmdc004,rmdcsite"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="arm" filename="armt400_01" method="dialog">
+    <section id="input">
+      <input id="head" field="rmdbdocno,rmdbseq,rmdb003,rmdb004,rmdb005,rmdb006"/>
+      <input id="body" page="1" field="rmdcseq1,rmdc005,rmdc006,rmdc007,rmdc008,rmdc004,rmdcsite" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="rmdbdocno"/>
+      <column id="rmdbseq"/>
+      <column id="rmdbsite"/>
+      <column id="rmdb003">
+        <after/>
+      </column>
+      <column id="rmdb003_desc"/>
+      <column id="rmdb003_desc1"/>
+      <column id="rmdb004">
+        <after/>
+      </column>
+      <column id="rmdb004_desc"/>
+      <column id="rmdb005">
+        <after/>
+      </column>
+      <column id="rmdb005_desc"/>
+      <column id="rmdb006" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="1">
+      <column id="rmdcseq1"/>
+      <column id="rmdc001">
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="rmdc002"/>
+      <column id="rmdc005">
+        <after>
+          <check chkid="v_inaa001" id="isExist"/>
+          <reference field="rmdc005_desc" ref_field="rmdc_t.rmdc005" map_field="rmdc005" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inag004_13" state="i"/>
+      </column>
+      <column id="rmdc005_desc"/>
+      <column id="rmdc006">
+        <after>
+          <check chkid="v_inab002_1" id="isExist"/>
+          <reference field="rmdc006_desc" ref_field="rmdc005,rmdc006" map_field="rmdc005,rmdc006" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inag004_13" state="i"/>
+      </column>
+      <column id="rmdc006_desc"/>
+      <column id="rmdc007">
+        <after>
+          <check chkid="v_inad001_1" id="isExist"/>
+        </after>
+        <controlp form="q_inag004_13" state="i"/>
+      </column>
+      <column id="rmdc008">
+        <controlp form="q_inag004_13" state="i"/>
+        <controlp form="q_inag003" state="c"/>
+      </column>
+      <column id="rmdc003">
+        <after>
+          <reference field="rmdc003_desc" ref_field="rmdc_t.rmdc003" map_field="rmdc003" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="rmdc003_desc"/>
+      <column id="rmdc004" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rmdcsite"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="rmdb_t" pk="rmdbdocno,rmdbseq">
+      <sql id="forupd_sql" type="sql" query="SELECT rmdbdocno,rmdbseq,rmdbsite,rmdb003,&apos;&apos;,&apos;&apos;,rmdb004,&apos;&apos;,rmdb005,&apos;&apos;,rmdb006 FROM rmdb_t WHERE rmdbent= ? AND rmdbdocno=? AND rmdbseq=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT rmdbdocno,rmdbseq,rmdbsite,rmdb003,&apos;&apos;,&apos;&apos;,rmdb004,&apos;&apos;,rmdb005,&apos;&apos;,rmdb006 FROM rmdb_t" order="rmdbdocno,rmdbseq"/>
+    </head>
+    <body id="rmdc_t" page="1" linked="" pk="rmdcseq1" fk="rmdcdocno,rmdcseq">
+      <sql id="forupd_sql_detail" query="SELECT rmdcseq1,rmdc001,rmdc002,rmdc005,&apos;&apos;,rmdc006,&apos;&apos;,rmdc007,rmdc008,rmdc003,&apos;&apos;,rmdc004,rmdcsite FROM rmdc_t WHERE rmdcent=? AND rmdcdocno=? AND rmdcseq=? AND rmdcseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rmdcseq1,rmdc001,rmdc002,rmdc005,&apos;&apos;,rmdc006,&apos;&apos;,rmdc007,rmdc008,rmdc003,&apos;&apos;,rmdc004,rmdcsite FROM rmdc_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

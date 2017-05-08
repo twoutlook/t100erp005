@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adeq217" module="ade" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="02003" crtdt="2015-09-06 16:35:00" modid="05948" moddt="2016-07-08 10:19:37" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="收銀收款實時查詢(圖形查詢)">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="rtjasite,rtjadocdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),rtjadocno(chr500),rtjasite,rtjasite_desc(chr500),rtjf002,rtjf002_desc(chr500),rtjf003(chr500),num(num10),rtjf026(chr500)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),rtjadocno(rtjadocno),rtjasite(b_rtjasite),rtjasite_desc(b_rtjasite_desc),rtjf002(b_rtjf002),rtjf002_desc(b_rtjf002_desc),rtjf003(rtjf003),num(b_num),rtjf026(rtjf026)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adeq217" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="rtjasite,rtjf002,num" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="rtjasite(b_rtjasite),rtjf002(b_rtjf002)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="rtjadocno"/>
+      <column id="rtjasite">
+        <after>
+          <check chkid="v_ooed004" id="isExist"/>
+          <reference field="rtjasite_desc" ref_field="rtjasite" map_field="rtjaent,rtjasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="rtjasite_desc"/>
+      <column id="rtjf002">
+        <after>
+          <check chkid="v_ooie001_1" id="isExist"/>
+          <reference field="rtjf002_desc" ref_field="rtjf002" map_field="rtjf002" ref_sql="SELECT ooial003 FROM ooial_t WHERE ooialent=$varg_enterprise$var AND ooial001=? AND ooial002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooie001_1" state="c"/>
+      </column>
+      <column id="rtjf002_desc"/>
+      <column id="rtjf003"/>
+      <column id="num"/>
+      <column id="rtjf026"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="rtja_t" page="1" linked="" pk="rtjadocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,rtjasite,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM rtja_t WHERE rtjaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

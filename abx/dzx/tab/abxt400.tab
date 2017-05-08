@@ -1,0 +1,232 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abxt400" module="abx" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02294" crtdt="2016-10-26 14:52:36" modid="02294" moddt="2016-10-26 14:52:36" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="放行單管制作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bxeasite,bxeadocno,bxeadocno_desc(chr80),bxeadocdt,bxea001,bxea002,bxea002_desc(chr80),bxea003,bxea003_desc(chr80),bxeastus,bxea004,bxea005,bxea006,bxea007,bxea008,bxea008_desc(chr80),bxea009,bxea010,bxea010_desc(chr80),bxea011,bxea012,bxea013,bxea014,bxea015,bxea016,oofb017(chr500),bxea017,bxea018,bxea019,bxea020,bxeaownid,bxeaownid_desc(chr80),bxeaowndp,bxeaowndp_desc(chr80),bxeacrtid,bxeacrtid_desc(chr80),bxeacrtdp,bxeacrtdp_desc(chr80),bxeacrtdt,bxeamodid,bxeamodid_desc(chr80),bxeamoddt,bxeacnfid,bxeacnfid_desc(chr80),bxeacnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bxebsite,bxebseq,bxeb001,bxeb002,bxeb003,bxeb003_desc(chr500),bxeb003_desc_1(chr500),iman012(chr500),bxeb004,bxeb004_desc(chr500),bxeb005,bxeb006,bxeb006_desc(chr500),bxeb007,bxeb008,bxeb009"/>
+      <var id="bs_field" value="bxeadocno,bxeadocdt,bxea001,bxea002,bxea002_desc(chr80),bxea003,bxea003_desc(chr80),bxea004,bxea010,bxea010_desc(chr80)" pk="bxeadocno" order=""/>
+      <bs_reference field="bxea002_desc" ref_field="bxea002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="bxea003_desc" ref_field="bxea003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="bxea010_desc" ref_field="bxea010" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1130&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="regen_bxeb"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="open_abxt400_02"/>
+    </section>
+  </structure>
+  <form id="0" module="abx" filename="abxt400" method="dialog">
+    <section id="input">
+      <input id="head" field="bxeasite,bxeadocno,bxeadocdt,bxea001,bxea002,bxea003,bxeastus,bxea004,bxea005,bxea006,bxea007,bxea008,bxea009,bxea010,bxea011,bxea012,bxea013,bxea014,bxea015,bxea016,bxea017,bxea018,bxea019,bxea020"/>
+      <input id="body" page="1" field="bxebsite,bxebseq,bxeb001,bxeb002,bxeb003,bxeb004,bxeb005,bxeb006,bxeb007,bxeb008,bxeb009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bxeasite,bxeadocno,bxeadocdt,bxea001,bxea002,bxea003,bxeastus,bxea004,bxea005,bxea006,bxea007,bxea008,bxea009,bxea010,bxea011,bxea012,bxea013,bxea014,bxea015,bxea016,bxea017,bxea018,bxea019,bxea020,bxeaownid,bxeaowndp,bxeacrtid,bxeacrtdp,bxeacrtdt,bxeamodid,bxeamoddt,bxeacnfid,bxeacnfdt"/>
+      <construct id="body" page="1" field="bxebsite,bxebseq,bxeb001,bxeb002,bxeb003,bxeb004,bxeb005,bxeb006,bxeb007,bxeb008,bxeb009"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bxeadocno"/>
+      <set id="head" type="no_entry" field="bxeadocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bxeasite"/>
+      <column id="bxeadocno">
+        <after/>
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_bxeadocno" state="c"/>
+      </column>
+      <column id="bxeadocno_desc"/>
+      <column id="bxeadocdt"/>
+      <column id="bxea001"/>
+      <column id="bxea002">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="bxea002_desc" ref_field="bxea_t.bxea002" map_field="bxea002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxea002_desc"/>
+      <column id="bxea003">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="bxea003_desc" ref_field="bxea_t.bxea003" map_field="bxea003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="bxea003_desc"/>
+      <column id="bxeastus" scc="13" type="S" default="N">
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+        <stus id="B" pic="close_a_case"/>
+      </column>
+      <column id="bxea004"/>
+      <column id="bxea005" type="S" default="1" def_scc="4081"/>
+      <column id="bxea006"/>
+      <column id="bxea007"/>
+      <column id="bxea008">
+        <after>
+          <reference field="bxea008_desc" ref_field="bxea_t.bxea008" map_field="bxea008" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="bxea008_desc"/>
+      <column id="bxea009"/>
+      <column id="bxea010">
+        <after>
+          <reference field="bxea010_desc" ref_field="bxea010" map_field="bxea010" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1130&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="bxea010_desc"/>
+      <column id="bxea011"/>
+      <column id="bxea012"/>
+      <column id="bxea013"/>
+      <column id="bxea014"/>
+      <column id="bxea015" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bxea016">
+        <after>
+          <check chkid="v_oofb019_1" id="isExist"/>
+        </after>
+        <controlp form="q_oofb019_1" state="i"/>
+        <controlp form="q_oofb019_1" state="c"/>
+      </column>
+      <column id="oofb017"/>
+      <column id="bxea017"/>
+      <column id="bxea018"/>
+      <column id="bxea019" type="S" default="N"/>
+      <column id="bxea020"/>
+      <column id="bxeaownid">
+        <after>
+          <reference field="bxeaownid_desc" ref_field="bxea_t.bxeaownid" map_field="bxeaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxeaownid_desc"/>
+      <column id="bxeaowndp">
+        <after>
+          <reference field="bxeaowndp_desc" ref_field="bxea_t.bxeaowndp" map_field="bxeaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bxeaowndp_desc"/>
+      <column id="bxeacrtid">
+        <after>
+          <reference field="bxeacrtid_desc" ref_field="bxea_t.bxeacrtid" map_field="bxeacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxeacrtid_desc"/>
+      <column id="bxeacrtdp">
+        <after>
+          <reference field="bxeacrtdp_desc" ref_field="bxea_t.bxeacrtdp" map_field="bxeacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bxeacrtdp_desc"/>
+      <column id="bxeacrtdt"/>
+      <column id="bxeamodid">
+        <after>
+          <reference field="bxeamodid_desc" ref_field="bxea_t.bxeamodid" map_field="bxeamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxeamodid_desc"/>
+      <column id="bxeamoddt"/>
+      <column id="bxeacnfid">
+        <after>
+          <reference field="bxeacnfid_desc" ref_field="bxea_t.bxeacnfid" map_field="bxeacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxeacnfid_desc"/>
+      <column id="bxeacnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="bxebsite"/>
+      <column id="bxebseq"/>
+      <column id="bxeb001"/>
+      <column id="bxeb002"/>
+      <column id="bxeb003">
+        <after>
+          <reference field="bxeb003_desc" ref_field="bxeb_t.bxeb003" map_field="bxeb003" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001_15" state="i"/>
+        <controlp form="q_imaf001_15" state="c"/>
+      </column>
+      <column id="bxeb003_desc"/>
+      <column id="bxeb003_desc_1"/>
+      <column id="iman012"/>
+      <column id="bxeb004">
+        <after>
+          <check chkid="v_imao002" id="isExist"/>
+          <reference field="bxeb004_desc" ref_field="bxeb_t.bxeb004" map_field="bxeb004" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imao002" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="bxeb004_desc"/>
+      <column id="bxeb005" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bxeb006">
+        <after>
+          <check chkid="v_ooaj002" id="isExist"/>
+          <reference field="bxeb006_desc" ref_field="bxeb_t.bxeb006" map_field="bxeb006" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooaj002_1" state="i"/>
+        <controlp form="q_ooaj002_1" state="c"/>
+      </column>
+      <column id="bxeb006_desc"/>
+      <column id="bxeb007" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bxeb008">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bxeb009" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="bxea_t" pk="bxeadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT bxeasite,bxeadocno,&apos;&apos;,bxeadocdt,bxea001,bxea002,&apos;&apos;,bxea003,&apos;&apos;,bxeastus,bxea004,bxea005,bxea006,bxea007,bxea008,&apos;&apos;,bxea009,bxea010,&apos;&apos;,bxea011,bxea012,bxea013,bxea014,bxea015,bxea016,&apos;&apos;,bxea017,bxea018,bxea019,bxea020,bxeaownid,&apos;&apos;,bxeaowndp,&apos;&apos;,bxeacrtid,&apos;&apos;,bxeacrtdp,&apos;&apos;,bxeacrtdt,bxeamodid,&apos;&apos;,bxeamoddt,bxeacnfid,&apos;&apos;,bxeacnfdt FROM bxea_t WHERE bxeaent= ? AND bxeadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bxeasite,bxeadocno,&apos;&apos;,bxeadocdt,bxea001,bxea002,&apos;&apos;,bxea003,&apos;&apos;,bxeastus,bxea004,bxea005,bxea006,bxea007,bxea008,&apos;&apos;,bxea009,bxea010,&apos;&apos;,bxea011,bxea012,bxea013,bxea014,bxea015,bxea016,&apos;&apos;,bxea017,bxea018,bxea019,bxea020,bxeaownid,&apos;&apos;,bxeaowndp,&apos;&apos;,bxeacrtid,&apos;&apos;,bxeacrtdp,&apos;&apos;,bxeacrtdt,bxeamodid,&apos;&apos;,bxeamoddt,bxeacnfid,&apos;&apos;,bxeacnfdt FROM bxea_t" order="bxeadocno"/>
+    </head>
+    <body id="bxeb_t" page="1" linked="" pk="bxebseq" fk="bxebdocno">
+      <sql id="forupd_sql_detail" query="SELECT bxebsite,bxebseq,bxeb001,bxeb002,bxeb003,&apos;&apos;,&apos;&apos;,&apos;&apos;,bxeb004,&apos;&apos;,bxeb005,bxeb006,&apos;&apos;,bxeb007,bxeb008,bxeb009 FROM bxeb_t WHERE bxebent=? AND bxebdocno=? AND bxebseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bxebsite,bxebseq,bxeb001,bxeb002,bxeb003,&apos;&apos;,&apos;&apos;,&apos;&apos;,bxeb004,&apos;&apos;,bxeb005,bxeb006,&apos;&apos;,bxeb007,bxeb008,bxeb009 FROM bxeb_t WHERE bxebent=? AND bxebdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

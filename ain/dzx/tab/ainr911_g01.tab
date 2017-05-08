@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ainr911_g01" module="ain" jobmode="N" type="g01" industry="std" crtid="06137" crtdt="2015-02-12 09:50:17" modid="06814" moddt="2016-07-01 10:09:38" sdver="2" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.pr1(STRING|print subrep01)">
+    <var seq="1" value="inba002,inba003,inba004,inba005,inba006,inba007,inba008,inbadocdt,inbadocno,inbaent,inbasite,inbastus,inbb001,inbb002,inbb003,inbb004,inbb007,inbb008,inbb009,inbb010,inbb011,inbb012,inbb013,inbb014,inbb015,inbb016,inbb017,inbb018,inbb019,inbb020,inbb021,inbb022,inbbseq,inbbsite,ooag_t_ooag011(ooag011|ooag_t.ooag011),ooefl_t_ooefl003(ooefl003|ooefl_t.ooefl003),x_imaal_t_imaal003(imaal003|x.imaal_t_imaal003),x_t2_imaal003(imaal003|x.t2_imaal003),x_inayl_t_inayl003(inayl003|x.inayl_t_inayl003),x_oocal_t_oocal003(oocal003|x.oocal_t_oocal003),x_t1_oocal003(oocal003|x.t1_oocal003),l_inba004_ooefl003(chr1000|trim(inba004)||&apos;.&apos;||trim((SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = inba_t.inba004 AND ooefl_t.ooeflent = inba_t.inbaent AND ooefl_t.ooefl002 = g_dlang))),l_inba003_ooag011(chr300|trim(inba003)||&apos;.&apos;||trim((SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = inba_t.inba003 AND ooag_t.ooagent = inba_t.inbaent))),l_inbb007_inayl003(chr1000|trim(inbb007)||&apos;.&apos;||trim(x.inayl_t_inayl003)),l_inbb016_desc(chr200|NULL),l_inbb008_inab003(chr200|NULL),x_imaal_t_imaal004(imaal004|x.imaal_t_imaal004),inbbdocno,inbbent"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="inba002,inba003,inba004,inba005,inba006,inba007,inba008,inbadocdt,inbadocno,inbaent,inbasite,inbastus,inbb001,inbb002,inbb003,inbb004,inbb007,inbb008,inbb009,inbb010,inbb011,inbb012,inbb013,inbb014,inbb015,inbb016,inbb017,inbb018,inbb019,inbb020,inbb021,inbb022,inbbseq,inbbsite,ooag_t_ooag011(ooag011|( SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = inba_t.inba003 AND ooag_t.ooagent = inba_t.inbaent)),ooefl_t_ooefl003(ooefl003|( SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = inba_t.inba004 AND ooefl_t.ooeflent = inba_t.inbaent AND ooefl_t.ooefl002 = g_dlang)),x_imaal_t_imaal003(imaal003|x.imaal_t_imaal003),x_t2_imaal003(imaal003|x.t2_imaal003),x_inayl_t_inayl003(inayl003|x.inayl_t_inayl003),x_oocal_t_oocal003(oocal003|x.oocal_t_oocal003),x_t1_oocal003(oocal003|x.t1_oocal003),l_inba004_ooefl003(chr1000|trim(inba004)||&apos;.&apos;||trim((SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = inba_t.inba004 AND ooefl_t.ooeflent = inba_t.inbaent AND ooefl_t.ooefl002 = g_dlang))),l_inba003_ooag011(chr300|trim(inba003)||&apos;.&apos;||trim((SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = inba_t.inba003 AND ooag_t.ooagent = inba_t.inbaent))),l_inbb007_inayl003(chr1000|trim(inbb007)||&apos;.&apos;||trim(x.inayl_t_inayl003)),l_inbb016_desc(chr200|NULL),l_inbb008_inab003(chr200|NULL),x_imaal_t_imaal004(imaal004|x.imaal_t_imaal004),inbbdocno,inbbent"/>
+    <sql id="g_from" query="inba_t LEFT OUTER JOIN ( SELECT inbb_t.*,( SELECT imaal003 FROM imaal_t WHERE imaal_t.imaal001 = inbb_t.inbb001 AND imaal_t.imaalent = inbb_t.inbbent AND imaal_t.imaal002 = g_dlang) imaal_t_imaal003,( SELECT imaal003 FROM imaal_t t2 WHERE t2.imaal001 = inbb_t.inbb004 AND t2.imaalent = inbb_t.inbbent AND t2.imaal002 = g_dlang) t2_imaal003,( SELECT inayl003 FROM inayl_t WHERE inayl_t.inayl001 = inbb_t.inbb007 AND inayl_t.inaylent = inbb_t.inbbent AND inayl_t.inayl002 = g_dlang) inayl_t_inayl003,( SELECT oocal003 FROM oocal_t WHERE oocal_t.oocal001 = inbb_t.inbb010 AND oocal_t.oocalent = inbb_t.inbbent AND oocal_t.oocal002 = g_dlang) oocal_t_oocal003,( SELECT oocal003 FROM oocal_t t1 WHERE t1.oocal001 = inbb_t.inbb013 AND t1.oocalent = inbb_t.inbbent AND t1.oocal002 = g_dlang) t1_oocal003,( SELECT imaal004 FROM imaal_t WHERE imaal_t.imaal001 = inbb_t.inbb001 AND imaal_t.imaalent = inbb_t.inbbent AND imaal_t.imaal002 = g_dlang) imaal_t_imaal004 FROM inbb_t ) x  ON inba_t.inbaent = x.inbbent AND inba_t.inbadocno = x.inbbdocno"/>
+    <sql id="g_where" query="" maintable="inba_t"/>
+    <sql id="g_order" query="inbadocno,inbbseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="inbadocno,inbbseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="inbadocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="inbaent,inbadocno"/>
+      <rep type="inbbseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="inbaent,inbadocno,inbbseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="inbaent,inbadocno,inbbseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="inbadocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="inbaent,inbadocno"/>
+      <rep type="inbbseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

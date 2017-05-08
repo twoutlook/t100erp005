@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammr405_g01" module="amm" jobmode="N" type="g01" industry="std" crtid="05423" crtdt="2015-06-29 00:49:19" modid="05423" moddt="2015-06-29 02:44:24" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="rtiadocno,rtiadocdt,rtia004,l_rtia004_desc(ooag011|NULL),rtia005,l_rtia005_desc(ooefl003|NULL),rtiacnfdt,rtiacnfid,l_rtiacnfid_desc(ooag011|NULL),l_mmaq022(mmaq022|NULL),l_mmaq022_desc(ooefl003|NULL),rtia041,rtia001,rtia002,rtia009,rtiaent,rtiasite,rtiastus,mmaf001,mmaf008,mmea_t_mmea001(mmea001|mmea_t.mmea001),mmea_t_mmea002(mmea002|mmea_t.mmea002),l_mmea001_mmea002(mmea001|NULL),l_mmag004(mmag004|NULL),l_mmag004_desc(oocql004|NULL),mmea_t_mmea003(mmea003|mmea_t.mmea003),l_mmea003_desc(mmanl003|NULL),mmea_t_mmea008(mmea008|mmea_t.mmea008),mmea_t_mmea010(mmea010|mmea_t.mmea010),l_mmea008_mmea010(mmea010|NULL),mmea_t_mmea006(mmea006|mmea_t.mmea006),mmea_t_mmea004(mmea004|mmea_t.mmea004),l_mmea004_desc(mmaf008|NULL),mmea_t_mmea011(mmea011|mmea_t.mmea011),l_rtiastus_desc(oocql004|NULL)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="rtiadocno,rtiadocdt,rtia004,l_rtia004_desc(ooag011|NULL),rtia005,l_rtia005_desc(ooefl003|NULL),rtiacnfdt,rtiacnfid,l_rtiacnfid_desc(ooag011|NULL),l_mmaq022(mmaq022|NULL),l_mmaq022_desc(ooefl003|NULL),rtia041,rtia001,rtia002,rtia009,rtiaent,rtiasite,rtiastus,mmaf001,mmaf008,mmea_t_mmea001(mmea001|mmea_t.mmea001),mmea_t_mmea002(mmea002|mmea_t.mmea002),l_mmea001_mmea002(mmea001|NULL),l_mmag004(mmag004|NULL),l_mmag004_desc(oocql004|NULL),mmea_t_mmea003(mmea003|mmea_t.mmea003),l_mmea003_desc(mmanl003|NULL),mmea_t_mmea008(mmea008|mmea_t.mmea008),mmea_t_mmea010(mmea010|mmea_t.mmea010),l_mmea008_mmea010(mmea010|NULL),mmea_t_mmea006(mmea006|mmea_t.mmea006),mmea_t_mmea004(mmea004|mmea_t.mmea004),l_mmea004_desc(mmaf008|NULL),mmea_t_mmea011(mmea011|mmea_t.mmea011),l_rtiastus_desc(oocql004|NULL)"/>
+    <sql id="g_from" query="rtia_t,mmaf_t,mmea_t"/>
+    <sql id="g_where" query="" maintable="rtia_t"/>
+    <sql id="g_order" query="rtiadocno"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="rtiadocno,l_mmea001_mmea002"/>
+    <section id="b_group" reptype="d01">
+      <rep type="rtiadocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="rtiaent,rtiadocno"/>
+      <rep type="l_mmea001_mmea002"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="rtiaent,rtiadocno,l_mmea001_mmea002"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="rtiaent,rtiadocno,l_mmea001_mmea002"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="rtiadocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="rtiaent,rtiadocno"/>
+      <rep type="l_mmea001_mmea002"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

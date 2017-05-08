@@ -1,0 +1,62 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmi120_01" module="anm" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="02291" crtdt="2016-01-26 15:11:14" modid="02291" moddt="2016-01-27 14:23:33" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="使用者設限">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmll001,nmas003(chr500),nmas003_desc(chr500),nmll002,nmll002_desc(chr500),nmllcomp,nmllsite,nmllstus"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmi120_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="nmll001,nmas003,nmll002,nmllcomp,nmllsite,nmllstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="nmll001,nmas003,nmll002,nmllcomp,nmllsite,nmllstus"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="nmll001"/>
+      <column id="nmas003">
+        <after>
+          <reference field="nmas003_desc" ref_field="nmas003" map_field="nmas003ent,nmas003" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="nmas003_desc"/>
+      <column id="nmll002">
+        <after>
+          <reference field="nmll002_desc" ref_field="nmll_t.nmll002" map_field="nmll002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmll002_desc"/>
+      <column id="nmllcomp"/>
+      <column id="nmllsite"/>
+      <column id="nmllstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <body id="nmll_t" page="1" linked="" pk="nmll001,nmll002">
+      <sql id="forupd_sql_detail" query="SELECT nmll001,&apos;&apos;,&apos;&apos;,nmll002,&apos;&apos;,nmllcomp,nmllsite,nmllstus FROM nmll_t WHERE nmllent=? AND nmll001=? AND nmll002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmll001,&apos;&apos;,&apos;&apos;,nmll002,&apos;&apos;,nmllcomp,nmllsite,nmllstus FROM nmll_t WHERE nmllent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

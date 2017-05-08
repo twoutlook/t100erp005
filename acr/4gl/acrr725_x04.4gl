@@ -1,0 +1,375 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="acrr725_x04.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:1(2016-02-25 18:29:03), PR版次:0001(2016-03-02 15:54:17)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000027
+#+ Filename...: acrr725_x04
+#+ Description: ...
+#+ Creator....: 03247(2016-02-25 17:44:49)
+#+ Modifier...: 03247 -SD/PR- 03247
+ 
+{</section>}
+ 
+{<section id="acrr725_x04.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:8)
+#add-point:填寫註解說明 name="global.memo"
+
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #condition 
+       con1 LIKE oocq_t.oocq002,         #condition1 
+       con2 LIKE oocq_t.oocq002,         #condition2 
+       type LIKE deca_t.deca001,         #type 
+       sdate LIKE deca_t.deca002,         #sdate 
+       edate LIKE deca_t.deca002,         #edate 
+       num LIKE deca_t.deca004          #num
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="acrr725_x04.main" readonly="Y" >}
+PUBLIC FUNCTION acrr725_x04(p_arg1,p_arg2,p_arg3,p_arg4,p_arg5,p_arg6,p_arg7)
+DEFINE  p_arg1 STRING                  #tm.wc  condition 
+DEFINE  p_arg2 LIKE oocq_t.oocq002         #tm.con1  condition1 
+DEFINE  p_arg3 LIKE oocq_t.oocq002         #tm.con2  condition2 
+DEFINE  p_arg4 LIKE deca_t.deca001         #tm.type  type 
+DEFINE  p_arg5 LIKE deca_t.deca002         #tm.sdate  sdate 
+DEFINE  p_arg6 LIKE deca_t.deca002         #tm.edate  edate 
+DEFINE  p_arg7 LIKE deca_t.deca004         #tm.num  num
+#add-point:init段define(客製用) name="component.define_customerization"
+
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.con1 = p_arg2
+   LET tm.con2 = p_arg3
+   LET tm.type = p_arg4
+   LET tm.sdate = p_arg5
+   LET tm.edate = p_arg6
+   LET tm.num = p_arg7
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "acrr725_x04"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL acrr725_x04_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL acrr725_x04_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL acrr725_x04_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL acrr725_x04_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL acrr725_x04_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="acrr725_x04.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION acrr725_x04_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "l_seq.type_t.num10,mmag004.mmag_t.mmag004,oocql004.oocql_t.oocql004,deca_t_deca027.deca_t.deca027,deca_t_deca031.deca_t.deca031,deca_t_deca028.deca_t.deca028,l_deca027.deca_t.deca027,l_deca022.deca_t.deca022" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   
+   #end add-point:create_tmp.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="acrr725_x04.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION acrr725_x04_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="acrr725_x04.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION acrr725_x04_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+DEFINE g_group       STRING
+DEFINE g_order       STRING
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   
+   #end add-point
+   LET g_select = " SELECT NULL,mmag004,oocql004,deca_t.deca027,deca_t.deca031,deca_t.deca028,deca_t.deca022, 
+       NULL,NULL"
+ 
+   #add-point:sel_prep g_from name="sel_prep.g_from"
+   LET g_select = " SELECT NULL,mmag004,oocql004,SUM(deca027),SUM(deca031),SUM(deca028),SUM(deca022), ",
+                   "       SUM(deca027)/SUM(deca031),SUM(deca022)/SUM(deca031) "
+   #end add-point
+    LET g_from = " FROM mmag_t,oocql_t,deca_t"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+   LET g_from = " FROM deca_t,oocq_t,mmag_t LEFT OUTER JOIN oocql_t ON oocqlent = mmagent AND oocql001 = mmag003 ",
+                "                                                  AND oocql002 = mmag004 AND oocql003 = '",g_dlang,"' "
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   LET g_where = " WHERE " ,tm.wc CLIPPED,
+                 "   AND decaent = ",g_enterprise," ",
+                 "   AND decaent = oocqent AND decaent = mmagent ",
+                 "   AND deca020 = mmag001 AND mmag002 = oocq002 ",
+                 "   AND mmag003 = oocq004 AND oocq001 = '2049' ",
+                 "   AND mmag002 = '",tm.con1,"' ",
+                 "   AND (deca002 >= '",tm.sdate,"' AND deca002 <= '",tm.edate,"') "
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   LET g_group = " GROUP BY mmag004,oocql004 "
+   CASE tm.type
+      WHEN '1'
+         LET g_order = " ORDER BY SUM(deca027) DESC "
+      WHEN '2'
+         LET g_order = " ORDER BY SUM(deca031) DESC "
+      WHEN '3'
+         LET g_order = " ORDER BY SUM(deca028) DESC "
+      WHEN '4'
+         LET g_order = " ORDER BY SUM(deca027)/SUM(deca031) DESC "
+      WHEN '5'
+         LET g_order = " ORDER BY SUM(deca022)/SUM(deca031) DESC "
+   END CASE
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("mmag_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED ," ",g_group CLIPPED ," ",g_order CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+   #end add-point
+   PREPARE acrr725_x04_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE acrr725_x04_curs CURSOR FOR acrr725_x04_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="acrr725_x04.ins_data" readonly="Y" >}
+PRIVATE FUNCTION acrr725_x04_ins_data()
+DEFINE sr RECORD 
+   l_seq LIKE type_t.num10, 
+   mmag004 LIKE mmag_t.mmag004, 
+   oocql004 LIKE oocql_t.oocql004, 
+   deca_t_deca027 LIKE deca_t.deca027, 
+   deca_t_deca031 LIKE deca_t.deca031, 
+   deca_t_deca028 LIKE deca_t.deca028, 
+   deca_t_deca022 LIKE deca_t.deca022, 
+   l_deca027 LIKE deca_t.deca027, 
+   l_deca022 LIKE deca_t.deca022
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+DEFINE l_num      LIKE type_t.num10
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    LET l_num = 1            #排名
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH acrr725_x04_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       IF l_num > tm.num THEN
+          EXIT FOREACH
+       END IF
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       LET sr.l_seq = l_num
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.l_seq,sr.mmag004,sr.oocql004,sr.deca_t_deca027,sr.deca_t_deca031,sr.deca_t_deca028,sr.l_deca027,sr.l_deca022
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "acrr725_x04_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       LET l_num = l_num + 1
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="acrr725_x04.rep_data" readonly="Y" >}
+PRIVATE FUNCTION acrr725_x04_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    
+    #end add-point:rep_data.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="acrr725_x04.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="ainp110" std_prog="ainp110" erpver="1.0" ver="2" module="AIN" type="M" booking="N" designer_ver="1.0" class="p" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="P" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="2" src="s" status="u">
+    <![CDATA[程式說明及目的： (庫存月結計算)
+作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：批次處理作業
+輸入模式：批次 P003_00
+作業資料來源(Master)：
+資料來源表：inaj_t(庫存交易明細檔)
+                    inal_t(製造批序號庫存交易明細檔)
+資料目的表：inat_t(料件庫存期間/月統計檔)
+                    inau_t(製造批序號庫存期間/月統計檔)
+
+資料處理：
+1.依輸入之年度期別，抓取期別起迄日期[T.會計週期資料檔(glav_t)]，可試試s_fin_date_get_period_range是否可用
+2.先刪除[T.料件庫存期間/月統計檔(inat_t)]中該年度期別之符合條件資料
+3.資料抓取
+  3-1.抓取前一期[T.料件庫存期間/月統計檔(inat_t)]符合條件且[C.期末數量] <> 0 的資料
+      [C.期初數量] = 前一期.期末數量
+      [C.參考單位-期初數量] = 前一期.參考單位-期末數量
+  3-2.抓取[T.庫存交易明細檔(inaj_t)]符合條件 AND [C.單據扣帳日期(inaj022)]存在期別起迄日期中
+                                             AND [C.出入庫碼(inaj004)] <> 0 的資料
+      3-2-1.依料件編號、產品特徵、庫存管理特徵、庫位編號、儲位編號、批號、庫存單位為群組
+      3-2-2.[C.本期入庫統計量] = [C.庫存異動類型(inaj036)]為"1"開頭之
+                                 [C.交易數量(inaj011)] * [C.交易單位與庫存單位換算率(inaj013)] * [C.出入庫碼(inaj004)]加總
+            [C.本期銷貨統計量] = [C.庫存異動類型(inaj036)]為"2"開頭之
+                                 [C.交易數量(inaj011)] * [C.交易單位與庫存單位換算率(inaj013)] * [C.出入庫碼(inaj004)]加總
+            [C.本期領用統計量] = [C.庫存異動類型(inaj036)]為"3"開頭之
+                                 [C.交易數量(inaj011)] * [C.交易單位與庫存單位換算率(inaj013)] * [C.出入庫碼(inaj004)]加總
+            [C.本期轉撥統計量] = [C.庫存異動類型(inaj036)]為"4"開頭之
+                                 [C.交易數量(inaj011)] * [C.交易單位與庫存單位換算率(inaj013)] * [C.出入庫碼(inaj004)]加總
+            [C.本期調整統計量] = [C.庫存異動類型(inaj036)]為"5"開頭之
+                                 [C.交易數量(inaj011)] * [C.交易單位與庫存單位換算率(inaj013)] * [C.出入庫碼(inaj004)]加總
+            [C.參考單位-本期入庫統計量] = [C.庫存異動類型(inaj036)]為"1"開頭之
+                                          [C.參考數量(inaj027)] * [C.出入庫碼(inaj004)]加總
+            [C.參考單位-本期銷貨統計量] = [C.庫存異動類型(inaj036)]為"2"開頭之
+                                          [C.參考數量(inaj027)] * [C.出入庫碼(inaj004)]加總
+            [C.參考單位-本期領用統計量] = [C.庫存異動類型(inaj036)]為"3"開頭之
+                                          [C.參考數量(inaj027)] * [C.出入庫碼(inaj004)]加總
+            [C.參考單位-本期轉撥統計量] = [C.庫存異動類型(inaj036)]為"4"開頭之
+                                          [C.參考數量(inaj027)] * [C.出入庫碼(inaj004)]加總
+            [C.參考單位-本期調整統計量] = [C.庫存異動類型(inaj036)]為"5"開頭之
+                                          [C.參考數量(inaj027)] * [C.出入庫碼(inaj004)]加總
+
+  3-3.寫入[T.料件庫存期間/月統計檔(inar_t)]，數量欄位空白者需給0
+      [C.年度] = 主畫面.年度
+      [C.期別] = 主畫面.期別
+      [C.期末數量] = [C.期初數量] + [C.本期入庫統計量] + [C.本期銷貨統計量] + 
+                     [C.本期領用統計量] +[C.本期轉撥統計量] +[C.本期調整統計量]
+      [C.參考單位-期末數量] = [C.參考單位-期初數量] + [C.參考單位-本期入庫統計量] + [C.參考單位-本期銷貨統計量] + 
+                              [C.參考單位-本期領用統計量] +[C.參考單位-本期轉撥統計量] +[C.參考單位-本期調整統計量]
+      [C.Tag二進位碼] = [T.儲位基本資料檔(inab_t)].[T.Tag二進位碼(inab008)]
+  3-4.更新重計期別後之期末庫存量
+      3-4-1.預設 l_last = 期末數量
+      3-4-1.Foreach 年度期別大於執行年度期別之符合條件[T.料件庫存期間/月統計檔(inar_t)]資料依年度期別排序
+              新[C.期末數量] = l_ast + [C.本期入庫統計量] + [C.本期銷貨統計量] + 
+                               [C.本期領用統計量] +[C.本期轉撥統計量] +[C.本期調整統計量]
+              更新[T.料件庫存期間/月統計檔(inar_t)]之期末數量
+              LET l_last = 新[C.期末數量] 
+            END FOREACH
+4.判斷符合條件的料件是否有用製造批號管理或製造序號管理，有的話繼續進行製造批序號月結，
+  處理方式同步驟2及步驟3，但改處理[T.製造批序號庫存期間/月統計檔(inas_t)]及[T.製造批序號庫存交易明細檔(inal_t)]
+5.庫位/儲位的Tag二進位碼有異動時，也要一併異動[T.料件庫存期間/月統計檔(inar_t)]、[T.製造批序號庫存期間/月統計檔(inas_t)]資料]]>
+  </all>
+  <field cite_std="N" name="glav_t.glav002" ver="2" src="s" column="glav002" table="glav_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glav_t.glav006" ver="2" src="s" column="glav006" table="glav_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaa_t.imaa001" ver="2" src="s" column="imaa001" table="imaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_imaf001_2" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaa_t.imaa009" ver="2" src="s" column="imaa009" table="imaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_rtax001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="u">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="2" name="glav_t.glav002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="2" name="glav_t.glav006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="2" name="imaa_t.imaa001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="2" name="imaa_t.imaa009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+  </help_code>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="group_qbe" text="QBE條件" lstr=""/>
+    <sfield name="lbl_imaa001" text="料件編號" lstr=""/>
+    <sfield name="lbl_imaa009" text="產品分類" lstr=""/>
+    <sfield name="ainp110.group_1" text="其他條件" lstr=""/>
+    <sfield name="lbl_glav002" text="年度" lstr=""/>
+    <sfield name="lbl_glav006" text="期別" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

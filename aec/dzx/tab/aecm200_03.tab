@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aecm200_03" module="aec" jobmode="N" type="c03a" industry="std" fix_arg="0" crtid="02482" crtdt="" modid="02482" moddt="2013-11-13 14:19:44" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="料件製程資源專案">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="ecbb001,ecbb002,ecbb003,ecbb004,ecbb004_desc(chr80),ecbb005"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="ecbgseq,ecbg004,ecbg005,ecbg005_desc(chr500),ecbg006,ecbg007,ecbg008,ecbg009"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="insert" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aec" filename="aecm200_03" method="dialog">
+    <section id="input">
+      <input id="head" field="ecbb001,ecbb002,ecbb003,ecbb004,ecbb005"/>
+      <input id="body" page="1" field="ecbgseq,ecbg004,ecbg005,ecbg006,ecbg007,ecbg008,ecbg009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="ecbb001,ecbb002,ecbb003,ecbb004,ecbb005"/>
+      <construct id="body" page="1" field="ecbgseq,ecbg004,ecbg005,ecbg006,ecbg007,ecbg008,ecbg009"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="ecbb001,ecbb002,ecbb003"/>
+      <set id="head" type="no_entry" field="ecbb001,ecbb002,ecbb003"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="ecbb001">
+        <controlp form="q_imaa001" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="ecbb002"/>
+      <column id="ecbb003"/>
+      <column id="ecbb004">
+        <after>
+          <reference field="ecbb004_desc" ref_field="ecbb_t.ecbb004" map_field="ecbbent,ecbb004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="ecbb004_desc"/>
+      <column id="ecbb005"/>
+    </init>
+    <init id="body" page="1">
+      <column id="ecbgseq"/>
+      <column id="ecbg004" type="S" default="1" def_scc="1203"/>
+      <column id="ecbg005">
+        <after>
+          <reference field="ecbg005_desc" ref_field="ecbg_t.ecbg005" map_field="ecbgent,ecbg005" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="ecbg005_desc"/>
+      <column id="ecbg006" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ecbg007" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ecbg008" type="S" default="1">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ecbg009" type="S" default="100">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="ecbb_t" pk="ecbb001,ecbb002,ecbb003">
+      <sql id="forupd_sql" type="sql" query="SELECT ecbb001,ecbb002,ecbb003,ecbb004,&apos;&apos;,ecbb005 FROM ecbb_t WHERE ecbbent= ? AND ecbbsite= ? AND ecbb001=? AND ecbb002=? AND ecbb003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT ecbb001,ecbb002,ecbb003,ecbb004,&apos;&apos;,ecbb005 FROM ecbb_t" order="ecbb001,ecbb002,ecbb003"/>
+    </head>
+    <body id="ecbg_t" page="1" linked="" pk="ecbgseq" fk="ecbg001,ecbg002,ecbg003">
+      <sql id="forupd_sql_detail" query="SELECT ecbgseq,ecbg004,ecbg005,&apos;&apos;,ecbg006,ecbg007,ecbg008,ecbg009 FROM ecbg_t WHERE ecbgent=? AND ecbgsite=? AND ecbg001=? AND ecbg002=? AND ecbg003=? AND ecbgseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT ecbgseq,ecbg004,ecbg005,&apos;&apos;,ecbg006,ecbg007,ecbg008,ecbg009 FROM ecbg_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

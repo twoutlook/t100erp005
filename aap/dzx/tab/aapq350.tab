@@ -1,0 +1,85 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapq350" module="aap" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="05016" crtdt="2014-09-23 11:06:24" modid="05016" moddt="2016-08-05 09:20:15" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="零用金費用報支查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="apcbdocno,apcald,apcald_desc(chr80),year,month,apcacomp_desc(chr80),apca057,apca057_desc(chr80),apacsite_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),apcbseq,apcbld,apcbdocno,apcb022,apcb014,apcb005,apcb105,apcb007,apcb102,apcb115,apcb027,apcb028,apca014(chr500),apca014_desc(chr500),apcb030,apcb030_desc(chr500),apcb010,apcb010_desc(chr500),apcb015,apcb015_desc(chr500)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),apcbseq(b_apcbseq),apcbld(b_apcbld),apcbdocno(b_apcbdocno),apcb022(b_apcb022),apcb014(b_apcb014),apcb005(b_apcb005),apcb105(b_apcb105),apcb007(b_apcb007),apcb102(b_apcb102),apcb115(b_apcb115),apcb027(b_apcb027),apcb028(b_apcb028),apca014(b_apca014),apca014_desc(b_apca014_desc),apcb030(b_apcb030),apcb030_desc(apcb030_desc),apcb010(b_apcb010),apcb010_desc(b_apcb010_desc),apcb015(b_apcb015),apcb015_desc(apcb015_desc)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="aap" filename="aapq350" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="apcbseq,apcbld,apcbdocno,apcb022,apcb014,apcb005,apcb105,apcb007,apcb102,apcb115,apcb027,apcb028,apca014,apca014_desc,apcb030,apcb010,apcb010_desc,apcb015" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="apcbseq(b_apcbseq),apcbld(b_apcbld),apcbdocno(b_apcbdocno),apcb022(b_apcb022),apcb014(b_apcb014),apcb005(b_apcb005),apcb105(b_apcb105),apcb007(b_apcb007),apcb102(b_apcb102),apcb115(b_apcb115),apcb027(b_apcb027),apcb028(b_apcb028),apcb030(b_apcb030),apcb010(b_apcb010),apcb015(b_apcb015)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="apcbseq">
+        <after>
+          <check id="range" bt="1.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="apcbld"/>
+      <column id="apcbdocno">
+        <controlp form="q_apcadocno" state="c"/>
+      </column>
+      <column id="apcb022" type="S" default="1"/>
+      <column id="apcb014">
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="apcb005"/>
+      <column id="apcb105" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="apcb007" type="S" default="0"/>
+      <column id="apcb102"/>
+      <column id="apcb115" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="apcb027"/>
+      <column id="apcb028"/>
+      <column id="apca014">
+        <after/>
+      </column>
+      <column id="apca014_desc"/>
+      <column id="apcb030">
+        <after/>
+      </column>
+      <column id="apcb030_desc"/>
+      <column id="apcb010">
+        <after/>
+      </column>
+      <column id="apcb010_desc"/>
+      <column id="apcb015">
+        <after/>
+        <controlp form="q_pjba001" state="c"/>
+      </column>
+      <column id="apcb015_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="apcb_t" page="1" linked="" pk="apcbld,apcbdocno,apcbseq">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,apcbseq,apcbld,apcbdocno,apcb022,apcb014,apcb005,apcb105,apcb007,apcb102,apcb115,apcb027,apcb028,&apos;&apos;,&apos;&apos;,apcb030,&apos;&apos;,apcb010,&apos;&apos;,apcb015,&apos;&apos; FROM apcb_t WHERE apcbent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="apmt820_02" std_prog="apmt820_02" erpver="1.0" module="APM" ver="1" env="s" zone="t10dev" normal_style="Y" booking="Y">
+  <point name="input.a.page1.pmag001" order="0" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+
+
+]]>
+  </point>
+  <point name="input.a.page1.pmag002" order="0" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+
+
+]]>
+  </point>
+  <point name="input.a.page1.pmag003" order="0" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+
+]]>
+  </point>
+  <point name="function.apmt820_02_pmag_chk" order="" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+
+PRIVATE FUNCTION apmt820_02_pmag_chk(p_pmcb001,p_pmcb002,p_pmcb003,p_pmcb004,p_pmcb005,p_pmcb006,p_pmcb007,p_pmcb008,p_pmcb009)
+DEFINE p_pmcb001 LIKE pmcb_t.pmcb001
+DEFINE p_pmcb002 LIKE pmcb_t.pmcb002
+DEFINE p_pmcb003 LIKE pmcb_t.pmcb003
+DEFINE p_pmcb004 LIKE pmcb_t.pmcb004
+DEFINE p_pmcb005 LIKE pmcb_t.pmcb005
+DEFINE p_pmcb006 LIKE pmcb_t.pmcb006
+DEFINE p_pmcb007 LIKE pmcb_t.pmcb007
+DEFINE p_pmcb008 LIKE pmcb_t.pmcb008
+DEFINE p_pmcb009 LIKE pmcb_t.pmcb009
+DEFINE l_n       LIKE type_t.num5
+   IF NOT cl_null(p_pmcb001) AND NOT cl_null(p_pmcb002) AND NOT cl_null(p_pmcb003) THEN
+      LET l_n = 0 
+      SELECT COUNT(*) INTO l_n FROM pmcb_t WHERE pmcbent = g_enterprise
+         AND pmcb001 = p_pmcb001
+         AND pmcb002 = p_pmcb002
+         AND pmcb003 = p_pmcb003
+      IF l_n > 0 THEN   
+         RETURN FALSE
+      END IF
+   END IF
+
+   IF NOT cl_null(p_pmcb002) THEN
+      LET l_n = 0
+      SELECT COUNT(*) INTO l_n FROM oocq_t 
+       WHERE oocq001 = '2036'
+         AND oocq002 = p_pmcb002
+         AND oocqent = g_enterprise
+      IF l_n = 0 THEN
+         RETURN FALSE
+      END IF
+      
+      LET l_n = 0
+      SELECT COUNT(*) INTO l_n FROM oocq_t 
+       WHERE oocq001 = '2036'
+         AND oocq002 = p_pmcb002
+         AND oocqent = g_enterprise
+         AND oocqstus= 'Y'
+      IF l_n = 0 THEN
+         RETURN FALSE
+      END IF
+   END IF
+
+   IF NOT cl_null(p_pmcb005) THEN
+      LET l_n = 0 
+      SELECT COUNT(*) INTO l_n FROM rtax_t
+       WHERE rtax001 = p_pmcb005
+         AND rtaxent = g_enterprise
+      IF l_n = 0 THEN
+         RETURN FALSE
+      END IF
+      
+      LET l_n = 0 
+      SELECT COUNT(*) INTO l_n FROM rtax_t
+       WHERE rtax001 = p_pmcb005
+         AND rtaxent = g_enterprise
+         AND rtaxstus= 'Y'
+      IF l_n = 0 THEN
+         RETURN FALSE
+      END IF
+      IF NOT cl_null(p_pmcb006) THEN
+         LET l_n = 0 
+         SELECT COUNT(*) INTO l_n FROM imaa_t
+          WHERE imaa001 =  p_pmcb006 
+            AND imaa009 =  p_pmcb005
+            AND imaaent = g_enterprise                     
+         IF l_n = 0 THEN
+            RETURN FALSE  
+         END IF 
+      END IF
+   END IF     
+
+   IF NOT cl_null(p_pmcb006) THEN
+      LET l_n = 0 
+      SELECT COUNT(*) INTO l_n FROM imaa_t
+       WHERE imaa001 = p_pmcb006
+         AND imaaent = g_enterprise
+      IF l_n = 0 THEN
+         RETURN FALSE 
+      END IF
+      
+      LET l_n = 0 
+      SELECT COUNT(*) INTO l_n FROM imaa_t
+       WHERE imaa001 = p_pmcb006
+         AND imaaent = g_enterprise
+         AND imaastus= 'Y'
+      IF l_n = 0 THEN
+         RETURN FALSE
+      END IF
+      
+      IF NOT cl_null(p_pmcb005) THEN
+         LET l_n = 0 
+         SELECT COUNT(*) INTO l_n FROM imaa_t
+          WHERE imaa001 =  p_pmcb006 
+            AND imaa009 =  p_pmcb005
+            AND imaaent = g_enterprise                     
+         IF l_n = 0 THEN
+            RETURN FALSE
+         END IF   
+      END IF
+    END IF
+
+   IF NOT cl_null(p_pmcb007) AND NOT cl_null(p_pmcb008) THEN
+      IF p_pmcb007 > p_pmcb008 THEN
+         RETURN FALSE
+      END IF
+   END IF
+
+   IF NOT cl_null(p_pmcb009) THEN
+      LET l_n = 0 
+      SELECT COUNT(*) INTO l_n FROM ooea_t 
+       WHERE ooea001 = p_pmcb009
+         AND ooeaent = g_enterprise
+      IF l_n = 0 THEN
+         RETURN FALSE
+      END IF
+      
+      LET l_n = 0 
+      SELECT COUNT(*) INTO l_n FROM ooea_t 
+       WHERE ooea001 = p_pmcb009
+         AND ooeaent = g_enterprise
+         AND ooeastus= 'Y'
+      IF l_n = 0 THEN
+         RETURN FALSE
+      END IF
+   END IF
+RETURN TRUE 
+END FUNCTION]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[           
+            DISPLAY ARRAY g_pmag_d TO s_detail1.*
+               BEFORE DISPLAY
+                  EXIT DISPLAY
+            END DISPLAY
+            
+         BEFORE ROW
+            LET l_ac = ARR_CURR()         
+         
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               LET l_success = 'Y'
+               EXIT DIALOG 
+            END IF
+            
+            UPDATE apmt820_02_tmp SET tmp_sel = g_pmag_d[l_ac].sel
+                                WHERE tmp_pmag001 = p_pmag001
+                                  AND tmp_pmag002 = g_pmag_d[l_ac].pmag002
+                                  AND tmp_pmag003 = g_pmag_d[l_ac].pmag003]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE p_pmag001       LIKE pmag_t.pmag001
+   DEFINE p_pmcbdocno     LIKE pmcb_t.pmcbdocno
+   DEFINE l_cnt           LIKE type_t.num5
+   DEFINE l_pmcb   RECORD
+               pmcb001  LIKE pmcb_t.pmcb001,
+               pmcb002  LIKE pmcb_t.pmcb002,
+               pmcb003  LIKE pmcb_t.pmcb003,
+               pmcb004  LIKE pmcb_t.pmcb004,
+               pmcb005  LIKE pmcb_t.pmcb005,
+               pmcb006  LIKE pmcb_t.pmcb006,
+               pmcb007  LIKE pmcb_t.pmcb007,
+               pmcb008  LIKE pmcb_t.pmcb008,
+               pmcb009  LIKE pmcb_t.pmcb009
+               END RECORD
+   DEFINE l_success     LIKE type_t.chr1
+   DEFINE l_pmcbseq     LIKE type_t.num5
+   DEFINE r_times       LIKE type_t.num5]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[p_pmcbdocno,p_pmag001]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF NOT INT_FLAG THEN
+      DECLARE apmt820_02_curs1 CURSOR FOR
+        SELECT tmp_pmag001,tmp_pmag002,tmp_pmag003,tmp_pmag004,tmp_pmag005,
+               tmp_pmag006,tmp_pmag007,tmp_pmag008,tmp_pmag009 
+          FROM apmt820_02_tmp WHERE tmp_sel = 'Y'
+      LET l_pmcbseq = 0
+      SELECT MAX(pmcbseq) INTO l_pmcbseq FROM pmcb_t
+       WHERE pmcbent = g_enterprise AND pmcbdocno = p_pmcbdocno
+      IF cl_null(l_pmcbseq) THEN LET l_pmcbseq = 0 END IF
+      LET l_pmcbseq = l_pmcbseq + 1
+      CALL s_transaction_begin()
+      LET r_times = 0
+      LET l_success = 'Y'
+      FOREACH apmt820_02_curs1 INTO l_pmcb.*
+         IF SQLCA.SQLCODE THEN
+            LET l_success = 'N'
+            EXIT FOREACH
+         END IF
+         IF NOT apmt820_02_pmag_chk(l_pmcb.pmcb001,l_pmcb.pmcb002,l_pmcb.pmcb003,l_pmcb.pmcb004,l_pmcb.pmcb005,
+                                    l_pmcb.pmcb006,l_pmcb.pmcb007,l_pmcb.pmcb008,l_pmcb.pmcb009) THEN
+            CONTINUE FOREACH 
+         ELSE
+            INSERT INTO pmcb_t(pmcbent,pmcbdocno,pmcbseq,pmcb001,pmcb002,pmcb003,pmcb004,pmcb005,pmcb006,pmcb007,pmcb008,pmcb009,pmcbacti)  
+                  VALUES(g_enterprise,p_pmcbdocno,l_pmcbseq,l_pmcb.pmcb001,l_pmcb.pmcb002,l_pmcb.pmcb003,l_pmcb.pmcb004,l_pmcb.pmcb005,
+                         l_pmcb.pmcb006,l_pmcb.pmcb007,l_pmcb.pmcb008,l_pmcb.pmcb009,'Y')    
+            IF SQLCA.SQLCODE THEN
+               LET l_success = 'N'
+               EXIT FOREACH
+            END IF
+            LET l_pmcbseq = l_pmcbseq + 1
+            LET r_times = r_times + 1
+         END IF
+         
+      END FOREACH
+      CALL s_transaction_end(l_success,'0')
+      DROP TABLE apmt820_02_tmp
+      RETURN r_times
+   END IF]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CREATE TEMP TABLE apmt820_02_tmp(
+                          tmp_sel      varchar(1),
+                          tmp_pmag001  varchar(10),
+                          tmp_pmag002  varchar(10),
+                          tmp_pmag003  varchar(40),
+                          tmp_pmag004  varchar(255),
+                          tmp_pmag005  varchar(10),
+                          tmp_pmag006  varchar(40),
+                          tmp_pmag007  date,
+                          tmp_pmag008  date,
+                          tmp_pmag009  varchar(10))
+   INSERT INTO apmt820_02_tmp 
+     SELECT 'N',pmag001,pmag002,pmag003,pmag004,pmag005,pmag006,pmag007,pmag008,pmag009
+       FROM pmag_t 
+      WHERE pmagent = g_enterprise AND pmag001 = p_pmag001
+   DECLARE apmt820_02_curs CURSOR FOR
+      SELECT * FROM apmt820_02_tmp
+   LET l_cnt = 1
+   FOREACH apmt820_02_curs INTO  g_pmag_d[l_cnt].*
+      IF SQLCA.SQLCODE THEN
+         EXIT FOREACH
+      END IF
+      LET l_cnt = l_cnt + 1
+   END FOREACH
+   CALL g_pmag_d.deleteElement(g_pmag_d.getLength())
+   LET l_allow_insert = FALSE]]>
+  </point>
+</add_points>

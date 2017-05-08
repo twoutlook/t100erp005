@@ -1,0 +1,117 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi320" module="aoo" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="01588" crtdt="2013-07-01 00:00:00" modid="01588" moddt="2013-10-01 09:55:25" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="庫存管理關聯標籤維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="oocr001,oocr002,oocr002_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="oocrstus,oocr003,oocr003_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail1_info" page_id="1_info" value="oocr003_s_detail1_info(chr500),oocrmodid,oocrmodid_desc(chr500),oocrmoddt,oocrownid,oocrownid_desc(chr500),oocrowndp,oocrowndp_desc(chr500),oocrcrtid,oocrcrtid_desc(chr500),oocrcrtdp,oocrcrtdp_desc(chr500),oocrcrtdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi320" method="dialog">
+    <section id="input">
+      <input id="head" field="oocr001,oocr002"/>
+      <input id="body" page="1" field="oocr003" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="oocr001,oocr002"/>
+      <construct id="body" page="1" field="oocr003"/>
+      <construct id="body" page="2" field="oocrmodid,oocrmoddt,oocrownid,oocrowndp,oocrcrtid,oocrcrtdp,oocrcrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="oocr001,oocr002"/>
+      <set id="head" type="no_entry" field="oocr001,oocr002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="oocr001"/>
+      <column id="oocr002">
+        <after>
+          <check chkid="v_oocq002" id="chkandReturn"/>
+          <reference field="oocr002_desc" ref_field="oocr001,oocr002" map_field="oocr001,oocr002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=? AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="oocr002_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="oocrstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="oocr003">
+        <after>
+          <check chkid="v_oocq002" id="chkandReturn"/>
+          <reference field="oocr003_desc" ref_field="oocr001,oocr003" map_field="oocr001,oocr003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=? AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="oocr003_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="oocr003_s_detail1_info"/>
+      <column id="oocrmodid">
+        <after>
+          <reference field="oocrmodid_desc" ref_field="oocr_t.oocrmodid" map_field="oocrmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oocrmodid_desc"/>
+      <column id="oocrmoddt"/>
+      <column id="oocrownid">
+        <after>
+          <reference field="oocrownid_desc" ref_field="oocr_t.oocrownid" map_field="oocrownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oocrownid_desc"/>
+      <column id="oocrowndp">
+        <after>
+          <reference field="oocrowndp_desc" ref_field="oocr_t.oocrowndp" map_field="oocrowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oocrowndp_desc"/>
+      <column id="oocrcrtid">
+        <after>
+          <reference field="oocrcrtid_desc" ref_field="oocr_t.oocrcrtid" map_field="oocrcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oocrcrtid_desc"/>
+      <column id="oocrcrtdp">
+        <after>
+          <reference field="oocrcrtdp_desc" ref_field="oocr_t.oocrcrtdp" map_field="oocrcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oocrcrtdp_desc"/>
+      <column id="oocrcrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="oocr_t" pk="oocr001,oocr002">
+      <sql id="forupd_sql" type="sql" query="SELECT oocr001,oocr002,&apos;&apos; FROM oocr_t WHERE oocrent= ? AND oocr001=? AND oocr002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT oocr001,oocr002,&apos;&apos; FROM oocr_t" order="oocr001,oocr002"/>
+    </head>
+    <body id="oocr_t" page="1,2" linked="" pk="oocr003" fk="oocr001,oocr002">
+      <sql id="forupd_sql_detail" query="SELECT oocrstus,oocr003,&apos;&apos;,&apos;&apos;,oocrmodid,&apos;&apos;,oocrmoddt,oocrownid,&apos;&apos;,oocrowndp,&apos;&apos;,oocrcrtid,&apos;&apos;,oocrcrtdp,&apos;&apos;,oocrcrtdt FROM oocr_t WHERE oocrent=? AND oocr001=? AND oocr002=? AND oocr003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT oocrstus,oocr003,&apos;&apos;,&apos;&apos;,oocrmodid,&apos;&apos;,oocrmoddt,oocrownid,&apos;&apos;,oocrowndp,&apos;&apos;,oocrcrtid,&apos;&apos;,oocrcrtdp,&apos;&apos;,oocrcrtdt FROM oocr_t WHERE oocrent= ? AND oocr001=? AND oocr002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,1060 @@
+<add_points prog="ainp900" std_prog="ainp900" erpver="1.0" module="AIN" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.ainp900_conf" cite_std="N" status="d" ver="" src="s" new="Y" order="1">
+<![CDATA[
+################################################################################
+# Descriptions...: 整批確認/取消确认
+# Memo...........:
+# Usage..........: CALL ainp900_batch_conf()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By lixh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ainp900_conf()
+   DEFINE l_success  LIKE type_t.num5
+   DEFINE l_cnt      LIKE type_t.num5
+   DEFINE l_count    LIKE type_t.num5   #执行笔数
+   
+   IF g_detail_cnt = 0 THEN
+      #请先选取资料
+      CALL cl_err('','abm-00098',1)
+      RETURN
+   END IF
+   IF l_conf = 'Y' THEN
+      IF NOT cl_ask_confirm('ain-00266') THEN
+         RETURN
+      END IF
+   END IF
+   IF l_conf = 'N' THEN
+      IF NOT cl_ask_confirm('ain-00267') THEN
+         RETURN
+      END IF
+   END IF
+   CALL s_transaction_begin()
+   
+   LET g_detail_cnt = g_detail_d.getLength()
+   LET l_count = 0
+   FOR l_ac=1 TO g_detail_cnt
+      IF g_detail_d[l_ac].sel = 'N' THEN
+         CONTINUE FOR
+      END IF
+      
+      
+
+      
+      LET l_count = l_count + 1
+      
+   END FOR
+
+   CALL s_transaction_end('Y','0')
+   #执行成功
+   #CALL cl_err('','adz-00217',1)
+   #资料拋转成功！（拋转笔数：%1笔）
+   CALL cl_err_msg('','abm-00097',l_count,1)
+END FUNCTION]]>
+</point>
+  <point name="b_fill.define" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   ]]>
+</point>
+  <point name="b_fill.foreach_into" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[           g_detail_d[l_ac].b_inpdsite,g_detail_d[l_ac].sel,g_detail_d[l_ac].b_inpddocno,g_detail_d[l_ac].b_inpdseq,g_detail_d[l_ac].b_inpd001,
+           g_detail_d[l_ac].b_inpd001_desc,g_detail_d[l_ac].b_inpd001_desc_1,g_detail_d[l_ac].b_inpf001,
+           g_detail_d[l_ac].b_inpd002,g_detail_d[l_ac].b_inpd003,g_detail_d[l_ac].b_inpd005,g_detail_d[l_ac].b_inpd005_desc,
+           g_detail_d[l_ac].b_inpd006,g_detail_d[l_ac].b_inpd006_desc,g_detail_d[l_ac].b_inpd007]]>
+</point>
+  <point name="b_fill.sql_before" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   LET g_sql1 = " SELECT inpdsite,'Y',inpddocno,inpdseq,inpd001,'','','',inpd002,inpd003,inpd005,'',inpd006,'',inpd007 FROM inpd_t,inpa_t ",
+                "  WHERE inpdent = inpaent AND inpdsite = inpasite AND inpd008 = inpadocno ",
+                "    AND inpdent = ? ",
+                "    AND inpdsite = '",g_site,"'" 
+               
+   LET g_sql2 = " SELECT inpfsite,'Y',inpfdocno,inpfseq,inpf003,'','',inpf001,'','','','','','','' FROM inpf_t,inpg_t,inpa_t ",   
+                "  WHERE inpfent = inpaent AND inpfsite = inpasite AND inpf004 = inpadocno ",
+                "    AND inpfent = inpgent AND inpfsite = inpgsite AND inpfdocno = inpgdocno AND inpfseq = inpgseq ",
+                "    AND inpfent = ? ",
+                "    AND inpfsite = '",g_site,"'" 
+  
+   IF NOT cl_null(g_wc_inpd008) THEN
+      LET g_sql1 = g_sql1," AND ",g_wc_inpd008
+   END IF   
+   IF NOT cl_null(g_wc_inpd005) THEN
+      LET g_sql1 = g_sql1," AND ",g_wc_inpd005
+   END IF      
+
+   IF NOT cl_null(g_wc_inpd008) THEN
+      LET g_wc_inpd008 = cl_replace_str(g_wc_inpd008,'inpf004','inpd008')
+      LET g_wc_inpd008 = cl_replace_str(g_wc_inpd008,'inpfdocno','inpddocno') 
+   END IF   
+   IF NOT cl_null(g_wc_inpd008) THEN
+      LET g_sql2 = g_sql2," AND ",g_wc_inpd008
+   END IF 
+   #現有庫存
+   IF l_invent = 'Y' THEN   
+      IF l_check = '1' THEN  #初盤
+         IF NOT cl_null(g_wc_inpd034) THEN
+            LET l_wc = cl_replace_str(g_wc_inpd034,'inpd040','inpd034')
+            LET g_sql1 = g_sql1, " AND (",g_wc_inpd034," OR ",l_wc,")"
+         END IF
+         IF NOT cl_null(g_wc_inpd032) THEN
+            LET l_wc = cl_replace_str(g_wc_inpd032,'inpd038','inpd032')
+            LET g_sql1 = g_sql1, " AND (",g_wc_inpd032," OR ",l_wc,")"
+         END IF  
+         IF NOT cl_null(g_inpd033) THEN 
+            LET g_sql1 = g_sql1," AND ( inpd033 = '",g_inpd033,"'"," OR inpd039 = '",g_inpd033,"')"
+         END IF  
+         LET g_sql1 = g_sql1, " AND (( inpa010 = 'Y' AND inpd040 IS NOT NULL） OR (inpa010 = 'N' AND inpd034 IS NOT NULL))"         
+      END IF 
+      IF l_check = '2' THEN  #復盤
+         IF NOT cl_null(g_wc_inpd034) THEN
+            LET l_wc = cl_replace_str(g_wc_inpd034,'inpd054','inpd034')
+            LET l_wc1 = cl_replace_str(g_wc_inpd034,'inpd060','inpd034')
+            LET g_sql1 = g_sql1, " AND (",l_wc," OR ",l_wc1,")"
+         END IF
+         IF NOT cl_null(g_wc_inpd032) THEN
+            LET l_wc2 = cl_replace_str(g_wc_inpd032,'inpd052','inpd032')
+            LET l_wc3 = cl_replace_str(g_wc_inpd032,'inpd058','inpd032')
+            LET g_sql1 = g_sql1, " AND (",l_wc2," OR ",l_wc3,")"
+         END IF 
+         IF NOT cl_null(g_inpd033) THEN 
+            LET g_sql1 = g_sql1," AND ( inpd053 = '",g_inpd033,"'"," OR inpd059 = '",g_inpd033,"')"
+         END IF      
+         LET g_sql1 = g_sql1, " AND (( inpa012 = 'Y' AND inpd060 IS NOT NULL） OR (inpa012 = 'N' AND inpd054 IS NOT NULL))"           
+      END IF 
+      IF l_conf = 'Y' THEN
+         LET g_sql1 = g_sql1, " AND inpdstus = 'N' "
+      END IF
+      IF l_conf = 'N' THEN
+         LET g_sql1 = g_sql1, " AND inpdstus = 'Y' "
+      END IF      
+   END IF   
+   IF l_work = 'Y' THEN
+      IF l_check = '1' THEN #初盤
+         IF NOT cl_null(g_wc_inpd032) THEN
+            LET l_wc3 = cl_replace_str(g_wc_inpd032,'inpf020','inpd032')
+            LET l_wc4 = cl_replace_str(g_wc_inpd032,'inpf022','inpd032')
+            LET g_sql2 = g_sql2," AND (",l_wc3," OR ",l_wc4,")"
+         END IF
+         
+         IF NOT cl_null(g_inpd033) THEN 
+            LET g_sql2 = g_sql2," AND ( inpf021 = '",g_inpd033,"'"," OR inpf023 = '",g_inpd033,"')"
+         END IF     
+         
+         IF NOT cl_null(g_wc_inpd034) THEN    
+            LET l_wc5 = cl_replace_str(g_wc_inpd034,'inpg031','inpd034')
+            LET l_wc6 = cl_replace_str(g_wc_inpd034,'inpg034','inpd034')
+            LET g_sql2 = g_sql2," AND (",l_wc5," OR ",l_wc6,")"
+         END IF  
+         LET g_sql2 = g_sql2, " AND (( inpa014 = 'Y' AND inpg034 IS NOT NULL） OR (inpa014 = 'N' AND inpg031 IS NOT NULL))"           
+      END IF   
+
+      IF l_check = '2' THEN  #復盤
+         IF NOT cl_null(g_wc_inpd032) THEN
+            LET l_wc3 = cl_replace_str(g_wc_inpd032,'inpf024','inpd032')
+            LET l_wc4 = cl_replace_str(g_wc_inpd032,'inpf026','inpd032')
+            LET g_sql2 = g_sql2," AND (",l_wc3," OR ",l_wc4,")"
+         END IF
+         
+         IF NOT cl_null(g_inpd033) THEN 
+            LET g_sql2 = g_sql2," AND ( inpf025 = '",g_inpd033,"'"," OR inpf027 = '",g_inpd033,"')"
+         END IF 
+         
+         IF NOT cl_null(g_wc_inpd034) THEN    
+            LET l_wc5 = cl_replace_str(g_wc_inpd034,'inpg051','inpd034')
+            LET l_wc6 = cl_replace_str(g_wc_inpd034,'inpg054','inpd034')
+            LET g_sql2 = g_sql2," AND (",l_wc5," OR ",l_wc6,")"
+         END IF   
+         LET g_sql2 = g_sql2, " AND (( inpa016 = 'Y' AND inpg054 IS NOT NULL） OR (inpa016 = 'N' AND inpg051 IS NOT NULL))"           
+      END IF   
+      
+      IF l_conf = 'Y' THEN
+         LET g_sql2 = g_sql2, " AND inpfstus = 'N' "
+      END IF
+      IF l_conf = 'N' THEN
+         LET g_sql2= g_sql2, " AND inpfstus = 'Y' "
+      END IF  
+   END IF
+   IF l_invent = 'Y' AND l_work = 'N' THEN
+      LET g_sql = g_sql1
+   END IF
+   IF l_invent = 'N' AND l_work = 'Y' THEN
+      LET g_sql = g_sql2
+   END IF
+   IF l_invent = 'Y' AND l_work = 'Y' THEN
+      LET g_sql = g_sql1," UNION ",g_sql2
+   END IF   ]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[       ]]>
+</point>
+  <point name="global.variable" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[              b_inpdsite         LIKE inpd_t.inpdsite,
+              sel                LIKE type_t.chr1,
+              b_inpddocno        LIKE inpd_t.inpddocno,
+              b_inpdseq          LIKE inpd_t.inpdseq,
+              b_inpd001          LIKE inpd_t.inpd001,
+              b_inpd001_desc     LIKE type_t.chr500,
+              b_inpd001_desc_1   LIKE type_t.chr500,
+              b_inpf001          LIKE inpf_t.inpf001,
+              b_inpd002          LIKE inpd_t.inpd002,
+              b_inpd003          LIKE inpd_t.inpd003,  
+              b_inpd005          LIKE inpd_t.inpd005,
+              b_inpd005_desc     LIKE type_t.chr500,
+              b_inpd006          LIKE inpd_t.inpd006,
+              b_inpd006_desc     LIKE type_t.chr500,   
+              b_inpd007          LIKE inpd_t.inpd007  
+                    END RECORD
+DEFINE g_invent   LIKE type_t.chr1
+DEFINE g_work     LIKE type_t.chr1
+DEFINE g_check    LIKE type_t.chr1
+DEFINE g_conf     LIKE type_t.chr1
+#TYPE type_g_qbe      RECORD
+#         inpd008       LIKE inpd_t.inpd008,
+#         inpddocno     LIKE inpd_t.inpddocno,
+#         inpd034       LIKE inpd_t.inpd034,
+#         inpd032       LIKE inpd_t.inpd032,
+#         inpd033       LIKE inpd_t.inpd033,
+#         inpd005       LIKE inpd_t.inpd005,
+#         inpd006       LIKE inpd_t.inpd006
+#                     END RECORD 
+#DEFINE g_qbe         type_g_qbe   
+DEFINE g_inpd033     LIKE inpd_t.inpd033
+DEFINE l_invent      LIKE type_t.chr1
+DEFINE l_work        LIKE type_t.chr1
+DEFINE l_check       LIKE type_t.chr1
+DEFINE l_conf        LIKE type_t.chr1
+DEFINE g_wc_inpd034  STRING
+DEFINE g_wc_inpd032  STRING
+DEFINE g_wc_inpd005  STRING
+DEFINE g_wc_inpd008  STRING
+DEFINE g_wc1         STRING
+DEFINE g_sql1        STRING
+DEFINE g_sql2        STRING
+DEFINE l_wc          STRING
+DEFINE l_wc1         STRING
+DEFINE l_wc2         STRING
+DEFINE l_wc3         STRING
+DEFINE l_wc4         STRING
+DEFINE l_wc5         STRING
+DEFINE l_wc6         STRING]]>
+</point>
+  <point name="ui_dialog.more_construct" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[         CONSTRUCT BY NAME g_wc ON inpd008,inpddocno
+	   
+            BEFORE CONSTRUCT
+                                                      
+            ON ACTION controlp INFIELD inpd008 
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_inpadocno()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO inpd008  #顯示到畫面上
+               NEXT FIELD inpd008                     #返回原欄位
+
+            ON ACTION controlp INFIELD inpddocno      #产品分类
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_inpddocno()                        #呼叫開窗
+               DISPLAY g_qryparam.return1 TO inpddocno   #顯示到畫面上
+               NEXT FIELD inpddocno                      #返回原欄位
+               
+            ON ACTION accept
+               #ACCEPT DIALOG
+               CALL ainp900_b_fill()
+
+         END CONSTRUCT
+         
+         CONSTRUCT BY NAME g_wc_inpd034 ON inpd034
+	   
+            BEFORE CONSTRUCT    
+
+            ON ACTION controlp INFIELD inpd034 
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO inpd034  #顯示到畫面上
+               NEXT FIELD inpd034  
+
+            ON ACTION accept
+               #ACCEPT DIALOG
+               CALL ainp900_b_fill()
+               
+         END CONSTRUCT      
+         
+         CONSTRUCT BY NAME g_wc_inpd032 ON inpd032
+            BEFORE CONSTRUCT    
+
+            ON ACTION controlp INFIELD inpd032 
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ooag001()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO inpd032  #顯示到畫面上
+               NEXT FIELD inpd032  
+
+            ON ACTION accept
+               #ACCEPT DIALOG
+               CALL ainp900_b_fill()
+         END CONSTRUCT      
+
+         CONSTRUCT BY NAME g_wc1 ON inpd033
+            BEFORE CONSTRUCT    
+ 
+            AFTER FIELD inpd033
+               LET g_inpd033 = GET_FLDBUF(inpd033)
+
+            ON ACTION accept
+               #ACCEPT DIALOG
+               CALL ainp900_b_fill()
+         END CONSTRUCT    
+
+         CONSTRUCT BY NAME g_wc_inpd005 ON inpd005,inpd006
+            BEFORE CONSTRUCT    
+            
+            ON ACTION controlp INFIELD inpd005 
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_inaa001_12()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO inpd005  #顯示到畫面上
+               NEXT FIELD inpd005      
+
+            ON ACTION controlp INFIELD inpd006 
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_inab002_1()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO inpd006  #顯示到畫面上
+               NEXT FIELD inpd006 
+               
+            ON ACTION accept
+               #ACCEPT DIALOG
+               CALL ainp900_b_fill()
+         END CONSTRUCT             ]]>
+</point>
+  <point name="ui_dialog.more_input" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[         INPUT BY NAME l_invent,l_work,l_check,l_conf
+            BEFORE INPUT
+               IF cl_null(l_invent) THEN LET l_invent = 'Y' END IF
+               IF cl_null(l_work) THEN LET l_work = 'N' END IF
+               IF cl_null(l_check) THEN LET l_check = '1' END IF
+               IF cl_null(l_conf) THEN LET l_conf = 'Y' END IF 
+               DISPLAY l_invent TO l_invent
+         END INPUT
+         
+         INPUT ARRAY g_detail_d FROM s_detail1.*
+             ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+         
+            BEFORE INPUT
+
+               LET g_detail_cnt = g_detail_d.getLength()
+         
+            BEFORE ROW
+
+               LET l_ac = ARR_CURR()
+            
+               LET g_detail_cnt = g_detail_d.getLength()
+
+         
+            AFTER FIELD sel
+               IF NOT cl_null(g_detail_d[l_ac].sel) THEN
+                  IF g_detail_d[l_ac].sel NOT MATCHES '[YN]' THEN
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+
+            ON ROW CHANGE
+               IF INT_FLAG THEN
+                  CALL cl_err('',9001,0)
+                  LET INT_FLAG = 0
+                  NEXT FIELD sel
+               END IF
+                  
+            AFTER ROW
+                  
+            AFTER INPUT
+    
+         END INPUT         ]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.parameter" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.background" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.before_close" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="init.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="init.init" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_dialog2" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.onaction_selall" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.onaction_selnone" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.onaction_sel" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.onaction_unsel" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.filter" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_action" cite_std="N" status="u" ver="" src="s" new="Y">
+<![CDATA[         ON ACTION batch_execute
+            CALL ainp900_batch_conf()]]>
+</point>
+  <point name="query.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="query.after_construct" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.clear" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.foreach_iside" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.other_table" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.after_b_fill" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="fetch.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="fetch.after_fill" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="detail_show.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="detail_show.detail_show" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="filter.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="filter.detail_cnt" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="filter_parser.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="function.ainp900_batch_conf" cite_std="N" status="u" ver="" src="s" new="Y" order="1">
+<![CDATA[
+################################################################################
+# Descriptions...: 整批確認/取消确认
+# Memo...........:
+# Usage..........: CALL ainp900_batch_conf()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By lixh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ainp900_batch_conf()
+   DEFINE l_success  LIKE type_t.num5
+   DEFINE l_cnt      LIKE type_t.num5
+   DEFINE l_count    LIKE type_t.num5   #执行笔数
+   
+   IF g_detail_cnt = 0 THEN
+      #请先选取资料
+      CALL cl_err('','abm-00098',1)
+      RETURN
+   END IF
+   IF l_conf = 'Y' THEN
+      IF NOT cl_ask_confirm('ain-00266') THEN
+         RETURN
+      END IF
+   END IF
+   IF l_conf = 'N' THEN
+      IF NOT cl_ask_confirm('ain-00267') THEN
+         RETURN
+      END IF
+   END IF
+   CALL s_transaction_begin()
+   
+   LET g_detail_cnt = g_detail_d.getLength()
+   LET l_count = 0
+   FOR l_ac=1 TO g_detail_cnt
+      IF g_detail_d[l_ac].sel = 'N' THEN
+         CONTINUE FOR
+      END IF
+      
+      
+
+      
+      LET l_count = l_count + 1
+      
+   END FOR
+
+   CALL s_transaction_end('Y','0')
+   #执行成功
+   #CALL cl_err('','adz-00217',1)
+   #资料拋转成功！（拋转笔数：%1笔）
+   CALL cl_err_msg('','abm-00097',l_count,1)
+END FUNCTION]]>
+</point>
+  <section id="ainp900.b_fill" ver="1" status="" src="s">
+<![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION ainp900_b_fill()
+ 
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   PREPARE ainp900_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR ainp900_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空
+   {<point name="b_fill.clear"/>}
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into
+   {<point name="b_fill.foreach_into"/>}
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.foreach_iside"/>}
+      #end add-point
+      
+      CALL ainp900_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( "", 9035, 1 )
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.other_table"/>}
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE ainp900_sel
+   
+   LET l_ac = 1
+   CALL ainp900_fetch()
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.after_b_fill"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="ainp900.description" ver="1" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000017
+#+ 
+#+ Filename...: ainp900
+#+ Description: 盤點批次確認作業
+#+ Creator....: 01534(2014/06/02)
+#+ Modifier...: 01534(2014/06/09)
+#+ Buildtype..: 應用 p02 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="ainp900.detail_show" ver="1" status="" src="s">
+<![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION ainp900_detail_show()
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段
+   {<point name="detail_show.detail_show"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="ainp900.fetch" ver="1" status="" src="s">
+<![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION ainp900_fetch()
+ 
+   DEFINE li_ac           LIKE type_t.num5
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後
+   {<point name="fetch.after_fill" />}
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+]]>
+</section>
+  <section id="ainp900.filter" ver="1" status="" src="s">
+<![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION ainp900_filter()
+   #add-point:filter段define
+   {<point name="filter.define"/>}
+   #end add-point    
+ 
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define
+   {<point name="filter.detail_cnt"/>}
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL ainp900_b_fill()
+   CALL ainp900_fetch()
+   
+END FUNCTION
+]]>
+</section>
+  <section id="ainp900.filter_parser" ver="1" status="" src="s">
+<![CDATA[#+ filter欄位解析
+PRIVATE FUNCTION ainp900_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   #add-point:filter段define
+   {<point name="filter_parser.define"/>}
+   #end add-point    
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="ainp900.filter_show" ver="1" status="" src="s">
+<![CDATA[#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION ainp900_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = ainp900_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="ainp900.global" ver="1" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num5              
+DEFINE l_ac_d               LIKE type_t.num5              #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num5              #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num5
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="ainp900.init" ver="1" status="" src="s">
+<![CDATA[#+ 畫面資料初始化
+PRIVATE FUNCTION ainp900_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point   
+ 
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+</section>
+  <section id="ainp900.main" ver="1" status="" src="s">
+<![CDATA[#+ 作業開始 
+MAIN
+   DEFINE ls_js  STRING
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("ain","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_ainp900 WITH FORM cl_ap_formpath("ain",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL ainp900_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL ainp900_ui_dialog() 
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_ainp900
+   END IF 
+   
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+</section>
+  <section id="ainp900.other_function" ver="1" status="" src="s">
+<![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+</section>
+  <section id="ainp900.query" ver="1" status="" src="s">
+<![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION ainp900_query()
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+   {<point name="query.define" />}
+   #end add-point 
+   
+   #add-point:cs段after_construct
+   {<point name="query.after_construct" />}
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL ainp900_b_fill()
+   LET l_ac = g_master_idx
+   CALL ainp900_fetch()
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      CALL cl_err("",-100,1)
+   END IF
+   
+END FUNCTION
+]]>
+</section>
+  <section id="ainp900.ui_dialog" ver="1" status="" src="s">
+<![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION ainp900_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num5
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point 
+ 
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE
+ 
+      CALL cl_dlg_query_bef_disp()  #相關查詢
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2
+            {<point name="ui_dialog.before_dialog2"/>}
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+            END FOR
+            #add-point:ui_dialog段on action selall
+            {<point name="ui_dialog.onaction_selall"/>}
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+            END FOR
+            #add-point:ui_dialog段on action selnone
+            {<point name="ui_dialog.onaction_selnone"/>}
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel
+            {<point name="ui_dialog.onaction_sel"/>}
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel
+            {<point name="ui_dialog.onaction_unsel"/>}
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL ainp900_filter()
+            #add-point:ON ACTION filter
+            {<point name="menu.filter" />}
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            CALL ainp900_query()
+ 
+         # 條件清除
+         ON ACTION qbeclear
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            CALL ainp900_b_fill()
+            CALL ainp900_fetch()
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+]]>
+</section>
+</add_points>

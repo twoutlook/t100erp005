@@ -1,0 +1,1399 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aisr460_g01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:7(2017-01-19 10:02:14), PR版次:0007(2017-01-19 10:16:37)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000044
+#+ Filename...: aisr460_g01
+#+ Description: ...
+#+ Creator....: 06816(2015-06-08 09:06:58)
+#+ Modifier...: 08729 -SD/PR- 08729
+ 
+{</section>}
+ 
+{<section id="aisr460_g01.global" readonly="Y" >}
+#報表 g01 樣板自動產生(Version:13)
+#add-point:填寫註解說明 name="global.memo"
+#160414-00018#33   160509   By 06821   效能調整
+#160905-00002#4    160905   By 06821   補入WHERE條件漏掉ENT的部分
+#161207-00045#1    170116   By 08729   1.發票日期需呈現民國年,月,日 2.報表申報年月需要呈現起始月份與截止月份 3.依據出口報單號碼排序
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+PRIVATE TYPE sr1_r RECORD
+   isaj001 LIKE isaj_t.isaj001, 
+   l_seq LIKE type_t.num20, 
+   l_typememo2 LIKE type_t.chr500, 
+   isaj002 LIKE isaj_t.isaj002, 
+   l_type LIKE type_t.chr500, 
+   isaj003 LIKE isaj_t.isaj003, 
+   isaj004 LIKE isaj_t.isaj004, 
+   isaj005 LIKE isaj_t.isaj005, 
+   isaj006 LIKE isaj_t.isaj006, 
+   isaj007 LIKE isaj_t.isaj007, 
+   isaj008 LIKE isaj_t.isaj008, 
+   isaj009 LIKE isaj_t.isaj009, 
+   isaj010 LIKE isaj_t.isaj010, 
+   isaj011 LIKE isaj_t.isaj011, 
+   isaj012 LIKE isaj_t.isaj012, 
+   isaj013 LIKE isaj_t.isaj013, 
+   isaj014 LIKE isaj_t.isaj014, 
+   isaj015 LIKE isaj_t.isaj015, 
+   isaj016 LIKE isaj_t.isaj016, 
+   isaj017 LIKE isaj_t.isaj017, 
+   isaj018 LIKE isaj_t.isaj018, 
+   isaj019 LIKE isaj_t.isaj019, 
+   isaj020 LIKE isaj_t.isaj020, 
+   isaj021 LIKE isaj_t.isaj021, 
+   isaj022 LIKE isaj_t.isaj022, 
+   isaj023 LIKE isaj_t.isaj023, 
+   isaj024 LIKE isaj_t.isaj024, 
+   isaj025 LIKE isaj_t.isaj025, 
+   isaj026 LIKE isaj_t.isaj026, 
+   isaj027 LIKE isaj_t.isaj027, 
+   isaj028 LIKE isaj_t.isaj028, 
+   isaj029 LIKE isaj_t.isaj029, 
+   isaj030 LIKE isaj_t.isaj030, 
+   isaj031 LIKE isaj_t.isaj031, 
+   isaj032 LIKE isaj_t.isaj032, 
+   isaj033 LIKE isaj_t.isaj033, 
+   isaj034 LIKE isaj_t.isaj034, 
+   isaj035 LIKE isaj_t.isaj035, 
+   isaj036 LIKE isaj_t.isaj036, 
+   isaj037 LIKE isaj_t.isaj037, 
+   isaj103 LIKE isaj_t.isaj103, 
+   isaj104 LIKE isaj_t.isaj104, 
+   isaj105 LIKE isaj_t.isaj105, 
+   isajcomp LIKE isaj_t.isajcomp, 
+   isajdocdt LIKE isaj_t.isajdocdt, 
+   isajent LIKE isaj_t.isajent, 
+   isajsite LIKE isaj_t.isajsite, 
+   isajstus LIKE isaj_t.isajstus, 
+   l_isaj105 LIKE isaj_t.isaj105, 
+   l_result LIKE type_t.chr500, 
+   l_memo LIKE type_t.chr500, 
+   l_isaj019_isaj020 LIKE type_t.chr500, 
+   l_isaa002 LIKE isaa_t.isaa002, 
+   l_ooefl004 LIKE ooefl_t.ooefl004, 
+   l_ooef002 LIKE ooef_t.ooef002, 
+   l_typememo LIKE type_t.chr500, 
+   l_format_isaj009 LIKE type_t.chr500, 
+   l_format_isaj022 LIKE type_t.chr500
+END RECORD
+ 
+PRIVATE TYPE sr2_r RECORD
+   ooff013 LIKE ooff_t.ooff013
+END RECORD
+ 
+ 
+DEFINE tm RECORD
+       wc STRING,                  #where condition 
+       a1 LIKE type_t.chr500,         #申報單位 
+       a2 LIKE type_t.num5,         #申報年份 
+       a3 LIKE type_t.num5          #申報月份
+       END RECORD
+DEFINE sr DYNAMIC ARRAY OF sr1_r                   #宣告sr為sr1_t資料結構的動態陣列
+DEFINE g_select        STRING
+DEFINE g_from          STRING
+DEFINE g_where         STRING
+DEFINE g_order         STRING
+DEFINE g_sql           STRING                         #report_select_prep,REPORT段使用
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_lineno        LIKE type_t.num5
+DEFINE g_lineno1       LIKE type_t.num5
+DEFINE g_lineno2       LIKE type_t.num5
+TYPE sr3_r RECORD
+   isaj001 LIKE isaj_t.isaj001, 
+   l_seq LIKE type_t.num20, 
+   l_typememo2 LIKE type_t.chr500, 
+   isaj002 LIKE isaj_t.isaj002, 
+   l_type LIKE type_t.chr500, 
+   isaj003 LIKE isaj_t.isaj003, 
+   isaj004 LIKE isaj_t.isaj004, 
+   isaj005 LIKE isaj_t.isaj005, 
+   isaj006 LIKE isaj_t.isaj006, 
+   isaj007 LIKE isaj_t.isaj007, 
+   isaj008 LIKE isaj_t.isaj008, 
+   isaj009 LIKE isaj_t.isaj009, 
+   isaj010 LIKE isaj_t.isaj010, 
+   isaj011 LIKE isaj_t.isaj011, 
+   isaj012 LIKE isaj_t.isaj012, 
+   isaj013 LIKE isaj_t.isaj013, 
+   isaj014 LIKE isaj_t.isaj014, 
+   isaj015 LIKE isaj_t.isaj015, 
+   isaj016 LIKE isaj_t.isaj016, 
+   isaj017 LIKE isaj_t.isaj017, 
+   isaj018 LIKE isaj_t.isaj018, 
+   isaj019 LIKE isaj_t.isaj019, 
+   isaj020 LIKE isaj_t.isaj020, 
+   isaj021 LIKE isaj_t.isaj021, 
+   isaj022 LIKE isaj_t.isaj022, 
+   isaj023 LIKE isaj_t.isaj023, 
+   isaj024 LIKE isaj_t.isaj024, 
+   isaj025 LIKE isaj_t.isaj025, 
+   isaj026 LIKE isaj_t.isaj026, 
+   isaj027 LIKE isaj_t.isaj027, 
+   isaj028 LIKE isaj_t.isaj028, 
+   isaj029 LIKE isaj_t.isaj029, 
+   isaj030 LIKE isaj_t.isaj030, 
+   isaj031 LIKE isaj_t.isaj031, 
+   isaj032 LIKE isaj_t.isaj032, 
+   isaj033 LIKE isaj_t.isaj033, 
+   isaj034 LIKE isaj_t.isaj034, 
+   isaj035 LIKE isaj_t.isaj035, 
+   isaj036 LIKE isaj_t.isaj036, 
+   isaj037 LIKE isaj_t.isaj037, 
+   isaj103 LIKE isaj_t.isaj103, 
+   isaj104 LIKE isaj_t.isaj104, 
+   isaj105 LIKE isaj_t.isaj105, 
+   isajcomp LIKE isaj_t.isajcomp, 
+   isajdocdt LIKE isaj_t.isajdocdt, 
+   isajent LIKE isaj_t.isajent, 
+   isajsite LIKE isaj_t.isajsite, 
+   isajstus LIKE isaj_t.isajstus, 
+   l_isaj105 LIKE isaj_t.isaj105, 
+   l_result LIKE type_t.chr500, 
+   l_memo LIKE type_t.chr500, 
+   l_isaj019_isaj020 LIKE type_t.chr500, 
+   l_isaa002 LIKE isaa_t.isaa002, 
+   l_ooefl004 LIKE ooefl_t.ooefl004, 
+   l_ooef002 LIKE ooef_t.ooef002, 
+   l_typememo LIKE type_t.chr500, 
+   l_format_isaj009 LIKE type_t.chr500, 
+   l_format_isaj022 LIKE type_t.chr500
+END RECORD
+TYPE sr4_r RECORD
+   isaj001 LIKE isaj_t.isaj001, 
+   l_seq LIKE type_t.num20, 
+   l_typememo2 LIKE type_t.chr500, 
+   isaj002 LIKE isaj_t.isaj002, 
+   l_type LIKE type_t.chr500, 
+   isaj003 LIKE isaj_t.isaj003, 
+   isaj004 LIKE isaj_t.isaj004, 
+   isaj005 LIKE isaj_t.isaj005, 
+   isaj006 LIKE isaj_t.isaj006, 
+   isaj007 LIKE isaj_t.isaj007, 
+   isaj008 LIKE isaj_t.isaj008, 
+   isaj009 LIKE isaj_t.isaj009, 
+   isaj010 LIKE isaj_t.isaj010, 
+   isaj011 LIKE isaj_t.isaj011, 
+   isaj012 LIKE isaj_t.isaj012, 
+   isaj013 LIKE isaj_t.isaj013, 
+   isaj014 LIKE isaj_t.isaj014, 
+   isaj015 LIKE isaj_t.isaj015, 
+   isaj016 LIKE isaj_t.isaj016, 
+   isaj017 LIKE isaj_t.isaj017, 
+   isaj018 LIKE isaj_t.isaj018, 
+   isaj019 LIKE isaj_t.isaj019, 
+   isaj020 LIKE isaj_t.isaj020, 
+   isaj021 LIKE isaj_t.isaj021, 
+   isaj022 LIKE isaj_t.isaj022, 
+   isaj023 LIKE isaj_t.isaj023, 
+   isaj024 LIKE isaj_t.isaj024, 
+   isaj025 LIKE isaj_t.isaj025, 
+   isaj026 LIKE isaj_t.isaj026, 
+   isaj027 LIKE isaj_t.isaj027, 
+   isaj028 LIKE isaj_t.isaj028, 
+   isaj029 LIKE isaj_t.isaj029, 
+   isaj030 LIKE isaj_t.isaj030, 
+   isaj031 LIKE isaj_t.isaj031, 
+   isaj032 LIKE isaj_t.isaj032, 
+   isaj033 LIKE isaj_t.isaj033, 
+   isaj034 LIKE isaj_t.isaj034, 
+   isaj035 LIKE isaj_t.isaj035, 
+   isaj036 LIKE isaj_t.isaj036, 
+   isaj037 LIKE isaj_t.isaj037, 
+   isaj103 LIKE isaj_t.isaj103, 
+   isaj104 LIKE isaj_t.isaj104, 
+   isaj105 LIKE isaj_t.isaj105, 
+   isajcomp LIKE isaj_t.isajcomp, 
+   isajdocdt LIKE isaj_t.isajdocdt, 
+   isajent LIKE isaj_t.isajent, 
+   isajsite LIKE isaj_t.isajsite, 
+   isajstus LIKE isaj_t.isajstus, 
+   l_isaj105 LIKE isaj_t.isaj105, 
+   l_result LIKE type_t.chr500, 
+   l_memo LIKE type_t.chr500, 
+   l_isaj019_isaj020 LIKE type_t.chr500, 
+   l_isaa002 LIKE isaa_t.isaa002, 
+   l_ooefl004 LIKE ooefl_t.ooefl004, 
+   l_ooef002 LIKE ooef_t.ooef002, 
+   l_typememo LIKE type_t.chr500, 
+   l_format_isaj009 LIKE type_t.chr500, 
+   l_format_isaj022 LIKE type_t.chr500
+END RECORD
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aisr460_g01.main" readonly="Y" >}
+PUBLIC FUNCTION aisr460_g01(p_arg1,p_arg2,p_arg3,p_arg4)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition 
+DEFINE  p_arg2 LIKE type_t.chr500         #tm.a1  申報單位 
+DEFINE  p_arg3 LIKE type_t.num5         #tm.a2  申報年份 
+DEFINE  p_arg4 LIKE type_t.num5         #tm.a3  申報月份
+#add-point:init段define (客製用) name="component_name.define_customerization"
+
+#end add-point
+#add-point:init段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component_name.define"
+ 
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.a1 = p_arg2
+   LET tm.a2 = p_arg3
+   LET tm.a3 = p_arg4
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+ 
+   #end add-point
+   #報表元件代號
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'   
+   
+   LET g_rep_code = "aisr460_g01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #主報表select子句準備
+   CALL aisr460_g01_sel_prep()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料存入array
+   CALL aisr460_g01_ins_data()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料印出
+   CALL aisr460_g01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aisr460_g01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aisr460_g01_sel_prep()
+   #add-point:sel_prep段define (客製用) name="sel_prep.define_customerization"
+   
+   #end add-point
+   #add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+   
+   #end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+ 
+   #end add-point
+   
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   LET g_select = " SELECT isaj001,NULL,NULL,isaj002,NULL,isaj003,isaj004,isaj005,isaj006,isaj007,isaj008, ",
+                  "        isaj009,isaj010,isaj011,isaj012,isaj013,isaj014,isaj015,isaj016,isaj017,isaj018,isaj019,isaj020, ",
+                  "        isaj021,isaj022,isaj023, ",
+                  "        CASE WHEN isaj024 IS NULL THEN '9' ELSE isaj024 END, ",
+                  "        isaj025,isaj026,isaj027,isaj028,isaj029,isaj030,isaj031,isaj032, ",
+                  "        isaj033,isaj034,isaj035,isaj036,isaj037,isaj103,isaj104, ",
+                  "        CASE WHEN isaj105 IS NULL THEN 0 ELSE isaj105 END, ",
+                  "        isajcomp,isajdocdt,isajent,isajsite,  ",
+                  "        isajstus,NULL,NULL,NULL,NULL, ",
+                  #稅籍編號
+                  "        (SELECT isaa002 FROM isaa_t WHERE isaaent = isajent AND isaa001 = '",tm.a1,"'), ",
+                  #營業人名稱
+                  "        (SELECT ooefl004 FROM ooefl_t WHERE ooeflent = isajent AND ooefl001 = '",tm.a1,"' AND ooefl002 = '",g_dlang,"'), ",
+                  #統一編號
+                  "        (SELECT ooef002 FROM ooef_t WHERE ooefent = isajent AND ooef001 = '",tm.a1,"'), ",
+                  "        NULL,NULL,NULL "
+#   #end add-point
+#   LET g_select = " SELECT isaj001,NULL,NULL,isaj002,NULL,isaj003,isaj004,isaj005,isaj006,isaj007,isaj008, 
+#       isaj009,isaj010,isaj011,isaj012,isaj013,isaj014,isaj015,isaj016,isaj017,isaj018,isaj019,isaj020, 
+#       isaj021,isaj022,isaj023,isaj024,isaj025,isaj026,isaj027,isaj028,isaj029,isaj030,isaj031,isaj032, 
+#       isaj033,isaj034,isaj035,isaj036,isaj037,isaj103,isaj104,isaj105,isajcomp,isajdocdt,isajent,isajsite, 
+#       isajstus,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL"
+# 
+#   #add-point:sel_prep g_from name="sel_prep.g_from"
+ 
+   #end add-point
+    LET g_from = " FROM isaj_t"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+ 
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED 
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   #LET g_order = " ORDER BY isaj024,isaj023,isaj022,isaj027 "   #161207-00045#1 mark
+   LET g_order = " ORDER BY isaj024,isaj023,isaj022,isaj027,isaj009,isaj006,isaj028,isaj026 "    #161207-00045#1 add
+#   #end add-point
+#    LET g_order = " ORDER BY isaj003,isaj024"
+# 
+#   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("isaj_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED ," ",g_order CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段 
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   
+   #end add-point
+   PREPARE aisr460_g01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()   
+      LET g_rep_success = 'N'    
+   END IF
+   DECLARE aisr460_g01_curs CURSOR FOR aisr460_g01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aisr460_g01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION aisr460_g01_ins_data()
+#主報表record(用於select子句)
+   DEFINE sr_s RECORD 
+   isaj001 LIKE isaj_t.isaj001, 
+   l_seq LIKE type_t.num20, 
+   l_typememo2 LIKE type_t.chr500, 
+   isaj002 LIKE isaj_t.isaj002, 
+   l_type LIKE type_t.chr500, 
+   isaj003 LIKE isaj_t.isaj003, 
+   isaj004 LIKE isaj_t.isaj004, 
+   isaj005 LIKE isaj_t.isaj005, 
+   isaj006 LIKE isaj_t.isaj006, 
+   isaj007 LIKE isaj_t.isaj007, 
+   isaj008 LIKE isaj_t.isaj008, 
+   isaj009 LIKE isaj_t.isaj009, 
+   isaj010 LIKE isaj_t.isaj010, 
+   isaj011 LIKE isaj_t.isaj011, 
+   isaj012 LIKE isaj_t.isaj012, 
+   isaj013 LIKE isaj_t.isaj013, 
+   isaj014 LIKE isaj_t.isaj014, 
+   isaj015 LIKE isaj_t.isaj015, 
+   isaj016 LIKE isaj_t.isaj016, 
+   isaj017 LIKE isaj_t.isaj017, 
+   isaj018 LIKE isaj_t.isaj018, 
+   isaj019 LIKE isaj_t.isaj019, 
+   isaj020 LIKE isaj_t.isaj020, 
+   isaj021 LIKE isaj_t.isaj021, 
+   isaj022 LIKE isaj_t.isaj022, 
+   isaj023 LIKE isaj_t.isaj023, 
+   isaj024 LIKE isaj_t.isaj024, 
+   isaj025 LIKE isaj_t.isaj025, 
+   isaj026 LIKE isaj_t.isaj026, 
+   isaj027 LIKE isaj_t.isaj027, 
+   isaj028 LIKE isaj_t.isaj028, 
+   isaj029 LIKE isaj_t.isaj029, 
+   isaj030 LIKE isaj_t.isaj030, 
+   isaj031 LIKE isaj_t.isaj031, 
+   isaj032 LIKE isaj_t.isaj032, 
+   isaj033 LIKE isaj_t.isaj033, 
+   isaj034 LIKE isaj_t.isaj034, 
+   isaj035 LIKE isaj_t.isaj035, 
+   isaj036 LIKE isaj_t.isaj036, 
+   isaj037 LIKE isaj_t.isaj037, 
+   isaj103 LIKE isaj_t.isaj103, 
+   isaj104 LIKE isaj_t.isaj104, 
+   isaj105 LIKE isaj_t.isaj105, 
+   isajcomp LIKE isaj_t.isajcomp, 
+   isajdocdt LIKE isaj_t.isajdocdt, 
+   isajent LIKE isaj_t.isajent, 
+   isajsite LIKE isaj_t.isajsite, 
+   isajstus LIKE isaj_t.isajstus, 
+   l_isaj105 LIKE isaj_t.isaj105, 
+   l_result LIKE type_t.chr500, 
+   l_memo LIKE type_t.chr500, 
+   l_isaj019_isaj020 LIKE type_t.chr500, 
+   l_isaa002 LIKE isaa_t.isaa002, 
+   l_ooefl004 LIKE ooefl_t.ooefl004, 
+   l_ooef002 LIKE ooef_t.ooef002, 
+   l_typememo LIKE type_t.chr500, 
+   l_format_isaj009 LIKE type_t.chr500, 
+   l_format_isaj022 LIKE type_t.chr500
+ END RECORD
+   DEFINE l_cnt           LIKE type_t.num10
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point   
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+DEFINE l_i         LIKE type_t.num5
+DEFINE l_j         LIKE type_t.num5
+DEFINE l_page      LIKE type_t.num20_6
+DEFINE l_isaj024   LIKE isaj_t.isaj024
+DEFINE l_month     LIKE type_t.chr500
+DEFINE l_year      LIKE type_t.chr500
+DEFINE l_year1     LIKE type_t.chr500
+DEFINE l_month1    LIKE type_t.chr500
+DEFINE l_day1      LIKE type_t.chr500
+DEFINE l_month2    LIKE type_t.chr500   #161207-00045#1 -add
+DEFINE l_isaa007   LIKE isaa_t.isaa007  #161207-00045#1 -add
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    LET l_i = 0    #非經海關的流水號(項次)
+    LET l_j = 0    #經海關的流水號(項次)
+    LET g_lineno = 0
+    #end add-point
+ 
+    CALL sr.clear()                                  #rep sr
+    LET l_cnt = 1
+    FOREACH aisr460_g01_curs INTO sr_s.*
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()       
+          LET g_rep_success = 'N'    
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       #160414-00018#33 --s mark
+       ##單頭資訊
+       ##統一編號
+       #SELECT ooef002 INTO sr_s.l_ooef002
+       #FROM ooef_t
+       #WHERE ooef001 = tm.a1
+       ##營業人名稱
+       #SELECT ooefl004 INTO sr_s.l_ooefl004
+       #  FROM ooefl_t
+       # WHERE ooeflent = g_enterprise
+       #   AND ooefl001 = tm.a1
+       #   AND ooefl002 = g_dlang
+       ##稅籍編號
+       #SELECT isaa002 INTO sr_s.l_isaa002
+       #FROM isaa_t
+       #WHERE isaa001 = tm.a1
+       #160414-00018#33 --e mark
+       #所屬年月份
+       LET l_year  = tm.a2-1911
+       LET l_month = tm.a3
+       #161207-00045#1 mark(s)
+       #IF l_month < 10 THEN
+       #   LET sr_s.l_isaj019_isaj020 = l_year CLIPPED,"年0",l_month CLIPPED,"月"
+       #ELSE
+       #   LET sr_s.l_isaj019_isaj020 = l_year CLIPPED,"年",l_month CLIPPED,"月"
+       #END IF
+       #161207-00045#1 mark(e)
+       #161207-00045#1 add(s)
+       SELECT isaa007 INTO l_isaa007
+         FROM isaa_t
+        WHERE isaaent = g_enterprise
+          AND isaa001 = tm.a1
+       LET l_month = l_month USING '&&'    
+       LET l_month2 = l_month-1 USING '&&' 
+       LET l_month2 = s_chr_atrim(l_month2) 
+       IF l_isaa007 = 1 THEN
+          LET sr_s.l_isaj019_isaj020 = l_year CLIPPED,"年",l_month2 CLIPPED,"-",l_month CLIPPED,"月" 
+       ELSE
+          LET sr_s.l_isaj019_isaj020 = l_year CLIPPED,"年",l_month  CLIPPED,"-",l_month CLIPPED,"月"
+       END IF
+       #161207-00045#1 add(e)
+       #單身內容
+       #依 isaj024 編流水號,l_type代表第1、2、3聯,l_page每24頁強制換頁
+       #160414-00018#33 --s mark
+       #IF cl_null(sr_s.isaj024) THEN LET sr_s.isaj024 = '9' END IF
+       #IF cl_null(sr_s.isaj105) THEN LET sr_s.isaj105 =  0  END IF
+       #160414-00018#33 --e mark
+       IF sr_s.isaj024 = '1' THEN
+          LET l_i = l_i + 1
+          LET sr_s.l_seq = l_i
+          LET sr_s.isaj027 = " "
+          LET sr_s.isaj028 = " "
+       ELSE
+          LET l_j = l_j + 1
+          LET sr_s.l_seq = l_j
+          LET sr_s.l_isaj105 = sr_s.isaj105
+          LET sr_s.isaj025 = " "
+          LET sr_s.isaj026 = " "
+          LET sr_s.isaj105 = " "
+       END IF
+       IF NOT cl_null(sr_s.isaj009) THEN 
+          LET l_year1  =  YEAR(sr_s.isaj009) - 1911
+          LET l_month1 = MONTH(sr_s.isaj009)
+          LET l_day1   =   DAY(sr_s.isaj009)
+          IF l_month1 < 10 THEN       
+             LET l_month1 = "0",l_month1
+          END IF          
+          #LET sr_s.l_format_isaj009 = l_year1 CLIPPED,l_month1 CLIPPED   #161207-00045#1 -mark
+          LET sr_s.l_format_isaj009 = l_year1 CLIPPED,"/",l_month1 CLIPPED,"/",l_day1 CLIPPED #161207-00045#1 -add
+       END IF
+       IF NOT cl_null(sr_s.isaj022) THEN 
+          LET l_year1  =  YEAR(sr_s.isaj022) - 1911
+          LET l_month1 = MONTH(sr_s.isaj022)
+          LET l_day1   =   DAY(sr_s.isaj022)
+          IF l_month1 < 10 THEN       
+             LET l_month1 = "0",l_month1
+          END IF
+          IF l_day1 < 10 THEN       
+             LET l_day1 = "0",l_day1
+          END IF
+          LET sr_s.l_format_isaj022 = l_year1 CLIPPED,l_month1 CLIPPED,l_day1 CLIPPED
+       END IF
+       #EX:1/24=0.04, 0.04(進位)=>0.1(進位)=>1
+       CALL s_num_round(4,sr_s.l_seq/24,1) RETURNING l_page
+       CALL s_num_round(4,l_page,0) RETURNING l_page
+       
+       LET sr_s.l_type = sr_s.isaj024 CLIPPED,l_page USING "####"
+       
+       #end add-point
+ 
+       #add-point:ins_data段before_arr name="ins_data.before.save"
+ 
+       #end add-point
+ 
+       #set rep array value
+       LET sr[l_cnt].isaj001 = sr_s.isaj001
+       LET sr[l_cnt].l_seq = sr_s.l_seq
+       LET sr[l_cnt].l_typememo2 = sr_s.l_typememo2
+       LET sr[l_cnt].isaj002 = sr_s.isaj002
+       LET sr[l_cnt].l_type = sr_s.l_type
+       LET sr[l_cnt].isaj003 = sr_s.isaj003
+       LET sr[l_cnt].isaj004 = sr_s.isaj004
+       LET sr[l_cnt].isaj005 = sr_s.isaj005
+       LET sr[l_cnt].isaj006 = sr_s.isaj006
+       LET sr[l_cnt].isaj007 = sr_s.isaj007
+       LET sr[l_cnt].isaj008 = sr_s.isaj008
+       LET sr[l_cnt].isaj009 = sr_s.isaj009
+       LET sr[l_cnt].isaj010 = sr_s.isaj010
+       LET sr[l_cnt].isaj011 = sr_s.isaj011
+       LET sr[l_cnt].isaj012 = sr_s.isaj012
+       LET sr[l_cnt].isaj013 = sr_s.isaj013
+       LET sr[l_cnt].isaj014 = sr_s.isaj014
+       LET sr[l_cnt].isaj015 = sr_s.isaj015
+       LET sr[l_cnt].isaj016 = sr_s.isaj016
+       LET sr[l_cnt].isaj017 = sr_s.isaj017
+       LET sr[l_cnt].isaj018 = sr_s.isaj018
+       LET sr[l_cnt].isaj019 = sr_s.isaj019
+       LET sr[l_cnt].isaj020 = sr_s.isaj020
+       LET sr[l_cnt].isaj021 = sr_s.isaj021
+       LET sr[l_cnt].isaj022 = sr_s.isaj022
+       LET sr[l_cnt].isaj023 = sr_s.isaj023
+       LET sr[l_cnt].isaj024 = sr_s.isaj024
+       LET sr[l_cnt].isaj025 = sr_s.isaj025
+       LET sr[l_cnt].isaj026 = sr_s.isaj026
+       LET sr[l_cnt].isaj027 = sr_s.isaj027
+       LET sr[l_cnt].isaj028 = sr_s.isaj028
+       LET sr[l_cnt].isaj029 = sr_s.isaj029
+       LET sr[l_cnt].isaj030 = sr_s.isaj030
+       LET sr[l_cnt].isaj031 = sr_s.isaj031
+       LET sr[l_cnt].isaj032 = sr_s.isaj032
+       LET sr[l_cnt].isaj033 = sr_s.isaj033
+       LET sr[l_cnt].isaj034 = sr_s.isaj034
+       LET sr[l_cnt].isaj035 = sr_s.isaj035
+       LET sr[l_cnt].isaj036 = sr_s.isaj036
+       LET sr[l_cnt].isaj037 = sr_s.isaj037
+       LET sr[l_cnt].isaj103 = sr_s.isaj103
+       LET sr[l_cnt].isaj104 = sr_s.isaj104
+       LET sr[l_cnt].isaj105 = sr_s.isaj105
+       LET sr[l_cnt].isajcomp = sr_s.isajcomp
+       LET sr[l_cnt].isajdocdt = sr_s.isajdocdt
+       LET sr[l_cnt].isajent = sr_s.isajent
+       LET sr[l_cnt].isajsite = sr_s.isajsite
+       LET sr[l_cnt].isajstus = sr_s.isajstus
+       LET sr[l_cnt].l_isaj105 = sr_s.l_isaj105
+       LET sr[l_cnt].l_result = sr_s.l_result
+       LET sr[l_cnt].l_memo = sr_s.l_memo
+       LET sr[l_cnt].l_isaj019_isaj020 = sr_s.l_isaj019_isaj020
+       LET sr[l_cnt].l_isaa002 = sr_s.l_isaa002
+       LET sr[l_cnt].l_ooefl004 = sr_s.l_ooefl004
+       LET sr[l_cnt].l_ooef002 = sr_s.l_ooef002
+       LET sr[l_cnt].l_typememo = sr_s.l_typememo
+       LET sr[l_cnt].l_format_isaj009 = sr_s.l_format_isaj009
+       LET sr[l_cnt].l_format_isaj022 = sr_s.l_format_isaj022
+ 
+ 
+       #add-point:ins_data段after_arr name="ins_data.after.save"
+       
+       #end add-point
+       LET l_cnt = l_cnt + 1
+    END FOREACH
+    CALL sr.deleteElement(l_cnt)
+ 
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aisr460_g01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION aisr460_g01_rep_data()
+   DEFINE HANDLER         om.SaxDocumentHandler
+   DEFINE l_i             INTEGER
+ 
+    #判斷是否有報表資料，若回彈出訊息視窗
+    IF sr.getLength() = 0 THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = "adz-00285"
+       LET g_errparam.extend = NULL
+       LET g_errparam.popup  = FALSE
+       LET g_errparam.replace[1] = ''
+       CALL cl_err()  
+       RETURN 
+    END IF
+    WHILE TRUE   
+       #add-point:rep_data段印前 name="rep_data.before"
+       
+       #end add-point     
+       LET handler = cl_gr_handler()
+       IF handler IS NOT NULL THEN
+          START REPORT aisr460_g01_rep TO XML HANDLER handler
+          FOR l_i = 1 TO sr.getLength()
+             OUTPUT TO REPORT aisr460_g01_rep(sr[l_i].*)
+             #報表中斷列印時，顯示錯誤訊息
+             IF fgl_report_getErrorStatus() THEN
+                DISPLAY "FGL: STOPPING REPORT msg=\"",fgl_report_getErrorString(),"\""
+                EXIT FOR
+             END IF                  
+          END FOR
+          FINISH REPORT aisr460_g01_rep
+       END IF
+       #add-point:rep_data段印完 name="rep_data.after"
+       
+       #end add-point       
+       IF g_rep_flag = TRUE THEN
+          LET g_rep_flag = FALSE
+          EXIT WHILE
+       END IF
+    END WHILE
+    #add-point:rep_data段離開while印完前 name="rep_data.end.before"
+    
+    #end add-point
+    CALL cl_gr_close_report()
+    #add-point:rep_data段離開while印完後 name="rep_data.end.after"
+    
+    #end add-point    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aisr460_g01.rep" readonly="Y" >}
+PRIVATE REPORT aisr460_g01_rep(sr1)
+DEFINE sr1 sr1_r
+DEFINE sr2 sr2_r
+DEFINE l_subrep01_show  LIKE type_t.chr1,
+       l_subrep02_show  LIKE type_t.chr1,
+       l_subrep03_show  LIKE type_t.chr1,
+       l_subrep04_show  LIKE type_t.chr1
+DEFINE l_cnt           LIKE type_t.num10
+DEFINE l_sub_sql       STRING
+#add-point:rep段define  (客製用) name="rep.define_customerization"
+
+#end add-point
+#add-point:rep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep.define"
+DEFINE l_isaj105_sum   LIKE type_t.num20_6       #非經海關金額合計
+DEFINE l_isaj105_sum2  LIKE type_t.num20_6       #經海關金額合計  
+DEFINE sr3 sr3_r
+#end add-point
+ 
+    #add-point:rep段ORDER_before name="rep.order.before"
+ 
+    #end add-point
+    ORDER  BY sr1.l_type,sr1.l_seq,sr1.l_format_isaj009,sr1.isaj006,sr1.isaj028,sr1.isaj026
+    #add-point:rep段ORDER_after name="rep.order.after"
+ 
+    #end add-point
+    
+    FORMAT
+       FIRST PAGE HEADER          
+          PRINTX g_user,g_pdate,g_rep_code,g_company,g_ptime,g_user_name,g_date_fmt
+          PRINTX tm.*
+          PRINTX g_grNumFmt.*
+          PRINTX g_rep_wcchp
+ 
+          #讀取beforeGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.l_type
+            #報表 d05 樣板自動產生(Version:6)
+            CALL cl_gr_title_clear()  #清除title變數值 
+            #add-point:rep.header  #公司資訊(不在公用變數內) name="rep.header"
+            
+            #end add-point:rep.header 
+            LET g_rep_docno = sr1.l_type
+            CALL cl_gr_init_pageheader() #表頭資訊
+            PRINTX g_grPageHeader.*
+            PRINTX g_grPageFooter.*
+            #add-point:rep.apr.signstr.before name="rep.apr.signstr.before"
+                          
+            #end add-point:rep.apr.signstr.before   
+            LET g_doc_key = 'isajent=' ,sr1.isajent,'{+}isajcomp=' ,sr1.isajcomp,'{+}isajsite=' ,sr1.isajsite,'{+}isaj001=' ,sr1.isaj001,'{+}isaj003=' ,sr1.isaj003,'{+}isaj005=' ,sr1.isaj005,'{+}isaj006=' ,sr1.isaj006,'{+}isaj007=' ,sr1.isaj007,'{+}isaj019=' ,sr1.isaj019,'{+}isaj020=' ,sr1.isaj020         
+            CALL cl_gr_init_apr(sr1.l_type)
+            #add-point:rep.apr.signstr name="rep.apr.signstr"
+           
+            #end add-point:rep.apr.signstr
+            PRINTX g_grSign.*
+ 
+ 
+ 
+           #add-point:rep.b_group.l_type.before name="rep.b_group.l_type.before"
+           
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub01.before name="rep.sub01.before"
+           
+           #end add-point:rep.sub01.before
+ 
+           #add-point:rep.sub01.sql name="rep.sub01.sql"
+           
+           #end add-point:rep.sub01.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='2' AND ooff004=0 AND ooffent = '", 
+                sr1.isajent CLIPPED ,"'", " AND  ooff003 = '", sr1.l_type CLIPPED ,"'"
+ 
+           #add-point:rep.sub01.afsql name="rep.sub01.afsql"
+           
+           #end add-point:rep.sub01.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep01_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE aisr460_g01_repcur01_cnt_pre FROM l_sub_sql
+           EXECUTE aisr460_g01_repcur01_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep01_show ="Y"
+           END IF
+           PRINTX l_subrep01_show
+           START REPORT aisr460_g01_subrep01
+           DECLARE aisr460_g01_repcur01 CURSOR FROM g_sql
+           FOREACH aisr460_g01_repcur01 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "aisr460_g01_repcur01:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub01.foreach name="rep.sub01.foreach"
+              
+              #end add-point:rep.sub01.foreach
+              OUTPUT TO REPORT aisr460_g01_subrep01(sr2.*)
+           END FOREACH
+           FINISH REPORT aisr460_g01_subrep01
+           #add-point:rep.sub01.after name="rep.sub01.after"
+           
+           #end add-point:rep.sub01.after
+ 
+ 
+ 
+           #add-point:rep.b_group.l_type.after name="rep.b_group.l_type.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.l_seq
+ 
+           #add-point:rep.b_group.l_seq.before name="rep.b_group.l_seq.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.b_group.l_seq.after name="rep.b_group.l_seq.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.l_format_isaj009
+ 
+           #add-point:rep.b_group.l_format_isaj009.before name="rep.b_group.l_format_isaj009.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.b_group.l_format_isaj009.after name="rep.b_group.l_format_isaj009.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.isaj006
+ 
+           #add-point:rep.b_group.isaj006.before name="rep.b_group.isaj006.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.b_group.isaj006.after name="rep.b_group.isaj006.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.isaj028
+ 
+           #add-point:rep.b_group.isaj028.before name="rep.b_group.isaj028.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.b_group.isaj028.after name="rep.b_group.isaj028.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.isaj026
+ 
+           #add-point:rep.b_group.isaj026.before name="rep.b_group.isaj026.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.b_group.isaj026.after name="rep.b_group.isaj026.after"
+           
+           #end add-point:
+ 
+ 
+ 
+ 
+       ON EVERY ROW
+          #add-point:rep.everyrow.before name="rep.everyrow.before"
+          
+          #end add-point:rep.everyrow.before
+ 
+          #單身前備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub02.before name="rep.sub02.before"
+           
+           #end add-point:rep.sub02.before
+ 
+           #add-point:rep.sub02.sql name="rep.sub02.sql"
+           
+           #end add-point:rep.sub02.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='2' AND ooffent = '", 
+                sr1.isajent CLIPPED ,"'", " AND  ooff003 = '", sr1.l_type CLIPPED ,"'"
+ 
+           #add-point:rep.sub02.afsql name="rep.sub02.afsql"
+           
+           #end add-point:rep.sub02.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep02_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE aisr460_g01_repcur02_cnt_pre FROM l_sub_sql
+           EXECUTE aisr460_g01_repcur02_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep02_show ="Y"
+           END IF
+           PRINTX l_subrep02_show
+           START REPORT aisr460_g01_subrep02
+           DECLARE aisr460_g01_repcur02 CURSOR FROM g_sql
+           FOREACH aisr460_g01_repcur02 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "aisr460_g01_repcur02:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub02.foreach name="rep.sub02.foreach"
+              
+              #end add-point:rep.sub02.foreach
+              OUTPUT TO REPORT aisr460_g01_subrep02(sr2.*)
+           END FOREACH
+           FINISH REPORT aisr460_g01_subrep02
+           #add-point:rep.sub02.after name="rep.sub02.after"
+           
+           #end add-point:rep.sub02.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.beforerow name="rep.everyrow.beforerow"
+          
+          #end add-point:rep.everyrow.beforerow
+            
+          PRINTX sr1.*
+ 
+          #add-point:rep.everyrow.afterrow name="rep.everyrow.afterrow"
+          
+          #end add-point:rep.everyrow.afterrow
+ 
+          #單身後備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub03.before name="rep.sub03.before"
+           
+           #end add-point:rep.sub03.before
+ 
+           #add-point:rep.sub03.sql name="rep.sub03.sql"
+           
+           #end add-point:rep.sub03.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='1' AND ooff003 = '", 
+                sr1.isajent CLIPPED ,"'"
+ 
+           #add-point:rep.sub03.afsql name="rep.sub03.afsql"
+           
+           #end add-point:rep.sub03.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep03_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE aisr460_g01_repcur03_cnt_pre FROM l_sub_sql
+           EXECUTE aisr460_g01_repcur03_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep03_show ="Y"
+           END IF
+           PRINTX l_subrep03_show
+           START REPORT aisr460_g01_subrep03
+           DECLARE aisr460_g01_repcur03 CURSOR FROM g_sql
+           FOREACH aisr460_g01_repcur03 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "aisr460_g01_repcur03:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub03.foreach name="rep.sub03.foreach"
+              
+              #end add-point:rep.sub03.foreach
+              OUTPUT TO REPORT aisr460_g01_subrep03(sr2.*)
+           END FOREACH
+           FINISH REPORT aisr460_g01_subrep03
+           #add-point:rep.sub03.after name="rep.sub03.after"
+           
+           #end add-point:rep.sub03.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.after name="rep.everyrow.after"
+          
+          #end add-point:rep.everyrow.after        
+ 
+          #讀取afterGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.l_type
+ 
+           #add-point:rep.a_group.l_type.before name="rep.a_group.l_type.before"
+           LET l_isaj105_sum  = GROUP SUM(sr1.isaj105)
+           LET l_isaj105_sum2 = GROUP SUM(sr1.l_isaj105)
+           PRINTX l_isaj105_sum,l_isaj105_sum2                    
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub04.before name="rep.sub04.before"
+           
+           #end add-point:rep.sub04.before
+ 
+           #add-point:rep.sub04.sql name="rep.sub04.sql"
+           
+           #end add-point:rep.sub04.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='1' AND ooff004=0 AND ooffent = '", 
+                sr1.isajent CLIPPED ,"'", " AND  ooff003 = '", sr1.l_type CLIPPED ,"'"
+ 
+           #add-point:rep.sub04.afsql name="rep.sub04.afsql"
+           
+           #end add-point:rep.sub04.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep04_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE aisr460_g01_repcur04_cnt_pre FROM l_sub_sql
+           EXECUTE aisr460_g01_repcur04_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep04_show ="Y"
+           END IF
+           PRINTX l_subrep04_show
+           START REPORT aisr460_g01_subrep04
+           DECLARE aisr460_g01_repcur04 CURSOR FROM g_sql
+           FOREACH aisr460_g01_repcur04 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "aisr460_g01_repcur04:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub04.foreach name="rep.sub04.foreach"
+              
+              #end add-point:rep.sub04.foreach
+              OUTPUT TO REPORT aisr460_g01_subrep04(sr2.*)
+           END FOREACH
+           FINISH REPORT aisr460_g01_subrep04
+           #add-point:rep.sub04.after name="rep.sub04.after"
+           
+           #end add-point:rep.sub04.after
+ 
+ 
+ 
+           #add-point:rep.a_group.l_type.after name="rep.a_group.l_type.after"
+ 
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.l_seq
+ 
+           #add-point:rep.a_group.l_seq.before name="rep.a_group.l_seq.before"
+           
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.a_group.l_seq.after name="rep.a_group.l_seq.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.l_format_isaj009
+ 
+           #add-point:rep.a_group.l_format_isaj009.before name="rep.a_group.l_format_isaj009.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.a_group.l_format_isaj009.after name="rep.a_group.l_format_isaj009.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.isaj006
+ 
+           #add-point:rep.a_group.isaj006.before name="rep.a_group.isaj006.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.a_group.isaj006.after name="rep.a_group.isaj006.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.isaj028
+ 
+           #add-point:rep.a_group.isaj028.before name="rep.a_group.isaj028.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.a_group.isaj028.after name="rep.a_group.isaj028.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.isaj026
+ 
+           #add-point:rep.a_group.isaj026.before name="rep.a_group.isaj026.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.a_group.isaj026.after name="rep.a_group.isaj026.after"
+           
+           #end add-point:
+ 
+ 
+ 
+       ON LAST ROW
+            #add-point:rep.lastrow.before name="rep.lastrow.before"  
+            
+            #end add-point :rep.lastrow.before
+ 
+            #add-point:rep.lastrow.after name="rep.lastrow.after"
+            START REPORT aisr460_g01_subrep05
+            OUTPUT TO REPORT aisr460_g01_subrep05(sr3.*)
+            FINISH REPORT aisr460_g01_subrep05
+            #end add-point :rep.lastrow.after
+END REPORT
+ 
+{</section>}
+ 
+{<section id="aisr460_g01.subrep_str" readonly="Y" >}
+#讀取子報表樣板
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT aisr460_g01_subrep01(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub01.define_customerization" 
+
+#end add-point
+#add-point:sub01.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub01.define" 
+
+#end add-point:sub01.define
+ 
+    #add-point:sub01.order.before name="sub01.order.before" 
+    
+    #end add-point:sub01.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub01.everyrow.before name="sub01.everyrow.before" 
+                          
+            #end add-point:sub01.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub01.everyrow.after name="sub01.everyrow.after" 
+            
+            #end add-point:sub01.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT aisr460_g01_subrep02(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub02.define_customerization" 
+
+#end add-point
+#add-point:sub02.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub02.define" 
+
+#end add-point:sub02.define
+ 
+    #add-point:sub02.order.before name="sub02.order.before" 
+    
+    #end add-point:sub02.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub02.everyrow.before name="sub02.everyrow.before" 
+                          
+            #end add-point:sub02.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub02.everyrow.after name="sub02.everyrow.after" 
+            
+            #end add-point:sub02.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT aisr460_g01_subrep03(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub03.define_customerization" 
+
+#end add-point
+#add-point:sub03.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub03.define" 
+
+#end add-point:sub03.define
+ 
+    #add-point:sub03.order.before name="sub03.order.before" 
+    
+    #end add-point:sub03.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub03.everyrow.before name="sub03.everyrow.before" 
+                          
+            #end add-point:sub03.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub03.everyrow.after name="sub03.everyrow.after" 
+            
+            #end add-point:sub03.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT aisr460_g01_subrep04(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub04.define_customerization" 
+
+#end add-point
+#add-point:sub04.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub04.define" 
+
+#end add-point:sub04.define
+ 
+    #add-point:sub04.order.before name="sub04.order.before" 
+    
+    #end add-point:sub04.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub04.everyrow.before name="sub04.everyrow.before" 
+                          
+            #end add-point:sub04.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub04.everyrow.after name="sub04.everyrow.after" 
+            
+            #end add-point:sub04.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aisr460_g01.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aisr460_g01.other_report" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 申報書
+# Memo...........:
+# Usage..........: CALL aisr460_g01_subrep05(sr3)
+# Date & Author..: 150626 By RayHuang
+# Modify.........:
+################################################################################
+PRIVATE REPORT aisr460_g01_subrep05(sr3)
+DEFINE sr3 sr3_r
+DEFINE l_isaa028       LIKE isaa_t.isaa028
+DEFINE l_isaa005       LIKE isaa_t.isaa005          
+DEFINE l_isaj105_total   LIKE type_t.num20_6          #非經海關金額總和
+DEFINE l_isaj105_2_total LIKE type_t.num20_6          #經海關金額總和
+DEFINE l_total           LIKE type_t.num20_6          #外銷總和
+DEFINE l_ooefl004        LIKE ooefl_t.ooefl004        #申報營業人名稱
+DEFINE l_isaa003         LIKE isaa_t.isaa003          #負責人姓名                          
+DEFINE l_oofb017         LIKE oofb_t.oofb017          #營業所在地址                          
+DEFINE l_isaa028_isaa005 LIKE type_t.chr500           #電話
+DEFINE l_cmd             STRING               
+DEFINE l_body_cnt1       LIKE type_t.num5
+DEFINE l_body_cnt2       LIKE type_t.num5 
+DEFINE l_body_tot        LIKE type_t.num5  
+DEFINE l_i               LIKE type_t.num5
+DEFINE l_page            LIKE type_t.num5
+DEFINE l_save_page       LIKE type_t.num5
+
+   FORMAT
+      
+      BEFORE GROUP OF sr3.l_type
+         PRINTX g_grPageHeader.*,g_date_fmt
+         LET l_cmd = " SELECT COUNT(*)  ",
+                     "   FROM isaj_t  ",  
+                     " WHERE " ,tm.wc CLIPPED," AND isaj024 = '1' "
+         PREPARE aisr460_g01_subrep05_body_cnt1_pr FROM l_cmd
+         EXECUTE aisr460_g01_subrep05_body_cnt1_pr INTO l_body_cnt1
+         LET l_cmd = " SELECT COUNT(*)  ",
+                     "   FROM isaj_t  ",  
+                     " WHERE " ,tm.wc CLIPPED," AND isaj024 <> '1' "
+         PREPARE aisr460_g01_subrep05_body_cnt2_pr FROM l_cmd
+         EXECUTE aisr460_g01_subrep05_body_cnt2_pr INTO l_body_cnt2
+         LET l_body_tot = l_body_cnt1 + l_body_cnt2
+         
+      ON EVERY ROW
+         PRINTX g_grNumFmt.*
+         PRINTX sr3.*
+         
+      AFTER GROUP OF sr3.l_type           
+         IF l_body_cnt1 MOD 24 = 0 THEN   
+            LET l_save_page = (l_body_cnt1 / 24)
+         ELSE
+            LET l_save_page = (l_body_cnt1 / 24) + 1
+         END IF
+         IF l_body_cnt2 MOD 24 = 0 THEN   
+            LET l_page = (l_body_cnt2 / 24) + l_save_page
+         ELSE
+            LET l_page = (l_body_cnt2 / 24) + l_save_page + 1
+         END IF
+         
+         PRINTX l_page
+         #經海關與非經海關的金額
+         LET g_sql = " SELECT SUM(CASE WHEN isaj105 IS NULL THEN  0 ELSE isaj105 END)  ",
+                     "   FROM isaj_t  ",  
+                     " WHERE " ,tm.wc CLIPPED," AND isaj024 = '1' "
+         PREPARE aisr460_g01_subrep05_isaj105_sum FROM g_sql
+         EXECUTE aisr460_g01_subrep05_isaj105_sum INTO l_isaj105_total
+         
+         LET g_sql = " SELECT SUM(CASE WHEN isaj105 IS NULL THEN  0 ELSE isaj105 END)  ",
+                     "   FROM isaj_t  ",  
+                     " WHERE " ,tm.wc CLIPPED," AND isaj024 <> '1' "
+         PREPARE aisr460_g01_subrep05_l_isaj105_sum FROM g_sql
+         EXECUTE aisr460_g01_subrep05_l_isaj105_sum INTO l_isaj105_2_total
+         IF cl_null(l_isaj105_total)   THEN LET l_isaj105_total   = 0 END IF
+         IF cl_null(l_isaj105_2_total) THEN LET l_isaj105_2_total = 0 END IF
+         #取得總和 
+         LET l_total = l_isaj105_total + l_isaj105_2_total
+         #申報營業人名稱
+         SELECT ooefl004 INTO l_ooefl004
+           FROM ooefl_t
+          WHERE ooeflent = g_enterprise      AND ooefl001 = tm.a1
+            AND ooefl002 = g_dlang;
+         #電話
+         SELECT isaa028,isaa005,isaa003 INTO l_isaa028,l_isaa005,l_isaa003
+         FROM isaa_t
+         WHERE isaaent = g_enterprise AND isaa001 = tm.a1  #160905-00002#4 add
+         #WHERE isaa001 = tm.a1;                           #160905-00002#4 mark
+         
+         IF cl_null(l_isaa028) THEN
+            LET l_isaa028_isaa005 = l_isaa005
+         ELSE
+            LET l_isaa028_isaa005 = l_isaa028,"-", l_isaa005     
+         END IF  
+                    
+         SELECT oofb017 INTO l_oofb017
+           FROM oofb_t,ooef_t
+          WHERE oofbent = g_enterprise  AND oofb008  ='1' #登記地址
+            AND oofb002 = ooef012       AND ooef001 = tm.a1
+            AND oofb010 = 'Y';
+                      
+         PRINTX l_isaj105_total,l_isaj105_2_total,l_total,l_ooefl004
+         PRINTX l_isaa003,l_isaa028_isaa005,l_oofb017
+
+END REPORT
+
+ 
+{</section>}
+ 

@@ -1,0 +1,505 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aooi410" std_prog="aooi410" erpver="1.0" ver="2" module="AOO" type="M" booking="Y" class="i" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items="delete,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="oogb_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail1_info" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：依各國公告行事曆負向表列出假日。
+作業功能：新增/修改/刪除/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：基本資料維護作業
+輸入模式：雙檔不搭配查詢方案模式F003_00
+作業資料來源(Master)：oogb_t(行事曆假日檔)
+                      ooall_t(參照表多語言檔)
+作業資料來源(Detail)：oogb_t(行事曆假日檔)
+                      ooga_t(日曆檔)
+TopMenu:
+   明細操作:[例假日產生]
+   相關資料:[日曆檔維護作業]]]>
+  </all>
+  <field cite_std="N" name="lbl_date_desc" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_week_desc" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_year" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oogb_t.oogb001" ver="1" src="s" column="oogb001" table="oogb_t" attribute="C812" type="varchar2(5)" req="Y" i_zoom="q_ooal002" c_zoom="q_ooal002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[行事曆參照表號：
+   ●欄位控管：
+     資料欄位:[T:行事曆假日檔].[C:行事曆參照表號]/可Display可Input
+     預設值:無
+     校驗:1.不允許錄入空白值
+          2.輸入值須存在[T:參照表檔].[C:參照表號]、[C:參照表類型]=4且為有效資料,
+            若資料不存在則詢問「輸入的參照表號不存在參照表檔,請問是否要新增此參照表號?」，
+            若選擇是則呼叫應用元件s_aooi070_ins()做參照表號的新增；
+            否則停留在本欄位并且還原舊值
+     帶值:帶出[T:參照表多語言檔].[C:說明]到參照表說明顯示
+     計算或處理:無
+
+   ●開窗處理：
+     1.查詢時：
+       參考函式：依標準查詢視窗 
+       開窗編號 : q_ooal002
+       查詢欄位：[T:參照表檔].[C:參照表號],[T:參照表多語言檔].[C:說明]
+       回值類型：多重回值
+     2.新增/修改時：
+       參考函式：依標準查詢視窗
+       開窗編號 : q_ooal002
+       查詢欄位：[T:參照表檔].[C:參照表號],[T:參照表多語言檔].[C:說明]
+       過濾條件：[T:參照表檔].[C:參照表類型]=4
+       回值類型：單一回值]]>
+  </field>
+  <field cite_std="N" name="oogb_t.oogb002" ver="1" src="s" column="oogb002" table="oogb_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[日期：
+   ●欄位控管：
+     資料欄位:[T:行事曆假日檔].[C:日期]/可Display可Input
+     預設值:無
+     校驗:1.輸入值須存在[T:日曆檔].[C:日期]且為有效資料
+     帶值:將[T:日曆檔].[C:星期(ooga002)]跟[T:日曆檔].[C:農曆月日(ooga003)]顯示到[C:日期]的後面
+     計算或處理:無
+]]>
+  </field>
+  <field cite_std="N" name="oogb_t.oogb003" ver="1" src="s" column="oogb003" table="oogb_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[休假類型：
+   ●欄位控管：
+     資料欄位:[T:行事曆假日檔].[C:休假類型]/可Display可Input
+     預設值:無
+     校驗:1.輸入值須存在[T:應用分類碼檔].[C:應用分類碼]、[C:應用分類]=6且為有效資料,若不存在請給予報錯並返回舊值.
+             2.檢查資料是否有效,若無效請給予報錯並返回舊值.
+     帶值:無
+     計算或處理:無
+
+   ●開窗處理：
+     1.查詢時：
+       參考函式：依標準查詢視窗
+       開窗編號 : q_oocq002
+       查詢欄位：[T:行事曆假日檔].[C:休假類型],[T:應用分類碼多語言檔].[C:說明]
+       過濾條件：[T:應用分類碼檔].[C:應用分類]=6
+       回值類型：多重回值
+     2.新增/修改時：
+       參考函式：依標準查詢視窗
+       開窗編號 : q_oocq002
+       查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+       過濾條件：[T:應用分類碼檔].[C:應用分類]=6
+       回值類型：單一回值
+]]>
+  </field>
+  <field cite_std="N" name="oogb_t.oogb004" ver="1" src="s" column="oogb004" table="oogb_t" attribute="C103" type="varchar2(80)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oogb_t.oogb005" ver="1" src="s" column="oogb005" table="oogb_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[分類一：
+   ●欄位控管：
+     資料欄位:[T:行事曆假日檔].[C:分類一]/可Display可Input
+     預設值:無
+     校驗:1.輸入值須存在[T:應用分類碼檔].[C:應用分類碼]、[C:應用分類]=7且為有效資料,若不存在請給予報錯並返回舊值.
+            2.檢查資料是否有效,若無效請給予報錯並返回舊值.
+     帶值:無
+     計算或處理:無
+
+   ●開窗處理：
+     1.查詢時：
+       參考函式：依標準查詢視窗
+       開窗編號 : q_oocq002
+       查詢欄位：[T:行事曆假日檔].[C:分類一],[T:應用分類碼多語言檔].[C:說明]
+       過濾條件：[T:應用分類碼檔].[C:應用分類]=7
+       回值類型：多重回值
+     2.新增/修改時：
+       參考函式：依標準查詢視窗
+       開窗編號 : q_oocq002
+       查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+       過濾條件：[T:應用分類碼檔].[C:應用分類]=7
+       回值類型：單一回值]]>
+  </field>
+  <field cite_std="N" name="oogb_t.oogb006" ver="1" src="s" column="oogb006" table="oogb_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[分類二：
+   ●欄位控管：
+     資料欄位:[T:行事曆假日檔].[C:分類一]/可Display可Input
+     預設值:無
+     校驗:1.輸入值須存在[T:應用分類碼檔].[C:應用分類碼]、[C:應用分類]=8且為有效資料,若不存在請給予報錯並返回舊值.
+            2.檢查資料是否有效,若無效請給予報錯並返回舊值.
+     帶值:無
+     計算或處理:無
+
+   ●開窗處理：
+     1.查詢時：
+       參考函式：依標準查詢視窗
+       開窗編號 : q_oocq002
+       查詢欄位：[T:行事曆假日檔].[C:分類一],[T:應用分類碼多語言檔].[C:說明]
+       過濾條件：[T:應用分類碼檔].[C:應用分類]=8
+       回值類型：多重回值
+     2.新增/修改時：
+       參考函式：依標準查詢視窗
+       開窗編號 : q_oocq002
+       查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+       過濾條件：[T:應用分類碼檔].[C:應用分類]=8
+       回值類型：單一回值]]>
+  </field>
+  <field cite_std="N" name="oogb_t.oogb007" ver="1" src="s" column="oogb007" table="oogb_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[分類三：
+   ●欄位控管：
+     資料欄位:[T:行事曆假日檔].[C:分類一]/可Display可Input
+     預設值:無
+     校驗:1.輸入值須存在[T:應用分類碼檔].[C:應用分類碼]、[C:應用分類]=9且為有效資料,若不存在請給予報錯並返回舊值.
+            2.檢查資料是否有效,若無效請給予報錯並返回舊值.
+     帶值:無
+     計算或處理:無
+
+   ●開窗處理：
+     1.查詢時：
+       參考函式：依標準查詢視窗
+       開窗編號 : q_oocq002
+       查詢欄位：[T:行事曆假日檔].[C:分類一],[T:應用分類碼多語言檔].[C:說明]
+       過濾條件：[T:應用分類碼檔].[C:應用分類]=9
+       回值類型：多重回值
+     2.新增/修改時：
+       參考函式：依標準查詢視窗
+       開窗編號 : q_oocq002
+       查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+       過濾條件：[T:應用分類碼檔].[C:應用分類]=9
+       回值類型：單一回值]]>
+  </field>
+  <field cite_std="N" name="oogb_t.oogb008" ver="1" src="s" column="oogb008" table="oogb_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[分類四：
+   ●欄位控管：
+     資料欄位:[T:行事曆假日檔].[C:分類一]/可Display可Input
+     預設值:無
+     校驗:1.輸入值須存在[T:應用分類碼檔].[C:應用分類碼]、[C:應用分類]=10且為有效資料,若不存在請給予報錯並返回舊值.
+            2.檢查資料是否有效,若無效請給予報錯並返回舊值.
+     帶值:無
+     計算或處理:無
+
+   ●開窗處理：
+     1.查詢時：
+       參考函式：依標準查詢視窗
+       開窗編號 : q_oocq002
+       查詢欄位：[T:行事曆假日檔].[C:分類一],[T:應用分類碼多語言檔].[C:說明]
+       過濾條件：[T:應用分類碼檔].[C:應用分類]=10
+       回值類型：多重回值
+     2.新增/修改時：
+       參考函式：依標準查詢視窗
+       開窗編號 : q_oocq002
+       查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+       過濾條件：[T:應用分類碼檔].[C:應用分類]=10
+       回值類型：單一回值]]>
+  </field>
+  <field cite_std="N" name="oogb_t.oogb009" ver="1" src="s" column="oogb009" table="oogb_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[分類五：
+   ●欄位控管：
+     資料欄位:[T:行事曆假日檔].[C:分類一]/可Display可Input
+     預設值:無
+     校驗:1.輸入值須存在[T:應用分類碼檔].[C:應用分類碼]、[C:應用分類]=11且為有效資料,若不存在請給予報錯並返回舊值.
+            2.檢查資料是否有效,若無效請給予報錯並返回舊值.
+     帶值:無
+     計算或處理:無
+
+   ●開窗處理：
+     1.查詢時：
+       參考函式：依標準查詢視窗
+       開窗編號 : q_oocq002
+       查詢欄位：[T:行事曆假日檔].[C:分類一],[T:應用分類碼多語言檔].[C:說明]
+       過濾條件：[T:應用分類碼檔].[C:應用分類]=11
+       回值類型：多重回值
+     2.新增/修改時：
+       參考函式：依標準查詢視窗
+       開窗編號 : q_oocq002
+       查詢欄位：[T:應用分類碼檔].[C:應用分類碼],[T:應用分類碼多語言檔].[C:說明]
+       過濾條件：[T:應用分類碼檔].[C:應用分類]=11
+       回值類型：單一回值]]>
+  </field>
+  <field cite_std="N" name="oogb_t.oogb010" ver="1" src="s" column="oogb010" table="oogb_t" attribute="N401" type="number(5,0)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oogb_t.oogbcrtdp" ver="1" src="s" column="oogbcrtdp" table="oogb_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oogb_t.oogbcrtdt" ver="1" src="s" column="oogbcrtdt" table="oogb_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oogb_t.oogbcrtid" ver="1" src="s" column="oogbcrtid" table="oogb_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oogb_t.oogbmoddt" ver="1" src="s" column="oogbmoddt" table="oogb_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oogb_t.oogbmodid" ver="1" src="s" column="oogbmodid" table="oogb_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oogb_t.oogbowndp" ver="1" src="s" column="oogbowndp" table="oogb_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oogb_t.oogbownid" ver="1" src="s" column="oogbownid" table="oogb_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="2" name="oogb001_desc" src="s" depend_field="oogb_t.oogb001" correspon_key="&apos;4&apos;,oogb001" ref_table="ooall_t" ref_fk="ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield cite_std="N" ver="2" name="oogb003_desc" src="s" depend_field="oogb_t.oogb003" correspon_key="&apos;6&apos;,oogb003" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="2" name="oogb005_desc" src="s" depend_field="oogb_t.oogb005" correspon_key="&apos;7&apos;,oogb005" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="2" name="oogb006_desc" src="s" depend_field="oogb_t.oogb006" correspon_key="&apos;8&apos;,oogb006" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="2" name="oogb007_desc" src="s" depend_field="oogb_t.oogb007" correspon_key="&apos;9&apos;,oogb007" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="2" name="oogb008_desc" src="s" depend_field="oogb_t.oogb008" correspon_key="&apos;10&apos;,oogb008" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="2" name="oogb009_desc" src="s" depend_field="oogb_t.oogb009" correspon_key="&apos;11&apos;,oogb008" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="oogbcrtdp_desc" src="s" depend_field="oogb_t.oogbcrtdp" correspon_key="oogbcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="oogbcrtid_desc" src="s" depend_field="oogb_t.oogbcrtid" correspon_key="oogbcrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="oogbmodid_desc" src="s" depend_field="oogb_t.oogbmodid" correspon_key="oogbmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="oogbowndp_desc" src="s" depend_field="oogb_t.oogbowndp" correspon_key="oogbowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="oogbownid_desc" src="s" depend_field="oogb_t.oogbownid" correspon_key="oogbownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="lbl_date_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_week_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_year" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oogb_t.oogb001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oogb_t.oogb002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oogb_t.oogb003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oogb_t.oogb004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oogb_t.oogb005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oogb_t.oogb006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oogb_t.oogb007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oogb_t.oogb008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oogb_t.oogb009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oogb_t.oogb010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oogb_t.oogbcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oogb_t.oogbcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oogb_t.oogbcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oogb_t.oogbmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oogb_t.oogbmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oogb_t.oogbowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oogb_t.oogbownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="aooi410_01" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[例假日產生：
+   校驗:無
+   處理:開啟畫面:有，呼叫子作業aooi410_1，輸入要產生的日期區間，整批產生資料
+]]>
+  </act>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_oogb001" text="行事曆參照表號" lstr=""/>
+    <sfield name="lbl_ooall004" text="說明" lstr=""/>
+    <sfield name="lbl_year" text="年度" lstr=""/>
+    <sfield name="lbl_oogb010" text="年度" lstr=""/>
+    <sfield name="bpage_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_acti" text="有效" lstr=""/>
+    <sfield name="lbl_oogb002" text="日期" lstr=""/>
+    <sfield name="lbl_week_desc" text="星期" lstr=""/>
+    <sfield name="week.0" text="日" lstr=""/>
+    <sfield name="week.1" text="一" lstr=""/>
+    <sfield name="week.2" text="二" lstr=""/>
+    <sfield name="week.3" text="三" lstr=""/>
+    <sfield name="week.4" text="四" lstr=""/>
+    <sfield name="week.5" text="五" lstr=""/>
+    <sfield name="week.6" text="六" lstr=""/>
+    <sfield name="lbl_date_desc" text="農曆日" lstr=""/>
+    <sfield name="lbl_oogb003" text="休假類型" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_oogb004" text="原因說明" lstr=""/>
+    <sfield name="lbl_oogb005" text="分類一" lstr=""/>
+    <sfield name="lbl_oogb006" text="分類二" lstr=""/>
+    <sfield name="lbl_oogb007" text="分類三" lstr=""/>
+    <sfield name="lbl_oogb008" text="分類四" lstr=""/>
+    <sfield name="lbl_oogb009" text="分類五" lstr=""/>
+    <sfield name="bpage_info" text="狀態" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="modid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="ownid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="owndp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="crtid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="crtdp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_collect_gzze001" text="訊息代碼" lstr=""/>
+    <sfield name="lbl_collect_gzze003" text="訊息內容" lstr=""/>
+    <sfield name="lbl_collect_gzze006" text="進階訊息" lstr=""/>
+    <sfield name="lbl_cl_err_s02_accept" text="確定" lstr=""/>
+    <sfield name="lbl_err_detail" text="進階訊息" lstr=""/>
+    <sfield name="lbl_suggest_exe" text="建議執行" lstr=""/>
+    <sfield name="lbl_err_contact" text="反應問題" lstr=""/>
+    <sfield name="lbl_cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="lbl_group_cl_err_s01" text="進階訊息" lstr=""/>
+    <sfield name="lbl_gzze001" text="訊息代碼:" lstr=""/>
+    <sfield name="lbl_gzze006" text="訊息內容:" lstr=""/>
+    <sfield name="lbl_sqlerrd2" text="SQL錯誤碼:" lstr=""/>
+    <sfield name="lbl_gzxm001" text="QBE編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm005" text="設為首頁-自動查詢方案" lstr=""/>
+    <sfield name="lbl_gzxm002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxm003" text="員工編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm004" text="設為預設查詢條件" lstr=""/>
+    <sfield name="cl_qbe_s02.bpage_1" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn005" text="欄位說明" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="cl_qbe_s02_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s02_Cancel" text="取消" lstr=""/>
+    <sfield name="lbl_funid" text="函式代碼" lstr=""/>
+    <sfield name="lbl_fundesc" text="函式說明" lstr=""/>
+    <sfield name="cl_qbe_s01_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s01_Cancel" text="取消" lstr=""/>
+    <sfield name="cl_qbe_s03.bpage_1" text="查詢方案列表" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxmstus" text="有效" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm004" text="預設" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm005" text="顯示於首頁" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm009" text="順序" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxml005" text="查詢方案說明" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm007" text="自設SQL條件" lstr=""/>
+    <sfield name="cl_qbe_s03.page_2" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn004" text="序號" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn005" text="條件欄位" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="lbl_oogb002_1" text="日期起迄" lstr=""/>
+    <sfield name="lbl_to" text="~" lstr=""/>
+    <sfield name="lbl_week" text="星期(例假日打勾)" lstr=""/>
+    <sfield name="lbl_ooga002_1" text="一" lstr=""/>
+    <sfield name="lbl_ooga002_2" text="二" lstr=""/>
+    <sfield name="lbl_ooga002_3" text="三" lstr=""/>
+    <sfield name="lbl_ooga002_4" text="四" lstr=""/>
+    <sfield name="lbl_ooga002_5" text="五" lstr=""/>
+    <sfield name="lbl_ooga002_6" text="六" lstr=""/>
+    <sfield name="lbl_ooga002_7" text="日" lstr=""/>
+    <sfield name="page_cl_doc_s01_page1" text="相關文件清單" lstr=""/>
+    <sfield name="lbl_loaa006" text="文件版本" lstr=""/>
+    <sfield name="lbl_loaa007" text="文件序號" lstr=""/>
+    <sfield name="lbl_loaa011" text="文件型態" lstr=""/>
+    <sfield name="lbl_loaa013" text="文件說明" lstr=""/>
+    <sfield name="lbl_loaa010" text="文件原始檔名" lstr=""/>
+    <sfield name="btn_upload" text="本地文件上傳" lstr=""/>
+    <sfield name="btn_crt_text" text="新建純文字紀錄" lstr=""/>
+    <sfield name="btn_doccrt_url" text="新建URL" lstr=""/>
+    <sfield name="btn_docopen" text="文件下載" lstr=""/>
+    <sfield name="btn_docupdate" text="文件資料修改" lstr=""/>
+    <sfield name="btn_docremove" text="文件刪除" lstr=""/>
+    <sfield name="btn_exit" text="關閉功能" lstr=""/>
+    <sfield name="page_cl_doc_s01_page2" text="文件基本資料" lstr=""/>
+    <sfield name="lbl_loaa004" text="用途類別" lstr=""/>
+    <sfield name="lbl_loaa005" text="預設顯示圖片" lstr=""/>
+    <sfield name="lbl_loaa012" text="文件位置(URL)" lstr=""/>
+    <sfield name="page_cl_doc_s01_page4" text="權限設定" lstr=""/>
+    <sfield name="group_read" text="讀取權限" lstr=""/>
+    <sfield name="group_modify" text="修改權限" lstr=""/>
+    <sfield name="page_cl_doc_s01_page3" text="異動資訊" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="btn_doccancel" text="放棄修改" lstr=""/>
+    <sfield name="btn_docmodify" text="資料存檔" lstr=""/>
+    <sfield name="lbl_gzxp007_1" text="選擇分類" lstr=""/>
+    <sfield name="add_catalog" text="" lstr=""/>
+    <sfield name="lbl_gzxp007_2" text="自訂分類" lstr=""/>
+    <sfield name="lbl_gzxp008" text="追蹤說明" lstr=""/>
+    <sfield name="accept" text="確定" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="follow_list" text="待追蹤" lstr=""/>
+    <sfield name="signature_list" text="待簽核" lstr=""/>
+    <sfield name="announcement" text="作業公告" lstr=""/>
+    <sfield name="cancelfollow" text="取消追蹤" lstr=""/>
+    <sfield name="assigncatalog" text="指定分類" lstr=""/>
+    <sfield name="cl_user_overview_s01.lbl_name" text="" lstr=""/>
+    <sfield name="lbl_gzxp002" text="作業名稱" lstr=""/>
+    <sfield name="lbl_gzxp006" text="單據日期" lstr=""/>
+    <sfield name="add_favorite_catalog" text="新增目錄" lstr=""/>
+    <sfield name="modify_favorite_desc" text="修改" lstr=""/>
+    <sfield name="favorite_del" text="移除" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_ooal001" text="參照表類型" lstr=""/>
+    <sfield name="lbl_ooal002" text="參照表編號" lstr=""/>
+    <sfield name="lbl_ooall005" text="助記碼" lstr=""/>
+    <sfield name="lbl_oocq002" text="應用分類碼" lstr=""/>
+    <sfield name="lbl_ooag001" text="員工編號" lstr=""/>
+    <sfield name="lbl_ooea001" text="組織編號" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="cl_ask_s04_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s03_Test" text="測試" lstr=""/>
+    <sfield name="cl_ask_s03_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s01_Choice" text="選擇" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="cl_progress_bar_Current" text="目前進度" lstr=""/>
+    <sfield name="cl_progress_bar_Total" text="全部" lstr=""/>
+    <sfield name="cl_progress_bar_%" text="%" lstr=""/>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="lbl_select" text="選擇" lstr=""/>
+    <sfield name="lbl_gzgdl002" text="樣板說明" lstr=""/>
+    <sfield name="lbl_gzgd003" text="客製否" lstr=""/>
+    <sfield name="lbl_gzgd007" text="樣板名稱(4rp)" lstr=""/>
+    <sfield name="lbl_outputformat" text="輸出格式" lstr=""/>
+    <sfield name="lbl_outputformat_1" text="預覽與列印(SVG)" lstr=""/>
+    <sfield name="lbl_outputformat_2" text="Adobe Acrobat (PDF)" lstr=""/>
+    <sfield name="lbl_outputformat_3" text="Microsoft Excel (XLS)" lstr=""/>
+    <sfield name="lbl_outputformat_4" text="Microsoft Excel (XLS) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_5" text="Microsoft Excel (XLSX)" lstr=""/>
+    <sfield name="lbl_outputformat_6" text="Microsoft Excel (XLSX) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_7" text="Microsoft Word (RTF)" lstr=""/>
+    <sfield name="lbl_outputformat_8" text="網頁 (HTML)" lstr=""/>
+    <sfield name="lbl_outputformat_9" text="郵件 (Mail)" lstr=""/>
+    <sfield name="lbl_set_default" text="設為預設樣版" lstr=""/>
+    <sfield name="lbl_btn_accept" text="確定" lstr=""/>
+    <sfield name="lbl_btn_cancel" text="放棄" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_gzza003" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzza001" text="程式編號" lstr=""/>
+    <sfield name="lbl_gzza002" text="程式類別" lstr=""/>
+    <sfield name="lbl_gzde002" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzde001" text="規格編號" lstr=""/>
+    <sfield name="lbl_gzdel003" text="說明" lstr=""/>
+    <sfield name="lbl_gzdf002" text="子畫面規格編號" lstr=""/>
+    <sfield name="lbl_gzdfl003" text="子畫面檔案名稱" lstr=""/>
+    <sfield name="lbl_gzcbl004" text="說明" lstr=""/>
+    <sfield name="lbl_gzde003" text="規格類別" lstr=""/>
+    <sfield name="lbl_dzfv004" text="畫面代號" lstr=""/>
+    <sfield name="lbl_dzfv005" text="主/子程式" lstr=""/>
+    <sact name="aooi410_01" text="例假日產生" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

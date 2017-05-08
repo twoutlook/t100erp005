@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astr840_g01" module="ast" jobmode="N" type="g01" industry="std" crtid="07142" crtdt="2016-06-07 21:07:02" modid="07142" moddt="2016-11-09 14:30:13" sdver="6" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.wc1(STRING|费用单明细)">
+    <var seq="1" value="stbe005,l_gysdesc(chr100|NULL),stbe013,stbeseq,stbd006,stbd005,stbd018,stbd017,stbd037,stbd002,stbe017,stbdunit,stbdstus,stbdent,l_zje(chr30|NULL),stbd033,l_cdfp(chr30|NULL),l_fyje(chr30|NULL),l_fymc(chr30|NULL),l_dep(chr30|NULL),l_bz(chr50|NULL),l_cc(chr30|NULL),l_n(chr30|NULL),l_kp(num15_3|NULL),stbddocno,stbd026,stbd025,stax_t_stax004(stax004|stax_t.stax004),stael_t_stael003(stael003|stael_t.stael003),stbe034,stbe031,l_stbe013(num20_6|&apos;&apos;),stbd021,l_stbd021(chr50|NULL),l_stje028(chr30|NULL),l_stje028_desc(chr30|NULL),stbdsite,l_stbdsite(chr50|NULL),l_stbd033(chr30|NULL),stbd047"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="stbe005,l_gysdesc(chr100|NULL),stbe013,stbeseq,stbd006,stbd005,stbd018,stbd017,stbd037,stbd002,stbe017,stbdunit,stbdstus,stbdent,l_zje(chr30|NULL),stbd033,l_cdfp(chr30|NULL),l_fyje(chr30|NULL),l_fymc(chr30|NULL),l_dep(chr30|NULL),l_bz(chr50|NULL),l_cc(chr30|NULL),l_n(chr30|NULL),l_kp(num15_3|NULL),stbddocno,stbd026,stbd025,stax_t_stax004(stax004|stax_t.stax004),stael_t_stael003(stael003|stael_t.stael003),stbe034,stbe031,l_stbe013(num20_6|&apos;&apos;),stbd021,l_stbd021(chr50|NULL),l_stje028(chr30|NULL),l_stje028_desc(chr30|NULL),stbdsite,l_stbdsite(chr50|NULL),l_stbd033(chr30|NULL),stbd047"/>
+    <sql id="g_from" query="stbd_t,stbe_t,stax_t,stael_t"/>
+    <sql id="g_where" query="" maintable="stbd_t"/>
+    <sql id="g_order" query="stbddocno"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="stbddocno"/>
+    <section id="b_group" reptype="d01">
+      <rep type="stbddocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="stbdent,stbddocno"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="stbdent,stbddocno"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="stbdent,stbddocno"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="stbddocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="stbdent,stbddocno"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

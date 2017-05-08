@@ -1,0 +1,1554 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="azzi931" std_prog="azzi931" erpver="1.0" module="AZZ" ver="3" env="s" zone="t10prd" booking="N" type="M" identity="s" section_flag="Y" designer_ver="1.0">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="Y" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="function.azzi931_init" order="1" ver="2" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi931_init()
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+   
+   LET g_hidden_4tm = TRUE     #是否不載入TopMenu TRUE:不載入, FALSE:載入
+   LET g_hidden_4tb = TRUE     #是否不載入ToolBar TRUE:不載入, FALSE:載入
+   LET ms_dgenv = FGL_GETENV("DGENV") CLIPPED
+   
+   CALL s_azzi932_syncway() RETURNING g_syncway
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi931_issue_set_entry" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi931_issue_set_entry(p_cmd)
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_entry段define
+
+   #end add-point
+
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("gzwg001,gzwg002",TRUE)
+      #add-point:set_entry段欄位控制
+
+      #end add-point
+   END IF
+
+   #add-point:set_entry段欄位控制後
+
+   #end add-point
+
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi931_issue_set_no_entry" order="3" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzi931_issue_set_no_entry(p_cmd)
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_no_entry段define
+
+   #end add-point
+
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("gzwg001,gzwg002",FALSE)
+      #add-point:set_no_entry段欄位控制
+
+      #end add-point
+   END IF
+
+   #add-point:set_no_entry段欄位控制後
+
+   #end add-point
+
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi931_issue_init" order="4" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 問題反映
+# Memo...........:
+# Usage..........: CALL azzi931_issue_init()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi931_issue_init()
+   DEFINE l_colname          STRING
+   DEFINE l_comment          STRING
+   DEFINE l_dn01             om.DomNode
+   DEFINE l_dn02             om.DomNode
+   
+   CALL cl_set_combo_scc('gzwi002','140')  #類別
+   CALL cl_set_combo_module("gzwi003",1)   #模組   
+   
+   INITIALIZE g_gzwi_m.* LIKE gzwi_t.*             #DEFAULT 設定
+   LET g_gzwi_m.gzwi017 = g_enterprise   #反映企業代碼
+   LET g_gzwi_m.gzwiownid = g_user
+   LET g_gzwi_m.gzwiowndp = g_dept
+   LET g_gzwi_m.gzwicrtid = g_user
+   LET g_gzwi_m.gzwicrtdp = g_dept 
+   #LET g_gzwi_m.gzwicrtdt = cl_get_current()
+   LET g_gzwi_m.gzwimodid = ""
+   LET g_gzwi_m.gzwimoddt = ""
+   LET g_gzwi_m.gzwistus = "Y"
+   
+   LET g_gzwi_m.gzwi003 = g_module     #模組
+   LET g_gzwi_m.gzwi008 = g_progcode   #作業編號
+   CALL cl_get_progname(g_gzwi_m.gzwi008,g_lang,"1") RETURNING g_gzwi_m.gzwi008_desc   #作業程式名稱
+   LET g_gzwi_m.gzwi010 = "N"                      #緊急案件
+   LET g_gzwi_m.gzwi011 = "1"                      #開立
+   LET g_gzwi_m.gzwi002 = "1"                      #問題分類
+   
+   LET g_gzwi_m.gzwi005 = g_gzwi_m.gzwicrtid       #反映人員
+   #取得聯絡對象檔與單位資料-反映人員
+   CALL s_azzi930_oofa_sel_2(g_enterprise,"2",g_gzwi_m.gzwi005) RETURNING g_oofa_sel[1].*
+   LET g_gzwi_m.gzwi005_desc = g_oofa_sel[1].oofa011
+   LET g_gzwi_m.gzwi005dp_desc = g_oofa_sel[1].ooefl003_dp
+   LET g_gzwi_m.gzwi006 = g_site                #g_oofa_sel[1].ooag004
+   LET g_gzwi_m.gzwi005op_desc = g_oofa_sel[1].ooefl003_site
+
+   #與服務平台同步方式 alm,almhelp,eservice
+   IF g_syncway = "alm" THEN
+      LET gc_is_helptoalm = "Y"
+      CALL gfrm_curr.setElementHidden("formonly.is_helptoalm",0)
+      CALL s_azzi902_get_gzzd("azzi931","lbl_is_helptoalm_digiwin") RETURNING l_colname, l_comment
+      #CheckBox的text在FormField的子節點中
+      LET l_dn01 = gfrm_curr.findNode("FormField", "formonly.is_helptoalm")
+      IF l_dn01.getChildCount() > 0 THEN
+         LET l_dn02 = l_dn01.getFirstChild()
+         CALL l_dn02.setAttribute("text", l_colname)
+      END IF
+   ELSE
+      LET gc_is_helptoalm = "N"
+      CALL gfrm_curr.setElementHidden("formonly.is_helptoalm",1)
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi931_ui_dialog" order="5" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL azzi931_ui_dialog()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi931_ui_dialog()
+   DEFINE l_str              STRING
+   DEFINE l_i                LIKE type_t.num5
+   DEFINE l_j                LIKE type_t.num5
+   DEFINE l_cnt              LIKE type_t.num5
+   DEFINE l_gzwj004_t        LIKE gzwj_t.gzwj004 	     #附件檔名
+   DEFINE l_chk              BOOLEAN
+   DEFINE l_attach           STRING                     #mail附件路徑字串
+   DEFINE l_size             LIKE type_t.num10          #檔案大小
+   DEFINE l_size_sum         LIKE type_t.num10          #檔案大小總和
+   DEFINE l_size_limt        LIKE type_t.num10          #檔案大小限制
+   DEFINE l_size_limt_mb     LIKE type_t.num10          #檔案大小限制(MB)
+   DEFINE ls_upload          STRING
+   DEFINE l_now_str          STRING
+   DEFINE l_new_path         STRING
+   DEFINE ls_pid             STRING
+   DEFINE l_tok              base.StringTokenizer
+   DEFINE l_file_basename    STRING                     #檔名
+   DEFINE l_file_extension   STRING                     #副檔名
+   DEFINE l_file_blob        LIKE type_t.blob
+   DEFINE l_browser          DYNAMIC ARRAY OF type_browser
+   DEFINE l_diffold          type_g_gzwo_inc            #原始資料
+   DEFINE l_diffnew          type_g_gzwo_inc            #異動後
+   DEFINE l_gzwi009          LIKE gzwi_t.gzwi009        #案件代號
+   DEFINE l_tarfile          STRING
+   DEFINE l_change_mail      BOOLEAN                    #是否因資料改變而需要寄送mail
+   DEFINE l_colname          STRING
+   DEFINE l_comment          STRING
+   
+   #有CALL s_azzi933_create_html,必須放在cl_ui_init之後,否則畫面載入4st異常
+   CALL azzi931_userguide_init()    #操作說明
+   CALL azzi931_issue_init()        #問題反映
+   CALL azzi931_support_init()      #聯絡客服
+
+   LOCATE l_file_blob IN MEMORY   #blob必須先用LOCATE初始化
+   LET l_chk = TRUE
+
+   #LET g_forupd_sql = "SELECT gzwj002,gzwj003 FROM gzwj_t WHERE gzwj001=? AND gzwj002=? FOR UPDATE"
+   #LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   #LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   #DECLARE azzi931_issue_bcl CURSOR FROM g_forupd_sql
+
+   LET g_sql = "INSERT INTO gzwi_t (gzwi001,gzwi002,gzwi003,gzwi004,gzwi005,",
+                                  " gzwi006,gzwi007,gzwi008,gzwi010,",
+                                  " gzwi011,gzwi013,gzwi014,gzwi015,",
+                                  " gzwi016,gzwi017,gzwi018,",
+                                  " gzwistus,gzwiownid,gzwiowndp,gzwicrtid,gzwicrtdp,gzwicrtdt)",
+               " VALUES (?,?,?,?,? ,?,?,?,?,? ,?,?,?,?,? ,?,?,?,?,? ,?,?)"
+   PREPARE azzi931_issue_ins_pre01 FROM g_sql
+
+   LET g_sql = "INSERT INTO gzwj_t (gzwj001,gzwj002,gzwj003,gzwj004,gzwj005,gzwj006,gzwj007)",
+               " VALUES (?,?,?,?,? ,?,?)"
+   PREPARE azzi931_issue_ins_pre02 FROM g_sql
+
+   DISPLAY BY NAME g_gzwi_m.gzwi005_desc,g_gzwi_m.gzwi005dp_desc,g_gzwi_m.gzwi008_desc
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      #問題反映輸入
+      INPUT g_gzwi_m.gzwi002,g_gzwi_m.gzwi003,g_gzwi_m.gzwi008,g_gzwi_m.gzwi005,g_gzwi_m.gzwi010,g_gzwi_m.gzwi004,ls_upload,gc_is_helptoalm
+         FROM gzwi002,gzwi003,gzwi008,gzwi005,gzwi010,gzwi004,formonly.upload,is_helptoalm
+         ATTRIBUTE(WITHOUT DEFAULTS)
+
+         #BEFORE INPUT
+         #   CALL cl_web_set_action_visible("accept",FALSE)
+			#   IF FGL_GETENV("GUIMODE") = "GWC" THEN    #"":telnet/GDC/GWC
+			#      CALL cl_web_set_comp_visible("file_browse",TRUE)
+			#   ELSE
+			#      CALL cl_web_set_comp_visible("file_browse",FALSE)
+			#   END IF
+
+			AFTER FIELD gzwi005   #反映人員
+            IF NOT s_azzi930_chk_isExist_gzwg004(g_enterprise,"2",g_gzwi_m.gzwi005) THEN   #檢查反映人員基本資料是否存在
+               #NEXT FIELD gzwi005
+            ELSE
+               CALL s_azzi930_oofa_sel_2(g_enterprise,"2",g_gzwi_m.gzwi005) RETURNING g_oofa_sel[1].*
+               LET g_gzwi_m.gzwi005_desc = g_oofa_sel[1].oofa011
+               LET g_gzwi_m.gzwi005dp_desc = g_oofa_sel[1].ooefl003_dp
+               LET g_gzwi_m.gzwi006 = g_site                #g_oofa_sel[1].ooag004
+               LET g_gzwi_m.gzwi005op_desc = g_oofa_sel[1].ooefl003_site  #g_oofa_sel[1].ooefl003_op
+               DISPLAY BY NAME g_gzwi_m.gzwi005_desc,g_gzwi_m.gzwi005dp_desc
+            END IF
+
+         AFTER FIELD gzwi008   #作業編號
+            IF NOT cl_null(g_gzwi_m.gzwi008) THEN
+               LET l_str = g_gzwi_m.gzwi003      #備份模組
+               CALL s_azzi933_get_module_by_prog(g_gzwi_m.gzwi008) RETURNING g_gzwi_m.gzwi003   #模組
+               IF cl_null(g_gzwi_m.gzwi003) THEN
+                  CALL cl_get_module(g_gzwi_m.gzwi008,"S") RETURNING g_gzwi_m.gzwi003
+               END IF
+               
+               IF cl_null(g_gzwi_m.gzwi003) THEN
+                  LET g_gzwi_m.gzwi003 = l_str   #還原模組
+               END IF
+               CALL cl_get_progname(g_gzwi_m.gzwi008,g_lang,"1") RETURNING g_gzwi_m.gzwi008_desc   #作業程式名稱
+            ELSE
+               LET g_gzwi_m.gzwi008_desc = NULL
+            END IF
+            DISPLAY g_gzwi_m.gzwi008_desc TO gzwi008_desc    #顯示到畫面上
+
+         #不檢查作業編號,因為部分模組(例如LIB,SUB)不屬於azzi910
+         #AFTER FIELD gzwi008
+         #   IF  NOT cl_null(g_gzwi_m.gzwi008) THEN
+         #      LET g_sql = "SELECT COUNT(*) FROM gzzz_t WHERE gzzz001 = ?"
+         #      PREPARE azzi931_chk_prog_pre FROM g_sql
+         #      EXECUTE azzi931_chk_prog_pre USING g_gzwi_m.gzwi008 INTO l_cnt
+         #      FREE azzi931_chk_prog_pre
+         #      IF l_cnt = 0 THEN
+         #         LET g_gzwi_m.gzwi008 = NULL
+         #         CALL cl_err('','azz-00083',1)
+         #         NEXT FIELD CURRENT
+         #      END IF
+         #   END IF
+
+         ON ACTION controlp INFIELD gzwi005   #反映人員
+            #add-point:ON ACTION controlp INFIELD gzwg004
+            #此段落由子樣板a07產生
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_gzwi_m.gzwi005      #給予default值
+            CALL q_ooag001()                                #呼叫開窗
+            LET g_gzwi_m.gzwi005 = g_qryparam.return1
+            DISPLAY g_gzwi_m.gzwi005 TO gzwi005
+            NEXT FIELD CURRENT                              #返回原欄位
+
+         ON ACTION controlp INFIELD gzwi008   #作業編號
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = "i"
+            LET g_qryparam.reqry = FALSE
+            IF NOT cl_null(g_gzwi_m.gzwi003) THEN
+               LET g_qryparam.where = "gzzz005 = '",g_gzwi_m.gzwi003 CLIPPED,"'"
+            END IF
+            CALL q_gzzz001_1()                     #呼叫開窗
+            LET g_gzwi_m.gzwi008 = g_qryparam.return1
+            CALL cl_get_progname(g_gzwi_m.gzwi008,g_lang,"1") RETURNING g_gzwi_m.gzwi008_desc   #作業程式名稱
+            DISPLAY g_gzwi_m.gzwi008,g_gzwi_m.gzwi008_desc TO gzwi008,gzwi008_desc    #顯示到畫面上
+
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+
+            #CALL cl_showmsg()      #錯誤訊息統整顯示
+            #DISPLAY BY NAME g_gzwi_m.gzwi001
+            #LET g_gzwi001_t = g_gzwi_m.gzwi001
+      END INPUT
+
+      #操作說明
+      INPUT g_wc_userguide FROM wc_userguide
+      END INPUT
+
+      INPUT ARRAY g_gzwj_arr FROM s_detail1.*
+            ATTRIBUTES(APPEND ROW=FALSE, INSERT ROW=FALSE, DELETE ROW=FALSE)
+         BEFORE ROW
+            LET l_ac_1 = DIALOG.getCurrentRow("s_detail1")
+            LET l_gzwj004_t = g_gzwj_arr[l_ac_1].gzwj004
+         ON CHANGE gzwj004
+            IF cl_null(g_gzwj_arr[l_ac_1].gzwj004) THEN
+               LET g_gzwj_arr[l_ac_1].gzwj004 = l_gzwj004_t
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "adz-00255"
+               LET g_errparam.extend = ""
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               NEXT FIELD CURRENT
+            END IF
+         ON ACTION controlp INFIELD gzwj004
+            #DISPLAY g_gzwj_arr[l_ac_1].gzwj004,", ",g_gzwj_arr[l_ac_1].gzwj005
+            #DISPLAY g_gzwj_arr[l_ac_1].tmpfile
+            IF os.Path.delete(g_gzwj_arr[l_ac_1].tmpfile) THEN
+               CALL g_gzwj_arr.deleteElement(l_ac_1)
+               LET l_cnt = g_gzwj_arr.getLength()
+               IF l_cnt = 0 THEN
+                  CALL gfrm_curr.setElementHidden("s_detail1",1)
+               ELSE
+                  CALL gfrm_curr.setElementHidden("s_detail1",0)
+               END IF
+            END IF
+      END INPUT
+
+      #聯絡客服
+      INPUT g_wc_support FROM wc_support #ATTRIBUTES(WITHOUT DEFAULTS=TRUE)
+      END INPUT
+
+      BEFORE DIALOG
+         LET g_curr_diag = ui.Dialog.getCurrent()
+         LET l_cnt = g_gzwj_arr.getLength()
+         IF l_cnt = 0 THEN
+            CALL gfrm_curr.setElementHidden("s_detail1",1)
+         END IF
+
+         CASE g_switch   #1:操作說明,2:問題反映,3:聯絡客服,4:FAQ,5:專家社群,6:相關流程
+            WHEN "1"
+               NEXT FIELD wc_userguide
+            WHEN "2"
+               NEXT FIELD gzwi002
+            WHEN "3"
+               NEXT FIELD wc_support
+         END CASE
+
+         IF FGL_GETENV("GUIMODE") = "GWC" THEN    #"":telnet/GDC/GWC
+            CALL gfrm_curr.setElementHidden("file_browse",1)   #選取上傳檔案,GDC專用
+         END IF
+
+      ON ACTION focus_page_1
+         #要到這一頁才設錨點,若在init時設定會導致focus位置不準
+         #CALL cl_marquee_property_comp("wc_userguide", "wc_locationhash", "C4")
+         NEXT FIELD wc_userguide
+      ON ACTION focus_page_2
+      ON ACTION focus_page_3
+         NEXT FIELD wc_support
+
+      ON ACTION focus_page_4
+      ON ACTION focus_page_5
+      ON ACTION focus_page_6
+
+
+      ON ACTION file_browse   #選取上傳檔案,GDC專用
+         CALL cl_client_browse_file() RETURNING ls_upload
+         #CALL ui.Interface.frontCall("standard","openfile",
+         #                            ["C:", "All Files", "*.*", "File Browser"],
+         #                            [ls_upload])
+
+      ON ACTION file_upload #上傳檔案
+         IF NOT cl_null(ls_upload) THEN   #C:/Users/P12345/Desktop/title/hlep_titlebg1.png
+            LET l_file_extension = os.Path.extension(ls_upload)        #副檔名
+            LET l_file_basename = os.Path.basename(ls_upload)          #原始檔名
+            IF NOT cl_null(l_file_extension) THEN    #拿掉副檔名
+               LET l_str = ".",l_file_extension
+               LET l_file_basename = cl_replace_str(l_file_basename, l_str, "")
+            END IF
+
+            #放在暫存目錄要改名,避免檔名重複
+            LET ls_pid = FGL_GETPID()
+            LET g_num = g_num + 1
+            LET l_str = g_num
+            LET l_new_path = g_prog CLIPPED,"_",ls_pid CLIPPED,"_",g_user CLIPPED,"_",l_str CLIPPED,".",l_file_extension
+            LET l_new_path = os.Path.join(FGL_GETENV("TEMPDIR"),l_new_path CLIPPED)
+            CALL FGL_GETFILE(ls_upload,l_new_path)   #Transfers a file from the front end workstation to the application server machine.
+            IF os.Path.exists(l_new_path) THEN
+               LET l_i = g_gzwj_arr.getLength() + 1
+               LET l_size =  os.Path.size(l_new_path)
+               LET l_size_sum = l_size
+               FOR l_j = 1 TO g_gzwj_arr.getLength()
+                  LET l_size_sum = l_size_sum + g_gzwj_arr[l_j].l_size
+               END FOR
+               CALL s_azzi932_filelimt(l_size_sum) RETURNING l_chk   #檔案大小總和限制
+
+               IF NOT l_chk THEN
+                  CONTINUE DIALOG
+               ELSE
+                  LET g_gzwj_arr[l_i].gzwj004 = l_file_basename
+                  LET g_gzwj_arr[l_i].gzwj005 = l_file_extension
+                  LET g_gzwj_arr[l_i].tmpfile = l_new_path
+                  LET g_gzwj_arr[l_i].l_size = l_size
+               END IF
+
+               LET l_cnt = g_gzwj_arr.getLength()
+               IF l_cnt = 0 THEN
+                  CALL gfrm_curr.setElementHidden("s_detail1",1)
+               ELSE
+                  CALL gfrm_curr.setElementHidden("s_detail1",0)
+               END IF
+            ELSE
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "azz-00101"
+               LET g_errparam.extend = ""
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               CONTINUE DIALOG
+            END IF
+         END IF
+
+         ON ACTION mailto_support   #寄給客服
+            LET l_chk = TRUE
+            LET l_change_mail = FALSE
+            CASE
+               WHEN cl_null(g_gzwi_m.gzwi002)          #問題分類
+                  CALL s_azzi902_get_gzzd("azzi932","lbl_gzwi002") RETURNING l_colname, l_comment
+                  
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = "adz-00255"
+                  LET g_errparam.extend = l_colname
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  NEXT FIELD gzwi002
+
+               WHEN cl_null(g_gzwi_m.gzwi003)          #模組
+                  CALL s_azzi902_get_gzzd("azzi932","lbl_gzwi003") RETURNING l_colname, l_comment
+                  
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = "adz-00255"
+                  LET g_errparam.extend = l_colname
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  NEXT FIELD gzwi003
+
+               WHEN cl_null(g_gzwi_m.gzwi004)          #問題描述
+                  CALL s_azzi902_get_gzzd("azzi932","lbl_gzwi004") RETURNING l_colname, l_comment
+                  
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = "adz-00255"
+                  LET g_errparam.extend = l_colname
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  NEXT FIELD gzwi004   #NEXT FIELD 可以不讓程式繼續往下執行,ui.Dialog.nextField 還要加CONTINUE DIALOG
+            END CASE
+
+            IF NOT s_azzi930_chk_isExist_gzwg004(g_enterprise,"2",g_gzwi_m.gzwi005) THEN   #檢查反映人員基本資料是否存在
+               NEXT FIELD gzwi005
+            END IF
+
+            CALL s_transaction_begin()
+
+            LET g_gzwi_m.gzwi014 = "1"                           #負責單位:1.MIS 2.E-Service
+            #LET g_gzwi_m.gzwi009 = NULL
+            LET g_gzwi_m.gzwi026 = NULL                          #日期要設NULL否則會是預設日期
+            #LET g_gzwi_m.gzwi027 = NULL
+            LET g_gzwi_m.gzwicrtdt = cl_get_current()            #2014-09-11 10:49:13
+            LET g_gzwi_m.gzwi013 = g_gzwi_m.gzwicrtdt            #反映日期
+
+            #處理人員
+            CALL s_azzi930_oofa_sel_3(g_enterprise,g_gzwi_m.gzwi006,g_gzwi_m.gzwi003,"gzwh004 = 'Y'") RETURNING g_oofa_sel
+            IF g_oofa_sel.getLength() > 0 THEN
+               LET g_gzwi_m.gzwi007 = g_oofa_sel[1].oofa001 CLIPPED   #處理人員-聯絡對象識別碼
+               LET g_gzwi_m.gzwi015 = g_oofa_sel[1].oofa002 CLIPPED   #處理人員類型
+               LET g_gzwi_m.gzwi018 = g_oofa_sel[1].oofa003 CLIPPED   #處理人員,聯絡對象代碼一oofa003
+            ELSE
+               CALL s_azzi930_oofa_sel_3(g_enterprise,g_gzwi_m.gzwi006,g_gzwi_m.gzwi003,"gzwh004 IS NULL") RETURNING g_oofa_sel
+               IF g_oofa_sel.getLength() > 0 THEN
+                  LET g_gzwi_m.gzwi007 = g_oofa_sel[1].oofa001 CLIPPED   #處理人員-聯絡對象識別碼
+                  LET g_gzwi_m.gzwi015 = g_oofa_sel[1].oofa002 CLIPPED   #處理人員類型
+                  LET g_gzwi_m.gzwi018 = g_oofa_sel[1].oofa003 CLIPPED   #處理人員,聯絡對象代碼一oofa003
+               ELSE
+                  CALL s_azzi930_oofa_sel_3(g_enterprise,g_gzwi_m.gzwi006,g_gzwi_m.gzwi003,"gzwh004 = 'N'") RETURNING g_oofa_sel
+                  IF g_oofa_sel.getLength() > 0 THEN
+                     LET g_gzwi_m.gzwi007 = g_oofa_sel[1].oofa001 CLIPPED   #處理人員-聯絡對象識別碼
+                     LET g_gzwi_m.gzwi015 = g_oofa_sel[1].oofa002 CLIPPED   #處理人員類型
+                     LET g_gzwi_m.gzwi018 = g_oofa_sel[1].oofa003 CLIPPED   #處理人員,聯絡對象代碼一oofa003
+                  END IF
+               END IF
+            END IF
+
+            #問題編號: 年月日+4碼流水號
+            CALL s_azzi930_gen_gzwi001(g_gzwi_m.gzwicrtdt) RETURNING g_gzwi_m.gzwi001,g_gzwi_m.gzwi016
+            EXECUTE azzi931_issue_ins_pre01 USING g_gzwi_m.gzwi001,g_gzwi_m.gzwi002,g_gzwi_m.gzwi003,g_gzwi_m.gzwi004,g_gzwi_m.gzwi005,
+                                                  g_gzwi_m.gzwi006,g_gzwi_m.gzwi007,g_gzwi_m.gzwi008,g_gzwi_m.gzwi010,
+                                                  g_gzwi_m.gzwi011,g_gzwi_m.gzwi013,g_gzwi_m.gzwi014,g_gzwi_m.gzwi015,
+                                                  g_gzwi_m.gzwi016,g_gzwi_m.gzwi017,g_gzwi_m.gzwi018,
+                                                  g_gzwi_m.gzwistus,g_gzwi_m.gzwiownid,g_gzwi_m.gzwiowndp,g_gzwi_m.gzwicrtid,g_gzwi_m.gzwicrtdp,g_gzwi_m.gzwicrtdt
+            IF SQLCA.sqlcode THEN
+               #同時有人新增,問題編號可能重複,再取一次編號
+               CALL s_azzi930_gen_gzwi001(g_gzwi_m.gzwicrtdt) RETURNING g_gzwi_m.gzwi001,g_gzwi_m.gzwi016
+               EXECUTE azzi931_issue_ins_pre01 USING g_gzwi_m.gzwi001,g_gzwi_m.gzwi002,g_gzwi_m.gzwi003,g_gzwi_m.gzwi004,g_gzwi_m.gzwi005,
+                                                     g_gzwi_m.gzwi006,g_gzwi_m.gzwi007,g_gzwi_m.gzwi008,g_gzwi_m.gzwi010,
+                                                     g_gzwi_m.gzwi011,g_gzwi_m.gzwi013,g_gzwi_m.gzwi014,g_gzwi_m.gzwi015,
+                                                     g_gzwi_m.gzwi016,g_gzwi_m.gzwi017,g_gzwi_m.gzwi018,
+                                                     g_gzwi_m.gzwistus,g_gzwi_m.gzwiownid,g_gzwi_m.gzwiowndp,g_gzwi_m.gzwicrtid,g_gzwi_m.gzwicrtdp,g_gzwi_m.gzwicrtdt
+               IF SQLCA.sqlcode THEN
+                  LET l_chk = FALSE
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CALL s_transaction_end('N','0')
+                  CONTINUE DIALOG
+               ELSE
+                  LET l_chk = TRUE
+               END IF
+            ELSE
+               LET l_chk = TRUE
+            END IF
+
+            IF l_chk THEN
+               LET l_attach = NULL
+               LET l_cnt = g_gzwj_arr.getLength()
+               IF l_cnt > 0 THEN
+                  LET g_gzwj_d.gzwj006 = "q"  #來源類型 q:問題附件; r:回覆附件
+                  LET g_gzwj_d.gzwj007 = g_gzwi_m.gzwi017   #反映企業代碼
+                  FOR l_i = 1 TO l_cnt
+                     LOCATE l_file_blob IN FILE g_gzwj_arr[l_i].tmpfile
+                     LET g_gzwj_d.gzwj002 = l_i
+                     LET g_gzwj_d.gzwj004 = g_gzwj_arr[l_i].gzwj004
+                     LET g_gzwj_d.gzwj005 = g_gzwj_arr[l_i].gzwj005
+                     EXECUTE azzi931_issue_ins_pre02 USING g_gzwi_m.gzwi001,g_gzwj_d.gzwj002,l_file_blob,g_gzwj_d.gzwj004,g_gzwj_d.gzwj005,
+                                                           g_gzwj_d.gzwj006,g_gzwj_d.gzwj007
+                     IF SQLCA.sqlcode THEN
+                        LET l_chk = FALSE
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = SQLCA.sqlcode
+                        LET g_errparam.extend = ""
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+
+                        CALL s_transaction_end('N','0')
+                        EXIT FOR
+                     END IF
+
+                     LET l_attach = l_attach CLIPPED,g_gzwj_arr[l_i].tmpfile CLIPPED,";"   #mail附件
+
+                  END FOR
+               END IF
+            END IF
+
+            IF l_chk THEN
+               LET l_diffold.gzwoownid = g_gzwi_m.gzwiownid  #資料所有者
+               LET l_diffold.gzwoowndp = g_gzwi_m.gzwiowndp  #資料所屬部門
+               LET l_diffold.gzwocrtid = g_gzwi_m.gzwicrtid  #資料建立者
+               LET l_diffold.gzwocrtdp = g_gzwi_m.gzwicrtdp  #資料建立部門
+               LET l_diffold.gzwocrtdt = g_gzwi_m.gzwicrtdt  #資料創建日
+               LET l_diffold.gzwomodid = g_gzwi_m.gzwimodid  #資料修改者
+               LET l_diffold.gzwomoddt = g_gzwi_m.gzwimoddt  #最近修改日
+               LET l_diffold.gzwostus  = g_gzwi_m.gzwistus   #狀態碼
+               LET l_diffold.gzwo001   = g_gzwi_m.gzwi001    #問題編號
+               LET l_diffold.gzwo002   = g_gzwi_m.gzwi002    #類別
+               LET l_diffold.gzwo003   = g_gzwi_m.gzwi003    #模組
+               LET l_diffold.gzwo004   = g_gzwi_m.gzwi004    #問題描述
+               LET l_diffold.gzwo005   = g_gzwi_m.gzwi005    #反映人員
+               LET l_diffold.gzwo006   = g_gzwi_m.gzwi006    #反映營運據點
+               LET l_diffold.gzwo007   = g_gzwi_m.gzwi007    #處理人員
+               LET l_diffold.gzwo008   = g_gzwi_m.gzwi008    #作業編號
+               LET l_diffold.gzwo009   = g_gzwi_m.gzwi009    #案件代號
+               LET l_diffold.gzwo010   = g_gzwi_m.gzwi010    #緊急案件
+               LET l_diffold.gzwo011   = g_gzwi_m.gzwi011    #處理狀態
+               LET l_diffold.gzwo012   = g_gzwi_m.gzwi012    #更新摘要
+               LET l_diffold.gzwo013   = g_gzwi_m.gzwi013    #反映日期
+               LET l_diffold.gzwo014   = g_gzwi_m.gzwi014    #負責單位
+               LET l_diffold.gzwo015   = g_gzwi_m.gzwi015    #處理人員類型
+               LET l_diffold.gzwo016   = g_gzwi_m.gzwi016    #流水號
+               LET l_diffold.gzwo017   = g_gzwi_m.gzwi017    #企業編號
+               LET l_diffold.gzwo018   = g_gzwi_m.gzwi018    #處理人員
+               LET l_diffold.gzwo019   = NULL                #規格預計完成日
+               LET l_diffold.gzwo020   = NULL                #規格實際完成日
+               LET l_diffold.gzwo021   = NULL                #預計完成日
+               LET l_diffold.gzwo022   = NULL                #實際完成日
+               LET l_diffold.gzwo026   = NULL                #最近同步時間
+               LET l_diffold.gzwo027   = NULL                #案件歷程
+                  
+               LET l_diffnew.gzwoownid = l_diffold.gzwoownid  #資料所有者
+               LET l_diffnew.gzwoowndp = l_diffold.gzwoowndp  #資料所屬部門
+               LET l_diffnew.gzwocrtid = l_diffold.gzwocrtid  #資料建立者
+               LET l_diffnew.gzwocrtdp = l_diffold.gzwocrtdp  #資料建立部門
+               LET l_diffnew.gzwocrtdt = l_diffold.gzwocrtdt  #資料創建日
+               LET l_diffnew.gzwomodid = l_diffold.gzwomodid  #資料修改者
+               LET l_diffnew.gzwomoddt = l_diffold.gzwomoddt  #最近修改日
+               LET l_diffnew.gzwostus  = l_diffold.gzwostus   #狀態碼
+               LET l_diffnew.gzwo001   = l_diffold.gzwo001    #問題編號
+               LET l_diffnew.gzwo002   = l_diffold.gzwo002    #類別
+               LET l_diffnew.gzwo003   = l_diffold.gzwo003    #模組
+               LET l_diffnew.gzwo004   = l_diffold.gzwo004    #問題描述
+               LET l_diffnew.gzwo005   = l_diffold.gzwo005    #反映人員
+               LET l_diffnew.gzwo006   = l_diffold.gzwo006    #反映營運據點
+               LET l_diffnew.gzwo007   = l_diffold.gzwo007    #處理人員
+               LET l_diffnew.gzwo008   = l_diffold.gzwo008    #作業編號
+               LET l_diffnew.gzwo009   = l_diffold.gzwo009    #案件代號
+               LET l_diffnew.gzwo010   = l_diffold.gzwo010    #緊急案件
+               LET l_diffnew.gzwo011   = l_diffold.gzwo011    #處理狀態
+               LET l_diffnew.gzwo012   = l_diffold.gzwo012    #更新摘要
+               LET l_diffnew.gzwo013   = l_diffold.gzwo013    #反映日期
+               LET l_diffnew.gzwo014   = l_diffold.gzwo014    #負責單位
+               LET l_diffnew.gzwo015   = l_diffold.gzwo015    #處理人員類型
+               LET l_diffnew.gzwo016   = l_diffold.gzwo016    #流水號
+               LET l_diffnew.gzwo017   = l_diffold.gzwo017    #企業編號
+               LET l_diffnew.gzwo018   = l_diffold.gzwo018    #處理人員
+               LET l_diffnew.gzwo019   = l_diffold.gzwo019    #規格預計完成日
+               LET l_diffnew.gzwo020   = l_diffold.gzwo020    #規格實際完成日
+               LET l_diffnew.gzwo021   = l_diffold.gzwo021    #預計完成日
+               LET l_diffnew.gzwo022   = l_diffold.gzwo022    #實際完成日
+               LET l_diffnew.gzwo026   = l_diffold.gzwo026    #最近同步時間
+               LET l_diffnew.gzwo027   = l_diffold.gzwo027    #案件歷程
+               
+               CALL s_azzi932_gzwo_ins("I",l_diffold.*,l_diffnew.*) RETURNING l_chk,l_diffnew.gzwo902   #新增問題反映記錄異動檔
+               IF NOT cl_null(l_diffnew.gzwo902) THEN
+                  IF NOT l_chk THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "azz-00766"   #問題編號%1異動記錄失敗
+                     LET g_errparam.replace[1] = g_gzwi_m.gzwi001
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                     CONTINUE DIALOG
+                  END IF
+               END IF
+            END IF
+
+            IF l_chk THEN
+               CALL s_transaction_end('Y','0')
+
+               IF gc_is_helptoalm = "Y" THEN
+                  LET l_diffold.gzwoownid = g_gzwi_m.gzwiownid    #資料所有者
+                  LET l_diffold.gzwoowndp = g_gzwi_m.gzwiowndp    #資料所屬部門
+                  LET l_diffold.gzwocrtid = g_gzwi_m.gzwicrtid    #資料建立者
+                  LET l_diffold.gzwocrtdp = g_gzwi_m.gzwicrtdp    #資料建立部門
+                  LET l_diffold.gzwocrtdt = g_gzwi_m.gzwicrtdt    #資料創建日
+                  LET l_diffold.gzwomodid = g_gzwi_m.gzwimodid    #資料修改者
+                  LET l_diffold.gzwomoddt = g_gzwi_m.gzwimoddt    #最近修改日
+                  LET l_diffold.gzwostus  = g_gzwi_m.gzwistus     #狀態碼
+                  LET l_diffold.gzwo001   = g_gzwi_m.gzwi001      #問題編號
+                  LET l_diffold.gzwo002   = g_gzwi_m.gzwi002      #類別
+                  LET l_diffold.gzwo003   = g_gzwi_m.gzwi003      #模組
+                  LET l_diffold.gzwo004   = g_gzwi_m.gzwi004      #問題描述
+                  LET l_diffold.gzwo005   = g_gzwi_m.gzwi005      #反映人員
+                  LET l_diffold.gzwo006   = g_gzwi_m.gzwi006      #反映營運據點
+                  LET l_diffold.gzwo007   = g_gzwi_m.gzwi007      #處理人員
+                  LET l_diffold.gzwo008   = g_gzwi_m.gzwi008      #作業編號
+                  LET l_diffold.gzwo009   = g_gzwi_m.gzwi009      #案件代號
+                  LET l_diffold.gzwo010   = g_gzwi_m.gzwi010      #緊急案件
+                  LET l_diffold.gzwo011   = g_gzwi_m.gzwi011      #處理狀態
+                  LET l_diffold.gzwo012   = g_gzwi_m.gzwi012      #更新摘要
+                  LET l_diffold.gzwo013   = g_gzwi_m.gzwi013      #反映日期
+                  LET l_diffold.gzwo014   = g_gzwi_m.gzwi014      #負責單位
+                  LET l_diffold.gzwo015   = g_gzwi_m.gzwi015      #處理人員類型
+                  LET l_diffold.gzwo016   = g_gzwi_m.gzwi016      #流水號
+                  LET l_diffold.gzwo017   = g_gzwi_m.gzwi017      #企業編號
+                  LET l_diffold.gzwo018   = g_gzwi_m.gzwi018      #處理人員
+                  LET l_diffold.gzwo019   = NULL                  #規格預計完成日
+                  LET l_diffold.gzwo020   = NULL                  #規格實際完成日
+                  LET l_diffold.gzwo021   = NULL                  #預計完成日
+                  LET l_diffold.gzwo022   = NULL                  #實際完成日
+                  LET l_diffold.gzwo026   = NULL                  #最近同步時間
+                  LET l_diffold.gzwo027   = NULL                  #案件歷程
+               
+                  CALL l_browser.clear()
+                  LET l_browser[1].b_gzwi005 = g_gzwi_m.gzwi005   #反映人員
+                  LET l_browser[1].b_gzwi001 = g_gzwi_m.gzwi001   #問題編號
+                  LET l_browser[1].b_gzwi003 = g_gzwi_m.gzwi003   #模組
+                  LET l_browser[1].b_gzwi008 = g_gzwi_m.gzwi008   #作業編號
+                  LET l_browser[1].b_gzwi004 = g_gzwi_m.gzwi004   #問題描述
+                  LET l_browser[1].b_gzwi012 = g_gzwi_m.gzwi012   #更新摘要
+                  LET l_browser[1].b_gzwi010 = g_gzwi_m.gzwi010   #緊急案件
+                  LET l_browser[1].b_gzwi013 = g_gzwi_m.gzwi013   #反映日期
+                  LET l_browser[1].b_gzwi017 = g_gzwi_m.gzwi017   #企業編號
+                  LET l_browser[1].b_gzwi006 = g_gzwi_m.gzwi006   #反映營運據點
+                  LET l_browser[1].b_gzwi002 = g_gzwi_m.gzwi002   #問題分類
+                  
+                  LET g_target_dir = FGL_GETENV("TEMPDIR")
+                  CALL s_azzi932_export_helplist("helptoalm",g_target_dir,l_browser) RETURNING l_chk,l_tarfile   #反映產中
+                  IF l_chk THEN
+                     CALL s_azzi932_sync(l_tarfile,l_diffold.*) RETURNING l_chk,l_change_mail,
+                                                                    g_gzwi_m.gzwi009,g_gzwi_m.gzwi014,
+                                                                    g_gzwi_m.gzwimodid,g_gzwi_m.gzwimoddt
+                  END IF
+               END IF
+            END IF
+            
+            IF l_chk THEN
+               #新增成功,寄mail
+               IF NOT l_change_mail THEN   #若s_azzi932_sync()沒有mail過,才要寄送,避免重複寄送
+                  CALL s_azzi930_send_mail(g_enterprise,g_gzwi_m.*,l_attach) RETURNING l_chk
+               END IF
+
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "adz-00077"   #資料已為您送出
+               LET g_errparam.extend = "(" || g_gzwi_m.gzwi009 CLIPPED || ")"
+               LET g_errparam.extend = g_gzwi_m.gzwi001 CLIPPED,g_errparam.extend CLIPPED
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+            END IF
+
+
+      #From component to program
+      ON ACTION wc_userguide_helpful   #操作說明-是否有幫助
+         CALL util.JSON.parse(g_wc_userguide,g_webc)
+         LET l_str = g_webc.param_arr[1]
+         IF NOT cl_null(l_str) THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = "std-00008"
+            LET g_errparam.extend = NULL
+            LET g_errparam.popup = TRUE
+            LET g_errparam.replace[1] = l_str CLIPPED
+            CALL cl_err()
+         END IF
+
+      ON ACTION wc_userguide_draft   #操作說明-新增,修改
+         CALL util.JSON.parse(g_wc_userguide,g_webc)
+         #CALL s_azzi933_userguide_draft(g_webc.param_str,g_progcode,g_webc.param_arr[1],g_webc.param_arr[2])
+         CALL s_azzi933_userguide_draft(g_progcode,ms_dgenv,g_webc.param_arr[1],g_lang)
+
+      ON ACTION wc_openurl
+         #LET g_action_choice="wc_openurl"
+         CALL util.JSON.parse(g_wc_userguide,g_webc)
+         LET l_str = g_webc.param_arr[1]
+         IF NOT cl_null(l_str) THEN
+            CALL ui.interface.frontCall("standard","launchurl",[l_str],[])
+         END IF
+
+      ON ACTION wc_support_exe   #聯絡客服
+         CALL util.JSON.parse(g_wc_support,g_webc)
+         LET l_str = g_webc.param_arr[1]
+         IF NOT cl_null(l_str) THEN
+            CALL ui.interface.frontCall("standard","launchurl",[l_str],[])
+         END IF
+
+
+      ON ACTION close       #在dialog 右上角 (X)
+         LET INT_FLAG=TRUE
+         EXIT DIALOG
+
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG=TRUE
+         EXIT DIALOG
+   END DIALOG
+
+   FREE azzi931_issue_ins_pre01
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi931_support_init" order="6" ver="2" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 聯絡客服網頁
+# Memo...........: 條件:企業編號、營運據點、屬於員工(非顧問)
+# Usage..........: CALL azzi931_support_init()
+#                  RETURNING void
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 2014/12/30 By tsai_yen
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi931_support_init()
+   DEFINE l_sql          STRING
+   DEFINE l_i            LIKE type_t.num5
+   DEFINE l_j            LIKE type_t.num5
+   DEFINE l_mod_col      LIKE type_t.num5        #餘數:1列排2欄
+   DEFINE l_mod_bg       LIKE type_t.num5        #餘數:名片右下角彩色三角形
+   DEFINE l_cssstyle     STRING
+   DEFINE l_html         STRING
+   DEFINE l_sup_card     DYNAMIC ARRAY OF RECORD
+          oofa001  LIKE oofa_t.oofa001,       #聯絡對象識別碼
+          oofa002  LIKE oofa_t.oofa002,       #聯絡對象類型
+          oofa003  LIKE oofa_t.oofa003,       #聯絡對象代碼一
+          oofa011  LIKE oofa_t.oofa011,       #全名
+          gzwg001  LIKE gzwg_t.gzwg001,       #營運據點
+          gzwg002  LIKE gzwg_t.gzwg002,       #服務人員
+          gzwgl004 LIKE gzwgl_t.gzwgl004,     #服務類型說明
+          tel      LIKE oofc_t.oofc012,       #電話
+          email    LIKE oofc_t.oofc012,       #
+          skype    LIKE oofc_t.oofc012,       #
+          qq       LIKE oofc_t.oofc012        #
+          END RECORD
+   DEFINE l_contact_scc DYNAMIC ARRAY OF RECORD
+          gzcb002    LIKE gzcb_t.gzcb002,    #系統分類碼值
+          gzcbl004   LIKE gzcbl_t.gzcbl004,  #聯絡說明
+          gzcb003    LIKE gzcb_t.gzcb003,    #指令
+          gzcb004    LIKE gzcb_t.gzcb004,    #類型
+          gzcb005    LIKE gzcb_t.gzcb005     #圖片名稱
+          END RECORD
+   DEFINE l_imguri      STRING
+   DEFINE l_imgdir      STRING
+   DEFINE l_bg          STRING
+   DEFINE l_bg_css      STRING
+   DEFINE l_str         STRING
+   DEFINE ls_modules    STRING
+   DEFINE l_modules     RECORD
+          gzwh003  LIKE gzwh_t.gzwh003,      #服務模組
+          gzzol003 LIKE gzzol_t.gzzol003     #模組名稱
+          END RECORD
+
+   #圖片路徑在Server上的 $TOP/res/img/ui/icon/azzi931
+   LET l_imguri = cl_ui_image_uri()   #http://IP/wt10dev/wa/i/azzi000/DUA_HTML5/Image/
+   LET l_imgdir = "16/"
+
+   LET l_sql = "SELECT COUNT(oofa001) FROM oofa_t",
+                  " LEFT JOIN gzwgl_t ON oofaent=gzwglent AND oofa001=gzwgl002 AND gzwgl003='"|| g_lang CLIPPED ||"'",
+                  " WHERE oofaent=? AND oofa001 IN (",
+                  "    SELECT gzwg002",
+                  "     FROM gzwg_t,gzwh_t",
+                  "     WHERE gzwgent = gzwhent AND gzwg001 = gzwh001 AND gzwg002 = gzwh002",
+                  "       AND gzwgent = ?  AND (gzwg001 = 'ALL' OR gzwg001 = ?) AND gzwgstus = 'Y'",
+                  "    )",
+                  " AND oofa002 = '2'"
+   PREPARE azzi931_support_init_1_cnt FROM l_sql
+   EXECUTE azzi931_support_init_1_cnt USING g_enterprise,g_enterprise,g_site INTO l_i
+   IF l_i = 0 THEN
+      CALL gfrm_curr.setElementHidden("page_3",1)
+   ELSE
+      #取得聯絡對象識別碼
+      LET l_sql = "SELECT oofa001,oofa002,oofa003,oofa011,gzwgl001,gzwgl002,gzwgl004 FROM oofa_t",
+                     " LEFT JOIN gzwgl_t ON oofaent=gzwglent AND oofa001=gzwgl002 AND gzwgl003='"|| g_lang CLIPPED ||"'",
+                     " WHERE oofaent=? AND oofa001 IN (",
+                     "    SELECT gzwg002",
+                     "     FROM gzwg_t,gzwh_t",
+                     "     WHERE gzwgent = gzwhent AND gzwg001 = gzwh001 AND gzwg002 = gzwh002",
+                     "       AND gzwgent = ?  AND (gzwg001 = 'ALL' OR gzwg001 = ?) AND gzwgstus = 'Y'",
+                     "    )",
+                     " AND oofa002 = '2'",
+                     " ORDER BY oofa002,oofa003 DESC"
+      DECLARE azzi931_support_init_1_cur CURSOR FROM l_sql
+      #連絡方式列表
+      LET l_sql = "SELECT oofc012",
+                  " FROM oofc_t",
+                  " WHERE oofcent = ? AND oofc002 = ? AND oofc008 = ?",
+                  " ORDER BY oofc010 DESC"
+      DECLARE azzi931_support_init_2_cur SCROLL CURSOR FROM l_sql
+
+      #azzi600取得SCC紀錄的聯絡說明, 指令, 類型, 圖片名稱.(axmt500業務人員CALL lib也有用到)
+      LET g_sql = "SELECT gzcbl004,gzcb003,gzcb004,gzcb005 FROM gzcb_t",
+                  " LEFT JOIN gzcbl_t ON gzcb001 = gzcbl001 AND gzcb002 = gzcbl002 AND gzcbl003 = '",g_lang,"'",
+                  " WHERE gzcb001 = '6' AND gzcb002 = ?"
+      PREPARE azzi931_support_contact_getscc_pre FROM g_sql
+      #一般電話
+      LET l_j = 1
+      LET l_contact_scc[l_j].gzcb002 = "1"
+      EXECUTE azzi931_support_contact_getscc_pre USING l_contact_scc[l_j].gzcb002 INTO l_contact_scc[l_j].gzcbl004,l_contact_scc[l_j].gzcb003,l_contact_scc[l_j].gzcb004,l_contact_scc[l_j].gzcb005
+      #電子郵件
+      LET l_j = l_j + 1
+      LET l_contact_scc[l_j].gzcb002 = "4"
+      EXECUTE azzi931_support_contact_getscc_pre USING l_contact_scc[l_j].gzcb002 INTO l_contact_scc[l_j].gzcbl004,l_contact_scc[l_j].gzcb003,l_contact_scc[l_j].gzcb004,l_contact_scc[l_j].gzcb005
+      #Skype 聯絡
+      LET l_j = l_j + 1
+      LET l_contact_scc[l_j].gzcb002 = "5"
+      EXECUTE azzi931_support_contact_getscc_pre USING l_contact_scc[l_j].gzcb002 INTO l_contact_scc[l_j].gzcbl004,l_contact_scc[l_j].gzcb003,l_contact_scc[l_j].gzcb004,l_contact_scc[l_j].gzcb005
+      #QQ
+      LET l_j = l_j + 1
+      LET l_contact_scc[l_j].gzcb002 = "7"
+      EXECUTE azzi931_support_contact_getscc_pre USING l_contact_scc[l_j].gzcb002 INTO l_contact_scc[l_j].gzcbl004,l_contact_scc[l_j].gzcb003,l_contact_scc[l_j].gzcb004,l_contact_scc[l_j].gzcb005
+
+      #負責模組,有勾選主要處理人員
+      LET l_sql = "SELECT DISTINCT gzwh003,t1.gzzol003 FROM gzwh_t",
+                  " LEFT JOIN gzzol_t t1 ON t1.gzzol001=gzwh003 AND t1.gzzol002='"|| g_lang CLIPPED ||"'",
+                  " WHERE gzwhent=? AND gzwh001=? AND gzwh002=? AND gzwh004 = 'Y'"
+      LET l_sql = cl_sql_add_mask(l_sql)              #遮蔽特定資料
+      DECLARE azzi931_module_cur CURSOR FROM l_sql
+
+      LET l_html =
+         '<div class="layoutcenter">',
+         '    <div class="outbox">'
+      LET l_i = 1
+      FOREACH azzi931_support_init_1_cur USING g_enterprise,g_enterprise,g_site INTO l_sup_card[l_i].oofa001,l_sup_card[l_i].oofa002,l_sup_card[l_i].oofa003,l_sup_card[l_i].oofa011,
+                                               l_sup_card[l_i].gzwg001,l_sup_card[l_i].gzwg002,l_sup_card[l_i].gzwgl004
+         OPEN azzi931_support_init_2_cur USING g_enterprise,l_sup_card[l_i].oofa001,'1'
+         FETCH FIRST azzi931_support_init_2_cur INTO l_sup_card[l_i].tel
+         OPEN azzi931_support_init_2_cur USING g_enterprise,l_sup_card[l_i].oofa001,'4'
+         FETCH FIRST azzi931_support_init_2_cur INTO l_sup_card[l_i].email
+         OPEN azzi931_support_init_2_cur USING g_enterprise,l_sup_card[l_i].oofa001,'5'
+         FETCH FIRST azzi931_support_init_2_cur INTO l_sup_card[l_i].skype
+         OPEN azzi931_support_init_2_cur USING g_enterprise,l_sup_card[l_i].oofa001,'7'
+         FETCH FIRST azzi931_support_init_2_cur INTO l_sup_card[l_i].qq
+
+         LET l_mod_col = l_i MOD 2
+         LET l_mod_bg = l_i MOD 4
+
+         CASE l_mod_bg
+            WHEN 1
+               LET l_bg_css = 'person1'
+               LET l_bg = l_imguri CLIPPED,'icon/azzi931/sup_bg_y.png'
+            WHEN 2
+               LET l_bg_css = 'person2'
+               LET l_bg = l_imguri CLIPPED,'icon/azzi931/sup_bg_p.png'
+            WHEN 3
+               LET l_bg_css = 'person3'
+               LET l_bg = l_imguri CLIPPED,'icon/azzi931/sup_bg_c.png'
+            WHEN 0
+               LET l_bg_css = 'person4'
+               LET l_bg = l_imguri CLIPPED,'icon/azzi931/sup_bg_g.png'
+         END CASE
+
+         CASE l_mod_col
+            WHEN 1
+            LET l_html = l_html CLIPPED,
+         '        <div class="boxs leftbox">'
+            WHEN 0
+            LET l_html = l_html CLIPPED,
+         '        <div class="boxs rightbox">'
+         END CASE
+         #http://IP/wt10dev/wa/i/app/gwc_azzi000/DUA_HTML5/Image/icon/azzi931/sup_tel.png
+
+         LET l_html = l_html CLIPPED,
+         '            <div class="box_small">',
+         '                <div class="box_small_l">',
+         '                	<table class="box_small_l_table"><tr><td><img src="',l_imguri CLIPPED,'icon/azzi931/sup_p00.png" class="img_p"/></td></tr></table>',
+         '                </div>',
+         '                <div class="box_small_r ',l_bg_css CLIPPED,'">',
+         '                    <table class="box_small_r_table"><tr><td>'
+         #全名
+         IF NOT cl_null(l_sup_card[l_i].oofa011) THEN
+            LET l_html = l_html CLIPPED,
+         '                        <div class="box_small_r_row p_title">',l_sup_card[l_i].oofa011 CLIPPED,'</div>'
+         END IF
+         #服務類型說明
+         IF NOT cl_null(l_sup_card[l_i].gzwgl004) THEN
+            LET l_html = l_html CLIPPED,
+         '                        <div class="box_small_r_row p_data">',l_sup_card[l_i].gzwgl004 CLIPPED,'</div>'
+         END IF
+         
+         #負責據點
+         #IF NOT cl_null(l_sup_card[l_i].gzwg001) THEN
+         #   CALL cl_get_feldname("gzwg001",g_lang) RETURNING l_str
+         #   LET l_html = l_html CLIPPED,
+         #'                        <div class="box_small_r_row p_data">',l_str CLIPPED,"：",l_sup_card[l_i].gzwg001 CLIPPED,'</div>'
+         #END IF
+         
+         #負責模組,有勾選主要處理人員
+         LET l_j = 1
+         LET l_str = ""
+         LET ls_modules = ""
+         FOREACH azzi931_module_cur USING g_enterprise,l_sup_card[l_i].gzwg001,l_sup_card[l_i].gzwg002 INTO l_modules.gzwh003,l_modules.gzzol003
+            IF l_j = 1 THEN
+               CALL cl_get_feldname("gzwh003",g_lang) RETURNING l_str
+               LET l_str = l_str CLIPPED,"：",l_modules.gzwh003 CLIPPED             #模組編號
+               LET ls_modules = l_modules.gzwh003 CLIPPED,l_modules.gzzol003   #模組編號+名稱
+            ELSE
+               LET l_str = l_str CLIPPED,", ",l_modules.gzwh003 CLIPPED
+               LET ls_modules = ls_modules CLIPPED,", ",l_modules.gzwh003 CLIPPED,l_modules.gzzol003
+            END IF
+            LET l_j = l_j + 1
+         END FOREACH
+         
+         IF NOT cl_null(ls_modules) THEN
+            LET l_html = l_html CLIPPED,
+         '                        <div class="box_small_r_row p_data" title="',l_str CLIPPED,'">',l_str CLIPPED,'</div>'
+         END IF
+         
+         #一般電話
+         FOR l_j = 1 TO l_contact_scc.getLength()
+            IF l_contact_scc[l_j].gzcb002 = "1" AND (NOT cl_null(l_sup_card[l_i].tel)) THEN
+               LET l_str = l_sup_card[l_i].tel
+               LET l_str = cl_replace_str(l_str,'-','')   #清除電話的特殊符號
+               LET l_str = cl_replace_str(l_str,' ','')
+               LET l_str = l_contact_scc[l_j].gzcb003 CLIPPED,l_str CLIPPED,l_contact_scc[l_j].gzcb004 CLIPPED
+               LET gs_json = s_azzi930_support_json("tel",l_str)
+               LET l_html = l_html CLIPPED,
+         '                        <div class="box_small_r_row p_data"><img src="',l_imguri CLIPPED,l_imgdir CLIPPED,l_contact_scc[l_j].gzcb005 CLIPPED,'" width="16" height="16" /><a class="data_link" href="javascript: void(0);" onClick=\'wc_act("wc_support_exe","',gs_json CLIPPED,'")\'>',l_sup_card[l_i].tel CLIPPED,'</a></div>'
+               EXIT FOR
+            END IF
+         END FOR
+         #電子郵件
+         FOR l_j = 1 TO l_contact_scc.getLength()
+            IF l_contact_scc[l_j].gzcb002 = "4" AND (NOT cl_null(l_sup_card[l_i].email)) THEN
+               LET l_str = l_contact_scc[l_j].gzcb003 CLIPPED,l_sup_card[l_i].email CLIPPED,l_contact_scc[l_j].gzcb004 CLIPPED
+               LET gs_json = s_azzi930_support_json("mailto",l_str)
+               LET l_html = l_html CLIPPED,
+         '                        <div class="box_small_r_row p_data"><img src="',l_imguri CLIPPED,l_imgdir CLIPPED,l_contact_scc[l_j].gzcb005 CLIPPED,'" width="16" height="16" /><a class="data_link" href="javascript: void(0);" onClick=\'wc_act("wc_support_exe","',gs_json CLIPPED,'")\'>',l_sup_card[l_i].email CLIPPED,'</a></div>'
+               EXIT FOR
+            END IF
+         END FOR
+
+         #Skype 聯絡
+         FOR l_j = 1 TO l_contact_scc.getLength()
+            IF l_contact_scc[l_j].gzcb002 = "5" AND (NOT cl_null(l_sup_card[l_i].skype)) THEN
+               LET l_str = l_contact_scc[l_j].gzcb003 CLIPPED,l_sup_card[l_i].skype CLIPPED,l_contact_scc[l_j].gzcb004 CLIPPED
+               LET gs_json = s_azzi930_support_json("skype",l_str)
+               LET l_html = l_html CLIPPED,
+         '                        <div class="box_small_r_row p_data"><img src="',l_imguri CLIPPED,l_imgdir CLIPPED,l_contact_scc[l_j].gzcb005 CLIPPED,'" width="16" height="16" /><a class="data_link" href="javascript: void(0);" onClick=\'wc_act("wc_support_exe","',gs_json CLIPPED,'")\'>',l_sup_card[l_i].skype CLIPPED,'</a></div>'
+               EXIT FOR
+            END IF
+         END FOR
+         #QQ
+         FOR l_j = 1 TO l_contact_scc.getLength()
+            IF l_contact_scc[l_j].gzcb002 = "7" AND (NOT cl_null(l_sup_card[l_i].qq)) THEN
+               LET l_str = l_contact_scc[l_j].gzcb003 CLIPPED,l_sup_card[l_i].qq CLIPPED,l_contact_scc[l_j].gzcb004 CLIPPED
+               LET gs_json = s_azzi930_support_json("skype",l_str)
+               LET l_html = l_html CLIPPED,
+         '                        <div class="box_small_r_row p_data"><img src="',l_imguri CLIPPED,l_imgdir CLIPPED,l_contact_scc[l_j].gzcb005 CLIPPED,'" width="16" height="16" /><a class="data_link" href="javascript: void(0);" onClick=\'wc_act("wc_support_exe","',gs_json CLIPPED,'")\'>',l_sup_card[l_i].qq CLIPPED,'</a></div>'
+               EXIT FOR
+            END IF
+         END FOR
+         LET l_html = l_html CLIPPED,
+         '                    </td></tr></table>',
+         '                </div>',
+         '            </div>',
+         '        </div>'
+         
+         LET l_i = l_i + 1
+      END FOREACH
+      CALL l_sup_card.deleteElement(l_sup_card.getLength())
+
+      LET l_html = l_html CLIPPED,
+         '    </div>',
+         '</div>'
+
+      LET l_cssstyle =
+         '.layoutcenter{',
+         '	width:760px;',
+         '	height: 100%;',
+         '	margin:0 auto;',
+         '}',
+         '.outbox{',
+         '	position: absolute;',
+         '	width:760px;',
+         '	background-color: #f5f5f5;',
+         '	border: 1px solid #d9d9d9;',
+         '	-webkit-border-radius: 5px;',
+         '	-moz-border-radius: 5px;',
+         '	border-radius: 5px;',
+         '	background-image:url(',l_imguri CLIPPED,'icon/azzi931/sup_bg.jpg);',
+         #'	background-image:url(',l_imguri CLIPPED,'icon/azzi931/sup_bg.png);',
+         '	background-repeat: no-repeat;',
+         '	background-position: bottom right;',
+         '	padding: 15px 15px 215px 15px;',
+         '}',
+#         '.outbox_bottom{',
+#         '	position: absolute;',
+#         '	width:760px;',
+#         '	height: 100%;',
+#         '	background-color: #f5f5f5;',
+#         '	border: 1px solid #d9d9d9;',
+#         '	-webkit-border-radius: 5px;',
+#         '	-moz-border-radius: 5px;',
+#         '	border-radius: 5px;',
+#         '	background-image:url(',l_imguri CLIPPED,'icon/azzi931/sup_bg.png);',
+#         '	background-repeat: no-repeat;',
+#         '	background-position: bottom right;',
+#         '	padding: 15px 15px 135px 15px;',
+#         '}',
+         '.boxs{',
+         '	position: relative;',
+         '	border: solid 1px #CCC;',
+         '	-moz-box-shadow: 1px 1px 5px #999;',
+         '	-webkit-box-shadow: 1px 1px 5px #999;',
+         '	box-shadow: 1px 1px 5px #999;',
+         '	background-color:#FFF;',
+         '	width: 373px;',
+         '	height:231px;',
+         '	margin-bottom: 15px;',
+         '}',
+         '.leftbox{',
+         '	float:left;',
+         '}',
+         '.rightbox{',
+         '	float:right;',
+         '}',
+         '.box_small{',
+         '	padding: 15px;',
+         '	/*height: 172px;*/',
+         '	display:table;',
+         '}',
+         '.box_small_l{',
+         '	width: 110px;',
+         '	height: 200px;',
+         '	float:left;',
+         '}',
+         '.box_small_r{',
+         '	width: 233px;',
+         '	height: 200px;',
+         '	float:right;',
+         '	overflow: hidden;',
+         '}',
+         '.person1{',
+         '	background-image:url(',l_imguri CLIPPED,'icon/azzi931/sup_bg_y.png);',
+         '	background-repeat: no-repeat;',
+         '	background-position: bottom right;',
+         '	background-color:#FFF;',
+         '	}',
+         '.person2{',
+         '	background-image:url(',l_imguri CLIPPED,'icon/azzi931/sup_bg_p.png);',
+         '	background-repeat: no-repeat;',
+         '	background-position: bottom right;',
+         '	background-color:#FFF;',
+         '	}',
+         '',
+         '.person3{',
+         '	background-image:url(',l_imguri CLIPPED,'icon/azzi931/sup_bg_c.png);',
+         '	background-repeat: no-repeat;',
+         '	background-position: bottom right;',
+         '	background-color:#FFF;',
+         '	}',
+         '.person4{',
+         '	background-image:url(',l_imguri CLIPPED,'icon/azzi931/sup_bg_g.png);',
+         '	background-repeat: no-repeat;',
+         '	background-position: bottom right;',
+         '	background-color:#FFF;',
+         '	}',
+         '',
+         '.box_small_l_table{',
+         '	height: inherit;',
+         '	margin-left:auto;',
+         '	margin-right:auto;',
+         '}',
+         '.box_small_l_table td{',
+         '	vertical-align: inherit;',
+         '}',
+         '.box_small_r_table{',
+         '	height: inherit;',
+         '}',
+         '.box_small_r_row{',
+         '	height: 24px;',
+         '	vertical-align: middle;',
+         '	padding-top: 3px;',
+         '    white-space: nowrap;',
+         '}',
+         '.img_p{',
+         '	max-width: 100px;',
+         '	max-height: 120px;',
+         '    vertical-align:middle;',
+         '}',
+         '.p_title {',
+         '	font-size: 16px;',
+         '	font-weight: bold;',
+         '	font-family: "微軟正黑體";',
+         '}',
+         '.p_data{',
+         '	font-size:12px;',
+         '	vertical-align: middle;',
+         '	font-family: "微軟正黑體";',
+         '}',
+         '.data_link{',
+         '	margin-left: 5px;',
+         '}'
+
+      CALL cl_marquee_property_comp("wc_support", "wc_href", "")
+      CALL cl_marquee_property_comp("wc_support", "wc_cssstyle",l_cssstyle)
+      CALL cl_marquee_property_comp("wc_support", "wc_body", l_html)
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.azzi931_userguide_init" order="7" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 操作說明網頁
+# Memo...........:
+# Usage..........: CALL azzi931_userguide_init()
+#                  RETURNING void
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 2015/01/29 By tsai_yen
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi931_userguide_init()
+   DEFINE l_sql          STRING
+   DEFINE l_i            LIKE type_t.num5
+   DEFINE l_j            LIKE type_t.num5
+   DEFINE l_cnt          LIKE type_t.num5
+   DEFINE l_cssstyle     STRING
+   DEFINE l_html         STRING
+   DEFINE l_str          STRING
+   DEFINE l_fromurl      STRING               #HTML內容來自哪一個URL,以webcomponent開始算起的相對路徑
+   DEFINE l_progmodule   STRING               #模組
+   DEFINE ls_file        STRING
+   DEFINE l_separator    STRING   #separate path segments, ex."/"
+   DEFINE l_www_path     STRING   #$TOP/www完整路徑,ex. "/u1/t10dev/www"
+   DEFINE l_dir_doc      STRING   #doc目錄,ex."doc/erp"
+   DEFINE l_chk          BOOLEAN
+   
+   #CALL gfrm_curr.setElementHidden("page_1",1)
+   LET l_chk = TRUE
+   IF cl_null(g_progcode) THEN
+      LET l_chk = FALSE
+   ELSE
+      #有效資料
+      LET l_sql = "SELECT COUNT(gzwp001) FROM gzwp_t WHERE gzwpstus = 'Y' AND gzwp001 = ? AND gzwp004 = ?"
+      PREPARE azzi931_userguide_init_cnt_pre FROM l_sql
+      EXECUTE azzi931_userguide_init_cnt_pre USING g_progcode,g_lang INTO l_cnt
+      IF l_cnt = 0 THEN
+         LET l_chk = FALSE
+      ELSE
+      #網頁檔案存在
+         CALL s_azzi933_path_init() RETURNING l_separator,l_www_path,l_dir_doc
+         CALL s_azzi933_progmodule(g_progcode) RETURNING l_progmodule
+         LET l_fromurl = "../../",l_dir_doc CLIPPED,"/",l_progmodule CLIPPED,"/",g_lang CLIPPED,"/",g_progcode,"/",g_progcode,".html" #"../../doc/erp/azz/zh_TW/azzi913/azzi913.html"
+         LET ls_file = os.Path.join(l_www_path, l_dir_doc)
+         LET ls_file = os.Path.join(ls_file, l_progmodule)
+         LET ls_file = os.Path.join(ls_file, g_lang)
+         LET ls_file = os.Path.join(ls_file, g_progcode)
+         LET ls_file = os.Path.join(ls_file, g_progcode || ".html")
+         IF NOT os.Path.exists(ls_file) THEN
+            LET l_chk = FALSE
+         END IF
+      END IF
+   END IF
+
+   IF NOT l_chk THEN
+      CALL gfrm_curr.setElementHidden("page_1",1)
+   ELSE
+      CALL cl_marquee_property_comp("wc_userguide", "wc_href", "")
+      CALL cl_marquee_property_comp("wc_userguide", "wc_cssstyle","")
+      CALL cl_marquee_property_comp("wc_userguide", "wc_body", "")
+      CALL cl_marquee_property_comp("wc_userguide", "wc_fromurl", l_fromurl)
+
+      IF g_helpparam.getLength() > 1 THEN
+         LET l_str = ""
+         FOR l_i = 1 TO g_helpparam.getLength()
+            LET l_str = l_str,",",g_helpparam[l_i]
+         END FOR
+         IF l_str.getIndexOf(",",1) = 1 AND l_str.getLength() > 1 THEN
+            LET l_str = l_str.subString(2,l_str.getLength())
+         END IF
+         CALL cl_marquee_property_comp("wc_userguide", "wc_argv", l_str)
+      END IF
+   END IF
+         
+      #Genero 2.51才支援webcomponent的frontCall
+      #CALL ui.Interface.frontCall("webcomponent", "call",
+      #   ["formonly.wc_userguide", "function(){location.hash = "C4";}", 'parameters'],
+      #   [] )
+      #CALL ui.Interface.frontCall("webcomponent", "call",
+      #   ["formonly.wc_userguide", "function(){alert('a');}", 'parameters'],
+      #   [] )
+      #   
+      #CALL ui.Interface.frontCall("webcomponent", "call",
+      #        ["formonly.wc_userguide", "function", 'parameters'],
+      #            [result] )
+END FUNCTION]]>
+  </point>
+  <point name="free_style.variable" order="" ver="3" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[#外來參數
+#參數1:功能類型：1:操作說明,2:問題反映,3:聯絡客服,4:FAQ,5:專家社群,6:相關流程
+#參數2:預設模組,以程式所屬模組為預設模組
+#參數3:預設反映問題程式編號
+DEFINE g_switch      LIKE type_t.chr1   
+DEFINE g_module      LIKE gzza_t.gzza003
+DEFINE g_progcode    LIKE gzzz_t.gzzz001
+DEFINE g_helpparam   DYNAMIC ARRAY OF STRING
+
+ TYPE type_browser RECORD                  #azzi931,azzi932,s_azzi932共用
+   b_statepic     LIKE type_t.chr50,
+   b_gzwi011 LIKE gzwi_t.gzwi011,
+   b_gzwi001 LIKE gzwi_t.gzwi001,
+   b_gzwi017 LIKE gzwi_t.gzwi017,
+   b_gzwi002 LIKE gzwi_t.gzwi002,
+   b_gzwi003 LIKE gzwi_t.gzwi003,
+   b_gzwi008 LIKE gzwi_t.gzwi008,
+   b_gzwi008_desc LIKE type_t.chr80,
+   b_gzwi010 LIKE gzwi_t.gzwi010,
+   b_gzwi004 LIKE gzwi_t.gzwi004,
+   b_gzwi012 LIKE gzwi_t.gzwi012,
+   b_gzwi005 LIKE gzwi_t.gzwi005,
+   b_gzwi005_desc LIKE type_t.chr80,
+   b_gzwi013 LIKE gzwi_t.gzwi013,
+   b_gzwi006 LIKE gzwi_t.gzwi006,
+   b_gzwi006_desc LIKE type_t.chr80,
+   b_gzwi015 LIKE gzwi_t.gzwi015,
+   b_gzwi018 LIKE gzwi_t.gzwi018,
+   b_gzwi007_desc LIKE type_t.chr80,
+   b_gzwi009 LIKE gzwi_t.gzwi009
+   END RECORD
+
+TYPE type_g_gzwi_inc        RECORD   #問題反映記錄檔,共用:s_azzi930,s_azzi932,azzi931,azzi932
+   gzwi001 LIKE gzwi_t.gzwi001,             #問題編號  
+   gzwi002 LIKE gzwi_t.gzwi002,             #類別
+   gzwi003 LIKE gzwi_t.gzwi003,             #模組
+   gzwi004 LIKE gzwi_t.gzwi004,             #問題描述
+   gzwi005 LIKE gzwi_t.gzwi005,             #反映人員
+   gzwi006 LIKE gzwi_t.gzwi006,             #反映人員營運據點
+   gzwi007 LIKE gzwi_t.gzwi007,             #處理人員
+   gzwi008 LIKE gzwi_t.gzwi008,             #作業編號
+   gzwi009 LIKE gzwi_t.gzwi009,             #案件代號
+   gzwi010 LIKE gzwi_t.gzwi010,             #緊急案件
+   gzwi011 LIKE gzwi_t.gzwi011,             #處理狀態
+   gzwi012 LIKE gzwi_t.gzwi012,             #更新摘要
+   gzwi013 DATETIME YEAR TO SECOND,         #反應日期
+   gzwi014 LIKE gzwi_t.gzwi014,             #負責單位:SCC '153': 0.產中;1.MIS;2.鼎新
+   gzwi015 LIKE gzwi_t.gzwi015,             #處理人員類型,聯絡對象類型oofa002
+   gzwi016 LIKE gzwi_t.gzwi016,             #流水號
+   gzwi017 LIKE gzwi_t.gzwi017,             #反映企業代碼
+   gzwi018 LIKE gzwi_t.gzwi018,             #處理人員,聯絡對象代碼一oofa003
+   gzwistus LIKE gzwi_t.gzwistus,           #狀態碼
+   gzwiownid LIKE gzwi_t.gzwiownid,         #資料所有者
+   gzwiownid_desc LIKE type_t.chr80,        ##
+   gzwiowndp LIKE gzwi_t.gzwiowndp,         #資料所屬部門
+   gzwiowndp_desc LIKE type_t.chr80,        ##
+   gzwicrtid LIKE gzwi_t.gzwicrtid,         #資料建立者
+   gzwicrtid_desc LIKE type_t.chr80,        ##
+   gzwicrtdp LIKE gzwi_t.gzwicrtdp,         #資料建立部門
+   gzwicrtdp_desc LIKE type_t.chr80,        ##
+   gzwicrtdt DATETIME YEAR TO SECOND,       #資料創建日
+   gzwimodid LIKE gzwi_t.gzwimodid,         #資料修改者
+   gzwimodid_desc LIKE type_t.chr80,        ##
+   gzwimoddt DATETIME YEAR TO SECOND,       #最近修改日
+   gzwi005_desc LIKE type_t.chr80,          #反映人員名稱
+   gzwi005dp_desc LIKE type_t.chr80,        #反映人員部門名稱
+   gzwi005op_desc LIKE type_t.chr80,        #反映人員營運據點名稱
+   gzwi008_desc LIKE gzzal_t.gzzal003,      #作業程式名稱
+   gzwi026 LIKE gzwi_t.gzwi026,             #最近同步時間
+   gzwi027 LIKE gzwi_t.gzwi027              #案件歷程
+   END RECORD
+TYPE type_g_gzwo_inc RECORD              #問題反映記錄異動檔,共用:s_azzi932,azzi931,azzi932
+   gzwoownid    LIKE gzwo_t.gzwoownid,   #資料所有者
+   gzwoowndp    LIKE gzwo_t.gzwoowndp,   #資料所屬部門
+   gzwocrtid    LIKE gzwo_t.gzwocrtid,   #資料建立者
+   gzwocrtdp    LIKE gzwo_t.gzwocrtdp,   #資料建立部門
+   gzwocrtdt    LIKE gzwo_t.gzwocrtdt,   #資料創建日
+   gzwomodid    LIKE gzwo_t.gzwomodid,   #資料修改者
+   gzwomoddt    LIKE gzwo_t.gzwomoddt,   #最近修改日
+   gzwostus     LIKE gzwo_t.gzwostus,    #狀態碼
+   gzwo001      LIKE gzwo_t.gzwo001,     #問題編號
+   gzwo002      LIKE gzwo_t.gzwo002,     #類別
+   gzwo003      LIKE gzwo_t.gzwo003,     #模組
+   gzwo004      LIKE gzwo_t.gzwo004,     #問題描述
+   gzwo005      LIKE gzwo_t.gzwo005,     #反映人員
+   gzwo006      LIKE gzwo_t.gzwo006,     #反映營運據點
+   gzwo007      LIKE gzwo_t.gzwo007,     #處理人員
+   gzwo008      LIKE gzwo_t.gzwo008,     #作業編號
+   gzwo009      LIKE gzwo_t.gzwo009,     #案件代號
+   gzwo010      LIKE gzwo_t.gzwo010,     #緊急案件
+   gzwo011      LIKE gzwo_t.gzwo011,     #處理狀態
+   gzwo012      LIKE gzwo_t.gzwo012,     #更新摘要
+   gzwo013      LIKE gzwo_t.gzwo013,     #反映日期
+   gzwo014      LIKE gzwo_t.gzwo014,     #負責單位
+   gzwo015      LIKE gzwo_t.gzwo015,     #處理人員類型
+   gzwo016      LIKE gzwo_t.gzwo016,     #流水號
+   gzwo017      LIKE gzwo_t.gzwo017,     #企業編號
+   gzwo018      LIKE gzwo_t.gzwo018,     #處理人員
+   gzwo019      LIKE gzwo_t.gzwo019,     #規格預計完成日
+   gzwo020      LIKE gzwo_t.gzwo020,     #規格實際完成日
+   gzwo021      LIKE gzwo_t.gzwo021,     #預計完成日
+   gzwo022      LIKE gzwo_t.gzwo022,     #實際完成日
+   gzwo023      LIKE gzwo_t.gzwo023,     #預估時數
+   gzwo024      LIKE gzwo_t.gzwo024,     #實際時數
+   gzwo025      LIKE gzwo_t.gzwo025,     #確認書編號
+   gzwoseq      LIKE gzwo_t.gzwoseq,     #項次
+   gzwo901      LIKE gzwo_t.gzwo901,     #執行指令
+   gzwo902      LIKE gzwo_t.gzwo902,     #異動欄位
+   gzwo026      LIKE gzwo_t.gzwo026,     #最近同步時間
+   gzwo027      LIKE gzwo_t.gzwo027      #案件歷程
+   END RECORD
+      
+TYPE type_g_gzwj_arr      RECORD    #問題反映附件
+   gzwj004 LIKE gzwj_t.gzwj004,	      #附件檔名
+   gzwj005 LIKE gzwj_t.gzwj005,	      #附件副檔名
+   tmpfile STRING,                     #Server暫存檔
+   l_size  LIKE type_t.num10
+   END RECORD
+TYPE type_g_gzwj_d        RECORD    #問題反映附件
+   gzwj002 LIKE gzwj_t.gzwj002,	      #附件編號
+   gzwj003 LIKE gzwj_t.gzwj003,	      #附件
+   gzwj004 LIKE gzwj_t.gzwj004,	      #附件檔名
+   gzwj005 LIKE gzwj_t.gzwj005,	      #附件副檔名
+   gzwj006 LIKE gzwj_t.gzwj006,	      #來源類型
+   gzwj007 LIKE gzwj_t.gzwj007,	      #反映企業代碼
+   tmpfile STRING                      #Server暫存檔
+   END RECORD
+
+DEFINE g_gzwi_m         type_g_gzwi_inc
+DEFINE g_gzwo           type_g_gzwo_inc
+DEFINE g_gzwj_arr       DYNAMIC ARRAY OF type_g_gzwj_arr
+DEFINE g_gzwj_d         type_g_gzwj_d
+DEFINE g_gzwi001_t      LIKE gzwi_t.gzwi001
+DEFINE g_sql            STRING
+DEFINE g_forupd_sql     STRING
+DEFINE gwin_curr        ui.Window            #Current Window
+DEFINE gfrm_curr        ui.Form              #Current Form
+DEFINE g_curr_diag      ui.Dialog            #Current Dialog
+DEFINE g_wcpath         STRING 
+DEFINE g_wc_userguide   STRING               #操作說明網頁內容
+DEFINE g_wc_support     STRING               #聯絡客服網頁內容
+DEFINE l_ac_1           LIKE type_t.num5     #s_detail1 index
+
+DEFINE g_num            LIKE type_t.num5     #上傳檔案的暫存檔名序號]]>
+  </point>
+  <point name="global.import" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[IMPORT util]]>
+  </point>
+  <point name="global.memo" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="global.variable" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE g_oofa_sel DYNAMIC ARRAY OF RECORD     #聯絡對象檔資料,與s_azzi930,s_azzi932,azzi932,azzi931共用
+        oofa001       LIKE oofa_t.oofa001,    #聯絡對象識別碼
+        oofa002       LIKE oofa_t.oofa002,    #聯絡對象類型
+        oofa003       LIKE oofa_t.oofa003,    #聯絡對象代碼一
+        oofa011       LIKE oofa_t.oofa011,    #全名
+        ooag003       LIKE ooag_t.ooag003,    #歸屬部門
+        ooefl003_dp   LIKE ooefl_t.ooefl003,  #部門名稱
+        ooag004       LIKE ooag_t.ooag004,    #歸屬營運據點
+        ooefl003_op   LIKE ooefl_t.ooefl003,  #歸屬營運據點名稱
+        ooefl003_site LIKE ooefl_t.ooefl003   #預設營運據點名稱
+       END RECORD
+DEFINE g_target_dir  STRING
+DEFINE gs_json       STRING                   #JSON字串
+DEFINE g_webc     RECORD                      #WebComponent 參數
+         param_str     STRING,
+         param_arr    DYNAMIC ARRAY OF STRING
+       END RECORD
+DEFINE ms_dgenv             LIKE gzwp_t.gzwp002     #環境變數DGENV客製標示(s:標準/ c:客製)
+DEFINE g_syncway            STRING                  #與服務平台同步方式 alm,almhelp,eservice
+DEFINE gc_is_helptoalm      LIKE type_t.chr1]]>
+  </point>
+  <point name="main.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="main.define_sql" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="main.init" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   ##參數
+   IF NOT cl_null(g_argv[1]) THEN
+      #1:操作說明,2:問題反映,3:聯絡客服,4:FAQ,5:專家社群,6:相關流程
+      LET g_switch = g_argv[1]
+   ELSE
+      LET g_switch = "0"
+   END IF
+   
+   IF NOT cl_null(g_argv[2]) THEN
+      LET g_module = g_argv[2]
+   ELSE
+      LET g_module = ""
+   END IF
+   
+   LET g_progcode = g_argv[3] CLIPPED   #作業編號
+
+   IF NOT cl_null(g_argv[4]) THEN
+      CALL util.JSON.parse(g_argv[4],g_helpparam)
+   END IF
+   
+   #DISPLAY "g_enterprise=",g_enterprise
+   #DISPLAY "g_switch=",g_switch
+   #DISPLAY "g_module=",g_module
+   #DISPLAY "g_progcode=",g_progcode
+   
+   IF cl_null(FGL_GETENV("GUIMODE")) OR FGL_GETENV("GUIMODE") = "GDC" THEN
+      # webComponent需在開啟視窗前設定路徑
+      LET g_wcpath = FGL_GETENV("FGLASIP"),"/components"
+      CALL ui.interface.frontCall("standard", "setwebcomponentpath",[g_wcpath],[])   #不支援GWC
+   END IF]]>
+  </point>
+  <section id="azzi931.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:3,PR版次:3) Build-000026
+#+ 
+#+ Filename...: azzi931
+#+ Description: Help
+#+ Creator....: 01101(2014-07-01 15:00:10)
+#+ Modifier...: 01101(2015-05-04 10:37:46) -SD/PR-
+]]>
+  </section>
+  <section id="azzi931.global" ver="3" status="" src="s" readonly="">
+    <![CDATA[#應用 i00 樣板自動產生(Version:3)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+]]>
+  </section>
+  <section id="azzi931.main" ver="1" status="" src="m" readonly="">
+    <![CDATA[#+ 作業開始
+MAIN
+   #add-point:main段define
+{<point name="main.define"/>}
+   #end add-point    
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("azz","")
+ 
+   #add-point:作業初始化
+{<point name="main.init"/>}
+   #end add-point
+ 
+   #add-point:SQL_define
+{<point name="main.define_sql" />}
+   #end add-point
+
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+{<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_azzi931 WITH FORM cl_ap_formpath("azz",g_code)
+
+      #程式初始化
+      CALL azzi931_init()
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #進入選單 Menu (='N')
+      CALL azzi931_ui_dialog()
+   
+      #畫面關閉
+      CLOSE WINDOW w_azzi931
+   END IF
+ 
+   #add-point:作業離開前
+{<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+]]>
+  </section>
+  <section id="azzi931.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+</add_points>

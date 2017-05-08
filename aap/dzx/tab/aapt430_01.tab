@@ -1,0 +1,72 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapt430_01" module="aap" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="03080" crtdt="2014-08-14 15:47:33" modid="03080" moddt="2014-12-30 10:33:04" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="費用分攤來源單號項次開窗選擇">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),apca004(chr10),apca004_desc(chr100),apca001(chr10),apcadocdt(dat),apcbld,apcbdocno,apcbseq,apcc001,apcc009,apca036,apca036_desc(chr500),apca015,apca015_desc(chr500),apca113,sumapce119(num20_6),apcb005,apcc119,apcc129,apcc139"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aap" filename="aapt430_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="sel,apca004,apca004_desc,apca001,apcadocdt,apcbld,apcbdocno,apcbseq,apcc001,apcc009,apca036,apca036_desc,apca015,apca015_desc,apca113,sumapce119,apcb005,apcc119,apcc129,apcc139" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="apca004" type="S" default="EMPL">
+        <after>
+          <check chkid="v_pmaa001_8" id="isExist"/>
+        </after>
+        <controlp form="q_pmaa001" state="i"/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="apca004_desc"/>
+      <column id="apca001" type="S" default="12"/>
+      <column id="apcadocdt"/>
+      <column id="apcbld"/>
+      <column id="apcbdocno"/>
+      <column id="apcbseq">
+        <after>
+          <check id="range" bt="1.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="apcc001"/>
+      <column id="apcc009"/>
+      <column id="apca036">
+        <after/>
+      </column>
+      <column id="apca036_desc"/>
+      <column id="apca015">
+        <after/>
+      </column>
+      <column id="apca015_desc"/>
+      <column id="apca113" type="S" default="0"/>
+      <column id="sumapce119" type="S" default="0"/>
+      <column id="apcb005"/>
+      <column id="apcc119"/>
+      <column id="apcc129"/>
+      <column id="apcc139"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="apcb_t" page="1" linked="" pk="apcbld,apcbdocno,apcbseq">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,apcbld,apcbdocno,apcbseq,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,apcb005,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM apcb_t WHERE apcbent=? AND apcbld=? AND apcbdocno=? AND apcbseq=? FOR UPDATE"/>
+      <sql id="detail_append" type="single" table="apcc_t" pk="apccld,apccdocno,apccseq,apcc001,apcc009" field="apcc001,apcc009,apcc119,apcc129,apcc139"/>
+      <sql id="detail_append" type="single" table="apca_t" pk="apcald,apcadocno" field="apca036,apca015,apca113"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,apcbld,apcbdocno,apcbseq,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,apcb005,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM apcb_t WHERE apcbent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

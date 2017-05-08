@@ -1,0 +1,83 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi900" module="aoo" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02716" crtdt="2014-08-13 08:44:04" modid="04010" moddt="2015-02-13 17:33:46" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="報表簽核維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="oojjstus,oojjsite,oojj006,oojj003,oojj003_desc(chr500),oojj004,oojj004_desc(chr500),oojj001,oojj001_desc(chr500),oojj002,oojj002_desc(chr500),oojj005,oojj005_desc(chr500),oojj007"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="oojjownid,oojjowndp,oojjcrtid,oojjcrtdp,oojjcrtdt,oojjmodid,oojjmoddt,oojj001,oojj002,oojjsite"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="ex_sign_set"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="sign_class_set"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi900" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="oojjstus,oojjsite,oojj006,oojj003,oojj004,oojj001,oojj002,oojj005,oojj007" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="oojjstus,oojjsite,oojj006,oojj003,oojj004,oojj001,oojj002,oojj005,oojj007"/>
+      <construct id="body" page="2" field="oojjownid,oojjowndp,oojjcrtid,oojjcrtdp,oojjcrtdt,oojjmodid,oojjmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="oojjstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="oojjsite"/>
+      <column id="oojj006"/>
+      <column id="oojj003">
+        <after>
+          <reference field="oojj003_desc" ref_field="oojj_t.oojj003" map_field="oojj003" ref_sql="SELECT gzzol003 FROM gzzol_t WHERE gzzol001=? AND g_lang=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="oojj003_desc"/>
+      <column id="oojj004" def_scc="24">
+        <after/>
+      </column>
+      <column id="oojj004_desc"/>
+      <column id="oojj001">
+        <after/>
+      </column>
+      <column id="oojj001_desc"/>
+      <column id="oojj002">
+        <after/>
+      </column>
+      <column id="oojj002_desc"/>
+      <column id="oojj005">
+        <after/>
+      </column>
+      <column id="oojj005_desc"/>
+      <column id="oojj007"/>
+    </init>
+    <init id="body" page="2">
+      <column id="oojjownid"/>
+      <column id="oojjowndp"/>
+      <column id="oojjcrtid"/>
+      <column id="oojjcrtdp"/>
+      <column id="oojjcrtdt"/>
+      <column id="oojjmodid"/>
+      <column id="oojjmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="oojj_t" page="1,2" linked="" pk="oojjsite,oojj001,oojj002">
+      <sql id="forupd_sql_detail" query="SELECT oojjstus,oojjsite,oojj006,oojj003,&apos;&apos;,oojj004,&apos;&apos;,oojj001,&apos;&apos;,oojj002,&apos;&apos;,oojj005,&apos;&apos;,oojj007,oojjownid,oojjowndp,oojjcrtid,oojjcrtdp,oojjcrtdt,oojjmodid,oojjmoddt,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM oojj_t WHERE oojjent=? AND oojjsite=? AND oojj001=? AND oojj002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT oojjstus,oojjsite,oojj006,oojj003,&apos;&apos;,oojj004,&apos;&apos;,oojj001,&apos;&apos;,oojj002,&apos;&apos;,oojj005,&apos;&apos;,oojj007,oojjownid,oojjowndp,oojjcrtid,oojjcrtdp,oojjcrtdt,oojjmodid,oojjmoddt,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM oojj_t WHERE oojjent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,144 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apji115" module="apj" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="05423" crtdt="2015-09-02 11:03:19" modid="01727" moddt="2015-12-03 17:11:05" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="專案成本要素分攤設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pjbx001,pjbxld,pjbxld_desc(chr80),pjbx002,pjbx003,pjbx004,pjbx004_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pjbxstus,pjbx005,l_pjbx005_desc(chr500),pjbx006,pjbx006_desc(chr500),pjbx008,pjbx009"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="pjbx005,pjbx006,pjbxownid,pjbxownid_desc(chr500),pjbxowndp,pjbxowndp_desc(chr500),pjbxcrtid,pjbxcrtid_desc(chr500),pjbxcrtdp,pjbxcrtdp_desc(chr500),pjbxcrtdt,pjbxmodid,pjbxmodid_desc(chr500),pjbxmoddt"/>
+      <var id="bs_field" value="pjbx001,pjbx001_desc(chr80),pjbxld,pjbxld_desc(chr80),pjbx002,pjbx003,pjbx004,p_pjbx004_desc(chr80)" pk="pjbxld,pjbx001,pjbx002,pjbx003,pjbx004" order=""/>
+      <bs_reference field="pjbx001_desc" ref_field="pjbx001" ref_sql="SELECT gzcbl004 FROM gzcbl_t WHERE gzcbl001=&apos;8908&apos; AND gzcbl002=? AND gzcbl003=$varg_lang$var"/>
+      <bs_reference field="pjbxld_desc" ref_field="pjbxld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="auto_reproduce"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="gen_pjbx009"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="auto_gen"/>
+    </section>
+  </structure>
+  <form id="0" module="apj" filename="apji115" method="dialog">
+    <section id="input">
+      <input id="head" field="pjbx001,pjbxld,pjbx002,pjbx003,pjbx004"/>
+      <input id="body" page="1" field="pjbxstus,pjbx005,pjbx006,pjbx008,pjbx009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pjbx001,pjbxld,pjbx002,pjbx003,pjbx004"/>
+      <construct id="body" page="1" field="pjbxstus,pjbx005,pjbx006,pjbx008,pjbx009"/>
+      <construct id="body" page="2" field="pjbxownid,pjbxowndp,pjbxcrtid,pjbxcrtdp,pjbxcrtdt,pjbxmodid,pjbxmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pjbxld,pjbx001,pjbx002,pjbx003,pjbx004"/>
+      <set id="head" type="no_entry" field="pjbxld,pjbx001,pjbx002,pjbx003,pjbx004"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="pjbx001" type="S" default="1" def_scc="8908"/>
+      <column id="pjbxld">
+        <after>
+          <reference field="pjbxld_desc" ref_field="pjbx_t.pjbxld" map_field="pjbxent,pjbxld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="pjbxld_desc"/>
+      <column id="pjbx002"/>
+      <column id="pjbx003"/>
+      <column id="pjbx004">
+        <after>
+          <check chkid="v_pjba001" id="isExist"/>
+          <reference field="pjbx004_desc" ref_field="pjbx_t.pjbx004" map_field="pjbx004" ref_sql="SELECT pjbal003 FROM pjbal_t WHERE pjbalent=$varg_enterprise$var AND pjbal001=? AND pjbal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pjba001" state="i"/>
+        <controlp form="q_pjba001" state="c"/>
+      </column>
+      <column id="pjbx004_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="pjbxstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pjbx005">
+        <after>
+          <check chkid="v_glac002_1" id="isExist"/>
+        </after>
+        <controlp form="q_glac002_5" state="i"/>
+        <controlp form="q_glac002_5" state="c"/>
+      </column>
+      <column id="l_pjbx005_desc"/>
+      <column id="pjbx006">
+        <after>
+          <check chkid="v_ooef001_14" id="isExist"/>
+          <reference field="pjbx006_desc" ref_field="pjbx_t.pjbx006" map_field="pjbx006" ref_sql="SELECT ooefl004 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_71" state="i"/>
+        <controlp form="q_ooeg001_71" state="c"/>
+      </column>
+      <column id="pjbx006_desc"/>
+      <column id="pjbx008" def_scc="8910"/>
+      <column id="pjbx009" type="S" default="100">
+        <after>
+          <check id="range" st="100" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="pjbxownid">
+        <after>
+          <reference field="pjbxownid_desc" ref_field="pjbx_t.pjbxownid" map_field="pjbxownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pjbxownid_desc"/>
+      <column id="pjbxowndp">
+        <after>
+          <reference field="pjbxowndp_desc" ref_field="pjbx_t.pjbxowndp" map_field="pjbxowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pjbxowndp_desc"/>
+      <column id="pjbxcrtid">
+        <after>
+          <reference field="pjbxcrtid_desc" ref_field="pjbx_t.pjbxcrtid" map_field="pjbxcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pjbxcrtid_desc"/>
+      <column id="pjbxcrtdp">
+        <after>
+          <reference field="pjbxcrtdp_desc" ref_field="pjbx_t.pjbxcrtdp" map_field="pjbxcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pjbxcrtdp_desc"/>
+      <column id="pjbxcrtdt"/>
+      <column id="pjbxmodid">
+        <after>
+          <reference field="pjbxmodid_desc" ref_field="pjbx_t.pjbxmodid" map_field="pjbxmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pjbxmodid_desc"/>
+      <column id="pjbxmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pjbx_t" pk="pjbxld,pjbx001,pjbx002,pjbx003,pjbx004">
+      <sql id="forupd_sql" type="sql" query="SELECT pjbx001,pjbxld,&apos;&apos;,pjbx002,pjbx003,pjbx004,&apos;&apos; FROM pjbx_t WHERE pjbxent= ? AND pjbxld=? AND pjbx001=? AND pjbx002=? AND pjbx003=? AND pjbx004=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pjbx001,pjbxld,&apos;&apos;,pjbx002,pjbx003,pjbx004,&apos;&apos; FROM pjbx_t" order="pjbxld,pjbx001,pjbx002,pjbx003,pjbx004"/>
+    </head>
+    <body id="pjbx_t" page="1,2" linked="" pk="pjbx005,pjbx006" fk="pjbxld,pjbx001,pjbx002,pjbx003,pjbx004">
+      <sql id="forupd_sql_detail" query="SELECT pjbxstus,pjbx005,&apos;&apos;,pjbx006,&apos;&apos;,pjbx008,pjbx009,&apos;&apos;,&apos;&apos;,pjbxownid,&apos;&apos;,pjbxowndp,&apos;&apos;,pjbxcrtid,&apos;&apos;,pjbxcrtdp,&apos;&apos;,pjbxcrtdt,pjbxmodid,&apos;&apos;,pjbxmoddt FROM pjbx_t WHERE pjbxent=? AND pjbxld=? AND pjbx001=? AND pjbx002=? AND pjbx003=? AND pjbx004=? AND pjbx005=? AND pjbx006=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pjbxstus,pjbx005,&apos;&apos;,pjbx006,&apos;&apos;,pjbx008,pjbx009,&apos;&apos;,&apos;&apos;,pjbxownid,&apos;&apos;,pjbxowndp,&apos;&apos;,pjbxcrtid,&apos;&apos;,pjbxcrtdp,&apos;&apos;,pjbxcrtdt,pjbxmodid,&apos;&apos;,pjbxmoddt FROM pjbx_t WHERE pjbxent= ? AND pjbxld=? AND pjbx001=? AND pjbx002=? AND pjbx003=? AND pjbx004=?"/>
+    </body>
+  </dataset>
+</assembly>
+

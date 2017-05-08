@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ainp520" module="ain" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="01726" crtdt="2014-04-11 10:29:46" modid="06814" moddt="2015-07-17 11:50:07" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="調撥差異調整批量產生作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="indc005(chr10),indcdocno(chr20),indedocno(chr20),indedocno_desc(chr80),stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="ain" filename="ainp520" method="dialog">
+    <section id="input">
+      <input id="head" field="indedocno"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="indc005,indcdocno"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="indc005">
+        <controlp form="q_ooed004_6" state="c"/>
+      </column>
+      <column id="indcdocno">
+        <controlp form="q_indcdocno" state="c"/>
+      </column>
+      <column id="indedocno">
+        <after>
+          <reference field="indedocno_desc" ref_field="indedocno" map_field="indeent,indedocno" ref_sql="SELECT oobxl003 FROM oobxl_t WHERE oobxlent=$varg_enterprise$var AND oobxl001=? AND oobxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooba002_1" state="i"/>
+      </column>
+      <column id="indedocno_desc"/>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apcq801" module="apc" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="01251" crtdt="2015-11-18 14:30:11" modid="01251" moddt="2015-11-18 14:54:44" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="收銀員繳大鈔查詢">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="pcausite,pcau005,pcau002,pcau003,pcau004,pcab003"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),pcausite,pcausite_desc(chr500),pcau002,pcau003,pcau004,pcab003,pcau005,pcau006,pcau007,pcau009,pcau008,pcau010,pcau011,pcau012"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),pcausite(b_pcausite),pcausite_desc(b_pcausite_desc),pcau002(b_pcau002),pcau003(b_pcau003),pcau004(b_pcau004),pcab003(b_pcab003),pcau005(b_pcau005),pcau006(b_pcau006),pcau007(b_pcau007),pcau009(b_pcau009),pcau008(b_pcau008),pcau010(b_pcau010),pcau011(b_pcau011),pcau012(b_pcau012)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="apc" filename="apcq801" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="pcausite,pcau002,pcau003,pcau004,pcab003,pcau005,pcau006,pcau007,pcau009,pcau008,pcau010,pcau011,pcau012" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="pcausite(b_pcausite),pcau002(b_pcau002),pcau003(b_pcau003),pcau004(b_pcau004),pcab003(b_pcab003),pcau005(b_pcau005),pcau006(b_pcau006),pcau007(b_pcau007),pcau009(b_pcau009),pcau008(b_pcau008),pcau010(b_pcau010),pcau011(b_pcau011),pcau012(b_pcau012)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="pcausite">
+        <after>
+          <reference field="pcausite_desc" ref_field="pcausite" map_field="pcauent,pcausite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pcausite_desc"/>
+      <column id="pcau002"/>
+      <column id="pcau003"/>
+      <column id="pcau004"/>
+      <column id="pcab003"/>
+      <column id="pcau005"/>
+      <column id="pcau006"/>
+      <column id="pcau007"/>
+      <column id="pcau009" type="S" default="0"/>
+      <column id="pcau008" type="S" default="0"/>
+      <column id="pcau010" type="S" default="0"/>
+      <column id="pcau011"/>
+      <column id="pcau012"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="pcau_t" page="1" linked="" pk="pcau001">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,pcausite,&apos;&apos;,pcau002,pcau003,pcau004,&apos;&apos;,pcau005,pcau006,pcau007,pcau009,pcau008,pcau010,pcau011,pcau012 FROM pcau_t WHERE pcauent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

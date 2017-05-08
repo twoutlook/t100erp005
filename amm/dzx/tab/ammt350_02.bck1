@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammt350_02" module="amm" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="08172" crtdt="2016-06-06 10:39:34" modid="08172" moddt="2016-06-06 11:10:22" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="規則對象範圍申請作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mmdisite,mmdiunit,mmdidocno,mmdi001,mmdi002,mmdi003,mmdi003_desc(chr500),mmdiacti"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="amm" filename="ammt350_02" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="mmdisite,mmdiunit,mmdidocno,mmdi001,mmdi002,mmdi003,mmdiacti" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="mmdisite,mmdiunit,mmdidocno,mmdi001,mmdi002,mmdi003,mmdiacti"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="mmdisite"/>
+      <column id="mmdiunit"/>
+      <column id="mmdidocno"/>
+      <column id="mmdi001"/>
+      <column id="mmdi002" def_scc="6856"/>
+      <column id="mmdi003">
+        <after>
+          <check chkid="v_mman001_1" id="isExist"/>
+          <reference field="mmdi003_desc" ref_field="mmdi_t.mmdi003" map_field="mmdi003" ref_sql="SELECT mmanl003 FROM mmanl_t WHERE mmanlent=$varg_enterprise$var AND mmanl001=? AND mmanl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mman001" state="i"/>
+        <controlp form="q_mmbo005" state="c"/>
+      </column>
+      <column id="mmdi003_desc"/>
+      <column id="mmdiacti"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="mmdi_t" page="1" linked="" pk="mmdidocno,mmdi003">
+      <sql id="forupd_sql_detail" query="SELECT mmdisite,mmdiunit,mmdidocno,mmdi001,mmdi002,mmdi003,&apos;&apos;,mmdiacti FROM mmdi_t WHERE mmdient=? AND mmdidocno=? AND mmdi003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mmdisite,mmdiunit,mmdidocno,mmdi001,mmdi002,mmdi003,&apos;&apos;,mmdiacti FROM mmdi_t WHERE mmdient= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

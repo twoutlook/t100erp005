@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axmt500_04" module="axm" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02040" crtdt="2014-02-11 10:43:57" modid="02040" moddt="2014-07-02 11:50:36" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="維護訂單其它資訊作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xmdcdocno,xmdcseq,xmdc027,xmdc028,xmdc028_desc(chr80),xmdc029,xmdc029_desc(chr80),xmdc030,xmdc031,xmdc031_desc(chr80),xmdc032,xmdc003,xmdc003_desc(chr80),xmdc033,xmdc036,xmdc037,xmdc038,xmdc039"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axm" filename="axmt500_04" method="dialog">
+    <section id="input">
+      <input id="head" field="xmdcdocno,xmdcseq,xmdc027,xmdc028,xmdc029,xmdc030,xmdc031,xmdc032,xmdc003,xmdc033,xmdc036,xmdc037,xmdc038,xmdc039"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="xmdcdocno"/>
+      <column id="xmdcseq"/>
+      <column id="xmdc027">
+        <after>
+          <check chkid="v_pmao004" id="isExist"/>
+        </after>
+        <controlp form="q_pmao004_1" state="i"/>
+        <controlp form="q_pmao004_1" state="c"/>
+      </column>
+      <column id="xmdc028">
+        <after>
+          <check chkid="v_imaa001_5" id="isExist"/>
+          <reference field="xmdc028_desc" ref_field="xmdc_t.xmdc028" map_field="xmdc028" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaa001=? "/>
+        </after>
+        <controlp form="q_imaa001" state="i"/>
+        <controlp form="q_inaa001_6" state="c"/>
+      </column>
+      <column id="xmdc028_desc"/>
+      <column id="xmdc029">
+        <after>
+          <check chkid="v_inab002_1" id="isExist"/>
+          <reference field="xmdc029_desc" ref_field="xmdc028,xmdc029" map_field="xmdc028,xmdc029" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inab002_6" state="i"/>
+        <controlp form="q_inab002_6" state="c"/>
+      </column>
+      <column id="xmdc029_desc"/>
+      <column id="xmdc030"/>
+      <column id="xmdc031">
+        <after>
+          <check chkid="v_oocq002_263" id="isExist"/>
+          <reference field="xmdc031_desc" ref_field="pmdn031" map_field="pmdn031" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;263&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="xmdc031_desc"/>
+      <column id="xmdc032" type="S" default="1" def_scc="2097"/>
+      <column id="xmdc003">
+        <after>
+          <reference field="xmdc003_desc" ref_field="xmdc_t.xmdc003" map_field="xmdc003" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmdc003_desc"/>
+      <column id="xmdc033">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="xmdc036"/>
+      <column id="xmdc037"/>
+      <column id="xmdc038"/>
+      <column id="xmdc039"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xmdc_t" pk="xmdcdocno,xmdcseq">
+      <sql id="forupd_sql" type="sql" query="SELECT xmdcdocno,xmdcseq,xmdc027,xmdc028,&apos;&apos;,xmdc029,&apos;&apos;,xmdc030,xmdc031,&apos;&apos;,xmdc032,xmdc003,&apos;&apos;,xmdc033,xmdc036,xmdc037,xmdc038,xmdc039 FROM xmdc_t WHERE xmdcent= ? AND xmdcdocno=? AND xmdcseq=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="xmdcdocno,xmdcseq"/>
+    </head>
+  </dataset>
+</assembly>
+

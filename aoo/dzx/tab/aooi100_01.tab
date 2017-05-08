@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi100_01" module="aoo" jobmode="N" type="c01a" industry="std" fix_arg="0" crtid="02431" crtdt="2014-09-23 14:22:48" modid="04010" moddt="2016-07-04 16:26:49" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="Logo上傳">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="ooek001,ooek001_desc(chr80),ooek002,ooek004,ooek005,ooekstus,ooekownid,ooekowndp,ooekcrtid,ooekcrtdp,ooekcrtdt,ooekmodid,ooekmodid_desc(chr80),ooekmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="btn_updatelogo"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi100_01" method="dialog">
+    <section id="input">
+      <input id="head" field="ooek002,ooek004,ooek005,ooekstus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="ooek002,ooek004,ooek005,ooekstus"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="ooek001,ooek002"/>
+      <set id="head" type="no_entry" field="ooek001,ooek002"/>
+    </init>
+    <init id="head">
+      <column id="ooek001">
+        <after>
+          <reference field="ooek001_desc" ref_field="ooek_t.ooek001" map_field="ooekent,ooek001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="ooek001_desc"/>
+      <column id="ooek002"/>
+      <column id="ooek004"/>
+      <column id="ooek005"/>
+      <column id="ooekstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="ooekownid"/>
+      <column id="ooekowndp"/>
+      <column id="ooekcrtid"/>
+      <column id="ooekcrtdp"/>
+      <column id="ooekcrtdt"/>
+      <column id="ooekmodid">
+        <after>
+          <reference field="ooekmodid_desc" ref_field="ooek_t.ooekmodid" map_field="ooekmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="ooekmodid_desc"/>
+      <column id="ooekmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="ooek_t" pk="ooek001,ooek002">
+      <sql id="forupd_sql" type="sql" query="SELECT ooek001,&apos;&apos;,ooek002,ooek004,ooek005,ooekstus,ooekownid,ooekowndp,ooekcrtid,ooekcrtdp,ooekcrtdt,ooekmodid,&apos;&apos;,ooekmoddt FROM ooek_t WHERE ooekent= ? AND ooek001=? AND ooek002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="ooek001,ooek002"/>
+    </head>
+  </dataset>
+</assembly>
+

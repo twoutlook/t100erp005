@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrr300_g01" module="axr" jobmode="N" type="g01" industry="std" crtid="01251" crtdt="2014-12-12 14:47:52" modid="07900" moddt="2016-12-05 17:01:23" sdver="10" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.a1(chr5|账套)">
+    <var seq="1" value="xrcadocno,xrcadocdt,xrca014,xrca015,xrca007,xrca053,xrca039,xrca004,xrca005,xrca008,xrca054,xrca022,xrca019,xrcc003,xrcc004,xrcc002,xrcc100,xrcc108,xrcc118,xrcaent,xrcc001,xrcc002_desc(chr50|NULL),xrcc108_desc(chr50|NULL),xrcc118_desc(chr50|NULL),xrca015_desc(chr200|NULL),xrca014_desc(chr200|NULL),xrca007_desc(chr200|NULL),xrca004_desc(chr200|NULL),xrca005_desc(chr200|NULL),xrca008_desc(chr200|NULL),xrca054_desc(chr200|NULL),xrca011,xrca012,xrca011_desc(chr200|NULL)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="xrcadocno(xrcadocno|xrcadocno),xrcadocdt(xrcadocdt|xrcadocdt),xrca014(xrca014|xrca014),xrca015(xrca015|xrca015),xrca007(xrca007|xrca007),xrca053(xrca053|xrca053),xrca039(xrca039|xrca039),xrca004(xrca004|xrca004),xrca005(xrca005|xrca005),xrca008(xrca008|xrca008),xrca054(xrca054|xrca054),xrca022(xrca022|xrca022),xrca019(xrca019|xrca019),xrcc003(xrcc003|xrcc003),xrcc004(xrcc004|xrcc004),xrcc002(xrcc002|xrcc002),xrcc100(xrcc100|xrcc100),xrcc108(xrcc108|xrcc108),xrcc118(xrcc118|xrcc118),xrcaent(xrcaent|xrcaent),xrcc001(xrcc001|xrcc001),xrcc002_desc(chr50|NULL),xrcc108_desc(chr50|NULL),xrcc118_desc(chr50|NULL),xrca015_desc(chr200|NULL),xrca014_desc(chr200|NULL),xrca007_desc(chr200|NULL),xrca004_desc(chr200|NULL),xrca005_desc(chr200|NULL),xrca008_desc(chr200|NULL),xrca054_desc(chr200|NULL),xrca011(xrca011|xrca011),xrca012(xrca012|xrca012),xrca011_desc(chr200|NULL)"/>
+    <sql id="g_from" query="xrca_t,xrcc_t"/>
+    <sql id="g_where" query="" maintable="xrca_t"/>
+    <sql id="g_order" query="xrcadocno"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="xrcadocno"/>
+    <section id="b_group" reptype="d01">
+      <rep type="xrcadocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="xrcaent,xrcadocno"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="xrcaent,xrcadocno"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="xrcaent,xrcadocno"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="xrcadocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="xrcaent,xrcadocno"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

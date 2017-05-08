@@ -1,0 +1,647 @@
+{<section id="asfp302_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0008(2014-06-30 18:18:37), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000112
+#+ Filename...: asfp302_01
+#+ Description: RUNCARD拆分
+#+ Creator....: 00768(2014-05-09 15:15:59)
+#+ Modifier...: 00768 -SD/PR-
+{</section>}
+
+
+
+{<section id="asfp302_01.global" >}
+#應用 c03b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_sfca_m        RECORD
+       sfcbdocno LIKE type_t.chr20, 
+   sfaa010 LIKE type_t.chr500, 
+   wip_qty LIKE type_t.num20_6, 
+   sfcb001 LIKE type_t.num10, 
+   imaal003 LIKE type_t.chr500, 
+   split_qty LIKE type_t.num20_6, 
+   sfcb003 LIKE type_t.chr10, 
+   sfcb003_desc LIKE type_t.chr80, 
+   sfcb004 LIKE type_t.chr10, 
+   imaal004 LIKE type_t.chr500, 
+   split_lot LIKE type_t.num5
+       END RECORD
+DEFINE g_sfca_m        type_g_sfca_m
+ 
+   
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_sfcb_d        RECORD
+       ln LIKE type_t.num5, 
+   qty LIKE type_t.num20_6, 
+   qtys LIKE type_t.num20_6
+       END RECORD
+
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_sfcb_d          DYNAMIC ARRAY OF type_g_sfcb_d
+DEFINE g_sfcb_d_t        type_g_sfcb_d
+
+ 
+DEFINE g_sfcb002_t   LIKE sfcb_t.sfcb002    #Key值備份
+
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10
+DEFINE l_ac                  LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+     
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+{</section>}
+ 
+{<section id="asfp302_01.input" >}   
+#+ 資料輸入
+PUBLIC FUNCTION asfp302_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_asfp302_01 WITH FORM cl_ap_formpath("asf","asfp302_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      INPUT BY NAME g_sfca_m.sfcbdocno,g_sfca_m.sfaa010,g_sfca_m.wip_qty,g_sfca_m.sfcb001,g_sfca_m.imaal003,g_sfca_m.split_qty,g_sfca_m.sfcb003,g_sfca_m.sfcb004,g_sfca_m.imaal004,g_sfca_m.split_lot ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.head.action"
+         {<point name="input.head.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.head.before_input"
+            {<point name="input.head.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfcbdocno
+            #add-point:BEFORE FIELD sfcbdocno name="input.b.sfcbdocno"
+            {<point name="input.b.sfcbdocno" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfcbdocno
+            
+            #add-point:AFTER FIELD sfcbdocno name="input.a.sfcbdocno"
+            {<point name="input.a.sfcbdocno" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfcbdocno
+            #add-point:ON CHANGE sfcbdocno name="input.g.sfcbdocno"
+            {<point name="input.g.sfcbdocno" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfaa010
+            #add-point:BEFORE FIELD sfaa010 name="input.b.sfaa010"
+            {<point name="input.b.sfaa010" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfaa010
+            
+            #add-point:AFTER FIELD sfaa010 name="input.a.sfaa010"
+            {<point name="input.a.sfaa010" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfaa010
+            #add-point:ON CHANGE sfaa010 name="input.g.sfaa010"
+            {<point name="input.g.sfaa010" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD wip_qty
+            #add-point:BEFORE FIELD wip_qty name="input.b.wip_qty"
+            {<point name="input.b.wip_qty" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD wip_qty
+            
+            #add-point:AFTER FIELD wip_qty name="input.a.wip_qty"
+            {<point name="input.a.wip_qty" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE wip_qty
+            #add-point:ON CHANGE wip_qty name="input.g.wip_qty"
+            {<point name="input.g.wip_qty" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfcb001
+            #add-point:BEFORE FIELD sfcb001 name="input.b.sfcb001"
+            {<point name="input.b.sfcb001" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfcb001
+            
+            #add-point:AFTER FIELD sfcb001 name="input.a.sfcb001"
+            {<point name="input.a.sfcb001" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfcb001
+            #add-point:ON CHANGE sfcb001 name="input.g.sfcb001"
+            {<point name="input.g.sfcb001" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imaal003
+            #add-point:BEFORE FIELD imaal003 name="input.b.imaal003"
+            {<point name="input.b.imaal003" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imaal003
+            
+            #add-point:AFTER FIELD imaal003 name="input.a.imaal003"
+            {<point name="input.a.imaal003" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imaal003
+            #add-point:ON CHANGE imaal003 name="input.g.imaal003"
+            {<point name="input.g.imaal003" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD split_qty
+            #add-point:BEFORE FIELD split_qty name="input.b.split_qty"
+            {<point name="input.b.split_qty" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD split_qty
+            
+            #add-point:AFTER FIELD split_qty name="input.a.split_qty"
+            {<point name="input.a.split_qty" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE split_qty
+            #add-point:ON CHANGE split_qty name="input.g.split_qty"
+            {<point name="input.g.split_qty" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfcb003
+            
+            #add-point:AFTER FIELD sfcb003 name="input.a.sfcb003"
+            {<point name="input.a.sfcb003" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfcb003
+            #add-point:BEFORE FIELD sfcb003 name="input.b.sfcb003"
+            {<point name="input.b.sfcb003" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfcb003
+            #add-point:ON CHANGE sfcb003 name="input.g.sfcb003"
+            {<point name="input.g.sfcb003" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sfcb004
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sfca_m.sfcb004,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD sfcb004
+            END IF 
+
+
+
+            #add-point:AFTER FIELD sfcb004 name="input.a.sfcb004"
+            {<point name="input.a.sfcb004" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sfcb004
+            #add-point:BEFORE FIELD sfcb004 name="input.b.sfcb004"
+            {<point name="input.b.sfcb004" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sfcb004
+            #add-point:ON CHANGE sfcb004 name="input.g.sfcb004"
+            {<point name="input.g.sfcb004" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imaal004
+            #add-point:BEFORE FIELD imaal004 name="input.b.imaal004"
+            {<point name="input.b.imaal004" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imaal004
+            
+            #add-point:AFTER FIELD imaal004 name="input.a.imaal004"
+            {<point name="input.a.imaal004" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE imaal004
+            #add-point:ON CHANGE imaal004 name="input.g.imaal004"
+            {<point name="input.g.imaal004" />}
+            #END add-point 
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD split_lot
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_sfca_m.split_lot,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD split_lot
+            END IF 
+
+
+
+            #add-point:AFTER FIELD split_lot name="input.a.split_lot"
+            {<point name="input.a.split_lot" />}
+            #END add-point
+            
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD split_lot
+            #add-point:BEFORE FIELD split_lot name="input.b.split_lot"
+            {<point name="input.b.split_lot" />}
+            #END add-point
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE split_lot
+            #add-point:ON CHANGE split_lot name="input.g.split_lot"
+            {<point name="input.g.split_lot" />}
+            #END add-point 
+
+
+ #欄位檢查
+                  #Ctrlp:input.c.sfcbdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfcbdocno
+            #add-point:ON ACTION controlp INFIELD sfcbdocno name="input.c.sfcbdocno"
+            {<point name="input.c.sfcbdocno" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.sfaa010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfaa010
+            #add-point:ON ACTION controlp INFIELD sfaa010 name="input.c.sfaa010"
+            {<point name="input.c.sfaa010" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.wip_qty
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD wip_qty
+            #add-point:ON ACTION controlp INFIELD wip_qty name="input.c.wip_qty"
+            {<point name="input.c.wip_qty" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.sfcb001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfcb001
+            #add-point:ON ACTION controlp INFIELD sfcb001 name="input.c.sfcb001"
+            {<point name="input.c.sfcb001" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.imaal003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imaal003
+            #add-point:ON ACTION controlp INFIELD imaal003 name="input.c.imaal003"
+            {<point name="input.c.imaal003" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.split_qty
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD split_qty
+            #add-point:ON ACTION controlp INFIELD split_qty name="input.c.split_qty"
+            {<point name="input.c.split_qty" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.sfcb003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfcb003
+            #add-point:ON ACTION controlp INFIELD sfcb003 name="input.c.sfcb003"
+            {<point name="input.c.sfcb003" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.sfcb004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sfcb004
+            #add-point:ON ACTION controlp INFIELD sfcb004 name="input.c.sfcb004"
+            {<point name="input.c.sfcb004" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.imaal004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imaal004
+            #add-point:ON ACTION controlp INFIELD imaal004 name="input.c.imaal004"
+            {<point name="input.c.imaal004" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.split_lot
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD split_lot
+            #add-point:ON ACTION controlp INFIELD split_lot name="input.c.split_lot"
+            {<point name="input.c.split_lot" />}
+            #END add-point
+
+
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.head.after_input"
+            {<point name="input.head.after_input"/>}
+            #end add-point
+            
+      END INPUT
+   
+      INPUT ARRAY g_sfcb_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.body.action"
+         {<point name="input.body.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.body.before_input"
+            {<point name="input.body.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ln
+            #add-point:BEFORE FIELD ln name="input.b.page1.ln"
+            {<point name="input.b.page1.ln" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ln
+            
+            #add-point:AFTER FIELD ln name="input.a.page1.ln"
+            {<point name="input.a.page1.ln" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE ln
+            #add-point:ON CHANGE ln name="input.g.page1.ln"
+            {<point name="input.g.page1.ln" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD qty
+            #add-point:BEFORE FIELD qty name="input.b.page1.qty"
+            {<point name="input.b.page1.qty" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD qty
+            
+            #add-point:AFTER FIELD qty name="input.a.page1.qty"
+            {<point name="input.a.page1.qty" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE qty
+            #add-point:ON CHANGE qty name="input.g.page1.qty"
+            {<point name="input.g.page1.qty" />}
+            #END add-point 
+
+
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD qtys
+            #add-point:BEFORE FIELD qtys name="input.b.page1.qtys"
+            {<point name="input.b.page1.qtys" />}
+            #END add-point
+
+
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD qtys
+            
+            #add-point:AFTER FIELD qtys name="input.a.page1.qtys"
+            {<point name="input.a.page1.qtys" />}
+            #END add-point
+            
+
+
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE qtys
+            #add-point:ON CHANGE qtys name="input.g.page1.qtys"
+            {<point name="input.g.page1.qtys" />}
+            #END add-point 
+
+
+ 
+                  #Ctrlp:input.c.page1.ln
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ln
+            #add-point:ON ACTION controlp INFIELD ln name="input.c.page1.ln"
+            {<point name="input.c.page1.ln" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.qty
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD qty
+            #add-point:ON ACTION controlp INFIELD qty name="input.c.page1.qty"
+            {<point name="input.c.page1.qty" />}
+            #END add-point
+
+
+         #Ctrlp:input.c.page1.qtys
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD qtys
+            #add-point:ON ACTION controlp INFIELD qtys name="input.c.page1.qtys"
+            {<point name="input.c.page1.qtys" />}
+            #END add-point
+
+
+
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.body.after_input"
+            {<point name="input.body.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+
+      
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_asfp302_01 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="asfp302_01.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+{</section>}
+{<section id="asfp302_01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+

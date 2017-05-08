@@ -1,0 +1,443 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="apmr060_x01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:5(2016-04-21 11:17:42), PR版次:
+#+ Customerized Version.: SD版次:(), PR版次:
+#+ Build......: 000048
+#+ Filename...: apmr060_x01
+#+ Description: 請採購追蹤表
+#+ Creator....: 05384(2015-09-03 16:30:18)
+#+ Modifier...: 02294 -SD/PR-
+
+{</section>}
+
+{<section id="apmr060_x01.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:7)
+#add-point:填寫註解說明
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #where condition 
+       wc2 STRING                   #where condition2
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+
+{</section>}
+
+{<section id="apmr060_x01.main" readonly="Y" >}
+PUBLIC FUNCTION apmr060_x01(p_arg1,p_arg2)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition 
+DEFINE  p_arg2 STRING                  #tm.wc2  where condition2
+#add-point:init段define(客製用) name="component.define_customerization"
+{<point name="component.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+{<point name="component.define"/>}
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.wc2 = p_arg2
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   {<point name="component.arg.prep" />}
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "apmr060_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL apmr060_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL apmr060_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL apmr060_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL apmr060_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL apmr060_x01_rep_data()
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="apmr060_x01.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION apmr060_x01_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   {<point name="create_tmp.before"/>}
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "pmdadocno.pmda_t.pmdadocno,pmdadocdt.pmda_t.pmdadocdt,l_pmda002_ooag011.type_t.chr300,l_pmda003_ooefl003.type_t.chr1000,l_pmdastus_desc.gzcbl_t.gzcbl004,pmdbseq.pmdb_t.pmdbseq,pmdb004.pmdb_t.pmdb004,l_pmdb004_desc.imaal_t.imaal003,l_pmdb004_desc1.imaal_t.imaal004,imaa_t_imaa009.imaa_t.imaa009,l_imaa009_desc.rtaxl_t.rtaxl003,imaf_t_imaf141.imaf_t.imaf141,l_imaf141_desc.oocql_t.oocql004,imaa_t_imaa127.imaa_t.imaa127,l_imaa127_desc.oocql_t.oocql004,l_pmdb033_desc.gzcbl_t.gzcbl004,pmdb030.pmdb_t.pmdb030,pmdb007.pmdb_t.pmdb007,pmdb006.pmdb_t.pmdb006,pmdb049.pmdb_t.pmdb049,pmdl_t_pmdldocno.pmdl_t.pmdldocno,pmdl_t_pmdldocdt.pmdl_t.pmdldocdt,l_pmdl005_desc.gzcbl_t.gzcbl004,l_pmdl002_ooag011.type_t.chr300,l_pmdl003_ooefl003.type_t.chr1000,l_pmdl004_pmaal004.type_t.chr100,l_pmdlstus_desc.gzcbl_t.gzcbl004,pmdo_t_pmdoseq.pmdo_t.pmdoseq,pmdo_t_pmdoseq1.pmdo_t.pmdoseq1,pmdo_t_pmdoseq2.pmdo_t.pmdoseq2,l_pmdo003_desc.gzcbl_t.gzcbl004,pmdo_t_pmdo001.pmdo_t.pmdo001,l_pmdo001_desc.imaal_t.imaal004,l_pmdo001_desc1.imaal_t.imaal004,pmdo_t_pmdo012.pmdo_t.pmdo012,l_pmdn052.pmdn_t.pmdn052,l_pmdo006_pmdo019.type_t.num20_6,pmds_t_pmdsdocno.pmds_t.pmdsdocno,pmds_t_pmdsdocdt.pmds_t.pmdsdocdt,l_pmds002_ooag011.type_t.chr300,l_pmds003_ooefl003.type_t.chr1000,l_pmdsstus_desc.gzcbl_t.gzcbl004,pmdt_t_pmdtseq.pmdt_t.pmdtseq,pmdt_t_pmdt006.pmdt_t.pmdt006,l_pmdt006_desc.imaal_t.imaal003,l_pmdt006_desc1.imaal_t.imaal004,pmdt_t_pmdt007.pmdt_t.pmdt007,l_pmdt007_desc.type_t.chr1000,pmdt_t_pmdt016.pmdt_t.pmdt016,l_pmdt016_desc.inayl_t.inayl003,pmdt_t_pmdt017.pmdt_t.pmdt017,l_pmdt017_desc.inab_t.inab003,pmdt_t_pmdt018.pmdt_t.pmdt018,pmdt_t_pmdt019.pmdt_t.pmdt019,pmdt_t_pmdt020.pmdt_t.pmdt020,l_pmdsdocno1.pmds_t.pmdsdocno,l_pmdsdocdt1.pmds_t.pmdsdocdt,l_pmds0021_ooag011.type_t.chr300,l_pmds0031_ooefl003.type_t.chr1000,l_pmdsstus1_desc.gzcbl_t.gzcbl004,l_pmdtseq1.pmdt_t.pmdtseq,l_pmdt0191.pmdt_t.pmdt019,l_pmdt0201.pmdt_t.pmdt020,l_pmdsdocno2.pmds_t.pmdsdocno,l_pmdsdocdt2.pmds_t.pmdsdocdt,l_pmds0022_ooag011.type_t.chr300,l_pmds0032_ooefl003.type_t.chr1000,l_pmdsstus2_desc.gzcbl_t.gzcbl004,l_pmdtseq2.pmdt_t.pmdtseq,l_pmdt0062.pmdt_t.pmdt006,l_pmdt0062_desc.imaal_t.imaal003,l_pmdt0062_desc1.imaal_t.imaal004,l_pmdt0072.pmdt_t.pmdt007,l_pmdt0072_desc.type_t.chr1000,l_pmdt0162.pmdt_t.pmdt016,l_pmdt0162_desc.inayl_t.inayl003,l_pmdt0172.pmdt_t.pmdt017,l_pmdt0172_desc.inab_t.inab003,l_pmdt0182.pmdt_t.pmdt018,l_pmdt0192.pmdt_t.pmdt019,l_pmdt0202.pmdt_t.pmdt020,l_pmdsdocno3.pmds_t.pmdsdocno,l_pmdsdocdt3.pmds_t.pmdsdocdt,l_pmds0023_ooag011.type_t.chr300,l_pmds0033_ooefl003.type_t.chr1000,l_pmdsstus3_desc.gzcbl_t.gzcbl004,l_pmds1003.pmds_t.pmds100,l_pmds1003_desc.gzcbl_t.gzcbl004,l_pmdtseq3.pmdt_t.pmdtseq,l_pmdt0193.pmdt_t.pmdt019,l_pmdt0203.pmdt_t.pmdt020" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   {<point name="create_tmp.after"/>}
+   #end add-point:create_tmp.after
+END FUNCTION
+
+{</section>}
+
+{<section id="apmr060_x01.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION apmr060_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+{<point name="ins_prep.define_customerization" edit="c" mark="Y"/>}
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+{<point name="ins_prep.define"/>}
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         {<point name="insert_prep"/>}
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+
+{</section>}
+
+{<section id="apmr060_x01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION apmr060_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+{<point name="sel_prep.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+{<point name="sel_prep.define"/>}
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   {<point name="sel_prep.before" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   {<point name="sel_prep.g_select" mark="Y"/>}
+   #end add-point
+   LET g_select = " SELECT pmdasite,pmdadocno,pmdadocdt,pmda002,'',pmda003,'',pmdastus,'',pmdbseq,pmdb004, 
+       '','',imaa_t.imaa009,'',imaf_t.imaf141,'',imaa_t.imaa127,'',pmdb033,'',pmdb030,pmdb007,pmdb006, 
+       pmdb049,pmdl_t.pmdldocno,pmdl_t.pmdldocdt,pmdl_t.pmdl005,'',pmdl_t.pmdl002,'',pmdl_t.pmdl003, 
+       '',pmdl_t.pmdl004,'',pmdl_t.pmdlstus,'',pmdo_t.pmdoseq,pmdo_t.pmdoseq1,pmdo_t.pmdoseq2,pmdo_t.pmdo003, 
+       '',pmdo_t.pmdo001,'','',pmdo_t.pmdo012,'',0,pmds_t.pmdsdocno,pmds_t.pmdsdocdt,pmds_t.pmds002, 
+       '',pmds_t.pmds003,'',pmds_t.pmdsstus,'',pmdt_t.pmdtseq,pmdt_t.pmdt006,'','',pmdt_t.pmdt007,'', 
+       pmdt_t.pmdt016,'',pmdt_t.pmdt017,'',pmdt_t.pmdt018,pmdt_t.pmdt019,pmdt_t.pmdt020,'','','','', 
+       '','','','',0,'','','','','','','','','','','','','','','','','','',0,'','','','','','','','', 
+       '','',0"
+ 
+   #add-point:sel_prep g_from name="sel_prep.g_from"
+   {<point name="sel_prep.g_from" mark="Y"/>}
+   #end add-point
+    LET g_from = " FROM pmda_t,pmdb_t,pmdl_t,pmdo_t,pmds_t,pmdt_t,imaa_t,imaf_t"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+   {<point name="sel_prep.g_where" mark="Y"/>}
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   {<point name="sel_prep.g_order" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   {<point name="sel_prep.sql.before" mark="Y"/>}
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("pmda_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   {<point name="sel_prep.sql.after" mark="Y"/>}
+   #end add-point
+   PREPARE apmr060_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE apmr060_x01_curs CURSOR FOR apmr060_x01_prepare
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="apmr060_x01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION apmr060_x01_ins_data()
+DEFINE sr RECORD 
+   pmdasite LIKE pmda_t.pmdasite, 
+   pmdadocno LIKE pmda_t.pmdadocno, 
+   pmdadocdt LIKE pmda_t.pmdadocdt, 
+   pmda002 LIKE pmda_t.pmda002, 
+   l_pmda002_ooag011 LIKE type_t.chr300, 
+   pmda003 LIKE pmda_t.pmda003, 
+   l_pmda003_ooefl003 LIKE type_t.chr1000, 
+   pmdastus LIKE pmda_t.pmdastus, 
+   l_pmdastus_desc LIKE gzcbl_t.gzcbl004, 
+   pmdbseq LIKE pmdb_t.pmdbseq, 
+   pmdb004 LIKE pmdb_t.pmdb004, 
+   l_pmdb004_desc LIKE imaal_t.imaal003, 
+   l_pmdb004_desc1 LIKE imaal_t.imaal004, 
+   imaa_t_imaa009 LIKE imaa_t.imaa009, 
+   l_imaa009_desc LIKE rtaxl_t.rtaxl003, 
+   imaf_t_imaf141 LIKE imaf_t.imaf141, 
+   l_imaf141_desc LIKE oocql_t.oocql004, 
+   imaa_t_imaa127 LIKE imaa_t.imaa127, 
+   l_imaa127_desc LIKE oocql_t.oocql004, 
+   pmdb033 LIKE pmdb_t.pmdb033, 
+   l_pmdb033_desc LIKE gzcbl_t.gzcbl004, 
+   pmdb030 LIKE pmdb_t.pmdb030, 
+   pmdb007 LIKE pmdb_t.pmdb007, 
+   pmdb006 LIKE pmdb_t.pmdb006, 
+   pmdb049 LIKE pmdb_t.pmdb049, 
+   pmdl_t_pmdldocno LIKE pmdl_t.pmdldocno, 
+   pmdl_t_pmdldocdt LIKE pmdl_t.pmdldocdt, 
+   pmdl_t_pmdl005 LIKE pmdl_t.pmdl005, 
+   l_pmdl005_desc LIKE gzcbl_t.gzcbl004, 
+   pmdl_t_pmdl002 LIKE pmdl_t.pmdl002, 
+   l_pmdl002_ooag011 LIKE type_t.chr300, 
+   pmdl_t_pmdl003 LIKE pmdl_t.pmdl003, 
+   l_pmdl003_ooefl003 LIKE type_t.chr1000, 
+   pmdl_t_pmdl004 LIKE pmdl_t.pmdl004, 
+   l_pmdl004_pmaal004 LIKE type_t.chr100, 
+   pmdl_t_pmdlstus LIKE pmdl_t.pmdlstus, 
+   l_pmdlstus_desc LIKE gzcbl_t.gzcbl004, 
+   pmdo_t_pmdoseq LIKE pmdo_t.pmdoseq, 
+   pmdo_t_pmdoseq1 LIKE pmdo_t.pmdoseq1, 
+   pmdo_t_pmdoseq2 LIKE pmdo_t.pmdoseq2, 
+   pmdo_t_pmdo003 LIKE pmdo_t.pmdo003, 
+   l_pmdo003_desc LIKE gzcbl_t.gzcbl004, 
+   pmdo_t_pmdo001 LIKE pmdo_t.pmdo001, 
+   l_pmdo001_desc LIKE imaal_t.imaal004, 
+   l_pmdo001_desc1 LIKE imaal_t.imaal004, 
+   pmdo_t_pmdo012 LIKE pmdo_t.pmdo012, 
+   l_pmdn052 LIKE pmdn_t.pmdn052, 
+   l_pmdo006_pmdo019 LIKE type_t.num20_6, 
+   pmds_t_pmdsdocno LIKE pmds_t.pmdsdocno, 
+   pmds_t_pmdsdocdt LIKE pmds_t.pmdsdocdt, 
+   pmds_t_pmds002 LIKE pmds_t.pmds002, 
+   l_pmds002_ooag011 LIKE type_t.chr300, 
+   pmds_t_pmds003 LIKE pmds_t.pmds003, 
+   l_pmds003_ooefl003 LIKE type_t.chr1000, 
+   pmds_t_pmdsstus LIKE pmds_t.pmdsstus, 
+   l_pmdsstus_desc LIKE gzcbl_t.gzcbl004, 
+   pmdt_t_pmdtseq LIKE pmdt_t.pmdtseq, 
+   pmdt_t_pmdt006 LIKE pmdt_t.pmdt006, 
+   l_pmdt006_desc LIKE imaal_t.imaal003, 
+   l_pmdt006_desc1 LIKE imaal_t.imaal004, 
+   pmdt_t_pmdt007 LIKE pmdt_t.pmdt007, 
+   l_pmdt007_desc LIKE type_t.chr1000, 
+   pmdt_t_pmdt016 LIKE pmdt_t.pmdt016, 
+   l_pmdt016_desc LIKE inayl_t.inayl003, 
+   pmdt_t_pmdt017 LIKE pmdt_t.pmdt017, 
+   l_pmdt017_desc LIKE inab_t.inab003, 
+   pmdt_t_pmdt018 LIKE pmdt_t.pmdt018, 
+   pmdt_t_pmdt019 LIKE pmdt_t.pmdt019, 
+   pmdt_t_pmdt020 LIKE pmdt_t.pmdt020, 
+   l_pmdsdocno1 LIKE pmds_t.pmdsdocno, 
+   l_pmdsdocdt1 LIKE pmds_t.pmdsdocdt, 
+   l_pmds0021_ooag011 LIKE type_t.chr300, 
+   l_pmds0031_ooefl003 LIKE type_t.chr1000, 
+   l_pmdsstus1 LIKE pmds_t.pmdsstus, 
+   l_pmdsstus1_desc LIKE gzcbl_t.gzcbl004, 
+   l_pmdtseq1 LIKE pmdt_t.pmdtseq, 
+   l_pmdt0191 LIKE pmdt_t.pmdt019, 
+   l_pmdt0201 LIKE pmdt_t.pmdt020, 
+   l_pmdsdocno2 LIKE pmds_t.pmdsdocno, 
+   l_pmdsdocdt2 LIKE pmds_t.pmdsdocdt, 
+   l_pmds0022_ooag011 LIKE type_t.chr300, 
+   l_pmds0032_ooefl003 LIKE type_t.chr1000, 
+   l_pmdsstus2 LIKE pmds_t.pmdsstus, 
+   l_pmdsstus2_desc LIKE gzcbl_t.gzcbl004, 
+   l_pmdtseq2 LIKE pmdt_t.pmdtseq, 
+   l_pmdt0062 LIKE pmdt_t.pmdt006, 
+   l_pmdt0062_desc LIKE imaal_t.imaal003, 
+   l_pmdt0062_desc1 LIKE imaal_t.imaal004, 
+   l_pmdt0072 LIKE pmdt_t.pmdt007, 
+   l_pmdt0072_desc LIKE type_t.chr1000, 
+   l_pmdt0162 LIKE pmdt_t.pmdt016, 
+   l_pmdt0162_desc LIKE inayl_t.inayl003, 
+   l_pmdt0172 LIKE pmdt_t.pmdt017, 
+   l_pmdt0172_desc LIKE inab_t.inab003, 
+   l_pmdt0182 LIKE pmdt_t.pmdt018, 
+   l_pmdt0192 LIKE pmdt_t.pmdt019, 
+   l_pmdt0202 LIKE pmdt_t.pmdt020, 
+   l_pmdsdocno3 LIKE pmds_t.pmdsdocno, 
+   l_pmdsdocdt3 LIKE pmds_t.pmdsdocdt, 
+   l_pmds0023_ooag011 LIKE type_t.chr300, 
+   l_pmds0033_ooefl003 LIKE type_t.chr1000, 
+   l_pmdsstus3 LIKE pmds_t.pmdsstus, 
+   l_pmdsstus3_desc LIKE gzcbl_t.gzcbl004, 
+   l_pmds1003 LIKE pmds_t.pmds100, 
+   l_pmds1003_desc LIKE gzcbl_t.gzcbl004, 
+   l_pmdtseq3 LIKE pmdt_t.pmdtseq, 
+   l_pmdt0193 LIKE pmdt_t.pmdt019, 
+   l_pmdt0203 LIKE pmdt_t.pmdt020
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+{<point name="ins_data.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+{<point name="ins_data.define"/>}
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    {<point name="ins_data.before"/>}
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH apmr060_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       {<point name="ins_data.foreach"/>}
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       {<point name="ins_data.before.save"/>}
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.pmdadocno,sr.pmdadocdt,sr.l_pmda002_ooag011,sr.l_pmda003_ooefl003,sr.l_pmdastus_desc,sr.pmdbseq,sr.pmdb004,sr.l_pmdb004_desc,sr.l_pmdb004_desc1,sr.imaa_t_imaa009,sr.l_imaa009_desc,sr.imaf_t_imaf141,sr.l_imaf141_desc,sr.imaa_t_imaa127,sr.l_imaa127_desc,sr.l_pmdb033_desc,sr.pmdb030,sr.pmdb007,sr.pmdb006,sr.pmdb049,sr.pmdl_t_pmdldocno,sr.pmdl_t_pmdldocdt,sr.l_pmdl005_desc,sr.l_pmdl002_ooag011,sr.l_pmdl003_ooefl003,sr.l_pmdl004_pmaal004,sr.l_pmdlstus_desc,sr.pmdo_t_pmdoseq,sr.pmdo_t_pmdoseq1,sr.pmdo_t_pmdoseq2,sr.l_pmdo003_desc,sr.pmdo_t_pmdo001,sr.l_pmdo001_desc,sr.l_pmdo001_desc1,sr.pmdo_t_pmdo012,sr.l_pmdn052,sr.l_pmdo006_pmdo019,sr.pmds_t_pmdsdocno,sr.pmds_t_pmdsdocdt,sr.l_pmds002_ooag011,sr.l_pmds003_ooefl003,sr.l_pmdsstus_desc,sr.pmdt_t_pmdtseq,sr.pmdt_t_pmdt006,sr.l_pmdt006_desc,sr.l_pmdt006_desc1,sr.pmdt_t_pmdt007,sr.l_pmdt007_desc,sr.pmdt_t_pmdt016,sr.l_pmdt016_desc,sr.pmdt_t_pmdt017,sr.l_pmdt017_desc,sr.pmdt_t_pmdt018,sr.pmdt_t_pmdt019,sr.pmdt_t_pmdt020,sr.l_pmdsdocno1,sr.l_pmdsdocdt1,sr.l_pmds0021_ooag011,sr.l_pmds0031_ooefl003,sr.l_pmdsstus1_desc,sr.l_pmdtseq1,sr.l_pmdt0191,sr.l_pmdt0201,sr.l_pmdsdocno2,sr.l_pmdsdocdt2,sr.l_pmds0022_ooag011,sr.l_pmds0032_ooefl003,sr.l_pmdsstus2_desc,sr.l_pmdtseq2,sr.l_pmdt0062,sr.l_pmdt0062_desc,sr.l_pmdt0062_desc1,sr.l_pmdt0072,sr.l_pmdt0072_desc,sr.l_pmdt0162,sr.l_pmdt0162_desc,sr.l_pmdt0172,sr.l_pmdt0172_desc,sr.l_pmdt0182,sr.l_pmdt0192,sr.l_pmdt0202,sr.l_pmdsdocno3,sr.l_pmdsdocdt3,sr.l_pmds0023_ooag011,sr.l_pmds0033_ooefl003,sr.l_pmdsstus3_desc,sr.l_pmds1003,sr.l_pmds1003_desc,sr.l_pmdtseq3,sr.l_pmdt0193,sr.l_pmdt0203
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "apmr060_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       {<point name="ins_data.after.save"/>}
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    {<point name="ins_data.after"/>}
+    #end add-point
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="apmr060_x01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION apmr060_x01_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+{<point name="rep_data.define_customerization" edit="c" mark="Y"/>}
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+{<point name="rep_data.define"/>}
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    {<point name="rep_data.before"/>}
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    {<point name="rep_data.after"/>}
+    #end add-point:rep_data.after
+END FUNCTION
+
+{</section>}
+
+{<section id="apmr060_x01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

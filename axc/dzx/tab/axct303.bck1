@@ -1,0 +1,139 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axct303" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="03297" crtdt="2014-12-05 11:26:31" modid="03297" moddt="2014-12-18 15:26:25" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="製程在製成本開帳作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xccvcomp,xccvcomp_desc(chr80),xccv004,xccv005,xccvld,xccvld_desc(chr80),xccv003,xccv003_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xccv001,xccv006,xccv007,xccv007_desc(chr500),xccv008,xccv009,xccv009_desc(chr500),xccv009_desc_desc(chr500),xccv010,xccv011,xccv002,xccv002_desc(chr500),xccv101,xccv102,xccv102a,xccv102b,xccv102c,xccv102d,xccv102e,xccv102f,xccv102g,xccv102h"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="open_axct303_s01"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="open_axct303_s02"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="axct328"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axct303" method="dialog">
+    <section id="input">
+      <input id="head" field="xccvcomp,xccv004,xccv005,xccvld,xccv003"/>
+      <input id="body" page="1" field="xccv001,xccv006,xccv007,xccv008,xccv009,xccv010,xccv011,xccv002,xccv101,xccv102,xccv102a,xccv102b,xccv102c,xccv102d,xccv102e,xccv102f,xccv102g,xccv102h" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xccvcomp,xccv004,xccv005,xccvld,xccv003"/>
+      <construct id="body" page="1" field="xccv001,xccv006,xccv007,xccv008,xccv009,xccv010,xccv011,xccv002,xccv101,xccv102,xccv102a,xccv102b,xccv102c,xccv102d,xccv102e,xccv102f,xccv102g,xccv102h"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xccvld,xccv003,xccv004,xccv005"/>
+      <set id="head" type="no_entry" field="xccvld,xccv003,xccv004,xccv005"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xccvcomp">
+        <after>
+          <check chkid="v_ooef001_1" id="isExist"/>
+          <reference field="xccvcomp_desc" ref_field="xccv_t.xccvcomp" map_field="xccvent,xccvcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_8" state="i"/>
+        <controlp form="q_ooef001_8" state="c"/>
+      </column>
+      <column id="xccvcomp_desc"/>
+      <column id="xccv004"/>
+      <column id="xccv005"/>
+      <column id="xccvld">
+        <after>
+          <check chkid="v_glaald" id="isExist"/>
+          <reference field="xccvld_desc" ref_field="xccv_t.xccvld" map_field="xccvent,xccvld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xccvld_desc"/>
+      <column id="xccv003">
+        <after>
+          <check chkid="v_xcat001" id="isExist"/>
+          <reference field="xccv003_desc" ref_field="xccv_t.xccv003" map_field="xccvent,xccv003" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcat001" state="i"/>
+        <controlp form="q_xcat001" state="c"/>
+      </column>
+      <column id="xccv003_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xccv001" type="S" default="1" def_scc="8914"/>
+      <column id="xccv006">
+        <controlp form="q_sfbadocno" state="i"/>
+        <controlp form="q_sfbadocno" state="c"/>
+      </column>
+      <column id="xccv007">
+        <after>
+          <reference field="xccv007_desc" ref_field="xccv007" map_field="xccv007" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_sfba003" state="i"/>
+        <controlp form="q_sfba003_1" state="c"/>
+      </column>
+      <column id="xccv007_desc"/>
+      <column id="xccv008">
+        <controlp form="q_sfba004" state="i"/>
+        <controlp form="q_sfba003_1" state="c"/>
+      </column>
+      <column id="xccv009">
+        <after>
+          <reference field="xccv009_desc" ref_field="xccv_t.xccv009" map_field="xccvent,xccv009" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imag001_2" state="i"/>
+        <controlp form="q_imag001_2" state="c"/>
+      </column>
+      <column id="xccv009_desc">
+        <after>
+          <reference field="xccv009_desc_desc" ref_field="xccv_t.xccv009" map_field="xccvent,xccv009" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xccv009_desc_desc"/>
+      <column id="xccv010">
+        <controlp form="q_bmaa002_1" state="i"/>
+        <controlp form="q_bmaa002_1" state="c"/>
+      </column>
+      <column id="xccv011">
+        <controlp form="q_inaj010" state="i"/>
+        <controlp form="q_inaj010" state="c"/>
+      </column>
+      <column id="xccv002">
+        <after>
+          <reference field="xccv002_desc" ref_field="xccvcomp,xccv002" map_field="xccvcomp,xccv002" ref_sql="SELECT xcbfl003 FROM xcbfl_t WHERE xcbflent=$varg_enterprise$var AND xcbflcomp=? AND xcbfl001=? AND xcbfl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcbf001" state="i"/>
+        <controlp form="q_xcbf001" state="c"/>
+      </column>
+      <column id="xccv002_desc"/>
+      <column id="xccv101" type="S" default="0"/>
+      <column id="xccv102" type="S" default="0"/>
+      <column id="xccv102a" type="S" default="0"/>
+      <column id="xccv102b" type="S" default="0"/>
+      <column id="xccv102c" type="S" default="0"/>
+      <column id="xccv102d" type="S" default="0"/>
+      <column id="xccv102e" type="S" default="0"/>
+      <column id="xccv102f" type="S" default="0"/>
+      <column id="xccv102g" type="S" default="0"/>
+      <column id="xccv102h" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xccv_t" pk="xccvld,xccv003,xccv004,xccv005">
+      <sql id="forupd_sql" type="sql" query="SELECT xccvcomp,&apos;&apos;,xccv004,xccv005,xccvld,&apos;&apos;,xccv003,&apos;&apos; FROM xccv_t WHERE xccvent= ? AND xccvld=? AND xccv003=? AND xccv004=? AND xccv005=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xccvcomp,&apos;&apos;,xccv004,xccv005,xccvld,&apos;&apos;,xccv003,&apos;&apos; FROM xccv_t" order="xccvld,xccv003,xccv004,xccv005"/>
+    </head>
+    <body id="xccv_t" page="1" linked="" pk="xccv001,xccv002,xccv006,xccv007,xccv008,xccv009,xccv010,xccv011" fk="xccvld,xccv003,xccv004,xccv005">
+      <sql id="forupd_sql_detail" query="SELECT xccv001,xccv006,xccv007,&apos;&apos;,xccv008,xccv009,&apos;&apos;,&apos;&apos;,xccv010,xccv011,xccv002,&apos;&apos;,xccv101,xccv102,xccv102a,xccv102b,xccv102c,xccv102d,xccv102e,xccv102f,xccv102g,xccv102h FROM xccv_t WHERE xccvent=? AND xccvld=? AND xccv003=? AND xccv004=? AND xccv005=? AND xccv001=? AND xccv002=? AND xccv006=? AND xccv007=? AND xccv008=? AND xccv009=? AND xccv010=? AND xccv011=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xccv001,xccv006,xccv007,&apos;&apos;,xccv008,xccv009,&apos;&apos;,&apos;&apos;,xccv010,xccv011,xccv002,&apos;&apos;,xccv101,xccv102,xccv102a,xccv102b,xccv102c,xccv102d,xccv102e,xccv102f,xccv102g,xccv102h FROM xccv_t WHERE xccvent= ? AND xccvld=? AND xccv003=? AND xccv004=? AND xccv005=?"/>
+    </body>
+  </dataset>
+</assembly>
+

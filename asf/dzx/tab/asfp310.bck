@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asfp310" module="asf" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="00768" crtdt="2014-04-02 10:29:52" modid="05426" moddt="2017-02-22 16:35:58" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="整批發料作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="sfaadocno(chr20),sfaa010(chr500),sfaa019(dat),sfaa020(dat),sfaa017(chr10),sfaa002(chr20),sfba003(chr10),sfba003_desc(chr80),sfba004(chr10),no_sets(chr500),priority1(chr500),priority2(chr500),priority3(chr500),priority4(chr500),can_sets(chr500),stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="redistribution"/>
+      <action id="gen_asft310"/>
+    </section>
+  </structure>
+  <form id="0" module="asf" filename="asfp310" method="dialog">
+    <section id="input">
+      <input id="head" field="sfba003,sfba004,no_sets,priority1,priority2,priority3,priority4,can_sets"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="sfaadocno,sfaa010,sfaa019,sfaa020,sfaa017,sfaa002"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="sfaadocno">
+        <controlp form="q_sfaadocno_1" state="c"/>
+      </column>
+      <column id="sfaa010">
+        <controlp form="q_imaa001_10" state="c"/>
+      </column>
+      <column id="sfaa019"/>
+      <column id="sfaa020"/>
+      <column id="sfaa017">
+        <controlp form="q_ooeg001_1" state="c"/>
+      </column>
+      <column id="sfaa002">
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sfba003">
+        <after>
+          <reference field="sfba003_desc" ref_field="sfba003" map_field="sfba003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+      </column>
+      <column id="sfba003_desc"/>
+      <column id="sfba004"/>
+      <column id="no_sets"/>
+      <column id="priority1"/>
+      <column id="priority2"/>
+      <column id="priority3"/>
+      <column id="priority4"/>
+      <column id="can_sets"/>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

@@ -1,0 +1,551 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="aooi901_01" std_prog="aooi901_01" erpver="1.0" module="AOO" ver="2" env="s" zone="t10dev" booking="Y" type="S" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="input.a.ooie001" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_ooie_m.ooie001) AND NOT cl_null(g_ooie_m.ooiesite) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_ooie_m.ooie001 != g_ooie001_t  OR g_ooie_m.ooiesite != g_ooiesite_t ))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM ooie_t WHERE "||"ooieent = '" ||g_enterprise|| "' AND "||"ooie001 = '"||g_ooie_m.ooie001 ||"' AND "|| "ooiesite = '"||g_ooie_m.ooiesite ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooie_m.ooie001
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooial003 FROM ooial_t WHERE ooialent='"||g_enterprise||"' AND ooial001=? AND ooial002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_ooie_m.ooie001_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_ooie_m.ooie001_desc
+]]>
+  </point>
+  <point name="input.a.ooie011" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL aooi901_01_ooie011_desc()
+            IF NOT cl_null(g_ooie_m.ooie011) THEN
+              IF NOT ap_chk_isExist(g_ooie_m.ooie011,"SELECT COUNT(*) FROM pmaa_t WHERE pmaaent = '"||g_enterprise||"' AND pmaa001 = ? ",'apm-00028',0) THEN 
+                 LET g_ooie_m.ooie011 = g_ooie_m_t.ooie011
+                 DISPLAY '' TO ooie011_desc
+                 NEXT FIELD CURRENT
+              END IF
+              IF NOT ap_chk_isExist(g_ooie_m.ooie011,"SELECT COUNT(*) FROM pmaa_t WHERE pmaaent = '"||g_enterprise||"' AND pmaa001 = ? AND pmaastus = 'Y' ",'apm-00029',0) THEN 
+                 LET g_ooie_m.ooie011 = g_ooie_m_t.ooie011
+                 DISPLAY '' TO ooie011_desc
+                 NEXT FIELD CURRENT
+              END IF              
+            END IF 
+            CALL aooi901_01_ooie011_desc()]]>
+  </point>
+  <point name="input.a.ooie012" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_ooie_m.ooie012) THEN
+                        
+            END IF 
+            CALL aooi901_01_set_format('ooie012',"##########&.##%")]]>
+  </point>
+  <point name="input.a.ooie013" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_ooie_m.ooie013) THEN 
+            END IF 
+]]>
+  </point>
+  <point name="input.a.ooiesite" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_ooie_m.ooie001) AND NOT cl_null(g_ooie_m.ooiesite) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_ooie_m.ooie001 != g_ooie001_t  OR g_ooie_m.ooiesite != g_ooiesite_t ))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM ooie_t WHERE "||"ooieent = '" ||g_enterprise|| "' AND "||"ooie001 = '"||g_ooie_m.ooie001 ||"' AND "|| "ooiesite = '"||g_ooie_m.ooiesite ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.c.ooie001" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_ooie_m.ooie001             #給予default值
+
+            #給予arg
+
+            CALL q_ooia()                                #呼叫開窗
+
+            LET g_ooie_m.ooie001 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_ooie_m.ooie001 TO ooie001              #顯示到畫面上
+
+            NEXT FIELD ooie001                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.ooie011" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_ooie_m.ooie011             #給予default值
+
+            #給予arg
+
+            CALL q_pmaa001()                                #呼叫開窗
+
+            LET g_ooie_m.ooie011 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_ooie_m.ooie011 TO ooie011              #顯示到畫面上
+            CALL aooi901_01_ooie011_desc()
+            NEXT FIELD ooie011                          #返回原欄位
+
+]]>
+  </point>
+  <point name="show.head.reference" order="0" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooie_m.ooie001
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooial003 FROM ooial_t WHERE ooialent='"||g_enterprise||"' AND ooial001=? AND ooial002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_ooie_m.ooie001_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_ooie_m.ooie001_desc
+]]>
+  </point>
+  <point name="function.aooi901_01_display" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+ 資料顯示
+PRIVATE FUNCTION aooi901_01_display()
+   SELECT ooie010,ooie011,ooie012,ooie013
+     INTO g_ooie_m.ooie010,g_ooie_m.ooie011,g_ooie_m.ooie012,g_ooie_m.ooie013 
+     FROM ooie_t WHERE ooiesite = g_ooiesite AND ooie001 = g_ooie001
+   DISPLAY BY NAME g_ooie_m.ooie010,g_ooie_m.ooie011,g_ooie_m.ooie012,g_ooie_m.ooie013
+   CALL aooi901_01_ooie011_desc()   
+   IF cl_null( g_ooie_m.ooie010) THEN 
+      LET  g_ooie_m.ooie010 = 'N'
+      DISPLAY BY NAME g_ooie_m.ooie010 
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.aooi901_01_set_format" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+ 百分號格式轉換
+PRIVATE FUNCTION aooi901_01_set_format(ps_fields,ps_format)
+   DEFINE   ps_fields           STRING,
+            ps_format           STRING
+   DEFINE   lst_fields          base.StringTokenizer,
+            ls_field_name       STRING
+   DEFINE   lnode_root          om.DomNode,
+            llst_items          om.NodeList,
+            li_i                LIKE type_t.num5,
+            lnode_item          om.DomNode,
+            ls_item_name        STRING,
+            lnode_item_child    om.DomNode,
+            ls_item_child_tag   STRING
+   DEFINE   lwin_curr           ui.Window
+
+   IF (ps_fields IS NULL) THEN
+      RETURN
+   ELSE
+      LET ps_fields = ps_fields.toLowerCase()
+   END IF
+
+   LET lwin_curr = ui.Window.getCurrent()
+   LET lnode_root = lwin_curr.getNode()
+
+   LET llst_items = lnode_root.selectByPath("//Form//*")
+   LET lst_fields = base.StringTokenizer.create(ps_fields, ",")
+   WHILE lst_fields.hasMoreTokens()
+      LET ls_field_name = lst_fields.nextToken()
+      LET ls_field_name = ls_field_name.trim()
+
+      FOR li_i = 1 TO llst_items.getLength()
+         LET lnode_item = llst_items.item(li_i)
+         LET ls_item_name = lnode_item.getAttribute("colName")
+
+         IF (ls_item_name IS NULL) THEN
+            LET ls_item_name = lnode_item.getAttribute("name")
+
+            IF (ls_item_name IS NULL) THEN
+               CONTINUE FOR
+            END IF
+         END IF
+
+         IF (ls_item_name.equals(ls_field_name)) THEN
+            LET lnode_item_child = lnode_item.getFirstChild()
+            LET ls_item_child_tag = lnode_item_child.getTagName()
+            IF (ls_item_child_tag.equals("Edit") OR
+                ls_item_child_tag.equals("ButtonEdit") OR
+                ls_item_child_tag.equals("Label") OR
+                ls_item_child_tag.equals("DateEdit")) THEN
+
+               CALL lnode_item_child.setAttribute("format", "")
+               CALL lnode_item_child.setAttribute("format", ps_format)
+            END IF
+
+            EXIT FOR
+         END IF
+      END FOR
+   END WHILE
+END FUNCTION]]>
+  </point>
+  <point name="function.aooi901_01_ooie011_desc" order="3" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+ 代收機構名稱
+PRIVATE FUNCTION aooi901_01_ooie011_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_ooie_m.ooie011
+   CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_ooie_m.ooie011_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_ooie_m.ooie011_desc
+END FUNCTION]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_ooiesite      LIKE ooie_t.ooiesite
+DEFINE g_ooie001       LIKE ooie_t.ooie001
+DEFINE g_ooie009       LIKE ooie_t.ooie009
+DEFINE g_ooie_m_t      type_g_ooie_m]]>
+  </point>
+  <point name="input.after_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            CALL s_transaction_begin()    
+            CALL cl_showmsg()   #錯誤訊息統整顯示
+
+            UPDATE ooie_t SET (ooie010,ooie011,ooie012,ooie013,ooiemodid,ooiemoddt) = (g_ooie_m.ooie010,g_ooie_m.ooie011,g_ooie_m.ooie012,g_ooie_m.ooie013,l_ooiemodid,l_ooiemoddt)
+             WHERE ooieent = g_enterprise AND ooiesite = g_ooiesite AND ooie001 = g_ooie001
+
+            IF SQLCA.sqlcode THEN
+               CALL cl_err("ooie_t",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')
+            ELSE
+               CALL s_transaction_end('Y','0')
+            END IF
+         ]]>
+  </point>
+  <point name="input.b.ooie011" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL aooi901_01_ooie011_desc()]]>
+  </point>
+  <point name="input.b.ooie012" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL aooi901_01_set_format('ooie012',"##########&.##")]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE p_ooiesite      LIKE ooie_t.ooiesite
+   DEFINE p_ooie001       LIKE ooie_t.ooie001
+   DEFINE p_ooie009       LIKE ooie_t.ooie009
+   DEFINE l_ooiemodid     LIKE ooie_t.ooiemodid
+   DEFINE l_ooiemoddt     LIKE ooie_t.ooiemoddt]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   p_ooiesite,p_ooie001,p_ooie009 ]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_ooiesite = p_ooiesite
+   LET g_ooie001 = p_ooie001
+   LET g_ooie_m.ooie009 = p_ooie009
+   LET g_ooie_m.ooie010 = 'N'
+   CALL aooi901_01_display()
+   LET g_ooie_m_t.* = g_ooie_m.*
+   LET l_ooiemodid = g_user
+   LET l_ooiemoddt = cl_get_current()]]>
+  </point>
+  <section id="aooi901_01.description" ver="7" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000082
+#+ 
+#+ Filename...: aooi901_01
+#+ Description: ...
+#+ Creator....: 02295(2013/10/08)
+#+ Modifier...: 02295(2013/10/10)
+#+ Buildtype..: 應用 c01b 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="aooi901_01.global" ver="1" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_ooie_m        RECORD
+       ooie009 LIKE ooie_t.ooie009, 
+   ooie011 LIKE ooie_t.ooie011, 
+   ooie011_desc LIKE type_t.chr80, 
+   ooie012 LIKE ooie_t.ooie012, 
+   ooie013 LIKE ooie_t.ooie013, 
+   ooie010 LIKE ooie_t.ooie010
+       END RECORD
+DEFINE g_ooie_m        type_g_ooie_m
+ 
+   
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="aooi901_01.input" ver="3" status="" src="s">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION aooi901_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aooi901_01 WITH FORM cl_ap_formpath("aoo","aooi901_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_ooie_m.ooie009,g_ooie_m.ooie011,g_ooie_m.ooie012,g_ooie_m.ooie013,g_ooie_m.ooie010  
+          ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #此段落由子樣板a01產生
+         BEFORE FIELD ooie009
+            #add-point:BEFORE FIELD ooie009
+            {<point name="input.b.ooie009" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD ooie009
+            
+            #add-point:AFTER FIELD ooie009
+            {<point name="input.a.ooie009" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE ooie009
+            #add-point:ON CHANGE ooie009
+            {<point name="input.g.ooie009" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD ooie011
+            
+            #add-point:AFTER FIELD ooie011
+            {<point name="input.a.ooie011" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD ooie011
+            #add-point:BEFORE FIELD ooie011
+            {<point name="input.b.ooie011" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE ooie011
+            #add-point:ON CHANGE ooie011
+            {<point name="input.g.ooie011" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD ooie012
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_ooie_m.ooie012,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD ooie012
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD ooie012
+            {<point name="input.a.ooie012" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD ooie012
+            #add-point:BEFORE FIELD ooie012
+            {<point name="input.b.ooie012" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE ooie012
+            #add-point:ON CHANGE ooie012
+            {<point name="input.g.ooie012" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD ooie013
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_ooie_m.ooie013,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD ooie013
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD ooie013
+            {<point name="input.a.ooie013" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD ooie013
+            #add-point:BEFORE FIELD ooie013
+            {<point name="input.b.ooie013" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE ooie013
+            #add-point:ON CHANGE ooie013
+            {<point name="input.g.ooie013" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD ooie010
+            #add-point:BEFORE FIELD ooie010
+            {<point name="input.b.ooie010" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD ooie010
+            
+            #add-point:AFTER FIELD ooie010
+            {<point name="input.a.ooie010" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE ooie010
+            #add-point:ON CHANGE ooie010
+            {<point name="input.g.ooie010" />}
+            #END add-point
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.ooie009
+         ON ACTION controlp INFIELD ooie009
+            #add-point:ON ACTION controlp INFIELD ooie009
+            {<point name="input.c.ooie009" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.ooie011
+         ON ACTION controlp INFIELD ooie011
+            #add-point:ON ACTION controlp INFIELD ooie011
+            {<point name="input.c.ooie011" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.ooie012
+         ON ACTION controlp INFIELD ooie012
+            #add-point:ON ACTION controlp INFIELD ooie012
+            {<point name="input.c.ooie012" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.ooie013
+         ON ACTION controlp INFIELD ooie013
+            #add-point:ON ACTION controlp INFIELD ooie013
+            {<point name="input.c.ooie013" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.ooie010
+         ON ACTION controlp INFIELD ooie010
+            #add-point:ON ACTION controlp INFIELD ooie010
+            {<point name="input.c.ooie010" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aooi901_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aooi901_01.other_dialog" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="aooi901_01.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

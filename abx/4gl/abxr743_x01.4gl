@@ -1,0 +1,421 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="abxr743_x01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:1(2016-08-02 16:38:20), PR版次:0001(2016-08-02 16:43:50)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000015
+#+ Filename...: abxr743_x01
+#+ Description: ...
+#+ Creator....: 06814(2016-07-21 14:06:44)
+#+ Modifier...: 06814 -SD/PR- 06814
+ 
+{</section>}
+ 
+{<section id="abxr743_x01.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:8)
+#add-point:填寫註解說明 name="global.memo"
+
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #where condition 
+       gb002 LIKE bxgb_t.bxgb002          #bxgb002
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="abxr743_x01.main" readonly="Y" >}
+PUBLIC FUNCTION abxr743_x01(p_arg1,p_arg2)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition 
+DEFINE  p_arg2 LIKE bxgb_t.bxgb002         #tm.gb002  bxgb002
+#add-point:init段define(客製用) name="component.define_customerization"
+
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.gb002 = p_arg2
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "abxr743_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL abxr743_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL abxr743_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL abxr743_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL abxr743_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL abxr743_x01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abxr743_x01.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION abxr743_x01_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "bxge004.bxge_t.bxge004,bxge001.bxge_t.bxge001,l_bxge001_desc.imaal_t.imaal003,l_bxge001_desc_desc.imaal_t.imaal004,bxge002.bxge_t.bxge002,bxge003.bxge_t.bxge003,bxba_t_bxba004.bxba_t.bxba004,bxge007.bxge_t.bxge007" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   #子報表
+   LET g_sql = " l_bxge001_1.bxge_t.bxge001 , l_bxge002_1.bxge_t.bxge002 , l_bxge004_1.bxge_t.bxge004 , ",
+               " l_bxge003_1.bxge_t.bxge003 , l_bxge005_1.bxge_t.bxge005 , l_bxge005_desc_1.imaal_t.imaal003 , ",
+               " l_bxge005_desc_desc_1.imaal_t.imaal004 , l_bxca009_1.bxca_t.bxca009 , l_bxge007_1.bxge_t.bxge007 "
+   
+   #建立TEMP TABLE,子報表序號2
+   IF NOT cl_xg_create_tmptable(g_sql,2) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #end add-point:create_tmp.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abxr743_x01.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION abxr743_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         WHEN 2
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[2] CLIPPED," VALUES(?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep1 FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep1",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abxr743_x01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION abxr743_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   LET g_select = " SELECT bxge004,bxge001,imaal003,imaal004,bxge002, ",
+                  "        bxge003,bxba_t.bxba004,bxge007 "
+#   #end add-point
+#   LET g_select = " SELECT bxge004,bxge001,NULL,NULL,bxge002,bxge003,bxba_t.bxba004,bxge007"
+# 
+#   #add-point:sel_prep g_from name="sel_prep.g_from"
+   LET g_from = " FROM bxgb_t,bxge_t ",
+                "      LEFT JOIN imaal_t ON imaalent = bxgeent AND imaal001 = bxge001 ",
+                "                       AND imaal002 = '",g_dlang,"' ",
+                "      ,bxba_t "
+        #LEFT JOIN iman_t ON iman
+#   #end add-point
+#    LET g_from = " FROM bxgb_t,bxge_t,bxba_t,iman_t"
+# 
+#   #add-point:sel_prep g_where name="sel_prep.g_where"
+   LET g_where = " WHERE " ,tm.wc , 
+                 "   AND bxgbent = bxgeent ",
+                 "   AND bxgbsite = bxgesite ",
+                 "   AND bxgb001 = bxge001 ",
+                 "   AND bxgb002 = bxge004 ",
+                 "   AND bxgb003 = bxge002 ",
+                 "   AND bxbaent = bxgbent AND bxba001 = bxgb001 ",
+                 "   AND bxgb002 = '",tm.gb002,"' AND bxge000 = 'T' "
+#   #end add-point
+#    LET g_where = " WHERE " ,tm.wc CLIPPED
+# 
+#   #add-point:sel_prep g_order name="sel_prep.g_order"
+   
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("bxgb_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   DISPLAY "g_sql:\n",g_sql 
+   #end add-point
+   PREPARE abxr743_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE abxr743_x01_curs CURSOR FOR abxr743_x01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abxr743_x01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION abxr743_x01_ins_data()
+DEFINE sr RECORD 
+   bxge004 LIKE bxge_t.bxge004, 
+   bxge001 LIKE bxge_t.bxge001, 
+   l_bxge001_desc LIKE imaal_t.imaal003, 
+   l_bxge001_desc_desc LIKE imaal_t.imaal004, 
+   bxge002 LIKE bxge_t.bxge002, 
+   bxge003 LIKE bxge_t.bxge003, 
+   bxba_t_bxba004 LIKE bxba_t.bxba004, 
+   bxge007 LIKE bxge_t.bxge007
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+DEFINE l_sql         STRING
+#子報表
+DEFINE sr1 RECORD 
+   l_bxge001_1           LIKE bxge_t.bxge001, 
+   l_bxge002_1           LIKE bxge_t.bxge002, 
+   l_bxge004_1           LIKE bxge_t.bxge004, 
+   l_bxge003_1           LIKE bxge_t.bxge003, 
+   l_bxge005_1           LIKE bxge_t.bxge005, 
+   l_bxge005_desc_1      LIKE imaal_t.imaal003, 
+   l_bxge005_desc_desc_1 LIKE imaal_t.imaal004, 
+   l_bxca009_1           LIKE bxca_t.bxca009, 
+   l_bxge007_1           LIKE bxge_t.bxge007
+ END RECORD
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    LET l_sql = " SELECT bxge001,bxge002,bxge004,bxge003,bxge005,imaal003,imaal004,bxca009,bxge007 ",
+                "   FROM bxge_t ",
+                "        LEFT JOIN imaal_t ON imaalent = bxgeent AND imaal001 = bxge005 AND imaal002 = '",g_dlang,"' ",
+                "        ,bxca_t ",
+                "  WHERE bxgeent = ",g_enterprise,
+                "    AND bxgesite = '",g_site,"' ",
+                "    AND bxge000 = 'T' ",
+                "    AND bxge001 = ? ",
+                "    AND bxge002 = ? ",
+                "    AND bxge003 = ? ",
+                "    AND bxge004 = ? ",
+                "    AND bxge001 <> bxge005 ",
+                "    AND bxgeent = bxcaent ",
+                "    AND bxgesite = bxcasite ",
+                "    AND bxca001 = bxge001 ",
+                "    AND bxca002 <= bxge002 ",
+                "    AND bxca004 = bxge005 ",
+                "  ORDER BY bxge003 ASC"
+    DECLARE abxr743_x01_curs1 CURSOR FROM l_sql
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH abxr743_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.bxge004,sr.bxge001,sr.l_bxge001_desc,sr.l_bxge001_desc_desc,sr.bxge002,sr.bxge003,sr.bxba_t_bxba004,sr.bxge007
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "abxr743_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       FOREACH abxr743_x01_curs1 USING sr.bxge001,sr.bxge002,sr.bxge003,sr.bxge004 INTO sr1.*                               
+          IF STATUS THEN
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.extend = 'foreach:'
+             LET g_errparam.code   = STATUS
+             LET g_errparam.popup  = TRUE
+             CALL cl_err()
+             LET g_rep_success = 'N'
+             EXIT FOREACH
+          END IF
+          
+          #EXECUTE
+          EXECUTE insert_prep1 USING sr1.l_bxge001_1,sr1.l_bxge002_1,sr1.l_bxge004_1,sr1.l_bxge003_1,sr1.l_bxge005_1,
+                                     sr1.l_bxge005_desc_1,sr1.l_bxge005_desc_desc_1,sr1.l_bxca009_1,sr1.l_bxge007_1
+         
+          IF SQLCA.sqlcode THEN
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.extend = "abxr743_x01_execute1"
+             LET g_errparam.code   = SQLCA.sqlcode
+             LET g_errparam.popup  = FALSE
+             CALL cl_err()       
+             LET g_rep_success = 'N'
+             EXIT FOREACH
+          END IF
+       END FOREACH
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abxr743_x01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION abxr743_x01_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    
+    #end add-point:rep_data.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abxr743_x01.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axct312_03" std_prog="axct312_03" erpver="1.0" ver="2" module="AXC" type="S" booking="Y" designer_ver="1.0" class="T" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="inba_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status=""/>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[當爲axct312時
+
+1.第一区的逻辑
+1.1账套(xcckld)：可输入，判断USER是否有该账套的权限，可以开窗，必须输入。
+1.2所属法人(xcckcomp)：根据账套自动带出归属法人，只显示不能修改。
+1.3成本计算类型(xcck003)：输入成本计算类型的有效值，可开窗。如果成本计算类型设置的计算时点(xcat003)为实时计算，则警告“实时计算只能查询，不能录入”，且不让往下输入，要么退出输入要么选择非实时计算的成本计算类型。并自动带出“成本计算时点（xcat003）”显示在画面上。
+1.4成本年度期别根据现行成本年度和期别默认,可修改。
+2.第二区的逻辑
+2.1根据单据编号(xcck007)、料件编号(xcck006)和理由码(xcck021)的条件范围从归属于第一区的法人组织(xcckcomp)下的异动类型(xcck010)为“杂收单据”的异动日期归属年度期别在第一区的成本年度(xcck004)和成本期别(xcck005)的所有杂收单据（资料来源档案为杂收单头档inba_t和杂收单身档inbc_t）
+2.2根据料号和第三区指定的账套(tm.ld)、成本计算类型(tm.type)、本位币顺序(tm.order)和成本年度(tm.yy)、期别(tm.mm)到料件成本期统计档xccc_t中抓出该料号的成本单价(xccc281,xccc281a~xccc281h)和成本核算币别(xccc009)。根据本次核算的成本币别(xcck041)、年度(xcck004)、期别(xcck005)和取到的成本核算币别(xccc009)进行汇率换算，抓到转换汇率。按取到的成本单价(xccc281,xccc281a~xccc281h)*转换汇率得到所需的成本单价（xcck282，xcck282a~xcck282h）
+2.3根据交易单位(xcck016)和成本单位(xcck017)的换算率(xcck018)*交易数量(xcck019)得到成本数量(xcck201)
+2.4根据成本单价(xcck282)*成本数量(xcck201)计算出成本。
+2.5杂收成本账务信息的资料逻辑如下: 
+  2.5.01 存货科目根据料号(xcck006)和账套(xcckld)去档案glac_t（产品科目依账套设定档，作业编号:agli161)中抓取存货科目，可调用相关元件。
+  2.5.02 费用科目根据原因码(xcck021)和账套（xcckld）去档案glab_t(理由码科目依账套设定档，作业编号：agli180)中抓取费用科目，可调用相关元件。
+  2.5.03 交易对象(xcck022):在杂收单单头（inba_t）、单身（inbc_t）档案抓取，抓不到则给空白。
+  2.5.04 客群(xcck023)：在杂收单单头（inba_t）、单身（inbc_t）档案抓取，抓不到再根据交易对象(xcck022)找出对应的客群，仍抓不到则给空白。
+  2.5.05 区域(xcck024)：在杂收单单头（inba_t）、单身（inbc_t）档案抓取，抓不到再根据交易对象(xcck022)找出对应的客群，仍抓不到则给空白。
+  2.5.06 成本中心(xcck025):在杂收单单头（inba_t）、单身（inbc_t）档案抓取，抓不到则给空白。
+  2.5.07 经营类别(xcck026)：在杂收单单头（inba_t）、单身（inbc_t）档案抓取，抓不到则给空白。
+  2.5.08 渠道(xcck027)：在杂收单单头（inba_t）、单身（inbc_t）档案抓取，抓不到则给空白。
+  2.5.09 品类(xcck028):根据料号(xcck006)在SITE料件档imag_t抓取成本分群(imag011).
+  2.5.10 品牌(xcck029)：默认为空格。
+  2.5.11 项目编号(xcck030)：在杂收单单头（inba_t）、单身（inbc_t）档案抓取，抓不到则给空白。
+  2.5.12 WBS(xcck031)：在杂收单单头（inba_t）、单身（inbc_t）档案抓取，抓不到则给空白。
+
+2.6如果该账套启用了功能币二则根据功能币二的币别和汇率方式得到功能币二的信息,并计算出单价和成本显示出来.注意数量不能动.
+2.7如果该账套启用了功能币三则根据功能币三的币别和汇率方式得到功能币三的信息,并计算出单价和成本显示出来.注意数量不能动.
+2.8根据输入的数据INERT ITNO到xcck_t中。注意分本位币顺序存入。
+2.9如果参数启用次成本要素，则根据料号和成本金额调用成本次要素处理的元件s_cost_subelement（）进行次成本要素的分配计算。
+
+
+當為axct313時
+
+1.第一区的逻辑
+1.1账套(xcckld)：可输入，判断USER是否有该账套的权限，可以开窗，必须输入。
+1.2所属法人(xcckcomp)：根据账套自动带出归属法人，只显示不能修改。
+1.3成本计算类型(xcck003)：输入成本计算类型的有效值，可开窗。如果成本计算类型设置的计算时点(xcat003)为实时计算，则警告“实时计算只能查询，不能录入”，且不让往下输入，要么退出输入要么选择非实时计算的成本计算类型。并自动带出“成本计算时点（xcat003）”显示在画面上。
+1.4成本年度期别根据现行成本年度和期别默认,可修改。
+2.第二区的逻辑
+2.1根据单据编号(xcck007)、料件编号(xcck006)和理由码(xcck021)的条件范围从归属于第一区的法人组织(xcckcomp)下的异动类型(xcck010)为“杂发单据”的异动日期归属年度期别在第一区的成本年度(xcck004)和成本期别(xcck005)的所有杂发单据（资料来源档案为杂发单头档inba_t和杂发单身档inbc_t）
+2.2根据料号和第三区指定的账套(tm.ld)、成本计算类型(tm.type)、本位币顺序(tm.order)和成本年度(tm.yy)、期别(tm.mm)到料件成本期统计档xccc_t中抓出该料号的成本单价(xccc281,xccc281a~xccc281h)和成本核算币别(xccc009)。根据本次核算的成本币别(xcck041)、年度(xcck004)、期别(xcck005)和取到的成本核算币别(xccc009)进行汇率换算，抓到转换汇率。按取到的成本单价(xccc281,xccc281a~xccc281h)*转换汇率得到所需的成本单价（xcck282，xcck282a~xcck282h）
+2.3根据交易单位(xcck016)和成本单位(xcck017)的换算率(xcck018)*交易数量(xcck019)得到成本数量(xcck201)
+2.4根据成本单价(xcck282)*成本数量(xcck201)计算出成本。
+2.5杂发成本账务信息的资料逻辑如下: 
+  2.5.01 存货科目根据料号(xcck006)和账套(xcckld)去档案glac_t（产品科目依账套设定档，作业编号:agli161)中抓取存货科目，可调用相关元件。
+  2.5.02 费用科目根据原因码(xcck021)和账套（xcckld）去档案glab_t(理由码科目依账套设定档，作业编号：agli180)中抓取费用科目，可调用相关元件。
+  2.5.03 交易对象(xcck022):在杂发单单头（inba_t）、单身（inbc_t）档案抓取，抓不到则给空白。
+  2.5.04 客群(xcck023)：在杂发单单头（inba_t）、单身（inbc_t）档案抓取，抓不到再根据交易对象(xcck022)找出对应的客群，仍抓不到则给空白。
+  2.5.05 区域(xcck024)：在杂发单单头（inba_t）、单身（inbc_t）档案抓取，抓不到再根据交易对象(xcck022)找出对应的客群，仍抓不到则给空白。
+  2.5.06 成本中心(xcck025):在杂发单单头（inba_t）、单身（inbc_t）档案抓取，抓不到则给空白。
+  2.5.07 经营类别(xcck026)：在杂发单单头（inba_t）、单身（inbc_t）档案抓取，抓不到则给空白。
+  2.5.08 渠道(xcck027)：在杂发单单头（inba_t）、单身（inbc_t）档案抓取，抓不到则给空白。
+  2.5.09 品类(xcck028):根据料号(xcck006)在SITE料件档imag_t抓取成本分群(imag011).
+  2.5.10 品牌(xcck029)：默认为空格。
+  2.5.11 项目编号(xcck030)：在杂发单单头（inba_t）、单身（inbc_t）档案抓取，抓不到则给空白。
+  2.5.12 WBS(xcck031)：在杂发单单头（inba_t）、单身（inbc_t）档案抓取，抓不到则给空白。
+  2.5.13成本域(xcck002)的取值逻辑：
+     2.5.13.1 按法人组织（ooef017）设定的成本参数（S-FIN-6001）是否采用成本域且采用哪种类型的成本域(S-FIN-6002)。
+     2.5.13.2如果采用成本域(S-FIN-6001='Y')  AND 成本计算类型的计价方式(xcat005)="6.按成本域设定"，则根据成本域的上设定的成本计价方式(xcbf004)。
+     2.5.13.3如果采用成本域是“组织”，则根据该笔资料的所属组织(inajsite)去成本域设定档(xcbf_t)找到成本计价类型(xcbf004)。
+     2.5.13.4如果采用成本域是“货主”，则根据该笔资料的归属的货主/仓库(inaj008)去成本域设定档(xcbf_t)找到成本计价类型(xcbf004)。
+
+2.6如果该账套启用了功能币二则根据功能币二的币别和汇率方式得到功能币二的信息,并计算出单价和成本显示出来.注意数量不能动.
+2.7如果该账套启用了功能币三则根据功能币三的币别和汇率方式得到功能币三的信息,并计算出单价和成本显示出来.注意数量不能动.
+2.8根据输入的数据INERT ITNO到xcck_t中。注意分本位币顺序存入。
+2.9如果参数启用次成本要素，则根据料号和成本金额调用成本次要素处理的元件s_cost_subelement（）进行次成本要素的分配计算。
+
+
+#當爲axct314時
+
+1.第一区的逻辑
+1.1账套(xcckld)：可输入，判断USER是否有该账套的权限，可以开窗，必须输入。
+1.2所属法人(xcckcomp)：根据账套自动带出归属法人，只显示不能修改。
+1.3成本计算类型(xcck003)：输入成本计算类型的有效值，可开窗。如果成本计算类型设置的计算时点(xcat003)为实时计算，则警告“实时计算只能查询，不能录入”，且不让往下输入，要么退出输入要么选择非实时计算的成本计算类型。并自动带出“成本计算时点（xcat003）”显示在画面上。
+1.4成本年度期别根据现行成本年度和期别默认,可修改。
+2.第二区的逻辑
+2.1根据单据编号(xcck007)、料件编号(xcck006)和理由码(xcck021)的条件范围从归属于第一区的法人组织(xcckcomp)下的异动类型(xcck010)为“当站下线”的异动日期归属年度期别在第一区的成本年度(xcck004)和成本期别(xcck005)的所有当站下线单据（资料来源档案为当站下线单单头（sfha_t）、单身（sfhb_t））
+2.2根据料号和第三区指定的账套(tm.ld)、成本计算类型(tm.type)、本位币顺序(tm.order)和成本年度(tm.yy)、期别(tm.mm)到料件成本期统计档xccc_t中抓出该料号的成本单价(xccc281,xccc281a~xccc281h)和成本核算币别(xccc009)。根据本次核算的成本币别(xcck041)、年度(xcck004)、期别(xcck005)和取到的成本核算币别(xccc009)进行汇率换算，抓到转换汇率。按取到的成本单价(xccc281,xccc281a~xccc281h)*转换汇率得到所需的成本单价（xcck282，xcck282a~xcck282h）
+2.3根据交易单位(xcck016)和成本单位(xcck017)的换算率(xcck018)*交易数量(xcck019)得到成本数量(xcck201)
+2.4根据成本单价(xcck282)*成本数量(xcck201)计算出成本。
+2.5当站下线成本账务信息的资料逻辑如下: 
+  2.5.01 存货科目根据料号(xcck006)和账套(xcckld)去档案glac_t（产品科目依账套设定档，作业编号:agli161)中抓取存货科目，可调用相关元件。
+  2.5.02 费用科目根据原因码(xcck021)和账套（xcckld）去档案glab_t(成本科目依账套设定档，作业编号：axci201)中抓取费用科目，可调用相关元件。
+  2.5.03 交易对象(xcck022):在当站下线单单头（sfha_t）、单身（sfhb_t）档案抓取，抓不到则给空白。
+  2.5.04 客群(xcck023)：在当站下线单单头（sfha_t）、单身（sfhb_t）档案抓取，抓不到再根据交易对象(xcck022)找出对应的客群，仍抓不到则给空白。
+  2.5.05 区域(xcck024)：在当站下线单单头（sfha_t）、单身（sfhb_t）档案抓取，抓不到再根据交易对象(xcck022)找出对应的客群，仍抓不到则给空白。
+  2.5.06 成本中心(xcck025):在当站下线单单头（sfha_t）、单身（sfhb_t）档案抓取，抓不到则给空白。
+  2.5.07 经营类别(xcck026)：在当站下线单单头（sfha_t）、单身（sfhb_t）档案抓取，抓不到则给空白。
+  2.5.08 渠道(xcck027)：在当站下线单单头（sfha_t）、单身（sfhb_t）档案抓取，抓不到则给空白。
+  2.5.09 品类(xcck028):根据料号(xcck006)在SITE料件档imag_t抓取成本分群(imag011).
+  2.5.10 品牌(xcck029)：默认为空格。
+  2.5.11 项目编号(xcck030)：在当站下线单单头（sfha_t）、单身（sfhb_t）档案抓取，抓不到则给空白。
+  2.5.12 WBS(xcck031)：在当站下线单单头（sfha_t）、单身（sfhb_t）档案抓取，抓不到则给空白。
+  2.5.13成本域(xcck002)的取值逻辑：
+     2.5.13.1 按法人组织（ooef017）设定的成本参数（S-FIN-6001）是否采用成本域且采用哪种类型的成本域(S-FIN-6002)。
+     2.5.13.2如果采用成本域(S-FIN-6001='Y')  AND 成本计算类型的计价方式(xcat005)="6.按成本域设定"，则根据成本域的上设定的成本计价方式(xcbf004)。
+     2.5.13.3如果采用成本域是“组织”，则根据该笔资料的所属组织(inajsite)去成本域设定档(xcbf_t)找到成本计价类型(xcbf004)。
+     2.5.13.4如果采用成本域是“货主”，则根据该笔资料的归属的货主/仓库(inaj008)去成本域设定档(xcbf_t)找到成本计价类型(xcbf004)。
+
+2.6如果该账套启用了功能币二则根据功能币二的币别和汇率方式得到功能币二的信息,并计算出单价和成本显示出来.注意数量不能动.
+2.7如果该账套启用了功能币三则根据功能币三的币别和汇率方式得到功能币三的信息,并计算出单价和成本显示出来.注意数量不能动.
+2.8根据输入的数据INERT ITNO到xcck_t中。注意分本位币顺序存入。
+2.9如果参数启用次成本要素，则根据料号和成本金额调用成本次要素处理的元件s_cost_subelement（）进行次成本要素的分配计算。
+
+
+]]>
+  </all>
+  <field cite_std="N" name="comp" ver="1" src="s" column="xccwcomp" table="xccw_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooef001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inaj_t.inaj001" ver="1" src="s" column="inaj001" table="inaj_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_inaj001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inaj_t.inaj005" ver="1" src="s" column="inaj005" table="inaj_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_imaa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inaj_t.inaj016" ver="1" src="s" column="inaj016" table="inaj_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ld" ver="1" src="s" column="xccwld" table="xccw_t" attribute="" type="" req="N" i_zoom="q_authorised_ld" c_zoom="q_authorised_ld" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：帳套
+   ●欄位控管：
+     資料欄位:[T:本期料件明細進出成本檔].[C:帳套]可Input及Display
+     預設值:無
+     校驗:1.不允許空白: /Yes
+          2.key值,不可重複,若資料重複,則報資料重複的錯
+          3.輸入的資料需存在于[帳別資料檔]中,若不存在,則報資料不存在的錯
+          4.輸入的資料需在[帳別資料檔]中有效,若無效,則報資料無效的錯]]>
+  </field>
+  <field cite_std="N" name="mm" ver="1" src="s" column="xccw005" table="xccw_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[上期年月:
+默认值为现行计算年月的上一期,
+如现行计算年月为2013/10,则为2013/09.
+如现行计算年月为2013/01,则为2012/12.
+允许进行更改
+
+将传入库存成本期初开账档 或库存月加权成本档 作为年度/月份条件,获取单价]]>
+  </field>
+  <field cite_std="N" name="type" ver="1" src="s" column="xccw003" table="xccw_t" attribute="" type="" req="N" i_zoom="q_xcat001" c_zoom="" chk_ref="v_xcat001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：成本計算類型
+   ●欄位控管：
+     資料欄位:[T:本期料件明細進出成本檔].[C:成本計算類型]可Input及Display
+     預設值:無
+     校驗:1.不允許空白: /Yes
+          2.key值,不可重複,若資料重複,則報資料重複的錯
+          3.輸入的資料需存在于[成本類型設置作業axci100]中,若不存在,則報資料不存在的錯
+          4.輸入的資料需在[成本類型設置作業axci100]中有效,若無效,則報資料無效的錯]]>
+  </field>
+  <field cite_std="N" name="xcat_t.xcat003" ver="1" src="s" column="xcat003" table="xcat_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="8904" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccw_t.xccw003" ver="1" src="s" column="xccw003" table="xccw_t" attribute="" type="" req="Y" i_zoom="q_xcat001" c_zoom="" chk_ref="v_xcat001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：成本計算類型
+   ●欄位控管：
+     資料欄位:[T:本期料件明細進出成本檔].[C:成本計算類型]可Input及Display
+     預設值:無
+     校驗:1.不允許空白: /Yes
+          2.key值,不可重複,若資料重複,則報資料重複的錯
+          3.輸入的資料需存在于[成本類型設置作業axci100]中,若不存在,則報資料不存在的錯
+          4.輸入的資料需在[成本類型設置作業axci100]中有效,若無效,則報資料無效的錯
+          5.帶出成本計算時點
+          如果成本计算类型设置的计算时点(xcat003)为实时计算，则警告“实时计算只能查询，不能录入”，
+          且不让往下输入，要么退出输入要么选择非实时计算的成本计算类型]]>
+  </field>
+  <field cite_std="N" name="xccw_t.xccw004" ver="1" src="s" column="xccw004" table="xccw_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[成本年度期别根据现行成本年度和期别默认,可修改。]]>
+  </field>
+  <field cite_std="N" name="xccw_t.xccw005" ver="1" src="s" column="xccw005" table="xccw_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[成本年度期别根据现行成本年度和期别默认,可修改。]]>
+  </field>
+  <field cite_std="N" name="xccw_t.xccwcomp" ver="1" src="s" column="xccwcomp" table="xccw_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xccw_t.xccwld" ver="1" src="s" column="xccwld" table="xccw_t" attribute="" type="" req="Y" i_zoom="q_authorised_ld" c_zoom="" chk_ref="v_glaald" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：帳套
+   ●欄位控管：
+     資料欄位:[T:本期料件明細進出成本檔].[C:帳套]可Input及Display
+     預設值:無
+     校驗:1.不允許空白: /Yes
+          2.key值,不可重複,若資料重複,則報資料重複的錯
+          3.輸入的資料需存在于[帳別資料檔]中,若不存在,則報資料不存在的錯
+          4.輸入的資料需在[帳別資料檔]中有效,若無效,則報資料無效的錯
+          5.帶出所屬法人 ]]>
+  </field>
+  <field cite_std="N" name="yy" ver="1" src="s" column="xccw004" table="xccw_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[上期年月:
+默认值为现行计算年月的上一期,
+如现行计算年月为2013/10,则为2013/09.
+如现行计算年月为2013/01,则为2012/12.
+允许进行更改
+
+将传入库存成本期初开账档 或库存月加权成本档 作为年度/月份条件,获取单价]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="comp_desc" src="s" depend_field="comp" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status=""/>
+    <rfield cite_std="N" ver="1" name="ld_desc" src="s" depend_field="ld" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status=""/>
+    <rfield cite_std="N" ver="1" name="type_desc" src="s" depend_field="type" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status=""/>
+    <rfield cite_std="N" ver="1" name="xccw003_desc" src="s" depend_field="xccw_t.xccw003" correspon_key="xccwent,xccw003" ref_table="xcatl_t" ref_fk="xcatlent,xcatl001" ref_dlang="xcatl002" ref_rtn="xcatl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xccwcomp_desc" src="s" depend_field="xccw_t.xccwcomp" correspon_key="xccwent,xccwcomp" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xccwld_desc" src="s" depend_field="xccw_t.xccwld" correspon_key="xccwent,xccwld" ref_table="glaal_t" ref_fk="glaalent,glaalld" ref_dlang="glaal001" ref_rtn="glaal002" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="comp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inaj_t.inaj001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inaj_t.inaj005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inaj_t.inaj016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ld" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mm" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="type" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcat_t.xcat003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccw_t.xccw003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccw_t.xccw004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccw_t.xccw005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccw_t.xccwcomp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xccw_t.xccwld" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="yy" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_master_axct312_03" text="單價來源選項" lstr=""/>
+    <sfield name="lbl_xcckld" text="帳套" lstr=""/>
+    <sfield name="lbl_glaal002" text="說明" lstr=""/>
+    <sfield name="lbl_xcckcomp" text="法人組織" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_xcck003" text="成本計算類型" lstr=""/>
+    <sfield name="lbl_xcatl003" text="成本類型說明" lstr=""/>
+    <sfield name="lbl_xcat003" text="成本計算時點" lstr=""/>
+    <sfield name="lbl_xcck004" text="成本年度期別" lstr=""/>
+    <sfield name="lbl_group_2" text="QBE條件" lstr=""/>
+    <sfield name="lbl_inbadocno" text="異動單據編號" lstr=""/>
+    <sfield name="lbl_inbc001" text="料件編號" lstr=""/>
+    <sfield name="lbl_inba007" text="理由碼" lstr=""/>
+    <sfield name="lbl_group_3" text="單價來源選項" lstr=""/>
+    <sfield name="lbl_comp" text="來源法人" lstr=""/>
+    <sfield name="lbl_ld" text="來源帳套" lstr=""/>
+    <sfield name="lbl_type" text="成本計算類型" lstr=""/>
+    <sfield name="lbl_yy" text="成本年度期別" lstr=""/>
+    <sact name="delete" text="刪除" lstr=""/>
+    <sact name="insert" text="新增" lstr=""/>
+    <sact name="modify" text="更改" lstr=""/>
+    <sact name="output" text="列印" lstr=""/>
+    <sact name="query" text="查詢" lstr=""/>
+    <sact name="reproduce" text="複製" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="2" cite_std="N" src="s">
+    <widget name="comp" status="u"/>
+    <widget name="comp_desc" status="u"/>
+    <widget name="inaj_t.inaj001" status="u"/>
+    <widget name="inaj_t.inaj005" status="u"/>
+    <widget name="inaj_t.inaj016" status="u"/>
+    <widget name="ld" status="u"/>
+    <widget name="ld_desc" status="u"/>
+    <widget name="mm" status="u"/>
+    <widget name="type" status="u"/>
+    <widget name="type_desc" status="u"/>
+    <widget name="yy" status="u"/>
+  </exclude>
+</spec>

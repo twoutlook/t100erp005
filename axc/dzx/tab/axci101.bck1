@@ -1,0 +1,145 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axci101" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="03297" crtdt="2014-07-30 16:19:00" modid="02040" moddt="2016-08-10 16:22:42" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="成本類型計算參數設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcazld,xcazld_desc(chr80),glaa014(chr1),glaacomp(chr10),glaacomp_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcazld,xcazstus,xcaz001,xcazl003(chr500),xcaz002,xcaz003,xcaz004,xcaz005,xcaz006,xcaz010,xcaz011,xcaz011_desc(chr500),xcaz009,xcaz009_desc(chr500),xcaz007,xcaz008"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcaz001,xcazownid,xcazownid_desc(chr500),xcazowndp,xcazowndp_desc(chr500),xcazcrtid,xcazcrtid_desc(chr500),xcazcrtdp,xcazcrtdp_desc(chr500),xcazcrtdt,xcazmodid,xcazmodid_desc(chr500),xcazmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axci101" method="dialog">
+    <section id="input">
+      <input id="head" field="xcazld,glaacomp"/>
+      <input id="body" page="1" field="xcazstus,xcaz001,xcaz002,xcaz003,xcaz004,xcaz005,xcaz006,xcaz010,xcaz011,xcaz009,xcaz007,xcaz008" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcazld,glaacomp"/>
+      <construct id="body" page="1" field="xcazstus,xcaz001,xcaz002,xcaz003,xcaz004,xcaz005,xcaz006,xcaz010,xcaz011,xcaz009,xcaz007,xcaz008"/>
+      <construct id="body" page="2" field="xcazownid,xcazowndp,xcazcrtid,xcazcrtdp,xcazcrtdt,xcazmodid,xcazmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcazld"/>
+      <set id="head" type="no_entry" field="xcazld"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcazld">
+        <after>
+          <check chkid="v_glaald" id="isExist"/>
+          <reference field="xcazld_desc" ref_field="xcaz_t.xcazld" map_field="xcazent,xcazld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xcazld_desc"/>
+      <column id="glaa014" type="S" default="N"/>
+      <column id="glaacomp">
+        <after>
+          <reference field="glaacomp_desc" ref_field="glaacomp" map_field="glabent,glaacomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="glaacomp_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcazstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="xcaz001">
+        <controlp form="q_xcat001" state="i"/>
+        <controlp form="q_xcat001" state="c"/>
+      </column>
+      <column id="xcazl003"/>
+      <column id="xcaz002" def_scc="8903"/>
+      <column id="xcaz003" def_scc="8904"/>
+      <column id="xcaz004" type="S" default="1" def_scc="8905"/>
+      <column id="xcaz005" def_scc="8911"/>
+      <column id="xcaz006" def_scc="8907"/>
+      <column id="xcaz010" type="S" default="N"/>
+      <column id="xcaz011">
+        <after>
+          <check chkid="v_xcaa001_01" id="isExist"/>
+          <reference field="xcaz011_desc" ref_field="xcaz_t.xcaz011" map_field="xcaz011" ref_sql="SELECT xcaal003 FROM xcaal_t WHERE xcaalent=$varg_enterprise$var AND xcaal001=? AND xcaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcaa001" state="i"/>
+        <controlp form="q_xcaa001" state="c"/>
+      </column>
+      <column id="xcaz011_desc"/>
+      <column id="xcaz009">
+        <after>
+          <check chkid="v_xcau001" id="isExist"/>
+          <reference field="xcaz009_desc" ref_field="xcaz_t.xcaz009" map_field="xcazent,xcaz009" ref_sql="SELECT xcaul003 FROM xcaul_t WHERE xcaulent=$varg_enterprise$var AND xcaul001=? AND xcaul002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcau001" state="i"/>
+        <controlp form="q_xcau001" state="c"/>
+      </column>
+      <column id="xcaz009_desc"/>
+      <column id="xcaz007"/>
+      <column id="xcaz008"/>
+    </init>
+    <init id="body" page="2">
+      <column id="xcazownid">
+        <after>
+          <reference field="xcazownid_desc" ref_field="xcaz_t.xcazownid" map_field="xcazownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcazownid_desc"/>
+      <column id="xcazowndp">
+        <after>
+          <reference field="xcazowndp_desc" ref_field="xcaz_t.xcazowndp" map_field="xcazowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcazowndp_desc"/>
+      <column id="xcazcrtid">
+        <after>
+          <reference field="xcazcrtid_desc" ref_field="xcaz_t.xcazcrtid" map_field="xcazcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcazcrtid_desc"/>
+      <column id="xcazcrtdp">
+        <after>
+          <reference field="xcazcrtdp_desc" ref_field="xcaz_t.xcazcrtdp" map_field="xcazcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcazcrtdp_desc"/>
+      <column id="xcazcrtdt"/>
+      <column id="xcazmodid">
+        <after>
+          <reference field="xcazmodid_desc" ref_field="xcaz_t.xcazmodid" map_field="xcazmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcazmodid_desc"/>
+      <column id="xcazmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcaz_t" pk="xcazld">
+      <sql id="forupd_sql" type="sql" query="SELECT xcazld,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xcaz_t WHERE xcazent= ? AND xcazld=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcazld,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xcaz_t" order="xcazld"/>
+    </head>
+    <body id="xcaz_t" page="1,2" linked="" pk="xcaz001" fk="xcazld">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,xcazstus,xcaz001,&apos;&apos;,xcaz002,xcaz003,xcaz004,xcaz005,xcaz006,xcaz010,xcaz011,&apos;&apos;,xcaz009,&apos;&apos;,xcaz007,xcaz008,&apos;&apos;,xcazownid,&apos;&apos;,xcazowndp,&apos;&apos;,xcazcrtid,&apos;&apos;,xcazcrtdp,&apos;&apos;,xcazcrtdt,xcazmodid,&apos;&apos;,xcazmoddt FROM xcaz_t WHERE xcazent=? AND xcazld=? AND xcaz001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,xcazstus,xcaz001,&apos;&apos;,xcaz002,xcaz003,xcaz004,xcaz005,xcaz006,xcaz010,xcaz011,&apos;&apos;,xcaz009,&apos;&apos;,xcaz007,xcaz008,&apos;&apos;,xcazownid,&apos;&apos;,xcazowndp,&apos;&apos;,xcazcrtid,&apos;&apos;,xcazcrtdp,&apos;&apos;,xcazcrtdt,xcazmodid,&apos;&apos;,xcazmoddt FROM xcaz_t WHERE xcazent= ? AND xcazld=?"/>
+    </body>
+  </dataset>
+</assembly>
+

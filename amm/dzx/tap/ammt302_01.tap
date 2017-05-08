@@ -1,0 +1,1089 @@
+<add_points prog="ammt302_01" std_prog="ammt302_01" erpver="1.0" module="AMM" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.ammt302_01_gen" cite_std="N" status="d" ver="1" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION ammt302_01_gen(p_mmaf001,p_mmcy002,p_oocq009,p_mmcy006)
+DEFINE  p_mmaf001   LIKE mmaf_t.mmaf001
+DEFINE p_mmcy002  LIKE mmcy_t.mmcy002
+DEFINE p_oocq009  LIKE oocq_t.oocq009
+DEFINE p_mmcy006  LIKE mmcy_t.mmcy006
+DEFINE l_mmcu004  LIKE mmcu_t.mmcu004
+DEFINE l_mmcu005  LIKE mmcu_t.mmcu005
+DEFINE l_mmcv     RECORD LIKE mmcv_t.*
+DEFINE l_oocq009  LIKE type_t.num10
+DEFINE l_oocq009_1 LIKE type_t.num10
+DEFINE l_oocq009_2 LIKE type_t.num10
+DEFINE l_sum_mmar008 LIKE mmar_t.mmar008
+DEFINE l_sum_mmar009 LIKE mmar_t.mmar009
+DEFINE l_cnt      LIKE type_t.num5
+DEFINE l_sql      STRING
+DEFINE l_sql_1    STRING
+DEFINE l_sql_2    STRING
+DEFINE l_mmcv002  LIKE mmcv_t.mmcv002  
+DEFINE l_mmcv003  LIKE mmcv_t.mmcv003
+DEFINE l_flag     LIKE type_t.num5
+DEFINE l_mmcz     RECORD LIKE mmcz_t.*
+
+    LET l_flag = TRUE
+       
+    LET l_oocq009_1 = p_oocq009
+    
+    #根据策略编号找出是否跨级升降。是否降级
+    SELECT mmcu004 ,mmcu005 INTO l_mmcu004,l_mmcu005 FROM mmcu_t
+     WHERE mmcuent =g_enterprise AND mmcu001 = p_mmcy006
+     
+    LET l_mmcz.mmczent = g_enterprise 
+    LET l_mmcz.mmczunit = g_mmcx_m.mmcxsite
+    LET l_mmcz.mmczsite = g_mmcx_m.mmcxsite
+    LET l_mmcz.mmczdocno = g_mmcxdocno
+    LET l_mmcz.mmcz001 = p_mmaf001
+      
+   
+    #根據是否跨級和是否降級 和策略規則求出升降等級
+    
+    
+   #跨級升降等 +  允許降等
+    # Yes      +    Yes =>由等級序最小,依序往上抓判斷每一等級,抓到最後符合的等級
+    IF ( l_mmcu004 = 'Y' AND l_mmcu005 = 'Y') OR (  l_mmcu004 = 'Y' AND l_mmcu005 = 'N') THEN 
+       
+       LET l_sql = " SELECT DISTINCT mmcv002,oocq009    FROM mmcv_t,oocq_t",
+                  " WHERE mmcvent = '",g_enterprise,"' AND mmcv001 = '",p_mmcy006,"'",
+                  "   AND oocqent =  '",g_enterprise,"' AND oocq001 = '2024' AND oocq002 = mmcv002",       
+                  " AND mmcvstus = 'Y'"
+       LET l_sql = l_sql," ORDER BY CAST(oocq009 AS NUMBER(5,0))  DESC "
+       PREPARE mmcv_pre1 FROM l_sql
+       DECLARE sel_mmcv1  CURSOR FOR mmcv_pre1
+       
+       LET l_sql_1 = "SELECT DISTINCT mmcv003 FROM mmcv_t WHERE mmcvent ='",g_enterprise,"'  AND mmcv001 = '",p_mmcy006,"'",
+                                                 " AND mmcv002 = ? ORDER BY mmcv003"
+       PREPARE mmcv_pre_1 FROM l_sql_1
+       DECLARE sel_mmcv_1  CURSOR FOR mmcv_pre_1
+       
+       LET l_sql_2 = "SELECT mmcv_t.* FROM mmcv_t WHERE  mmcvent ='",g_enterprise,"'  AND mmcv001 = '",p_mmcy006,"'",
+                                                 " AND mmcv002 = ? AND mmcv003 = ? ORDER BY mmcv003 "
+       
+       PREPARE mmcv_pre_2 FROM l_sql_2
+       DECLARE sel_mmcv_2  CURSOR FOR mmcv_pre_2
+       
+       FOREACH sel_mmcv1 INTO l_mmcv002,l_oocq009
+          #Yes      +     No =>由會員所在等級往上抓判斷每一等級,抓到最後符合的等級
+          IF l_mmcu004 = 'Y' AND l_mmcu005 = 'N' THEN
+              IF l_oocq009 <= l_oocq009_1 THEN
+                CONTINUE FOREACH
+              END IF
+          END IF
+          
+          FOREACH sel_mmcv_1 USING l_mmcv002 INTO l_mmcv003 
+           
+             FOREACH sel_mmcv_2 USING l_mmcv002,l_mmcv003 INTO l_mmcv.* 
+              
+                 CASE l_mmcv.mmcv005 
+                     WHEN '1'
+                        SELECT NVL(SUM(mmar009),0) INTO l_sum_mmar009 FROM mmar_t 
+                         WHERE mmarent = g_enterprise AND mmar002 = p_mmaf001
+                           AND CAST(mmar006 AS CHAR(10))  <= g_mmcx_m.mmcx002  AND mmar009 > 0
+                           AND EXISTS (SELECT 1 FROM mmcw_t,mmaq_t WHERE mmcwent =g_enterprise AND mmcw001 =p_mmcy006 AND mmcw002 = mmaq002 AND mmaq001 = mmar001 )
+                        IF NOT cl_null(l_mmcv.mmcv008) THEN
+                           IF NOT (l_sum_mmar009 <= l_mmcv.mmcv008 AND l_sum_mmar009 >=l_mmcv.mmcv007 ) THEN
+                              LET l_flag = FALSE
+                              EXIT FOREACH  
+                           ELSE
+                              LET l_mmcz.mmcz002 = '1'
+                              LET l_mmcz.mmcz003 = l_sum_mmar009
+                              CALL s_ammt302_ins_mmcztmp(l_mmcz.*)                         
+                           END IF
+                        ELSE
+                           IF l_sum_mmar009 <l_mmcv.mmcv007 THEN 
+                              LET l_flag = FALSE
+                              EXIT FOREACH   
+                           ELSE
+                              LET l_mmcz.mmcz002 = '1'
+                              LET l_mmcz.mmcz003 = l_sum_mmar009
+                              CALL s_ammt302_ins_mmcztmp(l_mmcz.*) 
+                           END IF                    
+                        END IF  
+                        
+                     WHEN '2'
+                  
+                          SELECT NVL(SUM(rtja049),0) INTO l_sum_mmar008 FROM rtja_t 
+                           WHERE rtjaent = g_enterprise  AND rtja001 IN (
+                                       SELECT DISTINCT mmaq001 FROM mmaq_t WHERE mmaqent =g_enterprise AND mmaq003 = p_mmaf001)
+                             AND rtjastus <>'X' AND rtjadocdt <=g_mmcx_m.mmcx002  AND rtja000 IN ('artt600','artt610')    
+                           AND EXISTS (SELECT 1 FROM mmcw_t,mmaq_t WHERE mmcwent =g_enterprise AND mmcw001 =p_mmcy006 AND mmcw002 = mmaq002 AND mmaq001 = rtja001 ) 
+
+                        IF NOT cl_null(l_mmcv.mmcv008) THEN
+                           IF NOT(l_sum_mmar008 <= l_mmcv.mmcv008 AND l_sum_mmar008 >=l_mmcv.mmcv007) THEN
+                              LET l_flag = FALSE
+                              EXIT FOREACH    
+                           ELSE
+                              LET l_mmcz.mmcz002 = '2'
+                              LET l_mmcz.mmcz003 = l_sum_mmar008
+                              CALL s_ammt302_ins_mmcztmp(l_mmcz.*)                            
+                           END IF
+                        ELSE
+                           IF l_sum_mmar008 <l_mmcv.mmcv007 THEN 
+                              LET l_flag = FALSE
+                              EXIT FOREACH   
+                           ELSE
+                              LET l_mmcz.mmcz002 = '2'
+                              LET l_mmcz.mmcz003 = l_sum_mmar008
+                              CALL s_ammt302_ins_mmcztmp(l_mmcz.*)                              
+                           END IF                    
+                        END IF 
+                     WHEN '3'
+                   
+                       SELECT SUM(CASE WHEN rtja049 >= 0 THEN 1 ELSE -1 END) INTO l_cnt FROM rtja_t 
+                           WHERE rtjaent = g_enterprise AND rtja001 IN (
+                                       SELECT DISTINCT mmaq001 FROM mmaq_t WHERE mmaqent =g_enterprise AND mmaq003 = p_mmaf001)
+                             AND rtjastus <>'X' AND rtjadocdt <=g_mmcx_m.mmcx002  AND rtja000 IN   ('artt600','artt610')    
+                           AND EXISTS (SELECT 1 FROM mmcw_t,mmaq_t WHERE mmcwent =g_enterprise AND mmcw001 =p_mmcy006 AND mmcw002 = mmaq002 AND mmaq001 = rtja001 )                            
+                        IF NOT cl_null(l_cnt) THEN
+                           IF NOT(l_cnt<= l_mmcv.mmcv008 AND l_cnt >=l_mmcv.mmcv007) THEN
+                              LET l_flag = FALSE
+                              EXIT FOREACH 
+                           ELSE
+                              LET l_mmcz.mmcz002 = '3'
+                              LET l_mmcz.mmcz003 = l_cnt
+                              CALL s_ammt302_ins_mmcztmp(l_mmcz.*)                            
+                           END IF
+                        ELSE
+                           IF l_cnt <l_mmcv.mmcv007 THEN 
+                              LET l_flag = FALSE
+                              EXIT FOREACH
+                           ELSE
+                              LET l_mmcz.mmcz002 = '3'
+                              LET l_mmcz.mmcz003 = l_cnt
+                              CALL s_ammt302_ins_mmcztmp(l_mmcz.*)                            
+                           END IF                    
+                        END IF 
+                     WHEN '4'
+                          SELECT  NVL(SUM(mmar009),0) INTO l_sum_mmar009 FROM mmar_t 
+                         WHERE mmarent = g_enterprise AND mmar002 = p_mmaf001
+                           AND CAST(mmar006 AS CHAR(10)) <= g_mmcx_m.mmcx002 AND CAST(mmar006 AS CHAR(10)) >= add_months(g_mmcx_m.mmcx002,l_mmcv.mmcv006*(-1)) 
+                           AND EXISTS (SELECT 1 FROM mmcw_t,mmaq_t WHERE mmcwent =g_enterprise AND mmcw001 =p_mmcy006 AND mmcw002 = mmaq002 AND mmaq001 = mmar001 )
+                        IF NOT cl_null(l_mmcv.mmcv008) THEN
+                           IF NOT (l_sum_mmar009 <= l_mmcv.mmcv008 AND l_sum_mmar009 >=l_mmcv.mmcv007) THEN
+                              LET l_flag = FALSE
+                              EXIT FOREACH 
+                           ELSE
+                              LET l_mmcz.mmcz002 = '4'
+                              LET l_mmcz.mmcz003 = l_sum_mmar009
+                              CALL s_ammt302_ins_mmcztmp(l_mmcz.*)                            
+                           END IF
+                        ELSE
+                           IF l_sum_mmar009 <l_mmcv.mmcv007 THEN 
+                              LET l_flag = FALSE
+                              EXIT FOREACH  
+                           ELSE
+                              LET l_mmcz.mmcz002 = '4'
+                              LET l_mmcz.mmcz003 = l_sum_mmar009
+                              CALL ammt302_01_ins_mmcztmp(l_mmcz.*)                           
+                           END IF                    
+                        END IF          
+                     WHEN '5'
+                   
+                         SELECT  NVL(SUM(rtja049),0) INTO l_sum_mmar008 FROM rtja_t 
+                           WHERE rtjaent = g_enterprise AND rtja002  IN (
+                                       SELECT DISTINCT mmaq001 FROM mmaq_t WHERE mmaqent =g_enterprise AND mmaq003 = p_mmaf001)
+                             AND rtjastus <>'X' AND rtjadate <=g_mmcx_m.mmcx002  AND rtjadate >= add_months(g_mmcx_m.mmcx002,l_mmcv.mmcv006*(-1))  AND rtja000 IN   ('artt600','artt610')      
+                           AND EXISTS (SELECT 1 FROM mmcw_t,mmaq_t WHERE mmcwent =g_enterprise AND mmcw001 =p_mmcy006 AND mmcw002 = mmaq002 AND mmaq001 = rtja001 ) 
+                        IF NOT cl_null(l_mmcv.mmcv008) THEN
+                           IF NOT (l_sum_mmar008 <= l_mmcv.mmcv008 AND l_sum_mmar008 >=l_mmcv.mmcv007) THEN
+                              LET l_flag = FALSE
+                              EXIT FOREACH  
+                           ELSE
+                              LET l_mmcz.mmcz002 = '5'
+                              LET l_mmcz.mmcz003 = l_sum_mmar008
+                              CALL ammt302_01_ins_mmcztmp(l_mmcz.*)                           
+                           END IF
+                        ELSE
+                           IF l_sum_mmar008 <l_mmcv.mmcv007 THEN 
+                              LET l_flag = FALSE
+                              EXIT FOREACH   
+                           ELSE
+                              LET l_mmcz.mmcz002 = '5'
+                              LET l_mmcz.mmcz003 = l_sum_mmar008
+                              CALL ammt302_01_ins_mmcztmp(l_mmcz.*)                            
+                           END IF                    
+                        END IF  
+                     WHEN '6'
+                   
+                         SELECT SUM(CASE WHEN rtja049 >= 0 THEN 1 ELSE -1 END) INTO l_cnt FROM rtja_t 
+                           WHERE rtjaent = g_enterprise AND rtja002  IN (
+                                       SELECT DISTINCT mmaq001 FROM mmaq_t WHERE mmaqent =g_enterprise AND mmaq003 = p_mmaf001)
+                             AND rtjastus <>'X' AND rtjadate <=g_mmcx_m.mmcx002  AND  rtjadate >= add_months(g_mmcx_m.mmcx002,l_mmcv.mmcv006*(-1)) AND rtja000 IN   ('artt600','artt610')
+                           AND EXISTS (SELECT 1 FROM mmcw_t,mmaq_t WHERE mmcwent =g_enterprise AND mmcw001 =p_mmcy006 AND mmcw002 = mmaq002 AND mmaq001 = rtja001 ) 
+                        IF NOT cl_null(l_cnt) THEN
+                           IF NOT (l_cnt<= l_mmcv.mmcv008 AND l_cnt >=l_mmcv.mmcv007) THEN
+                              LET l_flag = FALSE
+                              EXIT FOREACH   
+                           ELSE
+                              LET l_mmcz.mmcz002 = '6'
+                              LET l_mmcz.mmcz003 = l_cnt
+                              CALL ammt302_01_ins_mmcztmp(l_mmcz.*) 
+                           END IF
+                        ELSE
+                           IF l_cnt <l_mmcv.mmcv007 THEN 
+                              LET l_flag = FALSE
+                              EXIT FOREACH 
+                           ELSE
+                              LET l_mmcz.mmcz002 = '6'
+                              LET l_mmcz.mmcz003 = l_cnt
+                              CALL ammt302_01_ins_mmcztmp(l_mmcz.*)                            
+                           END IF                    
+                        END IF 
+                     END CASE
+                END FOREACH
+                IF l_flag = TRUE THEN #升等成功 
+                   IF l_mmcv002 = p_mmcy002 THEN
+                      RETURN FALSE,''
+                   END IF                   
+                   IF ammt302_01_ins_mmcz() THEN
+                      RETURN TRUE,l_mmcv002    
+                   ELSE
+                      RETURN FALSE,''
+                   END IF                   
+                ELSE
+                   DELETE FROM mmcz_01_tmp 
+                   LET l_flag = TRUE
+                   CONTINUE FOREACH
+                END IF
+            END FOREACH
+       END FOREACH
+    END IF
+    
+
+    # No      +    Yes =>由會員所在等級往上一級依序往下check 3 層級,有取到則不再往下取
+    IF ( l_mmcu004 = 'N' AND l_mmcu005 = 'Y') OR (l_mmcu004 = 'N' AND l_mmcu005 = 'N' ) THEN
+       
+       LET l_sql = " SELECT DISTINCT CAST(oocq009 AS NUMBER(5,0))  FROM (SELECT oocq009    FROM mmcv_t,oocq_t ",
+                                      "  WHERE mmcvent = '",g_enterprise,"' AND mmcv001 = '",p_mmcy006,"'",
+                                      "   AND oocqent = '",g_enterprise,"' AND oocq001 = '2024' AND oocq002 = mmcv002 ",      
+                                      "   AND mmcvstus = 'Y' AND CAST(oocq009 AS NUMBER(5,0))  >'",l_oocq009_1,"' ORDER BY CAST(oocq009 AS NUMBER(5,0)) )",
+                   "  WHERE rownum =1 "
+                
+      PREPARE sel_oocq FROM l_sql
+      EXECUTE sel_oocq INTO l_oocq009_2
+       
+       LET l_sql = " SELECT DISTINCT mmcv002,CAST(oocq009 AS NUMBER(5,0)) FROM (SELECT mmcv002,oocq009    FROM mmcv_t,oocq_t",
+                " WHERE mmcvent = '",g_enterprise,"' AND mmcv001 = '",p_mmcy006,"'",
+                "   AND oocqent =  '",g_enterprise,"' AND oocq001 = '2024' AND oocq002 = mmcv002",       
+                " AND mmcvstus = 'Y' AND CAST(oocq009 AS NUMBER(5,0))  <='",l_oocq009_2,"'  ORDER BY CAST(oocq009 AS NUMBER(5,0)) )",
+                " WHERE rownum <=3 "
+                
+       PREPARE mmcv_pre3 FROM l_sql
+       #抓取會員所在等級上一級
+       DECLARE sel_mmcv3  CURSOR FOR mmcv_pre3
+  
+       
+       LET l_sql_1 = "SELECT DISTINCT mmcv003 FROM mmcv_t WHERE mmcvent ='",g_enterprise,"'  AND mmcv001 = '",p_mmcy006,"'",
+                                                 " AND mmcv002 = ? ORDER BY mmcv003"
+       PREPARE mmcv_pre_3 FROM l_sql_1
+       DECLARE sel_mmcv_3  CURSOR FOR mmcv_pre_3
+       
+       LET l_sql_2 = "SELECT mmcv_t.* FROM mmcv_t  WHERE mmcvent ='",g_enterprise,"'  AND mmcv001 = '",p_mmcy006,"'",
+                                                 " AND mmcv002 = ? AND mmcv003 = ? ORDER BY mmcv003 "
+       
+       PREPARE mmcv_pre_4 FROM l_sql_2
+       DECLARE sel_mmcv_4  CURSOR FOR mmcv_pre_4
+       
+       FOREACH sel_mmcv3 INTO l_mmcv002,l_oocq009
+          FOREACH sel_mmcv_3 USING l_mmcv002 INTO l_mmcv003 
+             FOREACH sel_mmcv_4 USING l_mmcv002,l_mmcv003  INTO l_mmcv.*
+                 CASE l_mmcv.mmcv005 
+                     WHEN '1'
+                        SELECT NVL(SUM(mmar009),0) INTO l_sum_mmar009 FROM mmar_t 
+                         WHERE mmarent = g_enterprise AND mmar002 = p_mmaf001
+                           AND CAST(mmar006 AS CHAR(10)) <= g_mmcx_m.mmcx002  AND mmar009 > 0
+                           AND EXISTS (SELECT 1 FROM mmcw_t,mmaq_t WHERE mmcwent =g_enterprise AND mmcw001 =p_mmcy006 AND mmcw002 = mmaq002 AND mmaq001 = mmar001 )
+                        IF NOT cl_null(l_mmcv.mmcv008) THEN
+                           IF NOT (l_sum_mmar009 <= l_mmcv.mmcv008 AND l_sum_mmar009 >=l_mmcv.mmcv007 ) THEN
+                              LET l_flag = FALSE
+                              EXIT FOREACH 
+                           ELSE
+                              LET l_mmcz.mmcz002 = '1'
+                              LET l_mmcz.mmcz003 = l_sum_mmar009
+                              CALL ammt302_01_ins_mmcztmp(l_mmcz.*)                              
+                           END IF
+                        ELSE
+                           IF l_sum_mmar009 <l_mmcv.mmcv007 THEN 
+                              LET l_flag = FALSE
+                              EXIT FOREACH  
+                           ELSE
+                              LET l_mmcz.mmcz002 = '1'
+                              LET l_mmcz.mmcz003 = l_sum_mmar009
+                              CALL ammt302_01_ins_mmcztmp(l_mmcz.*)                            
+                           END IF                    
+                        END IF  
+                        
+                     WHEN '2'
+                   
+                          SELECT NVL(SUM(rtja049),0) INTO l_sum_mmar008 FROM rtja_t 
+                           WHERE rtjaent = g_enterprise AND rtja002  IN (
+                                       SELECT DISTINCT mmaq001 FROM mmaq_t WHERE mmaqent =g_enterprise AND mmaq003 = p_mmaf001)
+                             AND rtjastus <>'X' AND rtjadate <=g_mmcx_m.mmcx002  AND rtja000 IN   ('artt600','artt610')    
+                           AND EXISTS (SELECT 1 FROM mmcw_t,mmaq_t WHERE mmcwent =g_enterprise AND mmcw001 =p_mmcy006 AND mmcw002 = mmaq002 AND mmaq001 = rtja001 ) 
+                        IF NOT cl_null(l_mmcv.mmcv008) THEN
+                           IF NOT(l_sum_mmar008 <= l_mmcv.mmcv008 AND l_sum_mmar008 >=l_mmcv.mmcv007) THEN
+                              LET l_flag = FALSE
+                              EXIT FOREACH     
+                           ELSE
+                              LET l_mmcz.mmcz002 = '2'
+                              LET l_mmcz.mmcz003 = l_sum_mmar008
+                              CALL ammt302_01_ins_mmcztmp(l_mmcz.*)                            
+                           END IF
+                        ELSE
+                           IF l_sum_mmar008 <l_mmcv.mmcv007 THEN 
+                              LET l_flag = FALSE
+                              EXIT FOREACH   
+                           ELSE
+                              LET l_mmcz.mmcz002 = '2'
+                              LET l_mmcz.mmcz003 = l_sum_mmar008
+                              CALL ammt302_01_ins_mmcztmp(l_mmcz.*)                            
+                           END IF                    
+                        END IF 
+                     WHEN '3'
+                       
+                       SELECT SUM(CASE WHEN rtja049 >= 0 THEN 1 ELSE -1 END) INTO l_cnt FROM rtja_t 
+                           WHERE rtjaent = g_enterprise AND rtja002  IN (
+                                       SELECT DISTINCT mmaq001 FROM mmaq_t WHERE mmaqent =g_enterprise AND mmaq003 = p_mmaf001)
+                             AND rtjastus <>'X' AND rtjadate <=g_mmcx_m.mmcx002 AND rtja000 IN   ('artt600','artt610')      
+                           AND EXISTS (SELECT 1 FROM mmcw_t,mmaq_t WHERE mmcwent =g_enterprise AND mmcw001 =p_mmcy006 AND mmcw002 = mmaq002 AND mmaq001 = rtja001 ) 
+                        IF NOT cl_null(l_cnt) THEN
+                           IF NOT(l_cnt<= l_mmcv.mmcv008 AND l_cnt >=l_mmcv.mmcv007) THEN
+                              LET l_flag = FALSE
+                              EXIT FOREACH 
+                           ELSE
+                              LET l_mmcz.mmcz002 = '3'
+                              LET l_mmcz.mmcz003 = l_cnt
+                              CALL ammt302_01_ins_mmcztmp(l_mmcz.*)                            
+                           END IF
+                        ELSE
+                           IF l_cnt <l_mmcv.mmcv007 THEN 
+                              LET l_flag = FALSE
+                              EXIT FOREACH 
+                           ELSE
+                              LET l_mmcz.mmcz002 = '3'
+                              LET l_mmcz.mmcz003 = l_cnt
+                              CALL ammt302_01_ins_mmcztmp(l_mmcz.*)                           
+                           END IF                    
+                        END IF 
+                     WHEN '4'
+                          SELECT  NVL(SUM(mmar009),0) INTO l_sum_mmar009 FROM mmar_t 
+                         WHERE mmarent = g_enterprise AND mmar002 = p_mmaf001 
+                           AND CAST(mmar006 AS CHAR(10)) <= g_mmcx_m.mmcx002 AND CAST(mmar006 AS CHAR(10)) >= add_months(g_mmcx_m.mmcx002,l_mmcv.mmcv006*(-1)) 
+                           AND EXISTS (SELECT 1 FROM mmcw_t,mmaq_t WHERE mmcwent =g_enterprise AND mmcw001 =p_mmcy006 AND mmcw002 = mmaq002 AND mmaq001 = mmar001 )
+                        IF NOT cl_null(l_mmcv.mmcv008) THEN
+                           IF NOT (l_sum_mmar009 <= l_mmcv.mmcv008 AND l_sum_mmar009 >=l_mmcv.mmcv007) THEN
+                              LET l_flag = FALSE
+                              EXIT FOREACH   
+                           ELSE
+                              LET l_mmcz.mmcz002 = '4'
+                              LET l_mmcz.mmcz003 = l_sum_mmar009
+                              CALL ammt302_01_ins_mmcztmp(l_mmcz.*)                           
+                           END IF
+                        ELSE
+                           IF l_sum_mmar009 <l_mmcv.mmcv007 THEN 
+                              LET l_flag = FALSE
+                              EXIT FOREACH 
+                           ELSE
+                              LET l_mmcz.mmcz002 = '4'
+                              LET l_mmcz.mmcz003 = l_sum_mmar009
+                              CALL ammt302_01_ins_mmcztmp(l_mmcz.*)                             
+                           END IF                    
+                        END IF          
+                     WHEN '5'
+                   
+                         SELECT  NVL(SUM(rtja049),0) INTO l_sum_mmar008 FROM rtja_t 
+                           WHERE rtjaent = g_enterprise AND rtja002  IN (
+                                       SELECT DISTINCT mmaq001 FROM mmaq_t WHERE mmaqent =g_enterprise AND mmaq003 = p_mmaf001)
+                             AND rtjastus <>'X' AND rtjadate <=g_mmcx_m.mmcx002  AND rtjadate >= add_months(g_mmcx_m.mmcx002,l_mmcv.mmcv006*(-1)) AND rtja000 IN   ('artt600','artt610')     
+                           AND EXISTS (SELECT 1 FROM mmcw_t,mmaq_t WHERE mmcwent =g_enterprise AND mmcw001 =p_mmcy006 AND mmcw002 = mmaq002 AND mmaq001 = rtja001 ) 
+                        IF NOT cl_null(l_mmcv.mmcv008) THEN
+                           IF NOT (l_sum_mmar008 <= l_mmcv.mmcv008 AND l_sum_mmar008 >=l_mmcv.mmcv007) THEN
+                              LET l_flag = FALSE
+                              EXIT FOREACH  
+                           ELSE 
+                              LET l_mmcz.mmcz002 = '5'
+                              LET l_mmcz.mmcz003 = l_sum_mmar008
+                              CALL ammt302_01_ins_mmcztmp(l_mmcz.*)                             
+                           END IF
+                        ELSE
+                           IF l_sum_mmar008 <l_mmcv.mmcv007 THEN 
+                              LET l_flag = FALSE
+                              EXIT FOREACH 
+                           ELSE
+                              LET l_mmcz.mmcz002 = '5'
+                              LET l_mmcz.mmcz003 = l_sum_mmar008
+                              CALL ammt302_01_ins_mmcztmp(l_mmcz.*)                              
+                           END IF                    
+                        END IF  
+                     WHEN '6'
+                 
+                         SELECT SUM(CASE WHEN rtja049 >= 0 THEN 1 ELSE -1 END) INTO l_cnt FROM rtja_t 
+                           WHERE rtjaent = g_enterprise AND rtja002  IN (
+                                       SELECT DISTINCT mmaq001 FROM mmaq_t WHERE mmaqent =g_enterprise AND mmaq003 = p_mmaf001)
+                             AND rtjastus <>'X' AND rtjadate <=g_mmcx_m.mmcx002  AND  rtjadate >= add_months(g_mmcx_m.mmcx002,l_mmcv.mmcv006*(-1)) AND rtja000 IN   ('artt600','artt610') 
+                           AND EXISTS (SELECT 1 FROM mmcw_t,mmaq_t WHERE mmcwent =g_enterprise AND mmcw001 =p_mmcy006 AND mmcw002 = mmaq002 AND mmaq001 = rtja001 ) 
+                        IF NOT cl_null(l_cnt) THEN
+                           IF NOT (l_cnt<= l_mmcv.mmcv008 AND l_cnt >=l_mmcv.mmcv007) THEN
+                              LET l_flag = FALSE
+                              EXIT FOREACH  
+                           ELSE
+                              LET l_mmcz.mmcz002 = '6'
+                              LET l_mmcz.mmcz003 = l_cnt
+                              CALL ammt302_01_ins_mmcztmp(l_mmcz.*)                              
+                           END IF
+                        ELSE
+                           IF l_cnt <l_mmcv.mmcv007 THEN 
+                              LET l_flag = FALSE
+                              EXIT FOREACH 
+                           ELSE
+                              LET l_mmcz.mmcz002 = '6'
+                              LET l_mmcz.mmcz003 = l_cnt
+                              CALL ammt302_01_ins_mmcztmp(l_mmcz.*)                             
+                           END IF                    
+                        END IF 
+                     END CASE    
+             END FOREACH 
+             IF l_flag = TRUE THEN #升等成功  
+                IF l_mmcv002 = p_mmcy002 THEN
+                   RETURN FALSE,''
+                END IF  
+                IF ammt302_01_ins_mmcz() THEN
+                   RETURN TRUE,l_mmcv002
+                ELSE
+                   RETURN FALSE,''    
+                END IF                
+             ELSE
+                DELETE FROM mmcz_01_tmp
+                LET l_flag = TRUE
+                CONTINUE FOREACH
+             END IF             
+          END FOREACH
+          
+          IF l_mmcu004 = 'N' AND l_mmcu005 = 'N' THEN
+             EXIT FOREACH
+          END IF
+          
+       END FOREACH       
+    END IF
+    
+    IF l_flag THEN
+       #CALL cl_err('','amm-00299',1)
+       RETURN FALSE,''      
+    END IF  
+    RETURN l_flag,'' 
+END FUNCTION]]>
+</point>
+  <point name="function.ammt302_01_create_mmcztmp" cite_std="N" status="d" ver="1" src="s" new="Y" order="4" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION ammt302_01_create_mmcztmp()
+   DEFINE l_sql   STRING
+
+   DROP TABLE mmcz_01_tmp
+   
+   LET l_sql = "CREATE GLOBAL TEMPORARY TABLE mmcz_01_tmp AS ",
+                "SELECT * FROM mmcz_t "
+   PREPARE mmcz_tbl_01 FROM l_sql
+   EXECUTE mmcz_tbl_01
+   FREE mmcz_tbl_01
+END FUNCTION]]>
+</point>
+  <point name="function.ammt302_01_ins_mmcztmp" cite_std="N" status="d" ver="1" src="s" new="Y" order="5" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION ammt302_01_ins_mmcztmp(l_mmcz)
+DEFINE l_mmcz   RECORD LIKE mmcz_t.*
+
+   INSERT INTO mmcz_01_tmp VALUES(l_mmcz.*)
+END FUNCTION]]>
+</point>
+  <point name="function.ammt302_01_ins_mmcz" cite_std="N" status="d" ver="1" src="s" new="Y" order="6" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION ammt302_01_ins_mmcz()
+   INSERT INTO mmcz_t SELECT * FROM mmcz_tmp   
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("ins mmcz_t",SQLCA.sqlcode,1)
+      RETURN FALSE
+   END IF
+   RETURN TRUE
+END FUNCTION]]>
+</point>
+  <point name="free_style.variable" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[
+{<Module define>}
+#單頭 type 宣告
+
+ type type_tm           RECORD
+   wc1   STRING,
+   wc2   STRING
+       END RECORD
+       
+ type type_g_mmcx_m        RECORD
+   mmcx002  LIKE mmcx_t.mmcx002,
+   mmcxsite LIKE mmcx_t.mmcxsite
+       END RECORD
+
+DEFINE tm              type_tm
+DEFINE g_mmcx_m        type_g_mmcx_m
+
+DEFINE g_mmcxdocno     LIKE mmcx_t.mmcxdocno  
+DEFINE g_mmcxdocno_t   LIKE mmcx_t.mmcxdocno    #Key值備份
+
+
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+{</Module define>}]]>
+</point>
+  <point name="input.a.mmcxdocno" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_mmcx_m.mmcxdocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_mmcx_m.mmcxdocno != g_mmcxdocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mmcx_t WHERE "||"mmcxent = '" ||g_enterprise|| "' AND "||"mmcxdocno = '"||g_mmcx_m.mmcxdocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="function.ammt302_01" cite_std="N" status="u" ver="1" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[
+PUBLIC FUNCTION ammt302_01(--)
+   #add-point:input段變數傳入
+   p_mmcxdocno
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   {<Local define>}
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   DEFINE tok            base.StringTokenizer
+   
+   {</Local define>}
+   #add-point:input段define
+   {<point name="input.define"/>}
+   DEFINE p_mmcxdocno     LIKE mmcx_t.mmcxdocno
+   DEFINE l_stus          LIKE mmcx_t.mmcxstus
+   #end add-point
+
+   WHENEVER ERROR CONTINUE
+   
+   IF cl_null(p_mmcxdocno) THEN
+      RETURN 
+   END IF
+   
+   SELECT mmcxstus INTO l_stus FROM mmcx_t
+    WHERE mmcxent = g_enterprise AND mmcxdocno = p_mmcxdocno
+    
+   IF l_stus <> 'N' THEN
+      RETURN
+   END IF
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_ammt302_01 WITH FORM cl_ap_formpath("amm","ammt302_01")
+
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   CALL s_ammt302_create_mmcztmp()
+   LET g_mmcxdocno = p_mmcxdocno
+   #end add-point
+
+   WHILE TRUE
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      CONSTRUCT tm.wc1 ON mmag001,mmag004 FROM mmag001,mmag004_1
+         
+          BEFORE CONSTRUCT
+           
+          
+          AFTER FIELD mmag001
+             
+             
+          
+          AFTER FIELD mmag004_1
+          
+          
+          ON ACTION controlp INFIELD mmag001
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_mmaf001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mmag001  #顯示到畫面上
+
+            NEXT FIELD mmag001                     #返回原欄位
+            
+
+          ON ACTION controlp INFIELD mmag004_1
+
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+			LET g_qryparam.arg1 = '2025'
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mmag004_1  #顯示到畫面上
+
+            NEXT FIELD mmag004_1     
+           
+      END CONSTRUCT
+      
+      CONSTRUCT tm.wc2 ON mmag004 FROM mmag004_2
+         
+          BEFORE CONSTRUCT
+           
+
+          AFTER FIELD mmag004_2
+          
+          ON ACTION controlp INFIELD mmag004_2
+
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+			LET g_qryparam.arg1 = '2024'
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mmag004_2  #顯示到畫面上
+
+            NEXT FIELD mmag004_2     
+                      
+      END CONSTRUCT
+       
+
+      #輸入開始
+      INPUT BY NAME g_mmcx_m.mmcx002,g_mmcx_m.mmcxsite ATTRIBUTE(WITHOUT DEFAULTS)
+
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+
+         #自訂ACTION(master_input)
+
+
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+
+         #---------------------------<  Master  >---------------------------
+   
+         #----<<mmcx002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD mmcx002
+            #add-point:BEFORE FIELD mmcx002
+            {<point name="input.b.mmcx002" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD mmcx002
+
+            #add-point:AFTER FIELD mmcx002
+            {<point name="input.a.mmcx002" />}
+            IF g_mmcx_m.mmcx002 > g_today THEN
+               LET g_mmcx_m.mmcx002 = g_today
+               NEXT FIELD mmcx002
+            END IF
+            #END add-point
+
+
+         #此段落由子樣板a04產生
+         ON CHANGE mmcx002
+            #add-point:ON CHANGE mmcx002
+            {<point name="input.g.mmcx002" />}
+            #END add-point
+
+         #----<<mmcxunit>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD mmcxsite
+            #add-point:BEFORE FIELD mmcxunit
+            {<point name="input.b.mmcxunit" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD mmcxsite
+
+            #add-point:AFTER FIELD mmcxunit
+            {<point name="input.a.mmcxunit" />}
+            IF NOT cl_null( g_mmcx_m.mmcxsite) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_errshow = '1'
+               LET g_chkparam.arg1 = g_mmcx_m.mmcxsite
+               LET g_chkparam.arg2 = '2'
+               LET g_chkparam.arg3 = g_site
+               IF NOT cl_chk_exist("v_ooed004") THEN
+                  LET g_mmcx_m.mmcxsite = ''
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            
+            #END add-point
+
+
+         #此段落由子樣板a04產生
+         ON CHANGE mmcxsite
+            #add-point:ON CHANGE mmcxunit
+            {<point name="input.g.mmcxunit" />}
+            #END add-point
+
+ #欄位檢查
+         #---------------------------<  Master  >---------------------------
+         #----<<mmcxdocno>>----
+         #Ctrlp:input.c.mmcxdocno
+#         ON ACTION controlp INFIELD mmcxdocno
+            #add-point:ON ACTION controlp INFIELD mmcxdocno
+            {<point name="input.c.mmcxdocno" />}
+            #END add-point
+
+         #----<<mmcx002>>----
+         #Ctrlp:input.c.mmcx002
+         #ON ACTION controlp INFIELD mmcx002
+            #add-point:ON ACTION controlp INFIELD mmcx002
+            {<point name="input.c.mmcx002" />}
+            #END add-point
+
+         #----<<mmcxunit>>----
+         #Ctrlp:input.c.mmcxunit
+          ON ACTION controlp INFIELD mmcxsite
+            #add-point:ON ACTION controlp INFIELD mmcxsite
+            {<point name="input.c.mmcxunit" />}
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_mmcx_m.mmcxsite       #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_site #
+            LET g_qryparam.arg2 = "2" #
+
+            CALL q_ooed004()                                   #呼叫開窗
+
+            LET g_mmcx_m.mmcxsite = g_qryparam.return1              
+
+            DISPLAY g_mmcx_m.mmcxsite  TO mmcxsite              #顯示到畫面上
+
+            NEXT FIELD mmcxsite                                 #返回原欄位
+            
+            
+            #END add-point
+
+ #欄位開窗
+
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+
+      END INPUT
+
+      BEFORE DIALOG
+         LET g_mmcx_m.mmcx002 = g_today
+         LET g_mmcx_m.mmcxsite = g_site
+         DISPLAY BY NAME g_mmcx_m.mmcx002,g_mmcx_m.mmcxsite
+         NEXT FIELD mmag001
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION close
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION exit
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0   
+      CALL cl_err('',9001,0)
+      DROP TABLE mmcz_01_tmp
+     #畫面關閉
+      CLOSE WINDOW w_ammt302_01
+      RETURN
+   END IF
+   
+   IF cl_null(tm.wc1) THEN
+      LET tm.wc1 = " 1=1"
+   END IF
+
+   IF cl_null(tm.wc2) THEN
+      LET tm.wc2 = " 1=1"
+   END IF
+
+   CALL cl_err_showmsg_init()
+   CALL s_transaction_begin()
+   
+   IF ammt302_01_insert_b() THEN
+      CALL s_transaction_end('Y','0')
+      CALL cl_showmsg()
+      EXIT WHILE      
+   ELSE
+      CALL s_transaction_end('N','0')
+      CALL cl_showmsg()
+      CONTINUE WHILE    
+   END IF
+
+   END WHILE
+   #畫面關閉
+   CLOSE WINDOW w_ammt302_01
+   #add-point:input段after input
+   {<point name="input.post_input"/>}
+   #end add-point
+
+END FUNCTION]]>
+</point>
+  <point name="function.ammt302_01_insert_b" cite_std="N" status="u" ver="1" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION ammt302_01_insert_b()
+DEFINE l_sql      STRING 
+DEFINE l_mmaf001  LIKE mmaf_t.mmaf001
+DEFINE l_mmcy     RECORD LIKE mmcy_t.*
+DEFINE l_oocq009  LIKE oocq_t.oocq009
+DEFINE l_success  LIKE type_t.num5
+DEFINE l_n        LIKE type_t.num5
+DEFINE l_flag     LIKE type_t.chr1
+
+    LET l_flag = 'N'
+    SELECT COUNT(*) INTO l_n FROM mmcy_t WHERE mmcyent = g_enterprise AND mmcydocno = g_mmcxdocno
+    IF l_n > 0 THEN
+       IF cl_ask_confirm('amm-00308') THEN
+          LET l_flag = 'Y'
+       END IF       
+    END IF
+    LET l_sql = " SELECT mmaf001 FROM mmaf_t LEFT OUTER JOIN mmag_t ON mmag001 = mmaf001 AND mmafent = mmagent AND  mmag003 = '2025'  ",
+                "  WHERE mmafstus = 'Y' AND ",tm.wc1,
+                " INTERSECT ",
+                " SELECT mmaf001 FROM mmaf_t LEFT OUTER JOIN mmag_t ON mmag001 = mmaf001 AND mmafent = mmagent AND  mmag003 = '2024'  ",
+                 "  WHERE mmafstus = 'Y' AND ",tm.wc2
+
+    PREPARE sel_mmaf FROM l_sql
+    DECLARE mmaf_cur CURSOR FOR sel_mmaf
+    LET l_mmaf001 = NULL
+    FOREACH mmaf_cur INTO l_mmaf001
+    
+         SELECT COUNT(*) INTO l_n FROM mmcy_t INNER JOIN mmcx_t ON mmcxent = mmcyent AND mmcxdocno = mmcydocno
+          WHERE mmcy001 = l_mmaf001 AND mmcxstus = 'N' AND mmcyent = g_enterprise AND mmcxdocno<>g_mmcxdocno
+         IF l_n > 0 THEN 
+            CALL cl_errmsg('mmcy001',l_mmaf001,'','amm-00309',1)
+            CONTINUE FOREACH
+         END IF         
+         
+         SELECT COUNT(*) INTO l_n FROM mmcy_t WHERE mmcyent = g_enterprise AND mmcydocno = g_mmcxdocno AND mmcy001 = l_mmaf001
+         IF l_n > 0 THEN
+            IF l_flag = 'Y' THEN
+               DELETE FROM mmcy_t WHERE mmcyent = g_enterprise AND mmcydocno = g_mmcxdocno AND mmcy001 = l_mmaf001
+               DELETE FROM mmcz_t WHERE mmczent = g_enterprise AND mmczdocno = g_mmcxdocno AND mmcz001 = l_mmaf001
+            ELSE
+               CONTINUE FOREACH
+            END IF
+         END IF
+       
+         LET l_mmcy.mmcy001 = l_mmaf001
+         LET l_mmcy.mmcyent = g_enterprise 
+         LET l_mmcy.mmcydocno = g_mmcxdocno
+         LET l_mmcy.mmcysite = g_mmcx_m.mmcxsite
+         LET l_mmcy.mmcyunit =  g_mmcx_m.mmcxsite
+         #抓会员等级
+         SELECT DISTINCT mmag004 INTO l_mmcy.mmcy002 FROM mmag_t
+          WHERE mmagent = g_enterprise AND mmag001 = l_mmaf001 and mmag003 = '2024'
+         IF cl_null(l_mmcy.mmcy002) THEN
+            CALL cl_errmsg('mmcy001',l_mmaf001,'','amm-00304',1)
+            CONTINUE FOREACH
+         END IF
+         #抓会员类型        
+         SELECT DISTINCT mmag004 INTO l_mmcy.mmcy004 FROM mmag_t
+          WHERE mmagent = g_enterprise AND mmag001 = l_mmaf001 and mmag003 = '2025'  
+         IF cl_null(l_mmcy.mmcy004) THEN
+            CALL cl_errmsg('mmcy001',l_mmaf001,'','amm-00305',1)
+            CONTINUE FOREACH
+         END IF
+         #抓会员等级序  
+         SELECT oocq009 INTO l_oocq009 FROM oocq_t 
+          WHERE oocqent = g_enterprise AND oocq001 = '2024' AND oocq002 = l_mmcy.mmcy002 
+          
+          #抓升降等策略
+          SELECT oocq004 INTO l_mmcy.mmcy006 FROM oocq_t 
+           WHERE oocqent = g_enterprise AND oocq001 = '2025' AND oocq002 = l_mmcy.mmcy004
+         IF cl_null(l_mmcy.mmcy006) THEN
+            CALL cl_errmsg('mmcy001',l_mmaf001,'','amm-00306',1)
+            CONTINUE FOREACH
+         END IF 
+         
+         SELECT mmcu002 INTO l_mmcy.mmcy007 FROM mmcu_t
+          WHERE mmcuent =  g_enterprise AND mmcu001 = l_mmcy.mmcy006  
+   
+        #CALL ammt302_01_gen(l_mmaf001,l_mmcy.mmcy002,l_oocq009,l_mmcy.mmcy006) RETURNING l_success,l_mmcy.mmcy003
+         CALL s_ammt302_chk_mmcv(g_mmcxdocno,l_mmcy.mmcy001,g_mmcx_m.mmcx002,'2') RETURNING l_success,l_mmcy.mmcy003
+          
+         IF l_success THEN
+            INSERT INTO mmcy_t VALUES(l_mmcy.*)
+            IF SQLCA.sqlcode THEN
+               CALL cl_errmsg('mmcy_t','ins','',SQLCA.sqlcode,1)
+               RETURN FALSE
+            ELSE
+               IF NOT s_ammt302_ins_mmcz() THEN
+                  RETURN FALSE
+               END IF
+            END IF
+         END IF
+    END FOREACH
+    IF cl_null(l_mmaf001) THEN
+       CALL cl_err('','amm-00446',1)
+       RETURN FALSE
+    ELSE
+       RETURN TRUE
+    END IF
+END FUNCTION]]>
+</point>
+  <point name="main.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <section id="ammt302_01.description" ver="53" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000086
+#+ 
+#+ Filename...: ammt302_01
+#+ Description: ...
+#+ Creator....: 01533(2014/01/02)
+#+ Modifier...: 01533(2014/01/02)
+#+ Buildtype..: 應用 p00 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="ammt302_01.free_style_function" ver="1" status="" src="s">
+<![CDATA[#add-point:free_style
+{<point name="free_style.function"/>}
+#end add-point
+]]>
+</section>
+  <section id="ammt302_01.free_style_variable" ver="1" status="" src="s">
+<![CDATA[#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+]]>
+</section>
+  <section id="ammt302_01.global" ver="1" status="" src="s">
+<![CDATA[#add-point:註解編寫項目
+{<point name="main.memo" />}
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="main.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+]]>
+</section>
+  <section id="ammt302_01.global_variable" ver="1" status="" src="s">
+<![CDATA[#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+</section>
+  <section id="ammt302_01.other_dialog" ver="1" status="" src="s">
+<![CDATA[{<point name="other.dialog"/>}
+]]>
+</section>
+  <section id="ammt302_01.other_function" ver="1" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+</add_points>

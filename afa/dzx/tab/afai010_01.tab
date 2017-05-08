@@ -1,0 +1,47 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afai010_01" module="afa" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="02299" crtdt="2014-01-24 00:53:06" modid="02416" moddt="2014-01-23 17:02:52" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="批次新增">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="check(chr500),ooea001,ooeal003,ooea002,ooea009,ooea016"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="afa" filename="afai010_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="ooea001,ooeal003,ooea002,ooea009,ooea016" insert="N" append="Y" delete="N"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="check"/>
+      <column id="ooea001">
+        <controlp form="q_ooea" state="c"/>
+      </column>
+      <column id="ooeal003"/>
+      <column id="ooea002">
+        <controlp form="q_ooea" state="i"/>
+        <controlp form="q_ooea" state="c"/>
+      </column>
+      <column id="ooea009"/>
+      <column id="ooea016"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="ooea_t" page="1" linked="" pk="ooea001">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,ooea001,&apos;&apos;,ooea002,ooea009,ooea016 FROM ooea_t WHERE ooeaent=? AND ooea001=? FOR UPDATE"/>
+      <sql id="detail_append" type="single" table="ooeal_t" pk="ooeal001,ooeal002" field="ooeal003"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,ooea001,&apos;&apos;,ooea002,ooea009,ooea016 FROM ooea_t WHERE ooeaent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="ooeal_t.ooeal003" table="ooefl_t" fk="ooea001" pk="ooefl001,ooefl002" field="ooefl003"/>
+    </body>
+  </dataset>
+</assembly>
+

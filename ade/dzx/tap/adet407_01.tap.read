@@ -1,0 +1,537 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="adet407_01" std_prog="adet407_01" erpver="1.0" module="ADE" ver="2" env="s" zone="t10dev" booking="N" type="S" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="function.adet407_01_create_tmp_teable" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 建立table
+# Memo...........:
+# Usage..........: CALL adet407_01_create_tmp_teable()
+#                  RETURNING 回传参数
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/06/30 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION adet407_01_create_tmp_teable()
+
+   DROP TABLE adet407_dean
+   CREATE TEMP TABLE adet407_dean(
+      deanseq       LIKE dean_t.deanseq,   #項次
+      deansite      LIKE dean_t.deansite,  #營運據點
+      dean001       LIKE dean_t.dean001,   #營業日期
+      dean002       LIKE dean_t.dean002,   #款別分類
+      dean003       LIKE dean_t.dean003,   #款別編號
+      dean004       LIKE dean_t.dean004,   #卡券種編號
+      dean005       LIKE dean_t.dean005,   #券面額編號
+      dean006       LIKE dean_t.dean006,   #幣別
+      dean007       LIKE dean_t.dean007,   #存繳數量
+      dean008       LIKE dean_t.dean008,   #存繳金額
+      dean009       LIKE dean_t.dean009)   #支票號碼
+      
+END FUNCTION]]>
+  </point>
+  <point name="function.adet407_01_ins_detail" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 比對單身資料 新增單身資料
+# Memo...........:
+# Usage..........: CALL adet407_01_ins_detail()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/06/30 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION adet407_01_ins_detail()
+DEFINE l_sql          STRING
+DEFINE l_seq          LIKE type_t.num5
+DEFINE l_deav         RECORD
+       deavent        LIKE deav_t.deavent,    #企業編號
+       deavsite       LIKE deav_t.deavsite,   #營運據點
+       deavunit       LIKE deav_t.deavunit,   #應用組織
+       deavdocno      LIKE deav_t.deavdocno,  #單據編號
+       deavdocdt      LIKE deav_t.deavdocdt,  #營業日期
+       deavseq        LIKE deav_t.deavseq,    #項次
+       deav001        LIKE deav_t.deav001,    #款別分類
+       deav002        LIKE deav_t.deav002,    #款別編號
+       deav003        LIKE deav_t.deav003,    #卡券種編號
+       deav004        LIKE deav_t.deav004,    #券面額編號
+       deav005        LIKE deav_t.deav005,    #幣別
+       deav006        LIKE deav_t.deav006,    #代收數量
+       deav007        LIKE deav_t.deav007,    #代收金額
+       deav008        LIKE deav_t.deav008,    #支票號碼
+       deav009        LIKE deav_t.deav009,    #備註
+       deav010        LIKE deav_t.deav010,    #存繳單號
+       deav011        LIKE deav_t.deav011,    #存繳數量
+       deav012        LIKE deav_t.deav012,    #存繳金額
+       deav013        LIKE deav_t.deav013,    #差異金額
+       deav014        LIKE deav_t.deav014,    #是否處理
+       deav015        LIKE deav_t.deav015,    #處理方式
+       deav016        LIKE deav_t.deav016     #處理備註
+                      END RECORD
+                      
+   #把存繳單號的資料存放到temp table
+   CALL adet407_01_ins_temp()
+
+   LET l_sql = "SELECT deausite,deaudocdt,deau001,deau002,deau003,",
+               "       deau004,deau005,deau006,COALESCE(deau007,0),deau008,",
+               "       deau009,deandocno,COALESCE(dean007,0),dean008",
+               "  FROM deau_t",
+               "  LEFT OUTER JOIN adet407_dean",
+               "    ON deausite = deansite AND deaudocdt = dean001",
+               "   AND deau001 = dean002 AND deau002 = dean003",
+               "   AND deau003 = dean004 AND deau004 = dean005",
+               "   AND deau005 = dean006",
+               " WHERE deauent = ",g_enterprise,
+               "   AND deaudocno = '",g_deax_m.deaxdocno,"'"
+   PREPARE adet407_01_pre1 FROM l_sql
+   DECLARE adet407_01_curs1 CURSOR FOR adet407_01_pre1
+   
+   INITIALIZE l_deav.* TO NULL
+   LET l_seq = 1
+   FOREACH adet407_01_curs1 INTO l_deav.deavsite,l_deav.deavdocdt,l_deav.deav001,l_deav.deav002,
+                                 l_deav.deav003, l_deav.deav004,  l_deav.deav005,l_deav.deav006,
+                                 l_deav.deav007, l_deav.deav008,  l_deav.deav009,l_deav.deav010,
+                                 l_deav.deav011,l_deav.deav012
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg("deaxdocno",g_deax_m.deaxdocno,'Foreach adet407_01_curs1',SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      LET l_deav.deavent   = g_enterprise                      #企業編號
+      LET l_deav.deavsite  = g_deaxsite                        #營運據點
+      LET l_deav.deavunit  = g_deaxsite                        #應用組織
+      LET l_deav.deavdocno = g_deax_m.deaxdocno                #單據編號
+      LET l_deav.deavseq   = l_seq                             #項次
+      LET l_deav.deav013   = l_deav.deav012 - l_deav.deav007   #差異金額
+      LET l_deav.deav014   = 'N'                               #是否處理
+      LET l_deav.deav015   = NULL                              #處理方式
+      LET l_deav.deav016   = NULL                              #處理備註
+      
+      INSERT INTO deav_t
+            (deavent,deavsite,deavunit,deavdocno,deavseq,
+             deav001,deav002,deav003,deav004,deav005,
+             deav006,deav007,deav008,deav009,deav010,
+             deav011,deav012,deav013,deav014,deav015,
+             deav016)
+            VALUES(l_deav.deavent,l_deav.deavsite,l_deav.deavunit,l_deav.deavdocno,l_deav.deavseq,
+                   l_deav.deav001,l_deav.deav002, l_deav.deav003, l_deav.deav004,  l_deav.deav005,
+                   l_deav.deav006,l_deav.deav007, l_deav.deav008, l_deav.deav009,  l_deav.deav010,
+                   l_deav.deav011,l_deav.deav012, l_deav.deav013, l_deav.deav014,  l_deav.deav015,
+                   l_deav.deav016)
+                   
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg("deaxdocno",g_deax_m.deaxdocno,'INSERT INTO deav_t',SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      LET l_seq = l_seq + 1
+      INITIALIZE l_deav.* TO NULL
+      
+   END FOREACH
+   
+   LET l_sql = "SELECT deansite,dean001,dean002,dean003,dean004,",
+               "       dean005,dean006,deandocno,dean007,dean008",
+               "  FROM dean_t",
+               " WHERE deanent = ",g_enterprise,
+               "   AND deandocno = '",g_deax002,"'",
+               "   AND NOT EXISTS (SELECT * FROM deav_t",
+               "                    WHERE deavent = ",g_enterprise,
+               "                      AND deavdocno = '",g_deax_m.deaxdocno,"'",
+               "                      AND deavsite = deansite",
+               "                      AND deavdocdt = dean001",
+               "                      AND deav001 = dean002",
+               "                      AND deav002 = dean003",
+               "                      AND deav003 = dean004",
+               "                      AND deav004 = dean005",
+               "                      AND deav005 = dean006)"
+               
+   PREPARE adet407_01_pre2 FROM l_sql
+   DECLARE adet407_01_curs2 CURSOR FOR adet407_01_pre2
+   
+   INITIALIZE l_deav.* TO NULL
+   LET l_seq = 1
+   FOREACH adet407_01_curs2 INTO l_deav.deavsite,l_deav.deavdocdt,l_deav.deav001,l_deav.deav002,
+                                 l_deav.deav003, l_deav.deav004,  l_deav.deav005,l_deav.deav010,
+                                 l_deav.deav011, l_deav.deav012
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg("deaxdocno",g_deax_m.deaxdocno,'Foreach adet407_01_curs1',SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      LET l_deav.deavent   = g_enterprise                      #企業編號
+      LET l_deav.deavsite  = g_deaxsite                        #營運據點
+      LET l_deav.deavunit  = g_deaxsite                        #應用組織
+      LET l_deav.deavdocno = g_deax_m.deaxdocno                #單據編號
+      LET l_deav.deavseq   = l_seq                             #項次
+      LET l_deav.deav013   = l_deav.deav012                    #差異金額
+      LET l_deav.deav014   = 'N'                               #是否處理
+      LET l_deav.deav015   = NULL                              #處理方式
+      LET l_deav.deav016   = NULL                              #處理備註
+      
+      INSERT INTO deav_t
+            (deavent,deavsite,deavunit,deavdocno,deavseq,
+             deav001,deav002,deav003,deav004,deav005,
+             deav006,deav007,deav008,deav009,deav010,
+             deav011,deav012,deav013,deav014,deav015,
+             deav016)
+            VALUES(l_deav.deavent,l_deav.deavsite,l_deav.deavunit,l_deav.deavdocno,l_deav.deavseq,
+                   l_deav.deav001,l_deav.deav002, l_deav.deav003, l_deav.deav004,  l_deav.deav005,
+                   l_deav.deav006,l_deav.deav007, l_deav.deav008, l_deav.deav009,  l_deav.deav010,
+                   l_deav.deav011,l_deav.deav012, l_deav.deav013, l_deav.deav014,  l_deav.deav015,
+                   l_deav.deav016)
+                   
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg("deaxdocno",g_deax_m.deaxdocno,'INSERT INTO deav_t',SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      LET l_seq = l_seq + 1
+      INITIALIZE l_deav.* TO NULL
+      
+   END FOREACH
+END FUNCTION]]>
+  </point>
+  <point name="function.adet407_01_ins_temp" order="3" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 把存繳單號的資料存放到temp table
+# Memo...........:
+# Usage..........: CALL adet407_01_ins_temp()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/06/30 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION adet407_01_ins_temp()
+DEFINE l_sql          STRING
+DEFINE l_seq          LIKE type_t.num5
+DEFINE l_ac           LIKE type_t.num5
+
+   LET l_sql = "SELECT DISTINCT deansite,dean001,dean002,dean003,dean004,",
+               "                dean005,dean006,dean009,SUM(dean007),COALESCE(SUM(dean008),0)",
+               "  FROM dean_t",
+               " WHERE deanent = ",g_enterprise,
+               "   AND deandocno = '",g_deax002,"'",
+               " GROUP BY deansite,dean001,dean002,dean003,dean004,dean005,dean006,dean009"
+   PREPARE adet407_01_pre FROM l_sql
+   DECLARE adet407_01_curs CURSOR FOR adet407_01_pre
+   
+   LET l_seq = 1
+   INITIALIZE g_dean_d.* TO NULL
+   FOREACH adet407_01_curs INTO g_dean_d.deansite,g_dean_d.dean001,
+                                g_dean_d.dean002, g_dean_d.dean003,
+                                g_dean_d.dean004, g_dean_d.dean005,
+                                g_dean_d.dean006, g_dean_d.dean009,
+                                g_dean_d.dean007, g_dean_d.dean008
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg("deaxdocno",g_deax_m.deaxdocno,'Foreach adet407_01_curs',SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      INSERT INTO adet407_dean
+            (deanseq,deansite,dean001,dean002,dean003,
+             dean004,dean005, dean006, dean007,  dean008,
+             dean009)
+            VALUES(l_seq,g_dean_d.deansite,g_dean_d.dean001,g_dean_d.dean002,
+                   g_dean_d.dean003,g_dean_d.dean004,g_dean_d.dean005,
+                   g_dean_d.dean006,g_dean_d.dean007,g_dean_d.dean008,
+                   g_dean_d.dean009)
+                   
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg("deaxdocno",g_deax_m.deaxdocno,'INSERT INTO adet407_tmp',SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      LET l_seq = l_seq + 1
+   
+   END FOREACH
+   
+END FUNCTION]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_deax002       LIKE deax_t.deax002
+DEFINE g_deaxsite      LIKE deax_t.deaxsite
+
+ type type_g_dean_d        RECORD
+   deanseq   LIKE dean_t.deanseq,     #項次
+   deansite  LIKE dean_t.deansite,    #營運據點
+   dean001   LIKE dean_t.dean001,     #營業日期
+   dean002   LIKE dean_t.dean002,     #款別分類
+   dean003   LIKE dean_t.dean003,     #款別編號
+   dean004   LIKE dean_t.dean004,     #卡券種編號
+   dean005   LIKE dean_t.dean005,     #券面額編號
+   dean006   LIKE dean_t.dean006,     #幣別
+   dean007   LIKE dean_t.dean007,     #存繳數量
+   dean008   LIKE dean_t.dean008,     #存繳金額
+   dean009   LIKE dean_t.dean009      #支票號碼
+             END RECORD
+DEFINE g_dean_d        type_g_dean_d]]>
+  </point>
+  <point name="input.a.deaxdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            ]]>
+  </point>
+  <point name="input.c.deaxdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            ]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE p_deaxdocno     LIKE deax_t.deaxdocno]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   p_deaxdocno]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL adet407_01_create_tmp_teable()
+   #按下確認後
+   IF NOT INT_FLAG THEN
+      CALL adet407_01_ins_detail()
+   END IF]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_deax_m.deaxdocno = p_deaxdocno
+   LET g_deax002 = ''
+   LET g_deaxsite = ''
+   SELECT deaxsite,deax002,deax003
+     INTO g_deaxsite,g_deax002,g_deax_m.deax003
+     FROM deax_t
+    WHERE deaxent = g_enterprise
+      AND deaxdocno = p_deaxdocno]]>
+  </point>
+  <section id="adet407_01.description" ver="1" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000005
+#+ 
+#+ Filename...: adet407_01
+#+ Description: ...
+#+ Creator....: 04226(2014/06/30)
+#+ Modifier...: 04226(2014/07/01)
+#+ Buildtype..: 應用 c01b 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="adet407_01.global" ver="1" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_deax_m        RECORD
+       deaxdocno LIKE deax_t.deaxdocno, 
+   deax003 LIKE deax_t.deax003, 
+   path LIKE type_t.chr80
+       END RECORD
+DEFINE g_deax_m        type_g_deax_m
+ 
+   DEFINE g_deaxdocno_t LIKE deax_t.deaxdocno
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="adet407_01.input" ver="1" status="" src="s">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION adet407_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_adet407_01 WITH FORM cl_ap_formpath("ade","adet407_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_deax_m.deaxdocno,g_deax_m.deax003,g_deax_m.path ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #此段落由子樣板a01產生
+         BEFORE FIELD deaxdocno
+            #add-point:BEFORE FIELD deaxdocno
+            {<point name="input.b.deaxdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD deaxdocno
+            
+            #add-point:AFTER FIELD deaxdocno
+            {<point name="input.a.deaxdocno" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE deaxdocno
+            #add-point:ON CHANGE deaxdocno
+            {<point name="input.g.deaxdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD deax003
+            #add-point:BEFORE FIELD deax003
+            {<point name="input.b.deax003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD deax003
+            
+            #add-point:AFTER FIELD deax003
+            {<point name="input.a.deax003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE deax003
+            #add-point:ON CHANGE deax003
+            {<point name="input.g.deax003" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD path
+            #add-point:BEFORE FIELD path
+            {<point name="input.b.path" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD path
+            
+            #add-point:AFTER FIELD path
+            {<point name="input.a.path" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE path
+            #add-point:ON CHANGE path
+            {<point name="input.g.path" />}
+            #END add-point
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.deaxdocno
+         ON ACTION controlp INFIELD deaxdocno
+            #add-point:ON ACTION controlp INFIELD deaxdocno
+            {<point name="input.c.deaxdocno" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.deax003
+         ON ACTION controlp INFIELD deax003
+            #add-point:ON ACTION controlp INFIELD deax003
+            {<point name="input.c.deax003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.path
+         ON ACTION controlp INFIELD path
+            #add-point:ON ACTION controlp INFIELD path
+            {<point name="input.c.path" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_adet407_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="adet407_01.other_dialog" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="adet407_01.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

@@ -1,0 +1,2007 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="anmp480.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0016(2016-12-06 18:07:17), PR版次:0016(2017-01-20 16:58:25)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000054
+#+ Filename...: anmp480
+#+ Description: 國內匯款媒體檔轉出
+#+ Creator....: 05016(2015-07-29 15:50:27)
+#+ Modifier...: 08732 -SD/PR- 01531
+ 
+{</section>}
+ 
+{<section id="anmp480.global" >}
+#應用 p02 樣板自動產生(Version:22)
+#add-point:填寫註解說明 name="global.memo"
+#150818-00032#3  2015/08/23 By RayHuang nmbc_t新增兩個欄位
+#150923          2015/09/23 By Reanna   寫入銀存檔的日期改放異動單據的日期為主
+#150922-00021#8  2015/10/01 By Hans     到期日改道QBE 
+#150930-00010#4  2015/10/02 By 03538    匯率來源參數參照S-FIN-4012,且日平均匯率以新元件計算
+#151012-00014#6  2015/10/26 By RayHuang nmbc_t新增三個欄位(nmbc014~nmbc016)
+#151013-00019#11 2015/11/11 By Reanna   回寫實際匯款日時若選到期日，則依不同到期日產生不同張anmt480
+#160122-00001#29 2016/02/03 By 02599    增加交易账户用户权限控管
+#160122-00001#29 2016/03/17 By 07673    添加交易帳戶編號用戶權限空管,增加部门权限
+#160321-00016#38 2016/03/30 By Jessy    將重複內容的錯誤訊息置換為公用錯誤訊息
+#160322-00025#24 2016/04/22 By 01531    nmbcorga赋值
+#160318-00025#26 2016/04/28 BY 07900    校验代码重复错误讯息的修改
+#160816-00012#2  2016/08/29 By 01727    ANM增加资金中心，帐套，法人三个栏位权限
+#160905-00007#7  2016/09/05 By 01727    调整系统中无ENT的SQL条件增加ent
+#161020-00004#1  2016/10/20 By 02114    选择转账日期产生anmt480时,没有产生nmbc表
+#161021-00038#1  2016/10/24 By 06821    組織類型與職能開窗調整
+#161028-00051#2  2016/10/31 By 08729    處理法人檢核
+#161128-00061#1  2016/11/29 by 02481    标准程式定义采用宣告模式,弃用.*写法
+#161128-00038#1  2016/12/06 By 08732    1.增加銀行選項欄位(SCC:8729)2.增加玉山銀行的元件
+#161220-00055#1  2016/12/21 By 07900    anmp480生成anmt480的时候，异动日期也应该通过‘回写汇款实际日期’的选项给预设值。
+#170120-00026#1  2017/01/20 By 01531    l_docno 請改為 STRING 宣告, 若單號全選所組出的字串會被限制
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10             #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num10             #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+   nmcksite        LIKE nmck_t.nmcksite,
+   nmcksite_desc   LIKE type_t.chr80,
+   nmckcomp        LIKE nmck_t.nmckcomp,
+   nmckcomp_desc   LIKE type_t.chr80,
+   nmck004         LIKE nmck_t.nmck004,
+   nmck004_desc    LIKE type_t.chr80,
+   glaacomp_desc   LIKE type_t.chr80,
+   #nmck011         LIKE nmck_t.nmck011, #150922-00021#8 
+   nmck012         LIKE nmck_t.nmck012,
+   l_route         LIKE type_t.chr500,
+   l_bank          LIKE type_t.chr500,   #161128-00038#1   add   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)  #注意要在add-point內寫入END RECORD name="global.variable"
+     sel           LIKE type_t.chr1,
+     nmck005       LIKE nmck_t.nmck005,
+     nmck005_desc  LIKE type_t.chr80,
+     nmck015       LIKE nmck_t.nmck015,
+     nmck013       LIKE nmck_t.nmck013,
+     nmck013_desc  LIKE type_t.chr80,
+     nmck014       LIKE nmck_t.nmck014,      #151012-00014#3 151014 by lori add
+     nmck011       LIKE nmck_t.nmck011,
+     nmck103       LIKE nmck_t.nmck103,
+     nmckdocno     LIKE nmck_t.nmckdocno
+     END RECORD
+     
+DEFINE g_input       type_parameter    #INPUT條件
+DEFINE g_rec_b        LIKE type_t.num5 
+DEFINE l_cnt          LIKE type_t.num5
+DEFINE g_detail_idx   LIKE type_t.num5
+DEFINE g_ld           LIKE glaa_t.glaald
+DEFINE g_wc_nmckcomp  STRING 
+DEFINE g_dir          STRING
+DEFINE g_sql_bank     STRING                #160122-00001#29 by 07673
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num10              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="anmp480.main" >}
+#+ 作業開始 
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   DEFINE ls_js  STRING
+   #add-point:main段define name="main.define"
+   
+   #end add-point   
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("anm","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_anmp480 WITH FORM cl_ap_formpath("anm",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL anmp480_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL anmp480_ui_dialog() 
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_anmp480
+   END IF 
+   
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="anmp480.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION anmp480_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point   
+   #add-point:init段define name="init.define"
+   
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL s_fin_create_account_center_tmp()     #展組織下階成員所需之暫存檔 
+   #160122-00001#29 by 07673 --add--str--
+   LET g_sql_bank=NULL
+   CALL s_anmi120_get_bank_account_sql(g_user,g_dept) RETURNING g_sub_success,g_sql_bank
+   #160122-00001#29 by 07673 --add--end
+   #161128-00038#1   add---s
+   CALL cl_set_combo_scc("l_bank","8729")
+   LET g_input.l_bank = '01'
+   #161128-00038#1   add---e
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmp480.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION anmp480_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point 
+   DEFINE li_idx   LIKE type_t.num10
+   #add-point:ui_dialog段define name="init.init"
+   DEFINE l_ld     LIKE apca_t.apcald
+ ##160816-00012#2 Add  ---(S)---
+ # DEFINE  l_count    LIKE type_t.num5
+ # DEFINE  l_wc       STRING
+ # DEFINE  l_sql      STRING
+ ##160816-00012#2 Add  ---(E)---
+   #end add-point 
+   
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   CALL anmp480_qbe_clear()
+   #end add-point
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_detail_d.clear()
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL anmp480_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+        # INPUT BY NAME g_input.nmcksite,g_input.nmckcomp,g_input.nmck004,g_input.nmck011,g_input.nmck012, #150922-00021#8 mark
+          INPUT BY NAME g_input.nmcksite,g_input.nmckcomp,g_input.nmck004,g_input.nmck012,                 #150922-00021#8 add
+                       g_input.l_route,g_input.l_bank   #161128-00038#1   add g_input.l_bank
+               ATTRIBUTE(WITHOUT DEFAULTS)
+           
+            BEFORE INPUT
+            AFTER FIELD nmcksite
+               IF NOT cl_null(g_input.nmcksite) THEN
+                  CALL s_fin_account_center_chk(g_input.nmcksite,g_input.nmcksite,'6',g_today) RETURNING g_sub_success,g_errno
+                     IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_input.nmcksite = ''
+                     LET g_input.nmcksite_desc = ''
+                     DISPLAY BY NAME g_input.nmcksite_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL s_fin_orga_get_comp_ld(g_input.nmcksite)
+                     RETURNING g_sub_success,g_errno,g_input.nmckcomp,l_ld               
+                  CALL s_fin_account_center_sons_query('6',g_input.nmcksite,g_today,'')
+                  CALL s_fin_account_center_comp_str()RETURNING g_wc_nmckcomp
+                  CALL s_fin_get_wc_str(g_wc_nmckcomp) RETURNING g_wc_nmckcomp 
+                  CALL anmp480_nmckcomp_chk() RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     LET g_input.nmckcomp = ''
+                  END IF 
+                 ##160816-00012#2 Add  ---(S)---
+                 ##检查用户是否有资金中心对应法人的权限
+                 #CALL s_axrt300_get_site(g_user,'','3') RETURNING l_wc
+                 #LET l_count = 0
+                 #LET l_sql = "SELECT COUNT(*) FROM ooef_t WHERE ooefent = '",g_enterprise,"' ",
+                 #            "   AND ooef001 = '",g_input.nmckcomp,"'",
+                 #            "   AND ooef003 = 'Y'",
+                 #            "   AND ",l_wc CLIPPED
+                 #PREPARE anmp410_count_prep FROM l_sql
+                 #EXECUTE anmp410_count_prep INTO l_count
+                 #IF cl_null(l_count) THEN LET l_count = 0 END IF
+                 #IF l_count = 0 THEN
+                 #   LET g_input.nmckcomp = ''
+                 #   LET g_input.nmckcomp_desc = ''
+                 #   DISPLAY BY NAME g_input.nmckcomp,g_input.nmckcomp_desc
+                 #END IF
+                 ##160816-00012#2 Add  ---(E)---
+               END IF
+               LET g_input.nmcksite_desc = s_desc_get_department_desc(g_input.nmcksite )
+               LET g_input.nmckcomp_desc = s_desc_get_department_desc(g_input.nmckcomp )
+               DISPLAY BY NAME g_input.nmcksite_desc,g_input.nmckcomp_desc
+            
+            AFTER FIELD nmckcomp
+               LET g_input.nmckcomp_desc = ''
+               IF NOT cl_null(g_input.nmckcomp) THEN
+                  CALL s_fin_comp_chk(g_input.nmckcomp) RETURNING g_sub_success,g_errno #檢查是否為法人
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     #160321-00016#38 --s add
+                     LET g_errparam.replace[1] = 'aooi100'
+                     LET g_errparam.replace[2] = cl_get_progname('aooi100',g_lang,"2")
+                     LET g_errparam.exeprog = 'aooi100'
+                     #160321-00016#38 --e add
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_input.nmckcomp = ''
+                     LET g_input.nmckcomp_desc = ''
+                     DISPLAY BY NAME g_input.nmckcomp_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL anmp480_nmckcomp_chk() RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_input.nmckcomp = ''
+                     LET g_input.nmckcomp_desc = ''
+                     DISPLAY BY NAME g_input.nmckcomp_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  #161028-00051#2-add(s)
+                  CALL s_fin_site_belong_to_comp_chk(g_input.nmcksite,g_input.nmckcomp) RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_input.nmckcomp = ''
+                     LET g_input.nmckcomp_desc = ''
+                     DISPLAY BY NAME g_input.nmckcomp_desc,g_input.nmckcomp
+                     NEXT FIELD CURRENT
+                  END IF
+                  #161028-00051#2-add(e)
+                 ##160816-00012#2 Add  ---(S)---
+                 ##检查用户是否有资金中心对应法人的权限
+                 #CALL s_axrt300_get_site(g_user,'','3') RETURNING l_wc
+                 #LET l_count = 0
+                 #LET l_sql = "SELECT COUNT(*) FROM ooef_t WHERE ooefent = '",g_enterprise,"' ",
+                 #            "   AND ooef001 = '",g_input.nmckcomp,"'",
+                 #            "   AND ooef003 = 'Y'",
+                 #            "   AND ",l_wc CLIPPED
+                 #PREPARE anmp410_count_prep1 FROM l_sql
+                 #EXECUTE anmp410_count_prep1 INTO l_count
+                 #IF cl_null(l_count) THEN LET l_count = 0 END IF
+                 #IF l_count = 0 THEN
+                 #   INITIALIZE g_errparam TO NULL
+                 #   LET g_errparam.code = "ais-00228"
+                 #   LET g_errparam.extend = ''
+                 #   LET g_errparam.popup = TRUE
+                 #   CALL cl_err()
+                 #   NEXT FIELD CURRENT
+                 #END IF
+                 ##比對輸入的法人是否在資金組織下
+                 #IF s_chr_get_index_of(g_wc_nmckcomp,g_input.nmckcomp,'1') = 0 THEN
+                 #   INITIALIZE g_errparam TO NULL
+                 #   LET g_errparam.code = 'anm-00274'
+                 #   LET g_errparam.extend = ''
+                 #   LET g_errparam.popup = TRUE
+                 #   CALL cl_err()
+                 #   LET g_input.nmckcomp = ''
+                 #   LET g_input.nmckcomp_desc = ''
+                 #   DISPLAY BY NAME g_input.nmckcomp_desc
+                 #   NEXT FIELD CURRENT
+                 #END IF
+                 ##160816-00012#2 Add  ---(E)---
+               END IF
+               LET g_input.nmckcomp_desc = s_desc_get_department_desc(g_input.nmckcomp )
+               DISPLAY BY NAME g_input.nmckcomp_desc
+               
+            AFTER FIELD nmck004   
+               IF NOT cl_null(g_input.nmck004) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_input.nmck004
+                  LET g_chkparam.arg2 = g_input.nmckcomp
+                  #160318-00025#25  by 07900 --add-str
+                  LET g_errshow = TRUE #是否開窗                   
+                  LET g_chkparam.err_str[1] ="ade-00010:sub-01302|anmi120|",cl_get_progname("anmi120",g_lang,"2"),"|:EXEPROGanmi120"
+                  #160318-00025#25  by 07900 --add-end
+                  IF cl_chk_exist("v_nmas002_1") THEN
+                     #160122-00001#29--add---str
+                     #检查当前用户是否用权限使用该交易账户
+                     IF NOT s_anmi120_nmll002_chk(g_input.nmck004,g_user) THEN
+                        INITIALIZE g_errparam TO NULL 
+                        LET g_errparam.extend = g_input.nmck004
+                        LET g_errparam.code   = 'anm-00574' 
+                        LET g_errparam.popup  = TRUE 
+                        CALL cl_err()
+                        LET g_input.nmck004 = ''
+                        NEXT FIELD CURRENT
+                     END IF
+                     #160122-00001#29--add---end
+                  ELSE
+                     LET g_input.nmck004 = ''
+                     NEXT FIELD CURRENT
+                  END IF
+                  LET g_input.nmck004_desc= s_desc_get_nmas002_desc(g_input.nmck004)
+                  DISPLAY BY NAME g_input.nmck004_desc
+               END IF
+                  
+            
+            AFTER FIELD l_route
+              LET g_dir = g_input.l_route 
+              DISPLAY BY NAME g_input.l_route
+               
+         ON ACTION controlp INFIELD nmcksite
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_input.nmcksite          
+            LET g_qryparam.default2 = "" 
+            LET g_qryparam.where = " ooef206 = 'Y'"
+            #CALL q_ooef001()   #161021-00038#1 mark
+            CALL q_ooef001_33() #161021-00038#1 add                             
+            LET g_input.nmcksite = g_qryparam.return1
+            LET g_input.nmcksite_desc = s_desc_get_department_desc(g_input.nmcksite )
+            DISPLAY BY NAME g_input.nmcksite,g_input.nmcksite_desc
+            NEXT FIELD nmcksite                         
+         
+         ON ACTION controlp INFIELD nmckcomp
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_input.nmckcomp            
+            LET g_qryparam.where = " ooef003 = 'Y' AND ooef001 IN ",g_wc_nmckcomp
+           ##160816-00012#2 Add  ---(S)---
+           #CALL s_axrt300_get_site(g_user,'','1') RETURNING l_wc
+           #LET g_qryparam.where = g_qryparam.where," AND ",l_wc CLIPPED
+           ##160816-00012#2 Add  ---(E)---
+            #CALL q_ooef001()  #161021-00038#1 mark
+            CALL q_ooef001_2() #161021-00038#1 add                            
+            LET g_input.nmckcomp = g_qryparam.return1
+            LET g_input.nmckcomp_desc = s_desc_get_department_desc(g_input.nmckcomp )
+            DISPLAY BY NAME  g_input.nmckcomp,g_input.nmckcomp_desc          
+            NEXT FIELD nmckcomp                         
+        
+        ON ACTION controlp INFIELD nmck004
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_input.nmck004             #給予default值
+            LET g_qryparam.where = " nmaa002 IN (select ooef001 FROM ooef_t WHERE ooefent = '",g_enterprise,"'",
+                                   "              AND ooef017 = '",g_input.nmckcomp,"')",
+                                   #160122-00001#29 by 07673--modify--str--
+                                   " AND nmas002 IN (",g_sql_bank,")"
+                                   #160122-00001#29 by 07673--modify--end
+            CALL q_nmas_01()                              
+            LET g_input.nmck004 = g_qryparam.return1
+            LET g_input.nmck004_desc= s_desc_get_nmas002_desc(g_input.nmck004)
+            DISPLAY BY NAME g_input.nmck004,g_input.nmck004_desc        
+            NEXT FIELD nmck004                          
+         
+     
+        ON ACTION controlp INFIELD l_route
+           CALL ui.interface.frontcall("standard", "opendir", ["C:/",""], [g_dir])
+           LET g_input.l_route = g_dir
+           DISPLAY BY NAME g_input.l_route
+        
+         END INPUT
+         
+         
+         INPUT ARRAY g_detail_d FROM s_detail1.* 
+              ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                        INSERT ROW = FALSE,
+                        DELETE ROW = FALSE,
+                        APPEND ROW = FALSE)
+            BEFORE INPUT
+               IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+                 CALL FGL_SET_ARR_CURR(g_detail_d.getLength()+1) 
+                 LET g_insert = 'N' 
+               END IF 
+             
+            BEFORE ROW
+               LET l_ac = ARR_CURR()
+               LET g_master_idx = l_ac
+               DISPLAY l_ac TO FORMONLY.h_index
+               CALL anmp480_fetch() 
+           
+         END INPUT   
+         #150922-00021#8 add ------
+         CONSTRUCT BY NAME g_wc ON nmck011
+            BEFORE CONSTRUCT
+            
+         END CONSTRUCT   
+            
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+ 
+         #end add-point
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2 name="ui_dialog.before_dialog2"
+            
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            #add-point:ui_dialog段on action selall name="ui_dialog.selall.befroe"
+            
+            #end add-point            
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+               #add-point:ui_dialog段on action selall name="ui_dialog.for.onaction_selall"
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selall name="ui_dialog.onaction_selall"
+            
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+               #add-point:ui_dialog段on action selnone name="ui_dialog.for.onaction_selnone"
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selnone name="ui_dialog.onaction_selnone"
+            
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel name="ui_dialog.onaction_sel"
+            
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel name="ui_dialog.onaction_unsel"
+            
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL anmp480_filter()
+            #add-point:ON ACTION filter name="menu.filter"
+            
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            #add-point:ui_dialog段accept之前 name="menu.filter"
+            
+            #end add-point
+            CALL anmp480_query()
+             
+         # 條件清除
+         ON ACTION qbeclear
+            #add-point:ui_dialog段 name="ui_dialog.qbeclear"
+            CALL g_detail_d.clear()
+            CALL anmp480_qbe_clear()
+            #end add-point
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            #add-point:ui_dialog段datarefresh name="ui_dialog.datarefresh"
+            
+            #end add-point
+            CALL anmp480_b_fill()
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         ON ACTION batch_execute            
+            CALL anmp480_process()  
+            CALL anmp480_b_fill()     
+
+         #151012-00014#3 151015 by lori add---(S)
+         ON ACTION output
+            CALL anmp480_output()
+         #151012-00014#3 151015 by lori add---(E)   
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #(ver:22) ---start---
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      
+      #end add-point
+      #(ver:22) --- end ---
+ 
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #(ver:22) ---start---
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         #(ver:22) --- end ---
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmp480.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION anmp480_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define name="query.define"
+   
+   #end add-point 
+    
+   #add-point:cs段after_construct name="query.after_construct"
+   
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL anmp480_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   END IF
+   
+   #add-point:cs段after_query name="query.cs_after_query"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmp480.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION anmp480_b_fill()
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define name="b_fill.define"
+   
+   #end add-point
+ 
+   LET g_wc = g_wc, cl_sql_auth_filter()   #(ver:21) add cl_sql_auth_filter()
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   IF cl_null(g_wc) THEN 
+      LET g_wc = "1=1"
+   END IF
+   
+   LET g_sql = "   SELECT 'N',nmck005,'',nmck015,nmck013,'',nmck014,nmck011,nmck103,nmckdocno ",   #151012-00014#3 151014 lori add nmck014
+               "     FROM nmck_t ",
+               "    WHERE nmckent = ? ",
+               "      AND nmcksite = '",g_input.nmcksite,"'  ",
+               "      AND nmckcomp = '",g_input.nmckcomp,"'  ",
+               "      AND nmck012 IS NULL                    ",
+               "      AND nmck004  =  '",g_input.nmck004,"'  ",
+               #"      AND nmck011 <=  '",g_input.nmck011,"'  ", ##150922-00021#8 mark
+               "      AND nmckstus = 'Y'                     ",
+               "      AND nmck002 IN 
+                         (SELECT ooia001 FROM ooia_t 
+                           WHERE ooia002 = '20' OR ooia002 = '10' AND ooiaent = ",g_enterprise,") ",
+               "      AND ",g_wc    #150922-00021#8
+   LET g_sql = g_sql," ORDER BY nmckdocno "     #170120-00026#1 add         
+   #end add-point
+ 
+   PREPARE anmp480_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR anmp480_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空 name="b_fill.clear"
+   
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into name="b_fill.foreach_into"
+   g_detail_d[l_ac].*
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充 name="b_fill.foreach_iside"
+      SELECT nmabl003 INTO g_detail_d[l_ac].nmck013_desc
+        FROM nmabl_t
+       WHERE nmablent = g_enterprise
+         AND nmabl001 = g_detail_d[l_ac].nmck013
+         AND nmabl002 = g_dlang
+
+      CALL s_desc_get_trading_partner_abbr_desc(g_detail_d[l_ac].nmck005)
+         RETURNING g_detail_d[l_ac].nmck005_desc
+      #end add-point
+      
+      CALL anmp480_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.other_table"
+   CALL g_detail_d.deleteElement(g_detail_d.getLength())
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE anmp480_sel
+   
+   LET l_ac = 1
+   CALL anmp480_fetch()
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.after_b_fill"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmp480.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION anmp480_fetch()
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define name="fetch.define"
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後 name="fetch.after_fill"
+   
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmp480.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION anmp480_detail_show()
+   #add-point:show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point
+   #add-point:show段define name="detail_show.define"
+   
+   #end add-point
+   
+   #add-point:detail_show段 name="detail_show.detail_show"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmp480.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION anmp480_filter()
+   #add-point:filter段define(客製用) name="filter.define_customerization"
+   
+   #end add-point    
+   #add-point:filter段define name="filter.define"
+   
+   #end add-point
+   
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define name="filter.detail_cnt"
+   
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL anmp480_b_fill()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmp480.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION anmp480_filter_parser(ps_field)
+   #add-point:filter段define(客製用) name="filter_parser.define_customerization"
+   
+   #end add-point    
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define name="filter_parser.define"
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmp480.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION anmp480_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = anmp480_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmp480.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: 給予預設值
+# Memo...........:
+# Usage..........: CALL anmp480_qbe_clear()
+# Date & Author..: 2015/06/10 By Hans
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmp480_qbe_clear()
+
+
+    CALL s_aap_get_default_apcasite('','','')RETURNING g_sub_success,g_errno,g_input.nmcksite,
+                                                       g_ld,g_input.nmckcomp
+    CALL s_fin_account_center_sons_query('6',g_input.nmcksite,g_today,'')
+    CALL s_fin_account_center_comp_str()RETURNING g_wc_nmckcomp
+    CALL s_fin_get_wc_str(g_wc_nmckcomp) RETURNING g_wc_nmckcomp          
+    CALL anmp480_nmckcomp_chk() RETURNING g_sub_success,g_errno  
+    IF NOT g_sub_success THEN
+       LET g_input.nmckcomp = ''
+    END IF   
+       
+    LET g_input.nmckcomp_desc = s_desc_get_department_desc(g_input.nmckcomp)
+    LET g_input.nmcksite_desc = s_desc_get_department_desc(g_input.nmcksite)
+    LET g_input.nmck004 = '' 
+  #  LET g_input.nmck011 = g_today #150922-00021#8 mark
+    LET g_input.nmck012 = g_today    
+    #161128-00038#1   mark---s
+    #LET g_dir = "C:\\tiptop"
+    #LET g_input.l_route = "C:\\tiptop"
+    #161128-00038#1   mark---e
+    #161128-00038#1   add---s
+    LET g_dir = "C:\\t100"
+    LET g_input.l_route = "C:\\t100"
+    CALL cl_set_combo_scc("l_bank","8729")
+    LET g_input.l_bank = '01'
+    #161128-00038#1   add---e
+
+    DISPLAY BY NAME g_input.nmcksite,g_input.nmcksite_desc,g_input.nmckcomp,g_input.nmckcomp_desc,
+                  #  g_input.nmck011,g_input.nmck012,g_input.l_route,g_input.nmck004   #150922-00021#8 mark
+                    g_input.nmck012,g_input.l_route,g_input.nmck004,    #150922-00021#8 add
+                    g_input.l_bank   #161128-00038#1   add
+
+
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 資金中心所屬法人檢核
+# Memo...........:
+# Usage..........: CALL anmp480_nmckcomp_chk()
+# Date & Author..: 2015/06/10 By Hans
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmp480_nmckcomp_chk()
+DEFINE r_success   LIKE type_t.chr1
+DEFINE r_errno     LIKE gzze_t.gzze001
+DEFINE l_cnt       LIKE type_t.num5
+DEFINE l_sql       STRING
+
+   LET r_success = TRUE
+   LET l_cnt = 0
+   
+   LET l_sql = " SELECT COUNT(*)                          ",
+               "    FROM ooef_t                           ",
+               "   WHERE ooefent = '",g_enterprise,"'     ",
+               "     AND ooef001  IN ", g_wc_nmckcomp
+   PREPARE anmp480_prep FROM l_sql
+   EXECUTE anmp480_prep INTO l_cnt   
+
+   IF cl_null(l_cnt) THEN LET l_cnt = 0 END IF
+   
+   IF l_cnt = 0 THEN
+      LET r_success = FALSE
+      LET r_errno = 'anm-02915'
+   END IF
+
+
+   RETURN r_success,r_errno
+
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 執行
+# Memo...........:
+# Usage..........: CALL anmp480_process()
+# Date & Author..: 2015/06/10 By Hans
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmp480_process()
+DEFINE l_cnt           LIKE type_t.num5
+DEFINE li_idx          LIKE type_t.num5
+DEFINE l_i             LIKE type_t.num5
+DEFINE l_in_txt        STRING
+DEFINE r_success       LIKE type_t.num5
+DEFINE l_cho           LIKE type_t.chr1 
+DEFINE l_nmchdocno     LIKE nmch_t.nmchdocno
+DEFINE l_nmck012       LIKE nmck_t.nmck012
+#存放TXT-----
+DEFINE l_name          LIKE type_t.chr20
+DEFINE ch              base.Channel
+DEFINE l_file_name     STRING
+DEFINE l_file_name2    STRING
+DEFINE ls_target_file  STRING
+DEFINE ls_source_file  STRING
+DEFINE l_cmd           STRING
+#存放TXT-----
+#151013-00019#11 add ------
+DEFINE l_sql            STRING
+DEFINE l_nmck011        LIKE nmck_t.nmck011
+#DEFINE l_docno          LIKE type_t.chr500  #170120-00026#1 mark
+DEFINE l_docno          STRING               #170120-00026#1 add
+DEFINE l_nmchdocno_slip LIKE nmch_t.nmchdocno
+#151013-00019#11 add end---
+DEFINE l_date           LIKE type_t.chr100   #161128-00038#1   add
+
+   LET li_idx = ''
+   LET l_cnt = 0
+   LET l_i = 0
+   
+   #存放TXT part1 start----------
+   #取得暫時存放TXT的路徑(TEMPDIR)
+   #LET l_name = 'hn801.dat'   #161128-00038#1   mark
+   #161128-00038#1   add---s
+   IF g_input.l_bank = '01' THEN   #華南銀行
+      LET l_name = 'hn801.dat'
+   ELSE 
+      IF g_input.l_bank = '02' THEN   #玉山銀行
+         LET l_date = YEAR(CURRENT) USING "&&&&",MONTH(CURRENT) USING "&&" ,DAY(CURRENT) USING "&&"
+         LET l_name = 'esunBank',l_date
+      END IF
+   END IF
+   #161128-00038#1   add---e
+   LET l_file_name = l_name,'orig.TXT'  #原始檔案
+   LET l_file_name2 = l_name,'.TXT'     #轉成DOS格式的檔案
+   
+   LET ls_source_file = os.Path.join(FGL_GETENV("TEMPDIR"),l_file_name CLIPPED)
+   LET ch = base.Channel.create()
+   CALL ch.openFile(ls_source_file,"w")
+   CALL ch.setDelimiter("")
+   #存放TXT part1 end------------
+
+   #清空顯示條
+   DISPLAY '' ,0 TO stagenow,stagecomplete
+   #總共有幾筆資料要跑
+   FOR li_idx = 1 TO g_detail_d.getLength()
+      IF g_detail_d[li_idx].sel = "Y" THEN
+         LET l_cnt = l_cnt + 1
+      END IF
+   END FOR
+   IF l_cnt = 0 THEN
+      #未選擇資料
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'adb-00078'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   FOR li_idx = 1 TO g_detail_cnt
+      IF g_detail_d[li_idx].sel = 'N' THEN
+         CONTINUE FOR
+      ELSE
+         IF g_input.l_bank = '01' THEN   #161128-00038#1   add
+            CALL anmp480_getnmck(li_idx) RETURNING l_in_txt 
+         #161128-00038#1   add---s
+         ELSE
+            IF g_input.l_bank = '02' THEN
+               CALL s_anmp480_getnmck_esunBank(li_idx,g_input.nmckcomp,g_input.nmcksite,g_detail_d[li_idx].nmckdocno,g_input.nmck004,g_input.nmck012) RETURNING l_in_txt
+            END IF
+         END IF
+         #161128-00038#1   add---e
+      END IF      
+      CALL ch.write(l_in_txt)        
+   END FOR
+   
+   #存放TXT part2 start----------
+   #這裡要轉換成DOS格式
+#   LET l_cmd = "awk 'sub(\"$\", \"\\r\")' ", l_file_name, " > ", l_file_name2
+#   RUN l_cmd
+   #轉成BIG-5
+   #LET l_cmd = "iconv -c -f UTF-8 -t BIG-5  ",l_file_name ," > ",l_file_name2 
+   LET l_cmd = "iconv -c -f UTF-8 -t BIG-5  ",l_file_name ,"|awk 'sub(\"$\", \"\\r\")' >",l_file_name2
+   RUN l_cmd 
+   #取得user要存放TXT的路徑(user電腦端)
+   LET ls_target_file = os.Path.join(g_dir CLIPPED,l_file_name2 CLIPPED)
+   
+   #取得存放TXT端的路徑(伺服器端)
+   LET ls_source_file = os.Path.join(FGL_GETENV("TEMPDIR"),l_file_name2 CLIPPED)
+   
+   #EXAMPLE:CALL FGL_PUTFILE(ls_source_file,"C:\\Users\\bartscott\\Desktop\\5.1/aaa.txt.2")
+   CALL FGL_PUTFILE(ls_source_file,ls_target_file)
+   CALL ch.close() 
+   #存放TXT part2 end------------
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL            
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = g_dir
+      LET g_errparam.code   = 'anm-02917'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN
+   ELSE
+      INITIALIZE g_errparam TO NULL            
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = ''
+      LET g_errparam.code   = 'adz-00217'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()     
+      IF cl_ask_confirm('anm-02936') THEN #實際匯款日
+        #CALL anmp490_01(g_input.nmckcomp) RETURNING g_sub_success,l_cho,l_nmchdocno      #151013-00019#11 mark
+         CALL anmp490_01(g_input.nmckcomp) RETURNING g_sub_success,l_cho,l_nmchdocno_slip #151013-00019#11
+         IF NOT g_sub_success THEN
+            RETURN
+         END IF            
+         #寫入異動資料
+         CALL s_transaction_begin()
+         CALL cl_err_collect_init()
+         FOR li_idx = 1 TO g_detail_cnt　　#回寫異動日期
+            IF g_detail_d[li_idx].sel = 'N' THEN
+               CONTINUE FOR
+            ELSE                                    
+               CALL anmp480_writeback_date(l_cho,li_idx) RETURNING g_sub_success
+               IF NOT g_sub_success THEN
+                  CALL cl_err_collect_show()
+                  CALL s_transaction_end('N','0')
+                  RETURN
+               END IF
+               #151013-00019#11 add ------
+               #紀錄勾選的單號
+               IF cl_null(l_docno) THEN
+                  #第一筆要記錄
+                  LET l_docno = "'",g_detail_d[li_idx].nmckdocno,"'"
+               ELSE
+                  LET l_docno = l_docno,",","'",g_detail_d[li_idx].nmckdocno,"'"
+               END IF
+               #151013-00019#11 add end---
+            END IF    
+         END FOR
+         #151013-00019#11 add ------
+         IF l_cho = 1 THEN  #實際匯款日
+            CALL anmp480_ins_nmch(l_nmchdocno_slip,'',l_cho)RETURNING g_sub_success,l_nmchdocno  #161220-00055#1 add l_cho
+            
+            #161020-00004#1--add--str--
+            IF g_sub_success THEN 
+               CALL s_anmt480_ins_nmbc(l_nmchdocno,g_input.nmckcomp,1,g_input.nmck012)RETURNING g_sub_success
+            #161020-00004#1--add--str--
+               IF NOT g_sub_success THEN
+                  CALL cl_err_collect_show()
+                  CALL s_transaction_end('N','0')
+                  RETURN
+               END IF
+            #161020-00004#1--add--str--
+            ELSE
+               CALL cl_err_collect_show()
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF 
+            #161020-00004#1--end--str--          
+         ELSE
+            #計算出日期
+            LET l_sql = " SELECT UNIQUE nmck011",
+                        "    FROM nmck_t",
+                        "   WHERE nmckent = ",g_enterprise,
+                        "     AND nmckdocno IN (",l_docno,")"
+            PREPARE anmp480_nmck_p FROM l_sql
+            DECLARE anmp480_nmck_c CURSOR FOR anmp480_nmck_p
+            FOREACH anmp480_nmck_c INTO l_nmck011
+               CALL anmp480_ins_nmch(l_nmchdocno_slip,l_nmck011,l_cho)RETURNING g_sub_success,l_nmchdocno   #161220-00055#1 add l_cho
+               IF NOT g_sub_success THEN
+                  CALL cl_err_collect_show()
+                  CALL s_transaction_end('N','0')
+                  EXIT FOREACH
+                  RETURN
+               END IF
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = l_nmchdocno
+               LET g_errparam.code   = 'anm-02925'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               IF l_cho = 1 THEN  #l_cho =1 nmck012 回寫實際匯款日 else 回寫到期日
+                  LET l_nmck012 = g_input.nmck012 
+               ELSE
+                  LET l_nmck012 = ''
+               END IF
+               CALL s_anmt480_ins_nmbc(l_nmchdocno,g_input.nmckcomp,1,l_nmck012)RETURNING g_sub_success
+               IF NOT g_sub_success THEN
+                  CALL cl_err_collect_show()
+                  CALL s_transaction_end('N','0')
+                  EXIT FOREACH
+                  RETURN
+               END IF
+            END FOREACH
+         END IF
+         #151013-00019#11 add end---
+         
+         #151013-00019#11 mark ------
+         #CALL anmp480_ins_nmch(l_nmchdocno)RETURNING g_sub_success,l_nmchdocno
+         #IF NOT g_sub_success THEN
+         #   CALL cl_err_collect_show()
+         #   CALL s_transaction_end('N','0')
+         #   RETURN
+         #END IF     
+         #INITIALIZE g_errparam TO NULL            
+         #LET g_errparam.code = SQLCA.sqlcode
+         #LET g_errparam.extend = l_nmchdocno
+         #LET g_errparam.code   = 'anm-02925'
+         #LET g_errparam.popup = TRUE 
+         #CALL cl_err()          
+         #IF l_cho = 1 THEN  #l_cho =1 nmck012 回寫實際匯款日 else 回寫到期日
+         #   LET l_nmck012 = g_input.nmck012 
+         #ELSE
+         #   LET l_nmck012 = ''
+         #END IF
+         #CALL s_anmt480_ins_nmbc(l_nmchdocno,g_input.nmckcomp,1,l_nmck012)RETURNING g_sub_success
+         #151013-00019#11 mark end---
+         CALL cl_err_collect_show()
+         IF NOT g_sub_success THEN
+            CALL s_transaction_end('N','0')
+         ELSE
+            CALL s_transaction_end('Y','0')
+         END IF         
+      END IF
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 回寫實際匯款日
+# Memo...........:
+# Usage..........: CALL anmp480_writeback_date(p_cho,p_ac)
+# Date & Author..: 2015/06/12 By Hans
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmp480_writeback_date(p_cho,p_ac)
+DEFINE p_ac         LIKE type_t.num5
+DEFINE p_cho        LIKE type_t.chr1 #更新欄位 到期日或者是轉帳日期
+DEFINE r_success    LIKE type_t.num5
+   
+   
+   LET r_success = TRUE
+   IF p_cho = '1' THEN   
+      UPDATE nmck_t
+         SET nmck012 = g_input.nmck012,
+             nmck026 = '11',
+             nmck022 = g_user,
+             nmckmoddt = g_today
+       WHERE nmckent  = g_enterprise
+         AND nmckcomp = g_input.nmckcomp
+         AND nmckdocno = g_detail_d[p_ac].nmckdocno
+   ELSE     
+        UPDATE nmck_t
+         SET nmck012 = g_detail_d[p_ac].nmck011,
+             nmck026 = '11',
+             nmck022 = g_user,
+             nmckmoddt = g_today
+       WHERE nmckent  = g_enterprise
+         AND nmckcomp = g_input.nmckcomp
+         AND nmckdocno = g_detail_d[p_ac].nmckdocno
+   
+  
+   END IF
+   IF SQLCA.sqlcode THEN
+     INITIALIZE g_errparam TO NULL
+     LET g_errparam.code = SQLCA.sqlcode
+     LET g_errparam.extend = 'UPDATE nmck_t wrong'
+     LET g_errparam.popup = TRUE
+     LET g_errparam.sqlerr = SQLCA.SQLCODE
+     CALL cl_err()
+     LET r_success = FALSE
+   END IF   
+
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 將傳入的字串針對中文字補空格
+# Memo...........: utf8 --> big 5 
+# Usage..........: anmp480_convert(p_cnt,p_string)
+# Input parameter: p_cnt    欄位大小
+#                : p_string 字串
+# Return code....: 整理好的字串    
+# Date & Author..: 2015/06/15 By Hans
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmp480_convert(p_cnt,p_string)
+
+DEFINE l_length  LIKE type_t.num5
+DEFINE l_lb      LIKE type_t.num5
+DEFINE l_sum     LIKE type_t.num5
+DEFINE l_i       LIKE type_t.num5
+DEFINE l_en      LIKE type_t.num5
+DEFINE l_sumtrue LIKE type_t.num5
+DEFINE r_string  VARCHAR(2000)
+DEFINE p_string  STRING
+DEFINE p_cnt     LIKE type_t.num5
+DEFINE l_space   STRING
+   
+   LET l_space = ''
+   LET r_string = p_string  
+   IF cl_null (r_string) THEN
+      FOR l_i = 1 to p_cnt
+        LET l_space = l_space,'#'
+      END FOR
+      LET r_string = r_string USING l_space
+   ELSE         
+      SELECT LENGTHB(r_string) INTO l_length FROM dual #取得字串長度
+  
+      FOR l_i = 1 TO l_length
+         SELECT LENGTHB(SUBSTR(r_string,l_i,1)) INTO l_lb FROM dual              
+         IF l_lb > 1 THEN  #big5的長度
+            LET l_sum = l_sum + 2
+         ELSE
+            LET l_sum = l_sum + 1
+         END IF 
+         LET l_sumtrue = l_sumtrue + l_lb #字串原始的長度
+         IF l_sum = p_cnt THEN
+            EXIT FOR
+         END IF 
+
+         IF l_sum > p_cnt THEN
+            IF l_lb > 1 THEN  #big5的長度
+               LET l_sum = l_sum - 2
+            ELSE
+               LET l_sum = l_sum - 1
+            END IF 
+            LET l_sumtrue = l_sumtrue - l_lb #字串原始的長度            
+            EXIT FOR
+         END IF
+         IF l_sumtrue >= l_length THEN EXIT FOR END IF
+
+      END FOR
+      SELECT SUBSTRB(r_string,1,l_sumtrue) INTO r_string FROM dual            
+      LET l_en = p_cnt -l_sum 
+      LET r_string = r_string,l_en SPACES
+   END IF
+   
+   RETURN r_string
+END FUNCTION
+
+################################################################################
+# Descriptions...: 臨櫃國外整批匯出匯款格式
+# Memo...........:
+# Usage..........: CALL anmp480_getnmck(p_ac)
+# Date & Author..: 2015/07/29 By Hans
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmp480_getnmck(p_ac)
+DEFINE l_tmp           RECORD
+            tmp001        CHAR(12),   #1-12    付款帳號
+            tmp002        CHAR(8),    #13-20   付款日期
+            tmp003        CHAR(4),    #21-24   付款分行
+            tmp004        CHAR(10),   #25-34   付款人ID
+            tmp005        CHAR(7),    #35-41   解款行
+            tmp006        CHAR(16),   #42-57	  收款人帳號
+            tmp007        STRING,     #58-137  收款人戶名
+            tmp008        CHAR(13),   #138-150 付款金額
+            tmp009        STRING,     #151-230 付款人戶名   
+            tmp010        CHAR(36),   #231-266 付款人銷帳編號             
+            tmp011        CHAR(10),   #267-276 收款人 ID  
+            tmp012        CHAR(1),    #277-277 匯款通知方式 
+            tmp013        CHAR(40),   #278-317 匯款通知資訊
+            tmp014        CHAR(40),   #318-357 付款相關附言
+            tmp015        CHAR(1)     #358-358 手續費負擔方式
+                       END RECORD  
+DEFINE l_nmck          RECORD
+             nmck013     LIKE nmck_t.nmck013,
+             nmck014     LIKE nmck_t.nmck014,
+             nmck015     LIKE nmck_t.nmck015,         
+             nmck103     LIKE nmck_t.nmck103,
+             nmck016     LIKE nmck_t.nmck016,
+             nmck008     LIKE nmck_t.nmck008,
+             nmck011     LIKE nmck_t.nmck011             
+                       END RECORD
+DEFINE l_nmaa004       LIKE nmaa_t.nmaa004
+DEFINE l_nmaa005       LIKE nmaa_t.nmaa005
+DEFINE l_nmaa007       LIKE nmaa_t.nmaa007
+DEFINE l_date          LIKE type_t.chr100
+DEFINE l_ooef002       LIKE ooef_t.ooef002
+DEFINE l_pmaa003       LIKE pmaa_t.pmaa003
+DEFINE l_str           STRING
+
+DEFINE p_ac            LIKE type_t.num5      #第幾筆                  
+DEFINE l_in_txt        STRING 
+ 
+   INITIALIZE l_tmp.* TO NULL
+   #付款帳號
+   SELECT nmaa005,nmaa004,nmaa007 INTO l_nmaa005,l_nmaa004,l_nmaa007
+     FROM nmaa_t,nmas_t 
+    WHERE nmaaent = nmasent AND nmaaent = g_enterprise 
+      AND nmas001 = nmaa001
+      AND nmas002 = g_input.nmck004
+   
+  # LET l_date = YEAR(g_input.nmck012) USING "&&&&",MONTH(g_input.nmck012) USING "&&" ,DAY(g_input.nmck012) USING "&&"
+   #付款分行 nmaa004[4,7]
+   LET l_str = l_nmaa004 
+   LET l_str = l_str.subString(4,7)
+   LET l_nmaa004 = l_str
+   #付款人id 取統編       
+   SELECT ooef002  INTO l_ooef002  FROM ooef_t  WHERE ooefent  = g_enterprise AND ooef001  = g_input.nmcksite 
+   #解款行/收款人帳號/收款人戶名/付款金額
+   SELECT nmck013,nmck014,nmck015,nmck103,nmck016,nmck008,nmck011  
+     INTO l_nmck.nmck013,l_nmck.nmck014,l_nmck.nmck015,l_nmck.nmck103,l_nmck.nmck016,l_nmck.nmck008,l_nmck.nmck011 
+     FROM nmck_t WHERE nmckent = g_enterprise
+      AND nmckdocno = g_detail_d[p_ac].nmckdocno
+      AND nmckcomp = g_input.nmckcomp
+   #付款日期
+   LET l_date = YEAR(l_nmck.nmck011) USING "&&&&",MONTH(l_nmck.nmck011 ) USING "&&" ,DAY(l_nmck.nmck011) USING "&&"   
+   #收款人 ID
+   SELECT pmaa003 INTO l_pmaa003
+     FROM pmaa_t  
+    WHERE pmaaent = g_enterprise 
+      AND pmaa001 = g_detail_d[p_ac].nmck005
+  
+   
+   #1-12	付款帳號	     nmaa005   
+   LET l_tmp.tmp001 = l_nmaa005       
+   #13-20	付款日期
+   LET l_tmp.tmp002 = l_date
+   #21-24	付款分行(主辦行)
+   LET l_tmp.tmp003 = l_nmaa004
+   #25-34	付款人id ooef002(aooi100)	取統編
+   LET l_tmp.tmp004 = l_ooef002
+   #35-41	解款行	     nmck013
+   LET l_tmp.tmp005 = l_nmck.nmck013
+   #42-57	收款人帳號 nmck014
+   LET l_tmp.tmp006 = l_nmck.nmck014
+   #58-137	收款人戶名	     nmck015
+   CALL anmp480_convert(80,l_nmck.nmck015) RETURNING l_tmp.tmp007  
+   #138-150	付款金額	     nmck103
+   LET l_tmp.tmp008 = l_nmck.nmck103 USING "&&&&&&&&&&&&&"
+   #151-230	付款人戶名	     nmaa007 
+  # LET l_tmp.tmp009 = l_nmaa007
+   CALL anmp480_convert(80,l_nmaa007) RETURNING l_tmp.tmp009
+   #231-266	付款人銷帳編號   nmckdocno
+   LET l_tmp.tmp010 = g_detail_d[p_ac].nmckdocno
+   #267-276	收款人 ID	     pmaa003
+   LET l_tmp.tmp011 = l_pmaa003
+   #277-277	匯款通知方式
+   IF NOT cl_null(l_nmck.nmck016) THEN
+      LET l_tmp.tmp012 = '3' 
+   ELSE
+      LET l_tmp.tmp012 = '0'
+   END IF
+   #278-317	匯款通知資訊     nmck016
+   LET l_tmp.tmp013 = l_nmck.nmck016
+   #318-357	付款相關附言
+   LET l_tmp.tmp014 = ' '
+   #358-358	手續費負擔方式
+   IF l_nmck.nmck008 = '1' OR  l_nmck.nmck008 = '2' THEN
+      LET l_tmp.tmp015 = l_nmck.nmck008
+   ELSE
+      LET l_tmp.tmp015 = '1'
+   END IF
+   
+   #組成一長條的數字資料
+   LET l_in_txt = l_tmp.tmp001,l_tmp.tmp002,l_tmp.tmp003,l_tmp.tmp004,l_tmp.tmp005,
+                  l_tmp.tmp006,l_tmp.tmp007,l_tmp.tmp008,l_tmp.tmp009,l_tmp.tmp010,
+                  l_tmp.tmp011,l_tmp.tmp012,l_tmp.tmp013,l_tmp.tmp014,l_tmp.tmp015
+                  
+     
+             
+   RETURN l_in_txt            
+                       
+END FUNCTION
+
+################################################################################
+# Descriptions...: 產生應付票據異動主檔
+# Memo...........: p_nmck011 :到期日
+#                  p_cho: 1:转账日期   2：到期日  
+# Usage..........: CALL anmp480_ins_nmch()
+# Date & Author..: 2015/06/22 By Hans
+# Modify.........: #161220-00055#1  add p_cho
+################################################################################
+PRIVATE FUNCTION anmp480_ins_nmch(p_docno,p_nmck011,p_cho)
+#161128-00061#1----modify------begin-----------
+#DEFINE l_nmch   RECORD LIKE nmch_t.*
+DEFINE l_nmch RECORD  #應付票據異動主檔
+       nmchent LIKE nmch_t.nmchent, #企業編碼
+       nmchcomp LIKE nmch_t.nmchcomp, #法人
+       nmchsite LIKE nmch_t.nmchsite, #資金中心
+       nmchdocno LIKE nmch_t.nmchdocno, #單據號碼
+       nmchdocdt LIKE nmch_t.nmchdocdt, #異動日期
+       nmch001 LIKE nmch_t.nmch001, #異動類別
+       nmch002 LIKE nmch_t.nmch002, #帳務人員
+       nmch003 LIKE nmch_t.nmch003, #交易帳戶編碼
+       nmch004 LIKE nmch_t.nmch004, #重立帳否
+       nmch006 LIKE nmch_t.nmch006, #備註
+       nmch007 LIKE nmch_t.nmch007, #主帳套帳務單號
+       nmch008 LIKE nmch_t.nmch008, #次帳一帳套帳務單號
+       nmch009 LIKE nmch_t.nmch009, #次帳二帳套帳務單號
+       nmch100 LIKE nmch_t.nmch100, #幣別
+       nmch101 LIKE nmch_t.nmch101, #匯率
+       nmchstus LIKE nmch_t.nmchstus, #狀態碼
+       nmchownid LIKE nmch_t.nmchownid, #資料所有者
+       nmchowndp LIKE nmch_t.nmchowndp, #資料所屬部門
+       nmchcrtid LIKE nmch_t.nmchcrtid, #資料建立者
+       nmchcrtdp LIKE nmch_t.nmchcrtdp, #資料建立部門
+       nmchcrtdt LIKE nmch_t.nmchcrtdt, #資料創建日
+       nmchmodid LIKE nmch_t.nmchmodid, #資料修改者
+       nmchmoddt LIKE nmch_t.nmchmoddt, #最近修改日
+       nmchcnfid LIKE nmch_t.nmchcnfid, #資料確認者
+       nmchcnfdt LIKE nmch_t.nmchcnfdt, #資料確認日
+       nmch010 LIKE nmch_t.nmch010  #作業類別
+       END RECORD
+#161128-00061#1----modify------end-----------
+DEFINE l_i           LIKE type_t.num5
+DEFINE r_success     LIKE type_t.chr1
+DEFINE l_glaald      LIKE glaa_t.glaald
+DEFINE l_glaa003     LIKE glaa_t.glaa003   #150930-00010#4
+DEFINE l_glaa024     LIKE glaa_t.glaa024   #150930-00010#4
+DEFINE l_nmas003     LIKE nmas_t.nmas003
+DEFINE l_para        LIKE type_t.chr80     #資金模組匯率來源
+DEFINE l_glaa001     LIKE glaa_t.glaa001
+DEFINE p_docno       LIKE nmch_t.nmchdocno
+DEFINE p_nmck011     LIKE nmck_t.nmck011   #151013-00019#11
+DEFINE p_cho         LIKE type_t.chr1      #161220-00055#1 add
+
+   #帳戶幣別 
+   LET r_success = TRUE
+   SELECT nmas003 INTO l_nmas003
+     FROM nmaa_t,nmas_t
+    WHERE nmaaent = g_enterprise
+      AND nmaaent = nmasent
+      AND nmaa001 = nmas001
+      AND nmas002 = g_input.nmck004
+      AND nmaa002 IN (select ooef001 FROM ooef_t WHERE ooefent = g_enterprise
+                                                 AND ooef017 = g_input.nmckcomp)
+   #匯率
+  #CALL cl_get_para(g_enterprise,g_input.nmckcomp,'S-FIN-4004') RETURNING l_para  #150930-00010#4 mark  #資金模組匯率來源
+   CALL cl_get_para(g_enterprise,g_input.nmckcomp,'S-FIN-4012') RETURNING l_para  #150930-00010#4       #銀存支出匯率來源
+   SELECT glaa001 INTO l_glaa001  
+     FROM glaa_t
+    WHERE glaaent = g_enterprise AND glaacomp = g_input.nmckcomp
+      AND glaa014 = 'Y'
+
+   #150930-00010#4--s
+   SELECT glaald,glaa003,glaa024 INTO l_glaald,l_glaa003,l_glaa024
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaacomp = g_input.nmckcomp
+      AND glaa014 = 'Y'      
+   IF l_para = '23' THEN
+      #銀行日平均匯率
+      CALL s_anm_get_exrate(l_glaald,g_input.nmckcomp,g_input.nmck004,l_nmas003,l_glaa001,g_today) RETURNING l_nmch.nmch101  
+   ELSE
+   #150930-00010#4--e  
+      CALL s_aooi160_get_exrate('1',g_input.nmckcomp,g_today,l_nmas003,
+                                              #目的幣別;  交易金額;              匯類類型
+                                               l_glaa001,0,l_para)
+                        RETURNING l_nmch.nmch101                        
+   END IF   #150930-00010#4                       
+   IF cl_null(l_nmch.nmch101) THEN LET l_nmch.nmch101 = '1' END IF
+   #150930-00010#4 mark--s
+   #搬移到前面
+   #SELECT glaald INTO l_glaald
+   #  FROM glaa_t
+   # WHERE glaaent = g_enterprise
+   #   AND glaacomp = g_input.nmckcomp
+   #   AND glaa014 = 'Y'   
+   #150930-00010#4 mark--e
+   #取得單號         
+  #CALL s_aooi200_fin_gen_docno(l_glaald,'','',p_docno,g_today,'anmt480')                  #150930-00010#4 mark
+   #CALL s_aooi200_fin_gen_docno(l_glaald,l_glaa024,l_glaa003,p_docno,g_today,'anmt480')    #150930-00010#4 #151013-00019#11 mark
+   #      RETURNING g_sub_success,l_nmch.nmchdocno                                                          #151013-00019#11 mark
+   #151013-00019#11 add ------
+   IF NOT cl_null(p_nmck011) THEN
+      LET l_nmch.nmchdocdt = p_nmck011
+      CALL s_aooi200_fin_gen_docno(l_glaald,l_glaa024,l_glaa003,p_docno,p_nmck011,'anmt480')
+           RETURNING g_sub_success,l_nmch.nmchdocno
+   ELSE
+      LET l_nmch.nmchdocdt = g_today
+      CALL s_aooi200_fin_gen_docno(l_glaald,l_glaa024,l_glaa003,p_docno,g_today,'anmt480')
+           RETURNING g_sub_success,l_nmch.nmchdocno
+   END IF
+   #151013-00019#11 add end---
+   IF NOT g_sub_success THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'apm-00003'
+      LET g_errparam.extend = l_nmch.nmchdocno
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+     #RETURN                              #150930-00010#4 mark
+      RETURN r_success,l_nmch.nmchdocno   #150930-00010#4      
+   END IF
+
+
+   LET l_nmch.nmchent   = g_enterprise
+   LET l_nmch.nmchcomp  = g_input.nmckcomp
+   LET l_nmch.nmchsite  = g_input.nmcksite
+  #LET l_nmch.nmchdocdt = g_today #151013-00019#11
+  #161220-00055#1--add--s--
+   IF p_cho = 1 THEN
+      LET l_nmch.nmchdocdt = g_input.nmck012
+   END IF
+  #161220-00055#1--add--e--
+   LET l_nmch.nmch001 = '11'                 # 付訖	
+   LET l_nmch.nmch002 = g_user
+   LET l_nmch.nmch003 = g_input.nmck004
+   LET l_nmch.nmch004 ='N'
+   LET l_nmch.nmch006 = ''
+   LET l_nmch.nmch007 = ''
+   LET l_nmch.nmch008 = ''
+   LET l_nmch.nmch009 = ''
+   LET l_nmch.nmch010 = '2'
+   LET l_nmch.nmch100 = l_nmas003
+   LET l_nmch.nmch101 = l_nmch.nmch101
+   LET l_nmch.nmchstus  = 'Y'
+   LET l_nmch.nmchownid = g_user
+   LET l_nmch.nmchowndp = g_dept
+   LET l_nmch.nmchcrtid = g_user
+   LET l_nmch.nmchcrtdp = g_dept
+   LET l_nmch.nmchcrtdt = cl_get_current()
+   LET l_nmch.nmchmodid = g_user
+   LET l_nmch.nmchmoddt = g_today
+   LET l_nmch.nmchcnfid = g_user
+   LET l_nmch.nmchcnfdt = cl_get_current()
+   
+   #161128-00061#1----modify------begin-----------
+   #INSERT INTO nmch_t VALUES (l_nmch.*)
+   INSERT INTO nmch_t (nmchent,nmchcomp,nmchsite,nmchdocno,nmchdocdt,nmch001,nmch002,nmch003,nmch004,
+                       nmch006,nmch007,nmch008,nmch009,nmch100,nmch101,nmchstus,nmchownid,nmchowndp,
+                       nmchcrtid,nmchcrtdp,nmchcrtdt,nmchmodid,nmchmoddt,nmchcnfid,nmchcnfdt,nmch010)
+    VALUES (l_nmch.nmchent,l_nmch.nmchcomp,l_nmch.nmchsite,l_nmch.nmchdocno,l_nmch.nmchdocdt,l_nmch.nmch001,l_nmch.nmch002,l_nmch.nmch003,l_nmch.nmch004,
+            l_nmch.nmch006,l_nmch.nmch007,l_nmch.nmch008,l_nmch.nmch009,l_nmch.nmch100,l_nmch.nmch101,l_nmch.nmchstus,l_nmch.nmchownid,l_nmch.nmchowndp,
+            l_nmch.nmchcrtid,l_nmch.nmchcrtdp,l_nmch.nmchcrtdt,l_nmch.nmchmodid,l_nmch.nmchmoddt,l_nmch.nmchcnfid,l_nmch.nmchcnfdt,l_nmch.nmch010)
+   #161128-00061#1----modify------end-----------
+   IF SQLCA.SQLcode  THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "ins nmch_t"
+      LET g_errparam.popup = TRUE
+      LET r_success = FALSE
+      CALL cl_err()
+     #RETURN r_success                    #150930-00010#4 mark
+      RETURN r_success,l_nmch.nmchdocno   #150930-00010#4
+   END IF
+   
+   FOR l_i = 1 TO g_detail_d.getLength()
+      IF g_detail_d[l_i].sel = "Y" THEN
+        #CALL s_anmt480_ins_nmci(l_nmch.nmchdocno,g_input.nmckcomp,'11',g_detail_d[l_i].nmckdocno) RETURNING g_sub_success                  #150923 mark
+         #151013-00019#11 add ------
+         IF NOT cl_null(p_nmck011) THEN
+         #若是選到期日回寫要判斷=目前的到期日才寫入
+            IF g_detail_d[l_i].nmck011 <> p_nmck011 THEN
+               CONTINUE FOR
+            END IF
+         END IF
+         #151013-00019#11 add end---
+         CALL s_anmt480_ins_nmci(l_nmch.nmchdocno,l_nmch.nmchdocdt,g_input.nmckcomp,'11',g_detail_d[l_i].nmckdocno) RETURNING g_sub_success #150923
+         #CALL anmp480_ins_nmci(l_i,l_nmch.nmchdocno) RETURNING g_sub_success
+      END IF
+      IF NOT g_sub_success THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "ins nmci_t"
+         LET g_errparam.popup = TRUE
+         LET r_success = FALSE
+         CALL cl_err()
+      END IF
+   END FOR   
+   
+   RETURN r_success,l_nmch.nmchdocno 
+
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 產生應付票據異動明細檔
+# Memo...........:
+# Usage..........: CALL anmp480_ins_nmci(p_ac,p_docno)
+# Date & Author..: 2015/06/22 By Hans
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmp480_ins_nmci(p_ac,p_docno)
+#161128-00061#1----modify------begin-----------
+#DEFINE l_nmci      RECORD LIKE nmci_t.*
+DEFINE l_nmci RECORD  #應付票據異動明細檔
+       nmcient LIKE nmci_t.nmcient, #企業編碼
+       nmcicomp LIKE nmci_t.nmcicomp, #法人
+       nmcidocno LIKE nmci_t.nmcidocno, #單據號碼
+       nmciseq LIKE nmci_t.nmciseq, #項次
+       nmci001 LIKE nmci_t.nmci001, #票據單號
+       nmci002 LIKE nmci_t.nmci002, #票況
+       nmci003 LIKE nmci_t.nmci003, #開票單號
+       nmci008 LIKE nmci_t.nmci008, #重立帳單號
+       nmci100 LIKE nmci_t.nmci100, #幣別
+       nmci101 LIKE nmci_t.nmci101, #匯率
+       nmci103 LIKE nmci_t.nmci103, #異動原幣
+       nmci105 LIKE nmci_t.nmci105, #利息支出原幣
+       nmci113 LIKE nmci_t.nmci113, #異動本幣
+       nmci115 LIKE nmci_t.nmci115, #利息支出本幣
+       nmci118 LIKE nmci_t.nmci118, #匯差金額
+       nmci121 LIKE nmci_t.nmci121, #本位幣二匯率
+       nmci131 LIKE nmci_t.nmci131, #本位幣三匯率
+       nmciorga LIKE nmci_t.nmciorga, #來源組織
+       nmci132 LIKE nmci_t.nmci132, #來源類型
+       nmci133 LIKE nmci_t.nmci133, #項次
+       nmci009 LIKE nmci_t.nmci009  #含保證金帳戶否
+       END RECORD
+#161128-00061#1----modify------begin-----------
+DEFINE p_docno       LIKE nmch_t.nmchdocno
+DEFINE p_ac          LIKE type_t.num5
+DEFINE r_success     LIKE type_t.chr1
+   
+   LET r_success = TRUE
+   LET l_nmci.nmcient   = g_enterprise
+   LET l_nmci.nmcicomp  = g_input.nmckcomp
+   LET l_nmci.nmcidocno = p_docno
+   SELECT MAX(nmciseq)+1 INTO l_nmci.nmciseq 
+     FROM nmci_t
+    WHERE nmcient = g_enterprise
+      AND nmcidocno = l_nmci.nmcidocno
+      AND nmcicomp =  g_input.nmckcomp
+   IF cl_null(l_nmci.nmciseq)THEN LET l_nmci.nmciseq = 1 END IF
+   LET l_nmci.nmci001 = ''
+   SELECT nmck026,nmck100,nmck101,
+          nmck103,nmck113,nmck121,nmck131 
+     INTO l_nmci.nmci002,l_nmci.nmci100,l_nmci.nmci101,
+          l_nmci.nmci103,l_nmci.nmci113,l_nmci.nmci121,l_nmci.nmci131
+     FROM nmck_t
+    WHERE nmckdocno = g_detail_d[p_ac].nmckdocno
+      AND nmckcomp = g_input.nmckcomp
+      AND nmckent = g_enterprise     #160905-00007#7 Add
+   LET l_nmci.nmci003 = g_detail_d[p_ac].nmckdocno
+   LET l_nmci.nmci008 =  ''
+   #161128-00061#1----modify------begin-----------
+   #INSERT INTO nmci_t VALUES (l_nmci.*)
+   INSERT INTO nmci_t (nmcient,nmcicomp,nmcidocno,nmciseq,nmci001,nmci002,nmci003,nmci008,nmci100,
+                       nmci101,nmci103,nmci105,nmci113,nmci115,nmci118,nmci121,nmci131,nmciorga,
+                       nmci132,nmci133,nmci009)
+    VALUES (l_nmci.nmcient,l_nmci.nmcicomp,l_nmci.nmcidocno,l_nmci.nmciseq,l_nmci.nmci001,l_nmci.nmci002,l_nmci.nmci003,l_nmci.nmci008,l_nmci.nmci100,
+            l_nmci.nmci101,l_nmci.nmci103,l_nmci.nmci105,l_nmci.nmci113,l_nmci.nmci115,l_nmci.nmci118,l_nmci.nmci121,l_nmci.nmci131,l_nmci.nmciorga,
+            l_nmci.nmci132,l_nmci.nmci133,l_nmci.nmci009)
+   #161128-00061#1----modify------end-----------
+   IF SQLCA.SQLcode  THEN
+      LET r_success = FALSE
+   END IF
+   
+   RETURN r_success
+
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 產生銀存收支檔
+# Memo...........:
+# Usage..........: CALL anmp480_ins_nmbc(p_cho,p_docno)
+# Date & Author..: 2015/06/23 By Hans
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmp480_ins_nmbc(p_cho,p_docno)
+DEFINE l_nmbc           RECORD
+  nmbcent      LIKE nmbc_t.nmbcent,
+  nmbcownid    LIKE nmbc_t.nmbcownid,
+  nmbcowndp    LIKE nmbc_t.nmbcowndp,
+  nmbccrtid    LIKE nmbc_t.nmbccrtid,
+  nmbccrtdp    LIKE nmbc_t.nmbccrtdp,
+  nmbccrtdt    LIKE nmbc_t.nmbccrtdt,
+  nmbcmodid    LIKE nmbc_t.nmbcmodid,
+  nmbcmoddt    LIKE nmbc_t.nmbcmoddt,
+  nmbccnfid    LIKE nmbc_t.nmbccnfid,
+  nmbccnfdt    LIKE nmbc_t.nmbccnfdt,
+  nmbcpstid    LIKE nmbc_t.nmbcpstid,
+  nmbcpstdt    LIKE nmbc_t.nmbcpstdt,
+  nmbcstus     LIKE nmbc_t.nmbcstus,
+  nmbccomp     LIKE nmbc_t.nmbccomp,
+  nmbcsite     LIKE nmbc_t.nmbcsite,
+  nmbcorga     LIKE nmbc_t.nmbcorga,  #160322-00025#24 
+  nmbcdocno    LIKE nmbc_t.nmbcdocno,
+  nmbcseq      LIKE nmbc_t.nmbcseq,
+  nmbc001      LIKE nmbc_t.nmbc001,
+  nmbc002      LIKE nmbc_t.nmbc002,
+  nmbc003      LIKE nmbc_t.nmbc003,
+  nmbc004      LIKE nmbc_t.nmbc004,
+  nmbc005      LIKE nmbc_t.nmbc005,
+  nmbc006      LIKE nmbc_t.nmbc006,
+  nmbc007      LIKE nmbc_t.nmbc007,
+  nmbc008      LIKE nmbc_t.nmbc008,
+  nmbc009      LIKE nmbc_t.nmbc009,
+  nmbc010      LIKE nmbc_t.nmbc010,
+  nmbc011      LIKE nmbc_t.nmbc011,
+  nmbc012      LIKE nmbc_t.nmbc012,
+  nmbc013      LIKE nmbc_t.nmbc013,
+  nmbc014      LIKE nmbc_t.nmbc014, #151012-00014#6
+  nmbc015      LIKE nmbc_t.nmbc015, #151012-00014#6
+  nmbc016      LIKE nmbc_t.nmbc016, #151012-00014#6
+  nmbc100      LIKE nmbc_t.nmbc100,
+  nmbc101      LIKE nmbc_t.nmbc101,
+  nmbc103      LIKE nmbc_t.nmbc103,
+  nmbc113      LIKE nmbc_t.nmbc113,
+  nmbc121      LIKE nmbc_t.nmbc121,
+  nmbc123      LIKE nmbc_t.nmbc123,
+  nmbc131      LIKE nmbc_t.nmbc131,
+  nmbc133      LIKE nmbc_t.nmbc133
+                        END RECORD
+DEFINE l_i           LIKE type_t.num5
+DEFINE r_success     LIKE type_t.num5
+DEFINE p_cho         LIKE type_t.chr1 # 到期日或者是轉帳日期 
+DEFINE p_docno       LIKE nmch_t.nmchdocno
+   
+   LET r_success = TRUE
+   FOR l_i = 1 TO g_detail_d.getLength()
+      IF g_detail_d[l_i].sel = "Y" THEN  
+      
+         LET l_nmbc.nmbcent = g_enterprise
+         LET l_nmbc.nmbccomp= g_input.nmckcomp
+         LET l_nmbc.nmbcsite= g_input.nmcksite
+         LET l_nmbc.nmbcorga= g_input.nmckcomp #160322-00025#24
+         LET l_nmbc.nmbcdocno = p_docno
+      
+         SELECT MAX(nmbcseq)+1 INTO l_nmbc.nmbcseq 
+           FROM nmbc_t
+          WHERE nmbcent = g_enterprise
+            AND nmbcdocno = g_detail_d[l_i].nmckdocno
+            AND nmbccomp =  g_input.nmckcomp
+         IF cl_null(l_nmbc.nmbcseq)THEN LET l_nmbc.nmbcseq = 1 END IF
+   
+         SELECT nmck006,nmck009,nmck100,nmck101,nmck002,nmck025,
+                nmck103,nmck113,nmck121,nmck123,nmck131,nmck133,
+                nmck011,nmck013,nmck014                           #151012-00014#6 add nmck011 013 014
+           INTO l_nmbc.nmbc004,l_nmbc.nmbc007,l_nmbc.nmbc100,l_nmbc.nmbc101,l_nmbc.nmbc012,l_nmbc.nmbc013,
+                l_nmbc.nmbc103,l_nmbc.nmbc113,l_nmbc.nmbc121,l_nmbc.nmbc123,l_nmbc.nmbc131,l_nmbc.nmbc133,
+                l_nmbc.nmbc014,l_nmbc.nmbc015,l_nmbc.nmbc016      #151012-00014#6 add nmbc014~016
+           FROM nmck_t 
+          WHERE nmckent = g_enterprise
+            AND nmckdocno = g_detail_d[l_i].nmckdocno
+            AND nmckcomp = g_input.nmckcomp
+         
+         LET l_nmbc.nmbc001 = 'anmt460' 
+         LET l_nmbc.nmbc002 = g_input.nmck004
+         IF cl_null(l_nmbc.nmbc002) THEN LET l_nmbc.nmbc002 = ' ' END IF
+         LET l_nmbc.nmbc003 = g_detail_d[l_i].nmck005           
+         IF p_cho = '1' THEN 
+            LET l_nmbc.nmbc005 = g_input.nmck012
+            LET l_nmbc.nmbc010 = g_input.nmck012            
+         ELSE     
+            LET l_nmbc.nmbc005 = g_detail_d[l_i].nmck011
+            LET l_nmbc.nmbc010 = g_detail_d[l_i].nmck011 
+         END IF
+         SELECT nmaj002 INTO l_nmbc.nmbc006
+           FROM nmaj_t
+          WHERE nmajent = g_enterprise
+            AND nmaj001 = l_nmbc.nmbc007
+         
+         LET l_nmbc.nmbcownid = g_user
+         LET l_nmbc.nmbcowndp = g_dept
+         LET l_nmbc.nmbccrtid = g_user
+         LET l_nmbc.nmbccrtdp = g_dept
+         LET l_nmbc.nmbccrtdt = cl_get_current()
+         LET l_nmbc.nmbccnfid = g_user
+         LET l_nmbc.nmbccnfdt = cl_get_current()
+         LET l_nmbc.nmbcpstid = g_user
+         LET l_nmbc.nmbcpstdt = g_today
+         LET l_nmbc.nmbcstus = 'Y'
+     
+         INSERT INTO nmbc_t
+                     (nmbcent,
+                      nmbccomp,nmbcsite,nmbcdocno,nmbcseq,
+                      nmbc001,nmbc002,nmbc003,nmbc004,nmbc005,nmbc006,
+                      nmbc007,nmbc012,nmbc013,nmbc014,nmbc015,nmbc016, #150818-00032#3 add nmbc012,013 #151012-00014#6 add nmbc014~nmbc016
+                      nmbc100,nmbc101,nmbc103,  
+                      nmbc113,nmbc121,nmbc123,nmbc131,nmbc133,
+                      nmbcownid,nmbcowndp,nmbccrtid,nmbccrtdp,nmbccrtdt,
+                      nmbccnfid,nmbccnfdt,nmbcpstid,nmbcpstdt,nmbcstus)
+           
+         VALUES(l_nmbc.nmbcent,
+                  l_nmbc.nmbccomp,l_nmbc.nmbcsite,l_nmbc.nmbcdocno,l_nmbc.nmbcseq,
+                  l_nmbc.nmbc001,l_nmbc.nmbc002,l_nmbc.nmbc003,l_nmbc.nmbc004,l_nmbc.nmbc005,l_nmbc.nmbc006,
+                  l_nmbc.nmbc007,l_nmbc.nmbc012,l_nmbc.nmbc013,l_nmbc.nmbc014,l_nmbc.nmbc015,l_nmbc.nmbc016, #150818-00032#3 add nmbc012,013 #151012-00014#6 add nmbc014~nmbc016
+                  l_nmbc.nmbc100,l_nmbc.nmbc101,l_nmbc.nmbc103,
+                  l_nmbc.nmbc113,l_nmbc.nmbc121,l_nmbc.nmbc123,l_nmbc.nmbc131,l_nmbc.nmbc133,
+                  l_nmbc.nmbcownid,l_nmbc.nmbcowndp,l_nmbc.nmbccrtid,l_nmbc.nmbccrtdp,l_nmbc.nmbccrtdt,
+                  l_nmbc.nmbccnfid,l_nmbc.nmbccnfdt,l_nmbc.nmbcpstid,l_nmbc.nmbcpstdt,l_nmbc.nmbcstus)
+           
+         IF SQLCA.SQLcode OR SQLCA.SQLERRD[3]=0 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = g_detail_d[l_i].nmckdocno CLIPPED,"/ins nmbc_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET r_success = FALSE
+         END IF
+      END IF
+   END FOR   
+   
+   RETURN r_success
+
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 列印報表
+# Memo...........:
+# Usage..........: CALL anmp480_output()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2015/10/15 By Lori   #151012-00014#3
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmp480_output()
+   DEFINE l_i         LIKE type_t.num5
+   DEFINE l_wc        STRING
+   DEFINE g_master_wc STRING
+
+   
+   IF cl_null(g_input.nmcksite) OR cl_null(g_input.nmckcomp) OR cl_null(g_input.nmck004) OR cl_null(g_input.nmck012) THEN
+      INITIALIZE g_errparam.* TO NULL
+      LET g_errparam.code = 'aap-00332'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #取得有勾選的單號
+   FOR l_i = 1 TO g_detail_cnt
+      IF g_detail_d[l_i].sel = 'N' THEN
+         CONTINUE FOR
+      ELSE
+         IF cl_null(l_wc) THEN
+            LET l_wc = g_detail_d[l_i].nmckdocno
+         ELSE
+            LET l_wc = l_wc,"','",g_detail_d[l_i].nmckdocno
+         END IF
+      END IF
+   END FOR
+
+   #未勾選任何一筆資料
+   IF cl_null(l_wc) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'axr-00159'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN
+   ELSE
+      LET l_wc = "('",l_wc,"')"
+      LET g_master_wc = " nmckent = '",g_enterprise,"' AND nmckcomp = '",g_input.nmckcomp,"' AND nmckdocno IN ",l_wc CLIPPED
+      CALL anmp490_g01(g_master_wc,g_input.nmck004,g_input.nmck012)
+   END IF
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

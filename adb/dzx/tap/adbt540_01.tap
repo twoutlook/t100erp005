@@ -1,0 +1,2179 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="adbt540_01" std_prog="adbt540_01" erpver="1.0" module="ADB" ver="3" env="s" zone="t10dev" booking="Y" type="S" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="function.adbt540_01_xmdm_count" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adbt540_01_xmdm_count(p_control)
+   DEFINE p_control    LIKE type_t.chr5   
+   DEFINE l_n     LIKE type_t.num5
+   
+   LET l_n = 0
+   IF p_control = '1' THEN
+      SELECT COUNT(xmdmseq1) INTO l_n
+        FROM xmdm_t
+       WHERE xmdment = g_enterprise
+         AND xmdmdocno = g_xmdl.xmdldocno
+         AND xmdmseq = g_xmdl.xmdlseq
+   ELSE #出通單
+      SELECT COUNT(xmdiseq1) INTO l_n
+        FROM xmdi_t
+       WHERE xmdient = g_enterprise
+         AND xmdidocno = g_xmdl.xmdldocno
+         AND xmdiseq = g_xmdl.xmdlseq
+   END IF
+      
+   IF l_n = 0 THEN
+      RETURN FALSE
+   END IF
+   RETURN TRUE
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt540_01_insert_temp_table" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adbt540_01_insert_temp_table()
+   DEFINE l_sql        STRING
+   DEFINE l_xmdm       type_g_xmdm_data
+   DEFINE l_num        LIKE type_t.num5
+   DEFINE r_success    LIKE type_t.num5
+   
+   LET r_success = TRUE
+   
+   LET l_sql = "SELECT DISTINCT inag001,inag002,inag004,inag005,inag006,inag007",
+               "  FROM inag_t",
+               " WHERE inagent = ",g_enterprise,
+               "   AND inagsite = '",g_xmdl.xmdlsite,"'",
+               "   AND inag001 = '",g_xmdl.xmdl008,"'",
+               "   AND inag002 = '",g_xmdl.xmdl009,"'",
+               "   AND inag003 = ' '",
+               "   AND inag007 = '",g_xmdl.imaf053,"'"
+   PREPARE adbt540_01_temp_pre FROM l_sql
+   DECLARE adbt540_01_temp_cs CURSOR FOR adbt540_01_temp_pre
+   
+   LET l_num = 0
+
+   INITIALIZE l_xmdm.* TO NULL
+   
+   LET l_xmdm.xmdment = g_enterprise
+   LET l_xmdm.xmdmsite = g_xmdl.xmdlsite
+   LET l_xmdm.xmdmdocno = g_xmdl.xmdldocno
+   LET l_xmdm.xmdmseq = g_xmdl.xmdlseq
+   LET l_xmdm.xmdmseq1 = ''
+   LET l_xmdm.xmdm003 = g_xmdl.xmdl011
+   LET l_xmdm.xmdm004 = g_xmdl.xmdl012
+   LET l_xmdm.xmdm009 = 0                #預設出貨數量
+   LET l_xmdm.xmdm010 = g_xmdl.xmdl019
+   LET l_xmdm.xmdm012 = ''
+   LET l_xmdm.xmdm013 = ''
+   LET l_xmdm.xmdm014 = ''
+   LET l_xmdm.xmdm031 = ''
+   LET l_xmdm.xmdm032 = ''
+   
+   IF NOT cl_null(g_xmdl.xmdl020) THEN
+      LET l_xmdm.xmdm011 = 0                #預設參考數量
+   END IF
+   
+   FOREACH adbt540_01_temp_cs INTO l_xmdm.xmdm001,l_xmdm.xmdm002,l_xmdm.xmdm005,
+                                   l_xmdm.xmdm006,l_xmdm.xmdm007,l_xmdm.xmdm008,
+                                   l_xmdm.xmdm010,l_xmdm.xmdm011
+   
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+
+      LET l_num = l_num + 1
+      LET l_xmdm.xmdmseq1 = l_num
+      
+      INSERT INTO adbt540_01_temp(xmdment,xmdmsite,xmdmdocno,xmdmseq,xmdmseq1,
+                                  xmdm001,xmdm002,xmdm003,xmdm004,xmdm005,
+                                  xmdm006,xmdm007,xmdm008,xmdm009,xmdm010,
+                                  xmdm011,xmdm012,xmdm013,xmdm014,xmdm031,
+                                  xmdm032)
+           VALUES(l_xmdm.xmdment,l_xmdm.xmdmsite,l_xmdm.xmdmdocno,l_xmdm.xmdmseq,l_xmdm.xmdmseq1,
+                  l_xmdm.xmdm001,l_xmdm.xmdm002,l_xmdm.xmdm003,l_xmdm.xmdm004,l_xmdm.xmdm005,
+                  l_xmdm.xmdm006,l_xmdm.xmdm007,l_xmdm.xmdm008,l_xmdm.xmdm009,l_xmdm.xmdm010,
+                  l_xmdm.xmdm011,l_xmdm.xmdm012,l_xmdm.xmdm013,l_xmdm.xmdm014,l_xmdm.xmdm031,
+                  l_xmdm.xmdm032)
+                  
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF                  
+   END FOREACH   
+   
+   IF r_success AND
+      l_num = 0 THEN   #無符合之庫儲批資料
+      CALL cl_err('','axm-00165',1)         
+      LET r_success = FALSE
+   END IF
+   
+   CLOSE adbt540_01_temp_cs
+   FREE adbt540_01_temp_pre
+   
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt540_01_display_xmdl" order="3" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adbt540_01_display_xmdl()
+   DEFINE l_imaal003   LIKE imaal_t.imaal003
+   DEFINE l_imaal004   LIKE imaal_t.imaal004
+   DEFINE l_oocal003   LIKE oocal_t.oocal003
+   
+   DISPLAY BY NAME g_xmdl.xmdlseq
+   DISPLAY BY NAME g_xmdl.xmdl008
+   DISPLAY BY NAME g_xmdl.xmdl009
+   DISPLAY BY NAME g_xmdl.xmdl011
+   DISPLAY BY NAME g_xmdl.xmdl012
+   DISPLAY BY NAME g_xmdl.xmdl017
+   DISPLAY BY NAME g_xmdl.xmdl018
+   DISPLAY BY NAME g_xmdl.xmdl019
+   DISPLAY BY NAME g_xmdl.xmdl020
+   DISPLAY BY NAME g_xmdl.xmdl204
+   DISPLAY BY NAME g_xmdl.xmdl205
+   DISPLAY BY NAME g_xmdl.imaf053
+   DISPLAY BY NAME g_xmdl.xmdl0181
+   
+   #品名、規格desc
+   LET l_imaal003 = ''
+   LET l_imaal004 = ''
+   CALL s_desc_get_item_desc(g_xmdl.xmdl008) RETURNING l_imaal003,l_imaal004
+   DISPLAY l_imaal003 TO FORMONLY.xmdl008_desc
+   DISPLAY l_imaal004 TO FORMONLY.xmdl008_desc1
+   
+   #單位說明
+   LET l_oocal003 = ''
+   CALL s_desc_get_unit_desc(g_xmdl.xmdl017) RETURNING l_oocal003
+   DISPLAY l_oocal003 TO FORMONLY.xmdl017_display
+   
+   #參考單位說明
+   LET l_oocal003 = ''
+   CALL s_desc_get_unit_desc(g_xmdl.xmdl019) RETURNING l_oocal003
+   DISPLAY l_oocal003 TO FORMONLY.xmdl019_display
+   
+   #包裝單位說明
+   LET l_oocal003 = ''
+   CALL s_desc_get_unit_desc(g_xmdl.xmdl204) RETURNING l_oocal003
+   DISPLAY l_oocal003 TO xmdl204_desc
+   
+   #庫存單位說明
+   LET l_oocal003 = ''
+   CALL s_desc_get_unit_desc(g_xmdl.imaf053) RETURNING l_oocal003
+   DISPLAY l_oocal003 TO imaf053_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt540_01_create_temp_table" order="4" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adbt540_01_create_temp_table()
+     
+   CREATE TEMP TABLE adbt540_01_temp
+          (xmdment     LIKE xmdm_t.xmdment,
+           xmdmsite    LIKE xmdm_t.xmdmsite,
+           xmdmdocno   LIKE xmdm_t.xmdmdocno,
+           xmdmseq     LIKE xmdm_t.xmdmseq,
+           xmdmseq1    LIKE xmdm_t.xmdmseq1,
+           xmdm001     LIKE xmdm_t.xmdm001,
+           xmdm002     LIKE xmdm_t.xmdm002,
+           xmdm003     LIKE xmdm_t.xmdm003,
+           xmdm004     LIKE xmdm_t.xmdm004,
+           xmdm005     LIKE xmdm_t.xmdm005,
+           xmdm006     LIKE xmdm_t.xmdm006,
+           xmdm007     LIKE xmdm_t.xmdm007,
+           xmdm008     LIKE xmdm_t.xmdm008,
+           xmdm009     LIKE xmdm_t.xmdm009,
+           xmdm010     LIKE xmdm_t.xmdm010,
+           xmdm011     LIKE xmdm_t.xmdm011,
+           xmdm012     LIKE xmdm_t.xmdm012,
+           xmdm013     LIKE xmdm_t.xmdm013,
+           xmdm014     LIKE xmdm_t.xmdm014,
+           xmdm031     LIKE xmdm_t.xmdm031,
+           xmdm032     LIKE xmdm_t.xmdm032);
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt540_01_insert_temp_table1" order="5" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adbt540_01_insert_temp_table1(p_control)
+   DEFINE p_control    LIKE type_t.chr5  
+   DEFINE l_sql        STRING
+   DEFINE l_xmdm       type_g_xmdm_data
+   DEFINE r_success    LIKE type_t.num5
+   
+   LET r_success = TRUE
+         
+   IF p_control = '1' THEN
+      LET l_sql = "SELECT xmdment,xmdmsite,xmdmdocno,xmdmseq,xmdmseq1,",
+                  "       xmdm001,xmdm002,xmdm003,xmdm004,xmdm005,",
+                  "       xmdm006,xmdm007,xmdm008,xmdm009,xmdm010,",
+                  "       xmdm011,xmdm012,xmdm013,xmdm014,xmdm031,",
+                  "       xmdm032",
+                  "  FROM xmdm_t",
+                  " WHERE xmdment = ",g_enterprise,
+                  "   AND xmdmdocno = '",g_xmdl.xmdldocno,"'",
+                  "   AND xmdmseq = '",g_xmdl.xmdlseq,"'"
+   ELSE #出通單
+      LET l_sql = "SELECT xmdient,xmdisite,xmdidocno,xmdiseq,xmdiseq1,",
+                  "       xmdi001,xmdi002,xmdi003,xmdi004,xmdi005,",
+                  "       xmdi006,xmdi007,xmdi008,xmdi009,xmdi010,",
+                  "       xmdi011,xmdi012,'','','',''",
+                  "  FROM xmdi_t",
+                  " WHERE xmdient = ",g_enterprise,
+                  "   AND xmdidocno = '",g_xmdl.xmdldocno,"'",
+                  "   AND xmdiseq = '",g_xmdl.xmdlseq,"'"
+   END IF
+   
+   PREPARE adbt540_01_temp_pre1 FROM l_sql
+   DECLARE adbt540_01_temp_cs1 CURSOR FOR adbt540_01_temp_pre1
+   
+   FOREACH adbt540_01_temp_cs1 INTO l_xmdm.xmdment,l_xmdm.xmdmsite,l_xmdm.xmdmdocno,l_xmdm.xmdmseq,l_xmdm.xmdmseq1,
+                                    l_xmdm.xmdm001,l_xmdm.xmdm002,l_xmdm.xmdm003,l_xmdm.xmdm004,l_xmdm.xmdm005,
+                                    l_xmdm.xmdm006,l_xmdm.xmdm007,l_xmdm.xmdm008,l_xmdm.xmdm009,l_xmdm.xmdm010,
+                                    l_xmdm.xmdm011,l_xmdm.xmdm012,l_xmdm.xmdm013,l_xmdm.xmdm014,l_xmdm.xmdm031,
+                                    l_xmdm.xmdm032
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+
+      INSERT INTO adbt540_01_temp(xmdment,xmdmsite,xmdmdocno,xmdmseq,xmdmseq1,
+                                  xmdm001,xmdm002,xmdm003,xmdm004,xmdm005,
+                                  xmdm006,xmdm007,xmdm008,xmdm009,xmdm010,
+                                  xmdm011,xmdm012,xmdm013,xmdm014,xmdm031,
+                                  xmdm032)
+           VALUES(l_xmdm.xmdment,l_xmdm.xmdmsite,l_xmdm.xmdmdocno,l_xmdm.xmdmseq,l_xmdm.xmdmseq1,
+                  l_xmdm.xmdm001,l_xmdm.xmdm002,l_xmdm.xmdm003,l_xmdm.xmdm004,l_xmdm.xmdm005,
+                  l_xmdm.xmdm006,l_xmdm.xmdm007,l_xmdm.xmdm008,l_xmdm.xmdm009,l_xmdm.xmdm010,
+                  l_xmdm.xmdm011,l_xmdm.xmdm012,l_xmdm.xmdm013,l_xmdm.xmdm014,l_xmdm.xmdm031,
+                  l_xmdm.xmdm032)
+                  
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF                  
+   END FOREACH
+   
+   CLOSE adbt540_01_temp_cs1
+   FREE adbt540_01_temp_pre1 
+   
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt540_01_b_fill" order="6" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adbt540_01_b_fill()
+   DEFINE l_sql        STRING
+   
+   LET l_sql = "SELECT xmdmdocno,xmdmseq,xmdmseq1,",
+               "       xmdm001,xmdm002,xmdm003,xmdm004,xmdm005,",
+               "       xmdm006,xmdm007,xmdm008,xmdm009,xmdm010,",
+               "       xmdm011",
+               "  FROM adbt540_01_temp",
+               " WHERE xmdment = ",g_enterprise,
+               "   AND xmdmsite = '",g_xmdl.xmdlsite,"'",
+               "   AND xmdmdocno = '",g_xmdl.xmdldocno,"'",
+               "   AND xmdmseq = '",g_xmdl.xmdlseq,"'"
+
+   PREPARE adbt540_01_b_pre FROM l_sql
+   DECLARE adbt540_01_b_cs CURSOR FOR adbt540_01_b_pre
+
+   CALL g_xmdm_d.clear()
+   LET l_ac = 1
+   FOREACH adbt540_01_b_cs INTO g_xmdm_d[l_ac].xmdmdocno,g_xmdm_d[l_ac].xmdmseq,
+                                g_xmdm_d[l_ac].xmdmseq1,g_xmdm_d[l_ac].xmdm001,g_xmdm_d[l_ac].xmdm002,g_xmdm_d[l_ac].xmdm003,
+                                g_xmdm_d[l_ac].xmdm004,g_xmdm_d[l_ac].xmdm005,g_xmdm_d[l_ac].xmdm006,g_xmdm_d[l_ac].xmdm007,
+                                g_xmdm_d[l_ac].xmdm008,g_xmdm_d[l_ac].xmdm009,g_xmdm_d[l_ac].xmdm010,g_xmdm_d[l_ac].xmdm011
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+
+      CALL adbt540_01_xmdm005_ref()
+      CALL adbt540_01_xmdm006_ref()
+      CALL adbt540_01_xmdm008_ref()
+      CALL adbt540_01_xmdm010_ref()
+      CALL adbt540_01_inan010_display()
+      CALL adbt540_01_inag008_display()
+      CALL adbt540_01_ready_display()
+
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   CALL g_xmdm_d.deleteElement(g_xmdm_d.getLength())
+   LET g_rec_b = l_ac - 1
+   DISPLAY g_rec_b TO FORMONLY.cnt
+   CLOSE adbt540_01_b_cs
+   FREE adbt540_01_b_pre
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt540_01_drop_temp_table" order="7" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adbt540_01_drop_temp_table()
+   DROP TABLE adbt540_01_temp
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt540_01_xmdm005_ref" order="8" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adbt540_01_xmdm005_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xmdl.xmdlsite
+   LET g_ref_fields[2] = g_xmdm_d[l_ac].xmdm005
+   CALL ap_ref_array2(g_ref_fields,"SELECT inaa002 FROM inaa_t WHERE inaaent='"||g_enterprise||"' AND inaasite=? AND inaa001=? ","") RETURNING g_rtn_fields
+   LET g_xmdm_d[l_ac].xmdm005_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xmdm_d[l_ac].xmdm005_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt540_01_xmdm005_chk" order="9" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adbt540_01_xmdm005_chk()
+   IF NOT cl_null(g_xmdm_d[l_ac].xmdm005) THEN
+      IF g_xmdm_d[l_ac].xmdm005 != g_xmdm_d_t.xmdm005 OR g_xmdm_d_t.xmdm005 IS NULL THEN
+      
+         #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+         INITIALIZE g_chkparam.* TO NULL
+         IF cl_null(g_xmdm_d[l_ac].xmdm002) THEN LET g_xmdm_d[l_ac].xmdm002 = ' ' END IF
+         #設定g_chkparam.*的參數
+         LET g_chkparam.arg1 = g_xmdl.xmdlsite
+         LET g_chkparam.arg2 = g_xmdm_d[l_ac].xmdm001
+         LET g_chkparam.arg3 = g_xmdm_d[l_ac].xmdm002
+         LET g_chkparam.arg4 = g_xmdm_d[l_ac].xmdm005
+                     
+         #呼叫檢查存在並帶值的library
+         IF NOT cl_chk_exist("v_inag004_1") THEN
+            RETURN FALSE
+         END IF
+      END IF
+   END IF
+   RETURN TRUE
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt540_01_xmdi_count" order="10" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adbt540_01_xmdi_count(p_xmdmdocno,p_xmdmseq,p_control)
+   DEFINE p_xmdmdocno  LIKE xmdm_t.xmdmdocno
+   DEFINE p_xmdmseq    LIKE xmdm_t.xmdmseq
+   DEFINE p_control    LIKE type_t.chr5
+   DEFINE l_n          LIKE type_t.num5
+   
+   LET l_n = 0
+   
+   IF p_control = '1' THEN
+      SELECT COUNT(xmdiseq) INTO l_n
+        FROM xmdi_t,xmdl_t
+       WHERE xmdient = xmdlent
+         AND xmdisite = xmdlsite
+         AND xmdidocno = xmdl001
+         AND xmdiseq = xmdl002
+         AND xmdldocno = p_xmdmdocno
+         AND xmdlseq = p_xmdmseq
+   END IF
+   
+   IF l_n = 0 THEN
+      RETURN FALSE
+   END IF      
+   RETURN TRUE
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt540_01_xmdm006_ref" order="11" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adbt540_01_xmdm006_ref()
+INITIALIZE g_ref_fields TO NULL
+   IF cl_null(g_xmdm_d[l_ac].xmdm006) THEN  #儲位
+      LET g_xmdm_d[l_ac].xmdm006 = ' '
+   END IF
+
+   LET g_ref_fields[1] = g_xmdl.xmdlsite
+   LET g_ref_fields[2] = g_xmdm_d[l_ac].xmdm005
+   LET g_ref_fields[3] = g_xmdm_d[l_ac].xmdm006
+   CALL ap_ref_array2(g_ref_fields,"SELECT inab003 FROM inab_t WHERE inabent='"||g_enterprise||"' AND inabsite=? AND inab001=? AND inab002=? ","") RETURNING g_rtn_fields
+   LET g_xmdm_d[l_ac].xmdm006_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xmdm_d[l_ac].xmdm006_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt540_01_xmdm006_chk" order="12" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adbt540_01_xmdm006_chk()
+   IF NOT cl_null(g_xmdm_d[l_ac].xmdm006) THEN
+   
+      IF cl_null(g_xmdm_d[l_ac].xmdm005) THEN
+         CALL cl_err('','sub-00126',1)
+         RETURN FALSE
+      END IF      
+      IF cl_null(g_xmdm_d[l_ac].xmdm002) THEN LET g_xmdm_d[l_ac].xmdm002 = ' ' END IF
+      #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+      INITIALIZE g_chkparam.* TO NULL
+               
+      #設定g_chkparam.*的參數
+      LET g_chkparam.arg1 = g_xmdl.xmdlsite
+      LET g_chkparam.arg2 = g_xmdm_d[l_ac].xmdm001
+      LET g_chkparam.arg3 = g_xmdm_d[l_ac].xmdm002
+      LET g_chkparam.arg4 = g_xmdm_d[l_ac].xmdm005
+      LET g_chkparam.arg5 = g_xmdm_d[l_ac].xmdm006 
+                  
+      #呼叫檢查存在並帶值的library
+      IF NOT cl_chk_exist("v_inag005_1") THEN
+         RETURN FALSE
+      END IF
+   END IF
+   RETURN TRUE
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt540_01_xmdm007_chk" order="13" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adbt540_01_xmdm007_chk()
+   
+   IF NOT cl_null(g_xmdm_d[l_ac].xmdm007) THEN 
+   
+      IF cl_null(g_xmdm_d[l_ac].xmdm005) THEN
+         CALL cl_err('','sub-00126',1)
+         RETURN FALSE
+      END IF
+         
+      #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+      INITIALIZE g_chkparam.* TO NULL
+      IF cl_null(g_xmdm_d[l_ac].xmdm002) THEN LET g_xmdm_d[l_ac].xmdm002 = ' ' END IF
+      #設定g_chkparam.*的參數
+      LET g_chkparam.arg1 = g_xmdl.xmdlsite
+      LET g_chkparam.arg2 = g_xmdm_d[l_ac].xmdm001
+      LET g_chkparam.arg3 = g_xmdm_d[l_ac].xmdm002
+      LET g_chkparam.arg4 = g_xmdm_d[l_ac].xmdm005
+      LET g_chkparam.arg5 = g_xmdm_d[l_ac].xmdm006
+      LET g_chkparam.arg6 = g_xmdm_d[l_ac].xmdm007
+                  
+      #呼叫檢查存在並帶值的library
+      IF NOT cl_chk_exist("v_inag006_1") THEN
+         RETURN FALSE
+      END IF
+      
+   END IF
+   RETURN TRUE
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt540_01_set_entry" order="14" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adbt540_01_set_entry()
+   CALL cl_set_comp_entry("xmdm005,xmdm006,xmdm007",TRUE)
+   CALL cl_set_comp_entry("xmdm011",TRUE)
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt540_01_set_no_entry" order="15" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adbt540_01_set_no_entry(p_control)
+   DEFINE p_control    LIKE type_t.chr5
+   
+   IF adbt540_01_xmdi_count(g_xmdm_d[l_ac].xmdmdocno,g_xmdm_d[l_ac].xmdmseq,p_control) THEN  #來源為出通單
+      CALL cl_set_comp_entry("xmdm005,xmdm006,xmdm007",FALSE)
+   END IF
+   
+   IF NOT adbt540_01_imaf061_chk() THEN
+      CALL cl_set_comp_entry("xmdm007",FALSE)
+   END IF
+   
+   IF cl_null(g_xmdl.xmdl020) THEN
+      CALL cl_set_comp_entry("xmdm011",FALSE)
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt540_01_xmdm008_ref" order="16" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adbt540_01_xmdm008_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xmdm_d[l_ac].xmdm008
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xmdm_d[l_ac].xmdm008_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xmdm_d[l_ac].xmdm008_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt540_01_imaf061_chk" order="17" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adbt540_01_imaf061_chk()
+   DEFINE l_imaf061    LIKE imaf_t.imaf061
+   
+   LET l_imaf061 = ''   
+   SELECT imaf061 INTO l_imaf061
+     FROM imaf_t
+    WHERE imafent = g_enterprise
+      AND imafsite = g_xmdl.xmdlsite
+      AND imaf001 = g_xmdm_d[l_ac].xmdm001
+      
+   IF l_imaf061 <> '1' AND
+      l_imaf061 <> '3' THEN   #[T:料件據點進銷存檔].[C:批號控管]=1或3時才可輸入
+         RETURN FALSE
+   END IF
+   
+   RETURN TRUE
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt540_01_inan010_display" order="18" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adbt540_01_inan010_display()
+   DEFINE l_inan010     LIKE inan_t.inan010
+   
+   LET l_inan010 = 0
+   
+   IF NOT cl_null(g_xmdm_d[l_ac].xmdm001) AND
+      NOT cl_null(g_xmdm_d[l_ac].xmdm002) AND
+      NOT cl_null(g_xmdm_d[l_ac].xmdm005) AND
+      NOT cl_null(g_xmdm_d[l_ac].xmdm006) AND
+      NOT cl_null(g_xmdm_d[l_ac].xmdm007) AND
+      NOT cl_null(g_xmdm_d[l_ac].xmdm008) THEN
+      
+      SELECT SUM(inan010) INTO l_inan010
+        FROM inan_t
+       WHERE inanent = g_enterprise
+         AND inansite = g_xmdl.xmdlsite
+         AND inan001 = g_xmdm_d[l_ac].xmdm001
+         AND inan002 = g_xmdm_d[l_ac].xmdm002
+         AND inan004 = g_xmdm_d[l_ac].xmdm005
+         AND inan005 = g_xmdm_d[l_ac].xmdm006
+         AND inan006 = g_xmdm_d[l_ac].xmdm007
+         AND inan007 = g_xmdm_d[l_ac].xmdm008
+   END IF
+   
+   IF cl_null(l_inan010) THEN
+      LET l_inan010 = 0
+   END IF
+   
+   LET g_xmdm_d[l_ac].inan010 = l_inan010
+   DISPLAY BY NAME g_xmdm_d[l_ac].inan010
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt540_01_seq1_max" order="19" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 找單身項序最大值+1
+# Memo...........:
+# Usage..........: CALL adbt540_01_seq1_max(p_xmdldocno,p_xmdlseq,p_control)
+#                  RETURNING r_xmdmseq1
+# Input parameter: p_xmdldocno    單據單號
+#                : p_xmdlseq      單身項次
+#                : p_control      1為axmt540，2為axmt520
+# Return code....: r_xmdmseq1     項序最大值+1
+#                :
+# Date & Author..: 140327 By earl
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION adbt540_01_seq1_max(p_xmdldocno,p_xmdlseq,p_control)
+   DEFINE p_xmdldocno     LIKE xmdl_t.xmdldocno
+   DEFINE p_xmdlseq       LIKE xmdl_t.xmdlseq
+   DEFINE p_control       LIKE type_t.chr5
+   DEFINE r_xmdmseq1      LIKE xmdm_t.xmdmseq1
+
+   LET r_xmdmseq1 = ''
+
+   IF p_control = '1' THEN   #出貨單
+      SELECT MAX(xmdmseq1) + 1 INTO r_xmdmseq1
+        FROM xmdm_t
+       WHERE xmdment = g_enterprise
+         AND xmdmsite = g_xmdl.xmdlsite
+         AND xmdmdocno = p_xmdldocno
+         AND xmdmseq = p_xmdlseq
+   ELSE  #出通單
+      SELECT MAX(xmdiseq1) + 1 INTO r_xmdmseq1
+        FROM xmdi_t
+       WHERE xmdient = g_enterprise
+         AND xmdisite = g_xmdl.xmdlsite
+         AND xmdidocno = p_xmdldocno
+         AND xmdiseq = p_xmdlseq
+   END IF   
+   
+   IF cl_null(r_xmdmseq1) THEN
+      LET r_xmdmseq1 = 1
+   END IF
+   
+   RETURN r_xmdmseq1
+         
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt540_01_xmdm_t_insert" order="20" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adbt540_01_xmdm_t_insert(p_control)
+   DEFINE p_control    LIKE type_t.chr5
+   DEFINE l_sql        STRING
+   DEFINE l_xmdm       type_g_xmdm_data   
+   DEFINE r_success    LIKE type_t.num5
+   
+   LET r_success = TRUE
+   
+   DELETE FROM xmdm_t
+    WHERE xmdment = g_enterprise
+      AND xmdmsite = g_xmdl.xmdlsite
+      AND xmdmdocno = g_xmdl.xmdldocno
+      AND xmdmseq = g_xmdl.xmdlseq
+          
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('',SQLCA.sqlcode,1)
+      LET r_success = FALSE
+      RETURN r_success
+   END IF   
+   
+   LET l_sql = "SELECT xmdment,xmdmsite,xmdmdocno,xmdmseq,xmdmseq1,",
+               "       xmdm001,xmdm002,xmdm003,xmdm004,xmdm005,",
+               "       xmdm006,xmdm007,xmdm008,xmdm009,xmdm010,",
+               "       xmdm011,xmdm012,xmdm013,xmdm014,xmdm031,",
+               "       xmdm032",
+               "  FROM adbt540_01_temp",
+               " WHERE xmdment = ",g_enterprise,
+               "   AND xmdmsite = '",g_xmdl.xmdlsite,"'",
+               "   AND xmdmdocno = '",g_xmdl.xmdldocno,"'",
+               "   AND xmdmseq = '",g_xmdl.xmdlseq,"'"
+   PREPARE adbt540_01_pre1 FROM l_sql
+   DECLARE adbt540_01_cs1 CURSOR FOR adbt540_01_pre1   
+   
+   FOREACH adbt540_01_cs1 INTO l_xmdm.xmdment,l_xmdm.xmdmsite,l_xmdm.xmdmdocno,l_xmdm.xmdmseq,l_xmdm.xmdmseq1,
+                               l_xmdm.xmdm001,l_xmdm.xmdm002,l_xmdm.xmdm003,l_xmdm.xmdm004,l_xmdm.xmdm005,
+                               l_xmdm.xmdm006,l_xmdm.xmdm007,l_xmdm.xmdm008,l_xmdm.xmdm009,l_xmdm.xmdm010,
+                               l_xmdm.xmdm011,l_xmdm.xmdm012,l_xmdm.xmdm013,l_xmdm.xmdm014,l_xmdm.xmdm031,
+                               l_xmdm.xmdm032
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      IF cl_null(l_xmdm.xmdm009) OR 
+         l_xmdm.xmdm009 = 0 THEN
+         CONTINUE FOREACH
+      END IF
+
+      LET l_xmdm.xmdment = g_enterprise
+      LET l_xmdm.xmdmsite = g_xmdl.xmdlsite
+      
+      CALL adbt540_01_seq1_max(l_xmdm.xmdmdocno,l_xmdm.xmdmseq,p_control) RETURNING l_xmdm.xmdmseq1               
+      
+      IF p_control = '1' THEN      
+         INSERT INTO xmdm_t(xmdment,xmdmsite,xmdmdocno,xmdmseq,xmdmseq1,
+                            xmdm001,xmdm002,xmdm003,xmdm004,xmdm005,
+                            xmdm006,xmdm007,xmdm008,xmdm009,xmdm010,
+                            xmdm011,xmdm012,xmdm013,xmdm014,xmdm031,
+                            xmdm032)
+              VALUES (l_xmdm.xmdment,l_xmdm.xmdmsite,l_xmdm.xmdmdocno,l_xmdm.xmdmseq,l_xmdm.xmdmseq1,
+                      l_xmdm.xmdm001,l_xmdm.xmdm002,l_xmdm.xmdm003,l_xmdm.xmdm004,l_xmdm.xmdm005,
+                      l_xmdm.xmdm006,l_xmdm.xmdm007,l_xmdm.xmdm008,l_xmdm.xmdm009,l_xmdm.xmdm010,
+                      l_xmdm.xmdm011,l_xmdm.xmdm012,l_xmdm.xmdm013,l_xmdm.xmdm014,l_xmdm.xmdm031,
+                      l_xmdm.xmdm032)
+      ELSE #出通單
+         INSERT INTO xmdi_t(xmdient,xmdisite,xmdidocno,xmdiseq,xmdiseq1,
+                            xmdi001,xmdi002, xmdi003,  xmdi004,xmdi005,
+                            xmdi006,xmdi007, xmdi008,  xmdi009,xmdi010,
+                            xmdi011,xmdi012)
+              VALUES (l_xmdm.xmdment,l_xmdm.xmdmsite,l_xmdm.xmdmdocno,l_xmdm.xmdmseq,l_xmdm.xmdmseq1,
+                      l_xmdm.xmdm001,l_xmdm.xmdm002,l_xmdm.xmdm003,l_xmdm.xmdm004,l_xmdm.xmdm005,
+                      l_xmdm.xmdm006,l_xmdm.xmdm007,l_xmdm.xmdm008,l_xmdm.xmdm009,l_xmdm.xmdm010,
+                      l_xmdm.xmdm011,l_xmdm.xmdm012)
+      END IF
+      
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+   END FOREACH
+
+   CLOSE adbt540_01_cs1
+   FREE adbt540_01_pre1
+
+   RETURN r_success
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt540_01_ready_display" order="21" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adbt540_01_ready_display()
+   DEFINE l_ready    LIKE type_t.num5
+   
+   LET l_ready = 0
+   
+   IF NOT cl_null(g_xmdm_d[l_ac].inag008) THEN
+      LET l_ready = l_ready + g_xmdm_d[l_ac].inag008
+   END IF
+   
+   IF NOT cl_null(g_xmdm_d[l_ac].inan010) THEN
+      LET l_ready = l_ready - g_xmdm_d[l_ac].inan010
+   END IF
+   
+   LET g_xmdm_d[l_ac].ready = l_ready
+   DISPLAY BY NAME g_xmdm_d[l_ac].ready
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt540_01_inag008_display" order="22" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adbt540_01_inag008_display()
+   DEFINE l_inag008    LIKE inag_t.inag008
+   
+   #可能為Null的欄位
+   IF cl_null(g_xmdm_d[l_ac].xmdm002) THEN  #產品特徵
+      LET g_xmdm_d[l_ac].xmdm002 = ' '
+   END IF
+   IF cl_null(g_xmdm_d[l_ac].xmdm006) THEN  #儲位
+      LET g_xmdm_d[l_ac].xmdm006 = ' '
+   END IF
+   IF cl_null(g_xmdm_d[l_ac].xmdm007) THEN  #批號
+      LET g_xmdm_d[l_ac].xmdm007 = ' '
+   END IF
+   
+   LET l_inag008 = 0
+         
+   SELECT SUM(inag008) INTO l_inag008
+     FROM inag_t
+    WHERE inagent = g_enterprise
+      AND inagsite = g_xmdl.xmdlsite
+      AND inag001 = g_xmdm_d[l_ac].xmdm001
+      AND inag002 = g_xmdm_d[l_ac].xmdm002
+      AND inag003 = ' '
+      AND inag004 = g_xmdm_d[l_ac].xmdm005
+      AND inag005 = g_xmdm_d[l_ac].xmdm006
+      AND inag006 = g_xmdm_d[l_ac].xmdm007
+      AND inag007 = g_xmdm_d[l_ac].xmdm008
+   
+   IF cl_null(l_inag008) THEN
+      LET l_inag008 = 0
+   END IF
+      
+   LET g_xmdm_d[l_ac].inag008 = l_inag008
+   DISPLAY BY NAME g_xmdm_d[l_ac].inag008
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt540_01_xmdh011_chk" order="23" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 檢查出通單是否已為多庫儲批
+# Memo...........:
+# Usage..........: CALL adbt540_01_xmdh011_chk(p_xmdhdocno,p_xmdhseq)
+#                  RETURNING r_success
+# Input parameter: p_xmdhdocno      #出通單號
+#                : p_xmdhseq        #出通單項次
+# Return code....: r_success        #執行結果
+#                : 
+# Date & Author..: 140329 By earl
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION adbt540_01_xmdh011_chk(p_xmdhdocno,p_xmdhseq)
+   DEFINE p_xmdhdocno     LIKE xmdh_t.xmdhdocno
+   DEFINE p_xmdhseq       LIKE xmdh_t.xmdhseq
+   DEFINE l_xmdh011       LIKE xmdh_t.xmdh011
+   DEFINE r_success       LIKE type_t.num5
+
+   LET r_success = TRUE
+
+   IF NOT cl_null(p_xmdhdocno) AND
+      NOT cl_null(p_xmdhseq) THEN
+      
+      LET l_xmdh011 = ''
+      SELECT xmdh011 INTO l_xmdh011
+        FROM xmdh_t  
+       WHERE xmdhent = g_enterprise
+         AND xmdhdocno = p_xmdhdocno
+         AND xmdhseq = p_xmdhseq
+      
+      IF l_xmdh011 = 'Y' THEN
+         LET r_success = FALSE   #不可做更動
+      END IF
+   END IF
+
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt540_01_xmdm010_ref" order="24" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION adbt540_01_xmdm010_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xmdm_d[l_ac].xmdm010
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xmdm_d[l_ac].xmdm010_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xmdm_d[l_ac].xmdm010_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.adbt540_01_inag_chk" order="25" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 確認庫儲批是否重複
+# Memo...........:
+# Usage..........: CALL adbt540_01_inag_chk()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/05/22 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION adbt540_01_inag_chk()
+DEFINE l_cnt      LIKE type_t.num5
+
+   LET g_errno = ''
+   IF cl_null(g_xmdm_d[l_ac].xmdm006) THEN LET g_xmdm_d[l_ac].xmdm006 = ' ' END IF
+   IF cl_null(g_xmdm_d[l_ac].xmdm007) THEN LET g_xmdm_d[l_ac].xmdm007 = ' ' END IF
+   
+   #檢查庫儲批是否有輸入重複
+   LET l_cnt = 0
+   SELECT COUNT(*) INTO l_cnt
+     FROM adbt540_01_temp
+    WHERE xmdment = g_enterprise
+      AND xmdmsite = g_xmdl.xmdlsite
+      AND xmdmdocno = g_xmdl.xmdldocno
+      AND xmdmseq = g_xmdl.xmdlseq
+      AND xmdmseq1 <> g_xmdm_d[l_ac].xmdmseq1
+      AND xmdm005 = g_xmdm_d[l_ac].xmdm005
+      AND xmdm006 = g_xmdm_d[l_ac].xmdm006
+      AND xmdm007 = g_xmdm_d[l_ac].xmdm007
+   IF l_cnt >= 1 THEN
+      LET g_errno = 'adb-00095'
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="global.argv" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#p_control       #呼叫此子程式之程式1.axmt540或axmt541 2.axmt520
+#p_xmdlsite      #發貨組織
+#p_xmdkdocno     #單據單號
+#p_xmdmseq       #項次
+#p_xmdl008       #料件編號
+#p_xmdl009       #產品特徵
+#p_xmdl011       #作業編號
+#p_xmdl012       #製程序
+#p_xmdl017       #出貨單位
+#p_xmdl018       #數量
+#p_xmdl001       #出通單號
+#p_xmdl002       #出通項次
+#p_xmdl019       #參考單位
+#p_xmdl020       #參考數量
+#p_xmdl204       #包裝單位
+#p_xmdl205       #包裝數量]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[ TYPE type_g_xmdm_data      RECORD
+   xmdment   LIKE xmdm_t.xmdment,
+   xmdmsite  LIKE xmdm_t.xmdmsite,
+   xmdmdocno LIKE xmdm_t.xmdmdocno, 
+   xmdmseq   LIKE xmdm_t.xmdmseq, 
+   xmdmseq1  LIKE xmdm_t.xmdmseq1, 
+   xmdm001   LIKE xmdm_t.xmdm001, 
+   xmdm002   LIKE xmdm_t.xmdm002, 
+   xmdm003   LIKE xmdm_t.xmdm003, 
+   xmdm004   LIKE xmdm_t.xmdm004, 
+   xmdm005   LIKE xmdm_t.xmdm005, 
+   xmdm006   LIKE xmdm_t.xmdm006, 
+   xmdm007   LIKE xmdm_t.xmdm007, 
+   xmdm008   LIKE xmdm_t.xmdm008, 
+   xmdm009   LIKE xmdm_t.xmdm009, 
+   xmdm010   LIKE xmdm_t.xmdm010, 
+   xmdm011   LIKE xmdm_t.xmdm011, 
+   xmdm012   LIKE xmdm_t.xmdm012, 
+   xmdm013   LIKE xmdm_t.xmdm013, 
+   xmdm014   LIKE xmdm_t.xmdm014, 
+   xmdm031   LIKE xmdm_t.xmdm031, 
+   xmdm032   LIKE xmdm_t.xmdm032
+       END RECORD
+
+DEFINE g_xmdl    RECORD   #單頭display欄位
+       xmdlsite  LIKE xmdl_t.xmdlsite,    #發貨組織
+       xmdldocno LIKE xmdl_t.xmdldocno,   #單據編號
+       xmdlseq   LIKE xmdl_t.xmdlseq,     #項次
+       xmdl008   LIKE xmdl_t.xmdl008,     #商品編號
+       xmdl009   LIKE xmdl_t.xmdl009,     #產品特徵
+       xmdl011   LIKE xmdl_t.xmdl011,     #作業編號
+       xmdl012   LIKE xmdl_t.xmdl012,     #製程序
+       xmdl017   LIKE xmdl_t.xmdl017,     #出貨單位
+       xmdl018   LIKE xmdl_t.xmdl018,     #數量
+       xmdl001   LIKE xmdl_t.xmdl001,     #出通單號
+       xmdl002   LIKE xmdl_t.xmdl002,     #出通項次
+       xmdl019   LIKE xmdl_t.xmdl019,     #參考單位
+       xmdl020   LIKE xmdl_t.xmdl020,     #參考數量
+       xmdl204   LIKE xmdl_t.xmdl204,     #包裝單位
+       xmdl205   LIKE xmdl_t.xmdl205,     #包裝數量
+       imaf053   LIKE imaf_t.imaf053,     #庫存單位
+       xmdl0181  LIKE xmdl_t.xmdl018      #庫存數量
+                 END RECORD
+]]>
+  </point>
+  <point name="input.a.page1.xmdm001" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.a.page1.xmdm005" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            
+            CALL adbt540_01_xmdm005_ref() 
+            IF NOT adbt540_01_xmdm005_chk() THEN
+               LET g_xmdm_d[l_ac].xmdm005 = g_xmdm_d_t.xmdm005
+               CALL adbt540_01_xmdm005_ref()
+               NEXT FIELD CURRENT
+            END IF            
+            
+            IF NOT adbt540_01_xmdm006_chk() THEN
+               NEXT FIELD xmdm006
+            END IF
+            
+            IF NOT adbt540_01_xmdm007_chk() THEN
+               NEXT FIELD xmdm007
+            END IF
+            
+            CALL adbt540_01_inan010_display()
+            CALL adbt540_01_inag008_display()
+            CALL adbt540_01_ready_display()]]>
+  </point>
+  <point name="input.a.page1.xmdm006" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            
+            CALL adbt540_01_xmdm006_ref()
+            IF NOT adbt540_01_xmdm006_chk() THEN
+               LET g_xmdm_d[l_ac].xmdm006 = g_xmdm_d_t.xmdm006
+               CALL adbt540_01_xmdm006_ref()
+               NEXT FIELD CURRENT
+            END IF
+            
+            IF NOT adbt540_01_xmdm007_chk() THEN
+               NEXT FIELD xmdm007
+            END IF
+            
+            CALL adbt540_01_inan010_display()
+            CALL adbt540_01_inag008_display()
+            CALL adbt540_01_ready_display()]]>
+  </point>
+  <point name="input.a.page1.xmdm007" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            
+            IF NOT adbt540_01_xmdm007_chk() THEN
+               LET g_xmdm_d[l_ac].xmdm007 = g_xmdm_d_t.xmdm007
+               NEXT FIELD CURRENT
+            END IF
+            CALL adbt540_01_inag_chk()
+            IF NOT cl_null(g_errno) THEN
+               LET g_xmdm_d[l_ac].xmdm006 = ''
+               LET g_xmdm_d[l_ac].xmdm007 = ''
+               LET g_xmdm_d[l_ac].xmdm006_desc = ''
+               CALL cl_err('',g_errno,1)
+               NEXT FIELD xmdm005
+            END IF
+            CALL adbt540_01_inan010_display()
+            CALL adbt540_01_inag008_display()
+            CALL adbt540_01_ready_display()]]>
+  </point>
+  <point name="input.a.page1.xmdm008" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL adbt540_01_xmdm008_ref()
+            CALL adbt540_01_inan010_display()
+            CALL adbt540_01_inag008_display()
+            CALL adbt540_01_ready_display()]]>
+  </point>
+  <point name="input.a.page1.xmdm009" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            
+            IF NOT cl_null(g_xmdm_d[l_ac].xmdm009) THEN 
+               IF g_xmdm_d[l_ac].xmdm009 <> g_xmdm_d_t.xmdm009 THEN
+                  CALL cl_get_para(g_enterprise,g_xmdl.xmdlsite,'D-BAS-0070') RETURNING l_para_data  #出庫單據考慮在揀量 
+                  IF l_para_data = 'Y' THEN
+                     IF g_xmdm_d[l_ac].xmdm009 > g_xmdm_d[l_ac].ready THEN
+                        CALL cl_err('','axm-00172',1)
+                        LET g_xmdm_d[l_ac].xmdm009 = g_xmdm_d_t.xmdm009
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+                  
+                  LET l_xmdm009 = 0
+                   
+                   SELECT SUM(xmdm009) INTO l_xmdm009
+                     FROM adbt540_01_temp
+                    WHERE xmdment = g_enterprise
+                      AND xmdmdocno = g_xmdl.xmdldocno
+                      AND xmdmseq = g_xmdl.xmdlseq
+                      AND xmdmseq1 <> g_xmdm_d[l_ac].xmdmseq1
+                   
+                   IF cl_null(l_xmdm009) THEN LET l_xmdm009 = 0 END IF
+                   IF cl_null(g_xmdl.xmdl0181) THEN LET g_xmdl.xmdl0181 = 0 END IF
+                   LET l_xmdm009 = l_xmdm009 + g_xmdm_d[l_ac].xmdm009
+                   IF cl_null(l_xmdm009) THEN LET l_xmdm009 = 0 END IF
+                       
+                   IF l_xmdm009 > g_xmdl.xmdl0181 THEN
+                      #CALL cl_err('','axm-00196',1)
+                      LET g_xmdm_d[l_ac].xmdm009 = g_xmdm_d_t.xmdm009
+                      CALL cl_err_msg('','adb-00094',g_xmdl.xmdl0181 ||'|'|| g_xmdl.xmdlseq ||'|'|| l_xmdm009,1)
+                      NEXT FIELD xmdm009
+                   END IF
+                   
+               END IF
+            END IF
+            
+            #取位
+            CALL s_aooi250_take_decimals(g_xmdm_d[l_ac].xmdm008,g_xmdm_d[l_ac].xmdm009) RETURNING l_success,g_xmdm_d[l_ac].xmdm009
+                                    
+            #推算參考數量
+            CALL s_aooi250_convert_qty(g_xmdm_d[l_ac].xmdm001,g_xmdm_d[l_ac].xmdm008,g_xmdm_d[l_ac].xmdm010,g_xmdm_d[l_ac].xmdm009)
+               RETURNING l_success,g_xmdm_d[l_ac].xmdm011
+]]>
+  </point>
+  <point name="input.a.page1.xmdm010" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.a.page1.xmdm011" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xmdm_d[l_ac].xmdm011) THEN                
+               #參考數量取位
+               CALL s_aooi250_take_decimals(g_xmdm_d[l_ac].xmdm010,g_xmdm_d[l_ac].xmdm011) RETURNING l_success,g_xmdm_d[l_ac].xmdm011
+            END IF 
+]]>
+  </point>
+  <point name="input.a.page1.xmdmdocno" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_xmdm_d[g_detail_idx].xmdmdocno IS NOT NULL AND g_xmdm_d[g_detail_idx].xmdmseq IS NOT NULL AND g_xmdm_d[g_detail_idx].xmdmseq1 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdm_d[g_detail_idx].xmdmdocno != g_xmdm_d_t.xmdmdocno OR g_xmdm_d[g_detail_idx].xmdmseq != g_xmdm_d_t.xmdmseq OR g_xmdm_d[g_detail_idx].xmdmseq1 != g_xmdm_d_t.xmdmseq1)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdm_t WHERE "||"xmdment = '" ||g_enterprise|| "' AND "||"xmdmdocno = '"||g_xmdm_d[g_detail_idx].xmdmdocno ||"' AND "|| "xmdmseq = '"||g_xmdm_d[g_detail_idx].xmdmseq ||"' AND "|| "xmdmseq1 = '"||g_xmdm_d[g_detail_idx].xmdmseq1 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.xmdmseq" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_xmdm_d[g_detail_idx].xmdmdocno IS NOT NULL AND g_xmdm_d[g_detail_idx].xmdmseq IS NOT NULL AND g_xmdm_d[g_detail_idx].xmdmseq1 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdm_d[g_detail_idx].xmdmdocno != g_xmdm_d_t.xmdmdocno OR g_xmdm_d[g_detail_idx].xmdmseq != g_xmdm_d_t.xmdmseq OR g_xmdm_d[g_detail_idx].xmdmseq1 != g_xmdm_d_t.xmdmseq1)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdm_t WHERE "||"xmdment = '" ||g_enterprise|| "' AND "||"xmdmdocno = '"||g_xmdm_d[g_detail_idx].xmdmdocno ||"' AND "|| "xmdmseq = '"||g_xmdm_d[g_detail_idx].xmdmseq ||"' AND "|| "xmdmseq1 = '"||g_xmdm_d[g_detail_idx].xmdmseq1 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.xmdmseq1" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_xmdm_d[l_ac].xmdmseq1) THEN 
+            END IF 
+
+            #此段落由子樣板a05產生
+            IF  g_xmdm_d[g_detail_idx].xmdmdocno IS NOT NULL AND g_xmdm_d[g_detail_idx].xmdmseq IS NOT NULL AND g_xmdm_d[g_detail_idx].xmdmseq1 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmdm_d[g_detail_idx].xmdmdocno != g_xmdm_d_t.xmdmdocno OR g_xmdm_d[g_detail_idx].xmdmseq != g_xmdm_d_t.xmdmseq OR g_xmdm_d[g_detail_idx].xmdmseq1 != g_xmdm_d_t.xmdmseq1)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmdm_t WHERE "||"xmdment = '" ||g_enterprise|| "' AND "||"xmdmdocno = '"||g_xmdm_d[g_detail_idx].xmdmdocno ||"' AND "|| "xmdmseq = '"||g_xmdm_d[g_detail_idx].xmdmseq ||"' AND "|| "xmdmseq1 = '"||g_xmdm_d[g_detail_idx].xmdmseq1 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.after_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            
+            LET l_xmdm009 = 0
+            LET l_xmdm011 = 0
+            
+            SELECT SUM(xmdm009),SUM(xmdm011) INTO l_xmdm009,l_xmdm011
+              FROM adbt540_01_temp
+             WHERE xmdment = g_enterprise
+               AND xmdmdocno = g_xmdl.xmdldocno
+               AND xmdmseq = g_xmdl.xmdlseq
+               
+            IF cl_null(l_xmdm009) THEN LET l_xmdm009 = 0 END IF
+            IF cl_null(l_xmdm011) THEN LET l_xmdm011 = 0 END IF
+            IF cl_null(g_xmdl.xmdl0181) THEN LET g_xmdl.xmdl0181 = 0 END IF
+            IF cl_null(g_xmdl.xmdl020) THEN LET g_xmdl.xmdl020 = 0 END IF
+                
+            IF l_xmdm009 <> g_xmdl.xmdl0181 THEN
+               #CALL cl_err('','axm-00196',1)
+               CALL cl_err_msg('','adb-00094',g_xmdl.xmdl0181 ||'|'|| g_xmdl.xmdlseq ||'|'|| l_xmdm009,1)
+               NEXT FIELD xmdm009
+            END IF
+            
+            IF l_xmdm011 <> g_xmdl.xmdl020 THEN
+               #CALL cl_err('','axm-00232',1)
+               CALL cl_err_msg('','axm-00232',l_xmdm011 ||'|'|| g_xmdl.xmdlseq ||'|'|| g_xmdl.xmdl020,1)
+               NEXT FIELD xmdm011
+            END IF]]>
+  </point>
+  <point name="input.before_close" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         BEFORE ROW
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            DISPLAY l_ac TO FORMONLY.idx                        
+            
+            IF g_rec_b >= l_ac THEN
+               LET l_cmd='u'
+               LET g_xmdm_d_t.* = g_xmdm_d[l_ac].*  #BACKUP        
+            ELSE
+               LET l_cmd='a'
+            END IF
+            
+            CALL adbt540_01_set_entry()
+            CALL adbt540_01_set_no_entry(p_control)
+            
+            
+         BEFORE INSERT                  
+            LET l_cmd = 'a'
+            INITIALIZE g_xmdm_d_t.* TO NULL
+            INITIALIZE g_xmdm_d[l_ac].* TO NULL
+            LET g_xmdm_d[l_ac].xmdmdocno = g_xmdl.xmdldocno
+            LET g_xmdm_d[l_ac].xmdmseq = g_xmdl.xmdlseq
+            
+            LET g_xmdm_d[l_ac].xmdm001 = g_xmdl.xmdl008
+            LET g_xmdm_d[l_ac].xmdm002 = g_xmdl.xmdl009
+            LET g_xmdm_d[l_ac].xmdm003 = g_xmdl.xmdl011
+            LET g_xmdm_d[l_ac].xmdm004 = g_xmdl.xmdl012
+            
+            SELECT MAX(xmdmseq1)+1 INTO g_xmdm_d[l_ac].xmdmseq1 
+              FROM adbt540_01_temp
+             WHERE xmdment = g_enterprise
+               AND xmdmdocno = g_xmdl.xmdldocno
+               AND xmdmseq = g_xmdl.xmdlseq
+            
+            IF cl_null(g_xmdm_d[l_ac].xmdmseq1) THEN
+               LET g_xmdm_d[l_ac].xmdmseq1 = 1
+            END IF
+            
+            LET g_xmdm_d_t.* = g_xmdm_d[l_ac].*
+            CALL cl_show_fld_cont()
+            
+         AFTER INSERT            
+            IF INT_FLAG THEN
+               CALL cl_err('','9001',1)            
+               LET INT_FLAG = FALSE
+               CANCEL INSERT
+            END IF  
+                    
+            INSERT INTO adbt540_01_temp(xmdment,xmdmsite,xmdmdocno,xmdmseq,xmdmseq1,
+                                        xmdm001,xmdm002,xmdm003,xmdm004,xmdm005,
+                                        xmdm006,xmdm007,xmdm008,xmdm009,xmdm010,
+                                        xmdm011)
+                 VALUES (g_enterprise,g_xmdl.xmdlsite,g_xmdm_d[l_ac].xmdmdocno,g_xmdm_d[l_ac].xmdmseq,g_xmdm_d[l_ac].xmdmseq1,
+                         g_xmdm_d[l_ac].xmdm001,g_xmdm_d[l_ac].xmdm002,g_xmdm_d[l_ac].xmdm003,g_xmdm_d[l_ac].xmdm004,g_xmdm_d[l_ac].xmdm005,
+                         g_xmdm_d[l_ac].xmdm006,g_xmdm_d[l_ac].xmdm007,g_xmdm_d[l_ac].xmdm008,g_xmdm_d[l_ac].xmdm009,g_xmdm_d[l_ac].xmdm010,
+                         g_xmdm_d[l_ac].xmdm011)
+                 
+            IF SQLCA.SQLCODE THEN
+               CALL cl_err("xmdm_t",SQLCA.sqlcode,1)
+               CANCEL INSERT
+            ELSE
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+            
+         BEFORE DELETE                     
+            IF NOT cl_null(g_xmdm_d[l_ac].xmdmdocno) AND
+               NOT cl_null(g_xmdm_d[l_ac].xmdmseq) AND
+               NOT cl_null(g_xmdm_d[l_ac].xmdmseq1) THEN
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               
+               DELETE FROM adbt540_01_temp
+               WHERE xmdment = g_enterprise
+                 AND xmdmdocno = g_xmdm_d_t.xmdmdocno
+                 AND xmdmseq = g_xmdm_d_t.xmdmseq
+                 AND xmdmseq1 = g_xmdm_d_t.xmdmseq1
+
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("xmdm_t",SQLCA.sqlcode,1)
+                  CANCEL DELETE
+               ELSE
+                  LET g_rec_b = g_rec_b-1
+               END IF
+            END IF
+            
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               LET g_xmdm_d[l_ac].* = g_xmdm_d_t.*
+               EXIT DIALOG
+            END IF
+
+            UPDATE adbt540_01_temp SET xmdm001 = g_xmdm_d[l_ac].xmdm001,
+                                       xmdm002 = g_xmdm_d[l_ac].xmdm002,
+                                       xmdm003 = g_xmdm_d[l_ac].xmdm003,
+                                       xmdm004 = g_xmdm_d[l_ac].xmdm004,
+                                       xmdm005 = g_xmdm_d[l_ac].xmdm005,
+                                       xmdm006 = g_xmdm_d[l_ac].xmdm006,
+                                       xmdm007 = g_xmdm_d[l_ac].xmdm007,
+                                       xmdm008 = g_xmdm_d[l_ac].xmdm008,
+                                       xmdm009 = g_xmdm_d[l_ac].xmdm009,
+                                       xmdm010 = g_xmdm_d[l_ac].xmdm010,
+                                       xmdm011 = g_xmdm_d[l_ac].xmdm011
+             WHERE xmdment = g_enterprise
+               AND xmdmdocno = g_xmdm_d_t.xmdmdocno
+               AND xmdmseq = g_xmdm_d_t.xmdmseq
+               AND xmdmseq1 = g_xmdm_d_t.xmdmseq1
+                     
+            IF SQLCA.sqlcode THEN
+               CALL cl_err("xmdv_t",SQLCA.sqlcode,1)
+               LET g_xmdm_d[l_ac].* = g_xmdm_d_t.*
+            END IF
+               
+               
+         AFTER ROW
+            ]]>
+  </point>
+  <point name="input.c.page1.xmdm005" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdm_d[l_ac].xmdm005             #給予default值
+            LET g_qryparam.default2 = g_xmdm_d[l_ac].xmdm006             #儲位編號
+            LET g_qryparam.default3 = g_xmdm_d[l_ac].xmdm007             #批號
+
+            IF cl_null(g_xmdm_d[l_ac].xmdm002) THEN LET g_xmdm_d[l_ac].xmdm002 = ' ' END IF
+            #給予arg
+            LET g_qryparam.arg1 = g_xmdm_d[l_ac].xmdm001
+            LET g_qryparam.arg2 = g_xmdm_d[l_ac].xmdm002
+            LET g_qryparam.arg3 = g_xmdl.xmdlsite
+            
+            CALL q_inag004_6()                                #呼叫開窗
+
+            LET g_xmdm_d[l_ac].xmdm005 = g_qryparam.return1   #將開窗取得的值回傳到變數
+            LET g_xmdm_d[l_ac].xmdm006 = g_qryparam.return2   #儲位編號
+            LET g_xmdm_d[l_ac].xmdm007 = g_qryparam.return3   #批號
+
+            DISPLAY g_xmdm_d[l_ac].xmdm005 TO xmdm005         #顯示到畫面上
+            DISPLAY g_xmdm_d[l_ac].xmdm006 TO xmdm006         #儲位編號
+            DISPLAY g_xmdm_d[l_ac].xmdm007 TO xmdm007         #批號
+
+            CALL adbt540_01_xmdm005_ref()
+            CALL adbt540_01_xmdm006_ref()
+            NEXT FIELD xmdm005                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.page1.xmdm006" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdm_d[l_ac].xmdm005             #給予default值
+            LET g_qryparam.default2 = g_xmdm_d[l_ac].xmdm006             #儲位編號
+            LET g_qryparam.default3 = g_xmdm_d[l_ac].xmdm007             #批號
+
+            #給予arg
+            IF cl_null(g_xmdm_d[l_ac].xmdm002) THEN LET g_xmdm_d[l_ac].xmdm002 = ' ' END IF
+            LET g_qryparam.arg1 = g_xmdm_d[l_ac].xmdm001
+            LET g_qryparam.arg2 = g_xmdm_d[l_ac].xmdm002
+            LET g_qryparam.arg3 = g_xmdl.xmdlsite
+
+            CALL q_inag004_6()                                #呼叫開窗
+
+            LET g_xmdm_d[l_ac].xmdm005 = g_qryparam.return1   #將開窗取得的值回傳到變數
+            LET g_xmdm_d[l_ac].xmdm006 = g_qryparam.return2   #儲位編號
+            LET g_xmdm_d[l_ac].xmdm007 = g_qryparam.return3   #批號
+
+            DISPLAY g_xmdm_d[l_ac].xmdm005 TO xmdm005         #顯示到畫面上
+            DISPLAY g_xmdm_d[l_ac].xmdm006 TO xmdm006         #儲位編號
+            DISPLAY g_xmdm_d[l_ac].xmdm007 TO xmdm007         #批號
+
+            CALL adbt540_01_xmdm005_ref()
+            CALL adbt540_01_xmdm006_ref()
+            NEXT FIELD xmdm006                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.page1.xmdm007" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmdm_d[l_ac].xmdm005             #給予default值
+            LET g_qryparam.default2 = g_xmdm_d[l_ac].xmdm006             #儲位編號
+            LET g_qryparam.default3 = g_xmdm_d[l_ac].xmdm007             #批號
+
+            #給予arg
+            IF cl_null(g_xmdm_d[l_ac].xmdm002) THEN LET g_xmdm_d[l_ac].xmdm002 = ' ' END IF
+            LET g_qryparam.arg1 = g_xmdm_d[l_ac].xmdm001
+            LET g_qryparam.arg2 = g_xmdm_d[l_ac].xmdm002
+            LET g_qryparam.arg3 = g_xmdl.xmdlsite
+
+            CALL q_inag004_6()                                #呼叫開窗
+
+            LET g_xmdm_d[l_ac].xmdm005 = g_qryparam.return1   #將開窗取得的值回傳到變數
+            LET g_xmdm_d[l_ac].xmdm006 = g_qryparam.return2   #儲位編號
+            LET g_xmdm_d[l_ac].xmdm007 = g_qryparam.return3   #批號
+
+            DISPLAY g_xmdm_d[l_ac].xmdm005 TO xmdm005         #顯示到畫面上
+            DISPLAY g_xmdm_d[l_ac].xmdm006 TO xmdm006         #儲位編號
+            DISPLAY g_xmdm_d[l_ac].xmdm007 TO xmdm007         #批號
+
+            CALL adbt540_01_xmdm005_ref()
+            CALL adbt540_01_xmdm006_ref()
+            NEXT FIELD xmdm007                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE p_xmdlsite      LIKE xmdl_t.xmdlsite
+   DEFINE p_xmdmdocno     LIKE xmdm_t.xmdmdocno
+   DEFINE p_xmdmseq       LIKE xmdm_t.xmdmseq
+   DEFINE p_control       LIKE type_t.chr5           #呼叫此子程式之程式1.axmt540 2.axmt520
+   DEFINE p_xmdl008       LIKE xmdl_t.xmdl008
+   DEFINE p_xmdl009       LIKE xmdl_t.xmdl009
+   DEFINE p_xmdl011       LIKE xmdl_t.xmdl011
+   DEFINE p_xmdl012       LIKE xmdl_t.xmdl012
+   DEFINE p_xmdl017       LIKE xmdl_t.xmdl017
+   DEFINE p_xmdl018       LIKE xmdl_t.xmdl018
+   DEFINE p_xmdl001       LIKE xmdl_t.xmdl001
+   DEFINE p_xmdl002       LIKE xmdl_t.xmdl002
+   DEFINE p_xmdl019       LIKE xmdl_t.xmdl019
+   DEFINE p_xmdl020       LIKE xmdl_t.xmdl020
+   DEFINE p_xmdl204       LIKE xmdl_t.xmdl204
+   DEFINE p_xmdl205       LIKE xmdl_t.xmdl205
+   DEFINE r_success       LIKE type_t.num5
+   DEFINE l_forupd_sql    STRING
+   DEFINE l_para_data     LIKE type_t.chr80          #接參數用
+   DEFINE l_xmdm009       LIKE xmdm_t.xmdm009
+   DEFINE l_xmdm011       LIKE xmdm_t.xmdm011
+   DEFINE l_imaf053       LIKE imaf_t.imaf053
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_gzze003       LIKE gzze_t.gzze003]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   p_control,
+   p_xmdlsite,
+   p_xmdmdocno,
+   p_xmdmseq,
+   p_xmdl008,
+   p_xmdl009,
+   p_xmdl011,
+   p_xmdl012,
+   p_xmdl017,
+   p_xmdl018,
+   p_xmdl001,
+   p_xmdl002,
+   p_xmdl019,
+   p_xmdl020,
+   p_xmdl204,
+   p_xmdl205]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF NOT INT_FLAG THEN
+      CALL adbt540_01_xmdm_t_insert(p_control) RETURNING r_success
+   ELSE
+      LET INT_FLAG = FALSE
+      LET r_success = FALSE
+   END IF
+   
+   IF r_success THEN
+      CALL s_transaction_end('Y','0')
+   ELSE
+      CALL s_transaction_end('N','0')
+   END IF  
+   
+   CALL adbt540_01_drop_temp_table()
+   RETURN r_success]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[ 
+   
+   #若出通單已做多庫儲批不可新增刪除
+   IF p_control = '1' THEN
+      IF NOT adbt540_01_xmdh011_chk(g_xmdl.xmdl001,g_xmdl.xmdl002) THEN
+         LET l_allow_insert = FALSE
+         LET l_allow_delete = FALSE
+      END IF
+   END IF
+   
+   LET r_success = TRUE
+   INITIALIZE g_xmdl.* TO NULL
+   
+   #取的庫存單位
+   IF NOT cl_null(p_xmdlsite) AND NOT cl_null(p_xmdl008) THEN
+      LET l_imaf053 = ''
+      SELECT imaf053 INTO l_imaf053
+        FROM imaf_t
+       WHERE imafent = g_enterprise
+         AND imafsite = p_xmdlsite
+         AND imaf001 = p_xmdl008
+   END IF
+   
+   #包裝單位與庫存單位轉換
+   IF NOT cl_null(p_xmdl008) AND NOT cl_null(p_xmdl204) AND 
+      NOT cl_null(l_imaf053) AND NOT cl_null(p_xmdl205) THEN
+      #                          料件      單位(原)   單位(轉換) 數量(原)
+      CALL s_aooi250_convert_qty(p_xmdl008,p_xmdl204,l_imaf053,p_xmdl205)
+           RETURNING l_success,g_xmdl.xmdl0181
+   END IF
+   
+   LET g_errno = ''   
+   CASE
+      WHEN cl_null(p_control)
+         LET g_errno = 'sub-00280'
+      WHEN cl_null(p_xmdlsite)
+         LET g_errno = 'adb-00093'
+      WHEN cl_null(p_xmdmdocno)
+         LET g_errno = 'adb-00015'
+      WHEN cl_null(p_xmdmseq)
+         LET g_errno = 'sub-00406'
+      WHEN cl_null(p_xmdl008)
+         LET g_errno = 'sub-00123'
+      WHEN cl_null(p_xmdl017)
+         LET g_errno = 'axm-00199'
+      WHEN cl_null(p_xmdl018)
+         LET g_errno = 'axm-00200'
+      WHEN cl_null(p_xmdl204)
+         LET g_errno = 'adb-00091'
+      WHEN cl_null(p_xmdl205)
+         LET g_errno = 'adb-00092'
+      WHEN SQLCA.sqlcode = 100
+         LET g_errno = 'aim-00066'
+      WHEN cl_null(l_imaf053)
+         LET g_errno = 'sub-00476'
+      WHEN l_success = FALSE
+         LET g_errno = g_errno
+   END CASE
+          
+   IF NOT cl_null(g_errno) THEN
+      CALL cl_err('',g_errno,1)
+      CLOSE WINDOW w_adbt540_01
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   IF p_control = '2' THEN
+      #欄位說明變更
+      #出通資訊
+      LET l_gzze003 = cl_getmsg('adb-00096',g_dlang)
+      CALL cl_set_comp_att_text('group1',l_gzze003)
+      #出通單項次
+      LET l_gzze003 = cl_getmsg('adb-00097',g_dlang)
+      CALL cl_set_comp_att_text('lbl_xmdlseq',l_gzze003)
+   END IF
+
+   #將主程式的資訊帶入
+   LET g_xmdl.xmdlsite = p_xmdlsite     #發貨組織
+   LET g_xmdl.xmdldocno = p_xmdmdocno   #單據單號
+   LET g_xmdl.xmdlseq = p_xmdmseq       #項次
+   LET g_xmdl.xmdl008 = p_xmdl008       #料件編號
+   LET g_xmdl.xmdl009 = p_xmdl009       #產品特徵
+   LET g_xmdl.xmdl011 = p_xmdl011       #作業編號
+   LET g_xmdl.xmdl012 = p_xmdl012       #製程序
+   LET g_xmdl.xmdl017 = p_xmdl017       #出貨單位
+   LET g_xmdl.xmdl018 = p_xmdl018       #數量
+   LET g_xmdl.xmdl001 = p_xmdl001       #出通單號
+   LET g_xmdl.xmdl002 = p_xmdl002       #出通項次
+   LET g_xmdl.xmdl019 = p_xmdl019       #參考單位
+   LET g_xmdl.xmdl020 = p_xmdl020       #參考數量
+   LET g_xmdl.xmdl204 = p_xmdl204       #包裝單位
+   LET g_xmdl.xmdl205 = p_xmdl205       #包裝數量
+   LET g_xmdl.imaf053 = l_imaf053       #庫存單位
+
+   CALL adbt540_01_display_xmdl()        #單頭display   
+   
+   #建立temp_table
+   CALL adbt540_01_create_temp_table()
+   IF SQLCA.sqlcode THEN
+      CALL cl_err('',SQLCA.sqlcode,1)
+      CLOSE WINDOW w_adbt540_01
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   CALL s_transaction_begin()
+   
+   #塞temp_table
+   IF NOT adbt540_01_xmdm_count(p_control) THEN       #xmdm_t無資料
+      CALL adbt540_01_insert_temp_table() RETURNING r_success
+   ELSE
+      CALL adbt540_01_insert_temp_table1(p_control) RETURNING r_success
+   END IF
+   
+   IF NOT r_success THEN
+      CALL s_transaction_end('N','0')
+      CALL adbt540_01_drop_temp_table()
+      CLOSE WINDOW w_adbt540_01
+      RETURN r_success
+   END IF
+   
+   #顯示單身
+   CALL adbt540_01_b_fill()
+   ]]>
+  </point>
+  <point name="show.body.reference" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xmdm_d[l_ac].xmdmsite
+            LET g_ref_fields[2] = g_xmdm_d[l_ac].xmdm005
+            CALL ap_ref_array2(g_ref_fields,"SELECT inaa002 FROM inaa_t WHERE inaaent='"||g_enterprise||"' AND inaasite=? AND inaa001=? ","") RETURNING g_rtn_fields
+            LET g_xmdm_d[l_ac].xmdm005_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xmdm_d[l_ac].xmdm005_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xmdm_d[l_ac].xmdmsite
+            LET g_ref_fields[2] = g_xmdm_d[l_ac].xmdm005
+            LET g_ref_fields[3] = g_xmdm_d[l_ac].xmdm006
+            CALL ap_ref_array2(g_ref_fields,"SELECT inab003 FROM inab_t WHERE inabent='"||g_enterprise||"' AND inabsite=? AND inab001=? AND inab002=? ","") RETURNING g_rtn_fields
+            LET g_xmdm_d[l_ac].xmdm006_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xmdm_d[l_ac].xmdm006_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xmdm_d[l_ac].xmdm008
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xmdm_d[l_ac].xmdm008_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xmdm_d[l_ac].xmdm008_desc
+]]>
+  </point>
+  <section id="adbt540_01.description" ver="1" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:3,PR版次:3) Build-000101
+#+ 
+#+ Filename...: adbt540_01
+#+ Description: ...
+#+ Creator....: 04226(2014/05/19)
+#+ Modifier...: 04226(2014/06/10)
+#+ Buildtype..: 應用 c02b 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="adbt540_01.global" ver="1" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_xmdm_d        RECORD
+       xmdmdocno LIKE xmdm_t.xmdmdocno, 
+   xmdmseq LIKE xmdm_t.xmdmseq, 
+   xmdmseq1 LIKE xmdm_t.xmdmseq1, 
+   xmdm001 LIKE xmdm_t.xmdm001, 
+   xmdm002 LIKE xmdm_t.xmdm002, 
+   xmdm003 LIKE xmdm_t.xmdm003, 
+   xmdm004 LIKE xmdm_t.xmdm004, 
+   xmdm005 LIKE xmdm_t.xmdm005, 
+   xmdm005_desc LIKE type_t.chr500, 
+   xmdm006 LIKE xmdm_t.xmdm006, 
+   xmdm006_desc LIKE type_t.chr500, 
+   xmdm007 LIKE xmdm_t.xmdm007, 
+   xmdm008 LIKE xmdm_t.xmdm008, 
+   xmdm008_desc LIKE type_t.chr500, 
+   inag008 LIKE type_t.chr80, 
+   inan010 LIKE type_t.chr80, 
+   ready LIKE type_t.chr80, 
+   xmdm009 LIKE xmdm_t.xmdm009, 
+   xmdm010 LIKE xmdm_t.xmdm010, 
+   xmdm010_desc LIKE type_t.chr500, 
+   xmdm011 LIKE xmdm_t.xmdm011
+       END RECORD
+ 
+ 
+DEFINE g_xmdm_d          DYNAMIC ARRAY OF type_g_xmdm_d
+DEFINE g_xmdm_d_t        type_g_xmdm_d
+ 
+ 
+DEFINE g_xmdmdocno_t   LIKE xmdm_t.xmdmdocno    #Key值備份
+DEFINE g_xmdmseq_t      LIKE xmdm_t.xmdmseq    #Key值備份
+DEFINE g_xmdmseq1_t      LIKE xmdm_t.xmdmseq1    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num5
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num5  
+DEFINE g_detail_idx          LIKE type_t.num5  
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point	
+]]>
+  </section>
+  <section id="adbt540_01.input" ver="1" status="" src="s">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION adbt540_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_adbt540_01 WITH FORM cl_ap_formpath("adb","adbt540_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_xmdm_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #此段落由子樣板a01產生
+         BEFORE FIELD xmdmdocno
+            #add-point:BEFORE FIELD xmdmdocno
+            {<point name="input.b.page1.xmdmdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdmdocno
+            
+            #add-point:AFTER FIELD xmdmdocno
+            {<point name="input.a.page1.xmdmdocno" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdmdocno
+            #add-point:ON CHANGE xmdmdocno
+            {<point name="input.g.page1.xmdmdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdmseq
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_xmdm_d[l_ac].xmdmseq,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmdmseq
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmdmseq
+            {<point name="input.a.page1.xmdmseq" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdmseq
+            #add-point:BEFORE FIELD xmdmseq
+            {<point name="input.b.page1.xmdmseq" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdmseq
+            #add-point:ON CHANGE xmdmseq
+            {<point name="input.g.page1.xmdmseq" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdmseq1
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_xmdm_d[l_ac].xmdmseq1,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmdmseq1
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmdmseq1
+            {<point name="input.a.page1.xmdmseq1" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdmseq1
+            #add-point:BEFORE FIELD xmdmseq1
+            {<point name="input.b.page1.xmdmseq1" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdmseq1
+            #add-point:ON CHANGE xmdmseq1
+            {<point name="input.g.page1.xmdmseq1" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdm001
+            #add-point:BEFORE FIELD xmdm001
+            {<point name="input.b.page1.xmdm001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdm001
+            
+            #add-point:AFTER FIELD xmdm001
+            {<point name="input.a.page1.xmdm001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdm001
+            #add-point:ON CHANGE xmdm001
+            {<point name="input.g.page1.xmdm001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdm002
+            #add-point:BEFORE FIELD xmdm002
+            {<point name="input.b.page1.xmdm002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdm002
+            
+            #add-point:AFTER FIELD xmdm002
+            {<point name="input.a.page1.xmdm002" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdm002
+            #add-point:ON CHANGE xmdm002
+            {<point name="input.g.page1.xmdm002" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdm003
+            #add-point:BEFORE FIELD xmdm003
+            {<point name="input.b.page1.xmdm003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdm003
+            
+            #add-point:AFTER FIELD xmdm003
+            {<point name="input.a.page1.xmdm003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdm003
+            #add-point:ON CHANGE xmdm003
+            {<point name="input.g.page1.xmdm003" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdm004
+            #add-point:BEFORE FIELD xmdm004
+            {<point name="input.b.page1.xmdm004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdm004
+            
+            #add-point:AFTER FIELD xmdm004
+            {<point name="input.a.page1.xmdm004" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdm004
+            #add-point:ON CHANGE xmdm004
+            {<point name="input.g.page1.xmdm004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdm005
+            
+            #add-point:AFTER FIELD xmdm005
+            {<point name="input.a.page1.xmdm005" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdm005
+            #add-point:BEFORE FIELD xmdm005
+            {<point name="input.b.page1.xmdm005" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdm005
+            #add-point:ON CHANGE xmdm005
+            {<point name="input.g.page1.xmdm005" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdm006
+            
+            #add-point:AFTER FIELD xmdm006
+            {<point name="input.a.page1.xmdm006" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdm006
+            #add-point:BEFORE FIELD xmdm006
+            {<point name="input.b.page1.xmdm006" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdm006
+            #add-point:ON CHANGE xmdm006
+            {<point name="input.g.page1.xmdm006" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdm007
+            
+            #add-point:AFTER FIELD xmdm007
+            {<point name="input.a.page1.xmdm007" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdm007
+            #add-point:BEFORE FIELD xmdm007
+            {<point name="input.b.page1.xmdm007" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdm007
+            #add-point:ON CHANGE xmdm007
+            {<point name="input.g.page1.xmdm007" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdm008
+            
+            #add-point:AFTER FIELD xmdm008
+            {<point name="input.a.page1.xmdm008" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdm008
+            #add-point:BEFORE FIELD xmdm008
+            {<point name="input.b.page1.xmdm008" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdm008
+            #add-point:ON CHANGE xmdm008
+            {<point name="input.g.page1.xmdm008" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD inag008
+            #add-point:BEFORE FIELD inag008
+            {<point name="input.b.page1.inag008" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD inag008
+            
+            #add-point:AFTER FIELD inag008
+            {<point name="input.a.page1.inag008" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE inag008
+            #add-point:ON CHANGE inag008
+            {<point name="input.g.page1.inag008" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD inan010
+            #add-point:BEFORE FIELD inan010
+            {<point name="input.b.page1.inan010" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD inan010
+            
+            #add-point:AFTER FIELD inan010
+            {<point name="input.a.page1.inan010" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE inan010
+            #add-point:ON CHANGE inan010
+            {<point name="input.g.page1.inan010" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD ready
+            #add-point:BEFORE FIELD ready
+            {<point name="input.b.page1.ready" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD ready
+            
+            #add-point:AFTER FIELD ready
+            {<point name="input.a.page1.ready" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE ready
+            #add-point:ON CHANGE ready
+            {<point name="input.g.page1.ready" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdm009
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_xmdm_d[l_ac].xmdm009,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD xmdm009
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmdm009
+            {<point name="input.a.page1.xmdm009" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdm009
+            #add-point:BEFORE FIELD xmdm009
+            {<point name="input.b.page1.xmdm009" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdm009
+            #add-point:ON CHANGE xmdm009
+            {<point name="input.g.page1.xmdm009" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdm010
+            
+            #add-point:AFTER FIELD xmdm010
+            {<point name="input.a.page1.xmdm010" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdm010
+            #add-point:BEFORE FIELD xmdm010
+            {<point name="input.b.page1.xmdm010" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdm010
+            #add-point:ON CHANGE xmdm010
+            {<point name="input.g.page1.xmdm010" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD xmdm011
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_xmdm_d[l_ac].xmdm011,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD xmdm011
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD xmdm011
+            {<point name="input.a.page1.xmdm011" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD xmdm011
+            #add-point:BEFORE FIELD xmdm011
+            {<point name="input.b.page1.xmdm011" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE xmdm011
+            #add-point:ON CHANGE xmdm011
+            {<point name="input.g.page1.xmdm011" />}
+            #END add-point
+ 
+ 
+                  #Ctrlp:input.c.page1.xmdmdocno
+         ON ACTION controlp INFIELD xmdmdocno
+            #add-point:ON ACTION controlp INFIELD xmdmdocno
+            {<point name="input.c.page1.xmdmdocno" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdmseq
+         ON ACTION controlp INFIELD xmdmseq
+            #add-point:ON ACTION controlp INFIELD xmdmseq
+            {<point name="input.c.page1.xmdmseq" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdmseq1
+         ON ACTION controlp INFIELD xmdmseq1
+            #add-point:ON ACTION controlp INFIELD xmdmseq1
+            {<point name="input.c.page1.xmdmseq1" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdm001
+         ON ACTION controlp INFIELD xmdm001
+            #add-point:ON ACTION controlp INFIELD xmdm001
+            {<point name="input.c.page1.xmdm001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdm002
+         ON ACTION controlp INFIELD xmdm002
+            #add-point:ON ACTION controlp INFIELD xmdm002
+            {<point name="input.c.page1.xmdm002" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdm003
+         ON ACTION controlp INFIELD xmdm003
+            #add-point:ON ACTION controlp INFIELD xmdm003
+            {<point name="input.c.page1.xmdm003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdm004
+         ON ACTION controlp INFIELD xmdm004
+            #add-point:ON ACTION controlp INFIELD xmdm004
+            {<point name="input.c.page1.xmdm004" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdm005
+         ON ACTION controlp INFIELD xmdm005
+            #add-point:ON ACTION controlp INFIELD xmdm005
+            {<point name="input.c.page1.xmdm005" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdm006
+         ON ACTION controlp INFIELD xmdm006
+            #add-point:ON ACTION controlp INFIELD xmdm006
+            {<point name="input.c.page1.xmdm006" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdm007
+         ON ACTION controlp INFIELD xmdm007
+            #add-point:ON ACTION controlp INFIELD xmdm007
+            {<point name="input.c.page1.xmdm007" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdm008
+         ON ACTION controlp INFIELD xmdm008
+            #add-point:ON ACTION controlp INFIELD xmdm008
+            {<point name="input.c.page1.xmdm008" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.inag008
+         ON ACTION controlp INFIELD inag008
+            #add-point:ON ACTION controlp INFIELD inag008
+            {<point name="input.c.page1.inag008" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.inan010
+         ON ACTION controlp INFIELD inan010
+            #add-point:ON ACTION controlp INFIELD inan010
+            {<point name="input.c.page1.inan010" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.ready
+         ON ACTION controlp INFIELD ready
+            #add-point:ON ACTION controlp INFIELD ready
+            {<point name="input.c.page1.ready" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdm009
+         ON ACTION controlp INFIELD xmdm009
+            #add-point:ON ACTION controlp INFIELD xmdm009
+            {<point name="input.c.page1.xmdm009" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdm010
+         ON ACTION controlp INFIELD xmdm010
+            #add-point:ON ACTION controlp INFIELD xmdm010
+            {<point name="input.c.page1.xmdm010" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.xmdm011
+         ON ACTION controlp INFIELD xmdm011
+            #add-point:ON ACTION controlp INFIELD xmdm011
+            {<point name="input.c.page1.xmdm011" />}
+            #END add-point
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...)
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_adbt540_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="adbt540_01.other_dialog" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="adbt540_01.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

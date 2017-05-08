@@ -1,0 +1,147 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="amrt900" module="amr" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02574" crtdt="2015-06-25 14:40:10" modid="02574" moddt="2015-06-25 16:17:00" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="資源盤點作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mreadocno,mreadocno_desc(chr80),mrea003,mreadocdt,mrea001,mrea001_desc(chr80),mrea002,mrea002_desc(chr80),mreastus"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mrebseq,mreb001,mreb001_desc(chr500),mreb001_desc_desc(chr20),mreb002,mreb003,mreb003_desc(chr500),mreb004,mreb004_desc(chr500),mreb005,mreb006,mreb007,mreb008,mreb009,mreb010,mreb010_desc(chr500),mreb011,mreb011_desc(chr500),mreb012,mreb013,mreb014,mreb015"/>
+      <var id="bs_field" value="mreadocno,mreadocdt,mrea001,mrea001_desc(chr80),mrea002,mrea002_desc(chr80)" pk="mreadocno" order=""/>
+      <bs_reference field="mrea001_desc" ref_field="mrea001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="mrea002_desc" ref_field="mrea002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="amr" filename="amrt900" method="dialog">
+    <section id="input">
+      <input id="head" field="mreadocno,mrea003,mreadocdt,mrea001,mrea002,mreastus"/>
+      <input id="body" page="1" field="mrebseq,mreb001,mreb007,mreb008,mreb009,mreb010,mreb011,mreb012,mreb013,mreb014,mreb015" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mreadocno,mrea003,mreadocdt,mrea001,mrea002,mreastus"/>
+      <construct id="body" page="1" field="mrebseq,mreb001,mreb002,mreb003,mreb004,mreb005,mreb006,mreb007,mreb008,mreb009,mreb010,mreb011,mreb012,mreb013,mreb014,mreb015"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mreadocno"/>
+      <set id="head" type="no_entry" field="mreadocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="mreadocno">
+        <after/>
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_mreadocno" state="c"/>
+      </column>
+      <column id="mreadocno_desc"/>
+      <column id="mrea003"/>
+      <column id="mreadocdt"/>
+      <column id="mrea001">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="mrea001_desc" ref_field="mrea_t.mrea001" map_field="mrea001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mrea001_desc"/>
+      <column id="mrea002">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="mrea002_desc" ref_field="mrea_t.mrea002" map_field="mrea002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="mrea002_desc"/>
+      <column id="mreastus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+        <stus id="S" pic="posted"/>
+      </column>
+    </init>
+    <init id="body" page="1">
+      <column id="mrebseq"/>
+      <column id="mreb001">
+        <after>
+          <check chkid="v_mrba001_4" id="isExist"/>
+          <reference field="mreb001_desc" ref_field="mreb_t.mreb001" map_field="mreb001" ref_sql="SELECT mrba004 FROM mrba_t WHERE mrbaent=$varg_enterprise$var AND mrba001=? "/>
+        </after>
+        <controlp form="q_mrba001_1" state="i"/>
+        <controlp form="q_mrba001_1" state="c"/>
+      </column>
+      <column id="mreb001_desc">
+        <after>
+          <reference field="mreb001_desc_desc" ref_field="mreb_t.mreb001" map_field="mreb001" ref_sql="SELECT mrba008 FROM mrba_t WHERE mrbaent=$varg_enterprise$var AND mrba001=? "/>
+        </after>
+      </column>
+      <column id="mreb001_desc_desc"/>
+      <column id="mreb002" type="S" default="0"/>
+      <column id="mreb003">
+        <after>
+          <reference field="mreb003_desc" ref_field="mreb_t.mreb003" map_field="mreb003" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mreb003_desc"/>
+      <column id="mreb004">
+        <after>
+          <reference field="mreb004_desc" ref_field="mreb_t.mreb004" map_field="mreb004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="mreb004_desc"/>
+      <column id="mreb005"/>
+      <column id="mreb006"/>
+      <column id="mreb007" type="S" default="0" def_scc="3088"/>
+      <column id="mreb008" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mreb009"/>
+      <column id="mreb010">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="mreb010_desc" ref_field="mreb_t.mreb010" map_field="mreb010" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mreb010_desc"/>
+      <column id="mreb011">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="mreb011_desc" ref_field="mreb_t.mreb011" map_field="mreb011" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="mreb011_desc"/>
+      <column id="mreb012"/>
+      <column id="mreb013"/>
+      <column id="mreb014"/>
+      <column id="mreb015"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="mrea_t" pk="mreadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT mreadocno,&apos;&apos;,mrea003,mreadocdt,mrea001,&apos;&apos;,mrea002,&apos;&apos;,mreastus FROM mrea_t WHERE mreaent= ? AND mreadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mreadocno,&apos;&apos;,mrea003,mreadocdt,mrea001,&apos;&apos;,mrea002,&apos;&apos;,mreastus FROM mrea_t" order="mreadocno"/>
+    </head>
+    <body id="mreb_t" page="1" linked="" pk="mrebseq" fk="mrebdocno">
+      <sql id="forupd_sql_detail" query="SELECT mrebseq,mreb001,&apos;&apos;,&apos;&apos;,mreb002,mreb003,&apos;&apos;,mreb004,&apos;&apos;,mreb005,mreb006,mreb007,mreb008,mreb009,mreb010,&apos;&apos;,mreb011,&apos;&apos;,mreb012,mreb013,mreb014,mreb015 FROM mreb_t WHERE mrebent=? AND mrebdocno=? AND mrebseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mrebseq,mreb001,&apos;&apos;,&apos;&apos;,mreb002,mreb003,&apos;&apos;,mreb004,&apos;&apos;,mreb005,mreb006,mreb007,mreb008,mreb009,mreb010,&apos;&apos;,mreb011,&apos;&apos;,mreb012,mreb013,mreb014,mreb015 FROM mreb_t WHERE mrebent=? AND mrebdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

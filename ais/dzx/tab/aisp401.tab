@@ -1,0 +1,49 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisp401" module="ais" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="04152" crtdt="2015-04-09 14:20:17" modid="04152" moddt="2015-04-09 15:53:28" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="銷售額與稅額申報書產生作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="isaa012,isaa013,isajcomp,l_isajcomp_desc(chr80),l_rerun_chk(chr500),isaj003,stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="ais" filename="aisp401" method="dialog">
+    <section id="input">
+      <input id="head" field="isaa012,isaa013,isajcomp,l_rerun_chk"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="isaj003"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="isaa012">
+        <after>
+          <check id="range" st="2099" st_type="1" errno="azz-00087" bt="0" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="isaa013">
+        <after>
+          <check id="range" st="12" st_type="1" errno="azz-00087" bt="0" bt_type="0" ow="1"/>
+        </after>
+      </column>
+      <column id="isajcomp">
+        <after/>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="l_isajcomp_desc"/>
+      <column id="l_rerun_chk" type="S" default="Y"/>
+      <column id="isaj003">
+        <controlp form="q_isaa001_01" state="i"/>
+        <controlp form="q_isaa001_01" state="c"/>
+      </column>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

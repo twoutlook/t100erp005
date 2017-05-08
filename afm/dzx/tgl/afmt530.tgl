@@ -1,0 +1,5914 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="afmt530.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0015(2016-07-25 17:20:53), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000083
+#+ Filename...: afmt530
+#+ Description: 投資購買作業
+#+ Creator....: 03538(2015-04-29 14:35:26)
+#+ Modifier...: 03538 -SD/PR-
+
+{</section>}
+
+{<section id="afmt530.global" >}
+#應用 i01 樣板自動產生(Version:50)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"  
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE TYPE type_g_fmmj_m RECORD
+       fmmjsite LIKE fmmj_t.fmmjsite, 
+   fmmjsite_desc LIKE type_t.chr80, 
+   fmmjdocno LIKE fmmj_t.fmmjdocno, 
+   fmmjdocdt LIKE fmmj_t.fmmjdocdt, 
+   fmmj027 LIKE fmmj_t.fmmj027, 
+   fmmj001 LIKE fmmj_t.fmmj001, 
+   fmmj002 LIKE fmmj_t.fmmj002, 
+   fmmj002_desc LIKE type_t.chr80, 
+   fmmj003 LIKE fmmj_t.fmmj003, 
+   fmmj003_desc LIKE type_t.chr80, 
+   fmmj004 LIKE fmmj_t.fmmj004, 
+   fmmj006 LIKE fmmj_t.fmmj006, 
+   fmmj010 LIKE fmmj_t.fmmj010, 
+   fmmjstus LIKE fmmj_t.fmmjstus, 
+   fmmj005 LIKE fmmj_t.fmmj005, 
+   fmmj007 LIKE fmmj_t.fmmj007, 
+   fmmj008 LIKE fmmj_t.fmmj008, 
+   fmmj011 LIKE fmmj_t.fmmj011, 
+   fmmj012 LIKE fmmj_t.fmmj012, 
+   fmmj012_desc LIKE type_t.chr80, 
+   fmmj013 LIKE fmmj_t.fmmj013, 
+   fmmj013_desc LIKE type_t.chr80, 
+   fmmj014 LIKE fmmj_t.fmmj014, 
+   fmmj025 LIKE fmmj_t.fmmj025, 
+   fmmj025_desc LIKE type_t.chr80, 
+   fmmj026 LIKE fmmj_t.fmmj026, 
+   fmmj026_desc LIKE type_t.chr80, 
+   fmmj009 LIKE fmmj_t.fmmj009, 
+   fmmj028 LIKE fmmj_t.fmmj028, 
+   fmmj015 LIKE fmmj_t.fmmj015, 
+   fmmj029 LIKE fmmj_t.fmmj029, 
+   fmmj016 LIKE fmmj_t.fmmj016, 
+   fmmj030 LIKE fmmj_t.fmmj030, 
+   fmmj017 LIKE fmmj_t.fmmj017, 
+   fmmj031 LIKE fmmj_t.fmmj031, 
+   fmmj018 LIKE fmmj_t.fmmj018, 
+   fmmj019 LIKE fmmj_t.fmmj019, 
+   fmmj022 LIKE fmmj_t.fmmj022, 
+   fmmj020 LIKE fmmj_t.fmmj020, 
+   fmmj021 LIKE fmmj_t.fmmj021, 
+   fmmj024 LIKE fmmj_t.fmmj024, 
+   fmmj023 LIKE fmmj_t.fmmj023, 
+   fmmjownid LIKE fmmj_t.fmmjownid, 
+   fmmjownid_desc LIKE type_t.chr80, 
+   fmmjowndp LIKE fmmj_t.fmmjowndp, 
+   fmmjowndp_desc LIKE type_t.chr80, 
+   fmmjcrtid LIKE fmmj_t.fmmjcrtid, 
+   fmmjcrtid_desc LIKE type_t.chr80, 
+   fmmjcrtdp LIKE fmmj_t.fmmjcrtdp, 
+   fmmjcrtdp_desc LIKE type_t.chr80, 
+   fmmjcrtdt LIKE fmmj_t.fmmjcrtdt, 
+   fmmjmodid LIKE fmmj_t.fmmjmodid, 
+   fmmjmodid_desc LIKE type_t.chr80, 
+   fmmjmoddt LIKE fmmj_t.fmmjmoddt, 
+   fmmjcnfid LIKE fmmj_t.fmmjcnfid, 
+   fmmjcnfid_desc LIKE type_t.chr80, 
+   fmmjcnfdt LIKE fmmj_t.fmmjcnfdt
+       END RECORD
+ 
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD  #查詢方案用陣列 
+         b_statepic     LIKE type_t.chr50,
+            b_fmmjdocno LIKE fmmj_t.fmmjdocno
+      END RECORD 
+ 
+#add-point:自定義模組變數(Module Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_fmmj_m        type_g_fmmj_m  #單頭變數宣告
+DEFINE g_fmmj_m_t      type_g_fmmj_m  #單頭舊值宣告(系統還原用)
+DEFINE g_fmmj_m_o      type_g_fmmj_m  #單頭舊值宣告(其他用途)
+DEFINE g_fmmj_m_mask_o type_g_fmmj_m  #轉換遮罩前資料
+DEFINE g_fmmj_m_mask_n type_g_fmmj_m  #轉換遮罩後資料
+ 
+   DEFINE g_fmmjdocno_t LIKE fmmj_t.fmmjdocno
+ 
+   
+ 
+   
+ 
+DEFINE g_wc                  STRING                        #儲存查詢條件
+DEFINE g_wc_t                STRING                        #備份查詢條件
+DEFINE g_wc_filter           STRING                        #儲存過濾查詢條件
+DEFINE g_wc_filter_t         STRING                        #備份過濾查詢條件
+DEFINE g_sql                 STRING                        #資料撈取用SQL(含reference)
+DEFINE g_forupd_sql          STRING                        #資料鎖定用SQL
+DEFINE g_cnt                 LIKE type_t.num10             #指標/統計用變數
+DEFINE g_jump                LIKE type_t.num10             #查詢指定的筆數 
+DEFINE g_no_ask              LIKE type_t.num5              #是否開啟指定筆視窗 
+DEFINE g_rec_b               LIKE type_t.num10             #單身筆數                         
+DEFINE l_ac                  LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_pagestart           LIKE type_t.num10             #page起始筆數
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_state               STRING                        #確認前一個動作是否為新增/複製
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_error_show          LIKE type_t.num5              #是否顯示資料過多的錯誤訊息
+DEFINE g_aw                  STRING                        #確定當下點擊的單身(modify_detail用)
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+DEFINE g_log1                STRING                        #cl_log_modified_record用(舊值)
+DEFINE g_log2                STRING                        #cl_log_modified_record用(新值)
+ 
+#快速搜尋用
+DEFINE g_searchcol           STRING                        #查詢欄位代碼
+DEFINE g_searchstr           STRING                        #查詢欄位字串
+DEFINE g_order               STRING                        #查詢排序模式
+ 
+#Browser用
+DEFINE g_current_idx         LIKE type_t.num10             #Browser 所在筆數(當下page)
+DEFINE g_current_row         LIKE type_t.num10             #Browser 所在筆數(暫存用)
+DEFINE g_current_cnt         LIKE type_t.num10             #Browser 總筆數(當下page)
+DEFINE g_browser_idx         LIKE type_t.num10             #Browser 所在筆數(所有資料)
+DEFINE g_browser_cnt         LIKE type_t.num10             #Browser 總筆數(所有資料)
+DEFINE g_row_index           LIKE type_t.num10             #階層樹狀用指標
+DEFINE g_add_browse          STRING                        #新增填充用WC
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization" 
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="afmt530.main" >}
+#應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   {<point name="main.define_customerization" edit="c" mark="Y"/>}
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   {<point name="main.define"/>}
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("afm","")
+ 
+   #add-point:作業初始化 name="main.init"
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = " SELECT fmmjsite,'',fmmjdocno,fmmjdocdt,fmmj027,fmmj001,fmmj002,'',fmmj003,'', 
+       fmmj004,fmmj006,fmmj010,fmmjstus,fmmj005,fmmj007,fmmj008,fmmj011,fmmj012,'',fmmj013,'',fmmj014, 
+       fmmj025,'',fmmj026,'',fmmj009,fmmj028,fmmj015,fmmj029,fmmj016,fmmj030,fmmj017,fmmj031,fmmj018, 
+       fmmj019,fmmj022,fmmj020,fmmj021,fmmj024,fmmj023,fmmjownid,'',fmmjowndp,'',fmmjcrtid,'',fmmjcrtdp, 
+       '',fmmjcrtdt,fmmjmodid,'',fmmjmoddt,fmmjcnfid,'',fmmjcnfdt", 
+                      " FROM fmmj_t",
+                      " WHERE fmmjent= ? AND fmmjdocno=? FOR UPDATE"
+   #add-point:SQL_define name="main.after_define_sql"
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE afmt530_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT DISTINCT t0.fmmjsite,t0.fmmjdocno,t0.fmmjdocdt,t0.fmmj027,t0.fmmj001,t0.fmmj002, 
+       t0.fmmj003,t0.fmmj004,t0.fmmj006,t0.fmmj010,t0.fmmjstus,t0.fmmj005,t0.fmmj007,t0.fmmj008,t0.fmmj011, 
+       t0.fmmj012,t0.fmmj013,t0.fmmj014,t0.fmmj025,t0.fmmj026,t0.fmmj009,t0.fmmj028,t0.fmmj015,t0.fmmj029, 
+       t0.fmmj016,t0.fmmj030,t0.fmmj017,t0.fmmj031,t0.fmmj018,t0.fmmj019,t0.fmmj022,t0.fmmj020,t0.fmmj021, 
+       t0.fmmj024,t0.fmmj023,t0.fmmjownid,t0.fmmjowndp,t0.fmmjcrtid,t0.fmmjcrtdp,t0.fmmjcrtdt,t0.fmmjmodid, 
+       t0.fmmjmoddt,t0.fmmjcnfid,t0.fmmjcnfdt,t1.ooefl003 ,t2.fmmel003 ,t3.fmmal003 ,t4.ooag011 ,t5.ooefl003 , 
+       t6.ooag011 ,t7.ooefl003 ,t8.ooag011 ,t9.ooag011",
+               " FROM fmmj_t t0",
+                              " LEFT JOIN ooefl_t t1 ON t1.ooeflent="||g_enterprise||" AND t1.ooefl001=t0.fmmjsite AND t1.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN fmmel_t t2 ON t2.fmmelent="||g_enterprise||" AND t2.fmmel001=t0.fmmj002 AND t2.fmmel002='"||g_dlang||"' ",
+               " LEFT JOIN fmmal_t t3 ON t3.fmmalent="||g_enterprise||" AND t3.fmmal001=t0.fmmj003 AND t3.fmmal002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t4 ON t4.ooagent="||g_enterprise||" AND t4.ooag001=t0.fmmjownid  ",
+               " LEFT JOIN ooefl_t t5 ON t5.ooeflent="||g_enterprise||" AND t5.ooefl001=t0.fmmjowndp AND t5.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t6 ON t6.ooagent="||g_enterprise||" AND t6.ooag001=t0.fmmjcrtid  ",
+               " LEFT JOIN ooefl_t t7 ON t7.ooeflent="||g_enterprise||" AND t7.ooefl001=t0.fmmjcrtdp AND t7.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t8 ON t8.ooagent="||g_enterprise||" AND t8.ooag001=t0.fmmjmodid  ",
+               " LEFT JOIN ooag_t t9 ON t9.ooagent="||g_enterprise||" AND t9.ooag001=t0.fmmjcnfid  ",
+ 
+               " WHERE t0.fmmjent = " ||g_enterprise|| " AND t0.fmmjdocno = ?"
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   {<point name="main.after_refresh_sql"/>}
+   #end add-point
+   PREPARE afmt530_master_referesh FROM g_sql
+ 
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_afmt530 WITH FORM cl_ap_formpath("afm",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL afmt530_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL afmt530_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_afmt530
+      
+   END IF 
+   
+   CLOSE afmt530_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+
+{</section>}
+
+{<section id="afmt530.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION afmt530_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   {<point name="init.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:init段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   {<point name="init.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="init.pre_function"
+   {<point name="init.pre_function"/>}
+   #end add-point
+   
+   #定義combobox狀態
+      CALL cl_set_combo_scc_part('fmmjstus','13','Y,N,A,D,R,W,X')
+ 
+      CALL cl_set_combo_scc('fmmj011','8804') 
+   CALL cl_set_combo_scc('fmmj020','8860') 
+ 
+   LET g_error_show = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   #add-point:畫面資料初始化 name="init.init"
+   {<point name="init.init" />}
+   #end add-point
+   
+   #根據外部參數進行搜尋
+   CALL afmt530_default_search()
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="afmt530.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION afmt530_ui_dialog() 
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   {<point name="ui_dialog.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE li_exit   LIKE type_t.num10       #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num10       #指標變數
+   DEFINE ls_wc     STRING                  #wc用
+   DEFINE la_param  RECORD                  #程式串查用變數
+          prog       STRING,
+          actionid   STRING,
+          background LIKE type_t.chr1,
+          param      DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING                  #轉換後的json字串
+   DEFINE l_cmd_token           base.StringTokenizer   #報表作業cmdrun使用 
+   DEFINE l_cmd_next            STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_cnt             LIKE type_t.num5       #報表作業cmdrun使用
+   DEFINE l_cmd_prog_arg        STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_arg             STRING                 #報表作業cmdrun使用
+   #add-point:ui_dialog段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="ui_dialog.pre_function"
+   {<point name="ui_dialog.pre_function"/>}
+   #end add-point
+   
+   LET li_exit = FALSE
+   LET g_current_row = 0
+   LET g_current_idx = 0
+ 
+   #若有外部參數查詢, 則直接顯示資料(隱藏查詢方案)
+   IF g_default THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   ELSE
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF
+   
+   #action default動作
+   #應用 a42 樣板自動產生(Version:3)
+   #進入程式時預設執行的動作
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice="insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL afmt530_insert()
+            #add-point:ON ACTION insert name="menu.default.insert"
+            {<point name="menu.default.insert" />}
+            #END add-point
+         END IF
+ 
+      #add-point:action default自訂 name="ui_dialog.action_default"
+      {<point name="ui_dialog.action_default"/>}
+      #end add-point
+      OTHERWISE
+   END CASE
+ 
+ 
+ 
+   
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE li_exit = FALSE
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_browser.clear()       
+         INITIALIZE g_fmmj_m.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL afmt530_init()
+      END IF
+      
+      CALL lib_cl_dlg.cl_dlg_before_display()
+      CALL cl_notice()
+    
+      #確保g_current_idx位於正常區間內
+      #小於,等於0則指到第1筆
+      IF g_current_idx <= 0 THEN
+         LET g_current_idx = 1
+      END IF
+               
+      IF g_main_hidden = 0 THEN
+         MENU
+            BEFORE MENU 
+               #先填充browser資料
+               CALL afmt530_browser_fill(g_wc,"")
+               CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               
+               #還原為原本指定筆數
+               IF g_current_row > 0 THEN
+                  LET g_current_idx = g_current_row
+               END IF
+ 
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL afmt530_fetch("")   
+               END IF               
+               #add-point:ui_dialog段 before menu name="ui_dialog.before_menu"
+               {<point name="ui_dialog.before_menu"/>}
+               #end add-point
+            
+            #狀態碼切換
+            ON ACTION statechange
+               CALL afmt530_statechange()
+               LET g_action_choice="statechange"
+               #根據資料狀態切換action狀態
+               CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+               CALL afmt530_set_act_visible()
+               CALL afmt530_set_act_no_visible()
+               IF NOT (g_fmmj_m.fmmjdocno IS NULL
+ 
+                 ) THEN
+                  #組合條件
+                  LET g_add_browse = " fmmjent = " ||g_enterprise|| " AND",
+                                     " fmmjdocno = '", g_fmmj_m.fmmjdocno, "' "
+ 
+                  #填到對應位置
+                  CALL afmt530_browser_fill(g_wc,"")
+               END IF
+               
+            #第一筆資料
+            ON ACTION first
+               CALL afmt530_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            #下一筆資料
+            ON ACTION next
+               CALL afmt530_fetch("N")
+               LET g_current_row = g_current_idx
+            
+            #指定筆資料
+            ON ACTION jump
+               CALL afmt530_fetch("/")
+               LET g_current_row = g_current_idx
+            
+            #上一筆資料
+            ON ACTION previous
+               CALL afmt530_fetch("P")
+               LET g_current_row = g_current_idx
+            
+            #最後筆資料
+            ON ACTION last 
+               CALL afmt530_fetch("L")  
+               LET g_current_row = g_current_idx
+            
+            #離開程式
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU 
+            
+            #離開程式
+            ON ACTION close
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU
+            
+            #主頁摺疊
+            ON ACTION mainhidden   
+               LET g_action_choice = "mainhidden"            
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+                  CALL cl_notice()
+               END IF
+               EXIT MENU
+               
+            ON ACTION worksheethidden   #瀏覽頁折疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               EXIT MENU
+            
+            #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+          
+            #查詢方案用
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL afmt530_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            #查詢方案用
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL afmt530_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "-100" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL afmt530_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+            
+            
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL afmt530_modify()
+               #add-point:ON ACTION modify name="menu2.modify"
+               {<point name="menu2.modify" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_afmt530_01
+            LET g_action_choice="open_afmt530_01"
+            IF cl_auth_chk_act("open_afmt530_01") THEN
+               
+               #add-point:ON ACTION open_afmt530_01 name="menu2.open_afmt530_01"
+               {<point name="menu2.open_afmt530_01" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION update_fmmj027
+            LET g_action_choice="update_fmmj027"
+            IF cl_auth_chk_act("update_fmmj027") THEN
+               
+               #add-point:ON ACTION update_fmmj027 name="menu2.update_fmmj027"
+               {<point name="menu2.update_fmmj027" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION update_fmmj010_y
+            LET g_action_choice="update_fmmj010_y"
+            IF cl_auth_chk_act("update_fmmj010_y") THEN
+               
+               #add-point:ON ACTION update_fmmj010_y name="menu2.update_fmmj010_y"
+               {<point name="menu2.update_fmmj010_y" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL afmt530_delete()
+               #add-point:ON ACTION delete name="menu2.delete"
+               {<point name="menu2.delete" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL afmt530_insert()
+               #add-point:ON ACTION insert name="menu2.insert"
+               {<point name="menu2.insert" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_afmt530_02
+            LET g_action_choice="open_afmt530_02"
+            IF cl_auth_chk_act("open_afmt530_02") THEN
+               
+               #add-point:ON ACTION open_afmt530_02 name="menu2.open_afmt530_02"
+               {<point name="menu2.open_afmt530_02" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu2.output"
+               {<point name="menu2.output" mark="Y"/>}
+               #END add-point
+               &include "erp/afm/afmt530_rep.4gl"
+               #add-point:ON ACTION output.after name="menu2.after_output"
+               {<point name="menu2.after_output" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu2.quickprint"
+               {<point name="menu2.quickprint" mark="Y"/>}
+               #END add-point
+               &include "erp/afm/afmt530_rep.4gl"
+               #add-point:ON ACTION quickprint.after name="menu2.after_quickprint"
+               {<point name="menu2.after_quickprint" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL afmt530_reproduce()
+               #add-point:ON ACTION reproduce name="menu2.reproduce"
+               {<point name="menu2.reproduce" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL afmt530_query()
+               #add-point:ON ACTION query name="menu2.query"
+               {<point name="menu2.query" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION update_fmmj010_n
+            LET g_action_choice="update_fmmj010_n"
+            IF cl_auth_chk_act("update_fmmj010_n") THEN
+               
+               #add-point:ON ACTION update_fmmj010_n name="menu2.update_fmmj010_n"
+               {<point name="menu2.update_fmmj010_n" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+            
+            #應用 a32 樣板自動產生(Version:3)
+         #簽核狀況
+         ON ACTION bpm_status
+            #查詢簽核狀況, 統一建立HyperLink
+            CALL cl_bpm_status()
+            #add-point:ON ACTION bpm_status name="menu2.bpm_status"
+            {<point name="menu2.bpm_status" />}
+            #END add-point
+ 
+ 
+ 
+            
+            #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL afmt530_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.menu.related_document"
+               {<point name="ui_dialog.menu.related_document"/>}
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL afmt530_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.menu.agendum"
+            {<point name="ui_dialog.menu.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL afmt530_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.menu.followup"
+            {<point name="ui_dialog.menu.followup"/>}
+            #END add-point
+            CALL cl_user_overview_follow(g_fmmj_m.fmmjdocdt)
+ 
+ 
+ 
+            
+            #主選單用ACTION
+            &include "main_menu_exit_menu.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END MENU
+      
+      ELSE
+      
+         DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+           
+      
+            #左側瀏覽頁簽
+            DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTE(COUNT=g_rec_b)
+            
+               BEFORE ROW
+                  #回歸舊筆數位置 (回到當時異動的筆數)
+                  LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+                  IF g_current_idx = 0 THEN
+                     LET g_current_idx = 1
+                  END IF
+                  LET g_current_row = g_current_idx  #目前指標
+                  LET g_current_sw = TRUE
+                  CALL cl_show_fld_cont()     
+                  
+                  #當每次點任一筆資料都會需要用到               
+                  CALL afmt530_fetch("")
+ 
+               ON ACTION qbefield_user   #欄位隱藏設定 
+                  LET g_action_choice="qbefield_user"
+                  CALL cl_ui_qbefield_user()
+    
+               
+            
+            END DISPLAY
+ 
+            #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+            {<point name="ui_dialog.more_displayarray"/>}
+            #end add-point
+ 
+            #查詢方案用
+            SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+            SUBDIALOG lib_cl_dlg.cl_dlg_relateapps
+         
+            BEFORE DIALOG
+               #先填充browser資料
+               IF g_action_choice <> "mainhidden" THEN
+                  CALL afmt530_browser_fill(g_wc,"")
+               END IF
+               CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               #還原為原本指定筆數
+               IF g_current_row > 1 THEN
+                  #當刪除最後一筆資料時可能產生錯誤, 進行額外判斷
+                  IF g_current_row > g_browser.getLength() THEN
+                     LET g_current_row = g_browser.getLength()
+                  END IF 
+                  LET g_current_idx = g_current_row
+                  CALL DIALOG.setCurrentRow("s_browse",g_current_idx)
+               END IF
+ 
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL afmt530_fetch("")   
+               END IF          
+               CALL cl_notice()
+               
+               #add-point:ui_dialog段before name="ui_dialog.b_dialog"
+               {<point name="ui_dialog.b_dialog"/>}
+               #end add-point  
+            
+            AFTER DIALOG
+               #add-point:ui_dialog段 after dialog name="ui_dialog.after_dialog"
+               {<point name="ui_dialog.after_dialog"/>}
+               #end add-point
+            
+            #狀態碼切換
+            ON ACTION statechange
+               CALL afmt530_statechange()
+               LET g_action_choice="statechange"
+               #根據資料狀態切換action狀態
+               CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+               CALL afmt530_set_act_visible()
+               CALL afmt530_set_act_no_visible()
+               IF NOT (g_fmmj_m.fmmjdocno IS NULL
+ 
+                 ) THEN
+                  #組合條件
+                  LET g_add_browse = " fmmjent = " ||g_enterprise|| " AND",
+                                     " fmmjdocno = '", g_fmmj_m.fmmjdocno, "' "
+ 
+                  #填到對應位置
+                  CALL afmt530_browser_fill(g_wc,"")
+               END IF
+         
+            #應用 a49 樣板自動產生(Version:4)
+            #過濾瀏覽頁資料
+            ON ACTION filter
+               LET g_action_choice = "fetch"
+               #add-point:filter action name="ui_dialog.action.filter"
+               {<point name="ui_dialog.action.filter"/>}
+               #end add-point
+               CALL afmt530_filter()
+               EXIT DIALOG
+ 
+ 
+ 
+            
+            #第一筆資料
+            ON ACTION first
+               CALL afmt530_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            #下一筆資料
+            ON ACTION next
+               CALL afmt530_fetch("N")
+               LET g_current_row = g_current_idx
+         
+            #指定筆資料
+            ON ACTION jump
+               CALL afmt530_fetch("/")
+               LET g_current_row = g_current_idx
+         
+            #上一筆資料
+            ON ACTION previous
+               CALL afmt530_fetch("P")
+               LET g_current_row = g_current_idx
+          
+            #最後筆資料
+            ON ACTION last 
+               CALL afmt530_fetch("L")  
+               LET g_current_row = g_current_idx
+         
+            #離開程式
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+         
+            #離開程式
+            ON ACTION close
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+    
+            #主頁摺疊
+            ON ACTION mainhidden 
+               LET g_action_choice = "mainhidden"                
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+                  CALL cl_notice()
+               END IF
+               #EXIT DIALOG
+               
+            ON ACTION worksheethidden   #瀏覽頁折疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               #EXIT DIALOG
+         
+            ON ACTION exporttoexcel
+               LET g_action_choice="exporttoexcel"
+               IF cl_auth_chk_act("exporttoexcel") THEN
+                  #browser
+                  CALL g_export_node.clear()
+                  LET g_export_node[1] = base.typeInfo.create(g_browser)
+                  LET g_export_id[1]   = "s_browse"
+                  CALL cl_export_to_excel()
+               END IF
+         
+            #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+ 
+            
+            #查詢方案用
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL afmt530_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            #查詢方案用
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL afmt530_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "-100" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL afmt530_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+               
+            
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL afmt530_modify()
+               #add-point:ON ACTION modify name="menu.modify"
+               {<point name="menu.modify" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_afmt530_01
+            LET g_action_choice="open_afmt530_01"
+            IF cl_auth_chk_act("open_afmt530_01") THEN
+               
+               #add-point:ON ACTION open_afmt530_01 name="menu.open_afmt530_01"
+               {<point name="menu.open_afmt530_01" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION update_fmmj027
+            LET g_action_choice="update_fmmj027"
+            IF cl_auth_chk_act("update_fmmj027") THEN
+               
+               #add-point:ON ACTION update_fmmj027 name="menu.update_fmmj027"
+               {<point name="menu.update_fmmj027" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION update_fmmj010_y
+            LET g_action_choice="update_fmmj010_y"
+            IF cl_auth_chk_act("update_fmmj010_y") THEN
+               
+               #add-point:ON ACTION update_fmmj010_y name="menu.update_fmmj010_y"
+               {<point name="menu.update_fmmj010_y" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL afmt530_delete()
+               #add-point:ON ACTION delete name="menu.delete"
+               {<point name="menu.delete" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL afmt530_insert()
+               #add-point:ON ACTION insert name="menu.insert"
+               {<point name="menu.insert" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_afmt530_02
+            LET g_action_choice="open_afmt530_02"
+            IF cl_auth_chk_act("open_afmt530_02") THEN
+               
+               #add-point:ON ACTION open_afmt530_02 name="menu.open_afmt530_02"
+               {<point name="menu.open_afmt530_02" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               {<point name="menu.output" mark="Y"/>}
+               #END add-point
+               &include "erp/afm/afmt530_rep.4gl"
+               #add-point:ON ACTION output.after name="menu.after_output"
+               {<point name="menu.after_output" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               {<point name="menu.quickprint" mark="Y"/>}
+               #END add-point
+               &include "erp/afm/afmt530_rep.4gl"
+               #add-point:ON ACTION quickprint.after name="menu.after_quickprint"
+               {<point name="menu.after_quickprint" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL afmt530_reproduce()
+               #add-point:ON ACTION reproduce name="menu.reproduce"
+               {<point name="menu.reproduce" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL afmt530_query()
+               #add-point:ON ACTION query name="menu.query"
+               {<point name="menu.query" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION update_fmmj010_n
+            LET g_action_choice="update_fmmj010_n"
+            IF cl_auth_chk_act("update_fmmj010_n") THEN
+               
+               #add-point:ON ACTION update_fmmj010_n name="menu.update_fmmj010_n"
+               {<point name="menu.update_fmmj010_n" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+            
+            #應用 a32 樣板自動產生(Version:3)
+         #簽核狀況
+         ON ACTION bpm_status
+            #查詢簽核狀況, 統一建立HyperLink
+            CALL cl_bpm_status()
+            #add-point:ON ACTION bpm_status name="menu.bpm_status"
+            {<point name="menu.bpm_status" />}
+            #END add-point
+ 
+ 
+ 
+ 
+            #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL afmt530_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.dialog.related_document"
+               {<point name="ui_dialog.dialog.related_document"/>}
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL afmt530_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.dialog.agendum"
+            {<point name="ui_dialog.dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL afmt530_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.dialog.followup"
+            {<point name="ui_dialog.dialog.followup"/>}
+            #END add-point
+            CALL cl_user_overview_follow(g_fmmj_m.fmmjdocdt)
+ 
+ 
+ 
+ 
+            #主選單用ACTION
+            &include "main_menu_exit_dialog.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END DIALOG 
+      
+      END IF
+      
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      {<point name="ui_dialog.exit_dialog"/>}
+      #end add-point
+      
+      #(ver:50) ---start---
+      IF li_exit THEN
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         {<point name="ui_dialog.b_exit"/>}
+         #end add-point
+         EXIT WHILE
+      END IF
+      #(ver:50) --- end ---
+ 
+   END WHILE
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="afmt530.browser_fill" >}
+#應用 a29 樣板自動產生(Version:15)
+#+ 瀏覽頁簽資料填充(一般單檔)
+PRIVATE FUNCTION afmt530_browser_fill(p_wc,ps_page_action) 
+   #add-point:browser_fill段define name="browser_fill.define_customerization"
+   {<point name="browser_fill.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_wc              STRING
+   DEFINE ls_wc             STRING
+   DEFINE ps_page_action    STRING
+   DEFINE l_searchcol       STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="browser_fill.define"
+   {<point name="browser_fill.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="browser_fill.pre_function"
+   {<point name="browser_fill.pre_function"/>}
+   #end add-point
+   
+   LET l_searchcol = "fmmjdocno"
+ 
+   LET p_wc = p_wc.trim() #當查詢按下Q時 按下放棄 g_wc = "  " 所以要清掉空白
+   IF cl_null(p_wc) THEN  #p_wc 查詢條件
+      LET p_wc = " 1=1 " 
+   END IF
+   #add-point:browser_fill段wc控制 name="browser_fill.wc"
+   {<point name="browser_fill.wc"/>}
+   #end add-point
+ 
+   LET g_sql = " SELECT COUNT(1) FROM fmmj_t ",
+               "  ",
+               "  ",
+               " WHERE fmmjent = " ||g_enterprise|| " AND ", 
+               p_wc CLIPPED, cl_sql_add_filter("fmmj_t")
+                
+   #add-point:browser_fill段cnt_sql name="browser_fill.cnt_sql"
+   {<point name="browser_fill.cnt_sql"/>}
+   #end add-point
+                
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE header_cnt_pre FROM g_sql
+      EXECUTE header_cnt_pre INTO g_browser_cnt
+      FREE header_cnt_pre 
+   END IF
+   
+   #若超過最大顯示筆數
+   IF g_browser_cnt > g_max_browse THEN
+      IF g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_browser_cnt 
+         LET g_errparam.code   = 9035
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+      END IF
+   END IF
+   
+   LET g_error_show = 0
+   
+   IF ps_page_action = "F" OR
+      ps_page_action = "P"  OR
+      ps_page_action = "N"  OR
+      ps_page_action = "L"  THEN
+      LET g_page_action = ps_page_action
+   END IF
+   
+   IF cl_null(g_add_browse) THEN
+      #清除畫面
+      CLEAR FORM
+      INITIALIZE g_fmmj_m.* TO NULL
+      CALL g_browser.clear()
+      LET g_cnt = 1
+      LET ls_wc = p_wc
+   ELSE
+      LET ls_wc = g_add_browse
+      LET g_cnt = g_current_idx
+   END IF
+   
+   LET g_sql = " SELECT t0.fmmjstus,t0.fmmjdocno",
+               " FROM fmmj_t t0 ",
+               "  ",
+               
+               " WHERE t0.fmmjent = " ||g_enterprise|| " AND ", ls_wc, cl_sql_add_filter("fmmj_t")
+   #add-point:browser_fill段fill_wc name="browser_fill.fill_wc"
+   {<point name="browser_fill.fill_wc"/>}
+   #end add-point 
+   LET g_sql = g_sql, " ORDER BY ",l_searchcol," ",g_order
+   #add-point:browser_fill段before_pre name="browser_fill.before_pre"
+   {<point name="browser_fill.before_pre"/>}
+   #end add-point                    
+ 
+   #LET g_sql = cl_sql_add_tabid(g_sql,"fmmj_t")             #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE browse_pre FROM g_sql
+      DECLARE browse_cur CURSOR FOR browse_pre
+      
+      FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_fmmjdocno
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "foreach:" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+         
+         
+         
+         #add-point:browser_fill段reference name="browser_fill.reference"
+         {<point name="browser_fill.reference"/>}
+         #end add-point
+         
+         #遮罩相關處理
+         CALL afmt530_browser_mask()
+         
+               #應用 a24 樣板自動產生(Version:3)
+      #browser顯示圖片
+      CASE g_browser[g_cnt].b_statepic
+         WHEN "Y"
+            LET g_browser[g_cnt].b_statepic = "stus/16/confirmed.png"
+         WHEN "N"
+            LET g_browser[g_cnt].b_statepic = "stus/16/unconfirmed.png"
+         WHEN "A"
+            LET g_browser[g_cnt].b_statepic = "stus/16/approved.png"
+         WHEN "D"
+            LET g_browser[g_cnt].b_statepic = "stus/16/withdraw.png"
+         WHEN "R"
+            LET g_browser[g_cnt].b_statepic = "stus/16/rejection.png"
+         WHEN "W"
+            LET g_browser[g_cnt].b_statepic = "stus/16/signing.png"
+         WHEN "X"
+            LET g_browser[g_cnt].b_statepic = "stus/16/invalid.png"
+         
+      END CASE
+ 
+ 
+ 
+         LET g_cnt = g_cnt + 1
+         IF g_cnt > g_max_rec THEN
+            EXIT FOREACH
+         END IF
+      END FOREACH
+ 
+      FREE browse_pre
+ 
+   END IF
+ 
+   #清空g_add_browse, 並指定指標位置
+   IF NOT cl_null(g_add_browse) THEN
+      LET g_add_browse = ""
+      CALL g_curr_diag.setCurrentRow("s_browse",g_current_idx)
+   END IF
+   
+   IF cl_null(g_browser[g_cnt].b_fmmjdocno) THEN
+      CALL g_browser.deleteElement(g_cnt)
+   END IF
+   
+   LET g_header_cnt = g_browser.getLength()
+   LET g_current_cnt = g_browser.getLength()
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_rec_b = g_browser.getLength()
+   LET g_cnt = 0
+   DISPLAY g_browser_cnt TO FORMONLY.b_count
+   DISPLAY g_browser_cnt TO FORMONLY.h_count
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+   
+   #add-point:browser_fill段結束前 name="browser_fill.after"
+   {<point name="browser_fill.after"/>}
+   #end add-point   
+   
+END FUNCTION
+ 
+ 
+ 
+
+{</section>}
+
+{<section id="afmt530.construct" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION afmt530_construct()
+   #add-point:cs段define(客製用) name="cs.define_customerization"
+   {<point name="cs.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ls_return      STRING
+   DEFINE ls_result      STRING 
+   DEFINE ls_wc          STRING 
+   #add-point:cs段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="cs.define"
+   {<point name="cs.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="cs.pre_function"
+   {<point name="cs.pre_function"/>}
+   #end add-point
+   
+   #清空畫面&資料初始化
+   CLEAR FORM
+   INITIALIZE g_fmmj_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   LET g_current_row = 1
+ 
+   LET g_qryparam.state = "c"
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #螢幕上取條件
+      CONSTRUCT BY NAME g_wc ON fmmjsite,fmmjdocno,fmmjdocdt,fmmj027,fmmj001,fmmj002,fmmj003,fmmj004, 
+          fmmj006,fmmj010,fmmjstus,fmmj005,fmmj007,fmmj008,fmmj011,fmmj012,fmmj013,fmmj014,fmmj025,fmmj026, 
+          fmmj009,fmmj028,fmmj015,fmmj029,fmmj016,fmmj030,fmmj017,fmmj031,fmmj018,fmmj019,fmmj022,fmmj020, 
+          fmmj021,fmmj024,fmmj023,fmmjownid,fmmjowndp,fmmjcrtid,fmmjcrtdp,fmmjcrtdt,fmmjmodid,fmmjmoddt, 
+          fmmjcnfid,fmmjcnfdt
+      
+         BEFORE CONSTRUCT                                    
+            #add-point:cs段more_construct name="cs.before_construct"
+            {<point name="cs.before_construct"/>}
+            #end add-point             
+      
+         #公用欄位開窗相關處理
+         #應用 a11 樣板自動產生(Version:3)
+         #共用欄位查詢處理  
+         ##----<<fmmjcrtdt>>----
+         AFTER FIELD fmmjcrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+         #----<<fmmjmoddt>>----
+         AFTER FIELD fmmjmoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<fmmjcnfdt>>----
+         AFTER FIELD fmmjcnfdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<fmmjpstdt>>----
+ 
+ 
+ 
+      
+         #一般欄位
+                  #Ctrlp:construct.c.fmmjsite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmjsite
+            #add-point:ON ACTION controlp INFIELD fmmjsite name="construct.c.fmmjsite"
+            {<point name="construct.c.fmmjsite" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmjsite
+            #add-point:BEFORE FIELD fmmjsite name="construct.b.fmmjsite"
+            {<point name="construct.b.fmmjsite" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmjsite
+            
+            #add-point:AFTER FIELD fmmjsite name="construct.a.fmmjsite"
+            {<point name="construct.a.fmmjsite" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmjdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmjdocno
+            #add-point:ON ACTION controlp INFIELD fmmjdocno name="construct.c.fmmjdocno"
+            {<point name="construct.c.fmmjdocno" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmjdocno
+            #add-point:BEFORE FIELD fmmjdocno name="construct.b.fmmjdocno"
+            {<point name="construct.b.fmmjdocno" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmjdocno
+            
+            #add-point:AFTER FIELD fmmjdocno name="construct.a.fmmjdocno"
+            {<point name="construct.a.fmmjdocno" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmjdocdt
+            #add-point:BEFORE FIELD fmmjdocdt name="construct.b.fmmjdocdt"
+            {<point name="construct.b.fmmjdocdt" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmjdocdt
+            
+            #add-point:AFTER FIELD fmmjdocdt name="construct.a.fmmjdocdt"
+            {<point name="construct.a.fmmjdocdt" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmjdocdt
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmjdocdt
+            #add-point:ON ACTION controlp INFIELD fmmjdocdt name="construct.c.fmmjdocdt"
+            {<point name="construct.c.fmmjdocdt" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj027
+            #add-point:BEFORE FIELD fmmj027 name="construct.b.fmmj027"
+            {<point name="construct.b.fmmj027" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj027
+            
+            #add-point:AFTER FIELD fmmj027 name="construct.a.fmmj027"
+            {<point name="construct.a.fmmj027" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj027
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj027
+            #add-point:ON ACTION controlp INFIELD fmmj027 name="construct.c.fmmj027"
+            {<point name="construct.c.fmmj027" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj001
+            #add-point:BEFORE FIELD fmmj001 name="construct.b.fmmj001"
+            {<point name="construct.b.fmmj001" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj001
+            
+            #add-point:AFTER FIELD fmmj001 name="construct.a.fmmj001"
+            {<point name="construct.a.fmmj001" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj001
+            #add-point:ON ACTION controlp INFIELD fmmj001 name="construct.c.fmmj001"
+            {<point name="construct.c.fmmj001" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.fmmj002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj002
+            #add-point:ON ACTION controlp INFIELD fmmj002 name="construct.c.fmmj002"
+            {<point name="construct.c.fmmj002" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj002
+            #add-point:BEFORE FIELD fmmj002 name="construct.b.fmmj002"
+            {<point name="construct.b.fmmj002" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj002
+            
+            #add-point:AFTER FIELD fmmj002 name="construct.a.fmmj002"
+            {<point name="construct.a.fmmj002" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj003
+            #add-point:ON ACTION controlp INFIELD fmmj003 name="construct.c.fmmj003"
+            {<point name="construct.c.fmmj003" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj003
+            #add-point:BEFORE FIELD fmmj003 name="construct.b.fmmj003"
+            {<point name="construct.b.fmmj003" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj003
+            
+            #add-point:AFTER FIELD fmmj003 name="construct.a.fmmj003"
+            {<point name="construct.a.fmmj003" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj004
+            #add-point:BEFORE FIELD fmmj004 name="construct.b.fmmj004"
+            {<point name="construct.b.fmmj004" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj004
+            
+            #add-point:AFTER FIELD fmmj004 name="construct.a.fmmj004"
+            {<point name="construct.a.fmmj004" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj004
+            #add-point:ON ACTION controlp INFIELD fmmj004 name="construct.c.fmmj004"
+            {<point name="construct.c.fmmj004" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.fmmj006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj006
+            #add-point:ON ACTION controlp INFIELD fmmj006 name="construct.c.fmmj006"
+            {<point name="construct.c.fmmj006" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj006
+            #add-point:BEFORE FIELD fmmj006 name="construct.b.fmmj006"
+            {<point name="construct.b.fmmj006" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj006
+            
+            #add-point:AFTER FIELD fmmj006 name="construct.a.fmmj006"
+            {<point name="construct.a.fmmj006" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj010
+            #add-point:BEFORE FIELD fmmj010 name="construct.b.fmmj010"
+            {<point name="construct.b.fmmj010" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj010
+            
+            #add-point:AFTER FIELD fmmj010 name="construct.a.fmmj010"
+            {<point name="construct.a.fmmj010" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj010
+            #add-point:ON ACTION controlp INFIELD fmmj010 name="construct.c.fmmj010"
+            {<point name="construct.c.fmmj010" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmjstus
+            #add-point:BEFORE FIELD fmmjstus name="construct.b.fmmjstus"
+            {<point name="construct.b.fmmjstus" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmjstus
+            
+            #add-point:AFTER FIELD fmmjstus name="construct.a.fmmjstus"
+            {<point name="construct.a.fmmjstus" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmjstus
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmjstus
+            #add-point:ON ACTION controlp INFIELD fmmjstus name="construct.c.fmmjstus"
+            {<point name="construct.c.fmmjstus" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj005
+            #add-point:BEFORE FIELD fmmj005 name="construct.b.fmmj005"
+            {<point name="construct.b.fmmj005" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj005
+            
+            #add-point:AFTER FIELD fmmj005 name="construct.a.fmmj005"
+            {<point name="construct.a.fmmj005" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj005
+            #add-point:ON ACTION controlp INFIELD fmmj005 name="construct.c.fmmj005"
+            {<point name="construct.c.fmmj005" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj007
+            #add-point:BEFORE FIELD fmmj007 name="construct.b.fmmj007"
+            {<point name="construct.b.fmmj007" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj007
+            
+            #add-point:AFTER FIELD fmmj007 name="construct.a.fmmj007"
+            {<point name="construct.a.fmmj007" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj007
+            #add-point:ON ACTION controlp INFIELD fmmj007 name="construct.c.fmmj007"
+            {<point name="construct.c.fmmj007" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj008
+            #add-point:BEFORE FIELD fmmj008 name="construct.b.fmmj008"
+            {<point name="construct.b.fmmj008" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj008
+            
+            #add-point:AFTER FIELD fmmj008 name="construct.a.fmmj008"
+            {<point name="construct.a.fmmj008" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj008
+            #add-point:ON ACTION controlp INFIELD fmmj008 name="construct.c.fmmj008"
+            {<point name="construct.c.fmmj008" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj011
+            #add-point:BEFORE FIELD fmmj011 name="construct.b.fmmj011"
+            {<point name="construct.b.fmmj011" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj011
+            
+            #add-point:AFTER FIELD fmmj011 name="construct.a.fmmj011"
+            {<point name="construct.a.fmmj011" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj011
+            #add-point:ON ACTION controlp INFIELD fmmj011 name="construct.c.fmmj011"
+            {<point name="construct.c.fmmj011" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj012
+            #add-point:BEFORE FIELD fmmj012 name="construct.b.fmmj012"
+            {<point name="construct.b.fmmj012" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj012
+            
+            #add-point:AFTER FIELD fmmj012 name="construct.a.fmmj012"
+            {<point name="construct.a.fmmj012" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj012
+            #add-point:ON ACTION controlp INFIELD fmmj012 name="construct.c.fmmj012"
+            {<point name="construct.c.fmmj012" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj013
+            #add-point:BEFORE FIELD fmmj013 name="construct.b.fmmj013"
+            {<point name="construct.b.fmmj013" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj013
+            
+            #add-point:AFTER FIELD fmmj013 name="construct.a.fmmj013"
+            {<point name="construct.a.fmmj013" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj013
+            #add-point:ON ACTION controlp INFIELD fmmj013 name="construct.c.fmmj013"
+            {<point name="construct.c.fmmj013" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj014
+            #add-point:BEFORE FIELD fmmj014 name="construct.b.fmmj014"
+            {<point name="construct.b.fmmj014" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj014
+            
+            #add-point:AFTER FIELD fmmj014 name="construct.a.fmmj014"
+            {<point name="construct.a.fmmj014" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj014
+            #add-point:ON ACTION controlp INFIELD fmmj014 name="construct.c.fmmj014"
+            {<point name="construct.c.fmmj014" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.fmmj025
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj025
+            #add-point:ON ACTION controlp INFIELD fmmj025 name="construct.c.fmmj025"
+            {<point name="construct.c.fmmj025" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj025
+            #add-point:BEFORE FIELD fmmj025 name="construct.b.fmmj025"
+            {<point name="construct.b.fmmj025" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj025
+            
+            #add-point:AFTER FIELD fmmj025 name="construct.a.fmmj025"
+            {<point name="construct.a.fmmj025" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj026
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj026
+            #add-point:ON ACTION controlp INFIELD fmmj026 name="construct.c.fmmj026"
+            {<point name="construct.c.fmmj026" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj026
+            #add-point:BEFORE FIELD fmmj026 name="construct.b.fmmj026"
+            {<point name="construct.b.fmmj026" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj026
+            
+            #add-point:AFTER FIELD fmmj026 name="construct.a.fmmj026"
+            {<point name="construct.a.fmmj026" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj009
+            #add-point:BEFORE FIELD fmmj009 name="construct.b.fmmj009"
+            {<point name="construct.b.fmmj009" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj009
+            
+            #add-point:AFTER FIELD fmmj009 name="construct.a.fmmj009"
+            {<point name="construct.a.fmmj009" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj009
+            #add-point:ON ACTION controlp INFIELD fmmj009 name="construct.c.fmmj009"
+            {<point name="construct.c.fmmj009" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj028
+            #add-point:BEFORE FIELD fmmj028 name="construct.b.fmmj028"
+            {<point name="construct.b.fmmj028" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj028
+            
+            #add-point:AFTER FIELD fmmj028 name="construct.a.fmmj028"
+            {<point name="construct.a.fmmj028" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj028
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj028
+            #add-point:ON ACTION controlp INFIELD fmmj028 name="construct.c.fmmj028"
+            {<point name="construct.c.fmmj028" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj015
+            #add-point:BEFORE FIELD fmmj015 name="construct.b.fmmj015"
+            {<point name="construct.b.fmmj015" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj015
+            
+            #add-point:AFTER FIELD fmmj015 name="construct.a.fmmj015"
+            {<point name="construct.a.fmmj015" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj015
+            #add-point:ON ACTION controlp INFIELD fmmj015 name="construct.c.fmmj015"
+            {<point name="construct.c.fmmj015" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj029
+            #add-point:BEFORE FIELD fmmj029 name="construct.b.fmmj029"
+            {<point name="construct.b.fmmj029" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj029
+            
+            #add-point:AFTER FIELD fmmj029 name="construct.a.fmmj029"
+            {<point name="construct.a.fmmj029" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj029
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj029
+            #add-point:ON ACTION controlp INFIELD fmmj029 name="construct.c.fmmj029"
+            {<point name="construct.c.fmmj029" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj016
+            #add-point:BEFORE FIELD fmmj016 name="construct.b.fmmj016"
+            {<point name="construct.b.fmmj016" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj016
+            
+            #add-point:AFTER FIELD fmmj016 name="construct.a.fmmj016"
+            {<point name="construct.a.fmmj016" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj016
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj016
+            #add-point:ON ACTION controlp INFIELD fmmj016 name="construct.c.fmmj016"
+            {<point name="construct.c.fmmj016" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj030
+            #add-point:BEFORE FIELD fmmj030 name="construct.b.fmmj030"
+            {<point name="construct.b.fmmj030" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj030
+            
+            #add-point:AFTER FIELD fmmj030 name="construct.a.fmmj030"
+            {<point name="construct.a.fmmj030" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj030
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj030
+            #add-point:ON ACTION controlp INFIELD fmmj030 name="construct.c.fmmj030"
+            {<point name="construct.c.fmmj030" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj017
+            #add-point:BEFORE FIELD fmmj017 name="construct.b.fmmj017"
+            {<point name="construct.b.fmmj017" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj017
+            
+            #add-point:AFTER FIELD fmmj017 name="construct.a.fmmj017"
+            {<point name="construct.a.fmmj017" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj017
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj017
+            #add-point:ON ACTION controlp INFIELD fmmj017 name="construct.c.fmmj017"
+            {<point name="construct.c.fmmj017" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj031
+            #add-point:BEFORE FIELD fmmj031 name="construct.b.fmmj031"
+            {<point name="construct.b.fmmj031" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj031
+            
+            #add-point:AFTER FIELD fmmj031 name="construct.a.fmmj031"
+            {<point name="construct.a.fmmj031" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj031
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj031
+            #add-point:ON ACTION controlp INFIELD fmmj031 name="construct.c.fmmj031"
+            {<point name="construct.c.fmmj031" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj018
+            #add-point:BEFORE FIELD fmmj018 name="construct.b.fmmj018"
+            {<point name="construct.b.fmmj018" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj018
+            
+            #add-point:AFTER FIELD fmmj018 name="construct.a.fmmj018"
+            {<point name="construct.a.fmmj018" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj018
+            #add-point:ON ACTION controlp INFIELD fmmj018 name="construct.c.fmmj018"
+            {<point name="construct.c.fmmj018" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj019
+            #add-point:BEFORE FIELD fmmj019 name="construct.b.fmmj019"
+            {<point name="construct.b.fmmj019" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj019
+            
+            #add-point:AFTER FIELD fmmj019 name="construct.a.fmmj019"
+            {<point name="construct.a.fmmj019" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj019
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj019
+            #add-point:ON ACTION controlp INFIELD fmmj019 name="construct.c.fmmj019"
+            {<point name="construct.c.fmmj019" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj022
+            #add-point:BEFORE FIELD fmmj022 name="construct.b.fmmj022"
+            {<point name="construct.b.fmmj022" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj022
+            
+            #add-point:AFTER FIELD fmmj022 name="construct.a.fmmj022"
+            {<point name="construct.a.fmmj022" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj022
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj022
+            #add-point:ON ACTION controlp INFIELD fmmj022 name="construct.c.fmmj022"
+            {<point name="construct.c.fmmj022" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj020
+            #add-point:BEFORE FIELD fmmj020 name="construct.b.fmmj020"
+            {<point name="construct.b.fmmj020" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj020
+            
+            #add-point:AFTER FIELD fmmj020 name="construct.a.fmmj020"
+            {<point name="construct.a.fmmj020" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj020
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj020
+            #add-point:ON ACTION controlp INFIELD fmmj020 name="construct.c.fmmj020"
+            {<point name="construct.c.fmmj020" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj021
+            #add-point:BEFORE FIELD fmmj021 name="construct.b.fmmj021"
+            {<point name="construct.b.fmmj021" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj021
+            
+            #add-point:AFTER FIELD fmmj021 name="construct.a.fmmj021"
+            {<point name="construct.a.fmmj021" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj021
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj021
+            #add-point:ON ACTION controlp INFIELD fmmj021 name="construct.c.fmmj021"
+            {<point name="construct.c.fmmj021" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj024
+            #add-point:BEFORE FIELD fmmj024 name="construct.b.fmmj024"
+            {<point name="construct.b.fmmj024" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj024
+            
+            #add-point:AFTER FIELD fmmj024 name="construct.a.fmmj024"
+            {<point name="construct.a.fmmj024" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj024
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj024
+            #add-point:ON ACTION controlp INFIELD fmmj024 name="construct.c.fmmj024"
+            {<point name="construct.c.fmmj024" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj023
+            #add-point:BEFORE FIELD fmmj023 name="construct.b.fmmj023"
+            {<point name="construct.b.fmmj023" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj023
+            
+            #add-point:AFTER FIELD fmmj023 name="construct.a.fmmj023"
+            {<point name="construct.a.fmmj023" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmj023
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj023
+            #add-point:ON ACTION controlp INFIELD fmmj023 name="construct.c.fmmj023"
+            {<point name="construct.c.fmmj023" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.fmmjownid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmjownid
+            #add-point:ON ACTION controlp INFIELD fmmjownid name="construct.c.fmmjownid"
+            {<point name="construct.c.fmmjownid" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmjownid
+            #add-point:BEFORE FIELD fmmjownid name="construct.b.fmmjownid"
+            {<point name="construct.b.fmmjownid" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmjownid
+            
+            #add-point:AFTER FIELD fmmjownid name="construct.a.fmmjownid"
+            {<point name="construct.a.fmmjownid" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmjowndp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmjowndp
+            #add-point:ON ACTION controlp INFIELD fmmjowndp name="construct.c.fmmjowndp"
+            {<point name="construct.c.fmmjowndp" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmjowndp
+            #add-point:BEFORE FIELD fmmjowndp name="construct.b.fmmjowndp"
+            {<point name="construct.b.fmmjowndp" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmjowndp
+            
+            #add-point:AFTER FIELD fmmjowndp name="construct.a.fmmjowndp"
+            {<point name="construct.a.fmmjowndp" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmjcrtid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmjcrtid
+            #add-point:ON ACTION controlp INFIELD fmmjcrtid name="construct.c.fmmjcrtid"
+            {<point name="construct.c.fmmjcrtid" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmjcrtid
+            #add-point:BEFORE FIELD fmmjcrtid name="construct.b.fmmjcrtid"
+            {<point name="construct.b.fmmjcrtid" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmjcrtid
+            
+            #add-point:AFTER FIELD fmmjcrtid name="construct.a.fmmjcrtid"
+            {<point name="construct.a.fmmjcrtid" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.fmmjcrtdp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmjcrtdp
+            #add-point:ON ACTION controlp INFIELD fmmjcrtdp name="construct.c.fmmjcrtdp"
+            {<point name="construct.c.fmmjcrtdp" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmjcrtdp
+            #add-point:BEFORE FIELD fmmjcrtdp name="construct.b.fmmjcrtdp"
+            {<point name="construct.b.fmmjcrtdp" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmjcrtdp
+            
+            #add-point:AFTER FIELD fmmjcrtdp name="construct.a.fmmjcrtdp"
+            {<point name="construct.a.fmmjcrtdp" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmjcrtdt
+            #add-point:BEFORE FIELD fmmjcrtdt name="construct.b.fmmjcrtdt"
+            {<point name="construct.b.fmmjcrtdt" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.fmmjmodid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmjmodid
+            #add-point:ON ACTION controlp INFIELD fmmjmodid name="construct.c.fmmjmodid"
+            {<point name="construct.c.fmmjmodid" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmjmodid
+            #add-point:BEFORE FIELD fmmjmodid name="construct.b.fmmjmodid"
+            {<point name="construct.b.fmmjmodid" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmjmodid
+            
+            #add-point:AFTER FIELD fmmjmodid name="construct.a.fmmjmodid"
+            {<point name="construct.a.fmmjmodid" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmjmoddt
+            #add-point:BEFORE FIELD fmmjmoddt name="construct.b.fmmjmoddt"
+            {<point name="construct.b.fmmjmoddt" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.fmmjcnfid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmjcnfid
+            #add-point:ON ACTION controlp INFIELD fmmjcnfid name="construct.c.fmmjcnfid"
+            {<point name="construct.c.fmmjcnfid" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmjcnfid
+            #add-point:BEFORE FIELD fmmjcnfid name="construct.b.fmmjcnfid"
+            {<point name="construct.b.fmmjcnfid" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmjcnfid
+            
+            #add-point:AFTER FIELD fmmjcnfid name="construct.a.fmmjcnfid"
+            {<point name="construct.a.fmmjcnfid" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmjcnfdt
+            #add-point:BEFORE FIELD fmmjcnfdt name="construct.b.fmmjcnfdt"
+            {<point name="construct.b.fmmjcnfdt" />}
+            #END add-point
+ 
+ 
+ 
+           
+      END CONSTRUCT
+      
+      #add-point:cs段more_construct name="cs.more_construct"
+      {<point name="cs.more_construct"/>}
+      #end add-point   
+      
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog name="cs.b_dialog"
+         {<point name="cs.b_dialog"/>}
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+  
+   #add-point:cs段after_construct name="cs.after_construct"
+   {<point name="cs.after_construct"/>}
+   #end add-point
+  
+END FUNCTION
+
+{</section>}
+
+{<section id="afmt530.filter" >}
+#應用 a50 樣板自動產生(Version:8)
+#+ filter過濾功能
+PRIVATE FUNCTION afmt530_filter()
+   #add-point:filter段define name="filter.define_customerization"
+   {<point name="filter.define_customerization" edit="c" mark="Y"/>}
+   #end add-point   
+   #add-point:filter段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter.define"
+   {<point name="filter.define"/>}
+   #end add-point   
+   
+   #add-point:Function前置處理  name="filter.pre_function"
+   {<point name="filter.pre_function"/>}
+   #end add-point
+   
+   #切換畫面
+   IF NOT g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF   
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter.trim()
+   LET g_wc_t = g_wc
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter_t, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON fmmjdocno
+                          FROM s_browse[1].b_fmmjdocno
+ 
+         BEFORE CONSTRUCT
+               DISPLAY afmt530_filter_parser('fmmjdocno') TO s_browse[1].b_fmmjdocno
+      
+         #add-point:filter段cs_ctrl name="filter.cs_ctrl"
+         {<point name="filter.cs_ctrl"/>}
+         #end add-point
+      
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs name="filter.add_cs"
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog name="filter.b_dialog"
+         {<point name="filter.b_dialog"/>}
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = "   AND   ", g_wc_filter, "   "
+      LET g_wc = g_wc , g_wc_filter
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+      LET g_wc = g_wc_t
+   END IF
+ 
+      CALL afmt530_filter_show('fmmjdocno')
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="afmt530.filter_parser" >}
+#+ filter過濾功能
+PRIVATE FUNCTION afmt530_filter_parser(ps_field)
+   #add-point:filter段define name="filter_parser.define_customerization"
+   {<point name="filter_parser.define_customerization" edit="c" mark="Y"/>}
+   #end add-point    
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_parser.define"
+   {<point name="filter_parser.define"/>}
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="afmt530.filter_show" >}
+#+ 顯示過濾條件
+PRIVATE FUNCTION afmt530_filter_show(ps_field)
+   DEFINE ps_field         STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.b_", ps_field
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = afmt530_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="afmt530.query" >}
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION afmt530_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   {<point name="query.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ls_wc STRING
+   #add-point:query段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   {<point name="query.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="query.pre_function"
+   {<point name="query.pre_function"/>}
+   #end add-point
+   
+   LET INT_FLAG = 0
+   LET ls_wc = g_wc
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+ 
+   CALL g_browser.clear() 
+ 
+   #browser panel折疊
+   IF g_worksheet_hidden THEN
+      CALL gfrm_curr.setElementHidden("worksheet_vbox",0)
+      CALL gfrm_curr.setElementImage("worksheethidden","worksheethidden-24.png")
+      LET g_worksheet_hidden = 0
+   END IF
+   
+   #單頭折疊
+   IF g_header_hidden THEN
+      CALL gfrm_curr.setElementHidden("vb_master",0)
+      CALL gfrm_curr.setElementImage("controls","headerhidden-24")
+      LET g_header_hidden = 0
+   END IF
+ 
+   INITIALIZE g_fmmj_m.* TO NULL
+   ERROR ""
+ 
+   DISPLAY " " TO FORMONLY.b_count
+   DISPLAY " " TO FORMONLY.h_count
+   CALL afmt530_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      #LET g_wc = ls_wc
+      LET g_wc = " 1=2"
+      CALL afmt530_browser_fill(g_wc,"F")
+      CALL afmt530_fetch("")
+      RETURN
+   ELSE
+      LET g_current_row = 1
+      LET g_current_cnt = 0
+   END IF
+   
+   #根據條件從新抓取資料
+   LET g_error_show = 1
+   CALL afmt530_browser_fill(g_wc,"F")   # 移到第一頁
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||")")
+   
+   #備份搜尋條件
+   LET ls_wc = g_wc
+   
+   IF g_browser.getLength() = 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "-100" 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   ELSE
+      CALL afmt530_fetch("F") 
+   END IF
+   
+   LET g_wc_filter = ""
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="afmt530.fetch" >}
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION afmt530_fetch(p_fl)
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   {<point name="fetch.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_fl       LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   {<point name="fetch.define"/>}
+   #end add-point  
+   
+   #add-point:Function前置處理  name="fetch.pre_function"
+   {<point name="fetch.pre_function"/>}
+   #end add-point
+   
+   #根據傳入的條件決定抓取的資料
+   CASE p_fl
+      WHEN "F" 
+         LET g_current_idx = 1
+      WHEN "P"
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN "N"
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN "L" 
+         #LET g_current_idx = g_header_cnt        
+         LET g_current_idx = g_browser.getLength()    
+      WHEN "/"
+         #詢問要指定的筆數
+         IF (NOT g_no_ask) THEN      
+            CALL cl_getmsg("fetch", g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,": " FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl"
+            END PROMPT
+            
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT CASE  
+            END IF           
+         END IF
+         IF g_jump > 0 THEN
+            LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE     
+   END CASE
+ 
+   #筆數顯示
+   LET g_browser_idx = g_current_idx 
+   IF g_browser_cnt > 0 THEN
+      DISPLAY g_browser_idx TO FORMONLY.b_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.b_count #總筆數
+      DISPLAY g_browser_idx TO FORMONLY.h_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.h_count #總筆數
+   ELSE
+      DISPLAY '' TO FORMONLY.b_index #當下筆數
+      DISPLAY '' TO FORMONLY.b_count #總筆數
+      DISPLAY '' TO FORMONLY.h_index #當下筆數
+      DISPLAY '' TO FORMONLY.h_count #總筆數
+   END IF
+   
+   
+   
+   #避免超出browser資料筆數上限
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_browser_idx = g_browser.getLength()
+      LET g_current_idx = g_browser.getLength() 
+   END IF
+   
+   # 設定browse索引
+   CALL g_curr_diag.setCurrentRow("s_browse", g_current_idx)
+   CALL cl_navigator_setting(g_browser_idx, g_browser_cnt) 
+ 
+   #代表沒有資料, 無需做後續資料撈取之動作
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+ 
+   #根據選定的筆數給予key欄位值
+   LET g_fmmj_m.fmmjdocno = g_browser[g_current_idx].b_fmmjdocno
+ 
+                       
+   #讀取單頭所有欄位資料
+   EXECUTE afmt530_master_referesh USING g_fmmj_m.fmmjdocno INTO g_fmmj_m.fmmjsite,g_fmmj_m.fmmjdocno, 
+       g_fmmj_m.fmmjdocdt,g_fmmj_m.fmmj027,g_fmmj_m.fmmj001,g_fmmj_m.fmmj002,g_fmmj_m.fmmj003,g_fmmj_m.fmmj004, 
+       g_fmmj_m.fmmj006,g_fmmj_m.fmmj010,g_fmmj_m.fmmjstus,g_fmmj_m.fmmj005,g_fmmj_m.fmmj007,g_fmmj_m.fmmj008, 
+       g_fmmj_m.fmmj011,g_fmmj_m.fmmj012,g_fmmj_m.fmmj013,g_fmmj_m.fmmj014,g_fmmj_m.fmmj025,g_fmmj_m.fmmj026, 
+       g_fmmj_m.fmmj009,g_fmmj_m.fmmj028,g_fmmj_m.fmmj015,g_fmmj_m.fmmj029,g_fmmj_m.fmmj016,g_fmmj_m.fmmj030, 
+       g_fmmj_m.fmmj017,g_fmmj_m.fmmj031,g_fmmj_m.fmmj018,g_fmmj_m.fmmj019,g_fmmj_m.fmmj022,g_fmmj_m.fmmj020, 
+       g_fmmj_m.fmmj021,g_fmmj_m.fmmj024,g_fmmj_m.fmmj023,g_fmmj_m.fmmjownid,g_fmmj_m.fmmjowndp,g_fmmj_m.fmmjcrtid, 
+       g_fmmj_m.fmmjcrtdp,g_fmmj_m.fmmjcrtdt,g_fmmj_m.fmmjmodid,g_fmmj_m.fmmjmoddt,g_fmmj_m.fmmjcnfid, 
+       g_fmmj_m.fmmjcnfdt,g_fmmj_m.fmmjsite_desc,g_fmmj_m.fmmj002_desc,g_fmmj_m.fmmj003_desc,g_fmmj_m.fmmjownid_desc, 
+       g_fmmj_m.fmmjowndp_desc,g_fmmj_m.fmmjcrtid_desc,g_fmmj_m.fmmjcrtdp_desc,g_fmmj_m.fmmjmodid_desc, 
+       g_fmmj_m.fmmjcnfid_desc
+   
+   #遮罩相關處理
+   LET g_fmmj_m_mask_o.* =  g_fmmj_m.*
+   CALL afmt530_fmmj_t_mask()
+   LET g_fmmj_m_mask_n.* =  g_fmmj_m.*
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL afmt530_set_act_visible()
+   CALL afmt530_set_act_no_visible()
+ 
+   #add-point:fetch段action控制 name="fetch.action_control"
+   {<point name="fetch.action_control"/>}
+   #end add-point  
+   
+   
+   
+   #保存單頭舊值
+   LET g_fmmj_m_t.* = g_fmmj_m.*
+   LET g_fmmj_m_o.* = g_fmmj_m.*
+   
+   LET g_data_owner = g_fmmj_m.fmmjownid      
+   LET g_data_dept  = g_fmmj_m.fmmjowndp
+   
+   #重新顯示
+   CALL afmt530_show()
+   #應用 a56 樣板自動產生(Version:3)
+   #檢查此單據是否需顯示BPM簽核狀況按鈕 
+   IF cl_bpm_chk() THEN
+      CALL cl_set_act_visible("bpm_status",TRUE)
+   ELSE
+      CALL cl_set_act_visible("bpm_status",FALSE)
+   END IF
+ 
+ 
+ 
+ 
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="afmt530.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION afmt530_insert()
+   #add-point:insert段define(客製用) name="insert.define_customerization"
+   {<point name="insert.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:insert段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   {<point name="insert.define"/>}
+   #end add-point    
+   
+   #add-point:Function前置處理  name="insert.pre_function"
+   {<point name="insert.pre_function"/>}
+   #end add-point
+   
+   CLEAR FORM #清畫面欄位內容
+   INITIALIZE g_fmmj_m.* TO NULL             #DEFAULT 設定
+   LET g_fmmjdocno_t = NULL
+ 
+   
+   #add-point:insert段before name="insert.before"
+   {<point name="insert.before"/>}
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   
+   WHILE TRUE
+      
+      #公用欄位給值
+      #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_fmmj_m.fmmjownid = g_user
+      LET g_fmmj_m.fmmjowndp = g_dept
+      LET g_fmmj_m.fmmjcrtid = g_user
+      LET g_fmmj_m.fmmjcrtdp = g_dept 
+      LET g_fmmj_m.fmmjcrtdt = cl_get_current()
+      LET g_fmmj_m.fmmjmodid = g_user
+      LET g_fmmj_m.fmmjmoddt = cl_get_current()
+      LET g_fmmj_m.fmmjstus = 'N'
+ 
+ 
+ 
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+            LET g_fmmj_m.fmmj010 = "N"
+      LET g_fmmj_m.fmmj005 = "0"
+      LET g_fmmj_m.fmmj007 = "0"
+      LET g_fmmj_m.fmmj008 = "0"
+      LET g_fmmj_m.fmmj028 = "0"
+      LET g_fmmj_m.fmmj015 = "0"
+      LET g_fmmj_m.fmmj029 = "0"
+      LET g_fmmj_m.fmmj016 = "0"
+      LET g_fmmj_m.fmmj030 = "0"
+      LET g_fmmj_m.fmmj017 = "0"
+      LET g_fmmj_m.fmmj031 = "0"
+      LET g_fmmj_m.fmmj019 = "N"
+      LET g_fmmj_m.fmmj022 = "360"
+      LET g_fmmj_m.fmmj023 = "N"
+ 
+ 
+      #add-point:單頭預設值 name="insert.default"
+      {<point name="insert.default"/>}
+      #end add-point   
+     
+      #顯示狀態(stus)圖片
+            #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_fmmj_m.fmmjstus 
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+ 
+ 
+ 
+     
+      #資料輸入
+      CALL afmt530_input("a")
+      
+      #add-point:單頭輸入後 name="insert.after_insert"
+      {<point name="insert.after_insert"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         #取消
+         LET INT_FLAG = 0
+         DISPLAY g_current_cnt TO FORMONLY.h_count     #總筆數
+         DISPLAY g_current_idx TO FORMONLY.h_index     #當下筆數
+         INITIALIZE g_fmmj_m.* TO NULL
+         CALL afmt530_show()
+         CALL s_transaction_end('N','0')
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         RETURN
+      END IF
+ 
+      LET g_rec_b = 0
+      EXIT WHILE
+   END WHILE
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL afmt530_set_act_visible()
+   CALL afmt530_set_act_no_visible()
+ 
+   #將新增的資料併入搜尋條件中
+   LET g_state = "insert"
+   
+   LET g_fmmjdocno_t = g_fmmj_m.fmmjdocno
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " fmmjent = " ||g_enterprise|| " AND",
+                      " fmmjdocno = '", g_fmmj_m.fmmjdocno, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL afmt530_browser_fill("","")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+ 
+   #撈取異動後的資料(主要是帶出reference)
+   EXECUTE afmt530_master_referesh USING g_fmmj_m.fmmjdocno INTO g_fmmj_m.fmmjsite,g_fmmj_m.fmmjdocno, 
+       g_fmmj_m.fmmjdocdt,g_fmmj_m.fmmj027,g_fmmj_m.fmmj001,g_fmmj_m.fmmj002,g_fmmj_m.fmmj003,g_fmmj_m.fmmj004, 
+       g_fmmj_m.fmmj006,g_fmmj_m.fmmj010,g_fmmj_m.fmmjstus,g_fmmj_m.fmmj005,g_fmmj_m.fmmj007,g_fmmj_m.fmmj008, 
+       g_fmmj_m.fmmj011,g_fmmj_m.fmmj012,g_fmmj_m.fmmj013,g_fmmj_m.fmmj014,g_fmmj_m.fmmj025,g_fmmj_m.fmmj026, 
+       g_fmmj_m.fmmj009,g_fmmj_m.fmmj028,g_fmmj_m.fmmj015,g_fmmj_m.fmmj029,g_fmmj_m.fmmj016,g_fmmj_m.fmmj030, 
+       g_fmmj_m.fmmj017,g_fmmj_m.fmmj031,g_fmmj_m.fmmj018,g_fmmj_m.fmmj019,g_fmmj_m.fmmj022,g_fmmj_m.fmmj020, 
+       g_fmmj_m.fmmj021,g_fmmj_m.fmmj024,g_fmmj_m.fmmj023,g_fmmj_m.fmmjownid,g_fmmj_m.fmmjowndp,g_fmmj_m.fmmjcrtid, 
+       g_fmmj_m.fmmjcrtdp,g_fmmj_m.fmmjcrtdt,g_fmmj_m.fmmjmodid,g_fmmj_m.fmmjmoddt,g_fmmj_m.fmmjcnfid, 
+       g_fmmj_m.fmmjcnfdt,g_fmmj_m.fmmjsite_desc,g_fmmj_m.fmmj002_desc,g_fmmj_m.fmmj003_desc,g_fmmj_m.fmmjownid_desc, 
+       g_fmmj_m.fmmjowndp_desc,g_fmmj_m.fmmjcrtid_desc,g_fmmj_m.fmmjcrtdp_desc,g_fmmj_m.fmmjmodid_desc, 
+       g_fmmj_m.fmmjcnfid_desc
+   
+   
+   #遮罩相關處理
+   LET g_fmmj_m_mask_o.* =  g_fmmj_m.*
+   CALL afmt530_fmmj_t_mask()
+   LET g_fmmj_m_mask_n.* =  g_fmmj_m.*
+   
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_fmmj_m.fmmjsite,g_fmmj_m.fmmjsite_desc,g_fmmj_m.fmmjdocno,g_fmmj_m.fmmjdocdt,g_fmmj_m.fmmj027, 
+       g_fmmj_m.fmmj001,g_fmmj_m.fmmj002,g_fmmj_m.fmmj002_desc,g_fmmj_m.fmmj003,g_fmmj_m.fmmj003_desc, 
+       g_fmmj_m.fmmj004,g_fmmj_m.fmmj006,g_fmmj_m.fmmj010,g_fmmj_m.fmmjstus,g_fmmj_m.fmmj005,g_fmmj_m.fmmj007, 
+       g_fmmj_m.fmmj008,g_fmmj_m.fmmj011,g_fmmj_m.fmmj012,g_fmmj_m.fmmj012_desc,g_fmmj_m.fmmj013,g_fmmj_m.fmmj013_desc, 
+       g_fmmj_m.fmmj014,g_fmmj_m.fmmj025,g_fmmj_m.fmmj025_desc,g_fmmj_m.fmmj026,g_fmmj_m.fmmj026_desc, 
+       g_fmmj_m.fmmj009,g_fmmj_m.fmmj028,g_fmmj_m.fmmj015,g_fmmj_m.fmmj029,g_fmmj_m.fmmj016,g_fmmj_m.fmmj030, 
+       g_fmmj_m.fmmj017,g_fmmj_m.fmmj031,g_fmmj_m.fmmj018,g_fmmj_m.fmmj019,g_fmmj_m.fmmj022,g_fmmj_m.fmmj020, 
+       g_fmmj_m.fmmj021,g_fmmj_m.fmmj024,g_fmmj_m.fmmj023,g_fmmj_m.fmmjownid,g_fmmj_m.fmmjownid_desc, 
+       g_fmmj_m.fmmjowndp,g_fmmj_m.fmmjowndp_desc,g_fmmj_m.fmmjcrtid,g_fmmj_m.fmmjcrtid_desc,g_fmmj_m.fmmjcrtdp, 
+       g_fmmj_m.fmmjcrtdp_desc,g_fmmj_m.fmmjcrtdt,g_fmmj_m.fmmjmodid,g_fmmj_m.fmmjmodid_desc,g_fmmj_m.fmmjmoddt, 
+       g_fmmj_m.fmmjcnfid,g_fmmj_m.fmmjcnfid_desc,g_fmmj_m.fmmjcnfdt
+ 
+   #add-point:新增結束後 name="insert.after"
+   {<point name="insert.after"/>}
+   #end add-point 
+ 
+   LET g_data_owner = g_fmmj_m.fmmjownid      
+   LET g_data_dept  = g_fmmj_m.fmmjowndp
+ 
+   #功能已完成,通報訊息中心
+   CALL afmt530_msgcentre_notify('insert')
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="afmt530.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION afmt530_modify()
+   #add-point:modify段define(客製用) name="modify.define_customerization"
+   {<point name="modify.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:modify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   {<point name="modify.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理 name="modify.pre_function"
+   {<point name="modify.pre_function"/>}
+   #end add-point
+   
+   #先確定key值無遺漏
+   IF g_fmmj_m.fmmjdocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF 
+ 
+   ERROR ""
+  
+   #備份key值
+   LET g_fmmjdocno_t = g_fmmj_m.fmmjdocno
+ 
+   
+   CALL s_transaction_begin()
+   
+   #先lock資料
+   OPEN afmt530_cl USING g_enterprise,g_fmmj_m.fmmjdocno
+   IF SQLCA.SQLCODE THEN    #(ver:49)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN afmt530_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.popup = TRUE 
+      CLOSE afmt530_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE afmt530_master_referesh USING g_fmmj_m.fmmjdocno INTO g_fmmj_m.fmmjsite,g_fmmj_m.fmmjdocno, 
+       g_fmmj_m.fmmjdocdt,g_fmmj_m.fmmj027,g_fmmj_m.fmmj001,g_fmmj_m.fmmj002,g_fmmj_m.fmmj003,g_fmmj_m.fmmj004, 
+       g_fmmj_m.fmmj006,g_fmmj_m.fmmj010,g_fmmj_m.fmmjstus,g_fmmj_m.fmmj005,g_fmmj_m.fmmj007,g_fmmj_m.fmmj008, 
+       g_fmmj_m.fmmj011,g_fmmj_m.fmmj012,g_fmmj_m.fmmj013,g_fmmj_m.fmmj014,g_fmmj_m.fmmj025,g_fmmj_m.fmmj026, 
+       g_fmmj_m.fmmj009,g_fmmj_m.fmmj028,g_fmmj_m.fmmj015,g_fmmj_m.fmmj029,g_fmmj_m.fmmj016,g_fmmj_m.fmmj030, 
+       g_fmmj_m.fmmj017,g_fmmj_m.fmmj031,g_fmmj_m.fmmj018,g_fmmj_m.fmmj019,g_fmmj_m.fmmj022,g_fmmj_m.fmmj020, 
+       g_fmmj_m.fmmj021,g_fmmj_m.fmmj024,g_fmmj_m.fmmj023,g_fmmj_m.fmmjownid,g_fmmj_m.fmmjowndp,g_fmmj_m.fmmjcrtid, 
+       g_fmmj_m.fmmjcrtdp,g_fmmj_m.fmmjcrtdt,g_fmmj_m.fmmjmodid,g_fmmj_m.fmmjmoddt,g_fmmj_m.fmmjcnfid, 
+       g_fmmj_m.fmmjcnfdt,g_fmmj_m.fmmjsite_desc,g_fmmj_m.fmmj002_desc,g_fmmj_m.fmmj003_desc,g_fmmj_m.fmmjownid_desc, 
+       g_fmmj_m.fmmjowndp_desc,g_fmmj_m.fmmjcrtid_desc,g_fmmj_m.fmmjcrtdp_desc,g_fmmj_m.fmmjmodid_desc, 
+       g_fmmj_m.fmmjcnfid_desc
+ 
+   #檢查是否允許此動作
+   IF NOT afmt530_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #遮罩相關處理
+   LET g_fmmj_m_mask_o.* =  g_fmmj_m.*
+   CALL afmt530_fmmj_t_mask()
+   LET g_fmmj_m_mask_n.* =  g_fmmj_m.*
+   
+   
+ 
+   #顯示資料
+   CALL afmt530_show()
+   
+   WHILE TRUE
+      LET g_fmmj_m.fmmjdocno = g_fmmjdocno_t
+ 
+      
+      #寫入修改者/修改日期資訊
+      LET g_fmmj_m.fmmjmodid = g_user 
+LET g_fmmj_m.fmmjmoddt = cl_get_current()
+LET g_fmmj_m.fmmjmodid_desc = cl_get_username(g_fmmj_m.fmmjmodid)
+      
+      #add-point:modify段修改前 name="modify.before_input"
+      {<point name="modify.before_input"/>}
+      #end add-point
+ 
+      #資料輸入
+      CALL afmt530_input("u")     
+ 
+      #add-point:modify段修改後 name="modify.after_input"
+      {<point name="modify.after_input"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         CALL s_transaction_end('N','0')
+         LET INT_FLAG = 0
+         LET g_fmmj_m.* = g_fmmj_m_t.*
+         CALL afmt530_show()
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         EXIT WHILE
+      END IF
+ 
+      #若有modid跟moddt則進行update
+      UPDATE fmmj_t SET (fmmjmodid,fmmjmoddt) = (g_fmmj_m.fmmjmodid,g_fmmj_m.fmmjmoddt)
+       WHERE fmmjent = g_enterprise AND fmmjdocno = g_fmmjdocno_t
+ 
+ 
+      EXIT WHILE
+      
+   END WHILE
+ 
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL afmt530_set_act_visible()
+   CALL afmt530_set_act_no_visible()
+ 
+   #組合新增資料的條件
+   LET g_add_browse = " fmmjent = " ||g_enterprise|| " AND",
+                      " fmmjdocno = '", g_fmmj_m.fmmjdocno, "' "
+ 
+   #填到對應位置
+   CALL afmt530_browser_fill(g_wc,"")
+ 
+   CLOSE afmt530_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL afmt530_msgcentre_notify('modify')
+   
+   LET g_worksheet_hidden = 0
+   
+END FUNCTION   
+
+{</section>}
+
+{<section id="afmt530.input" >}
+#+ 資料輸入
+PRIVATE FUNCTION afmt530_input(p_cmd)
+   #add-point:input段define(客製用) name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_cmd           LIKE type_t.chr1
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_n             LIKE type_t.num10       #檢查重複用  
+   DEFINE l_cnt           LIKE type_t.num10       #檢查重複用  
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否  
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_i             LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num10
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="input.pre_function"
+   {<point name="input.pre_function"/>}
+   #end add-point
+   
+   #切換至輸入畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_fmmj_m.fmmjsite,g_fmmj_m.fmmjsite_desc,g_fmmj_m.fmmjdocno,g_fmmj_m.fmmjdocdt,g_fmmj_m.fmmj027, 
+       g_fmmj_m.fmmj001,g_fmmj_m.fmmj002,g_fmmj_m.fmmj002_desc,g_fmmj_m.fmmj003,g_fmmj_m.fmmj003_desc, 
+       g_fmmj_m.fmmj004,g_fmmj_m.fmmj006,g_fmmj_m.fmmj010,g_fmmj_m.fmmjstus,g_fmmj_m.fmmj005,g_fmmj_m.fmmj007, 
+       g_fmmj_m.fmmj008,g_fmmj_m.fmmj011,g_fmmj_m.fmmj012,g_fmmj_m.fmmj012_desc,g_fmmj_m.fmmj013,g_fmmj_m.fmmj013_desc, 
+       g_fmmj_m.fmmj014,g_fmmj_m.fmmj025,g_fmmj_m.fmmj025_desc,g_fmmj_m.fmmj026,g_fmmj_m.fmmj026_desc, 
+       g_fmmj_m.fmmj009,g_fmmj_m.fmmj028,g_fmmj_m.fmmj015,g_fmmj_m.fmmj029,g_fmmj_m.fmmj016,g_fmmj_m.fmmj030, 
+       g_fmmj_m.fmmj017,g_fmmj_m.fmmj031,g_fmmj_m.fmmj018,g_fmmj_m.fmmj019,g_fmmj_m.fmmj022,g_fmmj_m.fmmj020, 
+       g_fmmj_m.fmmj021,g_fmmj_m.fmmj024,g_fmmj_m.fmmj023,g_fmmj_m.fmmjownid,g_fmmj_m.fmmjownid_desc, 
+       g_fmmj_m.fmmjowndp,g_fmmj_m.fmmjowndp_desc,g_fmmj_m.fmmjcrtid,g_fmmj_m.fmmjcrtid_desc,g_fmmj_m.fmmjcrtdp, 
+       g_fmmj_m.fmmjcrtdp_desc,g_fmmj_m.fmmjcrtdt,g_fmmj_m.fmmjmodid,g_fmmj_m.fmmjmodid_desc,g_fmmj_m.fmmjmoddt, 
+       g_fmmj_m.fmmjcnfid,g_fmmj_m.fmmjcnfid_desc,g_fmmj_m.fmmjcnfdt
+   
+   CALL cl_set_head_visible("","YES")  
+   
+   #a-新增,r-複製,u-修改
+   IF p_cmd = 'r' THEN
+      #此段落的r動作等同於a
+      LET p_cmd = 'a'
+   END IF
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   LET g_qryparam.state = "i"
+   
+   #控制key欄位可否輸入
+   CALL afmt530_set_entry(p_cmd)
+   #add-point:set_entry後 name="input.after_set_entry"
+   {<point name="input.after_set_entry"/>}
+   #end add-point
+   CALL afmt530_set_no_entry(p_cmd)
+   
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+   #add-point:資料輸入前 name="input.before_input"
+   {<point name="input.before_input"/>}
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #單頭段
+      INPUT BY NAME g_fmmj_m.fmmjsite,g_fmmj_m.fmmjdocno,g_fmmj_m.fmmjdocdt,g_fmmj_m.fmmj027,g_fmmj_m.fmmj001, 
+          g_fmmj_m.fmmj002,g_fmmj_m.fmmj003,g_fmmj_m.fmmj004,g_fmmj_m.fmmj006,g_fmmj_m.fmmj010,g_fmmj_m.fmmjstus, 
+          g_fmmj_m.fmmj005,g_fmmj_m.fmmj007,g_fmmj_m.fmmj008,g_fmmj_m.fmmj011,g_fmmj_m.fmmj012,g_fmmj_m.fmmj013, 
+          g_fmmj_m.fmmj014,g_fmmj_m.fmmj025,g_fmmj_m.fmmj026,g_fmmj_m.fmmj009,g_fmmj_m.fmmj028,g_fmmj_m.fmmj015, 
+          g_fmmj_m.fmmj029,g_fmmj_m.fmmj016,g_fmmj_m.fmmj030,g_fmmj_m.fmmj017,g_fmmj_m.fmmj031,g_fmmj_m.fmmj018, 
+          g_fmmj_m.fmmj019,g_fmmj_m.fmmj022,g_fmmj_m.fmmj020,g_fmmj_m.fmmj021,g_fmmj_m.fmmj024,g_fmmj_m.fmmj023  
+
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            #其他table資料備份(確定是否更改用)
+            
+            #add-point:input開始前 name="input.before.input"
+            {<point name="input.before.input"/>}
+            #end add-point
+   
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmjsite
+            
+            #add-point:AFTER FIELD fmmjsite name="input.a.fmmjsite"
+            {<point name="input.a.fmmjsite" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmjsite
+            #add-point:BEFORE FIELD fmmjsite name="input.b.fmmjsite"
+            {<point name="input.b.fmmjsite" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmjsite
+            #add-point:ON CHANGE fmmjsite name="input.g.fmmjsite"
+            {<point name="input.g.fmmjsite" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmjdocno
+            #add-point:BEFORE FIELD fmmjdocno name="input.b.fmmjdocno"
+            {<point name="input.b.fmmjdocno" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmjdocno
+            
+            #add-point:AFTER FIELD fmmjdocno name="input.a.fmmjdocno"
+            {<point name="input.a.fmmjdocno" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmjdocno
+            #add-point:ON CHANGE fmmjdocno name="input.g.fmmjdocno"
+            {<point name="input.g.fmmjdocno" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmjdocdt
+            #add-point:BEFORE FIELD fmmjdocdt name="input.b.fmmjdocdt"
+            {<point name="input.b.fmmjdocdt" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmjdocdt
+            
+            #add-point:AFTER FIELD fmmjdocdt name="input.a.fmmjdocdt"
+            {<point name="input.a.fmmjdocdt" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmjdocdt
+            #add-point:ON CHANGE fmmjdocdt name="input.g.fmmjdocdt"
+            {<point name="input.g.fmmjdocdt" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj027
+            #add-point:BEFORE FIELD fmmj027 name="input.b.fmmj027"
+            {<point name="input.b.fmmj027" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj027
+            
+            #add-point:AFTER FIELD fmmj027 name="input.a.fmmj027"
+            {<point name="input.a.fmmj027" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj027
+            #add-point:ON CHANGE fmmj027 name="input.g.fmmj027"
+            {<point name="input.g.fmmj027" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj001
+            #add-point:BEFORE FIELD fmmj001 name="input.b.fmmj001"
+            {<point name="input.b.fmmj001" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj001
+            
+            #add-point:AFTER FIELD fmmj001 name="input.a.fmmj001"
+            {<point name="input.a.fmmj001" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj001
+            #add-point:ON CHANGE fmmj001 name="input.g.fmmj001"
+            {<point name="input.g.fmmj001" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj002
+            
+            #add-point:AFTER FIELD fmmj002 name="input.a.fmmj002"
+            {<point name="input.a.fmmj002" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj002
+            #add-point:BEFORE FIELD fmmj002 name="input.b.fmmj002"
+            {<point name="input.b.fmmj002" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj002
+            #add-point:ON CHANGE fmmj002 name="input.g.fmmj002"
+            {<point name="input.g.fmmj002" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj003
+            
+            #add-point:AFTER FIELD fmmj003 name="input.a.fmmj003"
+            {<point name="input.a.fmmj003" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj003
+            #add-point:BEFORE FIELD fmmj003 name="input.b.fmmj003"
+            {<point name="input.b.fmmj003" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj003
+            #add-point:ON CHANGE fmmj003 name="input.g.fmmj003"
+            {<point name="input.g.fmmj003" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj004
+            #add-point:BEFORE FIELD fmmj004 name="input.b.fmmj004"
+            {<point name="input.b.fmmj004" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj004
+            
+            #add-point:AFTER FIELD fmmj004 name="input.a.fmmj004"
+            {<point name="input.a.fmmj004" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj004
+            #add-point:ON CHANGE fmmj004 name="input.g.fmmj004"
+            {<point name="input.g.fmmj004" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj006
+            #add-point:BEFORE FIELD fmmj006 name="input.b.fmmj006"
+            {<point name="input.b.fmmj006" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj006
+            
+            #add-point:AFTER FIELD fmmj006 name="input.a.fmmj006"
+            {<point name="input.a.fmmj006" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj006
+            #add-point:ON CHANGE fmmj006 name="input.g.fmmj006"
+            {<point name="input.g.fmmj006" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj010
+            #add-point:BEFORE FIELD fmmj010 name="input.b.fmmj010"
+            {<point name="input.b.fmmj010" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj010
+            
+            #add-point:AFTER FIELD fmmj010 name="input.a.fmmj010"
+            {<point name="input.a.fmmj010" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj010
+            #add-point:ON CHANGE fmmj010 name="input.g.fmmj010"
+            {<point name="input.g.fmmj010" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmjstus
+            #add-point:BEFORE FIELD fmmjstus name="input.b.fmmjstus"
+            {<point name="input.b.fmmjstus" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmjstus
+            
+            #add-point:AFTER FIELD fmmjstus name="input.a.fmmjstus"
+            {<point name="input.a.fmmjstus" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmjstus
+            #add-point:ON CHANGE fmmjstus name="input.g.fmmjstus"
+            {<point name="input.g.fmmjstus" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj005
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_fmmj_m.fmmj005,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD fmmj005
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD fmmj005 name="input.a.fmmj005"
+            {<point name="input.a.fmmj005" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj005
+            #add-point:BEFORE FIELD fmmj005 name="input.b.fmmj005"
+            {<point name="input.b.fmmj005" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj005
+            #add-point:ON CHANGE fmmj005 name="input.g.fmmj005"
+            {<point name="input.g.fmmj005" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj007
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_fmmj_m.fmmj007,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD fmmj007
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD fmmj007 name="input.a.fmmj007"
+            {<point name="input.a.fmmj007" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj007
+            #add-point:BEFORE FIELD fmmj007 name="input.b.fmmj007"
+            {<point name="input.b.fmmj007" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj007
+            #add-point:ON CHANGE fmmj007 name="input.g.fmmj007"
+            {<point name="input.g.fmmj007" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj008
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_fmmj_m.fmmj008,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD fmmj008
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD fmmj008 name="input.a.fmmj008"
+            {<point name="input.a.fmmj008" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj008
+            #add-point:BEFORE FIELD fmmj008 name="input.b.fmmj008"
+            {<point name="input.b.fmmj008" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj008
+            #add-point:ON CHANGE fmmj008 name="input.g.fmmj008"
+            {<point name="input.g.fmmj008" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj011
+            #add-point:BEFORE FIELD fmmj011 name="input.b.fmmj011"
+            {<point name="input.b.fmmj011" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj011
+            
+            #add-point:AFTER FIELD fmmj011 name="input.a.fmmj011"
+            {<point name="input.a.fmmj011" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj011
+            #add-point:ON CHANGE fmmj011 name="input.g.fmmj011"
+            {<point name="input.g.fmmj011" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj012
+            
+            #add-point:AFTER FIELD fmmj012 name="input.a.fmmj012"
+            {<point name="input.a.fmmj012" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj012
+            #add-point:BEFORE FIELD fmmj012 name="input.b.fmmj012"
+            {<point name="input.b.fmmj012" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj012
+            #add-point:ON CHANGE fmmj012 name="input.g.fmmj012"
+            {<point name="input.g.fmmj012" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj013
+            
+            #add-point:AFTER FIELD fmmj013 name="input.a.fmmj013"
+            {<point name="input.a.fmmj013" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj013
+            #add-point:BEFORE FIELD fmmj013 name="input.b.fmmj013"
+            {<point name="input.b.fmmj013" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj013
+            #add-point:ON CHANGE fmmj013 name="input.g.fmmj013"
+            {<point name="input.g.fmmj013" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj014
+            #add-point:BEFORE FIELD fmmj014 name="input.b.fmmj014"
+            {<point name="input.b.fmmj014" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj014
+            
+            #add-point:AFTER FIELD fmmj014 name="input.a.fmmj014"
+            {<point name="input.a.fmmj014" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj014
+            #add-point:ON CHANGE fmmj014 name="input.g.fmmj014"
+            {<point name="input.g.fmmj014" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj025
+            
+            #add-point:AFTER FIELD fmmj025 name="input.a.fmmj025"
+            {<point name="input.a.fmmj025" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj025
+            #add-point:BEFORE FIELD fmmj025 name="input.b.fmmj025"
+            {<point name="input.b.fmmj025" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj025
+            #add-point:ON CHANGE fmmj025 name="input.g.fmmj025"
+            {<point name="input.g.fmmj025" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj026
+            
+            #add-point:AFTER FIELD fmmj026 name="input.a.fmmj026"
+            {<point name="input.a.fmmj026" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj026
+            #add-point:BEFORE FIELD fmmj026 name="input.b.fmmj026"
+            {<point name="input.b.fmmj026" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj026
+            #add-point:ON CHANGE fmmj026 name="input.g.fmmj026"
+            {<point name="input.g.fmmj026" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj009
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_fmmj_m.fmmj009,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD fmmj009
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD fmmj009 name="input.a.fmmj009"
+            {<point name="input.a.fmmj009" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj009
+            #add-point:BEFORE FIELD fmmj009 name="input.b.fmmj009"
+            {<point name="input.b.fmmj009" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj009
+            #add-point:ON CHANGE fmmj009 name="input.g.fmmj009"
+            {<point name="input.g.fmmj009" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj028
+            #add-point:BEFORE FIELD fmmj028 name="input.b.fmmj028"
+            {<point name="input.b.fmmj028" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj028
+            
+            #add-point:AFTER FIELD fmmj028 name="input.a.fmmj028"
+            {<point name="input.a.fmmj028" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj028
+            #add-point:ON CHANGE fmmj028 name="input.g.fmmj028"
+            {<point name="input.g.fmmj028" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj015
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_fmmj_m.fmmj015,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD fmmj015
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD fmmj015 name="input.a.fmmj015"
+            {<point name="input.a.fmmj015" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj015
+            #add-point:BEFORE FIELD fmmj015 name="input.b.fmmj015"
+            {<point name="input.b.fmmj015" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj015
+            #add-point:ON CHANGE fmmj015 name="input.g.fmmj015"
+            {<point name="input.g.fmmj015" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj029
+            #add-point:BEFORE FIELD fmmj029 name="input.b.fmmj029"
+            {<point name="input.b.fmmj029" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj029
+            
+            #add-point:AFTER FIELD fmmj029 name="input.a.fmmj029"
+            {<point name="input.a.fmmj029" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj029
+            #add-point:ON CHANGE fmmj029 name="input.g.fmmj029"
+            {<point name="input.g.fmmj029" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj016
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_fmmj_m.fmmj016,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD fmmj016
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD fmmj016 name="input.a.fmmj016"
+            {<point name="input.a.fmmj016" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj016
+            #add-point:BEFORE FIELD fmmj016 name="input.b.fmmj016"
+            {<point name="input.b.fmmj016" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj016
+            #add-point:ON CHANGE fmmj016 name="input.g.fmmj016"
+            {<point name="input.g.fmmj016" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj030
+            #add-point:BEFORE FIELD fmmj030 name="input.b.fmmj030"
+            {<point name="input.b.fmmj030" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj030
+            
+            #add-point:AFTER FIELD fmmj030 name="input.a.fmmj030"
+            {<point name="input.a.fmmj030" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj030
+            #add-point:ON CHANGE fmmj030 name="input.g.fmmj030"
+            {<point name="input.g.fmmj030" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj017
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_fmmj_m.fmmj017,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD fmmj017
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD fmmj017 name="input.a.fmmj017"
+            {<point name="input.a.fmmj017" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj017
+            #add-point:BEFORE FIELD fmmj017 name="input.b.fmmj017"
+            {<point name="input.b.fmmj017" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj017
+            #add-point:ON CHANGE fmmj017 name="input.g.fmmj017"
+            {<point name="input.g.fmmj017" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj031
+            #add-point:BEFORE FIELD fmmj031 name="input.b.fmmj031"
+            {<point name="input.b.fmmj031" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj031
+            
+            #add-point:AFTER FIELD fmmj031 name="input.a.fmmj031"
+            {<point name="input.a.fmmj031" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj031
+            #add-point:ON CHANGE fmmj031 name="input.g.fmmj031"
+            {<point name="input.g.fmmj031" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj018
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_fmmj_m.fmmj018,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD fmmj018
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD fmmj018 name="input.a.fmmj018"
+            {<point name="input.a.fmmj018" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj018
+            #add-point:BEFORE FIELD fmmj018 name="input.b.fmmj018"
+            {<point name="input.b.fmmj018" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj018
+            #add-point:ON CHANGE fmmj018 name="input.g.fmmj018"
+            {<point name="input.g.fmmj018" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj019
+            #add-point:BEFORE FIELD fmmj019 name="input.b.fmmj019"
+            {<point name="input.b.fmmj019" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj019
+            
+            #add-point:AFTER FIELD fmmj019 name="input.a.fmmj019"
+            {<point name="input.a.fmmj019" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj019
+            #add-point:ON CHANGE fmmj019 name="input.g.fmmj019"
+            {<point name="input.g.fmmj019" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj022
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_fmmj_m.fmmj022,"0.000","1","365.000","1","azz-00087",1) THEN
+               NEXT FIELD fmmj022
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD fmmj022 name="input.a.fmmj022"
+            {<point name="input.a.fmmj022" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj022
+            #add-point:BEFORE FIELD fmmj022 name="input.b.fmmj022"
+            {<point name="input.b.fmmj022" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj022
+            #add-point:ON CHANGE fmmj022 name="input.g.fmmj022"
+            {<point name="input.g.fmmj022" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj020
+            #add-point:BEFORE FIELD fmmj020 name="input.b.fmmj020"
+            {<point name="input.b.fmmj020" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj020
+            
+            #add-point:AFTER FIELD fmmj020 name="input.a.fmmj020"
+            {<point name="input.a.fmmj020" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj020
+            #add-point:ON CHANGE fmmj020 name="input.g.fmmj020"
+            {<point name="input.g.fmmj020" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj021
+            #add-point:BEFORE FIELD fmmj021 name="input.b.fmmj021"
+            {<point name="input.b.fmmj021" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj021
+            
+            #add-point:AFTER FIELD fmmj021 name="input.a.fmmj021"
+            {<point name="input.a.fmmj021" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj021
+            #add-point:ON CHANGE fmmj021 name="input.g.fmmj021"
+            {<point name="input.g.fmmj021" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj024
+            #add-point:BEFORE FIELD fmmj024 name="input.b.fmmj024"
+            {<point name="input.b.fmmj024" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj024
+            
+            #add-point:AFTER FIELD fmmj024 name="input.a.fmmj024"
+            {<point name="input.a.fmmj024" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj024
+            #add-point:ON CHANGE fmmj024 name="input.g.fmmj024"
+            {<point name="input.g.fmmj024" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmj023
+            #add-point:BEFORE FIELD fmmj023 name="input.b.fmmj023"
+            {<point name="input.b.fmmj023" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmj023
+            
+            #add-point:AFTER FIELD fmmj023 name="input.a.fmmj023"
+            {<point name="input.a.fmmj023" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmj023
+            #add-point:ON CHANGE fmmj023 name="input.g.fmmj023"
+            {<point name="input.g.fmmj023" />}
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.fmmjsite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmjsite
+            #add-point:ON ACTION controlp INFIELD fmmjsite name="input.c.fmmjsite"
+            {<point name="input.c.fmmjsite" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmjdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmjdocno
+            #add-point:ON ACTION controlp INFIELD fmmjdocno name="input.c.fmmjdocno"
+            {<point name="input.c.fmmjdocno" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmjdocdt
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmjdocdt
+            #add-point:ON ACTION controlp INFIELD fmmjdocdt name="input.c.fmmjdocdt"
+            {<point name="input.c.fmmjdocdt" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj027
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj027
+            #add-point:ON ACTION controlp INFIELD fmmj027 name="input.c.fmmj027"
+            {<point name="input.c.fmmj027" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj001
+            #add-point:ON ACTION controlp INFIELD fmmj001 name="input.c.fmmj001"
+            {<point name="input.c.fmmj001" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj002
+            #add-point:ON ACTION controlp INFIELD fmmj002 name="input.c.fmmj002"
+            {<point name="input.c.fmmj002" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj003
+            #add-point:ON ACTION controlp INFIELD fmmj003 name="input.c.fmmj003"
+            {<point name="input.c.fmmj003" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj004
+            #add-point:ON ACTION controlp INFIELD fmmj004 name="input.c.fmmj004"
+            {<point name="input.c.fmmj004" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj006
+            #add-point:ON ACTION controlp INFIELD fmmj006 name="input.c.fmmj006"
+            {<point name="input.c.fmmj006" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj010
+            #add-point:ON ACTION controlp INFIELD fmmj010 name="input.c.fmmj010"
+            {<point name="input.c.fmmj010" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmjstus
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmjstus
+            #add-point:ON ACTION controlp INFIELD fmmjstus name="input.c.fmmjstus"
+            {<point name="input.c.fmmjstus" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj005
+            #add-point:ON ACTION controlp INFIELD fmmj005 name="input.c.fmmj005"
+            {<point name="input.c.fmmj005" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj007
+            #add-point:ON ACTION controlp INFIELD fmmj007 name="input.c.fmmj007"
+            {<point name="input.c.fmmj007" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj008
+            #add-point:ON ACTION controlp INFIELD fmmj008 name="input.c.fmmj008"
+            {<point name="input.c.fmmj008" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj011
+            #add-point:ON ACTION controlp INFIELD fmmj011 name="input.c.fmmj011"
+            {<point name="input.c.fmmj011" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj012
+            #add-point:ON ACTION controlp INFIELD fmmj012 name="input.c.fmmj012"
+            {<point name="input.c.fmmj012" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj013
+            #add-point:ON ACTION controlp INFIELD fmmj013 name="input.c.fmmj013"
+            {<point name="input.c.fmmj013" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj014
+            #add-point:ON ACTION controlp INFIELD fmmj014 name="input.c.fmmj014"
+            {<point name="input.c.fmmj014" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj025
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj025
+            #add-point:ON ACTION controlp INFIELD fmmj025 name="input.c.fmmj025"
+            {<point name="input.c.fmmj025" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj026
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj026
+            #add-point:ON ACTION controlp INFIELD fmmj026 name="input.c.fmmj026"
+            {<point name="input.c.fmmj026" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj009
+            #add-point:ON ACTION controlp INFIELD fmmj009 name="input.c.fmmj009"
+            {<point name="input.c.fmmj009" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj028
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj028
+            #add-point:ON ACTION controlp INFIELD fmmj028 name="input.c.fmmj028"
+            {<point name="input.c.fmmj028" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj015
+            #add-point:ON ACTION controlp INFIELD fmmj015 name="input.c.fmmj015"
+            {<point name="input.c.fmmj015" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj029
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj029
+            #add-point:ON ACTION controlp INFIELD fmmj029 name="input.c.fmmj029"
+            {<point name="input.c.fmmj029" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj016
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj016
+            #add-point:ON ACTION controlp INFIELD fmmj016 name="input.c.fmmj016"
+            {<point name="input.c.fmmj016" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj030
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj030
+            #add-point:ON ACTION controlp INFIELD fmmj030 name="input.c.fmmj030"
+            {<point name="input.c.fmmj030" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj017
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj017
+            #add-point:ON ACTION controlp INFIELD fmmj017 name="input.c.fmmj017"
+            {<point name="input.c.fmmj017" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj031
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj031
+            #add-point:ON ACTION controlp INFIELD fmmj031 name="input.c.fmmj031"
+            {<point name="input.c.fmmj031" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj018
+            #add-point:ON ACTION controlp INFIELD fmmj018 name="input.c.fmmj018"
+            {<point name="input.c.fmmj018" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj019
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj019
+            #add-point:ON ACTION controlp INFIELD fmmj019 name="input.c.fmmj019"
+            {<point name="input.c.fmmj019" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj022
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj022
+            #add-point:ON ACTION controlp INFIELD fmmj022 name="input.c.fmmj022"
+            {<point name="input.c.fmmj022" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj020
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj020
+            #add-point:ON ACTION controlp INFIELD fmmj020 name="input.c.fmmj020"
+            {<point name="input.c.fmmj020" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj021
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj021
+            #add-point:ON ACTION controlp INFIELD fmmj021 name="input.c.fmmj021"
+            {<point name="input.c.fmmj021" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj024
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj024
+            #add-point:ON ACTION controlp INFIELD fmmj024 name="input.c.fmmj024"
+            {<point name="input.c.fmmj024" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmj023
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmj023
+            #add-point:ON ACTION controlp INFIELD fmmj023 name="input.c.fmmj023"
+            {<point name="input.c.fmmj023" />}
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #若點選cancel則離開dialog
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            
+            #錯誤訊息統整顯示
+            #CALL cl_err_collect_show()
+            #CALL cl_showmsg()
+  
+            IF p_cmd <> "u" THEN
+               #當p_cmd不為u代表為新增/複製
+               LET l_count = 1  
+ 
+               #確定新增的資料不存在(不重複)
+               SELECT COUNT(1) INTO l_count FROM fmmj_t
+                WHERE fmmjent = g_enterprise AND fmmjdocno = g_fmmj_m.fmmjdocno
+ 
+               IF l_count = 0 THEN
+               
+                  #add-point:單頭新增前 name="input.head.b_insert"
+                  {<point name="input.head.b_insert" mark="Y"/>}
+                  #end add-point
+               
+                  #將新增的單頭資料寫入資料庫
+                  INSERT INTO fmmj_t (fmmjent,fmmjsite,fmmjdocno,fmmjdocdt,fmmj027,fmmj001,fmmj002,fmmj003, 
+                      fmmj004,fmmj006,fmmj010,fmmjstus,fmmj005,fmmj007,fmmj008,fmmj011,fmmj012,fmmj013, 
+                      fmmj014,fmmj025,fmmj026,fmmj009,fmmj028,fmmj015,fmmj029,fmmj016,fmmj030,fmmj017, 
+                      fmmj031,fmmj018,fmmj019,fmmj022,fmmj020,fmmj021,fmmj024,fmmj023,fmmjownid,fmmjowndp, 
+                      fmmjcrtid,fmmjcrtdp,fmmjcrtdt,fmmjmodid,fmmjmoddt,fmmjcnfid,fmmjcnfdt)
+                  VALUES (g_enterprise,g_fmmj_m.fmmjsite,g_fmmj_m.fmmjdocno,g_fmmj_m.fmmjdocdt,g_fmmj_m.fmmj027, 
+                      g_fmmj_m.fmmj001,g_fmmj_m.fmmj002,g_fmmj_m.fmmj003,g_fmmj_m.fmmj004,g_fmmj_m.fmmj006, 
+                      g_fmmj_m.fmmj010,g_fmmj_m.fmmjstus,g_fmmj_m.fmmj005,g_fmmj_m.fmmj007,g_fmmj_m.fmmj008, 
+                      g_fmmj_m.fmmj011,g_fmmj_m.fmmj012,g_fmmj_m.fmmj013,g_fmmj_m.fmmj014,g_fmmj_m.fmmj025, 
+                      g_fmmj_m.fmmj026,g_fmmj_m.fmmj009,g_fmmj_m.fmmj028,g_fmmj_m.fmmj015,g_fmmj_m.fmmj029, 
+                      g_fmmj_m.fmmj016,g_fmmj_m.fmmj030,g_fmmj_m.fmmj017,g_fmmj_m.fmmj031,g_fmmj_m.fmmj018, 
+                      g_fmmj_m.fmmj019,g_fmmj_m.fmmj022,g_fmmj_m.fmmj020,g_fmmj_m.fmmj021,g_fmmj_m.fmmj024, 
+                      g_fmmj_m.fmmj023,g_fmmj_m.fmmjownid,g_fmmj_m.fmmjowndp,g_fmmj_m.fmmjcrtid,g_fmmj_m.fmmjcrtdp, 
+                      g_fmmj_m.fmmjcrtdt,g_fmmj_m.fmmjmodid,g_fmmj_m.fmmjmoddt,g_fmmj_m.fmmjcnfid,g_fmmj_m.fmmjcnfdt)  
+
+                  
+                  #add-point:單頭新增中 name="input.head.m_insert"
+                  {<point name="input.head.m_insert"/>}
+                  #end add-point
+                  
+                  #若寫入錯誤則提示錯誤訊息並返回輸入頁面
+                  IF SQLCA.SQLCODE THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "fmmj_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  
+                  
+                  #資料多語言用-增/改
+                  
+                  
+                  #add-point:單頭新增後 name="input.head.a_insert"
+                  {<point name="input.head.a_insert"/>}
+                  #end add-point
+                  
+                  CALL s_transaction_end('Y','0')
+               ELSE
+                  CALL s_transaction_end('N','0')
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = g_fmmj_m.fmmjdocno
+                  LET g_errparam.code   = "std-00006" 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+               END IF 
+            ELSE
+               #add-point:單頭修改前 name="input.head.b_update"
+               {<point name="input.head.b_update" mark="Y"/>}
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL afmt530_fmmj_t_mask_restore('restore_mask_o')
+               
+               UPDATE fmmj_t SET (fmmjsite,fmmjdocno,fmmjdocdt,fmmj027,fmmj001,fmmj002,fmmj003,fmmj004, 
+                   fmmj006,fmmj010,fmmjstus,fmmj005,fmmj007,fmmj008,fmmj011,fmmj012,fmmj013,fmmj014, 
+                   fmmj025,fmmj026,fmmj009,fmmj028,fmmj015,fmmj029,fmmj016,fmmj030,fmmj017,fmmj031,fmmj018, 
+                   fmmj019,fmmj022,fmmj020,fmmj021,fmmj024,fmmj023,fmmjownid,fmmjowndp,fmmjcrtid,fmmjcrtdp, 
+                   fmmjcrtdt,fmmjmodid,fmmjmoddt,fmmjcnfid,fmmjcnfdt) = (g_fmmj_m.fmmjsite,g_fmmj_m.fmmjdocno, 
+                   g_fmmj_m.fmmjdocdt,g_fmmj_m.fmmj027,g_fmmj_m.fmmj001,g_fmmj_m.fmmj002,g_fmmj_m.fmmj003, 
+                   g_fmmj_m.fmmj004,g_fmmj_m.fmmj006,g_fmmj_m.fmmj010,g_fmmj_m.fmmjstus,g_fmmj_m.fmmj005, 
+                   g_fmmj_m.fmmj007,g_fmmj_m.fmmj008,g_fmmj_m.fmmj011,g_fmmj_m.fmmj012,g_fmmj_m.fmmj013, 
+                   g_fmmj_m.fmmj014,g_fmmj_m.fmmj025,g_fmmj_m.fmmj026,g_fmmj_m.fmmj009,g_fmmj_m.fmmj028, 
+                   g_fmmj_m.fmmj015,g_fmmj_m.fmmj029,g_fmmj_m.fmmj016,g_fmmj_m.fmmj030,g_fmmj_m.fmmj017, 
+                   g_fmmj_m.fmmj031,g_fmmj_m.fmmj018,g_fmmj_m.fmmj019,g_fmmj_m.fmmj022,g_fmmj_m.fmmj020, 
+                   g_fmmj_m.fmmj021,g_fmmj_m.fmmj024,g_fmmj_m.fmmj023,g_fmmj_m.fmmjownid,g_fmmj_m.fmmjowndp, 
+                   g_fmmj_m.fmmjcrtid,g_fmmj_m.fmmjcrtdp,g_fmmj_m.fmmjcrtdt,g_fmmj_m.fmmjmodid,g_fmmj_m.fmmjmoddt, 
+                   g_fmmj_m.fmmjcnfid,g_fmmj_m.fmmjcnfdt)
+                WHERE fmmjent = g_enterprise AND fmmjdocno = g_fmmjdocno_t #
+ 
+               #add-point:單頭修改中 name="input.head.m_update"
+               {<point name="input.head.m_update"/>}
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL s_transaction_end('N','0')
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "fmmj_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  WHEN SQLCA.SQLCODE #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "fmmj_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  OTHERWISE
+                     
+                     #資料多語言用-增/改
+                     
+                     
+                     #將遮罩欄位進行遮蔽
+                     CALL afmt530_fmmj_t_mask_restore('restore_mask_n')
+                     
+                     #add-point:單頭修改後 name="input.head.a_update"
+                     {<point name="input.head.a_update"/>}
+                     #end add-point
+                     #修改歷程記錄(單頭修改)
+                     LET g_log1 = util.JSON.stringify(g_fmmj_m_t)
+                     LET g_log2 = util.JSON.stringify(g_fmmj_m)
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                        CALL s_transaction_end('N','0')
+                     ELSE
+                        CALL s_transaction_end('Y','0')
+                     END IF
+               END CASE
+               
+            END IF
+           #controlp
+      END INPUT
+      
+      #add-point:input段more input  name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      BEFORE DIALOG
+         #CALL cl_err_collect_init()
+         #add-point:input段before_dialog  name="input.before_dialog"
+         {<point name="input.before_dialog"/>}
+         #end add-point
+          
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      #放棄輸入
+      ON ACTION cancel
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      #在dialog 右上角 (X)
+      ON ACTION close 
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+    
+      #toolbar 離開
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input  name="input.after_input"
+   {<point name="input.after_input"/>}
+   #end add-point    
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="afmt530.reproduce" >}
+#+ 資料複製
+PRIVATE FUNCTION afmt530_reproduce()
+   #add-point:reproduce段define(客製用) name="reproduce.define_customerization"
+   {<point name="reproduce.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_newno     LIKE fmmj_t.fmmjdocno 
+   DEFINE l_oldno     LIKE fmmj_t.fmmjdocno 
+ 
+   DEFINE l_master    RECORD LIKE fmmj_t.* #此變數樣板目前無使用
+   DEFINE l_cnt       LIKE type_t.num10
+   #add-point:reproduce段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="reproduce.define"
+   {<point name="reproduce.define"/>}
+   #end add-point   
+   
+   #add-point:Function前置處理  name="reproduce.pre_function"
+   {<point name="reproduce.pre_function"/>}
+   #end add-point
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+   
+   #先確定key值無遺漏
+   IF g_fmmj_m.fmmjdocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #備份key值
+   LET g_fmmjdocno_t = g_fmmj_m.fmmjdocno
+ 
+   
+   #清空key值
+   LET g_fmmj_m.fmmjdocno = ""
+ 
+    
+   CALL afmt530_set_entry("a")
+   CALL afmt530_set_no_entry("a")
+   
+   #公用欄位給予預設值
+   #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_fmmj_m.fmmjownid = g_user
+      LET g_fmmj_m.fmmjowndp = g_dept
+      LET g_fmmj_m.fmmjcrtid = g_user
+      LET g_fmmj_m.fmmjcrtdp = g_dept 
+      LET g_fmmj_m.fmmjcrtdt = cl_get_current()
+      LET g_fmmj_m.fmmjmodid = g_user
+      LET g_fmmj_m.fmmjmoddt = cl_get_current()
+      LET g_fmmj_m.fmmjstus = 'N'
+ 
+ 
+ 
+   
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前 name="reproduce.head.b_input"
+   {<point name="reproduce.head.b_input"/>}
+   #end add-point
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_fmmj_m.fmmjstus 
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+ 
+ 
+ 
+   
+   #清空key欄位的desc
+   
+   
+   #資料輸入
+   CALL afmt530_input("r")
+   
+   IF INT_FLAG THEN
+      #取消
+      INITIALIZE g_fmmj_m.* TO NULL
+      CALL afmt530_show()
+      CALL s_transaction_end('N','0')
+      LET INT_FLAG = 0
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = 9001 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   CALL s_transaction_begin()
+   
+   #add-point:單頭複製前 name="reproduce.head.b_insert"
+   {<point name="reproduce.head.b_insert" mark="Y"/>}
+   #end add-point
+   
+   #add-point:單頭複製中 name="reproduce.head.m_insert"
+   {<point name="reproduce.head.m_insert"/>}
+   #end add-point
+   
+   IF SQLCA.SQLCODE THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "fmmj_t:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.popup = TRUE 
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #add-point:單頭複製後 name="reproduce.head.a_insert"
+   {<point name="reproduce.head.a_insert"/>}
+   #end add-point
+   
+   CALL s_transaction_end('Y','0')
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL afmt530_set_act_visible()
+   CALL afmt530_set_act_no_visible()
+ 
+   #將新增的資料併入搜尋條件中
+   LET g_state = "insert"
+   
+   LET g_fmmjdocno_t = g_fmmj_m.fmmjdocno
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " fmmjent = " ||g_enterprise|| " AND",
+                      " fmmjdocno = '", g_fmmj_m.fmmjdocno, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL afmt530_browser_fill("","")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   #add-point:完成複製段落後 name="reproduce.after_reproduce"
+   {<point name="reproduce.after_reproduce" />}
+   #end add-point
+              
+   LET g_data_owner = g_fmmj_m.fmmjownid      
+   LET g_data_dept  = g_fmmj_m.fmmjowndp
+              
+   #功能已完成,通報訊息中心
+   CALL afmt530_msgcentre_notify('reproduce')
+                 
+END FUNCTION
+
+{</section>}
+
+{<section id="afmt530.show" >}
+#+ 資料顯示 
+PRIVATE FUNCTION afmt530_show()
+   #add-point:show段define(客製用) name="show.define_customerization"
+   {<point name="show.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:show段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show.define"
+   {<point name="show.define"/>}
+   #end add-point  
+   
+   #add-point:show段Function前置處理  name="show.before"
+   {<point name="show.before"/>}
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值
+   #應用 a12 樣板自動產生(Version:4)
+ 
+ 
+ 
+    
+   #顯示followup圖示
+   #應用 a48 樣板自動產生(Version:3)
+   CALL afmt530_set_pk_array()
+   #add-point:ON ACTION agendum name="show.follow_pic"
+   {<point name="show.follow_pic"/>}
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+ 
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference name="show.head.reference"
+   {<point name="show.head.reference"/>}
+   #end add-point
+ 
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_fmmj_m.fmmjsite,g_fmmj_m.fmmjsite_desc,g_fmmj_m.fmmjdocno,g_fmmj_m.fmmjdocdt,g_fmmj_m.fmmj027, 
+       g_fmmj_m.fmmj001,g_fmmj_m.fmmj002,g_fmmj_m.fmmj002_desc,g_fmmj_m.fmmj003,g_fmmj_m.fmmj003_desc, 
+       g_fmmj_m.fmmj004,g_fmmj_m.fmmj006,g_fmmj_m.fmmj010,g_fmmj_m.fmmjstus,g_fmmj_m.fmmj005,g_fmmj_m.fmmj007, 
+       g_fmmj_m.fmmj008,g_fmmj_m.fmmj011,g_fmmj_m.fmmj012,g_fmmj_m.fmmj012_desc,g_fmmj_m.fmmj013,g_fmmj_m.fmmj013_desc, 
+       g_fmmj_m.fmmj014,g_fmmj_m.fmmj025,g_fmmj_m.fmmj025_desc,g_fmmj_m.fmmj026,g_fmmj_m.fmmj026_desc, 
+       g_fmmj_m.fmmj009,g_fmmj_m.fmmj028,g_fmmj_m.fmmj015,g_fmmj_m.fmmj029,g_fmmj_m.fmmj016,g_fmmj_m.fmmj030, 
+       g_fmmj_m.fmmj017,g_fmmj_m.fmmj031,g_fmmj_m.fmmj018,g_fmmj_m.fmmj019,g_fmmj_m.fmmj022,g_fmmj_m.fmmj020, 
+       g_fmmj_m.fmmj021,g_fmmj_m.fmmj024,g_fmmj_m.fmmj023,g_fmmj_m.fmmjownid,g_fmmj_m.fmmjownid_desc, 
+       g_fmmj_m.fmmjowndp,g_fmmj_m.fmmjowndp_desc,g_fmmj_m.fmmjcrtid,g_fmmj_m.fmmjcrtid_desc,g_fmmj_m.fmmjcrtdp, 
+       g_fmmj_m.fmmjcrtdp_desc,g_fmmj_m.fmmjcrtdt,g_fmmj_m.fmmjmodid,g_fmmj_m.fmmjmodid_desc,g_fmmj_m.fmmjmoddt, 
+       g_fmmj_m.fmmjcnfid,g_fmmj_m.fmmjcnfid_desc,g_fmmj_m.fmmjcnfdt
+   
+   #儲存PK
+   LET l_ac = g_current_idx
+   CALL afmt530_set_pk_array()
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_fmmj_m.fmmjstus 
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+ 
+ 
+ 
+ 
+   #顯示有特殊格式設定的欄位或說明
+   CALL cl_show_fld_cont()
+ 
+   #add-point:show段之後 name="show.after"
+   {<point name="show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="afmt530.delete" >}
+#+ 資料刪除 
+PRIVATE FUNCTION afmt530_delete()
+   #add-point:delete段define(客製用) name="delete.define_customerization"
+   {<point name="delete.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   {<point name="delete.define"/>}
+   #end add-point  
+   
+   #add-point:Function前置處理  name="delete.pre_function"
+   {<point name="delete.pre_function"/>}
+   #end add-point
+   
+   #先確定key值無遺漏
+   IF g_fmmj_m.fmmjdocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   CALL s_transaction_begin()
+    
+   LET g_fmmjdocno_t = g_fmmj_m.fmmjdocno
+ 
+   
+   
+ 
+   OPEN afmt530_cl USING g_enterprise,g_fmmj_m.fmmjdocno
+   IF SQLCA.SQLCODE THEN    #(ver:49)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN afmt530_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.popup = TRUE 
+      CLOSE afmt530_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE afmt530_master_referesh USING g_fmmj_m.fmmjdocno INTO g_fmmj_m.fmmjsite,g_fmmj_m.fmmjdocno, 
+       g_fmmj_m.fmmjdocdt,g_fmmj_m.fmmj027,g_fmmj_m.fmmj001,g_fmmj_m.fmmj002,g_fmmj_m.fmmj003,g_fmmj_m.fmmj004, 
+       g_fmmj_m.fmmj006,g_fmmj_m.fmmj010,g_fmmj_m.fmmjstus,g_fmmj_m.fmmj005,g_fmmj_m.fmmj007,g_fmmj_m.fmmj008, 
+       g_fmmj_m.fmmj011,g_fmmj_m.fmmj012,g_fmmj_m.fmmj013,g_fmmj_m.fmmj014,g_fmmj_m.fmmj025,g_fmmj_m.fmmj026, 
+       g_fmmj_m.fmmj009,g_fmmj_m.fmmj028,g_fmmj_m.fmmj015,g_fmmj_m.fmmj029,g_fmmj_m.fmmj016,g_fmmj_m.fmmj030, 
+       g_fmmj_m.fmmj017,g_fmmj_m.fmmj031,g_fmmj_m.fmmj018,g_fmmj_m.fmmj019,g_fmmj_m.fmmj022,g_fmmj_m.fmmj020, 
+       g_fmmj_m.fmmj021,g_fmmj_m.fmmj024,g_fmmj_m.fmmj023,g_fmmj_m.fmmjownid,g_fmmj_m.fmmjowndp,g_fmmj_m.fmmjcrtid, 
+       g_fmmj_m.fmmjcrtdp,g_fmmj_m.fmmjcrtdt,g_fmmj_m.fmmjmodid,g_fmmj_m.fmmjmoddt,g_fmmj_m.fmmjcnfid, 
+       g_fmmj_m.fmmjcnfdt,g_fmmj_m.fmmjsite_desc,g_fmmj_m.fmmj002_desc,g_fmmj_m.fmmj003_desc,g_fmmj_m.fmmjownid_desc, 
+       g_fmmj_m.fmmjowndp_desc,g_fmmj_m.fmmjcrtid_desc,g_fmmj_m.fmmjcrtdp_desc,g_fmmj_m.fmmjmodid_desc, 
+       g_fmmj_m.fmmjcnfid_desc
+   
+   
+   #檢查是否允許此動作
+   IF NOT afmt530_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_fmmj_m_mask_o.* =  g_fmmj_m.*
+   CALL afmt530_fmmj_t_mask()
+   LET g_fmmj_m_mask_n.* =  g_fmmj_m.*
+   
+   #將最新資料顯示到畫面上
+   CALL afmt530_show()
+   
+   IF cl_ask_delete() THEN
+ 
+      #add-point:單頭刪除前 name="delete.head.b_delete"
+      {<point name="delete.head.b_delete" mark="Y"/>}
+      #end add-point
+ 
+      #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL afmt530_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove"
+      {<point name="delete.befroe.related_document_remove"/>}
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+ 
+ 
+      DELETE FROM fmmj_t 
+       WHERE fmmjent = g_enterprise AND fmmjdocno = g_fmmj_m.fmmjdocno 
+ 
+ 
+      #add-point:單頭刪除中 name="delete.head.m_delete"
+      {<point name="delete.head.m_delete"/>}
+      #end add-point
+         
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "fmmj_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+      END IF
+  
+      
+      
+      #add-point:單頭刪除後 name="delete.head.a_delete"
+      {<point name="delete.head.a_delete"/>}
+      #end add-point
+      
+       
+ 
+      #修改歷程記錄(刪除)
+      LET g_log1 = util.JSON.stringify(g_fmmj_m)   #(ver:49)
+      IF NOT cl_log_modified_record(g_log1,'') THEN    #(ver:49)
+         CLOSE afmt530_cl
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      
+      CLEAR FORM
+      CALL afmt530_ui_browser_refresh()
+      
+      #確保畫面上保有資料
+      IF g_browser_cnt > 0 THEN
+         #CALL afmt530_browser_fill(g_wc,"")
+         CALL afmt530_fetch("P")
+      ELSE
+         CLEAR FORM
+      END IF
+      CALL s_transaction_end('Y','0')
+   ELSE    
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE afmt530_cl
+ 
+   #功能已完成,通報訊息中心
+   CALL afmt530_msgcentre_notify('delete')
+ 
+   #add-point:單頭刪除完成後 name="delete.a_delete"
+   {<point name="delete.a_delete"/>}
+   #end add-point
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="afmt530.ui_browser_refresh" >}
+#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION afmt530_ui_browser_refresh()
+   #add-point:ui_browser_refresh段define(客製用) name="ui_browser_refresh.define_customerization"
+   {<point name="ui_browser_refresh.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_browser_refresh.define"
+   {<point name="ui_browser_refresh.define"/>}
+   #end add-point    
+   
+   #add-point:Function前置處理  name="ui_browser_refresh.pre_function"
+   {<point name="ui_browser_refresh.pre_function"/>}
+   #end add-point
+   
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_header_cnt  = g_browser.getLength()
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_fmmjdocno = g_fmmj_m.fmmjdocno
+ 
+         THEN
+         CALL g_browser.deleteElement(l_i)
+       END IF
+   END FOR
+   LET g_browser_cnt = g_browser_cnt - 1
+   LET g_header_cnt = g_header_cnt - 1
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count     #page count
+   DISPLAY g_header_cnt  TO FORMONLY.h_count     #page count
+  
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+      CLEAR FORM
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+  
+END FUNCTION
+
+{</section>}
+
+{<section id="afmt530.set_entry" >}
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION afmt530_set_entry(p_cmd)
+   #add-point:set_entry段define(客製用) name="set_entry.define_customerization" 
+   {<point name="set_entry.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_entry段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry.define"
+   {<point name="set_entry.define"/>}
+   #end add-point     
+    
+   #add-point:Function前置處理 name="set_entry.pre_function"
+   {<point name="set_entry.pre_function"/>}
+   #end add-point
+   
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("fmmjdocno",TRUE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry段欄位控制 name="set_entry.field_control"
+      {<point name="set_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry段欄位控制後 name="set_entry.after_control"
+   {<point name="set_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="afmt530.set_no_entry" >}
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION afmt530_set_no_entry(p_cmd)
+   #add-point:set_no_entry段define(客製用) name="set_no_entry.define_customerization"
+   {<point name="set_no_entry.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_no_entry段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry.define"
+   {<point name="set_no_entry.define"/>}
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_no_entry.pre_function"
+   {<point name="set_no_entry.pre_function"/>}
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("fmmjdocno",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry段欄位控制 name="set_no_entry.field_control"
+      {<point name="set_no_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry段欄位控制後 name="set_no_entry.after_control"
+   {<point name="set_no_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="afmt530.set_act_visible" >}
+#+ 單頭權限開啟
+PRIVATE FUNCTION afmt530_set_act_visible()
+   #add-point:set_act_visible段define(客製用) name="set_act_visible.define_customerization" 
+   {<point name="set_act_visible.define_customerization" edit="c" mark="Y"/>}
+   #end add-point  
+   #add-point:set_act_visible段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible.define"
+   {<point name="set_act_visible.define"/>}
+   #end add-point
+   #add-point:set_act_visible段 name="set_act_visible.set_act_visible"
+   {<point name="set_act_visible.set_act_visible"/>}
+   #end add-point
+END FUNCTION
+
+{</section>}
+
+{<section id="afmt530.set_act_no_visible" >}
+#+ 單頭權限關閉
+PRIVATE FUNCTION afmt530_set_act_no_visible()
+   #add-point:set_act_no_visible段define(客製用) name="set_act_no_visible.define_customerization"
+   {<point name="set_act_no_visible.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:set_act_no_visible段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible.define"
+   {<point name="set_act_no_visible.define"/>}
+   #end add-point
+   #add-point:set_act_no_visible段 name="set_act_no_visible.set_act_no_visible"
+   {<point name="set_act_no_visible.set_act_no_visible"/>}
+   #end add-point
+END FUNCTION
+
+{</section>}
+
+{<section id="afmt530.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION afmt530_default_search()
+   #add-point:default_search段define(客製用) name="default_search.define_customerization" 
+   {<point name="default_search.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE li_idx  LIKE type_t.num10
+   DEFINE li_cnt  LIKE type_t.num10
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   {<point name="default_search.define"/>}
+   #end add-point  
+   
+   #add-point:Function前置處理  name="default_search.pre_function"
+   {<point name="default_search.pre_function"/>}
+   #end add-point
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   #add-point:default_search段開始前 name="default_search.before"
+   {<point name="default_search.before"/>}
+   #end add-point  
+   
+   #根據外部參數(g_argv)組合wc
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " fmmjdocno = '", g_argv[01], "' AND "
+   END IF
+   
+ 
+   
+   #add-point:default_search段after sql name="default_search.after_sql"
+   {<point name="default_search.after_sql"/>}
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      #若有外部參數則根據該參數組合
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      #若無外部參數則預設為1=2
+      LET g_default = FALSE
+      #預設查詢條件
+      LET g_wc = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=2"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前 name="default_search.after"
+   {<point name="default_search.after"/>}
+   #end add-point  
+ 
+   IF g_wc.getIndexOf(" 1=2", 1) THEN
+      LET g_default = TRUE
+   END IF
+ 
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="afmt530.mask_functions" >}
+&include "erp/afm/afmt530_mask.4gl"
+
+{</section>}
+
+{<section id="afmt530.state_change" >}
+   #應用 a09 樣板自動產生(Version:17)
+#+ 確認碼變更 
+PRIVATE FUNCTION afmt530_statechange()
+   #add-point:statechange段define(客製用) name="statechange.define_customerization"
+   {<point name="statechange.define_customerization" edit="c" mark="Y"/>}
+   #end add-point  
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:statechange段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="statechange.define"
+   {<point name="statechange.define"/>}
+   #end add-point  
+   
+   #add-point:Function前置處理 name="statechange.before"
+   {<point name="statechange.before"/>}
+   #end add-point  
+   
+   ERROR ""     #清空畫面右下側ERROR區塊
+ 
+   IF g_fmmj_m.fmmjdocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   CALL s_transaction_begin()
+   
+   OPEN afmt530_cl USING g_enterprise,g_fmmj_m.fmmjdocno
+   IF STATUS THEN
+      CLOSE afmt530_cl
+      CALL s_transaction_end('N','0')
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN afmt530_cl:" 
+      LET g_errparam.code   = STATUS 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #顯示最新的資料
+   EXECUTE afmt530_master_referesh USING g_fmmj_m.fmmjdocno INTO g_fmmj_m.fmmjsite,g_fmmj_m.fmmjdocno, 
+       g_fmmj_m.fmmjdocdt,g_fmmj_m.fmmj027,g_fmmj_m.fmmj001,g_fmmj_m.fmmj002,g_fmmj_m.fmmj003,g_fmmj_m.fmmj004, 
+       g_fmmj_m.fmmj006,g_fmmj_m.fmmj010,g_fmmj_m.fmmjstus,g_fmmj_m.fmmj005,g_fmmj_m.fmmj007,g_fmmj_m.fmmj008, 
+       g_fmmj_m.fmmj011,g_fmmj_m.fmmj012,g_fmmj_m.fmmj013,g_fmmj_m.fmmj014,g_fmmj_m.fmmj025,g_fmmj_m.fmmj026, 
+       g_fmmj_m.fmmj009,g_fmmj_m.fmmj028,g_fmmj_m.fmmj015,g_fmmj_m.fmmj029,g_fmmj_m.fmmj016,g_fmmj_m.fmmj030, 
+       g_fmmj_m.fmmj017,g_fmmj_m.fmmj031,g_fmmj_m.fmmj018,g_fmmj_m.fmmj019,g_fmmj_m.fmmj022,g_fmmj_m.fmmj020, 
+       g_fmmj_m.fmmj021,g_fmmj_m.fmmj024,g_fmmj_m.fmmj023,g_fmmj_m.fmmjownid,g_fmmj_m.fmmjowndp,g_fmmj_m.fmmjcrtid, 
+       g_fmmj_m.fmmjcrtdp,g_fmmj_m.fmmjcrtdt,g_fmmj_m.fmmjmodid,g_fmmj_m.fmmjmoddt,g_fmmj_m.fmmjcnfid, 
+       g_fmmj_m.fmmjcnfdt,g_fmmj_m.fmmjsite_desc,g_fmmj_m.fmmj002_desc,g_fmmj_m.fmmj003_desc,g_fmmj_m.fmmjownid_desc, 
+       g_fmmj_m.fmmjowndp_desc,g_fmmj_m.fmmjcrtid_desc,g_fmmj_m.fmmjcrtdp_desc,g_fmmj_m.fmmjmodid_desc, 
+       g_fmmj_m.fmmjcnfid_desc
+   
+ 
+   #檢查是否允許此動作
+   IF NOT afmt530_action_chk() THEN
+      CLOSE afmt530_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_fmmj_m.fmmjsite,g_fmmj_m.fmmjsite_desc,g_fmmj_m.fmmjdocno,g_fmmj_m.fmmjdocdt,g_fmmj_m.fmmj027, 
+       g_fmmj_m.fmmj001,g_fmmj_m.fmmj002,g_fmmj_m.fmmj002_desc,g_fmmj_m.fmmj003,g_fmmj_m.fmmj003_desc, 
+       g_fmmj_m.fmmj004,g_fmmj_m.fmmj006,g_fmmj_m.fmmj010,g_fmmj_m.fmmjstus,g_fmmj_m.fmmj005,g_fmmj_m.fmmj007, 
+       g_fmmj_m.fmmj008,g_fmmj_m.fmmj011,g_fmmj_m.fmmj012,g_fmmj_m.fmmj012_desc,g_fmmj_m.fmmj013,g_fmmj_m.fmmj013_desc, 
+       g_fmmj_m.fmmj014,g_fmmj_m.fmmj025,g_fmmj_m.fmmj025_desc,g_fmmj_m.fmmj026,g_fmmj_m.fmmj026_desc, 
+       g_fmmj_m.fmmj009,g_fmmj_m.fmmj028,g_fmmj_m.fmmj015,g_fmmj_m.fmmj029,g_fmmj_m.fmmj016,g_fmmj_m.fmmj030, 
+       g_fmmj_m.fmmj017,g_fmmj_m.fmmj031,g_fmmj_m.fmmj018,g_fmmj_m.fmmj019,g_fmmj_m.fmmj022,g_fmmj_m.fmmj020, 
+       g_fmmj_m.fmmj021,g_fmmj_m.fmmj024,g_fmmj_m.fmmj023,g_fmmj_m.fmmjownid,g_fmmj_m.fmmjownid_desc, 
+       g_fmmj_m.fmmjowndp,g_fmmj_m.fmmjowndp_desc,g_fmmj_m.fmmjcrtid,g_fmmj_m.fmmjcrtid_desc,g_fmmj_m.fmmjcrtdp, 
+       g_fmmj_m.fmmjcrtdp_desc,g_fmmj_m.fmmjcrtdt,g_fmmj_m.fmmjmodid,g_fmmj_m.fmmjmodid_desc,g_fmmj_m.fmmjmoddt, 
+       g_fmmj_m.fmmjcnfid,g_fmmj_m.fmmjcnfid_desc,g_fmmj_m.fmmjcnfdt
+ 
+   CASE g_fmmj_m.fmmjstus
+      WHEN "Y"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+      WHEN "N"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+      WHEN "A"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+      WHEN "D"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+      WHEN "R"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+      WHEN "W"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+      WHEN "X"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+      
+   END CASE
+ 
+   #add-point:資料刷新後 name="statechange.after_refresh"
+   {<point name="statechange.after_refresh"/>}
+   #end add-point
+ 
+   MENU "" ATTRIBUTES (STYLE="popup")
+      BEFORE MENU
+         HIDE OPTION "approved"
+         HIDE OPTION "rejection"
+         CASE g_fmmj_m.fmmjstus
+            
+            WHEN "Y"
+               HIDE OPTION "confirmed"
+            WHEN "N"
+               HIDE OPTION "unconfirmed"
+            WHEN "A"
+               HIDE OPTION "approved"
+            WHEN "D"
+               HIDE OPTION "withdraw"
+            WHEN "R"
+               HIDE OPTION "rejection"
+            WHEN "W"
+               HIDE OPTION "signing"
+            WHEN "X"
+               HIDE OPTION "invalid"
+         END CASE
+     
+      #add-point:menu前 name="statechange.before_menu"
+      {<point name="statechange.before_menu"/>}
+      #end add-point
+      
+      #應用 a36 樣板自動產生(Version:5)
+      #提交
+      ON ACTION signing
+         IF cl_auth_chk_act("signing") THEN
+            IF NOT afmt530_send() THEN
+               CALL s_transaction_end('N','0')
+            ELSE
+               CALL s_transaction_end('Y','0')
+            END IF
+            #因應簽核行為, 該動作完成後不再進行後續處理
+            #於此處直接返回
+            CLOSE afmt530_cl
+            RETURN
+         END IF
+    
+      #抽單
+      ON ACTION withdraw
+         IF cl_auth_chk_act("withdraw") THEN
+            IF NOT afmt530_draw_out() THEN
+               CALL s_transaction_end('N','0')
+            ELSE
+               CALL s_transaction_end('Y','0')
+            END IF
+            #因應簽核行為, 該動作完成後不再進行後續處理
+            #於此處直接返回
+            CLOSE afmt530_cl
+            RETURN
+         END IF
+ 
+ 
+ 
+	  
+      ON ACTION confirmed
+         IF cl_auth_chk_act("confirmed") THEN
+            LET lc_state = "Y"
+            #add-point:action控制 name="statechange.confirmed"
+            {<point name="statechange.confirmed"/>}
+            #end add-point
+         END IF
+         EXIT MENU
+      ON ACTION unconfirmed
+         IF cl_auth_chk_act("unconfirmed") THEN
+            LET lc_state = "N"
+            #add-point:action控制 name="statechange.unconfirmed"
+            {<point name="statechange.unconfirmed"/>}
+            #end add-point
+         END IF
+         EXIT MENU
+      ON ACTION approved
+         IF cl_auth_chk_act("approved") THEN
+            LET lc_state = "A"
+            #add-point:action控制 name="statechange.approved"
+            {<point name="statechange.approved"/>}
+            #end add-point
+         END IF
+         EXIT MENU
+      #ON ACTION withdraw
+      #   IF cl_auth_chk_act("withdraw") THEN
+      #      LET lc_state = "D"
+      #      #add-point:action控制 name="statechange.withdraw"
+      #      {<point name="statechange.withdraw"/>}
+      #      #end add-point
+      #   END IF
+      #   EXIT MENU
+      ON ACTION rejection
+         IF cl_auth_chk_act("rejection") THEN
+            LET lc_state = "R"
+            #add-point:action控制 name="statechange.rejection"
+            {<point name="statechange.rejection"/>}
+            #end add-point
+         END IF
+         EXIT MENU
+      #ON ACTION signing
+      #   IF cl_auth_chk_act("signing") THEN
+      #      LET lc_state = "W"
+      #      #add-point:action控制 name="statechange.signing"
+      #      {<point name="statechange.signing"/>}
+      #      #end add-point
+      #   END IF
+      #   EXIT MENU
+      ON ACTION invalid
+         IF cl_auth_chk_act("invalid") THEN
+            LET lc_state = "X"
+            #add-point:action控制 name="statechange.invalid"
+            {<point name="statechange.invalid"/>}
+            #end add-point
+         END IF
+         EXIT MENU
+ 
+      #add-point:stus控制 name="statechange.more_control"
+      {<point name="statechange.more_control"/>}
+      #end add-point
+      
+   END MENU
+   
+   #確認被選取的狀態碼在清單中
+   IF (lc_state <> "Y" 
+      AND lc_state <> "N"
+      AND lc_state <> "A"
+      AND lc_state <> "D"
+      AND lc_state <> "R"
+      AND lc_state <> "W"
+      AND lc_state <> "X"
+      ) OR 
+      g_fmmj_m.fmmjstus = lc_state OR cl_null(lc_state) THEN
+      CLOSE afmt530_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:stus修改前 name="statechange.b_update"
+   {<point name="statechange.b_update"/>}
+   #end add-point
+   
+   LET g_fmmj_m.fmmjmodid = g_user
+   LET g_fmmj_m.fmmjmoddt = cl_get_current()
+   LET g_fmmj_m.fmmjstus = lc_state
+   
+   #異動狀態碼欄位/修改人/修改日期
+   UPDATE fmmj_t 
+      SET (fmmjstus,fmmjmodid,fmmjmoddt) 
+        = (g_fmmj_m.fmmjstus,g_fmmj_m.fmmjmodid,g_fmmj_m.fmmjmoddt)     
+    WHERE fmmjent = g_enterprise AND fmmjdocno = g_fmmj_m.fmmjdocno
+ 
+    
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+   ELSE
+      CASE lc_state
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+    
+      #撈取異動後的資料
+      EXECUTE afmt530_master_referesh USING g_fmmj_m.fmmjdocno INTO g_fmmj_m.fmmjsite,g_fmmj_m.fmmjdocno, 
+          g_fmmj_m.fmmjdocdt,g_fmmj_m.fmmj027,g_fmmj_m.fmmj001,g_fmmj_m.fmmj002,g_fmmj_m.fmmj003,g_fmmj_m.fmmj004, 
+          g_fmmj_m.fmmj006,g_fmmj_m.fmmj010,g_fmmj_m.fmmjstus,g_fmmj_m.fmmj005,g_fmmj_m.fmmj007,g_fmmj_m.fmmj008, 
+          g_fmmj_m.fmmj011,g_fmmj_m.fmmj012,g_fmmj_m.fmmj013,g_fmmj_m.fmmj014,g_fmmj_m.fmmj025,g_fmmj_m.fmmj026, 
+          g_fmmj_m.fmmj009,g_fmmj_m.fmmj028,g_fmmj_m.fmmj015,g_fmmj_m.fmmj029,g_fmmj_m.fmmj016,g_fmmj_m.fmmj030, 
+          g_fmmj_m.fmmj017,g_fmmj_m.fmmj031,g_fmmj_m.fmmj018,g_fmmj_m.fmmj019,g_fmmj_m.fmmj022,g_fmmj_m.fmmj020, 
+          g_fmmj_m.fmmj021,g_fmmj_m.fmmj024,g_fmmj_m.fmmj023,g_fmmj_m.fmmjownid,g_fmmj_m.fmmjowndp,g_fmmj_m.fmmjcrtid, 
+          g_fmmj_m.fmmjcrtdp,g_fmmj_m.fmmjcrtdt,g_fmmj_m.fmmjmodid,g_fmmj_m.fmmjmoddt,g_fmmj_m.fmmjcnfid, 
+          g_fmmj_m.fmmjcnfdt,g_fmmj_m.fmmjsite_desc,g_fmmj_m.fmmj002_desc,g_fmmj_m.fmmj003_desc,g_fmmj_m.fmmjownid_desc, 
+          g_fmmj_m.fmmjowndp_desc,g_fmmj_m.fmmjcrtid_desc,g_fmmj_m.fmmjcrtdp_desc,g_fmmj_m.fmmjmodid_desc, 
+          g_fmmj_m.fmmjcnfid_desc
+      
+      #將資料顯示到畫面上
+      DISPLAY BY NAME g_fmmj_m.fmmjsite,g_fmmj_m.fmmjsite_desc,g_fmmj_m.fmmjdocno,g_fmmj_m.fmmjdocdt, 
+          g_fmmj_m.fmmj027,g_fmmj_m.fmmj001,g_fmmj_m.fmmj002,g_fmmj_m.fmmj002_desc,g_fmmj_m.fmmj003, 
+          g_fmmj_m.fmmj003_desc,g_fmmj_m.fmmj004,g_fmmj_m.fmmj006,g_fmmj_m.fmmj010,g_fmmj_m.fmmjstus, 
+          g_fmmj_m.fmmj005,g_fmmj_m.fmmj007,g_fmmj_m.fmmj008,g_fmmj_m.fmmj011,g_fmmj_m.fmmj012,g_fmmj_m.fmmj012_desc, 
+          g_fmmj_m.fmmj013,g_fmmj_m.fmmj013_desc,g_fmmj_m.fmmj014,g_fmmj_m.fmmj025,g_fmmj_m.fmmj025_desc, 
+          g_fmmj_m.fmmj026,g_fmmj_m.fmmj026_desc,g_fmmj_m.fmmj009,g_fmmj_m.fmmj028,g_fmmj_m.fmmj015, 
+          g_fmmj_m.fmmj029,g_fmmj_m.fmmj016,g_fmmj_m.fmmj030,g_fmmj_m.fmmj017,g_fmmj_m.fmmj031,g_fmmj_m.fmmj018, 
+          g_fmmj_m.fmmj019,g_fmmj_m.fmmj022,g_fmmj_m.fmmj020,g_fmmj_m.fmmj021,g_fmmj_m.fmmj024,g_fmmj_m.fmmj023, 
+          g_fmmj_m.fmmjownid,g_fmmj_m.fmmjownid_desc,g_fmmj_m.fmmjowndp,g_fmmj_m.fmmjowndp_desc,g_fmmj_m.fmmjcrtid, 
+          g_fmmj_m.fmmjcrtid_desc,g_fmmj_m.fmmjcrtdp,g_fmmj_m.fmmjcrtdp_desc,g_fmmj_m.fmmjcrtdt,g_fmmj_m.fmmjmodid, 
+          g_fmmj_m.fmmjmodid_desc,g_fmmj_m.fmmjmoddt,g_fmmj_m.fmmjcnfid,g_fmmj_m.fmmjcnfid_desc,g_fmmj_m.fmmjcnfdt 
+
+   END IF
+ 
+   #add-point:stus修改後 name="statechange.a_update"
+   {<point name="statechange.a_update"/>}
+   #end add-point
+ 
+   #add-point:statechange段結束前 name="statechange.after"
+   {<point name="statechange.after"/>}
+   #end add-point  
+ 
+   CLOSE afmt530_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL afmt530_msgcentre_notify('statechange:'||lc_state)
+   
+END FUNCTION
+ 
+ 
+ 
+
+{</section>}
+
+{<section id="afmt530.signature" >}
+   #應用 a39 樣板自動產生(Version:10)
+#+ BPM提交
+PRIVATE FUNCTION afmt530_send()
+   #add-point:send段define(客製用) name="send.define_customerization"
+   {<point name="send.define_customerization" edit="c" mark="Y"/>}
+   #end add-point 
+   #add-point:send段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="send.define"
+   {<point name="send.define"/>}
+   #end add-point 
+   
+   #add-point:Function前置處理  name="send.pre_function"
+   {<point name="send.pre_function"/>}
+   #end add-point
+   
+   #依據單據個數，需要指定所有單身條件為" 1=1"  (單身有幾個就要設幾個)
+ 
+ 
+   CALL afmt530_show()
+   CALL afmt530_set_pk_array()
+   
+   #add-point: 初始化的ADP name="send.before_send"
+   {<point name="send.before_send" />}
+   #end add-point
+   
+   #公用變數初始化
+   CALL cl_bpm_data_init()
+                  
+   #依照主檔/單身個數產生 CALL cl_bpm_set_master_data() / cl_bpm_set_detail_data() 
+   #單頭固定為 CALL cl_bpm_set_master_data(util.JSONObject.fromFGL(xxxx)) 傳入參數: (1)單頭陣列  ; 回傳值: 無
+   CALL cl_bpm_set_master_data(util.JSONObject.fromFGL(g_fmmj_m))
+                              
+   #單身固定為 CALL cl_bpm_set_detail_data(s_detailX, util.JSONArray.fromFGL(xxxx)) 傳入參數: (1)單身SR名稱  (2)單身陣列  ; 回傳值: 無
+ 
+ 
+   # cl_bpm_cli() 裡有包含以前的aws_condition()=>送簽資料檢核和更新單據狀況碼為'W'
+   # cl_bpm_cli() 傳入參數:無  ;  回傳值: 0 開單失敗; 1 開單成功
+ 
+   #add-point: 提交前的ADP name="send.before_cli"
+   {<point name="send.before_cli" />}
+   #end add-point
+ 
+   #開單失敗
+   IF NOT cl_bpm_cli() THEN 
+      RETURN FALSE
+   END IF
+ 
+   #add-point: 提交後的ADP name="send.after_send"
+   {<point name="send.after_send" />}
+   #end add-point
+ 
+   #此段落不需要刪除資料,但是否需要refresh圖片樣式???
+   #CALL afmt530_ui_browser_refresh()
+ 
+   #重新指定此筆單據資料狀態圖片=>送簽中
+   LET g_browser[g_current_idx].b_statepic = "stus/16/signing.png"
+ 
+   #重新取得單頭/單身資料,DISPLAY在畫面上
+ 
+   RETURN TRUE
+   
+END FUNCTION
+ 
+ 
+ 
+#應用 a40 樣板自動產生(Version:9)
+#+ BPM抽單
+PRIVATE FUNCTION afmt530_draw_out()
+   #add-point:draw段define name="draw.define_customerization"
+   {<point name="draw.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:draw段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="draw.define"
+   {<point name="draw.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="draw.pre_function"
+   {<point name="draw.pre_function"/>}
+   #end add-point
+   
+   #抽單失敗
+   IF NOT cl_bpm_draw_out() THEN 
+      RETURN FALSE
+   END IF    
+          
+   #重新指定此筆單據資料狀態圖片=>抽單
+   LET g_browser[g_current_idx].b_statepic = "stus/16/draw_out.png"
+ 
+   #重新取得單頭/單身資料,DISPLAY在畫面上
+ 
+   #add-point:Function後置處理  name="draw.after_function"
+   {<point name="draw.after_function"/>}
+   #end add-point
+ 
+   RETURN TRUE
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+
+{</section>}
+
+{<section id="afmt530.set_pk_array" >}
+   #應用 a51 樣板自動產生(Version:8)
+#+ 給予pk_array內容
+PRIVATE FUNCTION afmt530_set_pk_array()
+   #add-point:set_pk_array段define name="set_pk_array.define_customerization"
+   {<point name="set_pk_array.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:set_pk_array段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_pk_array.define"
+   {<point name="set_pk_array.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理 name="set_pk_array.before"
+   {<point name="set_pk_array.before"/>}
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_fmmj_m.fmmjdocno
+   LET g_pk_array[1].column = 'fmmjdocno'
+ 
+   
+   #add-point:set_pk_array段之後 name="set_pk_array.after"
+   {<point name="set_pk_array.after"/>}
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+
+{</section>}
+
+{<section id="afmt530.other_dialog" readonly="Y" >}
+ 
+
+{</section>}
+
+{<section id="afmt530.msgcentre_notify" >}
+#應用 a66 樣板自動產生(Version:6)
+PRIVATE FUNCTION afmt530_msgcentre_notify(lc_state)
+   #add-point:msgcentre_notify段define name="msgcentre_notify.define_customerization"
+   {<point name="msgcentre_notify.define_customerization" edit="c" mark="Y"/>}
+   #end add-point   
+   DEFINE lc_state LIKE type_t.chr80
+   #add-point:msgcentre_notify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="msgcentre_notify.define"
+   {<point name="msgcentre_notify.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="msgcentre_notify.pre_function"
+   {<point name="msgcentre_notify.pre_function"/>}
+   #end add-point
+   
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = lc_state
+ 
+   #PK資料填寫
+   CALL afmt530_set_pk_array()
+   #單頭資料填寫
+   LET g_msgparam.data[1] = util.JSON.stringify(g_fmmj_m)
+ 
+   #add-point:msgcentre其他通知 name="msgcentre_notify.process"
+   {<point name="msgcentre_notify.process"/>}
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+ 
+ 
+
+{</section>}
+
+{<section id="afmt530.action_chk" >}
+#+ 修改/刪除前行為檢查(是否可允許此動作), 若有其他行為須管控也可透過此段落
+PRIVATE FUNCTION afmt530_action_chk()
+   #add-point:action_chk段define(客製用) name="action_chk.define_customerization" 
+   {<point name="action_chk.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:action_chk段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="action_chk.define"
+   {<point name="action_chk.define"/>}
+   #end add-point
+   
+   #add-point:action_chk段action_chk name="action_chk.action_chk"
+   {<point name="action_chk.action_chk"/>}
+   #end add-point
+   
+   RETURN TRUE
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="afmt530.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

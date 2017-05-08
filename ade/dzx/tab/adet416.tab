@@ -1,0 +1,98 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adet416" module="ade" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02748" crtdt="2014-04-09 17:14:31" modid="06137" moddt="2015-07-24 16:55:13" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="收銀差錯處理維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="deagsite,deagsite_desc(chr80),deagdocdt,deahdocno,deahseq,deag001,deag002,deag002_desc(chr80),deag003,deag003_desc(chr80),deag004,deag004_desc(chr80),deah000,deah001,deah001_desc(chr80),deah015,deas002_sum(chr500),deah014"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="deasseq1,deas001,deas002,deas006,deas003,deas004,deas005"/>
+      <var id="bs_field" value="deagsite(deag_t.deagsite),deagsite_desc(chr80),deagdocdt(deag_t.deagdocdt),deahdocno,deag001(deag_t.deag001),deag002(deag_t.deag002),deag002_desc(chr80),deag003(deag_t.deag003),deag003_desc(chr80),deag004(deag_t.deag004),deag004_desc(chr80),deah000,deah001,deah001_desc(chr80),deah014,deahseq" pk="deahdocno,deahseq" order=""/>
+      <bs_reference field="deah001_desc" ref_field="deah001" ref_sql="SELECT ooial003 FROM ooial_t WHERE ooialent=$varg_enterprise$var AND ooial001=? AND ooial002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="confirm"/>
+      <action id="modify" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="unconfirm"/>
+      <action id="query" type="standard"/>
+      <action id="prog_adet402" prog="adet402" parameter="deahdocno"/>
+      <action id="prog_aooi130" lib="cl_user_contact" parameter="&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;,g_m.aooi130"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adet416" method="dialog">
+    <section id="input">
+      <input id="head" field="deahseq"/>
+      <input id="body" page="1" field="deasseq1,deas001,deas002,deas006,deas003,deas004,deas005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="deagsite,deagsite_desc,deagdocdt,deahdocno,deahseq,deag001,deag002,deag002_desc,deag003,deag003_desc,deag004,deag004_desc,deah000,deah001,deah015,deas002_sum,deah014"/>
+      <construct id="body" page="1" field="deasseq1,deas001,deas002,deas006,deas003,deas004,deas005"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="deahdocno,deahseq"/>
+      <set id="head" type="no_entry" field="deahdocno,deahseq"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="deagsite" type="V" default="g_site">
+        <after/>
+      </column>
+      <column id="deagsite_desc"/>
+      <column id="deagdocdt" type="V" default="g_today"/>
+      <column id="deahdocno">
+        <controlp form="q_deagdocno" state="c"/>
+      </column>
+      <column id="deahseq"/>
+      <column id="deag001"/>
+      <column id="deag002">
+        <after/>
+        <controlp form="q_oogd001_01" state="c"/>
+      </column>
+      <column id="deag002_desc"/>
+      <column id="deag003">
+        <after/>
+        <controlp form="q_pcaa001_1" state="c"/>
+      </column>
+      <column id="deag003_desc"/>
+      <column id="deag004">
+        <after/>
+        <controlp form="q_pcab001_1" state="c"/>
+      </column>
+      <column id="deag004_desc"/>
+      <column id="deah000" type="S" default="1"/>
+      <column id="deah001">
+        <after>
+          <reference field="deah001_desc" ref_field="deah_t.deah001" map_field="deahent,geah001" ref_sql="SELECT ooial003 FROM ooial_t WHERE ooialent=$varg_enterprise$var AND ooial001=? AND ooial002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooia001_03" state="c"/>
+      </column>
+      <column id="deah001_desc"/>
+      <column id="deah015"/>
+      <column id="deas002_sum"/>
+      <column id="deah014"/>
+    </init>
+    <init id="body" page="1">
+      <column id="deasseq1"/>
+      <column id="deas001"/>
+      <column id="deas002"/>
+      <column id="deas006"/>
+      <column id="deas003"/>
+      <column id="deas004"/>
+      <column id="deas005"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="deah_t" pk="deahdocno,deahseq">
+      <sql id="forupd_sql" type="sql" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,deahdocno,deahseq,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,deah000,deah001,&apos;&apos;,deah015,&apos;&apos;,deah014 FROM deah_t WHERE deahent= ? AND deahdocno=? AND deahseq=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,deahdocno,deahseq,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,deah000,deah001,&apos;&apos;,deah015,&apos;&apos;,deah014 FROM deah_t" order="deahdocno,deahseq"/>
+    </head>
+    <body id="deas_t" page="1" linked="" pk="deasseq1" fk="deasdocno,deasseq">
+      <sql id="forupd_sql_detail" query="SELECT deasseq1,deas001,deas002,deas006,deas003,deas004,deas005 FROM deas_t WHERE deasent=? AND deasdocno=? AND deasseq=? AND deasseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT deasseq1,deas001,deas002,deas006,deas003,deas004,deas005 FROM deas_t WHERE deasent=? AND deasdocno=? AND deasseq=?"/>
+    </body>
+  </dataset>
+</assembly>
+

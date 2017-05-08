@@ -1,0 +1,1279 @@
+{<section id="aapr300_g01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:19(2016-12-29 14:29:01), PR版次:
+#+ Customerized Version.: SD版次:(), PR版次:
+#+ Build......: 000565
+#+ Filename...: aapr300_g01
+#+ Description: ...
+#+ Creator....: 05016(2014-04-22 09:52:45)
+#+ Modifier...: 03080 -SD/PR-
+{</section>}
+
+
+
+{<section id="aapr300_g01.global" readonly="Y" >}
+#報表 g01 樣板自動產生(Version:13)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+PRIVATE TYPE sr1_r RECORD
+   l_apca101 LIKE type_t.chr80, 
+   l_ooef002 LIKE type_t.chr500, 
+   apca001 LIKE apca_t.apca001, 
+   apca003 LIKE apca_t.apca003, 
+   apca004 LIKE apca_t.apca004, 
+   apca005 LIKE apca_t.apca005, 
+   apca006 LIKE apca_t.apca006, 
+   apca007 LIKE apca_t.apca007, 
+   l_apca007_desc LIKE type_t.chr500, 
+   apca008 LIKE apca_t.apca008, 
+   apca009 LIKE apca_t.apca009, 
+   apca010 LIKE apca_t.apca010, 
+   apca011 LIKE apca_t.apca011, 
+   l_apca011_desc LIKE type_t.chr80, 
+   apca012 LIKE apca_t.apca012, 
+   apca013 LIKE apca_t.apca013, 
+   apca014 LIKE apca_t.apca014, 
+   apca015 LIKE apca_t.apca015, 
+   apca016 LIKE apca_t.apca016, 
+   apca017 LIKE apca_t.apca017, 
+   apca018 LIKE apca_t.apca018, 
+   apca019 LIKE apca_t.apca019, 
+   apca020 LIKE apca_t.apca020, 
+   apca021 LIKE apca_t.apca021, 
+   apca022 LIKE apca_t.apca022, 
+   apca025 LIKE apca_t.apca025, 
+   apca026 LIKE apca_t.apca026, 
+   apca027 LIKE apca_t.apca027, 
+   apca028 LIKE apca_t.apca028, 
+   apca029 LIKE apca_t.apca029, 
+   apca030 LIKE apca_t.apca030, 
+   apca031 LIKE apca_t.apca031, 
+   apca033 LIKE apca_t.apca033, 
+   apca034 LIKE apca_t.apca034, 
+   apca035 LIKE apca_t.apca035, 
+   apca036 LIKE apca_t.apca036, 
+   apca037 LIKE apca_t.apca037, 
+   apca038 LIKE apca_t.apca038, 
+   apca039 LIKE apca_t.apca039, 
+   apca046 LIKE apca_t.apca046, 
+   apca047 LIKE apca_t.apca047, 
+   apca048 LIKE apca_t.apca048, 
+   apca049 LIKE apca_t.apca049, 
+   apca050 LIKE apca_t.apca050, 
+   apca051 LIKE apca_t.apca051, 
+   apca052 LIKE apca_t.apca052, 
+   apca053 LIKE apca_t.apca053, 
+   apca054 LIKE apca_t.apca054, 
+   apca055 LIKE apca_t.apca055, 
+   apca056 LIKE apca_t.apca056, 
+   apca057 LIKE apca_t.apca057, 
+   apca058 LIKE apca_t.apca058, 
+   apca059 LIKE apca_t.apca059, 
+   apca060 LIKE apca_t.apca060, 
+   apca061 LIKE apca_t.apca061, 
+   apca062 LIKE apca_t.apca062, 
+   apca063 LIKE apca_t.apca063, 
+   apca100 LIKE apca_t.apca100, 
+   apca101 LIKE apca_t.apca101, 
+   apca103 LIKE apca_t.apca103, 
+   apca104 LIKE apca_t.apca104, 
+   apca106 LIKE apca_t.apca106, 
+   apca107 LIKE apca_t.apca107, 
+   apca108 LIKE apca_t.apca108, 
+   apca113 LIKE apca_t.apca113, 
+   apca114 LIKE apca_t.apca114, 
+   apca116 LIKE apca_t.apca116, 
+   apca117 LIKE apca_t.apca117, 
+   apca118 LIKE apca_t.apca118, 
+   apca120 LIKE apca_t.apca120, 
+   apca121 LIKE apca_t.apca121, 
+   apca123 LIKE apca_t.apca123, 
+   apca124 LIKE apca_t.apca124, 
+   apca126 LIKE apca_t.apca126, 
+   apca127 LIKE apca_t.apca127, 
+   apca128 LIKE apca_t.apca128, 
+   apca130 LIKE apca_t.apca130, 
+   apca131 LIKE apca_t.apca131, 
+   apca133 LIKE apca_t.apca133, 
+   apca134 LIKE apca_t.apca134, 
+   apca136 LIKE apca_t.apca136, 
+   apca137 LIKE apca_t.apca137, 
+   apca138 LIKE apca_t.apca138, 
+   apcacomp LIKE apca_t.apcacomp, 
+   apcadocdt LIKE apca_t.apcadocdt, 
+   apcadocno LIKE apca_t.apcadocno, 
+   apcaent LIKE apca_t.apcaent, 
+   apcald LIKE apca_t.apcald, 
+   apcasite LIKE apca_t.apcasite, 
+   apcastus LIKE apca_t.apcastus, 
+   apcb001 LIKE apcb_t.apcb001, 
+   apcb002 LIKE apcb_t.apcb002, 
+   apcb003 LIKE apcb_t.apcb003, 
+   apcb004 LIKE apcb_t.apcb004, 
+   apcb005 LIKE apcb_t.apcb005, 
+   apcb006 LIKE apcb_t.apcb006, 
+   apcb007 LIKE apcb_t.apcb007, 
+   apcb008 LIKE apcb_t.apcb008, 
+   apcb009 LIKE apcb_t.apcb009, 
+   apcb010 LIKE apcb_t.apcb010, 
+   apcb011 LIKE apcb_t.apcb011, 
+   apcb012 LIKE apcb_t.apcb012, 
+   apcb013 LIKE apcb_t.apcb013, 
+   apcb014 LIKE apcb_t.apcb014, 
+   apcb015 LIKE apcb_t.apcb015, 
+   apcb016 LIKE apcb_t.apcb016, 
+   apcb017 LIKE apcb_t.apcb017, 
+   apcb018 LIKE apcb_t.apcb018, 
+   apcb019 LIKE apcb_t.apcb019, 
+   apcb020 LIKE apcb_t.apcb020, 
+   apcb021 LIKE apcb_t.apcb021, 
+   apcb022 LIKE apcb_t.apcb022, 
+   apcb023 LIKE apcb_t.apcb023, 
+   apcb024 LIKE apcb_t.apcb024, 
+   apcb025 LIKE apcb_t.apcb025, 
+   apcb026 LIKE apcb_t.apcb026, 
+   apcb028 LIKE apcb_t.apcb028, 
+   apcb029 LIKE apcb_t.apcb029, 
+   apcb100 LIKE apcb_t.apcb100, 
+   apcb101 LIKE apcb_t.apcb101, 
+   apcb103 LIKE apcb_t.apcb103, 
+   apcb104 LIKE apcb_t.apcb104, 
+   apcb105 LIKE apcb_t.apcb105, 
+   apcb106 LIKE apcb_t.apcb106, 
+   apcb108 LIKE apcb_t.apcb108, 
+   apcb111 LIKE apcb_t.apcb111, 
+   apcb113 LIKE apcb_t.apcb113, 
+   apcb114 LIKE apcb_t.apcb114, 
+   apcb115 LIKE apcb_t.apcb115, 
+   apcb116 LIKE apcb_t.apcb116, 
+   apcb117 LIKE apcb_t.apcb117, 
+   apcb118 LIKE apcb_t.apcb118, 
+   apcb119 LIKE apcb_t.apcb119, 
+   apcb123 LIKE apcb_t.apcb123, 
+   apcb124 LIKE apcb_t.apcb124, 
+   apcb125 LIKE apcb_t.apcb125, 
+   apcb126 LIKE apcb_t.apcb126, 
+   apcb128 LIKE apcb_t.apcb128, 
+   apcb133 LIKE apcb_t.apcb133, 
+   apcb134 LIKE apcb_t.apcb134, 
+   apcb135 LIKE apcb_t.apcb135, 
+   apcb136 LIKE apcb_t.apcb136, 
+   apcb138 LIKE apcb_t.apcb138, 
+   apcblegl LIKE apcb_t.apcblegl, 
+   apcborga LIKE apcb_t.apcborga, 
+   apcbseq LIKE apcb_t.apcbseq, 
+   apcbsite LIKE apcb_t.apcbsite, 
+   t2_ooag011 LIKE ooag_t.ooag011, 
+   ooag_t_ooag011 LIKE ooag_t.ooag011, 
+   pmaal_t_pmaal004 LIKE pmaal_t.pmaal004, 
+   t1_pmaal004 LIKE pmaal_t.pmaal004, 
+   oocql_t_oocql004 LIKE oocql_t.oocql004, 
+   t7_oocql004 LIKE oocql_t.oocql004, 
+   t8_oocql004 LIKE oocql_t.oocql004, 
+   ooibl_t_ooibl004 LIKE ooibl_t.ooibl004, 
+   t3_ooefl003 LIKE ooefl_t.ooefl003, 
+   t4_ooefl003 LIKE ooefl_t.ooefl003, 
+   t5_ooefl003 LIKE ooefl_t.ooefl003, 
+   ooefl_t_ooefl003 LIKE ooefl_t.ooefl003, 
+   glacl_t_glacl004 LIKE glacl_t.glacl004, 
+   t6_glacl004 LIKE glacl_t.glacl004, 
+   ooidl_t_ooidl003 LIKE ooidl_t.ooidl003, 
+   bgaal_t_bgaal003 LIKE bgaal_t.bgaal003, 
+   glaal_t_glaal002 LIKE glaal_t.glaal002, 
+   x_oodbl_t_oodbl004 LIKE oodbl_t.oodbl004, 
+   l_apca014_ooag011 LIKE type_t.chr20, 
+   l_apca015_ooefl003 LIKE type_t.chr20, 
+   l_unit LIKE type_t.chr20, 
+   apcbdocno LIKE apcb_t.apcbdocno, 
+   l_imaal004 LIKE type_t.chr20, 
+   l_imaal003 LIKE type_t.chr20, 
+   l_oocql004 LIKE type_t.chr50, 
+   l_apca004_pmaal004 LIKE type_t.chr100, 
+   l_apca005_pmaal004 LIKE type_t.chr100, 
+   apcb047 LIKE apcb_t.apcb047, 
+   l_apca008_desc LIKE type_t.chr100, 
+   l_apcb010_desc LIKE type_t.chr100, 
+   l_apcb021_desc LIKE type_t.chr100
+END RECORD
+
+PRIVATE TYPE sr2_r RECORD
+   ooff013 LIKE ooff_t.ooff013
+END RECORD
+
+
+DEFINE tm RECORD
+       wc STRING                   #where condition
+       END RECORD
+DEFINE sr DYNAMIC ARRAY OF sr1_r                   #宣告sr為sr1_t資料結構的動態陣列
+DEFINE g_select        STRING
+DEFINE g_from          STRING
+DEFINE g_where         STRING
+DEFINE g_order         STRING
+DEFINE g_sql           STRING                         #report_select_prep,REPORT段使用
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:自定義環境變數(Global Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+{</section>}
+ 
+{<section id="aapr300_g01.main" readonly="Y" >}
+PUBLIC FUNCTION aapr300_g01(p_arg1)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition
+#add-point:init段define (客製用) name="component_name.define_customerization"
+{<point name="component_name.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:init段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component_name.define"
+{<point name="component_name.define"/>}
+#end add-point
+ 
+   LET tm.wc = p_arg1
+
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   {<point name="component.arg.prep" />}
+   #end add-point
+   #報表元件代號
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'   
+   
+   LET g_rep_code = "aapr300_g01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #主報表select子句準備
+   CALL aapr300_g01_sel_prep()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料存入array
+   CALL aapr300_g01_ins_data()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料印出
+   CALL aapr300_g01_rep_data()
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="aapr300_g01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aapr300_g01_sel_prep()
+   #add-point:sel_prep段define (客製用) name="sel_prep.define_customerization"
+   {<point name="sel_prep.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+   {<point name="sel_prep.define"/>}
+   #end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   {<point name="sel_prep.before" mark="Y"/>}
+   #end add-point
+   
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   {<point name="sel_prep.g_select" mark="Y"/>}
+   #end add-point
+   LET g_select = " SELECT '','',apca001,apca003,apca004,apca005,apca006,apca007,'',apca008,apca009,apca010,apca011,'',apca012,apca013,apca014,apca015,apca016,apca017,apca018,apca019,apca020,apca021,apca022,apca025,apca026,apca027,apca028,apca029,apca030,apca031,apca033,apca034,apca035,apca036,apca037,apca038,apca039,apca046,apca047,apca048,apca049,apca050,apca051,apca052,apca053,apca054,apca055,apca056,apca057,apca058,apca059,apca060,apca061,apca062,apca063,apca100,apca101,apca103,apca104,apca106,apca107,apca108,apca113,apca114,apca116,apca117,apca118,apca120,apca121,apca123,apca124,apca126,apca127,apca128,apca130,apca131,apca133,apca134,apca136,apca137,apca138,apcacomp,apcadocdt,apcadocno,apcaent,apcald,apcasite,apcastus,apcb001,apcb002,apcb003,apcb004,apcb005,apcb006,apcb007,apcb008,apcb009,apcb010,apcb011,apcb012,apcb013,apcb014,apcb015,apcb016,apcb017,apcb018,apcb019,apcb020,apcb021,apcb022,apcb023,apcb024,apcb025,apcb026,apcb028,apcb029,apcb100,apcb101,apcb103,apcb104,apcb105,apcb106,apcb108,apcb111,apcb113,apcb114,apcb115,apcb116,apcb117,apcb118,apcb119,apcb123,apcb124,apcb125,apcb126,apcb128,apcb133,apcb134,apcb135,apcb136,apcb138,apcblegl,apcborga,apcbseq,apcbsite,( SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = apca_t.apca014 AND ooag_t.ooagent = apca_t.apcaent),( SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = apca_t.apca003 AND ooag_t.ooagent = apca_t.apcaent),( SELECT pmaal004 FROM pmaal_t WHERE pmaal_t.pmaalent = apca_t.apcaent AND pmaal_t.pmaal001 = apca_t.apca004 AND pmaal_t.pmaal002 = '" ,g_dlang,"'" ,"),( SELECT pmaal004 FROM pmaal_t WHERE pmaal_t.pmaalent = apca_t.apcaent AND pmaal_t.pmaal001 = apca_t.apca005 AND pmaal_t.pmaal002 = '" ,g_dlang,"'" ,"),( SELECT oocql004 FROM oocql_t WHERE oocql_t.oocqlent = apca_t.apcaent AND oocql_t.oocql001 = '3211' AND oocql_t.oocql002 = apca_t.apca007 AND oocql_t.oocql003 = '" ,g_dlang,"'" ,"),( SELECT oocql004 FROM oocql_t WHERE oocql_t.oocqlent = apca_t.apcaent AND oocql_t.oocql001 = '3114' AND oocql_t.oocql002 = apca_t.apca054 AND oocql_t.oocql003 = '" ,g_dlang,"'" ,"),( SELECT oocql004 FROM oocql_t WHERE oocql_t.oocqlent = apca_t.apcaent AND oocql_t.oocql001 = '264' AND oocql_t.oocql002 = apca_t.apca058 AND oocql_t.oocql003 = '" ,g_dlang,"'" ,"),( SELECT ooibl004 FROM ooibl_t WHERE ooibl_t.ooiblent = apca_t.apcaent AND ooibl_t.ooibl002 = apca_t.apca008 AND ooibl_t.ooibl003 = '" ,g_dlang,"'" ,"),( SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooeflent = apca_t.apcaent AND ooefl_t.ooefl001 = apca_t.apca015 AND ooefl_t.ooefl002 = '" ,g_dlang,"'" ,"),( SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooeflent = apca_t.apcaent AND ooefl_t.ooefl001 = apca_t.apca033 AND ooefl_t.ooefl002 = '" ,g_dlang,"'" ,"),( SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooeflent = apca_t.apcaent AND ooefl_t.ooefl001 = apca_t.apca034 AND ooefl_t.ooefl002 = '" ,g_dlang,"'" ,"),( SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooeflent = apca_t.apcaent AND ooefl_t.ooefl001 = apca_t.apcasite AND ooefl_t.ooefl002 = '" ,g_dlang,"'" ,"),( SELECT glacl004 FROM glacl_t WHERE glacl_t.glaclent = apca_t.apcaent AND glacl_t.glacl001 = ' ' AND glacl_t.glacl002 = apca_t.apca030 AND glacl_t.glacl003 = '" ,g_dlang,"'" ,"),( SELECT glacl004 FROM glacl_t WHERE glacl_t.glaclent = apca_t.apcaent AND glacl_t.glacl001 = ' ' AND glacl_t.glacl002 = apca_t.apca036 AND glacl_t.glacl003 = '" ,g_dlang,"'" ,"),( SELECT ooidl003 FROM ooidl_t WHERE ooidl_t.ooidlent = apca_t.apcaent AND ooidl_t.ooidl001 = apca_t.apca055 AND ooidl_t.ooidl002 = '" ,g_dlang,"'" ,"),( SELECT bgaal003 FROM bgaal_t WHERE bgaal_t.bgaalent = apca_t.apcaent AND bgaal_t.bgaal001 = apca_t.apca059 AND bgaal_t.bgaal002 = '" ,g_dlang,"'" ,"),( SELECT glaal002 FROM glaal_t WHERE glaal_t.glaalent = apca_t.apcaent AND glaal_t.glaalld = apca_t.apcald AND glaal_t.glaal001 = '" ,g_dlang,"'" ,"),x.oodbl_t_oodbl004,trim(apca014)||'.'||trim((SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = apca_t.apca014 AND ooag_t.ooagent = apca_t.apcaent)),trim(apca015)||'.'||trim((SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooeflent = apca_t.apcaent AND ooefl_t.ooefl001 = apca_t.apcasite AND ooefl_t.ooefl002 = '" ,g_dlang,"'" ,")),'',apcbdocno,'','','',trim(apca004)||'.'||trim((SELECT pmaal004 FROM pmaal_t WHERE pmaal_t.pmaalent = apca_t.apcaent AND pmaal_t.pmaal001 = apca_t.apca004 AND pmaal_t.pmaal002 = '" ,g_dlang,"'" ,")),trim(apca005)||'.'||trim((SELECT pmaal004 FROM pmaal_t WHERE pmaal_t.pmaalent = apca_t.apcaent AND pmaal_t.pmaal001 = apca_t.apca004 AND pmaal_t.pmaal002 = '" ,g_dlang,"'" ,")),apcb047,NULL,NULL,NULL"
+ 
+   #add-point:sel_prep g_from name="sel_prep.g_from"
+   {<point name="sel_prep.g_from" mark="Y"/>}
+   #end add-point
+    LET g_from = " FROM apca_t LEFT OUTER JOIN ( SELECT apcb_t.*,( SELECT oodbl004 FROM oodbl_t WHERE oodbl_t.oodblent = apcb_t.apcbent AND oodbl_t.oodbl001 = ' ' AND oodbl_t.oodbl002 = apcb_t.apcb020 AND oodbl_t.oodbl003 = '" ,g_dlang,"'" ,") oodbl_t_oodbl004 FROM apcb_t ) x  ON apca_t.apcaent = x.apcbent AND apca_t.apcald = x.apcbld AND apca_t.apcadocno = x.apcbdocno AND apca_t.apcasite = x.apcbsite"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+   {<point name="sel_prep.g_where" mark="Y"/>}
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED 
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   {<point name="sel_prep.g_order" mark="Y"/>}
+   #end add-point
+    LET g_order = " ORDER BY apcadocno,apcbseq"
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   {<point name="sel_prep.sql.before" mark="Y"/>}
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("apca_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED ," ",g_order CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段 
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   {<point name="sel_prep.sql.after" mark="Y"/>}
+   #end add-point
+   PREPARE aapr300_g01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()   
+      LET g_rep_success = 'N'    
+   END IF
+   DECLARE aapr300_g01_curs CURSOR FOR aapr300_g01_prepare
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="aapr300_g01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION aapr300_g01_ins_data()
+#主報表record(用於select子句)
+   DEFINE sr_s RECORD 
+   l_apca101 LIKE type_t.chr80, 
+   l_ooef002 LIKE type_t.chr500, 
+   apca001 LIKE apca_t.apca001, 
+   apca003 LIKE apca_t.apca003, 
+   apca004 LIKE apca_t.apca004, 
+   apca005 LIKE apca_t.apca005, 
+   apca006 LIKE apca_t.apca006, 
+   apca007 LIKE apca_t.apca007, 
+   l_apca007_desc LIKE type_t.chr500, 
+   apca008 LIKE apca_t.apca008, 
+   apca009 LIKE apca_t.apca009, 
+   apca010 LIKE apca_t.apca010, 
+   apca011 LIKE apca_t.apca011, 
+   l_apca011_desc LIKE type_t.chr80, 
+   apca012 LIKE apca_t.apca012, 
+   apca013 LIKE apca_t.apca013, 
+   apca014 LIKE apca_t.apca014, 
+   apca015 LIKE apca_t.apca015, 
+   apca016 LIKE apca_t.apca016, 
+   apca017 LIKE apca_t.apca017, 
+   apca018 LIKE apca_t.apca018, 
+   apca019 LIKE apca_t.apca019, 
+   apca020 LIKE apca_t.apca020, 
+   apca021 LIKE apca_t.apca021, 
+   apca022 LIKE apca_t.apca022, 
+   apca025 LIKE apca_t.apca025, 
+   apca026 LIKE apca_t.apca026, 
+   apca027 LIKE apca_t.apca027, 
+   apca028 LIKE apca_t.apca028, 
+   apca029 LIKE apca_t.apca029, 
+   apca030 LIKE apca_t.apca030, 
+   apca031 LIKE apca_t.apca031, 
+   apca033 LIKE apca_t.apca033, 
+   apca034 LIKE apca_t.apca034, 
+   apca035 LIKE apca_t.apca035, 
+   apca036 LIKE apca_t.apca036, 
+   apca037 LIKE apca_t.apca037, 
+   apca038 LIKE apca_t.apca038, 
+   apca039 LIKE apca_t.apca039, 
+   apca046 LIKE apca_t.apca046, 
+   apca047 LIKE apca_t.apca047, 
+   apca048 LIKE apca_t.apca048, 
+   apca049 LIKE apca_t.apca049, 
+   apca050 LIKE apca_t.apca050, 
+   apca051 LIKE apca_t.apca051, 
+   apca052 LIKE apca_t.apca052, 
+   apca053 LIKE apca_t.apca053, 
+   apca054 LIKE apca_t.apca054, 
+   apca055 LIKE apca_t.apca055, 
+   apca056 LIKE apca_t.apca056, 
+   apca057 LIKE apca_t.apca057, 
+   apca058 LIKE apca_t.apca058, 
+   apca059 LIKE apca_t.apca059, 
+   apca060 LIKE apca_t.apca060, 
+   apca061 LIKE apca_t.apca061, 
+   apca062 LIKE apca_t.apca062, 
+   apca063 LIKE apca_t.apca063, 
+   apca100 LIKE apca_t.apca100, 
+   apca101 LIKE apca_t.apca101, 
+   apca103 LIKE apca_t.apca103, 
+   apca104 LIKE apca_t.apca104, 
+   apca106 LIKE apca_t.apca106, 
+   apca107 LIKE apca_t.apca107, 
+   apca108 LIKE apca_t.apca108, 
+   apca113 LIKE apca_t.apca113, 
+   apca114 LIKE apca_t.apca114, 
+   apca116 LIKE apca_t.apca116, 
+   apca117 LIKE apca_t.apca117, 
+   apca118 LIKE apca_t.apca118, 
+   apca120 LIKE apca_t.apca120, 
+   apca121 LIKE apca_t.apca121, 
+   apca123 LIKE apca_t.apca123, 
+   apca124 LIKE apca_t.apca124, 
+   apca126 LIKE apca_t.apca126, 
+   apca127 LIKE apca_t.apca127, 
+   apca128 LIKE apca_t.apca128, 
+   apca130 LIKE apca_t.apca130, 
+   apca131 LIKE apca_t.apca131, 
+   apca133 LIKE apca_t.apca133, 
+   apca134 LIKE apca_t.apca134, 
+   apca136 LIKE apca_t.apca136, 
+   apca137 LIKE apca_t.apca137, 
+   apca138 LIKE apca_t.apca138, 
+   apcacomp LIKE apca_t.apcacomp, 
+   apcadocdt LIKE apca_t.apcadocdt, 
+   apcadocno LIKE apca_t.apcadocno, 
+   apcaent LIKE apca_t.apcaent, 
+   apcald LIKE apca_t.apcald, 
+   apcasite LIKE apca_t.apcasite, 
+   apcastus LIKE apca_t.apcastus, 
+   apcb001 LIKE apcb_t.apcb001, 
+   apcb002 LIKE apcb_t.apcb002, 
+   apcb003 LIKE apcb_t.apcb003, 
+   apcb004 LIKE apcb_t.apcb004, 
+   apcb005 LIKE apcb_t.apcb005, 
+   apcb006 LIKE apcb_t.apcb006, 
+   apcb007 LIKE apcb_t.apcb007, 
+   apcb008 LIKE apcb_t.apcb008, 
+   apcb009 LIKE apcb_t.apcb009, 
+   apcb010 LIKE apcb_t.apcb010, 
+   apcb011 LIKE apcb_t.apcb011, 
+   apcb012 LIKE apcb_t.apcb012, 
+   apcb013 LIKE apcb_t.apcb013, 
+   apcb014 LIKE apcb_t.apcb014, 
+   apcb015 LIKE apcb_t.apcb015, 
+   apcb016 LIKE apcb_t.apcb016, 
+   apcb017 LIKE apcb_t.apcb017, 
+   apcb018 LIKE apcb_t.apcb018, 
+   apcb019 LIKE apcb_t.apcb019, 
+   apcb020 LIKE apcb_t.apcb020, 
+   apcb021 LIKE apcb_t.apcb021, 
+   apcb022 LIKE apcb_t.apcb022, 
+   apcb023 LIKE apcb_t.apcb023, 
+   apcb024 LIKE apcb_t.apcb024, 
+   apcb025 LIKE apcb_t.apcb025, 
+   apcb026 LIKE apcb_t.apcb026, 
+   apcb028 LIKE apcb_t.apcb028, 
+   apcb029 LIKE apcb_t.apcb029, 
+   apcb100 LIKE apcb_t.apcb100, 
+   apcb101 LIKE apcb_t.apcb101, 
+   apcb103 LIKE apcb_t.apcb103, 
+   apcb104 LIKE apcb_t.apcb104, 
+   apcb105 LIKE apcb_t.apcb105, 
+   apcb106 LIKE apcb_t.apcb106, 
+   apcb108 LIKE apcb_t.apcb108, 
+   apcb111 LIKE apcb_t.apcb111, 
+   apcb113 LIKE apcb_t.apcb113, 
+   apcb114 LIKE apcb_t.apcb114, 
+   apcb115 LIKE apcb_t.apcb115, 
+   apcb116 LIKE apcb_t.apcb116, 
+   apcb117 LIKE apcb_t.apcb117, 
+   apcb118 LIKE apcb_t.apcb118, 
+   apcb119 LIKE apcb_t.apcb119, 
+   apcb123 LIKE apcb_t.apcb123, 
+   apcb124 LIKE apcb_t.apcb124, 
+   apcb125 LIKE apcb_t.apcb125, 
+   apcb126 LIKE apcb_t.apcb126, 
+   apcb128 LIKE apcb_t.apcb128, 
+   apcb133 LIKE apcb_t.apcb133, 
+   apcb134 LIKE apcb_t.apcb134, 
+   apcb135 LIKE apcb_t.apcb135, 
+   apcb136 LIKE apcb_t.apcb136, 
+   apcb138 LIKE apcb_t.apcb138, 
+   apcblegl LIKE apcb_t.apcblegl, 
+   apcborga LIKE apcb_t.apcborga, 
+   apcbseq LIKE apcb_t.apcbseq, 
+   apcbsite LIKE apcb_t.apcbsite, 
+   t2_ooag011 LIKE ooag_t.ooag011, 
+   ooag_t_ooag011 LIKE ooag_t.ooag011, 
+   pmaal_t_pmaal004 LIKE pmaal_t.pmaal004, 
+   t1_pmaal004 LIKE pmaal_t.pmaal004, 
+   oocql_t_oocql004 LIKE oocql_t.oocql004, 
+   t7_oocql004 LIKE oocql_t.oocql004, 
+   t8_oocql004 LIKE oocql_t.oocql004, 
+   ooibl_t_ooibl004 LIKE ooibl_t.ooibl004, 
+   t3_ooefl003 LIKE ooefl_t.ooefl003, 
+   t4_ooefl003 LIKE ooefl_t.ooefl003, 
+   t5_ooefl003 LIKE ooefl_t.ooefl003, 
+   ooefl_t_ooefl003 LIKE ooefl_t.ooefl003, 
+   glacl_t_glacl004 LIKE glacl_t.glacl004, 
+   t6_glacl004 LIKE glacl_t.glacl004, 
+   ooidl_t_ooidl003 LIKE ooidl_t.ooidl003, 
+   bgaal_t_bgaal003 LIKE bgaal_t.bgaal003, 
+   glaal_t_glaal002 LIKE glaal_t.glaal002, 
+   x_oodbl_t_oodbl004 LIKE oodbl_t.oodbl004, 
+   l_apca014_ooag011 LIKE type_t.chr20, 
+   l_apca015_ooefl003 LIKE type_t.chr20, 
+   l_unit LIKE type_t.chr20, 
+   apcbdocno LIKE apcb_t.apcbdocno, 
+   l_imaal004 LIKE type_t.chr20, 
+   l_imaal003 LIKE type_t.chr20, 
+   l_oocql004 LIKE type_t.chr50, 
+   l_apca004_pmaal004 LIKE type_t.chr100, 
+   l_apca005_pmaal004 LIKE type_t.chr100, 
+   apcb047 LIKE apcb_t.apcb047, 
+   l_apca008_desc LIKE type_t.chr100, 
+   l_apcb010_desc LIKE type_t.chr100, 
+   l_apcb021_desc LIKE type_t.chr100
+ END RECORD
+   DEFINE l_cnt           LIKE type_t.num10
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+{<point name="ins_data.define_customerization" edit="c" mark="Y"/>}
+#end add-point   
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+{<point name="ins_data.define"/>}
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    {<point name="ins_data.before"/>}
+    #end add-point
+ 
+    CALL sr.clear()                                  #rep sr
+    LET l_cnt = 1
+    FOREACH aapr300_g01_curs INTO sr_s.*
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()       
+          LET g_rep_success = 'N'    
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       {<point name="ins_data.foreach"/>}
+       #end add-point
+ 
+       #add-point:ins_data段before_arr name="ins_data.before.save"
+       {<point name="ins_data.before.save"/>}
+       #end add-point
+ 
+       #set rep array value
+       LET sr[l_cnt].l_apca101 = sr_s.l_apca101
+       LET sr[l_cnt].l_ooef002 = sr_s.l_ooef002
+       LET sr[l_cnt].apca001 = sr_s.apca001
+       LET sr[l_cnt].apca003 = sr_s.apca003
+       LET sr[l_cnt].apca004 = sr_s.apca004
+       LET sr[l_cnt].apca005 = sr_s.apca005
+       LET sr[l_cnt].apca006 = sr_s.apca006
+       LET sr[l_cnt].apca007 = sr_s.apca007
+       LET sr[l_cnt].l_apca007_desc = sr_s.l_apca007_desc
+       LET sr[l_cnt].apca008 = sr_s.apca008
+       LET sr[l_cnt].apca009 = sr_s.apca009
+       LET sr[l_cnt].apca010 = sr_s.apca010
+       LET sr[l_cnt].apca011 = sr_s.apca011
+       LET sr[l_cnt].l_apca011_desc = sr_s.l_apca011_desc
+       LET sr[l_cnt].apca012 = sr_s.apca012
+       LET sr[l_cnt].apca013 = sr_s.apca013
+       LET sr[l_cnt].apca014 = sr_s.apca014
+       LET sr[l_cnt].apca015 = sr_s.apca015
+       LET sr[l_cnt].apca016 = sr_s.apca016
+       LET sr[l_cnt].apca017 = sr_s.apca017
+       LET sr[l_cnt].apca018 = sr_s.apca018
+       LET sr[l_cnt].apca019 = sr_s.apca019
+       LET sr[l_cnt].apca020 = sr_s.apca020
+       LET sr[l_cnt].apca021 = sr_s.apca021
+       LET sr[l_cnt].apca022 = sr_s.apca022
+       LET sr[l_cnt].apca025 = sr_s.apca025
+       LET sr[l_cnt].apca026 = sr_s.apca026
+       LET sr[l_cnt].apca027 = sr_s.apca027
+       LET sr[l_cnt].apca028 = sr_s.apca028
+       LET sr[l_cnt].apca029 = sr_s.apca029
+       LET sr[l_cnt].apca030 = sr_s.apca030
+       LET sr[l_cnt].apca031 = sr_s.apca031
+       LET sr[l_cnt].apca033 = sr_s.apca033
+       LET sr[l_cnt].apca034 = sr_s.apca034
+       LET sr[l_cnt].apca035 = sr_s.apca035
+       LET sr[l_cnt].apca036 = sr_s.apca036
+       LET sr[l_cnt].apca037 = sr_s.apca037
+       LET sr[l_cnt].apca038 = sr_s.apca038
+       LET sr[l_cnt].apca039 = sr_s.apca039
+       LET sr[l_cnt].apca046 = sr_s.apca046
+       LET sr[l_cnt].apca047 = sr_s.apca047
+       LET sr[l_cnt].apca048 = sr_s.apca048
+       LET sr[l_cnt].apca049 = sr_s.apca049
+       LET sr[l_cnt].apca050 = sr_s.apca050
+       LET sr[l_cnt].apca051 = sr_s.apca051
+       LET sr[l_cnt].apca052 = sr_s.apca052
+       LET sr[l_cnt].apca053 = sr_s.apca053
+       LET sr[l_cnt].apca054 = sr_s.apca054
+       LET sr[l_cnt].apca055 = sr_s.apca055
+       LET sr[l_cnt].apca056 = sr_s.apca056
+       LET sr[l_cnt].apca057 = sr_s.apca057
+       LET sr[l_cnt].apca058 = sr_s.apca058
+       LET sr[l_cnt].apca059 = sr_s.apca059
+       LET sr[l_cnt].apca060 = sr_s.apca060
+       LET sr[l_cnt].apca061 = sr_s.apca061
+       LET sr[l_cnt].apca062 = sr_s.apca062
+       LET sr[l_cnt].apca063 = sr_s.apca063
+       LET sr[l_cnt].apca100 = sr_s.apca100
+       LET sr[l_cnt].apca101 = sr_s.apca101
+       LET sr[l_cnt].apca103 = sr_s.apca103
+       LET sr[l_cnt].apca104 = sr_s.apca104
+       LET sr[l_cnt].apca106 = sr_s.apca106
+       LET sr[l_cnt].apca107 = sr_s.apca107
+       LET sr[l_cnt].apca108 = sr_s.apca108
+       LET sr[l_cnt].apca113 = sr_s.apca113
+       LET sr[l_cnt].apca114 = sr_s.apca114
+       LET sr[l_cnt].apca116 = sr_s.apca116
+       LET sr[l_cnt].apca117 = sr_s.apca117
+       LET sr[l_cnt].apca118 = sr_s.apca118
+       LET sr[l_cnt].apca120 = sr_s.apca120
+       LET sr[l_cnt].apca121 = sr_s.apca121
+       LET sr[l_cnt].apca123 = sr_s.apca123
+       LET sr[l_cnt].apca124 = sr_s.apca124
+       LET sr[l_cnt].apca126 = sr_s.apca126
+       LET sr[l_cnt].apca127 = sr_s.apca127
+       LET sr[l_cnt].apca128 = sr_s.apca128
+       LET sr[l_cnt].apca130 = sr_s.apca130
+       LET sr[l_cnt].apca131 = sr_s.apca131
+       LET sr[l_cnt].apca133 = sr_s.apca133
+       LET sr[l_cnt].apca134 = sr_s.apca134
+       LET sr[l_cnt].apca136 = sr_s.apca136
+       LET sr[l_cnt].apca137 = sr_s.apca137
+       LET sr[l_cnt].apca138 = sr_s.apca138
+       LET sr[l_cnt].apcacomp = sr_s.apcacomp
+       LET sr[l_cnt].apcadocdt = sr_s.apcadocdt
+       LET sr[l_cnt].apcadocno = sr_s.apcadocno
+       LET sr[l_cnt].apcaent = sr_s.apcaent
+       LET sr[l_cnt].apcald = sr_s.apcald
+       LET sr[l_cnt].apcasite = sr_s.apcasite
+       LET sr[l_cnt].apcastus = sr_s.apcastus
+       LET sr[l_cnt].apcb001 = sr_s.apcb001
+       LET sr[l_cnt].apcb002 = sr_s.apcb002
+       LET sr[l_cnt].apcb003 = sr_s.apcb003
+       LET sr[l_cnt].apcb004 = sr_s.apcb004
+       LET sr[l_cnt].apcb005 = sr_s.apcb005
+       LET sr[l_cnt].apcb006 = sr_s.apcb006
+       LET sr[l_cnt].apcb007 = sr_s.apcb007
+       LET sr[l_cnt].apcb008 = sr_s.apcb008
+       LET sr[l_cnt].apcb009 = sr_s.apcb009
+       LET sr[l_cnt].apcb010 = sr_s.apcb010
+       LET sr[l_cnt].apcb011 = sr_s.apcb011
+       LET sr[l_cnt].apcb012 = sr_s.apcb012
+       LET sr[l_cnt].apcb013 = sr_s.apcb013
+       LET sr[l_cnt].apcb014 = sr_s.apcb014
+       LET sr[l_cnt].apcb015 = sr_s.apcb015
+       LET sr[l_cnt].apcb016 = sr_s.apcb016
+       LET sr[l_cnt].apcb017 = sr_s.apcb017
+       LET sr[l_cnt].apcb018 = sr_s.apcb018
+       LET sr[l_cnt].apcb019 = sr_s.apcb019
+       LET sr[l_cnt].apcb020 = sr_s.apcb020
+       LET sr[l_cnt].apcb021 = sr_s.apcb021
+       LET sr[l_cnt].apcb022 = sr_s.apcb022
+       LET sr[l_cnt].apcb023 = sr_s.apcb023
+       LET sr[l_cnt].apcb024 = sr_s.apcb024
+       LET sr[l_cnt].apcb025 = sr_s.apcb025
+       LET sr[l_cnt].apcb026 = sr_s.apcb026
+       LET sr[l_cnt].apcb028 = sr_s.apcb028
+       LET sr[l_cnt].apcb029 = sr_s.apcb029
+       LET sr[l_cnt].apcb100 = sr_s.apcb100
+       LET sr[l_cnt].apcb101 = sr_s.apcb101
+       LET sr[l_cnt].apcb103 = sr_s.apcb103
+       LET sr[l_cnt].apcb104 = sr_s.apcb104
+       LET sr[l_cnt].apcb105 = sr_s.apcb105
+       LET sr[l_cnt].apcb106 = sr_s.apcb106
+       LET sr[l_cnt].apcb108 = sr_s.apcb108
+       LET sr[l_cnt].apcb111 = sr_s.apcb111
+       LET sr[l_cnt].apcb113 = sr_s.apcb113
+       LET sr[l_cnt].apcb114 = sr_s.apcb114
+       LET sr[l_cnt].apcb115 = sr_s.apcb115
+       LET sr[l_cnt].apcb116 = sr_s.apcb116
+       LET sr[l_cnt].apcb117 = sr_s.apcb117
+       LET sr[l_cnt].apcb118 = sr_s.apcb118
+       LET sr[l_cnt].apcb119 = sr_s.apcb119
+       LET sr[l_cnt].apcb123 = sr_s.apcb123
+       LET sr[l_cnt].apcb124 = sr_s.apcb124
+       LET sr[l_cnt].apcb125 = sr_s.apcb125
+       LET sr[l_cnt].apcb126 = sr_s.apcb126
+       LET sr[l_cnt].apcb128 = sr_s.apcb128
+       LET sr[l_cnt].apcb133 = sr_s.apcb133
+       LET sr[l_cnt].apcb134 = sr_s.apcb134
+       LET sr[l_cnt].apcb135 = sr_s.apcb135
+       LET sr[l_cnt].apcb136 = sr_s.apcb136
+       LET sr[l_cnt].apcb138 = sr_s.apcb138
+       LET sr[l_cnt].apcblegl = sr_s.apcblegl
+       LET sr[l_cnt].apcborga = sr_s.apcborga
+       LET sr[l_cnt].apcbseq = sr_s.apcbseq
+       LET sr[l_cnt].apcbsite = sr_s.apcbsite
+       LET sr[l_cnt].t2_ooag011 = sr_s.t2_ooag011
+       LET sr[l_cnt].ooag_t_ooag011 = sr_s.ooag_t_ooag011
+       LET sr[l_cnt].pmaal_t_pmaal004 = sr_s.pmaal_t_pmaal004
+       LET sr[l_cnt].t1_pmaal004 = sr_s.t1_pmaal004
+       LET sr[l_cnt].oocql_t_oocql004 = sr_s.oocql_t_oocql004
+       LET sr[l_cnt].t7_oocql004 = sr_s.t7_oocql004
+       LET sr[l_cnt].t8_oocql004 = sr_s.t8_oocql004
+       LET sr[l_cnt].ooibl_t_ooibl004 = sr_s.ooibl_t_ooibl004
+       LET sr[l_cnt].t3_ooefl003 = sr_s.t3_ooefl003
+       LET sr[l_cnt].t4_ooefl003 = sr_s.t4_ooefl003
+       LET sr[l_cnt].t5_ooefl003 = sr_s.t5_ooefl003
+       LET sr[l_cnt].ooefl_t_ooefl003 = sr_s.ooefl_t_ooefl003
+       LET sr[l_cnt].glacl_t_glacl004 = sr_s.glacl_t_glacl004
+       LET sr[l_cnt].t6_glacl004 = sr_s.t6_glacl004
+       LET sr[l_cnt].ooidl_t_ooidl003 = sr_s.ooidl_t_ooidl003
+       LET sr[l_cnt].bgaal_t_bgaal003 = sr_s.bgaal_t_bgaal003
+       LET sr[l_cnt].glaal_t_glaal002 = sr_s.glaal_t_glaal002
+       LET sr[l_cnt].x_oodbl_t_oodbl004 = sr_s.x_oodbl_t_oodbl004
+       LET sr[l_cnt].l_apca014_ooag011 = sr_s.l_apca014_ooag011
+       LET sr[l_cnt].l_apca015_ooefl003 = sr_s.l_apca015_ooefl003
+       LET sr[l_cnt].l_unit = sr_s.l_unit
+       LET sr[l_cnt].apcbdocno = sr_s.apcbdocno
+       LET sr[l_cnt].l_imaal004 = sr_s.l_imaal004
+       LET sr[l_cnt].l_imaal003 = sr_s.l_imaal003
+       LET sr[l_cnt].l_oocql004 = sr_s.l_oocql004
+       LET sr[l_cnt].l_apca004_pmaal004 = sr_s.l_apca004_pmaal004
+       LET sr[l_cnt].l_apca005_pmaal004 = sr_s.l_apca005_pmaal004
+       LET sr[l_cnt].apcb047 = sr_s.apcb047
+       LET sr[l_cnt].l_apca008_desc = sr_s.l_apca008_desc
+       LET sr[l_cnt].l_apcb010_desc = sr_s.l_apcb010_desc
+       LET sr[l_cnt].l_apcb021_desc = sr_s.l_apcb021_desc
+
+ 
+       #add-point:ins_data段after_arr name="ins_data.after.save"
+       {<point name="ins_data.after.save"/>}
+       #end add-point
+       LET l_cnt = l_cnt + 1
+    END FOREACH
+    CALL sr.deleteElement(l_cnt)
+ 
+    #add-point:ins_data段after name="ins_data.after"
+    {<point name="ins_data.after"/>}
+    #end add-point
+END FUNCTION
+{</section>}
+ 
+{<section id="aapr300_g01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION aapr300_g01_rep_data()
+   DEFINE HANDLER         om.SaxDocumentHandler
+   DEFINE l_i             INTEGER
+ 
+    #判斷是否有報表資料，若回彈出訊息視窗
+    IF sr.getLength() = 0 THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = "adz-00285"
+       LET g_errparam.extend = NULL
+       LET g_errparam.popup  = FALSE
+       LET g_errparam.replace[1] = ''
+       CALL cl_err()  
+       RETURN 
+    END IF
+    WHILE TRUE   
+       #add-point:rep_data段印前 name="rep_data.before"
+       {<point name="rep_data.before"/>}
+       #end add-point     
+       LET handler = cl_gr_handler()
+       IF handler IS NOT NULL THEN
+          START REPORT aapr300_g01_rep TO XML HANDLER handler
+          FOR l_i = 1 TO sr.getLength()
+             OUTPUT TO REPORT aapr300_g01_rep(sr[l_i].*)
+             #報表中斷列印時，顯示錯誤訊息
+             IF fgl_report_getErrorStatus() THEN
+                DISPLAY "FGL: STOPPING REPORT msg=\"",fgl_report_getErrorString(),"\""
+                EXIT FOR
+             END IF                  
+          END FOR
+          FINISH REPORT aapr300_g01_rep
+       END IF
+       #add-point:rep_data段印完 name="rep_data.after"
+       {<point name="rep_data.after"/>}
+       #end add-point       
+       IF g_rep_flag = TRUE THEN
+          LET g_rep_flag = FALSE
+          EXIT WHILE
+       END IF
+    END WHILE
+    #add-point:rep_data段離開while印完前 name="rep_data.end.before"
+    {<point name="rep_data.end.before"/>}
+    #end add-point
+    CALL cl_gr_close_report()
+    #add-point:rep_data段離開while印完後 name="rep_data.end.after"
+    {<point name="rep_data.end.after"/>}
+    #end add-point    
+END FUNCTION
+{</section>}
+ 
+{<section id="aapr300_g01.rep" readonly="Y" >}
+PRIVATE REPORT aapr300_g01_rep(sr1)
+DEFINE sr1 sr1_r
+DEFINE sr2 sr2_r
+DEFINE l_subrep01_show  LIKE type_t.chr1,
+       l_subrep02_show  LIKE type_t.chr1,
+       l_subrep03_show  LIKE type_t.chr1,
+       l_subrep04_show  LIKE type_t.chr1
+DEFINE l_cnt           LIKE type_t.num10
+DEFINE l_sub_sql       STRING
+#add-point:rep段define  (客製用) name="rep.define_customerization"
+{<point name="rep.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:rep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep.define"
+{<point name="rep.define"/>}
+#end add-point
+ 
+    #add-point:rep段ORDER_before name="rep.order.before"
+    {<point name="rep.order.before" mark="Y"/>}
+    #end add-point
+    ORDER EXTERNAL BY sr1.apcadocno,sr1.apcbseq
+    #add-point:rep段ORDER_after name="rep.order.after"
+    {<point name="rep.order.after"/>}
+    #end add-point
+    
+    FORMAT
+       FIRST PAGE HEADER          
+          PRINTX g_user,g_pdate,g_rep_code,g_company,g_ptime,g_user_name,g_date_fmt
+          PRINTX tm.*
+          PRINTX g_grNumFmt.*
+          PRINTX g_rep_wcchp
+ 
+          #讀取beforeGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.apcadocno
+            #報表 d05 樣板自動產生(Version:6)
+            CALL cl_gr_title_clear()  #清除title變數值 
+            #add-point:rep.header  #公司資訊(不在公用變數內) name="rep.header"
+            {<point name="rep.header"  mark="Y"/>}
+            #end add-point:rep.header 
+            LET g_rep_docno = sr1.apcadocno
+            CALL cl_gr_init_pageheader() #表頭資訊
+            PRINTX g_grPageHeader.*
+            PRINTX g_grPageFooter.*
+            #add-point:rep.apr.signstr.before name="rep.apr.signstr.before"
+            {<point name="rep.apr.signstr.before"  mark="Y"/>}              
+            #end add-point:rep.apr.signstr.before   
+            LET g_doc_key = 'apcaent=' ,sr1.apcaent,'{+}apcald=' ,sr1.apcald,'{+}apcadocno=' ,sr1.apcadocno         
+            CALL cl_gr_init_apr(sr1.apcadocno)
+            #add-point:rep.apr.signstr name="rep.apr.signstr"
+            {<point name="rep.apr.signstr"/>}              
+            #end add-point:rep.apr.signstr
+            PRINTX g_grSign.*
+
+
+
+           #add-point:rep.b_group.apcadocno.before name="rep.b_group.apcadocno.before"
+           {<point name="rep.b_group.apcadocno.before"/>}
+           #end add-point:
+
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub01.before name="rep.sub01.before"
+           {<point name="rep.sub01.before"/>}
+           #end add-point:rep.sub01.before
+
+           #add-point:rep.sub01.sql name="rep.sub01.sql"
+           {<point name="rep.sub01.sql" mark="Y"/>}
+           #end add-point:rep.sub01.sql
+
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='2' AND ooff004=0 AND ooffent = '", sr1.apcaent CLIPPED ,"'", " AND  ooff003 = '", sr1.apcadocno CLIPPED ,"'"
+
+           #add-point:rep.sub01.afsql name="rep.sub01.afsql"
+           {<point name="rep.sub01.afsql"/>}
+           #end add-point:rep.sub01.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep01_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE aapr300_g01_repcur01_cnt_pre FROM l_sub_sql
+           EXECUTE aapr300_g01_repcur01_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep01_show ="Y"
+           END IF
+           PRINTX l_subrep01_show
+           START REPORT aapr300_g01_subrep01
+           DECLARE aapr300_g01_repcur01 CURSOR FROM g_sql
+           FOREACH aapr300_g01_repcur01 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "aapr300_g01_repcur01:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub01.foreach name="rep.sub01.foreach"
+              {<point name="rep.sub01.foreach"/>}
+              #end add-point:rep.sub01.foreach
+              OUTPUT TO REPORT aapr300_g01_subrep01(sr2.*)
+           END FOREACH
+           FINISH REPORT aapr300_g01_subrep01
+           #add-point:rep.sub01.after name="rep.sub01.after"
+           {<point name="rep.sub01.after"/>}
+           #end add-point:rep.sub01.after
+
+
+
+           #add-point:rep.b_group.apcadocno.after name="rep.b_group.apcadocno.after"
+           {<point name="rep.b_group.apcadocno.after"/>}
+           #end add-point:
+
+
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.apcbseq
+
+           #add-point:rep.b_group.apcbseq.before name="rep.b_group.apcbseq.before"
+           {<point name="rep.b_group.apcbseq.before"/>}
+           #end add-point:
+
+
+           #add-point:rep.b_group.apcbseq.after name="rep.b_group.apcbseq.after"
+           {<point name="rep.b_group.apcbseq.after"/>}
+           #end add-point:
+
+
+
+ 
+       ON EVERY ROW
+          #add-point:rep.everyrow.before name="rep.everyrow.before"
+          {<point name="rep.everyrow.before"/>}
+          #end add-point:rep.everyrow.before
+ 
+          #單身前備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub02.before name="rep.sub02.before"
+           {<point name="rep.sub02.before"/>}
+           #end add-point:rep.sub02.before
+
+           #add-point:rep.sub02.sql name="rep.sub02.sql"
+           {<point name="rep.sub02.sql" mark="Y"/>}
+           #end add-point:rep.sub02.sql
+
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='2' AND ooffent = '", sr1.apcaent CLIPPED ,"'", " AND  ooff003 = '", sr1.apcadocno CLIPPED ,"'", " AND  ooff004 = ", sr1.apcbseq CLIPPED ,""
+
+           #add-point:rep.sub02.afsql name="rep.sub02.afsql"
+           {<point name="rep.sub02.afsql"/>}
+           #end add-point:rep.sub02.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep02_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE aapr300_g01_repcur02_cnt_pre FROM l_sub_sql
+           EXECUTE aapr300_g01_repcur02_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep02_show ="Y"
+           END IF
+           PRINTX l_subrep02_show
+           START REPORT aapr300_g01_subrep02
+           DECLARE aapr300_g01_repcur02 CURSOR FROM g_sql
+           FOREACH aapr300_g01_repcur02 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "aapr300_g01_repcur02:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub02.foreach name="rep.sub02.foreach"
+              {<point name="rep.sub02.foreach"/>}
+              #end add-point:rep.sub02.foreach
+              OUTPUT TO REPORT aapr300_g01_subrep02(sr2.*)
+           END FOREACH
+           FINISH REPORT aapr300_g01_subrep02
+           #add-point:rep.sub02.after name="rep.sub02.after"
+           {<point name="rep.sub02.after"/>}
+           #end add-point:rep.sub02.after
+
+
+
+          #add-point:rep.everyrow.beforerow name="rep.everyrow.beforerow"
+          {<point name="rep.everyrow.beforerow"/>}
+          #end add-point:rep.everyrow.beforerow
+            
+          PRINTX sr1.*
+ 
+          #add-point:rep.everyrow.afterrow name="rep.everyrow.afterrow"
+          {<point name="rep.everyrow.afterrow"/>}
+          #end add-point:rep.everyrow.afterrow
+ 
+          #單身後備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub03.before name="rep.sub03.before"
+           {<point name="rep.sub03.before"/>}
+           #end add-point:rep.sub03.before
+
+           #add-point:rep.sub03.sql name="rep.sub03.sql"
+           {<point name="rep.sub03.sql" mark="Y"/>}
+           #end add-point:rep.sub03.sql
+
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='1' AND ooffent = '", sr1.apcaent CLIPPED ,"'", " AND  ooff003 = '", sr1.apcadocno CLIPPED ,"'", " AND  ooff004 = ", sr1.apcbseq CLIPPED ,""
+
+           #add-point:rep.sub03.afsql name="rep.sub03.afsql"
+           {<point name="rep.sub03.afsql"/>}
+           #end add-point:rep.sub03.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep03_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE aapr300_g01_repcur03_cnt_pre FROM l_sub_sql
+           EXECUTE aapr300_g01_repcur03_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep03_show ="Y"
+           END IF
+           PRINTX l_subrep03_show
+           START REPORT aapr300_g01_subrep03
+           DECLARE aapr300_g01_repcur03 CURSOR FROM g_sql
+           FOREACH aapr300_g01_repcur03 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "aapr300_g01_repcur03:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub03.foreach name="rep.sub03.foreach"
+              {<point name="rep.sub03.foreach"/>}
+              #end add-point:rep.sub03.foreach
+              OUTPUT TO REPORT aapr300_g01_subrep03(sr2.*)
+           END FOREACH
+           FINISH REPORT aapr300_g01_subrep03
+           #add-point:rep.sub03.after name="rep.sub03.after"
+           {<point name="rep.sub03.after"/>}
+           #end add-point:rep.sub03.after
+
+
+
+          #add-point:rep.everyrow.after name="rep.everyrow.after"
+          {<point name="rep.everyrow.after"/>}
+          #end add-point:rep.everyrow.after        
+ 
+          #讀取afterGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.apcadocno
+
+           #add-point:rep.a_group.apcadocno.before name="rep.a_group.apcadocno.before"
+           {<point name="rep.a_group.apcadocno.before"/>}
+           #end add-point:
+
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub04.before name="rep.sub04.before"
+           {<point name="rep.sub04.before"/>}
+           #end add-point:rep.sub04.before
+
+           #add-point:rep.sub04.sql name="rep.sub04.sql"
+           {<point name="rep.sub04.sql" mark="Y"/>}
+           #end add-point:rep.sub04.sql
+
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='1' AND ooff004=0 AND ooffent = '", sr1.apcaent CLIPPED ,"'", " AND  ooff003 = '", sr1.apcadocno CLIPPED ,"'"
+
+           #add-point:rep.sub04.afsql name="rep.sub04.afsql"
+           {<point name="rep.sub04.afsql"/>}
+           #end add-point:rep.sub04.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep04_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE aapr300_g01_repcur04_cnt_pre FROM l_sub_sql
+           EXECUTE aapr300_g01_repcur04_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep04_show ="Y"
+           END IF
+           PRINTX l_subrep04_show
+           START REPORT aapr300_g01_subrep04
+           DECLARE aapr300_g01_repcur04 CURSOR FROM g_sql
+           FOREACH aapr300_g01_repcur04 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "aapr300_g01_repcur04:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub04.foreach name="rep.sub04.foreach"
+              {<point name="rep.sub04.foreach"/>}
+              #end add-point:rep.sub04.foreach
+              OUTPUT TO REPORT aapr300_g01_subrep04(sr2.*)
+           END FOREACH
+           FINISH REPORT aapr300_g01_subrep04
+           #add-point:rep.sub04.after name="rep.sub04.after"
+           {<point name="rep.sub04.after"/>}
+           #end add-point:rep.sub04.after
+
+
+
+           #add-point:rep.a_group.apcadocno.after name="rep.a_group.apcadocno.after"
+           {<point name="rep.a_group.apcadocno.after"/>}
+           #end add-point:
+
+
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.apcbseq
+
+           #add-point:rep.a_group.apcbseq.before name="rep.a_group.apcbseq.before"
+           {<point name="rep.a_group.apcbseq.before"/>}
+           #end add-point:
+
+
+           #add-point:rep.a_group.apcbseq.after name="rep.a_group.apcbseq.after"
+           {<point name="rep.a_group.apcbseq.after"/>}
+           #end add-point:
+
+
+
+       ON LAST ROW
+            #add-point:rep.lastrow.before name="rep.lastrow.before"  
+            {<point name="rep.lastrow.before"/>}        
+            #end add-point :rep.lastrow.before
+ 
+            #add-point:rep.lastrow.after name="rep.lastrow.after"
+            {<point name="rep.lastrow.after"/>}
+            #end add-point :rep.lastrow.after
+END REPORT
+{</section>}
+ 
+{<section id="aapr300_g01.subrep_str" readonly="Y" >}
+#讀取子報表樣板
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT aapr300_g01_subrep01(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub01.define_customerization" 
+{<point name="sub01.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:sub01.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub01.define" 
+{<point name="sub01.define"/>}
+#end add-point:sub01.define
+
+    #add-point:sub01.order.before name="sub01.order.before" 
+    {<point name="sub01.order.before"/>}
+    #end add-point:sub01.order.before
+
+
+
+    FORMAT
+
+
+
+       ON EVERY ROW
+            #add-point:sub01.everyrow.before name="sub01.everyrow.before" 
+            {<point name="sub01.everyrow.before"/>}              
+            #end add-point:sub01.everyrow.before
+
+            PRINTX sr2.*
+
+            #add-point:sub01.everyrow.after name="sub01.everyrow.after" 
+            {<point name="sub01.everyrow.after"/>}
+            #end add-point:sub01.everyrow.after
+
+
+END REPORT
+
+
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT aapr300_g01_subrep02(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub02.define_customerization" 
+{<point name="sub02.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:sub02.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub02.define" 
+{<point name="sub02.define"/>}
+#end add-point:sub02.define
+
+    #add-point:sub02.order.before name="sub02.order.before" 
+    {<point name="sub02.order.before"/>}
+    #end add-point:sub02.order.before
+
+
+
+    FORMAT
+
+
+
+       ON EVERY ROW
+            #add-point:sub02.everyrow.before name="sub02.everyrow.before" 
+            {<point name="sub02.everyrow.before"/>}              
+            #end add-point:sub02.everyrow.before
+
+            PRINTX sr2.*
+
+            #add-point:sub02.everyrow.after name="sub02.everyrow.after" 
+            {<point name="sub02.everyrow.after"/>}
+            #end add-point:sub02.everyrow.after
+
+
+END REPORT
+
+
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT aapr300_g01_subrep03(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub03.define_customerization" 
+{<point name="sub03.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:sub03.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub03.define" 
+{<point name="sub03.define"/>}
+#end add-point:sub03.define
+
+    #add-point:sub03.order.before name="sub03.order.before" 
+    {<point name="sub03.order.before"/>}
+    #end add-point:sub03.order.before
+
+
+
+    FORMAT
+
+
+
+       ON EVERY ROW
+            #add-point:sub03.everyrow.before name="sub03.everyrow.before" 
+            {<point name="sub03.everyrow.before"/>}              
+            #end add-point:sub03.everyrow.before
+
+            PRINTX sr2.*
+
+            #add-point:sub03.everyrow.after name="sub03.everyrow.after" 
+            {<point name="sub03.everyrow.after"/>}
+            #end add-point:sub03.everyrow.after
+
+
+END REPORT
+
+
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT aapr300_g01_subrep04(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub04.define_customerization" 
+{<point name="sub04.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:sub04.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub04.define" 
+{<point name="sub04.define"/>}
+#end add-point:sub04.define
+
+    #add-point:sub04.order.before name="sub04.order.before" 
+    {<point name="sub04.order.before"/>}
+    #end add-point:sub04.order.before
+
+
+
+    FORMAT
+
+
+
+       ON EVERY ROW
+            #add-point:sub04.everyrow.before name="sub04.everyrow.before" 
+            {<point name="sub04.everyrow.before"/>}              
+            #end add-point:sub04.everyrow.before
+
+            PRINTX sr2.*
+
+            #add-point:sub04.everyrow.after name="sub04.everyrow.after" 
+            {<point name="sub04.everyrow.after"/>}
+            #end add-point:sub04.everyrow.after
+
+
+END REPORT
+
+
+ 
+{</section>}
+ 
+{<section id="aapr300_g01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+ 
+{<section id="aapr300_g01.other_report" readonly="Y" >}
+{<point name="other.report"/>}
+{</section>}

@@ -1,0 +1,1736 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="aglq770.description" >}
+#+ Version..: T100-ERP-1.00.00(版次:1) Build-000058
+#+ 
+#+ Filename...: aglq770
+#+ Description: 明細分類帳(核算項)查詢作業
+#+ Creator....: 02599(2014/03/27)
+#+ Modifier...: 02599(2014/03/29)
+#+ Buildtype..: 應用 q02 樣板自動產生
+#+ 以上段落由子樣板a00產生
+
+{</section>}
+
+{<section id="aglq770.global" >}
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_glaq_d RECORD
+       #statepic       LIKE type_t.chr1,
+       sel            LIKE type_t.chr1,
+       glaq002 LIKE glaq_t.glaq002, 
+   glaq002_desc LIKE type_t.chr500, 
+   glaq017 LIKE glaq_t.glaq017, 
+   glaq017_desc LIKE type_t.chr500, 
+   glaq018 LIKE glaq_t.glaq018, 
+   glaq018_desc LIKE type_t.chr500, 
+   glaq019 LIKE glaq_t.glaq019, 
+   glaq019_desc LIKE type_t.chr500, 
+   glaq020 LIKE glaq_t.glaq020, 
+   glaq020_desc LIKE type_t.chr500, 
+   glaq021 LIKE glaq_t.glaq021, 
+   glaq021_desc LIKE type_t.chr500, 
+   glaq022 LIKE glaq_t.glaq022, 
+   glaq022_desc LIKE type_t.chr500, 
+   glaq023 LIKE glaq_t.glaq023, 
+   glaq023_desc LIKE type_t.chr500, 
+   glaq024 LIKE glaq_t.glaq024, 
+   glaq024_desc LIKE type_t.chr500, 
+   glaq051 LIKE glaq_t.glaq051, 
+   glaq052 LIKE glaq_t.glaq052,
+   glaq052_desc LIKE type_t.chr500,
+   glaq053 LIKE glaq_t.glaq053,
+   glaq053_desc LIKE type_t.chr500,
+   glaq025 LIKE glaq_t.glaq025, 
+   glaq025_desc LIKE type_t.chr80,     
+   glaq027 LIKE glaq_t.glaq027, 
+   glaq027_desc LIKE type_t.chr80, 
+   glaq028 LIKE glaq_t.glaq028, 
+   glaq028_desc LIKE type_t.chr80, 
+   glaq029 LIKE glaq_t.glaq029,
+   glaq029_desc LIKE type_t.chr80, 
+   glaq030 LIKE glaq_t.glaq030,
+   glaq030_desc LIKE type_t.chr80, 
+   glaq031 LIKE glaq_t.glaq031,
+   glaq031_desc LIKE type_t.chr80, 
+   glaq032 LIKE glaq_t.glaq032,
+   glaq032_desc LIKE type_t.chr80, 
+   glaq033 LIKE glaq_t.glaq033,
+   glaq033_desc LIKE type_t.chr80, 
+   glaq034 LIKE glaq_t.glaq034,
+   glaq034_desc LIKE type_t.chr80,
+   glaq035 LIKE glaq_t.glaq035,
+   glaq035_desc LIKE type_t.chr80, 
+   glaq036 LIKE glaq_t.glaq036,
+   glaq036_desc LIKE type_t.chr80,
+   glaq037 LIKE glaq_t.glaq037,
+   glaq037_desc LIKE type_t.chr80, 
+   glaq038 LIKE glaq_t.glaq038,
+   glaq038_desc LIKE type_t.chr80,
+   glaqdocno LIKE glaq_t.glaqdocno,
+   glapdocdt LIKE glap_t.glapdocdt,
+   glap004 LIKE glap_t.glap004,
+   glaq001 LIKE glaq_t.glaq001,   
+   style LIKE type_t.chr80, 
+   glaq005 LIKE glaq_t.glaq005, 
+   glaq006 LIKE glaq_t.glaq006, 
+   glaq010d LIKE glaq_t.glaq010, 
+   glaq010c LIKE glaq_t.glaq010, 
+   glaq003 LIKE glaq_t.glaq003, 
+   glaq004 LIKE glaq_t.glaq004, 
+   glaq039 LIKE glaq_t.glaq039, 
+   glaq040 LIKE glaq_t.glaq040, 
+   glaq041 LIKE glaq_t.glaq041, 
+   glaq042 LIKE glaq_t.glaq042, 
+   glaq043 LIKE glaq_t.glaq043, 
+   glaq044 LIKE glaq_t.glaq044, 
+   state LIKE type_t.chr80, 
+   amt LIKE glaq_t.glaq003, 
+   amt1 LIKE glaq_t.glaq003, 
+   amt2 LIKE glaq_t.glaq003, 
+   amt3 LIKE glaq_t.glaq003 
+       END RECORD
+ 
+ 
+#模組變數(Module Variables)
+DEFINE g_master                     type_g_glaq_d
+DEFINE g_master_t                   type_g_glaq_d
+DEFINE g_glaq_d          DYNAMIC ARRAY OF type_g_glaq_d
+DEFINE g_glaq_d_t        type_g_glaq_d
+ 
+      
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num5              
+DEFINE l_ac_d               LIKE type_t.num5              #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num5              #目前所在頁數
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num5
+DEFINE g_detail_idx         LIKE type_t.num5
+DEFINE g_detail_idx2        LIKE type_t.num5
+DEFINE g_hyper_url          STRING                        #hyperlink的主要網址
+ 
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+ 
+ 
+DEFINE g_wc_filter_table           STRING
+ 
+ 
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="aglq770.main" >}
+#+ 此段落由子樣板a26產生
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("agl","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = ""
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   DECLARE aglq770_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT UNIQUE ",
+               " FROM ",
+               " WHERE  "
+   #add-point:SQL_define
+   {<point name="main.after_refresh_sql"/>}
+   #end add-point
+   PREPARE aglq770_master_referesh FROM g_sql
+ 
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+ 
+   ELSE
+      
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aglq770 WITH FORM cl_ap_formpath("agl",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aglq770_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aglq770_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_aglq770
+      
+   END IF 
+   
+   CLOSE aglq770_cl
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+
+{</section>}
+
+{<section id="aglq770.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION aglq770_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+   
+   
+   
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="aglq770.ui_dialog" >}
+#+ 功能選單 
+PRIVATE FUNCTION aglq770_ui_dialog()
+   {<Local define>}
+   DEFINE li_idx   LIKE type_t.num5
+   {</Local define>}
+   #add-point:ui_dialog段define
+{<point name="ui_dialog.define"/>}
+   #end add-point 
+ 
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   #add-point:ui_dialog段before dialog 
+{<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   CALL aglq770_query()
+   
+   WHILE TRUE
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_glaq_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY g_glaq_d.getLength() TO FORMONLY.h_count
+               LET g_master_idx = l_ac
+               CALL aglq770_fetch()
+               #add-point:input段before row
+{<point name="input.body.before_row"/>}
+               #end add-point  
+            
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY
+      
+ 
+         
+ 
+      
+         #add-point:ui_dialog段define
+{<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         
+         BEFORE DIALOG      
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+ 
+            #add-point:ui_dialog段before dialog
+{<point name="ui_dialog.bef_dialog"/>}
+            #end add-point
+ 
+            NEXT FIELD sel
+      
+         ON ACTION exchange_ld
+ 
+            LET g_action_choice="exchange_ld"
+            IF cl_auth_chk_act("exchange_ld") THEN 
+               #add-point:ON ACTION exchange_ld
+               CALL aglt310_01(g_glaald) RETURNING g_bookno
+               IF g_glaald <> g_bookno THEN
+                  CLEAR FORM
+                  CALL g_glaq_s.clear()
+                  CALL g_glaq_d.clear()
+               END IF
+               LET g_glaald = g_bookno
+               #依据对应的主账套编码，抓取对应法人，币别，汇率参照编号，会计科目参照编号,关账日期
+               CALL aglq770_glaald_desc(g_glaald)
+               CALL aglq770_show()
+                IF cl_null(g_wc) THEN
+                   LET g_wc = '1=1'
+                END IF 
+                LET g_wc1 = ' 1=1'
+                LET g_wc2 = ' 1=1'
+               #END add-point
+               EXIT DIALOG
+            END IF               
+ 
+         ON ACTION last
+ 
+            LET g_action_choice="fetch" #161011-00018#1 mod last-->fetch
+#            IF cl_auth_chk_act("last") THEN  #161011-00018#1 mark 
+               #add-point:ON ACTION last
+{<point name="menu.last1" />}
+               #END add-point
+               EXIT DIALOG
+#            END IF #161011-00018#1 mark
+ 
+ 
+         ON ACTION next
+ 
+            LET g_action_choice="fetch" #161011-00018#1 mod next-->fetch
+#            IF cl_auth_chk_act("next") THEN  #161011-00018#1 mark 
+               #add-point:ON ACTION next
+{<point name="menu.next1" />}
+               #END add-point
+               EXIT DIALOG
+#            END IF #161011-00018#1 mark
+ 
+ 
+         ON ACTION insert
+ 
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN 
+               CALL aglq770_insert()
+               #add-point:ON ACTION insert
+{<point name="menu.insert" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION previous
+ 
+            LET g_action_choice="fetch" #161011-00018#1 mod previous-->fetch
+#            IF cl_auth_chk_act("previous") THEN  #161011-00018#1 mark
+               #add-point:ON ACTION previous
+{<point name="menu.previous1" />}
+               #END add-point
+               EXIT DIALOG
+#            END IF #161011-00018#1 mark
+ 
+ 
+         ON ACTION jump
+ 
+            LET g_action_choice="fetch" #161011-00018#1 mod jump-->fetch
+#            IF cl_auth_chk_act("jump") THEN #161011-00018#1 mark
+               #add-point:ON ACTION jump
+{<point name="menu.jump1" />}
+               #END add-point
+               EXIT DIALOG
+#            END IF #161011-00018#1 mark
+ 
+ 
+         ON ACTION query
+ 
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN 
+               CALL aglq770_query()
+               #add-point:ON ACTION query
+{<point name="menu.query" />}
+               #END add-point
+            END IF
+ 
+ 
+         ON ACTION first
+ 
+            LET g_action_choice="fetch" #161011-00018#1 mod first-->fetch
+#            IF cl_auth_chk_act("first") THEN  #161011-00018#1 mark
+               #add-point:ON ACTION first
+{<point name="menu.first1" />}
+               #END add-point
+               EXIT DIALOG
+#            END IF #161011-00018#1 mark
+ 
+ 
+         ON ACTION output
+ 
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN 
+               #add-point:ON ACTION output
+{<point name="menu.output" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION datainfo
+ 
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN 
+               #add-point:ON ACTION datainfo
+{<point name="menu.datainfo" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+      
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_glaq_d.getLength()
+               LET g_glaq_d[li_idx].sel = "Y"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selall
+{<point name="ui_dialog.onaction_selall"/>}
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_glaq_d.getLength()
+               LET g_glaq_d[li_idx].sel = "N"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selnone
+{<point name="ui_dialog.onaction_selnone"/>}
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_glaq_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_glaq_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action sel
+{<point name="ui_dialog.onaction_sel"/>}
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_glaq_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_glaq_d[li_idx].sel = "N"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action unsel
+{<point name="ui_dialog.onaction_unsel"/>}
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL aglq770_filter()
+            #add-point:ON ACTION filter
+{<point name="menu.filter" />}
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            CALL aglq770_b_fill()
+            CALL aglq770_fetch()
+            
+          ON ACTION exporttoexcel   #匯出excel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_glaq_d)
+ 
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF            
+      
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="aglq770.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION aglq770_query()
+   {<Local define>}
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   {</Local define>}
+   #add-point:query段define
+{<point name="query.define"/>}
+   #end add-point 
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_glaq_d.clear()
+   LET g_wc_filter = " 1=1"
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+   
+   LET g_qryparam.state = "c"
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   
+   #wc備份
+   LET ls_wc = g_wc
+   LET g_master_idx = l_ac
+ 
+   
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc_table ON glaq017,glaq018,glaq019,glaq020,glaq021,glaq022,glaq023,glaq024, 
+          glaq051,glaq052,glaq053,glaq025,glaq027,glaq028,glaq029,glaq030,glaq031,glaq032,glaq033,glaq034,
+          glaq035,glaq036,glaq037,glaq038
+           FROM s_detail1[1].b_glaq017,s_detail1[1].b_glaq018,s_detail1[1].b_glaq019, 
+               s_detail1[1].b_glaq020,s_detail1[1].b_glaq021,s_detail1[1].b_glaq022,s_detail1[1].b_glaq023, 
+               s_detail1[1].b_glaq024,s_detail1[1].b_glaq051,s_detail1[1].b_glaq052,s_detail1[1].b_glaq053,
+               s_detail1[1].b_glaq025,s_detail1[1].b_glaq027,s_detail1[1].b_glaq028,s_detail1[1].b_glaq029,
+               s_detail1[1].b_glaq030,s_detail1[1].b_glaq031,s_detail1[1].b_glaq032,s_detail1[1].b_glaq033,
+               s_detail1[1].b_glaq034,s_detail1[1].b_glaq035,s_detail1[1].b_glaq036,s_detail1[1].b_glaq037,
+               s_detail1[1].b_glaq038
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+{<point name="cs.head.before_construct"/>}
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+       #---------------------<  Detail: page1  >---------------------
+{<point name="construct.c.page1.b_glaq002" />}
+
+{<point name="construct.b.page1.b_glaq002" />}
+
+{<point name="construct.a.page1.b_glaq002" />}
+         #----<<b_glaq017>>----
+         #Ctrlp:construct.c.page1.b_glaq017
+         ON ACTION controlp INFIELD b_glaq017
+            #add-point:ON ACTION controlp INFIELD b_glaq017
+{<point name="construct.c.page1.b_glaq017" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_glaq017
+            #add-point:BEFORE FIELD b_glaq017
+{<point name="construct.b.page1.b_glaq017" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_glaq017
+            
+            #add-point:AFTER FIELD b_glaq017
+{<point name="construct.a.page1.b_glaq017" />}
+            #END add-point
+            
+ 
+         #----<<b_glaq018>>----
+         #Ctrlp:construct.c.page1.b_glaq018
+         ON ACTION controlp INFIELD b_glaq018
+            #add-point:ON ACTION controlp INFIELD b_glaq018
+{<point name="construct.c.page1.b_glaq018" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_glaq018
+            #add-point:BEFORE FIELD b_glaq018
+{<point name="construct.b.page1.b_glaq018" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_glaq018
+            
+            #add-point:AFTER FIELD b_glaq018
+{<point name="construct.a.page1.b_glaq018" />}
+            #END add-point
+            
+ 
+         #----<<b_glaq019>>----
+         #Ctrlp:construct.c.page1.b_glaq019
+         ON ACTION controlp INFIELD b_glaq019
+            #add-point:ON ACTION controlp INFIELD b_glaq019
+{<point name="construct.c.page1.b_glaq019" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_glaq019
+            #add-point:BEFORE FIELD b_glaq019
+{<point name="construct.b.page1.b_glaq019" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_glaq019
+            
+            #add-point:AFTER FIELD b_glaq019
+{<point name="construct.a.page1.b_glaq019" />}
+            #END add-point
+            
+ 
+         #----<<b_glaq020>>----
+         #Ctrlp:construct.c.page1.b_glaq020
+         ON ACTION controlp INFIELD b_glaq020
+            #add-point:ON ACTION controlp INFIELD b_glaq020
+{<point name="construct.c.page1.b_glaq020" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_glaq020
+            #add-point:BEFORE FIELD b_glaq020
+{<point name="construct.b.page1.b_glaq020" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_glaq020
+            
+            #add-point:AFTER FIELD b_glaq020
+{<point name="construct.a.page1.b_glaq020" />}
+            #END add-point
+            
+ 
+         #----<<b_glaq021>>----
+         #Ctrlp:construct.c.page1.b_glaq021
+         ON ACTION controlp INFIELD b_glaq021
+            #add-point:ON ACTION controlp INFIELD b_glaq021
+{<point name="construct.c.page1.b_glaq021" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_glaq021
+            #add-point:BEFORE FIELD b_glaq021
+{<point name="construct.b.page1.b_glaq021" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_glaq021
+            
+            #add-point:AFTER FIELD b_glaq021
+{<point name="construct.a.page1.b_glaq021" />}
+            #END add-point
+            
+ 
+         #----<<b_glaq022>>----
+         #Ctrlp:construct.c.page1.b_glaq022
+         ON ACTION controlp INFIELD b_glaq022
+            #add-point:ON ACTION controlp INFIELD b_glaq022
+{<point name="construct.c.page1.b_glaq022" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_glaq022
+            #add-point:BEFORE FIELD b_glaq022
+{<point name="construct.b.page1.b_glaq022" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_glaq022
+            
+            #add-point:AFTER FIELD b_glaq022
+{<point name="construct.a.page1.b_glaq022" />}
+            #END add-point
+            
+ 
+         #----<<b_glaq023>>----
+         #Ctrlp:construct.c.page1.b_glaq023
+         ON ACTION controlp INFIELD b_glaq023
+            #add-point:ON ACTION controlp INFIELD b_glaq023
+{<point name="construct.c.page1.b_glaq023" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_glaq023
+            #add-point:BEFORE FIELD b_glaq023
+{<point name="construct.b.page1.b_glaq023" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_glaq023
+            
+            #add-point:AFTER FIELD b_glaq023
+{<point name="construct.a.page1.b_glaq023" />}
+            #END add-point
+            
+ 
+         #----<<b_glaq024>>----
+         #Ctrlp:construct.c.page1.b_glaq024
+         ON ACTION controlp INFIELD b_glaq024
+            #add-point:ON ACTION controlp INFIELD b_glaq024
+{<point name="construct.c.page1.b_glaq024" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_glaq024
+            #add-point:BEFORE FIELD b_glaq024
+{<point name="construct.b.page1.b_glaq024" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_glaq024
+            
+            #add-point:AFTER FIELD b_glaq024
+{<point name="construct.a.page1.b_glaq024" />}
+            #END add-point
+            
+ 
+         #----<<b_glaq025>>----
+         #Ctrlp:construct.c.page1.b_glaq025
+         ON ACTION controlp INFIELD b_glaq025
+            #add-point:ON ACTION controlp INFIELD b_glaq025
+{<point name="construct.c.page1.b_glaq025" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_glaq025
+            #add-point:BEFORE FIELD b_glaq025
+{<point name="construct.b.page1.b_glaq025" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_glaq025
+            
+            #add-point:AFTER FIELD b_glaq025
+{<point name="construct.a.page1.b_glaq025" />}
+            #END add-point
+            
+ 
+         #----<<b_glaq052>>----
+         #Ctrlp:construct.c.page1.b_glaq052
+         ON ACTION controlp INFIELD b_glaq052
+            #add-point:ON ACTION controlp INFIELD b_glaq052
+{<point name="construct.c.page1.b_glaq026" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_glaq052
+            #add-point:BEFORE FIELD b_glaq052
+{<point name="construct.b.page1.b_glaq026" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_glaq052
+            
+            #add-point:AFTER FIELD b_glaq052
+{<point name="construct.a.page1.b_glaq026" />}
+            #END add-point
+            
+ 
+         #----<<b_glaq027>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_glaq027
+            #add-point:BEFORE FIELD b_glaq027
+{<point name="construct.b.page1.b_glaq027" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_glaq027
+            
+            #add-point:AFTER FIELD b_glaq027
+{<point name="construct.a.page1.b_glaq027" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_glaq027
+         ON ACTION controlp INFIELD b_glaq027
+            #add-point:ON ACTION controlp INFIELD b_glaq027
+{<point name="construct.c.page1.b_glaq027" />}
+            #END add-point
+ 
+         #----<<b_glaq028>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD b_glaq028
+            #add-point:BEFORE FIELD b_glaq028
+{<point name="construct.b.page1.b_glaq028" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD b_glaq028
+            
+            #add-point:AFTER FIELD b_glaq028
+{<point name="construct.a.page1.b_glaq028" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.b_glaq028
+         ON ACTION controlp INFIELD b_glaq028
+            #add-point:ON ACTION controlp INFIELD b_glaq028
+{<point name="construct.c.page1.b_glaq028" />}
+            #END add-point
+{<point name="construct.b.page1.b_glapdocdt" />}
+
+{<point name="construct.a.page1.b_glapdocdt" />}
+
+{<point name="construct.c.page1.b_glapdocdt" />}
+
+{<point name="construct.b.page1.b_glaqdocno" />}
+
+{<point name="construct.a.page1.b_glaqdocno" />}
+
+{<point name="construct.c.page1.b_glaqdocno" />}
+
+{<point name="construct.c.page1.b_glaq005" />}
+
+{<point name="construct.b.page1.b_glaq005" />}
+
+{<point name="construct.a.page1.b_glaq005" />}
+
+{<point name="construct.b.page1.b_glaq006" />}
+
+{<point name="construct.a.page1.b_glaq006" />}
+
+{<point name="construct.c.page1.b_glaq006" />}
+
+{<point name="construct.b.page1.glaq003" />}
+
+{<point name="construct.a.page1.glaq003" />}
+
+{<point name="construct.c.page1.glaq003" />}
+
+{<point name="construct.b.page1.glaq004" />}
+
+{<point name="construct.a.page1.glaq004" />}
+
+{<point name="construct.c.page1.glaq004" />}
+
+{<point name="construct.b.page1.glaq040" />}
+
+{<point name="construct.a.page1.glaq040" />}
+
+{<point name="construct.c.page1.glaq040" />}
+
+{<point name="construct.b.page1.glaq041" />}
+
+{<point name="construct.a.page1.glaq041" />}
+
+{<point name="construct.c.page1.glaq041" />}
+
+{<point name="construct.b.page1.glaq043" />}
+
+{<point name="construct.a.page1.glaq043" />}
+
+{<point name="construct.c.page1.glaq043" />}
+
+{<point name="construct.b.page1.glaq044" />}
+
+{<point name="construct.a.page1.glaq044" />}
+ 
+{<point name="construct.c.page1.glaq044" />}
+       END CONSTRUCT
+      
+ 
+      
+ 
+  
+      #add-point:query段more_construct
+{<point name="query.more_construct"/>}
+      #end add-point 
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc = ls_wc
+      LET l_flag=FALSE
+   ELSE
+      LET g_master_idx = 1
+   END IF
+   
+   LET g_wc = g_wc_table 
+ 
+ 
+        
+   LET g_wc2 = " 1=1"
+ 
+        
+   #add-point:cs段after_construct
+{<point name="cs.after_construct"/>}
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL aglq770_b_fill()
+   LET l_ac = g_master_idx
+   CALL aglq770_fetch()
+#   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+#      CALL cl_err("",-100,1)
+#   END IF
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="aglq770.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION aglq770_b_fill()
+   {<Local define>}
+   DEFINE ls_wc           STRING
+   {</Local define>}
+   #add-point:b_fill段define
+{<point name="b_fill.define"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+{<point name="b_fill.sql_before"/>}
+   #end add-point
+   
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter
+   
+   LET g_sql = "SELECT  UNIQUE glaq002,'',glaq017,'',glaq018,'',glaq019,'',glaq020,'',glaq021,'',glaq022, 
+       '',glaq023,'',glaq024,'',glaq051,glaq052,'',glaq053,'',glaq025,'',glaq027,glaq028,'','','','','','','','','','', 
+       '','','','','','','','','','','' FROM glaq_t",
+ 
+ 
+               "",
+               " WHERE glaqent= ? AND 1=1 AND ", ls_wc
+    
+   LET g_sql = g_sql, " ORDER BY glaq_t.glaqld,glaq_t.glaqdocno,glaq_t.glaqseq"
+  
+   #add-point:b_fill段sql_after
+{<point name="b_fill.sql_after"/>}
+   #end add-point
+  
+   PREPARE aglq770_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR aglq770_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_glaq_d.clear()
+ 
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO g_glaq_d[l_ac].glaq002,g_glaq_d[l_ac].glaq002_desc,g_glaq_d[l_ac].glaq017, 
+       g_glaq_d[l_ac].glaq017_desc,g_glaq_d[l_ac].glaq018,g_glaq_d[l_ac].glaq018_desc,g_glaq_d[l_ac].glaq019, 
+       g_glaq_d[l_ac].glaq019_desc,g_glaq_d[l_ac].glaq020,g_glaq_d[l_ac].glaq020_desc,g_glaq_d[l_ac].glaq021, 
+       g_glaq_d[l_ac].glaq021_desc,g_glaq_d[l_ac].glaq022,g_glaq_d[l_ac].glaq022_desc,g_glaq_d[l_ac].glaq023, 
+       g_glaq_d[l_ac].glaq023_desc,g_glaq_d[l_ac].glaq024,g_glaq_d[l_ac].glaq024_desc,g_glaq_d[l_ac].glaq051,
+       g_glaq_d[l_ac].glaq052,g_glaq_d[l_ac].glaq052_desc,g_glaq_d[l_ac].glaq053,g_glaq_d[l_ac].glaq053_desc, 
+       g_glaq_d[l_ac].glaq025,g_glaq_d[l_ac].glaq025_desc,g_glaq_d[l_ac].glaq027, 
+       g_glaq_d[l_ac].glaq028,g_glaq_d[l_ac].glapdocdt,g_glaq_d[l_ac].glaqdocno,g_glaq_d[l_ac].glap004, 
+       g_glaq_d[l_ac].style,g_glaq_d[l_ac].glaq005,g_glaq_d[l_ac].glaq006,g_glaq_d[l_ac].glaq010d,g_glaq_d[l_ac].glaq010c, 
+       g_glaq_d[l_ac].glaq003,g_glaq_d[l_ac].glaq004,g_glaq_d[l_ac].glaq039,g_glaq_d[l_ac].glaq040,g_glaq_d[l_ac].glaq041, 
+       g_glaq_d[l_ac].glaq042,g_glaq_d[l_ac].glaq043,g_glaq_d[l_ac].glaq044,g_glaq_d[l_ac].state,g_glaq_d[l_ac].amt, 
+       g_glaq_d[l_ac].amt1,g_glaq_d[l_ac].amt2,g_glaq_d[l_ac].amt3
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      LET g_glaq_d[l_ac].sel = "N"
+      #LET g_glaq_d[l_ac].statepic = cl_get_actipic(g_glaq_d[l_ac].statepic)
+ 
+      
+ 
+      #add-point:b_fill段資料填充
+{<point name="b_fill.fill"/>}
+      #end add-point
+      
+      CALL aglq770_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  9035
+            LET g_errparam.extend =  ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+ 
+   
+   CALL g_glaq_d.deleteElement(g_glaq_d.getLength())   
+ 
+   
+   #add-point:b_fill段資料填充(其他單身)
+{<point name="b_fill.others.fill"/>}
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE aglq770_pb
+   
+   LET l_ac = 1
+   CALL aglq770_fetch()
+   
+      CALL aglq770_filter_show('glaq002','b_glaq002')
+   CALL aglq770_filter_show('glaq017','b_glaq017')
+   CALL aglq770_filter_show('glaq018','b_glaq018')
+   CALL aglq770_filter_show('glaq019','b_glaq019')
+   CALL aglq770_filter_show('glaq020','b_glaq020')
+   CALL aglq770_filter_show('glaq021','b_glaq021')
+   CALL aglq770_filter_show('glaq022','b_glaq022')
+   CALL aglq770_filter_show('glaq023','b_glaq023')
+   CALL aglq770_filter_show('glaq024','b_glaq024')
+   CALL aglq770_filter_show('glaq051','b_glaq051')
+   CALL aglq770_filter_show('glaq052','b_glaq052')
+   CALL aglq770_filter_show('glaq053','b_glaq053')
+   CALL aglq770_filter_show('glaq025','b_glaq025')
+   CALL aglq770_filter_show('glaq027','b_glaq027')
+   CALL aglq770_filter_show('glaq028','b_glaq028')
+   CALL aglq770_filter_show('glaqdocno','b_glaq028')
+   CALL aglq770_filter_show('glaq005','b_glaq028')
+   CALL aglq770_filter_show('glaq006','b_glaq028')
+   CALL aglq770_filter_show('glaq003','b_glaq028')
+   CALL aglq770_filter_show('glaq004','b_glaq028')
+   CALL aglq770_filter_show('glaq039','b_glaq028')
+   CALL aglq770_filter_show('glaq040','b_glaq028')
+   CALL aglq770_filter_show('glaq041','b_glaq028')
+   CALL aglq770_filter_show('glaq042','b_glaq028')
+   CALL aglq770_filter_show('glaq043','b_glaq028')
+   CALL aglq770_filter_show('glaq044','b_glaq028')
+ 
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="aglq770.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION aglq770_fetch()
+   {<Local define>}
+   DEFINE li_ac           LIKE type_t.num5
+   {</Local define>}
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point
+   
+ 
+   
+   LET li_ac = l_ac 
+   
+ 
+   
+   #DISPLAY g_detail_cnt TO FORMONLY.cnt
+ 
+   #add-point:單身填充後
+   {<point name="fetch.after_fill" />}
+   #end add-point 
+   
+ 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="aglq770.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION aglq770_detail_show()
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值page1
+   
+    
+ 
+   
+   #讀入ref值
+   #add-point:show段單身reference
+   {<point name="detail_show.body.reference"/>}
+   #end add-point
+   
+ 
+ 
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="aglq770.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION aglq770_filter()
+   {<Local define>}
+   {</Local define>}
+   #add-point:filter段define
+{<point name="filter.define"/>}
+   #end add-point    
+   
+   LET l_ac = 1
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON glaq002,glaq017,glaq018,glaq019,glaq020,glaq021,glaq022,glaq023,glaq024, 
+          glaq051,glaq052,glaq053,glaq025,glaq027,glaq028,glaqdocno,glaq005,glaq006,glaq039,glaq040, 
+          glaq041,glaq042,glaq043,glaq044,glapdocdt #160302-00006#1 add
+                          FROM s_detail1[1].b_glaq002,s_detail1[1].b_glaq017,s_detail1[1].b_glaq018, 
+                              s_detail1[1].b_glaq019,s_detail1[1].b_glaq020,s_detail1[1].b_glaq021,s_detail1[1].b_glaq022, 
+                              s_detail1[1].b_glaq023,s_detail1[1].b_glaq024,s_detail1[1].b_glaq051,s_detail1[1].b_glaq052,
+                              s_detail1[1].b_glaq053,s_detail1[1].b_glaq025, 
+                              s_detail1[1].b_glaq027,s_detail1[1].b_glaq028,s_detail1[1].glaqdocno,s_detail1[1].glaq005, 
+                              s_detail1[1].glaq006,s_detail1[1].glaq039, 
+                              s_detail1[1].glaq040,s_detail1[1].glaq041,s_detail1[1].glaq042,s_detail1[1].glaq043, 
+                              s_detail1[1].glaq044,#160302-00006#1 modify
+                              s_detail1[1].glapdocdt #160302-00006#1 add
+#                              s_detail1[1].b_glaq027,s_detail1[1].b_glaq028,s_detail1[1].b_glaq028,s_detail1[1].b_glaq028, 
+#                              s_detail1[1].b_glaq028,s_detail1[1].b_glaq028,s_detail1[1].b_glaq028,s_detail1[1].b_glaq028, 
+#                              s_detail1[1].b_glaq028,s_detail1[1].b_glaq028,s_detail1[1].b_glaq028,s_detail1[1].b_glaq028, 
+#                             s_detail1[1].b_glaq028         #原代码错误
+                
+       BEFORE CONSTRUCT
+#saki       CALL cl_qbe_init()
+       #160302-00006#1 add-- str
+         ON ACTION controlp INFIELD b_glaq017
+            #add-point:ON ACTION controlp INFIELD b_glaq017
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " ooef201 = 'Y' "   #161021-00037#2 add
+            CALL q_ooef001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_glaq017  #顯示到畫面上
+            NEXT FIELD b_glaq017                     #返回原欄位
+    
+       
+         #----<<b_glaq018>>----
+         #Ctrlp:construct.c.page1.b_glaq018
+         ON ACTION controlp INFIELD b_glaq018
+            #add-point:ON ACTION controlp INFIELD b_glaq018
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = "ooegstus='Y'"
+            CALL q_ooeg001_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_glaq018  #顯示到畫面上
+            NEXT FIELD b_glaq018                     #返回原欄位
+    
+         #----<<b_glaq019>>----
+         #Ctrlp:construct.c.page1.b_glaq019
+         ON ACTION controlp INFIELD b_glaq019
+            #add-point:ON ACTION controlp INFIELD b_glaq019
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = "ooegstus='Y' AND ooeg003 IN ('1','2','3')"
+            CALL q_ooeg001_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_glaq019  #顯示到畫面上
+            NEXT FIELD b_glaq019                     #返回原欄位
+    
+            #END add-point
+            
+ 
+         #----<<b_glaq020>>----
+         #Ctrlp:construct.c.page1.b_glaq020
+         ON ACTION controlp INFIELD b_glaq020
+            #add-point:ON ACTION controlp INFIELD b_glaq020
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_oocq002_287()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_glaq020  #顯示到畫面上
+            NEXT FIELD b_glaq020                     #返回原欄位
+    
+            #END add-point
+            
+ 
+         #----<<b_glaq021>>----
+         #Ctrlp:construct.c.page1.b_glaq021
+         ON ACTION controlp INFIELD b_glaq021
+            #add-point:ON ACTION controlp INFIELD b_glaq021
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001_25()      #160913-00017#4  add
+            #CALL q_pmaa001()        #160913-00017#4  mark    
+            DISPLAY g_qryparam.return1 TO b_glaq021  #顯示到畫面上
+            NEXT FIELD b_glaq021                     #返回原欄位
+    
+
+            #END add-point
+            
+ 
+         #----<<b_glaq022>>----
+         #Ctrlp:construct.c.page1.b_glaq022
+         ON ACTION controlp INFIELD b_glaq022
+            #add-point:ON ACTION controlp INFIELD b_glaq022
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001_25()      #160913-00017#4  add
+            #CALL q_pmaa001()        #160913-00017#4  mark    
+            DISPLAY g_qryparam.return1 TO b_glaq022  #顯示到畫面上
+            NEXT FIELD b_glaq022                     #返回原欄位
+    
+
+            #END add-point
+            
+ 
+         #----<<b_glaq023>>----
+         #Ctrlp:construct.c.page1.b_glaq023
+         ON ACTION controlp INFIELD b_glaq023
+            #add-point:ON ACTION controlp INFIELD b_glaq023
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_oocq002_281()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_glaq023  #顯示到畫面上
+            NEXT FIELD b_glaq023                     #返回原欄位
+    
+            #END add-point
+            
+ 
+         #----<<b_glaq024>>----
+         #Ctrlp:construct.c.page1.b_glaq024
+         ON ACTION controlp INFIELD b_glaq024
+            #add-point:ON ACTION controlp INFIELD b_glaq024
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_rtax001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_glaq024  #顯示到畫面上
+            NEXT FIELD b_glaq024                     #返回原欄位
+    
+
+            #END add-point
+            
+ 
+         #----<<b_glaq025>>----
+         #Ctrlp:construct.c.page1.b_glaq025
+         ON ACTION controlp INFIELD b_glaq025
+            #add-point:ON ACTION controlp INFIELD b_glaq025
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001_8()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_glaq025  #顯示到畫面上
+            NEXT FIELD b_glaq025                     #返回原欄位
+    
+
+            #END add-point
+            
+ 
+         #----<<b_glaq052>>----
+         #Ctrlp:construct.c.page1.b_glaq052
+         ON ACTION controlp INFIELD b_glaq052
+            #add-point:ON ACTION controlp INFIELD b_glaq052
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " oojdstus='Y' "
+            CALL q_oojd001_2()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_glaq052  #顯示到畫面上
+            NEXT FIELD b_glaq052                     #返回原欄位
+    
+
+         ON ACTION controlp INFIELD b_glaq053
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_oocq002_2002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_glaq053  #顯示到畫面上
+            NEXT FIELD b_glaq053                     #返回原欄位
+      
+ 
+     
+ 
+         #Ctrlp:construct.c.page1.b_glaq027
+         ON ACTION controlp INFIELD b_glaq027
+            #add-point:ON ACTION controlp INFIELD b_glaq027
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.state = 'c'
+            CALL q_pjba001()                          #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_glaq027     #顯示到畫面上
+            NEXT FIELD b_glaq027
+            #END add-point
+
+ 
+         #Ctrlp:construct.c.page1.b_glaq028
+         ON ACTION controlp INFIELD b_glaq028
+            #add-point:ON ACTION controlp INFIELD b_glaq028
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+			   LET g_qryparam.where = "pjbb012 ='1'"
+            CALL q_pjbb002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_glaq028  #顯示到畫面上
+
+            NEXT FIELD b_glaq028 
+            
+            
+             ON ACTION controlp INFIELD b_glaq002
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = "glac001 = '",g_glaa004,"' AND glac006 = '1'"
+            CALL aglt310_04()                        #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_glaq002  #顯示到畫面上
+            NEXT FIELD b_glaq002                     #返回原欄位
+   
+           
+         ON ACTION controlp INFIELD glaqdocno
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_glapdocno()                        #呼叫開窗
+            DISPLAY g_qryparam.return1 TO glaqdocno  #顯示到畫面上
+            NEXT FIELD glaqdocno                     #返回原欄位  
+            
+         ON ACTION controlp INFIELD glaq005
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooai001()                         #呼叫開窗
+            DISPLAY g_qryparam.return1 TO glaq005  #顯示到畫面上
+            NEXT FIELD glaq005                     #返回原欄位        
+                #160302-00006#1 add-- end
+                
+            DISPLAY aglq770_filter_parser('glaq002') TO s_detail1[1].b_glaq002
+            DISPLAY aglq770_filter_parser('glaq017') TO s_detail1[1].b_glaq017
+            DISPLAY aglq770_filter_parser('glaq018') TO s_detail1[1].b_glaq018
+            DISPLAY aglq770_filter_parser('glaq019') TO s_detail1[1].b_glaq019
+            DISPLAY aglq770_filter_parser('glaq020') TO s_detail1[1].b_glaq020
+            DISPLAY aglq770_filter_parser('glaq021') TO s_detail1[1].b_glaq021
+            DISPLAY aglq770_filter_parser('glaq022') TO s_detail1[1].b_glaq022
+            DISPLAY aglq770_filter_parser('glaq023') TO s_detail1[1].b_glaq023
+            DISPLAY aglq770_filter_parser('glaq024') TO s_detail1[1].b_glaq024
+            DISPLAY aglq770_filter_parser('glaq051') TO s_detail1[1].b_glaq051
+            DISPLAY aglq770_filter_parser('glaq052') TO s_detail1[1].b_glaq052
+            DISPLAY aglq770_filter_parser('glaq053') TO s_detail1[1].b_glaq053
+            DISPLAY aglq770_filter_parser('glaq025') TO s_detail1[1].b_glaq025
+            DISPLAY aglq770_filter_parser('glaq027') TO s_detail1[1].b_glaq027
+            DISPLAY aglq770_filter_parser('glaq028') TO s_detail1[1].b_glaq028
+           #160302-00006#1 add --str
+            DISPLAY aglq770_filter_parser('glaqdocno') TO s_detail1[1].glaqdocno
+            DISPLAY aglq770_filter_parser('glaq005') TO s_detail1[1].glaq005
+            DISPLAY aglq770_filter_parser('glaq006') TO s_detail1[1].glaq006
+            DISPLAY aglq770_filter_parser('glaq039') TO s_detail1[1].glaq039
+            DISPLAY aglq770_filter_parser('glaq040') TO s_detail1[1].glaq040
+            DISPLAY aglq770_filter_parser('glaq041') TO s_detail1[1].glaq041
+            DISPLAY aglq770_filter_parser('glaq042') TO s_detail1[1].glaq042
+            DISPLAY aglq770_filter_parser('glaq043') TO s_detail1[1].glaq043
+            DISPLAY aglq770_filter_parser('glaq044') TO s_detail1[1].glaq044
+            DISPLAY aglq770_filter_parser('glapdocdt') TO s_detail1[1].glapdocdt
+            #160302-00006#1add--end
+#             DISPLAY aglq770_filter_parser('glaqdocno') TO s_detail1[1].b_glaq028
+#            DISPLAY aglq770_filter_parser('glaq005') TO s_detail1[1].b_glaq028
+#            DISPLAY aglq770_filter_parser('glaq006') TO s_detail1[1].b_glaq028
+#            DISPLAY aglq770_filter_parser('glaq003') TO s_detail1[1].b_glaq028
+#            DISPLAY aglq770_filter_parser('glaq004') TO s_detail1[1].b_glaq028
+#            DISPLAY aglq770_filter_parser('glaq039') TO s_detail1[1].b_glaq028
+#            DISPLAY aglq770_filter_parser('glaq040') TO s_detail1[1].b_glaq028
+#            DISPLAY aglq770_filter_parser('glaq041') TO s_detail1[1].b_glaq028
+#            DISPLAY aglq770_filter_parser('glaq042') TO s_detail1[1].b_glaq028
+#            DISPLAY aglq770_filter_parser('glaq043') TO s_detail1[1].b_glaq028
+#            DISPLAY aglq770_filter_parser('glaq044') TO s_detail1[1].b_glaq028
+ 
+ 
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs
+{<point name="filter.add_cs"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog
+{<point name="filter.b_dialog"/>}
+         #end add-point  
+ 
+      ON ACTION accept
+         ACCEPT DIALOG 
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+   
+      CALL aglq770_filter_show('glaq002','b_glaq002')
+   CALL aglq770_filter_show('glaq017','b_glaq017')
+   CALL aglq770_filter_show('glaq018','b_glaq018')
+   CALL aglq770_filter_show('glaq019','b_glaq019')
+   CALL aglq770_filter_show('glaq020','b_glaq020')
+   CALL aglq770_filter_show('glaq021','b_glaq021')
+   CALL aglq770_filter_show('glaq022','b_glaq022')
+   CALL aglq770_filter_show('glaq023','b_glaq023')
+   CALL aglq770_filter_show('glaq024','b_glaq024')
+   CALL aglq770_filter_show('glaq051','b_glaq051')
+   CALL aglq770_filter_show('glaq052','b_glaq052')
+   CALL aglq770_filter_show('glaq053','b_glaq053')
+   CALL aglq770_filter_show('glaq025','b_glaq025')
+   CALL aglq770_filter_show('glaq027','b_glaq027')
+   CALL aglq770_filter_show('glaq028','b_glaq028')
+   #160302-00006#1 add-str
+  CALL aglq770_filter_show('glaqdocno','glaqdocno')
+   CALL aglq770_filter_show('glaq005','glaq005')
+   CALL aglq770_filter_show('glaq006','glaq006')
+   CALL aglq770_filter_show('glaq039','glaq039')
+   CALL aglq770_filter_show('glaq040','glaq040')
+   CALL aglq770_filter_show('glaq041','glaq041')
+   CALL aglq770_filter_show('glaq042','glaq042')
+   CALL aglq770_filter_show('glaq043','glaq043')
+   CALL aglq770_filter_show('glaq044','glaq044')
+   CALL aglq770_filter_show('glapdocdt','glapdocdt')
+   #160302-00006#1 add-end
+#   CALL aglq770_filter_show('glaqdocno','b_glaq028')
+#   CALL aglq770_filter_show('glaq005','b_glaq028')
+#   CALL aglq770_filter_show('glaq006','b_glaq028')
+#   CALL aglq770_filter_show('glaq003','b_glaq028')
+#   CALL aglq770_filter_show('glaq004','b_glaq028')
+#   CALL aglq770_filter_show('glaq039','b_glaq028')
+#   CALL aglq770_filter_show('glaq040','b_glaq028')
+#   CALL aglq770_filter_show('glaq041','b_glaq028')
+#   CALL aglq770_filter_show('glaq042','b_glaq028')
+#   CALL aglq770_filter_show('glaq043','b_glaq028')
+#   CALL aglq770_filter_show('glaq044','b_glaq028')
+ 
+   
+    
+    CALL aglq770_b_fill1()
+  
+  
+    
+#   CALL aglq770_b_fill()
+#   CALL aglq770_fetch()
+#   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="aglq770.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION aglq770_filter_parser(ps_field)
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+   #add-point:filter段define
+   {<point name="filter_parser.define"/>}
+   #end add-point    
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="aglq770.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION aglq770_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = aglq770_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="aglq770.insert" >}
+#+ insert
+PRIVATE FUNCTION aglq770_insert()
+   #add-point:insert段define
+   {<point name="insert.define"/>}
+   #end add-point
+ 
+   #add-point:insert段control
+   {<point name="insert.control"/>}
+   #end add-point    
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="aglq770.modify" >}
+#+ modify
+PRIVATE FUNCTION aglq770_modify()
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point
+ 
+   #add-point:modify段control
+   {<point name="modify.control"/>}
+   #end add-point 
+END FUNCTION
+
+{</section>}
+
+{<section id="aglq770.reproduce" >}
+#+ reproduce
+PRIVATE FUNCTION aglq770_reproduce()
+   #add-point:reproduce段define
+   {<point name="reproduce.define"/>}
+   #end add-point
+ 
+   #add-point:reproduce段control
+   {<point name="reproduce.control"/>}
+   #end add-point 
+END FUNCTION
+
+{</section>}
+
+{<section id="aglq770.delete" >}
+#+ delete
+PRIVATE FUNCTION aglq770_delete()
+   #add-point:delete段define
+   {<point name="delete.define"/>}
+   #end add-point
+ 
+   #add-point:delete段control
+   {<point name="delete.control"/>}
+   #end add-point 
+END FUNCTION
+
+{</section>}
+
+{<section id="aglq770.other_function" >}
+{<point name="other.function"/>}
+
+{</section>}
+

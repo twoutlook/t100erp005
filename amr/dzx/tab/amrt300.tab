@@ -1,0 +1,200 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="amrt300" module="amr" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="05384" crtdt="2014-12-02 15:48:42" modid="03079" moddt="2016-07-20 14:44:27" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="資源維修工單維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mrdhdocno,mrdhdocno_desc(chr80),mrdhdocdt,mrdh001,mrdh001_desc(chr80),mrdh002,mrdh002_desc(chr80),mrdhstus,mrdhsite,mrdh003,mrdh003_desc(chr80),mrdh004,mrdh005,mrdh006,mrdh007,mrdh008,mrdhownid,mrdhownid_desc(chr80),mrdhowndp,mrdhowndp_desc(chr80),mrdhcrtid,mrdhcrtid_desc(chr80),mrdhcrtdp,mrdhcrtdp_desc(chr80),mrdhcrtdt,mrdhmodid,mrdhmodid_desc(chr80),mrdhmoddt,mrdhcnfid,mrdhcnfid_desc(chr80),mrdhcnfdt,mrdhpstid,mrdhpstid_desc(chr80),mrdhpstdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mrdiseq,mrdi001,mrdi002,mrdi002_desc(chr500),mrdi003,mrdi004,mrdi005,mrdi006,mrdi007,mrdi007_desc(chr500),mrdi008,mrdi008_desc(chr500),mrdi009,mrdisite"/>
+      <var id="bs_field" value="mrdhsite,mrdhdocno,mrdhdocdt,mrdh001,mrdh002,mrdhcrtid,mrdhcrtid_desc(chr80),mrdhcrtdt,mrdhmodid,mrdhmodid_desc(chr80),mrdhmoddt" pk="mrdhdocno" order=""/>
+      <bs_reference field="mrdhcrtid_desc" ref_field="mrdhcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="mrdhmodid_desc" ref_field="mrdhmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="amr" filename="amrt300" method="dialog">
+    <section id="input">
+      <input id="head" field="mrdhdocno,mrdhdocdt,mrdh001,mrdh002,mrdhstus,mrdhsite,mrdh003,mrdh005,mrdh006,mrdh007,mrdh008"/>
+      <input id="body" page="1" field="mrdiseq,mrdi001,mrdi002,mrdi003,mrdi004,mrdi005,mrdi006,mrdi007,mrdi008,mrdi009,mrdisite" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mrdhdocno,mrdhdocdt,mrdh001,mrdh002,mrdhstus,mrdhsite,mrdh003,mrdh004,mrdh005,mrdh006,mrdh007,mrdh008,mrdhownid,mrdhowndp,mrdhcrtid,mrdhcrtdp,mrdhcrtdt,mrdhmodid,mrdhmoddt,mrdhcnfid,mrdhcnfdt,mrdhpstid,mrdhpstdt"/>
+      <construct id="body" page="1" field="mrdiseq,mrdi001,mrdi002,mrdi003,mrdi004,mrdi005,mrdi006,mrdi007,mrdi008,mrdi009,mrdisite"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mrdhdocno"/>
+      <set id="head" type="no_entry" field="mrdhdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="mrdhdocno">
+        <after/>
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_mrdhdocno" state="c"/>
+      </column>
+      <column id="mrdhdocno_desc"/>
+      <column id="mrdhdocdt"/>
+      <column id="mrdh001">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="mrdh001_desc" ref_field="mrdh_t.mrdh001" map_field="mrdh001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mrdh001_desc"/>
+      <column id="mrdh002">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="mrdh002_desc" ref_field="mrdh_t.mrdh002" map_field="mrdh002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="mrdh002_desc"/>
+      <column id="mrdhstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="mrdhsite"/>
+      <column id="mrdh003">
+        <after>
+          <check chkid="v_mrba001_5" id="isExist"/>
+          <reference field="mrdh003_desc" ref_field="mrdhsite,mrdh003" map_field="mrdhsite,mrdh003" ref_sql="SELECT mrba004 FROM mrba_t WHERE mrbaent=$varg_enterprise$var AND mrbasite=? AND mrba001=? "/>
+        </after>
+        <controlp form="q_mrba001_4" state="i"/>
+        <controlp form="q_mrba001_4" state="c"/>
+      </column>
+      <column id="mrdh003_desc"/>
+      <column id="mrdh004"/>
+      <column id="mrdh005"/>
+      <column id="mrdh006"/>
+      <column id="mrdh007">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mrdh008"/>
+      <column id="mrdhownid">
+        <after>
+          <reference field="mrdhownid_desc" ref_field="mrdh_t.mrdhownid" map_field="mrdhownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mrdhownid_desc"/>
+      <column id="mrdhowndp">
+        <after>
+          <reference field="mrdhowndp_desc" ref_field="mrdh_t.mrdhowndp" map_field="mrdhowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mrdhowndp_desc"/>
+      <column id="mrdhcrtid">
+        <after>
+          <reference field="mrdhcrtid_desc" ref_field="mrdh_t.mrdhcrtid" map_field="mrdhcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mrdhcrtid_desc"/>
+      <column id="mrdhcrtdp">
+        <after>
+          <reference field="mrdhcrtdp_desc" ref_field="mrdh_t.mrdhcrtdp" map_field="mrdhcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mrdhcrtdp_desc"/>
+      <column id="mrdhcrtdt"/>
+      <column id="mrdhmodid">
+        <after>
+          <reference field="mrdhmodid_desc" ref_field="mrdh_t.mrdhmodid" map_field="mrdhmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mrdhmodid_desc"/>
+      <column id="mrdhmoddt"/>
+      <column id="mrdhcnfid">
+        <after>
+          <reference field="mrdhcnfid_desc" ref_field="mrdh_t.mrdhcnfid" map_field="mrdhcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mrdhcnfid_desc"/>
+      <column id="mrdhcnfdt"/>
+      <column id="mrdhpstid">
+        <after>
+          <reference field="mrdhpstid_desc" ref_field="mrdh_t.mrdhpstid" map_field="mrdhpstid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mrdhpstid_desc"/>
+      <column id="mrdhpstdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="mrdiseq"/>
+      <column id="mrdi001"/>
+      <column id="mrdi002">
+        <after/>
+        <controlp form="q_ooeg001_1" state="i"/>
+        <controlp form="q_ooeg001_1" state="c"/>
+      </column>
+      <column id="mrdi002_desc"/>
+      <column id="mrdi003">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mrdi004">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mrdi005">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mrdi006"/>
+      <column id="mrdi007">
+        <after>
+          <reference field="mrdi007_desc" ref_field="mrdi007" map_field="mrdi007" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_gzyb002" state="i"/>
+        <controlp form="q_gzyb002" state="c"/>
+      </column>
+      <column id="mrdi007_desc"/>
+      <column id="mrdi008">
+        <after>
+          <check chkid="v_mrba001_7" id="isExist"/>
+          <reference field="mrdi008_desc" ref_field="mrdisite,mrdi008" map_field="mrdisite,mrdi008" ref_sql="SELECT mrba004 FROM mrba_t WHERE mrbaent=$varg_enterprise$var AND mrbasite=? AND mrba001=? "/>
+        </after>
+        <controlp form="q_mrba001_6" state="i"/>
+        <controlp form="q_mrba001_6" state="c"/>
+      </column>
+      <column id="mrdi008_desc"/>
+      <column id="mrdi009"/>
+      <column id="mrdisite"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="mrdh_t" pk="mrdhdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT mrdhdocno,&apos;&apos;,mrdhdocdt,mrdh001,&apos;&apos;,mrdh002,&apos;&apos;,mrdhstus,mrdhsite,mrdh003,&apos;&apos;,mrdh004,mrdh005,mrdh006,mrdh007,mrdh008,mrdhownid,&apos;&apos;,mrdhowndp,&apos;&apos;,mrdhcrtid,&apos;&apos;,mrdhcrtdp,&apos;&apos;,mrdhcrtdt,mrdhmodid,&apos;&apos;,mrdhmoddt,mrdhcnfid,&apos;&apos;,mrdhcnfdt,mrdhpstid,&apos;&apos;,mrdhpstdt FROM mrdh_t WHERE mrdhent= ? AND mrdhdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mrdhdocno,&apos;&apos;,mrdhdocdt,mrdh001,&apos;&apos;,mrdh002,&apos;&apos;,mrdhstus,mrdhsite,mrdh003,&apos;&apos;,mrdh004,mrdh005,mrdh006,mrdh007,mrdh008,mrdhownid,&apos;&apos;,mrdhowndp,&apos;&apos;,mrdhcrtid,&apos;&apos;,mrdhcrtdp,&apos;&apos;,mrdhcrtdt,mrdhmodid,&apos;&apos;,mrdhmoddt,mrdhcnfid,&apos;&apos;,mrdhcnfdt,mrdhpstid,&apos;&apos;,mrdhpstdt FROM mrdh_t" order="mrdhdocno"/>
+    </head>
+    <body id="mrdi_t" page="1" linked="" pk="mrdiseq" fk="mrdidocno">
+      <sql id="forupd_sql_detail" query="SELECT mrdiseq,mrdi001,mrdi002,&apos;&apos;,mrdi003,mrdi004,mrdi005,mrdi006,mrdi007,&apos;&apos;,mrdi008,&apos;&apos;,mrdi009,mrdisite FROM mrdi_t WHERE mrdient=? AND mrdidocno=? AND mrdiseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mrdiseq,mrdi001,mrdi002,&apos;&apos;,mrdi003,mrdi004,mrdi005,mrdi006,mrdi007,&apos;&apos;,mrdi008,&apos;&apos;,mrdi009,mrdisite FROM mrdi_t WHERE mrdient=? AND mrdidocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

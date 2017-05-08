@@ -1,0 +1,404 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aapt815_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2016-06-27 23:33:59), PR版次:0004(2016-09-30 14:08:19)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000027
+#+ Filename...: aapt815_01
+#+ Description: 自動產生請款明細
+#+ Creator....: 04152(2016-06-26 20:42:24)
+#+ Modifier...: 04152 -SD/PR- 08732
+ 
+{</section>}
+ 
+{<section id="aapt815_01.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#Memos
+#160509-00004#104 by 05948 增加判断根据单头对公否去apmm100取条件一致的交易对象数据
+#160920-00019#2   2016/09/21  By 08732    交易對象開窗校驗調整
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_apeb_m        RECORD
+       apebdocno LIKE apeb_t.apebdocno
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_wc                 STRING
+DEFINE g_sql_ctrl           STRING
+#end add-point
+ 
+DEFINE g_apeb_m        type_g_apeb_m
+ 
+   DEFINE g_apebdocno_t LIKE apeb_t.apebdocno
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aapt815_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aapt815_01(--)
+   #add-point:input段變數傳入
+   p_apeasite,p_apeacomp,p_apeadocno,p_apeald,p_firstday,p_endday
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE p_apeasite      LIKE apea_t.apeasite
+   DEFINE p_apeacomp      LIKE apea_t.apeacomp
+   DEFINE p_apeadocno     LIKE apea_t.apeadocno
+   DEFINE p_apeald        LIKE apea_t.apeald
+   DEFINE p_firstday      LIKE type_t.dat
+   DEFINE p_endday        LIKE type_t.dat
+   DEFINE r_success       LIKE type_t.num5
+   DEFINE l_firstday      LIKE type_t.dat
+   DEFINE l_endday        LIKE type_t.dat
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aapt815_01 WITH FORM cl_ap_formpath("aap","aapt815_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   LET r_success = TRUE
+   #160920-00019#2---s
+   LET g_sql_ctrl = NULL
+   CALL s_control_get_supplier_sql('4',g_site,g_user,g_dept,'') RETURNING g_sub_success,g_sql_ctrl
+   #160920-00019#2---e
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_apeb_m.apebdocno ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apebdocno
+            #add-point:BEFORE FIELD apebdocno name="input.b.apebdocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apebdocno
+            
+            #add-point:AFTER FIELD apebdocno name="input.a.apebdocno"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apebdocno
+            #add-point:ON CHANGE apebdocno name="input.g.apebdocno"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.apebdocno
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apebdocno
+            #add-point:ON ACTION controlp INFIELD apebdocno name="input.c.apebdocno"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      CONSTRUCT BY NAME g_wc ON apca005,apcadocno
+         BEFORE CONSTRUCT
+         
+         ON ACTION controlp INFIELD apca005
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = "('1','3')"
+            #151231-00010#1(S)
+            IF NOT cl_null(g_sql_ctrl) AND NOT g_sql_ctrl = ' 1=1' THEN
+               LET g_qryparam.where = g_sql_ctrl
+            END IF
+            #151231-00010#1(E)
+            CALL q_pmaa001_1()
+            DISPLAY g_qryparam.return1 TO apca005
+            NEXT FIELD apca005
+            
+         ON ACTION controlp INFIELD apcadocno
+            
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = "apca001 IN (",s_fin_get_scc_gzcb002('8502','3','aapt210') ,") AND apcastus = 'Y'",
+                                   " AND apcasite = '",p_apeasite,"' AND apcacomp = '",p_apeacomp,"'",
+                                   " AND apcadocdt >= '",p_firstday,"' AND apcadocdt <='",p_endday,"'"
+            #151231-00010#1(S)
+            IF NOT cl_null(g_sql_ctrl) AND NOT g_sql_ctrl = ' 1=1'  THEN
+               LET g_qryparam.where = g_qryparam.where," AND EXISTS (SELECT 1 FROM pmaa_t ",
+                                                       "              WHERE pmaaent = ",g_enterprise,
+                                                       "                AND ",g_sql_ctrl,
+                                                       "                AND pmaaent = apcaent ",
+                                                       "                AND pmaa001 = apca004 )"
+            END IF
+            #151231-00010#1(E)
+            CALL q_apcadocno()
+            DISPLAY g_qryparam.return1 TO apcadocno
+            NEXT FIELD apcadocno
+            
+      END CONSTRUCT
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aapt815_01 
+   
+   #add-point:input段after input 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   CALL cl_err_collect_init()
+   CALL aapt815_01_ins_apeb(p_apeasite,p_apeacomp,p_apeadocno,p_apeald,p_firstday,p_endday,g_wc)
+        RETURNING g_sub_success
+   IF NOT g_sub_success THEN
+      LET r_success = FALSE
+   END IF
+   CALL cl_err_collect_show()
+   
+   RETURN r_success
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapt815_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aapt815_01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 整批寫入符合的應付款單
+# Memo...........:
+# Usage..........: CALL aapt815_01_ins_apeb()
+# Date & Author..: 2016/06/27 By Reanna
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aapt815_01_ins_apeb(p_apeasite,p_apeacomp,p_apeadocno,p_apeald,p_firstday,p_endday,p_wc)
+DEFINE p_apeasite    LIKE apea_t.apeasite
+DEFINE p_apeacomp    LIKE apea_t.apeacomp
+DEFINE p_apeadocno   LIKE apea_t.apeadocno
+DEFINE p_apeald      LIKE apea_t.apeald
+DEFINE p_firstday    LIKE type_t.dat
+DEFINE p_endday      LIKE type_t.dat
+DEFINE p_wc          STRING
+DEFINE l_sql         STRING
+#160509-00004#111--add--str--lujh
+DEFINE l_apca018     LIKE apca_t.apca018
+DEFINE l_stbd037     LIKE stbd_t.stbd037
+#160509-00004#111--add--end--lujh
+DEFINE l_money       LIKE apeb_t.apeb108
+DEFINE l_apeb        RECORD LIKE apeb_t.*
+DEFINE l_apca        RECORD
+                        apcasite  LIKE apca_t.apcasite,
+                        apca005   LIKE apca_t.apca005,
+                        apcadocno LIKE apca_t.apcadocno,
+                        apccseq   LIKE apcc_t.apccseq
+                     END RECORD
+DEFINE l_n           LIKE type_t.num5,   #add by liyan 160706
+       l_apea027     LIKE apea_t.apea027 #add by liyan 160706
+DEFINE r_success     LIKE type_t.num5
+   
+   LET r_success = TRUE   
+      
+   LET l_sql = "SELECT DISTINCT apcasite,apca005,apcadocno,apccseq",
+               "  FROM apca_t",
+               "  LEFT JOIN apcc_t ON apcaent=apccent AND apcald=apccld AND apcadocno=apccdocno",
+               " WHERE apcaent = ",g_enterprise,
+               "   AND apca001 IN (",s_fin_get_scc_gzcb002('8502','3','aapt210') ,") AND apcastus = 'Y'",
+               "   AND apcasite = '",p_apeasite,"' AND apcacomp = '",p_apeacomp,"'",
+               "   AND apcadocdt >= '",p_firstday,"' AND apcadocdt <='",p_endday,"'",
+               "   AND apcc108-apcc109 > 0 ",
+               "   AND ",g_wc,
+               " ORDER BY apcadocno"
+   PREPARE aapt815_01_sel_pre1 FROM l_sql
+   DECLARE aapt815_01_sel_cur1 CURSOR FOR aapt815_01_sel_pre1
+   FOREACH aapt815_01_sel_cur1 INTO l_apca.apcasite,l_apca.apca005,l_apca.apcadocno,l_apca.apccseq
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+            
+      INITIALIZE l_apeb.* TO NULL
+      
+      #160509-00004#111--add--str--lujh
+      SELECT apca018 INTO l_apca018 
+        FROM apca_t
+       WHERE apcaent = g_enterprise
+         AND apcald = p_apeald
+         AND apcadocno = l_apca.apcadocno
+         
+      SELECT stbd037 INTO l_stbd037
+        FROM stbd_t
+       WHERE stbdent = g_enterprise
+         AND stbddocno = l_apca018
+      #160509-00004#111--add--end--lujh
+      
+      #項次
+      SELECT MAX(apebseq)+1 INTO l_apeb.apebseq
+        FROM apeb_t
+       WHERE apebent = g_enterprise
+         AND apebdocno = p_apeadocno
+      IF cl_null(l_apeb.apebseq) THEN LET l_apeb.apebseq = 1 END IF
+      LET l_apeb.apeborga  = l_apca.apcasite
+      LET l_apeb.apeb023   = l_apca.apca005
+      LET l_apeb.apeb003   = l_apca.apcadocno
+      LET l_apeb.apeb004   = l_apca.apccseq
+      #add by liyan 160706--str--
+      SELECT apea027 INTO l_apea027 FROM apea_t WHERE apeadocno=p_apeadocno AND apeaent=g_enterprise
+      IF NOT cl_null(l_apea027) THEN 
+         SELECT count(*) INTO l_n 
+           FROM pmaf_t
+           WHERE pmafent = g_enterprise 
+             AND pmaf001 = l_apeb.apeb023
+             AND pmaf010 = l_apea027
+             AND pmaf011 = l_stbd037     #160509-00004#111 add lujh 
+         IF l_n=0 THEN 
+            CONTINUE FOREACH 
+         END IF 
+      END IF
+      #add by liyan 160706--end--
+      #檢查是否還有未沖金額
+      CALL s_aapt815_get_apeb108(p_apeadocno,l_apeb.apebseq,l_apeb.apeb003,l_apeb.apeb004)
+           RETURNING l_money
+      IF l_money <=0 THEN
+         CONTINUE FOREACH
+      END IF
+      
+      CALL s_aapt815_get_aapt210(p_apeadocno,p_apeald,l_apeb.apebseq,l_apeb.apeb003,l_apeb.apeb004)
+           RETURNING l_apeb.apeb100,l_apeb.apeb108,l_apeb.apeb101,
+                     l_apeb.apeb118,l_apeb.apeb015,l_apeb.apeb031
+      
+      LET l_apeb.apeb006   = '10'
+
+      INSERT INTO apeb_t (apebent,apebdocno,apebseq,
+                          apeborga,apeb023,apeb003,apeb004,apeb100,
+                          apeb108,apeb101,apeb118,apeb006,apeb015,
+                          apeb031)
+                   VALUES(g_enterprise,p_apeadocno,l_apeb.apebseq,
+                          l_apeb.apeborga,l_apeb.apeb023,l_apeb.apeb003,l_apeb.apeb004,l_apeb.apeb100,
+                          l_apeb.apeb108,l_apeb.apeb101,l_apeb.apeb118,l_apeb.apeb006,l_apeb.apeb015,
+                          l_apeb.apeb031
+                          )
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = ""
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END FOREACH
+   
+   RETURN r_success
+END FUNCTION
+
+ 
+{</section>}
+ 

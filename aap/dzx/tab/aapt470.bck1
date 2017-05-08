@@ -1,0 +1,157 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapt470" module="aap" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="08732" crtdt="2016-08-17 14:45:48" modid="08732" moddt="2016-09-30 09:42:27" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="付款資料變更申請作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="apdfsite,apdfsite_desc(chr80),apdf001,apdf001_desc(chr80),apdfld,apdfld_desc(chr80),apdfcomp,apdfdocno,apdfdocno_desc(chr80),apdfdocdt,apdfstus,apdfownid,apdfownid_desc(chr80),apdfowndp,apdfowndp_desc(chr80),apdfcrtid,apdfcrtid_desc(chr80),apdfcrtdp,apdfcrtdp_desc(chr80),apdfcrtdt,apdfmodid,apdfmodid_desc(chr80),apdfmoddt,apdfcnfid,apdfcnfid_desc(chr80),apdfcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="apdgseq,apdg001,apdg002,apdg003,apdg003_desc(chr500),apdg004,apdg005,apdg005_desc(chr500),apdg006,apdg007,l_apde002(chr500),apdg014,apdg015,apdg015_desc(chr500),apdg016,apdg017,apdg010"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aap" filename="aapt470" method="dialog">
+    <section id="input">
+      <input id="head" field="apdfsite,apdf001,apdfld,apdfcomp,apdfdocno,apdfdocdt,apdfstus"/>
+      <input id="body" page="1" field="apdgseq,apdg001,apdg002,apdg014,apdg015,apdg016,apdg017,apdg010" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="apdfsite,apdf001,apdfld,apdfcomp,apdfdocno,apdfdocdt,apdfstus,apdfownid,apdfowndp,apdfcrtid,apdfcrtdp,apdfcrtdt,apdfmodid,apdfmoddt,apdfcnfid,apdfcnfdt"/>
+      <construct id="body" page="1" field="apdgseq,apdg001,apdg002,apdg003,apdg004,apdg005,apdg006,apdg007,apdg014,apdg015,apdg016,apdg017,apdg010"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="apdfdocno,apdfld"/>
+      <set id="head" type="no_entry" field="apdfdocno,apdfld"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="apdfsite">
+        <after>
+          <check chkid="v_xrah002" id="isExist"/>
+          <reference field="apdfsite_desc" ref_field="apdf_t.apdfsite" map_field="apdfent,apdfsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="apdfsite_desc"/>
+      <column id="apdf001">
+        <after>
+          <reference field="apdf001_desc" ref_field="apdf_t.apdf001" map_field="apdfent,apdf001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="apdf001_desc"/>
+      <column id="apdfld">
+        <after>
+          <reference field="apdfld_desc" ref_field="apdf_t.apdfld" map_field="apdfent,apdfld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="apdfld_desc"/>
+      <column id="apdfcomp"/>
+      <column id="apdfdocno">
+        <after>
+          <reference field="apdfdocno_desc" ref_field="apdf_t.apdfdocno" map_field="apdfent,apdfdocno" ref_sql="SELECT oobal004 FROM oobal_t WHERE oobalent=$varg_enterprise$var AND oobal002=? AND oobal003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="apdfdocno_desc"/>
+      <column id="apdfdocdt"/>
+      <column id="apdfstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="apdfownid">
+        <after>
+          <reference field="apdfownid_desc" ref_field="apdf_t.apdfownid" map_field="apdfownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="apdfownid_desc"/>
+      <column id="apdfowndp">
+        <after>
+          <reference field="apdfowndp_desc" ref_field="apdf_t.apdfowndp" map_field="apdfowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="apdfowndp_desc"/>
+      <column id="apdfcrtid">
+        <after>
+          <reference field="apdfcrtid_desc" ref_field="apdf_t.apdfcrtid" map_field="apdfcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="apdfcrtid_desc"/>
+      <column id="apdfcrtdp">
+        <after>
+          <reference field="apdfcrtdp_desc" ref_field="apdf_t.apdfcrtdp" map_field="apdfcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="apdfcrtdp_desc"/>
+      <column id="apdfcrtdt"/>
+      <column id="apdfmodid">
+        <after>
+          <reference field="apdfmodid_desc" ref_field="apdf_t.apdfmodid" map_field="apdfmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="apdfmodid_desc"/>
+      <column id="apdfmoddt"/>
+      <column id="apdfcnfid">
+        <after>
+          <reference field="apdfcnfid_desc" ref_field="apdf_t.apdfcnfid" map_field="apdfcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="apdfcnfid_desc"/>
+      <column id="apdfcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="apdgseq"/>
+      <column id="apdg001"/>
+      <column id="apdg002"/>
+      <column id="apdg003">
+        <after/>
+      </column>
+      <column id="apdg003_desc"/>
+      <column id="apdg004"/>
+      <column id="apdg005">
+        <after/>
+      </column>
+      <column id="apdg005_desc"/>
+      <column id="apdg006"/>
+      <column id="apdg007"/>
+      <column id="l_apde002"/>
+      <column id="apdg014"/>
+      <column id="apdg015">
+        <after/>
+      </column>
+      <column id="apdg015_desc"/>
+      <column id="apdg016"/>
+      <column id="apdg017"/>
+      <column id="apdg010"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="apdf_t" pk="apdfdocno,apdfld">
+      <sql id="forupd_sql" type="sql" query="SELECT apdfsite,&apos;&apos;,apdf001,&apos;&apos;,apdfld,&apos;&apos;,apdfcomp,apdfdocno,&apos;&apos;,apdfdocdt,apdfstus,apdfownid,&apos;&apos;,apdfowndp,&apos;&apos;,apdfcrtid,&apos;&apos;,apdfcrtdp,&apos;&apos;,apdfcrtdt,apdfmodid,&apos;&apos;,apdfmoddt,apdfcnfid,&apos;&apos;,apdfcnfdt FROM apdf_t WHERE apdfent= ? AND apdfdocno=? AND apdfld=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT apdfsite,&apos;&apos;,apdf001,&apos;&apos;,apdfld,&apos;&apos;,apdfcomp,apdfdocno,&apos;&apos;,apdfdocdt,apdfstus,apdfownid,&apos;&apos;,apdfowndp,&apos;&apos;,apdfcrtid,&apos;&apos;,apdfcrtdp,&apos;&apos;,apdfcrtdt,apdfmodid,&apos;&apos;,apdfmoddt,apdfcnfid,&apos;&apos;,apdfcnfdt FROM apdf_t" order="apdfdocno,apdfld"/>
+    </head>
+    <body id="apdg_t" page="1" linked="" pk="apdgseq" fk="apdgdocno,apdgld">
+      <sql id="forupd_sql_detail" query="SELECT apdgseq,apdg001,apdg002,apdg003,&apos;&apos;,apdg004,apdg005,&apos;&apos;,apdg006,apdg007,&apos;&apos;,apdg014,apdg015,&apos;&apos;,apdg016,apdg017,apdg010 FROM apdg_t WHERE apdgent=? AND apdgdocno=? AND apdgld=? AND apdgseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT apdgseq,apdg001,apdg002,apdg003,&apos;&apos;,apdg004,apdg005,&apos;&apos;,apdg006,apdg007,&apos;&apos;,apdg014,apdg015,&apos;&apos;,apdg016,apdg017,apdg010 FROM apdg_t WHERE apdgent=? AND apdgdocno=? AND apdgld=?"/>
+    </body>
+  </dataset>
+</assembly>
+

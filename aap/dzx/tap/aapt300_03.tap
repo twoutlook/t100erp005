@@ -1,0 +1,4868 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="aapt300_03" std_prog="aapt300_03" erpver="1.0" module="AAP" ver="6" env="s" zone="t10prd" booking="Y" type="S" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="dialog.aapt300_03_display" order="1" ver="3" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+DIALOG aapt300_03_display()
+
+   DISPLAY ARRAY g_isam_d TO s_detail1_aapt300_03.* ATTRIBUTES(COUNT=300) 
+   
+      BEFORE DISPLAY
+         CALL FGL_SET_ARR_CURR(g_detail_idx)
+      AFTER DISPLAY
+         LET g_apcb_d5.* = g_isam_d.*
+   END DISPLAY
+
+END DIALOG]]>
+  </point>
+  <point name="function.aapt300_03_ref_amt" order="1" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 下方合計金額顯示
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aapt300_03_ref_amt()
+   DEFINE l_amt1,l_amt2,l_amt3         LIKE apca_t.apca103
+   DEFINE l_amt4,l_amt5,l_amt6         LIKE apca_t.apca103
+   DEFINE l_amt7,l_amt8,l_amt9         LIKE apca_t.apca103
+   DEFINE l_amt10,l_amt11,l_amt12      LIKE apca_t.apca103
+   DEFINE l_isam023                    LIKE isam_t.isam023
+   DEFINE l_isam024                    LIKE isam_t.isam024
+   DEFINE l_isam026                    LIKE isam_t.isam026
+   DEFINE l_isam027                    LIKE isam_t.isam027
+
+#帳款合計金額
+   #原幣
+   LET l_amt1 = g_apca_t.apca103 - g_apca_t.apca106                      #未稅金額
+   LET l_amt2 = g_apca_t.apca104                                         #稅額
+   LET l_amt3 = g_apca_t.apca103 - g_apca_t.apca106 + g_apca_t.apca104   #含稅金額
+   #本幣
+   LET l_amt4 = g_apca_t.apca113 - g_apca_t.apca116                      #未稅金額
+   LET l_amt5 = g_apca_t.apca114                                         #稅額
+   LET l_amt6 = g_apca_t.apca113 - g_apca_t.apca116 + g_apca_t.apca114   #含稅金額
+   
+#帳款與發票差異金額
+   SELECT SUM(isam023),SUM(isam024),SUM(isam026),SUM(isam027) INTO l_isam023,l_isam024,l_isam026,l_isam027 FROM isam_t
+    WHERE isament = g_enterprise
+      AND isamdocno = g_apca_t.apcadocno
+      AND isam001 = 'aapt300'
+   IF cl_null(l_isam023) THEN LEt l_isam023 = 0 END IF
+   IF cl_null(l_isam024) THEN LEt l_isam024 = 0 END IF
+   IF cl_null(l_isam026) THEN LEt l_isam026 = 0 END IF
+   IF cl_null(l_isam027) THEN LEt l_isam027 = 0 END IF
+   
+   #原幣
+   LET l_amt7 = l_amt1 - l_isam023
+   LET l_amt8 = l_amt2 - l_isam024
+   LET l_amt9 = l_amt7 + l_amt8
+   #本幣
+   LET l_amt10= l_amt4 - l_isam026
+   LET l_amt11= l_amt5 - l_isam027
+   LET l_amt12= l_amt10 + l_amt11
+   
+   DISPLAY l_amt1,l_amt2,l_amt3,     l_amt4,l_amt5,l_amt6,     l_amt7,l_amt8,l_amt9,      l_amt10,l_amt11,l_amt12
+        TO apca103,apca104,apca1031, apca113,apca114,apca1131, apca026,apca027,apca0261,  apca028,apca029,apca0281
+
+   LET g_amt = 0
+   LET g_amt = l_amt7 + l_amt8 + l_amt9 + l_amt10 + l_amt11 + l_amt12
+
+END FUNCTION]]>
+  </point>
+  <point name="dialog.aapt300_03_input" order="2" ver="6" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 發票明細輸入
+# Memo...........:
+# Usage..........: CALLaapt300_03_input()
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+DIALOG aapt300_03_input()
+DEFINE l_apcb         RECORD LIKE apcb_t.*
+DEFINE l_forupd_sql   STRING
+DEFINE l_lock_sw      LIKE type_t.chr1 
+DEFINE l_apcadocdt    LIKE apca_t.apcadocdt
+DEFINE l_glaa004      LIKE glaa_t.glaa004 
+DEFINE l_count        LIKE type_t.num5
+DEFINE l_cmd          LIKE type_t.chr5
+DEFINE l_isam         RECORD LIKE isam_t.*
+DEFINE l_oodb011      LIKE oodb_t.oodb011
+DEFINE l_apca         RECORD LIKE apca_t.*
+DEFINE l_change_tax   LIKE type_t.chr1  
+DEFINE l_change_rate  LIKE type_t.chr1
+DEFINE l_change       LIKE type_t.chr1 
+
+   INPUT ARRAY g_isam_d FROM s_detail1_aapt300_03.*
+      
+      ATTRIBUTE(COUNT = g_rec_b04,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                INSERT ROW = FALSE,
+                DELETE ROW = TRUE,
+                APPEND ROW = TRUE)                                 
+                
+      BEFORE INPUT    
+         #取得該法人的稅區
+         SELECT * INTO l_apca.*
+           FROM apca_t   
+          WHERE apcaent = g_enterprise
+            AND apcadocno = g_apcadocno
+            AND apcald = g_apcald
+            
+         LET g_apcacomp = l_apca.apcacomp  
+         
+         SELECT ooef019 INTO g_ooef019
+           FROM ooef_t
+          WHERE ooefent = g_enterprise 
+            AND ooef001 = g_apcacomp   
+            
+         #用"發票編碼方式"決定是否隱藏"發票代碼"  
+         CALL aapt300_03_set_entry_invoice_code()         
+         
+         #當執行作業為以下作業時才開放輸入，日後有新增可輸入的作業，需要維護。         
+         CASE g_prog
+            WHEN 'aapt301'
+            WHEN 'aapt310'
+            WHEN 'aapt330'
+            WHEN 'aapt331'            
+            WHEN 'aapt341'            
+            OTHERWISE
+               NEXT FIELD apca003
+         END CASE   
+
+         CALL cl_set_combo_scc('isam037','9719')       
+         LET l_forupd_sql = "SELECT isam001,isamdocno,isamseq,isam008,isam037,isam011,isam010,isam030,isam009, 
+             isam012,isam0121,isam013,isam014,isam015,isam023,isam024,isam025,isam026,isam027,isam028,isamcomp, 
+             isamstus,isam002,isam004,isam016,isam017,isam018,isam019,isam020,isam021,isam022,isam029,isam031, 
+             isam032,isam033,isam034,isam038,isam039 FROM isam_t WHERE isament=? AND isamdocno=? AND isamseq=?  
+             FOR UPDATE"
+         
+         LET l_forupd_sql = cl_sql_forupd(l_forupd_sql)  
+         PREPARE aapt300_03_input_p FROM l_forupd_sql
+         DECLARE aapt300_03_input_c CURSOR FOR aapt300_03_input_p
+                
+
+      BEFORE ROW 
+         CALL aapt300_03_b_fill1(g_apcadocno,g_apcald)
+         LET l_cmd = ''
+         LET l_ac = ARR_CURR()
+         LET l_lock_sw = 'N'            #DEFAULT
+         DISPLAY l_ac TO FORMONLY.idx                         
+         CALL s_transaction_begin() 
+         LET g_rec_b04 = g_isam_d.getLength()
+            
+         IF g_rec_b04 >= l_ac THEN
+            LET l_cmd='u'
+            LET g_isam_d_t.* = g_isam_d[l_ac].*  #BACKUP
+                
+            OPEN aapt300_03_input_c USING g_enterprise,
+                               g_isam_d[l_ac].isamdocno,g_isam_d[l_ac].isamseq
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = "aapt300_03_input_c"
+               LET g_errparam.code   = SQLCA.sqlcode
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+            ELSE
+               FETCH aapt300_03_input_c 
+               INTO g_isam_d[l_ac].isam001,g_isam_d[l_ac].isamdocno,g_isam_d[l_ac].isamseq, 
+                    g_isam_d[l_ac].isam008,g_isam_d[l_ac].isam037,g_isam_d[l_ac].isam011,g_isam_d[l_ac].isam010, 
+                    g_isam_d[l_ac].isam030,g_isam_d[l_ac].isam009,g_isam_d[l_ac].isam012,g_isam_d[l_ac].isam0121, 
+                    g_isam_d[l_ac].isam013,g_isam_d[l_ac].isam014,g_isam_d[l_ac].isam015,g_isam_d[l_ac].isam023, 
+                    g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025,g_isam_d[l_ac].isam026,g_isam_d[l_ac].isam027, 
+                    g_isam_d[l_ac].isam028,g_isam_d[l_ac].isamcomp,g_isam_d[l_ac].isamstus,g_isam_d[l_ac].isam002, 
+                    g_isam_d[l_ac].isam004,g_isam_d[l_ac].isam016,g_isam_d[l_ac].isam017,g_isam_d[l_ac].isam018, 
+                    g_isam_d[l_ac].isam019,g_isam_d[l_ac].isam020,g_isam_d[l_ac].isam021,g_isam_d[l_ac].isam022, 
+                    g_isam_d[l_ac].isam029,g_isam_d[l_ac].isam031,g_isam_d[l_ac].isam032,g_isam_d[l_ac].isam033, 
+                    g_isam_d[l_ac].isam034,g_isam_d[l_ac].isam038,g_isam_d[l_ac].isam039
+               CALL cl_show_fld_cont()    
+            END IF
+         ELSE 
+            LET l_cmd='a'  
+         END IF    
+         SELECT glaa001 INTO g_glaa001
+           FROM glaa_t
+          WHERE glaaent  = g_enterprise
+            AND glaacomp = g_isam_d[l_ac].isamcomp
+            AND glaa014  = 'Y' 
+         CALL aapt300_03_set_entry_money(g_isam_d[l_ac].isam0121)
+         CALL aapt300_03_isac003_chk(g_ooef019) 
+         #金額欄位
+         CALL cl_set_comp_entry("isam023,isam025,isam026,isam028",FALSE)
+         IF g_isam_d[l_ac].isam0121 = 'Y' THEN
+            CALL cl_set_comp_entry("isam025,isam028",TRUE)
+         ELSE
+            CALL cl_set_comp_entry("isam023,isam026",TRUE)
+         END IF
+
+      ON ROW CHANGE   
+         IF INT_FLAG THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = '' 
+            LET g_errparam.code   = 9001 
+            LET g_errparam.popup  = FALSE 
+            CALL cl_err()
+            
+            LET INT_FLAG = 0
+            LET g_isam_d[l_ac].* = g_isam_d_t.*
+            CLOSE aapt300_03_input_c
+            CALL s_transaction_end('N','0')
+            EXIT DIALOG 
+         END IF
+                 
+         IF l_lock_sw = 'Y' THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = g_isam_d[l_ac].isamdocno 
+            LET g_errparam.code   = -263 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            RETURN FALSE
+            LET g_isam_d[l_ac].* = g_isam_d_t.*
+         ELSE 
+            UPDATE isam_t SET (isam001,isamdocno,isamseq,isam008,isam037,isam011,isam010,isam030, 
+                 isam009,isam012,isam0121,isam013,isam014,isam015,isam023,isam024,isam025,isam026, 
+                 isam027,isam028,isamcomp,isamstus,isam002,isam004,isam016,isam017,isam018,isam019, 
+                 isam020,isam021,isam022,isam029,isam031,isam032,isam033,isam034,isam038,isam039) = (g_isam_d[l_ac].isam001, 
+                 g_isam_d[l_ac].isamdocno,g_isam_d[l_ac].isamseq,g_isam_d[l_ac].isam008,g_isam_d[l_ac].isam037, 
+                 g_isam_d[l_ac].isam011,g_isam_d[l_ac].isam010,g_isam_d[l_ac].isam030,g_isam_d[l_ac].isam009, 
+                 g_isam_d[l_ac].isam012,g_isam_d[l_ac].isam0121,g_isam_d[l_ac].isam013,g_isam_d[l_ac].isam014, 
+                 g_isam_d[l_ac].isam015,g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025, 
+                 g_isam_d[l_ac].isam026,g_isam_d[l_ac].isam027,g_isam_d[l_ac].isam028,g_isam_d[l_ac].isamcomp, 
+                 g_isam_d[l_ac].isamstus,g_isam_d[l_ac].isam002,g_isam_d[l_ac].isam004,g_isam_d[l_ac].isam016, 
+                 g_isam_d[l_ac].isam017,g_isam_d[l_ac].isam018,g_isam_d[l_ac].isam019,g_isam_d[l_ac].isam020, 
+                 g_isam_d[l_ac].isam021,g_isam_d[l_ac].isam022,g_isam_d[l_ac].isam029,g_isam_d[l_ac].isam031, 
+                 g_isam_d[l_ac].isam032,g_isam_d[l_ac].isam033,g_isam_d[l_ac].isam034,g_isam_d[l_ac].isam038, 
+                 g_isam_d[l_ac].isam039)
+             WHERE isament   = g_enterprise 
+               AND isamdocno = g_isam_d[l_ac].isamdocno    
+               AND isamseq   = g_isam_d[l_ac].isamseq  
+      
+             IF SQLCA.sqlcode THEN
+                INITIALIZE g_errparam TO NULL
+                LET g_errparam.code = SQLCA.sqlcode
+                LET g_errparam.extend = "isam_t"
+                LET g_errparam.popup = TRUE
+                CALL cl_err()
+                LET g_isam_d[l_ac].* = g_isam_d_t.*
+                CALL s_transaction_end('N',0) 
+             ELSE
+                 CALL s_transaction_end('Y',0)                
+             END IF
+         END IF
+         
+      BEFORE INSERT
+         CALL s_transaction_begin()   
+         LET l_cmd = 'a'
+         INITIALIZE g_isam_d_t.* TO NULL
+         INITIALIZE g_isam_d_o.* TO NULL
+         INITIALIZE g_isam_d[l_ac].* TO NULL
+         CALL aapt300_03_default_ins()
+         LET g_isam_d_t.* = g_isam_d[l_ac].*     #新輸入資料
+         LET g_isam_d_o.* = g_isam_d[l_ac].*     #新輸入資料
+         CALL cl_show_fld_cont()
+       
+      AFTER INSERT
+         IF INT_FLAG THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = ''
+            LET g_errparam.code   = 9001
+            LET g_errparam.popup  = FALSE
+            CALL cl_err()         
+            LET INT_FLAG = 0
+            CALL s_transaction_end('N',0) 
+         END IF
+         
+         LET l_isam.isament   = g_enterprise
+         LET l_isam.isamseq   = g_isam_d[l_ac].isamseq
+         LET l_isam.isamcomp  = g_isam_d[l_ac].isamcomp
+         LET l_isam.isamstus  = 'Y'
+         LET l_isam.isamdocno = g_apcadocno
+         LET l_isam.isam001   = g_prog
+         LET l_isam.isam002   = g_isam_d[l_ac].isam002
+         LET l_isam.isam008   = g_isam_d[l_ac].isam008
+         LET l_isam.isam037   = g_isam_d[l_ac].isam037
+         LET l_isam.isam011   = g_isam_d[l_ac].isam011
+         LET l_isam.isam012   = g_isam_d[l_ac].isam012
+         LET l_isam.isam010   = g_isam_d[l_ac].isam010
+         LET l_isam.isam030   = g_isam_d[l_ac].isam030
+         LET l_isam.isam009   = g_isam_d[l_ac].isam009
+         LET l_isam.isam0121  = g_isam_d[l_ac].isam0121
+         LET l_isam.isam013   = g_isam_d[l_ac].isam013
+         LET l_isam.isam014   = g_isam_d[l_ac].isam014
+         LET l_isam.isam015   = g_isam_d[l_ac].isam015
+         LET l_isam.isam023   = g_isam_d[l_ac].isam023
+         LET l_isam.isam024   = g_isam_d[l_ac].isam024
+         LET l_isam.isam025   = g_isam_d[l_ac].isam025
+         LET l_isam.isam026   = g_isam_d[l_ac].isam026
+         LET l_isam.isam027   = g_isam_d[l_ac].isam027
+         LET l_isam.isam028   = g_isam_d[l_ac].isam028
+         LET l_isam.isam036   = '11'
+         LET l_isam.isam050   = g_apcadocno         
+         LET l_isam.isamownid = g_user
+         LET l_isam.isamowndp = g_dept
+         LET l_isam.isamcrtid = g_user
+         LET l_isam.isamcrtdp = g_dept
+         LET l_isam.isamcrtdt = cl_get_current() 
+         LET l_isam.isammodid = g_user
+         LET l_isam.isammoddt = cl_get_current()
+                 
+         LET l_count = 1
+         #資料未重複, 插入新增資料
+         SELECT COUNT(*) INTO l_count FROM isam_t
+          WHERE isament = g_enterprise 
+            AND isamdocno = g_isam_d[l_ac].isamdocno
+            AND isamseq = g_isam_d[l_ac].isamseq 
+         IF l_count = 0 THEN   
+            INSERT INTO isam_t VALUES(l_isam.*)         
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "isam_t"
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+               CALL s_transaction_end('N',0) 
+            END IF   
+         ELSE
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = 'INSERT'
+            LET g_errparam.code   = "std-00006"
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()            
+            INITIALIZE g_isam_d[l_ac].* TO NULL
+            CALL s_transaction_end('N','0')       
+         END IF         
+         
+         IF SQLCA.SQLcode  THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = "isam_t"
+            LET g_errparam.code   = SQLCA.sqlcode
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            
+            CALL s_transaction_end('N','0')
+        
+         ELSE
+            CALL s_transaction_end('Y','0')
+            ERROR 'INSERT O.K'
+            LET g_rec_b04 = g_rec_b04 + 1            
+            LET g_detail_cnt = g_detail_cnt + 1       
+         END IF
+         
+      BEFORE DELETE                            #是否取消單身    
+         IF cl_ask_del_detail() THEN
+            IF l_lock_sw = "Y" THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  -263
+               LET g_errparam.extend = ""
+               LET g_errparam.popup = TRUE
+               CALL cl_err()  
+            END IF
+                         
+            DELETE FROM isam_t
+             WHERE isament = g_enterprise 
+                AND isamdocno = g_apcadocno
+                AND isamseq = g_isam_d[l_ac].isamseq         
+                        
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "isam_t" 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CALL s_transaction_end('N','0')
+            ELSE
+               LET g_rec_b04 = g_rec_b04 - 1                   
+               CALL s_transaction_end('Y','0')         
+            END IF 
+         END IF 
+      AFTER DELETE
+         CALL aapt300_03_b_fill1(g_apcadocno,g_apcald)
+         
+      AFTER ROW
+         CLOSE aapt300_03_input_c
+         
+      AFTER FIELD isam008
+         IF NOT cl_null(g_isam_d[l_ac].isam008)THEN
+            INITIALIZE g_chkparam.* TO NULL
+            LET g_chkparam.arg1 = g_ooef019
+            LET g_chkparam.arg2 = g_isam_d[l_ac].isam008
+            IF NOT cl_chk_exist("v_isac002_3") THEN
+               LET g_isam_d[l_ac].isam008 = '' 
+               DISPLAY BY NAME g_isam_d[l_ac].isam008
+               NEXT FIELD CURRENT
+            END IF
+            CALL aapt300_03_isac003_chk(g_ooef019)
+         END IF
+           
+      
+      ON ACTION controlp INFIELD isam008           
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'i'
+         LET g_qryparam.reqry = FALSE
+         LET g_qryparam.default1 = g_isam_d[l_ac].isam008             
+         LET g_qryparam.where = " isac003 IN ('1','3') AND isac001 = '",g_ooef019,"' "
+         CALL q_isac002()                                
+         LET g_isam_d[l_ac].isam008 = g_qryparam.return1
+         DISPLAY g_isam_d[l_ac].isam008 TO isam008              
+         NEXT FIELD isam008
+         
+      AFTER FIELD isam009
+         IF NOT cl_null(g_isam_d[l_ac].isam009) THEN
+            IF g_isam_d[l_ac].isam009 != g_isam_d_t.isam009 OR cl_null(g_isam_d_t.isam009) THEN
+               CALL aapt300_03_invoice_repeat_chk(g_isam_d[l_ac].isam009,g_isam_d[l_ac].isam010,g_isam_d[l_ac].isam008,g_apcadocno,g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam014)
+               RETURNING g_sub_success,g_errno
+               IF NOT g_sub_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_isam_d[l_ac].isam009 = g_isam_d_t.isam009
+                  NEXT FIELD CURRENT              
+               END IF
+            END IF
+         END IF 
+
+
+      AFTER FIELD isam010
+         IF NOT cl_null(g_isam_d[l_ac].isam010) THEN
+            IF g_isam_d[l_ac].isam010 != g_isam_d_t.isam010 OR cl_null(g_isam_d_t.isam010) THEN
+               CALL aapt300_03_invoice_repeat_chk(g_isam_d[l_ac].isam009,g_isam_d[l_ac].isam010,g_isam_d[l_ac].isam008,g_apcadocno,g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam014)
+               RETURNING g_sub_success,g_errno
+               IF NOT g_sub_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_isam_d[l_ac].isam010 = g_isam_d_t.isam010
+                  DISPLAY BY NAME g_isam_d[l_ac].isam010
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+         END IF
+     
+     
+      AFTER FIELD isam012
+         IF NOT cl_null(g_isam_d[l_ac].isam012) THEN 
+            IF g_isam_d[l_ac].isam012 != g_isam_d_t.isam012 OR cl_null(g_isam_d_t.isam012) THEN   
+               #抓取含稅否&稅率
+               CALL s_tax_chk(g_isam_d[l_ac].isamcomp,g_isam_d[l_ac].isam012) RETURNING g_sub_success,g_isam_d[l_ac].isam012_desc_desc,g_isam_d[l_ac].isam0121,g_isam_d[l_ac].isam013,l_oodb011       
+               IF NOT g_sub_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'aim-00164'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_isam_d[l_ac].isam012 = g_isam_d_t.isam012
+                   CALL s_desc_get_tax_desc(g_ooef019,g_isam_d[l_ac].isam012) RETURNING g_isam_d[l_ac].isam012_desc_desc
+                  DISPLAY BY NAME g_isam_d[l_ac].isam012,g_isam_d[l_ac].isam012_desc_desc
+                  NEXT FIELD CURRENT
+               END IF              
+               #稅別變更重新計算金額
+               IF NOT cl_null(g_isam_d[l_ac].isam025) AND NOT cl_null(g_isam_d[l_ac].isam014) AND NOT cl_null(g_isam_d[l_ac].isam015) THEN  
+                  IF g_isam_d[l_ac].isam0121 = 'Y' THEN                 
+                     CALL s_tax_count(g_apcacomp,g_isam_d[l_ac].isam012,g_isam_d[l_ac].isam025,1,g_isam_d[l_ac].isam014,g_isam_d[l_ac].isam015)    
+                        RETURNING g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025
+                                 ,g_isam_d[l_ac].isam026,g_isam_d[l_ac].isam027,g_isam_d[l_ac].isam028
+                   ELSE     
+                      CALL s_tax_count(g_apcacomp,g_isam_d[l_ac].isam012,g_isam_d[l_ac].isam023,1,g_isam_d[l_ac].isam014,g_isam_d[l_ac].isam015)    
+                        RETURNING g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025
+                                 ,g_isam_d[l_ac].isam026,g_isam_d[l_ac].isam027,g_isam_d[l_ac].isam028  
+                  END IF                                 
+               END IF
+                DISPLAY BY NAME g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025
+                               ,g_isam_d[l_ac].isam026,g_isam_d[l_ac].isam027,g_isam_d[l_ac].isam028
+               CALL aapt300_03_set_entry_money(g_isam_d[l_ac].isam0121)
+               CALL s_desc_get_tax_desc(g_ooef019,g_isam_d[l_ac].isam012) RETURNING g_isam_d[l_ac].isam012_desc_desc
+            END IF 
+         END IF
+         
+      
+     
+
+      ON ACTION controlp INFIELD isam012
+         #稅區
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'i'
+         LET g_qryparam.reqry = FALSE
+         LET g_qryparam.default1 =  g_isam_d[l_ac].isam012
+         LET g_qryparam.default2 = ""
+         LET g_qryparam.default3 = g_isam_d[l_ac].isam0121 #含稅否
+         LET g_qryparam.default4 = g_isam_d[l_ac].isam013
+         LET g_qryparam.arg1 = g_ooef019                   
+         CALL q_oodb002_5()
+         LET  g_isam_d[l_ac].isam012  = g_qryparam.return1
+         LET  g_isam_d[l_ac].isam0121 = g_qryparam.return3
+         LET  g_isam_d[l_ac].isam013  = g_qryparam.return4
+         CALL aapt300_03_set_entry_money(g_isam_d[l_ac].isam0121)
+         CALL s_desc_get_tax_desc(g_ooef019,g_isam_d[l_ac].isam012) RETURNING g_isam_d[l_ac].isam012_desc_desc
+         DISPLAY BY NAME g_isam_d[l_ac].isam012,g_isam_d[l_ac].isam0121,g_isam_d[l_ac].isam013
+         NEXT FIELD isam012                          #返回原欄位 
+     
+     
+      AFTER FIELD isam014       
+      IF NOT cl_null(g_isam_d[l_ac].isam014) THEN
+         CALL s_aap_ooaj001_chk(g_apcald,g_isam_d[l_ac].isam014) RETURNING g_sub_success,g_errno
+         IF NOT g_sub_success THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = g_errno
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET g_isam_d[l_ac].isam014 = ''
+            NEXT FIELD CURRENT
+         END IF      
+      END IF         
+      
+      ON ACTION controlp INFIELD isam014
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'i'
+         LET g_qryparam.reqry = FALSE
+         LET g_qryparam.default1 = g_isam_d[l_ac].isam014
+         LET g_qryparam.arg1 = g_isam_d[l_ac].isamcomp
+         CALL q_ooaj002_1()
+         LET g_isam_d[l_ac].isam014 = g_qryparam.return1
+         DISPLAY BY NAME g_isam_d[l_ac].isam014
+         NEXT FIELD isam014
+       
+      BEFORE FIELD isam023
+         CALL aapt300_03_set_entry_money(g_isam_d[l_ac].isam0121)
+         
+      AFTER FIELD isam023  #原幣未稅金額     
+         #紅字發票不可為正數
+         IF NOT cl_null(g_isam_d[l_ac].isam023) THEN 
+            IF g_isam_d[l_ac].isam023 != g_isam_d_t.isam023 OR cl_null(g_isam_d_t.isam023) THEN         
+               IF g_str = '2' AND g_isam_d[l_ac].isam023 > 0 THEN
+                    INITIALIZE g_errparam TO NULL
+                    LET g_errparam.code = 'aap-00215'
+                    LET g_errparam.extend = ''
+                    LET g_errparam.popup = TRUE
+                    CALL cl_err()
+                    LET g_isam_d[l_ac].isam023 = g_isam_d_t.isam023
+                    NEXT FIELD CURRENT
+               END IF
+               #檢核紅字發票是否超過扣抵金額
+               IF g_str = '2' AND g_isai002 ='1' THEN
+                    CALL aapt300_03_invoice_repeat_chk(g_isam_d[l_ac].isam009,g_isam_d[l_ac].isam010,g_isam_d[l_ac].isam008,g_apcadocno,g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam014) 
+                    RETURNING g_sub_success,g_errno
+                    IF NOT g_sub_success THEN
+                       INITIALIZE g_errparam TO NULL
+                       LET g_errparam.code = g_errno
+                       LET g_errparam.extend = ''
+                       LET g_errparam.popup = TRUE
+                       CALL cl_err()
+                       LET g_isam_d[l_ac].isam023 = g_isam_d_t.isam023
+                       NEXT FIELD CURRENT
+                    END IF
+               END IF         
+               IF cl_null(g_isam_d[l_ac].isam015) THEN LET g_isam_d[l_ac].isam015 = 1 END IF
+               IF cl_null(g_isam_d[l_ac].isam013) THEN LET g_isam_d[l_ac].isam013 = 0 END IF 
+               IF NOT cl_null(g_isam_d[l_ac].isam012) AND NOT cl_null(g_isam_d[l_ac].isam014) THEN
+                  CALL s_tax_count(g_apcacomp,g_isam_d[l_ac].isam012,g_isam_d[l_ac].isam023,1,g_isam_d[l_ac].isam014,g_isam_d[l_ac].isam015)    
+                      RETURNING g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025
+                               ,g_isam_d[l_ac].isam026,g_isam_d[l_ac].isam027,g_isam_d[l_ac].isam028
+                      DISPLAY BY NAME   g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025
+                                       ,g_isam_d[l_ac].isam026,g_isam_d[l_ac].isam027,g_isam_d[l_ac].isam028
+               END IF
+            END IF
+         END IF
+        
+
+      AFTER FIELD isam024
+         IF NOT cl_null(g_isam_d[l_ac].isam024) THEN 
+            IF g_isam_d[l_ac].isam024 != g_isam_d_t.isam024 OR cl_null(g_isam_d_t.isam024) THEN         
+               #紅字發票金額不可為正數
+               IF g_str = '2' AND g_isam_d[l_ac].isam024 > 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'aap-00215'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_isam_d[l_ac].isam024 = g_isam_d_t.isam024
+                  NEXT FIELD CURRENT
+               END IF 
+               CALL s_tax_sum_money_tax(g_isam_d[l_ac].isamcomp,g_ooef019,g_isam_d[l_ac].isam012,g_isam_d[l_ac].isam008,g_isam_d[l_ac].isam014,g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025)              
+               RETURNING g_sub_success,g_errno,g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025  
+               IF NOT g_sub_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_isam_d[l_ac].isam024 = g_isam_d_t.isam024
+                  NEXT FIELD CURRENT
+               ELSE           
+                  IF cl_null(g_isam_d[l_ac].isam015) THEN LET g_isam_d[l_ac].isam015 = 1 END IF
+                  IF cl_null(g_isam_d[l_ac].isam013) THEN LET g_isam_d[l_ac].isam013 = 0 END IF 
+                  IF g_isam_d[l_ac].isam0121 = 'Y' THEN                 
+                  CALL s_tax_count(g_apcacomp,g_isam_d[l_ac].isam012,g_isam_d[l_ac].isam025,1,g_isam_d[l_ac].isam014,g_isam_d[l_ac].isam015)    
+                     RETURNING g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025
+                              ,g_isam_d[l_ac].isam026,g_isam_d[l_ac].isam027,g_isam_d[l_ac].isam028
+                  ELSE     
+                     CALL s_tax_count(g_apcacomp,g_isam_d[l_ac].isam012,g_isam_d[l_ac].isam023,1,g_isam_d[l_ac].isam014,g_isam_d[l_ac].isam015)    
+                       RETURNING g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025
+                                ,g_isam_d[l_ac].isam026,g_isam_d[l_ac].isam027,g_isam_d[l_ac].isam028  
+                  END IF                                                   
+                  DISPLAY BY NAME g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025
+                                 ,g_isam_d[l_ac].isam026,g_isam_d[l_ac].isam027,g_isam_d[l_ac].isam028        
+               END IF
+            END IF               
+         END IF
+         
+      AFTER FIELD isam025
+         #原幣含稅金額
+         IF NOT cl_null(g_isam_d[l_ac].isam025) THEN
+            IF g_isam_d[l_ac].isam025 != g_isam_d_t.isam025 OR cl_null(g_isam_d_t.isam025) THEN
+               IF g_str = '2' AND g_isam_d[l_ac].isam025 > 0 THEN
+                   INITIALIZE g_errparam TO NULL
+                   LET g_errparam.code = 'aap-00215'
+                   LET g_errparam.extend = ''
+                   LET g_errparam.popup = TRUE
+                   CALL cl_err()
+                   LET g_isam_d[l_ac].isam025 = g_isam_d_t.isam025
+                   NEXT FIELD CURRENT
+               END IF
+               #150226--(s)
+               #檢核紅字發票是否超過扣抵金額
+               IF g_str = '2' AND g_isai002 ='1' THEN
+                    CALL aapt300_03_invoice_repeat_chk(g_isam_d[l_ac].isam009,g_isam_d[l_ac].isam010,g_isam_d[l_ac].isam008,g_apcadocno,g_isam_d[l_ac].isam025,g_isam_d[l_ac].isam014) 
+                    RETURNING g_sub_success,g_errno
+                    IF NOT g_sub_success THEN
+                       INITIALIZE g_errparam TO NULL
+                       LET g_errparam.code = g_errno
+                       LET g_errparam.extend = ''
+                       LET g_errparam.popup = TRUE
+                       CALL cl_err()
+                       LET g_isam_d[l_ac].isam025 = g_isam_d_t.isam025
+                       NEXT FIELD CURRENT
+                    END IF
+               END IF               
+               #150226--(e)
+               IF cl_null(g_isam_d[l_ac].isam015) THEN LET g_isam_d[l_ac].isam015 = 1 END IF
+               IF cl_null(g_isam_d[l_ac].isam013) THEN LET g_isam_d[l_ac].isam013 = 0 END IF 
+               IF NOT cl_null(g_isam_d[l_ac].isam012) AND NOT cl_null(g_isam_d[l_ac].isam014) THEN
+                  CALL s_tax_count(g_apcacomp,g_isam_d[l_ac].isam012,g_isam_d[l_ac].isam025,1,g_isam_d[l_ac].isam014,g_isam_d[l_ac].isam015)    
+                      RETURNING g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025
+                               ,g_isam_d[l_ac].isam026,g_isam_d[l_ac].isam027,g_isam_d[l_ac].isam028
+                      DISPLAY BY NAME   g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025
+                                       ,g_isam_d[l_ac].isam026,g_isam_d[l_ac].isam027,g_isam_d[l_ac].isam028
+               END IF                                                   
+            END IF               
+         END IF
+
+      BEFORE FIELD isam026
+         CALL aapt300_03_set_entry_money(g_isam_d[l_ac].isam0121)
+         
+      AFTER FIELD isam026              
+         #本幣未稅金額
+         IF NOT cl_null(g_isam_d[l_ac].isam026) THEN 
+            IF g_isam_d[l_ac].isam026 != g_isam_d_t.isam026 OR cl_null(g_isam_d_t.isam026) THEN
+               #紅字發票金額不可為正數            
+               IF g_str = '2' AND g_isam_d[l_ac].isam026 > 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'aap-00215'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_isam_d[l_ac].isam026 = g_isam_d_t.isam026
+                  NEXT FIELD CURRENT
+               END IF                           
+               IF cl_null(g_isam_d[l_ac].isam015) THEN LET g_isam_d[l_ac].isam015 = 1 END IF
+               IF cl_null(g_isam_d[l_ac].isam013) THEN LET g_isam_d[l_ac].isam013 = 0 END IF 
+               
+               #發票本幣未稅金額 = 發票原幣未稅金額 * 匯率
+               LET g_isam_d[l_ac].isam026 = g_isam_d[l_ac].isam023 * g_isam_d[l_ac].isam015
+               #幣別取位
+               CALL s_curr_round_ld('1',g_apcald,g_glaa001,g_isam_d[l_ac].isam026 ,2) RETURNING g_sub_success,g_errno,g_isam_d[l_ac].isam026                                                  
+               #發票本幣含稅金額 =  發票本幣未稅金額 * 1+稅率/100             
+               LET g_isam_d[l_ac].isam028 = g_isam_d[l_ac].isam026 * (1+(g_isam_d[l_ac].isam013/100))
+               CALL s_curr_round_ld('1',g_apcald,g_glaa001,g_isam_d[l_ac].isam028,2) RETURNING g_sub_success,g_errno,g_isam_d[l_ac].isam028
+               #稅額=含稅-未稅
+               LET g_isam_d[l_ac].isam027 = g_isam_d[l_ac].isam028 - g_isam_d[l_ac].isam026
+               DISPLAY BY NAME g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025,
+                               g_isam_d[l_ac].isam026,g_isam_d[l_ac].isam027,g_isam_d[l_ac].isam028
+            END IF
+         END IF
+         
+      AFTER FIELD isam027
+         IF NOT cl_null(g_isam_d[l_ac].isam027) THEN 
+            IF g_isam_d[l_ac].isam027 != g_isam_d_t.isam027 OR cl_null(g_isam_d_t.isam027) THEN
+               #紅字發票金額不可為正數            
+               IF g_str = '2' AND g_isam_d[l_ac].isam027 > 0 THEN
+                    INITIALIZE g_errparam TO NULL
+                    LET g_errparam.code = 'aap-00215'
+                    LET g_errparam.extend = ''
+                    LET g_errparam.popup = TRUE
+                    CALL cl_err()
+                    LET g_isam_d[l_ac].isam027 = g_isam_d_t.isam027
+                    NEXT FIELD CURRENT
+               END IF     
+               #檢核容差率            
+               CALL s_tax_sum_money_tax(g_isam_d[l_ac].isamcomp,g_ooef019,g_isam_d[l_ac].isam012,g_isam_d[l_ac].isam008,g_isam_d[l_ac].isam014,g_isam_d[l_ac].isam026,g_isam_d[l_ac].isam027,g_isam_d[l_ac].isam028)              
+               RETURNING g_sub_success,g_errno,g_isam_d[l_ac].isam026,g_isam_d[l_ac].isam027,g_isam_d[l_ac].isam028 
+               #容差率OK否
+               IF NOT g_sub_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_isam_d[l_ac].isam027 = g_isam_d_t.isam027
+                  NEXT FIELD CURRENT
+               END IF
+               DISPLAY BY NAME g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025,
+                               g_isam_d[l_ac].isam026,g_isam_d[l_ac].isam027,g_isam_d[l_ac].isam028
+            END IF   
+         END IF    
+         
+      AFTER FIELD isam028  
+         #本幣含稅金額      
+         IF NOT cl_null(g_isam_d[l_ac].isam028) THEN 
+             IF g_isam_d[l_ac].isam028 != g_isam_d_t.isam028 OR cl_null(g_isam_d_t.isam028) THEN
+                #紅字發票金額不可為正數            
+                IF g_str = '2' AND g_isam_d[l_ac].isam028 > 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'aap-00215'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_isam_d[l_ac].isam028 = g_isam_d_t.isam028
+                     NEXT FIELD CURRENT
+                END IF
+                IF cl_null(g_isam_d[l_ac].isam015) THEN LET g_isam_d[l_ac].isam015 = 1 END IF
+                #發票本幣含稅金額 = 發票原幣含稅金額 * 匯率
+                LET g_isam_d[l_ac].isam028 = g_isam_d[l_ac].isam025 * g_isam_d[l_ac].isam015
+                CALL s_curr_round_ld('1',g_apcald,g_glaa001,g_isam_d[l_ac].isam028,2) RETURNING g_sub_success,g_errno,g_isam_d[l_ac].isam028                
+                IF cl_null(g_isam_d[l_ac].isam013) THEN LET g_isam_d[l_ac].isam013 = 0 END IF
+                #發票本幣未稅金額 = 發票本幣含稅金額 / 1+稅率/100
+                LET g_isam_d[l_ac].isam026 = g_isam_d[l_ac].isam028 / (1+(g_isam_d[l_ac].isam013/100))
+                CALL s_curr_round_ld('1',g_apcald,g_glaa001,g_isam_d[l_ac].isam026,2) RETURNING g_sub_success,g_errno,g_isam_d[l_ac].isam026
+                #發票本幣稅額 = 發票本幣含稅金額 - 發票本幣未稅金額
+                LET g_isam_d[l_ac].isam027 = g_isam_d[l_ac].isam028 - g_isam_d[l_ac].isam026
+                DISPLAY BY NAME g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025,
+                                g_isam_d[l_ac].isam026,g_isam_d[l_ac].isam027,g_isam_d[l_ac].isam028                                                                       
+            END IF
+         END IF
+         
+      AFTER INPUT  
+#      #若稅別or匯率有變更，須詢問是否重新推算單身金額
+#         LET l_change_tax = 'N' 
+#         LET l_change_rate = 'N'         
+#         IF g_isam_d[l_ac].isam012 != g_isam_d_t.isam012 THEN
+#            LET l_change_tax = 'Y'
+#         END IF  
+#         IF g_isam_d[l_ac].isam015 != g_isam_d_t.isam015 THEN
+#            LET l_change_rate = 'Y'
+#         END IF             
+#         CASE 
+#            WHEN l_change_tax = 'Y' AND l_change_rate = 'Y'         
+#               IF cl_ask_confirm('aap-00338') THEN
+#                  LET l_change = 'Y'
+#               END IF         
+#            WHEN l_change_tax = 'Y' 
+#               IF cl_ask_confirm('aap-00337') THEN
+#                  LET l_change = "Y"
+#               END IF
+#            WHEN l_change_rate = 'Y'
+#               IF cl_ask_confirm('aap-00339')
+#                  LET l_change = "Y"  
+#               END IF
+#         END CASE         
+#         IF l_change = 'Y' THEN          
+#            CALL s_tax_count(g_apcacomp,g_isam_d[l_ac].isam012,g_isam_d[l_ac].isam023,1,g_isam_d[l_ac].isam014,g_isam_d[l_ac].isam015)    
+#                RETURNING g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025
+#                         ,g_isam_d[l_ac].isam026,g_isam_d[l_ac].isam027,g_isam_d[l_ac].isam028
+#            UPDATE isam_t SET (isam023,isam024,isam025
+#               ,isam026,isam027,isam028) = 
+#               (g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025 l_apba103,l_apba104,l_apba105
+#                g_isam_d[l_ac].isam026,g_isam_d[l_ac].isam027,g_isam_d[l_ac].isam028,l_apba113,l_apba114,l_apba115)
+#            WHERE isamdocno = g_isam_d[l_ac].isamdocno
+#              AND isamseq   = g_isam_d[l_ac].isamseq
+#              AND isament   = g_enterprise
+#
+#         END IF                        
+         LET g_apcb_d5.* = g_isam_d.*
+   END INPUT
+         
+
+END DIALOG]]>
+  </point>
+  <point name="function.aapt300_03_lcurr" order="2" ver="3" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 本幣金額計算
+# Memo...........:
+# Usage..........: CALL aapt300_03_lcurr()
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aapt300_03_lcurr()
+   DEFINE l_ooab002      LIKE ooab_t.ooab002
+   
+   CALL cl_get_para(g_enterprise,g_glaa_t.glaacomp,'S-BAS-0015') RETURNING l_ooab002
+   #原幣計算本幣
+   #isam023 --> isam026
+   IF NOT cl_null(g_isam_d[l_ac].isam023) THEN
+      CALL aapt300_03_exrate(g_isam_d[l_ac].isam011,g_isam_d[l_ac].isam014,g_glaa_t.glaa001,g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam015)
+         RETURNING g_isam_d[l_ac].isam026
+   END IF
+   #isam024 --> isam027
+   IF NOT cl_null(g_isam_d[l_ac].isam024) THEN
+      CALL aapt300_03_exrate(g_isam_d[l_ac].isam011,g_isam_d[l_ac].isam014,g_glaa_t.glaa001,g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam015)
+         RETURNING g_isam_d[l_ac].isam027
+   END IF
+   #isam025 --> isam028
+   IF NOT cl_null(g_isam_d[l_ac].isam025) THEN
+      CALL aapt300_03_exrate(g_isam_d[l_ac].isam011,g_isam_d[l_ac].isam014,g_glaa_t.glaa001,g_isam_d[l_ac].isam025,g_isam_d[l_ac].isam015)
+         RETURNING g_isam_d[l_ac].isam028
+   END IF
+  
+   DISPLAY  g_isam_d[l_ac].isam026, g_isam_d[l_ac].isam027, g_isam_d[l_ac].isam028
+        TO s_detail1[l_ac].isam026,s_detail1[l_ac].isam027,s_detail1[l_ac].isam028
+END FUNCTION]]>
+  </point>
+  <point name="function.aapt300_03_exrate" order="3" ver="5" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 計算本幣金額
+# Memo...........:
+# Usage..........: CALL aapt300_03_exrate
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aapt300_03_exrate(p_ooan004,p_ooan002,p_ooan003,p_amount,p_tmp)
+   DEFINE p_ooan004      LIKE ooan_t.ooan004
+   DEFINE p_ooan002      LIKE ooan_t.ooan002
+   DEFINE p_ooan003      LIKE ooan_t.ooan003
+   DEFINE p_amount       LIKE ooan_t.ooan005
+   DEFINE p_tmp          LIKE ooan_t.ooan005
+   DEFINE l_ooef014      LIKE ooef_t.ooef014
+   DEFINE l_ooaj004      LIKE ooaj_t.ooaj004
+   DEFINE l_ooaj005      LIKE ooaj_t.ooaj005
+   DEFINE l_ooan         RECORD
+            ooan012      LIKE ooan_t.ooan012,
+            ooan013      LIKE ooan_t.ooan013
+                     END RECORD
+   DEFINE l_conv         LIKE type_t.chr1
+   DEFINE l_rate         LIKE ooan_t.ooan005
+   DEFINE l_ooan001      LIKE ooan_t.ooan001
+
+   SELECT ooef014 INTO l_ooef014 FROM ooef_t
+    WHERE ooefent = g_enterprise AND ooef001 = g_glaa_t.glaacomp
+
+   #1.取基础币种的金额精度--若有传入p_amount时,返回的是金额,非汇率
+   CALL s_curr_sel_ooaj004(l_ooef014,p_ooan003)
+        RETURNING l_ooaj004
+
+   #2.取基础币种的汇率精度
+   CALL s_curr_sel_ooaj005(l_ooef014,p_ooan003)
+        RETURNING l_ooaj005
+
+   #3.取汇率 & 汇率方向
+   LET l_conv = '1'  #交易币种对基础币种
+   SELECT ooan012,ooan013 INTO l_ooan.ooan012,l_ooan.ooan013
+     FROM ooan_t,ooam_t
+    WHERE ooanent = g_enterprise
+      AND ooan001 = g_glaa_t.glaa002   #汇率参照表号
+      AND ooan002 = p_ooan002   #交易币种
+      AND ooan003 = p_ooan003   #基础币种
+      AND ooan004 = p_ooan004   #日期
+      AND ooament = ooanent
+      AND ooam001 = ooan001
+      AND ooam003 = ooan003
+      AND ooam004 = ooan004
+      AND ooamstus = 'Y'
+   IF SQLCA.sqlcode THEN
+      #交易币种对基础币种的关系不存在时,反向查找
+      SELECT ooan012,ooan013 INTO l_ooan.ooan012,l_ooan.ooan013
+        FROM ooan_t,ooam_t
+       WHERE ooanent = g_enterprise
+         AND ooan001 = g_glaa_t.glaa002   #汇率参照表号
+         AND ooan002 = p_ooan003   #基础币种
+         AND ooan003 = p_ooan002   #交易币种
+         AND ooan004 = p_ooan004
+         AND ooament = ooanent
+         AND ooam001 = ooan001
+         AND ooam003 = ooan003
+         AND ooam004 = ooan004
+         AND ooamstus = 'Y'
+      IF NOT SQLCA.sqlcode THEN
+         LET l_conv = '2'   #基础币种对交易币种
+      END IF
+   END IF
+
+   #交易币种批量
+   IF cl_null(l_ooan.ooan012) THEN LET l_ooan.ooan012 = 1 END IF
+   
+   #4.计算汇率
+   #减少处理步骤,以便精确度降低
+   IF l_conv = '1' THEN  #存在交易对基础币种的置换关系
+      IF l_ooan.ooan013 = '1' OR cl_null(l_ooan.ooan013) THEN   #存在正向的汇率关系
+         LET l_rate = p_tmp / l_ooan.ooan012 * p_amount
+      ELSE               #若为反向时,要1除取得的汇率
+         LET l_rate = 1 / p_tmp * l_ooan.ooan012 * p_amount
+      END IF
+   ELSE                  #存在基础对交易币种的转换关系
+      IF l_ooan.ooan013 = '1' THEN
+         LET l_rate = 1 / p_tmp * l_ooan.ooan012 * p_amount
+      ELSE
+         LET l_rate = p_tmp / l_ooan.ooan012 * p_amount
+      END IF
+   END IF
+
+   #5.按精度进位小数取位
+   IF p_amount > 1 THEN
+      #传入的为金额,直接按ooaj004取位
+      CALL s_num_round('1',l_rate,l_ooaj004) RETURNING l_rate
+   ELSE
+      #没有传入金额,根据汇率的精度进行取位
+      CALL s_num_round('1',l_rate,l_ooaj005) RETURNING l_rate
+   END IF
+
+   RETURN l_rate
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aapt300_03_default_ins" order="4" ver="4" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 新增時給默認值
+# Memo...........:
+# Usage..........: CALL aapt300_03_default_ins()
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aapt300_03_default_ins()
+   DEFINE l_apca     RECORD LIKE apca_t.*
+   
+   SELECT * INTO l_apca.*
+     FROM apca_t   
+    WHERE apcaent = g_enterprise
+      AND apcadocno = g_apcadocno
+      AND apcald = g_apcald
+   
+   IF cl_null(l_apca.apcadocno) THEN
+      INITIALIZE l_apca TO NULL
+   END IF
+
+   #取得該法人的稅區
+   SELECT ooef019 INTO g_ooef019
+     FROM ooef_t
+    WHERE ooefent = g_enterprise AND ooef001 = l_apca.apcacomp
+    
+   SELECT isak003,isak008,isak022,isak009,isak010,isak011,isak012
+     INTO g_isam_d[l_ac].isam008,g_isam_d[l_ac].isam009,g_isam_d[l_ac].isam022,
+          g_isam_d[l_ac].isam031,g_isam_d[l_ac].isam032,g_isam_d[l_ac].isam033,g_isam_d[l_ac].isam034
+     FROM isak_t
+    WHERE isakent = g_enterprise
+      AND isaksite= l_apca.apcasite
+      AND isak001 = l_apca.apca004
+   
+   SELECT isao001,isao002,isao003,isao003,isao004,isao005
+     INTO g_isam_d[l_ac].isam017,g_isam_d[l_ac].isam018,g_isam_d[l_ac].isam019,
+          g_isam_d[l_ac].isam020,g_isam_d[l_ac].isam021
+     FROM isao_t
+    WHERE isaoent = g_enterprise
+      AND isaosite= l_apca.apcasite
+  
+   SELECT pmaa003 INTO g_isam_d[l_ac].isam030 FROM pmaa_t
+    WHERE pmaaent = g_enterprise
+      AND pmaa001 = l_apca.apca004
+      
+   SELECT pmaal003 INTO g_isam_d[l_ac].isam029 FROM pmaal_t
+    WHERE pmaalent = g_enterprise
+      AND pmaal001 = l_apca.apca004
+      AND pmaal002 = g_dlang
+      
+   SELECT ooefl004 INTO g_isam_d[l_ac].isam016 FROM ooefl_t
+    WHERE ooeflent = g_enterprise
+      AND ooefl001 = l_apca.apcasite
+      AND ooefl002 = g_lang
+
+   LET g_isam_d[l_ac].isamcomp = l_apca.apcacomp
+   LET g_isam_d[l_ac].isamstus = 'Y'
+   LET g_isam_d[l_ac].isamdocno = g_apcadocno
+   LET g_isam_d[l_ac].isam001 = g_prog
+   LET g_isam_d[l_ac].isam002 = l_apca.apca004
+   LET g_isam_d[l_ac].isam004 = l_apca.apca015
+   IF cl_null(l_apca.apcadocdt ) THEN 
+      LET l_apca.apcadocdt  = g_today
+   END IF
+   LET g_isam_d[l_ac].isam011 = l_apca.apcadocdt
+   LET g_isam_d[l_ac].isam012 = l_apca.apca011
+   LET g_isam_d[l_ac].isam0121= l_apca.apca013
+   LET g_isam_d[l_ac].isam013 = l_apca.apca012
+   LET g_isam_d[l_ac].isam014 = l_apca.apca100
+   LET g_isam_d[l_ac].isam015 = l_apca.apca101
+   IF l_ac = 1 THEN
+      LET g_isam_d[l_ac].isam023 = l_apca.apca103
+      LET g_isam_d[l_ac].isam024 = l_apca.apca104
+      LET g_isam_d[l_ac].isam025 = g_isam_d[l_ac].isam023 + g_isam_d[l_ac].isam024
+      LET g_isam_d[l_ac].isam026 = l_apca.apca113
+      LET g_isam_d[l_ac].isam027 = l_apca.apca114
+      LET g_isam_d[l_ac].isam028 = g_isam_d[l_ac].isam026 + g_isam_d[l_ac].isam027
+   END IF   
+   LET g_isam_d[l_ac].isam037 = 1
+   LET g_isam_d[l_ac].isam038 = 0
+   LET g_isam_d[l_ac].isam039 = 1
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_isam_d[l_ac].isam012
+   CALL ap_ref_array2(g_ref_fields,"SELECT oodbl004 FROM oodbl_t WHERE oodblent='"||g_enterprise||"' AND oodbl001='"||g_ooef019||"' AND oodbl002=? AND oodbl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_isam_d[l_ac].isam012_desc_desc = '', g_rtn_fields[1] , ''
+   SELECT MAX(isamseq) INTO g_isam_d[l_ac].isamseq
+     FROM isam_t
+    WHERE isament = g_enterprise
+      AND isamdocno = g_apcadocno
+      AND isam001 = g_prog   
+      
+   IF cl_null(g_isam_d[l_ac].isamseq) THEN
+      LET g_isam_d[l_ac].isamseq = 1
+   ELSE
+      LET g_isam_d[l_ac].isamseq = g_isam_d[l_ac].isamseq +1
+   END IF
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aapt300_03_tax" order="5" ver="3" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 含稅、未稅金額計算
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aapt300_03_tax()
+   DEFINE l_ooef014      LIKE ooef_t.ooef014
+   DEFINE l_ooaj004      LIKE ooaj_t.ooaj004
+
+   IF g_isam_d[l_ac].isam021 = 'Y' THEN
+      IF NOT cl_null(g_isam_d[l_ac].isam013) AND NOT cl_null(g_isam_d[l_ac].isam025) THEN
+         LET g_isam_d[l_ac].isam023 = g_isam_d[l_ac].isam025 / (1+ g_isam_d[l_ac].isam013/100)
+         LET g_isam_d[l_ac].isam024 = g_isam_d[l_ac].isam025 - g_isam_d[l_ac].isam023
+      END IF
+   ELSE
+      IF NOT cl_null(g_isam_d[l_ac].isam013) AND NOT cl_null(g_isam_d[l_ac].isam023) THEN
+         LET g_isam_d[l_ac].isam024 = g_isam_d[l_ac].isam023 * g_isam_d[l_ac].isam013/100
+         LET g_isam_d[l_ac].isam025 = g_isam_d[l_ac].isam023 + g_isam_d[l_ac].isam024
+      END IF
+   END IF
+   
+   SELECT ooef014 INTO l_ooef014 FROM ooef_t
+    WHERE ooefent = g_enterprise AND ooef001 = g_glaa_t.glaacomp
+   
+   CALL s_curr_sel_ooaj004(l_ooef014,g_isam_d[l_ac].isam014)
+        RETURNING l_ooaj004
+
+   CALL s_num_round('1',g_isam_d[l_ac].isam023,l_ooaj004) RETURNING g_isam_d[l_ac].isam023
+   CALL s_num_round('1',g_isam_d[l_ac].isam024,l_ooaj004) RETURNING g_isam_d[l_ac].isam024
+   CALL s_num_round('1',g_isam_d[l_ac].isam025,l_ooaj004) RETURNING g_isam_d[l_ac].isam025
+   
+   DISPLAY  g_isam_d[l_ac].isam023, g_isam_d[l_ac].isam024, g_isam_d[l_ac].isam025
+        TO s_detail1[l_ac].isam023,s_detail1[l_ac].isam024,s_detail1[l_ac].isam025
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aapt300_03_b_fill1" order="6" ver="5" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 單身填充
+# Memo...........:
+# Usage..........: aapt300_03_b_fill1(p_docno)
+# Date & Author..: 2014/10/14 By Hans
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION aapt300_03_b_fill1(p_docno,p_ld)
+DEFINE p_docno       LIKE apca_t.apcadocno   #單據編號 
+DEFINE p_ld          LIKE apca_t.apcald
+DEFINE l_apca     RECORD LIKE apca_t.*
+   
+   LET g_apcald = p_ld
+   LET g_apcadocno = p_docno
+  
+   
+   SELECT * INTO l_apca.*
+     FROM apca_t   
+    WHERE apcaent = g_enterprise
+      AND apcadocno = g_apcadocno
+      AND apcald = g_apcald
+      
+   #取得稅區
+   SELECT ooef019 INTO g_ooef019 FROM ooef_t WHERE ooefent = g_enterprise AND ooef001 = l_apca.apcacomp  
+   CALL aapt300_03_clear_detail()
+   
+   CALL cl_set_combo_scc('isam037','9719')   
+   LET l_ac = 1
+   LET g_apcadocno = p_docno
+   LET g_sql = "   SELECT isam001,isamdocno,isamseq,isam008,isam037,isam011,isam009,isam010,           ", 
+               "          isam030,isam012,isam0121,isam013,isam014,isam015,isam023,isam024,            ", 
+               "          isam025,isam026,isam027,isam028,isamcomp,isamstus,isam002,isam004,isam016,   ", 
+               "          isam017,isam018,isam019,isam020,isam021,isam022,isam029,isam031,isam032,     ",
+               "          isam033,isam034,isam038,isam039                                              ",  
+               "     FROM isam_t                                                                       ",
+               "    WHERE isament = '",g_enterprise,"'                                                 ",
+              #"      AND isamdocno = isam050                                                          ",               #避免由110來的資料看不到
+               "      AND isam050 = '",p_docno,"'                                                      ", 
+               " ORDER BY isamseq                                                            "
+   
+   PREPARE aapt300_03_pb1 FROM g_sql
+   DECLARE b_fill_curs1 CURSOR FOR aapt300_03_pb1
+
+   FOREACH b_fill_curs1 
+      INTO g_isam_d[l_ac].isam001 ,g_isam_d[l_ac].isamdocno,g_isam_d[l_ac].isamseq,g_isam_d[l_ac].isam008, 
+           g_isam_d[l_ac].isam037,g_isam_d[l_ac].isam011,g_isam_d[l_ac].isam009,g_isam_d[l_ac].isam010,g_isam_d[l_ac].isam030,
+           g_isam_d[l_ac].isam012,g_isam_d[l_ac].isam0121,g_isam_d[l_ac].isam013,
+           g_isam_d[l_ac].isam014,g_isam_d[l_ac].isam015,g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025,
+           g_isam_d[l_ac].isam026,g_isam_d[l_ac].isam027,g_isam_d[l_ac].isam028,g_isam_d[l_ac].isamcomp,g_isam_d[l_ac].isamstus, 
+           g_isam_d[l_ac].isam002,g_isam_d[l_ac].isam004,g_isam_d[l_ac].isam016,g_isam_d[l_ac].isam017,g_isam_d[l_ac].isam018, 
+           g_isam_d[l_ac].isam019,g_isam_d[l_ac].isam020,g_isam_d[l_ac].isam021,g_isam_d[l_ac].isam022,g_isam_d[l_ac].isam029, 
+           g_isam_d[l_ac].isam031,g_isam_d[l_ac].isam032,g_isam_d[l_ac].isam033,g_isam_d[l_ac].isam034,g_isam_d[l_ac].isam038, 
+           g_isam_d[l_ac].isam039
+  
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+      #稅別說明
+      CALL s_desc_get_tax_desc(g_ooef019,g_isam_d[l_ac].isam012) RETURNING g_isam_d[l_ac].isam012_desc_desc
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+   CALL g_isam_d.deleteElement(g_isam_d.getLength())   
+   LET g_rec_b04 = l_ac - 1
+   LET g_apcb_d5.* = g_isam_d.*
+   
+   FREE b_fill_curs1        
+              
+END FUNCTION]]>
+  </point>
+  <point name="function.aapt300_03_set_entry_money" order="7" ver="3" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 依含稅否開放相關金額欄位
+# Memo...........:
+# Usage..........: CALL aapt300_03_set_entry_money(p_apbb121)
+# Input parameter: p_apbb0121   含稅否
+# Date & Author..: 2014/01/09 By Hans
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION aapt300_03_set_entry_money(p_apbb0121)
+DEFINE p_apbb0121 LIKE apbb_t.apbb0121   
+   
+   CALL cl_set_comp_entry("isam023,isam025,isam026,isam028",FALSE)
+   #含稅>>  未稅金額皆關閉
+   #未稅>>  含稅金額皆關閉
+   IF p_apbb0121 = 'Y' THEN
+      CALL cl_set_comp_entry("isam025,isam028",TRUE)
+   ELSE
+      CALL cl_set_comp_entry("isam023,isam026",TRUE)
+   END IF
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.aapt300_03_clear_detail" order="8" ver="3" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 清空單身
+# Memo...........:
+# Usage..........: CALL aapt300_03_clear_detail()
+# Date & Author..: 2015/01/13 By Hans
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION aapt300_03_clear_detail()
+   CALL g_isam_d.clear()
+END FUNCTION]]>
+  </point>
+  <point name="function.aapt300_03_isac003_chk" order="9" ver="3" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 檢查是否為紅字發票
+# Memo...........:
+# Usage..........: CALL aapt300_03_isac003_chk()
+# Date & Author..: 2015/01/30 By Hans
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aapt300_03_isac003_chk(p_ooef019)
+   DEFINE l_isac003 LIKE isac_t.isac003
+   DEFINE p_ooef019 LIKE ooef_t.ooef019 
+     
+   SELECT isac003 INTO l_isac003 
+     FROM isac_t
+    WHERE isacent = g_enterprise
+      AND isac001 = p_ooef019 
+      AND isac002 = g_isam_d[l_ac].isam008
+   #1藍字2紅字
+   CASE l_isac003
+      WHEN 1 
+         LET g_str = '1'
+      WHEN 2 
+         LET g_str = '1'
+      WHEN 3
+         LET g_str = '2'
+      WHEN 4 
+         LET g_str = '2'
+    END CASE    
+        
+END FUNCTION]]>
+  </point>
+  <point name="function.aapt300_03_invoice_repeat_chk" order="10" ver="4" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 檢查發票是否重複輸入
+# Memo...........:
+# Usage..........: CALL aapt300_03_invoice_repeat_chk(p_code,p_number,p_type,p_docno,p_money)
+#                  RETURNING r_success,r_errno
+# Input parameter: p_code    發票代碼
+#                : p_number  發票號碼
+#                : p_type    發票類型
+#                : p_docno   收票單據
+#                : p_money   目前輸入的金額
+#                : p_curr    幣別
+# Date & Author..: 2015/02/02 By Hans
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aapt300_03_invoice_repeat_chk(p_code,p_number,p_type,p_docno,p_money,p_curr)
+DEFINE p_code           LIKE isam_t.isam009
+DEFINE p_number         LIKE isam_t.isam010
+DEFINE p_type           LIKE isam_t.isam008
+DEFINE p_docno          LIKE isam_t.isamdocno
+DEFINE p_money          LIKE isam_t.isam023
+DEFINE p_curr           LIKE isam_t.isam014
+DEFINE r_success        LIKE type_t.num5
+DEFINE r_errno          LIKE gzze_t.gzze001
+DEFINE l_cnt            LIKE type_t.num5
+DEFINE l_sum_red        LIKE isam_t.isam023
+DEFINE l_sum_blue       LIKE isam_t.isam023
+
+#發票重複檢核：
+#有發票代碼：
+#發票號碼+發票代碼>>不能重複
+#(A單據跟B單據or同一張單據的發票號碼都不能重複)
+#沒發票代碼：
+#1.藍字發票
+#發票類型+發票號碼>>不能重複
+#(A單據跟B單據or同一張單據的發票號碼都不能重複
+#2.紅字發票：
+#可以打多張同張發票類型+發票號碼
+#(金額不能超過原來的藍字發票總金額(包含本身單據))
+#*要排除本单单身的发票号码
+#單頭輸入完發票號碼也要check(發票類型也要存在再檢查)
+#單頭紅字發票不check單身在檢查
+   LET r_success = TRUE
+
+   #抓取"發票編碼方式"區分是大陸or台灣
+   SELECT isai002 INTO g_isai002
+     FROM ooef_t
+     LEFT JOIN isai_t ON ooefent = isaient AND ooef019 = isai001
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_apcacomp
+   IF g_isai002 = "2" THEN #China
+      SELECT COUNT(*) INTO l_cnt
+        FROM isam_t
+       WHERE isament = g_enterprise
+         AND isam009 = p_code
+         AND isam010 = p_number
+         AND isam036 IN ('11','11Y')
+      IF cl_null(l_cnt) THEN LET l_cnt = 0 END IF
+      IF l_cnt > 0 THEN
+         LET r_success = FALSE
+         LET r_errno = 'ais-00121'
+      END IF
+   ELSE #Taiwan
+      IF g_str = '1' THEN
+         SELECT COUNT(*) INTO l_cnt
+           FROM isam_t
+          WHERE isament = g_enterprise
+            #AND isam008 = p_type
+            AND isam010 = p_number
+            AND isam036 IN ('11','11Y')
+         IF cl_null(l_cnt) THEN LET l_cnt = 0 END IF
+         IF l_cnt > 0 THEN
+            LET r_success = FALSE
+            LET r_errno = 'ais-00123'
+         END IF
+      ELSE
+         IF NOT cl_null(p_money) THEN
+            #紅字發票的總和
+            SELECT SUM(isam023) INTO l_sum_red
+              FROM isam_t
+             WHERE isament = g_enterprise
+               AND isam008 IN (SELECT isac002 FROM isac_t WHERE isac001 = g_ooef019 AND isac003 = '3')
+               AND isam010 = p_number
+               AND isam014 = p_curr
+               AND isam036 IN ('11','11Y')
+            IF cl_null(l_sum_red) THEN LET l_sum_red = 0 END IF
+            LET l_sum_red = s_math_abs(l_sum_red) + s_math_abs(p_money)
+            #藍字發票的總和
+            SELECT isam023 INTO l_sum_blue
+              FROM isam_t
+             WHERE isament = g_enterprise
+               AND isam008 NOT IN (SELECT isac002 FROM isac_t WHERE isac001 = g_ooef019 AND isac003 = '3')
+               AND isam010 = p_number
+               AND isam014 = p_curr
+               AND isam036 IN ('11','11Y')
+            IF cl_null(l_sum_blue) THEN LET l_sum_blue = 0 END IF
+            IF l_sum_red > l_sum_blue THEN
+               LET r_success = FALSE
+               LET r_errno = 'aap-00080'
+            END IF
+         END IF
+      END IF
+   END IF
+
+   RETURN r_success,r_errno
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aapt300_03_set_entry_invoice_code" order="11" ver="4" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 用"發票編碼方式"決定是否隱藏"發票代碼"
+# Memo...........:
+# Usage..........: CALL aapt300_03_set_entry_invoice_code()
+# Date & Author..: 2015/02/03 By Hans
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aapt300_03_set_entry_invoice_code()
+ 
+   SELECT isai002 INTO g_isai002
+     FROM ooef_t
+     LEFT JOIN isai_t ON ooefent = isaient AND ooef019 = isai001
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_apcacomp
+   IF g_isai002 = "1" THEN
+      CALL cl_set_comp_visible('isam009',FALSE)
+   ELSE
+      CALL cl_set_comp_visible('isam009',TRUE)
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="b_fill.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="b_fill.fill" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="b_fill.others.fill" order="" ver="3" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_apcb_d5.* = g_isam_d.*]]>
+  </point>
+  <point name="b_fill.sql_before" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   IF p_wc2 = " 1=1" THEN
+      LET p_wc2 = " isamdocno = '",g_apca_t.apcadocno,"' AND isam001 = 'aapt300' "
+   ELSE
+      LET p_wc2 = p_wc2," AND isamdocno = '",g_apca_t.apcadocno,"' AND isam001 = 'aapt300' "
+   END IF]]>
+  </point>
+  <point name="construct.c.page1.isam008" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_isac002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO isam008  #顯示到畫面上
+
+            NEXT FIELD isam008                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page1.isam012" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_oodb002_5()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO isam012  #顯示到畫面上
+               #DISPLAY g_qryparam.return2 TO oodb002 #稅別代碼 
+               #DISPLAY g_qryparam.return3 TO oodb005 #含稅否 
+               #DISPLAY g_qryparam.return4 TO oodb006 #稅率 
+
+            NEXT FIELD isam012                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page1.isam014" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooaj002_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO isam014  #顯示到畫面上
+
+            NEXT FIELD isam014                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.page1_aapt300_03.isam008" order="" ver="0" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_isac002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO isam008  #顯示到畫面上
+            NEXT FIELD isam008                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1_aapt300_03.isam012" order="" ver="0" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_oodb002_5()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO isam012  #顯示到畫面上
+            NEXT FIELD isam012                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1_aapt300_03.isam014" order="" ver="0" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooaj002_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO isam014  #顯示到畫面上
+            NEXT FIELD isam014                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="detail_show.define" order="" ver="3" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="detail_show.reference" order="" ver="3" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   ]]>
+  </point>
+  <point name="global.import" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[IMPORT FGL lib_cl_dlg]]>
+  </point>
+  <point name="global.variable" order="" ver="5" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE g_apca_t            RECORD LIKE apca_t.*
+DEFINE g_glaa_t            RECORD
+         glaacomp          LIKE glaa_t.glaacomp,
+         glaa001           LIKE glaa_t.glaa001,
+         glaa002           LIKE glaa_t.glaa002
+                       END RECORD
+DEFINE g_amt               LIKE apca_t.apca107
+DEFINE g_rec_b04           LIKE type_t.num5
+DEFINE g_detail_insert     LIKE type_t.num5   #單身的新增權限
+DEFINE g_detail_delete     LIKE type_t.num5   #單身的刪除權限
+DEFINE g_appoint_idx       LIKE type_t.num5   #指定進入單身行數
+DEFINE g_rec_b             LIKE type_t.num5
+
+DEFINE g_apcadocno       LIKE apca_t.apcadocno
+DEFINE g_apcald          LIKE apca_t.apcald
+DEFINE g_ooef019         LIKE ooef_t.ooef019 #稅區
+DEFINE g_apcacomp        LIKE apca_t.apcacomp
+DEFINE g_isai002         LIKE isai_t.isai002
+DEFINE g_str             LIKE type_t.chr1
+DEFINE g_glaa001         LIKE glaa_t.glaa001
+
+#匯出excel用所以另外宣告一個GLOBAL變數
+GLOBALS
+   DEFINE g_apcb_d5      DYNAMIC ARRAY OF type_g_isam_d
+END GLOBALS
+
+]]>
+  </point>
+  <point name="init.init" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL cl_set_combo_scc('isam037','9719')
+   CALL aapt300_03_ref_amt()
+   LET g_argv[1] = g_apca_t.apcadocno]]>
+  </point>
+  <point name="input.a.page1.isam001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_isam_d[g_detail_idx].isamdocno IS NOT NULL AND g_isam_d[g_detail_idx].isamseq IS NOT NULL AND g_isam_d[g_detail_idx].isam001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_isam_d[g_detail_idx].isamdocno != g_isam_d_t.isamdocno OR g_isam_d[g_detail_idx].isamseq != g_isam_d_t.isamseq OR g_isam_d[g_detail_idx].isam001 != g_isam_d_t.isam001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM isam_t WHERE "||"isament = '" ||g_enterprise|| "' AND "||"isamdocno = '"||g_isam_d[g_detail_idx].isamdocno ||"' AND "|| "isamseq = '"||g_isam_d[g_detail_idx].isamseq ||"' AND "|| "isam001 = '"||g_isam_d[g_detail_idx].isam001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.isam008" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_isam_d[g_detail_idx].isam008) THEN
+               SELECT isacstus INTO l_isacstus FROM isac_t
+                WHERE isacent = g_enterprise
+                  AND isac001 = l_ooef019
+                  AND isac002 = g_isam_d[g_detail_idx].isam008
+               CASE
+                  WHEN SQLCA.SQLCODE = 100
+                     IF l_cmd = 'a' THEN
+                        DISPLAY '' TO s_detail1[g_detail_idx].isam008
+                     ELSE
+                        DISPLAY g_isam_d_t.isam008 TO s_detail1[g_detail_idx].isam008
+                     END IF
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'ais-00029'
+                     LET g_errparam.extend = g_isam_d[g_detail_idx].isam008
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     IF l_cmd = 'a' THEN
+                        LET g_isam_d[g_detail_idx].isam008 = ''
+                     ELSE
+                        LET g_isam_d[g_detail_idx].isam008 = g_isam_d_t.isam008
+                     END IF
+                     DISPLAY g_isam_d[g_detail_idx].isam008 TO s_detail1[g_detail_idx].isam008
+                     NEXT FIELD CURRENT
+                  WHEN l_isacstus = 'N'
+                     IF l_cmd = 'a' THEN
+                        DISPLAY '' TO s_detail1[g_detail_idx].isam008
+                     ELSE
+                        DISPLAY g_isam_d_t.isam008 TO s_detail1[g_detail_idx].isam008
+                     END IF
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'aap-00023'
+                     LET g_errparam.extend = g_isam_d[g_detail_idx].isam008
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     IF l_cmd = 'a' THEN
+                        LET g_isam_d[g_detail_idx].isam008 = ''
+                     ELSE
+                        LET g_isam_d[g_detail_idx].isam008 = g_isam_d_t.isam008
+                     END IF
+                     DISPLAY g_isam_d[g_detail_idx].isam008 TO s_detail1[g_detail_idx].isam008
+                     NEXT FIELD CURRENT
+               END CASE
+            END IF]]>
+  </point>
+  <point name="input.a.page1.isam009" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_isam_d[g_detail_idx].isamdocno IS NOT NULL AND g_isam_d[g_detail_idx].isam008 IS NOT NULL AND g_isam_d[g_detail_idx].isam009 IS NOT NULL AND g_isam_d[g_detail_idx].isam010 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_isam_d[g_detail_idx].isamdocno != g_isam_d_t.isamdocno OR g_isam_d[g_detail_idx].isam008 != g_isam_d_t.isam008 OR g_isam_d[g_detail_idx].isam009 != g_isam_d_t.isam009 OR g_isam_d[g_detail_idx].isam010 != g_isam_d_t.isam010)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM isam_t WHERE "||"isament = '" ||g_enterprise|| "' AND "||"isamdocno = '"||g_isam_d[g_detail_idx].isamdocno ||"' AND "|| "isam008 = '"||g_isam_d[g_detail_idx].isam008 ||"' AND "|| "isam009 = '"||g_isam_d[g_detail_idx].isam009 ||"' AND "|| "isam010 = '"||g_isam_d[g_detail_idx].isam010 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.isam010" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_isam_d[g_detail_idx].isamdocno IS NOT NULL AND g_isam_d[g_detail_idx].isam008 IS NOT NULL AND g_isam_d[g_detail_idx].isam009 IS NOT NULL AND g_isam_d[g_detail_idx].isam010 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_isam_d[g_detail_idx].isamdocno != g_isam_d_t.isamdocno OR g_isam_d[g_detail_idx].isam008 != g_isam_d_t.isam008 OR g_isam_d[g_detail_idx].isam009 != g_isam_d_t.isam009 OR g_isam_d[g_detail_idx].isam010 != g_isam_d_t.isam010)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM isam_t WHERE "||"isament = '" ||g_enterprise|| "' AND "||"isamdocno = '"||g_isam_d[g_detail_idx].isamdocno ||"' AND "|| "isam008 = '"||g_isam_d[g_detail_idx].isam008 ||"' AND "|| "isam009 = '"||g_isam_d[g_detail_idx].isam009 ||"' AND "|| "isam010 = '"||g_isam_d[g_detail_idx].isam010 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.isam012" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_isam_d[l_ac].isam012) THEN 
+               IF NOT ap_chk_isExist(g_isam_d[l_ac].isam012,"SELECT COUNT(*) FROM oodb_t WHERE oodbent = '" ||g_enterprise|| "' AND oodb001 = '"||l_ooef019||"' AND oodb002 = ? ",'aoo-00222',1) THEN 
+                  LET g_isam_d[l_ac].isam012 = g_isam_d_t.isam012
+                  NEXT FIELD CURRENT
+               END IF     
+               IF NOT ap_chk_isExist(g_isam_d[l_ac].isam012,"SELECT COUNT(*) FROM oodb_t WHERE oodbent = '" ||g_enterprise|| "' AND oodb001 = '"||l_ooef019||"' AND oodb002 = ? AND oodbstus = 'Y' ",'aoo-00223',1) THEN 
+                  LET g_isam_d[l_ac].isam012 = g_isam_d_t.isam012
+                  NEXT FIELD CURRENT
+               END IF    
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND g_isam_d[l_ac].isam012 != g_isam_d_t.isam012 OR g_isam_d_t.isam012 IS NULL) THEN
+                  CALL s_tax_chk(g_apca_t.apcasite,g_isam_d[l_ac].isam012) RETURNING l_success,l_oodbl004,g_isam_d[l_ac].isam0121,g_isam_d[l_ac].isam013,l_oodb011
+                  CALL aapt300_03_tax()
+                  CALL aapt300_03_lcurr()
+               END IF
+               CALL aapt300_03_set_entry_b(l_cmd)
+               CALL aapt300_03_set_no_entry_b(l_cmd)
+            END IF
+            
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_isam_d[l_ac].isam012
+            CALL ap_ref_array2(g_ref_fields,"SELECT oodbl004 FROM oodbl_t WHERE oodblent='"||g_enterprise||"' AND oodbl001='"||l_ooef019||"' AND oodbl002=? AND oodbl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_isam_d[l_ac].isam012_desc_desc = '', g_rtn_fields[1] , ''
+            DISPLAY  g_isam_d[l_ac].isam012_desc_desc, g_isam_d[l_ac].isam0121, g_isam_d[l_ac].isam013
+                 TO s_detail1[l_ac].isam012_desc_desc,s_detail1[l_ac].isam0121,s_detail1[l_ac].isam013]]>
+  </point>
+  <point name="input.a.page1.isam014" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_isam_d[l_ac].isam014) THEN 
+               IF NOT ap_chk_isExist(g_isam_d[l_ac].isam014,"SELECT COUNT(*) FROM ooaj_t,ooef_t WHERE ooajent = ooefent AND ooef014 = ooaj001 AND ooajent = '" ||g_enterprise|| "' AND ooef001 = '"||g_glaa_t.glaacomp||"' AND "||"ooaj002 = ? ",'aoo-00175',1) THEN 
+                  LET g_isam_d[l_ac].isam014 = g_isam_d_t.isam014
+                  DISPLAY BY NAME g_isam_d[l_ac].isam014
+                  NEXT FIELD CURRENT
+               END IF 
+               IF NOT ap_chk_isExist(g_isam_d[l_ac].isam014,"SELECT COUNT(*) FROM ooaj_t,ooef_t WHERE ooajent = ooefent AND ooef014 = ooaj001 AND ooajent = '" ||g_enterprise|| "' AND ooef001 = '"||g_glaa_t.glaacomp||"' AND "||"ooaj002 = ? AND ooajstus = 'Y' ",'aoo-00176',1) THEN 
+                  LET g_isam_d[l_ac].isam014 = g_isam_d_t.isam014
+                  DISPLAY BY NAME g_isam_d[l_ac].isam014
+                  NEXT FIELD CURRENT
+               END IF               
+            END IF
+            IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_isam_d[l_ac].isam014 != g_isam_d_t.isam014 OR g_isam_d_t.isam014 IS NULL )) THEN
+               CALL cl_get_para(g_enterprise,g_glaa_t.glaacomp,'S-BAS-0015') RETURNING l_ooab002
+               CALL s_aooi160_get_exrate(2,g_glaa_t.glaald,g_isam_d[l_ac].isam011,g_isam_d[l_ac].isam014,g_glaa_t.glaa001,0,l_ooab002) RETURNING g_isam_d[l_ac].isam015
+               DISPLAY g_isam_d[l_ac].isam015 TO s_detail1[l_ac].isam015
+               CALL aapt300_03_lcurr()
+            END IF
+            CALL aapt300_03_set_entry_b(l_cmd)
+            CALL aapt300_03_set_no_entry_b(l_cmd)]]>
+  </point>
+  <point name="input.a.page1.isam015" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_isam_d[l_ac].isam015) THEN
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_isam_d[l_ac].isam015 != g_isam_d_t.isam015 OR g_isam_d_t.isam015 IS NULL )) THEN
+                  CALL aapt300_03_lcurr()
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.a.page1.isam023" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_isam_d[l_ac].isam023 != g_isam_d_t.isam023 OR g_isam_d_t.isam023 IS NULL )) THEN
+               CALL aapt300_03_tax()
+               CALL aapt300_03_lcurr()
+            END IF]]>
+  </point>
+  <point name="input.a.page1.isam024" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_isam_d[l_ac].isam024) THEN
+               IF NOT cl_null(g_isam_d[l_ac].isam023) THEN
+                  LET g_isam_d[l_ac].isam025 = g_isam_d[l_ac].isam023 + g_isam_d[l_ac].isam024
+               ELSE
+                  LET g_isam_d[l_ac].isam025 = g_isam_d[l_ac].isam024
+               END IF
+               IF NOT cl_null(g_isam_d[l_ac].isam015) THEN
+                  LET g_isam_d[l_ac].isam027 = g_isam_d[l_ac].isam024 * g_isam_d[l_ac].isam015
+                  IF NOT cl_null(g_isam_d[l_ac].isam026) THEN
+                     LET g_isam_d[l_ac].isam028 = g_isam_d[l_ac].isam026 + g_isam_d[l_ac].isam027
+                  ELSE
+                     LET g_isam_d[l_ac].isam028 = g_isam_d[l_ac].isam027
+                  END IF
+               END IF
+            END IF
+            DISPLAY BY NAME g_isam_d[l_ac].isam025,g_isam_d[l_ac].isam027,g_isam_d[l_ac].isam028]]>
+  </point>
+  <point name="input.a.page1.isam025" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_isam_d[l_ac].isam025 != g_isam_d_t.isam025 OR g_isam_d_t.isam025 IS NULL )) THEN
+               CALL aapt300_03_tax()
+               CALL aapt300_03_lcurr()
+            END IF]]>
+  </point>
+  <point name="input.a.page1.isamdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_isam_d[g_detail_idx].isamdocno IS NOT NULL AND g_isam_d[g_detail_idx].isamseq IS NOT NULL AND g_isam_d[g_detail_idx].isam001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_isam_d[g_detail_idx].isamdocno != g_isam_d_t.isamdocno OR g_isam_d[g_detail_idx].isamseq != g_isam_d_t.isamseq OR g_isam_d[g_detail_idx].isam001 != g_isam_d_t.isam001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM isam_t WHERE "||"isament = '" ||g_enterprise|| "' AND "||"isamdocno = '"||g_isam_d[g_detail_idx].isamdocno ||"' AND "|| "isamseq = '"||g_isam_d[g_detail_idx].isamseq ||"' AND "|| "isam001 = '"||g_isam_d[g_detail_idx].isam001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.isamseq" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_isam_d[g_detail_idx].isamdocno IS NOT NULL AND g_isam_d[g_detail_idx].isamseq IS NOT NULL AND g_isam_d[g_detail_idx].isam001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_isam_d[g_detail_idx].isamdocno != g_isam_d_t.isamdocno OR g_isam_d[g_detail_idx].isamseq != g_isam_d_t.isamseq OR g_isam_d[g_detail_idx].isam001 != g_isam_d_t.isam001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM isam_t WHERE "||"isament = '" ||g_enterprise|| "' AND "||"isamdocno = '"||g_isam_d[g_detail_idx].isamdocno ||"' AND "|| "isamseq = '"||g_isam_d[g_detail_idx].isamseq ||"' AND "|| "isam001 = '"||g_isam_d[g_detail_idx].isam001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1_aapt300_03.isamdocno" order="" ver="0" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            #確認資料無重複
+            IF  g_isam_d[g_detail_idx].isamdocno IS NOT NULL AND g_isam_d[g_detail_idx].isamseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_isam_d[g_detail_idx].isamdocno != g_isam_d_t.isamdocno OR g_isam_d[g_detail_idx].isamseq != g_isam_d_t.isamseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM isam_t WHERE "||"isament = '" ||g_enterprise|| "' AND "||"isamdocno = '"||g_isam_d[g_detail_idx].isamdocno ||"' AND "|| "isamseq = '"||g_isam_d[g_detail_idx].isamseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1_aapt300_03.isamseq" order="" ver="0" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            #確認資料無重複
+            IF  g_isam_d[g_detail_idx].isamdocno IS NOT NULL AND g_isam_d[g_detail_idx].isamseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_isam_d[g_detail_idx].isamdocno != g_isam_d_t.isamdocno OR g_isam_d[g_detail_idx].isamseq != g_isam_d_t.isamseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM isam_t WHERE "||"isament = '" ||g_enterprise|| "' AND "||"isamdocno = '"||g_isam_d[g_detail_idx].isamdocno ||"' AND "|| "isamseq = '"||g_isam_d[g_detail_idx].isamseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.b.page1.isamseq" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF cl_null(g_isam_d[g_detail_idx].isamseq) THEN
+               SELECT MAX(isamseq) INTO g_isam_d[g_detail_idx].isamseq
+                 FROM isam_t
+                WHERE isament = g_enterprise
+                  AND isamdocno = g_apca_t.apcadocno
+                  AND isam001 = 'aapt300'
+               IF cl_null(g_isam_d[g_detail_idx].isamseq) THEN
+                  LET g_isam_d[g_detail_idx].isamseq = 1
+               ELSE
+                  LET g_isam_d[g_detail_idx].isamseq = g_isam_d[g_detail_idx].isamseq +1
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.body.a_input" order="" ver="3" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL aapt300_03_ref_amt()
+            LET g_apcb_d5.* = g_isam_d.*]]>
+  </point>
+  <point name="input.body.a_insert2" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.body.before_bak" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL aapt300_03_default_ins()]]>
+  </point>
+  <point name="input.body.before_insert" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            ]]>
+  </point>
+  <point name="input.body.before_row" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL aapt300_03_ref_amt()]]>
+  </point>
+  <point name="input.c.page1.isam008" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_isam_d[l_ac].isam008             #給予default值
+            
+            LET g_qryparam.where = " isac003 = '1' AND isac001 = '",l_ooef019,"'"
+
+            #給予arg
+
+            CALL q_isac002()                                #呼叫開窗
+
+            LET g_isam_d[l_ac].isam008 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_isam_d[l_ac].isam008 TO isam008              #顯示到畫面上
+
+            NEXT FIELD isam008                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.page1.isam012" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_isam_d[l_ac].isam012             #給予default值
+            LET g_qryparam.default2 = "" #g_isam_d[l_ac].oodb002 #稅別代碼
+            LET g_qryparam.default3 = "" #g_isam_d[l_ac].oodb005 #含稅否
+            LET g_qryparam.default4 = "" #g_isam_d[l_ac].oodb006 #稅率
+
+            #給予arg
+            LET g_qryparam.arg1 = l_ooef019 #
+            LET g_qryparam.where = " oodb004 ='1' " 
+
+            CALL q_oodb002_5()                                #呼叫開窗
+
+            LET g_isam_d[l_ac].isam012 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            #LET g_isam_d[l_ac].oodb002 = g_qryparam.return2 #稅別代碼
+            #LET g_isam_d[l_ac].oodb005 = g_qryparam.return3 #含稅否
+            #LET g_isam_d[l_ac].oodb006 = g_qryparam.return4 #稅率
+
+            DISPLAY g_isam_d[l_ac].isam012 TO isam012              #顯示到畫面上
+            #DISPLAY g_isam_d[l_ac].oodb002 TO oodb002 #稅別代碼
+            #DISPLAY g_isam_d[l_ac].oodb005 TO oodb005 #含稅否
+            #DISPLAY g_isam_d[l_ac].oodb006 TO oodb006 #稅率
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_isam_d[l_ac].isam012
+            CALL ap_ref_array2(g_ref_fields,"SELECT oodbl004 FROM oodbl_t WHERE oodblent='"||g_enterprise||"' AND oodbl001='"||l_ooef019||"' AND oodbl002=? AND oodbl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_isam_d[l_ac].isam012_desc_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_isam_d[l_ac].isam012_desc_desc
+            
+            NEXT FIELD isam012                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.page1.isam014" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_isam_d[l_ac].isam014             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_glaa_t.glaacomp #
+
+            CALL q_ooaj002_1()                                #呼叫開窗
+
+            LET g_isam_d[l_ac].isam014 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_isam_d[l_ac].isam014 TO isam014              #顯示到畫面上
+
+            NEXT FIELD isam014                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.page1_aapt300_03.isam008" order="" ver="0" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_isam_d[l_ac].isam008             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_isac002()                                #呼叫開窗
+
+            LET g_isam_d[l_ac].isam008 = g_qryparam.return1              
+
+            DISPLAY g_isam_d[l_ac].isam008 TO isam008              #
+
+            NEXT FIELD isam008                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.page1_aapt300_03.isam012" order="" ver="0" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_isam_d[l_ac].isam012             #給予default值
+            LET g_qryparam.default2 = "" #g_isam_d[l_ac].oodb002 #稅別代碼
+            LET g_qryparam.default3 = "" #g_isam_d[l_ac].oodb005 #含稅否
+            LET g_qryparam.default4 = "" #g_isam_d[l_ac].oodb006 #稅率
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_oodb002_5()                                #呼叫開窗
+
+            LET g_isam_d[l_ac].isam012 = g_qryparam.return1              
+            #LET g_isam_d[l_ac].oodb002 = g_qryparam.return2 
+            #LET g_isam_d[l_ac].oodb005 = g_qryparam.return3 
+            #LET g_isam_d[l_ac].oodb006 = g_qryparam.return4 
+            DISPLAY g_isam_d[l_ac].isam012 TO isam012              #
+            #DISPLAY g_isam_d[l_ac].oodb002 TO oodb002 #稅別代碼
+            #DISPLAY g_isam_d[l_ac].oodb005 TO oodb005 #含稅否
+            #DISPLAY g_isam_d[l_ac].oodb006 TO oodb006 #稅率
+            NEXT FIELD isam012                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.page1_aapt300_03.isam014" order="" ver="0" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_isam_d[l_ac].isam014             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_ooaj002_1()                                #呼叫開窗
+
+            LET g_isam_d[l_ac].isam014 = g_qryparam.return1              
+
+            DISPLAY g_isam_d[l_ac].isam014 TO isam014              #
+
+            NEXT FIELD isam014                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.more_input" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="insert_b.a_insert" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      UPDATE isam_t 
+         SET isam200 = 'N',isam205 = 'N', isamownid = g_user,isamowndp = g_dept,
+             isamcrtid = g_user, isamcrtdt = g_today,isamcrtdp = g_dept,isam036 = 11,
+             isamcnfid = g_user, isamcnfdt = g_today
+       WHERE isament = g_enterprise AND isamdocno = g_isam_d[l_ac].isamdocno
+         AND isam008 = g_isam_d[l_ac].isam008 AND isam010 = g_isam_d[l_ac].isam010
+               
+  ]]>
+  </point>
+  <point name="insert_b.m_insert" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[       ]]>
+  </point>
+  <point name="main.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE p_ld      LIKE apca_t.apcald
+   DEFINE p_docno   LIKE apca_t.apcadocno]]>
+  </point>
+  <point name="main.exit" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_action_choice = ' '
+   IF NOT (g_apca_t.apca001 = '10' OR g_apca_t.apca001 = '22' OR g_apca_t.apca001 = '31' OR g_apca_t.apca001 = '50') AND g_amt > 0 THEN
+      CALL aapt300_05(g_apca_t.apcald,g_apca_t.apcadocno)
+   END IF]]>
+  </point>
+  <point name="main.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   p_ld,p_docno]]>
+  </point>
+  <point name="main.init" order="" ver="5" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   
+   SELECT * INTO g_apca_t.* FROM apca_t
+    WHERE apcaent = g_enterprise
+      AND apcadocno = p_docno
+      AND apcald  = p_ld
+      
+   SELECT glaacomp,glaa001,glaa002
+     INTO g_glaa_t.glaacomp,g_glaa_t.glaa001,g_glaa_t.glaa002
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald  = p_ld]]>
+  </point>
+  <point name="modify.after_input" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      CALL aapt300_03_b_fill(g_wc2)
+      CALL s_transaction_end('N','0')
+   END IF ]]>
+  </point>
+  <point name="modify.before_input" order="" ver="3" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   SELECT ooef019 INTO g_ooef019 FROM ooef_t WHERE ooefent = g_enterprise AND ooef001 = g_glaa_t.glaacomp]]>
+  </point>
+  <point name="modify.define" order="" ver="3" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE  l_ooab002              LIKE ooab_t.ooab002
+   DEFINE  l_isacstus             LIKE isac_t.isacstus
+   DEFINE  l_success              LIKE type_t.chr1
+   DEFINE  l_oodbl004             LIKE oodbl_t.oodbl004
+   DEFINE  l_oodb011              LIKE oodb_t.oodb011]]>
+  </point>
+  <point name="query.a.page1_aapt300_03.isam009" order="" ver="3" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            ]]>
+  </point>
+  <point name="set_entry_b.set_entry_b" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL cl_set_comp_entry('isam023,isam025,isam026,isam028',TRUE)]]>
+  </point>
+  <point name="set_no_entry_b.set_no_entry_b" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   IF g_isam_d[l_ac].isam014 = g_glaa_t.glaa001 THEN
+      CALL cl_set_comp_entry('isam026,isam028',FALSE)
+   END IF
+   IF g_isam_d[l_ac].isam0121 = 'Y' THEN
+      CALL cl_set_comp_entry('isam023,isam026',FALSE)
+   ELSE
+      CALL cl_set_comp_entry('isam025,isam028',FALSE)
+   END IF]]>
+  </point>
+  <point name="update_b.a_update" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[       UPDATE isam_t 
+         SET  isammodid = g_user,isammoddt = g_today
+       WHERE isament = g_enterprise AND isamdocno = g_isam_d[l_ac].isamdocno
+         AND isam008 = g_isam_d[l_ac].isam008 AND isam010 = g_isam_d[l_ac].isam010]]>
+  </point>
+  <section id="aapt300_03.b_fill" ver="16" status="" src="s" readonly="">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION aapt300_03_b_fill(p_wc2)              #BODY FILL UP
+   DEFINE p_wc2    STRING
+   #add-point:b_fill段define
+   {<point name="b_fill.define" edit="s"/>}
+   #end add-point
+   #add-point:b_fill段define(客製用)
+   {<point name="b_fill.define_customerization" edit="c"/>}
+   #end add-point
+   
+   IF cl_null(p_wc2) THEN
+      LET p_wc2 = " 1=1"
+   END IF
+   
+   #add-point:b_fill段sql之前
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   LET g_sql = "SELECT  UNIQUE t0.isam001,t0.isamdocno,t0.isamseq,t0.isam008,t0.isam037,t0.isam011,t0.isam010, 
+       t0.isam030,t0.isam009,t0.isam012,t0.isam0121,t0.isam013,t0.isam014,t0.isam015,t0.isam023,t0.isam024, 
+       t0.isam025,t0.isam026,t0.isam027,t0.isam028,t0.isamcomp,t0.isamstus,t0.isam002,t0.isam004,t0.isam016, 
+       t0.isam017,t0.isam018,t0.isam019,t0.isam020,t0.isam021,t0.isam022,t0.isam029,t0.isam031,t0.isam032, 
+       t0.isam033,t0.isam034,t0.isam038,t0.isam039  FROM isam_t t0",
+               "",
+               
+               " WHERE t0.isament= ?  AND  1=1 AND (", p_wc2, ") " 
+   #add-point:b_fill段sql wc
+   {<point name="b_fill.sql_wc"/>}
+   #end add-point
+   LET g_sql = g_sql, cl_sql_add_filter("isam_t"),
+                      " ORDER BY t0.isamdocno,t0.isamseq"
+   
+   #add-point:b_fill段sql之後
+   {<point name="b_fill.sql_after"/>}
+   #end add-point
+   
+   #LET g_sql = cl_sql_add_tabid(g_sql,"isam_t")            #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE aapt300_03_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR aapt300_03_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_isam_d.clear()
+ 
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO g_isam_d[l_ac].isam001,g_isam_d[l_ac].isamdocno,g_isam_d[l_ac].isamseq,g_isam_d[l_ac].isam008, 
+       g_isam_d[l_ac].isam037,g_isam_d[l_ac].isam011,g_isam_d[l_ac].isam010,g_isam_d[l_ac].isam030,g_isam_d[l_ac].isam009, 
+       g_isam_d[l_ac].isam012,g_isam_d[l_ac].isam0121,g_isam_d[l_ac].isam013,g_isam_d[l_ac].isam014, 
+       g_isam_d[l_ac].isam015,g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025,g_isam_d[l_ac].isam026, 
+       g_isam_d[l_ac].isam027,g_isam_d[l_ac].isam028,g_isam_d[l_ac].isamcomp,g_isam_d[l_ac].isamstus, 
+       g_isam_d[l_ac].isam002,g_isam_d[l_ac].isam004,g_isam_d[l_ac].isam016,g_isam_d[l_ac].isam017,g_isam_d[l_ac].isam018, 
+       g_isam_d[l_ac].isam019,g_isam_d[l_ac].isam020,g_isam_d[l_ac].isam021,g_isam_d[l_ac].isam022,g_isam_d[l_ac].isam029, 
+       g_isam_d[l_ac].isam031,g_isam_d[l_ac].isam032,g_isam_d[l_ac].isam033,g_isam_d[l_ac].isam034,g_isam_d[l_ac].isam038, 
+       g_isam_d[l_ac].isam039
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+  
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.fill"/>}
+      #end add-point
+      
+      CALL aapt300_03_detail_show()      
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code   = 9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+ 
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+ 
+   LET g_error_show = 0
+   
+ 
+   
+   CALL g_isam_d.deleteElement(g_isam_d.getLength())   
+ 
+   
+   #將key欄位填到每個page
+   FOR l_ac = 1 TO g_isam_d.getLength()
+ 
+      #add-point:b_fill段key值相關欄位
+      {<point name="b_fill.keys.fill"/>}
+      #end add-point
+   END FOR
+   
+   IF g_cnt > g_isam_d.getLength() THEN
+      LET l_ac = g_isam_d.getLength()
+   ELSE
+      LET l_ac = g_cnt
+   END IF
+   LET g_cnt = l_ac
+ 
+   #遮罩相關處理
+   FOR l_ac = 1 TO g_isam_d.getLength()
+      LET g_isam_d_mask_o[l_ac].* =  g_isam_d[l_ac].*
+      CALL aapt300_03_isam_t_mask()
+      LET g_isam_d_mask_n[l_ac].* =  g_isam_d[l_ac].*
+   END FOR
+   
+ 
+ 
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+   
+   ERROR "" 
+ 
+   LET g_detail_cnt = g_isam_d.getLength()
+   DISPLAY g_detail_idx TO FORMONLY.idx
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   
+   CLOSE b_fill_curs
+   FREE aapt300_03_pb
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aapt300_03.default_search" ver="12" status="" src="s" readonly="">
+    <![CDATA[#+ 外部參數搜尋
+PRIVATE FUNCTION aapt300_03_default_search()
+   DEFINE li_idx  LIKE type_t.num10
+   DEFINE li_cnt  LIKE type_t.num10
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define
+   {<point name="default_search.define" edit="s"/>}
+   #end add-point  
+   #add-point:default_search段define(客製用)
+   {<point name="default_search.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:default_search段開始前
+   {<point name="default_search.before"/>}
+   #end add-point  
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " isamdocno = '", g_argv[01], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " isamseq = '", g_argv[02], "' AND "
+   END IF
+ 
+   
+   #add-point:default_search段after sql
+   {<point name="default_search.after_sql"/>}
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET ls_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_wc2 = ls_wc
+   ELSE
+      LET g_wc2 = " 1=1"
+      #預設查詢條件
+      LET g_wc2 = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc2) THEN
+         LET g_wc2 = " 1=1"
+      END IF
+   END IF
+ 
+   #add-point:default_search段結束前
+   {<point name="default_search.after"/>}
+   #end add-point  
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="aapt300_03.delete" ver="11" status="" src="s" readonly="">
+    <![CDATA[#+ 資料刪除
+PRIVATE FUNCTION aapt300_03_delete()
+   DEFINE li_idx          LIKE type_t.num10
+   DEFINE li_ac_t         LIKE type_t.num10
+   DEFINE li_detail_tmp   LIKE type_t.num10
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:delete段define
+   {<point name="delete.define" edit="s"/>}
+   #end add-point 
+   #add-point:delete段define(客製用)
+   {<point name="delete.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:單身刪除前
+   {<point name="delete.body.before_delete"/>}
+   #end add-point
+   
+   CALL s_transaction_begin()
+   
+   LET li_ac_t = l_ac
+   
+   LET li_detail_tmp = g_detail_idx
+    
+   #lock所有所選資料
+   FOR li_idx = 1 TO g_isam_d.getLength()
+      LET g_detail_idx = li_idx
+      #已選擇的資料
+      IF g_curr_diag.isRowSelected(g_curr_diag.getCurrentItem(), li_idx) THEN 
+         #確定是否有被鎖定
+         IF NOT aapt300_03_lock_b("isam_t") THEN
+            #已被他人鎖定
+            RETURN
+         END IF
+      END IF
+   END FOR
+   
+   #add-point:單身刪除詢問前
+   {<point name="delete.body.b_delete_ask"/>}
+   #end add-point  
+   
+   #詢問是否確定刪除所選資料
+   IF NOT cl_ask_del_detail() THEN
+      RETURN
+   END IF
+   
+   FOR li_idx = 1 TO g_isam_d.getLength()
+      IF g_isam_d[li_idx].isamdocno IS NOT NULL
+         AND g_isam_d[li_idx].isamseq IS NOT NULL
+ 
+         AND g_curr_diag.isRowSelected(g_curr_diag.getCurrentItem(), li_idx) THEN 
+         
+         #add-point:單身刪除前
+         {<point name="delete.body.b_delete" mark="Y"/>}
+         #end add-point   
+         
+         DELETE FROM isam_t
+          WHERE isament = g_enterprise AND 
+                isamdocno = g_isam_d[li_idx].isamdocno
+                AND isamseq = g_isam_d[li_idx].isamseq
+ 
+         #add-point:單身刪除中
+         {<point name="delete.body.m_delete"/>}
+         #end add-point  
+                
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "isam_t" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            RETURN
+         ELSE
+            LET g_detail_cnt = g_detail_cnt-1
+            LET l_ac = li_idx
+            
+ 
+            
+ 
+            #add-point:單身同步刪除前(同層table)
+            {<point name="delete.body.a_delete"/>}
+            #end add-point
+            LET g_detail_idx = li_idx
+                           INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_isam_d_t.isamdocno
+               LET gs_keys[2] = g_isam_d_t.isamseq
+ 
+            #add-point:單身同步刪除中(同層table)
+            {<point name="delete.body.a_delete2"/>}
+            #end add-point
+                           CALL aapt300_03_delete_b('isam_t',gs_keys,"'1'")
+            #add-point:單身同步刪除後(同層table)
+            {<point name="delete.body.a_delete3"/>}
+            #end add-point
+         END IF 
+      END IF 
+    
+   END FOR
+   
+   LET g_detail_idx = li_detail_tmp
+            
+   #add-point:單身刪除後
+   {<point name="delete.after"/>}
+   #end add-point  
+   
+   LET l_ac = li_ac_t
+   
+   #刷新資料
+   CALL aapt300_03_b_fill(g_wc2)
+            
+END FUNCTION
+]]>
+  </section>
+  <section id="aapt300_03.delete_b" ver="8" status="" src="s" readonly="">
+    <![CDATA[#+ 刪除單身後其他table連動
+PRIVATE FUNCTION aapt300_03_delete_b(ps_table,ps_keys_bak,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:delete_b段define
+   {<point name="delete_b.define" edit="s"/>}
+   #end add-point     
+   #add-point:delete_b段define(客製用)
+   {<point name="delete_b.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "isam_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      IF ps_table <> 'isam_t' THEN
+         #add-point:delete_b段刪除前
+         {<point name="delete_b.b_delete" mark="Y"/>}
+         #end add-point     
+         
+         DELETE FROM isam_t
+          WHERE isament = g_enterprise AND
+            isamdocno = ps_keys_bak[1] AND isamseq = ps_keys_bak[2]
+         
+         #add-point:delete_b段刪除中
+         {<point name="delete_b.m_delete"/>}
+         #end add-point  
+            
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = FALSE 
+            CALL cl_err()
+         END IF
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_isam_d.deleteElement(li_idx) 
+      END IF 
+ 
+      
+      #add-point:delete_b段刪除後
+      {<point name="delete_b.a_delete"/>}
+      #end add-point
+      
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aapt300_03.description" ver="4" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:6,PR版次:6) Build-000179
+#+ 
+#+ Filename...: aapt300_03
+#+ Description: 進項發票信息
+#+ Creator....: 01727(2014-02-10 15:23:54)
+#+ Modifier...: 05016(2015-02-04 13:52:41) -SD/PR-
+]]>
+  </section>
+  <section id="aapt300_03.detail_show" ver="8" status="" src="s" readonly="">
+    <![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION aapt300_03_detail_show()
+   #add-point:show段define
+   {<point name="detail_show.define" edit="s"/>}
+   #end add-point
+   #add-point:detail_show段define(客製用)
+   {<point name="detail_show.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值page1
+   #應用 a12 樣板自動產生(Version:3)
+ 
+ 
+    
+ 
+   
+   #讀入ref值
+   #add-point:show段單身reference
+   {<point name="detail_show.reference"/>}
+   #end add-point
+   
+ 
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="aapt300_03.global" ver="15" status="" src="s" readonly="">
+    <![CDATA[#應用 i02 樣板自動產生(Version:13)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_isam_d RECORD
+       isam001 LIKE isam_t.isam001, 
+   isamdocno LIKE isam_t.isamdocno, 
+   isamseq LIKE isam_t.isamseq, 
+   isam008 LIKE isam_t.isam008, 
+   isam037 LIKE isam_t.isam037, 
+   isam011 LIKE isam_t.isam011, 
+   isam010 LIKE isam_t.isam010, 
+   isam030 LIKE isam_t.isam030, 
+   isam009 LIKE isam_t.isam009, 
+   isam012 LIKE isam_t.isam012, 
+   isam012_desc_desc LIKE type_t.chr500, 
+   isam0121 LIKE isam_t.isam0121, 
+   isam013 LIKE isam_t.isam013, 
+   isam014 LIKE isam_t.isam014, 
+   isam015 LIKE isam_t.isam015, 
+   isam023 LIKE isam_t.isam023, 
+   isam024 LIKE isam_t.isam024, 
+   isam025 LIKE isam_t.isam025, 
+   isam026 LIKE isam_t.isam026, 
+   isam027 LIKE isam_t.isam027, 
+   isam028 LIKE isam_t.isam028, 
+   isamcomp LIKE isam_t.isamcomp, 
+   isamstus LIKE isam_t.isamstus, 
+   isam002 LIKE isam_t.isam002, 
+   isam004 LIKE isam_t.isam004, 
+   isam016 LIKE isam_t.isam016, 
+   isam017 LIKE isam_t.isam017, 
+   isam018 LIKE isam_t.isam018, 
+   isam019 LIKE isam_t.isam019, 
+   isam020 LIKE isam_t.isam020, 
+   isam021 LIKE isam_t.isam021, 
+   isam022 LIKE isam_t.isam022, 
+   isam029 LIKE isam_t.isam029, 
+   isam031 LIKE isam_t.isam031, 
+   isam032 LIKE isam_t.isam032, 
+   isam033 LIKE isam_t.isam033, 
+   isam034 LIKE isam_t.isam034, 
+   isam038 LIKE isam_t.isam038, 
+   isam039 LIKE isam_t.isam039
+       END RECORD
+ 
+ 
+ 
+#模組變數(Module Variables)
+DEFINE g_isam_d          DYNAMIC ARRAY OF type_g_isam_d #單身變數
+DEFINE g_isam_d_t        type_g_isam_d                  #單身備份
+DEFINE g_isam_d_o        type_g_isam_d                  #單身備份
+DEFINE g_isam_d_mask_o   DYNAMIC ARRAY OF type_g_isam_d #單身變數
+DEFINE g_isam_d_mask_n   DYNAMIC ARRAY OF type_g_isam_d #單身變數
+ 
+      
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_temp_idx           LIKE type_t.num10             #單身 所在筆數(暫存用)
+DEFINE g_detail_idx         LIKE type_t.num10             #單身 所在筆數(所有資料)
+DEFINE g_detail_cnt         LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_chk                BOOLEAN
+DEFINE g_aw                 STRING                        #確定當下點擊的單身
+DEFINE g_log1               STRING                        #log用
+DEFINE g_log2               STRING                        #log用
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="aapt300_03.init" ver="4" status="" src="s" readonly="">
+    <![CDATA[#+ 畫面資料初始化
+PRIVATE FUNCTION aapt300_03_init()
+   #add-point:init段define
+   {<point name="init.define" edit="s"/>}
+   #end add-point   
+   #add-point:init段define(客製用)
+   {<point name="init.define_customerization" edit="c"/>}
+   #end add-point
+   
+      CALL cl_set_combo_scc_part('isamstus','50','N,Y,X')
+ 
+   
+   LET g_error_show = 1
+   
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+   CALL aapt300_03_default_search()
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aapt300_03.insert" ver="6" status="" src="s" readonly="">
+    <![CDATA[#+ 資料新增
+PRIVATE FUNCTION aapt300_03_insert()
+   #add-point:delete段define
+   {<point name="insert.define" edit="s"/>}
+   #end add-point                
+   #add-point:insert段define(客製用)
+   {<point name="insert.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:單身新增前
+   {<point name="insert.b_insert"/>}
+   #end add-point
+   
+   LET g_insert = 'Y'
+   CALL aapt300_03_modify()
+            
+   #add-point:單身新增後
+   {<point name="insert.a_insert"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="aapt300_03.insert_b" ver="7" status="" src="s" readonly="">
+    <![CDATA[#+ 新增單身後其他table連動
+PRIVATE FUNCTION aapt300_03_insert_b(ps_table,ps_keys,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:insert_b段define
+   {<point name="insert_b.define" edit="s"/>}
+   #end add-point     
+   #add-point:insert_b段define(客製用)
+   {<point name="insert_b.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "isam_t,"
+   #IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      
+      #add-point:insert_b段新增前
+      {<point name="insert_b.b_insert" mark="Y"/>}
+      #end add-point    
+      INSERT INTO isam_t
+                  (isament,
+                   isamdocno,isamseq
+                   ,isam001,isam008,isam037,isam011,isam010,isam030,isam009,isam012,isam0121,isam013,isam014,isam015,isam023,isam024,isam025,isam026,isam027,isam028,isamcomp,isamstus,isam002,isam004,isam016,isam017,isam018,isam019,isam020,isam021,isam022,isam029,isam031,isam032,isam033,isam034,isam038,isam039) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2]
+                   ,g_isam_d[l_ac].isam001,g_isam_d[l_ac].isam008,g_isam_d[l_ac].isam037,g_isam_d[l_ac].isam011, 
+                       g_isam_d[l_ac].isam010,g_isam_d[l_ac].isam030,g_isam_d[l_ac].isam009,g_isam_d[l_ac].isam012, 
+                       g_isam_d[l_ac].isam0121,g_isam_d[l_ac].isam013,g_isam_d[l_ac].isam014,g_isam_d[l_ac].isam015, 
+                       g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025,g_isam_d[l_ac].isam026, 
+                       g_isam_d[l_ac].isam027,g_isam_d[l_ac].isam028,g_isam_d[l_ac].isamcomp,g_isam_d[l_ac].isamstus, 
+                       g_isam_d[l_ac].isam002,g_isam_d[l_ac].isam004,g_isam_d[l_ac].isam016,g_isam_d[l_ac].isam017, 
+                       g_isam_d[l_ac].isam018,g_isam_d[l_ac].isam019,g_isam_d[l_ac].isam020,g_isam_d[l_ac].isam021, 
+                       g_isam_d[l_ac].isam022,g_isam_d[l_ac].isam029,g_isam_d[l_ac].isam031,g_isam_d[l_ac].isam032, 
+                       g_isam_d[l_ac].isam033,g_isam_d[l_ac].isam034,g_isam_d[l_ac].isam038,g_isam_d[l_ac].isam039) 
+
+      #add-point:insert_b段新增中
+      {<point name="insert_b.m_insert"/>}
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "isam_t" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+      END IF
+      #add-point:insert_b段新增後
+      {<point name="insert_b.a_insert"/>}
+      #end add-point    
+   #END IF
+   
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aapt300_03.lock_b" ver="7" status="" src="s" readonly="">
+    <![CDATA[#+ 連動lock其他單身table資料
+PRIVATE FUNCTION aapt300_03_lock_b(ps_table)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:lock_b段define
+   {<point name="lock_b.define" edit="s"/>}
+   #end add-point   
+   #add-point:lock_b段define(客製用)
+   {<point name="lock_b.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #先刷新資料
+   #CALL aapt300_03_b_fill(g_wc2)
+   
+   #鎖定整組table
+   #LET ls_group = ""
+   #僅鎖定自身table
+   LET ls_group = "isam_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN aapt300_03_bcl USING g_enterprise,
+                                       g_isam_d[g_detail_idx].isamdocno,g_isam_d[g_detail_idx].isamseq 
+
+                                       
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "aapt300_03_bcl" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   
+   END IF
+                                    
+ 
+   
+   RETURN TRUE
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="aapt300_03.main" ver="10" status="" src="s" readonly="">
+    <![CDATA[#應用 a27 樣板自動產生(Version:4)
+#+ 作業開始(子程式類型)
+PUBLIC FUNCTION aapt300_03(--)
+   #add-point:main段變數傳入
+   {<point name="main.get_var"/>}
+   #end add-point
+   )
+   #add-point:main段define
+   {<point name="main.define" edit="s"/>}
+   #end add-point   
+   #add-point:main段define(客製用)
+   {<point name="main.define_customerization" edit="c"/>}
+   #end add-point   
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+ 
+   
+   #add-point:main段define_sql
+   {<point name="main.body.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = "SELECT isam001,isamdocno,isamseq,isam008,isam037,isam011,isam010,isam030,isam009, 
+       isam012,isam0121,isam013,isam014,isam015,isam023,isam024,isam025,isam026,isam027,isam028,isamcomp, 
+       isamstus,isam002,isam004,isam016,isam017,isam018,isam019,isam020,isam021,isam022,isam029,isam031, 
+       isam032,isam033,isam034,isam038,isam039 FROM isam_t WHERE isament=? AND isamdocno=? AND isamseq=?  
+       FOR UPDATE"
+   #add-point:main段define_sql
+   {<point name="main.body.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE aapt300_03_bcl CURSOR FROM g_forupd_sql
+ 
+ 
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aapt300_03 WITH FORM cl_ap_formpath("aap","aapt300_03")
+   
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   #程式初始化
+   CALL aapt300_03_init()   
+ 
+   #進入選單 Menu (="N")
+   CALL aapt300_03_ui_dialog() 
+ 
+   #畫面關閉
+   CLOSE WINDOW w_aapt300_03
+ 
+   
+   
+ 
+   #add-point:離開前
+   {<point name="main.exit" />}
+   #end add-point
+END FUNCTION
+ 
+ 
+]]>
+  </section>
+  <section id="aapt300_03.mask_functions" ver="1" status="" src="s" readonly="">
+    <![CDATA[&include "erp/aap/aapt300_03_mask.4gl"
+]]>
+  </section>
+  <section id="aapt300_03.modify" ver="26" status="" src="s" readonly="">
+    <![CDATA[#+ 資料修改
+PRIVATE FUNCTION aapt300_03_modify()
+   DEFINE  l_cmd                  LIKE type_t.chr1
+   DEFINE  l_ac_t                 LIKE type_t.num10               #未取消的ARRAY CNT 
+   DEFINE  l_n                    LIKE type_t.num10               #檢查重複用  
+   DEFINE  l_cnt                  LIKE type_t.num10               #檢查重複用  
+   DEFINE  l_lock_sw              LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert         LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete         LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count                LIKE type_t.num10
+   DEFINE  l_i                    LIKE type_t.num10
+   DEFINE  ls_return              STRING
+   DEFINE  l_var_keys             DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys           DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                 DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields               DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak         DYNAMIC ARRAY OF STRING
+   DEFINE  li_reproduce           LIKE type_t.num10
+   DEFINE  li_reproduce_target    LIKE type_t.num10
+   DEFINE  lb_reproduce           BOOLEAN
+   #add-point:modify段define
+   {<point name="modify.define" edit="s"/>}
+   #end add-point 
+   #add-point:modify段define(客製用)
+   {<point name="modify.define_customerization" edit="c"/>}
+   #end add-point
+   LET g_action_choice = ""
+   
+   LET g_qryparam.state = "i"
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #add-point:modify開始前
+   {<point name="modify.define_sql" mark="Y"/>}
+   #end add-point
+   
+   LET INT_FLAG = FALSE
+   LET lb_reproduce = FALSE
+ 
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+ 
+   #add-point:modify段修改前
+   {<point name="modify.before_input"/>}
+   #end add-point
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_isam_d FROM s_detail1_aapt300_03.*
+          ATTRIBUTE(COUNT = g_detail_cnt,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_isam_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL aapt300_03_b_fill(g_wc2)
+            LET g_detail_cnt = g_isam_d.getLength()
+         
+         BEFORE ROW
+            #add-point:modify段before row
+            {<point name="input.body.before_row2"/>}
+            #end add-point  
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1_aapt300_03")
+            LET l_cmd = ''
+            LET l_ac = g_detail_idx
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+            DISPLAY g_isam_d.getLength() TO FORMONLY.cnt
+         
+            CALL s_transaction_begin()
+            LET g_detail_cnt = g_isam_d.getLength()
+            
+            IF g_detail_cnt >= l_ac 
+               AND g_isam_d[l_ac].isamdocno IS NOT NULL
+               AND g_isam_d[l_ac].isamseq IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_isam_d_t.* = g_isam_d[l_ac].*  #BACKUP
+               LET g_isam_d_o.* = g_isam_d[l_ac].*  #BACKUP
+               IF NOT aapt300_03_lock_b("isam_t") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH aapt300_03_bcl INTO g_isam_d[l_ac].isam001,g_isam_d[l_ac].isamdocno,g_isam_d[l_ac].isamseq, 
+                      g_isam_d[l_ac].isam008,g_isam_d[l_ac].isam037,g_isam_d[l_ac].isam011,g_isam_d[l_ac].isam010, 
+                      g_isam_d[l_ac].isam030,g_isam_d[l_ac].isam009,g_isam_d[l_ac].isam012,g_isam_d[l_ac].isam0121, 
+                      g_isam_d[l_ac].isam013,g_isam_d[l_ac].isam014,g_isam_d[l_ac].isam015,g_isam_d[l_ac].isam023, 
+                      g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025,g_isam_d[l_ac].isam026,g_isam_d[l_ac].isam027, 
+                      g_isam_d[l_ac].isam028,g_isam_d[l_ac].isamcomp,g_isam_d[l_ac].isamstus,g_isam_d[l_ac].isam002, 
+                      g_isam_d[l_ac].isam004,g_isam_d[l_ac].isam016,g_isam_d[l_ac].isam017,g_isam_d[l_ac].isam018, 
+                      g_isam_d[l_ac].isam019,g_isam_d[l_ac].isam020,g_isam_d[l_ac].isam021,g_isam_d[l_ac].isam022, 
+                      g_isam_d[l_ac].isam029,g_isam_d[l_ac].isam031,g_isam_d[l_ac].isam032,g_isam_d[l_ac].isam033, 
+                      g_isam_d[l_ac].isam034,g_isam_d[l_ac].isam038,g_isam_d[l_ac].isam039
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = g_isam_d_t.isamdocno 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_isam_d_mask_o[l_ac].* =  g_isam_d[l_ac].*
+                  CALL aapt300_03_isam_t_mask()
+                  LET g_isam_d_mask_n[l_ac].* =  g_isam_d[l_ac].*
+                  
+                  CALL aapt300_03_detail_show()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row
+            {<point name="input.body.before_row"/>}
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+        
+         BEFORE INSERT
+            
+            CALL s_transaction_begin()
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_isam_d_t.* TO NULL
+            INITIALIZE g_isam_d_o.* TO NULL
+            INITIALIZE g_isam_d[l_ac].* TO NULL 
+            #公用欄位給值(單身)
+            #應用 a14 樣板自動產生(Version:4)    
+      #公用欄位新增給值  
+      LET g_isam_d[l_ac].isamstus = ''
+ 
+ 
+            #自定義預設值(單身1)
+                  LET g_isam_d[l_ac].isam037 = "1"
+ 
+            #add-point:modify段before備份
+            {<point name="input.body.before_bak"/>}
+            #end add-point
+            LET g_isam_d_t.* = g_isam_d[l_ac].*     #新輸入資料
+            LET g_isam_d_o.* = g_isam_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL aapt300_03_set_entry_b("a")
+            CALL aapt300_03_set_no_entry_b("a")
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_isam_d[li_reproduce_target].* = g_isam_d[li_reproduce].*
+ 
+               LET g_isam_d[g_isam_d.getLength()].isamdocno = NULL
+               LET g_isam_d[g_isam_d.getLength()].isamseq = NULL
+ 
+            END IF
+            
+            #add-point:modify段before insert
+            {<point name="input.body.before_insert"/>}
+            #end add-point  
+  
+         AFTER INSERT
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM isam_t 
+             WHERE isament = g_enterprise AND isamdocno = g_isam_d[l_ac].isamdocno
+                                       AND isamseq = g_isam_d[l_ac].isamseq
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前
+               {<point name="input.body.b_insert"/>}
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_isam_d[g_detail_idx].isamdocno
+               LET gs_keys[2] = g_isam_d[g_detail_idx].isamseq
+               CALL aapt300_03_insert_b('isam_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後
+               {<point name="input.body.a_insert"/>}
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code   = "std-00006" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               INITIALIZE g_isam_d[l_ac].* TO NULL
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "isam_t" 
+               LET g_errparam.code   = SQLCA.sqlcode 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL aapt300_03_b_fill(g_wc2)
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert
+               {<point name="input.body.a_insert2"/>}
+               #end add-point
+               ##ERROR 'INSERT O.K'
+               LET g_detail_cnt = g_detail_cnt + 1
+               
+               LET g_wc2 = g_wc2, " OR (isamdocno = '", g_isam_d[l_ac].isamdocno, "' "
+                                  ," AND isamseq = '", g_isam_d[l_ac].isamseq, "' "
+ 
+                                  ,")"
+            END IF                
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+            ELSE
+               #add-point:單身刪除ask前
+               {<point name="input.body.b_delete_ask"/>}
+               #end add-point   
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   = -263 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前
+               {<point name="input.body.b_delete" mark="Y"/>}
+               #end add-point   
+               
+               DELETE FROM isam_t
+                WHERE isament = g_enterprise AND 
+                      isamdocno = g_isam_d_t.isamdocno
+                      AND isamseq = g_isam_d_t.isamseq
+ 
+                      
+               #add-point:單身刪除中
+               {<point name="input.body.m_delete"/>}
+               #end add-point  
+                      
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "isam_t" 
+                  LET g_errparam.code   = SQLCA.sqlcode 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE   
+               ELSE
+                  LET g_detail_cnt = g_detail_cnt-1
+                  
+                  #add-point:單身刪除後
+                  {<point name="input.body.a_delete"/>}
+                  #end add-point
+                  #修改歷程記錄(刪除)
+                  CALL aapt300_03_set_pk_array()
+                  IF NOT cl_log_modified_record('','') THEN 
+                  ELSE
+                  END IF
+               END IF 
+               CLOSE aapt300_03_bcl
+               #add-point:單身關閉bcl
+               {<point name="input.body.close"/>}
+               #end add-point
+               LET l_count = g_isam_d.getLength()
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_isam_d_t.isamdocno
+               LET gs_keys[2] = g_isam_d_t.isamseq
+ 
+               #應用 a47 樣板自動產生(Version:2)
+      #刪除相關文件
+      CALL aapt300_03_set_pk_array()
+      #add-point:相關文件刪除前
+      {<point name="delete.befroe.related_document_remove"/>}
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+            END IF 
+              
+         AFTER DELETE 
+            IF l_cmd <> 'd' THEN
+               #add-point:單身刪除後2
+               {<point name="input.body.after_delete"/>}
+               #end add-point
+                              CALL aapt300_03_delete_b('isam_t',gs_keys,"'1'")
+            END IF
+            #如果是最後一筆
+            IF l_ac = (g_isam_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam001
+            #add-point:BEFORE FIELD isam001
+            {<point name="input.b.page1_aapt300_03.isam001" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam001
+            
+            #add-point:AFTER FIELD isam001
+            {<point name="input.a.page1_aapt300_03.isam001" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE isam001
+            #add-point:ON CHANGE isam001
+            {<point name="input.g.page1_aapt300_03.isam001" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isamdocno
+            #add-point:BEFORE FIELD isamdocno
+            {<point name="input.b.page1_aapt300_03.isamdocno" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isamdocno
+            
+            #add-point:AFTER FIELD isamdocno
+            {<point name="input.a.page1_aapt300_03.isamdocno" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE isamdocno
+            #add-point:ON CHANGE isamdocno
+            {<point name="input.g.page1_aapt300_03.isamdocno" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isamseq
+            #add-point:BEFORE FIELD isamseq
+            {<point name="input.b.page1_aapt300_03.isamseq" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isamseq
+            
+            #add-point:AFTER FIELD isamseq
+            {<point name="input.a.page1_aapt300_03.isamseq" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE isamseq
+            #add-point:ON CHANGE isamseq
+            {<point name="input.g.page1_aapt300_03.isamseq" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam008
+            #add-point:BEFORE FIELD isam008
+            {<point name="input.b.page1_aapt300_03.isam008" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam008
+            
+            #add-point:AFTER FIELD isam008
+            {<point name="input.a.page1_aapt300_03.isam008" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE isam008
+            #add-point:ON CHANGE isam008
+            {<point name="input.g.page1_aapt300_03.isam008" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam037
+            #add-point:BEFORE FIELD isam037
+            {<point name="input.b.page1_aapt300_03.isam037" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam037
+            
+            #add-point:AFTER FIELD isam037
+            {<point name="input.a.page1_aapt300_03.isam037" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE isam037
+            #add-point:ON CHANGE isam037
+            {<point name="input.g.page1_aapt300_03.isam037" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam011
+            #add-point:BEFORE FIELD isam011
+            {<point name="input.b.page1_aapt300_03.isam011" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam011
+            
+            #add-point:AFTER FIELD isam011
+            {<point name="input.a.page1_aapt300_03.isam011" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE isam011
+            #add-point:ON CHANGE isam011
+            {<point name="input.g.page1_aapt300_03.isam011" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam010
+            #add-point:BEFORE FIELD isam010
+            {<point name="input.b.page1_aapt300_03.isam010" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam010
+            
+            #add-point:AFTER FIELD isam010
+            {<point name="input.a.page1_aapt300_03.isam010" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE isam010
+            #add-point:ON CHANGE isam010
+            {<point name="input.g.page1_aapt300_03.isam010" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam030
+            #add-point:BEFORE FIELD isam030
+            {<point name="input.b.page1_aapt300_03.isam030" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam030
+            
+            #add-point:AFTER FIELD isam030
+            {<point name="input.a.page1_aapt300_03.isam030" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE isam030
+            #add-point:ON CHANGE isam030
+            {<point name="input.g.page1_aapt300_03.isam030" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam009
+            #add-point:BEFORE FIELD isam009
+            {<point name="input.b.page1_aapt300_03.isam009" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam009
+            
+            #add-point:AFTER FIELD isam009
+            {<point name="input.a.page1_aapt300_03.isam009" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE isam009
+            #add-point:ON CHANGE isam009
+            {<point name="input.g.page1_aapt300_03.isam009" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam012
+            #add-point:BEFORE FIELD isam012
+            {<point name="input.b.page1_aapt300_03.isam012" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam012
+            
+            #add-point:AFTER FIELD isam012
+            {<point name="input.a.page1_aapt300_03.isam012" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE isam012
+            #add-point:ON CHANGE isam012
+            {<point name="input.g.page1_aapt300_03.isam012" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam012_desc_desc
+            #add-point:BEFORE FIELD isam012_desc_desc
+            {<point name="input.b.page1_aapt300_03.isam012_desc_desc" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam012_desc_desc
+            
+            #add-point:AFTER FIELD isam012_desc_desc
+            {<point name="input.a.page1_aapt300_03.isam012_desc_desc" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE isam012_desc_desc
+            #add-point:ON CHANGE isam012_desc_desc
+            {<point name="input.g.page1_aapt300_03.isam012_desc_desc" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam0121
+            #add-point:BEFORE FIELD isam0121
+            {<point name="input.b.page1_aapt300_03.isam0121" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam0121
+            
+            #add-point:AFTER FIELD isam0121
+            {<point name="input.a.page1_aapt300_03.isam0121" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE isam0121
+            #add-point:ON CHANGE isam0121
+            {<point name="input.g.page1_aapt300_03.isam0121" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam013
+            #add-point:BEFORE FIELD isam013
+            {<point name="input.b.page1_aapt300_03.isam013" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam013
+            
+            #add-point:AFTER FIELD isam013
+            {<point name="input.a.page1_aapt300_03.isam013" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE isam013
+            #add-point:ON CHANGE isam013
+            {<point name="input.g.page1_aapt300_03.isam013" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam014
+            #add-point:BEFORE FIELD isam014
+            {<point name="input.b.page1_aapt300_03.isam014" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam014
+            
+            #add-point:AFTER FIELD isam014
+            {<point name="input.a.page1_aapt300_03.isam014" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE isam014
+            #add-point:ON CHANGE isam014
+            {<point name="input.g.page1_aapt300_03.isam014" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam015
+            #add-point:BEFORE FIELD isam015
+            {<point name="input.b.page1_aapt300_03.isam015" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam015
+            
+            #add-point:AFTER FIELD isam015
+            {<point name="input.a.page1_aapt300_03.isam015" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE isam015
+            #add-point:ON CHANGE isam015
+            {<point name="input.g.page1_aapt300_03.isam015" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam023
+            #add-point:BEFORE FIELD isam023
+            {<point name="input.b.page1_aapt300_03.isam023" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam023
+            
+            #add-point:AFTER FIELD isam023
+            {<point name="input.a.page1_aapt300_03.isam023" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE isam023
+            #add-point:ON CHANGE isam023
+            {<point name="input.g.page1_aapt300_03.isam023" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam024
+            #add-point:BEFORE FIELD isam024
+            {<point name="input.b.page1_aapt300_03.isam024" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam024
+            
+            #add-point:AFTER FIELD isam024
+            {<point name="input.a.page1_aapt300_03.isam024" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE isam024
+            #add-point:ON CHANGE isam024
+            {<point name="input.g.page1_aapt300_03.isam024" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam025
+            #add-point:BEFORE FIELD isam025
+            {<point name="input.b.page1_aapt300_03.isam025" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam025
+            
+            #add-point:AFTER FIELD isam025
+            {<point name="input.a.page1_aapt300_03.isam025" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE isam025
+            #add-point:ON CHANGE isam025
+            {<point name="input.g.page1_aapt300_03.isam025" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam026
+            #add-point:BEFORE FIELD isam026
+            {<point name="input.b.page1_aapt300_03.isam026" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam026
+            
+            #add-point:AFTER FIELD isam026
+            {<point name="input.a.page1_aapt300_03.isam026" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE isam026
+            #add-point:ON CHANGE isam026
+            {<point name="input.g.page1_aapt300_03.isam026" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam027
+            #add-point:BEFORE FIELD isam027
+            {<point name="input.b.page1_aapt300_03.isam027" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam027
+            
+            #add-point:AFTER FIELD isam027
+            {<point name="input.a.page1_aapt300_03.isam027" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE isam027
+            #add-point:ON CHANGE isam027
+            {<point name="input.g.page1_aapt300_03.isam027" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam028
+            #add-point:BEFORE FIELD isam028
+            {<point name="input.b.page1_aapt300_03.isam028" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam028
+            
+            #add-point:AFTER FIELD isam028
+            {<point name="input.a.page1_aapt300_03.isam028" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE isam028
+            #add-point:ON CHANGE isam028
+            {<point name="input.g.page1_aapt300_03.isam028" />}
+            #END add-point 
+ 
+ 
+                  #Ctrlp:input.c.page1_aapt300_03.isam001
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam001
+            #add-point:ON ACTION controlp INFIELD isam001
+            {<point name="input.c.page1_aapt300_03.isam001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aapt300_03.isamdocno
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isamdocno
+            #add-point:ON ACTION controlp INFIELD isamdocno
+            {<point name="input.c.page1_aapt300_03.isamdocno" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aapt300_03.isamseq
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isamseq
+            #add-point:ON ACTION controlp INFIELD isamseq
+            {<point name="input.c.page1_aapt300_03.isamseq" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aapt300_03.isam008
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam008
+            #add-point:ON ACTION controlp INFIELD isam008
+            {<point name="input.c.page1_aapt300_03.isam008" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aapt300_03.isam037
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam037
+            #add-point:ON ACTION controlp INFIELD isam037
+            {<point name="input.c.page1_aapt300_03.isam037" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aapt300_03.isam011
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam011
+            #add-point:ON ACTION controlp INFIELD isam011
+            {<point name="input.c.page1_aapt300_03.isam011" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aapt300_03.isam010
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam010
+            #add-point:ON ACTION controlp INFIELD isam010
+            {<point name="input.c.page1_aapt300_03.isam010" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aapt300_03.isam030
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam030
+            #add-point:ON ACTION controlp INFIELD isam030
+            {<point name="input.c.page1_aapt300_03.isam030" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aapt300_03.isam009
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam009
+            #add-point:ON ACTION controlp INFIELD isam009
+            {<point name="input.c.page1_aapt300_03.isam009" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aapt300_03.isam012
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam012
+            #add-point:ON ACTION controlp INFIELD isam012
+            {<point name="input.c.page1_aapt300_03.isam012" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aapt300_03.isam012_desc_desc
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam012_desc_desc
+            #add-point:ON ACTION controlp INFIELD isam012_desc_desc
+            {<point name="input.c.page1_aapt300_03.isam012_desc_desc" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aapt300_03.isam0121
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam0121
+            #add-point:ON ACTION controlp INFIELD isam0121
+            {<point name="input.c.page1_aapt300_03.isam0121" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aapt300_03.isam013
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam013
+            #add-point:ON ACTION controlp INFIELD isam013
+            {<point name="input.c.page1_aapt300_03.isam013" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aapt300_03.isam014
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam014
+            #add-point:ON ACTION controlp INFIELD isam014
+            {<point name="input.c.page1_aapt300_03.isam014" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aapt300_03.isam015
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam015
+            #add-point:ON ACTION controlp INFIELD isam015
+            {<point name="input.c.page1_aapt300_03.isam015" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aapt300_03.isam023
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam023
+            #add-point:ON ACTION controlp INFIELD isam023
+            {<point name="input.c.page1_aapt300_03.isam023" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aapt300_03.isam024
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam024
+            #add-point:ON ACTION controlp INFIELD isam024
+            {<point name="input.c.page1_aapt300_03.isam024" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aapt300_03.isam025
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam025
+            #add-point:ON ACTION controlp INFIELD isam025
+            {<point name="input.c.page1_aapt300_03.isam025" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aapt300_03.isam026
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam026
+            #add-point:ON ACTION controlp INFIELD isam026
+            {<point name="input.c.page1_aapt300_03.isam026" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aapt300_03.isam027
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam027
+            #add-point:ON ACTION controlp INFIELD isam027
+            {<point name="input.c.page1_aapt300_03.isam027" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aapt300_03.isam028
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam028
+            #add-point:ON ACTION controlp INFIELD isam028
+            {<point name="input.c.page1_aapt300_03.isam028" />}
+            #END add-point
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               LET g_isam_d[l_ac].* = g_isam_d_t.*
+               CLOSE aapt300_03_bcl
+               #add-point:單身取消時
+               {<point name="input.body.cancel"/>}
+               #end add-point
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = g_isam_d[l_ac].isamdocno 
+               LET g_errparam.code   = -263 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET g_isam_d[l_ac].* = g_isam_d_t.*
+            ELSE
+               #寫入修改者/修改日期資訊(單身)
+            
+               #add-point:單身修改前
+               {<point name="input.body.b_update" mark="Y"/>}
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL aapt300_03_isam_t_mask_restore('restore_mask_o')
+ 
+               UPDATE isam_t SET (isam001,isamdocno,isamseq,isam008,isam037,isam011,isam010,isam030, 
+                   isam009,isam012,isam0121,isam013,isam014,isam015,isam023,isam024,isam025,isam026, 
+                   isam027,isam028,isamcomp,isamstus,isam002,isam004,isam016,isam017,isam018,isam019, 
+                   isam020,isam021,isam022,isam029,isam031,isam032,isam033,isam034,isam038,isam039) = (g_isam_d[l_ac].isam001, 
+                   g_isam_d[l_ac].isamdocno,g_isam_d[l_ac].isamseq,g_isam_d[l_ac].isam008,g_isam_d[l_ac].isam037, 
+                   g_isam_d[l_ac].isam011,g_isam_d[l_ac].isam010,g_isam_d[l_ac].isam030,g_isam_d[l_ac].isam009, 
+                   g_isam_d[l_ac].isam012,g_isam_d[l_ac].isam0121,g_isam_d[l_ac].isam013,g_isam_d[l_ac].isam014, 
+                   g_isam_d[l_ac].isam015,g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025, 
+                   g_isam_d[l_ac].isam026,g_isam_d[l_ac].isam027,g_isam_d[l_ac].isam028,g_isam_d[l_ac].isamcomp, 
+                   g_isam_d[l_ac].isamstus,g_isam_d[l_ac].isam002,g_isam_d[l_ac].isam004,g_isam_d[l_ac].isam016, 
+                   g_isam_d[l_ac].isam017,g_isam_d[l_ac].isam018,g_isam_d[l_ac].isam019,g_isam_d[l_ac].isam020, 
+                   g_isam_d[l_ac].isam021,g_isam_d[l_ac].isam022,g_isam_d[l_ac].isam029,g_isam_d[l_ac].isam031, 
+                   g_isam_d[l_ac].isam032,g_isam_d[l_ac].isam033,g_isam_d[l_ac].isam034,g_isam_d[l_ac].isam038, 
+                   g_isam_d[l_ac].isam039)
+                WHERE isament = g_enterprise AND
+                  isamdocno = g_isam_d_t.isamdocno #項次   
+                  AND isamseq = g_isam_d_t.isamseq  
+ 
+                  
+               #add-point:單身修改中
+               {<point name="input.body.m_update"/>}
+               #end add-point
+                  
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "isam_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                    WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "isam_t" 
+                     LET g_errparam.code   = SQLCA.sqlcode 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_isam_d[g_detail_idx].isamdocno
+               LET gs_keys_bak[1] = g_isam_d_t.isamdocno
+               LET gs_keys[2] = g_isam_d[g_detail_idx].isamseq
+               LET gs_keys_bak[2] = g_isam_d_t.isamseq
+               CALL aapt300_03_update_b('isam_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                     
+                     #修改歷程記錄(修改)
+                     LET g_log1 = util.JSON.stringify(g_isam_d_t)
+                     LET g_log2 = util.JSON.stringify(g_isam_d[l_ac])
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                     END IF
+               END CASE
+               
+               #將遮罩欄位進行遮蔽
+               CALL aapt300_03_isam_t_mask_restore('restore_mask_n')
+               
+               #add-point:單身修改後
+               {<point name="input.body.a_update"/>}
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            CALL aapt300_03_unlock_b("isam_t")
+            #其他table進行unlock
+            
+             #add-point:單身after row
+            {<point name="input.body.a_row"/>}
+            #end add-point
+            
+         AFTER INPUT
+            #add-point:單身input後
+            {<point name="input.body.a_input"/>}
+            #end add-point
+            #錯誤訊息統整顯示
+            #CALL cl_err_collect_show()
+            #CALL cl_showmsg()
+            
+         ON ACTION controlo   
+            CALL FGL_SET_ARR_CURR(g_isam_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_isam_d.getLength()+1
+            
+      END INPUT
+      
+ 
+      
+ 
+      
+      #add-point:before_more_input
+      {<point name="input.more_input"/>}
+      #end add-point
+      
+      BEFORE DIALOG
+         #CALL cl_err_collect_init()      
+         IF g_temp_idx > 0 THEN
+            LET l_ac = g_temp_idx
+            CALL DIALOG.setCurrentRow("s_detail1_aapt300_03",l_ac)
+            LET g_temp_idx = 1
+         END IF
+         #LET g_curr_diag = ui.DIALOG.getCurrent()
+         #add-point:before_dialog
+         {<point name="input.before_dialog"/>}
+         #end add-point
+         CASE g_aw
+            WHEN "s_detail1_aapt300_03"
+               NEXT FIELD isam001
+ 
+         END CASE
+   
+      ON ACTION accept
+         ACCEPT DIALOG
+      
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         CANCEL DIALOG
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) 
+              RETURNING g_fld_name,g_frm_name 
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang) 
+           
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   
+   END DIALOG 
+    
+   #新增後取消
+   IF l_cmd = 'a' THEN
+      #當取消或無輸入資料按確定時刪除對應資料
+      IF INT_FLAG OR cl_null(g_isam_d[g_detail_idx].isamdocno) THEN
+         CALL g_isam_d.deleteElement(g_detail_idx)
+ 
+      END IF
+   END IF
+   
+   #修改後取消
+   IF l_cmd = 'u' AND INT_FLAG THEN
+      LET g_isam_d[g_detail_idx].* = g_isam_d_t.*
+   END IF
+   
+   #add-point:modify段修改後
+   {<point name="modify.after_input"/>}
+   #end add-point
+ 
+   CLOSE aapt300_03_bcl
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aapt300_03.modify_detail_chk" ver="6" status="" src="s" readonly="">
+    <![CDATA[#+ 單身輸入判定(因應modify_detail)
+PRIVATE FUNCTION aapt300_03_modify_detail_chk(ps_record)
+   DEFINE ps_record STRING
+   DEFINE ls_return STRING
+   #add-point:modify_detail_chk段define
+   {<point name="modify_detail_chk.define" edit="s"/>}
+   #end add-point
+   #add-point:modify_detail_chk段define(客製用)
+   {<point name="modify_detail_chk.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:modify_detail_chk段開始前
+   {<point name="modify_detail_chk.before"/>}
+   #end add-point
+   
+   #根據sr名稱確定該page第一個欄位的名稱
+   CASE ps_record
+      WHEN "s_detail1_aapt300_03" 
+         LET ls_return = "isam001"
+ 
+      #add-point:modify_detail_chk段自訂page控制
+      {<point name="modify_detail_chk.page_control"/>}
+      #end add-point
+   END CASE
+    
+   #add-point:modify_detail_chk段結束前
+   {<point name="modify_detail_chk.after"/>}
+   #end add-point
+   
+   RETURN ls_return
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aapt300_03.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="aapt300_03.other_function" ver="2" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="aapt300_03.query" ver="14" status="" src="s" readonly="">
+    <![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION aapt300_03_query()
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+   {<point name="query.define" edit="s"/>}
+   #end add-point 
+   #add-point:query段define(客製用)
+   {<point name="query.define_customerization" edit="c"/>}
+   #end add-point
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_isam_d.clear()
+   
+   LET g_qryparam.state = "c"
+   
+   #wc備份
+   LET ls_wc = g_wc2
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      CONSTRUCT g_wc2 ON isam001,isamdocno,isamseq,isam008,isam037,isam011,isam010,isam030,isam009,isam012, 
+          isam012_desc_desc,isam0121,isam013,isam014,isam015,isam023,isam024,isam025,isam026,isam027, 
+          isam028 
+ 
+         FROM s_detail1_aapt300_03[1].isam001,s_detail1_aapt300_03[1].isamdocno,s_detail1_aapt300_03[1].isamseq, 
+             s_detail1_aapt300_03[1].isam008,s_detail1_aapt300_03[1].isam037,s_detail1_aapt300_03[1].isam011, 
+             s_detail1_aapt300_03[1].isam010,s_detail1_aapt300_03[1].isam030,s_detail1_aapt300_03[1].isam009, 
+             s_detail1_aapt300_03[1].isam012,s_detail1_aapt300_03[1].isam012_desc_desc,s_detail1_aapt300_03[1].isam0121, 
+             s_detail1_aapt300_03[1].isam013,s_detail1_aapt300_03[1].isam014,s_detail1_aapt300_03[1].isam015, 
+             s_detail1_aapt300_03[1].isam023,s_detail1_aapt300_03[1].isam024,s_detail1_aapt300_03[1].isam025, 
+             s_detail1_aapt300_03[1].isam026,s_detail1_aapt300_03[1].isam027,s_detail1_aapt300_03[1].isam028  
+
+      
+         #應用 a11 樣板自動產生(Version:2)
+         #共用欄位查詢處理  
+         ##----<<isamcrtdt>>----
+ 
+         #----<<isammoddt>>----
+         
+         #----<<isamcnfdt>>----
+         
+         #----<<isampstdt>>----
+ 
+ 
+      
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam001
+            #add-point:BEFORE FIELD isam001
+            {<point name="query.b.page1_aapt300_03.isam001" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam001
+            
+            #add-point:AFTER FIELD isam001
+            {<point name="query.a.page1_aapt300_03.isam001" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1_aapt300_03.isam001
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam001
+            #add-point:ON ACTION controlp INFIELD isam001
+            {<point name="query.c.page1_aapt300_03.isam001" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isamdocno
+            #add-point:BEFORE FIELD isamdocno
+            {<point name="query.b.page1_aapt300_03.isamdocno" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isamdocno
+            
+            #add-point:AFTER FIELD isamdocno
+            {<point name="query.a.page1_aapt300_03.isamdocno" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1_aapt300_03.isamdocno
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isamdocno
+            #add-point:ON ACTION controlp INFIELD isamdocno
+            {<point name="query.c.page1_aapt300_03.isamdocno" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isamseq
+            #add-point:BEFORE FIELD isamseq
+            {<point name="query.b.page1_aapt300_03.isamseq" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isamseq
+            
+            #add-point:AFTER FIELD isamseq
+            {<point name="query.a.page1_aapt300_03.isamseq" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1_aapt300_03.isamseq
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isamseq
+            #add-point:ON ACTION controlp INFIELD isamseq
+            {<point name="query.c.page1_aapt300_03.isamseq" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.page1_aapt300_03.isam008
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam008
+            #add-point:ON ACTION controlp INFIELD isam008
+            {<point name="construct.c.page1_aapt300_03.isam008" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam008
+            #add-point:BEFORE FIELD isam008
+            {<point name="query.b.page1_aapt300_03.isam008" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam008
+            
+            #add-point:AFTER FIELD isam008
+            {<point name="query.a.page1_aapt300_03.isam008" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam037
+            #add-point:BEFORE FIELD isam037
+            {<point name="query.b.page1_aapt300_03.isam037" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam037
+            
+            #add-point:AFTER FIELD isam037
+            {<point name="query.a.page1_aapt300_03.isam037" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1_aapt300_03.isam037
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam037
+            #add-point:ON ACTION controlp INFIELD isam037
+            {<point name="query.c.page1_aapt300_03.isam037" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam011
+            #add-point:BEFORE FIELD isam011
+            {<point name="query.b.page1_aapt300_03.isam011" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam011
+            
+            #add-point:AFTER FIELD isam011
+            {<point name="query.a.page1_aapt300_03.isam011" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1_aapt300_03.isam011
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam011
+            #add-point:ON ACTION controlp INFIELD isam011
+            {<point name="query.c.page1_aapt300_03.isam011" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam010
+            #add-point:BEFORE FIELD isam010
+            {<point name="query.b.page1_aapt300_03.isam010" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam010
+            
+            #add-point:AFTER FIELD isam010
+            {<point name="query.a.page1_aapt300_03.isam010" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1_aapt300_03.isam010
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam010
+            #add-point:ON ACTION controlp INFIELD isam010
+            {<point name="query.c.page1_aapt300_03.isam010" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam030
+            #add-point:BEFORE FIELD isam030
+            {<point name="query.b.page1_aapt300_03.isam030" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam030
+            
+            #add-point:AFTER FIELD isam030
+            {<point name="query.a.page1_aapt300_03.isam030" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1_aapt300_03.isam030
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam030
+            #add-point:ON ACTION controlp INFIELD isam030
+            {<point name="query.c.page1_aapt300_03.isam030" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam009
+            #add-point:BEFORE FIELD isam009
+            {<point name="query.b.page1_aapt300_03.isam009" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam009
+            
+            #add-point:AFTER FIELD isam009
+            {<point name="query.a.page1_aapt300_03.isam009" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1_aapt300_03.isam009
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam009
+            #add-point:ON ACTION controlp INFIELD isam009
+            {<point name="query.c.page1_aapt300_03.isam009" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.page1_aapt300_03.isam012
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam012
+            #add-point:ON ACTION controlp INFIELD isam012
+            {<point name="construct.c.page1_aapt300_03.isam012" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam012
+            #add-point:BEFORE FIELD isam012
+            {<point name="query.b.page1_aapt300_03.isam012" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam012
+            
+            #add-point:AFTER FIELD isam012
+            {<point name="query.a.page1_aapt300_03.isam012" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam012_desc_desc
+            #add-point:BEFORE FIELD isam012_desc_desc
+            {<point name="query.b.page1_aapt300_03.isam012_desc_desc" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam012_desc_desc
+            
+            #add-point:AFTER FIELD isam012_desc_desc
+            {<point name="query.a.page1_aapt300_03.isam012_desc_desc" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1_aapt300_03.isam012_desc_desc
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam012_desc_desc
+            #add-point:ON ACTION controlp INFIELD isam012_desc_desc
+            {<point name="query.c.page1_aapt300_03.isam012_desc_desc" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam0121
+            #add-point:BEFORE FIELD isam0121
+            {<point name="query.b.page1_aapt300_03.isam0121" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam0121
+            
+            #add-point:AFTER FIELD isam0121
+            {<point name="query.a.page1_aapt300_03.isam0121" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1_aapt300_03.isam0121
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam0121
+            #add-point:ON ACTION controlp INFIELD isam0121
+            {<point name="query.c.page1_aapt300_03.isam0121" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam013
+            #add-point:BEFORE FIELD isam013
+            {<point name="query.b.page1_aapt300_03.isam013" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam013
+            
+            #add-point:AFTER FIELD isam013
+            {<point name="query.a.page1_aapt300_03.isam013" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1_aapt300_03.isam013
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam013
+            #add-point:ON ACTION controlp INFIELD isam013
+            {<point name="query.c.page1_aapt300_03.isam013" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.page1_aapt300_03.isam014
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam014
+            #add-point:ON ACTION controlp INFIELD isam014
+            {<point name="construct.c.page1_aapt300_03.isam014" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam014
+            #add-point:BEFORE FIELD isam014
+            {<point name="query.b.page1_aapt300_03.isam014" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam014
+            
+            #add-point:AFTER FIELD isam014
+            {<point name="query.a.page1_aapt300_03.isam014" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam015
+            #add-point:BEFORE FIELD isam015
+            {<point name="query.b.page1_aapt300_03.isam015" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam015
+            
+            #add-point:AFTER FIELD isam015
+            {<point name="query.a.page1_aapt300_03.isam015" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1_aapt300_03.isam015
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam015
+            #add-point:ON ACTION controlp INFIELD isam015
+            {<point name="query.c.page1_aapt300_03.isam015" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam023
+            #add-point:BEFORE FIELD isam023
+            {<point name="query.b.page1_aapt300_03.isam023" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam023
+            
+            #add-point:AFTER FIELD isam023
+            {<point name="query.a.page1_aapt300_03.isam023" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1_aapt300_03.isam023
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam023
+            #add-point:ON ACTION controlp INFIELD isam023
+            {<point name="query.c.page1_aapt300_03.isam023" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam024
+            #add-point:BEFORE FIELD isam024
+            {<point name="query.b.page1_aapt300_03.isam024" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam024
+            
+            #add-point:AFTER FIELD isam024
+            {<point name="query.a.page1_aapt300_03.isam024" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1_aapt300_03.isam024
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam024
+            #add-point:ON ACTION controlp INFIELD isam024
+            {<point name="query.c.page1_aapt300_03.isam024" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam025
+            #add-point:BEFORE FIELD isam025
+            {<point name="query.b.page1_aapt300_03.isam025" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam025
+            
+            #add-point:AFTER FIELD isam025
+            {<point name="query.a.page1_aapt300_03.isam025" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1_aapt300_03.isam025
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam025
+            #add-point:ON ACTION controlp INFIELD isam025
+            {<point name="query.c.page1_aapt300_03.isam025" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam026
+            #add-point:BEFORE FIELD isam026
+            {<point name="query.b.page1_aapt300_03.isam026" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam026
+            
+            #add-point:AFTER FIELD isam026
+            {<point name="query.a.page1_aapt300_03.isam026" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1_aapt300_03.isam026
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam026
+            #add-point:ON ACTION controlp INFIELD isam026
+            {<point name="query.c.page1_aapt300_03.isam026" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam027
+            #add-point:BEFORE FIELD isam027
+            {<point name="query.b.page1_aapt300_03.isam027" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam027
+            
+            #add-point:AFTER FIELD isam027
+            {<point name="query.a.page1_aapt300_03.isam027" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1_aapt300_03.isam027
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam027
+            #add-point:ON ACTION controlp INFIELD isam027
+            {<point name="query.c.page1_aapt300_03.isam027" />}
+            #END add-point
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD isam028
+            #add-point:BEFORE FIELD isam028
+            {<point name="query.b.page1_aapt300_03.isam028" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD isam028
+            
+            #add-point:AFTER FIELD isam028
+            {<point name="query.a.page1_aapt300_03.isam028" />}
+            #END add-point
+            
+ 
+         #Ctrlp:query.c.page1_aapt300_03.isam028
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD isam028
+            #add-point:ON ACTION controlp INFIELD isam028
+            {<point name="query.c.page1_aapt300_03.isam028" />}
+            #END add-point
+ 
+  
+         
+ 
+      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct
+            {<point name="cs.before_construct"/>}
+            #end add-point 
+      
+      END CONSTRUCT
+  
+      #add-point:query段more_construct
+      {<point name="query.more_construct"/>}
+      #end add-point 
+  
+      BEFORE DIALOG 
+         CALL cl_qbe_init()
+         #add-point:query段before_dialog
+         {<point name="query.before_dialog"/>}
+         #end add-point 
+      
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+      
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         CANCEL DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+      CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:query段after_construct
+   {<point name="query.after_construct"/>}
+   #end add-point
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc2 = ls_wc
+   ELSE
+      LET g_error_show = 1
+      LET g_detail_idx = 1
+   END IF
+    
+   CALL aapt300_03_b_fill(g_wc2)
+   
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   END IF
+   
+   LET INT_FLAG = FALSE
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aapt300_03.set_entry_b" ver="4" status="" src="s" readonly="">
+    <![CDATA[#+ 單身欄位開啟設定
+PRIVATE FUNCTION aapt300_03_set_entry_b(p_cmd)                                                  
+   DEFINE p_cmd   LIKE type_t.chr1         
+   #add-point:set_entry_b段define
+   {<point name="set_entry_b.define" edit="s"/>}
+   #end add-point     
+   #add-point:set_entry_b段define(客製用)
+   {<point name="set_entry_b.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:set_entry_b段control
+   {<point name="set_entry_b.set_entry_b"/>}
+   #end add-point                                                                   
+                                                                                
+END FUNCTION                                                                    
+]]>
+  </section>
+  <section id="aapt300_03.set_no_entry_b" ver="4" status="" src="s" readonly="">
+    <![CDATA[#+ 單身欄位關閉設定
+PRIVATE FUNCTION aapt300_03_set_no_entry_b(p_cmd)                                               
+   DEFINE p_cmd   LIKE type_t.chr1           
+   #add-point:set_no_entry_b段define
+   {<point name="set_no_entry_b.define" edit="s"/>}
+   #end add-point
+   #add-point:set_no_entry_b段define(客製用)
+   {<point name="set_no_entry_b.define_customerization" edit="c"/>}
+   #end add-point   
+ 
+   #add-point:set_no_entry_b段control
+   {<point name="set_no_entry_b.set_no_entry_b"/>}
+   #end add-point       
+                                                                                
+END FUNCTION  
+]]>
+  </section>
+  <section id="aapt300_03.set_pk_array" ver="6" status="" src="s" readonly="">
+    <![CDATA[   #應用 a51 樣板自動產生(Version:5)
+#+ 給予pk_array內容
+PRIVATE FUNCTION aapt300_03_set_pk_array()
+   #add-point:set_pk_array段define
+   {<point name="set_pk_array.define" edit="s"/>}
+   #end add-point
+   #add-point:set_pk_array段define
+   {<point name="set_pk_array.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:set_pk_array段之前
+   {<point name="set_pk_array.before"/>}
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_isam_d[l_ac].isamdocno
+   LET g_pk_array[1].column = 'isamdocno'
+   LET g_pk_array[2].values = g_isam_d[l_ac].isamseq
+   LET g_pk_array[2].column = 'isamseq'
+   
+   #add-point:set_pk_array段之後
+   {<point name="set_pk_array.after"/>}
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+]]>
+  </section>
+  <section id="aapt300_03.state_change" ver="1" status="" src="s" readonly="">
+    <![CDATA[   
+]]>
+  </section>
+  <section id="aapt300_03.ui_dialog" ver="18" status="" src="s" readonly="">
+    <![CDATA[#+ 功能選單 
+PRIVATE FUNCTION aapt300_03_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE la_param  RECORD #串查用
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define" edit="s"/>}
+   #end add-point 
+   #add-point:ui_dialog段define(客製用)
+   {<point name="ui_dialog.define_customerization" edit="c"/>}
+   #end add-point
+   
+   LET g_action_choice = " "  
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()      
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   
+   LET g_detail_idx = 1
+   
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_isam_d.clear()
+ 
+         LET g_wc2 = ' 1=2'
+         LET g_action_choice = ""
+         CALL aapt300_03_init()
+      END IF
+   
+      CALL aapt300_03_b_fill(g_wc2)
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_isam_d TO s_detail1_aapt300_03.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               #add-point:ui_dialog段before display 
+               {<point name="ui_dialog.body.before_display" mark="Y"/>}
+               #end add-point
+               #讓各頁籤能夠同步指到特定資料
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               #add-point:ui_dialog段before display2
+               {<point name="ui_dialog.body.before_display2"/>}
+               #end add-point
+               
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1_aapt300_03")
+               LET l_ac = g_detail_idx
+               LET g_temp_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont() 
+               #顯示followup圖示
+               #應用 a48 樣板自動產生(Version:2)
+   CALL aapt300_03_set_pk_array()
+   #add-point:ON ACTION agendum
+   {<point name="show.follow_pic"/>}
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+               #add-point:display array-before row
+               {<point name="ui_dialog.before_row"/>}
+               #end add-point
+         
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY
+      
+ 
+      
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+    
+         BEFORE DIALOG
+            IF g_temp_idx > 0 THEN
+               LET l_ac = g_temp_idx
+               CALL DIALOG.setCurrentRow("s_detail1_aapt300_03",l_ac)
+               LET g_temp_idx = 1
+            END IF
+            LET g_curr_diag = ui.DIALOG.getCurrent()         
+            CALL DIALOG.setSelectionMode("s_detail1_aapt300_03", 1)
+ 
+            #add-point:ui_dialog段before
+            {<point name="ui_dialog.b_dialog"/>}
+            #end add-point
+            NEXT FIELD CURRENT
+      
+         
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL aapt300_03_modify()
+               #add-point:ON ACTION modify
+               {<point name="menu.modify" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = g_curr_diag.getCurrentItem()
+               CALL aapt300_03_modify()
+               #add-point:ON ACTION modify_detail
+               {<point name="menu.modify_detail" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL aapt300_03_delete()
+               #add-point:ON ACTION delete
+               {<point name="menu.delete" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL aapt300_03_insert()
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL aapt300_03_query()
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+               #應用 a59 樣板自動產生(Version:2)  
+               CALL g_curr_diag.setCurrentRow("s_detail1_aapt300_03",1)
+ 
+ 
+ 
+            END IF
+ 
+ 
+ 
+      
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_isam_d)
+               LET g_export_id[1]   = "s_detail1_aapt300_03"
+ 
+               #add-point:ON ACTION exporttoexcel
+               {<point name="menu.exporttoexcel" />}
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+            
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice="exit"
+            CANCEL DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            CANCEL DIALOG
+            
+         
+         
+         #應用 a46 樣板自動產生(Version:2)
+         #新增相關文件
+         ON ACTION related_document
+            CALL aapt300_03_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document
+               {<point name="ui_dialog.dialog.related_document"/>}
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL aapt300_03_set_pk_array()
+            #add-point:ON ACTION agendum
+            {<point name="ui_dialog.dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL aapt300_03_set_pk_array()
+            #add-point:ON ACTION followup
+            {<point name="ui_dialog.dialog.followup"/>}
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+         
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #add-point:ui_dialog段離開dialog前
+         {<point name="ui_dialog.b_exit"/>}
+         #end add-point
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="aapt300_03.unlock_b" ver="4" status="" src="s" readonly="">
+    <![CDATA[#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION aapt300_03_unlock_b(ps_table)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:unlock_b段define
+   {<point name="unlock_b.define" edit="s"/>}
+   #end add-point  
+   #add-point:unlock_b段define(客製用)
+   {<point name="unlock_b.define_customerization" edit="c"/>}
+   #end add-point
+   
+   LET ls_group = ""
+   
+   #IF ls_group.getIndexOf(ps_table,1) THEN
+      CLOSE aapt300_03_bcl
+   #END IF
+   
+ 
+   
+   #add-point:unlock_b段結束前
+   {<point name="unlock_b.after"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="aapt300_03.update_b" ver="9" status="" src="s" readonly="">
+    <![CDATA[#+ 修改單身後其他table連動
+PRIVATE FUNCTION aapt300_03_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   DEFINE ps_page          STRING
+   DEFINE ps_table         STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num10
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define
+   {<point name="update_b.define" edit="s"/>}
+   #end add-point     
+   #add-point:update_b段define(客製用)
+   {<point name="update_b.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #比對新舊值, 判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #若key無變動, 不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+    
+   #若key有變動, 則連動其他table的資料   
+   #判斷是否是同一群組的table
+   LET ls_group = "isam_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 AND ps_table <> "isam_t" THEN
+      #add-point:update_b段修改前
+      {<point name="update_b.b_update" mark="Y"/>}
+      #end add-point     
+      UPDATE isam_t 
+         SET (isamdocno,isamseq
+              ,isam001,isam008,isam037,isam011,isam010,isam030,isam009,isam012,isam0121,isam013,isam014,isam015,isam023,isam024,isam025,isam026,isam027,isam028,isamcomp,isamstus,isam002,isam004,isam016,isam017,isam018,isam019,isam020,isam021,isam022,isam029,isam031,isam032,isam033,isam034,isam038,isam039) 
+              = 
+             (ps_keys[1],ps_keys[2]
+              ,g_isam_d[l_ac].isam001,g_isam_d[l_ac].isam008,g_isam_d[l_ac].isam037,g_isam_d[l_ac].isam011, 
+                  g_isam_d[l_ac].isam010,g_isam_d[l_ac].isam030,g_isam_d[l_ac].isam009,g_isam_d[l_ac].isam012, 
+                  g_isam_d[l_ac].isam0121,g_isam_d[l_ac].isam013,g_isam_d[l_ac].isam014,g_isam_d[l_ac].isam015, 
+                  g_isam_d[l_ac].isam023,g_isam_d[l_ac].isam024,g_isam_d[l_ac].isam025,g_isam_d[l_ac].isam026, 
+                  g_isam_d[l_ac].isam027,g_isam_d[l_ac].isam028,g_isam_d[l_ac].isamcomp,g_isam_d[l_ac].isamstus, 
+                  g_isam_d[l_ac].isam002,g_isam_d[l_ac].isam004,g_isam_d[l_ac].isam016,g_isam_d[l_ac].isam017, 
+                  g_isam_d[l_ac].isam018,g_isam_d[l_ac].isam019,g_isam_d[l_ac].isam020,g_isam_d[l_ac].isam021, 
+                  g_isam_d[l_ac].isam022,g_isam_d[l_ac].isam029,g_isam_d[l_ac].isam031,g_isam_d[l_ac].isam032, 
+                  g_isam_d[l_ac].isam033,g_isam_d[l_ac].isam034,g_isam_d[l_ac].isam038,g_isam_d[l_ac].isam039)  
+
+         WHERE isamdocno = ps_keys_bak[1] AND isamseq = ps_keys_bak[2]
+      #add-point:update_b段修改中
+      {<point name="update_b.m_update"/>}
+      #end add-point 
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "isam_t" 
+            LET g_errparam.code   = "std-00009" 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "isam_t" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         OTHERWISE
+            
+      END CASE
+      #add-point:update_b段修改後
+      {<point name="update_b.a_update"/>}
+      #end add-point 
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+]]>
+  </section>
+</add_points>

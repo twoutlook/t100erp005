@@ -1,0 +1,114 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi551" module="azz" jobmode="N" type="i05" industry="std" fix_arg="0" crtid="01101" crtdt="2016-02-17 11:15:27" modid="01101" moddt="2016-06-27 15:27:04" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="知識庫索引維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzth004,gzth002,gzth001,gzth001_desc(chr80),gzthl004,gzth007,gzth003,gzth005,gzth006,gzthstus,gzthownid,gzthownid_desc(chr80),gzthowndp,gzthowndp_desc(chr80),gzthcrtid,gzthcrtid_desc(chr80),gzthcrtdp,gzthcrtdp_desc(chr80),gzthcrtdt,gzthmodid,gzthmodid_desc(chr80),gzthmoddt"/>
+      <var id="bs_field" value="gzth005,gzthstus,gzth004,img(chr80),gzth001,gzth001_desc(chr80),gzth001_desc_3(chr80),gzth001_desc_4(chr80),gzth002" pk="gzth001,gzth002" order=""/>
+      <bs_reference field="gzth001_desc" ref_field="gzth001,gzth002" ref_sql="SELECT gzthl004 FROM gzthl_t WHERE gzthl001=? AND gzthl002=? AND gzthl003=$varg_lang$var"/>
+      <bs_reference field="gzth001_desc_3" ref_field="gzth001" ref_sql="SELECT gztel003 FROM gztel_t WHERE gztel001=? AND gztel002=$varg_lang$var"/>
+      <bs_reference field="gzth001_desc_4" ref_field="gzth001" ref_sql="SELECT gztel003 FROM gztel_t WHERE gztel001=? AND gztel002=$varg_lang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="add_appdoc"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+      <action id="mainimg_del"/>
+      <action id="mainimg_ins"/>
+      <action id="icon_upload"/>
+      <action id="icon_del"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi551" method="dialog">
+    <section id="input">
+      <input id="head" field="gzth004,gzth002,gzth001,gzthl004,gzth007,gzth003,gzth005,gzth006,gzthstus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzth004,gzth002,gzth001,gzthl004,gzth007,gzth003,gzth005,gzth006,gzthstus,gzthownid,gzthowndp,gzthcrtid,gzthcrtdp,gzthcrtdt,gzthmodid,gzthmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzth001,gzth002"/>
+      <set id="head" type="no_entry" field="gzth001,gzth002"/>
+    </init>
+    <init id="head">
+      <column id="gzth004" def_scc="216"/>
+      <column id="gzth002">
+        <controlp form="q_gzth001" state="i"/>
+        <controlp form="q_gzth001" state="c"/>
+      </column>
+      <column id="gzth001">
+        <after>
+          <reference field="gzth001_desc" ref_field="gzth_t.gzth001" map_field="gzth001" ref_sql="SELECT gzzol003 FROM gzzol_t WHERE gzzol001=? AND gzzol002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzth001" state="i"/>
+        <controlp form="q_gzth001" state="c"/>
+      </column>
+      <column id="gzth001_desc"/>
+      <column id="gzthl004"/>
+      <column id="gzth007"/>
+      <column id="gzth003"/>
+      <column id="gzth005" type="S" default="0"/>
+      <column id="gzth006"/>
+      <column id="gzthstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="gzthownid">
+        <after>
+          <reference field="gzthownid_desc" ref_field="gzth_t.gzthownid" map_field="gzthownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzthownid_desc"/>
+      <column id="gzthowndp">
+        <after>
+          <reference field="gzthowndp_desc" ref_field="gzth_t.gzthowndp" map_field="gzthowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzthowndp_desc"/>
+      <column id="gzthcrtid">
+        <after>
+          <reference field="gzthcrtid_desc" ref_field="gzth_t.gzthcrtid" map_field="gzthcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzthcrtid_desc"/>
+      <column id="gzthcrtdp">
+        <after>
+          <reference field="gzthcrtdp_desc" ref_field="gzth_t.gzthcrtdp" map_field="gzthcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzthcrtdp_desc"/>
+      <column id="gzthcrtdt"/>
+      <column id="gzthmodid">
+        <after>
+          <reference field="gzthmodid_desc" ref_field="gzth_t.gzthmodid" map_field="gzthmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzthmodid_desc"/>
+      <column id="gzthmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzth_t" lid="gzth001" pid="gzth002" type="" desc="" speed="gzths_t" stype="" slid="gzths001" spid="gzths002" pk="gzth001,gzth002">
+      <sql id="forupd_sql" type="sql" query="SELECT gzth004,gzth002,gzth001,&apos;&apos;,&apos;&apos;,gzth007,gzth003,gzth005,gzth006,gzthstus,gzthownid,&apos;&apos;,gzthowndp,&apos;&apos;,gzthcrtid,&apos;&apos;,gzthcrtdp,&apos;&apos;,gzthcrtdt,gzthmodid,&apos;&apos;,gzthmoddt FROM gzth_t WHERE gzth001=? AND gzth002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzth004,gzth002,gzth001,&apos;&apos;,&apos;&apos;,gzth007,gzth003,gzth005,gzth006,gzthstus,gzthownid,&apos;&apos;,gzthowndp,&apos;&apos;,gzthcrtid,&apos;&apos;,gzthcrtdp,&apos;&apos;,gzthcrtdt,gzthmodid,&apos;&apos;,gzthmoddt FROM gzth_t" order="gzth001,gzth002"/>
+      <sql id="append" type="lang" target="gzthl_t.gzthl004" table="gzthl_t" fk="gzth001,gzth002" pk="gzthl001,gzthl002,gzthl003" field="gzthl004"/>
+    </head>
+  </dataset>
+</assembly>
+

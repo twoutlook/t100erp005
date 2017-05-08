@@ -1,0 +1,2166 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axmt410_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2014-10-15 11:48:48), PR版次:0003(2016-10-28 17:06:07)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000096
+#+ Filename...: axmt410_02
+#+ Description: 依報價範本產身單身子作業
+#+ Creator....: 03079(2014-07-01 17:50:22)
+#+ Modifier...: 03079 -SD/PR- 07423
+ 
+{</section>}
+ 
+{<section id="axmt410_02.global" >}
+#應用 c02b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#160318-00025#41  2016/04/25  By pengxin  將重複內容的錯誤訊息置換為公用錯誤訊息(r.v)
+#161026-00033#1   2016/10/28  By fionchen 調整品名規格無顯示問題
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_xmfc_d        RECORD
+       sel LIKE type_t.chr1, 
+   xmfcdocno LIKE xmfc_t.xmfcdocno, 
+   xmfc001 LIKE xmfc_t.xmfc001, 
+   xmfc002 LIKE xmfc_t.xmfc002, 
+   xmfc003 LIKE xmfc_t.xmfc003, 
+   xmfc004 LIKE xmfc_t.xmfc004, 
+   xmfc004_desc LIKE type_t.chr500, 
+   xmfc004_desc_desc LIKE type_t.chr500, 
+   xmfc005 LIKE xmfc_t.xmfc005, 
+   xmfc005_desc LIKE type_t.chr500, 
+   xmfc007 LIKE xmfc_t.xmfc007, 
+   xmfc006 LIKE xmfc_t.xmfc006, 
+   xmfc008 LIKE xmfc_t.xmfc008, 
+   xmfcsite LIKE xmfc_t.xmfcsite
+       END RECORD
+PRIVATE TYPE type_g_xmfc2_d RECORD
+       xmfb0031 LIKE type_t.chr10, 
+   xmfb0031_desc LIKE type_t.chr500, 
+   xmfc0021 LIKE type_t.num10, 
+   xmfc0031 LIKE type_t.num10, 
+   xmfc0041 LIKE type_t.chr500, 
+   xmfc0041_desc LIKE type_t.chr500, 
+   xmfc0041_desc_desc LIKE type_t.chr500, 
+   xmfc0051 LIKE type_t.chr500, 
+   xmfc0051_desc LIKE type_t.chr500, 
+   xmfc0071 LIKE type_t.chr10, 
+   xmfc0061 LIKE type_t.num20_6, 
+   xmfc0081 LIKE type_t.chr500
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE l_ac1                 LIKE type_t.num5 
+DEFINE l_ac2                 LIKE type_t.num5 
+DEFINE g_rec_b1              LIKE type_t.num5 
+DEFINE g_rec_b2              LIKE type_t.num5 
+#end add-point
+ 
+DEFINE g_xmfc_d          DYNAMIC ARRAY OF type_g_xmfc_d
+DEFINE g_xmfc_d_t        type_g_xmfc_d
+DEFINE g_xmfc2_d   DYNAMIC ARRAY OF type_g_xmfc2_d
+DEFINE g_xmfc2_d_t type_g_xmfc2_d
+ 
+ 
+DEFINE g_xmfcdocno_t   LIKE xmfc_t.xmfcdocno    #Key值備份
+DEFINE g_xmfc001_t      LIKE xmfc_t.xmfc001    #Key值備份
+DEFINE g_xmfc002_t      LIKE xmfc_t.xmfc002    #Key值備份
+DEFINE g_xmfc003_t      LIKE xmfc_t.xmfc003    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+    
+#add-point:傳入參數說明(global.argv)
+
+#end add-point    
+ 
+{</section>}
+ 
+{<section id="axmt410_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axmt410_02(--)
+   #add-point:input段變數傳入
+   
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axmt410_02 WITH FORM cl_ap_formpath("axm","axmt410_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_xmfc_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD sel
+            #add-point:BEFORE FIELD sel name="input.b.page1.sel"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD sel
+            
+            #add-point:AFTER FIELD sel name="input.a.page1.sel"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE sel
+            #add-point:ON CHANGE sel name="input.g.page1.sel"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfcdocno
+            #add-point:BEFORE FIELD xmfcdocno name="input.b.page1.xmfcdocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfcdocno
+            
+            #add-point:AFTER FIELD xmfcdocno name="input.a.page1.xmfcdocno"
+            #此段落由子樣板a05產生
+            IF  g_xmfc_d[g_detail_idx].xmfcdocno IS NOT NULL AND g_xmfc_d[g_detail_idx].xmfc001 IS NOT NULL AND g_xmfc_d[g_detail_idx].xmfc002 IS NOT NULL AND g_xmfc_d[g_detail_idx].xmfc003 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmfc_d[g_detail_idx].xmfcdocno != g_xmfc_d_t.xmfcdocno OR g_xmfc_d[g_detail_idx].xmfc001 != g_xmfc_d_t.xmfc001 OR g_xmfc_d[g_detail_idx].xmfc002 != g_xmfc_d_t.xmfc002 OR g_xmfc_d[g_detail_idx].xmfc003 != g_xmfc_d_t.xmfc003)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmfc_t WHERE "||"xmfcent = '" ||g_enterprise|| "' AND "||"xmfcdocno = '"||g_xmfc_d[g_detail_idx].xmfcdocno ||"' AND "|| "xmfc001 = '"||g_xmfc_d[g_detail_idx].xmfc001 ||"' AND "|| "xmfc002 = '"||g_xmfc_d[g_detail_idx].xmfc002 ||"' AND "|| "xmfc003 = '"||g_xmfc_d[g_detail_idx].xmfc003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfcdocno
+            #add-point:ON CHANGE xmfcdocno name="input.g.page1.xmfcdocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfc001
+            #add-point:BEFORE FIELD xmfc001 name="input.b.page1.xmfc001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfc001
+            
+            #add-point:AFTER FIELD xmfc001 name="input.a.page1.xmfc001"
+            #此段落由子樣板a05產生
+            IF  g_xmfc_d[g_detail_idx].xmfcdocno IS NOT NULL AND g_xmfc_d[g_detail_idx].xmfc001 IS NOT NULL AND g_xmfc_d[g_detail_idx].xmfc002 IS NOT NULL AND g_xmfc_d[g_detail_idx].xmfc003 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmfc_d[g_detail_idx].xmfcdocno != g_xmfc_d_t.xmfcdocno OR g_xmfc_d[g_detail_idx].xmfc001 != g_xmfc_d_t.xmfc001 OR g_xmfc_d[g_detail_idx].xmfc002 != g_xmfc_d_t.xmfc002 OR g_xmfc_d[g_detail_idx].xmfc003 != g_xmfc_d_t.xmfc003)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmfc_t WHERE "||"xmfcent = '" ||g_enterprise|| "' AND "||"xmfcdocno = '"||g_xmfc_d[g_detail_idx].xmfcdocno ||"' AND "|| "xmfc001 = '"||g_xmfc_d[g_detail_idx].xmfc001 ||"' AND "|| "xmfc002 = '"||g_xmfc_d[g_detail_idx].xmfc002 ||"' AND "|| "xmfc003 = '"||g_xmfc_d[g_detail_idx].xmfc003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfc001
+            #add-point:ON CHANGE xmfc001 name="input.g.page1.xmfc001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfc002
+            #add-point:BEFORE FIELD xmfc002 name="input.b.page1.xmfc002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfc002
+            
+            #add-point:AFTER FIELD xmfc002 name="input.a.page1.xmfc002"
+            #此段落由子樣板a05產生
+            IF  g_xmfc_d[g_detail_idx].xmfcdocno IS NOT NULL AND g_xmfc_d[g_detail_idx].xmfc001 IS NOT NULL AND g_xmfc_d[g_detail_idx].xmfc002 IS NOT NULL AND g_xmfc_d[g_detail_idx].xmfc003 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmfc_d[g_detail_idx].xmfcdocno != g_xmfc_d_t.xmfcdocno OR g_xmfc_d[g_detail_idx].xmfc001 != g_xmfc_d_t.xmfc001 OR g_xmfc_d[g_detail_idx].xmfc002 != g_xmfc_d_t.xmfc002 OR g_xmfc_d[g_detail_idx].xmfc003 != g_xmfc_d_t.xmfc003)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmfc_t WHERE "||"xmfcent = '" ||g_enterprise|| "' AND "||"xmfcdocno = '"||g_xmfc_d[g_detail_idx].xmfcdocno ||"' AND "|| "xmfc001 = '"||g_xmfc_d[g_detail_idx].xmfc001 ||"' AND "|| "xmfc002 = '"||g_xmfc_d[g_detail_idx].xmfc002 ||"' AND "|| "xmfc003 = '"||g_xmfc_d[g_detail_idx].xmfc003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfc002
+            #add-point:ON CHANGE xmfc002 name="input.g.page1.xmfc002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfc003
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xmfc_d[l_ac].xmfc003,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmfc003
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD xmfc003 name="input.a.page1.xmfc003"
+            #此段落由子樣板a05產生
+            IF  g_xmfc_d[g_detail_idx].xmfcdocno IS NOT NULL AND g_xmfc_d[g_detail_idx].xmfc001 IS NOT NULL AND g_xmfc_d[g_detail_idx].xmfc002 IS NOT NULL AND g_xmfc_d[g_detail_idx].xmfc003 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmfc_d[g_detail_idx].xmfcdocno != g_xmfc_d_t.xmfcdocno OR g_xmfc_d[g_detail_idx].xmfc001 != g_xmfc_d_t.xmfc001 OR g_xmfc_d[g_detail_idx].xmfc002 != g_xmfc_d_t.xmfc002 OR g_xmfc_d[g_detail_idx].xmfc003 != g_xmfc_d_t.xmfc003)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xmfc_t WHERE "||"xmfcent = '" ||g_enterprise|| "' AND "||"xmfcdocno = '"||g_xmfc_d[g_detail_idx].xmfcdocno ||"' AND "|| "xmfc001 = '"||g_xmfc_d[g_detail_idx].xmfc001 ||"' AND "|| "xmfc002 = '"||g_xmfc_d[g_detail_idx].xmfc002 ||"' AND "|| "xmfc003 = '"||g_xmfc_d[g_detail_idx].xmfc003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            IF NOT cl_null(g_xmfc_d[l_ac].xmfc003) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfc003
+            #add-point:BEFORE FIELD xmfc003 name="input.b.page1.xmfc003"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfc003
+            #add-point:ON CHANGE xmfc003 name="input.g.page1.xmfc003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfc004
+            
+            #add-point:AFTER FIELD xmfc004 name="input.a.page1.xmfc004"
+            IF NOT cl_null(g_xmfc_d[l_ac].xmfc004) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist_and_ref_val("v_imaf001_14") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xmfc_d[l_ac].xmfc004
+            CALL ap_ref_array2(g_ref_fields,"SELECT imaal003 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xmfc_d[l_ac].xmfc004_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xmfc_d[l_ac].xmfc004_desc
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfc004
+            #add-point:BEFORE FIELD xmfc004 name="input.b.page1.xmfc004"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfc004
+            #add-point:ON CHANGE xmfc004 name="input.g.page1.xmfc004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfc005
+            
+            #add-point:AFTER FIELD xmfc005 name="input.a.page1.xmfc005"
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfc005
+            #add-point:BEFORE FIELD xmfc005 name="input.b.page1.xmfc005"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfc005
+            #add-point:ON CHANGE xmfc005 name="input.g.page1.xmfc005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfc005_desc
+            #add-point:BEFORE FIELD xmfc005_desc name="input.b.page1.xmfc005_desc"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfc005_desc
+            
+            #add-point:AFTER FIELD xmfc005_desc name="input.a.page1.xmfc005_desc"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfc005_desc
+            #add-point:ON CHANGE xmfc005_desc name="input.g.page1.xmfc005_desc"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfc007
+            
+            #add-point:AFTER FIELD xmfc007 name="input.a.page1.xmfc007"
+            IF NOT cl_null(g_xmfc_d[l_ac].xmfc007) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg2 = '參數2'
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist_and_ref_val("v_imao002") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfc007
+            #add-point:BEFORE FIELD xmfc007 name="input.b.page1.xmfc007"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfc007
+            #add-point:ON CHANGE xmfc007 name="input.g.page1.xmfc007"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfc006
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xmfc_d[l_ac].xmfc006,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmfc006
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD xmfc006 name="input.a.page1.xmfc006"
+            IF NOT cl_null(g_xmfc_d[l_ac].xmfc006) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfc006
+            #add-point:BEFORE FIELD xmfc006 name="input.b.page1.xmfc006"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfc006
+            #add-point:ON CHANGE xmfc006 name="input.g.page1.xmfc006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfc008
+            #add-point:BEFORE FIELD xmfc008 name="input.b.page1.xmfc008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfc008
+            
+            #add-point:AFTER FIELD xmfc008 name="input.a.page1.xmfc008"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfc008
+            #add-point:ON CHANGE xmfc008 name="input.g.page1.xmfc008"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfcsite
+            #add-point:BEFORE FIELD xmfcsite name="input.b.page1.xmfcsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfcsite
+            
+            #add-point:AFTER FIELD xmfcsite name="input.a.page1.xmfcsite"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfcsite
+            #add-point:ON CHANGE xmfcsite name="input.g.page1.xmfcsite"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.sel
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD sel
+            #add-point:ON ACTION controlp INFIELD sel name="input.c.page1.sel"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmfcdocno
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfcdocno
+            #add-point:ON ACTION controlp INFIELD xmfcdocno name="input.c.page1.xmfcdocno"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmfc001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfc001
+            #add-point:ON ACTION controlp INFIELD xmfc001 name="input.c.page1.xmfc001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmfc002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfc002
+            #add-point:ON ACTION controlp INFIELD xmfc002 name="input.c.page1.xmfc002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmfc003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfc003
+            #add-point:ON ACTION controlp INFIELD xmfc003 name="input.c.page1.xmfc003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmfc004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfc004
+            #add-point:ON ACTION controlp INFIELD xmfc004 name="input.c.page1.xmfc004"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmfc_d[l_ac].xmfc004             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_imaf001_15()                                #呼叫開窗
+
+            LET g_xmfc_d[l_ac].xmfc004 = g_qryparam.return1              
+
+            DISPLAY g_xmfc_d[l_ac].xmfc004 TO xmfc004              #
+
+            NEXT FIELD xmfc004                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmfc005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfc005
+            #add-point:ON ACTION controlp INFIELD xmfc005 name="input.c.page1.xmfc005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmfc005_desc
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfc005_desc
+            #add-point:ON ACTION controlp INFIELD xmfc005_desc name="input.c.page1.xmfc005_desc"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmfc007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfc007
+            #add-point:ON ACTION controlp INFIELD xmfc007 name="input.c.page1.xmfc007"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmfc_d[l_ac].xmfc007             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_imao002()                                #呼叫開窗
+
+            LET g_xmfc_d[l_ac].xmfc007 = g_qryparam.return1              
+
+            DISPLAY g_xmfc_d[l_ac].xmfc007 TO xmfc007              #
+
+            NEXT FIELD xmfc007                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmfc006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfc006
+            #add-point:ON ACTION controlp INFIELD xmfc006 name="input.c.page1.xmfc006"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmfc008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfc008
+            #add-point:ON ACTION controlp INFIELD xmfc008 name="input.c.page1.xmfc008"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmfc_d[l_ac].xmfc008             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            LET g_qryparam.arg2 = "" #
+            
+            CALL q_xmfb003()                                #呼叫開窗
+
+            LET g_xmfc_d[l_ac].xmfc008 = g_qryparam.return1              
+
+            DISPLAY g_xmfc_d[l_ac].xmfc008 TO xmfc008              #
+
+            NEXT FIELD xmfc008                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmfcsite
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfcsite
+            #add-point:ON ACTION controlp INFIELD xmfcsite name="input.c.page1.xmfcsite"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...)
+         
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+      
+      INPUT ARRAY g_xmfc2_d FROM s_detail2.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfb0031
+            
+            #add-point:AFTER FIELD xmfb0031 name="input.a.page2.xmfb0031"
+            IF NOT cl_null(g_xmfc2_d[l_ac].xmfb0031) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg2 = '參數2'
+               #160318-00025#41  2016/04/25  by pengxin  add(S)
+               LET g_errshow = TRUE #是否開窗 
+               LET g_chkparam.err_str[1] = "aqc-00032:sub-01302|aqci030|",cl_get_progname("aqci030",g_lang,"2"),"|:EXEPROGaqci030"
+               #160318-00025#41  2016/04/25  by pengxin  add(E)
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist_and_ref_val("v_oocq002_1") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfb0031
+            #add-point:BEFORE FIELD xmfb0031 name="input.b.page2.xmfb0031"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfb0031
+            #add-point:ON CHANGE xmfb0031 name="input.g.page2.xmfb0031"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfb0031_desc
+            #add-point:BEFORE FIELD xmfb0031_desc name="input.b.page2.xmfb0031_desc"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfb0031_desc
+            
+            #add-point:AFTER FIELD xmfb0031_desc name="input.a.page2.xmfb0031_desc"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfb0031_desc
+            #add-point:ON CHANGE xmfb0031_desc name="input.g.page2.xmfb0031_desc"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfc0021
+            #add-point:BEFORE FIELD xmfc0021 name="input.b.page2.xmfc0021"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfc0021
+            
+            #add-point:AFTER FIELD xmfc0021 name="input.a.page2.xmfc0021"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfc0021
+            #add-point:ON CHANGE xmfc0021 name="input.g.page2.xmfc0021"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfc0031
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xmfc2_d[l_ac].xmfc0031,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmfc0031
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD xmfc0031 name="input.a.page2.xmfc0031"
+            IF NOT cl_null(g_xmfc2_d[l_ac].xmfc0031) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfc0031
+            #add-point:BEFORE FIELD xmfc0031 name="input.b.page2.xmfc0031"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfc0031
+            #add-point:ON CHANGE xmfc0031 name="input.g.page2.xmfc0031"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfc0041
+            
+            #add-point:AFTER FIELD xmfc0041 name="input.a.page2.xmfc0041"
+            IF NOT cl_null(g_xmfc2_d[l_ac].xmfc0041) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist_and_ref_val("v_imaf001_14") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfc0041
+            #add-point:BEFORE FIELD xmfc0041 name="input.b.page2.xmfc0041"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfc0041
+            #add-point:ON CHANGE xmfc0041 name="input.g.page2.xmfc0041"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfc0051
+            
+            #add-point:AFTER FIELD xmfc0051 name="input.a.page2.xmfc0051"
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfc0051
+            #add-point:BEFORE FIELD xmfc0051 name="input.b.page2.xmfc0051"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfc0051
+            #add-point:ON CHANGE xmfc0051 name="input.g.page2.xmfc0051"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfc0051_desc
+            #add-point:BEFORE FIELD xmfc0051_desc name="input.b.page2.xmfc0051_desc"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfc0051_desc
+            
+            #add-point:AFTER FIELD xmfc0051_desc name="input.a.page2.xmfc0051_desc"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfc0051_desc
+            #add-point:ON CHANGE xmfc0051_desc name="input.g.page2.xmfc0051_desc"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfc0071
+            
+            #add-point:AFTER FIELD xmfc0071 name="input.a.page2.xmfc0071"
+            IF NOT cl_null(g_xmfc2_d[l_ac].xmfc0071) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg2 = '參數2'
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist_and_ref_val("v_imao002") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfc0071
+            #add-point:BEFORE FIELD xmfc0071 name="input.b.page2.xmfc0071"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfc0071
+            #add-point:ON CHANGE xmfc0071 name="input.g.page2.xmfc0071"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfc0061
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xmfc2_d[l_ac].xmfc0061,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD xmfc0061
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD xmfc0061 name="input.a.page2.xmfc0061"
+            IF NOT cl_null(g_xmfc2_d[l_ac].xmfc0061) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfc0061
+            #add-point:BEFORE FIELD xmfc0061 name="input.b.page2.xmfc0061"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfc0061
+            #add-point:ON CHANGE xmfc0061 name="input.g.page2.xmfc0061"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmfc0081
+            #add-point:BEFORE FIELD xmfc0081 name="input.b.page2.xmfc0081"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmfc0081
+            
+            #add-point:AFTER FIELD xmfc0081 name="input.a.page2.xmfc0081"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmfc0081
+            #add-point:ON CHANGE xmfc0081 name="input.g.page2.xmfc0081"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page2.xmfb0031
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfb0031
+            #add-point:ON ACTION controlp INFIELD xmfb0031 name="input.c.page2.xmfb0031"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmfc2_d[l_ac].xmfb0031             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_oocq002_5()                                #呼叫開窗
+
+            LET g_xmfc2_d[l_ac].xmfb0031 = g_qryparam.return1              
+
+            DISPLAY g_xmfc2_d[l_ac].xmfb0031 TO xmfb0031              #
+
+            NEXT FIELD xmfb0031                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.xmfb0031_desc
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfb0031_desc
+            #add-point:ON ACTION controlp INFIELD xmfb0031_desc name="input.c.page2.xmfb0031_desc"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.xmfc0021
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfc0021
+            #add-point:ON ACTION controlp INFIELD xmfc0021 name="input.c.page2.xmfc0021"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.xmfc0031
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfc0031
+            #add-point:ON ACTION controlp INFIELD xmfc0031 name="input.c.page2.xmfc0031"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.xmfc0041
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfc0041
+            #add-point:ON ACTION controlp INFIELD xmfc0041 name="input.c.page2.xmfc0041"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmfc2_d[l_ac].xmfc0041             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_imaf001_15()                                #呼叫開窗
+
+            LET g_xmfc2_d[l_ac].xmfc0041 = g_qryparam.return1              
+
+            DISPLAY g_xmfc2_d[l_ac].xmfc0041 TO xmfc0041              #
+
+            NEXT FIELD xmfc0041                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.xmfc0051
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfc0051
+            #add-point:ON ACTION controlp INFIELD xmfc0051 name="input.c.page2.xmfc0051"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.xmfc0051_desc
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfc0051_desc
+            #add-point:ON ACTION controlp INFIELD xmfc0051_desc name="input.c.page2.xmfc0051_desc"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.xmfc0071
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfc0071
+            #add-point:ON ACTION controlp INFIELD xmfc0071 name="input.c.page2.xmfc0071"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmfc2_d[l_ac].xmfc0071             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            
+            CALL q_imao002()                                #呼叫開窗
+
+            LET g_xmfc2_d[l_ac].xmfc0071 = g_qryparam.return1              
+
+            DISPLAY g_xmfc2_d[l_ac].xmfc0071 TO xmfc0071              #
+
+            NEXT FIELD xmfc0071                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.xmfc0061
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfc0061
+            #add-point:ON ACTION controlp INFIELD xmfc0061 name="input.c.page2.xmfc0061"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.xmfc0081
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmfc0081
+            #add-point:ON ACTION controlp INFIELD xmfc0081 name="input.c.page2.xmfc0081"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmfc2_d[l_ac].xmfc0081             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            LET g_qryparam.arg2 = "" #
+            
+            CALL q_xmfb003()                                #呼叫開窗
+
+            LET g_xmfc2_d[l_ac].xmfc0081 = g_qryparam.return1              
+
+            DISPLAY g_xmfc2_d[l_ac].xmfc0081 TO xmfc0081              #
+
+            NEXT FIELD xmfc0081                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...)
+         
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+ 
+      
+      #add-point:自定義input
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axmt410_02 
+   
+   #add-point:input段after input 
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axmt410_02.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="axmt410_02.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL axmt410_02_new(p_xmfadocno)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2014/07/04 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt410_02_new(p_xmfadocno)
+   DEFINE p_xmfadocno     LIKE xmfa_t.xmfadocno
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   DEFINE l_sql           STRING
+   DEFINE l_xmfb001       LIKE xmfb_t.xmfb001     #版次 
+   DEFINE l_xmfb002       LIKE xmfb_t.xmfb002     #序號   
+   DEFINE l_xmfb003       LIKE xmfb_t.xmfb003     #分類 
+   DEFINE l_xmfb004       LIKE xmfb_t.xmfb004     #單選  
+   DEFINE l_xmfb005       LIKE xmfb_t.xmfb005     #數量下限  
+   DEFINE l_xmfb006       LIKE xmfb_t.xmfb006     #數量上限 
+   DEFINE l_cnt           LIKE type_t.num5  
+   DEFINE l_action_choice STRING
+   DEFINE l_i             LIKE type_t.num5 
+   
+   DEFINE l_xmfb003_desc  LIKE oocql_t.oocql004 
+   DEFINE l_xmfc_d        type_g_xmfc_d
+   DEFINE l_tok           base.StringTokenizer
+   DEFINE l_flag          LIKE type_t.num5
+   DEFINE l_xmfc008       LIKE xmfc_t.xmfc008 
+   DEFINE l_success       LIKE type_t.num5
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axmt410_02 WITH FORM cl_ap_formpath("axm","axmt410_02")
+
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init() 
+   
+   #移除舊資料 
+   DELETE FROM xmfc_tmp
+   DELETE FROM key_word_tmp
+
+   LET g_qryparam.state = "i"
+
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+
+   LET l_allow_insert = FALSE
+   LET l_allow_delete = FALSE 
+   
+   LET l_sql = "SELECT xmfb001,xmfb002,xmfb003,xmfb004,xmfb005,xmfb006 ",
+               "  FROM xmfb_t,xmfa_t ",
+               " WHERE xmfaent = xmfbent ",
+               "   AND xmfadocno = xmfbdocno ",
+               "   AND xmfa001 = xmfb001 ",
+               "   AND xmfastus = 'Y' ",
+               "   AND xmfbent = '",g_enterprise,"' ",
+               "   AND xmfbdocno = '",p_xmfadocno,"' ",
+               " ORDER BY xmfb002 "
+   PREPARE axmt410_02_xmfb_prep FROM l_sql
+   DECLARE axmt410_02_xmfb_curs CURSOR FOR axmt410_02_xmfb_prep
+
+   LET l_ac2 = 0 
+   FOREACH axmt410_02_xmfb_curs INTO l_xmfb001,l_xmfb002,l_xmfb003,l_xmfb004,l_xmfb005,l_xmfb006
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      LET l_action_choice = ''
+      
+      DISPLAY l_xmfb002 TO xmfb002
+      DISPLAY l_xmfb003 TO xmfb003 
+      CALL axmt410_02_get_xmfb003_ref(l_xmfb003)
+           RETURNING l_xmfb003_desc
+      DISPLAY l_xmfb003_desc TO xmfb003_desc
+      DISPLAY l_xmfb004 TO xmfb004
+      DISPLAY l_xmfb005 TO xmfb005
+      DISPLAY l_xmfb006 TO xmfb006
+      
+      #第二單身填充 
+      CALL axmt410_02_tmp_b_fill()
+      
+      IF g_xmfc2_d.getLength() > 0 THEN 
+         #每一次都要清空舊的限定字元 
+         DELETE FROM key_word_tmp
+
+         FOR l_i = 1 TO g_xmfc2_d.getLength()
+            IF NOT cl_null(g_xmfc2_d[l_i].xmfc0081) THEN
+               LET l_count = 0
+               SELECT COUNT(*) INTO l_count
+                 FROM key_word_tmp
+                WHERE word = g_xmfc2_d[l_i].xmfc0081
+
+               IF cl_null(l_count) THEN
+                  LET l_count = 0
+               END IF
+
+               IF l_count = 0 THEN
+                  INSERT INTO key_word_tmp(word)
+                                    VALUES(g_xmfc2_d[l_i].xmfc0081)
+               END IF
+            END IF
+         END FOR
+      END IF
+
+      LET l_sql = "SELECT 'N',xmfcdocno,xmfc001,xmfc002,xmfc003,xmfc004, ",
+                 #"       '','',xmfc005,'',xmfc007,xmfc006,xmfc008,xmfcsite ",                #161026-00033#1 mark
+                  "       imaal003,imaal004,xmfc005,'',xmfc007,xmfc006,xmfc008,xmfcsite ",    #161026-00033#1 add
+                  "  FROM xmfc_t ",
+                  "  LEFT JOIN imaal_t t1 ON t1.imaalent="||g_enterprise||" AND t1.imaal001=xmfc004 AND t1.imaal002='"||g_dlang||"' ",   #161026-00033#1 add
+                  " WHERE xmfcent = '",g_enterprise,"' ",
+                  "   AND xmfcdocno = '",p_xmfadocno,"' ",
+                  "   AND xmfc001 = ? ",
+                  "   AND xmfc002 = ? "
+
+
+      LET l_sql = l_sql," ORDER BY xmfc003 "
+      PREPARE axmt410_02_xmfc_prep FROM l_sql
+      DECLARE axmt410_02_xmfc_curs CURSOR FOR axmt410_02_xmfc_prep
+
+      CALL g_xmfc_d.clear()
+      LET l_cnt = 1
+      FOREACH axmt410_02_xmfc_curs USING l_xmfb001,l_xmfb002
+                                    INTO l_xmfc_d.*
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = 'foreach:'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            EXIT FOREACH
+         END IF
+         
+         LET l_count = 0
+         SELECT COUNT(*) INTO l_count
+           FROM key_word_tmp
+
+         IF cl_null(l_count) THEN
+            LET l_count = 0
+         END IF
+         
+         IF l_count > 0 THEN
+            IF NOT cl_null(l_xmfc_d.xmfc008) THEN
+               LET l_tok = base.StringTokenizer.CREATE(l_xmfc_d.xmfc008,",")
+               LET l_flag = FALSE
+
+               WHILE l_tok.hasMoreTokens()
+                  LET l_xmfc008 = l_tok.nextToken()
+                  IF cl_null(l_xmfc008) THEN
+                     CONTINUE WHILE
+                  END IF
+
+                  LET l_count = 0
+                  SELECT COUNT(*) INTO l_count
+                    FROM key_word_tmp
+                   WHERE word = l_xmfc008
+
+                  IF cl_null(l_count) THEN
+                     LET l_count = 0
+                  END IF
+
+                  IF l_count > 0 THEN
+                     LET l_flag = TRUE
+                     EXIT WHILE
+                  END IF
+               END WHILE
+
+               IF NOT l_flag THEN
+                  CONTINUE FOREACH
+               END IF
+            END IF 
+         END IF
+
+         LET g_xmfc_d[l_cnt].* = l_xmfc_d.* 
+         
+         #產品特徵說明 
+         CALL s_feature_description(g_xmfc_d[l_cnt].xmfc004,g_xmfc_d[l_cnt].xmfc005)
+              RETURNING l_success,g_xmfc_d[l_cnt].xmfc005_desc
+         
+         CALL axmt410_02_round(g_xmfc_d[l_cnt].xmfc007,g_xmfc_d[l_cnt].xmfc006)
+              RETURNING g_xmfc_d[l_cnt].xmfc006
+
+         LET l_cnt = l_cnt + 1
+         IF l_cnt > g_max_rec THEN
+            EXIT FOREACH
+         END IF
+      END FOREACH
+      
+      LET g_rec_b1 = l_cnt - 1 
+      
+      IF g_rec_b1 = 0 THEN      #如果沒有明細資料的話  
+         CONTINUE FOREACH       #就自動跳下一筆  
+      END IF
+      
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+         INPUT ARRAY g_xmfc_d FROM s_detail1.*
+             ATTRIBUTE(COUNT = g_rec_b1,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                     INSERT ROW = l_allow_insert,
+                     DELETE ROW = l_allow_delete,
+                     APPEND ROW = l_allow_insert)
+
+            BEFORE INPUT
+            BEFORE ROW
+               LET l_ac1 = ARR_CURR()
+            BEFORE FIELD sel
+            AFTER FIELD sel
+            ON CHANGE sel 
+               IF l_xmfb004 = 'Y' THEN 
+                  IF g_xmfc_d[l_ac1].sel = 'Y' THEN
+                     LET l_cnt = 0
+                     FOR l_i = 1 TO g_xmfc_d.getLength()
+                        IF g_xmfc_d[l_i].sel = 'Y' THEN
+                           LET l_cnt = l_cnt + 1
+                        END IF
+                     END FOR
+                     IF l_cnt >= 2 THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'axm-00372'     #此序號類型是單選，不可多選！  
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = FALSE
+                        CALL cl_err()
+       
+                        LET g_xmfc_d[l_ac1].sel = 'N'
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF 
+               
+               LET l_cnt = 0
+               FOR l_i = 1 TO g_xmfc_d.getLength()
+                  IF NOT cl_null(g_xmfc_d[l_i].xmfc006) THEN
+                     IF g_xmfc_d[l_i].sel = 'Y' THEN     #有勾選的才檢查是否有超出數量  
+                        LET l_cnt = l_cnt + g_xmfc_d[l_i].xmfc006
+                     END IF
+                  END IF
+               END FOR
+               IF g_xmfc_d[l_ac1].sel = 'Y' THEN
+                  IF l_cnt < l_xmfb005 OR l_cnt > l_xmfb006 THEN
+                     #此處僅提示即可  
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'axm-00371'     #數量需介於上限數量與下限數量之間！ 
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = FALSE
+                     CALL cl_err()
+        
+                  END IF
+               END IF
+
+            AFTER FIELD xmfc006
+               IF NOT cl_ap_chk_Range(g_xmfc_d[l_ac1].xmfc006,"0.000","0","","","azz-00079",1) THEN
+                  NEXT FIELD xmfc006
+               END IF
+               IF NOT cl_null(g_xmfc_d[l_ac1].xmfc006) THEN 
+                  CALL axmt410_02_round(g_xmfc_d[l_ac1].xmfc007,g_xmfc_d[l_ac1].xmfc006)
+                       RETURNING g_xmfc_d[l_ac1].xmfc006
+               
+                  IF g_xmfc_d[l_ac1].xmfc006 < l_xmfb005 OR
+                     g_xmfc_d[l_ac1].xmfc006 > l_xmfb006 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'axm-00371'     #數量需介於上限數量與下限數量之間！    
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+        
+                     NEXT FIELD CURRENT
+                  END IF
+
+                  LET l_cnt = 0
+                  FOR l_i = 1 TO g_xmfc_d.getLength()
+                     IF NOT cl_null(g_xmfc_d[l_i].xmfc006) THEN
+                        IF g_xmfc_d[l_i].sel = 'Y' THEN     #有勾選的才檢查是否有超出數量  
+                           LET l_cnt = l_cnt + g_xmfc_d[l_i].xmfc006
+                        END IF
+                     END IF
+                  END FOR 
+                  IF g_xmfc_d[l_ac1].sel = 'Y' THEN 
+                     IF l_cnt < l_xmfb005 OR l_cnt > l_xmfb006 THEN
+                        #此處僅提示即可  
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'axm-00371'     #數量需介於上限數量與下限數量之間！ 
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = FALSE
+                        CALL cl_err()
+        
+                     END IF
+                  END IF
+               END IF
+            BEFORE FIELD xmfc006
+
+            ON CHANGE xmfc006
+
+            AFTER INPUT
+
+         END INPUT 
+         
+         INPUT ARRAY g_xmfc2_d FROM s_detail2.*
+             ATTRIBUTE(COUNT = g_rec_b2,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                     INSERT ROW = FALSE,
+                     DELETE ROW = l_allow_delete,
+                     APPEND ROW = l_allow_insert)
+
+            BEFORE INPUT
+            BEFORE ROW
+               LET l_ac2 = ARR_CURR()
+
+            AFTER FIELD xmfb0031
+            BEFORE FIELD xmfb0031
+            ON CHANGE xmfb0031
+            AFTER FIELD xmfc0041
+            BEFORE FIELD xmfc0041
+            ON CHANGE xmfc0041
+            BEFORE FIELD xmfc0051
+            AFTER FIELD xmfc0051
+            ON CHANGE xmfc0051
+            AFTER FIELD xmfc0071
+               IF NOT cl_null(g_xmfc2_d[l_ac2].xmfc0071) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg2 = '參數2'
+                  IF cl_chk_exist_and_ref_val("v_imao002") THEN
+                  ELSE
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            BEFORE FIELD xmfc0071
+            ON CHANGE xmfc0071
+            AFTER FIELD xmfc0061
+               IF NOT cl_ap_chk_Range(g_xmfc2_d[l_ac2].xmfc0061,"0.000","0","","","azz-00079",1) THEN
+                  NEXT FIELD xmfc0061
+               END IF
+
+               IF NOT cl_null(g_xmfc2_d[l_ac2].xmfc0061) THEN  
+                  CALL axmt410_02_round(g_xmfc2_d[l_ac2].xmfc0071,g_xmfc2_d[l_ac2].xmfc0061)
+                       RETURNING g_xmfc2_d[l_ac2].xmfc0061
+               
+                  CALL axmt410_02_chk_xmfc0061(p_xmfadocno,l_xmfb001,l_ac2)
+                  IF NOT cl_null(g_errno) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     NEXT FIELD CURRENT
+                  END IF
+
+                  UPDATE xmfc_tmp SET xmfc006 = g_xmfc2_d[l_ac2].xmfc0061
+                   WHERE NVL(xmfb003,' ') = NVL(g_xmfc2_d[l_ac2].xmfb0031,' ')
+                     AND     xmfc002      = g_xmfc2_d[l_ac2].xmfc0021
+                     AND     xmfc003      = g_xmfc2_d[l_ac2].xmfc0031
+                     AND     xmfc004      = g_xmfc2_d[l_ac2].xmfc0041
+                     AND NVL(xmfc005,' ') = NVL(g_xmfc2_d[l_ac2].xmfc0051,' ')
+                     AND NVL(xmfc007,' ') = NVL(g_xmfc2_d[l_ac2].xmfc0071,' ')
+               END IF
+
+            BEFORE FIELD xmfc0061
+
+            ON CHANGE xmfc0061
+
+            ON ACTION controlp INFIELD xmfc0071
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_xmfc2_d[l_ac2].xmfc0071             #給予default值
+               LET g_qryparam.arg1 = "" #
+               CALL q_imao002()                                #呼叫開窗
+               LET g_xmfc2_d[l_ac2].xmfc0071 = g_qryparam.return1
+               DISPLAY g_xmfc2_d[l_ac2].xmfc0071 TO xmfc0071              #
+               NEXT FIELD xmfc0071                          #返回原欄位
+
+            AFTER INPUT
+
+         END INPUT 
+         
+         #公用action
+         ON ACTION accept
+            #ACCEPT DIALOG
+
+         ON ACTION cancel
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION btn_sel_all            #全選  
+            IF l_xmfb004 = 'N' THEN
+               CALL axmt410_02_sel('Y')
+            ELSE
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'axm-00370'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+         #此序號類型是單選，不可執行此動作！   
+            END IF
+
+         ON ACTION btn_no_sel_all         #取消全選  
+            CALL axmt410_02_sel('N')
+
+         ON ACTION btn_sel_change         #反向選取  
+            IF l_xmfb004 = 'N' THEN
+               CALL axmt410_02_sel_change()
+            ELSE
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'axm-00370'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+         #此序號類型是單選，不可執行此動作！  
+            END IF
+            
+         ON ACTION btn_download           #下載 
+            #計算是否有選取資料  
+            LET l_cnt = 0
+            FOR l_i = 1 TO g_xmfc_d.getLength()
+               IF g_xmfc_d[l_i].sel = 'Y' THEN
+                  LET l_cnt = l_cnt + 1
+               END IF
+            END FOR
+            IF l_cnt = 0 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = '-400'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+           #請先選取欲處理的資料！   
+               CONTINUE DIALOG
+            END IF
+
+            #計算已選取的資料，其數量的總和是否介於上、下限之間  
+            LET l_cnt = 0
+            FOR l_i = 1 TO g_xmfc_d.getLength()
+               IF g_xmfc_d[l_i].sel = 'Y' THEN
+                  IF cl_null(g_xmfc_d[l_i].xmfc006) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'sub-00516'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+           #數量不可為空!
+                     CONTINUE DIALOG
+                  END IF
+
+                  LET l_cnt = l_cnt + g_xmfc_d[l_i].xmfc006
+               END IF
+            END FOR
+            IF l_cnt < l_xmfb005 OR l_cnt > l_xmfb006 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'axm-00371'     #數量需介於上限數量與下限數量之間！  
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+        
+               CONTINUE DIALOG
+            END IF
+
+            FOR l_i = 1 TO g_xmfc_d.getLength()
+               IF g_xmfc_d[l_i].sel != 'Y' THEN
+                  CONTINUE FOR
+               END IF
+
+             #INSERT INTO xmfc_tmp(xmfb003,xmfc002,xmfc003,xmfc004,xmfc005,                                 #161026-00033#1 mark
+              INSERT INTO xmfc_tmp(xmfb003,xmfc002,xmfc003,xmfc004,xmfc004_desc,xmfc004_desc_1,xmfc005,  #161026-00033#1 add
+                                    xmfc007,xmfc006,xmfc008)
+                             VALUES(l_xmfb003,g_xmfc_d[l_i].xmfc002,g_xmfc_d[l_i].xmfc003,
+                                   #g_xmfc_d[l_i].xmfc004,g_xmfc_d[l_i].xmfc005,g_xmfc_d[l_i].xmfc007,                 #161026-00033#1 mark
+                                    g_xmfc_d[l_i].xmfc004,g_xmfc_d[l_i].xmfc004_desc,g_xmfc_d[l_i].xmfc004_desc_desc,  #161026-00033#1 add
+                                    g_xmfc_d[l_i].xmfc005,g_xmfc_d[l_i].xmfc007,                                       #161026-00033#1 add
+                                    g_xmfc_d[l_i].xmfc006,g_xmfc_d[l_i].xmfc008)
+
+            END FOR 
+            
+            LET l_action_choice = "download"
+            EXIT DIALOG
+
+         ON ACTION btn_delete             #移除  
+            IF l_ac2 > 0 THEN
+              IF cl_ask_promp("adz-00064") THEN     #是否刪除此筆資料?  
+                 DELETE FROM xmfc_tmp WHERE xmfb003 = g_xmfc2_d[l_ac2].xmfb0031
+                                        AND xmfc002 = g_xmfc2_d[l_ac2].xmfc0021
+                                        AND xmfc003 = g_xmfc2_d[l_ac2].xmfc0031
+                 CALL axmt410_02_tmp_b_fill()
+              END IF
+              CONTINUE DIALOG
+            END IF
+   
+         ON ACTION btn_cancel             #取消  
+            IF cl_ask_promp("adz-00261") THEN     #是否離開程式? 
+               CALL g_xmfc2_d.clear()
+               LET l_action_choice = "cancel"
+               EXIT DIALOG
+            ELSE
+               CONTINUE DIALOG
+            END IF
+
+         ON ACTION btn_accept             #完成   
+            IF cl_ask_promp("axm-00373") THEN     #是否完成此作業？ 
+               LET l_action_choice = "accept"
+               EXIT DIALOG 
+            ELSE 
+               CONTINUE DIALOG 
+            END IF 
+
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      CASE l_action_choice
+         WHEN "download"
+            CONTINUE FOREACH
+         WHEN "delete"
+
+         WHEN "cancel"
+            EXIT FOREACH
+         WHEN "accept"
+            EXIT FOREACH
+      END CASE
+      
+   END FOREACH
+   
+   IF cl_null(l_action_choice) OR l_action_choice = "download" THEN 
+      CALL g_xmfc_d.clear()
+      CALL axmt410_02_tmp_b_fill() 
+      
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM) 
+         INPUT ARRAY g_xmfc_d FROM s_detail1.*
+             ATTRIBUTE(COUNT = g_rec_b1,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                     INSERT ROW = l_allow_insert,
+                     DELETE ROW = l_allow_delete,
+                     APPEND ROW = l_allow_insert)
+
+            BEFORE INPUT
+            BEFORE ROW
+               LET l_ac1 = ARR_CURR()
+            AFTER INPUT
+
+         END INPUT 
+         
+         INPUT ARRAY g_xmfc2_d FROM s_detail2.*
+             ATTRIBUTE(COUNT = g_rec_b2,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                     INSERT ROW = FALSE,
+                     DELETE ROW = l_allow_delete,
+                     APPEND ROW = l_allow_insert)
+
+            BEFORE INPUT
+            BEFORE ROW
+               LET l_ac2 = ARR_CURR()
+
+            AFTER FIELD xmfc0061
+               IF NOT cl_ap_chk_Range(g_xmfc2_d[l_ac2].xmfc0061,"0.000","0","","","azz-00079",1) THEN
+                  NEXT FIELD xmfc0061
+               END IF
+
+               IF NOT cl_null(g_xmfc2_d[l_ac2].xmfc0061) THEN 
+                  CALL axmt410_02_round(g_xmfc2_d[l_ac2].xmfc0071,g_xmfc2_d[l_ac2].xmfc0061)
+                       RETURNING g_xmfc2_d[l_ac2].xmfc0061
+               
+                  CALL axmt410_02_chk_xmfc0061(p_xmfadocno,l_xmfb001,l_ac2)
+                  IF NOT cl_null(g_errno) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     NEXT FIELD CURRENT
+                  END IF
+
+                  UPDATE xmfc_tmp SET xmfc006 = g_xmfc2_d[l_ac2].xmfc0061
+                   WHERE NVL(xmfb003,' ') = NVL(g_xmfc2_d[l_ac2].xmfb0031,' ')
+                     AND     xmfc002      = g_xmfc2_d[l_ac2].xmfc0021
+                     AND     xmfc003      = g_xmfc2_d[l_ac2].xmfc0031
+                     AND     xmfc004      = g_xmfc2_d[l_ac2].xmfc0041
+                     AND NVL(xmfc005,' ') = NVL(g_xmfc2_d[l_ac2].xmfc0051,' ')
+                     AND NVL(xmfc007,' ') = NVL(g_xmfc2_d[l_ac2].xmfc0071,' ')
+               END IF 
+               
+            AFTER INPUT
+
+         END INPUT
+
+         #公用action
+         ON ACTION accept
+            ACCEPT DIALOG
+
+         ON ACTION cancel
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG 
+            
+         ON ACTION btn_delete             #移除  
+            IF l_ac2 > 0 THEN
+              IF cl_ask_promp("adz-00064") THEN     #是否刪除此筆資料?  
+                 DELETE FROM xmfc_tmp WHERE xmfb003 = g_xmfc2_d[l_ac2].xmfb0031
+                                        AND xmfc002 = g_xmfc2_d[l_ac2].xmfc0021
+                                        AND xmfc003 = g_xmfc2_d[l_ac2].xmfc0031
+                 CALL axmt410_02_tmp_b_fill()
+              END IF
+              CONTINUE DIALOG
+            END IF
+
+         ON ACTION btn_cancel             #取消  
+            IF cl_ask_promp("adz-00261") THEN     #是否離開程式? 
+               CALL g_xmfc2_d.clear()
+               LET l_action_choice = "cancel"
+               EXIT DIALOG
+            ELSE
+               CONTINUE DIALOG
+            END IF
+
+         ON ACTION btn_accept             #完成   
+            IF cl_ask_promp("axm-00373") THEN     #是否完成此作業？ 
+               LET l_action_choice = "accept"
+               EXIT DIALOG
+            ELSE
+               CONTINUE DIALOG
+            END IF 
+            
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      
+      END DIALOG
+   END IF  
+  
+
+   #畫面關閉
+   CLOSE WINDOW w_axmt410_02
+   
+   LET INT_FLAG = FALSE 
+
+   #直接把第二單身的資料回傳即可 就不用重取品名規格了
+   RETURN g_xmfc2_d 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 全選/全不選
+# Memo...........:
+# Usage..........: CALL axmt410_02_sel(p_flag)
+# Input parameter: Y/N
+# Date & Author..: 2014/07/04 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmt410_02_sel(p_flag)
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE l_i        LIKE type_t.num5
+
+   FOR l_i = 1 TO g_xmfc_d.getLength()
+      LET g_xmfc_d[l_i].sel = p_flag
+   END FOR 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 反向選取
+# Memo...........:
+# Usage..........: CALL axmt410_02_sel_change()
+# Date & Author..: 2014/07/04 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmt410_02_sel_change()
+   DEFINE l_i     LIKE type_t.num5
+
+   FOR l_i = 1 TO g_xmfc_d.getLength()
+      CASE
+         WHEN g_xmfc_d[l_i].sel = 'Y'
+            LET g_xmfc_d[l_i].sel = 'N'
+         WHEN g_xmfc_d[l_i].sel = 'N'
+            LET g_xmfc_d[l_i].sel = 'Y'
+         OTHERWISE
+            EXIT CASE
+      END CASE
+   END FOR
+END FUNCTION
+
+################################################################################
+# Descriptions...: 建立temp table 
+# Memo...........:
+# Usage..........: CALL axmt410_02_create_temp()
+# Date & Author..: 2014/07/06 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt410_02_create_temp()
+   CREATE TEMP TABLE xmfc_tmp(
+      xmfb003  LIKE xmfb_t.xmfb003,
+      xmfc002  LIKE xmfc_t.xmfc002,
+      xmfc003  LIKE xmfc_t.xmfc003,
+      xmfc004  LIKE xmfc_t.xmfc004,
+      xmfc004_desc    LIKE type_t.chr500,      #161026-00033#1 add
+      xmfc004_desc_1  LIKE type_t.chr500,      #161026-00033#1 add
+      xmfc005  LIKE xmfc_t.xmfc005,
+      xmfc007  LIKE xmfc_t.xmfc007,
+      xmfc006  LIKE xmfc_t.xmfc006,
+      xmfc008  LIKE xmfc_t.xmfc008
+   ) 
+   
+   CREATE TEMP TABLE key_word_tmp(
+      word     LIKE xmfc_t.xmfc008
+   )
+END FUNCTION
+
+################################################################################
+# Descriptions...: 刪除temp table 
+# Memo...........:
+# Usage..........: CALL axmt410_02_drop_temp()
+# Date & Author..: 2014/07/06 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION axmt410_02_drop_temp()
+   DROP TABLE xmfc_tmp 
+   
+   DROP TABLE key_word_tmp
+END FUNCTION
+
+################################################################################
+# Descriptions...: 第二單身資料填充 
+# Memo...........:
+# Usage..........: CALL axmt410_02_tmp_b_fill()
+# Date & Author..: 2014/07/06 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmt410_02_tmp_b_fill()
+   DEFINE l_cnt     LIKE type_t.num5
+   DEFINE l_sql     STRING 
+   DEFINE l_success LIKE type_t.num5 
+
+  #LET l_sql = "SELECT xmfb003,'',xmfc002,xmfc003,xmfc004,'','', ",                           #161026-00033#1 mark
+   LET l_sql = "SELECT xmfb003,'',xmfc002,xmfc003,xmfc004,xmfc004_desc,xmfc004_desc_1, ",     #161026-00033#1 add
+               "       xmfc005,'',xmfc007,xmfc006,xmfc008 ",
+               "  FROM xmfc_tmp ",
+               " ORDER BY xmfb003,xmfc002,xmfc003 "
+   PREPARE axmt410_02_temp_prep FROM l_sql
+   DECLARE axmt410_02_temp_curs CURSOR FOR axmt410_02_temp_prep
+
+   LET l_cnt = 1
+   FOREACH axmt410_02_temp_curs INTO g_xmfc2_d[l_cnt].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF 
+      
+      CALL axmt410_02_get_xmfb003_ref(g_xmfc2_d[l_cnt].xmfb0031)
+           RETURNING g_xmfc2_d[l_cnt].xmfb0031_desc 
+      
+      #取得產品特徵值 
+      CALL s_feature_description(g_xmfc2_d[l_cnt].xmfc0041,g_xmfc2_d[l_cnt].xmfc0051)
+           RETURNING l_success,g_xmfc2_d[l_cnt].xmfc0051_desc
+      
+      LET l_cnt = l_cnt + 1
+      IF l_cnt > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   CALL g_xmfc2_d.deleteElement(g_xmfc2_d.getLength())
+   LET g_rec_b2 = l_cnt - 1
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢查第二單身的數量是否超過上下限
+# Memo...........:
+# Usage..........: CALL axmt410_02_chk_xmfc0061(p_xmfadocno,p_xmfa001,p_ac)
+# Input parameter: p_xmfadocno：範本編號
+#                : p_xmfa001：版本 
+#                : p_ac：目前所在的列數
+# Date & Author..: 2014/07/08 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmt410_02_chk_xmfc0061(p_xmfadocno,p_xmfa001,p_ac)
+   DEFINE p_xmfadocno     LIKE xmfa_t.xmfadocno     #範本編號   
+   DEFINE p_xmfa001       LIKE xmfa_t.xmfa001       #版本   
+   DEFINE p_ac            LIKE type_t.num5
+   DEFINE l_sql           STRING
+   DEFINE l_xmfc002       LIKE xmfc_t.xmfc002       #序號 
+   DEFINE l_xmfc006_sum   LIKE xmfc_t.xmfc006
+   DEFINE l_xmfb005       LIKE xmfb_t.xmfb005       #數量下限 
+   DEFINE l_xmfb006       LIKE xmfb_t.xmfb006       #數量上限 
+   DEFINE l_i             LIKE type_t.num5
+
+   LET g_errno = ''
+   LET l_xmfc006_sum = 0
+
+   LET l_xmfb005 = 0
+   LET l_xmfb006 = 0
+   SELECT xmfb005,xmfb006 INTO l_xmfb005,l_xmfb006
+     FROM xmfb_t
+    WHERE xmfbent = g_enterprise
+      AND xmfbdocno = p_xmfadocno     #範本編號  
+      AND xmfb001 = p_xmfa001         #版本  
+      AND xmfb002 = g_xmfc2_d[p_ac].xmfc0021 
+      
+   FOR l_i = 1 TO g_xmfc2_d.getLength()
+      IF g_xmfc2_d[l_i].xmfc0021 = g_xmfc2_d[p_ac].xmfc0021 THEN
+         LET l_xmfc006_sum = l_xmfc006_sum + g_xmfc2_d[l_i].xmfc0061
+      END IF
+   END FOR
+
+   IF l_xmfc006_sum < l_xmfb005 OR l_xmfc006_sum > l_xmfb006 THEN
+      LET g_errno = 'axm-00371'     #數量需介於上限數量與下限數量之間！  
+   END IF
+END FUNCTION
+
+PRIVATE FUNCTION axmt410_02_get_xmfb003_ref(p_xmfb003)
+   DEFINE p_xmfb003     LIKE xmfb_t.xmfb003
+   DEFINE r_oocql004    LIKE oocql_t.oocql004
+
+   LET r_oocql004 = ''
+
+   SELECT oocql004 INTO r_oocql004
+     FROM oocql_t
+    WHERE oocqlent = g_enterprise
+      AND oocql001 = '803'
+      AND oocql002 = p_xmfb003
+      AND oocql003 = g_dlang
+
+   RETURN r_oocql004
+END FUNCTION
+
+################################################################################
+# Descriptions...: 依單位取位
+# Memo...........:
+# Usage..........: CALL axmt410_02_round(p_ooca001,p_xmfc006)
+#                  RETURNING r_xmfc006
+# Input parameter: p_ooca001：單位
+#                : p_xmfc006：數量
+# Return code....: r_xmfc006：數量
+# Date & Author..: 2014/07/08 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmt410_02_round(p_ooca001,p_xmfc006)
+   DEFINE p_ooca001     LIKE ooca_t.ooca001
+   DEFINE p_xmfc006     LIKE xmfc_t.xmfc006
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_ooca002     LIKE ooca_t.ooca002
+   DEFINE l_ooca004     LIKE ooca_t.ooca004
+   DEFINE r_xmfc006     LIKE xmfc_t.xmfc006
+
+   LET l_success = NULL
+   LET l_ooca002 = 0
+   LET l_ooca004 = NULL
+
+   LET r_xmfc006 = p_xmfc006
+
+   IF NOT cl_null(p_xmfc006) THEN
+      IF NOT cl_null(p_ooca001) THEN
+         CALL s_aooi250_get_msg(p_ooca001) RETURNING l_success,l_ooca002,l_ooca004
+         IF l_success THEN
+            CALL s_num_round(l_ooca004,p_xmfc006,l_ooca002) RETURNING r_xmfc006
+         END IF
+      END IF
+   END IF
+
+   RETURN r_xmfc006
+END FUNCTION
+
+ 
+{</section>}
+ 

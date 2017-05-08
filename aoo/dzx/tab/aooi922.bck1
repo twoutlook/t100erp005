@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi922" module="aoo" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="01996" crtdt="2016-04-26 15:12:24" modid="01996" moddt="2016-05-13 15:31:11" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="異常管理權限設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="ookc001,ookc001_desc(chr500),ookc002,ookc002_desc(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi922" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="ookc001,ookc002" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="ookc001,ookc002"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="ookc001">
+        <after>
+          <reference field="ookc001_desc" ref_field="ookc_t.ookc001" map_field="ookc001" ref_sql="SELECT gzyal003 FROM gzyal_t WHERE gzyalent=$varg_enterprise$var AND gzyal001=? AND gzyal002=$varg_lang$var"/>
+        </after>
+      </column>
+      <column id="ookc001_desc"/>
+      <column id="ookc002">
+        <after>
+          <reference field="ookc002_desc" ref_field="ookc_t.ookc002" map_field="ookc002" ref_sql="SELECT ookbl003 FROM ookbl_t WHERE ookblent=$varg_enterprise$var AND ookbl001=? AND ookbl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ookb002_1" state="i"/>
+        <controlp form="q_ookb002_1" state="c"/>
+      </column>
+      <column id="ookc002_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="ookc_t" page="1" linked="" pk="ookc001,ookc002">
+      <sql id="forupd_sql_detail" query="SELECT ookc001,&apos;&apos;,ookc002,&apos;&apos; FROM ookc_t WHERE ookcent=? AND ookc001=? AND ookc002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT ookc001,&apos;&apos;,ookc002,&apos;&apos; FROM ookc_t WHERE ookcent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

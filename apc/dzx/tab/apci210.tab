@@ -1,0 +1,117 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apci210" module="apc" jobmode="N" type="i05" industry="std" fix_arg="0" crtid="06137" crtdt="2016-07-12 14:21:08" modid="06137" moddt="2016-07-12 22:01:53" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="觸屏分類維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pcba001,pcbal003,pcbal004,pcba002,pcba002_desc(chr80),pcba003,pcba004,pcba005,pcba005_desc(chr80),pcbaunit,pcbaunit_desc(chr80),pcbastus,pcbaownid,pcbaownid_desc(chr80),pcbaowndp,pcbaowndp_desc(chr80),pcbacrtid,pcbacrtid_desc(chr80),pcbacrtdt,pcbacrtdp,pcbacrtdp_desc(chr80),pcbamodid,pcbamodid_desc(chr80),pcbamoddt"/>
+      <var id="bs_field" value="pcba003,pcba004,pcba005,pcba005_desc(chr80),pcba001,pcba002" pk="pcba001" order=""/>
+      <bs_reference field="pcba005_desc" ref_field="pcba005" ref_sql="SELECT pcbal003 FROM pcbal_t WHERE pcbalent=$varg_enterprise$var AND pcbal001=? AND pcbal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="compute_pcbf"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="apc" filename="apci210" method="dialog">
+    <section id="input">
+      <input id="head" field="pcba001,pcbal003,pcbal004,pcba002,pcba003,pcba004,pcba005,pcbaunit,pcbastus,pcbaownid,pcbaowndp,pcbacrtid,pcbacrtdt,pcbacrtdp,pcbamodid,pcbamoddt"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pcba001,pcbal003,pcbal004,pcba002,pcba003,pcba004,pcba005,pcbaunit,pcbastus,pcbaownid,pcbaowndp,pcbacrtid,pcbacrtdt,pcbacrtdp,pcbamodid,pcbamoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pcba001"/>
+      <set id="head" type="no_entry" field="pcba001"/>
+    </init>
+    <init id="head">
+      <column id="pcba001">
+        <controlp form="q_pcba001" state="c"/>
+      </column>
+      <column id="pcbal003"/>
+      <column id="pcbal004"/>
+      <column id="pcba002">
+        <after>
+          <reference field="pcba002_desc" ref_field="pcba_t.pcba002" map_field="pcbaent,pcba002" ref_sql="SELECT pcbal003 FROM pcbal_t WHERE pcbalent=$varg_enterprise$var AND pcbal001=? AND pcbal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pcba001_1" state="i"/>
+        <controlp form="q_pcba002" state="c"/>
+      </column>
+      <column id="pcba002_desc"/>
+      <column id="pcba003"/>
+      <column id="pcba004" type="S" default="0"/>
+      <column id="pcba005">
+        <after>
+          <reference field="pcba005_desc" ref_field="pcba_t.pcba005" map_field="pcbaent,pcba005" ref_sql="SELECT pcbal003 FROM pcbal_t WHERE pcbalent=$varg_enterprise$var AND pcbal001=? AND pcbal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax006" state="c"/>
+      </column>
+      <column id="pcba005_desc"/>
+      <column id="pcbaunit">
+        <after>
+          <reference field="pcbaunit_desc" ref_field="pcba_t.pcbaunit" map_field="pcbaent,pcbaunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pcbaunit_desc"/>
+      <column id="pcbastus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pcbaownid">
+        <after>
+          <reference field="pcbaownid_desc" ref_field="pcba_t.pcbaownid" map_field="pcbaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcbaownid_desc"/>
+      <column id="pcbaowndp">
+        <after>
+          <reference field="pcbaowndp_desc" ref_field="pcba_t.pcbaowndp" map_field="pcbaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pcbaowndp_desc"/>
+      <column id="pcbacrtid">
+        <after>
+          <reference field="pcbacrtid_desc" ref_field="pcba_t.pcbacrtid" map_field="pcbacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcbacrtid_desc"/>
+      <column id="pcbacrtdt"/>
+      <column id="pcbacrtdp">
+        <after>
+          <reference field="pcbacrtdp_desc" ref_field="pcba_t.pcbacrtdp" map_field="pcbacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pcbacrtdp_desc"/>
+      <column id="pcbamodid">
+        <after>
+          <reference field="pcbamodid_desc" ref_field="pcba_t.pcbamodid" map_field="pcbamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcbamodid_desc"/>
+      <column id="pcbamoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pcba_t" lid="pcba001" pid="pcba002" type=" " desc=" " speed="pcbas_t" stype=" " slid="pcbas001" spid="pcbas002" pk="pcba001">
+      <sql id="forupd_sql" type="sql" query="SELECT pcba001,&apos;&apos;,&apos;&apos;,pcba002,&apos;&apos;,pcba003,pcba004,pcba005,&apos;&apos;,pcbaunit,&apos;&apos;,pcbastus,pcbaownid,&apos;&apos;,pcbaowndp,&apos;&apos;,pcbacrtid,&apos;&apos;,pcbacrtdt,pcbacrtdp,&apos;&apos;,pcbamodid,&apos;&apos;,pcbamoddt FROM pcba_t WHERE pcbaent= ? AND pcba001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pcba001,&apos;&apos;,&apos;&apos;,pcba002,&apos;&apos;,pcba003,pcba004,pcba005,&apos;&apos;,pcbaunit,&apos;&apos;,pcbastus,pcbaownid,&apos;&apos;,pcbaowndp,&apos;&apos;,pcbacrtid,&apos;&apos;,pcbacrtdt,pcbacrtdp,&apos;&apos;,pcbamodid,&apos;&apos;,pcbamoddt FROM pcba_t" order="pcba001"/>
+      <sql id="append" type="lang" target="pcbal_t.pcbal003,pcbal_t.pcbal004" table="pcbal_t" fk="pcba001" pk="pcbal001,pcbal002" field="pcbal003,pcbal004"/>
+    </head>
+  </dataset>
+</assembly>
+

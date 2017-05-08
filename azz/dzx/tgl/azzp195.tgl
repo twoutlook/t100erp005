@@ -1,0 +1,109 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="azzp195.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0009(1900-01-01 00:00:00), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000071
+#+ Filename...: azzp195
+#+ Description: action編號更新檢視工具
+#+ Creator....: 01856(2014-07-02 14:14:21)
+#+ Modifier...: 00000 -SD/PR-
+
+{</section>}
+
+{<section id="azzp195.global" >}
+#應用 i00 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+{<point name="free_style.variable" mark="Y"/>}
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+{<point name="global.variable" />}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+
+{</section>}
+
+{<section id="azzp195.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define
+{<point name="main.define"/>}
+   #end add-point    
+   
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+   LET g_bgjob = "Y" 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("azz","")
+   LET g_t100debug = FGL_GETENV("T100DEBUG")
+   
+   LET gc_prog = g_argv[1]
+   LET gc_aw = g_argv[2]
+   DISPLAY "azzp195 gc_prog:",gc_prog ," gc_aw:",gc_aw 
+   IF gc_aw IS NULL THEN
+      LET gc_aw = "Y"
+   END IF
+   IF gc_aw <> "Y" THEN
+      LET gc_aw = "N"
+   END IF
+   LET g_start_time = cl_get_timestamp()
+   CALL g_gzzr.clear()
+   CALL azzp195_select()
+
+   CALL azzp195_system_chk()
+   IF gc_aw = "Y" THEN
+      CALL azzp195_gzyab_chk()
+      CALL azzp195_gzxh_chk()
+   END IF
+
+   CALL azzp195_compose() RETURNING ls_compose
+
+   DISPLAY ' '
+   DISPLAY 'Action List: '
+   DISPLAY ls_compose
+   DISPLAY ' '
+   DISPLAY 'Update ',gc_prog CLIPPED,' Data Succeed!'
+   LET g_end_time = cl_get_timestamp()
+   DISPLAY "action spent time:",g_end_time - g_start_time ," start:",g_start_time," end:",g_end_time   
+   #add-point:作業初始化
+{<point name="main.init"/>}
+
+{<point name="main.define_sql" />}
+
+{<point name="main.servicecall" />}
+
+{<point name="main.exit" />}
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+
+{</section>}
+
+{<section id="azzp195.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+{<point name="other.function"/>}
+#end add-point
+
+{</section>}
+

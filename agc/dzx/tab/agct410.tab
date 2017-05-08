@@ -1,0 +1,165 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agct410" module="agc" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="01533" crtdt="2013-12-30 14:17:52" modid="08172" moddt="2016-09-01 16:44:12" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="券狀態異動申請作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gcam000,gcamsite,gcamsite_desc(chr80),gcamunit,gcamdocdt,gcamdocno,gcam002,gcam002_desc(chr80),gcam001,gcam001_desc(chr80),gcamstus,gcamownid,gcamownid_desc(chr80),gcamowndp,gcamowndp_desc(chr80),gcamcrtid,gcamcrtid_desc(chr80),gcamcrtdp,gcamcrtdp_desc(chr80),gcamcrtdt,gcammodid,gcammodid_desc(chr80),gcammoddt,gcamcnfid,gcamcnfid_desc(chr80),gcamcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gcanunit,gcanseq,gcansite,gcansite_desc(chr500),gcan001,gcan002,gcan002_desc(chr500),gcan001_desc(num20_6),gcan003,gcan004"/>
+      <var id="bs_field" value="gcam000,gcamsite,gcamdocno,gcamdocdt,gcam002,gcam001,gcamunit" pk="gcamdocno" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="agct410_01"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="agc" filename="agct410" method="dialog">
+    <section id="input">
+      <input id="head" field="gcamsite,gcamunit,gcamdocdt,gcamdocno,gcam002,gcam001,gcamstus"/>
+      <input id="body" page="1" field="gcanunit,gcanseq,gcansite,gcan001,gcan002,gcan003,gcan004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gcamsite,gcamunit,gcamdocdt,gcamdocno,gcam002,gcam001,gcamstus,gcamownid,gcamowndp,gcamcrtid,gcamcrtdp,gcamcrtdt,gcammodid,gcammoddt,gcamcnfid,gcamcnfdt"/>
+      <construct id="body" page="1" field="gcanunit,gcanseq,gcansite,gcan001,gcan002,gcan003,gcan004"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gcamdocno"/>
+      <set id="head" type="no_entry" field="gcamdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gcam000" def_scc="6543"/>
+      <column id="gcamsite">
+        <after>
+          <reference field="gcamsite_desc" ref_field="gcam_t.gcamsite" map_field="gcament,gcamsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="gcamsite_desc"/>
+      <column id="gcamunit"/>
+      <column id="gcamdocdt"/>
+      <column id="gcamdocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_gcamdocno" state="c"/>
+      </column>
+      <column id="gcam002">
+        <after>
+          <reference field="gcam002_desc" ref_field="gcam002" map_field="gcam002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2055&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="gcam002_desc"/>
+      <column id="gcam001">
+        <after>
+          <reference field="gcam001_desc" ref_field="gcam001" map_field="gcam001" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2056&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="gcam001_desc"/>
+      <column id="gcamstus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="gcamownid">
+        <after>
+          <reference field="gcamownid_desc" ref_field="gcam_t.gcamownid" map_field="gcamownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gcamownid_desc"/>
+      <column id="gcamowndp">
+        <after>
+          <reference field="gcamowndp_desc" ref_field="gcam_t.gcamowndp" map_field="gcamowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gcamowndp_desc"/>
+      <column id="gcamcrtid">
+        <after>
+          <reference field="gcamcrtid_desc" ref_field="gcam_t.gcamcrtid" map_field="gcamcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gcamcrtid_desc"/>
+      <column id="gcamcrtdp">
+        <after>
+          <reference field="gcamcrtdp_desc" ref_field="gcam_t.gcamcrtdp" map_field="gcamcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gcamcrtdp_desc"/>
+      <column id="gcamcrtdt"/>
+      <column id="gcammodid">
+        <after>
+          <reference field="gcammodid_desc" ref_field="gcam_t.gcammodid" map_field="gcammodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gcammodid_desc"/>
+      <column id="gcammoddt"/>
+      <column id="gcamcnfid">
+        <after>
+          <reference field="gcamcnfid_desc" ref_field="gcam_t.gcamcnfid" map_field="gcamcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gcamcnfid_desc"/>
+      <column id="gcamcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="gcanunit"/>
+      <column id="gcanseq"/>
+      <column id="gcansite">
+        <after>
+          <reference field="gcansite_desc" ref_field="gcan_t.gcansite" map_field="gcanent,gcansite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="gcansite_desc"/>
+      <column id="gcan001">
+        <after>
+          <reference field="gcan001_desc" ref_field="gcan_t.gcan001" map_field="gcanent,gcan001" ref_sql="SELECT gcao004 FROM gcao_t WHERE gcaoent=$varg_enterprise$var AND gcao001=? "/>
+        </after>
+        <controlp form="q_gcao001_1" state="i"/>
+        <controlp form="q_gcao001" state="c"/>
+      </column>
+      <column id="gcan002">
+        <after>
+          <reference field="gcan002_desc" ref_field="gcan_t.gcan002" map_field="gcanent,gcan002" ref_sql="SELECT gcafl003 FROM gcafl_t WHERE gcaflent=$varg_enterprise$var AND gcafl001=? AND gcafl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_gcaf001" state="c"/>
+      </column>
+      <column id="gcan002_desc"/>
+      <column id="gcan001_desc"/>
+      <column id="gcan003"/>
+      <column id="gcan004" def_scc="6551"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gcam_t" pk="gcamdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT gcam000,gcamsite,&apos;&apos;,gcamunit,gcamdocdt,gcamdocno,gcam002,&apos;&apos;,gcam001,&apos;&apos;,gcamstus,gcamownid,&apos;&apos;,gcamowndp,&apos;&apos;,gcamcrtid,&apos;&apos;,gcamcrtdp,&apos;&apos;,gcamcrtdt,gcammodid,&apos;&apos;,gcammoddt,gcamcnfid,&apos;&apos;,gcamcnfdt FROM gcam_t WHERE gcament= ? AND gcamdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gcam000,gcamsite,&apos;&apos;,gcamunit,gcamdocdt,gcamdocno,gcam002,&apos;&apos;,gcam001,&apos;&apos;,gcamstus,gcamownid,&apos;&apos;,gcamowndp,&apos;&apos;,gcamcrtid,&apos;&apos;,gcamcrtdp,&apos;&apos;,gcamcrtdt,gcammodid,&apos;&apos;,gcammoddt,gcamcnfid,&apos;&apos;,gcamcnfdt FROM gcam_t" order="gcamdocno"/>
+    </head>
+    <body id="gcan_t" page="1" linked="" pk="gcanseq" fk="gcandocno">
+      <sql id="forupd_sql_detail" query="SELECT gcanunit,gcanseq,gcansite,&apos;&apos;,gcan001,gcan002,&apos;&apos;,&apos;&apos;,gcan003,gcan004 FROM gcan_t WHERE gcanent=? AND gcandocno=? AND gcanseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gcanunit,gcanseq,gcansite,&apos;&apos;,gcan001,gcan002,&apos;&apos;,&apos;&apos;,gcan003,gcan004 FROM gcan_t WHERE gcanent=? AND gcandocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

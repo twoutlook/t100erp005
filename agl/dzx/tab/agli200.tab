@@ -1,0 +1,100 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli200" module="agl" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02298" crtdt="2013-12-16 11:02:48" modid="02599" moddt="2016-07-20 18:08:15" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="間接法群組維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glbdstus,glbd001,glbdl003,glbd002,glbd003,glbd004,glbd005"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="glbd001,glbdmodid,glbdmodid_desc(chr500),glbdmoddt,glbdownid,glbdownid_desc(chr500),glbdowndp,glbdowndp_desc(chr500),glbdcrtid,glbdcrtid_desc(chr500),glbdcrtdp,glbdcrtdp_desc(chr500),glbdcrtdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="agli200" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="glbdstus,glbd001,glbdl003,glbd002,glbd003,glbd004,glbd005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="glbdstus,glbd001,glbdl003,glbd002,glbd003,glbd004,glbd005"/>
+      <construct id="body" page="2" field="glbdmodid,glbdmoddt,glbdownid,glbdowndp,glbdcrtid,glbdcrtdp,glbdcrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="glbdstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="glbd001">
+        <controlp form="q_glbd001" state="c"/>
+      </column>
+      <column id="glbdl003"/>
+      <column id="glbd002"/>
+      <column id="glbd003"/>
+      <column id="glbd004" type="S" default="1"/>
+      <column id="glbd005" type="S" default="2" def_scc="8056"/>
+    </init>
+    <init id="body" page="2">
+      <column id="glbdmodid">
+        <after>
+          <reference field="glbdmodid_desc" ref_field="glbd_t.glbdmodid" map_field="glbdmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glbdmodid_desc"/>
+      <column id="glbdmoddt"/>
+      <column id="glbdownid">
+        <after>
+          <reference field="glbdownid_desc" ref_field="glbd_t.glbdownid" map_field="glbdownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glbdownid_desc"/>
+      <column id="glbdowndp">
+        <after>
+          <reference field="glbdowndp_desc" ref_field="glbd_t.glbdowndp" map_field="glbdowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glbdowndp_desc"/>
+      <column id="glbdcrtid">
+        <after>
+          <reference field="glbdcrtid_desc" ref_field="glbd_t.glbdcrtid" map_field="glbdcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glbdcrtid_desc"/>
+      <column id="glbdcrtdp">
+        <after>
+          <reference field="glbdcrtdp_desc" ref_field="glbd_t.glbdcrtdp" map_field="glbdcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glbdcrtdp_desc"/>
+      <column id="glbdcrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="glbd_t" page="1,2" linked="" pk="glbd001">
+      <sql id="forupd_sql_detail" query="SELECT glbdstus,glbd001,&apos;&apos;,glbd002,glbd003,glbd004,glbd005,&apos;&apos;,glbdmodid,&apos;&apos;,glbdmoddt,glbdownid,&apos;&apos;,glbdowndp,&apos;&apos;,glbdcrtid,&apos;&apos;,glbdcrtdp,&apos;&apos;,glbdcrtdt FROM glbd_t WHERE glbdent=? AND glbd001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glbdstus,glbd001,&apos;&apos;,glbd002,glbd003,glbd004,glbd005,&apos;&apos;,glbdmodid,&apos;&apos;,glbdmoddt,glbdownid,&apos;&apos;,glbdowndp,&apos;&apos;,glbdcrtid,&apos;&apos;,glbdcrtdp,&apos;&apos;,glbdcrtdt FROM glbd_t WHERE glbdent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="glbdl_t.glbdl003" table="glbdl_t" fk="glbd001" pk="glbdl001,glbdl002" field="glbdl003"/>
+    </body>
+  </dataset>
+</assembly>
+

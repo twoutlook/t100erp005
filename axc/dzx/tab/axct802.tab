@@ -1,0 +1,113 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axct802" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="03297" crtdt="2014-12-11 10:09:52" modid="03297" moddt="2014-12-15 16:14:35" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="期初在製貨齡開帳作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcfmcomp,xcfmcomp_desc(chr80),xcfmsite"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcfmsite,l_xcfmsite_desc(chr500),xcfm007,xcfm001,xcfm002,xcfm002_desc(chr500),xcfm002_desc_desc(chr500),xcfm003,xcfm004,xcfm004_desc(chr500),xcfm005,xcfm005_desc(chr500),xcfm006,xcfm008,xcfm009"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axct802" method="dialog">
+    <section id="input">
+      <input id="head" field="xcfmcomp,xcfmsite"/>
+      <input id="body" page="1" field="l_xcfmsite_desc,xcfm007,xcfm001,xcfm002,xcfm003,xcfm004,xcfm005,xcfm006,xcfm008,xcfm009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcfmcomp"/>
+      <construct id="body" page="1" field="l_xcfmsite_desc,xcfm007,xcfm001,xcfm002,xcfm003,xcfm004,xcfm005,xcfm006,xcfm008,xcfm009"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcfmsite"/>
+      <set id="head" type="no_entry" field="xcfmsite"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcfmcomp">
+        <after>
+          <check chkid="v_ooef001_1" id="isExist"/>
+          <reference field="xcfmcomp_desc" ref_field="xcfm_t.xcfmcomp" map_field="xcfment,xcfmcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="xcfmcomp_desc"/>
+      <column id="xcfmsite">
+        <after/>
+      </column>
+    </init>
+    <init id="body" page="1">
+      <column id="l_xcfmsite_desc"/>
+      <column id="xcfm007"/>
+      <column id="xcfm001">
+        <controlp form="q_inaj020" state="i"/>
+        <controlp form="q_inaj020" state="c"/>
+      </column>
+      <column id="xcfm002">
+        <after>
+          <check chkid="v_imaf001_1" id="isExist"/>
+          <reference field="xcfm002_desc" ref_field="xcfm_t.xcfm002" map_field="xcfment,xcfm002" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001" state="i"/>
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="xcfm002_desc">
+        <after>
+          <reference field="xcfm002_desc_desc" ref_field="xcfm_t.xcfm002" map_field="xcfment,xcfm002" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcfm002_desc_desc"/>
+      <column id="xcfm003">
+        <controlp form="q_bmaa002_1" state="i"/>
+        <controlp form="q_bmaa002_1" state="c"/>
+      </column>
+      <column id="xcfm004">
+        <after>
+          <check chkid="v_inaa001_1" id="isExist"/>
+        </after>
+        <controlp form="q_inaa001" state="i"/>
+        <controlp form="q_inaa001" state="c"/>
+      </column>
+      <column id="xcfm004_desc"/>
+      <column id="xcfm005">
+        <after>
+          <check chkid="v_inab002" id="isExist"/>
+        </after>
+        <controlp form="q_inab002_3" state="i"/>
+        <controlp form="q_inab002_3" state="c"/>
+      </column>
+      <column id="xcfm005_desc"/>
+      <column id="xcfm006">
+        <controlp form="q_inag006_2" state="i"/>
+        <controlp form="q_inag006_2" state="c"/>
+      </column>
+      <column id="xcfm008">
+        <controlp form="q_imag014" state="i"/>
+        <controlp form="q_imag014" state="c"/>
+      </column>
+      <column id="xcfm009" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcfm_t" pk="xcfmsite">
+      <sql id="forupd_sql" type="sql" query="SELECT xcfmcomp,&apos;&apos;,xcfmsite FROM xcfm_t WHERE xcfment= ? AND xcfmsite=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcfmcomp,&apos;&apos;,xcfmsite FROM xcfm_t" order="xcfmsite"/>
+    </head>
+    <body id="xcfm_t" page="1" linked="" pk="xcfm001,xcfm002,xcfm003,xcfm004,xcfm005,xcfm006,xcfm007" fk="xcfmsite">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,&apos;&apos;,xcfm007,xcfm001,xcfm002,&apos;&apos;,&apos;&apos;,xcfm003,xcfm004,&apos;&apos;,xcfm005,&apos;&apos;,xcfm006,xcfm008,xcfm009 FROM xcfm_t WHERE xcfment=? AND xcfmsite=? AND xcfm001=? AND xcfm002=? AND xcfm003=? AND xcfm004=? AND xcfm005=? AND xcfm006=? AND xcfm007=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,xcfm007,xcfm001,xcfm002,&apos;&apos;,&apos;&apos;,xcfm003,xcfm004,&apos;&apos;,xcfm005,&apos;&apos;,xcfm006,xcfm008,xcfm009 FROM xcfm_t WHERE xcfment= ? AND xcfmsite=?"/>
+    </body>
+  </dataset>
+</assembly>
+

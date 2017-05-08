@@ -1,0 +1,160 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="amhi203" module="amh" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02296" crtdt="2014-01-03 13:56:56" modid="06814" moddt="2016-07-14 09:49:44" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="區域基本資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mhacsite,mhacsite_desc(chr80),mhac001,mhac001_desc(chr80),mhac002,mhac002_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mhacstus,mhacunit,mhacunit_desc(chr500),mhac003,mhacl005,mhacl006,mhac004,mhac005,mhac006"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="mhac003,mhacownid,mhacownid_desc(chr500),mhacowndp,mhacowndp_desc(chr500),mhaccrtid,mhaccrtid_desc(chr500),mhaccrtdp,mhaccrtdp_desc(chr500),mhaccrtdt,mhacmodid,mhacmodid_desc(chr500),mhacmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="amh" filename="amhi203" method="dialog">
+    <section id="input">
+      <input id="head" field="mhacsite,mhac001,mhac002"/>
+      <input id="body" page="1" field="mhacstus,mhacunit,mhac003,mhacl005,mhacl006,mhac004,mhac005,mhac006" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mhacsite,mhac001,mhac002"/>
+      <construct id="body" page="1" field="mhacstus,mhacunit,mhac003,mhacl005,mhacl006,mhac004,mhac005,mhac006"/>
+      <construct id="body" page="2" field="mhacownid,mhacowndp,mhaccrtid,mhaccrtdp,mhaccrtdt,mhacmodid,mhacmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mhac001,mhac002"/>
+      <set id="head" type="no_entry" field="mhac001,mhac002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="mhacsite">
+        <after>
+          <check chkid="v_ooed004" id="isExist"/>
+          <reference field="mhacsite_desc" ref_field="mhac_t.mhacsite" map_field="mhacsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="i"/>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="mhacsite_desc"/>
+      <column id="mhac001">
+        <after>
+          <check chkid="v_mhaa001" id="isExist"/>
+          <reference field="mhac001_desc" ref_field="mhac_t.mhac001" map_field="mhac001" ref_sql="SELECT mhaal003 FROM mhaal_t WHERE mhaalent=$varg_enterprise$var AND mhaal001=? AND mhaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhaa001" state="i"/>
+        <controlp form="q_mhaa001" state="c"/>
+      </column>
+      <column id="mhac001_desc"/>
+      <column id="mhac002">
+        <after>
+          <check chkid="v_mhab002" id="isExist"/>
+          <reference field="mhac002_desc" ref_field="mhac001,mhac002" map_field="mhac001,mhac002" ref_sql="SELECT mhabl004 FROM mhabl_t WHERE mhablent=$varg_enterprise$var AND mhabl001=? AND mhabl002=? AND mhabl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhab002" state="i"/>
+        <controlp form="q_mhab002" state="c"/>
+      </column>
+      <column id="mhac002_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="mhacstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="mhacunit">
+        <after>
+          <check chkid="v_ooed004" id="isExist"/>
+          <reference field="mhacunit_desc" ref_field="mhac_t.mhacunit" map_field="mhacunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="i"/>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="mhacunit_desc"/>
+      <column id="mhac003">
+        <controlp form="q_mhac003" state="c"/>
+      </column>
+      <column id="mhacl005"/>
+      <column id="mhacl006"/>
+      <column id="mhac004" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhac005" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhac006" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="mhacownid">
+        <after>
+          <reference field="mhacownid_desc" ref_field="mhac_t.mhacownid" map_field="mhacownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhacownid_desc"/>
+      <column id="mhacowndp">
+        <after>
+          <reference field="mhacowndp_desc" ref_field="mhac_t.mhacowndp" map_field="mhacowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhacowndp_desc"/>
+      <column id="mhaccrtid">
+        <after>
+          <reference field="mhaccrtid_desc" ref_field="mhac_t.mhaccrtid" map_field="mhaccrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhaccrtid_desc"/>
+      <column id="mhaccrtdp">
+        <after>
+          <reference field="mhaccrtdp_desc" ref_field="mhac_t.mhaccrtdp" map_field="mhaccrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhaccrtdp_desc"/>
+      <column id="mhaccrtdt"/>
+      <column id="mhacmodid">
+        <after>
+          <reference field="mhacmodid_desc" ref_field="mhac_t.mhacmodid" map_field="mhacmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhacmodid_desc"/>
+      <column id="mhacmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="mhac_t" pk="mhac001,mhac002">
+      <sql id="forupd_sql" type="sql" query="SELECT mhacsite,&apos;&apos;,mhac001,&apos;&apos;,mhac002,&apos;&apos; FROM mhac_t WHERE mhacent= ? AND mhac001=? AND mhac002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mhacsite,&apos;&apos;,mhac001,&apos;&apos;,mhac002,&apos;&apos; FROM mhac_t" order="mhac001,mhac002"/>
+    </head>
+    <body id="mhac_t" page="1,2" linked="" pk="mhac003" fk="mhac001,mhac002">
+      <sql id="forupd_sql_detail" query="SELECT mhacstus,mhacunit,&apos;&apos;,mhac003,&apos;&apos;,&apos;&apos;,mhac004,mhac005,mhac006,&apos;&apos;,mhacownid,&apos;&apos;,mhacowndp,&apos;&apos;,mhaccrtid,&apos;&apos;,mhaccrtdp,&apos;&apos;,mhaccrtdt,mhacmodid,&apos;&apos;,mhacmoddt FROM mhac_t WHERE mhacent=? AND mhac001=? AND mhac002=? AND mhac003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mhacstus,mhacunit,&apos;&apos;,mhac003,&apos;&apos;,&apos;&apos;,mhac004,mhac005,mhac006,&apos;&apos;,mhacownid,&apos;&apos;,mhacowndp,&apos;&apos;,mhaccrtid,&apos;&apos;,mhaccrtdp,&apos;&apos;,mhaccrtdt,mhacmodid,&apos;&apos;,mhacmoddt FROM mhac_t WHERE mhacent= ? AND mhac001=? AND mhac002=?"/>
+      <sql id="detail_append" type="lang" target="mhacl_t.mhacl005,mhacl_t.mhacl006" table="mhacl_t" fk="mhac001,mhac002,mhac003" pk="mhacl001,mhacl002,mhacl003,mhacl004" field="mhacl005,mhacl006"/>
+    </body>
+  </dataset>
+</assembly>
+

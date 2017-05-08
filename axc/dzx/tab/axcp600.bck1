@@ -1,0 +1,56 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcp600" module="axc" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="05947" crtdt="2015-09-17 17:11:00" modid="02295" moddt="2016-09-21 14:15:46" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="成本月結作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcazld(chr5),xcazld_desc(chr80),comp(chr10),comp_desc(chr80),xcaz001(chr10),xcaz001_desc(chr80),yy(num5),mm(num5),chk(chr500),stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="axc" filename="axcp600" method="dialog">
+    <section id="input">
+      <input id="head" field="xcazld,comp,xcaz001,yy,mm,chk"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcazld">
+        <after>
+          <check chkid="v_glaald" id="isExist"/>
+          <reference field="xcazld_desc" ref_field="xcazld" map_field="xcazent.xcazld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaa001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xcazld_desc"/>
+      <column id="comp">
+        <after>
+          <reference field="comp_desc" ref_field="comp" map_field="xcazent,comp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="comp_desc"/>
+      <column id="xcaz001">
+        <after>
+          <reference field="xcaz001_desc" ref_field="xcaz001" map_field="xcazent,xcaz001" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcat001" state="i"/>
+        <controlp form="q_xcat001" state="c"/>
+      </column>
+      <column id="xcaz001_desc"/>
+      <column id="yy"/>
+      <column id="mm"/>
+      <column id="chk" type="S" default="N"/>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

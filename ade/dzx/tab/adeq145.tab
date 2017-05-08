@@ -1,0 +1,69 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adeq145" module="ade" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="02749" crtdt="2016-10-17 17:51:05" modid="02749" moddt="2017-01-03 17:21:35" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="會員活卡率查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="rtjasite,l_date_s,l_date_e"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),rtjasite,rtjasite_desc(chr500),l_piece_n(num20_6),l_consumption_n(num20_6),l_sale_n(num20_6),l_survival_rate_n(num20_6)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="l_rtjasite_o(chr10),l_rtjasite_o_desc(chr500),l_piece_o(num20_6),l_consumption_o(num20_6),l_sale_o(num20_6),l_survival_rate_o(num20_6)"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="rtja001(chr30),mmaf001(chr30),mmaf008(chr500),rtja031(num20_6)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),rtjasite(b_rtjasite),rtjasite_desc(b_rtjasite_desc),l_piece_n(l_piece_n),l_consumption_n(l_consumption_n),l_sale_n(l_sale_n),l_survival_rate_n(l_survival_rate_n)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="l_rtjasite_o(l_rtjasite_o),l_rtjasite_o_desc(l_rtjasite_o_desc),l_piece_o(l_piece_o),l_consumption_o(l_consumption_o),l_sale_o(l_sale_o),l_survival_rate_o(l_survival_rate_o)"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="rtja001(rtja001),mmaf001(mmaf001),mmaf008(mmaf008),rtja031(rtja031)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adeq145" method="dialog">
+    <section id="input"/>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="rtjasite(b_rtjasite)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="rtjasite">
+        <after>
+          <reference field="rtjasite_desc" ref_field="rtjasite" map_field="rtjaent,rtjasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="rtjasite_desc"/>
+      <column id="l_piece_n"/>
+      <column id="l_consumption_n"/>
+      <column id="l_sale_n"/>
+      <column id="l_survival_rate_n"/>
+    </init>
+    <init id="body" page="2">
+      <column id="l_rtjasite_o">
+        <after/>
+      </column>
+      <column id="l_rtjasite_o_desc"/>
+      <column id="l_piece_o"/>
+      <column id="l_consumption_o"/>
+      <column id="l_sale_o"/>
+      <column id="l_survival_rate_o"/>
+    </init>
+    <init id="body" page="3">
+      <column id="rtja001"/>
+      <column id="mmaf001"/>
+      <column id="mmaf008"/>
+      <column id="rtja031"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="rtja_t" page="1,2,3" linked="" pk="rtjadocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,rtjasite,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM rtja_t WHERE rtjaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

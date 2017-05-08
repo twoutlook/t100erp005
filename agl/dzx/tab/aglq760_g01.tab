@@ -1,0 +1,33 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglq760_g01" module="agl" jobmode="N" type="g01" industry="std" crtid="05416" crtdt="2014-07-22 16:07:39" modid="02599" moddt="2016-05-27 15:04:37" sdver="3" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.sdate(dat|起始日期),tm.syear(glap002|起始年度),tm.speri(glap004|起始期別),tm.edate(dat|截止日期),tm.eyear(glap002|截止年度),tm.eperi(glap004|截止期別),tm.curro(chr1|顯示原幣),tm.grby1(chr1|按幣別分頁),tm.grby2(chr1|按科目分頁),tm.ctype(chr1|多本位幣),tm.ld(glaald|帳套)">
+    <var seq="1" value="glaqld,glaqcomp,glaqent,glaq002(chr30|NULL),glaq002_desc(chr300|NULL),glapdocdt(dat|NULL),glaqdocno(chr20|NULL),glap004(num5|NULL),glaq001(chr300|NULL),style(chr1|NULL),glaq005(chr10|NULL),glaq006(num26_10|NULL),glaq010d(num20_6|NULL),glaq010c(num20_6|NULL),glaq003(num20_6|NULL),glaq004(num20_6|NULL),state(chr10|NULL),amt(num20_6|NULL),amt1(num20_6|NULL),groupby1(chr100|NULL)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="glaqld,glaqcomp,glaqent,glaq002(chr30|NULL),glaq002_desc(chr300|NULL),glapdocdt(dat|NULL),glaqdocno(chr20|NULL),glap004(num5|NULL),glaq001(chr300|NULL),style(chr1|NULL),glaq005(chr10|NULL),glaq006(num26_10|NULL),glaq010d(num20_6|NULL),glaq010c(num20_6|NULL),glaq003(num20_6|NULL),glaq004(num20_6|NULL),state(chr10|NULL),amt(num20_6|NULL),amt1(num20_6|NULL),groupby1(chr100|NULL)"/>
+    <sql id="g_from" query="glaq_t"/>
+    <sql id="g_where" query="" maintable="glaq_t"/>
+    <sql id="g_order" query="groupby1"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="groupby1"/>
+    <section id="b_group" reptype="d01">
+      <rep type="groupby1" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="glaqent,groupby1"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="glaqent,groupby1"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="glaqent,groupby1"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="groupby1" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="glaqent,groupby1"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

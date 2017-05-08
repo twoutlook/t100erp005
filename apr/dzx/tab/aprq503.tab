@@ -1,0 +1,140 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aprq503" module="apr" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="03247" crtdt="2014-10-31 10:32:55" modid="03247" moddt="2014-11-08 23:30:02" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="客戶指定日期價格查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),prfmsite,prfm002,prfm002_desc(chr500),ldate(chr500),prfm001,prfm004"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="prfm020,prfm003,prfm003_desc(chr500),prfm003_desc_desc(chr500),imaa009(chr500),prfm005,prfm005_desc(chr500),prfm006,prfm006_desc(chr500),prfm009,prfm009_desc(chr500),prfm010,prfm011,prfm012,prfm013,prfm014,prfm015,prfm016,prfm019,prfm017,prfm018"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),prfmsite(b_prfmsite),prfm002(b_prfm002),prfm002_desc(b_prfm002_desc),ldate(b_ldate),prfm001(b_prfm001),prfm004(b_prfm004)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="prfm020(b_prfm020),prfm003(b_prfm003),prfm003_desc(b_prfm003_desc),prfm003_desc_desc(b_prfm003_desc_desc),imaa009(b_imaa009),prfm005(b_prfm005),prfm005_desc(b_prfm005_desc),prfm006(b_prfm006),prfm006_desc(prfm006_desc),prfm009(b_prfm009),prfm009_desc(b_prfm009_desc),prfm010(b_prfm010),prfm011(b_prfm011),prfm012(b_prfm012),prfm013(b_prfm013),prfm014(b_prfm014),prfm015(b_prfm015),prfm016(b_prfm016),prfm019(b_prfm019),prfm017(b_prfm017),prfm018(b_prfm018)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="apr" filename="aprq503" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="prfm002,ldate" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="prfm002(b_prfm002)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="prfmsite">
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="prfm002">
+        <after>
+          <reference field="prfm002_desc" ref_field="prfm002" map_field="prfm002" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_13" state="c"/>
+      </column>
+      <column id="prfm002_desc"/>
+      <column id="ldate"/>
+      <column id="prfm001" type="S" default="1" def_scc="6043"/>
+      <column id="prfm004" type="S" default="1" def_scc="6042"/>
+    </init>
+    <init id="body" page="2">
+      <column id="prfm020">
+        <after>
+          <check chkid="v_imay003" id="isExist"/>
+        </after>
+        <controlp form="q_imay003_3" state="i"/>
+        <controlp form="q_imay003_3" state="c"/>
+      </column>
+      <column id="prfm003">
+        <after>
+          <check chkid="v_imaa001_5" id="isExist"/>
+          <reference field="prfm003_desc" ref_field="prfm003" map_field="prfm003" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="prfm003_desc">
+        <after>
+          <reference field="prfm003_desc_desc" ref_field="prfm003" map_field="prfm003" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="prfm003_desc_desc"/>
+      <column id="imaa009"/>
+      <column id="prfm005">
+        <after>
+          <check chkid="v_ooai001" id="isExist"/>
+          <reference field="prfm005_desc" ref_field="prfm005" map_field="prfm005" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="prfm005_desc"/>
+      <column id="prfm006">
+        <after>
+          <check chkid="v_oodb002" id="isExist"/>
+        </after>
+        <controlp form="q_oodb002" state="c"/>
+      </column>
+      <column id="prfm006_desc"/>
+      <column id="prfm009">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="prfm009_desc" ref_field="prfm009" map_field="prfm009" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="prfm009_desc"/>
+      <column id="prfm010" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="prfm011" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="prfm012">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="prfm013" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="prfm014" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="prfm015">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="prfm016">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="prfm019"/>
+      <column id="prfm017"/>
+      <column id="prfm018"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="prfm_t" page="1,2" linked="" pk="prfmsite,prfm001,prfm002,prfm003,prfm004,prfm005,prfm006,prfm007,prfm008,prfm009">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,prfmsite,prfm002,&apos;&apos;,&apos;&apos;,prfm001,prfm004,prfm020,prfm003,&apos;&apos;,&apos;&apos;,&apos;&apos;,prfm005,&apos;&apos;,prfm006,&apos;&apos;,prfm009,&apos;&apos;,prfm010,prfm011,prfm012,prfm013,prfm014,prfm015,prfm016,prfm019,prfm017,prfm018 FROM prfm_t WHERE prfment= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

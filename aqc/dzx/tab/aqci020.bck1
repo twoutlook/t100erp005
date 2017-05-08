@@ -1,0 +1,111 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aqci020" module="aqc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="01996" crtdt="2013-11-06 11:07:08" modid="01534" moddt="2015-07-06 10:34:09" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="品質檢驗判定結果維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="qcao001,qcao001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="qcaostus,qcao002,qcaol004,qcaol005,qcao003,qcao004,qcao005,qcao006,qcao007"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="qcao002,qcaoownid,qcaoownid_desc(chr500),qcaoowndp,qcaoowndp_desc(chr500),qcaocrtid,qcaocrtid_desc(chr500),qcaocrtdp,qcaocrtdp_desc(chr500),qcaocrtdt,qcaomodid,qcaomodid_desc(chr500),qcaomoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="aqc" filename="aqci020" method="dialog">
+    <section id="input">
+      <input id="head" field="qcao001"/>
+      <input id="body" page="1" field="qcaostus,qcao002,qcaol004,qcaol005,qcao003,qcao004,qcao005,qcao006,qcao007" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="qcao001"/>
+      <construct id="body" page="1" field="qcaostus,qcao002,qcaol004,qcaol005,qcao003,qcao004,qcao005,qcao006,qcao007"/>
+      <construct id="body" page="2" field="qcaoownid,qcaoowndp,qcaocrtid,qcaocrtdp,qcaocrtdt,qcaomodid,qcaomoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="qcao001"/>
+      <set id="head" type="no_entry" field="qcao001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="qcao001">
+        <after>
+          <reference field="qcao001_desc" ref_field="qcao001" map_field="qcao001" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;5&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooal002" state="i"/>
+        <controlp form="q_ooal002" state="c"/>
+      </column>
+      <column id="qcao001_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="qcaostus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="qcao002">
+        <controlp form="q_qcao002" state="c"/>
+      </column>
+      <column id="qcaol004"/>
+      <column id="qcaol005"/>
+      <column id="qcao003" type="S" default="1" def_scc="5070"/>
+      <column id="qcao004" type="S" default="1" def_scc="5071"/>
+      <column id="qcao005" type="S" default="Y"/>
+      <column id="qcao006" type="S" default="Y"/>
+      <column id="qcao007" type="S" default="Y"/>
+    </init>
+    <init id="body" page="2">
+      <column id="qcaoownid">
+        <after/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="qcaoownid_desc"/>
+      <column id="qcaoowndp">
+        <after/>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="qcaoowndp_desc"/>
+      <column id="qcaocrtid">
+        <after/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="qcaocrtid_desc"/>
+      <column id="qcaocrtdp">
+        <after/>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="qcaocrtdp_desc"/>
+      <column id="qcaocrtdt"/>
+      <column id="qcaomodid">
+        <after/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="qcaomodid_desc"/>
+      <column id="qcaomoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="qcao_t" pk="qcao001">
+      <sql id="forupd_sql" type="sql" query="SELECT qcao001,&apos;&apos; FROM qcao_t WHERE qcaoent= ? AND qcao001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT qcao001,&apos;&apos; FROM qcao_t" order="qcao001"/>
+    </head>
+    <body id="qcao_t" page="1,2" linked="" pk="qcao002" fk="qcao001">
+      <sql id="forupd_sql_detail" query="SELECT qcaostus,qcao002,&apos;&apos;,&apos;&apos;,qcao003,qcao004,qcao005,qcao006,qcao007,&apos;&apos;,qcaoownid,&apos;&apos;,qcaoowndp,&apos;&apos;,qcaocrtid,&apos;&apos;,qcaocrtdp,&apos;&apos;,qcaocrtdt,qcaomodid,&apos;&apos;,qcaomoddt FROM qcao_t WHERE qcaoent=? AND qcao001=? AND qcao002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT qcaostus,qcao002,&apos;&apos;,&apos;&apos;,qcao003,qcao004,qcao005,qcao006,qcao007,&apos;&apos;,qcaoownid,&apos;&apos;,qcaoowndp,&apos;&apos;,qcaocrtid,&apos;&apos;,qcaocrtdp,&apos;&apos;,qcaocrtdt,qcaomodid,&apos;&apos;,qcaomoddt FROM qcao_t WHERE qcaoent= ? AND qcao001=?"/>
+      <sql id="detail_append" type="lang" target="qcaol_t.qcaol004,qcaol_t.qcaol005" table="qcaol_t" fk="qcao001,qcao002" pk="qcaol001,qcaol002,qcaol003" field="qcaol004,qcaol005"/>
+    </body>
+  </dataset>
+</assembly>
+

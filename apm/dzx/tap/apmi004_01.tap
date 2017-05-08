@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="apmi004_01" std_prog="apmi004_01" erpver="1.0" module="APM" ver="1" env="s" zone="t10dev" normal_style="Y" booking="Y">
+  <point name="input.a.pmak001" order="0" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF NOT cl_null(g_pmak_m.pmak001) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_pmak_m.pmak001 != g_pmak001_t )) THEN 
+                  CALL apmi004_01_pmak001_desc() 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmak_t WHERE "||"pmakent = '" ||g_enterprise|| "' AND "||"pmak001 = '"||g_pmak_m.pmak001 ||"'",'std-00004',0) THEN 
+                     LET g_pmak_m.pmak001 = g_pmak001_t
+                     CALL apmi004_01_pmak001_desc() 
+                     NEXT FIELD CURRENT
+                  END IF
+                  IF NOT apmi004_01_pmak001_chk() THEN
+                     LET g_pmak_m.pmak001 = g_pmak001_t
+                     CALL apmi004_01_pmak001_desc() 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+]]>
+  </point>
+  <point name="input.c.pmak001" order="0" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_pmak_m.pmak001             #給予default值
+
+            #給予arg
+
+            CALL q_ooag001()                                #呼叫開窗
+
+            LET g_pmak_m.pmak001 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_pmak_m.pmak001 TO pmak001              #顯示到畫面上
+            CALL apmi004_01_pmak001_desc() 
+
+            NEXT FIELD pmak001                          #返回原欄位
+
+]]>
+  </point>
+  <point name="show.head.reference" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_pmak_m.pmak001
+   CALL ap_ref_array2(g_ref_fields," SELECT mmakl002,mmakl003 FROM mmakl_t WHERE mmaklent = '"||g_enterprise||"' AND mmakldocno = ? AND mmakl001 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_pmak_m.mmakl002 = g_rtn_fields[1] 
+   LET g_pmak_m.mmakl003 = g_rtn_fields[2] 
+   DISPLAY BY NAME g_pmak_m.mmakl002,g_pmak_m.mmakl003]]>
+  </point>
+  <point name="function.apmi004_01_pmak001_ref" order="1" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#依據傳入的參數p_pmak001(識別碼)的值，從[T:一次性交易對象資料檔]抓取出對應的資料顯示在畫面上
+PRIVATE FUNCTION apmi004_01_pmak001_ref(p_pmak001)
+DEFINE p_pmak001   LIKE pmak_t.pmak001
+
+    SELECT pmak001,pmak003,pmak004,pmak005,pmak007,pmak008,pmak009 
+       INTO g_pmak_m.pmak001,g_pmak_m.pmak003,g_pmak_m.pmak004,g_pmak_m.pmak005,g_pmak_m.pmak007,g_pmak_m.pmak008,g_pmak_m.pmak009
+       FROM pmak_t 
+       WHERE pmak001 = p_pmak001 AND pmakent = g_enterprise
+       
+END FUNCTION]]>
+  </point>
+  <point name="function.apmi004_01_pmak001_chk" order="2" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+
+PRIVATE FUNCTION apmi004_01_pmak001_chk()
+DEFINE r_success  LIKE type_t.num5
+
+       LET r_success = TRUE
+       
+       IF NOT ap_chk_isExist(g_pmak_m.pmak001,"SELECT COUNT(*) FROM ooag_t WHERE ooagent = '" ||g_enterprise||"' AND ooag001 = ? ","aoo-00074",1 ) THEN
+          LET r_success = FALSE
+          RETURN r_success
+       END IF
+       IF NOT ap_chk_isExist(g_pmak_m.pmak001,"SELECT COUNT(*) FROM ooag_t WHERE ooagent = '" ||g_enterprise||"' AND ooag001 = ? AND ooagstus = 'Y' ","aoo-00071",1 ) THEN
+          LET r_success = FALSE
+          RETURN r_success
+       END IF
+       RETURN r_success
+       
+END FUNCTION]]>
+  </point>
+  <point name="function.apmi004_01_pmak001_desc" order="3" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+
+PRIVATE FUNCTION apmi004_01_pmak001_desc()
+        SELECT oofa011 INTO g_pmak_m.pmak003 FROM oofa_t WHERE oofaent = g_enterprise AND oofa002 = '2' AND oofa003 = g_pmak_m.pmak001
+        
+        SELECT oofb010 INTO g_pmak_m.pmak005 FROM oofb_t WHERE oofbent = g_enterprise AND oofb002 = '2' AND oofb003 = g_pmak_m.pmak001
+        
+        SELECT ooag006 INTO g_pmak_m.pmak009 FROM ooag_t WHERE ooagent = g_enterprise AND ooag001 = g_pmak_m.pmak001
+        
+END FUNCTION]]>
+  </point>
+  <point name="input.after_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+                
+            CALL cl_showmsg()   #錯誤訊息統整顯示
+ 
+            IF p_cmd <> "u" THEN
+               LET l_count = 1  
+               
+               IF p_type = '1' THEN
+                  #新增到oofa_t 聯絡信息
+                  LET l_success = ''
+                  LET l_oofa001 = ''
+                  SELECT pmaa002 INTO l_pmaa002 FROM pmaa_t WHERE pmaaent = g_enterprise AND pmaa001 =  p_pmak002
+                  IF cl_null(l_pmaa002) THEN
+                     LET l_pmaa002 = '3'
+                  END IF
+                  CALL s_aooi350_ins_oofa('3',p_pmak002,l_pmaa002) RETURNING l_success,g_pmak_m.pmak001
+                  IF NOT l_success THEN
+                     CALL cl_err("oofa_t",SQLCA.sqlcode,1)  
+                     CONTINUE DIALOG 
+                  END IF
+               END IF
+               
+               SELECT COUNT(*) INTO l_count FROM pmak_t
+                WHERE pmakent = g_enterprise AND pmak001 = g_pmak_m.pmak001
+
+               IF l_count = 0 THEN
+               
+                  INSERT INTO pmak_t (pmakent,pmak001,pmak002,pmak003,pmak004,pmak005,pmak006,pmak007,pmak008,pmak009)
+                  VALUES (g_enterprise,g_pmak_m.pmak001,p_pmak002,g_pmak_m.pmak003,g_pmak_m.pmak004,g_pmak_m.pmak005,p_pmak006,g_pmak_m.pmak007,g_pmak_m.pmak008,g_pmak_m.pmak009) # DISK WRITE
+                 
+                  IF SQLCA.sqlcode THEN
+                     CALL cl_err("pmak_t",SQLCA.sqlcode,1)  
+                     CONTINUE DIALOG
+                  END IF
+
+                  CALL s_transaction_end('Y','0')
+               ELSE
+                  CALL cl_err( "p_pmak001", "std-00006", 0 )
+                  CALL s_transaction_end('N','0')
+               END IF 
+            ELSE
+               #單頭修改
+               UPDATE pmak_t SET (pmak001,pmak003,pmak004,pmak005,pmak007,pmak008,pmak009) = (g_pmak_m.pmak001,g_pmak_m.pmak003,g_pmak_m.pmak004,g_pmak_m.pmak005,g_pmak_m.pmak007,g_pmak_m.pmak008,g_pmak_m.pmak009)
+                WHERE pmak001 = p_pmak001 AND pmakent = g_enterprise
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("pmak_t",SQLCA.sqlcode,1)  
+                  CALL s_transaction_end('N','0')
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.before_close" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET INT_FLAG = FALSE]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF p_cmd ='u' THEN
+               LET g_pmak001_t = g_pmak_m.pmak001
+               
+               CALL s_transaction_begin()
+               
+               OPEN apmi004_01_cl USING g_enterprise,g_pmak_m.pmak001
+               IF STATUS THEN
+                  CALL cl_err("OPEN apmi004_01_cl:", STATUS, 1)
+                  CLOSE apmi004_01_cl
+                  CALL s_transaction_end('N','0')
+                  RETURN
+               END IF
+ 
+               #鎖住將被更改或取消的資料
+               FETCH apmi004_01_cl INTO g_pmak_m.pmak001,g_pmak_m.pmak003,g_pmak_m.pmak004,g_pmak_m.pmak005,g_pmak_m.pmak007,g_pmak_m.pmak008,g_pmak_m.pmak009
+       
+               #資料被他人LOCK, 或是sql執行時出現錯誤
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("pmak_t",SQLCA.sqlcode,0)
+                  CLOSE apmi004_01_cl
+                  CALL s_transaction_end('N','0')
+                  RETURN
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE p_type          LIKE type_t.chr1      #'1' 識別碼   '2' 內部員工
+   DEFINE p_pmak001       LIKE pmak_t.pmak001
+   DEFINE p_pmak002       LIKE pmak_t.pmak002
+   DEFINE p_pmak006       LIKE pmak_t.pmak006
+   DEFINE l_n             LIKE type_t.num5
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_oofa001       LIKE oofa_t.oofa001
+   DEFINE l_pmaa002       LIKE pmaa_t.pmaa002
+   DEFINE l_forupd_sql    STRING
+   DEFINE r_pmak001       LIKE pmak_t.pmak001
+   DEFINE l_gzze003  LIKE gzze_t.gzze003]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   p_type,p_pmak001,p_pmak002,p_pmak006]]>
+  </point>
+  <point name="input.more_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[     ]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET INT_FLAG = FALSE
+   LET r_pmak001 =  g_pmak_m.pmak001
+   RETURN r_pmak001]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF cl_null(p_type) THEN
+      #参数为空,请检查传入参数！
+      CALL cl_err('','sub-00110',1)
+      LET r_pmak001 =  ''
+      RETURN r_pmak001
+      CLOSE WINDOW w_apmi004_01
+   END IF
+   IF p_type = '1' THEN
+      IF cl_null(p_pmak002) OR cl_null(p_pmak006) THEN
+         #参数为空,请检查传入参数！
+         CALL cl_err('','sub-00110',1)
+         LET r_pmak001 =  ''
+         RETURN r_pmak001
+         CLOSE WINDOW w_apmi004_01
+      END IF
+   END IF
+   IF p_type = '2' THEN
+      IF cl_null(p_pmak002) THEN
+         #参数为空,请检查传入参数！
+         CALL cl_err('','sub-00110',1)
+         LET r_pmak001 =  ''
+         RETURN r_pmak001
+         CLOSE WINDOW w_apmi004_01
+      END IF
+   END IF
+   
+   IF p_type = '1' THEN
+      CALL cl_set_comp_visible("lbl_pmak001,pmak001",FALSE)
+   END IF
+   
+   IF p_type = '2' THEN
+      LET l_gzze003 = ' '
+       SELECT gzze003 INTO l_gzze003 FROM gzze_t WHERE gzze001 = 'apm-00188' AND gzze002 = g_dlang
+       CALL cl_set_comp_att_text('lbl_pmak001',l_gzze003)
+   END IF
+   
+   INITIALIZE g_pmak_m.* LIKE pmak_t.*             #DEFAULT 設定  
+   LET g_pmak001_t = NULL     
+      
+   LET l_n = 0
+   SELECT COUNT(*) INTO l_n FROM pmak_t WHERE pmak001 = p_pmak001 AND pmakent = g_enterprise 
+   IF l_n > 0 THEN
+      CALL apmi004_01_pmak001_ref(p_pmak001)  #帶值
+      LET p_cmd = 'u'
+      LET l_forupd_sql = "SELECT pmak001,pmak003,pmak004,pmak005,pmak007,pmak008,pmak009 FROM pmak_t WHERE pmakent= ? AND pmak001=? FOR UPDATE"
+      LET l_forupd_sql = cl_sql_forupd(l_forupd_sql)                #轉換不同資料庫語法
+      DECLARE apmi004_01_cl CURSOR FROM l_forupd_sql
+   ELSE     
+      LET g_pmak_m.pmak001 = p_pmak001
+      LET g_pmak_m.pmak008 = g_today   #預設值
+      LET p_cmd = 'a'
+   END IF
+   DISPLAY BY NAME g_pmak_m.pmak001,g_pmak_m.pmak003,g_pmak_m.pmak004,g_pmak_m.pmak005,g_pmak_m.pmak007,g_pmak_m.pmak008,g_pmak_m.pmak009]]>
+  </point>
+</add_points>

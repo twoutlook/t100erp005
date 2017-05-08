@@ -1,0 +1,77 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astq801" module="ast" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="02159" crtdt="2016-05-18 16:48:50" modid="07142" moddt="2016-07-31 14:26:13" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="合約帳單明細查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="stjm001,stje007(chr500),stje007_desc(chr500),stje008(chr500),stje008_desc(chr500),stjmseq,stjm002,stjm003,stjm003_desc(chr500),stjm004,stjm005,stjm006,stjm007,stjm008,stjm009,stjm010,stjm011,stjm012,stjm013,stjm014,stjm015,stjm016,stjm017"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="stjm001(b_stjm001),stje007(b_stje007),stje007_desc(b_stje007_desc),stje008(b_stje008),stje008_desc(b_stje008_desc),stjmseq(b_stjmseq),stjm002(b_stjm002),stjm003(b_stjm003),stjm003_desc(b_stjm003_desc),stjm004(b_stjm004),stjm005(b_stjm005),stjm006(b_stjm006),stjm007(b_stjm007),stjm008(b_stjm008),stjm009(b_stjm009),stjm010(b_stjm010),stjm011(b_stjm011),stjm012(b_stjm012),stjm013(b_stjm013),stjm014(b_stjm014),stjm015(b_stjm015),stjm016(b_stjm016),stjm017(b_stjm017)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="query" type="standard"/>
+      <action id="advance_account"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="astq801" method="dialog">
+    <section id="input"/>
+    <section id="construct">
+      <construct id="body" page="1" field="stjm001(b_stjm001),stjmseq(b_stjmseq),stjm002(b_stjm002),stjm003(b_stjm003),stjm004(b_stjm004),stjm005(b_stjm005),stjm006(b_stjm006),stjm007(b_stjm007),stjm008(b_stjm008),stjm009(b_stjm009),stjm010(b_stjm010),stjm011(b_stjm011),stjm012(b_stjm012),stjm013(b_stjm013),stjm014(b_stjm014),stjm015(b_stjm015),stjm016(b_stjm016),stjm017(b_stjm017)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="stjm001"/>
+      <column id="stje007">
+        <after>
+          <reference field="stje007_desc" ref_field="stje007" map_field="stje007" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_1" state="c"/>
+      </column>
+      <column id="stje007_desc"/>
+      <column id="stje008">
+        <after>
+          <reference field="stje008_desc" ref_field="stje008" map_field="stje008" ref_sql="SELECT mhbel003 FROM mhbel_t WHERE mhbelent=$varg_enterprise$var AND mhbel001=? AND mhbel002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhbe001" state="c"/>
+      </column>
+      <column id="stje008_desc"/>
+      <column id="stjmseq"/>
+      <column id="stjm002"/>
+      <column id="stjm003">
+        <after>
+          <reference field="stjm003_desc" ref_field="stjm003" map_field="stjment,stjm003" ref_sql="SELECT stael003 FROM stael_t WHERE staelent=$varg_enterprise$var AND stael001=? AND stael002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_stae001" state="c"/>
+      </column>
+      <column id="stjm003_desc"/>
+      <column id="stjm004"/>
+      <column id="stjm005"/>
+      <column id="stjm006"/>
+      <column id="stjm007" type="S" default="0"/>
+      <column id="stjm008" type="S" default="0"/>
+      <column id="stjm009" type="S" default="0"/>
+      <column id="stjm010" type="S" default="0"/>
+      <column id="stjm011" type="S" default="0"/>
+      <column id="stjm012" type="S" default="0"/>
+      <column id="stjm013" type="S" default="0"/>
+      <column id="stjm014" type="S" default="0"/>
+      <column id="stjm015"/>
+      <column id="stjm016">
+        <controlp form="q_stbadocno" state="c"/>
+      </column>
+      <column id="stjm017"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="stjm_t" page="1" linked="" pk="stjmseq,stjm001">
+      <sql id="b_fill_sql" query="SELECT stjm001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,stjmseq,stjm002,stjm003,&apos;&apos;,stjm004,stjm005,stjm006,stjm007,stjm008,stjm009,stjm010,stjm011,stjm012,stjm013,stjm014,stjm015,stjm016,stjm017 FROM stjm_t WHERE stjment= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

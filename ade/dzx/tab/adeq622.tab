@@ -1,0 +1,63 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adeq622" module="ade" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="06137" crtdt="2014-11-25 15:39:41" modid="06815" moddt="2015-12-09 18:09:00" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="配銷銷售月結查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),debvsite,debvsite_desc(chr500),debv002,debv003,debv012,debv013,debv014,debv015,debv016,debv017,l_tax(num20_6),debv018,debv019,debv020,debv026,debv027"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),debvsite(b_debvsite),debvsite_desc(b_debvsite_desc),debv002(b_debv002),debv003(b_debv003),debv012(b_debv012),debv013(b_debv013),debv014(b_debv014),debv015(b_debv015),debv016(b_debv016),debv017(b_debv017),l_tax(l_tax),debv018(b_debv018),debv019(b_debv019),debv020(b_debv020),debv026(b_debv026),debv027(b_debv027)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adeq622" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="debvsite,debv002,debv003,debv012,debv013,debv014,debv015,debv016,debv017,debv018,debv019,debv020,debv026,debv027" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="debvsite(b_debvsite),debv002(b_debv002),debv003(b_debv003),debv012(b_debv012),debv013(b_debv013),debv014(b_debv014),debv015(b_debv015),debv016(b_debv016),debv017(b_debv017),debv018(b_debv018),debv019(b_debv019),debv020(b_debv020),debv026(b_debv026),debv027(b_debv027)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="debvsite">
+        <after>
+          <reference field="debvsite_desc" ref_field="debvsite" map_field="debvent,debvsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="debvsite_desc"/>
+      <column id="debv002"/>
+      <column id="debv003"/>
+      <column id="debv012" type="S" default="0"/>
+      <column id="debv013" type="S" default="0"/>
+      <column id="debv014" type="S" default="0"/>
+      <column id="debv015" type="S" default="0"/>
+      <column id="debv016" type="S" default="0"/>
+      <column id="debv017" type="S" default="0"/>
+      <column id="l_tax"/>
+      <column id="debv018" type="S" default="0"/>
+      <column id="debv019"/>
+      <column id="debv020" type="S" default="0"/>
+      <column id="debv026" type="S" default="0"/>
+      <column id="debv027" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="debv_t" page="1" linked="" pk="debvsite,debv002,debv003">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,debvsite,&apos;&apos;,debv002,debv003,debv012,debv013,debv014,debv015,debv016,debv017,&apos;&apos;,debv018,debv019,debv020,debv026,debv027 FROM debv_t WHERE debvent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,614 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aimi104" std_prog="aimi104" erpver="1.0" ver="5" module="AIM" type="M" booking="N" designer_ver="1.0" class="i" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="imce_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：當參數設定不使用料件申請功能時，可透過本作業維護料件的據點採購資料。
+作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：(基本資料/交易單據)維護作業
+輸入模式：單檔搭配查詢方案模式F001_sc
+作業資料來源(Master)：imce_t(料件據點採購分群檔)
+查詢方案設定：
+ (1)系統預設查詢方案：
+    無效料件 stus='N'
+    有效料件 stus='Y'
+ (2)系統預設相關作業：
+    無
+ (3)瀏覽Browse顯示欄位及型態：
+    imce141(採購分群)：ButtonEdit
+    oocql004(說明)：Edit
+ (4)傳入參數：
+    g_argv[1]：營運據點'ALL'，若g_argv[1]不為null，則 g_site = g_argv[1]
+    (註：營運據點為'ALL'和其他營運據點的會拆成兩支作業)
+特別說明：
+    1.數字欄位若無邏輯處理，其預設值都給0，0表示不控管，不可空白
+]]>
+  </all>
+  <field cite_std="N" name="b_imce141" ver="1" src="s" column="imce141" table="imce_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce141" ver="1" src="s" column="imce141" table="imce_t" attribute="" type="" req="Y" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[採購分群：
+   ●欄位控管：
+     資料欄位: [T:料件據點採購分群檔].[C:採購分群]/可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+          2.輸入值須存在[T:應用分類碼檔(ACC)].[C:應用分類瑪]，
+            [T:應用分類碼多語言檔].[C:應用分類]=203且為有效資料
+     帶值:自動帶出[T:應用分類碼多語言檔].[C:說明]
+          WHERE [T:應用分類碼多語言檔].[C:應用分類]=203
+            AND [T:應用分類碼多語言檔].[C:應用分類瑪]=[C:採購分群]
+          到本欄位後面顯示
+     計算或處理:無
+
+   ●開窗處理：q_oocq002
+     參考函式：依標準查詢視窗
+     查詢欄位：[T:應用分類碼檔(ACC)].[C:應用分類瑪],[T:應用分類碼多語言檔].[C:說明]
+     過濾條件：[T:應用分類碼檔(ACC)].[C:應用分類]=203
+     新增或修改時過濾條件：有效資料
+     回值類型：查詢時多重回值;新增或修改時單一回值
+]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce142" ver="1" src="s" column="imce142" table="imce_t" attribute="" type="" req="Y" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[採購人員：
+●欄位控管：
+     資料欄位: [T:料件據點採購分群檔].[C:採購人員]/可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+          2.輸入值須存在[T:員工檔].[C:員工編號]且為有效資料
+     帶值:以[C:倉管員]值到[T:員工檔]抓取[C:聯絡對象識別碼],再以[C:聯絡對象識別碼]
+          到[T:聯絡對象檔]中抓取[C:全名]到本欄位後面顯示
+     計算或處理:無
+
+   ●開窗處理：q_ooag001
+     參考函式：依標準查詢視窗
+     查詢欄位：[T:員工檔].[C:員工編號],[T:聯絡對象檔].[C:全名]
+     過濾條件：[T:員工檔].[C:聯絡對象識別碼]=[T:聯絡對象檔].[C:聯絡對象識別碼]
+     新增或修改時過濾條件：有效資料
+     回值類型：查詢時多重回值;新增或修改時單一回值
+]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce143" ver="4" src="s" column="imce143" table="imce_t" attribute="" type="" req="N" i_zoom="q_ooca001_1" c_zoom="q_ooca001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[採購單位：
+   ●欄位控管：
+     資料欄位: [T:料件據點採購分群檔].[C:採購單位]/可Display可Input
+     預設值:无
+     校驗:1.輸入值須存在[T:單位檔].[C:單位編號]且為有效資料
+     帶值:1.顯示時顯示單位的多語言說明
+     計算或處理:無
+
+   ●開窗處理：q_ooca001_1
+     查詢或新增/修改時：
+     參考函式：依標準查詢視窗
+     查詢欄位：[T:單位檔].[C:單位編號],[T:單位多語言檔].[C:說明]
+     回值類型：查詢時多重回值,新增/修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce144" ver="4" src="s" column="imce144" table="imce_t" attribute="" type="" req="N" i_zoom="q_ooca001_1" c_zoom="q_ooca001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[採購計價單位：
+   ●欄位控管：
+     資料欄位: [T:料件據點採購分群檔].[C:採購計價單位]/可Display可Input
+     預設值:同[T:料件據點採購分群檔].[C:採購單位]
+     校驗:1.輸入值須存在[T:單位檔].[C:單位編號]且為有效資料
+     帶值:1.顯示時顯示單位的多語言說明
+     計算或處理:無
+
+   ●開窗處理：q_ooca001_1
+     查詢或新增/修改時：
+     參考函式：依標準查詢視窗
+     查詢欄位：[T:單位檔].[C:單位編號],[T:單位多語言檔].[C:說明]
+     回值類型：查詢時多重回值,新增/修改時單一回值
+]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce145" ver="1" src="s" column="imce145" table="imce_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[採購單位批量：
+   ●欄位控管：
+     資料欄位: [T:料件據點採購分群檔].[C:採購單位批量]/可Display可Input
+     預設值:0
+     校驗:1.不允許空白
+          2.輸入值不可<0
+     帶值:無
+     計算或處理:無
+     其他說明:無
+]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce146" ver="1" src="s" column="imce146" table="imce_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[最小採購量：
+   ●欄位控管：
+     資料欄位: [T:料件據點採購分群檔].[C:最小採購量]/可Display可Input
+     預設值:0
+     校驗:1.不允許空白
+          2.輸入值不可<0
+     帶值:無
+     計算或處理:無
+     其他說明:無
+]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce147" ver="1" src="s" column="imce147" table="imce_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="2025" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[批量控管方式：
+   ●欄位控管：
+     資料欄位:[T:料件據點採購分群檔].[C:採購批量控管方式]/可Display可Input
+     允許空白:No
+     預設值:1
+     資料選項來源:SCC2025
+       資料庫:請呼叫cl_set_combo_scc("imce147",2025)
+     校驗:1.不允許空白
+          2.輸入值須存在SCC2025
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce148" ver="1" src="s" column="imce148" table="imce_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[經濟訂購量：
+   ●欄位控管：
+     資料欄位: [T:料件據點採購分群檔].[C:經濟訂購量]/可Display可Input
+     預設值:0
+     校驗:1.不允許空白
+          2.輸入值不可<0
+     帶值:無
+     計算或處理:無
+     其他說明:無
+]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce149" ver="1" src="s" column="imce149" table="imce_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[平均訂購量：
+   ●欄位控管：
+     資料欄位: [T:料件據點採購分群檔].[C:平均訂購量]/可Display可Input
+     預設值:0
+     校驗:1.不允許空白
+          2.輸入值不可<0
+     帶值:無
+     計算或處理:無
+     其他說明:無
+]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce151" ver="1" src="s" column="imce151" table="imce_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="2031" default="&apos;0&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[預設內外購：
+   ●欄位控管：
+     資料欄位:[T:料件據點採購分群檔].[C:預設內外購]/可Display可Input
+     允許空白:No
+     預設值:0
+     資料選項來源:SCC2031
+       資料庫:請呼叫cl_set_combo_scc("imce151",2031)
+     校驗:1.不允許空白
+          2.輸入值須存在SCC2031
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce152" ver="1" src="s" column="imce152" table="imce_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="2028" default="&apos;0&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[廠商選擇方式：
+   ●欄位控管：
+     資料欄位:[T:料件據點採購分群檔].[C:廠商選擇方式]/可Display可Input
+     允許空白:No
+     預設值:0
+     資料選項來源:SCC2028
+       資料庫:請呼叫cl_set_combo_scc("imce152",2028)
+     校驗:1.不允許空白
+          2.輸入值須存在SCC2028
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce153" ver="1" src="s" column="imce153" table="imce_t" attribute="" type="" req="N" i_zoom="q_pmaa001" c_zoom="q_pmaa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[主要供應商：
+   ●欄位控管：
+     資料欄位:[T:料件據點採購分群檔].[C:主要供應商]/可Display可Input
+     預設值:無
+     校驗:1.輸入值需存在[T:供應商主檔]且有效資料
+     帶值:抓取[T:供應商主檔]的[C:供應商全名]來顯示到後面
+     計算或處理:無
+
+   ●開窗處理：
+     查詢或新增/修改時：q_pmaa001
+     參考函式：依標準查詢視窗
+     查詢欄位：[T:供應商主檔].[C:供應商編號],[T:供應商主檔多語言檔].[C:供應商全名]
+     過濾條件：無
+     新增或修改時過濾條件：無
+     回值類型：查詢時多重回值,新增/修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce154" ver="1" src="s" column="imce154" table="imce_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[主供應商分配限量：
+   ●欄位控管：
+     資料欄位:[T:料件據點採購分群檔].[C:主供應商分配限量]/可Display可Input
+     預設值:0
+     校驗:1.不允許空白
+          2.輸入值不可<0
+     帶值:無
+     計算或處理:當[T:料件據點採購分群檔].[C:廠商選擇方式]='2'時，才可以輸入
+     其他說明:當[C:廠商選擇方式]為2時，則本欄位輸入值是有作用的，將會用來
+              計算出主要供應商分配到的採購量是多少
+]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce155" ver="1" src="s" column="imce155" table="imce_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[分配進位倍數：
+   ●欄位控管：
+     資料欄位:[T:料件據點採購分群檔].[C:分配進位倍數]/可Display可Input
+     預設值:0
+     校驗:1.不允許空白
+          2.輸入值不可<0
+     帶值:無
+     計算或處理:當[T:料件據點採購分群檔].[C:廠商選擇方式]='2'或'3'時，才可以輸入
+     其他說明:當[C:廠商選擇方式]為2或3時，則本欄位輸入值是有作用的，當計算出主供應
+              商分配到的採購量是多少時，若數量不為整數，將乘上本欄位值算出整數值
+              (例:若計算出主供應商分配採購數量為698，當[C:分配進位倍數]=100，表示
+　　　　　　　應進位為700)，剩下的數量再分配給次供應商，若數量不為整數，則同樣再
+　　　　　　　乘上本欄位算出整數值...以此類推
+
+]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce156" ver="1" src="s" column="imce156" table="imce_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="2024" default="&apos;0&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[供貨模式：
+   ●欄位控管：
+     資料欄位:[T:料件據點採購分群檔].[C:供貨模式]/可Display可Input
+     允許空白:No
+     預設值:0
+     資料選項來源:SCC2024
+       資料庫:請呼叫cl_set_combo_scc("imce156",2024)
+     校驗:1.不允許空白
+          2.輸入值須存在SCC2024
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce157" ver="1" src="s" column="imce157" table="imce_t" attribute="" type="" req="N" i_zoom="q_imaa001_3" c_zoom="q_imaa001_3" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[慣用包裝容器：
+   ●欄位控管：
+     資料欄位:[T:料件據點採購分群檔].[C:慣用包裝容器]/可Display可Input
+     預設值:無
+     校驗:1.輸入值需存在[T:商品/料件主檔]且[T:商品/料件主檔].[T:容器否]='Y'
+　　　　　　的有效資料
+     帶值:抓取[T:商品/料件主檔]的[C:品名]來顯示
+     計算或處理:無
+
+   ●開窗處理：
+     查詢或新增/修改時：q_imaa001_3
+     參考函式：依標準查詢視窗
+     查詢欄位：[T:商品/料件主檔].[C:料件編號],[T:商品/料件主檔多語言檔].[C:品名]
+     過濾條件：[T:商品/料件主檔].[T:容器否]='Y'
+     新增或修改時過濾條件：有效資料
+     回值類型：查詢時多重回值,新增/修改時單一回值
+]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce158" ver="1" src="s" column="imce158" table="imce_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="2027" default="&apos;0&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[接單拆解方式(採購)：
+   ●欄位控管：
+     資料欄位:[T:料件據點採購分群檔].[C:接單拆解方式(採購)]/可Display可Input
+     允許空白:No
+     預設值:0
+     資料選項來源:SCC2027
+       資料庫:請呼叫cl_set_combo_scc("imce158",2027)
+     校驗:1.不允許空白
+             2.輸入值須存在SCC2027
+     帶值:無
+     計算或處理:無]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce161" ver="2" src="s" column="imce161" table="imce_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[採購替代：
+   ●欄位控管：
+     資料欄位:[T:料件據點採購分群檔].[C:採購替代]/可Display可Input
+     允許空白:No
+     預設值:N
+     選項組合:選取為Y，無選取為N
+     校驗:1.不允許空白
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce162" ver="2" src="s" column="imce162" table="imce_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[採購收貨替代：
+   ●欄位控管：
+     資料欄位:[T:料件據點採購分群檔].[C:採購收貨替代]/可Display可Input
+     允許空白:No
+     預設值:N
+     選項組合:選取為Y，無選取為N
+     校驗:1.不允許空白
+     帶值:無
+     計算或處理:無]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce163" ver="2" src="s" column="imce163" table="imce_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[採購合約沖銷：
+   ●欄位控管：
+     資料欄位:[T:料件據點採購分群檔].[C:採購合約沖銷]/可Display可Input
+     允許空白:No
+     預設值:N
+     選項組合:選取為Y，無選取為N
+     校驗:1.不允許空白
+     帶值:無
+     計算或處理:無]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce164" ver="1" src="s" column="imce164" table="imce_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="&lt;=" max="100.000" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[採購時損耗率：
+   ●欄位控管：
+     資料欄位:[T:料件據點採購分群檔].[C:採購時損耗率]/可Display可Input
+     預設值:0(輸入值範圍0~100)     
+     校驗:1.不允許空白
+          2.輸入值需介於0~100(含邊界值)
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce165" ver="2" src="s" column="imce165" table="imce_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="&lt;=" max="100.000" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[採購時備品率：
+   ●欄位控管：
+     資料欄位:[T:料件據點採購分群檔].[C:採購時備品率]/可Display可Input
+     預設值:0(輸入值範圍0~100)
+     校驗:1.不允許空白
+           2.輸入值需介於0~100(含邊界值)
+     帶值:無
+     計算或處理:無]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce166" ver="2" src="s" column="imce166" table="imce_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="&lt;=" max="100.000" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[採購超交率：
+   ●欄位控管：
+     資料欄位: [T:料件據點採購分群檔].[C:採購超交率]/可Display可Input
+     允許空白:Yes
+     預設值:0
+     校驗:輸入值需介於0~100(含邊界值)
+     帶值:無
+     計算或處理:無
+     其他說明:0代表是不可以超交]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce171" ver="1" src="s" column="imce171" table="imce_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[採購文件前置時間：
+   ●欄位控管：
+     資料欄位:[T:料件據點採購分群檔].[C:採購文件前置時間]/可Display可Input
+     預設值:0  
+     校驗:1.不允許空白
+          2.輸入值不可小於0
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce172" ver="1" src="s" column="imce172" table="imce_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[採購交貨前置時間：
+   ●欄位控管：
+     資料欄位:[T:料件據點採購分群檔].[C:採購交貨前置時間]/可Display可Input
+     預設值:0  
+     校驗:1.不允許空白
+          2.輸入值不可小於0
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce173" ver="1" src="s" column="imce173" table="imce_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[採購到廠前置時間：
+   ●欄位控管：
+     資料欄位:[T:料件據點採購分群檔].[C:採購到廠前置時間]/可Display可Input
+     預設值:0  
+     校驗:1.不允許空白
+          2.輸入值不可小於0
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce174" ver="1" src="s" column="imce174" table="imce_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[採購入庫前置時間：
+   ●欄位控管：
+     資料欄位:[T:料件據點採購分群檔].[C:採購入庫前置時間]/可Display可Input
+     預設值:0  
+     校驗:1.不允許空白
+          2.輸入值不可小於0
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce175" ver="1" src="s" column="imce175" table="imce_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[嚴守交貨前置時間：
+   ●欄位控管：
+     資料欄位:[T:料件據點採購分群檔].[C:嚴守交貨前置時間]/可Display可Input
+     預設值:0  
+     校驗:1.不允許空白
+          2.輸入值不可小於0
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field cite_std="N" name="imce_t.imce176" ver="2" src="s" column="imce176" table="imce_t" attribute="" type="" req="" i_zoom="q_oocq002_3" c_zoom="q_oocq002_3" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[收貨時段：
+   ●欄位控管：
+     資料欄位:[T:料件據點採購分群檔].[C:收貨時段]/可Display可Input
+     預設值:無  
+     校驗:1.ACC_274
+             2.輸入值存在于時段維護作業中且有效
+     帶值:無
+     計算或處理:無]]>
+  </field>
+  <field cite_std="N" name="imce_t.imcecrtdp" ver="1" src="s" column="imcecrtdp" table="imce_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imce_t.imcecrtdt" ver="1" src="s" column="imcecrtdt" table="imce_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imce_t.imcecrtid" ver="1" src="s" column="imcecrtid" table="imce_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imce_t.imcemoddt" ver="1" src="s" column="imcemoddt" table="imce_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imce_t.imcemodid" ver="1" src="s" column="imcemodid" table="imce_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imce_t.imceowndp" ver="1" src="s" column="imceowndp" table="imce_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imce_t.imceownid" ver="1" src="s" column="imceownid" table="imce_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imce_t.imcestus" ver="1" src="s" column="imcestus" table="imce_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_imce176" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_imce141_desc" src="s" depend_field="b_imce141" correspon_key="imceent,&apos;203&apos;,imce141" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="imce141_desc" src="s" depend_field="imce_t.imce141" correspon_key="imceent,&apos;203&apos;,imce141" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="5" name="imce142_desc" src="s" depend_field="imce_t.imce142" correspon_key="imceent,imce142" ref_table="ooag_t" ref_fk="ooagent,ooag001" ref_dlang="" ref_rtn="ooag011" status="u"/>
+    <rfield cite_std="N" ver="4" name="imce143_desc" src="s" depend_field="imce_t.imce143" correspon_key="imce143" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="4" name="imce144_desc" src="s" depend_field="imce_t.imce144" correspon_key="imce144" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="2" name="imce153_desc" src="s" depend_field="imce_t.imce153" correspon_key="imceent,imce153" ref_table="pmaal_t" ref_fk="pmaalent,pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="imce157_desc" src="s" depend_field="imce_t.imce157" correspon_key="imceent,imce157" ref_table="imaal_t" ref_fk="imaalent,imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="imce176_desc" src="s" depend_field="imce_t.imce176" correspon_key="&apos;274&apos;,imce176" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="imcecrtdp_desc" src="s" depend_field="imce_t.imcecrtdp" correspon_key="imcecrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="imcecrtid_desc" src="s" depend_field="imce_t.imcecrtid" correspon_key="imcecrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="imcemodid_desc" src="s" depend_field="imce_t.imcemodid" correspon_key="imcemodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="imceowndp_desc" src="s" depend_field="imce_t.imceowndp" correspon_key="imceowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="imceownid_desc" src="s" depend_field="imce_t.imceownid" correspon_key="imceownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_imce141" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imce141" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imce142" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="imce_t.imce143" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="imce_t.imce144" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imce145" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imce146" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imce147" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imce148" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imce149" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imce151" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imce152" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imce153" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imce154" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imce155" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imce156" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imce157" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imce158" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imce_t.imce161" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imce_t.imce162" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imce_t.imce163" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imce164" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imce_t.imce165" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imce_t.imce166" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imce171" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imce172" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imce173" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imce174" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imce175" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="imce_t.imce176" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imcecrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imcecrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imcecrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imcemoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imcemodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imceowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imceownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imce_t.imcestus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_imce176" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="aimi101" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[串聯到產品分群資料aimi101]]>
+  </act>
+  <act cite_std="N" id="aimi102" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[串聯到庫存分群資料aimi102(SD還未完工故連接不了)]]>
+  </act>
+  <act cite_std="N" id="aimi106" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[串聯到品管分群資料aimi106]]>
+  </act>
+  <act cite_std="N" id="cost_cluster" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[串聯到成本分群資料(作業SA還沒有開規格)]]>
+  </act>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="wms_cluster" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[串聯到WMS分群資料(作業SA還沒有開規格)]]>
+  </act>
+  <strings>
+    <sfield name="lbl_imce141" text="採購分群" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_imce142" text="採購人員" lstr=""/>
+    <sfield name="lbl_ooag011" text="全名" lstr=""/>
+    <sfield name="lbl_imce143" text="採購單位" lstr=""/>
+    <sfield name="lbl_oocal003" text="說明" lstr=""/>
+    <sfield name="lbl_imce144" text="採購計價單位" lstr=""/>
+    <sfield name="lbl_imce145" text="採購單位批量" lstr=""/>
+    <sfield name="lbl_imce146" text="最小採購量" lstr=""/>
+    <sfield name="lbl_imce147" text="批量控管方式" lstr=""/>
+    <sfield name="lbl_imce148" text="經濟訂購量" lstr=""/>
+    <sfield name="lbl_imce149" text="平均訂購量" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="page_2" text="採購資料" lstr=""/>
+    <sfield name="lbl_imce151" text="預設內外購" lstr=""/>
+    <sfield name="lbl_imce158" text="採購單子件拆解方式" lstr=""/>
+    <sfield name="lbl_imce157" text="慣用包裝容器" lstr=""/>
+    <sfield name="lbl_imce152" text="廠商選擇方式" lstr=""/>
+    <sfield name="lbl_imce153" text="主要供應商" lstr=""/>
+    <sfield name="lbl_pmaal004" text="交易對象簡稱" lstr=""/>
+    <sfield name="lbl_imce154" text="主供應商分配限量" lstr=""/>
+    <sfield name="lbl_imce155" text="分配進位倍數" lstr=""/>
+    <sfield name="lbl_imce156" text="供貨模式" lstr=""/>
+    <sfield name="lbl_imce161" text="採購替代" lstr=""/>
+    <sfield name="lbl_imce162" text="採購收貨替代" lstr=""/>
+    <sfield name="lbl_imce163" text="採購合約沖銷" lstr=""/>
+    <sfield name="lbl_imce164" text="採購時損耗率" lstr=""/>
+    <sfield name="lbl_imce165" text="採購時備品率" lstr=""/>
+    <sfield name="lbl_imce166" text="採購超交率" lstr=""/>
+    <sfield name="page_3" text="採購前置時間與資訊" lstr=""/>
+    <sfield name="lbl_group1" text="前置時間" lstr=""/>
+    <sfield name="lbl_imce171" text="文件前置時間" lstr=""/>
+    <sfield name="lbl_imce172" text="交貨前置時間" lstr=""/>
+    <sfield name="lbl_imce173" text="到廠前置時間" lstr=""/>
+    <sfield name="lbl_imce174" text="入庫前置時間" lstr=""/>
+    <sfield name="lbl_imce175" text="最短採購前置時間" lstr=""/>
+    <sfield name="lbl_group2" text="交貨資訊" lstr=""/>
+    <sfield name="lbl_imce176" text="收貨時段" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="aimi101" text="產品分群資料" lstr=""/>
+    <sact name="aimi102" text="庫存分群資料" lstr=""/>
+    <sact name="aimi106" text="品管分群資料" lstr=""/>
+    <sact name="cost_cluster" text="成本分群資料" lstr=""/>
+    <sact name="wms_cluster" text="WMS分群資料" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglr310_g03" module="agl" jobmode="N" type="g01" industry="std" crtid="05416" crtdt="2014-07-29 16:48:49" modid="02599" moddt="2017-01-22 10:30:27" sdver="13" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where conditon)">
+    <var seq="1" value="glap012,glap014,glap015,glaq007,glaq009,glaq021,glapdocno,glapld,glap004,glap006,glaq006,glaq004,glaq013,glaq018,glaq025,glapdocdt,glaq011,glaq012,glaq015,glaq016,glaq027,glaq044,glap007,glap013,glaq003,glaq014,glaq017,glaq020,glaq022,glaq040,glap009,glaq039,glaq042,glapcomp,glapstus,glaq010,glaq024,glaq043,glaqseq,glap001,glap002,glaq001,glaq019,glaq023,glaq028,glap008,glap010,glap011,glaq005,glaq002,glaq008,glaq041,glaqcomp,ooefl_t_ooefl003(ooefl003|ooefl_t.ooefl003),glaal_t_glaal002(glaal002|glaal_t.glaal002),l_glapcomp_ooefl003(chr1000|trim(glapcomp)||&apos;.&apos;||trim((SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooeflent = glap_t.glapent AND ooefl_t.ooefl001 = glap_t.glapcomp AND ooefl_t.ooefl002 = g_dlang))),glapcnfid,glappstid,glapcrtid,glacl004(glacl004|NULL),glaq002_1(chr500|NULL),l_glaq017_1(chr1000|NULL),glapent,glaq051,glaq052,glaq053,l_glaq003_fmt(chr30|NULL),glaq029,glaq030,glaq031,glaq032,glaq033,glaq034,glaq035,glaq036,glaq037,glaq038"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="glap012,glap014,glap015,glaq007,glaq009,glaq021,glapdocno,glapld,glap004,glap006,glaq006,glaq004,glaq013,glaq018,glaq025,glapdocdt,glaq011,glaq012,glaq015,glaq016,glaq027,glaq044,glap007,glap013,glaq003,glaq014,glaq017,glaq020,glaq022,glaq040,glap009,glaq039,glaq042,glapcomp,glapstus,glaq010,glaq024,glaq043,glaqseq,glap001,glap002,glaq001,glaq019,glaq023,glaq028,glap008,glap010,glap011,glaq005,glaq002,glaq008,glaq041,glaqcomp,ooefl_t_ooefl003(ooefl003|( SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooeflent = glap_t.glapent AND ooefl_t.ooefl001 = glap_t.glapcomp AND ooefl_t.ooefl002 = g_dlang)),glaal_t_glaal002(glaal002|( SELECT glaal002 FROM glaal_t WHERE glaal_t.glaalent = glap_t.glapent AND glaal_t.glaalld = glap_t.glapld AND glaal_t.glaal001 = g_dlang)),l_glapcomp_ooefl003(chr1000|trim(glapcomp)||&apos;.&apos;||trim((SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooeflent = glap_t.glapent AND ooefl_t.ooefl001 = glap_t.glapcomp AND ooefl_t.ooefl002 = g_dlang))),glapcnfid,glappstid,glapcrtid,glacl004(glacl004|NULL),glaq002_1(chr500|NULL),l_glaq017_1(chr1000|NULL),glapent,glaq051,glaq052,glaq053,l_glaq003_fmt(chr30|NULL),glaq029,glaq030,glaq031,glaq032,glaq033,glaq034,glaq035,glaq036,glaq037,glaq038"/>
+    <sql id="g_from" query="glap_t LEFT OUTER JOIN ( SELECT glaq_t.* FROM glaq_t  ) x  ON glap_t.glapent = x.glaqent AND glap_t.glapld = x.glaqld AND glap_t.glapdocno = x.glaqdocno"/>
+    <sql id="g_where" query="glap_t.glapstus = &apos;Y&apos; AND " maintable="glap_t"/>
+    <sql id="g_order" query="glapdocno,glaqseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="glapdocno,glaqseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="glapdocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="glapent,glapdocno"/>
+      <rep type="glaqseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="glapent,glapdocno,glaqseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="glapent,glapdocno,glaqseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="glapdocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="glapent,glapdocno"/>
+      <rep type="glaqseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

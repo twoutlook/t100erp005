@@ -1,0 +1,122 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="acrt410_05" module="acr" jobmode="N" type="c03a" industry="std" fix_arg="0" crtid="03247" crtdt="2014-04-22 18:00:25" modid="03247" moddt="2014-04-28 11:04:38" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="客訴單之核決">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="crbcsite,crbcsite_desc(chr80),crbcdocno,crbc000,crbc001,crbc001_desc(chr80),crbc002,crbc002_desc(chr80),crbc003,crbcownid,crbcownid_desc(chr80),crbcowndp,crbcowndp_desc(chr80),crbccrtid,crbccrtid_desc(chr80),crbccrtdp,crbccrtdp_desc(chr80),crbccrtdt,crbcmodid,crbcmodid_desc(chr80),crbcmoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="crbeseq,crbe001,crbe002,crbesite"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+    </section>
+  </structure>
+  <form id="0" module="acr" filename="acrt410_05" method="dialog">
+    <section id="input">
+      <input id="head" field="crbcsite,crbcdocno,crbc000,crbc001,crbc002,crbc003"/>
+      <input id="body" page="1" field="crbeseq,crbe001,crbe002,crbesite" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="crbcsite,crbcdocno,crbc000,crbc001,crbc002,crbc003,crbcownid,crbcowndp,crbccrtid,crbccrtdp,crbccrtdt,crbcmodid,crbcmoddt"/>
+      <construct id="body" page="1" field="crbeseq,crbe001,crbe002,crbesite"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="crbcdocno,crbc000"/>
+      <set id="head" type="no_entry" field="crbcdocno,crbc000"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="crbcsite">
+        <after>
+          <reference field="crbcsite_desc" ref_field="crbc_t.crbcsite" map_field="crbcent,crbcsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="crbcsite_desc"/>
+      <column id="crbcdocno"/>
+      <column id="crbc000" type="S" default="1"/>
+      <column id="crbc001">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="crbc001_desc" ref_field="crbc_t.crbc001" map_field="crbc001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_6" state="i"/>
+        <controlp form="q_ooag001_6" state="c"/>
+      </column>
+      <column id="crbc001_desc"/>
+      <column id="crbc002">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="crbc002_desc" ref_field="crbc_t.crbc002" map_field="crbc002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_6" state="i"/>
+        <controlp form="q_ooag001_6" state="c"/>
+      </column>
+      <column id="crbc002_desc"/>
+      <column id="crbc003"/>
+      <column id="crbcownid">
+        <after>
+          <reference field="crbcownid_desc" ref_field="crbc_t.crbcownid" map_field="crbcownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="crbcownid_desc"/>
+      <column id="crbcowndp">
+        <after>
+          <reference field="crbcowndp_desc" ref_field="crbc_t.crbcowndp" map_field="crbcowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="crbcowndp_desc"/>
+      <column id="crbccrtid">
+        <after>
+          <reference field="crbccrtid_desc" ref_field="crbc_t.crbccrtid" map_field="crbccrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="crbccrtid_desc"/>
+      <column id="crbccrtdp">
+        <after>
+          <reference field="crbccrtdp_desc" ref_field="crbc_t.crbccrtdp" map_field="crbccrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="crbccrtdp_desc"/>
+      <column id="crbccrtdt"/>
+      <column id="crbcmodid">
+        <after>
+          <reference field="crbcmodid_desc" ref_field="crbc_t.crbcmodid" map_field="crbcmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="crbcmodid_desc"/>
+      <column id="crbcmoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="crbeseq">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="crbe001"/>
+      <column id="crbe002"/>
+      <column id="crbesite"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="crbc_t" pk="crbcdocno,crbc000">
+      <sql id="forupd_sql" type="sql" query="SELECT crbcsite,&apos;&apos;,crbcdocno,crbc000,crbc001,&apos;&apos;,crbc002,&apos;&apos;,crbc003,crbcownid,&apos;&apos;,crbcowndp,&apos;&apos;,crbccrtid,&apos;&apos;,crbccrtdp,&apos;&apos;,crbccrtdt,crbcmodid,&apos;&apos;,crbcmoddt FROM crbc_t WHERE crbcent= ? AND crbcdocno=? AND crbc000=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT crbcsite,&apos;&apos;,crbcdocno,crbc000,crbc001,&apos;&apos;,crbc002,&apos;&apos;,crbc003,crbcownid,&apos;&apos;,crbcowndp,&apos;&apos;,crbccrtid,&apos;&apos;,crbccrtdp,&apos;&apos;,crbccrtdt,crbcmodid,&apos;&apos;,crbcmoddt FROM crbc_t" order="crbcdocno,crbc000"/>
+    </head>
+    <body id="crbe_t" page="1" linked="" pk="crbeseq" fk="crbedocno,crbe000">
+      <sql id="forupd_sql_detail" query="SELECT crbeseq,crbe001,crbe002,crbesite FROM crbe_t WHERE crbeent=? AND crbedocno=? AND crbe000=? AND crbeseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT crbeseq,crbe001,crbe002,crbesite FROM crbe_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

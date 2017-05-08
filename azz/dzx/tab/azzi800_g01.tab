@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi800_g01" module="azz" jobmode="N" type="g01" industry="std" crtid="08108" crtdt="2016-03-28 15:50:33" modid="08108" moddt="2016-05-06 18:30:29" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="gzxaent,l_gzyal003(chr200|NULL),ooag_t_ooag011(ooag011|ooag_t.ooag011),gzxa003,gzxa001,gzxb002,gzxb003,gzxh_t_gzxh003(gzxh003|gzxh_t.gzxh003),l_gzcbl004_01(gzcbl004|NULL),l_gzcbl004_02(gzcbl004|NULL),l_gzcbl004_03(gzcbl004|NULL),gzxc_t_gzxc007(gzxc007|gzxc_t.gzxc007),l_ocdc(chr30|trim(gzxc004)||trim(ooefl003))"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="gzxaent,l_gzyal003(chr200|NULL),ooag_t_ooag011(ooag011|ooag_t.ooag011),gzxa003,gzxa001,gzxb002,gzxb003,gzxh_t_gzxh003(gzxh003|gzxh_t.gzxh003),l_gzcbl004_01(gzcbl004|NULL),l_gzcbl004_02(gzcbl004|NULL),l_gzcbl004_03(gzcbl004|NULL),gzxc_t_gzxc007(gzxc007|gzxc_t.gzxc007),l_ocdc(chr30|trim(gzxc004)||trim(ooefl003))"/>
+    <sql id="g_from" query="gzxa_t,gzxb_t,gzxc_t,ooag_t,ooefl_t,gzxh_t,gzyal_t"/>
+    <sql id="g_where" query="" maintable="gzxa_t"/>
+    <sql id="g_order" query="gzxa001,gzxb003"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="gzxa001,gzxb003"/>
+    <section id="b_group" reptype="d01">
+      <rep type="gzxa001" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="gzxaent,gzxa001"/>
+      <rep type="gzxb003"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="gzxaent,gzxa001,gzxb003"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="gzxaent,gzxa001,gzxb003"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="gzxa001" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="gzxaent,gzxa001"/>
+      <rep type="gzxb003"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

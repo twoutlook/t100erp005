@@ -1,0 +1,563 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="acrr827_x01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:1(2016-05-19 21:09:11), PR版次:0001(2016-08-17 10:26:15)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000014
+#+ Filename...: acrr827_x01
+#+ Description: 門店消費統計對比分析報表
+#+ Creator....: 07959(2016-05-11 09:22:59)
+#+ Modifier...: 07959 -SD/PR- 08172
+ 
+{</section>}
+ 
+{<section id="acrr827_x01.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:7)
+#add-point:填寫註解說明
+
+#end add-point
+#add-point:填寫註解說明
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #where condition 
+       sel LIKE type_t.chr1,         #分析类型 
+       chk LIKE type_t.chr1,         #是否勾选会员 
+       comp LIKE type_t.chr1,         #勾选期别 
+       dat1 STRING,                  #期别1 
+       dat2 STRING,                  #期别2 
+       dat3 STRING,                  #期别3 
+       dat4 STRING,                  #期别4 
+       dat5 STRING,                  #期别5 
+       name1 STRING,                  #期别栏位1 
+       name2 STRING,                  #期别栏位2 
+       name3 STRING,                  #期别栏位3 
+       name4 STRING,                  #期别栏位4 
+       name5 STRING                   #级别栏位5
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="acrr827_x01.main" readonly="Y" >}
+PUBLIC FUNCTION acrr827_x01(p_arg1,p_arg2,p_arg3,p_arg4,p_arg5,p_arg6,p_arg7,p_arg8,p_arg9,p_arg10,p_arg11,p_arg12,p_arg13,p_arg14)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition 
+DEFINE  p_arg2 LIKE type_t.chr1         #tm.sel  分析类型 
+DEFINE  p_arg3 LIKE type_t.chr1         #tm.chk  是否勾选会员 
+DEFINE  p_arg4 LIKE type_t.chr1         #tm.comp  勾选期别 
+DEFINE  p_arg5 STRING                  #tm.dat1  期别1 
+DEFINE  p_arg6 STRING                  #tm.dat2  期别2 
+DEFINE  p_arg7 STRING                  #tm.dat3  期别3 
+DEFINE  p_arg8 STRING                  #tm.dat4  期别4 
+DEFINE  p_arg9 STRING                  #tm.dat5  期别5 
+DEFINE  p_arg10 STRING                  #tm.name1  期别栏位1 
+DEFINE  p_arg11 STRING                  #tm.name2  期别栏位2 
+DEFINE  p_arg12 STRING                  #tm.name3  期别栏位3 
+DEFINE  p_arg13 STRING                  #tm.name4  期别栏位4 
+DEFINE  p_arg14 STRING                  #tm.name5  级别栏位5
+#add-point:init段define(客製用) name="component.define_customerization"
+
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.sel = p_arg2
+   LET tm.chk = p_arg3
+   LET tm.comp = p_arg4
+   LET tm.dat1 = p_arg5
+   LET tm.dat2 = p_arg6
+   LET tm.dat3 = p_arg7
+   LET tm.dat4 = p_arg8
+   LET tm.dat5 = p_arg9
+   LET tm.name1 = p_arg10
+   LET tm.name2 = p_arg11
+   LET tm.name3 = p_arg12
+   LET tm.name4 = p_arg13
+   LET tm.name5 = p_arg14
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "acrr827_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL acrr827_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL acrr827_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL acrr827_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL acrr827_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL acrr827_x01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="acrr827_x01.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION acrr827_x01_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+ 
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "debosite.debo_t.debosite,ooefl_t_ooefl003.ooefl_t.ooefl003,l_debo021_debo022.type_t.chr30,l_debo_type.type_t.num20_6" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   
+   #end add-point:create_tmp.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="acrr827_x01.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION acrr827_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="acrr827_x01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION acrr827_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+DEFINE l_where       STRING
+DEFINE l_dat1        LIKE type_t.chr100   #期别1栏位名
+DEFINE l_dat2        LIKE type_t.chr100   #期别2栏位名
+DEFINE l_dat3        LIKE type_t.chr100   #期别3栏位名
+DEFINE l_dat4        LIKE type_t.chr100   #期别4栏位名
+DEFINE l_dat5        LIKE type_t.chr100   #期别5栏位名
+DEFINE l_dat_num     LIKE type_t.num10
+DEFINE l_dat_str     STRING
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   
+   #end add-point
+   LET g_select = " SELECT debosite,ooefl_t.ooefl003,NULL,NULL"
+ 
+   #add-point:sel_prep g_from name="sel_prep.g_from"
+   
+   #end add-point
+    LET g_from = " FROM debo_t,debp_t,ooef_t,ooefl_t,rtaa_t,rtab_t"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+   
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("debo_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   LET l_where = ""      #查询条件
+   IF tm.chk='Y' THEN 
+      CALL s_aooi500_sql_where(g_prog,'debpsite') RETURNING l_where
+      LET tm.wc = tm.wc," AND ",l_where
+   ELSE
+      CALL s_aooi500_sql_where(g_prog,'debosite') RETURNING l_where
+      LET tm.wc = tm.wc," AND ",l_where
+   END IF
+   IF tm.chk='Y' THEN    #勾选会员
+      CASE tm.sel        #分析类型
+         WHEN 1          #销售额
+         LET g_sql = " SELECT debpsite,ooefl003,debp002,SUM(debp012) s FROM debp_t ",
+                     " LEFT JOIN rtab_t ON rtabent='",g_enterprise,"' AND debpent=rtabent AND debpsite=rtab002 ",
+                     " LEFT JOIN ooefl_t ON ooeflent='",g_enterprise,"' AND ooefl001=debpsite AND ooefl002='",g_dlang,"'",
+                     " WHERE ",tm.wc
+         WHEN 2          #毛利
+         LET g_sql = " SELECT debpsite,ooefl003,debp002,SUM(debp013) s FROM debp_t ",
+                     " LEFT JOIN rtab_t ON rtabent='",g_enterprise,"' AND debpent=rtabent AND debpsite=rtab002 ",
+                     " LEFT JOIN ooefl_t ON ooeflent='",g_enterprise,"' AND ooefl001=debpsite AND ooefl002='",g_dlang,"'",
+                     " WHERE ",tm.wc
+         WHEN 3          #客单量
+         LET g_sql = " SELECT debpsite,ooefl003,debp002,SUM(debp007)/SUM(debp016) s FROM debp_t  ",
+                     " LEFT JOIN rtab_t ON rtabent='",g_enterprise,"' AND debpent=rtabent AND debpsite=rtab002 ",
+                     " LEFT JOIN ooefl_t ON ooeflent='",g_enterprise,"' AND ooefl001=debpsite AND ooefl002='",g_dlang,"'",
+                     " WHERE ",tm.wc
+         WHEN 4          #客单价
+         LET g_sql = " SELECT debpsite,ooefl003,debp002,SUM(debp012)/SUM(debp016) s FROM debp_t  ",
+                     " LEFT JOIN rtab_t ON rtabent='",g_enterprise,"' AND debpent=rtabent AND debpsite=rtab002 ",
+                     " LEFT JOIN ooefl_t ON ooeflent='",g_enterprise,"' AND ooefl001=debpsite AND ooefl002='",g_dlang,"'",
+                     " WHERE ",tm.wc
+      END CASE
+#      LET g_sql = g_sql," GROUP BY debpsite,ooefl003,debp002"
+   ELSE                  #非会员
+      CASE tm.sel        #分析类型
+         WHEN 1          #销售额
+            LET g_sql = " SELECT debosite,ooefl003,debo002,SUM(debo010) s FROM debo_t ",
+                        " LEFT JOIN rtab_t ON rtabent='",g_enterprise,"' AND deboent=rtabent AND debosite=rtab002 ",
+                        " LEFT JOIN ooefl_t ON ooeflent='",g_enterprise,"' AND ooefl001=debosite AND ooefl002='",g_dlang,"'",
+                        " WHERE ",tm.wc
+            WHEN 2          #毛利
+            LET g_sql = " SELECT debosite,ooefl003,debo002,SUM(debo014) s FROM debo_t ",
+                        " LEFT JOIN rtab_t ON rtabent='",g_enterprise,"' AND deboent=rtabent AND debosite=rtab002 ",
+                        " LEFT JOIN ooefl_t ON ooeflent='",g_enterprise,"' AND ooefl001=debosite AND ooefl002='",g_dlang,"'",
+                        " WHERE ",tm.wc
+            WHEN 3          #客单量
+            LET g_sql = " SELECT debosite,ooefl003,debo002,SUM(debo005)/SUM(debo016) s FROM debo_t ",
+                        " LEFT JOIN rtab_t ON rtabent='",g_enterprise,"' AND deboent=rtabent AND debosite=rtab002 ",
+                        " LEFT JOIN ooefl_t ON ooeflent='",g_enterprise,"' AND ooefl001=debosite AND ooefl002='",g_dlang,"'",
+                        " WHERE ",tm.wc
+            WHEN 4          #客单价
+            LET g_sql = " SELECT debosite,ooefl003,debo002,SUM(debo010)/SUM(debo016) s FROM debo_t ",
+                        " LEFT JOIN rtab_t ON rtabent='",g_enterprise,"' AND deboent=rtabent AND debosite=rtab002 ",
+                        " LEFT JOIN ooefl_t ON ooeflent='",g_enterprise,"' AND ooefl001=debosite AND ooefl002='",g_dlang,"'",
+                        " WHERE ",tm.wc
+      END CASE
+#      LET g_sql = g_sql," GROUP BY debosite,ooefl003,debo002"
+   END IF
+   
+   IF tm.chk='Y' THEN    #勾选会员
+      CASE tm.comp
+         WHEN 1          #期别1
+            LET l_dat1 = tm.dat1
+            LET l_dat_str = l_dat1
+            LET l_dat_num = l_dat_str.getIndexOf("(",1)
+#            LET l_dat1 = l_dat1[19,20],".",l_dat1[22,23],"-",l_dat1[57,58]
+#            LET l_dat1 = l_dat1[l_dat_num+2,l_dat_num+3],".",l_dat1[l_dat_num+5,l_dat_num+6],"-",l_dat1[l_dat_num+40,l_dat_num+41]
+            LET l_dat1 = l_dat1[21,22],".",l_dat1[24,25],"-",l_dat1[61,62]
+            LET g_sql = g_sql," AND (debp002 ",tm.dat1,") "
+            LET g_sql = g_sql," GROUP BY debpsite,ooefl003,debp002"
+            LET g_sql = "SELECT debpsite,ooefl003,dat_name,s",
+                        "  FROM (    ",g_sql," ),acrr827_tmp ",
+                        " WHERE debp002 BETWEEN dat_start AND dat_end"
+         WHEN 2          #期别2
+            LET l_dat1 = tm.dat1
+            LET l_dat1 = l_dat1[21,22],".",l_dat1[24,25],"-",l_dat1[61,62]
+            LET l_dat2 = tm.dat2
+            LET l_dat2 = l_dat2[21,22],".",l_dat2[24,25],"-",l_dat2[61,62]
+            LET g_sql = g_sql," AND (debp002 ",tm.dat1," OR debp002 ",tm.dat2,") "
+            LET g_sql = g_sql," GROUP BY debpsite,ooefl003,debp002"
+            LET g_sql = "SELECT debpsite,ooefl003,dat_name,s",
+                        "  FROM (    ",g_sql," ),acrr827_tmp ",
+                        " WHERE debp002 BETWEEN dat_start AND dat_end"
+         WHEN 3          #期别3
+            LET l_dat1 = tm.dat1
+            LET l_dat1 = l_dat1[21,22],".",l_dat1[24,25],"-",l_dat1[61,62]
+            LET l_dat2 = tm.dat2
+            LET l_dat2 = l_dat2[21,22],".",l_dat2[24,25],"-",l_dat2[61,62]
+            LET l_dat3 = tm.dat3
+            LET l_dat3 = l_dat3[21,22],".",l_dat3[24,25],"-",l_dat3[61,62]
+            LET g_sql = g_sql," AND (debp002 ",tm.dat1," OR debp002 ",tm.dat2," OR debp002 ",tm.dat3,") "
+            LET g_sql = g_sql," GROUP BY debpsite,ooefl003,debp002"
+            LET g_sql = "SELECT debpsite,ooefl003,dat_name,s",
+                        "  FROM (    ",g_sql," ),acrr827_tmp ",
+                        " WHERE debp002 BETWEEN dat_start AND dat_end"
+         WHEN 4          #期别4
+            LET l_dat1 = tm.dat1
+            LET l_dat1 = l_dat1[21,22],".",l_dat1[24,25],"-",l_dat1[61,62]
+            LET l_dat2 = tm.dat2
+            LET l_dat2 = l_dat2[21,22],".",l_dat2[24,25],"-",l_dat2[61,62]
+            LET l_dat3 = tm.dat3
+            LET l_dat3 = l_dat3[21,22],".",l_dat3[24,25],"-",l_dat3[61,62]
+            LET l_dat4 = tm.dat4
+            LET l_dat4 = l_dat4[21,22],".",l_dat4[24,25],"-",l_dat4[61,62]
+            LET g_sql = g_sql," AND (debp002 ",tm.dat1," OR debp002 ",tm.dat2," OR debp002 ",tm.dat3," OR debp002 ",tm.dat4,") "
+            LET g_sql = g_sql," GROUP BY debpsite,ooefl003,debp002"
+            LET g_sql = "SELECT debpsite,ooefl003,dat_name,s",
+                        "  FROM (    ",g_sql," ),acrr827_tmp ",
+                        " WHERE debp002 BETWEEN dat_start AND dat_end"
+         WHEN 5          #期别5
+            LET l_dat1 = tm.dat1
+            LET l_dat1 = l_dat1[21,22],".",l_dat1[24,25],"-",l_dat1[61,62]
+            LET l_dat2 = tm.dat2
+            LET l_dat2 = l_dat2[21,22],".",l_dat2[24,25],"-",l_dat2[61,62]
+            LET l_dat3 = tm.dat3
+            LET l_dat3 = l_dat3[21,22],".",l_dat3[24,25],"-",l_dat3[61,62]
+            LET l_dat4 = tm.dat4
+            LET l_dat4 = l_dat4[21,22],".",l_dat4[24,25],"-",l_dat4[61,62]
+            LET l_dat5 = tm.dat5
+            LET l_dat5 = l_dat5[21,22],".",l_dat5[24,25],"-",l_dat5[61,62]
+            LET g_sql = g_sql," AND (debp002 ",tm.dat1," OR debp002 ",tm.dat2," OR debp002 ",tm.dat3," OR debp002 ",tm.dat4," OR debp002 ",tm.dat5,") "
+            LET g_sql = g_sql," GROUP BY debpsite,ooefl003,debp002"
+            LET g_sql = "SELECT debpsite,ooefl003,dat_name,s",
+                        "  FROM (    ",g_sql," ),acrr827_tmp ",
+                        " WHERE debp002 BETWEEN dat_start AND dat_end"
+      END CASE
+      
+   ELSE                  #非会员
+      CASE tm.comp
+         WHEN 1          #期别1
+            LET l_dat1 = tm.dat1
+            LET l_dat1 = l_dat1[21,22],".",l_dat1[24,25],"-",l_dat1[61,62]
+            LET g_sql = g_sql," AND (debo002 ",tm.dat1,") "
+            LET g_sql = g_sql," GROUP BY debosite,ooefl003,debo002"
+            LET g_sql = "SELECT debosite,ooefl003,dat_name,s",
+                        "  FROM (    ",g_sql," ),acrr827_tmp ",
+                        " WHERE debo002 BETWEEN dat_start AND dat_end"
+         WHEN 2          #期别2
+            LET l_dat1 = tm.dat1
+            LET l_dat1 = l_dat1[21,22],".",l_dat1[24,25],"-",l_dat1[61,62]
+            LET l_dat2 = tm.dat2
+            LET l_dat2 = l_dat2[21,22],".",l_dat2[24,25],"-",l_dat2[61,62]
+            LET g_sql = g_sql," AND (debo002 ",tm.dat1," OR debo002 ",tm.dat2,") "
+            LET g_sql = g_sql," GROUP BY debosite,ooefl003,debo002"
+            LET g_sql = "SELECT debosite,ooefl003,dat_name,s",
+                        "  FROM (    ",g_sql," ),acrr827_tmp ",
+                        " WHERE debo002 BETWEEN dat_start AND dat_end"
+         WHEN 3          #期别3
+            LET l_dat1 = tm.dat1
+            LET l_dat1 = l_dat1[21,22],".",l_dat1[24,25],"-",l_dat1[61,62]
+            LET l_dat2 = tm.dat2
+            LET l_dat2 = l_dat2[21,22],".",l_dat2[24,25],"-",l_dat2[61,62]
+            LET l_dat3 = tm.dat3
+            LET l_dat3 = l_dat3[21,22],".",l_dat3[24,25],"-",l_dat3[61,62]
+            LET g_sql = g_sql," AND (debo002 ",tm.dat1," OR debo002 ",tm.dat2," OR debo002 ",tm.dat3,") "
+            LET g_sql = g_sql," GROUP BY debosite,ooefl003,debo002"
+            LET g_sql = "SELECT debosite,ooefl003,dat_name,s",
+                        "  FROM (    ",g_sql," ),acrr827_tmp ",
+                        " WHERE debo002 BETWEEN dat_start AND dat_end"
+         WHEN 4          #期别4
+            LET l_dat1 = tm.dat1
+            LET l_dat1 = l_dat1[21,22],".",l_dat1[24,25],"-",l_dat1[61,62]
+            LET l_dat2 = tm.dat2
+            LET l_dat2 = l_dat2[21,22],".",l_dat2[24,25],"-",l_dat2[61,62]
+            LET l_dat3 = tm.dat3
+            LET l_dat3 = l_dat3[21,22],".",l_dat3[24,25],"-",l_dat3[61,62]
+            LET l_dat4 = tm.dat4
+            LET l_dat4 = l_dat4[21,22],".",l_dat4[24,25],"-",l_dat4[61,62]
+            LET g_sql = g_sql," AND (debo002 ",tm.dat1," OR debo002 ",tm.dat2," OR debo002 ",tm.dat3," OR debo002 ",tm.dat4,") "
+            LET g_sql = g_sql," GROUP BY debosite,ooefl003,debo002"
+            LET g_sql = "SELECT debosite,ooefl003,dat_name,s",
+                        "  FROM (    ",g_sql," ),acrr827_tmp ",
+                        " WHERE debo002 BETWEEN dat_start AND dat_end"
+         WHEN 5          #期别5
+            LET l_dat1 = tm.dat1
+            LET l_dat1 = l_dat1[21,22],".",l_dat1[24,25],"-",l_dat1[61,62]
+            LET l_dat2 = tm.dat2
+            LET l_dat2 = l_dat2[21,22],".",l_dat2[24,25],"-",l_dat2[61,62]
+            LET l_dat3 = tm.dat3
+            LET l_dat3 = l_dat3[21,22],".",l_dat3[24,25],"-",l_dat3[61,62]
+            LET l_dat4 = tm.dat4
+            LET l_dat4 = l_dat4[21,22],".",l_dat4[24,25],"-",l_dat4[61,62]
+            LET l_dat5 = tm.dat5
+            LET l_dat5 = l_dat5[21,22],".",l_dat5[24,25],"-",l_dat5[61,62]
+            LET g_sql = g_sql," AND (debo002 ",tm.dat1," OR debo002 ",tm.dat2," OR debo002 ",tm.dat3," OR debo002 ",tm.dat4," OR debo002 ",tm.dat5,")"
+            LET g_sql = g_sql," GROUP BY debosite,ooefl003,debo002"
+            LET g_sql = "SELECT debosite,ooefl003,dat_name,s",
+                        "  FROM (    ",g_sql," ),acrr827_tmp ",
+                        " WHERE debo002 BETWEEN dat_start AND dat_end"
+      END CASE
+   END IF
+   
+   
+   #end add-point
+   PREPARE acrr827_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE acrr827_x01_curs CURSOR FOR acrr827_x01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="acrr827_x01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION acrr827_x01_ins_data()
+DEFINE sr RECORD 
+   debosite LIKE debo_t.debosite, 
+   ooefl_t_ooefl003 LIKE ooefl_t.ooefl003, 
+   l_debo021_debo022 LIKE type_t.chr30, 
+   l_debo_type LIKE type_t.num20_6
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH acrr827_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+      
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.debosite,sr.ooefl_t_ooefl003,sr.l_debo021_debo022,sr.l_debo_type
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "acrr827_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="acrr827_x01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION acrr827_x01_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    
+    #end add-point:rep_data.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="acrr827_x01.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

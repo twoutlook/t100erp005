@@ -1,0 +1,551 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aisi055" std_prog="aisi055" erpver="1.0" ver="3" module="AIS" type="M" booking="N" class="i" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items="delete,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="isae_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 發票簿維護作業(大陸版)
+                 依每一期維護銷項發票簿,本作業的資料提供開立出貨/應收等銷項發票 
+                 使用,大陸稅區的銷項發票簿非固定期間,故不限定 
+
+
+標準作業功能：新增/修改/刪除/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：(基本資料/交易單據)維護作業
+輸入模式：假雙檔(子作業)無搭配任何方案F003_00
+作業資料來源(Master)：
+ 資料來源表：isae_t(發票簿資料檔)
+              
+作業資料來源(Detail)：
+ 資料來源表：isae_t(發票簿資料檔)
+]]>
+  </all>
+  <field cite_std="N" name="isac001" ver="1" src="s" column="isac001" table="isac_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isae004_2" ver="1" src="s" column="isae004" table="isae_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isae_t.isae001" ver="1" src="s" column="isae001" table="isae_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[簿號:
+  ●欄位控管：
+    資料欄位: isae001  /可Display可Input
+    預設值: 無 
+    校驗:同一營運 + 簿號不可以重覆  （跟台灣版不同，台灣版要加上 + 生效日期 + 失效日期）　
+    帶值:無
+    不可空白
+  ]]>
+  </field>
+  <field cite_std="N" name="isae_t.isae002" ver="1" src="s" column="isae002" table="isae_t" attribute="D001" type="date()" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[生效日期:
+  ●欄位控管：
+    資料欄位: isae002  /可Display可Input
+    預設值:新增時 第二筆以後帶上一筆的生效日期　
+    校驗: 不可小於媒體關帳日期(欄位待補)   
+    不可空白
+  ]]>
+  </field>
+  <field cite_std="N" name="isae_t.isae003" ver="1" src="s" column="isae003" table="isae_t" attribute="D001" type="date()" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[失效日期:
+  ●欄位控管：
+    資料欄位: isae003  /可Display可Input
+    預設值:新增時 第二筆以後帶上一筆的失效日期　
+    校驗: 不可小於媒體關帳日期(欄位待補)   
+　　　　
+
+  ]]>
+  </field>
+  <field cite_std="N" name="isae_t.isae004" ver="1" src="s" column="isae004" table="isae_t" attribute="C550" type="varchar2(2)" req="Y" i_zoom="q_isae004" c_zoom="q_isac002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[發票類型:
+  ●欄位控管： 
+    資料欄位: isae004 /可Display 可Input
+    預設值:無
+    校驗:必須存在發票類型檔
+    帶值:發票類型名稱
+    不可空白
+
+ ●開窗處理：
+ 　　１.新增/修改時：
+       參考函式：依標準查詢視窗
+       查詢欄位：發票類型,說明
+                 條件:交易稅區必須與法人所屬稅區相同
+       回值類型：單一回值
+]]>
+  </field>
+  <field cite_std="N" name="isae_t.isae005" ver="1" src="s" column="isae005" table="isae_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isae_t.isae006" ver="1" src="s" column="isae006" table="isae_t" attribute="C001" type="varchar2(1)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="9713" default="1" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：發票代碼
+   ●欄位控管：
+     資料欄位:[T:發票簿資料檔].[C:發票代碼]/可input及Display
+     預設值:無
+     校驗: 1.輸入的資料必須存在於發票字軌檔,若不存在,則報資料不存在的錯
+           2.輸入的資料必須在發票字軌檔中有效,若無效,則報資料無效的錯
+           3.參考稅務參數設定發票編碼方式 營運據點所屬稅區
+             若發票編碼方式 =2.发票代码  , 則本欄位則顯示
+             且隱藏 isae005 發票代碼欄位
+             
+           ]]>
+  </field>
+  <field cite_std="N" name="isae_t.isae007" ver="1" src="s" column="isae007" table="isae_t" attribute="C552" type="varchar2(20)" req="N" i_zoom="q_isad005()" c_zoom="q_isad005()" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isae_t.isae008" ver="1" src="s" column="isae008" table="isae_t" attribute="C552" type="varchar2(20)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[發票代碼:
+  ●欄位控管：
+    資料欄位: isae008 /可Display 可Input
+              參考稅務參數設定, 營運據點所屬稅區若使用發票編碼方式=2.發票代碼, 
+              則本欄位則顯示,且隱藏 isae007 字軌欄位
+　　　　　　　　
+    預設值:  無
+　　不可空白]]>
+  </field>
+  <field cite_std="N" name="isae_t.isae009" ver="1" src="s" column="isae009" table="isae_t" attribute="C552" type="varchar2(20)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[起始號碼:
+  ●欄位控管：
+    資料欄位: isae009  /可Display可Input
+    預設值:  無
+    不可空白
+    校驗:發票字軌+發票號碼不可存在於其他發票簿間 ]]>
+  </field>
+  <field cite_std="N" name="isae_t.isae010" ver="1" src="s" column="isae010" table="isae_t" attribute="C552" type="varchar2(20)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[結束號碼:
+  ●欄位控管：
+    資料欄位: isae010 /可Display可Input
+    預設值:起始號碼 
+    不可空白,不可小於起始號碼]]>
+  </field>
+  <field cite_std="N" name="isae_t.isae011" ver="1" src="s" column="isae011" table="isae_t" attribute="C552" type="varchar2(20)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[發票張數:
+  ●欄位控管：
+    資料欄位: isae012 /可Display 
+    預設值:結束號碼 - 起始號碼 + 1  
+    不可小於等於0 
+]]>
+  </field>
+  <field cite_std="N" name="isae_t.isae012" ver="1" src="s" column="isae012" table="isae_t" attribute="N001" type="number(5,0)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[下次列印號碼:
+  ●欄位控管：
+    資料欄位: isae012 /可Display 可Input
+    預設值:起始號碼 
+    不可空白
+    校驗:必須介於發票起迄號碼]]>
+  </field>
+  <field cite_std="N" name="isae_t.isae013" ver="1" src="s" column="isae013" table="isae_t" attribute="N001" type="number(5,0)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：已開張數
+  ●欄位控管：
+    資料欄位:[T:發票簿資料檔].[C:已開張數]/可Display
+    預設值:0
+    本欄位由發票列印作業機制 回寫]]>
+  </field>
+  <field cite_std="N" name="isae_t.isae014" ver="1" src="s" column="isae014" table="isae_t" attribute="D001" type="date()" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isae_t.isae015" ver="1" src="s" column="isae015" table="isae_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[欄位名稱：下傳POS否
+  ●欄位控管：
+    資料欄位: [T:發票簿資料檔].[C:下傳POS否]/可Display
+    預設值:N
+    本欄位由發票下傳 pos作業機制 回寫]]>
+  </field>
+  <field cite_std="N" name="isae_t.isae016" ver="1" src="s" column="isae016" table="isae_t" attribute="N401" type="number(5,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[年度:
+  ●欄位控管：
+    資料欄位: isae016 /可Display可Input
+    預設值:  無
+    不可空白
+    下拉選項比照 aooi410 行事曆作法, 下拉2000 年到 2100 
+]]>
+  </field>
+  <field cite_std="N" name="isae_t.isae017" ver="1" src="s" column="isae017" table="isae_t" attribute="N402" type="number(5,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[起始月份:
+  ●欄位控管：
+    資料欄位: isae017 /可Display可Input
+    預設值:  無
+    不可空白
+    下拉選項   1 月到  12月
+]]>
+  </field>
+  <field cite_std="N" name="isae_t.isae018" ver="1" src="s" column="isae018" table="isae_t" attribute="N402" type="number(5,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[結束月份:
+  ●欄位控管：
+    資料欄位: isae018 /可Display可Input
+    預設值:  起始月份 + 1 
+    不可空白
+    下拉選項   1 月到  12月
+]]>
+  </field>
+  <field cite_std="N" name="isae_t.isaecomp" ver="1" src="s" column="isaecomp" table="isae_t" attribute="C813" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_isaecomp" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[法人:
+  ●欄位控管：
+    資料欄位: isaecomp  /可Display　
+    預設值:  營運據點所屬法人
+ 
+
+
+  ●開窗處理：
+     1.查詢時：
+       參考函式：依標準查詢視窗  q_isae
+       查詢欄位：select unique 營運據點 (isaesite) ,營運簡稱(ooeal003)
+       回值類型：多重回值
+
+     2.新增/修改時：
+       依標準視窗/q_ooef
+       開窗欄位: 營運據點ooef001 ,組織簡稱ooeal003 
+]]>
+  </field>
+  <field cite_std="N" name="isae_t.isaecrtdp" ver="1" src="s" column="isaecrtdp" table="isae_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isae_t.isaecrtdt" ver="1" src="s" column="isaecrtdt" table="isae_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isae_t.isaecrtid" ver="1" src="s" column="isaecrtid" table="isae_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isae_t.isaemoddt" ver="1" src="s" column="isaemoddt" table="isae_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isae_t.isaemodid" ver="1" src="s" column="isaemodid" table="isae_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isae_t.isaeowndp" ver="1" src="s" column="isaeowndp" table="isae_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isae_t.isaeownid" ver="1" src="s" column="isaeownid" table="isae_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isae_t.isaesite" ver="1" src="s" column="isaesite" table="isae_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="q_ooef001_14" c_zoom="q_isaesite" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[營運據點:
+  ●欄位控管：
+    資料欄位: isaesite   / 可Display　, input 
+    預設值:  無
+    也可以是法人
+ 
+  ●開窗處理：
+     1.查詢時：
+       參考函式：依標準查詢視窗  q_isae
+       查詢欄位：select unique 營運據點 (isaesite) ,營運簡稱(ooeal003)
+       回值類型：多重回值
+
+     2.新增/修改時：
+       依標準視窗/q_ooef
+       開窗欄位: 營運據點ooef001 ,組織簡稱ooeal003 ]]>
+  </field>
+  <field cite_std="N" name="isae_t.isaestus" ver="1" src="s" column="isaestus" table="isae_t" attribute="C822" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[欄位名稱：有效
+  ●欄位控管：
+    資料欄位: [T:發票簿資料檔].[C:有效]/可Display可Input
+    預設值:  Y
+    不可空白
+    執行失效時檢核本發票簿已使用張數是否為0 ,若>0 則出現警訊且不可失效]]>
+  </field>
+  <field cite_std="N" name="ooall004" ver="1" src="s" column="ooall004" table="ooall_t" attribute="C817" type="varchar2(500)" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="isae004_desc" src="s" depend_field="isae_t.isae004" correspon_key="isaeent,isae001,isae004" ref_table="isacl_t" ref_fk="isaclent,isacl001,isacl002" ref_dlang="isacl003" ref_rtn="isacl004" status=""/>
+    <rfield cite_std="N" ver="1" name="isaecomp_desc" src="s" depend_field="isae_t.isaecomp" correspon_key="isaeent,isaecomp" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="isaecrtdp_desc" src="s" depend_field="isae_t.isaecrtdp" correspon_key="isaecrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="isaecrtid_desc" src="s" depend_field="isae_t.isaecrtid" correspon_key="&apos;2&apos;,isaecrtid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="isaemodid_desc" src="s" depend_field="isae_t.isaemodid" correspon_key="&apos;2&apos;,isaemodid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="isaeowndp_desc" src="s" depend_field="isae_t.isaeowndp" correspon_key="isaeowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="isaeownid_desc" src="s" depend_field="isae_t.isaeownid" correspon_key="&apos;2&apos;,isaeownid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="isaesite_desc" src="s" depend_field="isae_t.isaesite" correspon_key="isaeent,isaesite" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="isac001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae004_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isae001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isae002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isae003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isae004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isae005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isae006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isae007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isae008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isae009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isae010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isae011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isae012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isae013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isae014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isae015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isae016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isae017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isae018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isaecomp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isaecrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isaecrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isaecrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isaemoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isaemodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isaeowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isaeownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isaesite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isaestus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooall004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="aisi055_01" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="aisi055_02" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_isaesite" text="營運據點" lstr=""/>
+    <sfield name="lbl_isac001" text="交易稅區" lstr=""/>
+    <sfield name="lbl_ooall004" text="說明" lstr=""/>
+    <sfield name="lbl_isae016" text="年度" lstr=""/>
+    <sfield name="lbl_isae017" text="月份" lstr=""/>
+    <sfield name="lbl_combobox_21" text="~" lstr=""/>
+    <sfield name="lbl_isaecomp" text="所屬法人" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="bpage_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_isae001" text="簿號" lstr=""/>
+    <sfield name="lbl_isae002" text="生效日期" lstr=""/>
+    <sfield name="lbl_isae003" text="失效日期" lstr=""/>
+    <sfield name="lbl_isae004" text="發票類型" lstr=""/>
+    <sfield name="lbl_isacl004" text="說明" lstr=""/>
+    <sfield name="lbl_isae005" text="電子發票" lstr=""/>
+    <sfield name="lbl_isae006" text="開立方式" lstr=""/>
+    <sfield name="lbl_isae007" text="字軌" lstr=""/>
+    <sfield name="lbl_isae008" text="發票代碼" lstr=""/>
+    <sfield name="lbl_isae009" text="起始號碼" lstr=""/>
+    <sfield name="lbl_isae010" text="結束號碼" lstr=""/>
+    <sfield name="lbl_isae011" text="發票張數" lstr=""/>
+    <sfield name="lbl_isae012" text="下次列印號碼" lstr=""/>
+    <sfield name="lbl_isae013" text="已開張數" lstr=""/>
+    <sfield name="lbl_isae014" text="已列印發票日期" lstr=""/>
+    <sfield name="lbl_isae015" text="下傳 pos否" lstr=""/>
+    <sfield name="lbl_isaestus" text="有效" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="modid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="ownid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="owndp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="crtid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="crtdp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_collect_gzze001" text="訊息代碼" lstr=""/>
+    <sfield name="lbl_collect_gzze003" text="訊息內容" lstr=""/>
+    <sfield name="lbl_collect_gzze006" text="進階訊息" lstr=""/>
+    <sfield name="lbl_cl_err_s02_accept" text="確定" lstr=""/>
+    <sfield name="lbl_err_detail" text="進階訊息" lstr=""/>
+    <sfield name="lbl_suggest_exe" text="建議執行" lstr=""/>
+    <sfield name="lbl_err_contact" text="反應問題" lstr=""/>
+    <sfield name="lbl_cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="lbl_group_cl_err_s01" text="進階訊息" lstr=""/>
+    <sfield name="lbl_gzze001" text="訊息代碼:" lstr=""/>
+    <sfield name="lbl_gzze006" text="訊息內容:" lstr=""/>
+    <sfield name="lbl_sqlerrd2" text="SQL錯誤碼:" lstr=""/>
+    <sfield name="lbl_gzxm001" text="QBE編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm005" text="設為首頁-自動查詢方案" lstr=""/>
+    <sfield name="lbl_gzxm002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxm003" text="員工編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm004" text="設為預設查詢條件" lstr=""/>
+    <sfield name="cl_qbe_s02.bpage_1" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn005" text="欄位說明" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="cl_qbe_s02_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s02_Cancel" text="取消" lstr=""/>
+    <sfield name="lbl_funid" text="函式代碼" lstr=""/>
+    <sfield name="lbl_fundesc" text="函式說明" lstr=""/>
+    <sfield name="cl_qbe_s01_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s01_Cancel" text="取消" lstr=""/>
+    <sfield name="cl_qbe_s03.bpage_1" text="查詢方案列表" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxmstus" text="有效" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm004" text="預設" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm005" text="顯示於首頁" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm009" text="順序" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxml005" text="查詢方案說明" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm007" text="自設SQL條件" lstr=""/>
+    <sfield name="cl_qbe_s03.page_2" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn004" text="序號" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn005" text="條件欄位" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="aisi050_01.group_6" text="法人條件" lstr=""/>
+    <sfield name="lbl_comp" text="法人代碼" lstr=""/>
+    <sfield name="lbl_01_isae003" text="~" lstr=""/>
+    <sfield name="lbl_isae018" text="~" lstr=""/>
+    <sfield name="aisi050_01.group_5" text="發票簿ＱＢＥ條件" lstr=""/>
+    <sfield name="lbl_isasstus" text="狀態碼" lstr=""/>
+    <sfield name="lbl_isascomp" text="法人代碼" lstr=""/>
+    <sfield name="lbl_isassite" text="營運據點" lstr=""/>
+    <sfield name="lbl_isas001" text="簿號" lstr=""/>
+    <sfield name="lbl_isas002" text="生效日期" lstr=""/>
+    <sfield name="lbl_isas003" text="失效日期" lstr=""/>
+    <sfield name="lbl_isas004" text="發票類型" lstr=""/>
+    <sfield name="lbl_isas004_desc" text="發票類型" lstr=""/>
+    <sfield name="lbl_isas005" text="字軌" lstr=""/>
+    <sfield name="lbl_isas006" text="發票代碼" lstr=""/>
+    <sfield name="lbl_isas007" text="起始號碼" lstr=""/>
+    <sfield name="lbl_isas008" text="結束號碼" lstr=""/>
+    <sfield name="lbl_isas009" text="發票張數" lstr=""/>
+    <sfield name="lbl_isas010" text="已用張數" lstr=""/>
+    <sfield name="lbl_isas011" text="撥入營運據點" lstr=""/>
+    <sfield name="lbl_isas012" text="撥入起始號碼" lstr=""/>
+    <sfield name="lbl_isas013" text="撥入結束號碼" lstr=""/>
+    <sfield name="lbl_isas014" text="撥入簿號" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="aisi050_02.group_8" text="拆分來源" lstr=""/>
+    <sfield name="lbl_isae001_1" text="來源簿號" lstr=""/>
+    <sfield name="lbl_isae009_1" text="起始號碼" lstr=""/>
+    <sfield name="aisi050_02.group_7" text="拆分簿號設定" lstr=""/>
+    <sfield name="lbl_chr" text="固定字元" lstr=""/>
+    <sfield name="lbl_num" text="起始流水號" lstr=""/>
+    <sfield name="lbl_sheet" text="拆分後發票張數" lstr=""/>
+    <sfield name="lbl_b_isae001" text="簿號" lstr=""/>
+    <sfield name="lbl_b_isae002" text="生效日期" lstr=""/>
+    <sfield name="lbl_b_isae003" text="失效日期" lstr=""/>
+    <sfield name="lbl_b_isae005" text="電子發票" lstr=""/>
+    <sfield name="lbl_b_isae006" text="開立方式" lstr=""/>
+    <sfield name="lbl_b_isae007" text="字軌" lstr=""/>
+    <sfield name="lbl_b_isae008" text="發票代碼" lstr=""/>
+    <sfield name="lbl_b_isae009" text="起始號碼" lstr=""/>
+    <sfield name="lbl_b_isae010" text="結束號碼" lstr=""/>
+    <sfield name="lbl_b_isae011" text="發票張數" lstr=""/>
+    <sfield name="page_cl_doc_s01_page1" text="相關文件清單" lstr=""/>
+    <sfield name="lbl_loaa006" text="文件版本" lstr=""/>
+    <sfield name="lbl_loaa007" text="文件序號" lstr=""/>
+    <sfield name="lbl_loaa011" text="文件型態" lstr=""/>
+    <sfield name="lbl_loaa013" text="文件說明" lstr=""/>
+    <sfield name="lbl_loaa010" text="文件原始檔名" lstr=""/>
+    <sfield name="btn_upload" text="本地文件上傳" lstr=""/>
+    <sfield name="btn_crt_text" text="新建純文字紀錄" lstr=""/>
+    <sfield name="btn_doccrt_url" text="新建URL" lstr=""/>
+    <sfield name="btn_docopen" text="文件下載" lstr=""/>
+    <sfield name="btn_docupdate" text="文件資料修改" lstr=""/>
+    <sfield name="btn_docremove" text="文件刪除" lstr=""/>
+    <sfield name="btn_exit" text="關閉功能" lstr=""/>
+    <sfield name="page_cl_doc_s01_page2" text="文件基本資料" lstr=""/>
+    <sfield name="lbl_loaa004" text="用途類別" lstr=""/>
+    <sfield name="lbl_loaa005" text="預設顯示圖片" lstr=""/>
+    <sfield name="lbl_loaa012" text="文件位置(URL)" lstr=""/>
+    <sfield name="page_cl_doc_s01_page4" text="權限設定" lstr=""/>
+    <sfield name="group_read" text="讀取權限" lstr=""/>
+    <sfield name="group_modify" text="修改權限" lstr=""/>
+    <sfield name="page_cl_doc_s01_page3" text="異動資訊" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="btn_doccancel" text="放棄修改" lstr=""/>
+    <sfield name="btn_docmodify" text="資料存檔" lstr=""/>
+    <sfield name="lbl_gzxp007_1" text="選擇分類" lstr=""/>
+    <sfield name="add_catalog" text="" lstr=""/>
+    <sfield name="lbl_gzxp007_2" text="自訂分類" lstr=""/>
+    <sfield name="lbl_gzxp008" text="追蹤說明" lstr=""/>
+    <sfield name="accept" text="確定" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="follow_list" text="待追蹤" lstr=""/>
+    <sfield name="signature_list" text="待簽核" lstr=""/>
+    <sfield name="announcement" text="作業公告" lstr=""/>
+    <sfield name="cancelfollow" text="取消追蹤" lstr=""/>
+    <sfield name="assigncatalog" text="指定分類" lstr=""/>
+    <sfield name="cl_user_overview_s01.lbl_name" text="" lstr=""/>
+    <sfield name="lbl_gzxp002" text="作業名稱" lstr=""/>
+    <sfield name="lbl_gzxp006" text="單據日期" lstr=""/>
+    <sfield name="add_favorite_catalog" text="新增目錄" lstr=""/>
+    <sfield name="modify_favorite_desc" text="修改" lstr=""/>
+    <sfield name="favorite_del" text="移除" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_isac002" text="發票類型" lstr=""/>
+    <sfield name="lbl_isad005" text="發票字軌" lstr=""/>
+    <sfield name="lbl_isad006" text="發票種類" lstr=""/>
+    <sfield name="lbl_ooag001" text="員工編號" lstr=""/>
+    <sfield name="lbl_ooea001" text="組織編號" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_ooef001" text="組織編號" lstr=""/>
+    <sfield name="lbl_ooal002" text="參照表編號" lstr=""/>
+    <sfield name="lbl_ooall005" text="助記碼" lstr=""/>
+    <sfield name="cl_ask_s04_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s03_Test" text="測試" lstr=""/>
+    <sfield name="cl_ask_s03_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s01_Choice" text="選擇" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="cl_progress_bar_Current" text="目前進度" lstr=""/>
+    <sfield name="cl_progress_bar_Total" text="全部" lstr=""/>
+    <sfield name="cl_progress_bar_%" text="%" lstr=""/>
+    <sfield name="lbl_select" text="選擇" lstr=""/>
+    <sfield name="lbl_gzgdl002" text="樣版說明" lstr=""/>
+    <sfield name="lbl_gzgd003" text="客製否" lstr=""/>
+    <sfield name="lbl_gzgd007" text="樣版名稱(4rp)" lstr=""/>
+    <sfield name="lbl_rep_fmt" text="輸出格式" lstr=""/>
+    <sfield name="lbl_outputformat_1" text="預覽與列印(SVG)" lstr=""/>
+    <sfield name="lbl_outputformat_2" text="Adobe Acrobat (PDF)" lstr=""/>
+    <sfield name="lbl_outputformat_3" text="Microsoft Excel (XLS)" lstr=""/>
+    <sfield name="lbl_outputformat_4" text="Microsoft Excel (XLS) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_5" text="Microsoft Excel (XLSX)" lstr=""/>
+    <sfield name="lbl_outputformat_6" text="Microsoft Excel (XLSX) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_7" text="Microsoft Word (RTF)" lstr=""/>
+    <sfield name="lbl_outputformat_8" text="網頁 (HTML)" lstr=""/>
+    <sfield name="lbl_outputformat_9" text="郵件 (Mail)" lstr=""/>
+    <sfield name="lbl_set_default" text="設為預設樣版" lstr=""/>
+    <sfield name="lbl_btn_accept" text="確定" lstr=""/>
+    <sfield name="lbl_btn_cancel" text="放棄" lstr=""/>
+    <sfield name="lbl_gzza003" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzza001" text="程式編號" lstr=""/>
+    <sfield name="lbl_gzza002" text="程式類別" lstr=""/>
+    <sfield name="lbl_gzde002" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzde001" text="規格編號" lstr=""/>
+    <sfield name="lbl_gzdel003" text="說明" lstr=""/>
+    <sfield name="lbl_gzdf002" text="子畫面規格編號" lstr=""/>
+    <sfield name="lbl_gzdfl003" text="子畫面檔案名稱" lstr=""/>
+    <sfield name="lbl_gzcbl004" text="說明" lstr=""/>
+    <sfield name="lbl_gzde003" text="規格類別" lstr=""/>
+    <sfield name="lbl_dzfv004" text="畫面代號" lstr=""/>
+    <sfield name="lbl_dzfv005" text="主/子程式" lstr=""/>
+    <sact name="aisi055_01" text="發票簿調撥" lstr=""/>
+    <sact name="aisi055_02" text="發票簿拆分" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

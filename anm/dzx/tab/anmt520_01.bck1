@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmt520_01" module="anm" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="01531" crtdt="2016-07-01 09:58:02" modid="01531" moddt="2016-07-01 16:14:37" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="票據重新立帳">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xrcadocno,xrcald,xrcald_desc(chr80),xrca007,xrca007_desc(chr80),xrca009"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmt520_01" method="dialog">
+    <section id="input">
+      <input id="head" field="xrcadocno,xrcald,xrca007,xrca009"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="xrcadocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_apcadocno" state="c"/>
+      </column>
+      <column id="xrcald">
+        <after>
+          <reference field="xrcald_desc" ref_field="xrca_t.xrcald" map_field="xrcaent,xrcald" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xrcald_desc"/>
+      <column id="xrca007">
+        <after>
+          <reference field="xrca007_desc" ref_field="xrca007" map_field="xrca007" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;3211&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="xrca007_desc"/>
+      <column id="xrca009"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xrca_t" pk="xrcald,xrcadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT xrcadocno,xrcald,&apos;&apos;,xrca007,&apos;&apos;,xrca009 FROM xrca_t WHERE xrcaent= ? AND xrcald=? AND xrcadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="xrcald,xrcadocno"/>
+    </head>
+  </dataset>
+</assembly>
+

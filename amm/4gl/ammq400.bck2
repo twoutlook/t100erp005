@@ -1,0 +1,1865 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="ammq400.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0006(2016-03-15 14:55:49), PR版次:0006(2016-03-15 15:01:00)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000145
+#+ Filename...: ammq400
+#+ Description: 卡庫存查詢作業
+#+ Creator....: 03079(2014-02-26 15:36:34)
+#+ Modifier...: 06189 -SD/PR- 06189
+ 
+{</section>}
+ 
+{<section id="ammq400.global" >}
+#應用 i00 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable)
+{<Module define>}
+#ming --(S) 
+DEFINE g_browser      DYNAMIC ARRAY OF RECORD 
+                         b_show     LIKE type_t.chr100,      #外顯欄位 
+                         b_pid      LIKE type_t.chr100,      #父節點id 
+                         b_id       LIKE type_t.chr100,      #本身節點id   
+                         b_exp      LIKE type_t.chr100,      #是否展開 
+                         b_hasC     LIKE type_t.num5,        #是否有子節點 
+                         b_isExp    LIKE type_t.num5,        #是否已展開 
+                         b_expcode  LIKE type_t.num5,        #展開值 
+                         b_ooed001  LIKE ooed_t.ooed001,      
+                         b_ooed002  LIKE ooed_t.ooed002, 
+                         b_ooed003  LIKE ooed_t.ooed003, 
+                         b_ooed004  LIKE ooed_t.ooed004, 
+                         b_ooed005  LIKE ooed_t.ooed005, 
+                         b_mmbk002  LIKE mmbk_t.mmbk002, 
+                         b_inaa002  LIKE inaa_t.inaa002,  
+                         b_mmbk003  LIKE mmbk_t.mmbk003      
+                      END RECORD 
+DEFINE g_rec_b        LIKE type_t.num5 
+DEFINE g_browser_cnt  LIKE type_t.num5 
+DEFINE g_browser_root DYNAMIC ARRAY OF INTEGER 
+DEFINE g_mmbk001      LIKE mmbk_t.mmbk001 
+DEFINE g_mmbk001_t    LIKE mmbk_t.mmbk001 
+DEFINE g_ooed004      LIKE type_t.chr1000 
+DEFINE g_ooed004_t    LIKE type_t.chr1000  
+DEFINE g_type         LIKE type_t.num5 
+#ming --(E) 
+
+#單身 type 宣告
+ TYPE type_g_mmbj_d RECORD
+       #statepic       LIKE type_t.chr1,
+       #sel            LIKE type_t.chr1,
+       mmbj005        LIKE mmbj_t.mmbj005,
+       mmbj001        LIKE mmbj_t.mmbj001,
+       mmbj002        LIKE mmbj_t.mmbj002,
+       mmbj002_desc   LIKE type_t.chr500,
+       mmbj003        LIKE mmbj_t.mmbj003,
+       mmbj003_desc   LIKE type_t.chr500,
+       mmbj004        LIKE mmbj_t.mmbj004,
+       mmbj006        LIKE mmbj_t.mmbj006,
+       mmbj000        LIKE mmbj_t.mmbj000,
+       mmbj007        LIKE mmbj_t.mmbj007,
+       mmbj008        LIKE mmbj_t.mmbj008,
+       mmbj009        DATETIME YEAR TO SECOND,
+       mmbj010        LIKE mmbj_t.mmbj010,
+       mmbj011        LIKE mmbj_t.mmbj011,
+       mmbjsite       LIKE mmbj_t.mmbjsite,
+       mmbjsite_desc  LIKE type_t.chr500
+       END RECORD
+
+
+#模組變數(Module Variables)
+DEFINE g_master                     type_g_mmbj_d
+DEFINE g_master_t                   type_g_mmbj_d
+DEFINE g_mmbj_d          DYNAMIC ARRAY OF type_g_mmbj_d
+DEFINE g_mmbj_d_t        type_g_mmbj_d
+
+
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10
+DEFINE l_ac                 LIKE type_t.num5 
+#ming --(S) 
+DEFINE l_ac2                LIKE type_t.num5 
+#ming --(E) 
+DEFINE l_ac_d               LIKE type_t.num5              #單身idx
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num5              #目前所在頁數
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num5
+DEFINE g_detail_idx         LIKE type_t.num5
+DEFINE g_detail_idx2        LIKE type_t.num5
+
+#ming --(S) 
+DEFINE g_f1                 LIKE gzze_t.gzze003           #單頭的備註說明  
+#ming --(E) 
+
+#多table用wc
+DEFINE g_wc_table           STRING
+
+
+
+DEFINE g_wc_filter_table           STRING
+
+
+
+{</Module define>}          {#ADP版次:1#}
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="ammq400.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define
+      
+   #end add-point    
+   #add-point:main段define(客製用)
+   
+   #end add-point
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("amm","")
+ 
+   #add-point:作業初始化
+   #ming --(S) 
+   LET g_type = g_argv[1]  
+   IF cl_null(g_type) THEN 
+      LET g_type = 1 
+   END IF 
+   #ming --(E) 
+   #end add-point
+ 
+   #add-point:SQL_define
+      
+   #ming --(S) 
+   #LET g_forupd_sql = ""          {#ADP版次:1#}          {#ADP版次:1#}
+   LET g_forupd_sql = "SELECT ooed001,ooed002,ooed003,ooed004,ooed005 ",   
+                      "  FROM ooed_t ", 
+                      " WHERE ooedent = ? ", 
+#                      "   AND ooed001 = '2' ",  # mark by geza  150204-00001#34
+                      "   AND ooed001 = '8' ",  # add by geza  150204-00001#34
+                      "   AND ooed002 = ? ", 
+                      "   AND ooed003 = ? ", 
+                      "   AND ooed004 = ? ", 
+                      "   FOR UPDATE " 
+   #ming --(E) 
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE ammq400_cl CURSOR FROM g_forupd_sql 
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+            
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_ammq400 WITH FORM cl_ap_formpath("amm",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL ammq400_init()
+ 
+      #進入選單 Menu (='N')
+      CALL ammq400_ui_dialog()
+   
+      #畫面關閉
+      CLOSE WINDOW w_ammq400
+   END IF
+ 
+   #add-point:作業離開前
+      
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+ 
+{</section>}
+ 
+{<section id="ammq400.other_function" readonly="Y" >}
+#add-point:自定義元件(Function)
+
+PRIVATE FUNCTION ammq400_init()
+   #add-point:init段define
+   DEFINE l_str STRING 
+   #end add-point
+
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+
+   #ming --(S) 
+   CALL cl_set_combo_scc("ooed001",100) 
+   CALL cl_set_comp_visible("b_ooed001,b_ooed002,b_ooed003,b_ooed004,b_ooed005",FALSE) 
+   CALL cl_set_comp_visible("b_mmbj000,b_mmbj007,b_mmbj008,b_mmbj009,b_mmbj010",FALSE)
+#   CALL cl_set_comp_visible("b_mmbj011,b_mmbjsite,b_mmbjsite_desc",FALSE)    #mark by yangxf
+   CALL cl_set_comp_visible("b_mmbjsite,b_mmbjsite_desc",FALSE)               #add by yangxf
+   #CALL cl_set_combo_scc("b_mmbj006",8035)  #mark by geza 20160315
+   CALL cl_set_combo_scc("b_mmbj006",6738)  #add by geza 20160315   
+   IF g_type = 2 THEN 
+      LET l_str = cl_getmsg("amm-00247",g_dlang) 
+      CALL cl_set_comp_att_text("mmbk001",l_str)    #券種編號 
+      
+      LET l_str = cl_getmsg("amm-00246",g_dlang) 
+      CALL cl_set_comp_att_text("b_mmbj001",l_str)  #會員券號 
+      
+      LET l_str = cl_getmsg("amm-00247",g_dlang) 
+      CALL cl_set_comp_att_text("b_mmbj002",l_str)  #券種編號   
+      
+      LET l_str = cl_getmsg("amm-00248",g_dlang) 
+      CALL cl_set_comp_att_text("b_mmbj002_desc",l_str)  #券種說明
+      
+   END IF 
+   
+   LET g_f1 = "(",cl_getmsg("amm-00275",g_dlang),")"     #空白：表示全部 
+   
+   #ming --(E) 
+
+   #add-point:畫面資料初始化
+   
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION ammq400_ui_dialog()
+   {<Local define>}
+   DEFINE li_idx   LIKE type_t.num5
+   {</Local define>}
+   #add-point:ui_dialog段define
+   
+   #end add-point
+
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+
+   LET g_action_choice = " "
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+
+   #add-point:ui_dialog段before dialog
+   
+   #end add-point
+
+   CALL ammq400_query()
+
+   WHILE TRUE
+
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #ming --(S) 
+         DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTE(COUNT=g_rec_b) 
+            BEFORE ROW 
+               LET l_ac = DIALOG.getCurrentRow("s_browse") 
+               IF l_ac > 0 THEN 
+                  CALL ammq400_b_fill() 
+               END IF 
+            BEFORE DISPLAY 
+               LET l_ac = DIALOG.getCurrentRow("s_browse") 
+         END DISPLAY 
+
+         DISPLAY ARRAY g_mmbj_d TO s_detail2.* ATTRIBUTE(COUNT=g_detail_cnt) 
+            BEFORE DISPLAY 
+               LET g_current_page = 1 
+            BEFORE ROW 
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail2") 
+               LET l_ac2 = g_detail_idx 
+               DISPLAY g_detail_idx TO FORMONLY.h_index 
+               DISPLAY g_mmbj_d.getLength() TO FORMONLY.h_count 
+         END DISPLAY 
+         #DISPLAY ARRAY g_mmbj_d TO s_detail2.* ATTRIBUTE(COUNT=g_detail_cnt)
+         #
+         #   BEFORE DISPLAY
+         #      LET g_current_page = 1
+         #
+         #   BEFORE ROW
+         #      LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+         #      LET l_ac = g_detail_idx
+         #      DISPLAY g_detail_idx TO FORMONLY.h_index
+         #      DISPLAY g_mmbj_d.getLength() TO FORMONLY.h_count
+         #      LET g_master_idx = l_ac
+         #      CALL ammq400_fetch()
+         #      #add-point:input段before row
+         #      
+         #      #end add-point
+         #
+         #   #自訂ACTION(detail_show,page_1)
+         #
+         #END DISPLAY
+         #ming --(E)
+
+
+
+
+         #add-point:ui_dialog段define
+         
+         #end add-point
+
+         BEFORE DIALOG
+            #ming --(S) 
+            #CALL DIALOG.setSelectionMode("s_detail2", 1)
+            #ming --(E) 
+
+            #add-point:ui_dialog段before dialog
+            
+            #end add-point
+
+            #ming --(S)
+            #NEXT FIELD sel
+            #ming --(E)
+
+         #ming --(S) 
+         #ON ACTION insert
+         #
+         #   LET g_action_choice="insert"
+         #   IF cl_auth_chk_act("insert") THEN
+         #      CALL ammq400_insert()
+         #      #add-point:ON ACTION insert
+         #      
+         #      #END add-point
+         #      EXIT DIALOG
+         #   END IF
+         #ming --(E) 
+
+         #ming --(S) 
+         #ON ACTION output
+         #
+         #   LET g_action_choice="output"
+         #   IF cl_auth_chk_act("output") THEN
+         #      #add-point:ON ACTION output
+         #      
+         #      #END add-point
+         #      EXIT DIALOG
+         #   END IF
+         #ming --(E) 
+
+         #ming --(S) 
+         #ON ACTION datainfo
+         #
+         #   LET g_action_choice="datainfo"
+         #   IF cl_auth_chk_act("datainfo") THEN
+         #      #add-point:ON ACTION datainfo
+         #      
+         #      #END add-point
+         #      EXIT DIALOG
+         #   END IF
+         #ming --(E) 
+
+         ON ACTION query
+
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL ammq400_query()
+               #add-point:ON ACTION query
+               
+               #END add-point
+            END IF
+
+         #ming --(S) 
+         ##選擇全部
+         #ON ACTION selall
+         #   CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+         #   FOR li_idx = 1 TO g_mmbj_d.getLength()
+         #      LET g_mmbj_d[li_idx].sel = "Y"
+         #   END FOR
+         #
+         #   #add-point:ui_dialog段on action selall
+         #   
+         #   #end add-point
+         #ming --(E) 
+
+         #ming --(S) 
+         ##取消全部
+         #ON ACTION selnone
+         #   CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+         #   FOR li_idx = 1 TO g_mmbj_d.getLength()
+         #      LET g_mmbj_d[li_idx].sel = "N"
+         #   END FOR
+         #
+         #   #add-point:ui_dialog段on action selnone
+         #   
+         #   #end add-point
+         #ming --(E) 
+
+         #ming --(S) 
+         ##勾選所選資料
+         #ON ACTION sel
+         #   FOR li_idx = 1 TO g_mmbj_d.getLength()
+         #      IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+         #         LET g_mmbj_d[li_idx].sel = "Y"
+         #      END IF
+         #   END FOR
+         #
+         #   #add-point:ui_dialog段on action sel
+         #   
+         #   #end add-point
+         #ming --(E) 
+
+         #ming --(S) 
+         ##取消所選資料
+         #ON ACTION unsel
+         #   FOR li_idx = 1 TO g_mmbj_d.getLength()
+         #      IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+         #         LET g_mmbj_d[li_idx].sel = "N"
+         #      END IF
+         #   END FOR
+         #
+         #   #add-point:ui_dialog段on action unsel
+         #   
+         #   #end add-point
+         #ming --(E) 
+
+         #ming --(S) 
+         #ON ACTION filter
+         #   LET g_action_choice="filter"
+         #   CALL ammq400_filter()
+         #   #add-point:ON ACTION filter
+         #   
+         #   #END add-point
+         #   EXIT DIALOG 
+         #ming --(E) 
+
+         ON ACTION close
+            LET INT_FLAG=FALSE
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+
+         #ming --(S) 
+         ## 重新整理
+         #ON ACTION datarefresh
+         #   LET g_error_show = 1
+         #   CALL ammq400_b_fill()
+         #   CALL ammq400_fetch()
+         #ming --(E) 
+
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         
+         #ming --(S) 
+         #&include "relating_action.4gl" 
+         #ming --(E) 
+         
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+         #ming --(S) 
+         #CONTINUE DIALOG 
+         #ming --(E) 
+      END DIALOG
+
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+
+   END WHILE
+
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+
+END FUNCTION
+
+PRIVATE FUNCTION ammq400_query()
+   {<Local define>}
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING
+   {</Local define>}
+   #add-point:query段define
+   
+   #end add-point 
+   #ming --(S) 
+   DEFINE l_mmbk001  LIKE mmbk_t.mmbk001 
+   DEFINE l_sql      STRING 
+   #ming --(E) 
+
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_mmbj_d.clear()
+   LET g_wc_filter = " 1=1"
+
+   #ming --(S) 
+   #CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   #CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+   #ming --(E) 
+
+   LET g_qryparam.state = "c"
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+
+   #wc備份
+   LET ls_wc = g_wc
+   LET g_master_idx = l_ac 
+   
+   DISPLAY g_f1 TO FORMONLY.ooed004_desc 
+
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+      #ming --(S) 
+      INPUT g_mmbk001,g_ooed004 FROM mmbk001,ooed004  
+         BEFORE INPUT 
+
+         AFTER FIELD mmbk001 
+            DISPLAY '' TO FORMONLY.mmbk001_desc 
+            #IF NOT cl_null(g_mmbk001) THEN 
+            #   INITIALIZE g_chkparam.* TO NULL 
+            #   LET g_chkparam.arg1 = '1'    #ming 之後應該要換    
+            #   LET g_chkparam.arg2 = g_mmbk001 
+            #   IF NOT cl_chk_exist("v_mmbk001") THEN    #這個檢查還沒設好   
+            #      LET g_mmbk001 = g_mmbk001_t 
+            #      CALL ammq400_mmbk001_desc_ref() 
+            #      NEXT FIELD CURRENT 
+            #   END IF 
+            #END IF     
+            CALL ammq400_mmbk001_desc_ref() 
+            #LET g_mmbk001_t = g_mmbk001 
+
+         AFTER FIELD ooed004 
+            DISPLAY '' TO FORMONLY.ooed004_desc 
+            #IF NOT cl_null(g_ooed004) THEN 
+            #   INITIALIZE g_chkparam.* TO NULL 
+            #   LET g_chkparam.arg1 = g_ooed004 
+            #   LET g_chkparam.arg2 = '2' 
+            #   IF NOT cl_chk_exist("v_ooed004_1") THEN 
+            #      LET g_ooed004 = g_ooed004_t  
+            #      CALL ammq400_ooed004_desc_ref() 
+            #      NEXT FIELD CURRENT   
+            #   END IF 
+            #END IF 
+            CALL ammq400_ooed004_desc_ref() 
+            #LET g_ooed004_t = g_ooed004 
+
+         AFTER INPUT 
+            IF cl_null(g_mmbk001) THEN 
+               NEXT FIELD mmbk001 
+            END IF 
+            #IF cl_null(g_ooed004) THEN 
+            #   NEXT FIELD ooed004 
+            #END IF 
+         
+         ON ACTION controlp INFIELD mmbk001 
+            INITIALIZE g_qryparam.* TO NULL 
+            LET g_qryparam.state = 'i' 
+            LET g_qryparam.reqry = FALSE 
+            LET g_qryparam.default1 = g_mmbk001 
+            IF g_type = 1 THEN       #1.卡   
+               CALL q_mman001() 
+            ELSE                     #2.券   
+               CALL q_gcaf001() 
+            END IF 
+            LET g_mmbk001 = g_qryparam.return1  
+            DISPLAY g_mmbk001 TO mmbk001 
+
+         ON ACTION controlp INFIELD ooed004 
+            INITIALIZE g_qryparam.* TO NULL 
+            LET g_qryparam.state = 'i' 
+            LET g_qryparam.reqry = FALSE 
+            LET g_qryparam.default1 = g_ooed004 
+            CALL q_ooef001()  
+            LET g_ooed004 = g_qryparam.return1 
+            DISPLAY g_mmbk001 TO mmbk001 
+
+      END INPUT 
+      
+      ##單身根據table分拆construct
+      #CONSTRUCT g_wc_table ON mmbj000,mmbj001,mmbj002,mmbj004,mmbj006,mmbj003,mmbj005,mmbj008,mmbj009,
+      #    mmbj010,mmbj011,mmbjsite
+      #     FROM s_detail2[1].b_mmbj000,s_detail2[1].b_mmbj001,s_detail2[1].b_mmbj002,s_detail2[1].b_mmbj004,
+      #         s_detail2[1].b_mmbj006,s_detail2[1].b_mmbj003,s_detail2[1].b_mmbj005,s_detail2[1].b_mmbj008,
+      #         s_detail2[1].b_mmbj009,s_detail2[1].b_mmbj010,s_detail2[1].b_mmbj011,s_detail2[1].b_mmbjsite
+      #
+      #   BEFORE CONSTRUCT
+      #      #add-point:cs段more_construct
+      #      
+      #      #end add-point
+      #
+      #      #單身公用欄位開窗相關處理
+      #
+      #
+      # #單身一般欄位開窗相關處理
+      # #---------------------<  Detail: page1  >---------------------
+      #   #----<<mmbj000>>----
+      #   #Ctrlp:construct.c.page2.mmbj000
+      #   #ON ACTION controlp INFIELD mmbj000
+      #      #add-point:ON ACTION controlp INFIELD mmbj000
+      #      
+      #      #END add-point
+      #
+      #   #----<<mmbj001>>----
+      #   #Ctrlp:construct.c.page2.mmbj001
+      #   #ON ACTION controlp INFIELD mmbj001
+      #      #add-point:ON ACTION controlp INFIELD mmbj001
+      #      
+      #      #END add-point
+      #
+      #   #----<<mmbj002>>----
+      #   #Ctrlp:construct.c.page2.mmbj002
+      #   #ON ACTION controlp INFIELD mmbj002
+      #      #add-point:ON ACTION controlp INFIELD mmbj002
+      #      
+      #      #END add-point
+      #
+      #   #----<<mmbj004>>----
+      #   #Ctrlp:construct.c.page2.mmbj004
+      #   #ON ACTION controlp INFIELD mmbj004
+      #      #add-point:ON ACTION controlp INFIELD mmbj004
+      #      
+      #      #END add-point
+      #
+      #   #----<<mmbj006>>----
+      #   #Ctrlp:construct.c.page2.mmbj006
+      #   #ON ACTION controlp INFIELD mmbj006
+      #      #add-point:ON ACTION controlp INFIELD mmbj006
+      #      
+      #      #END add-point 
+      #
+      #   #----<<mmbj003>>----
+      #   #Ctrlp:construct.c.page2.mmbj003
+      #   #ON ACTION controlp INFIELD mmbj003
+      #      #add-point:ON ACTION controlp INFIELD mmbj003
+      #      
+      #      #END add-point
+      #
+      #   #----<<mmbj005>>----
+      #   #Ctrlp:construct.c.page2.mmbj005
+      #   #ON ACTION controlp INFIELD mmbj005
+      #      #add-point:ON ACTION controlp INFIELD mmbj005
+      #      
+      #      #END add-point
+      #
+      #   #----<<mmbj008>>----
+      #   #Ctrlp:construct.c.page2.mmbj008
+      #   #ON ACTION controlp INFIELD mmbj008
+      #      #add-point:ON ACTION controlp INFIELD mmbj008
+      #      
+      #      #END add-point
+      #
+      #   #----<<mmbj009>>----
+      #   #Ctrlp:construct.c.page2.mmbj009
+      #   #ON ACTION controlp INFIELD mmbj009
+      #      #add-point:ON ACTION controlp INFIELD mmbj009
+      #      
+      #      #END add-point
+      #
+      #   #----<<mmbj010>>----
+      #   #Ctrlp:construct.c.page2.mmbj010
+      #   #ON ACTION controlp INFIELD mmbj010
+      #      #add-point:ON ACTION controlp INFIELD mmbj010
+      #      
+      #      #END add-point
+      #
+      #   #----<<mmbj011>>----
+      #   #Ctrlp:construct.c.page2.mmbj011
+      #   #ON ACTION controlp INFIELD mmbj011
+      #      #add-point:ON ACTION controlp INFIELD mmbj011
+      #      
+      #      #END add-point
+      #
+      #   #----<<mmbjsite>>----
+      #   #Ctrlp:construct.c.page2.mmbjsite
+      #   #ON ACTION controlp INFIELD mmbjsite
+      #      #add-point:ON ACTION controlp INFIELD mmbjsite
+      #      
+      #      #END add-point
+      #
+      #END CONSTRUCT
+      #ming --(E) 
+
+      #add-point:query段more_construct
+      
+      #end add-point
+
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc = ls_wc 
+      
+      #ming --(S) 
+      CALL g_browser.clear() 
+      RETURN 
+      #ming --(E)
+   ELSE
+      LET g_master_idx = 1 
+      
+      #ming --(S) 
+      CALL g_browser.clear() 
+      #ming --(E) 
+   END IF
+
+   LET g_wc = g_wc_table
+
+   #ming --(S) 
+   CALL ammq400_browser_fill()
+   #ming --(E) 
+
+
+   LET g_wc2 = " 1=1"
+
+
+   #add-point:cs段after_construct
+   
+   #end add-point
+
+   #ming --(S) 
+   #LET g_error_show = 1
+   #CALL ammq400_b_fill()
+   #LET l_ac = g_master_idx
+   #CALL ammq400_fetch()
+   #IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+   #   CALL cl_err("",-100,1)
+   #END IF
+   #
+   #CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   #CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+   #ming --(E)
+
+END FUNCTION
+
+PRIVATE FUNCTION ammq400_b_fill()
+   {<Local define>}
+   DEFINE ls_wc           STRING
+   {</Local define>}
+   #add-point:b_fill段define
+   
+   #end add-point
+
+   #add-point:b_fill段sql_before
+   
+   #end add-point
+
+   #ming --(S) 
+   #IF cl_null(g_wc_filter) THEN
+   #   LET g_wc_filter = " 1=1"
+   #END IF
+   #IF cl_null(g_wc) THEN
+   #   LET g_wc = " 1=1"
+   #END IF
+   #IF cl_null(g_wc2) THEN
+   #   LET g_wc2 = " 1=1"
+   #END IF
+   #
+   #LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter
+   #
+   #LET g_sql = "SELECT  UNIQUE mmbj000,mmbj001,mmbj002,'',mmbj004,mmbj006,'',mmbj003,'',mmbj005,mmbj008,
+   #    mmbj009,mmbj010,mmbj011,mmbjsite,'' FROM mmbj_t",
+   #            "",
+   #            " WHERE mmbjent= ? AND 1=1 AND ", ls_wc
+   #LET g_sql = g_sql, " ORDER BY mmbj_t.mmbj000,mmbj_t.mmbj001,mmbj_t.mmbj002,mmbj_t.mmbj004,mmbj_t.mmbj006,mmbj_t.mmbj007"
+   
+   LET g_sql = "SELECT UNIQUE mmbj005,mmbj001,mmbj002,'',mmbj003,'',mmbj004,mmbj006,mmbj000,mmbj007, ", 
+               "              mmbj008,mmbj009,mmbj010,mmbj011, ", 
+               "              mmbjsite,'' ", 
+               "  FROM mmbj_t ", 
+               " WHERE mmbjent = '",g_enterprise,"' ", 
+               "   AND mmbj000 = ? ",     
+               "   AND mmbj002 = '",g_mmbk001,"' ", 
+               "   AND mmbj007 = '",g_browser[l_ac].b_mmbk002,"' ",   
+               " ORDER BY mmbj005 DESC,mmbj001,mmbj002,mmbj004,mmbj006,mmbj007 " 
+   #ming --(E) 
+   #add-point:b_fill段sql_after
+   
+   #end add-point
+
+   PREPARE ammq400_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR ammq400_pb
+
+   #ming --(S) 
+   #OPEN b_fill_curs USING g_enterprise
+   #ming --(E) 
+
+   CALL g_mmbj_d.clear()
+
+   #ming --(S) 
+   #LET g_cnt = l_ac
+   #LET l_ac = 1
+   
+   LET g_cnt = l_ac2 
+   LET l_ac2 = 1 
+   #ming --(E) 
+   ERROR "Searching!"
+
+   #FOREACH b_fill_curs INTO g_mmbj_d[l_ac].mmbj000,g_mmbj_d[l_ac].mmbj001,g_mmbj_d[l_ac].mmbj002,g_mmbj_d[l_ac].mmbj002_desc,
+   #    g_mmbj_d[l_ac].mmbj004,g_mmbj_d[l_ac].mmbj006,g_mmbj_d[l_ac].mmbj007,g_mmbj_d[l_ac].mmbj003,g_mmbj_d[l_ac].mmbj003_desc,
+   #    g_mmbj_d[l_ac].mmbj005,g_mmbj_d[l_ac].mmbj008,g_mmbj_d[l_ac].mmbj009,g_mmbj_d[l_ac].mmbj010,g_mmbj_d[l_ac].mmbj011,
+   #    g_mmbj_d[l_ac].mmbjsite,g_mmbj_d[l_ac].mmbjsite_desc
+   FOREACH b_fill_curs USING g_type 
+                       INTO g_mmbj_d[l_ac2].mmbj005,g_mmbj_d[l_ac2].mmbj001,g_mmbj_d[l_ac2].mmbj002, 
+                            g_mmbj_d[l_ac2].mmbj002_desc,g_mmbj_d[l_ac2].mmbj003,g_mmbj_d[l_ac2].mmbj003_desc, 
+                            g_mmbj_d[l_ac2].mmbj004,g_mmbj_d[l_ac2].mmbj006,g_mmbj_d[l_ac2].mmbj000,   
+                            g_mmbj_d[l_ac2].mmbj007,g_mmbj_d[l_ac2].mmbj008,g_mmbj_d[l_ac2].mmbj009, 
+                            g_mmbj_d[l_ac2].mmbj010,g_mmbj_d[l_ac2].mmbj011,g_mmbj_d[l_ac2].mmbjsite, 
+                            g_mmbj_d[l_ac2].mmbjsite_desc
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      #ming --(S) 
+      #LET g_mmbj_d[l_ac].sel = "N"
+      #ming --(E) 
+      #LET g_mmbj_d[l_ac].statepic = cl_get_actipic(g_mmbj_d[l_ac].statepic)
+
+      #add-point:b_fill段資料填充
+      
+      #end add-point
+
+      CALL ammq400_detail_show()
+
+      #ming --(S) 
+      #LET l_ac = l_ac + 1 
+      LET l_ac2 = l_ac2 + 1
+      #ming --(E) 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  9035
+            LET g_errparam.extend =  ""
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+         END IF
+         EXIT FOREACH
+      END IF
+
+   END FOREACH
+   LET g_error_show = 0
+
+   CALL g_mmbj_d.deleteElement(g_mmbj_d.getLength())
+
+
+   #add-point:b_fill段資料填充(其他單身)
+   
+   #end add-point
+
+   LET g_detail_cnt = l_ac - 1
+   DISPLAY g_detail_cnt TO FORMONLY.h_count 
+   #ming --(S) 
+   #LET l_ac = g_cnt
+   LET l_ac2 = g_cnt
+   #ming --(E) 
+   LET g_cnt = 0
+
+   #ming --(S) 
+   #CLOSE b_fill_curs
+   #ming --(E)
+   FREE ammq400_pb
+
+   #ming --(S) 
+   #LET l_ac = 1 
+   LET l_ac2 = 1 
+   #CALL ammq400_fetch()
+   #
+   #CALL ammq400_filter_show('mmbj000','b_mmbj000')
+   #CALL ammq400_filter_show('mmbj001','b_mmbj001')
+   #CALL ammq400_filter_show('mmbj002','b_mmbj002')
+   #CALL ammq400_filter_show('mmbj004','b_mmbj004')
+   #CALL ammq400_filter_show('mmbj006','b_mmbj006')
+   #CALL ammq400_filter_show('mmbj003','b_mmbj003')
+   #CALL ammq400_filter_show('mmbj005','b_mmbj005')
+   #CALL ammq400_filter_show('mmbj008','b_mmbj008')
+   #CALL ammq400_filter_show('mmbj009','b_mmbj009')
+   #CALL ammq400_filter_show('mmbj010','b_mmbj010')
+   #CALL ammq400_filter_show('mmbj011','b_mmbj011')
+   #CALL ammq400_filter_show('mmbjsite','b_mmbjsite')
+   #ming --(E) 
+
+
+END FUNCTION
+
+PRIVATE FUNCTION ammq400_fetch()
+   {<Local define>}
+   DEFINE li_ac           LIKE type_t.num5
+   {</Local define>}
+   #add-point:fetch段define
+   
+   #end add-point
+
+
+
+   LET li_ac = l_ac
+
+
+
+   #DISPLAY g_detail_cnt TO FORMONLY.cnt
+
+   #add-point:單身填充後
+   
+   #end add-point
+
+
+
+   LET l_ac = li_ac
+
+END FUNCTION
+
+PRIVATE FUNCTION ammq400_detail_show()
+   #add-point:show段define
+   
+   #end add-point
+
+   #add-point:detail_show段之前
+   
+   #end add-point
+
+
+
+   #帶出公用欄位reference值page1
+
+
+
+
+   #讀入ref值
+   #add-point:show段單身reference
+   #ming --(S) 
+   CALL ammq400_mmbj002_ref() 
+   CALL ammq400_mmbj003_ref() 
+   #ming --(E) 
+   #end add-point
+
+
+
+   #add-point:detail_show段之後
+   
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION ammq400_filter()
+   {<Local define>}
+   {</Local define>}
+   #add-point:filter段define
+   
+   #end add-point
+
+   #ming --(S) 
+   #LET l_ac = 1
+   #LET g_detail_idx = 1
+   #LET g_detail_idx2 = 1
+   #
+   #LET INT_FLAG = 0
+   #
+   #LET g_qryparam.state = 'c'
+   #
+   #LET g_wc_filter_t = g_wc_filter
+   #LET g_wc_t = g_wc
+   #
+   #CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   #CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+   #
+   #LET g_wc = cl_replace_str(g_wc, g_wc_filter, '') 
+   #ming --(E) 
+
+   #ming --(S) 
+   ##使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   #DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   #
+   #   #單頭
+   #   CONSTRUCT g_wc_filter ON mmbj000,mmbj001,mmbj002,mmbj004,mmbj006,mmbj003,mmbj005,mmbj008,mmbj009,
+   #       mmbj010,mmbj011,mmbjsite
+   #                       FROM s_detail2[1].b_mmbj000,s_detail2[1].b_mmbj001,s_detail2[1].b_mmbj002,
+   #                           s_detail2[1].b_mmbj004,s_detail2[1].b_mmbj006,s_detail2[1].b_mmbj003,s_detail2[1].b_mmbj005,
+   #                           s_detail2[1].b_mmbj008,s_detail2[1].b_mmbj009,s_detail2[1].b_mmbj010,s_detail2[1].b_mmbj011,
+   #                           s_detail2[1].b_mmbjsite
+   #
+   #      BEFORE CONSTRUCT
+   #         #saki       CALL cl_qbe_init()
+   #         DISPLAY ammq400_filter_parser('mmbj000') TO s_detail2[1].b_mmbj000
+   #         DISPLAY ammq400_filter_parser('mmbj001') TO s_detail2[1].b_mmbj001
+   #         DISPLAY ammq400_filter_parser('mmbj002') TO s_detail2[1].b_mmbj002
+   #         DISPLAY ammq400_filter_parser('mmbj004') TO s_detail2[1].b_mmbj004
+   #         DISPLAY ammq400_filter_parser('mmbj006') TO s_detail2[1].b_mmbj006
+   #         DISPLAY ammq400_filter_parser('mmbj003') TO s_detail2[1].b_mmbj003
+   #         DISPLAY ammq400_filter_parser('mmbj005') TO s_detail2[1].b_mmbj005
+   #         DISPLAY ammq400_filter_parser('mmbj008') TO s_detail2[1].b_mmbj008
+   #         DISPLAY ammq400_filter_parser('mmbj009') TO s_detail2[1].b_mmbj009
+   #         DISPLAY ammq400_filter_parser('mmbj010') TO s_detail2[1].b_mmbj010
+   #         DISPLAY ammq400_filter_parser('mmbj011') TO s_detail2[1].b_mmbj011
+   #         DISPLAY ammq400_filter_parser('mmbjsite') TO s_detail2[1].b_mmbjsite
+   #
+   #   END CONSTRUCT
+   #
+   #   #add-point:filter段add_cs
+   #   
+   #   #end add-point
+   #
+   #   BEFORE DIALOG
+   #      #add-point:filter段b_dialog
+   #      
+   #      #end add-point
+   #
+   #   ON ACTION accept
+   #      ACCEPT DIALOG
+   #
+   #   ON ACTION cancel
+   #      LET INT_FLAG = 1
+   #      EXIT DIALOG
+   #
+   #   #交談指令共用ACTION
+   #   &include "common_action.4gl"
+   #      CONTINUE DIALOG
+   #
+   #END DIALOG
+   #
+   #IF NOT INT_FLAG THEN
+   #   LET g_wc_filter = g_wc_filter, " "
+   #ELSE
+   #   LET g_wc_filter = g_wc_filter_t
+   #END IF
+   #
+   #CALL ammq400_filter_show('mmbj000','b_mmbj000')
+   #CALL ammq400_filter_show('mmbj001','b_mmbj001')
+   #CALL ammq400_filter_show('mmbj002','b_mmbj002')
+   #CALL ammq400_filter_show('mmbj004','b_mmbj004')
+   #CALL ammq400_filter_show('mmbj006','b_mmbj006')
+   #CALL ammq400_filter_show('mmbj003','b_mmbj003')
+   #CALL ammq400_filter_show('mmbj005','b_mmbj005')
+   #CALL ammq400_filter_show('mmbj008','b_mmbj008')
+   #CALL ammq400_filter_show('mmbj009','b_mmbj009')
+   #CALL ammq400_filter_show('mmbj010','b_mmbj010')
+   #CALL ammq400_filter_show('mmbj011','b_mmbj011')
+   #CALL ammq400_filter_show('mmbjsite','b_mmbjsite')
+   #
+   #CALL ammq400_b_fill()
+   #CALL ammq400_fetch()
+   #
+   #CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   #CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE) 
+   #ming --(E) 
+
+END FUNCTION
+
+PRIVATE FUNCTION ammq400_filter_parser(ps_field)
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+   #add-point:filter段define
+   
+   #end add-point
+
+   #ming --(S) 
+   ##一般條件解析
+   #LET ls_tmp = ps_field, "='"
+   #LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   #IF li_tmp > 0 THEN
+   #   LET li_tmp = ls_tmp.getLength() + li_tmp
+   #   LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+   #   LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   #END IF
+   #
+   ##模糊條件解析
+   #LET ls_tmp = ps_field, " like '"
+   #LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   #IF li_tmp > 0 THEN
+   #   LET li_tmp = ls_tmp.getLength() + li_tmp
+   #   LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+   #   LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   #   LET ls_var = cl_replace_str(ls_var,'%','*')
+   #END IF
+   #
+   #RETURN ls_var
+   #ming --(E) 
+
+END FUNCTION
+
+PRIVATE FUNCTION ammq400_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+
+   #ming --(S) 
+   #LET ls_name = "formonly.", ps_object
+   #
+   #LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   #LET ls_title = lnode_item.getAttribute("text")
+   #IF ls_title.getIndexOf('※',1) > 0 THEN
+   #   LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   #END IF
+   #
+   ##顯示資料組合
+   #LET ls_condition = ammq400_filter_parser(ps_field)
+   #IF NOT cl_null(ls_condition) THEN
+   #   LET ls_title = ls_title, '※', ls_condition, '※'
+   #END IF
+   #
+   ##將資料顯示回去
+   #CALL lnode_item.setAttribute("text",ls_title)
+   #ming --(E) 
+
+END FUNCTION
+
+PRIVATE FUNCTION ammq400_insert()
+   #add-point:insert段define
+   
+   #end add-point
+
+   #add-point:insert段control
+   
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION ammq400_modify()
+   #add-point:modify段define
+   
+   #end add-point
+
+   #add-point:modify段control
+   
+   #end add-point
+END FUNCTION
+
+PRIVATE FUNCTION ammq400_reproduce()
+   #add-point:reproduce段define
+   
+   #end add-point
+
+   #add-point:reproduce段control
+   
+   #end add-point
+END FUNCTION
+
+PRIVATE FUNCTION ammq400_delete()
+   #add-point:delete段define
+   
+   #end add-point
+
+   #add-point:delete段control
+   
+   #end add-point
+END FUNCTION
+################################################################################
+# Descriptions...: 準備產生樹狀結構
+# Memo...........:
+# Usage..........: CALL ammq400_browser_fill()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/03/07 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ammq400_browser_fill()
+   DEFINE l_n       LIKE type_t.num5 
+   DEFINE l_pid     LIKE type_t.chr50    #用於樹的第一層  
+   DEFINE l_sql     STRING 
+   DEFINE l_n2      LIKE type_t.num5  
+   DEFINE l_mmbk002 LIKE mmbk_t.mmbk002 
+   DEFINE l_mmbk003 LIKE mmbk_t.mmbk003 
+   DEFINE l_lv      LIKE type_t.num5 
+   DEFINE l_pac     LIKE type_t.num5  
+   DEFINE l_hasC    LIKE type_t.num5 
+
+   CALL g_browser.clear() 
+   LET g_cnt = 1 
+   LET l_n = 1 
+
+   #第一層的資料 
+   LET l_sql = "SELECT UNIQUE ooed002,ooed003 ", 
+               "  FROM ooed_t ", 
+               " WHERE ooedent = '",g_enterprise,"' ", 
+#               "   AND ooed001 = '2' ", # mark by geza  150204-00001#34
+               "   AND ooed001 = '8' ", # add by geza  150204-00001#34
+               "   AND ooed006 <= '",g_today,"' ", 
+               "   AND (ooed007 IS NULL OR ooed007 >= '",g_today,"' ) "  
+
+   IF NOT cl_null(g_ooed004) THEN 
+      LET l_sql = l_sql,"   AND ooed004 = '",g_ooed004,"' "  
+   END IF 
+
+   LET l_sql = l_sql," ORDER BY ooed002 " 
+   PREPARE master_type_0 FROM l_sql 
+   DECLARE master_typecur_0 CURSOR FOR master_type_0 
+
+   #第二層資料  
+   LET l_sql = "SELECT UNIQUE ooed004,ooed003 ", 
+               "  FROM ooed_t ", 
+               " WHERE ooedent = '",g_enterprise,"' ", 
+#               "   AND ooed001 = '2' ", # mark by geza  150204-00001#34
+               "   AND ooed001 = '8' ", # add by geza  150204-00001#34
+               "   AND ooed006 <= '",g_today,"' ", 
+               "   AND (ooed007 IS NULL OR ooed007 >= '",g_today,"' ) ", 
+               "   AND ooed002 = ? ", 
+               "   AND ooed003 = ? ", 
+               "   AND ooed002 = ooed005 ", 
+               "   AND ooed004 <> ooed005 ", 
+               " ORDER BY ooed004 " 
+   PREPARE master_type_1 FROM l_sql 
+   DECLARE master_typecur_1 CURSOR FOR master_type_1 
+
+   LET l_sql = "SELECT mmbk002,mmbk003 ", 
+               "  FROM mmbk_t ", 
+               " WHERE mmbkent = '",g_enterprise,"' ", 
+               "   AND mmbksite = ? ", 
+               "   AND mmbk000 = ? ",    
+               "   AND mmbk001 = '",g_mmbk001,"' ", 
+               " ORDER BY mmbk002,mmbk003 " 
+   PREPARE ammq400_mmbk_prep FROM l_sql 
+   DECLARE ammq400_mmbk_curs CURSOR FOR ammq400_mmbk_prep 
+
+   INITIALIZE g_browser_root TO NULL 
+   #初始化l_ac 
+   LET l_ac = 1 
+
+   LET g_browser_root[g_browser_root.getLength()+1] = l_ac 
+
+   LET g_browser[l_ac].b_ooed002 = g_mmbk001  
+   LET g_browser[l_ac].b_pid     = '0' CLIPPED           #父節點id     如果是0就是根目錄  
+   LET g_browser[l_ac].b_id      = l_ac USING "<<<"      #本身節點id  
+   LET g_browser[l_ac].b_exp     = TRUE                  #是否展開  
+   LET g_browser[l_ac].b_hasC    = TRUE                  #是否有子節點  
+   LET g_browser[l_ac].b_isExp   = TRUE                  #是否已展開  
+   LET l_ac = l_ac + 1 
+
+   FOREACH master_typecur_0 INTO g_browser[l_ac].b_ooed002,g_browser[l_ac].b_ooed003 
+      IF SQLCA.sqlcode THEN 
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+ 
+         EXIT FOREACH 
+      END IF 
+
+      #確定第一層root節點所在  
+      LET g_browser_root[g_browser_root.getLength()+1] = l_ac 
+      LET l_pac = l_ac
+      #此處(LV-1) 
+      LET g_browser[l_ac].b_ooed002 = g_browser[l_ac].b_ooed002 
+      LET g_browser[l_ac].b_ooed004 = g_browser[l_ac].b_ooed002 
+      LET g_browser[l_ac].b_pid = g_browser[1].b_id #'0' CLIPPED      #父節點id 
+      LET g_browser[l_ac].b_id = l_ac USING "<<<"        #本身節點id 
+      LET g_browser[l_ac].b_exp = TRUE                   #是否展開     
+      LET g_browser[l_ac].b_hasC = TRUE                  #是否有子節點 
+      LET g_browser[l_ac].b_isExp = TRUE                 #是否已展開 
+
+     #SELECT SUM(mmbk003) INTO g_browser[l_ac].b_mmbk003 
+     #  FROM mmbk_t 
+     # WHERE mmbkent = g_enterprise 
+     #   AND mmbksite = g_browser[l_ac].b_ooed004 
+     #   AND mmbk000 = '1' 
+     #   AND mmbk001 = g_mmbk001 
+
+      #第一層節點編號 
+      LET l_pid = g_browser[l_ac].b_id CLIPPED 
+      LET l_ac = l_ac + 1 
+      LET g_cnt = l_ac 
+      
+      FOREACH ammq400_mmbk_curs USING g_browser[l_ac-1].b_ooed004,g_type
+                                 INTO l_mmbk002,l_mmbk003
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+            EXIT FOREACH
+         END IF
+         LET g_browser[g_cnt].b_ooed002 = g_browser[l_ac-1].b_ooed002
+         LET g_browser[g_cnt].b_ooed004 = g_browser[l_ac-1].b_ooed004
+         LET g_browser[g_cnt].b_ooed005 = g_browser[l_ac-1].b_ooed004
+         LET g_browser[g_cnt].b_pid     = l_pid
+         LET g_browser[g_cnt].b_id      = l_pid,".",g_cnt USING "<<<"
+         LET g_browser[g_cnt].b_exp     = FALSE
+         LET g_browser[g_cnt].b_hasC    = FALSE
+         LET g_browser[g_cnt].b_mmbk002 = l_mmbk002
+         LET g_browser[g_cnt].b_mmbk003 = l_mmbk003
+
+         CALL ammq400_mmbk002_ref(g_cnt)
+
+         LET g_cnt = g_cnt + 1
+      END FOREACH
+      
+      FOREACH master_typecur_1 USING g_browser[l_pac].b_ooed002,g_browser[l_pac].b_ooed003
+                                INTO g_browser[g_cnt].b_ooed004,g_browser[g_cnt].b_ooed003 
+         IF SQLCA.sqlcode THEN 
+            INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+ 
+            EXIT FOREACH 
+         END IF  
+         LET l_lv = g_cnt 
+         LET g_browser[g_cnt].b_ooed002 = g_browser[l_pac].b_ooed002 
+         LET g_browser[g_cnt].b_ooed004 = g_browser[g_cnt].b_ooed004 
+         LET g_browser[g_cnt].b_ooed005 = g_browser[l_pac].b_ooed004  
+         LET g_browser[g_cnt].b_pid     = l_pid 
+         LET g_browser[g_cnt].b_id      = l_pid,".",g_cnt USING "<<<" 
+         LET g_browser[g_cnt].b_exp     = TRUE 
+         LET g_browser[g_cnt].b_hasC    = ammq400_chk_hasC(g_cnt) 
+         LET l_hasC = g_browser[g_cnt].b_hasC 
+
+        #IF g_browser[g_cnt].b_hasC = 1 THEN 
+        #   CALL ammq400_browser_expand(g_cnt) 
+        #   LET g_cnt = g_browser.getLength() 
+        #END IF 
+
+         LET g_cnt = g_cnt + 1 
+
+         FOREACH ammq400_mmbk_curs USING g_browser[l_lv].b_ooed004,g_type 
+                                    INTO l_mmbk002,l_mmbk003 
+            IF SQLCA.sqlcode THEN 
+               INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+ 
+               EXIT FOREACH 
+            END IF 
+            LET g_browser[g_cnt].b_ooed002 = g_browser[l_lv].b_ooed002 
+            LET g_browser[g_cnt].b_ooed004 = g_browser[l_lv].b_ooed004 
+            LET g_browser[g_cnt].b_ooed005 = g_browser[l_lv].b_ooed004 
+            LET g_browser[g_cnt].b_pid     = g_browser[l_lv].b_id 
+            LET g_browser[g_cnt].b_id      = g_browser[l_lv].b_id,".",g_cnt USING "<<<" 
+            LET g_browser[g_cnt].b_exp     = FALSE 
+            LET g_browser[g_cnt].b_hasC    = FALSE 
+            LET g_browser[g_cnt].b_mmbk002 = l_mmbk002 
+            LET g_browser[g_cnt].b_mmbk003 = l_mmbk003 
+
+            CALL ammq400_mmbk002_ref(g_cnt) 
+
+            LET l_hasC = TRUE 
+            LET g_cnt = g_cnt + 1   
+         END FOREACH 
+         
+         LET g_browser[l_lv].b_hasC = l_hasC 
+
+         CALL g_browser.deleteElement(g_cnt) 
+         LET g_cnt = g_cnt - 1 
+
+         IF g_browser[l_lv].b_hasC = 1 THEN 
+            CALL ammq400_browser_expand(l_lv) 
+            LET g_cnt = g_browser.getLength() 
+         END IF 
+         LET g_cnt = g_cnt + 1 
+      END FOREACH 
+
+      #FOREACH ammq400_mmbk_curs USING g_browser[2].b_ooed004 
+      #                           INTO l_mmbk002,l_mmbk003  
+      #   IF SQLCA.sqlcode THEN 
+      #      INITIALIZE g_errparam TO NULL
+      #   LET g_errparam.code = SQLCA.sqlcode
+      #   LET g_errparam.extend = 'foreach:'
+      #   LET g_errparam.popup = TRUE
+      #   CALL cl_err()
+ 
+      #      EXIT FOREACH 
+      #   END IF 
+      #   LET g_browser[g_cnt].b_ooed002 = g_browser[2].b_ooed002 
+      #   LET g_browser[g_cnt].b_ooed004 = g_browser[2].b_ooed004 
+      #   LET g_browser[g_cnt].b_ooed005 = g_browser[2].b_ooed004 
+      #   LET g_browser[g_cnt].b_pid     = l_pid 
+      #   LET g_browser[g_cnt].b_id      = l_pid,".",g_cnt USING "<<<" 
+      #   LET g_browser[g_cnt].b_exp     = FALSE  
+      #   LET g_browser[g_cnt].b_hasC    = FALSE 
+      #   LET g_browser[g_cnt].b_mmbk002 = l_mmbk002 
+      #   LET g_browser[g_cnt].b_mmbk003 = l_mmbk003 
+	  #
+      #   CALL ammq400_mmbk002_ref(g_cnt) 
+	  #
+      #   LET g_cnt = g_cnt + 1 
+      #END FOREACH 
+
+      LET l_ac = g_browser.getLength() 
+      
+      #EXIT FOREACH 
+   END FOREACH  
+
+   LET l_ac = l_ac - 1 
+   CALL g_browser.deleteElement(l_ac+1) 
+   FOR l_ac = 1 TO g_browser.getLength() 
+      CALL ammq400_desc_show(l_ac) 
+   END FOR 
+
+   LET g_browser_cnt = g_browser.getLength() - g_browser_root.getLength() 
+
+   FREE master_type_0 
+   FREE master_type_1 
+
+   FOR l_n2 = 1 TO g_browser.getLength() 
+      IF g_browser[l_n2].b_isExp IS NULL THEN 
+         CALL ammq400_browser_expand(l_n2) 
+      END IF 
+   END FOR 
+   
+   CALL ammq400_get_qty() 
+
+END FUNCTION
+################################################################################
+# Descriptions...: 檢查是否有下層節點
+# Memo...........:
+# Usage..........: CALL ammq400_chk_hasC(pi_id)
+# Input parameter: 要檢查的資料的array編號
+# Return code....: TRUE/FALSE
+# Date & Author..: 2014/03/07 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ammq400_chk_hasC(pi_id)
+   DEFINE pi_id     INTEGER 
+   DEFINE li_cnt    INTEGER 
+   
+   LET g_sql = "SELECT COUNT(*) FROM ooed_t ",  
+               " WHERE ooedent = '",g_enterprise,"' ", 
+               "   AND ooed004 <> ooed005 ",  
+#               "   AND ooed001 = '2' ", # mark by geza  150204-00001#34
+               "   AND ooed001 = '8' ", # add by geza  150204-00001#34                
+               "   AND ooed006 <= '",g_today,"' ", 
+               "   AND (ooed007 IS NULL OR ooed007 >= '",g_today,"' ) ", 
+               "   AND ooed005 = ? ", 
+               "   AND ooed002 = ? ", 
+               "   AND ooed003 = ? "  
+   PREPARE ammq400_master_chk1 FROM g_sql 
+   EXECUTE ammq400_master_chk1 USING g_browser[pi_id].b_ooed004,g_browser[pi_id].b_ooed002,g_browser[pi_id].b_ooed003 
+                                INTO li_cnt 
+   FREE ammq400_master_chk1 
+   IF li_cnt > 0 THEN 
+      RETURN TRUE 
+   ELSE 
+      RETURN FALSE 
+   END IF 
+END FUNCTION
+################################################################################
+# Descriptions...: 找出下層子節點
+# Memo...........:
+# Usage..........: CALL ammq400_browser_expand(p_id)
+# Input parameter: 要找子節點的資料array編號
+# Return code....: 無
+# Date & Author..: 2014/03/07 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ammq400_browser_expand(p_id)
+   DEFINE p_id        LIKE type_t.num10 
+   DEFINE l_id        LIKE type_t.num10 
+   DEFINE l_cnt       LIKE type_t.num10 
+   DEFINE l_keyvalue  LIKE type_t.chr50 
+   DEFINE l_typevalue LIKE type_t.chr50 
+   DEFINE l_type      LIKE type_t.chr50 
+   DEFINE l_sql       LIKE type_t.chr500 
+   DEFINE ls_source   LIKE type_t.chr500 
+   DEFINE ls_exp_code LIKE type_t.chr500 
+   DEFINE l_mmbk002   LIKE mmbk_t.mmbk002
+   DEFINE l_mmbk003   LIKE mmbk_t.mmbk003 
+   DEFINE l_pid       LIKE type_t.chr50      
+   DEFINE l_cnt2      LIKE type_t.num5       
+   DEFINE l_hasC      LIKE type_t.num5 
+
+   #若已經展開
+   IF g_browser[p_id].b_isExp = 1 THEN 
+      RETURN 
+   END IF 
+
+   LET g_browser[p_id].b_isExp = 1 
+
+   LET l_keyvalue = g_browser[p_id].b_ooed004 
+
+   LET l_sql = "SELECT UNIQUE ooed004,ooed003 ", 
+               "  FROM ooed_t ", 
+               " WHERE ooedent = '",g_enterprise,"' ", 
+               "   AND ooed005 = '",l_keyvalue,"' ", 
+               "   AND ooed004 <> ooed005 ", 
+#               "   AND ooed001 = '2' ", # mark by geza  150204-00001#34
+               "   AND ooed001 = '8' ", # add by geza  150204-00001#34
+               "   AND ooed006 <= '",g_today,"' ", 
+               "   AND ooed002 = '",g_browser[p_id].b_ooed002,"' ", 
+               "   AND ooed003 = '",g_browser[p_id].b_ooed003,"' ", 
+               "   AND (ooed007 IS NULL OR ooed007 >= '",g_today,"' ) ", 
+               " ORDER BY ooed004 "  
+   PREPARE tree_expand1 FROM l_sql 
+   DECLARE tree_ex_cur1 CURSOR FOR tree_expand1 
+
+   LET l_cnt = 0
+   FOREACH ammq400_mmbk_curs USING g_browser[p_id].b_ooed004,g_type
+                              INTO l_mmbk002,l_mmbk003
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      LET l_cnt = l_cnt + 1
+
+   END FOREACH
+
+   #ming --(S) 
+   #LET l_id = p_id + 1 
+   #LET l_id = g_browser.getLength() + 1  
+   LET l_id = p_id + 1 + l_cnt
+   #ming --(E) 
+   CALL g_browser.insertElement(l_id) 
+   LET l_cnt = 1 
+
+   FOREACH tree_ex_cur1 INTO g_browser[l_id].b_ooed004,g_browser[l_id].b_ooed003 
+      IF SQLCA.sqlcode THEN 
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+ 
+         EXIT FOREACH 
+      END IF 
+      IF cl_null(g_browser[l_id].b_ooed004) THEN 
+         EXIT FOREACH 
+      END IF 
+      
+      LET l_pid = l_id
+      
+      #pid = 父節點id 
+      LET g_browser[l_id].b_pid = g_browser[p_id].b_id 
+
+      #id = 本身節點id 
+      LET g_browser[l_id].b_id      = g_browser[p_id].b_id,".",l_cnt USING "<<<"  
+      LET g_browser[l_id].b_exp     = TRUE 
+      LET g_browser[l_id].b_ooed005 = g_browser[p_id].b_ooed004 
+      LET g_browser[l_id].b_ooed002 = g_browser[p_id].b_ooed002 
+
+      #hasC=確認該節點是否有子節點  
+      CALL ammq400_desc_show(l_id)   
+      LET g_browser[l_id].b_hasC = ammq400_chk_hasC(l_id)  
+      LET l_hasC = g_browser[l_id].b_hasC 
+      LET l_id = l_id + 1 
+      CALL g_browser.insertElement(l_id) 
+      LET l_cnt = l_cnt + 1 
+      
+      LET l_cnt2 = 1 
+      FOREACH ammq400_mmbk_curs USING g_browser[l_pid].b_ooed004,g_type
+                                 INTO l_mmbk002,l_mmbk003
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+            EXIT FOREACH
+         END IF
+
+         LET g_browser[l_id].b_ooed002 = g_browser[l_pid].b_ooed002 
+         LET g_browser[l_id].b_ooed004 = g_browser[l_pid].b_ooed004 
+         LET g_browser[l_id].b_ooed005 = g_browser[l_pid].b_ooed004 
+         LET g_browser[l_id].b_pid     = g_browser[l_pid].b_id 
+         LET g_browser[l_id].b_id      = g_browser[l_pid].b_id,".",l_cnt2 USING "<<<" 
+         LET g_browser[l_id].b_exp     = FALSE 
+         LET g_browser[l_id].b_hasC    = FALSE 
+         LET g_browser[l_id].b_mmbk002 = l_mmbk002 
+         LET g_browser[l_id].b_mmbk003 = l_mmbk003 
+
+         CALL ammq400_mmbk002_ref(l_id) 
+      
+         LET l_hasC = TRUE 
+         CALL ammq400_desc_show(l_id) 
+         LET g_browser[l_id].b_hasC = FALSE 
+         LET l_id = l_id + 1 
+         CALL g_browser.insertElement(l_id) 
+         LET l_cnt2 = l_cnt2 + 1 
+      
+      END FOREACH
+      LET g_browser[l_pid].b_hasC = l_hasC 
+      LET l_cnt2 = l_cnt2 - 1 
+      CALL g_browser.deleteElement(l_id) 
+   END FOREACH 
+   LET l_cnt = l_cnt - 1 
+   #刪除空資料 
+   CALL g_browser.deleteElement(l_id) 
+END FUNCTION
+################################################################################
+# Descriptions...: 設定樹要顯示的文字
+# Memo...........:
+# Usage..........: CALL ammq400_desc_show(pi_ac)
+# Input parameter: 目前要處理的資料編號
+# Return code....: 無
+# Date & Author..: 2014/03/07 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ammq400_desc_show(pi_ac)
+   DEFINE pi_ac          LIKE type_t.num5 
+   DEFINE li_tmp         LIKE type_t.num5 
+   DEFINE l_ooed004_desc LIKE type_t.chr80 
+   DEFINE ls_msg         STRING 
+   DEFINE l_mmanl003     LIKE mmanl_t.mmanl003 
+
+   LET li_tmp = l_ac 
+   LET l_ac = pi_ac 
+   IF cl_null(l_ac) OR l_ac = 0 THEN 
+      LET l_ac = 1 
+   END IF 
+
+   IF NOT cl_null(g_browser[l_ac].b_ooed004) AND cl_null(g_browser[l_ac].b_ooed005) THEN 
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_browser[l_ac].b_ooed002
+      CALL ap_ref_array2(g_ref_fields, 
+           "SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_lang||"'","") 
+           RETURNING g_rtn_fields
+      LET l_ooed004_desc = g_rtn_fields[1]
+      LET ls_msg = cl_getmsg("aoo-00232",g_lang)
+      LET g_browser[l_ac].b_show = g_browser[l_ac].b_ooed002,' (',l_ooed004_desc,')','(',ls_msg,g_browser[l_ac].b_ooed003,')'
+   ELSE
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_browser[l_ac].b_ooed004
+      CALL ap_ref_array2(g_ref_fields, 
+           "SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_lang||"'","")  
+           RETURNING g_rtn_fields
+      LET l_ooed004_desc = g_rtn_fields[1]
+      LET g_browser[l_ac].b_show = g_browser[l_ac].b_ooed004,' (',l_ooed004_desc,')'
+   END IF 
+
+   IF l_ac = 1 THEN 
+      LET l_mmanl003 = '' 
+      SELECT mmanl003 INTO l_mmanl003 FROM mmanl_t 
+       WHERE mmanlent = g_enterprise 
+         AND mmanl001 = g_mmbk001 
+         AND mmanl002 = g_dlang 
+      LET g_browser[l_ac].b_show = g_mmbk001,"(",l_mmanl003,")"   
+   END IF 
+END FUNCTION
+################################################################################
+# Descriptions...: 顯示單頭的參考欄位資訊
+# Memo...........:
+# Usage..........: CALL ammq400_mmbk001_desc_ref()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/03/07 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ammq400_mmbk001_desc_ref()
+   DEFINE l_str STRING 
+   INITIALIZE g_ref_fields TO NULL 
+
+   LET g_ref_fields[1] = g_mmbk001 
+   IF g_type = 1 THEN 
+      CALL ap_ref_array2(g_ref_fields, 
+           "SELECT mmanl003 FROM mmanl_t WHERE mmanlent='"||g_enterprise||"' AND mmanl001=? AND mmanl002='"||g_dlang||"'","")  
+           RETURNING g_rtn_fields  
+   ELSE 
+      CALL ap_ref_array2(g_ref_fields, 
+           "SELECT gcafl003 FROM gcafl_t WHERE gcaflent='"||g_enterprise||"' AND gcafl001=? AND gcafl002='"||g_dlang||"'","")  
+           RETURNING g_rtn_fields  
+   END IF 
+   LET l_str = g_rtn_fields[1]
+   DISPLAY l_str TO FORMONLY.mmbk001_desc 
+END FUNCTION
+################################################################################
+# Descriptions...: 顯示單頭的參考欄位資訊
+# Memo...........:
+# Usage..........: CALL ammq400_ooed004_desc_ref()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/03/07 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ammq400_ooed004_desc_ref()
+   DEFINE l_str STRING 
+   INITIALIZE g_ref_fields TO NULL 
+
+   LET g_ref_fields[1] = g_ooed004 
+   CALL ap_ref_array2(g_ref_fields, 
+        "SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_lang||"'","") 
+        RETURNING g_rtn_fields 
+   LET l_str = g_rtn_fields[1],g_f1 
+   DISPLAY l_str TO FORMONLY.ooed004_desc 
+END FUNCTION
+################################################################################
+# Descriptions...: 顯示單身的參考欄位資訊
+# Memo...........:
+# Usage..........: CALL ammq400_mmbj002_ref()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/03/07 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ammq400_mmbj002_ref()
+   INITIALIZE g_ref_fields TO NULL 
+   LET g_ref_fields[1] = g_mmbj_d[l_ac2].mmbj002  
+   IF g_type = 1 THEN 
+      CALL ap_ref_array2(g_ref_fields,
+           "SELECT mmanl003 FROM mmanl_t WHERE mmanlent='"||g_enterprise||"' AND mmanl001=? AND mmanl002='"||g_dlang||"'","")  
+           RETURNING g_rtn_fields 
+   ELSE  
+      CALL ap_ref_array2(g_ref_fields, 
+           "SELECT gcafl003 FROM gcafl_t WHERE gcaflent='"||g_enterprise||"' AND gcafl001=? AND gcafl002='"||g_dlang||"'","")  
+           RETURNING g_rtn_fields  
+   END IF         
+   LET g_mmbj_d[l_ac2].mmbj002_desc = g_rtn_fields[1]  
+   DISPLAY BY NAME g_mmbj_d[l_ac2].mmbj002_desc  
+END FUNCTION
+################################################################################
+# Descriptions...: 顯示單身參考欄位資訊
+# Memo...........:
+# Usage..........: CALL ammq400_mmbj003_ref() 
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/03/07 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ammq400_mmbj003_ref()
+   INITIALIZE g_ref_fields TO NULL 
+   LET g_ref_fields[1] = g_mmbj_d[l_ac2].mmbj003 
+   CALL ap_ref_array2(g_ref_fields, 
+        "SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002='"||g_dlang||"'","") 
+        RETURNING g_rtn_fields 
+   LET g_mmbj_d[l_ac2].mmbj003_desc = g_rtn_fields[1] 
+   DISPLAY BY NAME g_mmbj_d[l_ac2].mmbj003_desc  
+END FUNCTION
+################################################################################
+# Descriptions...: 顯示樹狀的參考欄位資訊
+# Memo...........:
+# Usage..........: CALL ammq400_mmbk002_ref(p_ac)
+# Input parameter: 目前要處理的資料編號
+# Return code....: 無
+# Date & Author..: 2014/03/07 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ammq400_mmbk002_ref(p_ac)
+   DEFINE p_ac     LIKE type_t.num5 
+
+   INITIALIZE g_ref_fields TO NULL 
+   #LET g_ref_fields[1] = g_browser[p_ac].b_ooed004     #20150704--mark by dongsz
+   #LET g_ref_fields[2] = g_browser[p_ac].b_mmbk002     #20150704--mark by dongsz
+   LET g_ref_fields[1] = g_browser[p_ac].b_mmbk002      #20150704--add by dongsz
+   CALL ap_ref_array2(g_ref_fields, 
+        #"SELECT inaa002 FROM inaa_t WHERE inaaent='"||g_enterprise||"' AND inaasite= ? AND inaa001 = ? ","")   #20150704--mark by dongsz
+        "SELECT inayl003 FROM inayl_t WHERE inaylent='"||g_enterprise||"' AND inayl001 = ? AND inayl002 = '"||g_dlang||"' ","")  #20150704--add by dongsz
+        RETURNING g_rtn_fields 
+   LET g_browser[p_ac].b_inaa002 = g_rtn_fields[1] 
+   DISPLAY BY NAME g_browser[p_ac].b_inaa002  
+END FUNCTION
+################################################################################
+# Descriptions...: 計算樹狀的庫存數量
+# Memo...........:
+# Usage..........: CALL ammq400_get_qty()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/03/07 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ammq400_get_qty()
+   DEFINE l_i    LIKE type_t.num5
+   DEFINE l_j    LIKE type_t.num5
+   DEFINE l_len  LIKE type_t.num5
+   DEFINE l_str  LIKE type_t.chr1000
+   DEFINE l_qty  LIKE type_t.num5
+   DEFINE l_id_s STRING
+
+   FOR l_i = 1 TO g_browser.getLength()
+      IF g_browser[l_i].b_pid = '0' THEN
+         CONTINUE FOR
+      END IF
+      IF g_browser[l_i].b_hasC = 1 THEN
+         LET l_len = 0
+         #增進效能的寫法 
+         #SELECT LENGTH(g_browser[l_i].b_id) INTO l_len FROM DUAL
+         LET l_id_s = g_browser[l_i].b_id
+         LET l_len = l_id_s.getLength()
+         
+         IF cl_null(l_len) THEN
+            LET l_len = 0
+         END IF
+
+         IF l_len = 0 THEN
+            CONTINUE FOR
+         END IF
+
+         LET l_qty = 0
+         FOR l_j = l_i + 1 TO g_browser.getLength()
+            LET l_str = ''
+            #增進效能的寫法 
+            #SELECT SUBSTR(g_browser[l_j].b_id,1,l_len) INTO l_str FROM DUAL
+            LET l_id_s = g_browser[l_j].b_id
+            LET l_str = l_id_s.subString(1,l_len)
+            
+            IF g_browser[l_i].b_id = l_str THEN
+               IF NOT cl_null(g_browser[l_j].b_mmbk003) THEN
+                  LET l_qty = l_qty + g_browser[l_j].b_mmbk003
+               END IF
+            END IF
+         END FOR
+         LET g_browser[l_i].b_mmbk003 = l_qty
+      ELSE
+         IF cl_null(g_browser[l_i].b_mmbk003) THEN
+            LET g_browser[l_i].b_mmbk003 = 0
+         END IF
+      END IF
+   END FOR
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

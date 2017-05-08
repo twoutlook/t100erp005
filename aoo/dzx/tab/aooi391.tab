@@ -1,0 +1,107 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi391" module="aoo" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02482" crtdt="2013-09-25 10:32:21" modid="04543" moddt="2015-03-02 18:23:50" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="編碼轉換表維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="oofj001,oofjl003,oofjl004,oofjstus,oofjownid,oofjownid_desc(chr80),oofjowndp,oofjowndp_desc(chr80),oofjcrtid,oofjcrtid_desc(chr80),oofjcrtdp,oofjcrtdp_desc(chr80),oofjcrtdt,oofjmodid,oofjmodid_desc(chr80),oofjmoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="oofk002,oofk003,oofk004,oofk005"/>
+      <var id="bs_field" value="oofj001,oofjl003(chr80),oofjl004(chr80)" pk="oofj001" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi391" method="dialog">
+    <section id="input">
+      <input id="head" field="oofj001,oofjl003,oofjl004,oofjstus"/>
+      <input id="body" page="1" field="oofk002,oofk003,oofk004,oofk005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="oofj001,oofjl003,oofjl004,oofjstus,oofjownid,oofjowndp,oofjcrtid,oofjcrtdp,oofjcrtdt,oofjmodid,oofjmoddt"/>
+      <construct id="body" page="1" field="oofk002,oofk003,oofk004,oofk005"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="oofj001"/>
+      <set id="head" type="no_entry" field="oofj001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="oofj001">
+        <controlp form="q_oofj001" state="c"/>
+      </column>
+      <column id="oofjl003"/>
+      <column id="oofjl004"/>
+      <column id="oofjstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="oofjownid">
+        <after>
+          <reference field="oofjownid_desc" ref_field="oofj_t.oofjownid" map_field="oofjownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oofjownid_desc"/>
+      <column id="oofjowndp">
+        <after>
+          <reference field="oofjowndp_desc" ref_field="oofj_t.oofjowndp" map_field="oofjowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oofjowndp_desc"/>
+      <column id="oofjcrtid">
+        <after>
+          <reference field="oofjcrtid_desc" ref_field="oofj_t.oofjcrtid" map_field="oofjcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oofjcrtid_desc"/>
+      <column id="oofjcrtdp">
+        <after>
+          <reference field="oofjcrtdp_desc" ref_field="oofj_t.oofjcrtdp" map_field="oofjcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oofjcrtdp_desc"/>
+      <column id="oofjcrtdt"/>
+      <column id="oofjmodid">
+        <after>
+          <reference field="oofjmodid_desc" ref_field="oofj_t.oofjmodid" map_field="oofjmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oofjmodid_desc"/>
+      <column id="oofjmoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="oofk002"/>
+      <column id="oofk003" type="S" default="0"/>
+      <column id="oofk004" type="S" default="0"/>
+      <column id="oofk005"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="oofj_t" pk="oofj001">
+      <sql id="forupd_sql" type="sql" query="SELECT oofj001,&apos;&apos;,&apos;&apos;,oofjstus,oofjownid,&apos;&apos;,oofjowndp,&apos;&apos;,oofjcrtid,&apos;&apos;,oofjcrtdp,&apos;&apos;,oofjcrtdt,oofjmodid,&apos;&apos;,oofjmoddt FROM oofj_t WHERE oofjent= ? AND oofj001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT oofj001,&apos;&apos;,&apos;&apos;,oofjstus,oofjownid,&apos;&apos;,oofjowndp,&apos;&apos;,oofjcrtid,&apos;&apos;,oofjcrtdp,&apos;&apos;,oofjcrtdt,oofjmodid,&apos;&apos;,oofjmoddt FROM oofj_t" order="oofj001"/>
+      <sql id="append" type="lang" target="oofjl_t.oofjl003,oofjl_t.oofjl004" table="oofjl_t" fk="oofj001" pk="oofjl001,oofjl002" field="oofjl003,oofjl004"/>
+    </head>
+    <body id="oofk_t" page="1" linked="" pk="oofk002,oofk003,oofk004" fk="oofk001">
+      <sql id="forupd_sql_detail" query="SELECT oofk002,oofk003,oofk004,oofk005 FROM oofk_t WHERE oofkent=? AND oofk001=? AND oofk002=? AND oofk003=? AND oofk004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT oofk002,oofk003,oofk004,oofk005 FROM oofk_t WHERE oofkent=? AND oofk001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

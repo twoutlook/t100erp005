@@ -1,0 +1,3977 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="artq520.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:6(2016-03-15 15:55:20), PR版次:0006(2016-10-30 15:45:22)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000069
+#+ Filename...: artq520
+#+ Description: 門店調價單條碼價籤查詢列印作業
+#+ Creator....: 06189(2015-06-19 09:01:00)
+#+ Modifier...: 06189 -SD/PR- 08742
+ 
+{</section>}
+ 
+{<section id="artq520.global" >}
+#應用 q01 樣板自動產生(Version:34)
+#add-point:填寫註解說明 name="global.memo"
+#161024-00025#9   2016/10/26  by 08742    组织开窗调整 
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_prbg_d RECORD
+       
+       sel LIKE type_t.chr1, 
+   seq LIKE type_t.chr500, 
+   count LIKE type_t.chr500, 
+   type LIKE type_t.chr500, 
+   docno LIKE type_t.chr500, 
+   prbgseq LIKE prbg_t.prbgseq, 
+   prbg003 LIKE prbg_t.prbg003, 
+   prbg002 LIKE prbg_t.prbg002, 
+   prbg002_desc LIKE type_t.chr500, 
+   imaal004 LIKE imaal_t.imaal004, 
+   imaa009 LIKE imaa_t.imaa009, 
+   rtaxl003 LIKE rtaxl_t.rtaxl003, 
+   imaa126 LIKE imaa_t.imaa126, 
+   imaa126_desc LIKE type_t.chr500, 
+   imaa122 LIKE imaa_t.imaa122, 
+   imaa105 LIKE imaa_t.imaa105, 
+   imaa105_desc LIKE type_t.chr6, 
+   prbg009 LIKE prbg_t.prbg009, 
+   prbg010 LIKE prbg_t.prbg010, 
+   prbg011 LIKE prbg_t.prbg011, 
+   prbg012 LIKE prbg_t.prbg012, 
+   rtdx022 LIKE rtdx_t.rtdx022, 
+   rtdx023 LIKE rtdx_t.rtdx023, 
+   rtdx020 LIKE rtdx_t.rtdx020, 
+   rtdx021 LIKE rtdx_t.rtdx021, 
+   rtdx038 LIKE rtdx_t.rtdx038, 
+   rtdx039 LIKE rtdx_t.rtdx039, 
+   rtdx040 LIKE rtdx_t.rtdx040, 
+   rtdx017 LIKE rtdx_t.rtdx017
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數-標準(Module Variable)  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_rtdy001            LIKE rtdy_t.rtdy001  
+DEFINE g_rtdxsite           LIKE rtdx_t.rtdxsite
+DEFINE g_rtdy001_desc      LIKE type_t.chr500
+DEFINE g_rtdxsite_desc      LIKE type_t.chr500
+DEFINE g_checkbox_1         LIKE type_t.chr1
+DEFINE g_checkbox_2         LIKE type_t.chr1
+DEFINE g_checkbox_3         LIKE type_t.chr1
+DEFINE g_checkbox_4         LIKE type_t.chr1
+DEFINE g_checkbox_5         LIKE type_t.chr1
+DEFINE g_checkbox_6         LIKE type_t.chr1 
+DEFINE g_buttonedit_1       LIKE prbi_t.prbidocno
+DEFINE g_buttonedit_2       LIKE prbi_t.prbidocno
+DEFINE g_buttonedit_3       LIKE prbi_t.prbidocno
+DEFINE g_buttonedit_4       LIKE prbi_t.prbidocno
+DEFINE g_buttonedit_5       LIKE prbi_t.prbidocno
+DEFINE g_buttonedit_6       LIKE prbi_t.prbidocno
+#DEFINE g_cust_rec   RECORD
+#               id               STRING,
+#               template         STRING,
+#               data                     DYNAMIC ARRAY OF RECORD          
+#                rowid     LIKE          type_t.num5,           #项次
+#                count     LIKE          type_t.chr500,         #打印数量
+#                inna01    LIKE          prbg_t.prbg003,        #商品条码
+#                inna02    LIKE          prbg_t.prbg002,        #商品编号
+#                inna03    LIKE          type_t.chr500,         #品名
+#                inna04    LIKE          imaal_t.imaal004,      #规格
+#                inna05    LIKE          imaa_t.imaa009,        #商品品类
+#                inna06    LIKE          rtaxl_t.rtaxl003,      #品类说明
+#                inna07    LIKE          imaa_t.imaa126,        #品牌
+#                inna08    LIKE          type_t.chr500,         #品牌说明                
+#                inna09    LIKE          imaa_t.imaa122,        #产地
+#                inna10    LIKE          imaa_t.imaa105,        #销售单位
+#                inna11    LIKE          prbg_t.prbg009,        #售价
+#                inna12    LIKE          prbg_t.prbg010,        #门店会员价1
+#                inna13    LIKE          prbg_t.prbg011,        #门店会员价2
+#                inna14    LIKE          prbg_t.prbg012,        #门店会员价3
+#                inna15    LIKE          rtdx_t.rtdx022,        #促销售价开始日期
+#                inna16    LIKE          rtdx_t.rtdx023,        #促销售价结束日期
+#                inna17    LIKE          rtdx_t.rtdx020,        #促销原价
+#                inna18    LIKE          rtdx_t.rtdx021,        #促销售价
+#                inna19    LIKE          rtdx_t.rtdx038,        #促销会员价1
+#                inna20    LIKE          rtdx_t.rtdx039,        #促销会员价2
+#                inna21    LIKE          rtdx_t.rtdx040,        #促销会员价3
+#                inna22    LIKE          rtdx_t.rtdx017,        #执行价
+#                inna23    LIKE          stba_t.stbaownid,      #打印人员 
+#                inna24    LIKE          type_t.chr500,         #类型
+#                inna25    LIKE          prbr_t.prbrdocno,      #来源单号
+#                inna26    LIKE          prbg_t.prbgseq         #来源项次     
+#                    END RECORD                                 
+#               END RECORD
+DEFINE g_cust_rec   RECORD
+                id               STRING,
+                template         STRING,
+                data                     DYNAMIC ARRAY OF RECORD          
+                rowid     LIKE          type_t.num5,           #项次
+                count     LIKE          type_t.chr500,         #打印数量
+                inna01    LIKE          prbg_t.prbg003,        #商品条码
+                inna02    LIKE          prbg_t.prbg002,        #商品编号
+                inna03    LIKE          type_t.chr500,         #品名
+                inna04    LIKE          imaal_t.imaal004,      #规格
+                inna05    LIKE          imaa_t.imaa009,        #商品品类
+                inna06    LIKE          rtaxl_t.rtaxl003,      #品类说明
+                inna07    LIKE          imaa_t.imaa126,        #品牌
+                inna08    LIKE          type_t.chr500,         #品牌说明                
+                inna09    LIKE          imaa_t.imaa122,        #产地
+                inna10    LIKE          imaa_t.imaa105,        #销售单位                
+                inna11                  STRING,                #售价
+                inna12                  STRING,                #门店会员价1
+                inna13                  STRING,                #门店会员价2
+                inna14                  STRING,                #门店会员价3
+                inna15    LIKE          rtdx_t.rtdx022,        #促销售价开始日期
+                inna16    LIKE          rtdx_t.rtdx023,        #促销售价结束日期
+                inna17                  STRING,                #促销原价
+                inna18                  STRING,                #促销售价
+                inna19                  STRING,                #促销会员价1
+                inna20                  STRING,                #促销会员价2
+                inna21                  STRING,                #促销会员价3
+                inna22                  STRING,                #执行价
+                inna23    LIKE          stba_t.stbaownid,      #打印人员 
+                inna24    LIKE          type_t.chr500,         #类型
+                inna25    LIKE          prbr_t.prbrdocno,      #来源单号
+                inna26    LIKE          prbg_t.prbgseq,         #来源项次
+                inna27    LIKE          type_t.chr500        #销售单位说明                
+                    END RECORD                                 
+               END RECORD
+DEFINE g_wc3           STRING 
+DEFINE g_str           LIKE type_t.chr50
+DEFINE g_prbf006       LIKE prbf_t.prbf006
+DEFINE g_date_1        LIKE prbf_t.prbf006
+DEFINE g_insert        LIKE type_t.chr5 
+DEFINE g_aw            STRING 
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_prbg_d            DYNAMIC ARRAY OF type_g_prbg_d
+DEFINE g_prbg_d_t          type_g_prbg_d
+ 
+ 
+ 
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                 STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE l_ac                  LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_current_page        LIKE type_t.num5              #目前所在頁數
+DEFINE g_current_row         LIKE type_t.num10             #目前所在筆數
+DEFINE g_current_idx         LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_row_index           LIKE type_t.num10
+DEFINE g_master_idx          LIKE type_t.num10
+DEFINE g_detail_idx          LIKE type_t.num10             #單身 所在筆數(所有資料)
+DEFINE g_detail_idx2         LIKE type_t.num10
+DEFINE g_hyper_url           STRING                        #hyperlink的主要網址
+DEFINE g_qbe_hidden          LIKE type_t.num5              #qbe頁籤折疊
+DEFINE g_tot_cnt             LIKE type_t.num10             #計算總筆數
+DEFINE g_num_in_page         LIKE type_t.num10             #每頁筆數
+DEFINE g_page_act_list       STRING                        #分頁ACTION清單
+DEFINE g_current_row_tot     LIKE type_t.num10             #目前所在總筆數
+DEFINE g_page_start_num      LIKE type_t.num10             #目前頁面起始筆數
+DEFINE g_page_end_num        LIKE type_t.num10             #目前頁面結束筆數
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+DEFINE g_detail_page_action STRING
+DEFINE g_pagestart          LIKE type_t.num10
+ 
+ 
+ 
+DEFINE g_wc_filter_table           STRING
+ 
+ 
+ 
+#add-point:自定義模組變數-客製(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="artq520.main" >}
+ #應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   DEFINE l_success LIKE type_t.num5    #161024-00025#9   2016/10/26  by 08742    add   
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("art","")
+ 
+   #add-point:作業初始化 name="main.init"
+   
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = " ", 
+                      " FROM ",
+                      " "
+   #add-point:SQL_define name="main.after_define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE artq520_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT  ",
+               " FROM  t0",
+               
+               " WHERE  "
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   
+   #end add-point
+   PREPARE artq520_master_referesh FROM g_sql
+ 
+   #add-point:main段define_sql name="main.body.define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = ""
+   #add-point:main段define_sql name="main.body.after_define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE artq520_bcl CURSOR FROM g_forupd_sql
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_artq520 WITH FORM cl_ap_formpath("art",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL artq520_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL artq520_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_artq520
+      
+   END IF 
+   
+   CLOSE artq520_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   CALL s_aooi500_drop_temp() RETURNING l_success    #161024-00025#9   2016/10/26  by 08742    add   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="artq520.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION artq520_init()
+   #add-point:init段define-客製 name="init.define_customerization"
+   
+   #end add-point
+   #add-point:init段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   DEFINE l_gzcbl004   LIKE gzcbl_t.gzcbl004 #add by geza 20160304
+   DEFINE l_success LIKE type_t.num5    #161024-00025#9   2016/10/26  by 08742    add   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="init.before_function"
+   
+   #end add-point
+ 
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1" 
+   LET g_error_show  = 1
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   
+     
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL cl_set_combo_scc('type','6830') 
+   CALL cl_set_toolbaritem_visible("show",FALSE)
+   LET g_checkbox_1 = 'N'
+   LET g_checkbox_2 = 'N'
+   LET g_checkbox_3 = 'N'
+   LET g_checkbox_4 = 'N'
+   LET g_checkbox_5 = 'N'
+   LET g_checkbox_6 = 'N'  
+   #add by geza 20160304(S)
+   #栏位名称重新显示
+   CALL s_desc_gzcbl004_desc('6899','1') RETURNING l_gzcbl004
+   CALL cl_set_comp_att_text("b_prbg010",l_gzcbl004)
+   CALL s_desc_gzcbl004_desc('6899','2') RETURNING l_gzcbl004
+   CALL cl_set_comp_att_text("b_prbg011",l_gzcbl004)
+   CALL s_desc_gzcbl004_desc('6899','3') RETURNING l_gzcbl004
+   CALL cl_set_comp_att_text("b_prbg012",l_gzcbl004)
+   CALL s_desc_gzcbl004_desc('6899','4') RETURNING l_gzcbl004
+   CALL cl_set_comp_att_text("b_rtdx038",l_gzcbl004)
+   CALL s_desc_gzcbl004_desc('6899','5') RETURNING l_gzcbl004
+   CALL cl_set_comp_att_text("b_rtdx039",l_gzcbl004)
+   CALL s_desc_gzcbl004_desc('6899','6') RETURNING l_gzcbl004
+   CALL cl_set_comp_att_text("b_rtdx040",l_gzcbl004)
+   #add by geza 20160304(E)    
+   CALL s_aooi500_create_temp() RETURNING l_success     #161024-00025#9   2016/10/26  by 08742    add   
+   #end add-point
+ 
+   CALL artq520_default_search()
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artq520.default_search" >}
+PRIVATE FUNCTION artq520_default_search()
+   #add-point:default_search段define-客製 name="default_search.define_customerization"
+   
+   #end add-point
+   #add-point:default_search段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point
+ 
+ 
+   #add-point:default_search段開始前 name="default_search.before"
+   
+   #end add-point
+ 
+   #應用 qs27 樣板自動產生(Version:3)
+   #+ 組承接外部參數時資料庫欄位對應條件(單身)
+   IF NOT cl_null(g_argv[01]) THEN
+      LET g_wc = g_wc, " prbgdocno = '", g_argv[01], "' AND "
+   END IF
+ 
+   IF NOT cl_null(g_argv[02]) THEN
+      LET g_wc = g_wc, " prbgseq = '", g_argv[02], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[03]) THEN
+      LET g_wc = g_wc, " prbgseq1 = '", g_argv[03], "' AND "
+   END IF
+ 
+ 
+ 
+ 
+ 
+ 
+   IF NOT cl_null(g_wc) THEN
+      LET g_wc = g_wc.subString(1,g_wc.getLength()-5)
+   ELSE
+      #預設查詢條件
+      LET g_wc = " 1=2"
+   END IF
+ 
+   #add-point:default_search段結束前 name="default_search.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artq520.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION artq520_ui_dialog() 
+   #add-point:ui_dialog段define-客製 name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num10
+   DEFINE ls_result STRING
+   DEFINE ls_wc     STRING
+   DEFINE lc_action_choice_old   STRING
+   DEFINE ls_js     STRING
+   DEFINE la_param  RECORD
+                    prog       STRING,
+                    actionid   STRING,
+                    background LIKE type_t.chr1,
+                    param      DYNAMIC ARRAY OF STRING
+                    END RECORD
+   #add-point:ui_dialog段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   DEFINE l_cnt         LIKE type_t.num10 
+   DEFINE ls_sql        STRING             #160126-00002#2 Add By Ken 160203
+   DEFINE l_success     LIKE type_t.num5   #160126-00002#2 Add By Ken 160203
+   DEFINE l_errno       LIKE type_t.chr10  #160126-00002#2 Add By Ken 160203
+   #end add-point
+   
+ 
+   #add-point:FUNCTION前置處理 name="ui_dialog.before_function"
+   
+   #end add-point
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   CALL cl_get_num_in_page() RETURNING g_num_in_page
+ 
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   LET g_current_idx = 1
+   LET g_action_choice = " "
+   LET lc_action_choice_old = ""
+   LET g_current_row_tot = 0
+   LET g_page_start_num = 1
+   LET g_page_end_num = g_num_in_page
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   LET l_ac = 1
+ 
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   LET g_wc2 = '1 = 2'
+   #end add-point
+ 
+   
+   CALL artq520_b_fill()
+  
+   WHILE li_exit = FALSE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_prbg_d.clear()
+ 
+         LET g_wc  = " 1=2"
+         LET g_wc2 = " 1=1"
+         LET g_action_choice = ""
+         LET g_detail_page_action = "detail_first"
+         LET g_pagestart = 1
+         LET g_current_row_tot = 0
+         LET g_page_start_num = 1
+         LET g_page_end_num = g_num_in_page
+         LET g_detail_idx = 1
+         LET g_detail_idx2 = 1
+ 
+         CALL artq520_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:input段落 name="ui_dialog.input"
+      #160126-00002#2 Add By Ken 160203(S)
+      INPUT g_checkbox_1,g_checkbox_2,g_checkbox_3,g_checkbox_4,g_checkbox_5,g_checkbox_6,g_buttonedit_1,g_buttonedit_2,g_buttonedit_3,g_buttonedit_4,g_buttonedit_5,g_buttonedit_6,g_rtdy001,g_rtdxsite,g_prbf006,g_date_1
+       FROM checkbox_1,checkbox_2,checkbox_3,checkbox_4,checkbox_5,checkbox_6,buttonedit_1,buttonedit_2,buttonedit_3,buttonedit_4,buttonedit_5,buttonedit_6,rtdy001,rtdxsite,prbf006,date_1
+           ATTRIBUTE(WITHOUT DEFAULTS)
+#       
+          BEFORE INPUT 
+             DISPLAY g_checkbox_1,g_checkbox_2,g_checkbox_3,g_checkbox_4,g_checkbox_5,g_checkbox_6,g_buttonedit_1,g_buttonedit_2,g_buttonedit_3,g_buttonedit_4,g_buttonedit_5,g_buttonedit_6
+                  TO checkbox_1,checkbox_2,checkbox_3,checkbox_4,checkbox_5,checkbox_6,buttonedit_1,buttonedit_2,buttonedit_3,buttonedit_4,buttonedit_5,buttonedit_6
+#             CALL cl_set_comp_entry("buttonedit_1,buttonedit_2,buttonedit_3,buttonedit_4,buttonedit_5,buttonedit_6",FALSE) #mark by geza 20160316
+             #add by geza 20160316(S)
+             IF g_checkbox_1 = 'Y' THEN
+                CALL cl_set_comp_entry("buttonedit_1",TRUE)
+             ELSE
+                CALL cl_set_comp_entry("buttonedit_1",FALSE)
+             END IF
+             IF g_checkbox_2 = 'Y' THEN
+                CALL cl_set_comp_entry("buttonedit_2",TRUE)
+             ELSE
+                CALL cl_set_comp_entry("buttonedit_2",FALSE)
+             END IF
+             IF g_checkbox_3 = 'Y' THEN
+                CALL cl_set_comp_entry("buttonedit_3",TRUE)
+             ELSE
+                CALL cl_set_comp_entry("buttonedit_3",FALSE)
+             END IF
+             IF g_checkbox_4 = 'Y' THEN
+                CALL cl_set_comp_entry("buttonedit_4",TRUE)
+             ELSE
+                CALL cl_set_comp_entry("buttonedit_4",FALSE)
+             END IF
+             IF g_checkbox_5 = 'Y' THEN
+                CALL cl_set_comp_entry("buttonedit_5",TRUE)
+             ELSE
+                CALL cl_set_comp_entry("buttonedit_5",FALSE)
+             END IF
+             IF g_checkbox_6 = 'Y' THEN
+                CALL cl_set_comp_entry("buttonedit_6",TRUE)
+             ELSE
+                CALL cl_set_comp_entry("buttonedit_6",FALSE)
+             END IF
+             #add by geza 20160316(E)
+             #mark by geza 20160316(S)
+#             LET  g_prbf006 = g_today
+#             LET  g_date_1 = g_today
+             #mark by geza 20160316(E)  
+             
+             
+            ON CHANGE checkbox_1
+#               IF g_checkbox_1 = 'Y' AND (g_checkbox_3 = 'Y' OR g_checkbox_4 = 'Y' OR g_checkbox_5 = 'Y' OR g_checkbox_6 = 'Y') THEN
+#                  LET g_checkbox_1 = 'N'
+#               END IF
+               
+               IF g_checkbox_1 = 'Y' THEN
+                  CALL cl_set_comp_entry("buttonedit_1",TRUE)
+               ELSE
+                  CALL cl_set_comp_entry("buttonedit_1",FALSE)
+               END IF
+               IF g_checkbox_1 = 'N' THEN
+                  LET g_buttonedit_1 = ''
+               END IF
+
+               
+            ON CHANGE checkbox_2
+#               IF g_checkbox_2 = 'Y' AND (g_checkbox_3 = 'Y' OR g_checkbox_4 = 'Y' OR g_checkbox_5 = 'Y' OR g_checkbox_6 = 'Y') THEN
+#                  LET g_checkbox_2 = 'N'
+#               END IF
+               IF g_checkbox_2 = 'Y' THEN
+                  CALL cl_set_comp_entry("buttonedit_2",TRUE) 
+               ELSE
+                  CALL cl_set_comp_entry("buttonedit_2",FALSE)   
+               END IF
+               IF g_checkbox_2 = 'N' THEN
+                  LET g_buttonedit_2 = ''
+               END IF
+
+            ON CHANGE checkbox_3
+#               IF g_checkbox_3 = 'Y' AND (g_checkbox_1 = 'Y' OR g_checkbox_2 = 'Y' OR g_checkbox_4 = 'Y' OR g_checkbox_5 = 'Y' OR g_checkbox_6 = 'Y') THEN
+#                  LET g_checkbox_3 = 'N'
+#               END IF
+               IF g_checkbox_3 = 'Y' THEN
+                  CALL cl_set_comp_entry("buttonedit_3",TRUE)
+               ELSE
+                  CALL cl_set_comp_entry("buttonedit_3",FALSE)                        
+               END IF
+               IF g_checkbox_3 = 'N' THEN
+                  LET g_buttonedit_3 = ''
+               END IF
+            
+            ON CHANGE checkbox_4
+#               IF g_checkbox_4 = 'Y' AND (g_checkbox_1 = 'Y' OR g_checkbox_2 = 'Y' OR g_checkbox_3 = 'Y' OR g_checkbox_5 = 'Y' OR g_checkbox_6 = 'Y') THEN
+#                  LET g_checkbox_4 = 'N'
+#               END IF
+               IF g_checkbox_4 = 'Y' THEN
+                  CALL cl_set_comp_entry("buttonedit_4",TRUE)
+               ELSE
+                  CALL cl_set_comp_entry("buttonedit_4",FALSE)                  
+               END IF
+                IF g_checkbox_4 = 'N' THEN
+                  LET g_buttonedit_4 = ''
+               END IF
+               
+            ON CHANGE checkbox_5
+#               IF g_checkbox_5 = 'Y' AND (g_checkbox_1 = 'Y' OR g_checkbox_2 = 'Y' OR g_checkbox_3 = 'Y' OR g_checkbox_4 = 'Y' OR g_checkbox_6 = 'Y') THEN
+#                  LET g_checkbox_5 = 'N'
+#               END IF
+               IF g_checkbox_5 = 'Y' THEN
+                  CALL cl_set_comp_entry("buttonedit_5",TRUE) 
+               ELSE
+                  CALL cl_set_comp_entry("buttonedit_5",FALSE)   
+               END IF
+               IF g_checkbox_5 = 'N' THEN
+                  LET g_buttonedit_5 = ''
+               END IF
+           
+            ON CHANGE checkbox_6
+#               IF g_checkbox_6 = 'Y' AND (g_checkbox_1 = 'Y' OR g_checkbox_2 = 'Y' OR g_checkbox_3 = 'Y' OR g_checkbox_4 = 'Y' OR g_checkbox_5 = 'Y') THEN
+#                  LET g_checkbox_6 = 'N'
+#               END IF
+               IF g_checkbox_6 = 'Y' THEN
+                  CALL cl_set_comp_entry("buttonedit_6",TRUE)
+               ELSE
+                  CALL cl_set_comp_entry("buttonedit_6",FALSE)                  
+               END IF           
+               IF g_checkbox_6 = 'N' THEN
+                  LET g_buttonedit_6 = ''
+               END IF
+            
+            
+            ON ACTION controlp INFIELD rtdy001
+            #add-point:ON ACTION controlp INFIELD rtdudocno
+                                                #此段落由子樣板a07產生            
+                #開窗i段
+                INITIALIZE g_qryparam.* TO NULL #sakura add
+                LET g_qryparam.state = 'i'      #sakura add       
+                LET g_qryparam.reqry = FALSE
+               
+                #LET g_qryparam.default1 = g_rtdu_m.rtdy001             #給予default值
+               
+                #給予arg
+                LET g_qryparam.where = " rtdystus = 'Y' "
+                #add by geza 20150824(S)
+                IF g_rtdxsite IS NOT NULL THEN
+                   LET g_qryparam.where = g_qryparam.where," AND EXISTS (SELECT 1 FROM rtdz_t WHERE rtdzent = ",g_enterprise," AND rtdz001 = rtdy001  AND rtdzstus = 'Y' AND rtdz002 = '",g_rtdxsite,"')"
+                END IF 
+                #add by geza 20150824(E)
+                CALL q_rtdy001()                                #呼叫開窗
+               
+                LET g_rtdy001 = g_qryparam.return1              
+               
+                DISPLAY g_rtdy001 TO rtdy001             #顯示到畫面上
+                
+                INITIALIZE g_ref_fields TO NULL
+                LET g_ref_fields[1] = g_rtdy001
+                LET ls_sql = "SELECT rtdyl003 FROM rtdyl_t WHERE rtdylent='"||g_enterprise||"' AND rtdyl001=? AND rtdyl002='"||g_dlang||"'"
+                LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+                CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+                LET g_rtdy001_desc = '', g_rtn_fields[1] , ''
+                DISPLAY  g_rtdy001_desc TO  rtdy001_desc   
+              
+                NEXT FIELD rtdy001
+         
+             AFTER FIELD rtdy001
+                IF NOT cl_null(g_rtdy001) THEN
+                   LET l_cnt = 0
+                   SELECT COUNT(*) INTO l_cnt
+                     FROM rtdy_t 
+                    WHERE rtdyent = g_enterprise
+                      AND rtdy001 = g_rtdy001             
+                      AND rtdystus = 'Y'
+                   IF l_cnt = 0 THEN
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.extend = ''
+                      LET g_errparam.code   = 'art-00631'
+                      LET g_errparam.popup  = TRUE
+                      CALL cl_err()
+                     
+                      NEXT FIELD CURRENT
+                   
+                   END IF
+                END IF
+                INITIALIZE g_ref_fields TO NULL
+                LET g_ref_fields[1] = g_rtdy001
+                LET ls_sql = "SELECT rtdyl003 FROM rtdyl_t WHERE rtdylent='"||g_enterprise||"' AND rtdyl001=? AND rtdyl002='"||g_dlang||"'"
+                LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+                CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+                LET g_rtdy001_desc = '', g_rtn_fields[1] , ''
+                DISPLAY  g_rtdy001_desc TO  rtdy001_desc   
+                
+             ON ACTION controlp INFIELD rtdxsite
+                #add-point:ON ACTION controlp INFIELD rtdusite
+                #應用 a07 樣板自動產生(Version:2)   
+                #開窗i段
+                #ken---add---str 需求單號：141208-00001 項次：14
+                INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'i'
+                LET g_qryparam.reqry = FALSE
+             
+                #LET g_qryparam.default1 = g_rtdu_m.rtdusite             #給予default值
+             
+                #給予arg
+                #LET g_qryparam.arg1 = "" #
+             
+                LET g_qryparam.where = s_aooi500_q_where(g_prog,'rtdxsite',g_site,'i') #150308-00001#3 150309 pomelo add 'i'
+                CALL q_ooef001_24()                                #呼叫開窗
+             
+                LET g_rtdxsite = g_qryparam.return1              
+             
+                DISPLAY g_rtdxsite TO  rtdxsite             #
+
+                INITIALIZE g_ref_fields TO NULL
+                LET g_ref_fields[1] = g_rtdxsite
+                LET ls_sql = "SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'"
+                LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+                CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+                LET g_rtdxsite_desc = '', g_rtn_fields[1] , ''
+                DISPLAY  g_rtdxsite_desc TO  rtdxsite_desc  
+
+                NEXT FIELD rtdxsite        
+              
+             AFTER FIELD rtdxsite
+                IF NOT cl_null(g_rtdxsite) THEN
+                   CALL s_aooi500_chk(g_prog,'rtdxsite',g_rtdxsite,g_site)
+                      RETURNING l_success,l_errno
+                   IF NOT l_success THEN
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.extend = ''
+                      LET g_errparam.code   = l_errno
+                      LET g_errparam.popup  = TRUE
+                      CALL cl_err()
+                
+                      NEXT FIELD CURRENT
+                   END IF
+                END IF
+               
+                INITIALIZE g_ref_fields TO NULL
+                LET g_ref_fields[1] = g_rtdxsite
+                LET ls_sql = "SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'"
+                LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+                CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+                LET g_rtdxsite_desc = '', g_rtn_fields[1] , ''
+                DISPLAY  g_rtdxsite_desc TO  rtdxsite_desc
+
+            ON ACTION controlp INFIELD buttonedit_1
+            #add-point:ON ACTION controlp INFIELD prbfdocno
+                                                                                                                                    #此段落由子樣板a07產生            
+               #開窗i段
+			       INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'i'
+			       LET g_qryparam.reqry = FALSE
+                
+                                  
+                #LET g_qryparam.where = "prbk003 = '1' "  #mark by geza 20160108
+                LET g_qryparam.where = "prbk003 = '1' AND prbk025 = '2'  AND (prbkstus = '1' OR prbkstus = '2') "  #add by geza 20160108                
+                #add by geza 20160108(S)                
+                IF g_rtdxsite IS NOT NULL  THEN   
+                   LET g_qryparam.where = g_qryparam.where," AND prbksite = '",g_rtdxsite,"' "
+                END IF
+                #add by geza 20160108(E)
+                IF g_prbf006 IS NOT NULL  THEN   
+                   LET g_qryparam.where = g_qryparam.where," AND prbk006 >= to_date('",g_prbf006,"','yyyy-mm-dd')"
+                END IF
+                CALL q_prbk001_2()                                #呼叫開窗
+             
+                LET g_buttonedit_1 = g_qryparam.return1              #將開窗取得的值回傳到變數
+             
+                DISPLAY g_buttonedit_1 TO buttonedit_1              #顯示到畫面上
+             
+                NEXT FIELD buttonedit_1  
+            
+            ON ACTION controlp INFIELD buttonedit_2
+            #add-point:ON ACTION controlp INFIELD prbfdocno
+                                                                                                                                    #此段落由子樣板a07產生            
+               #開窗i段
+			       INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'i'
+			       LET g_qryparam.reqry = FALSE
+             
+                #LET g_qryparam.where = "prbk003 = '2' " #mark by geza 20160108
+                LET g_qryparam.where = "prbk003 = '2' AND prbk025 = '2' AND (prbkstus = '1' OR prbkstus = '2') "  #add by geza 20160108  
+                #add by geza 20160108(S)                
+                IF g_rtdxsite IS NOT NULL  THEN   
+                   LET g_qryparam.where = g_qryparam.where," AND prbksite = '",g_rtdxsite,"' "
+                END IF
+                #add by geza 20160108(E)
+                IF g_prbf006 IS NOT NULL  THEN   
+                   LET g_qryparam.where = g_qryparam.where," AND prbk006 >= to_date('",g_prbf006,"','yyyy-mm-dd')"
+                END IF 
+                CALL q_prbk001_2()                               #呼叫開窗
+             
+                LET g_buttonedit_2 = g_qryparam.return1              #將開窗取得的值回傳到變數
+             
+                DISPLAY g_buttonedit_2 TO buttonedit_2              #顯示到畫面上
+             
+                NEXT FIELD buttonedit_2      
+            
+            ON ACTION controlp INFIELD buttonedit_3
+            #add-point:ON ACTION controlp INFIELD prbfdocno
+                                                                                                                                    #此段落由子樣板a07產生            
+               #開窗i段
+			       INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'i'
+			       LET g_qryparam.reqry = FALSE
+             
+                #LET g_qryparam.where = "prbk003 = '3' "      #mark  by geza 20160108 
+                LET g_qryparam.where = "prbk003 = '3' AND prbk025 = '2' AND (prbkstus = '1' OR prbkstus = '2') "  #add by geza 20160108  
+                #add by geza 20160108(S)                
+                IF g_rtdxsite IS NOT NULL  THEN   
+                   LET g_qryparam.where = g_qryparam.where," AND prbksite = '",g_rtdxsite,"' "
+                END IF
+                #add by geza 20160108(E)
+
+                IF g_prbf006 IS NOT NULL  THEN   
+                   LET g_qryparam.where = g_qryparam.where," AND prbk006 >= to_date('",g_prbf006,"','yyyy-mm-dd')"
+                END IF
+                IF g_date_1 IS NOT NULL  THEN   
+                   LET g_qryparam.where = g_qryparam.where," AND prbk007 <= to_date('",g_date_1,"','yyyy-mm-dd')"
+                END IF                   
+                CALL q_prbk001_2()                                #呼叫開窗
+             
+                LET g_buttonedit_3 = g_qryparam.return1              #將開窗取得的值回傳到變數
+             
+                DISPLAY g_buttonedit_3 TO buttonedit_3              #顯示到畫面上
+             
+                NEXT FIELD buttonedit_3 
+            
+            ON ACTION controlp INFIELD buttonedit_4
+            #add-point:ON ACTION controlp INFIELD prbfdocno
+                                                                                                                                    #此段落由子樣板a07產生            
+               #開窗i段
+			       INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'i'
+			       LET g_qryparam.reqry = FALSE
+             
+                #LET g_qryparam.where = "prbk003 = '4' " #mark by geza 20160108  
+                LET g_qryparam.where = "prbk003 = '4' AND prbk025 = '2' AND (prbkstus = '1' OR prbkstus = '2') "  #add by geza 20160108  
+                #add by geza 20160108(S)                
+                IF g_rtdxsite IS NOT NULL  THEN   
+                   LET g_qryparam.where = g_qryparam.where," AND prbksite = '",g_rtdxsite,"' "
+                END IF
+                #add by geza 20160108(E)
+                IF g_prbf006 IS NOT NULL  THEN   
+                   LET g_qryparam.where = g_qryparam.where," AND prbk006 >= to_date('",g_prbf006,"','yyyy-mm-dd')"
+                END IF
+                IF g_date_1 IS NOT NULL  THEN   
+                   LET g_qryparam.where = g_qryparam.where," AND prbk007 <= to_date('",g_date_1,"','yyyy-mm-dd')"
+                END IF   
+                CALL q_prbk001_2()                               #呼叫開窗
+             
+                LET g_buttonedit_4 = g_qryparam.return1              #將開窗取得的值回傳到變數
+             
+                DISPLAY g_buttonedit_4 TO buttonedit_4              #顯示到畫面上
+             
+                NEXT FIELD buttonedit_4  
+
+            ON ACTION controlp INFIELD buttonedit_5
+            #add-point:ON ACTION controlp INFIELD prbfdocno
+                                                                                                                                    #此段落由子樣板a07產生            
+               #開窗i段
+			       INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'i'
+			       LET g_qryparam.reqry = FALSE
+                LET g_qryparam.where  = " 1 = 1"
+                IF g_prbf006 IS NOT NULL  THEN   
+                   LET g_qryparam.where = g_qryparam.where," AND prbo002 >= to_date('",g_prbf006,"','yyyy-mm-dd')"
+                END IF
+                IF g_date_1 IS NOT NULL  THEN   
+                   LET g_qryparam.where =g_qryparam.where, " AND prbo003 <= to_date('",g_date_1,"','yyyy-mm-dd')"
+                END IF                   
+                
+                CALL q_prbodocno()                                #呼叫開窗
+             
+                LET g_buttonedit_5 = g_qryparam.return1              #將開窗取得的值回傳到變數
+             
+                DISPLAY g_buttonedit_5 TO buttonedit_5              #顯示到畫面上
+             
+                NEXT FIELD buttonedit_5
+
+             ON ACTION controlp INFIELD buttonedit_6
+            #add-point:ON ACTION controlp INFIELD prbfdocno
+                                                                                                                                    #此段落由子樣板a07產生            
+               #開窗i段
+			       INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'i'
+			       LET g_qryparam.reqry = FALSE
+                LET g_qryparam.where  = " 1 = 1"
+                IF g_prbf006 IS NOT NULL  THEN   
+                   LET g_qryparam.where =g_qryparam.where, " AND prbq002 >= to_date('",g_prbf006,"','yyyy-mm-dd')"
+                END IF
+                IF g_date_1 IS NOT NULL  THEN   
+                   LET g_qryparam.where =g_qryparam.where, " AND prbq003 <= to_date('",g_date_1,"','yyyy-mm-dd')"
+                END IF                   
+                
+                CALL q_prbqdocno()                                #呼叫開窗
+             
+                LET g_buttonedit_6 = g_qryparam.return1              #將開窗取得的值回傳到變數
+             
+                DISPLAY g_buttonedit_6 TO buttonedit_6              #顯示到畫面上
+             
+                NEXT FIELD buttonedit_6
+            
+            AFTER INPUT
+              #mark by geza 20160315(S)
+#              IF g_checkbox_1 = 'N' AND g_checkbox_2 = 'N' AND g_checkbox_3 = 'N' AND g_checkbox_4 = 'N' AND g_checkbox_5 = 'N' AND g_checkbox_6 = 'N' THEN
+#                 INITIALIZE g_errparam TO NULL
+#                 LET g_errparam.extend = ''
+#                 LET g_errparam.code   = 'art-00634'
+#                 LET g_errparam.popup  = TRUE
+#                 CALL cl_err()              
+#                 NEXT FIELD CURRENT
+#              END IF
+              #mark by geza 20160315(E)
+       END INPUT
+       #160126-00002#2 Add By Ken 160203(E)
+         #end add-point
+ 
+         #add-point:construct段落 name="ui_dialog.construct"
+        #160126-00002#2 Add By Ken 160203(S)
+        CONSTRUCT g_wc2 ON imaf153,imaa001,imaa009,imaa126,imaa127,imaa122
+                FROM  imaf153,imaa001,imaa009,imaa126,imaa127,imaa122    
+
+         BEFORE CONSTRUCT
+         
+         
+#         ON ACTION controlp INFIELD imaa009
+#
+#            INITIALIZE g_qryparam.* TO NULL
+#            LET g_qryparam.state = 'c' 
+#            LET g_qryparam.reqry = FALSE
+#            LET g_qryparam.arg1 = cl_get_para(g_enterprise,"","E-CIR-0001")
+#            CALL q_rtax001_4()                    #呼叫開窗
+#            DISPLAY g_qryparam.return1 TO imaa009  #顯示到畫面上
+#
+#            NEXT FIELD imaa009                    #返回原欄位
+
+         ON ACTION controlp INFIELD imaf153
+            
+           
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaf153  #顯示到畫面上
+
+            NEXT FIELD imaf153 
+          
+         ON ACTION controlp INFIELD imaa001
+            #add-point:ON ACTION controlp INFIELD deag002
+                                                #此段落由子樣板a08產生
+            #開窗c段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+			   IF g_wc3 IS NOT NULL AND g_wc3 != " 1=1" THEN
+               LET  g_qryparam.where = " imaa009 IN ( SELECT rtaw002 FROM rtaw_t WHERE rtawent = ",g_enterprise," AND ",g_wc3," )"
+            END IF
+            CALL q_imaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaa001  #顯示到畫面上
+
+            NEXT FIELD imaa001            
+        
+         ON ACTION controlp INFIELD imaa009
+            #add-point:ON ACTION controlp INFIELD deag003
+                                                #此段落由子樣板a08產生
+            #開窗c段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+            CALL q_rtax001_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaa009  #顯示到畫面上
+
+            NEXT FIELD imaa009  
+            
+         ON ACTION controlp INFIELD imaa126
+            #add-point:ON ACTION controlp INFIELD deag004
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '2002'
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaa126  #顯示到畫面上
+
+            NEXT FIELD imaa126                     #返回原欄位
+        ON ACTION controlp INFIELD imaa127
+            #add-point:ON ACTION controlp INFIELD deag004
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '2003'
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaa127  #顯示到畫面上
+
+            NEXT FIELD imaa127  
+                 
+
+         ON ACTION controlp INFIELD imaa122
+            #add-point:ON ACTION controlp INFIELD imaa122
+                        #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '2000'
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaa122  #顯示到畫面上
+
+            NEXT FIELD imaa122    
+         
+         AFTER CONSTRUCT 
+         
+      END CONSTRUCT
+      
+
+      
+      CONSTRUCT g_wc3 ON rtaw001 FROM  rtaw001  
+
+          ON ACTION controlp INFIELD rtaw001
+            #add-point:ON ACTION controlp INFIELD deag003
+                                                #此段落由子樣板a08產生
+            #開窗c段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+			   LET g_qryparam.where = " rtax004 ='",cl_get_para(g_enterprise,"","E-CIR-0001"),"'"
+            CALL q_rtax001_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtaw001  
+         
+         BEFORE CONSTRUCT
+         
+         AFTER CONSTRUCT
+      
+      END CONSTRUCT
+      #160126-00002#2 Add By Ken 160203(E)
+         #end add-point
+     
+         DISPLAY ARRAY g_prbg_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               CALL artq520_detail_action_trans()
+ 
+               LET g_master_idx = l_ac
+               #為避免按上下筆時影響執行效能，所以做一些處理
+               LET lc_action_choice_old = g_action_choice
+               LET g_action_choice = "fetch"
+               CALL artq520_b_fill2()
+               LET g_action_choice = lc_action_choice_old
+ 
+               #add-point:input段before row name="input.body.before_row"
+               
+               #end add-point
+ 
+            
+ 
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+            #add-point:page1自定義行為 name="ui_dialog.body.page1.action"
+            
+            #end add-point
+ 
+         END DISPLAY
+ 
+         #add-point:第一頁籤程式段mark結束用 name="ui_dialog.page1.mark.end"
+         
+         #end add-point
+ 
+ 
+ 
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+ 
+         BEFORE DIALOG
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            CALL artq520_detail_action_trans()
+ 
+            #add-point:ui_dialog段before dialog name="ui_dialog.bef_dialog"
+            #add by geza 20160315(S)
+            IF g_rtdxsite IS NULL THEN
+               LET g_rtdxsite = g_site     
+            END IF
+            DISPLAY  g_rtdxsite TO  rtdxsite
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_rtdxsite
+            LET ls_sql = "SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'"
+            LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+            CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+            LET g_rtdxsite_desc = '', g_rtn_fields[1] , ''
+            DISPLAY  g_rtdxsite_desc TO  rtdxsite_desc
+            LET g_rtdy001 = ' '
+            DISPLAY  g_rtdy001 TO  rtdy001
+            #add by geza 20160315(E)
+            #add by geza 20160316(S)
+            LET  g_prbf006 = g_today
+            LET  g_date_1 = g_today
+            #add by geza 20160316(E) 
+            CALL cl_set_act_visible("query,insert", FALSE)    #160126-00002#2 Add By Ken 160203
+            #NEXT FIELD sel                                   #160126-00002#2 Mark By Ken 160203
+            #end add-point
+            NEXT FIELD rtdy001
+ 
+         AFTER DIALOG
+            #add-point:ui_dialog段 after dialog name="ui_dialog.after_dialog"
+            ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = g_curr_diag.getCurrentItem()
+               CALL artq520_modify()
+               #add-point:ON ACTION modify_detail
+                                             
+               #END add-point
+               
+            END IF
+            #end add-point
+            
+         ON ACTION exit
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            INITIALIZE g_wc_filter TO NULL
+            IF cl_null(g_wc) THEN
+               LET g_wc = " 1=1"
+            END IF
+ 
+ 
+         
+            IF cl_null(g_wc2) THEN
+               LET g_wc2 = " 1=1"
+            END IF
+ 
+ 
+ 
+            #add-point:ON ACTION accept name="ui_dialog.accept"
+            #add by geza 20160315(S)
+            IF g_wc2 = '1 = 2' THEN
+               LET g_wc2 = " 1 =1 "
+            END IF
+            IF cl_null(g_rtdy001) OR g_rtdy001 = ' ' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'art-00749'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()              
+               CONTINUE DIALOG
+            END IF
+            IF cl_null(g_rtdxsite) THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'art-00317'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()              
+               CONTINUE DIALOG
+            END IF          
+            IF g_checkbox_1 = 'N' AND g_checkbox_2 = 'N' AND g_checkbox_3 = 'N' AND g_checkbox_4 = 'N' AND g_checkbox_5 = 'N' AND g_checkbox_6 = 'N' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ''
+               LET g_errparam.code   = 'art-00634'
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()              
+               CONTINUE DIALOG
+            END IF
+            #add by geza 20160315(E)    
+            #end add-point
+ 
+            LET g_detail_idx = 1
+            LET g_detail_idx2 = 1
+            CALL artq520_b_fill()
+ 
+            IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ""
+               LET g_errparam.code   = -100
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+            END IF
+ 
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum name="ui_dialog.agendum"
+            
+            #end add-point
+            CALL cl_user_overview()
+ 
+         ON ACTION exporttoexcel   #匯出excel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_prbg_d)
+               LET g_export_id[1]   = "s_detail1"
+ 
+               #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+               
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+ 
+         ON ACTION datarefresh   # 重新整理
+            CALL artq520_b_fill()
+ 
+         ON ACTION qbehidden     #qbe頁籤折疊
+            IF g_qbe_hidden THEN
+               CALL gfrm_curr.setElementHidden("qbe",0)
+               CALL gfrm_curr.setElementImage("qbehidden","16/mainhidden.png")
+               LET g_qbe_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("qbe",1)
+               CALL gfrm_curr.setElementImage("qbehidden","16/worksheethidden.png")
+               LET g_qbe_hidden = 1     #hidden
+            END IF
+ 
+         ON ACTION detail_first               #page first
+            LET g_action_choice = "detail_first"
+            LET g_detail_page_action = "detail_first"
+            CALL artq520_b_fill()
+ 
+         ON ACTION detail_previous                #page previous
+            LET g_action_choice = "detail_previous"
+            LET g_detail_page_action = "detail_previous"
+            CALL artq520_b_fill()
+ 
+         ON ACTION detail_next               #page next
+            LET g_action_choice = "detail_next"
+            LET g_detail_page_action = "detail_next"
+            CALL artq520_b_fill()
+ 
+         ON ACTION detail_last               #page last
+            LET g_action_choice = "detail_last"
+            LET g_detail_page_action = "detail_last"
+            CALL artq520_b_fill()
+ 
+         #應用 qs19 樣板自動產生(Version:3)
+         #有關於sel欄位選取的action段落
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_prbg_d.getLength()
+               LET g_prbg_d[li_idx].sel = "Y"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selall name="ui_dialog.onaction_selall"
+            
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_prbg_d.getLength()
+               LET g_prbg_d[li_idx].sel = "N"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selnone name="ui_dialog.onaction_selnone"
+            
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_prbg_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_prbg_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action sel name="ui_dialog.onaction_sel"
+            
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_prbg_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_prbg_d[li_idx].sel = "N"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action unsel name="ui_dialog.onaction_unsel"
+            
+            #end add-point
+ 
+ 
+ 
+ 
+ 
+         #應用 qs16 樣板自動產生(Version:3)
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL artq520_filter()
+            #add-point:ON ACTION filter name="menu.filter"
+            
+            #END add-point
+            EXIT DIALOG
+ 
+ 
+ 
+ 
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION print
+            LET g_action_choice="print"
+            IF cl_auth_chk_act("print") THEN
+               
+               #add-point:ON ACTION print name="menu.print"
+               LET l_cnt = g_prbg_d.getLength()
+               IF l_cnt > 0 THEN 
+                  
+                  CALL artq520_print()
+                  
+               ELSE   
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'art-00633'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_action_choice= ""
+                  EXIT DIALOG
+               END IF
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               LET l_cnt = g_prbg_d.getLength()
+               IF l_cnt > 0 THEN 
+                  
+                  CALL artq520_print()
+                  
+               ELSE   
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'art-00633'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_action_choice= ""
+                  EXIT DIALOG
+               END IF
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               LET l_cnt = g_prbg_d.getLength()
+               IF l_cnt > 0 THEN 
+                  
+                  CALL artq520_print()
+                  
+               ELSE   
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'art-00633'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_action_choice= ""
+                  EXIT DIALOG
+               END IF
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               
+               #add-point:ON ACTION query name="menu.query"
+               CALL artq520_query()
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo name="menu.datainfo"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+      
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+ 
+         #add-point:查詢方案相關ACTION設定前 name="ui_dialog.set_qbe_action_before"
+         
+         #end add-point
+ 
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+            #add-point:條件清除後 name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         #add-point:查詢方案相關ACTION設定後 name="ui_dialog.set_qbe_action_after"
+         
+         #end add-point
+ 
+      END DIALOG 
+   
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artq520.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION artq520_b_fill()
+   #add-point:b_fill段define-客製 name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc           STRING
+   DEFINE l_pid           LIKE type_t.chr50
+   DEFINE ls_sql_rank     STRING
+   #add-point:b_fill段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   DEFINE l_where1        STRING 
+   DEFINE l_where2        STRING 
+   DEFINE l_where3        STRING 
+   DEFINE l_cn            LIKE type_t.num10
+   #end add-point
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   
+   #end add-point
+ 
+ 
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter, cl_sql_auth_filter()   #(ver:34) add cl_sql_auth_filter()
+ 
+   CALL g_prbg_d.clear()
+ 
+   #add-point:陣列清空 name="b_fill.array_clear"
+   
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   IF g_cnt = 0 THEN
+      LET g_cnt = 1
+   END IF
+   LET l_ac = 1
+ 
+   # b_fill段sql組成及FOREACH撰寫
+   #應用 qs04 樣板自動產生(Version:9)
+   #+ b_fill段資料取得(包含sql組成及FOREACH段撰寫)
+   LET ls_sql_rank = "SELECT  UNIQUE '','','','','',prbgseq,prbg003,prbg002,'','','','','','','','', 
+       '',prbg009,prbg010,prbg011,prbg012,'','','','','','','',''  ,DENSE_RANK() OVER( ORDER BY prbg_t.prbgdocno, 
+       prbg_t.prbgseq,prbg_t.prbgseq1) AS RANK FROM prbg_t",
+ 
+ 
+                     "",
+                     " WHERE prbgent= ? AND 1=1 AND ", ls_wc
+   LET ls_sql_rank = ls_sql_rank, cl_sql_add_filter("prbg_t"),
+                     " ORDER BY prbg_t.prbgdocno,prbg_t.prbgseq,prbg_t.prbgseq1"
+ 
+   #add-point:b_fill段rank_sql_after name="b_fill.rank_sql_after"
+   
+   #end add-point
+ 
+   LET g_sql = "SELECT COUNT(1) FROM (",ls_sql_rank,")"
+ 
+   PREPARE b_fill_cnt_pre FROM g_sql  #總筆數
+   EXECUTE b_fill_cnt_pre USING g_enterprise INTO g_tot_cnt
+   FREE b_fill_cnt_pre
+ 
+   #add-point:b_fill段rank_sql_after_count name="b_fill.rank_sql_after_count"
+   
+   #end add-point
+ 
+   CASE g_detail_page_action
+      WHEN "detail_first"
+          LET g_pagestart = 1
+ 
+      WHEN "detail_previous"
+          LET g_pagestart = g_pagestart - g_num_in_page
+          IF g_pagestart < 1 THEN
+              LET g_pagestart = 1
+          END IF
+ 
+      WHEN "detail_next"
+         LET g_pagestart = g_pagestart + g_num_in_page
+         IF g_pagestart > g_tot_cnt THEN
+            LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+            WHILE g_pagestart > g_tot_cnt
+               LET g_pagestart = g_pagestart - g_num_in_page
+            END WHILE
+         END IF
+ 
+      WHEN "detail_last"
+         LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+         WHILE g_pagestart > g_tot_cnt
+            LET g_pagestart = g_pagestart - g_num_in_page
+         END WHILE
+ 
+      OTHERWISE
+         LET g_pagestart = 1
+ 
+   END CASE
+ 
+   LET g_sql = "SELECT '','','','','',prbgseq,prbg003,prbg002,'','','','','','','','','',prbg009,prbg010, 
+       prbg011,prbg012,'','','','','','','',''",
+               " FROM (",ls_sql_rank,")",
+              " WHERE RANK >= ",g_pagestart,
+                " AND RANK < ",g_pagestart + g_num_in_page
+ 
+   #add-point:b_fill段sql_after name="b_fill.sql_after"
+   INITIALIZE l_where1 TO NULL
+   INITIALIZE l_where2 TO NULL
+   INITIALIZE l_where3 TO NULL
+   INITIALIZE g_sql    TO NULL
+   #管理品类不为空，作为查询条件
+   IF g_wc3 IS NOT NULL AND g_wc3 != " 1=1" THEN
+      LET l_where2 = " AND EXISTS (SELECT 1 FROM rtaw_t,rtax_t ",
+                     " WHERE rtawent = rtaxent AND rtaxent = ",g_enterprise,
+                     "   AND rtaw002 = imaa009 AND rtax004 = '",cl_get_para(g_enterprise,"","E-CIR-0001"),"' AND ",g_wc3,")"
+   END IF
+   #进价单或者售价单查询
+   
+   IF g_checkbox_1 = 'Y' OR g_checkbox_2 = 'Y' THEN
+      LET g_sql = "  SELECT 'Y','",'1',"','1',((CASE WHEN  prbk001 = '",g_buttonedit_1,"' THEN '1' ELSE '2' END)),prbk001,prbk002,rtdx002,imaa001,imaal003,imaal004,imaa009,rtaxl003,imaa126,oocql004,imaa123,imaa105,oocal003,prbk020,prbk021,prbk022,prbk023,CAST('' as date),CAST('' as date),CAST('' as number(20, 6)),CAST('' as number(20, 6)),CAST('' as number(20, 6)),CAST('' as number(20, 6)),CAST('' as number(20, 6)),rtdx016",
+                  "  FROM imaa_t LEFT JOIN imaal_t ON (imaalent = imaaent AND imaal001 = imaa001 AND imaal002 = '"||g_dlang||"' ) 
+                                 LEFT JOIN oocal_t ON (oocalent = imaaent AND oocal001 = imaa105 AND oocal002 = '"||g_dlang||"' )    
+                                 LEFT JOIN rtaxl_t ON (rtaxlent = imaaent AND rtaxl001 = imaa009 AND rtaxl002 = '"||g_dlang||"' )     
+                                 LEFT JOIN oocql_t ON (oocqlent = imaaent AND oocql001 = '2002'  AND oocql002 = imaa126  AND oocql003 = '"||g_dlang||"' ) ,imaf_t,rtdx_t,prbk_t " ,     
+                  " WHERE imaaent = rtdxent AND imaa001 = rtdx001",
+                  " AND imaaent = imafent AND imaa001 = imaf001 AND rtdxsite = imafsite",
+                  " AND imaaent = prbkent AND imaa001 = prbk010 ",
+                  " AND (prbk003 = '1' OR prbk003 = '2') AND prbk025 = '2' ",
+                  " AND (prbkstus = '1' OR prbkstus = '2') ",
+                  " AND ",g_wc2,
+                  " AND imafsite = '",g_rtdxsite,"'",
+                  " AND imafent =  ",g_enterprise," "             
+      IF g_checkbox_1 = 'Y' AND g_checkbox_2 = 'N' THEN  
+         LET l_where1 =" AND prbk001 = '",g_buttonedit_1,"'"
+      END IF
+      IF g_checkbox_1 = 'N' AND g_checkbox_2 = 'Y' THEN  
+         LET l_where1 =" AND prbk001 = '",g_buttonedit_2,"'"
+      END IF
+      IF g_checkbox_1 = 'Y' AND g_checkbox_2 = 'Y' THEN  
+         LET l_where1 =" AND prbk001 IN ('",g_buttonedit_1,"','",g_buttonedit_2,"')"
+      END IF
+      LET g_sql = g_sql,l_where1
+      IF g_prbf006 IS NOT NULL  THEN   
+         LET l_where3 = " AND prbk006 >= '",g_prbf006,"'"
+      END IF
+      LET g_sql = g_sql,l_where3
+      IF g_wc3 IS NOT NULL AND g_wc3 != " 1=1" THEN
+         LET g_sql = g_sql,l_where2 
+      END IF 
+   END IF
+   #促销调价
+   IF g_checkbox_3 = 'Y'  THEN
+      IF g_checkbox_1 = 'Y' OR g_checkbox_2 = 'Y'  THEN
+         LET g_sql = g_sql," UNION ALL "
+      END IF
+      LET g_sql = g_sql,"  SELECT 'Y','",'1',"','1','3',prbk001,prbk002,rtdx002,imaa001,imaal003,imaal004,imaa009,rtaxl003,imaa126,oocql002,imaa123,imaa105,oocal003,rtdx016,rtdx017,rtdx018,rtdx019,prbk006,prbk007,CAST('' as number(20, 6)),prbk020,prbk021,prbk022,prbk023,prbk020",
+                  "  FROM imaa_t LEFT JOIN imaal_t ON (imaalent = imaaent AND imaal001 = imaa001 AND imaal002 = '"||g_dlang||"' ) 
+                                 LEFT JOIN oocal_t ON (oocalent = imaaent AND oocal001 = imaa105 AND oocal002 = '"||g_dlang||"' )
+                                 LEFT JOIN rtaxl_t ON (rtaxlent = imaaent AND rtaxl001 = imaa009 AND rtaxl002 = '"||g_dlang||"' )     
+                                 LEFT JOIN oocql_t ON (oocqlent = imaaent AND oocql001 = '2002'  AND oocql002 = imaa126  AND oocql003 = '"||g_dlang||"' )                  ,imaf_t,rtdx_t,prbk_t " ,     
+                  " WHERE imaaent = rtdxent AND imaa001 = rtdx001",
+                  " AND imaaent = imafent AND imaa001 = imaf001 AND rtdxsite = imafsite",
+                  " AND imaaent = prbkent AND imaa001 = prbk010 ",
+                 # " AND prbk003 = '3' AND prbk025 = '2' ",
+                  " AND prbk003 IN ('3','6') AND prbk025 = '2' ",    #调整进价与调整售价已拆分成两个单据，需将调整售价的纳入进来
+                  " AND (prbkstus = '1' OR prbkstus = '2') ",
+                  " AND ",g_wc2," AND prbk001 = '",g_buttonedit_3,"'",
+                  " AND imafsite = '",g_rtdxsite,"'",
+                  " AND imafent =  ",g_enterprise,""                         
+      #LET g_sql = g_sql,l_where1
+      IF g_prbf006 IS NOT NULL  THEN   
+         LET l_where3 = " AND prbk006 >= '",g_prbf006,"'"
+      END IF
+      IF g_date_1 IS NOT NULL  THEN   
+         LET l_where3 = l_where3," AND prbk007 <= '",g_date_1,"'"
+      END IF
+      LET g_sql = g_sql,l_where3
+      IF g_wc3 IS NOT NULL AND g_wc3 != " 1=1" THEN
+         LET g_sql = g_sql,l_where2 
+      END IF
+   END IF
+   #生鲜调价
+   IF g_checkbox_4 = 'Y'  THEN
+      IF g_checkbox_1 = 'Y' OR g_checkbox_2 = 'Y' OR g_checkbox_3 = 'Y'  THEN
+         LET g_sql = g_sql," UNION ALL "
+      END IF
+      LET g_sql = g_sql,"  SELECT 'Y','",'1',"','1','4',prbk001,prbk002,rtdx002,imaa001,imaal003,imaal004,imaa009,rtaxl003,imaa126,oocql002,imaa123,imaa105,oocal003,CAST('' as number(20, 6)),CAST('' as number(20, 6)),CAST('' as number(20, 6)),CAST('' as number(20, 6)),prbk006,prbk007,CAST('' as number(20, 6)),prbk020,prbk021,prbk022,prbk023,prbk020",
+                  "  FROM imaa_t LEFT JOIN imaal_t ON (imaalent = imaaent AND imaal001 = imaa001 AND imaal002 = '"||g_dlang||"' ) 
+                                 LEFT JOIN oocal_t ON (oocalent = imaaent AND oocal001 = imaa105 AND oocal002 = '"||g_dlang||"' )
+                                 LEFT JOIN rtaxl_t ON (rtaxlent = imaaent AND rtaxl001 = imaa009 AND rtaxl002 = '"||g_dlang||"' )     
+                                 LEFT JOIN oocql_t ON (oocqlent = imaaent AND oocql001 = '2002'  AND oocql002 = imaa126  AND oocql003 = '"||g_dlang||"' ) , imaf_t,rtdx_t,prbk_t " ,     
+                  " WHERE imaaent = rtdxent AND imaa001 = rtdx001",
+                  " AND imaaent = imafent AND imaa001 = imaf001 AND rtdxsite = imafsite",
+                  " AND imaaent = prbkent AND imaa001 = prbk010 ",
+                  " AND prbk003 = '4' AND prbk025 = '2' ",
+                  " AND (prbkstus = '1' OR prbkstus = '2') ",
+                  " AND ",g_wc2," AND prbk001 = '",g_buttonedit_4,"'" ,
+                  " AND imafsite = '",g_rtdxsite,"'",
+                  " AND imafent =  ",g_enterprise," "                    
+      #LET g_sql = g_sql,l_where1
+      IF g_prbf006 IS NOT NULL   THEN   
+         LET l_where3 = " AND prbk006 >= '",g_prbf006,"'"
+      END IF
+      IF g_date_1 IS NOT NULL  THEN   
+         LET l_where3 = l_where3," AND prbk007 <= '",g_date_1,"'"
+      END IF
+      LET g_sql = g_sql,l_where3
+      IF g_wc3 IS NOT NULL AND g_wc3 != " 1=1" THEN
+         LET g_sql = g_sql,l_where2 
+      END IF
+   END IF
+   #捆绑单
+   IF g_checkbox_5 = 'Y'  THEN
+      IF g_checkbox_1 = 'Y' OR g_checkbox_2 = 'Y' OR g_checkbox_3 = 'Y' OR g_checkbox_4 = 'Y'  THEN
+         LET g_sql = g_sql," UNION ALL "
+      END IF
+      LET g_sql = g_sql,"  SELECT 'Y','",'1',"','1','5',prbodocno,CAST('' as number(10, 0)),prbo004,CAST('' as varchar2(40)),prbo005,CAST('' as varchar2(255)),CAST('' as varchar2(10)),CAST('' as varchar2(500)),CAST('' as varchar2(10)),CAST('' as varchar2(500)),CAST('' as varchar2(80)),CAST('' as varchar2(10)),CAST('' as varchar2(500)),CAST('' as number(20, 6)),CAST('' as number(20, 6)),CAST('' as number(20, 6)),CAST('' as number(20, 6)),prbo002,prbo003,prbo006+prbo008,prbo006,prbo006,prbo006,prbo006,prbo006",
+                  "  FROM prbo_t " ,     
+                  " WHERE prboent  =  ",g_enterprise," " ,
+                  " AND prbodocno = '",g_buttonedit_5,"'",
+                  " AND prbosite = '",g_rtdxsite,"'",
+                  " AND prbostus = 'Y'"                       
+      #LET g_sql = g_sql,l_where1
+      IF g_prbf006 IS NOT NULL   THEN   
+         LET l_where3 = " AND prbo002 >= '",g_prbf006,"'"
+      END IF
+      IF g_date_1 IS NOT NULL  THEN   
+         LET l_where3 = l_where3," AND prbo003 <= '",g_date_1,"'"
+      END IF
+      LET g_sql = g_sql,l_where3
+   END IF
+   #削价单
+   IF g_checkbox_6 = 'Y'  THEN
+      IF g_checkbox_1 = 'Y' OR g_checkbox_2 = 'Y' OR g_checkbox_3 = 'Y' OR g_checkbox_4 = 'Y' OR g_checkbox_5 = 'Y'  THEN
+         LET g_sql = g_sql," UNION ALL "
+      END IF
+      #LET g_sql = g_sql,"  SELECT  DISTINCT 'Y','",'1',"','1','6',prbqdocno,prbrseq,prbr008,imaa001,prbr009,imaal004,imaa009,rtaxl003,imaa126,oocql002,imaa123,imaa105,oocal003,CAST('' as number(20, 6)),CAST('' as number(20, 6)),CAST('' as number(20, 6)),CAST('' as number(20, 6)),prbq002,prbq003,rtdx016*prbr010,prbr012,prbr012,prbr012,prbr012,prbr012",
+      LET g_sql = g_sql,"  SELECT  DISTINCT 'Y','",'1',"',to_char(prbr010),'6',prbqdocno,prbrseq,prbr008,imaa001,prbr009,imaal004,imaa009,rtaxl003,imaa126,oocql002,imaa123,imaa105,oocal003,CAST('' as number(20, 6)),CAST('' as number(20, 6)),CAST('' as number(20, 6)),CAST('' as number(20, 6)),prbq002,prbq003,rtdx016,prbr011,prbr011,prbr011,prbr011,prbr011",
+                        "  FROM imaa_t LEFT JOIN imaal_t ON (imaalent = imaaent AND imaal001 = imaa001 AND imaal002 = '"||g_dlang||"' ) 
+                                 LEFT JOIN oocal_t ON (oocalent = imaaent AND oocal001 = imaa105 AND oocal002 = '"||g_dlang||"' )
+                                 LEFT JOIN rtaxl_t ON (rtaxlent = imaaent AND rtaxl001 = imaa009 AND rtaxl002 = '"||g_dlang||"' )     
+                                 LEFT JOIN oocql_t ON (oocqlent = imaaent AND oocql001 = '2002'  AND oocql002 = imaa126  AND oocql003 = '"||g_dlang||"' ) 
+                                 LEFT JOIN imaf_t ON (imaaent = imafent AND imaa001 = imaf001 AND  imafsite ='",g_rtdxsite,"' ),imaf_t,rtdx_t,prbq_t,prbr_t " ,     
+                  " WHERE prbrent  = ",g_enterprise,"" ,
+                  " AND imaaent = rtdxent AND imaa001 = rtdx001",
+                  " AND prbqent = prbrent AND prbqdocno = prbrdocno ",
+                  " AND imaaent = prbqent AND imaa001 = prbr001 AND prbrsite = rtdxsite ",
+                  " AND prbrdocno = '",g_buttonedit_6,"'",
+                  " AND prbrsite = '",g_rtdxsite,"'" ,
+                  " AND prbqstus = 'Y'" ,
+                  " AND ",g_wc2                            
+      #LET g_sql = g_sql,l_where1
+      IF g_prbf006 IS NOT NULL  THEN   
+         LET l_where3 = " AND prbq002 >= '",g_prbf006,"'" 
+      END IF
+      IF g_date_1 IS NOT NULL  THEN   
+         LET l_where3 = l_where3," AND prbq003 <= '",g_date_1,"'"
+      END IF
+      LET g_sql = g_sql,l_where3
+      IF g_wc3 IS NOT NULL AND g_wc3 != " 1=1" THEN
+         LET g_sql = g_sql,l_where2 
+      END IF
+   END IF
+   
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE artq520_pb1 FROM g_sql
+   DECLARE b_fill_curs1 CURSOR FOR artq520_pb1
+ 
+   OPEN b_fill_curs1 
+ 
+   FOREACH b_fill_curs1 INTO g_prbg_d[l_ac].sel,g_prbg_d[l_ac].seq,g_prbg_d[l_ac].count,g_prbg_d[l_ac].type, 
+       g_prbg_d[l_ac].docno,g_prbg_d[l_ac].prbgseq,g_prbg_d[l_ac].prbg003,g_prbg_d[l_ac].prbg002,g_prbg_d[l_ac].prbg002_desc, 
+       g_prbg_d[l_ac].imaal004,g_prbg_d[l_ac].imaa009,g_prbg_d[l_ac].rtaxl003,g_prbg_d[l_ac].imaa126, 
+       g_prbg_d[l_ac].imaa126_desc,g_prbg_d[l_ac].imaa122,g_prbg_d[l_ac].imaa105,g_prbg_d[l_ac].imaa105_desc, 
+       g_prbg_d[l_ac].prbg009,g_prbg_d[l_ac].prbg010,g_prbg_d[l_ac].prbg011,g_prbg_d[l_ac].prbg012,g_prbg_d[l_ac].rtdx022, 
+       g_prbg_d[l_ac].rtdx023,g_prbg_d[l_ac].rtdx020,g_prbg_d[l_ac].rtdx021,g_prbg_d[l_ac].rtdx038,g_prbg_d[l_ac].rtdx039, 
+       g_prbg_d[l_ac].rtdx040,g_prbg_d[l_ac].rtdx017
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+ 
+      
+ 
+      #add-point:b_fill段資料填充
+      LET g_prbg_d[l_ac].seq = l_ac
+      #end add-point
+ 
+      CALL artq520_detail_show("'1'")
+ 
+      CALL artq520_prbg_t_mask()
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+ 
+   END FOREACH
+ 
+ 
+ 
+ 
+ 
+ 
+   #add-point:b_fill段資料填充(其他單身)
+
+   #end add-point
+ 
+   CALL g_prbg_d.deleteElement(g_prbg_d.getLength())
+ 
+   #add-point:陣列長度調整
+
+   #end add-point
+ 
+   LET g_error_show = 0
+ 
+   LET g_detail_cnt = g_prbg_d.getLength()
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+ 
+   #應用 qs06 樣板自動產生(Version:2)
+   #+ b_fill段CURSOR釋放
+   CLOSE b_fill_curs1
+   FREE artq520_pb1
+ 
+ 
+ 
+ 
+ 
+   #調整單身index指標，避免翻頁後指到空白筆數
+   CALL artq520_detail_index_setting()
+ 
+   #重新計算單身筆數並呈現
+   CALL artq520_detail_action_trans()
+ 
+   LET l_ac = 1
+   CALL artq520_b_fill2()
+ 
+      CALL artq520_filter_show('prbgseq','b_prbgseq')
+   CALL artq520_filter_show('prbg003','b_prbg003')
+   CALL artq520_filter_show('prbg002','b_prbg002')
+   CALL artq520_filter_show('imaal004','b_imaal004')
+   CALL artq520_filter_show('imaa009','b_imaa009')
+   CALL artq520_filter_show('rtaxl003','b_rtaxl003')
+   CALL artq520_filter_show('imaa126','b_imaa126')
+   CALL artq520_filter_show('imaa122','b_imaa122')
+   CALL artq520_filter_show('imaa105','b_imaa105')
+   CALL artq520_filter_show('prbg009','b_prbg009')
+   CALL artq520_filter_show('prbg010','b_prbg010')
+   CALL artq520_filter_show('prbg011','b_prbg011')
+   CALL artq520_filter_show('prbg012','b_prbg012')
+   CALL artq520_filter_show('rtdx022','b_rtdx022')
+   CALL artq520_filter_show('rtdx023','b_rtdx023')
+   CALL artq520_filter_show('rtdx020','b_rtdx020')
+   CALL artq520_filter_show('rtdx021','b_rtdx021')
+   CALL artq520_filter_show('rtdx038','b_rtdx038')
+   CALL artq520_filter_show('rtdx039','b_rtdx039')
+   CALL artq520_filter_show('rtdx040','b_rtdx040')
+   CALL artq520_filter_show('rtdx017','b_rtdx017')
+ 
+ 
+   RETURN
+   #end add-point
+ 
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE artq520_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR artq520_pb
+ 
+   OPEN b_fill_curs USING g_enterprise
+ 
+   FOREACH b_fill_curs INTO g_prbg_d[l_ac].sel,g_prbg_d[l_ac].seq,g_prbg_d[l_ac].count,g_prbg_d[l_ac].type, 
+       g_prbg_d[l_ac].docno,g_prbg_d[l_ac].prbgseq,g_prbg_d[l_ac].prbg003,g_prbg_d[l_ac].prbg002,g_prbg_d[l_ac].prbg002_desc, 
+       g_prbg_d[l_ac].imaal004,g_prbg_d[l_ac].imaa009,g_prbg_d[l_ac].rtaxl003,g_prbg_d[l_ac].imaa126, 
+       g_prbg_d[l_ac].imaa126_desc,g_prbg_d[l_ac].imaa122,g_prbg_d[l_ac].imaa105,g_prbg_d[l_ac].imaa105_desc, 
+       g_prbg_d[l_ac].prbg009,g_prbg_d[l_ac].prbg010,g_prbg_d[l_ac].prbg011,g_prbg_d[l_ac].prbg012,g_prbg_d[l_ac].rtdx022, 
+       g_prbg_d[l_ac].rtdx023,g_prbg_d[l_ac].rtdx020,g_prbg_d[l_ac].rtdx021,g_prbg_d[l_ac].rtdx038,g_prbg_d[l_ac].rtdx039, 
+       g_prbg_d[l_ac].rtdx040,g_prbg_d[l_ac].rtdx017
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+ 
+      
+ 
+      #add-point:b_fill段資料填充 name="b_fill.fill"
+      LET g_prbg_d[l_ac].seq = l_ac
+      #end add-point
+ 
+      CALL artq520_detail_show("'1'")
+ 
+      CALL artq520_prbg_t_mask()
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+ 
+   END FOREACH
+ 
+ 
+ 
+ 
+ 
+   #應用 qs05 樣板自動產生(Version:4)
+   #+ b_fill段其他table資料取得(包含sql組成及資料填充)
+ 
+ 
+ 
+ 
+ 
+ 
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.others.fill"
+   
+   #end add-point
+ 
+   CALL g_prbg_d.deleteElement(g_prbg_d.getLength())
+ 
+   #add-point:陣列長度調整 name="b_fill.array_deleteElement"
+   
+   #end add-point
+ 
+   LET g_error_show = 0
+ 
+   LET g_detail_cnt = g_prbg_d.getLength()
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+ 
+   #應用 qs06 樣板自動產生(Version:3)
+   #+ b_fill段CURSOR釋放
+   CLOSE b_fill_curs
+   FREE artq520_pb
+ 
+ 
+ 
+ 
+ 
+ 
+   #調整單身index指標，避免翻頁後指到空白筆數
+   CALL artq520_detail_index_setting()
+ 
+   #重新計算單身筆數並呈現
+   CALL artq520_detail_action_trans()
+ 
+   LET l_ac = 1
+   IF g_prbg_d.getLength() > 0 THEN
+      CALL artq520_b_fill2()
+   END IF
+ 
+      CALL artq520_filter_show('prbgseq','b_prbgseq')
+   CALL artq520_filter_show('prbg003','b_prbg003')
+   CALL artq520_filter_show('prbg002','b_prbg002')
+   CALL artq520_filter_show('imaal004','b_imaal004')
+   CALL artq520_filter_show('imaa009','b_imaa009')
+   CALL artq520_filter_show('rtaxl003','b_rtaxl003')
+   CALL artq520_filter_show('imaa126','b_imaa126')
+   CALL artq520_filter_show('imaa122','b_imaa122')
+   CALL artq520_filter_show('imaa105','b_imaa105')
+   CALL artq520_filter_show('prbg009','b_prbg009')
+   CALL artq520_filter_show('prbg010','b_prbg010')
+   CALL artq520_filter_show('prbg011','b_prbg011')
+   CALL artq520_filter_show('prbg012','b_prbg012')
+   CALL artq520_filter_show('rtdx022','b_rtdx022')
+   CALL artq520_filter_show('rtdx023','b_rtdx023')
+   CALL artq520_filter_show('rtdx020','b_rtdx020')
+   CALL artq520_filter_show('rtdx021','b_rtdx021')
+   CALL artq520_filter_show('rtdx038','b_rtdx038')
+   CALL artq520_filter_show('rtdx039','b_rtdx039')
+   CALL artq520_filter_show('rtdx040','b_rtdx040')
+   CALL artq520_filter_show('rtdx017','b_rtdx017')
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artq520.b_fill2" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION artq520_b_fill2()
+   #add-point:b_fill2段define-客製 name="b_fill2.define_customerization"
+   
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:b_fill2段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill2.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="b_fill2.before_function"
+   
+   #end add-point
+ 
+   LET li_ac = l_ac
+ 
+   #單身組成
+   #應用 qs07 樣板自動產生(Version:7)
+   #+ b_fill2段table資料取得(包含sql組成及資料填充)
+ 
+   #add-point:陣列清空 name="b_fill2.array_clear"
+   
+   #end add-point
+ 
+ 
+ 
+ 
+   #add-point:陣列長度調整 name="b_fill2.array_deleteElement"
+   LET g_detail_cnt = g_prbg_d.getLength()
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   #end add-point
+ 
+ 
+   DISPLAY li_ac TO FORMONLY.cnt
+   LET g_detail_idx2 = 1
+   DISPLAY g_detail_idx2 TO FORMONLY.idx
+ 
+ 
+ 
+ 
+ 
+   #add-point:單身填充後 name="b_fill2.after_fill"
+   
+   #end add-point
+ 
+   LET l_ac = li_ac
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artq520.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION artq520_detail_show(ps_page)
+   #add-point:show段define-客製 name="detail_show.define_customerization"
+   
+   #end add-point
+   DEFINE ps_page    STRING
+   DEFINE ls_sql     STRING
+   #add-point:show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   
+   #end add-point
+ 
+   #add-point:detail_show段之前 name="detail_show.before"
+   
+   #end add-point
+ 
+   
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      
+ 
+      #add-point:show段單身reference name="detail_show.body.reference"
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_prbg_d[l_ac].prbg002
+            LET ls_sql = "SELECT imaal003 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'"
+            LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+            CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+            LET g_prbg_d[l_ac].prbg002_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_prbg_d[l_ac].prbg002_desc
+
+      #end add-point
+   END IF
+ 
+ 
+ 
+   #add-point:detail_show段之後 name="detail_show.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artq520.filter" >}
+#應用 qs13 樣板自動產生(Version:8)
+#+ filter段相關程式段
+#+ filter過濾功能
+PRIVATE FUNCTION artq520_filter()
+   #add-point:filter段define-客製 name="filter.define_customerization"
+   
+   #end add-point
+   DEFINE  ls_result   STRING
+   #add-point:filter段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter.before_function"
+   
+   #end add-point
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+ 
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", TRUE)
+ 
+   
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   #應用 qs08 樣板自動產生(Version:5)
+   #+ filter段DIALOG段的組成
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON prbgseq,prbg003,prbg002,imaal004,imaa009,rtaxl003,imaa126,imaa122,imaa105, 
+          prbg009,prbg010,prbg011,prbg012,rtdx022,rtdx023,rtdx020,rtdx021,rtdx038,rtdx039,rtdx040,rtdx017 
+ 
+                          FROM s_detail1[1].b_prbgseq,s_detail1[1].b_prbg003,s_detail1[1].b_prbg002, 
+                              s_detail1[1].b_imaal004,s_detail1[1].b_imaa009,s_detail1[1].b_rtaxl003, 
+                              s_detail1[1].b_imaa126,s_detail1[1].b_imaa122,s_detail1[1].b_imaa105,s_detail1[1].b_prbg009, 
+                              s_detail1[1].b_prbg010,s_detail1[1].b_prbg011,s_detail1[1].b_prbg012,s_detail1[1].b_rtdx022, 
+                              s_detail1[1].b_rtdx023,s_detail1[1].b_rtdx020,s_detail1[1].b_rtdx021,s_detail1[1].b_rtdx038, 
+                              s_detail1[1].b_rtdx039,s_detail1[1].b_rtdx040,s_detail1[1].b_rtdx017
+ 
+         BEFORE CONSTRUCT
+                     DISPLAY artq520_filter_parser('prbgseq') TO s_detail1[1].b_prbgseq
+            DISPLAY artq520_filter_parser('prbg003') TO s_detail1[1].b_prbg003
+            DISPLAY artq520_filter_parser('prbg002') TO s_detail1[1].b_prbg002
+            DISPLAY artq520_filter_parser('imaal004') TO s_detail1[1].b_imaal004
+            DISPLAY artq520_filter_parser('imaa009') TO s_detail1[1].b_imaa009
+            DISPLAY artq520_filter_parser('rtaxl003') TO s_detail1[1].b_rtaxl003
+            DISPLAY artq520_filter_parser('imaa126') TO s_detail1[1].b_imaa126
+            DISPLAY artq520_filter_parser('imaa122') TO s_detail1[1].b_imaa122
+            DISPLAY artq520_filter_parser('imaa105') TO s_detail1[1].b_imaa105
+            DISPLAY artq520_filter_parser('prbg009') TO s_detail1[1].b_prbg009
+            DISPLAY artq520_filter_parser('prbg010') TO s_detail1[1].b_prbg010
+            DISPLAY artq520_filter_parser('prbg011') TO s_detail1[1].b_prbg011
+            DISPLAY artq520_filter_parser('prbg012') TO s_detail1[1].b_prbg012
+            DISPLAY artq520_filter_parser('rtdx022') TO s_detail1[1].b_rtdx022
+            DISPLAY artq520_filter_parser('rtdx023') TO s_detail1[1].b_rtdx023
+            DISPLAY artq520_filter_parser('rtdx020') TO s_detail1[1].b_rtdx020
+            DISPLAY artq520_filter_parser('rtdx021') TO s_detail1[1].b_rtdx021
+            DISPLAY artq520_filter_parser('rtdx038') TO s_detail1[1].b_rtdx038
+            DISPLAY artq520_filter_parser('rtdx039') TO s_detail1[1].b_rtdx039
+            DISPLAY artq520_filter_parser('rtdx040') TO s_detail1[1].b_rtdx040
+            DISPLAY artq520_filter_parser('rtdx017') TO s_detail1[1].b_rtdx017
+ 
+ 
+         #單身公用欄位開窗相關處理
+         
+ 
+         #單身一般欄位開窗相關處理
+                  #----<<sel>>----
+         #----<<seq>>----
+         #Ctrlp:construct.c.filter.page1.seq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD seq
+            #add-point:ON ACTION controlp INFIELD seq name="construct.c.filter.page1.seq"
+            
+            #END add-point
+ 
+ 
+         #----<<count>>----
+         #----<<type>>----
+         #----<<docno>>----
+         #----<<b_prbgseq>>----
+         #Ctrlp:construct.c.filter.page1.b_prbgseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_prbgseq
+            #add-point:ON ACTION controlp INFIELD b_prbgseq name="construct.c.filter.page1.b_prbgseq"
+            
+            #END add-point
+ 
+ 
+         #----<<b_prbg003>>----
+         #Ctrlp:construct.c.page1.b_prbg003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_prbg003
+            #add-point:ON ACTION controlp INFIELD b_prbg003 name="construct.c.filter.page1.b_prbg003"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_rtdx001_7()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_prbg003  #顯示到畫面上
+            NEXT FIELD b_prbg003                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #----<<b_prbg002>>----
+         #Ctrlp:construct.c.page1.b_prbg002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_prbg002
+            #add-point:ON ACTION controlp INFIELD b_prbg002 name="construct.c.filter.page1.b_prbg002"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_rtdx001_7()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_prbg002  #顯示到畫面上
+            NEXT FIELD b_prbg002                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #----<<b_prbg002_desc>>----
+         #----<<b_imaal004>>----
+         #Ctrlp:construct.c.filter.page1.b_imaal004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_imaal004
+            #add-point:ON ACTION controlp INFIELD b_imaal004 name="construct.c.filter.page1.b_imaal004"
+            
+            #END add-point
+ 
+ 
+         #----<<b_imaa009>>----
+         #Ctrlp:construct.c.page1.b_imaa009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_imaa009
+            #add-point:ON ACTION controlp INFIELD b_imaa009 name="construct.c.filter.page1.b_imaa009"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_rtax001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_imaa009  #顯示到畫面上
+            NEXT FIELD b_imaa009                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #----<<b_rtaxl003>>----
+         #Ctrlp:construct.c.filter.page1.b_rtaxl003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_rtaxl003
+            #add-point:ON ACTION controlp INFIELD b_rtaxl003 name="construct.c.filter.page1.b_rtaxl003"
+            
+            #END add-point
+ 
+ 
+         #----<<b_imaa126>>----
+         #Ctrlp:construct.c.page1.b_imaa126
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_imaa126
+            #add-point:ON ACTION controlp INFIELD b_imaa126 name="construct.c.filter.page1.b_imaa126"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_imaa126  #顯示到畫面上
+            NEXT FIELD b_imaa126                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #----<<b_imaa126_desc>>----
+         #----<<b_imaa122>>----
+         #Ctrlp:construct.c.page1.b_imaa122
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_imaa122
+            #add-point:ON ACTION controlp INFIELD b_imaa122 name="construct.c.filter.page1.b_imaa122"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_imaa122  #顯示到畫面上
+            NEXT FIELD b_imaa122                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #----<<b_imaa105>>----
+         #Ctrlp:construct.c.page1.b_imaa105
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_imaa105
+            #add-point:ON ACTION controlp INFIELD b_imaa105 name="construct.c.filter.page1.b_imaa105"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooca001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_imaa105  #顯示到畫面上
+            NEXT FIELD b_imaa105                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #----<<b_imaa105_desc>>----
+         #----<<b_prbg009>>----
+         #Ctrlp:construct.c.filter.page1.b_prbg009
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_prbg009
+            #add-point:ON ACTION controlp INFIELD b_prbg009 name="construct.c.filter.page1.b_prbg009"
+            
+            #END add-point
+ 
+ 
+         #----<<b_prbg010>>----
+         #Ctrlp:construct.c.filter.page1.b_prbg010
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_prbg010
+            #add-point:ON ACTION controlp INFIELD b_prbg010 name="construct.c.filter.page1.b_prbg010"
+            
+            #END add-point
+ 
+ 
+         #----<<b_prbg011>>----
+         #Ctrlp:construct.c.filter.page1.b_prbg011
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_prbg011
+            #add-point:ON ACTION controlp INFIELD b_prbg011 name="construct.c.filter.page1.b_prbg011"
+            
+            #END add-point
+ 
+ 
+         #----<<b_prbg012>>----
+         #Ctrlp:construct.c.filter.page1.b_prbg012
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_prbg012
+            #add-point:ON ACTION controlp INFIELD b_prbg012 name="construct.c.filter.page1.b_prbg012"
+            
+            #END add-point
+ 
+ 
+         #----<<b_rtdx022>>----
+         #Ctrlp:construct.c.filter.page1.b_rtdx022
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_rtdx022
+            #add-point:ON ACTION controlp INFIELD b_rtdx022 name="construct.c.filter.page1.b_rtdx022"
+            
+            #END add-point
+ 
+ 
+         #----<<b_rtdx023>>----
+         #Ctrlp:construct.c.filter.page1.b_rtdx023
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_rtdx023
+            #add-point:ON ACTION controlp INFIELD b_rtdx023 name="construct.c.filter.page1.b_rtdx023"
+            
+            #END add-point
+ 
+ 
+         #----<<b_rtdx020>>----
+         #Ctrlp:construct.c.filter.page1.b_rtdx020
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_rtdx020
+            #add-point:ON ACTION controlp INFIELD b_rtdx020 name="construct.c.filter.page1.b_rtdx020"
+            
+            #END add-point
+ 
+ 
+         #----<<b_rtdx021>>----
+         #Ctrlp:construct.c.filter.page1.b_rtdx021
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_rtdx021
+            #add-point:ON ACTION controlp INFIELD b_rtdx021 name="construct.c.filter.page1.b_rtdx021"
+            
+            #END add-point
+ 
+ 
+         #----<<b_rtdx038>>----
+         #Ctrlp:construct.c.filter.page1.b_rtdx038
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_rtdx038
+            #add-point:ON ACTION controlp INFIELD b_rtdx038 name="construct.c.filter.page1.b_rtdx038"
+            
+            #END add-point
+ 
+ 
+         #----<<b_rtdx039>>----
+         #Ctrlp:construct.c.filter.page1.b_rtdx039
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_rtdx039
+            #add-point:ON ACTION controlp INFIELD b_rtdx039 name="construct.c.filter.page1.b_rtdx039"
+            
+            #END add-point
+ 
+ 
+         #----<<b_rtdx040>>----
+         #Ctrlp:construct.c.filter.page1.b_rtdx040
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_rtdx040
+            #add-point:ON ACTION controlp INFIELD b_rtdx040 name="construct.c.filter.page1.b_rtdx040"
+            
+            #END add-point
+ 
+ 
+         #----<<b_rtdx017>>----
+         #Ctrlp:construct.c.filter.page1.b_rtdx017
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_rtdx017
+            #add-point:ON ACTION controlp INFIELD b_rtdx017 name="construct.c.filter.page1.b_rtdx017"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs name="filter.add_cs"
+      
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog name="filter.b_dialog"
+         
+         #end add-point
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+ 
+ 
+ 
+ 
+   
+ 
+   #add-point:離開DIALOG後相關處理 name="filter.after_dialog"
+   
+   #end add-point
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+ 
+      CALL artq520_filter_show('prbgseq','b_prbgseq')
+   CALL artq520_filter_show('prbg003','b_prbg003')
+   CALL artq520_filter_show('prbg002','b_prbg002')
+   CALL artq520_filter_show('imaal004','b_imaal004')
+   CALL artq520_filter_show('imaa009','b_imaa009')
+   CALL artq520_filter_show('rtaxl003','b_rtaxl003')
+   CALL artq520_filter_show('imaa126','b_imaa126')
+   CALL artq520_filter_show('imaa122','b_imaa122')
+   CALL artq520_filter_show('imaa105','b_imaa105')
+   CALL artq520_filter_show('prbg009','b_prbg009')
+   CALL artq520_filter_show('prbg010','b_prbg010')
+   CALL artq520_filter_show('prbg011','b_prbg011')
+   CALL artq520_filter_show('prbg012','b_prbg012')
+   CALL artq520_filter_show('rtdx022','b_rtdx022')
+   CALL artq520_filter_show('rtdx023','b_rtdx023')
+   CALL artq520_filter_show('rtdx020','b_rtdx020')
+   CALL artq520_filter_show('rtdx021','b_rtdx021')
+   CALL artq520_filter_show('rtdx038','b_rtdx038')
+   CALL artq520_filter_show('rtdx039','b_rtdx039')
+   CALL artq520_filter_show('rtdx040','b_rtdx040')
+   CALL artq520_filter_show('rtdx017','b_rtdx017')
+ 
+ 
+   CALL artq520_b_fill()
+ 
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.b_statepic", FALSE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artq520.filter_parser" >}
+#應用 qs14 樣板自動產生(Version:6)
+#+ filter pasara段
+#+ filter欄位解析
+PRIVATE FUNCTION artq520_filter_parser(ps_field)
+   #add-point:filter段define-客製 name="filter_parser.define_customerization"
+   
+   #end add-point
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+   #add-point:filter段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_parser.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter_parser.before_function"
+   
+   #end add-point
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+ 
+{</section>}
+ 
+{<section id="artq520.filter_show" >}
+#應用 qs15 樣板自動產生(Version:6)
+#+ filter標題欄位顯示搜尋條件
+PRIVATE FUNCTION artq520_filter_show(ps_field,ps_object)
+   #add-point:filter_show段define-客製 name="filter_show.define_customerization"
+   
+   #end add-point
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+   #add-point:filter_show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_show.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter_show.before_function"
+   
+   #end add-point
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LET ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = artq520_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+ 
+{</section>}
+ 
+{<section id="artq520.detail_action_trans" >}
+#+ 單身分頁筆數顯示及action圖片顯示切換功能
+PRIVATE FUNCTION artq520_detail_action_trans()
+   #add-point:detail_action_trans段define-客製 name="detail_action_trans.define_customerization"
+   
+   #end add-point
+   #add-point:detail_action_trans段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_action_trans.define"
+   
+   #end add-point
+ 
+ 
+   #add-point:FUNCTION前置處理 name="detail_action_trans.before_function"
+   
+   #end add-point
+ 
+   #因應單身切頁功能，筆數計算方式調整
+   LET g_current_row_tot = g_pagestart + g_detail_idx - 1
+   DISPLAY g_current_row_tot TO FORMONLY.h_index
+   DISPLAY g_tot_cnt TO FORMONLY.h_count
+ 
+   #顯示單身頁面的起始與結束筆數
+   LET g_page_start_num = g_pagestart
+   LET g_page_end_num = g_pagestart + g_num_in_page - 1
+   DISPLAY g_page_start_num TO FORMONLY.p_start
+   DISPLAY g_page_end_num TO FORMONLY.p_end
+ 
+   #目前不支援跳頁功能
+   LET g_page_act_list = "detail_first,detail_previous,'',detail_next,detail_last"
+   CALL cl_navigator_detail_page_setting(g_page_act_list,g_current_row_tot,g_pagestart,g_num_in_page,g_tot_cnt)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artq520.detail_index_setting" >}
+#+ 單身切頁後，index重新調整，避免翻頁後指到空白筆數
+PRIVATE FUNCTION artq520_detail_index_setting()
+   #add-point:detail_index_setting段define-客製 name="detail_index_setting.define_customerization"
+   
+   #end add-point
+   DEFINE li_redirect     BOOLEAN
+   DEFINE ldig_curr       ui.Dialog
+   #add-point:detail_index_setting段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_index_setting.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="detail_index_setting.before_function"
+   
+   #end add-point
+ 
+   IF g_curr_diag IS NOT NULL THEN
+      CASE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") <= "0"
+            LET g_detail_idx = 1
+            IF g_prbg_d.getLength() > 0 THEN
+               LET li_redirect = TRUE
+            END IF
+         WHEN g_curr_diag.getCurrentRow("s_detail1") > g_prbg_d.getLength() AND g_prbg_d.getLength() > 0
+            LET g_detail_idx = g_prbg_d.getLength()
+            LET li_redirect = TRUE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") != g_detail_idx
+            IF g_detail_idx > g_prbg_d.getLength() THEN
+               LET g_detail_idx = g_prbg_d.getLength()
+            END IF
+            LET li_redirect = TRUE
+      END CASE
+   END IF
+ 
+   IF li_redirect THEN
+      LET ldig_curr = ui.Dialog.getCurrent()
+      CALL ldig_curr.setCurrentRow("s_detail1", g_detail_idx)
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="artq520.mask_functions" >}
+ &include "erp/art/artq520_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="artq520.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 查询方法
+# Memo...........:
+# Usage..........: CALL artq520_query()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 20150619 By geza
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION artq520_query()
+DEFINE ls_wc         LIKE type_t.chr500
+DEFINE ls_return     STRING
+DEFINE ls_result     STRING 
+DEFINE l_cnt         LIKE type_t.num10
+DEFINE l_success     LIKE type_t.num5 
+DEFINE l_errno       LIKE type_t.chr10
+DEFINE r_insert      LIKE type_t.num5
+DEFINE ls_sql        STRING
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_prbg_d.clear()
+   INITIALIZE g_rtdy001 TO NULL #
+   INITIALIZE g_rtdxsite TO NULL #
+   LET g_qryparam.state = "c"
+   LET g_checkbox_1 = 'N'
+   LET g_checkbox_2 = 'N'
+   LET g_checkbox_3 = 'N'
+   LET g_checkbox_4 = 'N'
+   LET g_checkbox_5 = 'N'
+   LET g_checkbox_6 = 'N'
+   
+   INITIALIZE g_buttonedit_1 TO NULL
+   INITIALIZE g_buttonedit_2 TO NULL
+   INITIALIZE g_buttonedit_3 TO NULL
+   INITIALIZE g_buttonedit_4 TO NULL
+   INITIALIZE g_buttonedit_5 TO NULL
+   INITIALIZE g_buttonedit_6 TO NULL
+   CALL s_aooi500_default(g_prog,'rtdxsite',g_rtdxsite) RETURNING r_insert,g_rtdxsite
+   IF NOT r_insert THEN
+      RETURN 
+   END IF
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_rtdxsite
+   LET ls_sql = "SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'"
+   LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+   CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+   LET g_rtdxsite_desc = '', g_rtn_fields[1] , ''
+   DISPLAY  g_rtdxsite_desc TO  rtdxsite_desc
+   #wc備份
+   LET ls_wc = g_wc2
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      CONSTRUCT g_wc2 ON imaf153,imaa001,imaa009,imaa126,imaa127,imaa122
+                FROM  imaf153,imaa001,imaa009,imaa126,imaa127,imaa122    
+
+         BEFORE CONSTRUCT
+         
+         
+#         ON ACTION controlp INFIELD imaa009
+#
+#            INITIALIZE g_qryparam.* TO NULL
+#            LET g_qryparam.state = 'c' 
+#            LET g_qryparam.reqry = FALSE
+#            LET g_qryparam.arg1 = cl_get_para(g_enterprise,"","E-CIR-0001")
+#            CALL q_rtax001_4()                    #呼叫開窗
+#            DISPLAY g_qryparam.return1 TO imaa009  #顯示到畫面上
+#
+#            NEXT FIELD imaa009                    #返回原欄位
+
+         ON ACTION controlp INFIELD imaf153
+            
+           
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaf153  #顯示到畫面上
+
+            NEXT FIELD imaf153 
+          
+         ON ACTION controlp INFIELD imaa001
+            #add-point:ON ACTION controlp INFIELD deag002
+                                                #此段落由子樣板a08產生
+            #開窗c段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+			   IF g_wc3 IS NOT NULL AND g_wc3 != " 1=1" THEN
+               LET  g_qryparam.where = " imaa009 IN ( SELECT rtaw002 FROM rtaw_t WHERE rtawent = ",g_enterprise," AND ",g_wc3," )"
+            END IF
+            CALL q_imaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaa001  #顯示到畫面上
+
+            NEXT FIELD imaa001            
+        
+         ON ACTION controlp INFIELD imaa009
+            #add-point:ON ACTION controlp INFIELD deag003
+                                                #此段落由子樣板a08產生
+            #開窗c段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+            CALL q_rtax001_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaa009  #顯示到畫面上
+
+            NEXT FIELD imaa009  
+            
+         ON ACTION controlp INFIELD imaa126
+            #add-point:ON ACTION controlp INFIELD deag004
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '2002'
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaa126  #顯示到畫面上
+
+            NEXT FIELD imaa126                     #返回原欄位
+        ON ACTION controlp INFIELD imaa127
+            #add-point:ON ACTION controlp INFIELD deag004
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '2003'
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaa127  #顯示到畫面上
+
+            NEXT FIELD imaa127  
+                 
+
+         ON ACTION controlp INFIELD imaa122
+            #add-point:ON ACTION controlp INFIELD imaa122
+                        #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '2000'
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO imaa122  #顯示到畫面上
+
+            NEXT FIELD imaa122    
+         
+         AFTER CONSTRUCT 
+         
+      END CONSTRUCT
+      
+
+      
+      CONSTRUCT g_wc3 ON rtaw001 FROM  rtaw001  
+
+          ON ACTION controlp INFIELD rtaw001
+            #add-point:ON ACTION controlp INFIELD deag003
+                                                #此段落由子樣板a08產生
+            #開窗c段
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+			   LET g_qryparam.where = " rtax004 ='",cl_get_para(g_enterprise,"","E-CIR-0001"),"'"
+            CALL q_rtax001_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO rtaw001  
+         
+         BEFORE CONSTRUCT
+         
+         AFTER CONSTRUCT
+      
+      END CONSTRUCT
+      
+      INPUT g_checkbox_1,g_checkbox_2,g_checkbox_3,g_checkbox_4,g_checkbox_5,g_checkbox_6,g_buttonedit_1,g_buttonedit_2,g_buttonedit_3,g_buttonedit_4,g_buttonedit_5,g_buttonedit_6,g_rtdy001,g_rtdxsite,g_prbf006,g_date_1
+       FROM checkbox_1,checkbox_2,checkbox_3,checkbox_4,checkbox_5,checkbox_6,buttonedit_1,buttonedit_2,buttonedit_3,buttonedit_4,buttonedit_5,buttonedit_6,rtdy001,rtdxsite,prbf006,date_1
+           ATTRIBUTE(WITHOUT DEFAULTS)
+#       
+          BEFORE INPUT 
+             DISPLAY g_checkbox_1,g_checkbox_2,g_checkbox_3,g_checkbox_4,g_checkbox_5,g_checkbox_6,g_buttonedit_1,g_buttonedit_2,g_buttonedit_3,g_buttonedit_4,g_buttonedit_5,g_buttonedit_6
+                  TO checkbox_1,checkbox_2,checkbox_3,checkbox_4,checkbox_5,checkbox_6,buttonedit_1,buttonedit_2,buttonedit_3,buttonedit_4,buttonedit_5,buttonedit_6
+             CALL cl_set_comp_entry("buttonedit_1,buttonedit_2,buttonedit_3,buttonedit_4,buttonedit_5,buttonedit_6",FALSE)
+             LET  g_prbf006 = g_today
+             LET  g_date_1 = g_today
+
+            ON CHANGE checkbox_1
+#               IF g_checkbox_1 = 'Y' AND (g_checkbox_3 = 'Y' OR g_checkbox_4 = 'Y' OR g_checkbox_5 = 'Y' OR g_checkbox_6 = 'Y') THEN
+#                  LET g_checkbox_1 = 'N'
+#               END IF
+               
+               IF g_checkbox_1 = 'Y' THEN
+                  CALL cl_set_comp_entry("buttonedit_1",TRUE)
+               ELSE
+                  CALL cl_set_comp_entry("buttonedit_1",FALSE)
+               END IF
+               IF g_checkbox_1 = 'N' THEN
+                  LET g_buttonedit_1 = ''
+               END IF
+
+               
+            ON CHANGE checkbox_2
+#               IF g_checkbox_2 = 'Y' AND (g_checkbox_3 = 'Y' OR g_checkbox_4 = 'Y' OR g_checkbox_5 = 'Y' OR g_checkbox_6 = 'Y') THEN
+#                  LET g_checkbox_2 = 'N'
+#               END IF
+               IF g_checkbox_2 = 'Y' THEN
+                  CALL cl_set_comp_entry("buttonedit_2",TRUE) 
+               ELSE
+                  CALL cl_set_comp_entry("buttonedit_2",FALSE)   
+               END IF
+               IF g_checkbox_2 = 'N' THEN
+                  LET g_buttonedit_2 = ''
+               END IF
+
+            ON CHANGE checkbox_3
+#               IF g_checkbox_3 = 'Y' AND (g_checkbox_1 = 'Y' OR g_checkbox_2 = 'Y' OR g_checkbox_4 = 'Y' OR g_checkbox_5 = 'Y' OR g_checkbox_6 = 'Y') THEN
+#                  LET g_checkbox_3 = 'N'
+#               END IF
+               IF g_checkbox_3 = 'Y' THEN
+                  CALL cl_set_comp_entry("buttonedit_3",TRUE)
+               ELSE
+                  CALL cl_set_comp_entry("buttonedit_3",FALSE)                        
+               END IF
+               IF g_checkbox_3 = 'N' THEN
+                  LET g_buttonedit_3 = ''
+               END IF
+            
+            ON CHANGE checkbox_4
+#               IF g_checkbox_4 = 'Y' AND (g_checkbox_1 = 'Y' OR g_checkbox_2 = 'Y' OR g_checkbox_3 = 'Y' OR g_checkbox_5 = 'Y' OR g_checkbox_6 = 'Y') THEN
+#                  LET g_checkbox_4 = 'N'
+#               END IF
+               IF g_checkbox_4 = 'Y' THEN
+                  CALL cl_set_comp_entry("buttonedit_4",TRUE)
+               ELSE
+                  CALL cl_set_comp_entry("buttonedit_4",FALSE)                  
+               END IF
+                IF g_checkbox_4 = 'N' THEN
+                  LET g_buttonedit_4 = ''
+               END IF
+               
+            ON CHANGE checkbox_5
+#               IF g_checkbox_5 = 'Y' AND (g_checkbox_1 = 'Y' OR g_checkbox_2 = 'Y' OR g_checkbox_3 = 'Y' OR g_checkbox_4 = 'Y' OR g_checkbox_6 = 'Y') THEN
+#                  LET g_checkbox_5 = 'N'
+#               END IF
+               IF g_checkbox_5 = 'Y' THEN
+                  CALL cl_set_comp_entry("buttonedit_5",TRUE) 
+               ELSE
+                  CALL cl_set_comp_entry("buttonedit_5",FALSE)   
+               END IF
+               IF g_checkbox_5 = 'N' THEN
+                  LET g_buttonedit_5 = ''
+               END IF
+           
+            ON CHANGE checkbox_6
+#               IF g_checkbox_6 = 'Y' AND (g_checkbox_1 = 'Y' OR g_checkbox_2 = 'Y' OR g_checkbox_3 = 'Y' OR g_checkbox_4 = 'Y' OR g_checkbox_5 = 'Y') THEN
+#                  LET g_checkbox_6 = 'N'
+#               END IF
+               IF g_checkbox_6 = 'Y' THEN
+                  CALL cl_set_comp_entry("buttonedit_6",TRUE)
+               ELSE
+                  CALL cl_set_comp_entry("buttonedit_6",FALSE)                  
+               END IF           
+               IF g_checkbox_6 = 'N' THEN
+                  LET g_buttonedit_6 = ''
+               END IF
+            
+            
+            ON ACTION controlp INFIELD rtdy001
+            #add-point:ON ACTION controlp INFIELD rtdudocno
+                                                #此段落由子樣板a07產生            
+                #開窗i段
+                INITIALIZE g_qryparam.* TO NULL #sakura add
+                LET g_qryparam.state = 'i'      #sakura add       
+                LET g_qryparam.reqry = FALSE
+               
+                #LET g_qryparam.default1 = g_rtdu_m.rtdy001             #給予default值
+               
+                #給予arg
+                LET g_qryparam.where = " rtdystus = 'Y' "
+                #add by geza 20150824(S)
+                IF g_rtdxsite IS NOT NULL THEN
+                   LET g_qryparam.where = g_qryparam.where," AND EXISTS (SELECT 1 FROM rtdz_t WHERE rtdzent = ",g_enterprise," AND rtdz001 = rtdy001  AND rtdzstus = 'Y' AND rtdz002 = '",g_rtdxsite,"')"
+                END IF 
+                #add by geza 20150824(E)
+                CALL q_rtdy001()                                #呼叫開窗
+               
+                LET g_rtdy001 = g_qryparam.return1              
+               
+                DISPLAY g_rtdy001 TO rtdy001             #顯示到畫面上
+                
+                INITIALIZE g_ref_fields TO NULL
+                LET g_ref_fields[1] = g_rtdy001
+                LET ls_sql = "SELECT rtdyl003 FROM rtdyl_t WHERE rtdylent='"||g_enterprise||"' AND rtdyl001=? AND rtdyl002='"||g_dlang||"'"
+                LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+                CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+                LET g_rtdy001_desc = '', g_rtn_fields[1] , ''
+                DISPLAY  g_rtdy001_desc TO  rtdy001_desc   
+              
+                NEXT FIELD rtdy001
+         
+             AFTER FIELD rtdy001
+                IF NOT cl_null(g_rtdy001) THEN
+                   LET l_cnt = 0
+                   SELECT COUNT(*) INTO l_cnt
+                     FROM rtdy_t 
+                    WHERE rtdyent = g_enterprise
+                      AND rtdy001 = g_rtdy001             
+                      AND rtdystus = 'Y'
+                   IF l_cnt = 0 THEN
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.extend = ''
+                      LET g_errparam.code   = 'art-00631'
+                      LET g_errparam.popup  = TRUE
+                      CALL cl_err()
+                     
+                      NEXT FIELD CURRENT
+                   
+                   END IF
+                END IF
+                INITIALIZE g_ref_fields TO NULL
+                LET g_ref_fields[1] = g_rtdy001
+                LET ls_sql = "SELECT rtdyl003 FROM rtdyl_t WHERE rtdylent='"||g_enterprise||"' AND rtdyl001=? AND rtdyl002='"||g_dlang||"'"
+                LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+                CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+                LET g_rtdy001_desc = '', g_rtn_fields[1] , ''
+                DISPLAY  g_rtdy001_desc TO  rtdy001_desc   
+                
+             ON ACTION controlp INFIELD rtdxsite
+                #add-point:ON ACTION controlp INFIELD rtdusite
+                #應用 a07 樣板自動產生(Version:2)   
+                #開窗i段
+                #ken---add---str 需求單號：141208-00001 項次：14
+                INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'i'
+                LET g_qryparam.reqry = FALSE
+             
+                #LET g_qryparam.default1 = g_rtdu_m.rtdusite             #給予default值
+             
+                #給予arg
+                #LET g_qryparam.arg1 = "" #
+             
+                LET g_qryparam.where = s_aooi500_q_where(g_prog,'rtdxsite',g_site,'i') #150308-00001#3 150309 pomelo add 'i'
+                CALL q_ooef001_24()                                #呼叫開窗
+             
+                LET g_rtdxsite = g_qryparam.return1              
+             
+                DISPLAY g_rtdxsite TO  rtdxsite             #
+
+                INITIALIZE g_ref_fields TO NULL
+                LET g_ref_fields[1] = g_rtdxsite
+                LET ls_sql = "SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'"
+                LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+                CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+                LET g_rtdxsite_desc = '', g_rtn_fields[1] , ''
+                DISPLAY  g_rtdxsite_desc TO  rtdxsite_desc  
+
+                NEXT FIELD rtdxsite        
+              
+             AFTER FIELD rtdxsite
+                IF NOT cl_null(g_rtdxsite) THEN
+                   CALL s_aooi500_chk(g_prog,'rtdxsite',g_rtdxsite,g_site)
+                      RETURNING l_success,l_errno
+                   IF NOT l_success THEN
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.extend = ''
+                      LET g_errparam.code   = l_errno
+                      LET g_errparam.popup  = TRUE
+                      CALL cl_err()
+                
+                      NEXT FIELD CURRENT
+                   END IF
+                END IF
+               
+                INITIALIZE g_ref_fields TO NULL
+                LET g_ref_fields[1] = g_rtdxsite
+                LET ls_sql = "SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'"
+                LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+                CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+                LET g_rtdxsite_desc = '', g_rtn_fields[1] , ''
+                DISPLAY  g_rtdxsite_desc TO  rtdxsite_desc
+
+            ON ACTION controlp INFIELD buttonedit_1
+            #add-point:ON ACTION controlp INFIELD prbfdocno
+                                                                                                                                    #此段落由子樣板a07產生            
+               #開窗i段
+			       INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'i'
+			       LET g_qryparam.reqry = FALSE
+                
+                                  
+                #LET g_qryparam.where = "prbk003 = '1' "  #mark by geza 20160108
+                LET g_qryparam.where = "prbk003 = '1' AND prbk025 = '2'  AND (prbkstus = '1' OR prbkstus = '2') "  #add by geza 20160108                
+                #add by geza 20160108(S)                
+                IF g_rtdxsite IS NOT NULL  THEN   
+                   LET g_qryparam.where = g_qryparam.where," AND prbksite = '",g_rtdxsite,"' "
+                END IF
+                #add by geza 20160108(E)
+                IF g_prbf006 IS NOT NULL  THEN   
+                   LET g_qryparam.where = g_qryparam.where," AND prbk006 >= to_date('",g_prbf006,"','yyyy-mm-dd')"
+                END IF
+                CALL q_prbk001_2()                                #呼叫開窗
+             
+                LET g_buttonedit_1 = g_qryparam.return1              #將開窗取得的值回傳到變數
+             
+                DISPLAY g_buttonedit_1 TO buttonedit_1              #顯示到畫面上
+             
+                NEXT FIELD buttonedit_1  
+            
+            ON ACTION controlp INFIELD buttonedit_2
+            #add-point:ON ACTION controlp INFIELD prbfdocno
+                                                                                                                                    #此段落由子樣板a07產生            
+               #開窗i段
+			       INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'i'
+			       LET g_qryparam.reqry = FALSE
+             
+                #LET g_qryparam.where = "prbk003 = '2' " #mark by geza 20160108
+                LET g_qryparam.where = "prbk003 = '2' AND prbk025 = '2' AND (prbkstus = '1' OR prbkstus = '2') "  #add by geza 20160108  
+                #add by geza 20160108(S)                
+                IF g_rtdxsite IS NOT NULL  THEN   
+                   LET g_qryparam.where = g_qryparam.where," AND prbksite = '",g_rtdxsite,"' "
+                END IF
+                #add by geza 20160108(E)
+                IF g_prbf006 IS NOT NULL  THEN   
+                   LET g_qryparam.where = g_qryparam.where," AND prbk006 >= to_date('",g_prbf006,"','yyyy-mm-dd')"
+                END IF 
+                CALL q_prbk001_2()                               #呼叫開窗
+             
+                LET g_buttonedit_2 = g_qryparam.return1              #將開窗取得的值回傳到變數
+             
+                DISPLAY g_buttonedit_2 TO buttonedit_2              #顯示到畫面上
+             
+                NEXT FIELD buttonedit_2      
+            
+            ON ACTION controlp INFIELD buttonedit_3
+            #add-point:ON ACTION controlp INFIELD prbfdocno
+                                                                                                                                    #此段落由子樣板a07產生            
+               #開窗i段
+			       INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'i'
+			       LET g_qryparam.reqry = FALSE
+             
+                #LET g_qryparam.where = "prbk003 = '3' "      #mark  by geza 20160108 
+                LET g_qryparam.where = "prbk003 = '3' AND prbk025 = '2' AND (prbkstus = '1' OR prbkstus = '2') "  #add by geza 20160108  
+                #add by geza 20160108(S)                
+                IF g_rtdxsite IS NOT NULL  THEN   
+                   LET g_qryparam.where = g_qryparam.where," AND prbksite = '",g_rtdxsite,"' "
+                END IF
+                #add by geza 20160108(E)
+
+                IF g_prbf006 IS NOT NULL  THEN   
+                   LET g_qryparam.where = g_qryparam.where," AND prbk006 >= to_date('",g_prbf006,"','yyyy-mm-dd')"
+                END IF
+                IF g_date_1 IS NOT NULL  THEN   
+                   LET g_qryparam.where = g_qryparam.where," AND prbk007 <= to_date('",g_date_1,"','yyyy-mm-dd')"
+                END IF                   
+                CALL q_prbk001_2()                                #呼叫開窗
+             
+                LET g_buttonedit_3 = g_qryparam.return1              #將開窗取得的值回傳到變數
+             
+                DISPLAY g_buttonedit_3 TO buttonedit_3              #顯示到畫面上
+             
+                NEXT FIELD buttonedit_3 
+            
+            ON ACTION controlp INFIELD buttonedit_4
+            #add-point:ON ACTION controlp INFIELD prbfdocno
+                                                                                                                                    #此段落由子樣板a07產生            
+               #開窗i段
+			       INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'i'
+			       LET g_qryparam.reqry = FALSE
+             
+                #LET g_qryparam.where = "prbk003 = '4' " #mark by geza 20160108  
+                LET g_qryparam.where = "prbk003 = '4' AND prbk025 = '2' AND (prbkstus = '1' OR prbkstus = '2') "  #add by geza 20160108  
+                #add by geza 20160108(S)                
+                IF g_rtdxsite IS NOT NULL  THEN   
+                   LET g_qryparam.where = g_qryparam.where," AND prbksite = '",g_rtdxsite,"' "
+                END IF
+                #add by geza 20160108(E)
+                IF g_prbf006 IS NOT NULL  THEN   
+                   LET g_qryparam.where = g_qryparam.where," AND prbk006 >= to_date('",g_prbf006,"','yyyy-mm-dd')"
+                END IF
+                IF g_date_1 IS NOT NULL  THEN   
+                   LET g_qryparam.where = g_qryparam.where," AND prbk007 <= to_date('",g_date_1,"','yyyy-mm-dd')"
+                END IF   
+                CALL q_prbk001_2()                               #呼叫開窗
+             
+                LET g_buttonedit_4 = g_qryparam.return1              #將開窗取得的值回傳到變數
+             
+                DISPLAY g_buttonedit_4 TO buttonedit_4              #顯示到畫面上
+             
+                NEXT FIELD buttonedit_4  
+
+            ON ACTION controlp INFIELD buttonedit_5
+            #add-point:ON ACTION controlp INFIELD prbfdocno
+                                                                                                                                    #此段落由子樣板a07產生            
+               #開窗i段
+			       INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'i'
+			       LET g_qryparam.reqry = FALSE
+                LET g_qryparam.where  = " 1 = 1"
+                IF g_prbf006 IS NOT NULL  THEN   
+                   LET g_qryparam.where = g_qryparam.where," AND prbo002 >= to_date('",g_prbf006,"','yyyy-mm-dd')"
+                END IF
+                IF g_date_1 IS NOT NULL  THEN   
+                   LET g_qryparam.where =g_qryparam.where, " AND prbo003 <= to_date('",g_date_1,"','yyyy-mm-dd')"
+                END IF                   
+                
+                CALL q_prbodocno()                                #呼叫開窗
+             
+                LET g_buttonedit_5 = g_qryparam.return1              #將開窗取得的值回傳到變數
+             
+                DISPLAY g_buttonedit_5 TO buttonedit_5              #顯示到畫面上
+             
+                NEXT FIELD buttonedit_5
+
+             ON ACTION controlp INFIELD buttonedit_6
+            #add-point:ON ACTION controlp INFIELD prbfdocno
+                                                                                                                                    #此段落由子樣板a07產生            
+               #開窗i段
+			       INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'i'
+			       LET g_qryparam.reqry = FALSE
+                LET g_qryparam.where  = " 1 = 1"
+                IF g_prbf006 IS NOT NULL  THEN   
+                   LET g_qryparam.where =g_qryparam.where, " AND prbq002 >= to_date('",g_prbf006,"','yyyy-mm-dd')"
+                END IF
+                IF g_date_1 IS NOT NULL  THEN   
+                   LET g_qryparam.where =g_qryparam.where, " AND prbq003 <= to_date('",g_date_1,"','yyyy-mm-dd')"
+                END IF                   
+                
+                CALL q_prbqdocno()                                #呼叫開窗
+             
+                LET g_buttonedit_6 = g_qryparam.return1              #將開窗取得的值回傳到變數
+             
+                DISPLAY g_buttonedit_6 TO buttonedit_6              #顯示到畫面上
+             
+                NEXT FIELD buttonedit_6
+            
+            AFTER INPUT
+               
+              IF g_checkbox_1 = 'N' AND g_checkbox_2 = 'N' AND g_checkbox_3 = 'N' AND g_checkbox_4 = 'N' AND g_checkbox_5 = 'N' AND g_checkbox_6 = 'N' THEN
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = ''
+                 LET g_errparam.code   = 'art-00634'
+                 LET g_errparam.popup  = TRUE
+                 CALL cl_err()              
+                 NEXT FIELD CURRENT
+              END IF
+             
+       END INPUT
+
+
+      BEFORE DIALOG 
+#         LET g_deaf_d[1].deafdocdt = g_today
+#         DISPLAY g_deaf_d[1].deafdocdt TO deafdocdt
+#         LET g_deaf_d[1].deafsite = g_site
+#         DISPLAY g_deaf_d[1].deafsite TO deafsite
+#         CALL cl_qbe_init()
+
+      
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+      
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+      
+      ON ACTION accept
+              
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc2 = ls_wc
+   END IF
+    
+   LET g_error_show = 1
+   CALL artq520_b_fill()
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = -100
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+   END IF
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   LET INT_FLAG = FALSE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 打印预览
+# Memo...........:
+# Usage..........: CALL artq520_show()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 20150622 By geza
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION artq520_show()
+DEFINE l_cn         LIKE type_t.num10
+ DEFINE l_sql        STRING
+ DEFINE ls          STRING
+ DEFINE l_str        LIKE type_t.chr50
+ DEFINE l_str1       STRING
+ DEFINE l_str2       STRING
+ DEFINE l_dir        STRING
+ DEFINE l_json_path STRING
+ DEFINE ls_tmp      STRING
+ DEFINE l_channel   base.Channel
+ DEFINE obj util.JSONObject
+ DEFINE  l_url                  STRING
+ DEFINE l_c                     STRING
+ DEFINE p_content   STRING
+ DEFINE l_time      DATETIME YEAR TO FRACTION(5)
+ DEFINE l_code      LIKE type_t.chr50
+
+   #CALL artq520_b_fill()
+   FOR l_ac = 1 TO g_prbg_d.getLength() STEP 1
+      LET g_prbg_d[l_ac].seq = l_ac
+      IF g_prbg_d[l_ac].sel = 'Y' THEN
+         LET l_cn = g_cust_rec.data.getLength()+1
+         LET g_cust_rec.data[l_cn].rowid=g_prbg_d[l_ac].seq
+         LET g_cust_rec.data[l_cn].count=g_prbg_d[l_ac].count
+         LET g_cust_rec.data[l_cn].inna01=g_prbg_d[l_ac].prbg003
+         LET g_cust_rec.data[l_cn].inna02=g_prbg_d[l_ac].prbg002
+         LET g_cust_rec.data[l_cn].inna03=g_prbg_d[l_ac].prbg002_desc
+         LET g_cust_rec.data[l_cn].inna04=g_prbg_d[l_ac].imaal004
+         LET g_cust_rec.data[l_cn].inna05=g_prbg_d[l_ac].imaa009
+         LET g_cust_rec.data[l_cn].inna06=g_prbg_d[l_ac].rtaxl003   
+         LET g_cust_rec.data[l_cn].inna07=g_prbg_d[l_ac].imaa126
+         LET g_cust_rec.data[l_cn].inna08=g_prbg_d[l_ac].imaa126_desc
+         LET g_cust_rec.data[l_cn].inna09=g_prbg_d[l_ac].imaa122
+         LET g_cust_rec.data[l_cn].inna10=g_prbg_d[l_ac].imaa105
+         LET g_cust_rec.data[l_cn].inna11=g_prbg_d[l_ac].prbg009
+         LET g_cust_rec.data[l_cn].inna12=g_prbg_d[l_ac].prbg010
+         LET g_cust_rec.data[l_cn].inna13=g_prbg_d[l_ac].prbg011
+         LET g_cust_rec.data[l_cn].inna14=g_prbg_d[l_ac].prbg012
+         LET g_cust_rec.data[l_cn].inna15=g_prbg_d[l_ac].rtdx022
+         LET g_cust_rec.data[l_cn].inna16=g_prbg_d[l_ac].rtdx023
+         LET g_cust_rec.data[l_cn].inna17=g_prbg_d[l_ac].rtdx020
+         LET g_cust_rec.data[l_cn].inna18=g_prbg_d[l_ac].rtdx021
+         LET g_cust_rec.data[l_cn].inna19=g_prbg_d[l_ac].rtdx038
+         LET g_cust_rec.data[l_cn].inna20=g_prbg_d[l_ac].rtdx039
+         LET g_cust_rec.data[l_cn].inna21=g_prbg_d[l_ac].rtdx040
+         LET g_cust_rec.data[l_cn].inna22=g_prbg_d[l_ac].rtdx017
+         LET g_cust_rec.data[l_cn].inna23=g_user
+         LET g_cust_rec.data[l_cn].inna24=g_prbg_d[l_ac].type
+         LET g_cust_rec.data[l_cn].inna25=g_prbg_d[l_ac].docno
+         LET g_cust_rec.data[l_cn].inna26=g_prbg_d[l_ac].prbgseq  
+         
+         
+      END IF       
+   END FOR
+   
+   LET l_time = cl_get_timestamp()
+   LET l_str = l_time
+   LET l_str1 = l_str[1,4],l_str[6,7],l_str[9,10],l_str[12,13],l_str[15,16],l_str[18,19],l_str[21,25]
+
+   LET l_str = l_str1
+   #LET ls = "{'id' : '",l_str,"', 'template' : '",g_rtdy001,".svg' , 'data' : [",ls," ] }" 
+   LET g_str = l_str1
+   
+   LET l_dir = FGL_GETENV("TEMPDIR"),"/",l_str
+   LET l_c ="touch ",l_dir
+   RUN l_c
+   
+   LET g_cust_rec.id = l_str  
+   LET g_cust_rec.template = g_rtdy001,".svg" 
+  
+   
+   LET obj = util.JSONObject.fromFGL(g_cust_rec)
+#產生json string
+   LET p_content = obj.toString()
+   LET l_json_path = os.Path.join(FGL_GETENV("TEMPDIR"), l_str)
+   LET l_channel = base.Channel.create()
+   CALL l_channel.setDelimiter("")
+   CALL l_channel.openFile(l_json_path,"w")
+   CALL l_channel.write(p_content)
+   CALL l_channel.close()
+   
+   LET l_code = FGL_GETENV("FGLASIP")
+   LET l_code = l_code[8,18],"/tmp/",g_str
+
+   LET l_url = FGL_GETENV("FGLASIP"),"/compontents/tag/preview.html?data=",l_code
+
+   #LET l_url = l_url, "?id=", l_code
+   
+   CALL ui.Interface.frontCall("standard", "launchurl", [l_url], [])
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 打印
+# Memo...........:
+# Usage..........: CALL artq520_print()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 20150622 By geza
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION artq520_print()
+ DEFINE l_cn         LIKE type_t.num10
+ DEFINE l_sql        STRING
+ DEFINE ls          STRING
+ DEFINE l_str        LIKE type_t.chr50
+ DEFINE l_str1       STRING
+ DEFINE l_str2       STRING
+ DEFINE l_dir        STRING
+ DEFINE l_json_path STRING
+ DEFINE ls_tmp      STRING
+ DEFINE l_channel   base.Channel
+ DEFINE obj util.JSONObject
+ DEFINE  l_url                  STRING
+ DEFINE l_c                     STRING
+ DEFINE p_content   STRING
+ DEFINE l_time      DATETIME YEAR TO FRACTION(5)
+ DEFINE path          STRING
+ DEFINE l_result INTEGER
+ DEFINE parm1          STRING
+ DEFINE parm2          STRING
+ DEFINE parm3          STRING
+ DEFINE l_str3         STRING
+   #CALL artq520_b_fill()
+   CALL g_cust_rec.data.clear()
+   FOR l_ac = 1 TO g_prbg_d.getLength() STEP 1
+      LET g_prbg_d[l_ac].seq = l_ac
+      IF g_prbg_d[l_ac].sel = 'Y' AND g_prbg_d[l_ac].count >= 1 THEN
+         LET l_cn = g_cust_rec.data.getLength()+1
+         LET g_cust_rec.data[l_cn].rowid=g_prbg_d[l_ac].seq
+         LET g_cust_rec.data[l_cn].count=g_prbg_d[l_ac].count
+         LET g_cust_rec.data[l_cn].inna01=g_prbg_d[l_ac].prbg003
+         LET g_cust_rec.data[l_cn].inna02=g_prbg_d[l_ac].prbg002
+         LET g_cust_rec.data[l_cn].inna03=g_prbg_d[l_ac].prbg002_desc
+         LET g_cust_rec.data[l_cn].inna04=g_prbg_d[l_ac].imaal004
+         LET g_cust_rec.data[l_cn].inna05=g_prbg_d[l_ac].imaa009
+         LET g_cust_rec.data[l_cn].inna06=g_prbg_d[l_ac].rtaxl003   
+         LET g_cust_rec.data[l_cn].inna07=g_prbg_d[l_ac].imaa126
+         LET g_cust_rec.data[l_cn].inna08=g_prbg_d[l_ac].imaa126_desc
+         LET g_cust_rec.data[l_cn].inna09=g_prbg_d[l_ac].imaa122
+         LET g_cust_rec.data[l_cn].inna10=g_prbg_d[l_ac].imaa105         
+         LET l_str3  = g_prbg_d[l_ac].prbg009
+         LET l_str3  = l_str3.subString(1,l_str3.getLength()-4)
+         LET g_cust_rec.data[l_cn].inna11=l_str3
+         LET l_str3  = g_prbg_d[l_ac].prbg010
+         LET l_str3  = l_str3.subString(1,l_str3.getLength()-4)
+         LET g_cust_rec.data[l_cn].inna12=l_str3
+         LET l_str3  = g_prbg_d[l_ac].prbg011
+         LET l_str3  = l_str3.subString(1,l_str3.getLength()-4)
+         LET g_cust_rec.data[l_cn].inna13=l_str3
+         LET l_str3  = g_prbg_d[l_ac].prbg012
+         LET l_str3  = l_str3.subString(1,l_str3.getLength()-4)
+         LET g_cust_rec.data[l_cn].inna14=l_str3
+         LET g_cust_rec.data[l_cn].inna15=g_prbg_d[l_ac].rtdx022
+         LET g_cust_rec.data[l_cn].inna16=g_prbg_d[l_ac].rtdx023
+         LET l_str3  = g_prbg_d[l_ac].rtdx020
+         LET l_str3  = l_str3.subString(1,l_str3.getLength()-4)
+         LET g_cust_rec.data[l_cn].inna17=l_str3
+         LET l_str3  = g_prbg_d[l_ac].rtdx021
+         LET l_str3  = l_str3.subString(1,l_str3.getLength()-4)
+         LET g_cust_rec.data[l_cn].inna18=l_str3
+         LET l_str3  = g_prbg_d[l_ac].rtdx038
+         LET l_str3  = l_str3.subString(1,l_str3.getLength()-4)
+         LET g_cust_rec.data[l_cn].inna19=l_str3
+         LET l_str3  = g_prbg_d[l_ac].rtdx039
+         LET l_str3  = l_str3.subString(1,l_str3.getLength()-4)
+         LET g_cust_rec.data[l_cn].inna20=l_str3
+         LET l_str3  = g_prbg_d[l_ac].rtdx040
+         LET l_str3  = l_str3.subString(1,l_str3.getLength()-4)
+         LET g_cust_rec.data[l_cn].inna21=l_str3
+         LET l_str3  = g_prbg_d[l_ac].rtdx017
+         LET l_str3  = l_str3.subString(1,l_str3.getLength()-4)
+         LET g_cust_rec.data[l_cn].inna22=l_str3
+         LET g_cust_rec.data[l_cn].inna23=g_user
+         LET g_cust_rec.data[l_cn].inna24=g_prbg_d[l_ac].type
+         LET g_cust_rec.data[l_cn].inna25=g_prbg_d[l_ac].docno
+         LET g_cust_rec.data[l_cn].inna26=g_prbg_d[l_ac].prbgseq
+         LET g_cust_rec.data[l_cn].inna27=g_prbg_d[l_ac].imaa105_desc         
+      END IF       
+   END FOR
+   
+   LET l_time = cl_get_timestamp()
+   LET l_str = l_time
+   LET l_str1 = l_str[1,4],l_str[6,7],l_str[9,10],l_str[12,13],l_str[15,16],l_str[18,19],l_str[21,25]
+
+   LET l_str = l_str1,".dt"
+   #LET ls = "{'id' : '",l_str,"', 'template' : '",g_rtdy001,".svg' , 'data' : [",ls," ] }" 
+   LET g_str = l_str1
+   
+   LET l_dir = FGL_GETENV("TEMPDIR"),"/",l_str
+   LET l_c ="touch ",l_dir
+   RUN l_c
+   
+   LET g_cust_rec.id = l_str1  
+   LET g_cust_rec.template = g_rtdy001,".svg" 
+  
+   
+   LET obj = util.JSONObject.fromFGL(g_cust_rec)
+#產生json string
+   LET p_content = obj.toString()
+   LET l_json_path = os.Path.join(FGL_GETENV("TEMPDIR"), l_str)
+   LET l_channel = base.Channel.create()
+   CALL l_channel.setDelimiter("")
+   CALL l_channel.openFile(l_json_path,"w")
+   CALL l_channel.write(p_content)
+   CALL l_channel.close()
+   #parm1: 模版文件下载路径
+   #parm2: 数据文件下载路径
+#   LET parm1 = FGL_GETENV("TOP"),"/www/components/tag/templates/",g_rtdy001,".svg"
+#   LET parm2 = FGL_GETENV("TEMPDIR"),"/",l_str
+#   LET parm3 = FGL_GETENV("TOP"),"/www/components/tag/config.csv"
+   LET parm1 = FGL_GETENV("FGLASIP"),"/components/tag/templates/",g_rtdy001,".svg"
+   LET parm2 = FGL_GETENV("FGLASIP"),"/out/",l_str
+   LET parm3 = FGL_GETENV("FGLASIP"),"/components/tag/config.csv"
+   LET path =  "C:\\\\T100\\tag\\TPrinter.exe ",parm1," ",parm2 ," ",parm3
+   CALL ui.interface.frontCall("standard", "execute", [path,0],[l_result]);
+END FUNCTION
+
+################################################################################
+# Descriptions...: 修改
+# Memo...........:
+# Usage..........: CALL artq520_modify()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 20150622 By geza
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION artq520_modify()
+DEFINE  l_cmd                  LIKE type_t.chr1
+DEFINE  l_ac_t                 LIKE type_t.num5                #未取消的ARRAY CNT 
+DEFINE  l_n                    LIKE type_t.num5                #檢查重複用  
+DEFINE  l_cnt                  LIKE type_t.num5                #檢查重複用  
+DEFINE  l_lock_sw              LIKE type_t.chr1                #單身鎖住否  
+DEFINE  l_allow_insert         LIKE type_t.num5                #可新增否 
+DEFINE  l_allow_delete         LIKE type_t.num5                #可刪除否  
+DEFINE  l_count                LIKE type_t.num5
+DEFINE  l_i                    LIKE type_t.num5
+DEFINE  ls_return              STRING
+DEFINE  l_var_keys             DYNAMIC ARRAY OF STRING
+DEFINE  l_field_keys           DYNAMIC ARRAY OF STRING
+DEFINE  l_vars                 DYNAMIC ARRAY OF STRING
+DEFINE  l_fields               DYNAMIC ARRAY OF STRING
+DEFINE  l_var_keys_bak         DYNAMIC ARRAY OF STRING
+DEFINE  li_reproduce           LIKE type_t.num5
+DEFINE  li_reproduce_target    LIKE type_t.num5
+DEFINE  lb_reproduce           BOOLEAN
+DEFINE  l_sql                  STRING
+DEFINE  r_success              LIKE type_t.num5
+DEFINE  r_errno                LIKE type_t.chr50
+DEFINE  l_stdb002              LIKE stdb_t.stdb002
+DEFINE  l_stdb007              LIKE stdb_t.stdb007
+DEFINE  l_stdbstus             LIKE stdb_t.stdbstus
+DEFINE  ls_sql                 STRING
+DEFINE  r_insert               LIKE type_t.num5
+DEFINE  l_success              LIKE type_t.num5 
+DEFINE  l_errno                LIKE type_t.chr10
+   #end add-point
+   #add-point:modify段define-客製
+
+   #end add-point
+ 
+   #add-point:modify段control
+   LET g_action_choice = ""
+
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   LET INT_FLAG = FALSE
+   LET lb_reproduce = FALSE
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      INPUT ARRAY g_prbg_d FROM s_detail1.*
+         ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+                  
+         BEFORE INPUT
+            #单身没资料关闭单身
+            IF g_prbg_d.getLength() = 0  THEN
+               EXIT DIALOG
+            END IF 
+            
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_prbg_d.getLength()+1) 
+              LET g_insert = 'N' 
+            END IF 
+ 
+           # CALL artq520_b_fill()
+            LET g_detail_cnt = g_prbg_d.getLength()
+         
+         BEFORE ROW
+            #add-point:modify段before row
+
+            #end add-point  
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            LET l_cmd = ''
+            LET l_ac = g_detail_idx
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.h_index
+            DISPLAY g_prbg_d.getLength() TO FORMONLY.h_count
+         
+            CALL s_transaction_begin()
+            LET g_detail_cnt = g_prbg_d.getLength()
+            
+            IF g_detail_cnt >= l_ac 
+               AND g_prbg_d[l_ac].sel IS NOT NULL
+               AND g_prbg_d[l_ac].seq IS NOT NULL
+            THEN
+               LET l_cmd='u'
+            ELSE
+                LET l_cmd='a'
+            END IF   
+            IF l_cmd = 'a' THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF   
+         
+#         AFTER FIELD b_deaf009
+            
+       
+            
+            #END add-point
+            
+ 
+#         #此段落由子樣板a01產生
+#         BEFORE FIELD b_deaf009
+#            #add-point:BEFORE FIELD b_deaf009
+#            IF g_deaf_d[l_ac].deagstus = 'Y' OR g_deaf_d[l_ac].deaf011 = 'Y' THEN 
+#               NEXT FIELD b_deaf011
+#                  
+#            END IF
+#            
+#            IF g_deaf_d[l_ac].deaf008 = 0 THEN
+#               NEXT FIELD b_deaf010
+#            END IF
+#            #END add-point
+# 
+#         #此段落由子樣板a04產生
+#         ON CHANGE b_deaf009
+#            #add-point:ON CHANGE b_deaf009
+#            #add-point:ON CHANGE deaf009
+#            #“差错金额”>0时候可选择 2、4、5、6
+#            IF g_deaf_d[l_ac].deaf008 > 0 THEN 
+#               IF  g_deaf_d[l_ac].deaf009 <> '2' AND g_deaf_d[l_ac].deaf009 <> '4'
+#               AND g_deaf_d[l_ac].deaf009 <> '5' AND g_deaf_d[l_ac].deaf009 <> '6' THEN 
+#                  LET g_deaf_d[l_ac].deaf009 = g_deaf_d_t.deaf009
+#                  INITIALIZE g_errparam TO NULL
+#                  LET g_errparam.code = 'ade-00065'
+#                  LET g_errparam.extend = ''
+#                  LET g_errparam.popup = TRUE
+#                  CALL cl_err()
+#                  NEXT FIELD b_deaf009
+#               END IF 
+#            END IF 
+#            IF g_deaf_d[l_ac].deaf008 < 0 THEN 
+#               IF  g_deaf_d[l_ac].deaf009 <> '1' AND g_deaf_d[l_ac].deaf009 <> '3'
+#               AND g_deaf_d[l_ac].deaf009 <> '4' THEN 
+#                  LET g_deaf_d[l_ac].deaf009 = g_deaf_d_t.deaf009
+#                  INITIALIZE g_errparam TO NULL
+#                  LET g_errparam.code = 'ade-00066'
+#                  LET g_errparam.extend = ''
+#                  LET g_errparam.popup = TRUE
+#                  CALL cl_err()
+#                  NEXT FIELD b_deaf009
+#               END IF
+#            END IF 
+#            #END add-point
+# 
+#
+#         AFTER FIELD b_deaf010
+#            
+#       
+#            
+#            #END add-point
+#            
+# 
+#         #此段落由子樣板a01產生
+#         BEFORE FIELD b_deaf010
+#            #add-point:BEFORE FIELD b_deaf010
+#            IF g_deaf_d[l_ac].deagstus = 'Y' OR g_deaf_d[l_ac].deaf011 = 'Y' THEN 
+#               NEXT FIELD b_deaf011
+#                  
+#            END IF
+#            #END add-point
+# 
+#         #此段落由子樣板a04產生
+#         ON CHANGE b_deaf010
+#            #add-point:ON CHANGE b_deaf010
+#            
+#            #END add-point
+# 
+#
+#                             
+#       
+#         AFTER FIELD b_deaf011
+#            
+#       
+#            
+#            #END add-point
+#            
+# 
+#         #此段落由子樣板a01產生
+#         BEFORE FIELD b_deaf011
+#            #add-point:BEFORE FIELD b_deaf011
+#            IF g_deaf_d[l_ac].deagstus = 'Y'  THEN 
+#               NEXT FIELD sel
+#                  
+#            END IF
+#            #END add-point
+# 
+#         #此段落由子樣板a04產生
+#         ON CHANGE b_deaf011
+#            #add-point:ON CHANGE b_deaf011
+#            
+#            #END add-point
+# 
+#
+#                     
+# 
+#         ON ROW CHANGE
+#            IF INT_FLAG THEN
+#               INITIALIZE g_errparam TO NULL 
+#               LET g_errparam.extend = '' 
+#               LET g_errparam.code   = 9001 
+#               LET g_errparam.popup  = FALSE 
+#               CALL cl_err()
+# 
+#               LET INT_FLAG = 0
+#               LET g_deaf_d[l_ac].* = g_deaf_d_t.*
+#               CLOSE adeq412_bcl
+#               CALL s_transaction_end('N','0')
+#               EXIT DIALOG 
+#            END IF
+#              
+#            IF l_lock_sw = 'Y' THEN
+#               INITIALIZE g_errparam TO NULL 
+#               LET g_errparam.extend = '' 
+#               LET g_errparam.code   = -263 
+#               LET g_errparam.popup  = TRUE 
+#               CALL cl_err()
+# 
+#               LET g_deaf_d[l_ac].* = g_deaf_d_t.*
+#            ELSE
+#               
+#               #寫入修改者/修改日期資訊(單身)
+#            
+#               #add-point:單身修改前
+#         
+#               #end add-point
+#               
+#               UPDATE deaf_t 
+#                  SET deaf011 = g_deaf_d[l_ac].deaf011,
+#                      deaf010 = g_deaf_d[l_ac].deaf010,
+#                      deaf009 = g_deaf_d[l_ac].deaf009
+#                WHERE deafent = g_enterprise 
+#                  AND deafdocno = g_deaf_d[l_ac].deafdocno  
+#                  AND deaf005 = g_deaf_d[l_ac].deaf005 
+# 
+#                  
+#               #add-point:單身修改中
+#
+#               #end add-point
+#                  
+#               CASE
+#                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+#                     INITIALIZE g_errparam TO NULL 
+#                     LET g_errparam.extend = "deaf_t" 
+#                     LET g_errparam.code   = "std-00009" 
+#                     LET g_errparam.popup  = TRUE 
+#                     CALL cl_err()
+# 
+#                     CALL s_transaction_end('N','0')
+#                    WHEN SQLCA.sqlcode #其他錯誤
+#                     INITIALIZE g_errparam TO NULL 
+#                     LET g_errparam.extend = "deaf_t" 
+#                     LET g_errparam.code   = SQLCA.sqlcode 
+#                     LET g_errparam.popup  = TRUE 
+#                     CALL cl_err()
+# 
+#                     CALL s_transaction_end('N','0')
+#                  OTHERWISE                    
+#
+#               END CASE
+#               
+#               #add-point:單身修改後
+#
+#               #end add-point
+# 
+#            END IF
+            
+         AFTER ROW
+#            CALL astq730_unlock_b("stde_t")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            
+             #add-point:單身after row
+
+            #end add-point
+            
+         AFTER INPUT
+            #add-point:單身input後
+
+            #end add-point
+            
+         ON ACTION controlo   
+            CALL FGL_SET_ARR_CURR(g_prbg_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_prbg_d.getLength()+1
+            
+      END INPUT
+      
+      #add-point:before_more_input
+      INPUT g_rtdy001,g_rtdxsite FROM rtdy001,rtdxsite  
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+     
+         BEFORE INPUT
+         #add by geza 20150824(S)
+         IF cl_null(g_rtdxsite) THEN
+            CALL s_aooi500_default(g_prog,'rtdxsite',g_rtdxsite) RETURNING r_insert,g_rtdxsite
+            IF NOT r_insert THEN
+               RETURN 
+            END IF
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_rtdxsite
+            LET ls_sql = "SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'"
+            LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+            CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+            LET g_rtdxsite_desc = '', g_rtn_fields[1] , ''
+            DISPLAY  g_rtdxsite_desc TO  rtdxsite_desc
+         END IF   
+         
+         DISPLAY g_rtdy001,g_rtdxsite,g_rtdxsite_desc TO rtdy001,rtdxsite,rtdxsite_desc
+         #add by geza 20150824(E) 
+        #DISPLAY g_rtdy001 TO rtdy001  #mark by geza 20150824(E)
+          
+          
+         
+         #add by geza 20150824(S)
+         ON ACTION controlp INFIELD rtdxsite
+            #add-point:ON ACTION controlp INFIELD rtdusite
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            #ken---add---str 需求單號：141208-00001 項次：14
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            #LET g_qryparam.default1 = g_rtdu_m.rtdusite             #給予default值
+
+            #給予arg
+            #LET g_qryparam.arg1 = "" #
+
+            LET g_qryparam.where = s_aooi500_q_where(g_prog,'rtdxsite',g_site,'i') #150308-00001#3 150309 pomelo add 'i'
+            CALL q_ooef001_24()                                #呼叫開窗
+
+            LET g_rtdxsite = g_qryparam.return1              
+
+            DISPLAY g_rtdxsite TO  rtdxsite             #
+            
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_rtdxsite
+            LET ls_sql = "SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'"
+            LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+            CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+            LET g_rtdxsite_desc = '', g_rtn_fields[1] , ''
+            DISPLAY  g_rtdxsite_desc TO  rtdxsite_desc
+
+            
+            NEXT FIELD rtdxsite        
+          
+         AFTER FIELD rtdxsite
+            IF NOT cl_null(g_rtdxsite) THEN
+               CALL s_aooi500_chk(g_prog,'rtdxsite',g_rtdxsite,g_site)
+                  RETURNING l_success,l_errno
+               IF NOT l_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = ''
+                  LET g_errparam.code   = l_errno
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()
+            
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_rtdxsite
+            LET ls_sql = "SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'"
+            LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+            CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+            LET g_rtdxsite_desc = '', g_rtn_fields[1] , ''
+            DISPLAY  g_rtdxsite_desc TO  rtdxsite_desc
+         #add by geza 20150824(E)
+         
+         ON ACTION controlp INFIELD rtdy001
+            #add-point:ON ACTION controlp INFIELD rtdudocno
+                                                #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL #sakura add
+            LET g_qryparam.state = 'i'      #sakura add       
+            LET g_qryparam.reqry = FALSE
+
+            #LET g_qryparam.default1 = g_rtdu_m.rtdy001             #給予default值
+
+            #給予arg
+            LET g_qryparam.where = " rtdystus = 'Y' "
+            #add by geza 20150824(S)
+            IF g_rtdxsite IS NOT NULL THEN
+               LET g_qryparam.where = g_qryparam.where," AND EXISTS (SELECT 1 FROM rtdz_t WHERE rtdzent = ",g_enterprise," AND rtdz001 = rtdy001  AND rtdzstus = 'Y' AND rtdz002 = '",g_rtdxsite,"')"
+            END IF 
+            #add by geza 20150824(E)
+            CALL q_rtdy001()                                #呼叫開窗
+
+            LET g_rtdy001 = g_qryparam.return1              
+
+            DISPLAY g_rtdy001 TO rtdy001             #顯示到畫面上
+
+            NEXT FIELD rtdy001
+         
+         AFTER FIELD rtdy001
+            IF NOT cl_null(g_rtdy001) THEN
+               LET l_cnt = 0
+               SELECT COUNT(*) INTO l_cnt
+                 FROM rtdy_t 
+                WHERE rtdyent = g_enterprise
+                  AND rtdy001 = g_rtdy001             
+                  AND rtdystus = 'Y'
+               IF l_cnt = 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = ''
+                  LET g_errparam.code   = 'art-00631'
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()
+                 
+                  NEXT FIELD CURRENT
+               
+               END IF
+            END IF
+         AFTER INPUT
+      END INPUT
+      #end add-point
+      
+      BEFORE DIALOG 
+#         IF g_temp_idx > 0 THEN
+#            LET l_ac = g_temp_idx
+#            CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+#            LET g_temp_idx = 1
+#         END IF
+         LET g_curr_diag = ui.DIALOG.getCurrent()
+         #add-point:before_dialog
+
+         #end add-point
+#         CASE g_aw
+#            WHEN "s_detail1"
+#               NEXT FIELD stde001
+# 
+#         END CASE
+   
+      ON ACTION accept
+         ACCEPT DIALOG
+      
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) 
+              RETURNING g_fld_name,g_frm_name 
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang) 
+           
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   
+   END DIALOG 
+   
+   #add-point:modify段修改後
+  # CALL artq520_b_fill()
+   #end add-point
+ 
+  # CLOSE adeq412_bcl
+   CALL s_transaction_end('Y','0')
+END FUNCTION
+
+ 
+{</section>}
+ 

@@ -1,0 +1,4448 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aint911_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0007(2015-12-03 17:01:33), PR版次:0007(2016-09-05 15:10:43)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000074
+#+ Filename...: aint911_01
+#+ Description: 雜項庫存異動庫儲批明細維護作業
+#+ Creator....: 02749(2015-02-12 19:01:35)
+#+ Modifier...: 06137 -SD/PR- 02599
+ 
+{</section>}
+ 
+{<section id="aint911_01.global" >}
+#應用 i02 樣板自動產生(Version:38)
+#add-point:填寫註解說明 name="global.memo"
+#160318-00025#22  16/04/23  BY 07900    校验代码重复错误讯息的修改
+#160905-00007#6   2016/09/05 By 02599   SQL条件增加ent,问题在3699行，下载程序架构自动产生了
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS   #(ver:36) add
+   DEFINE mc_data_owner_check LIKE type_t.num5   #(ver:36) add
+END GLOBALS   #(ver:36) add
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_inbc_d RECORD
+       inbcsite LIKE inbc_t.inbcsite, 
+   inbcdocno LIKE inbc_t.inbcdocno, 
+   inbcseq LIKE inbc_t.inbcseq, 
+   inbcseq1 LIKE inbc_t.inbcseq1, 
+   inbc001 LIKE inbc_t.inbc001, 
+   inbc002 LIKE inbc_t.inbc002, 
+   inbc005 LIKE inbc_t.inbc005, 
+   inbc005_desc LIKE type_t.chr500, 
+   inbc006 LIKE inbc_t.inbc006, 
+   inbc006_desc LIKE type_t.chr500, 
+   inbc007 LIKE inbc_t.inbc007, 
+   inbc003 LIKE inbc_t.inbc003, 
+   inbc009 LIKE inbc_t.inbc009, 
+   inbc009_desc LIKE type_t.chr500, 
+   inbc010 LIKE inbc_t.inbc010, 
+   inbc211 LIKE inbc_t.inbc211, 
+   inbc211_desc LIKE type_t.chr500, 
+   inbc212 LIKE inbc_t.inbc212, 
+   inbc208 LIKE inbc_t.inbc208, 
+   inbc208_desc LIKE type_t.chr500, 
+   inbc206 LIKE inbc_t.inbc206, 
+   inbc207 LIKE inbc_t.inbc207, 
+   inbc204 LIKE inbc_t.inbc204, 
+   inbc205 LIKE inbc_t.inbc205, 
+   inbc015 LIKE inbc_t.inbc015, 
+   inbc203 LIKE inbc_t.inbc203, 
+   inbc016 LIKE inbc_t.inbc016, 
+   inbc017 LIKE inbc_t.inbc017
+       END RECORD
+ 
+ 
+ 
+#add-point:自定義模組變數(Module Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+ TYPE type_g_inbb_d        RECORD
+   inbbsite    LIKE inbb_t.inbbsite,
+   inbbdocno   LIKE inbb_t.inbbdocno,
+   inbbseq LIKE inbb_t.inbbseq, 
+   inbb001 LIKE inbb_t.inbb001, 
+   inbb001_desc LIKE type_t.chr80, 
+   inbb001_desc2 LIKE type_t.chr80, 
+   inbb002 LIKE inbb_t.inbb002,
+   inbb002_desc LIKE type_t.chr80, 
+   inbb004 LIKE inbb_t.inbb004,
+   inbb003 LIKE inbb_t.inbb003, 
+   inbb007 LIKE inbb_t.inbb007, 
+   inbb008 LIKE inbb_t.inbb008, 
+   inbb009 LIKE inbb_t.inbb009,
+   #151111-00021#2 Add By Ken 151125(S)
+   inbb210 LIKE inbb_t.inbb210,
+   #151111-00021#3 Add By Ken 151203(S)
+   inbb224 LIKE inbb_t.inbb224,
+   inbb224_desc LIKE type_t.chr500,
+   inbb225 LIKE inbb_t.inbb225,
+   #151111-00021#3 Add By Ken 151203(E)
+   inbb209 LIKE inbb_t.inbb209,
+   inbb209_desc LIKE type_t.chr500,
+   inbb207 LIKE inbb_t.inbb207,
+   inbb208 LIKE inbb_t.inbb208,
+   inbb205 LIKE inbb_t.inbb205,
+   inbb206 LIKE inbb_t.inbb206,
+   #151111-00021#2 Add By Ken 151125(E)   
+   inbb011 LIKE inbb_t.inbb011, 
+   inbb014 LIKE inbb_t.inbb014,
+   inbb204 LIKE inbb_t.inbb204,   #150507-00001#8 150527 by lori522612 add
+   inbb022 LIKE inbb_t.inbb022,
+   inbb021 LIKE inbb_t.inbb021
+       END RECORD
+       
+DEFINE g_inbb_d          DYNAMIC ARRAY OF type_g_inbb_d
+
+DEFINE l_ac2                  LIKE type_t.num5
+DEFINE g_rec_b2               LIKE type_t.num5 
+DEFINE g_detail_idx2          LIKE type_t.num5
+DEFINE g_inbadocno            LIKE inba_t.inbadocno
+DEFINE g_inbadocdt            LIKE inba_t.inbadocdt
+DEFINE g_inba002              LIKE inba_t.inba002
+DEFINE g_inba004              LIKE inba_t.inba004
+DEFINE g_type                 LIKE inba_t.inba004
+DEFINE g_rec_b                LIKE type_t.num5
+DEFINE g_imaf061              LIKE imaf_t.imaf061
+DEFINE g_imaf031              LIKE imaf_t.imaf031
+DEFINE g_imaf032              LIKE imaf_t.imaf032
+
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_inbc_d          DYNAMIC ARRAY OF type_g_inbc_d #單身變數
+DEFINE g_inbc_d_t        type_g_inbc_d                  #單身備份
+DEFINE g_inbc_d_o        type_g_inbc_d                  #單身備份
+DEFINE g_inbc_d_mask_o   DYNAMIC ARRAY OF type_g_inbc_d #單身變數
+DEFINE g_inbc_d_mask_n   DYNAMIC ARRAY OF type_g_inbc_d #單身變數
+ 
+      
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_temp_idx           LIKE type_t.num10             #單身 所在筆數(暫存用)
+DEFINE g_detail_idx         LIKE type_t.num10             #單身 所在筆數(所有資料)
+DEFINE g_detail_cnt         LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_chk                BOOLEAN
+DEFINE g_aw                 STRING                        #確定當下點擊的單身
+DEFINE g_log1               STRING                        #log用
+DEFINE g_log2               STRING                        #log用
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aint911_01.main" >}
+#應用 a27 樣板自動產生(Version:6)
+#+ 作業開始(子程式類型)
+PUBLIC FUNCTION aint911_01(--)
+   #add-point:main段變數傳入 name="main.get_var"
+   p_type,p_inbadocno
+   #end add-point
+   )
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   DEFINE p_type          LIKE inba_t.inba004
+   DEFINE p_inbadocno     LIKE inba_t.inbadocno
+   DEFINE l_inbastus      LIKE inba_t.inbastus
+   #end add-point   
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:作業初始化 name="main.init"
+   LET g_inbadocno = p_inbadocno
+   LET g_type = p_type
+   LET l_ac2 = 1
+   
+   SELECT inba002,inba004,inbadocdt INTO g_inba002,g_inba004,g_inbadocdt FROM inba_t WHERE inbaent = g_enterprise AND inbadocno = g_inbadocno
+
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+ 
+   
+   #add-point:main段define_sql name="main.body.define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = "SELECT inbcsite,inbcdocno,inbcseq,inbcseq1,inbc001,inbc002,inbc005,inbc006,inbc007, 
+       inbc003,inbc009,inbc010,inbc211,inbc212,inbc208,inbc206,inbc207,inbc204,inbc205,inbc015,inbc203, 
+       inbc016,inbc017 FROM inbc_t WHERE inbcent=? AND inbcdocno=? AND inbcseq=? AND inbcseq1=? FOR  
+       UPDATE"
+   #add-point:main段define_sql name="main.body.after_define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE aint911_01_bcl CURSOR FROM g_forupd_sql
+ 
+ 
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aint911_01 WITH FORM cl_ap_formpath("ain","aint911_01")
+   
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   #程式初始化
+   CALL aint911_01_init()   
+ 
+   #進入選單 Menu (="N")
+   CALL aint911_01_ui_dialog() 
+ 
+   #畫面關閉
+   CLOSE WINDOW w_aint911_01
+ 
+   
+   
+ 
+   #add-point:離開前 name="main.exit"
+   LET g_action_choice = ""
+   LET INT_FLAG = FALSE
+   #end add-point
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aint911_01.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION aint911_01_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point
+   #add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="init.pre_function"
+   
+   #end add-point
+   
+   
+   
+   LET g_error_show = 1
+   
+   #add-point:畫面資料初始化 name="init.init"
+   #判斷據點參數若不使用參考單位時，則參考單位、數量需隱藏不可以維護(據點參數:S-BAS-0028)
+   IF cl_get_para(g_enterprise,g_site,'S-BAS-0028') = 'N' THEN
+      CALL cl_set_comp_visible("inbc015,inbb014",FALSE)
+   END IF
+   
+   #判斷據點參數若不使用產品特徵時，則產品特徵需隱藏不可以維護(據點參數:S-BAS-0036)
+   IF cl_get_para(g_enterprise,g_site,'S-BAS-0036') = 'N' THEN
+      CALL cl_set_comp_visible("inbb002",FALSE)
+   END IF
+   #判斷若是雜發作業則有效日期與存貨備註隱藏不可以維護
+   IF g_type = '1' THEN
+       CALL cl_set_comp_visible("inbb204,inbb022,inbb021,inbc203,inbc016,inbc017",FALSE)      #150507-00001#8 150527 by lori522612 add inbb204,inbc203
+   END IF 
+   
+   #end add-point
+   
+   CALL aint911_01_default_search()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aint911_01.ui_dialog" >}
+#+ 功能選單 
+PRIVATE FUNCTION aint911_01_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE la_param  RECORD #串查用
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   DEFINE l_cmd_token           base.StringTokenizer   #報表作業cmdrun使用 
+   DEFINE l_cmd_next            STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_cnt             LIKE type_t.num5       #報表作業cmdrun使用
+   DEFINE l_cmd_prog_arg        STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_arg             STRING                 #報表作業cmdrun使用
+   #add-point:ui_dialog段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   DEFINE l_inbastus    LIKE inba_t.inbastus
+   #end add-point 
+   
+   #add-point:Function前置處理  name="ui_dialog.pre_function"
+   
+   #end add-point
+   
+   LET g_action_choice = " "  
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()      
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   
+   LET g_detail_idx = 1
+   
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   CALL aint911_01_inbb_fill(g_inbadocno)
+   #end add-point
+   
+   WHILE TRUE
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_inbc_d.clear()
+ 
+         LET g_wc2 = ' 1=2'
+         LET g_action_choice = ""
+         CALL aint911_01_init()
+      END IF
+   
+      CALL aint911_01_b_fill(g_wc2)
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_inbc_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               #add-point:ui_dialog段before display  name="ui_dialog.body.before_display"
+               
+               #end add-point
+               #讓各頁籤能夠同步指到特定資料
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               #add-point:ui_dialog段before display2 name="ui_dialog.body.before_display2"
+               
+               #end add-point
+               
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               LET g_temp_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont() 
+               #顯示followup圖示
+               #應用 a48 樣板自動產生(Version:3)
+   CALL aint911_01_set_pk_array()
+   #add-point:ON ACTION agendum name="show.follow_pic"
+   
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+ 
+               #add-point:display array-before row name="ui_dialog.before_row"
+               
+               #end add-point
+         
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY
+      
+ 
+      
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         DISPLAY ARRAY g_inbb_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b2)   
+    
+            BEFORE ROW
+               LET l_ac2 = DIALOG.getCurrentRow("s_detail2")
+               LET g_detail_idx2 = l_ac2
+               #CALL aint911_01_inbc_fill(g_inbadocno)
+               CALL aint911_01_b_fill('')
+               
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail_idx2)
+               LET l_ac2 = DIALOG.getCurrentRow("s_detail2")
+               #CALL aint911_01_inbc_fill(g_inbadocno)
+               CALL aint911_01_b_fill('')
+               
+         END DISPLAY
+         #end add-point
+    
+         BEFORE DIALOG
+            IF g_temp_idx > 0 THEN
+               LET l_ac = g_temp_idx
+               CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+               LET g_temp_idx = 1
+            END IF
+            LET g_curr_diag = ui.DIALOG.getCurrent()         
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+ 
+            #add-point:ui_dialog段before name="ui_dialog.b_dialog"
+            
+            #end add-point
+            NEXT FIELD CURRENT
+      
+         
+         #應用 a67 樣板自動產生(Version:1)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            LET g_aw = ''
+            CALL aint911_01_show_ownid_msg()
+            #因為不呼叫cl_auth_chk_act()，所以需另外紀錄log，
+            #但紀錄log時需紀錄status，與鴻傑討論後，決議先一律紀錄成功
+            CALL cl_log_act(g_action_choice,TRUE)
+            CALL aint911_01_modify()
+            #add-point:ON ACTION modify name="menu.modify"
+            
+            #END add-point
+            
+ 
+ 
+ 
+ 
+         #應用 a67 樣板自動產生(Version:1)
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            LET g_aw = g_curr_diag.getCurrentItem()
+            CALL aint911_01_show_ownid_msg()
+            #因為不呼叫cl_auth_chk_act()，所以需另外紀錄log，
+            #但紀錄log時需紀錄status，與鴻傑討論後，決議先一律紀錄成功
+            CALL cl_log_act(g_action_choice,TRUE)
+            CALL aint911_01_modify()
+            #add-point:ON ACTION modify_detail name="menu.modify_detail"
+            
+            #END add-point
+            
+ 
+ 
+ 
+ 
+      
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_inbc_d)
+               LET g_export_id[1]   = "s_detail1"
+ 
+               #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+               
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+            
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice="exit"
+            CANCEL DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            CANCEL DIALOG
+            
+         
+         
+         #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL aint911_01_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.dialog.related_document"
+               
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL aint911_01_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.dialog.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL aint911_01_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.dialog.followup"
+            
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+ 
+         
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aint911_01.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION aint911_01_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   
+   #end add-point 
+   
+   #add-point:Function前置處理  name="query.pre_function"
+   
+   #end add-point
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_inbc_d.clear()
+   
+   LET g_qryparam.state = "c"
+   
+   #wc備份
+   LET ls_wc = g_wc2
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      CONSTRUCT g_wc2 ON inbcsite,inbcdocno,inbcseq,inbcseq1,inbc001,inbc005,inbc006,inbc007,inbc003, 
+          inbc010,inbc208,inbc206,inbc207,inbc204,inbc205,inbc015,inbc203,inbc016,inbc017 
+ 
+         FROM s_detail1[1].inbcsite,s_detail1[1].inbcdocno,s_detail1[1].inbcseq,s_detail1[1].inbcseq1, 
+             s_detail1[1].inbc001,s_detail1[1].inbc005,s_detail1[1].inbc006,s_detail1[1].inbc007,s_detail1[1].inbc003, 
+             s_detail1[1].inbc010,s_detail1[1].inbc208,s_detail1[1].inbc206,s_detail1[1].inbc207,s_detail1[1].inbc204, 
+             s_detail1[1].inbc205,s_detail1[1].inbc015,s_detail1[1].inbc203,s_detail1[1].inbc016,s_detail1[1].inbc017  
+ 
+      
+         
+      
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbcsite
+            #add-point:BEFORE FIELD inbcsite name="query.b.page1.inbcsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbcsite
+            
+            #add-point:AFTER FIELD inbcsite name="query.a.page1.inbcsite"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.inbcsite
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbcsite
+            #add-point:ON ACTION controlp INFIELD inbcsite name="query.c.page1.inbcsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbcdocno
+            #add-point:BEFORE FIELD inbcdocno name="query.b.page1.inbcdocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbcdocno
+            
+            #add-point:AFTER FIELD inbcdocno name="query.a.page1.inbcdocno"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.inbcdocno
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbcdocno
+            #add-point:ON ACTION controlp INFIELD inbcdocno name="query.c.page1.inbcdocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbcseq
+            #add-point:BEFORE FIELD inbcseq name="query.b.page1.inbcseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbcseq
+            
+            #add-point:AFTER FIELD inbcseq name="query.a.page1.inbcseq"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.inbcseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbcseq
+            #add-point:ON ACTION controlp INFIELD inbcseq name="query.c.page1.inbcseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbcseq1
+            #add-point:BEFORE FIELD inbcseq1 name="query.b.page1.inbcseq1"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbcseq1
+            
+            #add-point:AFTER FIELD inbcseq1 name="query.a.page1.inbcseq1"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.inbcseq1
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbcseq1
+            #add-point:ON ACTION controlp INFIELD inbcseq1 name="query.c.page1.inbcseq1"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc001
+            #add-point:BEFORE FIELD inbc001 name="query.b.page1.inbc001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc001
+            
+            #add-point:AFTER FIELD inbc001 name="query.a.page1.inbc001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.inbc001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc001
+            #add-point:ON ACTION controlp INFIELD inbc001 name="query.c.page1.inbc001"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc005
+            #add-point:BEFORE FIELD inbc005 name="query.b.page1.inbc005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc005
+            
+            #add-point:AFTER FIELD inbc005 name="query.a.page1.inbc005"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.inbc005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc005
+            #add-point:ON ACTION controlp INFIELD inbc005 name="query.c.page1.inbc005"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc006
+            #add-point:BEFORE FIELD inbc006 name="query.b.page1.inbc006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc006
+            
+            #add-point:AFTER FIELD inbc006 name="query.a.page1.inbc006"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.inbc006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc006
+            #add-point:ON ACTION controlp INFIELD inbc006 name="query.c.page1.inbc006"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc007
+            #add-point:BEFORE FIELD inbc007 name="query.b.page1.inbc007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc007
+            
+            #add-point:AFTER FIELD inbc007 name="query.a.page1.inbc007"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.inbc007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc007
+            #add-point:ON ACTION controlp INFIELD inbc007 name="query.c.page1.inbc007"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc003
+            #add-point:BEFORE FIELD inbc003 name="query.b.page1.inbc003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc003
+            
+            #add-point:AFTER FIELD inbc003 name="query.a.page1.inbc003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.inbc003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc003
+            #add-point:ON ACTION controlp INFIELD inbc003 name="query.c.page1.inbc003"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc010
+            #add-point:BEFORE FIELD inbc010 name="query.b.page1.inbc010"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc010
+            
+            #add-point:AFTER FIELD inbc010 name="query.a.page1.inbc010"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.inbc010
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc010
+            #add-point:ON ACTION controlp INFIELD inbc010 name="query.c.page1.inbc010"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.inbc208
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc208
+            #add-point:ON ACTION controlp INFIELD inbc208 name="construct.c.page1.inbc208"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_stae001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inbc208  #顯示到畫面上
+            NEXT FIELD inbc208                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc208
+            #add-point:BEFORE FIELD inbc208 name="query.b.page1.inbc208"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc208
+            
+            #add-point:AFTER FIELD inbc208 name="query.a.page1.inbc208"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc206
+            #add-point:BEFORE FIELD inbc206 name="query.b.page1.inbc206"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc206
+            
+            #add-point:AFTER FIELD inbc206 name="query.a.page1.inbc206"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.inbc206
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc206
+            #add-point:ON ACTION controlp INFIELD inbc206 name="query.c.page1.inbc206"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc207
+            #add-point:BEFORE FIELD inbc207 name="query.b.page1.inbc207"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc207
+            
+            #add-point:AFTER FIELD inbc207 name="query.a.page1.inbc207"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.inbc207
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc207
+            #add-point:ON ACTION controlp INFIELD inbc207 name="query.c.page1.inbc207"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc204
+            #add-point:BEFORE FIELD inbc204 name="query.b.page1.inbc204"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc204
+            
+            #add-point:AFTER FIELD inbc204 name="query.a.page1.inbc204"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.inbc204
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc204
+            #add-point:ON ACTION controlp INFIELD inbc204 name="query.c.page1.inbc204"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc205
+            #add-point:BEFORE FIELD inbc205 name="query.b.page1.inbc205"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc205
+            
+            #add-point:AFTER FIELD inbc205 name="query.a.page1.inbc205"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.inbc205
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc205
+            #add-point:ON ACTION controlp INFIELD inbc205 name="query.c.page1.inbc205"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc015
+            #add-point:BEFORE FIELD inbc015 name="query.b.page1.inbc015"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc015
+            
+            #add-point:AFTER FIELD inbc015 name="query.a.page1.inbc015"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.inbc015
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc015
+            #add-point:ON ACTION controlp INFIELD inbc015 name="query.c.page1.inbc015"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc203
+            #add-point:BEFORE FIELD inbc203 name="query.b.page1.inbc203"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc203
+            
+            #add-point:AFTER FIELD inbc203 name="query.a.page1.inbc203"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.inbc203
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc203
+            #add-point:ON ACTION controlp INFIELD inbc203 name="query.c.page1.inbc203"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc016
+            #add-point:BEFORE FIELD inbc016 name="query.b.page1.inbc016"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc016
+            
+            #add-point:AFTER FIELD inbc016 name="query.a.page1.inbc016"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.inbc016
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc016
+            #add-point:ON ACTION controlp INFIELD inbc016 name="query.c.page1.inbc016"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc017
+            #add-point:BEFORE FIELD inbc017 name="query.b.page1.inbc017"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc017
+            
+            #add-point:AFTER FIELD inbc017 name="query.a.page1.inbc017"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.inbc017
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc017
+            #add-point:ON ACTION controlp INFIELD inbc017 name="query.c.page1.inbc017"
+            
+            #END add-point
+ 
+ 
+  
+         
+ 
+      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct name="cs.before_construct"
+            
+            #end add-point 
+      
+      END CONSTRUCT
+  
+      #add-point:query段more_construct name="query.more_construct"
+      
+      #end add-point 
+  
+      BEFORE DIALOG 
+         CALL cl_qbe_init()
+         #add-point:query段before_dialog name="query.before_dialog"
+         
+         #end add-point 
+      
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+      
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         CANCEL DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+      CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:query段after_construct name="query.after_construct"
+   
+   #end add-point
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      #LET g_wc2 = ls_wc
+      LET g_wc2 = " 1=2"
+      RETURN
+   ELSE
+      LET g_error_show = 1
+      LET g_detail_idx = 1
+   END IF
+    
+   CALL aint911_01_b_fill(g_wc2)
+ 
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   END IF
+   
+   LET INT_FLAG = FALSE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aint911_01.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION aint911_01_insert()
+   #add-point:insert段define(客製用) name="insert.define_customerization"
+   
+   #end add-point
+   #add-point:delete段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   
+   #end add-point                
+   
+   #add-point:Function前置處理  name="insert.pre_function"
+   
+   #end add-point
+   
+   #add-point:單身新增前 name="insert.b_insert"
+   
+   #end add-point
+   
+   LET g_insert = 'Y'
+   CALL aint911_01_modify()
+            
+   #add-point:單身新增後 name="insert.a_insert"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aint911_01.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION aint911_01_modify()
+   #add-point:modify段define(客製用) name="modify.define_customerization"
+   
+   #end add-point
+   DEFINE  l_cmd                  LIKE type_t.chr1
+   DEFINE  l_ac_t                 LIKE type_t.num10               #未取消的ARRAY CNT 
+   DEFINE  l_n                    LIKE type_t.num10               #檢查重複用  
+   DEFINE  l_cnt                  LIKE type_t.num10               #檢查重複用  
+   DEFINE  l_lock_sw              LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert         LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete         LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count                LIKE type_t.num10
+   DEFINE  l_i                    LIKE type_t.num10
+   DEFINE  ls_return              STRING
+   DEFINE  l_var_keys             DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys           DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                 DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields               DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak         DYNAMIC ARRAY OF STRING
+   DEFINE  li_reproduce           LIKE type_t.num10
+   DEFINE  li_reproduce_target    LIKE type_t.num10
+   DEFINE  lb_reproduce           BOOLEAN
+   DEFINE  l_insert               BOOLEAN
+   #add-point:modify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   DEFINE l_inbb010    LIKE inbb_t.inbb010
+   DEFINE l_inbb013    LIKE inbb_t.inbb013 
+   DEFINE l_inbc016    LIKE inbc_t.inbc016
+   DEFINE l_imaf032    LIKE imaf_t.imaf032
+   DEFINE l_ooac004    LIKE ooac_t.ooac004
+   DEFINE l_inbc010    LIKE inbc_t.inbc010
+   DEFINE l_inbc015    LIKE inbc_t.inbc015
+   DEFINE l_inaa007    LIKE inaa_t.inaa007
+   DEFINE l_inbastus   LIKE inba_t.inbastus
+   DEFINE l_success    LIKE type_t.num5
+   DEFINE l_rate       LIKE inaj_t.inaj014   
+   DEFINE l_flag       LIKE type_t.num5
+   DEFINE l_ooac002    LIKE ooac_t.ooac002
+   DEFINE l_imaf062    LIKE imaf_t.imaf062
+   DEFINE l_imaf063    LIKE imaf_t.imaf063
+   DEFINE l_flag1      LIKE type_t.num5
+   DEFINE l_inbc212    LIKE inbc_t.inbc212  #151111-00021#3 Add By Ken 151203 計價數量
+   #DEFINE l_inbc204    LIKE inbc_t.inbc204  #151111-00021#3 Add By Ken 151203 領用單價
+   DEFINE l_inbc205    LIKE inbc_t.inbc205  #151111-00021#3 Add By Ken 151203 領用金額
+   DEFINE l_inbc207    LIKE inbc_t.inbc207  #151111-00021#3 Add By Ken 151203 成本金額
+   #end add-point 
+   
+   #add-point:Function前置處理  name="modify.pre_function"
+   
+   #end add-point
+   
+#  LET g_action_choice = ""   #(ver:35) mark
+   
+   LET g_qryparam.state = "i"
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #add-point:modify開始前 name="modify.define_sql"
+   
+   #end add-point
+   
+   LET INT_FLAG = FALSE
+   LET lb_reproduce = FALSE
+   LET l_insert = FALSE
+ 
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+ 
+   #add-point:modify段修改前 name="modify.before_input"
+   LET g_errshow = 1
+   
+   LET l_inbastus = ''
+   SELECT inbastus INTO l_inbastus FROM inba_t WHERE inbaent = g_enterprise AND inbasite = g_site AND inbadocno = g_inbadocno
+   IF l_inbastus != 'Y' THEN
+      #該單據編號已過賬，不可修改！
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'ain-00024'
+      LET g_errparam.extend = g_inbadocno
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN
+   END IF
+   #end add-point
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_inbc_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_detail_cnt,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_inbc_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL aint911_01_b_fill(g_wc2)
+            LET g_detail_cnt = g_inbc_d.getLength()
+         
+         BEFORE ROW
+            #add-point:modify段before row name="input.body.before_row2"
+ 
+            #end add-point  
+            LET l_insert = FALSE
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            LET l_cmd = ''
+            LET l_ac_t = l_ac 
+            LET l_ac = g_detail_idx
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+            DISPLAY g_inbc_d.getLength() TO FORMONLY.cnt
+         
+            CALL s_transaction_begin()
+            LET g_detail_cnt = g_inbc_d.getLength()
+            
+            IF g_detail_cnt >= l_ac 
+               AND g_inbc_d[l_ac].inbcdocno IS NOT NULL
+               AND g_inbc_d[l_ac].inbcseq IS NOT NULL
+               AND g_inbc_d[l_ac].inbcseq1 IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_inbc_d_t.* = g_inbc_d[l_ac].*  #BACKUP
+               LET g_inbc_d_o.* = g_inbc_d[l_ac].*  #BACKUP
+               IF NOT aint911_01_lock_b("inbc_t") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH aint911_01_bcl INTO g_inbc_d[l_ac].inbcsite,g_inbc_d[l_ac].inbcdocno,g_inbc_d[l_ac].inbcseq, 
+                      g_inbc_d[l_ac].inbcseq1,g_inbc_d[l_ac].inbc001,g_inbc_d[l_ac].inbc002,g_inbc_d[l_ac].inbc005, 
+                      g_inbc_d[l_ac].inbc006,g_inbc_d[l_ac].inbc007,g_inbc_d[l_ac].inbc003,g_inbc_d[l_ac].inbc009, 
+                      g_inbc_d[l_ac].inbc010,g_inbc_d[l_ac].inbc211,g_inbc_d[l_ac].inbc212,g_inbc_d[l_ac].inbc208, 
+                      g_inbc_d[l_ac].inbc206,g_inbc_d[l_ac].inbc207,g_inbc_d[l_ac].inbc204,g_inbc_d[l_ac].inbc205, 
+                      g_inbc_d[l_ac].inbc015,g_inbc_d[l_ac].inbc203,g_inbc_d[l_ac].inbc016,g_inbc_d[l_ac].inbc017 
+ 
+                  IF SQLCA.SQLCODE THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = g_inbc_d_t.inbcdocno,":",SQLERRMESSAGE  
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_inbc_d_mask_o[l_ac].* =  g_inbc_d[l_ac].*
+                  CALL aint911_01_inbc_t_mask()
+                  LET g_inbc_d_mask_n[l_ac].* =  g_inbc_d[l_ac].*
+                  
+                  CALL aint911_01_detail_show()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            CALL aint911_01_set_entry_b(l_cmd)
+            CALL aint911_01_set_no_entry_b(l_cmd)
+            #add-point:modify段before row name="input.body.before_row"
+            CALL aint911_01_set_entry_b(l_cmd)
+            CALL aint911_01_set_no_required()
+            CALL aint911_01_set_required()
+            CALL aint911_01_set_no_entry_b(l_cmd)
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+ 
+            #其他table進行lock
+            
+ 
+        
+         BEFORE INSERT
+            
+            LET l_insert = TRUE
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_inbc_d_t.* TO NULL
+            INITIALIZE g_inbc_d_o.* TO NULL
+            INITIALIZE g_inbc_d[l_ac].* TO NULL 
+            #公用欄位給值(單身)
+            
+            #自定義預設值(單身1)
+                  LET g_inbc_d[l_ac].inbc010 = "0"
+      LET g_inbc_d[l_ac].inbc212 = "0"
+      LET g_inbc_d[l_ac].inbc206 = "0"
+      LET g_inbc_d[l_ac].inbc207 = "0"
+      LET g_inbc_d[l_ac].inbc204 = "0"
+      LET g_inbc_d[l_ac].inbc205 = "0"
+      LET g_inbc_d[l_ac].inbc015 = "0"
+ 
+            #add-point:modify段before備份 name="input.body.before_bak"
+            
+            #end add-point
+            LET g_inbc_d_t.* = g_inbc_d[l_ac].*     #新輸入資料
+            LET g_inbc_d_o.* = g_inbc_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_inbc_d[li_reproduce_target].* = g_inbc_d[li_reproduce].*
+ 
+               LET g_inbc_d[g_inbc_d.getLength()].inbcdocno = NULL
+               LET g_inbc_d[g_inbc_d.getLength()].inbcseq = NULL
+               LET g_inbc_d[g_inbc_d.getLength()].inbcseq1 = NULL
+ 
+            END IF
+            
+ 
+            CALL aint911_01_set_entry_b(l_cmd)
+            CALL aint911_01_set_no_entry_b(l_cmd)
+            #add-point:modify段before insert name="input.body.before_insert"
+            LET g_inbc_d[l_ac].inbcdocno = g_inbadocno
+            LET g_inbc_d[l_ac].inbcseq = g_inbb_d[l_ac2].inbbseq
+            LET g_inbc_d[l_ac].inbc001 = g_inbb_d[l_ac2].inbb001
+            LET g_inbc_d[l_ac].inbc005 = g_inbb_d[l_ac2].inbb007
+            LET g_inbc_d[l_ac].inbc006 = g_inbb_d[l_ac2].inbb008
+            LET g_inbc_d[l_ac].inbc007 = g_inbb_d[l_ac2].inbb009
+            LET g_inbc_d[l_ac].inbcsite = g_inbb_d[l_ac2].inbbsite
+            LET g_inbc_d[l_ac].inbc016 = g_inbb_d[l_ac2].inbb022
+            LET g_inbc_d[l_ac].inbc017 = g_inbb_d[l_ac2].inbb021
+            LET g_inbc_d[l_ac].inbc003 = g_inbb_d[l_ac2].inbb003
+            LET g_inbc_d[l_ac].inbc002 = g_inbb_d[l_ac2].inbb002
+            LET g_inbc_d[l_ac].inbc203 = g_inbb_d[l_ac2].inbb204   #150507-00001#8 150527 by lori522612 add
+            
+            CALL aint911_01_inbc005_ref(g_inbc_d[l_ac].inbc005) RETURNING g_inbc_d[l_ac].inbc005_desc
+            DISPLAY BY NAME g_inbc_d[l_ac].inbc005_desc
+            
+            LET l_inaa007 = ''
+            SELECT inaa007 INTO l_inaa007 FROM inaa_t WHERE inaaent = g_enterprise AND inaasite = g_site AND inaa001 = g_inbc_d[l_ac].inbc005
+            IF cl_null(g_inbc_d[l_ac].inbc006) AND l_inaa007 = '1' THEN
+               LET g_inbc_d[l_ac].inbc006 = ' '
+            END IF
+            
+            CALL aint911_01_inbc006_ref(g_inbc_d[l_ac].inbc005,g_inbc_d[l_ac].inbc006) RETURNING g_inbc_d[l_ac].inbc006_desc
+            DISPLAY BY NAME g_inbc_d[l_ac].inbc006_desc
+            
+            
+            SELECT MAX(inbcseq1)+1 INTO g_inbc_d[l_ac].inbcseq1 FROM inbc_t
+               WHERE inbcent = g_enterprise AND inbcsite = g_site 
+                 AND inbcdocno = g_inbc_d[l_ac].inbcdocno AND inbcseq = g_inbc_d[l_ac].inbcseq
+            IF cl_null(g_inbc_d[l_ac].inbcseq1) OR g_inbc_d[l_ac].inbcseq1 = 0 THEN
+               LET g_inbc_d[l_ac].inbcseq1 = 1
+            END IF
+            
+            CALL aint911_01_set_entry_b(l_cmd)
+            CALL aint911_01_set_no_required()
+            CALL aint911_01_set_required()
+            CALL aint911_01_set_no_entry_b(l_cmd)
+            #end add-point  
+  
+         AFTER INSERT
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(1) INTO l_count FROM inbc_t 
+             WHERE inbcent = g_enterprise AND inbcdocno = g_inbc_d[l_ac].inbcdocno
+                                       AND inbcseq = g_inbc_d[l_ac].inbcseq
+                                       AND inbcseq1 = g_inbc_d[l_ac].inbcseq1
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前 name="input.body.b_insert"
+               #150601-00009#5 1500602 by lori522612 add---(S)
+               LET l_success = ''                  
+               IF g_argv[1] = '2' THEN
+                  IF cl_null(g_inbb_d[l_ac2].inbb009) THEN
+                     CALL s_lot_out_get_batch_no(g_inbc_d[l_ac].inbc001)
+                        RETURNING l_success,g_inbc_d[l_ac].inbc007
+                     IF l_success = FALSE THEN
+                        CALL s_transaction_end('N','0')   
+                        CANCEL INSERT
+                     END IF
+                  ELSE
+                     LET g_inbc_d[l_ac].inbc007 = g_inbb_d[l_ac2].inbb009
+                  END IF   
+               END IF   
+               #150601-00009#5 1500602 by lori522612 add---(E)  
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_inbc_d[g_detail_idx].inbcdocno
+               LET gs_keys[2] = g_inbc_d[g_detail_idx].inbcseq
+               LET gs_keys[3] = g_inbc_d[g_detail_idx].inbcseq1
+               CALL aint911_01_insert_b('inbc_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後 name="input.body.a_insert"
+               
+               #end add-point
+            ELSE    
+               INITIALIZE g_inbc_d[l_ac].* TO NULL
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code   = "std-00006" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLCODE THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "inbc_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE
+               LET g_errparam.popup = TRUE 
+               CALL cl_err()
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL aint911_01_b_fill(g_wc2)
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert name="input.body.a_insert2"
+               LET l_inbb010 = ''
+               LET l_inbb013 = ''
+               SELECT inbb010,inbb013 INTO l_inbb010,l_inbb013 FROM inbb_t 
+                  WHERE inbbent = g_enterprise AND inbbsite = g_site 
+                     AND inbbdocno = g_inbc_d[l_ac].inbcdocno
+                     AND inbbseq = g_inbc_d[l_ac].inbcseq
+               
+      
+               UPDATE inbc_t SET (inbc002,inbc003,inbc004,inbc009,inbc011,inbc016) =
+                   (g_inbb_d[l_ac2].inbb002,g_inbb_d[l_ac2].inbb003,g_inbb_d[l_ac2].inbb004,
+                    l_inbb010,l_inbb013,g_inbc_d[l_ac].inbc016)
+                 WHERE inbcent = g_enterprise AND inbcsite = g_site AND inbcdocno = g_inbc_d[l_ac].inbcdocno
+                                       AND inbcseq = g_inbc_d[l_ac].inbcseq
+                                       AND inbcseq1 = g_inbc_d[l_ac].inbcseq1
+               IF SQLCA.SQLcode  THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "inbc_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+  
+                  CALL s_transaction_end('N','0')                    
+                  CANCEL INSERT
+               END IF    
+               
+               #更新申請明細的實際數量
+               SELECT SUM(inbc010),SUM(inbc015),SUM(inbc212),SUM(inbc205),SUM(inbc207) INTO l_inbc010,l_inbc015,l_inbc212,l_inbc205,l_inbc207  #151111-00021#3 Add By Ken 151203 加上inbc212計價數量,inbc205領用金額,inbc207成本金額
+                 FROM inbc_t
+                WHERE inbcent = g_enterprise 
+                  AND inbcsite = g_site 
+                  AND inbcdocno = g_inbc_d[l_ac].inbcdocno #項次   
+                  AND inbcseq = g_inbc_d[l_ac].inbcseq
+
+               UPDATE inbb_t SET inbb012 = l_inbc010,inbb015 = l_inbc015,inbb225 = l_inbc212,inbb206 = l_inbb205,inbb208 = l_inbc207  #151111-00021#3 Add By Ken 151203 加上inbb225=inbc212計價數量,inbb206=inbc205領用金額,inbb208=inbc207成本金額
+                WHERE inbbent = g_enterprise 
+                  AND inbbsite = g_site 
+                  AND inbbdocno = g_inbc_d[l_ac].inbcdocno
+                  AND inbbseq = g_inbc_d[l_ac].inbcseq   
+               IF SQLCA.SQLcode  THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "inbb_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+  
+                  CALL s_transaction_end('N','0')                    
+                  CANCEL INSERT
+               END IF
+               #end add-point
+               ##ERROR 'INSERT O.K'
+               LET g_detail_cnt = g_detail_cnt + 1
+               
+               LET g_wc2 = g_wc2, " OR (inbcdocno = '", g_inbc_d[l_ac].inbcdocno, "' "
+                                  ," AND inbcseq = '", g_inbc_d[l_ac].inbcseq, "' "
+                                  ," AND inbcseq1 = '", g_inbc_d[l_ac].inbcseq1, "' "
+ 
+                                  ,")"
+            END IF                
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+            ELSE
+               #add-point:單身刪除ask前 name="input.body.b_delete_ask"
+               
+               #end add-point   
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   = -263 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前 name="input.body.b_delete"
+               
+               #end add-point   
+               
+               DELETE FROM inbc_t
+                WHERE inbcent = g_enterprise AND 
+                      inbcdocno = g_inbc_d_t.inbcdocno
+                      AND inbcseq = g_inbc_d_t.inbcseq
+                      AND inbcseq1 = g_inbc_d_t.inbcseq1
+ 
+                      
+               #add-point:單身刪除中 name="input.body.m_delete"
+               
+               #end add-point  
+                      
+               IF SQLCA.SQLCODE THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "inbc_t:",SQLERRMESSAGE 
+                  LET g_errparam.code = SQLCA.SQLCODE
+                  LET g_errparam.popup = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE   
+               ELSE
+                  LET g_detail_cnt = g_detail_cnt-1
+                  
+ 
+                  #add-point:單身刪除後 name="input.body.a_delete"
+                  
+                  #end add-point
+                  #修改歷程記錄(刪除)
+                  CALL aint911_01_set_pk_array()
+                  LET g_log1 = util.JSON.stringify(g_inbc_d[l_ac])   #(ver:38)
+                  IF NOT cl_log_modified_record(g_log1,'') THEN    #(ver:38)
+                  ELSE
+                  END IF
+               END IF 
+               CLOSE aint911_01_bcl
+               #add-point:單身關閉bcl name="input.body.close"
+               
+               #end add-point
+               LET l_count = g_inbc_d.getLength()
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_inbc_d_t.inbcdocno
+               LET gs_keys[2] = g_inbc_d_t.inbcseq
+               LET gs_keys[3] = g_inbc_d_t.inbcseq1
+ 
+               #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL aint911_01_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove"
+      
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+ 
+            END IF 
+              
+         AFTER DELETE 
+            IF l_cmd <> 'd' THEN
+               #add-point:單身刪除後2 name="input.body.after_delete"
+               
+               #end add-point
+                              CALL aint911_01_delete_b('inbc_t',gs_keys,"'1'")
+            END IF
+            #如果是最後一筆
+            IF l_ac = (g_inbc_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+            #add-point:單身刪除後3 name="input.body.after_delete3"
+            
+            #end add-point
+ 
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbcsite
+            #add-point:BEFORE FIELD inbcsite name="input.b.page1.inbcsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbcsite
+            
+            #add-point:AFTER FIELD inbcsite name="input.a.page1.inbcsite"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inbcsite
+            #add-point:ON CHANGE inbcsite name="input.g.page1.inbcsite"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbcdocno
+            #add-point:BEFORE FIELD inbcdocno name="input.b.page1.inbcdocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbcdocno
+            
+            #add-point:AFTER FIELD inbcdocno name="input.a.page1.inbcdocno"
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_inbc_d[g_detail_idx].inbcdocno) AND NOT cl_null(g_inbc_d[g_detail_idx].inbcseq) AND NOT cl_null(g_inbc_d[g_detail_idx].inbcseq1) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_inbc_d[g_detail_idx].inbcdocno != g_inbc_d_t.inbcdocno OR g_inbc_d[g_detail_idx].inbcseq != g_inbc_d_t.inbcseq OR g_inbc_d[g_detail_idx].inbcseq1 != g_inbc_d_t.inbcseq1))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM inbc_t WHERE "||"inbcent = '" ||g_enterprise|| "' AND inbcsite = '" ||g_site|| "' AND "||"inbcdocno = '"||g_inbc_d[g_detail_idx].inbcdocno ||"' AND "|| "inbcseq = '"||g_inbc_d[g_detail_idx].inbcseq ||"' AND "|| "inbcseq1 = '"||g_inbc_d[g_detail_idx].inbcseq1 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inbcdocno
+            #add-point:ON CHANGE inbcdocno name="input.g.page1.inbcdocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbcseq
+            #add-point:BEFORE FIELD inbcseq name="input.b.page1.inbcseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbcseq
+            
+            #add-point:AFTER FIELD inbcseq name="input.a.page1.inbcseq"
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_inbc_d[g_detail_idx].inbcdocno) AND NOT cl_null(g_inbc_d[g_detail_idx].inbcseq) AND NOT cl_null(g_inbc_d[g_detail_idx].inbcseq1) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_inbc_d[g_detail_idx].inbcdocno != g_inbc_d_t.inbcdocno OR g_inbc_d[g_detail_idx].inbcseq != g_inbc_d_t.inbcseq OR g_inbc_d[g_detail_idx].inbcseq1 != g_inbc_d_t.inbcseq1))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM inbc_t WHERE "||"inbcent = '" ||g_enterprise|| "' AND inbcsite = '" ||g_site|| "' AND "||"inbcdocno = '"||g_inbc_d[g_detail_idx].inbcdocno ||"' AND "|| "inbcseq = '"||g_inbc_d[g_detail_idx].inbcseq ||"' AND "|| "inbcseq1 = '"||g_inbc_d[g_detail_idx].inbcseq1 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inbcseq
+            #add-point:ON CHANGE inbcseq name="input.g.page1.inbcseq"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbcseq1
+            #add-point:BEFORE FIELD inbcseq1 name="input.b.page1.inbcseq1"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbcseq1
+            
+            #add-point:AFTER FIELD inbcseq1 name="input.a.page1.inbcseq1"
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_inbc_d[g_detail_idx].inbcdocno) AND NOT cl_null(g_inbc_d[g_detail_idx].inbcseq) AND NOT cl_null(g_inbc_d[g_detail_idx].inbcseq1) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_inbc_d[g_detail_idx].inbcdocno != g_inbc_d_t.inbcdocno OR g_inbc_d[g_detail_idx].inbcseq != g_inbc_d_t.inbcseq OR g_inbc_d[g_detail_idx].inbcseq1 != g_inbc_d_t.inbcseq1))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM inbc_t WHERE "||"inbcent = '" ||g_enterprise|| "' AND inbcsite = '" ||g_site|| "' AND "||"inbcdocno = '"||g_inbc_d[g_detail_idx].inbcdocno ||"' AND "|| "inbcseq = '"||g_inbc_d[g_detail_idx].inbcseq ||"' AND "|| "inbcseq1 = '"||g_inbc_d[g_detail_idx].inbcseq1 ||"'",'std-00004',0) THEN 
+                     LET g_inbc_d[g_detail_idx].inbcseq1 = g_inbc_d_t.inbcseq1
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inbcseq1
+            #add-point:ON CHANGE inbcseq1 name="input.g.page1.inbcseq1"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc001
+            #add-point:BEFORE FIELD inbc001 name="input.b.page1.inbc001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc001
+            
+            #add-point:AFTER FIELD inbc001 name="input.a.page1.inbc001"
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inbc001
+            #add-point:ON CHANGE inbc001 name="input.g.page1.inbc001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc005
+            
+            #add-point:AFTER FIELD inbc005 name="input.a.page1.inbc005"
+            #150907-00033#1 20150916 mark by beckxie---S
+            #INITIALIZE g_ref_fields TO NULL
+            #LET g_ref_fields[1] = g_inbc_d[l_ac].inbc005
+            #CALL ap_ref_array2(g_ref_fields,"SELECT inaa002 FROM inaa_t WHERE inaaent='"||g_enterprise||"' AND inaa001=? ","") RETURNING g_rtn_fields
+            #LET g_inbc_d[l_ac].inbc005_desc = '', g_rtn_fields[1] , ''
+            #DISPLAY BY NAME g_inbc_d[l_ac].inbc005_desc
+            #150907-00033#1 20150916 mark by beckxie---E
+            #150907-00033#1 20150916  add by beckxie---S
+            CALL s_desc_get_stock_desc(g_site,g_inbc_d[l_ac].inbc005) RETURNING g_inbc_d[l_ac].inbc005_desc
+            DISPLAY BY NAME g_inbc_d[l_ac].inbc005_desc
+            #150907-00033#1 20150916  add by beckxie---E
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc005
+            #add-point:BEFORE FIELD inbc005 name="input.b.page1.inbc005"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inbc005
+            #add-point:ON CHANGE inbc005 name="input.g.page1.inbc005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc006
+            
+            #add-point:AFTER FIELD inbc006 name="input.a.page1.inbc006"
+            LET l_inaa007 = ''
+            SELECT inaa007 INTO l_inaa007 FROM inaa_t WHERE inaaent = g_enterprise AND inaasite = g_site AND inaa001 = g_inbc_d[l_ac].inbc005
+            #IF cl_null(g_inbc_d[l_ac].inbc006) AND l_inaa007 = '1' THEN
+            #   LET g_inbc_d[l_ac].inbc006 = ' '
+            #END IF
+            
+            CALL aint911_01_inbc006_ref(g_inbc_d[l_ac].inbc005,g_inbc_d[l_ac].inbc006) RETURNING g_inbc_d[l_ac].inbc006_desc
+            DISPLAY BY NAME g_inbc_d[l_ac].inbc006_desc
+            
+            #IF (g_inbc_d[l_ac].inbc006 IS NOT NULL) AND (NOT cl_null(g_inbc_d[l_ac].inbc005)) THEN 
+            IF (NOT cl_null(g_inbc_d[l_ac].inbc006)) AND (NOT cl_null(g_inbc_d[l_ac].inbc005)) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_inbc_d[l_ac].inbc006 != g_inbc_d_t.inbc006 OR cl_null(g_inbc_d_t.inbc006))) THEN 
+                  #若輸入的庫位+儲位不存在[T:儲位資料檔]時，則呼叫應用元件判斷是否需要新增儲位基本資料 
+                   IF g_type = '2' THEN
+                      IF NOT s_aini002_ins_inab(g_site,g_inbc_d[l_ac].inbc005,g_inbc_d[l_ac].inbc006) THEN
+                         INITIALIZE g_errparam TO NULL
+                         LET g_errparam.code = 'ain-00282'
+                         LET g_errparam.extend = "inab_t"
+                         LET g_errparam.popup = TRUE
+                         CALL cl_err()
+
+                         NEXT FIELD CURRENT
+                      END IF
+                   END IF
+  
+                  IF NOT aint911_01_inbc006_chk(g_inbc_d[l_ac].inbc005,g_inbc_d[l_ac].inbc006) THEN
+                     LET g_inbc_d[l_ac].inbc006 = g_inbc_d_t.inbc006
+                     CALL aint911_01_inbc006_ref(g_inbc_d[l_ac].inbc005,g_inbc_d[l_ac].inbc006) RETURNING g_inbc_d[l_ac].inbc006_desc
+                     DISPLAY BY NAME g_inbc_d[l_ac].inbc006_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            
+            IF cl_null(g_inbc_d[l_ac].inbc006) AND l_inaa007 = '1' THEN
+               LET g_inbc_d[l_ac].inbc006 = ' '
+            END IF
+            CALL aint911_01_set_entry_b(l_cmd)
+            CALL aint911_01_set_no_required()
+            CALL aint911_01_set_required()
+            CALL aint911_01_set_no_entry_b(l_cmd)
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc006
+            #add-point:BEFORE FIELD inbc006 name="input.b.page1.inbc006"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inbc006
+            #add-point:ON CHANGE inbc006 name="input.g.page1.inbc006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc007
+            #add-point:BEFORE FIELD inbc007 name="input.b.page1.inbc007"
+            ##若料件據點資料設置批號自動編碼，則進欄位之前自動編號
+            #IF cl_null(g_inbc_d[l_ac].inbc007) THEN
+            #   LET l_imaf062 = ''
+            #   LET l_imaf063 = ''
+            #   SELECT imaf062,imaf063 INTO l_imaf062,l_imaf063 FROM imaf_t 
+            #      WHERE imafent = g_enterprise AND imaf001 = g_inbc_d[l_ac].inbc001 AND imafsite = g_site
+            #   IF l_imaf062 = 'Y' AND (NOT cl_null(l_imaf063)) THEN  #自動編碼
+            #       CALL s_aooi390_1('6',l_imaf063) RETURNING l_success,g_inbc_d[l_ac].inbc007
+            #   END IF
+            #END IF       
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc007
+            
+            #add-point:AFTER FIELD inbc007 name="input.a.page1.inbc007"
+            IF NOT cl_null(g_inbc_d[l_ac].inbc007) THEN 
+               IF g_inbc_d[l_ac].inbc007 != g_inbc_d_o.inbc007 OR cl_null(g_inbc_d_o.inbc007) THEN 
+                  IF NOT aint911_01_inbc007_chk() THEN
+                     LET g_inbc_d[l_ac].inbc007 = g_inbc_d_o.inbc007
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  #150507-00001#8 150527 by lori522612 mark and add---(S)
+                  ##雜收作業若料件要做批號管理且又有做有效期管理時，需要自動計算該批的有效日期
+                  #IF g_type = '2' AND cl_null(g_inbc_d[l_ac].inbc016) THEN
+                  #   CALL s_aini010_calculate_effdt(g_site,g_inbc_d[l_ac].inbc001,g_inbc_d[l_ac2].inbc002,g_inbc_d[l_ac].inbc007,g_inbadocdt) RETURNING g_inbc_d[l_ac].inbc016
+                  #   DISPLAY BY NAME g_inbc_d[l_ac].inbc016
+                  #END IF
+                  
+                  #有效日期
+                  IF g_type = '2' THEN
+                     IF NOT cl_null(g_inbc_d[l_ac].inbc001) AND NOT cl_null(g_inbc_d[l_ac].inbc203) THEN
+                        CALL s_lot_out_effdate(g_inbb_d[l_ac2].inbbsite,g_inbc_d[l_ac].inbc001,
+                                               g_inbc_d[l_ac].inbc002,  g_inbc_d[l_ac].inbc203,
+                                               g_inbc_d[l_ac].inbc007)
+                           RETURNING l_success,g_inbc_d[l_ac].inbc016
+                        IF NOT l_success THEN
+                           LET g_inbc_d[l_ac].inbc203 = g_inbc_d_o.inbc203
+                           NEXT FIELD CURRENT
+                        END IF                        
+                     END IF      
+                  END IF
+                  #150507-00001#8 150527 by lori522612 mark and add---(E)
+               END IF
+            #ELSE
+            #   LET l_imaf062 = ''
+            #   LET l_imaf063 = ''
+            #   SELECT imaf062,imaf063 INTO l_imaf062,l_imaf063 FROM imaf_t 
+            #      WHERE imafent = g_enterprise AND imaf001 = g_inbc_d[l_ac].inbc001 AND imafsite = g_site
+            #   IF l_imaf062 = 'Y' AND (NOT cl_null(l_imaf063)) THEN  #自動編碼
+            #       CALL s_aooi390_1('6',l_imaf063) RETURNING l_success,g_inbc_d[l_ac].inbc007
+            #   END IF
+            END IF
+            
+            #150424-00018#4 150531 by lori522612 mark and add---(S)
+            CALL aint911_01_set_entry_b(l_cmd) 
+            CALL aint911_01_set_no_required()
+            CALL aint911_01_set_required()
+            CALL aint911_01_set_no_entry_b(l_cmd) 
+            
+            LET g_inbc_d_o.inbc007 = g_inbc_d[l_ac].inbc007
+            LET g_inbc_d_o.inbc016 = g_inbc_d[l_ac].inbc016
+            LET g_inbc_d_o.inbc203 = g_inbc_d[l_ac].inbc203
+            #150424-00018#4 150531 by lori522612 mark and add---(E)
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inbc007
+            #add-point:ON CHANGE inbc007 name="input.g.page1.inbc007"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc003
+            #add-point:BEFORE FIELD inbc003 name="input.b.page1.inbc003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc003
+            
+            #add-point:AFTER FIELD inbc003 name="input.a.page1.inbc003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inbc003
+            #add-point:ON CHANGE inbc003 name="input.g.page1.inbc003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc010
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_inbc_d[l_ac].inbc010,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD inbc010
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD inbc010 name="input.a.page1.inbc010"
+            IF NOT cl_null(g_inbc_d[l_ac].inbc010) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_inbc_d[l_ac].inbc010 != g_inbc_d_t.inbc010)) THEN 
+                  IF g_inbc_d[l_ac].inbc010 = 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'ain-00019'
+                     LET g_errparam.extend = g_inbc_d[l_ac].inbc010
+                     LET g_errparam.popup = FALSE
+                     CALL cl_err()
+
+                     LET g_inbc_d[l_ac].inbc010 = g_inbc_d_t.inbc010
+                     NEXT FIELD CURRENT
+                  END IF
+                 
+                  #依據單據別參數控管判斷是否允許輸入小於0
+                  CALL s_aooi200_get_slip(g_inbc_d[l_ac].inbcdocno) RETURNING l_flag1,l_ooac002
+                  CALL cl_get_doc_para(g_enterprise,g_site,l_ooac002,'D-BAS-0058') RETURNING l_ooac004
+                  IF l_ooac004 = 'N' AND g_inbc_d[l_ac].inbc010 < 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'ain-00020'
+                     LET g_errparam.extend = g_inbc_d[l_ac].inbc010
+                     LET g_errparam.popup = FALSE
+                     CALL cl_err()
+
+                     LET g_inbc_d[l_ac].inbc010 = g_inbc_d_t.inbc010
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  #此項序輸入的數量加上其他項序已經登打的數量總和，不可已大於對應申請明細的申請數量
+                  SELECT SUM(inbc010) INTO l_inbc010 FROM inbc_t 
+                     WHERE inbcent = g_enterprise AND inbcsite = g_site
+                       AND inbcdocno = g_inbc_d[l_ac].inbcdocno AND inbcseq = g_inbc_d[l_ac].inbcseq
+                  IF l_cmd = 'a' THEN
+                     LET l_inbc010 = l_inbc010 + g_inbc_d[l_ac].inbc010
+                  ELSE
+                     LET l_inbc010 = g_inbc_d[l_ac].inbc010
+                  END IF
+                  IF l_inbc010 > g_inbb_d[l_ac2].inbb011 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'ain-00022'
+                     LET g_errparam.extend = g_inbc_d[l_ac].inbc010
+                     LET g_errparam.popup = FALSE
+                     CALL cl_err()
+
+                     LET g_inbc_d[l_ac].inbc010 = g_inbc_d_t.inbc010
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  LET l_inbb010 = ''
+                  LET l_inbb013 = ''
+                  SELECT inbb010,inbb013 INTO l_inbb010,l_inbb013 FROM inbb_t
+                     WHERE inbbent = g_enterprise AND inbbsite = g_site 
+                       AND inbbdocno = g_inbc_d[l_ac].inbcdocno
+                       AND inbbseq = g_inbc_d[l_ac].inbcseq
+                  
+                  IF g_argv[1] = '1' THEN
+                     LET l_success = ''
+                     LET l_flag = ''
+                     CALL s_inventory_check_inan(g_site,g_inbc_d[l_ac].inbc001,g_inbb_d[l_ac2].inbb002,g_inbb_d[l_ac2].inbb003,
+                                                 g_inbc_d[l_ac].inbc005,g_inbc_d[l_ac].inbc006,g_inbc_d[l_ac].inbc007,
+                                                 l_inbb010,g_inbc_d[l_ac].inbc010,g_inbc_d[l_ac].inbcdocno,
+                                                 g_inbc_d[l_ac].inbcseq,g_inbc_d[l_ac].inbcseq1,'','') #160408-00035#9-add-'',''
+                          RETURNING l_success,l_flag
+                     IF NOT l_success THEN      #處理狀況
+                        LET g_inbc_d[l_ac].inbc010 = g_inbc_d_t.inbc010
+                        NEXT FIELD CURRENT
+                     ELSE
+                        IF l_flag = 0 THEN      #在揀量足夠否
+                           LET g_inbc_d[l_ac].inbc010 = g_inbc_d_t.inbc010
+                           NEXT FIELD CURRENT
+                        END IF
+                     END IF
+                  END IF
+                  
+                  #當申請數量是打負數時代表是出庫行為，檢核庫存量是否足夠
+                  IF g_argv[1] = '2' AND g_inbc_d[l_ac].inbc010 < 0 THEN
+                     #庫儲需存在與庫存明細檔中
+                     IF NOT cl_null(g_inbc_d[l_ac].inbc005) THEN
+                        IF NOT aint911_01_chk_inag004(g_inbc_d[l_ac].inbc005) THEN
+                           LET g_inbc_d[l_ac].inbc010 = g_inbc_d_t.inbc010
+                           NEXT FIELD CURRENT
+                        END IF
+                     END IF
+                     
+                     IF (NOT cl_null(g_inbc_d[l_ac].inbc005)) AND g_inbc_d[l_ac].inbc006 IS NOT NULL THEN
+                        IF NOT aint911_01_chk_inag005(g_inbc_d[l_ac].inbc005,g_inbc_d[l_ac].inbc006) THEN
+                           LET g_inbc_d[l_ac].inbc010 = g_inbc_d_t.inbc010
+                           NEXT FIELD CURRENT
+                        END IF
+                     END IF 
+                     
+                     LET l_success = ''
+                     LET l_flag1 = ''
+                     SELECT inbb010 INTO l_inbb010 FROM inbb_t 
+                       WHERE inbbent = g_enterprise AND inbbdocno = g_inbc_d[l_ac].inbcdocno AND inbbseq = g_inbc_d[l_ac].inbcseq
+                     CALL s_inventory_check_inag008('-1',g_inbc_d[l_ac].inbc001,g_inbb_d[l_ac2].inbb002,g_inbb_d[l_ac2].inbb003,
+                                                 g_inbc_d[l_ac].inbc005,g_inbc_d[l_ac].inbc006,g_inbc_d[l_ac].inbc007,
+                                                 g_inbc_d[l_ac].inbc010*(-1),g_inbc_d[l_ac].inbcdocno,g_inbc_d[l_ac].inbcseq,
+                                                 '0',l_inbb010,'')
+                          RETURNING l_success,l_flag1
+                     IF NOT l_success THEN      #處理狀況
+                        LET g_inbc_d[l_ac].inbc010 = g_inbc_d_t.inbc010
+                        NEXT FIELD CURRENT
+                     ELSE
+                        IF l_flag1 = 0 THEN      #庫存量足夠否
+                           INITIALIZE g_errparam TO NULL
+                           LET g_errparam.code = 'ain-00270'
+                           LET g_errparam.extend = ''
+                           LET g_errparam.popup = TRUE
+                           CALL cl_err()
+
+                           LET g_inbc_d[l_ac].inbc010 = g_inbc_d_t.inbc010
+                           NEXT FIELD CURRENT
+                        END IF
+                     END IF
+                  END IF
+                  
+                  LET g_inbc_d[l_ac].inbc207 = g_inbc_d[l_ac].inbc206 * g_inbc_d[l_ac].inbc010  #151111-00021#3 Add By Ken 151203(S)
+                      
+                  #單位自動換算
+                  IF (NOT cl_null(l_inbb010)) AND (NOT cl_null(l_inbb013)) THEN
+#                     CALL s_aimi190_get_convert(g_inbc_d[l_ac].inbc001,l_inbb010,l_inbb013) RETURNING l_success,l_rate #xj mod
+                     CALL s_aooi250_convert_qty(g_inbc_d[l_ac].inbc001,l_inbb010,l_inbb013,g_inbc_d[l_ac].inbc010)
+                        RETURNING l_success,g_inbc_d[l_ac].inbc015
+                     IF l_success THEN
+#                        LET g_inbc_d[l_ac].inbc015 = g_inbc_d[l_ac].inbc010 * l_rate  #xj mod
+                     END IF
+                  END IF 
+                  #151111-00021#3 Add By Ken 151203(S)
+                  #交易數量轉換成計價數量
+                  IF (NOT cl_null(g_inbc_d[l_ac].inbc009)) AND (NOT cl_null(g_inbc_d[l_ac].inbc211)) THEN
+                     CALL s_aooi250_convert_qty(g_inbc_d[l_ac].inbc001,g_inbc_d[l_ac].inbc009,g_inbc_d[l_ac].inbc211,g_inbc_d[l_ac].inbc010)
+                        RETURNING l_success,g_inbc_d[l_ac].inbc212
+                     CALL s_aooi250_take_decimals(g_inbc_d[l_ac].inbc211,g_inbc_d[l_ac].inbc212)
+                        RETURNING l_success,g_inbc_d[l_ac].inbc212
+                     #領用金額=計價數量*領用單價
+                     IF (NOT cl_null(g_inbc_d[l_ac].inbc212)) AND (NOT cl_null(g_inbc_d[l_ac].inbc204)) THEN
+                        LET g_inbc_d[l_ac].inbc205 = g_inbc_d[l_ac].inbc212 * g_inbc_d[l_ac].inbc204
+                     END IF
+                  END IF                  
+                  #151111-00021#3 Add By Ken 151203(E)                  
+               END IF      
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc010
+            #add-point:BEFORE FIELD inbc010 name="input.b.page1.inbc010"
+            LET g_inbc_d_t.inbc010 = g_inbc_d[l_ac].inbc010
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inbc010
+            #add-point:ON CHANGE inbc010 name="input.g.page1.inbc010"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc208
+            
+            #add-point:AFTER FIELD inbc208 name="input.a.page1.inbc208"
+            #151111-00021#2 Add By Ken 151125(S)
+            LET g_inbc_d[l_ac].inbc208_desc = ''
+            IF NOT cl_null(g_inbc_d[l_ac].inbc208) THEN
+               IF g_inbc_d[l_ac].inbc208 != g_inbc_d_o.inbc208 OR g_inbc_d_o.inbc208 IS NULL THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_inbc_d[l_ac].inbc208
+                  IF NOT cl_chk_exist("v_stae001") THEN
+                     LET g_inbc_d[l_ac].inbc208 = g_inbc_d_o.inbc208
+                     INITIALIZE g_ref_fields TO NULL
+                     LET g_ref_fields[1] = g_inbc_d[l_ac].inbc208
+                     CALL ap_ref_array2(g_ref_fields,"SELECT stael003 FROM stael_t WHERE staelent='"||g_enterprise||"' AND stael001=? AND stael002='"||g_dlang||"'","") RETURNING g_rtn_fields
+                     LET g_inbc_d[l_ac].inbc208_desc = '', g_rtn_fields[1] , ''
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_inbc_d[l_ac].inbc208
+            CALL ap_ref_array2(g_ref_fields,"SELECT stael003 FROM stael_t WHERE staelent='"||g_enterprise||"' AND stael001=? AND stael002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_inbc_d[l_ac].inbc208_desc = '', g_rtn_fields[1] , ''
+            LET g_inbc_d_o.inbc208 = g_inbc_d[l_ac].inbc208                                  
+            DISPLAY BY NAME g_inbc_d[l_ac].inbc208_desc
+            #151111-00021#2 Add By Ken 151125(E)
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc208
+            #add-point:BEFORE FIELD inbc208 name="input.b.page1.inbc208"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inbc208
+            #add-point:ON CHANGE inbc208 name="input.g.page1.inbc208"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc206
+            #add-point:BEFORE FIELD inbc206 name="input.b.page1.inbc206"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc206
+            
+            #add-point:AFTER FIELD inbc206 name="input.a.page1.inbc206"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inbc206
+            #add-point:ON CHANGE inbc206 name="input.g.page1.inbc206"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc207
+            #add-point:BEFORE FIELD inbc207 name="input.b.page1.inbc207"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc207
+            
+            #add-point:AFTER FIELD inbc207 name="input.a.page1.inbc207"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inbc207
+            #add-point:ON CHANGE inbc207 name="input.g.page1.inbc207"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc204
+            #add-point:BEFORE FIELD inbc204 name="input.b.page1.inbc204"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc204
+            
+            #add-point:AFTER FIELD inbc204 name="input.a.page1.inbc204"
+            #151111-00021#3 Add By Ken 151203(S)
+            IF NOT cl_null(g_inbc_d[l_ac].inbc204) THEN
+               IF g_inbc_d[l_ac].inbc204 != g_inbc_d_o.inbc204 OR g_inbc_d_o.inbc204 IS NULL THEN
+                  IF NOT cl_null(g_inbc_d[l_ac].inbc212) THEN
+                     LET g_inbc_d[l_ac].inbc205 = g_inbc_d[l_ac].inbc204 * g_inbc_d[l_ac].inbc212
+                  END IF
+               END IF
+            END IF
+            #151111-00021#3 Add By Ken 151203(E)
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inbc204
+            #add-point:ON CHANGE inbc204 name="input.g.page1.inbc204"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc205
+            #add-point:BEFORE FIELD inbc205 name="input.b.page1.inbc205"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc205
+            
+            #add-point:AFTER FIELD inbc205 name="input.a.page1.inbc205"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inbc205
+            #add-point:ON CHANGE inbc205 name="input.g.page1.inbc205"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc015
+            #add-point:BEFORE FIELD inbc015 name="input.b.page1.inbc015"
+            LET g_inbc_d_t.inbc015 = g_inbc_d[l_ac].inbc015
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc015
+            
+            #add-point:AFTER FIELD inbc015 name="input.a.page1.inbc015"
+            IF NOT cl_null(g_inbc_d[l_ac].inbc015) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_inbc_d[l_ac].inbc015 != g_inbc_d_t.inbc015)) THEN 
+                  IF g_inbc_d[l_ac].inbc015 = 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'ain-00019'
+                     LET g_errparam.extend = g_inbc_d[l_ac].inbc015
+                     LET g_errparam.popup = FALSE
+                     CALL cl_err()
+
+                     LET g_inbc_d[l_ac].inbc015 = g_inbc_d_t.inbc015
+                     NEXT FIELD CURRENT
+                  END IF
+                 
+                  #依據單據別參數控管判斷是否允許輸入小於0
+                  CALL s_aooi200_get_slip(g_inbc_d[l_ac].inbcdocno) RETURNING l_flag1,l_ooac002
+                  CALL cl_get_doc_para(g_enterprise,g_site,l_ooac002,'D-BAS-0058') RETURNING l_ooac004
+                  IF l_ooac004 = 'N' AND g_inbc_d[l_ac].inbc015 < 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'ain-00020'
+                     LET g_errparam.extend = g_inbc_d[l_ac].inbc015
+                     LET g_errparam.popup = FALSE
+                     CALL cl_err()
+
+                     LET g_inbc_d[l_ac].inbc015 = g_inbc_d_t.inbc015
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  #此項序輸入的參考數量加上其他項序已經登打的參考數量總和，不可已大於對應申請明細的參考數量
+                  SELECT SUM(inbc015) INTO l_inbc015 FROM inbc_t 
+                     WHERE inbcent = g_enterprise AND inbcsite = g_site
+                       AND inbcdocno = g_inbc_d[l_ac].inbcdocno AND inbcseq = g_inbc_d[l_ac].inbcseq
+                  IF l_cmd = 'a' THEN
+                     LET l_inbc015 = l_inbc015 + g_inbc_d[l_ac].inbc015
+                  ELSE
+                     LET l_inbc015 = g_inbc_d[l_ac].inbc015
+                  END IF
+                  IF l_inbc015 > g_inbb_d[l_ac2].inbb014 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'ain-00023'
+                     LET g_errparam.extend = g_inbc_d[l_ac].inbc015
+                     LET g_errparam.popup = FALSE
+                     CALL cl_err()
+
+                     LET g_inbc_d[l_ac].inbc015 = g_inbc_d_t.inbc015
+                     NEXT FIELD CURRENT
+                  END IF
+                  #單位自動換算
+                  SELECT inbb010,inbb013 INTO l_inbb010,l_inbb013 FROM inbb_t
+                     WHERE inbbent = g_enterprise AND inbbsite = g_site 
+                       AND inbbdocno = g_inbc_d[l_ac].inbcdocno
+                       AND inbbseq = g_inbc_d[l_ac].inbcseq
+                  IF (NOT cl_null(l_inbb010)) AND (NOT cl_null(l_inbb013)) THEN
+#                     CALL s_aimi190_get_convert(g_inbc_d[l_ac].inbc001,l_inbb013,l_inbb010) RETURNING l_success,l_rate #xj mod
+                     CALL s_aooi250_convert_qty(g_inbc_d[l_ac].inbc001,l_inbb013,l_inbb010,g_inbc_d[l_ac].inbc015) 
+                        RETURNING l_success,g_inbc_d[l_ac].inbc010
+                     IF l_success THEN
+#                        LET g_inbc_d[l_ac].inbc010 = g_inbc_d[l_ac].inbc015 * l_rate  #xj mod
+                     END IF
+                  END IF
+               END IF      
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inbc015
+            #add-point:ON CHANGE inbc015 name="input.g.page1.inbc015"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc203
+            #add-point:BEFORE FIELD inbc203 name="input.b.page1.inbc203"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc203
+            
+            #add-point:AFTER FIELD inbc203 name="input.a.page1.inbc203"
+            #150507-00001#8 150527 by lori522612 add---(S)
+            IF NOT cl_null(g_inbc_d[l_ac].inbc203) THEN
+               IF g_inbc_d[l_ac].inbc203 != g_inbc_d_o.inbc203 OR cl_null(g_inbc_d_o.inbc203) THEN
+                  IF NOT cl_null(g_inbc_d[l_ac].inbc001) THEN
+                     LET l_success = '' 
+                     CALL s_lot_out_effdate(g_inbb_d[l_ac2].inbbsite,
+                                            g_inbc_d[l_ac].inbc001,g_inbc_d[l_ac].inbc002,
+                                            g_inbc_d[l_ac].inbc203,g_inbc_d[l_ac].inbc007)
+                       RETURNING l_success,g_inbc_d[l_ac].inbc016
+                     IF NOT l_success THEN
+                        LET g_inbc_d[l_ac].inbc016 = g_inbc_d_o.inbc016
+                        NEXT FIELD CURRENT
+                     END IF 
+                  END IF   
+               END IF
+            END IF
+
+            CALL aint911_01_set_entry_b(l_cmd) 
+            CALL aint911_01_set_no_required()
+            CALL aint911_01_set_required()
+            CALL aint911_01_set_no_entry_b(l_cmd) 
+            
+            LET g_inbc_d_o.inbc016 = g_inbc_d[l_ac].inbc016
+            LET g_inbc_d_o.inbc203 = g_inbc_d[l_ac].inbc203
+            #150507-00001#8 150527 by lori522612 add---(E)
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inbc203
+            #add-point:ON CHANGE inbc203 name="input.g.page1.inbc203"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc016
+            #add-point:BEFORE FIELD inbc016 name="input.b.page1.inbc016"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc016
+            
+            #add-point:AFTER FIELD inbc016 name="input.a.page1.inbc016"
+            IF NOT cl_null(g_inbc_d[l_ac].inbc016) THEN
+               IF g_inbc_d[l_ac].inbc016 != g_inbc_d_o.inbc016 OR cl_null(g_inbc_d_o.inbc016) THEN
+                  LET g_inbc_d_o.inbc016 = g_inbc_d[l_ac].inbc016
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inbc016
+            #add-point:ON CHANGE inbc016 name="input.g.page1.inbc016"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inbc017
+            #add-point:BEFORE FIELD inbc017 name="input.b.page1.inbc017"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inbc017
+            
+            #add-point:AFTER FIELD inbc017 name="input.a.page1.inbc017"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inbc017
+            #add-point:ON CHANGE inbc017 name="input.g.page1.inbc017"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.inbcsite
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbcsite
+            #add-point:ON ACTION controlp INFIELD inbcsite name="input.c.page1.inbcsite"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.inbcdocno
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbcdocno
+            #add-point:ON ACTION controlp INFIELD inbcdocno name="input.c.page1.inbcdocno"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.inbcseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbcseq
+            #add-point:ON ACTION controlp INFIELD inbcseq name="input.c.page1.inbcseq"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.inbcseq1
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbcseq1
+            #add-point:ON ACTION controlp INFIELD inbcseq1 name="input.c.page1.inbcseq1"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.inbc001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc001
+            #add-point:ON ACTION controlp INFIELD inbc001 name="input.c.page1.inbc001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.inbc005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc005
+            #add-point:ON ACTION controlp INFIELD inbc005 name="input.c.page1.inbc005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.inbc006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc006
+            #add-point:ON ACTION controlp INFIELD inbc006 name="input.c.page1.inbc006"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			   LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_inbc_d[l_ac].inbc006             #給予default值
+
+            #若是雜項庫存發料作業時，輸入的料件+產品特徵+庫存管理特徵+庫位必須存在[T:庫存明細檔]中
+            IF g_type = '1' THEN
+               #150324-00007#1 20150413 By pmoelo mark(S)
+               #LET g_qryparam.where = " inag001 = '",g_inbc_d[l_ac].inbc001,"' AND inag001 = '",g_inbb_d[l_ac2].inbb002,"' AND inab003 = '",g_inbb_d[l_ac2].inbb003,"' AND inag004 = '",g_inbc_d[l_ac].inbc005,"' "
+               #CALL q_inag004_15()
+               #LET g_inbc_d[l_ac].inbc006 = g_qryparam.return2              #將開窗取得的值回傳到變數
+               #LET g_inbc_d[l_ac].inbc007 = g_qryparam.return3
+               #DISPLAY g_inbc_d[l_ac].inbc006 TO inbc006
+               #DISPLAY g_inbc_d[l_ac].inbc007 TO inbc007
+               #150324-00007#1 20150413 By pmoelo mark(E)
+               #150324-00007#1 20150413 By pmoelo add(S)
+               LET g_qryparam.default1 = g_inbc_d[l_ac].inbc005
+               LET g_qryparam.default2 = g_inbc_d[l_ac].inbc006
+               LET g_qryparam.default3 = g_inbc_d[l_ac].inbc007
+               LET g_qryparam.default4 = g_inbc_d[l_ac].inbc003
+               LET g_qryparam.arg1 = g_inbc_d[l_ac].inbcsite  #營運據點
+               LET g_qryparam.arg2 = g_inbc_d[l_ac].inbc001   #商品編號
+               #產品特徵
+               IF cl_null(g_inbc_d[l_ac].inbc002) THEN
+                  LET g_inbc_d[l_ac].inbc002 = ' '
+               END IF
+               LET g_qryparam.arg3 = g_inbc_d[l_ac].inbc002
+               #庫存管理特徵
+               IF cl_null(g_inbc_d[l_ac].inbc003) THEN
+                  LET g_qryparam.arg4 = ''
+               ELSE
+                  LET g_qryparam.arg4 = g_inbc_d[l_ac].inbc003
+               END IF
+               LET g_qryparam.arg5 = g_inbc_d[l_ac].inbc005   #庫位
+               
+               #儲位
+               LET g_qryparam.arg6 = ''
+               
+               #批號
+               IF cl_null(g_inbc_d[l_ac].inbc007) THEN
+                  LET g_qryparam.arg7 = ''
+               ELSE
+                  LET g_qryparam.arg7 = g_inbc_d[l_ac].inbc007
+               END IF
+               CALL q_inag004_18()
+               LET g_inbc_d[l_ac].inbc005 = g_qryparam.return1 
+               LET g_inbc_d[l_ac].inbc006 = g_qryparam.return2
+               LET g_inbc_d[l_ac].inbc007 = g_qryparam.return3
+               LET g_inbc_d[l_ac].inbc003 = g_qryparam.return4
+               #150324-00007#1 20150413 By pmoelo add(E)
+            END IF
+            
+            
+            #若是雜項庫存收料作業時
+            IF g_type = '2' THEN
+               LET g_qryparam.where = " inab001 = '",g_inbc_d[l_ac].inbc005,"' "
+               CALL q_inab002()
+               LET g_inbc_d[l_ac].inbc006 = g_qryparam.return1              #將開窗取得的值回傳到變數
+               DISPLAY g_inbc_d[l_ac].inbc006 TO inbc006
+              
+            END IF       
+
+            CALL aint911_01_inbc006_ref(g_inbc_d[l_ac].inbc005,g_inbc_d[l_ac].inbc006) RETURNING g_inbc_d[l_ac].inbc006_desc
+            DISPLAY BY NAME g_inbc_d[l_ac].inbc006_desc
+            NEXT FIELD inbc006
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.inbc007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc007
+            #add-point:ON ACTION controlp INFIELD inbc007 name="input.c.page1.inbc007"
+            #150324-00007#1 20150413 By pmoelo mark(S)
+            #INITIALIZE g_qryparam.* TO NULL
+            #LET g_qryparam.state = 'i'
+			   #LET g_qryparam.reqry = FALSE
+            #
+            #LET g_qryparam.default1 = g_inbc_d[l_ac].inbc007             #給予default值
+            #
+            ##若是雜項庫存發料作業時，輸入的料件+產品特徵+庫存管理特徵+庫位必須存在[T:庫存明細檔]中
+            #IF g_type = '1' THEN
+            #   LET g_qryparam.where = " inag001 = '",g_inbc_d[l_ac].inbc001,"' AND inag001 = '",g_inbb_d[l_ac2].inbb002,"' AND inab003 = '",g_inbb_d[l_ac2].inbb003,"' AND inag004 = '",g_inbc_d[l_ac].inbc005,"' "
+            #   CALL q_inag004_15()
+            #   LET g_inbc_d[l_ac].inbc006 = g_qryparam.return2              #將開窗取得的值回傳到變數
+            #   LET g_inbc_d[l_ac].inbc007 = g_qryparam.return3
+            #   DISPLAY g_inbc_d[l_ac].inbc006 TO inbc006
+            #   DISPLAY g_inbc_d[l_ac].inbc007 TO inbc007
+            #   
+            #END IF
+            #
+            #NEXT FIELD inbc007
+            #150324-00007#1 20150413 By pmoelo mark(E)
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.inbc003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc003
+            #add-point:ON ACTION controlp INFIELD inbc003 name="input.c.page1.inbc003"
+            #150324-00007#1 20150413 By pmoelo mark(S)
+            #INITIALIZE g_qryparam.* TO NULL
+            #LET g_qryparam.state = 'i'
+			   #LET g_qryparam.reqry = FALSE
+            #
+            #LET g_qryparam.default1 = g_inbc_d[l_ac].inbc003             #給予default值
+            #
+            ##若是雜項庫存發料作業時，輸入的料件+產品特徵+庫存管理特徵+庫位必須存在[T:庫存明細檔]中
+            #IF g_type = '1' THEN
+            #   LET g_qryparam.where = " inag001 = '",g_inbc_d[l_ac].inbc001,"' AND inag001 = '",g_inbb_d[l_ac2].inbb002,"' AND inab003 = '",g_inbb_d[l_ac2].inbb003,"' "
+            #   CALL q_inag004_15()
+            #   LET g_inbc_d[l_ac].inbc006 = g_qryparam.return2              #將開窗取得的值回傳到變數
+            #   LET g_inbc_d[l_ac].inbc007 = g_qryparam.return3
+            #   LET g_inbc_d[l_ac].inbc003 = g_qryparam.return4
+            #   DISPLAY g_inbc_d[l_ac].inbc006 TO inbc006
+            #   DISPLAY g_inbc_d[l_ac].inbc007 TO inbc007
+            #   DISPLAY g_inbc_d[l_ac].inbc003 TO inbc003
+            #END IF
+            #
+            #NEXT FIELD inbc007
+            #150324-00007#1 20150413 By pmoelo mark(E)
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.inbc010
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc010
+            #add-point:ON ACTION controlp INFIELD inbc010 name="input.c.page1.inbc010"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.inbc208
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc208
+            #add-point:ON ACTION controlp INFIELD inbc208 name="input.c.page1.inbc208"
+            #151111-00021#2 Add By Ken 151125(S)
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_inbc_d[l_ac].inbc208 
+            
+            CALL q_stae001()                                #呼叫開窗
+
+            LET g_inbc_d[l_ac].inbc208  = g_qryparam.return1             
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_inbc_d[l_ac].inbc208
+            CALL ap_ref_array2(g_ref_fields,"SELECT stael003 FROM stael_t WHERE staelent='"||g_enterprise||"' AND stael001=? AND stael002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_inbc_d[l_ac].inbc208_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_inbc_d[l_ac].inbc208,g_inbc_d[l_ac].inbc208_desc         
+            NEXT FIELD inbc208 
+            #151111-00021#2 Add By Ken 151125(E)
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.inbc206
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc206
+            #add-point:ON ACTION controlp INFIELD inbc206 name="input.c.page1.inbc206"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.inbc207
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc207
+            #add-point:ON ACTION controlp INFIELD inbc207 name="input.c.page1.inbc207"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.inbc204
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc204
+            #add-point:ON ACTION controlp INFIELD inbc204 name="input.c.page1.inbc204"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.inbc205
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc205
+            #add-point:ON ACTION controlp INFIELD inbc205 name="input.c.page1.inbc205"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.inbc015
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc015
+            #add-point:ON ACTION controlp INFIELD inbc015 name="input.c.page1.inbc015"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.inbc203
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc203
+            #add-point:ON ACTION controlp INFIELD inbc203 name="input.c.page1.inbc203"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.inbc016
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc016
+            #add-point:ON ACTION controlp INFIELD inbc016 name="input.c.page1.inbc016"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.inbc017
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inbc017
+            #add-point:ON ACTION controlp INFIELD inbc017 name="input.c.page1.inbc017"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               CLOSE aint911_01_bcl
+               LET INT_FLAG = 0
+               LET g_inbc_d[l_ac].* = g_inbc_d_t.*
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               #add-point:單身取消時 name="input.body.cancel"
+               
+               #end add-point
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = g_inbc_d[l_ac].inbcdocno 
+               LET g_errparam.code   = -263 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET g_inbc_d[l_ac].* = g_inbc_d_t.*
+            ELSE
+               #寫入修改者/修改日期資訊(單身)
+               
+            
+               #add-point:單身修改前 name="input.body.b_update"
+               
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL aint911_01_inbc_t_mask_restore('restore_mask_o')
+ 
+               UPDATE inbc_t SET (inbcsite,inbcdocno,inbcseq,inbcseq1,inbc001,inbc002,inbc005,inbc006, 
+                   inbc007,inbc003,inbc009,inbc010,inbc211,inbc212,inbc208,inbc206,inbc207,inbc204,inbc205, 
+                   inbc015,inbc203,inbc016,inbc017) = (g_inbc_d[l_ac].inbcsite,g_inbc_d[l_ac].inbcdocno, 
+                   g_inbc_d[l_ac].inbcseq,g_inbc_d[l_ac].inbcseq1,g_inbc_d[l_ac].inbc001,g_inbc_d[l_ac].inbc002, 
+                   g_inbc_d[l_ac].inbc005,g_inbc_d[l_ac].inbc006,g_inbc_d[l_ac].inbc007,g_inbc_d[l_ac].inbc003, 
+                   g_inbc_d[l_ac].inbc009,g_inbc_d[l_ac].inbc010,g_inbc_d[l_ac].inbc211,g_inbc_d[l_ac].inbc212, 
+                   g_inbc_d[l_ac].inbc208,g_inbc_d[l_ac].inbc206,g_inbc_d[l_ac].inbc207,g_inbc_d[l_ac].inbc204, 
+                   g_inbc_d[l_ac].inbc205,g_inbc_d[l_ac].inbc015,g_inbc_d[l_ac].inbc203,g_inbc_d[l_ac].inbc016, 
+                   g_inbc_d[l_ac].inbc017)
+                WHERE inbcent = g_enterprise AND
+                  inbcdocno = g_inbc_d_t.inbcdocno #項次   
+                  AND inbcseq = g_inbc_d_t.inbcseq  
+                  AND inbcseq1 = g_inbc_d_t.inbcseq1  
+ 
+                  
+               #add-point:單身修改中 name="input.body.m_update"
+               
+               #end add-point
+                  
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "inbc_t" 
+                     LET g_errparam.code = "std-00009" 
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                  WHEN SQLCA.SQLCODE #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "inbc_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_inbc_d[g_detail_idx].inbcdocno
+               LET gs_keys_bak[1] = g_inbc_d_t.inbcdocno
+               LET gs_keys[2] = g_inbc_d[g_detail_idx].inbcseq
+               LET gs_keys_bak[2] = g_inbc_d_t.inbcseq
+               LET gs_keys[3] = g_inbc_d[g_detail_idx].inbcseq1
+               LET gs_keys_bak[3] = g_inbc_d_t.inbcseq1
+               CALL aint911_01_update_b('inbc_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                     
+                     #修改歷程記錄(修改)
+                     LET g_log1 = util.JSON.stringify(g_inbc_d_t)
+                     LET g_log2 = util.JSON.stringify(g_inbc_d[l_ac])
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN
+                     END IF
+               END CASE
+               
+               #將遮罩欄位進行遮蔽
+               CALL aint911_01_inbc_t_mask_restore('restore_mask_n')
+               
+               #add-point:單身修改後 name="input.body.a_update"
+               SELECT SUM(inbc010),SUM(inbc015),SUM(inbc212),SUM(inbc205) INTO l_inbc010,l_inbc015,l_inbc212,l_inbc205  #151111-00021#3 Add By Ken 151203 加上inbc212計價數量,inbc205領用金額
+                 FROM inbc_t  
+                WHERE inbcent = g_enterprise 
+                  AND inbcsite = g_site 
+                  AND inbcdocno = g_inbc_d[l_ac].inbcdocno #項次   
+                  AND inbcseq = g_inbc_d[l_ac].inbcseq   
+                  
+               UPDATE inbb_t SET inbb012 = l_inbc010,inbb015 = l_inbc015,inbb225 = l_inbc212,inbb206 = l_inbc205   #151111-00021#3 Add By Ken 151203 加上inbb225=inbc212計價數量,inbb206=inbc205領用金額
+                WHERE inbbent = g_enterprise 
+                  AND inbbsite = g_site 
+                  AND inbbdocno = g_inbc_d[l_ac].inbcdocno
+                  AND inbbseq = g_inbc_d[l_ac].inbcseq   
+               IF SQLCA.SQLcode  THEN
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.code = SQLCA.sqlcode
+                 LET g_errparam.extend = "inbb_t"
+                 LET g_errparam.popup = TRUE
+                 CALL cl_err()
+   
+                  LET g_inbc_d[l_ac].* = g_inbc_d_t.*
+               END IF
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            CALL aint911_01_unlock_b("inbc_t")
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_inbc_d[l_ac].* = g_inbc_d_t.*
+               END IF
+               #add-point:單身after row name="input.body.a_close"
+               
+               #end add-point
+            ELSE
+            END IF
+            #其他table進行unlock
+            
+             #add-point:單身after row name="input.body.a_row"
+            
+            #end add-point
+            
+         AFTER INPUT
+            #add-point:單身input後 name="input.body.a_input"
+            
+            #end add-point
+            #錯誤訊息統整顯示
+            #CALL cl_err_collect_show()
+            #CALL cl_showmsg()
+            
+         ON ACTION controlo   
+            IF l_insert THEN
+               LET li_reproduce = l_ac_t
+               LET li_reproduce_target = l_ac
+               LET g_inbc_d[li_reproduce_target].* = g_inbc_d[li_reproduce].*
+ 
+               LET g_inbc_d[li_reproduce_target].inbcdocno = NULL
+               LET g_inbc_d[li_reproduce_target].inbcseq = NULL
+               LET g_inbc_d[li_reproduce_target].inbcseq1 = NULL
+ 
+            ELSE
+               CALL FGL_SET_ARR_CURR(g_inbc_d.getLength()+1)
+               LET lb_reproduce = TRUE
+               LET li_reproduce = l_ac
+               LET li_reproduce_target = g_inbc_d.getLength()+1
+            END IF
+            
+      END INPUT
+      
+ 
+      
+ 
+      
+      #add-point:before_more_input name="input.more_input"
+      DISPLAY ARRAY g_inbb_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b2)   
+    
+         BEFORE ROW  
+            LET l_ac2 = DIALOG.getCurrentRow("s_detail2")
+            LET g_detail_idx2 = l_ac2
+            CALL aint911_01_inbc_fill(g_inbadocno)
+             
+         BEFORE DISPLAY
+            IF g_aw ='1' THEN
+               CALL FGL_SET_ARR_CURR(g_detail_idx2)
+               LET g_aw = ''
+            END IF
+            #LET l_ac2 = DIALOG.getCurrentRow("s_detail2")
+            #CALL aint911_01_inbc_fill(g_inbadocno)
+            
+      END DISPLAY          
+      #end add-point
+      
+      BEFORE DIALOG
+         #CALL cl_err_collect_init()      
+         IF g_temp_idx > 0 THEN
+            LET l_ac = g_temp_idx
+            CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+            LET g_temp_idx = 1
+         END IF
+         #LET g_curr_diag = ui.DIALOG.getCurrent()
+         #add-point:before_dialog name="input.before_dialog"
+            LET l_inbastus = ''
+            SELECT inbastus INTO l_inbastus FROM inba_t WHERE inbaent = g_enterprise AND inbasite = g_site AND inbadocno = g_inbadocno
+            IF l_inbastus != 'Y' THEN
+               CALL cl_set_act_visible("modify",FALSE)
+            END IF
+         LET g_aw ='1'      
+         #end add-point
+         CASE g_aw
+            WHEN "s_detail1"
+               NEXT FIELD inbcsite
+ 
+         END CASE
+   
+      ON ACTION accept
+         ACCEPT DIALOG
+      
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         CANCEL DIALOG
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) 
+              RETURNING g_fld_name,g_frm_name 
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang) 
+           
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   
+   END DIALOG 
+    
+   #新增後取消
+   IF l_cmd = 'a' THEN
+      #當取消或無輸入資料按確定時刪除對應資料
+      IF INT_FLAG OR cl_null(g_inbc_d[g_detail_idx].inbcdocno) THEN
+         CALL g_inbc_d.deleteElement(g_detail_idx)
+ 
+      END IF
+   END IF
+   
+   #修改後取消
+   IF l_cmd = 'u' AND INT_FLAG THEN
+      LET g_inbc_d[g_detail_idx].* = g_inbc_d_t.*
+   END IF
+   
+   #add-point:modify段修改後 name="modify.after_input"
+   
+   #end add-point
+ 
+   CLOSE aint911_01_bcl
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aint911_01.delete" >}
+#+ 資料刪除
+PRIVATE FUNCTION aint911_01_delete()
+   #add-point:delete段define(客製用) name="delete.define_customerization"
+   
+   #end add-point
+   DEFINE li_idx          LIKE type_t.num10
+   DEFINE li_ac_t         LIKE type_t.num10
+   DEFINE li_detail_tmp   LIKE type_t.num10
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:delete段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   
+   #end add-point 
+   
+   #add-point:Function前置處理  name="delete.body.before_delete"
+   
+   #end add-point
+   
+   CALL s_transaction_begin()
+   
+   LET li_ac_t = l_ac
+   
+   LET li_detail_tmp = g_detail_idx
+    
+   #lock所有所選資料
+   FOR li_idx = 1 TO g_inbc_d.getLength()
+      LET g_detail_idx = li_idx
+      #已選擇的資料
+      IF g_curr_diag.isRowSelected(g_curr_diag.getCurrentItem(), li_idx) THEN 
+         #確定是否有被鎖定
+         IF NOT aint911_01_lock_b("inbc_t") THEN
+            #已被他人鎖定
+            RETURN
+         END IF
+ 
+         #(ver:35) ---add start---
+         #確定是否有刪除的權限
+         #先確定該table有ownid
+         IF cl_getField("inbc_t","") THEN
+            IF NOT cl_auth_chk_act_permission("delete") THEN
+               #有目前權限無法刪除的資料
+               RETURN
+            END IF
+         END IF
+         #(ver:35) --- add end ---
+      END IF
+   END FOR
+   
+   #add-point:單身刪除詢問前 name="delete.body.b_delete_ask"
+   
+   #end add-point  
+   
+   #詢問是否確定刪除所選資料
+   IF NOT cl_ask_del_detail() THEN
+      RETURN
+   END IF
+   
+   FOR li_idx = 1 TO g_inbc_d.getLength()
+      IF g_inbc_d[li_idx].inbcdocno IS NOT NULL
+         AND g_inbc_d[li_idx].inbcseq IS NOT NULL
+         AND g_inbc_d[li_idx].inbcseq1 IS NOT NULL
+ 
+         AND g_curr_diag.isRowSelected(g_curr_diag.getCurrentItem(), li_idx) THEN 
+         
+         #add-point:單身刪除前 name="delete.body.b_delete"
+         
+         #end add-point   
+         
+         DELETE FROM inbc_t
+          WHERE inbcent = g_enterprise AND 
+                inbcdocno = g_inbc_d[li_idx].inbcdocno
+                AND inbcseq = g_inbc_d[li_idx].inbcseq
+                AND inbcseq1 = g_inbc_d[li_idx].inbcseq1
+ 
+         #add-point:單身刪除中 name="delete.body.m_delete"
+         
+         #end add-point  
+                
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "inbc_t:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+            RETURN
+         ELSE
+            LET g_detail_cnt = g_detail_cnt-1
+            LET l_ac = li_idx
+            
+ 
+ 
+            
+ 
+ 
+            #add-point:單身同步刪除前(同層table) name="delete.body.a_delete"
+            
+            #end add-point
+            LET g_detail_idx = li_idx
+                           INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_inbc_d_t.inbcdocno
+               LET gs_keys[2] = g_inbc_d_t.inbcseq
+               LET gs_keys[3] = g_inbc_d_t.inbcseq1
+ 
+            #add-point:單身同步刪除中(同層table) name="delete.body.a_delete2"
+            
+            #end add-point
+                           CALL aint911_01_delete_b('inbc_t',gs_keys,"'1'")
+            #add-point:單身同步刪除後(同層table) name="delete.body.a_delete3"
+            
+            #end add-point
+            #刪除相關文件
+            #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL aint911_01_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove.func"
+      
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+ 
+            
+         END IF 
+      END IF 
+    
+   END FOR
+   
+   LET g_detail_idx = li_detail_tmp
+            
+   #add-point:單身刪除後 name="delete.after"
+   
+   #end add-point  
+   
+   LET l_ac = li_ac_t
+   
+   #刷新資料
+   CALL aint911_01_b_fill(g_wc2)
+            
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aint911_01.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION aint911_01_b_fill(p_wc2)              #BODY FILL UP
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE p_wc2            STRING
+   DEFINE ls_owndept_list  STRING  #(ver:35) add
+   DEFINE ls_ownuser_list  STRING  #(ver:35) add
+   #add-point:b_fill段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+ 
+   #end add-point
+   
+   #add-point:Function前置處理  name="b_fill.pre_function"
+   
+   #end add-point
+   
+   IF cl_null(p_wc2) THEN
+      LET p_wc2 = " 1=1"
+   END IF
+   
+   #add-point:b_fill段sql之前 name="b_fill.sql_before"
+   IF g_inbb_d.getLength() = 0 THEN
+      RETURN
+   END IF
+
+   LET p_wc2 = p_wc2, " AND inbcdocno = '",g_inbadocno,"' AND inbcseq = '",g_inbb_d[l_ac2].inbbseq,"' "
+   #end add-point
+ 
+   LET g_sql = "SELECT  DISTINCT t0.inbcsite,t0.inbcdocno,t0.inbcseq,t0.inbcseq1,t0.inbc001,t0.inbc002, 
+       t0.inbc005,t0.inbc006,t0.inbc007,t0.inbc003,t0.inbc009,t0.inbc010,t0.inbc211,t0.inbc212,t0.inbc208, 
+       t0.inbc206,t0.inbc207,t0.inbc204,t0.inbc205,t0.inbc015,t0.inbc203,t0.inbc016,t0.inbc017 ,t2.oocal003 , 
+       t3.stael003 FROM inbc_t t0",
+               "",
+                              " LEFT JOIN oocal_t t2 ON t2.oocalent="||g_enterprise||" AND t2.oocal001=t0.inbc211 AND t2.oocal002='"||g_dlang||"' ",
+               " LEFT JOIN stael_t t3 ON t3.staelent="||g_enterprise||" AND t3.stael001=t0.inbc208 AND t3.stael002='"||g_dlang||"' ",
+ 
+               " WHERE t0.inbcent= ?  AND  1=1 AND (", p_wc2, ") "
+ 
+   #(ver:35) ---add start---
+   
+   #(ver:35) --- add end ---
+ 
+   #add-point:b_fill段sql wc name="b_fill.sql_wc"
+   
+   #end add-point
+   LET g_sql = g_sql, cl_sql_add_filter("inbc_t"),
+                      " ORDER BY t0.inbcdocno,t0.inbcseq,t0.inbcseq1"
+   
+   #add-point:b_fill段sql之後 name="b_fill.sql_after"
+ 
+   #end add-point
+   
+   #LET g_sql = cl_sql_add_tabid(g_sql,"inbc_t")            #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE aint911_01_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR aint911_01_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_inbc_d.clear()
+ 
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO g_inbc_d[l_ac].inbcsite,g_inbc_d[l_ac].inbcdocno,g_inbc_d[l_ac].inbcseq, 
+       g_inbc_d[l_ac].inbcseq1,g_inbc_d[l_ac].inbc001,g_inbc_d[l_ac].inbc002,g_inbc_d[l_ac].inbc005, 
+       g_inbc_d[l_ac].inbc006,g_inbc_d[l_ac].inbc007,g_inbc_d[l_ac].inbc003,g_inbc_d[l_ac].inbc009,g_inbc_d[l_ac].inbc010, 
+       g_inbc_d[l_ac].inbc211,g_inbc_d[l_ac].inbc212,g_inbc_d[l_ac].inbc208,g_inbc_d[l_ac].inbc206,g_inbc_d[l_ac].inbc207, 
+       g_inbc_d[l_ac].inbc204,g_inbc_d[l_ac].inbc205,g_inbc_d[l_ac].inbc015,g_inbc_d[l_ac].inbc203,g_inbc_d[l_ac].inbc016, 
+       g_inbc_d[l_ac].inbc017,g_inbc_d[l_ac].inbc211_desc,g_inbc_d[l_ac].inbc208_desc
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH b_fill_curs:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+  
+      #add-point:b_fill段資料填充 name="b_fill.fill"
+      CALL aint911_01_inbc005_ref(g_inbc_d[l_ac].inbc005) RETURNING g_inbc_d[l_ac].inbc005_desc
+      DISPLAY BY NAME g_inbc_d[l_ac].inbc005_desc
+      
+      CALL aint911_01_inbc006_ref(g_inbc_d[l_ac].inbc005,g_inbc_d[l_ac].inbc006) RETURNING g_inbc_d[l_ac].inbc006_desc
+      DISPLAY BY NAME g_inbc_d[l_ac].inbc006_desc
+      #end add-point
+      
+      CALL aint911_01_detail_show()      
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code   = 9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+ 
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+ 
+   LET g_error_show = 0
+   
+ 
+   
+   CALL g_inbc_d.deleteElement(g_inbc_d.getLength())   
+ 
+   
+   #將key欄位填到每個page
+   FOR l_ac = 1 TO g_inbc_d.getLength()
+ 
+      #add-point:b_fill段key值相關欄位 name="b_fill.keys.fill"
+      
+      #end add-point
+   END FOR
+   
+   IF g_cnt > g_inbc_d.getLength() THEN
+      LET l_ac = g_inbc_d.getLength()
+   ELSE
+      LET l_ac = g_cnt
+   END IF
+   LET g_cnt = l_ac
+ 
+   #遮罩相關處理
+   FOR l_ac = 1 TO g_inbc_d.getLength()
+      LET g_inbc_d_mask_o[l_ac].* =  g_inbc_d[l_ac].*
+      CALL aint911_01_inbc_t_mask()
+      LET g_inbc_d_mask_n[l_ac].* =  g_inbc_d[l_ac].*
+   END FOR
+   
+ 
+   
+   LET l_ac = g_cnt
+ 
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.others.fill"
+    #抓取料件據點相關資訊
+     SELECT imaf061,imaf031,imaf032 INTO g_imaf061,g_imaf031,g_imaf032 FROM imaf_t WHERE
+       imafent = g_enterprise AND imafsite = g_inbb_d[l_ac2].inbbsite AND imaf001 = g_inbb_d[l_ac2].inbb001
+     IF cl_null(g_imaf031) THEN LET g_imaf031 = 0 END IF 
+     IF cl_null(g_imaf032) THEN LET g_imaf032 = 0 END IF 
+   #end add-point
+   
+   ERROR "" 
+ 
+   LET g_detail_cnt = g_inbc_d.getLength()
+   DISPLAY g_detail_idx TO FORMONLY.idx
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   
+   CLOSE b_fill_curs
+   FREE aint911_01_pb
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aint911_01.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION aint911_01_detail_show()
+   #add-point:detail_show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point
+   #add-point:show段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="detail_show.before"
+   
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值page1
+   
+    
+ 
+   
+   #讀入ref值
+   #add-point:show段單身reference name="detail_show.reference"
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_inbc_d[l_ac].inbc005
+#            CALL ap_ref_array2(g_ref_fields,"SELECT inaa002 FROM inaa_t WHERE inaaent='"||g_enterprise||"' AND inaasite='"||g_site||"' AND inaa001 = ? ","") RETURNING g_rtn_fields
+#            LET g_inbc_d[l_ac].inbc005_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_inbc_d[l_ac].inbc005_desc
+#
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_inbc_d[l_ac].inbc005
+#            LET g_ref_fields[2] = g_inbc_d[l_ac].inbc006
+#            CALL ap_ref_array2(g_ref_fields,"SELECT inab003 FROM inab_t WHERE inabent='"||g_enterprise||"' AND inab001=? AND inab002=? ","") RETURNING g_rtn_fields
+#            LET g_inbc_d[l_ac].inbc006_desc = '', g_rtn_fields[1] , ''
+#            DISPLAY BY NAME g_inbc_d[l_ac].inbc006_desc
+            
+      CALL aint911_01_inbc005_ref(g_inbc_d[l_ac].inbc005) RETURNING g_inbc_d[l_ac].inbc005_desc
+      DISPLAY BY NAME g_inbc_d[l_ac].inbc005_desc
+            
+      CALL aint911_01_inbc006_ref(g_inbc_d[l_ac].inbc005,g_inbc_d[l_ac].inbc006) RETURNING g_inbc_d[l_ac].inbc006_desc
+      DISPLAY BY NAME g_inbc_d[l_ac].inbc006_desc
+   #end add-point
+   
+ 
+   #add-point:detail_show段之後 name="detail_show.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aint911_01.set_entry_b" >}
+#+ 單身欄位開啟設定
+PRIVATE FUNCTION aint911_01_set_entry_b(p_cmd)                                                  
+   #add-point:set_entry_b段define(客製用) name="set_entry_b.define_customerization"
+   
+   #end add-point
+   DEFINE p_cmd   LIKE type_t.chr1         
+   #add-point:set_entry_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry_b.define"
+   
+   #end add-point
+ 
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("",TRUE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry_b段欄位控制 name="set_entry_b.field_control"
+      
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry_b段control name="set_entry_b.set_entry_b"
+   CALL cl_set_comp_entry("inbc006,inbc003",TRUE)
+   CALL cl_set_comp_entry("inbc007,inbc015",TRUE)
+   CALL cl_set_comp_entry("inbc203,inbc016",TRUE)   #150507-00001#8 150527 by lori522612 add   
+   #end add-point                                                                   
+                                                                                
+END FUNCTION                                                                 
+ 
+{</section>}
+ 
+{<section id="aint911_01.set_no_entry_b" >}
+#+ 單身欄位關閉設定
+PRIVATE FUNCTION aint911_01_set_no_entry_b(p_cmd)                                               
+   #add-point:set_no_entry_b段define(客製用) name="set_no_entry_b.define_customerization"
+   
+   #end add-point   
+   DEFINE p_cmd   LIKE type_t.chr1           
+   #add-point:set_no_entry_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry_b.define"
+   DEFINE l_imaa005         LIKE imaa_t.imaa005   #特徵組
+   DEFINE l_imaa006         LIKE imaa_t.imaa006   #基礎單位  
+   DEFINE l_imaf055         LIKE imaf_t.imaf055   #庫存管理特徵
+   DEFINE l_imaf061         LIKE imaf_t.imaf061   #庫存批號控管方式
+   DEFINE l_imaf091         LIKE imaf_t.imaf091   #預設庫位
+   DEFINE l_imaf092         LIKE imaf_t.imaf092   #預設儲位  
+   DEFINE l_inaa007         LIKE inaa_t.inaa007   #儲位管控方式
+   DEFINE l_success         LIKE type_t.num5      #150427-00001#5 150514 by lori522612 add
+   DEFINE l_set_entry       LIKE type_t.num5      #150427-00001#5 150514 by lori522612 add 
+   DEFINE l_type            LIKE type_t.num5      #150427-00001#5 150514 by lori522612 add    
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry_b段欄位控制 name="set_no_entry_b.field_control"
+      
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry_b段control name="set_no_entry_b.set_no_entry_b"
+   LET l_imaa005 = ''
+   LET l_imaa006 = ''
+   LET l_imaf055 = ''
+   LET l_imaf061 = ''
+   LET l_imaf091 = ''
+   LET l_imaf092 = ''
+   LET l_inaa007 = ''
+   
+   CALL cl_set_comp_entry("inbcseq1",FALSE)
+   
+   IF l_ac > 0 AND l_ac2 > 0 THEN          
+      #庫位
+      IF NOT cl_null(g_inbb_d[l_ac2].inbb007) THEN
+         CALL cl_set_comp_entry("inbc005",FALSE)
+      END IF
+      
+      #儲位
+      IF NOT cl_null(g_inbb_d[l_ac2].inbb008) THEN
+         CALL cl_set_comp_entry("inbc006",FALSE)
+      ELSE
+        #若[T:庫位資料檔].[C:儲位管理]='5'(不使用儲位管理)時，則[C:限定儲位]不可以維護
+        LET l_inaa007 = s_aint911_get_store_info(g_inbc_d[l_ac].inbc005)
+        IF l_inaa007 = '5' THEN
+           CALL cl_set_comp_entry("inbc006",FALSE)
+        END IF      
+      END IF
+      
+      #庫存管理特徵
+      IF NOT cl_null(g_inbb_d[l_ac2].inbb003) THEN
+         CALL cl_set_comp_entry("inbc003",FALSE)
+      ELSE
+         CALL s_aint911_get_prod_info(g_inbc_d[l_ac].inbc001)
+            RETURNING l_imaa005,l_imaa006,l_imaf055,l_imaf061,l_imaf091,l_imaf092 
+         
+         #若設定imaf055(庫存管理特徵)等於'2.不可有庫存管理特徵'時，則[C:庫存管理特徵]欄位不可輸入
+         IF l_imaf055 = '2' THEN
+            CALL cl_set_comp_entry("inbc003",FALSE)
+            LET g_inbc_d[l_ac].inbc003 = ' '
+         END IF     
+      END IF
+
+      #150427-00001#5 150514 by lori522612 add---(S)   
+      #批號
+      IF NOT cl_null(g_inbb_d[l_ac2].inbb009) THEN
+         CALL cl_set_comp_entry("inbc007",l_set_entry) 
+      ELSE   
+         LET l_success = ''  
+         LET l_set_entry = ''
+         
+         IF g_argv[1] = '1' THEN
+            LET l_type = -1
+         ELSE
+            LET l_type = 1
+         END IF
+         
+         CALL s_lot_out_entry(l_type,g_inbb_d[l_ac2].inbbdocno,g_inbb_d[l_ac2].inbbsite,g_inbc_d[l_ac].inbc001) 
+            RETURNING l_success,l_set_entry
+         IF l_success THEN
+            CALL cl_set_comp_entry("inbc007",l_set_entry) 
+         END IF
+      END IF
+      #150427-00001#5 150514 by lori522612 add---(E)   
+         
+      #150507-00001#8 150527 by lori522612 add---(S)
+      #有效日期
+      IF g_type = '2' THEN
+         LET l_success = ''  
+         LET l_set_entry = ''
+         
+         IF NOT cl_null(g_inbc_d[l_ac].inbc007) THEN
+            CALL s_lot_out_effdate_entry(g_inbb_d[l_ac2].inbbsite,g_inbc_d[l_ac].inbc001,
+                                         g_inbc_d[l_ac].inbc002,g_inbc_d[l_ac].inbc007)
+               RETURNING l_success,l_set_entry
+            IF l_success THEN
+               CALL cl_set_comp_entry("inbc016",l_set_entry) 
+            END IF 
+         END IF
+      END IF          
+      #150507-00001#8 150527 by lori522612 add---(E) 
+   END IF   
+   #end add-point       
+                                                                                
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aint911_01.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION aint911_01_default_search()
+   #add-point:default_search段define(客製用) name="default_search.define_customerization"
+   
+   #end add-point
+   DEFINE li_idx  LIKE type_t.num10
+   DEFINE li_cnt  LIKE type_t.num10
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="default_search.before"
+   
+   #end add-point  
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " inbcdocno = '", g_argv[01], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " inbcseq = '", g_argv[02], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[03]) THEN
+      LET ls_wc = ls_wc, " inbcseq1 = '", g_argv[03], "' AND "
+   END IF
+ 
+   
+   #add-point:default_search段after sql name="default_search.after_sql"
+   LET ls_wc = " 1=1"
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET ls_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_wc2 = ls_wc
+   ELSE
+      LET g_wc2 = " 1=1"
+      #預設查詢條件
+      LET g_wc2 = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc2) THEN
+         LET g_wc2 = " 1=1"
+      END IF
+   END IF
+ 
+   #add-point:default_search段結束前 name="default_search.after"
+   
+   #end add-point  
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aint911_01.delete_b" >}
+#+ 刪除單身後其他table連動
+PRIVATE FUNCTION aint911_01_delete_b(ps_table,ps_keys_bak,ps_page)
+   #add-point:delete_b段define(客製用) name="delete_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:delete_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="delete_b.pre_function"
+   
+   #end add-point
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "inbc_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      IF ps_table <> 'inbc_t' THEN
+         #add-point:delete_b段刪除前 name="delete_b.b_delete"
+         
+         #end add-point     
+         
+         DELETE FROM inbc_t
+          WHERE inbcent = g_enterprise AND
+            inbcdocno = ps_keys_bak[1] AND inbcseq = ps_keys_bak[2] AND inbcseq1 = ps_keys_bak[3]
+         
+         #add-point:delete_b段刪除中 name="delete_b.m_delete"
+         
+         #end add-point  
+            
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = ":",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE
+            LET g_errparam.popup = FALSE 
+            CALL cl_err()
+         END IF
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_inbc_d.deleteElement(li_idx) 
+      END IF 
+ 
+      
+      #add-point:delete_b段刪除後 name="delete_b.a_delete"
+      
+      #end add-point
+      
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aint911_01.insert_b" >}
+#+ 新增單身後其他table連動
+PRIVATE FUNCTION aint911_01_insert_b(ps_table,ps_keys,ps_page)
+   #add-point:insert_b段define(客製用) name="insert_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:insert_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="insert_b.pre_function"
+   
+   #end add-point
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "inbc_t,"
+   #IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      
+      #add-point:insert_b段新增前 name="insert_b.b_insert"
+      
+      #end add-point    
+      INSERT INTO inbc_t
+                  (inbcent,
+                   inbcdocno,inbcseq,inbcseq1
+                   ,inbcsite,inbc001,inbc002,inbc005,inbc006,inbc007,inbc003,inbc009,inbc010,inbc211,inbc212,inbc208,inbc206,inbc207,inbc204,inbc205,inbc015,inbc203,inbc016,inbc017) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2],ps_keys[3]
+                   ,g_inbc_d[l_ac].inbcsite,g_inbc_d[l_ac].inbc001,g_inbc_d[l_ac].inbc002,g_inbc_d[l_ac].inbc005, 
+                       g_inbc_d[l_ac].inbc006,g_inbc_d[l_ac].inbc007,g_inbc_d[l_ac].inbc003,g_inbc_d[l_ac].inbc009, 
+                       g_inbc_d[l_ac].inbc010,g_inbc_d[l_ac].inbc211,g_inbc_d[l_ac].inbc212,g_inbc_d[l_ac].inbc208, 
+                       g_inbc_d[l_ac].inbc206,g_inbc_d[l_ac].inbc207,g_inbc_d[l_ac].inbc204,g_inbc_d[l_ac].inbc205, 
+                       g_inbc_d[l_ac].inbc015,g_inbc_d[l_ac].inbc203,g_inbc_d[l_ac].inbc016,g_inbc_d[l_ac].inbc017) 
+ 
+      #add-point:insert_b段新增中 name="insert_b.m_insert"
+      
+      #end add-point    
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "inbc_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+      END IF
+      #add-point:insert_b段新增後 name="insert_b.a_insert"
+      
+      #end add-point    
+   #END IF
+   
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aint911_01.update_b" >}
+#+ 修改單身後其他table連動
+PRIVATE FUNCTION aint911_01_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   #add-point:update_b段define(客製用) name="update_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_page          STRING
+   DEFINE ps_table         STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num10
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="update_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="update_b.pre_function"
+   
+   #end add-point
+   
+   #比對新舊值, 判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #若key無變動, 不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+    
+   #若key有變動, 則連動其他table的資料   
+   #判斷是否是同一群組的table
+   LET ls_group = "inbc_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 AND ps_table <> "inbc_t" THEN
+      #add-point:update_b段修改前 name="update_b.b_update"
+      
+      #end add-point     
+      UPDATE inbc_t 
+         SET (inbcdocno,inbcseq,inbcseq1
+              ,inbcsite,inbc001,inbc002,inbc005,inbc006,inbc007,inbc003,inbc009,inbc010,inbc211,inbc212,inbc208,inbc206,inbc207,inbc204,inbc205,inbc015,inbc203,inbc016,inbc017) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3]
+              ,g_inbc_d[l_ac].inbcsite,g_inbc_d[l_ac].inbc001,g_inbc_d[l_ac].inbc002,g_inbc_d[l_ac].inbc005, 
+                  g_inbc_d[l_ac].inbc006,g_inbc_d[l_ac].inbc007,g_inbc_d[l_ac].inbc003,g_inbc_d[l_ac].inbc009, 
+                  g_inbc_d[l_ac].inbc010,g_inbc_d[l_ac].inbc211,g_inbc_d[l_ac].inbc212,g_inbc_d[l_ac].inbc208, 
+                  g_inbc_d[l_ac].inbc206,g_inbc_d[l_ac].inbc207,g_inbc_d[l_ac].inbc204,g_inbc_d[l_ac].inbc205, 
+                  g_inbc_d[l_ac].inbc015,g_inbc_d[l_ac].inbc203,g_inbc_d[l_ac].inbc016,g_inbc_d[l_ac].inbc017)  
+ 
+         WHERE inbcent = g_enterprise AND inbcdocno = ps_keys_bak[1] AND inbcseq = ps_keys_bak[2] AND inbcseq1 = ps_keys_bak[3]
+      #add-point:update_b段修改中 name="update_b.m_update"
+      
+      #end add-point 
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "inbc_t" 
+            LET g_errparam.code = "std-00009" 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+         WHEN SQLCA.SQLCODE #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "inbc_t:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+         OTHERWISE
+            
+      END CASE
+      #add-point:update_b段修改後 name="update_b.a_update"
+      
+      #end add-point 
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aint911_01.lock_b" >}
+#+ 連動lock其他單身table資料
+PRIVATE FUNCTION aint911_01_lock_b(ps_table)
+   #add-point:lock_b段define(客製用) name="lock_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:lock_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="lock_b.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="lock_b.pre_function"
+   
+   #end add-point
+   
+   #先刷新資料
+   #CALL aint911_01_b_fill(g_wc2)
+   
+   #鎖定整組table
+   #LET ls_group = ""
+   #僅鎖定自身table
+   LET ls_group = "inbc_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN aint911_01_bcl USING g_enterprise,
+                                       g_inbc_d[g_detail_idx].inbcdocno,g_inbc_d[g_detail_idx].inbcseq, 
+                                           g_inbc_d[g_detail_idx].inbcseq1
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "aint911_01_bcl:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   
+   END IF
+                                    
+ 
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aint911_01.unlock_b" >}
+#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION aint911_01_unlock_b(ps_table)
+   #add-point:unlock_b段define(客製用) name="unlock_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:unlock_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="unlock_b.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="unlock_b.pre_function"
+   
+   #end add-point
+   
+   LET ls_group = ""
+   
+   #IF ls_group.getIndexOf(ps_table,1) THEN
+      CLOSE aint911_01_bcl
+   #END IF
+   
+ 
+   
+   #add-point:unlock_b段結束前 name="unlock_b.after"
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aint911_01.modify_detail_chk" >}
+#+ 單身輸入判定(因應modify_detail)
+PRIVATE FUNCTION aint911_01_modify_detail_chk(ps_record)
+   #add-point:modify_detail_chk段define(客製用) name="modify_detail_chk.define_customerization"
+   
+   #end add-point
+   DEFINE ps_record STRING
+   DEFINE ls_return STRING
+   #add-point:modify_detail_chk段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify_detail_chk.define"
+   
+   #end add-point
+   
+   #add-point:modify_detail_chk段開始前 name="modify_detail_chk.before"
+   
+   #end add-point
+   
+   #根據sr名稱確定該page第一個欄位的名稱
+   CASE ps_record
+      WHEN "s_detail1" 
+         LET ls_return = "inbcsite"
+ 
+      #add-point:modify_detail_chk段自訂page控制 name="modify_detail_chk.page_control"
+      
+      #end add-point
+   END CASE
+    
+   #add-point:modify_detail_chk段結束前 name="modify_detail_chk.after"
+   
+   #end add-point
+   
+   RETURN ls_return
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aint911_01.show_ownid_msg" >}
+#+ 判斷是否顯示只能修改自己權限資料的訊息
+#(ver:35) ---add start---
+PRIVATE FUNCTION aint911_01_show_ownid_msg()
+   #add-point:show_ownid_msg段define(客製用) name="show_ownid_msg.define_customerization"
+   
+   #end add-point
+   #add-point:show_ownid_msg段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show_ownid_msg.define"
+   
+   #end add-point
+  
+ 
+   
+ 
+END FUNCTION
+#(ver:35) --- add end ---
+ 
+{</section>}
+ 
+{<section id="aint911_01.mask_functions" >}
+&include "erp/ain/aint911_01_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="aint911_01.set_pk_array" >}
+   #應用 a51 樣板自動產生(Version:8)
+#+ 給予pk_array內容
+PRIVATE FUNCTION aint911_01_set_pk_array()
+   #add-point:set_pk_array段define name="set_pk_array.define_customerization"
+   
+   #end add-point
+   #add-point:set_pk_array段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_pk_array.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="set_pk_array.before"
+   
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_inbc_d[l_ac].inbcdocno
+   LET g_pk_array[1].column = 'inbcdocno'
+   LET g_pk_array[2].values = g_inbc_d[l_ac].inbcseq
+   LET g_pk_array[2].column = 'inbcseq'
+   LET g_pk_array[3].values = g_inbc_d[l_ac].inbcseq1
+   LET g_pk_array[3].column = 'inbcseq1'
+   
+   #add-point:set_pk_array段之後 name="set_pk_array.after"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aint911_01.state_change" >}
+   
+ 
+{</section>}
+ 
+{<section id="aint911_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aint911_01.other_function" readonly="Y" >}
+#+
+PRIVATE FUNCTION aint911_01_inbb_fill(p_inbadocno)
+DEFINE p_inbadocno   LIKE inba_t.inbadocno
+DEFINE l_sql         STRING
+DEFINE l_ac1         LIKE type_t.num5
+DEFINE l_success     LIKE type_t.num5
+
+   LET l_sql ="SELECT inbbsite,  inbbdocno,   inbbseq,    inbb001,'', ",
+              "       '',        inbb002,     '',         inbb004,inbb003, ",
+              "       inbb007,   inbb008,     inbb009,    inbb210,   ",          #151111-00021#2 Add By Ken 151125 Add (inbb210)
+              "       inbb224,   t2.oocal003, inbb225, ",                        #151111-00021#3 Add By Ken 151203
+              "       inbb209,   t1.stael003, inbb207,    inbb208, ",            #151111-00021#2 Add By Ken 151125
+              "       inbb205,   inbb206, ",                                     #151111-00021#2 Add By Ken 151125
+              "       inbb011,   inbb014,     inbb204,   inbb022,     inbb021 ", #150507-00001#8 150527 by lori522612 add inbb204
+              "  FROM inbb_t ",
+              "       LEFT JOIN stael_t t1 ON t1.staelent=inbbent AND t1.stael001=inbb209 AND t1.stael002='"||g_dlang||"' ", #151111-00021#2 Add By Ken 151125
+              "       LEFT JOIN oocal_t t2 ON t2.oocalent=inbbent AND t2.oocal001=inbb224 AND t2.oocal002='"||g_dlang||"' ", #151111-00021#3 Add By Ken 151203
+              " WHERE inbbent = ",g_enterprise,
+              #"   AND inbbsite = '",g_site,"' ",     #151111-00021#2 Mark By Ken 151125
+              "   AND inbbdocno = '",p_inbadocno,"' ",
+              " ORDER BY inbbseq "
+   PREPARE aint911_01_pb2 FROM l_sql
+   DECLARE inbb_b_fill_curs CURSOR FOR aint911_01_pb2
+
+   CALL g_inbb_d.clear()
+   LET l_ac1 = 1
+   FOREACH inbb_b_fill_curs INTO g_inbb_d[l_ac1].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      CALL aint911_01_inbb001_ref(g_inbb_d[l_ac1].inbb001) RETURNING g_inbb_d[l_ac1].inbb001_desc,g_inbb_d[l_ac1].inbb001_desc2
+      DISPLAY BY NAME g_inbb_d[l_ac1].inbb001_desc,g_inbb_d[l_ac1].inbb001_desc2
+      
+      CALL s_feature_description(g_inbb_d[l_ac1].inbb001,g_inbb_d[l_ac1].inbb001) RETURNING l_success,g_inbb_d[l_ac1].inbb002_desc
+      DISPLAY BY NAME g_inbb_d[l_ac1].inbb002_desc 
+          
+      LET l_ac1 = l_ac1 + 1
+      IF l_ac1 > g_max_rec THEN
+         #CALL cl_err( "", 9035, 0 )
+         EXIT FOREACH
+      END IF
+
+   END FOREACH
+   CALL g_inbb_d.deleteElement(g_inbb_d.getLength())
+   LET g_rec_b2 = l_ac1 - 1
+   DISPLAY g_rec_b2 TO FORMONLY.cnt
+   CLOSE inbb_b_fill_curs
+   FREE aint911_01_pb2
+   
+END FUNCTION
+#+
+PRIVATE FUNCTION aint911_01_inbc005_ref(p_inbc005)
+DEFINE p_inbc005      LIKE inbc_t.inbc005
+DEFINE r_inbc005_desc LIKE inaa_t.inaa002
+      
+      #150907-00033#1 20150916 mark by beckxie---S
+      #INITIALIZE g_ref_fields TO NULL
+      #LET g_ref_fields[1] = p_inbc005
+      #CALL ap_ref_array2(g_ref_fields,"SELECT inaa002 FROM inaa_t WHERE inaaent='"||g_enterprise||"' AND inaasite='"||g_site||"' AND inaa001 = ? ","") RETURNING g_rtn_fields
+      #LET r_inbc005_desc = '', g_rtn_fields[1] , ''
+      #RETURN r_inbc005_desc
+      #150907-00033#1 20150916 mark by beckxie---E
+      #150907-00033#1 20150916  add by beckxie---S
+      CALL s_desc_get_stock_desc(g_site,p_inbc005) RETURNING r_inbc005_desc
+      RETURN r_inbc005_desc
+      #150907-00033#1 20150916  add by beckxie---E
+END FUNCTION
+#+
+PRIVATE FUNCTION aint911_01_inbc006_ref(p_inbc005,p_inbc006)
+DEFINE p_inbc005      LIKE inbc_t.inbc005
+DEFINE p_inbc006      LIKE inbc_t.inbc006
+DEFINE r_inbc006_desc LIKE inab_t.inab003
+DEFINE l_inaa007   LIKE inaa_t.inaa007
+
+      #INITIALIZE g_ref_fields TO NULL
+      #LET g_ref_fields[1] = p_inbc006
+      #CALL ap_ref_array2(g_ref_fields,"SELECT inab003 FROM inab_t WHERE inabent='"||g_enterprise||"' AND inabsite='"||g_site||"' AND inab001 = '"||p_inbc005||"' AND inab002 = ? ","") RETURNING g_rtn_fields
+      #LET r_inbc006_desc = '', g_rtn_fields[1] , ''
+      
+      SELECT inaa007 INTO l_inaa007 FROM inaa_t WHERE inaaent = g_enterprise AND inaasite = g_site AND inaa001 = p_inbc005
+      
+      IF l_inaa007 = '3' OR l_inaa007 = '4' THEN
+         INITIALIZE g_ref_fields TO NULL
+         LET g_ref_fields[1] = p_inbc006
+         CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001 = ? AND pmaal002 = '"||g_dlang||"'","") RETURNING g_rtn_fields
+         LET r_inbc006_desc = '', g_rtn_fields[1] , ''
+      ELSE
+         INITIALIZE g_ref_fields TO NULL
+         LET g_ref_fields[1] = p_inbc006
+         CALL ap_ref_array2(g_ref_fields,"SELECT inab003 FROM inab_t WHERE inabent='"||g_enterprise||"' AND inabsite='"||g_site||"' AND inab001 = '"||p_inbc005||"' AND inab002 = ? ","") RETURNING g_rtn_fields
+         LET r_inbc006_desc = '', g_rtn_fields[1] , ''
+      END IF
+      
+      RETURN r_inbc006_desc
+      
+END FUNCTION
+#+
+PRIVATE FUNCTION aint911_01_inbb001_ref(p_inbb001)
+DEFINE p_inbb001      LIKE inbb_t.inbb001
+DEFINE r_imaal003     LIKE imaal_t.imaal003
+DEFINE r_imaal004     LIKE imaal_t.imaal004
+
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = p_inbb001
+      CALL ap_ref_array2(g_ref_fields,"SELECT imaal003,imaal004 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? ","") RETURNING g_rtn_fields
+      LET r_imaal003 = '', g_rtn_fields[1] , ''
+      LET r_imaal004 = '', g_rtn_fields[2] , ''
+      RETURN r_imaal003,r_imaal004
+      
+END FUNCTION
+#+
+PRIVATE FUNCTION aint911_01_inbc_fill(p_inbadocno)
+DEFINE p_inbadocno   LIKE inba_t.inbadocno
+DEFINE l_sql         STRING
+DEFINE l_ac1         LIKE type_t.num5
+   
+   IF g_inbb_d.getLength() = 0 THEN
+      RETURN
+   END IF
+   #150907-00033#1 20150916 mark by beckxie---S
+   #LET l_sql ="SELECT inbcsite,inbcdocno,inbcseq,inbcseq1,",
+   #           "       inbc001, inbc002,  inbc005,inaa002, inbc006, ",
+   #           "       '',      inbc007,  inbc003,inbc010, inbc015, ",
+   #           "       inbc203, inbc016, inbc017 ",              
+   #           "  FROM inbc_t ",
+   #           "       LEFT JOIN inaa_t ON inaaent=inbcent AND inaasite=inbcsite AND inaa001 = inbc005 ",
+   #           " WHERE inbcent = ? ",
+   #           "   AND inbcsite = ? ",
+   #           "   AND inbcdocno =? ",
+   #           "  AND inbcseq = ? ",
+   #           " ORDER BY inbcseq,inbcseq1"
+   #150907-00033#1 20150916 mark by beckxie---E
+   #150907-00033#1 20150916  add by beckxie---S
+   LET l_sql ="SELECT inbcsite,inbcdocno,  inbcseq,     inbcseq1,",
+              "       inbc001, inbc002,    inbc005,     inayl003,  inbc006, ",
+              "       '',      inbc007,    inbc003,     inbc009,   t1.oocal003, ",  #151111-00021#3 Add By Ken 151203  Add(inbc009,t1.oocal003)
+              "       inbc010, inbc211,    t2.oocal003, inbc212, ",               #151111-00021#3 Add By Ken 151203  Add(inbc211,t2.oocal003,inbc212)
+              "       inbc208, stael003,   inbc206,     inbc207,   inbc204, ",    #151111-00021#2 Add By Ken 151125
+              "       inbc205, inbc015,    inbc203,     inbc016,   inbc017",      #151111-00021#2 Add By Ken 151125  Add(inbc205)             
+              "  FROM inbc_t ",
+              "       LEFT JOIN inayl_t ON inaylent=inbcent AND inayl001 = inbc005 ",
+              "       LEFT JOIN stael_t ON staelent=inbcent AND stael001=inbc208 AND stael002='"||g_dlang||"' ", #151111-00021#2 Add By Ken 151125
+              "       LEFT JOIN oocal_t t1 ON t1.oocalent=inbcent AND t1.oocal001=inbc009 AND t1.oocal002='"||g_dlang||"' ", #151111-00021#3 Add By Ken 151203
+              "       LEFT JOIN oocal_t t2 ON t2.oocalent=inbcent AND t2.oocal001=inbc211 AND t2.oocal002='"||g_dlang||"' ", #151111-00021#3 Add By Ken 151203
+              " WHERE inbcent = ? ",
+              "   AND inbcsite = ? ",
+              "   AND inbcdocno =? ",
+              "  AND inbcseq = ? ",
+              " ORDER BY inbcseq,inbcseq1"
+   #150907-00033#1 20150916  add by beckxie---E
+   PREPARE aint911_01_pb1 FROM l_sql
+   DECLARE inbc_b_fill_curs CURSOR FOR aint911_01_pb1
+
+   OPEN inbc_b_fill_curs USING g_enterprise,g_inbb_d[l_ac2].inbbsite ,p_inbadocno,g_inbb_d[l_ac2].inbbseq
+   CALL g_inbc_d.clear()
+   LET l_ac1 = 1
+   FOREACH inbc_b_fill_curs INTO g_inbc_d[l_ac1].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      CALL aint911_01_inbc005_ref(g_inbc_d[l_ac1].inbc005) RETURNING g_inbc_d[l_ac1].inbc005_desc
+      DISPLAY BY NAME g_inbc_d[l_ac1].inbc005_desc
+            
+      CALL aint911_01_inbc006_ref(g_inbc_d[l_ac1].inbc005,g_inbc_d[l_ac1].inbc006) RETURNING g_inbc_d[l_ac1].inbc006_desc
+      DISPLAY BY NAME g_inbc_d[l_ac1].inbc006_desc
+          
+      LET l_ac1 = l_ac1 + 1
+      IF l_ac1 > g_max_rec THEN
+         #CALL cl_err( "", 9035, 0 )
+         EXIT FOREACH
+      END IF
+
+   END FOREACH
+   CALL g_inbc_d.deleteElement(g_inbc_d.getLength())
+   LET g_rec_b = l_ac1 - 1
+   DISPLAY g_rec_b TO FORMONLY.cnt
+   CLOSE inbc_b_fill_curs
+   FREE aint911_01_pb1
+
+END FUNCTION
+#+
+PRIVATE FUNCTION aint911_01_inbc006_chk(p_inbc005,p_inbc006)
+DEFINE p_inbc005   LIKE inbc_t.inbc005
+DEFINE p_inbc006   LIKE inbc_t.inbc006
+DEFINE r_success   LIKE type_t.num5
+DEFINE l_success   LIKE type_t.num5
+DEFINE l_flag      LIKE type_t.num5
+DEFINE l_inaa007   LIKE inaa_t.inaa007
+
+      LET r_success = TRUE   
+      
+      IF cl_null(p_inbc006) THEN
+         LET p_inbc006 = ' '
+      END IF
+      
+      #若是雜項庫存發料作業時，輸入的料件+產品特徵+庫存管理特徵+庫位必須存在[T:庫存明細檔]中
+      IF g_type = '1' THEN
+         IF cl_null(g_inbb_d[l_ac2].inbb002) THEN
+            LET g_inbb_d[l_ac2].inbb002 = ' '
+         END IF
+         #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+         INITIALIZE g_chkparam.* TO NULL
+      
+         #設定g_chkparam.*的參數
+         LET g_chkparam.arg1 = g_site
+         LET g_chkparam.arg2 = g_inbc_d[l_ac].inbc001
+         LET g_chkparam.arg3 = g_inbb_d[l_ac2].inbb002
+         LET g_chkparam.arg4 = g_inbb_d[l_ac2].inbb003
+         LET g_chkparam.arg5 = p_inbc005
+         LET g_chkparam.arg6 = p_inbc006
+      
+         #呼叫檢查存在並帶值的library
+         IF NOT cl_chk_exist("v_inag005") THEN
+            LET r_success = FALSE
+            RETURN r_success  
+         END IF
+         
+      END IF 
+        
+      #若是雜項庫存收料作業時
+      IF g_type = '2' THEN
+         
+         #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+         INITIALIZE g_chkparam.* TO NULL
+         
+         #設定g_chkparam.*的參數
+         LET g_chkparam.arg1 = g_site
+         LET g_chkparam.arg2 = p_inbc005
+         LET g_chkparam.arg3 = p_inbc006
+         #160318-00025#23  by 07900 --add-str
+         LET g_errshow = TRUE #是否開窗                   
+         LET g_chkparam.err_str[1] ="aim-00063:sub-01302|aini002|",cl_get_progname("aini002",g_lang,"2"),"|:EXEPROGaini002"
+         #160318-00025#23  by 07900 --add-end
+         #呼叫檢查存在並帶值的library
+         IF NOT cl_chk_exist("v_inab002") THEN
+            LET r_success = FALSE
+            RETURN r_success  
+         END IF 
+      END IF  
+      #呼叫s_control_doc_chk('6',inbcdocno,inbc005,inbc006,'','','')應用元件，
+      #檢核輸入的庫位是否在單據別限制範圍內，若不在限制內則不允許使用此庫位
+      CALL s_control_chk_doc('6',g_inbadocno,p_inbc005,p_inbc006,'','','') RETURNING l_success,l_flag
+      IF NOT l_flag THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+        
+      RETURN r_success
+END FUNCTION
+#+
+PRIVATE FUNCTION aint911_01_inbc007_chk()
+DEFINE r_success   LIKE type_t.num5
+DEFINE l_success   LIKE type_t.num5
+DEFINE l_ooac001   LIKE ooac_t.ooac001
+DEFINE l_ooac002   LIKE ooac_t.ooac002
+DEFINE l_ooac004   LIKE ooac_t.ooac004
+DEFINE l_flag      LIKE type_t.num5          #标识符，TRUE/FALSE
+DEFINE l_flag1     LIKE type_t.num5          #标识符，TRUE/FALSE
+DEFINE l_site      LIKE type_t.chr20
+DEFINE l_inbadocno STRING 
+DEFINE l_n         LIKE type_t.num5 
+
+      LET l_flag = TRUE
+      LET l_flag1 = TRUE
+      LET l_ooac001 = NULL
+      LET l_ooac002 = NULL
+
+      LET r_success = TRUE   
+      
+      #若是雜項庫存發料作業時，輸入的料件+產品特徵+庫存管理特徵+庫位+儲位+批號必須存在[T:庫存明細檔]中
+      IF g_type = '1' THEN
+         IF cl_null(g_inbc_d[l_ac].inbc006) THEN
+            LET g_inbc_d[l_ac].inbc006 = ' '
+         END IF
+         IF cl_null(g_inbb_d[l_ac2].inbb002) THEN
+            LET g_inbb_d[l_ac2].inbb002 = ' '
+         END IF
+         #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+         INITIALIZE g_chkparam.* TO NULL
+      
+         #設定g_chkparam.*的參數
+         LET g_chkparam.arg1 = g_site
+         LET g_chkparam.arg2 = g_inbc_d[l_ac].inbc001
+         LET g_chkparam.arg3 = g_inbb_d[l_ac2].inbb002
+         LET g_chkparam.arg4 = g_inbb_d[l_ac2].inbb003
+         LET g_chkparam.arg5 = g_inbc_d[l_ac].inbc005
+         LET g_chkparam.arg6 = g_inbc_d[l_ac].inbc006
+         LET g_chkparam.arg7 = g_inbc_d[l_ac].inbc007
+      
+         #呼叫檢查存在並帶值的library
+         IF NOT cl_chk_exist("v_inag006") THEN
+            LET r_success = FALSE
+            RETURN r_success  
+         END IF
+        
+      END IF 
+        
+      #若是[P:雜項庫存收料維護作業]時，需檢核單據別參數的"庫存批號可重覆否"是否允許，
+      #若勾選不允許則要檢查輸入的批號是否存在[T:料件批號檔]中
+      IF g_type = '2' THEN
+         #150424-00018#4 150531 by lori522612 mark and add---(S)
+         ##ent+參照表號+單據別+參數編號(D-MFG-0012)抓ooac004的值
+         #
+         #CALL s_aooi200_get_site(g_inbadocno) RETURNING l_flag,l_site
+         #IF l_flag THEN
+         #   SELECT ooef004 INTO l_ooac001 FROM ooef_t
+         #    WHERE ooef005 = l_site
+         #      AND ooefent = g_enterprise
+         #END IF
+         #CALL s_aooi200_get_slip(g_inbadocno) RETURNING l_flag1,l_ooac002
+         #CALL cl_get_doc_para(g_enterprise,g_site,l_ooac002,'D-MFG-0012') RETURNING l_ooac004
+         #
+         #IF l_ooac004 = 'N' THEN
+         #  LET l_n = 0
+         #   IF g_inbb_d[l_ac].inbb002 IS NOT NULL THEN
+         #      SELECT COUNT(*) INTO l_n FROM inad_t 
+         #        WHERE inadent = g_enterprise AND inadsite = g_site AND inad001 = g_inbb_d[l_ac].inbb001
+         #          AND inad002 = g_inbb_d[l_ac].inbb002 AND inad003 = g_inbb_d[l_ac].inbb009
+         #   ELSE
+         #      SELECT COUNT(*) INTO l_n FROM inad_t 
+         #        WHERE inadent = g_enterprise AND inadsite = g_site AND inad001 = g_inbb_d[l_ac].inbb001
+         #          AND inad003 = g_inbb_d[l_ac].inbb009
+         #   END IF
+         #   IF l_n > 0 THEN
+         #      INITIALIZE g_errparam TO NULL
+         #      LET g_errparam.code = 'ain-00269'
+         #      LET g_errparam.extend = g_inbb_d[l_ac].inbb009
+         #      LET g_errparam.popup = TRUE
+         #      CALL cl_err()
+         #
+         #      LET r_success = FALSE
+         #      RETURN r_success  
+         #   END IF
+         #END IF
+         
+         IF NOT s_lot_out_chk(g_inbb_d[l_ac2].inbbsite,g_inbb_d[l_ac2].inbbdocno,g_inbc_d[l_ac].inbc001,
+                              g_inbc_d[l_ac].inbc002,g_inbc_d[l_ac].inbc007) THEN
+            LET r_success = FALSE
+            RETURN r_success  
+         END IF
+         #150424-00018#4 150531 by lori522612 mark and add---(E)
+      END IF   
+    
+      RETURN r_success
+END FUNCTION
+
+PRIVATE FUNCTION aint911_01_set_required()
+   DEFINE l_inaa007   LIKE inaa_t.inaa007
+   DEFINE l_imaf061   LIKE imaf_t.imaf061
+   DEFINE l_imaf055   LIKE imaf_t.imaf055
+   DEFINE l_success         LIKE type_t.num5      #150427-00001#5 150514 by lori522612 add
+   DEFINE l_set_required    LIKE type_t.num5      #150427-00001#5 150514 by lori522612 add
+   
+   #儲位
+   LET l_inaa007 = ''
+   SELECT inaa007 INTO l_inaa007 FROM inaa_t WHERE inaaent = g_enterprise AND inaasite = g_site AND inaa001 = g_inbc_d[l_ac].inbc005
+   IF l_inaa007 MATCHES '[1234]' THEN
+      CALL cl_set_comp_required("inbc006",TRUE)
+   END IF
+  
+   SELECT imaf061,imaf055 INTO l_imaf061,l_imaf055 FROM imaf_t WHERE imafent = g_enterprise AND imaf001 =  g_inbc_d[l_ac].inbc001 AND imafsite = g_site
+   
+   #150427-00001#5 150514 by lori522612 mark and add---(S)
+   ##[T:料件據點進銷存檔].[C:庫存批號控管]=1時,[C:必須有批號]欄位必輸
+   #IF l_imaf061 = '1' THEN
+   #   CALL cl_set_comp_required("inbc007",TRUE)
+   #END IF
+   #批號
+   LET l_success = ''     
+   LET l_set_required = '' 
+   
+   CALL s_lot_out_required(g_inbc_d[l_ac].inbc001) RETURNING l_success,l_set_required
+   IF l_success THEN
+      CALL cl_set_comp_required("inbc007",l_set_required)
+   END IF         
+   #150427-00001#5 150514 by lori522612 mark and add---(E)
+      
+   #若設定imaf055(庫存管理特徵)等於'1.必須有庫存管理特徵'時，則[C:庫存管理特徵]欄位必須輸入
+   IF l_imaf055 = '1' THEN
+      CALL cl_set_comp_required("inbc003",TRUE)
+   END IF
+   
+   #150507-00001#8 150527 by lori522612 add---(S)
+   #製造日期,有效日期
+   IF g_argv[1] = '2' THEN
+      LET l_success = ''
+      LET l_set_required = ''
+      CALL cl_set_comp_required("inbc203",TRUE)
+      
+      IF NOT cl_null(g_inbc_d[l_ac].inbc007) THEN
+         CALL s_lot_out_effdate_required(g_inbc_d[l_ac].inbc001,g_inbc_d[l_ac].inbc007) RETURNING l_success,l_set_required
+         IF l_success THEN
+            CALL cl_set_comp_required("inbc016",l_set_required)
+         END IF
+      END IF               
+   END IF
+   #150507-00001#8 150527 by lori522612 add---(E) 
+END FUNCTION
+
+PRIVATE FUNCTION aint911_01_set_no_required()
+   CALL cl_set_comp_required("inbc006,inbc007,inbc003",FALSE)
+   CALL cl_set_comp_required("inbc203,inbc016",FALSE)            #150507-00001#8 150527 by lori522612 add   
+END FUNCTION
+
+#輸入的料件+產品特徵+庫存管理特徵+庫位必須存在[T:庫存明細檔]中
+PRIVATE FUNCTION aint911_01_chk_inag004(p_inbb007)
+DEFINE p_inbb007   LIKE inbb_t.inbb007
+DEFINE r_success   LIKE type_t.num5
+      
+      LET r_success = TRUE
+      
+      IF cl_null(g_inbb_d[l_ac2].inbb002) THEN
+         LET g_inbb_d[l_ac2].inbb002 = ' '
+      END IF
+      IF cl_null(g_inbb_d[l_ac2].inbb003) THEN
+         LET g_inbb_d[l_ac2].inbb003 = ' '
+      END IF
+      #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+      INITIALIZE g_chkparam.* TO NULL
+      
+      #設定g_chkparam.*的參數
+      LET g_chkparam.arg1 = g_site
+      LET g_chkparam.arg2 = g_inbb_d[l_ac2].inbb001
+      LET g_chkparam.arg3 = g_inbb_d[l_ac2].inbb002
+      LET g_chkparam.arg4 = g_inbb_d[l_ac2].inbb003
+      LET g_chkparam.arg5 = p_inbb007
+      
+      #呼叫檢查存在並帶值的library
+      IF NOT cl_chk_exist("v_inag004") THEN
+         LET r_success = FALSE
+         RETURN r_success  
+      END IF
+         
+      RETURN r_success
+      
+END FUNCTION
+
+#輸入的料件+產品特徵+庫存管理特徵+庫位+儲位必須存在[T:庫存明細檔]中
+PRIVATE FUNCTION aint911_01_chk_inag005(p_inbb007,p_inbb008)
+DEFINE p_inbb007   LIKE inbb_t.inbb007
+DEFINE p_inbb008   LIKE inbb_t.inbb008
+DEFINE r_success   LIKE type_t.num5
+
+      LET r_success = TRUE   
+      
+      IF cl_null(p_inbb008) THEN
+         LET p_inbb008 = ' '
+      END IF
+      IF cl_null(g_inbb_d[l_ac2].inbb003) THEN
+         LET g_inbb_d[l_ac2].inbb003 = ' '
+      END IF
+
+      #若是雜項庫存發料作業時，輸入的料件+產品特徵+庫存管理特徵+庫位必須存在[T:庫存明細檔]中
+      IF cl_null(g_inbb_d[l_ac2].inbb002) THEN
+         LET g_inbb_d[l_ac2].inbb002 = ' '
+      END IF
+      IF cl_null(g_inbb_d[l_ac2].inbb003) THEN
+         LET g_inbb_d[l_ac2].inbb003 = ' '
+      END IF
+      IF cl_null(p_inbb008) THEN
+         LET p_inbb008 = ' '
+      END IF
+      #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+      INITIALIZE g_chkparam.* TO NULL
+      
+      #設定g_chkparam.*的參數
+      LET g_chkparam.arg1 = g_site
+      LET g_chkparam.arg2 = g_inbb_d[l_ac2].inbb001
+      LET g_chkparam.arg3 = g_inbb_d[l_ac2].inbb002
+      LET g_chkparam.arg4 = g_inbb_d[l_ac2].inbb003
+      LET g_chkparam.arg5 = p_inbb007
+      LET g_chkparam.arg6 = p_inbb008
+      
+      #呼叫檢查存在並帶值的library
+      IF NOT cl_chk_exist("v_inag005") THEN
+         LET r_success = FALSE
+         RETURN r_success  
+      END IF
+      RETURN r_success  
+      
+END FUNCTION
+
+ 
+{</section>}
+ 

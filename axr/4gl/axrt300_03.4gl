@@ -1,0 +1,1239 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axrt300_03.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0007(2013-12-03 16:48:40), PR版次:0007(2016-12-02 14:28:13)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000254
+#+ Filename...: axrt300_03
+#+ Description: 發票資訊
+#+ Creator....: 02295(2013-10-22 00:00:00)
+#+ Modifier...: 02295 -SD/PR- 02481
+ 
+{</section>}
+ 
+{<section id="axrt300_03.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#151023-00016#1   2015/10/26  By 01727 錯誤訊息改為正規報錯
+#160318-00005#52  2016/03/29  By 07959    將重複內容的錯誤訊息置換為公用錯誤訊息
+#160905-00002#6   2016/09/05  By 08732    補齊SQL where條件的ent
+#160913-00017#7   2016/09/22  By 07900    AXR模组调整交易客商开窗
+#161128-00061#4   2016/12/02  by 02481    标准程式定义采用宣告模式,弃用.*写法
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_xrca_m        RECORD
+       xrcadocno LIKE xrca_t.xrcadocno, 
+   xrcald LIKE xrca_t.xrcald, 
+   xrca023 LIKE xrca_t.xrca023, 
+   pmaa003 LIKE type_t.chr20, 
+   xrca025 LIKE xrca_t.xrca025, 
+   xrca011 LIKE xrca_t.xrca011, 
+   xrca011_desc LIKE type_t.chr80, 
+   xrca013 LIKE xrca_t.xrca013, 
+   xrca012 LIKE xrca_t.xrca012, 
+   xrca028 LIKE xrca_t.xrca028, 
+   xrca028_desc LIKE type_t.chr80, 
+   xrca060 LIKE xrca_t.xrca060, 
+   xrca029 LIKE xrca_t.xrca029, 
+   xrca061 LIKE xrca_t.xrca061, 
+   xrca030 LIKE xrca_t.xrca030, 
+   xrca031 LIKE xrca_t.xrca031, 
+   xrca032 LIKE xrca_t.xrca032, 
+   xrca030_2 LIKE type_t.num20_6, 
+   xrca031_2 LIKE type_t.num20_6, 
+   xrca032_2 LIKE type_t.num20_6
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+#單身 type 宣告
+ TYPE type_g_isaf_d        RECORD
+  num LIKE type_t.num5, 
+  isaf010 LIKE isaf_t.isaf010, 
+  isaf011 LIKE isaf_t.isaf011, 
+  isaf014 LIKE isaf_t.isaf014,
+  isaf018 LIKE isaf_t.isaf018,  
+  isaf103 LIKE isaf_t.isaf023, 
+  isaf104 LIKE isaf_t.isaf024, 
+  isaf105 LIKE isaf_t.isaf025, 
+  isafdocno LIKE isaf_t.isafdocno, 
+  isafstus LIKE isaf_t.isafstus
+       END RECORD
+ 
+DEFINE g_isaf_d    DYNAMIC ARRAY OF type_g_isaf_d       
+DEFINE g_rec_b     LIKE type_t.num5  
+DEFINE g_cnt       LIKE type_t.num5
+DEFINE g_xrca_m_t   type_g_xrca_m
+#161128-00061#4---mdofiy--begin---------
+#DEFINE g_xrca      RECORD LIKE xrca_t.*
+DEFINE g_xrca  RECORD  #應收憑單單頭
+       xrcaent LIKE xrca_t.xrcaent, #企業編號
+       xrcaownid LIKE xrca_t.xrcaownid, #資料所有者
+       xrcaowndp LIKE xrca_t.xrcaowndp, #資料所屬部門
+       xrcacrtid LIKE xrca_t.xrcacrtid, #資料建立者
+       xrcacrtdp LIKE xrca_t.xrcacrtdp, #資料建立部門
+       xrcacrtdt LIKE xrca_t.xrcacrtdt, #資料創建日
+       xrcamodid LIKE xrca_t.xrcamodid, #資料修改者
+       xrcamoddt LIKE xrca_t.xrcamoddt, #最近修改日
+       xrcacnfid LIKE xrca_t.xrcacnfid, #資料確認者
+       xrcacnfdt LIKE xrca_t.xrcacnfdt, #資料確認日
+       xrcapstid LIKE xrca_t.xrcapstid, #資料過帳者
+       xrcapstdt LIKE xrca_t.xrcapstdt, #資料過帳日
+       xrcastus LIKE xrca_t.xrcastus, #狀態碼
+       xrcacomp LIKE xrca_t.xrcacomp, #法人
+       xrcald LIKE xrca_t.xrcald, #帳套
+       xrcadocno LIKE xrca_t.xrcadocno, #應收帳款單號碼
+       xrcadocdt LIKE xrca_t.xrcadocdt, #帳款日期
+       xrca001 LIKE xrca_t.xrca001, #帳款單性質
+       xrcasite LIKE xrca_t.xrcasite, #帳務中心
+       xrca003 LIKE xrca_t.xrca003, #帳務人員
+       xrca004 LIKE xrca_t.xrca004, #帳款客戶編號
+       xrca005 LIKE xrca_t.xrca005, #收款客戶
+       xrca006 LIKE xrca_t.xrca006, #客戶分類
+       xrca007 LIKE xrca_t.xrca007, #帳款類別
+       xrca008 LIKE xrca_t.xrca008, #收款條件編號
+       xrca009 LIKE xrca_t.xrca009, #應收款日/應扣抵日
+       xrca010 LIKE xrca_t.xrca010, #容許票據到期日
+       xrca011 LIKE xrca_t.xrca011, #稅別
+       xrca012 LIKE xrca_t.xrca012, #稅率
+       xrca013 LIKE xrca_t.xrca013, #含稅否
+       xrca014 LIKE xrca_t.xrca014, #人員編號
+       xrca015 LIKE xrca_t.xrca015, #部門編號
+       xrca016 LIKE xrca_t.xrca016, #來源作業類型
+       xrca017 LIKE xrca_t.xrca017, #產生方式
+       xrca018 LIKE xrca_t.xrca018, #來源參考單號
+       xrca019 LIKE xrca_t.xrca019, #系統產生對應單號(待抵帳款-預收)
+       xrca020 LIKE xrca_t.xrca020, #信用狀申請流程否
+       xrca021 LIKE xrca_t.xrca021, #商業發票號碼(IV no.)
+       xrca022 LIKE xrca_t.xrca022, #出口報單號碼
+       xrca023 LIKE xrca_t.xrca023, #發票客戶編號
+       xrca024 LIKE xrca_t.xrca024, #發票客戶統一編號
+       xrca025 LIKE xrca_t.xrca025, #發票客戶全名
+       xrca026 LIKE xrca_t.xrca026, #發票客戶地址
+       xrca028 LIKE xrca_t.xrca028, #發票類型
+       xrca029 LIKE xrca_t.xrca029, #發票匯率
+       xrca030 LIKE xrca_t.xrca030, #發票應開未稅金額
+       xrca031 LIKE xrca_t.xrca031, #發票應開稅額
+       xrca032 LIKE xrca_t.xrca032, #發票應開含稅金額
+       xrca033 LIKE xrca_t.xrca033, #專案編號
+       xrca034 LIKE xrca_t.xrca034, #責任中心
+       xrca035 LIKE xrca_t.xrca035, #應收(借方)科目編號
+       xrca036 LIKE xrca_t.xrca036, #收入(貸方)科目編號
+       xrca037 LIKE xrca_t.xrca037, #分錄傳票產生否
+       xrca038 LIKE xrca_t.xrca038, #拋轉傳票號碼
+       xrca039 LIKE xrca_t.xrca039, #會計檢核附件份數
+       xrca040 LIKE xrca_t.xrca040, #留置否
+       xrca041 LIKE xrca_t.xrca041, #留置理由碼
+       xrca042 LIKE xrca_t.xrca042, #留置設定日期
+       xrca043 LIKE xrca_t.xrca043, #留置解除日期
+       xrca044 LIKE xrca_t.xrca044, #留置原幣金額
+       xrca045 LIKE xrca_t.xrca045, #留置說明
+       xrca046 LIKE xrca_t.xrca046, #關係人否
+       xrca047 LIKE xrca_t.xrca047, #多角序號
+       xrca048 LIKE xrca_t.xrca048, #集團代收/代付單號
+       xrca049 LIKE xrca_t.xrca049, #來源營運中心編號
+       xrca050 LIKE xrca_t.xrca050, #交易原始單據份數
+       xrca051 LIKE xrca_t.xrca051, #作廢理由碼
+       xrca052 LIKE xrca_t.xrca052, #列印次數
+       xrca053 LIKE xrca_t.xrca053, #備註
+       xrca054 LIKE xrca_t.xrca054, #多帳期設定
+       xrca055 LIKE xrca_t.xrca055, #繳款優惠條件
+       xrca056 LIKE xrca_t.xrca056, #會計檢核附件狀態
+       xrca057 LIKE xrca_t.xrca057, #交易對象識別碼
+       xrca058 LIKE xrca_t.xrca058, #銷售分類
+       xrca059 LIKE xrca_t.xrca059, #預算編號
+       xrca060 LIKE xrca_t.xrca060, #發票開立原則
+       xrca061 LIKE xrca_t.xrca061, #預計開立發票日期
+       xrca062 LIKE xrca_t.xrca062, #多角性質
+       xrca063 LIKE xrca_t.xrca063, #整帳批序號
+       xrca064 LIKE xrca_t.xrca064, #訂金序次
+       xrca065 LIKE xrca_t.xrca065, #發票編號
+       xrca066 LIKE xrca_t.xrca066, #發票號碼
+       xrca100 LIKE xrca_t.xrca100, #交易原幣別
+       xrca101 LIKE xrca_t.xrca101, #原幣匯率
+       xrca103 LIKE xrca_t.xrca103, #原幣未稅金額
+       xrca104 LIKE xrca_t.xrca104, #原幣稅額
+       xrca106 LIKE xrca_t.xrca106, #原幣直接折抵合計金額
+       xrca107 LIKE xrca_t.xrca107, #原幣直接沖帳(調整)合計金額
+       xrca108 LIKE xrca_t.xrca108, #原幣應收金額
+       xrca113 LIKE xrca_t.xrca113, #本幣未稅金額
+       xrca114 LIKE xrca_t.xrca114, #本幣稅額
+       xrca116 LIKE xrca_t.xrca116, #本幣直接沖帳(調整)合計金額
+       xrca117 LIKE xrca_t.xrca117, #本幣直接沖帳(調整)合計金額
+       xrca118 LIKE xrca_t.xrca118, #本幣應收金額
+       xrca120 LIKE xrca_t.xrca120, #本位幣二幣別
+       xrca121 LIKE xrca_t.xrca121, #本位幣二匯率
+       xrca123 LIKE xrca_t.xrca123, #本位幣二未稅金額
+       xrca124 LIKE xrca_t.xrca124, #本位幣二稅額
+       xrca126 LIKE xrca_t.xrca126, #本位幣二直接折抵合計金額
+       xrca127 LIKE xrca_t.xrca127, #本位幣二直接沖帳(調整)合計金額
+       xrca128 LIKE xrca_t.xrca128, #本位幣二應收金額
+       xrca130 LIKE xrca_t.xrca130, #本位幣三幣別
+       xrca131 LIKE xrca_t.xrca131, #本位幣三匯率
+       xrca133 LIKE xrca_t.xrca133, #本位幣三未稅金額
+       xrca134 LIKE xrca_t.xrca134, #本位幣三稅額
+       xrca136 LIKE xrca_t.xrca136, #本位幣三直接折抵合計金額
+       xrca137 LIKE xrca_t.xrca137, #本位幣三直接沖帳(調整)合計金額
+       xrca138 LIKE xrca_t.xrca138  #本位幣三應收金額
+       END RECORD
+#161128-00061#4---mdofiy--end---------       
+DEFINE g_ooef019   LIKE ooef_t.ooef019
+#end add-point
+ 
+DEFINE g_xrca_m        type_g_xrca_m
+ 
+   DEFINE g_xrcadocno_t LIKE xrca_t.xrcadocno
+DEFINE g_xrcald_t LIKE xrca_t.xrcald
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axrt300_03.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axrt300_03(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   p_xrcald,p_xrcadocno
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE p_xrcald      LIKE xrca_t.xrcald
+   DEFINE p_xrcadocno   LIKE xrca_t.xrcadocno
+   DEFINE p_xrca018     LIKE xrca_t.xrca018 
+   
+   IF cl_null(p_xrcald) OR cl_null(p_xrcadocno) THEN 
+      RETURN
+   END IF
+   CALL s_transaction_begin() 
+  #INITIALIZE g_xrca_m_t.* LIKE xrca_t.*
+  #INITIALIZE g_xrca.*     LIKE xrca_t.*
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axrt300_03 WITH FORM cl_ap_formpath("axr","axrt300_03")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   CALL cl_set_combo_scc('xrca060','9721')
+   #161128-00061#4---mdofiy--begin---------
+   #SELECT * INTO g_xrca.* 
+    SELECT xrcaent,xrcaownid,xrcaowndp,xrcacrtid,xrcacrtdp,xrcacrtdt,xrcamodid,xrcamoddt,xrcacnfid,
+          xrcacnfdt,xrcapstid,xrcapstdt,xrcastus,xrcacomp,xrcald,xrcadocno,xrcadocdt,xrca001,
+          xrcasite,xrca003,xrca004,xrca005,xrca006,xrca007,xrca008,xrca009,xrca010,xrca011,
+          xrca012,xrca013,xrca014,xrca015,xrca016,xrca017,xrca018,xrca019,xrca020,xrca021,
+          xrca022,xrca023,xrca024,xrca025,xrca026,xrca028,xrca029,xrca030,xrca031,xrca032,
+          xrca033,xrca034,xrca035,xrca036,xrca037,xrca038,xrca039,xrca040,xrca041,xrca042,
+          xrca043,xrca044,xrca045,xrca046,xrca047,xrca048,xrca049,xrca050,xrca051,xrca052,
+          xrca053,xrca054,xrca055,xrca056,xrca057,xrca058,xrca059,xrca060,xrca061,xrca062,
+          xrca063,xrca064,xrca065,xrca066,xrca100,xrca101,xrca103,xrca104,xrca106,xrca107,
+          xrca108,xrca113,xrca114,xrca116,xrca117,xrca118,xrca120,xrca121,xrca123,xrca124,
+          xrca126,xrca127,xrca128,xrca130,xrca131,xrca133,xrca134,xrca136,xrca137,xrca138 INTO g_xrca.*
+          
+   #161128-00061#4---mdofiy--end---------
+   FROM xrca_t WHERE xrcaent = g_enterprise AND xrcald = p_xrcald AND xrcadocno = p_xrcadocno
+   CALL axrt300_03_b_fill()
+   CALL axrt300_03_def()
+   
+   
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_xrca_m.xrcadocno,g_xrca_m.xrcald,g_xrca_m.xrca023,g_xrca_m.pmaa003,g_xrca_m.xrca025, 
+          g_xrca_m.xrca011,g_xrca_m.xrca013,g_xrca_m.xrca012,g_xrca_m.xrca028,g_xrca_m.xrca060,g_xrca_m.xrca029, 
+          g_xrca_m.xrca061,g_xrca_m.xrca030,g_xrca_m.xrca031,g_xrca_m.xrca032,g_xrca_m.xrca030_2,g_xrca_m.xrca031_2, 
+          g_xrca_m.xrca032_2 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            LET g_xrca_m.xrca029 = 1
+            DISPLAY BY NAME g_xrca_m.xrca029
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcadocno
+            #add-point:BEFORE FIELD xrcadocno name="input.b.xrcadocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcadocno
+            
+            #add-point:AFTER FIELD xrcadocno name="input.a.xrcadocno"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcadocno
+            #add-point:ON CHANGE xrcadocno name="input.g.xrcadocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrcald
+            #add-point:BEFORE FIELD xrcald name="input.b.xrcald"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrcald
+            
+            #add-point:AFTER FIELD xrcald name="input.a.xrcald"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrcald
+            #add-point:ON CHANGE xrcald name="input.g.xrcald"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca023
+            #add-point:BEFORE FIELD xrca023 name="input.b.xrca023"
+            CALL axrt300_03_xrca023_desc()
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca023
+            
+            #add-point:AFTER FIELD xrca023 name="input.a.xrca023"
+            CALL axrt300_03_xrca023_desc()
+            IF NOT cl_null(g_xrca_m.xrca023) THEN 
+               IF NOT ap_chk_isExist(g_xrca_m.xrca023,"SELECT COUNT(*) FROM pmaa_t WHERE pmaaent = '" ||g_enterprise|| "' AND pmaa001 = ? ",'apm-00028',1) THEN 
+                  LET g_xrca_m.xrca023 = g_xrca_m_t.xrca023 
+                  NEXT FIELD CURRENT
+               END IF  
+#               IF NOT ap_chk_isExist(g_xrca_m.xrca023,"SELECT COUNT(*) FROM pmaa_t WHERE pmaaent = '" ||g_enterprise|| "' AND pmaa001 = ? AND pmaastus ='Y' ",'apm-00029',1) THEN  #160318-00005#52  mark 
+               IF NOT ap_chk_isExist(g_xrca_m.xrca023,"SELECT COUNT(*) FROM pmaa_t WHERE pmaaent = '" ||g_enterprise|| "' AND pmaa001 = ? AND pmaastus ='Y' ",'sub-01302','apmm100') THEN   #160318-00005#52  add
+                  LET g_xrca_m.xrca023 = g_xrca_m_t.xrca023 
+                  NEXT FIELD CURRENT
+               END IF               
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca023
+            #add-point:ON CHANGE xrca023 name="input.g.xrca023"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmaa003
+            #add-point:BEFORE FIELD pmaa003 name="input.b.pmaa003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmaa003
+            
+            #add-point:AFTER FIELD pmaa003 name="input.a.pmaa003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmaa003
+            #add-point:ON CHANGE pmaa003 name="input.g.pmaa003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca025
+            #add-point:BEFORE FIELD xrca025 name="input.b.xrca025"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca025
+            
+            #add-point:AFTER FIELD xrca025 name="input.a.xrca025"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca025
+            #add-point:ON CHANGE xrca025 name="input.g.xrca025"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca011
+            
+            #add-point:AFTER FIELD xrca011 name="input.a.xrca011"
+            CALL axrt300_03_xrca011_desc()
+            IF NOT cl_null(g_xrca_m.xrca011) THEN 
+               IF NOT ap_chk_isExist(g_xrca_m.xrca011,"SELECT COUNT(*) FROM oodb_t,ooef_t WHERE ooefent = oodbent AND ooef019 = oodb001 AND oodbent = '" ||g_enterprise|| "' AND ooef001 = '"||g_xrca.xrcacomp||"' AND oodb002 = ? ",'aoo-00222',1) THEN 
+                  LET g_xrca_m.xrca011 = g_xrca_m_t.xrca011 
+                  NEXT FIELD CURRENT
+               END IF     
+#               IF NOT ap_chk_isExist(g_xrca_m.xrca011,"SELECT COUNT(*) FROM oodb_t,ooef_t WHERE ooefent = oodbent AND ooef019 = oodb001 AND oodbent = '" ||g_enterprise|| "' AND ooef001 = '"||g_xrca.xrcacomp||"' AND oodb002 = ? AND oodbstus = 'Y' ",'aoo-00223',1) THEN   #160318-00005#52  mark
+               IF NOT ap_chk_isExist(g_xrca_m.xrca011,"SELECT COUNT(*) FROM oodb_t,ooef_t WHERE ooefent = oodbent AND ooef019 = oodb001 AND oodbent = '" ||g_enterprise|| "' AND ooef001 = '"||g_xrca.xrcacomp||"' AND oodb002 = ? AND oodbstus = 'Y' ",'sub-01302','aooi610') THEN    #160318-00005#52  add
+                  LET g_xrca_m.xrca011 = g_xrca_m_t.xrca011 
+                  NEXT FIELD CURRENT
+               END IF                 
+            END IF 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca011
+            #add-point:BEFORE FIELD xrca011 name="input.b.xrca011"
+            CALL axrt300_03_xrca011_desc()
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca011
+            #add-point:ON CHANGE xrca011 name="input.g.xrca011"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca013
+            #add-point:BEFORE FIELD xrca013 name="input.b.xrca013"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca013
+            
+            #add-point:AFTER FIELD xrca013 name="input.a.xrca013"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca013
+            #add-point:ON CHANGE xrca013 name="input.g.xrca013"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca012
+            #add-point:BEFORE FIELD xrca012 name="input.b.xrca012"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca012
+            
+            #add-point:AFTER FIELD xrca012 name="input.a.xrca012"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca012
+            #add-point:ON CHANGE xrca012 name="input.g.xrca012"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca028
+            
+            #add-point:AFTER FIELD xrca028 name="input.a.xrca028"
+            CALL axrt300_03_xrca028_desc()
+            IF NOT cl_null(g_xrca_m.xrca028) THEN 
+               IF NOT ap_chk_isExist(g_xrca_m.xrca028,"SELECT COUNT(*) FROM isac_t,ooef_t WHERE ooef019 = isac001 AND ooefent = isacent AND isacent = '" ||g_enterprise|| "' AND ooef001 = '"||g_xrca.xrcacomp||"' AND "||"isac002 = ? ",'axr-00030',1) THEN 
+                  LET g_xrca_m.xrca028 = g_xrca_m_t.xrca028 
+                  NEXT FIELD CURRENT
+               END IF   
+               IF NOT ap_chk_isExist(g_xrca_m.xrca028,"SELECT COUNT(*) FROM isac_t,ooef_t WHERE ooef019 = isac001 AND ooefent = isacent AND isacent = '" ||g_enterprise|| "' AND ooef001 = '"||g_xrca.xrcacomp||"' AND "||"isac002 = ? AND isacstus = 'Y' ",'axr-00031',1) THEN 
+                  LET g_xrca_m.xrca028 = g_xrca_m_t.xrca028 
+                  NEXT FIELD CURRENT
+               END IF                
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca028
+            #add-point:BEFORE FIELD xrca028 name="input.b.xrca028"
+            CALL axrt300_03_xrca028_desc()
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca028
+            #add-point:ON CHANGE xrca028 name="input.g.xrca028"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca060
+            #add-point:BEFORE FIELD xrca060 name="input.b.xrca060"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca060
+            
+            #add-point:AFTER FIELD xrca060 name="input.a.xrca060"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca060
+            #add-point:ON CHANGE xrca060 name="input.g.xrca060"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca029
+            #add-point:BEFORE FIELD xrca029 name="input.b.xrca029"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca029
+            
+            #add-point:AFTER FIELD xrca029 name="input.a.xrca029"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca029
+            #add-point:ON CHANGE xrca029 name="input.g.xrca029"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca061
+            #add-point:BEFORE FIELD xrca061 name="input.b.xrca061"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca061
+            
+            #add-point:AFTER FIELD xrca061 name="input.a.xrca061"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca061
+            #add-point:ON CHANGE xrca061 name="input.g.xrca061"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca030
+            #add-point:BEFORE FIELD xrca030 name="input.b.xrca030"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca030
+            
+            #add-point:AFTER FIELD xrca030 name="input.a.xrca030"
+            IF NOT cl_null(g_xrca_m.xrca030) AND g_xrca_m.xrca030 > g_xrca.xrca103 THEN 
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'axr-00032'
+               LET g_errparam.extend = g_xrca_m.xrca030
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               NEXT FIELD xrca030               
+            END IF
+            LET g_xrca_m.xrca032 = g_xrca_m.xrca031 + g_xrca_m.xrca030
+            DISPLAY BY NAME g_xrca_m.xrca032
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca030
+            #add-point:ON CHANGE xrca030 name="input.g.xrca030"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca031
+            #add-point:BEFORE FIELD xrca031 name="input.b.xrca031"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca031
+            
+            #add-point:AFTER FIELD xrca031 name="input.a.xrca031"
+            LET g_xrca_m.xrca032 = g_xrca_m.xrca031 + g_xrca_m.xrca030
+            DISPLAY BY NAME g_xrca_m.xrca032
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca031
+            #add-point:ON CHANGE xrca031 name="input.g.xrca031"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca032
+            #add-point:BEFORE FIELD xrca032 name="input.b.xrca032"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca032
+            
+            #add-point:AFTER FIELD xrca032 name="input.a.xrca032"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca032
+            #add-point:ON CHANGE xrca032 name="input.g.xrca032"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca030_2
+            #add-point:BEFORE FIELD xrca030_2 name="input.b.xrca030_2"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca030_2
+            
+            #add-point:AFTER FIELD xrca030_2 name="input.a.xrca030_2"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca030_2
+            #add-point:ON CHANGE xrca030_2 name="input.g.xrca030_2"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca031_2
+            #add-point:BEFORE FIELD xrca031_2 name="input.b.xrca031_2"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca031_2
+            
+            #add-point:AFTER FIELD xrca031_2 name="input.a.xrca031_2"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca031_2
+            #add-point:ON CHANGE xrca031_2 name="input.g.xrca031_2"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xrca032_2
+            #add-point:BEFORE FIELD xrca032_2 name="input.b.xrca032_2"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xrca032_2
+            
+            #add-point:AFTER FIELD xrca032_2 name="input.a.xrca032_2"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xrca032_2
+            #add-point:ON CHANGE xrca032_2 name="input.g.xrca032_2"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.xrcadocno
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcadocno
+            #add-point:ON ACTION controlp INFIELD xrcadocno name="input.c.xrcadocno"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrcald
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrcald
+            #add-point:ON ACTION controlp INFIELD xrcald name="input.c.xrcald"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrca023
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca023
+            #add-point:ON ACTION controlp INFIELD xrca023 name="input.c.xrca023"
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xrca_m.xrca023             #給予default值
+
+            #給予arg
+            # CALL q_pmaa001()   #160913-00017#7  mark                  #呼叫開窗
+            #160913-00017#7--ADD(S)--
+            LET g_qryparam.arg1="('2','3')"
+            CALL q_pmaa001_1()
+            #160913-00017#7--ADD(E)--
+
+            LET g_xrca_m.xrca023 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            CALL axrt300_03_xrca023_desc()
+            DISPLAY g_xrca_m.xrca023 TO xrca023              #顯示到畫面上
+            NEXT FIELD xrca023                          #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmaa003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmaa003
+            #add-point:ON ACTION controlp INFIELD pmaa003 name="input.c.pmaa003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrca025
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca025
+            #add-point:ON ACTION controlp INFIELD xrca025 name="input.c.xrca025"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrca011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca011
+            #add-point:ON ACTION controlp INFIELD xrca011 name="input.c.xrca011"
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default2 = g_xrca_m.xrca011             #給予default值
+            #LET g_qryparam.default1 = "" #g_xrca_m.oodb004 #交易類型
+            #LET g_qryparam.default3 = "" #g_xrca_m.oodb005 #含稅否
+            #LET g_qryparam.default4 = "" #g_xrca_m.oodb006 #稅率
+
+            #給予arg
+            SELECT ooef019 INTO g_ooef019 FROM ooef_t WHERE ooefent = g_enterprise AND ooef001 = g_xrca.xrcacomp
+            LET g_qryparam.where = " oodb004 ='1'" 
+            LET g_qryparam.arg1 = g_ooef019
+            CALL q_oodb002_5()                                #呼叫開窗
+
+            LET g_xrca_m.xrca011 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            #LET g_xrca_m.oodb004 = g_qryparam.return2 #交易類型
+            #LET g_xrca_m.oodb005 = g_qryparam.return3 #含稅否
+            #LET g_xrca_m.oodb006 = g_qryparam.return4 #稅率
+
+            DISPLAY g_xrca_m.xrca011 TO xrca011              #顯示到畫面上
+            #DISPLAY g_xrca_m.oodb004 TO oodb004 #交易類型
+            #DISPLAY g_xrca_m.oodb005 TO oodb005 #含稅否
+            #DISPLAY g_xrca_m.oodb006 TO oodb006 #稅率
+
+            NEXT FIELD xrca011                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrca013
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca013
+            #add-point:ON ACTION controlp INFIELD xrca013 name="input.c.xrca013"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrca012
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca012
+            #add-point:ON ACTION controlp INFIELD xrca012 name="input.c.xrca012"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrca028
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca028
+            #add-point:ON ACTION controlp INFIELD xrca028 name="input.c.xrca028"
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xrca_m.xrca028             #給予default值
+            IF g_prog = 'axrt320' THEN
+               LET g_qryparam.where = " isac001 = (SELECT ooef019 FROM ooef_t WHERE ooefent = '",g_enterprise,"' AND ooef001 ='",g_xrca.xrcacomp,"') AND isac003 ='4'"
+            ELSE
+               LET g_qryparam.where = " isac001 = (SELECT ooef019 FROM ooef_t WHERE ooefent = '",g_enterprise,"' AND ooef001 ='",g_xrca.xrcacomp,"') AND isac003 ='2'"
+            END IF
+            #給予arg
+
+            CALL q_isac002()                                #呼叫開窗
+
+            LET g_xrca_m.xrca028 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xrca_m.xrca028 TO xrca028              #顯示到畫面上
+            CALL axrt300_03_xrca028_desc()
+            NEXT FIELD xrca028                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrca060
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca060
+            #add-point:ON ACTION controlp INFIELD xrca060 name="input.c.xrca060"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrca029
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca029
+            #add-point:ON ACTION controlp INFIELD xrca029 name="input.c.xrca029"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrca061
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca061
+            #add-point:ON ACTION controlp INFIELD xrca061 name="input.c.xrca061"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrca030
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca030
+            #add-point:ON ACTION controlp INFIELD xrca030 name="input.c.xrca030"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrca031
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca031
+            #add-point:ON ACTION controlp INFIELD xrca031 name="input.c.xrca031"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrca032
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca032
+            #add-point:ON ACTION controlp INFIELD xrca032 name="input.c.xrca032"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrca030_2
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca030_2
+            #add-point:ON ACTION controlp INFIELD xrca030_2 name="input.c.xrca030_2"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrca031_2
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca031_2
+            #add-point:ON ACTION controlp INFIELD xrca031_2 name="input.c.xrca031_2"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.xrca032_2
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xrca032_2
+            #add-point:ON ACTION controlp INFIELD xrca032_2 name="input.c.xrca032_2"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+              
+           #CALL cl_showmsg()      #錯誤訊息統整顯示   #151023-00016#1 Mark
+            DISPLAY BY NAME g_xrca_m.*   
+               
+            UPDATE xrca_t SET (xrca023,xrca025,xrca028,xrca029,xrca030,xrca031,xrca032)=(g_xrca_m.xrca023,g_xrca_m.xrca025,g_xrca_m.xrca028,g_xrca_m.xrca029,g_xrca_m.xrca030,g_xrca_m.xrca031,g_xrca_m.xrca032)
+             WHERE xrcaent = g_enterprise AND xrcald = p_xrcald
+               AND xrcadocno = p_xrcadocno 
+
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "g_xrca_m"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+  
+               CALL s_transaction_end('N','0')
+            ELSE
+               CALL s_transaction_end('Y','0')
+            END IF
+                    
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      DISPLAY ARRAY g_isaf_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b)
+          
+         BEFORE DISPLAY
+            CONTINUE DIALOG
+      END DISPLAY
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axrt300_03 
+   
+   #add-point:input段after input name="input.post_input"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrt300_03.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="axrt300_03.other_function" readonly="Y" >}
+#+ 單身填充
+PRIVATE FUNCTION axrt300_03_b_fill()
+DEFINE l_sql    STRING  
+
+   CALL g_isaf_d.clear()  
+ 
+   LET l_sql = "SELECT  UNIQUE '',isaf010,isaf011,isaf014,isaf018,isaf103,isaf104,isaf105,isafdocno,isafstus FROM isaf_t,isag_t,xrcb_t",   
+               " WHERE isafent=? ",
+               "   AND isagent=isafent AND isagcomp = isafcomp AND isagdocno = isafdocno",
+               "   AND xrcb002 = isag002 AND xrcb003 = isag003",
+               "   AND xrcbdocno = '",g_xrca.xrcadocno,"' AND xrcbld = '",g_xrca.xrcald,"'",
+               "ORDER BY isaf011 "
+ 
+   PREPARE axrt300_03_pb FROM l_sql
+   DECLARE b_fill_cs CURSOR FOR axrt300_03_pb
+
+   LET g_cnt = 1
+ 
+   LET g_xrca_m.xrca030_2 = 0 
+   LET g_xrca_m.xrca031_2 = 0 
+   LET g_xrca_m.xrca032_2 = 0 
+
+   OPEN b_fill_cs USING g_enterprise
+   FOREACH b_fill_cs INTO g_isaf_d[g_cnt].*
+      IF SQLCA.sqlcode THEN 
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+     
+      LET g_isaf_d[g_cnt].num = g_cnt
+
+      IF cl_null(g_isaf_d[g_cnt].isaf103) THEN LET g_isaf_d[g_cnt].isaf103 = 0 END IF 
+      IF cl_null(g_isaf_d[g_cnt].isaf104) THEN LET g_isaf_d[g_cnt].isaf104 = 0 END IF
+      IF cl_null(g_isaf_d[g_cnt].isaf105) THEN LET g_isaf_d[g_cnt].isaf105 = 0 END IF   
+
+      LET g_xrca_m.xrca030_2 = g_xrca_m.xrca030_2 + g_isaf_d[g_cnt].isaf103
+      LET g_xrca_m.xrca031_2 = g_xrca_m.xrca031_2 + g_isaf_d[g_cnt].isaf104
+      LET g_xrca_m.xrca032_2 = g_xrca_m.xrca032_2 + g_isaf_d[g_cnt].isaf105
+
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   CALL g_isaf_d.deleteElement(g_isaf_d.getLength()) 
+ 
+END FUNCTION
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt300_03_xrca028_desc()
+DEFINE l_isac001  LIKE isac_t.isac001
+
+   SELECT ooef019 INTO l_isac001 FROM ooef_t
+    #WHERE ooef001 = g_xrca.xrcacomp                             #160905-00002#6  mark
+    WHERE ooefent = g_enterprise AND ooef001 = g_xrca.xrcacomp   #160905-00002#6  add
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = l_isac001
+   LET g_ref_fields[2] = g_xrca_m.xrca028
+   CALL ap_ref_array2(g_ref_fields,"SELECT isacl004 FROM isacl_t WHERE isaclent='"||g_enterprise||"' AND isacl001=? AND isacl002=? AND isacl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xrca_m.xrca028_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xrca_m.xrca028_desc
+END FUNCTION
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt300_03_xrca011_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xrca.xrcacomp
+   LET g_ref_fields[2] = g_xrca_m.xrca011
+   CALL ap_ref_array2(g_ref_fields,"SELECT oodbl004 FROM oodbl_t,ooef_t WHERE oodbl001 = ooef019 AND ooef001 = ? AND oodblent='"||g_enterprise||"' AND oodbl002 = ? AND oodbl003= '"||g_lang||"'","") RETURNING g_rtn_fields
+   LET g_xrca_m.xrca011_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xrca_m.xrca011_desc
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xrca.xrcacomp
+   LET g_ref_fields[2] = g_xrca_m.xrca011
+   CALL ap_ref_array2(g_ref_fields,"SELECT oodb005,oodb006 FROM oodb_t,ooef_t WHERE oodbent = ooefent AND oodb001 = ooef019 AND ooef001 = ? AND oodbent='"||g_enterprise||"' AND oodb002 = ? AND oodb004 = '1' AND oodbstus ='Y' ","") RETURNING g_rtn_fields
+   LET g_xrca_m.xrca013 =  g_rtn_fields[1]  
+   LET g_xrca_m.xrca012 =  g_rtn_fields[2] 
+   DISPLAY BY NAME g_xrca_m.xrca013,g_xrca_m.xrca012  
+END FUNCTION
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt300_03_xrca023_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xrca_m.xrca023
+   CALL ap_ref_array2(g_ref_fields,"SELECT pmaal003 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xrca_m.xrca025 = g_rtn_fields[1] 
+   DISPLAY BY NAME g_xrca_m.xrca025
+END FUNCTION
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt300_03_def()
+   IF cl_null(g_xrca_m.xrca023) THEN 
+      LET g_xrca_m.xrca023 = g_xrca.xrca004
+      CALL axrt300_03_xrca023_desc()
+  
+      LET g_xrca_m.xrca011 = g_xrca.xrca011
+      CALL axrt300_03_xrca011_desc()
+  
+      LET g_xrca_m.xrca060 = '1'
+      LET g_xrca_m.xrca061 = g_xrca.xrca009
+      
+      LET g_xrca_m.xrca030 = g_xrca.xrca103 
+      IF g_xrca_m.xrca060 = '1' THEN 
+         LET g_xrca_m.xrca031 = g_xrca_m.xrca030 * g_xrca_m.xrca012/100
+      END IF
+      LET g_xrca_m.xrca032 = g_xrca_m.xrca031 +g_xrca_m.xrca030
+      
+      SELECT isak003 INTO g_xrca_m.xrca028 FROM isak_t
+       WHERE isakent = g_enterprise AND isaksite = g_xrca.xrcacomp AND isak001 = g_xrca_m.xrca023
+      
+      CALL axrt300_03_xrca028_desc()      
+   END IF
+   CALL axrt300_03_show()
+END FUNCTION
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt300_03_show()
+   DISPLAY BY NAME g_xrca_m.*
+END FUNCTION
+
+ 
+{</section>}
+ 

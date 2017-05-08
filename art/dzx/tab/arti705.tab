@@ -1,0 +1,136 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="arti705" module="art" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02749" crtdt="2014-03-27 16:00:28" modid="02159" moddt="2015-01-15 20:23:21" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="自動補貨配送商品依品類設定配送單日">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="rtkb001,rtkb002,rtkb002_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="rtkbstus,rtkb003,rtkb003_desc(chr500),rtkb004,rtkb005,rtkb006,rtkb007,rtkb007_desc(chr500),rtkb008,rtkb009,rtkbunit"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="rtkb003,rtkbownid,rtkbownid_desc(chr500),rtkbowndp,rtkbowndp_desc(chr500),rtkbcrtid,rtkbcrtid_desc(chr500),rtkbcrtdp,rtkbcrtdp_desc(chr500),rtkbcrtdt,rtkbmodid,rtkbmodid_desc(chr500),rtkbmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="art" filename="arti705" method="dialog">
+    <section id="input">
+      <input id="head" field="rtkb001,rtkb002"/>
+      <input id="body" page="1" field="rtkbstus,rtkb003,rtkb004,rtkb005,rtkb006,rtkb007,rtkb008,rtkb009,rtkbunit" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="rtkb001,rtkb002"/>
+      <construct id="body" page="1" field="rtkbstus,rtkb003,rtkb004,rtkb005,rtkb006,rtkb007,rtkb008,rtkb009,rtkbunit"/>
+      <construct id="body" page="2" field="rtkbownid,rtkbowndp,rtkbcrtid,rtkbcrtdp,rtkbcrtdt,rtkbmodid,rtkbmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="rtkb001,rtkb002"/>
+      <set id="head" type="no_entry" field="rtkb001,rtkb002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="rtkb001" type="S" default="2" def_scc="6030"/>
+      <column id="rtkb002">
+        <after>
+          <reference field="rtkb002_desc" ref_field="rtkb_t.rtkb002" map_field="rtkbent,rtkb002" ref_sql="SELECT rtaal003 FROM rtaal_t WHERE rtaalent=$varg_enterprise$var AND rtaal001=? AND rtaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="rtkb002_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="rtkbstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="rtkb003">
+        <after>
+          <check chkid="v_rtax001_1" id="isExist"/>
+          <reference field="rtkb003_desc" ref_field="rtkb_t.rtkb003" map_field="rtkbent,rtkb003" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001" state="i"/>
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="rtkb003_desc"/>
+      <column id="rtkb004" def_scc="6019"/>
+      <column id="rtkb005"/>
+      <column id="rtkb006"/>
+      <column id="rtkb007">
+        <after>
+          <check chkid="v_oocq002_01" id="isExist"/>
+          <reference field="rtkb007_desc" ref_field="rtkb007" map_field="rtkb007" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;274&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="rtkb007_desc"/>
+      <column id="rtkb008" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkb009" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="rtkbunit"/>
+    </init>
+    <init id="body" page="2">
+      <column id="rtkbownid">
+        <after>
+          <reference field="rtkbownid_desc" ref_field="rtkb_t.rtkbownid" map_field="rtkbownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtkbownid_desc"/>
+      <column id="rtkbowndp">
+        <after>
+          <reference field="rtkbowndp_desc" ref_field="rtkb_t.rtkbowndp" map_field="rtkbowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtkbowndp_desc"/>
+      <column id="rtkbcrtid">
+        <after>
+          <reference field="rtkbcrtid_desc" ref_field="rtkb_t.rtkbcrtid" map_field="rtkbcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtkbcrtid_desc"/>
+      <column id="rtkbcrtdp">
+        <after>
+          <reference field="rtkbcrtdp_desc" ref_field="rtkb_t.rtkbcrtdp" map_field="rtkbcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtkbcrtdp_desc"/>
+      <column id="rtkbcrtdt"/>
+      <column id="rtkbmodid">
+        <after>
+          <reference field="rtkbmodid_desc" ref_field="rtkb_t.rtkbmodid" map_field="rtkbmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtkbmodid_desc"/>
+      <column id="rtkbmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="rtkb_t" pk="rtkb001,rtkb002">
+      <sql id="forupd_sql" type="sql" query="SELECT rtkb001,rtkb002,&apos;&apos; FROM rtkb_t WHERE rtkbent= ? AND rtkb001=? AND rtkb002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT rtkb001,rtkb002,&apos;&apos; FROM rtkb_t" order="rtkb001,rtkb002"/>
+    </head>
+    <body id="rtkb_t" page="1,2" linked="" pk="rtkb003" fk="rtkb001,rtkb002">
+      <sql id="forupd_sql_detail" query="SELECT rtkbstus,rtkb003,&apos;&apos;,rtkb004,rtkb005,rtkb006,rtkb007,&apos;&apos;,rtkb008,rtkb009,rtkbunit,&apos;&apos;,rtkbownid,&apos;&apos;,rtkbowndp,&apos;&apos;,rtkbcrtid,&apos;&apos;,rtkbcrtdp,&apos;&apos;,rtkbcrtdt,rtkbmodid,&apos;&apos;,rtkbmoddt FROM rtkb_t WHERE rtkbent=? AND rtkb001=? AND rtkb002=? AND rtkb003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rtkbstus,rtkb003,&apos;&apos;,rtkb004,rtkb005,rtkb006,rtkb007,&apos;&apos;,rtkb008,rtkb009,rtkbunit,&apos;&apos;,rtkbownid,&apos;&apos;,rtkbowndp,&apos;&apos;,rtkbcrtid,&apos;&apos;,rtkbcrtdp,&apos;&apos;,rtkbcrtdt,rtkbmodid,&apos;&apos;,rtkbmoddt FROM rtkb_t WHERE rtkbent= ? AND rtkb001=? AND rtkb002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

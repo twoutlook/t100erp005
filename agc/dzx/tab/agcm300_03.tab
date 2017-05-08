@@ -1,0 +1,68 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agcm300_03" module="agc" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="01726" crtdt="2013-11-12 10:44:52" modid="01726" moddt="2014-06-30 16:50:05" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="券種基本資料維護作業 -提貨商品設定">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gcas001,gcasseq,gcas002,gcas002_desc(chr500),gcas008,gcas006,gcas003,gcas003_desc(chr500),gcas005,gcas009,gcas007,gcasstus"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="agc" filename="agcm300_03" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="gcas001,gcasseq,gcas002,gcas008,gcas006,gcas003,gcas005,gcas009,gcas007,gcasstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="gcas001,gcasseq,gcas002,gcas008,gcas006,gcas003,gcas005,gcas009,gcas007,gcasstus"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="gcas001"/>
+      <column id="gcasseq" type="S" default="1"/>
+      <column id="gcas002">
+        <after>
+          <reference field="gcas002_desc" ref_field="gcas002" map_field="gcas002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2071&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="gcas002_desc"/>
+      <column id="gcas008"/>
+      <column id="gcas006" type="S" default="1" def_scc="6531"/>
+      <column id="gcas003">
+        <after>
+          <reference field="gcas003_desc" ref_field="gcas_t.gcas003" map_field="gcasent,gcas003" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtdx001_1" state="i"/>
+        <controlp form="q_gcas003" state="c"/>
+      </column>
+      <column id="gcas003_desc"/>
+      <column id="gcas005">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="gcas009"/>
+      <column id="gcas007"/>
+      <column id="gcasstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <body id="gcas_t" page="1" linked="" pk="gcas001,gcasseq">
+      <sql id="forupd_sql_detail" query="SELECT gcas001,gcasseq,gcas002,&apos;&apos;,gcas008,gcas006,gcas003,&apos;&apos;,gcas005,gcas009,gcas007,gcasstus FROM gcas_t WHERE gcasent=? AND gcas001=? AND gcasseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gcas001,gcasseq,gcas002,&apos;&apos;,gcas008,gcas006,gcas003,&apos;&apos;,gcas005,gcas009,gcas007,gcasstus FROM gcas_t WHERE gcasent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

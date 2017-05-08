@@ -1,0 +1,4671 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aist430.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2015-03-11 21:47:42), PR版次:0004(2016-11-02 17:54:41)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000070
+#+ Filename...: aist430
+#+ Description: 國外勞務資料維護
+#+ Creator....: 04152(2015-03-11 14:05:55)
+#+ Modifier...: 04152 -SD/PR- 08171
+ 
+{</section>}
+ 
+{<section id="aist430.global" >}
+#應用 i01 樣板自動產生(Version:50)
+#add-point:填寫註解說明 name="global.memo"
+#150507-00007#2    2015/05/08 By Jessy  財務優化；單頭隱藏alt+s改為單頭固定
+#161005-00003#3    2016/11/02 By 08171  新舊值調整
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"  
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE TYPE type_g_isca_m RECORD
+       iscasite LIKE isca_t.iscasite, 
+   l_iscasite_desc LIKE type_t.chr80, 
+   isca809 LIKE isca_t.isca809, 
+   isca001 LIKE isca_t.isca001, 
+   isca002 LIKE isca_t.isca002, 
+   iscaownid LIKE isca_t.iscaownid, 
+   iscaownid_desc LIKE type_t.chr80, 
+   iscaowndp LIKE isca_t.iscaowndp, 
+   iscaowndp_desc LIKE type_t.chr80, 
+   iscacrtid LIKE isca_t.iscacrtid, 
+   iscacrtid_desc LIKE type_t.chr80, 
+   iscacrtdp LIKE isca_t.iscacrtdp, 
+   iscacrtdp_desc LIKE type_t.chr80, 
+   iscacrtdt LIKE isca_t.iscacrtdt, 
+   iscamodid LIKE isca_t.iscamodid, 
+   iscamodid_desc LIKE type_t.chr80, 
+   iscamoddt LIKE isca_t.iscamoddt, 
+   isca701 LIKE isca_t.isca701, 
+   isca702 LIKE isca_t.isca702, 
+   isca703 LIKE isca_t.isca703, 
+   isca704 LIKE isca_t.isca704, 
+   isca705 LIKE isca_t.isca705, 
+   isca707 LIKE isca_t.isca707, 
+   isca706 LIKE isca_t.isca706, 
+   isca708 LIKE isca_t.isca708, 
+   isca805 LIKE isca_t.isca805, 
+   isca806 LIKE isca_t.isca806, 
+   isca807 LIKE isca_t.isca807, 
+   isca801 LIKE isca_t.isca801, 
+   isca803 LIKE isca_t.isca803, 
+   isca802 LIKE isca_t.isca802, 
+   isca804 LIKE isca_t.isca804
+       END RECORD
+ 
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD  #查詢方案用陣列 
+         b_statepic     LIKE type_t.chr50,
+            b_iscasite LIKE isca_t.iscasite,
+      b_isca809 LIKE isca_t.isca809,
+      b_isca001 LIKE isca_t.isca001,
+      b_isca002 LIKE isca_t.isca002
+      END RECORD 
+ 
+#add-point:自定義模組變數(Module Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_isca_m        type_g_isca_m  #單頭變數宣告
+DEFINE g_isca_m_t      type_g_isca_m  #單頭舊值宣告(系統還原用)
+DEFINE g_isca_m_o      type_g_isca_m  #單頭舊值宣告(其他用途)
+DEFINE g_isca_m_mask_o type_g_isca_m  #轉換遮罩前資料
+DEFINE g_isca_m_mask_n type_g_isca_m  #轉換遮罩後資料
+ 
+   DEFINE g_iscasite_t LIKE isca_t.iscasite
+DEFINE g_isca001_t LIKE isca_t.isca001
+DEFINE g_isca002_t LIKE isca_t.isca002
+ 
+   
+ 
+   
+ 
+DEFINE g_wc                  STRING                        #儲存查詢條件
+DEFINE g_wc_t                STRING                        #備份查詢條件
+DEFINE g_wc_filter           STRING                        #儲存過濾查詢條件
+DEFINE g_wc_filter_t         STRING                        #備份過濾查詢條件
+DEFINE g_sql                 STRING                        #資料撈取用SQL(含reference)
+DEFINE g_forupd_sql          STRING                        #資料鎖定用SQL
+DEFINE g_cnt                 LIKE type_t.num10             #指標/統計用變數
+DEFINE g_jump                LIKE type_t.num10             #查詢指定的筆數 
+DEFINE g_no_ask              LIKE type_t.num5              #是否開啟指定筆視窗 
+DEFINE g_rec_b               LIKE type_t.num10             #單身筆數                         
+DEFINE l_ac                  LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_pagestart           LIKE type_t.num10             #page起始筆數
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_state               STRING                        #確認前一個動作是否為新增/複製
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_error_show          LIKE type_t.num5              #是否顯示資料過多的錯誤訊息
+DEFINE g_aw                  STRING                        #確定當下點擊的單身(modify_detail用)
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+DEFINE g_log1                STRING                        #cl_log_modified_record用(舊值)
+DEFINE g_log2                STRING                        #cl_log_modified_record用(新值)
+ 
+#快速搜尋用
+DEFINE g_searchcol           STRING                        #查詢欄位代碼
+DEFINE g_searchstr           STRING                        #查詢欄位字串
+DEFINE g_order               STRING                        #查詢排序模式
+ 
+#Browser用
+DEFINE g_current_idx         LIKE type_t.num10             #Browser 所在筆數(當下page)
+DEFINE g_current_row         LIKE type_t.num10             #Browser 所在筆數(暫存用)
+DEFINE g_current_cnt         LIKE type_t.num10             #Browser 總筆數(當下page)
+DEFINE g_browser_idx         LIKE type_t.num10             #Browser 所在筆數(所有資料)
+DEFINE g_browser_cnt         LIKE type_t.num10             #Browser 總筆數(所有資料)
+DEFINE g_row_index           LIKE type_t.num10             #階層樹狀用指標
+DEFINE g_add_browse          STRING                        #新增填充用WC
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization" 
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aist430.main" >}
+#應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("ais","")
+ 
+   #add-point:作業初始化 name="main.init"
+   
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = " SELECT iscasite,'',isca809,isca001,isca002,iscaownid,'',iscaowndp,'',iscacrtid, 
+       '',iscacrtdp,'',iscacrtdt,iscamodid,'',iscamoddt,isca701,isca702,isca703,isca704,isca705,isca707, 
+       isca706,isca708,isca805,isca806,isca807,isca801,isca803,isca802,isca804", 
+                      " FROM isca_t",
+                      " WHERE iscaent= ? AND iscasite=? AND isca001=? AND isca002=? FOR UPDATE"
+   #add-point:SQL_define name="main.after_define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE aist430_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT DISTINCT t0.iscasite,t0.isca809,t0.isca001,t0.isca002,t0.iscaownid,t0.iscaowndp, 
+       t0.iscacrtid,t0.iscacrtdp,t0.iscacrtdt,t0.iscamodid,t0.iscamoddt,t0.isca701,t0.isca702,t0.isca703, 
+       t0.isca704,t0.isca705,t0.isca707,t0.isca706,t0.isca708,t0.isca805,t0.isca806,t0.isca807,t0.isca801, 
+       t0.isca803,t0.isca802,t0.isca804,t1.ooag011 ,t2.ooefl003 ,t3.ooag011 ,t4.ooefl003 ,t5.ooag011", 
+ 
+               " FROM isca_t t0",
+                              " LEFT JOIN ooag_t t1 ON t1.ooagent="||g_enterprise||" AND t1.ooag001=t0.iscaownid  ",
+               " LEFT JOIN ooefl_t t2 ON t2.ooeflent="||g_enterprise||" AND t2.ooefl001=t0.iscaowndp AND t2.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t3 ON t3.ooagent="||g_enterprise||" AND t3.ooag001=t0.iscacrtid  ",
+               " LEFT JOIN ooefl_t t4 ON t4.ooeflent="||g_enterprise||" AND t4.ooefl001=t0.iscacrtdp AND t4.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t5 ON t5.ooagent="||g_enterprise||" AND t5.ooag001=t0.iscamodid  ",
+ 
+               " WHERE t0.iscaent = " ||g_enterprise|| " AND t0.iscasite = ? AND t0.isca001 = ? AND t0.isca002 = ?"
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   
+   #end add-point
+   PREPARE aist430_master_referesh FROM g_sql
+ 
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aist430 WITH FORM cl_ap_formpath("ais",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aist430_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aist430_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_aist430
+      
+   END IF 
+   
+   CLOSE aist430_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aist430.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION aist430_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point
+   #add-point:init段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="init.pre_function"
+   
+   #end add-point
+   
+   #定義combobox狀態
+   
+   
+   LET g_error_show = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   #add-point:畫面資料初始化 name="init.init"
+   CALL s_fin_set_comp_scc('isca001','43')   #年度
+   CALL s_fin_set_comp_scc('isca002','39')  #月份
+   #end add-point
+   
+   #根據外部參數進行搜尋
+   CALL aist430_default_search()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist430.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aist430_ui_dialog() 
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit   LIKE type_t.num10       #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num10       #指標變數
+   DEFINE ls_wc     STRING                  #wc用
+   DEFINE la_param  RECORD                  #程式串查用變數
+          prog       STRING,
+          actionid   STRING,
+          background LIKE type_t.chr1,
+          param      DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING                  #轉換後的json字串
+   DEFINE l_cmd_token           base.StringTokenizer   #報表作業cmdrun使用 
+   DEFINE l_cmd_next            STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_cnt             LIKE type_t.num5       #報表作業cmdrun使用
+   DEFINE l_cmd_prog_arg        STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_arg             STRING                 #報表作業cmdrun使用
+   #add-point:ui_dialog段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="ui_dialog.pre_function"
+   
+   #end add-point
+   
+   LET li_exit = FALSE
+   LET g_current_row = 0
+   LET g_current_idx = 0
+ 
+   #若有外部參數查詢, 則直接顯示資料(隱藏查詢方案)
+   IF g_default THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   ELSE
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF
+   
+   #action default動作
+   #應用 a42 樣板自動產生(Version:3)
+   #進入程式時預設執行的動作
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice="insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL aist430_insert()
+            #add-point:ON ACTION insert name="menu.default.insert"
+            
+            #END add-point
+         END IF
+ 
+      #add-point:action default自訂 name="ui_dialog.action_default"
+      
+      #end add-point
+      OTHERWISE
+   END CASE
+ 
+ 
+ 
+   
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   
+   #end add-point
+ 
+   WHILE li_exit = FALSE
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_browser.clear()       
+         INITIALIZE g_isca_m.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL aist430_init()
+      END IF
+      
+      CALL lib_cl_dlg.cl_dlg_before_display()
+      CALL cl_notice()
+    
+      #確保g_current_idx位於正常區間內
+      #小於,等於0則指到第1筆
+      IF g_current_idx <= 0 THEN
+         LET g_current_idx = 1
+      END IF
+               
+      IF g_main_hidden = 0 THEN
+         MENU
+            BEFORE MENU 
+               #先填充browser資料
+               CALL aist430_browser_fill(g_wc,"")
+               CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               
+               #還原為原本指定筆數
+               IF g_current_row > 0 THEN
+                  LET g_current_idx = g_current_row
+               END IF
+ 
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL aist430_fetch("")   
+               END IF               
+               #add-point:ui_dialog段 before menu name="ui_dialog.before_menu"
+               
+               #end add-point
+            
+ 
+ 
+               
+            #第一筆資料
+            ON ACTION first
+               CALL aist430_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            #下一筆資料
+            ON ACTION next
+               CALL aist430_fetch("N")
+               LET g_current_row = g_current_idx
+            
+            #指定筆資料
+            ON ACTION jump
+               CALL aist430_fetch("/")
+               LET g_current_row = g_current_idx
+            
+            #上一筆資料
+            ON ACTION previous
+               CALL aist430_fetch("P")
+               LET g_current_row = g_current_idx
+            
+            #最後筆資料
+            ON ACTION last 
+               CALL aist430_fetch("L")  
+               LET g_current_row = g_current_idx
+            
+            #離開程式
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU 
+            
+            #離開程式
+            ON ACTION close
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU
+            
+            #主頁摺疊
+            ON ACTION mainhidden   
+               LET g_action_choice = "mainhidden"            
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+                  CALL cl_notice()
+               END IF
+               EXIT MENU
+               
+            ON ACTION worksheethidden   #瀏覽頁折疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               EXIT MENU
+            
+            #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+          
+            #查詢方案用
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL aist430_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            #查詢方案用
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL aist430_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "-100" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL aist430_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+            
+            
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL aist430_modify()
+               #add-point:ON ACTION modify name="menu2.modify"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL aist430_delete()
+               #add-point:ON ACTION delete name="menu2.delete"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL aist430_insert()
+               #add-point:ON ACTION insert name="menu2.insert"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL aist430_reproduce()
+               #add-point:ON ACTION reproduce name="menu2.reproduce"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL aist430_query()
+               #add-point:ON ACTION query name="menu2.query"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+            
+            
+            
+            #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL aist430_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.menu.related_document"
+               
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL aist430_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.menu.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL aist430_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.menu.followup"
+            
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+ 
+            
+            #主選單用ACTION
+            &include "main_menu_exit_menu.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END MENU
+      
+      ELSE
+      
+         DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+           
+      
+            #左側瀏覽頁簽
+            DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTE(COUNT=g_rec_b)
+            
+               BEFORE ROW
+                  #回歸舊筆數位置 (回到當時異動的筆數)
+                  LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+                  IF g_current_idx = 0 THEN
+                     LET g_current_idx = 1
+                  END IF
+                  LET g_current_row = g_current_idx  #目前指標
+                  LET g_current_sw = TRUE
+                  CALL cl_show_fld_cont()     
+                  
+                  #當每次點任一筆資料都會需要用到               
+                  CALL aist430_fetch("")
+ 
+               ON ACTION qbefield_user   #欄位隱藏設定 
+                  LET g_action_choice="qbefield_user"
+                  CALL cl_ui_qbefield_user()
+    
+               
+            
+            END DISPLAY
+ 
+            #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+            
+            #end add-point
+ 
+            #查詢方案用
+            SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+            SUBDIALOG lib_cl_dlg.cl_dlg_relateapps
+         
+            BEFORE DIALOG
+               #先填充browser資料
+               IF g_action_choice <> "mainhidden" THEN
+                  CALL aist430_browser_fill(g_wc,"")
+               END IF
+               CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               #還原為原本指定筆數
+               IF g_current_row > 1 THEN
+                  #當刪除最後一筆資料時可能產生錯誤, 進行額外判斷
+                  IF g_current_row > g_browser.getLength() THEN
+                     LET g_current_row = g_browser.getLength()
+                  END IF 
+                  LET g_current_idx = g_current_row
+                  CALL DIALOG.setCurrentRow("s_browse",g_current_idx)
+               END IF
+ 
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL aist430_fetch("")   
+               END IF          
+               CALL cl_notice()
+               
+               #add-point:ui_dialog段before name="ui_dialog.b_dialog"
+               
+               #end add-point  
+            
+            AFTER DIALOG
+               #add-point:ui_dialog段 after dialog name="ui_dialog.after_dialog"
+               
+               #end add-point
+            
+ 
+ 
+         
+            #應用 a49 樣板自動產生(Version:4)
+            #過濾瀏覽頁資料
+            ON ACTION filter
+               LET g_action_choice = "fetch"
+               #add-point:filter action name="ui_dialog.action.filter"
+               
+               #end add-point
+               CALL aist430_filter()
+               EXIT DIALOG
+ 
+ 
+ 
+            
+            #第一筆資料
+            ON ACTION first
+               CALL aist430_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            #下一筆資料
+            ON ACTION next
+               CALL aist430_fetch("N")
+               LET g_current_row = g_current_idx
+         
+            #指定筆資料
+            ON ACTION jump
+               CALL aist430_fetch("/")
+               LET g_current_row = g_current_idx
+         
+            #上一筆資料
+            ON ACTION previous
+               CALL aist430_fetch("P")
+               LET g_current_row = g_current_idx
+          
+            #最後筆資料
+            ON ACTION last 
+               CALL aist430_fetch("L")  
+               LET g_current_row = g_current_idx
+         
+            #離開程式
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+         
+            #離開程式
+            ON ACTION close
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+    
+            #主頁摺疊
+            ON ACTION mainhidden 
+               LET g_action_choice = "mainhidden"                
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+                  CALL cl_notice()
+               END IF
+               #EXIT DIALOG
+               
+            ON ACTION worksheethidden   #瀏覽頁折疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               #EXIT DIALOG
+         
+            ON ACTION exporttoexcel
+               LET g_action_choice="exporttoexcel"
+               IF cl_auth_chk_act("exporttoexcel") THEN
+                  #browser
+                  CALL g_export_node.clear()
+                  LET g_export_node[1] = base.typeInfo.create(g_browser)
+                  LET g_export_id[1]   = "s_browse"
+                  CALL cl_export_to_excel()
+               END IF
+         
+            #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+ 
+            
+            #查詢方案用
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL aist430_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            #查詢方案用
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL aist430_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "-100" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL aist430_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+               
+            
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL aist430_modify()
+               #add-point:ON ACTION modify name="menu.modify"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL aist430_delete()
+               #add-point:ON ACTION delete name="menu.delete"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL aist430_insert()
+               #add-point:ON ACTION insert name="menu.insert"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL aist430_reproduce()
+               #add-point:ON ACTION reproduce name="menu.reproduce"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL aist430_query()
+               #add-point:ON ACTION query name="menu.query"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+            
+            
+ 
+            #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL aist430_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.dialog.related_document"
+               
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL aist430_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.dialog.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL aist430_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.dialog.followup"
+            
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+ 
+ 
+            #主選單用ACTION
+            &include "main_menu_exit_dialog.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END DIALOG 
+      
+      END IF
+      
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      
+      #end add-point
+      
+      #(ver:50) ---start---
+      IF li_exit THEN
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         EXIT WHILE
+      END IF
+      #(ver:50) --- end ---
+ 
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist430.browser_fill" >}
+#應用 a29 樣板自動產生(Version:15)
+#+ 瀏覽頁簽資料填充(一般單檔)
+PRIVATE FUNCTION aist430_browser_fill(p_wc,ps_page_action) 
+   #add-point:browser_fill段define name="browser_fill.define_customerization"
+   
+   #end add-point
+   DEFINE p_wc              STRING
+   DEFINE ls_wc             STRING
+   DEFINE ps_page_action    STRING
+   DEFINE l_searchcol       STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="browser_fill.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="browser_fill.pre_function"
+   
+   #end add-point
+   
+   LET l_searchcol = "iscasite,isca001,isca002"
+ 
+   LET p_wc = p_wc.trim() #當查詢按下Q時 按下放棄 g_wc = "  " 所以要清掉空白
+   IF cl_null(p_wc) THEN  #p_wc 查詢條件
+      LET p_wc = " 1=1 " 
+   END IF
+   #add-point:browser_fill段wc控制 name="browser_fill.wc"
+   
+   #end add-point
+ 
+   LET g_sql = " SELECT COUNT(1) FROM isca_t ",
+               "  ",
+               "  ",
+               " WHERE iscaent = " ||g_enterprise|| " AND ", 
+               p_wc CLIPPED, cl_sql_add_filter("isca_t")
+                
+   #add-point:browser_fill段cnt_sql name="browser_fill.cnt_sql"
+   
+   #end add-point
+                
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE header_cnt_pre FROM g_sql
+      EXECUTE header_cnt_pre INTO g_browser_cnt
+      FREE header_cnt_pre 
+   END IF
+   
+   #若超過最大顯示筆數
+   IF g_browser_cnt > g_max_browse THEN
+      IF g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_browser_cnt 
+         LET g_errparam.code   = 9035
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+      END IF
+   END IF
+   
+   LET g_error_show = 0
+   
+   IF ps_page_action = "F" OR
+      ps_page_action = "P"  OR
+      ps_page_action = "N"  OR
+      ps_page_action = "L"  THEN
+      LET g_page_action = ps_page_action
+   END IF
+   
+   IF cl_null(g_add_browse) THEN
+      #清除畫面
+      CLEAR FORM
+      INITIALIZE g_isca_m.* TO NULL
+      CALL g_browser.clear()
+      LET g_cnt = 1
+      LET ls_wc = p_wc
+   ELSE
+      LET ls_wc = g_add_browse
+      LET g_cnt = g_current_idx
+   END IF
+   
+   LET g_sql = " SELECT t0.iscastus,t0.iscasite,t0.isca809,t0.isca001,t0.isca002",
+               " FROM isca_t t0 ",
+               "  ",
+               
+               " WHERE t0.iscaent = " ||g_enterprise|| " AND ", ls_wc, cl_sql_add_filter("isca_t")
+   #add-point:browser_fill段fill_wc name="browser_fill.fill_wc"
+   
+   #end add-point 
+   LET g_sql = g_sql, " ORDER BY ",l_searchcol," ",g_order
+   #add-point:browser_fill段before_pre name="browser_fill.before_pre"
+   
+   #end add-point                    
+ 
+   #LET g_sql = cl_sql_add_tabid(g_sql,"isca_t")             #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE browse_pre FROM g_sql
+      DECLARE browse_cur CURSOR FOR browse_pre
+      
+      FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_iscasite,g_browser[g_cnt].b_isca809, 
+          g_browser[g_cnt].b_isca001,g_browser[g_cnt].b_isca002
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "foreach:" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+         
+         
+         
+         #add-point:browser_fill段reference name="browser_fill.reference"
+         
+         #end add-point
+         
+         #遮罩相關處理
+         CALL aist430_browser_mask()
+         
+         
+         LET g_cnt = g_cnt + 1
+         IF g_cnt > g_max_rec THEN
+            EXIT FOREACH
+         END IF
+      END FOREACH
+ 
+      FREE browse_pre
+ 
+   END IF
+ 
+   #清空g_add_browse, 並指定指標位置
+   IF NOT cl_null(g_add_browse) THEN
+      LET g_add_browse = ""
+      CALL g_curr_diag.setCurrentRow("s_browse",g_current_idx)
+   END IF
+   
+   IF cl_null(g_browser[g_cnt].b_iscasite) THEN
+      CALL g_browser.deleteElement(g_cnt)
+   END IF
+   
+   LET g_header_cnt = g_browser.getLength()
+   LET g_current_cnt = g_browser.getLength()
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_rec_b = g_browser.getLength()
+   LET g_cnt = 0
+   DISPLAY g_browser_cnt TO FORMONLY.b_count
+   DISPLAY g_browser_cnt TO FORMONLY.h_count
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+   
+   #add-point:browser_fill段結束前 name="browser_fill.after"
+   
+   #end add-point   
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aist430.construct" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION aist430_construct()
+   #add-point:cs段define(客製用) name="cs.define_customerization"
+   
+   #end add-point
+   DEFINE ls_return      STRING
+   DEFINE ls_result      STRING 
+   DEFINE ls_wc          STRING 
+   #add-point:cs段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="cs.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="cs.pre_function"
+   
+   #end add-point
+   
+   #清空畫面&資料初始化
+   CLEAR FORM
+   INITIALIZE g_isca_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   LET g_current_row = 1
+ 
+   LET g_qryparam.state = "c"
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #螢幕上取條件
+      CONSTRUCT BY NAME g_wc ON iscasite,isca809,isca001,isca002,iscaownid,iscaowndp,iscacrtid,iscacrtdp, 
+          iscacrtdt,iscamodid,isca701,isca702,isca703,isca704,isca705,isca707,isca706,isca708,isca805, 
+          isca806,isca807,isca801,isca803,isca802,isca804
+      
+         BEFORE CONSTRUCT                                    
+            #add-point:cs段more_construct name="cs.before_construct"
+            
+            #end add-point             
+      
+         #公用欄位開窗相關處理
+         #應用 a11 樣板自動產生(Version:3)
+         #共用欄位查詢處理  
+         ##----<<iscacrtdt>>----
+         AFTER FIELD iscacrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+         #----<<iscamoddt>>----
+         AFTER FIELD iscamoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<iscacnfdt>>----
+         
+         #----<<iscapstdt>>----
+ 
+ 
+ 
+      
+         #一般欄位
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD iscasite
+            #add-point:BEFORE FIELD iscasite name="construct.b.iscasite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD iscasite
+            
+            #add-point:AFTER FIELD iscasite name="construct.a.iscasite"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.iscasite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD iscasite
+            #add-point:ON ACTION controlp INFIELD iscasite name="construct.c.iscasite"
+            #c開窗-申報單位代碼
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " isaa022 = 'Y'"
+            CALL q_isaa001()
+            DISPLAY g_qryparam.return1 TO iscasite
+            NEXT FIELD iscasite
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca809
+            #add-point:BEFORE FIELD isca809 name="construct.b.isca809"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca809
+            
+            #add-point:AFTER FIELD isca809 name="construct.a.isca809"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isca809
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca809
+            #add-point:ON ACTION controlp INFIELD isca809 name="construct.c.isca809"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca001
+            #add-point:BEFORE FIELD isca001 name="construct.b.isca001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca001
+            
+            #add-point:AFTER FIELD isca001 name="construct.a.isca001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isca001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca001
+            #add-point:ON ACTION controlp INFIELD isca001 name="construct.c.isca001"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca002
+            #add-point:BEFORE FIELD isca002 name="construct.b.isca002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca002
+            
+            #add-point:AFTER FIELD isca002 name="construct.a.isca002"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isca002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca002
+            #add-point:ON ACTION controlp INFIELD isca002 name="construct.c.isca002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.iscaownid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD iscaownid
+            #add-point:ON ACTION controlp INFIELD iscaownid name="construct.c.iscaownid"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO iscaownid  #顯示到畫面上
+            NEXT FIELD iscaownid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD iscaownid
+            #add-point:BEFORE FIELD iscaownid name="construct.b.iscaownid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD iscaownid
+            
+            #add-point:AFTER FIELD iscaownid name="construct.a.iscaownid"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.iscaowndp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD iscaowndp
+            #add-point:ON ACTION controlp INFIELD iscaowndp name="construct.c.iscaowndp"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO iscaowndp  #顯示到畫面上
+            NEXT FIELD iscaowndp                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD iscaowndp
+            #add-point:BEFORE FIELD iscaowndp name="construct.b.iscaowndp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD iscaowndp
+            
+            #add-point:AFTER FIELD iscaowndp name="construct.a.iscaowndp"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.iscacrtid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD iscacrtid
+            #add-point:ON ACTION controlp INFIELD iscacrtid name="construct.c.iscacrtid"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO iscacrtid  #顯示到畫面上
+            NEXT FIELD iscacrtid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD iscacrtid
+            #add-point:BEFORE FIELD iscacrtid name="construct.b.iscacrtid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD iscacrtid
+            
+            #add-point:AFTER FIELD iscacrtid name="construct.a.iscacrtid"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.iscacrtdp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD iscacrtdp
+            #add-point:ON ACTION controlp INFIELD iscacrtdp name="construct.c.iscacrtdp"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO iscacrtdp  #顯示到畫面上
+            NEXT FIELD iscacrtdp                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD iscacrtdp
+            #add-point:BEFORE FIELD iscacrtdp name="construct.b.iscacrtdp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD iscacrtdp
+            
+            #add-point:AFTER FIELD iscacrtdp name="construct.a.iscacrtdp"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD iscacrtdt
+            #add-point:BEFORE FIELD iscacrtdt name="construct.b.iscacrtdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.iscamodid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD iscamodid
+            #add-point:ON ACTION controlp INFIELD iscamodid name="construct.c.iscamodid"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO iscamodid  #顯示到畫面上
+            NEXT FIELD iscamodid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD iscamodid
+            #add-point:BEFORE FIELD iscamodid name="construct.b.iscamodid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD iscamodid
+            
+            #add-point:AFTER FIELD iscamodid name="construct.a.iscamodid"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca701
+            #add-point:BEFORE FIELD isca701 name="construct.b.isca701"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca701
+            
+            #add-point:AFTER FIELD isca701 name="construct.a.isca701"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isca701
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca701
+            #add-point:ON ACTION controlp INFIELD isca701 name="construct.c.isca701"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca702
+            #add-point:BEFORE FIELD isca702 name="construct.b.isca702"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca702
+            
+            #add-point:AFTER FIELD isca702 name="construct.a.isca702"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isca702
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca702
+            #add-point:ON ACTION controlp INFIELD isca702 name="construct.c.isca702"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca703
+            #add-point:BEFORE FIELD isca703 name="construct.b.isca703"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca703
+            
+            #add-point:AFTER FIELD isca703 name="construct.a.isca703"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isca703
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca703
+            #add-point:ON ACTION controlp INFIELD isca703 name="construct.c.isca703"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca704
+            #add-point:BEFORE FIELD isca704 name="construct.b.isca704"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca704
+            
+            #add-point:AFTER FIELD isca704 name="construct.a.isca704"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isca704
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca704
+            #add-point:ON ACTION controlp INFIELD isca704 name="construct.c.isca704"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca705
+            #add-point:BEFORE FIELD isca705 name="construct.b.isca705"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca705
+            
+            #add-point:AFTER FIELD isca705 name="construct.a.isca705"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isca705
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca705
+            #add-point:ON ACTION controlp INFIELD isca705 name="construct.c.isca705"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca707
+            #add-point:BEFORE FIELD isca707 name="construct.b.isca707"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca707
+            
+            #add-point:AFTER FIELD isca707 name="construct.a.isca707"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isca707
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca707
+            #add-point:ON ACTION controlp INFIELD isca707 name="construct.c.isca707"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca706
+            #add-point:BEFORE FIELD isca706 name="construct.b.isca706"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca706
+            
+            #add-point:AFTER FIELD isca706 name="construct.a.isca706"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isca706
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca706
+            #add-point:ON ACTION controlp INFIELD isca706 name="construct.c.isca706"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca708
+            #add-point:BEFORE FIELD isca708 name="construct.b.isca708"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca708
+            
+            #add-point:AFTER FIELD isca708 name="construct.a.isca708"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isca708
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca708
+            #add-point:ON ACTION controlp INFIELD isca708 name="construct.c.isca708"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca805
+            #add-point:BEFORE FIELD isca805 name="construct.b.isca805"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca805
+            
+            #add-point:AFTER FIELD isca805 name="construct.a.isca805"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isca805
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca805
+            #add-point:ON ACTION controlp INFIELD isca805 name="construct.c.isca805"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca806
+            #add-point:BEFORE FIELD isca806 name="construct.b.isca806"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca806
+            
+            #add-point:AFTER FIELD isca806 name="construct.a.isca806"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isca806
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca806
+            #add-point:ON ACTION controlp INFIELD isca806 name="construct.c.isca806"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca807
+            #add-point:BEFORE FIELD isca807 name="construct.b.isca807"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca807
+            
+            #add-point:AFTER FIELD isca807 name="construct.a.isca807"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isca807
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca807
+            #add-point:ON ACTION controlp INFIELD isca807 name="construct.c.isca807"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca801
+            #add-point:BEFORE FIELD isca801 name="construct.b.isca801"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca801
+            
+            #add-point:AFTER FIELD isca801 name="construct.a.isca801"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isca801
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca801
+            #add-point:ON ACTION controlp INFIELD isca801 name="construct.c.isca801"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca803
+            #add-point:BEFORE FIELD isca803 name="construct.b.isca803"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca803
+            
+            #add-point:AFTER FIELD isca803 name="construct.a.isca803"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isca803
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca803
+            #add-point:ON ACTION controlp INFIELD isca803 name="construct.c.isca803"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca802
+            #add-point:BEFORE FIELD isca802 name="construct.b.isca802"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca802
+            
+            #add-point:AFTER FIELD isca802 name="construct.a.isca802"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isca802
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca802
+            #add-point:ON ACTION controlp INFIELD isca802 name="construct.c.isca802"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca804
+            #add-point:BEFORE FIELD isca804 name="construct.b.isca804"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca804
+            
+            #add-point:AFTER FIELD isca804 name="construct.a.isca804"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.isca804
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca804
+            #add-point:ON ACTION controlp INFIELD isca804 name="construct.c.isca804"
+            
+            #END add-point
+ 
+ 
+ 
+           
+      END CONSTRUCT
+      
+      #add-point:cs段more_construct name="cs.more_construct"
+      
+      #end add-point   
+      
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog name="cs.b_dialog"
+         
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+  
+   #add-point:cs段after_construct name="cs.after_construct"
+   
+   #end add-point
+  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist430.filter" >}
+#應用 a50 樣板自動產生(Version:8)
+#+ filter過濾功能
+PRIVATE FUNCTION aist430_filter()
+   #add-point:filter段define name="filter.define_customerization"
+   
+   #end add-point   
+   #add-point:filter段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="filter.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   IF NOT g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF   
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter.trim()
+   LET g_wc_t = g_wc
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter_t, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON iscasite,isca809,isca001,isca002
+                          FROM s_browse[1].b_iscasite,s_browse[1].b_isca809,s_browse[1].b_isca001,s_browse[1].b_isca002 
+ 
+ 
+         BEFORE CONSTRUCT
+               DISPLAY aist430_filter_parser('iscasite') TO s_browse[1].b_iscasite
+            DISPLAY aist430_filter_parser('isca809') TO s_browse[1].b_isca809
+            DISPLAY aist430_filter_parser('isca001') TO s_browse[1].b_isca001
+            DISPLAY aist430_filter_parser('isca002') TO s_browse[1].b_isca002
+      
+         #add-point:filter段cs_ctrl name="filter.cs_ctrl"
+         
+         #end add-point
+      
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs name="filter.add_cs"
+      
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog name="filter.b_dialog"
+         
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = "   AND   ", g_wc_filter, "   "
+      LET g_wc = g_wc , g_wc_filter
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+      LET g_wc = g_wc_t
+   END IF
+ 
+      CALL aist430_filter_show('iscasite')
+   CALL aist430_filter_show('isca809')
+   CALL aist430_filter_show('isca001')
+   CALL aist430_filter_show('isca002')
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist430.filter_parser" >}
+#+ filter過濾功能
+PRIVATE FUNCTION aist430_filter_parser(ps_field)
+   #add-point:filter段define name="filter_parser.define_customerization"
+   
+   #end add-point    
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_parser.define"
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist430.filter_show" >}
+#+ 顯示過濾條件
+PRIVATE FUNCTION aist430_filter_show(ps_field)
+   DEFINE ps_field         STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.b_", ps_field
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = aist430_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist430.query" >}
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION aist430_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc STRING
+   #add-point:query段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="query.pre_function"
+   
+   #end add-point
+   
+   LET INT_FLAG = 0
+   LET ls_wc = g_wc
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+ 
+   CALL g_browser.clear() 
+ 
+   #browser panel折疊
+   IF g_worksheet_hidden THEN
+      CALL gfrm_curr.setElementHidden("worksheet_vbox",0)
+      CALL gfrm_curr.setElementImage("worksheethidden","worksheethidden-24.png")
+      LET g_worksheet_hidden = 0
+   END IF
+   
+   #單頭折疊
+   IF g_header_hidden THEN
+      CALL gfrm_curr.setElementHidden("vb_master",0)
+      CALL gfrm_curr.setElementImage("controls","headerhidden-24")
+      LET g_header_hidden = 0
+   END IF
+ 
+   INITIALIZE g_isca_m.* TO NULL
+   ERROR ""
+ 
+   DISPLAY " " TO FORMONLY.b_count
+   DISPLAY " " TO FORMONLY.h_count
+   CALL aist430_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      #LET g_wc = ls_wc
+      LET g_wc = " 1=2"
+      CALL aist430_browser_fill(g_wc,"F")
+      CALL aist430_fetch("")
+      RETURN
+   ELSE
+      LET g_current_row = 1
+      LET g_current_cnt = 0
+   END IF
+   
+   #根據條件從新抓取資料
+   LET g_error_show = 1
+   CALL aist430_browser_fill(g_wc,"F")   # 移到第一頁
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||")")
+   
+   #備份搜尋條件
+   LET ls_wc = g_wc
+   
+   IF g_browser.getLength() = 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "-100" 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   ELSE
+      CALL aist430_fetch("F") 
+   END IF
+   
+   LET g_wc_filter = ""
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist430.fetch" >}
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION aist430_fetch(p_fl)
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point
+   DEFINE p_fl       LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="fetch.pre_function"
+   
+   #end add-point
+   
+   #根據傳入的條件決定抓取的資料
+   CASE p_fl
+      WHEN "F" 
+         LET g_current_idx = 1
+      WHEN "P"
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN "N"
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN "L" 
+         #LET g_current_idx = g_header_cnt        
+         LET g_current_idx = g_browser.getLength()    
+      WHEN "/"
+         #詢問要指定的筆數
+         IF (NOT g_no_ask) THEN      
+            CALL cl_getmsg("fetch", g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,": " FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl"
+            END PROMPT
+            
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT CASE  
+            END IF           
+         END IF
+         IF g_jump > 0 THEN
+            LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE     
+   END CASE
+ 
+   #筆數顯示
+   LET g_browser_idx = g_current_idx 
+   IF g_browser_cnt > 0 THEN
+      DISPLAY g_browser_idx TO FORMONLY.b_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.b_count #總筆數
+      DISPLAY g_browser_idx TO FORMONLY.h_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.h_count #總筆數
+   ELSE
+      DISPLAY '' TO FORMONLY.b_index #當下筆數
+      DISPLAY '' TO FORMONLY.b_count #總筆數
+      DISPLAY '' TO FORMONLY.h_index #當下筆數
+      DISPLAY '' TO FORMONLY.h_count #總筆數
+   END IF
+   
+   
+   
+   #避免超出browser資料筆數上限
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_browser_idx = g_browser.getLength()
+      LET g_current_idx = g_browser.getLength() 
+   END IF
+   
+   # 設定browse索引
+   CALL g_curr_diag.setCurrentRow("s_browse", g_current_idx)
+   CALL cl_navigator_setting(g_browser_idx, g_browser_cnt) 
+ 
+   #代表沒有資料, 無需做後續資料撈取之動作
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+ 
+   #根據選定的筆數給予key欄位值
+   LET g_isca_m.iscasite = g_browser[g_current_idx].b_iscasite
+   LET g_isca_m.isca001 = g_browser[g_current_idx].b_isca001
+   LET g_isca_m.isca002 = g_browser[g_current_idx].b_isca002
+ 
+                       
+   #讀取單頭所有欄位資料
+   EXECUTE aist430_master_referesh USING g_isca_m.iscasite,g_isca_m.isca001,g_isca_m.isca002 INTO g_isca_m.iscasite, 
+       g_isca_m.isca809,g_isca_m.isca001,g_isca_m.isca002,g_isca_m.iscaownid,g_isca_m.iscaowndp,g_isca_m.iscacrtid, 
+       g_isca_m.iscacrtdp,g_isca_m.iscacrtdt,g_isca_m.iscamodid,g_isca_m.iscamoddt,g_isca_m.isca701, 
+       g_isca_m.isca702,g_isca_m.isca703,g_isca_m.isca704,g_isca_m.isca705,g_isca_m.isca707,g_isca_m.isca706, 
+       g_isca_m.isca708,g_isca_m.isca805,g_isca_m.isca806,g_isca_m.isca807,g_isca_m.isca801,g_isca_m.isca803, 
+       g_isca_m.isca802,g_isca_m.isca804,g_isca_m.iscaownid_desc,g_isca_m.iscaowndp_desc,g_isca_m.iscacrtid_desc, 
+       g_isca_m.iscacrtdp_desc,g_isca_m.iscamodid_desc
+   
+   #遮罩相關處理
+   LET g_isca_m_mask_o.* =  g_isca_m.*
+   CALL aist430_isca_t_mask()
+   LET g_isca_m_mask_n.* =  g_isca_m.*
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL aist430_set_act_visible()
+   CALL aist430_set_act_no_visible()
+ 
+   #add-point:fetch段action控制 name="fetch.action_control"
+   
+   #end add-point  
+   
+   
+   
+   #保存單頭舊值
+   LET g_isca_m_t.* = g_isca_m.*
+   LET g_isca_m_o.* = g_isca_m.*
+   
+   LET g_data_owner = g_isca_m.iscaownid      
+   LET g_data_dept  = g_isca_m.iscaowndp
+   
+   #重新顯示
+   CALL aist430_show()
+   
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist430.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION aist430_insert()
+   #add-point:insert段define(客製用) name="insert.define_customerization"
+   
+   #end add-point
+   #add-point:insert段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="insert.pre_function"
+   
+   #end add-point
+   
+   CLEAR FORM #清畫面欄位內容
+   INITIALIZE g_isca_m.* TO NULL             #DEFAULT 設定
+   LET g_iscasite_t = NULL
+   LET g_isca001_t = NULL
+   LET g_isca002_t = NULL
+ 
+   
+   #add-point:insert段before name="insert.before"
+   
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   
+   WHILE TRUE
+      
+      #公用欄位給值
+      #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_isca_m.iscaownid = g_user
+      LET g_isca_m.iscaowndp = g_dept
+      LET g_isca_m.iscacrtid = g_user
+      LET g_isca_m.iscacrtdp = g_dept 
+      LET g_isca_m.iscacrtdt = cl_get_current()
+      LET g_isca_m.iscamodid = g_user
+      LET g_isca_m.iscamoddt = cl_get_current()
+ 
+ 
+ 
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+            LET g_isca_m.isca701 = "0"
+      LET g_isca_m.isca702 = "0"
+      LET g_isca_m.isca703 = "0"
+      LET g_isca_m.isca704 = "0"
+      LET g_isca_m.isca705 = "0"
+      LET g_isca_m.isca707 = "0"
+      LET g_isca_m.isca706 = "0"
+      LET g_isca_m.isca708 = "0"
+      LET g_isca_m.isca805 = "0"
+      LET g_isca_m.isca806 = "0"
+      LET g_isca_m.isca807 = "0"
+      LET g_isca_m.isca801 = "0"
+      LET g_isca_m.isca803 = "0"
+      LET g_isca_m.isca802 = "0"
+      LET g_isca_m.isca804 = "0"
+ 
+ 
+      #add-point:單頭預設值 name="insert.default"
+      
+      #end add-point   
+     
+      #顯示狀態(stus)圖片
+      
+     
+      #資料輸入
+      CALL aist430_input("a")
+      
+      #add-point:單頭輸入後 name="insert.after_insert"
+      
+      #end add-point
+      
+      IF INT_FLAG THEN
+         #取消
+         LET INT_FLAG = 0
+         DISPLAY g_current_cnt TO FORMONLY.h_count     #總筆數
+         DISPLAY g_current_idx TO FORMONLY.h_index     #當下筆數
+         INITIALIZE g_isca_m.* TO NULL
+         CALL aist430_show()
+         CALL s_transaction_end('N','0')
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         RETURN
+      END IF
+ 
+      LET g_rec_b = 0
+      EXIT WHILE
+   END WHILE
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL aist430_set_act_visible()
+   CALL aist430_set_act_no_visible()
+ 
+   #將新增的資料併入搜尋條件中
+   LET g_state = "insert"
+   
+   LET g_iscasite_t = g_isca_m.iscasite
+   LET g_isca001_t = g_isca_m.isca001
+   LET g_isca002_t = g_isca_m.isca002
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " iscaent = " ||g_enterprise|| " AND",
+                      " iscasite = '", g_isca_m.iscasite, "' "
+                      ," AND isca001 = '", g_isca_m.isca001, "' "
+                      ," AND isca002 = '", g_isca_m.isca002, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL aist430_browser_fill("","")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+ 
+   #撈取異動後的資料(主要是帶出reference)
+   EXECUTE aist430_master_referesh USING g_isca_m.iscasite,g_isca_m.isca001,g_isca_m.isca002 INTO g_isca_m.iscasite, 
+       g_isca_m.isca809,g_isca_m.isca001,g_isca_m.isca002,g_isca_m.iscaownid,g_isca_m.iscaowndp,g_isca_m.iscacrtid, 
+       g_isca_m.iscacrtdp,g_isca_m.iscacrtdt,g_isca_m.iscamodid,g_isca_m.iscamoddt,g_isca_m.isca701, 
+       g_isca_m.isca702,g_isca_m.isca703,g_isca_m.isca704,g_isca_m.isca705,g_isca_m.isca707,g_isca_m.isca706, 
+       g_isca_m.isca708,g_isca_m.isca805,g_isca_m.isca806,g_isca_m.isca807,g_isca_m.isca801,g_isca_m.isca803, 
+       g_isca_m.isca802,g_isca_m.isca804,g_isca_m.iscaownid_desc,g_isca_m.iscaowndp_desc,g_isca_m.iscacrtid_desc, 
+       g_isca_m.iscacrtdp_desc,g_isca_m.iscamodid_desc
+   
+   
+   #遮罩相關處理
+   LET g_isca_m_mask_o.* =  g_isca_m.*
+   CALL aist430_isca_t_mask()
+   LET g_isca_m_mask_n.* =  g_isca_m.*
+   
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_isca_m.iscasite,g_isca_m.l_iscasite_desc,g_isca_m.isca809,g_isca_m.isca001,g_isca_m.isca002, 
+       g_isca_m.iscaownid,g_isca_m.iscaownid_desc,g_isca_m.iscaowndp,g_isca_m.iscaowndp_desc,g_isca_m.iscacrtid, 
+       g_isca_m.iscacrtid_desc,g_isca_m.iscacrtdp,g_isca_m.iscacrtdp_desc,g_isca_m.iscacrtdt,g_isca_m.iscamodid, 
+       g_isca_m.iscamodid_desc,g_isca_m.iscamoddt,g_isca_m.isca701,g_isca_m.isca702,g_isca_m.isca703, 
+       g_isca_m.isca704,g_isca_m.isca705,g_isca_m.isca707,g_isca_m.isca706,g_isca_m.isca708,g_isca_m.isca805, 
+       g_isca_m.isca806,g_isca_m.isca807,g_isca_m.isca801,g_isca_m.isca803,g_isca_m.isca802,g_isca_m.isca804 
+ 
+ 
+   #add-point:新增結束後 name="insert.after"
+   
+   #end add-point 
+ 
+   LET g_data_owner = g_isca_m.iscaownid      
+   LET g_data_dept  = g_isca_m.iscaowndp
+ 
+   #功能已完成,通報訊息中心
+   CALL aist430_msgcentre_notify('insert')
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist430.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION aist430_modify()
+   #add-point:modify段define(客製用) name="modify.define_customerization"
+   
+   #end add-point
+   #add-point:modify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="modify.pre_function"
+   
+   #end add-point
+   
+   #先確定key值無遺漏
+   IF g_isca_m.iscasite IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF 
+ 
+   ERROR ""
+  
+   #備份key值
+   LET g_iscasite_t = g_isca_m.iscasite
+   LET g_isca001_t = g_isca_m.isca001
+   LET g_isca002_t = g_isca_m.isca002
+ 
+   
+   CALL s_transaction_begin()
+   
+   #先lock資料
+   OPEN aist430_cl USING g_enterprise,g_isca_m.iscasite,g_isca_m.isca001,g_isca_m.isca002
+   IF SQLCA.SQLCODE THEN    #(ver:49)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN aist430_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.popup = TRUE 
+      CLOSE aist430_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE aist430_master_referesh USING g_isca_m.iscasite,g_isca_m.isca001,g_isca_m.isca002 INTO g_isca_m.iscasite, 
+       g_isca_m.isca809,g_isca_m.isca001,g_isca_m.isca002,g_isca_m.iscaownid,g_isca_m.iscaowndp,g_isca_m.iscacrtid, 
+       g_isca_m.iscacrtdp,g_isca_m.iscacrtdt,g_isca_m.iscamodid,g_isca_m.iscamoddt,g_isca_m.isca701, 
+       g_isca_m.isca702,g_isca_m.isca703,g_isca_m.isca704,g_isca_m.isca705,g_isca_m.isca707,g_isca_m.isca706, 
+       g_isca_m.isca708,g_isca_m.isca805,g_isca_m.isca806,g_isca_m.isca807,g_isca_m.isca801,g_isca_m.isca803, 
+       g_isca_m.isca802,g_isca_m.isca804,g_isca_m.iscaownid_desc,g_isca_m.iscaowndp_desc,g_isca_m.iscacrtid_desc, 
+       g_isca_m.iscacrtdp_desc,g_isca_m.iscamodid_desc
+ 
+   #檢查是否允許此動作
+   IF NOT aist430_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #遮罩相關處理
+   LET g_isca_m_mask_o.* =  g_isca_m.*
+   CALL aist430_isca_t_mask()
+   LET g_isca_m_mask_n.* =  g_isca_m.*
+   
+   
+ 
+   #顯示資料
+   CALL aist430_show()
+   
+   WHILE TRUE
+      LET g_isca_m.iscasite = g_iscasite_t
+      LET g_isca_m.isca001 = g_isca001_t
+      LET g_isca_m.isca002 = g_isca002_t
+ 
+      
+      #寫入修改者/修改日期資訊
+      LET g_isca_m.iscamodid = g_user 
+LET g_isca_m.iscamoddt = cl_get_current()
+LET g_isca_m.iscamodid_desc = cl_get_username(g_isca_m.iscamodid)
+      
+      #add-point:modify段修改前 name="modify.before_input"
+      
+      #end add-point
+ 
+      #資料輸入
+      CALL aist430_input("u")     
+ 
+      #add-point:modify段修改後 name="modify.after_input"
+      
+      #end add-point
+      
+      IF INT_FLAG THEN
+         CALL s_transaction_end('N','0')
+         LET INT_FLAG = 0
+         LET g_isca_m.* = g_isca_m_t.*
+         CALL aist430_show()
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         EXIT WHILE
+      END IF
+ 
+      #若有modid跟moddt則進行update
+      UPDATE isca_t SET (iscamodid,iscamoddt) = (g_isca_m.iscamodid,g_isca_m.iscamoddt)
+       WHERE iscaent = g_enterprise AND iscasite = g_iscasite_t
+         AND isca001 = g_isca001_t
+         AND isca002 = g_isca002_t
+ 
+ 
+      EXIT WHILE
+      
+   END WHILE
+ 
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL aist430_set_act_visible()
+   CALL aist430_set_act_no_visible()
+ 
+   #組合新增資料的條件
+   LET g_add_browse = " iscaent = " ||g_enterprise|| " AND",
+                      " iscasite = '", g_isca_m.iscasite, "' "
+                      ," AND isca001 = '", g_isca_m.isca001, "' "
+                      ," AND isca002 = '", g_isca_m.isca002, "' "
+ 
+   #填到對應位置
+   CALL aist430_browser_fill(g_wc,"")
+ 
+   CLOSE aist430_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL aist430_msgcentre_notify('modify')
+   
+   LET g_worksheet_hidden = 0
+   
+END FUNCTION   
+ 
+{</section>}
+ 
+{<section id="aist430.input" >}
+#+ 資料輸入
+PRIVATE FUNCTION aist430_input(p_cmd)
+   #add-point:input段define(客製用) name="input.define_customerization"
+   
+   #end add-point
+   DEFINE p_cmd           LIKE type_t.chr1
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_n             LIKE type_t.num10       #檢查重複用  
+   DEFINE l_cnt           LIKE type_t.num10       #檢查重複用  
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否  
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_i             LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num10
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE l_isaa012       LIKE isaa_t.isaa012    #年度
+   DEFINE l_isaa013       LIKE isaa_t.isaa013    #月份
+   DEFINE l_day1          LIKE type_t.dat        #輸入的年月
+   DEFINE l_day2          LIKE type_t.dat        #aisi010設定的年月
+   DEFINE l_other         LIKE isca_t.isca801
+   #end add-point
+   
+   #add-point:Function前置處理  name="input.pre_function"
+   
+   #end add-point
+   
+   #切換至輸入畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_isca_m.iscasite,g_isca_m.l_iscasite_desc,g_isca_m.isca809,g_isca_m.isca001,g_isca_m.isca002, 
+       g_isca_m.iscaownid,g_isca_m.iscaownid_desc,g_isca_m.iscaowndp,g_isca_m.iscaowndp_desc,g_isca_m.iscacrtid, 
+       g_isca_m.iscacrtid_desc,g_isca_m.iscacrtdp,g_isca_m.iscacrtdp_desc,g_isca_m.iscacrtdt,g_isca_m.iscamodid, 
+       g_isca_m.iscamodid_desc,g_isca_m.iscamoddt,g_isca_m.isca701,g_isca_m.isca702,g_isca_m.isca703, 
+       g_isca_m.isca704,g_isca_m.isca705,g_isca_m.isca707,g_isca_m.isca706,g_isca_m.isca708,g_isca_m.isca805, 
+       g_isca_m.isca806,g_isca_m.isca807,g_isca_m.isca801,g_isca_m.isca803,g_isca_m.isca802,g_isca_m.isca804 
+ 
+   
+   CALL cl_set_head_visible("","YES")  
+   
+   #a-新增,r-複製,u-修改
+   IF p_cmd = 'r' THEN
+      #此段落的r動作等同於a
+      LET p_cmd = 'a'
+   END IF
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   LET g_qryparam.state = "i"
+   
+   #控制key欄位可否輸入
+   CALL aist430_set_entry(p_cmd)
+   #add-point:set_entry後 name="input.after_set_entry"
+   
+   #end add-point
+   CALL aist430_set_no_entry(p_cmd)
+   
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+   #add-point:資料輸入前 name="input.before_input"
+   
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #單頭段
+      INPUT BY NAME g_isca_m.iscasite,g_isca_m.isca809,g_isca_m.isca001,g_isca_m.isca002,g_isca_m.isca702, 
+          g_isca_m.isca703,g_isca_m.isca704,g_isca_m.isca705,g_isca_m.isca707,g_isca_m.isca706,g_isca_m.isca708, 
+          g_isca_m.isca806,g_isca_m.isca807,g_isca_m.isca801,g_isca_m.isca803,g_isca_m.isca802,g_isca_m.isca804  
+ 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            #其他table資料備份(確定是否更改用)
+            
+            #add-point:input開始前 name="input.before.input"
+            
+            #end add-point
+   
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD iscasite
+            
+            #add-point:AFTER FIELD iscasite name="input.a.iscasite"
+
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  NOT cl_null(g_isca_m.iscasite) AND NOT cl_null(g_isca_m.isca001) AND NOT cl_null(g_isca_m.isca002) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_isca_m.iscasite != g_iscasite_t  OR g_isca_m.isca001 != g_isca001_t  OR g_isca_m.isca002 != g_isca002_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM isca_t WHERE "||"iscaent = '" ||g_enterprise|| "' AND "||"iscasite = '"||g_isca_m.iscasite ||"' AND "|| "isca001 = '"||g_isca_m.isca001 ||"' AND "|| "isca002 = '"||g_isca_m.isca002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            IF NOT cl_null(g_isca_m.iscasite) THEN
+              #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_isca_m.iscasite != g_isca_m_t.iscasite OR cl_null(g_isca_m_t.iscasite))) THEN #161005-00003#3 mark
+               IF g_isca_m.iscasite != g_isca_m_o.iscasite OR cl_null(g_isca_m_o.iscasite) THEN #161005-00003#3 add
+                  #申報單位須存在aisi010裡面
+                  SELECT COUNT(*) INTO l_cnt
+                    FROM isaa_t
+                   WHERE isaaent = g_enterprise
+                     AND isaa001 = g_isca_m.iscasite
+                     AND isaa022 = "Y"
+                  IF cl_null(l_cnt) THEN LET l_cnt = 0 END IF
+                  IF l_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'ais-00193'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                    #LET g_isca_m.iscasite= g_isca_m_t.iscasite #161005-00003#3 mark
+                     LET g_isca_m.iscasite= g_isca_m_o.iscasite #161005-00003#3 add
+                     CALL s_desc_get_department_desc(g_isca_m.iscasite) RETURNING g_isca_m.l_iscasite_desc
+                     DISPLAY BY NAME g_isca_m.iscasite,g_isca_m.l_iscasite_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL s_desc_get_department_desc(g_isca_m.iscasite) RETURNING g_isca_m.l_iscasite_desc
+            DISPLAY BY NAME g_isca_m.l_iscasite_desc
+            LET g_isca_m_o.* = g_isca_m.* #161005-00003#3 add
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD iscasite
+            #add-point:BEFORE FIELD iscasite name="input.b.iscasite"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE iscasite
+            #add-point:ON CHANGE iscasite name="input.g.iscasite"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca809
+            #add-point:BEFORE FIELD isca809 name="input.b.isca809"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca809
+            
+            #add-point:AFTER FIELD isca809 name="input.a.isca809"
+            IF NOT cl_null(g_isca_m.isca809) THEN
+               #取位至整數
+               CALL s_num_round(3,g_isca_m.isca809,0) RETURNING g_isca_m.isca809
+               #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_isca_m.isca809 != g_isca_m_t.isca809 OR cl_null(g_isca_m_t.isca809) )) THEN  #161005-00003#3 mark
+                IF g_isca_m.isca809 != g_isca_m_o.isca809 OR cl_null(g_isca_m_o.isca809) THEN #161005-00003#3 add
+                  #不得扣抵比例需>0
+                  IF g_isca_m.isca809 < 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'ais-00189'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                    #LET g_isca_m.isca809= g_isca_m_t.isca809 #161005-00003#3 mark
+                     LET g_isca_m.isca809= g_isca_m_o.isca809 #161005-00003#3 add
+                     DISPLAY BY NAME g_isca_m.isca809
+                     NEXT FIELD CURRENT
+                  END IF
+                  #重新計算應納營業稅稅額
+                  #161005-00003#3 --s add
+                  LET g_isca_m.isca807 = 0
+                  LET g_isca_m.isca803 = 0
+                  LET g_isca_m.isca804 = 0
+                  #161005-00003#3 --e add
+                  LET g_isca_m.isca807 = g_isca_m.isca703 * g_isca_m.isca809 * 0.01 * 0.01
+                  LET g_isca_m.isca803 = g_isca_m.isca707 * g_isca_m.isca809 * 0.01 * 0.02
+                  LET g_isca_m.isca804 = g_isca_m.isca708 * g_isca_m.isca809 * 0.01 * 0.05
+                  CALL aist430_sum_isca805() RETURNING g_isca_m.isca805
+                  LET g_isca_m_t.isca809 = g_isca_m.isca809
+                  DISPLAY BY NAME g_isca_m.isca803,g_isca_m.isca804,g_isca_m.isca805,g_isca_m.isca807
+               END IF
+            END IF
+            LET g_isca_m_o.* = g_isca_m.*  #161005-00003#3 add
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isca809
+            #add-point:ON CHANGE isca809 name="input.g.isca809"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca001
+            #add-point:BEFORE FIELD isca001 name="input.b.isca001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca001
+            
+            #add-point:AFTER FIELD isca001 name="input.a.isca001"
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  NOT cl_null(g_isca_m.iscasite) AND NOT cl_null(g_isca_m.isca001) AND NOT cl_null(g_isca_m.isca002) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_isca_m.iscasite != g_iscasite_t  OR g_isca_m.isca001 != g_isca001_t  OR g_isca_m.isca002 != g_isca002_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM isca_t WHERE "||"iscaent = '" ||g_enterprise|| "' AND "||"iscasite = '"||g_isca_m.iscasite ||"' AND "|| "isca001 = '"||g_isca_m.isca001 ||"' AND "|| "isca002 = '"||g_isca_m.isca002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            IF NOT cl_null(g_isca_m.isca001) THEN
+              #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_isca_m.isca001 != g_isca_m_t.isca001 OR cl_null(g_isca_m_t.isca001) )) THEN #161005-00003#3 mark
+               IF g_isca_m.isca001 != g_isca_m_o.isca001 OR cl_null(g_isca_m_o.isca001) THEN #161005-00003#3 add
+                  #年度不可小於aisi010的申報年度
+                  SELECT isaa012,isaa013 INTO l_isaa012,l_isaa013
+                    FROM isaa_t
+                   WHERE isaaent = g_enterprise
+                     AND isaa001 = g_isca_m.iscasite
+                     AND isaa022 = "Y"
+                  IF NOT cl_null(l_isaa012) OR NOT cl_null(l_isaa013) THEN
+                     LET l_day1= MDY(g_isca_m.isca002,1,g_isca_m.isca001)
+                     LET l_day2= MDY(l_isaa013,1,l_isaa012)
+                     IF l_day1 <= l_day2 THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'ais-00190'
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                       #LET g_isca_m.isca001= g_isca_m_t.isca001 #161005-00003#3 mark 
+                       #LET g_isca_m.isca002= g_isca_m_t.isca002 #161005-00003#3 mark
+                        LET g_isca_m.isca001= g_isca_m_o.isca001 #161005-00003#3 add
+                        LET g_isca_m.isca002= g_isca_m_o.isca002 #161005-00003#3 add
+                        DISPLAY BY NAME g_isca_m.isca001,g_isca_m.isca002
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+                  #LET g_isca_m_t.isca001 = g_isca_m_t.isca001 #161005-00003#3 mark
+               END IF
+            END IF
+            LET g_isca_m_o.* = g_isca_m.* #161005-00003#3 add
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isca001
+            #add-point:ON CHANGE isca001 name="input.g.isca001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca002
+            #add-point:BEFORE FIELD isca002 name="input.b.isca002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca002
+            
+            #add-point:AFTER FIELD isca002 name="input.a.isca002"
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  NOT cl_null(g_isca_m.iscasite) AND NOT cl_null(g_isca_m.isca001) AND NOT cl_null(g_isca_m.isca002) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_isca_m.iscasite != g_iscasite_t  OR g_isca_m.isca001 != g_isca001_t  OR g_isca_m.isca002 != g_isca002_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM isca_t WHERE "||"iscaent = '" ||g_enterprise|| "' AND "||"iscasite = '"||g_isca_m.iscasite ||"' AND "|| "isca001 = '"||g_isca_m.isca001 ||"' AND "|| "isca002 = '"||g_isca_m.isca002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            IF NOT cl_null(g_isca_m.isca002) THEN
+               #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_isca_m.isca002 != g_isca_m_t.isca002 OR cl_null(g_isca_m_t.isca002) )) THEN #161005-00003#3 mark
+                IF g_isca_m.isca002 != g_isca_m_o.isca002 OR cl_null(g_isca_m_o.isca002) THEN #161005-00003#3 add
+                  #月份不可小於aisi010的申報月份
+                  SELECT isaa012,isaa013 INTO l_isaa012,l_isaa013
+                    FROM isaa_t
+                   WHERE isaaent = g_enterprise
+                     AND isaa001 = g_isca_m.iscasite
+                     AND isaa022 = "Y"
+                  IF NOT cl_null(l_isaa012) OR NOT cl_null(l_isaa013) THEN
+                     LET l_day1= MDY(g_isca_m.isca002,1,g_isca_m.isca001)
+                     LET l_day2= MDY(l_isaa013,1,l_isaa012)
+                     IF l_day1 <= l_day2 THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'ais-00191'
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                       #LET g_isca_m.isca001= g_isca_m_t.isca001 #161005-00003#3 mark
+                       #LET g_isca_m.isca002= g_isca_m_t.isca002 #161005-00003#3 mark
+                        LET g_isca_m.isca001= g_isca_m_o.isca001 #161005-00003#3 add
+                        LET g_isca_m.isca002= g_isca_m_o.isca002 #161005-00003#3 add
+                        DISPLAY BY NAME g_isca_m.isca001,g_isca_m.isca002
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+                  #LET g_isca_m_t.isca002 = g_isca_m_t.isca002 
+               END IF
+            END IF
+            LET g_isca_m_o.* = g_isca_m.* #161005-00003#3 add
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isca002
+            #add-point:ON CHANGE isca002 name="input.g.isca002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca702
+            #add-point:BEFORE FIELD isca702 name="input.b.isca702"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca702
+            
+            #add-point:AFTER FIELD isca702 name="input.a.isca702"
+            IF NOT cl_null(g_isca_m.isca702) THEN
+               CALL s_num_round(3,g_isca_m.isca702,0) RETURNING g_isca_m.isca702
+              #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_isca_m.isca702 != g_isca_m_t.isca702 OR cl_null(g_isca_m_t.isca702) )) THEN #161005-00003#3 mark
+               IF g_isca_m.isca702 != g_isca_m_o.isca702 OR cl_null(g_isca_m_o.isca702) THEN #161005-00003#3 add
+                  #161005-00003#3 --s add
+                  LET g_isca_m.isca701 = 0 
+                  LET g_isca_m.isca806 = 0
+                  LET g_isca_m.isca805 = 0
+                  #161005-00003#3 --e add
+                  CALL aist430_sum_isca701() RETURNING g_isca_m.isca701,g_isca_m.isca806
+                  CALL aist430_sum_isca805() RETURNING g_isca_m.isca805
+                  #LET g_isca_m_t.isca702 = g_isca_m.isca702 #161005-00003#3 mark
+                  DISPLAY BY NAME g_isca_m.isca701,g_isca_m.isca806,g_isca_m.isca805
+               END IF
+            END IF
+            LET g_isca_m_o.* = g_isca_m.* #161005-00003#3 add
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isca702
+            #add-point:ON CHANGE isca702 name="input.g.isca702"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca703
+            #add-point:BEFORE FIELD isca703 name="input.b.isca703"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca703
+            
+            #add-point:AFTER FIELD isca703 name="input.a.isca703"
+            IF NOT cl_null(g_isca_m.isca703) THEN
+               CALL s_num_round(3,g_isca_m.isca703,0) RETURNING g_isca_m.isca703
+              #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_isca_m.isca703 != g_isca_m_t.isca703 OR cl_null(g_isca_m_t.isca703) )) THEN #161005-00003#3 mark
+               IF g_isca_m.isca703 != g_isca_m_o.isca703 OR cl_null(g_isca_m_o.isca703) THEN #161005-00003#3 add
+                  #161005-00003#3 --s add
+                  LET g_isca_m.isca701 = 0 
+                  LET g_isca_m.isca807 = 0
+                  LET g_isca_m.isca805 = 0
+                  #161005-00003#3 --e add
+                  CALL aist430_sum_isca701() RETURNING g_isca_m.isca701,g_isca_m.isca807
+                  CALL aist430_sum_isca805() RETURNING g_isca_m.isca805
+                  #LET g_isca_m_t.isca703 = g_isca_m.isca703 #161005-00003#3 mark
+                  DISPLAY BY NAME g_isca_m.isca701,g_isca_m.isca807,g_isca_m.isca805
+               END IF
+            END IF
+            LET g_isca_m_o.* = g_isca_m.* #161005-00003#3 add
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isca703
+            #add-point:ON CHANGE isca703 name="input.g.isca703"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca704
+            #add-point:BEFORE FIELD isca704 name="input.b.isca704"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca704
+            
+            #add-point:AFTER FIELD isca704 name="input.a.isca704"
+            IF NOT cl_null(g_isca_m.isca704) THEN
+               CALL s_num_round(3,g_isca_m.isca704,0) RETURNING g_isca_m.isca704
+              #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_isca_m.isca704 != g_isca_m_t.isca704 OR cl_null(g_isca_m_t.isca704) )) THEN #161005-00003#3 mark
+               IF g_isca_m.isca704 != g_isca_m_o.isca704 OR cl_null(g_isca_m_o.isca704) THEN #161005-00003#3 add
+                  LET g_isca_m.isca701 = 0 #161005-00003#3 add
+                  CALL aist430_sum_isca701() RETURNING g_isca_m.isca701,l_other
+                  #LET g_isca_m_t.isca704 = g_isca_m.isca704 #161005-00003#3 mark
+                  DISPLAY BY NAME g_isca_m.isca701
+               END IF
+            END IF
+            LET g_isca_m_o.* = g_isca_m.* #161005-00003#3 add
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isca704
+            #add-point:ON CHANGE isca704 name="input.g.isca704"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca705
+            #add-point:BEFORE FIELD isca705 name="input.b.isca705"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca705
+            
+            #add-point:AFTER FIELD isca705 name="input.a.isca705"
+            IF NOT cl_null(g_isca_m.isca705) THEN
+               CALL s_num_round(3,g_isca_m.isca705,0) RETURNING g_isca_m.isca705
+              #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_isca_m.isca705 != g_isca_m_t.isca705 OR cl_null(g_isca_m_t.isca705) )) THEN #161005-00003#3 mark
+               IF g_isca_m.isca705 != g_isca_m_o.isca705 OR cl_null(g_isca_m_o.isca705) THEN #161005-00003#3 add
+                  #161005-00003#3 --s add
+                  LET g_isca_m.isca701 = 0
+                  LET g_isca_m.isca801 = 0
+                  LET g_isca_m.isca805 = 0
+                  #161005-00003#3 --e add
+                  CALL aist430_sum_isca701() RETURNING g_isca_m.isca701,g_isca_m.isca801
+                  CALL aist430_sum_isca805() RETURNING g_isca_m.isca805
+                  #LET g_isca_m_t.isca705 = g_isca_m.isca705 #161005-00003#3 mark
+                  DISPLAY BY NAME g_isca_m.isca701,g_isca_m.isca801,g_isca_m.isca805
+               END IF
+            END IF
+            LET g_isca_m_o.* = g_isca_m.* #161005-00003#3  add
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isca705
+            #add-point:ON CHANGE isca705 name="input.g.isca705"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca707
+            #add-point:BEFORE FIELD isca707 name="input.b.isca707"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca707
+            
+            #add-point:AFTER FIELD isca707 name="input.a.isca707"
+            IF NOT cl_null(g_isca_m.isca707) THEN
+               CALL s_num_round(3,g_isca_m.isca707,0) RETURNING g_isca_m.isca707
+              #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_isca_m.isca707 != g_isca_m_t.isca707 OR cl_null(g_isca_m_t.isca707) )) THEN #161005-00003#3 mark
+               IF g_isca_m.isca707 != g_isca_m_o.isca707 OR cl_null(g_isca_m_o.isca707) THEN #161005-00003#3 add
+                  #161005-00003#3 --s add
+                  LET g_isca_m.isca701 = 0
+                  LET g_isca_m.isca803 = 0
+                  LET g_isca_m.isca805 = 0
+                  #161005-00003#3 --e add
+                  CALL aist430_sum_isca701() RETURNING g_isca_m.isca701,g_isca_m.isca803
+                  CALL aist430_sum_isca805() RETURNING g_isca_m.isca805
+                  #LET g_isca_m_t.isca707 = g_isca_m.isca707 #161005-00003#3 mark
+                  DISPLAY BY NAME g_isca_m.isca701,g_isca_m.isca803,g_isca_m.isca805
+               END IF
+            END IF
+            LET g_isca_m_o.* = g_isca_m.* #161005-00003#3 add
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isca707
+            #add-point:ON CHANGE isca707 name="input.g.isca707"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca706
+            #add-point:BEFORE FIELD isca706 name="input.b.isca706"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca706
+            
+            #add-point:AFTER FIELD isca706 name="input.a.isca706"
+            IF NOT cl_null(g_isca_m.isca706) THEN
+               CALL s_num_round(3,g_isca_m.isca706,0) RETURNING g_isca_m.isca706
+              #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_isca_m.isca706 != g_isca_m_t.isca706 OR cl_null(g_isca_m_t.isca706) )) THEN #161005-00003#3 mark
+               IF g_isca_m.isca706 != g_isca_m_o.isca706 OR cl_null(g_isca_m_o.isca706) THEN #161005-00003#3 add
+                  #161005-00003#3 --s add
+                  LET g_isca_m.isca701 = 0
+                  LET g_isca_m.isca802 = 0
+                  LET g_isca_m.isca805 = 0
+                  #161005-00003#3 --e add
+                  CALL aist430_sum_isca701() RETURNING g_isca_m.isca701,g_isca_m.isca802
+                  CALL aist430_sum_isca805() RETURNING g_isca_m.isca805
+                  #LET g_isca_m_t.isca706 = g_isca_m.isca706 #161005-00003#3 mark
+                  DISPLAY BY NAME g_isca_m.isca701,g_isca_m.isca802,g_isca_m.isca805
+               END IF
+            END IF
+            LET g_isca_m_o.* = g_isca_m.* #161005-00003#3 add
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isca706
+            #add-point:ON CHANGE isca706 name="input.g.isca706"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca708
+            #add-point:BEFORE FIELD isca708 name="input.b.isca708"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca708
+            
+            #add-point:AFTER FIELD isca708 name="input.a.isca708"
+            IF NOT cl_null(g_isca_m.isca708) THEN
+               CALL s_num_round(3,g_isca_m.isca708,0) RETURNING g_isca_m.isca708
+              #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_isca_m.isca708 != g_isca_m_t.isca708 OR cl_null(g_isca_m_t.isca708) )) THEN #161005-00003#3 mark
+               IF g_isca_m.isca708 != g_isca_m_o.isca708 OR cl_null(g_isca_m_o.isca708) THEN #161005-00003#3 add
+                  #161005-00003#3 --s add
+                  LET g_isca_m.isca701 = 0
+                  LET g_isca_m.isca804 = 0
+                  LET g_isca_m.isca805 = 0
+                  #161005-00003#3 --e add
+                  CALL aist430_sum_isca701() RETURNING g_isca_m.isca701,g_isca_m.isca804
+                  CALL aist430_sum_isca805() RETURNING g_isca_m.isca805
+                  #LET g_isca_m_t.isca708 = g_isca_m.isca708 #161005-00003#3 mark
+                  DISPLAY BY NAME g_isca_m.isca701,g_isca_m.isca804,g_isca_m.isca805
+               END IF
+            END IF
+            LET g_isca_m_o.* = g_isca_m.* #161005-00003#3 add
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isca708
+            #add-point:ON CHANGE isca708 name="input.g.isca708"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca806
+            #add-point:BEFORE FIELD isca806 name="input.b.isca806"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca806
+            
+            #add-point:AFTER FIELD isca806 name="input.a.isca806"
+            IF NOT cl_null(g_isca_m.isca806) THEN
+               CALL s_num_round(3,g_isca_m.isca806,0) RETURNING g_isca_m.isca806
+              #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_isca_m.isca806 != g_isca_m_t.isca806 OR cl_null(g_isca_m_t.isca806) )) THEN #161005-00003#3 mark
+               IF g_isca_m.isca806 != g_isca_m_o.isca806 OR cl_null(g_isca_m_o.isca806) THEN #161005-00003#3 add
+                  CALL aist430_sum_isca805() RETURNING g_isca_m.isca805
+                  CALL aist430_chk_rate() RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                    #LET g_isca_m.isca806 = g_isca_m_t.isca806 #161005-00003#3 mark
+                     LET g_isca_m.isca806 = g_isca_m_o.isca806 #161005-00003#3 add
+                     LET g_isca_m.isca805 = 0                  #161005-00003#3 add
+                     CALL aist430_sum_isca805() RETURNING g_isca_m.isca805
+                     DISPLAY BY NAME g_isca_m.isca805,g_isca_m.isca806
+                     NEXT FIELD CURRENT
+                  END IF
+                  #LET g_isca_m_t.isca806 = g_isca_m.isca806 #161005-00003#3 mark
+                  DISPLAY BY NAME g_isca_m.isca805,g_isca_m.isca806
+               END IF
+            END IF
+            LET g_isca_m_o.* = g_isca_m.*  #161005-00003#3 add
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isca806
+            #add-point:ON CHANGE isca806 name="input.g.isca806"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca807
+            #add-point:BEFORE FIELD isca807 name="input.b.isca807"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca807
+            
+            #add-point:AFTER FIELD isca807 name="input.a.isca807"
+            IF NOT cl_null(g_isca_m.isca807) THEN
+               CALL s_num_round(3,g_isca_m.isca807,0) RETURNING g_isca_m.isca807
+              #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_isca_m.isca807 != g_isca_m_t.isca807 OR cl_null(g_isca_m_t.isca807) )) THEN #161005-00003#3 mark
+               IF g_isca_m.isca807 != g_isca_m_o.isca807 OR cl_null(g_isca_m_o.isca807) THEN #161005-00003#3 add
+                  CALL aist430_sum_isca805() RETURNING g_isca_m.isca805
+                  CALL aist430_chk_rate() RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                    #LET g_isca_m.isca807 = g_isca_m_t.isca807 #161005-00003#3 mark
+                     LET g_isca_m.isca807 = g_isca_m_o.isca807 #161005-00003#3 add
+                     CALL aist430_sum_isca805() RETURNING g_isca_m.isca805
+                     DISPLAY BY NAME g_isca_m.isca805,g_isca_m.isca807
+                     NEXT FIELD CURRENT
+                  END IF
+                  #LET g_isca_m_t.isca807 = g_isca_m.isca807 #161005-00003#3 mark
+                  DISPLAY BY NAME g_isca_m.isca805,g_isca_m.isca807
+               END IF
+            END IF
+            LET g_isca_m_o.* = g_isca_m.* #161005-00003#3 add
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isca807
+            #add-point:ON CHANGE isca807 name="input.g.isca807"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca801
+            #add-point:BEFORE FIELD isca801 name="input.b.isca801"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca801
+            
+            #add-point:AFTER FIELD isca801 name="input.a.isca801"
+            IF NOT cl_null(g_isca_m.isca801) THEN
+               CALL s_num_round(3,g_isca_m.isca801,0) RETURNING g_isca_m.isca801
+               #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_isca_m.isca801 != g_isca_m_t.isca801 OR cl_null(g_isca_m_t.isca801) )) THEN #161005-00003#3 mark
+                IF g_isca_m.isca801 != g_isca_m_o.isca801 OR cl_null(g_isca_m_o.isca801) THEN #161005-00003#3 add
+                  CALL aist430_sum_isca805() RETURNING g_isca_m.isca805
+                  CALL aist430_chk_rate() RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                    #LET g_isca_m.isca801 = g_isca_m_t.isca801 #161005-00003#3 mark
+                     LET g_isca_m.isca801 = g_isca_m_o.isca801 #161005-00003#3 add
+                     CALL aist430_sum_isca805() RETURNING g_isca_m.isca805
+                     DISPLAY BY NAME g_isca_m.isca805,g_isca_m.isca801
+                     NEXT FIELD CURRENT
+                  END IF
+                  #LET g_isca_m_t.isca801 = g_isca_m.isca801 #161005-00003#3 mark
+                  DISPLAY BY NAME g_isca_m.isca805,g_isca_m.isca801
+               END IF
+            END IF
+            LET g_isca_m_o.* = g_isca_m.* #161005-00003#3 add
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isca801
+            #add-point:ON CHANGE isca801 name="input.g.isca801"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca803
+            #add-point:BEFORE FIELD isca803 name="input.b.isca803"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca803
+            
+            #add-point:AFTER FIELD isca803 name="input.a.isca803"
+            IF NOT cl_null(g_isca_m.isca803) THEN
+               CALL s_num_round(3,g_isca_m.isca803,0) RETURNING g_isca_m.isca803
+              #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_isca_m.isca803 != g_isca_m_t.isca803 OR cl_null(g_isca_m_t.isca803) )) THEN #161005-00003#3 mark
+               IF g_isca_m.isca803 != g_isca_m_o.isca803 OR cl_null(g_isca_m_o.isca803) THEN #161005-00003#3 add
+                  CALL aist430_sum_isca805() RETURNING g_isca_m.isca805
+                  CALL aist430_chk_rate() RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                    #LET g_isca_m.isca803 = g_isca_m_t.isca803 #161005-00003#3 mark
+                     LET g_isca_m.isca803 = g_isca_m_o.isca803 #161005-00003#3 add
+                     LET g_isca_m.isca805 = 0                  #161005-00003#3 add
+                     CALL aist430_sum_isca805() RETURNING g_isca_m.isca805
+                     DISPLAY BY NAME g_isca_m.isca805,g_isca_m.isca803
+                     NEXT FIELD CURRENT
+                  END IF
+                  #LET g_isca_m_t.isca803 = g_isca_m.isca803 #161005-00003#3 mark
+                  DISPLAY BY NAME g_isca_m.isca805,g_isca_m.isca803
+               END IF
+            END IF
+            LET g_isca_m_o.* = g_isca_m.*  #161005-00003#3 add
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isca803
+            #add-point:ON CHANGE isca803 name="input.g.isca803"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca802
+            #add-point:BEFORE FIELD isca802 name="input.b.isca802"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca802
+            
+            #add-point:AFTER FIELD isca802 name="input.a.isca802"
+            IF NOT cl_null(g_isca_m.isca802) THEN
+               CALL s_num_round(3,g_isca_m.isca802,0) RETURNING g_isca_m.isca802
+              #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_isca_m.isca802 != g_isca_m_t.isca802 OR cl_null(g_isca_m_t.isca802) )) THEN #161005-00003#3 mark
+               IF g_isca_m.isca802 != g_isca_m_o.isca802 OR cl_null(g_isca_m_o.isca802) THEN #161005-00003#3 add
+                  CALL aist430_sum_isca805() RETURNING g_isca_m.isca805
+                  CALL aist430_chk_rate() RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                    #LET g_isca_m.isca802 = g_isca_m_t.isca802 #161005-00003#3 mark
+                     LET g_isca_m.isca802 = g_isca_m_o.isca802 #161005-00003#3 add
+                     LET g_isca_m.isca805 = 0                  #161005-00003#3 add
+                     CALL aist430_sum_isca805() RETURNING g_isca_m.isca805
+                     DISPLAY BY NAME g_isca_m.isca805,g_isca_m.isca802
+                     NEXT FIELD CURRENT
+                  END IF
+                  #LET g_isca_m_t.isca802 = g_isca_m.isca802 #161005-00003#3 mark
+                  DISPLAY BY NAME g_isca_m.isca805,g_isca_m.isca802
+               END IF
+            END IF
+            LET g_isca_m_o.* = g_isca_m.* #161005-00003#3 add
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isca802
+            #add-point:ON CHANGE isca802 name="input.g.isca802"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD isca804
+            #add-point:BEFORE FIELD isca804 name="input.b.isca804"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD isca804
+            
+            #add-point:AFTER FIELD isca804 name="input.a.isca804"
+            IF NOT cl_null(g_isca_m.isca804) THEN
+               CALL s_num_round(3,g_isca_m.isca804,0) RETURNING g_isca_m.isca804
+              #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_isca_m.isca804 != g_isca_m_t.isca804 OR cl_null(g_isca_m_t.isca804) )) THEN #161005-00003#3 mark
+               IF g_isca_m.isca804 != g_isca_m_o.isca804 OR cl_null(g_isca_m_o.isca804) THEN #161005-00003#3 add
+                  CALL aist430_sum_isca805() RETURNING g_isca_m.isca805
+                  CALL aist430_chk_rate() RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                    #LET g_isca_m.isca804 = g_isca_m_t.isca804 #161005-00003#3 mark
+                     LET g_isca_m.isca804 = g_isca_m_o.isca804 #161005-00003#3 add
+                     LET g_isca_m.isca805 = 0                  #161005-00003#3 add
+                     CALL aist430_sum_isca805() RETURNING g_isca_m.isca805
+                     DISPLAY BY NAME g_isca_m.isca805,g_isca_m.isca804
+                     NEXT FIELD CURRENT
+                  END IF
+                  #LET g_isca_m_t.isca804 = g_isca_m.isca804 #161005-00003#3 mark
+                  DISPLAY BY NAME g_isca_m.isca805,g_isca_m.isca804
+               END IF
+            END IF
+            LET g_isca_m_o.* = g_isca_m.* #161005-00003#3 add
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE isca804
+            #add-point:ON CHANGE isca804 name="input.g.isca804"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.iscasite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD iscasite
+            #add-point:ON ACTION controlp INFIELD iscasite name="input.c.iscasite"
+            #i開窗-申報單位代碼
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_isca_m.iscasite
+            LET g_qryparam.where = " isaa022 = 'Y' AND isaastus = 'Y' "
+            CALL q_isaa001()
+            LET g_isca_m.iscasite = g_qryparam.return1
+            DISPLAY BY NAME g_isca_m.iscasite
+            NEXT FIELD iscasite
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isca809
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca809
+            #add-point:ON ACTION controlp INFIELD isca809 name="input.c.isca809"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isca001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca001
+            #add-point:ON ACTION controlp INFIELD isca001 name="input.c.isca001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isca002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca002
+            #add-point:ON ACTION controlp INFIELD isca002 name="input.c.isca002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isca702
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca702
+            #add-point:ON ACTION controlp INFIELD isca702 name="input.c.isca702"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isca703
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca703
+            #add-point:ON ACTION controlp INFIELD isca703 name="input.c.isca703"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isca704
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca704
+            #add-point:ON ACTION controlp INFIELD isca704 name="input.c.isca704"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isca705
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca705
+            #add-point:ON ACTION controlp INFIELD isca705 name="input.c.isca705"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isca707
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca707
+            #add-point:ON ACTION controlp INFIELD isca707 name="input.c.isca707"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isca706
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca706
+            #add-point:ON ACTION controlp INFIELD isca706 name="input.c.isca706"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isca708
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca708
+            #add-point:ON ACTION controlp INFIELD isca708 name="input.c.isca708"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isca806
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca806
+            #add-point:ON ACTION controlp INFIELD isca806 name="input.c.isca806"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isca807
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca807
+            #add-point:ON ACTION controlp INFIELD isca807 name="input.c.isca807"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isca801
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca801
+            #add-point:ON ACTION controlp INFIELD isca801 name="input.c.isca801"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isca803
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca803
+            #add-point:ON ACTION controlp INFIELD isca803 name="input.c.isca803"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isca802
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca802
+            #add-point:ON ACTION controlp INFIELD isca802 name="input.c.isca802"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.isca804
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD isca804
+            #add-point:ON ACTION controlp INFIELD isca804 name="input.c.isca804"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #若點選cancel則離開dialog
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            
+            #錯誤訊息統整顯示
+            #CALL cl_err_collect_show()
+            #CALL cl_showmsg()
+  
+            IF p_cmd <> "u" THEN
+               #當p_cmd不為u代表為新增/複製
+               LET l_count = 1  
+ 
+               #確定新增的資料不存在(不重複)
+               SELECT COUNT(1) INTO l_count FROM isca_t
+                WHERE iscaent = g_enterprise AND iscasite = g_isca_m.iscasite
+                  AND isca001 = g_isca_m.isca001
+                  AND isca002 = g_isca_m.isca002
+ 
+               IF l_count = 0 THEN
+               
+                  #add-point:單頭新增前 name="input.head.b_insert"
+                  
+                  #end add-point
+               
+                  #將新增的單頭資料寫入資料庫
+                  INSERT INTO isca_t (iscaent,iscasite,isca809,isca001,isca002,iscaownid,iscaowndp,iscacrtid, 
+                      iscacrtdp,iscacrtdt,iscamodid,iscamoddt,isca701,isca702,isca703,isca704,isca705, 
+                      isca707,isca706,isca708,isca805,isca806,isca807,isca801,isca803,isca802,isca804) 
+ 
+                  VALUES (g_enterprise,g_isca_m.iscasite,g_isca_m.isca809,g_isca_m.isca001,g_isca_m.isca002, 
+                      g_isca_m.iscaownid,g_isca_m.iscaowndp,g_isca_m.iscacrtid,g_isca_m.iscacrtdp,g_isca_m.iscacrtdt, 
+                      g_isca_m.iscamodid,g_isca_m.iscamoddt,g_isca_m.isca701,g_isca_m.isca702,g_isca_m.isca703, 
+                      g_isca_m.isca704,g_isca_m.isca705,g_isca_m.isca707,g_isca_m.isca706,g_isca_m.isca708, 
+                      g_isca_m.isca805,g_isca_m.isca806,g_isca_m.isca807,g_isca_m.isca801,g_isca_m.isca803, 
+                      g_isca_m.isca802,g_isca_m.isca804) 
+                  
+                  #add-point:單頭新增中 name="input.head.m_insert"
+ 
+                  #end add-point
+                  
+                  #若寫入錯誤則提示錯誤訊息並返回輸入頁面
+                  IF SQLCA.SQLCODE THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "isca_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  
+                  
+                  #資料多語言用-增/改
+                  
+                  
+                  #add-point:單頭新增後 name="input.head.a_insert"
+                  
+                  #end add-point
+                  
+                  CALL s_transaction_end('Y','0')
+               ELSE
+                  CALL s_transaction_end('N','0')
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = g_isca_m.iscasite
+                  LET g_errparam.code   = "std-00006" 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+               END IF 
+            ELSE
+               #add-point:單頭修改前 name="input.head.b_update"
+ 
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL aist430_isca_t_mask_restore('restore_mask_o')
+               
+               UPDATE isca_t SET (iscasite,isca809,isca001,isca002,iscaownid,iscaowndp,iscacrtid,iscacrtdp, 
+                   iscacrtdt,iscamodid,iscamoddt,isca701,isca702,isca703,isca704,isca705,isca707,isca706, 
+                   isca708,isca805,isca806,isca807,isca801,isca803,isca802,isca804) = (g_isca_m.iscasite, 
+                   g_isca_m.isca809,g_isca_m.isca001,g_isca_m.isca002,g_isca_m.iscaownid,g_isca_m.iscaowndp, 
+                   g_isca_m.iscacrtid,g_isca_m.iscacrtdp,g_isca_m.iscacrtdt,g_isca_m.iscamodid,g_isca_m.iscamoddt, 
+                   g_isca_m.isca701,g_isca_m.isca702,g_isca_m.isca703,g_isca_m.isca704,g_isca_m.isca705, 
+                   g_isca_m.isca707,g_isca_m.isca706,g_isca_m.isca708,g_isca_m.isca805,g_isca_m.isca806, 
+                   g_isca_m.isca807,g_isca_m.isca801,g_isca_m.isca803,g_isca_m.isca802,g_isca_m.isca804) 
+ 
+                WHERE iscaent = g_enterprise AND iscasite = g_iscasite_t #
+                  AND isca001 = g_isca001_t
+                  AND isca002 = g_isca002_t
+ 
+               #add-point:單頭修改中 name="input.head.m_update"
+               
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL s_transaction_end('N','0')
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "isca_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  WHEN SQLCA.SQLCODE #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "isca_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  OTHERWISE
+                     
+                     #資料多語言用-增/改
+                     
+                     
+                     #將遮罩欄位進行遮蔽
+                     CALL aist430_isca_t_mask_restore('restore_mask_n')
+                     
+                     #add-point:單頭修改後 name="input.head.a_update"
+                     
+                     #end add-point
+                     #修改歷程記錄(單頭修改)
+                     LET g_log1 = util.JSON.stringify(g_isca_m_t)
+                     LET g_log2 = util.JSON.stringify(g_isca_m)
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                        CALL s_transaction_end('N','0')
+                     ELSE
+                        CALL s_transaction_end('Y','0')
+                     END IF
+               END CASE
+               
+            END IF
+           #controlp
+      END INPUT
+      
+      #add-point:input段more input  name="input.more_input"
+      
+      #end add-point
+    
+      BEFORE DIALOG
+         #CALL cl_err_collect_init()
+         #add-point:input段before_dialog  name="input.before_dialog"
+         
+         #end add-point
+          
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      #放棄輸入
+      ON ACTION cancel
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      #在dialog 右上角 (X)
+      ON ACTION close 
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+    
+      #toolbar 離開
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input  name="input.after_input"
+   
+   #end add-point    
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist430.reproduce" >}
+#+ 資料複製
+PRIVATE FUNCTION aist430_reproduce()
+   #add-point:reproduce段define(客製用) name="reproduce.define_customerization"
+   
+   #end add-point
+   DEFINE l_newno     LIKE isca_t.iscasite 
+   DEFINE l_oldno     LIKE isca_t.iscasite 
+   DEFINE l_newno02     LIKE isca_t.isca001 
+   DEFINE l_oldno02     LIKE isca_t.isca001 
+   DEFINE l_newno03     LIKE isca_t.isca002 
+   DEFINE l_oldno03     LIKE isca_t.isca002 
+ 
+   DEFINE l_master    RECORD LIKE isca_t.* #此變數樣板目前無使用
+   DEFINE l_cnt       LIKE type_t.num10
+   #add-point:reproduce段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="reproduce.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="reproduce.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+   
+   #先確定key值無遺漏
+   IF g_isca_m.iscasite IS NULL
+      OR g_isca_m.isca001 IS NULL
+      OR g_isca_m.isca002 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #備份key值
+   LET g_iscasite_t = g_isca_m.iscasite
+   LET g_isca001_t = g_isca_m.isca001
+   LET g_isca002_t = g_isca_m.isca002
+ 
+   
+   #清空key值
+   LET g_isca_m.iscasite = ""
+   LET g_isca_m.isca001 = ""
+   LET g_isca_m.isca002 = ""
+ 
+    
+   CALL aist430_set_entry("a")
+   CALL aist430_set_no_entry("a")
+   
+   #公用欄位給予預設值
+   #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_isca_m.iscaownid = g_user
+      LET g_isca_m.iscaowndp = g_dept
+      LET g_isca_m.iscacrtid = g_user
+      LET g_isca_m.iscacrtdp = g_dept 
+      LET g_isca_m.iscacrtdt = cl_get_current()
+      LET g_isca_m.iscamodid = g_user
+      LET g_isca_m.iscamoddt = cl_get_current()
+ 
+ 
+ 
+   
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前 name="reproduce.head.b_input"
+   
+   #end add-point
+   
+   #顯示狀態(stus)圖片
+   
+   
+   #清空key欄位的desc
+   
+   
+   #資料輸入
+   CALL aist430_input("r")
+   
+   IF INT_FLAG THEN
+      #取消
+      INITIALIZE g_isca_m.* TO NULL
+      CALL aist430_show()
+      CALL s_transaction_end('N','0')
+      LET INT_FLAG = 0
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = 9001 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   CALL s_transaction_begin()
+   
+   #add-point:單頭複製前 name="reproduce.head.b_insert"
+   
+   #end add-point
+   
+   #add-point:單頭複製中 name="reproduce.head.m_insert"
+   
+   #end add-point
+   
+   IF SQLCA.SQLCODE THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "isca_t:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.popup = TRUE 
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #add-point:單頭複製後 name="reproduce.head.a_insert"
+   
+   #end add-point
+   
+   CALL s_transaction_end('Y','0')
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL aist430_set_act_visible()
+   CALL aist430_set_act_no_visible()
+ 
+   #將新增的資料併入搜尋條件中
+   LET g_state = "insert"
+   
+   LET g_iscasite_t = g_isca_m.iscasite
+   LET g_isca001_t = g_isca_m.isca001
+   LET g_isca002_t = g_isca_m.isca002
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " iscaent = " ||g_enterprise|| " AND",
+                      " iscasite = '", g_isca_m.iscasite, "' "
+                      ," AND isca001 = '", g_isca_m.isca001, "' "
+                      ," AND isca002 = '", g_isca_m.isca002, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL aist430_browser_fill("","")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   #add-point:完成複製段落後 name="reproduce.after_reproduce"
+   
+   #end add-point
+              
+   LET g_data_owner = g_isca_m.iscaownid      
+   LET g_data_dept  = g_isca_m.iscaowndp
+              
+   #功能已完成,通報訊息中心
+   CALL aist430_msgcentre_notify('reproduce')
+                 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist430.show" >}
+#+ 資料顯示 
+PRIVATE FUNCTION aist430_show()
+   #add-point:show段define(客製用) name="show.define_customerization"
+   
+   #end add-point
+   #add-point:show段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show.define"
+   
+   #end add-point  
+   
+   #add-point:show段Function前置處理  name="show.before"
+   
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值
+   #應用 a12 樣板自動產生(Version:4)
+ 
+ 
+ 
+    
+   #顯示followup圖示
+   #應用 a48 樣板自動產生(Version:3)
+   CALL aist430_set_pk_array()
+   #add-point:ON ACTION agendum name="show.follow_pic"
+   
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+ 
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference name="show.head.reference"
+   CALL s_desc_get_department_desc(g_isca_m.iscasite) RETURNING g_isca_m.l_iscasite_desc
+   #end add-point
+ 
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_isca_m.iscasite,g_isca_m.l_iscasite_desc,g_isca_m.isca809,g_isca_m.isca001,g_isca_m.isca002, 
+       g_isca_m.iscaownid,g_isca_m.iscaownid_desc,g_isca_m.iscaowndp,g_isca_m.iscaowndp_desc,g_isca_m.iscacrtid, 
+       g_isca_m.iscacrtid_desc,g_isca_m.iscacrtdp,g_isca_m.iscacrtdp_desc,g_isca_m.iscacrtdt,g_isca_m.iscamodid, 
+       g_isca_m.iscamodid_desc,g_isca_m.iscamoddt,g_isca_m.isca701,g_isca_m.isca702,g_isca_m.isca703, 
+       g_isca_m.isca704,g_isca_m.isca705,g_isca_m.isca707,g_isca_m.isca706,g_isca_m.isca708,g_isca_m.isca805, 
+       g_isca_m.isca806,g_isca_m.isca807,g_isca_m.isca801,g_isca_m.isca803,g_isca_m.isca802,g_isca_m.isca804 
+ 
+   
+   #儲存PK
+   LET l_ac = g_current_idx
+   CALL aist430_set_pk_array()
+   
+   #顯示狀態(stus)圖片
+   
+ 
+   #顯示有特殊格式設定的欄位或說明
+   CALL cl_show_fld_cont()
+ 
+   #add-point:show段之後 name="show.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist430.delete" >}
+#+ 資料刪除 
+PRIVATE FUNCTION aist430_delete()
+   #add-point:delete段define(客製用) name="delete.define_customerization"
+   
+   #end add-point
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="delete.pre_function"
+   
+   #end add-point
+   
+   #先確定key值無遺漏
+   IF g_isca_m.iscasite IS NULL
+   OR g_isca_m.isca001 IS NULL
+   OR g_isca_m.isca002 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   CALL s_transaction_begin()
+    
+   LET g_iscasite_t = g_isca_m.iscasite
+   LET g_isca001_t = g_isca_m.isca001
+   LET g_isca002_t = g_isca_m.isca002
+ 
+   
+   
+ 
+   OPEN aist430_cl USING g_enterprise,g_isca_m.iscasite,g_isca_m.isca001,g_isca_m.isca002
+   IF SQLCA.SQLCODE THEN    #(ver:49)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN aist430_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.popup = TRUE 
+      CLOSE aist430_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE aist430_master_referesh USING g_isca_m.iscasite,g_isca_m.isca001,g_isca_m.isca002 INTO g_isca_m.iscasite, 
+       g_isca_m.isca809,g_isca_m.isca001,g_isca_m.isca002,g_isca_m.iscaownid,g_isca_m.iscaowndp,g_isca_m.iscacrtid, 
+       g_isca_m.iscacrtdp,g_isca_m.iscacrtdt,g_isca_m.iscamodid,g_isca_m.iscamoddt,g_isca_m.isca701, 
+       g_isca_m.isca702,g_isca_m.isca703,g_isca_m.isca704,g_isca_m.isca705,g_isca_m.isca707,g_isca_m.isca706, 
+       g_isca_m.isca708,g_isca_m.isca805,g_isca_m.isca806,g_isca_m.isca807,g_isca_m.isca801,g_isca_m.isca803, 
+       g_isca_m.isca802,g_isca_m.isca804,g_isca_m.iscaownid_desc,g_isca_m.iscaowndp_desc,g_isca_m.iscacrtid_desc, 
+       g_isca_m.iscacrtdp_desc,g_isca_m.iscamodid_desc
+   
+   
+   #檢查是否允許此動作
+   IF NOT aist430_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_isca_m_mask_o.* =  g_isca_m.*
+   CALL aist430_isca_t_mask()
+   LET g_isca_m_mask_n.* =  g_isca_m.*
+   
+   #將最新資料顯示到畫面上
+   CALL aist430_show()
+   
+   IF cl_ask_delete() THEN
+ 
+      #add-point:單頭刪除前 name="delete.head.b_delete"
+      
+      #end add-point
+ 
+      #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL aist430_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove"
+      
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+ 
+ 
+      DELETE FROM isca_t 
+       WHERE iscaent = g_enterprise AND iscasite = g_isca_m.iscasite 
+         AND isca001 = g_isca_m.isca001 
+         AND isca002 = g_isca_m.isca002 
+ 
+ 
+      #add-point:單頭刪除中 name="delete.head.m_delete"
+      
+      #end add-point
+         
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "isca_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+      END IF
+  
+      
+      
+      #add-point:單頭刪除後 name="delete.head.a_delete"
+      
+      #end add-point
+      
+       
+ 
+      #修改歷程記錄(刪除)
+      LET g_log1 = util.JSON.stringify(g_isca_m)   #(ver:49)
+      IF NOT cl_log_modified_record(g_log1,'') THEN    #(ver:49)
+         CLOSE aist430_cl
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      
+      CLEAR FORM
+      CALL aist430_ui_browser_refresh()
+      
+      #確保畫面上保有資料
+      IF g_browser_cnt > 0 THEN
+         #CALL aist430_browser_fill(g_wc,"")
+         CALL aist430_fetch("P")
+      ELSE
+         CLEAR FORM
+      END IF
+      CALL s_transaction_end('Y','0')
+   ELSE    
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE aist430_cl
+ 
+   #功能已完成,通報訊息中心
+   CALL aist430_msgcentre_notify('delete')
+ 
+   #add-point:單頭刪除完成後 name="delete.a_delete"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist430.ui_browser_refresh" >}
+#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION aist430_ui_browser_refresh()
+   #add-point:ui_browser_refresh段define(客製用) name="ui_browser_refresh.define_customerization"
+   
+   #end add-point
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_browser_refresh.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="ui_browser_refresh.pre_function"
+   
+   #end add-point
+   
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_header_cnt  = g_browser.getLength()
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_iscasite = g_isca_m.iscasite
+         AND g_browser[l_i].b_isca001 = g_isca_m.isca001
+         AND g_browser[l_i].b_isca002 = g_isca_m.isca002
+ 
+         THEN
+         CALL g_browser.deleteElement(l_i)
+       END IF
+   END FOR
+   LET g_browser_cnt = g_browser_cnt - 1
+   LET g_header_cnt = g_header_cnt - 1
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count     #page count
+   DISPLAY g_header_cnt  TO FORMONLY.h_count     #page count
+  
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+      CLEAR FORM
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist430.set_entry" >}
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION aist430_set_entry(p_cmd)
+   #add-point:set_entry段define(客製用) name="set_entry.define_customerization" 
+   
+   #end add-point
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_entry段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry.define"
+   
+   #end add-point     
+    
+   #add-point:Function前置處理 name="set_entry.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("iscasite,isca001,isca002",TRUE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry段欄位控制 name="set_entry.field_control"
+      
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry段欄位控制後 name="set_entry.after_control"
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist430.set_no_entry" >}
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION aist430_set_no_entry(p_cmd)
+   #add-point:set_no_entry段define(客製用) name="set_no_entry.define_customerization"
+   
+   #end add-point
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_no_entry段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_no_entry.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("iscasite,isca001,isca002",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry段欄位控制 name="set_no_entry.field_control"
+      
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry段欄位控制後 name="set_no_entry.after_control"
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist430.set_act_visible" >}
+#+ 單頭權限開啟
+PRIVATE FUNCTION aist430_set_act_visible()
+   #add-point:set_act_visible段define(客製用) name="set_act_visible.define_customerization" 
+   
+   #end add-point  
+   #add-point:set_act_visible段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible.define"
+   
+   #end add-point
+   #add-point:set_act_visible段 name="set_act_visible.set_act_visible"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist430.set_act_no_visible" >}
+#+ 單頭權限關閉
+PRIVATE FUNCTION aist430_set_act_no_visible()
+   #add-point:set_act_no_visible段define(客製用) name="set_act_no_visible.define_customerization"
+   
+   #end add-point
+   #add-point:set_act_no_visible段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible.define"
+   
+   #end add-point
+   #add-point:set_act_no_visible段 name="set_act_no_visible.set_act_no_visible"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist430.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION aist430_default_search()
+   #add-point:default_search段define(客製用) name="default_search.define_customerization" 
+   
+   #end add-point
+   DEFINE li_idx  LIKE type_t.num10
+   DEFINE li_cnt  LIKE type_t.num10
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="default_search.pre_function"
+   
+   #end add-point
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   #add-point:default_search段開始前 name="default_search.before"
+   
+   #end add-point  
+   
+   #根據外部參數(g_argv)組合wc
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " iscasite = '", g_argv[01], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " isca001 = '", g_argv[02], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[03]) THEN
+      LET ls_wc = ls_wc, " isca002 = '", g_argv[03], "' AND "
+   END IF
+ 
+   
+   #add-point:default_search段after sql name="default_search.after_sql"
+   
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      #若有外部參數則根據該參數組合
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      #若無外部參數則預設為1=2
+      LET g_default = FALSE
+      #預設查詢條件
+      LET g_wc = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=2"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前 name="default_search.after"
+   
+   #end add-point  
+ 
+   IF g_wc.getIndexOf(" 1=2", 1) THEN
+      LET g_default = TRUE
+   END IF
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist430.mask_functions" >}
+&include "erp/ais/aist430_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="aist430.state_change" >}
+   
+ 
+{</section>}
+ 
+{<section id="aist430.signature" >}
+   
+ 
+{</section>}
+ 
+{<section id="aist430.set_pk_array" >}
+   #應用 a51 樣板自動產生(Version:8)
+#+ 給予pk_array內容
+PRIVATE FUNCTION aist430_set_pk_array()
+   #add-point:set_pk_array段define name="set_pk_array.define_customerization"
+   
+   #end add-point
+   #add-point:set_pk_array段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_pk_array.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="set_pk_array.before"
+   
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_isca_m.iscasite
+   LET g_pk_array[1].column = 'iscasite'
+   LET g_pk_array[2].values = g_isca_m.isca001
+   LET g_pk_array[2].column = 'isca001'
+   LET g_pk_array[3].values = g_isca_m.isca002
+   LET g_pk_array[3].column = 'isca002'
+   
+   #add-point:set_pk_array段之後 name="set_pk_array.after"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aist430.other_dialog" readonly="Y" >}
+ 
+ 
+{</section>}
+ 
+{<section id="aist430.msgcentre_notify" >}
+#應用 a66 樣板自動產生(Version:6)
+PRIVATE FUNCTION aist430_msgcentre_notify(lc_state)
+   #add-point:msgcentre_notify段define name="msgcentre_notify.define_customerization"
+   
+   #end add-point   
+   DEFINE lc_state LIKE type_t.chr80
+   #add-point:msgcentre_notify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="msgcentre_notify.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="msgcentre_notify.pre_function"
+   
+   #end add-point
+   
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = lc_state
+ 
+   #PK資料填寫
+   CALL aist430_set_pk_array()
+   #單頭資料填寫
+   LET g_msgparam.data[1] = util.JSON.stringify(g_isca_m)
+ 
+   #add-point:msgcentre其他通知 name="msgcentre_notify.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aist430.action_chk" >}
+#+ 修改/刪除前行為檢查(是否可允許此動作), 若有其他行為須管控也可透過此段落
+PRIVATE FUNCTION aist430_action_chk()
+   #add-point:action_chk段define(客製用) name="action_chk.define_customerization" 
+   
+   #end add-point
+   #add-point:action_chk段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="action_chk.define"
+   
+   #end add-point
+   
+   #add-point:action_chk段action_chk name="action_chk.action_chk"
+   
+   #end add-point
+   
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aist430.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 合計(1)=(2)+(3)+(4)
+# Memo...........:
+# Usage..........: CALL aist430_sum_isca701()
+# Date & Author..: 2015/03/11 By Reanna
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aist430_sum_isca701()
+DEFINE r_isca701     LIKE isca_t.isca701
+DEFINE r_amt         LIKE isca_t.isca801
+
+   LET r_isca701 = 0
+   LET r_isca701 = g_isca_m.isca702 + g_isca_m.isca703 + g_isca_m.isca704 +
+                   g_isca_m.isca705 + g_isca_m.isca707 +
+                   g_isca_m.isca706 + g_isca_m.isca708
+   #重新計算應納營業稅稅額
+   CALL aist430_recount() RETURNING r_amt
+
+   RETURN r_isca701,r_amt
+END FUNCTION
+
+################################################################################
+# Descriptions...: 合計(5)=(6)+(7)
+# Memo...........:
+# Usage..........: CALL aist430_sum_isca805()
+# Date & Author..: 2015/03/11 By Reanna
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aist430_sum_isca805()
+DEFINE r_isca805     LIKE isca_t.isca805
+
+   LET r_isca805 = 0
+   LET r_isca805 = g_isca_m.isca806 + g_isca_m.isca807 +
+                   g_isca_m.isca801 + g_isca_m.isca803 +
+                   g_isca_m.isca802 + g_isca_m.isca804
+
+   RETURN r_isca805
+END FUNCTION
+
+################################################################################
+# Descriptions...: 重新計算應納營業稅稅額
+# Memo...........:
+# Usage..........: CALL aist430_recount()
+# Date & Author..: 2015/03/11 By Reanna
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aist430_recount()
+DEFINE r_amt         LIKE isca_t.isca801
+   
+   LET r_amt = 0
+   
+   #g(1%)
+   IF INFIELD (isca702) THEN
+      LET r_amt = g_isca_m.isca702 * 0.01
+   END IF
+   #h(2%)
+   IF INFIELD (isca705) THEN
+      LET r_amt = g_isca_m.isca705 * 0.02
+   END IF
+   #i(5%)
+   IF INFIELD (isca706) THEN
+      LET r_amt = g_isca_m.isca706 * 0.05
+   END IF
+   
+   #j(1%)
+   IF INFIELD (isca703) THEN
+      LET r_amt = g_isca_m.isca703 * g_isca_m.isca809 * 0.01 * 0.01
+   END IF
+   #k(2%)
+   IF INFIELD (isca707) THEN
+      LET r_amt = g_isca_m.isca707 * g_isca_m.isca809 * 0.01 * 0.02
+   END IF
+   #l(5%)
+   IF INFIELD (isca708) THEN
+      LET r_amt = g_isca_m.isca708 * g_isca_m.isca809 * 0.01 * 0.05
+   END IF
+
+   CALL s_num_round(3,r_amt,0) RETURNING r_amt
+   
+   RETURN r_amt
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 稅額檢查
+# Memo...........:
+# Usage..........: CALL aist430_chk_rate()
+# Date & Author..: 2015/03/11 By Reanna
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aist430_chk_rate()
+DEFINE r_success    LIKE type_t.num5
+DEFINE r_errno      LIKE gzze_t.gzze001
+DEFINE l_stand      LIKE isca_t.isca806
+DEFINE l_diff       LIKE isca_t.isca806
+   
+   LET r_success = TRUE
+   LET r_errno = ""
+
+   #稅額容差範圍為1
+   LET l_stand = 0
+   LET l_diff = 0
+   #g(1%)
+   IF INFIELD (isca806) THEN
+      LET l_stand = g_isca_m.isca702 * 0.01
+      CALL s_num_round(3,l_stand,0) RETURNING l_stand
+      LET l_diff = s_math_abs(g_isca_m.isca806 - l_stand)
+   END IF
+   #h(2%)
+   IF INFIELD (isca801) THEN
+      LET l_stand = g_isca_m.isca705 * 0.02
+      CALL s_num_round(3,l_stand,0) RETURNING l_stand
+      LET l_diff = s_math_abs(g_isca_m.isca801 - l_stand)
+   END IF
+   #i(5%)
+   IF INFIELD (isca802) THEN
+      LET l_stand = g_isca_m.isca706 * 0.05
+      CALL s_num_round(3,l_stand,0) RETURNING l_stand
+      LET l_diff = s_math_abs(g_isca_m.isca802 - l_stand)
+   END IF
+   
+   #j(1%)
+   IF INFIELD (isca807) THEN
+      LET l_stand = g_isca_m.isca703 * g_isca_m.isca809 * 0.01 * 0.01
+      CALL s_num_round(3,l_stand,0) RETURNING l_stand
+      LET l_diff = s_math_abs(g_isca_m.isca807 - l_stand)
+   END IF
+   #k(2%)
+   IF INFIELD (isca803) THEN
+      LET l_stand = g_isca_m.isca707 * g_isca_m.isca809 * 0.01 * 0.02
+      CALL s_num_round(3,l_stand,0) RETURNING l_stand
+      LET l_diff = s_math_abs(g_isca_m.isca803 - l_stand)
+   END IF
+   #l(5%)
+   IF INFIELD (isca804) THEN
+      LET l_stand = g_isca_m.isca708 * g_isca_m.isca809 * 0.01 * 0.05
+      CALL s_num_round(3,l_stand,0) RETURNING l_stand
+      LET l_diff = s_math_abs(g_isca_m.isca804 - l_stand)
+   END IF
+   
+   IF l_diff > 1 THEN
+      LET r_errno = "ais-00192"
+      LET r_success = FALSE
+   END IF
+   
+   RETURN r_success,r_errno
+END FUNCTION
+
+ 
+{</section>}
+ 

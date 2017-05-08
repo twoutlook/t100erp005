@@ -1,0 +1,68 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapt300_07" module="aap" jobmode="N" type="c01a" industry="std" fix_arg="0" crtid="01727" crtdt="2014-01-24 01:13:00" modid="01727" moddt="2014-01-27 10:51:27" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="多帳期條件變更設定">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="apcadocno,apcald,apca008,apca008_desc(chr80),apca009,apca010,apca054,apca054_desc(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="prog_apca054" prog="axri012" parameter="apca054"/>
+    </section>
+  </structure>
+  <form id="0" module="aap" filename="aapt300_07" method="dialog">
+    <section id="input">
+      <input id="head" field="apcadocno,apcald,apca008,apca009,apca010,apca054"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="apcadocno,apcald,apca008,apca009,apca010,apca054"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="apcald,apcadocno"/>
+      <set id="head" type="no_entry" field="apcald,apcadocno"/>
+    </init>
+    <init id="head">
+      <column id="apcadocno">
+        <controlp form="q_ooba002_3" state="i"/>
+        <controlp form="q_apcadocno" state="c"/>
+      </column>
+      <column id="apcald">
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="apca008">
+        <after>
+          <reference field="apca008_desc" ref_field="apca_t.apca008" map_field="apcaent,apca008" ref_sql="SELECT ooibl004 FROM ooibl_t WHERE ooiblent=$varg_enterprise$var AND ooibl002=? AND ooibl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooib001_2" state="i"/>
+        <controlp form="q_ooib001_2" state="c"/>
+      </column>
+      <column id="apca008_desc"/>
+      <column id="apca009"/>
+      <column id="apca010"/>
+      <column id="apca054">
+        <after>
+          <check chkid="v_oocq002_01" id="isExist"/>
+          <reference field="apca054_desc" ref_field="apca054" map_field="apca054" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;3114&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="apca054_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="apca_t" pk="apcald,apcadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT apcadocno,apcald,apca008,&apos;&apos;,apca009,apca010,apca054,&apos;&apos; FROM apca_t WHERE apcaent= ? AND apcald=? AND apcadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="apcald,apcadocno"/>
+    </head>
+  </dataset>
+</assembly>
+

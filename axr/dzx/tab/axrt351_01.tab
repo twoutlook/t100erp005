@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrt351_01" module="axr" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02114" crtdt="2016-06-06 16:53:52" modid="02114" moddt="2016-06-07 09:41:27" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="產生日結帳務">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xrcasite,xrcasite_desc(chr80),xrcald,xrcald_desc(chr80),b_comb(chr500),xrcadocno,l_xrcadocno(chr500),debz002"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axrt351_01" method="dialog">
+    <section id="input">
+      <input id="head" field="xrcasite,xrcald,b_comb,xrcadocno,l_xrcadocno,debz002"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="xrcasite">
+        <after>
+          <reference field="xrcasite_desc" ref_field="xrca_t.xrcasite" map_field="xrcaent,xrcasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xrah002_1" state="i"/>
+        <controlp form="q_xrah002_1" state="c"/>
+      </column>
+      <column id="xrcasite_desc"/>
+      <column id="xrcald">
+        <after>
+          <reference field="xrcald_desc" ref_field="xrca_t.xrcald" map_field="xrcaent,xrcald" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xrcald_desc"/>
+      <column id="b_comb"/>
+      <column id="xrcadocno">
+        <controlp form="q_ooba002_3" state="i"/>
+        <controlp form="q_xrcadocno" state="c"/>
+      </column>
+      <column id="l_xrcadocno"/>
+      <column id="debz002"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xrca_t" pk="xrcald,xrcadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT xrcasite,&apos;&apos;,xrcald,&apos;&apos;,&apos;&apos;,xrcadocno,&apos;&apos;,&apos;&apos; FROM xrca_t WHERE xrcaent= ? AND xrcald=? AND xrcadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="xrcald,xrcadocno"/>
+    </head>
+  </dataset>
+</assembly>
+

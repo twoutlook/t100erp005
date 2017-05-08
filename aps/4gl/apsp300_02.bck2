@@ -1,0 +1,519 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="apsp300_02.description" >}
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000006
+#+ 
+#+ Filename...: apsp300_02
+#+ Description: ...
+#+ Creator....: 00378(2014/07/08)
+#+ Modifier...: 00378(2014/07/08)
+#+ Buildtype..: 應用 c01b 樣板自動產生
+#+ 以上段落由子樣板a00產生
+ 
+{</section>}
+ 
+{<section id="apsp300_02.global" >}
+
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+GLOBALS "../../aps/4gl/apsp300.inc"
+#end add-point
+ 
+#單頭 type 宣告
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apsp300_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION apsp300_02(--)
+)
+
+ 
+ 
+ 
+ 
+ 
+
+ 
+
+ 
+ 
+ 
+
+ 
+
+ 
+
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsp300_02.other_dialog" readonly="Y" >}
+
+DIALOG apsp300_02_input()
+   DEFINE l_success       LIKE type_t.num5   
+   DEFINE l_ooef004       LIKE ooef_t.ooef004
+   
+   INPUT BY NAME g_setting.*  ATTRIBUTE(WITHOUT DEFAULTS)
+   
+      BEFORE INPUT
+         CALL apsp300_02_get_settings()
+         CALL apsp300_02_set_entry_b()  
+         CALL apsp300_02_set_no_entry_b() 
+         
+      ON ACTION save_settings
+         CALL apsp300_02_save_settings()
+              RETURNING l_success
+         IF NOT l_success THEN
+            CONTINUE DIALOG
+         END IF
+      
+      BEFORE FIELD choice1
+         #160214-00005#5-add----(S)
+         CALL apsp300_02_set_entry_b()
+         CALL apsp300_02_set_no_entry_b()
+         #160214-00005#5-add----(E)
+      
+      #160214-00005#5-add----(S)      
+      ON CHANGE choice1
+         CALL apsp300_02_set_entry_b()
+         CALL apsp300_02_set_no_entry_b()      
+         IF g_setting.choice1 = '1' THEN
+            LET g_setting.choice2 = 'N'
+            LET g_setting.choice3 = 'N'
+            LET g_setting.choice4 = 'N'
+         END IF
+      #160214-00005#5-add----(E)   
+         
+      AFTER FIELD choice1 
+         CALL apsp300_02_set_entry_b()
+         CALL apsp300_02_set_no_entry_b()      
+      
+      #160214-00005#5-add----(S)
+      ON CHANGE choice5
+         CALL apsp300_02_set_entry_b()
+         CALL apsp300_02_set_no_entry_b()
+         IF g_setting.choice5 = 'Y' THEN
+            CALL cl_set_comp_required("choice6",TRUE)
+         ELSE
+            CALL cl_set_comp_required("choice6",FALSE)
+         END IF
+      #160214-00005#5-add----(E)
+      
+      AFTER FIELD choice5
+         CALL apsp300_02_set_entry_b()
+         CALL apsp300_02_set_no_entry_b()
+         IF g_setting.choice5 = 'Y' THEN
+            NEXT FIELD choice6
+         ELSE
+            LET g_setting.choice6 = ''
+            DISPLAY BY NAME g_setting.choice6
+         END IF
+         
+      AFTER FIELD choice6
+         IF NOT cl_null(g_setting.choice6) THEN
+            #检查单别
+            CALL s_aooi200_chk_slip(g_site,'',g_setting.choice6,'asft303')
+                 RETURNING l_success
+            IF NOT l_success THEN
+               NEXT FIELD CURRENT
+            END IF
+         END IF
+ 
+      ON ACTION controlp INFIELD choice6
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'i'
+         LET g_qryparam.reqry = FALSE
+         LET g_qryparam.default1 = g_setting.choice6
+
+         #單別參照表號 
+         SELECT ooef004 INTO l_ooef004
+           FROM ooef_t
+          WHERE ooefent = g_enterprise
+            AND ooef001 = g_site
+
+         #給予arg 
+         LET g_qryparam.arg1 = l_ooef004
+         LET g_qryparam.arg2 = 'asft303'
+         CALL q_ooba002_1()
+         LET g_setting.choice6 = g_qryparam.return1
+         DISPLAY BY NAME g_setting.choice6
+         NEXT FIELD choice6
+ 
+      AFTER INPUT
+         IF g_setting.choice1 NOT MATCHES '[12]' THEN
+            NEXT FIELD choice1
+         END IF
+      
+         IF g_setting.choice2 NOT MATCHES '[YN]' THEN
+            NEXT FIELD choice2
+         END IF
+         
+         IF g_setting.choice3 NOT MATCHES '[YN]' THEN
+            NEXT FIELD choice3
+         END IF
+
+         IF g_setting.choice4 NOT MATCHES '[YN]' THEN
+            NEXT FIELD choice4
+         END IF
+
+         IF g_setting.choice5 NOT MATCHES '[YN]' THEN
+            NEXT FIELD choice5
+         END IF
+
+         IF g_setting.choice7 NOT MATCHES '[YN]' THEN
+            NEXT FIELD choice7
+         END IF
+         
+         #160512-00016#1 20160524 add by ming -----(S) 
+         IF g_setting.choice8 NOT MATCHES '[YN]' THEN 
+            NEXT FIELD choice8 
+         END IF 
+         #160512-00016#1 20160524 add by ming -----(E) 
+         
+         
+         IF NOT cl_null(g_setting.choice6) THEN
+            #检查单别
+            CALL s_aooi200_chk_slip(g_site,'',g_setting.choice6,'asft303')
+                 RETURNING l_success
+            IF NOT l_success THEN
+               NEXT FIELD choice6
+            END IF
+         END IF
+
+         IF g_setting.choice5 = 'Y' AND cl_null(g_setting.choice6) THEN
+            #勾选"转入PBI"的选项时,PBI单别一定要录入!
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'asf-00469'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            NEXT FIELD choice6
+         END IF
+   END INPUT
+
+END DIALOG
+
+ 
+{</section>}
+ 
+{<section id="apsp300_02.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 取储存的条件设定
+# Memo...........:
+# Usage..........: CALL apsp300_02_get_settings()
+#                       RETURNING NULL
+# Input parameter: NULL
+# Return code....: NULL
+# Date & Author..: 2014-07-08 By Carrier
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apsp300_02_get_settings()
+   DEFINE l_sql         STRING
+   
+   LET l_sql = "SELECT gzxn007 FROM gzxm_t,gzxn_t",
+               " WHERE gzxment  = gzxnent AND gzxment = ",g_enterprise,
+               "   AND gzxm001  = gzxn001 AND gzxm001 = 1 ",
+               "   AND gzxm002  = gzxn002 AND gzxm002 = 'apsp300_02'",
+               "   AND gzxm003  = gzxn003 AND gzxm003 = '",g_user,"'",
+               "   AND gzxmstus = 'Y'",
+               "   AND gzxn005  = ? "
+   PREPARE apsp300_02_get_settings_p1 FROM l_sql
+   
+   #拼单选择
+   EXECUTE apsp300_02_get_settings_p1 USING 'choice1' INTO g_setting.choice1
+   IF cl_null(g_setting.choice1) THEN LET g_setting.choice1 = '1' END IF
+
+   #拼單方式-需求日期  
+   EXECUTE apsp300_02_get_settings_p1 USING 'choice2' INTO g_setting.choice2
+   IF cl_null(g_setting.choice2) THEN LET g_setting.choice2 = 'N' END IF
+
+   #拼單方式-產品特徵  
+   EXECUTE apsp300_02_get_settings_p1 USING 'choice3' INTO g_setting.choice3
+   IF cl_null(g_setting.choice3) THEN LET g_setting.choice3 = 'N' END IF
+   
+   #拼單方式-需求單號  
+   EXECUTE apsp300_02_get_settings_p1 USING 'choice4' INTO g_setting.choice4
+   IF cl_null(g_setting.choice4) THEN LET g_setting.choice4 = 'N' END IF
+
+   #轉入PBI  
+   EXECUTE apsp300_02_get_settings_p1 USING 'choice5' INTO g_setting.choice5
+   IF cl_null(g_setting.choice5) THEN LET g_setting.choice5 = 'N' END IF
+
+   #PBI單別  
+   EXECUTE apsp300_02_get_settings_p1 USING 'choice6' INTO g_setting.choice6
+
+   #下次不再進此畫面  
+   EXECUTE apsp300_02_get_settings_p1 USING 'choice7' INTO g_setting.choice7
+   IF cl_null(g_setting.choice7) THEN LET g_setting.choice7 = 'N' END IF
+   
+   #160512-00016#1 20160524 add by ming -----(S) 
+   #保稅否  
+   EXECUTE apsp300_02_get_settings_p1 USING 'choice8' INTO g_setting.choice8 
+   IF cl_null(g_setting.choice8) THEN LET g_setting.choice8 = 'N' END IF 
+   #160512-00016#1 20160524 add by ming -----(E) 
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取储存的条件设定
+# Memo...........:
+# Usage..........: CALL apsp300_02_save_settings()
+#                       RETURNING r_success
+# Input parameter: NULL
+# Return code....: r_success     成功否标识符
+# Date & Author..: 2014-07-08 By Carrier
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apsp300_02_save_settings()
+   DEFINE r_success     LIKE type_t.num5
+   DEFINE l_gzxm_t      RECORD LIKE gzxm_t.*
+   DEFINE l_gzxn_t      RECORD LIKE gzxn_t.*
+   
+   LET r_success = FALSE
+   
+   DELETE FROM gzxm_t
+    WHERE gzxment = g_enterprise
+      AND gzxm001 = 1
+      AND gzxm002 = 'apsp300_02'
+      AND gzxm003 = g_user
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'delete gzxm_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN r_success
+   END IF
+   
+   DELETE FROM gzxn_t
+    WHERE gzxnent = g_enterprise
+      AND gzxn001 = 1
+      AND gzxn002 = 'apsp300_02'
+      AND gzxn003 = g_user
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'delete gzxn_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN r_success
+   END IF   
+   
+   INITIALIZE l_gzxm_t.* TO NULL
+   LET l_gzxm_t.gzxmstus  = 'Y'                   #狀態碼    
+   LET l_gzxm_t.gzxment = g_enterprise            #企業編號  
+   LET l_gzxm_t.gzxm001 = 1                       #QBE編號   
+   LET l_gzxm_t.gzxm002 = 'apsp300_02'            #作業編號  
+   LET l_gzxm_t.gzxm003 = g_user                  #員工編號  
+   LET l_gzxm_t.gzxm004 = 'Y'                     #是否為預設
+   LET l_gzxm_t.gzxm005 = 'N'                     #首頁使用  
+   LET l_gzxm_t.gzxm006 = NULL                    #查詢方案來源序號  
+   LET l_gzxm_t.gzxm007 = NULL                    #自設WHERE條件     
+   LET l_gzxm_t.gzxm008 = NULL                    #分群編號    
+   LET l_gzxm_t.gzxmownid = g_user                #資料所有者  
+   LET l_gzxm_t.gzxmowndp = g_dept                #資料所屬部門
+   LET l_gzxm_t.gzxmcrtid = g_user                #資料建立者  
+   LET l_gzxm_t.gzxmcrtdp = g_dept                #資料建立部門
+   LET l_gzxm_t.gzxmcrtdt = cl_get_current()      #資料創建日  
+   LET l_gzxm_t.gzxmmodid = NULL                  #資料修改者  
+   LET l_gzxm_t.gzxmmoddt = NULL                  #最近修改日  
+   LET l_gzxm_t.gzxm009 = 1                       #順序       
+   
+   INSERT INTO gzxm_t VALUES(l_gzxm_t.*)
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'insert gzxm_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN r_success
+   END IF
+   
+   INITIALIZE l_gzxn_t.* TO NULL
+   LET l_gzxn_t.gzxnent = g_enterprise            #企業編號
+   LET l_gzxn_t.gzxn001 = 1                       #QBE編號 
+   LET l_gzxn_t.gzxn002 = 'apsp300_02'            #作業編號
+   LET l_gzxn_t.gzxn003 = g_user                  #員工編號
+   LET l_gzxn_t.gzxn004 = 1                       #條件序號
+   LET l_gzxn_t.gzxn005 = 'choice1'               #欄位編號
+   LET l_gzxn_t.gzxn006 = NULL                    #運算子  
+   LET l_gzxn_t.gzxn007 = g_setting.choice1       #條件值1 
+   LET l_gzxn_t.gzxn008 = NULL                    #條件值2 
+
+   INSERT INTO gzxn_t VALUES(l_gzxn_t.*)
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'insert gzxn_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN r_success
+   END IF
+   
+   LET l_gzxn_t.gzxn004 = 2                       #條件序號
+   LET l_gzxn_t.gzxn005 = 'choice2'               #欄位編號
+   LET l_gzxn_t.gzxn007 = g_setting.choice2       #條件值1 
+
+   INSERT INTO gzxn_t VALUES(l_gzxn_t.*)
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'insert gzxn_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN r_success
+   END IF
+
+   LET l_gzxn_t.gzxn004 = 3                       #條件序號
+   LET l_gzxn_t.gzxn005 = 'choice3'               #欄位編號
+   LET l_gzxn_t.gzxn007 = g_setting.choice3       #條件值1 
+
+   INSERT INTO gzxn_t VALUES(l_gzxn_t.*)
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'insert gzxn_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN r_success
+   END IF
+   
+   LET l_gzxn_t.gzxn004 = 4                       #條件序號
+   LET l_gzxn_t.gzxn005 = 'choice4'               #欄位編號
+   LET l_gzxn_t.gzxn007 = g_setting.choice4       #條件值1 
+
+   INSERT INTO gzxn_t VALUES(l_gzxn_t.*)
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'insert gzxn_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN r_success
+   END IF
+
+   LET l_gzxn_t.gzxn004 = 5                       #條件序號
+   LET l_gzxn_t.gzxn005 = 'choice5'               #欄位編號
+   LET l_gzxn_t.gzxn007 = g_setting.choice5       #條件值1 
+
+   INSERT INTO gzxn_t VALUES(l_gzxn_t.*)
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'insert gzxn_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN r_success
+   END IF
+   
+   LET l_gzxn_t.gzxn004 = 6                       #條件序號
+   LET l_gzxn_t.gzxn005 = 'choice6'               #欄位編號
+   LET l_gzxn_t.gzxn007 = g_setting.choice6       #條件值1 
+
+   INSERT INTO gzxn_t VALUES(l_gzxn_t.*)
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'insert gzxn_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN r_success
+   END IF
+
+   LET l_gzxn_t.gzxn004 = 7                       #條件序號
+   LET l_gzxn_t.gzxn005 = 'choice7'               #欄位編號
+   LET l_gzxn_t.gzxn007 = g_setting.choice7       #條件值1 
+
+   INSERT INTO gzxn_t VALUES(l_gzxn_t.*)
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'insert gzxn_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN r_success
+   END IF 
+   
+   #160512-00016#1 20160524 add by ming -----(S) 
+   LET l_gzxn_t.gzxn004 = 8                      #條件序號
+   LET l_gzxn_t.gzxn005 = 'choice8'              #欄位編號 
+   LET l_gzxn_t.gzxn007 = g_setting.choice8      #條件值1  
+   
+   INSERT INTO gzxn_t VALUES(l_gzxn_t.*) 
+   IF SQLCA.sqlcode THEN 
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = 'insert gzxn_t' 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err() 
+      RETURN r_success 
+   END IF 
+   #160512-00016#1 20160524 add by ming -----(E) 
+   
+   #保存数据完成
+   INITIALIZE g_errparam TO NULL
+   LET g_errparam.code = 'aps-00023'
+   LET g_errparam.popup = TRUE
+   CALL cl_err()
+   
+   LET r_success = TRUE
+   RETURN r_success
+   
+END FUNCTION
+
+PRIVATE FUNCTION apsp300_02_set_entry_b()
+   #160512-00016#1 20160524 modify by ming -----(S)
+   #CALL cl_set_comp_entry("choice2,choice3,choice4,choice6",TRUE) 
+   CALL cl_set_comp_entry("choice2,choice3,choice4,choice6,choice8",TRUE) 
+   #160512-00016#1 20160524 modify by ming -----(E)  
+END FUNCTION
+
+PRIVATE FUNCTION apsp300_02_set_no_entry_b()
+   IF g_setting.choice1 = '1' THEN 
+      #160512-00016#1 20160524 modify by ming -----(S) 
+      #CALL cl_set_comp_entry("choice2,choice3,choice4",FALSE)
+      CALL cl_set_comp_entry("choice2,choice3,choice4,choice8",FALSE)
+      #160512-00016#1 20160524 modify by ming -----(E) 
+   END IF
+
+   IF g_setting.choice5 = 'N' THEN
+      CALL cl_set_comp_entry("choice6",FALSE)
+   END IF
+END FUNCTION
+
+ 
+{</section>}
+ 

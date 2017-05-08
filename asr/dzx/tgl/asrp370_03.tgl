@@ -1,0 +1,388 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="asrp370_03.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2014-11-24 14:38:30), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000065
+#+ Filename...: asrp370_03
+#+ Description: 重複性生產調撥產生作業——生成調撥單
+#+ Creator....: 00768(2014-11-11 17:01:59)
+#+ Modifier...: 00768 -SD/PR-
+
+{</section>}
+
+{<section id="asrp370_03.global" >}
+#應用 c03b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_indc_m        RECORD
+       indcdocno LIKE indc_t.indcdocno, 
+   indcdocno_desc LIKE type_t.chr80, 
+   indcdocdt LIKE indc_t.indcdocdt, 
+   post LIKE type_t.chr500, 
+   indcdocno_03 LIKE type_t.chr20, 
+   indcdocdt_03 LIKE type_t.dat
+       END RECORD
+DEFINE g_indc_m        type_g_indc_m
+ 
+   DEFINE g_indcdocno_t LIKE indc_t.indcdocno
+ 
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_indd_d        RECORD
+       inddseq LIKE indd_t.inddseq, 
+   indd002 LIKE indd_t.indd002, 
+   indd002_desc LIKE type_t.chr500, 
+   indd002_desc_desc LIKE type_t.chr500, 
+   indd004 LIKE indd_t.indd004, 
+   indd102 LIKE indd_t.indd102, 
+   indd022 LIKE indd_t.indd022, 
+   indd022_desc LIKE type_t.chr500, 
+   indd023 LIKE indd_t.indd023, 
+   indd023_desc LIKE type_t.chr500, 
+   indd024 LIKE indd_t.indd024, 
+   indd006 LIKE indd_t.indd006, 
+   indd006_desc LIKE type_t.chr500, 
+   indd103 LIKE indd_t.indd103, 
+   indd021 LIKE indd_t.indd021, 
+   indd104 LIKE indd_t.indd104, 
+   indd104_desc LIKE type_t.chr500, 
+   indd105 LIKE indd_t.indd105, 
+   indd106 LIKE indd_t.indd106, 
+   indd151 LIKE indd_t.indd151, 
+   indd151_desc LIKE type_t.chr500, 
+   indd032 LIKE indd_t.indd032, 
+   indd032_desc LIKE type_t.chr500, 
+   indd033 LIKE indd_t.indd033, 
+   indd033_desc LIKE type_t.chr500, 
+   indd031 LIKE indd_t.indd031, 
+   indd109 LIKE indd_t.indd109, 
+   indd040 LIKE indd_t.indd040, 
+   indd152 LIKE indd_t.indd152
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_indd_d          DYNAMIC ARRAY OF type_g_indd_d
+DEFINE g_indd_d_t        type_g_indd_d
+ 
+ 
+DEFINE g_inddseq_t   LIKE indd_t.inddseq    #Key值備份
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10
+DEFINE l_ac                  LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+     
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="asrp370_03.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION asrp370_03(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_asrp370_03 WITH FORM cl_ap_formpath("asr","asrp370_03")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      INPUT BY NAME g_indc_m.indcdocno,g_indc_m.indcdocdt,g_indc_m.post ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.head.action"
+         {<point name="input.head.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.head.before_input"
+            {<point name="input.head.before_input"/>}
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indcdocno
+            
+            #add-point:AFTER FIELD indcdocno name="input.a.indcdocno"
+            {<point name="input.a.indcdocno" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indcdocno
+            #add-point:BEFORE FIELD indcdocno name="input.b.indcdocno"
+            {<point name="input.b.indcdocno" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE indcdocno
+            #add-point:ON CHANGE indcdocno name="input.g.indcdocno"
+            {<point name="input.g.indcdocno" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD indcdocdt
+            #add-point:BEFORE FIELD indcdocdt name="input.b.indcdocdt"
+            {<point name="input.b.indcdocdt" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD indcdocdt
+            
+            #add-point:AFTER FIELD indcdocdt name="input.a.indcdocdt"
+            {<point name="input.a.indcdocdt" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE indcdocdt
+            #add-point:ON CHANGE indcdocdt name="input.g.indcdocdt"
+            {<point name="input.g.indcdocdt" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD post
+            #add-point:BEFORE FIELD post name="input.b.post"
+            {<point name="input.b.post" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD post
+            
+            #add-point:AFTER FIELD post name="input.a.post"
+            {<point name="input.a.post" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE post
+            #add-point:ON CHANGE post name="input.g.post"
+            {<point name="input.g.post" />}
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.indcdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indcdocno
+            #add-point:ON ACTION controlp INFIELD indcdocno name="input.c.indcdocno"
+            {<point name="input.c.indcdocno" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.indcdocdt
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD indcdocdt
+            #add-point:ON ACTION controlp INFIELD indcdocdt name="input.c.indcdocdt"
+            {<point name="input.c.indcdocdt" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.post
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD post
+            #add-point:ON ACTION controlp INFIELD post name="input.c.post"
+            {<point name="input.c.post" />}
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.head.after_input"
+            {<point name="input.head.after_input"/>}
+            #end add-point
+            
+      END INPUT
+   
+      INPUT ARRAY g_indd_d FROM s_detail1_asrp370_03.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.body.action"
+         {<point name="input.body.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.body.before_input"
+            {<point name="input.body.before_input"/>}
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inddseq
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_indd_d[l_ac].inddseq,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD inddseq
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD inddseq name="input.a.page1_asrp370_03.inddseq"
+            {<point name="input.a.page1_asrp370_03.inddseq" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inddseq
+            #add-point:BEFORE FIELD inddseq name="input.b.page1_asrp370_03.inddseq"
+            {<point name="input.b.page1_asrp370_03.inddseq" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inddseq
+            #add-point:ON CHANGE inddseq name="input.g.page1_asrp370_03.inddseq"
+            {<point name="input.g.page1_asrp370_03.inddseq" />}
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1_asrp370_03.inddseq
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inddseq
+            #add-point:ON ACTION controlp INFIELD inddseq name="input.c.page1_asrp370_03.inddseq"
+            {<point name="input.c.page1_asrp370_03.inddseq" />}
+            #END add-point
+ 
+ 
+ 
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.body.after_input"
+            {<point name="input.body.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_asrp370_03 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="asrp370_03.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+
+{</section>}
+
+{<section id="asrp370_03.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

@@ -1,0 +1,155 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abmm208" module="abm" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="00768" crtdt="2014-10-11 16:05:41" modid="00768" moddt="2014-10-28 16:04:48" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="FAS組合設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bmla001,bmla001_desc(chr80),bmla001_desc_desc(chr80),bmla002,bmla003,bmla004,bmla005,bmlaownid,bmlaownid_desc(chr80),bmlaowndp,bmlaowndp_desc(chr80),bmlacrtid,bmlacrtid_desc(chr80),bmlacrtdp,bmlacrtdp_desc(chr80),bmlacrtdt,bmlamodid,bmlamodid_desc(chr80),bmlamoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bmlb004,bmlb003,bmlb003_desc(chr500),bmlb005,bmlb006,bmlb007,bmlb008,bmlb008_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="bmlc004(chr500),bmlc004_desc(chr500),bmlc004_desc_desc(chr500),bmlc005(chr500),bmlc006(chr500),bmlc007(chr500),bmlc008"/>
+      <var id="bs_field" value="bmla001,bmla001_desc(chr80),bmla001_desc_desc(chr80),bmla002" pk="bmla001,bmla002" order=""/>
+      <bs_reference field="bmla001_desc" ref_field="bmla001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+      <bs_reference field="bmla001_desc_desc" ref_field="bmla001" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="gen_b"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="gen_b"/>
+    </section>
+    <section id="master_input">
+      <action id="gen_b"/>
+    </section>
+  </structure>
+  <form id="0" module="abm" filename="abmm208" method="dialog">
+    <section id="input">
+      <input id="head" field="bmla001,bmla002,bmla003,bmla004,bmla005"/>
+      <input id="body" page="1" field="bmlb004,bmlb003,bmlb005,bmlb006,bmlb007,bmlb008" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="bmlc004,bmlc005,bmlc006,bmlc007,bmlc008" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bmla001,bmla002,bmla003,bmla004,bmla005,bmlaownid,bmlaowndp,bmlacrtid,bmlacrtdp,bmlacrtdt,bmlamodid,bmlamoddt"/>
+      <construct id="body" page="1" field="bmlb004,bmlb003,bmlb005,bmlb006,bmlb007,bmlb008"/>
+      <construct id="body" page="2" field="bmlc004,bmlc005,bmlc006,bmlc007,bmlc008"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bmla001,bmla002"/>
+      <set id="head" type="no_entry" field="bmla001,bmla002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bmla001">
+        <after>
+          <reference field="bmla001_desc" ref_field="bmla_t.bmla001" map_field="bmla001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="bmla001_desc">
+        <after>
+          <reference field="bmla001_desc_desc" ref_field="bmla001_desc" map_field="bmla001" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="bmla001_desc_desc"/>
+      <column id="bmla002"/>
+      <column id="bmla003"/>
+      <column id="bmla004"/>
+      <column id="bmla005"/>
+      <column id="bmlaownid">
+        <after>
+          <reference field="bmlaownid_desc" ref_field="bmla_t.bmlaownid" map_field="bmlaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bmlaownid_desc"/>
+      <column id="bmlaowndp">
+        <after>
+          <reference field="bmlaowndp_desc" ref_field="bmla_t.bmlaowndp" map_field="bmlaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooea001_1" state="c"/>
+      </column>
+      <column id="bmlaowndp_desc"/>
+      <column id="bmlacrtid">
+        <after>
+          <reference field="bmlacrtid_desc" ref_field="bmla_t.bmlacrtid" map_field="bmlacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bmlacrtid_desc"/>
+      <column id="bmlacrtdp">
+        <after>
+          <reference field="bmlacrtdp_desc" ref_field="bmla_t.bmlacrtdp" map_field="bmlacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooea001_1" state="c"/>
+      </column>
+      <column id="bmlacrtdp_desc"/>
+      <column id="bmlacrtdt"/>
+      <column id="bmlamodid">
+        <after>
+          <reference field="bmlamodid_desc" ref_field="bmla_t.bmlamodid" map_field="bmlamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bmlamodid_desc"/>
+      <column id="bmlamoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="bmlb004"/>
+      <column id="bmlb003">
+        <after>
+          <reference field="bmlb003_desc" ref_field="bmlb003" map_field="bmlb003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1112&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="bmlb003_desc"/>
+      <column id="bmlb005" type="S" default="N"/>
+      <column id="bmlb006" type="S" default="1"/>
+      <column id="bmlb007" type="S" default="1"/>
+      <column id="bmlb008">
+        <after>
+          <reference field="bmlb008_desc" ref_field="bmlb008" map_field="bmlb008" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;273&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="bmlb008_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="bmlc004">
+        <after>
+          <reference field="bmlc004_desc" ref_field="bmlc004" map_field="bmlc004" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="bmlc004_desc">
+        <after>
+          <reference field="bmlc004_desc_desc" ref_field="bmlc004_desc" map_field="bmlc004" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="bmlc004_desc_desc"/>
+      <column id="bmlc005"/>
+      <column id="bmlc006"/>
+      <column id="bmlc007"/>
+      <column id="bmlc008"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bmla_t" pk="bmla001,bmla002">
+      <sql id="forupd_sql" type="sql" query="SELECT bmla001,&apos;&apos;,&apos;&apos;,bmla002,bmla003,bmla004,bmla005,bmlaownid,&apos;&apos;,bmlaowndp,&apos;&apos;,bmlacrtid,&apos;&apos;,bmlacrtdp,&apos;&apos;,bmlacrtdt,bmlamodid,&apos;&apos;,bmlamoddt FROM bmla_t WHERE bmlaent= ? AND bmla001=? AND bmla002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bmla001,&apos;&apos;,&apos;&apos;,bmla002,bmla003,bmla004,bmla005,bmlaownid,&apos;&apos;,bmlaowndp,&apos;&apos;,bmlacrtid,&apos;&apos;,bmlacrtdp,&apos;&apos;,bmlacrtdt,bmlamodid,&apos;&apos;,bmlamoddt FROM bmla_t" order="bmla001,bmla002"/>
+    </head>
+    <body id="bmlb_t" page="1" linked="" pk="bmlb003" fk="bmlb001,bmlb002">
+      <sql id="forupd_sql_detail" query="SELECT bmlb004,bmlb003,&apos;&apos;,bmlb005,bmlb006,bmlb007,bmlb008,&apos;&apos; FROM bmlb_t WHERE bmlbent=? AND bmlb001=? AND bmlb002=? AND bmlb003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bmlb004,bmlb003,&apos;&apos;,bmlb005,bmlb006,bmlb007,bmlb008,&apos;&apos; FROM bmlb_t WHERE bmlbent=? AND bmlb001=? AND bmlb002=?"/>
+    </body>
+    <body id="bmlc_t" page="2" linked="" detail="Y" master="bmlb_t" default_site="N" pk="bmlc004" fk="bmlc001,bmlc002,bmlc003">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,bmlc008 FROM bmlc_t WHERE bmlcent=? AND bmlc001=? AND bmlc002=? AND bmlc003=? AND bmlc004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,bmlc008 FROM bmlc_t WHERE bmlcent=? AND bmlc001=? AND bmlc002=? AND bmlc003=?"/>
+    </body>
+  </dataset>
+</assembly>
+

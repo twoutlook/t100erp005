@@ -1,0 +1,265 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astt812" module="ast" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="06137" crtdt="2016-03-22 10:15:20" modid="08172" moddt="2016-09-14 17:24:47" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="預租協議維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="sticsite,sticsite_desc(chr80),sticdocdt,sticdocno,stic001,stic006,stic007,stic002,stic002_desc(chr80),stic003,stic015,stic015_desc(chr80),stic016,stic010,stic010_desc(chr80),stic011,stic012,stic012_desc(chr80),stic013,stic013_desc(chr80),stic014,stic014_desc(chr80),stic004,stic005,stic008,stic009,sticunit,stic018,stic018_desc(chr80),stic019,stic017,stic020,stic020_desc(chr80),stic021,stic021_desc(chr80),stic022,stic023,stic023_desc(chr80),stic024,stic024_desc(chr80),stic025,sticstus,sticownid,sticownid_desc(chr80),sticowndp,sticowndp_desc(chr80),sticcrtid,sticcrtid_desc(chr80),sticcrtdp,sticcrtdp_desc(chr80),sticcrtdt,sticmodid,sticmodid_desc(chr80),sticmoddt,sticcnfid,sticcnfid_desc(chr80),sticcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="stidseq,stid001,stid001_desc(chr500),stid002,l_mhad008(chr10),stid003,stid003_desc(chr500),stid004,stid004_desc(chr500),stid005,stid005_desc(chr500),stid006,stid007,stid008"/>
+      <var id="bs_field" value="sticsite,sticdocdt,sticdocno,stic001,stic002,stic002_desc(chr80),stic010,stic010_desc(chr80),stic004,stic005" pk="sticdocno" order=""/>
+      <bs_reference field="stic002_desc" ref_field="stic002" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+      <bs_reference field="stic010_desc" ref_field="stic010" ref_sql="SELECT mhbel003 FROM mhbel_t WHERE mhbelent=$varg_enterprise$var AND mhbel001=? AND mhbel002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="gen_expense"/>
+      <action id="prog_stic017" prog="astt810" parameter="stic017"/>
+      <action id="prog_stic020" lib="cl_user_contact" parameter="&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;,g_stic_m.stic020"/>
+      <action id="prog_stic023" lib="cl_user_contact" parameter="&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;,g_stic_m.stic023"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="astt812" method="dialog">
+    <section id="input">
+      <input id="head" field="sticsite,sticdocdt,sticdocno,stic001,stic006,stic002,stic003,stic015,stic016,stic010,stic004,stic005,stic018,stic019,stic020,stic021,stic025,sticstus"/>
+      <input id="body" page="1" field="stidseq" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="sticsite,sticdocdt,sticdocno,stic001,stic006,stic007,stic002,stic003,stic015,stic016,stic010,stic011,stic012,stic013,stic014,stic004,stic005,stic008,stic009,stic018,stic019,stic017,stic020,stic021,stic022,stic023,stic024,stic025,sticstus,sticownid,sticowndp,sticcrtid,sticcrtdp,sticcrtdt,sticmodid,sticmoddt,sticcnfid,sticcnfdt"/>
+      <construct id="body" page="1" field="stidseq,stid001,stid002,l_mhad008,stid003,stid004,stid005,stid006,stid007,stid008"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="sticdocno"/>
+      <set id="head" type="no_entry" field="sticdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="sticsite">
+        <after>
+          <reference field="sticsite_desc" ref_field="stic_t.sticsite" map_field="sticsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="sticsite_desc"/>
+      <column id="sticdocdt"/>
+      <column id="sticdocno">
+        <controlp form="q_ooba002_1" state="i"/>
+      </column>
+      <column id="stic001" type="S" default="1" def_scc="6918"/>
+      <column id="stic006"/>
+      <column id="stic007"/>
+      <column id="stic002">
+        <after>
+          <reference field="stic002_desc" ref_field="stic_t.stic002" map_field="stic002" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_1" state="i"/>
+        <controlp form="q_pmaa001_1" state="c"/>
+      </column>
+      <column id="stic002_desc"/>
+      <column id="stic003"/>
+      <column id="stic015">
+        <after>
+          <reference field="stic015_desc" ref_field="stic015" map_field="stic015" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2002&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002_2002" state="i"/>
+        <controlp form="q_oocq002_2002" state="c"/>
+      </column>
+      <column id="stic015_desc"/>
+      <column id="stic016" type="S" default="1" def_scc="6202"/>
+      <column id="stic010">
+        <after>
+          <reference field="stic010_desc" ref_field="stic_t.stic010" map_field="stic010" ref_sql="SELECT mhbel003 FROM mhbel_t WHERE mhbelent=$varg_enterprise$var AND mhbel001=? AND mhbel002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhbe001" state="i"/>
+        <controlp form="q_mhbc001_1" state="c"/>
+      </column>
+      <column id="stic010_desc"/>
+      <column id="stic011"/>
+      <column id="stic012">
+        <after>
+          <reference field="stic012_desc" ref_field="stic_t.stic012" map_field="stic012" ref_sql="SELECT mhaal003 FROM mhaal_t WHERE mhaalent=$varg_enterprise$var AND mhaal001=? AND mhaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhaa001" state="c"/>
+      </column>
+      <column id="stic012_desc"/>
+      <column id="stic013">
+        <after>
+          <reference field="stic013_desc" ref_field="stic012,stic013" map_field="stic012,stic013" ref_sql="SELECT mhabl004 FROM mhabl_t WHERE mhablent=$varg_enterprise$var AND mhabl001=? AND mhabl002=? AND mhabl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhab002" state="c"/>
+      </column>
+      <column id="stic013_desc"/>
+      <column id="stic014">
+        <after>
+          <reference field="stic014_desc" ref_field="stic_t.stic014" map_field="sticent,stic014" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="stic014_desc"/>
+      <column id="stic004"/>
+      <column id="stic005"/>
+      <column id="stic008"/>
+      <column id="stic009"/>
+      <column id="sticunit"/>
+      <column id="stic018">
+        <after>
+          <check chkid="v_stae001" id="isExist"/>
+          <reference field="stic018_desc" ref_field="stic_t.stic018" map_field="stic018" ref_sql="SELECT stael003 FROM stael_t WHERE staelent=$varg_enterprise$var AND stael001=? AND stael002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_stae001" state="i"/>
+        <controlp form="q_stae001" state="c"/>
+      </column>
+      <column id="stic018_desc"/>
+      <column id="stic019" type="S" default="0"/>
+      <column id="stic017"/>
+      <column id="stic020">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="stic020_desc" ref_field="stic_t.stic020" map_field="stic020" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stic020_desc"/>
+      <column id="stic021">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="stic021_desc" ref_field="stic_t.stic021" map_field="stic021" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="stic021_desc"/>
+      <column id="stic022"/>
+      <column id="stic023">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="stic023_desc" ref_field="stic_t.stic023" map_field="stic023" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stic023_desc"/>
+      <column id="stic024">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="stic024_desc" ref_field="stic_t.stic024" map_field="stic024" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="stic024_desc"/>
+      <column id="stic025"/>
+      <column id="sticstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+        <stus id="E" pic="ended"/>
+      </column>
+      <column id="sticownid">
+        <after>
+          <reference field="sticownid_desc" ref_field="stic_t.sticownid" map_field="sticownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sticownid_desc"/>
+      <column id="sticowndp">
+        <after>
+          <reference field="sticowndp_desc" ref_field="stic_t.sticowndp" map_field="sticowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="sticowndp_desc"/>
+      <column id="sticcrtid">
+        <after>
+          <reference field="sticcrtid_desc" ref_field="stic_t.sticcrtid" map_field="sticcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sticcrtid_desc"/>
+      <column id="sticcrtdp">
+        <after>
+          <reference field="sticcrtdp_desc" ref_field="stic_t.sticcrtdp" map_field="sticcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="sticcrtdp_desc"/>
+      <column id="sticcrtdt"/>
+      <column id="sticmodid">
+        <after>
+          <reference field="sticmodid_desc" ref_field="stic_t.sticmodid" map_field="sticmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sticmodid_desc"/>
+      <column id="sticmoddt"/>
+      <column id="sticcnfid">
+        <after>
+          <reference field="sticcnfid_desc" ref_field="stic_t.sticcnfid" map_field="sticcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="sticcnfid_desc"/>
+      <column id="sticcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="stidseq" type="S" default="0"/>
+      <column id="stid001">
+        <after>
+          <reference field="stid001_desc" ref_field="stid003,stid004,stid005,stid001" map_field="stid003,stid004,stid005,stid001" ref_sql="SELECT mhadl006 FROM mhadl_t WHERE mhadlent=$varg_enterprise$var AND mhadl001=? AND mhadl002=? AND mhadl003=? AND mhadl004=? AND mhadl005=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhad001" state="c"/>
+      </column>
+      <column id="stid001_desc"/>
+      <column id="stid002" type="S" default="0"/>
+      <column id="l_mhad008"/>
+      <column id="stid003">
+        <after>
+          <reference field="stid003_desc" ref_field="stid_t.stid003" map_field="stid003" ref_sql="SELECT mhaal003 FROM mhaal_t WHERE mhaalent=$varg_enterprise$var AND mhaal001=? AND mhaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhaa001" state="c"/>
+      </column>
+      <column id="stid003_desc"/>
+      <column id="stid004">
+        <after>
+          <reference field="stid004_desc" ref_field="stid003,stid004" map_field="stid003,stid004" ref_sql="SELECT mhabl004 FROM mhabl_t WHERE mhablent=$varg_enterprise$var AND mhabl001=? AND mhabl002=? AND mhabl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhab002" state="c"/>
+      </column>
+      <column id="stid004_desc"/>
+      <column id="stid005">
+        <after>
+          <reference field="stid005_desc" ref_field="stid003,stid004,stid005" map_field="stid003,stid004,stid005" ref_sql="SELECT mhacl005 FROM mhacl_t WHERE mhaclent=$varg_enterprise$var AND mhacl001=? AND mhacl002=? AND mhacl003=? AND mhacl004=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhac003" state="c"/>
+      </column>
+      <column id="stid005_desc"/>
+      <column id="stid006" type="S" default="0"/>
+      <column id="stid007" type="S" default="0"/>
+      <column id="stid008" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="stic_t" pk="sticdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT sticsite,&apos;&apos;,sticdocdt,sticdocno,stic001,stic006,stic007,stic002,&apos;&apos;,stic003,stic015,&apos;&apos;,stic016,stic010,&apos;&apos;,stic011,stic012,&apos;&apos;,stic013,&apos;&apos;,stic014,&apos;&apos;,stic004,stic005,stic008,stic009,sticunit,stic018,&apos;&apos;,stic019,stic017,stic020,&apos;&apos;,stic021,&apos;&apos;,stic022,stic023,&apos;&apos;,stic024,&apos;&apos;,stic025,sticstus,sticownid,&apos;&apos;,sticowndp,&apos;&apos;,sticcrtid,&apos;&apos;,sticcrtdp,&apos;&apos;,sticcrtdt,sticmodid,&apos;&apos;,sticmoddt,sticcnfid,&apos;&apos;,sticcnfdt FROM stic_t WHERE sticent= ? AND sticdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT sticsite,&apos;&apos;,sticdocdt,sticdocno,stic001,stic006,stic007,stic002,&apos;&apos;,stic003,stic015,&apos;&apos;,stic016,stic010,&apos;&apos;,stic011,stic012,&apos;&apos;,stic013,&apos;&apos;,stic014,&apos;&apos;,stic004,stic005,stic008,stic009,sticunit,stic018,&apos;&apos;,stic019,stic017,stic020,&apos;&apos;,stic021,&apos;&apos;,stic022,stic023,&apos;&apos;,stic024,&apos;&apos;,stic025,sticstus,sticownid,&apos;&apos;,sticowndp,&apos;&apos;,sticcrtid,&apos;&apos;,sticcrtdp,&apos;&apos;,sticcrtdt,sticmodid,&apos;&apos;,sticmoddt,sticcnfid,&apos;&apos;,sticcnfdt FROM stic_t" order="sticdocno"/>
+    </head>
+    <body id="stid_t" page="1" linked="" pk="stidseq" fk="stiddocno">
+      <sql id="forupd_sql_detail" query="SELECT stidseq,stid001,&apos;&apos;,stid002,&apos;&apos;,stid003,&apos;&apos;,stid004,&apos;&apos;,stid005,&apos;&apos;,stid006,stid007,stid008 FROM stid_t WHERE stident=? AND stiddocno=? AND stidseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT stidseq,stid001,&apos;&apos;,stid002,&apos;&apos;,stid003,&apos;&apos;,stid004,&apos;&apos;,stid005,&apos;&apos;,stid006,stid007,stid008 FROM stid_t WHERE stident=? AND stiddocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

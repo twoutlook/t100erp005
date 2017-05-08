@@ -1,0 +1,120 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi301" module="azz" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="04010" crtdt="2014-04-10 09:47:10" modid="04010" moddt="2015-01-22 10:42:42" sdver="0009" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="憑證報表樣板設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzgd001,gzgd001_desc(chr80),gzgd009,gzgd010,gzgd002,gzgd005,gzgd005_desc(chr80),gzgd011,gzgd004,gzgd004_desc(chr80),gzgd008,gzgd003,gzgd012,gzgd013,papersize(chr500),orientation(chr500),gzgdstus(chr500)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzgd006,gzgd007,l_gzgdl002(chr500),gzgdownid,gzgdownid_desc(chr500),gzgdowndp,gzgdowndp_desc(chr500),gzgdcrtid,gzgdcrtid_desc(chr500),gzgdcrtdp,gzgdcrtdp_desc(chr500),gzgdcrtdt,gzgdmodid,gzgdmodid_desc(chr500),gzgdmoddt,gzgd000"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="changepapersize"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi301" method="dialog">
+    <section id="input">
+      <input id="head" field="gzgd001,gzgd009,gzgd010,gzgd002,gzgd005,gzgd011,gzgd004,gzgd008,gzgd003,gzgd012,gzgd013,papersize,orientation"/>
+      <input id="body" page="1" field="gzgd006,gzgd007,gzgd000" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzgd001,gzgd009,gzgd010,gzgd002,gzgd005,gzgd011,gzgd004,gzgd008,gzgd003,gzgd012,gzgd013,papersize,orientation"/>
+      <construct id="body" page="1" field="gzgd006,gzgd007,gzgdownid,gzgdowndp,gzgdcrtid,gzgdcrtdp,gzgdcrtdt,gzgdmodid,gzgdmoddt,gzgd000"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gzgd001">
+        <after/>
+        <controlp form="q_dzga001" state="i"/>
+        <controlp form="q_dzga001" state="c"/>
+      </column>
+      <column id="gzgd001_desc"/>
+      <column id="gzgd009"/>
+      <column id="gzgd010" type="S" default="1" def_scc="145"/>
+      <column id="gzgd002"/>
+      <column id="gzgd005">
+        <after/>
+        <controlp form="q_gzxa003_2" state="i"/>
+        <controlp form="q_gzxa003_2" state="c"/>
+      </column>
+      <column id="gzgd005_desc"/>
+      <column id="gzgd011"/>
+      <column id="gzgd004">
+        <after/>
+        <controlp form="q_gzya001" state="i"/>
+        <controlp form="q_gzya001" state="c"/>
+      </column>
+      <column id="gzgd004_desc"/>
+      <column id="gzgd008"/>
+      <column id="gzgd003"/>
+      <column id="gzgd012"/>
+      <column id="gzgd013"/>
+      <column id="papersize"/>
+      <column id="orientation"/>
+      <column id="gzgdstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="1">
+      <column id="gzgd006"/>
+      <column id="gzgd007"/>
+      <column id="l_gzgdl002"/>
+      <column id="gzgdownid">
+        <after>
+          <reference field="gzgdownid_desc" ref_field="gzgd_t.gzgdownid" map_field="gzgdownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="gzgdownid_desc"/>
+      <column id="gzgdowndp">
+        <after>
+          <reference field="gzgdowndp_desc" ref_field="gzgd_t.gzgdowndp" map_field="gzgdowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="gzgdowndp_desc"/>
+      <column id="gzgdcrtid">
+        <after>
+          <reference field="gzgdcrtid_desc" ref_field="gzgd_t.gzgdcrtid" map_field="gzgdcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="gzgdcrtid_desc"/>
+      <column id="gzgdcrtdp">
+        <after>
+          <reference field="gzgdcrtdp_desc" ref_field="gzgd_t.gzgdcrtdp" map_field="gzgdcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="gzgdcrtdp_desc"/>
+      <column id="gzgdcrtdt"/>
+      <column id="gzgdmodid">
+        <after>
+          <reference field="gzgdmodid_desc" ref_field="gzgd_t.gzgdmodid" map_field="gzgdmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="gzgdmodid_desc"/>
+      <column id="gzgdmoddt"/>
+      <column id="gzgd000"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzgd_t" pk="">
+      <sql id="forupd_sql" type="sql" query="SELECT gzgd001,&apos;&apos;,gzgd009,gzgd010,gzgd002,gzgd005,&apos;&apos;,gzgd011,gzgd004,&apos;&apos;,gzgd008,gzgd003,gzgd012,gzgd013,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM gzgd_t WHERE  FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzgd001,&apos;&apos;,gzgd009,gzgd010,gzgd002,gzgd005,&apos;&apos;,gzgd011,gzgd004,&apos;&apos;,gzgd008,gzgd003,gzgd012,gzgd013,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM gzgd_t" order=""/>
+    </head>
+    <body id="gzgd_t" page="1" linked="" pk="gzgd000" fk="">
+      <sql id="forupd_sql_detail" query="SELECT gzgd006,gzgd007,&apos;&apos;,gzgdownid,&apos;&apos;,gzgdowndp,&apos;&apos;,gzgdcrtid,&apos;&apos;,gzgdcrtdp,&apos;&apos;,gzgdcrtdt,gzgdmodid,&apos;&apos;,gzgdmoddt,gzgd000 FROM gzgd_t WHERE gzgd000=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzgd006,gzgd007,&apos;&apos;,gzgdownid,&apos;&apos;,gzgdowndp,&apos;&apos;,gzgdcrtid,&apos;&apos;,gzgdcrtdp,&apos;&apos;,gzgdcrtdt,gzgdmodid,&apos;&apos;,gzgdmoddt,gzgd000 FROM gzgd_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

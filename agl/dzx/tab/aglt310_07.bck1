@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglt310_07" module="agl" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="02599" crtdt="2014-12-29 22:30:09" modid="02599" moddt="2015-03-25 11:32:55" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="追溯來源單據">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glapdocno,glapld,glap007,glap008,glce001,glce002,gzzz001(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="aglt310_07" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="glapdocno,glapld,glap007,glap008,glce001,glce002,gzzz001" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="glapdocno">
+        <controlp form="q_ooba002" state="i"/>
+        <controlp form="q_glapdocno" state="c"/>
+      </column>
+      <column id="glapld">
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_glaald" state="c"/>
+      </column>
+      <column id="glap007" def_scc="8007"/>
+      <column id="glap008" def_scc="8035">
+        <controlp form="q_glac002_2" state="i"/>
+        <controlp form="q_glap008" state="c"/>
+      </column>
+      <column id="glce001"/>
+      <column id="glce002"/>
+      <column id="gzzz001"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="glap_t" page="1" linked="" pk="glapld,glapdocno">
+      <sql id="forupd_sql_detail" query="SELECT glapdocno,glapld,glap007,glap008,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM glap_t WHERE glapent=? AND glapld=? AND glapdocno=? FOR UPDATE"/>
+      <sql id="detail_append" type="single" table="glce_t" pk="glceld,glce001,glce002" field="glce001,glce002"/>
+      <sql id="b_fill_sql" query="SELECT glapdocno,glapld,glap007,glap008,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM glap_t WHERE glapent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmt520_g01" module="anm" jobmode="N" type="g01" industry="std" crtid="06821" crtdt="2015-09-03 08:59:03" modid="02291" moddt="2016-02-15 14:30:36" sdver="2" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="nmcr118,l_xreb116(xreb116|&apos;&apos;),l_nmbb005(nmbb005|&apos;&apos;),l_nmbb007(nmbb007|&apos;&apos;),l_nmbb031_desc(nmbb031|&apos;&apos;),l_nmbb026_desc(chr500|&apos;&apos;),l_nmbb026(nmbb026|&apos;&apos;),l_nmbb043_desc(chr500|&apos;&apos;),l_nmbb043(nmbb043|&apos;&apos;),nmcr003,nmcq003,l_nmcq001_desc(chr500|&apos;&apos;),nmcq001,nmcqdocno,nmcq100,nmcqdocdt,nmcrseq,nmcr104,nmcr105,nmcr106,nmcr114,nmcr115,nmcr116,nmcr113,nmcr103,nmcr001,l_nmcrorga_desc(chr500|&apos;&apos;),nmcrorga,nmcq101,l_nmcq003_desc(chr500|&apos;&apos;),l_nmcqcomp_desc(chr500|&apos;&apos;),nmcqcomp,l_nmcqsite_desc(chr500|&apos;&apos;),nmcqsite,nmcrent,nmcqent"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="nmcr118(nmcr118|nmcr118),l_xreb116(xreb116|&apos;&apos;),l_nmbb005(nmbb005|&apos;&apos;),l_nmbb007(nmbb007|&apos;&apos;),l_nmbb031_desc(nmbb031|&apos;&apos;),l_nmbb026_desc(chr500|&apos;&apos;),l_nmbb026(nmbb026|&apos;&apos;),l_nmbb043_desc(chr500|&apos;&apos;),l_nmbb043(nmbb043|&apos;&apos;),nmcr003(nmcr003|nmcr003),nmcq003(nmcq003|nmcq003),l_nmcq001_desc(chr500|&apos;&apos;),nmcq001(nmcq001|nmcq001),nmcqdocno(nmcqdocno|nmcqdocno),nmcq100(nmcq100|nmcq100),nmcqdocdt(nmcqdocdt|nmcqdocdt),nmcrseq(nmcrseq|nmcrseq),nmcr104(nmcr104|nmcr104),nmcr105(nmcr105|nmcr105),nmcr106(nmcr106|nmcr106),nmcr114(nmcr114|nmcr114),nmcr115(nmcr115|nmcr115),nmcr116(nmcr116|nmcr116),nmcr113(nmcr113|nmcr113),nmcr103(nmcr103|nmcr103),nmcr001(nmcr001|nmcr001),l_nmcrorga_desc(chr500|&apos;&apos;),nmcrorga(nmcrorga|nmcrorga),nmcq101(nmcq101|nmcq101),l_nmcq003_desc(chr500|&apos;&apos;),l_nmcqcomp_desc(chr500|&apos;&apos;),nmcqcomp(nmcqcomp|nmcqcomp),l_nmcqsite_desc(chr500|&apos;&apos;),nmcqsite(nmcqsite|nmcqsite),nmcrent(nmcrent|nmcrent),nmcqent(nmcqent|nmcqent)"/>
+    <sql id="g_from" query="nmcq_t,nmcr_t"/>
+    <sql id="g_where" query="" maintable="nmcq_t"/>
+    <sql id="g_order" query="nmcqdocno,nmcrseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="nmcqdocno,nmcrseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="nmcqdocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="nmcqent,nmcqdocno"/>
+      <rep type="nmcrseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="nmcqent,nmcqdocno,nmcrseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="nmcqent,nmcqdocno,nmcrseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="nmcqdocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="nmcqent,nmcqdocno"/>
+      <rep type="nmcrseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

@@ -1,0 +1,3507 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aapq420.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:10(2015-04-27 17:43:03), PR版次:0010(2017-01-12 18:33:20)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000079
+#+ Filename...: aapq420
+#+ Description: 付款清單查詢作業
+#+ Creator....: 03080(2015-02-13 11:05:32)
+#+ Modifier...: 06821 -SD/PR- 04152
+ 
+{</section>}
+ 
+{<section id="aapq420.global" >}
+#應用 q02 樣板自動產生(Version:42)
+#add-point:填寫註解說明 name="global.memo"
+#150213-00007#5                albireo  增加來自直接付款的付款明細資料(apca_t-apde_t)
+#150319-00004#6                Jessy    查詢類轉XG報表
+#151231-00010#4  2016/01/11 By 02097    增加控制組
+#160812-00027#2  2016/08/16 By 06821    全面盤點應付程式帳套權限控管
+#161006-00005#42 2016/10/27 By 08732    組織類型與職能開窗調整
+#161108-00017#2  2016/11/09 By Reanna   程式中INSERT INTO 有星號作整批調整
+#161115-00042#5  2016/11/17 By 08729    開窗增加過濾據點
+#161229-00047#32 2017/01/12 By Reanna   財務用供應商對象控制組,法人條件改為用 IN (site...)的方式,QBE時,傳入符合權限的法人；INPUT時傳入目前法人據點
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_apde_d RECORD
+       #statepic       LIKE type_t.chr1,
+       
+       apdasite LIKE apda_t.apdasite, 
+   l_apcasite_desc LIKE type_t.chr100, 
+   apda003 LIKE apda_t.apda003, 
+   l_apda003_desc LIKE type_t.chr100, 
+   apdeld LIKE apde_t.apdeld, 
+   l_apdeld_desc LIKE type_t.chr500, 
+   apdedocno LIKE apde_t.apdedocno, 
+   apda001 LIKE apda_t.apda001, 
+   apdadocdt LIKE apda_t.apdadocdt, 
+   apda005 LIKE apda_t.apda005, 
+   l_apda005_desc LIKE type_t.chr100, 
+   apda014 LIKE apda_t.apda014, 
+   apdastus LIKE apda_t.apdastus, 
+   apdeseq LIKE apde_t.apdeseq, 
+   apdeorga LIKE apde_t.apdeorga, 
+   l_apdeorga_desc LIKE type_t.chr100, 
+   apde002 LIKE apde_t.apde002, 
+   apde006 LIKE apde_t.apde006, 
+   apde003 LIKE apde_t.apde003, 
+   apde008 LIKE apde_t.apde008, 
+   apde021 LIKE apde_t.apde021, 
+   apde024 LIKE apde_t.apde024, 
+   apde100 LIKE apde_t.apde100, 
+   apde109 LIKE apde_t.apde109, 
+   apde101 LIKE apde_t.apde101, 
+   apde119 LIKE apde_t.apde119, 
+   apde032 LIKE apde_t.apde032, 
+   apde013 LIKE apde_t.apde013, 
+   l_apde013_desc LIKE type_t.chr100, 
+   apde014 LIKE apde_t.apde014, 
+   apde015 LIKE apde_t.apde015, 
+   apde016 LIKE apde_t.apde016, 
+   l_apde016_desc LIKE type_t.chr100, 
+   apde010 LIKE apde_t.apde010, 
+   apde009 LIKE apde_t.apde009, 
+   apde039 LIKE apde_t.apde039, 
+   apde040 LIKE apde_t.apde040, 
+   apde011 LIKE apde_t.apde011, 
+   l_apde011_desc LIKE type_t.chr100, 
+   apde012 LIKE apde_t.apde012, 
+   l_apde012_desc LIKE type_t.chr100, 
+   apde046 LIKE apde_t.apde046 
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數-標準(Module Variable)  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_wc_apca    STRING    #重新construct 後直接付款的條件  150213-00007#5
+DEFINE g_wc_apca_t  STRING    #150213-00007#5
+DEFINE g_wc_filter2 STRING    #重新construct 後直接付款的條件(for 二次查詢)  150213-00007#5
+DEFINE g_wc_filter2_t STRING
+DEFINE g_construct_display    RECORD    #重新construct紀錄的螢幕值  150213-00007#5
+                   apdasite   STRING,
+                   apda003    STRING,
+                   apdeld     STRING,
+                   apdedocno  STRING,
+                   apda001    STRING,
+                   apdadocdt  STRING,
+                   apda005    STRING,
+                   apda014    STRING,
+                   apdastus   STRING,
+                   apdeseq    STRING,
+                   apdeorga   STRING,
+                   apde002    STRING,
+                   apde006    STRING,
+                   apde003    STRING,
+                   apde008    STRING,
+                   apde021    STRING,
+                   apde024    STRING,
+                   apde100    STRING,
+                   apde109    STRING,
+                   apde101    STRING,
+                   apde119    STRING,
+                   apde032    STRING,
+                   apde013    STRING,
+                   apde014    STRING,
+                   apde015    STRING,
+                   apde016    STRING,
+                   apde010    STRING,
+                   apde009    STRING,
+                   apde039    STRING,
+                   apde040    STRING,
+                   apde011    STRING,
+                   apde012    STRING,
+                   apde046    STRING
+                              END RECORD
+
+DEFINE l_gzcbl004          LIKE type_t.chr80    #150319-00004#6 定義判斷apda001欄位空值
+DEFINE g_sql_ctrl          STRING               #151231-00010#4
+DEFINE g_wc_cs_ld          STRING               #160812-00027#2 add 查詢時帳套權限範圍
+DEFINE g_site_str          STRING               #161115-00042#5 add 
+DEFINE g_comp              LIKE glaa_t.glaacomp #161115-00042#5 add
+#161229-00047#32 add ------
+DEFINE g_wc_cs_comp        STRING
+DEFINE g_comp_str          STRING
+#161229-00047#32 add end---
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_master                     type_g_apde_d
+DEFINE g_master_t                   type_g_apde_d
+DEFINE g_apde_d          DYNAMIC ARRAY OF type_g_apde_d
+DEFINE g_apde_d_t        type_g_apde_d
+ 
+      
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10              #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num5              #目前所在頁數
+DEFINE g_detail_cnt         LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_detail_cnt2        LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+DEFINE g_detail_idx         LIKE type_t.num10
+DEFINE g_detail_idx2        LIKE type_t.num10
+DEFINE g_hyper_url          STRING                        #hyperlink的主要網址
+DEFINE g_tot_cnt            LIKE type_t.num10             #計算總筆數
+DEFINE g_num_in_page        LIKE type_t.num10             #每頁筆數
+DEFINE g_current_row_tot    LIKE type_t.num10             #目前所在總筆數
+DEFINE g_page_act_list      STRING                        #分頁ACTION清單
+DEFINE g_page_start_num     LIKE type_t.num10             #目前頁面起始筆數
+DEFINE g_page_end_num       LIKE type_t.num10             #目前頁面結束筆數
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+DEFINE g_wc_filter_table    STRING
+DEFINE g_detail_page_action STRING
+DEFINE g_pagestart          LIKE type_t.num10
+ 
+ 
+ 
+#add-point:自定義模組變數-客製(Module Variable) name="global.variable_customerization"
+
+##end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aapq420.main" >}
+ #應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   DEFINE  g_apdald         LIKE  apda_t.apdald    #161115-00042#5 add 
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aap","")
+ 
+   #add-point:作業初始化 name="main.init"
+   #151231-00010#4--(S)
+   LET g_sql_ctrl = NULL
+   #CALL s_control_get_supplier_sql('4',g_site,g_user,g_dept,'') RETURNING g_sub_success,g_sql_ctrl #161115-00042#5 mark
+   #151231-00010#4--(E)
+   #161229-00047#32 mark ------
+   ##161115-00042#5-add(s)
+   # SELECT ooef017 INTO g_comp
+   #  FROM ooef_t
+   # WHERE ooefent = g_enterprise
+   #   AND ooef001 = g_site
+   #   AND ooefstus = 'Y'
+   #CALL s_control_get_supplier_sql_pmab('4',g_site,g_user,g_dept,'',g_comp) RETURNING g_sub_success,g_sql_ctrl
+   ##161115-00042#5-add(e)
+   #161229-00047#32 mark end---
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = " ", 
+                      " FROM ",
+                      " "
+   #add-point:SQL_define name="main.after_define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE aapq420_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT  ",
+               " FROM  t0",
+               
+               " WHERE  "
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   
+   #end add-point
+   PREPARE aapq420_master_referesh FROM g_sql
+ 
+   #add-point:main段define_sql name="main.body.define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = ""
+   #add-point:main段define_sql name="main.body.after_define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE aapq420_bcl CURSOR FROM g_forupd_sql
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aapq420 WITH FORM cl_ap_formpath("aap",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aapq420_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aapq420_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_aapq420
+      
+   END IF 
+   
+   CLOSE aapq420_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aapq420.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION aapq420_init()
+   #add-point:init段define-客製 name="init.define_customerization"
+   
+   #end add-point
+   #add-point:init段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   DEFINE l_str   STRING
+   #end add-point
+   
+ 
+   #add-point:FUNCTION前置處理 name="init.before_function"
+   
+   #end add-point
+ 
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+      CALL cl_set_combo_scc_part('b_apdastus','13','N,Y,A,D,R,W,X')
+ 
+   
+   
+   #add-point:畫面資料初始化 name="init.init"
+   #CALL cl_set_combo_scc_part('b_apda001','8507','45')    #150213-00007#5  MARK
+   CALL aapq420_create_tmp()          #150319-00004#6 create tmp table
+   #150213-00007#5-----s
+   CALL aapq420_set_apca001_combo()   #含apca001,apda001 ='45'
+   #150213-00007#5-----e
+   LET l_str = s_aap_get_acc_str('8506',"gzcb004 = '2' AND gzcb002 <> '17' ") CLIPPED
+   CALL cl_set_combo_scc_part('b_apde002','8506',l_str)
+   LET l_str = s_aap_get_acc_str('8310',"gzcb002 <> 'ZZ' ") CLIPPED
+   CALL cl_set_combo_scc_part('b_apde006','8310',l_str)
+   
+   #160812-00027#2 --s add
+   #帳套權限相關預設範圍
+   CALL s_fin_create_account_center_tmp()
+   CALL s_fin_azzi800_sons_query(g_today)
+   CALL s_fin_account_center_ld_str() RETURNING g_wc_cs_ld     
+   CALL s_fin_get_wc_str(g_wc_cs_ld) RETURNING g_wc_cs_ld  
+   #160812-00027#2 --e add
+   
+   #161229-00047#32 add ------
+   CALL s_fin_account_center_comp_str() RETURNING g_wc_cs_comp
+   CALL s_fin_get_wc_str(g_wc_cs_comp) RETURNING g_wc_cs_comp
+   CALL s_control_get_supplier_sql_pmab('4',g_site,g_user,g_dept,'',g_wc_cs_comp) RETURNING g_sub_success,g_sql_ctrl
+   #161229-00047#32 add end---
+   #end add-point
+ 
+   CALL aapq420_default_search()  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapq420.default_search" >}
+PRIVATE FUNCTION aapq420_default_search()
+   #add-point:default_search段define-客製 name="default_search.define_customerization"
+   
+   #end add-point
+   #add-point:default_search段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point
+ 
+   #add-point:default_search段開始前 name="default_search.before"
+   
+   #end add-point
+ 
+   #應用 qs27 樣板自動產生(Version:3)
+   #+ 組承接外部參數時資料庫欄位對應條件(單身)
+   IF NOT cl_null(g_argv[01]) THEN
+      LET g_wc = g_wc, " apdeld = '", g_argv[01], "' AND "
+   END IF
+ 
+   IF NOT cl_null(g_argv[02]) THEN
+      LET g_wc = g_wc, " apdedocno = '", g_argv[02], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[03]) THEN
+      LET g_wc = g_wc, " apdeseq = '", g_argv[03], "' AND "
+   END IF
+ 
+ 
+ 
+ 
+ 
+ 
+   IF NOT cl_null(g_wc) THEN
+      LET g_wc = g_wc.subString(1,g_wc.getLength()-5)
+   ELSE
+      #預設查詢條件
+      LET g_wc = " 1=2"
+   END IF
+ 
+   #add-point:default_search段開始後 name="default_search.after"
+   #150213-00007#5-----s
+   LET g_wc_apca = g_wc    #若主條件受傳入參數影響的處理  
+   #150213-00007#5-----e
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapq420.ui_dialog" >}
+#+ 功能選單 
+PRIVATE FUNCTION aapq420_ui_dialog()
+   #add-point:ui_dialog段define-客製 name="ui_dialog.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_wc      STRING
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE lc_action_choice_old     STRING
+   DEFINE lc_current_row           LIKE type_t.num10
+   DEFINE ls_js      STRING
+   DEFINE la_param   RECORD
+                     prog       STRING,
+                     actionid   STRING,
+                     background LIKE type_t.chr1,
+                     param      DYNAMIC ARRAY OF STRING
+                     END RECORD
+   #add-point:ui_dialog段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   
+   #end add-point 
+ 
+   #add-point:FUNCTION前置處理 name="ui_dialog.before_function"
+   
+   #end add-point
+ 
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "
+   LET lc_action_choice_old = ""
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   CALL cl_get_num_in_page() RETURNING g_num_in_page
+         
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   
+   #end add-point
+ 
+   LET g_detail_page_action = "detail_first"
+   LET g_pagestart = 1
+   LET g_current_row_tot = 1
+   LET g_page_start_num = 1
+   LET g_page_end_num = g_num_in_page
+   IF NOT cl_null(g_wc) AND g_wc != " 1=2" THEN
+      LET g_detail_idx = 1
+      LET g_detail_idx2 = 1
+      CALL aapq420_b_fill()
+   ELSE
+      CALL aapq420_query()
+   END IF
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_apde_d.clear()
+ 
+         LET g_wc  = " 1=2"
+         LET g_wc2 = " 1=1"
+         LET g_action_choice = ""
+         LET g_detail_page_action = "detail_first"
+         LET g_pagestart = 1
+         LET g_current_row_tot = 1
+         LET g_page_start_num = 1
+         LET g_page_end_num = g_num_in_page
+         LET g_detail_idx = 1
+         LET g_detail_idx2 = 1
+ 
+         CALL aapq420_init()
+      END IF
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_apde_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+ 
+               #為避免按上下筆影響執行效能，所以有作一些處理
+               LET lc_action_choice_old = g_action_choice
+               LET g_action_choice = "fetch"
+               CALL aapq420_fetch()
+               LET g_action_choice = lc_action_choice_old
+               LET g_master_idx = l_ac
+               CALL aapq420_detail_action_trans()
+               #add-point:input段before row name="input.body.before_row"
+               
+               #end add-point  
+            
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+            #add-point:page1自定義行為 name="ui_dialog.body.page1.action"
+            
+            #end add-point
+ 
+         END DISPLAY
+      
+ 
+         
+ 
+      
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+         
+         BEFORE DIALOG
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            CALL aapq420_detail_action_trans()
+ 
+            #add-point:ui_dialog段before dialog name="ui_dialog.bef_dialog"
+            
+            #end add-point
+ 
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               CALL aapq420_x01(' 1=1','aapq420_x01_tmp')    #150319-00004#6 畫面的東西轉成XG報表   
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               CALL aapq420_x01(' 1=1','aapq420_x01_tmp')    #150319-00004#6 畫面的東西轉成XG報表   
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL aapq420_query()
+               #add-point:ON ACTION query name="menu.query"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo name="menu.datainfo"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL aapq420_filter()
+            #add-point:ON ACTION filter name="menu.filter"
+            
+            #END add-point
+ 
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+ 
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION datarefresh   # 重新整理
+            LET g_error_show = 1
+            CALL aapq420_b_fill()
+ 
+         ON ACTION exporttoexcel   #匯出excel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_apde_d)
+               LET g_export_id[1]   = "s_detail1"
+ 
+               #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+               
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+ 
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum name="ui_dialog.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+ 
+         ON ACTION detail_first               #page first
+            LET g_action_choice = "detail_first"
+            LET g_detail_page_action = "detail_first"
+            CALL aapq420_b_fill()
+ 
+         ON ACTION detail_previous                #page previous
+            LET g_action_choice = "detail_previous"
+            LET g_detail_page_action = "detail_previous"
+            CALL aapq420_b_fill()
+ 
+         ON ACTION detail_next                #page next
+            LET g_action_choice = "detail_next"
+            LET g_detail_page_action = "detail_next"
+            CALL aapq420_b_fill()
+ 
+         ON ACTION detail_last                #page last
+            LET g_action_choice = "detail_last"
+            LET g_detail_page_action = "detail_last"
+            CALL aapq420_b_fill()
+ 
+         
+         
+ 
+         #add-point:ui_dialog段自定義action name="ui_dialog.more_action"
+         
+         #end add-point
+      
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+ 
+         #add-point:查詢方案相關ACTION設定前 name="ui_dialog.set_qbe_action_before"
+        
+         #end add-point
+ 
+         #add-point:查詢方案相關ACTION設定後 name="ui_dialog.set_qbe_action_after"
+         
+         #end add-point
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapq420.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION aapq420_query()
+   #add-point:query段define-客製 name="query.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_wc2     LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   DEFINE  g_apdacomp       LIKE  apda_t.apdacomp  #161115-00042#5 add
+   DEFINE  g_apdald         LIKE  apda_t.apdald    #161115-00042#5 add 
+   DEFINE  l_ld_str         STRING                 #161115-00042#5 add 
+   #end add-point 
+   
+   #add-point:FUNCTION前置處理 name="query.before_function"
+   
+   #end add-point
+ 
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_apde_d.clear()
+ 
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+   
+   LET g_qryparam.state = "c"
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_wc_filter = " 1=1"
+   LET g_detail_page_action = ""
+   LET g_pagestart = 1
+   
+   #wc備份
+   LET ls_wc = g_wc
+   LET ls_wc2 = g_wc2
+   LET g_master_idx = l_ac
+ 
+   
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc_table ON apdasite,apda003,apdeld,apdedocno,apda001,apdadocdt,apda005,apda014,apdastus, 
+          apdeseq,apdeorga,apde002,apde006,apde003,apde008,apde021,apde024,apde100,apde109,apde101,apde119, 
+          apde032,apde013,apde014,apde015,apde016,apde010,apde009,apde039,apde040,apde011,apde012,apde046 
+ 
+           FROM s_detail1[1].b_apdasite,s_detail1[1].b_apda003,s_detail1[1].b_apdeld,s_detail1[1].b_apdedocno, 
+               s_detail1[1].b_apda001,s_detail1[1].b_apdadocdt,s_detail1[1].b_apda005,s_detail1[1].b_apda014, 
+               s_detail1[1].b_apdastus,s_detail1[1].b_apdeseq,s_detail1[1].b_apdeorga,s_detail1[1].b_apde002, 
+               s_detail1[1].b_apde006,s_detail1[1].b_apde003,s_detail1[1].b_apde008,s_detail1[1].b_apde021, 
+               s_detail1[1].b_apde024,s_detail1[1].b_apde100,s_detail1[1].b_apde109,s_detail1[1].b_apde101, 
+               s_detail1[1].b_apde119,s_detail1[1].b_apde032,s_detail1[1].b_apde013,s_detail1[1].b_apde014, 
+               s_detail1[1].b_apde015,s_detail1[1].b_apde016,s_detail1[1].b_apde010,s_detail1[1].b_apde009, 
+               s_detail1[1].b_apde039,s_detail1[1].b_apde040,s_detail1[1].b_apde011,s_detail1[1].b_apde012, 
+               s_detail1[1].b_apde046
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct name="cs.head.before_construct"
+            
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+                #----<<b_apdasite>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apdasite
+            #add-point:BEFORE FIELD b_apdasite name="construct.b.page1.b_apdasite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apdasite
+            
+            #add-point:AFTER FIELD b_apdasite name="construct.a.page1.b_apdasite"
+            CALL FGL_DIALOG_GETBUFFER() RETURNING g_site_str  #161115-00042#5 add
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apdasite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apdasite
+            #add-point:ON ACTION controlp INFIELD b_apdasite name="construct.c.page1.b_apdasite"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            #CALL q_ooef001()      #161006-00005#42   mark
+            CALL q_ooef001_46()    #161006-00005#42   add            #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_apdasite  #顯示到畫面上
+            NEXT FIELD b_apdasite                     #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<l_apcasite_desc>>----
+         #----<<b_apda003>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apda003
+            #add-point:BEFORE FIELD b_apda003 name="construct.b.page1.b_apda003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apda003
+            
+            #add-point:AFTER FIELD b_apda003 name="construct.a.page1.b_apda003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apda003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apda003
+            #add-point:ON ACTION controlp INFIELD b_apda003 name="construct.c.page1.b_apda003"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()
+            DISPLAY g_qryparam.return1 TO b_apda003      #顯示到畫面上
+            NEXT FIELD b_apda003
+            #END add-point
+ 
+ 
+         #----<<l_apda003_desc>>----
+         #----<<b_apdeld>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apdeld
+            #add-point:BEFORE FIELD b_apdeld name="construct.b.page1.b_apdeld"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apdeld
+            
+            #add-point:AFTER FIELD b_apdeld name="construct.a.page1.b_apdeld"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apdeld
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apdeld
+            #add-point:ON ACTION controlp INFIELD b_apdeld name="construct.c.page1.b_apdeld"
+            #帳別
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = g_user
+            #LET g_qryparam.arg2 = g_grup #160812-00027#2 mark 應傳入g_dept
+            #160812-00027#2 --s add 
+            LET g_qryparam.arg2 = g_dept
+            LET g_qryparam.where = " glaald IN ",g_wc_cs_ld  
+            #160812-00027#2 --e add
+            CALL q_authorised_ld()
+            DISPLAY g_qryparam.return1 TO b_apdeld
+            NEXT FIELD b_apdeld
+            #END add-point
+ 
+ 
+         #----<<l_apdeld_desc>>----
+         #----<<b_apdedocno>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apdedocno
+            #add-point:BEFORE FIELD b_apdedocno name="construct.b.page1.b_apdedocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apdedocno
+            
+            #add-point:AFTER FIELD b_apdedocno name="construct.a.page1.b_apdedocno"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apdedocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apdedocno
+            #add-point:ON ACTION controlp INFIELD b_apdedocno name="construct.c.page1.b_apdedocno"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " apda001 = '45' "
+            #151231-00010#4--(S)
+            LET g_sql_ctrl = NULL
+            CALL s_control_get_sql("apda005",'4','4',g_user,g_dept) RETURNING g_sub_success,g_sql_ctrl
+            IF NOT cl_null(g_sql_ctrl) THEN
+               LET g_qryparam.where = g_qryparam.where ," AND ",g_sql_ctrl
+            END IF
+            #151231-00010#4--(E)
+            CALL q_apdadocno()
+            DISPLAY g_qryparam.return1 TO b_apdedocno
+            NEXT FIELD b_apdedocno
+            #END add-point
+ 
+ 
+         #----<<b_apda001>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apda001
+            #add-point:BEFORE FIELD b_apda001 name="construct.b.page1.b_apda001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apda001
+            
+            #add-point:AFTER FIELD b_apda001 name="construct.a.page1.b_apda001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apda001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apda001
+            #add-point:ON ACTION controlp INFIELD b_apda001 name="construct.c.page1.b_apda001"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apdadocdt>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apdadocdt
+            #add-point:BEFORE FIELD b_apdadocdt name="construct.b.page1.b_apdadocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apdadocdt
+            
+            #add-point:AFTER FIELD b_apdadocdt name="construct.a.page1.b_apdadocdt"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apdadocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apdadocdt
+            #add-point:ON ACTION controlp INFIELD b_apdadocdt name="construct.c.page1.b_apdadocdt"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apda005>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apda005
+            #add-point:BEFORE FIELD b_apda005 name="construct.b.page1.b_apda005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apda005
+            
+            #add-point:AFTER FIELD b_apda005 name="construct.a.page1.b_apda005"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apda005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apda005
+            #add-point:ON ACTION controlp INFIELD b_apda005 name="construct.c.page1.b_apda005"
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            #151231-00010#4--(S)
+            LET g_sql_ctrl = NULL
+            CALL s_control_get_sql("apca005",'4','4',g_user,g_dept) RETURNING g_sub_success,g_sql_ctrl
+            IF NOT cl_null(g_sql_ctrl) THEN
+               LET g_qryparam.where = g_sql_ctrl
+            END IF
+            #151231-00010#4--(E)
+            CALL q_apca005()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_apda005  #顯示到畫面上
+            NEXT FIELD b_apda005 
+            #END add-point
+ 
+ 
+         #----<<l_apda005_desc>>----
+         #----<<b_apda014>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apda014
+            #add-point:BEFORE FIELD b_apda014 name="construct.b.page1.b_apda014"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apda014
+            
+            #add-point:AFTER FIELD b_apda014 name="construct.a.page1.b_apda014"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apda014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apda014
+            #add-point:ON ACTION controlp INFIELD b_apda014 name="construct.c.page1.b_apda014"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            #161115-00042#5 add (s)
+            #查詢依帳套權限管理
+            CALL s_axrt300_get_site(g_user,g_site_str,'2') RETURNING l_ld_str 
+            LET l_ld_str = cl_replace_str(l_ld_str,"glaald","apdald")
+            LET g_qryparam.where = l_ld_str
+            #161115-00042#5 add (e)
+            CALL q_apda014()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_apda014  #顯示到畫面上
+            NEXT FIELD b_apda014
+            #END add-point
+ 
+ 
+         #----<<b_apdastus>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apdastus
+            #add-point:BEFORE FIELD b_apdastus name="construct.b.page1.b_apdastus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apdastus
+            
+            #add-point:AFTER FIELD b_apdastus name="construct.a.page1.b_apdastus"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apdastus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apdastus
+            #add-point:ON ACTION controlp INFIELD b_apdastus name="construct.c.page1.b_apdastus"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apdeseq>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apdeseq
+            #add-point:BEFORE FIELD b_apdeseq name="construct.b.page1.b_apdeseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apdeseq
+            
+            #add-point:AFTER FIELD b_apdeseq name="construct.a.page1.b_apdeseq"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apdeseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apdeseq
+            #add-point:ON ACTION controlp INFIELD b_apdeseq name="construct.c.page1.b_apdeseq"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apdeorga>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apdeorga
+            #add-point:BEFORE FIELD b_apdeorga name="construct.b.page1.b_apdeorga"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apdeorga
+            
+            #add-point:AFTER FIELD b_apdeorga name="construct.a.page1.b_apdeorga"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apdeorga
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apdeorga
+            #add-point:ON ACTION controlp INFIELD b_apdeorga name="construct.c.page1.b_apdeorga"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            #CALL q_ooef001()      #161006-00005#42   mark
+            CALL q_ooef001_33()    #161006-00005#42   add            #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_apdeorga  #顯示到畫面上
+            NEXT FIELD b_apdeorga     
+            #END add-point
+ 
+ 
+         #----<<l_apdeorga_desc>>----
+         #----<<b_apde002>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apde002
+            #add-point:BEFORE FIELD b_apde002 name="construct.b.page1.b_apde002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apde002
+            
+            #add-point:AFTER FIELD b_apde002 name="construct.a.page1.b_apde002"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apde002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde002
+            #add-point:ON ACTION controlp INFIELD b_apde002 name="construct.c.page1.b_apde002"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde006>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apde006
+            #add-point:BEFORE FIELD b_apde006 name="construct.b.page1.b_apde006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apde006
+            
+            #add-point:AFTER FIELD b_apde006 name="construct.a.page1.b_apde006"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apde006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde006
+            #add-point:ON ACTION controlp INFIELD b_apde006 name="construct.c.page1.b_apde006"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde003>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apde003
+            #add-point:BEFORE FIELD b_apde003 name="construct.b.page1.b_apde003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apde003
+            
+            #add-point:AFTER FIELD b_apde003 name="construct.a.page1.b_apde003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apde003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde003
+            #add-point:ON ACTION controlp INFIELD b_apde003 name="construct.c.page1.b_apde003"
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            #161115-00042#5 add (s)
+            #查詢依帳套權限管理
+            CALL s_axrt300_get_site(g_user,g_site_str,'2') RETURNING l_ld_str 
+            LET l_ld_str = cl_replace_str(l_ld_str,"glaald","apdeld")
+            LET g_qryparam.where = l_ld_str
+            #161115-00042#5 add (e)
+            CALL q_apde003()                                       
+            DISPLAY g_qryparam.return1 TO b_apde003           
+            NEXT FIELD b_apde003
+            #END add-point
+ 
+ 
+         #----<<b_apde008>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apde008
+            #add-point:BEFORE FIELD b_apde008 name="construct.b.page1.b_apde008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apde008
+            
+            #add-point:AFTER FIELD b_apde008 name="construct.a.page1.b_apde008"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apde008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde008
+            #add-point:ON ACTION controlp INFIELD b_apde008 name="construct.c.page1.b_apde008"
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_nmas001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_apde008  #顯示到畫面上
+            NEXT FIELD b_apde008 
+            #END add-point
+ 
+ 
+         #----<<b_apde021>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apde021
+            #add-point:BEFORE FIELD b_apde021 name="construct.b.page1.b_apde021"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apde021
+            
+            #add-point:AFTER FIELD b_apde021 name="construct.a.page1.b_apde021"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apde021
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde021
+            #add-point:ON ACTION controlp INFIELD b_apde021 name="construct.c.page1.b_apde021"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooia001()
+            DISPLAY g_qryparam.return1 TO b_apde021   #顯示到畫面上
+            NEXT FIELD b_apde021
+            #END add-point
+ 
+ 
+         #----<<b_apde024>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apde024
+            #add-point:BEFORE FIELD b_apde024 name="construct.b.page1.b_apde024"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apde024
+            
+            #add-point:AFTER FIELD b_apde024 name="construct.a.page1.b_apde024"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apde024
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde024
+            #add-point:ON ACTION controlp INFIELD b_apde024 name="construct.c.page1.b_apde024"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde100>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apde100
+            #add-point:BEFORE FIELD b_apde100 name="construct.b.page1.b_apde100"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apde100
+            
+            #add-point:AFTER FIELD b_apde100 name="construct.a.page1.b_apde100"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apde100
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde100
+            #add-point:ON ACTION controlp INFIELD b_apde100 name="construct.c.page1.b_apde100"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooai001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_apde100  #顯示到畫面上
+            NEXT FIELD b_apde100 
+            #END add-point
+ 
+ 
+         #----<<b_apde109>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apde109
+            #add-point:BEFORE FIELD b_apde109 name="construct.b.page1.b_apde109"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apde109
+            
+            #add-point:AFTER FIELD b_apde109 name="construct.a.page1.b_apde109"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apde109
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde109
+            #add-point:ON ACTION controlp INFIELD b_apde109 name="construct.c.page1.b_apde109"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde101>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apde101
+            #add-point:BEFORE FIELD b_apde101 name="construct.b.page1.b_apde101"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apde101
+            
+            #add-point:AFTER FIELD b_apde101 name="construct.a.page1.b_apde101"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apde101
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde101
+            #add-point:ON ACTION controlp INFIELD b_apde101 name="construct.c.page1.b_apde101"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde119>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apde119
+            #add-point:BEFORE FIELD b_apde119 name="construct.b.page1.b_apde119"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apde119
+            
+            #add-point:AFTER FIELD b_apde119 name="construct.a.page1.b_apde119"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apde119
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde119
+            #add-point:ON ACTION controlp INFIELD b_apde119 name="construct.c.page1.b_apde119"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde032>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apde032
+            #add-point:BEFORE FIELD b_apde032 name="construct.b.page1.b_apde032"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apde032
+            
+            #add-point:AFTER FIELD b_apde032 name="construct.a.page1.b_apde032"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apde032
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde032
+            #add-point:ON ACTION controlp INFIELD b_apde032 name="construct.c.page1.b_apde032"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde013>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apde013
+            #add-point:BEFORE FIELD b_apde013 name="construct.b.page1.b_apde013"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apde013
+            
+            #add-point:AFTER FIELD b_apde013 name="construct.a.page1.b_apde013"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apde013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde013
+            #add-point:ON ACTION controlp INFIELD b_apde013 name="construct.c.page1.b_apde013"
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmac002_2()
+            DISPLAY g_qryparam.return1 TO b_apde013  #顯示到畫面上
+            NEXT FIELD b_apde013
+            #END add-point
+ 
+ 
+         #----<<l_apde013_desc>>----
+         #----<<b_apde014>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apde014
+            #add-point:BEFORE FIELD b_apde014 name="construct.b.page1.b_apde014"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apde014
+            
+            #add-point:AFTER FIELD b_apde014 name="construct.a.page1.b_apde014"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apde014
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde014
+            #add-point:ON ACTION controlp INFIELD b_apde014 name="construct.c.page1.b_apde014"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde015>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apde015
+            #add-point:BEFORE FIELD b_apde015 name="construct.b.page1.b_apde015"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apde015
+            
+            #add-point:AFTER FIELD b_apde015 name="construct.a.page1.b_apde015"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apde015
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde015
+            #add-point:ON ACTION controlp INFIELD b_apde015 name="construct.c.page1.b_apde015"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde016>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apde016
+            #add-point:BEFORE FIELD b_apde016 name="construct.b.page1.b_apde016"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apde016
+            
+            #add-point:AFTER FIELD b_apde016 name="construct.a.page1.b_apde016"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apde016
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde016
+            #add-point:ON ACTION controlp INFIELD b_apde016 name="construct.c.page1.b_apde016"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = "glac003 <>'1' " #非統制科目
+            #161115-00042#5 add(s)
+            SELECT ooef017 INTO g_comp FROM ooef_t WHERE ooefent = g_enterprise AND ooef001 = g_site
+            SELECT glaald INTO g_apdald FROM glaa_t WHERE glaaent = g_enterprise AND glaacomp = g_comp
+               AND glaa014 = 'Y'  
+            LET g_qryparam.where = g_qryparam.where,
+                                   " AND glac002 IN (SELECT glad001 FROM glad_t,glac_t WHERE glad001= glac002 ",
+                                   " AND glacent = gladent ",
+                                   " AND gladld='",g_apdald,"' AND gladent=",g_enterprise,
+                                   " AND gladstus = 'Y' )"
+            #161115-00042#5 add(e)
+            CALL aglt310_04()
+            DISPLAY g_qryparam.return1 TO b_apde016   #顯示到畫面上
+            NEXT FIELD b_apde016
+            #END add-point
+ 
+ 
+         #----<<l_apde016_desc>>----
+         #----<<b_apde010>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apde010
+            #add-point:BEFORE FIELD b_apde010 name="construct.b.page1.b_apde010"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apde010
+            
+            #add-point:AFTER FIELD b_apde010 name="construct.a.page1.b_apde010"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apde010
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde010
+            #add-point:ON ACTION controlp INFIELD b_apde010 name="construct.c.page1.b_apde010"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde009>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apde009
+            #add-point:BEFORE FIELD b_apde009 name="construct.b.page1.b_apde009"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apde009
+            
+            #add-point:AFTER FIELD b_apde009 name="construct.a.page1.b_apde009"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apde009
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde009
+            #add-point:ON ACTION controlp INFIELD b_apde009 name="construct.c.page1.b_apde009"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde039>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apde039
+            #add-point:BEFORE FIELD b_apde039 name="construct.b.page1.b_apde039"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apde039
+            
+            #add-point:AFTER FIELD b_apde039 name="construct.a.page1.b_apde039"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apde039
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde039
+            #add-point:ON ACTION controlp INFIELD b_apde039 name="construct.c.page1.b_apde039"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde040>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apde040
+            #add-point:BEFORE FIELD b_apde040 name="construct.b.page1.b_apde040"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apde040
+            
+            #add-point:AFTER FIELD b_apde040 name="construct.a.page1.b_apde040"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apde040
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde040
+            #add-point:ON ACTION controlp INFIELD b_apde040 name="construct.c.page1.b_apde040"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde011>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apde011
+            #add-point:BEFORE FIELD b_apde011 name="construct.b.page1.b_apde011"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apde011
+            
+            #add-point:AFTER FIELD b_apde011 name="construct.a.page1.b_apde011"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apde011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde011
+            #add-point:ON ACTION controlp INFIELD b_apde011 name="construct.c.page1.b_apde011"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_nmaj001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_apde011  #顯示到畫面上
+            NEXT FIELD b_apde011 
+            #END add-point
+ 
+ 
+         #----<<l_apde011_desc>>----
+         #----<<b_apde012>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apde012
+            #add-point:BEFORE FIELD b_apde012 name="construct.b.page1.b_apde012"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apde012
+            
+            #add-point:AFTER FIELD b_apde012 name="construct.a.page1.b_apde012"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apde012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde012
+            #add-point:ON ACTION controlp INFIELD b_apde012 name="construct.c.page1.b_apde012"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_nmai002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_apde012  #顯示到畫面上
+            NEXT FIELD b_apde012 
+            #END add-point
+ 
+ 
+         #----<<l_apde012_desc>>----
+         #----<<b_apde046>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_apde046
+            #add-point:BEFORE FIELD b_apde046 name="construct.b.page1.b_apde046"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_apde046
+            
+            #add-point:AFTER FIELD b_apde046 name="construct.a.page1.b_apde046"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_apde046
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde046
+            #add-point:ON ACTION controlp INFIELD b_apde046 name="construct.c.page1.b_apde046"
+            
+            #END add-point
+ 
+ 
+   
+       
+      END CONSTRUCT
+      
+ 
+      
+ 
+  
+      #add-point:query段more_construct name="query.more_construct"
+      #150213-00007#5-----s
+      #離開時判斷是否按放棄決定是否重組apca-apde的條件字串
+      AFTER DIALOG
+         LET g_construct_display.apdasite  =GET_FLDBUF(b_apdasite)   
+         LET g_construct_display.apda003   =GET_FLDBUF(b_apda003)    
+         LET g_construct_display.apdeld    =GET_FLDBUF(b_apdeld)     
+         LET g_construct_display.apdedocno =GET_FLDBUF(b_apdedocno)  
+         LET g_construct_display.apda001   =GET_FLDBUF(b_apda001)    
+         LET g_construct_display.apdadocdt =GET_FLDBUF(b_apdadocdt)  
+         LET g_construct_display.apda005   =GET_FLDBUF(b_apda005)    
+         LET g_construct_display.apda014   =GET_FLDBUF(b_apda014)   
+         LET g_construct_display.apdastus  =GET_FLDBUF(b_apdastus)   
+         LET g_construct_display.apdeseq   =GET_FLDBUF(b_apdeseq)    
+         LET g_construct_display.apdeorga  =GET_FLDBUF(b_apdeorga)   
+         LET g_construct_display.apde002   =GET_FLDBUF(b_apde002)   
+         LET g_construct_display.apde006   =GET_FLDBUF(b_apde006)   
+         LET g_construct_display.apde003   =GET_FLDBUF(b_apde003)    
+         LET g_construct_display.apde008   =GET_FLDBUF(b_apde008)    
+         LET g_construct_display.apde021   =GET_FLDBUF(b_apde021)    
+         LET g_construct_display.apde024   =GET_FLDBUF(b_apde024)    
+         LET g_construct_display.apde100   =GET_FLDBUF(b_apde100)    
+         LET g_construct_display.apde109   =GET_FLDBUF(b_apde109)    
+         LET g_construct_display.apde101   =GET_FLDBUF(b_apde101)    
+         LET g_construct_display.apde119   =GET_FLDBUF(b_apde119)    
+         LET g_construct_display.apde032   =GET_FLDBUF(b_apde032)    
+         LET g_construct_display.apde013   =GET_FLDBUF(b_apde013)    
+         LET g_construct_display.apde014   =GET_FLDBUF(b_apde014)    
+         LET g_construct_display.apde015   =GET_FLDBUF(b_apde015)    
+         LET g_construct_display.apde016   =GET_FLDBUF(b_apde016)    
+         LET g_construct_display.apde010   =GET_FLDBUF(b_apde010)    
+         LET g_construct_display.apde009   =GET_FLDBUF(b_apde009)    
+         LET g_construct_display.apde039   =GET_FLDBUF(b_apde039)    
+         LET g_construct_display.apde040   =GET_FLDBUF(b_apde040)    
+         LET g_construct_display.apde011   =GET_FLDBUF(b_apde011)    
+         LET g_construct_display.apde012   =GET_FLDBUF(b_apde012)    
+         LET g_construct_display.apde046   =GET_FLDBUF(b_apde046)    
+         IF INT_FLAG THEN
+         ELSE
+            CONSTRUCT g_wc_apca ON apcasite,apca003,apdeld,apdedocno,apca001,apcadocdt,apca005,apca038,apcastus, 
+             apdeseq,apdeorga,apde002,apde006,apde003,apde008,apde021,apde024,apde100,apde109,apde101,apde119, 
+             apde032,apde013,apde014,apde015,apde016,apde010,apde009,apde039,apde040,apde011,apde012,apde046
+             FROM s_detail1[1].b_apdasite,s_detail1[1].b_apda003,s_detail1[1].b_apdeld,s_detail1[1].b_apdedocno, 
+                  s_detail1[1].b_apda001,s_detail1[1].b_apdadocdt,s_detail1[1].b_apda005,s_detail1[1].b_apda014, 
+                  s_detail1[1].b_apdastus,s_detail1[1].b_apdeseq,s_detail1[1].b_apdeorga,s_detail1[1].b_apde002, 
+                  s_detail1[1].b_apde006,s_detail1[1].b_apde003,s_detail1[1].b_apde008,s_detail1[1].b_apde021, 
+                  s_detail1[1].b_apde024,s_detail1[1].b_apde100,s_detail1[1].b_apde109,s_detail1[1].b_apde101, 
+                  s_detail1[1].b_apde119,s_detail1[1].b_apde032,s_detail1[1].b_apde013,s_detail1[1].b_apde014, 
+                  s_detail1[1].b_apde015,s_detail1[1].b_apde016,s_detail1[1].b_apde010,s_detail1[1].b_apde009, 
+                  s_detail1[1].b_apde039,s_detail1[1].b_apde040,s_detail1[1].b_apde011,s_detail1[1].b_apde012, 
+                  s_detail1[1].b_apde046
+               BEFORE CONSTRUCT
+                  DISPLAY g_construct_display.apdasite, g_construct_display.apda003 ,
+                          g_construct_display.apdeld, g_construct_display.apdedocno,  
+                          g_construct_display.apda001,g_construct_display.apdadocdt,
+                          g_construct_display.apda005, g_construct_display.apda014,   
+                          g_construct_display.apdastus, g_construct_display.apdeseq,    
+                          g_construct_display.apdeorga, g_construct_display.apde002,   
+                          g_construct_display.apde006, g_construct_display.apde003,    
+                          g_construct_display.apde008, g_construct_display.apde021,    
+                          g_construct_display.apde024, g_construct_display.apde100,    
+                          g_construct_display.apde109, g_construct_display.apde101,    
+                          g_construct_display.apde119, g_construct_display.apde032,    
+                          g_construct_display.apde013, g_construct_display.apde014,    
+                          g_construct_display.apde015, g_construct_display.apde016,    
+                          g_construct_display.apde010, g_construct_display.apde009,    
+                          g_construct_display.apde039, g_construct_display.apde040,    
+                          g_construct_display.apde011, g_construct_display.apde012,    
+                          g_construct_display.apde046 
+                       TO s_detail1[1].b_apdasite,s_detail1[1].b_apda003,s_detail1[1].b_apdeld,s_detail1[1].b_apdedocno, 
+                          s_detail1[1].b_apda001,s_detail1[1].b_apdadocdt,s_detail1[1].b_apda005,s_detail1[1].b_apda014, 
+                          s_detail1[1].b_apdastus,s_detail1[1].b_apdeseq,s_detail1[1].b_apdeorga,s_detail1[1].b_apde002, 
+                          s_detail1[1].b_apde006,s_detail1[1].b_apde003,s_detail1[1].b_apde008,s_detail1[1].b_apde021, 
+                          s_detail1[1].b_apde024,s_detail1[1].b_apde100,s_detail1[1].b_apde109,s_detail1[1].b_apde101, 
+                          s_detail1[1].b_apde119,s_detail1[1].b_apde032,s_detail1[1].b_apde013,s_detail1[1].b_apde014, 
+                          s_detail1[1].b_apde015,s_detail1[1].b_apde016,s_detail1[1].b_apde010,s_detail1[1].b_apde009, 
+                          s_detail1[1].b_apde039,s_detail1[1].b_apde040,s_detail1[1].b_apde011,s_detail1[1].b_apde012, 
+                          s_detail1[1].b_apde046
+                  EXIT CONSTRUCT
+            END CONSTRUCT
+         END IF
+      #150213-00007#5-----e
+      #end add-point 
+ 
+      ON ACTION accept
+         #add-point:ON ACTION accept name="query.accept"
+         
+         #end add-point
+ 
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+ 
+      #add-point:query段查詢方案相關ACTION設定前 name="query.set_qbe_action_before"
+      
+      #end add-point 
+ 
+      ON ACTION qbeclear   # 條件清除
+         CLEAR FORM
+         #add-point:條件清除後 name="query.qbeclear"
+         
+         #end add-point 
+ 
+      #add-point:query段查詢方案相關ACTION設定後 name="query.set_qbe_action_after"
+      
+      #end add-point 
+ 
+   END DIALOG
+ 
+   
+ 
+   LET g_wc = g_wc_table 
+ 
+ 
+   
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+ 
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc = " 1=2"
+      LET g_wc2 = " 1=1"
+      LET g_wc_filter = g_wc_filter_t
+      RETURN
+   ELSE
+      LET g_master_idx = 1
+   END IF
+        
+   #add-point:cs段after_construct name="cs.after_construct"
+ 
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL aapq420_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = -100 
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+   END IF
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapq420.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION aapq420_b_fill()
+   #add-point:b_fill段define-客製 name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc           STRING
+   DEFINE ls_wc2          STRING
+   DEFINE ls_sql_rank     STRING
+   #add-point:b_fill段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   DEFINE ls_wc_apca      STRING
+   #150319-00004#6-----s
+   #XG報表用的temp
+   DEFINE l_i             LIKE type_t.num10
+   DEFINE l_x01_tmp       RECORD                            
+      apdasite           LIKE apda_t.apdasite, 
+      l_apcasite_desc    LIKE type_t.chr80, 
+      apda003            LIKE apda_t.apda003, 
+      l_apda003_desc     LIKE type_t.chr80, 
+      apdeld             LIKE apde_t.apdeld, 
+      l_apdeld_desc      LIKE type_t.chr80, 
+      apdedocno          LIKE apde_t.apdedocno, 
+      apda001            LIKE apda_t.apda001,
+      apda001_desc       LIKE type_t.chr1000,  
+      apdadocdt          LIKE apda_t.apdadocdt, 
+      apda005            LIKE apda_t.apda005, 
+      l_apda005_desc     LIKE type_t.chr80, 
+      apda014            LIKE apda_t.apda014, 
+      apdastus           LIKE apda_t.apdastus,
+      apdastus_desc      LIKE type_t.chr1000,
+      apdeseq            LIKE apde_t.apdeseq, 
+      apdeorga           LIKE apde_t.apdeorga, 
+      l_apdeorga_desc    LIKE type_t.chr80, 
+      apde002            LIKE apde_t.apde002,
+      apde002_desc       LIKE type_t.chr1000,
+      apde006            LIKE apde_t.apde006,
+      apde006_desc       LIKE type_t.chr1000,
+      apde003            LIKE apde_t.apde003, 
+      apde008            LIKE apde_t.apde008, 
+      apde021            LIKE apde_t.apde021, 
+      apde024            LIKE apde_t.apde024, 
+      apde100            LIKE apde_t.apde100, 
+      apde109            LIKE apde_t.apde109, 
+      apde101            LIKE apde_t.apde101, 
+      apde119            LIKE apde_t.apde119, 
+      apde032            LIKE apde_t.apde032, 
+      apde013            LIKE apde_t.apde013, 
+      l_apde013_desc     LIKE type_t.chr80, 
+      apde014            LIKE apde_t.apde014, 
+      apde015            LIKE apde_t.apde015, 
+      apde016            LIKE apde_t.apde016, 
+      l_apde016_desc     LIKE type_t.chr80, 
+      apde010            LIKE apde_t.apde010, 
+      apde009            LIKE apde_t.apde009, 
+      apde039            LIKE apde_t.apde039, 
+      apde040            LIKE apde_t.apde040, 
+      apde011            LIKE apde_t.apde011, 
+      l_apde011_desc     LIKE type_t.chr80, 
+      apde012            LIKE apde_t.apde012, 
+      l_apde012_desc     LIKE type_t.chr80, 
+      apde046            LIKE apde_t.apde046
+   END RECORD
+   #150319-00004#6-----e
+   #end add-point
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   IF cl_null(g_wc_filter2) THEN
+      LET g_wc_filter2 = " 1=1"
+   END IF
+   IF cl_null(g_wc_apca) THEN
+      LET g_wc_apca = " 1=1"
+   END IF
+   LET ls_wc_apca = g_wc_apca, " AND ", g_wc_filter2
+   #end add-point
+ 
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter, cl_sql_auth_filter()   #(ver:40) add cl_sql_auth_filter()
+ 
+   LET ls_sql_rank = "SELECT  UNIQUE '','','','',apdeld,'',apdedocno,'','','','','','',apdeseq,apdeorga, 
+       '',apde002,apde006,apde003,apde008,apde021,apde024,apde100,apde109,apde101,apde119,apde032,apde013, 
+       '',apde014,apde015,apde016,'',apde010,apde009,apde039,apde040,apde011,'',apde012,'',apde046  , 
+       DENSE_RANK() OVER( ORDER BY apde_t.apdeld,apde_t.apdedocno,apde_t.apdeseq) AS RANK FROM apde_t", 
+ 
+ 
+ 
+                     "",
+                     " WHERE apdeent= ? AND 1=1 AND ", ls_wc
+    
+   LET ls_sql_rank = ls_sql_rank, cl_sql_add_filter("apde_t"),
+                     " ORDER BY apde_t.apdeld,apde_t.apdedocno,apde_t.apdeseq"
+ 
+   #add-point:b_fill段rank_sql_after name="b_fill.rank_sql_after"
+   
+   #end add-point
+ 
+   LET g_sql = "SELECT COUNT(1) FROM (",ls_sql_rank,")"
+ 
+   PREPARE b_fill_cnt_pre FROM g_sql
+   EXECUTE b_fill_cnt_pre USING g_enterprise INTO g_tot_cnt
+   FREE b_fill_cnt_pre
+ 
+   #add-point:b_fill段rank_sql_after_count name="b_fill.rank_sql_after_count"
+   
+   #end add-point
+ 
+   CASE g_detail_page_action
+      WHEN "detail_first"
+          LET g_pagestart = 1
+ 
+      WHEN "detail_previous"
+          LET g_pagestart = g_pagestart - g_num_in_page
+          IF g_pagestart < 1 THEN
+              LET g_pagestart = 1
+          END IF
+ 
+      WHEN "detail_next"
+         LET g_pagestart = g_pagestart + g_num_in_page
+         IF g_pagestart > g_tot_cnt THEN
+            LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+            WHILE g_pagestart > g_tot_cnt
+               LET g_pagestart = g_pagestart - g_num_in_page
+            END WHILE
+         END IF
+ 
+      WHEN "detail_last"
+         LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+         WHILE g_pagestart > g_tot_cnt
+            LET g_pagestart = g_pagestart - g_num_in_page
+         END WHILE
+ 
+      OTHERWISE
+         LET g_pagestart = 1
+ 
+   END CASE
+ 
+   LET g_sql = "SELECT '','','','',apdeld,'',apdedocno,'','','','','','',apdeseq,apdeorga,'',apde002, 
+       apde006,apde003,apde008,apde021,apde024,apde100,apde109,apde101,apde119,apde032,apde013,'',apde014, 
+       apde015,apde016,'',apde010,apde009,apde039,apde040,apde011,'',apde012,'',apde046",
+               " FROM (",ls_sql_rank,")",
+              " WHERE RANK >= ",g_pagestart,
+                " AND RANK < ",g_pagestart + g_num_in_page
+ 
+   #add-point:b_fill段sql_after name="b_fill.sql_after"
+   LET g_sql = "SELECT         apdasite,'',apda003,'',apdeld,'',apdedocno,apda001,",
+               "               apdadocdt,apda005,'',apda014,apdastus,apdeseq,",
+               "               apdeorga,'',apde002,apde006, ",
+               "               apde003,apde008,apde021,apde024,apde100,apde109, ",
+               "               apde101,apde119,apde032,apde013,'',apde014, ",
+               "               apde015,apde016,'', ",
+               "               apde010,apde009,apde039,apde040,apde011,'',",
+               "               apde012,'',apde046 ",
+               "               FROM apde_t,apda_t ",
+               " WHERE apdeent = apdaent AND apdeld = apdald AND apdedocno = apdadocno ",
+               "   AND apda001 = '45' ",
+               "   AND (EXISTS(SELECT 1 FROM glba_t WHERE glbaent = apdaent AND glbald = apdald AND glba001 = '",g_user,"') ",
+               "         OR EXISTS(SELECT 1 FROM glbb_t WHERE glbbent = apdaent AND glbbld = apdald AND glbb001 = '",g_dept,"') ",
+               "         OR (NOT EXISTS(SELECT 1 FROM glba_t WHERE glbaent = apdaent AND glbald = apdald) AND NOT EXISTS(SELECT 1 FROM glbb_t WHERE glbbent = apdaent AND glbbld = apdald))) ",
+               "   AND apdeent= ? AND 1=1 AND ", ls_wc
+   #151231-00010#4--(S)
+   LET g_sql_ctrl = NULL
+   CALL s_control_get_sql("apda005",'4','4',g_user,g_dept) RETURNING g_sub_success,g_sql_ctrl
+   IF NOT cl_null(g_sql_ctrl) THEN
+      LET g_sql = g_sql, " AND ",g_sql_ctrl
+   END IF
+   #151231-00010#4--(E)
+   LET g_sql = g_sql, cl_sql_add_filter("apde_t"),cl_sql_add_filter("apda_t"),
+                      " ORDER BY apde_t.apdeld,apde_t.apdedocno,apde_t.apdeseq"
+   #end add-point
+ 
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE aapq420_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR aapq420_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_apde_d.clear()
+ 
+   #add-point:陣列清空 name="b_fill.array_clear"
+   
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   IF g_cnt = 0 THEN
+      LET g_cnt = 1
+   END IF
+   LET l_ac = 1   
+ 
+   FOREACH b_fill_curs INTO g_apde_d[l_ac].apdasite,g_apde_d[l_ac].l_apcasite_desc,g_apde_d[l_ac].apda003, 
+       g_apde_d[l_ac].l_apda003_desc,g_apde_d[l_ac].apdeld,g_apde_d[l_ac].l_apdeld_desc,g_apde_d[l_ac].apdedocno, 
+       g_apde_d[l_ac].apda001,g_apde_d[l_ac].apdadocdt,g_apde_d[l_ac].apda005,g_apde_d[l_ac].l_apda005_desc, 
+       g_apde_d[l_ac].apda014,g_apde_d[l_ac].apdastus,g_apde_d[l_ac].apdeseq,g_apde_d[l_ac].apdeorga, 
+       g_apde_d[l_ac].l_apdeorga_desc,g_apde_d[l_ac].apde002,g_apde_d[l_ac].apde006,g_apde_d[l_ac].apde003, 
+       g_apde_d[l_ac].apde008,g_apde_d[l_ac].apde021,g_apde_d[l_ac].apde024,g_apde_d[l_ac].apde100,g_apde_d[l_ac].apde109, 
+       g_apde_d[l_ac].apde101,g_apde_d[l_ac].apde119,g_apde_d[l_ac].apde032,g_apde_d[l_ac].apde013,g_apde_d[l_ac].l_apde013_desc, 
+       g_apde_d[l_ac].apde014,g_apde_d[l_ac].apde015,g_apde_d[l_ac].apde016,g_apde_d[l_ac].l_apde016_desc, 
+       g_apde_d[l_ac].apde010,g_apde_d[l_ac].apde009,g_apde_d[l_ac].apde039,g_apde_d[l_ac].apde040,g_apde_d[l_ac].apde011, 
+       g_apde_d[l_ac].l_apde011_desc,g_apde_d[l_ac].apde012,g_apde_d[l_ac].l_apde012_desc,g_apde_d[l_ac].apde046 
+ 
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #LET g_apde_d[l_ac].statepic = cl_get_actipic(g_apde_d[l_ac].statepic)
+ 
+      
+ 
+      #add-point:b_fill段資料填充 name="b_fill.fill"
+#      CALL s_desc_get_department_desc(g_apde_d[l_ac].apdasite) RETURNING g_apde_d[l_ac].l_apcasite_desc
+#      LET g_apde_d[l_ac].l_apda003_desc = s_desc_get_person_desc(g_apde_d[l_ac].apda003)
+#      LET g_apde_d[l_ac].l_apdeld_desc  = s_desc_get_ld_desc(g_apde_d[l_ac].apdeld)
+#      LET g_apde_d[l_ac].l_apda005_desc = s_desc_get_trading_partner_abbr_desc(g_apde_d[l_ac].apda005)
+#      LET g_apde_d[l_ac].l_apdeorga_desc = s_desc_get_department_desc(g_apde_d[l_ac].apdeorga)
+#      LET g_apde_d[l_ac].l_apde013_desc = s_desc_get_trading_partner_abbr_desc(g_apde_d[l_ac].apde013) 
+#      LET g_apde_d[l_ac].l_apde016_desc = s_desc_get_account_desc(g_apde_d[l_ac].apdeld,g_apde_d[l_ac].apde016)
+#      LET g_apde_d[l_ac].l_apde011_desc = s_desc_get_nmajl003_desc(g_apde_d[l_ac].apde011)
+#      LET l_glaa005 = NULL
+#      SELECT glaa005 INTO l_glaa005 FROM glaa_t
+#       WHERE glaald = g_apde_d[l_ac].apdeld
+#         AND glaaent = g_enterprise
+#      LET g_apde_d[l_ac].l_apde012_desc = s_desc_get_nmail004_desc(l_glaa005,g_apde_d[l_ac].apde012)
+      #end add-point
+ 
+      CALL aapq420_detail_show("'1'")      
+ 
+      CALL aapq420_apde_t_mask()
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "" 
+            LET g_errparam.code = 9035 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+ 
+   
+   CALL g_apde_d.deleteElement(g_apde_d.getLength())   
+ 
+   #add-point:陣列長度調整 name="b_fill.array_deleteElement"
+   
+   #end add-point
+   
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.others.fill"
+  
+   LET g_sql = "SELECT  UNIQUE apcasite,'',apca003,'',apdeld,'',apdedocno,apca001,",
+               "               apcadocdt,apca005,'',apca038,apcastus,apdeseq,",
+               "               apdeorga,'',apde002,apde006, ",
+               "               apde003,apde008,apde021,apde024,apde100,apde109, ",
+               "               apde101,apde119,apde032,apde013,'',apde014, ",
+               "               apde015,apde016,'', ",
+               "               apde010,apde009,apde039,apde040,apde011,'',",
+               "               apde012,'',apde046 ",
+               "               FROM apde_t,apca_t ",
+               " WHERE apdeent = apcaent AND apdeld = apcald AND apdedocno = apcadocno ",
+               "   AND (EXISTS(SELECT 1 FROM glba_t WHERE glbaent = apcaent AND glbald = apcald AND glba001 = '",g_user,"') ",
+               "         OR EXISTS(SELECT 1 FROM glbb_t WHERE glbbent = apcaent AND glbbld = apcald AND glbb001 = '",g_dept,"') ",
+               "         OR (NOT EXISTS(SELECT 1 FROM glba_t WHERE glbaent = apcaent AND glbald = apcald) AND NOT EXISTS(SELECT 1 FROM glbb_t WHERE glbbent = apcaent AND glbbld = apcald))) ",
+               "   AND apdeent= ? AND 1=1 AND ", ls_wc_apca
+   #151231-00010#4--(S)
+   LET g_sql_ctrl = NULL
+   CALL s_control_get_sql("apca005",'4','4',g_user,g_dept) RETURNING g_sub_success,g_sql_ctrl
+   IF NOT cl_null(g_sql_ctrl) THEN
+      LET g_sql = g_sql, " AND ",g_sql_ctrl
+   END IF
+   #151231-00010#4--(E)
+   LET g_sql = g_sql, cl_sql_add_filter("apde_t"),cl_sql_add_filter("apca_t"),
+                      " ORDER BY apde_t.apdeld,apde_t.apdedocno,apde_t.apdeseq"
+                      
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE aapq420_pb2 FROM g_sql
+   DECLARE b_fill_curs2 CURSOR FOR aapq420_pb2
+   
+   OPEN b_fill_curs2 USING g_enterprise                   
+   FOREACH b_fill_curs2 INTO g_apde_d[l_ac].apdasite,g_apde_d[l_ac].l_apcasite_desc,g_apde_d[l_ac].apda003, 
+       g_apde_d[l_ac].l_apda003_desc,g_apde_d[l_ac].apdeld,g_apde_d[l_ac].l_apdeld_desc,g_apde_d[l_ac].apdedocno, 
+       g_apde_d[l_ac].apda001,g_apde_d[l_ac].apdadocdt,g_apde_d[l_ac].apda005,g_apde_d[l_ac].l_apda005_desc, 
+       g_apde_d[l_ac].apda014,g_apde_d[l_ac].apdastus,g_apde_d[l_ac].apdeseq,g_apde_d[l_ac].apdeorga, 
+       g_apde_d[l_ac].l_apdeorga_desc,g_apde_d[l_ac].apde002,g_apde_d[l_ac].apde006,g_apde_d[l_ac].apde003, 
+       g_apde_d[l_ac].apde008,g_apde_d[l_ac].apde021,g_apde_d[l_ac].apde024,g_apde_d[l_ac].apde100,g_apde_d[l_ac].apde109, 
+       g_apde_d[l_ac].apde101,g_apde_d[l_ac].apde119,g_apde_d[l_ac].apde032,g_apde_d[l_ac].apde013,g_apde_d[l_ac].l_apde013_desc, 
+       g_apde_d[l_ac].apde014,g_apde_d[l_ac].apde015,g_apde_d[l_ac].apde016,g_apde_d[l_ac].l_apde016_desc, 
+       g_apde_d[l_ac].apde010,g_apde_d[l_ac].apde009,g_apde_d[l_ac].apde039,g_apde_d[l_ac].apde040,g_apde_d[l_ac].apde011, 
+       g_apde_d[l_ac].l_apde011_desc,g_apde_d[l_ac].apde012,g_apde_d[l_ac].l_apde012_desc,g_apde_d[l_ac].apde046 
+
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      CALL aapq420_detail_show("'1'")      
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+   LET g_error_show = 0
+      
+   CALL g_apde_d.deleteElement(g_apde_d.getLength())   
+   
+   
+   
+   #150319-00004#6-----s
+   #依畫面資料INSERT XG_tmp 
+   DELETE FROM aapq420_x01_tmp
+   FOR l_i = 1 TO g_apde_d.getLength()
+      INITIALIZE l_x01_tmp.* TO NULL
+      LET l_x01_tmp.apdasite          = g_apde_d[l_i].apdasite 
+      LET l_x01_tmp.l_apcasite_desc   = g_apde_d[l_i].l_apcasite_desc 
+      LET l_x01_tmp.apda003           = g_apde_d[l_i].apda003 
+      LET l_x01_tmp.l_apda003_desc    = g_apde_d[l_i].l_apda003_desc 
+      LET l_x01_tmp.apdeld            = g_apde_d[l_i].apdeld 
+      LET l_x01_tmp.l_apdeld_desc     = g_apde_d[l_i].l_apdeld_desc 
+      LET l_x01_tmp.apdedocno         = g_apde_d[l_i].apdedocno
+      LET l_x01_tmp.apda001           = g_apde_d[l_i].apda001
+      LET l_x01_tmp.apda001_desc      = g_apde_d[l_i].apda001,":",s_desc_gzcbl004_desc('8502',g_apde_d[l_i].apda001)
+      LET l_gzcbl004                  = s_desc_gzcbl004_desc('8502',g_apde_d[l_i].apda001)
+      IF cl_null(l_gzcbl004) THEN      
+         LET l_x01_tmp.apda001_desc   = g_apde_d[l_i].apda001,":",s_desc_gzcbl004_desc('8507',g_apde_d[l_i].apda001)  
+      END IF
+      
+      LET l_x01_tmp.apdadocdt         = g_apde_d[l_i].apdadocdt 
+      LET l_x01_tmp.apda005           = g_apde_d[l_i].apda005 
+      LET l_x01_tmp.l_apda005_desc    = g_apde_d[l_i].l_apda005_desc
+      LET l_x01_tmp.apda014           = g_apde_d[l_i].apda014 
+      LET l_x01_tmp.apdastus          = g_apde_d[l_i].apdastus
+      
+      IF cl_null(g_apde_d[l_i].apdastus) THEN 
+         LET l_x01_tmp.apdastus_desc  = ""
+      ELSE
+         LET l_x01_tmp.apdastus_desc  = l_x01_tmp.apdastus,":",s_desc_gzcbl004_desc('13',l_x01_tmp.apdastus)
+      END IF
+      
+      LET l_x01_tmp.apdeseq           = g_apde_d[l_i].apdeseq 
+      LET l_x01_tmp.apdeorga          = g_apde_d[l_i].apdeorga 
+      LET l_x01_tmp.l_apdeorga_desc   = g_apde_d[l_i].l_apdeorga_desc 
+      LET l_x01_tmp.apde002           = g_apde_d[l_i].apde002
+      
+      IF cl_null(g_apde_d[l_i].apde002) THEN 
+         LET l_x01_tmp.apde002_desc   = ""
+      ELSE
+         LET l_x01_tmp.apde002_desc   = l_x01_tmp.apde002,":",s_desc_gzcbl004_desc('8506',l_x01_tmp.apde002) 
+      END IF 
+      
+      LET l_x01_tmp.apde006           = g_apde_d[l_i].apde006
+      
+      IF cl_null(g_apde_d[l_i].apde006) THEN 
+         LET l_x01_tmp.apde006_desc   = ""
+      ELSE
+         LET l_x01_tmp.apde006_desc   = l_x01_tmp.apde006,":",s_desc_gzcbl004_desc('8310',l_x01_tmp.apde006)       
+      END IF
+      
+      LET l_x01_tmp.apde003           = g_apde_d[l_i].apde003
+      LET l_x01_tmp.apde008           = g_apde_d[l_i].apde008
+      LET l_x01_tmp.apde021           = g_apde_d[l_i].apde021
+      LET l_x01_tmp.apde024           = g_apde_d[l_i].apde024
+      LET l_x01_tmp.apde100           = g_apde_d[l_i].apde100
+      LET l_x01_tmp.apde109           = g_apde_d[l_i].apde109
+      LET l_x01_tmp.apde101           = g_apde_d[l_i].apde101
+      LET l_x01_tmp.apde119           = g_apde_d[l_i].apde119
+      LET l_x01_tmp.apde032           = g_apde_d[l_i].apde032
+      LET l_x01_tmp.apde013           = g_apde_d[l_i].apde013
+      LET l_x01_tmp.l_apde013_desc    = g_apde_d[l_i].l_apde013_desc
+      LET l_x01_tmp.apde014           = g_apde_d[l_i].apde014
+      LET l_x01_tmp.apde015           = g_apde_d[l_i].apde015
+      LET l_x01_tmp.apde016           = g_apde_d[l_i].apde016
+      LET l_x01_tmp.l_apde016_desc    = g_apde_d[l_i].l_apde016_desc
+      LET l_x01_tmp.apde010           = g_apde_d[l_i].apde010
+      LET l_x01_tmp.apde009           = g_apde_d[l_i].apde009
+      LET l_x01_tmp.apde039           = g_apde_d[l_i].apde039
+      LET l_x01_tmp.apde040           = g_apde_d[l_i].apde040
+      LET l_x01_tmp.apde011           = g_apde_d[l_i].apde011
+      LET l_x01_tmp.l_apde011_desc    = g_apde_d[l_i].l_apde011_desc
+      LET l_x01_tmp.apde012           = g_apde_d[l_i].apde012
+      LET l_x01_tmp.l_apde012_desc    = g_apde_d[l_i].l_apde012_desc
+      LET l_x01_tmp.apde046           = g_apde_d[l_i].apde046
+      #INSERT INTO aapq420_x01_tmp VALUES(l_x01_tmp.*) #161108-00017#2 mark
+      #161108-00017#2 add ------
+      INSERT INTO aapq420_x01_tmp (apdasite,l_apcasite_desc,apda003,l_apda003_desc,apdeld,
+                                   l_apdeld_desc,apdedocno,apda001,apda001_desc,apdadocdt,
+                                   apda005,l_apda005_desc,apda014,apdastus,apdastus_desc,
+                                   apdeseq,apdeorga,l_apdeorga_desc,apde002,apde002_desc,
+                                   apde006,apde006_desc,apde003,apde008,apde021,
+                                   apde024,apde100,apde109,apde101,apde119,
+                                   apde032,apde013,l_apde013_desc,apde014,apde015,
+                                   apde016,l_apde016_desc,apde010,apde009,apde039,
+                                   apde040,apde011,l_apde011_desc,apde012,l_apde012_desc,
+                                   apde046
+                                  )
+      VALUES (l_x01_tmp.apdasite,l_x01_tmp.l_apcasite_desc,l_x01_tmp.apda003,l_x01_tmp.l_apda003_desc,l_x01_tmp.apdeld,
+              l_x01_tmp.l_apdeld_desc,l_x01_tmp.apdedocno,l_x01_tmp.apda001,l_x01_tmp.apda001_desc,l_x01_tmp.apdadocdt,
+              l_x01_tmp.apda005,l_x01_tmp.l_apda005_desc,l_x01_tmp.apda014,l_x01_tmp.apdastus,l_x01_tmp.apdastus_desc,
+              l_x01_tmp.apdeseq,l_x01_tmp.apdeorga,l_x01_tmp.l_apdeorga_desc,l_x01_tmp.apde002,l_x01_tmp.apde002_desc,
+              l_x01_tmp.apde006,l_x01_tmp.apde006_desc,l_x01_tmp.apde003,l_x01_tmp.apde008,l_x01_tmp.apde021,
+              l_x01_tmp.apde024,l_x01_tmp.apde100,l_x01_tmp.apde109,l_x01_tmp.apde101,l_x01_tmp.apde119,
+              l_x01_tmp.apde032,l_x01_tmp.apde013,l_x01_tmp.l_apde013_desc,l_x01_tmp.apde014,l_x01_tmp.apde015,
+              l_x01_tmp.apde016,l_x01_tmp.l_apde016_desc,l_x01_tmp.apde010,l_x01_tmp.apde009,l_x01_tmp.apde039,
+              l_x01_tmp.apde040,l_x01_tmp.apde011,l_x01_tmp.l_apde011_desc,l_x01_tmp.apde012,l_x01_tmp.l_apde012_desc,
+              l_x01_tmp.apde046
+             )
+      #161108-00017#2 add end---
+   END FOR
+   #150319-00004#6-----e
+   #end add-point
+ 
+   LET g_detail_cnt = g_apde_d.getLength()
+#  DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE aapq420_pb
+ 
+   #調整單身index指標，避免翻頁後指到空白筆數
+   CALL aapq420_detail_index_setting()
+ 
+   #重新計算單身筆數並呈現
+   CALL aapq420_detail_action_trans()
+ 
+   IF g_apde_d.getLength() > 0 THEN
+      LET l_ac = 1
+      CALL aapq420_fetch()
+   END IF
+   
+      CALL aapq420_filter_show('apdasite','b_apdasite')
+   CALL aapq420_filter_show('apda003','b_apda003')
+   CALL aapq420_filter_show('apdeld','b_apdeld')
+   CALL aapq420_filter_show('apdedocno','b_apdedocno')
+   CALL aapq420_filter_show('apda001','b_apda001')
+   CALL aapq420_filter_show('apdadocdt','b_apdadocdt')
+   CALL aapq420_filter_show('apda005','b_apda005')
+   CALL aapq420_filter_show('apda014','b_apda014')
+   CALL aapq420_filter_show('apdastus','b_apdastus')
+   CALL aapq420_filter_show('apdeseq','b_apdeseq')
+   CALL aapq420_filter_show('apdeorga','b_apdeorga')
+   CALL aapq420_filter_show('apde002','b_apde002')
+   CALL aapq420_filter_show('apde006','b_apde006')
+   CALL aapq420_filter_show('apde003','b_apde003')
+   CALL aapq420_filter_show('apde008','b_apde008')
+   CALL aapq420_filter_show('apde021','b_apde021')
+   CALL aapq420_filter_show('apde024','b_apde024')
+   CALL aapq420_filter_show('apde100','b_apde100')
+   CALL aapq420_filter_show('apde109','b_apde109')
+   CALL aapq420_filter_show('apde101','b_apde101')
+   CALL aapq420_filter_show('apde119','b_apde119')
+   CALL aapq420_filter_show('apde032','b_apde032')
+   CALL aapq420_filter_show('apde013','b_apde013')
+   CALL aapq420_filter_show('apde014','b_apde014')
+   CALL aapq420_filter_show('apde015','b_apde015')
+   CALL aapq420_filter_show('apde016','b_apde016')
+   CALL aapq420_filter_show('apde010','b_apde010')
+   CALL aapq420_filter_show('apde009','b_apde009')
+   CALL aapq420_filter_show('apde039','b_apde039')
+   CALL aapq420_filter_show('apde040','b_apde040')
+   CALL aapq420_filter_show('apde011','b_apde011')
+   CALL aapq420_filter_show('apde012','b_apde012')
+   CALL aapq420_filter_show('apde046','b_apde046')
+ 
+ 
+   #add-point:b_fill段結束前 name="b_fill.after"
+ 
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapq420.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION aapq420_fetch()
+   #add-point:fetch段define-客製 name="fetch.define_customerization"
+   
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   
+   #end add-point
+   
+   #add-point:FUNCTION前置處理 name="fetch.before_function"
+   
+   #end add-point
+ 
+ 
+   #add-point:陣列清空 name="fetch.array_clear"
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+ 
+   
+   #add-point:單身填充後 name="fetch.after_fill"
+   
+   #end add-point 
+   
+ 
+   #add-point:陣列筆數調整 name="fetch.array_deleteElement"
+   
+   #end add-point
+ 
+   LET l_ac = li_ac
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapq420.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION aapq420_detail_show(ps_page)
+   #add-point:show段define-客製 name="detail_show.define_customerization"
+   
+   #end add-point
+   DEFINE ps_page    STRING
+   DEFINE ls_sql     STRING
+   #add-point:show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   DEFINE l_glaa005       LIKE glaa_t.glaa005
+   #end add-point
+ 
+   #add-point:detail_show段之前 name="detail_show.before"
+   
+   #end add-point
+   
+   
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      
+ 
+      #add-point:show段單身reference name="detail_show.body.reference"
+      CALL s_desc_get_department_desc(g_apde_d[l_ac].apdasite) RETURNING g_apde_d[l_ac].l_apcasite_desc
+      LET g_apde_d[l_ac].l_apda003_desc = s_desc_get_person_desc(g_apde_d[l_ac].apda003)
+      LET g_apde_d[l_ac].l_apdeld_desc  = s_desc_get_ld_desc(g_apde_d[l_ac].apdeld)
+      LET g_apde_d[l_ac].l_apda005_desc = s_desc_get_trading_partner_abbr_desc(g_apde_d[l_ac].apda005)
+      LET g_apde_d[l_ac].l_apdeorga_desc = s_desc_get_department_desc(g_apde_d[l_ac].apdeorga)
+      LET g_apde_d[l_ac].l_apde013_desc = s_desc_get_trading_partner_abbr_desc(g_apde_d[l_ac].apde013) 
+      LET g_apde_d[l_ac].l_apde016_desc = s_desc_get_account_desc(g_apde_d[l_ac].apdeld,g_apde_d[l_ac].apde016)
+      LET g_apde_d[l_ac].l_apde011_desc = s_desc_get_nmajl003_desc(g_apde_d[l_ac].apde011)
+      LET l_glaa005 = NULL
+      SELECT glaa005 INTO l_glaa005 FROM glaa_t
+       WHERE glaald = g_apde_d[l_ac].apdeld
+         AND glaaent = g_enterprise
+      LET g_apde_d[l_ac].l_apde012_desc = s_desc_get_nmail004_desc(l_glaa005,g_apde_d[l_ac].apde012)
+      #end add-point
+   END IF
+   
+ 
+ 
+   #add-point:detail_show段之後 name="detail_show.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapq420.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION aapq420_filter()
+   #add-point:filter段define-客製 name="filter.define_customerization"
+   
+   #end add-point
+   DEFINE  ls_result   STRING
+   #add-point:filter段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter.define"
+   
+   #end add-point
+   
+   #add-point:FUNCTION前置處理 name="filter.before_function"
+   
+   #end add-point
+ 
+   LET l_ac = 1
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON apdasite,apda003,apdeld,apdedocno,apda001,apdadocdt,apda005,apda014,apdastus, 
+          apdeseq,apdeorga,apde002,apde006,apde003,apde008,apde021,apde024,apde100,apde109,apde101,apde119, 
+          apde032,apde013,apde014,apde015,apde016,apde010,apde009,apde039,apde040,apde011,apde012,apde046 
+ 
+                          FROM s_detail1[1].b_apdasite,s_detail1[1].b_apda003,s_detail1[1].b_apdeld, 
+                              s_detail1[1].b_apdedocno,s_detail1[1].b_apda001,s_detail1[1].b_apdadocdt, 
+                              s_detail1[1].b_apda005,s_detail1[1].b_apda014,s_detail1[1].b_apdastus, 
+                              s_detail1[1].b_apdeseq,s_detail1[1].b_apdeorga,s_detail1[1].b_apde002, 
+                              s_detail1[1].b_apde006,s_detail1[1].b_apde003,s_detail1[1].b_apde008,s_detail1[1].b_apde021, 
+                              s_detail1[1].b_apde024,s_detail1[1].b_apde100,s_detail1[1].b_apde109,s_detail1[1].b_apde101, 
+                              s_detail1[1].b_apde119,s_detail1[1].b_apde032,s_detail1[1].b_apde013,s_detail1[1].b_apde014, 
+                              s_detail1[1].b_apde015,s_detail1[1].b_apde016,s_detail1[1].b_apde010,s_detail1[1].b_apde009, 
+                              s_detail1[1].b_apde039,s_detail1[1].b_apde040,s_detail1[1].b_apde011,s_detail1[1].b_apde012, 
+                              s_detail1[1].b_apde046
+ 
+         BEFORE CONSTRUCT
+                     DISPLAY aapq420_filter_parser('apdasite') TO s_detail1[1].b_apdasite
+            DISPLAY aapq420_filter_parser('apda003') TO s_detail1[1].b_apda003
+            DISPLAY aapq420_filter_parser('apdeld') TO s_detail1[1].b_apdeld
+            DISPLAY aapq420_filter_parser('apdedocno') TO s_detail1[1].b_apdedocno
+            DISPLAY aapq420_filter_parser('apda001') TO s_detail1[1].b_apda001
+            DISPLAY aapq420_filter_parser('apdadocdt') TO s_detail1[1].b_apdadocdt
+            DISPLAY aapq420_filter_parser('apda005') TO s_detail1[1].b_apda005
+            DISPLAY aapq420_filter_parser('apda014') TO s_detail1[1].b_apda014
+            DISPLAY aapq420_filter_parser('apdastus') TO s_detail1[1].b_apdastus
+            DISPLAY aapq420_filter_parser('apdeseq') TO s_detail1[1].b_apdeseq
+            DISPLAY aapq420_filter_parser('apdeorga') TO s_detail1[1].b_apdeorga
+            DISPLAY aapq420_filter_parser('apde002') TO s_detail1[1].b_apde002
+            DISPLAY aapq420_filter_parser('apde006') TO s_detail1[1].b_apde006
+            DISPLAY aapq420_filter_parser('apde003') TO s_detail1[1].b_apde003
+            DISPLAY aapq420_filter_parser('apde008') TO s_detail1[1].b_apde008
+            DISPLAY aapq420_filter_parser('apde021') TO s_detail1[1].b_apde021
+            DISPLAY aapq420_filter_parser('apde024') TO s_detail1[1].b_apde024
+            DISPLAY aapq420_filter_parser('apde100') TO s_detail1[1].b_apde100
+            DISPLAY aapq420_filter_parser('apde109') TO s_detail1[1].b_apde109
+            DISPLAY aapq420_filter_parser('apde101') TO s_detail1[1].b_apde101
+            DISPLAY aapq420_filter_parser('apde119') TO s_detail1[1].b_apde119
+            DISPLAY aapq420_filter_parser('apde032') TO s_detail1[1].b_apde032
+            DISPLAY aapq420_filter_parser('apde013') TO s_detail1[1].b_apde013
+            DISPLAY aapq420_filter_parser('apde014') TO s_detail1[1].b_apde014
+            DISPLAY aapq420_filter_parser('apde015') TO s_detail1[1].b_apde015
+            DISPLAY aapq420_filter_parser('apde016') TO s_detail1[1].b_apde016
+            DISPLAY aapq420_filter_parser('apde010') TO s_detail1[1].b_apde010
+            DISPLAY aapq420_filter_parser('apde009') TO s_detail1[1].b_apde009
+            DISPLAY aapq420_filter_parser('apde039') TO s_detail1[1].b_apde039
+            DISPLAY aapq420_filter_parser('apde040') TO s_detail1[1].b_apde040
+            DISPLAY aapq420_filter_parser('apde011') TO s_detail1[1].b_apde011
+            DISPLAY aapq420_filter_parser('apde012') TO s_detail1[1].b_apde012
+            DISPLAY aapq420_filter_parser('apde046') TO s_detail1[1].b_apde046
+ 
+ 
+         #單身公用欄位開窗相關處理
+         
+           
+         #單身一般欄位開窗相關處理
+                  #----<<b_apdasite>>----
+         #Ctrlp:construct.c.filter.page1.b_apdasite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apdasite
+            #add-point:ON ACTION controlp INFIELD b_apdasite name="construct.c.filter.page1.b_apdasite"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            #CALL q_ooef001()      #161006-00005#42   mark
+            CALL q_ooef001_46()    #161006-00005#42   add              #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_apdasite  #顯示到畫面上
+            NEXT FIELD b_apdasite
+            #END add-point
+ 
+ 
+         #----<<l_apcasite_desc>>----
+         #----<<b_apda003>>----
+         #Ctrlp:construct.c.filter.page1.b_apda003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apda003
+            #add-point:ON ACTION controlp INFIELD b_apda003 name="construct.c.filter.page1.b_apda003"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()
+            DISPLAY g_qryparam.return1 TO b_apda003      #顯示到畫面上
+            NEXT FIELD b_apda003
+            #END add-point
+ 
+ 
+         #----<<l_apda003_desc>>----
+         #----<<b_apdeld>>----
+         #Ctrlp:construct.c.filter.page1.b_apdeld
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apdeld
+            #add-point:ON ACTION controlp INFIELD b_apdeld name="construct.c.filter.page1.b_apdeld"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = g_user
+            #LET g_qryparam.arg2 = g_grup #160812-00027#2 mark 應傳入g_dept
+            #160812-00027#2 --s add 
+            LET g_qryparam.arg2 = g_dept
+            LET g_qryparam.where = " glaald IN ",g_wc_cs_ld  
+            #160812-00027#2 --e add
+            CALL q_authorised_ld()
+            DISPLAY g_qryparam.return1 TO b_apdeld
+            NEXT FIELD b_apdeld
+            #END add-point
+ 
+ 
+         #----<<l_apdeld_desc>>----
+         #----<<b_apdedocno>>----
+         #Ctrlp:construct.c.filter.page1.b_apdedocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apdedocno
+            #add-point:ON ACTION controlp INFIELD b_apdedocno name="construct.c.filter.page1.b_apdedocno"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " apda001 = '45' "
+            #151231-00010#4--(S)
+            LET g_sql_ctrl = NULL
+            CALL s_control_get_sql("apda005",'4','4',g_user,g_dept) RETURNING g_sub_success,g_sql_ctrl
+            IF NOT cl_null(g_sql_ctrl) THEN
+               LET g_qryparam.where = g_qryparam.where ," AND ",g_sql_ctrl
+            END IF
+            #151231-00010#4--(E)
+            CALL q_apdadocno()
+            DISPLAY g_qryparam.return1 TO b_apdedocno
+            NEXT FIELD b_apdedocno
+            #END add-point
+ 
+ 
+         #----<<b_apda001>>----
+         #Ctrlp:construct.c.filter.page1.b_apda001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apda001
+            #add-point:ON ACTION controlp INFIELD b_apda001 name="construct.c.filter.page1.b_apda001"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apdadocdt>>----
+         #Ctrlp:construct.c.filter.page1.b_apdadocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apdadocdt
+            #add-point:ON ACTION controlp INFIELD b_apdadocdt name="construct.c.filter.page1.b_apdadocdt"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apda005>>----
+         #Ctrlp:construct.c.filter.page1.b_apda005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apda005
+            #add-point:ON ACTION controlp INFIELD b_apda005 name="construct.c.filter.page1.b_apda005"
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            #151231-00010#4--(S)
+            LET g_sql_ctrl = NULL
+            CALL s_control_get_sql("apca005",'4','4',g_user,g_dept) RETURNING g_sub_success,g_sql_ctrl
+            IF NOT cl_null(g_sql_ctrl) THEN
+               LET g_qryparam.where = g_sql_ctrl
+            END IF
+            #151231-00010#4--(E)
+            CALL q_apca005()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_apda005  #顯示到畫面上
+            NEXT FIELD b_apda005
+            #END add-point
+ 
+ 
+         #----<<l_apda005_desc>>----
+         #----<<b_apda014>>----
+         #Ctrlp:construct.c.filter.page1.b_apda014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apda014
+            #add-point:ON ACTION controlp INFIELD b_apda014 name="construct.c.filter.page1.b_apda014"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_apda014()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_apda014  #顯示到畫面上
+            NEXT FIELD b_apda014      
+            #END add-point
+ 
+ 
+         #----<<b_apdastus>>----
+         #Ctrlp:construct.c.filter.page1.b_apdastus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apdastus
+            #add-point:ON ACTION controlp INFIELD b_apdastus name="construct.c.filter.page1.b_apdastus"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apdeseq>>----
+         #Ctrlp:construct.c.filter.page1.b_apdeseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apdeseq
+            #add-point:ON ACTION controlp INFIELD b_apdeseq name="construct.c.filter.page1.b_apdeseq"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apdeorga>>----
+         #Ctrlp:construct.c.filter.page1.b_apdeorga
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apdeorga
+            #add-point:ON ACTION controlp INFIELD b_apdeorga name="construct.c.filter.page1.b_apdeorga"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            #CALL q_ooef001()      #161006-00005#42   mark
+            CALL q_ooef001_33()    #161006-00005#42   add                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_apdeorga  #顯示到畫面上
+            NEXT FIELD b_apdeorga                     #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<l_apdeorga_desc>>----
+         #----<<b_apde002>>----
+         #Ctrlp:construct.c.filter.page1.b_apde002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde002
+            #add-point:ON ACTION controlp INFIELD b_apde002 name="construct.c.filter.page1.b_apde002"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde006>>----
+         #Ctrlp:construct.c.filter.page1.b_apde006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde006
+            #add-point:ON ACTION controlp INFIELD b_apde006 name="construct.c.filter.page1.b_apde006"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde003>>----
+         #Ctrlp:construct.c.filter.page1.b_apde003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde003
+            #add-point:ON ACTION controlp INFIELD b_apde003 name="construct.c.filter.page1.b_apde003"
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_apde003()                                       
+            DISPLAY g_qryparam.return1 TO b_apde003           
+            NEXT FIELD b_apde003 
+            #END add-point
+ 
+ 
+         #----<<b_apde008>>----
+         #Ctrlp:construct.c.filter.page1.b_apde008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde008
+            #add-point:ON ACTION controlp INFIELD b_apde008 name="construct.c.filter.page1.b_apde008"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_nmas001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_apde008  #顯示到畫面上
+            NEXT FIELD b_apde008                     #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<b_apde021>>----
+         #Ctrlp:construct.c.filter.page1.b_apde021
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde021
+            #add-point:ON ACTION controlp INFIELD b_apde021 name="construct.c.filter.page1.b_apde021"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooia001()
+            DISPLAY g_qryparam.return1 TO b_apde021   #顯示到畫面上
+            NEXT FIELD b_apde021
+            #END add-point
+ 
+ 
+         #----<<b_apde024>>----
+         #Ctrlp:construct.c.filter.page1.b_apde024
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde024
+            #add-point:ON ACTION controlp INFIELD b_apde024 name="construct.c.filter.page1.b_apde024"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde100>>----
+         #Ctrlp:construct.c.filter.page1.b_apde100
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde100
+            #add-point:ON ACTION controlp INFIELD b_apde100 name="construct.c.filter.page1.b_apde100"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooai001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_apde100  #顯示到畫面上
+            NEXT FIELD b_apde100                     #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<b_apde109>>----
+         #Ctrlp:construct.c.filter.page1.b_apde109
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde109
+            #add-point:ON ACTION controlp INFIELD b_apde109 name="construct.c.filter.page1.b_apde109"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde101>>----
+         #Ctrlp:construct.c.filter.page1.b_apde101
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde101
+            #add-point:ON ACTION controlp INFIELD b_apde101 name="construct.c.filter.page1.b_apde101"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde119>>----
+         #Ctrlp:construct.c.filter.page1.b_apde119
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde119
+            #add-point:ON ACTION controlp INFIELD b_apde119 name="construct.c.filter.page1.b_apde119"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde032>>----
+         #Ctrlp:construct.c.filter.page1.b_apde032
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde032
+            #add-point:ON ACTION controlp INFIELD b_apde032 name="construct.c.filter.page1.b_apde032"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde013>>----
+         #Ctrlp:construct.c.filter.page1.b_apde013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde013
+            #add-point:ON ACTION controlp INFIELD b_apde013 name="construct.c.filter.page1.b_apde013"
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmac002_2()
+            DISPLAY g_qryparam.return1 TO b_apde013  #顯示到畫面上
+            NEXT FIELD b_apde013
+            #END add-point
+ 
+ 
+         #----<<l_apde013_desc>>----
+         #----<<b_apde014>>----
+         #Ctrlp:construct.c.filter.page1.b_apde014
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde014
+            #add-point:ON ACTION controlp INFIELD b_apde014 name="construct.c.filter.page1.b_apde014"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde015>>----
+         #Ctrlp:construct.c.filter.page1.b_apde015
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde015
+            #add-point:ON ACTION controlp INFIELD b_apde015 name="construct.c.filter.page1.b_apde015"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde016>>----
+         #Ctrlp:construct.c.filter.page1.b_apde016
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde016
+            #add-point:ON ACTION controlp INFIELD b_apde016 name="construct.c.filter.page1.b_apde016"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = "glac003 <>'1' " #非統制科目
+            CALL aglt310_04()
+            DISPLAY g_qryparam.return1 TO b_apde016   #顯示到畫面上
+            NEXT FIELD b_apde016     
+            #END add-point
+ 
+ 
+         #----<<l_apde016_desc>>----
+         #----<<b_apde010>>----
+         #Ctrlp:construct.c.filter.page1.b_apde010
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde010
+            #add-point:ON ACTION controlp INFIELD b_apde010 name="construct.c.filter.page1.b_apde010"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde009>>----
+         #Ctrlp:construct.c.filter.page1.b_apde009
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde009
+            #add-point:ON ACTION controlp INFIELD b_apde009 name="construct.c.filter.page1.b_apde009"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde039>>----
+         #Ctrlp:construct.c.filter.page1.b_apde039
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde039
+            #add-point:ON ACTION controlp INFIELD b_apde039 name="construct.c.filter.page1.b_apde039"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde040>>----
+         #Ctrlp:construct.c.filter.page1.b_apde040
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde040
+            #add-point:ON ACTION controlp INFIELD b_apde040 name="construct.c.filter.page1.b_apde040"
+            
+            #END add-point
+ 
+ 
+         #----<<b_apde011>>----
+         #Ctrlp:construct.c.filter.page1.b_apde011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde011
+            #add-point:ON ACTION controlp INFIELD b_apde011 name="construct.c.filter.page1.b_apde011"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_nmaj001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_apde011  #顯示到畫面上
+            NEXT FIELD b_apde011  
+            #END add-point
+ 
+ 
+         #----<<l_apde011_desc>>----
+         #----<<b_apde012>>----
+         #Ctrlp:construct.c.filter.page1.b_apde012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde012
+            #add-point:ON ACTION controlp INFIELD b_apde012 name="construct.c.filter.page1.b_apde012"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_nmai002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_apde012  #顯示到畫面上
+            NEXT FIELD b_apde012 
+            #END add-point
+ 
+ 
+         #----<<l_apde012_desc>>----
+         #----<<b_apde046>>----
+         #Ctrlp:construct.c.filter.page1.b_apde046
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_apde046
+            #add-point:ON ACTION controlp INFIELD b_apde046 name="construct.c.filter.page1.b_apde046"
+            
+            #END add-point
+ 
+ 
+   
+ 
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs name="filter.add_cs"
+ 
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog name="filter.b_dialog"
+      #150213-00007#5-----s
+      #離開時判斷是否按放棄決定是否重組apca-apde的條件字串
+      AFTER DIALOG
+         LET g_construct_display.apdasite  =GET_FLDBUF(b_apdasite)   
+         LET g_construct_display.apda003   =GET_FLDBUF(b_apda003)    
+         LET g_construct_display.apdeld    =GET_FLDBUF(b_apdeld)     
+         LET g_construct_display.apdedocno =GET_FLDBUF(b_apdedocno)  
+         LET g_construct_display.apda001   =GET_FLDBUF(b_apda001)    
+         LET g_construct_display.apdadocdt =GET_FLDBUF(b_apdadocdt)  
+         LET g_construct_display.apda005   =GET_FLDBUF(b_apda005)    
+         LET g_construct_display.apda014   =GET_FLDBUF(b_apda014)   
+         LET g_construct_display.apdastus  =GET_FLDBUF(b_apdastus)   
+         LET g_construct_display.apdeseq   =GET_FLDBUF(b_apdeseq)    
+         LET g_construct_display.apdeorga  =GET_FLDBUF(b_apdeorga)   
+         LET g_construct_display.apde002   =GET_FLDBUF(b_apde002)   
+         LET g_construct_display.apde006   =GET_FLDBUF(b_apde006)   
+         LET g_construct_display.apde003   =GET_FLDBUF(b_apde003)    
+         LET g_construct_display.apde008   =GET_FLDBUF(b_apde008)    
+         LET g_construct_display.apde021   =GET_FLDBUF(b_apde021)    
+         LET g_construct_display.apde024   =GET_FLDBUF(b_apde024)    
+         LET g_construct_display.apde100   =GET_FLDBUF(b_apde100)    
+         LET g_construct_display.apde109   =GET_FLDBUF(b_apde109)    
+         LET g_construct_display.apde101   =GET_FLDBUF(b_apde101)    
+         LET g_construct_display.apde119   =GET_FLDBUF(b_apde119)    
+         LET g_construct_display.apde032   =GET_FLDBUF(b_apde032)    
+         LET g_construct_display.apde013   =GET_FLDBUF(b_apde013)    
+         LET g_construct_display.apde014   =GET_FLDBUF(b_apde014)    
+         LET g_construct_display.apde015   =GET_FLDBUF(b_apde015)    
+         LET g_construct_display.apde016   =GET_FLDBUF(b_apde016)    
+         LET g_construct_display.apde010   =GET_FLDBUF(b_apde010)    
+         LET g_construct_display.apde009   =GET_FLDBUF(b_apde009)    
+         LET g_construct_display.apde039   =GET_FLDBUF(b_apde039)    
+         LET g_construct_display.apde040   =GET_FLDBUF(b_apde040)    
+         LET g_construct_display.apde011   =GET_FLDBUF(b_apde011)    
+         LET g_construct_display.apde012   =GET_FLDBUF(b_apde012)    
+         LET g_construct_display.apde046   =GET_FLDBUF(b_apde046)    
+         IF INT_FLAG THEN
+         ELSE
+            CONSTRUCT g_wc_filter2 ON apcasite,apca003,apdeld,apdedocno,apca001,apcadocdt,apca005,apca038,apcastus, 
+             apdeseq,apdeorga,apde002,apde006,apde003,apde008,apde021,apde024,apde100,apde109,apde101,apde119, 
+             apde032,apde013,apde014,apde015,apde016,apde010,apde009,apde039,apde040,apde011,apde012,apde046
+             FROM s_detail1[1].b_apdasite,s_detail1[1].b_apda003,s_detail1[1].b_apdeld,s_detail1[1].b_apdedocno, 
+                  s_detail1[1].b_apda001,s_detail1[1].b_apdadocdt,s_detail1[1].b_apda005,s_detail1[1].b_apda014, 
+                  s_detail1[1].b_apdastus,s_detail1[1].b_apdeseq,s_detail1[1].b_apdeorga,s_detail1[1].b_apde002, 
+                  s_detail1[1].b_apde006,s_detail1[1].b_apde003,s_detail1[1].b_apde008,s_detail1[1].b_apde021, 
+                  s_detail1[1].b_apde024,s_detail1[1].b_apde100,s_detail1[1].b_apde109,s_detail1[1].b_apde101, 
+                  s_detail1[1].b_apde119,s_detail1[1].b_apde032,s_detail1[1].b_apde013,s_detail1[1].b_apde014, 
+                  s_detail1[1].b_apde015,s_detail1[1].b_apde016,s_detail1[1].b_apde010,s_detail1[1].b_apde009, 
+                  s_detail1[1].b_apde039,s_detail1[1].b_apde040,s_detail1[1].b_apde011,s_detail1[1].b_apde012, 
+                  s_detail1[1].b_apde046
+               BEFORE CONSTRUCT
+                  DISPLAY g_construct_display.apdasite, g_construct_display.apda003 ,
+                          g_construct_display.apdeld, g_construct_display.apdedocno,  
+                          g_construct_display.apda001,g_construct_display.apdadocdt,
+                          g_construct_display.apda005, g_construct_display.apda014,   
+                          g_construct_display.apdastus, g_construct_display.apdeseq,    
+                          g_construct_display.apdeorga, g_construct_display.apde002,   
+                          g_construct_display.apde006, g_construct_display.apde003,    
+                          g_construct_display.apde008, g_construct_display.apde021,    
+                          g_construct_display.apde024, g_construct_display.apde100,    
+                          g_construct_display.apde109, g_construct_display.apde101,    
+                          g_construct_display.apde119, g_construct_display.apde032,    
+                          g_construct_display.apde013, g_construct_display.apde014,    
+                          g_construct_display.apde015, g_construct_display.apde016,    
+                          g_construct_display.apde010, g_construct_display.apde009,    
+                          g_construct_display.apde039, g_construct_display.apde040,    
+                          g_construct_display.apde011, g_construct_display.apde012,    
+                          g_construct_display.apde046 
+                       TO s_detail1[1].b_apdasite,s_detail1[1].b_apda003,s_detail1[1].b_apdeld,s_detail1[1].b_apdedocno, 
+                          s_detail1[1].b_apda001,s_detail1[1].b_apdadocdt,s_detail1[1].b_apda005,s_detail1[1].b_apda014, 
+                          s_detail1[1].b_apdastus,s_detail1[1].b_apdeseq,s_detail1[1].b_apdeorga,s_detail1[1].b_apde002, 
+                          s_detail1[1].b_apde006,s_detail1[1].b_apde003,s_detail1[1].b_apde008,s_detail1[1].b_apde021, 
+                          s_detail1[1].b_apde024,s_detail1[1].b_apde100,s_detail1[1].b_apde109,s_detail1[1].b_apde101, 
+                          s_detail1[1].b_apde119,s_detail1[1].b_apde032,s_detail1[1].b_apde013,s_detail1[1].b_apde014, 
+                          s_detail1[1].b_apde015,s_detail1[1].b_apde016,s_detail1[1].b_apde010,s_detail1[1].b_apde009, 
+                          s_detail1[1].b_apde039,s_detail1[1].b_apde040,s_detail1[1].b_apde011,s_detail1[1].b_apde012, 
+                          s_detail1[1].b_apde046
+                  EXIT CONSTRUCT
+            END CONSTRUCT
+         END IF
+      #150213-00007#5-----e
+         #end add-point  
+ 
+      ON ACTION accept
+         ACCEPT DIALOG 
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+      LET g_wc_filter_t = g_wc_filter
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+   
+      CALL aapq420_filter_show('apdasite','b_apdasite')
+   CALL aapq420_filter_show('apda003','b_apda003')
+   CALL aapq420_filter_show('apdeld','b_apdeld')
+   CALL aapq420_filter_show('apdedocno','b_apdedocno')
+   CALL aapq420_filter_show('apda001','b_apda001')
+   CALL aapq420_filter_show('apdadocdt','b_apdadocdt')
+   CALL aapq420_filter_show('apda005','b_apda005')
+   CALL aapq420_filter_show('apda014','b_apda014')
+   CALL aapq420_filter_show('apdastus','b_apdastus')
+   CALL aapq420_filter_show('apdeseq','b_apdeseq')
+   CALL aapq420_filter_show('apdeorga','b_apdeorga')
+   CALL aapq420_filter_show('apde002','b_apde002')
+   CALL aapq420_filter_show('apde006','b_apde006')
+   CALL aapq420_filter_show('apde003','b_apde003')
+   CALL aapq420_filter_show('apde008','b_apde008')
+   CALL aapq420_filter_show('apde021','b_apde021')
+   CALL aapq420_filter_show('apde024','b_apde024')
+   CALL aapq420_filter_show('apde100','b_apde100')
+   CALL aapq420_filter_show('apde109','b_apde109')
+   CALL aapq420_filter_show('apde101','b_apde101')
+   CALL aapq420_filter_show('apde119','b_apde119')
+   CALL aapq420_filter_show('apde032','b_apde032')
+   CALL aapq420_filter_show('apde013','b_apde013')
+   CALL aapq420_filter_show('apde014','b_apde014')
+   CALL aapq420_filter_show('apde015','b_apde015')
+   CALL aapq420_filter_show('apde016','b_apde016')
+   CALL aapq420_filter_show('apde010','b_apde010')
+   CALL aapq420_filter_show('apde009','b_apde009')
+   CALL aapq420_filter_show('apde039','b_apde039')
+   CALL aapq420_filter_show('apde040','b_apde040')
+   CALL aapq420_filter_show('apde011','b_apde011')
+   CALL aapq420_filter_show('apde012','b_apde012')
+   CALL aapq420_filter_show('apde046','b_apde046')
+ 
+    
+   CALL aapq420_b_fill()
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapq420.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION aapq420_filter_parser(ps_field)
+   #add-point:filter段define-客製 name="filter_parser.define_customerization"
+   
+   #end add-point
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   #add-point:filter段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_parser.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter_parser.before_function"
+   
+   #end add-point
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapq420.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION aapq420_filter_show(ps_field,ps_object)
+   #add-point:filter_show段define-客製 name="filter_show.define_customerization"
+   
+   #end add-point
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+   #add-point:filter_show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_show.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter_show.before_function"
+   
+   #end add-point
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = aapq420_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapq420.insert" >}
+#+ insert
+PRIVATE FUNCTION aapq420_insert()
+   #add-point:insert段define-客製 name="insert.define_customerization"
+   
+   #end add-point
+   #add-point:insert段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   
+   #end add-point
+ 
+   #add-point:insert段control name="insert.control"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapq420.modify" >}
+#+ modify
+PRIVATE FUNCTION aapq420_modify()
+   #add-point:modify段define-客製 name="modify.define_customerization"
+   
+   #end add-point
+   #add-point:modify段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   
+   #end add-point
+ 
+   #add-point:modify段control name="modify.control"
+   
+   #end add-point 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapq420.reproduce" >}
+#+ reproduce
+PRIVATE FUNCTION aapq420_reproduce()
+   #add-point:reproduce段define-客製 name="reproduce.define_customerization"
+   
+   #end add-point
+   #add-point:reproduce段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="reproduce.define"
+   
+   #end add-point
+ 
+   #add-point:reproduce段control name="reproduce.control"
+   
+   #end add-point 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapq420.delete" >}
+#+ delete
+PRIVATE FUNCTION aapq420_delete()
+   #add-point:delete段define-客製 name="delete.define_customerization"
+   
+   #end add-point
+   #add-point:delete段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   
+   #end add-point
+ 
+   #add-point:delete段control name="delete.control"
+   
+   #end add-point 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapq420.detail_action_trans" >}
+#+ 單身分頁筆數顯示及action圖片顯示切換功能
+PRIVATE FUNCTION aapq420_detail_action_trans()
+   #add-point:detail_action_trans段define-客製 name="detail_action_trans.define_customerization"
+   
+   #end add-point
+   #add-point:detail_action_trans段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_action_trans.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="detail_action_trans.before_function"
+   
+   #end add-point
+ 
+   #因應單身切頁功能，筆數計算方式調整
+   LET g_current_row_tot = g_pagestart + g_detail_idx - 1
+   DISPLAY g_current_row_tot TO FORMONLY.h_index
+   DISPLAY g_tot_cnt TO FORMONLY.h_count
+ 
+   #顯示單身頁面的起始與結束筆數
+   LET g_page_start_num = g_pagestart
+   LET g_page_end_num = g_pagestart + g_num_in_page - 1
+   DISPLAY g_page_start_num TO FORMONLY.p_start
+   DISPLAY g_page_end_num TO FORMONLY.p_end
+ 
+   #目前不支援跳頁功能
+   LET g_page_act_list = "detail_first,detail_previous,'',detail_next,detail_last"
+   CALL cl_navigator_detail_page_setting(g_page_act_list,g_current_row_tot,g_pagestart,g_num_in_page,g_tot_cnt)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapq420.detail_index_setting" >}
+#+ 單身切頁後，index重新調整，避免翻頁後指到空白筆數
+PRIVATE FUNCTION aapq420_detail_index_setting()
+   #add-point:detail_index_setting段define-客製 name="deatil_index_setting.define_customerization"
+   
+   #end add-point
+   DEFINE li_redirect     BOOLEAN
+   DEFINE ldig_curr       ui.Dialog
+   #add-point:detail_index_setting段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_index_setting.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="detail_index_setting.before_function"
+   
+   #end add-point
+ 
+   IF g_curr_diag IS NOT NULL THEN
+      CASE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") <= "0"
+            LET g_detail_idx = 1
+            IF g_apde_d.getLength() > 0 THEN
+               LET li_redirect = TRUE
+            END IF
+         WHEN g_curr_diag.getCurrentRow("s_detail1") > g_apde_d.getLength() AND g_apde_d.getLength() > 0
+            LET g_detail_idx = g_apde_d.getLength()
+            LET li_redirect = TRUE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") != g_detail_idx
+            IF g_detail_idx > g_apde_d.getLength() THEN
+               LET g_detail_idx = g_apde_d.getLength()
+            END IF
+            LET li_redirect = TRUE
+      END CASE
+   END IF
+ 
+   IF li_redirect THEN
+      LET ldig_curr = ui.Dialog.getCurrent()
+      CALL ldig_curr.setCurrentRow("s_detail1", g_detail_idx)
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapq420.mask_functions" >}
+ &include "erp/aap/aapq420_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="aapq420.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 組合apca001,apda001
+# Memo...........:
+# Date & Author..: 150319 By albireo
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aapq420_set_apca001_combo()
+   DEFINE l_item     STRING
+   DEFINE l_value   STRING
+   DEFINE l_sql      STRING
+   DEFINE l_gzcb     RECORD
+                     gzcb002   LIKE gzcb_t.gzcb002,
+                     gzcbl004  LIKE gzcbl_t.gzcbl004
+                     END RECORD
+   LET l_sql = " SELECT gzcb002,gzcbl004 FROM gzcb_t ",
+               "   LEFT OUTER JOIN gzcbl_t ON gzcbl001= gzcb001 ",
+               "                           AND gzcbl002 = gzcb002 AND gzcbl003 = '",g_dlang,"' ",
+               "  WHERE gzcb001 = '8502' "
+   PREPARE sel_combop1 FROM l_sql
+   DECLARE sel_comboc1 CURSOR FOR sel_combop1
+   
+   LET l_item = NULL
+   LET l_value = NULL
+   FOREACH sel_comboc1 INTO l_gzcb.gzcb002,l_gzcb.gzcbl004
+      IF SQLCA.SQLCODE THEN EXIT FOREACH END IF
+      IF cl_null(l_item)THEN
+         LET l_item = l_gzcb.gzcb002 CLIPPED
+      ELSE
+         LET l_item = l_item CLIPPED,",",l_gzcb.gzcb002
+      END IF
+      IF cl_null(l_value)THEN
+         LET l_value = l_gzcb.gzcb002,":",l_gzcb.gzcbl004
+      ELSE
+         LET l_value = l_value CLIPPED,",",l_gzcb.gzcb002,":",l_gzcb.gzcbl004
+      END IF
+   END FOREACH
+   
+   INITIALIZE l_gzcb.* TO NULL
+   SELECT gzcb002,gzcbl004 INTO l_gzcb.gzcb002,l_gzcb.gzcbl004
+     FROM gzcb_t
+          LEFT OUTER JOIN gzcbl_t ON gzcbl001 = gzcb001
+                                     AND gzcbl002 = gzcb002
+                                     AND gzcbl003 = g_dlang
+    WHERE gzcb001 = '8507'
+      AND gzcb002 = '45'
+   IF cl_null(l_item)THEN
+      LET l_item = l_gzcb.gzcb002 CLIPPED
+   ELSE
+      LET l_item = l_item CLIPPED,",",l_gzcb.gzcb002
+   END IF
+   IF cl_null(l_value)THEN
+      LET l_value = l_gzcb.gzcb002,":",l_gzcb.gzcbl004
+   ELSE
+      LET l_value = l_value CLIPPED,",",l_gzcb.gzcb002,":",l_gzcb.gzcbl004
+   END IF
+      
+   CALL cl_set_combo_items('b_apda001',l_item,l_value)
+END FUNCTION
+
+################################################################################
+# Descriptions...: 建立臨時表
+# Memo...........: #150319-00004#6
+# Usage..........: CALL aapq420_create_tmp()
+# Date & Author..: 150427 By jessy
+################################################################################
+PRIVATE FUNCTION aapq420_create_tmp()
+     
+   DROP TABLE aapq420_x01_tmp;
+   CREATE TEMP TABLE aapq420_x01_tmp(
+      apdasite           LIKE apda_t.apdasite, 
+      l_apcasite_desc    LIKE type_t.chr80, 
+      apda003            LIKE apda_t.apda003, 
+      l_apda003_desc     LIKE type_t.chr80, 
+      apdeld             LIKE apde_t.apdeld, 
+      l_apdeld_desc      LIKE type_t.chr80, 
+      apdedocno          LIKE apde_t.apdedocno, 
+      apda001            LIKE apda_t.apda001,   
+      apda001_desc       LIKE type_t.chr1000,        
+      apdadocdt          LIKE apda_t.apdadocdt, 
+      apda005            LIKE apda_t.apda005, 
+      l_apda005_desc     LIKE type_t.chr80, 
+      apda014            LIKE apda_t.apda014, 
+      apdastus           LIKE apda_t.apdastus,
+      apdastus_desc      LIKE type_t.chr1000,      
+      apdeseq            LIKE apde_t.apdeseq, 
+      apdeorga           LIKE apde_t.apdeorga, 
+      l_apdeorga_desc    LIKE type_t.chr80, 
+      apde002            LIKE apde_t.apde002,
+      apde002_desc       LIKE type_t.chr1000,      
+      apde006            LIKE apde_t.apde006,
+      apde006_desc       LIKE type_t.chr1000,      
+      apde003            LIKE apde_t.apde003, 
+      apde008            LIKE apde_t.apde008, 
+      apde021            LIKE apde_t.apde021, 
+      apde024            LIKE apde_t.apde024, 
+      apde100            LIKE apde_t.apde100, 
+      apde109            LIKE apde_t.apde109, 
+      apde101            LIKE apde_t.apde101, 
+      apde119            LIKE apde_t.apde119, 
+      apde032            LIKE apde_t.apde032, 
+      apde013            LIKE apde_t.apde013, 
+      l_apde013_desc     LIKE type_t.chr80, 
+      apde014            LIKE apde_t.apde014, 
+      apde015            LIKE apde_t.apde015, 
+      apde016            LIKE apde_t.apde016, 
+      l_apde016_desc     LIKE type_t.chr80, 
+      apde010            LIKE apde_t.apde010, 
+      apde009            LIKE apde_t.apde009, 
+      apde039            LIKE apde_t.apde039, 
+      apde040            LIKE apde_t.apde040, 
+      apde011            LIKE apde_t.apde011, 
+      l_apde011_desc     LIKE type_t.chr80, 
+      apde012            LIKE apde_t.apde012, 
+      l_apde012_desc     LIKE type_t.chr80, 
+      apde046            LIKE apde_t.apde046
+   )
+   
+END FUNCTION
+
+ 
+{</section>}
+ 

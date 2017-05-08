@@ -1,0 +1,212 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aimm207" module="aim" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="02587" crtdt="2014-03-25 10:27:44" modid="04441" moddt="2016-05-30 17:44:39" sdver="0007" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="料件法人財務資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="imagsite,imagsite_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="imagstus,imag001,imag001_desc(chr500),imag001_desc_desc(chr500),imag024,imag011,imag011_desc(chr500),imag013,imag013_desc(chr500),imag013_desc_desc(chr500),imag014,imag014_desc(chr500),imag015,imag016,imag017,imag018,imag019,imag020,imag021,imag022,imag023"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="imag001,imagownid,imagownid_desc(chr500),imagowndp,imagowndp_desc(chr500),imagcrtid,imagcrtid_desc(chr500),imagcrtdp,imagcrtdp_desc(chr500),imagcrtdt,imagmodid,imagmodid_desc(chr500),imagmoddt,imagcnfid,imagcnfid_desc(chr500),imagcnfdt"/>
+      <var id="bs_field" value="imagsite,imagsite_desc(chr80)" pk="imagsite" order=""/>
+      <bs_reference field="imagsite_desc" ref_field="imagsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="aimm201_01"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="open_aimm202"/>
+      <action id="open_aimm200"/>
+      <action id="open_aimm206"/>
+      <action id="open_aimm204"/>
+      <action id="open_aimm210"/>
+      <action id="open_aimm201"/>
+      <action id="open_aimm203"/>
+      <action id="open_aimm205"/>
+      <action id="open_aimm208"/>
+    </section>
+  </structure>
+  <form id="0" module="aim" filename="aimm207" method="dialog">
+    <section id="input">
+      <input id="head" field="imagsite"/>
+      <input id="body" page="1" field="imagstus,imag001,imag024,imag011,imag013,imag014,imag015,imag016,imag017,imag018,imag019,imag020,imag021,imag022,imag023" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="imagsite"/>
+      <construct id="body" page="1" field="imagstus,imag001,imag024,imag011,imag013,imag014,imag015,imag016,imag017,imag018,imag019,imag020,imag021,imag022,imag023"/>
+      <construct id="body" page="2" field="imagownid,imagowndp,imagcrtid,imagcrtdp,imagcrtdt,imagmodid,imagmoddt,imagcnfid,imagcnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="imagsite"/>
+      <set id="head" type="no_entry" field="imagsite"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="imagsite">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+          <reference field="imagsite_desc" ref_field="imag_t.imagsite" map_field="imagent,imagsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="imagsite_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="imagstus" scc="50" type="S" default="Y">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="imag001">
+        <after>
+          <reference field="imag001_desc" ref_field="imag_t.imag001" map_field="imagent,imag001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imag001_1" state="i"/>
+        <controlp form="q_imag001" state="c"/>
+      </column>
+      <column id="imag001_desc">
+        <after>
+          <reference field="imag001_desc_desc" ref_field="imag_t.imag001" map_field="imagent,imag001" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="imag001_desc_desc"/>
+      <column id="imag024" type="S" default="1" def_scc="4062"/>
+      <column id="imag011">
+        <after>
+          <reference field="imag011_desc" ref_field="imag011" map_field="imag011" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;206&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imag011_desc"/>
+      <column id="imag013">
+        <after>
+          <check chkid="v_imag001" id="isExist"/>
+          <reference field="imag013_desc" ref_field="imag_t.imag013" map_field="imagent,imag013" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imag001_1" state="i"/>
+        <controlp form="q_imag001_1" state="c"/>
+      </column>
+      <column id="imag013_desc">
+        <after>
+          <reference field="imag013_desc_desc" ref_field="imag_t.imag013" map_field="imagent,imag001" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="imag013_desc_desc"/>
+      <column id="imag014">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="imag014_desc" ref_field="imag_t.imag014" map_field="imagent,imag014" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="imag014_desc"/>
+      <column id="imag015" type="S" default="1" def_scc="8907"/>
+      <column id="imag016" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imag017" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imag018" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imag019" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imag020" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imag021" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imag022" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imag023" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="imagownid">
+        <after>
+          <reference field="imagownid_desc" ref_field="imag_t.imagownid" map_field="imagownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imagownid_desc"/>
+      <column id="imagowndp">
+        <after>
+          <reference field="imagowndp_desc" ref_field="imag_t.imagowndp" map_field="imagowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imagowndp_desc"/>
+      <column id="imagcrtid">
+        <after>
+          <reference field="imagcrtid_desc" ref_field="imag_t.imagcrtid" map_field="imagcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imagcrtid_desc"/>
+      <column id="imagcrtdp">
+        <after>
+          <reference field="imagcrtdp_desc" ref_field="imag_t.imagcrtdp" map_field="imagcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imagcrtdp_desc"/>
+      <column id="imagcrtdt"/>
+      <column id="imagmodid">
+        <after>
+          <reference field="imagmodid_desc" ref_field="imag_t.imagmodid" map_field="imagmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imagmodid_desc"/>
+      <column id="imagmoddt"/>
+      <column id="imagcnfid">
+        <after>
+          <reference field="imagcnfid_desc" ref_field="imag_t.imagcnfid" map_field="imagcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imagcnfid_desc"/>
+      <column id="imagcnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="imag_t" pk="imagsite">
+      <sql id="forupd_sql" type="sql" query="SELECT imagsite,&apos;&apos; FROM imag_t WHERE imagent= ? AND imagsite=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT imagsite,&apos;&apos; FROM imag_t" order="imagsite"/>
+    </head>
+    <body id="imag_t" page="1,2" linked="" pk="imag001" fk="imagsite">
+      <sql id="forupd_sql_detail" query="SELECT imagstus,imag001,&apos;&apos;,&apos;&apos;,imag024,imag011,&apos;&apos;,imag013,&apos;&apos;,&apos;&apos;,imag014,&apos;&apos;,imag015,imag016,imag017,imag018,imag019,imag020,imag021,imag022,imag023,&apos;&apos;,imagownid,&apos;&apos;,imagowndp,&apos;&apos;,imagcrtid,&apos;&apos;,imagcrtdp,&apos;&apos;,imagcrtdt,imagmodid,&apos;&apos;,imagmoddt,imagcnfid,&apos;&apos;,imagcnfdt FROM imag_t WHERE imagent=? AND imagsite=? AND imag001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT imagstus,imag001,&apos;&apos;,&apos;&apos;,imag024,imag011,&apos;&apos;,imag013,&apos;&apos;,&apos;&apos;,imag014,&apos;&apos;,imag015,imag016,imag017,imag018,imag019,imag020,imag021,imag022,imag023,&apos;&apos;,imagownid,&apos;&apos;,imagowndp,&apos;&apos;,imagcrtid,&apos;&apos;,imagcrtdp,&apos;&apos;,imagcrtdt,imagmodid,&apos;&apos;,imagmoddt,imagcnfid,&apos;&apos;,imagcnfdt FROM imag_t WHERE imagent= ? AND imagsite=?"/>
+    </body>
+  </dataset>
+</assembly>
+

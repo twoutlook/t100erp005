@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="abmr002_x01" std_prog="abmr002_x01" erpver="1.0" module="ABM" ver="1" env="s" zone="t10dev" booking="N" type="X" identity="s">
+  <other>
+    <code_template value="" status=""/>
+    <free_style value="" status=""/>
+  </other>
+  <point name="component.get_var" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[p_arg1,p_arg2]]>
+  </point>
+  <section id="abmr002_x01.create_tmptable" ver="1" status="" src="s">
+    <![CDATA[PRIVATE FUNCTION abmr002_x01_create_tmptable()
+ 
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before
+   {<point name="create_tmp.before"/>}
+   #end add-point:create_tmp.before
+ 
+   #建立TEMP TABLE 透過此lib(組字串+create temp table+組ins的問號)
+   IF NOT cl_xg_create_tmptable() THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after
+   {<point name="create_tmp.after"/>}
+   #end add-point:create_tmp.after
+END FUNCTION
+]]>
+  </section>
+  <section id="abmr002_x01.description" ver="1" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000001
+#+ 
+#+ Filename...: abmr002_x01
+#+ Description: 取替代料件使用清單列印
+#+ Creator....: 05231(2014/07/08)
+#+ Modifier...: 05231(2014/07/08)
+#+ Buildtype..: 應用 x01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="abmr002_x01.global" ver="1" status="" src="s">
+    <![CDATA[ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  # where condition 
+       a1 LIKE type_t.chr5          #取替料號跳頁
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+ 
+#add-point:自定義環境變數(Global Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="abmr002_x01.ins_data" ver="1" status="" src="s">
+    <![CDATA[PRIVATE FUNCTION abmr002_x01_ins_data()
+DEFINE sr RECORD 
+   bmea008 LIKE bmea_t.bmea008, 
+   b_imaal003 LIKE type_t.chr1000, 
+   b_imaal004 LIKE type_t.chr1000, 
+   bmea001 LIKE bmea_t.bmea001, 
+   c_imaal003 LIKE type_t.chr1000, 
+   c_imaal004 LIKE type_t.chr1000, 
+   bmea002 LIKE bmea_t.bmea002, 
+   bmea003 LIKE bmea_t.bmea003, 
+   d_imaal003 LIKE type_t.chr1000, 
+   d_imaal004 LIKE type_t.chr1000, 
+   e_oocql004 LIKE type_t.chr1000, 
+   f_oocql004_bmea006 LIKE type_t.chr1000, 
+   l_bmea011_bmea012 LIKE type_t.chr1000, 
+   bmea013 LIKE bmea_t.bmea013
+ END RECORD
+#add-point:ins_data段define
+{<point name="ins_data.define"/>}
+#end add-point
+ 
+    #add-point:ins_data段before
+    {<point name="ins_data.before"/>}
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH abmr002_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          CALL cl_err('foreach:',STATUS,1)
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach
+       {<point name="ins_data.foreach"/>}
+       #end add-point
+ 
+       #add-point:ins_data段before.save
+       {<point name="ins_data.before.save"/>}
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.bmea008,sr.b_imaal003,sr.b_imaal004,sr.bmea001,sr.c_imaal003,sr.c_imaal004,sr.bmea002,sr.bmea003,sr.d_imaal003,sr.d_imaal004,sr.e_oocql004,sr.f_oocql004_bmea006,sr.l_bmea011_bmea012,sr.bmea013
+ 
+       IF SQLCA.sqlcode THEN
+          CALL cl_err("abmr002_x01_execute",SQLCA.sqlcode,0)
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save
+       {<point name="ins_data.after.save"/>}
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after
+    {<point name="ins_data.after"/>}
+    #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="abmr002_x01.ins_prep" ver="1" status="" src="s">
+    <![CDATA[PRIVATE FUNCTION abmr002_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define
+{<point name="ins_prep.define"/>}
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            CALL cl_err(l_prep_str,status,1)
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF         
+ 
+         WHEN 2
+         PREPARE insert_prep1 FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            CALL cl_err(l_prep_str,status,1)
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF         
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+]]>
+  </section>
+  <section id="abmr002_x01.main" ver="1" status="" src="s">
+    <![CDATA[PUBLIC FUNCTION abmr002_x01(--)
+   #add-point:component段變數傳入
+   {<point name="component.get_var"/>}
+   #end add-point
+   )
+DEFINE  p_arg1 STRING                  #tm.wc   where condition 
+DEFINE  p_arg2 LIKE type_t.chr5         #tm.a1  取替料號跳頁
+#add-point:init段define
+{<point name="component.define"/>}
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.a1 = p_arg2
+ 
+   #add-point:報表元件參數準備
+   {<point name="component.arg.prep" />}
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "abmr002_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL abmr002_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL abmr002_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL abmr002_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL abmr002_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL abmr002_x01_rep_data()
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="abmr002_x01.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="abmr002_x01.rep_data" ver="1" status="" src="s">
+    <![CDATA[PRIVATE FUNCTION abmr002_x01_rep_data()
+#add-point:rep_data.define
+{<point name="rep_data.define"/>}
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before
+    {<point name="rep_data.before"/>}
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after
+    {<point name="rep_data.after"/>}
+    #end add-point:rep_data.after
+END FUNCTION
+]]>
+  </section>
+  <section id="abmr002_x01.sel_prep" ver="1" status="" src="s">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION abmr002_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define
+{<point name="sel_prep.define"/>}
+#end add-point
+ 
+   #add-point:sel_prep before
+   {<point name="sel_prep.before" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep g_select
+   {<point name="sel_prep.g_select" mark="Y"/>}
+   #end add-point
+   LET g_select = " SELECT bmea008,'','',bmea001,'','',bmea002,bmea003,'','','','','',bmea013"
+ 
+   #add-point:sel_prep g_from
+   {<point name="sel_prep.g_from" mark="Y"/>}
+   #end add-point
+    LET g_from = " FROM  bmea_t "
+ 
+   #add-point:sel_prep g_where
+   {<point name="sel_prep.g_where" mark="Y"/>}
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order
+   {<point name="sel_prep.g_order" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before
+   {<point name="sel_prep.sql.before" mark="Y"/>}
+   #end add-point:sel_prep.sql.before
+   
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after
+   {<point name="sel_prep.sql.after" mark="Y"/>}
+   #end add-point
+   PREPARE abmr002_x01_prepare FROM g_sql
+   IF STATUS THEN
+      CALL cl_err('prepare:',STATUS,1)
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE abmr002_x01_curs CURSOR FOR abmr002_x01_prepare
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

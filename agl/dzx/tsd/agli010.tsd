@@ -1,0 +1,734 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="agli010" std_prog="agli010" erpver="1.0" ver="5" module="AGL" type="M" booking="Y" designer_ver="1.0" class="i" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="glaa_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Tree" status=""/>
+    </tbl>
+  </table>
+  <tree name="s_browse" ver="1" src="s" kind="recu_01" att="type,id,pid,desc,speed,stype,sid,spid" cite_std="N" status="">
+    <type no="1" table="" col=""/>
+    <id no="2" table="glaa_t" col="glaald"/>
+    <pid no="3" table="glaa_t" col="glaacomp"/>
+    <desc no="4" table="" col=""/>
+    <speed no="5" table="glaas_t" col=""/>
+    <stype no="6" table="glaas_t" col="glaasent"/>
+    <sid no="7" table="glaas_t" col="glaasld"/>
+    <spid no="8" table="glaas_t" col="glaas001"/>
+    <type2 no="" table="" col=""/>
+    <type3 no="" table="" col=""/>
+    <type4 no="" table="" col=""/>
+    <type5 no="" table="" col=""/>
+    <type6 no="" table="" col=""/>
+  </tree>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：維護企業所有帳別基本設定, 每個帳別需設定其對應的帳簿幣別、使用的匯率參照表、會計週期參照表及會計科目參照表等, 並選用該帳簿的結帳方式, 做為總帳模組後續會計相關作業的帳務基礎依據
+作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：基本資料維護作業
+選用版型：單檔多欄模式F002_00
+資料來源：glaa_t(帳別資料檔)
+          glaal_t(帳別多語言檔)
+          glab_t(帳別科目預設檔)
+          glad_t(帳別科目管理設定檔)
+關聯檔案：ooaj_t(幣別多語言檔)
+          ooam_t(參照表說明資料檔)
+          glacl_t(會計科目多語言檔)
+
+
+TOPMENU內容
+1.整單操作：帳別科目管理設定
+2.相關資料：匯率維護作業，會計週期維護作業，會計科目維護作業]]>
+  </all>
+  <field cite_std="N" name="b_glaacomp" ver="1" src="s" column="glaacomp" table="glaa_t" attribute="" type="" req="Y" i_zoom="q_ooea001_2" c_zoom="q_ooea001_2" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_glaald" ver="1" src="s" column="glaald" table="glaa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_glaa" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa001" ver="1" src="s" column="glaa001" table="glaa_t" attribute="" type="" req="Y" i_zoom="q_ooai001" c_zoom="q_ooai001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：使用幣別
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+            2.輸入值須存在幣別基本資料檔且為有效資料
+            3.需要存在於幣別基礎資料檔中且為有效，如果不存在需要報錯提示不存在，如果無效就報錯無效  ]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa002" ver="1" src="s" column="glaa002" table="glaa_t" attribute="" type="" req="Y" i_zoom="q_ooal002" c_zoom="q_ooal002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：匯率參照表號
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+            2.輸入值須存在參照表基本檔且參照表類型=1.匯率且為有效資料
+            3.報錯提示：不存在，無效，參照表類型不正確]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa003" ver="1" src="s" column="glaa003" table="glaa_t" attribute="" type="" req="Y" i_zoom="q_glav001" c_zoom="q_glav001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：會計週期參照表號
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+            2.輸入值須存在"會計週期資料檔"且为有效的编号
+            3.報錯提示：不存在，無效，參照表類型不正確
+
+]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa004" ver="1" src="s" column="glaa004" table="glaa_t" attribute="" type="" req="Y" i_zoom="q_ooal002" c_zoom="q_ooal002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：會計科目參照表號
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+             2.輸入值須存在參照表基本檔且參照表類型=0.會計科目且為有效資料
+             3.報錯提示：不存在，無效，參照表類型不正確]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa005" ver="1" src="s" column="glaa005" table="glaa_t" attribute="" type="" req="Y" i_zoom="q_ooal002" c_zoom="q_ooal002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：現金變動參照表號
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+            2.輸入值須存在參照表基本檔且參照表類型=現金變動碼 且為有效資料
+            3.報錯提示：不存在，無效，參照表類型不正確]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa006" ver="1" src="s" column="glaa006" table="glaa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="8003" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：月結方式
+
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值: 1.表結法     
+     校驗:1.不允許空白
+          2.輸入值須存在: 1.表結法 2.帳結法]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa007" ver="1" src="s" column="glaa007" table="glaa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="8003" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：年結方式
+
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值: 1.表結法     
+     校驗:1.不允許空白
+          2.輸入值須存在: 1.表結法 2.帳結法
+]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa008" ver="1" src="s" column="glaa008" table="glaa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[欄位名稱：平行記帳
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:N
+     校驗:1.不允許空白
+          2.輸入值 Y/N
+          3.同法人下,次帳套(非主帳套),至多設定二套採”平行記帳”方式的帳別
+         　(平行記帳者，立沖帳亦須回寫至業務來源單據，前端業務單據檔，預開三個欄位供回寫記錄控管)
+          
+  
+]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa009" ver="1" src="s" column="glaa009" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="8005" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[當 平行記帳='N' 時, 本欄位可輸入,否则本栏位为空
+輸入值 1/2
+1.主帳套傳票完整複製到次帳套
+2.次帳套僅記錄差異傳票
+]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa010" ver="1" src="s" column="glaa010" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：現行年度
+   ●欄位控管：
+     資料欄位:Display Only(本欄位由期末結轉作業update)
+    
+]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa011" ver="1" src="s" column="glaa011" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：現行期別
+   ●欄位控管：
+     資料欄位:Display Only(本欄位由期末結轉作業update)
+    
+]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa012" ver="1" src="s" column="glaa012" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[欄位名稱：最後過帳日期
+   ●欄位控管：
+     資料欄位:Display Only(本欄位由傳票整批過帳作業update)
+    
+]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa013" ver="1" src="s" column="glaa013" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[欄位名稱：關帳日期
+   ●欄位控管：
+     資料欄位:Display Only(本欄位由關帳作業update)
+    
+]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa014" ver="1" src="s" column="glaa014" table="glaa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[欄位名稱：主帳套
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:N
+     校驗:1.不允許空白
+          2.輸入值 Y/N
+          3.輸入完存檔時需檢核同一個法人下只能有一個帳別編號打勾(代表主帳套),僅警示訊息即可
+          
+  
+]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa015" ver="1" src="s" column="glaa015" table="glaa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[欄位名稱：啟用本位幣二
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:N
+     校驗:1.不允許空白
+          2.輸入值須為Y/N
+     計算或處理:1.本欄位=Y時,幣別/換算基準/匯率採用 才可輸入且為必輸不可空白]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa016" ver="1" src="s" column="glaa016" table="glaa_t" attribute="" type="" req="N" i_zoom="q_ooai001" c_zoom="q_ooai001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：幣別（本位幣二）
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+          2.輸入值須存在幣別基本資料檔且為有效資料,不可與帳簿幣別(glaa001)相同]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa017" ver="1" src="s" column="glaa017" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="8022" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：換算基準（本位幣二）
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:1.交易幣別
+     校驗:1.不允許空白
+          2.輸入值需為　1.交易原幣   2. 帳簿幣別]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa018" ver="1" src="s" column="glaa018" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="40" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：匯率採用 (本位幣二)
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+          2.輸入值需存在 SCC_40 
+]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa019" ver="1" src="s" column="glaa019" table="glaa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[欄位名稱：啟用本位幣三
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:N
+     校驗:1.不允許空白
+          2.輸入值須為Y/N
+     計算或處理:1.本欄位=Y時,幣別/換算基準/匯率採用 才可輸入且為必輸不可空白
+]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa020" ver="1" src="s" column="glaa020" table="glaa_t" attribute="" type="" req="N" i_zoom="q_ooai001" c_zoom="q_ooai001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：幣別（本位幣三）
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+          2.輸入值須存在幣別基本資料檔且為有效資料,不可與帳簿幣別(glaa001)或本位幣二(glaa016)相同]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa021" ver="1" src="s" column="glaa021" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="8022" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：換算基準（本位幣三）
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:1.交易幣別
+     校驗:1.不允許空白
+          2.輸入值需為　1.交易原幣   2. 帳簿幣別]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa022" ver="1" src="s" column="glaa022" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="40" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：匯率採用 (本位幣二)
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+          2.輸入值需存在 SCC_40 
+]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa023" ver="1" src="s" column="glaa023" table="glaa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="8021" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="RadioGroup" status="">
+    <![CDATA[欄位名稱：次帳套帳務維護時機
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值: 1.個別維護及產生帳款資料
+     校驗:1.不允許空白
+          2.輸入值需存在 1.個別維護及產生帳款資料 2.跟隨主帳套帳款資料,可同時維護不同帳套會計資料
+]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa024" ver="1" src="s" column="glaa024" table="glaa_t" attribute="" type="" req="Y" i_zoom="q_ooal002" c_zoom="q_ooal002" chk_ref="v_ooal002_3" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：單據別參照表號
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:由歸屬法人對應的營運據點,抓取營運據點基本資料.單據別參照表號(ooef004)
+     校驗:1.不允許空白
+          2.輸入值須存在參照表基本檔且參照表類型=單據別 且為有效資料
+              ]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa025" ver="1" src="s" column="glaa025" table="glaa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="40" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：匯率採用
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+          2.輸入值需存在 SCC_40  (銀行買入、中價…)
+]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa026" ver="1" src="s" column="glaa026" table="glaa_t" attribute="" type="" req="" i_zoom="q_ooal002_10" c_zoom="q_ooal002_10" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：幣別參照表號
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值: 取組織基本資料檔.幣別參照表號(ooef014) where 組織編號(ooef001)=歸屬法人(glaacomp)
+     校驗:1.不允許空白
+          2.輸入值須存在參照表基本檔且參照表類型=10.幣別且為有效資料
+         
+   ●開窗處理：
+     1.查詢時：
+       參考函式：依標準查詢視窗（參照表類型=10.幣別）
+       查詢欄位：依標準查詢視窗
+       回值類型：多重回值
+     2.新增/修改時：
+       參考函式：依標準查詢視窗（參照表類型=10.幣別)
+       查詢欄位：依標準查詢視窗
+       回值類型：單一回值
+      
+]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa027" ver="4" src="s" column="glaa027" table="glaa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[單據據點代號：
+   ●欄位控管：
+     資料欄位:glaa027/可Display可Input
+     預設值:法人设置的单据据点代（ooef005)
+     校驗:1.單據編號編碼分三段(單別據點代碼 - 單據編碼 期別與流水),
+            第一段的單別據點代碼就是[C:單據據點代號]欄位值,故本欄位不允許空白
+          2.輸入值不可重複
+     帶值:無
+     計算或處理:1.預設為組織編號後N碼,N=aoos010企業層級參數維護作業裡設定的 '營運據點代表號長度'
+                2.此欄位值均轉為大寫]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa100" ver="1" src="s" column="glaa100" table="glaa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[欄位名稱：傳票輸入時自動按缺號產生
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:N
+     校驗:1.不允許空白
+          2.輸入值須為 Y/N
+
+本欄位='Y'時,傳票憑證的維護相應調整如下:
+1.傳票成立時(新增/複製),以當筆的傳票單別+傳票日期,抓取當月缺號由小到大自動賦值(可修改)]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa101" ver="1" src="s" column="glaa101" table="glaa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="8031" default="2" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：傳票總號輸入時機
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值: 2.整帳時批次產生
+     校驗:1.不允許空白
+          2.輸入值須存在 1.傳票成立時手動輸入 2.整帳時批次產生
+
+本欄位=1.傳票成立時手動輸入,傳票憑證輸入時,總號欄位為必輸入,且輸入時需判斷當月份所有傳票其總號不可重複
+本欄位=2.整帳時批次產生,總號欄位noentry,由傳票總號重排作業(aglp520)事後回寫]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa102" ver="1" src="s" column="glaa102" table="glaa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="8032" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：借貸不平處理方式
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值: 1.輸入至借貸平衡為止
+     校驗:1.不允許空白
+          2.輸入值須存在 1.輸入至借貸平衡為止 2.僅予以警告但仍可接受
+
+本欄位=1.輸入至借貸平衡為止,傳票憑證輸入完畢存檔時,需判斷是否借貸平衡,若借方總金額!=貸方總金額,應提示訊息並不允許存檔離開
+本欄位=2.僅予以警告但仍可接受,傳票憑證輸入完畢存檔時,需判斷是否借貸平衡,若借方總金額!=貸方總金額,應提示訊息,顯示選擇暫時存檔離開或繼續輸入
+]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa103" ver="3" src="s" column="glaa103" table="glaa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[欄位名稱：未列印傳票可否進行過帳
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:N
+     校驗:1.不允許空白
+          2.輸入值須為 Y/N
+
+本欄位='N'時,傳票憑證過帳前應先檢核是否列印次數已>0
+]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa111" ver="1" src="s" column="glaa111" table="glaa_t" attribute="" type="" req="N" i_zoom="q_ooba002_05" c_zoom="q_ooba002_05" chk_ref="v_ooba002_01" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：應計調整傳票單別
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:無
+     校驗:1.可空白
+          2.輸入值須存在單別基本資料檔,且性質='應計調整'(傳票憑證來源類型='RA'),且為有效資料]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa112" ver="1" src="s" column="glaa112" table="glaa_t" attribute="" type="" req="N" i_zoom="q_ooba002_05" c_zoom="q_ooba002_05" chk_ref="v_ooba002_02" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：期末結轉傳票單別
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:無
+     校驗:1.可空白
+          2.輸入值須存在單別基本資料檔,且性質='期末結轉'(傳票憑證來源類型='CE'),且為有效資料]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa113" ver="1" src="s" column="glaa113" table="glaa_t" attribute="" type="" req="N" i_zoom="q_ooba002_05" c_zoom="q_ooba002_05" chk_ref="v_ooba002_03" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：年底結轉傳票單別
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:無
+     校驗:1.可空白
+          2.輸入值須存在單別基本資料檔,且性質='年底結轉'(傳票憑證來源類型='YE'),且為有效資料]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa120" ver="1" src="s" column="glaa120" table="glaa_t" attribute="" type="" req="N" i_zoom="q_xcat001" c_zoom="q_xcat001" chk_ref="v_xcat001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa121" ver="4" src="s" column="glaa121" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa122" ver="4" src="s" column="glaa122" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa130" ver="5" src="s" column="glaa130" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa131" ver="5" src="s" column="glaa131" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa132" ver="5" src="s" column="glaa132" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa133" ver="5" src="s" column="glaa133" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa134" ver="5" src="s" column="glaa134" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa135" ver="5" src="s" column="glaa135" table="glaa_t" attribute="" type="" req="N" i_zoom="q_ooal002_6" c_zoom="q_ooal002_6" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaa136" ver="5" src="s" column="glaa136" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaacomp" ver="1" src="s" column="glaacomp" table="glaa_t" attribute="" type="" req="Y" i_zoom="q_ooef001_2" c_zoom="q_ooef001_2" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：歸屬法人
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+          2.輸入需存在組織基本資料檔且組織類型=法人
+          3.检查资料需要存在与组织基本资料档案且组织类型为法人：
+            如果不存在就报错提示不存在
+            如果无效就报错提示无效
+            如果组织类型不为法人就报错提示组织类型错误]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaacrtdp" ver="1" src="s" column="glaacrtdp" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaacrtdt" ver="1" src="s" column="glaacrtdt" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaacrtid" ver="1" src="s" column="glaacrtid" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaald" ver="1" src="s" column="glaald" table="glaa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_glaa" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：帳別編號
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+             2.輸入值不可重複
+             3.重复性检查，如果重复需要报错提示资料重复]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaamoddt" ver="1" src="s" column="glaamoddt" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaamodid" ver="1" src="s" column="glaamodid" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaaowndp" ver="1" src="s" column="glaaowndp" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaaownid" ver="1" src="s" column="glaaownid" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaa_t.glaastus" ver="1" src="s" column="glaastus" table="glaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_glaal002" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="buttonedit_1" ver="5" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="checkbox_1" ver="5" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="checkbox_2" ver="5" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="combobox_1" ver="5" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="combobox_2" ver="5" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaa132" ver="5" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="l_glaa135_desc" ver="5" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_glaa135_desc" ver="5" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="5" name="_desc" src="s" depend_field="" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status="d"/>
+    <rfield cite_std="N" ver="1" name="b_glaacomp_desc" src="s" depend_field="b_glaacomp" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status=""/>
+    <rfield cite_std="N" ver="3" name="fflabe7_desc" src="s" depend_field="" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status=""/>
+    <rfield cite_std="N" ver="5" name="fflabel2_desc" src="s" depend_field="" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status="d"/>
+    <rfield cite_std="N" ver="3" name="fflabel5_desc" src="s" depend_field="" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status=""/>
+    <rfield cite_std="N" ver="3" name="fflabel8_desc" src="s" depend_field="" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status=""/>
+    <rfield cite_std="N" ver="1" name="glaa001_desc" src="s" depend_field="glaa_t.glaa001" correspon_key="glaaent,glaa001" ref_table="ooail_t" ref_fk="ooailent,ooail001" ref_dlang="ooail002" ref_rtn="ooail003" status=""/>
+    <rfield cite_std="N" ver="1" name="glaa002_desc" src="s" depend_field="glaa_t.glaa002" correspon_key="glaaent,&apos;1&apos;,glaa002" ref_table="ooall_t" ref_fk="ooallent,ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield cite_std="N" ver="2" name="glaa003_desc" src="s" depend_field="glaa_t.glaa003" correspon_key="glaaent,&apos;13&apos;,glaa003" ref_table="ooall_t" ref_fk="ooallent,ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield cite_std="N" ver="1" name="glaa004_desc" src="s" depend_field="glaa_t.glaa004" correspon_key="glaaent,&apos;0&apos;,glaa004" ref_table="ooall_t" ref_fk="ooallent,ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield cite_std="N" ver="1" name="glaa005_desc" src="s" depend_field="glaa_t.glaa005" correspon_key="glaaent,&apos;8&apos;,glaa005" ref_table="ooall_t" ref_fk="ooallent,ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield cite_std="N" ver="1" name="glaa024_desc" src="s" depend_field="glaa_t.glaa024" correspon_key="glaaent,&apos;3&apos;,glaa024" ref_table="ooall_t" ref_fk="ooallent,ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield cite_std="N" ver="1" name="glaa026_desc" src="s" depend_field="glaa_t.glaa026" correspon_key="glaaent,&apos;10&apos;,glaa026" ref_table="ooall_t" ref_fk="ooallent,ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield cite_std="N" ver="1" name="glaa120_desc" src="s" depend_field="glaa_t.glaa120" correspon_key="glaaent,glaa120" ref_table="xcatl_t" ref_fk="xcatlent,xcatl001" ref_dlang="xcatl002" ref_rtn="xcatl003" status=""/>
+    <rfield cite_std="N" ver="5" name="glaa135_desc" src="s" depend_field="glaa_t.glaa135" correspon_key="&apos;8&apos;,glaa135,glaaent" ref_table="ooall_t" ref_fk="ooall001,ooall002,ooallent" ref_dlang="ooall003" ref_rtn="ooall004" status="u"/>
+    <rfield cite_std="N" ver="1" name="glaacomp_desc" src="s" depend_field="glaa_t.glaacomp" correspon_key="glaaent,glaacomp" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="glaacrtdp_desc" src="s" depend_field="glaa_t.glaacrtdp" correspon_key="glaacrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="glaacrtid_desc" src="s" depend_field="glaa_t.glaacrtid" correspon_key="glaacrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="glaamodid_desc" src="s" depend_field="glaa_t.glaamodid" correspon_key="glaamodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="glaaowndp_desc" src="s" depend_field="glaa_t.glaaowndp" correspon_key="glaaowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="glaaownid_desc" src="s" depend_field="glaa_t.glaaownid" correspon_key="glaaownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+  </ref_field>
+  <multi_lang>
+    <mfield cite_std="N" ver="1" name="glaal_t.glaal002" src="s" depend_field="glaa_t.glaald" correspon_key="glaaent,glaald" lang_table="glaal_t" lang_fk="glaalent,glaalld" lang_dlang="glaal001" lang_rtn="glaal002" status="">
+      <![CDATA[]]>
+    </mfield>
+  </multi_lang>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_glaacomp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_glaald" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="buttonedit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="5" name="checkbox_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="5" name="checkbox_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="5" name="combobox_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="5" name="combobox_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="5" name="glaa132" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa023" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa024" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa025" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa026" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="glaa_t.glaa027" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa100" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa101" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa102" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="glaa_t.glaa103" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa111" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa112" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa113" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaa120" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="glaa_t.glaa121" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="glaa_t.glaa122" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="glaa_t.glaa130" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="5" name="glaa_t.glaa131" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="5" name="glaa_t.glaa132" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="5" name="glaa_t.glaa133" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="5" name="glaa_t.glaa134" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="5" name="glaa_t.glaa135" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="5" name="glaa_t.glaa136" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaacomp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaacrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaacrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaacrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaald" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaamoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaamodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaaowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaaownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaa_t.glaastus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="l_glaa135_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="5" name="lbl_glaa135_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="lbl_glaal002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="open_agli010_01" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="open_agli010_02" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="open_agli020" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[call agli020會計科目維護作業(參照表編號由本作業帶入）
+]]>
+  </act>
+  <act cite_std="N" id="open_agli030" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[call agli030帳別科目管理設定作業(帳別編號由本作業傳入後顯示用）
+]]>
+  </act>
+  <act cite_std="N" id="open_agli100" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[call aooi420會計週期維護作業(行事曆維護作業.型事曆類別=會計週期）
+带SA规划后完善
+]]>
+  </act>
+  <act cite_std="N" id="open_aooi150" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[call aooi150匯率維護作業，傳入畫面上面的匯率參照表號
+]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="cbo_searchcol.0" text="選擇查詢欄位" lstr=""/>
+    <sfield name="lbl_glaald" text="帳別編號" lstr=""/>
+    <sfield name="lbl_glaacomp" text="歸屬法人" lstr=""/>
+    <sfield name="rdo_expand.1" text="上推" lstr=""/>
+    <sfield name="rdo_expand.2" text="下展" lstr=""/>
+    <sfield name="rdo_expand.3" text="全部" lstr=""/>
+    <sfield name="lbl_name" text="樹狀節點說明" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_glaal002_desc" text="帳別名稱" lstr=""/>
+    <sfield name="lbl_glaa027" text="單據據點代號" lstr=""/>
+    <sfield name="lbl_glaa026" text="幣別參照表" lstr=""/>
+    <sfield name="lbl_ooall004" text="說明" lstr=""/>
+    <sfield name="lbl_glaa001" text="使用幣別" lstr=""/>
+    <sfield name="lbl_glaa002" text="匯率參照表" lstr=""/>
+    <sfield name="lbl_glaa025" text="匯率採用" lstr=""/>
+    <sfield name="lbl_glaa003" text="會計週期參照表" lstr=""/>
+    <sfield name="lbl_glaa004" text="會計科目參照表" lstr=""/>
+    <sfield name="lbl_glaa024" text="單據別參照表" lstr=""/>
+    <sfield name="lbl_glaa005" text="現金變動參照表" lstr=""/>
+    <sfield name="lbl_glaa006" text="月結方式" lstr=""/>
+    <sfield name="lbl_glaa007" text="年結方式" lstr=""/>
+    <sfield name="agli010.group_6" text="帳別類型數據" lstr=""/>
+    <sfield name="lbl_glaa014" text="主帳別" lstr=""/>
+    <sfield name="lbl_glaa008" text="平行輔帳" lstr=""/>
+    <sfield name="lbl_glaa023" text="平行輔帳順序" lstr=""/>
+    <sfield name="lbl_glaa009" text="其他輔帳出帳方式" lstr=""/>
+    <sfield name="group_1" text="結帳資訊" lstr=""/>
+    <sfield name="lbl_glaa010" text="現行年度" lstr=""/>
+    <sfield name="lbl_glaa011" text="現行期別" lstr=""/>
+    <sfield name="lbl_glaa012" text="最後過帳日期" lstr=""/>
+    <sfield name="lbl_glaa013" text="關帳日期" lstr=""/>
+    <sfield name="lbl_glaastus" text="狀態碼" lstr=""/>
+    <sfield name="page_2" text="多本幣設定" lstr=""/>
+    <sfield name="group_3" text="多本位幣設置" lstr=""/>
+    <sfield name="lbl_glaa015" text="啟用本位幣二" lstr=""/>
+    <sfield name="lbl_glaa019" text="啟用本位幣三" lstr=""/>
+    <sfield name="lbl_glaa016" text="本位幣二" lstr=""/>
+    <sfield name="lbl_glaa020" text="本位幣三" lstr=""/>
+    <sfield name="lbl_glaa017" text="本位幣二換算基準" lstr=""/>
+    <sfield name="lbl_glaa021" text="本位幣三換算基準" lstr=""/>
+    <sfield name="lbl_glaa018" text="本位幣二匯率採用" lstr=""/>
+    <sfield name="lbl_glaa022" text="本位幣三匯率採用" lstr=""/>
+    <sfield name="page_3" text="參數設定" lstr=""/>
+    <sfield name="agli010.group4" text="傳票相關參數" lstr=""/>
+    <sfield name="lbl_glaa100" text="傳票輸入時自動按缺號產生" lstr=""/>
+    <sfield name="lbl_glaa101" text="傳票總號輸入時機" lstr=""/>
+    <sfield name="lbl_glaa102" text="借貸不平衡的處理方式" lstr=""/>
+    <sfield name="lbl_glaa103" text="未列印的傳票可否進行過帳" lstr=""/>
+    <sfield name="agli010.group6" text="單別預設" lstr=""/>
+    <sfield name="lbl_glaa111" text="應計調整單別" lstr=""/>
+    <sfield name="lbl_glaa112" text="期末結轉單別" lstr=""/>
+    <sfield name="lbl_glaa113" text="年底結轉單別" lstr=""/>
+    <sfield name="agli010.group7" text="成本相關參數" lstr=""/>
+    <sfield name="lbl_glaa120" text="成本計算類型" lstr=""/>
+    <sfield name="lbl_xcatl003" text="成本類型說明" lstr=""/>
+    <sfield name="agli010.group8" text="分錄底稿參數" lstr=""/>
+    <sfield name="lbl_glaa121" text="子模塊啟用分錄底稿" lstr=""/>
+    <sfield name="lbl_checkbox_1" text="合併帳套" lstr=""/>
+    <sfield name="lbl_glaa136" text="應付核銷限定立帳己產生憑證" lstr=""/>
+    <sfield name="agli010.group9" text="資金管理參數" lstr=""/>
+    <sfield name="lbl_glaa122" text="總帳可維護資金異動明細" lstr=""/>
+    <sfield name="page_4" text="合併報表" lstr=""/>
+    <sfield name="lbl_glaa130" text="合併帳套" lstr=""/>
+    <sfield name="lbl_glaa131" text="分層合併" lstr=""/>
+    <sfield name="lbl_checkbox_2" text="分層合併" lstr=""/>
+    <sfield name="lbl_glaa132" text="平均匯率計算方式" lstr=""/>
+    <sfield name="lbl_glaa133" text="非T100公司匯入餘額類型" lstr=""/>
+    <sfield name="lbl_glaa134" text="合併科目轉換依據異動碼設定值" lstr=""/>
+    <sfield name="agli010.group_7" text="現流表間接法" lstr=""/>
+    <sfield name="lbl_glaa135" text="群組參照表號" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_tbegin" text="共" lstr=""/>
+    <sfield name="lbl_tend" text="筆" lstr=""/>
+    <sfield name="lbl_glbald" text="帳別" lstr=""/>
+    <sfield name="lbl_glba001" text="使用者編號" lstr=""/>
+    <sfield name="lbl_oofa011_1" text="使用者名稱" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_glbbld" text="帳別" lstr=""/>
+    <sfield name="lbl_glbb001" text="部門編號" lstr=""/>
+    <sfield name="lbl_ooeal003_1" text="部門名稱" lstr=""/>
+    <sfield name="lbl_glaalld" text="帳別編號" lstr=""/>
+    <sfield name="lbl_glaal001" text="語言別" lstr=""/>
+    <sfield name="lbl_glaal002" text="說明" lstr=""/>
+    <sfield name="lbl_glaal003" text="助記碼" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="open_agli010_01" text="使用者設限" lstr=""/>
+    <sact name="open_agli010_02" text="部門設限" lstr=""/>
+    <sact name="open_agli020" text="會計科目維護作業" lstr=""/>
+    <sact name="open_agli030" text="帳別科目管理設定" lstr=""/>
+    <sact name="open_agli100" text="會計週期維護作業" lstr=""/>
+    <sact name="open_aooi150" text="匯率維護作業" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="5" cite_std="N" src="s">
+    <widget name="fflabel5_desc" status="u"/>
+    <widget name="glaa135_desc" status="d"/>
+  </exclude>
+</spec>

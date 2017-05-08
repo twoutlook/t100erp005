@@ -1,0 +1,200 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="amhi206" module="amh" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="06254" crtdt="2015-11-16 13:41:58" modid="06814" moddt="2016-05-12 11:47:44" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="場地基本資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),mhaasite(chr10),mhaasite_desc(chr500),mhaaunit(chr10),mhaaunit_desc(chr500),mhaa001(chr10),mhaal003(chr500),mhaa005(num20_6),mhaa006(num20_6),mhaa002(num20_6),mhaa003(num20_6),mhaa004(num20_6),mhab001(chr10),mhab002(chr10),mhabl004(chr500),mhab006(num20_6),mhab007(num20_6),mhab008(num20_6),mhab009(num20_6),mhab003(num20_6),mhab004(num20_6),mhab005(num20_6),mhac001(chr10),mhac002(chr10),mhac003(chr10),mhacl005(chr500),mhac004(num20_6),mhac005(num20_6),mhac006(num20_6),mhad001(chr10),mhad002(chr10),mhad003(chr10),mhad004(chr20),mhadl006(chr500),mhad010(chr10),mhad010_desc(chr500),mhad005(num20_6),mhad006(num20_6),mhad007(num20_6),mhad008(chr10),mhadstus(chr10)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="excel_load"/>
+      <action id="pinvalid"/>
+      <action id="pvalid"/>
+      <action id="excel_example"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="amh" filename="amhi206" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="sel,mhaasite,mhaaunit,mhaa001,mhaal003,mhaa005,mhaa006,mhaa002,mhaa003,mhaa004,mhab001,mhab002,mhabl004,mhab006,mhab007,mhab008,mhab009,mhab003,mhab004,mhab005,mhac001,mhac002,mhac003,mhacl005,mhac004,mhac005,mhac006,mhad001,mhad002,mhad003,mhad004,mhadl006,mhad010,mhad005,mhad006,mhad007,mhad008,mhadstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="sel,mhaasite,mhaaunit,mhaa001,mhaal003,mhaa005,mhaa006,mhaa002,mhaa003,mhaa004,mhab001,mhab002,mhabl004,mhab006,mhab007,mhab008,mhab009,mhab003,mhab004,mhab005,mhac001,mhac002,mhac003,mhacl005,mhac004,mhac005,mhac006,mhad001,mhad002,mhad003,mhad004,mhadl006,mhad010,mhad005,mhad006,mhad007,mhad008,mhadstus"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel" type="S" default="N"/>
+      <column id="mhaasite">
+        <after>
+          <check chkid="v_ooed004" id="isExist"/>
+          <reference field="mhaasite_desc" ref_field="mhaasite" map_field="mhaasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="i"/>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="mhaasite_desc"/>
+      <column id="mhaaunit">
+        <after>
+          <check chkid="v_ooed004" id="isExist"/>
+          <reference field="mhaaunit_desc" ref_field="mhaaunit" map_field="mhaaunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="i"/>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="mhaaunit_desc"/>
+      <column id="mhaa001">
+        <controlp form="q_mhaa001" state="c"/>
+      </column>
+      <column id="mhaal003"/>
+      <column id="mhaa005" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhaa006" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhaa002" type="S" default="0"/>
+      <column id="mhaa003" type="S" default="0"/>
+      <column id="mhaa004" type="S" default="0"/>
+      <column id="mhab001">
+        <after>
+          <check chkid="v_mhaa001" id="isExist"/>
+        </after>
+        <controlp form="q_mhaa001" state="i"/>
+        <controlp form="q_mhaa001" state="c"/>
+      </column>
+      <column id="mhab002">
+        <controlp form="q_mhab002" state="c"/>
+      </column>
+      <column id="mhabl004"/>
+      <column id="mhab006" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhab007" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhab008">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhab009">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhab003" type="S" default="0"/>
+      <column id="mhab004" type="S" default="0"/>
+      <column id="mhab005" type="S" default="0"/>
+      <column id="mhac001">
+        <after>
+          <check chkid="v_mhaa001" id="isExist"/>
+        </after>
+        <controlp form="q_mhaa001" state="i"/>
+        <controlp form="q_mhaa001" state="c"/>
+      </column>
+      <column id="mhac002">
+        <after>
+          <check chkid="v_mhab002" id="isExist"/>
+        </after>
+        <controlp form="q_mhab002" state="i"/>
+        <controlp form="q_mhab002" state="c"/>
+      </column>
+      <column id="mhac003">
+        <controlp form="q_mhac003" state="c"/>
+      </column>
+      <column id="mhacl005"/>
+      <column id="mhac004" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhac005" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhac006" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhad001">
+        <after>
+          <check chkid="v_mhaa001" id="isExist"/>
+        </after>
+        <controlp form="q_mhaa001" state="i"/>
+        <controlp form="q_mhaa001" state="c"/>
+      </column>
+      <column id="mhad002">
+        <after>
+          <check chkid="v_mhab002" id="isExist"/>
+        </after>
+        <controlp form="q_mhab002" state="i"/>
+        <controlp form="q_mhab002" state="c"/>
+      </column>
+      <column id="mhad003">
+        <controlp form="q_mhac003" state="i"/>
+        <controlp form="q_mhac003" state="c"/>
+      </column>
+      <column id="mhad004">
+        <controlp form="q_mhad001" state="c"/>
+      </column>
+      <column id="mhadl006"/>
+      <column id="mhad010">
+        <after>
+          <reference field="mhad010_desc" ref_field="mhad010" map_field="mhad010" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2145&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mhad010_desc"/>
+      <column id="mhad005" type="S" default="0"/>
+      <column id="mhad006" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhad007" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhad008"/>
+      <column id="mhadstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <body id="mhaa_t" page="1" linked="" pk="mhaasite,mhaa001">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM mhaa_t WHERE mhaaent=? AND mhaasite=? AND mhaa001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM mhaa_t WHERE mhaaent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="mhaal003" table="mhaal_t" fk="mhaa001" pk="mhaal001,mhaal002" field="mhaal003"/>
+      <sql id="detail_append" type="lang" target="mhabl004" table="mhabl_t" fk="mhab001,mhab002" pk="mhabl001,mhabl002,mhabl003" field="mhabl004"/>
+      <sql id="detail_append" type="lang" target="mhacl005" table="mhacl_t" fk="mhac001,mhac002,mhac003" pk="mhacl001,mhacl002,mhacl003,mhacl004" field="mhacl005"/>
+      <sql id="detail_append" type="lang" target="mhadl006" table="mhadl_t" fk="mhad001,mhad002,mhad003,mhad004" pk="mhadl001,mhadl002,mhadl003,mhadl004,mhadl005" field="mhadl006"/>
+    </body>
+  </dataset>
+</assembly>
+

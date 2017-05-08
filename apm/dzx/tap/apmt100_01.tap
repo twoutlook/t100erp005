@@ -1,0 +1,820 @@
+<add_points prog="apmt100_01" std_prog="apmt100_01" erpver="1.0" module="APM" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="construct.c.page1.pmbc002" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="0" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO pmbc002  #顯示到畫面上
+
+            NEXT FIELD pmbc002                     #返回原欄位
+
+]]>
+</point>
+  <point name="input.a.page1.pmbc002" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="0" mark_hard="N">
+<![CDATA[            CALL apmt100_01_pmbc002_ref(g_pmbc_d[l_ac].pmbc002) RETURNING g_pmbc_d[l_ac].pmbc002_desc
+            DISPLAY BY NAME g_pmbc_d[l_ac].pmbc002_desc
+            
+            IF NOT cl_null(g_pmbc_d[l_ac].pmbcdocno) AND NOT cl_null(g_pmbc_d[l_ac].pmbc002) AND NOT cl_null(g_pmbc_d[l_ac].pmbc003) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_pmbc_d[l_ac].pmbcdocno != g_pmbc_d_t.pmbcdocno OR g_pmbc_d[l_ac].pmbc002 != g_pmbc_d_t.pmbc002 OR g_pmbc_d[l_ac].pmbc003 != g_pmbc_d_t.pmbc003))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmbc_t WHERE pmbcent = '" ||g_enterprise|| "' AND pmbcdocno = '"||g_pmbc_d[l_ac].pmbcdocno ||"' AND pmbc002 = '"||g_pmbc_d[l_ac].pmbc002 ||"' AND pmbc003 = '"||g_pmbc_d[l_ac].pmbc003 ||"'",'std-00004',0) THEN 
+                     LET g_pmbc_d[l_ac].pmbc002 = g_pmbc_d_t.pmbc002
+                     CALL apmt100_01_pmbc002_ref(g_pmbc_d[l_ac].pmbc002) RETURNING g_pmbc_d[l_ac].pmbc002_desc
+                     DISPLAY BY NAME g_pmbc_d[l_ac].pmbc002_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  IF NOT ap_chk_isExist(g_pmbc_d[l_ac].pmbc002,"SELECT COUNT(*) FROM pmaa_t WHERE pmaaent = '" ||g_enterprise||"' AND pmaa001 = ? ","apm-00028",1 ) THEN
+                     LET g_pmbc_d[l_ac].pmbc002 = g_pmbc_d_t.pmbc002
+                     CALL apmt100_01_pmbc002_ref(g_pmbc_d[l_ac].pmbc002) RETURNING g_pmbc_d[l_ac].pmbc002_desc
+                     DISPLAY BY NAME g_pmbc_d[l_ac].pmbc002_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  IF NOT ap_chk_isExist(g_pmbc_d[l_ac].pmbc002,"SELECT COUNT(*) FROM pmaa_t WHERE pmaaent = '" ||g_enterprise||"' AND pmaa001 = ? AND pmaastus != 'X' ","apm-00044",1 ) THEN
+                     LET g_pmbc_d[l_ac].pmbc002 = g_pmbc_d_t.pmbc002
+                     CALL apmt100_01_pmbc002_ref(g_pmbc_d[l_ac].pmbc002) RETURNING g_pmbc_d[l_ac].pmbc002_desc
+                     DISPLAY BY NAME g_pmbc_d[l_ac].pmbc002_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+]]>
+</point>
+  <point name="input.a.page1.pmbc003" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="0" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_pmbc_d[l_ac].pmbcdocno) AND NOT cl_null(g_pmbc_d[l_ac].pmbc002) AND NOT cl_null(g_pmbc_d[l_ac].pmbc003) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( g_pmbc_d[l_ac].pmbc002 != g_pmbc_d_t.pmbc002 OR g_pmbc_d[l_ac].pmbc003 != g_pmbc_d_t.pmbc003)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmbc_t WHERE "||"pmbcent = '" ||g_enterprise|| "' AND "||"pmbcdocno = '"||g_pmbc_d[g_detail_idx].pmbcdocno ||"' AND "|| "pmbc002 = '"||g_pmbc_d[g_detail_idx].pmbc002 ||"' AND "|| "pmbc003 = '"||g_pmbc_d[g_detail_idx].pmbc003 ||"'",'std-00004',0) THEN 
+                     LET g_pmbc_d[l_ac].pmbc003 = g_pmbc_d_t.pmbc003
+                     NEXT FIELD CURRENT
+                  END IF
+                  IF g_pmbc_d[l_ac].pmbc004 = 'Y' THEN
+                     IF NOT apmt100_01_pmbc004_chk() THEN
+                        LET g_pmbc_d[l_ac].pmbc003 = g_pmbc_d_t.pmbc003
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page1.pmbcdocno" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="0" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_pmbc_d[g_detail_idx].pmbcdocno) AND NOT cl_null(g_pmbc_d[g_detail_idx].pmbc002) AND NOT cl_null(g_pmbc_d[g_detail_idx].pmbc003) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_pmbc_d[g_detail_idx].pmbcdocno != g_pmbc_d_t.pmbcdocno OR g_pmbc_d[g_detail_idx].pmbc002 != g_pmbc_d_t.pmbc002 OR g_pmbc_d[g_detail_idx].pmbc003 != g_pmbc_d_t.pmbc003))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmbc_t WHERE "||"pmbcent = '" ||g_enterprise|| "' AND "||"pmbcdocno = '"||g_pmbc_d[g_detail_idx].pmbcdocno ||"' AND "|| "pmbc002 = '"||g_pmbc_d[g_detail_idx].pmbc002 ||"' AND "|| "pmbc003 = '"||g_pmbc_d[g_detail_idx].pmbc003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.c.page1.pmbc002" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="0" mark_hard="N">
+<![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_pmbc_d[l_ac].pmbc002             #給予default值
+            
+            #給予arg
+
+            CALL q_pmaa001_4()                                #呼叫開窗
+
+            LET g_pmbc_d[l_ac].pmbc002 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_pmbc_d[l_ac].pmbc002 TO pmbc002              #顯示到畫面上
+            
+            CALL apmt100_01_pmbc002_ref(g_pmbc_d[l_ac].pmbc002) RETURNING g_pmbc_d[l_ac].pmbc002_desc
+            DISPLAY BY NAME g_pmbc_d[l_ac].pmbc002_desc
+
+            NEXT FIELD pmbc002                          #返回原欄位
+
+]]>
+</point>
+  <point name="show.body.reference" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="0" mark_hard="N">
+<![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pmbc_d[l_ac].pmbc002
+            CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_pmbc_d[l_ac].pmbc002_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pmbc_d[l_ac].pmbc002_desc
+]]>
+</point>
+  <point name="function.apmt100_01_b_fill" cite_std="N" status="" ver="1" src="s" new="Y" cite_ver="" order="1" mark_hard="N">
+<![CDATA[#+
+PRIVATE FUNCTION apmt100_01_b_fill(p_pmbadocno)
+   DEFINE p_pmbadocno LIKE pmba_t.pmbadocno
+   DEFINE l_sql       STRING
+
+   DEFINE l_ac1       LIKE type_t.num5
+   
+   LET l_sql = "SELECT pmbcstus,pmbcdocno,pmbc001,pmbc003,pmbc004,pmbc002,'' FROM pmbc_t WHERE pmbcent = '",g_enterprise,"' AND pmbcdocno = '",p_pmbadocno,"' "
+   PREPARE apmt100_01_pb FROM l_sql
+   DECLARE b_fill_curs CURSOR FOR apmt100_01_pb
+
+   CALL g_pmbc_d.clear()
+   LET l_ac1 = 1
+   FOREACH b_fill_curs INTO g_pmbc_d[l_ac1].*
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      CALL apmt100_01_pmbc002_ref(g_pmbc_d[l_ac1].pmbc002) RETURNING g_pmbc_d[l_ac1].pmbc002_desc
+          
+      LET l_ac1 = l_ac1 + 1
+      IF l_ac1 > g_max_rec THEN
+         #CALL cl_err( "", 9035, 0 )
+         EXIT FOREACH
+      END IF
+
+   END FOREACH
+   CALL g_pmbc_d.deleteElement(g_pmbc_d.getLength())
+   LET g_rec_b = l_ac1 - 1
+   DISPLAY g_rec_b TO FORMONLY.cnt
+   CLOSE b_fill_curs
+   FREE apmt100_01_pb
+   
+END FUNCTION]]>
+</point>
+  <point name="function.apmt100_01_pmbc002_ref" cite_std="N" status="" ver="1" src="s" new="Y" cite_ver="" order="2" mark_hard="N">
+<![CDATA[#+
+PRIVATE FUNCTION apmt100_01_pmbc002_ref(p_pmbc002)
+DEFINE p_pmbc002      LIKE pmbc_t.pmbc002
+DEFINE r_pmbc002_desc LIKE pmaal_t.pmaal004
+
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = p_pmbc002
+       CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+       LET r_pmbc002_desc = '', g_rtn_fields[1] , ''
+       RETURN r_pmbc002_desc
+       
+END FUNCTION]]>
+</point>
+  <point name="function.apmt100_01_pmbc004_chk" cite_std="N" status="" ver="1" src="s" new="Y" cite_ver="" order="3" mark_hard="N">
+<![CDATA[#+
+PRIVATE FUNCTION apmt100_01_pmbc004_chk()
+DEFINE l_n            LIKE type_t.num5
+DEFINE r_success      LIKE type_t.num5
+
+       LET l_n = 0
+       LET r_success = TRUE       
+       SELECT COUNT(*) INTO l_n FROM pmbc_t WHERE pmbcent = g_enterprise AND pmbcdocno = g_pmbc_d[l_ac].pmbcdocno AND pmbc003 = g_pmbc_d[l_ac].pmbc003 AND pmbc004 = 'Y'
+       #同一個交易類型已勾選一筆資料為主要的，不可再次勾選
+       IF l_n > 0 THEN
+          CALL cl_err(g_pmbc_d[l_ac].pmbc003,'apm-00156',1)
+          LET r_success = FALSE
+          RETURN r_success
+       END IF
+       RETURN r_success
+      
+END FUNCTION]]>
+</point>
+  <point name="input.a.page1.pmbc004" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_pmbc_d[l_ac].pmbcdocno) AND NOT cl_null(g_pmbc_d[l_ac].pmbc004) AND NOT cl_null(g_pmbc_d[l_ac].pmbc003) THEN 
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_pmbc_d[l_ac].pmbc004 != g_pmbc_d_t.pmbc004 OR cl_null(g_pmbc_d_t.pmbc004))) THEN
+                  IF g_pmbc_d[l_ac].pmbc004 = 'Y' THEN
+                     IF NOT apmt100_01_pmbc004_chk() THEN
+                        LET g_pmbc_d[l_ac].pmbc004 = g_pmbc_d_t.pmbc004
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF
+            END IF]]>
+</point>
+  <point name="input.before_close" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   LET INT_FLAG = FALSE]]>
+</point>
+  <point name="input.before_input" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            CALL apmt100_01_b_fill(p_pmbadocno)
+            LET g_rec_b = g_pmbc_d.getLength()
+            
+          BEFORE ROW 
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+   
+            LET g_rec_b = g_pmbc_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND NOT cl_null(g_pmbc_d[l_ac].pmbcdocno)
+               AND NOT cl_null(g_pmbc_d[l_ac].pmbc002) 
+               AND NOT cl_null(g_pmbc_d[l_ac].pmbc003) 
+ 
+ 
+            THEN
+               LET l_cmd='u'
+			   LET g_pmbc_d_t.* = g_pmbc_d[l_ac].*  #BACKUP
+			   
+			   OPEN apmt100_01_bcl USING g_enterprise,p_pmbadocno,g_pmbc_d[l_ac].pmbc002,g_pmbc_d[l_ac].pmbc003
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("apmt100_01_bcl",SQLCA.sqlcode,1)
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH apmt100_01_bcl INTO g_pmbc_d[l_ac].pmbcstus,g_pmbc_d[l_ac].pmbcdocno,g_pmbc_d[l_ac].pmbc001,g_pmbc_d[l_ac].pmbc003,g_pmbc_d[l_ac].pmbc004,g_pmbc_d[l_ac].pmbc002,g_pmbc_d[l_ac].pmbc002_desc
+                  
+                  IF SQLCA.sqlcode THEN
+                     CALL cl_err(p_pmbadocno,SQLCA.sqlcode,1)
+                     LET l_lock_sw = "Y"
+                  END IF
+				  CALL apmt100_01_pmbc002_ref(g_pmbc_d[l_ac].pmbc002) RETURNING g_pmbc_d[l_ac].pmbc002_desc
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+        
+         BEFORE INSERT
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_pmbc_d[l_ac].* TO NULL          
+            
+            LET g_pmbc_d[l_ac].pmbcdocno = p_pmbadocno
+            LET g_pmbc_d[l_ac].pmbc001 = p_pmba001
+            LET g_pmbc_d[l_ac].pmbcstus = 'Y'
+            LET g_pmbc_d[l_ac].pmbc003 = '1'
+            LET g_pmbc_d[l_ac].pmbc004 = 'N'
+            
+            LET g_pmbc_d_t.* = g_pmbc_d[l_ac].*     #新輸入資料
+
+            CALL cl_show_fld_cont()
+            
+            
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM pmbc_t 
+             WHERE pmbcent = g_enterprise AND pmbcdocno = g_pmbc_d[l_ac].pmbcdocno
+               AND pmbc002 = g_pmbc_d[l_ac].pmbc002
+               AND pmbc003 = g_pmbc_d[l_ac].pmbc003
+      
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               INSERT INTO pmbc_t (pmbcent,pmbcdocno,pmbc001,pmbc002,pmbc003,pmbc004,pmbcstus)
+                  VALUES (g_enterprise,g_pmbc_d[l_ac].pmbcdocno,g_pmbc_d[l_ac].pmbc001,g_pmbc_d[l_ac].pmbc002,g_pmbc_d[l_ac].pmbc003,g_pmbc_d[l_ac].pmbc004,g_pmbc_d[l_ac].pmbcstus)
+            ELSE    
+               CALL cl_err('INSERT',"std-00006",1)
+               INITIALIZE g_pmbc_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("pmbc_t",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               CALL s_transaction_end('Y','0')
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF NOT cl_null(g_pmbc_d[l_ac].pmbcdocno)
+               AND NOT cl_null(g_pmbc_d[l_ac].pmbc002) 
+               AND NOT cl_null(g_pmbc_d[l_ac].pmbc003) THEN 
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  CALL cl_err("", -263, 1)
+                  CANCEL DELETE
+               END IF
+
+               DELETE FROM pmbc_t
+                WHERE pmbcent = g_enterprise AND pmbcdocno = g_pmbc_d_t.pmbcdocno
+                  AND pmbc002 = g_pmbc_d_t.pmbc002
+                  AND pmbc003 = g_pmbc_d_t.pmbc003
+
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("pmbc_t",SQLCA.sqlcode,1)
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF 
+               CLOSE apmt100_01_bcl
+               LET l_count = g_pmbc_d.getLength()
+            END IF 
+            
+        ON ROW CHANGE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               LET g_pmbc_d[l_ac].* = g_pmbc_d_t.*
+               CLOSE apmt100_01_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG
+            END IF
+
+            IF l_lock_sw = 'Y' THEN
+               CALL cl_err(g_pmbc_d[l_ac].pmbc002,-263,1)
+               LET g_pmbc_d[l_ac].* = g_pmbc_d_t.*
+            ELSE
+               UPDATE pmbc_t SET (pmbc002,pmbc003,pmbc004,pmbcstus) = (g_pmbc_d[l_ac].pmbc002,g_pmbc_d[l_ac].pmbc003,g_pmbc_d[l_ac].pmbc004,g_pmbc_d[l_ac].pmbcstus)
+                WHERE pmbcent = g_enterprise 
+                  AND pmbcdocno = g_pmbc_d_t.pmbcdocno
+                  AND pmbc002 = g_pmbc_d_t.pmbc002
+                  AND pmbc003 = g_pmbc_d_t.pmbc003
+
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("pmbc_t",SQLCA.sqlcode,1)
+                  LET g_pmbc_d[l_ac].* = g_pmbc_d_t.*
+                  CALL s_transaction_end('N','0')
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF
+            END IF
+            
+         AFTER ROW
+            CLOSE apmt100_01_bcl
+            CALL s_transaction_end('Y','0')]]>
+</point>
+  <point name="input.define" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   DEFINE p_pmbadocno     LIKE pmba_t.pmbadocno
+   DEFINE p_pmba001       LIKE pmba_t.pmba001
+   DEFINE l_lock_sw       LIKE type_t.chr1
+   DEFINE l_forupd_sql    STRING
+   DEFINE l_n             LIKE type_t.num5                #檢查重複用  
+   DEFINE l_cnt           LIKE type_t.num5]]>
+</point>
+  <point name="input.g.page1.pmbc004" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_pmbc_d[l_ac].pmbcdocno) AND NOT cl_null(g_pmbc_d[l_ac].pmbc004) AND NOT cl_null(g_pmbc_d[l_ac].pmbc003) THEN 
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_pmbc_d[l_ac].pmbc004 != g_pmbc_d_t.pmbc004 OR cl_null(g_pmbc_d_t.pmbc004))) THEN
+                  IF g_pmbc_d[l_ac].pmbc004 = 'Y' THEN
+                     IF NOT apmt100_01_pmbc004_chk() THEN
+                        LET g_pmbc_d[l_ac].pmbc004 = g_pmbc_d_t.pmbc004
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF
+            END IF]]>
+</point>
+  <point name="input.get_var" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   p_pmbadocno,p_pmba001]]>
+</point>
+  <point name="input.post_input" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   CALL s_transaction_begin()]]>
+</point>
+  <point name="input.pre_input" cite_std="N" status="u" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   WHENEVER ERROR CONTINUE
+   #CALL s_transaction_end('N','0')
+   
+   CALL cl_set_combo_scc('pmbc003','2013')
+   
+   CALL apmt100_01_b_fill(p_pmbadocno)
+   
+   LET l_ac = 1
+   LET l_forupd_sql = "SELECT pmbcstus,pmbcdocno,pmbc001,pmbc003,pmbc004,pmbc002,'' FROM pmbc_t WHERE pmbcent = ? AND pmbcdocno = ? AND pmbc002 = ? AND pmbc003 = ? FOR UPDATE"
+   LET l_forupd_sql = cl_sql_forupd(l_forupd_sql)
+   DECLARE apmt100_01_bcl CURSOR FROM l_forupd_sql]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.action" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.pmbcstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.pmbcstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.pmbcstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.pmbcdocno" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.pmbcdocno" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.pmbc001" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.pmbc001" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.pmbc001" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.pmbc003" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.pmbc003" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.pmbc004" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.pmbc002" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.pmbc002" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.pmbcstus" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.pmbcdocno" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.pmbc001" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.pmbc003" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.pmbc004" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.after_input" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="input.more_input" cite_std="N" status="" ver="" src="" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <section id="apmt100_01.description" ver="4" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(版次:1) Build-000059
+#+ 
+#+ Filename...: apmt100_01
+#+ Description: ...
+#+ Creator....: 02294(2013/10/21)
+#+ Modifier...: 02294(2013/10/21)
+#+ Buildtype..: 應用 c02b 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="apmt100_01.global" ver="2" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_pmbc_d        RECORD
+       pmbcstus LIKE pmbc_t.pmbcstus, 
+   pmbcdocno LIKE pmbc_t.pmbcdocno, 
+   pmbc001 LIKE pmbc_t.pmbc001, 
+   pmbc003 LIKE pmbc_t.pmbc003, 
+   pmbc004 LIKE pmbc_t.pmbc004, 
+   pmbc002 LIKE pmbc_t.pmbc002, 
+   pmbc002_desc LIKE type_t.chr500
+       END RECORD
+ 
+ 
+DEFINE g_pmbc_d          DYNAMIC ARRAY OF type_g_pmbc_d
+DEFINE g_pmbc_d_t        type_g_pmbc_d
+ 
+ 
+DEFINE g_pmbcdocno_t   LIKE pmbc_t.pmbcdocno    #Key值備份
+DEFINE g_pmbc002_t      LIKE pmbc_t.pmbc002    #Key值備份
+DEFINE g_pmbc003_t      LIKE pmbc_t.pmbc003    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num5
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num5  
+DEFINE g_detail_idx          LIKE type_t.num5  
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point	
+]]>
+</section>
+  <section id="apmt100_01.input" ver="2" status="" src="s">
+<![CDATA[#+ 資料輸入
+PUBLIC FUNCTION apmt100_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_apmt100_01 WITH FORM cl_ap_formpath("apm","apmt100_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_pmbc_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+         #---------------------<  Detail: page1  >---------------------
+         #----<<pmbcstus>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmbcstus
+            #add-point:BEFORE FIELD pmbcstus
+            {<point name="input.b.page1.pmbcstus" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmbcstus
+            
+            #add-point:AFTER FIELD pmbcstus
+            {<point name="input.a.page1.pmbcstus" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE pmbcstus
+            #add-point:ON CHANGE pmbcstus
+            {<point name="input.g.page1.pmbcstus" />}
+            #END add-point
+ 
+         #----<<pmbcdocno>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmbcdocno
+            #add-point:BEFORE FIELD pmbcdocno
+            {<point name="input.b.page1.pmbcdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmbcdocno
+            
+            #add-point:AFTER FIELD pmbcdocno
+            {<point name="input.a.page1.pmbcdocno" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE pmbcdocno
+            #add-point:ON CHANGE pmbcdocno
+            {<point name="input.g.page1.pmbcdocno" />}
+            #END add-point
+ 
+         #----<<pmbc001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmbc001
+            #add-point:BEFORE FIELD pmbc001
+            {<point name="input.b.page1.pmbc001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmbc001
+            
+            #add-point:AFTER FIELD pmbc001
+            {<point name="input.a.page1.pmbc001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE pmbc001
+            #add-point:ON CHANGE pmbc001
+            {<point name="input.g.page1.pmbc001" />}
+            #END add-point
+ 
+         #----<<pmbc003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmbc003
+            #add-point:BEFORE FIELD pmbc003
+            {<point name="input.b.page1.pmbc003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmbc003
+            
+            #add-point:AFTER FIELD pmbc003
+            {<point name="input.a.page1.pmbc003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE pmbc003
+            #add-point:ON CHANGE pmbc003
+            {<point name="input.g.page1.pmbc003" />}
+            #END add-point
+ 
+         #----<<pmbc004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmbc004
+            #add-point:BEFORE FIELD pmbc004
+            {<point name="input.b.page1.pmbc004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD pmbc004
+            
+            #add-point:AFTER FIELD pmbc004
+            {<point name="input.a.page1.pmbc004" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE pmbc004
+            #add-point:ON CHANGE pmbc004
+            {<point name="input.g.page1.pmbc004" />}
+            #END add-point
+ 
+         #----<<pmbc002>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD pmbc002
+            
+            #add-point:AFTER FIELD pmbc002
+            {<point name="input.a.page1.pmbc002" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD pmbc002
+            #add-point:BEFORE FIELD pmbc002
+            {<point name="input.b.page1.pmbc002" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE pmbc002
+            #add-point:ON CHANGE pmbc002
+            {<point name="input.g.page1.pmbc002" />}
+            #END add-point
+ 
+         #----<<pmbc002_desc>>----
+ 
+         #---------------------<  Detail: page1  >---------------------
+         #----<<pmbcstus>>----
+         #Ctrlp:input.c.page1.pmbcstus
+         ON ACTION controlp INFIELD pmbcstus
+            #add-point:ON ACTION controlp INFIELD pmbcstus
+            {<point name="input.c.page1.pmbcstus" />}
+            #END add-point
+ 
+         #----<<pmbcdocno>>----
+         #Ctrlp:input.c.page1.pmbcdocno
+         ON ACTION controlp INFIELD pmbcdocno
+            #add-point:ON ACTION controlp INFIELD pmbcdocno
+            {<point name="input.c.page1.pmbcdocno" />}
+            #END add-point
+ 
+         #----<<pmbc001>>----
+         #Ctrlp:input.c.page1.pmbc001
+         ON ACTION controlp INFIELD pmbc001
+            #add-point:ON ACTION controlp INFIELD pmbc001
+            {<point name="input.c.page1.pmbc001" />}
+            #END add-point
+ 
+         #----<<pmbc003>>----
+         #Ctrlp:input.c.page1.pmbc003
+         ON ACTION controlp INFIELD pmbc003
+            #add-point:ON ACTION controlp INFIELD pmbc003
+            {<point name="input.c.page1.pmbc003" />}
+            #END add-point
+ 
+         #----<<pmbc004>>----
+         #Ctrlp:input.c.page1.pmbc004
+         ON ACTION controlp INFIELD pmbc004
+            #add-point:ON ACTION controlp INFIELD pmbc004
+            {<point name="input.c.page1.pmbc004" />}
+            #END add-point
+ 
+         #----<<pmbc002>>----
+         #Ctrlp:input.c.page1.pmbc002
+         ON ACTION controlp INFIELD pmbc002
+            #add-point:ON ACTION controlp INFIELD pmbc002
+            {<point name="input.c.page1.pmbc002" />}
+            #END add-point
+ 
+         #----<<pmbc002_desc>>----
+ 
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_apmt100_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+</section>
+  <section id="apmt100_01.other_dialog" ver="1" status="" src="s">
+<![CDATA[{<point name="other.dialog"/>}
+]]>
+</section>
+  <section id="apmt100_01.other_function" ver="1" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+</add_points>

@@ -1,0 +1,239 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmt170" module="afm" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="07166" crtdt="2015-11-18 15:56:57" modid="08729" moddt="2016-09-28 16:13:14" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="償還本息維護">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="fmcvsite,fmcvsite_desc(chr80),fmcvcomp,fmcvcomp_desc(chr80),fmcvdocno,fmcvdocdt,fmcvstus,fmcvownid,fmcvownid_desc(chr80),fmcvowndp,fmcvowndp_desc(chr80),fmcvcrtid,fmcvcrtid_desc(chr80),fmcvcrtdp,fmcvcrtdp_desc(chr80),fmcvcrtdt,fmcvmodid,fmcvmodid_desc(chr80),fmcvmoddt,fmcvcnfid,fmcvcnfid_desc(chr80),fmcvcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="fmcwseq,fmcw021,fmcw022,fmcw001,fmcw002,fmcw003,fmcw002_desc(chr500),fmcw003_desc(chr30),fmcw004,fmcw005,fmcw005_desc(chr500),fmcw006,fmcw010,fmcw011,fmcw017,fmcw018,fmcw023,fmcw026"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="fmcwseq,fmcw007,fmcw008,fmcw009,fmcw016,fmcw016_desc(chr500)"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="fmcwseq,fmcw021_desc(chr500),fmcw022_desc(chr500),fmcw002_desc1(chr500),fmcw003_desc1(chr500),fmcw006_desc(chr500),fmcw010_desc(chr500),fmcw011_desc(chr500),fmcw012,fmcw013,fmcw019,fmcw024,fmcw014,fmcw015,fmcw020,fmcw025"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="refund"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmt170" method="dialog">
+    <section id="input">
+      <input id="head" field="fmcvsite,fmcvcomp,fmcvdocno,fmcvdocdt,fmcvstus"/>
+      <input id="body" page="1" field="fmcw021,fmcw022,fmcw001,fmcw002,fmcw003,fmcw004,fmcw005,fmcw006,fmcw010,fmcw011,fmcw017,fmcw018,fmcw023,fmcw026" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="fmcw007,fmcw008,fmcw009,fmcw016" insert="N" append="N" delete="N"/>
+      <input id="body" page="3" field="fmcw021_desc,fmcw022_desc,fmcw002_desc1,fmcw003_desc1,fmcw006_desc,fmcw010_desc,fmcw011_desc,fmcw012,fmcw013,fmcw019,fmcw024,fmcw014,fmcw015,fmcw020,fmcw025" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="fmcvsite,fmcvsite_desc,fmcvcomp,fmcvcomp_desc,fmcvdocno,fmcvdocdt,fmcvstus,fmcvownid,fmcvowndp,fmcvcrtid,fmcvcrtdp,fmcvcrtdt,fmcvmodid,fmcvmoddt,fmcvcnfid,fmcvcnfdt"/>
+      <construct id="body" page="1" field="fmcwseq,fmcw021,fmcw022,fmcw001,fmcw002,fmcw003,fmcw004,fmcw005,fmcw006,fmcw010,fmcw011,fmcw017,fmcw018,fmcw023,fmcw026"/>
+      <construct id="body" page="2" field="fmcw007,fmcw008,fmcw009,fmcw016"/>
+      <construct id="body" page="3" field="fmcw021_desc,fmcw022_desc,fmcw002_desc1,fmcw003_desc1,fmcw006_desc,fmcw010_desc,fmcw011_desc,fmcw012,fmcw013,fmcw019,fmcw024,fmcw014,fmcw015,fmcw020,fmcw025"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="fmcvdocno"/>
+      <set id="head" type="no_entry" field="fmcvdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="fmcvsite">
+        <after>
+          <check chkid="v_ooef001_42" id="isExist"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="fmcvsite_desc"/>
+      <column id="fmcvcomp">
+        <after>
+          <check chkid="v_ooef001_15" id="isExist"/>
+        </after>
+        <controlp form="q_fmcvcomp_01" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="fmcvcomp_desc"/>
+      <column id="fmcvdocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_fmcvdocno_01" state="c"/>
+      </column>
+      <column id="fmcvdocdt"/>
+      <column id="fmcvstus" scc="13">
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="C" pic="closed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="fmcvownid">
+        <after>
+          <reference field="fmcvownid_desc" ref_field="fmcv_t.fmcvownid" map_field="fmcvownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmcvownid_desc"/>
+      <column id="fmcvowndp">
+        <after>
+          <reference field="fmcvowndp_desc" ref_field="fmcv_t.fmcvowndp" map_field="fmcvowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmcvowndp_desc"/>
+      <column id="fmcvcrtid">
+        <after>
+          <reference field="fmcvcrtid_desc" ref_field="fmcv_t.fmcvcrtid" map_field="fmcvcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmcvcrtid_desc"/>
+      <column id="fmcvcrtdp">
+        <after>
+          <reference field="fmcvcrtdp_desc" ref_field="fmcv_t.fmcvcrtdp" map_field="fmcvcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmcvcrtdp_desc"/>
+      <column id="fmcvcrtdt"/>
+      <column id="fmcvmodid">
+        <after>
+          <reference field="fmcvmodid_desc" ref_field="fmcv_t.fmcvmodid" map_field="fmcvmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmcvmodid_desc"/>
+      <column id="fmcvmoddt"/>
+      <column id="fmcvcnfid">
+        <after>
+          <reference field="fmcvcnfid_desc" ref_field="fmcv_t.fmcvcnfid" map_field="fmcvcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmcvcnfid_desc"/>
+      <column id="fmcvcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="fmcwseq"/>
+      <column id="fmcw021">
+        <after/>
+        <controlp form="q_fmcrdocno_2" state="i"/>
+        <controlp form="q_fmcrdocno_2" state="c"/>
+      </column>
+      <column id="fmcw022" type="S" default="0">
+        <after/>
+      </column>
+      <column id="fmcw001">
+        <after>
+          <check chkid="v_ooef001_43" id="isExist"/>
+        </after>
+        <controlp form="q_ooef001_05" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="fmcw002">
+        <after>
+          <check chkid="v_fmcs001" id="isExist"/>
+          <reference field="fmcw002_desc" ref_field="fmcw_t.fmcw002" map_field="fmcwent,fmcw002" ref_sql="SELECT fmcj002 FROM fmcj_t WHERE fmcjent=$varg_enterprise$var AND fmcjdocno=? "/>
+        </after>
+        <controlp form="q_fmcw002" state="i"/>
+        <controlp form="q_fmcsdocno" state="c"/>
+      </column>
+      <column id="fmcw003">
+        <after>
+          <check chkid="v_fmcs002" id="isExist"/>
+          <reference field="fmcw003_desc" ref_field="fmcw002,fmcw003" map_field="fmcw002,fmcw003" ref_sql="SELECT fmck003 FROM fmck_t WHERE fmckent=$varg_enterprise$var AND fmckdocno=? AND fmckseq=? "/>
+        </after>
+        <controlp form="q_fmcw003" state="i"/>
+        <controlp form="q_fmcs002" state="c"/>
+      </column>
+      <column id="fmcw002_desc"/>
+      <column id="fmcw003_desc"/>
+      <column id="fmcw004" def_scc="8859">
+        <after>
+          <check chkid="v_fmcw004" id="isExist"/>
+        </after>
+      </column>
+      <column id="fmcw005">
+        <after>
+          <check chkid="v_ooai001" id="isExist"/>
+          <reference field="fmcw005_desc" ref_field="fmcw_t.fmcw005" map_field="fmcwent,fmcw005" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="fmcw005_desc"/>
+      <column id="fmcw006" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmcw010">
+        <after/>
+        <controlp form="q_glaa003" state="i"/>
+        <controlp form="q_glaa003" state="c"/>
+      </column>
+      <column id="fmcw011" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmcw017" type="S" default="0"/>
+      <column id="fmcw018"/>
+      <column id="fmcw023" type="S" default="0"/>
+      <column id="fmcw026"/>
+    </init>
+    <init id="body" page="2">
+      <column id="fmcw007">
+        <after>
+          <check chkid="v_fmcw007" id="isExist"/>
+        </after>
+        <controlp form="q_fmcw007" state="i"/>
+        <controlp form="q_nmaa001_02" state="c"/>
+      </column>
+      <column id="fmcw008" def_scc="8708"/>
+      <column id="fmcw009">
+        <after>
+          <check chkid="v_nmaj001" id="isExist"/>
+        </after>
+        <controlp form="q_nmaj001_2" state="i"/>
+        <controlp form="q_nmaj001_2" state="c"/>
+      </column>
+      <column id="fmcw016">
+        <after/>
+      </column>
+      <column id="fmcw016_desc"/>
+    </init>
+    <init id="body" page="3">
+      <column id="fmcw021_desc"/>
+      <column id="fmcw022_desc"/>
+      <column id="fmcw002_desc1"/>
+      <column id="fmcw003_desc1"/>
+      <column id="fmcw006_desc"/>
+      <column id="fmcw010_desc"/>
+      <column id="fmcw011_desc"/>
+      <column id="fmcw012"/>
+      <column id="fmcw013" type="S" default="0"/>
+      <column id="fmcw019" type="S" default="0"/>
+      <column id="fmcw024" type="S" default="0"/>
+      <column id="fmcw014"/>
+      <column id="fmcw015" type="S" default="0"/>
+      <column id="fmcw020" type="S" default="0"/>
+      <column id="fmcw025" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="fmcv_t" pk="fmcvdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT fmcvsite,&apos;&apos;,fmcvcomp,&apos;&apos;,fmcvdocno,fmcvdocdt,fmcvstus,fmcvownid,&apos;&apos;,fmcvowndp,&apos;&apos;,fmcvcrtid,&apos;&apos;,fmcvcrtdp,&apos;&apos;,fmcvcrtdt,fmcvmodid,&apos;&apos;,fmcvmoddt,fmcvcnfid,&apos;&apos;,fmcvcnfdt FROM fmcv_t WHERE fmcvent= ? AND fmcvdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT fmcvsite,&apos;&apos;,fmcvcomp,&apos;&apos;,fmcvdocno,fmcvdocdt,fmcvstus,fmcvownid,&apos;&apos;,fmcvowndp,&apos;&apos;,fmcvcrtid,&apos;&apos;,fmcvcrtdp,&apos;&apos;,fmcvcrtdt,fmcvmodid,&apos;&apos;,fmcvmoddt,fmcvcnfid,&apos;&apos;,fmcvcnfdt FROM fmcv_t" order="fmcvdocno"/>
+    </head>
+    <body id="fmcw_t" page="1,2,3" linked="" pk="fmcwseq" fk="fmcwdocno">
+      <sql id="forupd_sql_detail" query="SELECT fmcwseq,fmcw021,fmcw022,fmcw001,fmcw002,fmcw003,&apos;&apos;,&apos;&apos;,fmcw004,fmcw005,&apos;&apos;,fmcw006,fmcw010,fmcw011,fmcw017,fmcw018,fmcw023,fmcw026,&apos;&apos;,fmcw007,fmcw008,fmcw009,fmcw016,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,fmcw012,fmcw013,fmcw019,fmcw024,fmcw014,fmcw015,fmcw020,fmcw025 FROM fmcw_t WHERE fmcwent=? AND fmcwdocno=? AND fmcwseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT fmcwseq,fmcw021,fmcw022,fmcw001,fmcw002,fmcw003,&apos;&apos;,&apos;&apos;,fmcw004,fmcw005,&apos;&apos;,fmcw006,fmcw010,fmcw011,fmcw017,fmcw018,fmcw023,fmcw026,&apos;&apos;,fmcw007,fmcw008,fmcw009,fmcw016,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,fmcw012,fmcw013,fmcw019,fmcw024,fmcw014,fmcw015,fmcw020,fmcw025 FROM fmcw_t WHERE fmcwent=? AND fmcwdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

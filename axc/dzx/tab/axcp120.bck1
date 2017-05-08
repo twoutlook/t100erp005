@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcp120" module="axc" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="02291" crtdt="2014-03-20 13:43:47" modid="02294" moddt="2016-07-21 11:00:54" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="成本階計算作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="imagsite(chr10),imagsite_desc(chr80),year(chr500),month(chr500),order(chr500),level(num5),check(chr500),stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="axc" filename="axcp120" method="dialog">
+    <section id="input">
+      <input id="head" field="imagsite,year,month,order,level,check"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="imagsite,year,month,order,check"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="imagsite">
+        <after>
+          <reference field="imagsite_desc" ref_field="imagsite" map_field="imagent,imagsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="imagsite_desc"/>
+      <column id="year"/>
+      <column id="month"/>
+      <column id="order" type="S" default="1"/>
+      <column id="level" type="S" default="20">
+        <after>
+          <check id="range" st="99" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="check" type="S" default="N"/>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

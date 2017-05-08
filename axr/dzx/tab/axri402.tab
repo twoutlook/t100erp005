@@ -1,0 +1,151 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axri402" module="axr" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="06821" crtdt="2015-12-31 10:14:51" modid="06821" moddt="2016-01-06 14:08:33" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="遞延認列設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xragld,xragld_desc(chr80),l_comp(chr10),l_comp_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xrakstus,xrakseq,xrak001,xrak001_desc(chr500),xrak002,xrak002_desc(chr500),xrak003,xrak003_desc(chr500),xrak004,l_imaal003(chr500),l_imaal004(chr500),xrak005,xrak006,xrak007,xrak007_desc(chr500),xrak008,xrak009"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xralseq1,xral002"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="xrakseq_2(num10),xrak001_2(chr10),xrakownid,xrakownid_desc(chr500),xrakowndp,xrakowndp_desc(chr500),xrakcrtid,xrakcrtid_desc(chr500),xrakcrtdp,xrakcrtdp_desc(chr500),xrakcrtdt,xrakmodid,xrakmodid_desc(chr500),xrakmoddt"/>
+      <var id="bs_field" value="xragld" pk="xragld" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axri402" method="dialog">
+    <section id="input">
+      <input id="head" field="xragld"/>
+      <input id="body" page="1" field="xrakstus,xrakseq,xrak001,xrak002,xrak003,xrak004,xrak005,xrak006,xrak007,xrak008,xrak009" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="xralseq1,xral002" insert="N" append="N" delete="N"/>
+      <input id="body" page="3" field="xrakseq_2,xrak001_2,xrakownid,xrakowndp,xrakcrtid,xrakcrtdp,xrakcrtdt,xrakmodid,xrakmoddt" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xragld"/>
+      <construct id="body" page="1" field="xrakstus,xrakseq,xrak001,xrak002,xrak003,xrak004,xrak005,xrak006,xrak007,xrak008,xrak009"/>
+      <construct id="body" page="2" field="xralseq1,xral002"/>
+      <construct id="body" page="3" field="xrakseq_2,xrak001_2,xrakownid,xrakowndp,xrakcrtid,xrakcrtdp,xrakcrtdt,xrakmodid,xrakmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xragld"/>
+      <set id="head" type="no_entry" field="xragld"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xragld">
+        <after/>
+      </column>
+      <column id="xragld_desc"/>
+      <column id="l_comp">
+        <after/>
+        <controlp form="q_ooea001_2" state="i"/>
+        <controlp form="q_ooea001_2" state="c"/>
+      </column>
+      <column id="l_comp_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xrakstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="xrakseq"/>
+      <column id="xrak001">
+        <after/>
+      </column>
+      <column id="xrak001_desc"/>
+      <column id="xrak002" type="S" default="*">
+        <after/>
+      </column>
+      <column id="xrak002_desc"/>
+      <column id="xrak003" type="S" default="*">
+        <after/>
+      </column>
+      <column id="xrak003_desc"/>
+      <column id="xrak004" type="S" default="*"/>
+      <column id="l_imaal003"/>
+      <column id="l_imaal004"/>
+      <column id="xrak005">
+        <after>
+          <check id="range" st="100" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="xrak006" type="S" default="1" def_scc="8347"/>
+      <column id="xrak007">
+        <after/>
+      </column>
+      <column id="xrak007_desc"/>
+      <column id="xrak008"/>
+      <column id="xrak009"/>
+    </init>
+    <init id="body" page="2">
+      <column id="xralseq1">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="1.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="xral002">
+        <after>
+          <check id="range" st="100.000000" st_type="1" errno="azz-00087" bt="0.000000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="3">
+      <column id="xrakseq_2"/>
+      <column id="xrak001_2"/>
+      <column id="xrakownid">
+        <after>
+          <reference field="xrakownid_desc" ref_field="xrak_t.xrakownid" map_field="xrakownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="xrakownid_desc"/>
+      <column id="xrakowndp">
+        <after>
+          <reference field="xrakowndp_desc" ref_field="xrak_t.xrakowndp" map_field="xrakowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xrakowndp_desc"/>
+      <column id="xrakcrtid">
+        <after>
+          <reference field="xrakcrtid_desc" ref_field="xrak_t.xrakcrtid" map_field="xrakcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="xrakcrtid_desc"/>
+      <column id="xrakcrtdp">
+        <after>
+          <reference field="xrakcrtdp_desc" ref_field="xrak_t.xrakcrtdp" map_field="xrakcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xrakcrtdp_desc"/>
+      <column id="xrakcrtdt"/>
+      <column id="xrakmodid">
+        <after>
+          <reference field="xrakmodid_desc" ref_field="xrak_t.xrakmodid" map_field="xrakmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="xrakmodid_desc"/>
+      <column id="xrakmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xrag_t" pk="xragld">
+      <sql id="forupd_sql" type="sql" query="SELECT xragld,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xrag_t WHERE xragent= ? AND xragld=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xragld,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xrag_t" order="xragld"/>
+    </head>
+    <body id="xrak_t" page="1,3" linked="" pk="xrakseq,xrak001" fk="xrakld">
+      <sql id="forupd_sql_detail" query="SELECT xrakstus,xrakseq,xrak001,&apos;&apos;,xrak002,&apos;&apos;,xrak003,&apos;&apos;,xrak004,&apos;&apos;,&apos;&apos;,xrak005,xrak006,xrak007,&apos;&apos;,xrak008,xrak009,&apos;&apos;,&apos;&apos;,xrakownid,&apos;&apos;,xrakowndp,&apos;&apos;,xrakcrtid,&apos;&apos;,xrakcrtdp,&apos;&apos;,xrakcrtdt,xrakmodid,&apos;&apos;,xrakmoddt FROM xrak_t WHERE xrakent=? AND xrakld=? AND xrakseq=? AND xrak001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xrakstus,xrakseq,xrak001,&apos;&apos;,xrak002,&apos;&apos;,xrak003,&apos;&apos;,xrak004,&apos;&apos;,&apos;&apos;,xrak005,xrak006,xrak007,&apos;&apos;,xrak008,xrak009,&apos;&apos;,&apos;&apos;,xrakownid,&apos;&apos;,xrakowndp,&apos;&apos;,xrakcrtid,&apos;&apos;,xrakcrtdp,&apos;&apos;,xrakcrtdt,xrakmodid,&apos;&apos;,xrakmoddt FROM xrak_t WHERE xrakent=? AND xrakld=?"/>
+    </body>
+    <body id="xral_t" page="2" linked="" detail="Y" master="xrak_t" default_site="N" pk="xralseq1" fk="xralld,xralseq,xral001">
+      <sql id="forupd_sql_detail" query="SELECT xralseq1,xral002 FROM xral_t WHERE xralent=? AND xralld=? AND xralseq=? AND xral001=? AND xralseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xralseq1,xral002 FROM xral_t WHERE xralent=? AND xralld=? AND xralseq=? AND xral001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

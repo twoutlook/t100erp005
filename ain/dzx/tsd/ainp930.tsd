@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="ainp930" std_prog="ainp930" erpver="1.0" ver="1" module="AIN" type="M" booking="Y" designer_ver="1.0" class="p" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：計算存貨的週轉率
+標準作業功能：條件查詢/條件儲存/相關文件/說明/離開
+狀態功能：無
+作業類型：批次計算作業
+輸入模式：批次作業版型
+作業資料來源(Master)：
+ 資料來源表：imaa_t(商品料件主檔)
+                        imaf_t(料號據點進銷存檔)
+                        inag_t(庫存明細擋)
+                        inpo_t
+                        inpp_t
+
+補充說明：(輸入此作的補充說明事項)
+
+●程式初始狀態:
+  1.當畫面上的立即列印結果為'Y'，則呼叫ainr920(存貨週轉率分析報表)
+
+●資料處理:
+  1.計算存貨的週轉率，並將計算結果存檔
+  2.存貨週轉率計算：
+    資料來源:商品料件主檔[imaa_t]，為已確認有效資料、料件據點財務檔[imag_t]、
+             料件據點進銷存檔[imaf_t]、
+             料件库存成本期异动统计档[xccc_t]、
+             在製主件成本期異動統計檔[xccd_t]、在製元件成本期異動統計檔[xcce_t]
+    資料期間：截止年度+期別往前推 依計算區間推算期間的期數
+       1.依年：截止年度往前推一年
+       2.依半年：截止年度+期別，往前推6期
+       3.依季：截止年度+期別，往前推3期
+       4.依月：截止年度+期別，往前推一期
+    依計算代碼取得存貨週轉率資料單頭檔[inpo_t]、存貨週轉率資料單身檔[inpp_t]
+    依計算類別：
+    (1)全部存貨：
+       資料取得:商品料件主檔[imaa_t]，為已確認有效資料
+                料件库存成本期异动统计档[xccc_t]
+            條件：年度期別區間為上方依計算區間得之起始、截止年度期別
+                  成本計算類型為計價方式為"月加權平均"成本
+           依存貨基礎：1.包含在製品金額 
+                         條件加上：在製主件成本期異動統計檔[xccd_t]、
+                                   在製元件成本期異動統計檔[xcce_t]
+                       2.不含在製金額
+           期間銷貨成本 = 該料號的銷貨成本[xccc304 - xccc306]
+           平均存貨 = (該料號的上期結存金額[xccc102] + 期末結存金額[xccc902]) / 2
+           若存貨基礎：1.包含在製品金額 ，則
+              該料號是否存在在製主件成本期異動統計檔[xccd_t]、
+                            在製元件成本期異動統計檔[xcce_t]
+                      若兩者皆存在則須全部加上，若只存在在製單頭則僅需加上主件金額
+               若存在則，
+                  平均存貨 = ((該料號的上期結存金額[xccc102] + 期末結存金額[xccc902])
+                              (該料號的期初結存金額(xccd102)+期末結存金額(xccd902))    + / 2
+                 or 
+                   平均存貨 = ((該料號的上期結存金額[xccc102] + 期末結存金額[xccc902])
+                              (該料號的期初結存金額(xcce102)+期末結存金額(xcce902))    + / 2
+                 or
+                    平均存貨 = ((該料號的上期結存金額[xccc102] + 期末結存金額[xccc902])
+                              (該料號的期初結存金額(xccd102)+期末結存金額(xccd902)+ 
+                              (該料號的期初結存金額(xcce102)+期末結存金額(xcce902)   )    + / 2
+           存貨週轉率 = 期間銷貨成本 / 平均存貨
+           存貨周轉天數 = 計算期天數 / 存貨週轉率
+           舉例：計算區間為1.依年，則計算期天數= 360
+                           2.依半年，則計算期天數 = 180
+                           3.依季，則計算期天數 = 90
+                           4.依月，則計算期天數 = 30
+    (2)依產品分類：             
+        資料取得:商品料件主檔[imaa_t]，為已確認有效資料
+           Group by 產品分類
+           依照產品分類來計算存貨週轉率
+           邏輯同上
+           需注意存貨週轉率資料單身檔[inpp_t]，如果有輸入資料則只計算該單身的產品分類
+           否則就全部存貨依產品分類彙總計算
+           舉例：
+                產品分類：A01
+                  計算歸屬A01產品分類的所有料號，依上述的邏輯，計算其產品分類存貨週轉率
+     (3)依ABC分類：             
+        資料取得:商品料件主檔[imaa_t]，為已確認有效資料
+           Group by ABC分類碼
+           依照ABC分類來計算存貨週轉率
+           邏輯同上
+           全部存貨依ABC分類彙總計算
+           舉例：
+                A類：
+                  計算歸屬A類的所有料號，依上述的邏輯，計算其A類料件的存貨週轉率
+     (4)依成本分群：             
+        資料取得:商品料件主檔[imaa_t]，為已確認有效資料
+           Group by 成本分群
+           依照成本分群來計算存貨週轉率
+           邏輯同上
+           需注意存貨週轉率資料單身檔[inpp_t]，如果有輸入資料則只計算該單身的成本分群
+           否則就全部存貨依成本分群彙總計算
+           舉例：
+               成本分群：A01
+                  計算歸屬A01成本分群的所有料號，依上述的邏輯，計算其成本分群存貨週轉率
+
+  3.計算後，將計算結果存檔：
+    存貨週轉率期間統計檔(inpq_t)，
+     寫入時以inpqent+inpqsite+inpq001+inpq002+inpq003 判斷若資料已存在則新增一筆且版本+1]]>
+  </all>
+  <field cite_std="N" name="inpo001" ver="1" src="s" column="inpo001" table="inpo_t" attribute="" type="" req="Y" i_zoom="q_inpo001" c_zoom="q_inpo001" chk_ref="v_inpo001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[計算代碼：
+ ●欄位控管：
+  資料欄位: inpo001/可Display可Input
+  允許空白: No
+  預設值:  
+  資料處理：1.輸入檢查：輸入需存在[T:存貨週轉率資料單頭擋(inpo_t)].[C:計算代碼(inpo001)]
+              且為有效資料
+            2.輸入後帶出以下相關欄位：說明、計算類別、存貨基礎、計算區間等欄位的值]]>
+  </field>
+  <field cite_std="N" name="inpo002" ver="1" src="s" column="inpo002" table="inpo_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[說明：
+ ●欄位控管：
+  資料欄位: inpo002/Display Only
+  允許空白:
+  預設值:  
+  資料選項來源: ]]>
+  </field>
+  <field cite_std="N" name="inpo003" ver="1" src="s" column="inpo003" table="inpo_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[計算類別：
+ ●欄位控管：
+  資料欄位: inpo003/Display Only
+  允許空白:
+  預設值:  
+  資料選項來源: 
+]]>
+  </field>
+  <field cite_std="N" name="inpo004" ver="1" src="s" column="inpo004" table="inpo_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[存貨基礎：
+ ●欄位控管：
+  資料欄位: inpo004/Display Only
+  允許空白:
+  預設值:  
+  資料選項來源:]]>
+  </field>
+  <field cite_std="N" name="inpo005" ver="1" src="s" column="inpo005" table="inpo_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[計算區間：
+ ●欄位控管：
+  資料欄位: inpo005/Display Only
+  允許空白:
+  預設值:  
+  資料選項來源: 
+]]>
+  </field>
+  <field cite_std="N" name="mm" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[截止期別：
+   ●欄位控管：
+     資料欄位:計算截止期別 /可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+          
+     帶值:無             
+     計算或處理:無]]>
+  </field>
+  <field cite_std="N" name="print01" ver="1" src="s" column="inpa009" table="inpa_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="">
+    <![CDATA[呼叫ainr920存貨週轉率列印]]>
+  </field>
+  <field cite_std="N" name="yy" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[截止年度：
+   ●欄位控管：
+     資料欄位:計算截止年度 /可Display可Input
+     預設值:無
+     校驗:1.不允許空白
+          
+     帶值:無             
+     計算或處理:無]]>
+  </field>
+  <field cite_std="N" name="buttonedit_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="combobox_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="combobox_2" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="combobox_3" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="edit_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="print" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="CheckBox" status="d">
+    <![CDATA[呼叫ainr920存貨週轉率列印]]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="buttonedit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="combobox_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="combobox_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="combobox_3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="edit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="inpo001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpo002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpo003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpo004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inpo005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mm" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="print" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="print01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="yy" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="lbl_inpo001" text="計算原則編號" lstr=""/>
+    <sfield name="lbl_inpo002" text="說明" lstr=""/>
+    <sfield name="lbl_inpo003" text="計算類別" lstr=""/>
+    <sfield name="lbl_inpo004" text="存貨基礎" lstr=""/>
+    <sfield name="lbl_inpo005" text="計算區間" lstr=""/>
+    <sfield name="group_input" text="計算期間" lstr=""/>
+    <sfield name="lbl_yy" text="目前年度" lstr=""/>
+    <sfield name="lbl_mm" text="目前期別" lstr=""/>
+    <sfield name="lbl_print01" text="立即列印結果" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_oojk001" text="簽核代號" lstr=""/>
+    <sfield name="lbl_oojk004_str" text="簽核關卡" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="1" cite_std="N" src="s">
+    <widget name="print" status="d"/>
+    <widget name="print01" status="d"/>
+  </exclude>
+</spec>

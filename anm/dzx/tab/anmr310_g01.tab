@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmr310_g01" module="anm" jobmode="N" type="g01" industry="std" crtid="05016" crtdt="2015-09-09 15:08:02" modid="02291" moddt="2016-02-16 14:42:54" sdver="4" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="l_nmaa005(nmaa005|&apos;&apos;),l_nmbb003_desc(chr100|&apos;&apos;),l_nmbb054_desc(chr100|&apos;&apos;),l_nmbb002_desc(chr100|&apos;&apos;),l_nmbb001_desc(chr100|&apos;&apos;),l_nmbacomp_desc(chr100|&apos;&apos;),l_nmbasite_desc(chr100|&apos;&apos;),nmba002,nmba003,nmba004,nmba005,nmba006,nmba007,nmbacomp,nmbadocdt,nmbadocno,nmbaent,nmbasite,nmbastus,nmbb001,nmbb002,nmbb003,nmbb004,nmbb005,nmbb006,nmbb007,nmbb008,nmbb009,nmbb010,nmbb011,nmbb012,nmbb013,nmbb014,nmbb015,nmbb016,nmbb017,nmbb018,nmbb019,nmbb020,nmbb021,nmbb022,nmbb023,nmbb024,nmbb025,nmbb026,nmbb027,nmbb029,nmbb053,nmbb054,nmbb056,nmbb057,nmbb058,nmbb059,nmbb060,nmbb061,nmbb062,nmbb066,nmbb067,nmbb068,nmbblegl,nmbborga,nmbbseq"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="l_nmaa005(nmaa005|&apos;&apos;),l_nmbb003_desc(chr100|&apos;&apos;),l_nmbb054_desc(chr100|&apos;&apos;),l_nmbb002_desc(chr100|&apos;&apos;),l_nmbb001_desc(chr100|&apos;&apos;),l_nmbacomp_desc(chr100|&apos;&apos;),l_nmbasite_desc(chr100|&apos;&apos;),nmba002(nmba002|nmba002),nmba003(nmba003|nmba003),nmba004(nmba004|nmba004),nmba005(nmba005|nmba005),nmba006(nmba006|nmba006),nmba007(nmba007|nmba007),nmbacomp(nmbacomp|nmbacomp),nmbadocdt(nmbadocdt|nmbadocdt),nmbadocno(nmbadocno|nmbadocno),nmbaent(nmbaent|nmbaent),nmbasite(nmbasite|nmbasite),nmbastus(nmbastus|nmbastus),nmbb001(nmbb001|nmbb001),nmbb002(nmbb002|nmbb002),nmbb003(nmbb003|nmbb003),nmbb004(nmbb004|nmbb004),nmbb005(nmbb005|nmbb005),nmbb006(nmbb006|nmbb006),nmbb007(nmbb007|nmbb007),nmbb008(nmbb008|nmbb008),nmbb009(nmbb009|nmbb009),nmbb010(nmbb010|nmbb010),nmbb011(nmbb011|nmbb011),nmbb012(nmbb012|nmbb012),nmbb013(nmbb013|nmbb013),nmbb014(nmbb014|nmbb014),nmbb015(nmbb015|nmbb015),nmbb016(nmbb016|nmbb016),nmbb017(nmbb017|nmbb017),nmbb018(nmbb018|nmbb018),nmbb019(nmbb019|nmbb019),nmbb020(nmbb020|nmbb020),nmbb021(nmbb021|nmbb021),nmbb022(nmbb022|nmbb022),nmbb023(nmbb023|nmbb023),nmbb024(nmbb024|nmbb024),nmbb025(nmbb025|nmbb025),nmbb026(nmbb026|nmbb026),nmbb027(nmbb027|nmbb027),nmbb029(nmbb029|nmbb029),nmbb053(nmbb053|nmbb053),nmbb054(nmbb054|nmbb054),nmbb056(nmbb056|nmbb056),nmbb057(nmbb057|nmbb057),nmbb058(nmbb058|nmbb058),nmbb059(nmbb059|nmbb059),nmbb060(nmbb060|nmbb060),nmbb061(nmbb061|nmbb061),nmbb062(nmbb062|nmbb062),nmbb066(nmbb066|nmbb066),nmbb067(nmbb067|nmbb067),nmbb068(nmbb068|nmbb068),nmbblegl(nmbblegl|nmbblegl),nmbborga(nmbborga|nmbborga),nmbbseq(nmbbseq|nmbbseq)"/>
+    <sql id="g_from" query=" nmba_t  LEFT OUTER JOIN ( SELECT nmbb_t.* FROM nmbb_t  ) x  ON nmba_t.nmbaent = x.nmbbent AND nmba_t.nmbacomp = x.nmbbcomp AND nmba_t.nmbadocno = x.nmbbdocno"/>
+    <sql id="g_where" query="" maintable="nmba_t"/>
+    <sql id="g_order" query="nmbadocno,nmbbseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="nmbadocno,nmbbseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="nmbadocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="nmbaent,nmbadocno"/>
+      <rep type="nmbbseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="nmbaent,nmbadocno,nmbbseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="nmbaent,nmbadocno,nmbbseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="nmbadocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="nmbaent,nmbadocno"/>
+      <rep type="nmbbseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

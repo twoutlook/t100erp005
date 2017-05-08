@@ -1,0 +1,914 @@
+<add_points prog="anmi190" std_prog="anmi190" erpver="1.0" module="ANM" ver="1" env="s" zone="t10dev" normal_style="Y" booking="Y">
+  <point name="function.anmi190_ooall004" cite_std="N" status="u" ver="1" src="s" new="Y" order="1" cite_ver="" mark_hard="N">
+<![CDATA[# 带参照编号说明
+PRIVATE FUNCTION anmi190_ooall004(p_ooall002)
+DEFINE p_ooall002    LIKE ooal_t.ooal002
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_ooall002
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooall004 FROM ooall_t WHERE ooallent='"||g_enterprise||"' AND ooall001='7' AND ooall002=? AND ooall003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_nmam_m.nmam001_desc = g_rtn_fields[1]
+END FUNCTION]]>
+</point>
+  <point name="function.anmi190_nmam001_chk" cite_std="N" status="" ver="1" src="s" new="Y" order="2" cite_ver="" mark_hard="N">
+<![CDATA[# #輸入值須存在[T:參照表檔].[C:參照表號]、[C:參照表類型]=9且為有效資料,
+# #若資料不存在則詢問「輸入的參照表號不存在參照表檔,請問是否要新增此參照表號?」，
+# #若選擇是則呼叫應用元件s_aooi070_ins()做參照表號的新增；
+# #否則停留在本欄位
+PRIVATE FUNCTION anmi190_nmam001_chk(p_nmam001)
+DEFINE p_nmam001    LIKE nmam_t.nmam001
+   DEFINE r_errno      LIKE type_t.chr20
+   DEFINE l_ooal002    LIKE ooal_t.ooal002
+   DEFINE l_ooalstus   LIKE ooal_t.ooalstus
+  
+   LET r_errno = ''
+
+   SELECT ooal002,ooalstus INTO l_ooal002,l_ooalstus
+     FROM ooal_t
+    WHERE ooalent = g_enterprise
+      AND ooal001 = 7
+      AND ooal002 = p_nmam001
+
+    CASE
+       WHEN sqlca.sqlcode = 100   LET r_errno = 'aoo-00076'
+       WHEN l_ooalstus ='N'       LET r_errno = 'aoo-00145'
+     END CASE
+     RETURN r_errno
+END FUNCTION]]>
+</point>
+  <point name="construct.c.nmam001" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooal002_7()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmam001  #顯示到畫面上
+
+            NEXT FIELD nmam001                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.page2.nmamcrtdp" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmamcrtdp  #顯示到畫面上
+
+            NEXT FIELD nmamcrtdp                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.page2.nmamcrtid" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmamcrtid  #顯示到畫面上
+
+            NEXT FIELD nmamcrtid                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.page2.nmammodid" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmammodid  #顯示到畫面上
+
+            NEXT FIELD nmammodid                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.page2.nmamowndp" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmamowndp  #顯示到畫面上
+
+            NEXT FIELD nmamowndp                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.page2.nmamownid" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmamownid  #顯示到畫面上
+
+            NEXT FIELD nmamownid                     #返回原欄位
+
+]]>
+</point>
+  <point name="init.init" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   CALL cl_set_combo_scc('nmam003',8709)]]>
+</point>
+  <point name="input.a.nmam001" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            DISPLAY '' to nmam001_desc
+            IF  NOT cl_null(g_nmam_m.nmam001) THEN 
+               #輸入值須存在[T:參照表檔].[C:參照表號]、[C:參照表類型]=9且為有效資料,
+               #若資料不存在則詢問「輸入的參照表號不存在參照表檔,請問是否要新增此參照表號?」，
+               #若選擇是則呼叫應用元件s_aooi070_ins()做參照表號的新增；
+               #否則停留在本欄位
+               CALL anmi190_nmam001_chk(g_nmam_m.nmam001)  RETURNING g_errno
+               IF NOT cl_null(g_errno) THEN
+                  IF g_errno = 'aoo-00076' THEN
+                     IF NOT cl_ask_confirm('aoo-00076') THEN
+                        LET g_nmam_m.nmam001 = ''
+                        LET g_nmam_m.nmam001_desc =''
+                        DISPLAY BY NAME g_nmam_m.nmam001_desc 
+                        NEXT FIELD nmam001
+                     ELSE
+                        CALL s_transaction_begin()
+                        LET l_success = 0
+                        CALL s_aooi070_ins(7,g_nmam_m.nmam001) RETURNING l_success
+                        IF l_success = 1 THEN
+                           CALL s_transaction_end('Y','1')
+                        ELSE
+                           CALL s_transaction_end('N','1')
+                        END IF 
+                     END IF
+                  ELSE
+                     CALL cl_err(g_nmam_m.nmam001,g_errno,1)
+                     LET g_nmam_m.nmam001 = g_nmam001_t
+                     CALL anmi190_ooall004(g_nmam_m.nmam001)
+                     DISPLAY BY NAME g_nmam_m.nmam001_desc 
+                     NEXT FIELD  nmam001
+                  END IF
+               END IF
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_nmam_m.nmam001 != g_nmam001_t ))) THEN 
+                  IF NOT ap_chk_notDup(g_nmam_m.nmam001,"SELECT COUNT(*) FROM nmam_t WHERE "||"nmament = '" ||g_enterprise|| "' AND "||"nmam001 = '"||g_nmam_m.nmam001 ||"'",'std-00004',0) THEN 
+                     LET g_nmam_m.nmam001 = g_nmam001_t 
+                     CALL anmi190_ooall004(g_nmam_m.nmam001)
+                     DISPLAY BY NAME g_nmam_m.nmam001_desc 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            ELSE
+               LET g_nmam_m.nmam001_desc = ''
+               DISPLAY BY NAME g_nmam_m.nmam001_desc 
+            END IF 
+            #带参照编号说明
+            CALL anmi190_ooall004(g_nmam_m.nmam001)
+            DISPLAY BY NAME g_nmam_m.nmam001_desc       ]]>
+</point>
+  <point name="input.a.page1.nmam002" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_nmam_m.nmam001) AND NOT cl_null(g_nmam_d[l_ac].nmam002) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_nmam_m.nmam001 != g_nmam001_t  OR g_nmam_d[l_ac].nmam002 != g_nmam_d_t.nmam002))) THEN 
+                  IF NOT ap_chk_notDup(g_nmam_d[l_ac].nmam002,"SELECT COUNT(*) FROM nmam_t WHERE "||"nmament = '" ||g_enterprise|| "' AND "||"nmam001 = '"||g_nmam_m.nmam001 ||"' AND "|| "nmam002 = '"||g_nmam_d[l_ac].nmam002 ||"'",'std-00004',0) THEN 
+                     LET g_nmam_d[l_ac].nmam002 = g_nmam_d_t.nmam002
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.page1.nmam003" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page2.nmam002_2" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_nmam_m.nmam001) AND NOT cl_null(g_nmam2_d[l_ac].nmam002) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_nmam_m.nmam001 != g_nmam001_t OR g_nmam2_d[l_ac].nmam002 != g_nmam2_d_t.nmam002))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM nmam_t WHERE "||"nmament = '" ||g_enterprise|| "' AND "||"nmam001 = '"||g_nmam_m.nmam001 ||"' AND "|| "nmam002 = '"||g_nmam2_d[l_ac].nmam002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page2.nmamcrtdp" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmam2_d[l_ac].nmamcrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmam2_d[l_ac].nmamcrtdp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmam2_d[l_ac].nmamcrtdp_desc
+]]>
+</point>
+  <point name="input.a.page2.nmamcrtid" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmam2_d[l_ac].nmamcrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_nmam2_d[l_ac].nmamcrtid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmam2_d[l_ac].nmamcrtid_desc
+]]>
+</point>
+  <point name="input.a.page2.nmammodid" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmam2_d[l_ac].nmammodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_nmam2_d[l_ac].nmammodid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmam2_d[l_ac].nmammodid_desc
+]]>
+</point>
+  <point name="input.a.page2.nmamowndp" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[
+]]>
+</point>
+  <point name="input.a.page2.nmamownid" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmam2_d[l_ac].nmamownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_nmam2_d[l_ac].nmamownid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmam2_d[l_ac].nmamownid_desc
+]]>
+</point>
+  <point name="input.body.b_update" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[               LET g_nmam1_info_d[l_ac].nmammodid = g_user
+               LET g_nmam1_info_d[l_ac].nmammoddt = cl_get_current()]]>
+</point>
+  <point name="input.body.before_insert" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            LET g_nmam_d[l_ac].nmamstus = "Y"]]>
+</point>
+  <point name="input.body.before_row" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[             ]]>
+</point>
+  <point name="input.c.nmam001" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.state = 'i'
+            CALL q_ooal002_7() 
+            LET g_nmam_m.nmam001 = g_qryparam.return1 
+            CALL anmi190_ooall004(g_nmam_m.nmam001)
+            DISPLAY BY NAME g_nmam_m.nmam001_desc
+            DISPLAY g_nmam_m.nmam001 TO nmam001  #顯示到畫面上
+            NEXT FIELD nmam001                     #返回原欄位]]>
+</point>
+  <point name="input.define" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   DEFINE l_success        LIKE type_t.num5 
+   DEFINE l_str            STRING]]>
+</point>
+  <point name="input.detail_input.page1.update_item" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[               IF NOT cl_null(g_nmam_d[l_ac].nmam002)  THEN
+                  CALL n_nmaml(g_nmam_m.nmam001,g_nmam_d[l_ac].nmam002)
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_nmam_m.nmam001
+                  LET g_ref_fields[2] = g_nmam_d[l_ac].nmam002
+                  CALL ap_ref_array2(g_ref_fields," SELECT nmaml004 FROM nmaml_t WHERE nmamlent = '"
+                      ||g_enterprise||"' AND nmaml001 = ? AND nmaml002 = ? AND nmaml003 = '"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_nmam_d[l_ac].nmaml004 = g_rtn_fields[1]
+                  DISPLAY BY NAME g_nmam_d[l_ac].nmaml004
+               END IF]]>
+</point>
+  <point name="ref_show.body.reference" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   INITIALIZE g_ref_fields TO NULL 
+   LET g_ref_fields[1] = g_nmam_m.nmam001
+   LET g_ref_fields[2] = g_nmam_d[l_ac].nmam002
+   CALL ap_ref_array2(g_ref_fields," SELECT nmaml004 FROM nmaml_t WHERE nmamlent = '"||g_enterprise||"' AND nmaml001 = ? AND nmaml002 = ? AND nmaml003 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_nmam_d[l_ac].nmaml004 = g_rtn_fields[1] 
+   DISPLAY BY NAME g_nmam_d[l_ac].nmaml004]]>
+</point>
+  <point name="ref_show.body1_info.reference" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmam1_info_d[l_ac].nmammodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_nmam1_info_d[l_ac].nmammodid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmam1_info_d[l_ac].nmammodid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmam1_info_d[l_ac].nmamownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_nmam1_info_d[l_ac].nmamownid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmam1_info_d[l_ac].nmamownid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmam1_info_d[l_ac].nmamowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmam1_info_d[l_ac].nmamowndp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmam1_info_d[l_ac].nmamowndp_desc
+            
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmam1_info_d[l_ac].nmamcrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_nmam1_info_d[l_ac].nmamcrtid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmam1_info_d[l_ac].nmamcrtid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmam1_info_d[l_ac].nmamcrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmam1_info_d[l_ac].nmamcrtdp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmam1_info_d[l_ac].nmamcrtdp_desc
+]]>
+</point>
+  <point name="ref_show.head.reference" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmam_m.nmam001
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooall004 FROM ooall_t WHERE ooallent='"||g_enterprise||"' AND ooall001='7' AND ooall002=? AND ooall003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmam_m.nmam001_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmam_m.nmam001_desc
+]]>
+</point>
+  <point name="reproduce.action" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[      ON ACTION controlp INFIELD nmam001
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.state = 'i'
+            CALL q_ooal002_7() 
+            LET l_newno= g_qryparam.return1
+            DISPLAY l_newno TO nmam001  #顯示到畫面上
+            NEXT FIELD nmam001                     ]]>
+</point>
+  <point name="reproduce.body.a_insert" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[      LET l_sql = " INSERT INTO nmaml_t ",
+                  " SELECT nmamlent,'",l_newno,"',nmaml002,nmaml003,nmaml004 ",
+                  " FROM nmaml_t ",
+                  " WHERE nmamlent ='",g_enterprise,"'",
+                  " AND nmaml001 = '",g_nmam001_t,"'  AND nmaml002= '",l_detail.nmam002,"'"
+      PREPARE anmi190_ins_nmaml FROM l_sql
+      EXECUTE anmi190_ins_nmaml
+      IF SQLCA.sqlcode THEN
+         CALL cl_err('Insert nmaml_t error!',SQLCA.sqlcode,1)
+         ROLLBACK WORK
+         RETURN
+      END IF]]>
+</point>
+  <point name="reproduce.define" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   DEFINE l_success  LIKE type_t.num5
+   DEFINE l_sql      STRING ]]>
+</point>
+  <point name="reproduce.nmam001" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            DISPLAY '' TO nmam001_desc
+            IF  NOT cl_null(l_newno) THEN 
+               #輸入值須存在[T:參照表檔].[C:參照表號]、[C:參照表類型]=9且為有效資料,
+               #若資料不存在則詢問「輸入的參照表號不存在參照表檔,請問是否要新增此參照表號?」，
+               #若選擇是則呼叫程式aooi070做參照表號的新增；
+               #否則停留在本欄位
+               CALL anmi190_nmam001_chk(l_newno)  RETURNING g_errno
+               IF NOT cl_null(g_errno) THEN
+                  IF g_errno = 'aoo-00076' THEN
+                     IF NOT cl_ask_confirm('aoo-00076') THEN
+                        LET l_newno = ''
+                        LET g_nmam_m.nmam001_desc =''
+                        DISPLAY BY NAME g_nmam_m.nmam001_desc 
+                        NEXT FIELD nmam001
+                     ELSE
+                        CALL s_transaction_begin()
+                        LET l_success = 0
+                        CALL s_aooi070_ins(7,l_newno) RETURNING l_success
+                        IF l_success = 1 THEN
+                           CALL s_transaction_end('Y','1')
+                        ELSE
+                           CALL s_transaction_end('N','1')
+                        END IF
+                     END IF
+                  ELSE
+                     CALL cl_err(l_newno,g_errno,1)
+                     LET l_newno = ''
+                     LET g_nmam_m.nmam001_desc = ''
+                     DISPLAY BY NAME g_nmam_m.nmam001_desc 
+                     NEXT FIELD  nmam001
+                  END IF
+               END IF
+               
+               IF NOT ap_chk_notDup(l_newno,"SELECT COUNT(*) FROM nmam_t WHERE "||"nmament = '" ||g_enterprise|| "' AND "||"nmam001 = '"||l_newno ||"'",'std-00004',0) THEN 
+                  LET l_newno = ''
+                  LET g_nmam_m.nmam001_desc = ''
+                  DISPLAY BY NAME g_nmam_m.nmam001_desc 
+                  NEXT FIELD nmam001 
+               END IF
+            ELSE 
+               LET g_nmam_m.nmam001_desc = ''
+               DISPLAY BY NAME g_nmam_m.nmam001_desc       
+            END IF 
+            #带参照编号说明
+            CALL anmi190_ooall004(l_newno)
+            DISPLAY BY NAME g_nmam_m.nmam001_desc       ]]>
+</point>
+  <point name="show.body.reference" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[
+   INITIALIZE g_ref_fields TO NULL 
+   LET g_ref_fields[1] = g_nmam_m.nmam001
+   LET g_ref_fields[2] = g_nmam_d[l_ac].nmam002
+   CALL ap_ref_array2(g_ref_fields," SELECT nmaml004 FROM nmaml_t WHERE nmamlent = '"||g_enterprise||"' AND nmaml001 = ? AND nmaml002 = ? AND nmaml003 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_nmam_d[l_ac].nmaml004 = g_rtn_fields[1] 
+   DISPLAY BY NAME g_nmam_d[l_ac].nmaml004]]>
+</point>
+  <point name="show.head.reference" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_nmam_m.nmam001
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooall004 FROM ooall_t WHERE ooallent='"||g_enterprise||"' AND ooall001='9' AND ooall002=? AND ooall003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_nmam_m.nmam001_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_nmam_m.nmam001_desc
+]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.init" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.define_sql" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.after_define_sql" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.before_close" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="init.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_dialog" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.page1.action" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.body1_info.action" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_dialog2" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="menu.delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="menu.insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="menu.modify" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="menu.modify_detail" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="menu.output" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="menu.query" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="menu.reproduce" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="browser_search.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.before_browser_fill" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.before_count" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.reference" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_headershow.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_detailshow.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_detailshow.before" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_detailshow.after" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_browser_refresh.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="cs.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="cs.head.before_construct" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.nmam001" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.nmam001" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="cs.body.before_construct" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.nmaml004" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.nmaml004" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1.nmaml004" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.nmam003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.nmam003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1.nmam003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.nmamstus" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.nmamstus" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1.nmamstus" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1_info.nmammodid" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1_info.nmammodid" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1_info.nmammodid" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1_info.nmammoddt" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1_info.nmamownid" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1_info.nmamownid" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1_info.nmamownid" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1_info.nmamowndp" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1_info.nmamowndp" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1_info.nmamowndp" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1_info.nmamcrtid" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1_info.nmamcrtid" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1_info.nmamcrtid" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1_info.nmamcrtdp" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1_info.nmamcrtdp" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1_info.nmamcrtdp" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1_info.nmamcrtdt" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="cs.more_construct" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="cs.before_dialog" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="cs.after_construct" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="filter.add_cs" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="filter.b_dialog" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="query.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="query.befroe_query" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="fetch.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="fetch.before_fetch" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="insert.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="insert.default" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="insert.after_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify.before_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify.after_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify.b_key_update" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify.m_key_update" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify.a_key_update" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.define_sql" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.after_define_sql" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.after_set_entry" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.after_set_no_entry" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.before_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.b_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.nmam001" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.nmam001" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.b_update" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.m_update" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.a_update" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.a_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.b_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.m_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.a_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.after_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.b_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.a_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.after_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.nmaml004" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.nmaml004" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.nmaml004" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.nmam003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.nmam003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.nmamstus" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.nmamstus" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.nmamstus" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.nmaml004" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.nmam003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.nmamstus" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.m_update" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.a_update" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.after_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body1_info.action" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.more_inputarray" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.before_dialog" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.after_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="show.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="show.before" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="show.after" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ref_show.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.head.b_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.after_reproduce" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="detail_reproduce.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="detail_reproduce.body.table1.b_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="detail_reproduce.body.table1.m_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="detail_reproduce.body.table1.a_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="detail_reproduce.body.lang0.b_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="detail_reproduce.lang0.table1.m_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="detail_reproduce.lang0.table1.a_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="delete.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.b_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.m_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.a_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.sql_before" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.fill" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="bfill.foreach" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="b_fill2.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="b_fill2.after_fill" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="before_delete.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.b_single_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.m_single_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.a_single_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="delete_b.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="insert_b.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="update_b.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="lock_b.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="unlock_b.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.field_control" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.after_control" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.field_control" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.after_control" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry_b.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry_b.set_entry_b" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry_b.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry_b.set_no_entry_b段" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="default_search.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="default_search.before" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="default_search.after" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify_detail_chk.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify_detail_chk.before" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify_detail_chk.page_control" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify_detail_chk.after" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+</add_points>

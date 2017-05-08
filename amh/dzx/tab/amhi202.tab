@@ -1,0 +1,157 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="amhi202" module="amh" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02296" crtdt="2014-01-02 09:26:26" modid="06814" moddt="2016-07-14 09:48:52" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="樓層基本資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mhabsite,mhabsite_desc(chr80),mhab001,mhab001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mhabstus,mhabunit,mhabunit_desc(chr500),mhab002,mhabl004,mhabl005,mhab006,mhab007,mhab008,mhab009,mhab003,mhab004,mhab005"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="mhab002,mhabownid,mhabownid_desc(chr500),mhabowndp,mhabowndp_desc(chr500),mhabcrtid,mhabcrtid_desc(chr500),mhabcrtdp,mhabcrtdp_desc(chr500),mhabcrtdt,mhabmodid,mhabmodid_desc(chr500),mhabmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="amh" filename="amhi202" method="dialog">
+    <section id="input">
+      <input id="head" field="mhabsite,mhab001"/>
+      <input id="body" page="1" field="mhabstus,mhabunit,mhab002,mhabl004,mhabl005,mhab006,mhab007,mhab008,mhab009,mhab003,mhab004,mhab005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mhabsite,mhab001"/>
+      <construct id="body" page="1" field="mhabstus,mhabunit,mhab002,mhabl004,mhabl005,mhab006,mhab007,mhab008,mhab009,mhab003,mhab004,mhab005"/>
+      <construct id="body" page="2" field="mhabownid,mhabowndp,mhabcrtid,mhabcrtdp,mhabcrtdt,mhabmodid,mhabmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mhab001"/>
+      <set id="head" type="no_entry" field="mhab001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="mhabsite">
+        <after>
+          <reference field="mhabsite_desc" ref_field="mhab_t.mhabsite" map_field="mhabsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="i"/>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="mhabsite_desc"/>
+      <column id="mhab001">
+        <after>
+          <check chkid="v_mhaa001" id="isExist"/>
+          <reference field="mhab001_desc" ref_field="mhab_t.mhab001" map_field="mhab001" ref_sql="SELECT mhaal003 FROM mhaal_t WHERE mhaalent=$varg_enterprise$var AND mhaal001=? AND mhaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhaa001" state="i"/>
+        <controlp form="q_mhaa001" state="c"/>
+      </column>
+      <column id="mhab001_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="mhabstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="mhabunit">
+        <after>
+          <reference field="mhabunit_desc" ref_field="mhab_t.mhabunit" map_field="mhabunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="i"/>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="mhabunit_desc"/>
+      <column id="mhab002">
+        <controlp form="q_mhab002" state="c"/>
+      </column>
+      <column id="mhabl004"/>
+      <column id="mhabl005"/>
+      <column id="mhab006" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhab007" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhab008">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhab009">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mhab003" type="S" default="0"/>
+      <column id="mhab004" type="S" default="0"/>
+      <column id="mhab005" type="S" default="0"/>
+    </init>
+    <init id="body" page="2">
+      <column id="mhabownid">
+        <after>
+          <reference field="mhabownid_desc" ref_field="mhab_t.mhabownid" map_field="mhabownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhabownid_desc"/>
+      <column id="mhabowndp">
+        <after>
+          <reference field="mhabowndp_desc" ref_field="mhab_t.mhabowndp" map_field="mhabowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhabowndp_desc"/>
+      <column id="mhabcrtid">
+        <after>
+          <reference field="mhabcrtid_desc" ref_field="mhab_t.mhabcrtid" map_field="mhabcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhabcrtid_desc"/>
+      <column id="mhabcrtdp">
+        <after>
+          <reference field="mhabcrtdp_desc" ref_field="mhab_t.mhabcrtdp" map_field="mhabcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhabcrtdp_desc"/>
+      <column id="mhabcrtdt"/>
+      <column id="mhabmodid">
+        <after>
+          <reference field="mhabmodid_desc" ref_field="mhab_t.mhabmodid" map_field="mhabmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhabmodid_desc"/>
+      <column id="mhabmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="mhab_t" pk="mhab001">
+      <sql id="forupd_sql" type="sql" query="SELECT mhabsite,&apos;&apos;,mhab001,&apos;&apos; FROM mhab_t WHERE mhabent= ? AND mhab001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mhabsite,&apos;&apos;,mhab001,&apos;&apos; FROM mhab_t" order="mhab001"/>
+    </head>
+    <body id="mhab_t" page="1,2" linked="" pk="mhab002" fk="mhab001">
+      <sql id="forupd_sql_detail" query="SELECT mhabstus,mhabunit,&apos;&apos;,mhab002,&apos;&apos;,&apos;&apos;,mhab006,mhab007,mhab008,mhab009,mhab003,mhab004,mhab005,&apos;&apos;,mhabownid,&apos;&apos;,mhabowndp,&apos;&apos;,mhabcrtid,&apos;&apos;,mhabcrtdp,&apos;&apos;,mhabcrtdt,mhabmodid,&apos;&apos;,mhabmoddt FROM mhab_t WHERE mhabent=? AND mhab001=? AND mhab002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mhabstus,mhabunit,&apos;&apos;,mhab002,&apos;&apos;,&apos;&apos;,mhab006,mhab007,mhab008,mhab009,mhab003,mhab004,mhab005,&apos;&apos;,mhabownid,&apos;&apos;,mhabowndp,&apos;&apos;,mhabcrtid,&apos;&apos;,mhabcrtdp,&apos;&apos;,mhabcrtdt,mhabmodid,&apos;&apos;,mhabmoddt FROM mhab_t WHERE mhabent= ? AND mhab001=?"/>
+      <sql id="detail_append" type="lang" target="mhabl_t.mhabl004,mhabl_t.mhabl005" table="mhabl_t" fk="mhab001,mhab002" pk="mhabl001,mhabl002,mhabl003" field="mhabl004,mhabl005"/>
+    </body>
+  </dataset>
+</assembly>
+

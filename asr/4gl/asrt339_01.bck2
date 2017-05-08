@@ -1,0 +1,1218 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="asrt339_01.description" >}
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000019
+#+ 
+#+ Filename...: asrt339_01
+#+ Description: ...
+#+ Creator....: 00537(2014/07/09)
+#+ Modifier...: 00537(2014/07/09)
+#+ Buildtype..: 應用 c01b 樣板自動產生
+#+ 以上段落由子樣板a00產生
+ 
+{</section>}
+ 
+{<section id="asrt339_01.global" >}
+
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+#160905-00007#15 2016/09/06 by 08172 库存管理特征 
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_inba_m        RECORD
+       inbadocno LIKE inba_t.inbadocno, 
+   inbadocno_desc LIKE type_t.chr80, 
+   sfdadocno LIKE type_t.chr20, 
+   sfdadocno_desc LIKE type_t.chr80
+       END RECORD
+DEFINE g_inba_m        type_g_inba_m
+ 
+   DEFINE g_inbadocno_t LIKE inba_t.inbadocno
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義模組變數(Module Variable)
+DEFINE g_flag          LIKE type_t.num5     #0:杂收单，退料单都是全新产生的 1:已有杂收单，不用重新产生 2：已有退料单，不用重新产生
+DEFINE g_sfjadocno     LIKE sfja_t.sfjadocno
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asrt339_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION asrt339_01(--)
+   #add-point:input段變數傳入
+   p_sfjadocno
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   DEFINE p_sfjadocno     LIKE sfja_t.sfjadocno
+   DEFINE l_sfjastus      LIKE sfja_t.sfjastus
+   DEFINE l_sfja004       LIKE sfja_t.sfja004
+   DEFINE l_sfja005       LIKE sfja_t.sfja005
+   DEFINE l_inbastus      LIKE inba_t.inbastus
+   DEFINE l_sfdastus      LIKE sfda_t.sfdastus
+   DEFINE l_ooef004       LIKE ooef_t.ooef004
+   DEFINE l_cnt           LIKE type_t.num5
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_asrt339_01 WITH FORM cl_ap_formpath("asr","asrt339_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   LET g_today = cl_get_today()
+   LET g_argv[1] = p_sfjadocno 
+   LET g_sfjadocno = p_sfjadocno
+   SELECT sfja004,sfja005,sfjastus INTO l_sfja004,l_sfja005,l_sfjastus
+     FROM sfja_t
+    WHERE sfjaent   = g_enterprise
+      AND sfjasite  = g_site
+      AND sfjadocno = p_sfjadocno
+      
+   IF l_sfjastus NOT MATCHES '[S]' THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'asf-00398'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      CLOSE WINDOW w_asrt339_01 
+      RETURN
+   END IF
+
+#产生过的，提示下不产生了，记得要set no entry，都产生过了，提示下就return吧
+   IF l_sfja004 IS NULL AND l_sfja005 IS NULL THEN
+      LET g_flag = 0
+#不能两种单身资料都没有
+#      LET l_cnt = 0 
+#      SELECT COUNT(*) INTO l_cnt 
+#        FROM sfjb_t
+#       WHERE sfjbent   = g_enterprise
+#         AND sfjbsite  = g_site
+#         AND sfjbdocno = p_sfjadocno
+#         AND (sfjb010   = '2' OR sfjb010   = '3') 
+#      
+#      IF l_cnt = 0 THEN
+#         INITIALIZE g_errparam TO NULL
+#         LET g_errparam.code = 'asf-00404'
+#         LET g_errparam.extend = ''
+#         LET g_errparam.popup = TRUE
+#         CALL cl_err()
+#         CLOSE WINDOW w_asrt339_01 
+#         RETURN
+#      END IF
+
+      LET l_cnt = 0 
+      SELECT COUNT(*) INTO l_cnt 
+        FROM sfjc_t
+       WHERE sfjcent   = g_enterprise
+         AND sfjcsite  = g_site
+         AND sfjcdocno = p_sfjadocno
+         AND (sfjc010   = '2' OR sfjc010   = '3') 
+      
+      IF l_cnt = 0 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'asf-00405'
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         CLOSE WINDOW w_asrt339_01 
+         RETURN
+      END IF
+
+#检查单身是否有杂收资料，若没有，不用产生
+#      LET l_cnt = 0 
+#      SELECT COUNT(*) INTO l_cnt 
+#        FROM sfjb_t
+#       WHERE sfjbent   = g_enterprise
+#         AND sfjbsite  = g_site
+#         AND sfjbdocno = p_sfjadocno
+#         AND sfjb010   = '2' 
+#      
+#      IF l_cnt = 0 THEN
+#         LET g_flag = 1
+#         CALL cl_set_comp_entry("inbadocno",FALSE)
+#      END IF
+      
+      LET l_cnt = 0 
+      SELECT COUNT(*) INTO l_cnt 
+        FROM sfjc_t
+       WHERE sfjcent   = g_enterprise
+         AND sfjcsite  = g_site
+         AND sfjcdocno = p_sfjadocno
+         AND sfjc010   = '2' 
+      
+      IF l_cnt = 0 THEN
+         LET g_flag = 1
+         CALL cl_set_comp_entry("inbadocno",FALSE)
+      END IF
+#检查单身是否有退料资料，若没有，不用产生
+#      LET l_cnt = 0 
+#      SELECT COUNT(*) INTO l_cnt 
+#        FROM sfjb_t
+#       WHERE sfjbent   = g_enterprise
+#         AND sfjbsite  = g_site
+#         AND sfjbdocno = p_sfjadocno
+#         AND sfjb010   = '3' 
+#      
+#      IF l_cnt = 0 THEN
+#         LET g_flag = 2
+#         CALL cl_set_comp_entry("sfdadocno",FALSE)
+#      END IF
+      
+      LET l_cnt = 0 
+      SELECT COUNT(*) INTO l_cnt 
+        FROM sfjc_t
+       WHERE sfjcent   = g_enterprise
+         AND sfjcsite  = g_site
+         AND sfjcdocno = p_sfjadocno
+         AND sfjc010   = '3' 
+      
+      IF l_cnt = 0 THEN
+         LET g_flag = 2
+         CALL cl_set_comp_entry("sfdadocno",FALSE)
+      END IF
+       
+   END IF
+   IF l_sfja004 IS NOT NULL AND l_sfja005 IS NULL THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'asf-00362'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+      CALL cl_set_comp_entry("inbadocno",FALSE)
+      LET g_inba_m.inbadocno = l_sfja004
+      LET g_flag = 1
+#检查单身是否有退料资料，若没有，不用产生
+#      LET l_cnt = 0 
+#      SELECT COUNT(*) INTO l_cnt 
+#        FROM sfjb_t
+#       WHERE sfjbent   = g_enterprise
+#         AND sfjbsite  = g_site
+#         AND sfjbdocno = p_sfjadocno
+#         AND sfjb010   = '3' 
+#      
+#      IF l_cnt = 0 THEN
+#         INITIALIZE g_errparam TO NULL
+#         LET g_errparam.code = 'asf-00401'
+#         LET g_errparam.extend = ''
+#         LET g_errparam.popup = TRUE
+#         CALL cl_err()
+#         CLOSE WINDOW w_asrt339_01 
+#         RETURN
+#      END IF
+      
+      LET l_cnt = 0 
+      SELECT COUNT(*) INTO l_cnt 
+        FROM sfjc_t
+       WHERE sfjcent   = g_enterprise
+         AND sfjcsite  = g_site
+         AND sfjcdocno = p_sfjadocno
+         AND sfjc010   = '3' 
+      
+      IF l_cnt = 0 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'asf-00402'
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         CLOSE WINDOW w_asrt339_01 
+         RETURN
+      END IF
+   END IF
+   IF l_sfja005 IS NOT NULL AND l_sfja004 IS NULL THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'asf-00363'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+      CALL cl_set_comp_entry("sfdadocno",FALSE)
+      LET g_inba_m.sfdadocno = l_sfja005
+      LET g_flag = 2
+#检查单身是否有杂收资料，若没有，不用产生
+#      LET l_cnt = 0 
+#      SELECT COUNT(*) INTO l_cnt 
+#        FROM sfjb_t
+#       WHERE sfjbent   = g_enterprise
+#         AND sfjbsite  = g_site
+#         AND sfjbdocno = p_sfjadocno
+#         AND sfjb010   = '2' 
+#      
+#      IF l_cnt = 0 THEN
+#         INITIALIZE g_errparam TO NULL
+#         LET g_errparam.code = 'asf-00399'
+#         LET g_errparam.extend = ''
+#         LET g_errparam.popup = TRUE
+#         CALL cl_err()
+#         CLOSE WINDOW w_asrt339_01 
+#         RETURN
+#      END IF
+      
+      LET l_cnt = 0 
+      SELECT COUNT(*) INTO l_cnt 
+        FROM sfjc_t
+       WHERE sfjcent   = g_enterprise
+         AND sfjcsite  = g_site
+         AND sfjcdocno = p_sfjadocno
+         AND sfjc010   = '2' 
+      
+      IF l_cnt = 0 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'asf-00400'
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         CLOSE WINDOW w_asrt339_01 
+         RETURN
+      END IF
+   END IF
+   IF l_sfja005 IS NOT NULL AND l_sfja004 IS NOT NULL THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'asf-00364'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      CLOSE WINDOW w_asrt339_01
+      RETURN
+   END IF
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_inba_m.inbadocno,g_inba_m.sfdadocno ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            SELECT ooef004 INTO l_ooef004 
+              FROM ooef_t
+             WHERE ooefent = g_enterprise
+               AND ooef001 = g_site
+               
+            IF g_inba_m.inbadocno IS NULL AND l_ooef004 IS NOT NULL THEN
+               SELECT COUNT(ooba002) INTO l_cnt
+                 FROM ooba_t
+                 WHERE oobaent = g_enterprise 
+                   AND ooba002  IN (SELECT oobl001 FROM oobl_t WHERE  ooblent = g_enterprise  AND oobl002 = 'aint302' ) 
+                   AND oobastus = 'Y' 
+                   AND ooba001  = l_ooef004
+               IF l_cnt = 1 THEN
+                  SELECT ooba002 INTO g_inba_m.inbadocno
+                    FROM ooba_t
+                    WHERE oobaent = g_enterprise 
+                      AND ooba002  IN (SELECT oobl001 FROM oobl_t WHERE  ooblent = g_enterprise  AND oobl002 = 'aint302' ) 
+                      AND oobastus = 'Y' 
+                      AND ooba001  = l_ooef004               
+               END IF
+            END IF
+            IF g_inba_m.sfdadocno IS NULL AND l_ooef004 IS NOT NULL THEN
+               SELECT COUNT(ooba002) INTO l_cnt
+                 FROM ooba_t
+                 WHERE oobaent = g_enterprise 
+                   AND ooba002  IN (SELECT oobl001 FROM oobl_t WHERE  ooblent = g_enterprise  AND oobl002 = 'asft323' ) 
+                   AND oobastus = 'Y' 
+                   AND ooba001  = l_ooef004
+               IF l_cnt = 1 THEN
+                  SELECT ooba002 INTO g_inba_m.sfdadocno
+                    FROM ooba_t
+                    WHERE oobaent = g_enterprise 
+                      AND ooba002  IN (SELECT oobl001 FROM oobl_t WHERE  ooblent = g_enterprise  AND oobl002 = 'aint302' ) 
+                      AND oobastus = 'Y' 
+                      AND ooba001  = l_ooef004               
+               END IF
+            END IF
+            #现在写成默认带主画面的，如果有就带出来
+            #还要写如果没有就检查2个单别是不是唯一的单别，是的话就带出来
+            #end add-point
+          
+                  #此段落由子樣板a02產生
+         AFTER FIELD inbadocno
+            
+            #add-point:AFTER FIELD inbadocno
+
+            #此段落由子樣板a05產生
+            IF NOT cl_null(g_inba_m.inbadocno) THEN
+#有单别检查单别，是完整单号检查完整单号，传入完整单号的话，会截取单别做单别合法性检查               
+               IF NOT s_aooi200_chk_docno(g_site,g_inba_m.inbadocno,g_today,'aint302') THEN
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            LET g_inba_m.inbadocno_desc = s_aooi200_get_slip_desc(g_inba_m.inbadocno)
+            DISPLAY BY NAME g_inba_m.inbadocno_desc
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD inbadocno
+            #add-point:BEFORE FIELD inbadocno
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE inbadocno
+            #add-point:ON CHANGE inbadocno
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfdadocno
+            
+            #add-point:AFTER FIELD sfdadocno
+            IF NOT cl_null(g_inba_m.sfdadocno) THEN
+#有单别检查单别，是完整单号检查完整单号，传入完整单号的话，会截取单别做单别合法性检查               
+               IF NOT s_aooi200_chk_docno(g_site,g_inba_m.sfdadocno,g_today,'asft323') THEN
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            LET g_inba_m.sfdadocno_desc = s_aooi200_get_slip_desc(g_inba_m.sfdadocno)
+            DISPLAY BY NAME g_inba_m.sfdadocno_desc
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfdadocno
+            #add-point:BEFORE FIELD sfdadocno
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sfdadocno
+            #add-point:ON CHANGE sfdadocno
+
+            #END add-point
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.inbadocno
+         ON ACTION controlp INFIELD inbadocno
+            #add-point:ON ACTION controlp INFIELD inbadocno
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_inba_m.inbadocno             #給予default值
+
+            #給予arg
+            SELECT ooef004 INTO l_ooef004 
+              FROM ooef_t
+             WHERE ooefent = g_enterprise
+               AND ooef001 = g_site
+               
+            LET g_qryparam.arg1 = l_ooef004          #
+            LET g_qryparam.arg2 = 'aint302'      #
+            
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_inba_m.inbadocno = g_qryparam.return1              
+
+            DISPLAY g_inba_m.inbadocno TO inbadocno              #
+
+            NEXT FIELD inbadocno                          #返回原欄位
+
+
+            #END add-point
+ 
+         #Ctrlp:input.c.sfdadocno
+         ON ACTION controlp INFIELD sfdadocno
+            #add-point:ON ACTION controlp INFIELD sfdadocno
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_inba_m.sfdadocno             #給予default值
+
+            #給予arg
+            SELECT ooef004 INTO l_ooef004 
+              FROM ooef_t
+             WHERE ooefent = g_enterprise
+               AND ooef001 = g_site
+               
+            LET g_qryparam.arg1 = l_ooef004          #
+            LET g_qryparam.arg2 = 'asft323'      #
+            
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_inba_m.sfdadocno = g_qryparam.return1              
+
+            DISPLAY g_inba_m.sfdadocno TO sfdadocno              #
+
+            NEXT FIELD sfdadocno                          #返回原欄位
+
+
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+#都ok了，开始吧！
+            CALL asrt339_01_gen_inba_sfda()
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+#这里居然没有addpoint
+         CALL asrt339_01_gen_inba_sfda()
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_asrt339_01 
+   
+   #add-point:input段after input 
+
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asrt339_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="asrt339_01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asrt339_01_gen_inba_sfda()
+   DEFINE l_success   LIKE type_t.num5
+   DEFINE l_inbadocno   LIKE inba_t.inbadocno
+   DEFINE l_sfdadocno   LIKE sfda_t.sfdadocno   
+#检查事务中
+   IF NOT s_transaction_chk('N',1) THEN
+      RETURN 
+   END IF   
+
+   CALL s_lot_ins_create_tmp()  
+   CALL s_aooi390_cre_tmp_table() RETURNING l_success   #add--2015/03/19 By shiun
+   CALL s_transaction_begin()
+   LET l_inbadocno = NULL
+   LET l_sfdadocno = NULL
+   IF g_flag = '0' THEN  #两个都产生
+      CALL s_aooi200_gen_docno(g_site,g_inba_m.inbadocno,g_today,'aint302') RETURNING l_success,g_inba_m.inbadocno
+      IF NOT l_success THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'apm-00003'
+         LET g_errparam.extend = g_inba_m.inbadocno
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      IF NOT asrt339_01_ins_inba() THEN
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      LET l_inbadocno = g_inba_m.inbadocno
+      CALL s_aooi200_gen_docno(g_site,g_inba_m.sfdadocno,g_today,'asft323') RETURNING l_success,g_inba_m.sfdadocno
+      IF NOT l_success THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'apm-00003'
+         LET g_errparam.extend = g_inba_m.sfdadocno
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      IF NOT asrt339_01_ins_sfda() THEN
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      LET l_sfdadocno = g_inba_m.sfdadocno
+   END IF
+   IF g_flag = '1' THEN  #已有杂收单，只要产生退料单
+      CALL s_aooi200_gen_docno(g_site,g_inba_m.sfdadocno,g_today,'asft323') RETURNING l_success,g_inba_m.sfdadocno
+      IF NOT l_success THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'apm-00003'
+         LET g_errparam.extend = g_inba_m.sfdadocno
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      IF NOT asrt339_01_ins_sfda() THEN
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      LET l_sfdadocno = g_inba_m.sfdadocno
+   END IF
+   IF g_flag = '2' THEN  #已有退料单，只要产生杂收单
+      CALL s_aooi200_gen_docno(g_site,g_inba_m.inbadocno,g_today,'aint302') RETURNING l_success,g_inba_m.inbadocno
+      IF NOT l_success THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'apm-00003'
+         LET g_errparam.extend = g_inba_m.inbadocno
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      IF NOT asrt339_01_ins_inba() THEN
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      LET l_inbadocno = g_inba_m.inbadocno
+   END IF
+   CALL s_lot_ins_drop_tmp()
+   CALL s_aooi390_drop_tmp_table()   #add--2015/03/19 By shiun
+   UPDATE sfja_t SET sfja004 = l_inbadocno,
+                     sfja005 = l_sfdadocno
+    WHERE sfjaent   = g_enterprise
+      AND sfjasite  = g_site
+      AND sfjadocno = g_sfjadocno
+
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'upd sfja_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+
+   CALL s_transaction_end('Y','0')
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: r_success      回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asrt339_01_ins_inba()
+   DEFINE l_sfja      RECORD LIKE sfja_t.*
+   DEFINE l_sfjb      RECORD LIKE sfjb_t.*
+   DEFINE l_sfjc      RECORD LIKE sfjc_t.*
+   DEFINE l_inba      RECORD LIKE inba_t.*
+   DEFINE l_inbb      RECORD LIKE inbb_t.*
+   DEFINE l_inbc      RECORD LIKE inbc_t.*
+   DEFINE l_inao      RECORD LIKE inao_t.*
+   DEFINE r_success   LIKE type_t.num5
+   DEFINE l_success   LIKE type_t.num5
+   DEFINE l_amount    LIKE inbb_t.inbb011
+   DEFINE l_imaf071   LIKE imaf_t.imaf071
+   DEFINE l_imaf081   LIKE imaf_t.imaf081
+   
+   LET r_success = TRUE
+   #检查事务中
+   IF NOT s_transaction_chk('Y',1) THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   INITIALIZE l_sfja.* TO NULL
+   INITIALIZE l_sfjb.* TO NULL
+   INITIALIZE l_sfjc.* TO NULL
+   INITIALIZE l_inba.* TO NULL
+   INITIALIZE l_inbb.* TO NULL
+   INITIALIZE l_inbc.* TO NULL
+   INITIALIZE l_inao.* TO NULL
+   
+#先插单头
+   SELECT * INTO l_sfja.* 
+     FROM sfja_t
+    WHERE sfjaent   = g_enterprise
+      AND sfjasite  = g_site
+      AND sfjadocno = g_sfjadocno
+      
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'sel sfja_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   LET l_inba.inbaent   = l_sfja.sfjaent                                                  #企業編號        
+   LET l_inba.inbasite  = l_sfja.sfjasite                                                 #營運據點        
+   LET l_inba.inbadocno = g_inba_m.inbadocno                                              #單據編號        
+   LET l_inba.inbadocdt = g_today                                                         #輸入日期        
+   LET l_inba.inba001   = '2'                                                             #單據類別        
+   LET l_inba.inba002   = ''                                                              #扣帳日期        
+   LET l_inba.inba003   = g_user                                                          #申請人員        
+   LET l_inba.inba004   = g_dept                                                          #申請部門        
+   LET l_inba.inba005   = '8'                                                             #來源資料類型    
+   LET l_inba.inba006   = l_sfja.sfjadocno                                                #來源單號        
+   LET l_inba.inba007   = ''                                                              #理由碼  
+   CALL s_aooi360_sel('6',l_sfja.sfjadocno,'','','','','','','','','','4')              #備註 
+        RETURNING l_success,l_inba.inba008                                                #                          
+   LET l_inba.inba009   = ''                                                              #保稅異動原因      
+   LET l_inba.inba010   = ''                                                              #保稅進口報單    
+   LET l_inba.inba011   = ''                                                              #保稅進口報單日期
+   LET l_inba.inbaownid = g_user                                                          #資料所有者      
+   LET l_inba.inbaowndp = g_dept                                                          #資料所屬部門    
+   LET l_inba.inbacrtid = g_user                                                          #資料建立者      
+   LET l_inba.inbacrtdp = g_dept                                                          #資料建立部門    
+   LET l_inba.inbacrtdt = g_today                                                         #資料創建日      
+   LET l_inba.inbamodid = ''                                                              #資料修改者      
+   LET l_inba.inbamoddt = ''                                                              #最近修改日      
+   LET l_inba.inbacnfid = ''                                                              #資料確認者      
+   LET l_inba.inbacnfdt = ''                                                              #資料確認日      
+   LET l_inba.inbapstid = ''                                                              #資料過帳者
+   LET l_inba.inbapstdt = ''                                                              #資料過帳日
+   LET l_inba.inbastus  = 'N'                                                             #狀態碼
+
+   INSERT INTO inba_t VALUES(l_inba.*)
+   
+   IF SQLCA.sqlcode THEN
+     INITIALIZE g_errparam TO NULL
+     LET g_errparam.code = SQLCA.sqlcode
+     LET g_errparam.extend = 'ins inba'
+     LET g_errparam.popup = TRUE
+     CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+#再插各个单身  #取sfjc没错，是SA要求的
+   DECLARE asrt339_01_sel_sfjc_cs CURSOR FOR
+      SELECT * FROM sfjc_t
+       WHERE sfjcent   = g_enterprise
+         AND sfjcsite  = g_site
+         AND sfjcdocno = g_sfjadocno
+         AND sfjc010   = '2'
+         
+   FOREACH asrt339_01_sel_sfjc_cs INTO l_sfjc.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      LET l_inbb.inbbent   = l_sfjc.sfjcent                                  #企業編號        
+      LET l_inbb.inbbsite  = l_sfjc.sfjcsite                                 #營運據點        
+      LET l_inbb.inbbdocno = g_inba_m.inbadocno                              #單據編號        
+      LET l_inbb.inbbseq   = l_sfjc.sfjcseq                                  #項次            
+      LET l_inbb.inbb001   = l_sfjc.sfjc003                                  #料件編號        
+      LET l_inbb.inbb002   = l_sfjc.sfjc004                                  #產品特徵        
+      LET l_inbb.inbb003   = l_sfjc.sfjc014                                  #庫存管理特徵    
+      LET l_inbb.inbb004   = ''                                              #包裝容器編號    
+      LET l_inbb.inbb007   = l_sfjc.sfjc011                                  #庫位            
+      LET l_inbb.inbb008   = l_sfjc.sfjc012                                  #限定儲位        
+      LET l_inbb.inbb009   = l_sfjc.sfjc013                                  #限定批號        
+      LET l_inbb.inbb010   = l_sfjc.sfjc005                                  #交易單位        
+      LET l_inbb.inbb011   = l_sfjc.sfjc006                                  #申請數量        
+      LET l_inbb.inbb012   = l_sfjc.sfjc006                                  #實際異動數量    
+      LET l_inbb.inbb013   = l_sfjc.sfjc007                                  #參考單位        
+      LET l_inbb.inbb014   = l_sfjc.sfjc008                                  #參考單位申請數量
+      LET l_inbb.inbb015   = l_sfjc.sfjc008                                  #參考單位實際數量
+      LET l_inbb.inbb016   = l_sfjc.sfjc009                                  #理由碼          
+      LET l_inbb.inbb017   = l_sfja.sfjadocno                                #來源單號        
+      LET l_inbb.inbb018   = 'N'                                             #檢驗否          
+      LET l_inbb.inbb020   = ''                                              #單據備註        
+      LET l_inbb.inbb021   = ''                                              #存貨備註        
+      LET l_inbb.inbb022   = ''                                              #有效日期  
+
+      INSERT INTO inbb_t VALUES(l_inbb.*)
+      
+      IF SQLCA.sqlcode THEN
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.code = SQLCA.sqlcode
+        LET g_errparam.extend = 'ins inbb'
+        LET g_errparam.popup = TRUE
+        CALL cl_err()
+      
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+#再插单身对应的批序号
+      LET l_success = '' 
+      LET l_imaf071 = ''
+      LET l_imaf081 = '' 
+      SELECT imaf071,imaf081 INTO l_imaf071,l_imaf081 FROM imaf_t
+       WHERE imafent  = g_enterprise
+         AND imafsite = g_site
+         AND imaf001  = l_inbb.inbb001
+         
+      IF l_imaf071 = '1' OR l_imaf081 = '1' THEN   #参考aimm212，制造批序号管理            
+         CALL s_lot_ins(g_site,l_inba.inbadocno,l_inbb.inbbseq,'0',l_inbb.inbb001,l_inbb.inbb002,l_inbb.inbb010,l_inbb.inbb011,'1',l_inba.inba003,'2',g_site,l_inba.inba007,l_inba.inba008,l_inba.inba009,l_inbb.inbb003) #160905-00007#15 by 08172 库存管理特征 
+              RETURNING l_success,l_amount
+         IF NOT l_success THEN
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+      END IF
+   END FOREACH
+   CLOSE asrt339_01_sel_sfjc_cs
+   FREE asrt339_01_sel_sfjc_cs
+
+ 
+   DECLARE asrt339_01_sel_sfjc_cs1 CURSOR FOR
+      SELECT * FROM sfjc_t
+       WHERE sfjcent   = g_enterprise
+         AND sfjcsite  = g_site
+         AND sfjcdocno = g_sfjadocno
+         AND sfjc010   = '2'
+         
+   FOREACH asrt339_01_sel_sfjc_cs1 INTO l_sfjc.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      LET l_inbc.inbcent   = l_sfjc.sfjcent                                  #企業編號        
+      LET l_inbc.inbcsite  = l_sfjc.sfjcsite                                 #營運據點        
+      LET l_inbc.inbcdocno = g_inba_m.inbadocno                              #單據編號        
+      LET l_inbc.inbcseq   = l_sfjc.sfjcseq                                  #項次 
+      LET l_inbc.inbcseq1  = l_sfjc.sfjcseq1                                 #項序       
+      LET l_inbc.inbc001   = l_sfjc.sfjc003                                  #料件編號        
+      LET l_inbc.inbc002   = l_sfjc.sfjc004                                  #產品特徵        
+      LET l_inbc.inbc003   = l_sfjc.sfjc014                                  #庫存管理特徵    
+      LET l_inbc.inbc004   = ''                                              #包裝容器編號    
+      LET l_inbc.inbc005   = l_sfjc.sfjc011                                  #庫位            
+      LET l_inbc.inbc006   = l_sfjc.sfjc012                                  #儲位        
+      LET l_inbc.inbc007   = l_sfjc.sfjc013                                  #批號        
+      LET l_inbc.inbc009   = l_sfjc.sfjc005                                  #交易單位        
+      LET l_inbc.inbc010   = l_sfjc.sfjc006                                  #數量           
+      LET l_inbc.inbc011   = l_sfjc.sfjc007                                  #參考單位        
+      LET l_inbc.inbc015   = l_sfjc.sfjc008                                  #參考數量
+      LET l_inbc.inbc016   = ''                                              #有效日期
+      LET l_inbc.inbc017   = ''                                              #存貨備註        
+
+      INSERT INTO inbc_t VALUES(l_inbc.*)
+      
+      IF SQLCA.sqlcode THEN
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.code = SQLCA.sqlcode
+        LET g_errparam.extend = 'ins inbc'
+        LET g_errparam.popup = TRUE
+        CALL cl_err()
+      
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END FOREACH
+   CLOSE asrt339_01_sel_sfjc_cs1
+   FREE asrt339_01_sel_sfjc_cs1 
+   
+   RETURN r_success
+#inao的批序号资料进aint302去维护产生
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asrt339_01_ins_sfda()
+   DEFINE l_sfda      RECORD LIKE sfda_t.*
+   DEFINE l_sfdc      RECORD LIKE sfdc_t.*
+   DEFINE l_sfdd      RECORD LIKE sfdd_t.*
+   DEFINE l_sfde      RECORD LIKE sfde_t.*
+   DEFINE l_sfdf      RECORD LIKE sfdf_t.*
+   DEFINE l_sfja      RECORD LIKE sfja_t.*
+   DEFINE l_sfjb      RECORD LIKE sfjb_t.*
+   DEFINE l_sfjc      RECORD LIKE sfjc_t.*
+   DEFINE r_success   LIKE type_t.num5
+   
+   LET r_success = TRUE
+   #检查事务中
+   IF NOT s_transaction_chk('Y',1) THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   INITIALIZE l_sfja.* TO NULL
+   INITIALIZE l_sfjb.* TO NULL
+   INITIALIZE l_sfjc.* TO NULL
+   INITIALIZE l_sfda.* TO NULL
+   INITIALIZE l_sfdc.* TO NULL
+   INITIALIZE l_sfdd.* TO NULL
+   INITIALIZE l_sfde.* TO NULL
+   INITIALIZE l_sfdf.* TO NULL
+   
+
+#先插单头
+   SELECT * INTO l_sfja.* 
+     FROM sfja_t
+    WHERE sfjaent   = g_enterprise
+      AND sfjasite  = g_site
+      AND sfjadocno = g_sfjadocno
+      
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'sel sfja_t'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   LET l_sfda.sfdaent   = l_sfja.sfjaent             #企業編號    
+   LET l_sfda.sfdasite  = l_sfja.sfjasite            #營運據點    
+   LET l_sfda.sfdadocno = g_inba_m.sfdadocno         #發退料單號  
+   LET l_sfda.sfdadocdt = g_today                    #單據日期    
+   LET l_sfda.sfda001   = ''                         #過帳日期    
+   LET l_sfda.sfda002   = '23'                       #發退料類別  
+   LET l_sfda.sfda003   = g_dept                     #生產部門    
+   LET l_sfda.sfda004   = g_user                     #申請人      
+   LET l_sfda.sfda005   = ''                         #PBI編號     
+   LET l_sfda.sfda006   = ''                         #生產料號    
+   LET l_sfda.sfda007   = ''                         #BOM特性     
+   LET l_sfda.sfda008   = ''                         #產品特徵    
+   LET l_sfda.sfda009   = ''                         #生產控制組  
+   LET l_sfda.sfda010   = ''                         #作業編號    
+   LET l_sfda.sfda011   = ''                         #作業序      
+   LET l_sfda.sfda012   = ''                         #庫位        
+   LET l_sfda.sfda013   = ''                         #套數        
+   LET l_sfda.sfda014   = l_sfja.sfjadocno           #來源單號    
+   LET l_sfda.sfda015   = '04'                       #來源類型    
+   LET l_sfda.sfdaownid = g_user                     #資料所有者  
+   LET l_sfda.sfdaowndp = g_dept                     #資料所屬部門
+   LET l_sfda.sfdacrtid = g_user                     #資料建立者  
+   LET l_sfda.sfdacrtdp = g_dept                     #資料建立部門
+   LET l_sfda.sfdacrtdt = g_today                    #資料創建日  
+   LET l_sfda.sfdamodid = ''                         #資料修改者
+   LET l_sfda.sfdamoddt = ''                         #最近修改日
+   LET l_sfda.sfdacnfid = ''                         #資料確認者
+   LET l_sfda.sfdacnfdt = ''                         #資料確認日
+   LET l_sfda.sfdapstid = ''                         #資料過帳者
+   LET l_sfda.sfdapstdt = ''                         #資料過帳日
+   LET l_sfda.sfdastus  = 'N'                        #狀態碼      
+
+   INSERT INTO sfda_t VALUES(l_sfda.*)
+   
+   IF SQLCA.sqlcode THEN
+     INITIALIZE g_errparam TO NULL
+     LET g_errparam.code = SQLCA.sqlcode
+     LET g_errparam.extend = 'ins sfda'
+     LET g_errparam.popup = TRUE
+     CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+#再插各个单身
+#取sfjc没错，是SA要求的
+   DECLARE asrt339_01_sel_sfjc_cs2 CURSOR FOR
+      SELECT * FROM sfjc_t
+       WHERE sfjcent   = g_enterprise
+         AND sfjcsite  = g_site
+         AND sfjcdocno = g_sfjadocno
+         AND sfjc010   = '3'
+         
+
+   FOREACH asrt339_01_sel_sfjc_cs2 INTO l_sfjc.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      
+      LET l_sfdc.sfdcent   = l_sfjc.sfjcent           #企業編號        
+      LET l_sfdc.sfdcsite  = l_sfjc.sfjcsite          #營運據點        
+      LET l_sfdc.sfdcdocno = g_inba_m.sfdadocno       #發退料單號      
+      LET l_sfdc.sfdcseq   = l_sfjc.sfjcseq           #項次            
+      LET l_sfdc.sfdc001   = l_sfjc.sfjc001           #工單單號        
+      LET l_sfdc.sfdc002   = l_sfjc.sfjc002           #工單項次        
+      LET l_sfdc.sfdc003   = l_sfjc.sfjc015           #工單項序        
+      LET l_sfdc.sfdc004   = l_sfjc.sfjc003           #需求料號        
+      LET l_sfdc.sfdc005   = l_sfjc.sfjc004           #特徵            
+      LET l_sfdc.sfdc006   = l_sfjc.sfjc005           #單位            
+      LET l_sfdc.sfdc007   = l_sfjc.sfjc006           #申請數量        
+      LET l_sfdc.sfdc008   = l_sfjc.sfjc006           #實際數量        
+      LET l_sfdc.sfdc009   = l_sfjc.sfjc007           #參考單位        
+      LET l_sfdc.sfdc010   = l_sfjc.sfjc008           #參考單位需求數量
+      LET l_sfdc.sfdc011   = l_sfjc.sfjc008           #參考單位實際數量
+      LET l_sfdc.sfdc012   = l_sfjc.sfjc011           #指定庫位        
+      LET l_sfdc.sfdc013   = l_sfjc.sfjc012           #指定儲位        
+      LET l_sfdc.sfdc014   = l_sfjc.sfjc013           #指定批號        
+      LET l_sfdc.sfdc015   = l_sfjc.sfjc009           #理由碼          
+      LET l_sfdc.sfdc016   = l_sfjc.sfjc014           #庫存管理特徴    
+      LET l_sfdc.sfdc017   = '1'                      #正負            
+      
+      INSERT INTO sfdc_t VALUES(l_sfdc.*)
+      
+      IF SQLCA.sqlcode THEN
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.code = SQLCA.sqlcode
+        LET g_errparam.extend = 'ins sfdc'
+        LET g_errparam.popup = TRUE
+        CALL cl_err()
+      
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END FOREACH
+   CLOSE asrt339_01_sel_sfjc_cs2
+   FREE asrt339_01_sel_sfjc_cs2
+   
+#sfdd对应sfjc
+   DECLARE asrt339_01_sel_sfjc_cs3 CURSOR FOR
+      SELECT * FROM sfjc_t
+       WHERE sfjcent   = g_enterprise
+         AND sfjcsite  = g_site
+         AND sfjcdocno = g_sfjadocno
+         AND sfjc010   = '3'
+         
+   FOREACH asrt339_01_sel_sfjc_cs3 INTO l_sfjc.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      LET l_sfdd.sfddent   = l_sfjc.sfjcent             #企業編號    
+      LET l_sfdd.sfddsite  = l_sfjc.sfjcsite            #營運據點    
+      LET l_sfdd.sfdddocno = g_inba_m.sfdadocno         #發退料單號  
+      LET l_sfdd.sfddseq   = l_sfjc.sfjcseq             #項次        
+      LET l_sfdd.sfddseq1  = l_sfjc.sfjcseq1            #項序        
+      LET l_sfdd.sfdd001   = l_sfjc.sfjc003             #發退料料號  
+      LET l_sfdd.sfdd002   = '1'                        #替代率      
+      LET l_sfdd.sfdd003   = l_sfjc.sfjc011             #庫位        
+      LET l_sfdd.sfdd004   = l_sfjc.sfjc012             #儲位        
+      LET l_sfdd.sfdd005   = l_sfjc.sfjc013             #批號        
+      LET l_sfdd.sfdd006   = l_sfjc.sfjc005             #單位        
+      LET l_sfdd.sfdd007   = l_sfjc.sfjc006             #數量        
+      LET l_sfdd.sfdd008   = l_sfjc.sfjc007             #參考單位    
+      LET l_sfdd.sfdd009   = l_sfjc.sfjc008             #參考單位數量
+      LET l_sfdd.sfdd010   = l_sfjc.sfjc014             #庫存管理特徵
+      LET l_sfdd.sfdd011   = ''                         #包裝容器    
+      LET l_sfdd.sfdd012   = '1'                        #正負 
+      LET l_sfdd.sfdd013   = l_sfjc.sfjc004             #产品特征
+
+      INSERT INTO sfdd_t VALUES(l_sfdd.*)
+      
+      IF SQLCA.sqlcode THEN
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.code = SQLCA.sqlcode
+        LET g_errparam.extend = 'ins sfdd'
+        LET g_errparam.popup = TRUE
+        CALL cl_err()
+      
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END FOREACH
+   CLOSE asrt339_01_sel_sfjc_cs3
+   FREE asrt339_01_sel_sfjc_cs3  
+
+#sfde是需求汇总档，根据sfdc汇总 group by 料号，特征，单位，参考单位
+   DECLARE asrt339_01_sel_sfdc_cs CURSOR FOR
+      SELECT DISTINCT sfdcent,sfdcsite,sfdcdocno,'0',sfdc004,sfdc005,sfdc006,SUM(sfdc007),SUM(sfdc008),sfdc009,SUM(sfdc010),SUM(sfdc011),'',sfdc017 
+        FROM sfdc_t,sfda_t
+       WHERE sfdaent   = g_enterprise
+         AND sfdasite  = g_site
+         AND sfdadocno = g_inba_m.sfdadocno
+         AND sfdcent   = sfdaent
+         AND sfdcsite  = sfdasite
+         AND sfdcdocno = sfdadocno
+         GROUP BY sfdcent,sfdcsite,sfdcdocno,sfdc004,sfdc005,sfdc006,sfdc009,sfdc017         
+
+   FOREACH asrt339_01_sel_sfdc_cs INTO l_sfde.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+        
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+
+
+      SELECT MAX(sfdeseq)+1 
+        INTO l_sfde.sfdeseq
+        FROM sfde_t
+       WHERE sfdeent   = g_enterprise
+         AND sfdesite  = g_site
+         AND sfdedocno = g_inba_m.sfdadocno 
+         
+      IF l_sfde.sfdeseq IS NULL OR l_sfde.sfdeseq = 0 THEN
+         LET l_sfde.sfdeseq = 1
+      END IF      
+          
+      INSERT INTO sfde_t VALUES(l_sfde.*)
+      
+      IF SQLCA.sqlcode THEN
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.code = SQLCA.sqlcode
+        LET g_errparam.extend = 'ins sfde'
+        LET g_errparam.popup = TRUE
+        CALL cl_err()
+      
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END FOREACH
+   CLOSE asrt339_01_sel_sfdc_cs
+   FREE asrt339_01_sel_sfdc_cs       
+      
+#sfdf是明细汇总档，根据sfdd汇总 group by 料号，特征，单位，参考单位，仓储批
+   DECLARE asrt339_01_sel_sfdd_cs CURSOR FOR
+      SELECT DISTINCT sfddent,sfddsite,sfdddocno,sfddseq,'0',sfdd001,sfdd002,
+                      sfdd003,sfdd004,sfdd005,sfdd006,SUM(sfdd007),sfdd008,SUM(sfdd009),sfdd010,sfdd011,sfdd012,sfdd013 
+        FROM sfdd_t,sfda_t
+       WHERE sfdaent   = g_enterprise
+         AND sfdasite  = g_site
+         AND sfdadocno = g_inba_m.sfdadocno
+         AND sfddent   = sfdaent
+         AND sfddsite  = sfdasite
+         AND sfdddocno = sfdadocno
+         GROUP BY sfddent,sfddsite,sfdddocno,sfddseq,sfdd001,sfdd002,sfdd003,
+                      sfdd004,sfdd005,sfdd006,sfdd008,sfdd010,sfdd011,sfdd012,sfdd013        
+
+   FOREACH asrt339_01_sel_sfdd_cs INTO l_sfdf.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      
+      SELECT MAX(sfdfseq1)+1 
+        INTO l_sfdf.sfdfseq1
+        FROM sfdf_t
+       WHERE sfdfent   = g_enterprise
+         AND sfdfsite  = g_site
+         AND sfdfdocno = g_inba_m.sfdadocno
+         AND sfdfseq   = l_sfdf.sfdfseq         
+         
+      IF l_sfdf.sfdfseq1 IS NULL OR l_sfdf.sfdfseq1 = 0 THEN
+         LET l_sfdf.sfdfseq1 = 1
+      END IF  
+      
+      INSERT INTO sfdf_t VALUES(l_sfdf.*)
+      
+      IF SQLCA.sqlcode THEN
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.code = SQLCA.sqlcode
+        LET g_errparam.extend = 'ins sfdf'
+        LET g_errparam.popup = TRUE
+        CALL cl_err()
+      
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END FOREACH
+   CLOSE asrt339_01_sel_sfdd_cs
+   FREE asrt339_01_sel_sfdd_cs 
+
+   RETURN r_success
+END FUNCTION
+
+ 
+{</section>}
+ 

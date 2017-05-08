@@ -1,0 +1,127 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axci950" module="axc" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02040" crtdt="2015-12-07 13:45:37" modid="00768" moddt="2016-06-16 18:38:45" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="內部損益計算基礎設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcja001,xcjal003,xcja002,xcja008,xcja005,xcja003,xcja009,xcja009_desc(chr500),xcja004,xcja011,xcja006,xcja006_desc(chr500),xcja007,xcja007_desc(chr500),xcja010,xcjastus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcja001,xcja001_2_desc(chr500),xcjaownid,xcjaownid_desc(chr500),xcjaowndp,xcjaowndp_desc(chr500),xcjacrtid,xcjacrtid_desc(chr500),xcjacrtdp,xcjacrtdp_desc(chr500),xcjacrtdt,xcjamodid,xcjamodid_desc(chr500),xcjamoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axci950" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="xcja001,xcjal003,xcja002,xcja008,xcja005,xcja003,xcja009,xcja004,xcja011,xcja006,xcja007,xcja010,xcjastus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="xcja001,xcjal003,xcja002,xcja008,xcja005,xcja003,xcja009,xcja004,xcja011,xcja006,xcja007,xcja010,xcjastus"/>
+      <construct id="body" page="2" field="xcjaownid,xcjaowndp,xcjacrtid,xcjacrtdp,xcjacrtdt,xcjamodid,xcjamoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcja001"/>
+      <column id="xcjal003"/>
+      <column id="xcja002" type="S" default="N"/>
+      <column id="xcja008" type="S" default="1" def_scc="4071"/>
+      <column id="xcja005" type="S" default="1" def_scc="4070"/>
+      <column id="xcja003" type="S" default="1" def_scc="4068"/>
+      <column id="xcja009">
+        <after>
+          <reference field="xcja009_desc" ref_field="xcja_t.xcja009" map_field="xcja009" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcja009_desc"/>
+      <column id="xcja004" type="S" default="1" def_scc="4069"/>
+      <column id="xcja011" type="S" default="1"/>
+      <column id="xcja006">
+        <after>
+          <check chkid="v_ooaj002" id="isExist"/>
+          <reference field="xcja006_desc" ref_field="xcja_t.xcja006" map_field="xcja006" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooaj002_2" state="i"/>
+        <controlp form="q_ooaj002_1" state="c"/>
+      </column>
+      <column id="xcja006_desc"/>
+      <column id="xcja007">
+        <after>
+          <check chkid="v_ooeg001_5" id="isExist"/>
+          <reference field="xcja007_desc" ref_field="xcja_t.xcja007" map_field="xcja007" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_4" state="i"/>
+        <controlp form="q_ooeg001_4" state="c"/>
+      </column>
+      <column id="xcja007_desc"/>
+      <column id="xcja010" type="S" default="N"/>
+      <column id="xcjastus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="xcja001_2_desc"/>
+      <column id="xcjaownid">
+        <after>
+          <reference field="xcjaownid_desc" ref_field="xcja_t.xcjaownid" map_field="xcjaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcjaownid_desc"/>
+      <column id="xcjaowndp">
+        <after>
+          <reference field="xcjaowndp_desc" ref_field="xcja_t.xcjaowndp" map_field="xcjaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcjaowndp_desc"/>
+      <column id="xcjacrtid">
+        <after>
+          <reference field="xcjacrtid_desc" ref_field="xcja_t.xcjacrtid" map_field="xcjacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcjacrtid_desc"/>
+      <column id="xcjacrtdp">
+        <after>
+          <reference field="xcjacrtdp_desc" ref_field="xcja_t.xcjacrtdp" map_field="xcjacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcjacrtdp_desc"/>
+      <column id="xcjacrtdt"/>
+      <column id="xcjamodid">
+        <after>
+          <reference field="xcjamodid_desc" ref_field="xcja_t.xcjamodid" map_field="xcjamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcjamodid_desc"/>
+      <column id="xcjamoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="xcja_t" page="1,2" linked="" pk="xcja001">
+      <sql id="forupd_sql_detail" query="SELECT xcja001,&apos;&apos;,xcja002,xcja008,xcja005,xcja003,xcja009,&apos;&apos;,xcja004,xcja011,xcja006,&apos;&apos;,xcja007,&apos;&apos;,xcja010,xcjastus,&apos;&apos;,&apos;&apos;,xcjaownid,&apos;&apos;,xcjaowndp,&apos;&apos;,xcjacrtid,&apos;&apos;,xcjacrtdp,&apos;&apos;,xcjacrtdt,xcjamodid,&apos;&apos;,xcjamoddt FROM xcja_t WHERE xcjaent=? AND xcja001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcja001,&apos;&apos;,xcja002,xcja008,xcja005,xcja003,xcja009,&apos;&apos;,xcja004,xcja011,xcja006,&apos;&apos;,xcja007,&apos;&apos;,xcja010,xcjastus,&apos;&apos;,&apos;&apos;,xcjaownid,&apos;&apos;,xcjaowndp,&apos;&apos;,xcjacrtid,&apos;&apos;,xcjacrtdp,&apos;&apos;,xcjacrtdt,xcjamodid,&apos;&apos;,xcjamoddt FROM xcja_t WHERE xcjaent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="xcjal_t.xcjal003" table="xcjal_t" fk="xcja001" pk="xcjal001,xcjal002" field="xcjal003"/>
+    </body>
+  </dataset>
+</assembly>
+

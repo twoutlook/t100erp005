@@ -1,0 +1,266 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="acrt410" module="acr" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="03247" crtdt="2014-04-21 09:56:20" modid="06189" moddt="2015-04-29 17:23:44" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="客訴單資料記錄維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="crbasite,crbasite_desc(chr80),crbadocdt,crbadocno,crba004,crba005,crba001,crba001_desc(chr80),crba002,crba002_desc(chr80),crbastus,crba026,crba006,crba007,crba008,crba014,crba015,crba011,crba012,crba013,crba009,crba010,crba003,crba003_desc(chr80),crba016,crba017,imaal004(chr500),crba018,crba018_desc(chr80),crba019,crba020,crba021,crba022,crba023,crba024,crba025,crbaownid,crbaownid_desc(chr80),crbaowndp,crbaowndp_desc(chr80),crbacrtid,crbacrtid_desc(chr80),crbacrtdp,crbacrtdp_desc(chr80),crbacrtdt,crbamodid,crbamodid_desc(chr80),crbamoddt,crbacnfid,crbacnfid_desc(chr80),crbacnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="crbbseq,crbb001,crbb002,crbbsite"/>
+      <var id="bs_field" value="crbasite,crbasite_desc(chr80),crbadocdt,crbadocno,crba004,crba005,crba001,crba001_desc(chr80),crba002,crba002_desc(chr80)" pk="crbadocno" order=""/>
+      <bs_reference field="crbasite_desc" ref_field="crbasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="crba001_desc" ref_field="crba001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="crba002_desc" ref_field="crba002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="closed"/>
+      <action id="confirm_record"/>
+      <action id="modify" type="standard"/>
+      <action id="result"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="audit"/>
+      <action id="method"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="remarks"/>
+      <action id="query" type="standard"/>
+      <action id="reason"/>
+      <action id="prog_crba001" prog="cl_user_contact(&quot;aooi130&quot;," parameter="&quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;)"/>
+      <action id="prog_crba026" prog="artt600" parameter="crba026"/>
+      <action id="prog_crba006" prog="artt600" parameter="crba006"/>
+      <action id="prog_crba015" prog="artt600" parameter="crba015"/>
+    </section>
+  </structure>
+  <form id="0" module="acr" filename="acrt410" method="dialog">
+    <section id="input">
+      <input id="head" field="crbasite,crbadocdt,crbadocno,crba004,crba005,crba001,crba002,crbastus,crba026,crba006,crba007,crba008,crba014,crba015,crba011,crba012,crba013,crba009,crba010,crba003,crba016,crba017,crba018,crba019,crba020,crba021,crba022,crba023,crba024,crba025"/>
+      <input id="body" page="1" field="crbbseq,crbb001,crbb002,crbbsite" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="crbasite,crbadocdt,crbadocno,crba004,crba005,crba001,crba002,crbastus,crba026,crba006,crba007,crba008,crba014,crba015,crba011,crba012,crba013,crba009,crba010,crba003,crba016,crba017,crba018,crba019,crba020,crba021,crba022,crba023,crba024,crba025,crbaownid,crbaowndp,crbacrtid,crbacrtdp,crbacrtdt,crbamodid,crbamoddt,crbacnfid,crbacnfdt"/>
+      <construct id="body" page="1" field="crbbseq,crbb001,crbb002,crbbsite"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="crbadocno"/>
+      <set id="head" type="no_entry" field="crbadocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="crbasite">
+        <after>
+          <check chkid="v_ooed004" id="isExist"/>
+          <reference field="crbasite_desc" ref_field="crba_t.crbasite" map_field="crbasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="crbasite_desc"/>
+      <column id="crbadocdt"/>
+      <column id="crbadocno">
+        <after>
+          <check chkid="v_ooba002" id="isExist"/>
+        </after>
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_crbadocno" state="c"/>
+      </column>
+      <column id="crba004"/>
+      <column id="crba005"/>
+      <column id="crba001">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="crba001_desc" ref_field="crba_t.crba001" map_field="crba001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_6" state="i"/>
+        <controlp form="q_ooag001_6" state="c"/>
+      </column>
+      <column id="crba001_desc"/>
+      <column id="crba002">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="crba002_desc" ref_field="crba_t.crba002" map_field="crba002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="crba002_desc"/>
+      <column id="crbastus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="C" pic="closed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="crba026">
+        <controlp form="q_crba026" state="i"/>
+        <controlp form="q_crba026" state="c"/>
+      </column>
+      <column id="crba006">
+        <controlp form="q_crba026" state="i"/>
+        <controlp form="q_crba026" state="c"/>
+      </column>
+      <column id="crba007"/>
+      <column id="crba008"/>
+      <column id="crba014"/>
+      <column id="crba015">
+        <controlp form="q_crba015" state="i"/>
+        <controlp form="q_crba015" state="c"/>
+      </column>
+      <column id="crba011">
+        <after>
+          <check chkid="v_mmaq001" id="isExist"/>
+        </after>
+        <controlp form="q_mmaq001_2" state="i"/>
+        <controlp form="q_mmaq001_2" state="c"/>
+      </column>
+      <column id="crba012">
+        <after>
+          <check chkid="v_mmaf001" id="isExist"/>
+        </after>
+        <controlp form="q_mmaf001" state="i"/>
+        <controlp form="q_mmaf001" state="c"/>
+      </column>
+      <column id="crba013"/>
+      <column id="crba009">
+        <after>
+          <check chkid="v_pmaa001_3" id="isExist"/>
+        </after>
+        <controlp form="q_pmaa001_13" state="i"/>
+        <controlp form="q_pmaa001_13" state="c"/>
+      </column>
+      <column id="crba010"/>
+      <column id="crba003">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="crba003_desc" ref_field="crba_t.crba003" map_field="crba003" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_6" state="i"/>
+        <controlp form="q_ooag001_6" state="c"/>
+      </column>
+      <column id="crba003_desc"/>
+      <column id="crba016">
+        <after>
+          <check chkid="v_imaa001" id="isExist"/>
+        </after>
+        <controlp form="q_imaa001" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="crba017"/>
+      <column id="imaal004"/>
+      <column id="crba018">
+        <after>
+          <check chkid="v_ooai001" id="isExist"/>
+          <reference field="crba018_desc" ref_field="crba_t.crba018" map_field="crba018" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooai001_1" state="i"/>
+        <controlp form="q_ooai001_1" state="c"/>
+      </column>
+      <column id="crba018_desc"/>
+      <column id="crba019" type="S" default="1">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="crba020" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="crba021" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="crba022" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="crba023" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="crba024" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="crba025" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="crbaownid">
+        <after>
+          <reference field="crbaownid_desc" ref_field="crba_t.crbaownid" map_field="crbaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="crbaownid_desc"/>
+      <column id="crbaowndp">
+        <after>
+          <reference field="crbaowndp_desc" ref_field="crba_t.crbaowndp" map_field="crbaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="crbaowndp_desc"/>
+      <column id="crbacrtid">
+        <after>
+          <reference field="crbacrtid_desc" ref_field="crba_t.crbacrtid" map_field="crbacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="crbacrtid_desc"/>
+      <column id="crbacrtdp">
+        <after>
+          <reference field="crbacrtdp_desc" ref_field="crba_t.crbacrtdp" map_field="crbacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="crbacrtdp_desc"/>
+      <column id="crbacrtdt"/>
+      <column id="crbamodid">
+        <after>
+          <reference field="crbamodid_desc" ref_field="crba_t.crbamodid" map_field="crbamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="crbamodid_desc"/>
+      <column id="crbamoddt"/>
+      <column id="crbacnfid">
+        <after>
+          <reference field="crbacnfid_desc" ref_field="crba_t.crbacnfid" map_field="crbacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="crbacnfid_desc"/>
+      <column id="crbacnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="crbbseq">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="crbb001"/>
+      <column id="crbb002"/>
+      <column id="crbbsite"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="crba_t" pk="crbadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT crbasite,&apos;&apos;,crbadocdt,crbadocno,crba004,crba005,crba001,&apos;&apos;,crba002,&apos;&apos;,crbastus,crba026,crba006,crba007,crba008,crba014,crba015,crba011,crba012,crba013,crba009,crba010,crba003,&apos;&apos;,crba016,crba017,&apos;&apos;,crba018,&apos;&apos;,crba019,crba020,crba021,crba022,crba023,crba024,crba025,crbaownid,&apos;&apos;,crbaowndp,&apos;&apos;,crbacrtid,&apos;&apos;,crbacrtdp,&apos;&apos;,crbacrtdt,crbamodid,&apos;&apos;,crbamoddt,crbacnfid,&apos;&apos;,crbacnfdt FROM crba_t WHERE crbaent= ? AND crbadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT crbasite,&apos;&apos;,crbadocdt,crbadocno,crba004,crba005,crba001,&apos;&apos;,crba002,&apos;&apos;,crbastus,crba026,crba006,crba007,crba008,crba014,crba015,crba011,crba012,crba013,crba009,crba010,crba003,&apos;&apos;,crba016,crba017,&apos;&apos;,crba018,&apos;&apos;,crba019,crba020,crba021,crba022,crba023,crba024,crba025,crbaownid,&apos;&apos;,crbaowndp,&apos;&apos;,crbacrtid,&apos;&apos;,crbacrtdp,&apos;&apos;,crbacrtdt,crbamodid,&apos;&apos;,crbamoddt,crbacnfid,&apos;&apos;,crbacnfdt FROM crba_t" order="crbadocno"/>
+    </head>
+    <body id="crbb_t" page="1" linked="" pk="crbbseq" fk="crbbdocno">
+      <sql id="forupd_sql_detail" query="SELECT crbbseq,crbb001,crbb002,crbbsite FROM crbb_t WHERE crbbent=? AND crbbdocno=? AND crbbseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT crbbseq,crbb001,crbb002,crbbsite FROM crbb_t WHERE crbbent=? AND crbbdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asft300_03" module="asf" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="01258" crtdt="2014-01-06 09:58:42" modid="01258" moddt="2014-01-07 19:15:08" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="SET替代">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="check(chr1),check1(chr1),bmga003,bmga003_desc(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="asf" filename="asft300_03" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="check,check1,bmga003" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="check" type="S" default="N"/>
+      <column id="check1" type="S" default="N"/>
+      <column id="bmga003">
+        <after>
+          <reference field="bmga003_desc" ref_field="bmga_t.bmga003" map_field="bmga003" ref_sql="SELECT bmgal005 FROM bmgal_t WHERE bmgalent=$varg_enterprise$var AND bmgal003=? AND bmgal004=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="bmga003_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="bmga_t" page="1" linked="" pk="bmga001,bmga002,bmga003">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,&apos;&apos;,bmga003,&apos;&apos; FROM bmga_t WHERE bmgaent=? AND bmgasite=? AND bmga001=? AND bmga002=? AND bmga003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,bmga003,&apos;&apos; FROM bmga_t WHERE bmgaent= ? AND bmgasite= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,367 @@
+{<section id="afaq153_x01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:1(2016-11-18 19:42:28), PR版次:
+#+ Customerized Version.: SD版次:(), PR版次:
+#+ Build......: 000000
+#+ Filename...: afaq153_x01
+#+ Description: ...
+#+ Creator....: 07900(2016-11-02 09:45:54)
+#+ Modifier...: 07900 -SD/PR-
+{</section>}
+
+
+
+{<section id="afaq153_x01.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:8)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #where condition 
+       a1 STRING,                  #temp table 
+       a2 LIKE glaa_t.glaa015,         #启用本位币二 
+       a3 LIKE glaa_t.glaa019          #启用本位币三
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+{</section>}
+ 
+{<section id="afaq153_x01.main" readonly="Y" >}
+PUBLIC FUNCTION afaq153_x01(p_arg1,p_arg2,p_arg3,p_arg4)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition 
+DEFINE  p_arg2 STRING                  #tm.a1  temp table 
+DEFINE  p_arg3 LIKE glaa_t.glaa015         #tm.a2  启用本位币二 
+DEFINE  p_arg4 LIKE glaa_t.glaa019         #tm.a3  启用本位币三
+#add-point:init段define(客製用) name="component.define_customerization"
+{<point name="component.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+{<point name="component.define"/>}
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.a1 = p_arg2
+   LET tm.a2 = p_arg3
+   LET tm.a3 = p_arg4
+
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   {<point name="component.arg.prep" />}
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "afaq153_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL afaq153_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL afaq153_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL afaq153_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL afaq153_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL afaq153_x01_rep_data()
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="afaq153_x01.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION afaq153_x01_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   {<point name="create_tmp.before"/>}
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "l_y.type_t.chr500,faam001.faam_t.faam001,faam002.faam_t.faam002,faam000.faam_t.faam000,faam009.faam_t.faam009,l_faam009_desc.type_t.chr500,faah028.faah_t.faah028,l_faah028_desc.type_t.chr500,l_faah005.type_t.chr500,l_faah042.type_t.chr500,faah008.faah_t.faah008,l_faah008_desc.type_t.chr500,faah018.faah_t.faah018,faam014.faam_t.faam014,l_faam003_desc.type_t.chr500,l_faaj019.type_t.num20_6,l_faam007_desc.type_t.chr500,faam010.faam_t.faam010,l_faam010_desc.type_t.chr500,faam015.faam_t.faam015,faam013.faam_t.faam013,faah043.faah_t.faah043,faah044.faah_t.faah044,faam017.faam_t.faam017,faam103.faam_t.faam103,faam105.faam_t.faam105,faam104.faam_t.faam104,faam153.faam_t.faam153,faam155.faam_t.faam155,faam154.faam_t.faam154,faam024.faam_t.faam024,faamsite.faam_t.faamsite,l_faamsite.type_t.chr500,faamld.faam_t.faamld,l_faamld.type_t.chr500,faamcomp.faam_t.faamcomp,l_faamcomp.type_t.chr500,faam011.faam_t.faam011,faam004.faam_t.faam004,faam005.faam_t.faam005,l_faam004_1.type_t.num5,l_faam005_1.type_t.num5,l_faaj105.type_t.num20_6,l_faaj155.type_t.num20_6,faament.faam_t.faament" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   {<point name="create_tmp.after"/>}
+   #end add-point:create_tmp.after
+END FUNCTION
+{</section>}
+ 
+{<section id="afaq153_x01.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION afaq153_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+{<point name="ins_prep.define_customerization" edit="c" mark="Y"/>}
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+{<point name="ins_prep.define"/>}
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         {<point name="insert_prep"/>}
+         #end add-point                  
+
+
+      END CASE
+   END FOR
+END FUNCTION
+{</section>}
+ 
+{<section id="afaq153_x01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION afaq153_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+{<point name="sel_prep.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+{<point name="sel_prep.define"/>}
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   {<point name="sel_prep.before" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   {<point name="sel_prep.g_select" mark="Y"/>}
+   #end add-point
+   LET g_select = " SELECT NULL,faam001,faam002,faam000,faam009,NULL,faah028,NULL,NULL,NULL,faah008,NULL,faah018,faam014,NULL,NULL,NULL,faam010,NULL,faam015,faam013,faah043,faah044,faam017,faam103,faam105,faam104,faam153,faam155,faam154,faam024,faamsite,NULL,faamld,NULL,faamcomp,NULL,faam011,faam004,faam005,0,0,NULL,NULL,faament"
+ 
+   #add-point:sel_prep g_from name="sel_prep.g_from"
+   {<point name="sel_prep.g_from" mark="Y"/>}
+   #end add-point
+    LET g_from = " FROM faam_t,faah_t,faaj_t"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+   {<point name="sel_prep.g_where" mark="Y"/>}
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   {<point name="sel_prep.g_order" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   {<point name="sel_prep.sql.before" mark="Y"/>}
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("faam_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   {<point name="sel_prep.sql.after" mark="Y"/>}
+   #end add-point
+   PREPARE afaq153_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE afaq153_x01_curs CURSOR FOR afaq153_x01_prepare
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="afaq153_x01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION afaq153_x01_ins_data()
+DEFINE sr RECORD 
+   l_y LIKE type_t.chr500, 
+   faam001 LIKE faam_t.faam001, 
+   faam002 LIKE faam_t.faam002, 
+   faam000 LIKE faam_t.faam000, 
+   faam009 LIKE faam_t.faam009, 
+   l_faam009_desc LIKE type_t.chr500, 
+   faah028 LIKE faah_t.faah028, 
+   l_faah028_desc LIKE type_t.chr500, 
+   l_faah005 LIKE type_t.chr500, 
+   l_faah042 LIKE type_t.chr500, 
+   faah008 LIKE faah_t.faah008, 
+   l_faah008_desc LIKE type_t.chr500, 
+   faah018 LIKE faah_t.faah018, 
+   faam014 LIKE faam_t.faam014, 
+   l_faam003_desc LIKE type_t.chr500, 
+   l_faaj019 LIKE type_t.num20_6, 
+   l_faam007_desc LIKE type_t.chr500, 
+   faam010 LIKE faam_t.faam010, 
+   l_faam010_desc LIKE type_t.chr500, 
+   faam015 LIKE faam_t.faam015, 
+   faam013 LIKE faam_t.faam013, 
+   faah043 LIKE faah_t.faah043, 
+   faah044 LIKE faah_t.faah044, 
+   faam017 LIKE faam_t.faam017, 
+   faam103 LIKE faam_t.faam103, 
+   faam105 LIKE faam_t.faam105, 
+   faam104 LIKE faam_t.faam104, 
+   faam153 LIKE faam_t.faam153, 
+   faam155 LIKE faam_t.faam155, 
+   faam154 LIKE faam_t.faam154, 
+   faam024 LIKE faam_t.faam024, 
+   faamsite LIKE faam_t.faamsite, 
+   l_faamsite LIKE type_t.chr500, 
+   faamld LIKE faam_t.faamld, 
+   l_faamld LIKE type_t.chr500, 
+   faamcomp LIKE faam_t.faamcomp, 
+   l_faamcomp LIKE type_t.chr500, 
+   faam011 LIKE faam_t.faam011, 
+   faam004 LIKE faam_t.faam004, 
+   faam005 LIKE faam_t.faam005, 
+   l_faam004_1 LIKE type_t.num5, 
+   l_faam005_1 LIKE type_t.num5, 
+   l_faaj105 LIKE type_t.num20_6, 
+   l_faaj155 LIKE type_t.num20_6, 
+   faament LIKE faam_t.faament
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+{<point name="ins_data.define_customerization" edit="c" mark="Y"/>}
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+{<point name="ins_data.define"/>}
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    {<point name="ins_data.before"/>}
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH afaq153_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       {<point name="ins_data.foreach"/>}
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       {<point name="ins_data.before.save"/>}
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.l_y,sr.faam001,sr.faam002,sr.faam000,sr.faam009,sr.l_faam009_desc,sr.faah028,sr.l_faah028_desc,sr.l_faah005,sr.l_faah042,sr.faah008,sr.l_faah008_desc,sr.faah018,sr.faam014,sr.l_faam003_desc,sr.l_faaj019,sr.l_faam007_desc,sr.faam010,sr.l_faam010_desc,sr.faam015,sr.faam013,sr.faah043,sr.faah044,sr.faam017,sr.faam103,sr.faam105,sr.faam104,sr.faam153,sr.faam155,sr.faam154,sr.faam024,sr.faamsite,sr.l_faamsite,sr.faamld,sr.l_faamld,sr.faamcomp,sr.l_faamcomp,sr.faam011,sr.faam004,sr.faam005,sr.l_faam004_1,sr.l_faam005_1,sr.l_faaj105,sr.l_faaj155,sr.faament
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "afaq153_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       {<point name="ins_data.after.save"/>}
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    {<point name="ins_data.after"/>}
+    #end add-point
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="afaq153_x01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION afaq153_x01_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+{<point name="rep_data.define_customerization" edit="c" mark="Y"/>}
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+{<point name="rep_data.define"/>}
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    {<point name="rep_data.before"/>}
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    {<point name="rep_data.after"/>}
+    #end add-point:rep_data.after
+END FUNCTION
+{</section>}
+ 
+{<section id="afaq153_x01.other_function" readonly="Y" >} 
+{<point name="other.function"/>}
+{</section>}

@@ -1,0 +1,161 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adet401" module="ade" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02159" crtdt="2015-05-14 18:53:28" modid="02159" moddt="2015-05-15 18:21:07" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="營業款轉備用金維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="deabsite,deabsite_desc(chr80),deabdocdt,deabdocno,deab001,deab002,deab002_desc(chr80),deabunit(chr10),deabstus,deabownid,deabownid_desc(chr80),deabowndp,deabowndp_desc(chr80),deabcrtid,deabcrtid_desc(chr80),deabcrtdp,deabcrtdp_desc(chr80),deabcrtdt,deabmodid,deabmodid_desc(chr80),deabmoddt,deabcnfid,deabcnfid_desc(chr80),deabcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="deacseq,deac005,deac006,deac006_desc(chr500),deac007,deac002,deac004,deac002_desc(chr500),deac008,deacsite,deacunit,deac001"/>
+      <var id="bs_field" value="deabsite,deabdocdt,deabdocno,deab001,deab002" pk="deabdocno" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adet401" method="dialog">
+    <section id="input">
+      <input id="head" field="deabsite,deabdocdt,deabdocno,deab001,deab002,deabunit,deabstus"/>
+      <input id="body" page="1" field="deacseq,deac005,deac006,deac007,deac002,deac004,deac008,deacsite,deacunit,deac001" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="deabsite,deabdocdt,deabdocno,deab001,deab002,deabunit,deabstus,deabownid,deabowndp,deabcrtid,deabcrtdp,deabcrtdt,deabmodid,deabmoddt,deabcnfid,deabcnfdt"/>
+      <construct id="body" page="1" field="deacseq,deac005,deac006,deac007,deac002,deac004,deac008,deacsite,deacunit,deac001"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="deabdocno"/>
+      <set id="head" type="no_entry" field="deabdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="deabsite">
+        <after>
+          <reference field="deabsite_desc" ref_field="deab_t.deabsite" map_field="deabent,deabsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="deabsite_desc"/>
+      <column id="deabdocdt"/>
+      <column id="deabdocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_deabdocno" state="c"/>
+      </column>
+      <column id="deab001"/>
+      <column id="deab002">
+        <after>
+          <check chkid="v_ooag001_2" id="isExist"/>
+          <reference field="deab002_desc" ref_field="deab_t.deab002" map_field="deab002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_5" state="i"/>
+        <controlp form="q_ooag001_5" state="c"/>
+      </column>
+      <column id="deab002_desc"/>
+      <column id="deabunit"/>
+      <column id="deabstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="deabownid">
+        <after>
+          <reference field="deabownid_desc" ref_field="deab_t.deabownid" map_field="deabownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="deabownid_desc"/>
+      <column id="deabowndp">
+        <after>
+          <reference field="deabowndp_desc" ref_field="deab_t.deabowndp" map_field="deabowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="deabowndp_desc"/>
+      <column id="deabcrtid">
+        <after>
+          <reference field="deabcrtid_desc" ref_field="deab_t.deabcrtid" map_field="deabcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="deabcrtid_desc"/>
+      <column id="deabcrtdp">
+        <after>
+          <reference field="deabcrtdp_desc" ref_field="deab_t.deabcrtdp" map_field="deabcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="deabcrtdp_desc"/>
+      <column id="deabcrtdt"/>
+      <column id="deabmodid">
+        <after>
+          <reference field="deabmodid_desc" ref_field="deab_t.deabmodid" map_field="deabmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="deabmodid_desc"/>
+      <column id="deabmoddt"/>
+      <column id="deabcnfid">
+        <after>
+          <reference field="deabcnfid_desc" ref_field="deab_t.deabcnfid" map_field="deabcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="deabcnfid_desc"/>
+      <column id="deabcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="deacseq"/>
+      <column id="deac005"/>
+      <column id="deac006">
+        <after>
+          <check chkid="v_ooie001_2" id="isExist"/>
+          <reference field="deac006_desc" ref_field="deac_t.deac006" map_field="deacent,deac006" ref_sql="SELECT ooial003 FROM ooial_t WHERE ooialent=$varg_enterprise$var AND ooial001=? AND ooial002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooie001_4" state="i"/>
+        <controlp form="q_ooie001_2" state="c"/>
+      </column>
+      <column id="deac006_desc"/>
+      <column id="deac007" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="deac002">
+        <after>
+          <check chkid="v_nmas002_3" id="isExist"/>
+          <reference field="deac002_desc" ref_field="deac_t.deac002" map_field="deacent,deac002" ref_sql="SELECT nmaal003 FROM nmaal_t WHERE nmaalent=$varg_enterprise$var AND nmaal001=? AND nmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmas002" state="i"/>
+        <controlp form="q_nmas002" state="c"/>
+      </column>
+      <column id="deac004"/>
+      <column id="deac002_desc"/>
+      <column id="deac008"/>
+      <column id="deacsite"/>
+      <column id="deacunit"/>
+      <column id="deac001"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="deab_t" pk="deabdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT deabsite,&apos;&apos;,deabdocdt,deabdocno,deab001,deab002,&apos;&apos;,&apos;&apos;,deabstus,deabownid,&apos;&apos;,deabowndp,&apos;&apos;,deabcrtid,&apos;&apos;,deabcrtdp,&apos;&apos;,deabcrtdt,deabmodid,&apos;&apos;,deabmoddt,deabcnfid,&apos;&apos;,deabcnfdt FROM deab_t WHERE deabent= ? AND deabdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT deabsite,&apos;&apos;,deabdocdt,deabdocno,deab001,deab002,&apos;&apos;,&apos;&apos;,deabstus,deabownid,&apos;&apos;,deabowndp,&apos;&apos;,deabcrtid,&apos;&apos;,deabcrtdp,&apos;&apos;,deabcrtdt,deabmodid,&apos;&apos;,deabmoddt,deabcnfid,&apos;&apos;,deabcnfdt FROM deab_t" order="deabdocno"/>
+    </head>
+    <body id="deac_t" page="1" linked="" pk="deacseq" fk="deacdocno">
+      <sql id="forupd_sql_detail" query="SELECT deacseq,deac005,deac006,&apos;&apos;,deac007,deac002,deac004,&apos;&apos;,deac008,deacsite,deacunit,deac001 FROM deac_t WHERE deacent=? AND deacdocno=? AND deacseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT deacseq,deac005,deac006,&apos;&apos;,deac007,deac002,deac004,&apos;&apos;,deac008,deacsite,deacunit,deac001 FROM deac_t WHERE deacent=? AND deacdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

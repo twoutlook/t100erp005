@@ -1,0 +1,80 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmt520_04" module="apm" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="02294" crtdt="2014-07-31 09:34:01" modid="02294" moddt="2014-07-31 10:45:55" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="委外拆件收貨料件明細">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pmdtdocno,pmdtseq,pmdt006,pmdt006_desc(chr500),imaal004(chr500),pmdt019,pmdt019_desc(chr500),pmdt020,pmdt021,pmdt021_desc(chr500),pmdt022"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="gen_back"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmt520_04" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="pmdtdocno,pmdtseq,pmdt006,pmdt019,pmdt020,pmdt021,pmdt022" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="pmdtdocno"/>
+      <column id="pmdtseq"/>
+      <column id="pmdt006">
+        <after>
+          <check chkid="v_imaf001_14" id="isExist"/>
+          <reference field="pmdt006_desc" ref_field="pmdt_t.pmdt006" map_field="pmdt006" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf015" state="i"/>
+        <controlp form="q_imaf015" state="c"/>
+      </column>
+      <column id="pmdt006_desc"/>
+      <column id="imaal004"/>
+      <column id="pmdt019">
+        <after>
+          <check chkid="v_imao002" id="isExist"/>
+          <reference field="pmdt019_desc" ref_field="pmdt_t.pmdt019" map_field="pmdt019" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imao002" state="i"/>
+        <controlp form="q_imao002" state="c"/>
+      </column>
+      <column id="pmdt019_desc"/>
+      <column id="pmdt020" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pmdt021">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="pmdt021_desc" ref_field="pmdt_t.pmdt021" map_field="pmdt021" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="pmdt021_desc"/>
+      <column id="pmdt022" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <body id="pmdt_t" page="1" linked="" pk="pmdtdocno,pmdtseq">
+      <sql id="forupd_sql_detail" query="SELECT pmdtdocno,pmdtseq,pmdt006,&apos;&apos;,&apos;&apos;,pmdt019,&apos;&apos;,pmdt020,pmdt021,&apos;&apos;,pmdt022 FROM pmdt_t WHERE pmdtent=? AND pmdtdocno=? AND pmdtseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pmdtdocno,pmdtseq,pmdt006,&apos;&apos;,&apos;&apos;,pmdt019,&apos;&apos;,pmdt020,pmdt021,&apos;&apos;,pmdt022 FROM pmdt_t WHERE pmdtent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

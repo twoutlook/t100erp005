@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrr470_g01" module="axr" jobmode="N" type="g01" industry="std" crtid="06821" crtdt="2016-01-27 13:35:08" modid="07900" moddt="2016-12-06 10:25:52" sdver="3" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="xrepent,xreqent,xrep001,xrep002,xrepdocno,xrepsite,l_xrepsite_desc(chr500|&apos;&apos;),xrep004,xrepdocdt,xrepld,l_xrepld_desc(chr500|&apos;&apos;),xreqseq,xreq004,xreq006,xreq010,l_imaal003(chr500|&apos;&apos;),xreq008,xreq011,xreq013,l_xreq013_desc(chr500|&apos;&apos;),xreq100,xreq101,xreq103,xreq113"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="xrepent(xrepent|xrepent),xreqent(xreqent|xreqent),xrep001(xrep001|xrep001),xrep002(xrep002|xrep002),xrepdocno(xrepdocno|xrepdocno),xrepsite(xrepsite|xrepsite),l_xrepsite_desc(chr500|&apos;&apos;),xrep004(xrep004|xrep004),xrepdocdt(xrepdocdt|xrepdocdt),xrepld(xrepld|xrepld),l_xrepld_desc(chr500|&apos;&apos;),xreqseq(xreqseq|xreqseq),xreq004(xreq004|xreq004),xreq006(xreq006|xreq006),xreq010(xreq010|xreq010),l_imaal003(chr500|&apos;&apos;),xreq008(xreq008|xreq008),xreq011(xreq011|xreq011),xreq013(xreq013|xreq013),l_xreq013_desc(chr500|&apos;&apos;),xreq100(xreq100|xreq100),xreq101(xreq101|xreq101),xreq103(xreq103|xreq103),xreq113(xreq113|xreq113)"/>
+    <sql id="g_from" query="xrep_t,xreq_t"/>
+    <sql id="g_where" query="" maintable="xrep_t"/>
+    <sql id="g_order" query="xrepdocno"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="xrepdocno,xreqseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="xrepdocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="xrepent,xrepdocno"/>
+      <rep type="xreqseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="xrepent,xrepdocno,xreqseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="xrepent,xrepdocno,xreqseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="xrepdocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="xrepent,xrepdocno"/>
+      <rep type="xreqseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

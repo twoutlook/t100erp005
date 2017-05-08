@@ -1,0 +1,66 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcp803" module="axc" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="05795" crtdt="2015-05-12 16:43:48" modid="05795" moddt="2015-05-15 14:26:37" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="在製貨齡計算作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcceld(chr5),xcceld_desc(chr80),xccecomp(chr10),xccecomp_desc(chr80),xcce004(num5),xcce005(num5),xcce003(chr10),xcce003_desc(chr80),date1(chr500),date2(chr500),xcce006(chr20),xccd007(chr500),xcce002(chr30),xcce007(chr500),stagenow(chr80),p1(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="axc" filename="axcp803" method="dialog">
+    <section id="input">
+      <input id="head" field="xcceld,xccecomp,xcce004,xcce005,xcce003,date1,date2"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcce006,xcce002"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcceld">
+        <after>
+          <reference field="xcceld_desc" ref_field="xcceld" map_field="xcceent,xcceld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+      </column>
+      <column id="xcceld_desc"/>
+      <column id="xccecomp">
+        <after>
+          <reference field="xccecomp_desc" ref_field="xccecomp" map_field="xcceent,xccecomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+      </column>
+      <column id="xccecomp_desc"/>
+      <column id="xcce004"/>
+      <column id="xcce005"/>
+      <column id="xcce003">
+        <after>
+          <reference field="xcce003_desc" ref_field="xcce003" map_field="xcceent,xcce003" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcat001" state="i"/>
+      </column>
+      <column id="xcce003_desc"/>
+      <column id="date1"/>
+      <column id="date2"/>
+      <column id="xcce006">
+        <controlp form="q_sfaadocno_1" state="c"/>
+      </column>
+      <column id="xccd007">
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="xcce002">
+        <controlp form="q_xccc002" state="c"/>
+      </column>
+      <column id="xcce007">
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="stagenow"/>
+      <column id="p1"/>
+    </init>
+  </form>
+</assembly>
+

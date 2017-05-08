@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisq380" module="ais" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="08732" crtdt="2016-09-12 12:02:02" modid="08729" moddt="2017-01-25 12:14:36" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="應收發票清單查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isatsite,isatcomp,isatcomp_desc(chr500),isatdocno,isatseq,isaf002,isat009,isat007,isat003,isat004,isat002,isat001,isat001_desc(chr500),l_isat025(chr10),isat025_desc(chr500),isat028,isat028_desc(chr500),isat029,isat023,isat100,isat101,isat103,isat104,isat105,isat113,isat114,isat115"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isatsite(b_isatsite),isatcomp(b_isatcomp),isatcomp_desc(b_isatcomp_desc),isatdocno(b_isatdocno),isatseq(b_isatseq),isaf002(b_isaf002),isat009(b_isat009),isat007(b_isat007),isat003(b_isat003),isat004(b_isat004),isat002(b_isat002),isat001(b_isat001),isat001_desc(b_isat001_desc),l_isat025(l_isat025),isat025_desc(b_isat025_desc),isat028(b_isat028),isat028_desc(b_isat028_desc),isat029(b_isat029),isat023(b_isat023),isat100(b_isat100),isat101(b_isat101),isat103(b_isat103),isat104(b_isat104),isat105(b_isat105),isat113(b_isat113),isat114(b_isat114),isat115(b_isat115)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="prog_aisq380"/>
+    </section>
+  </structure>
+  <form id="0" module="ais" filename="aisq380" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="isatsite,isatcomp,isatdocno,isatseq,isaf002,isat009,isat007,isat003,isat004,isat002,isat001,isat028,isat029,isat023,isat100,isat101,isat103,isat104,isat105,isat113,isat114,isat115" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="isatsite(b_isatsite),isatcomp(b_isatcomp),isatdocno(b_isatdocno),isatseq(b_isatseq),isaf002(b_isaf002),isat009(b_isat009),isat007(b_isat007),isat003(b_isat003),isat004(b_isat004),isat002(b_isat002),isat001(b_isat001),isat028(b_isat028),isat029(b_isat029),isat023(b_isat023),isat100(b_isat100),isat101(b_isat101),isat103(b_isat103),isat104(b_isat104),isat105(b_isat105),isat113(b_isat113),isat114(b_isat114),isat115(b_isat115)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="isatsite"/>
+      <column id="isatcomp">
+        <after>
+          <reference field="isatcomp_desc" ref_field="isatcomp" map_field="isatent,isatcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="isatcomp_desc"/>
+      <column id="isatdocno"/>
+      <column id="isatseq"/>
+      <column id="isaf002">
+        <after>
+          <check chkid="v_pmaa001_2" id="isExist"/>
+        </after>
+        <controlp form="q_pmaa001" state="i"/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="isat009"/>
+      <column id="isat007"/>
+      <column id="isat003"/>
+      <column id="isat004"/>
+      <column id="isat002"/>
+      <column id="isat001">
+        <after>
+          <reference field="isat001_desc" ref_field="isatcomp,isat001" map_field="isatcomp,isat001" ref_sql="SELECT isacl004 FROM isacl_t WHERE isaclent=$varg_enterprise$var AND isacl001=? AND isacl002=? AND isacl003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="isat001_desc"/>
+      <column id="l_isat025"/>
+      <column id="isat025_desc"/>
+      <column id="isat028">
+        <after>
+          <reference field="isat028_desc" ref_field="isat028" map_field="isat028" ref_sql="SELECT oodbl004 FROM oodbl_t WHERE oodblent=$varg_enterprise$var AND oodbl001=&apos;&apos; AND oodbl002=? AND oodbl003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="isat028_desc"/>
+      <column id="isat029"/>
+      <column id="isat023"/>
+      <column id="isat100"/>
+      <column id="isat101"/>
+      <column id="isat103" type="S" default="0"/>
+      <column id="isat104" type="S" default="0"/>
+      <column id="isat105" type="S" default="0"/>
+      <column id="isat113" type="S" default="0"/>
+      <column id="isat114" type="S" default="0"/>
+      <column id="isat115" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="isat_t" page="1" linked="" pk="isatcomp,isatseq,isat003,isat004">
+      <sql id="b_fill_sql" query="SELECT isatsite,isatcomp,&apos;&apos;,isatdocno,isatseq,&apos;&apos;,isat009,isat007,isat003,isat004,isat002,isat001,&apos;&apos;,&apos;&apos;,&apos;&apos;,isat028,&apos;&apos;,isat029,isat023,isat100,isat101,isat103,isat104,isat105,isat113,isat114,isat115 FROM isat_t WHERE isatent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

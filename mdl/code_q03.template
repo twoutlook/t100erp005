@@ -1,0 +1,545 @@
+{<section id="${general_prefix}.global" >}
+#應用 q03 樣板自動產生(Version:13)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_${detail_var_title} RECORD
+       sel            LIKE type_t.chr1,
+       ${detail_fields_define}
+       END RECORD
+ 
+#pages - Start -
+PRIVATE TYPE type_${detail_var_title${page}} RECORD
+       ${detail_fields_define${page}}
+       END RECORD
+#pages -  End  -
+ 
+#add-point:自定義模組變數-標準(Module Variable)  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE ${detail_var_title}            DYNAMIC ARRAY OF type_${detail_var_title}
+DEFINE ${detail_var_title}_t          type_${detail_var_title}
+#pages - Start -             
+DEFINE ${detail_var_title${page}}     DYNAMIC ARRAY OF type_${detail_var_title${page}}
+DEFINE ${detail_var_title${page}}_t   type_${detail_var_title${page}}
+#pages -  End  -
+ 
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD    #資料瀏覽之欄位
+       b_show          LIKE type_t.chr100,    #外顯欄位
+       b_pid           LIKE type_t.chr100,    #父節點id
+       b_id            LIKE type_t.chr100,    #本身節點id
+       b_exp           LIKE type_t.chr100,    #是否展開
+       b_hasC          LIKE type_t.num5,      #是否有子節點
+       b_isExp         LIKE type_t.num5,      #是否已展開
+       b_expcode       LIKE type_t.num5,      #展開值
+       #tree自定義欄位
+       ${browser_fields_define}
+                   END RECORD
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                 STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE l_ac                  LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_current_page        LIKE type_t.num5              #目前所在頁數
+DEFINE g_current_row         LIKE type_t.num10             #目前所在筆數
+DEFINE g_current_idx         LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_master_idx          LIKE type_t.num10
+DEFINE g_detail_idx          LIKE type_t.num10             #單身 所在筆數(所有資料)
+DEFINE g_detail_idx2         LIKE type_t.num10
+DEFINE g_hyper_url           STRING                        #hyperlink的主要網址
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+#tables - Start -
+DEFINE g_wc_table${table}   STRING
+#tables -  End  -
+#tables_d2 - Start -
+DEFINE g_wc2_table${table}   STRING
+#tables -  End  -
+ 
+DEFINE g_wc_filter_table           STRING
+#tables - Start -
+DEFINE g_wc_filter_table${table}   STRING
+#tables -  End  -
+#tables_d2 - Start -
+DEFINE g_wc2_filter_table${table}   STRING
+#tables -  End  -
+ 
+#add-point:自定義模組變數-客製(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+{</section>}
+ 
+{<section id="${general_prefix}.main" >}
+${general_main_function}
+{</section>}
+ 
+{<section id="${general_prefix}.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION ${general_prefix}_init()
+   #add-point:init段define-客製 name="init.define_customerization"
+   {<point name="init.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:init段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1" 
+   LET g_error_show  = 1
+#  LET g_selcolor    = "#D0E7FD"
+   ${general_define_combo_stus}
+   ${general_define_combo}  
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   {<point name="init.init" />}
+   #end add-point
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${general_prefix}.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION ${general_prefix}_ui_dialog() 
+   #add-point:ui_dialog段define-客製 name="ui_dialog.define_customerization"
+   {<point name="ui_dialog.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   {<Local define>}
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num10
+   DEFINE ls_result STRING
+   {</Local define>}
+   #add-point:ui_dialog段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+   
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+ 
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   LET g_current_row = 0
+   LET g_current_idx = 1
+   LET g_action_choice = " "
+   LET g_main_hidden = 1
+   LET l_ac = 1
+ 
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   ${detail_hyper_aft_construct}
+   CALL ${general_prefix}_b_fill()
+  
+   WHILE li_exit = FALSE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL ${detail_var_title}.clear()
+         #pages - Start -
+         CALL ${detail_var_title${page}}.clear()
+         #pages -  End  -
+         LET g_wc  = " 1=2"
+         LET g_wc2 = " 1=1"
+         LET g_action_choice = ""
+ 
+         CALL ${general_prefix}_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:input段落 name="ui_dialog.input"
+         {<point name="ui_dialog.input"/>}
+         #end add-point
+ 
+         #add-point:construct段落 name="ui_dialog.construct"
+         {<point name="ui_dialog.construct"/>}
+         #end add-point
+     
+         DISPLAY ARRAY ${detail_var_title} TO ${sr_name}.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("${sr_name}")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.h_index
+               DISPLAY ${detail_var_title}.getLength() TO FORMONLY.h_count
+               LET g_master_idx = l_ac
+               CALL ${general_prefix}_b_fill2()
+ 
+               #add-point:input段before row name="input.body.before_row"
+               {<point name="input.body.before_row"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_1)
+            ${detail_saction_choice1}
+ 
+         END DISPLAY
+ 
+         #pages - Start -
+         DISPLAY ARRAY ${detail_var_title${page}} TO ${sr_name${page}}.*
+            ATTRIBUTES(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = ${page}
+ 
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("${sr_name${page}}")
+               LET l_ac = g_detail_idx2
+               LET g_detail_idx2 = l_ac
+               DISPLAY g_detail_idx2 TO FORMONLY.idx
+ 
+               #add-point:input段before row name="input.body${page_id}.before_row"
+               {<point name="input.body${page_id}.before_row"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_${page})
+            ${detail_saction_choice${page}}
+ 
+         END DISPLAY
+         #pages -  End  -
+ 
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         BEFORE DIALOG
+            CALL DIALOG.setSelectionMode("${sr_name}", 1)
+            #add-point:ui_dialog段before dialog name="ui_dialog.bef_dialog"
+            {<point name="ui_dialog.bef_dialog"/>}
+            #end add-point
+            NEXT FIELD sel
+ 
+         AFTER DIALOG
+            #add-point:ui_dialog段 after dialog name="ui_dialog.after_dialog"
+            {<point name="ui_dialog.after_dialog"/>}
+            #end add-point
+            
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("${sr_name}", 1, -1, 1)
+            FOR li_idx = 1 TO ${detail_var_title}.getLength()
+               LET ${detail_var_title}[li_idx].sel = "Y"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selall name="ui_dialog.onaction_selall"
+            {<point name="ui_dialog.onaction_selall"/>}
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("${sr_name}", 1, -1, 0)
+            FOR li_idx = 1 TO ${detail_var_title}.getLength()
+               LET ${detail_var_title}[li_idx].sel = "N"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selnone name="ui_dialog.onaction_selnone"
+            {<point name="ui_dialog.onaction_selnone"/>}
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO ${detail_var_title}.getLength()
+               IF DIALOG.isRowSelected("${sr_name}", li_idx) THEN
+                  LET ${detail_var_title}[li_idx].sel = "Y"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action sel name="ui_dialog.onaction_sel"
+            {<point name="ui_dialog.onaction_sel"/>}
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO ${detail_var_title}.getLength()
+               IF DIALOG.isRowSelected("${sr_name}", li_idx) THEN
+                  LET ${detail_var_title}[li_idx].sel = "N"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action unsel name="ui_dialog.onaction_unsel"
+            {<point name="ui_dialog.onaction_unsel"/>}
+            #end add-point
+ 
+         ON ACTION qbehidden   #瀏覽頁折疊
+            IF g_worksheet_hidden THEN
+               CALL gfrm_curr.setElementHidden("qbe",0)
+               CALL gfrm_curr.setElementImage("qbehidden","16/mainhidden.png")
+               LET g_worksheet_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("qbe",1)
+               CALL gfrm_curr.setElementImage("qbehidden","16/worksheethidden.png")
+               LET g_worksheet_hidden = 1
+            END IF
+ 
+         ON ACTION exit
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            INITIALIZE g_wc_filter TO NULL
+            IF cl_null(g_wc) THEN
+               LET g_wc = " 1=1"
+            END IF
+            #tables - Start -
+            IF NOT cl_null(g_wc_table${table}) AND g_wc_table${table} <> " 1=1" THEN
+               LET g_wc = g_wc , " AND ", g_wc_table${table}
+            END IF
+            #tables -  End  -
+            #tables_d2 - Start -
+            IF NOT cl_null(g_wc2_table${table}) AND g_wc2_table${table} <> " 1=1" THEN
+               LET g_wc = g_wc, " AND ", g_wc2_table${table}
+            END IF
+            #tables -  End  -
+         
+            IF cl_null(g_wc2) THEN
+               LET g_wc2 = " 1=1"
+            END IF
+
+            #tables_d2 - Start -
+            IF NOT cl_null(g_wc2_table${table}) AND g_wc2_table${table} <> " 1=1" THEN
+               LET g_wc2 = g_wc2, " AND ", g_wc2_table${table}
+            END IF
+            #tables -  End  -
+            CALL ${general_prefix}_b_fill()
+            NEXT FIELD sel   # 為了讓一開始的focus停留在單頭
+      
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum name="ui_dialog.agendum"
+            {<point name="ui_dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+ 
+         ${general_filter_on_action}
+ 
+         ${general_action_call}
+      
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+ 
+      END DIALOG 
+   
+   END WHILE
+ 
+END FUNCTION
+{</section>}
+ 
+ 
+{<section id="${general_prefix}.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION ${general_prefix}_b_fill()
+   #add-point:b_fill段define-客製 name="b_fill.define_customerization"
+   {<point name="b_fill.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   {<Local define>}
+   DEFINE ls_wc           STRING
+   {</Local define>}
+   #add-point:b_fill段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   {<point name="b_fill.define"/>}
+   #end add-point
+
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+ 
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter, cl_sql_auth_filter()   #(ver:13) add cl_sql_auth_filter()
+ 
+   CALL ${detail_var_title}.clear()
+   #pages - Start -
+   CALL ${detail_var_title${page}}.clear()
+   #pages -  End  -
+ 
+   ${detail_using_ent}
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1
+ 
+   # b_fill段sql組成及FOREACH撰寫
+   ${detail_b_fill_data}
+ 
+   CALL ${detail_var_title}.deleteElement(${detail_var_title}.getLength())
+   #pages - Start -
+   CALL ${detail_var_title${page}}.deleteElement(${detail_var_title${page}}.getLength())
+   #pages -  End  -
+   LET g_error_show = 0
+ 
+ 
+   #tables - Start -
+   ${detail_b_fill_relate_data}
+   #tables -  End  -
+ 
+ 
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.others.fill"
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+ 
+   LET g_detail_cnt = l_ac - 1
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+ 
+   ${detail_b_fill_cursor_free}
+ 
+   LET l_ac = 1
+   CALL ${general_prefix}_b_fill2()
+ 
+   ${detail_display_condition}
+ 
+END FUNCTION
+{</section>}
+ 
+ 
+{<section id="${general_prefix}.b_fill2" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION ${general_prefix}_b_fill2()
+   #add-point:b_fill2段define-客製 name="b_fill2.define_customerization"
+   {<point name="b_fill2.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   {<Local define>}
+   DEFINE li_ac           LIKE type_t.num10
+   {</Local define>}
+   #add-point:b_fill2段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill2.define"
+   {<point name="b_fill2.define"/>}
+   #end add-point
+ 
+   #pages - Start -
+   ${general_master_mark${page}}CALL ${detail_var_title${page}}.clear()
+   #pages -  End  -
+ 
+   LET li_ac = l_ac
+ 
+   #單身組成
+   ${detail_b_fill2_data}
+ 
+   #add-point:單身填充後 name="b_fill2.after_fill"
+   {<point name="b_fill2.after_fill" />}
+   #end add-point
+ 
+   #pages - Start -
+   ${general_master_mark${page}}CALL ${detail_var_title${page}}.deleteElement(${detail_var_title${page}}.getLength())
+   #pages -  End  -
+ 
+   LET l_ac = li_ac
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${general_prefix}.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION ${general_prefix}_detail_show()
+   #add-point:show段define-客製 name="detail_show.define_customerization"
+   {<point name="detail_show.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之前 name="detail_show.before"
+   {<point name="detail_show.before"/>}
+   #end add-point
+ 
+   ${general_display_site}
+ 
+   #帶出公用欄位reference值page1
+   ${detail_commons_ref}
+ 
+   #pages - Start -
+   #帶出公用欄位reference值page${page}
+   ${detail_commons_ref${page}}
+   #pages -  End  -
+ 
+   #讀入ref值
+   #add-point:show段單身reference name="detail_show.body.reference"
+   {<point name="detail_show.body.reference"/>}
+   #end add-point
+ 
+   #pages - Start -
+   #add-point:show段單身reference name="detail_show.body${page_id}.reference"
+   {<point name="detail_show.body${page_id}.reference"/>}
+   #end add-point
+   #pages -  End  -
+ 
+   #add-point:detail_show段之後 name="detail_show.after"
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+{</section>}
+ 
+${general_filter}
+${general_filter_parser}
+${general_filter_show}
+ 
+{<section id="${general_prefix}.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+ 
+

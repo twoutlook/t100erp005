@@ -1,0 +1,2960 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="adeq115.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:4(2016-02-17 10:59:10), PR版次:0004(2016-04-27 10:58:31)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000050
+#+ Filename...: adeq115
+#+ Description: 門店經營預算同比日查詢作業
+#+ Creator....: 04226(2015-07-06 20:52:56)
+#+ Modifier...: 04226 -SD/PR- 07673
+ 
+{</section>}
+ 
+{<section id="adeq115.global" >}
+#應用 q02 樣板自動產生(Version:42)
+#add-point:填寫註解說明 name="global.memo"
+#160318-00025#52 2016/04/27 By 07673   將重複內容的錯誤訊息置換為公用錯誤訊息
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_debo_d RECORD
+       #statepic       LIKE type_t.chr1,
+       
+       sel LIKE type_t.chr1, 
+   debo002 LIKE debo_t.debo002, 
+   debosite LIKE debo_t.debosite, 
+   debosite_desc LIKE type_t.chr500, 
+   debo010 LIKE debo_t.debo010, 
+   l_debo013_b LIKE type_t.num20_6, 
+   l_debo013_r2 LIKE type_t.num20_6, 
+   l_debo013_p LIKE type_t.num20_6, 
+   l_debo013_r3 LIKE type_t.num20_6, 
+   debo014 LIKE debo_t.debo014, 
+   l_debo014_b LIKE type_t.num20_6, 
+   l_debo014_r1 LIKE type_t.num20_6, 
+   l_debo014_p LIKE type_t.num20_6, 
+   debo015 LIKE debo_t.debo015, 
+   l_debo015_p LIKE type_t.num20_6, 
+   l_debo015_r1 LIKE type_t.num20_6, 
+   l_debo015_r2 LIKE type_t.num20_6, 
+   l_debo015_r3 LIKE type_t.num20_6, 
+   debo007 LIKE debo_t.debo007, 
+   l_debo007_p LIKE type_t.num20_6, 
+   debo016 LIKE debo_t.debo016, 
+   l_debo016_p LIKE type_t.num20_6, 
+   l_debo016_r1 LIKE type_t.num20_6, 
+   debo025 LIKE debo_t.debo025, 
+   l_xccu102 LIKE type_t.num20_6, 
+   l_xccu102_p LIKE type_t.num20_6, 
+   l_self_sale_p LIKE type_t.num20_6, 
+   l_self_sale LIKE type_t.num20_6, 
+   l_uni_sale_p LIKE type_t.num20_6, 
+   l_uni_sale LIKE type_t.num20_6, 
+   l_debo013_r1 LIKE type_t.num20_6, 
+   l_ooef113 LIKE type_t.num20_6 
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數-標準(Module Variable)  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+ TYPE type_g_debo2_d RECORD
+      debosite       LIKE debo_t.debosite, 
+      debosite_desc  LIKE type_t.chr500, 
+      debo010        LIKE debo_t.debo010, 
+      l_debo013_b    LIKE type_t.num20_6, 
+      l_debo013_r2   LIKE type_t.num20_6, 
+      l_debo013_p    LIKE type_t.num20_6, 
+      l_debo013_r3   LIKE type_t.num20_6, 
+      debo014        LIKE debo_t.debo014, 
+      l_debo014_b    LIKE type_t.num20_6, 
+      l_debo014_r1   LIKE type_t.num20_6, 
+      l_debo014_p    LIKE type_t.num20_6, 
+      debo015        LIKE debo_t.debo015, 
+      l_debo015_p    LIKE type_t.num20_6, 
+      l_debo015_r1   LIKE type_t.num20_6, 
+      l_debo015_r2   LIKE type_t.num20_6, 
+      l_debo015_r3   LIKE type_t.num20_6, 
+      debo007        LIKE debo_t.debo007, 
+      l_debo007_p    LIKE type_t.num20_6, 
+      debo016        LIKE debo_t.debo016, 
+      l_debo016_p    LIKE type_t.num20_6, 
+      l_debo016_r1   LIKE type_t.num20_6, 
+      debo025        LIKE debo_t.debo025, 
+      l_xccu102      LIKE type_t.num20_6, 
+      l_xccu102_p    LIKE type_t.num20_6, 
+      l_self_sale    LIKE type_t.num20_6, 
+      l_self_sale_p  LIKE type_t.num20_6, 
+      l_uni_sale     LIKE type_t.num20_6, 
+      l_uni_sale_p   LIKE type_t.num20_6, 
+      l_debo013_r1   LIKE type_t.num20_6,
+      l_ooef113      LIKE type_t.num20_6
+                         END RECORD
+DEFINE g_debo2_d         DYNAMIC ARRAY OF type_g_debo2_d
+DEFINE g_last_year_date  LIKE type_t.dat
+DEFINE g_last_year_date2 LIKE type_t.dat
+
+TYPE type_g_input             RECORD
+     l_sale_qbe               LIKE rtca_t.rtca001,
+     l_sale_qbe_desc          LIKE rtcal_t.rtcal003,
+     l_gross_profit_qbe       LIKE rtca_t.rtca001,
+     l_gross_profit_desc      LIKE rtcal_t.rtcal003
+                              END RECORD
+DEFINE g_input                type_g_input
+DEFINE g_input_t              type_g_input
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_master                     type_g_debo_d
+DEFINE g_master_t                   type_g_debo_d
+DEFINE g_debo_d          DYNAMIC ARRAY OF type_g_debo_d
+DEFINE g_debo_d_t        type_g_debo_d
+ 
+      
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10              #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num5              #目前所在頁數
+DEFINE g_detail_cnt         LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_detail_cnt2        LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+DEFINE g_detail_idx         LIKE type_t.num10
+DEFINE g_detail_idx2        LIKE type_t.num10
+DEFINE g_hyper_url          STRING                        #hyperlink的主要網址
+DEFINE g_tot_cnt            LIKE type_t.num10             #計算總筆數
+DEFINE g_num_in_page        LIKE type_t.num10             #每頁筆數
+DEFINE g_current_row_tot    LIKE type_t.num10             #目前所在總筆數
+DEFINE g_page_act_list      STRING                        #分頁ACTION清單
+DEFINE g_page_start_num     LIKE type_t.num10             #目前頁面起始筆數
+DEFINE g_page_end_num       LIKE type_t.num10             #目前頁面結束筆數
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+DEFINE g_wc_filter_table    STRING
+DEFINE g_detail_page_action STRING
+DEFINE g_pagestart          LIKE type_t.num10
+ 
+ 
+ 
+#add-point:自定義模組變數-客製(Module Variable) name="global.variable_customerization"
+
+##end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="adeq115.main" >}
+ #應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   DEFINE l_success     LIKE type_t.num5
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("ade","")
+ 
+   #add-point:作業初始化 name="main.init"
+   
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = " ", 
+                      " FROM ",
+                      " "
+   #add-point:SQL_define name="main.after_define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE adeq115_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT  ",
+               " FROM  t0",
+               
+               " WHERE  "
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   
+   #end add-point
+   PREPARE adeq115_master_referesh FROM g_sql
+ 
+   #add-point:main段define_sql name="main.body.define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = ""
+   #add-point:main段define_sql name="main.body.after_define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE adeq115_bcl CURSOR FROM g_forupd_sql
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_adeq115 WITH FORM cl_ap_formpath("ade",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL adeq115_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL adeq115_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_adeq115
+      
+   END IF 
+   
+   CLOSE adeq115_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   CALL s_aooi500_drop_temp() RETURNING l_success
+   CALL adeq115_drop_tmp()
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="adeq115.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION adeq115_init()
+   #add-point:init段define-客製 name="init.define_customerization"
+   
+   #end add-point
+   #add-point:init段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   DEFINE l_success     LIKE type_t.num5
+   #end add-point
+   
+ 
+   #add-point:FUNCTION前置處理 name="init.before_function"
+   
+   #end add-point
+ 
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   
+   
+   
+   #add-point:畫面資料初始化 name="init.init"
+   CALL s_aooi500_create_temp() RETURNING l_success
+   LET l_success = ''
+   CALL adeq115_create_tmp() RETURNING l_success
+   #end add-point
+ 
+   CALL adeq115_default_search()  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adeq115.default_search" >}
+PRIVATE FUNCTION adeq115_default_search()
+   #add-point:default_search段define-客製 name="default_search.define_customerization"
+   
+   #end add-point
+   #add-point:default_search段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point
+ 
+   #add-point:default_search段開始前 name="default_search.before"
+   
+   #end add-point
+ 
+   #應用 qs27 樣板自動產生(Version:3)
+   #+ 組承接外部參數時資料庫欄位對應條件(單身)
+   IF NOT cl_null(g_argv[01]) THEN
+      LET g_wc = g_wc, " debosite = '", g_argv[01], "' AND "
+   END IF
+ 
+   IF NOT cl_null(g_argv[02]) THEN
+      LET g_wc = g_wc, " debo002 = '", g_argv[02], "' AND "
+   END IF
+ 
+ 
+ 
+ 
+ 
+ 
+   IF NOT cl_null(g_wc) THEN
+      LET g_wc = g_wc.subString(1,g_wc.getLength()-5)
+   ELSE
+      #預設查詢條件
+      LET g_wc = " 1=2"
+   END IF
+ 
+   #add-point:default_search段開始後 name="default_search.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adeq115.ui_dialog" >}
+#+ 功能選單 
+PRIVATE FUNCTION adeq115_ui_dialog()
+   #add-point:ui_dialog段define-客製 name="ui_dialog.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_wc      STRING
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE lc_action_choice_old     STRING
+   DEFINE lc_current_row           LIKE type_t.num10
+   DEFINE ls_js      STRING
+   DEFINE la_param   RECORD
+                     prog       STRING,
+                     actionid   STRING,
+                     background LIKE type_t.chr1,
+                     param      DYNAMIC ARRAY OF STRING
+                     END RECORD
+   #add-point:ui_dialog段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   
+   #end add-point 
+ 
+   #add-point:FUNCTION前置處理 name="ui_dialog.before_function"
+   
+   #end add-point
+ 
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "
+   LET lc_action_choice_old = ""
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   CALL cl_get_num_in_page() RETURNING g_num_in_page
+         
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   
+   #end add-point
+ 
+   LET g_detail_page_action = "detail_first"
+   LET g_pagestart = 1
+   LET g_current_row_tot = 1
+   LET g_page_start_num = 1
+   LET g_page_end_num = g_num_in_page
+   IF NOT cl_null(g_wc) AND g_wc != " 1=2" THEN
+      LET g_detail_idx = 1
+      LET g_detail_idx2 = 1
+      CALL adeq115_b_fill()
+   ELSE
+      CALL adeq115_query()
+   END IF
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_debo_d.clear()
+ 
+         LET g_wc  = " 1=2"
+         LET g_wc2 = " 1=1"
+         LET g_action_choice = ""
+         LET g_detail_page_action = "detail_first"
+         LET g_pagestart = 1
+         LET g_current_row_tot = 1
+         LET g_page_start_num = 1
+         LET g_page_end_num = g_num_in_page
+         LET g_detail_idx = 1
+         LET g_detail_idx2 = 1
+ 
+         CALL adeq115_init()
+      END IF
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_debo_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+ 
+               #為避免按上下筆影響執行效能，所以有作一些處理
+               LET lc_action_choice_old = g_action_choice
+               LET g_action_choice = "fetch"
+               CALL adeq115_fetch()
+               LET g_action_choice = lc_action_choice_old
+               LET g_master_idx = l_ac
+               CALL adeq115_detail_action_trans()
+               #add-point:input段before row name="input.body.before_row"
+               
+               #end add-point  
+            
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+            #add-point:page1自定義行為 name="ui_dialog.body.page1.action"
+            
+            #end add-point
+ 
+         END DISPLAY
+      
+ 
+         
+ 
+      
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         DISPLAY ARRAY g_debo2_d TO s_detail2.* ATTRIBUTE(COUNT=g_detail_cnt) 
+         
+         END DISPLAY
+         #end add-point
+         
+         BEFORE DIALOG
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            CALL adeq115_detail_action_trans()
+ 
+            #add-point:ui_dialog段before dialog name="ui_dialog.bef_dialog"
+            CALL cl_set_act_visible("selall,selnone,sel,unsel", FALSE)
+            CALL cl_set_comp_visible("sel", FALSE)
+            #end add-point
+ 
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL adeq115_insert()
+               #add-point:ON ACTION insert name="menu.insert"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL adeq115_query()
+               #add-point:ON ACTION query name="menu.query"
+               EXIT DIALOG
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo name="menu.datainfo"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL adeq115_filter()
+            #add-point:ON ACTION filter name="menu.filter"
+            
+            #END add-point
+ 
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+ 
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION datarefresh   # 重新整理
+            LET g_error_show = 1
+            CALL adeq115_b_fill()
+ 
+         ON ACTION exporttoexcel   #匯出excel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_debo_d)
+               LET g_export_id[1]   = "s_detail1"
+ 
+               #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+               LET g_export_node[2] = base.typeInfo.create(g_debo2_d)
+               LET g_export_id[2]   = "s_detail2"
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+ 
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum name="ui_dialog.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+ 
+         ON ACTION detail_first               #page first
+            LET g_action_choice = "detail_first"
+            LET g_detail_page_action = "detail_first"
+            CALL adeq115_b_fill()
+ 
+         ON ACTION detail_previous                #page previous
+            LET g_action_choice = "detail_previous"
+            LET g_detail_page_action = "detail_previous"
+            CALL adeq115_b_fill()
+ 
+         ON ACTION detail_next                #page next
+            LET g_action_choice = "detail_next"
+            LET g_detail_page_action = "detail_next"
+            CALL adeq115_b_fill()
+ 
+         ON ACTION detail_last                #page last
+            LET g_action_choice = "detail_last"
+            LET g_detail_page_action = "detail_last"
+            CALL adeq115_b_fill()
+ 
+         #應用 qs19 樣板自動產生(Version:3)
+         #有關於sel欄位選取的action段落
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_debo_d.getLength()
+               LET g_debo_d[li_idx].sel = "Y"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selall name="ui_dialog.onaction_selall"
+            
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_debo_d.getLength()
+               LET g_debo_d[li_idx].sel = "N"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selnone name="ui_dialog.onaction_selnone"
+            
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_debo_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_debo_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action sel name="ui_dialog.onaction_sel"
+            
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_debo_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_debo_d[li_idx].sel = "N"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action unsel name="ui_dialog.onaction_unsel"
+            
+            #end add-point
+ 
+ 
+ 
+ 
+ 
+         
+ 
+         #add-point:ui_dialog段自定義action name="ui_dialog.more_action"
+         
+         #end add-point
+      
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+ 
+         #add-point:查詢方案相關ACTION設定前 name="ui_dialog.set_qbe_action_before"
+         
+         #end add-point
+ 
+         #add-point:查詢方案相關ACTION設定後 name="ui_dialog.set_qbe_action_after"
+         
+         #end add-point
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adeq115.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION adeq115_query()
+   #add-point:query段define-客製 name="query.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_wc2     LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   
+   #end add-point 
+   
+   #add-point:FUNCTION前置處理 name="query.before_function"
+   #160126-00007#2 160217 By pomelo add(S)
+   INITIALIZE g_input.* TO NULL
+   DISPLAY BY NAME  g_input.l_sale_qbe, g_input.l_sale_qbe_desc,
+                    g_input.l_gross_profit_qbe, g_input.l_gross_profit_desc
+   CALL g_debo2_d.clear()
+   LET g_wc2 = " 1=1"
+   #160126-00007#2 160217 By pomelo add(E)
+   #end add-point
+ 
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_debo_d.clear()
+ 
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+   
+   LET g_qryparam.state = "c"
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_wc_filter = " 1=1"
+   LET g_detail_page_action = ""
+   LET g_pagestart = 1
+   
+   #wc備份
+   LET ls_wc = g_wc
+   LET ls_wc2 = g_wc2
+   LET g_master_idx = l_ac
+ 
+   
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc_table ON debo002,debosite,debo010,debo014,debo015,debo007,debo016,debo025
+           FROM s_detail1[1].b_debo002,s_detail1[1].b_debosite,s_detail1[1].b_debo010,s_detail1[1].b_debo014, 
+               s_detail1[1].b_debo015,s_detail1[1].b_debo007,s_detail1[1].b_debo016,s_detail1[1].b_debo025 
+ 
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct name="cs.head.before_construct"
+            DISPlAY g_site TO b_debosite
+            DISPLAY g_today-1 TO b_debo002
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+                #----<<sel>>----
+         #----<<b_debo002>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debo002
+            #add-point:BEFORE FIELD b_debo002 name="construct.b.page1.b_debo002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debo002
+            
+            #add-point:AFTER FIELD b_debo002 name="construct.a.page1.b_debo002"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debo002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debo002
+            #add-point:ON ACTION controlp INFIELD b_debo002 name="construct.c.page1.b_debo002"
+            
+            #END add-point
+ 
+ 
+         #----<<b_debosite>>----
+         #Ctrlp:construct.c.page1.b_debosite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debosite
+            #add-point:ON ACTION controlp INFIELD b_debosite name="construct.c.page1.b_debosite"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where  = s_aooi500_q_where(g_prog,'debosite',g_site,'c')
+            CALL q_ooef001_24()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_debosite  #顯示到畫面上
+            NEXT FIELD b_debosite                     #返回原欄位
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debosite
+            #add-point:BEFORE FIELD b_debosite name="construct.b.page1.b_debosite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debosite
+            
+            #add-point:AFTER FIELD b_debosite name="construct.a.page1.b_debosite"
+            
+            #END add-point
+            
+ 
+ 
+         #----<<b_debosite_desc>>----
+         #----<<b_debo010>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debo010
+            #add-point:BEFORE FIELD b_debo010 name="construct.b.page1.b_debo010"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debo010
+            
+            #add-point:AFTER FIELD b_debo010 name="construct.a.page1.b_debo010"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debo010
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debo010
+            #add-point:ON ACTION controlp INFIELD b_debo010 name="construct.c.page1.b_debo010"
+            
+            #END add-point
+ 
+ 
+         #----<<l_debo013_b>>----
+         #----<<l_debo013_r2>>----
+         #----<<l_debo013_p>>----
+         #----<<l_debo013_r3>>----
+         #----<<b_debo014>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debo014
+            #add-point:BEFORE FIELD b_debo014 name="construct.b.page1.b_debo014"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debo014
+            
+            #add-point:AFTER FIELD b_debo014 name="construct.a.page1.b_debo014"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debo014
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debo014
+            #add-point:ON ACTION controlp INFIELD b_debo014 name="construct.c.page1.b_debo014"
+            
+            #END add-point
+ 
+ 
+         #----<<l_debo014_b>>----
+         #----<<l_debo014_r1>>----
+         #----<<l_debo014_p>>----
+         #----<<b_debo015>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debo015
+            #add-point:BEFORE FIELD b_debo015 name="construct.b.page1.b_debo015"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debo015
+            
+            #add-point:AFTER FIELD b_debo015 name="construct.a.page1.b_debo015"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debo015
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debo015
+            #add-point:ON ACTION controlp INFIELD b_debo015 name="construct.c.page1.b_debo015"
+            
+            #END add-point
+ 
+ 
+         #----<<l_debo015_p>>----
+         #----<<l_debo015_r1>>----
+         #----<<l_debo015_r2>>----
+         #----<<l_debo015_r3>>----
+         #----<<b_debo007>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debo007
+            #add-point:BEFORE FIELD b_debo007 name="construct.b.page1.b_debo007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debo007
+            
+            #add-point:AFTER FIELD b_debo007 name="construct.a.page1.b_debo007"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debo007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debo007
+            #add-point:ON ACTION controlp INFIELD b_debo007 name="construct.c.page1.b_debo007"
+            
+            #END add-point
+ 
+ 
+         #----<<l_debo007_p>>----
+         #----<<b_debo016>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debo016
+            #add-point:BEFORE FIELD b_debo016 name="construct.b.page1.b_debo016"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debo016
+            
+            #add-point:AFTER FIELD b_debo016 name="construct.a.page1.b_debo016"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debo016
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debo016
+            #add-point:ON ACTION controlp INFIELD b_debo016 name="construct.c.page1.b_debo016"
+            
+            #END add-point
+ 
+ 
+         #----<<l_debo016_p>>----
+         #----<<l_debo016_r1>>----
+         #----<<b_debo025>>----
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD b_debo025
+            #add-point:BEFORE FIELD b_debo025 name="construct.b.page1.b_debo025"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD b_debo025
+            
+            #add-point:AFTER FIELD b_debo025 name="construct.a.page1.b_debo025"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.b_debo025
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debo025
+            #add-point:ON ACTION controlp INFIELD b_debo025 name="construct.c.page1.b_debo025"
+            
+            #END add-point
+ 
+ 
+         #----<<l_xccu102>>----
+         #----<<l_xccu102_p>>----
+         #----<<l_self_sale_p>>----
+         #----<<l_self_sale>>----
+         #----<<l_uni_sale_p>>----
+         #----<<l_uni_sale>>----
+         #----<<l_debo013_r1>>----
+         #----<<l_ooef113>>----
+   
+       
+      END CONSTRUCT
+      
+ 
+      
+ 
+  
+      #add-point:query段more_construct name="query.more_construct"
+      #160126-00007#2 160128 By pomelo add(S)
+      INPUT BY NAME g_input.l_sale_qbe, g_input.l_gross_profit_qbe ATTRIBUTE(WITHOUT DEFAULTS)
+         BEFORE INPUT
+            IF NOT cl_null(g_input.l_sale_qbe) THEN
+               LET g_input.l_sale_qbe_desc = adeq115_rtca001_ref(g_input.l_sale_qbe)
+               DISPLAY BY NAME g_input.l_sale_qbe_desc
+            END IF
+            IF NOT cl_null(g_input.l_gross_profit_qbe) THEN
+               LET g_input.l_gross_profit_desc = adeq115_rtca001_ref(g_input.l_gross_profit_qbe)
+               DISPLAY BY NAME g_input.l_gross_profit_desc
+            END IF
+            
+         AFTER FIELD l_sale_qbe
+            IF NOT cl_null(g_input.l_sale_qbe) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_input.l_sale_qbe
+               LET g_errshow = TRUE   #160318-00025#52
+               LET g_chkparam.err_str[1] = "art-00050:sub-01302|aimm200|",cl_get_progname("aimm200",g_lang,"2"),"|:EXEPROGaimm200"    #160318-00025#52
+               IF NOT cl_chk_exist("v_rtca001") THEN
+                  LET g_input.l_sale_qbe = g_input_t.l_sale_qbe
+                  LET g_input.l_sale_qbe_desc = adeq115_rtca001_ref(g_input.l_sale_qbe)
+                  DISPLAY BY NAME  g_input.l_sale_qbe,g_input.l_sale_qbe_desc  
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            LET g_input.l_sale_qbe_desc = adeq115_rtca001_ref(g_input.l_sale_qbe)
+            DISPLAY BY NAME  g_input.l_sale_qbe,g_input.l_sale_qbe_desc  
+            
+         AFTER FIELD l_gross_profit_qbe
+            IF NOT cl_null(g_input.l_gross_profit_qbe) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_input.l_gross_profit_qbe
+               LET g_errshow = TRUE   #160318-00025#52
+               LET g_chkparam.err_str[1] = "art-00050:sub-01302|aimm200|",cl_get_progname("aimm200",g_lang,"2"),"|:EXEPROGaimm200"    #160318-00025#52
+               IF NOT cl_chk_exist("v_rtca001") THEN
+                  LET g_input.l_gross_profit_qbe = g_input_t.l_gross_profit_qbe
+                  LET g_input.l_gross_profit_desc = adeq115_rtca001_ref(g_input.l_gross_profit_qbe)
+                  DISPLAY BY NAME  g_input.l_gross_profit_qbe,g_input.l_gross_profit_desc  
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            LET g_input.l_gross_profit_desc = adeq115_rtca001_ref(g_input.l_gross_profit_qbe)
+            DISPLAY BY NAME  g_input.l_gross_profit_qbe,g_input.l_gross_profit_desc  
+         
+         ON ACTION controlp INFIELD l_sale_qbe
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            CALL q_rtca001()                          
+            LET g_input.l_sale_qbe = g_qryparam.return1
+            LET g_input.l_sale_qbe_desc = adeq115_rtca001_ref(g_input.l_sale_qbe)
+            
+            DISPLAY BY NAME  g_input.l_sale_qbe,g_input.l_sale_qbe_desc  
+            
+            NEXT FIELD l_sale_qbe 
+            
+         ON ACTION controlp INFIELD l_gross_profit_qbe
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            CALL q_rtca001()                          
+            LET g_input.l_gross_profit_qbe = g_qryparam.return1
+            LET g_input.l_gross_profit_desc = adeq115_rtca001_ref(g_input.l_gross_profit_qbe)
+            DISPLAY g_input.l_gross_profit_qbe TO l_gross_profit_qbe
+            DISPLAY g_input.l_gross_profit_desc TO l_gross_profit_desc 
+            
+            NEXT FIELD l_gross_profit_qbe          
+      END INPUT
+      
+      BEFORE DIALOG
+         DISPlAY g_site TO b_debosite
+         DISPLAY g_today-1 TO b_debo002
+      #160126-00007#2 160128 By pomelo add(E)
+      #end add-point 
+ 
+      ON ACTION accept
+         #add-point:ON ACTION accept name="query.accept"
+         
+         #end add-point
+ 
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+ 
+      #add-point:query段查詢方案相關ACTION設定前 name="query.set_qbe_action_before"
+      
+      #end add-point 
+ 
+      ON ACTION qbeclear   # 條件清除
+         CLEAR FORM
+         #add-point:條件清除後 name="query.qbeclear"
+         #160126-00007#2 160217 By pomelo add(S)
+         INITIALIZE g_input.* TO NULL
+         DISPLAY BY NAME  g_input.l_sale_qbe,g_input.l_sale_qbe_desc,
+                          g_input.l_gross_profit_qbe, g_input.l_gross_profit_desc
+         #160126-00007#2 160217 By pomelo add(E)
+         #end add-point 
+ 
+      #add-point:query段查詢方案相關ACTION設定後 name="query.set_qbe_action_after"
+      
+      #end add-point 
+ 
+   END DIALOG
+ 
+   
+ 
+   LET g_wc = g_wc_table 
+ 
+ 
+   
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+ 
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      LET g_wc = " 1=2"
+      LET g_wc2 = " 1=1"
+      LET g_wc_filter = g_wc_filter_t
+      RETURN
+   ELSE
+      LET g_master_idx = 1
+   END IF
+        
+   #add-point:cs段after_construct name="cs.after_construct"
+   
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL adeq115_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = -100 
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+   END IF
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adeq115.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION adeq115_b_fill()
+   #add-point:b_fill段define-客製 name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc           STRING
+   DEFINE ls_wc2          STRING
+   DEFINE ls_sql_rank     STRING
+   #add-point:b_fill段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   DEFINE l_sql           STRING
+   DEFINE l_where         STRING
+   DEFINE l_debo010_sum   LIKE debo_t.debo010    #當天公司銷售額
+   DEFINE l_data          LIKE type_t.dat        #搜尋出來的最大筆統計日期
+   #end add-point
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   LET l_where = s_aooi500_sql_where(g_prog,'debosite')
+   IF cl_null(g_wc) THEN
+      LET g_wc = l_where
+   ELSE
+      LET g_wc = g_wc CLIPPED," AND ",l_where
+   END IF
+   #end add-point
+ 
+   IF cl_null(g_wc_filter) THEN
+      LET g_wc_filter = " 1=1"
+   END IF
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   
+   LET ls_wc = g_wc, " AND ", g_wc2, " AND ", g_wc_filter, cl_sql_auth_filter()   #(ver:40) add cl_sql_auth_filter()
+ 
+   LET ls_sql_rank = "SELECT  UNIQUE '',debo002,debosite,'',debo010,'','','','',debo014,'','','',debo015, 
+       '','','','',debo007,'',debo016,'','',debo025,'','','','','','','',''  ,DENSE_RANK() OVER( ORDER BY debo_t.debosite, 
+       debo_t.debo002) AS RANK FROM debo_t",
+ 
+ 
+                     "",
+                     " WHERE deboent= ? AND 1=1 AND ", ls_wc
+    
+   LET ls_sql_rank = ls_sql_rank, cl_sql_add_filter("debo_t"),
+                     " ORDER BY debo_t.debosite,debo_t.debo002"
+ 
+   #add-point:b_fill段rank_sql_after name="b_fill.rank_sql_after"
+   #150826-00013#2 20150903 s983961--mark(s) 效能調整
+   #LET ls_sql_rank = "SELECT UNIQUE '',      debo002, debosite, t1.ooefl003 debosite_desc,",
+   #                  "              debo010, '',      '',       '',",
+   #                  "              '',      debo014, '',       '',",
+   #                  "              '',      debo015, '',       '',",
+   #                  "              '',      '',      debo007,  '',",
+   #                  "              debo016, '',      '',       debo025,",
+   #                  "              '',      '',      '',       '',",
+   #                  "              '',      '',      ooef113,  ''  ,",
+   #                  "              DENSE_RANK() OVER( ORDER BY debo_t.debosite,debo_t.debo002) AS RANK",
+   #                  "  FROM ooef_t,debo_t",
+   #                  "  LEFT OUTER JOIN ooefl_t t1 ON t1.ooeflent = deboent",
+   #                  "                            AND t1.ooefl001 = debosite",
+   #                  "                            AND t1.ooefl002 = '",g_dlang,"'",
+   #                  " WHERE deboent = ooefent",
+   #                  "   AND debosite = ooef001",
+   #                  "   AND deboent = ?",
+   #                  "   AND ", ls_wc
+   #150826-00013#2 20150904 s983961--mark(e) 效能調整  
+   
+   #150826-00013#2 20150903 s983961--add(s) 效能調整
+   LET ls_sql_rank =" SELECT UNIQUE '',      debo002, debosite, ", 
+                    "               (SELECT ooefl003 FROM ooefl_t ",
+                    "                 WHERE ooeflent = deboent ",
+                    "                   AND ooefl001 = debosite ",
+                    "                   AND ooefl002 ='"||g_dlang||"') debosite_desc,",
+                    "              debo010, '',      '',       '',",
+                    "              '',      debo014, '',       '',",
+                    "              '',      debo015, '',       '',",
+                    "              '',      '',      debo007,  '',",
+                    "              debo016, '',      '',       debo025,",
+                    "              l_xccu102,                     ",
+                    "              '',      '',      '',          ",
+                    "              '',      '',      ooef113,  '',",
+                    "              DENSE_RANK() OVER( ORDER BY debosite,debo002) AS RANK ",
+                    "   FROM (SELECT UNIQUE deboent,  ",
+                    "                       debo002,  ",
+                    "                       debosite, ", 
+                    "                       debo010,  ",
+                    "                       debo014,  ",
+                    "                       debo015,  ",
+                    "                       debo007,  ",
+                    "                       debo016,  ",
+                    "                       debo025,  ",
+                    "                       SUM(COALESCE(deba052,0)) l_xccu102, ",
+                    "                       ooef113   ",
+                    "           FROM ooef_t,debo_t,deba_t",
+                    "          WHERE ooefent = deboent ",
+                    "            AND ooef001 = debosite",
+                    "            AND debaent = deboent ",
+                    "            AND debasite = debosite ",
+                    "            AND deba002 = debo002 ",                    
+                    "            AND deboent = ?       ",
+                    "            AND ", ls_wc,
+                    "          GROUP BY deboent,debo002,debosite,debo010,debo014,debo015,debo007,debo016,debo025,ooef113) ",
+                    "  WHERE 1=1 "
+   #150826-00013#2 20150903 s983961--add(e) 效能調整                  
+   
+   LET ls_sql_rank = ls_sql_rank, cl_sql_add_filter("debo_t"),
+                     " ORDER BY debosite,debo002"
+   #end add-point
+ 
+   LET g_sql = "SELECT COUNT(1) FROM (",ls_sql_rank,")"
+ 
+   PREPARE b_fill_cnt_pre FROM g_sql
+   EXECUTE b_fill_cnt_pre USING g_enterprise INTO g_tot_cnt
+   FREE b_fill_cnt_pre
+ 
+   #add-point:b_fill段rank_sql_after_count name="b_fill.rank_sql_after_count"
+   
+   #end add-point
+ 
+   CASE g_detail_page_action
+      WHEN "detail_first"
+          LET g_pagestart = 1
+ 
+      WHEN "detail_previous"
+          LET g_pagestart = g_pagestart - g_num_in_page
+          IF g_pagestart < 1 THEN
+              LET g_pagestart = 1
+          END IF
+ 
+      WHEN "detail_next"
+         LET g_pagestart = g_pagestart + g_num_in_page
+         IF g_pagestart > g_tot_cnt THEN
+            LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+            WHILE g_pagestart > g_tot_cnt
+               LET g_pagestart = g_pagestart - g_num_in_page
+            END WHILE
+         END IF
+ 
+      WHEN "detail_last"
+         LET g_pagestart = g_tot_cnt - (g_tot_cnt mod g_num_in_page) + 1
+         WHILE g_pagestart > g_tot_cnt
+            LET g_pagestart = g_pagestart - g_num_in_page
+         END WHILE
+ 
+      OTHERWISE
+         LET g_pagestart = 1
+ 
+   END CASE
+ 
+   LET g_sql = "SELECT '',debo002,debosite,'',debo010,'','','','',debo014,'','','',debo015,'','','', 
+       '',debo007,'',debo016,'','',debo025,'','','','','','','',''",
+               " FROM (",ls_sql_rank,")",
+              " WHERE RANK >= ",g_pagestart,
+                " AND RANK < ",g_pagestart + g_num_in_page
+ 
+   #add-point:b_fill段sql_after name="b_fill.sql_after"
+   LET g_sql = "SELECT '',       debo002, debosite, debosite_desc,",
+               "       debo010,  '',      '',       '',",
+               "       '',       debo014, '',       '',",
+               "       '',       debo015, '',       '',",
+               "       '',       '',      debo007,  '',",
+               "       debo016,  '',      '',       debo025,",
+               "       l_xccu102,'',      '',       '',",
+               "       '',       '',      '',       ooef113",
+               " FROM (",ls_sql_rank,")",
+              " WHERE RANK >= ",g_pagestart,
+                " AND RANK < ",g_pagestart + g_num_in_page
+   #end add-point
+ 
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE adeq115_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR adeq115_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_debo_d.clear()
+ 
+   #add-point:陣列清空 name="b_fill.array_clear"
+   #公司銷售額
+   LET l_sql = "SELECT COALESCE(SUM(COALESCE(debo010,0)),0)",
+               "  FROM debo_t",
+               " WHERE deboent = ",g_enterprise,
+               "   AND debo002 = ?"
+   PREPARE adeq115_debo010_summ FROM l_sql
+   
+   #預算
+   LET l_sql = "SELECT SUM(COALESCE(rtcd007,'0')), SUM(COALESCE(rtcd008,'0')), SUM(COALESCE(rtcd009,'0')), SUM(COALESCE(rtcd010,'0')),",
+               "       SUM(COALESCE(rtcd011,'0')), SUM(COALESCE(rtcd012,'0')), SUM(COALESCE(rtcd013,'0')), SUM(COALESCE(rtcd014,'0')),",
+               "       SUM(COALESCE(rtcd015,'0')), SUM(COALESCE(rtcd016,'0')), SUM(COALESCE(rtcd017,'0')), SUM(COALESCE(rtcd018,'0')),",
+               "       SUM(COALESCE(rtcd019,'0')), SUM(COALESCE(rtcd020,'0')), SUM(COALESCE(rtcd021,'0')), SUM(COALESCE(rtcd022,'0')),",
+               "       SUM(COALESCE(rtcd023,'0')), SUM(COALESCE(rtcd024,'0')), SUM(COALESCE(rtcd025,'0')), SUM(COALESCE(rtcd026,'0')),",
+               "       SUM(COALESCE(rtcd027,'0')), SUM(COALESCE(rtcd028,'0')), SUM(COALESCE(rtcd029,'0')), SUM(COALESCE(rtcd030,'0')),",
+               "       SUM(COALESCE(rtcd031,'0')), SUM(COALESCE(rtcd032,'0')), SUM(COALESCE(rtcd033,'0')), SUM(COALESCE(rtcd034,'0')),",
+               "       SUM(COALESCE(rtcd035,'0')), SUM(COALESCE(rtcd036,'0')), SUM(COALESCE(rtcd037,'0'))",
+               "  FROM rtcd_t",
+               " WHERE rtcdent = ",g_enterprise,
+               "   AND rtcdsite = ?",
+               "   AND rtcd001 = ?",
+               "   AND rtcd004 = '4'",
+               "   AND rtcd005 = ?"
+   PREPARE adeq115_sel_rtcd FROM l_sql
+   
+   #去年
+   LET l_sql = "SELECT COALESCE(debo013,0), COALESCE(debo016,0),",
+               "       COALESCE(debo015,0), COALESCE(debo007,0),",
+               "       COALESCE(debo014,0)",
+               "  FROM debo_t",
+               " WHERE deboent = ",g_enterprise,
+               "   AND debosite = ?",
+               "   AND debo002 = ?"
+   PREPARE adeq115_sel_debo_p FROM l_sql
+   
+   #自營/聯營 銷售
+   LET l_sql = "SELECT COALESCE(SUM(COALESCE(deba026,0)),0)",
+               "  FROM deba_t",
+               " WHERE debaent = ",g_enterprise,
+               "   AND debasite = ?",
+               "   AND deba002 = ?",
+               "   AND deba049 = ?"
+   PREPARE adeq115_sel_deba026 FROM l_sql
+   
+   #160126-00007#2 160129 By pomelo add(S)
+   #庫存成本
+   LET l_sql = "SELECT SUM(COALESCE(deba052,0))",
+               "  FROM deba_t",
+               " WHERE debaent = ",g_enterprise,
+               "   AND debasite = ?",
+               "   AND deba002 = ?"
+   PREPARE adeq115_sel_deba052 FROM l_sql
+   #160126-00007#2 160129 By pomelo add(E)
+   
+   #新增temp table
+   LET l_sql = "INSERT INTO adeq115_tmp(debo002, ",     
+               "                        debosite,     debo010,     debo010_sum,   l_debo013_b,",
+               "                        l_debo013_p,  debo016,     l_debo016_p,   debo007,",
+               "                        l_debo007_p,  l_self_sale, l_self_sale_p, l_uni_sale,",
+               "                        l_uni_sale_p, debo014,     l_debo014_p,   l_debo014_b, l_xccu102 , l_xccu102_p)",  #150716-00020#2 2015/10/16 S983961--add l_xccu102 , l_xccu102_p
+               "  VALUES(?, ",
+               "         ?,?,?,?,",
+               "         ?,?,?,?,",
+               "         ?,?,?,?,",
+               "         ?,?,?,?,?,?)"
+   PREPARE adeq115_in_tmp FROM l_sql
+   
+   DELETE FROM adeq115_tmp
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   IF g_cnt = 0 THEN
+      LET g_cnt = 1
+   END IF
+   LET l_ac = 1   
+ 
+   FOREACH b_fill_curs INTO g_debo_d[l_ac].sel,g_debo_d[l_ac].debo002,g_debo_d[l_ac].debosite,g_debo_d[l_ac].debosite_desc, 
+       g_debo_d[l_ac].debo010,g_debo_d[l_ac].l_debo013_b,g_debo_d[l_ac].l_debo013_r2,g_debo_d[l_ac].l_debo013_p, 
+       g_debo_d[l_ac].l_debo013_r3,g_debo_d[l_ac].debo014,g_debo_d[l_ac].l_debo014_b,g_debo_d[l_ac].l_debo014_r1, 
+       g_debo_d[l_ac].l_debo014_p,g_debo_d[l_ac].debo015,g_debo_d[l_ac].l_debo015_p,g_debo_d[l_ac].l_debo015_r1, 
+       g_debo_d[l_ac].l_debo015_r2,g_debo_d[l_ac].l_debo015_r3,g_debo_d[l_ac].debo007,g_debo_d[l_ac].l_debo007_p, 
+       g_debo_d[l_ac].debo016,g_debo_d[l_ac].l_debo016_p,g_debo_d[l_ac].l_debo016_r1,g_debo_d[l_ac].debo025, 
+       g_debo_d[l_ac].l_xccu102,g_debo_d[l_ac].l_xccu102_p,g_debo_d[l_ac].l_self_sale_p,g_debo_d[l_ac].l_self_sale, 
+       g_debo_d[l_ac].l_uni_sale_p,g_debo_d[l_ac].l_uni_sale,g_debo_d[l_ac].l_debo013_r1,g_debo_d[l_ac].l_ooef113 
+ 
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #LET g_debo_d[l_ac].statepic = cl_get_actipic(g_debo_d[l_ac].statepic)
+ 
+      
+ 
+      #add-point:b_fill段資料填充 name="b_fill.fill"
+      
+      IF cl_null(g_debo_d[l_ac].debo010) THEN
+         LET g_debo_d[l_ac].debo010 = 0
+      END IF
+      
+      IF cl_null(g_debo_d[l_ac].debo025) THEN
+         LET g_debo_d[l_ac].debo025 = 0
+      END IF
+      
+      IF cl_null(g_debo_d[l_ac].debo016) THEN
+         LET g_debo_d[l_ac].debo016 = 0
+      END IF
+      
+      IF cl_null(g_debo_d[l_ac].debo015) THEN
+         LET g_debo_d[l_ac].debo015 = 0
+      END IF
+      
+      IF cl_null(g_debo_d[l_ac].debo007) THEN
+         LET g_debo_d[l_ac].debo007 = 0
+      END IF
+      
+      IF cl_null(g_debo_d[l_ac].debo014) THEN
+         LET g_debo_d[l_ac].debo014 = 0
+      END IF
+      
+      #去年日期
+      LET g_last_year_date = MDY(MONTH(g_debo_d[l_ac].debo002),DAY(g_debo_d[l_ac].debo002),YEAR(g_debo_d[l_ac].debo002) - 1)
+      
+      ##預測
+      #淨預算銷售額 預算毛利額
+      CALL adeq115_def_budget()
+         RETURNING g_debo_d[l_ac].l_debo013_b,g_debo_d[l_ac].l_debo014_b
+      
+      ##去年
+      IF cl_null(g_last_year_date) THEN
+         LET g_debo_d[l_ac].l_debo013_p = 0
+         LET g_debo_d[l_ac].l_debo016_p = 0
+         LET g_debo_d[l_ac].l_debo015_p = 0
+         LET g_debo_d[l_ac].l_debo007_p = 0
+         LET g_debo_d[l_ac].l_debo014_p = 0
+         
+         LET g_debo_d[l_ac].l_self_sale_p = 0
+         LET g_debo_d[l_ac].l_uni_sale_p = 0
+      ELSE
+         EXECUTE adeq115_sel_debo_p USING g_debo_d[l_ac].debosite,g_last_year_date
+            INTO g_debo_d[l_ac].l_debo013_p, g_debo_d[l_ac].l_debo016_p,
+                 g_debo_d[l_ac].l_debo015_p, g_debo_d[l_ac].l_debo007_p,
+                 g_debo_d[l_ac].l_debo014_p
+         
+         IF cl_null(g_debo_d[l_ac].l_debo013_p) THEN
+            LET g_debo_d[l_ac].l_debo013_p = 0
+         END IF
+         
+         IF cl_null(g_debo_d[l_ac].l_debo016_p) THEN
+            LET g_debo_d[l_ac].l_debo016_p = 0
+         END IF
+         
+         IF cl_null(g_debo_d[l_ac].l_debo015_p) THEN
+            LET g_debo_d[l_ac].l_debo015_p = 0
+         END IF
+         
+         IF cl_null(g_debo_d[l_ac].l_debo007_p) THEN
+            LET g_debo_d[l_ac].l_debo007_p = 0
+         END IF
+         
+         IF cl_null(g_debo_d[l_ac].l_debo014_p) THEN
+            LET g_debo_d[l_ac].l_debo014_p = 0
+         END IF
+         
+         #去年自營
+         EXECUTE adeq115_sel_deba026 USING g_debo_d[l_ac].debosite,g_last_year_date,'1'
+            INTO g_debo_d[l_ac].l_self_sale_p
+            
+         #去年聯營
+         EXECUTE adeq115_sel_deba026 USING g_debo_d[l_ac].debosite,g_last_year_date,'4'
+            INTO g_debo_d[l_ac].l_uni_sale_p
+      END IF
+      
+      
+      ## 銷售額
+      #當天公司銷售額
+      LET l_debo010_sum = 0
+      EXECUTE adeq115_debo010_summ USING g_debo_d[l_ac].debo002
+         INTO l_debo010_sum
+         
+      #銷售佔公司比
+      IF  l_debo010_sum = 0 THEN
+          #LET g_debo_d[l_ac].l_debo013_r1 = 0
+          #150716-00020#2 15/07/20 s983961--add(s)
+          CASE 
+             WHEN g_debo_d[l_ac].debo010 > 0
+                LET g_debo_d[l_ac].l_debo013_r1 = 100
+             WHEN g_debo_d[l_ac].debo010 = 0
+                LET g_debo_d[l_ac].l_debo013_r1 = 0
+             WHEN g_debo_d[l_ac].debo010 < 0
+                LET g_debo_d[l_ac].l_debo013_r1 = -100
+          END CASE      
+          #150716-00020#2 15/07/20 s983961--add(e)
+      ELSE      
+          LET g_debo_d[l_ac].l_debo013_r1 = (g_debo_d[l_ac].debo010 / l_debo010_sum) * 100
+      END IF
+      #銷售額預算比
+      IF g_debo_d[l_ac].l_debo013_b = 0  THEN
+         #LET g_debo_d[l_ac].l_debo013_r2 = 0
+         #150716-00020#2 15/07/20 s983961--add(s)
+         CASE 
+             WHEN g_debo_d[l_ac].debo010 > 0
+                LET g_debo_d[l_ac].l_debo013_r2 = 100
+             WHEN g_debo_d[l_ac].debo010 = 0
+                LET g_debo_d[l_ac].l_debo013_r2 = 0
+             WHEN g_debo_d[l_ac].debo010 < 0
+                LET g_debo_d[l_ac].l_debo013_r2 = -100
+         END CASE      
+         #150716-00020#2 15/07/20 s983961--add(e)
+      ELSE            
+         LET g_debo_d[l_ac].l_debo013_r2 = (g_debo_d[l_ac].debo010 / g_debo_d[l_ac].l_debo013_b) * 100        
+      END IF
+      
+      #銷售額同比
+      IF g_debo_d[l_ac].l_debo013_p = 0  THEN
+         #LET g_debo_d[l_ac].l_debo013_r3 = 0
+         #150716-00020#2 15/07/20 s983961--add(s)
+         CASE 
+             WHEN g_debo_d[l_ac].debo010 > 0
+                LET g_debo_d[l_ac].l_debo013_r3 = 100
+             WHEN g_debo_d[l_ac].debo010 = 0
+                LET g_debo_d[l_ac].l_debo013_r3 = 0
+             WHEN g_debo_d[l_ac].debo010 < 0
+                LET g_debo_d[l_ac].l_debo013_r3 = -100
+         END CASE      
+         #150716-00020#2 15/07/20 s983961--add(e)
+      ELSE
+         LET g_debo_d[l_ac].l_debo013_r3 = (g_debo_d[l_ac].debo010 / g_debo_d[l_ac].l_debo013_p) * 100
+      END IF
+      
+      ##客單數
+      #客單數同比
+      IF g_debo_d[l_ac].l_debo016_p = 0  THEN
+         #LET g_debo_d[l_ac].l_debo016_r1 = 0
+         #150716-00020#2 15/07/20 s983961--add(s)
+         CASE 
+             WHEN g_debo_d[l_ac].debo016 > 0
+                LET g_debo_d[l_ac].l_debo016_r1 = 100
+             WHEN g_debo_d[l_ac].debo016 = 0
+                LET g_debo_d[l_ac].l_debo016_r1 = 0
+             WHEN g_debo_d[l_ac].debo016 < 0
+                LET g_debo_d[l_ac].l_debo016_r1 = -100
+         END CASE      
+         #150716-00020#2 15/07/20 s983961--add(s)
+      ELSE
+         LET g_debo_d[l_ac].l_debo016_r1 = (g_debo_d[l_ac].debo016 / g_debo_d[l_ac].l_debo016_p) * 100
+      END IF
+      
+      ##毛利率
+      #預算毛利率
+      IF g_debo_d[l_ac].l_debo013_b = 0  THEN
+         #LET g_debo_d[l_ac].l_debo015_r1 = 0
+         #150716-00020#2 15/07/20 s983961--add(s)
+         CASE 
+             WHEN g_debo_d[l_ac].l_debo014_b > 0
+                LET g_debo_d[l_ac].l_debo015_r1 = 100
+             WHEN g_debo_d[l_ac].l_debo014_b = 0
+                LET g_debo_d[l_ac].l_debo015_r1 = 0
+             WHEN g_debo_d[l_ac].l_debo014_b < 0
+                LET g_debo_d[l_ac].l_debo015_r1 = -100
+         END CASE      
+         #150716-00020#2 15/07/20 s983961--add(e)
+      ELSE
+         LET g_debo_d[l_ac].l_debo015_r1 = (g_debo_d[l_ac].l_debo014_b / g_debo_d[l_ac].l_debo013_b) * 100
+      END IF
+      
+      #毛利率預算比
+      IF g_debo_d[l_ac].l_debo015_r1 = 0  THEN
+         #LET g_debo_d[l_ac].l_debo015_r2 = 0
+         #150716-00020#2 15/07/20 s983961--add(s)
+         CASE 
+             WHEN g_debo_d[l_ac].debo015 > 0
+                LET g_debo_d[l_ac].l_debo015_r2 = 100
+             WHEN g_debo_d[l_ac].debo015= 0
+                LET g_debo_d[l_ac].l_debo015_r2 = 0
+             WHEN g_debo_d[l_ac].debo015 < 0
+                LET g_debo_d[l_ac].l_debo015_r2 = -100
+         END CASE      
+         #150716-00020#2 15/07/20 s983961--add(e)
+      ELSE
+         LET g_debo_d[l_ac].l_debo015_r2 = (g_debo_d[l_ac].debo015 / g_debo_d[l_ac].l_debo015_r1) * 100
+      END IF
+      
+      #毛利率同比
+      IF g_debo_d[l_ac].l_debo015_p = 0  THEN
+         #LET g_debo_d[l_ac].l_debo015_r3 = 0
+         #150716-00020#2 15/07/20 s983961--add(s)
+         CASE 
+             WHEN g_debo_d[l_ac].debo015 > 0
+                LET g_debo_d[l_ac].l_debo015_r3 = 100
+             WHEN g_debo_d[l_ac].debo015= 0
+                LET g_debo_d[l_ac].l_debo015_r3 = 0
+             WHEN g_debo_d[l_ac].debo015 < 0
+                LET g_debo_d[l_ac].l_debo015_r3 = -100
+         END CASE      
+         #150716-00020#2 15/07/20 s983961--add(e)
+      ELSE
+         LET g_debo_d[l_ac].l_debo015_r3 = (g_debo_d[l_ac].debo015 / g_debo_d[l_ac].l_debo015_p) * 100
+      END IF
+      
+      ##庫存成本額
+      #2015/10/16 s983961--mark(s) 效調
+      ##當天庫存金額150716-00020#2 15/07/20 s983961
+      #LET g_debo_d[l_ac].l_xccu102 = 0
+      #SELECT SUM(COALESCE(deba052,0)) INTO g_debo_d[l_ac].l_xccu102
+      #  FROM deba_t
+      # WHERE debaent = g_enterprise 
+      #   AND debasite = g_debo_d[l_ac].debosite
+      #   AND deba002 = g_debo_d[l_ac].debo002        
+      #IF cl_null(g_debo_d[l_ac].l_xccu102) THEN
+      #LET g_debo_d[l_ac].l_xccu102 = 0
+      #END IF      
+      #2015/10/16 s983961--mark(e) 效調
+      
+      #160126-00007#2 160129 By pomelo mark(S)
+      #去年庫存金額150716-00020#2 15/07/20 s983961
+      #LET g_debo_d[l_ac].l_xccu102_p = 0   
+      #SELECT SUM(COALESCE(deba052,0)) INTO g_debo_d[l_ac].l_xccu102_p
+      #  FROM deba_t
+      # WHERE debaent = deboent 
+      #   AND debasite = debosite
+      #   AND deba002 = g_last_year_date        
+      #IF cl_null(g_debo_d[l_ac].l_xccu102_p) THEN
+      #   LET g_debo_d[l_ac].l_xccu102_p = 0
+      #END IF  
+      #160126-00007#2 160129 By pomelo mark(E)
+      #160126-00007#2 160129 By pomelo add(S)      
+      #去年庫存成本金額
+      LET g_debo_d[l_ac].l_xccu102_p = 0
+      EXECUTE adeq115_sel_deba052 USING g_debo_d[l_ac].debosite,g_last_year_date
+         INTO g_debo_d[l_ac].l_xccu102_p
+      IF cl_null(g_debo_d[l_ac].l_xccu102_p) THEN
+         LET g_debo_d[l_ac].l_xccu102_p = 0
+      END IF
+      #160126-00007#2 160129 By pomelo add(E)
+      
+      ##自營銷售
+      #今年自營
+      EXECUTE adeq115_sel_deba026 USING g_debo_d[l_ac].debosite,g_debo_d[l_ac].debo002,'1'
+         INTO g_debo_d[l_ac].l_self_sale
+         
+      #今年聯營
+      EXECUTE adeq115_sel_deba026 USING g_debo_d[l_ac].debosite,g_debo_d[l_ac].debo002,'4'
+         INTO g_debo_d[l_ac].l_uni_sale
+      
+      ##毛利
+      ##毛利額預算比
+      IF g_debo_d[l_ac].l_debo014_b = 0 THEN
+         #LET g_debo_d[l_ac].l_debo014_r1 = 0
+         #150716-00020#2 15/07/20 s983961--add(s)
+         CASE 
+             WHEN g_debo_d[l_ac].debo014 > 0
+                LET g_debo_d[l_ac].l_debo014_r1 = 100
+             WHEN g_debo_d[l_ac].debo014 = 0
+                LET g_debo_d[l_ac].l_debo014_r1 = 0
+             WHEN g_debo_d[l_ac].debo014 < 0
+                LET g_debo_d[l_ac].l_debo014_r1 = -100
+         END CASE      
+         #150716-00020#2 15/07/20 s983961--add(e)
+      ELSE
+         LET g_debo_d[l_ac].l_debo014_r1 = (g_debo_d[l_ac].debo014 / g_debo_d[l_ac].l_debo014_b) * 100
+      END IF
+      
+      
+      #新增 temp table
+      #2015/07/20 s983961--add g_debo_d[l_ac].debo002
+      EXECUTE adeq115_in_tmp USING g_debo_d[l_ac].debo002,      
+                                   g_debo_d[l_ac].debosite,     g_debo_d[l_ac].debo010,     l_debo010_sum,                g_debo_d[l_ac].l_debo013_b,
+                                   g_debo_d[l_ac].l_debo013_p,  g_debo_d[l_ac].debo016,     g_debo_d[l_ac].l_debo016_p,   g_debo_d[l_ac].debo007,
+                                   g_debo_d[l_ac].l_debo007_p,  g_debo_d[l_ac].l_self_sale, g_debo_d[l_ac].l_self_sale_p, g_debo_d[l_ac].l_uni_sale,
+                                   g_debo_d[l_ac].l_uni_sale_p, g_debo_d[l_ac].debo014,     g_debo_d[l_ac].l_debo014_p,   g_debo_d[l_ac].l_debo014_b,
+                                   g_debo_d[l_ac].l_xccu102,    g_debo_d[l_ac].l_xccu102_p
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "Ins adeq115_tmp"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+      #end add-point
+ 
+      CALL adeq115_detail_show("'1'")      
+ 
+      CALL adeq115_debo_t_mask()
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "" 
+            LET g_errparam.code = 9035 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+ 
+   
+   CALL g_debo_d.deleteElement(g_debo_d.getLength())   
+ 
+   #add-point:陣列長度調整 name="b_fill.array_deleteElement"
+   
+   #end add-point
+   
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.others.fill"
+   LET g_cnt = l_ac
+   IF g_cnt = 0 THEN
+      LET g_cnt = 1
+   END IF
+   LET l_ac = 1   
+   #150826-00013#2 20150903 s983961--mark and mod(s) 效能調整
+   #LET l_sql = "SELECT ooef113,ooefl003",
+   #            "  FROM ooef_t",
+   #            "  LEFT OUTER JOIN ooefl_t ON ooeflent = ooefent",
+   #            "                         AND ooefl001 = ooef001",
+   #            "                         AND ooefl002 = '",g_dlang,"'",
+   #            " WHERE ooefent = ",g_enterprise,
+   #            "   AND ooef001 = ?"
+ 
+   LET l_sql = "SELECT ooef113, ",
+               "       (SELECT ooefl003 FROM ooefl_t ",
+               "         WHERE ooeflent = ooefent ",
+               "           AND ooefl001 = ooef001 ",
+               "           AND ooefl002 ='"||g_dlang||"') ooefl003 ",  
+               "  FROM ooef_t",
+               " WHERE ooefent = ",g_enterprise,
+               "   AND ooef001 = ?"
+   #150826-00013#2 20150903 s983961--mark and mod(e) 效能調整            
+   PREPARE adeq115_sel_ooef FROM l_sql
+   
+   LET l_sql = "SELECT MAX(debo002),",      
+               "       debosite,          SUM(debo010),     SUM(debo010_sum),   SUM(l_debo013_b),",
+               "       SUM(l_debo013_p),  SUM(debo016),     SUM(l_debo016_p),   SUM(debo007),",
+               "       SUM(l_debo007_p),  SUM(l_self_sale), SUM(l_self_sale_p), SUM(l_uni_sale),",
+               "       SUM(l_uni_sale_p), SUM(debo014),     SUM(l_debo014_p),   SUM(l_debo014_b),",
+               "       SUM(l_xccu102),    SUM(l_xccu102_p) ",
+               "  FROM adeq115_tmp",
+               " GROUP BY debosite"
+   PREPARE adeq115_tmp_pre FROM l_sql
+   DECLARE adeq115_tmp_cs CURSOR FOR adeq115_tmp_pre
+   
+   FOREACH adeq115_tmp_cs
+     INTO l_data,                       
+          g_debo2_d[l_ac].debosite,     g_debo2_d[l_ac].debo010,     l_debo010_sum,                 g_debo2_d[l_ac].l_debo013_b,
+          g_debo2_d[l_ac].l_debo013_p,  g_debo2_d[l_ac].debo016,     g_debo2_d[l_ac].l_debo016_p,   g_debo2_d[l_ac].debo007,
+          g_debo2_d[l_ac].l_debo007_p,  g_debo2_d[l_ac].l_self_sale, g_debo2_d[l_ac].l_self_sale_p, g_debo2_d[l_ac].l_uni_sale,
+          g_debo2_d[l_ac].l_uni_sale_p, g_debo2_d[l_ac].debo014,     g_debo2_d[l_ac].l_debo014_p,   g_debo2_d[l_ac].l_debo014_b,
+          g_debo2_d[l_ac].l_xccu102,    g_debo2_d[l_ac].l_xccu102_p
+          
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      EXECUTE adeq115_sel_ooef USING g_debo2_d[l_ac].debosite
+         INTO g_debo2_d[l_ac].l_ooef113,g_debo2_d[l_ac].debosite_desc
+      
+      LET g_last_year_date2 = MDY(MONTH(l_data),DAY(l_data),YEAR(l_data) - 1) #2015/07/20 s983961 add 去年的統計日期
+      ## 銷售額
+      #銷售佔公司比
+      IF l_debo010_sum = 0  THEN
+         CASE 
+             WHEN g_debo2_d[l_ac].debo010 > 0
+                LET g_debo2_d[l_ac].l_debo013_r1 = 100
+             WHEN g_debo2_d[l_ac].debo010 = 0
+                LET g_debo2_d[l_ac].l_debo013_r1 = 0
+             WHEN g_debo2_d[l_ac].debo010 < 0
+                LET g_debo2_d[l_ac].l_debo013_r1 = -100
+         END CASE 
+      ELSE         
+          LET g_debo2_d[l_ac].l_debo013_r1 = (g_debo2_d[l_ac].debo010 / l_debo010_sum) * 100
+      END IF
+      #銷售額預算比
+      IF g_debo2_d[l_ac].l_debo013_b = 0  THEN
+         #LET g_debo2_d[l_ac].l_debo013_r2 = 0
+         #150716-00020#2 15/07/20 s983961--add(s)
+         CASE 
+             WHEN g_debo2_d[l_ac].debo010 > 0
+                LET g_debo2_d[l_ac].l_debo013_r2 = 100
+             WHEN g_debo2_d[l_ac].debo010 = 0
+                LET g_debo2_d[l_ac].l_debo013_r2 = 0
+             WHEN g_debo2_d[l_ac].debo010 < 0
+                LET g_debo2_d[l_ac].l_debo013_r2 = -100
+         END CASE 
+         #150716-00020#2 15/07/20 s983961--add(e)
+      ELSE
+         LET g_debo2_d[l_ac].l_debo013_r2 = (g_debo2_d[l_ac].debo010 / g_debo2_d[l_ac].l_debo013_b) * 100
+      END IF
+      
+      #銷售額同比
+      IF g_debo2_d[l_ac].l_debo013_p = 0  THEN
+         #LET g_debo2_d[l_ac].l_debo013_r3 = 0
+         #150716-00020#2 15/07/20 s983961--add(s)
+         CASE 
+             WHEN g_debo2_d[l_ac].debo010 > 0
+                LET g_debo2_d[l_ac].l_debo013_r3 = 100
+             WHEN g_debo2_d[l_ac].debo010 = 0
+                LET g_debo2_d[l_ac].l_debo013_r3 = 0
+             WHEN g_debo2_d[l_ac].debo010 < 0
+                LET g_debo2_d[l_ac].l_debo013_r3 = -100
+         END CASE 
+         #150716-00020#2 15/07/20 s983961--add(e)
+      ELSE
+         LET g_debo2_d[l_ac].l_debo013_r3 = (g_debo2_d[l_ac].debo010 / g_debo2_d[l_ac].l_debo013_p) * 100
+      END IF
+      
+      ##客單價
+      #客單價 = 應收金額 / 客單數
+      IF g_debo2_d[l_ac].debo016 = 0  THEN
+         #LET g_debo2_d[l_ac].debo025 = 0
+         #150716-00020#2 15/07/20 s983961--add(s)
+         CASE 
+             WHEN g_debo2_d[l_ac].debo010 > 0
+                LET g_debo2_d[l_ac].debo025 = 100
+             WHEN g_debo2_d[l_ac].debo010 = 0
+                LET g_debo2_d[l_ac].debo025 = 0
+             WHEN g_debo2_d[l_ac].debo010 < 0
+                LET g_debo2_d[l_ac].debo025 = -100
+         END CASE 
+         #150716-00020#2 15/07/20 s983961--add(e)
+      ELSE
+         LET g_debo2_d[l_ac].debo025 = (g_debo2_d[l_ac].debo010 / g_debo2_d[l_ac].debo016) * 100
+      END IF
+      
+      ##客單數
+      #客單數同比
+      IF g_debo2_d[l_ac].l_debo016_p = 0  THEN
+         #LET g_debo2_d[l_ac].l_debo016_r1 = 0
+         #150716-00020#2 15/07/20 s983961--add(s)
+         CASE 
+             WHEN g_debo2_d[l_ac].debo016 > 0
+                LET g_debo2_d[l_ac].l_debo016_r1 = 100
+             WHEN g_debo2_d[l_ac].debo016 = 0
+                LET g_debo2_d[l_ac].l_debo016_r1 = 0
+             WHEN g_debo2_d[l_ac].debo016 < 0
+                LET g_debo2_d[l_ac].l_debo016_r1 = -100
+         END CASE 
+         #150716-00020#2 15/07/20 s983961--add(e)
+      ELSE
+         LET g_debo2_d[l_ac].l_debo016_r1 = (g_debo2_d[l_ac].debo016 / g_debo2_d[l_ac].l_debo016_p) * 100
+      END IF
+      
+      ##毛利率
+      #毛利率 = 毛利 / 應收金額
+      IF g_debo2_d[l_ac].debo010 = 0  THEN
+         #LET g_debo2_d[l_ac].debo015 = 0
+         #150716-00020#2 15/07/20 s983961--add(s)
+         CASE 
+             WHEN g_debo2_d[l_ac].debo014 > 0
+                LET g_debo2_d[l_ac].debo015 = 100
+             WHEN g_debo2_d[l_ac].debo014 = 0
+                LET g_debo2_d[l_ac].debo015 = 0
+             WHEN g_debo2_d[l_ac].debo014 < 0
+                LET g_debo2_d[l_ac].debo015 = -100
+         END CASE 
+         #150716-00020#2 15/07/20 s983961--add(e)
+      ELSE
+         LET g_debo2_d[l_ac].debo015 = (g_debo2_d[l_ac].debo014 / g_debo2_d[l_ac].debo010) *100
+      END IF
+      
+      #去年毛利率 = 去年毛利 / 去年應收金額
+      IF g_debo2_d[l_ac].l_debo013_p = 0  THEN
+         #LET g_debo2_d[l_ac].l_debo015_p = 0
+         #150716-00020#2 15/07/20 s983961--add(s)
+         CASE 
+             WHEN g_debo2_d[l_ac].l_debo014_p > 0
+                LET g_debo2_d[l_ac].l_debo015_p = 100
+             WHEN g_debo2_d[l_ac].l_debo014_p = 0
+                LET g_debo2_d[l_ac].l_debo015_p = 0
+             WHEN g_debo2_d[l_ac].l_debo014_p < 0
+                LET g_debo2_d[l_ac].l_debo015_p = -100
+         END CASE 
+         #150716-00020#2 15/07/20 s983961--add(e)
+      ELSE
+         LET g_debo2_d[l_ac].l_debo015_p = (g_debo2_d[l_ac].l_debo014_p / g_debo2_d[l_ac].l_debo013_p) *100
+      END IF
+      
+      #預算毛利率
+      IF g_debo2_d[l_ac].l_debo013_b = 0  THEN
+         #LET g_debo2_d[l_ac].l_debo015_r1 = 0
+         #150716-00020#2 15/07/20 s983961--add(s)
+         CASE 
+             WHEN g_debo2_d[l_ac].l_debo014_b > 0
+                LET g_debo2_d[l_ac].l_debo015_r1 = 100
+             WHEN g_debo2_d[l_ac].l_debo014_b = 0
+                LET g_debo2_d[l_ac].l_debo015_r1 = 0
+             WHEN g_debo2_d[l_ac].l_debo014_b < 0
+                LET g_debo2_d[l_ac].l_debo015_r1 = -100
+         END CASE 
+         #150716-00020#2 15/07/20 s983961--add(e)
+      ELSE
+         LET g_debo2_d[l_ac].l_debo015_r1 = (g_debo2_d[l_ac].l_debo014_b / g_debo2_d[l_ac].l_debo013_b) * 100
+      END IF
+      
+      #毛利率預算比
+      IF g_debo2_d[l_ac].l_debo015_r1 = 0  THEN
+         #LET g_debo2_d[l_ac].l_debo015_r2 = 0
+         #150716-00020#2 15/07/20 s983961--add(s)
+         CASE 
+             WHEN g_debo2_d[l_ac].debo015 > 0
+                LET g_debo2_d[l_ac].l_debo015_r2 = 100
+             WHEN g_debo2_d[l_ac].debo015 = 0
+                LET g_debo2_d[l_ac].l_debo015_r2 = 0
+             WHEN g_debo2_d[l_ac].debo015 < 0
+                LET g_debo2_d[l_ac].l_debo015_r2 = -100
+         END CASE 
+         #150716-00020#2 15/07/20 s983961--add(e)
+      ELSE
+         LET g_debo2_d[l_ac].l_debo015_r2 = (g_debo2_d[l_ac].debo015 / g_debo2_d[l_ac].l_debo015_r1) * 100
+      END IF
+      
+      #毛利率同比
+      IF g_debo2_d[l_ac].l_debo015_p = 0  THEN
+         #LET g_debo2_d[l_ac].l_debo015_r3 = 0
+         CASE 
+             WHEN g_debo2_d[l_ac].debo015 > 0
+                LET g_debo2_d[l_ac].l_debo015_r3 = 100
+             WHEN g_debo2_d[l_ac].debo015 = 0
+                LET g_debo2_d[l_ac].l_debo015_r3 = 0
+             WHEN g_debo2_d[l_ac].debo015 < 0
+                LET g_debo2_d[l_ac].l_debo015_r3 = -100
+         END CASE 
+      ELSE
+         LET g_debo2_d[l_ac].l_debo015_r3 = (g_debo2_d[l_ac].debo015 / g_debo2_d[l_ac].l_debo015_p) * 100
+      END IF
+      
+      ##庫存成本額
+      #2015/10/16 s983961--mark(s)
+      ##當天庫存金額 150716-00020#2 15/07/20 s983961--add
+      #LET g_debo2_d[l_ac].l_xccu102 = 0
+      #SELECT SUM(COALESCE(deba052,0)) INTO g_debo2_d[l_ac].l_xccu102
+      #  FROM deba_t
+      # WHERE debaent = g_enterprise
+      #   AND debasite = g_debo2_d[l_ac].debosite
+      #   AND deba002 = l_data      
+      #IF cl_null(g_debo2_d[l_ac].l_xccu102) THEN
+      #LET g_debo2_d[l_ac].l_xccu102 = 0
+      #END IF        
+      ##去年庫存金額 150716-00020#2 15/07/20 s983961--add
+      #LET g_debo2_d[l_ac].l_xccu102_p = 0
+      #SELECT SUM(COALESCE(deba052,0)) INTO g_debo2_d[l_ac].l_xccu102_p
+      #  FROM deba_t
+      # WHERE debaent = g_enterprise 
+      #   AND debasite = g_debo2_d[l_ac].debosite
+      #   AND deba002 = g_last_year_date2       
+      #IF cl_null(l_xccu102_d2) THEN
+      #LET g_debo2_d[l_ac].l_xccu102_p = 0
+      #END IF        
+      #2015/10/16 s983961--mark(e)
+      
+      ##毛利
+      ##毛利額預算比 
+      IF g_debo2_d[l_ac].l_debo014_b = 0  THEN
+         #LET g_debo2_d[l_ac].l_debo014_r1 = 0
+         CASE 
+             WHEN g_debo2_d[l_ac].debo014 > 0
+                LET g_debo2_d[l_ac].l_debo014_r1 = 100
+             WHEN g_debo2_d[l_ac].debo014 = 0
+                LET g_debo2_d[l_ac].l_debo014_r1 = 0
+             WHEN g_debo2_d[l_ac].debo014 < 0
+                LET g_debo2_d[l_ac].l_debo014_r1 = -100
+         END CASE 
+      ELSE
+         LET g_debo2_d[l_ac].l_debo014_r1 = (g_debo2_d[l_ac].debo014 / g_debo2_d[l_ac].l_debo014_b) * 100
+      END IF
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+   CALL g_debo2_d.deleteElement(g_debo2_d.getLength())   
+   #end add-point
+ 
+   LET g_detail_cnt = g_debo_d.getLength()
+#  DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE adeq115_pb
+ 
+   #調整單身index指標，避免翻頁後指到空白筆數
+   CALL adeq115_detail_index_setting()
+ 
+   #重新計算單身筆數並呈現
+   CALL adeq115_detail_action_trans()
+ 
+   IF g_debo_d.getLength() > 0 THEN
+      LET l_ac = 1
+      CALL adeq115_fetch()
+   END IF
+   
+      CALL adeq115_filter_show('debo002','b_debo002')
+   CALL adeq115_filter_show('debosite','b_debosite')
+   CALL adeq115_filter_show('debo010','b_debo010')
+   CALL adeq115_filter_show('debo014','b_debo014')
+   CALL adeq115_filter_show('debo015','b_debo015')
+   CALL adeq115_filter_show('debo007','b_debo007')
+   CALL adeq115_filter_show('debo016','b_debo016')
+   CALL adeq115_filter_show('debo025','b_debo025')
+ 
+ 
+   #add-point:b_fill段結束前 name="b_fill.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adeq115.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION adeq115_fetch()
+   #add-point:fetch段define-客製 name="fetch.define_customerization"
+   
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   
+   #end add-point
+   
+   #add-point:FUNCTION前置處理 name="fetch.before_function"
+   
+   #end add-point
+ 
+ 
+   #add-point:陣列清空 name="fetch.array_clear"
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+ 
+   
+   #add-point:單身填充後 name="fetch.after_fill"
+   
+   #end add-point 
+   
+ 
+   #add-point:陣列筆數調整 name="fetch.array_deleteElement"
+   
+   #end add-point
+ 
+   LET l_ac = li_ac
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adeq115.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION adeq115_detail_show(ps_page)
+   #add-point:show段define-客製 name="detail_show.define_customerization"
+   
+   #end add-point
+   DEFINE ps_page    STRING
+   DEFINE ls_sql     STRING
+   #add-point:show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   
+   #end add-point
+ 
+   #add-point:detail_show段之前 name="detail_show.before"
+   
+   #end add-point
+   
+   
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      
+ 
+      #add-point:show段單身reference name="detail_show.body.reference"
+ 
+      #end add-point
+   END IF
+   
+ 
+ 
+   #add-point:detail_show段之後 name="detail_show.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adeq115.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION adeq115_filter()
+   #add-point:filter段define-客製 name="filter.define_customerization"
+   
+   #end add-point
+   DEFINE  ls_result   STRING
+   #add-point:filter段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter.define"
+   
+   #end add-point
+   
+   #add-point:FUNCTION前置處理 name="filter.before_function"
+   
+   #end add-point
+ 
+   LET l_ac = 1
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON debo002,debosite,debo010,debo014,debo015,debo007,debo016,debo025
+                          FROM s_detail1[1].b_debo002,s_detail1[1].b_debosite,s_detail1[1].b_debo010, 
+                              s_detail1[1].b_debo014,s_detail1[1].b_debo015,s_detail1[1].b_debo007,s_detail1[1].b_debo016, 
+                              s_detail1[1].b_debo025
+ 
+         BEFORE CONSTRUCT
+                     DISPLAY adeq115_filter_parser('debo002') TO s_detail1[1].b_debo002
+            DISPLAY adeq115_filter_parser('debosite') TO s_detail1[1].b_debosite
+            DISPLAY adeq115_filter_parser('debo010') TO s_detail1[1].b_debo010
+            DISPLAY adeq115_filter_parser('debo014') TO s_detail1[1].b_debo014
+            DISPLAY adeq115_filter_parser('debo015') TO s_detail1[1].b_debo015
+            DISPLAY adeq115_filter_parser('debo007') TO s_detail1[1].b_debo007
+            DISPLAY adeq115_filter_parser('debo016') TO s_detail1[1].b_debo016
+            DISPLAY adeq115_filter_parser('debo025') TO s_detail1[1].b_debo025
+ 
+ 
+         #單身公用欄位開窗相關處理
+         
+           
+         #單身一般欄位開窗相關處理
+                  #----<<sel>>----
+         #----<<b_debo002>>----
+         #Ctrlp:construct.c.filter.page1.b_debo002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debo002
+            #add-point:ON ACTION controlp INFIELD b_debo002 name="construct.c.filter.page1.b_debo002"
+            
+            #END add-point
+ 
+ 
+         #----<<b_debosite>>----
+         #Ctrlp:construct.c.page1.b_debosite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debosite
+            #add-point:ON ACTION controlp INFIELD b_debosite name="construct.c.filter.page1.b_debosite"
+            #應用 a08 樣板自動產生(Version:2)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where  = s_aooi500_q_where(g_prog,'debosite',g_site,'c')
+            CALL q_ooef001_24()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO b_debosite  #顯示到畫面上
+            NEXT FIELD b_debosite                     #返回原欄位
+            #END add-point
+ 
+ 
+         #----<<b_debosite_desc>>----
+         #----<<b_debo010>>----
+         #Ctrlp:construct.c.filter.page1.b_debo010
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debo010
+            #add-point:ON ACTION controlp INFIELD b_debo010 name="construct.c.filter.page1.b_debo010"
+            
+            #END add-point
+ 
+ 
+         #----<<l_debo013_b>>----
+         #----<<l_debo013_r2>>----
+         #----<<l_debo013_p>>----
+         #----<<l_debo013_r3>>----
+         #----<<b_debo014>>----
+         #Ctrlp:construct.c.filter.page1.b_debo014
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debo014
+            #add-point:ON ACTION controlp INFIELD b_debo014 name="construct.c.filter.page1.b_debo014"
+            
+            #END add-point
+ 
+ 
+         #----<<l_debo014_b>>----
+         #----<<l_debo014_r1>>----
+         #----<<l_debo014_p>>----
+         #----<<b_debo015>>----
+         #Ctrlp:construct.c.filter.page1.b_debo015
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debo015
+            #add-point:ON ACTION controlp INFIELD b_debo015 name="construct.c.filter.page1.b_debo015"
+            
+            #END add-point
+ 
+ 
+         #----<<l_debo015_p>>----
+         #----<<l_debo015_r1>>----
+         #----<<l_debo015_r2>>----
+         #----<<l_debo015_r3>>----
+         #----<<b_debo007>>----
+         #Ctrlp:construct.c.filter.page1.b_debo007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debo007
+            #add-point:ON ACTION controlp INFIELD b_debo007 name="construct.c.filter.page1.b_debo007"
+            
+            #END add-point
+ 
+ 
+         #----<<l_debo007_p>>----
+         #----<<b_debo016>>----
+         #Ctrlp:construct.c.filter.page1.b_debo016
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debo016
+            #add-point:ON ACTION controlp INFIELD b_debo016 name="construct.c.filter.page1.b_debo016"
+            
+            #END add-point
+ 
+ 
+         #----<<l_debo016_p>>----
+         #----<<l_debo016_r1>>----
+         #----<<b_debo025>>----
+         #Ctrlp:construct.c.filter.page1.b_debo025
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD b_debo025
+            #add-point:ON ACTION controlp INFIELD b_debo025 name="construct.c.filter.page1.b_debo025"
+            
+            #END add-point
+ 
+ 
+         #----<<l_xccu102>>----
+         #----<<l_xccu102_p>>----
+         #----<<l_self_sale_p>>----
+         #----<<l_self_sale>>----
+         #----<<l_uni_sale_p>>----
+         #----<<l_uni_sale>>----
+         #----<<l_debo013_r1>>----
+         #----<<l_ooef113>>----
+   
+ 
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs name="filter.add_cs"
+      
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog name="filter.b_dialog"
+         
+         #end add-point  
+ 
+      ON ACTION accept
+         ACCEPT DIALOG 
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = g_wc_filter, " "
+      LET g_wc_filter_t = g_wc_filter
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+   END IF
+   
+      CALL adeq115_filter_show('debo002','b_debo002')
+   CALL adeq115_filter_show('debosite','b_debosite')
+   CALL adeq115_filter_show('debo010','b_debo010')
+   CALL adeq115_filter_show('debo014','b_debo014')
+   CALL adeq115_filter_show('debo015','b_debo015')
+   CALL adeq115_filter_show('debo007','b_debo007')
+   CALL adeq115_filter_show('debo016','b_debo016')
+   CALL adeq115_filter_show('debo025','b_debo025')
+ 
+    
+   CALL adeq115_b_fill()
+   
+   CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+   CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adeq115.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION adeq115_filter_parser(ps_field)
+   #add-point:filter段define-客製 name="filter_parser.define_customerization"
+   
+   #end add-point
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   #add-point:filter段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_parser.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter_parser.before_function"
+   
+   #end add-point
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adeq115.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION adeq115_filter_show(ps_field,ps_object)
+   #add-point:filter_show段define-客製 name="filter_show.define_customerization"
+   
+   #end add-point
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+   #add-point:filter_show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_show.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="filter_show.before_function"
+   
+   #end add-point
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = adeq115_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adeq115.insert" >}
+#+ insert
+PRIVATE FUNCTION adeq115_insert()
+   #add-point:insert段define-客製 name="insert.define_customerization"
+   
+   #end add-point
+   #add-point:insert段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   
+   #end add-point
+ 
+   #add-point:insert段control name="insert.control"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adeq115.modify" >}
+#+ modify
+PRIVATE FUNCTION adeq115_modify()
+   #add-point:modify段define-客製 name="modify.define_customerization"
+   
+   #end add-point
+   #add-point:modify段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   
+   #end add-point
+ 
+   #add-point:modify段control name="modify.control"
+   
+   #end add-point 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adeq115.reproduce" >}
+#+ reproduce
+PRIVATE FUNCTION adeq115_reproduce()
+   #add-point:reproduce段define-客製 name="reproduce.define_customerization"
+   
+   #end add-point
+   #add-point:reproduce段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="reproduce.define"
+   
+   #end add-point
+ 
+   #add-point:reproduce段control name="reproduce.control"
+   
+   #end add-point 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adeq115.delete" >}
+#+ delete
+PRIVATE FUNCTION adeq115_delete()
+   #add-point:delete段define-客製 name="delete.define_customerization"
+   
+   #end add-point
+   #add-point:delete段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   
+   #end add-point
+ 
+   #add-point:delete段control name="delete.control"
+   
+   #end add-point 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adeq115.detail_action_trans" >}
+#+ 單身分頁筆數顯示及action圖片顯示切換功能
+PRIVATE FUNCTION adeq115_detail_action_trans()
+   #add-point:detail_action_trans段define-客製 name="detail_action_trans.define_customerization"
+   
+   #end add-point
+   #add-point:detail_action_trans段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_action_trans.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="detail_action_trans.before_function"
+   
+   #end add-point
+ 
+   #因應單身切頁功能，筆數計算方式調整
+   LET g_current_row_tot = g_pagestart + g_detail_idx - 1
+   DISPLAY g_current_row_tot TO FORMONLY.h_index
+   DISPLAY g_tot_cnt TO FORMONLY.h_count
+ 
+   #顯示單身頁面的起始與結束筆數
+   LET g_page_start_num = g_pagestart
+   LET g_page_end_num = g_pagestart + g_num_in_page - 1
+   DISPLAY g_page_start_num TO FORMONLY.p_start
+   DISPLAY g_page_end_num TO FORMONLY.p_end
+ 
+   #目前不支援跳頁功能
+   LET g_page_act_list = "detail_first,detail_previous,'',detail_next,detail_last"
+   CALL cl_navigator_detail_page_setting(g_page_act_list,g_current_row_tot,g_pagestart,g_num_in_page,g_tot_cnt)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adeq115.detail_index_setting" >}
+#+ 單身切頁後，index重新調整，避免翻頁後指到空白筆數
+PRIVATE FUNCTION adeq115_detail_index_setting()
+   #add-point:detail_index_setting段define-客製 name="deatil_index_setting.define_customerization"
+   
+   #end add-point
+   DEFINE li_redirect     BOOLEAN
+   DEFINE ldig_curr       ui.Dialog
+   #add-point:detail_index_setting段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_index_setting.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="detail_index_setting.before_function"
+   
+   #end add-point
+ 
+   IF g_curr_diag IS NOT NULL THEN
+      CASE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") <= "0"
+            LET g_detail_idx = 1
+            IF g_debo_d.getLength() > 0 THEN
+               LET li_redirect = TRUE
+            END IF
+         WHEN g_curr_diag.getCurrentRow("s_detail1") > g_debo_d.getLength() AND g_debo_d.getLength() > 0
+            LET g_detail_idx = g_debo_d.getLength()
+            LET li_redirect = TRUE
+         WHEN g_curr_diag.getCurrentRow("s_detail1") != g_detail_idx
+            IF g_detail_idx > g_debo_d.getLength() THEN
+               LET g_detail_idx = g_debo_d.getLength()
+            END IF
+            LET li_redirect = TRUE
+      END CASE
+   END IF
+ 
+   IF li_redirect THEN
+      LET ldig_curr = ui.Dialog.getCurrent()
+      CALL ldig_curr.setCurrentRow("s_detail1", g_detail_idx)
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adeq115.mask_functions" >}
+ &include "erp/ade/adeq115_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="adeq115.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 取出預算相關欄位值
+# Memo...........:
+# Usage..........: CALL adeq115_def_budget()
+#                  RETURNING r_debo013_b,debo014_b
+# Input parameter: 無
+# Return code....: r_debo013_b    淨預算銷售額
+#                : r_debo014_b    預算毛利額
+# Date & Author..: 2015/07/07 By pomelo
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION adeq115_def_budget()
+DEFINE r_debo013_b     LIKE debo_t.debo013
+DEFINE r_debo014_b     LIKE debo_t.debo014
+DEFINE l_rtcd001       LIKE rtcd_t.rtcd001
+DEFINE l_day           LIKE type_t.num5
+DEFINE l_rtcd_1        RECORD
+       rtcd007         LIKE rtcd_t.rtcd007,
+       rtcd008         LIKE rtcd_t.rtcd008,
+       rtcd009         LIKE rtcd_t.rtcd009,
+       rtcd010         LIKE rtcd_t.rtcd010,
+       rtcd011         LIKE rtcd_t.rtcd011,
+       rtcd012         LIKE rtcd_t.rtcd012,
+       rtcd013         LIKE rtcd_t.rtcd013,
+       rtcd014         LIKE rtcd_t.rtcd014,
+       rtcd015         LIKE rtcd_t.rtcd015,
+       rtcd016         LIKE rtcd_t.rtcd016,
+       rtcd017         LIKE rtcd_t.rtcd017,
+       rtcd018         LIKE rtcd_t.rtcd018,
+       rtcd019         LIKE rtcd_t.rtcd019,
+       rtcd020         LIKE rtcd_t.rtcd020,
+       rtcd021         LIKE rtcd_t.rtcd021,
+       rtcd022         LIKE rtcd_t.rtcd022,
+       rtcd023         LIKE rtcd_t.rtcd023,
+       rtcd024         LIKE rtcd_t.rtcd024,
+       rtcd025         LIKE rtcd_t.rtcd025,
+       rtcd026         LIKE rtcd_t.rtcd026,
+       rtcd027         LIKE rtcd_t.rtcd027,
+       rtcd028         LIKE rtcd_t.rtcd028,
+       rtcd029         LIKE rtcd_t.rtcd029,
+       rtcd030         LIKE rtcd_t.rtcd030,
+       rtcd031         LIKE rtcd_t.rtcd031,
+       rtcd032         LIKE rtcd_t.rtcd032,
+       rtcd033         LIKE rtcd_t.rtcd033,
+       rtcd034         LIKE rtcd_t.rtcd034,
+       rtcd035         LIKE rtcd_t.rtcd035,
+       rtcd036         LIKE rtcd_t.rtcd036,
+       rtcd037         LIKE rtcd_t.rtcd037
+                       END RECORD
+DEFINE l_rtcd_2        RECORD
+       rtcd007         LIKE rtcd_t.rtcd007,
+       rtcd008         LIKE rtcd_t.rtcd008,
+       rtcd009         LIKE rtcd_t.rtcd009,
+       rtcd010         LIKE rtcd_t.rtcd010,
+       rtcd011         LIKE rtcd_t.rtcd011,
+       rtcd012         LIKE rtcd_t.rtcd012,
+       rtcd013         LIKE rtcd_t.rtcd013,
+       rtcd014         LIKE rtcd_t.rtcd014,
+       rtcd015         LIKE rtcd_t.rtcd015,
+       rtcd016         LIKE rtcd_t.rtcd016,
+       rtcd017         LIKE rtcd_t.rtcd017,
+       rtcd018         LIKE rtcd_t.rtcd018,
+       rtcd019         LIKE rtcd_t.rtcd019,
+       rtcd020         LIKE rtcd_t.rtcd020,
+       rtcd021         LIKE rtcd_t.rtcd021,
+       rtcd022         LIKE rtcd_t.rtcd022,
+       rtcd023         LIKE rtcd_t.rtcd023,
+       rtcd024         LIKE rtcd_t.rtcd024,
+       rtcd025         LIKE rtcd_t.rtcd025,
+       rtcd026         LIKE rtcd_t.rtcd026,
+       rtcd027         LIKE rtcd_t.rtcd027,
+       rtcd028         LIKE rtcd_t.rtcd028,
+       rtcd029         LIKE rtcd_t.rtcd029,
+       rtcd030         LIKE rtcd_t.rtcd030,
+       rtcd031         LIKE rtcd_t.rtcd031,
+       rtcd032         LIKE rtcd_t.rtcd032,
+       rtcd033         LIKE rtcd_t.rtcd033,
+       rtcd034         LIKE rtcd_t.rtcd034,
+       rtcd035         LIKE rtcd_t.rtcd035,
+       rtcd036         LIKE rtcd_t.rtcd036,
+       rtcd037         LIKE rtcd_t.rtcd037
+                       END RECORD
+                          
+   LET r_debo013_b = 0
+   LET r_debo014_b = 0
+   
+   ##預算
+   LET l_rtcd001 = YEAR(g_debo_d[l_ac].debo002) * 100 + MONTH(g_debo_d[l_ac].debo002)
+   
+   #淨預算銷售額
+   EXECUTE adeq115_sel_rtcd
+     #USING g_debo_d[l_ac].debosite, l_rtcd001, '0001'              #160126-00007#2 160129 By pomelo mark
+     USING g_debo_d[l_ac].debosite, l_rtcd001, g_input.l_sale_qbe   #160126-00007#2 160129 By pomelo add
+      INTO l_rtcd_1.rtcd007, l_rtcd_1.rtcd008, l_rtcd_1.rtcd009, l_rtcd_1.rtcd010,
+           l_rtcd_1.rtcd011, l_rtcd_1.rtcd012, l_rtcd_1.rtcd013, l_rtcd_1.rtcd014,
+           l_rtcd_1.rtcd015, l_rtcd_1.rtcd016, l_rtcd_1.rtcd017, l_rtcd_1.rtcd018,
+           l_rtcd_1.rtcd019, l_rtcd_1.rtcd020, l_rtcd_1.rtcd021, l_rtcd_1.rtcd022,
+           l_rtcd_1.rtcd023, l_rtcd_1.rtcd024, l_rtcd_1.rtcd025, l_rtcd_1.rtcd026,
+           l_rtcd_1.rtcd027, l_rtcd_1.rtcd028, l_rtcd_1.rtcd029, l_rtcd_1.rtcd030,
+           l_rtcd_1.rtcd031, l_rtcd_1.rtcd032, l_rtcd_1.rtcd033, l_rtcd_1.rtcd034,
+           l_rtcd_1.rtcd035, l_rtcd_1.rtcd036, l_rtcd_1.rtcd037
+   
+   #預算毛利額
+   EXECUTE adeq115_sel_rtcd
+     #USING g_debo_d[l_ac].debosite, l_rtcd001, '0002'                      #160126-00007#2 160129 By pomelo mark
+     USING g_debo_d[l_ac].debosite, l_rtcd001, g_input.l_gross_profit_qbe   #160126-00007#2 160129 By pomelo add
+      INTO l_rtcd_2.rtcd007, l_rtcd_2.rtcd008, l_rtcd_2.rtcd009, l_rtcd_2.rtcd010,
+           l_rtcd_2.rtcd011, l_rtcd_2.rtcd012, l_rtcd_2.rtcd013, l_rtcd_2.rtcd014,
+           l_rtcd_2.rtcd015, l_rtcd_2.rtcd016, l_rtcd_2.rtcd017, l_rtcd_2.rtcd018,
+           l_rtcd_2.rtcd019, l_rtcd_2.rtcd020, l_rtcd_2.rtcd021, l_rtcd_2.rtcd022,
+           l_rtcd_2.rtcd023, l_rtcd_2.rtcd024, l_rtcd_2.rtcd025, l_rtcd_2.rtcd026,
+           l_rtcd_2.rtcd027, l_rtcd_2.rtcd028, l_rtcd_2.rtcd029, l_rtcd_2.rtcd030,
+           l_rtcd_2.rtcd031, l_rtcd_2.rtcd032, l_rtcd_2.rtcd033, l_rtcd_2.rtcd034,
+           l_rtcd_2.rtcd035, l_rtcd_2.rtcd036, l_rtcd_2.rtcd037
+   
+   LET l_day = DAY(g_debo_d[l_ac].debo002)
+   
+   CASE l_day
+      WHEN 1
+         LET r_debo013_b = l_rtcd_1.rtcd007
+         LET r_debo014_b = l_rtcd_2.rtcd007
+         
+      WHEN 2
+         LET r_debo013_b = l_rtcd_1.rtcd008
+         LET r_debo014_b = l_rtcd_2.rtcd008
+         
+      WHEN 3
+         LET r_debo013_b = l_rtcd_1.rtcd009
+         LET r_debo014_b = l_rtcd_2.rtcd009
+         
+      WHEN 4
+         LET r_debo013_b = l_rtcd_1.rtcd010
+         LET r_debo014_b = l_rtcd_2.rtcd010
+         
+      WHEN 5
+         LET r_debo013_b = l_rtcd_1.rtcd011
+         LET r_debo014_b = l_rtcd_2.rtcd011
+         
+      WHEN 6
+         LET r_debo013_b = l_rtcd_1.rtcd012
+         LET r_debo014_b = l_rtcd_2.rtcd012
+         
+      WHEN 7
+         LET r_debo013_b = l_rtcd_1.rtcd013
+         LET r_debo014_b = l_rtcd_2.rtcd013
+         
+      WHEN 8
+         LET r_debo013_b = l_rtcd_1.rtcd014
+         LET r_debo014_b = l_rtcd_2.rtcd014
+         
+      WHEN 9
+         LET r_debo013_b = l_rtcd_1.rtcd015
+         LET r_debo014_b = l_rtcd_2.rtcd015
+         
+      WHEN 10
+         LET r_debo013_b = l_rtcd_1.rtcd016
+         LET r_debo014_b = l_rtcd_2.rtcd016
+         
+      WHEN 11
+         LET r_debo013_b = l_rtcd_1.rtcd017
+         LET r_debo014_b = l_rtcd_2.rtcd017
+         
+      WHEN 12
+         LET r_debo013_b = l_rtcd_1.rtcd018
+         LET r_debo014_b = l_rtcd_2.rtcd018
+         
+      WHEN 13
+         LET r_debo013_b = l_rtcd_1.rtcd019
+         LET r_debo014_b = l_rtcd_2.rtcd019
+         
+      WHEN 14
+         LET r_debo013_b = l_rtcd_1.rtcd020
+         LET r_debo014_b = l_rtcd_2.rtcd020
+         
+      WHEN 15
+         LET r_debo013_b = l_rtcd_1.rtcd021
+         LET r_debo014_b = l_rtcd_2.rtcd021
+         
+      WHEN 16
+         LET r_debo013_b = l_rtcd_1.rtcd022
+         LET r_debo014_b = l_rtcd_2.rtcd022
+         
+      WHEN 17
+         LET r_debo013_b = l_rtcd_1.rtcd023
+         LET r_debo014_b = l_rtcd_2.rtcd023
+         
+      WHEN 18
+         LET r_debo013_b = l_rtcd_1.rtcd024
+         LET r_debo014_b = l_rtcd_2.rtcd024
+         
+      WHEN 19
+         LET r_debo013_b = l_rtcd_1.rtcd025
+         LET r_debo014_b = l_rtcd_2.rtcd025
+         
+      WHEN 20
+         LET r_debo013_b = l_rtcd_1.rtcd026
+         LET r_debo014_b = l_rtcd_2.rtcd026
+         
+      WHEN 21
+         LET r_debo013_b = l_rtcd_1.rtcd027
+         LET r_debo014_b = l_rtcd_2.rtcd027
+         
+      WHEN 22
+         LET r_debo013_b = l_rtcd_1.rtcd028
+         LET r_debo014_b = l_rtcd_2.rtcd028
+         
+      WHEN 23
+         LET r_debo013_b = l_rtcd_1.rtcd029
+         LET r_debo014_b = l_rtcd_2.rtcd029
+         
+      WHEN 24
+         LET r_debo013_b = l_rtcd_1.rtcd030
+         LET r_debo014_b = l_rtcd_2.rtcd030
+         
+      WHEN 25
+         LET r_debo013_b = l_rtcd_1.rtcd031
+         LET r_debo014_b = l_rtcd_2.rtcd031
+         
+      WHEN 26
+         LET r_debo013_b = l_rtcd_1.rtcd032
+         LET r_debo014_b = l_rtcd_2.rtcd032
+         
+      WHEN 27
+         LET r_debo013_b = l_rtcd_1.rtcd033
+         LET r_debo014_b = l_rtcd_2.rtcd033
+         
+      WHEN 28
+         LET r_debo013_b = l_rtcd_1.rtcd034
+         LET r_debo014_b = l_rtcd_2.rtcd034
+         
+      WHEN 29
+         LET r_debo013_b = l_rtcd_1.rtcd035
+         LET r_debo014_b = l_rtcd_2.rtcd035
+         
+      WHEN 30
+         LET r_debo013_b = l_rtcd_1.rtcd036
+         LET r_debo014_b = l_rtcd_2.rtcd036
+         
+      WHEN 31
+         LET r_debo013_b = l_rtcd_1.rtcd037
+         LET r_debo014_b = l_rtcd_2.rtcd037
+         
+   END CASE
+   
+   IF cl_null(r_debo013_b) THEN
+      LET r_debo013_b = 0
+   END IF
+   
+   IF cl_null(r_debo014_b) THEN
+      LET r_debo014_b = 0
+   END IF
+   
+   RETURN r_debo013_b,r_debo014_b
+END FUNCTION
+
+################################################################################
+# Descriptions...: 建立temp table
+# Memo...........:
+# Usage..........: CALL adeq115_create_tmp()
+#                  RETURNING r_success
+# Input parameter: 無
+# Return code....: r_success      True/False
+# Date & Author..: 2015/07/07 By pomelo
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION adeq115_create_tmp()
+DEFINE r_success         LIKE type_t.num5
+
+   LET r_success = TRUE
+   
+   CALL adeq115_drop_tmp() 
+   CREATE TEMP TABLE adeq115_tmp(
+      debo002         DATE,          #統計日期
+      debosite        VARCHAR(10),
+      debo010         DECIMAL(20,6),          #應收金額
+      debo010_sum     DECIMAL(20,6),          #公司銷售金額
+      l_debo013_b     DECIMAL(20,6),          #淨預算銷售額
+      l_debo013_p     DECIMAL(20,6),          #去年應收金額
+      debo016         DECIMAL(20,6),          #客單數
+      l_debo016_p     DECIMAL(20,6),          #去年客單數
+      debo007         DECIMAL(20,6),          #進貨成本
+      l_debo007_p     DECIMAL(20,6),          #去年進貨成本
+      l_self_sale     DECIMAL(20,6),          #今年自營
+      l_self_sale_p   DECIMAL(20,6),          #去年自營
+      l_uni_sale      DECIMAL(20,6),          #今年聯營
+      l_uni_sale_p    DECIMAL(20,6),          #去年聯營
+      debo014         DECIMAL(20,6),          #毛利額
+      l_debo014_p     DECIMAL(20,6),          #去年毛利額
+      l_debo014_b     DECIMAL(20,6),          #預算毛利額
+      l_xccu102       DECIMAL(20,6),          #庫存金額
+      l_xccu102_p     DECIMAL(20,6))          #去年庫存金額
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "Create adeq115_tmp"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 刪除temp table
+# Memo...........:
+# Usage..........: CALL adeq115_drop_tmp()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2015/07/07 By pomelo
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION adeq115_drop_tmp()
+
+   DROP TABLE adeq115_tmp
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 指標说明
+# Memo...........:
+# Usage..........: CALL adeq115_rtca001_ref(p_rtca001)
+#                     RETURNING r_rtcal003
+# Input parameter: p_rtca001      指標編號
+# Return code....: rtcal003       指標說明
+# Date & Author..: 2016/01/29 By pomelo
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION adeq115_rtca001_ref(p_rtca001)
+DEFINE p_rtca001         LIKE rtca_t.rtca001
+DEFINE r_rtcal003        LIKE rtcal_t.rtcal003
+   
+   LET r_rtcal003 = ''
+   
+   SELECT rtcal003 INTO r_rtcal003
+     FROM rtcal_t
+    WHERE rtcalent = g_enterprise
+      AND rtcal001 = p_rtca001
+      AND rtcal002 = g_dlang
+      
+   RETURN r_rtcal003
+END FUNCTION
+
+ 
+{</section>}
+ 

@@ -1,0 +1,672 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="asfr340" std_prog="asfr340" erpver="1.0" module="ASF" ver="2" env="s" zone="t10dev" booking="N" type="M" identity="s">
+  <other>
+    <code_template value="R" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="construct.c.sfea002" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #申請人員 
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfea002  #顯示到畫面上
+            NEXT FIELD sfea002                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.sfea003" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #申請部門 
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfea003  #顯示到畫面上
+            NEXT FIELD sfea003                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.sfeadocno" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #入庫單號
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_sfeadocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfeadocno  #顯示到畫面上
+            NEXT FIELD sfeadocno                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.sfeb001" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #工單單號
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeb001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO sfeb001  #顯示到畫面上
+            NEXT FIELD sfeb001                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="init.init" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_master.sfearadio  = '0'
+   LET g_master.sfecchk ='N'
+   CALL cl_set_combo_scc_part('sfeastus','13','A,D,N,R,W,X,Y,S')]]>
+  </point>
+  <point name="process.pre_process" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF cl_null(g_master.wc) THEN
+      LET g_master.wc = " 1=1"
+   END IF
+   LET g_wc = g_master.wc
+   LET g_wc = g_wc CLIPPED ," AND sfeaent = '",g_enterprise,"' AND sfeasite = '",g_site,"' " 
+   IF NOT cl_null(g_master.sfeastus) THEN
+      LET g_wc = g_wc CLIPPED ," AND sfeastus = '",g_master.sfeastus,"' "
+   END IF
+   
+   IF g_master.sfearadio = 0 THEN               
+      CALL asfr340_g01(g_wc,g_master.sfecchk)
+   ELSE 
+      CALL asfr340_g02(g_wc,g_master.sfecchk)
+   END IF
+           ]]>
+  </point>
+  <point name="ui_dialog.qbeclear" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            LET g_master.sfearadio  = '0'
+            LET g_master.sfecchk ='N'
+            LET g_master.sfeastus = '']]>
+  </point>
+  <section id="asfr340.description" ver="1" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000052
+#+ 
+#+ Filename...: asfr340
+#+ Description: 工單入庫列印
+#+ Creator....: 05016(2014/05/23)
+#+ Modifier...: 05016(2014/06/30)
+#+ Buildtype..: 應用 r01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="asfr340.global" ver="11" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       sfeadocno LIKE type_t.chr20, 
+   sfeadocdt LIKE type_t.dat, 
+   sfea001 LIKE type_t.dat, 
+   sfea002 LIKE type_t.chr10, 
+   sfea003 LIKE type_t.chr10, 
+   sfeb001 LIKE type_t.chr20, 
+   sfeastus LIKE type_t.chr10, 
+   sfearadio LIKE type_t.chr80, 
+   sfecchk LIKE type_t.chr10,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="asfr340.init" ver="1" status="" src="s">
+    <![CDATA[#+ 初始化作業
+PRIVATE FUNCTION asfr340_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="asfr340.main" ver="2" status="" src="s">
+    <![CDATA[MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point 
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("asf","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+      CALL asfr340_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_asfr340 WITH FORM cl_ap_formpath("asf",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL asfr340_init()
+ 
+      #進入選單 Menu (="N")
+      CALL asfr340_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_asfr340
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+  </section>
+  <section id="asfr340.other_function" ver="1" status="" src="s">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="asfr340.process" ver="2" status="" src="s">
+    <![CDATA[#+ 資料處理
+PRIVATE FUNCTION asfr340_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   {<point name="process.define"/>}
+   #end add-point
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE asfr340_process_cs CURSOR FROM ls_sql
+#  FOREACH asfr340_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+   END IF
+END FUNCTION
+]]>
+  </section>
+  <section id="asfr340.transfer_argv" ver="1" status="" src="s">
+    <![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION asfr340_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+ 
+   CALL util.JSON.parse(ls_js,la_param)
+ 
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+  </section>
+  <section id="asfr340.ui_dialog" ver="15" status="" src="s">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION asfr340_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+ 
+   #add-point:ui_dialog段before dialog
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #+ 此段落由子樣板a57產生
+         INPUT BY NAME g_master.sfeastus,g_master.sfearadio,g_master.sfecchk 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前
+               {<point name="input.m.before_input"/>}
+               #end add-point
+         
+                     #此段落由子樣板a01產生
+         BEFORE FIELD sfeastus
+            #add-point:BEFORE FIELD sfeastus
+            {<point name="input.b.sfeastus" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfeastus
+            
+            #add-point:AFTER FIELD sfeastus
+            {<point name="input.a.sfeastus" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sfeastus
+            #add-point:ON CHANGE sfeastus
+            {<point name="input.g.sfeastus" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfearadio
+            #add-point:BEFORE FIELD sfearadio
+            {<point name="input.b.sfearadio" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfearadio
+            
+            #add-point:AFTER FIELD sfearadio
+            {<point name="input.a.sfearadio" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sfearadio
+            #add-point:ON CHANGE sfearadio
+            {<point name="input.g.sfearadio" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfecchk
+            #add-point:BEFORE FIELD sfecchk
+            {<point name="input.b.sfecchk" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfecchk
+            
+            #add-point:AFTER FIELD sfecchk
+            {<point name="input.a.sfecchk" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE sfecchk
+            #add-point:ON CHANGE sfecchk
+            {<point name="input.g.sfecchk" />}
+            #END add-point
+ 
+ 
+                     #Ctrlp:input.c.sfeastus
+         ON ACTION controlp INFIELD sfeastus
+            #add-point:ON ACTION controlp INFIELD sfeastus
+            {<point name="input.c.sfeastus" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sfearadio
+         ON ACTION controlp INFIELD sfearadio
+            #add-point:ON ACTION controlp INFIELD sfearadio
+            {<point name="input.c.sfearadio" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.sfecchk
+         ON ACTION controlp INFIELD sfecchk
+            #add-point:ON ACTION controlp INFIELD sfecchk
+            {<point name="input.c.sfecchk" />}
+            #END add-point
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後
+               {<point name="input.m.after_input"/>}
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...)
+            {<point name="input.other"/>}
+            #end add-point
+               
+         END INPUT
+ 
+ 
+         
+         #+ 此段落由子樣板a57產生
+         CONSTRUCT BY NAME g_master.wc ON sfeadocno,sfeadocdt,sfea001,sfea002,sfea003,sfeb001
+         
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct
+               {<point name="cs.head.before_construct"/>}
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #Ctrlp:construct.c.sfeadocno
+         ON ACTION controlp INFIELD sfeadocno
+            #add-point:ON ACTION controlp INFIELD sfeadocno
+            {<point name="construct.c.sfeadocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfeadocno
+            #add-point:BEFORE FIELD sfeadocno
+            {<point name="construct.b.sfeadocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfeadocno
+            
+            #add-point:AFTER FIELD sfeadocno
+            {<point name="construct.a.sfeadocno" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfeadocdt
+            #add-point:BEFORE FIELD sfeadocdt
+            {<point name="construct.b.sfeadocdt" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfeadocdt
+            
+            #add-point:AFTER FIELD sfeadocdt
+            {<point name="construct.a.sfeadocdt" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.sfeadocdt
+         ON ACTION controlp INFIELD sfeadocdt
+            #add-point:ON ACTION controlp INFIELD sfeadocdt
+            {<point name="construct.c.sfeadocdt" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfea001
+            #add-point:BEFORE FIELD sfea001
+            {<point name="construct.b.sfea001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfea001
+            
+            #add-point:AFTER FIELD sfea001
+            {<point name="construct.a.sfea001" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.sfea001
+         ON ACTION controlp INFIELD sfea001
+            #add-point:ON ACTION controlp INFIELD sfea001
+            {<point name="construct.c.sfea001" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.sfea002
+         ON ACTION controlp INFIELD sfea002
+            #add-point:ON ACTION controlp INFIELD sfea002
+            {<point name="construct.c.sfea002" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfea002
+            #add-point:BEFORE FIELD sfea002
+            {<point name="construct.b.sfea002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfea002
+            
+            #add-point:AFTER FIELD sfea002
+            {<point name="construct.a.sfea002" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.sfea003
+         ON ACTION controlp INFIELD sfea003
+            #add-point:ON ACTION controlp INFIELD sfea003
+            {<point name="construct.c.sfea003" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfea003
+            #add-point:BEFORE FIELD sfea003
+            {<point name="construct.b.sfea003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfea003
+            
+            #add-point:AFTER FIELD sfea003
+            {<point name="construct.a.sfea003" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.sfeb001
+         ON ACTION controlp INFIELD sfeb001
+            #add-point:ON ACTION controlp INFIELD sfeb001
+            {<point name="construct.c.sfeb001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD sfeb001
+            #add-point:BEFORE FIELD sfeb001
+            {<point name="construct.b.sfeb001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD sfeb001
+            
+            #add-point:AFTER FIELD sfeb001
+            {<point name="construct.a.sfeb001" />}
+            #END add-point
+            
+ 
+ 
+            
+            #add-point:其他管控
+            {<point name="cs.other"/>}
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+      
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               LET lc_param.wc = ls_wc
+               #取得條件後需要執行項目,應新增於下方adp
+               #add-point:ui_dialog段qbe_select後
+               {<point name="ui_dialog.qbe_select"/>}
+               #end add-point
+            END IF
+ 
+         ON ACTION qbe_save
+            CALL cl_qbe_save()
+ 
+         ON ACTION output
+            ACCEPT DIALOG
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE lc_param.* TO NULL
+            #add-point:ui_dialog段qbeclear
+            {<point name="ui_dialog.qbeclear"/>}
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         LET g_jobid = cl_schedule_get_jobid(g_prog)
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL asfr340_process(ls_js)
+            WHEN g_schedule.gzpa003 = "1"
+            #    CALL cl_schedule_update_data(g_jobid,ls_js)
+                 LET ls_js = asfr340_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+         INITIALIZE lc_param.*  TO NULL 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

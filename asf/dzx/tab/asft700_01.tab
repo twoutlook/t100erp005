@@ -1,0 +1,66 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asft700_01" module="asf" jobmode="N" type="c03a" industry="std" fix_arg="0" crtid="00537" crtdt="2014-11-18 17:48:41" modid="02040" moddt="2016-11-01 16:27:41" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="維護多筆影響工作站">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="sfnbdocno,sfnbseq,sfnbsite"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sfncdocno,sfncseq,sfncseq1,sfnc000,sfnc000_desc(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="asf" filename="asft700_01" method="dialog">
+    <section id="input">
+      <input id="head" field="sfnbdocno,sfnbseq,sfnbsite"/>
+      <input id="body" page="1" field="sfncdocno,sfncseq,sfncseq1,sfnc000" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="sfnbdocno,sfnbseq,sfnbsite"/>
+      <construct id="body" page="1" field="sfncdocno,sfncseq,sfncseq1,sfnc000"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="sfnbsite,sfnbdocno,sfnbseq"/>
+      <set id="head" type="no_entry" field="sfnbsite,sfnbdocno,sfnbseq"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="sfnbdocno"/>
+      <column id="sfnbseq">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="sfnbsite"/>
+    </init>
+    <init id="body" page="1">
+      <column id="sfncdocno"/>
+      <column id="sfncseq"/>
+      <column id="sfncseq1"/>
+      <column id="sfnc000">
+        <after>
+          <check chkid="v_ecaa001" id="isExist"/>
+          <reference field="sfnc000_desc" ref_field="sfnc_t.sfnc000" map_field="sfnc000" ref_sql="SELECT ecaa002 FROM ecaa_t WHERE ecaaent=$varg_enterprise$var AND ecaa001=? "/>
+        </after>
+        <controlp form="q_ecaa001_1" state="i"/>
+        <controlp form="q_ecaa001_1" state="c"/>
+      </column>
+      <column id="sfnc000_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="sfnb_t" pk="sfnbsite,sfnbdocno,sfnbseq">
+      <sql id="forupd_sql" type="sql" query="SELECT sfnbdocno,sfnbseq,sfnbsite FROM sfnb_t WHERE sfnbent= ? AND sfnbsite=? AND sfnbdocno=? AND sfnbseq=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT sfnbdocno,sfnbseq,sfnbsite FROM sfnb_t" order="sfnbsite,sfnbdocno,sfnbseq"/>
+    </head>
+    <body id="sfnc_t" page="1" linked="" pk="sfncseq1" fk="sfncsite,sfncdocno,sfncseq">
+      <sql id="forupd_sql_detail" query="SELECT sfncdocno,sfncseq,sfncseq1,sfnc000,&apos;&apos; FROM sfnc_t WHERE sfncent=? AND sfncsite=? AND sfncdocno=? AND sfncseq=? AND sfncseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT sfncdocno,sfncseq,sfncseq1,sfnc000,&apos;&apos; FROM sfnc_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,178 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapt415" module="aap" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="05016" crtdt="2014-12-09 09:57:14" modid="02114" moddt="2015-12-15 10:19:54" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="發票請款單維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="apeasite,apeasite_desc(chr80),apea003,apea003_desc(chr80),apeadocdt,apeacomp,apeald,apeadocno,apea001,apea019,apea020,apea005,apea005_desc(chr80),apea013,apea006,apeastus,apeaownid,apeaownid_desc(chr80),apeaowndp,apeaowndp_desc(chr80),apeacrtid,apeacrtid_desc(chr80),apeacrtdp,apeacrtdp_desc(chr80),apeacrtdt,apeamodid,apeamodid_desc(chr80),apeamoddt,apeacnfid,apeacnfid_desc(chr80),apeacnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="apebseq,apeborga,apeborga_desc(chr500),apeb002,apeb007,apeb008,apeb011,apeb003,apeb004,apeb005,apeb031,apeb100,apeb108,apeb101,apeb118,apeb006,apeb024,apeb025,apebcomp,apbbdocdt(dat),apbb055(dat),apeb012,apebld"/>
+      <var id="bs_field" value="apeasite,apea003,apea003_desc(chr80),apeadocdt,apeadocno" pk="apeadocno" order=""/>
+      <bs_reference field="apea003_desc" ref_field="apea003" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="aapt415_paychk"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="prog_apea003" lib="cl_user_contact" parameter="&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;,g_apea_m.apea003"/>
+    </section>
+  </structure>
+  <form id="0" module="aap" filename="aapt415" method="dialog">
+    <section id="input">
+      <input id="head" field="apeasite,apea003,apeadocdt,apeacomp,apeald,apeadocno,apea001,apea019,apea020,apea005,apea013,apea006,apeastus"/>
+      <input id="body" page="1" field="apebseq,apeborga,apeborga_desc,apeb002,apeb007,apeb008,apeb011,apeb003,apeb004,apeb005,apeb031,apeb100,apeb108,apeb101,apeb118,apeb006,apeb024,apeb025,apebcomp,apbbdocdt,apbb055,apeb012,apebld" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="apeasite,apeasite_desc,apea003,apea003_desc,apeadocdt,apeacomp,apeald,apeadocno,apea001,apea019,apea020,apea005,apea005_desc,apea013,apea006,apeastus,apeaownid,apeaowndp,apeacrtid,apeacrtdp,apeacrtdt,apeamodid,apeamoddt,apeacnfid,apeacnfdt"/>
+      <construct id="body" page="1" field="apebseq,apeborga,apeborga_desc,apeb002,apeb008,apeb011,apeb003,apeb004,apeb005,apeb031,apeb100,apeb108,apeb101,apeb118,apeb006,apeb024,apeb025,apebcomp,apebld"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="apeadocno"/>
+      <set id="head" type="no_entry" field="apeadocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="apeasite">
+        <after/>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="apeasite_desc"/>
+      <column id="apea003">
+        <after/>
+      </column>
+      <column id="apea003_desc"/>
+      <column id="apeadocdt"/>
+      <column id="apeacomp">
+        <controlp form="q_ooef001" state="i"/>
+      </column>
+      <column id="apeald"/>
+      <column id="apeadocno"/>
+      <column id="apea001" def_scc="8507"/>
+      <column id="apea019"/>
+      <column id="apea020"/>
+      <column id="apea005">
+        <after/>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="apea005_desc"/>
+      <column id="apea013"/>
+      <column id="apea006"/>
+      <column id="apeastus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+      </column>
+      <column id="apeaownid">
+        <after>
+          <reference field="apeaownid_desc" ref_field="apea_t.apeaownid" map_field="apeaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="apeaownid_desc"/>
+      <column id="apeaowndp">
+        <after>
+          <reference field="apeaowndp_desc" ref_field="apea_t.apeaowndp" map_field="apeaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="apeaowndp_desc"/>
+      <column id="apeacrtid">
+        <after>
+          <reference field="apeacrtid_desc" ref_field="apea_t.apeacrtid" map_field="apeacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="apeacrtid_desc"/>
+      <column id="apeacrtdp">
+        <after>
+          <reference field="apeacrtdp_desc" ref_field="apea_t.apeacrtdp" map_field="apeacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="apeacrtdp_desc"/>
+      <column id="apeacrtdt"/>
+      <column id="apeamodid">
+        <after>
+          <reference field="apeamodid_desc" ref_field="apea_t.apeamodid" map_field="apeamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="apeamodid_desc"/>
+      <column id="apeamoddt"/>
+      <column id="apeacnfid">
+        <after>
+          <reference field="apeacnfid_desc" ref_field="apea_t.apeacnfid" map_field="apeacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="apeacnfid_desc"/>
+      <column id="apeacnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="apebseq">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="apeborga">
+        <after/>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="apeborga_desc"/>
+      <column id="apeb002"/>
+      <column id="apeb007"/>
+      <column id="apeb008">
+        <controlp form="q_nmas_01" state="i"/>
+        <controlp form="q_nmas_01" state="c"/>
+      </column>
+      <column id="apeb011"/>
+      <column id="apeb003"/>
+      <column id="apeb004"/>
+      <column id="apeb005"/>
+      <column id="apeb031"/>
+      <column id="apeb100">
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="apeb108" type="S" default="0"/>
+      <column id="apeb101">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="apeb118" type="S" default="0"/>
+      <column id="apeb006"/>
+      <column id="apeb024"/>
+      <column id="apeb025"/>
+      <column id="apebcomp"/>
+      <column id="apbbdocdt"/>
+      <column id="apbb055"/>
+      <column id="apeb012"/>
+      <column id="apebld"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="apea_t" pk="apeadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT apeasite,&apos;&apos;,apea003,&apos;&apos;,apeadocdt,apeacomp,apeald,apeadocno,apea001,apea019,apea020,apea005,&apos;&apos;,apea013,apea006,apeastus,apeaownid,&apos;&apos;,apeaowndp,&apos;&apos;,apeacrtid,&apos;&apos;,apeacrtdp,&apos;&apos;,apeacrtdt,apeamodid,&apos;&apos;,apeamoddt,apeacnfid,&apos;&apos;,apeacnfdt FROM apea_t WHERE apeaent= ? AND apeadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT apeasite,&apos;&apos;,apea003,&apos;&apos;,apeadocdt,apeacomp,apeald,apeadocno,apea001,apea019,apea020,apea005,&apos;&apos;,apea013,apea006,apeastus,apeaownid,&apos;&apos;,apeaowndp,&apos;&apos;,apeacrtid,&apos;&apos;,apeacrtdp,&apos;&apos;,apeacrtdt,apeamodid,&apos;&apos;,apeamoddt,apeacnfid,&apos;&apos;,apeacnfdt FROM apea_t" order="apeadocno"/>
+    </head>
+    <body id="apeb_t" page="1" linked="" pk="apebseq" fk="apebdocno">
+      <sql id="forupd_sql_detail" query="SELECT apebseq,apeborga,&apos;&apos;,apeb002,apeb007,apeb008,apeb011,apeb003,apeb004,apeb005,apeb031,apeb100,apeb108,apeb101,apeb118,apeb006,apeb024,apeb025,apebcomp,&apos;&apos;,&apos;&apos;,apeb012,apebld FROM apeb_t WHERE apebent=? AND apebdocno=? AND apebseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT apebseq,apeborga,&apos;&apos;,apeb002,apeb007,apeb008,apeb011,apeb003,apeb004,apeb005,apeb031,apeb100,apeb108,apeb101,apeb118,apeb006,apeb024,apeb025,apebcomp,&apos;&apos;,&apos;&apos;,apeb012,apebld FROM apeb_t WHERE apebent=? AND apebdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

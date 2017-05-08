@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axct301_01" module="axc" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02291" crtdt="2014-04-14 14:00:01" modid="02291" moddt="2014-04-14 00:00:00" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="整批導入">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xccbcomp,xccbcomp_desc(chr80),xccbld,xccbld_desc(chr80),format(chr500),mold(chr2),way(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="browser"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axct301_01" method="dialog">
+    <section id="input">
+      <input id="head" field="xccbcomp,xccbld,format,mold,way"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="xccbcomp">
+        <after>
+          <reference field="xccbcomp_desc" ref_field="xccb_t.xccbcomp" map_field="xccbent,xccbcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="xccbcomp_desc"/>
+      <column id="xccbld">
+        <after>
+          <reference field="xccbld_desc" ref_field="xccb_t.xccbld" map_field="xccbent,xccbld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xccbld_desc"/>
+      <column id="format"/>
+      <column id="mold"/>
+      <column id="way"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xccb_t" pk="xccbld,xccb001,xccb002,xccb003,xccb004,xccb005,xccb006,xccb007,xccb008,xccb009">
+      <sql id="forupd_sql" type="sql" query="SELECT xccbcomp,&apos;&apos;,xccbld,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xccb_t WHERE xccbent= ? AND xccbld=? AND xccb001=? AND xccb002=? AND xccb003=? AND xccb004=? AND xccb005=? AND xccb006=? AND xccb007=? AND xccb008=? AND xccb009=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="xccbld,xccb001,xccb002,xccb003,xccb004,xccb005,xccb006,xccb007,xccb008,xccb009"/>
+    </head>
+  </dataset>
+</assembly>
+

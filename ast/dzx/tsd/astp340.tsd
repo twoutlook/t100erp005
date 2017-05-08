@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="astp340" std_prog="astp340" erpver="1.0" ver="2" module="AST" type="M" booking="Y" designer_ver="1.0" class="p" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 根据QBE条件自动产生结算单资料
+作業類型：批处理作業
+
+------------批處理邏輯------------
+===============================================================================================
+功能名稱：零售结算单批处理产生作业
+功能目的：零售结算单批处理产生作业
+關鍵詞：结算中心、结账日，结算会计期，结算单
+同義詞：结算中心、结账日，结算会计期，结算单
+傳入參數：1.结算中心，2.合同编号，3.供应商，4.结算日期
+回傳值：1.檢核狀態(r_success) 2.錯誤訊息
+===============================================================================================
+检查：
+  默认单别未设定，错误提示【XXX作业未设定默认单别，请到arti200中设定默认单别!
+1.栏位赋值
+    结算日期空白或者无值则赋值=g_today-1
+    结算会计期=当前结算会计期(asti206)    
+2.条件筛选
+  1.1筛选合同：根据QBE抓取符合范围的条件的合同资料
+  其中条件： 结算中心=？  AND 合同编号= ?  AND　供应商= ？   AND 结账日期<=？ (未结算的最小账期的结账日)  
+3.产生结算资料(astt340)：
+  3.1若存在未审核的结算单，则不可产生结算单
+  3.2产生单头资料
+     根据QBE条件以及结算中心、合同、供应商以及结账日、账期对应的日期区间等等，产生结算单单头资料
+  3.3产生单身资料
+     抓取结算供应商的账期期间以及之前未结算的底稿资料写入单身
+     回写底稿状态
+  3.4汇总单身资料回写单头汇总页签   
+4.回傳r_success,錯誤訊息]]>
+  </all>
+  <field cite_std="N" name="choice" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ComboBox" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stan001" ver="1" src="s" column="stan001" table="stan_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_stan001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[合同编号：
+   ●開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：合同编号、合同版本、供应商、经营方式、结算方式、结算类型]]>
+  </field>
+  <field cite_std="N" name="stan005" ver="1" src="s" column="stan005" table="stan_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_pmaa001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[供应商：
+   ●開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：供应商
+     新增/修改過濾條件：则抓有效供应商资料]]>
+  </field>
+  <field cite_std="N" name="stan015" ver="1" src="s" column="stan015" table="stan_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooef001_24" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[结算中心：
+   ●開窗處理：
+      參考函式：依標準查詢視窗 
+      查詢欄位：[T:组织资料].[C:組織],[T:組織多語言檔].[C:說明]
+      筛选条件：有效的组织资料，并且职能=结算中心
+      回值類型：多重回值]]>
+  </field>
+  <field cite_std="N" name="stax004" ver="1" src="s" column="stax004" table="stax_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="DateEdit" status="">
+    <![CDATA[结账日期
+   ●欄位控管：
+     資料欄位:可Display可Input
+     預設值:g_today-1
+     校驗:1.允許空白
+          2.非空白时要小于等于今天]]>
+  </field>
+  <field cite_std="N" name="choice1" ver="2" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="combobox_1" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ComboBox" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="2" name="choice" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="2" name="choice1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="2" name="combobox_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="stan001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stan005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stan015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stax004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="group_qbe" text="QBE條件" lstr=""/>
+    <sfield name="lbl_stan015" text="結算中心" lstr=""/>
+    <sfield name="lbl_stan001" text="合同編號" lstr=""/>
+    <sfield name="lbl_stan005" text="供應商" lstr=""/>
+    <sfield name="lbl_stax004" text="結算日期" lstr=""/>
+    <sfield name="group_input" text="其他條件" lstr=""/>
+    <sfield name="lbl_choice" text="選項" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_stbdsite" text="結算中心" lstr=""/>
+    <sfield name="lbl_ooefl003" text="結算中心說明(簡稱)" lstr=""/>
+    <sfield name="lbl_stbddocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_stbddocdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_stbd023" text="結算地點" lstr=""/>
+    <sfield name="lbl_stbd002" text="供應商" lstr=""/>
+    <sfield name="lbl_pmaal004" text="供應商簡稱" lstr=""/>
+    <sfield name="lbl_stbd003" text="經營方式" lstr=""/>
+    <sfield name="lbl_stbd004" text="結算賬期" lstr=""/>
+    <sfield name="lbl_stbd005" text="起始日期" lstr=""/>
+    <sfield name="lbl_stbd006" text="截止日期" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

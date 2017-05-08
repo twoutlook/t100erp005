@@ -1,0 +1,449 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammt500" module="amm" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="08172" crtdt="2016-06-14 09:54:35" modid="07142" moddt="2016-07-20 16:41:01" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="4" tabver="10001" description="會員快速發卡維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mmaasite,mmaasite_desc(chr80),mmaadocdt,mmaadocno,mmaa000,mmaa001,mmaa020,mmaa002,mmaa019,mmaa019_desc(chr80),mmaa056,mmaa052,mmaa052_desc(chr80),mmaa055,mmaa061,mmaa061_desc(chr80),mmaa054,mmaastus,mmaa008,mmaa009,mmaa014,mmaa003,mmaa015,mmaa013,mmaa004,mmaa010,mmaa024,mmaa025,mmaa026,mmaa027,mmaa028,mmaa012,mmaa011,mmaa029,mmaa034,mmaa039,mmaa030,mmaa035,mmaa040,mmaa031,mmaa036,mmaa041,mmaa032,mmaa037,mmaa042,mmaa033,mmaa038,mmaa043,mmaa057,mmaa057_desc(chr80),mmaa047,mmaa060,mmaa059,mmaa048,mmaa062,mmaa062_desc(chr80),mmaa044,mmaa044_desc(chr80),mmaa049,mmaa058,mmaa045,mmaa050,mmaa046,mmaa051,mmaaownid,mmaaownid_desc(chr80),mmaaowndp,mmaaowndp_desc(chr80),mmaacrtid,mmaacrtid_desc(chr80),mmaacrtdp,mmaacrtdp_desc(chr80),mmaacrtdt,mmaamodid,mmaamodid_desc(chr80),mmaamoddt,mmaacnfid,mmaacnfid_desc(chr80),mmaacnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mmac001,mmac002,mmac002_desc(chr500),mmac003,mmacacti"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="mmae001,mmae002,mmae002_desc(chr500),mmaeacti"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="mmad001,mmad002,mmad002_desc(chr500),mmadacti"/>
+      <var id="body" page="4" record="s_detail4" page_id="4" value="mmab001,mmab002,mmab002_desc(chr500),mmab003,mmab004,mmab004_desc(chr500)"/>
+      <var id="bs_field" value="mmaasite,mmaasite_desc(chr80),mmaadocno,mmaa001,mmaa008,mmaa004,mmaa015,mmaa014,mmaa019,mmaa019_desc(chr80),mmaa052,mmaa052_desc(chr80),mmaa061,mmaa061_desc(chr80),mmaa056,mmaa055,mmaa054" pk="mmaadocno" order=""/>
+      <bs_reference field="mmaasite_desc" ref_field="mmaasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="mmaa019_desc" ref_field="mmaa019" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="mmaa052_desc" ref_field="mmaa052" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="mmaa061_desc" ref_field="mmaa061" ref_sql="SELECT pcab003 FROM pcab_t WHERE pcabent=$varg_enterprise$var AND pcab001=? "/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="demo"/>
+      <action id="ammt500_pay_detail"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="pay_money"/>
+      <action id="output"/>
+      <action id="ammt500_pay"/>
+      <action id="query" type="standard"/>
+      <action id="update_mmaa001"/>
+    </section>
+  </structure>
+  <form id="0" module="amm" filename="ammt500" method="dialog">
+    <section id="input">
+      <input id="head" field="mmaasite,mmaadocdt,mmaadocno,mmaa000,mmaa001,mmaa020,mmaa002,mmaa019,mmaa056,mmaa052,mmaa055,mmaa061,mmaa054,mmaastus,mmaa008,mmaa009,mmaa014,mmaa003,mmaa015,mmaa013,mmaa004,mmaa010,mmaa024,mmaa025,mmaa026,mmaa027,mmaa028,mmaa012,mmaa011,mmaa029,mmaa034,mmaa039,mmaa030,mmaa035,mmaa040,mmaa031,mmaa036,mmaa041,mmaa032,mmaa037,mmaa042,mmaa033,mmaa038,mmaa043,mmaa057,mmaa047,mmaa060,mmaa059,mmaa048,mmaa062,mmaa044,mmaa049,mmaa058,mmaa045,mmaa050,mmaa046,mmaa051"/>
+      <input id="body" page="1" field="mmac001,mmac002,mmac003,mmacacti" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="mmae001,mmae002,mmaeacti" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="mmad001,mmad002,mmadacti" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="4" field="mmab001,mmab002,mmab003,mmab004" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mmaasite,mmaadocdt,mmaadocno,mmaa000,mmaa001,mmaa020,mmaa002,mmaa019,mmaa056,mmaa052,mmaa055,mmaa061,mmaa054,mmaastus,mmaa008,mmaa009,mmaa014,mmaa003,mmaa015,mmaa013,mmaa004,mmaa010,mmaa024,mmaa025,mmaa026,mmaa027,mmaa028,mmaa012,mmaa011,mmaa029,mmaa034,mmaa039,mmaa030,mmaa035,mmaa040,mmaa031,mmaa036,mmaa041,mmaa032,mmaa037,mmaa042,mmaa033,mmaa038,mmaa043,mmaa057,mmaa047,mmaa060,mmaa059,mmaa048,mmaa062,mmaa044,mmaa049,mmaa058,mmaa045,mmaa050,mmaa046,mmaa051,mmaaownid,mmaaowndp,mmaacrtid,mmaacrtdp,mmaacrtdt,mmaamodid,mmaamoddt,mmaacnfid,mmaacnfdt"/>
+      <construct id="body" page="1" field="mmac001,mmac002,mmac003,mmacacti"/>
+      <construct id="body" page="2" field="mmae001,mmae002,mmaeacti"/>
+      <construct id="body" page="3" field="mmad001,mmad002,mmadacti"/>
+      <construct id="body" page="4" field="mmab001,mmab002,mmab003,mmab004"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mmaadocno"/>
+      <set id="head" type="no_entry" field="mmaadocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="mmaasite">
+        <after>
+          <check chkid="v_ooed004" id="isExist"/>
+          <reference field="mmaasite_desc" ref_field="mmaa_t.mmaasite" map_field="mmaasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="mmaasite_desc"/>
+      <column id="mmaadocdt"/>
+      <column id="mmaadocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_mmaadocno" state="c"/>
+      </column>
+      <column id="mmaa000" def_scc="32"/>
+      <column id="mmaa001">
+        <controlp form="q_mmaf001" state="i"/>
+        <controlp form="q_mmaf001" state="c"/>
+      </column>
+      <column id="mmaa020">
+        <after>
+          <check chkid="v_mmaq001_2" id="isExist"/>
+        </after>
+        <controlp form="q_mmaq001_3" state="i"/>
+        <controlp form="q_mmaq001_3" state="c"/>
+      </column>
+      <column id="mmaa002">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mmaa019">
+        <after>
+          <reference field="mmaa019_desc" ref_field="mmaa_t.mmaa019" map_field="mmaa019" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_2" state="i"/>
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="mmaa019_desc"/>
+      <column id="mmaa056"/>
+      <column id="mmaa052">
+        <after>
+          <reference field="mmaa052_desc" ref_field="mmaa_t.mmaa052" map_field="mmaa052" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="mmaa052_desc"/>
+      <column id="mmaa055"/>
+      <column id="mmaa061">
+        <after>
+          <reference field="mmaa061_desc" ref_field="mmaa_t.mmaa061" map_field="mmaa061" ref_sql="SELECT pcab003 FROM pcab_t WHERE pcabent=$varg_enterprise$var AND pcab001=? "/>
+        </after>
+        <controlp form="q_pcab001_1" state="i"/>
+        <controlp form="q_pcab001_1" state="c"/>
+      </column>
+      <column id="mmaa061_desc"/>
+      <column id="mmaa054"/>
+      <column id="mmaastus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="A" pic="approved"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="mmaa008"/>
+      <column id="mmaa009"/>
+      <column id="mmaa014"/>
+      <column id="mmaa003" def_scc="6501"/>
+      <column id="mmaa015"/>
+      <column id="mmaa013"/>
+      <column id="mmaa004"/>
+      <column id="mmaa010">
+        <controlp form="q_oocn002" state="i"/>
+        <controlp form="q_oocn002" state="c"/>
+      </column>
+      <column id="mmaa024">
+        <after>
+          <check chkid="v_oocg001" id="isExist"/>
+        </after>
+        <controlp form="q_oocg001" state="i"/>
+        <controlp form="q_oocg001" state="c"/>
+      </column>
+      <column id="mmaa025">
+        <after>
+          <check chkid="v_ooci002_1" id="isExist"/>
+        </after>
+        <controlp form="q_ooci002" state="i"/>
+        <controlp form="q_ooci002" state="c"/>
+      </column>
+      <column id="mmaa026">
+        <after>
+          <check chkid="v_oock003" id="isExist"/>
+        </after>
+        <controlp form="q_oock003" state="i"/>
+        <controlp form="q_oock003" state="c"/>
+      </column>
+      <column id="mmaa027">
+        <after>
+          <check chkid="v_oocm004" id="isExist"/>
+        </after>
+        <controlp form="q_oocm004" state="i"/>
+        <controlp form="q_oocm004" state="c"/>
+      </column>
+      <column id="mmaa028">
+        <after>
+          <check chkid="v_ooco005" id="isExist"/>
+        </after>
+        <controlp form="q_ooco005" state="i"/>
+        <controlp form="q_ooco005" state="c"/>
+      </column>
+      <column id="mmaa012"/>
+      <column id="mmaa011"/>
+      <column id="mmaa029">
+        <after>
+          <check chkid="v_oocq002" id="chkandReturn"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmaa034">
+        <after>
+          <check chkid="v_oocq002" id="chkandReturn"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmaa039">
+        <after>
+          <check chkid="v_oocq002" id="chkandReturn"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmaa030">
+        <after>
+          <check chkid="v_oocq002" id="chkandReturn"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmaa035">
+        <after>
+          <check chkid="v_oocq002" id="chkandReturn"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmaa040">
+        <after>
+          <check chkid="v_oocq002" id="chkandReturn"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmaa031">
+        <after>
+          <check chkid="v_oocq002" id="chkandReturn"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmaa036">
+        <after>
+          <check chkid="v_oocq002" id="chkandReturn"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmaa041">
+        <after>
+          <check chkid="v_oocq002" id="chkandReturn"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmaa032">
+        <after>
+          <check chkid="v_oocq002" id="chkandReturn"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmaa037">
+        <after>
+          <check chkid="v_oocq002" id="chkandReturn"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmaa042">
+        <after>
+          <check chkid="v_oocq002" id="chkandReturn"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmaa033">
+        <after>
+          <check chkid="v_oocq002" id="chkandReturn"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmaa038">
+        <after>
+          <check chkid="v_oocq002" id="chkandReturn"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmaa043">
+        <after>
+          <check chkid="v_oocq002" id="chkandReturn"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmaa057">
+        <after>
+          <reference field="mmaa057_desc" ref_field="mmaasite,mmaa057" map_field="mmaasite,mmaa057" ref_sql="SELECT mmbyl004 FROM mmbyl_t WHERE mmbylent=$varg_enterprise$var AND mmbylsite=? AND mmbyl001=? AND mmbyl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mmby001" state="i"/>
+        <controlp form="q_mmby001" state="c"/>
+      </column>
+      <column id="mmaa057_desc"/>
+      <column id="mmaa047"/>
+      <column id="mmaa060" type="S" default="0"/>
+      <column id="mmaa059">
+        <controlp form="q_mmaq001_7" state="i"/>
+        <controlp form="q_mmea001" state="c"/>
+      </column>
+      <column id="mmaa048" type="S" default="0"/>
+      <column id="mmaa062">
+        <after>
+          <reference field="mmaa062_desc" ref_field="mmaa_t.mmaa062" map_field="mmaa062" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inaa001_4" state="i"/>
+        <controlp form="q_inaa001_5" state="c"/>
+      </column>
+      <column id="mmaa062_desc"/>
+      <column id="mmaa044">
+        <after>
+          <reference field="mmaa044_desc" ref_field="mmaa_t.mmaa044" map_field="mmaa044" ref_sql="SELECT mmanl003 FROM mmanl_t WHERE mmanlent=$varg_enterprise$var AND mmanl001=? AND mmanl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mman001" state="c"/>
+      </column>
+      <column id="mmaa044_desc"/>
+      <column id="mmaa049"/>
+      <column id="mmaa058"/>
+      <column id="mmaa045" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mmaa050" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mmaa046">
+        <after>
+          <check id="range" st="100" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="mmaa051"/>
+      <column id="mmaaownid">
+        <after>
+          <reference field="mmaaownid_desc" ref_field="mmaa_t.mmaaownid" map_field="mmaaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmaaownid_desc"/>
+      <column id="mmaaowndp">
+        <after>
+          <reference field="mmaaowndp_desc" ref_field="mmaa_t.mmaaowndp" map_field="mmaaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mmaaowndp_desc"/>
+      <column id="mmaacrtid">
+        <after>
+          <reference field="mmaacrtid_desc" ref_field="mmaa_t.mmaacrtid" map_field="mmaacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmaacrtid_desc"/>
+      <column id="mmaacrtdp">
+        <after>
+          <reference field="mmaacrtdp_desc" ref_field="mmaa_t.mmaacrtdp" map_field="mmaacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mmaacrtdp_desc"/>
+      <column id="mmaacrtdt"/>
+      <column id="mmaamodid">
+        <after>
+          <reference field="mmaamodid_desc" ref_field="mmaa_t.mmaamodid" map_field="mmaamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmaamodid_desc"/>
+      <column id="mmaamoddt"/>
+      <column id="mmaacnfid">
+        <after>
+          <reference field="mmaacnfid_desc" ref_field="mmaa_t.mmaacnfid" map_field="mmaacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmaacnfid_desc"/>
+      <column id="mmaacnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="mmac001"/>
+      <column id="mmac002">
+        <after>
+          <reference field="mmac002_desc" ref_field="mmac002" map_field="mmac002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2050&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmac002_desc"/>
+      <column id="mmac003"/>
+      <column id="mmacacti" type="S" default="Y"/>
+    </init>
+    <init id="body" page="2">
+      <column id="mmae001"/>
+      <column id="mmae002">
+        <after>
+          <reference field="mmae002_desc" ref_field="mmae002" map_field="mmae002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2057&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmae002_desc"/>
+      <column id="mmaeacti" type="S" default="Y"/>
+    </init>
+    <init id="body" page="3">
+      <column id="mmad001"/>
+      <column id="mmad002">
+        <after>
+          <reference field="mmad002_desc" ref_field="mmad002" map_field="mmad002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2051&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmad002_desc"/>
+      <column id="mmadacti" type="S" default="Y"/>
+    </init>
+    <init id="body" page="4">
+      <column id="mmab001"/>
+      <column id="mmab002">
+        <after>
+          <reference field="mmab002_desc" ref_field="mmab002" map_field="mmab002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2049&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmab002_desc"/>
+      <column id="mmab003"/>
+      <column id="mmab004">
+        <after>
+          <reference field="mmab004_desc" ref_field="mmab004" map_field="mmab004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2016&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmab004_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="mmaa_t" pk="mmaadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT mmaasite,&apos;&apos;,mmaadocdt,mmaadocno,mmaa000,mmaa001,mmaa020,mmaa002,mmaa019,&apos;&apos;,mmaa056,mmaa052,&apos;&apos;,mmaa055,mmaa061,&apos;&apos;,mmaa054,mmaastus,mmaa008,mmaa009,mmaa014,mmaa003,mmaa015,mmaa013,mmaa004,mmaa010,mmaa024,mmaa025,mmaa026,mmaa027,mmaa028,mmaa012,mmaa011,mmaa029,mmaa034,mmaa039,mmaa030,mmaa035,mmaa040,mmaa031,mmaa036,mmaa041,mmaa032,mmaa037,mmaa042,mmaa033,mmaa038,mmaa043,mmaa057,&apos;&apos;,mmaa047,mmaa060,mmaa059,mmaa048,mmaa062,&apos;&apos;,mmaa044,&apos;&apos;,mmaa049,mmaa058,mmaa045,mmaa050,mmaa046,mmaa051,mmaaownid,&apos;&apos;,mmaaowndp,&apos;&apos;,mmaacrtid,&apos;&apos;,mmaacrtdp,&apos;&apos;,mmaacrtdt,mmaamodid,&apos;&apos;,mmaamoddt,mmaacnfid,&apos;&apos;,mmaacnfdt FROM mmaa_t WHERE mmaaent= ? AND mmaadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mmaasite,&apos;&apos;,mmaadocdt,mmaadocno,mmaa000,mmaa001,mmaa020,mmaa002,mmaa019,&apos;&apos;,mmaa056,mmaa052,&apos;&apos;,mmaa055,mmaa061,&apos;&apos;,mmaa054,mmaastus,mmaa008,mmaa009,mmaa014,mmaa003,mmaa015,mmaa013,mmaa004,mmaa010,mmaa024,mmaa025,mmaa026,mmaa027,mmaa028,mmaa012,mmaa011,mmaa029,mmaa034,mmaa039,mmaa030,mmaa035,mmaa040,mmaa031,mmaa036,mmaa041,mmaa032,mmaa037,mmaa042,mmaa033,mmaa038,mmaa043,mmaa057,&apos;&apos;,mmaa047,mmaa060,mmaa059,mmaa048,mmaa062,&apos;&apos;,mmaa044,&apos;&apos;,mmaa049,mmaa058,mmaa045,mmaa050,mmaa046,mmaa051,mmaaownid,&apos;&apos;,mmaaowndp,&apos;&apos;,mmaacrtid,&apos;&apos;,mmaacrtdp,&apos;&apos;,mmaacrtdt,mmaamodid,&apos;&apos;,mmaamoddt,mmaacnfid,&apos;&apos;,mmaacnfdt FROM mmaa_t" order="mmaadocno"/>
+    </head>
+    <body id="mmac_t" page="1" linked="" pk="mmac002" fk="mmacdocno">
+      <sql id="forupd_sql_detail" query="SELECT mmac001,mmac002,&apos;&apos;,mmac003,mmacacti FROM mmac_t WHERE mmacent=? AND mmacdocno=? AND mmac002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mmac001,mmac002,&apos;&apos;,mmac003,mmacacti FROM mmac_t WHERE mmacent=? AND mmacdocno=?"/>
+    </body>
+    <body id="mmae_t" page="2" linked="" pk="mmae002" fk="mmaedocno">
+      <sql id="forupd_sql_detail" query="SELECT mmae001,mmae002,&apos;&apos;,mmaeacti FROM mmae_t WHERE mmaeent=? AND mmaedocno=? AND mmae002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mmae001,mmae002,&apos;&apos;,mmaeacti FROM mmae_t WHERE mmaeent=? AND mmaedocno=?"/>
+    </body>
+    <body id="mmad_t" page="3" linked="" pk="mmad002" fk="mmaddocno">
+      <sql id="forupd_sql_detail" query="SELECT mmad001,mmad002,&apos;&apos;,mmadacti FROM mmad_t WHERE mmadent=? AND mmaddocno=? AND mmad002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mmad001,mmad002,&apos;&apos;,mmadacti FROM mmad_t WHERE mmadent=? AND mmaddocno=?"/>
+    </body>
+    <body id="mmab_t" page="4" linked="" pk="mmab002" fk="mmabdocno">
+      <sql id="forupd_sql_detail" query="SELECT mmab001,mmab002,&apos;&apos;,mmab003,mmab004,&apos;&apos; FROM mmab_t WHERE mmabent=? AND mmabdocno=? AND mmab002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mmab001,mmab002,&apos;&apos;,mmab003,mmab004,&apos;&apos; FROM mmab_t WHERE mmabent=? AND mmabdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

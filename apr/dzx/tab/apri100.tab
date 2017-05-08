@@ -1,0 +1,108 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apri100" module="apr" jobmode="N" type="i13" industry="std" fix_arg="0" crtid="02296" crtdt="2014-02-27 00:00:00" modid="02749" moddt="2015-03-09 11:16:56" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="競爭門店資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="prba001,prba001_desc(chr80),prba002,prba003,prba004,prba005,prba006,prba007,prbastus,prbaownid,prbaownid_desc(chr80),prbaowndp,prbaowndp_desc(chr80),prbacrtid,prbacrtid_desc(chr80),prbacrtdp,prbacrtdp_desc(chr80),prbacrtdt,prbamodid,prbamodid_desc(chr80),prbamoddt"/>
+      <var id="bs_field" value="prba001,prba002,prba003" pk="prba001,prba002" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apr" filename="apri100" method="dialog">
+    <section id="input">
+      <input id="head" field="prba001,prba002,prba003,prba004,prba005,prba006,prba007,prbastus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="prba001,prba002,prba003,prba004,prba005,prba006,prba007,prbastus,prbaownid,prbaowndp,prbacrtid,prbacrtdp,prbacrtdt,prbamodid,prbamoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="prba001,prba002"/>
+      <set id="head" type="no_entry" field="prba001,prba002"/>
+    </init>
+    <init id="head">
+      <column id="prba001">
+        <after>
+          <check chkid="v_ooef001_2" id="isExist"/>
+          <reference field="prba001_desc" ref_field="prba_t.prba001" map_field="prba001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_3" state="i"/>
+        <controlp form="q_ooef001_3" state="c"/>
+      </column>
+      <column id="prba001_desc"/>
+      <column id="prba002">
+        <controlp form="q_prba002" state="c"/>
+      </column>
+      <column id="prba003"/>
+      <column id="prba004">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="prba005">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="prba006"/>
+      <column id="prba007"/>
+      <column id="prbastus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="prbaownid">
+        <after>
+          <reference field="prbaownid_desc" ref_field="prba_t.prbaownid" map_field="prbaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="prbaownid_desc"/>
+      <column id="prbaowndp">
+        <after>
+          <reference field="prbaowndp_desc" ref_field="prba_t.prbaowndp" map_field="prbaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="prbaowndp_desc"/>
+      <column id="prbacrtid">
+        <after>
+          <reference field="prbacrtid_desc" ref_field="prba_t.prbacrtid" map_field="prbacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="prbacrtid_desc"/>
+      <column id="prbacrtdp">
+        <after>
+          <reference field="prbacrtdp_desc" ref_field="prba_t.prbacrtdp" map_field="prbacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="prbacrtdp_desc"/>
+      <column id="prbacrtdt"/>
+      <column id="prbamodid">
+        <after>
+          <reference field="prbamodid_desc" ref_field="prba_t.prbamodid" map_field="prbamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="prbamodid_desc"/>
+      <column id="prbamoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="prba_t" lid="prba002" type="prba001" type2="" type3="" type4="" type5="" type6="" desc="prba003" pk="prba001,prba002">
+      <sql id="forupd_sql" type="sql" query="SELECT prba001,&apos;&apos;,prba002,prba003,prba004,prba005,prba006,prba007,prbastus,prbaownid,&apos;&apos;,prbaowndp,&apos;&apos;,prbacrtid,&apos;&apos;,prbacrtdp,&apos;&apos;,prbacrtdt,prbamodid,&apos;&apos;,prbamoddt FROM prba_t WHERE prbaent= ? AND prba001=? AND prba002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT prba001,prba002 FROM prba_t" order="prba001,prba002"/>
+    </head>
+  </dataset>
+</assembly>
+

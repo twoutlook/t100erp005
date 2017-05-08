@@ -1,0 +1,118 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abgi215" module="abg" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02298" crtdt="2013-09-12 17:37:44" modid="06821" moddt="2015-08-06 17:15:00" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="樣表分配設定">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bgay001,bgay001_desc(chr80),bgay002,bgay002_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bgaystus,bgay003,bgay003_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="bgay003,bgaymodid,bgaymodid_desc(chr500),bgaymoddt,bgayownid,bgayownid_desc(chr500),bgayowndp,bgayowndp_desc(chr500),bgaycrtid,bgaycrtid_desc(chr500),bgaycrtdp,bgaycrtdp_desc(chr500),bgaycrtdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="lbl_vaild"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abg" filename="abgi215" method="dialog">
+    <section id="input">
+      <input id="head" field="bgay001,bgay002"/>
+      <input id="body" page="1" field="bgaystus,bgay003,bgay003_desc" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bgay001,bgay002"/>
+      <construct id="body" page="1" field="bgaystus,bgay003,bgay003_desc"/>
+      <construct id="body" page="2" field="bgaymodid,bgaymoddt,bgayownid,bgayowndp,bgaycrtid,bgaycrtdp,bgaycrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bgay001,bgay002"/>
+      <set id="head" type="no_entry" field="bgay001,bgay002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bgay001">
+        <after>
+          <reference field="bgay001_desc" ref_field="bgay_t.bgay001" map_field="bgayent,bgay001" ref_sql="SELECT bgaal003 FROM bgaal_t WHERE bgaalent=$varg_enterprise$var AND bgaal001=? AND bgaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_bgaa001" state="i"/>
+        <controlp form="q_bgaa001" state="c"/>
+      </column>
+      <column id="bgay001_desc"/>
+      <column id="bgay002">
+        <after>
+          <reference field="bgay002_desc" ref_field="bgay_t.bgay002" map_field="bgayent,bgay002" ref_sql="SELECT bgawl003 FROM bgawl_t WHERE bgawlent=$varg_enterprise$var AND bgawl001=? AND bgawl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_bgaw001" state="i"/>
+        <controlp form="q_bgaw001" state="c"/>
+      </column>
+      <column id="bgay002_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="bgaystus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="bgay003">
+        <after/>
+        <controlp form="q_bgae001" state="i"/>
+        <controlp form="q_bgae001" state="c"/>
+      </column>
+      <column id="bgay003_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="bgaymodid">
+        <after>
+          <reference field="bgaymodid_desc" ref_field="bgay_t.bgaymodid" map_field="bgaymodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgaymodid_desc"/>
+      <column id="bgaymoddt"/>
+      <column id="bgayownid">
+        <after>
+          <reference field="bgayownid_desc" ref_field="bgay_t.bgayownid" map_field="bgayownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgayownid_desc"/>
+      <column id="bgayowndp">
+        <after>
+          <reference field="bgayowndp_desc" ref_field="bgay_t.bgayowndp" map_field="bgayowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgayowndp_desc"/>
+      <column id="bgaycrtid">
+        <after>
+          <reference field="bgaycrtid_desc" ref_field="bgay_t.bgaycrtid" map_field="bgaycrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgaycrtid_desc"/>
+      <column id="bgaycrtdp">
+        <after>
+          <reference field="bgaycrtdp_desc" ref_field="bgay_t.bgaycrtdp" map_field="bgaycrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgaycrtdp_desc"/>
+      <column id="bgaycrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bgay_t" pk="bgay001,bgay002">
+      <sql id="forupd_sql" type="sql" query="SELECT bgay001,&apos;&apos;,bgay002,&apos;&apos; FROM bgay_t WHERE bgayent= ? AND bgay001=? AND bgay002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bgay001,&apos;&apos;,bgay002,&apos;&apos; FROM bgay_t" order="bgay001,bgay002"/>
+    </head>
+    <body id="bgay_t" page="1,2" linked="" pk="bgay003" fk="bgay001,bgay002">
+      <sql id="forupd_sql_detail" query="SELECT bgaystus,bgay003,&apos;&apos;,&apos;&apos;,bgaymodid,&apos;&apos;,bgaymoddt,bgayownid,&apos;&apos;,bgayowndp,&apos;&apos;,bgaycrtid,&apos;&apos;,bgaycrtdp,&apos;&apos;,bgaycrtdt FROM bgay_t WHERE bgayent=? AND bgay001=? AND bgay002=? AND bgay003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bgaystus,bgay003,&apos;&apos;,&apos;&apos;,bgaymodid,&apos;&apos;,bgaymoddt,bgayownid,&apos;&apos;,bgayowndp,&apos;&apos;,bgaycrtid,&apos;&apos;,bgaycrtdp,&apos;&apos;,bgaycrtdt FROM bgay_t WHERE bgayent= ? AND bgay001=? AND bgay002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

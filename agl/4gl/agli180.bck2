@@ -1,0 +1,3719 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="agli180.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0010(2015-06-15 13:52:22), PR版次:0010(2016-09-05 16:50:43)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000614
+#+ Filename...: agli180
+#+ Description: 理由碼依帳套設定科目作業
+#+ Creator....: 02291(2013-10-30 17:02:30)
+#+ Modifier...: 02291 -SD/PR- 05423
+ 
+{</section>}
+ 
+{<section id="agli180.global" >}
+#應用 i00 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#150527-00031#1   2015/05/27  By apo         當理由碼於aini099已經被刪除,這邊會因為抓不到狀態碼而進不了修改段,導致理由碼無法同步
+#160318-00005#15  2016/03/25  by 07675       將重複內容的錯誤訊息置換為公用錯誤訊息
+#160811-00039#6   2016/08/25  By 02599       查询及建立资料时（包括直接查询全部、开窗、输入值后的检核）及更改和删除，要考虑账套权限。
+#160905-00007#3   2016/09/05  By zhujing     调整系统中无ENT的SQL条件增加ent
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable)
+{<Module define>}
+
+#單頭 type 宣告
+PRIVATE TYPE type_g_glab_m RECORD
+       glabld LIKE glab_t.glabld,
+   glabld_desc LIKE type_t.chr80,
+   glaacomp LIKE type_t.chr80,
+   glab001 LIKE glab_t.glab001,
+   stus1 LIKE type_t.chr80,
+   glaa004 LIKE type_t.chr80,
+   glab002 LIKE glab_t.glab002,
+   glab003 LIKE glab_t.glab003
+       END RECORD
+
+#模組變數(Module Variables)
+DEFINE g_glab_m        type_g_glab_m
+DEFINE g_glab_m_t      type_g_glab_m                #備份舊值
+DEFINE g_glabld_t   LIKE glab_t.glabld    #Key值備份
+DEFINE g_glab001_t   LIKE glab_t.glab001    #Key值備份
+
+DEFINE g_glab002_t   LIKE glab_t.glab002    #Key值備份
+
+DEFINE g_glab003_t   LIKE glab_t.glab003    #Key值備份
+
+
+
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD                   #資料瀏覽之欄位
+                #外顯欄位
+       b_show          LIKE type_t.chr100,
+       #父節點id
+       b_pid           LIKE type_t.chr100,
+       #本身節點id
+       b_id            LIKE type_t.chr100,
+       #是否展開
+       b_exp           LIKE type_t.chr100,
+       #是否有子節點
+       b_hasC          LIKE type_t.num5,
+       #是否已展開
+       b_isExp         LIKE type_t.num5,
+       #展開值
+       b_expcode       LIKE type_t.num5,
+       #tree自定義欄位
+            b_glab002 LIKE glab_t.glab002,
+      b_glab001 LIKE glab_t.glab001,
+      b_glab003 LIKE glab_t.glab003,
+      b_glabld LIKE glab_t.glabld,
+      b_glab005 LIKE type_t.chr80,
+      b_glab006 LIKE type_t.chr80,
+      b_glab007 LIKE type_t.chr80,
+      b_glab008 LIKE type_t.chr80,
+      b_glab009 LIKE type_t.chr80,
+      b_glab011 LIKE glab_t.glab011,
+   b_oocqstus LIKE type_t.chr80
+         #,rank           LIKE type_t.num10
+      END RECORD
+
+#無單頭append欄位定義
+
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+
+DEFINE g_sql                 STRING                        #組 sql 用
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_jump                LIKE type_t.num10             #查詢指定的筆數
+DEFINE g_no_ask              LIKE type_t.num5              #是否開啟指定筆視窗
+DEFINE g_rec_b               LIKE type_t.num5              #單身筆數
+DEFINE l_ac                  LIKE type_t.num5              #目前處理的ARRAY CNT
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_pagestart           LIKE type_t.num5              #page起始筆數
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_state               STRING
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+
+#快速搜尋用
+DEFINE g_searchcol           STRING             #查詢欄位代碼
+DEFINE g_searchstr           STRING             #查詢欄位字串
+DEFINE g_order               STRING             #查詢排序模式
+
+#Browser用
+DEFINE g_current_idx         LIKE type_t.num5   #Browser 所在筆數(當下page)
+DEFINE g_current_row         LIKE type_t.num5   #Browser 所在筆數(暫存用)
+DEFINE g_detail_cnt          LIKE type_t.num5   #單身總筆數
+DEFINE g_detail_idx          LIKE type_t.num5   #單身目前所在筆數
+DEFINE g_current_cnt         LIKE type_t.num10  #Browser 總筆數(當下page)
+DEFINE g_browser_idx         LIKE type_t.num5   #Browser 所在筆數(所有資料)
+DEFINE g_browser_cnt         LIKE type_t.num5   #Browser 總筆數(所有資料)
+DEFINE g_tmp_page            LIKE type_t.num5
+DEFINE g_row_index           LIKE type_t.num5
+{</Module define>}
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable)
+DEFINE g_browser1    DYNAMIC ARRAY OF RECORD                   #資料瀏覽之欄位
+      b_glab002 LIKE glab_t.glab002,
+      b_glab001 LIKE glab_t.glab001,
+      b_glab003 LIKE glab_t.glab003,
+      b_glabld LIKE glab_t.glabld
+      END RECORD
+DEFINE g_glabld      LIKE glab_t.glabld
+DEFINE g_root_cnt    LIKE type_t.num5
+DEFINE g_wc1         STRING                        #儲存查詢條件
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="agli180.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define
+   
+   #end add-point    
+   #add-point:main段define(客製用)
+   
+   #end add-point
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("agl","")
+ 
+   #add-point:作業初始化
+   
+   #end add-point
+ 
+   #add-point:SQL_define
+   LET g_forupd_sql = "SELECT glabld,'','',glab001,'','',glab002,glab003 FROM glab_t WHERE glabent= ? AND glabld=? AND glab001=? AND glab002=? AND glab003=? FOR UPDATE"
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE agli180_cl CURSOR FROM g_forupd_sql 
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_agli180 WITH FORM cl_ap_formpath("agl",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL agli180_init()
+ 
+      #進入選單 Menu (='N')
+      CALL agli180_ui_dialog()
+   
+      #畫面關閉
+      CLOSE WINDOW w_agli180
+   END IF
+ 
+   #add-point:作業離開前
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+ 
+{</section>}
+ 
+{<section id="agli180.other_function" readonly="Y" >}
+#add-point:自定義元件(Function)
+#帳套編號有效性檢查
+PRIVATE FUNCTION agli180_glabld_chk(p_glabld)
+   DEFINE p_glabld LIKE glab_t.glabld
+   DEFINE r_success LIKE type_t.num5
+   DEFINE l_success LIKE type_t.num5
+
+   LET r_success = TRUE
+   IF NOT cl_null(p_glabld) THEN
+      #檢查是否存在
+      IF r_success THEN
+         IF NOT ap_chk_isExist(p_glabld,"SELECT COUNT(*) FROM glaa_t WHERE glaaent = '"
+            ||g_enterprise||"' AND glaald = ? ","agl-00016",0 ) THEN
+            LET r_success = FALSE
+         END IF
+      END IF
+      #檢查是否有效
+      IF r_success THEN
+         IF NOT ap_chk_isExist(p_glabld,"SELECT COUNT(*) FROM glaa_t WHERE glaaent = '"
+#            ||g_enterprise||"' AND glaald = ? AND glaastus = 'Y' ","agl-00051",0 ) THEN
+             ||g_enterprise||"' AND glaald = ? AND glaastus = 'Y' ",'sub-01302','agli010') THEN #160318-00005#15 mod 
+            LET r_success = FALSE
+         END IF
+      END IF
+      IF r_success THEN
+         CALL s_ld_chk_authorization(g_user,g_glab_m.glabld) RETURNING l_success
+         IF l_success = FALSE THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'agl-00165'
+            LET g_errparam.extend = g_glab_m.glabld
+            LET g_errparam.popup = FALSE
+            CALL cl_err()
+
+            LET r_success = FALSE
+         END IF
+      END IF
+   END IF
+   RETURN r_success
+END FUNCTION
+#帳套編號欄位帶值
+PRIVATE FUNCTION agli180_glabld_ref(p_glabld)
+   DEFINE p_glabld         LIKE glab_t.glabld
+   DEFINE r_glaal002       LIKE glaal_t.glaal002
+   DEFINE r_glaastus       LIKE glaa_t.glaastus
+   DEFINE r_glaacomp       LIKE glaa_t.glaacomp
+   DEFINE r_glaa004        LIKE glaa_t.glaa004
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_glabld
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET r_glaal002 = '', g_rtn_fields[1] , ''
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_glabld
+   CALL ap_ref_array2(g_ref_fields,"SELECT glaastus,glaacomp,glaa004 FROM glaa_t WHERE glaaent='"||g_enterprise||"' AND glaald=?","") RETURNING g_rtn_fields
+   LET r_glaastus = '', g_rtn_fields[1] , ''
+   LET r_glaacomp = '', g_rtn_fields[2] , ''
+   LET r_glaa004  = '', g_rtn_fields[3] , ''
+   RETURN r_glaal002,r_glaacomp,r_glaastus,r_glaa004
+
+END FUNCTION
+
+PRIVATE FUNCTION agli180_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+
+   LET g_main_hidden = 0
+
+  #CALL cl_set_combo_scc('glab003','8315')
+   CALL cl_set_combo_scc_part('stus1','17','N,Y')
+   CALL cl_set_combo_scc_part('b_oocqstus','17','N,Y')
+   CALL cl_set_combo_scc('b_glab011','8315')
+
+   LET g_error_show = 1
+
+   #add-point:畫面資料初始化
+   
+   #end add-point
+
+   CALL agli180_default_search()
+
+END FUNCTION
+
+PRIVATE FUNCTION agli180_ui_dialog()
+   {<Local define>}
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   {</Local define>}
+   #add-point:ui_dialog段define
+   DEFINE l_success LIKE type_t.chr1
+   #end add-point
+
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+   LET g_current_row = 0
+   LET g_current_idx = 1
+
+   #該樣板不需此段落CALL gfrm_curr.setElementImage("logo","logo/applogo.png")
+   #該樣板不需此段落CALL gfrm_curr.setElementHidden("mainlayout",1)
+   #該樣板不需此段落CALL gfrm_curr.setElementHidden("worksheet",0)
+
+   #add-point:ui_dialog段before dialog
+  #CALL cl_set_act_visible("accept,cancel", FALSE)
+   #end add-point
+
+   WHILE li_exit = FALSE
+
+      CALL agli180_browser_fill("")
+      CALL agli180_b_fill(g_wc)
+     #CALL agli180_browser_expand('1')
+      #該樣板不需此段落CALL lib_cl_dlg.cl_dlg_before_display()
+      #該樣板不需此段落CALL cl_notice()
+
+      #判斷前一個動作是否為新增, 若是的話切換到新增的筆數
+      IF g_state = "Y" THEN
+         FOR li_idx = 1 TO g_browser1.getLength()
+            IF g_browser1[li_idx].b_glabld = g_glabld_t
+#               AND g_browser1[li_idx].b_glab001 = g_glab001_t
+#
+#               AND g_browser1[li_idx].b_glab002 = g_glab002_t
+#
+#               AND g_browser1[li_idx].b_glab003 = g_glab003_t
+
+
+               THEN
+               LET g_current_row = li_idx
+               LET g_current_idx = li_idx
+               EXIT FOR
+            END IF
+         END FOR
+         LET g_state = ""
+      END IF
+
+         DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+            INPUT g_searchstr,g_searchcol FROM formonly.searchstr,formonly.cbo_searchcol
+               BEFORE INPUT
+
+            END INPUT
+
+            #左側瀏覽頁簽
+            DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTE(COUNT=g_rec_b)
+
+               BEFORE ROW
+                  #回歸舊筆數位置 (回到當時異動的筆數)
+                  LET g_detail_idx = DIALOG.getCurrentRow("s_browse")
+                  CALL cl_show_fld_cont()
+                  IF NOT cl_null(g_browser[g_detail_idx].b_glab003) THEN
+                     CALL cl_set_act_visible("modify,open_agli180_01", TRUE)
+                  ELSE
+                     CALL cl_set_act_visible("modify,open_agli180_01", FALSE)
+                  END IF
+
+                  #當每次點任一筆資料都會需要用到
+                 #CALL agli180_fetch("")
+                 #CALL agli180_glabld_show()
+               
+               BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               LET l_ac = DIALOG.getCurrentRow("s_browse")
+
+               ON EXPAND (g_row_index)
+                  #樹展開
+                  CALL agli180_browser_expand(g_row_index)
+                  LET g_browser[g_row_index].b_isExp = 1
+
+               ON COLLAPSE (g_row_index)
+                  #樹關閉
+
+            END DISPLAY
+
+            #該樣板不需此段落SUBDIALOG lib_cl_dlg.dlg_qryplan
+            #該樣板不需此段落SUBDIALOG lib_cl_dlg.dlg_relateapps
+
+            #add-point:ui_dialog段define
+            {<point name="ui_dialog.more_displayarray"/>}
+            #end add-point
+
+            BEFORE DIALOG
+               CALL cl_navigator_setting(g_current_idx, g_detail_cnt)
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               #LET g_page = "first"
+               #回歸舊筆數位置 (回到當時異動的筆數)
+               #該樣板不需此段落LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+               IF g_current_row > 1 AND g_current_idx = 1 AND g_current_sw = FALSE THEN
+               #該樣板不需此段落   CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+                  LET g_current_idx = g_current_row
+               END IF
+               LET g_current_row = g_current_idx #目前指標
+               LET g_current_sw = TRUE
+
+               IF g_current_idx > g_browser.getLength() THEN
+                  LET g_current_idx = g_browser.getLength()
+               END IF
+
+               IF g_current_idx = 0 AND g_browser.getLength() > 0 THEN
+                  LET g_current_idx = 1
+               END IF
+
+               #當每次點任一筆資料都會需要用到
+               IF g_current_idx <> 0 THEN
+                  CALL agli180_fetch("")
+               END IF
+               CALL agli180_glabld_show()
+
+            AFTER DIALOG
+               #add-point:ui_dialog段 after dialog
+               {<point name="ui_dialog.after_dialog"/>}
+               #end add-point
+
+            #ON ACTION statechange
+            #   CALL agli180_statechange()
+            #   LET g_action_choice="statechange"
+            #   EXIT DIALOG
+
+            #該樣板不需此段落ON ACTION filter
+            #該樣板不需此段落   CALL agli180_filter()
+            #該樣板不需此段落   EXIT DIALOG
+
+            ON ACTION first
+               CALL agli180_fetch("F")
+               IF NOT cl_null(g_browser[g_detail_idx].b_glab003) THEN
+                  CALL cl_set_act_visible("modify,open_agli180_01", TRUE)
+               ELSE
+                  CALL cl_set_act_visible("modify,open_agli180_01", FALSE)
+               END IF
+               LET g_current_row = g_current_idx
+
+            ON ACTION next
+               CALL agli180_fetch("N")
+               IF NOT cl_null(g_browser[g_detail_idx].b_glab003) THEN
+                  CALL cl_set_act_visible("modify,open_agli180_01", TRUE)
+               ELSE
+                  CALL cl_set_act_visible("modify,open_agli180_01", FALSE)
+               END IF
+               LET g_current_row = g_current_idx
+
+            ON ACTION jump
+               CALL agli180_fetch("/")
+               IF NOT cl_null(g_browser[g_detail_idx].b_glab003) THEN
+                  CALL cl_set_act_visible("modify,open_agli180_01", TRUE)
+               ELSE
+                  CALL cl_set_act_visible("modify,open_agli180_01", FALSE)
+               END IF
+               LET g_current_row = g_current_idx
+
+            ON ACTION previous
+               CALL agli180_fetch("P")
+               IF NOT cl_null(g_browser[g_detail_idx].b_glab003) THEN
+                  CALL cl_set_act_visible("modify,open_agli180_01", TRUE)
+               ELSE
+                  CALL cl_set_act_visible("modify,open_agli180_01", FALSE)
+               END IF
+               LET g_current_row = g_current_idx
+
+            ON ACTION last
+               CALL agli180_fetch("L")
+               IF NOT cl_null(g_browser[g_detail_idx].b_glab003) THEN
+                  CALL cl_set_act_visible("modify,open_agli180_01", TRUE)
+               ELSE
+                  CALL cl_set_act_visible("modify,open_agli180_01", FALSE)
+               END IF
+               #CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               #CALL fgl_set_arr_curr(g_current_idx)
+               LET g_current_row = g_current_idx
+
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG
+
+            ON ACTION close
+               LET li_exit = TRUE
+               EXIT DIALOG
+
+            ON ACTION mainhidden       #主頁摺疊
+               IF g_main_hidden THEN
+                  #該樣板不需此段落CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  #該樣板不需此段落CALL gfrm_curr.setElementHidden("worksheet",1)
+                  #該樣板不需此段落LET g_main_hidden = 0
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  LET g_main_hidden = 0
+                  CALL gfrm_curr.setElementImage("mainhidden","small/arr-u.png")
+               ELSE
+                  #該樣板不需此段落CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  #該樣板不需此段落CALL gfrm_curr.setElementHidden("worksheet",0)
+                  #該樣板不需此段落LET g_main_hidden = 1
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  LET g_main_hidden = 1
+                  CALL gfrm_curr.setElementImage("mainhidden","small/arr-d.png")
+               END IF
+               #該樣板不需此段落EXIT DIALOG
+
+            ON ACTION worksheethidden   #瀏覽頁折疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               EXIT DIALOG
+
+            #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+            ON ACTION controls
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("worksheet_detail",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("worksheet_detail",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden
+               END IF
+
+            #快速搜尋
+            ON ACTION searchdata
+               LET g_current_idx = 1
+               LET g_searchstr = GET_FLDBUF(searchstr)
+               CALL agli180_browser_search()
+               EXIT DIALOG
+
+
+
+#         ON ACTION delete
+#
+#            LET g_action_choice="delete"
+#            IF cl_auth_chk_act("delete") THEN
+#              #CALL agli180_delete()
+#               #add-point:ON ACTION delete
+#               EXIT DIALOG
+#               #END add-point
+#            END IF
+
+#150527-00031#1--mark--(s)
+#         ON ACTION output
+#
+#            LET g_action_choice="output"
+#            IF cl_auth_chk_act("output") THEN
+#               #add-point:ON ACTION output
+#               {<point name="menu.output" />}
+#               #END add-point
+#                EXIT DIALOG
+#            END IF
+#150527-00031#1--mark--(e)            
+
+
+         ON ACTION open_agli180_01
+
+            LET g_action_choice="open_agli180_01"
+            IF cl_auth_chk_act("open_agli180_01") THEN
+               #add-point:ON ACTION open_agli180_01
+               CALL agli180_chk_glabld(g_glab_m.glabld)
+               IF NOT cl_null(g_errno) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = g_glab_m.glabld
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+               ELSE
+                  IF g_glab_m.stus1 = 'Y' THEN
+                    #IF g_browser[g_detail_idx].b_oocqstus = 'Y' THEN   #150527-00031#1 mark
+                     IF g_browser[g_detail_idx].b_oocqstus = 'Y' OR cl_null(g_browser[g_detail_idx].b_oocqstus) THEN   #150527-00031#1
+                        CALL agli180_glab004_upd_chk() RETURNING l_success
+                        IF l_success = 'Y' THEN
+                           INITIALIZE g_errparam TO NULL
+                           LET g_errparam.code = 'agl-00161'
+                           LET g_errparam.extend = ''
+                           LET g_errparam.popup = FALSE
+                           CALL cl_err()
+
+                        ELSE
+                           CALL agli180_glab_ins_chk()
+                           CALL agli180_glab_del_chk() RETURNING l_success
+                           IF l_success = 'Y' THEN
+                              INITIALIZE g_errparam TO NULL
+                              LET g_errparam.code = 'agl-00137'
+                              LET g_errparam.extend = ''
+                              LET g_errparam.popup = FALSE
+                              CALL cl_err()
+
+                           ELSE
+                              CALL agli180_01(g_glab_m.glabld,g_browser[g_detail_idx].b_glab002,g_browser[g_detail_idx].b_glab003)
+                           END IF
+                        END IF
+                     ELSE
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'agl-00133'
+                        LET g_errparam.extend = g_glab_m.glabld
+                        LET g_errparam.popup = FALSE
+                        CALL cl_err()
+
+                     END IF
+                  ELSE
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'agl-00134'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = FALSE
+                     CALL cl_err()
+
+                  END IF
+               END IF
+               #END add-point
+                EXIT DIALOG
+            END IF
+
+         ON ACTION open_agli180_02
+
+            LET g_action_choice="open_agli180_02"
+            IF cl_auth_chk_act("open_agli180_02") THEN
+               #add-point:ON ACTION open_agli180_02
+               CALL agli180_glab_ins_chk1()
+               CALL agli180_glab_del_chk1() RETURNING l_success
+               #END add-point
+                EXIT DIALOG
+            END IF
+            
+         ON ACTION open_del
+
+            LET g_action_choice="open_del"
+            IF cl_auth_chk_act("open_del") THEN
+               #add-point:ON ACTION open_agli180_01
+               CALL s_ld_chk_authorization(g_user,g_glab_m.glabld) RETURNING l_success
+               IF l_success = FALSE THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'agl-00165'
+                  LET g_errparam.extend = g_glab_m.glabld
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+               ELSE
+                  IF cl_ask_confirm('agl-00158') THEN
+                     CALL agli180_del()
+                  END IF
+               END IF
+               #END add-point
+                EXIT DIALOG
+            END IF
+
+         ON ACTION insert
+
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL agli180_insert()
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+                EXIT DIALOG
+            END IF
+
+
+         ON ACTION query
+
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL agli180_query()
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+            END IF
+
+
+         ON ACTION modify
+
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+              #CALL agli180_modify()
+               #add-point:ON ACTION modify
+               CALL agli180_chk_glabld(g_glab_m.glabld)
+               IF NOT cl_null(g_errno) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = g_glab_m.glabld
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+               ELSE
+                  IF g_glab_m.stus1 = 'Y' THEN
+                    #IF g_browser[g_detail_idx].b_oocqstus = 'Y' THEN   #150527-00031#1 mark
+                     IF g_browser[g_detail_idx].b_oocqstus = 'Y' OR cl_null(g_browser[g_detail_idx].b_oocqstus) THEN   #150527-00031#1
+                        CALL agli180_glab004_upd_chk() RETURNING l_success
+                        IF l_success = 'Y' THEN
+                           INITIALIZE g_errparam TO NULL
+                           LET g_errparam.code = 'agl-00161'
+                           LET g_errparam.extend = ''
+                           LET g_errparam.popup = TRUE
+                           CALL cl_err()
+
+                        ELSE
+                           CALL agli180_glab_ins_chk()
+                           CALL agli180_glab_del_chk() RETURNING l_success
+                           IF l_success = 'Y' THEN
+                              INITIALIZE g_errparam TO NULL
+                              LET g_errparam.code = 'agl-00137'
+                              LET g_errparam.extend = ''
+                              LET g_errparam.popup = FALSE
+                              CALL cl_err()
+
+                           ELSE
+                              CALL agli180_01(g_glab_m.glabld,g_browser[g_detail_idx].b_glab002,g_browser[g_detail_idx].b_glab003)
+                           END IF
+                        END IF
+                     ELSE
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'agl-00133'
+                        LET g_errparam.extend = g_glab_m.glabld
+                        LET g_errparam.popup = FALSE
+                        CALL cl_err()
+
+                     END IF
+                  ELSE
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'agl-00134'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = FALSE
+                     CALL cl_err()
+
+                  END IF
+               END IF
+               
+               #END add-point
+                EXIT DIALOG
+            END IF
+
+
+         ON ACTION reproduce
+
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL agli180_reproduce()
+               #add-point:ON ACTION reproduce
+               {<point name="menu.reproduce" />}
+               #END add-point
+                EXIT DIALOG
+            END IF
+
+
+
+
+            #主選單用ACTION
+            &include "main_menu.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+
+         END DIALOG
+
+   END WHILE
+  #CALL cl_set_act_visible("accept,cancel", TRUE)
+
+END FUNCTION
+
+PRIVATE FUNCTION agli180_browser_fill(ps_page_action)
+   {<Local define>}
+   DEFINE ps_wc              STRING
+   DEFINE ps_page_action     STRING
+   DEFINE ls_sql             STRING
+   DEFINE li_idx             LIKE type_t.num5
+   {</Local define>}
+   #add-point:browser_fill段define
+   DEFINE l_sql_rank        STRING
+   DEFINE l_searchcol       STRING
+   DEFINE l_ld_str          STRING   #160811-00039#6
+   #end add-point
+
+   CLEAR FORM
+  #INITIALIZE g_glab_m.* TO NULL
+   CALL g_browser1.clear()
+   
+   #搜尋用
+   IF cl_null(g_searchcol) OR g_searchcol = '0' THEN
+      LET l_searchcol = "glabld"
+   ELSE
+      LET l_searchcol = g_searchcol
+   END IF
+   
+   #160811-00039#6--add--str--
+   CALL s_ld_sel_authority_sql(g_user,g_dept) RETURNING l_ld_str
+   LET l_ld_str = cl_replace_str(l_ld_str,"glaald","glabld")
+   IF cl_null(g_wc) THEN 
+      LET g_wc = l_ld_str
+   ELSE
+      LET g_wc = g_wc," AND ",l_ld_str
+   END IF
+   #160811-00039#6--add--end
+   
+   IF NOT cl_null(g_wc) THEN
+      #單身未輸入搜尋條件
+      LET ls_sql = " SELECT UNIQUE glabld ",
+
+                      " FROM glab_t ",
+                      " WHERE glabent = '" ||g_enterprise|| "' AND glab001 = '11' AND ",g_wc CLIPPED
+ 
+   END IF 
+   
+   LET g_sql = " SELECT COUNT(*) FROM (",ls_sql,")"
+   
+   PREPARE header_cnt_pre FROM g_sql
+   EXECUTE header_cnt_pre INTO g_browser_cnt   #總筆數
+   FREE header_cnt_pre
+   
+   #若超過最大顯示筆數
+   IF g_browser_cnt > g_max_browse AND g_error_show = 1THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = '9035'
+      LET g_errparam.extend = g_browser_cnt
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+   END IF
+   LET g_error_show = 0
+ 
+   DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示 
+
+   IF ps_page_action = "first" OR              
+      ps_page_action = "prev"  OR
+      ps_page_action = "next"  OR
+      ps_page_action = "last"  THEN
+      LET g_page_action = ps_page_action        #g_page_action 這個會影響 browser 下面四個button 的判斷 
+   END IF
+   
+   CASE ps_page_action
+      WHEN "F" 
+         LET g_pagestart = 1
+          
+      WHEN "P"  
+         LET g_pagestart = g_pagestart - g_max_browse
+         IF g_pagestart < 1 THEN
+             LET g_pagestart = 1
+         END IF
+          
+      WHEN "N"  
+         LET g_pagestart = g_pagestart + g_max_browse
+         IF g_pagestart > g_browser_cnt THEN
+            LET g_pagestart = g_browser_cnt - (g_browser_cnt mod g_max_browse) + 1
+            WHILE g_pagestart > g_browser_cnt 
+               LET g_pagestart = g_pagestart - g_max_browse
+            END WHILE
+         END IF
+      
+      WHEN "L"  
+         LET g_pagestart = g_browser_cnt - (g_browser_cnt mod g_max_browse) + 1
+         WHILE g_pagestart > g_browser_cnt 
+            LET g_pagestart = g_pagestart - g_max_browse
+         END WHILE
+ 
+      OTHERWISE
+         LET g_pagestart = 1
+         
+   END CASE
+
+   LET ls_sql = " SELECT UNIQUE glabld",#,glab001,glab002,glab003 ",
+
+                      " FROM glab_t ",
+                      " WHERE glabent = '" ||g_enterprise|| "' AND glab001 = '11' AND ",g_wc CLIPPED
+   
+   LET l_sql_rank = "SELECT glabld,DENSE_RANK() OVER(ORDER BY glabld ",g_order,") AS RANK ",
+                    " FROM (",ls_sql,") "
+
+   #定義翻頁CURSOR
+   LET ls_sql= " SELECT glabld FROM (",l_sql_rank,") WHERE RANK>=",g_pagestart,
+              " AND RANK<",g_pagestart+g_max_browse,
+              " ORDER BY ",l_searchcol," ",g_order
+   
+   
+   PREPARE browse_pre FROM ls_sql
+   DECLARE browse_cur CURSOR FOR browse_pre
+   
+   LET g_cnt  = 1
+   FOREACH browse_cur INTO g_browser1[g_cnt].b_glabld#,g_browser1[g_cnt].b_glab001,g_browser1[g_cnt].b_glab002,g_browser1[g_cnt].b_glab003
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH  
+   
+   LET g_error_show = 0
+
+   CALL g_browser1.deleteElement(g_browser1.getLength())
+
+   LET g_header_cnt = g_browser1.getLength()
+   LET g_rec_b = g_cnt - 1
+  #LET g_detail_cnt = g_rec_b
+   LET g_cnt = 0
+   #瀏覽頁筆數顯示
+   DISPLAY g_browser_cnt TO FORMONLY.b_count        #總筆數
+   DISPLAY g_browser_cnt TO FORMONLY.h_count        #總筆數
+
+
+   #CALL agli180_fetch("")
+
+   FREE browse_pre
+
+END FUNCTION
+
+PRIVATE FUNCTION agli180_browser_expand(pi_id)
+   {<Local define>}
+   DEFINE pi_id            LIKE type_t.num10
+   DEFINE li_lv            LIKE type_t.num10
+   DEFINE li_idx           LIKE type_t.num10
+   DEFINE ls_wc            STRING
+   DEFINE ls_type_list     STRING
+   DEFINE ls_sql           STRING
+   {</Local define>}
+   #add-point:browser_expand段define
+   DEFINE l_n               LIKE type_t.num10
+   #end add-point
+
+   #已經展開過
+   IF g_browser[pi_id].b_isExp = TRUE  THEN 
+      RETURN
+   END IF
+
+   #leaf展開
+   IF g_browser[pi_id].b_expcode = (3-1) THEN
+      CALL agli180_browser_expand_leaf(pi_id)
+      RETURN
+   END IF
+
+#   IF g_browser[g_current_idx].b_expcode <> "3"  OR cl_null(g_browser[g_current_idx].b_expcode) THEN
+#      CALL cl_set_act_visible("modify,open_agli180_01", FALSE)
+#   ELSE
+#      CALL cl_set_act_visible("modify,open_agli180_01", TRUE)
+#   END IF
+
+   LET li_lv = g_browser[pi_id].b_expcode
+   LET g_browser[pi_id].b_isExp = TRUE
+
+   CASE li_lv
+      WHEN 1
+         LET ls_wc = " AND glab001 = '",g_browser[pi_id].b_glab001,"' "
+         LET ls_type_list = "glab001"
+                            ,",glab002"
+
+      WHEN 2
+         LET ls_wc = " AND glab001 = '", g_browser[pi_id].b_glab001, "'"
+                     ," AND glab002 = '", g_browser[pi_id].b_glab002, "'"
+         LET ls_type_list = "glab001"
+                            ,",glab002"
+                            #,","
+
+      WHEN 3
+         LET ls_wc = " AND glab001 = '", g_browser[pi_id].b_glab001, "'"
+                     ," AND glab002 = '", g_browser[pi_id].b_glab002, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+         LET ls_type_list = "glab001"
+                            ,",glab003"
+                            #,","
+                            #,","
+
+      WHEN 4
+         LET ls_wc = " AND glab001 = '", g_browser[pi_id].b_glab001, "'"
+                     ," AND glab003 = '", g_browser[pi_id].b_glab003, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+         LET ls_type_list = "glab001"
+                            ,",glab003"
+                            #,","
+                            #,","
+                            #,","
+
+      WHEN 5
+         LET ls_wc = " AND glab001 = '", g_browser[pi_id].b_glab001, "'"
+                     ," AND glab003 = '", g_browser[pi_id].b_glab003, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+                     #," AND  = '", g_browser[pi_id].b_, "'"
+         LET ls_type_list = "glab001"
+                            ,",glab003"
+                            #,","
+                            #,","
+                            #,","
+                            #,","
+   END CASE
+
+   LET ls_sql = " SELECT UNIQUE   ", ls_type_list,
+                " FROM glab_t ",
+                "  ",
+                "  ",
+                " WHERE glabent = '" ||g_enterprise|| "' AND glab001 = '11' AND ", g_wc, ls_wc
+
+   LET li_lv = g_browser[pi_id].b_expcode
+
+   #add-point:browser_expand段before prepare
+   {<point name="browser_expand.before_prepare"/>}
+   #end add-point
+
+   PREPARE expand_pre FROM ls_sql
+   DECLARE expand_cur CURSOR FOR expand_pre
+
+   LET li_idx = pi_id + 1
+   CALL g_browser.insertElement(li_idx)
+  #CALL g_browser.clear()
+   FOREACH expand_cur INTO g_browser[li_idx].b_glab001,g_browser[li_idx].b_glab002
+      LET g_browser[li_idx].b_pid     = g_browser[pi_id].b_id
+      LET g_browser[li_idx].b_id      = g_browser[pi_id].b_id , ".", li_idx USING "<<<"
+      LET g_browser[li_idx].b_exp     = FALSE
+      LET g_browser[li_idx].b_expcode = li_lv + 1
+      LET g_browser[li_idx].b_hasC    = TRUE
+      CASE li_lv
+         WHEN 1
+            LET g_browser[li_idx].b_show = g_browser[li_idx].b_glab002
+         WHEN 2
+            #LET g_browser[li_idx].b_show = g_browser[li_idx].b_
+         WHEN 3
+            #LET g_browser[li_idx].b_show = g_browser[li_idx].b_
+         WHEN 4
+            #LET g_browser[li_idx].b_show = g_browser[li_idx].b_
+         WHEN 5
+            #LET g_browser[li_idx].b_show = g_browser[li_idx].b_
+      END CASE
+      CALL agli180_desc_show(li_idx)
+      LET li_idx = li_idx + 1
+      CALL g_browser.insertElement(li_idx)
+   END FOREACH
+
+   FOR li_idx = 1 TO g_browser.getLength()
+      IF cl_null(g_browser[li_idx].b_glab001) AND cl_null(g_browser[li_idx].b_glab002) THEN
+         CALL g_browser.deleteElement(li_idx)
+         LET li_idx = li_idx - 1
+      ELSE
+         CALL agli180_desc_show(li_idx)
+      END IF
+   END FOR
+   CALL g_browser.deleteElement(li_idx)
+
+   LET g_browser_cnt = g_browser.getLength()
+
+   #瀏覽頁筆數顯示
+  #DISPLAY g_browser_cnt TO FORMONLY.b_count        #總筆數
+   LET g_browser_cnt = g_browser.getLength() - g_root_cnt
+   SELECT COUNT(glab003) INTO l_n FROM glab_t WHERE glabld=g_glab_m.glabld and glab001 = '11' AND glabent=g_enterprise
+   DISPLAY l_n TO FORMONLY.cnt        #總筆數
+
+END FUNCTION
+
+PRIVATE FUNCTION agli180_browser_expand_leaf(pi_id)
+   {<Local define>}
+   DEFINE pi_id            LIKE type_t.num10
+   DEFINE li_lv            LIKE type_t.num10
+   DEFINE li_idx           LIKE type_t.num10
+   DEFINE ls_wc            STRING
+   DEFINE ls_sql           STRING
+   DEFINE ls_type_list     STRING
+   {</Local define>}
+   #add-point:browser_expand_leaf段define
+   DEFINE l_n               LIKE type_t.num10
+   DEFINE l_glab005_desc    LIKE type_t.chr80
+   DEFINE l_glab006_desc    LIKE type_t.chr80
+   DEFINE l_glab007_desc    LIKE type_t.chr80
+   DEFINE l_glab008_desc    LIKE type_t.chr80
+   DEFINE l_glab009_desc    LIKE type_t.chr80
+   #end add-point
+
+   LET ls_wc = " AND glab001 = '", g_browser[pi_id].b_glab001, "'"
+               ," AND glab002 = '", g_browser[pi_id].b_glab002, "'"
+               ," AND glabld = '", g_glab_m.glabld, "'"
+               #," AND  = '", g_browser[pi_id].b_, "'"
+               #," AND  = '", g_browser[pi_id].b_, "'"
+               #," AND  = '", g_browser[pi_id].b_, "'"
+
+   LET ls_sql = " SELECT UNIQUE glab002,glab001,glab003,glabld,glab005,glab006,glab007,glab008,glab009,glab011,'' ",
+                " FROM glab_t ",
+                "  ",
+                "  ",
+                " WHERE glabent = '" ||g_enterprise|| "' AND glab001 = '11' AND ", g_wc, ls_wc
+
+   LET li_lv = g_browser[pi_id].b_expcode
+
+   LET ls_sql = ls_sql, " ORDER BY glab002"
+
+   #add-point:browser_expand_leaf段before prepare
+   {<point name="browser_expand_leaf.before_prepare"/>}
+   #end add-point
+
+   PREPARE leaf_pre FROM ls_sql
+   DECLARE leaf_cur CURSOR FOR leaf_pre
+
+   LET g_cnt = pi_id + 1
+   CALL g_browser.insertElement(g_cnt)
+   FOREACH leaf_cur INTO g_browser[g_cnt].b_glab002,g_browser[g_cnt].b_glab001,g_browser[g_cnt].b_glab003,g_browser[g_cnt].b_glabld,g_browser[g_cnt].b_glab005,g_browser[g_cnt].b_glab006,g_browser[g_cnt].b_glab007,g_browser[g_cnt].b_glab008,g_browser[g_cnt].b_glab009,g_browser[g_cnt].b_glab011,g_browser[g_cnt].b_oocqstus
+      LET g_browser[g_cnt].b_pid     = g_browser[pi_id].b_id
+      LET g_browser[g_cnt].b_id      = g_browser[pi_id].b_id , ".", g_cnt USING "<<<"
+      LET g_browser[g_cnt].b_exp     = FALSE
+      LET g_browser[g_cnt].b_expcode = li_lv + 1
+      LET g_browser[g_cnt].b_hasC    = FALSE
+      LET g_browser[g_cnt].b_show = g_browser[g_cnt].b_glab003
+      CALL agli180_desc_show(g_cnt)
+      CALL agli180_glacl004(g_browser[g_cnt].b_glab005) RETURNING l_glab005_desc
+      CALL agli180_glacl004(g_browser[g_cnt].b_glab006) RETURNING l_glab006_desc
+      CALL agli180_glacl004(g_browser[g_cnt].b_glab007) RETURNING l_glab007_desc
+      CALL agli180_glacl004(g_browser[g_cnt].b_glab008) RETURNING l_glab008_desc
+      CALL agli180_glacl004(g_browser[g_cnt].b_glab009) RETURNING l_glab009_desc
+      IF NOT cl_null(g_browser[g_cnt].b_glab005) THEN LET g_browser[g_cnt].b_glab005 = g_browser[g_cnt].b_glab005,'(',l_glab005_desc,')' END IF
+      IF NOT cl_null(g_browser[g_cnt].b_glab006) THEN LET g_browser[g_cnt].b_glab006 = g_browser[g_cnt].b_glab006,'(',l_glab006_desc,')' END IF
+      IF NOT cl_null(g_browser[g_cnt].b_glab007) THEN LET g_browser[g_cnt].b_glab007 = g_browser[g_cnt].b_glab007,'(',l_glab007_desc,')' END IF
+      IF NOT cl_null(g_browser[g_cnt].b_glab008) THEN LET g_browser[g_cnt].b_glab008 = g_browser[g_cnt].b_glab008,'(',l_glab008_desc,')' END IF
+      IF NOT cl_null(g_browser[g_cnt].b_glab009) THEN LET g_browser[g_cnt].b_glab009 = g_browser[g_cnt].b_glab009,'(',l_glab009_desc,')' END IF
+      LET g_cnt = g_cnt + 1
+      CALL g_browser.insertElement(g_cnt)
+   END FOREACH
+   
+   
+#   FOR g_cnt = 1 TO g_browser.getLength()
+#      IF NOT cl_null(g_browser[g_cnt].b_glab001) AND cl_null(g_browser[g_cnt].b_glab002) THEN
+#         CALL g_browser.deleteElement(g_cnt)
+#         LET g_cnt = g_cnt - 1
+#      ELSE
+#         CALL agli180_desc_show(g_cnt)
+#      END IF
+#   END FOR
+  #LET g_cnt = g_cnt - 2
+   SELECT COUNT(glab003) INTO l_n FROM glab_t WHERE glabld=g_glab_m.glabld and glab001 = '11' AND glabent=g_enterprise
+   DISPLAY l_n TO FORMONLY.cnt
+   CALL g_browser.deleteElement(g_cnt)
+
+   LET g_browser_cnt = g_browser.getLength()
+
+   #瀏覽頁筆數顯示
+  #DISPLAY g_browser_cnt TO FORMONLY.b_count        #總筆數
+  #DISPLAY g_browser_cnt TO FORMONLY.h_count        #總筆數
+
+END FUNCTION
+
+PRIVATE FUNCTION agli180_desc_show(pi_ac)
+   {<Local define>}
+   DEFINE pi_ac   LIKE type_t.num5
+   DEFINE li_tmp  LIKE type_t.num5
+   {</Local define>}
+   #add-point:desc_show段define
+   DEFINE l_ref   LIKE type_t.chr80
+   #end add-point
+
+   LET li_tmp = l_ac
+   LET l_ac = pi_ac
+
+   #add-point:desc_show段desc處理
+ # SELECT UNIQUE glab002,glab003 INTO g_browser[pi_ac].b_glab002,g_browser[pi_ac].b_glab003
+ #   FROM glab_t 
+ #  WHERE glabent = g_enterprise AND glab001 = '11' 
+ #    AND glabld = g_browser[pi_ac].b_glabld
+ #    AND glab001 = g_browser[pi_ac].b_glab001
+   SELECT oocqstus INTO g_browser[pi_ac].b_oocqstus FROM oocq_t
+    WHERE oocqent = g_enterprise AND oocq001 = g_browser[pi_ac].b_glab002 AND oocq002 = g_browser[pi_ac].b_glab003
+
+   SELECT gzaal003 INTO l_ref FROM gzaal_t 
+    WHERE gzaal001 = g_browser[l_ac].b_glab002 AND gzaal003 = g_dlang
+   
+   IF cl_null(g_browser[l_ac].b_glab003) AND NOT cl_null(g_browser[l_ac].b_glab002) THEN
+      SELECT gzaal003 INTO l_ref FROM gzaal_t 
+       WHERE gzaal001 = g_browser[l_ac].b_glab002 AND gzaal002 = g_dlang
+      LET g_browser[l_ac].b_show =  g_browser[l_ac].b_glab002,"(",l_ref,")"
+   END IF
+   IF NOT cl_null(g_browser[l_ac].b_glab003) THEN
+      SELECT oocql004 INTO l_ref FROM oocql_t 
+       WHERE oocqlent = g_enterprise AND oocql001 = g_browser[l_ac].b_glab002
+         AND oocql002 = g_browser[l_ac].b_glab003 AND oocql003 = g_dlang
+       LET g_browser[l_ac].b_show =  g_browser[l_ac].b_glab003,"(",l_ref,")"
+   END IF
+   #end add-point
+   LET l_ac = li_tmp
+
+END FUNCTION
+
+PRIVATE FUNCTION agli180_browser_search()
+   {<Local define>}
+   DEFINE ls_wc       STRING   #若有輸入g_searchstr時用來代換g_wc的暫存變數
+   {</Local define>}
+   #add-point:browser_search段define
+   {<point name="browser_search.define"/>}
+   #END add-point
+
+   IF NOT cl_null(g_searchstr) THEN
+      LET ls_wc = " lower(", g_searchcol, ") LIKE '", g_searchstr, "%'"
+      LET ls_wc = ls_wc.toLowerCase()
+   ELSE
+      LET ls_wc = " 1=1 "
+   END IF
+
+   LET g_wc = ls_wc
+
+END FUNCTION
+
+PRIVATE FUNCTION agli180_construct()
+   {<Local define>}
+   DEFINE ls_return      STRING
+   DEFINE ls_result      STRING
+   {</Local define>}
+   #add-point:cs段define
+   DEFINE l_sql          STRING
+   #end add-point
+
+   CLEAR FORM
+   INITIALIZE g_glab_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   LET g_current_row = 1
+
+   LET g_qryparam.state = "c"
+
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+      #螢幕上取條件
+      CONSTRUCT BY NAME g_wc ON glabld
+
+         BEFORE CONSTRUCT
+            CALL cl_qbe_init()
+            #add-point:cs段more_construct
+            {<point name="cs.before_construct"/>}
+            #end add-point
+
+         #公用欄位開窗相關處理
+
+
+         #一般欄位
+         #---------------------------<  Master  >---------------------------
+         #----<<glabld>>----
+         #Ctrlp:construct.c.glabld
+         ON ACTION controlp INFIELD glabld
+            #add-point:ON ACTION controlp INFIELD glabld
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+			LET g_qryparam.arg1 = g_user
+			LET g_qryparam.arg2 = g_dept
+           #CALL q_glaald_01()                           #呼叫開窗
+            CALL q_authorised_ld()
+            DISPLAY g_qryparam.return1 TO glabld  #顯示到畫面上
+           #CALL agli180_glabld_show()
+
+            NEXT FIELD glabld                     #返回原欄位
+
+          {#ADP版次:1#}
+            #END add-point
+
+         #此段落由子樣板a01產生
+         BEFORE FIELD glabld
+            #add-point:BEFORE FIELD glabld
+            {<point name="construct.b.glabld" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD glabld
+
+            #add-point:AFTER FIELD glabld
+           #CALL agli180_glabld_show()
+            #END add-point
+
+
+         #----<<glaacomp>>----
+         #----<<glab001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glab001
+            #add-point:BEFORE FIELD glab001
+            {<point name="construct.b.glab001" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD glab001
+
+            #add-point:AFTER FIELD glab001
+            {<point name="construct.a.glab001" />}
+            #END add-point
+
+
+         #Ctrlp:construct.c.glab001
+#         ON ACTION controlp INFIELD glab001
+            #add-point:ON ACTION controlp INFIELD glab001
+            {<point name="construct.c.glab001" />}
+            #END add-point
+
+         #----<<stus1>>----
+         #----<<glaa004>>----
+         #----<<glab002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glab002
+            #add-point:BEFORE FIELD glab002
+            {<point name="construct.b.glab002" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD glab002
+
+            #add-point:AFTER FIELD glab002
+            {<point name="construct.a.glab002" />}
+            #END add-point
+
+
+         #Ctrlp:construct.c.glab002
+#         ON ACTION controlp INFIELD glab002
+            #add-point:ON ACTION controlp INFIELD glab002
+            {<point name="construct.c.glab002" />}
+            #END add-point
+
+         #----<<glab003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glab003
+            #add-point:BEFORE FIELD glab003
+            {<point name="construct.b.glab003" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD glab003
+
+            #add-point:AFTER FIELD glab003
+            {<point name="construct.a.glab003" />}
+            #END add-point
+
+
+         #Ctrlp:construct.c.glab003
+#         ON ACTION controlp INFIELD glab003
+            #add-point:ON ACTION controlp INFIELD glab003
+            {<point name="construct.c.glab003" />}
+            #END add-point
+
+
+
+      END CONSTRUCT
+
+      ON ACTION accept
+         EXIT DIALOG
+
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+
+      #add-point:cs段more_construct
+      {<point name="cs.more_construct"/>}
+      #end add-point
+
+      #查詢CONSTRUCT共用ACTION
+      &include "construct_action.4gl"
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+
+   #add-point:cs段after_construct
+
+   #end add-point
+
+   #LET g_wc = g_wc CLIPPED,cl_get_extra_cond("", "")
+
+END FUNCTION
+
+PRIVATE FUNCTION agli180_filter()
+#該樣板不需此段落   {<Local define>}
+#該樣板不需此段落   {</Local define>}
+#該樣板不需此段落   #add-point:filter段define
+#該樣板不需此段落   {<point name="filter.define"/>}
+#該樣板不需此段落   #end add-point
+
+#該樣板不需此段落   LET INT_FLAG = 0
+
+#該樣板不需此段落   LET g_qryparam.state = 'c'
+
+#該樣板不需此段落   LET g_wc_filter_t = g_wc_filter
+#該樣板不需此段落   LET g_wc_t = g_wc
+
+#該樣板不需此段落   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+
+#該樣板不需此段落   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+#該樣板不需此段落   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+#該樣板不需此段落      #單頭
+#該樣板不需此段落      CONSTRUCT g_wc_filter ON
+#該樣板不需此段落                          FROM
+
+#該樣板不需此段落         BEFORE CONSTRUCT
+#該樣板不需此段落            CALL cl_qbe_init()
+#該樣板不需此段落
+
+#該樣板不需此段落      END CONSTRUCT
+
+      #add-point:filter段add_cs
+      {<point name="filter.add_cs"/>}
+      #end add-point
+
+#該樣板不需此段落      BEFORE DIALOG
+         #add-point:filter段b_dialog
+         {<point name="filter.b_dialog"/>}
+         #end add-point
+
+#該樣板不需此段落      ON ACTION accept
+#該樣板不需此段落         ACCEPT DIALOG
+
+#該樣板不需此段落      ON ACTION cancel
+#該樣板不需此段落         LET INT_FLAG = 1
+#該樣板不需此段落         EXIT DIALOG
+
+#該樣板不需此段落      #交談指令共用ACTION
+#該樣板不需此段落      &include "common_action.4gl"
+#該樣板不需此段落         CONTINUE DIALOG
+
+#該樣板不需此段落   END DIALOG
+
+#該樣板不需此段落   IF NOT INT_FLAG THEN
+#該樣板不需此段落      LET g_wc_filter = "   AND   ", g_wc_filter, "   "
+#該樣板不需此段落      LET g_wc = g_wc , g_wc_filter
+#該樣板不需此段落   ELSE
+#該樣板不需此段落      LET g_wc_filter = g_wc_filter_t
+#該樣板不需此段落      LET g_wc = g_wc_t
+#該樣板不需此段落   END IF
+
+END FUNCTION
+
+PRIVATE FUNCTION agli180_filter_parser(ps_field)
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+#該樣板不需此段落   #add-point:filter段define
+#該樣板不需此段落   {<point name="filter_parser.define"/>}
+#該樣板不需此段落   #end add-point
+
+#該樣板不需此段落   #一般條件解析
+#該樣板不需此段落   LET ls_tmp = ps_field, "='"
+#該樣板不需此段落   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+#該樣板不需此段落   IF li_tmp > 0 THEN
+#該樣板不需此段落      LET li_tmp = ls_tmp.getLength() + li_tmp
+#該樣板不需此段落      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+#該樣板不需此段落      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+#該樣板不需此段落   END IF
+
+#該樣板不需此段落   #模糊條件解析
+#該樣板不需此段落   LET ls_tmp = ps_field, " like '"
+#該樣板不需此段落   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+#該樣板不需此段落   IF li_tmp > 0 THEN
+#該樣板不需此段落      LET li_tmp = ls_tmp.getLength() + li_tmp
+#該樣板不需此段落      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+#該樣板不需此段落      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+#該樣板不需此段落      LET ls_var = cl_replace_str(ls_var,'%','*')
+#該樣板不需此段落   END IF
+
+#該樣板不需此段落   RETURN ls_var
+
+END FUNCTION
+
+PRIVATE FUNCTION agli180_query()
+   {<Local define>}
+   DEFINE ls_wc STRING
+   {</Local define>}
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point
+
+   LET INT_FLAG = 0
+   LET ls_wc = g_wc
+   
+   CALL cl_navigator_setting( g_current_idx, g_detail_cnt )
+
+   #切換畫面
+   #該樣板不需此段落IF g_main_hidden THEN
+   #該樣板不需此段落   CALL gfrm_curr.setElementHidden("mainlayout",0)
+   #該樣板不需此段落   CALL gfrm_curr.setElementHidden("worksheet",1)
+   #該樣板不需此段落   LET g_main_hidden = 0
+   #該樣板不需此段落END IF
+
+   CALL g_browser.clear()
+
+   IF g_worksheet_hidden THEN  #browser panel 單身折疊
+      CALL gfrm_curr.setElementHidden("worksheet_vbox",0)
+      CALL gfrm_curr.setElementImage("worksheethidden","worksheethidden-24.png")
+      LET g_worksheet_hidden = 0
+   END IF
+   IF g_header_hidden THEN    #單頭折疊
+      CALL gfrm_curr.setElementHidden("worksheet_detail",0)
+      CALL gfrm_curr.setElementImage("controls","headerhidden-24")
+      LET g_header_hidden = 0
+   END IF
+
+   INITIALIZE g_glab_m.* TO NULL
+   ERROR ""
+
+   DISPLAY " " TO FORMONLY.b_count
+   DISPLAY " " TO FORMONLY.h_count
+   CALL agli180_construct()
+
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      LET g_wc = ls_wc
+      CALL agli180_browser_fill('')
+      CALL agli180_b_fill(g_wc)
+      CALL agli180_fetch("")
+      RETURN
+   END IF
+
+   #該樣板不需此段落
+   LET g_error_show = 1
+   CALL agli180_browser_fill("F")   # 移到第一頁
+   CALL agli180_b_fill(g_wc)
+  #CALL agli180_browser_expand('1')
+
+   IF g_browser_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "-100"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+   ELSE
+      CALL agli180_fetch("F")
+   END IF
+   
+   #第二層助記碼搜尋
+   IF g_browser_cnt = 0 THEN
+      IF NOT cl_null(g_wc) THEN
+         LET g_error_show = 1
+         CALL agli180_browser_fill("F")
+      END IF
+
+   END IF
+
+   LET g_wc_filter = ""
+
+END FUNCTION
+
+PRIVATE FUNCTION agli180_fetch(p_fl)
+   {<Local define>}
+   DEFINE p_fl       LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   {</Local define>}
+
+   #add-point:fetch段define
+   DEFINE l_n               LIKE type_t.num10
+   CALL agli180_glabld_show()
+   CALL g_browser.clear() 
+   #end add-point
+
+   CASE p_fl
+      WHEN "F" LET g_current_idx = 1
+      WHEN "P"
+         IF g_current_idx > 1 THEN
+            LET g_current_idx = g_current_idx - 1
+         END IF
+      WHEN "N"
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF
+      WHEN "L"
+         LET g_current_idx = g_header_cnt
+      WHEN "/"
+         IF (NOT g_no_ask) THEN
+            CALL cl_getmsg("fetch", g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+
+            PROMPT ls_msg CLIPPED,": " FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl"
+            END PROMPT
+
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT CASE
+            END IF
+         END IF
+         IF g_jump > 0 THEN
+            LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE
+   END CASE
+
+   CALL agli180_browser_fill(p_fl)
+   
+   LET g_detail_cnt = g_header_cnt            
+   
+   #單身筆數顯示
+   SELECT COUNT(glab003) INTO l_n FROM glab_t WHERE glabld=g_glab_m.glabld and glab001 = '11' AND glabent=g_enterprise
+   DISPLAY l_n TO FORMONLY.cnt                      #設定page 總筆數 
+
+   #瀏覽頁筆數顯示
+   LET g_browser_idx = g_pagestart+g_current_idx-1
+  #DISPLAY g_browser_idx TO FORMONLY.b_index        #當下筆數
+  #DISPLAY g_browser_cnt TO FORMONLY.b_count        #總筆數
+   DISPLAY g_browser_idx TO FORMONLY.h_index1        #當下筆數 
+   DISPLAY g_browser_cnt TO FORMONLY.h_count        #總筆數
+   
+   CALL cl_navigator_setting( g_current_idx, g_detail_cnt )
+
+#   IF g_browser[g_current_idx].b_expcode <> "3"  OR cl_null(g_browser[g_current_idx].b_expcode) THEN
+#      CALL cl_set_act_visible("statechange,modify,delete,reproduce,open_agli180_01", FALSE)
+#   ELSE
+#      CALL cl_set_act_visible("statechange,modify,reproduce,open_agli180_01", TRUE)
+#   END IF
+   
+#   IF NOT cl_null(g_browser[g_current_idx].b_glab003) THEN
+#      CALL cl_set_act_visible("modify,open_agli180_01", TRUE)
+#   ELSE
+#      CALL cl_set_act_visible("modify,open_agli180_01", FALSE)
+#   END IF
+
+   IF g_current_idx > g_browser1.getLength() THEN
+      LET g_current_idx = g_browser1.getLength()
+   END IF
+
+   # 設定browse索引
+#   CALL g_curr_diag.setCurrentRow("s_browser", g_current_idx)
+#
+#   CALL cl_navigator_setting(g_browser_idx, g_current_cnt)
+#   CALL cl_navigator_setting(g_browser_idx, g_browser_cnt )
+
+   #代表沒有資料, 無需做後續資料撈取之動作
+   IF g_current_idx = 0 OR g_browser1.getLength() = 0 THEN
+      RETURN
+   END IF
+
+   LET g_glab_m.glabld = g_browser1[g_current_idx].b_glabld
+   LET g_glab_m.glab001 = g_browser1[g_current_idx].b_glab001
+
+   LET g_glab_m.glab002 = g_browser1[g_current_idx].b_glab002
+
+   LET g_glab_m.glab003 = g_browser1[g_current_idx].b_glab003
+
+
+
+   #重讀DB,因TEMP有不被更新特性
+    SELECT UNIQUE glabld,glab001#,glab002,glab003
+ INTO g_glab_m.glabld,g_glab_m.glab001#,g_glab_m.glab002,g_glab_m.glab003
+ FROM glab_t
+ WHERE glabent = g_enterprise AND glabld = g_glab_m.glabld AND glab001 = '11' #AND glab002 = g_glab_m.glab002 AND glab003 = g_glab_m.glab003
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "glab_t"
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      INITIALIZE g_glab_m.* TO NULL
+      RETURN
+   END IF
+
+   #若無資料則關閉相關功能
+   #該樣板不需此段落IF g_browser_cnt = 0 THEN
+   #該樣板不需此段落   CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+   #該樣板不需此段落ELSE
+   #該樣板不需此段落   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   #該樣板不需此段落END IF
+
+   #add-point:fetch段action控制
+   SELECT oocqstus INTO g_browser[g_current_idx].b_oocqstus FROM oocq_t
+    WHERE oocqent = g_enterprise AND oocq001 = g_glab_m.glab002 AND oocq002 = g_glab_m.glab003
+   #end add-point
+
+
+
+   #重新顯示
+   CALL agli180_show()
+   CALL agli180_glabld_show()
+
+END FUNCTION
+
+PRIVATE FUNCTION agli180_insert()
+   #add-point:insert段define
+   {<point name="insert.define"/>}
+   #end add-point
+
+   CLEAR FORM                    #清畫面欄位內容
+
+   INITIALIZE g_glab_m.* LIKE glab_t.*             #DEFAULT 設定
+   LET g_glabld_t = NULL
+   LET g_glab001_t = NULL
+
+   LET g_glab002_t = NULL
+
+   LET g_glab003_t = NULL
+
+
+
+   CALL s_transaction_begin()
+
+   WHILE TRUE
+      #六階樹狀給值
+
+      LET g_current_idx = g_curr_diag.getCurrentRow("s_browse")
+      IF g_current_idx > 0 THEN
+         IF NOT cl_null(g_browser[g_current_idx].b_show) THEN
+            LET g_glab_m.glab001 = g_browser[g_current_idx].b_glabld
+            LET g_glab_m.glab003 = g_browser[g_current_idx].b_glab003
+            #LET  = g_browser[g_current_idx].b_
+            #LET  = g_browser[g_current_idx].b_
+            #LET  = g_browser[g_current_idx].b_
+            #LET  = g_browser[g_current_idx].b_
+         END IF
+      END IF
+
+      #公用欄位給值
+
+
+      #append欄位給值
+
+
+      #一般欄位給值
+
+
+      #add-point:單頭預設值
+      {<point name="insert.default"/>}
+      #end add-point
+
+      CALL agli180_input("a")
+
+      #add-point:單頭輸入後
+      {<point name="insert.after_insert"/>}
+      #end add-point
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_glab_m.* = g_glab_m_t.*
+         CALL agli180_show()
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 9001
+         LET g_errparam.extend = ""
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+         EXIT WHILE
+      END IF
+
+      LET g_rec_b = 0
+      EXIT WHILE
+   END WHILE
+
+   LET g_state = "Y"
+   LET g_glabld_t = g_glab_m.glabld
+
+   LET g_glab_m_t.glabld = g_glab_m.glabld
+#   LET g_wc = g_wc,
+#              " OR ( glabent = '" ||g_enterprise|| "' AND",
+#              " glabld = '", g_glab_m.glabld CLIPPED, "' "
+#              ," AND glab001 = '11' "
+
+   #該樣板不需此段落           ," AND glab002 = '", g_glab_m.glab002 CLIPPED, "' "
+
+   #該樣板不需此段落           ," AND glab003 = '", g_glab_m.glab003 CLIPPED, "' "
+
+
+#              , ") "
+
+END FUNCTION
+
+PRIVATE FUNCTION agli180_show()
+   #add-point:show段define
+   
+   #end add-point
+
+   #add-point:show段之前
+   {<point name="show.before"/>}
+   #end add-point
+
+
+
+   LET g_glab_m_t.* = g_glab_m.*      #保存單頭舊值
+
+   #在browser 移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()
+
+   #帶出公用欄位reference值
+
+
+   #讀入ref值(單頭)
+   #add-point:show段reference
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_glab_m.glabld
+            CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_glab_m.glabld_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_glab_m.glabld_desc
+          {#ADP版次:1#}
+    
+   #end add-point
+
+   #將資料輸出到畫面上
+  #DISPLAY BY NAME g_glab_m.glabld,g_glab_m.glabld_desc,g_glab_m.glaacomp,g_glab_m.glab001,g_glab_m.stus1,g_glab_m.glaa004,g_glab_m.glab002,g_glab_m.glab003
+   CALL agli180_b_fill(g_wc)
+  #CALL agli180_browser_expand(1)
+  #LET g_browser[1].b_isExp = 1
+   #顯示狀態(stus)圖片
+
+
+   #add-point:show段之後
+   LET g_glabld = g_glab_m.glabld
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION agli180_modify()
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   DEFINE l_pass           LIKE type_t.num5  #160811-00039#6 add
+   #end add-point
+
+   IF g_glab_m.glabld IS NULL
+
+   THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "std-00003"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      RETURN
+   END IF
+   
+   #160811-00039#6--add--str--
+   CALL s_ld_chk_authorization(g_user,g_glab_m.glabld) RETURNING l_pass
+   IF l_pass = FALSE THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'agl-00165'
+      LET g_errparam.extend = g_glab_m.glabld
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      
+      RETURN
+   END IF
+   #160811-00039#6--add--end
+   
+    SELECT UNIQUE glabld,glab001,glab002,glab003
+ INTO g_glab_m.glabld,g_glab_m.glab001,g_glab_m.glab002,g_glab_m.glab003
+ FROM glab_t
+ WHERE glabent = g_enterprise AND glabld = g_glab_m.glabld AND glab001 = g_glab_m.glab001 AND glab002 = g_glab_m.glab002 AND glab003 = g_glab_m.glab003
+
+   ERROR ""
+
+   LET g_glabld_t = g_glab_m.glabld
+   LET g_glab001_t = g_glab_m.glab001
+
+   LET g_glab002_t = g_glab_m.glab002
+
+   LET g_glab003_t = g_glab_m.glab003
+
+
+
+   CALL s_transaction_begin()
+
+   OPEN agli180_cl USING g_enterprise,g_glab_m.glabld,g_glab_m.glab001,g_glab_m.glab002,g_glab_m.glab003
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "OPEN agli180_cl:"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      CLOSE agli180_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+
+   #鎖住將被更改或取消的資料
+   FETCH agli180_cl INTO g_glab_m.glabld,g_glab_m.glabld_desc,g_glab_m.glaacomp,g_glab_m.glab001,g_glab_m.stus1,g_glab_m.glaa004,g_glab_m.glab002,g_glab_m.glab003
+
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "glab_t"
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      CLOSE agli180_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+
+
+
+   CALL agli180_show()
+
+   WHILE TRUE
+      LET g_glab_m.glabld = g_glabld_t
+      LET g_glab_m.glab001 = g_glab001_t
+
+      LET g_glab_m.glab002 = g_glab002_t
+
+      LET g_glab_m.glab003 = g_glab003_t
+
+
+
+      #寫入修改者/修改日期資訊
+
+
+      #add-point:modify段修改前
+      {<point name="modify.before_input"/>}
+      #end add-point
+
+      CALL agli180_input("u")     #欄位更改
+
+      #add-point:modify段修改後
+      {<point name="modify.after_input"/>}
+      #end add-point
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_glab_m.* = g_glab_m_t.*
+         CALL agli180_show()
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 9001
+         LET g_errparam.extend = ""
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+         EXIT WHILE
+      END IF
+
+      EXIT WHILE
+
+   END WHILE
+
+   #修改歷程記錄
+   IF NOT cl_log_modified_record(g_glab_m.glabld,g_site) THEN
+      CALL s_transaction_end('N','0')
+   END IF
+
+   CLOSE agli180_cl
+   CALL s_transaction_end('Y','0')
+
+   #流程通知預埋點-U
+   CALL cl_flow_notify(g_glab_m.glabld,"U")
+
+   LET g_worksheet_hidden = 0
+
+END FUNCTION
+
+PRIVATE FUNCTION agli180_input(p_cmd)
+   {<Local define>}
+   DEFINE p_cmd           LIKE type_t.chr1
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT
+   DEFINE l_n             LIKE type_t.num5        #檢查重複用
+   DEFINE l_cnt           LIKE type_t.num5        #檢查重複用
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   {</Local define>}
+   #add-point:input段define
+   DEFINE l_glaa004       LIKE glaa_t.glaa004          {#ADP版次:1#}
+   DEFINE l_ooall004      LIKE ooall_t.ooall004
+   DEFINE l_str1          STRING
+   DEFINE l_str2          STRING
+   DEFINE l_ooefl003  LIKE ooefl_t.ooefl003
+   #end add-point
+
+   #切換畫面
+   #該樣板不需此段落IF g_main_hidden THEN
+   #該樣板不需此段落   CALL gfrm_curr.setElementHidden("mainlayout",0)
+   #該樣板不需此段落   CALL gfrm_curr.setElementHidden("worksheet",1)
+   #該樣板不需此段落   LET g_main_hidden = 0
+   #該樣板不需此段落END IF
+   CALL gfrm_curr.setElementHidden("mainlayout",0)
+   CALL gfrm_curr.setElementImage("mainhidden","small/arr-u.png")
+   LET g_main_hidden = 1
+
+   CALL cl_set_head_visible("","YES")
+
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+
+   LET g_qryparam.state = "i"
+
+   #控制key欄位可否輸入
+   CALL agli180_set_entry(p_cmd)
+   #add-point:set_entry後
+   {<point name="input.after_set_entry"/>}
+   #end add-point
+   CALL agli180_set_no_entry(p_cmd)
+   #add-point:資料輸入前
+   {<point name="input.before_input"/>}
+   #end add-point
+
+  #DISPLAY BY NAME g_glab_m.glabld,g_glab_m.glaacomp,g_glab_m.glab001,g_glab_m.stus1,g_glab_m.glaa004,g_glab_m.glab002,g_glab_m.glab003
+   CALL agli180_glabld_show()
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+      #單頭段
+      INPUT BY NAME g_glab_m.glabld,g_glab_m.glaacomp,g_glab_m.glab001,g_glab_m.stus1,g_glab_m.glaa004,g_glab_m.glab002,g_glab_m.glab003
+         ATTRIBUTE(WITHOUT DEFAULTS)
+
+         #自訂ACTION(master_input)
+
+
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            #其他table資料備份(確定是否更改用)
+
+
+         #---------------------------<  Master  >---------------------------
+         #----<<glabld>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD glabld
+
+            #add-point:AFTER FIELD glabld
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_glab_m.glabld)  THEN
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND g_glab_m.glabld != g_glabld_t) THEN
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glab_t WHERE "||"glabent = '" ||g_enterprise|| "' AND "||"glabld = '"||g_glab_m.glabld ||"' AND "||"glab001 = '11' ",'std-00004',0) THEN
+                     LET g_glab_m.glabld = ''
+                     LET g_glab_m.glabld_desc = NULL
+                     LET g_glab_m.stus1= ''
+                     LET g_glab_m.glaacomp = ''
+                     LET g_glab_m.glaa004 = ''
+                     DISPLAY BY NAME g_glab_m.glabld_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+
+               IF NOT agli180_glabld_chk(g_glab_m.glabld) THEN
+                  IF p_cmd = 'a' THEN
+                     LET g_glab_m.glabld = ''
+                     LET g_glab_m.glabld_desc = NULL
+                     LET g_glab_m.stus1= ''
+                     LET g_glab_m.glaacomp = ''
+                     LET g_glab_m.glaa004 = ''
+                     DISPLAY BY NAME g_glab_m.glabld_desc
+                  ELSE
+                     LET g_glab_m.glabld = g_glab_m_t.glabld
+                  END IF
+                  NEXT FIELD glabld
+               END IF
+            END IF
+
+
+            CALL agli180_glabld_show()
+          {#ADP版次:1#}
+            #END add-point
+
+
+         #此段落由子樣板a01產生
+         BEFORE FIELD glabld
+            #add-point:BEFORE FIELD glabld
+            {<point name="input.b.glabld" />}
+            #END add-point
+
+         #此段落由子樣板a04產生
+         ON CHANGE glabld
+            #add-point:ON CHANGE glabld
+            {<point name="input.g.glabld" />}
+            #END add-point
+
+         #----<<glaacomp>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaacomp
+            #add-point:BEFORE FIELD glaacomp
+            {<point name="input.b.glaacomp" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD glaacomp
+
+            #add-point:AFTER FIELD glaacomp
+            {<point name="input.a.glaacomp" />}
+            #END add-point
+
+
+         #此段落由子樣板a04產生
+         ON CHANGE glaacomp
+            #add-point:ON CHANGE glaacomp
+            {<point name="input.g.glaacomp" />}
+            #END add-point
+
+         #----<<glab001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glab001
+            #add-point:BEFORE FIELD glab001
+            {<point name="input.b.glab001" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD glab001
+
+            #add-point:AFTER FIELD glab001
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_glab_m.glabld) AND NOT cl_null(g_glab_m.glab001) AND NOT cl_null(g_glab_m.glab002) AND NOT cl_null(g_glab_m.glab003) THEN
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_glab_m.glabld != g_glabld_t  OR g_glab_m.glab001 != g_glab001_t  OR g_glab_m.glab002 != g_glab002_t  OR g_glab_m.glab003 != g_glab003_t )) THEN
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glab_t WHERE "||"glabent = '" ||g_enterprise|| "' AND "||"glabld = '"||g_glab_m.glabld ||"' AND "|| "glab001 = '"||g_glab_m.glab001 ||"' AND "|| "glab002 = '"||g_glab_m.glab002 ||"' AND "|| "glab003 = '"||g_glab_m.glab003 ||"'",'std-00004',0) THEN
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+          {#ADP版次:1#}
+            #END add-point
+
+
+         #此段落由子樣板a04產生
+         ON CHANGE glab001
+            #add-point:ON CHANGE glab001
+            {<point name="input.g.glab001" />}
+            #END add-point
+
+         #----<<stus1>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD stus1
+            #add-point:BEFORE FIELD stus1
+            {<point name="input.b.stus1" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD stus1
+
+            #add-point:AFTER FIELD stus1
+            {<point name="input.a.stus1" />}
+            #END add-point
+
+
+         #此段落由子樣板a04產生
+         ON CHANGE stus1
+            #add-point:ON CHANGE stus1
+            {<point name="input.g.stus1" />}
+            #END add-point
+
+         #----<<glaa004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glaa004
+            #add-point:BEFORE FIELD glaa004
+            {<point name="input.b.glaa004" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD glaa004
+
+            #add-point:AFTER FIELD glaa004
+            {<point name="input.a.glaa004" />}
+            #END add-point
+
+
+         #此段落由子樣板a04產生
+         ON CHANGE glaa004
+            #add-point:ON CHANGE glaa004
+            {<point name="input.g.glaa004" />}
+            #END add-point
+
+         #----<<glab002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glab002
+            #add-point:BEFORE FIELD glab002
+            {<point name="input.b.glab002" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD glab002
+
+            #add-point:AFTER FIELD glab002
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_glab_m.glabld) AND NOT cl_null(g_glab_m.glab001) AND NOT cl_null(g_glab_m.glab002) AND NOT cl_null(g_glab_m.glab003) THEN
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_glab_m.glabld != g_glabld_t  OR g_glab_m.glab001 != g_glab001_t  OR g_glab_m.glab002 != g_glab002_t  OR g_glab_m.glab003 != g_glab003_t )) THEN
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glab_t WHERE "||"glabent = '" ||g_enterprise|| "' AND "||"glabld = '"||g_glab_m.glabld ||"' AND "|| "glab001 = '"||g_glab_m.glab001 ||"' AND "|| "glab002 = '"||g_glab_m.glab002 ||"' AND "|| "glab003 = '"||g_glab_m.glab003 ||"'",'std-00004',0) THEN
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+          {#ADP版次:1#}
+            #END add-point
+
+
+         #此段落由子樣板a04產生
+         ON CHANGE glab002
+            #add-point:ON CHANGE glab002
+            {<point name="input.g.glab002" />}
+            #END add-point
+
+         #----<<glab003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glab003
+            #add-point:BEFORE FIELD glab003
+            {<point name="input.b.glab003" />}
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD glab003
+
+            #add-point:AFTER FIELD glab003
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_glab_m.glabld) AND NOT cl_null(g_glab_m.glab001) AND NOT cl_null(g_glab_m.glab002) AND NOT cl_null(g_glab_m.glab003) THEN
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_glab_m.glabld != g_glabld_t  OR g_glab_m.glab001 != g_glab001_t  OR g_glab_m.glab002 != g_glab002_t  OR g_glab_m.glab003 != g_glab003_t )) THEN
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glab_t WHERE "||"glabent = '" ||g_enterprise|| "' AND "||"glabld = '"||g_glab_m.glabld ||"' AND "|| "glab001 = '"||g_glab_m.glab001 ||"' AND "|| "glab002 = '"||g_glab_m.glab002 ||"' AND "|| "glab003 = '"||g_glab_m.glab003 ||"'",'std-00004',0) THEN
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+          {#ADP版次:1#}
+            #END add-point
+
+
+         #此段落由子樣板a04產生
+         ON CHANGE glab003
+            #add-point:ON CHANGE glab003
+            {<point name="input.g.glab003" />}
+            #END add-point
+
+ #欄位檢查
+         #---------------------------<  Master  >---------------------------
+         #----<<glabld>>----
+         #Ctrlp:input.c.glabld
+         ON ACTION controlp INFIELD glabld
+            #add-point:ON ACTION controlp INFIELD glabld
+#此段落由子樣板a07產生
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glab_m.glabld             #給予default值
+            LET g_qryparam.arg1 = g_user
+			LET g_qryparam.arg2 = g_dept
+
+            #給予arg
+
+           #CALL q_glaald_01()                                #呼叫開窗
+            CALL q_authorised_ld()
+
+            LET g_glab_m.glabld = g_qryparam.return1              #將開窗取得的值回傳到變數
+            
+
+            DISPLAY g_glab_m.glabld TO glabld              #顯示到畫面上
+            CALL agli180_glabld_show()
+
+            NEXT FIELD glabld                          #返回原欄位
+
+          {#ADP版次:1#}
+            #END add-point
+
+         #----<<glaacomp>>----
+         #Ctrlp:input.c.glaacomp
+         ON ACTION controlp INFIELD glaacomp
+            #add-point:ON ACTION controlp INFIELD glaacomp
+#此段落由子樣板a07產生
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glab_m.glaacomp             #給予default值
+
+            #給予arg
+            LET g_qryparam.where = " ooef003= 'Y' "
+            CALL q_ooef001()                                #呼叫開窗
+
+            LET g_glab_m.glaacomp = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_glab_m.glaacomp TO glaacomp              #顯示到畫面上
+
+            NEXT FIELD glaacomp                          #返回原欄位
+
+          {#ADP版次:1#}
+            #END add-point
+
+         #----<<glab001>>----
+         #Ctrlp:input.c.glab001
+#         ON ACTION controlp INFIELD glab001
+            #add-point:ON ACTION controlp INFIELD glab001
+            {<point name="input.c.glab001" />}
+            #END add-point
+
+         #----<<stus1>>----
+         #Ctrlp:input.c.stus1
+#         ON ACTION controlp INFIELD stus1
+            #add-point:ON ACTION controlp INFIELD stus1
+            {<point name="input.c.stus1" />}
+            #END add-point
+
+         #----<<glaa004>>----
+         #Ctrlp:input.c.glaa004
+         ON ACTION controlp INFIELD glaa004
+            #add-point:ON ACTION controlp INFIELD glaa004
+#此段落由子樣板a07產生
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glab_m.glaa004             #給予default值
+
+            #給予arg
+
+            CALL q_ooal002()                                #呼叫開窗
+
+            LET g_glab_m.glaa004 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_glab_m.glaa004 TO glaa004              #顯示到畫面上
+
+            NEXT FIELD glaa004                          #返回原欄位
+
+          {#ADP版次:1#}
+            #END add-point
+
+         #----<<glab002>>----
+         #Ctrlp:input.c.glab002
+#         ON ACTION controlp INFIELD glab002
+            #add-point:ON ACTION controlp INFIELD glab002
+            {<point name="input.c.glab002" />}
+            #END add-point
+
+         #----<<glab003>>----
+         #Ctrlp:input.c.glab003
+#         ON ACTION controlp INFIELD glab003
+            #add-point:ON ACTION controlp INFIELD glab003
+            {<point name="input.c.glab003" />}
+            #END add-point
+
+ #欄位開窗
+
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+
+#            CALL cl_showmsg()   #錯誤訊息統整顯示
+
+            IF p_cmd <> "u" THEN
+               LET l_count = 1
+
+               SELECT COUNT(*) INTO l_count FROM glab_t
+                WHERE glabent = g_enterprise AND glabld = g_glab_m.glabld
+                  AND glab001 = g_glab_m.glab001
+
+                  AND glab002 = g_glab_m.glab002
+
+                  AND glab003 = g_glab_m.glab003
+
+
+               IF l_count = 0 THEN
+
+                  #add-point:單頭新增前
+                  LET g_glab_m.glab001 = '11'
+                  SELECT glaa004 INTO l_glaa004 FROM glaa_t WHERE glaaent = g_enterprise AND glaald = g_glab_m.glabld
+
+                  LET g_sql = "SELECT unique oocq001,oocq002 FROM oocq_t,gzcb_t ",
+                              " WHERE oocq001 = gzcb004 AND gzcb001 = '24' AND oocqent=",g_enterprise
+                  PREPARE glab_pre FROM g_sql
+                  DECLARE glab_cur CURSOR FOR glab_pre
+                  FOREACH glab_cur INTO g_glab_m.glab002,g_glab_m.glab003          {#ADP版次:1#}
+                  #end add-point
+
+                  INSERT INTO glab_t (glabent,glabld,glab001,glab002,glab003,glab011)
+                  VALUES (g_enterprise,g_glab_m.glabld,g_glab_m.glab001,g_glab_m.glab002,g_glab_m.glab003,'1') # DISK WRITE
+
+                  #add-point:單頭新增中
+                     IF SQLCA.sqlcode THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = SQLCA.sqlcode
+                        LET g_errparam.extend = "glab_t"
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+
+                        CONTINUE FOREACH
+                     END IF
+                  END FOREACH          {#ADP版次:1#}
+                  #end add-point
+
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = SQLCA.sqlcode
+                        LET g_errparam.extend = "glab_t"
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+
+                     CONTINUE DIALOG
+                  END IF
+
+
+
+                  #資料多語言用-增/改
+
+
+                  #add-point:單頭新增後
+                  UPDATE glab_t SET glab004 = l_glaa004
+                   WHERE glabld = g_glab_m.glabld AND glab001 = '11'
+                     AND glabent = g_enterprise    #160905-00007#3 add
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = SQLCA.sqlcode
+                        LET g_errparam.extend = "glab_t"
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+
+                     CONTINUE DIALOG
+                  END IF          {#ADP版次:1#}
+                  #end add-point
+
+                  CALL s_transaction_end('Y','0')
+               ELSE
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  "std-00006"
+                  LET g_errparam.extend =  "g_glab_m.glabld"
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+
+                  CALL s_transaction_end('N','0')
+               END IF
+            ELSE
+               #add-point:單頭修改前
+               {<point name="input.head.b_update" mark="Y"/>}
+               #end add-point
+               UPDATE glab_t SET (glabld,glab001,glab002,glab003) = (g_glab_m.glabld,g_glab_m.glab001,g_glab_m.glab002,g_glab_m.glab003)
+                WHERE glabent = g_enterprise AND glabld = g_glabld_t #
+                  AND glab001 = g_glab001_t
+
+                  AND glab002 = g_glab002_t
+
+                  AND glab003 = g_glab003_t
+
+
+               #add-point:單頭修改中
+               {<point name="input.head.m_update"/>}
+               #end add-point
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = SQLCA.sqlcode
+                        LET g_errparam.extend = "glab_t"
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+
+                  CALL s_transaction_end('N','0')
+               ELSE
+
+
+
+                  #資料多語言用-增/改
+
+
+                  #add-point:單頭修改後
+                  {<point name="input.head.a_update"/>}
+                  #end add-point
+
+                  CALL s_transaction_end('Y','0')
+               END IF
+            END IF
+           #controlp
+      END INPUT
+
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+
+      ON ACTION controls
+         CALL cl_set_head_visible("","AUTO")
+
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel      #在dialog button (放棄)
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION close       #在dialog 右上角 (X)
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+
+   #add-point:input段after input
+   {<point name="input.after_input"/>}
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION agli180_reproduce()
+   {<Local define>}
+   DEFINE l_newno     LIKE glab_t.glabld
+   DEFINE l_oldno     LIKE glab_t.glabld
+   DEFINE l_newno02     LIKE glab_t.glab001
+   DEFINE l_oldno02     LIKE glab_t.glab001
+
+   DEFINE l_newno03     LIKE glab_t.glab002
+   DEFINE l_oldno03     LIKE glab_t.glab002
+
+   DEFINE l_newno04     LIKE glab_t.glab003
+   DEFINE l_oldno04     LIKE glab_t.glab003
+
+
+   DEFINE l_master    RECORD LIKE glab_t.*
+   DEFINE l_cnt       LIKE type_t.num5
+   {</Local define>}
+
+   #add-point:reproduce段define
+   DEFINE l_glaa004   LIKE glaa_t.glaa004
+   DEFINE l_glaa004_t LIKE glaa_t.glaa004
+   DEFINE l_sql       STRING
+   #end add-point
+
+   #切換畫面
+   #該樣板不需此段落IF g_main_hidden THEN
+   #該樣板不需此段落   CALL gfrm_curr.setElementHidden("mainlayout",0)
+   #該樣板不需此段落   CALL gfrm_curr.setElementHidden("worksheet",1)
+   #該樣板不需此段落   LET g_main_hidden = 0
+   #該樣板不需此段落END IF
+
+   IF g_glab_m.glabld IS NULL
+#      OR g_glab_m.glab001 IS NULL
+#
+#      OR g_glab_m.glab002 IS NULL
+#
+#      OR g_glab_m.glab003 IS NULL
+
+
+   THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "std-00003"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      RETURN
+   END IF
+
+   LET g_glabld_t = g_glab_m.glabld
+   LET g_glab001_t = g_glab_m.glab001
+
+   LET g_glab002_t = g_glab_m.glab002
+
+   LET g_glab003_t = g_glab_m.glab003
+
+
+
+   CALL agli180_set_entry("a")
+   CALL agli180_set_no_entry("a")
+
+      LET g_glab_m.glabld_desc = ''
+      LET g_glab_m.stus1 = ''
+      LET g_glab_m.glaacomp = ''
+      LET g_glab_m.glaa004 = ''
+   DISPLAY BY NAME g_glab_m.glabld_desc,g_glab_m.stus1,g_glab_m.glaacomp,g_glab_m.glaa004
+
+
+   INPUT l_newno    # FROM
+        ,l_newno02
+
+        ,l_newno03
+
+        ,l_newno04
+
+
+   FROM glabld
+        ,glab001
+
+        ,glab002
+
+        ,glab003
+
+
+        ATTRIBUTE(FIELD ORDER FORM)
+
+      #add-point:複製段落開窗/欄位控管/自定義action
+      {<point name="reproduce.action" />}
+      #end add-point
+
+      BEFORE INPUT
+         #add-point:複製段落Before input
+         {<point name="reproduce.before_input" />}
+         #end add-point
+
+      AFTER FIELD glabld
+         IF l_newno IS NULL THEN
+            NEXT FIELD CURRENT
+         END IF
+         #add-point:AFTER FIELD glabld
+         SELECT glaa004 INTO l_glaa004_t FROM glaa_t WHERE glaaent=g_enterprise AND glaald = g_glab_m_t.glabld
+         SELECT glaa004 INTO l_glaa004 FROM glaa_t WHERE glaaent=g_enterprise AND glaald = l_newno
+         IF l_glaa004_t != l_glaa004 THEN
+            LET l_newno = ''
+            LET g_glab_m.glabld_desc = ''
+            LET g_glab_m.stus1= ''
+            LET g_glab_m.glaacomp = ''
+            LET g_glab_m.glaa004 = ''
+            DISPLAY BY NAME g_glab_m.glabld_desc,g_glab_m.stus1,g_glab_m.glaacomp,g_glab_m.glaa004
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'agl-00138'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = FALSE
+            CALL cl_err()
+
+            NEXT FIELD glabld
+         END IF
+         
+         IF  NOT cl_null(l_newno)  THEN
+             IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glab_t WHERE "||"glabent = '" ||g_enterprise|| "' AND "||"glabld = '"||l_newno ||"' AND "||"glab001 = '11' ",'std-00004',0) THEN
+                 LET l_newno = ''
+                 LET g_glab_m.glabld_desc = ''
+                 LET g_glab_m.stus1= ''
+                 LET g_glab_m.glaacomp = ''
+                 LET g_glab_m.glaa004 = ''
+                 DISPLAY BY NAME g_glab_m.glabld_desc,g_glab_m.stus1,g_glab_m.glaacomp,g_glab_m.glaa004
+                 NEXT FIELD CURRENT
+             END IF
+
+             IF NOT agli180_glabld_chk(l_newno) THEN
+                LET l_newno = ''
+                LET g_glab_m.glabld_desc = ''
+                LET g_glab_m.stus1= ''
+                LET g_glab_m.glaacomp = ''
+                LET g_glab_m.glaa004 = ''
+                DISPLAY BY NAME g_glab_m.glabld_desc,g_glab_m.stus1,g_glab_m.glaacomp,g_glab_m.glaa004
+                NEXT FIELD glabld
+             END IF
+         END IF
+
+         CALL agli180_glabld_show()
+         #end add-point
+
+      AFTER FIELD glab001
+         IF l_newno02 IS NULL THEN
+            NEXT FIELD CURRENT
+         END IF
+         #add-point:AFTER FIELD glab001
+         {<point name="reproduce.a.glab001" />}
+         #end add-point
+
+      AFTER FIELD glab002
+         IF l_newno03 IS NULL THEN
+            NEXT FIELD CURRENT
+         END IF
+         #add-point:AFTER FIELD glab002
+         {<point name="reproduce.a.glab002" />}
+         #end add-point
+
+      AFTER FIELD glab003
+         IF l_newno04 IS NULL THEN
+            NEXT FIELD CURRENT
+         END IF
+         #add-point:AFTER FIELD glab003
+         {<point name="reproduce.a.glab003" />}
+         #end add-point
+
+
+
+      #add-point:More_input
+      ON ACTION controlp INFIELD glabld
+            #add-point:ON ACTION controlp INFIELD glabld
+#此段落由子樣板a07產生
+            #開窗i段
+            SELECT glaa004 INTO l_glaa004_t FROM glaa_t WHERE glaaent=g_enterprise AND glaald = g_glab_m_t.glabld
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = l_newno             #給予default值
+            LET g_qryparam.where = " glaa004 = '",l_glaa004_t,"'"
+            LET g_qryparam.arg1 = g_user
+			LET g_qryparam.arg2 = g_dept
+
+            #給予arg
+
+           #CALL q_glaald_01()                                #呼叫開窗
+            CALL q_authorised_ld()
+
+            LET l_newno = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY l_newno TO glabld              #顯示到畫面上
+            LET g_glab_m.glabld = l_newno
+            CALL agli180_glabld_show()
+
+            NEXT FIELD glabld                          #返回原欄位
+
+          {#ADP版次:1#}
+            #END add-point
+      #end add-point
+
+      AFTER INPUT
+         #若取消則直接結束
+         IF INT_FLAG = 1 THEN
+            LET INT_FLAG = 0
+            RETURN
+         END IF
+
+         #確定該key值是否有重複定義
+         LET l_newno02 = '11'
+#         LET l_newno03 = g_glab_m.glab002
+#         LET l_newno04 = g_glab_m.glab003
+         IF g_glab_m.glabld IS NULL
+#         OR g_glab_m.glab001 IS NULL
+#
+#         OR g_glab_m.glab002 IS NULL
+#
+#         OR g_glab_m.glab003 IS NULL
+
+
+         THEN
+            NEXT FIELD glabld
+         END IF
+         LET l_cnt = 0
+         SELECT COUNT(*) INTO l_cnt FROM glab_t
+          WHERE glabent = g_enterprise AND glabld = l_newno
+            AND glab001 = '11'
+#
+#            AND glab002 = l_newno03
+#
+#            AND glab003 = l_newno04
+
+
+         IF l_cnt > 0 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = "std-00006"
+            LET g_errparam.extend = "Reproduce"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            NEXT FIELD glabld
+         END IF
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE INPUT
+   END INPUT
+
+   IF INT_FLAG OR l_newno IS NULL THEN
+      LET INT_FLAG = 0
+      RETURN
+   END IF
+
+   CALL s_transaction_begin()
+
+   LET l_sql = " SELECT *  FROM glab_t ",
+               "  WHERE glabent = '",g_enterprise,"' AND glabld = '",g_glab_m_t.glabld,"'",
+               "  AND glab001 = '11'"
+
+   #公用欄位給予預設值
+
+
+   #add-point:單頭複製前
+   PREPARE repproduce_pre FROM l_sql
+   DECLARE repproduce_cur CURSOR FOR repproduce_pre
+   FOREACH repproduce_cur INTO l_master.*  
+      LET l_master.glabld = l_newno
+      LET l_master.glab001 = '11'
+   #end add-point
+
+      INSERT INTO glab_t VALUES (l_master.*) #複製單頭
+
+   #add-point:單頭複製中
+   {<point name="reproduce.head.m_insert"/>}
+   #end add-point
+
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "glab_t"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+
+   #add-point:單頭複製後
+   END FOREACH
+   #end add-point
+
+
+
+   CALL s_transaction_end('Y','0')
+   ERROR "ROW(",l_newno,") O.K"
+
+   #該樣板不需此段落LET g_state = "Y"
+
+#   LET g_wc = g_wc,
+#              " OR (",
+#              " glabld = '", l_newno CLIPPED, "' "
+#              ," AND glab001 = '11' )"
+#
+#   #該樣板不需此段落           ," AND glab002 = '", l_newno03 CLIPPED, "' "
+#
+#   #該樣板不需此段落           ," AND glab003 = '", l_newno04 CLIPPED, "' "
+#
+#
+#             , ") "
+
+   #add-point:完成複製段落後
+   LET g_glabld_t = l_newno
+   LET g_state = "Y"
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION agli180_delete()
+   {<Local define>}
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_pass           LIKE type_t.num5  #160811-00039#6 add
+   {</Local define>}
+   #add-point:delete段define
+   {<point name="delete.define"/>}
+   #end add-point
+
+   IF g_glab_m.glabld IS NULL
+   OR g_glab_m.glab001 IS NULL
+
+   OR g_glab_m.glab002 IS NULL
+
+   OR g_glab_m.glab003 IS NULL
+
+
+   THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "std-00003"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      RETURN
+   END IF
+
+   #160811-00039#6--add--str--
+   CALL s_ld_chk_authorization(g_user,g_glab_m.glabld) RETURNING l_pass
+   IF l_pass = FALSE THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'agl-00165'
+      LET g_errparam.extend = g_glab_m.glabld
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      
+      RETURN
+   END IF
+   #160811-00039#6--add--end
+   
+   CALL s_transaction_begin()
+
+   LET g_glabld_t = g_glab_m.glabld
+   LET g_glab001_t = g_glab_m.glab001
+
+   LET g_glab002_t = g_glab_m.glab002
+
+   LET g_glab003_t = g_glab_m.glab003
+
+
+
+
+
+   OPEN agli180_cl USING g_enterprise,
+                           g_glab_m.glabld
+                           ,g_glab_m.glab001
+
+                           ,g_glab_m.glab002
+
+                           ,g_glab_m.glab003
+
+
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "OPEN agli180_cl:"
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      CLOSE agli180_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+
+   FETCH agli180_cl INTO g_glab_m.glabld,g_glab_m.glabld_desc,g_glab_m.glaacomp,g_glab_m.glab001,g_glab_m.stus1,g_glab_m.glaa004,g_glab_m.glab002,g_glab_m.glab003
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = g_glab_m.glabld
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      RETURN
+   END IF
+
+   CALL agli180_show()
+   IF cl_ask_delete() THEN
+      INITIALIZE g_doc.* TO NULL
+      LET g_doc.column1 = "glabld"
+      LET g_doc.value1 = g_glab_m.glabld
+      CALL cl_doc_remove()
+
+      #add-point:單頭刪除前
+      {<point name="delete.head.b_delete" mark="Y"/>}
+      #end add-point
+
+      DELETE FROM glab_t
+       WHERE glabent = g_enterprise AND glabld = g_glab_m.glabld
+         AND glab001 = g_glab_m.glab001
+
+         AND glab002 = g_glab_m.glab002
+
+         AND glab003 = g_glab_m.glab003
+
+
+
+      #add-point:單頭刪除中
+      {<point name="delete.head.m_delete"/>}
+      #end add-point
+
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "glab_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+         CALL s_transaction_end('N','0')
+      END IF
+
+
+
+      #add-point:單頭刪除後
+      {<point name="delete.head.a_delete"/>}
+      #end add-point
+
+
+
+      CLEAR FORM
+      CALL agli180_ui_browser_refresh()
+      IF g_browser_cnt > 0 THEN
+         CALL agli180_fetch("P")
+      ELSE
+         CALL agli180_browser_fill("F")
+        #CALL agli180_b_fill(" 1=1")
+      END IF
+
+   END IF
+
+   CLOSE agli180_cl
+   CALL s_transaction_end('Y','0')
+
+   #流程通知預埋點-D
+   CALL cl_flow_notify(g_glab_m.glabld,"D")
+
+END FUNCTION
+
+PRIVATE FUNCTION agli180_ui_browser_refresh()
+   {<Local define>}
+   DEFINE l_i  LIKE type_t.num10
+   {</Local define>}
+
+   #add-point:ui_browser_refresh段define
+   {<point name="ui_browser_refresh.define"/>}
+   #end add-point
+
+   FOR l_i =1 TO g_browser1.getLength()
+      IF g_browser1[l_i].b_glabld = g_glab_m.glabld THEN
+         CALL g_browser1.deleteElement(l_i)
+         LET g_header_cnt = g_header_cnt - 1
+       END IF
+   END FOR
+
+   DISPLAY g_header_cnt TO FORMONLY.b_count     #page count
+   DISPLAY g_header_cnt TO FORMONLY.h_count     #page count
+   LET g_browser_cnt = g_browser_cnt-1
+   IF g_current_idx > g_browser_cnt THEN        #確定browse 筆數指在同一筆
+      LET g_current_idx = g_browser_cnt
+   END IF
+
+END FUNCTION
+
+PRIVATE FUNCTION agli180_set_entry(p_cmd)
+   {<Local define>}
+   DEFINE p_cmd LIKE type_t.chr1
+   {</Local define>}
+
+   #add-point:set_entry段define
+   {<point name="set_entry.define"/>}
+   #end add-point
+
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("glabld,glab001,glab002,glab003",TRUE)
+      #add-point:set_entry段欄位控制
+      {<point name="set_entry.field_control"/>}
+      #end add-point
+   END IF
+
+   #add-point:set_entry段欄位控制後
+   {<point name="set_entry.after_control"/>}
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION agli180_set_no_entry(p_cmd)
+   {<Local define>}
+   DEFINE p_cmd LIKE type_t.chr1
+   {</Local define>}
+
+   #add-point:set_no_entry段define
+   {<point name="set_no_entry.define"/>}
+   #end add-point
+
+   IF p_cmd = "u" THEN
+      CALL cl_set_comp_entry("glabld,glab001,glab002,glab003",FALSE)
+      #add-point:set_no_entry段欄位控制
+      {<point name="set_no_entry.field_control"/>}
+      #end add-point
+   END IF
+
+   #add-point:set_no_entry段欄位控制後
+   {<point name="set_no_entry.after_control"/>}
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION agli180_default_search()
+   {<Local define>}
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   {</Local define>}
+   #add-point:default_search段define
+   {<point name="default_search.define"/>}
+   #end add-point
+
+   #add-point:default_search段開始前
+   {<point name="default_search.before"/>}
+   #end add-point
+
+   LET g_pagestart = 1
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   IF NOT cl_null(g_argv[1]) THEN
+      LET ls_wc = ls_wc, " glabld = '", g_argv[1], "' AND "
+   END IF
+
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " glab001 = ", g_argv[02], " AND "
+   END IF
+
+   IF NOT cl_null(g_argv[03]) THEN
+      LET ls_wc = ls_wc, " glab002 = ", g_argv[03], " AND "
+   END IF
+
+   IF NOT cl_null(g_argv[04]) THEN
+      LET ls_wc = ls_wc, " glab003 = ", g_argv[04], " AND "
+   END IF
+
+
+
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+   ELSE
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=1"
+      END IF
+   END IF
+
+   #add-point:default_search段結束前
+   {<point name="default_search.after"/>}
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION agli180_glabld_show()
+DEFINE l_str1      LIKE type_t.chr80
+DEFINE l_str2      LIKE type_t.chr80
+DEFINE l_ooall004  LIKE ooall_t.ooall004
+DEFINE l_ooefl003  LIKE ooefl_t.ooefl003
+
+  SELECT glaal002 INTO g_glab_m.glabld_desc FROM glaal_t 
+    WHERE glaalent=g_enterprise AND glaal001=g_dlang AND glaalld = g_glab_m.glabld
+   
+   SELECT glaacomp,glaastus,glaa004 INTO g_glab_m.glaacomp,g_glab_m.stus1,g_glab_m.glaa004
+     FROM glaa_t 
+    WHERE glaaent=g_enterprise AND glaald = g_glab_m.glabld
+    
+  SELECT ooall004 INTO l_ooall004 FROM ooall_t 
+   WHERE ooallent = g_enterprise AND ooall001 = '0' 
+     AND ooall002 = g_glab_m.glaa004 AND ooall003 = g_dlang
+  
+  IF NOT cl_null(g_glab_m.glaa004) THEN
+     LET l_str1 = g_glab_m.glaa004,'(',l_ooall004,')'
+  END IF
+  
+  SELECT ooefl003 INTO l_ooefl003 FROM ooefl_t 
+   WHERE ooeflent=g_enterprise  AND ooefl001=g_glab_m.glaacomp AND ooefl002=g_dlang
+  
+  IF NOT cl_null(g_glab_m.glaacomp) THEN 
+     LET l_str2 = g_glab_m.glaacomp,'(',l_ooefl003,')'
+  END IF
+  DISPLAY g_glab_m.glabld,g_glab_m.glabld_desc,g_glab_m.stus1,l_str2,l_str1
+        TO glabld,glabld_desc,stus1,FORMONLY.glaacomp,FORMONLY.glaa004
+  LET g_glab_m.glaa004 = l_str1
+  LET g_glab_m.glaacomp = l_str2
+  DISPLAY BY NAME g_glab_m.glaacomp,g_glab_m.glaa004
+        
+END FUNCTION
+#瀏覽樹
+PRIVATE FUNCTION agli180_b_fill(ps_wc)
+   {<Local define>}
+   DEFINE ps_wc              STRING
+   DEFINE ps_page_action     STRING
+   DEFINE ls_sql             STRING
+   DEFINE li_idx             LIKE type_t.num5
+   DEFINE li_idx2            LIKE type_t.num5
+   DEFINE li_idx3            LIKE type_t.num5
+   {</Local define>}
+   #add-point:browser_fill段define
+   DEFINE l_n               LIKE type_t.num10
+   DEFINE l_glab005_desc    LIKE type_t.chr80
+   DEFINE l_glab006_desc    LIKE type_t.chr80
+   DEFINE l_glab007_desc    LIKE type_t.chr80
+   DEFINE l_glab008_desc    LIKE type_t.chr80
+   DEFINE l_glab009_desc    LIKE type_t.chr80
+   #end add-point
+
+   CALL g_browser.clear() 
+   
+   LET ls_sql = " SELECT UNIQUE glab001 ",
+
+                      " FROM glab_t ",
+                      " WHERE glabent = '" ||g_enterprise|| "' AND glab001 = '11' AND ",ps_wc CLIPPED
+
+   PREPARE browse_pre1 FROM ls_sql
+   DECLARE browse_cur1 CURSOR FOR browse_pre1
+   
+   LET li_idx  = 1
+   FOREACH browse_cur1 INTO g_browser[li_idx].b_glab001
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      LET g_browser[li_idx].b_pid     = 0
+      LET g_browser[li_idx].b_id      = 0, ".", li_idx USING "<<<"
+      LET g_browser[li_idx].b_exp     = TRUE
+      LET g_browser[li_idx].b_expcode = 1
+      LET g_browser[li_idx].b_hasC    = TRUE
+      LET g_browser[li_idx].b_show    = g_browser[li_idx].b_glab001
+      CALL agli180_desc_show(li_idx)
+      LET g_browser[li_idx].b_isExp = TRUE
+      LET li_idx = li_idx  + 1
+      
+      
+      LET li_idx2 = li_idx 
+      LET ls_sql = " SELECT UNIQUE glab001,glab002  ", 
+                   " FROM glab_t ",
+                   " WHERE glabent = '",g_enterprise,"' AND glab001 = '11' ",
+                   "   AND glabld = '",g_glab_m.glabld,"'",
+                   "   AND ", ps_wc
+
+      PREPARE browser_pre1 FROM ls_sql
+      DECLARE browser_cur1 CURSOR FOR browser_pre1
+      FOREACH browser_cur1 INTO g_browser[li_idx2].b_glab001,g_browser[li_idx2].b_glab002
+         LET g_browser[li_idx2].b_pid     = g_browser[li_idx-1].b_id
+         LET g_browser[li_idx2].b_id      = g_browser[li_idx-1].b_id , ".", li_idx2 USING "<<<"
+         LET g_browser[li_idx2].b_exp     = TRUE
+         LET g_browser[li_idx2].b_expcode = 2
+         LET g_browser[li_idx2].b_hasC    = FALSE
+         LET g_browser[li_idx2].b_isExp = TRUE
+         CALL agli180_desc_show(li_idx2)
+         LET li_idx2 = li_idx2 + 1
+         
+         LET ls_sql = " SELECT UNIQUE glab002,glab001,glab003,glabld,glab005,glab006,glab007,glab008,glab009,glab011,'' ",
+                      " FROM glab_t ",
+                      " WHERE glabent = '",g_enterprise,"' AND glab001 = '11'",
+                      "   AND glabld = '",g_glab_m.glabld, "'",
+                      "   AND glab002 = '",g_browser[li_idx2-1].b_glab002,"' AND ", ps_wc, 
+                      " ORDER BY glab002"
+
+         PREPARE browser_pre3 FROM ls_sql
+         DECLARE browser_cur3 CURSOR FOR browser_pre3
+         LET li_idx3 = li_idx2
+         FOREACH browser_cur3 INTO g_browser[li_idx3].b_glab002,g_browser[li_idx3].b_glab001,g_browser[li_idx3].b_glab003,g_browser[li_idx3].b_glabld,g_browser[li_idx3].b_glab005,g_browser[li_idx3].b_glab006,g_browser[li_idx3].b_glab007,g_browser[li_idx3].b_glab008,g_browser[li_idx3].b_glab009,g_browser[li_idx3].b_glab011,g_browser[li_idx3].b_oocqstus
+            LET g_browser[li_idx3].b_pid     = g_browser[li_idx2-1].b_id
+            LET g_browser[li_idx3].b_id      = g_browser[li_idx2-1].b_id , ".", li_idx3 USING "<<<"
+            LET g_browser[li_idx3].b_exp     = FALSE
+            LET g_browser[li_idx3].b_expcode = 3
+            LET g_browser[li_idx3].b_hasC    = FALSE
+            LET g_browser[li_idx3].b_show = g_browser[li_idx3].b_glab003
+            CALL agli180_desc_show(li_idx3)
+            CALL agli180_glacl004(g_browser[li_idx3].b_glab005) RETURNING l_glab005_desc
+            CALL agli180_glacl004(g_browser[li_idx3].b_glab006) RETURNING l_glab006_desc
+            CALL agli180_glacl004(g_browser[li_idx3].b_glab007) RETURNING l_glab007_desc
+            CALL agli180_glacl004(g_browser[li_idx3].b_glab008) RETURNING l_glab008_desc
+            CALL agli180_glacl004(g_browser[li_idx3].b_glab009) RETURNING l_glab009_desc
+            IF NOT cl_null(g_browser[li_idx3].b_glab005) THEN LET g_browser[li_idx3].b_glab005 = g_browser[li_idx3].b_glab005,'(',l_glab005_desc,')' END IF
+            IF NOT cl_null(g_browser[li_idx3].b_glab006) THEN LET g_browser[li_idx3].b_glab006 = g_browser[li_idx3].b_glab006,'(',l_glab006_desc,')' END IF
+            IF NOT cl_null(g_browser[li_idx3].b_glab007) THEN LET g_browser[li_idx3].b_glab007 = g_browser[li_idx3].b_glab007,'(',l_glab007_desc,')' END IF
+            IF NOT cl_null(g_browser[li_idx3].b_glab008) THEN LET g_browser[li_idx3].b_glab008 = g_browser[li_idx3].b_glab008,'(',l_glab008_desc,')' END IF
+            IF NOT cl_null(g_browser[li_idx3].b_glab009) THEN LET g_browser[li_idx3].b_glab009 = g_browser[li_idx3].b_glab009,'(',l_glab009_desc,')' END IF
+            LET li_idx3 = li_idx3 + 1
+         END FOREACH
+         LET li_idx2 = g_browser.getLength()
+         
+      END FOREACH
+      LET li_idx = g_browser.getLength()
+   
+      IF li_idx  > g_max_rec AND g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 9035
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+   END FOREACH  
+#   IF g_browser[g_current_idx].b_expcode <> "3"  OR cl_null(g_browser[g_current_idx].b_expcode) THEN
+#      CALL cl_set_act_visible("modify,open_agli180_01", FALSE)
+#   ELSE
+#      CALL cl_set_act_visible("modify,open_agli180_01", TRUE)
+#   END IF
+   
+   LET g_error_show = 0
+
+   CALL g_browser.deleteElement(g_browser.getLength())
+   
+   LET g_browser_cnt = g_browser.getlength()
+   SELECT COUNT(glab003) INTO l_n FROM glab_t WHERE glabld=g_glab_m.glabld and glab001 = '11' AND glabent=g_enterprise
+   DISPLAY l_n TO FORMONLY.cnt        #總筆數
+
+   FREE browse_pre
+END FUNCTION
+#删除不存在的理由碼資料
+PRIVATE FUNCTION agli180_glab_del_chk()
+DEFINE l_sql         STRING
+DEFINE l_glab_01     RECORD LIKE glab_t.*
+DEFINE l_ac          LIKE type_t.num5
+DEFINE l_oocq001     LIKE oocq_t.oocq001
+DEFINE l_oocq002     LIKE oocq_t.oocq002
+DEFINE l_glaa004     LIKE glaa_t.glaa004
+DEFINE r_success      LIKE type_t.chr1
+
+   LET r_success = 'N'
+   
+   CALL s_transaction_begin()
+   
+   #若不存在SCC中，刪除glab_t里對應資料
+   LET l_sql = "SELECT * FROM glab_t WHERE glabld = '",g_glab_m.glabld,"' AND glab001 = '11' ",
+               " AND glabent = '",g_enterprise,"'",
+               " AND glab002 NOT IN ( SELECT unique oocq001 FROM oocq_t,gzcb_t ",
+               "  WHERE oocq001 = gzcb004 AND gzcb001 = '24' AND oocqent=",g_enterprise,
+               ") "
+   PREPARE glab_pre1 FROM l_sql
+   DECLARE glab_cur1 CURSOR FOR glab_pre1
+   FOREACH glab_cur1 INTO l_glab_01.*
+      
+      DELETE FROM glab_t 
+       WHERE glabent = l_glab_01.glabent AND glabld = l_glab_01.glabld
+         AND glab001 = '11' AND glab002 = l_glab_01.glab002
+         
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "glab_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         CONTINUE FOREACH
+      ELSE 
+         LET r_success = 'Y'
+      END IF
+        
+   END FOREACH
+   
+   #若不存在ACC中，刪除glab_t里對應資料
+   LET l_sql = "SELECT * FROM glab_t WHERE glabld = '",g_glab_m.glabld,"' AND glab001 = '11' ",
+               " AND glab002 ='",g_browser[g_detail_idx].b_glab002,"' AND glabent = '",g_enterprise,"'",
+               " AND glab003 NOT IN ( SELECT unique oocq002 FROM oocq_t,gzcb_t ",
+               "  WHERE oocq001 = gzcb004 AND gzcb001 = '24' AND oocqent=",g_enterprise,
+               "   AND oocq001 = '",g_browser[g_detail_idx].b_glab002,"') "
+   PREPARE glab_pre2 FROM l_sql
+   DECLARE glab_cur2 CURSOR FOR glab_pre2
+   FOREACH glab_cur2 INTO l_glab_01.*
+      
+      DELETE FROM glab_t 
+       WHERE glabent = l_glab_01.glabent AND glabld = l_glab_01.glabld
+         AND glab001 = l_glab_01.glab001 AND glab002 = l_glab_01.glab002
+         AND glab003 = l_glab_01.glab003
+         
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "glab_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         CONTINUE FOREACH
+      ELSE 
+         LET r_success = 'Y'
+      END IF
+        
+   END FOREACH
+   RETURN r_success
+END FUNCTION
+#新增理由碼資料
+PRIVATE FUNCTION agli180_glab_ins_chk()
+DEFINE l_sql         STRING
+DEFINE l_glab_01     RECORD LIKE glab_t.*
+DEFINE l_ac          LIKE type_t.num5
+DEFINE l_oocq001     LIKE oocq_t.oocq001
+DEFINE l_oocq002     LIKE oocq_t.oocq002
+DEFINE l_glaa004     LIKE glaa_t.glaa004
+
+   CALL s_transaction_begin()
+   #若SCC有新增，在glab_t里新增對應理由碼
+   LET l_sql = "SELECT unique oocq001,oocq002 FROM oocq_t,gzcb_t ",
+               " WHERE oocq001 = gzcb004 AND gzcb001 = '24' AND oocqent=",g_enterprise,
+               "   AND oocq001  NOT IN( SELECT glab002 FROM glab_t WHERE glabld = '",g_glab_m.glabld,"'",
+               "   AND glab001 = '11' AND glabent = '",g_enterprise,"')"
+   PREPARE glab_pre3 FROM l_sql
+   DECLARE glab_cur3 CURSOR FOR glab_pre3
+   FOREACH glab_cur3 INTO l_oocq001,l_oocq002
+   
+      SELECT glaa004 INTO l_glaa004 FROM glaa_t WHERE glaaent = g_enterprise AND glaald = g_glab_m.glabld
+
+      INSERT INTO  glab_t(glabent,glabld,glab001,glab002,glab003,glab004) 
+                   VALUES(g_enterprise,g_glab_m.glabld,'11',l_oocq001,l_oocq002,l_glaa004)
+                   
+         
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "glab_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         CONTINUE FOREACH
+      END IF
+        
+   END FOREACH
+   
+   #若ACC有新增，在glab_t里新增對應理由碼
+   LET l_sql = "SELECT unique oocq001,oocq002 FROM oocq_t,gzcb_t ",
+               " WHERE oocq001 = gzcb004 AND gzcb001 = '24' AND oocqent=",g_enterprise,
+               "   AND oocq001 = '",g_browser[g_detail_idx].b_glab002,"'",
+               "   AND oocq002  NOT IN( SELECT glab003 FROM glab_t WHERE glabld = '",g_glab_m.glabld,"'",
+               "   AND glab001 = '11' AND glab002 = '",g_browser[g_detail_idx].b_glab002,"' AND glabent = '",g_enterprise,"')"
+   PREPARE glab_pre4 FROM l_sql
+   DECLARE glab_cur4 CURSOR FOR glab_pre4
+   FOREACH glab_cur4 INTO l_oocq001,l_oocq002
+   
+      SELECT glaa004 INTO l_glaa004 FROM glaa_t WHERE glaaent = g_enterprise AND glaald = g_glab_m.glabld
+
+      INSERT INTO  glab_t(glabent,glabld,glab001,glab002,glab003,glab004) 
+                   VALUES(g_enterprise,g_glab_m.glabld,'11',l_oocq001,l_oocq002,l_glaa004)
+         
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "glab_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         CONTINUE FOREACH
+      END IF
+        
+   END FOREACH
+   CALL s_transaction_end('Y','0')
+END FUNCTION
+#科目編號欄位帶值
+PRIVATE FUNCTION agli180_glacl004(p_glab005)
+DEFINE l_glab004    LIKE glab_t.glab004
+DEFINE r_glacl004   LIKE glacl_t.glacl004
+DEFINE p_glab005    LIKE glab_t.glab005
+
+   SELECT unique glab004 INTO l_glab004 FROM glab_t WHERE glabent = g_enterprise AND glabld = g_glab_m.glabld AND glab001 = '11'
+   SELECT glacl004 INTO r_glacl004 FROM glacl_t 
+    WHERE glaclent = g_enterprise AND glacl001 = l_glab004 
+      AND glacl002 = p_glab005 AND glacl003 = g_dlang
+   RETURN r_glacl004
+END FUNCTION
+#人員權限檢查
+PRIVATE FUNCTION agli180_chk_glabld(p_glabld)
+DEFINE p_glabld      LIKE glab_t.glabld
+DEFINE l_cnt         LIKE type_t.num5
+
+   LET l_cnt = 0
+   LET g_errno = NULL
+   SELECT COUNT(*) INTO l_cnt FROM glba_t WHERE glbaent = g_enterprise AND glbald = p_glabld AND glbastus = 'Y'
+   IF l_cnt = 0 THEN
+      LET l_cnt = 0
+      SELECT COUNT(*) INTO l_cnt FROM glbb_t WHERE glbbent = g_enterprise AND glbbld = p_glabld AND glbbstus = 'Y'
+      IF l_cnt > 0 THEN
+         LET l_cnt = 0
+         SELECT COUNT(*) INTO l_cnt
+         FROM glbb_t,ooag_t
+         WHERE glbbent = g_enterprise AND glbbld = p_glaald AND glbbstus = 'Y'
+           AND ooag003 = glbb001 AND ooagent = glbbent AND ooag001 = g_user
+         IF l_cnt = 0 THEN
+            LET g_errno = "axr-00023" RETURN
+            RETURN
+         END IF
+      END IF
+   ELSE
+      LET l_cnt = 0
+      SELECT COUNT(*) INTO l_cnt FROM glba_t WHERE glbaent = g_enterprise AND glbald = p_glabld AND glbastus = 'Y' AND glba001 = g_user
+      IF l_cnt = 0 THEN
+         LET g_errno = "axr-00022" RETURN
+         RETURN
+      END IF
+   END IF
+END FUNCTION
+#刪除該帳套所設定之理由碼科目資料
+PRIVATE FUNCTION agli180_del()
+   CALL s_transaction_begin()
+   DELETE FROM glab_t WHERE glabent = g_enterprise AND glabld  = g_glab_m.glabld AND glab001 = '11'
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "glab_t"
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      CALL s_transaction_end('N','0')
+   END IF
+
+   CLEAR FORM
+   CALL agli180_ui_browser_refresh()
+   IF g_browser_cnt > 0 THEN
+      CALL agli180_fetch("P")
+   ELSE
+      CALL agli180_browser_fill("F")
+   END IF
+
+   CLOSE agli180_cl
+   CALL s_transaction_end('Y','0')
+
+   #流程通知預埋點-D
+   CALL cl_flow_notify(g_glab_m.glabld,"D")
+   
+END FUNCTION
+#會計科目參照表變更
+PRIVATE FUNCTION agli180_glab004_upd_chk()
+DEFINE l_glaa004    LIKE glaa_t.glaa004 
+DEFINE l_glab004    LIKE glab_t.glab004
+DEFINE l_success    LIKE type_t.chr1
+
+   LET l_success = 'N'
+   SELECT unique glaa004 INTO l_glaa004 FROM glaa_t WHERE glaaent=g_enterprise AND glaald = g_glab_m.glabld
+   SELECT unique glab004 INTO l_glab004 FROM glab_t WHERE glabent=g_enterprise AND glabld = g_glab_m.glabld AND glab001 = '11'
+   IF l_glaa004 != l_glab004 THEN
+      CALL s_transaction_begin()
+      UPDATE glab_t SET glab004 = l_glaa004
+                  WHERE glabent = g_enterprise
+                    AND glabld = g_glab_m.glabld
+                    AND glab001 = '11'
+         
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "glab_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         CALL s_transaction_end('N','0')
+      END IF
+      CALL s_transaction_end('Y','0')
+      LET l_success = 'Y'
+   END IF
+   RETURN l_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION agli180_glab_del_chk1()
+DEFINE l_sql         STRING
+DEFINE l_glab_01     RECORD LIKE glab_t.*
+DEFINE l_ac          LIKE type_t.num5
+DEFINE l_oocq001     LIKE oocq_t.oocq001
+DEFINE l_oocq002     LIKE oocq_t.oocq002
+DEFINE l_glaa004     LIKE glaa_t.glaa004
+DEFINE r_success      LIKE type_t.chr1
+DEFINE l_n           LIKE type_t.num5
+
+   LET r_success = 'N'
+   
+   CALL s_transaction_begin()
+   
+   #若不存在SCC中，刪除glab_t里對應資料
+   LET l_sql = "SELECT * FROM glab_t WHERE glab001 = '11' ",
+               " AND glabent = '",g_enterprise,"'",
+               " AND glab002 NOT IN ( SELECT unique oocq001 FROM oocq_t,gzcb_t ",
+               "  WHERE oocq001 = gzcb004 AND gzcb001 = '24' AND oocqent=",g_enterprise,
+               ") "
+   PREPARE glab_del_pre1 FROM l_sql
+   DECLARE glab_del_cur1 CURSOR FOR glab_del_pre1
+   FOREACH glab_del_cur1 INTO l_glab_01.*
+      SELECT COUNT(*) INTO l_n FROM glab_t 
+       WHERE glabent = l_glab_01.glabent AND glabld = l_glab_01.glabld
+         AND glab001 = '11' AND glab002 = l_glab_01.glab002
+      IF l_n = 0 THEN
+         CONTINUE FOREACH
+      END IF
+      
+      DELETE FROM glab_t 
+       WHERE glabent = l_glab_01.glabent AND glabld = l_glab_01.glabld
+         AND glab001 = '11' AND glab002 = l_glab_01.glab002
+         
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "glab_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         CONTINUE FOREACH
+      ELSE 
+         LET r_success = 'Y'
+      END IF
+        
+   END FOREACH
+   
+   #若不存在ACC中，刪除glab_t里對應資料
+   LET l_sql = "SELECT * FROM glab_t WHERE glab001 = '11' ",
+               " AND glabent = '",g_enterprise,"'",
+               " AND glab003 NOT IN ( SELECT unique oocq002 FROM oocq_t,gzcb_t ",
+               "  WHERE oocq001 = gzcb004 AND gzcb001 = '24' AND oocqent=",g_enterprise,") "
+   PREPARE glab_del_pre2 FROM l_sql
+   DECLARE glab_del_cur2 CURSOR FOR glab_del_pre2
+   FOREACH glab_del_cur2 INTO l_glab_01.*
+      SELECT COUNT(*) INTO l_n FROM glab_t 
+       WHERE glabent = l_glab_01.glabent AND glabld = l_glab_01.glabld
+         AND glab001 = '11' AND glab002 = l_glab_01.glab002
+         AND glab003 = l_glab_01.glab003
+      IF l_n = 0 THEN
+         CONTINUE FOREACH
+      END IF
+      
+      DELETE FROM glab_t 
+       WHERE glabent = l_glab_01.glabent AND glabld = l_glab_01.glabld
+         AND glab001 = l_glab_01.glab001 AND glab002 = l_glab_01.glab002
+         AND glab003 = l_glab_01.glab003
+         
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "glab_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         CONTINUE FOREACH
+      ELSE 
+         LET r_success = 'Y'
+      END IF
+        
+   END FOREACH
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION agli180_glab_ins_chk1()
+DEFINE l_sql         STRING
+DEFINE l_glab_01     RECORD LIKE glab_t.*
+DEFINE l_ac          LIKE type_t.num5
+DEFINE l_oocq001     LIKE oocq_t.oocq001
+DEFINE l_oocq002     LIKE oocq_t.oocq002
+DEFINE l_glaa004     LIKE glaa_t.glaa004
+DEFINE l_glabld      LIKE glab_t.glabld
+DEFINE l_n           LIKE type_t.num5
+
+   CALL s_transaction_begin()
+   #若SCC有新增，在glab_t里新增對應理由碼
+   LET l_sql = "SELECT unique oocq001,oocq002 FROM oocq_t,gzcb_t ",
+               " WHERE oocq001 = gzcb004 AND gzcb001 = '24' AND oocqent=",g_enterprise,
+               "   AND oocq001  NOT IN( SELECT glab002 FROM glab_t WHERE glabld = ? ",
+               "   AND glab001 = '11' AND glabent = '",g_enterprise,"')"
+   PREPARE glab_ins_pre3 FROM l_sql
+   DECLARE glab_ins_cur3 CURSOR FOR glab_ins_pre3
+   
+   #若ACC有新增，在glab_t里新增對應理由碼
+   LET l_sql = "SELECT unique oocq001,oocq002 FROM oocq_t,gzcb_t ",
+               " WHERE oocq001 = gzcb004 AND gzcb001 = '24' AND oocqent=",g_enterprise,
+               "   AND oocq002  NOT IN( SELECT glab003 FROM glab_t WHERE glabld = ?",
+               "   AND glab001 = '11' AND glabent = '",g_enterprise,"')"
+   PREPARE glab_ins_pre4 FROM l_sql
+   DECLARE glab_ins_cur4 CURSOR FOR glab_ins_pre4
+   
+   LET l_sql = "SELECT unique glabld FROM glab_t WHERE glab001 = '11' ",
+               " AND glabent = '",g_enterprise,"'"
+   PREPARE glabld_prep FROM l_sql
+   DECLARE glabld_curs CURSOR FOR glabld_prep
+   FOREACH glabld_curs INTO l_glabld
+   
+      FOREACH glab_ins_cur3 USING l_glabld INTO l_oocq001,l_oocq002
+      
+         SELECT COUNT(*) INTO l_n FROM glab_t 
+          WHERE glabent = g_entprise AND glabld = l_glabld
+            AND glab001 = '11' AND glab002 = l_oocq001
+            AND glab003 = l_oocq002
+         IF l_n > 0 THEN
+            CONTINUE FOREACH
+         END IF
+         SELECT glaa004 INTO l_glaa004 FROM glaa_t WHERE glaaent = g_enterprise AND glaald = l_glabld
+         
+      
+         INSERT INTO  glab_t(glabent,glabld,glab001,glab002,glab003,glab004) 
+                      VALUES(g_enterprise,l_glabld,'11',l_oocq001,l_oocq002,l_glaa004)
+                      
+            
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "glab_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+      
+            CONTINUE FOREACH
+         END IF
+           
+      END FOREACH
+   
+      
+      FOREACH glab_ins_cur4 USING l_glabld INTO l_oocq001,l_oocq002
+         SELECT COUNT(*) INTO l_n FROM glab_t 
+          WHERE glabent = g_entprise AND glabld = l_glabld
+            AND glab001 = '11' AND glab002 = l_oocq001
+            AND glab003 = l_oocq002
+         IF l_n > 0 THEN
+            CONTINUE FOREACH
+         END IF
+         
+         SELECT glaa004 INTO l_glaa004 FROM glaa_t WHERE glaaent = g_enterprise AND glaald = l_glabld
+      
+         INSERT INTO  glab_t(glabent,glabld,glab001,glab002,glab003,glab004) 
+                      VALUES(g_enterprise,l_glabld,'11',l_oocq001,l_oocq002,l_glaa004)
+            
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "glab_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+      
+            CONTINUE FOREACH
+         END IF
+           
+      END FOREACH
+   END FOREACH
+   CALL s_transaction_end('Y','0') 
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

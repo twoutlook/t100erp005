@@ -1,0 +1,4798 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="agcq300.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0009(2016-09-12 16:44:46), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000107
+#+ Filename...: agcq300
+#+ Description: 券資料查詢作業
+#+ Creator....: 02482(2014-04-02 13:43:15)
+#+ Modifier...: 06814 -SD/PR-
+
+{</section>}
+
+{<section id="agcq300.global" >}
+#應用 i02 樣板自動產生(Version:38)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS   #(ver:36) add
+   DEFINE mc_data_owner_check LIKE type_t.num5   #(ver:36) add
+END GLOBALS   #(ver:36) add
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_gcao_d RECORD
+       gcao001 LIKE gcao_t.gcao001, 
+   gcao002 LIKE gcao_t.gcao002, 
+   gcao002_desc LIKE type_t.chr500, 
+   gcao003 LIKE gcao_t.gcao003, 
+   gcao003_desc LIKE type_t.chr500, 
+   gcao037 LIKE gcao_t.gcao037, 
+   b_gcao037_desc LIKE type_t.chr500, 
+   gcao004 LIKE gcao_t.gcao004, 
+   gcao005 LIKE gcao_t.gcao005, 
+   l_docno LIKE type_t.chr20, 
+   gcao006 LIKE gcao_t.gcao006, 
+   gcao008 LIKE gcao_t.gcao008, 
+   gcao009 LIKE gcao_t.gcao009, 
+   gcao034 LIKE gcao_t.gcao034, 
+   gcao034_desc LIKE type_t.chr500, 
+   gcao038 LIKE gcao_t.gcao038
+       END RECORD
+PRIVATE TYPE type_g_gcao2_d RECORD
+       gcao001 LIKE gcao_t.gcao001, 
+   gcao005b LIKE type_t.chr1, 
+   gcao011 LIKE gcao_t.gcao011, 
+   gcao011_desc LIKE type_t.chr500, 
+   gcao012 LIKE gcao_t.gcao012, 
+   gcao013 LIKE gcao_t.gcao013, 
+   gcao013_desc LIKE type_t.chr500, 
+   gcao039 LIKE gcao_t.gcao039, 
+   gcao014 LIKE gcao_t.gcao014, 
+   gcao014_desc LIKE type_t.chr500, 
+   gcao015 LIKE gcao_t.gcao015, 
+   gcao016 LIKE gcao_t.gcao016, 
+   gcao016_desc LIKE type_t.chr500, 
+   gcao040 LIKE gcao_t.gcao040, 
+   gcao017 LIKE gcao_t.gcao017, 
+   gcao017_desc LIKE type_t.chr500, 
+   gcao018 LIKE gcao_t.gcao018, 
+   gcao019 LIKE gcao_t.gcao019, 
+   gcao019_desc LIKE type_t.chr500, 
+   gcao041 LIKE gcao_t.gcao041, 
+   gcao020 LIKE gcao_t.gcao020, 
+   gcao020_desc LIKE type_t.chr500, 
+   gcao021 LIKE gcao_t.gcao021, 
+   gcao022 LIKE gcao_t.gcao022, 
+   gcao022_desc LIKE type_t.chr500, 
+   gcao042 LIKE gcao_t.gcao042, 
+   gcao023 LIKE gcao_t.gcao023, 
+   gcao023_desc LIKE type_t.chr500, 
+   gcao024 LIKE gcao_t.gcao024, 
+   gcao025 LIKE gcao_t.gcao025, 
+   gcao025_desc LIKE type_t.chr500, 
+   gcao043 LIKE gcao_t.gcao043, 
+   gcao026 LIKE gcao_t.gcao026, 
+   gcao026_desc LIKE type_t.chr500, 
+   gcao027 LIKE gcao_t.gcao027, 
+   gcao028 LIKE gcao_t.gcao028, 
+   gcao028_desc LIKE type_t.chr500, 
+   gcao044 LIKE gcao_t.gcao044, 
+   gcao029 LIKE gcao_t.gcao029, 
+   gcao029_desc LIKE type_t.chr500, 
+   gcao030 LIKE gcao_t.gcao030, 
+   gcao031 LIKE gcao_t.gcao031, 
+   gcao031_desc LIKE type_t.chr500, 
+   gcao045 LIKE gcao_t.gcao045
+       END RECORD
+ 
+ 
+ 
+#add-point:自定義模組變數(Module Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_gcao_d          DYNAMIC ARRAY OF type_g_gcao_d #單身變數
+DEFINE g_gcao_d_t        type_g_gcao_d                  #單身備份
+DEFINE g_gcao_d_o        type_g_gcao_d                  #單身備份
+DEFINE g_gcao_d_mask_o   DYNAMIC ARRAY OF type_g_gcao_d #單身變數
+DEFINE g_gcao_d_mask_n   DYNAMIC ARRAY OF type_g_gcao_d #單身變數
+DEFINE g_gcao2_d   DYNAMIC ARRAY OF type_g_gcao2_d
+DEFINE g_gcao2_d_t type_g_gcao2_d
+DEFINE g_gcao2_d_o type_g_gcao2_d
+DEFINE g_gcao2_d_mask_o DYNAMIC ARRAY OF type_g_gcao2_d
+DEFINE g_gcao2_d_mask_n DYNAMIC ARRAY OF type_g_gcao2_d
+ 
+      
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_temp_idx           LIKE type_t.num10             #單身 所在筆數(暫存用)
+DEFINE g_detail_idx         LIKE type_t.num10             #單身 所在筆數(所有資料)
+DEFINE g_detail_cnt         LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_chk                BOOLEAN
+DEFINE g_aw                 STRING                        #確定當下點擊的單身
+DEFINE g_log1               STRING                        #log用
+DEFINE g_log2               STRING                        #log用
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="agcq300.main" >}
+#應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   {<point name="main.define_customerization" edit="c" mark="Y"/>}
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   {<point name="main.define"/>}
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("agc","")
+ 
+   #add-point:作業初始化 name="main.init"
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   {<point name="main.define_sql" />}
+   #end add-point
+ 
+ 
+   #add-point:main段define_sql name="main.body.define_sql"
+   {<point name="main.body.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = "SELECT gcao001,gcao002,gcao003,gcao037,gcao004,gcao005,gcao006,gcao008,gcao009, 
+       gcao034,gcao038,gcao001,gcao011,gcao012,gcao013,gcao039,gcao014,gcao015,gcao016,gcao040,gcao017, 
+       gcao018,gcao019,gcao041,gcao020,gcao021,gcao022,gcao042,gcao023,gcao024,gcao025,gcao043,gcao026, 
+       gcao027,gcao028,gcao044,gcao029,gcao030,gcao031,gcao045 FROM gcao_t WHERE gcaoent=? AND gcao001=?  
+       FOR UPDATE"
+   #add-point:main段define_sql name="main.body.after_define_sql"
+   {<point name="main.body.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE agcq300_bcl CURSOR FROM g_forupd_sql
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_agcq300 WITH FORM cl_ap_formpath("agc",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL agcq300_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL agcq300_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_agcq300
+      
+   END IF 
+   
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+
+{</section>}
+
+{<section id="agcq300.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION agcq300_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   {<point name="init.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   {<point name="init.define"/>}
+   #end add-point   
+   
+   #add-point:Function前置處理  name="init.pre_function"
+   {<point name="init.pre_function"/>}
+   #end add-point
+   
+   
+      CALL cl_set_combo_scc('gcao005','6551') 
+   CALL cl_set_combo_scc('gcao006','6559') 
+ 
+   LET g_error_show = 1
+   
+   #add-point:畫面資料初始化 name="init.init"
+   {<point name="init.init" />}
+   #end add-point
+   
+   CALL agcq300_default_search()
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="agcq300.ui_dialog" >}
+#+ 功能選單 
+PRIVATE FUNCTION agcq300_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   {<point name="ui_dialog.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE la_param  RECORD #串查用
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   DEFINE l_cmd_token           base.StringTokenizer   #報表作業cmdrun使用 
+   DEFINE l_cmd_next            STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_cnt             LIKE type_t.num5       #報表作業cmdrun使用
+   DEFINE l_cmd_prog_arg        STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_arg             STRING                 #報表作業cmdrun使用
+   #add-point:ui_dialog段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   {<point name="ui_dialog.define"/>}
+   #end add-point 
+   
+   #add-point:Function前置處理  name="ui_dialog.pre_function"
+   {<point name="ui_dialog.pre_function"/>}
+   #end add-point
+   
+   LET g_action_choice = " "  
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()      
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   
+   LET g_detail_idx = 1
+   
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_gcao_d.clear()
+         CALL g_gcao2_d.clear()
+ 
+         LET g_wc2 = ' 1=2'
+         LET g_action_choice = ""
+         CALL agcq300_init()
+      END IF
+   
+      CALL agcq300_b_fill(g_wc2)
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_gcao_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               #add-point:ui_dialog段before display  name="ui_dialog.body.before_display"
+               {<point name="ui_dialog.body.before_display" mark="Y"/>}
+               #end add-point
+               #讓各頁籤能夠同步指到特定資料
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               #add-point:ui_dialog段before display2 name="ui_dialog.body.before_display2"
+               {<point name="ui_dialog.body.before_display2"/>}
+               #end add-point
+               
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               LET g_temp_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont() 
+               #顯示followup圖示
+               #應用 a48 樣板自動產生(Version:3)
+   CALL agcq300_set_pk_array()
+   #add-point:ON ACTION agendum name="show.follow_pic"
+   {<point name="show.follow_pic"/>}
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+ 
+               #add-point:display array-before row name="ui_dialog.before_row"
+               {<point name="ui_dialog.before_row"/>}
+               #end add-point
+         
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY
+      
+         DISPLAY ARRAY g_gcao2_d TO s_detail2.*
+            ATTRIBUTES(COUNT=g_detail_cnt)  
+         
+            BEFORE DISPLAY 
+               #add-point:ui_dialog段before display  name="ui_dialog.body2.before_display"
+               {<point name="ui_dialog.body2.before_display" mark="Y"/>}
+               #end add-point
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               #add-point:ui_dialog段before display2 name="ui_dialog.body2.before_display2"
+               {<point name="ui_dialog.body2.before_display2"/>}
+               #end add-point
+         
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac = g_detail_idx
+               LET g_temp_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont() 
+               #顯示followup圖示
+               #應用 a48 樣板自動產生(Version:3)
+   CALL agcq300_set_pk_array()
+   #add-point:ON ACTION agendum name="show.follow_pic"
+   {<point name="show.follow_pic"/>}
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+ 
+               #add-point:display array-before row name="ui_dialog.before_row2"
+               {<point name="ui_dialog.before_row2"/>}
+               #end add-point
+               
+            #自訂ACTION(detail_show,page_2)
+            
+               
+         END DISPLAY
+ 
+      
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+    
+         BEFORE DIALOG
+            IF g_temp_idx > 0 THEN
+               LET l_ac = g_temp_idx
+               CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+               LET g_temp_idx = 1
+            END IF
+            LET g_curr_diag = ui.DIALOG.getCurrent()         
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            CALL DIALOG.setSelectionMode("s_detail2", 1)
+ 
+            #add-point:ui_dialog段before name="ui_dialog.b_dialog"
+            {<point name="ui_dialog.b_dialog"/>}
+            #end add-point
+            NEXT FIELD CURRENT
+      
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               {<point name="menu.output" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               {<point name="menu.quickprint" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL agcq300_query()
+               #add-point:ON ACTION query name="menu.query"
+               {<point name="menu.query" mark="Y"/>}
+               #END add-point
+               #應用 a59 樣板自動產生(Version:3)  
+               CALL g_curr_diag.setCurrentRow("s_detail1",1)
+               CALL g_curr_diag.setCurrentRow("s_detail2",1)
+ 
+ 
+ 
+ 
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo name="menu.datainfo"
+               {<point name="menu.datainfo" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+      
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_gcao_d)
+               LET g_export_id[1]   = "s_detail1"
+               LET g_export_node[2] = base.typeInfo.create(g_gcao2_d)
+               LET g_export_id[2]   = "s_detail2"
+ 
+               #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+               {<point name="menu.exporttoexcel" />}
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+            
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice="exit"
+            CANCEL DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            CANCEL DIALOG
+            
+         
+         
+         #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL agcq300_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.dialog.related_document"
+               {<point name="ui_dialog.dialog.related_document"/>}
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL agcq300_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.dialog.agendum"
+            {<point name="ui_dialog.dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL agcq300_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.dialog.followup"
+            {<point name="ui_dialog.dialog.followup"/>}
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+ 
+         
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         {<point name="ui_dialog.b_exit"/>}
+         #end add-point
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="agcq300.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION agcq300_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   {<point name="query.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   {<point name="query.define"/>}
+   #end add-point 
+   
+   #add-point:Function前置處理  name="query.pre_function"
+   {<point name="query.pre_function"/>}
+   #end add-point
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_gcao_d.clear()
+   
+   LET g_qryparam.state = "c"
+   
+   #wc備份
+   LET ls_wc = g_wc2
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      CONSTRUCT g_wc2 ON gcao001,gcao002,gcao003,gcao037,gcao004,gcao005,l_docno,gcao006,gcao008,gcao009, 
+          gcao034,gcao038,gcao011,gcao012,gcao013,gcao039,gcao014,gcao015,gcao016,gcao040,gcao017,gcao018, 
+          gcao019,gcao041,gcao020,gcao021,gcao022,gcao042,gcao023,gcao024,gcao025,gcao043,gcao026,gcao027, 
+          gcao028,gcao044,gcao029,gcao030,gcao031,gcao045 
+ 
+         FROM s_detail1[1].gcao001,s_detail1[1].gcao002,s_detail1[1].gcao003,s_detail1[1].gcao037,s_detail1[1].gcao004, 
+             s_detail1[1].gcao005,s_detail1[1].l_docno,s_detail1[1].gcao006,s_detail1[1].gcao008,s_detail1[1].gcao009, 
+             s_detail1[1].gcao034,s_detail1[1].gcao038,s_detail2[1].gcao011,s_detail2[1].gcao012,s_detail2[1].gcao013, 
+             s_detail2[1].gcao039,s_detail2[1].gcao014,s_detail2[1].gcao015,s_detail2[1].gcao016,s_detail2[1].gcao040, 
+             s_detail2[1].gcao017,s_detail2[1].gcao018,s_detail2[1].gcao019,s_detail2[1].gcao041,s_detail2[1].gcao020, 
+             s_detail2[1].gcao021,s_detail2[1].gcao022,s_detail2[1].gcao042,s_detail2[1].gcao023,s_detail2[1].gcao024, 
+             s_detail2[1].gcao025,s_detail2[1].gcao043,s_detail2[1].gcao026,s_detail2[1].gcao027,s_detail2[1].gcao028, 
+             s_detail2[1].gcao044,s_detail2[1].gcao029,s_detail2[1].gcao030,s_detail2[1].gcao031,s_detail2[1].gcao045  
+
+      
+         
+      
+                  #Ctrlp:construct.c.page1.gcao001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao001
+            #add-point:ON ACTION controlp INFIELD gcao001 name="construct.c.page1.gcao001"
+            {<point name="construct.c.page1.gcao001" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao001
+            #add-point:BEFORE FIELD gcao001 name="query.b.page1.gcao001"
+            {<point name="query.b.page1.gcao001" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao001
+            
+            #add-point:AFTER FIELD gcao001 name="query.a.page1.gcao001"
+            {<point name="query.a.page1.gcao001" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.gcao002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao002
+            #add-point:ON ACTION controlp INFIELD gcao002 name="construct.c.page1.gcao002"
+            {<point name="construct.c.page1.gcao002" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao002
+            #add-point:BEFORE FIELD gcao002 name="query.b.page1.gcao002"
+            {<point name="query.b.page1.gcao002" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao002
+            
+            #add-point:AFTER FIELD gcao002 name="query.a.page1.gcao002"
+            {<point name="query.a.page1.gcao002" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.gcao003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao003
+            #add-point:ON ACTION controlp INFIELD gcao003 name="construct.c.page1.gcao003"
+            {<point name="construct.c.page1.gcao003" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao003
+            #add-point:BEFORE FIELD gcao003 name="query.b.page1.gcao003"
+            {<point name="query.b.page1.gcao003" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao003
+            
+            #add-point:AFTER FIELD gcao003 name="query.a.page1.gcao003"
+            {<point name="query.a.page1.gcao003" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.gcao037
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao037
+            #add-point:ON ACTION controlp INFIELD gcao037 name="construct.c.page1.gcao037"
+            {<point name="construct.c.page1.gcao037" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao037
+            #add-point:BEFORE FIELD gcao037 name="query.b.page1.gcao037"
+            {<point name="query.b.page1.gcao037" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao037
+            
+            #add-point:AFTER FIELD gcao037 name="query.a.page1.gcao037"
+            {<point name="query.a.page1.gcao037" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao004
+            #add-point:BEFORE FIELD gcao004 name="query.b.page1.gcao004"
+            {<point name="query.b.page1.gcao004" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao004
+            
+            #add-point:AFTER FIELD gcao004 name="query.a.page1.gcao004"
+            {<point name="query.a.page1.gcao004" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.gcao004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao004
+            #add-point:ON ACTION controlp INFIELD gcao004 name="query.c.page1.gcao004"
+            {<point name="query.c.page1.gcao004" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao005
+            #add-point:BEFORE FIELD gcao005 name="query.b.page1.gcao005"
+            {<point name="query.b.page1.gcao005" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao005
+            
+            #add-point:AFTER FIELD gcao005 name="query.a.page1.gcao005"
+            {<point name="query.a.page1.gcao005" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.gcao005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao005
+            #add-point:ON ACTION controlp INFIELD gcao005 name="query.c.page1.gcao005"
+            {<point name="query.c.page1.gcao005" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_docno
+            #add-point:BEFORE FIELD l_docno name="query.b.page1.l_docno"
+            {<point name="query.b.page1.l_docno" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_docno
+            
+            #add-point:AFTER FIELD l_docno name="query.a.page1.l_docno"
+            {<point name="query.a.page1.l_docno" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.l_docno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_docno
+            #add-point:ON ACTION controlp INFIELD l_docno name="query.c.page1.l_docno"
+            {<point name="query.c.page1.l_docno" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao006
+            #add-point:BEFORE FIELD gcao006 name="query.b.page1.gcao006"
+            {<point name="query.b.page1.gcao006" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao006
+            
+            #add-point:AFTER FIELD gcao006 name="query.a.page1.gcao006"
+            {<point name="query.a.page1.gcao006" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.gcao006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao006
+            #add-point:ON ACTION controlp INFIELD gcao006 name="query.c.page1.gcao006"
+            {<point name="query.c.page1.gcao006" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao008
+            #add-point:BEFORE FIELD gcao008 name="query.b.page1.gcao008"
+            {<point name="query.b.page1.gcao008" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao008
+            
+            #add-point:AFTER FIELD gcao008 name="query.a.page1.gcao008"
+            {<point name="query.a.page1.gcao008" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.gcao008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao008
+            #add-point:ON ACTION controlp INFIELD gcao008 name="query.c.page1.gcao008"
+            {<point name="query.c.page1.gcao008" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao009
+            #add-point:BEFORE FIELD gcao009 name="query.b.page1.gcao009"
+            {<point name="query.b.page1.gcao009" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao009
+            
+            #add-point:AFTER FIELD gcao009 name="query.a.page1.gcao009"
+            {<point name="query.a.page1.gcao009" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.gcao009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao009
+            #add-point:ON ACTION controlp INFIELD gcao009 name="query.c.page1.gcao009"
+            {<point name="query.c.page1.gcao009" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.gcao034
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao034
+            #add-point:ON ACTION controlp INFIELD gcao034 name="construct.c.page1.gcao034"
+            {<point name="construct.c.page1.gcao034" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao034
+            #add-point:BEFORE FIELD gcao034 name="query.b.page1.gcao034"
+            {<point name="query.b.page1.gcao034" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao034
+            
+            #add-point:AFTER FIELD gcao034 name="query.a.page1.gcao034"
+            {<point name="query.a.page1.gcao034" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao038
+            #add-point:BEFORE FIELD gcao038 name="query.b.page1.gcao038"
+            {<point name="query.b.page1.gcao038" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao038
+            
+            #add-point:AFTER FIELD gcao038 name="query.a.page1.gcao038"
+            {<point name="query.a.page1.gcao038" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.gcao038
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao038
+            #add-point:ON ACTION controlp INFIELD gcao038 name="query.c.page1.gcao038"
+            {<point name="query.c.page1.gcao038" />}
+            #END add-point
+ 
+ 
+  
+         
+                  #Ctrlp:construct.c.page2.gcao011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao011
+            #add-point:ON ACTION controlp INFIELD gcao011 name="construct.c.page2.gcao011"
+            {<point name="construct.c.page2.gcao011" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao011
+            #add-point:BEFORE FIELD gcao011 name="query.b.page2.gcao011"
+            {<point name="query.b.page2.gcao011" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao011
+            
+            #add-point:AFTER FIELD gcao011 name="query.a.page2.gcao011"
+            {<point name="query.a.page2.gcao011" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao012
+            #add-point:BEFORE FIELD gcao012 name="query.b.page2.gcao012"
+            {<point name="query.b.page2.gcao012" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao012
+            
+            #add-point:AFTER FIELD gcao012 name="query.a.page2.gcao012"
+            {<point name="query.a.page2.gcao012" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page2.gcao012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao012
+            #add-point:ON ACTION controlp INFIELD gcao012 name="query.c.page2.gcao012"
+            {<point name="query.c.page2.gcao012" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page2.gcao013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao013
+            #add-point:ON ACTION controlp INFIELD gcao013 name="construct.c.page2.gcao013"
+            {<point name="construct.c.page2.gcao013" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao013
+            #add-point:BEFORE FIELD gcao013 name="query.b.page2.gcao013"
+            {<point name="query.b.page2.gcao013" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao013
+            
+            #add-point:AFTER FIELD gcao013 name="query.a.page2.gcao013"
+            {<point name="query.a.page2.gcao013" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.gcao039
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao039
+            #add-point:ON ACTION controlp INFIELD gcao039 name="construct.c.page2.gcao039"
+            {<point name="construct.c.page2.gcao039" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao039
+            #add-point:BEFORE FIELD gcao039 name="query.b.page2.gcao039"
+            {<point name="query.b.page2.gcao039" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao039
+            
+            #add-point:AFTER FIELD gcao039 name="query.a.page2.gcao039"
+            {<point name="query.a.page2.gcao039" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.gcao014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao014
+            #add-point:ON ACTION controlp INFIELD gcao014 name="construct.c.page2.gcao014"
+            {<point name="construct.c.page2.gcao014" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao014
+            #add-point:BEFORE FIELD gcao014 name="query.b.page2.gcao014"
+            {<point name="query.b.page2.gcao014" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao014
+            
+            #add-point:AFTER FIELD gcao014 name="query.a.page2.gcao014"
+            {<point name="query.a.page2.gcao014" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao015
+            #add-point:BEFORE FIELD gcao015 name="query.b.page2.gcao015"
+            {<point name="query.b.page2.gcao015" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao015
+            
+            #add-point:AFTER FIELD gcao015 name="query.a.page2.gcao015"
+            {<point name="query.a.page2.gcao015" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page2.gcao015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao015
+            #add-point:ON ACTION controlp INFIELD gcao015 name="query.c.page2.gcao015"
+            {<point name="query.c.page2.gcao015" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page2.gcao016
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao016
+            #add-point:ON ACTION controlp INFIELD gcao016 name="construct.c.page2.gcao016"
+            {<point name="construct.c.page2.gcao016" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao016
+            #add-point:BEFORE FIELD gcao016 name="query.b.page2.gcao016"
+            {<point name="query.b.page2.gcao016" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao016
+            
+            #add-point:AFTER FIELD gcao016 name="query.a.page2.gcao016"
+            {<point name="query.a.page2.gcao016" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.gcao040
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao040
+            #add-point:ON ACTION controlp INFIELD gcao040 name="construct.c.page2.gcao040"
+            {<point name="construct.c.page2.gcao040" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao040
+            #add-point:BEFORE FIELD gcao040 name="query.b.page2.gcao040"
+            {<point name="query.b.page2.gcao040" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao040
+            
+            #add-point:AFTER FIELD gcao040 name="query.a.page2.gcao040"
+            {<point name="query.a.page2.gcao040" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.gcao017
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao017
+            #add-point:ON ACTION controlp INFIELD gcao017 name="construct.c.page2.gcao017"
+            {<point name="construct.c.page2.gcao017" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao017
+            #add-point:BEFORE FIELD gcao017 name="query.b.page2.gcao017"
+            {<point name="query.b.page2.gcao017" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao017
+            
+            #add-point:AFTER FIELD gcao017 name="query.a.page2.gcao017"
+            {<point name="query.a.page2.gcao017" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao018
+            #add-point:BEFORE FIELD gcao018 name="query.b.page2.gcao018"
+            {<point name="query.b.page2.gcao018" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao018
+            
+            #add-point:AFTER FIELD gcao018 name="query.a.page2.gcao018"
+            {<point name="query.a.page2.gcao018" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page2.gcao018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao018
+            #add-point:ON ACTION controlp INFIELD gcao018 name="query.c.page2.gcao018"
+            {<point name="query.c.page2.gcao018" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page2.gcao019
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao019
+            #add-point:ON ACTION controlp INFIELD gcao019 name="construct.c.page2.gcao019"
+            {<point name="construct.c.page2.gcao019" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao019
+            #add-point:BEFORE FIELD gcao019 name="query.b.page2.gcao019"
+            {<point name="query.b.page2.gcao019" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao019
+            
+            #add-point:AFTER FIELD gcao019 name="query.a.page2.gcao019"
+            {<point name="query.a.page2.gcao019" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.gcao041
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao041
+            #add-point:ON ACTION controlp INFIELD gcao041 name="construct.c.page2.gcao041"
+            {<point name="construct.c.page2.gcao041" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao041
+            #add-point:BEFORE FIELD gcao041 name="query.b.page2.gcao041"
+            {<point name="query.b.page2.gcao041" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao041
+            
+            #add-point:AFTER FIELD gcao041 name="query.a.page2.gcao041"
+            {<point name="query.a.page2.gcao041" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.gcao020
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao020
+            #add-point:ON ACTION controlp INFIELD gcao020 name="construct.c.page2.gcao020"
+            {<point name="construct.c.page2.gcao020" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao020
+            #add-point:BEFORE FIELD gcao020 name="query.b.page2.gcao020"
+            {<point name="query.b.page2.gcao020" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao020
+            
+            #add-point:AFTER FIELD gcao020 name="query.a.page2.gcao020"
+            {<point name="query.a.page2.gcao020" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao021
+            #add-point:BEFORE FIELD gcao021 name="query.b.page2.gcao021"
+            {<point name="query.b.page2.gcao021" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao021
+            
+            #add-point:AFTER FIELD gcao021 name="query.a.page2.gcao021"
+            {<point name="query.a.page2.gcao021" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page2.gcao021
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao021
+            #add-point:ON ACTION controlp INFIELD gcao021 name="query.c.page2.gcao021"
+            {<point name="query.c.page2.gcao021" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page2.gcao022
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao022
+            #add-point:ON ACTION controlp INFIELD gcao022 name="construct.c.page2.gcao022"
+            {<point name="construct.c.page2.gcao022" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao022
+            #add-point:BEFORE FIELD gcao022 name="query.b.page2.gcao022"
+            {<point name="query.b.page2.gcao022" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao022
+            
+            #add-point:AFTER FIELD gcao022 name="query.a.page2.gcao022"
+            {<point name="query.a.page2.gcao022" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.gcao042
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao042
+            #add-point:ON ACTION controlp INFIELD gcao042 name="construct.c.page2.gcao042"
+            {<point name="construct.c.page2.gcao042" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao042
+            #add-point:BEFORE FIELD gcao042 name="query.b.page2.gcao042"
+            {<point name="query.b.page2.gcao042" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao042
+            
+            #add-point:AFTER FIELD gcao042 name="query.a.page2.gcao042"
+            {<point name="query.a.page2.gcao042" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.gcao023
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao023
+            #add-point:ON ACTION controlp INFIELD gcao023 name="construct.c.page2.gcao023"
+            {<point name="construct.c.page2.gcao023" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao023
+            #add-point:BEFORE FIELD gcao023 name="query.b.page2.gcao023"
+            {<point name="query.b.page2.gcao023" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao023
+            
+            #add-point:AFTER FIELD gcao023 name="query.a.page2.gcao023"
+            {<point name="query.a.page2.gcao023" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao024
+            #add-point:BEFORE FIELD gcao024 name="query.b.page2.gcao024"
+            {<point name="query.b.page2.gcao024" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao024
+            
+            #add-point:AFTER FIELD gcao024 name="query.a.page2.gcao024"
+            {<point name="query.a.page2.gcao024" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page2.gcao024
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao024
+            #add-point:ON ACTION controlp INFIELD gcao024 name="query.c.page2.gcao024"
+            {<point name="query.c.page2.gcao024" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page2.gcao025
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao025
+            #add-point:ON ACTION controlp INFIELD gcao025 name="construct.c.page2.gcao025"
+            {<point name="construct.c.page2.gcao025" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao025
+            #add-point:BEFORE FIELD gcao025 name="query.b.page2.gcao025"
+            {<point name="query.b.page2.gcao025" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao025
+            
+            #add-point:AFTER FIELD gcao025 name="query.a.page2.gcao025"
+            {<point name="query.a.page2.gcao025" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.gcao043
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao043
+            #add-point:ON ACTION controlp INFIELD gcao043 name="construct.c.page2.gcao043"
+            {<point name="construct.c.page2.gcao043" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao043
+            #add-point:BEFORE FIELD gcao043 name="query.b.page2.gcao043"
+            {<point name="query.b.page2.gcao043" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao043
+            
+            #add-point:AFTER FIELD gcao043 name="query.a.page2.gcao043"
+            {<point name="query.a.page2.gcao043" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.gcao026
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao026
+            #add-point:ON ACTION controlp INFIELD gcao026 name="construct.c.page2.gcao026"
+            {<point name="construct.c.page2.gcao026" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao026
+            #add-point:BEFORE FIELD gcao026 name="query.b.page2.gcao026"
+            {<point name="query.b.page2.gcao026" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao026
+            
+            #add-point:AFTER FIELD gcao026 name="query.a.page2.gcao026"
+            {<point name="query.a.page2.gcao026" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao027
+            #add-point:BEFORE FIELD gcao027 name="query.b.page2.gcao027"
+            {<point name="query.b.page2.gcao027" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao027
+            
+            #add-point:AFTER FIELD gcao027 name="query.a.page2.gcao027"
+            {<point name="query.a.page2.gcao027" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page2.gcao027
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao027
+            #add-point:ON ACTION controlp INFIELD gcao027 name="query.c.page2.gcao027"
+            {<point name="query.c.page2.gcao027" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page2.gcao028
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao028
+            #add-point:ON ACTION controlp INFIELD gcao028 name="construct.c.page2.gcao028"
+            {<point name="construct.c.page2.gcao028" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao028
+            #add-point:BEFORE FIELD gcao028 name="query.b.page2.gcao028"
+            {<point name="query.b.page2.gcao028" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao028
+            
+            #add-point:AFTER FIELD gcao028 name="query.a.page2.gcao028"
+            {<point name="query.a.page2.gcao028" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.gcao044
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao044
+            #add-point:ON ACTION controlp INFIELD gcao044 name="construct.c.page2.gcao044"
+            {<point name="construct.c.page2.gcao044" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao044
+            #add-point:BEFORE FIELD gcao044 name="query.b.page2.gcao044"
+            {<point name="query.b.page2.gcao044" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao044
+            
+            #add-point:AFTER FIELD gcao044 name="query.a.page2.gcao044"
+            {<point name="query.a.page2.gcao044" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.gcao029
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao029
+            #add-point:ON ACTION controlp INFIELD gcao029 name="construct.c.page2.gcao029"
+            {<point name="construct.c.page2.gcao029" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao029
+            #add-point:BEFORE FIELD gcao029 name="query.b.page2.gcao029"
+            {<point name="query.b.page2.gcao029" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao029
+            
+            #add-point:AFTER FIELD gcao029 name="query.a.page2.gcao029"
+            {<point name="query.a.page2.gcao029" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao030
+            #add-point:BEFORE FIELD gcao030 name="query.b.page2.gcao030"
+            {<point name="query.b.page2.gcao030" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao030
+            
+            #add-point:AFTER FIELD gcao030 name="query.a.page2.gcao030"
+            {<point name="query.a.page2.gcao030" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page2.gcao030
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao030
+            #add-point:ON ACTION controlp INFIELD gcao030 name="query.c.page2.gcao030"
+            {<point name="query.c.page2.gcao030" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page2.gcao031
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao031
+            #add-point:ON ACTION controlp INFIELD gcao031 name="construct.c.page2.gcao031"
+            {<point name="construct.c.page2.gcao031" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao031
+            #add-point:BEFORE FIELD gcao031 name="query.b.page2.gcao031"
+            {<point name="query.b.page2.gcao031" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao031
+            
+            #add-point:AFTER FIELD gcao031 name="query.a.page2.gcao031"
+            {<point name="query.a.page2.gcao031" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.gcao045
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao045
+            #add-point:ON ACTION controlp INFIELD gcao045 name="construct.c.page2.gcao045"
+            {<point name="construct.c.page2.gcao045" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao045
+            #add-point:BEFORE FIELD gcao045 name="query.b.page2.gcao045"
+            {<point name="query.b.page2.gcao045" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao045
+            
+            #add-point:AFTER FIELD gcao045 name="query.a.page2.gcao045"
+            {<point name="query.a.page2.gcao045" />}
+            #END add-point
+            
+ 
+ 
+  
+ 
+      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct name="cs.before_construct"
+            {<point name="cs.before_construct"/>}
+            #end add-point 
+      
+      END CONSTRUCT
+  
+      #add-point:query段more_construct name="query.more_construct"
+      {<point name="query.more_construct"/>}
+      #end add-point 
+  
+      BEFORE DIALOG 
+         CALL cl_qbe_init()
+         #add-point:query段before_dialog name="query.before_dialog"
+         {<point name="query.before_dialog"/>}
+         #end add-point 
+      
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+      
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         CANCEL DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+      CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:query段after_construct name="query.after_construct"
+   {<point name="query.after_construct"/>}
+   #end add-point
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      #LET g_wc2 = ls_wc
+      LET g_wc2 = " 1=2"
+      RETURN
+   ELSE
+      LET g_error_show = 1
+      LET g_detail_idx = 1
+   END IF
+    
+   CALL agcq300_b_fill(g_wc2)
+ 
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   END IF
+   
+   LET INT_FLAG = FALSE
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="agcq300.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION agcq300_insert()
+   #add-point:insert段define(客製用) name="insert.define_customerization"
+   {<point name="insert.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:delete段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   {<point name="insert.define"/>}
+   #end add-point                
+   
+   #add-point:Function前置處理  name="insert.pre_function"
+   {<point name="insert.pre_function"/>}
+   #end add-point
+   
+   #add-point:單身新增前 name="insert.b_insert"
+   {<point name="insert.b_insert"/>}
+   #end add-point
+   
+   LET g_insert = 'Y'
+   CALL agcq300_modify()
+            
+   #add-point:單身新增後 name="insert.a_insert"
+   {<point name="insert.a_insert"/>}
+   #end add-point
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="agcq300.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION agcq300_modify()
+   #add-point:modify段define(客製用) name="modify.define_customerization"
+   {<point name="modify.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE  l_cmd                  LIKE type_t.chr1
+   DEFINE  l_ac_t                 LIKE type_t.num10               #未取消的ARRAY CNT 
+   DEFINE  l_n                    LIKE type_t.num10               #檢查重複用  
+   DEFINE  l_cnt                  LIKE type_t.num10               #檢查重複用  
+   DEFINE  l_lock_sw              LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert         LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete         LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count                LIKE type_t.num10
+   DEFINE  l_i                    LIKE type_t.num10
+   DEFINE  ls_return              STRING
+   DEFINE  l_var_keys             DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys           DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                 DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields               DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak         DYNAMIC ARRAY OF STRING
+   DEFINE  li_reproduce           LIKE type_t.num10
+   DEFINE  li_reproduce_target    LIKE type_t.num10
+   DEFINE  lb_reproduce           BOOLEAN
+   DEFINE  l_insert               BOOLEAN
+   #add-point:modify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   {<point name="modify.define"/>}
+   #end add-point 
+   
+   #add-point:Function前置處理  name="modify.pre_function"
+   {<point name="modify.pre_function"/>}
+   #end add-point
+   
+#  LET g_action_choice = ""   #(ver:35) mark
+   
+   LET g_qryparam.state = "i"
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #add-point:modify開始前 name="modify.define_sql"
+   {<point name="modify.define_sql" mark="Y"/>}
+   #end add-point
+   
+   LET INT_FLAG = FALSE
+   LET lb_reproduce = FALSE
+   LET l_insert = FALSE
+ 
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+ 
+   #add-point:modify段修改前 name="modify.before_input"
+   {<point name="modify.before_input"/>}
+   #end add-point
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_gcao_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_detail_cnt,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_gcao_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL agcq300_b_fill(g_wc2)
+            LET g_detail_cnt = g_gcao_d.getLength()
+         
+         BEFORE ROW
+            #add-point:modify段before row name="input.body.before_row2"
+            {<point name="input.body.before_row2"/>}
+            #end add-point  
+            LET l_insert = FALSE
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            LET l_cmd = ''
+            LET l_ac_t = l_ac 
+            LET l_ac = g_detail_idx
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+            DISPLAY g_gcao_d.getLength() TO FORMONLY.cnt
+         
+            CALL s_transaction_begin()
+            LET g_detail_cnt = g_gcao_d.getLength()
+            
+            IF g_detail_cnt >= l_ac 
+               AND g_gcao_d[l_ac].gcao001 IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_gcao_d_t.* = g_gcao_d[l_ac].*  #BACKUP
+               LET g_gcao_d_o.* = g_gcao_d[l_ac].*  #BACKUP
+               IF NOT agcq300_lock_b("gcao_t") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH agcq300_bcl INTO g_gcao_d[l_ac].gcao001,g_gcao_d[l_ac].gcao002,g_gcao_d[l_ac].gcao003, 
+                      g_gcao_d[l_ac].gcao037,g_gcao_d[l_ac].gcao004,g_gcao_d[l_ac].gcao005,g_gcao_d[l_ac].gcao006, 
+                      g_gcao_d[l_ac].gcao008,g_gcao_d[l_ac].gcao009,g_gcao_d[l_ac].gcao034,g_gcao_d[l_ac].gcao038, 
+                      g_gcao2_d[l_ac].gcao001,g_gcao2_d[l_ac].gcao011,g_gcao2_d[l_ac].gcao012,g_gcao2_d[l_ac].gcao013, 
+                      g_gcao2_d[l_ac].gcao039,g_gcao2_d[l_ac].gcao014,g_gcao2_d[l_ac].gcao015,g_gcao2_d[l_ac].gcao016, 
+                      g_gcao2_d[l_ac].gcao040,g_gcao2_d[l_ac].gcao017,g_gcao2_d[l_ac].gcao018,g_gcao2_d[l_ac].gcao019, 
+                      g_gcao2_d[l_ac].gcao041,g_gcao2_d[l_ac].gcao020,g_gcao2_d[l_ac].gcao021,g_gcao2_d[l_ac].gcao022, 
+                      g_gcao2_d[l_ac].gcao042,g_gcao2_d[l_ac].gcao023,g_gcao2_d[l_ac].gcao024,g_gcao2_d[l_ac].gcao025, 
+                      g_gcao2_d[l_ac].gcao043,g_gcao2_d[l_ac].gcao026,g_gcao2_d[l_ac].gcao027,g_gcao2_d[l_ac].gcao028, 
+                      g_gcao2_d[l_ac].gcao044,g_gcao2_d[l_ac].gcao029,g_gcao2_d[l_ac].gcao030,g_gcao2_d[l_ac].gcao031, 
+                      g_gcao2_d[l_ac].gcao045
+                  IF SQLCA.SQLCODE THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = g_gcao_d_t.gcao001,":",SQLERRMESSAGE  
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_gcao_d_mask_o[l_ac].* =  g_gcao_d[l_ac].*
+                  CALL agcq300_gcao_t_mask()
+                  LET g_gcao_d_mask_n[l_ac].* =  g_gcao_d[l_ac].*
+                  
+                  CALL agcq300_detail_show()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            CALL agcq300_set_entry_b(l_cmd)
+            CALL agcq300_set_no_entry_b(l_cmd)
+            #add-point:modify段before row name="input.body.before_row"
+            {<point name="input.body.before_row"/>}
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+ 
+ 
+            #其他table進行lock
+            
+ 
+ 
+        
+         BEFORE INSERT
+            
+            LET l_insert = TRUE
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_gcao_d_t.* TO NULL
+            INITIALIZE g_gcao_d_o.* TO NULL
+            INITIALIZE g_gcao_d[l_ac].* TO NULL 
+            #公用欄位給值(單身)
+            
+            #自定義預設值(單身2)
+            
+            #add-point:modify段before備份 name="input.body.before_bak"
+            {<point name="input.body.before_bak"/>}
+            #end add-point
+            LET g_gcao_d_t.* = g_gcao_d[l_ac].*     #新輸入資料
+            LET g_gcao_d_o.* = g_gcao_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_gcao_d[li_reproduce_target].* = g_gcao_d[li_reproduce].*
+               LET g_gcao2_d[li_reproduce_target].* = g_gcao2_d[li_reproduce].*
+ 
+               LET g_gcao_d[g_gcao_d.getLength()].gcao001 = NULL
+ 
+            END IF
+            
+ 
+ 
+            CALL agcq300_set_entry_b(l_cmd)
+            CALL agcq300_set_no_entry_b(l_cmd)
+            #add-point:modify段before insert name="input.body.before_insert"
+            {<point name="input.body.before_insert"/>}
+            #end add-point  
+  
+         AFTER INSERT
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(1) INTO l_count FROM gcao_t 
+             WHERE gcaoent = g_enterprise AND gcao001 = g_gcao_d[l_ac].gcao001
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前 name="input.body.b_insert"
+               {<point name="input.body.b_insert"/>}
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_gcao_d[g_detail_idx].gcao001
+               CALL agcq300_insert_b('gcao_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後 name="input.body.a_insert"
+               {<point name="input.body.a_insert"/>}
+               #end add-point
+            ELSE    
+               INITIALIZE g_gcao_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code   = "std-00006" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLCODE THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "gcao_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')                    
+               CALL cl_err()
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL agcq300_b_fill(g_wc2)
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert name="input.body.a_insert2"
+               {<point name="input.body.a_insert2"/>}
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ##ERROR 'INSERT O.K'
+               LET g_detail_cnt = g_detail_cnt + 1
+               
+               LET g_wc2 = g_wc2, " OR (gcao001 = '", g_gcao_d[l_ac].gcao001, "' "
+ 
+                                  ,")"
+            END IF                
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+            ELSE
+               #add-point:單身刪除ask前 name="input.body.b_delete_ask"
+               {<point name="input.body.b_delete_ask"/>}
+               #end add-point   
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   = -263 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前 name="input.body.b_delete"
+               {<point name="input.body.b_delete" mark="Y"/>}
+               #end add-point   
+               
+               DELETE FROM gcao_t
+                WHERE gcaoent = g_enterprise AND 
+                      gcao001 = g_gcao_d_t.gcao001
+ 
+                      
+               #add-point:單身刪除中 name="input.body.m_delete"
+               {<point name="input.body.m_delete"/>}
+               #end add-point  
+                      
+               IF SQLCA.SQLCODE THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "gcao_t:",SQLERRMESSAGE 
+                  LET g_errparam.code = SQLCA.SQLCODE
+                  LET g_errparam.popup = TRUE 
+                  CALL s_transaction_end('N','0')
+                  CALL cl_err()
+                  CANCEL DELETE   
+               ELSE
+                  LET g_detail_cnt = g_detail_cnt-1
+                  
+ 
+ 
+                  #add-point:單身刪除後 name="input.body.a_delete"
+                  {<point name="input.body.a_delete"/>}
+                  #end add-point
+                  #修改歷程記錄(刪除)
+                  CALL agcq300_set_pk_array()
+                  LET g_log1 = util.JSON.stringify(g_gcao_d[l_ac])   #(ver:38)
+                  IF NOT cl_log_modified_record(g_log1,'') THEN    #(ver:38)
+                     CALL s_transaction_end('N','0')
+                  ELSE
+                     CALL s_transaction_end('Y','0')
+                  END IF
+               END IF 
+               CLOSE agcq300_bcl
+               #add-point:單身關閉bcl name="input.body.close"
+               {<point name="input.body.close"/>}
+               #end add-point
+               LET l_count = g_gcao_d.getLength()
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_gcao_d_t.gcao001
+ 
+               #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL agcq300_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove"
+      {<point name="delete.befroe.related_document_remove"/>}
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+ 
+            END IF 
+              
+         AFTER DELETE 
+            IF l_cmd <> 'd' THEN
+               #add-point:單身刪除後2 name="input.body.after_delete"
+               {<point name="input.body.after_delete"/>}
+               #end add-point
+                              CALL agcq300_delete_b('gcao_t',gs_keys,"'1'")
+            END IF
+            #如果是最後一筆
+            IF l_ac = (g_gcao_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+            #add-point:單身刪除後3 name="input.body.after_delete3"
+            {<point name="input.body.after_delete3"/>}
+            #end add-point
+ 
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao001
+            #add-point:BEFORE FIELD gcao001 name="input.b.page1.gcao001"
+            {<point name="input.b.page1.gcao001" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao001
+            
+            #add-point:AFTER FIELD gcao001 name="input.a.page1.gcao001"
+            {<point name="input.a.page1.gcao001" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao001
+            #add-point:ON CHANGE gcao001 name="input.g.page1.gcao001"
+            {<point name="input.g.page1.gcao001" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao002
+            
+            #add-point:AFTER FIELD gcao002 name="input.a.page1.gcao002"
+            {<point name="input.a.page1.gcao002" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao002
+            #add-point:BEFORE FIELD gcao002 name="input.b.page1.gcao002"
+            {<point name="input.b.page1.gcao002" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao002
+            #add-point:ON CHANGE gcao002 name="input.g.page1.gcao002"
+            {<point name="input.g.page1.gcao002" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao003
+            
+            #add-point:AFTER FIELD gcao003 name="input.a.page1.gcao003"
+            {<point name="input.a.page1.gcao003" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao003
+            #add-point:BEFORE FIELD gcao003 name="input.b.page1.gcao003"
+            {<point name="input.b.page1.gcao003" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao003
+            #add-point:ON CHANGE gcao003 name="input.g.page1.gcao003"
+            {<point name="input.g.page1.gcao003" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao037
+            
+            #add-point:AFTER FIELD gcao037 name="input.a.page1.gcao037"
+            {<point name="input.a.page1.gcao037" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao037
+            #add-point:BEFORE FIELD gcao037 name="input.b.page1.gcao037"
+            {<point name="input.b.page1.gcao037" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao037
+            #add-point:ON CHANGE gcao037 name="input.g.page1.gcao037"
+            {<point name="input.g.page1.gcao037" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao004
+            #add-point:BEFORE FIELD gcao004 name="input.b.page1.gcao004"
+            {<point name="input.b.page1.gcao004" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao004
+            
+            #add-point:AFTER FIELD gcao004 name="input.a.page1.gcao004"
+            {<point name="input.a.page1.gcao004" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao004
+            #add-point:ON CHANGE gcao004 name="input.g.page1.gcao004"
+            {<point name="input.g.page1.gcao004" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao005
+            #add-point:BEFORE FIELD gcao005 name="input.b.page1.gcao005"
+            {<point name="input.b.page1.gcao005" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao005
+            
+            #add-point:AFTER FIELD gcao005 name="input.a.page1.gcao005"
+            {<point name="input.a.page1.gcao005" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao005
+            #add-point:ON CHANGE gcao005 name="input.g.page1.gcao005"
+            {<point name="input.g.page1.gcao005" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao006
+            #add-point:BEFORE FIELD gcao006 name="input.b.page1.gcao006"
+            {<point name="input.b.page1.gcao006" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao006
+            
+            #add-point:AFTER FIELD gcao006 name="input.a.page1.gcao006"
+            {<point name="input.a.page1.gcao006" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao006
+            #add-point:ON CHANGE gcao006 name="input.g.page1.gcao006"
+            {<point name="input.g.page1.gcao006" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao008
+            #add-point:BEFORE FIELD gcao008 name="input.b.page1.gcao008"
+            {<point name="input.b.page1.gcao008" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao008
+            
+            #add-point:AFTER FIELD gcao008 name="input.a.page1.gcao008"
+            {<point name="input.a.page1.gcao008" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao008
+            #add-point:ON CHANGE gcao008 name="input.g.page1.gcao008"
+            {<point name="input.g.page1.gcao008" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao009
+            #add-point:BEFORE FIELD gcao009 name="input.b.page1.gcao009"
+            {<point name="input.b.page1.gcao009" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao009
+            
+            #add-point:AFTER FIELD gcao009 name="input.a.page1.gcao009"
+            {<point name="input.a.page1.gcao009" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao009
+            #add-point:ON CHANGE gcao009 name="input.g.page1.gcao009"
+            {<point name="input.g.page1.gcao009" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao034
+            
+            #add-point:AFTER FIELD gcao034 name="input.a.page1.gcao034"
+            {<point name="input.a.page1.gcao034" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao034
+            #add-point:BEFORE FIELD gcao034 name="input.b.page1.gcao034"
+            {<point name="input.b.page1.gcao034" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao034
+            #add-point:ON CHANGE gcao034 name="input.g.page1.gcao034"
+            {<point name="input.g.page1.gcao034" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao038
+            #add-point:BEFORE FIELD gcao038 name="input.b.page1.gcao038"
+            {<point name="input.b.page1.gcao038" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao038
+            
+            #add-point:AFTER FIELD gcao038 name="input.a.page1.gcao038"
+            {<point name="input.a.page1.gcao038" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao038
+            #add-point:ON CHANGE gcao038 name="input.g.page1.gcao038"
+            {<point name="input.g.page1.gcao038" />}
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.gcao001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao001
+            #add-point:ON ACTION controlp INFIELD gcao001 name="input.c.page1.gcao001"
+            {<point name="input.c.page1.gcao001" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.gcao002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao002
+            #add-point:ON ACTION controlp INFIELD gcao002 name="input.c.page1.gcao002"
+            {<point name="input.c.page1.gcao002" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.gcao003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao003
+            #add-point:ON ACTION controlp INFIELD gcao003 name="input.c.page1.gcao003"
+            {<point name="input.c.page1.gcao003" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.gcao037
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao037
+            #add-point:ON ACTION controlp INFIELD gcao037 name="input.c.page1.gcao037"
+            {<point name="input.c.page1.gcao037" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.gcao004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao004
+            #add-point:ON ACTION controlp INFIELD gcao004 name="input.c.page1.gcao004"
+            {<point name="input.c.page1.gcao004" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.gcao005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao005
+            #add-point:ON ACTION controlp INFIELD gcao005 name="input.c.page1.gcao005"
+            {<point name="input.c.page1.gcao005" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.gcao006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao006
+            #add-point:ON ACTION controlp INFIELD gcao006 name="input.c.page1.gcao006"
+            {<point name="input.c.page1.gcao006" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.gcao008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao008
+            #add-point:ON ACTION controlp INFIELD gcao008 name="input.c.page1.gcao008"
+            {<point name="input.c.page1.gcao008" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.gcao009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao009
+            #add-point:ON ACTION controlp INFIELD gcao009 name="input.c.page1.gcao009"
+            {<point name="input.c.page1.gcao009" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.gcao034
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao034
+            #add-point:ON ACTION controlp INFIELD gcao034 name="input.c.page1.gcao034"
+            {<point name="input.c.page1.gcao034" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.gcao038
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao038
+            #add-point:ON ACTION controlp INFIELD gcao038 name="input.c.page1.gcao038"
+            {<point name="input.c.page1.gcao038" />}
+            #END add-point
+ 
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               CLOSE agcq300_bcl
+               CALL s_transaction_end('N','0')
+               LET INT_FLAG = 0
+               LET g_gcao_d[l_ac].* = g_gcao_d_t.*
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               #add-point:單身取消時 name="input.body.cancel"
+               {<point name="input.body.cancel"/>}
+               #end add-point
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = g_gcao_d[l_ac].gcao001 
+               LET g_errparam.code   = -263 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET g_gcao_d[l_ac].* = g_gcao_d_t.*
+            ELSE
+               #寫入修改者/修改日期資訊(單身)
+               
+            
+               #add-point:單身修改前 name="input.body.b_update"
+               {<point name="input.body.b_update" mark="Y"/>}
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL agcq300_gcao_t_mask_restore('restore_mask_o')
+ 
+               UPDATE gcao_t SET (gcao001,gcao002,gcao003,gcao037,gcao004,gcao005,gcao006,gcao008,gcao009, 
+                   gcao034,gcao038,gcao011,gcao012,gcao013,gcao039,gcao014,gcao015,gcao016,gcao040,gcao017, 
+                   gcao018,gcao019,gcao041,gcao020,gcao021,gcao022,gcao042,gcao023,gcao024,gcao025,gcao043, 
+                   gcao026,gcao027,gcao028,gcao044,gcao029,gcao030,gcao031,gcao045) = (g_gcao_d[l_ac].gcao001, 
+                   g_gcao_d[l_ac].gcao002,g_gcao_d[l_ac].gcao003,g_gcao_d[l_ac].gcao037,g_gcao_d[l_ac].gcao004, 
+                   g_gcao_d[l_ac].gcao005,g_gcao_d[l_ac].gcao006,g_gcao_d[l_ac].gcao008,g_gcao_d[l_ac].gcao009, 
+                   g_gcao_d[l_ac].gcao034,g_gcao_d[l_ac].gcao038,g_gcao2_d[l_ac].gcao011,g_gcao2_d[l_ac].gcao012, 
+                   g_gcao2_d[l_ac].gcao013,g_gcao2_d[l_ac].gcao039,g_gcao2_d[l_ac].gcao014,g_gcao2_d[l_ac].gcao015, 
+                   g_gcao2_d[l_ac].gcao016,g_gcao2_d[l_ac].gcao040,g_gcao2_d[l_ac].gcao017,g_gcao2_d[l_ac].gcao018, 
+                   g_gcao2_d[l_ac].gcao019,g_gcao2_d[l_ac].gcao041,g_gcao2_d[l_ac].gcao020,g_gcao2_d[l_ac].gcao021, 
+                   g_gcao2_d[l_ac].gcao022,g_gcao2_d[l_ac].gcao042,g_gcao2_d[l_ac].gcao023,g_gcao2_d[l_ac].gcao024, 
+                   g_gcao2_d[l_ac].gcao025,g_gcao2_d[l_ac].gcao043,g_gcao2_d[l_ac].gcao026,g_gcao2_d[l_ac].gcao027, 
+                   g_gcao2_d[l_ac].gcao028,g_gcao2_d[l_ac].gcao044,g_gcao2_d[l_ac].gcao029,g_gcao2_d[l_ac].gcao030, 
+                   g_gcao2_d[l_ac].gcao031,g_gcao2_d[l_ac].gcao045)
+                WHERE gcaoent = g_enterprise AND
+                  gcao001 = g_gcao_d_t.gcao001 #項次   
+ 
+                  
+               #add-point:單身修改中 name="input.body.m_update"
+               {<point name="input.body.m_update"/>}
+               #end add-point
+                  
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL s_transaction_end('N','0')
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "gcao_t" 
+                     LET g_errparam.code = "std-00009" 
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                  WHEN SQLCA.SQLCODE #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "gcao_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_gcao_d[g_detail_idx].gcao001
+               LET gs_keys_bak[1] = g_gcao_d_t.gcao001
+               CALL agcq300_update_b('gcao_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                     
+                     #修改歷程記錄(修改)
+                     LET g_log1 = util.JSON.stringify(g_gcao_d_t)
+                     LET g_log2 = util.JSON.stringify(g_gcao_d[l_ac])
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN
+                        CALL s_transaction_end('N','0')
+                     END IF
+               END CASE
+               
+               #將遮罩欄位進行遮蔽
+               CALL agcq300_gcao_t_mask_restore('restore_mask_n')
+               
+               #add-point:單身修改後 name="input.body.a_update"
+               {<point name="input.body.a_update"/>}
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            CALL agcq300_unlock_b("gcao_t")
+            IF INT_FLAG THEN
+               CALL s_transaction_end('N','0')
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_gcao_d[l_ac].* = g_gcao_d_t.*
+               END IF
+               #add-point:單身after row name="input.body.a_close"
+               {<point name="input.body.a_close"/>}
+               #end add-point
+            ELSE
+               CALL s_transaction_end('Y','0')
+            END IF
+            #其他table進行unlock
+            
+             #add-point:單身after row name="input.body.a_row"
+            {<point name="input.body.a_row"/>}
+            #end add-point
+            
+         AFTER INPUT
+            #add-point:單身input後 name="input.body.a_input"
+            {<point name="input.body.a_input"/>}
+            #end add-point
+            #錯誤訊息統整顯示
+            #CALL cl_err_collect_show()
+            #CALL cl_showmsg()
+            
+         ON ACTION controlo   
+            IF l_insert THEN
+               LET li_reproduce = l_ac_t
+               LET li_reproduce_target = l_ac
+               LET g_gcao_d[li_reproduce_target].* = g_gcao_d[li_reproduce].*
+               LET g_gcao2_d[li_reproduce_target].* = g_gcao2_d[li_reproduce].*
+ 
+               LET g_gcao_d[li_reproduce_target].gcao001 = NULL
+ 
+            ELSE
+               CALL FGL_SET_ARR_CURR(g_gcao_d.getLength()+1)
+               LET lb_reproduce = TRUE
+               LET li_reproduce = l_ac
+               LET li_reproduce_target = g_gcao_d.getLength()+1
+            END IF
+            
+      END INPUT
+      
+      INPUT ARRAY g_gcao2_d FROM s_detail2.*
+         ATTRIBUTE(COUNT = g_detail_cnt,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                 INSERT ROW = FALSE, #此頁面insert功能由產生器控制, 手動之設定無效! 
+
+                 DELETE ROW = l_allow_delete,
+                 APPEND ROW = l_allow_insert)
+                 
+         #自訂ACTION(detail_input,page_2)
+         
+         
+         BEFORE INPUT
+          CALL FGL_SET_ARR_CURR(g_detail_idx)
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            
+            CALL agcq300_b_fill(g_wc2)
+            LET g_detail_cnt = g_gcao2_d.getLength()
+    
+         BEFORE INSERT
+            LET g_insert = 'Y' 
+            NEXT FIELD gcao001
+ 
+            LET l_insert = TRUE
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_gcao2_d[l_ac].* TO NULL 
+            INITIALIZE g_gcao2_d_t.* TO NULL
+            INITIALIZE g_gcao2_d_o.* TO NULL
+            #公用欄位給值(單身2)
+            
+            #自定義預設值(單身2)
+            
+            #add-point:modify段before備份 name="input.body2.before_bak"
+            {<point name="input.body2.before_bak"/>}
+            #end add-point
+            LET g_gcao2_d_t.* = g_gcao2_d[l_ac].*     #新輸入資料
+            LET g_gcao2_d_o.* = g_gcao2_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_gcao_d[li_reproduce_target].* = g_gcao_d[li_reproduce].*
+               LET g_gcao2_d[li_reproduce_target].* = g_gcao2_d[li_reproduce].*
+ 
+               LET g_gcao2_d[li_reproduce_target].gcao001 = NULL
+            END IF
+            
+ 
+ 
+            CALL agcq300_set_entry_b(l_cmd)
+            CALL agcq300_set_no_entry_b(l_cmd)
+            #add-point:modify段before insert name="input.body2.before_insert"
+            {<point name="input.body2.before_insert"/>}
+            #end add-point  
+            
+         BEFORE ROW 
+            #add-point:modify段before row name="input.body2.before_row2"
+            {<point name="input.body2.before_row2"/>}
+            #end add-point  
+            LET l_insert = FALSE
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail2")
+            LET l_cmd = ''
+            LET l_ac_t = l_ac 
+            LET l_ac = g_detail_idx
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+            DISPLAY g_gcao2_d.getLength() TO FORMONLY.cnt
+         
+            CALL s_transaction_begin()
+            
+            LET g_detail_cnt = g_gcao2_d.getLength()
+            
+            IF g_detail_cnt >= l_ac 
+               AND g_gcao2_d[l_ac].gcao001 IS NOT NULL
+            THEN 
+               LET l_cmd='u'
+               LET g_gcao2_d_t.* = g_gcao2_d[l_ac].*  #BACKUP
+               LET g_gcao2_d_o.* = g_gcao2_d[l_ac].*  #BACKUP
+               IF NOT agcq300_lock_b("gcao_t") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH agcq300_bcl INTO g_gcao_d[l_ac].gcao001,g_gcao_d[l_ac].gcao002,g_gcao_d[l_ac].gcao003, 
+                      g_gcao_d[l_ac].gcao037,g_gcao_d[l_ac].gcao004,g_gcao_d[l_ac].gcao005,g_gcao_d[l_ac].gcao006, 
+                      g_gcao_d[l_ac].gcao008,g_gcao_d[l_ac].gcao009,g_gcao_d[l_ac].gcao034,g_gcao_d[l_ac].gcao038, 
+                      g_gcao2_d[l_ac].gcao001,g_gcao2_d[l_ac].gcao011,g_gcao2_d[l_ac].gcao012,g_gcao2_d[l_ac].gcao013, 
+                      g_gcao2_d[l_ac].gcao039,g_gcao2_d[l_ac].gcao014,g_gcao2_d[l_ac].gcao015,g_gcao2_d[l_ac].gcao016, 
+                      g_gcao2_d[l_ac].gcao040,g_gcao2_d[l_ac].gcao017,g_gcao2_d[l_ac].gcao018,g_gcao2_d[l_ac].gcao019, 
+                      g_gcao2_d[l_ac].gcao041,g_gcao2_d[l_ac].gcao020,g_gcao2_d[l_ac].gcao021,g_gcao2_d[l_ac].gcao022, 
+                      g_gcao2_d[l_ac].gcao042,g_gcao2_d[l_ac].gcao023,g_gcao2_d[l_ac].gcao024,g_gcao2_d[l_ac].gcao025, 
+                      g_gcao2_d[l_ac].gcao043,g_gcao2_d[l_ac].gcao026,g_gcao2_d[l_ac].gcao027,g_gcao2_d[l_ac].gcao028, 
+                      g_gcao2_d[l_ac].gcao044,g_gcao2_d[l_ac].gcao029,g_gcao2_d[l_ac].gcao030,g_gcao2_d[l_ac].gcao031, 
+                      g_gcao2_d[l_ac].gcao045
+                  IF SQLCA.SQLCODE THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "FETCH agcq300_bcl:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_gcao2_d_mask_o[l_ac].* =  g_gcao2_d[l_ac].*
+                  CALL agcq300_gcao_t_mask()
+                  LET g_gcao2_d_mask_n[l_ac].* =  g_gcao2_d[l_ac].*
+                  
+                  CALL cl_show_fld_cont()
+                  CALL agcq300_detail_show()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            CALL agcq300_set_entry_b(l_cmd)
+            CALL agcq300_set_no_entry_b(l_cmd)
+            #add-point:modify段before row name="input.body2.before_row"
+            {<point name="input.body2.before_row"/>}
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+ 
+ 
+            #其他table進行lock
+            
+ 
+ 
+            
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+            ELSE
+               #add-point:單身2ask刪除前 name="input.body2.b_delete_ask"
+               {<point name="input.body2.b_delete_ask">}
+               #end add-point 
+            
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   = -263 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身2刪除前 name="input.body2.b_delete"
+               {<point name="input.body2.b_delete" mark="Y"/>}
+               #end add-point 
+               
+               DELETE FROM gcao_t
+                WHERE gcaoent = g_enterprise AND
+                  gcao001 = g_gcao2_d_t.gcao001
+                  
+               #add-point:單身2刪除中 name="input.body2.m_delete"
+               {<point name="input.body2.m_delete"/>}
+               #end add-point 
+                  
+               IF SQLCA.SQLCODE THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "gcao_t:",SQLERRMESSAGE 
+                  LET g_errparam.code = SQLCA.SQLCODE
+                  LET g_errparam.popup = TRUE 
+                  CALL s_transaction_end('N','0')
+                  CALL cl_err()
+                  CANCEL DELETE   
+               ELSE
+                  LET g_detail_cnt = g_detail_cnt-1
+                  
+ 
+ 
+                  #add-point:單身2刪除後 name="input.body2.a_delete"
+                  {<point name="input.body2.a_delete"/>}
+                  #end add-point
+                  #修改歷程記錄(刪除)
+                  CALL agcq300_set_pk_array()
+                  LET g_log1 = util.JSON.stringify(g_gcao2_d[l_ac])   #(ver:38)
+                  IF NOT cl_log_modified_record(g_log1,'') THEN    #(ver:38)
+                     CALL s_transaction_end('N','0')
+                  ELSE
+                     CALL s_transaction_end('Y','0')
+                  END IF
+               END IF 
+               CLOSE agcq300_bcl
+               #add-point:單身2刪除關閉bcl name="input.body2.close"
+               {<point name="input.body2.close"/>}
+               #end add-point
+               LET l_count = g_gcao_d.getLength()
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_gcao2_d_t.gcao001
+ 
+               #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL agcq300_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove"
+      {<point name="delete.befroe.related_document_remove"/>}
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+ 
+            END IF 
+            
+         AFTER DELETE 
+            IF l_cmd <> 'd' THEN
+               #add-point:單身刪除後2 name="input.body2.after_delete"
+               {<point name="input.body2.after_delete"/>}
+               #end add-point
+                              CALL agcq300_delete_b('gcao_t',gs_keys,"'2'")
+            END IF
+            #如果是最後一筆
+            IF l_ac = (g_gcao2_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+            #add-point:單身刪除後3 name="input.body2.after_delete3"
+            {<point name="input.body2.after_delete3"/>}
+            #end add-point
+ 
+         AFTER INSERT    
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(1) INTO l_count FROM gcao_t 
+             WHERE gcaoent = g_enterprise AND
+                   gcao001 = g_gcao2_d[l_ac].gcao001
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身2新增前 name="input.body2.b_insert"
+               {<point name="input.body2.b_insert"/>}
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_gcao2_d[g_detail_idx].gcao001
+               CALL agcq300_insert_b('gcao_t',gs_keys,"'2'")
+                           
+               #add-point:單身新增後2 name="input.body2.a_insert"
+               {<point name="input.body2.a_insert"/>}
+               #end add-point
+            ELSE    
+               INITIALIZE g_gcao_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code   = "std-00006" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLCODE THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "gcao_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')                    
+               CALL cl_err()
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL agcq300_b_fill(g_wc2)
+               #資料多語言用-增/改
+               
+               #add-point:單身新增後 name="input.body2.after_insert"
+               {<point name="input.body2.after_insert"/>}
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ##ERROR 'INSERT O.K'
+               LET g_detail_cnt = g_detail_cnt + 1
+               LET g_wc2 = g_wc2, " OR (gcao001 = '", g_gcao2_d[l_ac].gcao001, "' "
+                                  ,")"
+            END IF
+            
+         ON ROW CHANGE 
+            IF INT_FLAG THEN
+               CALL s_transaction_end('N','0')
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               LET g_gcao2_d[l_ac].* = g_gcao2_d_t.*
+               CLOSE agcq300_bcl
+               #add-point:單身page2取消後 name="input.body2.cancel"
+               {<point name="input.body2.cancel"/>}
+               #end add-point
+               EXIT DIALOG 
+            END IF
+            
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = -263 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET g_gcao2_d[l_ac].* = g_gcao2_d_t.*
+            ELSE
+               
+               #寫入修改者/修改日期資訊(單身2)
+               
+               
+               #add-point:單身page2修改前 name="input.body2.b_update"
+               {<point name="input.body2.b_update" mark="Y"/>}
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL agcq300_gcao_t_mask_restore('restore_mask_o')
+               
+               UPDATE gcao_t SET (gcao001,gcao002,gcao003,gcao037,gcao004,gcao005,gcao006,gcao008,gcao009, 
+                   gcao034,gcao038,gcao011,gcao012,gcao013,gcao039,gcao014,gcao015,gcao016,gcao040,gcao017, 
+                   gcao018,gcao019,gcao041,gcao020,gcao021,gcao022,gcao042,gcao023,gcao024,gcao025,gcao043, 
+                   gcao026,gcao027,gcao028,gcao044,gcao029,gcao030,gcao031,gcao045) = (g_gcao_d[l_ac].gcao001, 
+                   g_gcao_d[l_ac].gcao002,g_gcao_d[l_ac].gcao003,g_gcao_d[l_ac].gcao037,g_gcao_d[l_ac].gcao004, 
+                   g_gcao_d[l_ac].gcao005,g_gcao_d[l_ac].gcao006,g_gcao_d[l_ac].gcao008,g_gcao_d[l_ac].gcao009, 
+                   g_gcao_d[l_ac].gcao034,g_gcao_d[l_ac].gcao038,g_gcao2_d[l_ac].gcao011,g_gcao2_d[l_ac].gcao012, 
+                   g_gcao2_d[l_ac].gcao013,g_gcao2_d[l_ac].gcao039,g_gcao2_d[l_ac].gcao014,g_gcao2_d[l_ac].gcao015, 
+                   g_gcao2_d[l_ac].gcao016,g_gcao2_d[l_ac].gcao040,g_gcao2_d[l_ac].gcao017,g_gcao2_d[l_ac].gcao018, 
+                   g_gcao2_d[l_ac].gcao019,g_gcao2_d[l_ac].gcao041,g_gcao2_d[l_ac].gcao020,g_gcao2_d[l_ac].gcao021, 
+                   g_gcao2_d[l_ac].gcao022,g_gcao2_d[l_ac].gcao042,g_gcao2_d[l_ac].gcao023,g_gcao2_d[l_ac].gcao024, 
+                   g_gcao2_d[l_ac].gcao025,g_gcao2_d[l_ac].gcao043,g_gcao2_d[l_ac].gcao026,g_gcao2_d[l_ac].gcao027, 
+                   g_gcao2_d[l_ac].gcao028,g_gcao2_d[l_ac].gcao044,g_gcao2_d[l_ac].gcao029,g_gcao2_d[l_ac].gcao030, 
+                   g_gcao2_d[l_ac].gcao031,g_gcao2_d[l_ac].gcao045) #自訂欄位頁簽
+                WHERE gcaoent = g_enterprise AND
+                  gcao001 = g_gcao2_d_t.gcao001 #項次 
+                  
+               #add-point:單身page2修改中 name="input.body2.m_update"
+               {<point name="input.body2.m_update"/>}
+               #end add-point
+                  
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL s_transaction_end('N','0')
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "gcao_t" 
+                     LET g_errparam.code = "std-00009" 
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                  WHEN SQLCA.SQLCODE #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "gcao_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE 
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_gcao2_d[g_detail_idx].gcao001
+               LET gs_keys_bak[1] = g_gcao2_d_t.gcao001
+               CALL agcq300_update_b('gcao_t',gs_keys,gs_keys_bak,"'2'")
+                     #資料多語言用-增/改
+                     
+                     
+                     #修改歷程記錄(修改)
+                     LET g_log1 = util.JSON.stringify(g_gcao2_d_t)
+                     LET g_log2 = util.JSON.stringify(g_gcao2_d[l_ac])
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                        CALL s_transaction_end('N','0')
+                     END IF
+               END CASE
+               
+               #將遮罩欄位進行遮蔽
+               CALL agcq300_gcao_t_mask_restore('restore_mask_n')
+               
+               #add-point:單身page2修改後 name="input.body2.a_update"
+               {<point name="input.body2.a_update"/>}
+               #end add-point
+            END IF
+         
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao011
+            
+            #add-point:AFTER FIELD gcao011 name="input.a.page2.gcao011"
+            {<point name="input.a.page2.gcao011" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao011
+            #add-point:BEFORE FIELD gcao011 name="input.b.page2.gcao011"
+            {<point name="input.b.page2.gcao011" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao011
+            #add-point:ON CHANGE gcao011 name="input.g.page2.gcao011"
+            {<point name="input.g.page2.gcao011" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao012
+            #add-point:BEFORE FIELD gcao012 name="input.b.page2.gcao012"
+            {<point name="input.b.page2.gcao012" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao012
+            
+            #add-point:AFTER FIELD gcao012 name="input.a.page2.gcao012"
+            {<point name="input.a.page2.gcao012" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao012
+            #add-point:ON CHANGE gcao012 name="input.g.page2.gcao012"
+            {<point name="input.g.page2.gcao012" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao013
+            
+            #add-point:AFTER FIELD gcao013 name="input.a.page2.gcao013"
+            {<point name="input.a.page2.gcao013" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao013
+            #add-point:BEFORE FIELD gcao013 name="input.b.page2.gcao013"
+            {<point name="input.b.page2.gcao013" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao013
+            #add-point:ON CHANGE gcao013 name="input.g.page2.gcao013"
+            {<point name="input.g.page2.gcao013" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao039
+            #add-point:BEFORE FIELD gcao039 name="input.b.page2.gcao039"
+            {<point name="input.b.page2.gcao039" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao039
+            
+            #add-point:AFTER FIELD gcao039 name="input.a.page2.gcao039"
+            {<point name="input.a.page2.gcao039" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao039
+            #add-point:ON CHANGE gcao039 name="input.g.page2.gcao039"
+            {<point name="input.g.page2.gcao039" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao014
+            
+            #add-point:AFTER FIELD gcao014 name="input.a.page2.gcao014"
+            {<point name="input.a.page2.gcao014" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao014
+            #add-point:BEFORE FIELD gcao014 name="input.b.page2.gcao014"
+            {<point name="input.b.page2.gcao014" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao014
+            #add-point:ON CHANGE gcao014 name="input.g.page2.gcao014"
+            {<point name="input.g.page2.gcao014" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao015
+            #add-point:BEFORE FIELD gcao015 name="input.b.page2.gcao015"
+            {<point name="input.b.page2.gcao015" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao015
+            
+            #add-point:AFTER FIELD gcao015 name="input.a.page2.gcao015"
+            {<point name="input.a.page2.gcao015" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao015
+            #add-point:ON CHANGE gcao015 name="input.g.page2.gcao015"
+            {<point name="input.g.page2.gcao015" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao016
+            
+            #add-point:AFTER FIELD gcao016 name="input.a.page2.gcao016"
+            {<point name="input.a.page2.gcao016" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao016
+            #add-point:BEFORE FIELD gcao016 name="input.b.page2.gcao016"
+            {<point name="input.b.page2.gcao016" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao016
+            #add-point:ON CHANGE gcao016 name="input.g.page2.gcao016"
+            {<point name="input.g.page2.gcao016" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao040
+            #add-point:BEFORE FIELD gcao040 name="input.b.page2.gcao040"
+            {<point name="input.b.page2.gcao040" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao040
+            
+            #add-point:AFTER FIELD gcao040 name="input.a.page2.gcao040"
+            {<point name="input.a.page2.gcao040" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao040
+            #add-point:ON CHANGE gcao040 name="input.g.page2.gcao040"
+            {<point name="input.g.page2.gcao040" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao017
+            
+            #add-point:AFTER FIELD gcao017 name="input.a.page2.gcao017"
+            {<point name="input.a.page2.gcao017" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao017
+            #add-point:BEFORE FIELD gcao017 name="input.b.page2.gcao017"
+            {<point name="input.b.page2.gcao017" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao017
+            #add-point:ON CHANGE gcao017 name="input.g.page2.gcao017"
+            {<point name="input.g.page2.gcao017" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao018
+            #add-point:BEFORE FIELD gcao018 name="input.b.page2.gcao018"
+            {<point name="input.b.page2.gcao018" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao018
+            
+            #add-point:AFTER FIELD gcao018 name="input.a.page2.gcao018"
+            {<point name="input.a.page2.gcao018" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao018
+            #add-point:ON CHANGE gcao018 name="input.g.page2.gcao018"
+            {<point name="input.g.page2.gcao018" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao019
+            
+            #add-point:AFTER FIELD gcao019 name="input.a.page2.gcao019"
+            {<point name="input.a.page2.gcao019" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao019
+            #add-point:BEFORE FIELD gcao019 name="input.b.page2.gcao019"
+            {<point name="input.b.page2.gcao019" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao019
+            #add-point:ON CHANGE gcao019 name="input.g.page2.gcao019"
+            {<point name="input.g.page2.gcao019" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao041
+            #add-point:BEFORE FIELD gcao041 name="input.b.page2.gcao041"
+            {<point name="input.b.page2.gcao041" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao041
+            
+            #add-point:AFTER FIELD gcao041 name="input.a.page2.gcao041"
+            {<point name="input.a.page2.gcao041" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao041
+            #add-point:ON CHANGE gcao041 name="input.g.page2.gcao041"
+            {<point name="input.g.page2.gcao041" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao020
+            
+            #add-point:AFTER FIELD gcao020 name="input.a.page2.gcao020"
+            {<point name="input.a.page2.gcao020" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao020
+            #add-point:BEFORE FIELD gcao020 name="input.b.page2.gcao020"
+            {<point name="input.b.page2.gcao020" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao020
+            #add-point:ON CHANGE gcao020 name="input.g.page2.gcao020"
+            {<point name="input.g.page2.gcao020" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao021
+            #add-point:BEFORE FIELD gcao021 name="input.b.page2.gcao021"
+            {<point name="input.b.page2.gcao021" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao021
+            
+            #add-point:AFTER FIELD gcao021 name="input.a.page2.gcao021"
+            {<point name="input.a.page2.gcao021" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao021
+            #add-point:ON CHANGE gcao021 name="input.g.page2.gcao021"
+            {<point name="input.g.page2.gcao021" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao022
+            
+            #add-point:AFTER FIELD gcao022 name="input.a.page2.gcao022"
+            {<point name="input.a.page2.gcao022" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao022
+            #add-point:BEFORE FIELD gcao022 name="input.b.page2.gcao022"
+            {<point name="input.b.page2.gcao022" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao022
+            #add-point:ON CHANGE gcao022 name="input.g.page2.gcao022"
+            {<point name="input.g.page2.gcao022" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao042
+            #add-point:BEFORE FIELD gcao042 name="input.b.page2.gcao042"
+            {<point name="input.b.page2.gcao042" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao042
+            
+            #add-point:AFTER FIELD gcao042 name="input.a.page2.gcao042"
+            {<point name="input.a.page2.gcao042" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao042
+            #add-point:ON CHANGE gcao042 name="input.g.page2.gcao042"
+            {<point name="input.g.page2.gcao042" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao023
+            
+            #add-point:AFTER FIELD gcao023 name="input.a.page2.gcao023"
+            {<point name="input.a.page2.gcao023" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao023
+            #add-point:BEFORE FIELD gcao023 name="input.b.page2.gcao023"
+            {<point name="input.b.page2.gcao023" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao023
+            #add-point:ON CHANGE gcao023 name="input.g.page2.gcao023"
+            {<point name="input.g.page2.gcao023" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao024
+            #add-point:BEFORE FIELD gcao024 name="input.b.page2.gcao024"
+            {<point name="input.b.page2.gcao024" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao024
+            
+            #add-point:AFTER FIELD gcao024 name="input.a.page2.gcao024"
+            {<point name="input.a.page2.gcao024" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao024
+            #add-point:ON CHANGE gcao024 name="input.g.page2.gcao024"
+            {<point name="input.g.page2.gcao024" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao025
+            
+            #add-point:AFTER FIELD gcao025 name="input.a.page2.gcao025"
+            {<point name="input.a.page2.gcao025" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao025
+            #add-point:BEFORE FIELD gcao025 name="input.b.page2.gcao025"
+            {<point name="input.b.page2.gcao025" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao025
+            #add-point:ON CHANGE gcao025 name="input.g.page2.gcao025"
+            {<point name="input.g.page2.gcao025" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao043
+            #add-point:BEFORE FIELD gcao043 name="input.b.page2.gcao043"
+            {<point name="input.b.page2.gcao043" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao043
+            
+            #add-point:AFTER FIELD gcao043 name="input.a.page2.gcao043"
+            {<point name="input.a.page2.gcao043" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao043
+            #add-point:ON CHANGE gcao043 name="input.g.page2.gcao043"
+            {<point name="input.g.page2.gcao043" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao026
+            
+            #add-point:AFTER FIELD gcao026 name="input.a.page2.gcao026"
+            {<point name="input.a.page2.gcao026" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao026
+            #add-point:BEFORE FIELD gcao026 name="input.b.page2.gcao026"
+            {<point name="input.b.page2.gcao026" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao026
+            #add-point:ON CHANGE gcao026 name="input.g.page2.gcao026"
+            {<point name="input.g.page2.gcao026" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao027
+            #add-point:BEFORE FIELD gcao027 name="input.b.page2.gcao027"
+            {<point name="input.b.page2.gcao027" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao027
+            
+            #add-point:AFTER FIELD gcao027 name="input.a.page2.gcao027"
+            {<point name="input.a.page2.gcao027" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao027
+            #add-point:ON CHANGE gcao027 name="input.g.page2.gcao027"
+            {<point name="input.g.page2.gcao027" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao028
+            
+            #add-point:AFTER FIELD gcao028 name="input.a.page2.gcao028"
+            {<point name="input.a.page2.gcao028" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao028
+            #add-point:BEFORE FIELD gcao028 name="input.b.page2.gcao028"
+            {<point name="input.b.page2.gcao028" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao028
+            #add-point:ON CHANGE gcao028 name="input.g.page2.gcao028"
+            {<point name="input.g.page2.gcao028" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao044
+            #add-point:BEFORE FIELD gcao044 name="input.b.page2.gcao044"
+            {<point name="input.b.page2.gcao044" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao044
+            
+            #add-point:AFTER FIELD gcao044 name="input.a.page2.gcao044"
+            {<point name="input.a.page2.gcao044" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao044
+            #add-point:ON CHANGE gcao044 name="input.g.page2.gcao044"
+            {<point name="input.g.page2.gcao044" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao029
+            
+            #add-point:AFTER FIELD gcao029 name="input.a.page2.gcao029"
+            {<point name="input.a.page2.gcao029" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao029
+            #add-point:BEFORE FIELD gcao029 name="input.b.page2.gcao029"
+            {<point name="input.b.page2.gcao029" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao029
+            #add-point:ON CHANGE gcao029 name="input.g.page2.gcao029"
+            {<point name="input.g.page2.gcao029" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao030
+            #add-point:BEFORE FIELD gcao030 name="input.b.page2.gcao030"
+            {<point name="input.b.page2.gcao030" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao030
+            
+            #add-point:AFTER FIELD gcao030 name="input.a.page2.gcao030"
+            {<point name="input.a.page2.gcao030" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao030
+            #add-point:ON CHANGE gcao030 name="input.g.page2.gcao030"
+            {<point name="input.g.page2.gcao030" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao031
+            
+            #add-point:AFTER FIELD gcao031 name="input.a.page2.gcao031"
+            {<point name="input.a.page2.gcao031" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao031
+            #add-point:BEFORE FIELD gcao031 name="input.b.page2.gcao031"
+            {<point name="input.b.page2.gcao031" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao031
+            #add-point:ON CHANGE gcao031 name="input.g.page2.gcao031"
+            {<point name="input.g.page2.gcao031" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD gcao045
+            #add-point:BEFORE FIELD gcao045 name="input.b.page2.gcao045"
+            {<point name="input.b.page2.gcao045" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD gcao045
+            
+            #add-point:AFTER FIELD gcao045 name="input.a.page2.gcao045"
+            {<point name="input.a.page2.gcao045" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE gcao045
+            #add-point:ON CHANGE gcao045 name="input.g.page2.gcao045"
+            {<point name="input.g.page2.gcao045" />}
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page2.gcao011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao011
+            #add-point:ON ACTION controlp INFIELD gcao011 name="input.c.page2.gcao011"
+            {<point name="input.c.page2.gcao011" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao012
+            #add-point:ON ACTION controlp INFIELD gcao012 name="input.c.page2.gcao012"
+            {<point name="input.c.page2.gcao012" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao013
+            #add-point:ON ACTION controlp INFIELD gcao013 name="input.c.page2.gcao013"
+            {<point name="input.c.page2.gcao013" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao039
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao039
+            #add-point:ON ACTION controlp INFIELD gcao039 name="input.c.page2.gcao039"
+            {<point name="input.c.page2.gcao039" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao014
+            #add-point:ON ACTION controlp INFIELD gcao014 name="input.c.page2.gcao014"
+            {<point name="input.c.page2.gcao014" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao015
+            #add-point:ON ACTION controlp INFIELD gcao015 name="input.c.page2.gcao015"
+            {<point name="input.c.page2.gcao015" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao016
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao016
+            #add-point:ON ACTION controlp INFIELD gcao016 name="input.c.page2.gcao016"
+            {<point name="input.c.page2.gcao016" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao040
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao040
+            #add-point:ON ACTION controlp INFIELD gcao040 name="input.c.page2.gcao040"
+            {<point name="input.c.page2.gcao040" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao017
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao017
+            #add-point:ON ACTION controlp INFIELD gcao017 name="input.c.page2.gcao017"
+            {<point name="input.c.page2.gcao017" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao018
+            #add-point:ON ACTION controlp INFIELD gcao018 name="input.c.page2.gcao018"
+            {<point name="input.c.page2.gcao018" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao019
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao019
+            #add-point:ON ACTION controlp INFIELD gcao019 name="input.c.page2.gcao019"
+            {<point name="input.c.page2.gcao019" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao041
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao041
+            #add-point:ON ACTION controlp INFIELD gcao041 name="input.c.page2.gcao041"
+            {<point name="input.c.page2.gcao041" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao020
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao020
+            #add-point:ON ACTION controlp INFIELD gcao020 name="input.c.page2.gcao020"
+            {<point name="input.c.page2.gcao020" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao021
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao021
+            #add-point:ON ACTION controlp INFIELD gcao021 name="input.c.page2.gcao021"
+            {<point name="input.c.page2.gcao021" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao022
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao022
+            #add-point:ON ACTION controlp INFIELD gcao022 name="input.c.page2.gcao022"
+            {<point name="input.c.page2.gcao022" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao042
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao042
+            #add-point:ON ACTION controlp INFIELD gcao042 name="input.c.page2.gcao042"
+            {<point name="input.c.page2.gcao042" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao023
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao023
+            #add-point:ON ACTION controlp INFIELD gcao023 name="input.c.page2.gcao023"
+            {<point name="input.c.page2.gcao023" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao024
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao024
+            #add-point:ON ACTION controlp INFIELD gcao024 name="input.c.page2.gcao024"
+            {<point name="input.c.page2.gcao024" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao025
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao025
+            #add-point:ON ACTION controlp INFIELD gcao025 name="input.c.page2.gcao025"
+            {<point name="input.c.page2.gcao025" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao043
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao043
+            #add-point:ON ACTION controlp INFIELD gcao043 name="input.c.page2.gcao043"
+            {<point name="input.c.page2.gcao043" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao026
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao026
+            #add-point:ON ACTION controlp INFIELD gcao026 name="input.c.page2.gcao026"
+            {<point name="input.c.page2.gcao026" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao027
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao027
+            #add-point:ON ACTION controlp INFIELD gcao027 name="input.c.page2.gcao027"
+            {<point name="input.c.page2.gcao027" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao028
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao028
+            #add-point:ON ACTION controlp INFIELD gcao028 name="input.c.page2.gcao028"
+            {<point name="input.c.page2.gcao028" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao044
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao044
+            #add-point:ON ACTION controlp INFIELD gcao044 name="input.c.page2.gcao044"
+            {<point name="input.c.page2.gcao044" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao029
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao029
+            #add-point:ON ACTION controlp INFIELD gcao029 name="input.c.page2.gcao029"
+            {<point name="input.c.page2.gcao029" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao030
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao030
+            #add-point:ON ACTION controlp INFIELD gcao030 name="input.c.page2.gcao030"
+            {<point name="input.c.page2.gcao030" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao031
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao031
+            #add-point:ON ACTION controlp INFIELD gcao031 name="input.c.page2.gcao031"
+            {<point name="input.c.page2.gcao031" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.gcao045
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD gcao045
+            #add-point:ON ACTION controlp INFIELD gcao045 name="input.c.page2.gcao045"
+            {<point name="input.c.page2.gcao045" />}
+            #END add-point
+ 
+ 
+ 
+ 
+         AFTER ROW
+            LET l_ac = ARR_CURR()
+            LET l_ac_t = l_ac
+            IF INT_FLAG THEN
+               CALL s_transaction_end('N','0')
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_gcao2_d[l_ac].* = g_gcao2_d_t.*
+               END IF
+               CLOSE agcq300_bcl
+               #add-point:單身after row name="input.body2.a_close"
+               {<point name="input.body2.a_close"/>}
+               #end add-point
+               EXIT DIALOG 
+            END IF
+            
+            #其他table進行unlock
+            
+ 
+            CALL agcq300_unlock_b("gcao_t")
+            CALL s_transaction_end('Y','0')
+            #add-point:單身after row name="input.body2.a_row"
+            {<point name="input.body2.a_row"/>}
+            #end add-point
+            
+         AFTER INPUT
+            #add-point:單身2input後 name="input.body2.a_input"
+            {<point name="input.body2.a_input"/>}
+            #end add-point
+         
+         #複製上一次指定的單身資料至最下方
+         ON ACTION controlo   
+            IF l_insert THEN
+               LET li_reproduce = l_ac_t
+               LET li_reproduce_target = l_ac
+               LET g_gcao_d[li_reproduce_target].* = g_gcao_d[li_reproduce].*
+               LET g_gcao2_d[li_reproduce_target].* = g_gcao2_d[li_reproduce].*
+ 
+               LET g_gcao2_d[li_reproduce_target].gcao001 = NULL
+            ELSE
+               CALL FGL_SET_ARR_CURR(g_gcao2_d.getLength()+1)
+               LET lb_reproduce = TRUE
+               LET li_reproduce = l_ac
+               LET li_reproduce_target = g_gcao2_d.getLength()+1
+            END IF
+      END INPUT
+ 
+      
+ 
+      
+      #add-point:before_more_input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+      
+      BEFORE DIALOG
+         #CALL cl_err_collect_init()      
+         IF g_temp_idx > 0 THEN
+            LET l_ac = g_temp_idx
+            CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+            LET g_temp_idx = 1
+         END IF
+         #LET g_curr_diag = ui.DIALOG.getCurrent()
+         #add-point:before_dialog name="input.before_dialog"
+         {<point name="input.before_dialog"/>}
+         #end add-point
+         CASE g_aw
+            WHEN "s_detail1"
+               NEXT FIELD gcao001
+            WHEN "s_detail2"
+               NEXT FIELD gcao001_2
+ 
+         END CASE
+   
+      ON ACTION accept
+         ACCEPT DIALOG
+      
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         CANCEL DIALOG
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) 
+              RETURNING g_fld_name,g_frm_name 
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang) 
+           
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   
+   END DIALOG 
+    
+   #新增後取消
+   IF l_cmd = 'a' THEN
+      #當取消或無輸入資料按確定時刪除對應資料
+      IF INT_FLAG OR cl_null(g_gcao_d[g_detail_idx].gcao001) THEN
+         CALL g_gcao_d.deleteElement(g_detail_idx)
+         CALL g_gcao2_d.deleteElement(g_detail_idx)
+ 
+      END IF
+   END IF
+   
+   #修改後取消
+   IF l_cmd = 'u' AND INT_FLAG THEN
+      LET g_gcao_d[g_detail_idx].* = g_gcao_d_t.*
+   END IF
+   
+   #add-point:modify段修改後 name="modify.after_input"
+   {<point name="modify.after_input"/>}
+   #end add-point
+ 
+   CLOSE agcq300_bcl
+   CALL s_transaction_end('Y','0')
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="agcq300.delete" >}
+#+ 資料刪除
+PRIVATE FUNCTION agcq300_delete()
+   #add-point:delete段define(客製用) name="delete.define_customerization"
+   {<point name="delete.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE li_idx          LIKE type_t.num10
+   DEFINE li_ac_t         LIKE type_t.num10
+   DEFINE li_detail_tmp   LIKE type_t.num10
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:delete段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   {<point name="delete.define"/>}
+   #end add-point 
+   
+   #add-point:Function前置處理  name="delete.body.before_delete"
+   {<point name="delete.body.before_delete"/>}
+   #end add-point
+   
+   CALL s_transaction_begin()
+   
+   LET li_ac_t = l_ac
+   
+   LET li_detail_tmp = g_detail_idx
+    
+   #lock所有所選資料
+   FOR li_idx = 1 TO g_gcao_d.getLength()
+      LET g_detail_idx = li_idx
+      #已選擇的資料
+      IF g_curr_diag.isRowSelected(g_curr_diag.getCurrentItem(), li_idx) THEN 
+         #確定是否有被鎖定
+         IF NOT agcq300_lock_b("gcao_t") THEN
+            #已被他人鎖定
+            CALL s_transaction_end('N','0')
+            RETURN
+         END IF
+ 
+         #(ver:35) ---add start---
+         #確定是否有刪除的權限
+         #先確定該table有ownid
+         IF cl_getField("gcao_t","") THEN
+            IF NOT cl_auth_chk_act_permission("delete") THEN
+               #有目前權限無法刪除的資料
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+         END IF
+         #(ver:35) --- add end ---
+      END IF
+   END FOR
+   
+   #add-point:單身刪除詢問前 name="delete.body.b_delete_ask"
+   {<point name="delete.body.b_delete_ask"/>}
+   #end add-point  
+   
+   #詢問是否確定刪除所選資料
+   IF NOT cl_ask_del_detail() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   FOR li_idx = 1 TO g_gcao_d.getLength()
+      IF g_gcao_d[li_idx].gcao001 IS NOT NULL
+ 
+         AND g_curr_diag.isRowSelected(g_curr_diag.getCurrentItem(), li_idx) THEN 
+         
+         #add-point:單身刪除前 name="delete.body.b_delete"
+         {<point name="delete.body.b_delete" mark="Y"/>}
+         #end add-point   
+         
+         DELETE FROM gcao_t
+          WHERE gcaoent = g_enterprise AND 
+                gcao001 = g_gcao_d[li_idx].gcao001
+ 
+         #add-point:單身刪除中 name="delete.body.m_delete"
+         {<point name="delete.body.m_delete"/>}
+         #end add-point  
+                
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "gcao_t:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            RETURN
+         ELSE
+            LET g_detail_cnt = g_detail_cnt-1
+            LET l_ac = li_idx
+            
+ 
+ 
+            
+ 
+ 
+ 
+            
+ 
+ 
+            
+ 
+ 
+ 
+            #add-point:單身同步刪除前(同層table) name="delete.body.a_delete"
+            {<point name="delete.body.a_delete"/>}
+            #end add-point
+            LET g_detail_idx = li_idx
+                           INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_gcao_d_t.gcao001
+ 
+            #add-point:單身同步刪除中(同層table) name="delete.body.a_delete2"
+            {<point name="delete.body.a_delete2"/>}
+            #end add-point
+                           CALL agcq300_delete_b('gcao_t',gs_keys,"'1'")
+            #add-point:單身同步刪除後(同層table) name="delete.body.a_delete3"
+            {<point name="delete.body.a_delete3"/>}
+            #end add-point
+            #刪除相關文件
+            #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL agcq300_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove.func"
+      {<point name="delete.befroe.related_document_remove.func"/>}
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+ 
+            
+         END IF 
+      END IF 
+    
+   END FOR
+   CALL s_transaction_end('Y','0')
+   
+   LET g_detail_idx = li_detail_tmp
+            
+   #add-point:單身刪除後 name="delete.after"
+   {<point name="delete.after"/>}
+   #end add-point  
+   
+   LET l_ac = li_ac_t
+   
+   #刷新資料
+   CALL agcq300_b_fill(g_wc2)
+            
+END FUNCTION
+
+{</section>}
+
+{<section id="agcq300.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION agcq300_b_fill(p_wc2)              #BODY FILL UP
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+   {<point name="b_fill.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_wc2            STRING
+   DEFINE ls_owndept_list  STRING  #(ver:35) add
+   DEFINE ls_ownuser_list  STRING  #(ver:35) add
+   #add-point:b_fill段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   {<point name="b_fill.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="b_fill.pre_function"
+   {<point name="b_fill.pre_function"/>}
+   #end add-point
+   
+   IF cl_null(p_wc2) THEN
+      LET p_wc2 = " 1=1"
+   END IF
+   
+   #add-point:b_fill段sql之前 name="b_fill.sql_before"
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   LET g_sql = "SELECT  DISTINCT t0.gcao001,t0.gcao002,t0.gcao003,t0.gcao037,t0.gcao004,t0.gcao005,t0.gcao006, 
+       t0.gcao008,t0.gcao009,t0.gcao034,t0.gcao038,t0.gcao001,t0.gcao011,t0.gcao012,t0.gcao013,t0.gcao039, 
+       t0.gcao014,t0.gcao015,t0.gcao016,t0.gcao040,t0.gcao017,t0.gcao018,t0.gcao019,t0.gcao041,t0.gcao020, 
+       t0.gcao021,t0.gcao022,t0.gcao042,t0.gcao023,t0.gcao024,t0.gcao025,t0.gcao043,t0.gcao026,t0.gcao027, 
+       t0.gcao028,t0.gcao044,t0.gcao029,t0.gcao030,t0.gcao031,t0.gcao045 ,t1.gcafl003 ,t2.oocql004 , 
+       t3.mmaf008 ,t4.ooefl003 ,t5.ooefl003 ,t6.ooefl003 ,t7.ooefl003 ,t8.ooefl003 ,t9.ooefl003 ,t10.ooefl003 , 
+       t11.ooefl003 ,t12.ooefl003 ,t13.ooefl003 ,t14.ooefl003 ,t15.ooefl003 ,t16.ooefl003 ,t17.ooefl003 FROM gcao_t t0", 
+
+               "",
+                              " LEFT JOIN gcafl_t t1 ON t1.gcaflent="||g_enterprise||" AND t1.gcafl001=t0.gcao002 AND t1.gcafl002='"||g_dlang||"' ",
+               " LEFT JOIN oocql_t t2 ON t2.oocqlent="||g_enterprise||" AND t2.oocql001='2071' AND t2.oocql002=t0.gcao003 AND t2.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN mmaf_t t3 ON t3.mmafent="||g_enterprise||" AND t3.mmaf001=t0.gcao034  ",
+               " LEFT JOIN ooefl_t t4 ON t4.ooeflent="||g_enterprise||" AND t4.ooefl001=t0.gcao011 AND t4.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t5 ON t5.ooeflent="||g_enterprise||" AND t5.ooefl001=t0.gcao013 AND t5.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t6 ON t6.ooeflent="||g_enterprise||" AND t6.ooefl001=t0.gcao014 AND t6.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t7 ON t7.ooeflent="||g_enterprise||" AND t7.ooefl001=t0.gcao016 AND t7.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t8 ON t8.ooeflent="||g_enterprise||" AND t8.ooefl001=t0.gcao017 AND t8.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t9 ON t9.ooeflent="||g_enterprise||" AND t9.ooefl001=t0.gcao019 AND t9.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t10 ON t10.ooeflent="||g_enterprise||" AND t10.ooefl001=t0.gcao020 AND t10.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t11 ON t11.ooeflent="||g_enterprise||" AND t11.ooefl001=t0.gcao022 AND t11.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t12 ON t12.ooeflent="||g_enterprise||" AND t12.ooefl001=t0.gcao023 AND t12.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t13 ON t13.ooeflent="||g_enterprise||" AND t13.ooefl001=t0.gcao025 AND t13.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t14 ON t14.ooeflent="||g_enterprise||" AND t14.ooefl001=t0.gcao026 AND t14.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t15 ON t15.ooeflent="||g_enterprise||" AND t15.ooefl001=t0.gcao028 AND t15.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t16 ON t16.ooeflent="||g_enterprise||" AND t16.ooefl001=t0.gcao029 AND t16.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t17 ON t17.ooeflent="||g_enterprise||" AND t17.ooefl001=t0.gcao031 AND t17.ooefl002='"||g_dlang||"' ",
+ 
+               " WHERE t0.gcaoent= ?  AND  1=1 AND (", p_wc2, ") "
+ 
+   #(ver:35) ---add start---
+   
+   #(ver:35) --- add end ---
+ 
+   #add-point:b_fill段sql wc name="b_fill.sql_wc"
+   {<point name="b_fill.sql_wc"/>}
+   #end add-point
+   LET g_sql = g_sql, cl_sql_add_filter("gcao_t"),
+                      " ORDER BY t0.gcao001"
+   
+   #add-point:b_fill段sql之後 name="b_fill.sql_after"
+   {<point name="b_fill.sql_after"/>}
+   #end add-point
+   
+   #LET g_sql = cl_sql_add_tabid(g_sql,"gcao_t")            #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE agcq300_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR agcq300_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_gcao_d.clear()
+   CALL g_gcao2_d.clear()   
+ 
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO g_gcao_d[l_ac].gcao001,g_gcao_d[l_ac].gcao002,g_gcao_d[l_ac].gcao003,g_gcao_d[l_ac].gcao037, 
+       g_gcao_d[l_ac].gcao004,g_gcao_d[l_ac].gcao005,g_gcao_d[l_ac].gcao006,g_gcao_d[l_ac].gcao008,g_gcao_d[l_ac].gcao009, 
+       g_gcao_d[l_ac].gcao034,g_gcao_d[l_ac].gcao038,g_gcao2_d[l_ac].gcao001,g_gcao2_d[l_ac].gcao011, 
+       g_gcao2_d[l_ac].gcao012,g_gcao2_d[l_ac].gcao013,g_gcao2_d[l_ac].gcao039,g_gcao2_d[l_ac].gcao014, 
+       g_gcao2_d[l_ac].gcao015,g_gcao2_d[l_ac].gcao016,g_gcao2_d[l_ac].gcao040,g_gcao2_d[l_ac].gcao017, 
+       g_gcao2_d[l_ac].gcao018,g_gcao2_d[l_ac].gcao019,g_gcao2_d[l_ac].gcao041,g_gcao2_d[l_ac].gcao020, 
+       g_gcao2_d[l_ac].gcao021,g_gcao2_d[l_ac].gcao022,g_gcao2_d[l_ac].gcao042,g_gcao2_d[l_ac].gcao023, 
+       g_gcao2_d[l_ac].gcao024,g_gcao2_d[l_ac].gcao025,g_gcao2_d[l_ac].gcao043,g_gcao2_d[l_ac].gcao026, 
+       g_gcao2_d[l_ac].gcao027,g_gcao2_d[l_ac].gcao028,g_gcao2_d[l_ac].gcao044,g_gcao2_d[l_ac].gcao029, 
+       g_gcao2_d[l_ac].gcao030,g_gcao2_d[l_ac].gcao031,g_gcao2_d[l_ac].gcao045,g_gcao_d[l_ac].gcao002_desc, 
+       g_gcao_d[l_ac].gcao003_desc,g_gcao_d[l_ac].gcao034_desc,g_gcao2_d[l_ac].gcao011_desc,g_gcao2_d[l_ac].gcao013_desc, 
+       g_gcao2_d[l_ac].gcao014_desc,g_gcao2_d[l_ac].gcao016_desc,g_gcao2_d[l_ac].gcao017_desc,g_gcao2_d[l_ac].gcao019_desc, 
+       g_gcao2_d[l_ac].gcao020_desc,g_gcao2_d[l_ac].gcao022_desc,g_gcao2_d[l_ac].gcao023_desc,g_gcao2_d[l_ac].gcao025_desc, 
+       g_gcao2_d[l_ac].gcao026_desc,g_gcao2_d[l_ac].gcao028_desc,g_gcao2_d[l_ac].gcao029_desc,g_gcao2_d[l_ac].gcao031_desc 
+
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH b_fill_curs:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+  
+      #add-point:b_fill段資料填充 name="b_fill.fill"
+      {<point name="b_fill.fill"/>}
+      #end add-point
+      
+      CALL agcq300_detail_show()      
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code   = 9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+ 
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+ 
+   LET g_error_show = 0
+   
+ 
+   
+   CALL g_gcao_d.deleteElement(g_gcao_d.getLength())   
+   CALL g_gcao2_d.deleteElement(g_gcao2_d.getLength())
+ 
+   
+   #將key欄位填到每個page
+   FOR l_ac = 1 TO g_gcao_d.getLength()
+      LET g_gcao2_d[l_ac].gcao001 = g_gcao_d[l_ac].gcao001 
+ 
+      #add-point:b_fill段key值相關欄位 name="b_fill.keys.fill"
+      {<point name="b_fill.keys.fill"/>}
+      #end add-point
+   END FOR
+   
+   IF g_cnt > g_gcao_d.getLength() THEN
+      LET l_ac = g_gcao_d.getLength()
+   ELSE
+      LET l_ac = g_cnt
+   END IF
+   LET g_cnt = l_ac
+ 
+   #遮罩相關處理
+   FOR l_ac = 1 TO g_gcao_d.getLength()
+      LET g_gcao_d_mask_o[l_ac].* =  g_gcao_d[l_ac].*
+      CALL agcq300_gcao_t_mask()
+      LET g_gcao_d_mask_n[l_ac].* =  g_gcao_d[l_ac].*
+   END FOR
+   
+   LET g_gcao2_d_mask_o.* =  g_gcao2_d.*
+   FOR l_ac = 1 TO g_gcao2_d.getLength()
+      LET g_gcao2_d_mask_o[l_ac].* =  g_gcao2_d[l_ac].*
+      CALL agcq300_gcao_t_mask()
+      LET g_gcao2_d_mask_n[l_ac].* =  g_gcao2_d[l_ac].*
+   END FOR
+ 
+   
+   LET l_ac = g_cnt
+ 
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.others.fill"
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+   
+   ERROR "" 
+ 
+   LET g_detail_cnt = g_gcao_d.getLength()
+   DISPLAY g_detail_idx TO FORMONLY.idx
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   
+   CLOSE b_fill_curs
+   FREE agcq300_pb
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="agcq300.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION agcq300_detail_show()
+   #add-point:detail_show段define(客製用) name="detail_show.define_customerization"
+   {<point name="detail_show.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:show段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   {<point name="detail_show.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="detail_show.before"
+   {<point name="detail_show.before"/>}
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值page1
+   
+    
+   #帶出公用欄位reference值page2
+   
+ 
+   
+   #讀入ref值
+   #add-point:show段單身reference name="detail_show.reference"
+   {<point name="detail_show.reference"/>}
+   #end add-point
+   
+   #add-point:show段單身reference name="detail_show.body2.reference"
+   {<point name="detail_show.body2.reference"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之後 name="detail_show.after"
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="agcq300.set_entry_b" >}
+#+ 單身欄位開啟設定
+PRIVATE FUNCTION agcq300_set_entry_b(p_cmd)                                                  
+   #add-point:set_entry_b段define(客製用) name="set_entry_b.define_customerization"
+   {<point name="set_entry_b.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_cmd   LIKE type_t.chr1         
+   #add-point:set_entry_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry_b.define"
+   {<point name="set_entry_b.define"/>}
+   #end add-point
+ 
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("",TRUE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry_b段欄位控制 name="set_entry_b.field_control"
+      {<point name="set_entry_b.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry_b段control name="set_entry_b.set_entry_b"
+   {<point name="set_entry_b.set_entry_b"/>}
+   #end add-point                                                                   
+                                                                                
+END FUNCTION                                                                 
+
+{</section>}
+
+{<section id="agcq300.set_no_entry_b" >}
+#+ 單身欄位關閉設定
+PRIVATE FUNCTION agcq300_set_no_entry_b(p_cmd)                                               
+   #add-point:set_no_entry_b段define(客製用) name="set_no_entry_b.define_customerization"
+   {<point name="set_no_entry_b.define_customerization" edit="c" mark="Y"/>}
+   #end add-point   
+   DEFINE p_cmd   LIKE type_t.chr1           
+   #add-point:set_no_entry_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry_b.define"
+   {<point name="set_no_entry_b.define"/>}
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry_b段欄位控制 name="set_no_entry_b.field_control"
+      {<point name="set_no_entry_b.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry_b段control name="set_no_entry_b.set_no_entry_b"
+   {<point name="set_no_entry_b.set_no_entry_b"/>}
+   #end add-point       
+                                                                                
+END FUNCTION
+
+{</section>}
+
+{<section id="agcq300.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION agcq300_default_search()
+   #add-point:default_search段define(客製用) name="default_search.define_customerization"
+   {<point name="default_search.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE li_idx  LIKE type_t.num10
+   DEFINE li_cnt  LIKE type_t.num10
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   {<point name="default_search.define"/>}
+   #end add-point  
+   
+   #add-point:Function前置處理  name="default_search.before"
+   {<point name="default_search.before"/>}
+   #end add-point  
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " gcao001 = '", g_argv[01], "' AND "
+   END IF
+   
+ 
+   
+   #add-point:default_search段after sql name="default_search.after_sql"
+   {<point name="default_search.after_sql"/>}
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET ls_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_wc2 = ls_wc
+   ELSE
+      LET g_wc2 = " 1=1"
+      #預設查詢條件
+      LET g_wc2 = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc2) THEN
+         LET g_wc2 = " 1=1"
+      END IF
+   END IF
+ 
+   #add-point:default_search段結束前 name="default_search.after"
+   {<point name="default_search.after"/>}
+   #end add-point  
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="agcq300.delete_b" >}
+#+ 刪除單身後其他table連動
+PRIVATE FUNCTION agcq300_delete_b(ps_table,ps_keys_bak,ps_page)
+   #add-point:delete_b段define(客製用) name="delete_b.define_customerization"
+   {<point name="delete_b.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:delete_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete_b.define"
+   {<point name="delete_b.define"/>}
+   #end add-point     
+   
+   #add-point:Function前置處理  name="delete_b.pre_function"
+   {<point name="delete_b.pre_function"/>}
+   #end add-point
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "gcao_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      IF ps_table <> 'gcao_t' THEN
+         #add-point:delete_b段刪除前 name="delete_b.b_delete"
+         {<point name="delete_b.b_delete" mark="Y"/>}
+         #end add-point     
+         
+         DELETE FROM gcao_t
+          WHERE gcaoent = g_enterprise AND
+            gcao001 = ps_keys_bak[1]
+         
+         #add-point:delete_b段刪除中 name="delete_b.m_delete"
+         {<point name="delete_b.m_delete"/>}
+         #end add-point  
+            
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = ":",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE
+            LET g_errparam.popup = FALSE 
+            CALL cl_err()
+         END IF
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_gcao_d.deleteElement(li_idx) 
+      END IF 
+      IF ps_page <> "'2'" THEN 
+         CALL g_gcao2_d.deleteElement(li_idx) 
+      END IF 
+ 
+      
+      #add-point:delete_b段刪除後 name="delete_b.a_delete"
+      {<point name="delete_b.a_delete"/>}
+      #end add-point
+      
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="agcq300.insert_b" >}
+#+ 新增單身後其他table連動
+PRIVATE FUNCTION agcq300_insert_b(ps_table,ps_keys,ps_page)
+   #add-point:insert_b段define(客製用) name="insert_b.define_customerization"
+   {<point name="insert_b.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:insert_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert_b.define"
+   {<point name="insert_b.define"/>}
+   #end add-point     
+   
+   #add-point:Function前置處理  name="insert_b.pre_function"
+   {<point name="insert_b.pre_function"/>}
+   #end add-point
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "gcao_t,"
+   #IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      
+      #add-point:insert_b段新增前 name="insert_b.b_insert"
+      {<point name="insert_b.b_insert" mark="Y"/>}
+      #end add-point    
+      INSERT INTO gcao_t
+                  (gcaoent,
+                   gcao001
+                   ,gcao002,gcao003,gcao037,gcao004,gcao005,gcao006,gcao008,gcao009,gcao034,gcao038,gcao011,gcao012,gcao013,gcao039,gcao014,gcao015,gcao016,gcao040,gcao017,gcao018,gcao019,gcao041,gcao020,gcao021,gcao022,gcao042,gcao023,gcao024,gcao025,gcao043,gcao026,gcao027,gcao028,gcao044,gcao029,gcao030,gcao031,gcao045) 
+            VALUES(g_enterprise,
+                   ps_keys[1]
+                   ,g_gcao_d[l_ac].gcao002,g_gcao_d[l_ac].gcao003,g_gcao_d[l_ac].gcao037,g_gcao_d[l_ac].gcao004, 
+                       g_gcao_d[l_ac].gcao005,g_gcao_d[l_ac].gcao006,g_gcao_d[l_ac].gcao008,g_gcao_d[l_ac].gcao009, 
+                       g_gcao_d[l_ac].gcao034,g_gcao_d[l_ac].gcao038,g_gcao2_d[l_ac].gcao011,g_gcao2_d[l_ac].gcao012, 
+                       g_gcao2_d[l_ac].gcao013,g_gcao2_d[l_ac].gcao039,g_gcao2_d[l_ac].gcao014,g_gcao2_d[l_ac].gcao015, 
+                       g_gcao2_d[l_ac].gcao016,g_gcao2_d[l_ac].gcao040,g_gcao2_d[l_ac].gcao017,g_gcao2_d[l_ac].gcao018, 
+                       g_gcao2_d[l_ac].gcao019,g_gcao2_d[l_ac].gcao041,g_gcao2_d[l_ac].gcao020,g_gcao2_d[l_ac].gcao021, 
+                       g_gcao2_d[l_ac].gcao022,g_gcao2_d[l_ac].gcao042,g_gcao2_d[l_ac].gcao023,g_gcao2_d[l_ac].gcao024, 
+                       g_gcao2_d[l_ac].gcao025,g_gcao2_d[l_ac].gcao043,g_gcao2_d[l_ac].gcao026,g_gcao2_d[l_ac].gcao027, 
+                       g_gcao2_d[l_ac].gcao028,g_gcao2_d[l_ac].gcao044,g_gcao2_d[l_ac].gcao029,g_gcao2_d[l_ac].gcao030, 
+                       g_gcao2_d[l_ac].gcao031,g_gcao2_d[l_ac].gcao045)
+      #add-point:insert_b段新增中 name="insert_b.m_insert"
+      {<point name="insert_b.m_insert"/>}
+      #end add-point    
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "gcao_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+      END IF
+      #add-point:insert_b段新增後 name="insert_b.a_insert"
+      {<point name="insert_b.a_insert"/>}
+      #end add-point    
+   #END IF
+   
+ 
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="agcq300.update_b" >}
+#+ 修改單身後其他table連動
+PRIVATE FUNCTION agcq300_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   #add-point:update_b段define(客製用) name="update_b.define_customerization"
+   {<point name="update_b.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ps_page          STRING
+   DEFINE ps_table         STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num10
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="update_b.define"
+   {<point name="update_b.define"/>}
+   #end add-point     
+   
+   #add-point:Function前置處理  name="update_b.pre_function"
+   {<point name="update_b.pre_function"/>}
+   #end add-point
+   
+   #比對新舊值, 判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #若key無變動, 不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+    
+   #若key有變動, 則連動其他table的資料   
+   #判斷是否是同一群組的table
+   LET ls_group = "gcao_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 AND ps_table <> "gcao_t" THEN
+      #add-point:update_b段修改前 name="update_b.b_update"
+      {<point name="update_b.b_update" mark="Y"/>}
+      #end add-point     
+      UPDATE gcao_t 
+         SET (gcao001
+              ,gcao002,gcao003,gcao037,gcao004,gcao005,gcao006,gcao008,gcao009,gcao034,gcao038,gcao011,gcao012,gcao013,gcao039,gcao014,gcao015,gcao016,gcao040,gcao017,gcao018,gcao019,gcao041,gcao020,gcao021,gcao022,gcao042,gcao023,gcao024,gcao025,gcao043,gcao026,gcao027,gcao028,gcao044,gcao029,gcao030,gcao031,gcao045) 
+              = 
+             (ps_keys[1]
+              ,g_gcao_d[l_ac].gcao002,g_gcao_d[l_ac].gcao003,g_gcao_d[l_ac].gcao037,g_gcao_d[l_ac].gcao004, 
+                  g_gcao_d[l_ac].gcao005,g_gcao_d[l_ac].gcao006,g_gcao_d[l_ac].gcao008,g_gcao_d[l_ac].gcao009, 
+                  g_gcao_d[l_ac].gcao034,g_gcao_d[l_ac].gcao038,g_gcao2_d[l_ac].gcao011,g_gcao2_d[l_ac].gcao012, 
+                  g_gcao2_d[l_ac].gcao013,g_gcao2_d[l_ac].gcao039,g_gcao2_d[l_ac].gcao014,g_gcao2_d[l_ac].gcao015, 
+                  g_gcao2_d[l_ac].gcao016,g_gcao2_d[l_ac].gcao040,g_gcao2_d[l_ac].gcao017,g_gcao2_d[l_ac].gcao018, 
+                  g_gcao2_d[l_ac].gcao019,g_gcao2_d[l_ac].gcao041,g_gcao2_d[l_ac].gcao020,g_gcao2_d[l_ac].gcao021, 
+                  g_gcao2_d[l_ac].gcao022,g_gcao2_d[l_ac].gcao042,g_gcao2_d[l_ac].gcao023,g_gcao2_d[l_ac].gcao024, 
+                  g_gcao2_d[l_ac].gcao025,g_gcao2_d[l_ac].gcao043,g_gcao2_d[l_ac].gcao026,g_gcao2_d[l_ac].gcao027, 
+                  g_gcao2_d[l_ac].gcao028,g_gcao2_d[l_ac].gcao044,g_gcao2_d[l_ac].gcao029,g_gcao2_d[l_ac].gcao030, 
+                  g_gcao2_d[l_ac].gcao031,g_gcao2_d[l_ac].gcao045) 
+         WHERE gcaoent = g_enterprise AND gcao001 = ps_keys_bak[1]
+      #add-point:update_b段修改中 name="update_b.m_update"
+      {<point name="update_b.m_update"/>}
+      #end add-point 
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            CALL s_transaction_end('N','0')
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "gcao_t" 
+            LET g_errparam.code = "std-00009" 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+         WHEN SQLCA.SQLCODE #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "gcao_t:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+         OTHERWISE
+            
+      END CASE
+      #add-point:update_b段修改後 name="update_b.a_update"
+      {<point name="update_b.a_update"/>}
+      #end add-point 
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="agcq300.lock_b" >}
+#+ 連動lock其他單身table資料
+PRIVATE FUNCTION agcq300_lock_b(ps_table)
+   #add-point:lock_b段define(客製用) name="lock_b.define_customerization"
+   {<point name="lock_b.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:lock_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="lock_b.define"
+   {<point name="lock_b.define"/>}
+   #end add-point   
+   
+   #add-point:Function前置處理  name="lock_b.pre_function"
+   {<point name="lock_b.pre_function"/>}
+   #end add-point
+   
+   #先刷新資料
+   #CALL agcq300_b_fill(g_wc2)
+   
+   #鎖定整組table
+   #LET ls_group = ""
+   #僅鎖定自身table
+   LET ls_group = "gcao_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN agcq300_bcl USING g_enterprise,
+                                       g_gcao_d[g_detail_idx].gcao001
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "agcq300_bcl:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   
+   END IF
+                                    
+ 
+   
+   RETURN TRUE
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="agcq300.unlock_b" >}
+#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION agcq300_unlock_b(ps_table)
+   #add-point:unlock_b段define(客製用) name="unlock_b.define_customerization"
+   {<point name="unlock_b.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:unlock_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="unlock_b.define"
+   {<point name="unlock_b.define"/>}
+   #end add-point  
+   
+   #add-point:Function前置處理  name="unlock_b.pre_function"
+   {<point name="unlock_b.pre_function"/>}
+   #end add-point
+   
+   LET ls_group = ""
+   
+   #IF ls_group.getIndexOf(ps_table,1) THEN
+      CLOSE agcq300_bcl
+   #END IF
+   
+ 
+   
+   #add-point:unlock_b段結束前 name="unlock_b.after"
+   {<point name="unlock_b.after"/>}
+   #end add-point 
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="agcq300.modify_detail_chk" >}
+#+ 單身輸入判定(因應modify_detail)
+PRIVATE FUNCTION agcq300_modify_detail_chk(ps_record)
+   #add-point:modify_detail_chk段define(客製用) name="modify_detail_chk.define_customerization"
+   {<point name="modify_detail_chk.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ps_record STRING
+   DEFINE ls_return STRING
+   #add-point:modify_detail_chk段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify_detail_chk.define"
+   {<point name="modify_detail_chk.define"/>}
+   #end add-point
+   
+   #add-point:modify_detail_chk段開始前 name="modify_detail_chk.before"
+   {<point name="modify_detail_chk.before"/>}
+   #end add-point
+   
+   #根據sr名稱確定該page第一個欄位的名稱
+   CASE ps_record
+      WHEN "s_detail1" 
+         LET ls_return = "gcao001"
+      WHEN "s_detail2"
+         LET ls_return = "gcao001_2"
+ 
+      #add-point:modify_detail_chk段自訂page控制 name="modify_detail_chk.page_control"
+      {<point name="modify_detail_chk.page_control"/>}
+      #end add-point
+   END CASE
+    
+   #add-point:modify_detail_chk段結束前 name="modify_detail_chk.after"
+   {<point name="modify_detail_chk.after"/>}
+   #end add-point
+   
+   RETURN ls_return
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="agcq300.show_ownid_msg" >}
+#+ 判斷是否顯示只能修改自己權限資料的訊息
+#(ver:35) ---add start---
+PRIVATE FUNCTION agcq300_show_ownid_msg()
+   #add-point:show_ownid_msg段define(客製用) name="show_ownid_msg.define_customerization"
+   {<point name="show_ownid_msg.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:show_ownid_msg段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show_ownid_msg.define"
+   {<point name="show_ownid_msg.define"/>}
+   #end add-point
+  
+ 
+   
+ 
+END FUNCTION
+#(ver:35) --- add end ---
+
+{</section>}
+
+{<section id="agcq300.mask_functions" >}
+&include "erp/agc/agcq300_mask.4gl"
+
+{</section>}
+
+{<section id="agcq300.set_pk_array" >}
+   #應用 a51 樣板自動產生(Version:8)
+#+ 給予pk_array內容
+PRIVATE FUNCTION agcq300_set_pk_array()
+   #add-point:set_pk_array段define name="set_pk_array.define_customerization"
+   {<point name="set_pk_array.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:set_pk_array段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_pk_array.define"
+   {<point name="set_pk_array.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理 name="set_pk_array.before"
+   {<point name="set_pk_array.before"/>}
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_gcao_d[l_ac].gcao001
+   LET g_pk_array[1].column = 'gcao001'
+ 
+   
+   #add-point:set_pk_array段之後 name="set_pk_array.after"
+   {<point name="set_pk_array.after"/>}
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+
+{</section>}
+
+{<section id="agcq300.state_change" >}
+   
+
+{</section>}
+
+{<section id="agcq300.other_dialog" readonly="Y" >}
+ 
+
+{</section>}
+
+{<section id="agcq300.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

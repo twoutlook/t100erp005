@@ -1,0 +1,113 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asti204" module="ast" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="01533" crtdt="2013-09-26 03:18:29" modid="06189" moddt="2015-04-27 16:07:15" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="費用編號合約輸入條件設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="staf001,staf001_desc(chr80),staf002"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="stafstus,staf003,staf003_desc(chr500),staf004,staf005,staf006"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="staf003,stafownid,stafownid_desc(chr500),stafowndp,stafowndp_desc(chr500),stafcrtid,stafcrtid_desc(chr500),stafcrtdp,stafcrtdp_desc(chr500),stafcrtdt,stafmodid,stafmodid_desc(chr500),stafmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="asti204" method="dialog">
+    <section id="input">
+      <input id="head" field="staf001,staf002"/>
+      <input id="body" page="1" field="stafstus,staf003,staf003_desc,staf004,staf005" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="staf001,staf002"/>
+      <construct id="body" page="1" field="stafstus,staf003,staf003_desc,staf004,staf005"/>
+      <construct id="body" page="2" field="stafownid,stafowndp,stafcrtid,stafcrtdp,stafcrtdt,stafmodid,stafmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="staf001,staf002"/>
+      <set id="head" type="no_entry" field="staf001,staf002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="staf001">
+        <after>
+          <reference field="staf001_desc" ref_field="staf_t.staf001" map_field="stafent,staf001" ref_sql="SELECT stael003 FROM stael_t WHERE staelent=$varg_enterprise$var AND stael001=? AND stael002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_stae001" state="i"/>
+        <controlp form="q_stae001" state="c"/>
+      </column>
+      <column id="staf001_desc"/>
+      <column id="staf002" type="S" default="1" def_scc="6013"/>
+    </init>
+    <init id="body" page="1">
+      <column id="stafstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="staf003" def_scc="6015">
+        <after/>
+      </column>
+      <column id="staf003_desc"/>
+      <column id="staf004" type="S" default="Y"/>
+      <column id="staf005" type="S" default="N"/>
+      <column id="staf006"/>
+    </init>
+    <init id="body" page="2">
+      <column id="stafownid">
+        <after>
+          <reference field="stafownid_desc" ref_field="staf_t.stafownid" map_field="stafownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stafownid_desc"/>
+      <column id="stafowndp">
+        <after>
+          <reference field="stafowndp_desc" ref_field="staf_t.stafowndp" map_field="stafowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="stafowndp_desc"/>
+      <column id="stafcrtid">
+        <after>
+          <reference field="stafcrtid_desc" ref_field="staf_t.stafcrtid" map_field="stafcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stafcrtid_desc"/>
+      <column id="stafcrtdp">
+        <after>
+          <reference field="stafcrtdp_desc" ref_field="staf_t.stafcrtdp" map_field="stafcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="stafcrtdp_desc"/>
+      <column id="stafcrtdt"/>
+      <column id="stafmodid">
+        <after>
+          <reference field="stafmodid_desc" ref_field="staf_t.stafmodid" map_field="stafmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stafmodid_desc"/>
+      <column id="stafmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="staf_t" pk="staf001,staf002">
+      <sql id="forupd_sql" type="sql" query="SELECT staf001,&apos;&apos;,staf002 FROM staf_t WHERE stafent= ? AND staf001=? AND staf002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT staf001,&apos;&apos;,staf002 FROM staf_t" order="staf001,staf002"/>
+    </head>
+    <body id="staf_t" page="1,2" linked="" pk="staf003" fk="staf001,staf002">
+      <sql id="forupd_sql_detail" query="SELECT stafstus,staf003,&apos;&apos;,staf004,staf005,staf006,&apos;&apos;,stafownid,&apos;&apos;,stafowndp,&apos;&apos;,stafcrtid,&apos;&apos;,stafcrtdp,&apos;&apos;,stafcrtdt,stafmodid,&apos;&apos;,stafmoddt FROM staf_t WHERE stafent=? AND staf001=? AND staf002=? AND staf003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT stafstus,staf003,&apos;&apos;,staf004,staf005,staf006,&apos;&apos;,stafownid,&apos;&apos;,stafowndp,&apos;&apos;,stafcrtid,&apos;&apos;,stafcrtdp,&apos;&apos;,stafcrtdt,stafmodid,&apos;&apos;,stafmoddt FROM staf_t WHERE stafent= ? AND staf001=? AND staf002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

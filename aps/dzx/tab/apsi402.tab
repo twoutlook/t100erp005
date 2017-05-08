@@ -1,0 +1,138 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apsi402" module="aps" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="04441" crtdt="2014-04-07 09:01:09" modid="02749" moddt="2016-06-29 15:29:21" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="MDS匯總結果維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="psbb001,psbb001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="psbb012,psbb013,psbb002,psbbdocno,psbbseq,psbbseq1,psbbseq2,psbb003,psbb003_desc_desc(chr500),psbb003_desc(chr500),psbb004,psbb014,psbb007,psbb005,psbb005_desc(chr500),psbb006,psbb008,psbb008_desc(chr500),psbb010,psbb010_desc(chr500),psbb009,psbb009_desc(chr500),psbb011,psbb011_desc(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="button1"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="button2"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aps" filename="apsi402" method="dialog">
+    <section id="input">
+      <input id="head" field="psbb001"/>
+      <input id="body" page="1" field="psbb012,psbb013,psbb014" insert="N" append="Y" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="psbb001"/>
+      <construct id="body" page="1" field="psbb014"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="psbb001"/>
+      <set id="head" type="no_entry" field="psbb001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="psbb001">
+        <after>
+          <check chkid="v_psba001" id="isExist"/>
+          <reference field="psbb001_desc" ref_field="psbb_t.psbb001" map_field="psbb001" ref_sql="SELECT psbal003 FROM psbal_t WHERE psbalent=$varg_enterprise$var AND psbal001=? AND psbal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_psba001" state="i"/>
+        <controlp form="q_psba001" state="c"/>
+      </column>
+      <column id="psbb001_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="psbb012"/>
+      <column id="psbb013" type="S" default="N"/>
+      <column id="psbb002" def_scc="5428"/>
+      <column id="psbbdocno">
+        <after>
+          <check chkid="v_xmdadocno" id="isExist"/>
+        </after>
+        <controlp form="q_xmdadocno" state="i"/>
+        <controlp form="q_xmdadocno" state="c"/>
+      </column>
+      <column id="psbbseq"/>
+      <column id="psbbseq1"/>
+      <column id="psbbseq2"/>
+      <column id="psbb003">
+        <after>
+          <check chkid="v_imaf001" id="isExist"/>
+          <reference field="psbb003_desc" ref_field="psbb_t.psbb003" map_field="psbb004" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001" state="i"/>
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="psbb003_desc_desc"/>
+      <column id="psbb003_desc">
+        <after>
+          <reference field="psbb003_desc_desc" ref_field="psbb_t.psbb003" map_field="psbb003" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="psbb004"/>
+      <column id="psbb014" type="S" default="N"/>
+      <column id="psbb007"/>
+      <column id="psbb005">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="psbb005_desc" ref_field="psbb_t.psbb005" map_field="psbb005" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001" state="i"/>
+        <controlp form="q_ooca001" state="c"/>
+      </column>
+      <column id="psbb005_desc"/>
+      <column id="psbb006"/>
+      <column id="psbb008">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="psbb008_desc" ref_field="psbb_t.psbb008" map_field="psbb008" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psbb008_desc"/>
+      <column id="psbb010">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+          <reference field="psbb010_desc" ref_field="psbb_t.psbb010" map_field="psbb010" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="psbb010_desc"/>
+      <column id="psbb009">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="psbb009_desc" ref_field="psbb_t.psbb009" map_field="psbb009" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="psbb009_desc"/>
+      <column id="psbb011">
+        <after>
+          <reference field="psbb011_desc" ref_field="psbb_t.psbb011" map_field="psbb011" ref_sql="SELECT oojdl003 FROM oojdl_t WHERE oojdlent=$varg_enterprise$var AND oojdl001=? AND oojdl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oojd001_1" state="i"/>
+        <controlp form="q_oojd001_1" state="c"/>
+      </column>
+      <column id="psbb011_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="psbb_t" pk="psbb001">
+      <sql id="forupd_sql" type="sql" query="SELECT psbb001,&apos;&apos; FROM psbb_t WHERE psbbent= ? AND psbbsite= ? AND psbb001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT psbb001,&apos;&apos; FROM psbb_t" order="psbb001"/>
+    </head>
+    <body id="psbb_t" page="1" linked="" pk="psbbdocno,psbbseq,psbbseq1,psbbseq2" fk="psbb001">
+      <sql id="forupd_sql_detail" query="SELECT psbb012,psbb013,psbb002,psbbdocno,psbbseq,psbbseq1,psbbseq2,psbb003,&apos;&apos;,&apos;&apos;,psbb004,psbb014,psbb007,psbb005,&apos;&apos;,psbb006,psbb008,&apos;&apos;,psbb010,&apos;&apos;,psbb009,&apos;&apos;,psbb011,&apos;&apos; FROM psbb_t WHERE psbbent=? AND psbbsite=? AND psbb001=? AND psbbdocno=? AND psbbseq=? AND psbbseq1=? AND psbbseq2=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT psbb012,psbb013,psbb002,psbbdocno,psbbseq,psbbseq1,psbbseq2,psbb003,&apos;&apos;,&apos;&apos;,psbb004,psbb014,psbb007,psbb005,&apos;&apos;,psbb006,psbb008,&apos;&apos;,psbb010,&apos;&apos;,psbb009,&apos;&apos;,psbb011,&apos;&apos; FROM psbb_t WHERE psbbent= ? AND psbbsite= ? AND psbb001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

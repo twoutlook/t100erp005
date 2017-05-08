@@ -1,0 +1,124 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aimi107" module="aim" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="01996" crtdt="2014-07-08 14:36:13" modid="05423" moddt="2016-10-24 17:27:25" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="集團預設料件財務分群資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="imchstus,imchsite,imch011,oocql004,oocql005,imch013,imch013_desc(chr500),imch013_desc_desc(chr500),imch014,imch014_desc(chr500),imch015"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="imchsite,imch011,imchownid,imchownid_desc(chr500),imchowndp,imchowndp_desc(chr500),imchcrtid,imchcrtid_desc(chr500),imchcrtdp,imchcrtdp_desc(chr500),imchcrtdt,imchmodid,imchmodid_desc(chr500),imchmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="aim" filename="aimi107" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="imchstus,imchsite,imch011,oocql004,oocql005,imch013,imch014,imch015" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="imchstus,imchsite,imch011,oocql004,oocql005,imch013,imch014,imch015"/>
+      <construct id="body" page="2" field="imchownid,imchowndp,imchcrtid,imchcrtdp,imchcrtdt,imchmodid,imchmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="imchstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="imchsite"/>
+      <column id="imch011">
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="oocql004"/>
+      <column id="oocql005"/>
+      <column id="imch013">
+        <after>
+          <check chkid="v_imaa001" id="isExist"/>
+          <reference field="imch013_desc" ref_field="imch_t.imch013" map_field="imch013" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="imch013_desc">
+        <after>
+          <reference field="imch013_desc_desc" ref_field="imch_t.imch013" map_field="imch013" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="imch013_desc_desc"/>
+      <column id="imch014">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="imch014_desc" ref_field="imch_t.imch014" map_field="imch014" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="imch014_desc"/>
+      <column id="imch015" def_scc="8907"/>
+    </init>
+    <init id="body" page="2">
+      <column id="imchownid">
+        <after>
+          <reference field="imchownid_desc" ref_field="imch_t.imchownid" map_field="imchownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imchownid_desc"/>
+      <column id="imchowndp">
+        <after>
+          <reference field="imchowndp_desc" ref_field="imch_t.imchowndp" map_field="imchowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imchowndp_desc"/>
+      <column id="imchcrtid">
+        <after>
+          <reference field="imchcrtid_desc" ref_field="imch_t.imchcrtid" map_field="imchcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imchcrtid_desc"/>
+      <column id="imchcrtdp">
+        <after>
+          <reference field="imchcrtdp_desc" ref_field="imch_t.imchcrtdp" map_field="imchcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imchcrtdp_desc"/>
+      <column id="imchcrtdt"/>
+      <column id="imchmodid">
+        <after>
+          <reference field="imchmodid_desc" ref_field="imch_t.imchmodid" map_field="imchmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imchmodid_desc"/>
+      <column id="imchmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="imch_t" page="1,2" linked="" pk="imchsite,imch011">
+      <sql id="forupd_sql_detail" query="SELECT imchstus,imchsite,imch011,&apos;&apos;,&apos;&apos;,imch013,&apos;&apos;,&apos;&apos;,imch014,&apos;&apos;,imch015,&apos;&apos;,&apos;&apos;,imchownid,&apos;&apos;,imchowndp,&apos;&apos;,imchcrtid,&apos;&apos;,imchcrtdp,&apos;&apos;,imchcrtdt,imchmodid,&apos;&apos;,imchmoddt FROM imch_t WHERE imchent=? AND imchsite=? AND imch011=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT imchstus,imchsite,imch011,&apos;&apos;,&apos;&apos;,imch013,&apos;&apos;,&apos;&apos;,imch014,&apos;&apos;,imch015,&apos;&apos;,&apos;&apos;,imchownid,&apos;&apos;,imchowndp,&apos;&apos;,imchcrtid,&apos;&apos;,imchcrtdp,&apos;&apos;,imchcrtdt,imchmodid,&apos;&apos;,imchmoddt FROM imch_t WHERE imchent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="oocql_t.oocql004,oocql_t.oocql005" table="oocql_t" fk="&apos;206&apos;,imch011" pk="oocql001,oocql002,oocql003" field="oocql004,oocql005"/>
+    </body>
+  </dataset>
+</assembly>
+

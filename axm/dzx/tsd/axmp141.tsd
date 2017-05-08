@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axmp141" std_prog="axmp141" erpver="1.0" ver="2" module="AXM" type="M" booking="Y" designer_ver="1.0" class="p" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：重新計算信用評核客戶的信用餘額
+標準作業功能：條件查詢/條件儲存/相關文件/說明/離開
+狀態功能：無
+作業類型：批次計算作業
+輸入模式：批次作業版型
+作業資料來源(Master)：
+ 資料來源表：xmaa_t(信用評等公式資料檔)
+                        xmab_t(信用評核異動明細檔)
+                        xmad_t(信用評核月結檔)
+
+
+●程式初始狀態:
+  1.本支批次作業的處理進度中的目前處理階段，大致分為資料初始化、計算各據點信用餘額、計算集團信用餘額
+    等階段
+  2.本支批次作業的處理進度中的整體處理進度，依據要計算的額度客戶+據點資料筆數畫分成100等份顯示，
+    每計算完額度對象+據點的信用餘額時就增加一等份 
+
+●資料處理:
+  1.此作業計算處理邏輯類似TIPTOP的aimp620，用上期期末月結信用餘額加本期的所有異動明細的交易金額，
+    算出本期的信用餘額
+    1-1.若計算的額度客戶當期沒有任何信用額動異動明細，且對應的xmac_t記錄的各項目額度也均為0時，
+        則此額度客戶度不需產生本年度期別的月結檔
+
+  2.計算額度對象在各營運據點的月結信用餘額
+    2-1.依據UI畫面的額度對象與信用評等QBE條件，且pmab002不等於'1:不查核'或'4:依據集團設置'抓取符合條件
+        的交易對象據點資料(pmab_t)進行計算，並將相同額度對象與信用評等的資料放在一起計算(也就是用
+        信用評等、額度對象做為order by)
+    2-2.依據UI畫面輸入的計算年度期別抓取該額度對象在該據點(g_site)上一期的各計算項目的結存餘額資料  
+        (xmad_t)，取出的結存餘額做為計算的期出餘額並將該餘額預設給變數l_balxx(每一個計算項目的
+        餘額預設給一個變數)，若抓取不到上期結存資料時，則各項目的上期結存餘額預設為0
+    2-3.依據2-1取得的交易對象與畫面上輸入的計算年度期別區間內(例如:計算年度期別為2013/11，則區間日期為
+        2013/11/1 ~ 2013/11/30)，且當下營運據點做為條件，取出所有符合條件的信用評核異動明細(xmab_t)
+        資料(建議可以依據相同的計算項目(xmab001)、與交易幣別(xmab007)對交易金額進行 匯總
+    2-4.依據2-3取得的異動明細計算計算項目的餘額
+        2-4-1.依據異動明細的計算項目值，判斷該計算項目在該信用評等中設置的"檢查百分比"
+              值，計算該項目的信用耗用金額，計算公式如下:
+                l_balxx = l_balxx+((交易金額-已充銷金額)*百分比*交易幣別與額度幣別匯率)
+        2-4-2.若異動明細的計算項目在信用評等的公式中找不到有設置該計算項目時，則此異動明細不需要計算
+
+    2-5.最後同一額度對象與信用評等重複2-3~2-4步驟計算完後，用該額度對象設置的所有計算項目
+        的耗用金額得到該額度對象在該據點的信用餘額
+    2-6.將上數計算所得的各計算項目耗用金額新增寫入交易對象信用月結檔(xmad_t)
+
+  3.計算額度對象在集團的信用餘額檔
+    3-1.依據UI畫面的額度對象與信用評等QBE條件，且pmaa051不等於'1:不查核的交易對象主檔資料(pmaa_t)，
+        並將相同額度對象與信用評等的資料放在一起計算(也就是用信用評等、額度對象做為order by)
+    3-2.依據UI畫面輸入的計算年度期別抓取該額度對象且據點等於'ALL'的上一期各計算項目的結存餘額資料
+        (xmad_t)，取出的結存餘額做為計算的期出餘額並將該餘額預設給變數l_balxx(每一個計算項目的
+        餘額預設給一個變數)
+    3-3.依據2-1取得的交易對象與畫面上輸入的計算年度期別區間內(例如:計算年度期別為2013/11，則區間日期為
+        2013/11/1 ~ 2013/11/30)做為條件，取出所有符合條件的信用評核異動明細(xmab_t)資料(建議可以依據
+        相同的計算項目(xmab001)、異動類型(xmab002)與交易幣別(xmab007)對交易金額進行匯總，這樣可以減少
+        foreach的次數)
+    3-4.依據3-3取得的異動明細與3-1取得的信用評等設定的公式計算各計算項目的餘額
+        3-4-1.依據異動明細的計算項目值，判斷該計算項目在該信用評等中設置的"餘額加減項"與"檢查百分比"
+              值，計算該項目的信用耗用金額，計算公式如下:
+                  則l_balxx = l_balxx+((交易金額-已充銷金額)*百分比*交易幣別與額度幣別匯率)
+        3-4-2.若異動明細的計算項目在信用評等的公式中找不到有設置該計算項目時，則此異動明細不需要計算
+    3-5.最後同一額度對象與信用評等重複3-3~3-4步驟計算完後，用該額度對象設置的加減所有計算項目
+        的耗用金額得到該額度對象在集團('ALL')的信用餘額
+    3-6.將上數計算所得的各計算項目耗用金額與新增寫入交易對象信用月結檔(xmad_t)
+                
+              
+]]>
+  </all>
+  <field cite_std="N" name="p" ver="2" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="&lt;=" max="12" min_compare="&gt;=" min="1" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmab_t.pmab003" ver="2" src="s" column="pmab003" table="pmab_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_pmaa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmab_t.pmab004" ver="2" src="s" column="pmab004" table="pmab_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="u">
+    <![CDATA[開窗傳入參數argq = '296']]>
+  </field>
+  <field cite_std="N" name="y" ver="2" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="N" can_query="N" widget="Edit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmaa_t.pmaa052" ver="2" src="s" column="pmaa052" table="pmaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_pmaa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pmaa_t.pmaa053" ver="2" src="s" column="pmaa053" table="pmaa_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_xmaj001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="d">
+    <![CDATA[開窗傳入參數argq = '296']]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="2" name="p" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="2" name="pmaa_t.pmaa052" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="2" name="pmaa_t.pmaa053" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="2" name="pmab_t.pmab003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="2" name="pmab_t.pmab004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="2" name="y" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+  </help_code>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="group_qbe" text="QBE條件" lstr=""/>
+    <sfield name="lbl_pmaa001" text="額度客戶" lstr=""/>
+    <sfield name="lbl_oocq002" text="信用評等" lstr=""/>
+    <sfield name="group_input" text="Input條件" lstr=""/>
+    <sfield name="lbl_y" text="計算年度" lstr=""/>
+    <sfield name="lbl_p" text="計算期別" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

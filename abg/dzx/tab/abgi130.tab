@@ -1,0 +1,119 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abgi130" module="abg" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="06821" crtdt="2015-08-10 11:42:15" modid="06821" moddt="2015-08-17 12:13:52" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="預算現金碼對應表">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bgan001,bgan001_desc(chr80),bgan002,bgan002_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bgan004,bgan004_desc(chr500),bgan004_1_desc(chr500),bgan003,bgan003_desc(chr500),bgan003_1_desc(chr500),bganstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="bgan004,bganownid,bganownid_desc(chr500),bganowndp,bganowndp_desc(chr500),bgancrtid,bgancrtid_desc(chr500),bgancrtdp,bgancrtdp_desc(chr500),bgancrtdt,bganmodid,bganmodid_desc(chr500),bganmoddt"/>
+      <var id="bs_field" value="bgan001,bgan002" pk="bgan001,bgan002" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="abgi130_field_chk"/>
+    </section>
+  </structure>
+  <form id="0" module="abg" filename="abgi130" method="dialog">
+    <section id="input">
+      <input id="head" field="bgan001,bgan002"/>
+      <input id="body" page="1" field="bgan004,bgan004_desc,bgan004_1_desc,bgan003,bgan003_desc,bgan003_1_desc,bganstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bgan001,bgan001_desc,bgan002,bgan002_desc"/>
+      <construct id="body" page="1" field="bgan004,bgan004_desc,bgan004_1_desc,bgan003,bgan003_desc,bgan003_1_desc,bganstus"/>
+      <construct id="body" page="2" field="bganownid,bganowndp,bgancrtid,bgancrtdp,bgancrtdt,bganmodid,bganmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bgan001,bgan002"/>
+      <set id="head" type="no_entry" field="bgan001,bgan002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bgan001">
+        <after/>
+        <controlp form="q_ooal002_6" state="i"/>
+        <controlp form="q_ooal002_6" state="c"/>
+      </column>
+      <column id="bgan001_desc"/>
+      <column id="bgan002">
+        <after/>
+        <controlp form="q_ooal002_6" state="i"/>
+        <controlp form="q_ooal002_6" state="c"/>
+      </column>
+      <column id="bgan002_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="bgan004">
+        <after/>
+      </column>
+      <column id="bgan004_desc"/>
+      <column id="bgan004_1_desc"/>
+      <column id="bgan003">
+        <after/>
+      </column>
+      <column id="bgan003_desc"/>
+      <column id="bgan003_1_desc"/>
+      <column id="bganstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="bganownid">
+        <after>
+          <reference field="bganownid_desc" ref_field="bgan_t.bganownid" map_field="bganownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bganownid_desc"/>
+      <column id="bganowndp">
+        <after>
+          <reference field="bganowndp_desc" ref_field="bgan_t.bganowndp" map_field="bganowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bganowndp_desc"/>
+      <column id="bgancrtid">
+        <after>
+          <reference field="bgancrtid_desc" ref_field="bgan_t.bgancrtid" map_field="bgancrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgancrtid_desc"/>
+      <column id="bgancrtdp">
+        <after>
+          <reference field="bgancrtdp_desc" ref_field="bgan_t.bgancrtdp" map_field="bgancrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgancrtdp_desc"/>
+      <column id="bgancrtdt"/>
+      <column id="bganmodid">
+        <after>
+          <reference field="bganmodid_desc" ref_field="bgan_t.bganmodid" map_field="bganmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bganmodid_desc"/>
+      <column id="bganmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bgan_t" pk="bgan001,bgan002">
+      <sql id="forupd_sql" type="sql" query="SELECT bgan001,&apos;&apos;,bgan002,&apos;&apos; FROM bgan_t WHERE bganent= ? AND bgan001=? AND bgan002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bgan001,&apos;&apos;,bgan002,&apos;&apos; FROM bgan_t" order="bgan001,bgan002"/>
+    </head>
+    <body id="bgan_t" page="1,2" linked="" pk="bgan004" fk="bgan001,bgan002">
+      <sql id="forupd_sql_detail" query="SELECT bgan004,&apos;&apos;,&apos;&apos;,bgan003,&apos;&apos;,&apos;&apos;,bganstus,&apos;&apos;,bganownid,&apos;&apos;,bganowndp,&apos;&apos;,bgancrtid,&apos;&apos;,bgancrtdp,&apos;&apos;,bgancrtdt,bganmodid,&apos;&apos;,bganmoddt FROM bgan_t WHERE bganent=? AND bgan001=? AND bgan002=? AND bgan004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bgan004,&apos;&apos;,&apos;&apos;,bgan003,&apos;&apos;,&apos;&apos;,bganstus,&apos;&apos;,bganownid,&apos;&apos;,bganowndp,&apos;&apos;,bgancrtid,&apos;&apos;,bgancrtdp,&apos;&apos;,bgancrtdt,bganmodid,&apos;&apos;,bganmoddt FROM bgan_t WHERE bganent= ? AND bgan001=? AND bgan002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

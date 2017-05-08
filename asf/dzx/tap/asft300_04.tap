@@ -1,0 +1,198 @@
+<add_points prog="asft300_04" std_prog="asft300_04" erpver="1.0" module="ASF" ver="1" env="s" zone="t10dev" normal_style="Y" booking="Y">
+  <point name="input.a.sfaf001" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_sfaf_m.sfaf001) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_sfaf_m.sfaf001 != g_sfaf001_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM sfaf_t WHERE "||"sfafent = '" ||g_enterprise|| "' AND "||"sfafsite = '"||g_site ||"' AND "|| "sfafdocno = '"||g_sfafdocno ||"' AND "|| "sfaf001 = '"||g_sfaf_m.sfaf001 ||"'",'std-00004',0) THEN 
+                     LET g_sfaf_m.sfaf001 = g_sfaf001_t
+                     NEXT FIELD CURRENT
+                  END IF
+                  IF NOT asft300_04_sfaf_check() THEN
+                     LET g_sfaf_m.sfaf001 = g_sfaf001_t
+                     NEXT FIELD CURRENT
+                  END IF                 
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.sfafdocno" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_sfaf_m.sfafsite) AND NOT cl_null(g_sfaf_m.sfafdocno) AND NOT cl_null(g_sfaf_m.sfaf001) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_sfaf_m.sfafsite != g_sfafsite_t  OR g_sfaf_m.sfafdocno != g_sfafdocno_t  OR g_sfaf_m.sfaf001 != g_sfaf001_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM sfaf_t WHERE "||"sfafent = '" ||g_enterprise|| "' AND "||"sfafsite = '"||g_sfaf_m.sfafsite ||"' AND "|| "sfafdocno = '"||g_sfaf_m.sfafdocno ||"' AND "|| "sfaf001 = '"||g_sfaf_m.sfaf001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.sfafsite" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_sfaf_m.sfafsite) AND NOT cl_null(g_sfaf_m.sfafdocno) AND NOT cl_null(g_sfaf_m.sfaf001) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_sfaf_m.sfafsite != g_sfafsite_t  OR g_sfaf_m.sfafdocno != g_sfafdocno_t  OR g_sfaf_m.sfaf001 != g_sfaf001_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM sfaf_t WHERE "||"sfafent = '" ||g_enterprise|| "' AND "||"sfafsite = '"||g_sfaf_m.sfafsite ||"' AND "|| "sfafdocno = '"||g_sfaf_m.sfafdocno ||"' AND "|| "sfaf001 = '"||g_sfaf_m.sfaf001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="function.asft300_04_ins_sfaf" cite_std="N" status="u" ver="1" src="s" new="Y" order="1" cite_ver="" mark_hard="N">
+<![CDATA[#批次新增产品序号
+PRIVATE FUNCTION asft300_04_ins_sfaf()
+DEFINE l_no1     LIKE type_t.num20
+DEFINE l_no2     LIKE type_t.num20
+DEFINE l_a       LIKE type_t.chr80
+DEFINE l_i       LIKE type_t.num10
+DEFINE l_n       LIKE type_t.num5
+DEFINE l_sfaf001 LIKE sfaf_t.sfaf001
+DEFINE l_sfafseq LIKE sfaf_t.sfafseq
+   
+   IF cl_null(g_start_no) THEN
+      RETURN
+   END IF 
+   LET l_no1 = g_start_no
+   FOR l_i = 1 TO LENGTH(g_start_no)
+      IF cl_null(l_a) THEN
+         LET l_a = '&'
+      ELSE
+         LET l_a = l_a,'&'
+      END IF 
+   END FOR
+ 
+   FOR l_i = 1 TO g_sfaf_m.number
+      LET l_no2 = l_no1 + l_i - 1
+      LET l_sfaf001 = l_no2 USING l_a
+      LET l_sfaf001 = g_sfaf_m.sfaf001[1,LENGTH(g_sfaf_m.sfaf001)-LENGTH(g_start_no)],l_sfaf001
+      SELECT COUNT(*) INTO l_n FROM sfaf_t WHERE sfafent=g_enterprise AND sfafsite=g_site
+         AND sfafdocno=g_sfafdocno AND sfaf001=l_sfaf001
+      IF l_n = 0 THEN
+         SELECT MAX(sfafseq)+1 INTO l_sfafseq FROM sfaf_t WHERE sfafent=g_enterprise AND sfafsite=g_site
+            AND sfafdocno=g_sfafdocno
+         IF cl_null(l_sfafseq) THEN
+            LET l_sfafseq = 1 
+         END IF
+         INSERT INTO sfaf_t(sfafent,sfafsite,sfafdocno,sfafseq,sfaf001) VALUES(g_enterprise,g_site,g_sfafdocno,l_sfafseq,l_sfaf001)
+      END IF
+   END FOR
+END FUNCTION]]>
+</point>
+  <point name="function.asft300_04_sfaf_check" cite_std="N" status="" ver="1" src="s" new="Y" order="2" cite_ver="" mark_hard="N">
+<![CDATA[#栏位检查
+PRIVATE FUNCTION asft300_04_sfaf_check()
+   DEFINE l_length        LIKE type_t.num5
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_start_no      LIKE sfaf_t.sfaf001
+   DEFINE l_end_no        LIKE sfaf_t.sfaf001
+   DEFINE l_no1           LIKE type_t.num20
+   DEFINE l_no2           LIKE type_t.num20
+   
+   IF cl_null(g_sfaf_m.sfaf001) THEN
+      RETURN TRUE
+   END IF
+   
+   LET l_length  = LENGTH(g_sfaf_m.sfaf001)
+   LET l_start_no = ''
+   FOR l_i = l_length TO 1 STEP -1
+      IF g_sfaf_m.sfaf001[l_i,l_i] MATCHES '[0-9]' THEN
+         IF cl_null(l_start_no) THEN
+            LET l_start_no = g_sfaf_m.sfaf001[l_i,l_i]
+         ELSE
+            LET l_start_no = g_sfaf_m.sfaf001[l_i,l_i],l_start_no
+         END IF
+      ELSE
+         EXIT FOR
+      END IF
+   END FOR
+   IF cl_null(l_start_no) THEN
+      CALL cl_err(g_sfaf_m.sfaf001,'asf-00063',1)
+      RETURN FALSE
+   END IF 
+   IF NOT cl_null(g_sfaf_m.number) AND g_sfaf_m.number > 0 THEN
+      LET l_no1 = l_start_no
+      LET l_no2 = l_no1 + g_sfaf_m.number-1
+      LET l_end_no = l_no2
+      IF LENGTH(l_start_no) < LENGTH(l_end_no) THEN
+         CALL cl_err(g_sfaf_m.sfaf001,'asf-00064',1)
+         RETURN FALSE
+      END IF
+      LET g_start_no = l_start_no
+   END IF    
+   RETURN TRUE
+END FUNCTION]]>
+</point>
+  <point name="global.variable" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[DEFINE g_sfafdocno           LIKE sfaf_t.sfafdocno
+DEFINE g_start_no            LIKE sfaf_t.sfaf001
+DEFINE g_sfafdocno_t   LIKE sfaf_t.sfafdocno    #Key值備份
+DEFINE g_sfaf001_t      LIKE sfaf_t.sfaf001    #Key值備份]]>
+</point>
+  <point name="input.a.number" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            IF NOT asft300_04_sfaf_check() THEN
+               NEXT FIELD CURRENT
+            END IF ]]>
+</point>
+  <point name="input.before_close" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   IF INT_FLAG THEN
+      LET INT_FLAG = 0 
+   ELSE
+      CALL asft300_04_ins_sfaf() 
+   END IF
+]]>
+</point>
+  <point name="input.define" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   DEFINE p_sfaadocno     LIKE sfaa_t.sfaadocno
+]]>
+</point>
+  <point name="input.get_var" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   p_sfaadocno]]>
+</point>
+  <point name="input.pre_input" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   LET g_sfafdocno = p_sfaadocno]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.action" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.before_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.sfaf001" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.sfaf001" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.number" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.number" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.sfaf001" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.number" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.after_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.more_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.post_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+</add_points>

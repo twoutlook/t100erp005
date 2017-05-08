@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="awsp900_02" std_prog="awsp900_02" erpver="1.0" module="AWS" ver="2" env="s" zone="t10dev" booking="N" type="S" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="Y" status=""/>
+  </other>
+  <point name="function.awsp900_02_invokeSrv" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 提供 invokeSrv 服務呼叫
+# Memo...........:
+# Usage..........: CALL awsp900_02_invokeSrv()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_02_invokeSrv()
+DEFINE l_cmd         STRING
+DEFINE la_param      RECORD
+          prog       STRING,
+          param      DYNAMIC ARRAY OF STRING
+                     END RECORD
+DEFINE l_prog        LIKE gzja_t.gzja001
+DEFINE l_service     LIKE gzja_t.gzja004
+ 
+    WHENEVER ERROR CONTINUE
+ 
+    #服務變數初始化
+    CALL awsp900_01_init()
+
+    #取出輸入檔案路徑內的輸入字串
+    LET g_request.request = awsp900_01_read_file(g_request_file_path)
+    IF cl_null(g_request.request) THEN
+       LET g_srvcode = "100"
+    END IF
+    #DISPLAY "g_request.request = ", g_request.request
+
+    #取得服務名稱
+    LET g_service = awsp900_02_req_process() 
+    display "service:",g_service 
+
+
+    #紀錄 Request XML
+    CALL awsp900_01_writeRequestLog()   
+
+    #檢查服務名稱是否正確, 若正確則呼叫服務 Function 處理
+    IF g_srvcode ="000" THEN
+       LET l_service = g_service
+       #參考azzi700的設定
+       SELECT gzja001 INTO l_prog FROM gzja_t WHERE gzja004 = l_service
+
+       IF cl_null(l_prog) THEN
+          LET g_srvcode = "100"       #服務未按照正常流程執行
+          LET g_response.response  = "[", g_service CLIPPED, "]", "Service not executed successfully"  
+       ELSE
+          LET la_param.prog = l_prog
+       END IF
+    END IF
+
+    IF g_srvcode = "000" THEN
+       LET la_param.param[1] = g_request_file_path CLIPPED
+       LET la_param.param[2] = g_response_file_path CLIPPED
+       LET l_cmd = util.JSON.stringify(la_param)
+
+       DISPLAY "run service: ", l_cmd
+       DISPLAY "(debug cmdrun)  r.d ", l_prog CLIPPED," '",g_request_file_path CLIPPED,"' '",g_response_file_path CLIPPED,"'"
+       CALL cl_cmdrun_wait(l_cmd)
+    END IF
+
+    #檢查服務處理狀況
+    CALL awsp900_02_response_process()
+    display g_response.response
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_02_req_process" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 取得服務名稱
+# Memo...........:
+# Usage..........: CALL awsp900_02_req_process()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_02_req_process()
+DEFINE lx_reqdoc         xml.DomDocument
+DEFINE lx_node_list      xml.DomNodeList
+DEFINE lx_tnode          xml.DomNode
+DEFINE lx_pnode          xml.DomNode
+DEFINE l_service         STRING
+DEFINE l_status          STRING
+DEFINE l_i               INTEGER
+DEFINE l_ent             STRING
+
+
+    IF cl_null(g_request.request) THEN
+       LET g_srvcode = "100"       #服務未按照正常流程執行
+       LET g_status.code= "-1"
+       LET g_status.description = "Request isn't valid XML document."
+       LET g_response.response = "Request isn't valid XML document."
+       RETURN ""
+    END IF
+
+    #將 XML 檔案轉為 XML DomNode
+    CALL awsp900_01_filetoxml(g_request_file_path) 
+      RETURNING l_status,lx_reqdoc,g_response.response
+    IF NOT l_status THEN
+       LET g_srvcode = "100"       #服務未按照正常流程執行
+       RETURN ""
+    END IF
+
+    LET l_service = cl_bpm_get_node_attribute(lx_reqdoc,"service","name")
+    display "service :", l_service
+    IF cl_null(l_service) THEN
+       LET g_srvcode = "100"       #服務未按照正常流程執行
+       LET g_status.code= "-1"
+       LET g_status.description = "Request isn't valid XML document."
+       LET g_response.response = "Request isn't valid XML document: not found service name" 
+    END IF
+
+    LET g_account = cl_bpm_get_node_attribute(lx_reqdoc,"host","acct")
+    
+    LET l_ent = awsp900_01_getNodeValue(lx_reqdoc,"key","EntId")
+    IF NOT cl_null(l_ent) THEN
+       LET g_enterprise = l_ent
+    END IF
+    display "02_account:",g_account
+    display "02_topent:",g_enterprise
+    CALL FGL_SETENV("WEBUSER",g_account)
+    CALL FGL_SETENV("LOGNAME",g_account)
+    CALL FGL_SETENV("TOPENT",g_enterprise)
+
+    RETURN l_service
+END FUNCTION]]>
+  </point>
+  <point name="function.awsp900_02_response_process" order="3" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 檢查服務處理狀況
+# Memo...........:
+# Usage..........: CALL awsp900_02_response_process()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION awsp900_02_response_process()
+DEFINE l_channel         base.Channel
+DEFINE l_str             STRING
+    
+    #檢查服務處理是否正常狀況
+    IF g_srvcode = "000" THEN
+       display "size:", os.Path.size(g_response_file_path)
+       IF os.Path.size(g_response_file_path) > 0  THEN
+          LET g_response.response = awsp900_01_read_file(g_response_file_path)
+       ELSE
+
+          display "open error"
+          LET l_str = ""
+          LET g_srvcode = "100"       #服務未按照正常流程執行
+          LET g_response.response  = "Service not executed successfully. path:", g_response_file_path
+       END IF
+    END IF
+    
+    display "res:",g_response.response
+    #若有錯誤，則必須回傳錯誤原因
+    IF g_srvcode = "100" THEN
+       #產生 response 資料
+       CALL awsp900_01_create_response(g_response.response)
+    END IF
+    
+    LET g_response.response =cl_str_replace(g_response.response,"<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>","")
+    #紀錄 Request XML
+    CALL awsp900_01_writeResponseLog()
+END FUNCTION]]>
+  </point>
+  <section id="awsp900.free_style_variable" ver="1" status="" src="s">
+    <![CDATA[#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="awsp900.global" ver="1" status="" src="s">
+    <![CDATA[#add-point:註解編寫項目
+{<point name="main.memo" />}
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="main.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+]]>
+  </section>
+  <section id="awsp900.global_variable" ver="1" status="" src="s">
+    <![CDATA[#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="awsp900.other_dialog" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="awsp900.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="awsp900_02.description" ver="1" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000017
+#+ 
+#+ Filename...: awsp900_02
+#+ Description: ...
+#+ Creator....: 00544(2014/05/23)
+#+ Modifier...: 00544(2014/05/23)
+#+ Buildtype..: 應用 p00 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+</add_points>

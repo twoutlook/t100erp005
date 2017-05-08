@@ -1,0 +1,391 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="awsp500.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2015-10-15 12:02:12), PR版次:0002(2016-12-26 11:39:27)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000044
+#+ Filename...: awsp500
+#+ Description: 回傳ERP批次處理結果
+#+ Creator....: 05775(2015-10-15 09:31:25)
+#+ Modifier...: 05775 -SD/PR- 08879
+ 
+{</section>}
+ 
+{<section id="awsp500.global" >}
+#應用 p01 樣板自動產生(Version:10)
+#161226-00009#1   161226 By Mars     重新撈取資料再回覆PLM處理訊息
+#Memos
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+IMPORT xml
+IMPORT com
+IMPORT util
+IMPORT security
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+
+#add-point:自定義模組變數(Module Variable)
+GLOBALS "../../cfg/top_ws.inc"
+
+TYPE type_g_attribute                  DYNAMIC ARRAY OF RECORD
+        name                           STRING,      #屬性名稱
+        value                          STRING       #屬性值
+                                       END RECORD      
+DEFINE g_serial                        STRING                                       
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="awsp500.main" >}
+MAIN
+   DEFINE ls_js           STRING
+   #add-point:main段define 
+   DEFINE la_param        RECORD
+             userid       LIKE type_t.chr20,
+             jobid        LIKE type_t.chr20,
+             jobstatus    LIKE type_t.chr1,
+             msg          STRING
+                          END RECORD
+   
+   #end add-point 
+   #add-point:main段define (客製用)
+
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   LET g_prog = "awsp500"
+   LET g_bgjob = "Y"
+   CALL cl_db_connect("ds",FALSE) 
+   CALL cl_ap_init("aws","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   LET ls_js = g_argv[1]
+   CALL util.JSON.parse(g_argv[1],la_param)
+ 
+   CALL awsp500_plm_job(la_param.*)
+ 
+
+ 
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="awsp500.init" >}
+
+ 
+
+ 
+
+ 
+{</section>}
+ 
+{<section id="awsp500.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: 透過參數決定WebClient的request組成語法
+# Memo...........:
+# Usage..........: CALL awsp500_plm_job(p_param)
+#                  RETURNING 回传参数
+# Input parameter: p_param :呼叫awsp500時的外部參數
+# Return code....: none
+# Date & Author..: 15/10/15 By TSD.Tim
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsp500_plm_job(p_param)
+   DEFINE p_param                RECORD
+             userid              LIKE type_t.chr20,
+             jobid               LIKE type_t.chr20,
+             jobstatus           LIKE type_t.chr1,
+             msg                 STRING
+                                 END RECORD                      
+   DEFINE l_req_doc              xml.DomDocument
+   DEFINE l_request_root         xml.DomNode
+   DEFINE l_request_str          STRING
+   DEFINE l_start                LIKE type_t.num10
+   DEFINE l_end                  LIKE type_t.num10
+   DEFINE l_xml_str              STRING
+   DEFINE l_request_doc          xml.DomDocument
+   DEFINE l_request_content      xml.DomNode
+   DEFINE l_request              xml.DomNode   
+   DEFINE l_file                 STRING
+   DEFINE l_attr                 type_g_attribute
+   DEFINE l_node                 xml.DomNode
+   DEFINE l_today                LIKE type_t.chr20   
+   DEFINE l_time                 LIKE type_t.chr20
+   DEFINE l_file_name1           LIKE type_t.chr50
+   DEFINE l_file_name2           LIKE type_t.chr50
+   DEFINE l_response_content_str	STRING
+   DEFINE l_status		         INTEGER   
+   DEFINE l_res_doc              xml.DomDocument
+   DEFINE l_req_doc_log          xml.DomDocument
+   DEFINE l_log_str              STRING
+   
+   #建立 Request XML
+   LET l_req_doc = xml.DomDocument.createDocument("request")
+   LET l_request_root = l_req_doc.getDocumentElement()
+   
+   #建立屬性資料
+   CALL l_request_root.setAttribute("type", "sync")
+   CALL l_request_root.setAttribute("key", cl_trust_crosskey(l_xml_str))
+   
+   #建立TT主機資訊(<host>)
+   CALL l_attr.clear()
+   LET l_attr = cl_bpm_get_host_info()
+   CALL cl_bpm_create_node(l_req_doc,l_request_root,'host',l_attr) RETURNING l_req_doc,l_node
+
+   #建立PLM主機資訊(<service>)
+   CALL l_attr.clear()
+   LET l_attr[1].name = "prod"
+   LET l_attr[1].value = "PLM"
+
+   LET l_attr[2].name = "name"
+   LET l_attr[2].value = "setT100JobStatus"
+   
+   CALL cl_bpm_create_node(l_req_doc,l_request_root,'service',l_attr) RETURNING l_req_doc,l_node
+   
+   #取得 host 及 service 字串 <host prod=.../>
+   LET l_request_str = l_request_root.toString()
+   LET l_start = l_request_str.getIndexOf("<host",1)
+   LET l_end = l_request_str.getIndexOf("/>",l_request_str.getIndexOf("<service",l_start))
+   LET l_xml_str =  l_request_str.subString(l_start,l_end+1)
+   CALL l_request_root.setAttribute("key", cl_trust_crosskey(l_xml_str))
+   
+   # payload 資訊
+   CALL cl_bpm_create_payload(l_req_doc,l_request_root) RETURNING l_req_doc,l_request_root
+   
+   CALL cl_bpm_request_content_pre() RETURNING l_request_doc,l_request
+   
+   #建立Parameter節點
+   CALL l_attr.clear() 
+   CALL cl_bpm_create_node(l_request_doc, l_request,"Parameter",l_attr) RETURNING l_request_doc, l_node
+   
+   ##建立Record節點
+   CALL cl_bpm_create_node(l_request_doc,l_node,"Record",l_attr)
+      RETURNING l_request_doc, l_node
+
+   #建立request真正資料內容
+   LET l_attr[1].name = "UserId"
+   LET l_attr[1].value = p_param.userid
+   
+   LET l_attr[2].name = "JobID"
+   LET l_attr[2].value = p_param.jobid
+   
+   LET l_attr[3].name = "JobStatus"
+   CASE p_param.jobstatus
+      WHEN 'Y'   #成功
+         LET p_param.jobstatus = '3'
+      WHEN 'F'   #失敗
+         LET p_param.jobstatus = '4'
+      WHEN 'D'
+         LET p_param.jobstatus = '5'
+      OTHERWISE
+         EXIT CASE
+   END CASE
+   LET l_attr[3].value = p_param.jobstatus
+   
+   DISPLAY "awsp500_jobid_Message = " ,p_param.jobid ,":", p_param.msg    #161226-00009#1   161226  By Mars add  
+   
+   LET l_attr[4].name = "Message"
+   LET l_attr[4].value = p_param.msg
+   
+   CALL cl_bpm_create_field(l_request_doc,l_node,l_attr) RETURNING l_node
+
+   CALL l_request_doc.setFeature("format-pretty-print",true)
+
+   LET l_request_content = l_req_doc.createCDataSection(l_request_doc.saveToString())
+   CALL l_request_root.appendChild(l_request_content)
+   
+   LET l_xml_str = l_req_doc.saveToString()
+   LET l_xml_str = cl_str_replace(l_xml_str,'<?xml version="1.0" encoding="UTF-8" standalone="no"?>',"")
+   
+   LET l_today = cl_get_today()
+   LET l_time = cl_get_time()
+   LET l_file_name1 = 'plm_ws_',l_today[1,4],l_today[6,7],l_today[9,10],l_time[1,2],l_time[4,5],l_time[7,8],'_request.xml'
+   
+   LET l_file = os.Path.join(FGL_GETENV("TEMPDIR"), l_file_name1)   
+    LET l_req_doc_log = xml.DomDocument.create()
+   CALL l_req_doc_log.loadFromString(l_xml_str)
+   CALL l_req_doc_log.setFeature("format-pretty-print",true)
+   LET l_log_str = l_req_doc_log.saveToString()
+   CALL l_req_doc_log.save(l_file)   #查看用
+   
+   #設定 PLM server
+   IF NOT awsp500_01_chk_plm_server() THEN
+      RETURN
+   END IF 
+   
+   #紀錄LOG檔
+   CALL awsp500_plm_log('1',l_log_str)   #紀錄Request log
+
+   CALL awsp500_01_invokeSrv(l_xml_str)
+      RETURNING l_status,l_response_content_str  
+
+   CALL awsp500_plm_log('2',l_response_content_str)  #紀錄Response log
+   
+   IF cl_null(l_response_content_str) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  "lib-00027"   #請找MIS 協助處理.
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN 
+   END IF
+   
+   DISPLAY l_response_content_str
+   
+   LET l_res_doc = xml.DomDocument.create()
+   CALL l_res_doc.loadFromString(l_response_content_str)
+
+   LET l_file_name2 = 'plm_ws_',l_today[1,4],l_today[6,7],l_today[9,10],l_time[1,2],l_time[4,5],l_time[7,8],'_response.xml'
+   LET l_file = os.Path.join(FGL_GETENV("TEMPDIR"),l_file_name2)   
+   CALL l_res_doc.setFeature("format-pretty-print", true) 
+   CALL l_res_doc.save(l_file)
+END FUNCTION
+
+################################################################################
+# Descriptions...: 批次紀錄Request/Response LOG
+# Memo...........:
+# Usage..........: CALL awsp500_plm_log(p_type,p_log_str)
+# Input parameter: p_type     :1.Request 2.Response
+#                  p_log_str  :XML字串
+# Return code....: none
+# Date & Author..: 15/10/20 By TSD.Tim
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION awsp500_plm_log(p_type,p_log_str)
+   DEFINE p_type      LIKE type_t.chr1
+   DEFINE p_log_str   STRING
+   DEFINE l_channel   base.Channel
+   DEFINE l_logfile   STRING
+   DEFINE l_str       STRING
+   DEFINE l_curr      STRING
+   DEFINE l_sb        base.StringBuffer
+   
+   LET l_curr = cl_time_trans_by_tz("current_time")
+   
+   #LOG檔路徑: $LOGDIR/awsp500-YYYYMMDD.log
+   LET l_logfile = FGL_GETENV("TEMPDIR"), "/", "awsp500-",g_today USING 'YYYYMMDD',".log"
+   
+   LET l_channel = base.Channel.create()
+   CALL l_channel.setDelimiter(NULL)
+   CALL l_channel.openFile(l_logfile, "a")
+   IF STATUS = 0 THEN
+      IF p_type = '1' THEN   #Request 
+         LET g_serial = l_curr.subString(12,25)  #取時~毫秒
+         LET l_sb = base.StringBuffer.create()
+         CALL l_sb.append(g_serial)
+         CALL l_sb.replace(":", "", 0)
+         CALL l_sb.replace(".", "", 0)
+         LET g_serial = l_sb.toString()      
+         
+         LET l_str = "#--------------------------- (", l_curr , ") ----------------------------#\n",
+                     "[Request Service #", g_serial,"]\n",
+                     "setT100JobStatus begin at ", cl_get_time(),"\n",
+                     "[Request Message #", g_serial,"]\n",
+                     p_log_str, "\n"    
+      ELSE                   #Response
+         LET l_str = "[Response Service #", g_serial,"]\n",
+                     "setT100JobStatus end at ", cl_get_time(),"\n",
+                     "[Response Message #", g_serial,"]\n",
+                     p_log_str, "\n",
+                     "#------------------------------------------------------------------------------------#\n\n"
+      END IF  
+      CALL l_channel.write(l_str)
+   END IF
+
+   CALL l_channel.close()
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="awsp500.ui_dialog" >}
+#+ 選單功能實際執行處
+{<point name="ui_dialog.define" edit="s"/>}
+ 
+{<point name="ui_dialog.define_customerization" edit="c"/>}
+ 
+{<point name="ui_dialog.before_dialog"/>}
+ 
+{<point name="ui_dialog.before_dialog2"/>}
+ 
+{<point name="ui_dialog.more_construct"/>}
+ 
+{<point name="ui_dialog.more_input"/>}
+ 
+{<point name="ui_dialog.more_displayarray"/>}
+ 
+{<point name="ui_dialog.before_dialog3"/>}
+ 
+{<point name="ui_dialog.before_qbeclear" mark="Y"/>}
+ 
+{<point name="ui_dialog.qbeclear"/>}
+ 
+{<point name="ui_dialog.more_action"/>}
+ 
+{<point name="process.exit_dialog"/>}
+ 
+{<point name="process.after_schedule"/>}
+ 
+{</section>}
+ 
+{<section id="awsp500.transfer_argv" >}
+{<point name="transfer_agrv.define" edit="s"/>}
+ 
+{<point name="transfer_agrv.define_customerization" edit="c"/>}
+ 
+{<point name="transfer.argv.define"/>}
+ 
+{</section>}
+ 
+{<section id="awsp500.process" >}
+{<point name="process.define" edit="s"/>}
+ 
+{<point name="process.define_customerization" edit="c"/>}
+ 
+{<point name="process.pre_process"/>}
+ 
+{<point name="process.count_progress"/>}
+ 
+{<point name="process.process"/>}
+ 
+{<point name="process.foreground_finish"/>}
+ 
+{<point name="process.background_finish"/>}
+ 
+{</section>}
+ 
+{<section id="awsp500.get_buffer" >}
+{<point name="get_buffer.others"/>}
+ 
+{</section>}
+ 
+{<section id="awsp500.msgcentre_notify" >}
+{<point name="msg_centre.process"/>}
+ 
+{</section>}
+ 

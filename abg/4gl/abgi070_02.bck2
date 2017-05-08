@@ -1,0 +1,833 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="abgi070_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2016-07-27 10:56:12), PR版次:0001(2016-07-27 14:28:11)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000020
+#+ Filename...: abgi070_02
+#+ Description: 複製財報結構
+#+ Creator....: 01267(2016-07-12 11:55:13)
+#+ Modifier...: 03080 -SD/PR- 03080
+ 
+{</section>}
+ 
+{<section id="abgi070_02.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+IMPORT util    #為了JSON
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_glfa_m        RECORD
+       glfa001 LIKE glfa_t.glfa001, 
+   glfa001_desc LIKE type_t.chr80, 
+   glfa004 LIKE glfa_t.glfa004, 
+   glfa002 LIKE glfa_t.glfa002, 
+   l_dummy LIKE type_t.chr80, 
+   l_glfa001_1 LIKE type_t.chr10, 
+   l_glfa001_1_desc LIKE type_t.chr100, 
+   l_glfa004_1 LIKE type_t.chr10, 
+   l_glfa002_1 LIKE type_t.chr1
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_glfa_m_o      type_g_glfa_m     #儲存舊值方便比較
+#end add-point
+ 
+DEFINE g_glfa_m        type_g_glfa_m
+ 
+   DEFINE g_glfa001_t LIKE glfa_t.glfa001
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="abgi070_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION abgi070_02(--)
+   #add-point:input段變數傳入
+   p_lsjs
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE p_lsjs          STRING              #動態JSON使用的字串
+   DEFINE r_success       LIKE type_t.num5    #成功與否
+   DEFINE r_abgi070       LIKE glfa_t.glfa001 #產生的abgi070報表版號
+   
+   WHENEVER ERROR CONTINUE
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_abgi070_02 WITH FORM cl_ap_formpath("abg","abgi070_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   LET r_success = TRUE
+   CALL cl_set_combo_scc('glfa002','9930')
+   CALL cl_set_combo_scc('l_glfa002_1','9930')
+   INITIALIZE g_glfa_m.* TO NULL
+   INITIALIZE g_glfa_m_o.* TO NULL
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_glfa_m.glfa001,g_glfa_m.glfa004,g_glfa_m.glfa002,g_glfa_m.l_glfa001_1,g_glfa_m.l_glfa001_1_desc, 
+          g_glfa_m.l_glfa004_1,g_glfa_m.l_glfa002_1 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glfa001
+            
+            #add-point:AFTER FIELD glfa001 name="input.a.glfa001"
+
+            #應用 a05 樣板自動產生(Version:3)
+           ##確認資料無重複
+           #IF  NOT cl_null(g_glfa_m.glfa001) THEN 
+           #   IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_glfa_m.glfa001 != g_glfa001_t )) THEN 
+           #      IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glfa_t WHERE "||"glfaent = '" ||g_enterprise|| "' AND "||"glfa001 = '"||g_glfa_m.glfa001 ||"'",'std-00004',0) THEN 
+           #         NEXT FIELD CURRENT
+           #      END IF
+           #   END IF
+           #END IF
+
+            #報表模板
+            IF NOT cl_null(g_glfa_m.glfa001)THEN
+               IF cl_null(g_glfa_m_o.glfa001) OR (g_glfa_m.glfa001 <> g_glfa_m_o.glfa001)THEN
+                  CALL abgi070_02_glfa001_chk(g_glfa_m.glfa001,'1')RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam.* TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_glfa_m.glfa001 = g_glfa_m_o.glfa001
+                     NEXT FIELD glfa001
+                  END IF
+                  
+                  CALL abgi070_02_glfa001004_chk(g_glfa_m.glfa001,g_glfa_m.l_glfa004_1)RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam.* TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_glfa_m.glfa001 = g_glfa_m_o.glfa001
+                     NEXT FIELD glfa001
+                  END IF                  
+                  CALL abgi070_02_glfa001_carry()
+               END IF
+            END IF   
+            CALL abgi070_02_to_o_h()            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glfa001
+            #add-point:BEFORE FIELD glfa001 name="input.b.glfa001"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glfa001
+            #add-point:ON CHANGE glfa001 name="input.g.glfa001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glfa004
+            
+            #add-point:AFTER FIELD glfa004 name="input.a.glfa004"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glfa004
+            #add-point:BEFORE FIELD glfa004 name="input.b.glfa004"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glfa004
+            #add-point:ON CHANGE glfa004 name="input.g.glfa004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glfa002
+            #add-point:BEFORE FIELD glfa002 name="input.b.glfa002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glfa002
+            
+            #add-point:AFTER FIELD glfa002 name="input.a.glfa002"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glfa002
+            #add-point:ON CHANGE glfa002 name="input.g.glfa002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_glfa001_1
+            
+            #add-point:AFTER FIELD l_glfa001_1 name="input.a.l_glfa001_1"
+            #報表模板
+            IF NOT cl_null(g_glfa_m.l_glfa001_1)THEN
+               IF cl_null(g_glfa_m_o.l_glfa001_1) OR (g_glfa_m.l_glfa001_1 <> g_glfa_m_o.l_glfa001_1)THEN
+                  CALL abgi070_02_glfa001_chk(g_glfa_m.l_glfa001_1,'2')RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam.* TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_glfa_m.l_glfa001_1 = g_glfa_m_o.l_glfa001_1
+                     NEXT FIELD l_glfa001_1
+                  END IF
+               END IF
+            END IF   
+            CALL abgi070_02_to_o_h()  
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_glfa001_1
+            #add-point:BEFORE FIELD l_glfa001_1 name="input.b.l_glfa001_1"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_glfa001_1
+            #add-point:ON CHANGE l_glfa001_1 name="input.g.l_glfa001_1"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_glfa001_1_desc
+            #add-point:BEFORE FIELD l_glfa001_1_desc name="input.b.l_glfa001_1_desc"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_glfa001_1_desc
+            
+            #add-point:AFTER FIELD l_glfa001_1_desc name="input.a.l_glfa001_1_desc"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_glfa001_1_desc
+            #add-point:ON CHANGE l_glfa001_1_desc name="input.g.l_glfa001_1_desc"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_glfa004_1
+            
+            #add-point:AFTER FIELD l_glfa004_1 name="input.a.l_glfa004_1"
+            #預算細項參照表
+            IF NOT cl_null(g_glfa_m.l_glfa004_1)THEN
+               IF cl_null(g_glfa_m_o.l_glfa004_1) OR (g_glfa_m.l_glfa004_1 <> g_glfa_m_o.l_glfa004_1)THEN
+                  CALL abgi070_02_glfa004_chk(g_glfa_m.l_glfa004_1)RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam.* TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_glfa_m.l_glfa004_1 = g_glfa_m_o.l_glfa004_1
+                     NEXT FIELD l_glfa004_1
+                  END IF
+                  CALL abgi070_02_glfa001004_chk(g_glfa_m.glfa001,g_glfa_m.l_glfa004_1)RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam.* TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_glfa_m.l_glfa004_1 = g_glfa_m_o.l_glfa004_1
+                     NEXT FIELD l_glfa004_1
+                  END IF 
+               END IF
+            END IF   
+            CALL abgi070_02_to_o_h() 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_glfa004_1
+            #add-point:BEFORE FIELD l_glfa004_1 name="input.b.l_glfa004_1"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_glfa004_1
+            #add-point:ON CHANGE l_glfa004_1 name="input.g.l_glfa004_1"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_glfa002_1
+            #add-point:BEFORE FIELD l_glfa002_1 name="input.b.l_glfa002_1"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_glfa002_1
+            
+            #add-point:AFTER FIELD l_glfa002_1 name="input.a.l_glfa002_1"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_glfa002_1
+            #add-point:ON CHANGE l_glfa002_1 name="input.g.l_glfa002_1"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.glfa001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glfa001
+            #add-point:ON ACTION controlp INFIELD glfa001 name="input.c.glfa001"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glfa_m.glfa001
+            CALL q_glfa001()
+            LET g_glfa_m.glfa001 = g_qryparam.return1
+            DISPLAY BY NAME g_glfa_m.glfa001
+            CALL abgi070_02_glfa001_carry()
+            NEXT FIELD glfa001
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glfa004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glfa004
+            #add-point:ON ACTION controlp INFIELD glfa004 name="input.c.glfa004"
+ 
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glfa002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glfa002
+            #add-point:ON ACTION controlp INFIELD glfa002 name="input.c.glfa002"
+ 
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.l_glfa001_1
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_glfa001_1
+            #add-point:ON ACTION controlp INFIELD l_glfa001_1 name="input.c.l_glfa001_1"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.l_glfa001_1_desc
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_glfa001_1_desc
+            #add-point:ON ACTION controlp INFIELD l_glfa001_1_desc name="input.c.l_glfa001_1_desc"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.l_glfa004_1
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_glfa004_1
+            #add-point:ON ACTION controlp INFIELD l_glfa004_1 name="input.c.l_glfa004_1"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glfa_m.l_glfa004_1             #給予default值
+            LET g_qryparam.where = "ooal001 = '11' " #預算細項參照表
+            CALL q_ooal002()                                #呼叫開窗
+            LET g_glfa_m.l_glfa004_1 = g_qryparam.return1              
+            DISPLAY g_glfa_m.l_glfa004_1 TO l_glfa004_1              #
+            NEXT FIELD l_glfa004_1                          #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.l_glfa002_1
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_glfa002_1
+            #add-point:ON ACTION controlp INFIELD l_glfa002_1 name="input.c.l_glfa002_1"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_abgi070_02 
+   
+   #add-point:input段after input 
+   IF INT_FLAG THEN
+      LET r_success= FALSE
+      LET r_abgi070  = NULL
+      LET INT_FLAG = 0
+   ELSE
+      CALL s_transaction_begin()
+      CALL abgi070_02_process() RETURNING g_sub_success,r_abgi070
+      IF NOT g_sub_success THEN LET r_success = FALSE END IF
+      CALL s_transaction_end('Y',0)
+   END IF
+
+   RETURN r_success,r_abgi070
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgi070_02.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="abgi070_02.other_function" readonly="Y" >}
+
+PRIVATE FUNCTION abgi070_02_glfa001_chk(p_glfa001,p_type)
+   DEFINE p_glfa001   LIKE glfa_t.glfa001
+   DEFINE p_type      LIKE type_t.chr1
+   DEFINE r_success   LIKE type_t.num5
+   DEFINE r_errno     LIKE gzze_t.gzze001
+   DEFINE l_glfa001   LIKE glfa_t.glfa001
+   WHENEVER ERROR CONTINUE
+   
+   LET r_success = TRUE LET r_errno = NULL
+   
+   CASE
+      WHEN p_type = '1'
+         #來源報表模板
+         LET l_glfa001 = NULL
+         SELECT glfa001 INTO l_glfa001 FROM glfa_t
+          WHERE glfa001 = p_glfa001
+            AND glfaent = g_enterprise
+            
+         CASE
+            WHEN SQLCA.SQLCODE = 100
+               LET r_success = FALSE
+               LET r_errno   = 'agl-00249'
+         END CASE
+      WHEN p_type = '2'
+         #目的報表模板
+         LET l_glfa001 = NULL
+         SELECT glfa001 INTO l_glfa001 FROM glfa_t
+          WHERE glfa001 = p_glfa001
+            AND glfaent = g_enterprise
+            
+         CASE
+            WHEN NOT cl_null(l_glfa001)
+               LET r_success = FALSE
+               LET r_errno = 'aoo-00051'
+         END CASE         
+   END CASE
+   
+   RETURN r_success,r_errno
+END FUNCTION
+
+PRIVATE FUNCTION abgi070_02_to_o_h()
+   WHENEVER ERROR CONTINUE
+   LET g_glfa_m_o.* = g_glfa_m.*
+END FUNCTION
+
+PRIVATE FUNCTION abgi070_02_glfa004_chk(p_glfa004)
+   DEFINE p_glfa004   LIKE glfa_t.glfa004
+   DEFINE r_success   LIKE type_t.num5
+   DEFINE r_errno     LIKE gzze_t.gzze001
+   DEFINE l_ooalstus  LIKE ooal_t.ooalstus
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE   LET r_errno = NULL
+   
+   LET l_ooalstus = NULL
+   SELECT ooalstus INTO l_ooalstus FROM ooal_t
+    WHERE ooalent = g_enterprise
+      AND ooal001 = '11'
+      AND ooal002 = p_glfa004
+   CASE
+      WHEN SQLCA.SQLCODE = 100
+         LET r_success = FALSE
+         LET r_errno   = 'abg-00141'
+      WHEN l_ooalstus <> 'Y' 
+         LET r_success = FALSE
+         LET r_errno   = 'abg-00142'
+   END CASE
+   
+   RETURN r_success,r_errno
+END FUNCTION
+
+PRIVATE FUNCTION abgi070_02_glfa001004_chk(p_glfa001,p_glfa004)
+   DEFINE p_glfa001   LIKE glfa_t.glfa001
+   DEFINE p_glfa004   LIKE glfa_t.glfa004
+   DEFINE r_success   LIKE type_t.num5
+   DEFINE r_errno     LIKE gzze_t.gzze001
+   DEFINE l_glfa004   LIKE glfa_t.glfa004
+   DEFINE l_count     LIKE type_t.num10
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE   LET r_errno = NULL
+   IF NOT cl_null(p_glfa001) AND NOT cl_null(p_glfa004)THEN
+   ELSE
+      RETURN r_success,r_errno
+   END IF
+   
+   LET l_glfa004 = NULL
+   SELECT glfa004 INTO l_glfa004 FROM glfa_t
+    WHERE glfaent = g_enterprise
+      AND glfa001 = p_glfa001
+   
+   LET l_count = NULL
+   SELECT COUNT(*) INTO l_count FROM bgao_t
+    WHERE bgaoent = g_enterprise
+      AND bgao001 = p_glfa004
+      AND bgao002 = l_glfa004
+      AND bgaostus = 'Y'
+   IF cl_null(l_count)THEN LET l_count = 0 END IF
+   
+   IF l_count = 0 THEN
+      LET r_success = FALSE
+      LET r_errno = 'abg-00140'
+   END IF
+   
+   RETURN r_success,r_errno
+END FUNCTION
+
+PRIVATE FUNCTION abgi070_02_glfa001_carry()
+   LET g_glfa_m.glfa001_desc = ''
+   LET g_glfa_m.glfa004 = ''
+   LET g_glfa_m.glfa002 = ''
+   SELECT glfa004,glfa002 INTO g_glfa_m.glfa004,g_glfa_m.glfa002
+     FROM glfa_t
+    WHERE glfaent = g_enterprise
+      AND glfa001 = g_glfa_m.glfa001
+      
+   LET g_glfa_m.glfa001_desc = NULL
+   SELECT glfal003 INTO g_glfa_m.glfa001_desc
+     FROM glfal_t
+    WHERE glfalent = g_enterprise
+      AND glfal001 = g_glfa_m.glfa001
+      AND glfal002 = g_dlang
+   LET g_glfa_m.l_glfa002_1 = g_glfa_m.glfa002
+   DISPLAY BY NAME g_glfa_m.glfa001_desc,g_glfa_m.glfa002,g_glfa_m.glfa004,g_glfa_m.l_glfa002_1
+END FUNCTION
+
+PRIVATE FUNCTION abgi070_02_process()
+   DEFINE l_glfa RECORD LIKE glfa_t.*
+   DEFINE l_glfb RECORD LIKE glfb_t.*
+   DEFINE l_glfbl RECORD LIKE glfbl_t.*
+   DEFINE l_sql  STRING
+   DEFINE r_success LIKE type_t.num5
+   DEFINE r_glfa001 LIKE glfa_t.glfa001
+   DEFINE l_glfcar  DYNAMIC ARRAY OF RECORD
+                       glfc001_o   LIKE glfc_t.glfc001,
+                       glfc001_n   LIKE glfc_t.glfc001
+                    END RECORD
+   DEFINE l_glfc RECORD LIKE glfc_t.*
+   DEFINE l_glfc001_n   LIKE glfc_t.glfc001 #新號碼
+   DEFINE l_glfc001_nn  LIKE type_t.num10   #數字部分
+   DEFINE l_i           LIKE type_t.num10
+   DEFINE l_glfc001_o   LIKE glfc_t.glfc001
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+   LET r_glfa001 = NULL
+   #160713----------------------------s
+   #1 複製glfa  glfb 僅變更KEY及畫面欄位
+   #160713----------------------------e
+   
+   INITIALIZE l_glfa.* TO NULL
+   SELECT * INTO l_glfa.* 
+     FROM glfa_t
+    WHERE glfaent = g_enterprise
+      AND glfa001 = g_glfa_m.glfa001
+      
+   LET l_glfa.glfa001 = g_glfa_m.l_glfa001_1   #目的報表模板編號
+   LET l_glfa.glfa016 = '3'                    #目的樣表類型(預算)
+   LET l_glfa.glfa002 = g_glfa_m.l_glfa002_1
+   LET l_glfa.glfa004 = g_glfa_m.l_glfa004_1
+   INSERT INTO glfa_t VALUES(l_glfa.*)
+   IF SQLCA.SQLCODE THEN 
+      INITIALIZE g_errparam.* TO NULL
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.extend = 'abgi070_02_process:INSERT glfa'
+      CALL cl_err()
+      LET r_success = FALSE
+   END IF
+   
+   LET l_sql = "SELECT * FROM glfb_t ",
+               " WHERE glfbent = ",g_enterprise," ",
+               "   AND glfb001 = '",g_glfa_m.glfa001,"' "
+   PREPARE sel_glfbop1 FROM l_sql
+   DECLARE sel_glfboc1 CURSOR FOR sel_glfbop1
+   
+   FOREACH sel_glfboc1 INTO l_glfb.*
+      IF SQLCA.SQLCODE THEN EXIT FOREACH END IF
+      
+      LET l_glfb.glfb001 = g_glfa_m.l_glfa001_1
+      INSERT INTO glfb_t VALUES(l_glfb.*)
+      IF SQLCA.SQLCODE THEN 
+         INITIALIZE g_errparam.* TO NULL
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.extend = 'abgi070_02_process:INSERT glfb'
+         CALL cl_err()
+         LET r_success = FALSE
+      END IF
+   END FOREACH
+   
+   LET l_sql = "SELECT * FROM glfbl_t ",
+               " WHERE glfblent = ",g_enterprise," ",
+               "   AND glfbl001 = '",g_glfa_m.glfa001,"' "
+   PREPARE sel_glfblop1 FROM l_sql
+   DECLARE sel_glfbloc1 CURSOR FOR sel_glfblop1
+   
+   FOREACH sel_glfbloc1 INTO l_glfbl.*
+      IF SQLCA.SQLCODE THEN EXIT FOREACH END IF
+      
+      LET l_glfbl.glfbl001 = g_glfa_m.l_glfa001_1
+      INSERT INTO glfbl_t VALUES(l_glfbl.*)
+      IF SQLCA.SQLCODE THEN 
+         INITIALIZE g_errparam.* TO NULL
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.extend = 'abgi070_02_process:INSERT glfbl'
+         CALL cl_err()
+         LET r_success = FALSE
+      END IF
+   END FOREACH
+   
+   #kris:多語言僅以目前語言別新增         
+   INSERT INTO glfal_t(glfalent,glfal001,glfal002,glfal003)
+    VALUES(g_enterprise,g_glfa_m.l_glfa001_1,g_dlang,g_glfa_m.l_glfa001_1_desc)
+   IF SQLCA.SQLCODE THEN 
+      INITIALIZE g_errparam.* TO NULL
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.extend = 'abgi070_02_process:INSERT glfal_t'
+      CALL cl_err()
+      LET r_success = FALSE
+   END IF   
+   
+   #160713----------------------------s
+   #2 把單身屬於取數公式來源2類的distinct取出後存放到array中
+   #先處理好glfc
+   #160713----------------------------e
+   LET l_sql = "SELECT DISTINCT glfb005 FROM glfb_t ",
+               " WHERE glfbent = ",g_enterprise, " ",
+               "   AND glfb001 = '",g_glfa_m.glfa001,"' ",
+               "   AND glfb004 = '2' "
+   PREPARE sel_glfbnp1 FROM l_sql
+   DECLARE sel_glfbnc1 CURSOR FOR sel_glfbnp1
+   
+   LET l_sql = "SELECT * FROM glfc_t ",
+               " WHERE glfcent = ",g_enterprise," ",
+               "   AND glfc001 = ? "
+   PREPARE sel_glfcop1 FROM l_sql
+   DECLARE sel_glfcoc1 CURSOR FOR sel_glfcop1
+   
+   LET l_i = 1
+   CALL l_glfcar.clear()
+   FOREACH sel_glfbnc1 INTO l_glfcar[l_i].glfc001_o
+      IF SQLCA.SQLCODE THEN EXIT FOREACH END IF
+      LET l_sql = l_glfcar[l_i].glfc001_o
+      LET l_sql = l_sql.trim()
+      LET l_glfc001_o = l_sql CLIPPED
+      
+      #重新取號SYS'7碼流水'
+      LET l_glfc001_n = NULL
+      SELECT MAX(glfc001) INTO l_glfc001_n FROM glfc_t
+       WHERE glfcent = g_enterprise
+         AND glfc001 LIKE 'SYS%%%%%%%'
+       
+      #取號邏輯+1
+      IF NOT cl_null(l_glfc001_n)THEN
+         LET l_glfc001_nn = l_glfc001_n[4,10]
+         LET l_glfc001_nn = l_glfc001_nn + 1
+         LET l_glfc001_n = 'SYS',l_glfc001_nn USING '&&&&&&&'
+      END IF
+      IF cl_null(l_glfc001_n)THEN LET l_glfc001_n = 'SYS0000001' END IF
+      LET l_glfcar[l_i].glfc001_n = l_glfc001_n
+      
+      FOREACH sel_glfcoc1 USING l_glfc001_o
+         INTO l_glfc.*
+         IF SQLCA.SQLCODE THEN EXIT FOREACH END IF
+         LET l_glfc.glfc001 = l_glfc001_n
+         LET l_glfc.glfc008 = '7'
+         LET l_glfc.glfc013 = '4'
+         LET l_glfc.glfc002 = g_glfa_m.l_glfa004_1
+         
+         #需做起訖科目置換成起訖項目
+         CALL s_abgq053_get_bgao004(g_glfa_m.l_glfa004_1,g_glfa_m.glfa004,l_glfc.glfc003)RETURNING g_sub_success,l_glfc.glfc003
+         IF NOT g_sub_success THEN
+            INITIALIZE g_errparam.* TO NULL
+            LET g_errparam.code = ''
+            LET g_errparam.extend = 'abgi070_02_process:get glfc003'
+            CALL cl_err()
+            LET r_success = FALSE            
+         END IF
+         CALL s_abgq053_get_bgao004(g_glfa_m.l_glfa004_1,g_glfa_m.glfa004,l_glfc.glfc004)RETURNING g_sub_success,l_glfc.glfc004
+         IF NOT g_sub_success THEN
+            INITIALIZE g_errparam.* TO NULL
+            LET g_errparam.code = ''
+            LET g_errparam.extend = 'abgi070_02_process:get glfc004'
+            CALL cl_err()
+            LET r_success = FALSE            
+         END IF
+         INSERT INTO glfc_t VALUES(l_glfc.*)
+         IF SQLCA.SQLCODE THEN 
+            INITIALIZE g_errparam.* TO NULL
+            LET g_errparam.code = SQLCA.SQLCODE
+            LET g_errparam.extend = 'abgi070_02_process:INSERT glfc_t'
+            CALL cl_err()
+            LET r_success = FALSE
+         END IF          
+      END FOREACH
+      
+      LET l_i = l_i + 1
+   END FOREACH
+   
+   #回寫新單abgi070中單身的舊換新
+   FOR l_i = 1 TO l_glfcar.getLength()
+      UPDATE glfb_t SET glfb005 =  l_glfcar[l_i].glfc001_n
+       WHERE glfbent = g_enterprise
+         AND glfb001 = l_glfa.glfa001
+         AND glfb005 =  l_glfcar[l_i].glfc001_o
+      IF SQLCA.SQLCODE THEN 
+         INITIALIZE g_errparam.* TO NULL
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.extend = 'abgi070_02_process:INSERT glfb_t'
+         CALL cl_err()
+         LET r_success = FALSE
+      END IF   
+   END FOR
+  
+   
+   IF r_success THEN
+      LET r_glfa001 = l_glfa.glfa001
+   END IF
+   RETURN r_success,r_glfa001
+END FUNCTION
+
+ 
+{</section>}
+ 

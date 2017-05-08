@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axct701_01" std_prog="axct701_01" erpver="1.0" ver="3" module="AXC" type="S" booking="Y" designer_ver="1.0" class="T" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="xcea_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status=""/>
+  </table>
+  <all cite_std="N" ver="3" src="s" status="u">
+    <![CDATA[axct701\axct702\axct707\axct708\axct706\axct705\axct709 共用
+
+axct701
+1.根据INPUT条件中的账别(xceald)、按账别启用的本位币确定的顺序、成本计算类型、年度、月份去在制主件成本期异动统计档(xccd_t)和在制元件成本期异动统计档(xcce_t)、拆件在制主件成本期异动统计档(xcch_t)和拆件在制元件成本期异动统计档(xcci_t)中抓出对应的工单在制投入数据分别产生到单头(xcea_t)、第一单身(xceb_t)和第二单身(xcec_t)。
+  1.1从在制主件档（xccd_t）和元件档(xcce_t)中抓数据的注意点： 
+    1.1.1从在制主件成本期异动统计档(xccd_t)中抓取资料时除了上述条件外要排除本阶投入的人工(xccd202b)、委外加工费(xccd202c)、制费一(xccd202d)、制费二(xccd202e)、制费三(xccd202f)、制费四(xccd202g)、制费五(xccd202h)
+    1.1.2从在制元件成本期异动统计档(xcce_t)中抓取资料时除了上述条件外要排除料号=‘DL+OH+SUB’的金额。
+  因为上述凭证在平时做工资应付、委外加工费应付和制造费用结转时已经处理了。
+    1.1.3在制主件成本期异动统计档(xccd_t)的在制投入数据是指本阶投入的材料金额(xccd202a)和下阶投入的成本金额(xccd204,其下可细分为材料(xccd204a)、人工(xccd204b)、委外加工(xccd204c)、制费一(xccd204d)、制费二(xccd204e)、制费三(xccd204f)、制费四(xccd204g)、制费五(xccd204h))。
+    1.1.4在制元件成本期异动统计档(xcce_t)的在制投入数据是指投入的数量(xcce201)和投入的成本金额(xcce202)、材料成本(xcce202a)、人工成本(xcce202b)、委外加工(xcce202c)、制费一(xcce202d)、制费二(xcce202e)、制费三(xcce202f)、制费四(xcce202g)、制费五(xcce202h)。
+  1.2从拆件在制主件档（xcch_t）和拆件元件档(xcci_t)中抓数据的注意点： 
+    1.2.1从拆件在制主件成本期异动统计档(xcch_t)中抓取资料时除了上述条件外要排除本阶投入的人工(xcch202b)、委外加工费(xcch202c)、制费一(xcch202d)、制费二(xcch202e)、制费三(xcch202f)、制费四(xcch202g)、制费五(xcch202h)
+    1.2.2从拆件在制元件成本期异动统计档(xcci_t)中抓取资料时除了上述条件外要排除料号=‘DL+OH+SUB’的金额。
+  因为上述凭证在平时做工资应付、委外加工费应付和制造费用结转时已经处理了。
+    1.2.3拆件在制主件成本期异动统计档(xcch_t)的在制投入数据是指本阶投入的材料金额(xcch202a)和下阶投入的成本金额(xcch204,其下可细分为材料(xcch204a)、人工(xcch204b)、委外加工(xcch204c)、制费一(xcch204d)、制费二(xcch204e)、制费三(xcch204f)、制费四(xcch204g)、制费五(xcch204h))。
+    1.2.4拆件在制元件成本期异动统计档(xcci_t)的在制投入数据是指投入的数量(xcci201)和投入的成本金额(xcci202)、材料成本(xcci202a)、人工成本(xcci202b)、委外加工(xcci202c)、制费一(xcci202d)、制费二(xcci202e)、制费三(xcci202f)、制费四(xcci202g)、制费五(xcci202h)。
+
+2.第一单身的科目根据账套成本科目设定档（glab_t）的生产在制材料科目抓取，其他分类字段根据主件料号的相关设定档抓取，如果抓不到则置为空格，由人工修改维护。
+  2.01 交易对象(xceb111):如果工单是委外工单，则根据工单编号去工单档抓取交易对象字段,如果不是委外工单则设为空白。
+  2.02 客群(xceb112)：根据交易对象(xceb111)找出对应的客群。
+  2.03 区域(xceb113)：如果工单是委外工单，则根据交易对象(xceb111)抓出其归属的区域；如果不是委外工单则抓取该工单的组织归属的区域。
+  2.04 成本中心(xceb114):根据工单编号去工单档抓取成本中心字段。
+  2.05 经营类别(xceb115)：默认为空格。
+  2.06 渠道(xceb116)：默认为空格。
+  2.07 品类(xceb117):根据主件料号在SITE料件档imag_t抓取成本分群(imag011).
+  2.08 品牌(xceb118)：默认为空格。
+  2.09 项目编号(xceb119)：根据工单编号去工单档抓取项目编号和WBS字段。
+  2.10 WBS(xceb120)：根据工单编号去工单档抓取项目编号和WBS字段。
+
+3.第二单身的科目根据元件料号和账套用元件s_Get_Item_Acc去产品科目账套设定档(glcc_t)抓取存货科目(glcc002)，其他分类字段根据元件料号的相关设定档抓取，如果抓不到则置为空格，由人工修改维护。
+  3.01 交易对象(xcec111):如果工单是委外工单，则根据工单编号去工单档抓取交易对象字段,如果不是委外工单则设为空白。
+  3.02 客群(xcec112)：根据交易对象(xcec111)找出对应的客群。
+  3.03 区域(xcec113)：如果工单是委外工单，则根据交易对象(xcec111)抓出其归属的区域；如果不是委外工单则抓取该工单的组织归属的区域。
+  3.04 成本中心(xcec114):根据工单编号去工单档抓取成本中心字段。
+  3.05 经营类别(xcec115)：默认为空格。
+  3.06 渠道(xcec116)：默认为空格。
+  3.07 品类(xcec117):根据元件件料号在SITE料件档imag_t抓取成本分群(imag011).
+  3.08 品牌(xcec118)：默认为空格。
+  3.09 项目编号(xcec119)：根据工单编号去工单档抓取项目编号和WBS字段。
+  3.10 WBS(xcec120)：根据工单编号去工单档抓取项目编号和WBS字段。
+  
+
+4.判断账别是否启用多本位币核算，启用几个就显示几个页签。
+
+5.单据编号(xceadocno)根据标准编码规则产生
+
+axct702
+1.根据INPUT条件中的账别(xceald)、按账别启用的本位币确定的顺序、成本计算类型、年度、月份从在制主件成本期异动统计档(xccd_t)、在制元件成本期异动统计档(xcce_t)和联产品成本期异动档(xccg_t)、拆件在制主件成本期异动统计档(xcch_t)和拆件在制元件成本期异动统计档(xcci_t)中抓出在制转出的数据分别产生到单头(xcea_t)、第一单身(xceb_t)和第二单身(xcec_t)。
+   1.1从在制主件成本档(xccd_t)和联产品成本档(xccg_t)中抓取数据存入第一单身(xceb_t)的逻辑：
+　   1.1.1判断该工单有无联产品入库，没有的话从在制主件成本期异动统计档(xccd_t)中抓取资料：成本域(xccd02)、工单编号(xccd006)、主件料号(xccd007)、SUM(转出数量（xccd301))、SUM(转出成本金额(xccd302))、SUM(材料成本(xccd302a))、SUM(人工成本(xccd302b))、SUM(委外加工(xccd302c))、SUM(制费一(xccd302d))、SUM(制费二(xccd302e))、SUM(制费三(xccd302f))、SUM(制费四(xccd302g))、SUM(制费五(xccd302h))。
+     1.1.2判断该工单有无联产品入库，有的话从联产品成本档(xccg_t)中抓取资料：成本域(xccg002)、工单编号(xccg006)、主件料号(xccg007)、项目号(xccg007)、SUM(转出数量（xccg301))、SUM(转出成本金额(xccg302))、SUM(材料成本(xccg302a))、SUM(人工成本(xccg302b))、SUM(委外加工(xccg302c))、SUM(制费一(xccg302d))、SUM(制费二(xccg302e))、SUM(制费三(xccg302f))、SUM(制费四(xccg302g))、SUM(制费五(xccg302h))。
+   1.2从在制元件成本档(xccd_t)中抓取数据存入第二单身(xcec_t)的逻辑：
+     1.2.1在制元件成本期异动统计档(xcce_t)的在制转出数据是指：成本域(xcce02)、工单编号(xcce006)、元件料号(xcce007)、项目号(xcce009)、SUM(转出数量(xcce301))、SUM(转出成本金额(xcce302))、SUM(材料成本(xcce302a))、SUM(人工成本(xcce302b))、SUM(委外加工(xcce302c))、SUM(制费一(xcce302d))、SUM(制费二(xcce302e))、SUM(制费三(xcce302f))、SUM(制费四(xcce302g))、SUM(制费五(xcce302h))。
+
+   1.3从拆件在制主件成本档(xcch_t)、拆件在制元件成本档(xcci_t)中抓取数据存入第一单身(xceb_t)和第二单身(xcec_t)
+     1.3.1从拆件在制元件成本期异动统计档(xcci_t)中抓取本期入库数据：成本域（xcci002）、拆件工单编号(xcci006)、元件料号(xcci007)、SUM(转出数量(xcci301))、SUM(转出成本金额(xcci302))、SUM(材料成本(xcci302a))、SUM(人工成本(xcci302b))、SUM(委外加工(xcci302c))、SUM(制费一(xcci302d))、SUM(制费二(xcci302e))、SUM(制费三(xcci302f))、SUM(制费四(xcci302g))、SUM(制费五(xcci302h))存入第一单身(xceb_t)。
+     1.3.2从拆件在制主件成本档(xcch_t)和拆件在制元件成本期异动统计档(xcci_t)中抓取本期转出数据：成本域（xcch002）、拆件工单编号(xcch006)、主件料号(xcch007)、SUM(转出数量(xcci301))、SUM(转出成本金额(xcci302))、SUM(材料成本(xcci302a))、SUM(人工成本(xcci302b))、SUM(委外加工(xcci302c))、SUM(制费一(xcci302d))、SUM(制费二(xcci302e))、SUM(制费三(xcci302f))、SUM(制费四(xcci302g))、SUM(制费五(xcci302h))。存入第二单身(xcec_t)
+
+2.第一单身(xceb_t)的科目根据入库料号和账套通过元件s_Get_Item_Acc从产品科目账套设定档(glcc_t)中抓取存货科目(glcc002)，其他分类字段根据入库料号的相关设定档抓取，如果抓不到则置为空格，由人工修改维护。
+  2.01 交易对象(xceb111):如果工单是委外工单，则根据工单编号去工单档抓取交易对象字段,如果不是委外工单则设为空白。
+  2.02 客群(xceb112)：根据交易对象(xceb111)找出对应的客群。
+  2.03 区域(xceb113)：如果工单是委外工单，则根据交易对象(xceb111)抓出其归属的区域；如果不是委外工单则抓取该工单的组织归属的区域。
+  2.04 成本中心(xceb114):根据工单编号去工单档抓取成本中心字段。
+  2.05 经营类别(xceb115)：默认为空格。
+  2.06 渠道(xceb116)：默认为空格。
+  2.07 品类(xceb117):根据入库料号在SITE料件档imag_t抓取成本分群(imag011).
+  2.08 品牌(xceb118)：默认为空格。
+  2.09 项目编号(xceb119)：根据工单编号去工单档抓取项目编号和WBS字段。
+  2.10 WBS(xceb120)：根据工单编号去工单档抓取项目编号和WBS字段。
+ 
+3.第二单身(xcec_t)的科目根据账套成本科目设定档(glab_t)的生产在制材料科目抓取(元件料号=‘DL+OH+SUB’的科目空白，在“人工制费科目设置”中维护)，其他分类字段根据工单的相关设定档抓取，如果抓不到则置为空格，由人工修改维护。
+  3.01 交易对象(xcec111):如果工单是委外工单，则根据工单编号去工单档抓取交易对象字段,如果不是委外工单则设为空白。
+  3.02 客群(xcec112)：根据交易对象(xcec111)找出对应的客群。
+  3.03 区域(xcec113)：如果工单是委外工单，则根据交易对象(xcec111)抓出其归属的区域；如果不是委外工单则抓取该工单的组织归属的区域。
+  3.04 成本中心(xcec114):根据工单编号去工单档抓取成本中心字段。
+  3.05 经营类别(xcec115)：默认为空格。
+  3.06 渠道(xcec116)：默认为空格。
+  3.07 品类(xcec117):根据该工单的主件料号在SITE料件档imag_t抓取成本分群(imag011)..
+  3.08 品牌(xcec118)：默认为空格。
+  3.09 项目编号(xcec119)：根据工单编号去工单档抓取项目编号和WBS字段。
+  3.10 WBS(xcec120)：根据工单编号去工单档抓取项目编号和WBS字段。
+
+4.第三单身(xced_t)的资料产生逻辑：
+  4.1先根据第二单身(xcec)中的元件料号=‘DL+OH+SUB’，按在制科目分类、摘要、成本中心、区域、交易客商、产品大类、项目编号、WBS为GROUP合计出在制成本金额。
+     即：
+     在制科目分类   成本金额            条件
+     人工         SUM(xcec202b)     元件料号=‘DL+OH+SUB’ GROUP BY 摘要、成本中心、区域、交易客商、产品大类、项目编号、WBS
+     加工         SUM(xcec202c)     元件料号=‘DL+OH+SUB’ GROUP BY 摘要、成本中心、区域、交易客商、产品大类、项目编号、WBS
+     制费一       SUM(xcec202d)     元件料号=‘DL+OH+SUB’ GROUP BY 摘要、成本中心、区域、交易客商、产品大类、项目编号、WBS
+     制费二       SUM(xcec202e)     元件料号=‘DL+OH+SUB’ GROUP BY 摘要、成本中心、区域、交易客商、产品大类、项目编号、WBS
+     制费三       SUM(xcec202f)     元件料号=‘DL+OH+SUB’ GROUP BY 摘要、成本中心、区域、交易客商、产品大类、项目编号、WBS
+     制费四       SUM(xcec202g)     元件料号=‘DL+OH+SUB’ GROUP BY 摘要、成本中心、区域、交易客商、产品大类、项目编号、WBS
+     制费五       SUM(xcec202h)     元件料号=‘DL+OH+SUB’ GROUP BY 摘要、成本中心、区域、交易客商、产品大类、项目编号、WBS
+  4.2科目根据账套成本科目设定档（glab_t）的生产在制人工、加工、制费一、制费二、制费三、制费四、制费五的科目抓取。
+  
+5.判断账别是否启用多本位币核算，启用几个就显示几个页签。
+
+axct707
+1.根据INPUT条件中的账别(xceald)、按账别启用的本位币确定的顺序、成本计算类型、年度、月份从本期料件明细进出成本档(xcck_t)中抓出杂项进出的成本数据（可根据异动类别（xcck022）来判断）产生到单头档(xcea_t)、第一单身档(xceb_t)和第二单身档(xcec_t)中。
+  1.1第一单身（xceb_t）的取值逻辑：
+     成本域(xcck002)、杂项进出料号(xcck006)、原因码（xcck021）、交易对象(xcck022)、客群（xcck023）、区域(xcck024)、成本中心(xcck025)、经营类别(xcck026)、渠道(xcck027)、品类(xcck028)、品牌(xcck029)、项目号（xcck030）、WBS(xcck031)、费用成本科目(xcck033)、SUM(出货/销退数量（xcck201))、SUM(成本金额(xcck202))、SUM(材料(xcck202a))、SUM(人工(xcck202b))、SUM(委外加工(xcck202c))、SUM(制费一(xcck202d))、SUM(制费二(xcck202e))、SUM(制费三(xcck202f))、SUM(制费四(xcck202g))、SUM(制费五(xcck202h))。
+  1.2第二单身(xcec_t)的取值逻辑：
+     成本域(xcck002)、杂项进出料号(xcck006)、原因码（xcck021）、交易对象(xcck022)、客群（xcck023）、区域(xcck024)、成本中心(xcck025)、经营类别(xcck026)、渠道(xcck027)、品类(xcck028)、品牌(xcck029)、项目号（xcck030）、WBS(xcck031)、存货成本科目(xcck032)、SUM(出货/销退数量（xcck201))、SUM(成本金额(xcck202))、SUM(材料(xcck202a))、SUM(人工(xcck202b))、SUM(委外加工(xcck202c))、SUM(制费一(xcck202d))、SUM(制费二(xcck202e))、SUM(制费三(xcck202f))、SUM(制费四(xcck202g))、SUM(制费五(xcck202h))。
+
+2.第一单身(xceb_t)的费用科目如果是空的，则再根据账套成本科目设定档（glab_t）的杂项费用科目抓取
+3.第二单身(xcec_t)的存货科目如果是空的，则再根据料号和账套调用元件（s_Get_Item_Acc）去产品科目依账套设定档(glcc_t)抓取存货科目(glcc002)。
+4.判断账别是否启用多本位币核算，启用几个就显示几个页签。
+
+axct708
+1.根据INPUT条件中的账别(xceald)、按账别启用的本位币确定的顺序、成本计算类型、年度、月份从本期料件明细进出成本档(xcck_t)中抓出杂项进出的成本数据（可根据异动类别（xcck022）来判断）产生到单头档(xcea_t)、第一单身档(xceb_t)和第二单身档(xcec_t)中。
+  1.1第一单身（xceb_t）的取值逻辑：根据xcck_t的数据与xceb_t的数据差异产生
+    1.1.1从xcck_t抓取最新的杂项进出数量和金额等数据
+     按成本域(xcck002)、杂项料号(xcck006)、原因码（xcck021）、交易对象(xcck022)、客群（xcck023）、区域(xcck024)、成本中心(xcck025)、经营类别(xcck026)、渠道(xcck027)、品类(xcck028)、品牌(xcck029)、项目号（xcck030）、WBS(xcck031)、费用成本科目(xcck033)、SUM(杂项进出数量（xcck201))、SUM(成本金额(xcck202))、SUM(材料(xcck202a))、SUM(人工(xcck202b))、SUM(委外加工(xcck202c))、SUM(制费一(xcck202d))、SUM(制费二(xcck202e))、SUM(制费三(xcck202f))、SUM(制费四(xcck202g))、SUM(制费五(xcck202h))。
+   1.1.2从xceb_t抓取已做凭证的杂项进出数量和金额等数据，根据凭证类型=‘杂项进出凭证’
+     如果本位币顺序是第一本位币：
+     按成本域(xceb103)、杂项料号(xceb004)、原因码（xceb110）、交易对象(xceb111)、客群（xceb112）、区域(xceb113)、成本中心(xceb114)、经营类别(xceb115)、渠道(xceb116)、品类(xceb117)、品牌(xceb118)、项目号（xceb119）、WBS(xceb120)、费用成本科目(xceb101)、SUM(杂项进出数量（xceb201))、SUM(成本金额(xceb202))、SUM(材料(xceb202a))、SUM(人工(xceb202b))、SUM(委外加工(xceb202c))、SUM(制费一(xceb202d))、SUM(制费二(xceb202e))、SUM(制费三(xceb202f))、SUM(制费四(xceb202g))、SUM(制费五(xceb202h))。
+　　 如果本位币顺序是第二本位币：
+     按成本域(xceb103)、杂项料号(xceb004)、原因码（xceb110）、交易对象(xceb111)、客群（xceb112）、区域(xceb113)、成本中心(xceb114)、经营类别(xceb115)、渠道(xceb116)、品类(xceb117)、品牌(xceb118)、项目号（xceb119）、WBS(xceb120)、费用成本科目(xceb101)、SUM(杂项进出数量（xceb201))、SUM(成本金额(xceb212))、SUM(材料(xceb212a))、SUM(人工(xceb212b))、SUM(委外加工(xceb212c))、SUM(制费一(xceb212d))、SUM(制费二(xceb212e))、SUM(制费三(xceb212f))、SUM(制费四(xceb212g))、SUM(制费五(xceb212h))。
+     如果本位币顺序是第三本位币：
+     按成本域(xceb103)、杂项料号(xceb004)、原因码（xceb110）、交易对象(xceb111)、客群（xceb112）、区域(xceb113)、成本中心(xceb114)、经营类别(xceb115)、渠道(xceb116)、品类(xceb117)、品牌(xceb118)、项目号（xceb119）、WBS(xceb120)、费用成本科目(xceb101)、SUM(杂项进出数量（xceb201))、SUM(成本金额(xceb222))、SUM(材料(xceb222a))、SUM(人工(xceb222b))、SUM(委外加工(xceb222c))、SUM(制费一(xceb222d))、SUM(制费二(xceb222e))、SUM(制费三(xceb222f))、SUM(制费四(xceb222g))、SUM(制费五(xceb222h))。
+    1.1.3根据前2步的资料比对差异，差异（数量或金额）不为零的存入xceb_t中。
+
+  1.2第二单身(xcec_t)的取值逻辑：
+    1.2.1从xcck_t抓取最新的杂项进出数量和金额等数据
+     按成本域(xcck002)、杂项料号(xcck006)、原因码（xcck021）、交易对象(xcck022)、客群（xcck023）、区域(xcck024)、成本中心(xcck025)、经营类别(xcck026)、渠道(xcck027)、品类(xcck028)、品牌(xcck029)、项目号（xcck030）、WBS(xcck031)、存货科目(xcck033)、SUM(杂项进出数量（xcck201))、SUM(成本金额(xcck202))、SUM(材料(xcck202a))、SUM(人工(xcck202b))、SUM(委外加工(xcck202c))、SUM(制费一(xcck202d))、SUM(制费二(xcck202e))、SUM(制费三(xcck202f))、SUM(制费四(xcck202g))、SUM(制费五(xcck202h))。
+   1.2.1从xcec_t抓取已做凭证的杂项进出数量和金额等数据，根据凭证类型=‘杂项进出凭证’
+     如果本位币顺序是第一本位币：
+     按成本域(xcec103)、杂项料号(xcec004)、原因码（xcec110）、交易对象(xcec111)、客群（xcec112）、区域(xcec113)、成本中心(xcec114)、经营类别(xcec115)、渠道(xcec116)、品类(xcec117)、品牌(xcec118)、项目号（xcec119）、WBS(xcec120)、费用成本科目(xcec101)、SUM(杂项进出数量（xcec201))、SUM(成本金额(xcec202))、SUM(材料(xcec202a))、SUM(人工(xcec202b))、SUM(委外加工(xcec202c))、SUM(制费一(xcec202d))、SUM(制费二(xcec202e))、SUM(制费三(xcec202f))、SUM(制费四(xcec202g))、SUM(制费五(xcec202h))。
+　　 如果本位币顺序是第二本位币：
+     按成本域(xcec103)、杂项料号(xcec004)、原因码（xcec110）、交易对象(xcec111)、客群（xcec112）、区域(xcec113)、成本中心(xcec114)、经营类别(xcec115)、渠道(xcec116)、品类(xcec117)、品牌(xcec118)、项目号（xcec119）、WBS(xcec120)、费用成本科目(xcec101)、SUM(杂项进出数量（xcec201))、SUM(成本金额(xcec212))、SUM(材料(xcec212a))、SUM(人工(xcec212b))、SUM(委外加工(xcec212c))、SUM(制费一(xcec212d))、SUM(制费二(xcec212e))、SUM(制费三(xcec212f))、SUM(制费四(xcec212g))、SUM(制费五(xcec212h))。
+     如果本位币顺序是第三本位币：
+     按成本域(xcec103)、杂项料号(xcec004)、原因码（xcec110）、交易对象(xcec111)、客群（xcec112）、区域(xcec113)、成本中心(xcec114)、经营类别(xcec115)、渠道(xcec116)、品类(xcec117)、品牌(xcec118)、项目号（xcec119）、WBS(xcec120)、费用成本科目(xcec101)、SUM(杂项进出数量（xcec201))、SUM(成本金额(xcec222))、SUM(材料(xcec222a))、SUM(人工(xcec222b))、SUM(委外加工(xcec222c))、SUM(制费一(xcec222d))、SUM(制费二(xcec222e))、SUM(制费三(xcec222f))、SUM(制费四(xcec222g))、SUM(制费五(xcec222h))。
+    1.1.3根据前2步的资料比对差异，差异（数量或金额）不为零的存入xcec_t中。
+
+2.第一单身(xceb_t)的费用科目如果是空的，则再根据账套成本科目设定档（glab_t）的杂项费用科目抓取
+3.第二单身(xcec_t)的存货科目如果是空的，则再根据料号和账套调用元件（s_Get_Item_Acc）去产品科目依账套设定档(glcc_t)抓取存货科目(glcc002)。
+4.判断账别是否启用多本位币核算，启用几个就显示几个页签。
+
+
+axct706銷貨成本憑證
+邏輯處理：
+1.根据INPUT条件中的账别(xceald)、按账别启用的本位币确定的顺序、成本计算类型、年度、月份从本期料件明细进出成本档(xcck_t)中抓出销售的成本数据
+（可根据异动类别（xcck020）来判断）产生到单头档(xcea_t)、第一单身档(xceb_t)和第二单身档(xcec_t)中。
+  1.1第一单身（xceb_t）的取值逻辑：
+     成本域(xcck002)、出货/销退料号(xcck006)、原因码（xcck021）、交易对象(xcck022)、客群（xcck023）、区域(xcck024)、成本中心(xcck025)、经营类别(xcck026)、
+     渠道(xcck027)、品类(xcck028)、品牌(xcck029)、项目号（xcck030）、WBS(xcck031)、费用成本科目(xcck033)、SUM(出货/销退数量（xcck201))、
+     SUM(成本金额(xcck202))、SUM(材料(xcck202a))、SUM(人工(xcck202b))、SUM(委外加工(xcck202c))、SUM(制费一(xcck202d))、SUM(制费二(xcck202e))、
+     SUM(制费三(xcck202f))、SUM(制费四(xcck202g))、SUM(制费五(xcck202h))。
+  1.2第二单身(xcec_t)的取值逻辑：
+     成本域(xcck002)、出货/销退料号(xcck006)、原因码（xcck021）、交易对象(xcck022)、客群（xcck023）、区域(xcck024)、成本中心(xcck025)、经营类别(xcck026)、
+     渠道(xcck027)、品类(xcck028)、品牌(xcck029)、项目号（xcck030）、WBS(xcck031)、存货成本科目(xcck032)、SUM(出货/销退数量（xcck201))、
+     SUM(成本金额(xcck202))、SUM(材料(xcck202a))、SUM(人工(xcck202b))、SUM(委外加工(xcck202c))、SUM(制费一(xcck202d))、SUM(制费二(xcck202e))、
+     SUM(制费三(xcck202f))、SUM(制费四(xcck202g))、SUM(制费五(xcck202h))。
+
+2.第一单身(xceb_t)的销货成本科目如果是空的，则再根据料号和账套调用元件（s_get_item_acc）去产品科目依账套设定档(glcc_t)抓取销货成本科目(glcc004)。
+3.第二单身(xcec_t)的存货科目如果是空的，则如果销售类型不是从发出商品转出的再根据料号和账套调用元件（s_get_item_acc）去产品科目依账套设定档(glcc_t)
+   抓取存货科目(glcc002)；如果销售类型是从发出商品转出的再根据账套成本科目设定档(glab_t)抓取默认发出商品科目。
+4.判断账别是否启用多本位币核算，启用几个就显示几个页签。
+
+
+axct705
+1.根据INPUT条件中的账别(xceald)、按账别启用的本位币确定的顺序、成本计算类型、年度、月份从在制主件成本期异动统计档(xccd_t)、在制元件成本期异动统计档(xcce_t)和拆件在制主件成本期异动统计档(xcch_t)和拆件在制元件成本期异动统计档(xcci_t)中抓出在制转出的数据分别产生到单头(xcea_t)、第一单身(xceb_t)和第二单身(xcec_t)。
+  
+   1.1从在制主件成本档(xccd_t)中抓取数据存入第一单身（xceb_t）的逻辑：
+      成本域(xccd02)、工单编号(xccd006)、主件料号(xccd007)、SUM(差异转出数量(xccd303))、SUM(差异转出成本金额(xccd304))、SUM(材料成本(xccd304a))、SUM(人工成本(xccd304b))、SUM(委外加工(xccd304c))、SUM(制费一(xccd304d))、SUM(制费二(xccd304e))、SUM(制费三(xccd304f))、SUM(制费四(xccd304g))、SUM(制费五(xccd304h))。
+
+   1.2从在制元件成本档(xcce_t)中抓取数据存入第二单身（xcec_t）的逻辑：
+       成本域(xcce02)、工单编号(xcce006)、元件料号(xcce007)、项目号(xcce009)、SUM(差异转出数量(xcce303))、SUM(差异转出成本金额(xcce304))、SUM(材料成本(xcce304a))、SUM(人工成本(xcce304b))、SUM(委外加工(xcce304c))、SUM(制费一(xcce304d))、SUM(制费二(xcce304e))、SUM(制费三(xcce304f))、SUM(制费四(xcce304g))、SUM(制费五(xcce304h))。
+
+   1.3从拆件在制主件成本档(xcch_t)中抓取数据存入第一单身(xceb_t)：
+      成本域（xcch002）、拆件工单编号(xcch006)、主件料号(xcch007)、SUM(差异转出数量(xcch303))、SUM(差异转出成本金额(xcch304))、SUM(材料成本(xcch304a))、SUM(人工成本(xcch304b))、SUM(委外加工(xcch304c))、SUM(制费一(xcch304d))、SUM(制费二(xcch304e))、SUM(制费三(xcch304f))、SUM(制费四(xcch304g))、SUM(制费五(xcch304h)).
+ 
+   1.4从拆件在制元件成本档(xcci_t)中抓取数据存入第二单身(xcec_t)
+     成本域（xcci002）、拆件工单编号(xcci006)、元件料号(xcci007)、项目号(xcci009)、SUM(差异转出数量(xcci303))、SUM(差异转出成本金额(xcci304))、SUM(材料成本(xcci304a))、SUM(人工成本(xcci304b))、SUM(委外加工(xcci304c))、SUM(制费一(xcci304d))、SUM(制费二(xcci304e))、SUM(制费三(xcci304f))、SUM(制费四(xcci304g))、SUM(制费五(xcci304h))。
+    
+
+2.第一单身(xceb)的科目根据账套成本科目设定档(glab_t)的在制转出差异科目抓取，其他分类字段根据入库料号的相关设定档抓取，如果抓不到则置为空格，由人工修改维护。
+  2.01 交易对象(xceb111):如果工单是委外工单，则根据工单编号去工单档抓取交易对象字段,如果不是委外工单则设为空白。
+  2.02 客群(xceb112)：根据交易对象(xceb111)找出对应的客群。
+  2.03 区域(xceb113)：如果工单是委外工单，则根据交易对象(xceb111)抓出其归属的区域；如果不是委外工单则抓取该工单的组织归属的区域。
+  2.04 成本中心(xceb114):根据工单编号去工单档抓取成本中心字段。
+  2.05 经营类别(xceb115)：默认为空格。
+  2.06 渠道(xceb116)：默认为空格。
+  2.07 品类(xceb117):根据入库料号在SITE料件档imag_t抓取成本分群(imag011).
+  2.08 品牌(xceb118)：默认为空格。
+  2.09 项目编号(xceb119)：根据工单编号去工单档抓取项目编号和WBS字段。
+  2.10 WBS(xceb120)：根据工单编号去工单档抓取项目编号和WBS字段。
+ 
+3.第二单身(xcec)的科目根据账套成本科目设定档(glab_t)的生产在制材料科目抓取，其他分类字段根据工单的相关设定档抓取，如果抓不到则置为空格，由人工修改维护。
+  3.01 交易对象(xcec111):如果工单是委外工单，则根据工单编号去工单档抓取交易对象字段,如果不是委外工单则设为空白。
+  3.02 客群(xcec112)：根据交易对象(xcec111)找出对应的客群。
+  3.03 区域(xcec113)：如果工单是委外工单，则根据交易对象(xcec111)抓出其归属的区域；如果不是委外工单则抓取该工单的组织归属的区域。
+  3.04 成本中心(xcec114):根据工单编号去工单档抓取成本中心字段。
+  3.05 经营类别(xcec115)：默认为空格。
+  3.06 渠道(xcec116)：默认为空格。
+  3.07 品类(xcec117):根据该工单的主件料号在SITE料件档imag_t抓取成本分群(imag011)..
+  3.08 品牌(xcec118)：默认为空格。
+  3.09 项目编号(xcec119)：根据工单编号去工单档抓取项目编号和WBS字段。
+  3.10 WBS(xcec120)：根据工单编号去工单档抓取项目编号和WBS字段。
+4.第三单身(xced_t)的资料产生逻辑：
+  4.1先根据第二单身(xcec)中的元件料号=‘DL+OH+SUB’，按在制科目分类、摘要、成本中心、区域、交易客商、产品大类、项目编号、WBS为GROUP合计出在制成本金额。
+     即：
+     在制科目分类   成本金额            条件
+     人工         SUM(xcec202b)     元件料号=‘DL+OH+SUB’ GROUP BY 摘要、成本中心、区域、交易客商、产品大类、项目编号、WBS
+     加工         SUM(xcec202c)     元件料号=‘DL+OH+SUB’ GROUP BY 摘要、成本中心、区域、交易客商、产品大类、项目编号、WBS
+     制费一       SUM(xcec202d)     元件料号=‘DL+OH+SUB’ GROUP BY 摘要、成本中心、区域、交易客商、产品大类、项目编号、WBS
+     制费二       SUM(xcec202e)     元件料号=‘DL+OH+SUB’ GROUP BY 摘要、成本中心、区域、交易客商、产品大类、项目编号、WBS
+     制费三       SUM(xcec202f)     元件料号=‘DL+OH+SUB’ GROUP BY 摘要、成本中心、区域、交易客商、产品大类、项目编号、WBS
+     制费四       SUM(xcec202g)     元件料号=‘DL+OH+SUB’ GROUP BY 摘要、成本中心、区域、交易客商、产品大类、项目编号、WBS
+     制费五       SUM(xcec202h)     元件料号=‘DL+OH+SUB’ GROUP BY 摘要、成本中心、区域、交易客商、产品大类、项目编号、WBS
+  4.2科目根据账套成本科目设定档（glab_t）的生产在制人工、加工、制费一、制费二、制费三、制费四、制费五的科目抓取。
+  
+5.判断账别是否启用多本位币核算，启用几个就显示几个页签。  
+
+
+axct709
+1.根据INPUT条件中的账别(xceald)、按账别启用的本位币确定的顺序、成本计算类型、年度、月份从本期费用收集与分摊档中抓出分摊金额数据）产生到单头档(xcea_t)、第一单身档(xceb_t)和第二单身档(xcec_t)中。
+  1.1第一单身（xceb_t）的取值逻辑：axct201,xcbl_t
+     1.1.1检核当期的年度期别的xcbl_t是否已产生，如为null，则提示运行axct201
+     1.1.2 xceb_t各检栏赋值
+      xceb003（xcbl001费用类型)
+      xceb202=sum(xcbl100分摊成本)
+      xceb核算项取对应的xcbl_t中的固定核算项栏位
+      xceb101(xcbl010科目)
+  1.2第二单身(xcec_t)的取值逻辑:xcbk_t
+      1.2.1检核当期的年度期别的xcbk_t是否已产生，如为null，则提示运行axcp202
+      xcec003=xcbk007分摊方式
+      xcec001=xcbk006工单单号
+      xcec202=xcbk202分摊金额
+2.第一单身(xceb_t)的费用科目和第二单身(xcec_t)的成本科目如果是空的，则再根据账套成本科目设定档（glab_t）的费用科目和成本科目抓取(axci201),如果抓不到则置为空格，由人工修改维护。
+
+3.
+  3.01 交易对象(xcec111):如果工单是委外工单，则根据工单编号去工单档抓取交易对象字段,如果不是委外工单则设为空白。
+  3.02 客群(xcec112)：根据交易对象(xcec111)找出对应的客群。
+  3.03 区域(xcec113)：如果工单是委外工单，则根据交易对象(xcec111)抓出其归属的区域；如果不是委外工单则抓取该工单的组织归属的区域。
+  3.04 成本中心(xcec114):根据工单编号去工单档抓取成本中心字段。
+  3.05 经营类别(xcec115)：默认为空格。
+  3.06 渠道(xcec116)：默认为空格。
+  3.07 品类(xcec117):根据元件件料号在SITE料件档imag_t抓取成本分群(imag011).
+  3.08 品牌(xcec118)：默认为空格。
+  3.09 项目编号(xcec119)：根据工单编号去工单档抓取项目编号和WBS字段。
+  3.10 WBS(xcec120)：根据工单编号去工单档抓取项目编号和WBS字段。
+  4.判断账别是否启用多本位币核算，启用几个就显示几个页签。
+
+]]>
+  </all>
+  <field cite_std="N" name="xcea_t.xcea001" ver="1" src="s" column="xcea001" table="xcea_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcea_t.xcea003" ver="1" src="s" column="xcea003" table="xcea_t" attribute="" type="" req="Y" i_zoom="q_xcat001" c_zoom="q_xcat001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcea_t.xcea004" ver="1" src="s" column="xcea004" table="xcea_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[年度：
+默认值为当前成本计算年度（取自成本参数档，允许手动更改）]]>
+  </field>
+  <field cite_std="N" name="xcea_t.xcea005" ver="1" src="s" column="xcea005" table="xcea_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[月份：
+默认值为当前成本计算月份（取自成本参数档，允许手动更改）]]>
+  </field>
+  <field cite_std="N" name="xcea_t.xcea006" ver="1" src="s" column="xcea006" table="xcea_t" attribute="" type="" req="Y" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcea_t.xcea007" ver="1" src="s" column="xcea007" table="xcea_t" attribute="" type="" req="Y" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcea_t.xceacomp" ver="1" src="s" column="xceacomp" table="xcea_t" attribute="" type="" req="Y" i_zoom="q_ooef001_8" c_zoom="q_ooef001_8" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xcea_t.xceadocno" ver="1" src="s" column="xceadocno" table="xcea_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[单据类别：
+1.必须录入，且不能为空。
+2.根据成本参数档设定的默认成本凭证单据类别自动赋值。
+3.数据检查，必须是单据类别档中类型为＂成本凭证＂类型的单据类别．]]>
+  </field>
+  <field cite_std="N" name="xcea_t.xceald" ver="1" src="s" column="xceald" table="xcea_t" attribute="" type="" req="Y" i_zoom="q_authorised_ld" c_zoom="q_authorised_ld" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：帳別编号
+查询时：
+          1.輸入值須存在[T:帳別基本資料檔].[C:帳別編號]且為有效資料]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="xcea003_desc" src="s" depend_field="xcea_t.xcea003" correspon_key="xceaent,xcea003" ref_table="xcatl_t" ref_fk="xcatlent,xcatl001" ref_dlang="xcatl002" ref_rtn="xcatl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xcea006_desc" src="s" depend_field="xcea_t.xcea006" correspon_key="xcea006" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="xcea007_desc" src="s" depend_field="xcea_t.xcea007" correspon_key="xceaent,xcea007" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xceacomp_desc" src="s" depend_field="xcea_t.xceacomp" correspon_key="xceaent,xceacomp" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xceald_desc" src="s" depend_field="xcea_t.xceald" correspon_key="xceaent,xceald" ref_table="glaal_t" ref_fk="glaalent,glaalld" ref_dlang="glaal001" ref_rtn="glaal002" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="xcea_t.xcea001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcea_t.xcea003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcea_t.xcea004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcea_t.xcea005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcea_t.xcea006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcea_t.xcea007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcea_t.xceacomp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcea_t.xceadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcea_t.xceald" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="page_1" text="INPUT" lstr=""/>
+    <sfield name="lbl_xceald" text="帳套編號" lstr=""/>
+    <sfield name="lbl_xceacomp" text="所屬法人" lstr=""/>
+    <sfield name="lbl_xcea003" text="成本計算類型" lstr=""/>
+    <sfield name="lbl_xcea004" text="年度" lstr=""/>
+    <sfield name="lbl_xcea005_1" text="月份" lstr=""/>
+    <sfield name="lbl_xceadocno" text="單據類別" lstr=""/>
+    <sfield name="lbl_xcea001" text="單據日期" lstr=""/>
+    <sfield name="lbl_xcea006" text="帳務人員" lstr=""/>
+    <sfield name="lbl_xcea007" text="帳務部門" lstr=""/>
+    <sact name="delete" text="刪除" lstr=""/>
+    <sact name="insert" text="新增" lstr=""/>
+    <sact name="modify" text="更改" lstr=""/>
+    <sact name="output" text="列印" lstr=""/>
+    <sact name="query" text="查詢" lstr=""/>
+    <sact name="reproduce" text="複製" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

@@ -1,0 +1,165 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmt550" module="afm" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="03538" crtdt="2015-04-30 15:08:58" modid="05016" moddt="2015-11-03 13:53:19" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="期末公允價值維護">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="fmmpsite,fmmpsite_desc(chr80),fmmpld,fmmpld_desc(chr80),l_comp(chr500),l_comp_desc(chr80),fmmp001,fmmp002"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="fmmp003,fmmp003_desc(chr500),fmmp004,l_fmmj004(chr20),l_fmmj003(chr10),fmmp005,l_fmmj006(chr10),l_fmmj007(num20_6),fmmp006,fmmp007,fmmp008,fmmp009,fmmp010,fmmp011,fmmpstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="fmmp004,fmmpownid,fmmpownid_desc(chr500),fmmpowndp,fmmpowndp_desc(chr500),fmmpcrtid,fmmpcrtid_desc(chr500),fmmpcrtdp,fmmpcrtdp_desc(chr500),fmmpcrtdt,fmmpmodid,fmmpmodid_desc(chr500),fmmpmoddt,fmmpcnfid,fmmpcnfid_desc(chr500),fmmpcnfdt"/>
+      <var id="bs_field" value="fmmpld,fmmpld_desc(chr80),fmmp001,fmmp002" pk="fmmpld,fmmp001,fmmp002" order=""/>
+      <bs_reference field="fmmpld_desc" ref_field="fmmpld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmt550" method="dialog">
+    <section id="input">
+      <input id="head" field="fmmpsite,fmmpld,fmmp001,fmmp002"/>
+      <input id="body" page="1" field="fmmp003,fmmp004,fmmp005,fmmp006,fmmp007,fmmp008,fmmp009,fmmp010,fmmp011,fmmpstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="fmmpsite,fmmpld,fmmp001,fmmp002"/>
+      <construct id="body" page="1" field="fmmp003,fmmp004,fmmp005,fmmp006,fmmp007,fmmp008,fmmp009,fmmp010,fmmp011,fmmpstus"/>
+      <construct id="body" page="2" field="fmmpownid,fmmpowndp,fmmpcrtid,fmmpcrtdp,fmmpcrtdt,fmmpmodid,fmmpmoddt,fmmpcnfid,fmmpcnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="fmmpld,fmmp001,fmmp002"/>
+      <set id="head" type="no_entry" field="fmmpld,fmmp001,fmmp002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="fmmpsite">
+        <after>
+          <reference field="fmmpsite_desc" ref_field="fmmp_t.fmmpsite" map_field="fmmpsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="fmmpsite_desc"/>
+      <column id="fmmpld">
+        <after>
+          <reference field="fmmpld_desc" ref_field="fmmp_t.fmmpld" map_field="fmmpld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="fmmpld_desc"/>
+      <column id="l_comp">
+        <after>
+          <reference field="l_comp_desc" ref_field="l_comp" map_field="l_comp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="l_comp_desc"/>
+      <column id="fmmp001"/>
+      <column id="fmmp002"/>
+    </init>
+    <init id="body" page="1">
+      <column id="fmmp003">
+        <after>
+          <reference field="fmmp003_desc" ref_field="fmmp_t.fmmp003" map_field="fmmp003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="fmmp003_desc"/>
+      <column id="fmmp004">
+        <controlp form="q_fmmjdocno" state="i"/>
+        <controlp form="q_fmmjdocno" state="c"/>
+      </column>
+      <column id="l_fmmj004"/>
+      <column id="l_fmmj003"/>
+      <column id="fmmp005" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="l_fmmj006"/>
+      <column id="l_fmmj007" type="S" default="0">
+        <after>
+          <check id="range" bt="&gt;=0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmmp006" type="S" default="0"/>
+      <column id="fmmp007" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmmp008" type="S" default="0"/>
+      <column id="fmmp009" type="S" default="0"/>
+      <column id="fmmp010" type="S" default="0"/>
+      <column id="fmmp011" type="S" default="0"/>
+      <column id="fmmpstus" scc="13" type="S" default="Y">
+        <stus id="Y" pic="confirmed"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="fmmpownid">
+        <after>
+          <reference field="fmmpownid_desc" ref_field="fmmp_t.fmmpownid" map_field="fmmpownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmmpownid_desc"/>
+      <column id="fmmpowndp">
+        <after>
+          <reference field="fmmpowndp_desc" ref_field="fmmp_t.fmmpowndp" map_field="fmmpowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmmpowndp_desc"/>
+      <column id="fmmpcrtid">
+        <after>
+          <reference field="fmmpcrtid_desc" ref_field="fmmp_t.fmmpcrtid" map_field="fmmpcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmmpcrtid_desc"/>
+      <column id="fmmpcrtdp">
+        <after>
+          <reference field="fmmpcrtdp_desc" ref_field="fmmp_t.fmmpcrtdp" map_field="fmmpcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmmpcrtdp_desc"/>
+      <column id="fmmpcrtdt"/>
+      <column id="fmmpmodid">
+        <after>
+          <reference field="fmmpmodid_desc" ref_field="fmmp_t.fmmpmodid" map_field="fmmpmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmmpmodid_desc"/>
+      <column id="fmmpmoddt"/>
+      <column id="fmmpcnfid">
+        <after>
+          <reference field="fmmpcnfid_desc" ref_field="fmmp_t.fmmpcnfid" map_field="fmmpcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmmpcnfid_desc"/>
+      <column id="fmmpcnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="fmmp_t" pk="fmmpld,fmmp001,fmmp002">
+      <sql id="forupd_sql" type="sql" query="SELECT fmmpsite,&apos;&apos;,fmmpld,&apos;&apos;,&apos;&apos;,&apos;&apos;,fmmp001,fmmp002 FROM fmmp_t WHERE fmmpent= ? AND fmmpld=? AND fmmp001=? AND fmmp002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT fmmpsite,&apos;&apos;,fmmpld,&apos;&apos;,&apos;&apos;,&apos;&apos;,fmmp001,fmmp002 FROM fmmp_t" order="fmmpld,fmmp001,fmmp002"/>
+    </head>
+    <body id="fmmp_t" page="1,2" linked="" pk="fmmp004" fk="fmmpld,fmmp001,fmmp002">
+      <sql id="forupd_sql_detail" query="SELECT fmmp003,&apos;&apos;,fmmp004,&apos;&apos;,&apos;&apos;,fmmp005,&apos;&apos;,&apos;&apos;,fmmp006,fmmp007,fmmp008,fmmp009,fmmp010,fmmp011,fmmpstus,&apos;&apos;,fmmpownid,&apos;&apos;,fmmpowndp,&apos;&apos;,fmmpcrtid,&apos;&apos;,fmmpcrtdp,&apos;&apos;,fmmpcrtdt,fmmpmodid,&apos;&apos;,fmmpmoddt,fmmpcnfid,&apos;&apos;,fmmpcnfdt FROM fmmp_t WHERE fmmpent=? AND fmmpld=? AND fmmp001=? AND fmmp002=? AND fmmp004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT fmmp003,&apos;&apos;,fmmp004,&apos;&apos;,&apos;&apos;,fmmp005,&apos;&apos;,&apos;&apos;,fmmp006,fmmp007,fmmp008,fmmp009,fmmp010,fmmp011,fmmpstus,&apos;&apos;,fmmpownid,&apos;&apos;,fmmpowndp,&apos;&apos;,fmmpcrtid,&apos;&apos;,fmmpcrtdp,&apos;&apos;,fmmpcrtdt,fmmpmodid,&apos;&apos;,fmmpmoddt,fmmpcnfid,&apos;&apos;,fmmpcnfdt FROM fmmp_t WHERE fmmpent= ? AND fmmpld=? AND fmmp001=? AND fmmp002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

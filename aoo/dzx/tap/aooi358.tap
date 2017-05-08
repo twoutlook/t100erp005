@@ -1,0 +1,542 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="aooi358" std_prog="aooi358" erpver="1.0" module="AOO" ver="1" env="s" zone="t10dev" normal_style="Y" booking="Y">
+  <point name="construct.c.oofdcrtdp" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO oofdcrtdp  #顯示到畫面上
+
+            NEXT FIELD oofdcrtdp                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.oofdcrtid" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO oofdcrtid  #顯示到畫面上
+
+            NEXT FIELD oofdcrtid                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.oofdmodid" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO oofdmodid  #顯示到畫面上
+
+            NEXT FIELD oofdmodid                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.oofdowndp" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO oofdowndp  #顯示到畫面上
+
+            NEXT FIELD oofdowndp                     #返回原欄位
+
+]]>
+  </point>
+  <point name="construct.c.oofdownid" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO oofdownid  #顯示到畫面上
+
+            NEXT FIELD oofdownid                     #返回原欄位
+
+]]>
+  </point>
+  <point name="function.aooi358_key_chk" order="" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION aooi358_key_chk(p_cmd,p_oofd001,p_oofd002,p_oofd003,p_oofd004,p_oofd005,p_oofd006,p_oofd007,p_oofd008,p_oofd009,p_oofd010,p_oofd011)
+DEFINE p_cmd     LIKE type_t.chr1
+   DEFINE p_oofd001 LIKE oofd_t.oofd001
+   DEFINE p_oofd002 LIKE oofd_t.oofd002
+   DEFINE p_oofd003 LIKE oofd_t.oofd003
+   DEFINE p_oofd004 LIKE oofd_t.oofd004
+   DEFINE p_oofd005 LIKE oofd_t.oofd005
+   DEFINE p_oofd006 LIKE oofd_t.oofd006
+   DEFINE p_oofd007 LIKE oofd_t.oofd007
+   DEFINE p_oofd008 LIKE oofd_t.oofd008
+   DEFINE p_oofd009 LIKE oofd_t.oofd009
+   DEFINE p_oofd010 LIKE oofd_t.oofd010
+   DEFINE p_oofd011 LIKE oofd_t.oofd011
+   
+   IF NOT cl_null(p_oofd001) AND NOT cl_null(p_oofd002) AND NOT cl_null(p_oofd003)
+      AND NOT cl_null(p_oofd004) AND NOT cl_null(p_oofd005) 
+      AND NOT cl_null(p_oofd006) AND NOT cl_null(p_oofd007) 
+      AND NOT cl_null(p_oofd008) AND NOT cl_null(p_oofd009) 
+      AND NOT cl_null(p_oofd010) AND NOT cl_null(p_oofd011) THEN 
+      IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND 
+         (p_oofd001 != g_oofd001_t  OR p_oofd002 != g_oofd002_t  
+          OR p_oofd003 != g_oofd003_t  OR p_oofd004 != g_oofd004_t  
+          OR p_oofd005 != g_oofd005_t  OR p_oofd006 != g_oofd006_t  
+          OR p_oofd007 != g_oofd007_t  OR p_oofd008 != g_oofd008_t  
+          OR p_oofd009 != g_oofd009_t  OR p_oofd010 != g_oofd010_t  
+          OR p_oofd011 != g_oofd011_t ))) THEN 
+         IF NOT ap_chk_notDup(p_oofd002||"~"||p_oofd003,"SELECT COUNT(*) FROM oofd_t WHERE "
+            ||"oofdent = '" ||g_enterprise|| "' AND "||"oofd001 = '"
+            ||p_oofd001 ||"' AND "|| "oofd002 = '"||p_oofd002 ||"' AND "
+            || "oofd003 = '"||p_oofd003 ||"' AND "|| "oofd004 = '"||p_oofd004 
+            ||"' AND "|| "oofd005 = '"||p_oofd005 ||"' AND "|| "oofd006 = '"
+            ||p_oofd006 ||"' AND "|| "oofd007 = '"||p_oofd007 ||"' AND "
+            || "oofd008 = '"||p_oofd008 ||"' AND "|| "oofd009 = '"||p_oofd009 
+            ||"' AND "|| "oofd010 = '"||p_oofd010 ||"' AND "|| "oofd011 = '"
+            ||p_oofd011 ||"'",'std-00004',0) THEN 
+            RETURN FALSE
+         END IF
+      END IF
+   END IF
+   IF p_oofd001 = '1' THEN 
+      IF NOT ap_chk_isExist(p_oofd002,"SELECT COUNT(*) FROM ooag_t WHERE ooagent = '"
+         ||g_enterprise||"' AND ooag001 = ? ","aoo-00074",0 ) THEN
+         RETURN FALSE
+      END IF
+      IF NOT ap_chk_isExist(p_oofd002,"SELECT COUNT(*) FROM ooag_t WHERE ooagent = '"
+         ||g_enterprise||"' AND ooag001 = ? AND ooagstus = 'Y' ","aoo-00071",0 ) THEN
+         RETURN FALSE
+      END IF
+   END IF 
+   IF NOT cl_null(p_oofd001) AND NOT cl_null(p_oofd002) AND NOT cl_null(p_oofd003) AND p_oofd001 = '1' THEN
+      IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND 
+         (p_oofd001 != g_oofd001_t  OR p_oofd002 != g_oofd002_t  
+          OR p_oofd003 != g_oofd003_t  ))) THEN 
+         IF NOT ap_chk_notDup(p_oofd002||"~"||p_oofd003,"SELECT COUNT(*) FROM oofd_t WHERE "
+            ||"oofdent = '" ||g_enterprise|| "' AND "||"oofd001 = '"
+            ||p_oofd001 ||"' AND "|| "oofd002 = '"||p_oofd002 ||"' AND "
+            || "oofd003 = '"||p_oofd003||"'",'aoo-00072',0) THEN 
+            RETURN FALSE
+         END IF 
+         IF NOT ap_chk_isExist(p_oofd002,"SELECT COUNT(*) FROM ooag_t WHERE ooagent = '"
+            ||g_enterprise||"' AND ooag001 = ? ","aoo-00074",0 ) THEN
+            RETURN FALSE
+         END IF
+         IF NOT ap_chk_isExist(p_oofd002,"SELECT COUNT(*) FROM ooag_t WHERE ooagent = '"
+         ||g_enterprise||"' AND ooag001 = ? AND ooagstus = 'Y' ","aoo-00071",0 ) THEN
+            RETURN FALSE
+         END IF
+         IF p_oofd003 <= 0 THEN
+            CALL cl_err(p_oofd003 ,'aoo-00006',0)
+            RETURN FALSE
+         END IF
+      END IF 
+   END IF
+   RETURN TRUE
+END FUNCTION]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL cl_set_combo_scc('oofd001',3)]]>
+  </point>
+  <point name="input.a.oofd001" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF NOT aooi358_key_chk(p_cmd,g_oofd_m.oofd001,g_oofd_m.oofd002,g_oofd_m.oofd003,g_oofd_m.oofd004,
+                                      g_oofd_m.oofd005,g_oofd_m.oofd006,g_oofd_m.oofd007,g_oofd_m.oofd008,
+                                      g_oofd_m.oofd009,g_oofd_m.oofd010,g_oofd_m.oofd011) THEN
+                                      
+               IF p_cmd = 'a' THEN 
+                  LET g_oofd_m.oofd001 = ''
+               ELSE
+                  LET g_oofd_m.oofd001 = g_oofd_m_t.oofd001
+               END IF 
+               NEXT FIELD CURRENT
+            END IF]]>
+  </point>
+  <point name="input.a.oofd002" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF NOT aooi358_key_chk(p_cmd,g_oofd_m.oofd001,g_oofd_m.oofd002,g_oofd_m.oofd003,g_oofd_m.oofd004,
+                                      g_oofd_m.oofd005,g_oofd_m.oofd006,g_oofd_m.oofd007,g_oofd_m.oofd008,
+                                      g_oofd_m.oofd009,g_oofd_m.oofd010,g_oofd_m.oofd011) THEN
+                                      
+               IF p_cmd = 'a' THEN 
+                  LET g_oofd_m.oofd002 = ''
+               ELSE
+                  LET g_oofd_m.oofd002 = g_oofd_m_t.oofd002
+               END IF 
+               NEXT FIELD CURRENT
+            END IF]]>
+  </point>
+  <point name="input.a.oofd003" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF NOT aooi358_key_chk(p_cmd,g_oofd_m.oofd001,g_oofd_m.oofd002,g_oofd_m.oofd003,g_oofd_m.oofd004,
+                                      g_oofd_m.oofd005,g_oofd_m.oofd006,g_oofd_m.oofd007,g_oofd_m.oofd008,
+                                      g_oofd_m.oofd009,g_oofd_m.oofd010,g_oofd_m.oofd011) THEN
+                                      
+               IF p_cmd = 'a' THEN 
+                  LET g_oofd_m.oofd003 = ''
+               ELSE
+                  LET g_oofd_m.oofd003 = g_oofd_m_t.oofd003
+               END IF 
+               NEXT FIELD CURRENT
+            END IF]]>
+  </point>
+  <point name="input.a.oofd004" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT aooi358_key_chk(p_cmd,g_oofd_m.oofd001,g_oofd_m.oofd002,g_oofd_m.oofd003,g_oofd_m.oofd004,
+                                      g_oofd_m.oofd005,g_oofd_m.oofd006,g_oofd_m.oofd007,g_oofd_m.oofd008,
+                                      g_oofd_m.oofd009,g_oofd_m.oofd010,g_oofd_m.oofd011) THEN
+                                      
+               IF p_cmd = 'a' THEN 
+                  LET g_oofd_m.oofd004 = ''
+               ELSE
+                  LET g_oofd_m.oofd004 = g_oofd_m_t.oofd004
+               END IF 
+               NEXT FIELD CURRENT
+            END IF]]>
+  </point>
+  <point name="input.a.oofd005" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT aooi358_key_chk(p_cmd,g_oofd_m.oofd001,g_oofd_m.oofd002,g_oofd_m.oofd003,g_oofd_m.oofd004,
+                                      g_oofd_m.oofd005,g_oofd_m.oofd006,g_oofd_m.oofd007,g_oofd_m.oofd008,
+                                      g_oofd_m.oofd009,g_oofd_m.oofd010,g_oofd_m.oofd011) THEN
+                                      
+               IF p_cmd = 'a' THEN 
+                  LET g_oofd_m.oofd005 = ''
+               ELSE
+                  LET g_oofd_m.oofd005 = g_oofd_m_t.oofd005
+               END IF 
+               NEXT FIELD CURRENT
+            END IF]]>
+  </point>
+  <point name="input.a.oofd006" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT aooi358_key_chk(p_cmd,g_oofd_m.oofd001,g_oofd_m.oofd002,g_oofd_m.oofd003,g_oofd_m.oofd004,
+                                      g_oofd_m.oofd005,g_oofd_m.oofd006,g_oofd_m.oofd007,g_oofd_m.oofd008,
+                                      g_oofd_m.oofd009,g_oofd_m.oofd010,g_oofd_m.oofd011) THEN
+                                      
+               IF p_cmd = 'a' THEN 
+                  LET g_oofd_m.oofd006 = ''
+               ELSE
+                  LET g_oofd_m.oofd006 = g_oofd_m_t.oofd006
+               END IF 
+               NEXT FIELD CURRENT
+            END IF]]>
+  </point>
+  <point name="input.a.oofd007" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT aooi358_key_chk(p_cmd,g_oofd_m.oofd001,g_oofd_m.oofd002,g_oofd_m.oofd003,g_oofd_m.oofd004,
+                                      g_oofd_m.oofd005,g_oofd_m.oofd006,g_oofd_m.oofd007,g_oofd_m.oofd008,
+                                      g_oofd_m.oofd009,g_oofd_m.oofd010,g_oofd_m.oofd011) THEN
+                                      
+               IF p_cmd = 'a' THEN 
+                  LET g_oofd_m.oofd007 = ''
+               ELSE
+                  LET g_oofd_m.oofd007 = g_oofd_m_t.oofd007
+               END IF 
+               NEXT FIELD CURRENT
+            END IF]]>
+  </point>
+  <point name="input.a.oofd008" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT aooi358_key_chk(p_cmd,g_oofd_m.oofd001,g_oofd_m.oofd002,g_oofd_m.oofd003,g_oofd_m.oofd004,
+                                      g_oofd_m.oofd005,g_oofd_m.oofd006,g_oofd_m.oofd007,g_oofd_m.oofd008,
+                                      g_oofd_m.oofd009,g_oofd_m.oofd010,g_oofd_m.oofd011) THEN
+                                      
+               IF p_cmd = 'a' THEN 
+                  LET g_oofd_m.oofd008 = ''
+               ELSE
+                  LET g_oofd_m.oofd008 = g_oofd_m_t.oofd008
+               END IF 
+               NEXT FIELD CURRENT
+            END IF]]>
+  </point>
+  <point name="input.a.oofd009" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT aooi358_key_chk(p_cmd,g_oofd_m.oofd001,g_oofd_m.oofd002,g_oofd_m.oofd003,g_oofd_m.oofd004,
+                                      g_oofd_m.oofd005,g_oofd_m.oofd006,g_oofd_m.oofd007,g_oofd_m.oofd008,
+                                      g_oofd_m.oofd009,g_oofd_m.oofd010,g_oofd_m.oofd011) THEN
+                                      
+               IF p_cmd = 'a' THEN 
+                  LET g_oofd_m.oofd009 = ''
+               ELSE
+                  LET g_oofd_m.oofd009 = g_oofd_m_t.oofd009
+               END IF 
+               NEXT FIELD CURRENT
+            END IF]]>
+  </point>
+  <point name="input.a.oofd010" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT aooi358_key_chk(p_cmd,g_oofd_m.oofd001,g_oofd_m.oofd002,g_oofd_m.oofd003,g_oofd_m.oofd004,
+                                      g_oofd_m.oofd005,g_oofd_m.oofd006,g_oofd_m.oofd007,g_oofd_m.oofd008,
+                                      g_oofd_m.oofd009,g_oofd_m.oofd010,g_oofd_m.oofd011) THEN
+                                      
+               IF p_cmd = 'a' THEN 
+                  LET g_oofd_m.oofd010 = ''
+               ELSE
+                  LET g_oofd_m.oofd010 = g_oofd_m_t.oofd010
+               END IF 
+               NEXT FIELD CURRENT
+            END IF]]>
+  </point>
+  <point name="input.a.oofd011" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT aooi358_key_chk(p_cmd,g_oofd_m.oofd001,g_oofd_m.oofd002,g_oofd_m.oofd003,g_oofd_m.oofd004,
+                                      g_oofd_m.oofd005,g_oofd_m.oofd006,g_oofd_m.oofd007,g_oofd_m.oofd008,
+                                      g_oofd_m.oofd009,g_oofd_m.oofd010,g_oofd_m.oofd011) THEN
+                                      
+               IF p_cmd = 'a' THEN 
+                  LET g_oofd_m.oofd011 = ''
+               ELSE
+                  LET g_oofd_m.oofd011 = g_oofd_m_t.oofd011
+               END IF 
+               NEXT FIELD CURRENT
+            END IF]]>
+  </point>
+  <point name="input.a.oofdcrtdp" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_oofd_m.oofdcrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_oofd_m.oofdcrtdp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_oofd_m.oofdcrtdp_desc
+]]>
+  </point>
+  <point name="input.a.oofdcrtid" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_oofd_m.oofdcrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_oofd_m.oofdcrtid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_oofd_m.oofdcrtid_desc
+]]>
+  </point>
+  <point name="input.a.oofddept" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.a.oofdmodid" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_oofd_m.oofdmodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_oofd_m.oofdmodid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_oofd_m.oofdmodid_desc
+]]>
+  </point>
+  <point name="input.a.oofdmodu" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.a.oofdorid" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.a.oofdoriu" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.a.oofdowndp" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_oofd_m.oofdowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_oofd_m.oofdowndp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_oofd_m.oofdowndp_desc
+]]>
+  </point>
+  <point name="input.a.oofdownid" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_oofd_m.oofdownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_oofd_m.oofdownid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_oofd_m.oofdownid_desc
+]]>
+  </point>
+  <point name="input.a.oofduser" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+]]>
+  </point>
+  <point name="input.b.oofd001" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.master_input.open_grcy" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.where = " (oofe008> '",g_today,"' OR oofe008 IS NULL )"
+               LET g_qryparam.default1 = g_oofd_m.oofd012#給予default值
+
+               #給予arg
+
+               CALL q_oofe007()                                #呼叫開窗
+               LET g_qryparam.where =''
+               IF cl_null(g_oofd_m.oofd012) THEN 
+                  LET g_oofd_m.oofd012 = g_qryparam.return1
+               ELSE
+                  LET g_oofd_m.oofd012 = g_oofd_m.oofd012||'\n'||g_qryparam.return1              #將開窗取得的值回傳到變數
+               END IF
+               DISPLAY g_oofd_m.oofd012 TO oofd012            #顯示到畫面上
+
+               NEXT FIELD oofd012                          #返回原欄位]]>
+  </point>
+  <point name="insert.default" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      LET g_oofd_m.oofd004 = ' '
+      LET g_oofd_m.oofd005 = ' ' 
+      LET g_oofd_m.oofd006 = ' '
+      LET g_oofd_m.oofd007 = ' ' 
+      LET g_oofd_m.oofd008 = ' '
+      LET g_oofd_m.oofd009 = ' ' 
+      LET g_oofd_m.oofd010 = ' '
+      LET g_oofd_m.oofd011 = ' ' 
+      LET g_oofd_m.oofd001 = 1 
+      LET g_oofd_m.oofdstus = "Y"]]>
+  </point>
+  <point name="menu.open_aooi130" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               CALL cl_cmdrun("aooi130")]]>
+  </point>
+  <point name="menu.open_aooi359" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               CALL cl_cmdrun("aooi359")]]>
+  </point>
+  <point name="menu.open_cybz" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               CALL cl_cmdrun("aooi358")]]>
+  </point>
+  <point name="menu.open_yg" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               CALL cl_cmdrun("aooi130")]]>
+  </point>
+  <point name="reproduce.a.oofd001" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         IF NOT aooi358_key_chk('a',l_newno,l_newno02,l_newno03,l_newno04,
+                                      l_newno05,l_newno06,l_newno07,l_newno08,
+                                      l_newno09,l_newno10,l_newno11) THEN
+                                      
+            LET l_newno = ''
+            NEXT FIELD CURRENT
+         END IF]]>
+  </point>
+  <point name="reproduce.a.oofd002" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         IF NOT aooi358_key_chk('a',l_newno,l_newno02,l_newno03,l_newno04,
+                                      l_newno05,l_newno06,l_newno07,l_newno08,
+                                      l_newno09,l_newno10,l_newno11) THEN
+                                      
+            LET l_newno02 = ''
+            NEXT FIELD CURRENT
+         END IF]]>
+  </point>
+  <point name="reproduce.a.oofd003" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         IF NOT aooi358_key_chk('a',l_newno,l_newno02,l_newno03,l_newno04,
+                                      l_newno05,l_newno06,l_newno07,l_newno08,
+                                      l_newno09,l_newno10,l_newno11) THEN
+                                      
+            LET l_newno03 = ''
+            NEXT FIELD CURRENT
+         END IF]]>
+  </point>
+  <point name="reproduce.a.oofd004" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         IF NOT aooi358_key_chk('a',l_newno,l_newno02,l_newno03,l_newno04,
+                                      l_newno05,l_newno06,l_newno07,l_newno08,
+                                      l_newno09,l_newno10,l_newno11) THEN
+                                      
+            LET l_newno04 = ''
+            NEXT FIELD CURRENT
+         END IF]]>
+  </point>
+  <point name="reproduce.a.oofd005" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         IF NOT aooi358_key_chk('a',l_newno,l_newno02,l_newno03,l_newno04,
+                                      l_newno05,l_newno06,l_newno07,l_newno08,
+                                      l_newno09,l_newno10,l_newno11) THEN
+                                      
+            LET l_newno05 = ''
+            NEXT FIELD CURRENT
+         END IF]]>
+  </point>
+  <point name="reproduce.a.oofd006" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         IF NOT aooi358_key_chk('a',l_newno,l_newno02,l_newno03,l_newno04,
+                                      l_newno05,l_newno06,l_newno07,l_newno08,
+                                      l_newno09,l_newno10,l_newno11) THEN
+                                      
+            LET l_newno06 = ''
+            NEXT FIELD CURRENT
+         END IF]]>
+  </point>
+  <point name="reproduce.a.oofd007" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         IF NOT aooi358_key_chk('a',l_newno,l_newno02,l_newno03,l_newno04,
+                                      l_newno05,l_newno06,l_newno07,l_newno08,
+                                      l_newno09,l_newno10,l_newno11) THEN
+                                      
+            LET l_newno07 = ''
+            NEXT FIELD CURRENT
+         END IF]]>
+  </point>
+  <point name="reproduce.a.oofd008" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         IF NOT aooi358_key_chk('a',l_newno,l_newno02,l_newno03,l_newno04,
+                                      l_newno05,l_newno06,l_newno07,l_newno08,
+                                      l_newno09,l_newno10,l_newno11) THEN
+                                      
+            LET l_newno08 = ''
+            NEXT FIELD CURRENT
+         END IF]]>
+  </point>
+  <point name="reproduce.a.oofd009" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         IF NOT aooi358_key_chk('a',l_newno,l_newno02,l_newno03,l_newno04,
+                                      l_newno05,l_newno06,l_newno07,l_newno08,
+                                      l_newno09,l_newno10,l_newno11) THEN
+                                      
+            LET l_newno09 = ''
+            NEXT FIELD CURRENT
+         END IF]]>
+  </point>
+  <point name="reproduce.a.oofd010" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         IF NOT aooi358_key_chk('a',l_newno,l_newno02,l_newno03,l_newno04,
+                                      l_newno05,l_newno06,l_newno07,l_newno08,
+                                      l_newno09,l_newno10,l_newno11) THEN
+                                      
+            LET l_newno10 = ''
+            NEXT FIELD CURRENT
+         END IF]]>
+  </point>
+  <point name="reproduce.a.oofd011" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         IF NOT aooi358_key_chk('a',l_newno,l_newno02,l_newno03,l_newno04,
+                                      l_newno05,l_newno06,l_newno07,l_newno08,
+                                      l_newno09,l_newno10,l_newno11) THEN
+                                      
+            LET l_newno11 = ''
+            NEXT FIELD CURRENT
+         END IF]]>
+  </point>
+  <point name="reproduce.before_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         LET l_newno04 = ' '
+         LET l_newno05 = ' ' 
+         LET l_newno06 = ' '
+         LET l_newno07 = ' ' 
+         LET l_newno08 = ' '
+         LET l_newno09 = ' ' 
+         LET l_newno10 = ' '
+         LET l_newno11 = ' ']]>
+  </point>
+  <point name="reproduce.head.b_insert" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET l_master.oofdmodid = ''
+   LET l_master.oofdmoddt = ''
+   LET l_master.oofdstus = 'Y']]>
+  </point>
+  <point name="show.head.reference" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_oofd_m.oofdmodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_oofd_m.oofdmodid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_oofd_m.oofdmodid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_oofd_m.oofdownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_oofd_m.oofdownid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_oofd_m.oofdownid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_oofd_m.oofdowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_oofd_m.oofdowndp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_oofd_m.oofdowndp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_oofd_m.oofdcrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_oofd_m.oofdcrtdp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_oofd_m.oofdcrtdp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_oofd_m.oofdcrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_oofd_m.oofdcrtid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_oofd_m.oofdcrtid_desc
+]]>
+  </point>
+</add_points>

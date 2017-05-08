@@ -1,0 +1,37 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ainr302_g01" module="ain" jobmode="N" type="g01" industry="std" crtid="05384" crtdt="2014-06-10 17:01:52" modid="05423" moddt="2016-10-21 18:42:45" sdver="9" tabver="10001" description="雜項收料單">
+  <define arg="tm.wc(STRING|where condition),tm.a1(chr1|實際入庫),tm.a2(chr1|製造批序號)">
+    <var seq="1" value="l_condition(chr1000|NULL),inba002,inba003,inba004,inba005,inba006,inba007,inba008,inbadocdt,inbadocno,inbaent,inbasite,inbastus,inbb001,inbb002,inbb003,inbb004,inbb007,inbb008,inbb009,inbb010,inbb011,inbb012,inbb013,inbb014,inbb015,inbb016,inbb017,inbb018,inbb020,inbb021,inbbseq,inbbsite,ooag_t_ooag011(ooag011|ooag_t.ooag011),ooefl_t_ooefl003(ooefl003|ooefl_t.ooefl003),x_imaal_t_imaal003(imaal003|x.imaal_t_imaal003),x_t1_imaal003(imaal003|x.t1_imaal003),x_t1_imaal004(imaal004|x.t1_imaal004),x_oocal_t_oocal003(oocal003|x.oocal_t_oocal003),l_inba003_ooag011(chr300|trim(inba003)||&apos;.&apos;||trim((SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = inba_t.inba003 AND ooag_t.ooagent = inba_t.inbaent))),l_inba004_ooefl003(chr1000|trim(inba004)||&apos;.&apos;||trim((SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = inba_t.inba004 AND ooefl_t.ooeflent = inba_t.inbaent AND ooefl_t.ooefl002 = g_dlang))),inbbent,x_t2_oocal003(oocal003|x.t2_oocal003),l_inbb016_desc(oocql004|&apos;&apos;),inbbdocno,l_inba008_show(chr1|&apos;&apos;),l_inbb020_show(chr1|&apos;&apos;),l_inbb002_inbb003_show(chr1|&apos;&apos;),l_imaal004_inbb009_show(chr1|&apos;&apos;),l_imaal003_inbb008_show(chr1|&apos;&apos;),l_inbb008_inab003_show(chr1|&apos;&apos;),l_inbb007_inayl003_show(chr1|&apos;&apos;),l_inbb007_inayl003(chr1000|&apos;&apos;),l_inbb008_inab003(chr1000|&apos;&apos;)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="l_condition(chr1000|NULL),inba002,inba003,inba004,inba005,inba006,inba007,inba008,inbadocdt,inbadocno,inbaent,inbasite,inbastus,inbb001,inbb002,inbb003,inbb004,inbb007,inbb008,inbb009,inbb010,inbb011,inbb012,inbb013,inbb014,inbb015,inbb016,inbb017,inbb018,inbb020,inbb021,inbbseq,inbbsite,ooag_t_ooag011(ooag011|( SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = inba_t.inba003 AND ooag_t.ooagent = inba_t.inbaent)),ooefl_t_ooefl003(ooefl003|( SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = inba_t.inba004 AND ooefl_t.ooeflent = inba_t.inbaent AND ooefl_t.ooefl002 = g_dlang)),x_imaal_t_imaal003(imaal003|x.imaal_t_imaal003),x_t1_imaal003(imaal003|x.t1_imaal003),x_t1_imaal004(imaal004|x.t1_imaal004),x_oocal_t_oocal003(oocal003|x.oocal_t_oocal003),l_inba003_ooag011(chr300|trim(inba003)||&apos;.&apos;||trim((SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = inba_t.inba003 AND ooag_t.ooagent = inba_t.inbaent))),l_inba004_ooefl003(chr1000|trim(inba004)||&apos;.&apos;||trim((SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = inba_t.inba004 AND ooefl_t.ooeflent = inba_t.inbaent AND ooefl_t.ooefl002 = g_dlang))),inbbent,x_t2_oocal003(oocal003|x.t2_oocal003),l_inbb016_desc(oocql004|&apos;&apos;),inbbdocno,l_inba008_show(chr1|&apos;&apos;),l_inbb020_show(chr1|&apos;&apos;),l_inbb002_inbb003_show(chr1|&apos;&apos;),l_imaal004_inbb009_show(chr1|&apos;&apos;),l_imaal003_inbb008_show(chr1|&apos;&apos;),l_inbb008_inab003_show(chr1|&apos;&apos;),l_inbb007_inayl003_show(chr1|&apos;&apos;),l_inbb007_inayl003(chr1000|&apos;&apos;),l_inbb008_inab003(chr1000|&apos;&apos;)"/>
+    <sql id="g_from" query="inba_t LEFT OUTER JOIN ( SELECT inbb_t.*,( SELECT imaal003 FROM imaal_t WHERE imaal_t.imaal001 = inbb_t.inbb004 AND imaal_t.imaalent = inbb_t.inbbent AND imaal_t.imaal002 = g_dlang) imaal_t_imaal003,( SELECT imaal003 FROM imaal_t WHERE imaal_t.imaal001 = inbb_t.inbb001 AND imaal_t.imaalent = inbb_t.inbbent AND imaal_t.imaal002 = g_dlang) t1_imaal003,( SELECT imaal004 FROM imaal_t WHERE imaal_t.imaal001 = inbb_t.inbb001 AND imaal_t.imaalent = inbb_t.inbbent AND imaal_t.imaal002 = g_dlang) t1_imaal004,( SELECT oocal003 FROM oocal_t WHERE oocal_t.oocal001 = inbb_t.inbb013 AND oocal_t.oocalent = inbb_t.inbbent AND oocal_t.oocal002 = g_dlang) oocal_t_oocal003,( SELECT oocal003 FROM oocal_t WHERE oocal_t.oocal001 = inbb_t.inbb010 AND oocal_t.oocalent = inbb_t.inbbent AND oocal_t.oocal002 = g_dlang) t2_oocal003 FROM inbb_t ) x  ON inba_t.inbaent = x.inbbent AND inba_t.inbadocno = x.inbbdocno"/>
+    <sql id="g_where" query="inba_t.inba001 = &apos;2&apos; AND " maintable="inba_t"/>
+    <sql id="g_order" query="inbadocno,inbb001,inbb007,inbbseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="inbadocno,inbb001,l_condition"/>
+    <section id="b_group" reptype="d01">
+      <rep type="inbadocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff002" where="inbaent,inbadocno"/>
+      <rep type="inbb001"/>
+      <rep type="l_condition"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff002" where="inbaent,inbadocno,inbb001,l_condition"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff002" where="inbaent,inbadocno,inbb001,l_condition"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="inbadocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff002" where="inbaent,inbadocno"/>
+      <rep type="inbb001"/>
+      <rep type="l_condition"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

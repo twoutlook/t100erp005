@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axrp130_s01" std_prog="axrp130_s01" erpver="1.0" ver="1" module="AXR" booking="Y" class="" template="F001_00" env="s" zone="t10dev">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <table ver="1" cite_std="N">
+    <tbl name="xrca_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status=""/>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[
+－－－－－－－－－－3.0      武秋玲   2014/05/15－－－－－－－－－－
+ 1.axrp130_s1(產生應收帳款單)：　達到整帳為負數合計值者，轉立待抵帳款單。
+ 　。輸入畫面增加＂待抵帳款單別＂輸入，指定產生的待抵帳款單別（'02','22'）
+   。輸入欄位順序異動。
+   。產生帳款單的單頭時，同彙總條件者，合計金額是否為負數?  
+                負數者，單別取"待抵帳款單別"。
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－
+axrp130_s1(產生應收帳款單)：
+ 產生應收帳款作業，以可共用作業方式書寫。
+　　　　　　可由axrp130下範圍後，產生帳款資料；
+ 亦須可提供'背景批次'作業，呼叫產生資料。此類型者只有條件sql，無作’勾選’動作。
+
+。傳入參數：
+ 帳務中心  xrcasite
+ 帳套別    xrcaLD
+ 發票立帳否　 t_IV
+ 未開發票處理 t_estmd_rev
+ 分帳彙總項目 t_g_type
+            SQL條件字串　t_qbe
+ 已勾選資料　 t_xmdl_array
+
+。處理說明：
+１。判別有無傳入資料t_xmdl_array
+    有傳入資料者，直接取資料內容
+    無傳入資枓者，則必須另依QBE條件t_qbe，重新取符合的資料。
+
+●產生帳款單：
+－－－－－－－－－－3.0      武秋玲   2014/05/15－－－－－－－－－－
+。轉暫估應收：
+　。正數轉暫估應收'01.應收暫估’
+　。負數轉暫估銷退'02.銷退暫估'
+。轉出貨應收：：
+　。帳款自動沖抵已預收款款
+　。自動沖銷暫估
+　。負數轉待抵帳款'22.待抵帳款)
+－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－－
+。處理原則：
+　。匯率取值xmdk017，依出貨單的匯率設定條件(xmdk042+xmdk043)。
+
+　。依據’分帳彙總項目’為帳款單據的分帳依據（切分帳款單據）。
+ 分帳彙總項目:
+  ※ 基本分帳條件(A)=　營運組織+交易對象+帳款對象+幣別   +匯率   +收款條件+稅別
+　　　　　　 　　　　xmdksite +xmdk007 +xmdk008 +xmdk016+xmdk017+xmdk010 +xmdk012 
+  0.出貨單 ：(A)＋出貨單號xmdkdocno
+  。帶入帳款單單頭的[來源單據]
+  1.訂單號碼 ：(A)＋訂單號碼xmdl003
+  2.業務人員 ：(A)＋業務人員xmdk003
+  3.業務部門　：(A)＋業務部門xmdk004
+  。單頭的［業務人員］可空白　
+  4.INVOICE發票號：(A)＋INVOICE發票xmdk037
+  5.產品編號 ：(A)＋產品編號xmdl008
+　。依輸入之單別、人員、帳款類別為預設值。
+　　　　。須先判斷合計金額（原幣含稅金額）是否為負數，負數者產生單別取＂待抵帳款單別＂(xrcadocno_22)
+  。發票立帳判斷：
+　　１。已開發票立帳者(t_IV='2')；須檢核該出貨單（銷退單）有無已立＂暫估單＂，且未沖銷者。
+　　　已立暫估單者，系統須自動［沖暫估］處理，餘量即視作一般發票立帳。
+　　　　1.沖暫估數量, 不得 > 原暫估單可沖數量。
+        2.一般立帳數量＝　開發票數量－沖暫估數量
+　　２。未開發票立帳者(t_IV='1')；依各交易單設定之處理模式產生(xmdk???)。
+        未開發票處理模式(t_estmd_rev):
+　　　　1.計入未開發票的銷貨待驗收入
+　　　　2.計入銷貨收入
+　　　　3.列發出商品及納入成本結算 :產生調撥單規格另交辦
+　　　　4.列發出商品及凍結發出成本 :產生調撥單規格另交辦
+  。檢核該出貨單有否收款記錄"銷售交易收款檔(rtie_t)"
+ 。與一般出貨單作業尚未整合, 故暫不處理。
+ 。有收款記錄者，其收款資料產生至"直接沖帳xrce_t"
+　。產生單據是否＂自動確認＂處理，由選項輸入，但必須檢核該輸入人員有無aapt300的＂確認＂權限。
+
+]]>
+  </all>
+  <field cite_std="N" name="check1" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[依來源單據之扣帳日期立帳（t_g_date）:
+  。依"分帳彙總項目"判別作default值
+ ０出貨單 = Y　 
+ １訂單號碼 = N
+ ２業務人員 = N
+ ３來源組織 = N
+ ４產品號碼 = N
+  。為'Y'值者，產生帳款單據時取交易對象設定的pmab105
+    為'N'值者，產生帳款單據時依指定值
+]]>
+  </field>
+  <field cite_std="N" name="check2" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[依交易對象取慣用交易資訊（t_g_acc）：
+　。default 'Y'
+  。為'Y'值者，產生帳款單據時取交易對象設定的pmab105
+    為'N'值者，產生帳款單據時依指定值
+]]>
+  </field>
+  <field cite_std="N" name="check3" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[已產生且無差異之帳款單，是否自動確認處理（t_confirm）:
+　。default 'Y'
+  。BEFORE FIELD: 判別可否維護，條件採AND，即缺一不可。
+     1.[帳款單別xrcadocno]是否須走簽流程? (此判別式尚未定,預留)
+          Y: default t_confirm='N' 且 no entry
+ N: default t_confirm='Y' 且 可EDIT
+     2.檢核登錄人員有無作業的'確認'功能權限?
+ Y: default t_confirm='Y' 且 可EDIT
+ N: default t_confirm='N' 且 no entry
+]]>
+  </field>
+  <field cite_std="N" name="comb1" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[Display Only]]>
+  </field>
+  <field cite_std="N" name="comb2" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[。未開發票立帳(t_estmd_rev)
+　。CASE t_IV='1' 未開發票立帳者: 可INPUT ELSE NOENTRY。
+  。default '1'
+  。下拉選項：SCC_8309出貨未開發票立應收帳處理方式
+  1.計入未開發票的銷貨待驗收入
+  3.列發出商品及納入成本結算
+ 4.列發出商品及凍結發出成本
+　。帶值　：
+　　　即限定資料範圍 xmdk???=t_estmd_rev
+]]>
+  </field>
+  <field cite_std="N" name="comb3" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[彙總顯示(t_g_gen1)：
+。可INPUT/ NOT NULL/ default '0'
+。SCC_8327 出貨應收立帳彙總項目  
+SCC_8327 出貨應收立帳彙總項目 
+0 出貨單
+1 訂單號碼
+2 業務人員
+3 業務部門
+4 發票號碼
+5 產品編號
+]]>
+  </field>
+  <field cite_std="N" name="xrca003" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[帳務人員: 
+  ●欄位控管：
+     資料欄位:xrca003  /可Display 
+     允許空白:No
+     預設值: 登錄人員之工號
+     校驗： 1.必須存在於使用者資料檔 
+ 2.[人員]應有該[帳套別]的權限。
+]]>
+  </field>
+  <field cite_std="N" name="xrca063" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[ 整帳批序號 
+　　於aooi390 設定財務整帳序號
+　　。整帳時的批序號帶入;SCC_15='14'，CALL s_aooi390('14')
+  ●欄位控管：  
+     資料欄位:xrca063 / 可Display 可input   
+     允許空白:yes 
+     預設值:0
+ 
+     call 元件已完成(再查)     
+]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrca007" ver="1" src="s" column="xrca007" table="xrca_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[帳款類別（xrca007）：
+　。IF t_g_acc='Y' THEN 'NO ENTRY' / 給空白值 /不可維護
+　。IF t_g_acc='N' THEN 'INPUT'    / 無預設值 /可維護
+]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrcacomp" ver="1" src="s" column="xrcacomp" table="xrca_t" attribute="C813" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[Display Only]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrcadocdt" ver="1" src="s" column="xrcadocdt" table="xrca_t" attribute="D001" type="date()" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[帳款日期（xrcadocdt）：
+　。IF t_g_date='Y' THEN 'NO ENTRY' / 給空白值 /不可維護
+　。IF t_g_date='N' THEN 'INPUT'    / TODAY  /可維護
+　。輸入檢核：
+　　　。大於關帳日期（aoos020　應收關帳日期 ）
+　
+]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrcald" ver="1" src="s" column="xrcald" table="xrca_t" attribute="C501" type="varchar2(5)" req="N" i_zoom="q_authorised_ld" c_zoom="q_authorised_ld" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[Display Only]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrcasite" ver="1" src="s" column="xrcasite" table="xrca_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="q_xrah002_1" c_zoom="q_xrah002_1" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[Display Only]]>
+  </field>
+  <field cite_std="N" name="xrcadocno_12" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[應收帳款單別xrcadocno_12：
+　。不可空白
+　。default：取資料第一筆出貨單的單別
+ 對應"流程單別設定（aooi210)"，取第一筆設定產生的AR單。(CALL 元件)
+　　　。依帳套別歸屬法人取’單別參照表’
+　　　。依［帳款單性質］(取單別對應的參數’D-FIN-2001應收帳款單性質’）開窗
+ 1.未開立發票立帳者 : 帳款單性質='01' #立暫估單
+ 2.已開立發票立帳者 : 帳款單性質='12'
+。開窗及檢核：
+　　　。依’發票立帳否’判別可使用的單別（帳款單性質）。
+　　　。依帳套別歸屬法人取’單別參照表’
+      。單別性質=aapt300 & 款單性質(單別參數)='01'、'12'
+]]>
+  </field>
+  <field cite_std="N" name="xrcadocno_22" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[待抵帳款單別xrcadocno_22：
+　。不可空白
+　。default：取資料第一筆出貨單的單別
+ 對應"流程單別設定（aooi210)"，取第一筆設定產生的AR單。(CALL 元件)
+　　　。依帳套別歸屬法人取’單別參照表’
+　　　。依［帳款單性質］(取單別對應的參數’D-FIN-2001應收帳款單性質’）開窗
+ 1.未開立發票立帳者 : 帳款單性質='02' #立銷退暫估單
+ 2.已開立發票立帳者 : 帳款單性質='22'
+。開窗及檢核：
+　　　。依’發票立帳否’判別可使用的單別（帳款單性質）。
+　　　。依帳套別歸屬法人取’單別參照表’
+      。單別性質=aapt300 & 款單性質(單別參數)='02'、'22'
+]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="xrca003_desc" src="s" depend_field="xrca003" correspon_key="&apos;2&apos;,xrca003" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="xrca007_desc" src="s" depend_field="xrca007" correspon_key="xrcaent,&apos;3111&apos;,xrca007" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="xrcadocno_12_desc" src="s" depend_field="xrcadocno_12" correspon_key="xrcaent,xrcadocno" ref_table="oobxl_t" ref_fk="oobxlent,oobxl001" ref_dlang="oobxl002" ref_rtn="oobxl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xrcadocno_22_desc" src="s" depend_field="xrcadocno_22" correspon_key="xrcaent,xrcadocno" ref_table="oobxl_t" ref_fk="oobxlent,oobxl001" ref_dlang="oobxl002" ref_rtn="oobxl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xrcald_desc" src="s" depend_field="xrca_t.xrcald" correspon_key="xrcaent,xrcald" ref_table="glaal_t" ref_fk="glaalent,glaalld" ref_dlang="glaal001" ref_rtn="glaal002" status=""/>
+    <rfield cite_std="N" ver="1" name="xrcasite_desc" src="s" depend_field="xrca_t.xrcasite" correspon_key="xrcaent,xrcasite" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="check1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="check2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="check3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="comb1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="comb2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="comb3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca063" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrca007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrcacomp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrcadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrcald" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrcasite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcadocno_12" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcadocno_22" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="accept" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="cancel" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_xrcasite" text="帳務中心" lstr=""/>
+    <sfield name="lbl_xrcald" text="帳別" lstr=""/>
+    <sfield name="lbl_comb1_s01" text="發票立帳否" lstr=""/>
+    <sfield name="lbl_comb3" text="分帳彙總項目" lstr=""/>
+    <sfield name="lbl_xrcadocno_12" text="應收帳款單別" lstr=""/>
+    <sfield name="lbl_oobxl003" text="說明" lstr=""/>
+    <sfield name="lbl_xrcadocno_22" text="待抵帳款單別" lstr=""/>
+    <sfield name="lbl_check1_s01" text="依來源單據之扣帳日期立帳" lstr=""/>
+    <sfield name="lbl_xrcadocdt" text="帳款日期" lstr=""/>
+    <sfield name="lbl_check2_s01" text="依交易對象取慣用交易資訊" lstr=""/>
+    <sfield name="lbl_xrca007" text="帳款類別" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_check3_s01" text="產生且無差異之帳款單,單據是否自動確認?" lstr=""/>
+    <sfield name="lbl_xrca063" text="整帳批序號" lstr=""/>
+    <sfield name="lbl_xrca003" text="帳務人員" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_accept" text="確定" lstr=""/>
+    <sfield name="lbl_cancel" text="放棄" lstr=""/>
+    <sact name="accept" text="確定" lstr=""/>
+    <sact name="cancel" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

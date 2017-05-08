@@ -1,0 +1,1794 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="aooi350_02" std_prog="aooi350_02" erpver="1.0" module="AOO" ver="5" env="s" zone="t10prd" booking="N" type="S" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <point name="construct.c.page1.oofc009" order="0" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO oofc009  #顯示到畫面上
+
+            NEXT FIELD oofc009                     #返回原欄位
+
+]]>
+  </point>
+  <point name="dialog.aooi350_02_display" order="1" ver="4" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 被主程式嵌入的通訊資料顯示模式
+# Memo...........: 
+# Usage..........: CALL aooi350_02_display()
+# Input parameter: None
+# Return code....: None
+# Date & Author..: 2014/02/24 By Saki
+# Modify.........:
+################################################################################
+DIALOG aooi350_02_display()
+   DISPLAY ARRAY g_oofc_d TO s_detail1_aooi350_02.* ATTRIBUTE(COUNT=g_d_cnt_i35002)
+      BEFORE DISPLAY
+         CALL FGL_SET_ARR_CURR(g_d_idx_i35002)
+         #單身不連動, 所以進入單身時, 要重新顯示單身筆數
+         DISPLAY g_d_idx_i35002, g_d_cnt_i35002 TO FORMONLY.idx, FORMONLY.cnt
+      BEFORE ROW
+         LET g_d_idx_i35002 = DIALOG.getCurrentRow("s_detail1_aooi350_02")
+         DISPLAY g_d_idx_i35002 TO FORMONLY.idx
+         # 點的當筆放入g_appoint_idx中, 可讓雙擊直接進入指定筆
+         LET g_appoint_idx = g_d_idx_i35002
+      AFTER DISPLAY
+         LET g_oofc_d2.* = g_oofc_d.*
+   END DISPLAY
+END DIALOG]]>
+  </point>
+  <point name="function.aooi350_02_lock_b" order="1" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#  連動lock其他單身table資料
+PRIVATE FUNCTION aooi350_02_lock_b(p_ac)
+   DEFINE p_ac  LIKE type_t.num5
+
+      OPEN aooi350_02_bcl USING g_oofc_d[p_ac].oofc001
+
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "aooi350_02_bcl"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         RETURN FALSE
+      END IF
+   RETURN TRUE
+END FUNCTION]]>
+  </point>
+  <point name="dialog.aooi350_02_construct" order="2" ver="5" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 被主程式嵌入的通訊方式查詢模式
+# Memo...........: 
+# Usage..........: CALL aooi350_02_construct()
+# Input parameter: None
+# Return code....: None
+# Date & Author..: 2014/02/24 By Saki
+# Modify.........:
+################################################################################
+DIALOG aooi350_02_construct()
+   DEFINE ls_result   STRING
+
+   CONSTRUCT g_wc2_i35002 ON oofcstus,oofc001,oofc008,oofc009,oofc010,
+                             oofc014,oofc011,oofc012,oofc013,oofc015
+        FROM s_detail1_aooi350_02[1].oofcstus,s_detail1_aooi350_02[1].oofc001,
+             s_detail1_aooi350_02[1].oofc008,s_detail1_aooi350_02[1].oofc009,
+             s_detail1_aooi350_02[1].oofc010,s_detail1_aooi350_02[1].oofc014,
+             s_detail1_aooi350_02[1].oofc011,s_detail1_aooi350_02[1].oofc012,
+             s_detail1_aooi350_02[1].oofc013,s_detail1_aooi350_02[1].oofc015
+
+      AFTER FIELD oofccrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+
+      AFTER FIELD oofcmoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+
+      ON ACTION controlp INFIELD oofc009
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            #給予arg
+            LET g_qryparam.arg1 = "3" #
+            CALL q_oocq002()    
+            DISPLAY g_qryparam.return1 TO oofc009  #顯示到畫面上
+
+            NEXT FIELD oofc009
+   END CONSTRUCT
+END DIALOG]]>
+  </point>
+  <point name="function.aooi350_02_unlock_b" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION aooi350_02_unlock_b()
+   CLOSE aooi350_02_bcl
+END FUNCTION]]>
+  </point>
+  <point name="dialog.aooi350_02_input" order="3" ver="5" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 被主程式嵌入的通訊方式輸入模式
+# Memo...........: 
+# Usage..........: CALL aooi350_02_input()
+# Input parameter: None
+# Return code....: None
+# Date & Author..: 2014/02/24 By Saki
+# Modify.........:
+################################################################################
+DIALOG aooi350_02_input()
+   {<Local define>}
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   {</Local define>}
+   #add-point:input段define
+   DEFINE l_oofc         RECORD LIKE oofc_t.*
+   DEFINE l_forupd_sql   STRING
+   DEFINE l_lock_sw      LIKE type_t.chr1 
+   DEFINE l_success      LIKE type_t.num5
+   DEFINE l_n            LIKE type_t.num5
+   DEFINE l_wc           STRING
+   #end add-point  
+
+      INPUT ARRAY g_oofc_d FROM s_detail1_aooi350_02.*
+          ATTRIBUTE(COUNT = g_d_cnt_i35002,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = g_detail_insert,
+                  DELETE ROW = g_detail_delete,
+                  APPEND ROW = g_detail_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            LET l_forupd_sql = " SELECT oofcstus,oofc001,oofc008,oofc009,'',oofc012,oofc010,oofc014,oofc011,oofc015,oofc013 ",
+                      "   FROM oofc_t WHERE oofcent = '",g_enterprise,"' AND oofc002 = '",g_pmaa027_d,"'AND oofc001 = ? FOR UPDATE"
+            LET l_forupd_sql = cl_sql_forupd(l_forupd_sql)  
+            PREPARE aooi350_02_dialog_b FROM l_forupd_sql
+            DECLARE aooi350_02_dialog_bcl CURSOR FOR aooi350_02_dialog_b 
+            IF g_appoint_idx > 0 THEN
+               CALL DIALOG.setCurrentRow("s_detail1_aooi350_02",g_appoint_idx)
+            END IF
+         BEFORE ROW
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET l_lock_sw = 'N'            #DEFAULT
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            LET g_rec_b = g_oofc_d.getLength()
+            
+            IF g_rec_b >= l_ac THEN  
+               LET l_cmd='u'
+               LET g_oofc_d_t.* = g_oofc_d[l_ac].*  #BACKUP
+               CALL aooi350_02_set_entry_b()
+               CALL aooi350_02_set_no_entry_b()
+               
+               OPEN aooi350_02_dialog_bcl USING g_oofc_d[l_ac].oofc001
+               IF SQLCA.sqlcode THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH aooi350_02_dialog_bcl INTO g_oofc_d[l_ac].oofcstus,g_oofc_d[l_ac].oofc001,g_oofc_d[l_ac].oofc008,g_oofc_d[l_ac].oofc009,g_oofc_d[l_ac].oofc009_desc,
+                                                   g_oofc_d[l_ac].oofc012,g_oofc_d[l_ac].oofc010,g_oofc_d[l_ac].oofc014,g_oofc_d[l_ac].oofc011,g_oofc_d[l_ac].oofc015,g_oofc_d[l_ac].oofc013
+                  IF SQLCA.sqlcode THEN
+                     LET l_lock_sw = "Y"
+                  END IF
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_oofc_d[l_ac].oofc009
+                  CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='3' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_oofc_d[l_ac].oofc009_desc = g_rtn_fields[1]
+                 DISPLAY BY NAME g_oofc_d[l_ac].oofc009_desc                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            
+         BEFORE INSERT
+            CALL s_transaction_begin()
+            LET l_cmd = 'a'
+            INITIALIZE g_oofc_d_t.* TO NULL
+            INITIALIZE g_oofc_d[l_ac].* TO NULL 
+            
+            LET g_oofc_d_t.* = g_oofc_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()   
+            CALL aooi350_02_set_entry_b()
+            CALL aooi350_02_set_no_entry_b()
+               
+            LET g_oofc_d[l_ac].oofcstus = 'Y'
+            LET g_oofc_d[l_ac].oofc010 = 'N'
+            LET g_oofc_d[l_ac].oofc015 = 'Y'
+            
+         AFTER INSERT
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+#               CANCEL INSERT
+            END IF
+            LET l_oofc.oofcent = g_enterprise
+            LET l_oofc.oofcstus =g_oofc_d[l_ac].oofcstus
+            LET l_success = NULL
+            LET l_wc = " oofcent = '",g_enterprise,"' "
+            CALL s_aooi350_get_idno('oofc001','oofc_t',l_wc) RETURNING l_success,l_oofc.oofc001
+            LET l_oofc.oofc002 = g_pmaa027_d
+            LET l_oofc.oofc008 = g_oofc_d[l_ac].oofc008
+            LET l_oofc.oofc009 = g_oofc_d[l_ac].oofc009
+            LET l_oofc.oofc010 = g_oofc_d[l_ac].oofc010 
+            LET l_oofc.oofc011 = g_oofc_d[l_ac].oofc011
+            LET l_oofc.oofc012 = g_oofc_d[l_ac].oofc012
+            LET l_oofc.oofc013 = g_oofc_d[l_ac].oofc013
+            LET l_oofc.oofc014 = g_oofc_d[l_ac].oofc014
+            LET l_oofc.oofc015 = g_oofc_d[l_ac].oofc015
+            LET l_oofc.oofcownid = g_user
+            LET l_oofc.oofcowndp = g_dept
+            LET l_oofc.oofccrtid = g_user
+            LET l_oofc.oofccrtdp = g_dept 
+            LET l_oofc.oofccrtdt = cl_get_current()
+            LET l_oofc.oofcmodid = g_user
+            LET l_oofc.oofcmoddt = cl_get_current()
+            SELECT COUNT(*) INTO l_count FROM oofc_t 
+             WHERE oofcent = g_enterprise AND oofc001 = l_oofc.oofc001  AND oofc002 = g_pmaa027_d
+                        
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #INSERT INTO oofc_t VALUES(l_oofc.*)
+               INSERT INTO oofc_t(oofcstus,oofcent,oofc001,oofc002,oofc003,oofc004,oofc005,oofc006,oofc007,oofc008,oofc009,oofc010,oofc011,oofc012,oofc013,oofc014,
+                                  oofc015,
+                                  oofcownid,oofcowndp,oofccrtid,oofccrtdp,oofccrtdt,oofcmodid,oofcmoddt) 
+                VALUES(l_oofc.oofcstus,l_oofc.oofcent,l_oofc.oofc001,l_oofc.oofc002,l_oofc.oofc003,l_oofc.oofc004,l_oofc.oofc005,l_oofc.oofc006,l_oofc.oofc007,
+                       l_oofc.oofc008, l_oofc.oofc009,l_oofc.oofc010,l_oofc.oofc011,l_oofc.oofc012,l_oofc.oofc013,l_oofc.oofc014,
+                       l_oofc.oofc015,
+                       l_oofc.oofcownid,l_oofc.oofcowndp,l_oofc.oofccrtid,l_oofc.oofccrtdp,l_oofc.oofccrtdt,l_oofc.oofcmodid,l_oofc.oofcmoddt)
+                        
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "oofc_t"
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+
+               END IF
+            ELSE    
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               INITIALIZE g_oofc_d[l_ac].* TO NULL
+               CALL s_transaction_end('N',0)
+#               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "oofc_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+  
+               CALL s_transaction_end('N',0)                   
+#               CANCEL INSERT
+            ELSE
+              
+               CALL s_transaction_end('Y',0)
+               
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+ 
+        BEFORE DELETE                            #是否取消單身
+            IF NOT cl_null(g_oofc_d[l_ac].oofc001) THEN
+
+               #IF NOT cl_ask_del_detail() THEN
+#              #    CANCEL DELETE
+               #END IF
+               IF cl_ask_del_detail() THEN
+                  IF l_lock_sw = "Y" THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code =  -263
+                     LET g_errparam.extend = ""
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                  
+#                     CANCEL DELETE
+                  END IF
+                  DELETE FROM oofc_t
+                   WHERE oofcent = g_enterprise AND oofc001 = g_oofc_d[l_ac].oofc001 AND oofc002 = g_pmaa027_d
+                  
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "oofc_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  
+                     CALL s_transaction_end('N',0)
+#                     CANCEL DELETE   
+                  ELSE
+                     LET g_rec_b = g_rec_b-1
+                     
+                     CALL s_transaction_end('Y',0)
+                  END IF 
+                  CLOSE aooi350_02_dialog_bcl
+                  LET l_count = g_oofc_d.getLength()
+               END IF
+            END IF 
+            
+         AFTER DELETE
+            CALL aooi350_02_b_fill(g_pmaa027_d)
+            
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_oofc_d[l_ac].* = g_oofc_d_t.*
+               CLOSE aooi350_02_dialog_bcl
+               CALL s_transaction_end('N',0)
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = l_oofc.oofc001
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_oofc_d[l_ac].* = g_oofc_d_t.*
+            ELSE
+               UPDATE oofc_t SET (oofcstus,oofc008,oofc009,oofc014,oofc010,oofc011,oofc012,oofc013,oofc015)= (g_oofc_d[l_ac].oofcstus,g_oofc_d[l_ac].oofc008,g_oofc_d[l_ac].oofc009,g_oofc_d[l_ac].oofc014,g_oofc_d[l_ac].oofc010,g_oofc_d[l_ac].oofc011,g_oofc_d[l_ac].oofc012,g_oofc_d[l_ac].oofc013,g_oofc_d[l_ac].oofc015)
+                WHERE oofcent = g_enterprise AND oofc001 = g_oofc_d[l_ac].oofc001 AND oofc002 = g_pmaa027_d 
+ 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "oofc_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+   
+                  LET g_oofc_d[l_ac].* = g_oofc_d_t.*
+                  CALL s_transaction_end('N',0)
+               ELSE
+                  CALL s_transaction_end('Y',0)               
+               END IF
+
+            END IF
+            
+         AFTER ROW
+            CLOSE aooi350_02_dialog_bcl
+              
+            #end add-point
+          
+         #---------------------<  Detail: page1  >---------------------
+         #----<<oofcstus>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD oofcstus
+            #add-point:BEFORE FIELD oofcstus
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD oofcstus
+            
+            #add-point:AFTER FIELD oofcstus
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE oofcstus
+            #add-point:ON CHANGE oofcstus
+
+            #END add-point
+ 
+         #----<<oofc001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD oofc001
+            #add-point:BEFORE FIELD oofc001
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD oofc001
+            
+            #add-point:AFTER FIELD oofc001
+            #此段落由子樣板a05產生
+            IF  g_oofc_d[g_detail_idx].oofc001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_oofc_d[g_detail_idx].oofc001 != g_oofc_d_t.oofc001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM oofc_t WHERE "||"oofcent = '" ||g_enterprise|| "' AND "||"oofc001 = '"||g_oofc_d[g_detail_idx].oofc001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE oofc001
+            #add-point:ON CHANGE oofc001
+
+            #END add-point
+ 
+         #----<<oofc008>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD oofc008
+            #add-point:BEFORE FIELD oofc008
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD oofc008
+            
+            #add-point:AFTER FIELD oofc008
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE oofc008
+            #add-point:ON CHANGE oofc008
+            CALL aooi350_02_set_entry_b()
+            CALL aooi350_02_set_no_entry_b()
+            #END add-point
+ 
+         #----<<oofc009>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD oofc009
+            
+            #add-point:AFTER FIELD oofc009
+            IF NOT cl_null(g_oofc_d[l_ac].oofc009) THEN
+               CALL s_azzi650_chk_exist('3',g_oofc_d[l_ac].oofc009) RETURNING l_success
+               IF NOT l_success THEN
+                  LET g_oofc_d[l_ac].oofc009 = g_oofc_d_t.oofc009
+                  LET g_oofc_d[l_ac].oofc009_desc = g_oofc_d_t.oofc009_desc
+                  NEXT FIELD oofc009
+               END IF   
+            END IF   
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_oofc_d[l_ac].oofc009
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='3' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_oofc_d[l_ac].oofc009_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_oofc_d[l_ac].oofc009_desc
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD oofc009
+            #add-point:BEFORE FIELD oofc009
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE oofc009
+            #add-point:ON CHANGE oofc009
+
+            #END add-point
+ 
+         #----<<oofc010>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD oofc010
+            #add-point:BEFORE FIELD oofc010
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD oofc010
+            
+            #add-point:AFTER FIELD oofc010
+            IF NOT cl_null(g_oofc_d[l_ac].oofc008) AND g_oofc_d[l_ac].oofc010 = 'Y' THEN
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_oofc_d[l_ac].oofc010 != g_oofc_d_t.oofc010))) THEN
+                  LET l_n = 0
+                  SELECT COUNT(*) INTO l_n FROM oofc_t
+                  WHERE oofcent = g_enterprise
+                    AND oofc002 = g_pmaa027_d
+                    AND oofc008 = g_oofc_d[l_ac].oofc008
+                    AND oofc010 = 'Y'
+                   IF l_n > 0 THEN
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = 'aoo-00153'
+                      LET g_errparam.extend = g_oofc_d[l_ac].oofc010
+                      LET g_errparam.popup = TRUE
+                      CALL cl_err()
+
+                      LET g_oofc_d[l_ac].oofc010 = 'N'
+                      NEXT FIELD oofc010
+                   END IF
+                END IF
+             END IF 
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE oofc010
+            #add-point:ON CHANGE oofc010
+
+            #END add-point
+ 
+         #----<<oofc014>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD oofc014
+            #add-point:BEFORE FIELD oofc014
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD oofc014
+            
+            #add-point:AFTER FIELD oofc014
+            IF  NOT cl_null(g_oofc_d[l_ac].oofc014) THEN
+                IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_oofc_d[l_ac].oofc014 != g_oofc_d_t.oofc014) OR g_oofc_d_t.oofc014 IS NULL)) THEN
+                   IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM oofc_t WHERE "||"oofcent = '" ||g_enterprise|| "' AND "||"oofc002 = '"|| g_pmaa027_d || "' AND "||"oofc014 = '"||g_oofc_d[l_ac].oofc014 ||"'",'std-00004',1) THEN 
+                       LET g_oofc_d[l_ac].oofc014 = g_oofc_d_t.oofc014
+                       NEXT FIELD oofc014
+                   END IF
+                END IF
+            END IF  
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE oofc014
+            #add-point:ON CHANGE oofc014
+
+            #END add-point
+ 
+         #----<<oofc011>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD oofc011
+            #add-point:BEFORE FIELD oofc011
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD oofc011
+            
+            #add-point:AFTER FIELD oofc011
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE oofc011
+            #add-point:ON CHANGE oofc011
+
+            #END add-point
+ 
+         #----<<oofc012>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD oofc012
+            #add-point:BEFORE FIELD oofc012
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD oofc012
+            
+            #add-point:AFTER FIELD oofc012
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE oofc012
+            #add-point:ON CHANGE oofc012
+
+            #END add-point
+ 
+         #----<<oofc013>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD oofc013
+            #add-point:BEFORE FIELD oofc013
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD oofc013
+            
+            #add-point:AFTER FIELD oofc013
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE oofc013
+            #add-point:ON CHANGE oofc013
+
+            #END add-point
+ 
+ 
+         #---------------------<  Detail: page1  >---------------------
+         #----<<oofcstus>>----
+         #Ctrlp:input.c.page1_aooi350_02.oofcstus
+         ON ACTION controlp INFIELD oofcstus
+            #add-point:ON ACTION controlp INFIELD oofcstus
+
+            #END add-point
+ 
+         #----<<oofc001>>----
+         #Ctrlp:input.c.page1_aooi350_02.oofc001
+         ON ACTION controlp INFIELD oofc001
+            #add-point:ON ACTION controlp INFIELD oofc001
+
+            #END add-point
+ 
+         #----<<oofc008>>----
+         #Ctrlp:input.c.page1_aooi350_02.oofc008
+         ON ACTION controlp INFIELD oofc008
+            #add-point:ON ACTION controlp INFIELD oofc008
+
+            #END add-point
+ 
+         #----<<oofc009>>----
+         #Ctrlp:input.c.page1_aooi350_02.oofc009
+         ON ACTION controlp INFIELD oofc009
+            #add-point:ON ACTION controlp INFIELD oofc009
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_oofc_d[l_ac].oofc009             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "3" #
+
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_oofc_d[l_ac].oofc009 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_oofc_d[l_ac].oofc009 TO oofc009              #顯示到畫面上
+
+            NEXT FIELD oofc009                          #返回原欄位
+
+
+            #END add-point
+ 
+         #----<<oofc010>>----
+         #Ctrlp:input.c.page1_aooi350_02.oofc010
+         ON ACTION controlp INFIELD oofc010
+            #add-point:ON ACTION controlp INFIELD oofc010
+
+            #END add-point
+ 
+         #----<<oofc014>>----
+         #Ctrlp:input.c.page1_aooi350_02.oofc014
+         ON ACTION controlp INFIELD oofc014
+            #add-point:ON ACTION controlp INFIELD oofc014
+
+            #END add-point
+ 
+         #----<<oofc011>>----
+         #Ctrlp:input.c.page1_aooi350_02.oofc011
+         ON ACTION controlp INFIELD oofc011
+            #add-point:ON ACTION controlp INFIELD oofc011
+
+            #END add-point
+ 
+         #----<<oofc012>>----
+         #Ctrlp:input.c.page1_aooi350_02.oofc012
+         ON ACTION controlp INFIELD oofc012
+            #add-point:ON ACTION controlp INFIELD oofc012
+
+            #END add-point
+ 
+         #----<<oofc013>>----
+         #Ctrlp:input.c.page1_aooi350_02.oofc013
+         ON ACTION controlp INFIELD oofc013
+            #add-point:ON ACTION controlp INFIELD oofc013
+
+            #END add-point
+ 
+ 
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            LET g_pmba2_d.* = g_oofc_d.*
+            LET g_oofc_d2.* = g_oofc_d.*
+            #end add-point
+            
+      END INPUT  
+
+END DIALOG]]>
+  </point>
+  <point name="function.aooi350_02_b_fill" order="3" ver="5" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[# 單身陣列填充
+PUBLIC FUNCTION aooi350_02_b_fill(p_oofc002)
+  DEFINE l_sql      STRING
+   DEFINE p_oofc002   LIKE oofc_t.oofc002
+   DEFINE l_ac1      LIKE type_t.num5
+   LET l_sql = " SELECT oofcstus,oofc001,oofc008,oofc009,'',oofc012,oofc010,oofc014,oofc011,oofc015,oofc013 FROM oofc_t ",
+               "  WHERE oofcent = '",g_enterprise,"' AND oofc002 = '",p_oofc002,"'" 
+   IF NOT cl_null(g_wc2_i35002) THEN
+      LET l_sql = l_sql CLIPPED, " AND ", g_wc2_i35002 CLIPPED
+   END IF
+   LET l_sql = l_sql, " ORDER BY oofc008,oofc009 " 
+   PREPARE aooi350_02_pb FROM l_sql
+   DECLARE b_fill_curs CURSOR FOR aooi350_02_pb 
+   
+   CALL g_oofc_d.clear()
+   LET l_ac1 = 1
+   FOREACH b_fill_curs INTO g_oofc_d[l_ac1].oofcstus,g_oofc_d[l_ac1].oofc001,g_oofc_d[l_ac1].oofc008,g_oofc_d[l_ac1].oofc009,g_oofc_d[l_ac1].oofc009_desc,
+                            g_oofc_d[l_ac1].oofc012, g_oofc_d[l_ac1].oofc010,g_oofc_d[l_ac1].oofc014,g_oofc_d[l_ac1].oofc011,g_oofc_d[l_ac1].oofc015,g_oofc_d[l_ac1].oofc013
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_oofc_d[l_ac1].oofc009
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='3' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_oofc_d[l_ac1].oofc009_desc = g_rtn_fields[1]
+      DISPLAY BY NAME g_oofc_d[l_ac1].oofc009_desc
+      LET l_ac1 = l_ac1 + 1
+      IF l_ac1 > g_max_rec THEN
+         #CALL cl_err( "", 9035, 0 )
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH 
+   CALL g_oofc_d.deleteElement(g_oofc_d.getLength())   
+   LET g_rec_b = l_ac1 - 1
+   DISPLAY g_rec_b TO FORMONLY.cnt
+   LET g_pmba2_d.* = g_oofc_d.*
+   #將總筆數, 目前筆數指定到共用變數中
+   IF g_rec_b > 0 THEN
+      LET g_d_idx_i35002 = 1
+   ELSE
+      LET g_d_idx_i35002 = 0
+   END IF
+   LET g_d_cnt_i35002 = g_rec_b
+   LET g_oofc_d2.* = g_oofc_d.*
+   CLOSE b_fill_curs
+   FREE aooi350_02_pb
+END FUNCTION]]>
+  </point>
+  <point name="function.aooi350_02_clear_detail" order="4" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 清除畫面上通訊方式單身
+# Memo...........: 
+# Usage..........: CALL aooi350_02_clear_detail()
+# Input parameter: None
+# Return code....: None
+# Date & Author..: 2014/02/24 By Saki
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION aooi350_02_clear_detail()
+   CALL g_oofc_d.clear()
+END FUNCTION]]>
+  </point>
+  <point name="function.aooi350_02_set_entry" order="5" ver="5" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="function.aooi350_02_set_entry_b" order="5" ver="5" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION aooi350_02_set_entry_b()
+
+    CALL cl_set_comp_entry("oofc015",TRUE)
+
+END FUNCTION]]>
+  </point>
+  <point name="function.aooi350_02_set_no_entry_b" order="6" ver="5" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION aooi350_02_set_no_entry_b()
+
+    #通訊類型="電子郵件"時，"寄發郵件"可輸
+    IF g_oofc_d[l_ac].oofc008 <> '4' THEN
+       CALL cl_set_comp_entry("oofc015",FALSE)
+    END IF
+    
+END FUNCTION]]>
+  </point>
+  <point name="construct.c.page1_aooi350_02.oofc009" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO oofc009  #顯示到畫面上
+
+            NEXT FIELD oofc009                     #返回原欄位
+
+]]>
+  </point>
+  <point name="global.argv" order="" ver="4" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[GLOBALS   
+   DEFINE g_pmba2_d          DYNAMIC ARRAY OF type_g_oofc_d
+   DEFINE g_oofc_d2          DYNAMIC ARRAY OF type_g_oofc_d
+END GLOBALS]]>
+  </point>
+  <point name="global.inc" order="" ver="4" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[GLOBALS "../../aoo/4gl/aooi350_02.inc"]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#GLOBALS
+#   DEFINE g_detail_insert   LIKE type_t.num5   #單身的新增權限
+#   DEFINE g_detail_delete   LIKE type_t.num5   #單身的刪除權限
+#   DEFINE g_wc2_i35002      STRING             #單身QBE條件
+#   DEFINE g_d_idx_i35002    LIKE type_t.num5   #單身所在筆數
+#   DEFINE g_d_cnt_i35002    LIKE type_t.num5   #單身總筆數
+#   DEFINE g_pmaa027_d       LIKE pmaa_t.pmaa027
+#   DEFINE g_appoint_idx     LIKE type_t.num5   #指定進入單身行數
+#END GLOBALS]]>
+  </point>
+  <point name="input.a.page1.oofc001" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_oofc_d[l_ac].oofc001) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_oofc_d[l_ac].oofc001 != g_oofc_d_t.oofc001))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM oofc_t WHERE "||"oofcent = '" ||g_enterprise|| "' AND "||"oofc001 = '"||g_oofc_d[l_ac].oofc001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1.oofc008" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_oofc_d[l_ac].oofc008) AND g_oofc_d[l_ac].oofc010 = 'Y' THEN
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_oofc_d[l_ac].oofc008 != g_oofc_d_t.oofc008))) THEN
+                  LET l_n = 0
+                  SELECT COUNT(*) INTO l_n FROM oofc_t
+                   WHERE oofcent = g_enterprise
+                    AND oofc002 = p_oofc002 
+                    AND oofc008 = g_oofc_d[l_ac].oofc008
+                    AND oofc010 = 'Y'
+                   IF l_n > 0 THEN 
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = 'aoo-00153'
+                      LET g_errparam.extend = g_oofc_d[l_ac].oofc008
+                      LET g_errparam.popup = FALSE
+                      CALL cl_err()
+
+                      LET g_oofc_d[l_ac].oofc008 = g_oofc_d_t.oofc008
+                      NEXT FIELD oofc008
+                   END IF 
+                END IF    
+             END IF ]]>
+  </point>
+  <point name="input.a.page1.oofc009" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_oofc_d[l_ac].oofc009) THEN
+               LET l_n = 0
+               SELECT COUNT(*) INTO l_n FROM oocq_t
+                WHERE oocqent =  g_enterprise
+                  AND oocq001 = '3'
+                  AND oocq002 = g_oofc_d[l_ac].oofc009
+               IF l_n = 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'aoo-00081'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_oofc_d[l_ac].oofc009 = g_oofc_d_t.oofc009
+                  LET g_oofc_d[l_ac].oofc009_desc = g_oofc_d_t.oofc009_desc
+                  NEXT FIELD oofc009
+               END IF
+
+               LET l_n = 0
+               SELECT COUNT(*) INTO l_n FROM oocq_t
+               WHERE oocqent =  g_enterprise
+                 AND oocq001 = '3'
+                 AND oocq002 = g_oofc_d[l_ac].oofc009
+                 AND oocqstus= 'Y'
+               IF l_n = 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'aoo-00082'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_oofc_d[l_ac].oofc009 = g_oofc_d_t.oofc009
+                  LET g_oofc_d[l_ac].oofc009_desc = g_oofc_d_t.oofc009_desc
+                  NEXT FIELD oofc009
+               END IF
+            END IF   
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_oofc_d[l_ac].oofc009
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='3' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_oofc_d[l_ac].oofc009_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_oofc_d[l_ac].oofc009_desc
+]]>
+  </point>
+  <point name="input.a.page1.oofc010" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_oofc_d[l_ac].oofc008) AND g_oofc_d[l_ac].oofc010 = 'Y' THEN
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_oofc_d[l_ac].oofc010 != g_oofc_d_t.oofc010))) THEN
+                  LET l_n = 0
+                  SELECT COUNT(*) INTO l_n FROM oofc_t
+                  WHERE oofcent = g_enterprise
+                    AND oofc002 = p_oofc002 
+                    AND oofc008 = g_oofc_d[l_ac].oofc008
+                    AND oofc010 = 'Y'
+                   IF l_n > 0 THEN 
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = 'aoo-00153'
+                      LET g_errparam.extend = g_oofc_d[l_ac].oofc010
+                      LET g_errparam.popup = FALSE
+                      CALL cl_err()
+
+                      LET g_oofc_d[l_ac].oofc010 = 'N'
+                      NEXT FIELD oofc010
+                   END IF   
+                END IF   
+             END IF   ]]>
+  </point>
+  <point name="input.a.page1.oofc014" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF  NOT cl_null(g_oofc_d[l_ac].oofc014) THEN 
+                IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_oofc_d[l_ac].oofc014 != g_oofc_d_t.oofc014) OR g_oofc_d_t.oofc014 IS NULL)) THEN
+                   IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM oofc_t WHERE "||"oofcent = '" ||g_enterprise|| "' AND "||"oofc014 = '"||g_oofc_d[l_ac].oofc014 ||"'",'std-00004',0) THEN 
+                       LET g_oofc_d[l_ac].oofc014 = g_oofc_d_t.oofc014
+                       NEXT FIELD oofc014
+                   END IF
+                END IF  
+            END IF]]>
+  </point>
+  <point name="input.a.page1_aooi350_02.oofc001" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  g_oofc_d[g_detail_idx].oofc001 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_oofc_d[g_detail_idx].oofc001 != g_oofc_d_t.oofc001)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM oofc_t WHERE "||"oofcent = '" ||g_enterprise|| "' AND "||"oofc001 = '"||g_oofc_d[g_detail_idx].oofc001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.page1_aooi350_02.oofc009" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_oofc_d[l_ac].oofc009) THEN
+               CALL s_azzi650_chk_exist('3',g_oofc_d[l_ac].oofc009) RETURNING l_success
+               IF NOT l_success THEN
+                  LET g_oofc_d[l_ac].oofc009 = g_oofc_d_t.oofc009
+                  LET g_oofc_d[l_ac].oofc009_desc = g_oofc_d_t.oofc009_desc
+                  NEXT FIELD oofc009
+               END IF   
+            END IF   
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_oofc_d[l_ac].oofc009
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='3' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_oofc_d[l_ac].oofc009_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_oofc_d[l_ac].oofc009_desc
+]]>
+  </point>
+  <point name="input.a.page1_aooi350_02.oofc010" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_oofc_d[l_ac].oofc008) AND g_oofc_d[l_ac].oofc010 = 'Y' THEN
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_oofc_d[l_ac].oofc010 != g_oofc_d_t.oofc010))) THEN
+                  LET l_n = 0
+                  SELECT COUNT(*) INTO l_n FROM oofc_t
+                  WHERE oofcent = g_enterprise
+                    AND oofc002 = p_oofc002
+                    AND oofc008 = g_oofc_d[l_ac].oofc008
+                    AND oofc010 = 'Y'
+                   IF l_n > 0 THEN
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = 'aoo-00153'
+                      LET g_errparam.extend = g_oofc_d[l_ac].oofc010
+                      LET g_errparam.popup = TRUE
+                      CALL cl_err()
+
+                      LET g_oofc_d[l_ac].oofc010 = 'N'
+                      NEXT FIELD oofc010
+                   END IF
+                END IF
+             END IF             ]]>
+  </point>
+  <point name="input.a.page1_aooi350_02.oofc014" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF  NOT cl_null(g_oofc_d[l_ac].oofc014) THEN
+                IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_oofc_d[l_ac].oofc014 != g_oofc_d_t.oofc014) OR g_oofc_d_t.oofc014 IS NULL)) THEN
+                   IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM oofc_t WHERE "||"oofcent = '" ||g_enterprise|| "' AND "||"oofc002 = '"|| p_oofc002 || "' AND "||"oofc014 = '"||g_oofc_d[l_ac].oofc014 ||"'",'std-00004',1) THEN 
+                       LET g_oofc_d[l_ac].oofc014 = g_oofc_d_t.oofc014
+                       NEXT FIELD oofc014
+                   END IF
+                END IF
+            END IF    ]]>
+  </point>
+  <point name="input.after_input" order="" ver="4" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            LET g_oofc_d2.* = g_oofc_d.*]]>
+  </point>
+  <point name="input.before_input" order="" ver="5" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[         BEFORE ROW
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET l_lock_sw = 'N'            #DEFAULT
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            LET g_rec_b = g_oofc_d.getLength()
+            
+            IF g_rec_b >= l_ac THEN  
+               LET l_cmd='u'
+               LET g_oofc_d_t.* = g_oofc_d[l_ac].*  #BACKUP
+               CALL aooi350_02_set_entry_b()
+               CALL aooi350_02_set_no_entry_b()
+               
+               IF NOT aooi350_02_lock_b(l_ac) THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH aooi350_02_bcl INTO g_oofc_d[l_ac].oofcstus,g_oofc_d[l_ac].oofc001,g_oofc_d[l_ac].oofc008,g_oofc_d[l_ac].oofc009,g_oofc_d[l_ac].oofc009_desc,
+                                            g_oofc_d[l_ac].oofc012,g_oofc_d[l_ac].oofc010,g_oofc_d[l_ac].oofc014,g_oofc_d[l_ac].oofc011,g_oofc_d[l_ac].oofc015,g_oofc_d[l_ac].oofc013
+                  IF SQLCA.sqlcode THEN
+                     LET l_lock_sw = "Y"
+                  END IF
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_oofc_d[l_ac].oofc009
+                  CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='3' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_oofc_d[l_ac].oofc009_desc = g_rtn_fields[1]
+                 DISPLAY BY NAME g_oofc_d[l_ac].oofc009_desc                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            
+         BEFORE INSERT
+            CALL s_transaction_begin()
+            LET l_cmd = 'a'
+            INITIALIZE g_oofc_d_t.* TO NULL
+            INITIALIZE g_oofc_d[l_ac].* TO NULL 
+            
+            LET g_oofc_d_t.* = g_oofc_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()   
+            CALL aooi350_02_set_entry_b()
+            CALL aooi350_02_set_no_entry_b()
+               
+            LET g_oofc_d[l_ac].oofcstus = 'Y'
+            LET g_oofc_d[l_ac].oofc010 = 'N'
+            LET g_oofc_d[l_ac].oofc015 = 'Y'
+            
+         AFTER INSERT
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+            LET l_oofc.oofcent = g_enterprise
+            LET l_oofc.oofcstus =g_oofc_d[l_ac].oofcstus
+            LET l_success = NULL
+            LET l_wc = " oofcent = '",g_enterprise,"' "
+            CALL s_aooi350_get_idno('oofc001','oofc_t',l_wc) RETURNING l_success,l_oofc.oofc001
+            LET l_oofc.oofc002 = p_oofc002
+            LET l_oofc.oofc008 = g_oofc_d[l_ac].oofc008
+            LET l_oofc.oofc009 = g_oofc_d[l_ac].oofc009
+            LET l_oofc.oofc010 = g_oofc_d[l_ac].oofc010 
+            LET l_oofc.oofc011 = g_oofc_d[l_ac].oofc011
+            LET l_oofc.oofc012 = g_oofc_d[l_ac].oofc012
+            LET l_oofc.oofc013 = g_oofc_d[l_ac].oofc013
+            LET l_oofc.oofc014 = g_oofc_d[l_ac].oofc014
+            LET l_oofc.oofc015 = g_oofc_d[l_ac].oofc015
+            LET l_oofc.oofcownid = g_user
+            LET l_oofc.oofcowndp = g_dept
+            LET l_oofc.oofccrtid = g_user
+            LET l_oofc.oofccrtdp = g_dept 
+            LET l_oofc.oofccrtdt = cl_get_current()
+            LET l_oofc.oofcmodid = g_user
+            LET l_oofc.oofcmoddt = cl_get_current()
+            SELECT COUNT(*) INTO l_count FROM oofc_t 
+             WHERE oofcent = g_enterprise AND oofc001 = l_oofc.oofc001  AND oofc002 = p_oofc002
+                        
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #INSERT INTO oofc_t VALUES(l_oofc.*)
+               INSERT INTO oofc_t(oofcstus,oofcent,oofc001,oofc002,oofc003,oofc004,oofc005,oofc006,oofc007,oofc008,oofc009,oofc010,oofc011,oofc012,oofc013,oofc014,
+                                  oofc015,
+                                  oofcownid,oofcowndp,oofccrtid,oofccrtdp,oofccrtdt,oofcmodid,oofcmoddt) 
+                VALUES(l_oofc.oofcstus,l_oofc.oofcent,l_oofc.oofc001,l_oofc.oofc002,l_oofc.oofc003,l_oofc.oofc004,l_oofc.oofc005,l_oofc.oofc006,l_oofc.oofc007,
+                       l_oofc.oofc008, l_oofc.oofc009,l_oofc.oofc010,l_oofc.oofc011,l_oofc.oofc012,l_oofc.oofc013,l_oofc.oofc014,
+                       l_oofc.oofc015,
+                       l_oofc.oofcownid,l_oofc.oofcowndp,l_oofc.oofccrtid,l_oofc.oofccrtdp,l_oofc.oofccrtdt,l_oofc.oofcmodid,l_oofc.oofcmoddt)
+                        
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "oofc_t"
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+
+               END IF
+            ELSE    
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               INITIALIZE g_oofc_d[l_ac].* TO NULL
+               CALL s_transaction_end('N',0)
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "oofc_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+  
+               CALL s_transaction_end('N',0)                   
+               CANCEL INSERT
+            ELSE
+              
+               CALL s_transaction_end('Y',0)
+               
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+ 
+        BEFORE DELETE                            #是否取消單身
+            IF NOT cl_null(g_oofc_d[l_ac].oofc001) THEN
+
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  -263
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CANCEL DELETE
+               END IF
+               DELETE FROM oofc_t
+                WHERE oofcent = g_enterprise AND oofc001 = g_oofc_d[l_ac].oofc001 AND oofc002 = p_oofc002
+ 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "oofc_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+                  CALL s_transaction_end('N',0)
+                  CANCEL DELETE   
+               ELSE
+                  LET g_rec_b = g_rec_b-1
+                  
+                  CALL s_transaction_end('Y',0)
+               END IF 
+               CLOSE aooi350_02_bcl
+               LET l_count = g_oofc_d.getLength()
+            END IF 
+            
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_oofc_d[l_ac].* = g_oofc_d_t.*
+               CLOSE aooi350_02_bcl
+               CALL s_transaction_end('N',0)
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = l_oofc.oofc001
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_oofc_d[l_ac].* = g_oofc_d_t.*
+            ELSE
+               UPDATE oofc_t SET (oofcstus,oofc008,oofc009,oofc014,oofc010,oofc011,oofc012,oofc013,oofc015)= (g_oofc_d[l_ac].oofcstus,g_oofc_d[l_ac].oofc008,g_oofc_d[l_ac].oofc009,g_oofc_d[l_ac].oofc014,g_oofc_d[l_ac].oofc010,g_oofc_d[l_ac].oofc011,g_oofc_d[l_ac].oofc012,g_oofc_d[l_ac].oofc013,g_oofc_d[l_ac].oofc015)
+                WHERE oofcent = g_enterprise AND oofc001 = g_oofc_d[l_ac].oofc001 AND oofc002 = p_oofc002 
+ 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "oofc_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+   
+                  LET g_oofc_d[l_ac].* = g_oofc_d_t.*
+                  CALL s_transaction_end('N',0)
+               ELSE
+                  CALL s_transaction_end('Y',0)               
+               END IF
+
+            END IF
+            
+         AFTER ROW
+            CALL aooi350_02_unlock_b()
+              ]]>
+  </point>
+  <point name="input.c.page1.oofc009" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_oofc_d[l_ac].oofc009             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "3" #應用分類
+
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_oofc_d[l_ac].oofc009 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_oofc_d[l_ac].oofc009 TO oofc009              #顯示到畫面上
+
+            NEXT FIELD oofc009                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.page1_aooi350_02.oofc009" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_oofc_d[l_ac].oofc009             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "3" #
+
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_oofc_d[l_ac].oofc009 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_oofc_d[l_ac].oofc009 TO oofc009              #顯示到畫面上
+
+            NEXT FIELD oofc009                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE p_oofc002      LIKE oofc_t.oofc002
+   DEFINE l_oofc         RECORD LIKE oofc_t.*
+   DEFINE l_forupd_sql   STRING
+   DEFINE l_lock_sw      LIKE type_t.chr1 
+   DEFINE l_success      LIKE type_t.num5
+   DEFINE l_n            LIKE type_t.num5
+   DEFINE l_wc           STRING]]>
+  </point>
+  <point name="input.g.page1_aooi350_02.oofc008" order="" ver="5" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL aooi350_02_set_entry_b()
+            CALL aooi350_02_set_no_entry_b()]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[    p_oofc002]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CLOSE aooi350_02_bcl]]>
+  </point>
+  <point name="input.pre_input" order="" ver="5" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   WHENEVER ERROR CALL cl_err_msg_log
+   CALL cl_set_combo_scc('oofc008','6')
+   CALL aooi350_02_b_fill(p_oofc002)
+   LET l_forupd_sql = " SELECT oofcstus,oofc001,oofc008,oofc009,'',oofc012,oofc010,oofc014,oofc011,oofc015,oofc013 ",
+                      "   FROM oofc_t WHERE oofcent = '",g_enterprise,"' AND oofc002 = '",p_oofc002,"'AND oofc001 = ? FOR UPDATE"
+   LET l_forupd_sql = cl_sql_forupd(l_forupd_sql)  
+   PREPARE aooi350_02_b FROM l_forupd_sql
+   DECLARE aooi350_02_bcl CURSOR FOR aooi350_02_b 
+   LET INT_FLAG = FALSE    
+]]>
+  </point>
+  <point name="show.body.reference" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_oofc_d[l_ac].oofc009
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='3' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_oofc_d[l_ac].oofc009_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_oofc_d[l_ac].oofc009_desc
+]]>
+  </point>
+  <section id="aooi350_02.description" ver="32" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:5,PR版次:5) Build-000214
+#+ 
+#+ Filename...: aooi350_02
+#+ Description: 通訊方式
+#+ Creator....: 01258(2013-08-16 10:43:52)
+#+ Modifier...: 02294(2015-06-30 15:26:18) -SD/PR-
+]]>
+  </section>
+  <section id="aooi350_02.global" ver="7" status="" src="s" readonly="">
+    <![CDATA[#應用 c02b 樣板自動產生(Version:5)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_oofc_d        RECORD
+       oofcstus LIKE oofc_t.oofcstus, 
+   oofc001 LIKE oofc_t.oofc001, 
+   oofc008 LIKE oofc_t.oofc008, 
+   oofc009 LIKE oofc_t.oofc009, 
+   oofc009_desc LIKE type_t.chr500, 
+   oofc012 LIKE oofc_t.oofc012, 
+   oofc010 LIKE oofc_t.oofc010, 
+   oofc014 LIKE oofc_t.oofc014, 
+   oofc011 LIKE oofc_t.oofc011, 
+   oofc015 LIKE oofc_t.oofc015, 
+   oofc013 LIKE oofc_t.oofc013
+       END RECORD
+ 
+ 
+DEFINE g_oofc_d          DYNAMIC ARRAY OF type_g_oofc_d
+DEFINE g_oofc_d_t        type_g_oofc_d
+ 
+ 
+DEFINE g_oofc001_t   LIKE oofc_t.oofc001    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+    
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point    
+]]>
+  </section>
+  <section id="aooi350_02.input" ver="8" status="" src="s" readonly="">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION aooi350_02(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define" edit="s"/>}
+   #end add-point
+   #add-point:input段define
+   {<point name="input.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aooi350_02 WITH FORM cl_ap_formpath("aoo","aooi350_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_oofc_d FROM s_detail1_aooi350_02.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD oofcstus
+            #add-point:BEFORE FIELD oofcstus
+            {<point name="input.b.page1_aooi350_02.oofcstus" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD oofcstus
+            
+            #add-point:AFTER FIELD oofcstus
+            {<point name="input.a.page1_aooi350_02.oofcstus" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE oofcstus
+            #add-point:ON CHANGE oofcstus
+            {<point name="input.g.page1_aooi350_02.oofcstus" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD oofc001
+            #add-point:BEFORE FIELD oofc001
+            {<point name="input.b.page1_aooi350_02.oofc001" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD oofc001
+            
+            #add-point:AFTER FIELD oofc001
+            {<point name="input.a.page1_aooi350_02.oofc001" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE oofc001
+            #add-point:ON CHANGE oofc001
+            {<point name="input.g.page1_aooi350_02.oofc001" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD oofc008
+            #add-point:BEFORE FIELD oofc008
+            {<point name="input.b.page1_aooi350_02.oofc008" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD oofc008
+            
+            #add-point:AFTER FIELD oofc008
+            {<point name="input.a.page1_aooi350_02.oofc008" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE oofc008
+            #add-point:ON CHANGE oofc008
+            {<point name="input.g.page1_aooi350_02.oofc008" />}
+            #END add-point 
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD oofc009
+            
+            #add-point:AFTER FIELD oofc009
+            {<point name="input.a.page1_aooi350_02.oofc009" />}
+            #END add-point
+            
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD oofc009
+            #add-point:BEFORE FIELD oofc009
+            {<point name="input.b.page1_aooi350_02.oofc009" />}
+            #END add-point
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE oofc009
+            #add-point:ON CHANGE oofc009
+            {<point name="input.g.page1_aooi350_02.oofc009" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD oofc012
+            #add-point:BEFORE FIELD oofc012
+            {<point name="input.b.page1_aooi350_02.oofc012" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD oofc012
+            
+            #add-point:AFTER FIELD oofc012
+            {<point name="input.a.page1_aooi350_02.oofc012" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE oofc012
+            #add-point:ON CHANGE oofc012
+            {<point name="input.g.page1_aooi350_02.oofc012" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD oofc010
+            #add-point:BEFORE FIELD oofc010
+            {<point name="input.b.page1_aooi350_02.oofc010" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD oofc010
+            
+            #add-point:AFTER FIELD oofc010
+            {<point name="input.a.page1_aooi350_02.oofc010" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE oofc010
+            #add-point:ON CHANGE oofc010
+            {<point name="input.g.page1_aooi350_02.oofc010" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD oofc014
+            #add-point:BEFORE FIELD oofc014
+            {<point name="input.b.page1_aooi350_02.oofc014" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD oofc014
+            
+            #add-point:AFTER FIELD oofc014
+            {<point name="input.a.page1_aooi350_02.oofc014" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE oofc014
+            #add-point:ON CHANGE oofc014
+            {<point name="input.g.page1_aooi350_02.oofc014" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD oofc011
+            #add-point:BEFORE FIELD oofc011
+            {<point name="input.b.page1_aooi350_02.oofc011" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD oofc011
+            
+            #add-point:AFTER FIELD oofc011
+            {<point name="input.a.page1_aooi350_02.oofc011" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE oofc011
+            #add-point:ON CHANGE oofc011
+            {<point name="input.g.page1_aooi350_02.oofc011" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD oofc015
+            #add-point:BEFORE FIELD oofc015
+            {<point name="input.b.page1_aooi350_02.oofc015" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD oofc015
+            
+            #add-point:AFTER FIELD oofc015
+            {<point name="input.a.page1_aooi350_02.oofc015" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE oofc015
+            #add-point:ON CHANGE oofc015
+            {<point name="input.g.page1_aooi350_02.oofc015" />}
+            #END add-point 
+ 
+         #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD oofc013
+            #add-point:BEFORE FIELD oofc013
+            {<point name="input.b.page1_aooi350_02.oofc013" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD oofc013
+            
+            #add-point:AFTER FIELD oofc013
+            {<point name="input.a.page1_aooi350_02.oofc013" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE oofc013
+            #add-point:ON CHANGE oofc013
+            {<point name="input.g.page1_aooi350_02.oofc013" />}
+            #END add-point 
+ 
+ 
+                  #Ctrlp:input.c.page1_aooi350_02.oofcstus
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD oofcstus
+            #add-point:ON ACTION controlp INFIELD oofcstus
+            {<point name="input.c.page1_aooi350_02.oofcstus" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aooi350_02.oofc001
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD oofc001
+            #add-point:ON ACTION controlp INFIELD oofc001
+            {<point name="input.c.page1_aooi350_02.oofc001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aooi350_02.oofc008
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD oofc008
+            #add-point:ON ACTION controlp INFIELD oofc008
+            {<point name="input.c.page1_aooi350_02.oofc008" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aooi350_02.oofc009
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD oofc009
+            #add-point:ON ACTION controlp INFIELD oofc009
+            {<point name="input.c.page1_aooi350_02.oofc009" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aooi350_02.oofc012
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD oofc012
+            #add-point:ON ACTION controlp INFIELD oofc012
+            {<point name="input.c.page1_aooi350_02.oofc012" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aooi350_02.oofc010
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD oofc010
+            #add-point:ON ACTION controlp INFIELD oofc010
+            {<point name="input.c.page1_aooi350_02.oofc010" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aooi350_02.oofc014
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD oofc014
+            #add-point:ON ACTION controlp INFIELD oofc014
+            {<point name="input.c.page1_aooi350_02.oofc014" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aooi350_02.oofc011
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD oofc011
+            #add-point:ON ACTION controlp INFIELD oofc011
+            {<point name="input.c.page1_aooi350_02.oofc011" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aooi350_02.oofc015
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD oofc015
+            #add-point:ON ACTION controlp INFIELD oofc015
+            {<point name="input.c.page1_aooi350_02.oofc015" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1_aooi350_02.oofc013
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD oofc013
+            #add-point:ON ACTION controlp INFIELD oofc013
+            {<point name="input.c.page1_aooi350_02.oofc013" />}
+            #END add-point
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...)
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel
+         {<point name="input.cancel"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aooi350_02 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aooi350_02.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="aooi350_02.other_function" ver="2" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

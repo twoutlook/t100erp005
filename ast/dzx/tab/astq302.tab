@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astq302" module="ast" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="06189" crtdt="2016-01-08 16:35:20" modid="08742" moddt="2016-09-14 09:35:48" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="扣率代銷銷售成本彙總查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="stbysite,sdate,edate,stby020,stby005,stby018"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),stbysite,stbysite_desc(chr500),stby020,stby005,stby005_desc(chr500),stby018(chr500),stby018_desc(chr500),stan007,stan007_desc(chr500),oodb006,stan037,stbb009,stbb025,stby009,stby011,stby008,stby012,stbc017,stbc018,stbe031,stby019"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),stbysite(b_stbysite),stbysite_desc(b_stbysite_desc),stby020(b_stby020),stby005(b_stby005),stby005_desc(b_stby005_desc),stby018(b_stby018),stby018_desc(b_stby018_desc),stan007(b_stan007),stan007_desc(b_stan007_desc),oodb006(b_oodb006),stan037(b_stan037),stbb009(b_stbb009),stbb025(b_stbb025),stby009(b_stby009),stby011(b_stby011),stby008(b_stby008),stby012(b_stby012),stbc017(b_stbc017),stbc018(b_stbc018),stbe031(b_stbe031),stby019(b_stby019)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="query_collect"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="astq302" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="stbysite,stby020,stby005,stan007,oodb006,stan037,stbb009,stbb025,stby009,stby011,stby008,stby012,stbc017,stbc018,stbe031,stby019" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="stbysite(b_stbysite),stby020(b_stby020),stby005(b_stby005),stan007(b_stan007),oodb006(b_oodb006),stan037(b_stan037),stbb009(b_stbb009),stbb025(b_stbb025),stby009(b_stby009),stby011(b_stby011),stby008(b_stby008),stby012(b_stby012),stbc017(b_stbc017),stbc018(b_stbc018),stbe031(b_stbe031),stby019(b_stby019)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="stbysite">
+        <after>
+          <reference field="stbysite_desc" ref_field="stbysite" map_field="stbysite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stbysite_desc"/>
+      <column id="stby020"/>
+      <column id="stby005">
+        <after>
+          <reference field="stby005_desc" ref_field="stby005" map_field="stby005" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stby005_desc"/>
+      <column id="stby018">
+        <after>
+          <reference field="stby018_desc" ref_field="stby018" map_field="stby018" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stby018_desc"/>
+      <column id="stan007">
+        <after>
+          <reference field="stan007_desc" ref_field="stbysite,stan007" map_field="stbysite,stan007" ref_sql="SELECT oodbl004 FROM oodbl_t WHERE oodblent=$varg_enterprise$var AND oodbl001=? AND oodbl002=? AND oodbl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oodb002_1" state="i"/>
+        <controlp form="q_oodb002_1" state="c"/>
+      </column>
+      <column id="stan007_desc"/>
+      <column id="oodb006">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="stan037"/>
+      <column id="stbb009" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="stbb025" type="S" default="0"/>
+      <column id="stby009" type="S" default="0"/>
+      <column id="stby011" type="S" default="0"/>
+      <column id="stby008" type="S" default="0"/>
+      <column id="stby012" type="S" default="0"/>
+      <column id="stbc017" type="S" default="0"/>
+      <column id="stbc018" type="S" default="0"/>
+      <column id="stbe031" type="S" default="0"/>
+      <column id="stby019" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="stby_t" page="1" linked="" pk="stbysite,stbydocno,stbyseq">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,stbysite,&apos;&apos;,stby020,stby005,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,stby009,stby011,stby008,stby012,&apos;&apos;,&apos;&apos;,&apos;&apos;,stby019 FROM stby_t WHERE stbyent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,73 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrt940_01" module="axr" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02599" crtdt="2014-10-30 16:51:16" modid="02599" moddt="2014-11-18 17:11:27" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="批次產生">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xreasite,xreasite_desc(chr80),xreald,xreald_desc(chr80),xrea016,xrea016_desc(chr80),docno_01(chr500),xrea001,xrea002,xrejdocdt,xrad001,xrad001_desc(chr80),xrad004,chk_a(chr500),chk_b(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axrt940_01" method="dialog">
+    <section id="input">
+      <input id="head" field="xreasite,xreald,xrea016,docno_01,xrea001,xrea002,xrejdocdt,xrad001,xrad004,chk_a,chk_b"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="xreasite">
+        <after>
+          <reference field="xreasite_desc" ref_field="xrea_t.xreasite" map_field="xreaent,xreasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+      </column>
+      <column id="xreasite_desc"/>
+      <column id="xreald">
+        <after>
+          <reference field="xreald_desc" ref_field="xrea_t.xreald" map_field="xreaent,xreald" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+      </column>
+      <column id="xreald_desc"/>
+      <column id="xrea016">
+        <after>
+          <reference field="xrea016_desc" ref_field="xrea_t.xrea016" map_field="xreaent,xrea016" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+      </column>
+      <column id="xrea016_desc"/>
+      <column id="docno_01">
+        <controlp form="q_ooba002_3" state="i"/>
+      </column>
+      <column id="xrea001"/>
+      <column id="xrea002"/>
+      <column id="xrejdocdt"/>
+      <column id="xrad001">
+        <after>
+          <reference field="xrad001_desc" ref_field="xrad_t.xrad001" map_field="xradent,xrad001" ref_sql="SELECT xradl003 FROM xradl_t WHERE xradlent=$varg_enterprise$var AND xradl001=? AND xradl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="axri014_01" state="i"/>
+      </column>
+      <column id="xrad001_desc"/>
+      <column id="xrad004" type="S" default="1" def_scc="8312"/>
+      <column id="chk_a"/>
+      <column id="chk_b" type="S" default="Y"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xrea_t" pk="xreald,xrea001,xrea002,xrea003,xrea004,xrea005,xrea006,xrea007">
+      <sql id="forupd_sql" type="sql" query="SELECT xreasite,&apos;&apos;,xreald,&apos;&apos;,xrea016,&apos;&apos;,&apos;&apos;,xrea001,xrea002,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xrea_t WHERE xreaent= ? AND xreald=? AND xrea001=? AND xrea002=? AND xrea003=? AND xrea004=? AND xrea005=? AND xrea006=? AND xrea007=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="xreald,xrea001,xrea002,xrea003,xrea004,xrea005,xrea006,xrea007"/>
+    </head>
+  </dataset>
+</assembly>
+

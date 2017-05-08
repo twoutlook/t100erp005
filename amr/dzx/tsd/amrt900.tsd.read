@@ -1,0 +1,323 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="amrt900" std_prog="amrt900" erpver="1.0" ver="1" module="AMR" type="M" booking="N" designer_ver="1.0" class="t" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="mrea_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+    <tbl name="mreb_t" main="N" head="N" pk="" fk_detail="" parent="mrea_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 资源盘点作业
+   標準作業功能取消： 
+狀態功能：[確認/取消確認/無效]
+作業類型：交易單據維護作業
+輸入模式： 雙檔-無搭配任何方案F003_00
+作業資料來源(Master)：
+             資料來源表：mrea_t(資源設備盤點單單頭檔)
+作業資料來源(Detail)：
+資料來源表：mreb_t(資源設備盤點單單身檔)
+
+过账：将非空的盘点数量、实际保管人员、实际保管部门、实际存放一级位置、实际存放二级位置更新至资源主档（仅更新资源盘点状态=2.  的资料）
+不过过账还原
+]]>
+  </all>
+  <di_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[新增盘点单时，单头录入完毕后，弹出子画面“盘点资源范围”，录入要盘点的QBE条件，依据QBE条件产生资源明细至单身
+产生单身明细时检查：若某些资源编号在其他未过账的盘点单中已存在，批量给出提示，这些资源不能生成至单身明细
+
+盘点数量、备注、实际保管人、实际保管部门、实际一级存放位置、实际二级存放位置可空白，空白表示与原来资料一致
+
+资源盘点状态:新增資料時預設為0.未盤點
+                             盤點結果與系統一致時應選擇1.盤點正確，不需要输入盘点数量、备注、实际保管人、实际保管部门、实际一级存放位置、实际二级存放位置
+                             盤點結果與系統有差異時應選擇2.盤點并更新資料，過賬時依盤點后資料更新資源主檔
+                             盤點結果與系統一致但資源有故障時應選擇3.故障，不需要输入盘点数量、备注、实际保管人、实际保管部门、实际一级存放位置、实际二级存放位置
+]]>
+  </di_all>
+  <field cite_std="N" name="b_mrea001" ver="1" src="s" column="mrea001" table="mrea_t" attribute="" type="" req="Y" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mrea002" ver="1" src="s" column="mrea002" table="mrea_t" attribute="" type="" req="N" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="v_ooeg001" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mreadocdt" ver="1" src="s" column="mreadocdt" table="mrea_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mreadocno" ver="1" src="s" column="mreadocno" table="mrea_t" attribute="" type="" req="Y" i_zoom="q_ooba002_1" c_zoom="q_mreadocno" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrea_t.mrea001" ver="1" src="s" column="mrea001" table="mrea_t" attribute="" type="" req="Y" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[盤點人員：
+   ●欄位控管：
+     預設值:g_user
+     校驗:1.不允許空白
+          2.輸入值須存在人員檔裡且為有效資料
+     帶值:人員全名
+              盤點人員變更後自動帶出盤點部門
+
+   ●開窗處理：
+     1.查詢時：
+       參考函式：依標準查詢視窗
+       查詢欄位：員工編號、全名、歸屬部門、部門名稱
+       回值類型：多重回值
+
+     2.新增/修改時：
+       參考函式：依標準查詢視窗
+       查詢欄位：員工編號、全名、歸屬部門、部門名稱
+       回值類型：單一回值
+]]>
+  </field>
+  <field cite_std="N" name="mrea_t.mrea002" ver="1" src="s" column="mrea002" table="mrea_t" attribute="" type="" req="Y" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="v_ooeg001" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[盤點部門：
+   ●欄位控管：
+     資料欄位:mrea002/可Display可Input
+     預設值:g_dept
+     校驗:1.輸入值須存在[T:組織基本資料檔].[C:組織編號]WHERE [C:部門否]='Y' 且為有效資料
+                arg1 = 盤點部門(mrea002)
+                arg2 =單據日期(mreadocdt)
+     帶值:1.自動帶出[T:組織多語言檔].[C:說明(簡稱)]到[C:部門名稱]
+     計算或處理:無
+
+   ●開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：[T:組織基本資料檔].[C:組織編號],[T:組織多語言檔].[C:說明(簡稱)]
+     查詢時過濾條件：[T:組織基本資料檔].[C:部門否]='Y'
+     新增/修改時過濾條件：[T:組織基本資料檔].[C:部門否]='Y' 且有效資料
+     回值類型：查詢時多重回值，新增/修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="mrea_t.mrea003" ver="1" src="s" column="mrea003" table="mrea_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[預設值=g_today]]>
+  </field>
+  <field cite_std="N" name="mrea_t.mreadocdt" ver="1" src="s" column="mreadocdt" table="mrea_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[預設值=g_today]]>
+  </field>
+  <field cite_std="N" name="mrea_t.mreadocno" ver="1" src="s" column="mreadocno" table="mrea_t" attribute="" type="" req="Y" i_zoom="q_ooba002_1" c_zoom="q_mreadocno" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[計算或處理:1.當新增時才可輸入單別，修改時此欄位為NoEntry
+                     2.呼叫s_aooi200_chk_slip檢查單別
+                     3.呼叫s_control_chk_doc檢查控制組
+                     4.新增存檔時，呼叫應用元件s_aooi200_gen_docno自動編申請單號
+                     5.呼叫s_aooi200_get_slip_desc帶值mreadocno_desc 
+
+input開窗：
+arg1=參照表編號(ooef004)由ooefent=g_enterprise AND ooef001=g_site
+arg2=g_prog]]>
+  </field>
+  <field cite_std="N" name="mrea_t.mreastus" ver="1" src="s" column="mreastus" table="mrea_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mreadocno_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mreb_t.mreb001" ver="1" src="s" column="mreb001" table="mreb_t" attribute="" type="" req="Y" i_zoom="q_mrba001_1" c_zoom="q_mrba001_1" chk_ref="v_mrba001_4" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:1.輸入值須存在[T:資源主檔].[C:資源編號]
+          2.不允許空白
+          3.輸入後，檢查是否存在其他筆未過帳的資料
+     帶值:資源名稱、資源原廠序號、數量、保管人員、保管部門、一級存放位置、二級存放位置]]>
+  </field>
+  <field cite_std="N" name="mreb_t.mreb002" ver="1" src="s" column="mreb002" table="mreb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[預設值:依資源編號帶出]]>
+  </field>
+  <field cite_std="N" name="mreb_t.mreb003" ver="1" src="s" column="mreb003" table="mreb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設值:依資源編號帶出]]>
+  </field>
+  <field cite_std="N" name="mreb_t.mreb004" ver="1" src="s" column="mreb004" table="mreb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設值:依資源編號帶出]]>
+  </field>
+  <field cite_std="N" name="mreb_t.mreb005" ver="1" src="s" column="mreb005" table="mreb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[預設值:依資源編號帶出]]>
+  </field>
+  <field cite_std="N" name="mreb_t.mreb006" ver="1" src="s" column="mreb006" table="mreb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[預設值:依資源編號帶出]]>
+  </field>
+  <field cite_std="N" name="mreb_t.mreb007" ver="1" src="s" column="mreb007" table="mreb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="3088" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[預設值:0.未盘点
+     校驗:
+     帶值:
+     計算或處理：
+  值=0：後面欄位皆不可輸入
+  值=1：只開放盤點日期、盤點時間可輸入，必輸
+  值=2：● 後面欄位皆開放輸入
+               ● 盤點數量、實際保管人員、實際保管部門、實際存放一級位置、實際存放二級位置，
+                     這些欄位至少要輸入一個欄位才能離開該筆資料
+               ● 盤點日期、盤點時間必輸
+  值=3：只開放盤點日期、盤點時間可輸入，必輸
+]]>
+  </field>
+  <field cite_std="N" name="mreb_t.mreb008" ver="1" src="s" column="mreb008" table="mreb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="0" max_compare="" max="" min_compare="&gt;=" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[  校驗:可空白，空白表示與原數量一致
+              盘点状态=1或3时，不可Input
+     帶值:
+     計算或處理:若盤點數量不為null且盤點數量<>数量，需将资源盘点状态修改为2.盘点并更新资料]]>
+  </field>
+  <field cite_std="N" name="mreb_t.mreb009" ver="1" src="s" column="mreb009" table="mreb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mreb_t.mreb010" ver="1" src="s" column="mreb010" table="mreb_t" attribute="" type="" req="N" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[ 校驗:可空白，空白表示與原保管人员一致
+              盘点状态=1或3时，不可Input
+     帶值:
+     計算或處理:若实际保管人员不為null且实际保管人员<>保管人员，需将资源盘点状态修改为2.盘点并更新资料]]>
+  </field>
+  <field cite_std="N" name="mreb_t.mreb011" ver="1" src="s" column="mreb011" table="mreb_t" attribute="" type="" req="N" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="v_ooeg001" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:可空白，空白表示與原保管部门一致
+              盘点状态=1或3时，不可Input
+     帶值:
+     計算或處理:若实际保管部门不為null且实际保管部门<>保管部门，需将资源盘点状态修改为2.盘点并更新资料]]>
+  </field>
+  <field cite_std="N" name="mreb_t.mreb012" ver="1" src="s" column="mreb012" table="mreb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mreb_t.mreb013" ver="1" src="s" column="mreb013" table="mreb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mreb_t.mreb014" ver="1" src="s" column="mreb014" table="mreb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mreb_t.mreb015" ver="1" src="s" column="mreb015" table="mreb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mreb_t.mrebseq" ver="1" src="s" column="mrebseq" table="mreb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_mrea001_desc" src="s" depend_field="b_mrea001" correspon_key="mrea001" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="b_mrea002_desc" src="s" depend_field="b_mrea002" correspon_key="mrea002" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mrea001_desc" src="s" depend_field="mrea_t.mrea001" correspon_key="mrea001" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="mrea002_desc" src="s" depend_field="mrea_t.mrea002" correspon_key="mrea002" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mreb001_desc" src="s" depend_field="mreb_t.mreb001" correspon_key="mreb001" ref_table="mrba_t" ref_fk="mrba001" ref_dlang="" ref_rtn="mrba004" status=""/>
+    <rfield cite_std="N" ver="1" name="mreb001_desc_1" src="s" depend_field="" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status="d"/>
+    <rfield cite_std="N" ver="1" name="mreb001_desc_desc" src="s" depend_field="mreb_t.mreb001" correspon_key="mreb001" ref_table="mrba_t" ref_fk="mrba001" ref_dlang="" ref_rtn="mrba008" status=""/>
+    <rfield cite_std="N" ver="1" name="mreb003_desc" src="s" depend_field="mreb_t.mreb003" correspon_key="mreb003" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="mreb004_desc" src="s" depend_field="mreb_t.mreb004" correspon_key="mreb004" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mreb010_desc" src="s" depend_field="mreb_t.mreb010" correspon_key="mreb010" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="mreb011_desc" src="s" depend_field="mreb_t.mreb011" correspon_key="mreb011" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_mrea001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mrea002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mreadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mreadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrea_t.mrea001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrea_t.mrea002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrea_t.mrea003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrea_t.mreadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrea_t.mreadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrea_t.mreastus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mreadocno_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mreb_t.mreb001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mreb_t.mreb002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mreb_t.mreb003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mreb_t.mreb004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mreb_t.mreb005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mreb_t.mreb006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mreb_t.mreb007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mreb_t.mreb008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mreb_t.mreb009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mreb_t.mreb010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mreb_t.mreb011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mreb_t.mreb012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mreb_t.mreb013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mreb_t.mreb014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mreb_t.mreb015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mreb_t.mrebseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="exporttoexcel" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="condition_page" text="盤點資源範圍" lstr=""/>
+    <sfield name="group_qbe" text="QBE條件" lstr=""/>
+    <sfield name="lbl_mrba019" text="所有權區分" lstr=""/>
+    <sfield name="lbl_mrba020" text="據點/客戶" lstr=""/>
+    <sfield name="lbl_mrba000" text="資源類型" lstr=""/>
+    <sfield name="lbl_mrba001" text="資源編號" lstr=""/>
+    <sfield name="lbl_mrba015" text="保固截止日" lstr=""/>
+    <sfield name="lbl_mrba016" text="保管人員" lstr=""/>
+    <sfield name="lbl_mrba017" text="保管部門" lstr=""/>
+    <sfield name="lbl_mrba018" text="一級存放位置" lstr=""/>
+    <sfield name="lbl_mrba102" text="二級存放位置" lstr=""/>
+    <sfield name="lbl_mrba100" text="存放狀態" lstr=""/>
+    <sfield name="accept" text="確定" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="group_input" text="其他條件" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_mreadocno" text="單據單號" lstr=""/>
+    <sfield name="lbl_mreadocdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_mrea001" text="盤點人員" lstr=""/>
+    <sfield name="lbl_ooag011" text="實際保管人員名稱" lstr=""/>
+    <sfield name="lbl_mrea002" text="盤點部門" lstr=""/>
+    <sfield name="lbl_ooefl003" text="實際保管部門名稱" lstr=""/>
+    <sfield name="lbl_mrea003" text="過帳日期" lstr=""/>
+    <sfield name="bpage_1" text="資源明細" lstr=""/>
+    <sfield name="lbl_mrebseq" text="項次" lstr=""/>
+    <sfield name="lbl_mreb001" text="資源編號" lstr=""/>
+    <sfield name="lbl_mrba004" text="資源名稱" lstr=""/>
+    <sfield name="lbl_mrba008" text="原廠序號" lstr=""/>
+    <sfield name="lbl_mreb002" text="數量" lstr=""/>
+    <sfield name="lbl_mreb003" text="保管人員" lstr=""/>
+    <sfield name="lbl_mreb004" text="保管部門" lstr=""/>
+    <sfield name="lbl_mreb005" text="一級存放位置" lstr=""/>
+    <sfield name="lbl_mreb006" text="二級存放位置" lstr=""/>
+    <sfield name="lbl_mreb007" text="資源盤點狀態" lstr=""/>
+    <sfield name="lbl_mreb008" text="盤點數量" lstr=""/>
+    <sfield name="lbl_mreb009" text="備註" lstr=""/>
+    <sfield name="lbl_mreb010" text="實際保管人員" lstr=""/>
+    <sfield name="lbl_mreb011" text="實際保管部門" lstr=""/>
+    <sfield name="lbl_mreb012" text="實際存放一級位置" lstr=""/>
+    <sfield name="lbl_mreb013" text="實際存放二級位置" lstr=""/>
+    <sfield name="lbl_mreb014" text="盤點日期" lstr=""/>
+    <sfield name="lbl_mreb015" text="盤點時間" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="1" cite_std="N" src="s">
+    <widget name="mreb001_desc_desc" status=""/>
+  </exclude>
+</spec>

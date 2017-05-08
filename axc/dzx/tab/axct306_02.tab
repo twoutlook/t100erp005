@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axct306_02" module="axc" jobmode="N" type="c01a" industry="std" fix_arg="0" crtid="00537" crtdt="2014-09-10 17:12:40" modid="00537" moddt="2014-09-10 23:01:02" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="axct306整批匯入">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcdjcomp,xcdjcomp_desc(chr80),xcdjld,xcdjld_desc(chr80),format(chr500),char(chr500),dir(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+    <section id="master_input">
+      <action id="browser"/>
+      <action id="off"/>
+      <action id="produce"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axct306_02" method="dialog">
+    <section id="input">
+      <input id="head" field="xcdjcomp,xcdjld,format,char,dir"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcdjcomp,xcdjld,format,char,dir"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcdjld,xcdj001,xcdj002,xcdj003,xcdj004,xcdj005,xcdj006,xcdj007,xcdj008,xcdj009,xcdj010"/>
+      <set id="head" type="no_entry" field="xcdjld,xcdj001,xcdj002,xcdj003,xcdj004,xcdj005,xcdj006,xcdj007,xcdj008,xcdj009,xcdj010"/>
+    </init>
+    <init id="head">
+      <column id="xcdjcomp">
+        <after>
+          <reference field="xcdjcomp_desc" ref_field="xcdj_t.xcdjcomp" map_field="xcdjent,xcdjcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcdjcomp_desc"/>
+      <column id="xcdjld">
+        <after>
+          <reference field="xcdjld_desc" ref_field="xcdj_t.xcdjld" map_field="xcdjent,xcdjld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcdjld_desc"/>
+      <column id="format"/>
+      <column id="char"/>
+      <column id="dir"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcdj_t" pk="xcdjld,xcdj001,xcdj002,xcdj003,xcdj004,xcdj005,xcdj006,xcdj007,xcdj008,xcdj009,xcdj010">
+      <sql id="forupd_sql" type="sql" query="SELECT xcdjcomp,&apos;&apos;,xcdjld,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xcdj_t WHERE xcdjent= ? AND xcdjld=? AND xcdj001=? AND xcdj002=? AND xcdj003=? AND xcdj004=? AND xcdj005=? AND xcdj006=? AND xcdj007=? AND xcdj008=? AND xcdj009=? AND xcdj010=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="xcdjld,xcdj001,xcdj002,xcdj003,xcdj004,xcdj005,xcdj006,xcdj007,xcdj008,xcdj009,xcdj010"/>
+    </head>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,433 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aglq941_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2016-06-28 17:29:34), PR版次:0001(2016-06-28 18:54:05)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000022
+#+ Filename...: aglq941_01
+#+ Description: 資料上傳
+#+ Creator....: 06821(2016-06-28 17:25:16)
+#+ Modifier...: 06821 -SD/PR- 06821
+ 
+{</section>}
+ 
+{<section id="aglq941_01.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_glef_m        RECORD
+       glefld LIKE glef_t.glefld, 
+   glefld_desc LIKE type_t.chr80, 
+   glef001 LIKE glef_t.glef001, 
+   glef001_desc LIKE type_t.chr80, 
+   glef004 LIKE glef_t.glef004, 
+   glef005 LIKE glef_t.glef005
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+#DEFINE g_glef      RECORD
+#         glefld    LIKE glef_t.glefld,
+#         glef001   LIKE glef_t.glef001,
+#         glef004   LIKE glef_t.glef004,
+#         glef005   LIKE glef_t.glef005,    
+#         glef006   LIKE glef_t.glef006,    
+#         l_sum     LIKE type_t.num20_6,    #記帳幣金額
+#         l_sum_2   LIKE type_t.num20_6,    #功能幣金額
+#         l_sum_3   LIKE type_t.num20_6,    #報告幣金額
+#                   END RECORD
+                  
+#end add-point
+ 
+DEFINE g_glef_m        type_g_glef_m
+ 
+   DEFINE g_glefld_t LIKE glef_t.glefld
+DEFINE g_glef001_t LIKE glef_t.glef001
+DEFINE g_glef004_t LIKE glef_t.glef004
+DEFINE g_glef005_t LIKE glef_t.glef005
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+ 
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aglq941_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aglq941_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   #p_array
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE p_glefld        LIKE glef_t.glefld
+   DEFINE p_glef001       LIKE glef_t.glef001
+   DEFINE p_glef004       LIKE glef_t.glef004
+   DEFINE p_glef005       LIKE glef_t.glef005
+   DEFINE g_glefld        LIKE glef_t.glefld
+   DEFINE g_glef001       LIKE glef_t.glef001
+   DEFINE g_glef004       LIKE glef_t.glef004
+   DEFINE g_glef005       LIKE glef_t.glef005
+   DEFINE r_success       LIKE type_t.num5
+   
+   DEFINE p_array DYNAMIC ARRAY OF RECORD
+                  chr    LIKE type_t.chr1000,
+                  dat    LIKE type_t.dat
+                  END RECORD
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aglq941_01 WITH FORM cl_ap_formpath("agl","aglq941_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   CLEAR FORM
+   WHENEVER ERROR CONTINUE
+   
+   LET r_success = TRUE
+   
+   #LET g_glef.glefld   = p_array[1].chr
+   #LET g_glef.glef001  = p_array[2].chr
+   #LET g_glef.glef004  = p_array[3].chr
+   #LET g_glef.glef005  = p_array[4].chr
+   #LET g_glef.glef006  = p_array[5].chr
+   #LET g_glef.l_sum    = p_array[6].num
+   #LET g_glef.l_sum_2  = p_array[7].num
+   #LET g_glef.l_sum_3  = p_array[8].num
+                       
+   #INITIALIZE g_glef_m.* TO NULL
+   #LET g_glefld  = p_glefld   
+   #LET g_glef001 = p_glef001  
+   #LET g_glef004 = p_glef004  
+   #LET g_glef005 = p_glef005  
+   #IF cl_null(g_glefld) OR cl_null(g_glef001) OR cl_null(g_glef004) OR cl_null(g_glef005) THEN RETURN END IF
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_glef_m.glefld,g_glef_m.glef001,g_glef_m.glef004,g_glef_m.glef005 ATTRIBUTE(WITHOUT  
+          DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glefld
+            
+            #add-point:AFTER FIELD glefld name="input.a.glefld"
+            #合併帳別
+            LET g_glef_m.glefld_desc = ' '
+            DISPLAY BY NAME g_glef_m.glefld_desc
+            IF NOT cl_null(g_glef_m.glefld) THEN
+               CALL s_merge_ld_with_comp_chk(g_glef_m.glefld,g_glef_m.glef001,g_user,1)RETURNING g_sub_success,g_errno
+               IF NOT g_sub_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_glef_m.glefld = ''
+                  LET g_glef_m.glefld_desc = ''
+                  DISPLAY BY NAME g_glef_m.glefld,g_glef_m.glefld_desc    
+                  NEXT FIELD CURRENT
+               END IF             
+            END IF
+            CALL s_desc_get_ld_desc(g_glef_m.glefld) RETURNING g_glef_m.glefld_desc
+            DISPLAY BY NAME g_glef_m.glefld,g_glef_m.glefld_desc   
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glefld
+            #add-point:BEFORE FIELD glefld name="input.b.glefld"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glefld
+            #add-point:ON CHANGE glefld name="input.g.glefld"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glef001
+            
+            #add-point:AFTER FIELD glef001 name="input.a.glef001"
+            #上層公司
+            LET g_glef_m.glef001_desc = ' '
+            DISPLAY BY NAME g_glef_m.glef001_desc
+            IF NOT cl_null(g_glef_m.glef001) THEN
+               CALL s_merge_ld_with_comp_chk(g_glef_m.glefld,g_glef_m.glef001,g_user,1)RETURNING g_sub_success,g_errno
+               IF NOT g_sub_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_glef_m.glef001 = ''
+                  LET g_glef_m.glef001_desc = ''
+                  DISPLAY BY NAME g_glef_m.glef001,g_glef_m.glef001_desc 
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            LET g_glef_m.glef001_desc = s_desc_glda001_desc(g_glef_m.glef001)
+            DISPLAY BY NAME g_glef_m.glef001,g_glef_m.glef001_desc
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glef001
+            #add-point:BEFORE FIELD glef001 name="input.b.glef001"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glef001
+            #add-point:ON CHANGE glef001 name="input.g.glef001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glef004
+            #add-point:BEFORE FIELD glef004 name="input.b.glef004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glef004
+            
+            #add-point:AFTER FIELD glef004 name="input.a.glef004"
+
+
+
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glef004
+            #add-point:ON CHANGE glef004 name="input.g.glef004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glef005
+            #add-point:BEFORE FIELD glef005 name="input.b.glef005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glef005
+            
+            #add-point:AFTER FIELD glef005 name="input.a.glef005"
+            #應用 a05 樣板自動產生(Version:3)
+
+
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glef005
+            #add-point:ON CHANGE glef005 name="input.g.glef005"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.glefld
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glefld
+            #add-point:ON ACTION controlp INFIELD glefld name="input.c.glefld"
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL                                                
+            LET g_qryparam.state = 'i'                                                     
+            LET g_qryparam.reqry = FALSE                                                   
+            LET g_qryparam.default1 = g_glef_m.glefld                                     
+            LET g_qryparam.arg1 = g_user                                 #人員權限         
+            LET g_qryparam.arg2 = g_dept                                 #部門權限         
+            LET g_qryparam.where = " glaald IN (SELECT DISTINCT gldbld FROM gldb_t ",              
+                                   "             WHERE gldbstus = 'Y' ",                                    
+                                   "               AND gldbent = '",g_enterprise,"') "                                               
+            CALL q_authorised_ld()                                                         
+            LET g_glef_m.glefld = g_qryparam.return1                                      
+            CALL s_desc_get_ld_desc(g_glef_m.glefld) RETURNING g_glef_m.glefld_desc            
+            DISPLAY BY NAME g_glef_m.glefld,g_glef_m.glefld_desc                         
+            NEXT FIELD glefld 
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glef001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glef001
+            #add-point:ON ACTION controlp INFIELD glef001 name="input.c.glef001"
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glef_m.glef001
+            LET g_qryparam.where = " gldc009 = 'Y' AND gldbstus = 'Y' ",
+                                   " AND gldcld = '",g_glef_m.glefld,"' "  
+            CALL q_gldc001()    
+            LET g_glef_m.glef001 = g_qryparam.return1
+            CALL s_desc_glda001_desc(g_glef_m.glef001) RETURNING g_glef_m.glef001_desc
+            DISPLAY BY NAME g_glef_m.glef001,g_glef_m.glef001_desc
+            NEXT FIELD glef001
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glef004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glef004
+            #add-point:ON ACTION controlp INFIELD glef004 name="input.c.glef004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glef005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glef005
+            #add-point:ON ACTION controlp INFIELD glef005 name="input.c.glef005"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aglq941_01 
+   
+   #add-point:input段after input name="input.post_input"
+   #LET r_success = TRUE
+   #
+   #CALL cl_err_collect_init()
+   #IF INT_FLAG THEN
+   #   LET r_success= FALSE
+   #   LET INT_FLAG = 0
+   #ELSE
+   #   CALL aglq941_01_ins_glen() RETURNING g_sub_success
+   #   IF NOT g_sub_success THEN
+   #      LET r_success= FALSE
+   #   END IF
+   #END IF
+   #CALL cl_err_collect_show()
+   
+   #RETURN r_success
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglq941_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aglq941_01.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

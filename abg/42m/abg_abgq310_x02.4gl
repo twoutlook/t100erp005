@@ -1,0 +1,428 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="abgq310_x02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:1(2017-02-07 15:20:05), PR版次:0001(2017-02-07 14:45:56)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000000
+#+ Filename...: abgq310_x02
+#+ Description: ...
+#+ Creator....: 02599(2017-01-18 14:45:10)
+#+ Modifier...: 02599 -SD/PR- 02599
+ 
+{</section>}
+ 
+{<section id="abgq310_x02.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:8)
+#add-point:填寫註解說明 name="global.memo"
+
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #condition:where 
+       tmp STRING,                  #print_tmp 
+       a1 STRING                   #visible:where
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="abgq310_x02.main" readonly="Y" >}
+PUBLIC FUNCTION abgq310_x02(p_arg1,p_arg2,p_arg3)
+DEFINE  p_arg1 STRING                  #tm.wc  condition:where 
+DEFINE  p_arg2 STRING                  #tm.tmp  print_tmp 
+DEFINE  p_arg3 STRING                  #tm.a1  visible:where
+#add-point:init段define(客製用) name="component.define_customerization"
+
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.tmp = p_arg2
+   LET tm.a1 = p_arg3
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "abgq310_x02"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL abgq310_x02_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL abgq310_x02_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL abgq310_x02_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL abgq310_x02_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL abgq310_x02_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgq310_x02.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION abgq310_x02_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "bgcjent.bgcj_t.bgcjent,l_seq.type_t.num10,bgcj007.bgcj_t.bgcj007,l_bgcj007_desc.type_t.chr500,bgcj009.bgcj_t.bgcj009,l_bgcj009_desc.type_t.chr500,bgcj049.bgcj_t.bgcj049,l_bgcj049_desc.type_t.chr500,bgcj012.bgcj_t.bgcj012,l_bgcj012_desc.type_t.chr500,bgcj013.bgcj_t.bgcj013,l_bgcj013_desc.type_t.chr500,bgcj014.bgcj_t.bgcj014,l_bgcj014_desc.type_t.chr500,bgcj015.bgcj_t.bgcj015,l_bgcj015_desc.type_t.chr500,bgcj016.bgcj_t.bgcj016,l_bgcj016_desc.type_t.chr500,bgcj017.bgcj_t.bgcj017,l_bgcj017_desc.type_t.chr500,bgcj018.bgcj_t.bgcj018,l_bgcj018_desc.type_t.chr500,bgcj019.bgcj_t.bgcj019,l_bgcj019_desc.type_t.chr500,bgcj020.bgcj_t.bgcj020,l_bgcj020_desc.type_t.chr500,bgcj021.bgcj_t.bgcj021,l_bgcj021_desc.type_t.chr500,bgcj022.bgcj_t.bgcj022,l_bgcj022_desc.type_t.chr500,bgcj023.bgcj_t.bgcj023,l_bgcj023_desc.type_t.chr500,bgcj024.bgcj_t.bgcj024,l_bgcj024_desc.type_t.chr500,bgcj035.bgcj_t.bgcj035,bgcj036.bgcj_t.bgcj036,bgcj037.bgcj_t.bgcj037,bgcj100.bgcj_t.bgcj100,l_num1.type_t.num20_6,l_price1.type_t.num20_6,l_amt1.type_t.num20_6,l_bamt1.type_t.num20_6,l_num2.type_t.num20_6,l_price2.type_t.num20_6,l_amt2.type_t.num20_6,l_bamt2.type_t.num20_6,l_num3.type_t.num20_6,l_price3.type_t.num20_6,l_amt3.type_t.num20_6,l_bamt3.type_t.num20_6,l_num4.type_t.num20_6,l_price4.type_t.num20_6,l_amt4.type_t.num20_6,l_bamt4.type_t.num20_6,l_num5.type_t.num20_6,l_price5.type_t.num20_6,l_amt5.type_t.num20_6,l_bamt5.type_t.num20_6,l_num6.type_t.num20_6,l_price6.type_t.num20_6,l_amt6.type_t.num20_6,l_bamt6.type_t.num20_6,l_num7.type_t.num20_6,l_price7.type_t.num20_6,l_amt7.type_t.num20_6,l_bamt7.type_t.num20_6,l_num8.type_t.num20_6,l_price8.type_t.num20_6,l_amt8.type_t.num20_6,l_bamt8.type_t.num20_6,l_num9.type_t.num20_6,l_price9.type_t.num20_6,l_amt9.type_t.num20_6,l_bamt9.type_t.num20_6,l_num10.type_t.num20_6,l_price10.type_t.num20_6,l_amt10.type_t.num20_6,l_bamt10.type_t.num20_6,l_num11.type_t.num20_6,l_price11.type_t.num20_6,l_amt11.type_t.num20_6,l_bamt11.type_t.num20_6,l_num12.type_t.num20_6,l_price12.type_t.num20_6,l_amt12.type_t.num20_6,l_bamt12.type_t.num20_6,l_num13.type_t.num20_6,l_price13.type_t.num20_6,l_amt13.type_t.num20_6,l_bamt13.type_t.num20_6,l_sum2.type_t.num20_6,l_bsum2.type_t.num20_6,l_idx.type_t.num10" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   
+   #end add-point:create_tmp.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgq310_x02.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION abgq310_x02_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)" 
+ 
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgq310_x02.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION abgq310_x02_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   
+   #end add-point
+   LET g_select = " SELECT bgcjent,NULL,bgcj007,'',bgcj009,'',bgcj049,'',bgcj012,'',bgcj013,'',bgcj014, 
+       '',bgcj015,'',bgcj016,'',bgcj017,'',bgcj018,'',bgcj019,'',bgcj020,'',bgcj021,'',bgcj022,'',bgcj023, 
+       '',bgcj024,'',bgcj035,bgcj036,bgcj037,bgcj100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 
+       0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0"
+ 
+   #add-point:sel_prep g_from name="sel_prep.g_from"
+   
+   #end add-point
+    LET g_from = " FROM bgcj_t"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+   
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("bgcj_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   LET g_sql=" SELECT * FROM ", tm.tmp CLIPPED," ORDER BY idx"
+   #end add-point
+   PREPARE abgq310_x02_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE abgq310_x02_curs CURSOR FOR abgq310_x02_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgq310_x02.ins_data" readonly="Y" >}
+PRIVATE FUNCTION abgq310_x02_ins_data()
+DEFINE sr RECORD 
+   bgcjent LIKE bgcj_t.bgcjent, 
+   l_seq LIKE type_t.num10, 
+   bgcj007 LIKE bgcj_t.bgcj007, 
+   l_bgcj007_desc LIKE type_t.chr500, 
+   bgcj009 LIKE bgcj_t.bgcj009, 
+   l_bgcj009_desc LIKE type_t.chr500, 
+   bgcj049 LIKE bgcj_t.bgcj049, 
+   l_bgcj049_desc LIKE type_t.chr500, 
+   bgcj012 LIKE bgcj_t.bgcj012, 
+   l_bgcj012_desc LIKE type_t.chr500, 
+   bgcj013 LIKE bgcj_t.bgcj013, 
+   l_bgcj013_desc LIKE type_t.chr500, 
+   bgcj014 LIKE bgcj_t.bgcj014, 
+   l_bgcj014_desc LIKE type_t.chr500, 
+   bgcj015 LIKE bgcj_t.bgcj015, 
+   l_bgcj015_desc LIKE type_t.chr500, 
+   bgcj016 LIKE bgcj_t.bgcj016, 
+   l_bgcj016_desc LIKE type_t.chr500, 
+   bgcj017 LIKE bgcj_t.bgcj017, 
+   l_bgcj017_desc LIKE type_t.chr500, 
+   bgcj018 LIKE bgcj_t.bgcj018, 
+   l_bgcj018_desc LIKE type_t.chr500, 
+   bgcj019 LIKE bgcj_t.bgcj019, 
+   l_bgcj019_desc LIKE type_t.chr500, 
+   bgcj020 LIKE bgcj_t.bgcj020, 
+   l_bgcj020_desc LIKE type_t.chr500, 
+   bgcj021 LIKE bgcj_t.bgcj021, 
+   l_bgcj021_desc LIKE type_t.chr500, 
+   bgcj022 LIKE bgcj_t.bgcj022, 
+   l_bgcj022_desc LIKE type_t.chr500, 
+   bgcj023 LIKE bgcj_t.bgcj023, 
+   l_bgcj023_desc LIKE type_t.chr500, 
+   bgcj024 LIKE bgcj_t.bgcj024, 
+   l_bgcj024_desc LIKE type_t.chr500, 
+   bgcj035 LIKE bgcj_t.bgcj035, 
+   bgcj036 LIKE bgcj_t.bgcj036, 
+   bgcj037 LIKE bgcj_t.bgcj037, 
+   bgcj100 LIKE bgcj_t.bgcj100, 
+   l_num1 LIKE type_t.num20_6, 
+   l_price1 LIKE type_t.num20_6, 
+   l_amt1 LIKE type_t.num20_6, 
+   l_bamt1 LIKE type_t.num20_6, 
+   l_num2 LIKE type_t.num20_6, 
+   l_price2 LIKE type_t.num20_6, 
+   l_amt2 LIKE type_t.num20_6, 
+   l_bamt2 LIKE type_t.num20_6, 
+   l_num3 LIKE type_t.num20_6, 
+   l_price3 LIKE type_t.num20_6, 
+   l_amt3 LIKE type_t.num20_6, 
+   l_bamt3 LIKE type_t.num20_6, 
+   l_num4 LIKE type_t.num20_6, 
+   l_price4 LIKE type_t.num20_6, 
+   l_amt4 LIKE type_t.num20_6, 
+   l_bamt4 LIKE type_t.num20_6, 
+   l_num5 LIKE type_t.num20_6, 
+   l_price5 LIKE type_t.num20_6, 
+   l_amt5 LIKE type_t.num20_6, 
+   l_bamt5 LIKE type_t.num20_6, 
+   l_num6 LIKE type_t.num20_6, 
+   l_price6 LIKE type_t.num20_6, 
+   l_amt6 LIKE type_t.num20_6, 
+   l_bamt6 LIKE type_t.num20_6, 
+   l_num7 LIKE type_t.num20_6, 
+   l_price7 LIKE type_t.num20_6, 
+   l_amt7 LIKE type_t.num20_6, 
+   l_bamt7 LIKE type_t.num20_6, 
+   l_num8 LIKE type_t.num20_6, 
+   l_price8 LIKE type_t.num20_6, 
+   l_amt8 LIKE type_t.num20_6, 
+   l_bamt8 LIKE type_t.num20_6, 
+   l_num9 LIKE type_t.num20_6, 
+   l_price9 LIKE type_t.num20_6, 
+   l_amt9 LIKE type_t.num20_6, 
+   l_bamt9 LIKE type_t.num20_6, 
+   l_num10 LIKE type_t.num20_6, 
+   l_price10 LIKE type_t.num20_6, 
+   l_amt10 LIKE type_t.num20_6, 
+   l_bamt10 LIKE type_t.num20_6, 
+   l_num11 LIKE type_t.num20_6, 
+   l_price11 LIKE type_t.num20_6, 
+   l_amt11 LIKE type_t.num20_6, 
+   l_bamt11 LIKE type_t.num20_6, 
+   l_num12 LIKE type_t.num20_6, 
+   l_price12 LIKE type_t.num20_6, 
+   l_amt12 LIKE type_t.num20_6, 
+   l_bamt12 LIKE type_t.num20_6, 
+   l_num13 LIKE type_t.num20_6, 
+   l_price13 LIKE type_t.num20_6, 
+   l_amt13 LIKE type_t.num20_6, 
+   l_bamt13 LIKE type_t.num20_6, 
+   l_sum2 LIKE type_t.num20_6, 
+   l_bsum2 LIKE type_t.num20_6, 
+   l_idx LIKE type_t.num10
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH abgq310_x02_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.bgcjent,sr.l_seq,sr.bgcj007,sr.l_bgcj007_desc,sr.bgcj009,sr.l_bgcj009_desc,sr.bgcj049,sr.l_bgcj049_desc,sr.bgcj012,sr.l_bgcj012_desc,sr.bgcj013,sr.l_bgcj013_desc,sr.bgcj014,sr.l_bgcj014_desc,sr.bgcj015,sr.l_bgcj015_desc,sr.bgcj016,sr.l_bgcj016_desc,sr.bgcj017,sr.l_bgcj017_desc,sr.bgcj018,sr.l_bgcj018_desc,sr.bgcj019,sr.l_bgcj019_desc,sr.bgcj020,sr.l_bgcj020_desc,sr.bgcj021,sr.l_bgcj021_desc,sr.bgcj022,sr.l_bgcj022_desc,sr.bgcj023,sr.l_bgcj023_desc,sr.bgcj024,sr.l_bgcj024_desc,sr.bgcj035,sr.bgcj036,sr.bgcj037,sr.bgcj100,sr.l_num1,sr.l_price1,sr.l_amt1,sr.l_bamt1,sr.l_num2,sr.l_price2,sr.l_amt2,sr.l_bamt2,sr.l_num3,sr.l_price3,sr.l_amt3,sr.l_bamt3,sr.l_num4,sr.l_price4,sr.l_amt4,sr.l_bamt4,sr.l_num5,sr.l_price5,sr.l_amt5,sr.l_bamt5,sr.l_num6,sr.l_price6,sr.l_amt6,sr.l_bamt6,sr.l_num7,sr.l_price7,sr.l_amt7,sr.l_bamt7,sr.l_num8,sr.l_price8,sr.l_amt8,sr.l_bamt8,sr.l_num9,sr.l_price9,sr.l_amt9,sr.l_bamt9,sr.l_num10,sr.l_price10,sr.l_amt10,sr.l_bamt10,sr.l_num11,sr.l_price11,sr.l_amt11,sr.l_bamt11,sr.l_num12,sr.l_price12,sr.l_amt12,sr.l_bamt12,sr.l_num13,sr.l_price13,sr.l_amt13,sr.l_bamt13,sr.l_sum2,sr.l_bsum2,sr.l_idx
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "abgq310_x02_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    LET g_xgrid.visible_column = NULL
+    LET g_xgrid.visible_column = tm.a1
+    #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgq310_x02.rep_data" readonly="Y" >}
+PRIVATE FUNCTION abgq310_x02_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    
+    #end add-point:rep_data.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgq310_x02.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

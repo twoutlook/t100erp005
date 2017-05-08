@@ -1,0 +1,71 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adbt510_04" module="adb" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02748" crtdt="2014-07-01 17:07:50" modid="02748" moddt="2014-08-11 15:18:53" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="分銷訂單變更其他資訊維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xmeg900,xmegdocno,xmegseq,xmeg901,xmeg031,xmeg031_desc(chr80),xmeg032,xmeg003,xmeg003_desc(chr80),xmeg033,xmeg034,xmeg036,xmeg037,xmeg038,xmeg039"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="adb" filename="adbt510_04" method="dialog">
+    <section id="input">
+      <input id="head" field="xmeg900,xmegdocno,xmegseq,xmeg901,xmeg031,xmeg032,xmeg003,xmeg033,xmeg034,xmeg036,xmeg037,xmeg038,xmeg039"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="xmeg900"/>
+      <column id="xmegdocno"/>
+      <column id="xmegseq"/>
+      <column id="xmeg901" type="S" default="N"/>
+      <column id="xmeg031">
+        <after>
+          <check chkid="v_oocq002_263" id="isExist"/>
+          <reference field="xmeg031_desc" ref_field="xmeg031" map_field="xmeg031" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;263&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+      </column>
+      <column id="xmeg031_desc"/>
+      <column id="xmeg032" type="S" default="1" def_scc="2056"/>
+      <column id="xmeg003">
+        <after>
+          <check chkid="v_imaa001_3" id="isExist"/>
+          <reference field="xmeg003_desc" ref_field="xmeg_t.xmeg003" map_field="xmeg003" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001_3" state="i"/>
+      </column>
+      <column id="xmeg003_desc"/>
+      <column id="xmeg033">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="xmeg034">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="xmeg036"/>
+      <column id="xmeg037"/>
+      <column id="xmeg038"/>
+      <column id="xmeg039" type="S" default="1" def_scc="2067"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xmeg_t" pk="xmegdocno,xmegseq,xmeg900">
+      <sql id="forupd_sql" type="sql" query="SELECT xmeg900,xmegdocno,xmegseq,xmeg901,xmeg031,&apos;&apos;,xmeg032,xmeg003,&apos;&apos;,xmeg033,xmeg034,xmeg036,xmeg037,xmeg038,xmeg039 FROM xmeg_t WHERE xmegent= ? AND xmegdocno=? AND xmegseq=? AND xmeg900=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="xmegdocno,xmegseq,xmeg900"/>
+    </head>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,100 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axci116" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="03297" crtdt="2015-02-02 09:57:50" modid="03297" moddt="2015-02-02 15:24:31" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="自製品成本次要素分配率設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcamsite,xcamsite_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcamseq,xcam001,xcam001_desc(chr500),xcam001_desc_desc(chr500),xcam002,xcam002_desc(chr500),xcam003,xcam003_desc(chr500),xcam004,xcam004_desc(chr500),xcam005"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axci116" method="dialog">
+    <section id="input">
+      <input id="head" field="xcamsite"/>
+      <input id="body" page="1" field="xcamseq,xcam001,xcam002,xcam003,xcam004,xcam005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcamsite"/>
+      <construct id="body" page="1" field="xcamseq,xcam001,xcam002,xcam003,xcam004,xcam005"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcamsite"/>
+      <set id="head" type="no_entry" field="xcamsite"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcamsite">
+        <after>
+          <reference field="xcamsite_desc" ref_field="xcam_t.xcamsite" map_field="xcament,xcamsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcamsite_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcamseq"/>
+      <column id="xcam001">
+        <after>
+          <check chkid="v_imaf001_3" id="isExist"/>
+          <reference field="xcam001_desc" ref_field="xcam_t.xcam001" map_field="xcament,xcam001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001_16" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="xcam001_desc">
+        <after>
+          <reference field="xcam001_desc_desc" ref_field="xcam_t.xcam001" map_field="xcament,xcam001" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcam001_desc_desc"/>
+      <column id="xcam002">
+        <after>
+          <check chkid="v_imca001" id="isExist"/>
+          <reference field="xcam002_desc" ref_field="xcam002" map_field="xcam002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;200&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa003" state="i"/>
+        <controlp form="q_imca001_1" state="c"/>
+      </column>
+      <column id="xcam002_desc"/>
+      <column id="xcam003">
+        <after>
+          <check chkid="v_oocq002_206" id="isExist"/>
+          <reference field="xcam003_desc" ref_field="xcam003" map_field="xcam003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;206&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imag011_1" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="xcam003_desc"/>
+      <column id="xcam004">
+        <after>
+          <check chkid="v_xcau001" id="isExist"/>
+          <reference field="xcam004_desc" ref_field="xcam_t.xcam004" map_field="xcament,xcam004" ref_sql="SELECT xcaul003 FROM xcaul_t WHERE xcaulent=$varg_enterprise$var AND xcaul001=? AND xcaul002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_xcau001" state="i"/>
+        <controlp form="q_xcau001" state="c"/>
+      </column>
+      <column id="xcam004_desc"/>
+      <column id="xcam005"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcam_t" pk="xcamsite">
+      <sql id="forupd_sql" type="sql" query="SELECT xcamsite,&apos;&apos; FROM xcam_t WHERE xcament= ? AND xcamsite=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcamsite,&apos;&apos; FROM xcam_t" order="xcamsite"/>
+    </head>
+    <body id="xcam_t" page="1" linked="" pk="xcamseq" fk="xcamsite">
+      <sql id="forupd_sql_detail" query="SELECT xcamseq,xcam001,&apos;&apos;,&apos;&apos;,xcam002,&apos;&apos;,xcam003,&apos;&apos;,xcam004,&apos;&apos;,xcam005 FROM xcam_t WHERE xcament=? AND xcamsite=? AND xcamseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcamseq,xcam001,&apos;&apos;,&apos;&apos;,xcam002,&apos;&apos;,xcam003,&apos;&apos;,xcam004,&apos;&apos;,xcam005 FROM xcam_t WHERE xcament= ? AND xcamsite=?"/>
+    </body>
+  </dataset>
+</assembly>
+

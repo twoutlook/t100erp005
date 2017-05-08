@@ -1,0 +1,105 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisi020" module="ais" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="02295" crtdt="2013-12-27 10:43:31" modid="04152" moddt="2015-12-24 14:11:08" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="交易對象稅務資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="isak002,isak002_desc(chr80),isak001,isak001_desc(chr80),isakstus,isak008,isak009,isak010,isak011,isak012,isak003,isak004,isakownid,isakownid_desc(chr80),isakowndp,isakowndp_desc(chr80),isakcrtid,isakcrtid_desc(chr80),isakcrtdp,isakcrtdp_desc(chr80),isakcrtdt,isakmodid,isakmodid_desc(chr80),isakmoddt"/>
+      <var id="bs_field" value="isak001,isak001_desc(chr80),isak002" pk="isak001,isak002" order=""/>
+      <bs_reference field="isak001_desc" ref_field="isak001" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ais" filename="aisi020" method="dialog">
+    <section id="input">
+      <input id="head" field="isak002,isak001,isakstus,isak008,isak009,isak010,isak011,isak012,isak003,isak004"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="isak002,isak002_desc,isak001,isak001_desc,isakstus,isak008,isak009,isak010,isak011,isak012,isak003,isak004,isakownid,isakowndp,isakcrtid,isakcrtdp,isakcrtdt,isakmodid,isakmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="isak001,isak002"/>
+      <set id="head" type="no_entry" field="isak001,isak002"/>
+    </init>
+    <init id="head">
+      <column id="isak002">
+        <after>
+          <check chkid="v_oodb002" id="isExist"/>
+        </after>
+        <controlp form="q_oodb002_3" state="i"/>
+        <controlp form="q_oodb002_3" state="c"/>
+      </column>
+      <column id="isak002_desc"/>
+      <column id="isak001">
+        <after>
+          <check chkid="v_pmab001" id="isExist"/>
+        </after>
+        <controlp form="q_pmab001" state="i"/>
+        <controlp form="q_isak001" state="c"/>
+      </column>
+      <column id="isak001_desc"/>
+      <column id="isakstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="isak008"/>
+      <column id="isak009"/>
+      <column id="isak010"/>
+      <column id="isak011"/>
+      <column id="isak012"/>
+      <column id="isak003" def_scc="9722"/>
+      <column id="isak004"/>
+      <column id="isakownid">
+        <after>
+          <reference field="isakownid_desc" ref_field="isak_t.isakownid" map_field="isakownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isakownid_desc"/>
+      <column id="isakowndp">
+        <after>
+          <reference field="isakowndp_desc" ref_field="isak_t.isakowndp" map_field="isakowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="isakowndp_desc"/>
+      <column id="isakcrtid">
+        <after>
+          <reference field="isakcrtid_desc" ref_field="isak_t.isakcrtid" map_field="isakcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isakcrtid_desc"/>
+      <column id="isakcrtdp">
+        <after>
+          <reference field="isakcrtdp_desc" ref_field="isak_t.isakcrtdp" map_field="isakcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="isakcrtdp_desc"/>
+      <column id="isakcrtdt"/>
+      <column id="isakmodid">
+        <after>
+          <reference field="isakmodid_desc" ref_field="isak_t.isakmodid" map_field="isakmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isakmodid_desc"/>
+      <column id="isakmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="isak_t" pk="isak001,isak002">
+      <sql id="forupd_sql" type="sql" query="SELECT isak002,&apos;&apos;,isak001,&apos;&apos;,isakstus,isak008,isak009,isak010,isak011,isak012,isak003,isak004,isakownid,&apos;&apos;,isakowndp,&apos;&apos;,isakcrtid,&apos;&apos;,isakcrtdp,&apos;&apos;,isakcrtdt,isakmodid,&apos;&apos;,isakmoddt FROM isak_t WHERE isakent= ? AND isak001=? AND isak002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT isak001,isak002 FROM isak_t" order="isak001,isak002"/>
+    </head>
+  </dataset>
+</assembly>
+

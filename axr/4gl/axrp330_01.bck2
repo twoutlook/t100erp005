@@ -1,0 +1,386 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axrp330_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0009(2015-02-11 09:49:36), PR版次:0009(2016-10-28 16:09:38)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000160
+#+ Filename...: axrp330_01
+#+ Description: 拋轉傳票
+#+ Creator....: 02114(2014-03-06 10:57:54)
+#+ Modifier...: 02097 -SD/PR- 07423
+ 
+{</section>}
+ 
+{<section id="axrp330_01.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#150126-00027#1   Belle    增加傳票補號
+#150226           Reanna   調整單別開窗
+#150429-00010#14  Reanna   調整單別開窗
+#160318-00025#39  pengxin  將重複內容的錯誤訊息置換為公用錯誤訊息(r.v)
+#160620-00010#2   2016/06/21 By 01531  拋轉傳票時，傳票憑證日期應該預設單據的財務日期，而非系統日期
+#160705-00042#11  2016/07/14 By sakura 程式中寫死g_prog部分改寫MATCHES方式
+#161028-00043#1   2016/10/28 By fionchen 調整160727-00019全系統調整臨時表名稱長度大於15碼的作業
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+ 
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_glap_m        RECORD
+       glapdocno LIKE glap_t.glapdocno, 
+   glapdocdt LIKE glap_t.glapdocdt
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_ooef004      LIKE ooef_t.ooef004
+#end add-point
+ 
+DEFINE g_glap_m        type_g_glap_m
+ 
+   DEFINE g_glapdocno_t LIKE glap_t.glapdocno
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axrp330_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axrp330_01(--)
+   #add-point:input段變數傳入
+      p_ld,
+      p_docdt #160620-00010#2
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE p_ld             LIKE apca_t.apcald
+   DEFINE p_wc             STRING
+   DEFINE l_glaacomp       LIKE glaa_t.glaacomp
+   DEFINE l_glaa100        LIKE glaa_t.glaa100        #150126-00027#1
+   DEFINE l_glapdocno      LIKE glap_t.glapdocno      #150126-00027#1
+   DEFINE l_glaa024        LIKE glaa_t.glaa024        #150226
+   DEFINE l_chr            LIKE type_t.chr1           #150429-00010#14
+   DEFINE l_prog           LIKE gzza_t.gzza001        #150429-00010#14
+   DEFINE p_docdt          LIKE glap_t.glapdocdt      #160620-00010#2  
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axrp330_01 WITH FORM cl_ap_formpath("axr","axrp330_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   #150226 add glaa024
+   SELECT glaacomp,glaa100,glaa024
+     INTO l_glaacomp,l_glaa100,l_glaa024
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald = p_ld
+   SELECT ooef004 INTO g_ooef004
+     FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = l_glaacomp
+   #150126-00027#1
+   IF l_glaa100 = 'Y' THEN
+      CALL cl_set_comp_visible('cont_no',FALSE)
+   ELSE
+      CALL cl_set_comp_visible('cont_no',TRUE)
+   END IF
+   LET l_glapdocno = ''
+   #150126-00027#1
+   #LET g_glap_m.glapdocdt = g_today  #160620-00010#2 mark
+   LET g_glap_m.glapdocdt = p_docdt   #160620-00010#2 add
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_glap_m.glapdocno,g_glap_m.glapdocdt ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         #150126-00027#1--(S)
+         ON ACTION cont_no
+            IF cl_null(g_glap_m.glapdocdt) THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'aap-00331'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+            END IF
+            IF cl_null(g_glap_m.glapdocno) THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'aap-00332'
+               LET g_errparam.extend = s_fin_get_colname('aapp330','glapdocno')
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+            END IF
+            IF NOT cl_null(g_glap_m.glapdocdt) AND NOT  cl_null(g_glap_m.glapdocno) THEN
+               CALL s_transaction_begin()
+               CALL s_fin_continue_no_input(p_ld,'',g_glap_m.glapdocno,g_glap_m.glapdocdt,'3')
+               CALL s_transaction_end('Y','Y')                           
+           END IF
+         #150126-00027#1--(E)
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+                                    
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glapdocno
+            #add-point:BEFORE FIELD glapdocno name="input.b.glapdocno"
+                                    
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glapdocno
+            
+            #add-point:AFTER FIELD glapdocno name="input.a.glapdocno"
+            IF NOT cl_null(g_glap_m.glapdocno) THEN 
+               #150429-00010#14 add ------               
+               LET l_chr = 'N'  #不迴轉
+               #160705-00042#11 160714 by sakura mark(S)               
+               #CASE g_prog
+               #     WHEN 'afmt570'       #重評價
+               #160705-00042#11 160714 by sakura mark(E)
+               #160705-00042#11 160714 by sakura add(S)
+               CASE 
+                    WHEN g_prog MATCHES 'afmt570'       #重評價
+               #160705-00042#11 160714 by sakura add(E)                    
+                         SELECT (CASE WHEN glca002 = '2' THEN 'Y' ELSE 'N' END) INTO l_chr
+                           FROM glca_t
+                          WHERE glcaent = g_enterprise
+                            AND glcald  = p_ld AND glca001 = 'FM'
+               END CASE
+               IF l_chr = 'Y' THEN
+                  LET l_prog = 'aglt350'
+               ELSE
+                  LET l_prog = 'aglt310'
+               END IF
+               IF s_aooi200_fin_chk_docno(p_ld,'','',g_glap_m.glapdocno,g_glap_m.glapdocdt,l_prog) THEN
+               #150429-00010#14 add end---
+               #150429-00010#14 mark ------
+               ##設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               #INITIALIZE g_chkparam.* TO NULL               
+               ##LET g_chkparam.arg1 = g_ooef004  #150226 mark
+               #LET g_chkparam.arg1 = l_glaa024   #150226
+               #LET g_chkparam.arg2 = g_glap_m.glapdocno
+               #160318-00025#39  2016/04/22  by pengxin  add(S)
+               #LET g_errshow = TRUE #是否開窗 
+               #LET g_chkparam.err_str[1] = "agl-00189:sub-01302|aooi200|",cl_get_progname("aooi200",g_lang,"2"),"|:EXEPROGaooi200"
+               ##160318-00025#39  2016/04/22  by pengxin  add(E)
+               ##呼叫檢查存在並帶值的library
+               #IF cl_chk_exist("v_ooba002_07") THEN
+               #150429-00010#14 mark end---
+                  #150126-00027#1
+                  IF l_glaa100 = 'Y' THEN
+                     IF cl_null(l_glapdocno) OR l_glapdocno <> g_glap_m.glapdocno THEN
+                       #DELETE FROM s_fin_tmp_conti_no    #161028-00043#1 mark
+                        DELETE FROM s_fin_tmp             #161028-00043#1 add
+                     END IF
+                  END IF
+                  #150126-00027#1
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_glap_m.glapdocno = ''
+                  #150126-00027#1--(S)
+                  IF l_glaa100 = 'Y' THEN
+                    #DELETE FROM s_fin_tmp_conti_no     #161028-00043#1 mark
+                     DELETE FROM s_fin_tmp              #161028-00043#1 add
+                  END IF
+                  #150126-00027#1--(E)
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            LET l_glapdocno = g_glap_m.glapdocno   #150126-00027#1
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glapdocno
+            #add-point:ON CHANGE glapdocno name="input.g.glapdocno"
+                                    
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glapdocdt
+            #add-point:BEFORE FIELD glapdocdt name="input.b.glapdocdt"
+                                    
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glapdocdt
+            
+            #add-point:AFTER FIELD glapdocdt name="input.a.glapdocdt"
+                                    
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glapdocdt
+            #add-point:ON CHANGE glapdocdt name="input.g.glapdocdt"
+                                    
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.glapdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glapdocno
+            #add-point:ON ACTION controlp INFIELD glapdocno name="input.c.glapdocno"
+
+   			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+   			LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glap_m.glapdocno  #給予default值
+            #LET g_qryparam.arg1 = g_ooef004              #150226 mark
+            LET g_qryparam.arg1 = l_glaa024               #150226
+            
+            #150429-00010#14 add ------
+            #160705-00042#11 160714 by sakura mark(S)            
+            #CASE g_prog
+            #     WHEN 'afmt570'       #重評價
+            #160705-00042#11 160714 by sakura mark(E)
+            #160705-00042#11 160714 by sakura add(S)
+            CASE 
+                 WHEN g_prog MATCHES 'afmt570'       #重評價
+            #160705-00042#11 160714 by sakura add(E)                 
+                      SELECT (CASE WHEN glca002 = '2' THEN 'Y' ELSE 'N' END) INTO l_chr
+                        FROM glca_t
+                       WHERE glcaent = g_enterprise
+                         AND glcald  = p_ld AND glca001 = 'FM'
+
+            END CASE
+            IF l_chr = 'Y' THEN
+               LET g_qryparam.arg2 = 'aglt350'
+            ELSE
+               LET g_qryparam.arg2 = 'aglt310'
+            END IF
+            #150429-00010#14 add end---
+            #LET g_qryparam.arg2 = 'aglt310'              #150429-00010#14 mark
+            #CALL q_ooba002_3()                           #150226 mark
+            CALL q_ooba002_1()                            #150226
+            LET g_glap_m.glapdocno = g_qryparam.return1   #將開窗取得的值回傳到變數
+            DISPLAY g_glap_m.glapdocno TO glapdocno       #顯示到畫面上
+            NEXT FIELD glapdocno                          #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glapdocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glapdocdt
+            #add-point:ON ACTION controlp INFIELD glapdocdt name="input.c.glapdocdt"
+                                    
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+                                    
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+                  
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+         
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axrp330_01 
+   
+   #add-point:input段after input 
+   IF INT_FLAG THEN
+      RETURN '',''
+   END IF
+   
+   RETURN g_glap_m.glapdocno,g_glap_m.glapdocdt
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrp330_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="axrp330_01.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

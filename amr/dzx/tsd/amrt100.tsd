@@ -1,0 +1,553 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="amrt100" std_prog="amrt100" erpver="1.0" ver="5" module="AMR" type="M" booking="Y" designer_ver="1.0" class="t" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="mrda_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+    <tbl name="mrdb_t" main="N" head="N" pk="" fk_detail="" parent="mrda_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="mrde_t" main="N" head="N" pk="mrdeent,mrdedocno,mrdeseq,mrdeseq1" fk_detail="mrdeent,mrdedocno,mrdeseq" parent="mrdb_t" fk_master="mrdbent,mrdbdocno,mrdbseq" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：提供機台保養或儀器校驗時進行記錄
+標準作業功能取消：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+狀態功能：[確認/取消確認/無效]
+作業類型：交易單據維護作業
+輸入模式：雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)：
+ 資料來源表：mrda_t(資料檔)
+
+作業資料來源(Detail)：
+ 資料來源表：mrdb_t(單身檔)
+
+
+補充說明：無
+
+查詢方案：保養校驗單號、校驗日期、保校人員、保校部門、資源編號、資源分類、狀態碼、資料建立者、資料建立日期、最近修改者、最近修改日期
+
+]]>
+  </all>
+  <di_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[mrdb_t:
+●新增時，欄位控管：
+　1.若單據狀態=0.開立時,"已完成"/"儀錶值(校前)"/"儀錶值(校後)"/"缺失原因"/"花費時間"/"時間單位"等欄位不可輸入
+  2.若單據狀態=1.校驗中時,僅"已完成"/"儀錶值(校前)"/"儀錶值(校後)"/"缺失原因"/"備註"/"花費時間"/"時間單位"等欄位可輸入,但單身
+    可新增,但不允許刪除
+●若單據狀態=2.已完校時,單頭/單身均不允許新增/修改
+●於離開單身時,將amri100"預計時間"合計數,回寫至單頭"保養花費時間"
+●若上述amri100"預計時間"之時間單位不同,將先轉為分後,再合計並將合計數回寫至單頭,並將時間單位預設為'分'
+●相同的"保修項目原項次"(mrdb015)僅計算一次]]>
+  </di_all>
+  <mi_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[1.單頭新增完成後,由系統依單頭"資源編號"+"保修類型"於amri100所設定之保修項目,產生單身資料:
+   mrdb_t:
+   "保修校驗單號"<--mrdadocno
+   "項次"<--已存在項次最大號+1
+   "保修項目"<--mraj004
+   "保養部位"<--mraj005
+   "保養內容"<--mraj006
+   "完成"<--'N'
+   "儀錶編號"<--mraj007
+   "標準值"<--mraj009
+   "花費時間"<--mraj012
+   "時間單位"<--mraj013
+   mrde_t:
+   mrdedocno<--mrdbdocno
+   mrdeseq<--mrdbseq
+   mrdeseq1<--相同mrdedocno+mrdeseq取最大項次+1
+   "更換零件料號"<--mrak004
+   "零件備註"<--mrak008
+   "數量"<--mrak005
+   "單位"<--mrak006
+   "舊零件處理方式"<--mrak007
+2.若是"資源編號"+"保修類型"未於amri100,則改以"資源編號"於amrm200所設定之"資源分類",改以"資源分類"+"保修類型"於amri100所設定之保修項目,產生單身資料
+3.若是一個保修項目設定多筆更換零件品號,則須將該保修項目之所有零件品號產生至單身
+]]>
+  </mi_all>
+  <field cite_std="N" name="b_mrda001" ver="1" src="s" column="mrda001" table="mrda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mrda002" ver="1" src="s" column="mrda002" table="mrda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mrda003" ver="1" src="s" column="mrda003" table="mrda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mrda003_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mrda006" ver="1" src="s" column="mrda006" table="mrda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mrdacrtdt" ver="1" src="s" column="mrdacrtdt" table="mrda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mrdacrtid" ver="1" src="s" column="mrdacrtid" table="mrda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mrdadocdt" ver="1" src="s" column="mrdadocdt" table="mrda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mrdadocno" ver="1" src="s" column="mrdadocno" table="mrda_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mrdamoddt" ver="1" src="s" column="mrdamoddt" table="mrda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mrdamodid" ver="1" src="s" column="mrdamodid" table="mrda_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrda003_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrda001" ver="1" src="s" column="mrda001" table="mrda_t" attribute="" type="" req="Y" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設值:g_user
+校驗:v_ooag001
+ arg1 = mrda001
+
+1.依據mrda001的值到[T:員工檔]抓取[C:歸屬部門]的值，並預設到mrda002(保校部門)欄位上
+     計算或處理:無
+]]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrda002" ver="1" src="s" column="mrda002" table="mrda_t" attribute="" type="" req="Y" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="v_ooeg001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設值:g_dept
+
+校驗v_ooeg001
+arg1=mrda002
+arg2=mrdadocdt
+
+input開窗
+arg1=mrdadocdt
+]]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrda003" ver="1" src="s" column="mrda003" table="mrda_t" attribute="" type="" req="Y" i_zoom="q_mrba001_4" c_zoom="q_mrba001_4" chk_ref="v_mrba001_5" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗:v_mrba001_5
+arg1 = mrda003
+
+帶值mrba004到mrda003_desc]]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrda004" ver="1" src="s" column="mrda004" table="mrda_t" attribute="" type="" req="Y" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗s_azzi650_chk_exist('1104',mrda004)
+
+查詢開窗q_oocq002
+arg1 = '1104'
+
+編輯開窗q_oocq002
+arg1 = '1104']]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrda005" ver="1" src="s" column="mrda005" table="mrda_t" attribute="" type="" req="Y" i_zoom="q_mraa001" c_zoom="q_mraa001" chk_ref="v_mraa001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗v_mraa001
+arg1 = mrda005
+]]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrda006" ver="1" src="s" column="mrda006" table="mrda_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[1."資源編號"將amrm200之"資源分類"(mrba010)帶入此欄
+
+查詢開窗q_oocq002
+arg1 = '1101'
+]]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrda007" ver="1" src="s" column="mrda007" table="mrda_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[1."資源編號"將amrm200之"廠牌"(mrba011)帶入此欄
+
+查詢開窗q_oocq002
+arg1 = '1102']]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrda008" ver="3" src="s" column="mrda008" table="mrda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="5203" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrda009" ver="1" src="s" column="mrda009" table="mrda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[依"資源編號"+"保修類型"篩選保校記錄單頭檔,將最近之"保校日期"帶入此欄]]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrda010" ver="3" src="s" column="mrda010" table="mrda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[有輸入單位時必輸，若單位為Null則可為空不輸入]]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrda011" ver="3" src="s" column="mrda011" table="mrda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="5204" default="&apos;2&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[若有值則保養時間必輸]]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrda012" ver="5" src="s" column="mrda012" table="mrda_t" attribute="" type="" req="N" i_zoom="q_ooba002_1" c_zoom="q_mrdhdocno" chk_ref="v_mrdhdocno" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="u">
+    <![CDATA[1.計算或處理:於執行[轉維修]後回寫
+
+查詢開窗待維修單完成]]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrdacnfdt" ver="1" src="s" column="mrdacnfdt" table="mrda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrdacnfid" ver="1" src="s" column="mrdacnfid" table="mrda_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrdacrtdp" ver="1" src="s" column="mrdacrtdp" table="mrda_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrdacrtdt" ver="1" src="s" column="mrdacrtdt" table="mrda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrdacrtid" ver="1" src="s" column="mrdacrtid" table="mrda_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrdadocdt" ver="1" src="s" column="mrdadocdt" table="mrda_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[預設值:g_today]]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrdadocno" ver="3" src="s" column="mrdadocno" table="mrda_t" attribute="" type="" req="Y" i_zoom="q_ooba002_1" c_zoom="q_mrdadocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[1.呼叫s_control_chk_doc('1',g_mrda_m.mrdadocno,'6',g_user,g_dept,'','')應用元件，檢核輸入的單據別是否可以被key人員對應的控制組使用
+2.帶值:1.抓取[T:單據別多語言檔][C:說明]的值顯示在下方[C:單別名稱]欄位
+3.計算或處理:1.當新增時才可輸入單別，修改時此欄位為NoEntry
+4.新增存檔時，呼叫應用元件s_aooi200_gen_docno自動編申請單號
+
+input開窗q_ooba002_1
+arg1 = ooef004
+arg2 = g_prog
+]]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrdamoddt" ver="1" src="s" column="mrdamoddt" table="mrda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrdamodid" ver="1" src="s" column="mrdamodid" table="mrda_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrdaowndp" ver="1" src="s" column="mrdaowndp" table="mrda_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrdaownid" ver="1" src="s" column="mrdaownid" table="mrda_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrdasite" ver="1" src="s" column="mrdasite" table="mrda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrda_t.mrdastus" ver="1" src="s" column="mrdastus" table="mrda_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[狀態為2時
+更新：資料完校者、資料完校日期
+
+#轉校驗
+僅[T.保校記錄單頭檔].[C.單據狀態]=0.開立時,可執行此功能
+將[T.保校記錄單頭檔].[C.單據狀態]更新為1.校驗中
+更新amrm200 "資源狀態"=2.暫停使用
+
+#轉維修
+僅[T.保校記錄單頭檔].[C.單據狀態]=1.校驗中時,可執行此功能
+將[T.保校記錄單頭檔].[C.單據狀態]更新為3.轉維修
+
+#校驗完成
+僅[T.保校記錄單頭檔].[C.單據狀態]=1.校驗中時,可執行此功能
+將[T.保校記錄單頭檔].[C.單據狀態]更新為2.已完校
+更新amrm200 "資源狀態"=1.使用中]]>
+  </field>
+  <field cite_std="N" name="mrdadocno_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrdb005_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrdb_t.mrdb001" ver="1" src="s" column="mrdb001" table="mrdb_t" attribute="" type="" req="Y" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[查詢開窗q_oocq002
+arg1 = 1110
+
+編輯開窗q_oocq002
+arg1 = 1110
+
+校驗s_azzi650_chk_exist('1110',mrdb001)]]>
+  </field>
+  <field cite_std="N" name="mrdb_t.mrdb002" ver="1" src="s" column="mrdb002" table="mrdb_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[查詢開窗q_oocq002
+arg1 = 1114
+
+編輯開窗q_oocq002
+arg1 = 1114
+
+校驗s_azzi650_chk_exist('1114',mrdb002)]]>
+  </field>
+  <field cite_std="N" name="mrdb_t.mrdb003" ver="1" src="s" column="mrdb003" table="mrdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrdb_t.mrdb004" ver="1" src="s" column="mrdb004" table="mrdb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrdb_t.mrdb005" ver="1" src="s" column="mrdb005" table="mrdb_t" attribute="" type="" req="N" i_zoom="q_mrbc002_2" c_zoom="q_mrbc002_2" chk_ref="v_mrbc002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗v_mrbc002
+arg1 = mrda003
+arg2 = mrdb005
+
+input開窗q_mrbc002_2
+arg1 = mrda003
+]]>
+  </field>
+  <field cite_std="N" name="mrdb_t.mrdb006" ver="1" src="s" column="mrdb006" table="mrdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[若"儀錶編號"有輸入值,則此欄不可為空白]]>
+  </field>
+  <field cite_std="N" name="mrdb_t.mrdb007" ver="1" src="s" column="mrdb007" table="mrdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrdb_t.mrdb012" ver="1" src="s" column="mrdb012" table="mrdb_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[查詢開窗q_oocq002
+arg1 = 1106
+
+編輯開窗q_oocq002
+arg1 = 1106
+
+校驗s_azzi650_chk_exist('1106',mrdb012)]]>
+  </field>
+  <field cite_std="N" name="mrdb_t.mrdb013" ver="1" src="s" column="mrdb013" table="mrdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrdb_t.mrdb014" ver="1" src="s" column="mrdb014" table="mrdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrdb_t.mrdb015" ver="1" src="s" column="mrdb015" table="mrdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[若有值則花費時間必輸]]>
+  </field>
+  <field cite_std="N" name="mrdb_t.mrdb016" ver="1" src="s" column="mrdb016" table="mrdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="5204" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[若有輸入值則花費時間必輸]]>
+  </field>
+  <field cite_std="N" name="mrdb_t.mrdbseq" ver="1" src="s" column="mrdbseq" table="mrdb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[MAX+1]]>
+  </field>
+  <field cite_std="N" name="mrdb_t.mrdbsite" ver="1" src="s" column="mrdbsite" table="mrdb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrde001_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrde001_desc1" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrde_t.mrde001" ver="1" src="s" column="mrde001" table="mrde_t" attribute="" type="" req="Y" i_zoom="q_imaa001" c_zoom="q_imaa001" chk_ref="v_imaa001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[校驗v_imaa001
+ arg1=mrde001
+
+帶值 
+s_desc_get_item_desc(mrde001)]]>
+  </field>
+  <field cite_std="N" name="mrde_t.mrde002" ver="1" src="s" column="mrde002" table="mrde_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrde_t.mrde003" ver="1" src="s" column="mrde003" table="mrde_t" attribute="" type="" req="Y" i_zoom="q_imao002" c_zoom="q_ooca001_1" chk_ref="v_imao002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[1.若"數量"有輸入值,則此欄位不允許空白
+
+校驗v_imao002
+arg1 = mrde001
+arg2 = mrde003
+
+input開窗q_imao002
+arg1 = mrde001]]>
+  </field>
+  <field cite_std="N" name="mrde_t.mrde004" ver="1" src="s" column="mrde004" table="mrde_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrde_t.mrde005" ver="1" src="s" column="mrde005" table="mrde_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="5213" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mrde_t.mrdeseq1" ver="1" src="s" column="mrdeseq1" table="mrde_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[MAX+1]]>
+  </field>
+  <field cite_std="N" name="mrde_t.mrdesite" ver="1" src="s" column="mrdesite" table="mrde_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="5" name="prog_amrt300" depend_field="mrda_t.mrda012" src="s" status="">
+      <program order="1" type="1" name="amrt300"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_mrda001_desc" src="s" depend_field="b_mrda001" correspon_key="mrda001" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="b_mrda002_desc" src="s" depend_field="b_mrda002" correspon_key="mrda002" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="2" name="b_mrda006_desc" src="s" depend_field="b_mrda006" correspon_key="&apos;1101&apos;,mrda006" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="b_mrdacrtid_desc" src="s" depend_field="b_mrdacrtid" correspon_key="mrdacrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="b_mrdamodid_desc" src="s" depend_field="b_mrdamodid" correspon_key="mrdamodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="mrda001_desc" src="s" depend_field="mrda_t.mrda001" correspon_key="mrda001" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="mrda002_desc" src="s" depend_field="mrda_t.mrda002" correspon_key="mrda002" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mrda004_desc" src="s" depend_field="mrda_t.mrda004" correspon_key="&apos;1104&apos;,mrda004" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="mrda005_desc" src="s" depend_field="mrda_t.mrda005" correspon_key="mrda005" ref_table="mraal_t" ref_fk="mraal001" ref_dlang="mraal002" ref_rtn="mraal003" status=""/>
+    <rfield cite_std="N" ver="2" name="mrda006_desc" src="s" depend_field="mrda_t.mrda006" correspon_key="&apos;1101&apos;,mrda006" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="mrda007_desc" src="s" depend_field="mrda_t.mrda007" correspon_key="&apos;1102&apos;,mrda007" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="mrdacnfid_desc" src="s" depend_field="mrda_t.mrdacnfid" correspon_key="mrdacnfid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="mrdacrtdp_desc" src="s" depend_field="mrda_t.mrdacrtdp" correspon_key="mrdacrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mrdacrtid_desc" src="s" depend_field="mrda_t.mrdacrtid" correspon_key="mrdacrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="mrdamodid_desc" src="s" depend_field="mrda_t.mrdamodid" correspon_key="mrdamodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="mrdaowndp_desc" src="s" depend_field="mrda_t.mrdaowndp" correspon_key="mrdaowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mrdaownid_desc" src="s" depend_field="mrda_t.mrdaownid" correspon_key="mrdaownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="mrdb001_desc" src="s" depend_field="mrdb_t.mrdb001" correspon_key="&apos;1110&apos;,mrdb001" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="mrdb002_desc" src="s" depend_field="mrdb_t.mrdb002" correspon_key="&apos;1114&apos;,mrdb002" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="mrdb012_desc" src="s" depend_field="mrdb_t.mrdb012" correspon_key="&apos;1106&apos;,mrdb012" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="mrde003_desc" src="s" depend_field="mrde_t.mrde003" correspon_key="mrde003" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_mrda001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mrda002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mrda003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="b_mrda003_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mrda006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mrdacrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mrdacrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mrdadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mrdadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mrdamoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mrdamodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="mrda003_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrda_t.mrda001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrda_t.mrda002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrda_t.mrda003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrda_t.mrda004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrda_t.mrda005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrda_t.mrda006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrda_t.mrda007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="mrda_t.mrda008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrda_t.mrda009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="mrda_t.mrda010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="mrda_t.mrda011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="mrda_t.mrda012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="mrda_t.mrdacnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrda_t.mrdacnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrda_t.mrdacrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrda_t.mrdacrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrda_t.mrdacrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrda_t.mrdadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="mrda_t.mrdadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrda_t.mrdamoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrda_t.mrdamodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrda_t.mrdaowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrda_t.mrdaownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrda_t.mrdasite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrda_t.mrdastus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrdadocno_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="mrdb005_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrdb_t.mrdb001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrdb_t.mrdb002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrdb_t.mrdb003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrdb_t.mrdb004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrdb_t.mrdb005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrdb_t.mrdb006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrdb_t.mrdb007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrdb_t.mrdb012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrdb_t.mrdb013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrdb_t.mrdb014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrdb_t.mrdb015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrdb_t.mrdb016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrdb_t.mrdbseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrdb_t.mrdbsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="mrde001_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="mrde001_desc1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrde_t.mrde001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrde_t.mrde002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrde_t.mrde003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrde_t.mrde004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrde_t.mrde005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrde_t.mrdeseq1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mrde_t.mrdesite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="action_1" ver="5" src="s" type="" gen_code="" status="d">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="amrt100_batch_produce" ver="5" src="s" type="all" gen_code="Y" status="u">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="generate_amrt300" ver="5" src="s" type="all" gen_code="Y" status="u">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_mrdadocno" text="保校單號" lstr=""/>
+    <sfield name="lbl_mrdadocdt" text="保校日期" lstr=""/>
+    <sfield name="lbl_mrda001" text="保養人員" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_mrda002" text="保養部門" lstr=""/>
+    <sfield name="lbl_ooefl003" text="部門名稱" lstr=""/>
+    <sfield name="lbl_mrda003" text="資源編號" lstr=""/>
+    <sfield name="lbl_mrda003_desc" text="資源名稱" lstr=""/>
+    <sfield name="lbl_mrda006" text="資源分類" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_mrdasite" text="營運據點" lstr=""/>
+    <sfield name="lbl_mrda012" text="資源維修單號" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_mrda004" text="保修類型" lstr=""/>
+    <sfield name="lbl_mrda005" text="保修週期" lstr=""/>
+    <sfield name="lbl_mrda007" text="廠牌" lstr=""/>
+    <sfield name="lbl_mrda008" text="保養後資源狀態" lstr=""/>
+    <sfield name="lbl_mrda009" text="上次保養日" lstr=""/>
+    <sfield name="lbl_mrda010" text="保養花費時間" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料完校者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料完校日期" lstr=""/>
+    <sfield name="lbl_mrdbsite" text="營運據點" lstr=""/>
+    <sfield name="lbl_mrdbseq" text="項次" lstr=""/>
+    <sfield name="lbl_mrdb001" text="保修項目" lstr=""/>
+    <sfield name="lbl_mrdb002" text="保修部位" lstr=""/>
+    <sfield name="lbl_mrdb003" text="保修內容" lstr=""/>
+    <sfield name="lbl_mrdb004" text="完成否" lstr=""/>
+    <sfield name="lbl_mrdb015" text="花費時間" lstr=""/>
+    <sfield name="lbl_mrdb016" text="時間單位" lstr=""/>
+    <sfield name="lbl_mrdb005" text="儀錶編號" lstr=""/>
+    <sfield name="lbl_mrdb005_desc" text="儀表名稱" lstr=""/>
+    <sfield name="lbl_mrdb014" text="儀錶標準值" lstr=""/>
+    <sfield name="lbl_mrdb006" text="儀錶值(校正前)" lstr=""/>
+    <sfield name="lbl_mrdb007" text="儀錶值(校正後)" lstr=""/>
+    <sfield name="lbl_mrdb012" text="缺失原因" lstr=""/>
+    <sfield name="lbl_mrdb013" text="備註" lstr=""/>
+    <sfield name="lbl_mrdesite" text="營運據點" lstr=""/>
+    <sfield name="lbl_mrdeseq1" text="保校零件項次" lstr=""/>
+    <sfield name="lbl_mrde001" text="更換零件品號" lstr=""/>
+    <sfield name="lbl_mrde001_desc" text="品名" lstr=""/>
+    <sfield name="lbl_mrde001_desc1" text="規格" lstr=""/>
+    <sfield name="lbl_mrde004" text="零件備註" lstr=""/>
+    <sfield name="lbl_mrde002" text="數量" lstr=""/>
+    <sfield name="lbl_mrde003" text="單位" lstr=""/>
+    <sfield name="lbl_oocal003" text="單位名稱" lstr=""/>
+    <sfield name="lbl_mrde005" text="舊零件處理方式" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="amrt100_batch_produce" text="保養校驗批次產生" lstr=""/>
+    <sact name="generate_amrt300" text="產生維修工單" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

@@ -1,0 +1,39 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asfr004_g01" module="asf" jobmode="N" type="g01" industry="std" crtid="04441" crtdt="2014-09-09 14:19:36" modid="08993" moddt="2016-11-09 11:07:11" sdver="3" tabver="10001" description="工作站在製狀況表">
+  <define arg="tm.wc(STRING|條件),tm.chk(chr1|列印工單明細)">
+    <var seq="1" value="sfcbent,sfcb003,l_oocql004(chr30|NULL),sfcb004,sfcb011,l_ecaa002(chr30|NULL),sfcb050,sfcb046,sfcb047,sfcb048,sfcb049,sfcb051,sfcb001,sfcb002,sfcbdocno"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="sfcbent,sfcb003,l_oocql004(chr30|NULL),sfcb004,sfcb011,l_ecaa002(chr30|NULL),sfcb050,sfcb046,sfcb047,sfcb048,sfcb049,sfcb051,sfcb001,sfcb002,sfcbdocno"/>
+    <sql id="g_from" query="sfcb_t"/>
+    <sql id="g_where" query="" maintable="sfcb_t"/>
+    <sql id="g_order" query="sfcbent,sfcb003,sfcb004,sfcb011"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="sfcbent,sfcb003,sfcb004,sfcb011"/>
+    <section id="b_group" reptype="d01">
+      <rep type="sfcbent" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="sfcbent,sfcbent"/>
+      <rep type="sfcb003"/>
+      <rep type="sfcb004"/>
+      <rep type="sfcb011"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003" where="sfcbent,sfcbent,sfcb003,sfcb004,sfcb011"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooff003" where="sfcbent,sfcbent,sfcb003,sfcb004,sfcb011"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="sfcbent" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="sfcbent,sfcbent"/>
+      <rep type="sfcb003"/>
+      <rep type="sfcb004"/>
+      <rep type="sfcb011"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

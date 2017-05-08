@@ -1,0 +1,207 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglt523" module="agl" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="02749" crtdt="2015-12-02 13:51:40" modid="02749" moddt="2015-12-18 18:07:46" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="合併報表關係人遞延項攤銷維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gldvld,gldvld_desc(chr80),gldv001,gldv001_desc(chr80),gldv002,gldv002_desc(chr80),gldv003,gldv004,gldv008,gldv005_1(chr10),l_gldv005_desc(chr80),gldv006_1(chr10),l_gldv006_desc(chr80),gldv007_1(chr10),l_gldv007_desc(chr80),gldvstus"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gldv009,gldv005,gldv006,gldv007,gldv010,gldv011,gldv012,gldv012_desc(chr500),gldv013,gldv014,gldv014_desc(chr500),gldv015,gldv016,l_gldv016_desc(chr500),gldv017,l_gldv017_desc(chr500),gldv018,l_gldv018_desc(chr500),gldv019,gldv020,gldv021,gldv027,gldv028,gldv029,gldv022,gldv023,gldv024,gldv025,gldv026,gldv030,gldv031,gldv032"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gldv009,gldvownid,gldvownid_desc(chr500),gldvowndp,gldvowndp_desc(chr500),gldvcrtid,gldvcrtid_desc(chr500),gldvcrtdp,gldvcrtdp_desc(chr500),gldvcrtdt,gldvmodid,gldvmodid_desc(chr500),gldvmoddt,gldvcnfid,gldvcnfid_desc(chr500),gldvcnfdt"/>
+      <var id="bs_field" value="gldvld,gldvld_desc(chr80),gldv001,gldv001_desc(chr80),gldv002,gldv002_desc(chr80),gldv003,gldv004" pk="gldvld,gldv001,gldv002,gldv003,gldv004" order=""/>
+      <bs_reference field="gldvld_desc" ref_field="gldvld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+      <bs_reference field="gldv001_desc" ref_field="gldv001" ref_sql="SELECT gldal003 FROM gldal_t WHERE gldalent=$varg_enterprise$var AND gldal001=? AND gldal002=$varg_dlang$var"/>
+      <bs_reference field="gldv002_desc" ref_field="gldv002" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="statechange"/>
+      <action id="open_aglt502_01"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="aglt523" method="dialog">
+    <section id="input">
+      <input id="head" field="gldvld,gldv001,gldv002,gldv003,gldv004,gldv008,gldvstus"/>
+      <input id="body" page="1" field="gldv009,gldv005,gldv006,gldv007,gldv010,gldv011,gldv012,gldv013,gldv014,gldv015,gldv016,gldv017,gldv018,gldv019,gldv020,gldv021,gldv027,gldv028,gldv029,gldv022,gldv023,gldv024,gldv025,gldv026,gldv030,gldv031,gldv032" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gldvld,gldv001,gldv002,gldv003,gldv004,gldv008,l_gldv005_desc,l_gldv006_desc,l_gldv007_desc,gldvstus"/>
+      <construct id="body" page="1" field="gldv009,gldv005,gldv006,gldv007,gldv010,gldv011,gldv012,gldv013,gldv014,gldv015,gldv016,l_gldv016_desc,gldv017,l_gldv017_desc,gldv018,l_gldv018_desc,gldv019,gldv020,gldv021,gldv027,gldv028,gldv029,gldv022,gldv023,gldv024,gldv025,gldv026,gldv030,gldv031,gldv032"/>
+      <construct id="body" page="2" field="gldvownid,gldvowndp,gldvcrtid,gldvcrtdp,gldvcrtdt,gldvmodid,gldvmoddt,gldvcnfid,gldvcnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gldvld,gldv001,gldv002,gldv003,gldv004"/>
+      <set id="head" type="no_entry" field="gldvld,gldv001,gldv002,gldv003,gldv004"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gldvld">
+        <after>
+          <reference field="gldvld_desc" ref_field="gldv_t.gldvld" map_field="gldvld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="gldvld_desc"/>
+      <column id="gldv001">
+        <after>
+          <reference field="gldv001_desc" ref_field="gldv_t.gldv001" map_field="gldv001" ref_sql="SELECT gldal003 FROM gldal_t WHERE gldalent=$varg_enterprise$var AND gldal001=? AND gldal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_gldc001" state="i"/>
+        <controlp form="q_gldc001" state="c"/>
+      </column>
+      <column id="gldv001_desc"/>
+      <column id="gldv002">
+        <after>
+          <reference field="gldv002_desc" ref_field="gldv_t.gldv002" map_field="gldv002" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+      </column>
+      <column id="gldv002_desc"/>
+      <column id="gldv003"/>
+      <column id="gldv004"/>
+      <column id="gldv008"/>
+      <column id="gldv005_1"/>
+      <column id="l_gldv005_desc"/>
+      <column id="gldv006_1"/>
+      <column id="l_gldv006_desc"/>
+      <column id="gldv007_1"/>
+      <column id="l_gldv007_desc"/>
+      <column id="gldvstus" scc="50">
+        <stus id="N" pic="open"/>
+        <stus id="X" pic="void"/>
+        <stus id="Y" pic="valid"/>
+      </column>
+    </init>
+    <init id="body" page="1">
+      <column id="gldv009"/>
+      <column id="gldv005">
+        <after/>
+      </column>
+      <column id="gldv006">
+        <after/>
+      </column>
+      <column id="gldv007">
+        <after/>
+      </column>
+      <column id="gldv010" type="S" default="1" def_scc="9999"/>
+      <column id="gldv011" type="S" default="1" def_scc="8200"/>
+      <column id="gldv012">
+        <after>
+          <reference field="gldv012_desc" ref_field="gldv_t.gldv012" map_field="gldv012" ref_sql="SELECT gldal003 FROM gldal_t WHERE gldalent=$varg_enterprise$var AND gldal001=? AND gldal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_gldc002_1" state="i"/>
+        <controlp form="q_gldc002_1" state="c"/>
+      </column>
+      <column id="gldv012_desc"/>
+      <column id="gldv013">
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="gldv014">
+        <after>
+          <reference field="gldv014_desc" ref_field="gldv_t.gldv014" map_field="gldv014" ref_sql="SELECT gldal003 FROM gldal_t WHERE gldalent=$varg_enterprise$var AND gldal001=? AND gldal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_gldc002_1" state="i"/>
+        <controlp form="q_gldc002_1" state="c"/>
+      </column>
+      <column id="gldv014_desc"/>
+      <column id="gldv015">
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="gldv016">
+        <after/>
+      </column>
+      <column id="l_gldv016_desc"/>
+      <column id="gldv017">
+        <after/>
+      </column>
+      <column id="l_gldv017_desc"/>
+      <column id="gldv018">
+        <after/>
+      </column>
+      <column id="l_gldv018_desc"/>
+      <column id="gldv019" type="S" default="0"/>
+      <column id="gldv020" type="S" default="0"/>
+      <column id="gldv021" type="S" default="0"/>
+      <column id="gldv027" type="S" default="0"/>
+      <column id="gldv028" type="S" default="0"/>
+      <column id="gldv029" type="S" default="0"/>
+      <column id="gldv022">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="gldv023"/>
+      <column id="gldv024" type="S" default="0"/>
+      <column id="gldv025" type="S" default="0"/>
+      <column id="gldv026" type="S" default="0"/>
+      <column id="gldv030" type="S" default="0"/>
+      <column id="gldv031" type="S" default="0"/>
+      <column id="gldv032" type="S" default="0"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gldvownid">
+        <after>
+          <reference field="gldvownid_desc" ref_field="gldv_t.gldvownid" map_field="gldvownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gldvownid_desc"/>
+      <column id="gldvowndp">
+        <after>
+          <reference field="gldvowndp_desc" ref_field="gldv_t.gldvowndp" map_field="gldvowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gldvowndp_desc"/>
+      <column id="gldvcrtid">
+        <after>
+          <reference field="gldvcrtid_desc" ref_field="gldv_t.gldvcrtid" map_field="gldvcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gldvcrtid_desc"/>
+      <column id="gldvcrtdp">
+        <after>
+          <reference field="gldvcrtdp_desc" ref_field="gldv_t.gldvcrtdp" map_field="gldvcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gldvcrtdp_desc"/>
+      <column id="gldvcrtdt"/>
+      <column id="gldvmodid">
+        <after>
+          <reference field="gldvmodid_desc" ref_field="gldv_t.gldvmodid" map_field="gldvmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gldvmodid_desc"/>
+      <column id="gldvmoddt"/>
+      <column id="gldvcnfid">
+        <after>
+          <reference field="gldvcnfid_desc" ref_field="gldv_t.gldvcnfid" map_field="gldvcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gldvcnfid_desc"/>
+      <column id="gldvcnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gldv_t" pk="gldvld,gldv001,gldv002,gldv003,gldv004">
+      <sql id="forupd_sql" type="sql" query="SELECT gldvld,&apos;&apos;,gldv001,&apos;&apos;,gldv002,&apos;&apos;,gldv003,gldv004,gldv008,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,gldvstus FROM gldv_t WHERE gldvent= ? AND gldvld=? AND gldv001=? AND gldv002=? AND gldv003=? AND gldv004=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gldvld,&apos;&apos;,gldv001,&apos;&apos;,gldv002,&apos;&apos;,gldv003,gldv004,gldv008,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,gldvstus FROM gldv_t" order="gldvld,gldv001,gldv002,gldv003,gldv004"/>
+    </head>
+    <body id="gldv_t" page="1,2" linked="" pk="gldv009" fk="gldvld,gldv001,gldv002,gldv003,gldv004">
+      <sql id="forupd_sql_detail" query="SELECT gldv009,gldv005,gldv006,gldv007,gldv010,gldv011,gldv012,&apos;&apos;,gldv013,gldv014,&apos;&apos;,gldv015,gldv016,&apos;&apos;,gldv017,&apos;&apos;,gldv018,&apos;&apos;,gldv019,gldv020,gldv021,gldv027,gldv028,gldv029,gldv022,gldv023,gldv024,gldv025,gldv026,gldv030,gldv031,gldv032,&apos;&apos;,gldvownid,&apos;&apos;,gldvowndp,&apos;&apos;,gldvcrtid,&apos;&apos;,gldvcrtdp,&apos;&apos;,gldvcrtdt,gldvmodid,&apos;&apos;,gldvmoddt,gldvcnfid,&apos;&apos;,gldvcnfdt FROM gldv_t WHERE gldvent=? AND gldvld=? AND gldv001=? AND gldv002=? AND gldv003=? AND gldv004=? AND gldv009=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gldv009,gldv005,gldv006,gldv007,gldv010,gldv011,gldv012,&apos;&apos;,gldv013,gldv014,&apos;&apos;,gldv015,gldv016,&apos;&apos;,gldv017,&apos;&apos;,gldv018,&apos;&apos;,gldv019,gldv020,gldv021,gldv027,gldv028,gldv029,gldv022,gldv023,gldv024,gldv025,gldv026,gldv030,gldv031,gldv032,&apos;&apos;,gldvownid,&apos;&apos;,gldvowndp,&apos;&apos;,gldvcrtid,&apos;&apos;,gldvcrtdp,&apos;&apos;,gldvcrtdt,gldvmodid,&apos;&apos;,gldvmoddt,gldvcnfid,&apos;&apos;,gldvcnfdt FROM gldv_t WHERE gldvent= ? AND gldvld=? AND gldv001=? AND gldv002=? AND gldv003=? AND gldv004=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmr311" module="anm" jobmode="N" type="r01" industry="std" fix_arg="0" crtid="05016" crtdt="2015-09-10 13:47:06" modid="05016" moddt="2015-09-10 15:46:56" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="銀存帳務單列印">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="nmbsld,nmbsld_desc(chr80),nmbscomp,nmbscomp_desc(chr80),nmbsdocno,nmbsdocdt,nmbsstus(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="anm" filename="anmr311" method="dialog">
+    <section id="input">
+      <input id="head" field="nmbsld,nmbsstus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="nmbsdocno,nmbsdocdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="nmbsld">
+        <after>
+          <check chkid="v_glaald_1" id="isExist"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="nmbsld_desc"/>
+      <column id="nmbscomp">
+        <after>
+          <check chkid="v_ooef001_1" id="isExist"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="nmbscomp_desc"/>
+      <column id="nmbsdocno">
+        <after>
+          <check chkid="v_ooba002" id="isExist"/>
+        </after>
+        <controlp form="q_ooba002" state="i"/>
+        <controlp form="q_nmbsdocno" state="c"/>
+      </column>
+      <column id="nmbsdocdt"/>
+      <column id="nmbsstus" scc="13">
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+    </init>
+  </form>
+</assembly>
+

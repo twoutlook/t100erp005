@@ -1,0 +1,124 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adeq130" module="ade" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="04226" crtdt="2014-03-18 15:51:55" modid="06815" moddt="2015-12-03 10:10:49" sdver="0007" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="門店銷售日結查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),debosite,debosite_desc(chr500),debo001,debo002,debo010,debo013,debo005,debo006,debo007,debo008,debo009,debo011,debo012,debo023,debo024,debo014,debo015,debo016,debo025,debo019,debo020,debo017,debo018,debo003,debo004"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="debp005,debp005_desc(chr500),debp006,debp006_desc(chr500),debp007,debp008,debp012,debp017,debp018,debp019,debp013,debp014,debp015,debp016,debp020"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="debq006,debq005,debq005_desc(chr500),debq007"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),debosite(b_debosite),debosite_desc(b_debosite_desc),debo001(b_debo001),debo002(b_debo002),debo010(b_debo010),debo013(b_debo013),debo005(b_debo005),debo006(b_debo006),debo007(b_debo007),debo008(b_debo008),debo009(b_debo009),debo011(b_debo011),debo012(b_debo012),debo023(b_debo023),debo024(b_debo024),debo014(b_debo014),debo015(b_debo015),debo016(b_debo016),debo025(b_debo025),debo019(b_debo019),debo020(b_debo020),debo017(b_debo017),debo018(b_debo018),debo003(b_debo003),debo004(b_debo004)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="debp005(b_debp005),debp005_desc(b_debp005_desc),debp006(b_debp006),debp006_desc(b_debp006_desc),debp007(b_debp007),debp008(b_debp008),debp012(b_debp012),debp017(b_debp017),debp018(b_debp018),debp019(b_debp019),debp013(b_debp013),debp014(b_debp014),debp015(b_debp015),debp016(b_debp016),debp020(b_debp020)"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="debq006(b_debq006),debq005(b_debq005),debq005_desc(b_debq005_desc),debq007(b_debq007)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adeq130" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="debosite,debo001,debo002,debo010,debo013,debo005,debo006,debo007,debo008,debo009,debo011,debo012,debo023,debo024,debo014,debo015,debo016,debo025,debo019,debo020,debo017,debo018,debo003,debo004" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="debp005,debp006,debp007,debp008,debp012,debp017,debp018,debp019,debp013,debp014,debp015,debp016,debp020" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="debq006,debq005,debq007" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="debosite(b_debosite),debo001(b_debo001),debo002(b_debo002),debo010(b_debo010),debo013(b_debo013),debo005(b_debo005),debo006(b_debo006),debo007(b_debo007),debo008(b_debo008),debo009(b_debo009),debo011(b_debo011),debo012(b_debo012),debo023(b_debo023),debo024(b_debo024),debo014(b_debo014),debo015(b_debo015),debo016(b_debo016),debo025(b_debo025),debo019(b_debo019),debo020(b_debo020),debo017(b_debo017),debo018(b_debo018),debo003(b_debo003),debo004(b_debo004)"/>
+      <construct id="body" page="2" field="debp005(b_debp005),debp006(b_debp006),debp007(b_debp007),debp008(b_debp008),debp012(b_debp012),debp017(b_debp017),debp018(b_debp018),debp019(b_debp019),debp013(b_debp013),debp014(b_debp014),debp015(b_debp015),debp016(b_debp016),debp020(b_debp020)"/>
+      <construct id="body" page="3" field="debq006(b_debq006),debq005(b_debq005),debq007(b_debq007)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="debosite">
+        <after>
+          <reference field="debosite_desc" ref_field="debosite" map_field="debosite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="debosite_desc"/>
+      <column id="debo001" def_scc="6540"/>
+      <column id="debo002"/>
+      <column id="debo010" type="S" default="0"/>
+      <column id="debo013" type="S" default="0"/>
+      <column id="debo005" type="S" default="0"/>
+      <column id="debo006" type="S" default="0"/>
+      <column id="debo007" type="S" default="0"/>
+      <column id="debo008" type="S" default="0"/>
+      <column id="debo009" type="S" default="0"/>
+      <column id="debo011" type="S" default="0"/>
+      <column id="debo012" type="S" default="0"/>
+      <column id="debo023" type="S" default="0"/>
+      <column id="debo024" type="S" default="0"/>
+      <column id="debo014" type="S" default="0"/>
+      <column id="debo015"/>
+      <column id="debo016" type="S" default="0"/>
+      <column id="debo025" type="S" default="0"/>
+      <column id="debo019" type="S" default="0"/>
+      <column id="debo020" type="S" default="0"/>
+      <column id="debo017" type="S" default="0"/>
+      <column id="debo018" type="S" default="0"/>
+      <column id="debo003"/>
+      <column id="debo004"/>
+    </init>
+    <init id="body" page="2">
+      <column id="debp005">
+        <after>
+          <reference field="debp005_desc" ref_field="debp005" map_field="debp005" ref_sql="SELECT mmanl003 FROM mmanl_t WHERE mmanlent=$varg_enterprise$var AND mmanl001=? AND mmanl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mman001" state="c"/>
+      </column>
+      <column id="debp005_desc"/>
+      <column id="debp006">
+        <after>
+          <reference field="debp006_desc" ref_field="debp006" map_field="debp006" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2024&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="debp006_desc"/>
+      <column id="debp007"/>
+      <column id="debp008"/>
+      <column id="debp012"/>
+      <column id="debp017" type="S" default="0"/>
+      <column id="debp018" type="S" default="0"/>
+      <column id="debp019" type="S" default="0"/>
+      <column id="debp013"/>
+      <column id="debp014"/>
+      <column id="debp015"/>
+      <column id="debp016"/>
+      <column id="debp020" type="S" default="0"/>
+    </init>
+    <init id="body" page="3">
+      <column id="debq006" def_scc="8310"/>
+      <column id="debq005">
+        <after>
+          <reference field="debq005_desc" ref_field="debq005" map_field="debq005" ref_sql="SELECT ooial003 FROM ooial_t WHERE ooialent=$varg_enterprise$var AND ooial001=? AND ooial002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooia001_5" state="c"/>
+      </column>
+      <column id="debq005_desc"/>
+      <column id="debq007"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="debo_t" page="1" linked="" pk="debosite,debo002">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,debosite,&apos;&apos;,debo001,debo002,debo010,debo013,debo005,debo006,debo007,debo008,debo009,debo011,debo012,debo023,debo024,debo014,debo015,debo016,debo025,debo019,debo020,debo017,debo018,debo003,debo004 FROM debo_t WHERE deboent= ? AND 1=1 "/>
+    </body>
+    <body id="debp_t" page="2" linked="" pk="debp005,debp006" fk="debpsite,debp002" detail="Y">
+      <sql id="b_fill_sql" query="SELECT debp005,&apos;&apos;,debp006,&apos;&apos;,debp007,debp008,debp012,debp017,debp018,debp019,debp013,debp014,debp015,debp016,debp020 FROM debp_t WHERE debpent=? AND debpsite=? AND debp002=?"/>
+    </body>
+    <body id="debq_t" page="3" linked="" pk="debq005" fk="debqsite,debq002" detail="Y">
+      <sql id="b_fill_sql" query="SELECT debq006,debq005,&apos;&apos;,debq007 FROM debq_t WHERE debqent=? AND debqsite=? AND debq002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

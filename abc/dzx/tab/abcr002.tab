@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abcr002" module="abc" jobmode="N" type="r01" industry="std" fix_arg="0" crtid="05384" crtdt="2016-11-08 10:46:22" modid="04226" moddt="2016-11-30 14:53:29" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="條碼列印作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bcaa001,bcaa002,bcaa004,bcaa005,input_chk(chr500),b_bcaa001(chr500),b_bcaa002(chr500),bcaa002_desc(chr80),bcaa002_desc_1(chr80),bcaa002_desc_2(chr80),b_bcaa013(chr30),b_bcaa009(num20_6),print_num(num10),bcaastus"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="abc" filename="abcr002" method="dialog">
+    <section id="input">
+      <input id="head" field="input_chk,b_bcaa001,b_bcaa002,b_bcaa013,b_bcaa009,print_num,bcaastus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bcaa001,bcaa002,bcaa004,bcaa005"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bcaa001">
+        <controlp form="q_bcaa001" state="c"/>
+      </column>
+      <column id="bcaa002">
+        <after>
+          <reference field="bcaa002_desc" ref_field="bcaa_t.bcaa002" map_field="bcaa002" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001_15" state="c"/>
+      </column>
+      <column id="bcaa004">
+        <controlp form="q_bcaa004" state="c"/>
+      </column>
+      <column id="bcaa005" type="S" default="0"/>
+      <column id="input_chk" type="S" default="N"/>
+      <column id="b_bcaa001"/>
+      <column id="b_bcaa002">
+        <after>
+          <check chkid="v_imaf001_14" id="isExist"/>
+        </after>
+        <controlp form="q_imaf001_15" state="i"/>
+        <controlp form="q_imaf001_15" state="c"/>
+      </column>
+      <column id="bcaa002_desc"/>
+      <column id="bcaa002_desc_1"/>
+      <column id="bcaa002_desc_2"/>
+      <column id="b_bcaa013"/>
+      <column id="b_bcaa009" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="print_num"/>
+      <column id="bcaastus" scc="50" type="S" default="Y">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+    </init>
+  </form>
+</assembly>
+

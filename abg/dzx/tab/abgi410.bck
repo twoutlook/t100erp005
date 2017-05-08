@@ -1,0 +1,158 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abgi410" module="abg" jobmode="N" type="i04" industry="std" fix_arg="0" crtid="02114" crtdt="2016-11-07 15:34:49" modid="02114" moddt="2016-11-07 15:34:49" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="預算BOM維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bgda001,bgda001_desc(chr80),bgda002,bgasl003,bgasl004,bgdastus,bgas004(chr10),bgda003,bgas005(chr10),bgda005,bgas310(chr10),bgdaownid,bgdaownid_desc(chr80),bgdaowndp,bgdaowndp_desc(chr80),bgdacrtid,bgdacrtid_desc(chr80),bgdacrtdp,bgdacrtdp_desc(chr80),bgdacrtdt,bgdamodid,bgdamodid_desc(chr80),bgdamoddt,bgdacnfid,bgdacnfid_desc(chr80),bgdacnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bgdbseq,bgdb004,bgasl003(chr500),bgasl004(chr500),bgdb005,bgdb006,bgdb007,bgdb008,bgda003(dat),bgdb009"/>
+      <var id="bs_field" value="bgda001,bgda002,bgda003" pk="bgda001,bgda002,bgda003" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="open_abgi410_02"/>
+      <action id="open_abgi410_01"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abg" filename="abgi410" method="dialog">
+    <section id="input">
+      <input id="head" field="bgda001,bgda002,bgasl003,bgasl004,bgdastus,bgas004,bgda003,bgas005,bgda005,bgas310"/>
+      <input id="body" page="1" field="bgdbseq,bgdb004,bgasl003,bgasl004,bgdb005,bgdb006,bgdb007,bgdb008,bgda003,bgdb009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bgda001,bgda002,bgasl003,bgasl004,bgdastus,bgas004,bgda003,bgas005,bgda005,bgas310,bgdaownid,bgdaowndp,bgdacrtid,bgdacrtdp,bgdacrtdt,bgdamodid,bgdamoddt,bgdacnfid,bgdacnfdt"/>
+      <construct id="body" page="1" field="bgdbseq,bgdb004,bgasl003,bgasl004,bgdb005,bgdb006,bgdb007,bgdb008,bgda003,bgdb009"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bgda001,bgda002,bgda003"/>
+      <set id="head" type="no_entry" field="bgda001,bgda002,bgda003"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bgda001">
+        <after>
+          <check chkid="v_ooef001_24" id="isExist"/>
+          <reference field="bgda001_desc" ref_field="bgda_t.bgda001" map_field="bgda001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_77" state="i"/>
+        <controlp form="q_ooef001_77" state="c"/>
+      </column>
+      <column id="bgda001_desc"/>
+      <column id="bgda002">
+        <after>
+          <check chkid="v_bgas001" id="isExist"/>
+        </after>
+        <controlp form="q_bgas001" state="i"/>
+        <controlp form="q_bgas001" state="c"/>
+      </column>
+      <column id="bgasl003"/>
+      <column id="bgasl004"/>
+      <column id="bgdastus" scc="50">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="bgas004"/>
+      <column id="bgda003"/>
+      <column id="bgas005"/>
+      <column id="bgda005"/>
+      <column id="bgas310"/>
+      <column id="bgdaownid">
+        <after>
+          <reference field="bgdaownid_desc" ref_field="bgda_t.bgdaownid" map_field="bgdaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgdaownid_desc"/>
+      <column id="bgdaowndp">
+        <after>
+          <reference field="bgdaowndp_desc" ref_field="bgda_t.bgdaowndp" map_field="bgdaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgdaowndp_desc"/>
+      <column id="bgdacrtid">
+        <after>
+          <reference field="bgdacrtid_desc" ref_field="bgda_t.bgdacrtid" map_field="bgdacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgdacrtid_desc"/>
+      <column id="bgdacrtdp">
+        <after>
+          <reference field="bgdacrtdp_desc" ref_field="bgda_t.bgdacrtdp" map_field="bgdacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgdacrtdp_desc"/>
+      <column id="bgdacrtdt"/>
+      <column id="bgdamodid">
+        <after>
+          <reference field="bgdamodid_desc" ref_field="bgda_t.bgdamodid" map_field="bgdamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgdamodid_desc"/>
+      <column id="bgdamoddt"/>
+      <column id="bgdacnfid">
+        <after>
+          <reference field="bgdacnfid_desc" ref_field="bgda_t.bgdacnfid" map_field="bgdacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgdacnfid_desc"/>
+      <column id="bgdacnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="bgdbseq"/>
+      <column id="bgdb004">
+        <after>
+          <check chkid="v_bgas001" id="isExist"/>
+        </after>
+        <controlp form="q_bgas001" state="i"/>
+        <controlp form="q_bgas001" state="c"/>
+      </column>
+      <column id="bgasl003"/>
+      <column id="bgasl004"/>
+      <column id="bgdb005">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bgdb006">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bgdb007">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="bgdb008"/>
+      <column id="bgda003"/>
+      <column id="bgdb009"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bgda_t" pid="bgda002" type="" desc="" pk="bgda001,bgda002,bgda003">
+      <sql id="forupd_sql" type="sql" query="SELECT bgda001,&apos;&apos;,bgda002,&apos;&apos;,&apos;&apos;,bgdastus,&apos;&apos;,bgda003,&apos;&apos;,bgda005,&apos;&apos;,bgdaownid,&apos;&apos;,bgdaowndp,&apos;&apos;,bgdacrtid,&apos;&apos;,bgdacrtdp,&apos;&apos;,bgdacrtdt,bgdamodid,&apos;&apos;,bgdamoddt,bgdacnfid,&apos;&apos;,bgdacnfdt FROM bgda_t WHERE bgdaent= ? AND bgda001=? AND bgda002=? AND bgda003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="bgda001,bgda002,bgda003"/>
+    </head>
+    <body id="bgdb_t" page="1" linked="" lid="bgdb004" pid="bgdb002" type="" pk="bgdbseq" fk="bgdb001,bgdb002,bgdb003">
+      <sql id="forupd_sql_detail" query="SELECT bgdbseq,bgdb004,&apos;&apos;,&apos;&apos;,bgdb005,bgdb006,bgdb007,bgdb008,&apos;&apos;,bgdb009 FROM bgdb_t WHERE bgdbent=? AND bgdb001=? AND bgdb002=? AND bgdb003=? AND bgdbseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bgdbseq,bgdb004,&apos;&apos;,&apos;&apos;,bgdb005,bgdb006,bgdb007,bgdb008,&apos;&apos;,bgdb009 FROM bgdb_t WHERE bgdbent=? AND bgdb001=? AND bgdb002=? AND bgdb003=?"/>
+    </body>
+  </dataset>
+</assembly>
+

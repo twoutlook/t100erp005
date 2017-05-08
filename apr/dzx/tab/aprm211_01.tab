@@ -1,0 +1,81 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aprm211_01" module="apr" jobmode="N" type="c04a" industry="std" fix_arg="0" crtid="02482" crtdt="2014-03-28 10:27:52" modid="01251" moddt="2015-04-15 10:11:11" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="促銷主檔參與對象設定">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="prdmstus,prdm004,prdm002,prdm003,prdm005,prdm001,prdmsite,prdmunit"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="prdnstus,prdn002,prdn003,prdn004,prdn004_desc(chr500),prdnsite,prdnunit"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="detail_qrystr" mode="popup">
+        <action id="prog_v_prdi002" prog="v_prdi002" parameter="prdm004"/>
+      </action>
+    </section>
+  </structure>
+  <form id="0" module="apr" filename="aprm211_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="prdmstus,prdm004,prdm002,prdm003,prdm005,prdm001,prdmsite,prdmunit" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="prdnstus,prdn002,prdn003,prdn004,prdnsite,prdnunit" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="prdmstus,prdm004,prdm002,prdm003,prdm005,prdm001,prdmsite,prdmunit"/>
+      <construct id="body" page="2" field="prdnstus,prdn002,prdn003,prdn004,prdnsite,prdnunit"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="prdmstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="prdm004">
+        <controlp form="q_prdh002" state="i"/>
+      </column>
+      <column id="prdm002"/>
+      <column id="prdm003" def_scc="6567"/>
+      <column id="prdm005" type="S" default="0"/>
+      <column id="prdm001"/>
+      <column id="prdmsite"/>
+      <column id="prdmunit"/>
+    </init>
+    <init id="body" page="2">
+      <column id="prdnstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="prdn002"/>
+      <column id="prdn003"/>
+      <column id="prdn004">
+        <after/>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_prdn004" state="c"/>
+      </column>
+      <column id="prdn004_desc"/>
+      <column id="prdnsite"/>
+      <column id="prdnunit"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="prdm_t" page="1" linked="" pk="prdm001,prdm002,prdm004">
+      <sql id="forupd_sql_detail" query="SELECT prdmstus,prdm004,prdm002,prdm003,prdm005,prdm001,prdmsite,prdmunit FROM prdm_t WHERE prdment=? AND prdm001=? AND prdm002=? AND prdm004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT prdmstus,prdm004,prdm002,prdm003,prdm005,prdm001,prdmsite,prdmunit FROM prdm_t WHERE prdment= ? AND 1=1 "/>
+    </body>
+    <body id="prdn_t" page="2" linked="" pk="prdn003,prdn004" fk="prdn001,prdn002" detail="Y">
+      <sql id="forupd_sql_detail" query="SELECT prdnstus,prdn002,prdn003,prdn004,&apos;&apos;,prdnsite,prdnunit FROM prdn_t WHERE prdnent=? AND prdn001=? AND prdn002=? AND prdn003=? AND prdn004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT prdnstus,prdn002,prdn003,prdn004,&apos;&apos;,prdnsite,prdnunit FROM prdn_t WHERE prdnent=? AND prdn001=? AND prdn002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,1168 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="astr540_g01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:3(2016-10-20 16:18:35), PR版次:0003(1900-01-01 00:00:00)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000065
+#+ Filename...: astr540_g01
+#+ Description: 結算單
+#+ Creator....: 06535(2015-07-15 16:58:07)
+#+ Modifier...: 05384 -SD/PR- 00000
+ 
+{</section>}
+ 
+{<section id="astr540_g01.global" readonly="Y" >}
+#報表 g01 樣板自動產生(Version:11)
+#add-point:填寫註解說明
+#160905-00007#16   2016/09/05  By 02599       SQL条件增加ent
+#end add-point
+#add-point:填寫註解說明
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+PRIVATE TYPE sr1_r RECORD
+   stbe005 LIKE stbe_t.stbe005, 
+   l_gysdesc LIKE type_t.chr100, 
+   stbe013 LIKE stbe_t.stbe013, 
+   stbeseq LIKE stbe_t.stbeseq, 
+   stbd006 LIKE stbd_t.stbd006, 
+   stbd005 LIKE stbd_t.stbd005, 
+   stbd018 LIKE stbd_t.stbd018, 
+   stbd017 LIKE stbd_t.stbd017, 
+   stbd037 LIKE stbd_t.stbd037, 
+   stbd002 LIKE stbd_t.stbd002, 
+   stbe017 LIKE stbe_t.stbe017, 
+   stbdunit LIKE stbd_t.stbdunit, 
+   stbdstus LIKE stbd_t.stbdstus, 
+   stbdent LIKE stbd_t.stbdent, 
+   l_zje LIKE type_t.chr30, 
+   stbd033 LIKE stbd_t.stbd033, 
+   l_cdfp LIKE type_t.chr30, 
+   l_fyje LIKE type_t.chr30, 
+   l_fymc LIKE type_t.chr30, 
+   l_dep LIKE type_t.chr30, 
+   l_bz LIKE type_t.chr50, 
+   l_cc LIKE type_t.chr30, 
+   l_n LIKE type_t.chr30, 
+   l_kp LIKE type_t.num15_3, 
+   stbddocno LIKE stbd_t.stbddocno, 
+   stbd026 LIKE stbd_t.stbd026, 
+   stbd025 LIKE stbd_t.stbd025, 
+   stax_t_stax004 LIKE stax_t.stax004, 
+   stael_t_stael003 LIKE stael_t.stael003, 
+   stbe034 LIKE stbe_t.stbe034, 
+   stbe031 LIKE stbe_t.stbe031, 
+   l_stbe013 LIKE type_t.num20_6, 
+   stbd021 LIKE stbd_t.stbd021, 
+   l_stbd021 LIKE type_t.chr50, 
+   l_stfa051 LIKE type_t.chr30, 
+   l_stfa051_desc LIKE type_t.chr30, 
+   stbdsite LIKE stbd_t.stbdsite, 
+   l_stbdsite LIKE type_t.chr50, 
+   l_stbd033 LIKE type_t.chr30, 
+   stbd047 LIKE stbd_t.stbd047
+END RECORD
+ 
+PRIVATE TYPE sr2_r RECORD
+   ooff013 LIKE ooff_t.ooff013
+END RECORD
+ 
+ 
+DEFINE tm RECORD
+       wc STRING                   #where condition
+       END RECORD
+DEFINE sr DYNAMIC ARRAY OF sr1_r                   #宣告sr為sr1_t資料結構的動態陣列
+DEFINE g_select        STRING
+DEFINE g_from          STRING
+DEFINE g_where         STRING
+DEFINE g_order         STRING
+DEFINE g_sql           STRING                         #report_select_prep,REPORT段使用
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+TYPE sr3_r RECORD         
+   #子報表05資料
+   stbeseq       LIKE stbe_t.stbeseq, #序号
+   l_dep         LIKE stbe_t.stbe005,   #部类
+   l_fymc        LIKE stael_t.stael003,  #费用名称
+   l_fyje       LIKE  rtif_t.rtif003,   #费用金额
+   l_cdfp       LIKE  type_t.chr30,    #冲抵发票
+   l_bz          LIKE type_t.chr30,
+   stbddocno    LIKE  stbd_t.stbddocno
+  END RECORD
+
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="astr540_g01.main" readonly="Y" >}
+PUBLIC FUNCTION astr540_g01(p_arg1)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition
+#add-point:init段define (客製用) name="component_name.define_customerization"
+
+#end add-point
+#add-point:init段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component_name.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   #報表元件代號
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'   
+   
+   LET g_rep_code = "astr540_g01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #主報表select子句準備
+   CALL astr540_g01_sel_prep()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料存入array
+   CALL astr540_g01_ins_data()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料印出
+   CALL astr540_g01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="astr540_g01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION astr540_g01_sel_prep()
+   #add-point:sel_prep段define (客製用) name="sel_prep.define_customerization"
+   
+   #end add-point
+   #add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+ 
+   #end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+   
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+  LET g_select = " SELECT DISTINCT stbe005,'',nvl(stbe013,0),stbeseq,stbe007,stbe006,stbd018,stbd017,stbd037,stbd002, 
+       stbe017,stbdunit,stbdstus,stbdent,'',stbe033,'','','','',stbe032,'','',stbd045, 
+       stbddocno,stbd026,stbd025,stfj004,stael003,nvl(stbe034,0),stbe031, nvl(stbe034,0)-nvl(stbe013,0),
+       stbd021,ooag011,stfa051,rtaxl003,stbdsite,ooefl003,stbd033,stbd047 "   #add by geza 20151008 stbd045
+       #将stax004 赋值为当前的单据日期 stfj004 guomy 2015/10/9 
+       #modified by lanjj 2015-11-19 把开始/截至日期从stbd005/stbd006改为stbe006/stbe007
+       #modified by lanjj 2016-01-11 增加字段stbd033
+       #modified by lanjj 2016-01-21 增加字段stbd047
+#   #end add-point
+#   LET g_select = " SELECT stbe005,NULL,stbe013,stbeseq,stbd006,stbd005,stbd018,stbd017,stbd037,stbd002, 
+#       stbe017,stbdunit,stbdstus,stbdent,NULL,stbd033,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,stbddocno, 
+#       stbd026,stbd025,stax_t.stax004,stael_t.stael003,stbe034,stbe031,'',stbd021,NULL,NULL,NULL,stbdsite, 
+#       NULL,NULL,stbd047"
+# 
+#   #add-point:sel_prep g_from name="sel_prep.g_from"
+#mark by guomy 2015/9/9 --start--------------------
+#  LET g_from = " FROM stbe_t",
+#               " LEFT OUTER JOIN stael_t ON staelent=stbeent AND stbe005 = stael001 AND stael002 ='",g_dlang,"' ",
+#               "     ,stbd_t LEFT OUTER JOIN stax_t ON stbdent = staxent AND stax001 = stbd001 AND staxseq = stbd004 "
+
+  LET g_from = " FROM stbd_t",
+               " LEFT  JOIN stbe_t ON stbeent=stbdent AND stbedocno = stbddocno AND stbe001 !='3' ",  
+               " LEFT  JOIN stael_t ON staelent=stbeent AND stbe005 = stael001 AND stael002 ='",g_dlang,"' ",
+               " LEFT  JOIN stfj_t ON stbdent = stfjent AND stfj001 = stbd001 AND stfjseq = stbd004 ",
+               " LEFT  JOIN ooag_t ON stbdent = ooagent AND ooag001 = stbd021 ",  #add by dengdd 15/11/2
+               " LEFT  JOIN stfa_t ON stbdent = stfaent AND stbd001 = stfa001 ",
+               " LEFT  JOIN rtaxl_t ON rtaxlent=rtaxlent AND rtaxl001=stfa051 AND rtaxl002 ='",g_dlang,"'",
+               " LEFT  JOIN ooefl_t ON ooeflent=stbdent  AND ooefl001=stbdsite AND ooefl002 = '",g_dlang,"'"
+         #      " LEFT  JOIN stax_t ON stbdent = staxent AND stax001 = stbd001 AND staxseq = stbd004 "
+
+# add by guomy 2015/9/9 --end--------------------              
+#   #end add-point
+#    LET g_from = " FROM stbd_t,stbe_t,stax_t,stael_t"
+# 
+#   #add-point:sel_prep g_where name="sel_prep.g_where"
+    #mark by guomy 2015/9/9 報表數據列印重複------start-----
+    # LET g_where =" WHERE " ,tm.wc CLIPPED, " AND stbeent = stbdent AND stbedocno = stbddocno "
+     
+      LET g_where =" WHERE  " ,tm.wc CLIPPED
+             
+   #by guomy 2015/9/9 報表數據列印重複------end-----          
+#   #end add-point
+#    LET g_where = " WHERE " ,tm.wc CLIPPED 
+# 
+#   #add-point:sel_prep g_order name="sel_prep.g_order"
+     LET g_order = " ORDER BY stbeseq"
+#   #end add-point
+#    LET g_order = " ORDER BY stbddocno"
+# 
+#   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("stbd_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED ," ",g_order CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段 
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   
+   #end add-point
+   PREPARE astr540_g01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()   
+      LET g_rep_success = 'N'    
+   END IF
+   DECLARE astr540_g01_curs CURSOR FOR astr540_g01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="astr540_g01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION astr540_g01_ins_data()
+#主報表record(用於select子句)
+   DEFINE sr_s RECORD 
+   stbe005 LIKE stbe_t.stbe005, 
+   l_gysdesc LIKE type_t.chr100, 
+   stbe013 LIKE stbe_t.stbe013, 
+   stbeseq LIKE stbe_t.stbeseq, 
+   stbd006 LIKE stbd_t.stbd006, 
+   stbd005 LIKE stbd_t.stbd005, 
+   stbd018 LIKE stbd_t.stbd018, 
+   stbd017 LIKE stbd_t.stbd017, 
+   stbd037 LIKE stbd_t.stbd037, 
+   stbd002 LIKE stbd_t.stbd002, 
+   stbe017 LIKE stbe_t.stbe017, 
+   stbdunit LIKE stbd_t.stbdunit, 
+   stbdstus LIKE stbd_t.stbdstus, 
+   stbdent LIKE stbd_t.stbdent, 
+   l_zje LIKE type_t.chr30, 
+   stbd033 LIKE stbd_t.stbd033, 
+   l_cdfp LIKE type_t.chr30, 
+   l_fyje LIKE type_t.chr30, 
+   l_fymc LIKE type_t.chr30, 
+   l_dep LIKE type_t.chr30, 
+   l_bz LIKE type_t.chr50, 
+   l_cc LIKE type_t.chr30, 
+   l_n LIKE type_t.chr30, 
+   l_kp LIKE type_t.num15_3, 
+   stbddocno LIKE stbd_t.stbddocno, 
+   stbd026 LIKE stbd_t.stbd026, 
+   stbd025 LIKE stbd_t.stbd025, 
+   stax_t_stax004 LIKE stax_t.stax004, 
+   stael_t_stael003 LIKE stael_t.stael003, 
+   stbe034 LIKE stbe_t.stbe034, 
+   stbe031 LIKE stbe_t.stbe031, 
+   l_stbe013 LIKE type_t.num20_6, 
+   stbd021 LIKE stbd_t.stbd021, 
+   l_stbd021 LIKE type_t.chr50, 
+   l_stfa051 LIKE type_t.chr30, 
+   l_stfa051_desc LIKE type_t.chr30, 
+   stbdsite LIKE stbd_t.stbdsite, 
+   l_stbdsite LIKE type_t.chr50, 
+   l_stbd033 LIKE type_t.chr30, 
+   stbd047 LIKE stbd_t.stbd047
+ END RECORD
+   DEFINE l_cnt           LIKE type_t.num10
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point   
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+DEFINE l_gys      LIKE pmaal_t.pmaal003
+DEFINE l_gysdesc LIKE type_t.chr100
+DEFINE l_kp      LIKE stbd_t.stbd017
+
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    
+    #end add-point
+ 
+    CALL sr.clear()                                  #rep sr
+    LET l_cnt = 1
+    FOREACH astr540_g01_curs INTO sr_s.*
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()       
+          LET g_rep_success = 'N'    
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+ # mark by guomy 2019/9/9----
+#       SELECT pmaal003 INTO l_gysdesc FROM pmaal_t
+#        WHERE pmaalent =sr_s.stbdent
+#          AND  pmaal001 = sr_s.stbd002
+#          AND pmaal002 = g_dlang
+ #  LET sr_s.l_gysdesc = sr_s.stbd002,".",l_gysdesc
+ 
+       SELECT pmaal003 INTO  l_gysdesc 
+         FROM pmaal_t
+        WHERE pmaalent =sr_s.stbdent
+          AND pmaal001 = sr_s.stbd002
+          AND pmaal002 = g_dlang
+          
+      LET sr_s.l_gysdesc = sr_s.stbd002,"|",l_gysdesc 
+      LET sr_s.l_stfa051_desc = sr_s.l_stfa051,"|",sr_s.l_stfa051_desc
+      LET sr_s.l_stbdsite=sr_s.stbdsite,"|",sr_s.l_stbdsite
+          
+       SELECT gzcbl004 INTO sr_s.l_cc  #stbd033取值應為日結成本類型
+         FROM gzcbl_t
+        WHERE gzcbl001 ='6800'
+          AND gzcbl002 =sr_s.stbd033
+          AND gzcbl003 = g_dlang 
+ 
+     
+     
+    
+  
+ 
+
+ #  add  by guomy end ---------------------------------         
+       SELECT stbd017 INTO l_kp FROM stbd_t
+       WHERE  stbdent =sr_s.stbdent
+         AND  stbddocno =sr_s.stbddocno
+       
+       SELECT DISTINCT stbd037,stbd017,stbd018,stbd026 FROM stbd_t
+       WHERE stbdent =sr_s.stbdent
+         AND stbddocno =sr_s.stbddocno
+       
+       
+       
+       
+       #end add-point
+ 
+       #add-point:ins_data段before_arr name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #set rep array value
+       LET sr[l_cnt].stbe005 = sr_s.stbe005
+       LET sr[l_cnt].l_gysdesc = sr_s.l_gysdesc
+       LET sr[l_cnt].stbe013 = sr_s.stbe013
+       LET sr[l_cnt].stbeseq = sr_s.stbeseq
+       LET sr[l_cnt].stbd006 = sr_s.stbd006
+       LET sr[l_cnt].stbd005 = sr_s.stbd005
+       LET sr[l_cnt].stbd018 = sr_s.stbd018
+       LET sr[l_cnt].stbd017 = sr_s.stbd017
+       LET sr[l_cnt].stbd037 = sr_s.stbd037
+       LET sr[l_cnt].stbd002 = sr_s.stbd002
+       LET sr[l_cnt].stbe017 = sr_s.stbe017
+       LET sr[l_cnt].stbdunit = sr_s.stbdunit
+       LET sr[l_cnt].stbdstus = sr_s.stbdstus
+       LET sr[l_cnt].stbdent = sr_s.stbdent
+       LET sr[l_cnt].l_zje = sr_s.l_zje
+       LET sr[l_cnt].stbd033 = sr_s.stbd033
+       LET sr[l_cnt].l_cdfp = sr_s.l_cdfp
+       LET sr[l_cnt].l_fyje = sr_s.l_fyje
+       LET sr[l_cnt].l_fymc = sr_s.l_fymc
+       LET sr[l_cnt].l_dep = sr_s.l_dep
+       LET sr[l_cnt].l_bz = sr_s.l_bz
+       LET sr[l_cnt].l_cc = sr_s.l_cc
+       LET sr[l_cnt].l_n = sr_s.l_n
+       LET sr[l_cnt].l_kp = sr_s.l_kp
+       LET sr[l_cnt].stbddocno = sr_s.stbddocno
+       LET sr[l_cnt].stbd026 = sr_s.stbd026
+       LET sr[l_cnt].stbd025 = sr_s.stbd025
+       LET sr[l_cnt].stax_t_stax004 = sr_s.stax_t_stax004
+       LET sr[l_cnt].stael_t_stael003 = sr_s.stael_t_stael003
+       LET sr[l_cnt].stbe034 = sr_s.stbe034
+       LET sr[l_cnt].stbe031 = sr_s.stbe031
+       LET sr[l_cnt].l_stbe013 = sr_s.l_stbe013
+       LET sr[l_cnt].stbd021 = sr_s.stbd021
+       LET sr[l_cnt].l_stbd021 = sr_s.l_stbd021
+       LET sr[l_cnt].l_stfa051 = sr_s.l_stfa051
+       LET sr[l_cnt].l_stfa051_desc = sr_s.l_stfa051_desc
+       LET sr[l_cnt].stbdsite = sr_s.stbdsite
+       LET sr[l_cnt].l_stbdsite = sr_s.l_stbdsite
+       LET sr[l_cnt].l_stbd033 = sr_s.l_stbd033
+       LET sr[l_cnt].stbd047 = sr_s.stbd047
+ 
+ 
+       #add-point:ins_data段after_arr name="ins_data.after.save"
+       
+       #end add-point
+       LET l_cnt = l_cnt + 1
+    END FOREACH
+    CALL sr.deleteElement(l_cnt)
+ 
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="astr540_g01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION astr540_g01_rep_data()
+   DEFINE HANDLER         om.SaxDocumentHandler
+   DEFINE l_i             INTEGER
+ 
+    #判斷是否有報表資料，若回彈出訊息視窗
+    IF sr.getLength() = 0 THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = "adz-00285"
+       LET g_errparam.extend = NULL
+       LET g_errparam.popup  = FALSE
+       LET g_errparam.replace[1] = ''
+       CALL cl_err()  
+       RETURN 
+    END IF
+    WHILE TRUE   
+       #add-point:rep_data段印前 name="rep_data.before"
+       
+       #end add-point     
+       LET handler = cl_gr_handler()
+       IF handler IS NOT NULL THEN
+          START REPORT astr540_g01_rep TO XML HANDLER handler
+          FOR l_i = 1 TO sr.getLength()
+             OUTPUT TO REPORT astr540_g01_rep(sr[l_i].*)
+          END FOR
+          FINISH REPORT astr540_g01_rep
+       END IF
+       #add-point:rep_data段印完 name="rep_data.after"
+       
+       #end add-point       
+       IF g_rep_flag = TRUE THEN
+          LET g_rep_flag = FALSE
+          EXIT WHILE
+       END IF
+    END WHILE
+    #add-point:rep_data段離開while印完前 name="rep_data.end.before"
+    
+    #end add-point
+    CALL cl_gr_close_report()
+    #add-point:rep_data段離開while印完後 name="rep_data.end.after"
+    
+    #end add-point    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="astr540_g01.rep" readonly="Y" >}
+PRIVATE REPORT astr540_g01_rep(sr1)
+DEFINE sr1 sr1_r
+DEFINE sr2 sr2_r
+DEFINE l_subrep01_show  LIKE type_t.chr1,
+       l_subrep02_show  LIKE type_t.chr1,
+       l_subrep03_show  LIKE type_t.chr1,
+       l_subrep04_show  LIKE type_t.chr1
+DEFINE l_cnt           LIKE type_t.num10
+DEFINE l_sub_sql       STRING
+#add-point:rep段define  (客製用) name="rep.define_customerization"
+
+#end add-point
+#add-point:rep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep.define"
+DEFINE sr3 sr3_r                                        
+DEFINE l_subrep05_show  LIKE type_t.chr1 
+DEFINE l_dep            LIKE stbe_t.stbe005
+DEFINE l_sum1       LIKE stbe_t.stbe013
+DEFINE l_sum2       LIKE stbe_t.stbe013
+DEFINE l_sum3       LIKE stbe_t.stbe013 
+DEFINE l_ooefl003   LIKE ooefl_t.ooefl003
+DEFINE l_stfal004   LIKE stfal_t.stfal004
+DEFINE l_staal003   LIKE staal_t.staal003
+DEFINE l_no   LIKE   type_t.num15_3 #帐扣总金额
+DEFINE l_num     LIKE type_t.num15_3 #帐扣冲票金额
+DEFINE l_sum     LIKE type_t.num15_3 #帐扣补冲票金额
+DEFINE l_time    LIKE type_t.chr100  #增加结算日期范围取值为起始-结束日期  guomy 2015/10/9
+DEFINE l_stbdstus LIKE type_t.chr100 
+
+
+DEFINE l_ooefl006  LIKE ooefl_t.ooefl006  #2015-10-30 ADDED BY LANJJ
+#end add-point
+ 
+    #add-point:rep段ORDER_before name="rep.order.before"
+ 
+    #end add-point
+    ORDER  BY sr1.stbddocno
+    #add-point:rep段ORDER_after name="rep.order.after"
+    #sr1.stbe_t_stbeseq
+    #end add-point
+    
+    FORMAT
+       FIRST PAGE HEADER          
+          PRINTX g_user,g_pdate,g_rep_code,g_company,g_ptime,g_user_name,g_date_fmt
+          PRINTX tm.*
+          PRINTX g_grNumFmt.*
+          PRINTX g_rep_wcchp
+ 
+          #讀取beforeGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.stbddocno
+            #報表 d05 樣板自動產生(Version:6)
+            CALL cl_gr_title_clear()  #清除title變數值 
+            #add-point:rep.header  #公司資訊(不在公用變數內) name="rep.header"
+           
+           #ADDED BY LANJJ 2015-10-30 ---S---
+             SELECT ooefl006 INTO l_ooefl006
+               FROM ooefl_t 
+              WHERE ooeflent = sr1.stbdent
+                AND ooefl001 = (SELECT ooef017 
+                                  FROM ooef_t 
+                                 WHERE ooefent = sr1.stbdent AND ooef001 = g_site) 
+                AND ooefl002 = g_dlang
+            LET g_grPageHeader.title0101 = l_ooefl006
+           #ADDED BY LANJJ 2015-10-30 ---E---
+           
+            #end add-point:rep.header 
+            LET g_rep_docno = sr1.stbddocno
+            CALL cl_gr_init_pageheader() #表頭資訊
+            PRINTX g_grPageHeader.*
+            PRINTX g_grPageFooter.*
+            #add-point:rep.apr.signstr.before name="rep.apr.signstr.before"
+#add by guomy 2015/9/9 start---------------------------------
+          LET l_ooefl003=''
+         SELECT ooefl003 INTO l_ooefl003  #帶出組織名稱
+           FROM ooefl_t
+          WHERE ooefl001 = sr1.stbdunit AND ooeflent = g_enterprise
+            AND ooefl002 = g_dlang
+         
+          IF cl_null(l_ooefl003) THEN
+             LET l_ooefl003 = sr1.stbdunit
+          ELSE 
+             LET l_ooefl003= sr1.stbdunit ,'|',l_ooefl003              
+          END IF
+         
+         LET l_stfal004='' 
+         SELECT stfal004 INTO l_stfal004  
+           FROM stfal_t
+          WHERE stfal001 =(SELECT stbd001 
+                             FROM stbd_t
+                            WHERE stbdent =g_enterprise AND stbddocno=sr1.stbddocno )
+            AND stfalent = g_enterprise
+            AND stfal002 = g_dlang
+         
+          IF cl_null(l_stfal004) THEN
+             LET l_stfal004 = sr1.stbd037
+          ELSE 
+             LET l_stfal004= sr1.stbd037 ,'|',l_stfal004 
+          END IF          
+
+      #结算方式
+         LET l_staal003='' 
+         SELECT  staal003 INTO l_staal003  
+           FROM staal_t
+        WHERE staal001=sr1.stbe017
+          AND staalent=sr1.stbdent 
+          AND staal002=g_dlang 
+         
+          IF cl_null(l_staal003) THEN
+             LET l_staal003 = sr1.stbe017
+          ELSE 
+             LET l_staal003= sr1.stbe017 ,'|',l_staal003 
+          END IF  
+
+
+        IF cl_null(sr1.stbeseq) THEN
+           LET sr1.stbd005 = ''
+           LET sr1.stbd006 = '' 
+        END IF 
+          
+#add by guomy 2015/9/9 end------------------------------
+            #end add-point:rep.apr.signstr.before   
+            LET g_doc_key = 'stbdent=' ,sr1.stbdent,'{+}stbddocno=' ,sr1.stbddocno         
+            CALL cl_gr_init_apr(sr1.stbddocno)
+            #add-point:rep.apr.signstr name="rep.apr.signstr"
+ 
+            #end add-point:rep.apr.signstr
+            PRINTX g_grSign.*
+ 
+ 
+ 
+           #add-point:rep.b_group.stbddocno.before name="rep.b_group.stbddocno.before"
+           LET l_sum1=0
+           LET l_sum2=0
+           LET l_sum3=0
+           LET l_no = 0
+           LET l_sum=0
+           LET l_num=0
+          
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub01.before name="rep.sub01.before"
+           #  LET l_sum1=0  # add by  guomy 2015/9/9
+           #end add-point:rep.sub01.before
+ 
+           #add-point:rep.sub01.sql name="rep.sub01.sql"
+           
+           #end add-point:rep.sub01.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='2' AND ooffent = '", 
+                sr1.stbdent CLIPPED ,"'", " AND  ooff002 = '", sr1.stbddocno CLIPPED ,"'"
+ 
+           #add-point:rep.sub01.afsql name="rep.sub01.afsql"
+           
+           #end add-point:rep.sub01.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep01_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE astr540_g01_repcur01_cnt_pre FROM l_sub_sql
+           EXECUTE astr540_g01_repcur01_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep01_show ="Y"
+           END IF
+           PRINTX l_subrep01_show
+           START REPORT astr540_g01_subrep01
+           DECLARE astr540_g01_repcur01 CURSOR FROM g_sql
+           FOREACH astr540_g01_repcur01 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "astr540_g01_repcur01:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub01.foreach name="rep.sub01.foreach"
+              
+              #end add-point:rep.sub01.foreach
+              OUTPUT TO REPORT astr540_g01_subrep01(sr2.*)
+           END FOREACH
+           FINISH REPORT astr540_g01_subrep01
+           #add-point:rep.sub01.after name="rep.sub01.after"
+           
+           #end add-point:rep.sub01.after
+ 
+ 
+ 
+           #add-point:rep.b_group.stbddocno.after name="rep.b_group.stbddocno.after"
+           
+           #end add-point:
+ 
+ 
+ 
+ 
+       ON EVERY ROW
+          #add-point:rep.everyrow.before name="rep.everyrow.before"
+          
+          #end add-point:rep.everyrow.before
+ 
+          #單身前備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub02.before name="rep.sub02.before"
+           
+           #end add-point:rep.sub02.before
+ 
+           #add-point:rep.sub02.sql name="rep.sub02.sql"
+           
+           #end add-point:rep.sub02.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='2' AND ooffent = '", 
+                sr1.stbdent CLIPPED ,"'", " AND  ooff002 = '", sr1.stbddocno CLIPPED ,"'"
+ 
+           #add-point:rep.sub02.afsql name="rep.sub02.afsql"
+           
+           #end add-point:rep.sub02.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep02_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE astr540_g01_repcur02_cnt_pre FROM l_sub_sql
+           EXECUTE astr540_g01_repcur02_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep02_show ="Y"
+           END IF
+           PRINTX l_subrep02_show
+           START REPORT astr540_g01_subrep02
+           DECLARE astr540_g01_repcur02 CURSOR FROM g_sql
+           FOREACH astr540_g01_repcur02 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "astr540_g01_repcur02:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub02.foreach name="rep.sub02.foreach"
+              
+              #end add-point:rep.sub02.foreach
+              OUTPUT TO REPORT astr540_g01_subrep02(sr2.*)
+           END FOREACH
+           FINISH REPORT astr540_g01_subrep02
+           #add-point:rep.sub02.after name="rep.sub02.after"
+           
+           #end add-point:rep.sub02.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.beforerow name="rep.everyrow.beforerow"
+          
+          #end add-point:rep.everyrow.beforerow
+            
+          PRINTX sr1.*
+ 
+          #add-point:rep.everyrow.afterrow name="rep.everyrow.afterrow"
+          LET l_sum1 = l_sum1 + sr1.stbe013
+          LET l_sum2 = l_sum2 + sr1.stbe034
+          #end add-point:rep.everyrow.afterrow
+ 
+          #單身後備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub03.before name="rep.sub03.before"
+           
+           #end add-point:rep.sub03.before
+ 
+           #add-point:rep.sub03.sql name="rep.sub03.sql"
+           
+           #end add-point:rep.sub03.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='1' AND ooff002 = '", 
+                sr1.stbdent CLIPPED ,"'"
+ 
+           #add-point:rep.sub03.afsql name="rep.sub03.afsql"
+           
+           #end add-point:rep.sub03.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep03_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE astr540_g01_repcur03_cnt_pre FROM l_sub_sql
+           EXECUTE astr540_g01_repcur03_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep03_show ="Y"
+           END IF
+           PRINTX l_subrep03_show
+           START REPORT astr540_g01_subrep03
+           DECLARE astr540_g01_repcur03 CURSOR FROM g_sql
+           FOREACH astr540_g01_repcur03 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "astr540_g01_repcur03:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub03.foreach name="rep.sub03.foreach"
+              
+              #end add-point:rep.sub03.foreach
+              OUTPUT TO REPORT astr540_g01_subrep03(sr2.*)
+           END FOREACH
+           FINISH REPORT astr540_g01_subrep03
+           #add-point:rep.sub03.after name="rep.sub03.after"
+           
+           #end add-point:rep.sub03.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.after name="rep.everyrow.after"
+          
+          #end add-point:rep.everyrow.after        
+ 
+          #讀取afterGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.stbddocno
+ 
+           #add-point:rep.a_group.stbddocno.before name="rep.a_group.stbddocno.before"
+        SELECT  sum(stbe013) INTO l_no
+          FROM STBE_T 
+         WHERE stbedocno=sr1.stbddocno
+           AND stbe001 = '3'   
+           AND stbeent = g_enterprise #160905-00007#16 add
+
+        SELECT  sum(stbe013) INTO l_num
+          FROM STBE_T 
+         WHERE stbedocno=sr1.stbddocno
+           AND stbe001 = '3'
+           AND stbe025 = 'Y' 
+           AND stbeent = g_enterprise #160905-00007#16 add
+
+       SELECT gzcbl004 INTO l_stbdstus
+         FROM gzcbl_t 
+        WHERE gzcbl001 ='13'  
+          AND gzcbl002 = sr1.stbdstus 
+          AND gzcbl003 = g_dlang
+       LET  l_stbdstus =  sr1.stbdstus,"|",l_stbdstus 
+        LET l_sum = l_no - l_num
+        IF cl_null(l_no) THEN
+           LET l_no = 0
+        END IF 
+        IF cl_null(l_num) THEN
+           LET l_num = 0
+        END IF 
+        IF cl_null(l_sum) THEN
+           LET l_sum = 0
+        END IF         
+        PRINTX l_sum1
+        PRINTX l_no
+        PRINTX l_num
+        PRINTX l_sum
+        PRINTX l_stbdstus
+       
+#mark by guomy 2015/9/9 --start--------------------       
+#       LET g_sql = " SELECT  distinct stbeseq,'','','','',''",
+#                   "   FROM stbe_t ",
+#                   #" LEFT OUTER JOIN stael_t ON staelent = stbeent AND stbe005 = stael0 AND stael002 ='",g_dlang,"' ",
+#                   #"       ,stbd_t LEFT OUTER JOIN stax_t ON stbdent = staxent AND stax001 = stbd001 AND staxseq = stbd004 ",
+#                  "  WHERE stbe001 = '3' " ,
+#                   "  ORDER BY stbeseq" 
+
+      SELECT stbd005||'-'||stbd006 INTO l_time 
+        FROM stbd_t 
+       WHERE stbddocno = sr1.stbddocno
+         AND stbdent = g_enterprise
+       PRINTX  l_time 
+       LET l_sum3 = l_sum2-l_sum1
+       PRINTX l_sum3
+       PRINTX l_sum2
+       PRINTX l_ooefl003
+       PRINTX l_stfal004 
+       PRINTX l_staal003       
+       LET g_sql = " SELECT  distinct stbeseq,stbe005,stael003,stbe013,stbe025,stbe032,stbedocno ",
+                   "   FROM stbe_t ",
+                   "  LEFT OUTER JOIN stael_t ON staelent = stbeent AND stbe005 = stael001 AND stael002 ='",g_dlang,"' ",
+                   "  WHERE stbe001 = '3' " ,
+                   "    AND stbedocno='",sr1.stbddocno CLIPPED,"'",
+                   "  ORDER BY stbeseq"  
+                   
+#  
+#   stbeseq       LIKE stbe_t.stbeseq, #序号
+#   l_dep         LIKE stbe_t.stbe005,   #費用編號  stbe005
+#   l_fymc        LIKE stael_t.stael003,  #费用名称  stael003
+#   l_fyje       LIKE  rtif_t.rtif003,   #费用金额  stbe013
+#   l_cdfp       LIKE  type_t.chr30,    #冲抵发票  stbe025
+#   l_bz          LIKE type_t.chr30, #備註 stbe032
+#   stbddocno    LIKE  stbd_t.stbddocno
+   
+#mark by guomy 2015/9/9 --end --------------------  
+       LET l_cnt = 0
+       LET l_sub_sql = ""
+       LET l_subrep05_show ="N"
+       LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+       PREPARE astr540_g01_repcur05_cnt_pre FROM l_sub_sql
+       EXECUTE astr540_g01_repcur05_cnt_pre INTO l_cnt
+       IF l_cnt > 0 THEN 
+         LET l_subrep05_show ="Y"
+       END IF
+       PRINTX l_subrep05_show                           
+       START REPORT astr540_g01_subrep05                 
+       DECLARE astr540_g01_repcur05 CURSOR FROM g_sql
+       FOREACH astr540_g01_repcur05 INTO sr3.*
+#mark by guomy 2015/9/9 --start--------------------       
+#          SELECT stbe005 INTO sr3.l_dep
+#            FROM stbe_t
+#           WHERE stbeent =sr1.stbdent
+#             AND stbedocno=sr1.stbddocno
+#             AND stbeseq = sr3.stbeseq
+#             
+#          SELECT stael003 INTO sr3.l_fymc
+#            FROM stael_t
+#           WHERE staelent=sr1.stbdent
+#             AND stael001=sr3.l_dep
+#             AND stael002=g_dlang
+#             
+#          SELECT stbe013 INTO sr3.l_fyje
+#            FROM stbe_t
+#           WHERE stbeent =sr1.stbdent
+#             AND stbedocno=sr1.stbddocno
+#             AND stbeseq = sr3.stbeseq
+#             
+#          SELECT stbe025 INTO sr3.l_cdfp
+#            FROM stbe_t
+#           WHERE stbeent =sr1.stbdent
+#             AND stbedocno=sr1.stbddocno
+#             AND stbeseq = sr3.stbeseq
+          
+          
+#mark by guomy 2015/9/9 --end--------------------          
+          
+          
+          IF STATUS THEN 
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.extend = "astr540_g01_repcur05:"
+             LET g_errparam.code   = SQLCA.sqlcode
+             LET g_errparam.popup  = FALSE
+             CALL cl_err()                  
+             EXIT FOREACH 
+          END IF
+          OUTPUT TO REPORT astr540_g01_subrep05(sr3.*)
+       END FOREACH
+
+FINISH REPORT astr540_g01_subrep05
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub04.before name="rep.sub04.before"
+           
+           #end add-point:rep.sub04.before
+ 
+           #add-point:rep.sub04.sql name="rep.sub04.sql"
+           
+           #end add-point:rep.sub04.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='1' AND ooffent = '", 
+                sr1.stbdent CLIPPED ,"'", " AND  ooff002 = '", sr1.stbddocno CLIPPED ,"'"
+ 
+           #add-point:rep.sub04.afsql name="rep.sub04.afsql"
+           
+           #end add-point:rep.sub04.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep04_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE astr540_g01_repcur04_cnt_pre FROM l_sub_sql
+           EXECUTE astr540_g01_repcur04_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep04_show ="Y"
+           END IF
+           PRINTX l_subrep04_show
+           START REPORT astr540_g01_subrep04
+           DECLARE astr540_g01_repcur04 CURSOR FROM g_sql
+           FOREACH astr540_g01_repcur04 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "astr540_g01_repcur04:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub04.foreach name="rep.sub04.foreach"
+              
+              #end add-point:rep.sub04.foreach
+              OUTPUT TO REPORT astr540_g01_subrep04(sr2.*)
+           END FOREACH
+           FINISH REPORT astr540_g01_subrep04
+           #add-point:rep.sub04.after name="rep.sub04.after"
+           
+           #end add-point:rep.sub04.after
+ 
+ 
+ 
+           #add-point:rep.a_group.stbddocno.after name="rep.a_group.stbddocno.after"
+           
+           #end add-point:
+ 
+ 
+ 
+       ON LAST ROW
+            #add-point:rep.lastrow.before name="rep.lastrow.before"  
+                    
+            #end add-point :rep.lastrow.before
+ 
+            #add-point:rep.lastrow.after name="rep.lastrow.after"
+            
+            #end add-point :rep.lastrow.after
+END REPORT
+ 
+{</section>}
+ 
+{<section id="astr540_g01.subrep_str" readonly="Y" >}
+#讀取子報表樣板
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT astr540_g01_subrep01(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub01.define_customerization" 
+
+#end add-point
+#add-point:sub01.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub01.define" 
+
+#end add-point:sub01.define
+ 
+    #add-point:sub01.order.before name="sub01.order.before" 
+    
+    #end add-point:sub01.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub01.everyrow.before name="sub01.everyrow.before" 
+                          
+            #end add-point:sub01.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub01.everyrow.after name="sub01.everyrow.after" 
+            
+            #end add-point:sub01.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT astr540_g01_subrep02(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub02.define_customerization" 
+
+#end add-point
+#add-point:sub02.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub02.define" 
+
+#end add-point:sub02.define
+ 
+    #add-point:sub02.order.before name="sub02.order.before" 
+    
+    #end add-point:sub02.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub02.everyrow.before name="sub02.everyrow.before" 
+                          
+            #end add-point:sub02.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub02.everyrow.after name="sub02.everyrow.after" 
+            
+            #end add-point:sub02.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT astr540_g01_subrep03(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub03.define_customerization" 
+
+#end add-point
+#add-point:sub03.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub03.define" 
+
+#end add-point:sub03.define
+ 
+    #add-point:sub03.order.before name="sub03.order.before" 
+    
+    #end add-point:sub03.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub03.everyrow.before name="sub03.everyrow.before" 
+                          
+            #end add-point:sub03.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub03.everyrow.after name="sub03.everyrow.after" 
+            
+            #end add-point:sub03.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT astr540_g01_subrep04(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub04.define_customerization" 
+
+#end add-point
+#add-point:sub04.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub04.define" 
+
+#end add-point:sub04.define
+ 
+    #add-point:sub04.order.before name="sub04.order.before" 
+    
+    #end add-point:sub04.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub04.everyrow.before name="sub04.everyrow.before" 
+                          
+            #end add-point:sub04.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub04.everyrow.after name="sub04.everyrow.after" 
+            
+            #end add-point:sub04.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="astr540_g01.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="astr540_g01.other_report" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE REPORT astr540_g01_subrep05(sr3)
+   DEFINE  sr3    sr3_r  
+DEFINE l_sum2  LIKE stbe_t.stbe013
+   ORDER  BY sr3.stbddocno,sr3.stbeseq
+
+      FORMAT
+      BEFORE GROUP OF sr3.stbddocno
+        LET l_sum2=0
+        ON EVERY ROW
+           PRINTX g_grNumFmt.*
+           PRINTX sr3.*
+           LET l_sum2=l_sum2+sr3.l_fyje
+           AFTER GROUP OF sr3.stbddocno
+           PRINTX l_sum2
+           
+END REPORT
+
+ 
+{</section>}
+ 

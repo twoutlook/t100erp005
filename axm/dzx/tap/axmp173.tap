@@ -1,0 +1,919 @@
+<add_points prog="axmp173" std_prog="axmp173" erpver="1.0" module="AXM" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.axmp173_bom" cite_std="N" status="u" ver="1" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION axmp173_bom(p_xmif009,p_imaa001,p_qty,p_ant)
+DEFINE p_xmif009 LIKE xmif_t.xmif009
+DEFINE p_imaa001 LIKE imaa_t.imaa001
+DEFINE p_qty     LIKE xmid_t.xmid017   ##主件數量
+DEFINE p_ant     LIKE xmid_t.xmid021
+DEFINE l_qty     LIKE xmid_t.xmid017   ##主件數量
+DEFINE l_ant     LIKE xmid_t.xmid021
+DEFINE l_bmba003 LIKE bmba_t.bmba003
+DEFINE l_xmig013 LIKE xmig_t.xmig013
+DEFINE l_xmig015 LIKE xmig_t.xmig015
+DEFINE l_success LIKE type_t.num5
+DEFINE l_xmif009 LIKE xmif_t.xmif009
+DEFINE l_total   LIKE xmif_t.xmif010
+DEFINE l_i       LIKE type_t.num5
+DEFINE l_j       LIKE type_t.num5
+DEFINE l_bmba             DYNAMIC ARRAY OF RECORD #回传数组
+       bmba001            LIKE bmba_t.bmba001,    #bom相关资料都可以通过回传的key值抓取
+       bmba002            LIKE bmba_t.bmba002,
+       bmba003            LIKE bmba_t.bmba003,
+       bmba011            LIKE bmba_t.bmba011,     #QPA 分子，对应于原始的主件料号
+       bmba012            LIKE bmba_t.bmba012      #QPA 分母，对应于原始的主件料号
+                          END RECORD
+DEFINE l_xmif             DYNAMIC ARRAY OF RECORD 
+       xmif009            LIKE xmif_t.xmif009,   
+       xmif010            LIKE xmif_t.xmif010,
+       xmif011            LIKE xmif_t.xmif011,
+       xmif012            LIKE xmif_t.xmif012,
+       xmif014            LIKE xmif_t.xmif014
+                          END RECORD
+
+      
+   CALL axmp173_get_bom(p_xmif009,p_imaa001) RETURNING l_bmba
+   
+   FOR l_i = 1 TO l_bmba.getlength()
+      ##取axmi172程式中複合條件的項次
+      CALL axmp173_get_xmieseq(l_bmba[l_i].bmba003) RETURNING l_success,l_xmif009,l_total,l_xmif
+      IF NOT l_success THEN CONTINUE FOR END IF 
+      LET l_qty = (p_qty * l_bmba[l_i].bmba011)/l_bmba[l_i].bmba012
+      LET l_ant = (p_ant * l_bmba[l_i].bmba011)/l_bmba[l_i].bmba012
+      FOR l_j = 1 TO l_xmif.getlength()
+         LET l_xmig013 = l_qty * (l_xmif[l_j].xmif010/l_total)
+         LET l_xmig015 = l_ant * (l_xmif[l_j].xmif010/l_total)         
+         IF axmp173_chk_bom(l_xmif[l_j].xmif009,l_bmba[l_i].bmba003) AND l_xmif[l_j].xmif014 = 'Y' THEN 
+            CALL axmp173_bom(l_xmif[l_j].xmif009,l_bmba[l_i].bmba003,l_xmig013,l_xmig015)
+         END IF
+         IF l_xmif[l_j].xmif011 = 'N' AND l_xmig013 < l_xmif[l_j].xmif012 THEN
+            UPDATE xmig_t
+               SET xmig013 = xmig013 + l_xmig013,
+                   xmig015 = xmig015 + l_xmig015,
+                   xmig016 = xmig016 + l_xmig013
+             WHERE xmigent = g_enterprise
+               AND xmigsite = l_xmif009
+               AND xmig001 = g_xmid.xmid001
+               AND xmig002 = g_xmid.xmid002
+               AND xmig003 = g_xmig003        #版本
+               AND xmig004 = g_xmid.xmid005
+               AND xmig005 = g_xmid.xmid006
+               AND xmig006 = l_bmba[l_i].bmba003
+               AND xmig007 = g_xmid.xmid008
+               AND xmig008 = g_xmid.xmid009
+               AND xmig009 = g_xmid.xmid010
+               AND xmig010 = g_xmid.xmid011                  
+         ELSE
+            INSERT INTO xmig_t(xmigent,xmigsite,xmig001,xmig002,xmig003,
+                               xmig004,xmig005,xmig006,xmig007,xmig008,
+                               xmig009,xmig010,xmig011,xmig012,xmig013,
+                               xmig014,xmig015,xmig016,xmig017,xmig018)
+                 VALUES(g_enterprise,l_xmif[l_j].xmif009,g_xmid.xmid001,g_xmid.xmid002,g_xmig003,
+                         g_xmid.xmid005,g_xmid.xmid006,l_bmba[l_i].bmba003,g_xmid.xmid008,g_xmid.xmid009,
+                         g_xmid.xmid010,g_xmid.xmid011,g_xmid.xmid012,g_xmid.xmid013,l_xmig013,
+                         g_xmid.xmid018,l_xmig015,l_xmig013,'2',g_xmid.xmid014) 
+         END IF 
+         IF SQLCA.sqlcode THEN
+            CALL cl_err("xmig_t",SQLCA.sqlcode,1)  
+            LET g_success = FALSE
+            EXIT FOR
+         END IF         
+      END FOR
+      IF g_success = FALSE THEN 
+         EXIT FOR
+      END IF
+   END FOR
+
+
+END FUNCTION]]>
+</point>
+  <point name="function.axmp173_chk_bom" cite_std="N" status="" ver="1" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION axmp173_chk_bom(p_site,p_imaa001)
+DEFINE p_site    LIKE ooef_t.ooef001
+DEFINE p_imaa001 LIKE imaa_t.imaa001
+DEFINE r_success LIKE type_t.num5
+DEFINE l_cnt     LIKE type_t.num5
+DEFINE l_imaf012 LIKE imaf_t.imaf012
+DEFINE l_sql     STRING
+
+   LET r_success = FALSE
+   SELECT imaf012 INTO l_imaf012 
+     FROM imaf_t
+    WHERE imafent = g_enterprise
+      AND imaf001 = p_imaa001
+      AND imafsite = p_site
+                
+   LET l_cnt = 0
+   SELECT COUNT(*) INTO l_cnt 
+     FROM bmaa_t,imae_t
+    WHERE bmaaent = imaeent
+      AND bmaasite = imaesite
+      AND bmaa001 = imae001
+      AND bmaa002 = imae037
+      AND bmaaent = g_enterprise
+      AND bmaasite = p_site
+      AND bmaa001 = p_imaa001
+   IF l_cnt > 0 AND l_imaf012 = '2' THEN 
+      LET r_success = TRUE    
+   END IF 
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <point name="function.axmp173_xmic_exist" cite_std="N" status="" ver="1" src="s" new="Y" order="3" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 檢查預測編號+預測起始日期存在
+# Memo...........:
+# Usage..........: CALL axmp173_xmic_exist()
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 2014/03/26 By xianghui
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axmp173_xmic_exist()
+DEFINE r_success   LIKE type_t.num5
+
+   LET r_success = TRUE
+   IF NOT cl_null(g_xmic_m.xmic001) AND NOT cl_null(g_xmic_m.xmic002) THEN 
+      IF NOT ap_chk_isExist(g_xmic_m.xmic001,"SELECT COUNT(*) FROM xmic_t WHERE "||"xmicent = '" ||g_enterprise|| "' AND "||"xmic001 = ? AND xmic002 = '"||g_xmic_m.xmic002||"' ",'axm-00195',1) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF 
+      IF NOT ap_chk_isExist(g_xmic_m.xmic001,"SELECT COUNT(*) FROM xmic_t WHERE "||"xmicent = '" ||g_enterprise|| "' AND "||"xmic001 = ? AND xmic002 = '"||g_xmic_m.xmic002||"' AND xmicstus = 'Y'",'axm-00318',1) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF       
+   END IF
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <point name="function.axmp173_def_xmic002" cite_std="N" status="" ver="1" src="s" new="Y" order="4" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION axmp173_def_xmic002()
+DEFINE l_cnt   LIKE type_t.num5
+
+   IF NOT cl_null(g_xmic_m.xmic001) THEN 
+      LET l_cnt = 0
+      SELECT COUNT(*) INTO l_cnt
+        FROM xmic_t
+       WHERE xmicent = g_enterprise 
+         AND xmic001 = g_xmic_m.xmic001
+         AND NOT EXISTS (SELECT * FROM xmic_t,xmig_t  
+                                 WHERE xmicent = xmigent 
+                                   AND xmic001 = xmig001
+                                   AND xmic002 = xmig002
+                                   AND xmic003 = xmig003)         
+      IF l_cnt = 1 THEN 
+         SELECT DISTINCT xmic002 INTO g_xmic_m.xmic002
+           FROM xmic_t
+          WHERE xmicent = g_enterprise 
+            AND xmic001 = g_xmic_m.xmic001
+            AND NOT EXISTS (SELECT * FROM xmic_t,xmig_t  
+                                    WHERE xmicent = xmigent 
+                                      AND xmic001 = xmig001
+                                      AND xmic002 = xmig002
+                                      AND xmic003 = xmig003) 
+         DISPLAY BY NAME g_xmic_m.xmic002                                      
+      END IF
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.axmp173_xmic001_chk" cite_std="N" status="" ver="1" src="s" new="Y" order="5" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION axmp173_xmic001_chk()
+DEFINE l_cnt        LIKE type_t.num5
+DEFINE l_xmia009    LIKE xmia_t.xmia009
+DEFINE r_success    LIKE type_t.num5
+
+   LET r_success = TRUE
+   IF NOT cl_null(g_xmic_m.xmic001) THEN 
+      LET l_cnt = 0
+      SELECT COUNT(*) INTO l_cnt 
+        FROM xmic_t
+       WHERE xmicent = g_enterprise
+         AND xmic001 = g_xmic_m.xmic001 
+      IF l_cnt = 0 THEN 
+         CALL cl_err(g_xmic_m.xmic001,'axm-00277',1)
+         LET r_success = FALSE
+      END IF
+      SELECT xmia009 INTO l_xmia009
+        FROM xmia_t
+       WHERE xmiaent = g_enterprise
+         AND xmia001 = g_xmic_m.xmic001
+      IF l_xmia009 <> 'Y' THEN 
+         CALL cl_err(g_xmic_m.xmic001,'axm-00317',1)
+         LET r_success = FALSE         
+      END IF
+   END IF
+   RETURN r_success
+END FUNCTION]]>
+</point>
+  <point name="function.axmp173_get_bom" cite_std="N" status="" ver="1" src="s" new="Y" order="6" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION axmp173_get_bom(p_site,p_bmaa001)
+DEFINE p_site       LIKE bmaa_t.bmaasite,
+       p_bmaa001    LIKE bmaa_t.bmaa001
+DEFINE l_sql        STRING
+DEFINE l_bmaa002    LIKE bmaa_t.bmaa002
+DEFINE l_date       DATETIME YEAR TO SECOND
+DEFINE l_date_1     LIKE type_t.chr20        #BOM有效日期
+DEFINE l_ac         LIKE type_t.num5
+DEFINE r_bmba             DYNAMIC ARRAY OF RECORD #回传数组
+       bmba001            LIKE bmba_t.bmba001,    #bom相关资料都可以通过回传的key值抓取
+       bmba002            LIKE bmba_t.bmba002,
+       bmba003            LIKE bmba_t.bmba003,
+       bmba011            LIKE bmba_t.bmba011,     #QPA 分子，对应于原始的主件料号
+       bmba012            LIKE bmba_t.bmba012      #QPA 分母，对应于原始的主件料号
+                          END RECORD
+DEFINE l_i                LIKE type_t.num5
+DEFINE l_x                LIKE type_t.num5
+
+
+   LET l_date = cl_get_current()
+   LET l_date_1 = l_date
+   
+   SELECT imae037 INTO l_bmaa002 
+     FROM imae_t 
+    WHERE imaeent = g_enterprise
+      AND imaesite = p_site
+      AND imae001 = p_bmaa001 
+      
+   LET l_ac = 1
+   LET l_sql = "SELECT bmba001,bmba002,bmba003,bmba011,bmba012 FROM bmaa_t,bmba_t",
+               " WHERE bmaaent=bmbaent AND bmaasite=bmbasite AND bmaa001=bmba001 AND bmaa002=bmba002",
+               "   AND bmbaent='",g_enterprise,"' AND bmbasite='",p_site,"' AND bmba001='",p_bmaa001,"' AND bmba002='",l_bmaa002,"' AND bmaastus='Y'",
+               "   AND to_char(bmba005,'YYYY-MM-DD hh24:mi:ss')<='",l_date_1,"' AND (bmba006 IS NULL OR to_char(bmba006,'YYYY-MM-DD hh24:mi:ss')>'",l_date_1,"')"
+   PREPARE axmp173_bom_pre FROM l_sql
+   DECLARE axmp173_bom_cs CURSOR FOR axmp173_bom_pre
+   FOREACH axmp173_bom_cs INTO r_bmba[l_ac].*
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+   END FOREACH
+   CALL r_bmba.deleteElement(r_bmba.getLength())
+   RETURN r_bmba
+END FUNCTION]]>
+</point>
+  <point name="function.axmp173_get_xmieseq" cite_std="N" status="u" ver="1" src="s" new="Y" order="7" mark_hard="N">
+<![CDATA[
+PRIVATE FUNCTION axmp173_get_xmieseq(p_imaa001)
+DEFINE p_imaa001  LIKE imaa_t.imaa001
+DEFINE l_imaa009  LIKE imaa_t.imaa009
+DEFINE l_sql      STRING 
+DEFINE l_xmieseq  LIKE xmie_t.xmieseq
+DEFINE l_ac       LIKE type_t.num5
+DEFINE r_success  LIKE type_t.num5
+DEFINE r_xmif009  LIKE xmif_t.xmif009
+DEFINE r_total    LIKE xmif_t.xmif010
+DEFINE r_xmif     DYNAMIC ARRAY OF RECORD 
+       xmif009    LIKE xmif_t.xmif009,   
+       xmif010    LIKE xmif_t.xmif010,
+       xmif011    LIKE xmif_t.xmif011,
+       xmif012    LIKE xmif_t.xmif012,
+       xmif014    LIKE xmif_t.xmif014
+                  END RECORD
+
+   LET r_success = TRUE
+   
+   SELECT imaa009 INTO l_imaa009
+     FROM imaa_t
+    WHERE imaaent = g_enterprise
+      AND imaa001 = p_imaa001
+     
+     
+   LET l_sql = " SELECT xmieseq ", 
+                "   FROM xmie_t",
+                "  WHERE xmieent = '",g_enterprise,"'",
+                "    AND xmie001 = '",g_xmid.xmid001,"'",
+                "    AND xmie002 = '",l_imaa009,"'",
+                "    AND (xmie003 = '",g_xmid.xmid007,"' OR xmie003 = ' ')",
+                "    AND (xmie004 = '",g_xmid.xmid005,"' OR xmie004 = ' ')",
+                "    AND (xmie005 = '",g_xmid.xmid009,"' OR xmie005 = ' ')",
+                "    AND (xmie006 = '",g_xmid.xmid010,"' OR xmie006 = ' ')",
+                "    AND (xmie007 = '",g_xmid.xmid006,"' OR xmie007 = ' ')",
+                "    AND (xmie008 = '",g_xmid.xmid004,"' OR xmie008 = ' ')",
+                "    AND rownum = 1",
+                "    ORDER BY (xmie003||xmie004||xmie005||xmie006||xmie007||xmie008) DESC"
+   PREPARE xmieseq_pre1 FROM l_sql
+   EXECUTE xmieseq_pre1 INTO l_xmieseq
+   IF l_xmieseq IS NULL THEN 
+      LET l_sql = " SELECT xmieseq ", 
+                   "   FROM xmie_t",
+                   "  WHERE xmieent = '",g_enterprise,"'",
+                   "    AND xmie001 = '",g_xmid.xmid001,"'",
+                   "    AND xmie002 = 'ALL'",
+                   "    AND (xmie003 = '",g_xmid.xmid007,"' OR xmie003 = ' ')",
+                   "    AND (xmie004 = '",g_xmid.xmid005,"' OR xmie004 = ' ')",
+                   "    AND (xmie005 = '",g_xmid.xmid009,"' OR xmie005 = ' ')",
+                   "    AND (xmie006 = '",g_xmid.xmid010,"' OR xmie006 = ' ')",
+                   "    AND (xmie007 = '",g_xmid.xmid006,"' OR xmie007 = ' ')",
+                   "    AND (xmie008 = '",g_xmid.xmid004,"' OR xmie008 = ' ')",
+                   "    AND rownum = 1",
+                   "    ORDER BY (xmie003||xmie004||xmie005||xmie006||xmie007||xmie008) DESC"
+      PREPARE xmieseq_pre2 FROM l_sql
+      EXECUTE xmieseq_pre2 INTO l_xmieseq         
+   END IF
+   IF cl_null(l_xmieseq) THEN 
+      LET r_success = FALSE
+      RETURN r_success,r_xmif009,r_total,r_xmif 
+   END IF
+   
+   ##去axmi172分配營運據點的主要營運據點
+   SELECT xmif009 INTO r_xmif009 
+     FROM xmif_t
+   WHERE xmifent = g_enterprise
+     AND xmif001 = g_xmid.xmid001      
+     AND xmifseq = l_xmieseq
+     AND xmif011 = 'Y'
+     
+   SELECT SUM(xmif010) INTO r_total
+     FROM xmif_t
+    WHERE xmifent = g_enterprise
+      AND xmif001 = g_xmid.xmid001      
+      AND xmifseq = l_xmieseq 
+      
+   LET l_ac = 1  
+   LET l_sql = "SELECT DISTINCT xmif009,xmif010,xmif011,xmif012,xmif014 FROM xmif_t ",
+               " WHERE xmifent ='",g_enterprise,"'",
+               "   AND xmif001 = '",g_xmid.xmid001,"'",
+               "   AND xmifseq = '",l_xmieseq,"'",
+               " ORDER BY xmif011 DESC"
+   PREPARE axmp173_xmif_pr2 FROM l_sql           
+   DECLARE axmp173_xmif_cs2 CURSOR FOR axmp173_xmif_pr2
+   FOREACH axmp173_xmif_cs2 INTO r_xmif[l_ac].*   
+      IF SQLCA.sqlcode THEN
+         CALL cl_err('foreach:',SQLCA.sqlcode,1)
+         LET g_success = FALSE
+         EXIT FOREACH
+      END IF 
+      LET l_ac = l_ac + 1
+   END FOREACH 
+   CALL r_xmif.deleteElement(r_xmif.getLength())
+   RETURN r_success,r_xmif009,r_total,r_xmif    
+END FUNCTION]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[TYPE type_g_xmic_m RECORD
+        xmic001  LIKE xmic_t.xmic001,
+        xmic002  LIKE xmic_t.xmic002
+                     END RECORD 
+DEFINE g_xmic_m     type_g_xmic_m 
+DEFINE g_xmic_m_t   type_g_xmic_m
+DEFINE g_xmid      RECORD LIKE xmid_t.*
+DEFINE g_imae037    LIKE imae_t.imae037
+DEFINE g_xmig003    LIKE xmig_t.xmig003
+DEFINE g_stagecomplete LIKE type_t.num5]]>
+</point>
+  <point name="main.background" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   LET g_bgjob = "N"]]>
+</point>
+  <point name="process.count_progress" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[     ]]>
+</point>
+  <point name="process.define" cite_std="N" status="u" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   DEFINE l_xmieseq   LIKE xmie_t.xmieseq   
+   DEFINE l_xmig013   LIKE xmig_t.xmig013
+   DEFINE l_xmig015   LIKE xmig_t.xmig015
+   DEFINE l_imaa009   LIKE imaa_t.imaa009
+   DEFINE l_xmif009   LIKE xmif_t.xmif009
+   DEFINE l_total     LIKE xmif_t.xmif010
+   DEFINE l_success   LIKE type_t.num5
+   DEFINE l_cnt       LIKE type_t.num5
+   DEFINE l_i         LIKE type_t.num5
+   DEFINE l_xmif     DYNAMIC ARRAY OF RECORD 
+          xmif009    LIKE xmif_t.xmif009,   
+          xmif010    LIKE xmif_t.xmif010,
+          xmif011    LIKE xmif_t.xmif011,
+          xmif012    LIKE xmif_t.xmif012,
+          xmif014    LIKE xmif_t.xmif014
+                     END RECORD   ]]>
+</point>
+  <point name="process.process" cite_std="N" status="u" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   CALL s_transaction_begin()
+
+   LET g_success = TRUE
+   
+   SELECT COUNT(*) INTO l_cnt
+     FROM xmig_t
+    WHERE xmigent = g_enterprise
+      AND xmig001 = g_xmic_m.xmic001
+      AND xmig002 = g_xmic_m.xmic002
+   IF l_cnt > 0 THEN 
+      IF NOT cl_ask_confirm('axm-00253') THEN 
+         RETURN
+      END IF
+   END IF
+   
+   LET g_stagecomplete = 0
+   DISPLAY g_stagecomplete TO stagecomplete
+   
+   SELECT MAX(xmig003) INTO g_xmig003
+     FROM xmig_t
+    WHERE xmigent = g_enterprise
+      AND xmig001 = g_xmic_m.xmic001
+      AND xmig002 = g_xmic_m.xmic002
+   IF g_xmig003 IS NULL THEN 
+      LET g_xmig003 = 1
+   ELSE
+      LET g_xmig003 = g_xmig003 + 1
+   END IF
+      
+   LET ls_sql = " SELECT DISTINCT *",
+                "   FROM xmid_t ",
+                "  WHERE xmident = '",g_enterprise,"'",
+                "    AND xmid001 = '",g_xmic_m.xmic001,"'",
+                "    AND xmid002 = '",g_xmic_m.xmic002,"'"
+   DECLARE axmp173_process_cs CURSOR FROM ls_sql
+   FOREACH axmp173_process_cs INTO g_xmid.*
+      IF SQLCA.sqlcode THEN
+         CALL cl_err('foreach:',SQLCA.sqlcode,1)
+         LET g_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      
+      ##取axmi172程式中複合條件的項次,主要營運據點
+      CALL axmp173_get_xmieseq(g_xmid.xmid007) RETURNING l_success,l_xmif009,l_total,l_xmif
+      IF NOT l_success  THEN  CONTINUE FOREACH END IF
+      
+      FOR l_i = 1 TO l_xmif.getLength()
+         IF cl_null(g_xmid.xmid016) THEN LET g_xmid.xmid016 = 0 END IF
+
+         LET l_xmig013 = g_xmid.xmid017 * (l_xmif[l_i].xmif010/l_total)
+         LET l_xmig015 = g_xmid.xmid021 * (l_xmif[l_i].xmif010/l_total)
+         
+         IF axmp173_chk_bom(l_xmif[l_i].xmif009,g_xmid.xmid007) AND l_xmif[l_i].xmif014 = 'Y' THEN 
+            #展BOM
+            CALL axmp173_bom(l_xmif[l_i].xmif009,g_xmid.xmid007,l_xmig013,l_xmig015)
+         END IF
+
+         IF l_xmif[l_i].xmif011 = 'N' AND l_xmig013 < l_xmif[l_i].xmif012 THEN
+            UPDATE xmig_t
+               SET xmig013 = xmig013 + l_xmig013,
+                   xmig015 = xmig015 + l_xmig015,
+                   xmig016 = xmig016 + l_xmig013
+             WHERE xmigent = g_enterprise
+               AND xmigsite = l_xmif009
+               AND xmig001 = g_xmid.xmid001
+               AND xmig002 = g_xmid.xmid002
+               AND xmig003 = g_xmig003
+               AND xmig004 = g_xmid.xmid005
+               AND xmig005 = g_xmid.xmid006
+               AND xmig006 = g_xmid.xmid007
+               AND xmig007 = g_xmid.xmid008
+               AND xmig008 = g_xmid.xmid009
+               AND xmig009 = g_xmid.xmid010
+               AND xmig010 = g_xmid.xmid011                  
+         ELSE
+            INSERT INTO xmig_t(xmigent,xmigsite,xmig001,xmig002,xmig003,xmig004,xmig005,xmig006,xmig007,xmig008,
+                               xmig009,xmig010,xmig011,xmig012,xmig013,xmig014,xmig015,xmig016,xmig017,xmig018)
+                 VALUES(g_enterprise,l_xmif[l_i].xmif009,g_xmid.xmid001,g_xmid.xmid002,g_xmig003,g_xmid.xmid005,
+                         g_xmid.xmid006,g_xmid.xmid007,g_xmid.xmid008,g_xmid.xmid009,g_xmid.xmid010,g_xmid.xmid011,
+                         g_xmid.xmid012,g_xmid.xmid013,l_xmig013,g_xmid.xmid018,l_xmig015,l_xmig013,'1',g_xmid.xmid014) 
+         END IF 
+         IF SQLCA.sqlcode THEN
+            CALL cl_err("xmig_t",SQLCA.sqlcode,1)  
+            LET g_success = FALSE
+            EXIT FOR
+         END IF         
+      END FOR
+      IF NOT g_success THEN
+         EXIT FOREACH
+      END IF 
+   END FOREACH
+   
+   LET g_stagecomplete = 100
+   DISPLAY g_stagecomplete TO stagecomplete 
+   
+   IF g_success THEN 
+      CALL s_transaction_end('Y','0') 
+   ELSE
+      CALL s_transaction_end('N','0')   
+   END IF]]>
+</point>
+  <point name="ui_dialog.before_dialog" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   LET g_xmic_m.xmic001 = ''
+   LET g_xmic_m.xmic002 = '' ]]>
+</point>
+  <point name="ui_dialog.more_input" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[         INPUT BY NAME g_xmic_m.* ATTRIBUTE(WITHOUT DEFAULTS)
+            BEFORE INPUT
+              
+            AFTER FIELD xmic001
+               IF NOT axmp173_xmic001_chk() THEN 
+                  NEXT FIELD CURRENT
+               END IF
+               IF NOT axmp173_xmic_exist() THEN 
+                  LET g_xmic_m.xmic001 = ''
+                  NEXT FIELD CURRENT
+               END IF
+               CALL axmp173_def_xmic002()
+               
+            AFTER FIELD xmic002
+               IF NOT axmp173_xmic_exist() THEN 
+                  LET g_xmic_m.xmic002 = ''
+                  NEXT FIELD CURRENT               
+               END IF            
+            ON ACTION controlp INFIELD xmic001
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_xmic_m.xmic001       #給予default值
+               CALL q_xmia001()                                 #呼叫開窗
+               LET g_xmic_m.xmic001 = g_qryparam.return1        #將開窗取得的值回傳到變數
+               DISPLAY g_xmic_m.xmic001 TO xmic001              #顯示到畫面上
+               CALL axmp173_def_xmic002()
+               NEXT FIELD xmic001                               #返回原欄位 
+               
+         END INPUT]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.parameter" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.before_close" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="init.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="init.init" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_construct" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.qbe_select" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.qbeclear" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_action" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.exit_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="transfer.argv.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.pre_process" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.foreground_finish" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.background_finish" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <section id="axmp173.description" ver="50" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000097
+#+ 
+#+ Filename...: axmp173
+#+ Description: 銷售預測分配批次作業
+#+ Creator....: 02295(2014/03/28)
+#+ Modifier...: 02295(2014/04/22)
+#+ Buildtype..: 應用 p01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="axmp173.global" ver="1" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="axmp173.init" ver="1" status="" src="s">
+<![CDATA[#+ 初始化作業
+PRIVATE FUNCTION axmp173_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+</section>
+  <section id="axmp173.main" ver="2" status="" src="s">
+<![CDATA[MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("axm","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+      CALL axmp173_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_axmp173 WITH FORM cl_ap_formpath("axm",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL axmp173_init()
+ 
+      #進入選單 Menu (="N")
+      CALL axmp173_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_axmp173
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+</section>
+  <section id="axmp173.other_function" ver="1" status="" src="s">
+<![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+</section>
+  <section id="axmp173.process" ver="2" status="" src="s">
+<![CDATA[#+ 資料處理
+PRIVATE FUNCTION axmp173_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   {<point name="process.define"/>}
+   #end add-point
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE axmp173_process_cs CURSOR FROM ls_sql
+#  FOREACH axmp173_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+   END IF
+END FUNCTION
+]]>
+</section>
+  <section id="axmp173.transfer_argv" ver="1" status="" src="s">
+<![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION axmp173_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+ 
+   CALL util.JSON.parse(ls_js,la_param)
+ 
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+</section>
+  <section id="axmp173.ui_dialog" ver="5" status="" src="s">
+<![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION axmp173_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+ 
+   #add-point:ui_dialog段before dialog
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               LET lc_param.wc = ls_wc
+               #取得條件後需要執行項目,應新增於下方adp
+               #add-point:ui_dialog段qbe_select後
+               {<point name="ui_dialog.qbe_select"/>}
+               #end add-point
+            END IF
+ 
+         ON ACTION qbe_save
+            CALL cl_qbe_save()
+ 
+         ON ACTION batch_execute
+            ACCEPT DIALOG
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE lc_param.* TO NULL
+            #add-point:ui_dialog段qbeclear
+            {<point name="ui_dialog.qbeclear"/>}
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         LET g_jobid = cl_schedule_get_jobid(g_prog)
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL axmp173_process(ls_js)
+            WHEN g_schedule.gzpa003 = "1"
+                 CALL cl_schedule_update_data(g_jobid)
+                 LET ls_js = axmp173_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid)
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid)
+         END CASE    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+         INITIALIZE lc_param.*  TO NULL 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+</section>
+</add_points>

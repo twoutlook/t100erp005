@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asfr340_g01" module="asf" jobmode="N" type="g01" industry="std" crtid="05016" crtdt="2014-05-26 10:11:19" modid="08993" moddt="2016-11-09 15:34:41" sdver="6" tabver="10001" description="工单入库单">
+  <define arg="tm.wc(STRING|where condition),tm.a1(chr1|列印入庫明細)">
+    <var seq="1" value="sfea001,sfea002,sfea003,sfea004,sfea005,sfeadocdt,sfeadocno,sfeaent,sfeasite,sfeastus,sfeb001,sfeb002,sfeb003,sfeb004,sfeb005,sfeb006,sfeb007,sfeb008,sfeb009,sfeb010,sfeb011,sfeb012,sfeb013,sfeb014,sfeb015,sfeb016,sfeb017,sfeb018,sfeb019,sfeb020,sfeb021,sfeb022,sfeb025,sfeb026,sfebseq,sfebsite,x_imaal_t_imaal003(imaal003|x.imaal_t_imaal003),x_imaal_t_imaal004(imaal004|x.imaal_t_imaal004),l_inayl003(inayl003|&apos;&apos;),l_sfeb013_inayl003(chr1000|&apos;&apos;),l_sfea002_ooag011(chr100|&apos;&apos;),l_sfea003_ooefl003(chr100|&apos;&apos;),l_inab003(inab003|&apos;&apos;),l_sfeb014_inab003(chr1000|&apos;&apos;)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="sfea001,sfea002,sfea003,sfea004,sfea005,sfeadocdt,sfeadocno,sfeaent,sfeasite,sfeastus,sfeb001,sfeb002,sfeb003,sfeb004,sfeb005,sfeb006,sfeb007,sfeb008,sfeb009,sfeb010,sfeb011,sfeb012,sfeb013,sfeb014,sfeb015,sfeb016,sfeb017,sfeb018,sfeb019,sfeb020,sfeb021,sfeb022,sfeb025,sfeb026,sfebseq,sfebsite,x_imaal_t_imaal003(imaal003|x.imaal_t_imaal003),x_imaal_t_imaal004(imaal004|x.imaal_t_imaal004),l_inayl003(inayl003|&apos;&apos;),l_sfeb013_inayl003(chr1000|&apos;&apos;),l_sfea002_ooag011(chr100|&apos;&apos;),l_sfea003_ooefl003(chr100|&apos;&apos;),l_inab003(inab003|&apos;&apos;),l_sfeb014_inab003(chr1000|&apos;&apos;)"/>
+    <sql id="g_from" query=" sfea_t  LEFT OUTER JOIN ( SELECT sfeb_t.*,( SELECT imaal003 FROM imaal_t WHERE imaal_t.imaal001 = sfeb_t.sfeb004 AND imaal_t.imaalent = sfeb_t.sfebent AND imaal_t.imaal002 = g_dlang) imaal_t_imaal003,( SELECT imaal004 FROM imaal_t WHERE imaal_t.imaal001 = sfeb_t.sfeb004 AND imaal_t.imaalent = sfeb_t.sfebent AND imaal_t.imaal002 = g_dlang) imaal_t_imaal004 FROM sfeb_t ) x  ON sfea_t.sfeaent = x.sfebent AND sfea_t.sfeadocno = x.sfebdocno"/>
+    <sql id="g_where" query="" maintable="sfea_t"/>
+    <sql id="g_order" query="sfeadocno,sfebseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="sfeadocno,sfebseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="sfeadocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="sfeaent,sfeadocno"/>
+      <rep type="sfebseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="sfeaent,sfeadocno,sfebseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="sfeaent,sfeadocno,sfebseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="sfeadocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="sfeaent,sfeadocno"/>
+      <rep type="sfebseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

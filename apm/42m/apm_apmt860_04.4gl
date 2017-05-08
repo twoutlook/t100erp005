@@ -1,0 +1,2186 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="apmt860_04.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2015-01-26 11:33:01), PR版次:0003(2016-11-10 18:02:27)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000073
+#+ Filename...: apmt860_04
+#+ Description: 進項發票資訊維護
+#+ Creator....: 04226(2015-01-26 11:31:01)
+#+ Modifier...: 04226 -SD/PR- 00700
+ 
+{</section>}
+ 
+{<section id="apmt860_04.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#+ Modifier...:   No.160318-00025#37   2016/04/19 BY pengxin  將重複內容的錯誤訊息置換為公用錯誤訊息(r.v)
+#161104-00002#11  2016/11/10  By Rainy    將程式中 *寫法改掉
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_pmdw_m        RECORD
+       pmdwdocno LIKE pmdw_t.pmdwdocno, 
+   pmdwseq LIKE pmdw_t.pmdwseq, 
+   pmdw008 LIKE pmdw_t.pmdw008, 
+   pmdw008_desc LIKE type_t.chr80, 
+   pmdw037 LIKE pmdw_t.pmdw037, 
+   pmdw011 LIKE pmdw_t.pmdw011, 
+   pmdw010 LIKE pmdw_t.pmdw010, 
+   pmdw200 LIKE pmdw_t.pmdw200, 
+   pmdw030 LIKE pmdw_t.pmdw030, 
+   pmdw009 LIKE pmdw_t.pmdw009, 
+   pmdw012 LIKE pmdw_t.pmdw012, 
+   pmdw012_desc LIKE type_t.chr80, 
+   pmdw0121 LIKE pmdw_t.pmdw0121, 
+   pmdw013 LIKE pmdw_t.pmdw013, 
+   pmdw014 LIKE pmdw_t.pmdw014, 
+   pmdw014_desc LIKE type_t.chr80, 
+   pmdw015 LIKE pmdw_t.pmdw015, 
+   pmdw023 LIKE pmdw_t.pmdw023, 
+   pmdw024 LIKE pmdw_t.pmdw024, 
+   pmdw025 LIKE pmdw_t.pmdw025, 
+   pmdw026 LIKE pmdw_t.pmdw026, 
+   pmdw027 LIKE pmdw_t.pmdw027, 
+   pmdw028 LIKE pmdw_t.pmdw028, 
+   pmdwcomp LIKE pmdw_t.pmdwcomp, 
+   pmdw019 LIKE pmdw_t.pmdw019, 
+   pmdw034 LIKE pmdw_t.pmdw034, 
+   pmdwstus LIKE pmdw_t.pmdwstus, 
+   pmdw020 LIKE pmdw_t.pmdw020, 
+   pmdw038 LIKE pmdw_t.pmdw038, 
+   pmdw001 LIKE pmdw_t.pmdw001, 
+   pmdw021 LIKE pmdw_t.pmdw021, 
+   pmdw039 LIKE pmdw_t.pmdw039, 
+   pmdw002 LIKE pmdw_t.pmdw002, 
+   pmdw022 LIKE pmdw_t.pmdw022, 
+   pmdw004 LIKE pmdw_t.pmdw004, 
+   pmdw029 LIKE pmdw_t.pmdw029, 
+   pmdw016 LIKE pmdw_t.pmdw016, 
+   pmdw031 LIKE pmdw_t.pmdw031, 
+   pmdw017 LIKE pmdw_t.pmdw017, 
+   pmdw032 LIKE pmdw_t.pmdw032, 
+   pmdw018 LIKE pmdw_t.pmdw018, 
+   pmdw033 LIKE pmdw_t.pmdw033
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_pmdw_m_t       type_g_pmdw_m
+DEFINE g_pmdw_m_o       type_g_pmdw_m
+DEFINE g_glaa001        LIKE glaa_t.glaa001    #本幣
+DEFINE g_glaald         LIKE glaa_t.glaald
+DEFINE g_pmdsdocdt      LIKE pmds_t.pmdsdocdt
+DEFINE g_pmdssite       LIKE pmds_t.pmdssite
+DEFINE g_ooef019        LIKE ooef_t.ooef019
+#end add-point
+ 
+DEFINE g_pmdw_m        type_g_pmdw_m
+ 
+   DEFINE g_pmdwdocno_t LIKE pmdw_t.pmdwdocno
+DEFINE g_pmdwseq_t LIKE pmdw_t.pmdwseq
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apmt860_04.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION apmt860_04(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   p_pmdwdocno
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE p_pmdwdocno     LIKE pmdw_t.pmdwdocno
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_oodb011       LIKE oodb_t.oodb011    #取得稅別類型1:正常稅率2:依料件設定
+   DEFINE l_apca121        LIKE apca_t.apca121
+   DEFINE l_apca131        LIKE apca_t.apca131
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_apmt860_04 WITH FORM cl_ap_formpath("apm","apmt860_04")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+ 
+   CALL cl_set_combo_scc('pmdw037','9719')
+   
+   SELECT pmdsdocdt,pmdssite INTO g_pmdsdocdt,g_pmdssite
+     FROM pmds_t
+    WHERE pmdsent = g_enterprise
+      AND pmdsdocno = g_pmdw_m.pmdwdocno
+      
+   SELECT ooef019 INTO g_ooef019
+     FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_pmdssite
+   
+   INITIALIZE g_pmdw_m.* TO NULL
+   LET g_pmdw_m.pmdwdocno = p_pmdwdocno
+   #若已經維護，先加載資料
+   SELECT pmdwdocno, pmdwseq, pmdw008, pmdw037,  pmdw011,
+          pmdw010,   pmdw200, pmdw030, pmdw009,  pmdw012,
+          pmdw0121,  pmdw013, pmdw014, pmdw015,  pmdw023,
+          pmdw024,   pmdw025, pmdw026, pmdw027,  pmdw028,
+          pmdwcomp,  pmdw019, pmdw034, pmdwstus, pmdw020,
+          pmdw038,   pmdw001, pmdw021, pmdw039,  pmdw002,
+          pmdw022,   pmdw004, pmdw029, pmdw016,  pmdw031, 
+          pmdw017,   pmdw032, pmdw018, pmdw033
+     INTO g_pmdw_m.pmdwdocno, g_pmdw_m.pmdwseq, g_pmdw_m.pmdw008, g_pmdw_m.pmdw037, g_pmdw_m.pmdw011,
+          g_pmdw_m.pmdw010,   g_pmdw_m.pmdw200, g_pmdw_m.pmdw030, g_pmdw_m.pmdw009, g_pmdw_m.pmdw012,
+          g_pmdw_m.pmdw0121,  g_pmdw_m.pmdw013, g_pmdw_m.pmdw014, g_pmdw_m.pmdw015, g_pmdw_m.pmdw023,
+          g_pmdw_m.pmdw024,   g_pmdw_m.pmdw025, g_pmdw_m.pmdw026, g_pmdw_m.pmdw027, g_pmdw_m.pmdw028,
+          g_pmdw_m.pmdwcomp,  g_pmdw_m.pmdw019, g_pmdw_m.pmdw034, g_pmdw_m.pmdwstus,g_pmdw_m.pmdw020,
+          g_pmdw_m.pmdw038,   g_pmdw_m.pmdw001, g_pmdw_m.pmdw021, g_pmdw_m.pmdw039, g_pmdw_m.pmdw002,
+          g_pmdw_m.pmdw022,   g_pmdw_m.pmdw004, g_pmdw_m.pmdw029, g_pmdw_m.pmdw016, g_pmdw_m.pmdw031, 
+          g_pmdw_m.pmdw017,   g_pmdw_m.pmdw032, g_pmdw_m.pmdw018, g_pmdw_m.pmdw033
+     FROM pmdw_t
+    WHERE pmdwent = g_enterprise
+      AND pmdwdocno = g_pmdw_m.pmdwdocno
+   
+   IF SQLCA.sqlcode = 100 THEN  #沒有資料
+      LET p_cmd = 'a'
+      CALL apmt860_04_default()
+   ELSE
+      LET p_cmd = 'u'
+      CALL apmt860_04_get_ld_info()
+      CALL s_desc_get_invoice_type_desc1(g_site,g_pmdw_m.pmdw008) RETURNING g_pmdw_m.pmdw008_desc
+      DISPLAY BY NAME g_pmdw_m.pmdw008_desc
+      CALL s_desc_get_tax_desc(g_ooef019,g_pmdw_m.pmdw012) RETURNING g_pmdw_m.pmdw012_desc
+      DISPLAY BY NAME g_pmdw_m.pmdw012_desc
+      CALL s_desc_get_currency_desc(g_pmdw_m.pmdw014) RETURNING g_pmdw_m.pmdw014_desc
+      DISPLAY BY NAME g_pmdw_m.pmdw014_desc
+   END IF
+   
+   CALL apmt860_04_set_entry()
+   CALL apmt860_04_set_no_entry()
+   DISPLAY BY NAME g_pmdw_m.pmdwdocno,g_pmdw_m.pmdwseq,g_pmdw_m.pmdw008,g_pmdw_m.pmdw037,g_pmdw_m.pmdw011, 
+          g_pmdw_m.pmdw010,g_pmdw_m.pmdw200,g_pmdw_m.pmdw030,g_pmdw_m.pmdw009,g_pmdw_m.pmdw012,g_pmdw_m.pmdw0121, 
+          g_pmdw_m.pmdw013,g_pmdw_m.pmdw014,g_pmdw_m.pmdw015,g_pmdw_m.pmdw023,g_pmdw_m.pmdw024,g_pmdw_m.pmdw025, 
+          g_pmdw_m.pmdw026,g_pmdw_m.pmdw027,g_pmdw_m.pmdw028,g_pmdw_m.pmdwcomp,g_pmdw_m.pmdw019,g_pmdw_m.pmdw034, 
+          g_pmdw_m.pmdwstus,g_pmdw_m.pmdw020,g_pmdw_m.pmdw038,g_pmdw_m.pmdw001,g_pmdw_m.pmdw021,g_pmdw_m.pmdw039, 
+          g_pmdw_m.pmdw002,g_pmdw_m.pmdw022,g_pmdw_m.pmdw004,g_pmdw_m.pmdw029,g_pmdw_m.pmdw016,g_pmdw_m.pmdw031, 
+          g_pmdw_m.pmdw017,g_pmdw_m.pmdw032,g_pmdw_m.pmdw018,g_pmdw_m.pmdw033
+   
+   LET g_pmdw_m_t.* = g_pmdw_m.*
+   LET g_pmdw_m_o.* = g_pmdw_m.*
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_pmdw_m.pmdwdocno,g_pmdw_m.pmdwseq,g_pmdw_m.pmdw008,g_pmdw_m.pmdw037,g_pmdw_m.pmdw011, 
+          g_pmdw_m.pmdw010,g_pmdw_m.pmdw200,g_pmdw_m.pmdw030,g_pmdw_m.pmdw009,g_pmdw_m.pmdw012,g_pmdw_m.pmdw0121, 
+          g_pmdw_m.pmdw013,g_pmdw_m.pmdw014,g_pmdw_m.pmdw015,g_pmdw_m.pmdw023,g_pmdw_m.pmdw024,g_pmdw_m.pmdw025, 
+          g_pmdw_m.pmdw026,g_pmdw_m.pmdw027,g_pmdw_m.pmdw028,g_pmdw_m.pmdwcomp,g_pmdw_m.pmdw019,g_pmdw_m.pmdw034, 
+          g_pmdw_m.pmdwstus,g_pmdw_m.pmdw020,g_pmdw_m.pmdw038,g_pmdw_m.pmdw001,g_pmdw_m.pmdw021,g_pmdw_m.pmdw039, 
+          g_pmdw_m.pmdw002,g_pmdw_m.pmdw022,g_pmdw_m.pmdw004,g_pmdw_m.pmdw029,g_pmdw_m.pmdw016,g_pmdw_m.pmdw031, 
+          g_pmdw_m.pmdw017,g_pmdw_m.pmdw032,g_pmdw_m.pmdw018,g_pmdw_m.pmdw033 ATTRIBUTE(WITHOUT DEFAULTS) 
+ 
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdwdocno
+            #add-point:BEFORE FIELD pmdwdocno name="input.b.pmdwdocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdwdocno
+            
+            #add-point:AFTER FIELD pmdwdocno name="input.a.pmdwdocno"
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  NOT cl_null(g_pmdw_m.pmdwdocno) AND NOT cl_null(g_pmdw_m.pmdwseq) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_pmdw_m.pmdwdocno != g_pmdw_m_t.pmdwdocno  OR g_pmdw_m.pmdwseq != g_pmdw_m_t.pmdwseq )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmdw_t WHERE "||"pmdwent = '" ||g_enterprise|| "' AND "||"pmdwdocno = '"||g_pmdw_m.pmdwdocno ||"' AND "|| "pmdwseq = '"||g_pmdw_m.pmdwseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdwdocno
+            #add-point:ON CHANGE pmdwdocno name="input.g.pmdwdocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdwseq
+            #add-point:BEFORE FIELD pmdwseq name="input.b.pmdwseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdwseq
+            
+            #add-point:AFTER FIELD pmdwseq name="input.a.pmdwseq"
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  NOT cl_null(g_pmdw_m.pmdwdocno) AND NOT cl_null(g_pmdw_m.pmdwseq) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_pmdw_m.pmdwdocno != g_pmdw_m_t.pmdwdocno  OR g_pmdw_m.pmdwseq != g_pmdw_m_t.pmdwseq )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmdw_t WHERE "||"pmdwent = '" ||g_enterprise|| "' AND "||"pmdwdocno = '"||g_pmdw_m.pmdwdocno ||"' AND "|| "pmdwseq = '"||g_pmdw_m.pmdwseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdwseq
+            #add-point:ON CHANGE pmdwseq name="input.g.pmdwseq"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw008
+            
+            #add-point:AFTER FIELD pmdw008 name="input.a.pmdw008"
+            LET g_pmdw_m.pmdw008_desc = ''
+            DISPLAY BY NAME g_pmdw_m.pmdw008_desc
+            IF (NOT cl_null(g_pmdw_m.pmdw008)) AND (g_pmdw_m.pmdw008 != g_pmdw_m_t.pmdw008 OR cl_null(g_pmdw_m_t.pmdw008 ))  THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_ooef019
+               LET g_chkparam.arg2 = g_pmdw_m.pmdw008
+               IF NOT cl_chk_exist("v_isac002_1") THEN
+                  LET g_pmdw_m.pmdw008 = g_pmdw_m_t.pmdw008
+                  CALL s_desc_get_invoice_type_desc1(g_site,g_pmdw_m.pmdw008)
+                     RETURNING g_pmdw_m.pmdw008_desc
+                  DISPLAY BY NAME g_pmdw_m.pmdw008_desc
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            CALL s_desc_get_invoice_type_desc1(g_site,g_pmdw_m.pmdw008) RETURNING g_pmdw_m.pmdw008_desc
+            DISPLAY BY NAME g_pmdw_m.pmdw008_desc
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw008
+            #add-point:BEFORE FIELD pmdw008 name="input.b.pmdw008"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw008
+            #add-point:ON CHANGE pmdw008 name="input.g.pmdw008"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw037
+            #add-point:BEFORE FIELD pmdw037 name="input.b.pmdw037"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw037
+            
+            #add-point:AFTER FIELD pmdw037 name="input.a.pmdw037"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw037
+            #add-point:ON CHANGE pmdw037 name="input.g.pmdw037"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw011
+            #add-point:BEFORE FIELD pmdw011 name="input.b.pmdw011"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw011
+            
+            #add-point:AFTER FIELD pmdw011 name="input.a.pmdw011"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw011
+            #add-point:ON CHANGE pmdw011 name="input.g.pmdw011"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw010
+            #add-point:BEFORE FIELD pmdw010 name="input.b.pmdw010"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw010
+            
+            #add-point:AFTER FIELD pmdw010 name="input.a.pmdw010"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw010
+            #add-point:ON CHANGE pmdw010 name="input.g.pmdw010"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw200
+            #add-point:BEFORE FIELD pmdw200 name="input.b.pmdw200"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw200
+            
+            #add-point:AFTER FIELD pmdw200 name="input.a.pmdw200"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw200
+            #add-point:ON CHANGE pmdw200 name="input.g.pmdw200"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw030
+            #add-point:BEFORE FIELD pmdw030 name="input.b.pmdw030"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw030
+            
+            #add-point:AFTER FIELD pmdw030 name="input.a.pmdw030"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw030
+            #add-point:ON CHANGE pmdw030 name="input.g.pmdw030"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw009
+            #add-point:BEFORE FIELD pmdw009 name="input.b.pmdw009"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw009
+            
+            #add-point:AFTER FIELD pmdw009 name="input.a.pmdw009"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw009
+            #add-point:ON CHANGE pmdw009 name="input.g.pmdw009"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw012
+            
+            #add-point:AFTER FIELD pmdw012 name="input.a.pmdw012"
+            LET g_pmdw_m.pmdw012_desc = ''
+            DISPLAY BY NAME g_pmdw_m.pmdw012_desc
+            IF NOT cl_null(g_pmdw_m.pmdw012) THEN
+               IF g_pmdw_m.pmdw012 != g_pmdw_m_o.pmdw012 OR cl_null(g_pmdw_m_o.pmdw012 ) THEN
+                  CALL s_tax_chk(g_pmdssite,g_pmdw_m.pmdw012)
+                        RETURNING l_success,g_pmdw_m.pmdw012_desc,g_pmdw_m.pmdw0121,g_pmdw_m.pmdw013,l_oodb011
+                     
+                  IF NOT l_success THEN
+                     LET g_pmdw_m.pmdw012 = g_pmdw_m_o.pmdw012
+                     CALL s_desc_get_tax_desc(g_ooef019,g_pmdw_m.pmdw012) RETURNING g_pmdw_m.pmdw012_desc
+                     DISPLAY BY NAME g_pmdw_m.pmdw012_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  CALL apmt860_04_tax(g_pmdw_m.pmdw023,g_pmdw_m.pmdw025) RETURNING g_pmdw_m.pmdw023,g_pmdw_m.pmdw024,g_pmdw_m.pmdw025
+                  CALL apmt860_04_tax(g_pmdw_m.pmdw026,g_pmdw_m.pmdw028) RETURNING g_pmdw_m.pmdw026,g_pmdw_m.pmdw027,g_pmdw_m.pmdw028
+               END IF
+            END IF
+            CALL s_desc_get_tax_desc(g_ooef019,g_pmdw_m.pmdw012) RETURNING g_pmdw_m.pmdw012_desc
+            DISPLAY BY NAME g_pmdw_m.pmdw012_desc
+            LET g_pmdw_m_o.pmdw012 = g_pmdw_m.pmdw012
+            CALL apmt860_04_set_entry()
+            CALL apmt860_04_set_no_entry()
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw012
+            #add-point:BEFORE FIELD pmdw012 name="input.b.pmdw012"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw012
+            #add-point:ON CHANGE pmdw012 name="input.g.pmdw012"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw0121
+            #add-point:BEFORE FIELD pmdw0121 name="input.b.pmdw0121"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw0121
+            
+            #add-point:AFTER FIELD pmdw0121 name="input.a.pmdw0121"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw0121
+            #add-point:ON CHANGE pmdw0121 name="input.g.pmdw0121"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw013
+            #add-point:BEFORE FIELD pmdw013 name="input.b.pmdw013"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw013
+            
+            #add-point:AFTER FIELD pmdw013 name="input.a.pmdw013"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw013
+            #add-point:ON CHANGE pmdw013 name="input.g.pmdw013"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw014
+            
+            #add-point:AFTER FIELD pmdw014 name="input.a.pmdw014"
+            LET g_pmdw_m.pmdw014_desc = ''
+            DISPLAY BY NAME g_pmdw_m.pmdw014_desc
+            IF NOT cl_null(g_pmdw_m.pmdw014) THEN
+               IF g_pmdw_m.pmdw014 != g_pmdw_m_o.pmdw014 OR cl_null(g_pmdw_m_o.pmdw014) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_pmdssite
+                  LET g_chkparam.arg2 = g_pmdw_m.pmdw014
+                  #160318-00025#37  2016/04/19  by pengxin  add(S)
+                  LET g_errshow = TRUE #是否開窗 
+                  LET g_chkparam.err_str[1] = "aoo-00176:sub-01302|aooi150|",cl_get_progname("aooi150",g_lang,"2"),"|:EXEPROGaooi150"
+                  #160318-00025#37  2016/04/19  by pengxin  add(E)
+                  IF cl_chk_exist("v_ooaj002") THEN
+                     IF (NOT cl_null(g_pmdsdocdt)) AND (NOT cl_null(g_pmdw_m.pmdwcomp)) AND (NOT cl_null(g_glaald)) THEN
+                        CALL s_fin_get_curr_rate(g_pmdw_m.pmdwcomp,g_glaald,g_pmdsdocdt,g_pmdw_m.pmdw014,'')
+                           RETURNING g_pmdw_m.pmdw015,l_apca121,l_apca131
+                        DISPLAY BY NAME g_pmdw_m.pmdw015
+                     END IF
+                  ELSE
+                     LET g_pmdw_m.pmdw014 = g_pmdw_m_o.pmdw014
+                     CALL s_desc_get_currency_desc(g_pmdw_m.pmdw014) RETURNING g_pmdw_m.pmdw014_desc
+                     DISPLAY BY NAME g_pmdw_m.pmdw014_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  IF g_pmdw_m.pmdw014 = g_glaa001 THEN
+                     LET g_pmdw_m.pmdw015 =  1
+                     LET g_pmdw_m.pmdw026 = g_pmdw_m.pmdw023
+                     LET g_pmdw_m.pmdw027 = g_pmdw_m.pmdw024
+                     LET g_pmdw_m.pmdw028 = g_pmdw_m.pmdw025
+                  ELSE 
+                     CALL apmt860_04_lcurr()
+                  END IF
+               END IF
+            END IF
+            CALL s_desc_get_currency_desc(g_pmdw_m.pmdw014) RETURNING g_pmdw_m.pmdw014_desc
+            DISPLAY BY NAME g_pmdw_m.pmdw014_desc
+            LET g_pmdw_m_o.pmdw014 = g_pmdw_m.pmdw014
+            CALL apmt860_04_set_entry()
+            CALL apmt860_04_set_no_entry()
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw014
+            #add-point:BEFORE FIELD pmdw014 name="input.b.pmdw014"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw014
+            #add-point:ON CHANGE pmdw014 name="input.g.pmdw014"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw015
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pmdw_m.pmdw015,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD pmdw015
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pmdw015 name="input.a.pmdw015"
+            IF NOT cl_null(g_pmdw_m.pmdw015) THEN
+               IF g_pmdw_m.pmdw015 != g_pmdw_m_o.pmdw015 OR cl_null(g_pmdw_m_o.pmdw015) THEN 
+                  CALL apmt860_04_lcurr()
+               END IF
+            END IF 
+            LET g_pmdw_m_o.pmdw015 = g_pmdw_m.pmdw015
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw015
+            #add-point:BEFORE FIELD pmdw015 name="input.b.pmdw015"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw015
+            #add-point:ON CHANGE pmdw015 name="input.g.pmdw015"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw023
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pmdw_m.pmdw023,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD pmdw023
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pmdw023 name="input.a.pmdw023"
+            IF NOT cl_null(g_pmdw_m.pmdw023) THEN
+               IF g_pmdw_m.pmdw023 != g_pmdw_m_o.pmdw023 OR cl_null(g_pmdw_m_o.pmdw023) THEN 
+                  CALL apmt860_04_tax(g_pmdw_m.pmdw023,g_pmdw_m.pmdw025) RETURNING g_pmdw_m.pmdw023,g_pmdw_m.pmdw024,g_pmdw_m.pmdw025
+                  DISPLAY BY NAME g_pmdw_m.pmdw023,g_pmdw_m.pmdw024,g_pmdw_m.pmdw025
+                  
+                  CALL apmt860_04_lcurr()
+               END IF
+            END IF
+            LET g_pmdw_m_o.pmdw023 = g_pmdw_m.pmdw023
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw023
+            #add-point:BEFORE FIELD pmdw023 name="input.b.pmdw023"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw023
+            #add-point:ON CHANGE pmdw023 name="input.g.pmdw023"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw024
+            #add-point:BEFORE FIELD pmdw024 name="input.b.pmdw024"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw024
+            
+            #add-point:AFTER FIELD pmdw024 name="input.a.pmdw024"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw024
+            #add-point:ON CHANGE pmdw024 name="input.g.pmdw024"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw025
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pmdw_m.pmdw025,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD pmdw025
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pmdw025 name="input.a.pmdw025"
+            IF NOT cl_null(g_pmdw_m.pmdw025) THEN
+               IF g_pmdw_m.pmdw025 != g_pmdw_m_o.pmdw025 OR cl_null(g_pmdw_m_o.pmdw025) THEN 
+                  CALL apmt860_04_tax(g_pmdw_m.pmdw023,g_pmdw_m.pmdw025) RETURNING g_pmdw_m.pmdw023,g_pmdw_m.pmdw024,g_pmdw_m.pmdw025
+                  DISPLAY BY NAME g_pmdw_m.pmdw023,g_pmdw_m.pmdw024,g_pmdw_m.pmdw025
+                  CALL apmt860_04_lcurr()
+               END IF
+            END IF 
+            LET g_pmdw_m_o.pmdw025 = g_pmdw_m.pmdw025
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw025
+            #add-point:BEFORE FIELD pmdw025 name="input.b.pmdw025"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw025
+            #add-point:ON CHANGE pmdw025 name="input.g.pmdw025"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw026
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pmdw_m.pmdw026,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD pmdw026
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pmdw026 name="input.a.pmdw026"
+            IF NOT cl_null(g_pmdw_m.pmdw026) THEN
+               IF g_pmdw_m.pmdw026 != g_pmdw_m_o.pmdw026 OR cl_null(g_pmdw_m_o.pmdw026) THEN 
+                  CALL apmt860_04_tax(g_pmdw_m.pmdw026,g_pmdw_m.pmdw028) RETURNING g_pmdw_m.pmdw026,g_pmdw_m.pmdw027,g_pmdw_m.pmdw028
+                  DISPLAY BY NAME g_pmdw_m.pmdw026,g_pmdw_m.pmdw027,g_pmdw_m.pmdw028
+               END IF
+            END IF 
+            LET g_pmdw_m_o.pmdw026 = g_pmdw_m.pmdw026
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw026
+            #add-point:BEFORE FIELD pmdw026 name="input.b.pmdw026"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw026
+            #add-point:ON CHANGE pmdw026 name="input.g.pmdw026"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw027
+            #add-point:BEFORE FIELD pmdw027 name="input.b.pmdw027"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw027
+            
+            #add-point:AFTER FIELD pmdw027 name="input.a.pmdw027"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw027
+            #add-point:ON CHANGE pmdw027 name="input.g.pmdw027"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw028
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_pmdw_m.pmdw028,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD pmdw028
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD pmdw028 name="input.a.pmdw028"
+            IF NOT cl_null(g_pmdw_m.pmdw028) THEN
+               IF g_pmdw_m.pmdw028 != g_pmdw_m_o.pmdw028 OR cl_null(g_pmdw_m_o.pmdw028) THEN  
+                  CALL apmt860_04_tax(g_pmdw_m.pmdw026,g_pmdw_m.pmdw028) RETURNING g_pmdw_m.pmdw026,g_pmdw_m.pmdw027,g_pmdw_m.pmdw028
+                  DISPLAY BY NAME g_pmdw_m.pmdw026,g_pmdw_m.pmdw027,g_pmdw_m.pmdw028
+               END IF
+            END IF 
+            LET g_pmdw_m_o.pmdw028 = g_pmdw_m.pmdw028
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw028
+            #add-point:BEFORE FIELD pmdw028 name="input.b.pmdw028"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw028
+            #add-point:ON CHANGE pmdw028 name="input.g.pmdw028"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdwcomp
+            #add-point:BEFORE FIELD pmdwcomp name="input.b.pmdwcomp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdwcomp
+            
+            #add-point:AFTER FIELD pmdwcomp name="input.a.pmdwcomp"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdwcomp
+            #add-point:ON CHANGE pmdwcomp name="input.g.pmdwcomp"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw019
+            #add-point:BEFORE FIELD pmdw019 name="input.b.pmdw019"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw019
+            
+            #add-point:AFTER FIELD pmdw019 name="input.a.pmdw019"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw019
+            #add-point:ON CHANGE pmdw019 name="input.g.pmdw019"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw034
+            #add-point:BEFORE FIELD pmdw034 name="input.b.pmdw034"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw034
+            
+            #add-point:AFTER FIELD pmdw034 name="input.a.pmdw034"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw034
+            #add-point:ON CHANGE pmdw034 name="input.g.pmdw034"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdwstus
+            #add-point:BEFORE FIELD pmdwstus name="input.b.pmdwstus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdwstus
+            
+            #add-point:AFTER FIELD pmdwstus name="input.a.pmdwstus"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdwstus
+            #add-point:ON CHANGE pmdwstus name="input.g.pmdwstus"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw020
+            #add-point:BEFORE FIELD pmdw020 name="input.b.pmdw020"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw020
+            
+            #add-point:AFTER FIELD pmdw020 name="input.a.pmdw020"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw020
+            #add-point:ON CHANGE pmdw020 name="input.g.pmdw020"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw038
+            #add-point:BEFORE FIELD pmdw038 name="input.b.pmdw038"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw038
+            
+            #add-point:AFTER FIELD pmdw038 name="input.a.pmdw038"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw038
+            #add-point:ON CHANGE pmdw038 name="input.g.pmdw038"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw001
+            #add-point:BEFORE FIELD pmdw001 name="input.b.pmdw001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw001
+            
+            #add-point:AFTER FIELD pmdw001 name="input.a.pmdw001"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw001
+            #add-point:ON CHANGE pmdw001 name="input.g.pmdw001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw021
+            #add-point:BEFORE FIELD pmdw021 name="input.b.pmdw021"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw021
+            
+            #add-point:AFTER FIELD pmdw021 name="input.a.pmdw021"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw021
+            #add-point:ON CHANGE pmdw021 name="input.g.pmdw021"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw039
+            #add-point:BEFORE FIELD pmdw039 name="input.b.pmdw039"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw039
+            
+            #add-point:AFTER FIELD pmdw039 name="input.a.pmdw039"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw039
+            #add-point:ON CHANGE pmdw039 name="input.g.pmdw039"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw002
+            #add-point:BEFORE FIELD pmdw002 name="input.b.pmdw002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw002
+            
+            #add-point:AFTER FIELD pmdw002 name="input.a.pmdw002"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw002
+            #add-point:ON CHANGE pmdw002 name="input.g.pmdw002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw022
+            #add-point:BEFORE FIELD pmdw022 name="input.b.pmdw022"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw022
+            
+            #add-point:AFTER FIELD pmdw022 name="input.a.pmdw022"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw022
+            #add-point:ON CHANGE pmdw022 name="input.g.pmdw022"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw004
+            #add-point:BEFORE FIELD pmdw004 name="input.b.pmdw004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw004
+            
+            #add-point:AFTER FIELD pmdw004 name="input.a.pmdw004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw004
+            #add-point:ON CHANGE pmdw004 name="input.g.pmdw004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw029
+            #add-point:BEFORE FIELD pmdw029 name="input.b.pmdw029"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw029
+            
+            #add-point:AFTER FIELD pmdw029 name="input.a.pmdw029"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw029
+            #add-point:ON CHANGE pmdw029 name="input.g.pmdw029"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw016
+            #add-point:BEFORE FIELD pmdw016 name="input.b.pmdw016"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw016
+            
+            #add-point:AFTER FIELD pmdw016 name="input.a.pmdw016"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw016
+            #add-point:ON CHANGE pmdw016 name="input.g.pmdw016"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw031
+            #add-point:BEFORE FIELD pmdw031 name="input.b.pmdw031"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw031
+            
+            #add-point:AFTER FIELD pmdw031 name="input.a.pmdw031"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw031
+            #add-point:ON CHANGE pmdw031 name="input.g.pmdw031"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw017
+            #add-point:BEFORE FIELD pmdw017 name="input.b.pmdw017"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw017
+            
+            #add-point:AFTER FIELD pmdw017 name="input.a.pmdw017"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw017
+            #add-point:ON CHANGE pmdw017 name="input.g.pmdw017"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw032
+            #add-point:BEFORE FIELD pmdw032 name="input.b.pmdw032"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw032
+            
+            #add-point:AFTER FIELD pmdw032 name="input.a.pmdw032"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw032
+            #add-point:ON CHANGE pmdw032 name="input.g.pmdw032"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw018
+            #add-point:BEFORE FIELD pmdw018 name="input.b.pmdw018"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw018
+            
+            #add-point:AFTER FIELD pmdw018 name="input.a.pmdw018"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw018
+            #add-point:ON CHANGE pmdw018 name="input.g.pmdw018"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmdw033
+            #add-point:BEFORE FIELD pmdw033 name="input.b.pmdw033"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmdw033
+            
+            #add-point:AFTER FIELD pmdw033 name="input.a.pmdw033"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmdw033
+            #add-point:ON CHANGE pmdw033 name="input.g.pmdw033"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.pmdwdocno
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdwdocno
+            #add-point:ON ACTION controlp INFIELD pmdwdocno name="input.c.pmdwdocno"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdwseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdwseq
+            #add-point:ON ACTION controlp INFIELD pmdwseq name="input.c.pmdwseq"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw008
+            #add-point:ON ACTION controlp INFIELD pmdw008 name="input.c.pmdw008"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_pmdw_m.pmdw008             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_ooef019
+            LET g_qryparam.arg2 = '1'   #進項
+            CALL q_isac002_1()                                #呼叫開窗
+
+            LET g_pmdw_m.pmdw008 = g_qryparam.return1              
+
+            DISPLAY g_pmdw_m.pmdw008 TO pmdw008
+            CALL s_desc_get_invoice_type_desc1(g_pmdssite,g_pmdw_m.pmdw008) RETURNING g_pmdw_m.pmdw008_desc
+            DISPLAY BY NAME g_pmdw_m.pmdw008_desc
+
+            NEXT FIELD pmdw008                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw037
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw037
+            #add-point:ON ACTION controlp INFIELD pmdw037 name="input.c.pmdw037"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw011
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw011
+            #add-point:ON ACTION controlp INFIELD pmdw011 name="input.c.pmdw011"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw010
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw010
+            #add-point:ON ACTION controlp INFIELD pmdw010 name="input.c.pmdw010"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw200
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw200
+            #add-point:ON ACTION controlp INFIELD pmdw200 name="input.c.pmdw200"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw030
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw030
+            #add-point:ON ACTION controlp INFIELD pmdw030 name="input.c.pmdw030"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw009
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw009
+            #add-point:ON ACTION controlp INFIELD pmdw009 name="input.c.pmdw009"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw012
+            #add-point:ON ACTION controlp INFIELD pmdw012 name="input.c.pmdw012"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_pmdw_m.pmdw012
+            
+            CALL q_oodb002_2()
+            LET g_pmdw_m.pmdw012 = g_qryparam.return1 
+            DISPLAY g_pmdw_m.pmdw012 TO pmdw012
+            CALL s_desc_get_tax_desc(g_ooef019,g_pmdw_m.pmdw012)
+               RETURNING g_pmdw_m.pmdw012_desc
+            DISPLAY BY NAME g_pmdw_m.pmdw012_desc
+            NEXT FIELD pmdw012
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw0121
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw0121
+            #add-point:ON ACTION controlp INFIELD pmdw0121 name="input.c.pmdw0121"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw013
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw013
+            #add-point:ON ACTION controlp INFIELD pmdw013 name="input.c.pmdw013"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw014
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw014
+            #add-point:ON ACTION controlp INFIELD pmdw014 name="input.c.pmdw014"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_pmdw_m.pmdw014
+            
+            #給予arg
+            LET g_qryparam.arg1 = g_pmdssite
+            CALL q_ooaj002_1()
+            LET g_pmdw_m.pmdw014 = g_qryparam.return1
+            DISPLAY g_pmdw_m.pmdw014 TO pmdw014
+            CALL s_desc_get_currency_desc(g_pmdw_m.pmdw014) RETURNING g_pmdw_m.pmdw014_desc
+            DISPLAY BY NAME g_pmdw_m.pmdw014_desc
+            NEXT FIELD pmdw014
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw015
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw015
+            #add-point:ON ACTION controlp INFIELD pmdw015 name="input.c.pmdw015"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw023
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw023
+            #add-point:ON ACTION controlp INFIELD pmdw023 name="input.c.pmdw023"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw024
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw024
+            #add-point:ON ACTION controlp INFIELD pmdw024 name="input.c.pmdw024"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw025
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw025
+            #add-point:ON ACTION controlp INFIELD pmdw025 name="input.c.pmdw025"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw026
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw026
+            #add-point:ON ACTION controlp INFIELD pmdw026 name="input.c.pmdw026"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw027
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw027
+            #add-point:ON ACTION controlp INFIELD pmdw027 name="input.c.pmdw027"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw028
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw028
+            #add-point:ON ACTION controlp INFIELD pmdw028 name="input.c.pmdw028"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdwcomp
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdwcomp
+            #add-point:ON ACTION controlp INFIELD pmdwcomp name="input.c.pmdwcomp"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw019
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw019
+            #add-point:ON ACTION controlp INFIELD pmdw019 name="input.c.pmdw019"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw034
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw034
+            #add-point:ON ACTION controlp INFIELD pmdw034 name="input.c.pmdw034"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdwstus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdwstus
+            #add-point:ON ACTION controlp INFIELD pmdwstus name="input.c.pmdwstus"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw020
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw020
+            #add-point:ON ACTION controlp INFIELD pmdw020 name="input.c.pmdw020"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw038
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw038
+            #add-point:ON ACTION controlp INFIELD pmdw038 name="input.c.pmdw038"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw001
+            #add-point:ON ACTION controlp INFIELD pmdw001 name="input.c.pmdw001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw021
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw021
+            #add-point:ON ACTION controlp INFIELD pmdw021 name="input.c.pmdw021"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw039
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw039
+            #add-point:ON ACTION controlp INFIELD pmdw039 name="input.c.pmdw039"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw002
+            #add-point:ON ACTION controlp INFIELD pmdw002 name="input.c.pmdw002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw022
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw022
+            #add-point:ON ACTION controlp INFIELD pmdw022 name="input.c.pmdw022"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw004
+            #add-point:ON ACTION controlp INFIELD pmdw004 name="input.c.pmdw004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw029
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw029
+            #add-point:ON ACTION controlp INFIELD pmdw029 name="input.c.pmdw029"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw016
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw016
+            #add-point:ON ACTION controlp INFIELD pmdw016 name="input.c.pmdw016"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw031
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw031
+            #add-point:ON ACTION controlp INFIELD pmdw031 name="input.c.pmdw031"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw017
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw017
+            #add-point:ON ACTION controlp INFIELD pmdw017 name="input.c.pmdw017"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw032
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw032
+            #add-point:ON ACTION controlp INFIELD pmdw032 name="input.c.pmdw032"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw018
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw018
+            #add-point:ON ACTION controlp INFIELD pmdw018 name="input.c.pmdw018"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmdw033
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmdw033
+            #add-point:ON ACTION controlp INFIELD pmdw033 name="input.c.pmdw033"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            IF p_cmd <> 'u' THEN
+    
+               CALL s_transaction_begin()
+              
+               INSERT INTO pmdw_t (pmdwent, pmdwdocno, pmdwseq, pmdw001, pmdw008,
+                                   pmdw037, pmdw011,   pmdw010, pmdw030, pmdw009,
+                                   pmdw012, pmdw0121,  pmdw013, pmdw014, pmdw015,
+                                   pmdw023, pmdw024,   pmdw025, pmdw026, pmdw027,
+                                   pmdw028, pmdwcomp,  pmdwstus,pmdw002, pmdw004,
+              		                 pmdw016, pmdw017,   pmdw018, pmdw019, pmdw020,
+              		                 pmdw021, pmdw022,   pmdw029, pmdw031, pmdw032,
+              		                 pmdw033, pmdw034,   pmdw038, pmdw039, pmdw200) 
+                  VALUES(g_enterprise,     g_pmdw_m.pmdwdocno, g_pmdw_m.pmdwseq, g_pmdw_m.pmdw001, g_pmdw_m.pmdw008,
+                         g_pmdw_m.pmdw037, g_pmdw_m.pmdw011,   g_pmdw_m.pmdw010, g_pmdw_m.pmdw030, g_pmdw_m.pmdw009,
+                         g_pmdw_m.pmdw012, g_pmdw_m.pmdw0121,  g_pmdw_m.pmdw013, g_pmdw_m.pmdw014, g_pmdw_m.pmdw015, 
+                         g_pmdw_m.pmdw023, g_pmdw_m.pmdw024,   g_pmdw_m.pmdw025, g_pmdw_m.pmdw026, g_pmdw_m.pmdw027,
+                         g_pmdw_m.pmdw028, g_pmdw_m.pmdwcomp,  g_pmdw_m.pmdwstus,g_pmdw_m.pmdw002, g_pmdw_m.pmdw004,
+                         g_pmdw_m.pmdw016, g_pmdw_m.pmdw017,   g_pmdw_m.pmdw018, g_pmdw_m.pmdw019, g_pmdw_m.pmdw020,
+                         g_pmdw_m.pmdw021, g_pmdw_m.pmdw022,   g_pmdw_m.pmdw029, g_pmdw_m.pmdw031, g_pmdw_m.pmdw032, 
+                         g_pmdw_m.pmdw033, g_pmdw_m.pmdw034,   g_pmdw_m.pmdw038, g_pmdw_m.pmdw039, g_pmdw_m.pmdw200)
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "g_pmdw_m" 
+                  LET g_errparam.code   = SQLCA.sqlcode 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CALL s_transaction_end('N','0')
+                  CONTINUE DIALOG
+               END IF
+               CALL s_transaction_end('Y','0')
+            ELSE
+               CALL s_transaction_begin()
+               UPDATE pmdw_t SET (pmdw001,  pmdwdocno,pmdwseq, pmdw008, pmdw037,
+                                  pmdw011,  pmdw010,  pmdw030, pmdw009, pmdw012,
+                                  pmdw0121, pmdw013,  pmdw014, pmdw015, pmdw023,
+                                  pmdw024,  pmdw025,  pmdw026, pmdw027, pmdw028,
+                                  pmdwcomp, pmdwstus, pmdw002, pmdw004, pmdw016,
+                                  pmdw017,  pmdw018,  pmdw019, pmdw020, pmdw021,
+                                  pmdw022,  pmdw029,  pmdw031, pmdw032, pmdw033,
+                                  pmdw034,  pmdw038,  pmdw039, pmdw200) 
+                               = (g_pmdw_m.pmdw001,  g_pmdw_m.pmdwdocno, g_pmdw_m.pmdwseq, g_pmdw_m.pmdw008, g_pmdw_m.pmdw037, 
+                                  g_pmdw_m.pmdw011,  g_pmdw_m.pmdw010,   g_pmdw_m.pmdw030, g_pmdw_m.pmdw009, g_pmdw_m.pmdw012,
+                                  g_pmdw_m.pmdw0121, g_pmdw_m.pmdw013,   g_pmdw_m.pmdw014, g_pmdw_m.pmdw015, g_pmdw_m.pmdw023,
+                                  g_pmdw_m.pmdw024,  g_pmdw_m.pmdw025,   g_pmdw_m.pmdw026, g_pmdw_m.pmdw027, g_pmdw_m.pmdw028,
+                                  g_pmdw_m.pmdwcomp, g_pmdw_m.pmdwstus,  g_pmdw_m.pmdw002, g_pmdw_m.pmdw004, g_pmdw_m.pmdw016, 
+                                  g_pmdw_m.pmdw017,  g_pmdw_m.pmdw018,   g_pmdw_m.pmdw019, g_pmdw_m.pmdw020, g_pmdw_m.pmdw021,
+                                  g_pmdw_m.pmdw022,  g_pmdw_m.pmdw029,   g_pmdw_m.pmdw031, g_pmdw_m.pmdw032, g_pmdw_m.pmdw033,
+                                  g_pmdw_m.pmdw034,  g_pmdw_m.pmdw038,    g_pmdw_m.pmdw039, g_pmdw_m.pmdw200)
+                WHERE pmdwent = g_enterprise
+                  AND pmdwdocno = g_pmdw_m_t.pmdwdocno
+                  AND pmdwseq = g_pmdw_m_t.pmdwseq 
+                IF SQLCA.sqlcode THEN
+                   INITIALIZE g_errparam TO NULL 
+                   LET g_errparam.extend = "g_pmdw_m" 
+                   LET g_errparam.code   = SQLCA.sqlcode 
+                   LET g_errparam.popup  = TRUE 
+                   CALL cl_err()
+                   CALL s_transaction_end('N','0')
+                   CONTINUE DIALOG
+                END IF
+                CALL s_transaction_end('Y','0')
+            END IF
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   LET INT_FLAG = FALSE
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_apmt860_04 
+   
+   #add-point:input段after input name="input.post_input"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmt860_04.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="apmt860_04.other_function" readonly="Y" >}
+
+#初始化
+PRIVATE FUNCTION apmt860_04_default()
+DEFINE l_pmds008    LIKE pmds_t.pmds008
+DEFINE l_apca121    LIKE apca_t.apca121
+DEFINE l_apca131    LIKE apca_t.apca131
+DEFINE l_pmds043    LIKE pmds_t.pmds043
+DEFINE l_pmds044    LIKE pmds_t.pmds044
+DEFINE l_pmds046    LIKE pmds_t.pmds046
+
+   SELECT COALESCE(MAX(pmdwseq),0)+1
+     INTO g_pmdw_m.pmdwseq
+     FROM pmdw_t
+    WHERE pmdwent = g_enterprise
+      AND pmdwdocno = g_pmdw_m.pmdwdocno
+   
+   LET g_pmdw_m.pmdw037 = '1'
+   LET g_pmdw_m.pmdw200 = 'N'
+   
+   #根據單號帶出收貨單上的稅別，幣別等信息
+   SELECT pmdsdocdt, pmds033, pmds035, pmds034, pmds037,
+          pmds038,   pmds008, pmds043, pmds044, pmds046 
+     INTO g_pmdw_m.pmdw011, g_pmdw_m.pmdw012, g_pmdw_m.pmdw0121, g_pmdw_m.pmdw013, g_pmdw_m.pmdw014,
+          g_pmdw_m.pmdw015, l_pmds008,        l_pmds043,         l_pmds044,        l_pmds046
+     FROM pmds_t
+    WHERE pmdsent = g_enterprise
+      AND pmdsdocno = g_pmdw_m.pmdwdocno
+      
+   CALL s_desc_get_tax_desc(g_ooef019,g_pmdw_m.pmdw012) RETURNING g_pmdw_m.pmdw012_desc
+   CALL s_desc_get_currency_desc(g_pmdw_m.pmdw014) RETURNING g_pmdw_m.pmdw014_desc
+   DISPLAY BY NAME g_pmdw_m.pmdw012_desc,g_pmdw_m.pmdw014_desc
+   
+   SELECT isak008,isak009,isak010,isak011,isak012
+     INTO g_pmdw_m.pmdw009,g_pmdw_m.pmdw031,g_pmdw_m.pmdw032,g_pmdw_m.pmdw033,g_pmdw_m.pmdw034
+     FROM isak_t
+    WHERE isakent = g_enterprise
+      AND isak001 = l_pmds008
+      AND isak002 = g_ooef019
+      
+   SELECT isao001,isao002,isao003,isao003,isao004,isao005
+     INTO g_pmdw_m.pmdw017,g_pmdw_m.pmdw018,g_pmdw_m.pmdw019,
+          g_pmdw_m.pmdw020,g_pmdw_m.pmdw021
+     FROM isao_t
+    WHERE isaoent = g_enterprise
+      AND isaosite= g_site
+      
+   SELECT pmaa003 INTO g_pmdw_m.pmdw030 FROM pmaa_t
+    WHERE pmaaent = g_enterprise
+      AND pmaa001 = l_pmds008
+      
+   SELECT pmaal003 INTO g_pmdw_m.pmdw029 FROM pmaal_t
+    WHERE pmaalent = g_enterprise
+      AND pmaal001 = l_pmds008
+      AND pmaal002 = g_dlang
+      
+   SELECT ooefl004 INTO g_pmdw_m.pmdw016 FROM ooefl_t
+    WHERE ooeflent = g_enterprise
+      AND ooefl001 = g_site
+      AND ooefl002 = g_lang
+
+   LET g_pmdw_m.pmdwstus = 'Y'
+   LET g_pmdw_m.pmdw001 = g_prog
+   LET g_pmdw_m.pmdw002 = l_pmds008
+   LET g_pmdw_m.pmdw004 = g_dept
+   LET g_pmdw_m.pmdw011 = g_pmdsdocdt
+   
+   LET g_pmdw_m.pmdw023 = l_pmds043
+   LET g_pmdw_m.pmdw024 = l_pmds046
+   LET g_pmdw_m.pmdw025 = l_pmds044
+   
+   CALL apmt860_04_get_ld_info()
+   IF cl_null(g_pmdw_m.pmdwcomp) THEN
+      SELECT ooef017 INTO g_pmdw_m.pmdwcomp
+        FROM ooef_t
+       WHERE ooefent = g_enterprise
+         AND ooef001 = g_pmdssite
+   END IF
+   
+   IF cl_null(g_pmdw_m.pmdw015) THEN
+      IF (NOT cl_null(g_pmdsdocdt)) AND (NOT cl_null(g_pmdw_m.pmdwcomp)) AND
+         (NOT cl_null(g_glaald)) THEN
+         CALL s_fin_get_curr_rate(g_pmdw_m.pmdwcomp,g_glaald,g_pmdsdocdt,g_pmdw_m.pmdw014,'')
+               RETURNING g_pmdw_m.pmdw015,l_apca121,l_apca131
+         DISPLAY BY NAME g_pmdw_m.pmdw015
+      END IF
+   END IF
+   
+   IF g_pmdw_m.pmdw014 = g_glaa001 THEN
+      LET g_pmdw_m.pmdw015 =  1
+      LET g_pmdw_m.pmdw026 = g_pmdw_m.pmdw023
+      LET g_pmdw_m.pmdw027 = g_pmdw_m.pmdw024
+      LET g_pmdw_m.pmdw028 = g_pmdw_m.pmdw025
+   ELSE 
+      CALL apmt860_04_lcurr()
+   END IF
+   
+   LET g_pmdw_m.pmdw037 = 1
+   LET g_pmdw_m.pmdw038 = 0
+   LET g_pmdw_m.pmdw039 = 1
+END FUNCTION
+
+#獲取帳套，本幣等信息
+PRIVATE FUNCTION apmt860_04_get_ld_info()
+DEFINE l_glaacomp       LIKE glaa_t.glaacomp     #所屬法人
+DEFINE l_glaa004        LIKE glaa_t.glaa004      #科目參照表
+DEFINE l_glaa014        LIKE glaa_t.glaa014      #是否為主帳套
+DEFINE l_glaa015        LIKE glaa_t.glaa015      #是否啟用本位幣二
+DEFINE l_glaa016        LIKE glaa_t.glaa016      #是否啟用本位幣二
+DEFINE l_glaa019        LIKE glaa_t.glaa019      #是否啟用本位幣三
+DEFINE l_glaa020        LIKE glaa_t.glaa020      #是否啟用本位幣二
+DEFINE l_glaa017        LIKE glaa_t.glaa017      #本位幣二換算基準
+DEFINE l_glaa021        LIKE glaa_t.glaa021      #本位幣三換算基準
+DEFINE l_glaa024        LIKE glaa_t.glaa024      #單據別參照表
+DEFINE l_success        LIKE type_t.num5
+DEFINE l_errno          STRING
+DEFINE l_site           LIKE ooef_t.ooef001
+DEFINE l_apca121        LIKE apca_t.apca121
+DEFINE l_apca131        LIKE apca_t.apca131
+
+   CALL s_aap_get_default_apcasite('','','') RETURNING l_success,l_errno,l_site,g_glaald,l_glaacomp
+   
+   CALL s_ld_sel_glaa(g_glaald,'glaa001|glaa015|glaa016|glaa019|glaa020|glaa004|glaacomp|glaa014|glaa017|glaa021|glaa024')
+        RETURNING  l_success,g_glaa001,
+                   l_glaa015,l_glaa016,
+                   l_glaa019,l_glaa020,
+                   l_glaa004,l_glaacomp,l_glaa014,
+                   l_glaa017,l_glaa021,l_glaa024
+   IF cl_null(g_pmdw_m.pmdwcomp) THEN
+      LET g_pmdw_m.pmdwcomp = l_glaacomp
+   END IF
+   
+END FUNCTION
+
+PRIVATE FUNCTION apmt860_04_set_entry()
+
+   CALL cl_set_comp_entry("pmdw023,pmdw025,pmdw026,pmdw028",TRUE)
+    
+END FUNCTION
+
+PRIVATE FUNCTION apmt860_04_set_no_entry()
+
+   IF g_pmdw_m.pmdw014 = g_glaa001 THEN    #交易幣與本幣相同時
+      CALL cl_set_comp_entry("pmdw015,pmdw026,pmdw028",FALSE)
+      LET g_pmdw_m.pmdw015 =  1
+      LET g_pmdw_m.pmdw026 = g_pmdw_m.pmdw023
+      LET g_pmdw_m.pmdw027 = g_pmdw_m.pmdw024
+      LET g_pmdw_m.pmdw028 = g_pmdw_m.pmdw025
+      DISPLAY BY NAME g_pmdw_m.pmdw026,g_pmdw_m.pmdw027,g_pmdw_m.pmdw028
+   END IF
+   
+   IF g_pmdw_m.pmdw0121 = 'Y' THEN
+      CALL cl_set_comp_entry('pmdw023,pmdw026',FALSE)
+   ELSE
+      CALL cl_set_comp_entry('pmdw025,pmdw028',FALSE)
+   END IF
+    
+END FUNCTION
+
+#原币推算本币
+PRIVATE FUNCTION apmt860_04_lcurr()
+   DEFINE l_ooab002      LIKE ooab_t.ooab002
+   
+   CALL cl_get_para(g_enterprise,g_pmdw_m.pmdwcomp,'S-BAS-0015') RETURNING l_ooab002
+   #原幣計算本幣
+   #pmdw023 --> pmdw026
+   IF NOT cl_null(g_pmdw_m.pmdw023) THEN
+      CALL apmt860_04_exrate(g_pmdw_m.pmdw011,g_pmdw_m.pmdw014,g_glaa001,g_pmdw_m.pmdw023,g_pmdw_m.pmdw015)
+         RETURNING g_pmdw_m.pmdw026
+   END IF
+   #pmdw024 --> pmdw027
+   IF NOT cl_null(g_pmdw_m.pmdw024) THEN
+      CALL apmt860_04_exrate(g_pmdw_m.pmdw011,g_pmdw_m.pmdw014,g_glaa001,g_pmdw_m.pmdw024,g_pmdw_m.pmdw015)
+         RETURNING g_pmdw_m.pmdw027
+   END IF
+   #pmdw025 --> pmdw028
+   IF NOT cl_null(g_pmdw_m.pmdw025) THEN
+      CALL apmt860_04_exrate(g_pmdw_m.pmdw011,g_pmdw_m.pmdw014,g_glaa001,g_pmdw_m.pmdw025,g_pmdw_m.pmdw015)
+         RETURNING g_pmdw_m.pmdw028
+   END IF
+  
+   DISPLAY BY NAME g_pmdw_m.pmdw026, g_pmdw_m.pmdw027, g_pmdw_m.pmdw028
+        
+END FUNCTION
+
+#根據幣別匯率推算金額
+PRIVATE FUNCTION apmt860_04_exrate(p_ooan004,p_ooan002,p_ooan003,p_amount,p_tmp)
+   DEFINE p_ooan004      LIKE ooan_t.ooan004
+   DEFINE p_ooan002      LIKE ooan_t.ooan002
+   DEFINE p_ooan003      LIKE ooan_t.ooan003
+   DEFINE p_amount       LIKE ooan_t.ooan005
+   DEFINE p_tmp          LIKE ooan_t.ooan005
+   DEFINE l_ooef014      LIKE ooef_t.ooef014
+   DEFINE l_ooaj004      LIKE ooaj_t.ooaj004
+   DEFINE l_ooaj005      LIKE ooaj_t.ooaj005
+ #161104-00002#11 161110 By rainy mod---(S) 
+ #調整*寫法   
+   #DEFINE l_ooan         RECORD LIKE ooan_t.*
+   DEFINE l_ooan RECORD  #日匯率資料檔
+       ooanent LIKE ooan_t.ooanent, #企業編號
+       ooan001 LIKE ooan_t.ooan001, #匯率參照表號
+       ooan002 LIKE ooan_t.ooan002, #交易幣別
+       ooan003 LIKE ooan_t.ooan003, #基礎幣別
+       ooan004 LIKE ooan_t.ooan004, #日期
+       ooan005 LIKE ooan_t.ooan005, #銀行買入匯率
+       ooan006 LIKE ooan_t.ooan006, #銀行賣出匯率
+       ooan007 LIKE ooan_t.ooan007, #銀行中價匯率
+       ooan008 LIKE ooan_t.ooan008, #海關買入匯率
+       ooan009 LIKE ooan_t.ooan009, #海關賣出匯率
+       ooan010 LIKE ooan_t.ooan010, #更新時間
+       ooan011 LIKE ooan_t.ooan011, #更新方式
+       ooan012 LIKE ooan_t.ooan012, #交易貨幣批量
+       ooan013 LIKE ooan_t.ooan013, #匯率輸入方式
+       ooanud001 LIKE ooan_t.ooanud001, #自定義欄位(文字)001
+       ooanud002 LIKE ooan_t.ooanud002, #自定義欄位(文字)002
+       ooanud003 LIKE ooan_t.ooanud003, #自定義欄位(文字)003
+       ooanud004 LIKE ooan_t.ooanud004, #自定義欄位(文字)004
+       ooanud005 LIKE ooan_t.ooanud005, #自定義欄位(文字)005
+       ooanud006 LIKE ooan_t.ooanud006, #自定義欄位(文字)006
+       ooanud007 LIKE ooan_t.ooanud007, #自定義欄位(文字)007
+       ooanud008 LIKE ooan_t.ooanud008, #自定義欄位(文字)008
+       ooanud009 LIKE ooan_t.ooanud009, #自定義欄位(文字)009
+       ooanud010 LIKE ooan_t.ooanud010, #自定義欄位(文字)010
+       ooanud011 LIKE ooan_t.ooanud011, #自定義欄位(數字)011
+       ooanud012 LIKE ooan_t.ooanud012, #自定義欄位(數字)012
+       ooanud013 LIKE ooan_t.ooanud013, #自定義欄位(數字)013
+       ooanud014 LIKE ooan_t.ooanud014, #自定義欄位(數字)014
+       ooanud015 LIKE ooan_t.ooanud015, #自定義欄位(數字)015
+       ooanud016 LIKE ooan_t.ooanud016, #自定義欄位(數字)016
+       ooanud017 LIKE ooan_t.ooanud017, #自定義欄位(數字)017
+       ooanud018 LIKE ooan_t.ooanud018, #自定義欄位(數字)018
+       ooanud019 LIKE ooan_t.ooanud019, #自定義欄位(數字)019
+       ooanud020 LIKE ooan_t.ooanud020, #自定義欄位(數字)020
+       ooanud021 LIKE ooan_t.ooanud021, #自定義欄位(日期時間)021
+       ooanud022 LIKE ooan_t.ooanud022, #自定義欄位(日期時間)022
+       ooanud023 LIKE ooan_t.ooanud023, #自定義欄位(日期時間)023
+       ooanud024 LIKE ooan_t.ooanud024, #自定義欄位(日期時間)024
+       ooanud025 LIKE ooan_t.ooanud025, #自定義欄位(日期時間)025
+       ooanud026 LIKE ooan_t.ooanud026, #自定義欄位(日期時間)026
+       ooanud027 LIKE ooan_t.ooanud027, #自定義欄位(日期時間)027
+       ooanud028 LIKE ooan_t.ooanud028, #自定義欄位(日期時間)028
+       ooanud029 LIKE ooan_t.ooanud029, #自定義欄位(日期時間)029
+       ooanud030 LIKE ooan_t.ooanud030  #自定義欄位(日期時間)030
+END RECORD
+ #161104-00002#11 161110 By rainy mod---(E)    
+   DEFINE l_conv         LIKE type_t.chr1
+   DEFINE l_rate         LIKE ooan_t.ooan005
+   DEFINE l_ooan001      LIKE ooan_t.ooan001
+   DEFINE l_ooef015      LIKE ooef_t.ooef015
+
+   SELECT ooef014,ooef015 INTO l_ooef014,l_ooef015 FROM ooef_t
+    WHERE ooefent = g_enterprise AND ooef001 = g_pmdw_m.pmdwcomp
+
+   #1.取基础币种的金额精度--若有传入p_amount时,返回的是金额,非汇率
+   CALL s_curr_sel_ooaj004(l_ooef014,p_ooan003)
+        RETURNING l_ooaj004
+
+   #2.取基础币种的汇率精度
+   CALL s_curr_sel_ooaj005(l_ooef014,p_ooan003)
+        RETURNING l_ooaj005
+
+   #3.取汇率 & 汇率方向
+   LET l_conv = '1'  #交易币种对基础币种
+ #161104-00002#11 161110 By rainy mod---(S) 
+ #調整*寫法  
+   #SELECT ooan_t.* INTO l_ooan.*
+   SELECT ooanent,ooan001,ooan002,ooan003,ooan004,
+          ooan005,ooan006,ooan007,ooan008,ooan009,
+          ooan010,ooan011,ooan012,ooan013,ooanud001,
+          ooanud002,ooanud003,ooanud004,ooanud005,ooanud006,
+          ooanud007,ooanud008,ooanud009,ooanud010,ooanud011,
+          ooanud012,ooanud013,ooanud014,ooanud015,ooanud016,
+          ooanud017,ooanud018,ooanud019,ooanud020,ooanud021,
+          ooanud022,ooanud023,ooanud024,ooanud025,ooanud026,
+          ooanud027,ooanud028,ooanud029,ooanud030
+   INTO l_ooan.ooanent,l_ooan.ooan001,l_ooan.ooan002,l_ooan.ooan003,l_ooan.ooan004,
+        l_ooan.ooan005,l_ooan.ooan006,l_ooan.ooan007,l_ooan.ooan008,l_ooan.ooan009,
+        l_ooan.ooan010,l_ooan.ooan011,l_ooan.ooan012,l_ooan.ooan013,l_ooan.ooanud001,
+        l_ooan.ooanud002,l_ooan.ooanud003,l_ooan.ooanud004,l_ooan.ooanud005,l_ooan.ooanud006,
+        l_ooan.ooanud007,l_ooan.ooanud008,l_ooan.ooanud009,l_ooan.ooanud010,l_ooan.ooanud011,
+        l_ooan.ooanud012,l_ooan.ooanud013,l_ooan.ooanud014,l_ooan.ooanud015,l_ooan.ooanud016,
+        l_ooan.ooanud017,l_ooan.ooanud018,l_ooan.ooanud019,l_ooan.ooanud020,l_ooan.ooanud021,
+        l_ooan.ooanud022,l_ooan.ooanud023,l_ooan.ooanud024,l_ooan.ooanud025,l_ooan.ooanud026,
+        l_ooan.ooanud027,l_ooan.ooanud028,l_ooan.ooanud029,l_ooan.ooanud030 
+ #161104-00002#11 161110 By rainy mod---(E)   
+     FROM ooan_t,ooam_t
+    WHERE ooanent = g_enterprise
+      AND ooan001 = l_ooef015   #汇率参照表号
+      AND ooan002 = p_ooan002   #交易币种
+      AND ooan003 = p_ooan003   #基础币种
+      AND ooan004 = p_ooan004   #日期
+      AND ooament = ooanent
+      AND ooam001 = ooan001
+      AND ooam003 = ooan003
+      AND ooam004 = ooan004
+      AND ooamstus = 'Y'
+   IF SQLCA.sqlcode THEN
+      #交易币种对基础币种的关系不存在时,反向查找
+      
+   #161104-00002#11 161110 By rainy mod---(S) 
+   #調整*寫法     
+     #SELECT ooan_t.* INTO l_ooan.*
+     SELECT ooanent,ooan001,ooan002,ooan003,ooan004,
+            ooan005,ooan006,ooan007,ooan008,ooan009,
+            ooan010,ooan011,ooan012,ooan013,ooanud001,
+            ooanud002,ooanud003,ooanud004,ooanud005,ooanud006,
+            ooanud007,ooanud008,ooanud009,ooanud010,ooanud011,
+            ooanud012,ooanud013,ooanud014,ooanud015,ooanud016,
+            ooanud017,ooanud018,ooanud019,ooanud020,ooanud021,
+            ooanud022,ooanud023,ooanud024,ooanud025,ooanud026,
+            ooanud027,ooanud028,ooanud029,ooanud030
+     INTO l_ooan.ooanent,l_ooan.ooan001,l_ooan.ooan002,l_ooan.ooan003,l_ooan.ooan004,
+          l_ooan.ooan005,l_ooan.ooan006,l_ooan.ooan007,l_ooan.ooan008,l_ooan.ooan009,
+          l_ooan.ooan010,l_ooan.ooan011,l_ooan.ooan012,l_ooan.ooan013,l_ooan.ooanud001,
+          l_ooan.ooanud002,l_ooan.ooanud003,l_ooan.ooanud004,l_ooan.ooanud005,l_ooan.ooanud006,
+          l_ooan.ooanud007,l_ooan.ooanud008,l_ooan.ooanud009,l_ooan.ooanud010,l_ooan.ooanud011,
+          l_ooan.ooanud012,l_ooan.ooanud013,l_ooan.ooanud014,l_ooan.ooanud015,l_ooan.ooanud016,
+          l_ooan.ooanud017,l_ooan.ooanud018,l_ooan.ooanud019,l_ooan.ooanud020,l_ooan.ooanud021,
+          l_ooan.ooanud022,l_ooan.ooanud023,l_ooan.ooanud024,l_ooan.ooanud025,l_ooan.ooanud026,
+          l_ooan.ooanud027,l_ooan.ooanud028,l_ooan.ooanud029,l_ooan.ooanud030 
+   #161104-00002#11 161110 By rainy mod---(E)         
+        FROM ooan_t,ooam_t
+       WHERE ooanent = g_enterprise
+         AND ooan001 = l_ooef015   #汇率参照表号
+         AND ooan002 = p_ooan003   #基础币种
+         AND ooan003 = p_ooan002   #交易币种
+         AND ooan004 = p_ooan004
+         AND ooament = ooanent
+         AND ooam001 = ooan001
+         AND ooam003 = ooan003
+         AND ooam004 = ooan004
+         AND ooamstus = 'Y'
+      IF NOT SQLCA.sqlcode THEN
+         LET l_conv = '2'   #基础币种对交易币种
+      END IF
+   END IF
+
+   #交易币种批量
+   IF cl_null(l_ooan.ooan012) THEN LET l_ooan.ooan012 = 1 END IF
+   
+   #4.计算汇率
+   #减少处理步骤,以便精确度降低
+   IF l_conv = '1' THEN  #存在交易对基础币种的置换关系
+      IF l_ooan.ooan013 = '1' OR cl_null(l_ooan.ooan013) THEN   #存在正向的汇率关系
+         LET l_rate = p_tmp / l_ooan.ooan012 * p_amount
+      ELSE               #若为反向时,要1除取得的汇率
+         LET l_rate = 1 / p_tmp * l_ooan.ooan012 * p_amount
+      END IF
+   ELSE                  #存在基础对交易币种的转换关系
+      IF l_ooan.ooan013 = '1' THEN
+         LET l_rate = 1 / p_tmp * l_ooan.ooan012 * p_amount
+      ELSE
+         LET l_rate = p_tmp / l_ooan.ooan012 * p_amount
+      END IF
+   END IF
+
+   #5.按精度进位小数取位
+   IF p_amount > 1 THEN
+      #传入的为金额,直接按ooaj004取位
+      CALL s_num_round('1',l_rate,l_ooaj004) RETURNING l_rate
+   ELSE
+      #没有传入金额,根据汇率的精度进行取位
+      CALL s_num_round('1',l_rate,l_ooaj005) RETURNING l_rate
+   END IF
+
+   RETURN l_rate
+
+END FUNCTION
+
+#計算含稅、未稅、稅額
+PRIVATE FUNCTION apmt860_04_tax(p_pmdw023,p_pmdw025)
+DEFINE p_pmdw025      LIKE pmdw_t.pmdw025
+DEFINE p_pmdw023      LIKE pmdw_t.pmdw023
+DEFINE l_ooef014      LIKE ooef_t.ooef014
+DEFINE l_ooaj004      LIKE ooaj_t.ooaj004
+DEFINE r_pmdw023      LIKE pmdw_t.pmdw023
+DEFINE r_pmdw024      LIKE pmdw_t.pmdw024
+DEFINE r_pmdw025      LIKE pmdw_t.pmdw025
+
+   LET r_pmdw023 = 0
+   LET r_pmdw024 = 0
+   LET r_pmdw025 = 0
+   
+   IF g_pmdw_m.pmdw0121 = 'Y' THEN
+      IF NOT cl_null(g_pmdw_m.pmdw013) AND NOT cl_null(p_pmdw025) THEN
+         LET r_pmdw023 = p_pmdw025 / (1+ g_pmdw_m.pmdw013/100)
+         LET r_pmdw024 = p_pmdw025 - r_pmdw023
+         LET r_pmdw025 = p_pmdw025
+      END IF
+   ELSE
+      IF NOT cl_null(g_pmdw_m.pmdw013) AND NOT cl_null(p_pmdw023) THEN
+         LET r_pmdw024 = p_pmdw023 * g_pmdw_m.pmdw013/100
+         LET r_pmdw025 = p_pmdw023 + r_pmdw024
+         LET r_pmdw023 = p_pmdw023
+      END IF
+   END IF
+   
+   SELECT ooef014 INTO l_ooef014 FROM ooef_t
+    WHERE ooefent = g_enterprise AND ooef001 = g_pmdw_m.pmdwcomp
+   
+   CALL s_curr_sel_ooaj004(l_ooef014,g_pmdw_m.pmdw014)
+        RETURNING l_ooaj004
+
+   CALL s_num_round('1',r_pmdw023,l_ooaj004) RETURNING r_pmdw023
+   CALL s_num_round('1',r_pmdw024,l_ooaj004) RETURNING r_pmdw024
+   CALL s_num_round('1',r_pmdw025,l_ooaj004) RETURNING r_pmdw025
+   
+   RETURN r_pmdw023,r_pmdw024,r_pmdw025
+   
+END FUNCTION
+
+ 
+{</section>}
+ 

@@ -1,0 +1,367 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="adeq415_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2014-04-17 00:00:00), PR版次:0001(2014-06-05 15:14:40)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000105
+#+ Filename...: adeq415_01
+#+ Description: 券核銷確認明細資料批次產生作業
+#+ Creator....: 02748(2014-04-17 20:09:29)
+#+ Modifier...: 02748 -SD/PR- 02748
+ 
+{</section>}
+ 
+{<section id="adeq415_01.global" >}
+#應用 p00 樣板自動產生(Version:4)
+#add-point:填寫註解說明
+
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="adeq415_01.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="adeq415_01.global_variable" >}
+#add-point:自定義模組變數(Module Variable)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="adeq415_01.other_dialog" >}
+
+ 
+{</section>}
+ 
+{<section id="adeq415_01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 券核銷審核明細資料批次產生
+# Memo...........:
+# Usage..........: adeq415_01_gen_gcbj(p_sql,p_regen)
+# Input parameter: p_sql        SQL
+# Input parameter: p_regen      是否重新產生
+# Return code....: r_success    狀態
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION adeq415_01_gen_gcbj(p_sql,p_regen)
+   DEFINE p_sql             STRING
+   DEFINE p_regen           LIKE type_t.chr1
+   DEFINE l_gcbj_d         RECORD 
+             gcbjent        LIKE gcbj_t.gcbjent,
+             gcbjdocno      LIKE gcbj_t.gcbjdocno,
+             gcbjseq        LIKE gcbj_t.gcbjseq,
+             gcbjseq1       LIKE gcbj_t.gcbjseq1,
+             gcbj001        LIKE gcbj_t.gcbj001,
+             gcbj002        LIKE gcbj_t.gcbj002,
+             gcbj003        LIKE gcbj_t.gcbj003,
+             gcbj004        LIKE gcbj_t.gcbj004,
+             gcbj005        LIKE gcbj_t.gcbj005,
+             gcbj006        LIKE gcbj_t.gcbj006,
+             gcbj007        LIKE gcbj_t.gcbj007,
+             gcbj008        LIKE gcbj_t.gcbj008,
+             gcbj009        LIKE gcbj_t.gcbj009,
+             gcbj010        LIKE gcbj_t.gcbj010,
+             gcbj011        LIKE gcbj_t.gcbj011,
+             rtjf016        LIKE rtjf_t.rtjf016,
+             rtjf017        LIKE rtjf_t.rtjf017
+   END RECORD
+   DEFINE l_i               LIKE type_t.num5
+   DEFINE l_first           LIKE type_t.num5
+   DEFINE l_last            LIKE type_t.num5
+   DEFINE l_head            STRING
+   DEFINE l_str1            STRING
+   DEFINE l_str2            STRING
+   DEFINE r_success         LIKE type_t.num5
+   DEFINE l_seq             STRING
+   DEFINE l_gcbjseq1        LIKE gcbj_t.gcbjseq1
+   DEFINE l_gcao001         LIKE gcao_t.gcao001
+   
+   WHENEVER ERROR CONTINUE
+      
+   PREPARE adeq415_01_pb FROM p_sql
+   DECLARE adeq415_01_curs CURSOR FOR adeq415_01_pb
+   
+   LET r_success = TRUE
+   
+   FOREACH adeq415_01_curs USING g_enterprise INTO l_gcbj_d.gcbjent, l_gcbj_d.gcbjdocno, l_gcbj_d.gcbjseq, l_gcbj_d.gcbjseq1, 
+                                                   l_gcbj_d.gcbj001, l_gcbj_d.gcbj002, l_gcbj_d.gcbj003, l_gcbj_d.gcbj004, 
+                                                   l_gcbj_d.gcbj005, l_gcbj_d.gcbj006, l_gcbj_d.gcbj007, l_gcbj_d.gcbj008, 
+                                                   l_gcbj_d.gcbj009, l_gcbj_d.gcbj010, l_gcbj_d.gcbj011, l_gcbj_d.rtjf016,
+                                                   l_gcbj_d.rtjf017
+      
+      SELECT MAX(gcbjseq1)
+        INTO l_gcbjseq1
+        FROM gcbj_t
+       WHERE gcbjent = g_enterprise
+         AND gcbjdocno = l_gcbj_d.gcbjdocno
+         AND gcbjseq = l_gcbj_d.gcbjseq
+      IF cl_null(l_gcbjseq1) THEN
+         LET l_gcbjseq1 = 0
+      END IF
+        
+      LET l_gcbj_d.gcbjseq1 = l_gcbjseq1 + 1
+      IF l_gcbj_d.rtjf016 <> l_gcbj_d.rtjf017 THEN
+         #多張
+         DECLARE adeq415_01_curs1 CURSOR FOR
+          SELECT gcao001
+            FROM gcao_t
+           WHERE gcaoent = g_enterprise
+             AND gcao001 BETWEEN l_gcbj_d.rtjf016 AND l_gcbj_d.rtjf017
+         
+         FOREACH adeq415_01_curs1 INTO l_gcao001
+            LET l_gcbj_d.gcbj001 = l_gcao001
+            CALL adeq415_01_ins_gcbj(l_gcbj_d.*,p_regen) RETURNING r_success
+            IF NOT r_success THEN
+               EXIT FOREACH
+            END IF
+            LET l_gcbj_d.gcbjseq1 = l_gcbj_d.gcbjseq1 + 1
+         END FOREACH
+         #LET l_i = 1
+         #LET l_str1 = l_gcbj_d.rtjf016
+         #LET l_str2 = l_gcbj_d.rtjf017
+         #
+         #WHILE l_str1.subString(l_i,l_i) = l_str2.subString(l_i,l_i)
+         #   LET l_i = l_i +1
+         #END WHILE
+         ##拆出相同部分
+         #LET l_head = l_str1.subString(1,l_i-1)
+         ##流水號
+         #LET l_first = l_str1.subString(l_i,l_str1.getLength())
+         #LET l_last = l_str2.subString(l_i,l_str2.getLength())
+         #
+         #FOR l_i = l_first TO l_last
+         #   #組券號
+         #   LET l_seq = l_i
+         #   LET l_gcbj_d.gcbj001 = l_head,l_seq
+         #   CALL adeq415_01_ins_gcbj(l_gcbj_d.*,p_regen) RETURNING r_success
+         #   IF NOT r_success THEN
+         #      EXIT FOR
+         #   END IF
+         #   LET l_gcbj_d.gcbjseq1 = l_gcbj_d.gcbjseq1 + 1
+         #END FOR
+      ELSE
+         #只有一張
+         LET l_gcbj_d.gcbj001 = l_gcbj_d.rtjf016
+         CALL adeq415_01_ins_gcbj(l_gcbj_d.*,p_regen) RETURNING r_success
+      END IF   
+      IF NOT r_success THEN
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 券核銷審核明細資料批次產生作業
+# Memo...........:
+# Usage..........: CALL adeq415_01()
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION adeq415_01()
+   DEFINE l_wc              STRING
+   DEFINE l_regen           LIKE type_t.chr1
+   
+   WHENEVER ERROR CONTINUE
+   
+   OPEN WINDOW w_adeq415_01 WITH FORM cl_ap_formpath("ade","adeq415_01")   
+   CALL cl_ui_init()
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         CONSTRUCT BY NAME l_wc ON deagsite,deagdocno,deagdocdt
+            ON ACTION controlp INFIELD deagsite
+	           INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+	           LET g_qryparam.reqry = FALSE
+               LET g_qryparam.arg1 = g_site
+               LET g_qryparam.arg2 = "2"
+               CALL q_ooed004_3()                         #呼叫開窗
+               DISPLAY g_qryparam.return1 TO deagsite  #顯示到畫面上
+           
+               NEXT FIELD deagsite
+            
+            ON ACTION controlp INFIELD deagdocno
+	           INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+	           LET g_qryparam.reqry = FALSE
+               CALL q_deagdocno()                         #呼叫開窗
+               DISPLAY g_qryparam.return1 TO deagdocno  #顯示到畫面上
+           
+               NEXT FIELD deagdocno
+         END CONSTRUCT
+         
+         INPUT l_regen FROM regen
+
+         END INPUT 
+         
+         BEFORE DIALOG
+            LET l_regen = "N"
+            
+         ON ACTION accept
+            ACCEPT DIALOG
+         
+         ON ACTION cancel
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG   
+      END DIALOG
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+      ELSE
+         CALL adeq415_01_gen_sql(l_wc,l_regen)
+      END IF
+   
+   #畫面關閉
+   CLOSE WINDOW w_adeq415_01
+END FUNCTION
+
+PRIVATE FUNCTION adeq415_01_ins_gcbj(p_gcbj_d,p_regen)
+   DEFINE p_gcbj_d         RECORD 
+             gcbjent        LIKE gcbj_t.gcbjent,
+             gcbjdocno      LIKE gcbj_t.gcbjdocno,
+             gcbjseq        LIKE gcbj_t.gcbjseq,
+             gcbjseq1       LIKE gcbj_t.gcbjseq1,
+             gcbj001        LIKE gcbj_t.gcbj001,
+             gcbj002        LIKE gcbj_t.gcbj002,
+             gcbj003        LIKE gcbj_t.gcbj003,
+             gcbj004        LIKE gcbj_t.gcbj004,
+             gcbj005        LIKE gcbj_t.gcbj005,
+             gcbj006        LIKE gcbj_t.gcbj006,
+             gcbj007        LIKE gcbj_t.gcbj007,
+             gcbj008        LIKE gcbj_t.gcbj008,
+             gcbj009        LIKE gcbj_t.gcbj009,
+             gcbj010        LIKE gcbj_t.gcbj010,
+             gcbj011        LIKE gcbj_t.gcbj011,
+             rtjf016        LIKE rtjf_t.rtjf016,
+             rtjf017        LIKE rtjf_t.rtjf017
+   END RECORD
+   DEFINE p_regen           LIKE type_t.chr1
+   DEFINE r_success         LIKE type_t.num5
+   DEFINE l_cnt             LIKE type_t.num5
+   DEFINE l_cnt2            LIKE type_t.num5
+   
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+   
+   SELECT gcao005,gcao032,gcao033
+     INTO p_gcbj_d.gcbj003,p_gcbj_d.gcbj004,p_gcbj_d.gcbj005
+     FROM gcao_t
+    WHERE gcaoent = g_enterprise
+      AND gcao001 = p_gcbj_d.gcbj001
+        
+   LET p_gcbj_d.gcbj008 = "1"
+   LET p_gcbj_d.gcbj010 = NULL
+   #是否已有資料
+   SELECT COUNT(*)
+     INTO l_cnt
+     FROM gcbj_t
+    WHERE gcbjent = g_enterprise
+      AND gcbjdocno = p_gcbj_d.gcbjdocno
+      AND gcbjseq = p_gcbj_d.gcbjseq
+      AND gcbj001 = p_gcbj_d.gcbj001
+    
+   IF l_cnt > 0 THEN
+      #是否有已審資料
+      SELECT COUNT(*)
+        INTO l_cnt2
+        FROM gcbj_t
+       WHERE gcbjent = g_enterprise
+         AND gcbjdocno = p_gcbj_d.gcbjdocno
+         AND gcbjseq = p_gcbj_d.gcbjseq
+         AND gcbj008 <> "1"
+   END IF
+   IF l_cnt2 = 0 THEN
+      IF l_cnt > 0 AND p_regen = "Y" THEN
+         DELETE FROM gcbj_t
+               WHERE gcbjent = g_enterprise
+                 AND gcbjdocno = p_gcbj_d.gcbjdocno
+                 AND gcbjseq = p_gcbj_d.gcbjseq
+                 AND gcbj001 = p_gcbj_d.gcbj001
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "del gcbj_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+  
+            LET r_success = FALSE
+         END IF
+      END IF
+      IF l_cnt = 0 OR p_regen = "Y" THEN
+         INSERT INTO gcbj_t(gcbjent, gcbjdocno, gcbjseq, gcbjseq1, gcbj001, gcbj002, gcbj003, gcbj004, gcbj005, gcbj006, gcbj007, gcbj008, gcbj009, gcbj010, gcbj011)
+              VALUES (p_gcbj_d.gcbjent, p_gcbj_d.gcbjdocno, p_gcbj_d.gcbjseq, p_gcbj_d.gcbjseq1, p_gcbj_d.gcbj001, p_gcbj_d.gcbj002, p_gcbj_d.gcbj003, p_gcbj_d.gcbj004, p_gcbj_d.gcbj005, p_gcbj_d.gcbj006, p_gcbj_d.gcbj007, p_gcbj_d.gcbj008, p_gcbj_d.gcbj009, p_gcbj_d.gcbj010, p_gcbj_d.gcbj011)
+         
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "ins gcbj_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+  
+            LET r_success = FALSE
+         END IF
+      END IF
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+PRIVATE FUNCTION adeq415_01_gen_sql(p_wc,p_regen)
+   DEFINE p_wc              STRING
+   DEFINE p_regen           LIKE type_t.chr1
+   DEFINE l_sql             STRING
+   DEFINE r_success         LIKE type_t.num5
+   
+   WHENEVER ERROR CONTINUE
+   LET l_sql = "SELECT deagent,deagdocno,deahseq,'','',rtjf013,'','','','','','','','','',rtjf016,rtjf017 FROM deag_t,deah_t,rtjf_t,gcaf_t",
+               " WHERE deagent= ? AND deagent = deahent AND deagdocno = deahdocno ",
+               "   AND deagent = rtjfent AND deagsite = rtjfsite AND deagdocdt = rtjf025 ",
+               "   AND (deag001 = rtjf027 OR (deag001 IS NULL AND rtjf027 IS NULL)) AND deag002 = rtjf028 AND deag003 = rtjf029 AND deag004 = rtjf030 ",
+               "   AND deah001 = rtjf002 AND deah002 = rtjf013 AND deah003 = rtjf015 ",
+               "   AND rtjf001 = '40' AND gcafent = deagent AND gcaf001 = deah002 AND gcaf025 <> '4' AND ", p_wc
+   LET l_sql = l_sql, " ORDER BY deagdocno,deahseq"
+   
+   CALL s_transaction_begin()
+   
+   CALL adeq415_01_gen_gcbj(l_sql,p_regen) RETURNING r_success
+   IF r_success THEN
+      CALL s_transaction_end('Y','1')
+   ELSE
+      CALL s_transaction_end('N','0')
+   END IF  
+END FUNCTION
+
+ 
+{</section>}
+ 

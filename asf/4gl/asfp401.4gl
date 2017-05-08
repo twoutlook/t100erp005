@@ -1,0 +1,170 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="asfp401.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2014-03-05 00:00:00), PR版次:0002(2017-01-06 15:28:16)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000110
+#+ Filename...: asfp401
+#+ Description: 整批子工單產生作業
+#+ Creator....: 01258(2014-03-05 11:13:25)
+#+ Modifier...: 01258 -SD/PR- 00700
+ 
+{</section>}
+ 
+{<section id="asfp401.global" >}
+#應用 i00 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#170104-00066#2  2017/01/06  By Rainy     筆數相關變數由num5放大至num10
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+{<Module define>}
+
+#單身 type 宣告
+ TYPE type_g_sfaa_d RECORD
+       sfaadocno LIKE sfaa_t.sfaadocno,
+   sfaadocdt LIKE sfaa_t.sfaadocdt
+       END RECORD
+
+
+#無單身append欄位定義
+
+#模組變數(Module Variables)
+DEFINE g_sfaa_d          DYNAMIC ARRAY OF type_g_sfaa_d
+DEFINE g_sfaa_d_t        type_g_sfaa_d
+
+
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10
+DEFINE l_ac                 LIKE type_t.num10              #目前處理的ARRAY CNT  #170104-00066#2 num5->num10  17/01/06 mod by rainy 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_temp_idx           LIKE type_t.num10              #單身 所在筆數(暫存用)  #170104-00066#2 num5->num10  17/01/06 mod by rainy 
+DEFINE g_detail_idx         LIKE type_t.num10              #單身 所在筆數(所有資料)#170104-00066#2 num5->num10  17/01/06 mod by rainy 
+DEFINE g_detail_cnt         LIKE type_t.num10              #單身 總筆數(所有資料)  #170104-00066#2 num5->num10  17/01/06 mod by rainy 
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_chk                BOOLEAN
+DEFINE g_aw                 STRING                        #確定當下點擊的單身
+
+#多table用wc
+DEFINE g_wc_table           STRING
+
+
+{</Module define>}          {#ADP版次:1#}
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asfp401.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define name="main.define"
+      DEFINE l_success     LIKE type_t.num5
+   DEFINE l_num         LIKE type_t.num5
+   #end add-point    
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("asf","")
+ 
+   #add-point:作業初始化 name="main.init"
+
+   CALL s_asfp401('','','') RETURNING l_success,l_num
+   RETURN 
+   #end add-point
+ 
+   #add-point:SQL_define name="main.define_sql"
+      
+   #LET g_forupd_sql = ""          {#ADP版次:1#}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE asfp401_cl CURSOR FROM g_forupd_sql 
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call name="main.servicecall"
+            
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_asfp401 WITH FORM cl_ap_formpath("asf",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL asfp401_init()
+ 
+      #進入選單 Menu (='N')
+      CALL asfp401_ui_dialog()
+   
+      #畫面關閉
+      CLOSE WINDOW w_asfp401
+   END IF
+ 
+   #add-point:作業離開前 name="main.exit"
+      
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+ 
+{</section>}
+ 
+{<section id="asfp401.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+PRIVATE FUNCTION asfp401_ui_dialog()
+
+END FUNCTION
+
+PRIVATE FUNCTION asfp401_init()
+
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

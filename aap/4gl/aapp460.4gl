@@ -1,0 +1,1064 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aapp460.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2016-06-06 09:45:44), PR版次:0003(2016-10-27 10:41:43)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000027
+#+ Filename...: aapp460
+#+ Description: 費用分攤整批確認作業
+#+ Creator....: 06821(2016-06-06 09:26:06)
+#+ Modifier...: 06821 -SD/PR- 08171
+ 
+{</section>}
+ 
+{<section id="aapp460.global" >}
+#應用 p01 樣板自動產生(Version:19)
+#add-point:填寫註解說明 name="global.memo" name="global.memo"
+#160812-00027#3  160816  06821   全面盤點應付程式帳套權限控管
+#161014-00053#7  161021  08171   帳套權限調整
+#161006-00005#18 161027  08732   組織類型與職能開窗調整
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+   apdasite       LIKE apda_t.apdasite, 
+   apdald         LIKE apda_t.apdald, 
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       apdasite LIKE type_t.chr10, 
+   apdasite_desc LIKE type_t.chr80, 
+   apdald LIKE type_t.chr5, 
+   apdald_desc LIKE type_t.chr80, 
+   l_apdacomp LIKE type_t.chr500, 
+   apdadocno LIKE type_t.chr20, 
+   apdadocdt LIKE type_t.dat, 
+   apda018 LIKE type_t.chr10, 
+   apda003 LIKE type_t.chr20, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+DEFINE g_master_o      type_master
+DEFINE g_wc_apdald     STRING
+DEFINE g_apdacomp      LIKE apda_t.apdacomp
+DEFINE g_sfin3007      LIKE apda_t.apdadocdt
+DEFINE g_sfin6012      LIKE apda_t.apdadocdt
+DEFINE g_sfindt        LIKE apda_t.apdadocdt #AP/AXC 關帳日期較大者
+DEFINE g_glaa024       LIKE glaa_t.glaa024
+DEFINE g_wc_apcald     STRING  #161014-00053#7
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aapp460.main" >}
+MAIN
+   #add-point:main段define (客製用) name="main.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define name="main.define"
+   
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aap","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+      CALL aapp460_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aapp460 WITH FORM cl_ap_formpath("aap",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL aapp460_init()
+ 
+      #進入選單 Menu (="N")
+      CALL aapp460_ui_dialog()
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_aapp460
+   END IF
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="aapp460.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION aapp460_init()
+ 
+   #add-point:init段define (客製用) name="init.define_customerization"
+   
+   #end add-point
+   #add-point:ui_dialog段define name="init.define"
+   
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL s_fin_create_account_center_tmp()    #帳務中心
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp460.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aapp460_ui_dialog()
+ 
+   #add-point:ui_dialog段define (客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define name="ui_dialog.define"
+   DEFINE l_apdald  LIKE apda_t.apdald
+   DEFINE l_comp_wc    STRING  #161014-00053#7
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   CALL aapp460_qbe_clear()
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2 name="ui_dialog.before_dialog2"
+      
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #應用 a57 樣板自動產生(Version:3)
+         INPUT BY NAME g_master.apdasite,g_master.apdald 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前 name="input.m.before_input"
+               INITIALIZE g_master_o.* TO NULL
+               LET g_master_o.* = g_master.*
+               #end add-point
+         
+                     #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apdasite
+            
+            #add-point:AFTER FIELD apdasite name="input.a.apdasite"
+            LET g_master.apdasite_desc = ''
+            IF NOT cl_null(g_master.apdasite) THEN
+               IF g_master.apdasite != g_master_o.apdasite THEN
+                  CALL s_fin_account_center_sons_query('3',g_master.apdasite,g_today,'1')
+                  #如果帳務中心不同 且帳套有值 先依據現在的帳務中心跟帳套勾稽一次---(S)---
+                  #避免USER 在帳務中心跟帳套卡住走不了 增加對帳套有資料的處理
+                  IF g_master_o.apdasite != g_master.apdasite AND NOT cl_null(g_master.apdald) THEN   
+                     CALL s_fin_account_center_with_ld_chk(g_master.apdasite,g_master.apdald,g_user,'3','N','',g_today) RETURNING g_sub_success,g_errno
+                     IF NOT g_sub_success THEN
+                        #勾稽失敗:目前的帳套不在這個帳務中心下 因此預設值給帳務中心的主帳套
+                        CALL s_fin_orga_get_comp_ld(g_master.apdasite) RETURNING g_sub_success,g_errno,g_apdacomp,l_apdald
+                        #判斷這個主帳套使用者是否有權限
+                        CALL s_fin_account_center_with_ld_chk(g_master.apdasite,g_master.apdald,g_user,'3','N','',g_today) RETURNING g_sub_success,g_errno
+                     END IF
+                     #判斷完成後 若勾稽失敗則回復舊值
+                     IF NOT g_sub_success THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = g_errno
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        LET g_master.apdasite = g_master_o.apdasite
+                        LET g_master.apdald   = g_master_o.apdald
+                        CALL s_desc_get_department_desc(g_master.apdasite) RETURNING g_master.apdasite_desc
+                        DISPLAY BY NAME g_master.apdasite_desc
+                        NEXT FIELD CURRENT
+                     END IF
+                     CALL s_desc_get_ld_desc(g_master.apdald) RETURNING g_master.apdald_desc
+                     CALL s_fin_account_center_sons_query('3',g_master.apdasite,g_today,'1')  #依據正確的資料再重展一次結構
+                     CALL s_fin_account_center_ld_str() RETURNING g_wc_apdald
+                     CALL s_fin_get_wc_str(g_wc_apdald) RETURNING g_wc_apdald
+                     LET g_master_o.apdasite = g_master.apdasite
+                     LET g_master_o.apdald = g_master.apdald
+                     CALL s_ld_sel_glaa(g_master.apdald,'glaa024') RETURNING g_sub_success,g_glaa024
+                     CALL s_fin_orga_get_comp_ld(g_master.apdasite) RETURNING g_sub_success,g_errno,g_apdacomp,l_apdald
+                     LET g_master.l_apdacomp = s_desc_show1(g_apdacomp,s_desc_get_department_desc(g_apdacomp))
+                     #取得參數
+                     CALL cl_get_para(g_enterprise,g_apdacomp,'S-FIN-3007') RETURNING g_sfin3007
+                     CALL cl_get_para(g_enterprise,g_apdacomp,'S-FIN-6012') RETURNING g_sfin6012
+                     DISPLAY BY NAME g_master.apdald_desc,g_master.l_apdacomp
+                  END IF
+                  #如果帳務中心不同 且帳套有值 先依據現在的帳務中心跟帳套勾稽一次---(E)---
+                  CALL s_fin_account_center_with_ld_chk(g_master.apdasite,g_master.apdald,g_user,'3','N','',g_today) RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_master.apdasite = g_master_o.apdasite
+                     CALL s_desc_get_department_desc(g_master.apdasite) RETURNING g_master.apdasite_desc
+                     CALL s_fin_orga_get_comp_ld(g_master.apdasite) RETURNING g_sub_success,g_errno,g_apdacomp,l_apdald
+                     LET g_master.l_apdacomp = s_desc_show1(g_apdacomp,s_desc_get_department_desc(g_apdacomp))
+                     #取得參數
+                     CALL cl_get_para(g_enterprise,g_apdacomp,'S-FIN-3007') RETURNING g_sfin3007
+                     CALL cl_get_para(g_enterprise,g_apdacomp,'S-FIN-6012') RETURNING g_sfin6012
+                     DISPLAY BY NAME g_master.apdasite_desc,g_master.apdald_desc,g_master.l_apdacomp
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               
+               CALL s_fin_account_center_sons_query('3',g_master.apdasite,g_today,'1')  #依據正確的資料再重展一次結構
+               CALL s_fin_account_center_ld_str() RETURNING g_wc_apdald
+               CALL s_fin_get_wc_str(g_wc_apdald) RETURNING g_wc_apdald
+               LET g_master_o.apdasite = g_master.apdasite
+               CALL s_ld_sel_glaa(g_master.apdald,'glaa024') RETURNING g_sub_success,g_glaa024 
+            END IF
+            LET g_master.apdald_desc  = s_desc_get_ld_desc(g_master.apdald)
+            LET g_master_o.apdasite = g_master.apdasite
+            LET g_master.apdasite_desc = s_desc_get_department_desc(g_master.apdasite)
+            DISPLAY BY NAME g_master.apdasite_desc,g_master.apdald,g_master.apdald_desc
+            #161014-00053#7 --s add
+            CALL s_fin_account_center_sons_query('3',g_master.apdasite,g_today,'1')  #依據正確的資料再重展一次結構
+            #取得帳務中心底下的帳套範圍 
+            CALL s_fin_account_center_ld_str() RETURNING g_wc_apcald
+            CALL s_fin_get_wc_str(g_wc_apcald) RETURNING g_wc_apcald
+            #161014-00053#7 --e add 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apdasite
+            #add-point:BEFORE FIELD apdasite name="input.b.apdasite"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apdasite
+            #add-point:ON CHANGE apdasite name="input.g.apdasite"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apdald
+            
+            #add-point:AFTER FIELD apdald name="input.a.apdald"
+            LET g_master.apdald_desc = ''
+            #IF NOT cl_null(g_master.apdald) AND NOT cl_null(g_master.apdasite) THEN #161014-00053#7 mark
+            IF NOT cl_null(g_master.apdald) THEN                                     #161014-00053#7 add
+               #IF g_master.apdald != g_master_o.apdald THEN  #161014-00053#7 mark
+               IF g_master.apdald != g_master_o.apdald OR cl_null(g_master_o.apdald) THEN  #161014-00053#7 add
+                  #CALL s_fin_account_center_with_ld_chk(g_master.apdasite,g_master.apdald,g_user,'3','N',g_wc_apdald,g_today) RETURNING g_sub_success,g_errno #160812-00027#3 mark
+                  CALL s_fin_account_center_with_ld_chk(g_master.apdasite,g_master.apdald,g_user,'3','Y',g_wc_apdald,g_today) RETURNING g_sub_success,g_errno  #160812-00027#3 add
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_master.apdald = g_master_o.apdald
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL s_fin_ld_carry(g_master.apdald,'') RETURNING g_sub_success,g_master.apdald,g_apdacomp,g_errno
+                  LET g_master.l_apdacomp = s_desc_show1(g_apdacomp,s_desc_get_department_desc(g_apdacomp))
+                  #取得參數
+                  CALL cl_get_para(g_enterprise,g_apdacomp,'S-FIN-3007') RETURNING g_sfin3007
+                  CALL cl_get_para(g_enterprise,g_apdacomp,'S-FIN-6012') RETURNING g_sfin6012
+                  CALL s_ld_sel_glaa(g_master.apdald,'glaa024') RETURNING g_sub_success,g_glaa024
+                  LET g_master.apdald_desc = s_desc_get_ld_desc(g_master.apdald)
+                  DISPLAY BY NAME g_master.apdald_desc,g_master.l_apdacomp
+               END IF
+            END IF
+            LET g_master_o.apdald = g_master.apdald
+            CALL s_fin_ld_carry(g_master.apdald,'') RETURNING g_sub_success,g_master.apdald,g_apdacomp,g_errno
+            LET g_master.l_apdacomp = s_desc_show1(g_apdacomp,s_desc_get_department_desc(g_apdacomp))
+            CALL s_desc_get_ld_desc(g_master.apdald) RETURNING g_master.apdald_desc
+            DISPLAY BY NAME g_master.apdald_desc,g_master.l_apdacomp
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apdald
+            #add-point:BEFORE FIELD apdald name="input.b.apdald"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apdald
+            #add-point:ON CHANGE apdald name="input.g.apdald"
+            
+            #END add-point 
+ 
+ 
+ 
+                     #Ctrlp:input.c.apdasite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apdasite
+            #add-point:ON ACTION controlp INFIELD apdasite name="input.c.apdasite"
+            #帳務中心
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_master.apdasite
+            #CALL q_ooef001()     #161006-00005#18   mark
+            CALL q_ooef001_46()   #161006-00005#18   add
+            LET g_master.apdasite = g_qryparam.return1
+            CALL s_desc_get_department_desc(g_master.apdasite) RETURNING g_master.apdasite_desc
+            DISPLAY BY NAME g_master.apdasite,g_master.apdasite_desc
+            NEXT FIELD apdasite
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.apdald
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apdald
+            #add-point:ON ACTION controlp INFIELD apdald name="input.c.apdald"
+            #帳套
+            #161014-00053#7 --s add
+            #取得帳務組織下所屬成員之帳別   
+            CALL s_fin_account_center_comp_str() RETURNING l_comp_wc
+            #將取回的字串轉換為SQL條件
+            CALL aapp460_get_ooef001_wc(l_comp_wc) RETURNING l_comp_wc
+            #161014-00053#7 --e add
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_master.apdald
+            #160812-00027#3 --s mark
+            #LET g_qryparam.where = " glaa014 = 'Y' ",  #glaa014(主帳套)
+            #                       " AND glaald IN ",g_wc_apdald
+            #160812-00027#3 --e mark
+            #LET g_qryparam.where = " (glaa008 = 'Y' OR glaa014 = 'Y') AND glaald IN ",g_wc_apdald CLIPPED   #160812-00027#3 add 
+            LET g_qryparam.where = " (glaa008 = 'Y' OR glaa014 = 'Y') AND glaacomp IN ",l_comp_wc,""         #161014-00053#7 add
+            LET g_qryparam.arg1 = g_user #人員權限
+            LET g_qryparam.arg2 = g_dept #部門權限
+            CALL q_authorised_ld()
+            LET g_master.apdald = g_qryparam.return1
+            CALL s_fin_ld_carry(g_master.apdald,'') RETURNING g_sub_success,g_master.apdald,g_apdacomp,g_errno
+            LET g_master.l_apdacomp = s_desc_show1(g_apdacomp,s_desc_get_department_desc(g_apdacomp))
+            CALL s_desc_get_ld_desc(g_master.apdald) RETURNING g_master.apdald_desc
+            DISPLAY BY NAME g_master.apdald,g_master.apdald_desc,g_master.l_apdacomp
+            NEXT FIELD apdald
+            #END add-point
+ 
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後 name="input.m.after_input"
+               #如未設定關帳日期，系統提示且不可執行 >>兩者都要設定
+               IF cl_null(g_sfin3007) OR cl_null(g_sfin6012) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'agl-00345'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  NEXT FIELD apdasite
+               END IF
+               
+               #AP/AXC 關帳日期，取較大者
+               IF g_sfin3007 > g_sfin6012 THEN
+                  LET g_sfindt = g_sfin3007
+               ELSE
+                  LET g_sfindt = g_sfin6012
+               END IF
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...) name="input.other"
+            
+            #end add-point
+         END INPUT
+ 
+ 
+ 
+         
+         #應用 a58 樣板自動產生(Version:3)
+         CONSTRUCT BY NAME g_master.wc ON apdadocno,apdadocdt,apda018,apda003
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct name="cs.head.before_construct"
+               
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apdadocno
+            #add-point:BEFORE FIELD apdadocno name="construct.b.apdadocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apdadocno
+            
+            #add-point:AFTER FIELD apdadocno name="construct.a.apdadocno"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.apdadocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apdadocno
+            #add-point:ON ACTION controlp INFIELD apdadocno name="construct.c.apdadocno"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " apda001 = '43' AND apdasite = '",g_master.apdasite,"' AND apdald = '",g_master.apdald,"' ",
+                                   " AND apdadocdt > '",g_sfindt,"' AND apdastus = 'N' "
+            CALL q_apdadocno_1()
+            DISPLAY g_qryparam.return1 TO apdadocno
+            NEXT FIELD apdadocno
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apdadocdt
+            #add-point:BEFORE FIELD apdadocdt name="construct.b.apdadocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apdadocdt
+            
+            #add-point:AFTER FIELD apdadocdt name="construct.a.apdadocdt"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.apdadocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apdadocdt
+            #add-point:ON ACTION controlp INFIELD apdadocdt name="construct.c.apdadocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apda018
+            #add-point:BEFORE FIELD apda018 name="construct.b.apda018"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apda018
+            
+            #add-point:AFTER FIELD apda018 name="construct.a.apda018"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.apda018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apda018
+            #add-point:ON ACTION controlp INFIELD apda018 name="construct.c.apda018"
+            #帳務人員
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = "3113"
+            CALL q_oocq002()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO apda018  #顯示到畫面上
+            NEXT FIELD apda018                     #返回原欄位
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apda003
+            #add-point:BEFORE FIELD apda003 name="construct.b.apda003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apda003
+            
+            #add-point:AFTER FIELD apda003 name="construct.a.apda003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.apda003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apda003
+            #add-point:ON ACTION controlp INFIELD apda003 name="construct.c.apda003"
+            #帳務人員
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()
+            DISPLAY g_qryparam.return1 TO apda003
+            NEXT FIELD apda003
+            #END add-point
+ 
+ 
+ 
+            
+            #add-point:其他管控 name="cs.other"
+            
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+ 
+      
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL aapp460_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog3"
+            
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear name="ui_dialog.before_qbeclear"
+         
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear name="ui_dialog.qbeclear"
+            CALL aapp460_qbe_clear()
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL aapp460_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog name="process.exit_dialog"
+      
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL aapp460_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = aapp460_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule name="process.after_schedule"
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp460.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION aapp460_transfer_argv(ls_js)
+ 
+   #add-point:transfer_agrv段define (客製用) name="transfer_agrv.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define name="transfer_agrv.define"
+   
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容 name="transfer.argv.define"
+   
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp460.process" >}
+#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION aapp460_process(ls_js)
+ 
+   #add-point:process段define (客製用) name="process.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define name="process.define"
+   DEFINE l_apdadocno   LIKE apda_t.apdadocno
+   DEFINE l_count       LIKE type_t.num10 
+   DEFINE l_count_apda  LIKE type_t.num10 
+   DEFINE l_cnt         LIKE type_t.num10 
+   DEFINE l_sql         STRING 
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+   LET li_p01_status = 1
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理 name="process.pre_process"
+   IF cl_null(g_master.apdasite) OR cl_null(g_master.apdald) THEN
+      INITIALIZE g_errparam.* TO NULL
+      LET g_errparam.code = 'aap-00332'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN
+   END IF
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress name="process.count_progress"
+      CALL cl_progress_bar_no_window(l_count+1)   #給予總次數
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE aapp460_process_cs CURSOR FROM ls_sql
+#  FOREACH aapp460_process_cs INTO
+   #add-point:process段process name="process.process"
+   IF cl_null(g_master.wc) THEN
+      LET g_master.wc = " 1=1"
+   END IF
+   
+   #主SQL--------------------
+   LET l_sql = " SELECT apdadocno FROM apda_t ",
+               " WHERE apdaent = ",g_enterprise, " ",
+               "   AND apdasite = '",g_master.apdasite,"' ",
+               "   AND apdald = '",g_master.apdald,"' ",
+               "   AND apda001 = '43' ",
+               "   AND apdadocdt > '",g_sfindt,"' ",
+               "   AND apdastus = 'N' ",
+               "   AND ",g_master.wc
+                
+   PREPARE aapp460_apdap FROM l_sql
+   DECLARE aapp460_apdac CURSOR WITH HOLD FOR aapp460_apdap
+   
+   #計算筆數------------------
+   LET l_sql = "SELECT COUNT(*) FROM (",l_sql CLIPPED,")"
+   PREPARE aapp460_apda_count FROM l_sql
+
+   #檢核是否有符合條件的資料----
+   LET l_count_apda = 0
+   EXECUTE aapp460_apda_count INTO l_count_apda
+   IF cl_null(l_count_apda)THEN LET l_count_apda = 0 END IF 
+   IF l_count_apda = 0 THEN
+      #無符合條件資料
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'aap-00313'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      DISPLAY '' ,0 TO stagenow,stagecomplete   #失敗:清空進度條
+      RETURN
+   END IF
+   
+   CALL cl_err_collect_init()
+   #整批確認------------------
+   LET l_cnt = 0
+   LET l_apdadocno = ''
+   FOREACH aapp460_apdac INTO l_apdadocno
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.extend = 'FOREACH:aapp460_apdac'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF 
+      #確認前檢核
+      IF NOT s_aapt430_conf_chk(g_master.apdald,l_apdadocno) THEN
+         #有檢核出錯誤,收集錯誤訊息
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'aap-00315'
+         LET g_errparam.replace[1] = g_master.apdald
+         LET g_errparam.replace[2] = l_apdadocno
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         CONTINUE FOREACH
+      ELSE
+         CALL s_transaction_begin()
+         #確認段更新
+         IF NOT s_aapt430_conf_upd(g_master.apdald,l_apdadocno) THEN
+            #更新失敗
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'aap-00315'
+            LET g_errparam.replace[1] = g_master.apdald
+            LET g_errparam.replace[2] = l_apdadocno
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            CALL s_transaction_end('N','0')
+         ELSE
+            #更新成功
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'aap-00314'
+            LET g_errparam.replace[1] = g_master.apdald
+            LET g_errparam.replace[2] = l_apdadocno
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            CALL s_transaction_end('Y','0')
+            LET l_cnt = l_cnt +1 
+         END IF
+      END IF
+      CALL cl_progress_no_window_ing("")        #執行推進
+   END FOREACH   
+   
+   IF l_cnt > 0 THEN
+      CALL cl_progress_no_window_ing("")        #成功:最後一次次執行推進
+   ELSE
+      CALL cl_err_collect_show()
+      DISPLAY '' ,0 TO stagenow,stagecomplete   #失敗:清空進度條
+      RETURN
+   END IF
+   CALL cl_err_collect_show()
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理 name="process.foreground_finish"
+      
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理 name="process.background_finish"
+      
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL aapp460_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp460.get_buffer" >}
+PRIVATE FUNCTION aapp460_get_buffer(p_dialog)
+ 
+   #add-point:process段define (客製用) name="get_buffer.define_customerization"
+   
+   #end add-point
+   DEFINE p_dialog   ui.DIALOG
+   #add-point:process段define name="get_buffer.define"
+   
+   #end add-point
+ 
+   
+   LET g_master.apdasite = p_dialog.getFieldBuffer('apdasite')
+   LET g_master.apdald = p_dialog.getFieldBuffer('apdald')
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理 name="get_buffer.others"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp460.msgcentre_notify" >}
+PRIVATE FUNCTION aapp460_msgcentre_notify()
+ 
+   #add-point:process段define (客製用) name="msgcentre_notify.define_customerization"
+   
+   #end add-point
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:process段define name="msgcentre_notify.define"
+   
+   #end add-point
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知 name="msg_centre.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp460.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: 預設值
+# Memo...........:
+# Usage..........: CALL aapp460_qbe_clear()
+# Date & Author..: 160606 By Jessy
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aapp460_qbe_clear()
+   
+   CLEAR FORM
+   INITIALIZE g_master.* TO NULL
+   
+   CALL s_aap_get_default_apcasite('','','') RETURNING g_sub_success,g_errno,g_master.apdasite,g_master.apdald,g_apdacomp
+   LET g_master.l_apdacomp = s_desc_show1(g_apdacomp,s_desc_get_department_desc(g_apdacomp))
+   CALL s_fin_account_center_sons_query('3',g_master.apdasite,g_today,'1')
+   CALL s_fin_account_center_ld_str() RETURNING g_wc_apdald
+   CALL s_fin_get_wc_str(g_wc_apdald) RETURNING g_wc_apdald
+   CALL s_ld_sel_glaa(g_master.apdald,'glaa024') RETURNING g_sub_success,g_glaa024
+   
+   #取得參數
+   CALL cl_get_para(g_enterprise,g_apdacomp,'S-FIN-3007') RETURNING g_sfin3007
+   CALL cl_get_para(g_enterprise,g_apdacomp,'S-FIN-6012') RETURNING g_sfin6012
+   #AP/AXC 關帳日期，取較大者
+   IF g_sfin3007 > g_sfin6012 THEN
+      LET g_sfindt = g_sfin3007
+   ELSE
+      LET g_sfindt = g_sfin6012
+   END IF
+   
+   LET g_master.apdald_desc  = s_desc_get_ld_desc(g_master.apdald)
+   LET g_master.apdasite_desc= s_desc_get_department_desc(g_master.apdasite)
+   
+   LET g_master_o.* = g_master.*
+   
+   DISPLAY BY NAME g_master.apdald  ,g_master.apdald_desc,
+                   g_master.apdasite,g_master.apdasite_desc,
+                   g_master.l_apdacomp
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 轉成SQL
+# Memo...........: #161014-00053#1
+# Usage..........: CALL aapp460_get_ooef001_wc(p_wc)
+#                  RETURNING 回传参数
+# Input parameter: p_wc 帳套
+# Return code....: r_wc ('帳套')
+# Date & Author..: 161021 By 08171
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aapp460_get_ooef001_wc(p_wc)
+   DEFINE p_wc       STRING
+   DEFINE r_wc       STRING
+   DEFINE tok        base.StringTokenizer
+   DEFINE l_str      STRING
+
+   LET tok = base.StringTokenizer.create(p_wc,",")
+   WHILE tok.hasMoreTokens()
+      IF cl_null(l_str) THEN
+         LET l_str = tok.nextToken()
+      ELSE
+         LET l_str = l_str,"','",tok.nextToken()
+      END IF      
+   END WHILE   
+   LET r_wc = "('",l_str,"')"
+   
+   RETURN r_wc
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

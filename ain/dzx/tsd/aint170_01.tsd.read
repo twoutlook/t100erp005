@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aint170_01" std_prog="aint170_01" erpver="1.0" ver="2" module="AIN" type="S" booking="N" designer_ver="1.0" class="T" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="Y" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="inag_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="inai_t" main="N" head="N" pk="inaient,inaisite,inai001,inai002,inai003,inai004,inai005,inai006,inai007,inai008" fk_detail="" parent="inag_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail2" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：維護變更數量
+作業功能：修改/離開
+作業類型：子作業
+輸入模式：
+作業資料來源(Detail)：
+ 資料來源表：inag_t(庫存明細檔)
+                        inai_t(製造批序號庫存明細檔)
+
+●進入子作業:
+1.判斷該變更申請項次是否已有對應的變更明細資料，若有存在則抓取變更明細資料顯示在庫存明細Table中，
+  若沒有則依據變更申請維護的資料抓去對應的inag_t且inag008需要大於的資料顯示在庫存明細中
+  1-1.抓取出的資料選取欄位預設都是勾選的
+  1-2.庫存明細資料只能維護選取、變更數量兩個欄位
+  1-3.若資料來源為inbh_t時則相關欄位值如下:
+       [C:選取] = 'Y'
+       [C:變更數量] = inbh017
+       [C:庫存數量] = 對應的inag008
+       [C:庫位] = inbh003
+       [C:儲位] = inbh004
+       [C:產品特徵] = inbh005
+       [C:庫存特徵] = inbh006
+       [C:批號] = inbh007
+       [C:單位] = inbh008
+  1-4.若資料來源為inag_t時則相關欄位值如下:
+       [C:選取] = 'Y'
+       [C:變更數量] = inag008
+       [C:庫存數量] = inag008
+       [C:庫位] = inag004
+       [C:儲位] = inag005
+       [C:產品特徵] = inag002
+       [C:庫存特徵] = inag003
+       [C:批號] = inag006
+       [C:單位] = inag007
+
+2.若變更項次的料號有做批序號管理時，則依據庫存明細的資料抓取相關資料顯示在製造批序號明細Table中，
+  若已有對應的inao_t資料時直接抓取inao_t資料顯示，若沒有則抓取對應的inai_t且inai010大於的資料顯示
+  2-1.只顯示庫存明細游標指向的那一筆資料所對應的製造批序號明細資料
+  2-2.抓取出的資料選取欄位預設都是勾選的
+  2-3.只能維護選取、變更數量兩個欄位
+  2-4.若資料來源為inao_t時則是抓取inao013=1的那一筆資料，相關欄位值如下:
+       [C:選取] = 'Y'
+       [C:變更數量] = inao012
+       [C:庫存數量] = 對應的inai010
+       [C:製造批號] = inao008
+       [C:製造序號] = inao009
+  2-5.若資料來源為inai_t時則相關欄位值如下:
+       [C:選取] = 'Y'
+       [C:變更數量] = inai010
+       [C:庫存數量] = inai010
+       [C:製造批號] = inai007
+       [C:製造序號] = inai009
+
+●離開子作業:
+  1.將該變更申請項次對應的inbh_t與inao_t相關資料刪除
+  2.依據庫存明細有勾選的資料重新產生inbh_t資料
+  3.若變更的料號有做製造批序號管理時，則依據製造批序號明細有勾選的資料產生inao_t資料
+    3-1.需產生兩筆inao_t資料一筆為變更前的資料(inao013=1)另一筆為變更後的資料(inao013=-1)
+    3-2.變更後與變更前的資料只有差異inao013與變更類型所對到的欄位(例如變更類型為'1:產品特徵"則
+        變更後的inao002是改存inbg011的值
+
+
+
+
+
+
+]]>
+  </all>
+  <db_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[1.此單身只可以維護選取與變更數量兩個欄位
+]]>
+  </db_all>
+  <mi_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[]]>
+  </mi_all>
+  <field cite_std="N" name="change_num" ver="1" src="s" column="inag008" table="inag_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[1.此欄位不可以小於等於0
+2.此欄位不可以大於庫存量
+]]>
+  </field>
+  <field cite_std="N" name="change_num1" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[1.此欄位不可以小於等於0
+2.此欄位不可以大於庫存量
+]]>
+  </field>
+  <field cite_std="N" name="inag_t.inag002" ver="1" src="s" column="inag002" table="inag_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inag_t.inag003" ver="1" src="s" column="inag003" table="inag_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inag_t.inag004" ver="1" src="s" column="inag004" table="inag_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inag_t.inag005" ver="1" src="s" column="inag005" table="inag_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inag_t.inag006" ver="1" src="s" column="inag006" table="inag_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inag_t.inag007" ver="1" src="s" column="inag007" table="inag_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inag_t.inag008" ver="1" src="s" column="inag008" table="inag_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inai_t.inai007" ver="1" src="s" column="inai007" table="inai_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inai_t.inai008" ver="1" src="s" column="inai008" table="inai_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inai_t.inai010" ver="1" src="s" column="inai010" table="inai_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="inag004_desc" src="s" depend_field="inag_t.inag004" correspon_key="inag004" ref_table="inaa_t" ref_fk="inaa001" ref_dlang="" ref_rtn="inaa002" status=""/>
+    <rfield cite_std="N" ver="1" name="inag005_desc" src="s" depend_field="inag_t.inag005" correspon_key="inag004,inag005" ref_table="inab_t" ref_fk="inab001,inab002" ref_dlang="" ref_rtn="inab003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="change_num" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="change_num1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inag_t.inag002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inag_t.inag003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inag_t.inag004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inag_t.inag005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inag_t.inag006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inag_t.inag007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inag_t.inag008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inai_t.inai007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inai_t.inai008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="inai_t.inai010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <strings>
+    <sfield name="group2" text="庫存明細" lstr=""/>
+    <sfield name="lbl_sel" text="選擇" lstr=""/>
+    <sfield name="lbl_changge_num" text="變更數" lstr=""/>
+    <sfield name="lbl_inag008" text="帳面庫存數量" lstr=""/>
+    <sfield name="lbl_inag004" text="庫位編號" lstr=""/>
+    <sfield name="lbl_inaa002" text="庫位名稱" lstr=""/>
+    <sfield name="lbl_inag005" text="儲位編號" lstr=""/>
+    <sfield name="lbl_inab003" text="儲位名稱" lstr=""/>
+    <sfield name="lbl_inag002" text="產品特徵" lstr=""/>
+    <sfield name="lbl_inag003" text="庫存管理特徵" lstr=""/>
+    <sfield name="lbl_inag007" text="單位" lstr=""/>
+    <sfield name="lbl_inag006" text="批號" lstr=""/>
+    <sfield name="group_1" text="製造批序號明細" lstr=""/>
+    <sfield name="lbl_sel1" text="選擇" lstr=""/>
+    <sfield name="lbl_change_num1" text="變更量" lstr=""/>
+    <sfield name="lbl_inai010" text="帳面基礎單位庫存數量" lstr=""/>
+    <sfield name="lbl_inai007" text="製造批號" lstr=""/>
+    <sfield name="lbl_inai008" text="製造序號" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

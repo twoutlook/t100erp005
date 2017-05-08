@@ -1,0 +1,228 @@
+<add_points prog="axci140_02" std_prog="axci140_02" erpver="1.0" module="AXC" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.axci140_02_xcbe_del" cite_std="N" status="u" ver="1" src="s" new="Y" cite_ver="" order="1" mark_hard="N">
+<![CDATA[# 刪除xcbe_t在制約當量設定檔
+PRIVATE FUNCTION axci140_02_xcbe_del()
+   CALL s_transaction_begin()
+   LET g_success = 'Y'
+   
+   LET g_sql = "DELETE FROM xcbe_t ",
+               " WHERE xcbeent = '",g_enterprise,"'",
+               "   AND ", g_wc       
+   PREPARE axci140_01_pre FROM g_sql
+   EXECUTE axci140_01_pre 
+   IF SQLCA.SQLcode  THEN
+      LET g_success = 'N'
+   ELSE
+      LET g_success = 'Y'
+   END IF 
+
+   IF g_success = 'N' THEN
+      CALL cl_err("glab_t",SQLCA.sqlcode,1)  
+      CALL s_transaction_end('N','1') 
+   ELSE
+      CALL s_transaction_end('Y','1')
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="construct.after_construct" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="construct.before_construct" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[            ON ACTION controlp INFIELD xcbesite
+            #add-point:ON ACTION controlp INFIELD xcbesite
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_xcbesite()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xcbesite  #顯示到畫面上
+
+            NEXT FIELD xcbesite                     #返回原欄位]]>
+</point>
+  <point name="construct.post_construct" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[   IF INT_FLAG THEN
+      RETURN 
+   END IF
+   
+   CALL axci140_02_xcbe_del()]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="1" src="s" new="N" cite_ver="" order="" mark_hard="N">
+<![CDATA[DEFINE g_sql          STRING]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.get_var" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.define" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.pre_construct" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.action" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.more_construct" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <point name="construct.before_close" cite_std="N" status="" ver="" src="s" new="Y" cite_ver="">
+<![CDATA[]]>
+</point>
+  <section id="axci140_02.description" ver="12" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000011
+#+ 
+#+ Filename...: axci140_02
+#+ Description: ...
+#+ Creator....: 02114(2014/02/26)
+#+ Modifier...: 02114(2014/03/05)
+#+ Buildtype..: 應用 c01c 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="axci140_02.global" ver="3" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+DEFINE g_rec_b               LIKE type_t.num5   
+DEFINE g_wc                  STRING
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point  
+]]>
+</section>
+  <section id="axci140_02.input" ver="3" status="" src="s">
+<![CDATA[#+ 資料輸入
+PUBLIC FUNCTION axci140_02(--)
+   #add-point:construct段變數傳入
+   {<point name="construct.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   #add-point:construct段define
+   {<point name="construct.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axci140_02 WITH FORM cl_ap_formpath("axc","axci140_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="construct.pre_construct"/>}
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      CONSTRUCT BY NAME g_wc ON xcbesite,xcbe001,xcbe002 
+      
+            #add-point:自定義action
+            {<point name="construct.action"/>}
+            #end add-point
+	  
+         BEFORE CONSTRUCT
+            #add-point:單頭輸入前處理
+            {<point name="construct.before_construct"/>}
+            #end add-point
+            
+         AFTER CONSTRUCT
+            #add-point:單頭輸入後處理
+            {<point name="construct.after_construct"/>}
+            #end add-point
+            
+         
+ 
+         
+       
+      END CONSTRUCT
+ 
+      #add-point:自定義construct
+      {<point name="construct.more_construct"/>}
+      #end add-point
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+         
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="construct.before_close"/>}
+   #end add-point 
+   
+   #畫面關閉
+   CLOSE WINDOW w_axci140_02 
+   
+   #add-point:construct段after construct 
+   {<point name="construct.post_construct"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="axci140_02.other_dialog" ver="1" status="" src="s">
+<![CDATA[{<point name="other.dialog"/>}
+]]>
+</section>
+  <section id="axci140_02.other_function" ver="2" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+</add_points>

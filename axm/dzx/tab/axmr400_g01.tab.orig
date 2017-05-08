@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axmr400_g01" module="axm" jobmode="N" type="g01" industry="std" crtid="02716" crtdt="2013/10/17" modid="02716" moddt="2013/10/17" sdver="1" tabver="10001" description="GR測試程式" arg="6">
+  <define>
+      <var seq="1" value="itea000,itea001,itea002,itea003,itea004,itea005,itea006,itea007,itea008,itea009,itea010,itea011,itea012,itea013,itea014,itea015,itea016,itea017,itea018,itea019,iteb002,iteb003,iteb004,iteb005,iteb006,iteb007,iteb008,iteb009,iteb010,iteb011,iteb012,iteb013,iteb014,iteb015,iteb016,iteb017,iteb018,iteb019,iteb024,itaz003,itaz004,itaz005,itxm002,itgm002,itah002,itag002,itge002,itgc003,itim003,itgf002,itoc002,itoc002_1,addr1(itoc004),addr2(itoc004),addr3(itoc004),addr4(itoc004),addr5(itoc004),unit(chr50),itzo002,g_msg(chr1000),itzo003,itzo004,itzo005,l_count(num5)"/>
+      <var seq="2" value="itoa001,itoa003,itoa004,itoa005,itoa006"/>
+      <var seq="3" value="itmc001,itmc002,itmc003,itmc004,itea001,iteb002"/>   
+      <var seq="4" value="l_ocf_display01(chr1),l_ocf_display02(chr1),l_ocf_display03(chr1),l_ocf_display04(chr1),l_ocf_display05(chr1),l_ocf_display06(chr1),l_ocf_display07(chr1),l_ocf_display08(chr1),l_ocf_display09(chr1),l_ocf_display10(chr1),l_ocf_display11(chr1),l_ocf_display12(chr1),itcf001,itcf002,itcf003,itcf004,itcf005,itcf006,itcf007,itcf008,itcf009,itcf010,itcf011,itcf012,itcf013,itcf014,itcf015,itcf016,itcf017,itcf018,itcf019,itcf020,itcf021,itcf022,itcf023,itcf024,itcf025,itcf026"/>    
+  </define>
+  <selprep>
+       <sql id="l_select" query ="itea000,itea001,itea002,itea003,itea004,itea005,itea006,itea007,itea008,itea009,itea010,itea011,itea012,itea013,itea014,itea015,itea016,itea017,itea018,itea019,iteb002,iteb003,iteb004,iteb005,iteb006,iteb007,iteb008,iteb009,iteb010,iteb011,iteb012,iteb013,iteb014,iteb015,iteb016,iteb017,iteb018,iteb019,iteb020,iteb021,iteb022,iteb023,iteb024,itaz003,itaz004,itaz005,itxm002,itgm002,itah002,itag002,itgc003,itge002,itim003,itgf002,itoc002,itoc002_1(itoc002|''),addr1(itoc004|''),addr2(itoc004|''),addr3(itoc004|''),addr4(itoc004|''),addr5(itoc004|''),unit(chr50|''),itzo002,g_msg(chr1000|''),itzo003(|''),itzo004(|''),itzo005(|''),l_count(num5|iteb010-iteb009)"/>
+       <sql id="l_from" query ="itea_t LEFT OUTER JOIN itaz_t ON itea012 = itaz001 LEFT OUTER JOIN itxm_t ON itea013 = itxm001 LEFT OUTER JOIN itgm_t ON itea010 = itgm001 LEFT OUTER JOIN itah_t ON itea014 = itah001 LEFT OUTER JOIN itag_t ON itea015 = itag001 LEFT OUTER JOIN itgc_t ON itea011 = itgc001 AND itgc002='2' LEFT OUTER JOIN itge_t ON itea009 = itge001, iteb_t LEFT OUTER JOIN itim_t ON iteb003 = itim001 LEFT OUTER JOIN itgf_t ON iteb004 = itgf001 ,itoc_t"/>
+       <sql id="l_where" query ="itea001=iteb001 AND itea004=itoc001 AND itea020 != 'X' AND" order="itea001,itea002,iteb002"/>
+       <sql id="l_order" query ="itea001,itea002,iteb002" />
+  </selprep>  
+  <mainrep>
+       <section id="repOrder" type ="EXTERNAL" name="itea001,iteb002"/>
+       <section id="b_group" reptype="d01">
+         <rep type="itea001" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT * FROM itoa_t WHERE itoa003=0 and itoa005 ='1' and itoa001='" where="itea001" />
+         <rep type="itea002"/>         
+       </section>  
+
+       <section id="everyRow">
+          <rep type="before" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT * FROM itoa_t WHERE itoa005 ='1' and " pk="itoa001,itoa003" where="itea001,iteb002" />
+          <rep type="before" subtype="d04" sub_seq="05" recordseq="3" sub_query=" SELECT itmc001,itmc002,itmc003,itmc004,'',''" table="itmc_t" pk="itmc001,itmc002" where="itea001,iteb002" />
+          <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT * FROM itoa_t WHERE itoa005 ='2' and " pk="itoa001,itoa003" where="itea001,iteb002" />
+       </section>  
+    
+       <section id="a_gruop" reptype="d01"> 
+          <rep type="itea001" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT * FROM itoa_t WHERE itoa003 = 0 AND itoa005='2' " pk="itoa001" where="itea001" />
+          <rep type="itea001" subtype="d04" sub_seq="06" recordseq="4" sub_query=" SELECT '','','','','','','','','','','','',itcf001,itcf002,itcf003,itcf004,itcf005,itcf006,itcf007,itcf008,itcf009,itcf010,itcf011,itcf012,itcf013,itcf014,itcf015,itcf016,itcf017,itcf018,itcf019,itcf020,itcf021,itcf022,itcf023,itcf024,itcf025,itcf026" table="itcf_t" pk="itcf001,itcf002" where="l_itea004,l_itea017" />
+          <rep type="itea002"/> 
+       </section>
+  </mainrep>
+  <subrep>
+       <subreptag id="01" type ="" name="" recordseq="2"/>
+       <subreptag id="02" type ="" name="" recordseq="2"/>
+       <subreptag id="03" type ="" name="" recordseq="2"/>
+       <subreptag id="04" type ="" name="" recordseq="2"/>
+       <subreptag id="05" type ="" name="" recordseq="3"/>
+       <subreptag id="06" type ="" name="" recordseq="4"/>    
+  </subrep>  
+
+</assembly>
+

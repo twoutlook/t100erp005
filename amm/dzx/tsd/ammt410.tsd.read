@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="ammt410" std_prog="ammt410" erpver="1.0" ver="6" module="AMM" type="M" booking="N" designer_ver="1.0" class="t" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="mmbd_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+    <tbl name="mmbe_t" main="N" head="N" pk="" fk_detail="" parent="mmbd_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 提供會員卡開卡維護記錄
+標準作業功能取消：新增/修改/刪除/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+狀態功能：[有效/無效] / [確認/取消確認/作廢/過帳/取消過帳] / [確認/取消確認/無效]
+作業類型：(基本資料/交易單據)維護作業
+輸入模式：雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)：
+ 資料來源表：mmbd_t(會員卡狀態異動單頭檔)
+             
+作業資料來源(Detail)：
+ 資料來源表：mmbe_t(會員卡狀態異動單身檔)
+
+查詢方案設定：
+ (1)系統預設查詢方案：
+ (2)系統預設相關作業：
+    已確認
+    未確認
+    作廢
+ (3)瀏覽Browse顯示欄位及型態：
+    mmbd000  (異動類別)：Edit
+    mmbddocno(單據編號)：Edit
+    mmbddocdt(單據日期)：Edit
+    mmbdsite (所屬營運據點)：Edit 
+  (ammt411,ammt412,ammt413,ammt414,ammt415,ammt416,ammt417) 同時使用 ammt410
+  TOPMENU
+   明細操作:批次產生單身開卡資料
+
+
+
+]]>
+  </all>
+  <field cite_std="N" name="b_mmbd000" ver="1" src="s" column="mmbd000" table="mmbd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6511" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mmbddocdt" ver="1" src="s" column="mmbddocdt" table="mmbd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mmbddocno" ver="1" src="s" column="mmbddocno" table="mmbd_t" attribute="" type="" req="Y" i_zoom="q_ooba002" c_zoom="q_ooba002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mmbdsite" ver="1" src="s" column="mmbdsite" table="mmbd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_mmbdunit" ver="1" src="s" column="mmbdunit" table="mmbd_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_mmbdsite" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbd_t.mmbd000" ver="1" src="s" column="mmbd000" table="mmbd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6511" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[異動類別：
+   ●欄位控管：
+     預設值:執行ammt411時為3.(卡開卡),
+                執行ammt412時為4.(卡作廢),
+                執行ammt413時為5.(卡掛失),
+                執行ammt414時為8.(卡取消掛失),
+                執行ammt415時為6.(卡凍結),
+                執行ammt416時為9.(卡取消凍結),
+                執行ammt417時為7.(卡註銷),
+
+
+   
+]]>
+  </field>
+  <field cite_std="N" name="mmbd_t.mmbd001" ver="1" src="s" column="mmbd001" table="mmbd_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[異動來源：
+  ●欄位控制：
+     校驗:1.輸入值須存在[T:應用分類碼檔].[C:應用分類碼]、[C:應用分類]=2056 且為有效資料
+
+   ●開窗處理：
+       過濾條件：[T:應用分類碼檔].[C:應用分類]=2056
+]]>
+  </field>
+  <field cite_std="N" name="mmbd_t.mmbd002" ver="1" src="s" column="mmbd002" table="mmbd_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[理由碼:
+  ●欄位控制：
+     校驗:1.輸入值須存在[T:應用分類碼檔].[C:應用分類碼]、[C:應用分類]=2055 且為有效資料
+    
+   ●開窗處理：
+       過濾條件：[T:應用分類碼檔].[C:應用分類]=2055]]>
+  </field>
+  <field cite_std="N" name="mmbd_t.mmbdcnfdt" ver="1" src="s" column="mmbdcnfdt" table="mmbd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbd_t.mmbdcnfid" ver="1" src="s" column="mmbdcnfid" table="mmbd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbd_t.mmbdcrtdp" ver="1" src="s" column="mmbdcrtdp" table="mmbd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbd_t.mmbdcrtdt" ver="1" src="s" column="mmbdcrtdt" table="mmbd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbd_t.mmbdcrtid" ver="1" src="s" column="mmbdcrtid" table="mmbd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbd_t.mmbddocdt" ver="1" src="s" column="mmbddocdt" table="mmbd_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[單據日期：
+   ●欄位控管：
+     預設值:g_today
+
+]]>
+  </field>
+  <field cite_std="N" name="mmbd_t.mmbddocno" ver="4" src="s" column="mmbddocno" table="mmbd_t" attribute="" type="" req="Y" i_zoom="q_ooba002_1" c_zoom="q_mmbddocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[單據編號：
+   ●欄位控管：
+     校驗: 1.需要存在[T:單據別資料檔ooba_t].[C:單據編號ooba002],且參照表號為[T:營運據點檔]=g_site裏設定的ooef004(單據別使用參照表)且必須為有效資料.
+                  且 執行ammt411時,需存在[T:單據別對應作業代號檔].[C:對應作業代號oobl003]='ammt411'的資料
+                       執行ammt412時,需存在[T:單據別對應作業代號檔].[C:對應作業代號oobl003]='ammt412'的資料
+                       執行ammt413時,需存在[T:單據別對應作業代號檔].[C:對應作業代號oobl003]='ammt413'的資料
+                       執行ammt414時,需存在[T:單據別對應作業代號檔].[C:對應作業代號oobl003]='ammt414'的資料                 
+                       執行ammt415時,需存在[T:單據別對應作業代號檔].[C:對應作業代號oobl003]='ammt415'的資料
+                       執行ammt416時,需存在[T:單據別對應作業代號檔].[C:對應作業代號oobl003]='ammt416'的資料
+                       執行ammt417時,需存在[T:單據別對應作業代號檔].[C:對應作業代號oobl003]='ammt417'的資料
+              2.呼叫s_arti200_get_def_doc_type預設單別   #20141205新增
+    
+  開窗處理
+     1.新增時開窗:
+                  參數arg1 = [T:營運據點檔]ooef001=g_site裏設定的ooef004(單據別使用參照表)
+                  執行ammt411時,  參數arg2= 'ammt411'
+                  執行ammt412時,  參數arg2= 'ammt412'
+                  執行ammt413時,  參數arg2= 'ammt413'
+                  執行ammt414時,  參數arg2= 'ammt414'               
+                  執行ammt415時,  參數arg2= 'ammt415'
+                  執行ammt416時,  參數arg2= 'ammt416'
+                  執行ammt417時,  參數arg2= 'ammt417'
+     2.查詢時開窗：
+       過濾條件 :執行ammt411時,異動類別=3.(卡開卡),
+                      執行ammt412時,異動類別=4.(卡作廢),
+                      執行ammt413時,異動類別=5.(卡掛失),
+                      執行ammt414時,異動類別=8.(卡取消掛失),
+                      執行ammt415時,異動類別=6.(卡凍結),
+                      執行ammt416時,異動類別=9.(卡取消凍結),
+                      執行ammt417時,異動類別=7.(卡註銷),
+
+
+]]>
+  </field>
+  <field cite_std="N" name="mmbd_t.mmbdmoddt" ver="1" src="s" column="mmbdmoddt" table="mmbd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbd_t.mmbdmodid" ver="1" src="s" column="mmbdmodid" table="mmbd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbd_t.mmbdowndp" ver="1" src="s" column="mmbdowndp" table="mmbd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbd_t.mmbdownid" ver="1" src="s" column="mmbdownid" table="mmbd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbd_t.mmbdsite" ver="3" src="s" column="mmbdsite" table="mmbd_t" attribute="" type="" req="Y" i_zoom="q_ooef001" c_zoom="q_ooef001" chk_ref="v_ooef001_20" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[所屬營運據點：
+  ●欄位控制：
+     預設值:使用者登入 SITE
+     當單身無何一筆資料時才允許修改.
+]]>
+  </field>
+  <field cite_std="N" name="mmbd_t.mmbdstus" ver="1" src="s" column="mmbdstus" table="mmbd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmbd_t.mmbdunit" ver="1" src="s" column="mmbdunit" table="mmbd_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[預設值:  g_site]]>
+  </field>
+  <field cite_std="N" name="mmbe_t.mmbe001" ver="1" src="s" column="mmbe001" table="mmbe_t" attribute="" type="" req="Y" i_zoom="q_mmbe001" c_zoom="q_mmbe001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[會員卡號：
+   ●欄位控管：
+     3.校驗:輸入值須存在[T:會員卡資訊檔]].[C:會員卡號]且執行ammt411時,[T:會員卡資訊檔].[C:會員卡狀態]='2'發卡 且對應[T:卡種基本資料檔][C:使用時需開卡]='Y'
+                                                                                     執行ammt412時,[T:會員卡資訊檔].[C:會員卡狀態]='1'發行
+                                                                                        且[T:會員卡資訊檔][C:發行營運據點]=[T:會員卡狀態異動單身檔][C:需求營運據點]  ##只有自己發行的才允許作廢
+                                                                                     執行ammt413時,[T:會員卡資訊檔].[C:會員卡狀態]='2'發卡 或 '3'開卡
+                                                                                     執行ammt414時,[T:會員卡資訊檔].[C:會員卡狀態]='5'掛失
+                                                                                     執行ammt415時,[T:會員卡資訊檔].[C:會員卡狀態]='2'發卡 or '3'開卡
+                                                                                     執行ammt416時,[T:會員卡資訊檔].[C:會員卡狀態]='6'凍結
+                                                                                     執行ammt417時,[T:會員卡資訊檔].[C:會員卡狀態]='2'發卡 or '3'開卡'or '5.掛失'
+     4.輸入完[會員卡號]後抓取對應[T:會員卡資訊檔].[C:卡種編號],[T:會員卡資訊檔].[C:會員編號]顯示.
+     5.畫面[會員姓名]依[T:會員卡狀態異動單身檔][C:會員編號]取[T:會員基本資料檔-主檔][C:會員姓名]顯示                    
+     6.畫面[卡種名稱]依[T:會員卡狀態異動單身檔][C:卡種編號]取[T:卡種基本資料檔][C:卡種名稱]顯示
+當執行ammt411時---開始規格段
+     7.[T:會員卡狀態異動單身][C:有效期至] 則依 [C:卡種編號]取[T:卡種基本資料檔][C:卡效期控管]
+       當[C:卡效期控管]='N'時表示不控管效期,則[T:會員卡狀態異動單身檔][C:有效期至]=''
+       當[C:卡效期控管]='Y'時則判斷[C:依效期控管起算基準]
+                           當[C:依效期控管起算基準]='1.發行日'or'2.發卡日''or'3.開卡日' 
+                                                    則以對應[[T:會員卡資訊檔]][C:發行日期] or[C:發卡日]or[C:開卡日]為起算基準
+                           再判斷[C:有效期至]='1.指定日期'則取[C:卡種編號]對應之[T:卡種基本資料檔][C:效期指定日期]寫入                         
+                                            或'2.指定月份長度'則取[C:卡種編號]對應之[T:卡種基本資料檔][C:效期指定月份長度] 
+                                                 依起算基準+效期指定月份長度寫入[T:會員卡狀態異動單身檔].[C:有效期至]欄位
+當執行ammt411時---結束規格段
+
+   ●開窗處理：
+     1.新增/修改時:
+       參考函式：
+       執行ammt413~417時查詢q_mmbe001
+       執行ammt411        時查詢q_mmbe001_2
+       執行ammt412        時查詢q_mmbe001_1
+
+       執行ammt411時,過濾條件：[T:會員卡資訊檔].[C:會員卡狀態]='2'發卡 且對應[T:卡種基本資料檔][C:使用時需開卡]='Y'
+       執行ammt412時,過濾條件：[T:會員卡資訊檔].[C:會員卡狀態]='1'發行 且[T:會員卡資訊檔][C:發行營運據點]=[T:會員卡狀態異動單身檔][C:需求營運據點]  
+       執行ammt413時,過濾條件：[T:會員基本資料檔-主檔].[C:會員卡狀態]='2'發卡  or '3'開卡
+       執行ammt414時,過濾條件：[T:會員基本資料檔-主檔].[C:會員卡狀態]='5'掛失
+       執行ammt415時,過濾條件：[T:會員基本資料檔-主檔].[C:會員卡狀態]=''2'發卡 or '3'開卡
+       執行ammt416時,過濾條件：[T:會員基本資料檔-主檔].[C:會員卡狀態]='6'凍結
+       執行ammt417時,過濾條件：[T:會員基本資料檔-主檔].[C:會員卡狀態]='2'發卡 or '3'開卡'or '5.掛失'
+ 
+     2.查詢時：
+       參考函式：
+       執行ammt413~417時查詢q_mmbe001
+       執行ammt411        時查詢q_mmbe001_2
+       執行ammt412        時查詢q_mmbe001_1
+
+]]>
+  </field>
+  <field cite_std="N" name="mmbe_t.mmbe002" ver="1" src="s" column="mmbe002" table="mmbe_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_mman001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[卡種編號：
+   ●欄位控管：
+     1.預設值:由[C:會員卡號]輸入後自動帶入,不允許修改.
+    ]]>
+  </field>
+  <field cite_std="N" name="mmbe_t.mmbe003" ver="1" src="s" column="mmbe003" table="mmbe_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_mmaf001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[會員編號：
+   ●欄位控管：
+     1.預設值:程式依[C:會員卡號]抓取[T:會員卡資訊檔][C:會員編號]顯示,不允許修改
+     2.當單頭異動類別為'4' 的時候  本欄位隱藏
+]]>
+  </field>
+  <field cite_std="N" name="mmbe_t.mmbe005" ver="1" src="s" column="mmbe005" table="mmbe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6515" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[異動前卡狀態：
+     1.預設值:程式依[C:會員卡號]抓取[T:會員卡資訊檔][C:卡狀態]顯示,不允許修改
+     2.當單頭異動類別為'3','4','8','9' 的時候  本欄位隱藏]]>
+  </field>
+  <field cite_std="N" name="mmbe_t.mmbe006" ver="1" src="s" column="mmbe006" table="mmbe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[有效期至：
+   ●欄位控管：
+     1.預設值:由程式依卡種設定原則計算後帶入,不允許修改
+      2.當單頭異動類別為'4' 的時候  本欄位隱藏
+]]>
+  </field>
+  <field cite_std="N" name="mmbe_t.mmbeseq" ver="1" src="s" column="mmbeseq" table="mmbe_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[項次
+   最大值加1]]>
+  </field>
+  <field cite_std="N" name="mmbe_t.mmbesite" ver="3" src="s" column="mmbesite" table="mmbe_t" attribute="" type="" req="Y" i_zoom="q_ooed004" c_zoom="q_ooef001" chk_ref="v_ooed004" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[需求營運據點：
+   ●欄位控管：
+     2.預設值:[T:會員卡狀態異動單頭檔].[C:所屬營運據點],可修改
+     3.校驗:輸入值須存在[T:組織基本資料檔][C:組織編號] WHERE [C:需求營運據點]需存在[T:組織結構提速檔]
+       且為[T:會員卡狀態異動單頭檔].[C:所屬營運據點]包含以下所有有效資料.
+    
+    
+   ●開窗處理：
+           過濾條件:抓取[T:組織結構提速檔]WHERE[T:會員卡狀態異動單頭檔].[C:所屬營運據點](包含)以下所有據點資顯示.(暫不處理)
+
+     
+]]>
+  </field>
+  <field cite_std="N" name="mmbe_t.mmbeunit" ver="1" src="s" column="mmbeunit" table="mmbe_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="2" name="b_mmbdsite_desc" src="s" depend_field="b_mmbdsite" correspon_key="mmbdsite" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="2" name="mmbd001_desc" src="s" depend_field="mmbd_t.mmbd001" correspon_key="&apos;2056&apos;,mmbd001" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="2" name="mmbd002_desc" src="s" depend_field="mmbd_t.mmbd002" correspon_key="&apos;2055&apos;,mmbd002" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="mmbdcnfid_desc" src="s" depend_field="mmbd_t.mmbdcnfid" correspon_key="mmbdcnfid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="mmbdcrtdp_desc" src="s" depend_field="mmbd_t.mmbdcrtdp" correspon_key="mmbdcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmbdcrtid_desc" src="s" depend_field="mmbd_t.mmbdcrtid" correspon_key="mmbdcrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="mmbdmodid_desc" src="s" depend_field="mmbd_t.mmbdmodid" correspon_key="mmbdmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="mmbdowndp_desc" src="s" depend_field="mmbd_t.mmbdowndp" correspon_key="mmbdowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmbdownid_desc" src="s" depend_field="mmbd_t.mmbdownid" correspon_key="mmbdownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="2" name="mmbdsite_desc" src="s" depend_field="mmbd_t.mmbdsite" correspon_key="mmbdsite" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="2" name="mmbe002_desc" src="s" depend_field="mmbe_t.mmbe002" correspon_key="mmbe002" ref_table="mmanl_t" ref_fk="mmanl001" ref_dlang="mmanl002" ref_rtn="mmanl003" status=""/>
+    <rfield cite_std="N" ver="2" name="mmbe003_desc" src="s" depend_field="mmbe_t.mmbe003" correspon_key="mmbe003" ref_table="mmaf_t" ref_fk="mmaf001" ref_dlang="" ref_rtn="mmaf008" status=""/>
+    <rfield cite_std="N" ver="2" name="mmbesite_desc" src="s" depend_field="mmbe_t.mmbesite" correspon_key="mmbesite" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_mmbd000" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mmbddocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mmbddocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mmbdsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_mmbdunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_mmbdsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbd_t.mmbd000" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbd_t.mmbd001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbd_t.mmbd002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbd_t.mmbdcnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbd_t.mmbdcnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbd_t.mmbdcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbd_t.mmbdcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbd_t.mmbdcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbd_t.mmbddocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="mmbd_t.mmbddocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbd_t.mmbdmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbd_t.mmbdmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbd_t.mmbdowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbd_t.mmbdownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="mmbd_t.mmbdsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbd_t.mmbdstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbd_t.mmbdunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbe_t.mmbe001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbe_t.mmbe002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbe_t.mmbe003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbe_t.mmbe005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbe_t.mmbe006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbe_t.mmbeseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="mmbe_t.mmbesite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmbe_t.mmbeunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="open_pc" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[功能:
+   批次產生會員卡異動單身開卡資料
+   CALL ammt410_01(單據編號 , 申請營運據點)]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_mmbd000" text="異動類別" lstr=""/>
+    <sfield name="lbl_mmbdunit" text="b_mmbdunit" lstr=""/>
+    <sfield name="lbl_mmbddocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_mmbddocdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_mmbdsite" text="申請組織" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_mmbd003" text="lbl_mmbdunit" lstr=""/>
+    <sfield name="lbl_mmbd002" text="理由碼" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_mmbd001" text="異動來源" lstr=""/>
+    <sfield name="lbl_mmbdstus" text="狀態碼" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="lbl_mmbeseq" text="項次" lstr=""/>
+    <sfield name="lbl_mmbesite" text="需求組織" lstr=""/>
+    <sfield name="lbl_mmbe001" text="會員卡號" lstr=""/>
+    <sfield name="lbl_mmbe002" text="卡種編號" lstr=""/>
+    <sfield name="lbl_mmanl003" text="說明" lstr=""/>
+    <sfield name="lbl_mmbe003" text="會員編號" lstr=""/>
+    <sfield name="lbl_mmaf008" text="會員姓名" lstr=""/>
+    <sfield name="lbl_mmbe006" text="有效期至" lstr=""/>
+    <sfield name="lbl_mmbe005" text="異動前卡狀態" lstr=""/>
+    <sfield name="lbl_mmbeunit" text="應用組織" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_mmbedocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_mmaq001" text="會員卡號" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="open_pc" text="批次產生單身開卡資料" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

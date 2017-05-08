@@ -1,0 +1,2414 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="ammt405" std_prog="ammt405" erpver="1.0" ver="8" module="AMM" type="M" booking="N" designer_ver="1.0" class="t" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="gcbi_t" main="N" head="N" pk="" fk_detail="" parent="rtia_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail6" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="isaf_t" main="N" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status=""/>
+    <tbl name="mmea_t" main="N" head="N" pk="" fk_detail="" parent="rtia_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="mmeb_t" main="N" head="N" pk="" fk_detail="" parent="rtia_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail3" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="mmec_t" main="N" head="N" pk="" fk_detail="" parent="rtia_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="mmed_t" main="N" head="N" pk="" fk_detail="" parent="rtia_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail4" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail5" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="rtia_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+    <tbl name="rtib_t" main="N" head="N" pk="" fk_detail="" parent="rtia_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail7" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="rtic_t" main="N" head="N" pk="" fk_detail="" parent="rtia_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail8" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="rtie_t" main="N" head="N" pk="" fk_detail="" parent="rtia_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail10" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="xrcd_t" main="N" head="N" pk="" fk_detail="" parent="rtia_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail9" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 提供 ERP 端進行零售銷售(包括商品銷售,卡/券/儲值銷售共用同一支程式)
+標準作業功能取消：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+狀態功能：[有效/無效] / [確認/取消確認/作廢/過帳] / [確認/取消確認/無效]
+作業類型：(基本資料/交易單據)維護作業
+輸入模式：雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)：
+ 資料來源表：銷售交易單頭檔(rtia_t)
+作業資料來源(Detail)：
+ 資料來源表：  銷售交易商品明細檔(rtib_t)
+                        銷售交易折扣明細檔(rtic_t)
+                        銷售交易收款檔(rtie_t)
+                        銷售交易收款明細檔(xrcd_t)
+                        发卡明細檔(mmea_t) 
+                        补卡明細檔 (mmeb_t)
+                        换卡明細檔 (mmec_t)
+                        储值 明細檔(mmed_t) 
+                        券明明細檔(gcbi_t)
+
+補充說明：(輸入此作的補充說明事項)
+
+料號規劃原則:不同庫存單位+銷售單位分開料號(不走多單位)
+料號單位換算原則:條碼包裝單位=銷售單位
+                 銷售單位換算->庫存單位(商品清單件裝數)
+                         換算->計價單位(商品主檔)
+              
+             ex:條碼1箱(銷售單位=包裝單位)=24瓶(庫存單位), 計價單位平=$20=>刷條碼 2箱(銷售單位=包裝單位), 庫存扣 48平, 總金額 $960
+                條碼1組(銷售單位=包裝單位)=6平,            計價單位平=$20=>刷條碼 2組, 庫存扣 12平, 總金額 $240
+                條碼1平(銷售單位=包裝單位)=1平,            計價單位平=$20=>刷條碼 2平, 庫存扣  2平, 總金額 $40
+
+             1.刷箱條碼 取得包裝單位=銷售單位 
+             2.銷售單位換算計價單位
+             3.銷售換算庫存單位= 24平
+
+相關元件:1.卡券庫存異動元件  40 
+              2.收款元件   100
+              3.積點計算元件   40
+              4.儲值計算元件   40 
+              5.商品庫存異動元件(引用)
+              6.促銷取價元件(引用)
+              7.稅額計算元件(引用)
+              8.發票開立列印 (引用) ]]>
+  </all>
+  <db_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[]]>
+  </db_all>
+  <di_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[]]>
+  </di_all>
+  <field cite_std="N" name="amount" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[總銷貨金額(含稅)：
+   ●欄位控管：
+     資料欄位:可Display
+     預設值:SUM([[T:流通銷售單身檔].[C:標準售價]*[T:流通銷售單身檔]*[C:銷售數量]),不允許輸入]]>
+  </field>
+  <field cite_std="N" name="amount2" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="amount3" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_rtia002" ver="1" src="s" column="rtia002" table="rtia_t" attribute="" type="" req="N" i_zoom="q_pmaa001_7" c_zoom="q_pmaa001_7" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_rtia006" ver="1" src="s" column="rtia006" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_rtiadocdt" ver="1" src="s" column="rtiadocdt" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_rtiadocno" ver="1" src="s" column="rtiadocno" table="rtia_t" attribute="" type="" req="Y" i_zoom="q_ooba002_1" c_zoom="q_rtiadocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_rtiasite" ver="1" src="s" column="rtiasite" table="rtia_t" attribute="" type="" req="N" i_zoom="q_ooed004" c_zoom="q_ooed004" chk_ref="v_ooed004" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gcbi_t.gcbi001" ver="1" src="s" column="gcbi001" table="gcbi_t" attribute="" type="" req="Y" i_zoom="q_gcao001_9" c_zoom="q_gcao001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[開始券號：券狀態(1.發行 2.作廢 3.停用 4.銷售 5.銷售退回 6.已使用 7.已核銷)
+   ●欄位控管：
+     資料欄位:[T:券銷售資料檔].[C:開始券號]可Display 可Input
+     預設值:No,不允許空白
+     校驗:1.開始券號需存在[T:券資料檔][C:券流轉狀態]='1'.發行 or '5'銷售退回
+          2.對應券種需存在[T:會員卡券生效營運組織設定檔]
+     帶值:依[C:起始券號]抓取[T:券資料檔]對應券種編號/券面額編號/券單位金額顯示於畫面右方
+   ●開窗處理：
+     1.新增/修改/查詢時：
+       參考函式：q_gcao001_9
+       查詢欄位：券号，券种，有效日期，失效日期
+       回值類型：新增單一回值,修改/查詢多重回值
+
+           
+]]>
+  </field>
+  <field cite_std="N" name="gcbi_t.gcbi002" ver="1" src="s" column="gcbi002" table="gcbi_t" attribute="" type="" req="Y" i_zoom="q_gcao001_9" c_zoom="q_gcao001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[結束券號：券狀態(1.發行 2.作廢 3.停用 4.銷售 5.銷售退回 6.已使用 7.已核銷)
+   ●欄位控管：
+     資料欄位:[T:券銷售資料檔].[C:結束券號]可Display 可Input
+     預設值:No,不允許空白
+     校驗:以下條件,程式需 check [T:券銷售資料檔][C:開始券號][C:結束券號]區間內所有券資料,若其中一筆不符合則顯示 error 
+          1.所有券號需存在[T:券資料檔]且[T:券資料檔][C:券流轉狀態]='1'.發行 or '5'銷售退回
+          2.[C:開始券號][C:結束券號]其對應券種,面額編號需相同
+          3.對應券種需存在[T:會員卡券生效營運組織設定檔]
+     帶值:(無)           
+   
+   ●開窗處理：
+     1.新增/修改/查詢時：
+       參考函式：q_gcao001_9
+       查詢欄位：券号，券种，有效日期，失效日期
+       回值類型：新增單一回值,修改/查詢多重回值
+]]>
+  </field>
+  <field cite_std="N" name="gcbi_t.gcbi003" ver="1" src="s" column="gcbi003" table="gcbi_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gcbi_t.gcbi004" ver="1" src="s" column="gcbi004" table="gcbi_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gcbi_t.gcbi005" ver="1" src="s" column="gcbi005" table="gcbi_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[券張數：
+   ●欄位控管：
+     資料欄位:[T:券銷售資料檔].[C:券張數]可Display
+     預設值:count 開始券號結束券號張數顯示o,不允許空白
+     校驗:以下條件,程式需 check [T:流通銷售收款明細檔][C:起始券號][C:結束券號]區間內所有券資料,若其中一筆不符合則顯示 error 
+          1.所有券號需存在[T:券資料檔]且[T:券資料檔][C:券流轉狀態]='1'.發行 or '5'銷售退回
+          2.[C:起始券號][C:結束券號]其對應券種,面額編號需相同
+     帶值:(無)        
+]]>
+  </field>
+  <field cite_std="N" name="gcbi_t.gcbi006" ver="1" src="s" column="gcbi006" table="gcbi_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[券總金額：
+   ●欄位控管：
+     資料欄位:[T:券銷售資料檔].[C:券張數]可Display
+     預設值:券單位金額*券張數,不允許空白
+     校驗:(無)
+     帶值:(無)        
+]]>
+  </field>
+  <field cite_std="N" name="gcbi_t.gcbi007" ver="1" src="s" column="gcbi007" table="gcbi_t" attribute="" type="" req="Y" i_zoom="q_inag004" c_zoom="q_inag004" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[庫位/庫區:(待確認抓法)
+   ●欄位控管：
+     資料欄位:[T:券銷售資料檔].[C:庫區]可Display可Input
+     預設值:无，不可空白
+     校驗:庫區資料需存在[T:庫區商品資料檔]        
+     帶值:(無)
+     
+   ●開窗處理：
+     1.新增/修改/查詢時：
+       參考函式：q_inag004
+       查詢欄位：開窗時需依目前庫區欄位輸入值過濾顯示資料,若為空白或Null
+                 則顯示此收銀機檔對應庫區庫存資料
+       回值類型：新增單一回值,修改/查詢多重回值
+
+]]>
+  </field>
+  <field cite_std="N" name="gcbi_t.gcbi008" ver="1" src="s" column="gcbi008" table="gcbi_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[指定會員卡號：
+   ●欄位控管：
+     資料欄位:[T:券銷售資料檔].[C:指定對應會員卡號]可Display 
+     預設值:单头会员卡号
+     校驗:无
+     帶值:(無)        
+]]>
+  </field>
+  <field cite_std="N" name="gcbi_t.gcbiseq" ver="1" src="s" column="gcbiseq" table="gcbi_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gcbi_t.gcbiseq1" ver="1" src="s" column="gcbiseq1" table="gcbi_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaal003_01" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imaal004_01" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inaa001_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inaa001_desc01" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inaa001_desc02" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="inaa001_desc03" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isaf_t.isaf009" ver="1" src="s" column="isaf009" table="isaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[電子發票
+   ●欄位控管：
+     資料欄位:[T:發票主檔].[C:電子發票]可Display 可Input
+     預設值:無,允許空白
+     校驗:    
+     帶值:
+                
+   
+   ●開窗處理：
+     1.新增/修改/查詢時：
+       參考函式：依標準查詢視窗 / q_xxxx999
+       查詢欄位：
+       回值類型：新增單一回值,修改/查詢多重回值
+
+]]>
+  </field>
+  <field cite_std="N" name="isaf_t.isaf010" ver="1" src="s" column="isaf010" table="isaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[電子發票隨機碼(由發票開立元件回寫)
+   ●欄位控管：
+     資料欄位:[T:發票主檔].[C:電子發票隨機碼]可Display可Input
+     預設值:無,當[C:電子發票]='Y' 時,不允許空白
+     校驗:    
+     帶值:
+                
+   
+  
+]]>
+  </field>
+  <field cite_std="N" name="isaf_t.isaf044" ver="1" src="s" column="isaf044" table="isaf_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isaf_t.isaf201" ver="1" src="s" column="isaf201" table="isaf_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="v_oocq002_3801" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[愛心碼
+   ●欄位控管：
+     資料欄位:[T:發票主檔].[C:愛心碼]可Display可Input
+     預設值:無,允許空白
+     校驗:    
+     帶值:
+                
+]]>
+  </field>
+  <field cite_std="N" name="isaf_t.isaf202" ver="1" src="s" column="isaf202" table="isaf_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="v_oocq002_3802" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[載具類別編碼
+   ●欄位控管：
+     資料欄位:[T:發票主檔].[C:載具類別編碼]可Display可Input
+     預設值:無,允許空白
+     資料選項來源: 
+       常數型態: 1.(門店取貨),2.(倉庫取貨)
+       資料庫: 抓取[T:系統分類值檔].[C:系統分類碼]=6546的資料,
+　　     　　　　  [T:系統分類值檔].[C:系統分類值]為下拉選項代號,
+                   [T:系統分類值多語言檔].[C:說明]為下拉選項說明
+     校驗:1.輸入值須存在[T:系統分類碼檔].[C:系統分類碼]、[C:系統分類]=6546 且為有效資料
+     帶值:無
+     計算或處理:無
+           
+ 
+]]>
+  </field>
+  <field cite_std="N" name="isaf_t.isaf203" ver="1" src="s" column="isaf203" table="isaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[載具顯碼ID
+   ●欄位控管：
+     資料欄位:[T:發票主檔].[C:載具顯碼ID]可Display可Input
+     預設值:無,允許空白
+     校驗:    
+     帶值:
+                
+]]>
+  </field>
+  <field cite_std="N" name="isaf_t.isaf204" ver="1" src="s" column="isaf204" table="isaf_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[載具隱碼ID
+   ●欄位控管：
+     資料欄位:[T:發票主檔].[C:載具隱碼ID]可Display可Input
+     預設值:無,允許空白
+     校驗:    
+     帶值:
+                
+]]>
+  </field>
+  <field cite_std="N" name="isaf_t.isaf207" ver="1" src="s" column="isaf207" table="isaf_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="v_oocq002_3803" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[電子發票領取方式
+   ●欄位控管：
+     資料欄位:[T:發票主檔].[C:電子發票領取方式]可Display可Input
+     預設值:無,允許空白
+     校驗:    
+     帶值:
+                
+   
+ 
+]]>
+  </field>
+  <field cite_std="N" name="mmak009" ver="1" src="s" column="mmak009" table="mmak_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6505" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmak010" ver="1" src="s" column="mmak010" table="mmak_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmaq002" ver="1" src="s" column="mmaq002" table="mmaq_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_mmaf001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmaq002_1" ver="1" src="s" column="mmaq002" table="mmaq_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_mmaf001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmaq002_1_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmaq002_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmaq003" ver="1" src="s" column="mmaq003" table="mmaq_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_mman001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmaq003_1" ver="1" src="s" column="mmaq003" table="mmaq_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_mman001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmea013_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmea014" ver="6" src="s" column="mmea014" table="mmea_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items=" " default="N" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[  欄位 mmea014 checkbox,放至畫面最右方
+  發卡時記錄贈品否,Default 'N'
+  若應收金額mmea012 = 0 ,則mmea012='Y'
+
+]]>
+  </field>
+  <field cite_std="N" name="mmea_t.mmea001" ver="1" src="s" column="mmea001" table="mmea_t" attribute="" type="" req="Y" i_zoom="q_mmaq001_7" c_zoom="q_mmea001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[起始卡號：
+   ●欄位控管：
+     資料欄位:[T:會員卡發卡資料檔].[C:起始卡號]可Display 可Input
+     預設值:No,不允許空白
+     校驗:起始卡號需存在[T:會員卡資訊檔][C:會員卡狀態]='1'.發行 
+          對應卡種需存在[T:會員卡券生效營運組織設定檔]
+     帶值:依[C:開始卡號]抓取[T:會員卡資訊檔]對應卡種編號/發卡方式/附贈卡最低銷費金額/卡張數/單張購卡金額/總購卡金額顯示於畫面右方
+          
+           
+   ●開窗處理：
+     1.新增/修改/查詢時：
+       參考函式：q_mmaq001_7 / q_mmea001
+       查詢欄位：开始卡号
+       回值類型：新增單一回值,修改/查詢多重回值
+   
+]]>
+  </field>
+  <field cite_std="N" name="mmea_t.mmea002" ver="1" src="s" column="mmea002" table="mmea_t" attribute="" type="" req="Y" i_zoom="q_mmaq001_7" c_zoom="q_mmea002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[結束卡號：
+   ●欄位控管：
+     資料欄位:[T:會員卡發卡資料檔].[C:結束卡號]可Display 可Input
+     預設值:[T:會員卡發卡資料檔],不允許空白
+     校驗:以下條件,程式需 check [T:會員卡發卡資料檔][C:開始卡號][C:結束卡號]區間內所有卡資料,若其中一筆不符合則顯示 error 
+          1.所有卡號需存在[T:券資料檔]且[T:會員卡資料檔][C:會員卡狀態]='1'.發行
+          2.[C:開始卡號][C:結束卡號]其對應卡種,面額編號需相同
+          3.對應卡種需存在[T:會員卡券生效營運組織設定檔]
+
+     帶值:(無)
+           
+   
+   ●開窗處理：
+     1.新增/修改/查詢時：
+       參考函式：q_mmaq001_7 / q_mmea002
+       查詢欄位：结束卡号
+       回值類型：新增單一回值,修改/查詢多重回值
+
+
+]]>
+  </field>
+  <field cite_std="N" name="mmea_t.mmea003" ver="1" src="s" column="mmea003" table="mmea_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_mman001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmea_t.mmea004" ver="1" src="s" column="mmea004" table="mmea_t" attribute="" type="" req="Y" i_zoom="q_mmaf001" c_zoom="q_mmaf001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[會員編號：
+   ●欄位控管：
+     資料欄位:[T:會員卡發卡資料檔].[C:會員編號]可Display 可Input
+     預設值:(無),[T:會員卡種資料檔][C:卡記名]則不允許空白
+     校驗:資料需存在[T:會員基本資料檔-主檔]且為已確認資料
+     帶值:(無)
+           
+   
+   ●開窗處理：
+     1.新增/修改/查詢時：
+       參考函式：q_mmaf001 / q_mmaf001
+       查詢欄位：會員編號
+       回值類型：新增單一回值,修改/查詢多重回值
+
+
+]]>
+  </field>
+  <field cite_std="N" name="mmea_t.mmea005" ver="1" src="s" column="mmea005" table="mmea_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmea_t.mmea006" ver="6" src="s" column="mmea006" table="mmea_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmea_t.mmea007" ver="1" src="s" column="mmea007" table="mmea_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmea_t.mmea008" ver="1" src="s" column="mmea008" table="mmea_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[單張儲值金額：
+   ●欄位控管：
+     資料欄位:[T:會員卡發卡資料檔].[C:單張儲值金額]可Display 可Input
+     預設值:0,不允許空白
+     CALL 儲值計算元件,計算出折扣及加值金額
+     校驗:資料需>=0
+     帶值:(無)
+           ]]>
+  </field>
+  <field cite_std="N" name="mmea_t.mmea009" ver="6" src="s" column="mmea009" table="mmea_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="&lt;=" max="100" min_compare="&gt;=" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmea_t.mmea010" ver="7" src="s" column="mmea010" table="mmea_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[單張加值金額：
+   ●欄位控管：
+     資料欄位:[T:會員卡發卡資料檔].[C:單張加值金額]可Display
+     預設值:依卡種抓取[T:會員卡種資料檔][C:儲值加值]/[C:預設加值最低金額條件]/[C:預設加值儲值金額基準]/[C:預設單位加值金額]
+            IF [T:會員卡種資料檔][C:儲值加值]='Y' AND [T:會員卡發卡資料檔][C:單張儲值金額]>=[T:會員卡種資料檔][C:預設加值最低金額條件] THEN
+               LET [C:單張加值金額]= ([C:單張儲值金額]/[C:預設加值儲值金額基準])取整數 * [C:預設單位加值金額]
+            ELSE
+               LET [C:單張加值金額]= 0
+           END IF
+           不允許空白
+     校驗:資料需>=0
+     帶值:(無)
+           
+   
+ 
+]]>
+  </field>
+  <field cite_std="N" name="mmea_t.mmea011" ver="1" src="s" column="mmea011" table="mmea_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[總儲值金額：
+   ●欄位控管：
+     資料欄位:[T:會員卡發卡資料檔].[C:總儲值金額]可Display 
+     預設值:LET 總儲值金額=[C:卡張數]*([C:單張儲值金額]+[C:單張加值金額])
+            不允許空白
+     校驗:資料需>=0
+     帶值:(無)
+           ]]>
+  </field>
+  <field cite_std="N" name="mmea_t.mmea012" ver="1" src="s" column="mmea012" table="mmea_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[應收金額：
+   ●欄位控管：
+     資料欄位:[T:會員卡發卡資料檔].[C:應收金額]可Display 
+     預設值:LET [C:應收金額]=[C:總購卡金額]+[C:卡張數]*[C:單張儲值金額]*[C:儲值折扣率]/100
+            不允許空白
+     校驗:資料需>=0
+     帶值:(無)
+           
+   
+ 
+]]>
+  </field>
+  <field cite_std="N" name="mmea_t.mmea013" ver="1" src="s" column="mmea013" table="mmea_t" attribute="" type="" req="Y" i_zoom="q_inag004" c_zoom="q_inag004" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmea_t.mmeaseq" ver="1" src="s" column="mmeaseq" table="mmea_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[項次：
+   ●欄位控管：
+     資料欄位:[T:會員卡發卡資料檔].[C:項次]欄位隱藏
+     預設值:於確認時回寫,不允許空白
+     校驗:
+     帶值:(無)
+   
+   
+    ●開窗處理：
+     (無)
+]]>
+  </field>
+  <field cite_std="N" name="mmeb_t.mmeb001" ver="1" src="s" column="mmeb001" table="mmeb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[原卡卡號：
+   ●欄位控管：
+     資料欄位:[T: 會員卡補卡資料檔].[C:原卡卡號]可Display可Input
+     預設值:無,允許空白
+     校驗:1.原卡卡號需存在[T:會員卡資訊檔]且[T:會員卡資訊檔][C:會員卡狀態]='5'掛失    
+     帶值:依卡號抓取[T:會員卡資訊檔]帶出[C:卡種編號]/[C:會員編號]/[C:會員卡效期]/[C:累計積點]/[C:會員卡儲值餘額]/[C:儲值餘額成本金額]
+
+   ●開窗處理：
+     1.查詢時：
+       參考函式：q_mmaq001_7 / q_mmec001
+       查詢欄位：[T:會員卡資訊檔][C:會員卡號]/[[C:卡種編號]/[C:會員姓名]
+       回值類型：新增單一回值,修改/查詢多重回值]]>
+  </field>
+  <field cite_std="N" name="mmeb_t.mmeb002" ver="1" src="s" column="mmeb002" table="mmeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmeb_t.mmeb003" ver="1" src="s" column="mmeb003" table="mmeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmeb_t.mmeb004" ver="1" src="s" column="mmeb004" table="mmeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmeb_t.mmeb005" ver="1" src="s" column="mmeb005" table="mmeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmeb_t.mmeb006" ver="1" src="s" column="mmeb006" table="mmeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmeb_t.mmeb007" ver="1" src="s" column="mmeb007" table="mmeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmeb_t.mmeb008" ver="1" src="s" column="mmeb008" table="mmeb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[新卡卡號：
+   ●欄位控管：
+     資料欄位:[T: 會員卡換卡資料檔].[C:原卡卡號]可Display可Input
+     預設值:無,允許空白
+     校驗:1.原卡卡號需存在[T:會員卡資訊檔]且[T:會員卡資訊檔][C:會員卡狀態]='1'.發行     
+     帶值:依卡號抓取[T:會員卡資訊檔]帶出[C:卡種編號]/[C:會員卡可儲值]/[C:會員卡儲值折扣],[C:會員卡種資料檔][C:换卡工本費]
+   
+   ●開窗處理：
+     1.查詢時：
+       參考函式：q_mmaq001_7 / q_mmeb008
+       查詢欄位：[T:會員卡資訊檔][C:會員卡號]/[[C:卡種編號]/[C:會員姓名]
+       回值類型：新增單一回值,修改/查詢多重回值
+]]>
+  </field>
+  <field cite_std="N" name="mmeb_t.mmeb009" ver="1" src="s" column="mmeb009" table="mmeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmeb_t.mmeb010" ver="1" src="s" column="mmeb010" table="mmeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmeb_t.mmeb011" ver="1" src="s" column="mmeb011" table="mmeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmeb_t.mmeb012" ver="6" src="s" column="mmeb012" table="mmeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmeb_t.mmeb013" ver="1" src="s" column="mmeb013" table="mmeb_t" attribute="" type="" req="Y" i_zoom="q_inag004" c_zoom="q_inag004" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[庫位/庫區:(待確認抓法)
+   ●欄位控管：
+     資料欄位:[T:券銷售資料檔].[C:庫區]可Display可Input
+     預設值:无，不可空白
+     校驗:庫區資料需存在[T:庫區商品資料檔]        
+     帶值:(無)]]>
+  </field>
+  <field cite_std="N" name="mmeb_t.mmeb014" ver="1" src="s" column="mmeb014" table="mmeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[理由碼：
+   ●欄位控管：
+     資料欄位:[T: 會員卡換卡資料檔].[C:理由碼]可Display可Input
+     預設值:無,允許空白
+     校驗:1.輸入值須存在[T:應用分類碼檔].[C:應用分類碼]、[C:應用分類]=2055 且為有效資料    
+     帶值:理由碼說明顯示於右方
+         
+   
+   ●開窗處理：
+     1.新增/修改/查詢時：
+       參考函式：q_oocq002 / q_oocq002
+       查詢欄位：抓取[T:應用分類碼檔].[C:應用分類碼]、[C:應用分類]=2055 ,[T:應用分類碼多語言檔][說明]
+       回值類型：新增單一回值,修改/查詢多重回值
+]]>
+  </field>
+  <field cite_std="N" name="mmeb_t.mmeb015" ver="1" src="s" column="mmeb015" table="mmeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6515" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmeb_t.mmebseq" ver="1" src="s" column="mmebseq" table="mmeb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[項次：
+   ●欄位控管：
+     資料欄位:[T:會員卡發卡資料檔].[C:項次]欄位隱藏
+     預設值:於確認時回寫,不允許空白
+     校驗:
+     帶值:(無)
+
+   
+    ●開窗處理：
+     (無)
+]]>
+  </field>
+  <field cite_std="N" name="mmec_t.mmec001" ver="1" src="s" column="mmec001" table="mmec_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[原卡卡號：
+   ●欄位控管：
+     資料欄位:[T: 會員卡換卡資料檔].[C:原卡卡號]可Display可Input
+     預設值:無,允許空白
+     校驗:1.原卡卡號需存在[T:會員卡資訊檔]且[T:會員卡資訊檔][C:會員卡狀態]='2'.發卡 or '3'.開卡     
+     帶值:依卡號抓取[T:會員卡資訊檔]帶出[C:卡種編號]/[C:會員編號]/[C:會員卡效期]/[C:累計積點]/[C:會員卡儲值餘額]/[C:儲值餘額成本金額]
+         
+   
+   ●開窗處理：
+     1.查詢時：
+       參考函式：q_mmaq001_7 / q_mmeb001
+       查詢欄位：[T:會員卡資訊檔][C:會員卡號]/[[C:卡種編號]/[C:會員姓名]
+       回值類型：新增單一回值,修改/查詢多重回值
+
+]]>
+  </field>
+  <field cite_std="N" name="mmec_t.mmec002" ver="1" src="s" column="mmec002" table="mmec_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmec_t.mmec003" ver="1" src="s" column="mmec003" table="mmec_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmec_t.mmec004" ver="1" src="s" column="mmec004" table="mmec_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmec_t.mmec005" ver="1" src="s" column="mmec005" table="mmec_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmec_t.mmec006" ver="1" src="s" column="mmec006" table="mmec_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmec_t.mmec007" ver="1" src="s" column="mmec007" table="mmec_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmec_t.mmec008" ver="1" src="s" column="mmec008" table="mmec_t" attribute="" type="" req="Y" i_zoom="q_mmaq001_7" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[新卡卡號：
+   ●欄位控管：
+     資料欄位:[T: 會員卡補卡資料檔].[C:原卡卡號]可Display可Input
+     預設值:無,允許空白
+     校驗:1.原卡卡號需存在[T:會員卡資訊檔]且[T:會員卡資訊檔][C:會員卡狀態]='1'.發行 
+     帶值:依卡號抓取[T:會員卡資訊檔]帶出[C:卡種編號]/[C:會員卡可儲值]/[C:會員卡儲值折扣],[C:會員卡種資料檔][C:補卡工本費]
+         
+   
+   ●開窗處理：
+     1.查詢時：
+       參考函式：q_mmaq001_7 / q_mmec008
+       查詢欄位：[T:會員卡資訊檔][C:會員卡號]/[[C:卡種編號]/[C:會員姓名]
+       回值類型：新增單一回值,修改/查詢多重回值
+]]>
+  </field>
+  <field cite_std="N" name="mmec_t.mmec009" ver="1" src="s" column="mmec009" table="mmec_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmec_t.mmec010" ver="1" src="s" column="mmec010" table="mmec_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmec_t.mmec011" ver="1" src="s" column="mmec011" table="mmec_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmec_t.mmec012" ver="6" src="s" column="mmec012" table="mmec_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;=" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmec_t.mmec013" ver="1" src="s" column="mmec013" table="mmec_t" attribute="" type="" req="Y" i_zoom="q_inag004" c_zoom="q_inag004" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[庫位/庫區:(待確認抓法)
+   ●欄位控管：
+     資料欄位:[T:券銷售資料檔].[C:庫區]可Display可Input
+     預設值:无，不可空白
+     校驗:庫區資料需存在[T:庫區商品資料檔]        
+     帶值:(無)]]>
+  </field>
+  <field cite_std="N" name="mmec_t.mmec014" ver="1" src="s" column="mmec014" table="mmec_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[理由碼：
+   ●欄位控管：
+     資料欄位:[T: 會員卡補卡資料檔].[C:理由碼]可Display可Input
+     預設值:無,允許空白
+     校驗:1.輸入值須存在[T:應用分類碼檔].[C:應用分類碼]、[C:應用分類]=2055 且為有效資料    
+     帶值:理由碼說明顯示於右方
+         
+   
+   ●開窗處理：
+     1.新增/修改/查詢時：
+       參考函式：q_oocq002 / q_oocq002
+       查詢欄位：抓取[T:應用分類碼檔].[C:應用分類碼]、[C:應用分類]=2055 ,[T:應用分類碼多語言檔][說明]
+       回值類型：新增單一回值,修改/查詢多重回值
+]]>
+  </field>
+  <field cite_std="N" name="mmec_t.mmec015" ver="1" src="s" column="mmec015" table="mmec_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6515" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[系统分类码：6515
+]]>
+  </field>
+  <field cite_std="N" name="mmec_t.mmecseq" ver="1" src="s" column="mmecseq" table="mmec_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[項次：
+   ●欄位控管：
+     資料欄位:[T:會員卡發卡資料檔].[C:項次]欄位隱藏
+     預設值:於確認時回寫,不允許空白
+     校驗:
+     帶值:(無)
+   
+   
+    ●開窗處理：
+     (無)
+]]>
+  </field>
+  <field cite_std="N" name="mmed001_1" ver="1" src="s" column="mmed001" table="mmed_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[註銷卡號：
+   ●欄位控管：
+     資料欄位:[T:會員卡儲值資料檔].[C:儲值卡號]可Display 可Input
+     預設值:無,允許空白
+     校驗:1.儲值卡號需存在[T:會員卡資訊檔]且[T:會員卡資訊檔][C:會員卡狀態]= '3'.開卡 且效期<=g_today    
+     帶值:依卡號抓取[T:會員卡資訊檔]帶出[C:卡種編號]/[C:會員編號]/[C:會員卡儲值餘額]/[C:卡內儲值成本]
+          LET [C:異動類型]     = -1
+          LET [C:註銷金額]     = [C:會員卡儲值餘額]
+          LET [C:此次註銷成本] = [C:會員卡儲值餘額]
+          LET [C:註銷後卡內餘額]= 0
+          LET [C:期末儲值成本] =0
+          LET [C:實際應付金額]= [C:會員卡儲值餘額] * [C:異動類型]
+]]>
+  </field>
+  <field cite_std="N" name="mmed002_1" ver="1" src="s" column="mmed002" table="mmed_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmed003_1" ver="1" src="s" column="mmed003" table="mmed_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmed004_1" ver="1" src="s" column="mmed004" table="mmed_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmed005_1" ver="1" src="s" column="mmed005" table="mmed_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmed009_1" ver="1" src="s" column="mmed009" table="mmed_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmed010_1" ver="1" src="s" column="mmed010" table="mmed_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmed012_1" ver="1" src="s" column="mmed012" table="mmed_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmed013_1" ver="1" src="s" column="mmed013" table="mmed_t" attribute="" type="" req="Y" i_zoom="q_inag004" c_zoom="q_inag004" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[庫位/庫區:(待確認抓法)
+   ●欄位控管：
+     資料欄位:[T:券銷售資料檔].[C:庫區]可Display可Input
+     預設值:无，不可空白
+     校驗:庫區資料需存在[T:庫區商品資料檔]        
+     帶值:(無)]]>
+  </field>
+  <field cite_std="N" name="mmed013_desc_1" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmed014_1" ver="1" src="s" column="mmed014" table="mmed_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[理由碼：
+   ●欄位控管：
+     資料欄位:[T: 會員卡換卡資料檔].[C:理由碼]可Display可Input
+     預設值:無,允許空白
+     校驗:1.輸入值須存在[T:應用分類碼檔].[C:應用分類碼]、[C:應用分類]=2055 且為有效資料    
+     帶值:理由碼說明顯示於右方
+         
+   
+   ●開窗處理：
+     1.新增/修改/查詢時：
+       參考函式：q_oocq002 / q_oocq002
+       查詢欄位：抓取[T:應用分類碼檔].[C:應用分類碼]、[C:應用分類]=2055 ,[T:應用分類碼多語言檔][說明]
+       回值類型：新增單一回值,修改/查詢多重回值
+]]>
+  </field>
+  <field cite_std="N" name="mmed_t.mmed001" ver="1" src="s" column="mmed001" table="mmed_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[儲值卡號：
+   ●欄位控管：
+     資料欄位:[T:會員卡儲值資料檔].[C:儲值卡號]可Display 可Input
+     預設值:無,允許空白
+     校驗:1.儲值卡號需存在[T:會員卡資訊檔]且[T:會員卡資訊檔][C:會員卡狀態]= '3'.開卡 且效期>=g_today    
+     帶值:依卡號抓取[T:會員卡資訊檔]帶出[C:卡種編號]/[C:會員編號]/[C:會員卡儲值餘額]/[C:卡內儲值成本]
+         
+]]>
+  </field>
+  <field cite_std="N" name="mmed_t.mmed002" ver="1" src="s" column="mmed002" table="mmed_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmed_t.mmed003" ver="1" src="s" column="mmed003" table="mmed_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmed_t.mmed004" ver="1" src="s" column="mmed004" table="mmed_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmed_t.mmed005" ver="1" src="s" column="mmed005" table="mmed_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[儲值金額：
+   ●欄位控管：
+     資料欄位:[T:會員卡儲值資料檔].[C:儲值金額]可Display 可Input
+     預設值:0,不允許空白
+     校驗:資料需>0
+     帶值:輸入儲值金額後計算[C:此次儲值成本]   =[C:儲值金額]*(折扣比率/100)
+                            [C:儲值後卡內餘額] = 儲值卡餘額+[C:儲值金額]
+                            [C:實際應付金額]   = [C:儲值金額]*(折扣比率/100)
+]]>
+  </field>
+  <field cite_std="N" name="mmed_t.mmed006" ver="1" src="s" column="mmed006" table="mmed_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmed_t.mmed007" ver="1" src="s" column="mmed007" table="mmed_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmed_t.mmed008" ver="1" src="s" column="mmed008" table="mmed_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmed_t.mmed009" ver="1" src="s" column="mmed009" table="mmed_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmed_t.mmed010" ver="1" src="s" column="mmed010" table="mmed_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmed_t.mmed012" ver="1" src="s" column="mmed012" table="mmed_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="mmed_t.mmed013" ver="1" src="s" column="mmed013" table="mmed_t" attribute="" type="" req="Y" i_zoom="q_inag004" c_zoom="q_inag004" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[庫位/庫區:(待確認抓法)
+   ●欄位控管：
+     資料欄位:[T:券銷售資料檔].[C:庫區]可Display可Input
+     預設值:无，不可空白
+     校驗:庫區資料需存在[T:庫區商品資料檔]        
+     帶值:(無)]]>
+  </field>
+  <field cite_std="N" name="mmed_t.mmed014" ver="1" src="s" column="mmed014" table="mmed_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[理由碼：
+   ●欄位控管：
+     資料欄位:[T: 會員卡換卡資料檔].[C:理由碼]可Display可Input
+     預設值:無,允許空白
+     校驗:1.輸入值須存在[T:應用分類碼檔].[C:應用分類碼]、[C:應用分類]=2055 且為有效資料    
+     帶值:理由碼說明顯示於右方
+         
+   
+   ●開窗處理：
+     1.新增/修改/查詢時：
+       參考函式：q_oocq002 / q_oocq002
+       查詢欄位：抓取[T:應用分類碼檔].[C:應用分類碼]、[C:應用分類]=2055 ,[T:應用分類碼多語言檔][說明]
+       回值類型：新增單一回值,修改/查詢多重回值
+]]>
+  </field>
+  <field cite_std="N" name="mmed_t.mmedseq" ver="1" src="s" column="mmedseq" table="mmed_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[項次：
+   ●欄位控管：
+     資料欄位:[T:會員卡發卡資料檔].[C:項次]欄位隱藏
+     預設值:於確認時回寫,不允許空白
+     校驗:
+     帶值:(無)
+   
+   
+    ●開窗處理：
+     (無)
+]]>
+  </field>
+  <field cite_std="N" name="mmedseq_6" ver="1" src="s" column="mmedseq" table="mmed_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oocq009" ver="1" src="s" column="oocq009" table="oocq_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[系统分类码：2071]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia001" ver="1" src="s" column="rtia001" table="rtia_t" attribute="" type="" req="N" i_zoom="q_mmaq001_1" c_zoom="q_mmaq001_1" chk_ref="v_mmaq001_2" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[會員卡號：
+   ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C:會員卡號]可Display可Input
+     預設值:無,允許空白
+     校驗:1.輸入值須存在[T:會員卡資料檔].[C:會員卡號]且[C:會員卡狀態］＝3.開卡
+     帶值:依[T:流通銷售單頭檔].[C:會員卡號]抓取[T:會員基本料檔-主檔][會員姓名]顯示於右方
+             依[T:流通銷售單頭檔].[C:會員卡號]抓取[T:會員基本料檔-主檔][大宗客戶編號]顯示於[C:客戶編號]欄位,
+             並依[C:客戶編號]抓取[T:主易對象主檔多語言檔][C:交易對象簡稱]顯示
+   ●開窗處理：
+     1.新增/修改/查詢時：
+       參考函式：q_mmaq001_3
+       查詢欄位：[T:會員卡資料檔].[C:會員卡號],[T.會員基本料檔-主檔].[C:會員姓名],[T.會員基本料檔-主檔].[C:會員出生日期]
+                       [T.會員基本料檔-主檔].[C:會員手機號碼]
+       回值類型：新增單一回值,修改/查詢多重回值
+
+]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia002" ver="1" src="s" column="rtia002" table="rtia_t" attribute="" type="" req="Y" i_zoom="q_pmaa001_7" c_zoom="q_pmaa001_7" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[客戶編號：
+   ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C:客戶編號]可Display可Input
+     預設值:不允許空白,依[C:會員卡號]抓[T:會員卡資料檔][C:會員編號],再依[C:會員編號]抓取[T:會員基本資料檔-主檔][C:大宗客戶編號],
+                       若取不到再取[T:營運據點檔][C:散客編號]
+
+     校驗:1.若[C:會員卡號]不為空白或Null時,輸入值須存在[T:會員基本資料檔-主檔][C:大宗客戶編號]
+          2.若[C:會員卡號]為空白或Null時,輸入值須存在[T:營運據點檔][C:散客編號]
+     帶值:依[T:流通銷售單頭檔].[C:客戶編號]抓取[T:交易對象主檔多語言檔][C:交易對象簡稱]顯示於右方
+
+   ●開窗處理：
+     1.新增/修改：
+       參考函式：q_ooef108
+       查詢欄位：散客編號
+       回值類型：單一回值
+
+       查詢：
+       參考函式：q_pmaa001_7
+       查詢欄位：交易對象編號
+       回值類型：查詢多重回值
+]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia004" ver="1" src="s" column="rtia004" table="rtia_t" attribute="" type="" req="Y" i_zoom="q_oofa003" c_zoom="q_oofa003" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[業務人員：
+   ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C:業務人員]可Display可Input
+     預設值:登入使用者,不允許空白
+     校驗:1.輸入值須存在[T:員工資料檔].[C:員工編號]且為有效資料        
+     帶值:依[T:流通銷售單頭檔].[C:業務人員]抓取[T:聯絡對象檔].[C:全名]顯示於右方
+
+   ●開窗處理：
+     1.新增/修改/查詢時：
+       參考函式：q_ooag001
+       查詢欄位：員工編號
+       回值類型：新增單一回值,修改/查詢多重回值
+]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia005" ver="1" src="s" column="rtia005" table="rtia_t" attribute="" type="" req="Y" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[業務部門：
+   ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C:業務部門]可Display可Input
+     預設值:依[C:業務人員]抓取對應[T:員工資料檔][C:歸屬部門],不允許空白
+     校驗:1.輸入值須存在[T:部門資料檔].[C:部門編號]且為有效資料        
+     帶值:依[T:流通銷售單頭檔].[C:業務部門]抓取[T:組織基本資料檔多語言檔].[C:說明(簡稱)]顯示於右方
+        
+   ●開窗處理：
+     1.新增/修改/查詢時：
+       參考函式：q_ooeg001
+       查詢欄位：部門編號
+       回值類型：新增單一回值,修改/查詢多重回值
+]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia006" ver="1" src="s" column="rtia006" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[結算日期：
+   ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C:結算日期]/Display 
+     預設值:(無),允許空白.不允許輸入
+   
+
+   ●開窗處理：
+     1.查詢時：
+       參考函式：提供標準行事曆
+      
+     2.新增時：
+       參考函式：提供標準行事曆 
+]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia007" ver="6" src="s" column="rtia007" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_rtia007" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia009" ver="1" src="s" column="rtia009" table="rtia_t" attribute="" type="" req="N" i_zoom="q_gzaa001" c_zoom="q_gzaa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[銷售分類：
+   ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C:銷售分類]可Display可Input
+     預設值:無,允許空白
+     校驗:1.輸入值須存在[T:應用分類碼檔].[C:應用分類碼]、[C:應用分類]=295 且為有效資料
+     帶值:依[T:流通銷售單頭檔].[C:銷售分類碼] 抓取[T:應用分類碼多語言檔][說明]顯示於右方
+   
+   ●開窗處理：
+     1.新增/修改/查詢時：
+       參考函式：q_gzaa001 / q_gzaa001
+       查詢欄位：抓取[T:應用分類碼檔].[C:應用分類碼]、[C:應用分類]=295 ,[T:應用分類碼多語言檔][說明]
+       回值類型：新增單一回值,修改/查詢多重回值
+]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia014" ver="1" src="s" column="rtia014" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[起始發票\折讓：(待確認發票處理方式)
+   ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C:起始發票\折讓]可Display可Input
+     預設值:依發票取號方式處理,允許空白
+     校驗:(無)   
+     帶值:(無)
+                
+   
+ ]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia015" ver="1" src="s" column="rtia015" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[截止發票\折讓：(待確認發票處理方式)
+   ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C:截止發票\折讓]可Display可Input
+     預設值:依發票取號方式處理,允許空白
+     校驗:(無)   
+     帶值:(無)
+                
+]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia025" ver="1" src="s" column="rtia025" table="rtia_t" attribute="" type="" req="Y" i_zoom="q_pmad002" c_zoom="q_rtia025" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[收款條件
+   ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C:收款條件]可Display可Input
+     預設值:不允許空白.依[T:流通銷售單頭檔][C:客戶編號]抓取[T:交易對象允許收/付款條件檔][C:交易條件編號]且[C:主要否]='Y' AND [C:有效否]='Y' 
+     校驗:  需存在[T:交易對象允許收/付款條件檔] 有效資料
+     帶值:
+    
+   ●開窗處理：
+     1.新增/修改/查詢時：
+       參考函式：q_pmad002 / q_rtia025
+       查詢欄位：交易條件編號
+       回值類型：新增單一回值,修改/查詢多重回值
+
+]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia026" ver="1" src="s" column="rtia026" table="rtia_t" attribute="" type="" req="Y" i_zoom="q_ooaj002_2" c_zoom="q_ooaj002_2" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[幣別
+   ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C:幣別]可Display可Input
+     預設值:抓取[T:交易對象據點檔][C:客戶慣用交易幣別],不允許空白
+     校驗:依營運組織對應的幣別參照表號抓取[T:使用幣別設定檔] 有效資料
+     帶值:(無)
+   
+   ●開窗處理：
+     1.新增/修改/查詢時：
+       參考函式：q_ooaj002_2 / q_ooaj002_2
+       查詢欄位：使用幣別
+       回值類型：新增單一回值,修改/查詢多重回值
+
+]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia027" ver="1" src="s" column="rtia027" table="rtia_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[匯率
+   ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C:匯率]可Display可Input
+     預設值:依營運據點抓取參數編號=S-BAS-0010 抓取內銷外幣使用匯率來源抓取對應匯率(共用元件?),不允許空白
+     校驗:(無)
+     帶值:(無)
+                
+   
+   ]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia028" ver="1" src="s" column="rtia028" table="rtia_t" attribute="" type="" req="Y" i_zoom="q_pmab084" c_zoom="q_pmab084" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[稅別
+   ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C:稅別]可Display可Input
+     預設值:無,允許空白
+     校驗:依營運組織抓取单一税别设置档的税别
+     帶值:(無)
+
+   ●開窗處理：
+     1.新增/修改/查詢時：
+       參考函式：q_pmab084 / q_pmab084
+       查詢欄位：稅別代碼
+       回值類型：新增單一回值,修改/查詢多重回值
+]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia029" ver="1" src="s" column="rtia029" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[稅率
+   ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C:稅率]可Display可Input
+     預設值:無,允許空白
+     校驗:稅別對應的稅率    
+     帶值:
+                
+   
+   ●開窗處理：
+     1.新增/修改/查詢時：
+       參考函式：依標準查詢視窗 / q_xxxx999
+       查詢欄位：
+       回值類型：新增單一回值,修改/查詢多重回值
+
+]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia030" ver="1" src="s" column="rtia030" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[含稅
+   ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C:含稅]可Display可Input
+     預設值:'N',不允許空白
+     校驗:
+     帶值:
+]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia032" ver="1" src="s" column="rtia032" table="rtia_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6544" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[資料來源
+   ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C:資料來源]可Display
+     預設值:1.ERP無,不允許空白
+     資料選項來源: 
+       常數型態: 1.(ERP),2.(POS),3.(電商)
+       資料庫: 抓取[T:系統分類值檔].[C:系統分類碼]6544的資料,
+　　     　　　　  [T:系統分類值檔].[C:系統分類值]為下拉選項代號,
+                   [T:系統分類值多語言檔].[C:說明]為下拉選項說明
+     校驗:1.輸入值須存在[T:系統分類碼檔].[C:系統分類碼]、[C:系統分類]6544 且為有效資料
+     帶值:無
+     計算或處理:無
+                      
+   
+]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia033" ver="1" src="s" column="rtia033" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_rtia033" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[資料來源單號
+   ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C:資料來源單號]可Display
+     預設值:當[C:資料來源]=1.ERP,則資料來源單號=[C:銷售單號},允許空白
+     校驗:    
+     帶值:
+                
+   
+   ●開窗處理：
+     1.查詢時：
+       參考函式：q_rtia033
+       查詢欄位：[T:經營單位多語言檔].[C:资料来源单号]
+       回值類型：新增單一回值,修改/查詢多重回值
+
+]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia034" ver="1" src="s" column="rtia034" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[來源交易日期
+   ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C:來源交易日期]可Display可Input
+     預設值:當[C:資料來源]=1.ERP,則來[C:源交易日期]=[T:流通銷售單頭檔].[C:單據日期],不允許空白
+     校驗: 日期確認規則
+     帶值: (無)
+                
+   
+   ●開窗處理：
+     標準日曆
+
+]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia035" ver="1" src="s" column="rtia035" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="TimeEdit" status="">
+    <![CDATA[來源交易時間
+   ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C:來源交易時間]可Display可Input
+     預設值::當[C:資料來源]=1.ERP,則來[C:源交易時間]=系統時間,不允許空白
+     校驗:符合時間規範    
+     帶值:(無)
+                
+   
+   ]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia036" ver="1" src="s" column="rtia036" table="rtia_t" attribute="" type="" req="N" i_zoom="q_pcaa001_1" c_zoom="q_pcaa001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[收銀機號
+   ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C:收銀機號]可Display可Input
+     預設值:無,允許空白.當[C:資料來源]<>1.ERP 則不允許修改
+     校驗: 需存在 [T:收銀機資料檔]   
+     帶值:依營運據點+收銀機號抓取[T:收銀機基本資料檔].[C:收銀機編號]對應的[C:收銀方式]資料帶入畫面
+
+   ●開窗處理：
+     1.新增/修改/查詢時：
+       參考函式：q_pcaa001_1 / q_pcaa001_1
+       查詢欄位：收銀機編號
+       回值類型：新增單一回值,修改/查詢多重回值
+
+]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia037" ver="5" src="s" column="rtia037" table="rtia_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[收銀員
+   ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C:收銀員]可Display可Input
+     預設值:Default g_user,不允許空白.當[C:資料來源]<>1.ERP 時不允許修改
+     校驗:1.輸入值須存在[T:員工資料檔].[C:員工編號]且為有效資料        
+     帶值:依[T:流通銷售單頭檔].[C:收銀員]抓取[T:聯絡對象檔].[C:全名]顯示於右方
+                
+   
+   ●開窗處理：
+     1.新增/修改/查詢時：
+       參考函式：q_ooag001 / q_ooag001
+       查詢欄位：員工編號
+       回值類型：新增單一回值,修改/查詢多重回值
+
+]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia038" ver="1" src="s" column="rtia038" table="rtia_t" attribute="" type="" req="N" i_zoom="q_oogd001_02" c_zoom="q_oogd001_01" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[收銀員
+   ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C:班別]可Display可Input
+     預設值:(無).當[C:資料來源]<>1.ERP 則不允許修改.
+     校驗:資料需存在[T:班別檔]且為有效資料    
+     帶值:(無)
+                
+   
+   ●開窗處理：
+     1.新增/修改/查詢時：
+       參考函式：q_oogd001_02 / q_oogd001_01
+       查詢欄位：班別編號
+       回值類型：新增單一回值,修改/查詢多重回值
+
+]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia039" ver="1" src="s" column="rtia039" table="rtia_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6202" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[收銀方式：(避免混收銀) ,連鎖(or 專櫃)都是自收銀再區分是否第三方代收/MALL 賣場可分統收or 自收/專櫃有統收或自收
+  ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C:收銀方式]可Display
+     預設值:依收銀機對應2.自收銀,不允許空白或 Null
+     資料選項來源: 
+       常數型態: 0.(統一收銀),1.(自收銀)
+       資料庫: 抓取[T:系統分類值檔].[C:系統分類碼]6202對應的資料,
+　　     　　　　  [T:系統分類值檔].[C:系統分類值]為下拉選項代號,
+                   [T:系統分類值多語言檔].[C:說明]為下拉選項說明
+     校驗:1.輸入值須存在[T:系統分類碼檔].[C:系統分類碼]、[C:系統分類]6547對應的且為有效資料
+     帶值:無
+     計算或處理:無
+          
+
+]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia041" ver="1" src="s" column="rtia041" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[備註：
+   ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C備註]可Display
+     預設值:(無),允許空白
+     校驗:(無)
+     帶值:(無)
+                
+]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia048" ver="1" src="s" column="rtia048" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtia050" ver="6" src="s" column="rtia050" table="rtia_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtiacnfdt" ver="1" src="s" column="rtiacnfdt" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtiacnfid" ver="1" src="s" column="rtiacnfid" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtiacrtdp" ver="1" src="s" column="rtiacrtdp" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtiacrtdt" ver="1" src="s" column="rtiacrtdt" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtiacrtid" ver="1" src="s" column="rtiacrtid" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtiadocdt" ver="1" src="s" column="rtiadocdt" table="rtia_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[單據日期：
+   ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C:單據日期]/Display Input
+     預設值:系統日期
+     不允許空白
+
+   ●開窗處理：
+     1.查詢時：
+       參考函式：提供標準行事曆
+      
+     2.新增時：
+       參考函式：提供標準行事曆 
+]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtiadocno" ver="1" src="s" column="rtiadocno" table="rtia_t" attribute="" type="" req="Y" i_zoom="q_ooba002_1" c_zoom="q_rtiadocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[單據編號：
+   ●欄位控管：
+     資料欄位:[T:流通銷售單頭檔].[C:單據編號]/可Display 可 Input
+     預設值:無,不允許空白
+     程式依單據別編碼原則產生單據編號
+
+   ●開窗處理：
+     1.查詢時：
+       參考函式：q_rtiadocno
+       查詢欄位：[T:流通銷售單頭檔].[C:單據編號]
+       回值類型：單一回值
+
+     2.新增時:
+       參考函式：q_ooba002_1
+       查詢欄位：[T:單別檔].[C:單別],[T:單別檔].[C:單別說明]
+       回值類型：多重回值
+     
+]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtiamoddt" ver="1" src="s" column="rtiamoddt" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtiamodid" ver="1" src="s" column="rtiamodid" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtiaowndp" ver="1" src="s" column="rtiaowndp" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtiaownid" ver="1" src="s" column="rtiaownid" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtiapstdt" ver="1" src="s" column="rtiapstdt" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtiapstid" ver="1" src="s" column="rtiapstid" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtiasite" ver="1" src="s" column="rtiasite" table="rtia_t" attribute="" type="" req="Y" i_zoom="q_ooed004" c_zoom="q_ooed004" chk_ref="v_ooed004" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[銷售組織
+   ●欄位控管：
+     1.資料欄位:[T:流通銷售單頭檔].[C:營運據點]/可Display Input
+     2.預設值:User 登入營運據點.可修改.不允許空白
+     3.校驗:取User登入組織以下營運據點資料.
+     4.離開此欄位時則不允許再更改.
+     5.LET [T:流通銷售單頭檔].[C:應用組織] = [T:流通銷售單頭檔].[C:營運據點]
+
+   ●開窗處理：
+       參考函式：q_ooed004
+       查詢欄位：[T:營運據點檔][C:營運據點],[T:經營單位多語言檔][C:說明(簡稱)]
+       回值類型：查詢多重回值,新增/修改單一回值
+     
+]]>
+  </field>
+  <field cite_std="N" name="rtia_t.rtiastus" ver="1" src="s" column="rtiastus" table="rtia_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib003_01" ver="1" src="s" column="rtib003" table="rtib_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib003_02" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib003_03" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib004_01" ver="1" src="s" column="rtib004" table="rtib_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_imaa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib004_02" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib004_03" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib006_02" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib006_02_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib006_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib008_01" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib010_01" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib012_01" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib013_01" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib013_01_desc" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib021_01" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib_t.rtib003" ver="1" src="s" column="rtib003" table="rtib_t" attribute="" type="" req="N" i_zoom="q_imay003_2" c_zoom="q_imay003_2" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib_t.rtib004" ver="1" src="s" column="rtib004" table="rtib_t" attribute="" type="" req="N" i_zoom="q_rtdx001_1" c_zoom="q_imaa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib_t.rtib006" ver="1" src="s" column="rtib006" table="rtib_t" attribute="" type="" req="N" i_zoom="q_rtdx014" c_zoom="q_rtdx014" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib_t.rtib008" ver="1" src="s" column="rtib008" table="rtib_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib_t.rtib009" ver="1" src="s" column="rtib009" table="rtib_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib_t.rtib010" ver="1" src="s" column="rtib010" table="rtib_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib_t.rtib012" ver="1" src="s" column="rtib012" table="rtib_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib_t.rtib013" ver="1" src="s" column="rtib013" table="rtib_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooca001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib_t.rtib020" ver="1" src="s" column="rtib020" table="rtib_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib_t.rtib021" ver="1" src="s" column="rtib021" table="rtib_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib_t.rtib022" ver="1" src="s" column="rtib022" table="rtib_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib_t.rtib024" ver="1" src="s" column="rtib024" table="rtib_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib_t.rtib025" ver="1" src="s" column="rtib025" table="rtib_t" attribute="" type="" req="N" i_zoom="q_inag005_4" c_zoom="q_inaa001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib_t.rtib026" ver="1" src="s" column="rtib026" table="rtib_t" attribute="" type="" req="N" i_zoom="q_inag005_3" c_zoom="q_inag005_3" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib_t.rtib027" ver="1" src="s" column="rtib027" table="rtib_t" attribute="" type="" req="N" i_zoom="q_inag006" c_zoom="q_inag006" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib_t.rtib028" ver="1" src="s" column="rtib028" table="rtib_t" attribute="" type="" req="N" i_zoom="q_inaa120" c_zoom="q_inaa120" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib_t.rtib030" ver="1" src="s" column="rtib030" table="rtib_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib_t.rtib031" ver="1" src="s" column="rtib031" table="rtib_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtib_t.rtibseq" ver="1" src="s" column="rtibseq" table="rtib_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtic_t.rtic001" ver="1" src="s" column="rtic001" table="rtic_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6707" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtic_t.rtic002" ver="1" src="s" column="rtic002" table="rtic_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6708" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtic_t.rtic003" ver="1" src="s" column="rtic003" table="rtic_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtic_t.rtic004" ver="1" src="s" column="rtic004" table="rtic_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtic_t.rtic005" ver="1" src="s" column="rtic005" table="rtic_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtic_t.rtic006" ver="1" src="s" column="rtic006" table="rtic_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6564" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtic_t.rtic007" ver="1" src="s" column="rtic007" table="rtic_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6565" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtic_t.rtic008" ver="1" src="s" column="rtic008" table="rtic_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtic_t.rtic009" ver="1" src="s" column="rtic009" table="rtic_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtic_t.rtic010" ver="1" src="s" column="rtic010" table="rtic_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtic_t.rtic011" ver="1" src="s" column="rtic011" table="rtic_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtic_t.rtic012" ver="1" src="s" column="rtic012" table="rtic_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtic_t.rtic013" ver="1" src="s" column="rtic013" table="rtic_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtic_t.rtic014" ver="1" src="s" column="rtic014" table="rtic_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtic_t.rtic015" ver="1" src="s" column="rtic015" table="rtic_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtic_t.rtic016" ver="1" src="s" column="rtic016" table="rtic_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtic_t.rtic017" ver="1" src="s" column="rtic017" table="rtic_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtic_t.rtic018" ver="1" src="s" column="rtic018" table="rtic_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtic_t.rtic020" ver="1" src="s" column="rtic020" table="rtic_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtic_t.rticseq" ver="1" src="s" column="rticseq" table="rtic_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtic_t.rticseq1" ver="1" src="s" column="rticseq1" table="rtic_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtie_t.rtie001" ver="1" src="s" column="rtie001" table="rtie_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="8310" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtie_t.rtie002" ver="1" src="s" column="rtie002" table="rtie_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_rtie002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtie_t.rtie006" ver="1" src="s" column="rtie006" table="rtie_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtie_t.rtieseq" ver="1" src="s" column="rtieseq" table="rtie_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtie_t.rtieseq1" ver="1" src="s" column="rtieseq1" table="rtie_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="snum" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[總件數：
+   ●欄位控管：
+     資料欄位:可Display
+     預設值:SUM([T:流通銷售單身檔].[C:數量]),不允許輸入]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd002" ver="1" src="s" column="xrcd002" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_xrcd002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd003" ver="1" src="s" column="xrcd003" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd004" ver="1" src="s" column="xrcd004" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd006" ver="1" src="s" column="xrcd006" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd007" ver="1" src="s" column="xrcd007" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcd104" ver="1" src="s" column="xrcd104" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcdld" ver="1" src="s" column="xrcdld" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcdseq" ver="1" src="s" column="xrcdseq" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcd_t.xrcdseq2" ver="1" src="s" column="xrcdseq2" table="xrcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="1" name="xrcd_t.xrcd002" depend_field="xrcd_t.xrcd002" src="s" status="">
+      <program order="1" type="2" name="aooi610"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="2" name="b_rtiasite_desc" src="s" depend_field="b_rtiasite" correspon_key="rtiasite" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="gcbi003_desc" src="s" depend_field="gcbi_t.gcbi003" correspon_key="gcbient,gcbi003" ref_table="gcafl_t" ref_fk="gcaflent,gcafl001" ref_dlang="gcafl002" ref_rtn="gcafl003" status=""/>
+    <rfield cite_std="N" ver="1" name="isaf201_desc" src="s" depend_field="isaf_t.isaf201" correspon_key="isafent,&apos;3801&apos;,isaf201" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="8" name="mmaq003_desc" src="s" depend_field="mmaq003" correspon_key="mmaq003" ref_table="mmaf_t" ref_fk="mmaf001" ref_dlang="" ref_rtn="mmaf004" status="u"/>
+    <rfield cite_std="N" ver="8" name="mmaq003_desc_1" src="s" depend_field="" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status="d"/>
+    <rfield cite_std="N" ver="8" name="mmaq003_desc_desc" src="s" depend_field="mmaq003" correspon_key="mmaq003" ref_table="mmaf_t" ref_fk="mmaf001" ref_dlang="" ref_rtn="mmaf008" status="u"/>
+    <rfield cite_std="N" ver="1" name="mmea003_desc" src="s" depend_field="mmea_t.mmea003" correspon_key="mmeaent,mmea003" ref_table="mmanl_t" ref_fk="mmanlent,mmanl001" ref_dlang="mmanl002" ref_rtn="mmanl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmeb002_desc" src="s" depend_field="mmeb_t.mmeb002" correspon_key="mmebent,mmeb002" ref_table="mmanl_t" ref_fk="mmanlent,mmanl001" ref_dlang="mmanl002" ref_rtn="mmanl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmeb009_desc" src="s" depend_field="mmeb_t.mmeb009" correspon_key="mmebent,mmeb009" ref_table="mmanl_t" ref_fk="mmanlent,mmanl001" ref_dlang="mmanl002" ref_rtn="mmanl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmeb014_desc" src="s" depend_field="mmeb_t.mmeb014" correspon_key="mmebent,&apos;2055&apos;,mmeb014" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="mmec002_desc" src="s" depend_field="mmec_t.mmec002" correspon_key="mmecent,mmec002" ref_table="mmanl_t" ref_fk="mmanlent,mmanl001" ref_dlang="mmanl002" ref_rtn="mmanl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmec009_desc" src="s" depend_field="mmec_t.mmec009" correspon_key="mmecent,mmec009" ref_table="mmanl_t" ref_fk="mmanlent,mmanl001" ref_dlang="mmanl002" ref_rtn="mmanl003" status=""/>
+    <rfield cite_std="N" ver="1" name="mmec014_desc" src="s" depend_field="mmec_t.mmec014" correspon_key="mmecent,&apos;2055&apos;,mmec014" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="mmed014_1_desc" src="s" depend_field="mmed014_1" correspon_key="mmedent,&apos;2055&apos;,mmed014" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="mmed014_desc" src="s" depend_field="mmed_t.mmed014" correspon_key="mmedent,&apos;2055&apos;,mmed014" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtia001_desc" src="s" depend_field="rtia_t.rtia001" correspon_key="rtiaent,rtia001" ref_table="mmaf_t" ref_fk="mmafent,mmaf001" ref_dlang="" ref_rtn="mmaf008" status=""/>
+    <rfield cite_std="N" ver="1" name="rtia002_desc" src="s" depend_field="rtia_t.rtia002" correspon_key="rtiaent,rtia002" ref_table="pmaal_t" ref_fk="pmaalent,pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtia004_desc" src="s" depend_field="rtia_t.rtia004" correspon_key="rtia004" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="rtia005_desc" src="s" depend_field="rtia_t.rtia005" correspon_key="rtia005" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtia009_desc" src="s" depend_field="rtia_t.rtia009" correspon_key="rtiaent,&apos;295&apos;,rtia009" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtia025_desc" src="s" depend_field="rtia_t.rtia025" correspon_key="rtiaent,rtia025" ref_table="ooibl_t" ref_fk="ooiblent,ooibl002" ref_dlang="ooibl003" ref_rtn="ooibl004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtia036_desc" src="s" depend_field="rtia_t.rtia036" correspon_key="rtiaent,rtiasite,rtia036" ref_table="pcaal_t" ref_fk="pcaalent,pcaalsite,pcaal001" ref_dlang="pcaal002" ref_rtn="pcaal003" status=""/>
+    <rfield cite_std="N" ver="2" name="rtia037_desc" src="s" depend_field="rtia_t.rtia037" correspon_key="rtia037" ref_table="pcab_t" ref_fk="pcab001" ref_dlang="" ref_rtn="pcab003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtia038_desc" src="s" depend_field="rtia_t.rtia038" correspon_key="rtiaent,rtia038,rtiasite" ref_table="oogd_t" ref_fk="oogdent,oogd001,oogdsite" ref_dlang="" ref_rtn="oogd002" status=""/>
+    <rfield cite_std="N" ver="1" name="rtiacnfid_desc" src="s" depend_field="rtia_t.rtiacnfid" correspon_key="rtiacnfid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="rtiacrtdp_desc" src="s" depend_field="rtia_t.rtiacrtdp" correspon_key="rtiacrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtiacrtid_desc" src="s" depend_field="rtia_t.rtiacrtid" correspon_key="rtiacrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="rtiamodid_desc" src="s" depend_field="rtia_t.rtiamodid" correspon_key="rtiamodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="rtiaowndp_desc" src="s" depend_field="rtia_t.rtiaowndp" correspon_key="rtiaowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtiaownid_desc" src="s" depend_field="rtia_t.rtiaownid" correspon_key="rtiaownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="rtiapstid_desc" src="s" depend_field="rtia_t.rtiapstid" correspon_key="rtiapstid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="rtiasite_desc" src="s" depend_field="rtia_t.rtiasite" correspon_key="rtiasite" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtib004_desc" src="s" depend_field="rtib_t.rtib004" correspon_key="rtibent,rtib004" ref_table="imaal_t" ref_fk="imaalent,imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="2" name="rtib004_desc_desc" src="s" depend_field="rtib004_desc" correspon_key="rtibent,rtib004" ref_table="imaal_t" ref_fk="imaalent,imaal001" ref_dlang="imaal002" ref_rtn="imaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtib013_desc" src="s" depend_field="rtib_t.rtib013" correspon_key="rtibent,rtib013" ref_table="oocal_t" ref_fk="oocalent,oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtib024_desc" src="s" depend_field="rtib_t.rtib024" correspon_key="rtibent,&apos;295&apos;,rtib024" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="3" name="rtib025_desc" src="s" depend_field="rtib_t.rtib025" correspon_key="rtib025" ref_table="inayl_t" ref_fk="inayl001" ref_dlang="inayl002" ref_rtn="inayl003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtie002_desc" src="s" depend_field="rtie_t.rtie002" correspon_key="rtieent,rtie002" ref_table="ooial_t" ref_fk="ooialent,ooial001" ref_dlang="ooial002" ref_rtn="ooial003" status=""/>
+    <rfield cite_std="N" ver="1" name="xrcd002_desc" src="s" depend_field="xrcd_t.xrcd002" correspon_key="xrcaent,&apos;2&apos;,xrcd002" ref_table="oodbl_t" ref_fk="oodblent,oodbl001,oodbl002" ref_dlang="oodbl003" ref_rtn="oodbl004" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="amount" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="amount2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="amount3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_rtia002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_rtia006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_rtiadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_rtiadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_rtiasite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gcbi_t.gcbi001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gcbi_t.gcbi002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gcbi_t.gcbi003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gcbi_t.gcbi004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gcbi_t.gcbi005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gcbi_t.gcbi006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gcbi_t.gcbi007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gcbi_t.gcbi008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gcbi_t.gcbiseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gcbi_t.gcbiseq1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaal003_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaal004_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="inaa001_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="inaa001_desc01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="inaa001_desc02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="inaa001_desc03" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isaf_t.isaf009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isaf_t.isaf010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isaf_t.isaf044" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isaf_t.isaf201" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isaf_t.isaf202" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isaf_t.isaf203" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isaf_t.isaf204" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isaf_t.isaf207" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmak010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmaq002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmaq002_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmaq002_1_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="mmaq002_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmaq003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmaq003_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="mmea013_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="mmea014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmea_t.mmea001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmea_t.mmea002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmea_t.mmea003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmea_t.mmea004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmea_t.mmea005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="mmea_t.mmea006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmea_t.mmea007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmea_t.mmea008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="mmea_t.mmea009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="7" name="mmea_t.mmea010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmea_t.mmea011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmea_t.mmea012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmea_t.mmea013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmea_t.mmeaseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmeb_t.mmeb001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmeb_t.mmeb002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmeb_t.mmeb003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmeb_t.mmeb004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmeb_t.mmeb005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmeb_t.mmeb006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmeb_t.mmeb007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmeb_t.mmeb008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmeb_t.mmeb009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmeb_t.mmeb010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmeb_t.mmeb011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="mmeb_t.mmeb012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmeb_t.mmeb013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmeb_t.mmeb014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmeb_t.mmeb015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmeb_t.mmebseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmec_t.mmec001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmec_t.mmec002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmec_t.mmec003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmec_t.mmec004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmec_t.mmec005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmec_t.mmec006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmec_t.mmec007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmec_t.mmec008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmec_t.mmec009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmec_t.mmec010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmec_t.mmec011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="mmec_t.mmec012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmec_t.mmec013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmec_t.mmec014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmec_t.mmec015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmec_t.mmecseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmed001_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmed002_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmed003_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmed004_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmed005_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmed009_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmed010_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmed012_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmed013_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="mmed013_desc_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmed014_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmed_t.mmed001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmed_t.mmed002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmed_t.mmed003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmed_t.mmed004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmed_t.mmed005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmed_t.mmed006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmed_t.mmed007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmed_t.mmed008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmed_t.mmed009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmed_t.mmed010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmed_t.mmed012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmed_t.mmed013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmed_t.mmed014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmed_t.mmedseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="mmedseq_6" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oocq009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="rtia_t.rtia007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia025" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia026" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia027" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia028" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia029" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia030" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia032" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia033" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia034" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia035" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia036" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="rtia_t.rtia037" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia038" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia039" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia041" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtia048" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="6" name="rtia_t.rtia050" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtiacnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtiacnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtiacrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtiacrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtiacrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtiadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtiadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtiamoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtiamodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtiaowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtiaownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtiapstdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtiapstid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtiasite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtia_t.rtiastus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib003_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib003_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib003_03" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib004_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib004_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib004_03" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib006_02" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="rtib006_02_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib006_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib008_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib010_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib012_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib013_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="rtib013_01_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib021_01" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib_t.rtib003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib_t.rtib004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib_t.rtib006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib_t.rtib008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib_t.rtib009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib_t.rtib010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib_t.rtib012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib_t.rtib013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib_t.rtib020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib_t.rtib021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib_t.rtib022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib_t.rtib024" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib_t.rtib025" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib_t.rtib026" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib_t.rtib027" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib_t.rtib028" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib_t.rtib030" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib_t.rtib031" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtib_t.rtibseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtic_t.rtic001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtic_t.rtic002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtic_t.rtic003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtic_t.rtic004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtic_t.rtic005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtic_t.rtic006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtic_t.rtic007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtic_t.rtic008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtic_t.rtic009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtic_t.rtic010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtic_t.rtic011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtic_t.rtic012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtic_t.rtic013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtic_t.rtic014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtic_t.rtic015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtic_t.rtic016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtic_t.rtic017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtic_t.rtic018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtic_t.rtic020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtic_t.rticseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtic_t.rticseq1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtie_t.rtie001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtie_t.rtie002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtie_t.rtie006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtie_t.rtieseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtie_t.rtieseq1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="snum" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcd002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcd003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcd004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcd006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcd007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcd104" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcdld" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcdseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcd_t.xrcdseq2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="ammt405_01" ver="6" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="ammt405_03" ver="6" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="ammt405_note" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="ammt405_notecreate" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="ammt405_notevoid" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="ammt405_pay" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="ammt405_pay_detail" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reset_password" ver="6" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="set_password" ver="6" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_rtiasite" text="發卡組織" lstr=""/>
+    <sfield name="lbl_ooefl003" text="組織名稱" lstr=""/>
+    <sfield name="lbl_rtiadocdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_rtiadocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_rtia002" text="客戶編號" lstr=""/>
+    <sfield name="lbl_rtia002_desc" text="客戶名稱" lstr=""/>
+    <sfield name="lbl_rtia006" text="過帳日期" lstr=""/>
+    <sfield name="lbl_rtia004" text="發卡人員" lstr=""/>
+    <sfield name="lbl_rtia005" text="發卡部門" lstr=""/>
+    <sfield name="lbl_rtia048" text="收款結賬否" lstr=""/>
+    <sfield name="lbl_rtia001" text="會員卡號" lstr=""/>
+    <sfield name="lbl_rtia050" text="組織贈送" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_rtia007" text="來源單號" lstr=""/>
+    <sfield name="lbl_rtia009" text="銷售分類" lstr=""/>
+    <sfield name="lbl_rtia014" text="起始發票/折讓" lstr=""/>
+    <sfield name="lbl_rtia015" text="截止發票/折讓" lstr=""/>
+    <sfield name="lbl_rtia041" text="備註" lstr=""/>
+    <sfield name="page_3.ammt405" text="交易條件" lstr=""/>
+    <sfield name="lbl_rtia025" text="收款條件" lstr=""/>
+    <sfield name="lbl_rtia026" text="幣別/匯率" lstr=""/>
+    <sfield name="lbl_label" text="/" lstr=""/>
+    <sfield name="lbl_rtia028" text="稅別/稅率" lstr=""/>
+    <sfield name="lbl_label_2" text="/" lstr=""/>
+    <sfield name="lbl_rtia030" text="含稅" lstr=""/>
+    <sfield name="page_4.ammt405" text="其他資料" lstr=""/>
+    <sfield name="lbl_rtia032" text="資料來源" lstr=""/>
+    <sfield name="lbl_rtia033" text="資料來源單號" lstr=""/>
+    <sfield name="lbl_rtia034" text="來源交易日期" lstr=""/>
+    <sfield name="lbl_rtia035" text="來源交易時間" lstr=""/>
+    <sfield name="lbl_rtia036" text="收銀機號" lstr=""/>
+    <sfield name="lbl_rtia037" text="收銀員" lstr=""/>
+    <sfield name="lbl_pcab003" text="收銀人員姓名" lstr=""/>
+    <sfield name="lbl_rtia038" text="班別" lstr=""/>
+    <sfield name="lbl_rtia039" text="收銀方式" lstr=""/>
+    <sfield name="page_5.ammt405" text="電子發票資料" lstr=""/>
+    <sfield name="lbl_isaf009" text="電子發票" lstr=""/>
+    <sfield name="lbl_isaf010" text="電子發票隨機碼" lstr=""/>
+    <sfield name="lbl_isaf044" text="電子發票列印次數" lstr=""/>
+    <sfield name="lbl_isaf202" text="載具類別號碼" lstr=""/>
+    <sfield name="lbl_isaf203" text="載具顯碼 ID" lstr=""/>
+    <sfield name="lbl_isaf204" text="載具隱碼 ID" lstr=""/>
+    <sfield name="lbl_isaf201" text="愛心碼" lstr=""/>
+    <sfield name="lbl_isaf207" text="電子發票領取方式" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="lbl_pstid" text="資料過帳者" lstr=""/>
+    <sfield name="lbl_pstdt" text="過帳日期" lstr=""/>
+    <sfield name="bpage_1" text="發卡明細" lstr=""/>
+    <sfield name="lbl_mmeaseq" text="項次" lstr=""/>
+    <sfield name="lbl_mmea001" text="開始卡號" lstr=""/>
+    <sfield name="lbl_mmea002" text="結束卡號" lstr=""/>
+    <sfield name="lbl_mmea003" text="卡種編號" lstr=""/>
+    <sfield name="lbl_mmanl003" text="卡種名稱" lstr=""/>
+    <sfield name="lbl_mmak009" text="發卡方式" lstr=""/>
+    <sfield name="lbl_mmak010" text="消費附贈最低消費金額" lstr=""/>
+    <sfield name="lbl_mmea004" text="會員編號" lstr=""/>
+    <sfield name="lbl_mmea005" text="卡張數" lstr=""/>
+    <sfield name="lbl_mmea006" text="單張購卡金額" lstr=""/>
+    <sfield name="lbl_mmea007" text="總購卡金額" lstr=""/>
+    <sfield name="lbl_mmea008" text="單張儲值金額" lstr=""/>
+    <sfield name="lbl_mmea009" text="儲值折扣率%" lstr=""/>
+    <sfield name="lbl_mmea010" text="單張加值金額" lstr=""/>
+    <sfield name="lbl_mmea011" text="總儲值金額" lstr=""/>
+    <sfield name="lbl_mmea012" text="應收金額" lstr=""/>
+    <sfield name="lbl_mmea013" text="庫區" lstr=""/>
+    <sfield name="lbl_mmea013_desc" text="庫區名稱" lstr=""/>
+    <sfield name="lbl_mmea014" text="發卡時記錄贈品否" lstr=""/>
+    <sfield name="page_6.ammt405" text="換卡明細" lstr=""/>
+    <sfield name="lbl_mmecseq" text="項次" lstr=""/>
+    <sfield name="lbl_mmec014" text="理由碼" lstr=""/>
+    <sfield name="lbl_oocql004" text="理由碼說明" lstr=""/>
+    <sfield name="lbl_mmec001" text="原卡卡號" lstr=""/>
+    <sfield name="lbl_mmec002" text="卡種" lstr=""/>
+    <sfield name="lbl_mmec003" text="會員編號" lstr=""/>
+    <sfield name="lbl_mmec004" text="原卡效期" lstr=""/>
+    <sfield name="lbl_mmec005" text="原卡內積點" lstr=""/>
+    <sfield name="lbl_mmec006" text="原卡內儲值餘額" lstr=""/>
+    <sfield name="lbl_mmec007" text="原卡內儲值成本" lstr=""/>
+    <sfield name="lbl_mmec008" text="新卡卡號" lstr=""/>
+    <sfield name="lbl_mmec009" text="新卡卡種" lstr=""/>
+    <sfield name="lbl_mmec010" text="新卡可儲值" lstr=""/>
+    <sfield name="lbl_mmec011" text="新卡儲值折扣率" lstr=""/>
+    <sfield name="lbl_mmec012" text="換卡工本費" lstr=""/>
+    <sfield name="lbl_mmec013" text="庫區" lstr=""/>
+    <sfield name="lbl_mmec013_desc" text="庫區名稱" lstr=""/>
+    <sfield name="lbl_mmec015" text="原卡狀態" lstr=""/>
+    <sfield name="page_7.ammt405" text="補卡明細" lstr=""/>
+    <sfield name="lbl_mmebseq" text="項次" lstr=""/>
+    <sfield name="lbl_mmeb014" text="理由碼" lstr=""/>
+    <sfield name="lbl_mmeb001" text="原卡卡號" lstr=""/>
+    <sfield name="lbl_mmeb002" text="卡種" lstr=""/>
+    <sfield name="lbl_mmeb003" text="會員編號" lstr=""/>
+    <sfield name="lbl_mmeb004" text="原卡效期" lstr=""/>
+    <sfield name="lbl_mmeb005" text="原卡內積點" lstr=""/>
+    <sfield name="lbl_mmeb006" text="原卡內儲值餘額" lstr=""/>
+    <sfield name="lbl_mmeb007" text="原卡內儲值成本" lstr=""/>
+    <sfield name="lbl_mmeb008" text="新卡卡號" lstr=""/>
+    <sfield name="lbl_mmeb009" text="新卡卡種" lstr=""/>
+    <sfield name="lbl_mmeb010" text="新卡可儲值" lstr=""/>
+    <sfield name="lbl_mmeb011" text="新卡儲值折扣率(%)" lstr=""/>
+    <sfield name="lbl_mmeb012" text="補卡工本費" lstr=""/>
+    <sfield name="lbl_mmeb013" text="庫區" lstr=""/>
+    <sfield name="lbl_mmeb013_desc" text="庫區名稱" lstr=""/>
+    <sfield name="lbl_mmeb015" text="原卡狀態" lstr=""/>
+    <sfield name="page_8.ammt405" text="卡儲值明細" lstr=""/>
+    <sfield name="lbl_mmedseq" text="項次" lstr=""/>
+    <sfield name="lbl_mmed001" text="儲值卡號" lstr=""/>
+    <sfield name="lbl_mmaq002" text="卡種" lstr=""/>
+    <sfield name="lbl_mmaq002_desc" text="卡種名稱" lstr=""/>
+    <sfield name="lbl_mmaq003" text="會員編號" lstr=""/>
+    <sfield name="lbl_mmaf004" text="證件號碼" lstr=""/>
+    <sfield name="lbl_mmaf008" text="會員姓名" lstr=""/>
+    <sfield name="lbl_mmed002" text="儲值卡餘額" lstr=""/>
+    <sfield name="lbl_mmed003" text="卡內儲值成本" lstr=""/>
+    <sfield name="lbl_mmed004" text="異動類型" lstr=""/>
+    <sfield name="lbl_mmed005" text="儲值金額" lstr=""/>
+    <sfield name="lbl_mmed006" text="折扣比率(%)" lstr=""/>
+    <sfield name="lbl_mmed007" text="折扣金額" lstr=""/>
+    <sfield name="lbl_mmed008" text="加值金額" lstr=""/>
+    <sfield name="lbl_mmed009" text="此次註銷成本" lstr=""/>
+    <sfield name="lbl_mmed010" text="儲值後卡內餘額" lstr=""/>
+    <sfield name="lbl_mmed012" text="實際應付金額" lstr=""/>
+    <sfield name="lbl_mmed014" text="理由碼" lstr=""/>
+    <sfield name="lbl_mmed013" text="庫區" lstr=""/>
+    <sfield name="lbl_mmed013_desc" text="庫區名稱" lstr=""/>
+    <sfield name="page_9.ammt405" text="卡儲值註銷明細" lstr=""/>
+    <sfield name="lbl_mmed014_1" text="理由碼" lstr=""/>
+    <sfield name="lbl_mmed001_1" text="註銷卡號" lstr=""/>
+    <sfield name="lbl_mmaq002_1" text="卡種" lstr=""/>
+    <sfield name="lbl_mmaq003_1" text="會員編號" lstr=""/>
+    <sfield name="lbl_mmed002_1" text="儲值卡餘額" lstr=""/>
+    <sfield name="lbl_mmed003_1" text="卡內儲值成本" lstr=""/>
+    <sfield name="lbl_mmed004_1" text="異動類型" lstr=""/>
+    <sfield name="lbl_mmed005_1" text="註銷金額" lstr=""/>
+    <sfield name="lbl_mmed009_1" text="此次註銷成本" lstr=""/>
+    <sfield name="lbl_mmed010_1" text="註銷後卡內餘額" lstr=""/>
+    <sfield name="lbl_mmed012_1" text="實際應付金額" lstr=""/>
+    <sfield name="lbl_mmed013_1" text="庫區" lstr=""/>
+    <sfield name="lbl_mmed013_desc_1" text="庫區名稱" lstr=""/>
+    <sfield name="page_10.ammt405" text="券明細" lstr=""/>
+    <sfield name="lbl_gcbiseq" text="項次" lstr=""/>
+    <sfield name="lbl_gcbiseq1" text="序" lstr=""/>
+    <sfield name="lbl_gcbi001" text="開始券號" lstr=""/>
+    <sfield name="lbl_gcbi002" text="結束券號" lstr=""/>
+    <sfield name="lbl_gcbi003" text="券種" lstr=""/>
+    <sfield name="lbl_gcafl003" text="券種名稱" lstr=""/>
+    <sfield name="lbl_gcbi004" text="券面額編號" lstr=""/>
+    <sfield name="lbl_oocq009" text="券單位金額" lstr=""/>
+    <sfield name="lbl_gcbi005" text="券張數" lstr=""/>
+    <sfield name="lbl_gcbi006" text="券總金額" lstr=""/>
+    <sfield name="lbl_gcbi007" text="庫區" lstr=""/>
+    <sfield name="lbl_gcbi007_desc" text="庫區名稱" lstr=""/>
+    <sfield name="lbl_gcbi008" text="指定對應會員編號" lstr=""/>
+    <sfield name="page_11.ammt405" text="商品明細" lstr=""/>
+    <sfield name="lbl_rtibseq" text="項次" lstr=""/>
+    <sfield name="lbl_rtib003" text="商品條碼" lstr=""/>
+    <sfield name="lbl_rtib004" text="商品編號" lstr=""/>
+    <sfield name="lbl_imaal003" text="商品名稱" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="lbl_rtib006" text="稅別" lstr=""/>
+    <sfield name="lbl_rtib006_desc" text="稅別名稱" lstr=""/>
+    <sfield name="lbl_rtib008" text="標準售價" lstr=""/>
+    <sfield name="lbl_rtib009" text="促銷價" lstr=""/>
+    <sfield name="lbl_rtib010" text="交易價" lstr=""/>
+    <sfield name="lbl_rtib012" text="數量" lstr=""/>
+    <sfield name="lbl_rtib013" text="銷售單位" lstr=""/>
+    <sfield name="lbl_oocal003" text="單位說明" lstr=""/>
+    <sfield name="lbl_rtib020" text="折扣金額" lstr=""/>
+    <sfield name="lbl_rtib021" text="銷售金額" lstr=""/>
+    <sfield name="lbl_rtib031" text="本幣應收金額" lstr=""/>
+    <sfield name="lbl_rtib022" text="未稅金額" lstr=""/>
+    <sfield name="lbl_rtib024" text="理由碼" lstr=""/>
+    <sfield name="lbl_rtib025" text="庫位/庫區" lstr=""/>
+    <sfield name="lbl_inayl003" text="說明" lstr=""/>
+    <sfield name="lbl_rtib026" text="儲位" lstr=""/>
+    <sfield name="lbl_rtib027" text="批號" lstr=""/>
+    <sfield name="lbl_rtib028" text="專櫃編號" lstr=""/>
+    <sfield name="lbl_rtib030" text="對應發卡項次" lstr=""/>
+    <sfield name="page_12.ammt405" text="折扣明細" lstr=""/>
+    <sfield name="lbl_rticseq" text="項次" lstr=""/>
+    <sfield name="lbl_rtib013_01_desc" text="單位說明" lstr=""/>
+    <sfield name="lbl_rtib008_01" text="原價" lstr=""/>
+    <sfield name="lbl_rticseq1" text="折扣序" lstr=""/>
+    <sfield name="lbl_rtic001" text="單據類型" lstr=""/>
+    <sfield name="lbl_rtic002" text="折價方式" lstr=""/>
+    <sfield name="lbl_rtic003" text="促銷規則" lstr=""/>
+    <sfield name="lbl_rtic004" text="活動類別" lstr=""/>
+    <sfield name="lbl_rtic005" text="活動子類別" lstr=""/>
+    <sfield name="lbl_rtic006" text="促銷方式" lstr=""/>
+    <sfield name="lbl_rtic007" text="入機方式" lstr=""/>
+    <sfield name="lbl_rtic008" text="參與數量" lstr=""/>
+    <sfield name="lbl_rtic009" text="參與金額" lstr=""/>
+    <sfield name="lbl_rtic010" text="贈送基數" lstr=""/>
+    <sfield name="lbl_rtic011" text="贈送幅度" lstr=""/>
+    <sfield name="lbl_rtic012" text="折扣率" lstr=""/>
+    <sfield name="lbl_rtic013" text="折讓金額" lstr=""/>
+    <sfield name="lbl_rtic014" text="贈卡券種" lstr=""/>
+    <sfield name="lbl_rtic015" text="贈卡券號" lstr=""/>
+    <sfield name="lbl_rtic016" text="贈送面額" lstr=""/>
+    <sfield name="lbl_rtic017" text="贈送面額單位金額" lstr=""/>
+    <sfield name="lbl_rtic018" text="接卡券種" lstr=""/>
+    <sfield name="lbl_rtic020" text="接收基數" lstr=""/>
+    <sfield name="page_13.ammt405" text="交易稅明細" lstr=""/>
+    <sfield name="lbl_xrcd007" text="計算序" lstr=""/>
+    <sfield name="lbl_xrcdld" text="帳別" lstr=""/>
+    <sfield name="lbl_xrcdseq" text="項次" lstr=""/>
+    <sfield name="lbl_rtib006_1" text="複合稅別" lstr=""/>
+    <sfield name="lbl_rtib006_02_desc" text="複合稅別名稱" lstr=""/>
+    <sfield name="lbl_xrcdseq2" text="稅別序" lstr=""/>
+    <sfield name="lbl_xrcd002" text="稅別" lstr=""/>
+    <sfield name="lbl_oodbl004" text="稅別名稱" lstr=""/>
+    <sfield name="lbl_xrcd003" text="稅率" lstr=""/>
+    <sfield name="lbl_xrcd006" text="含稅" lstr=""/>
+    <sfield name="lbl_xrcd004" text="固定稅額" lstr=""/>
+    <sfield name="lbl_xrcd104" text="稅額" lstr=""/>
+    <sfield name="page_14.ammt405" text="收款明細" lstr=""/>
+    <sfield name="lbl_rtieseq" text="項次" lstr=""/>
+    <sfield name="lbl_rtieseq1" text="收款序" lstr=""/>
+    <sfield name="lbl_rtie001" text="款別類型" lstr=""/>
+    <sfield name="lbl_rtie002" text="款別" lstr=""/>
+    <sfield name="lbl_ooial003" text="款別說明" lstr=""/>
+    <sfield name="lbl_rtie006" text="實收金額" lstr=""/>
+    <sfield name="lbl_snum" text="總件數" lstr=""/>
+    <sfield name="lbl_amount" text="總銷貨金額(含稅)" lstr=""/>
+    <sfield name="lbl_amount2" text="折扣金額" lstr=""/>
+    <sfield name="lbl_amount3" text="應收金額(含稅)" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_master" text="拋轉傳票條件" lstr=""/>
+    <sfield name="lbl_glapdocno" text="傳票憑證單別" lstr=""/>
+    <sfield name="lbl_glapdocdt" text="傳票憑證日期" lstr=""/>
+    <sfield name="lbl_flag" text="補傳票空號" lstr=""/>
+    <sfield name="lbl_glap010" text="傳票號碼" lstr=""/>
+    <sfield name="lbl_docno_e" text="~" lstr=""/>
+    <sfield name="lbl_accept" text="執行" lstr=""/>
+    <sfield name="lbl_cancel" text="取消" lstr=""/>
+    <sfield name="accept" text="確認" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="lbl_docno" text="應收單號" lstr=""/>
+    <sfield name="lbl_seq" text="項次" lstr=""/>
+    <sfield name="lbl_glaq002" text="會計科目" lstr=""/>
+    <sfield name="lbl_glaq002_desc" text="科目編號" lstr=""/>
+    <sfield name="lbl_glaq017" text="營運據點" lstr=""/>
+    <sfield name="lbl_glaq017_desc" text="營運據點" lstr=""/>
+    <sfield name="lbl_glaq018" text="部門編號" lstr=""/>
+    <sfield name="lbl_glaq018_desc" text="部門" lstr=""/>
+    <sfield name="lbl_glaq019" text="利潤/成本中心" lstr=""/>
+    <sfield name="lbl_glaq019_desc" text="利潤/成本中心" lstr=""/>
+    <sfield name="lbl_glaq020" text="區域" lstr=""/>
+    <sfield name="lbl_glaq020_desc" text="區域" lstr=""/>
+    <sfield name="lbl_glaq021" text="交易客商" lstr=""/>
+    <sfield name="lbl_glaq021_desc" text="交易客商" lstr=""/>
+    <sfield name="lbl_glaq022" text="帳款客戶" lstr=""/>
+    <sfield name="lbl_glaq022_desc" text="帳款客戶" lstr=""/>
+    <sfield name="lbl_glaq023" text="客群" lstr=""/>
+    <sfield name="lbl_glaq023_desc" text="客群" lstr=""/>
+    <sfield name="lbl_glaq024" text="產品類別" lstr=""/>
+    <sfield name="lbl_glaq024_desc" text="產品類別" lstr=""/>
+    <sfield name="lbl_glaq025" text="人員" lstr=""/>
+    <sfield name="lbl_glaq025_desc" text="人員" lstr=""/>
+    <sfield name="lbl_glaq027" text="專案編號" lstr=""/>
+    <sfield name="lbl_glaq028" text="WBS" lstr=""/>
+    <sfield name="lbl_glaq029" text="核算項(一)" lstr=""/>
+    <sfield name="lbl_glaq029_desc" text="核算項(一)" lstr=""/>
+    <sfield name="lbl_glaq030" text="核算項(二)" lstr=""/>
+    <sfield name="lbl_glaq030_desc" text="核算項(二)" lstr=""/>
+    <sfield name="lbl_glaq031" text="核算項(三)" lstr=""/>
+    <sfield name="lbl_glaq031_desc" text="核算項(三)" lstr=""/>
+    <sfield name="lbl_glaq032" text="核算項(四)" lstr=""/>
+    <sfield name="lbl_glaq032_desc" text="核算項(四)" lstr=""/>
+    <sfield name="lbl_glaq033" text="核算項(五)" lstr=""/>
+    <sfield name="lbl_glaq033_desc" text="核算項(五)" lstr=""/>
+    <sfield name="lbl_glaq034" text="核算項(六)" lstr=""/>
+    <sfield name="lbl_glaq034_desc" text="核算項(六)" lstr=""/>
+    <sfield name="lbl_glaq035" text="核算項(七)" lstr=""/>
+    <sfield name="lbl_glaq035_desc" text="核算項(七)" lstr=""/>
+    <sfield name="lbl_glaq036" text="核算項(八)" lstr=""/>
+    <sfield name="lbl_glaq036_desc" text="核算項(八)" lstr=""/>
+    <sfield name="lbl_glaq037" text="核算項(九)" lstr=""/>
+    <sfield name="lbl_glaq037_desc" text="核算項(九)" lstr=""/>
+    <sfield name="lbl_glaq038" text="核算項(十)" lstr=""/>
+    <sfield name="lbl_glaq038_desc" text="核算項(十)" lstr=""/>
+    <sfield name="lbl_source" text="科目來源" lstr=""/>
+    <sfield name="lbl_sw" text="借/貸" lstr=""/>
+    <sfield name="lbl_glaq001" text="摘要" lstr=""/>
+    <sfield name="lbl_docdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_pmaal004" text="交易對象簡稱" lstr=""/>
+    <sfield name="lbl_glaqseq" text="項次" lstr=""/>
+    <sfield name="lbl_lc_subject" text="會計科目" lstr=""/>
+    <sfield name="lbl_glaq003" text="借方金額" lstr=""/>
+    <sfield name="lbl_glaq004" text="貸方金額" lstr=""/>
+    <sfield name="lbl_glaq040" text="借方金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_glaq041" text="貸方金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_glaq043" text="借方金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_glaq044" text="貸方金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_rtaxl003" text="說明" lstr=""/>
+    <sfield name="lbl_glbc004" text="現金變動碼" lstr=""/>
+    <sfield name="lbl_glaq051" text="經營方式" lstr=""/>
+    <sfield name="lbl_glaq026" text="預算編號" lstr=""/>
+    <sfield name="lbl_glaq052" text="渠道" lstr=""/>
+    <sfield name="lbl_oojdl003" text="說明" lstr=""/>
+    <sfield name="lbl_glaq053" text="品牌" lstr=""/>
+    <sfield name="lbl_page_1" text="資產類" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_glac002" text="會計科目編號" lstr=""/>
+    <sfield name="lbl_glacl004" text="說明" lstr=""/>
+    <sfield name="lbl_glac003" text="統制/明細別" lstr=""/>
+    <sfield name="lbl_glac009" text="內部管理科目" lstr=""/>
+    <sfield name="lbl_page_2" text="負債類" lstr=""/>
+    <sfield name="lbl_page_3" text="公用類" lstr=""/>
+    <sfield name="lbl_page_4" text="股東權益類" lstr=""/>
+    <sfield name="lbl_page_5" text="成本類" lstr=""/>
+    <sfield name="lbl_page_6" text="損益類" lstr=""/>
+    <sfield name="lbl_mmaq001" text="會員卡號" lstr=""/>
+    <sfield name="lbl_mmaq001_2" text="~" lstr=""/>
+    <sfield name="lbl_pwd1" text="原密碼" lstr=""/>
+    <sfield name="lbl_pwd2" text="設置新密碼" lstr=""/>
+    <sfield name="lbl_pwd3" text="確認新密碼" lstr=""/>
+    <sfield name="lbl_ooff002" text="第一KEY值" lstr=""/>
+    <sfield name="lbl_ooff007" text="第六KEY值" lstr=""/>
+    <sfield name="lbl_ooff003" text="第二KEY值" lstr=""/>
+    <sfield name="lbl_ooff008" text="第七KEY值" lstr=""/>
+    <sfield name="lbl_ooff004" text="第三KEY值" lstr=""/>
+    <sfield name="lbl_ooff009" text="第八KEY值" lstr=""/>
+    <sfield name="lbl_ooff005" text="第四KEY值" lstr=""/>
+    <sfield name="lbl_ooff010" text="第九KEY值" lstr=""/>
+    <sfield name="lbl_ooff006" text="第五KEY值" lstr=""/>
+    <sfield name="lbl_ooff011" text="第十KEY值" lstr=""/>
+    <sfield name="lbl_ooff001" text="備註類型" lstr=""/>
+    <sfield name="lbl_ooff012" text="控制類型" lstr=""/>
+    <sfield name="lbl_ooff014" text="失效日期" lstr=""/>
+    <sfield name="define" text="預設備註" lstr=""/>
+    <sfield name="comme" text="個人常用備註" lstr=""/>
+    <sfield name="lbl_glaqdocno" text="單號" lstr=""/>
+    <sfield name="lbl_glaqld" text="帳別" lstr=""/>
+    <sfield name="lbl_glaq005" text="幣別" lstr=""/>
+    <sfield name="lbl_glaq006" text="匯率" lstr=""/>
+    <sfield name="lbl_glaq010" text="原幣金額" lstr=""/>
+    <sfield name="lbl_page1" text="固定核算項" lstr=""/>
+    <sfield name="lbl_page2" text="自由核算項" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_ooff013" text="備註說明" lstr=""/>
+    <sfield name="page_s_aooi390_s01_1" text="QBE條件" lstr=""/>
+    <sfield name="lbl_oofg001" text="編碼分類" lstr=""/>
+    <sfield name="lbl_oofg002" text="編碼性質" lstr=""/>
+    <sfield name="cbo_searchcol.0" text="選擇查詢欄位" lstr=""/>
+    <sfield name="lbl_oofg005" text="節點編號" lstr=""/>
+    <sfield name="lbl_oofg006" text="前段節點編號" lstr=""/>
+    <sfield name="rdo_expand.1" text="上推" lstr=""/>
+    <sfield name="rdo_expand.2" text="下展" lstr=""/>
+    <sfield name="rdo_expand.3" text="全部" lstr=""/>
+    <sfield name="lbl_name" text="樹狀節點說明" lstr=""/>
+    <sfield name="page_s_aooi390_s01_2" text="基本資料" lstr=""/>
+    <sfield name="lbl_n0" text="編碼分類" lstr=""/>
+    <sfield name="lbl_n1" text="編碼總長度" lstr=""/>
+    <sfield name="lbl_n2" text="編碼總段數" lstr=""/>
+    <sfield name="lbl_n3" text="自動編號" lstr=""/>
+    <sfield name="page_s_aooi390_s01_3" text="明細資料" lstr=""/>
+    <sfield name="lbl_oofg007" text="段次" lstr=""/>
+    <sfield name="lbl_oofgl004" text="節點名稱" lstr=""/>
+    <sfield name="lbl_oofg009" text="長度" lstr=""/>
+    <sfield name="lbl_oofg016" text="使用轉換表" lstr=""/>
+    <sfield name="lbl_oofg008" text="節點型態" lstr=""/>
+    <sfield name="lbl_value" text="輸入值" lstr=""/>
+    <sfield name="lbl_value_desc" text="說明" lstr=""/>
+    <sfield name="lbl_tbegin" text="第" lstr=""/>
+    <sfield name="lbl_tend" text="組" lstr=""/>
+    <sfield name="lbl_axrt300_07_xrcbdocno" text="單號_隱藏" lstr=""/>
+    <sfield name="lbl_axrt300_07_xrcbld" text="帳別_隱藏" lstr=""/>
+    <sfield name="lbl_xrcbseq" text="項次" lstr=""/>
+    <sfield name="lbl_xrcb047" text="摘要" lstr=""/>
+    <sfield name="lbl_xrcb029" text="應收帳款科目" lstr=""/>
+    <sfield name="lbl_xrcb021" text="收入會計科目" lstr=""/>
+    <sfield name="lbl_xrcb051" text="業務人員" lstr=""/>
+    <sfield name="lbl_xrcb010" text="業務部門" lstr=""/>
+    <sfield name="lbl_xrcb011" text="責任中心" lstr=""/>
+    <sfield name="lbl_xrcb024" text="區域" lstr=""/>
+    <sfield name="lbl_xrcb036" text="客群" lstr=""/>
+    <sfield name="lbl_xrcb012" text="產品類別" lstr=""/>
+    <sfield name="lbl_xrcb015" text="專案代號" lstr=""/>
+    <sfield name="lbl_xrcb016" text="WBS編號" lstr=""/>
+    <sfield name="lbl_xrcb033" text="經營方式" lstr=""/>
+    <sfield name="lbl_xrcb034" text="渠道" lstr=""/>
+    <sfield name="lbl_xrcb035" text="品牌" lstr=""/>
+    <sfield name="lbl_xrcb037" text="自由核算項一" lstr=""/>
+    <sfield name="lbl_xrcb038" text="自由核算項二" lstr=""/>
+    <sfield name="lbl_xrcb039" text="自由核算項三" lstr=""/>
+    <sfield name="lbl_xrcb040" text="自由核算項四" lstr=""/>
+    <sfield name="lbl_xrcb041" text="自由核算項五" lstr=""/>
+    <sfield name="lbl_xrcb042" text="自由核算項六" lstr=""/>
+    <sfield name="lbl_xrcb043" text="自由核算項七" lstr=""/>
+    <sfield name="lbl_xrcb044" text="自由核算項八" lstr=""/>
+    <sfield name="lbl_xrcb045" text="自由核算項九" lstr=""/>
+    <sfield name="lbl_xrcb046" text="自由核算項十" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sfield name="lbl_glapld" text="帳別" lstr=""/>
+    <sfield name="lbl_rtif002_s01" text="現金款別" lstr=""/>
+    <sfield name="lbl_rtif003" text="收款金額" lstr=""/>
+    <sfield name="lbl_but01s01" text="取消收款" lstr=""/>
+    <sfield name="lbl_pay_01" text="總應收款金額" lstr=""/>
+    <sfield name="lbl_pay_05" text="應找零現金金額" lstr=""/>
+    <sfield name="lbl_pay_02" text="總預收款金額" lstr=""/>
+    <sfield name="lbl_pay_06" text="應開立餘額券金額" lstr=""/>
+    <sfield name="lbl_pay_03" text="總收款金額" lstr=""/>
+    <sfield name="lbl_pay_04" text="未收款金額合計" lstr=""/>
+    <sfield name="bpage_s_pay" text="收款統計" lstr=""/>
+    <sfield name="lbl_rtif001" text="款別類型" lstr=""/>
+    <sfield name="lbl_rtif002" text="款別編號" lstr=""/>
+    <sfield name="lbl_rtif002_desc" text="款別說明" lstr=""/>
+    <sfield name="lbl_rtif013_1" text="卡種/券種" lstr=""/>
+    <sfield name="lbl_rtif015_1" text="面額" lstr=""/>
+    <sfield name="lbl_oocql004_s11" text="面額說明" lstr=""/>
+    <sfield name="lbl_rtif003_1" text="實收金額" lstr=""/>
+    <sfield name="lbl_rtif019_1" text="溢收金額" lstr=""/>
+    <sfield name="lbl_rtif022" text="抵現積點" lstr=""/>
+    <sfield name="lbl_but01" text="現金" lstr=""/>
+    <sfield name="lbl_but02" text="銀行電匯款" lstr=""/>
+    <sfield name="lbl_but03" text="票據" lstr=""/>
+    <sfield name="lbl_but04" text="有價券(禮券)" lstr=""/>
+    <sfield name="lbl_but05" text="銀行卡/信用卡" lstr=""/>
+    <sfield name="lbl_but06" text="儲值" lstr=""/>
+    <sfield name="lbl_but07" text="積分抵現" lstr=""/>
+    <sfield name="lbl_but071" text="銀行信用狀" lstr=""/>
+    <sfield name="lbl_but09" text="其他" lstr=""/>
+    <sfield name="lbl_but08" text="預收" lstr=""/>
+    <sfield name="lbl_but12" text="賒銷" lstr=""/>
+    <sfield name="lbl_but10" text="取消收款" lstr=""/>
+    <sfield name="lbl_but11" text="結帳" lstr=""/>
+    <sfield name="lbl_rtig002_s10" text="券種" lstr=""/>
+    <sfield name="lbl_rtig003_s10" text="餘額券金額" lstr=""/>
+    <sfield name="lbl_rtig001_s10" text="券編號" lstr=""/>
+    <sfield name="bpage_s09" text="款別明細" lstr=""/>
+    <sfield name="lbl_ooial003_1" text="款別說明" lstr=""/>
+    <sfield name="lbl_rtif004_s09" text="卡號/票號/帳號/待抵單號" lstr=""/>
+    <sfield name="lbl_rtif005" text="刷卡機號" lstr=""/>
+    <sfield name="lbl_rtif006" text="刷卡手續費率" lstr=""/>
+    <sfield name="lbl_rtif007" text="刷卡手續金額" lstr=""/>
+    <sfield name="lbl_rtif008" text="支票面額" lstr=""/>
+    <sfield name="lbl_rtif009" text="票據到期日" lstr=""/>
+    <sfield name="lbl_rtif010" text="票據付款銀行" lstr=""/>
+    <sfield name="lbl_rtif013" text="卡/券種編號" lstr=""/>
+    <sfield name="lbl_rtif014" text="會員卡號" lstr=""/>
+    <sfield name="lbl_rtif015" text="券面額編號" lstr=""/>
+    <sfield name="lbl_oocql004_s09" text="券面額說明" lstr=""/>
+    <sfield name="lbl_rtif016" text="起始券號" lstr=""/>
+    <sfield name="lbl_rtif017" text="結束券號" lstr=""/>
+    <sfield name="lbl_rtif018" text="券數量" lstr=""/>
+    <sfield name="lbl_rtif020" text="票券溢收金額" lstr=""/>
+    <sfield name="lbl_rtif021" text="沖預收款類型" lstr=""/>
+    <sfield name="lbl_rtif024" text="退款類型" lstr=""/>
+    <sfield name="lbl_rtif025" text="收款日期" lstr=""/>
+    <sfield name="lbl_rtif026" text="收款時間" lstr=""/>
+    <sfield name="bpage_s08" text="收款明細" lstr=""/>
+    <sfield name="lbl_rtifseq" text="收款項次" lstr=""/>
+    <sfield name="lbl_rtifseq1" text="收款序" lstr=""/>
+    <sfield name="lbl_rtif002_s08" text="沖預收類型" lstr=""/>
+    <sfield name="lbl_rtif004_s08" text="沖預收單號" lstr=""/>
+    <sfield name="lbl_s08_04" text="訂單交易幣別" lstr=""/>
+    <sfield name="lbl_s08_01" text="總金額" lstr=""/>
+    <sfield name="lbl_s08_02" text="已沖金額" lstr=""/>
+    <sfield name="lbl_s08_03" text="可沖金額" lstr=""/>
+    <sfield name="lbl_rtif002_s07" text="積分抵現款別" lstr=""/>
+    <sfield name="lbl_rtif004_s07" text="卡號" lstr=""/>
+    <sfield name="lbl_rtif013_s07" text="卡種" lstr=""/>
+    <sfield name="lbl_s07_01" text="積分餘額" lstr=""/>
+    <sfield name="lbl_s07_02" text="預設抵現積分基準" lstr=""/>
+    <sfield name="lbl_s07_03" text="預設抵現單位金額" lstr=""/>
+    <sfield name="lbl_s07_04" text="預設最低抵現消費額" lstr=""/>
+    <sfield name="lbl_s07_05" text="可抵現金" lstr=""/>
+    <sfield name="lbl_s07_06" text="抵現後積分餘額" lstr=""/>
+    <sfield name="lbl_rtif002_s06" text="儲值款別" lstr=""/>
+    <sfield name="lbl_rtif004_s06" text="卡號" lstr=""/>
+    <sfield name="lbl_rtif003_desc_s06" text="儲值卡餘額" lstr=""/>
+    <sfield name="lbl_rtif003_s06" text="儲值卡收款金額" lstr=""/>
+    <sfield name="lbl_rtif002_s05" text="銀行卡/信用卡款別" lstr=""/>
+    <sfield name="lbl_rtif004_s05" text="卡號" lstr=""/>
+    <sfield name="lbl_rtif003_s05" text="刷卡金額" lstr=""/>
+    <sfield name="bpage_s04" text="收款明細" lstr=""/>
+    <sfield name="lbl_rtif002_s04" text="有價券款別" lstr=""/>
+    <sfield name="lbl_s_pay_04_01" text="券種" lstr=""/>
+    <sfield name="lbl_s_pay_04_01_desc" text="券種說明" lstr=""/>
+    <sfield name="lbl_s_pay_04_02" text="券面額編號" lstr=""/>
+    <sfield name="lbl_s_pay_04_02_desc" text="券面額編號說明" lstr=""/>
+    <sfield name="lbl_s_pay_04_03" text="券單位金額" lstr=""/>
+    <sfield name="lbl_s_pay_04_04" text="券張數" lstr=""/>
+    <sfield name="lbl_s_pay_04_05" text="券總金額" lstr=""/>
+    <sfield name="lbl_rtif020_s04" text="溢收金額" lstr=""/>
+    <sfield name="bpage_s03" text="收款明細" lstr=""/>
+    <sfield name="lbl_rtif002_s03" text="票據款別" lstr=""/>
+    <sfield name="lbl_rtif004_s03" text="支票號碼" lstr=""/>
+    <sfield name="lbl_nmabl003_s03" text="銀行名稱" lstr=""/>
+    <sfield name="lbl_rtif020_s03" text="溢收金額" lstr=""/>
+    <sfield name="bpage_s02" text="收款明細" lstr=""/>
+    <sfield name="lbl_rtif002_s02" text="銀行電匯款別" lstr=""/>
+    <sfield name="lbl_rtif004_s02" text="手工轉帳卡號" lstr=""/>
+    <sfield name="lbl_rtif007_s02" text="手續費" lstr=""/>
+    <sfield name="lbl_glgald" text="帳別編號" lstr=""/>
+    <sfield name="lbl_glgacomp" text="歸屬法人" lstr=""/>
+    <sfield name="lbl_glaa001" text="帳簿幣別" lstr=""/>
+    <sfield name="lbl_glgadocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_glgadocdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_glga100" text="系統/類別" lstr=""/>
+    <sfield name="lbl_glga007" text="傳票號碼" lstr=""/>
+    <sfield name="lbl_glga008" text="傳票日期" lstr=""/>
+    <sfield name="lbl_glga006" text="附件張數" lstr=""/>
+    <sfield name="lbl_glgbseq" text="項次" lstr=""/>
+    <sfield name="lbl_glgb001" text="摘要" lstr=""/>
+    <sfield name="lbl_glgb002" text="科目編號" lstr=""/>
+    <sfield name="lbl_glgb005" text="幣別" lstr=""/>
+    <sfield name="lbl_glgb006" text="匯率" lstr=""/>
+    <sfield name="lbl_glgb010" text="原幣金額" lstr=""/>
+    <sfield name="lbl_glgb003" text="借方金額" lstr=""/>
+    <sfield name="lbl_glgb004" text="貸方金額" lstr=""/>
+    <sfield name="lbl_glgb039" text="匯率(本位幣二)" lstr=""/>
+    <sfield name="lbl_glgb040" text="借方金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_glgb041" text="貸方金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_amt2" text="金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_glgb042" text="匯率(本位幣三)" lstr=""/>
+    <sfield name="lbl_glgb043" text="借方金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_glgb044" text="貸方金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_amt3" text="金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_glgb017" text="營運據點" lstr=""/>
+    <sfield name="lbl_glgb018" text="部門編號" lstr=""/>
+    <sfield name="lbl_glgb019" text="利潤/成本中心" lstr=""/>
+    <sfield name="lbl_glgb020" text="區域" lstr=""/>
+    <sfield name="lbl_glgb021" text="交易客商" lstr=""/>
+    <sfield name="lbl_glgb022" text="帳款客商" lstr=""/>
+    <sfield name="lbl_glgb023" text="客群" lstr=""/>
+    <sfield name="lbl_glgb024" text="產品類別" lstr=""/>
+    <sfield name="lbl_glgb051" text="經營方式" lstr=""/>
+    <sfield name="lbl_glgb052" text="渠道" lstr=""/>
+    <sfield name="lbl_glgb053" text="品牌" lstr=""/>
+    <sfield name="lbl_glgb025" text="人員" lstr=""/>
+    <sfield name="lbl_glgb027" text="專案編號" lstr=""/>
+    <sfield name="lbl_glgb028" text="WBS" lstr=""/>
+    <sfield name="lbl_glgb055" text="現金變動碼" lstr=""/>
+    <sfield name="lbl_glgb029" text="自由核算項一" lstr=""/>
+    <sfield name="lbl_glgb030" text="自由核算項二" lstr=""/>
+    <sfield name="lbl_glgb031" text="自由核算項三" lstr=""/>
+    <sfield name="lbl_glgb032" text="自由核算項四" lstr=""/>
+    <sfield name="lbl_glgb033" text="自由核算項五" lstr=""/>
+    <sfield name="lbl_glgb034" text="自由核算項六" lstr=""/>
+    <sfield name="lbl_glgb035" text="自由核算項七" lstr=""/>
+    <sfield name="lbl_glgb036" text="自由核算項八" lstr=""/>
+    <sfield name="lbl_glgb037" text="自由核算項九" lstr=""/>
+    <sfield name="lbl_glgb038" text="自由核算項十" lstr=""/>
+    <sact name="ammt405_01" text="記錄/取消贈品" lstr=""/>
+    <sact name="ammt405_03" text="調整折扣" lstr=""/>
+    <sact name="ammt405_note" text="備註" lstr=""/>
+    <sact name="ammt405_notecreate" text="發票/折讓開立" lstr=""/>
+    <sact name="ammt405_notevoid" text="發票/折讓作廢" lstr=""/>
+    <sact name="ammt405_pay" text="收款" lstr=""/>
+    <sact name="ammt405_pay_detail" text="款別明細" lstr=""/>
+    <sact name="reset_password" text="密碼重置" lstr=""/>
+    <sact name="set_password" text="密碼設定" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="5" cite_std="N" src="s">
+    <widget name="isaf201_desc" status=""/>
+    <widget name="isaf_t.isaf009" status=""/>
+    <widget name="isaf_t.isaf010" status=""/>
+    <widget name="isaf_t.isaf044" status=""/>
+    <widget name="isaf_t.isaf201" status=""/>
+    <widget name="isaf_t.isaf202" status=""/>
+    <widget name="isaf_t.isaf203" status=""/>
+    <widget name="isaf_t.isaf204" status=""/>
+    <widget name="isaf_t.isaf207" status=""/>
+    <widget name="s_detail5" status=""/>
+  </exclude>
+</spec>

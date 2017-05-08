@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axcp560" module="axc" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="02040" crtdt="2016-07-22 10:43:40" modid="02040" moddt="2016-07-22 10:43:40" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="材料標準成本批量修改作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcab001(chr10),change_type(chr5),imaa001(chr500),imag011(chr10),imaa003(chr10),xcax002(chr10),price(chr2),pmdnsite(chr10),pmdnsite_desc(chr80),real_cost(chr500),xcccld(chr5),xcccld_desc(chr80),xccc002(chr30),xccc002_desc(chr80),xccc003(chr10),xccc003_desc(chr80),xccc004(num5),xccc005(num5),standard(chr500),xcab001_1(chr10),per(num10),stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="axc" filename="axcp560" method="dialog">
+    <section id="input">
+      <input id="head" field="xcab001,change_type,price,pmdnsite,real_cost,xcccld,xccc002,xccc003,xccc004,xccc005,standard,xcab001_1,per"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="imaa001,imag011,imaa003,xcax002"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcab001">
+        <after>
+          <check chkid="v_xcab001" id="isExist"/>
+        </after>
+        <controlp form="q_xcab001" state="i"/>
+      </column>
+      <column id="change_type"/>
+      <column id="imaa001">
+        <controlp form="q_imaa001_2" state="c"/>
+      </column>
+      <column id="imag011">
+        <controlp form="q_imag011_2" state="c"/>
+      </column>
+      <column id="imaa003">
+        <controlp form="q_imaa003" state="c"/>
+      </column>
+      <column id="xcax002">
+        <controlp form="q_xcax002" state="c"/>
+      </column>
+      <column id="price"/>
+      <column id="pmdnsite">
+        <after>
+          <reference field="pmdnsite_desc" ref_field="pmdnsite" map_field="pmdnent,pmdnsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="pmdnsite_desc"/>
+      <column id="real_cost"/>
+      <column id="xcccld">
+        <after>
+          <reference field="xcccld_desc" ref_field="xcccld" map_field="xcccent,xcccld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalent.glaald=? AND glaal001=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcccld_desc"/>
+      <column id="xccc002">
+        <after>
+          <reference field="xccc002_desc" ref_field="xccccomp,xccc002" map_field="xccccomp,xccc002" ref_sql="SELECT xcbfl003 FROM xcbfl_t WHERE xcbflent=$varg_enterprise$var AND xcbflcomp=? AND xcbfl001=? AND xcbfl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xccc002_desc"/>
+      <column id="xccc003">
+        <after>
+          <reference field="xccc003_desc" ref_field="xccc003" map_field="xcccent,xccc003" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xccc003_desc"/>
+      <column id="xccc004"/>
+      <column id="xccc005"/>
+      <column id="standard"/>
+      <column id="xcab001_1">
+        <controlp form="q_xcab001" state="i"/>
+      </column>
+      <column id="per">
+        <after>
+          <check id="range" st="100" st_type="1" errno="azz-00087" bt="-100" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

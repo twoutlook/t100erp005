@@ -1,0 +1,1199 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="apmm100_03.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0007(2014-10-20 17:26:11), PR版次:0007(2016-03-21 11:50:21)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000173
+#+ Filename...: apmm100_03
+#+ Description: 交易對象允許收/付款條件維護作業
+#+ Creator....: 02294(2013-09-05 14:50:11)
+#+ Modifier...: 02294 -SD/PR- 05016
+ 
+{</section>}
+ 
+{<section id="apmm100_03.global" >}
+#應用 c02b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#160318-00005#34  16/03/18   By Hans  將重複內容的錯誤訊息置換為公用錯誤訊息 
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+GLOBALS "../../apm/4gl/apmm100_03.inc"
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_pmad_d        RECORD
+       pmadstus LIKE pmad_t.pmadstus, 
+   pmad001 LIKE pmad_t.pmad001, 
+   pmad002 LIKE pmad_t.pmad002, 
+   pmad002_desc LIKE type_t.chr500, 
+   pmad003 LIKE pmad_t.pmad003, 
+   pmad004 LIKE pmad_t.pmad004
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_pmad003_d   LIKE pmad_t.pmad003
+#end add-point
+ 
+DEFINE g_pmad_d          DYNAMIC ARRAY OF type_g_pmad_d
+DEFINE g_pmad_d_t        type_g_pmad_d
+ 
+ 
+DEFINE g_pmad001_t   LIKE pmad_t.pmad001    #Key值備份
+DEFINE g_pmad002_t      LIKE pmad_t.pmad002    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+    
+#add-point:傳入參數說明(global.argv)
+GLOBALS
+   DEFINE g_pmaa3_d          DYNAMIC ARRAY OF type_g_pmad_d
+END GLOBALS
+#end add-point    
+ 
+{</section>}
+ 
+{<section id="apmm100_03.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION apmm100_03(--)
+   #add-point:input段變數傳入
+   p_pmad001,p_pmad003
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE p_pmad001       LIKE pmad_t.pmad001
+   DEFINE p_pmad003       LIKE pmad_t.pmad003    #1.付款條件  #2.收款條件
+   DEFINE l_lock_sw       LIKE type_t.chr1
+   DEFINE l_forupd_sql    STRING
+   DEFINE l_n             LIKE type_t.num5                #檢查重複用  
+   DEFINE l_cnt           LIKE type_t.num5
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_apmm100_03 WITH FORM cl_ap_formpath("apm","apmm100_03")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   WHENEVER ERROR CONTINUE
+   #CALL s_transaction_end('N','0')
+   
+   CALL apmm100_03_title_visible(p_pmad003)
+   CALL apmm100_03_b_fill(p_pmad001,p_pmad003)
+   
+   LET l_ac = 1
+   LET l_forupd_sql = "SELECT pmadstus,pmad001,pmad002,'',pmad003,pmad004 FROM pmad_t WHERE pmadent = ? AND pmad001 = ? AND pmad002 = ? FOR UPDATE"
+   LET l_forupd_sql = cl_sql_forupd(l_forupd_sql)
+   DECLARE apmm100_03_bcl CURSOR FROM l_forupd_sql
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_pmad_d FROM s_detail1_apmm100_03.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            CALL apmm100_03_b_fill(p_pmad001,p_pmad003)
+            LET g_rec_b = g_pmad_d.getLength()
+            
+          BEFORE ROW 
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+   
+            LET g_rec_b = g_pmad_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND NOT cl_null(g_pmad_d[l_ac].pmad001)
+               AND NOT cl_null(g_pmad_d[l_ac].pmad002)  
+ 
+            THEN
+               LET l_cmd='u'
+			   LET g_pmad_d_t.* = g_pmad_d[l_ac].*  #BACKUP
+			   
+			   OPEN apmm100_03_bcl USING g_enterprise,p_pmad001,g_pmad_d[l_ac].pmad002
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "apmm100_03_bcl"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH apmm100_03_bcl INTO g_pmad_d[l_ac].pmadstus,g_pmad_d[l_ac].pmad001,g_pmad_d[l_ac].pmad002,g_pmad_d[l_ac].pmad002_desc,g_pmad_d[l_ac].pmad003,g_pmad_d[l_ac].pmad004
+                  
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = p_pmad001
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET l_lock_sw = "Y"
+                  END IF
+				  CALL apmm100_03_pmad002_ref(g_pmad_d[l_ac].pmad002) RETURNING g_pmad_d[l_ac].pmad002_desc
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+        
+         BEFORE INSERT
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_pmad_d[l_ac].* TO NULL          
+            
+            LET g_pmad_d[l_ac].pmad001 = p_pmad001
+            LET g_pmad_d[l_ac].pmadstus = 'Y'
+            LET g_pmad_d[l_ac].pmad003 = p_pmad003
+            LET g_pmad_d[l_ac].pmad004 = 'N'
+            
+            LET g_pmad_d_t.* = g_pmad_d[l_ac].*     #新輸入資料
+
+            CALL cl_show_fld_cont()
+            
+            
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM pmad_t 
+             WHERE pmadent = g_enterprise AND pmad001 = g_pmad_d[l_ac].pmad001
+               AND pmad002 = g_pmad_d[l_ac].pmad002
+      
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               INSERT INTO pmad_t (pmadent,pmad001,pmad002,pmad003,pmad004,pmadstus)
+                  VALUES (g_enterprise,g_pmad_d[l_ac].pmad001,g_pmad_d[l_ac].pmad002,g_pmad_d[l_ac].pmad003,g_pmad_d[l_ac].pmad004,g_pmad_d[l_ac].pmadstus)
+            ELSE    
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               INITIALIZE g_pmad_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "pmad_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+  
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               CALL s_transaction_end('Y','0')
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF NOT cl_null(g_pmad_d[l_ac].pmad001)
+               AND NOT cl_null(g_pmad_d[l_ac].pmad002)  THEN 
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  -263
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CANCEL DELETE
+               END IF
+
+               DELETE FROM pmad_t
+                WHERE pmadent = g_enterprise AND pmad001 = g_pmad_d_t.pmad001
+                  AND pmad002 = g_pmad_d_t.pmad002
+
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "pmad_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF 
+               CLOSE apmm100_03_bcl
+               LET l_count = g_pmad_d.getLength()
+            END IF 
+            
+        ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_pmad_d[l_ac].* = g_pmad_d_t.*
+               CLOSE apmm100_03_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG
+            END IF
+
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = g_pmad_d[l_ac].pmad002
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_pmad_d[l_ac].* = g_pmad_d_t.*
+            ELSE
+               UPDATE pmad_t SET (pmad002,pmad003,pmad004,pmadstus) = (g_pmad_d[l_ac].pmad002,g_pmad_d[l_ac].pmad003,g_pmad_d[l_ac].pmad004,g_pmad_d[l_ac].pmadstus)
+                WHERE pmadent = g_enterprise 
+                  AND pmad001 = g_pmad_d_t.pmad001
+                  AND pmad002 = g_pmad_d_t.pmad002
+
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "pmad_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+                  LET g_pmad_d[l_ac].* = g_pmad_d_t.*
+                  CALL s_transaction_end('N','0')
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF
+            END IF
+            
+         AFTER ROW
+            CLOSE apmm100_03_bcl
+            CALL s_transaction_end('Y','0')
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmadstus
+            #add-point:BEFORE FIELD pmadstus name="input.b.page1_apmm100_03.pmadstus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmadstus
+            
+            #add-point:AFTER FIELD pmadstus name="input.a.page1_apmm100_03.pmadstus"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmadstus
+            #add-point:ON CHANGE pmadstus name="input.g.page1_apmm100_03.pmadstus"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmad001_2
+            #add-point:BEFORE FIELD pmad001_2 name="input.b.page1_apmm100_03.pmad001_2"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmad001_2
+            
+            #add-point:AFTER FIELD pmad001_2 name="input.a.page1_apmm100_03.pmad001_2"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmad001_2
+            #add-point:ON CHANGE pmad001_2 name="input.g.page1_apmm100_03.pmad001_2"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmad002
+            
+            #add-point:AFTER FIELD pmad002 name="input.a.page1_apmm100_03.pmad002"
+            CALL apmm100_03_pmad002_ref(g_pmad_d[l_ac].pmad002) RETURNING g_pmad_d[l_ac].pmad002_desc
+            DISPLAY BY NAME g_pmad_d[l_ac].pmad002_desc
+            IF  NOT cl_null(g_pmad_d[l_ac].pmad001) AND NOT cl_null(g_pmad_d[l_ac].pmad002) AND NOT cl_null(g_pmad_d[l_ac].pmad003) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_pmad_d[l_ac].pmad001 != g_pmad_d_t.pmad001 OR g_pmad_d[l_ac].pmad002 != g_pmad_d_t.pmad002 OR g_pmad_d[l_ac].pmad003 != g_pmad_d_t.pmad003))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmad_t WHERE "||"pmadent = '" ||g_enterprise|| "' AND "||"pmad001 = '"||g_pmad_d[l_ac].pmad001 ||"' AND "|| "pmad002 = '"||g_pmad_d[l_ac].pmad002 ||"' AND "|| "pmad003 = '"||g_pmad_d[l_ac].pmad003 ||"'",'std-00004',0) THEN 
+                     LET g_pmad_d[l_ac].pmad002 = g_pmad_d_t.pmad002
+                     CALL apmm100_03_pmad002_ref(g_pmad_d[l_ac].pmad002) RETURNING g_pmad_d[l_ac].pmad002_desc
+                     DISPLAY BY NAME g_pmad_d[l_ac].pmad002_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmad_d[l_ac].pmad002 != g_pmad_d_t.pmad002)) THEN 
+                  IF p_pmad003 = '1' THEN  #付款
+                     IF NOT ap_chk_isExist(g_pmad_d[l_ac].pmad002,"SELECT COUNT(*) FROM ooib_t WHERE ooibent = '" ||g_enterprise||"' AND ooib001 = '1' AND ooib002 = ? ","apm-00185",0 ) THEN
+                        LET g_pmad_d[l_ac].pmad002 =g_pmad_d_t.pmad002
+                        CALL apmm100_03_pmad002_ref(g_pmad_d[l_ac].pmad002) RETURNING g_pmad_d[l_ac].pmad002_desc
+                        DISPLAY BY NAME g_pmad_d[l_ac].pmad002_desc
+                        NEXT FIELD CURRENT
+                     END IF
+                     #IF NOT ap_chk_isExist(g_pmad_d[l_ac].pmad002,"SELECT COUNT(*) FROM ooib_t WHERE ooibent = '" ||g_enterprise||"' AND ooib001 = '1' AND ooib002 = ? AND ooibstus = 'Y' ","apm-00186",0 ) THEN
+                     IF NOT ap_chk_isExist(g_pmad_d[l_ac].pmad002,"SELECT COUNT(*) FROM ooib_t WHERE ooibent = '" ||g_enterprise||"' AND ooib001 = '1' AND ooib002 = ? AND ooibstus = 'Y' ","sub-01302",'aooi716' ) THEN
+                        LET g_pmad_d[l_ac].pmad002 =g_pmad_d_t.pmad002
+                        CALL apmm100_03_pmad002_ref(g_pmad_d[l_ac].pmad002) RETURNING g_pmad_d[l_ac].pmad002_desc
+                        DISPLAY BY NAME g_pmad_d[l_ac].pmad002_desc
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+                  IF p_pmad003 = '2' THEN  #收款
+                     IF NOT ap_chk_isExist(g_pmad_d[l_ac].pmad002,"SELECT COUNT(*) FROM ooib_t WHERE ooibent = '" ||g_enterprise||"' AND ooib001 = '2' AND ooib002 = ? ","apm-00183",0 ) THEN
+                        LET g_pmad_d[l_ac].pmad002 =g_pmad_d_t.pmad002
+                        CALL apmm100_03_pmad002_ref(g_pmad_d[l_ac].pmad002) RETURNING g_pmad_d[l_ac].pmad002_desc
+                        DISPLAY BY NAME g_pmad_d[l_ac].pmad002_desc
+                        NEXT FIELD CURRENT
+                     END IF
+                     #IF NOT ap_chk_isExist(g_pmad_d[l_ac].pmad002,"SELECT COUNT(*) FROM ooib_t WHERE ooibent = '" ||g_enterprise||"' AND ooib001 = '2' AND ooib002 = ? AND ooibstus = 'Y' ","apm-00184",0 ) THEN        #160318-00005#34
+                     IF NOT ap_chk_isExist(g_pmad_d[l_ac].pmad002,"SELECT COUNT(*) FROM ooib_t WHERE ooibent = '" ||g_enterprise||"' AND ooib001 = '2' AND ooib002 = ? AND ooibstus = 'Y' ","sub-01302",'aooi714' ) THEN #160318-00005#34
+                        LET g_pmad_d[l_ac].pmad002 =g_pmad_d_t.pmad002
+                        CALL apmm100_03_pmad002_ref(g_pmad_d[l_ac].pmad002) RETURNING g_pmad_d[l_ac].pmad002_desc
+                        DISPLAY BY NAME g_pmad_d[l_ac].pmad002_desc
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF
+            END IF
+            CALL apmm100_03_pmad002_ref(g_pmad_d[l_ac].pmad002) RETURNING g_pmad_d[l_ac].pmad002_desc
+            DISPLAY BY NAME g_pmad_d[l_ac].pmad002_desc
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmad002
+            #add-point:BEFORE FIELD pmad002 name="input.b.page1_apmm100_03.pmad002"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmad002
+            #add-point:ON CHANGE pmad002 name="input.g.page1_apmm100_03.pmad002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmad003
+            #add-point:BEFORE FIELD pmad003 name="input.b.page1_apmm100_03.pmad003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmad003
+            
+            #add-point:AFTER FIELD pmad003 name="input.a.page1_apmm100_03.pmad003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmad003
+            #add-point:ON CHANGE pmad003 name="input.g.page1_apmm100_03.pmad003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmad004
+            #add-point:BEFORE FIELD pmad004 name="input.b.page1_apmm100_03.pmad004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmad004
+            
+            #add-point:AFTER FIELD pmad004 name="input.a.page1_apmm100_03.pmad004"
+            IF NOT cl_null(g_pmad_d[l_ac].pmad001) AND NOT cl_null(g_pmad_d[l_ac].pmad004) AND NOT cl_null(g_pmad_d[l_ac].pmad003) THEN 
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_pmad_d[l_ac].pmad004 != g_pmad_d_t.pmad004 OR cl_null(g_pmad_d_t.pmad004))) THEN
+                  IF g_pmad_d[l_ac].pmad004 = 'Y' THEN
+                     IF NOT apmm100_03_pmad004_chk() THEN
+                        LET g_pmad_d[l_ac].pmad004 = g_pmad_d_t.pmad004
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmad004
+            #add-point:ON CHANGE pmad004 name="input.g.page1_apmm100_03.pmad004"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1_apmm100_03.pmadstus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmadstus
+            #add-point:ON ACTION controlp INFIELD pmadstus name="input.c.page1_apmm100_03.pmadstus"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_apmm100_03.pmad001_2
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmad001_2
+            #add-point:ON ACTION controlp INFIELD pmad001_2 name="input.c.page1_apmm100_03.pmad001_2"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_apmm100_03.pmad002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmad002
+            #add-point:ON ACTION controlp INFIELD pmad002 name="input.c.page1_apmm100_03.pmad002"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_pmad_d[l_ac].pmad002            #給予default值
+   
+            IF g_pmad_d[l_ac].pmad003 = '1' THEN  #付款
+               CALL q_ooib001_2()                                #呼叫開窗
+            END IF
+            IF g_pmad_d[l_ac].pmad003 = '2' THEN  #收款
+               CALL q_ooib001_1()                                #呼叫開窗
+            END IF
+            LET g_pmad_d[l_ac].pmad002 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_pmad_d[l_ac].pmad002 TO pmad002              #顯示到畫面上
+            CALL apmm100_03_pmad002_ref(g_pmad_d[l_ac].pmad002) RETURNING g_pmad_d[l_ac].pmad002_desc
+            DISPLAY BY NAME g_pmad_d[l_ac].pmad002_desc
+
+            NEXT FIELD pmad002
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_apmm100_03.pmad003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmad003
+            #add-point:ON ACTION controlp INFIELD pmad003 name="input.c.page1_apmm100_03.pmad003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_apmm100_03.pmad004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmad004
+            #add-point:ON ACTION controlp INFIELD pmad004 name="input.c.page1_apmm100_03.pmad004"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...)
+         
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   LET INT_FLAG = FALSE
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_apmm100_03 
+   
+   #add-point:input段after input 
+   CALL s_transaction_begin()
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmm100_03.other_dialog" readonly="Y" >}
+################################################################################
+# Descriptions...: 被主程式嵌入的單身顯示模式
+# Memo...........: 
+# Usage..........: apmm100_03_display()
+# Input parameter: None
+# Return code....: None
+# Date & Author..: 2014/09/23 By lixiang
+# Modify.........:
+################################################################################
+DIALOG apmm100_03_display()
+   
+   DISPLAY ARRAY g_pmad_d TO s_detail1_apmm100_03.* ATTRIBUTE(COUNT=g_d_cnt_m10003)
+
+      BEFORE DISPLAY
+         CALL FGL_SET_ARR_CURR(g_d_idx_m10003)
+         #單身不連動, 所以進入單身時, 要重新顯示單身筆數
+         DISPLAY g_d_idx_m10003, g_d_cnt_m10003 TO FORMONLY.idx, FORMONLY.cnt
+
+      BEFORE ROW
+         LET g_d_idx_m10003 = DIALOG.getCurrentRow("s_detail1_apmm100_03")
+         DISPLAY g_d_idx_m10003 TO FORMONLY.idx
+         # 點的當筆放入g_appoint_idx中, 可讓雙擊直接進入指定筆
+         LET g_appoint_idx = g_d_idx_m10003
+
+   END DISPLAY
+   
+END DIALOG
+################################################################################
+# Descriptions...: 被主程式嵌入的單身查詢模式
+# Memo...........: 
+# Usage..........: CALL apmm100_03_construct()
+# Input parameter: None
+# Return code....: None
+# Date & Author..: 2014/09/24 By lixiang
+# Modify.........:
+################################################################################
+DIALOG apmm100_03_construct()
+
+   CONSTRUCT g_wc2_m10003 ON pmadstus,pmad002,pmad003,pmad004
+        FROM s_detail1_apmm100_03[1].pmadstus,
+             s_detail1_apmm100_03[1].pmad002,s_detail1_apmm100_03[1].pmad003,
+             s_detail1_apmm100_03[1].pmad004
+
+         ON ACTION controlp INFIELD pmad002
+			   INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			   LET g_qryparam.reqry = FALSE
+            #收款
+            CALL q_ooib001_1()                 
+            DISPLAY g_qryparam.return1 TO pmad002             #顯示到畫面上
+            NEXT FIELD pmad002                        #返回原欄位      
+            
+   END CONSTRUCT
+   
+END DIALOG
+################################################################################
+# Descriptions...: 被主程式嵌入的單身輸入模式
+# Memo...........: 
+# Usage..........: CALL apmm100_03_input()
+# Input parameter: None
+# Return code....: None
+# Date & Author..: 2014/09/24 By lixiang
+# Modify.........:
+################################################################################
+DIALOG apmm100_03_input()
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT   
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   DEFINE l_lock_sw       LIKE type_t.chr1
+   DEFINE l_forupd_sql    STRING
+   DEFINE l_n             LIKE type_t.num5                #檢查重複用  
+   DEFINE l_cnt           LIKE type_t.num5
+   #add by lixiang 20150604--S----
+   DEFINE l_str1          STRING
+   DEFINE l_str2          STRING
+   DEFINE bst             base.StringTokenizer
+   DEFINE l_index         LIKE type_t.num5
+   DEFINE l_pmad002       LIKE pmad_t.pmad002
+   #add by lixiang 20150604--E----
+
+   INPUT ARRAY g_pmad_d FROM s_detail1_apmm100_03.*
+          ATTRIBUTE(COUNT = g_d_cnt_m10003,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = g_detail_delete,
+                  APPEND ROW = g_detail_insert)
+
+         BEFORE INPUT
+            LET l_forupd_sql = "SELECT pmadstus,pmad001,pmad002,'',pmad003,pmad004 FROM pmad_t WHERE pmadent = ? AND pmad001 = ? AND pmad002 = ? FOR UPDATE"
+            LET l_forupd_sql = cl_sql_forupd(l_forupd_sql)
+            PREPARE apmm100_03_dialog_b FROM l_forupd_sql
+            DECLARE apmm100_03_dialog_bcl CURSOR FOR apmm100_03_dialog_b
+            IF g_appoint_idx > 0 THEN
+               CALL DIALOG.setCurrentRow("s_detail1_apmm100_03",g_appoint_idx)
+            END IF
+            LET g_pmad003_d = '2'  #收款
+            
+          BEFORE ROW 
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+   
+            LET g_rec_b = g_pmad_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND NOT cl_null(g_pmad_d[l_ac].pmad001)
+               AND NOT cl_null(g_pmad_d[l_ac].pmad002)  
+ 
+            THEN
+               LET l_cmd='u'
+			      LET g_pmad_d_t.* = g_pmad_d[l_ac].*  #BACKUP
+			   
+			      OPEN apmm100_03_dialog_bcl USING g_enterprise,g_pmaa001_d,g_pmad_d[l_ac].pmad002
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "apmm100_03_dialog_bcl"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH apmm100_03_dialog_bcl INTO g_pmad_d[l_ac].pmadstus,g_pmad_d[l_ac].pmad001,g_pmad_d[l_ac].pmad002,g_pmad_d[l_ac].pmad002_desc,g_pmad_d[l_ac].pmad003,g_pmad_d[l_ac].pmad004
+                  
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = g_pmaa001_d
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET l_lock_sw = "Y"
+                  END IF
+				      CALL apmm100_03_pmad002_ref(g_pmad_d[l_ac].pmad002) RETURNING g_pmad_d[l_ac].pmad002_desc
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+        
+         BEFORE INSERT
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_pmad_d[l_ac].* TO NULL          
+            
+            LET g_pmad_d[l_ac].pmad001 = g_pmaa001_d
+            LET g_pmad_d[l_ac].pmadstus = 'Y'
+            LET g_pmad_d[l_ac].pmad003 = g_pmad003_d
+            #LET g_pmad_d[l_ac].pmad003 = '2'  #收款
+            LET g_pmad_d[l_ac].pmad004 = 'N'
+            
+            LET g_pmad_d_t.* = g_pmad_d[l_ac].*     #新輸入資料
+
+            CALL cl_show_fld_cont()
+            
+            
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               #CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM pmad_t 
+             WHERE pmadent = g_enterprise AND pmad001 = g_pmad_d[l_ac].pmad001
+               AND pmad002 = g_pmad_d[l_ac].pmad002
+      
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               INSERT INTO pmad_t (pmadent,pmad001,pmad002,pmad003,pmad004,pmadstus)
+                  VALUES (g_enterprise,g_pmad_d[l_ac].pmad001,g_pmad_d[l_ac].pmad002,g_pmad_d[l_ac].pmad003,g_pmad_d[l_ac].pmad004,g_pmad_d[l_ac].pmadstus)
+            #ELSE    #mark by lixiang 20150604
+            #   INITIALIZE g_errparam TO NULL
+            #   LET g_errparam.code = "std-00006"
+            #   LET g_errparam.extend = 'INSERT'
+            #   LET g_errparam.popup = TRUE
+            #   CALL cl_err()
+            #
+            #   INITIALIZE g_pmad_d[l_ac].* TO NULL
+            #   CALL s_transaction_end('N','0')
+               #CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "pmad_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+  
+               CALL s_transaction_end('N','0')                    
+               #CANCEL INSERT
+            ELSE
+               CALL s_transaction_end('Y','0')
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF NOT cl_null(g_pmad_d[l_ac].pmad001)
+               AND NOT cl_null(g_pmad_d[l_ac].pmad002)  THEN 
+               
+               IF cl_ask_del_detail() THEN
+                  IF l_lock_sw = "Y" THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code =  -263
+                     LET g_errparam.extend = ""
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                  
+                     #CANCEL DELETE
+                  END IF
+                  
+                  DELETE FROM pmad_t
+                   WHERE pmadent = g_enterprise AND pmad001 = g_pmad_d_t.pmad001
+                     AND pmad002 = g_pmad_d_t.pmad002
+                  
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "pmad_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                  
+                     CALL s_transaction_end('N','0')
+                     #CANCEL DELETE   
+                  ELSE
+                     CALL s_transaction_end('Y','0')
+                  END IF 
+                  CLOSE apmm100_03_dialog_bcl
+                  LET l_count = g_pmad_d.getLength()
+               END IF
+            END IF 
+            
+        AFTER DELETE
+           CALL apmm100_03_b_fill(g_pmaa001_d,g_pmad003_d) #收款
+            
+        ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_pmad_d[l_ac].* = g_pmad_d_t.*
+               CLOSE apmm100_03_dialog_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG
+            END IF
+
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = g_pmad_d[l_ac].pmad002
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_pmad_d[l_ac].* = g_pmad_d_t.*
+            ELSE
+               UPDATE pmad_t SET (pmad002,pmad003,pmad004,pmadstus) = (g_pmad_d[l_ac].pmad002,g_pmad_d[l_ac].pmad003,g_pmad_d[l_ac].pmad004,g_pmad_d[l_ac].pmadstus)
+                WHERE pmadent = g_enterprise 
+                  AND pmad001 = g_pmad_d_t.pmad001
+                  AND pmad002 = g_pmad_d_t.pmad002
+
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "pmad_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_pmad_d[l_ac].* = g_pmad_d_t.*
+                  CALL s_transaction_end('N','0')
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF
+            END IF
+            
+         AFTER ROW
+            CLOSE apmm100_03_dialog_bcl
+            CALL s_transaction_end('Y','0')
+
+         AFTER FIELD pmad002
+            CALL apmm100_03_pmad002_ref(g_pmad_d[l_ac].pmad002) RETURNING g_pmad_d[l_ac].pmad002_desc
+            DISPLAY BY NAME g_pmad_d[l_ac].pmad002_desc
+            IF  NOT cl_null(g_pmad_d[l_ac].pmad001) AND NOT cl_null(g_pmad_d[l_ac].pmad002) AND NOT cl_null(g_pmad_d[l_ac].pmad003) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_pmad_d[l_ac].pmad001 != g_pmad_d_t.pmad001 OR g_pmad_d[l_ac].pmad002 != g_pmad_d_t.pmad002 OR g_pmad_d[l_ac].pmad003 != g_pmad_d_t.pmad003))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pmad_t WHERE "||"pmadent = '" ||g_enterprise|| "' AND "||"pmad001 = '"||g_pmad_d[l_ac].pmad001 ||"' AND "|| "pmad002 = '"||g_pmad_d[l_ac].pmad002 ||"' AND "|| "pmad003 = '"||g_pmad_d[l_ac].pmad003 ||"'",'std-00004',0) THEN 
+                     LET g_pmad_d[l_ac].pmad002 = g_pmad_d_t.pmad002
+                     CALL apmm100_03_pmad002_ref(g_pmad_d[l_ac].pmad002) RETURNING g_pmad_d[l_ac].pmad002_desc
+                     DISPLAY BY NAME g_pmad_d[l_ac].pmad002_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_pmad_d[l_ac].pmad002 != g_pmad_d_t.pmad002)) THEN 
+                  IF g_pmad003_d = '1' THEN  #付款
+                     IF NOT ap_chk_isExist(g_pmad_d[l_ac].pmad002,"SELECT COUNT(*) FROM ooib_t WHERE ooibent = '" ||g_enterprise||"' AND ooib001 = '1' AND ooib002 = ? ","apm-00185",0 ) THEN
+                        LET g_pmad_d[l_ac].pmad002 =g_pmad_d_t.pmad002
+                        CALL apmm100_03_pmad002_ref(g_pmad_d[l_ac].pmad002) RETURNING g_pmad_d[l_ac].pmad002_desc
+                        DISPLAY BY NAME g_pmad_d[l_ac].pmad002_desc
+                        NEXT FIELD CURRENT
+                     END IF
+                     #IF NOT ap_chk_isExist(g_pmad_d[l_ac].pmad002,"SELECT COUNT(*) FROM ooib_t WHERE ooibent = '" ||g_enterprise||"' AND ooib001 = '1' AND ooib002 = ? AND ooibstus = 'Y' ","apm-00186",0 ) THEN         #160318-00005#34
+                     IF NOT ap_chk_isExist(g_pmad_d[l_ac].pmad002,"SELECT COUNT(*) FROM ooib_t WHERE ooibent = '" ||g_enterprise||"' AND ooib001 = '1' AND ooib002 = ? AND ooibstus = 'Y' ","sub-01302",'aooi716' ) THEN  #160318-00005#34
+                        LET g_pmad_d[l_ac].pmad002 =g_pmad_d_t.pmad002
+                        CALL apmm100_03_pmad002_ref(g_pmad_d[l_ac].pmad002) RETURNING g_pmad_d[l_ac].pmad002_desc
+                        DISPLAY BY NAME g_pmad_d[l_ac].pmad002_desc
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+                  IF g_pmad003_d = '2' THEN  #收款
+                     IF NOT ap_chk_isExist(g_pmad_d[l_ac].pmad002,"SELECT COUNT(*) FROM ooib_t WHERE ooibent = '" ||g_enterprise||"' AND ooib001 = '2' AND ooib002 = ? ","apm-00183",0 ) THEN
+                        LET g_pmad_d[l_ac].pmad002 =g_pmad_d_t.pmad002
+                        CALL apmm100_03_pmad002_ref(g_pmad_d[l_ac].pmad002) RETURNING g_pmad_d[l_ac].pmad002_desc
+                        DISPLAY BY NAME g_pmad_d[l_ac].pmad002_desc
+                        NEXT FIELD CURRENT
+                     END IF
+                     #IF NOT ap_chk_isExist(g_pmad_d[l_ac].pmad002,"SELECT COUNT(*) FROM ooib_t WHERE ooibent = '" ||g_enterprise||"' AND ooib001 = '2' AND ooib002 = ? AND ooibstus = 'Y' ","apm-00184",0 ) THEN  #160318-00005#34
+                     IF NOT ap_chk_isExist(g_pmad_d[l_ac].pmad002,"SELECT COUNT(*) FROM ooib_t WHERE ooibent = '" ||g_enterprise||"' AND ooib001 = '2' AND ooib002 = ? AND ooibstus = 'Y' ","sub-01302",'aooi714' ) THEN   #160318-00005#34
+                        LET g_pmad_d[l_ac].pmad002 =g_pmad_d_t.pmad002
+                        CALL apmm100_03_pmad002_ref(g_pmad_d[l_ac].pmad002) RETURNING g_pmad_d[l_ac].pmad002_desc
+                        DISPLAY BY NAME g_pmad_d[l_ac].pmad002_desc
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF
+            END IF
+            CALL apmm100_03_pmad002_ref(g_pmad_d[l_ac].pmad002) RETURNING g_pmad_d[l_ac].pmad002_desc
+            DISPLAY BY NAME g_pmad_d[l_ac].pmad002_desc
+
+         AFTER FIELD pmad004
+            IF NOT cl_null(g_pmad_d[l_ac].pmad001) AND NOT cl_null(g_pmad_d[l_ac].pmad004) AND NOT cl_null(g_pmad_d[l_ac].pmad003) THEN 
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_pmad_d[l_ac].pmad004 != g_pmad_d_t.pmad004 OR cl_null(g_pmad_d_t.pmad004))) THEN
+                  IF g_pmad_d[l_ac].pmad004 = 'Y' THEN
+                     IF NOT apmm100_03_pmad004_chk() THEN
+                        LET g_pmad_d[l_ac].pmad004 = g_pmad_d_t.pmad004
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF
+            END IF
+
+         ON ACTION controlp INFIELD pmad002
+            INITIALIZE g_qryparam.* TO NULL
+            IF l_cmd = 'a' THEN
+               LET g_qryparam.state = 'c' #開窗多選，新增多筆 #modify by lixiang 20150604
+            ELSE
+               LET g_qryparam.state = 'i'
+            END IF
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_pmad_d[l_ac].pmad002            #給予default值
+            
+            IF l_cmd = 'a' THEN
+               LET g_qryparam.where = " ooibstus = 'Y' " #modify by lixiang 20150604
+            END IF
+   
+            IF g_pmad_d[l_ac].pmad003 = '1' THEN  #付款
+               CALL q_ooib001_2()                                #呼叫開窗
+            END IF
+            IF g_pmad_d[l_ac].pmad003 = '2' THEN  #收款
+               CALL q_ooib001_1()                                #呼叫開窗
+            END IF
+            
+            #add by lixiang 20150604--S----
+            
+            LET l_str1 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            LET l_index = l_str1.getIndexOf('|',1)
+            #開窗時多選，則所選資料全部新增到表中
+            IF l_index > 1 THEN
+               LET bst= base.StringTokenizer.create(l_str1,"|")
+               WHILE bst.hasMoreTokens()
+                  LET l_str2 = bst.nextToken()
+                  LET l_pmad002 = l_str2
+                  LET l_count = 1  
+                  SELECT COUNT(*) INTO l_count FROM pmad_t
+                   WHERE pmadent = g_enterprise AND pmad001 = g_pmad_d[l_ac].pmad001 AND pmad002 = l_pmad002
+                  IF l_count = 0 THEN
+                     INSERT INTO pmad_t (pmadent,pmad001,pmad002,pmad003,pmad004,pmadstus) 
+                        VALUES(g_enterprise,g_pmad_d[l_ac].pmad001,l_pmad002,g_pmad_d[l_ac].pmad003,'N','Y')
+                  END IF
+               END WHILE
+
+               CALL apmm100_03_b_fill(g_pmad_d[l_ac].pmad001,g_pmad_d[l_ac].pmad003)
+               LET g_rec_b = g_pmad_d.getLength()
+               IF g_rec_b > 0 THEN
+                  LET l_cmd = 'u' 
+                  LET g_pmad_d_t.* = g_pmad_d[l_ac].*
+               END IF
+            ELSE
+            #add by lixiang 20150604--E----
+               LET g_pmad_d[l_ac].pmad002 = g_qryparam.return1              #將開窗取得的值回傳到變數
+               DISPLAY g_pmad_d[l_ac].pmad002 TO pmad002              #顯示到畫面上
+               CALL apmm100_03_pmad002_ref(g_pmad_d[l_ac].pmad002) RETURNING g_pmad_d[l_ac].pmad002_desc
+               DISPLAY BY NAME g_pmad_d[l_ac].pmad002_desc
+            END IF
+            NEXT FIELD pmad002
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            LET g_pmaa3_d.* = g_pmad_d.*
+            #end add-point
+            
+      END INPUT
+   
+END DIALOG
+
+ 
+{</section>}
+ 
+{<section id="apmm100_03.other_function" readonly="Y" >}
+#根據交易類型，顯示付款/收款條件說明
+PRIVATE FUNCTION apmm100_03_title_visible(p_pmad003)
+DEFINE p_pmad003  LIKE pmad_t.pmad003
+DEFINE l_gzze003  LIKE gzze_t.gzze003
+
+       IF NOT cl_null(p_pmad003) THEN
+          #付款條件
+          IF p_pmad003 = '1' THEN
+             LET l_gzze003 = ' '
+             SELECT gzze003 INTO l_gzze003 FROM gzze_t WHERE gzze001 = 'apm-00159' AND gzze002 = g_dlang
+             CALL cl_set_comp_att_text('pmad002',l_gzze003)
+          END IF
+          #收款條件
+          IF p_pmad003 = '2' THEN
+             LET l_gzze003 = ' '
+             SELECT gzze003 INTO l_gzze003 FROM gzze_t WHERE gzze001 = 'apm-00160' AND gzze002 = g_dlang
+             CALL cl_set_comp_att_text('pmad002',l_gzze003)
+          END IF
+       END IF
+END FUNCTION
+#+
+PUBLIC FUNCTION apmm100_03_b_fill(p_pmad001,p_pmad003)
+   DEFINE p_pmad001   LIKE pmad_t.pmad001
+   DEFINE p_pmad003   LIKE pmad_t.pmad003
+   DEFINE l_sql       STRING
+
+   DEFINE l_ac1       LIKE type_t.num5
+   
+   LET l_sql = "SELECT pmadstus,pmad001,pmad002,'',pmad003,pmad004 FROM pmad_t WHERE pmadent = '",g_enterprise,"' AND pmad001 = '",p_pmad001,"' AND pmad003 = '",p_pmad003,"' "
+   IF NOT cl_null(g_wc2_m10003) THEN
+      LET l_sql = l_sql CLIPPED, " AND ",g_wc2_m10003 CLIPPED
+   END IF
+   PREPARE apmm100_03_pb FROM l_sql
+   DECLARE b_fill_curs CURSOR FOR apmm100_03_pb
+
+   CALL g_pmad_d.clear()
+   LET l_ac1 = 1
+   FOREACH b_fill_curs INTO g_pmad_d[l_ac1].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      CALL apmm100_03_pmad002_ref(g_pmad_d[l_ac1].pmad002) RETURNING g_pmad_d[l_ac1].pmad002_desc
+          
+      LET l_ac1 = l_ac1 + 1
+      IF l_ac1 > g_max_rec THEN
+         #CALL cl_err( "", 9035, 0 )
+         EXIT FOREACH
+      END IF
+
+   END FOREACH
+   CALL g_pmad_d.deleteElement(g_pmad_d.getLength())
+   LET g_rec_b = l_ac1 - 1
+   DISPLAY g_rec_b TO FORMONLY.cnt
+   LET g_pmaa3_d.* = g_pmad_d.*
+   #將總筆數, 目前筆數指定到共用變數中
+   IF g_rec_b > 0 THEN
+      LET g_d_idx_m10003 = 1
+   ELSE
+      LET g_d_idx_m10003 = 0
+   END IF
+   LET g_d_cnt_m10003 = g_rec_b
+   
+   CLOSE b_fill_curs
+   FREE apmm100_03_pb
+   
+END FUNCTION
+################################################################################
+# Descriptions...: 清除畫面上單身
+# Memo...........: 
+# Usage..........: CALL apmm100_03_clear_detail()
+# Input parameter: None
+# Return code....: None
+# Date & Author..: 2014/09/23 By lixiang
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmm100_03_clear_detail()
+
+    CALL g_pmad_d.clear()
+    
+END FUNCTION
+#+
+PRIVATE FUNCTION apmm100_03_pmad004_chk()
+DEFINE l_n            LIKE type_t.num5
+DEFINE r_success      LIKE type_t.num5
+
+       LET l_n = 0
+       LET r_success = TRUE       
+       SELECT COUNT(*) INTO l_n FROM pmad_t WHERE pmadent = g_enterprise AND pmad001 = g_pmad_d[l_ac].pmad001 AND pmad003 = g_pmad_d[l_ac].pmad003 AND pmad004 = 'Y'
+
+       IF l_n > 0 THEN
+          IF g_pmad_d[l_ac].pmad003 = '1' THEN   #已勾選了主要付款條件，不可勾選多個！
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.code = 'apm-00161'
+             LET g_errparam.extend = g_pmad_d[l_ac].pmad001
+             LET g_errparam.popup = TRUE
+             CALL cl_err()
+
+          END IF
+          IF g_pmad_d[l_ac].pmad003 = '2' THEN   #已勾選了主要收款條件，不可勾選多個！
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.code = 'apm-00161'
+             LET g_errparam.extend = g_pmad_d[l_ac].pmad001
+             LET g_errparam.popup = TRUE
+             CALL cl_err()
+
+          END IF
+          LET r_success = FALSE
+          RETURN r_success
+       END IF
+       RETURN r_success
+      
+END FUNCTION
+#+
+PRIVATE FUNCTION apmm100_03_pmad002_ref(p_pmad002)
+DEFINE p_pmad002      LIKE pmad_t.pmad002
+DEFINE r_pmad002_desc LIKE ooibl_t.ooibl004
+
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = p_pmad002
+      CALL ap_ref_array2(g_ref_fields,"SELECT ooibl004 FROM ooibl_t WHERE ooiblent='"||g_enterprise||"' AND ooibl002=? AND ooibl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET r_pmad002_desc = g_rtn_fields[1]
+      RETURN r_pmad002_desc
+      
+END FUNCTION
+
+ 
+{</section>}
+ 

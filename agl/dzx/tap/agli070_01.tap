@@ -1,0 +1,1288 @@
+<add_points prog="agli070_01" std_prog="agli070_01" erpver="1.0" module="AGL" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.agli070_01_glfc001_chk" cite_std="N" status="" ver="1" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 公式變量檢查
+# Memo...........:
+# Usage..........: CALL agli070_01_glfc001_chk(p_glfc001)
+# Date & Author..: 2014/5/15 By wangrr
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION agli070_01_glfc001_chk(p_glfc001)
+   DEFINE p_glfc001       LIKE glfc_t.glfc001
+   DEFINE l_str           LIKE type_t.chr10
+   DEFINE l_chr           LIKE type_t.chr1
+   DEFINE l_num           LIKE type_t.num5
+   DEFINE l_cnt           LIKE type_t.num5
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_str1          STRING
+   
+   LET g_errno=''
+   IF g_glfb_m.glfb004='1' THEN
+      LET l_str1=p_glfc001
+      LET l_num=l_str1.getIndexOf('|',1)
+      IF l_num>0 THEN
+         LET g_flag=TRUE
+         FOR l_i = 1 TO g_glfb.getLength()
+            SELECT COUNT(*) INTO l_cnt FROM glfb_t 
+             WHERE glfbent=g_enterprise AND glfb001=g_glfa.glfa001
+               AND glfbseq=g_glfb[l_i].glfbseq AND glfbseq1=g_glfb[l_i].glfbseq1
+            IF l_cnt=0 THEN
+               LET g_errno='agl-00241'
+               EXIT FOR
+            END IF            
+         END FOR
+      ELSE
+         LET g_flag=FALSE
+         LET l_chr=l_str1.substring(1,1)
+         LET l_num=l_str1.substring(2,l_str1.getLength())
+         SELECT COUNT(*) INTO l_cnt FROM glfb_t 
+          WHERE glfbent=g_enterprise AND glfb001=g_glfa.glfa001
+            AND glfbseq=l_num AND glfbseq1=l_chr
+         IF l_cnt=0 THEN
+            LET g_errno='agl-00241'
+         END IF
+      END IF
+   ELSE
+      SELECT COUNT(*) INTO l_cnt FROM glfc_t
+      WHERE glfcent=g_enterprise AND glfc001=p_glfc001
+      IF l_cnt=0 THEN
+         LET g_errno='agl-00240'
+      END IF
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.agli070_01_b_fill" cite_std="N" status="" ver="1" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 填充單身
+# Memo...........:
+# Usage..........: CALL agli070_01_b_fill()
+# Date & Author..: 2014/5/20 By wangrr
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION agli070_01_b_fill()
+   DEFINE l_sql          STRING
+   DEFINE l_sql1         STRING
+   DEFINE l_ac           LIKE type_t.num5
+   
+   IF cl_null(g_glfb_m.glfb004) THEN
+      RETURN
+   END IF
+   
+   IF g_glfb_m.glfb004='1' THEN
+      LET l_sql=" SELECT 'N',glfbseq,glfbseq1,glfb002,glfbl004,glfb003,'','' ",
+                "   FROM glfb_t ",
+                "   LEFT JOIN glfbl_t ON glfbent=glfblent AND glfb001 = glfbl001 AND glfbseq = glfblseq AND glfb002 = glfbl002 AND glfbl003 = '",g_lang,"'",
+                "  WHERE glfbent = ",g_enterprise," AND glfb001 ='",g_glfa.glfa001,"'",
+                "    AND glfbseq <> ",g_glfbseq," AND glfbseq1 ='",g_glfbseq1,"'"
+      IF NOT cl_null(g_wc) AND g_wc <> " 1=1" THEN
+         LET l_sql1=cl_replace_str(g_wc,"glfc001","glfbseq")
+         LET l_sql=l_sql," AND ",l_sql1
+      END IF
+      LET l_sql=l_sql," ORDER BY glfbseq,glfbseq1"
+   ELSE
+      LET l_sql=" SELECT DISTINCT 'N','','','','','',glfc001,glfcl003 ",
+                "   FROM glfc_t ",
+                "   LEFT JOIN glfcl_t ON glfcent=glfclent AND glfc001=glfcl001 AND glfcl002 = '",g_lang,"'",
+                "  WHERE glfcent = ",g_enterprise," AND glfc002='",g_glfa.glfa004,"'"
+      IF NOT cl_null(g_wc) AND g_wc <> " 1=1" THEN
+         LET l_sql=l_sql," AND ",g_wc
+      END IF
+      LET l_sql=l_sql," ORDER BY glfc001 "
+   END IF
+   PREPARE agli070_01_sel_pr FROM l_sql
+   DECLARE agli070_01_sel_cs CURSOR FOR agli070_01_sel_pr
+   
+   CALL g_glfb_d.clear()
+   LET l_ac=1
+   FOREACH agli070_01_sel_cs INTO g_glfb_d[l_ac].chk,g_glfb_d[l_ac].glfbseq,g_glfb_d[l_ac].glfbseq1,
+                                  g_glfb_d[l_ac].glfb002,g_glfb_d[l_ac].glfbl004,g_glfb_d[l_ac].glfb003,
+                                  g_glfb_d[l_ac].glfcl001,g_glfb_d[l_ac].glfcl003
+      IF SQLCA.SQLCODE THEN
+         CALL cl_err('FOREACH',SQLCA.SQLCODE,1)
+         EXIT FOREACH
+      END IF
+      
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         CALL cl_err( '', 9035, 1)
+         EXIT FOREACH
+      END IF 
+   END FOREACH
+   LET l_ac=l_ac-1
+   CALL g_glfb_d.deleteElement(g_glfb_d.getLength())
+END FUNCTION]]>
+</point>
+  <point name="function.agli070_01_get_formula" cite_std="N" status="" ver="1" src="s" new="Y" order="3" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 獲取計算公式
+# Memo...........:
+# Usage..........: CALL agli070_01_get_formula(p_type)
+#                  RETURNING r_str
+# Input parameter: p_type         類型
+# Return code....: r_str          公式組合結果
+# Date & Author..: 2014/5/20 By wangrr
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION agli070_01_get_formula(p_type)
+   DEFINE p_type        LIKE type_t.chr1
+   DEFINE l_i           LIKE type_t.num5
+   DEFINE l_chr         LIKE type_t.chr1
+   DEFINE l_str,l_str1  STRING
+   DEFINE r_str         STRING
+   
+   LET r_str=""
+   #運算符
+
+   IF p_type='6' THEN 
+      LET r_str="(" 
+      RETURN r_str
+   END IF
+   IF p_type='7' THEN 
+      LET r_str=")" 
+      RETURN r_str
+   END IF
+   
+   #選擇的公式
+   LET  l_str1=""
+   FOR l_i=1 TO g_glfb_d.getLength()
+      IF g_glfb_d[l_i].chk='Y' THEN
+         IF g_glfb_m.glfb004 ='1' THEN
+            #項目列+行
+            LET l_str=g_glfb_d[l_i].glfbseq1,g_glfb_d[l_i].glfbseq USING '<<<<'
+         ELSE
+            #公式編號
+            LET l_str=g_glfb_d[l_i].glfcl001
+         END IF
+         CASE p_type
+            WHEN '2' LET l_str=l_str,"+"
+            WHEN '3' LET l_str=l_str,"-"
+            WHEN '4' LET l_str=l_str,"*"
+            WHEN '5' LET l_str=l_str,"/"
+         END CASE
+         LET l_str1=l_str1,l_str
+      END IF
+   END FOR
+   IF NOT cl_null(l_str1) THEN
+      LET l_chr=l_str1.substring(l_str1.getLength(),l_str1.getLength())
+      IF l_chr MATCHES '[\\+\\-\\*\\/]' OR l_chr='-' THEN
+         LET l_str1=l_str1.substring(1,l_str1.getLength()-1)
+      END IF
+   ELSE
+      CASE p_type
+         WHEN '2' LET l_str1="+"
+         WHEN '3' LET l_str1="-"
+         WHEN '4' LET l_str1="*"
+         WHEN '5' LET l_str1="/"
+      END CASE
+   END IF
+   #運算符+公式
+   LET r_str=r_str,l_str1
+   
+   RETURN r_str
+END FUNCTION]]>
+</point>
+  <point name="function.agli070_01_check" cite_std="N" status="" ver="1" src="s" new="Y" order="4" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 全選/全不選
+# Memo...........:
+# Usage..........: CALL agli070_01_check(p_type)
+# Input parameter: p_type         類型
+# Date & Author..: 2014/5/20 By wangrr
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION agli070_01_check(p_type)
+   DEFINE p_type        LIKE type_t.chr1
+   DEFINE l_i           LIKE type_t.num5
+   
+   FOR l_i=1 TO g_glfb_d.getLength()
+       LET g_glfb_d[l_i].chk=p_type
+   END FOR
+END FUNCTION]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[DEFINE g_glfa                RECORD LIKE glfa_t.*
+DEFINE g_str                 STRING
+DEFINE g_glfb                DYNAMIC ARRAY OF RECORD
+       glfbseq               LIKE glfb_t.glfbseq,
+       glfbseq1              LIKE glfb_t.glfbseq1
+       END RECORD
+DEFINE dis_x                 DYNAMIC ARRAY OF STRING
+DEFINE g_flag                LIKE type_t.num5
+DEFINE g_glfbseq             LIKE glfb_t.glfbseq
+DEFINE g_glfbseq1            LIKE glfb_t.glfbseq1
+DEFINE g_wc                  STRING]]>
+</point>
+  <point name="input.a.glfc001" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_glfb_m.glfc001) THEN
+               CALL agli070_01_glfc001_chk(g_glfb_m.glfc001)
+               IF NOT cl_null(g_errno) THEN
+                  CALL cl_err('',g_errno,0)
+                  NEXT FIELD glfc001
+               END IF
+               CALL agli070_01_b_fill()
+#               IF g_glfb_m.glfb004='1' AND g_flag=TRUE THEN
+#                  IF NOT cl_null(g_glfb_m.glfc009) AND g_glfb_m.glfc009 MATCHES '[1234]' THEN
+#                     CASE g_glfb_m.glfc009
+#                       WHEN '1' LET l_str1='+'
+#                       WHEN '2' LET l_str1='-'
+#                       WHEN '3' LET l_str1='*'
+#                       WHEN '4' LET l_str1='/'
+#                       WHEN '5' LET l_str1='('
+#                       WHEN '6' LET l_str1=')'
+#                    END CASE
+#                     LET g_str=cl_replace_str(g_str,"|",l_str1)
+#                     LET g_glfb_m.glfb005=g_glfb_m.glfb005 CLIPPED,g_str
+#                     LET l_num = l_num + 1
+#                     LET dis_x[l_num] = g_str
+#                  END IF
+#               ELSE
+#                  LET g_glfb_m.glfb005=g_glfb_m.glfb005,g_glfb_m.glfc001
+#                  LET l_num = l_num + 1
+#                  LET dis_x[l_num] = g_glfb_m.glfc001                  
+#               END IF
+               DISPLAY BY NAME g_glfb_m.glfb005
+            END IF]]>
+</point>
+  <point name="input.a.glfc009" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="input.a.page1.glfb001" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_glfb_m.glfb001 IS NOT NULL AND g_glfb_m.glfbseq IS NOT NULL AND g_glfb_m.glfbseq1 IS NOT NULL AND g_glfb_d[g_detail_idx].glfb001 IS NOT NULL AND g_glfb_d[g_detail_idx].glfbseq IS NOT NULL AND g_glfb_d[g_detail_idx].glfbseq1 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_glfb_m.glfb001 != g_glfb001_t OR g_glfb_m.glfbseq != g_glfbseq_t OR g_glfb_m.glfbseq1 != g_glfbseq1_t OR g_glfb_d[g_detail_idx].glfb001 != g_glfb_d_t.glfb001 OR g_glfb_d[g_detail_idx].glfbseq != g_glfb_d_t.glfbseq OR g_glfb_d[g_detail_idx].glfbseq1 != g_glfb_d_t.glfbseq1)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glfb_t WHERE "||"glfbent = '" ||g_enterprise|| "' AND "||"glfb001 = '"||g_glfb_m.glfb001 ||"' AND "|| "glfbseq = '"||g_glfb_m.glfbseq ||"' AND "|| "glfbseq1 = '"||g_glfb_m.glfbseq1 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page1.glfbseq" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+#            IF  g_glfb_m.glfb001 IS NOT NULL AND g_glfb_m.glfbseq IS NOT NULL AND g_glfb_m.glfbseq1 IS NOT NULL AND g_glfb_d[g_detail_idx].glfb001 IS NOT NULL AND g_glfb_d[g_detail_idx].glfbseq IS NOT NULL AND g_glfb_d[g_detail_idx].glfbseq1 IS NOT NULL THEN 
+#               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_glfb_m.glfb001 != g_glfb001_t OR g_glfb_m.glfbseq != g_glfbseq_t OR g_glfb_m.glfbseq1 != g_glfbseq1_t OR g_glfb_d[g_detail_idx].glfb001 != g_glfb_d_t.glfb001 OR g_glfb_d[g_detail_idx].glfbseq != g_glfb_d_t.glfbseq OR g_glfb_d[g_detail_idx].glfbseq1 != g_glfb_d_t.glfbseq1)) THEN 
+#                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glfb_t WHERE "||"glfbent = '" ||g_enterprise|| "' AND "||"glfb001 = '"||g_glfb_m.glfb001 ||"' AND "|| "glfbseq = '"||g_glfb_m.glfbseq ||"' AND "|| "glfbseq1 = '"||g_glfb_m.glfbseq1 ||"'",'std-00004',0) THEN 
+#                     NEXT FIELD CURRENT
+#                  END IF
+#               END IF
+#            END IF
+
+]]>
+</point>
+  <point name="input.a.page1.glfbseq1" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+#            IF  g_glfb_m.glfb001 IS NOT NULL AND g_glfb_m.glfbseq IS NOT NULL AND g_glfb_m.glfbseq1 IS NOT NULL AND g_glfb_d[g_detail_idx].glfb001 IS NOT NULL AND g_glfb_d[g_detail_idx].glfbseq IS NOT NULL AND g_glfb_d[g_detail_idx].glfbseq1 IS NOT NULL THEN 
+#               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_glfb_m.glfb001 != g_glfb001_t OR g_glfb_m.glfbseq != g_glfbseq_t OR g_glfb_m.glfbseq1 != g_glfbseq1_t OR g_glfb_d[g_detail_idx].glfb001 != g_glfb_d_t.glfb001 OR g_glfb_d[g_detail_idx].glfbseq != g_glfb_d_t.glfbseq OR g_glfb_d[g_detail_idx].glfbseq1 != g_glfb_d_t.glfbseq1)) THEN 
+#                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM glfb_t WHERE "||"glfbent = '" ||g_enterprise|| "' AND "||"glfb001 = '"||g_glfb_m.glfb001 ||"' AND "|| "glfbseq = '"||g_glfb_m.glfbseq ||"' AND "|| "glfbseq1 = '"||g_glfb_m.glfbseq1 ||"'",'std-00004',0) THEN 
+#                     NEXT FIELD CURRENT
+#                  END IF
+#               END IF
+#            END IF
+
+]]>
+</point>
+  <point name="input.after_input" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="input.b.glfb004" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            IF cl_null(g_glfb_m.glfb004) THEN
+               LET g_glfb_m.glfb004='2'
+               CALL cl_set_comp_visible("glfcl001,glfcl003",TRUE)
+               CALL cl_set_comp_visible("glfbseq,glfbseq1,glfbl004",FALSE)
+               DISPLAY BY NAME g_glfb_m.glfb004
+               CALL agli070_01_b_fill()
+            END IF]]>
+</point>
+  <point name="input.b.glfb005" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            LET l_glfb005_o = g_glfb_m.glfb005]]>
+</point>
+  <point name="input.b.glfc001" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="input.before_close" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   IF INT_FLAG THEN
+      LET INT_FLAG=FALSE
+      SELECT glfb004,glfb005 INTO g_glfb_m.glfb004,g_glfb_m.glfb005
+        FROM glfb_t
+       WHERE glfbent=g_enterprise AND glfb001=g_glfa.glfa001
+         AND glfbseq=p_glfbseq    AND glfbseq1=p_glfbseq1
+   END IF]]>
+</point>
+  <point name="input.before_input" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="input.c.glfc001" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.default1 = g_glfb_m.glfc001      #給予default值
+            #本報表設定公式
+            IF g_glfb_m.glfb004='2' THEN
+               LET g_qryparam.where =" glfc002='",g_glfa.glfa004,"'"
+               CALL q_glfc001()                                #呼叫開窗
+            ELSE
+               #表內項目
+               LET g_qryparam.default2 = g_glfbseq1
+               LET g_qryparam.where = " glfb001='",g_glfa.glfa001,"' AND glfbseq1='",p_glfbseq1,"'"
+               CALL q_glfb()  
+            END IF
+            LET g_glfb_m.glfc001 = g_qryparam.return1 
+            DISPLAY g_glfb_m.glfc001 TO glfc001  
+            NEXT FIELD glfc001                          #返回原欄位]]>
+</point>
+  <point name="input.define" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   DEFINE p_glfa001       LIKE glfa_t.glfa001
+   DEFINE p_glfbseq       LIKE glfb_t.glfbseq
+   DEFINE p_glfbseq1      LIKE glfb_t.glfbseq1
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_str,l_str1    STRING
+   DEFINE l_str2          STRING
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_num,l_num1    LIKE type_t.num5
+   DEFINE l_glfb005_o     LIKE glfb_t.glfb005
+   DEFINE l_glfa007       LIKE glfa_t.glfa007]]>
+</point>
+  <point name="input.g.glfb004" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            IF g_glfb_m.glfb004='1' THEN
+               CALL cl_set_comp_visible("glfcl001,glfcl003",FALSE)
+               CALL cl_set_comp_visible("glfbseq,glfbseq1,glfbl004",TRUE)
+            ELSE
+               CALL cl_set_comp_visible("glfcl001,glfcl003",TRUE)
+               CALL cl_set_comp_visible("glfbseq,glfbseq1,glfbl004",FALSE)
+            END IF
+            CALL agli070_01_b_fill()]]>
+</point>
+  <point name="input.g.glfb005" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            IF g_glfb_m.glfb004='1' THEN
+               LET l_str=g_glfbseq1,g_glfbseq USING '<<'
+               LET l_str1=g_glfb_m.glfb005
+               IF l_str1.getIndexOf(l_str,1)>0 THEN
+                  LET g_glfb_m.glfb005=l_glfb005_o
+                  CALL cl_err('','agl-00254',0)
+                  NEXT FIELD glfb005
+               END IF
+            END IF            ]]>
+</point>
+  <point name="input.g.glfc001" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            ]]>
+</point>
+  <point name="input.g.glfc009" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_glfb_m.glfc009) THEN
+               CASE g_glfb_m.glfc009
+                  WHEN '1' LET l_str1='+'
+                  WHEN '2' LET l_str1='-'
+                  WHEN '3' LET l_str1='*'
+                  WHEN '4' LET l_str1='/'
+                  WHEN '5' LET l_str1='('
+                  WHEN '6' LET l_str1=')'
+               END CASE
+                  
+               IF g_glfb_m.glfb004='1' AND g_flag=TRUE THEN
+                  IF cl_null(g_glfb_m.glfb005) AND g_glfb_m.glfc009 MATCHES '[1234]' THEN
+                     LET g_str=cl_replace_str(g_str,"|",l_str1)
+                     LET g_glfb_m.glfb005=g_glfb_m.glfb005 CLIPPED,g_str,l_str1
+                     LET l_num = l_num + 1
+                     LET dis_x[l_num] = g_str,l_str1
+                  END IF
+               ELSE
+                  LET g_glfb_m.glfb005=g_glfb_m.glfb005,l_str1 
+                  LET l_num = l_num + 1
+                  LET dis_x[l_num] = l_str1           
+               END IF
+               DISPLAY BY NAME g_glfb_m.glfb005
+               LET g_glfb_m.glfc001=''
+               DISPLAY BY NAME g_glfb_m.glfc001
+            END IF   ]]>
+</point>
+  <point name="input.get_var" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   p_glfa001,p_glfbseq,p_glfbseq1]]>
+</point>
+  <point name="input.head.before_input" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="input.more_input" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[      CONSTRUCT BY NAME g_wc ON glfc001
+         BEFORE CONSTRUCT
+         
+         ON ACTION controlp INFIELD glfc001
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            IF g_glfb_m.glfb004='2' THEN
+               #報表設定公式
+               CALL q_glfc001()
+            ELSE
+               #表內公式
+               CALL q_glfb()
+            END IF               
+            DISPLAY g_qryparam.return1 TO glfc001 
+            NEXT FIELD glfc001
+            
+      END CONSTRUCT 
+      
+      ON ACTION calculate
+         IF cl_null(g_glfb_m.glfb005) AND NOT cl_null(g_glfb_m.glfc001) THEN
+            LET g_glfb_m.glfb005=g_glfb_m.glfc001
+         END IF
+         LET l_str=g_glfb_m.glfb005
+         LET l_str1=l_str.substring(l_str.getLength(),l_str.getLength())
+         IF l_str1 MATCHES '[\\+\\-\\*\\/]' OR l_str1='-' THEN
+            LET l_str=l_str.substring(1,l_str.getLength()-1)
+            LET g_glfb_m.glfb005=l_str
+         END IF
+         IF g_glfa.glfa002='1' OR g_glfa.glfa002='3' THEN
+            IF p_glfbseq1='A' OR p_glfbseq1='C' THEN
+               LET l_glfa007=0
+            ELSE
+               LET l_glfa007=g_glfa.glfa007
+            END IF
+                              #帳別          #年度           #起始期別  #截止期別       #小數位數       #單位            
+            CALL s_analy_form(g_glfa.glfa005,g_glfa.glfa006,l_glfa007,l_glfa007,g_glfa.glfa009,g_glfa.glfa008,
+                              #報表模板編號   #取數公式來源     #計算公式
+                              g_glfa.glfa001,g_glfb_m.glfb004,g_glfb_m.glfb005)
+            RETURNING l_success,g_glfb_m.amt
+         ELSE
+            IF p_glfbseq1='A' THEN
+                                    #帳別          #年度           #起始期別       #截止期別       #小數位數       #單位            
+               CALL s_analy_form(g_glfa.glfa005,g_glfa.glfa010,g_glfa.glfa011,g_glfa.glfa012,g_glfa.glfa009,g_glfa.glfa008,
+                                 #報表模板編號   #取數公式來源     #計算公式
+                                 g_glfa.glfa001,g_glfb_m.glfb004,g_glfb_m.glfb005)
+               RETURNING l_success,g_glfb_m.amt
+            ELSE
+                                 #帳別          #年度           #起始期別       #截止期別       #小數位數       #單位            
+               CALL s_analy_form(g_glfa.glfa005,g_glfa.glfa013,g_glfa.glfa014,g_glfa.glfa015,g_glfa.glfa009,g_glfa.glfa008,
+                                 #報表模板編號   #取數公式來源     #計算公式
+                                 g_glfa.glfa001,g_glfb_m.glfb004,g_glfb_m.glfb005)
+               RETURNING l_success,g_glfb_m.amt
+            END IF
+         END IF
+         LET g_glfb_m.glfc001=''
+         DISPLAY BY NAME g_glfb_m.glfc001,g_glfb_m.glfb005,g_glfb_m.amt
+      
+      #導入右邊公式
+      ON ACTION add_col
+         CALL agli070_01_get_formula('1') RETURNING l_str
+         LET g_glfb_m.glfb005=g_glfb_m.glfb005,l_str
+         LET l_num = l_num + 1
+         LET dis_x[l_num] = l_str
+         CALL agli070_01_check('N')
+         
+      #+
+      ON ACTION plus
+         CALL agli070_01_get_formula('2') RETURNING l_str
+         LET g_glfb_m.glfb005=g_glfb_m.glfb005,l_str
+         LET l_num = l_num + 1
+         LET dis_x[l_num] = l_str
+         CALL agli070_01_check('N')
+         
+      #-
+      ON ACTION minus
+         CALL agli070_01_get_formula('3') RETURNING l_str
+         LET g_glfb_m.glfb005=g_glfb_m.glfb005,l_str
+         LET l_num = l_num + 1
+         LET dis_x[l_num] = l_str
+         CALL agli070_01_check('N')
+         
+      #*
+      ON ACTION multiply
+         CALL agli070_01_get_formula('4') RETURNING l_str
+         LET g_glfb_m.glfb005=g_glfb_m.glfb005,l_str
+         LET l_num = l_num + 1
+         LET dis_x[l_num] = l_str
+         CALL agli070_01_check('N')
+         
+      #/
+      ON ACTION division
+         CALL agli070_01_get_formula('5') RETURNING l_str
+         LET g_glfb_m.glfb005=g_glfb_m.glfb005,l_str
+         LET l_num = l_num + 1
+         LET dis_x[l_num] = l_str
+         CALL agli070_01_check('N')
+         
+      #(
+      ON ACTION left
+         CALL agli070_01_get_formula('6') RETURNING l_str
+         LET g_glfb_m.glfb005=g_glfb_m.glfb005,l_str
+         LET l_num = l_num + 1
+         LET dis_x[l_num] = l_str
+         CALL agli070_01_check('N')
+         
+      #)
+      ON ACTION right
+         CALL agli070_01_get_formula('7') RETURNING l_str
+         LET g_glfb_m.glfb005=g_glfb_m.glfb005,l_str
+         LET l_num = l_num + 1
+         LET dis_x[l_num] = l_str
+         CALL agli070_01_check('N')
+      
+      #取消上步操作
+      ON ACTION del_col
+         IF l_num = 0 THEN
+         ELSE
+            LET l_str1 = dis_x[l_num]
+            LET l_str = g_glfb_m.glfb005
+            LET l_num1 = l_str.getLength() - l_str1.getLength()
+            LET g_glfb_m.glfb005 = l_str.substring(1,l_num1)
+            LET l_num = l_num - 1
+            DISPLAY BY NAME g_glfb_m.glfb005 
+         END IF
+      
+      ON ACTION search
+         CALL agli070_01_b_fill()
+         
+      ON ACTION check_all
+         CALL agli070_01_check('Y')
+         
+      ON ACTION check_none
+         CALL agli070_01_check('N')]]>
+</point>
+  <point name="input.post_input" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   LET l_str=g_glfb_m.glfb005
+   LET l_str1=l_str.substring(l_str.getLength(),l_str.getLength())
+   IF l_str1 MATCHES '[\\+\\-\\*\\/\\(\\)]' OR l_str1='-' THEN
+      LET l_str=l_str.substring(1,l_str.getLength()-1)
+      LET g_glfb_m.glfb005=l_str
+   END IF
+   IF g_glfa.glfa002='1' OR g_glfa.glfa002='3' THEN
+      IF p_glfbseq1='A' OR p_glfbseq1='C' THEN
+         LET l_glfa007=0
+      ELSE
+         LET l_glfa007=g_glfa.glfa007
+      END IF
+                        #帳別          #年度           #起始期別  #截止期別      #小數位數       #單位            
+      CALL s_analy_form(g_glfa.glfa005,g_glfa.glfa006,l_glfa007,l_glfa007,g_glfa.glfa009,g_glfa.glfa008,
+                        #報表模板編號   #取數公式來源     #計算公式
+                        g_glfa.glfa001,g_glfb_m.glfb004,g_glfb_m.glfb005)
+      RETURNING l_success,g_glfb_m.amt
+   ELSE
+       #本期數
+       IF p_glfbseq1='A' THEN
+                               #帳別          #年度           #起始期別       #截止期別       #小數位數       #單位            
+          CALL s_analy_form(g_glfa.glfa005,g_glfa.glfa010,g_glfa.glfa011,g_glfa.glfa012,g_glfa.glfa009,g_glfa.glfa008,
+                            #報表模板編號   #取數公式來源     #計算公式
+                            g_glfa.glfa001,g_glfb_m.glfb004,g_glfb_m.glfb005)
+          RETURNING l_success,g_glfb_m.amt
+       ELSE #上期數
+                            #帳別          #年度           #起始期別       #截止期別       #小數位數       #單位            
+          CALL s_analy_form(g_glfa.glfa005,g_glfa.glfa013,g_glfa.glfa014,g_glfa.glfa015,g_glfa.glfa009,g_glfa.glfa008,
+                            #報表模板編號   #取數公式來源     #計算公式
+                            g_glfa.glfa001,g_glfb_m.glfb004,g_glfb_m.glfb005)
+          RETURNING l_success,g_glfb_m.amt
+       END IF 
+   END IF
+   RETURN g_glfb_m.glfb004,g_glfb_m.glfb005,g_glfb_m.amt]]>
+</point>
+  <point name="input.pre_input" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   LET g_glfbseq=p_glfbseq
+   LET g_glfbseq1=p_glfbseq1
+   INITIALIZE g_glfb_m.* TO NULL
+   SELECT glfa_t.* INTO g_glfa.* FROM glfa_t
+   WHERE glfaent=g_enterprise AND glfa001=p_glfa001
+   IF g_glfbseq1='A' OR g_glfbseq1='C' THEN
+      LET g_glfa.glfa007=0
+   END IF
+   CALL cl_set_combo_scc('glfb004','9935')
+   LET g_flag=FALSE
+   LET l_num=0
+   LET l_num1=0
+   SELECT glfb004,glfb005 INTO g_glfb_m.glfb004,g_glfb_m.glfb005 
+   FROM glfb_t
+   WHERE glfbent=g_enterprise AND glfb001=p_glfa001
+   AND glfbseq=g_glfbseq AND glfbseq1=g_glfbseq1
+   DISPLAY BY NAME g_glfb_m.glfb004,g_glfb_m.glfb005
+   IF NOT cl_null(g_glfb_m.glfb005) THEN
+      LET l_num = l_num + 1
+      LET dis_x[l_num] = g_glfb_m.glfb005
+   END IF
+   IF cl_null(g_glfb_m.glfb004) THEN
+      LET g_glfb_m.glfb004='2'
+   END IF
+   IF g_glfb_m.glfb004='2' THEN
+      CALL cl_set_comp_visible("glfcl001,glfcl003",TRUE)
+      CALL cl_set_comp_visible("glfbseq,glfbseq1,glfbl004",FALSE)
+   ELSE
+      CALL cl_set_comp_visible("glfcl001,glfcl003",FALSE)
+      CALL cl_set_comp_visible("glfbseq,glfbseq1,glfbl004",TRUE)
+   END IF
+   CALL agli070_01_b_fill()]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.head.action" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.glfb004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.glfb005" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.amt" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.amt" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.amt" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.glfb004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.glfb005" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.amt" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.head.after_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.body.action" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.body.before_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.chk" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.chk" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.chk" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.glfbseq" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.glfbseq" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.glfbseq1" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.glfbseq1" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.glfb002" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.glfb002" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.glfb002" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.glfbl004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.glfbl004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.glfbl004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.glfb003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.glfb003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.glfb003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.glfcl001" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.glfcl001" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.glfcl001" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.glfcl003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.glfcl003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.glfcl003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.chk" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.glfbseq" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.glfbseq1" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.glfb002" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.glfbl004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.glfb003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.glfcl001" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.glfcl003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.body.after_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <section id="agli070_01.description" ver="115" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000133
+#+ 
+#+ Filename...: agli070_01
+#+ Description: ...
+#+ Creator....: 02599(2014/05/13)
+#+ Modifier...: 02599(2014/05/20)
+#+ Buildtype..: 應用 c03b 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="agli070_01.global" ver="7" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_glfb_m        RECORD
+       glfb004 LIKE glfb_t.glfb004, 
+   glfc001 LIKE type_t.chr80, 
+   glfb005 LIKE glfb_t.glfb005, 
+   amt LIKE type_t.chr80
+       END RECORD
+DEFINE g_glfb_m        type_g_glfb_m
+ 
+   
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_glfb_d        RECORD
+       chk LIKE type_t.chr80, 
+   glfbseq LIKE type_t.chr80, 
+   glfbseq1 LIKE type_t.chr80, 
+   glfb002 LIKE type_t.chr80, 
+   glfbl004 LIKE type_t.chr80, 
+   glfb003 LIKE type_t.chr80, 
+   glfcl001 LIKE type_t.chr80, 
+   glfcl003 LIKE type_t.chr80
+       END RECORD
+ 
+ 
+DEFINE g_glfb_d          DYNAMIC ARRAY OF type_g_glfb_d
+DEFINE g_glfb_d_t        type_g_glfb_d
+ 
+ 
+DEFINE g_glfb001_t   LIKE glfb_t.glfb001    #Key值備份
+DEFINE g_glfbseq_t      LIKE glfb_t.glfbseq    #Key值備份
+DEFINE g_glfbseq1_t      LIKE glfb_t.glfbseq1    #Key值備份
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num5  
+DEFINE l_ac                  LIKE type_t.num5
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+       
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="agli070_01.input" ver="7" status="" src="s">
+<![CDATA[#+ 資料輸入
+PUBLIC FUNCTION agli070_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_agli070_01 WITH FORM cl_ap_formpath("agl","agli070_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      INPUT BY NAME g_glfb_m.glfb004,g_glfb_m.glfb005,g_glfb_m.amt ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.head.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.head.before_input"/>}
+            #end add-point
+          
+         #---------------------------<  Master  >---------------------------
+         #----<<glfb004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glfb004
+            #add-point:BEFORE FIELD glfb004
+            {<point name="input.b.glfb004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glfb004
+            
+            #add-point:AFTER FIELD glfb004
+            {<point name="input.a.glfb004" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glfb004
+            #add-point:ON CHANGE glfb004
+            {<point name="input.g.glfb004" />}
+            #END add-point
+ 
+         #----<<glfc001>>----
+         #----<<glfb005>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glfb005
+            #add-point:BEFORE FIELD glfb005
+            {<point name="input.b.glfb005" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glfb005
+            
+            #add-point:AFTER FIELD glfb005
+            {<point name="input.a.glfb005" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glfb005
+            #add-point:ON CHANGE glfb005
+            {<point name="input.g.glfb005" />}
+            #END add-point
+ 
+         #----<<amt>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD amt
+            #add-point:BEFORE FIELD amt
+            {<point name="input.b.amt" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD amt
+            
+            #add-point:AFTER FIELD amt
+            {<point name="input.a.amt" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE amt
+            #add-point:ON CHANGE amt
+            {<point name="input.g.amt" />}
+            #END add-point
+ 
+ #欄位檢查
+         #---------------------------<  Master  >---------------------------
+         #----<<glfb004>>----
+         #Ctrlp:input.c.glfb004
+         ON ACTION controlp INFIELD glfb004
+            #add-point:ON ACTION controlp INFIELD glfb004
+            {<point name="input.c.glfb004" />}
+            #END add-point
+ 
+         #----<<glfc001>>----
+         #----<<glfb005>>----
+         #Ctrlp:input.c.glfb005
+         ON ACTION controlp INFIELD glfb005
+            #add-point:ON ACTION controlp INFIELD glfb005
+            {<point name="input.c.glfb005" />}
+            #END add-point
+ 
+         #----<<amt>>----
+         #Ctrlp:input.c.amt
+         ON ACTION controlp INFIELD amt
+            #add-point:ON ACTION controlp INFIELD amt
+            {<point name="input.c.amt" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.head.after_input"/>}
+            #end add-point
+            
+      END INPUT
+   
+      INPUT ARRAY g_glfb_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.body.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            {<point name="input.body.before_input"/>}
+            #end add-point
+          
+         #---------------------<  Detail: page1  >---------------------
+         #----<<chk>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD chk
+            #add-point:BEFORE FIELD chk
+            {<point name="input.b.page1.chk" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD chk
+            
+            #add-point:AFTER FIELD chk
+            {<point name="input.a.page1.chk" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE chk
+            #add-point:ON CHANGE chk
+            {<point name="input.g.page1.chk" />}
+            #END add-point
+ 
+         #----<<glfbseq>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glfbseq
+            #add-point:BEFORE FIELD glfbseq
+            {<point name="input.b.page1.glfbseq" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glfbseq
+            
+            #add-point:AFTER FIELD glfbseq
+            {<point name="input.a.page1.glfbseq" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glfbseq
+            #add-point:ON CHANGE glfbseq
+            {<point name="input.g.page1.glfbseq" />}
+            #END add-point
+ 
+         #----<<glfbseq1>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glfbseq1
+            #add-point:BEFORE FIELD glfbseq1
+            {<point name="input.b.page1.glfbseq1" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glfbseq1
+            
+            #add-point:AFTER FIELD glfbseq1
+            {<point name="input.a.page1.glfbseq1" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glfbseq1
+            #add-point:ON CHANGE glfbseq1
+            {<point name="input.g.page1.glfbseq1" />}
+            #END add-point
+ 
+         #----<<glfb002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glfb002
+            #add-point:BEFORE FIELD glfb002
+            {<point name="input.b.page1.glfb002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glfb002
+            
+            #add-point:AFTER FIELD glfb002
+            {<point name="input.a.page1.glfb002" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glfb002
+            #add-point:ON CHANGE glfb002
+            {<point name="input.g.page1.glfb002" />}
+            #END add-point
+ 
+         #----<<glfbl004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glfbl004
+            #add-point:BEFORE FIELD glfbl004
+            {<point name="input.b.page1.glfbl004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glfbl004
+            
+            #add-point:AFTER FIELD glfbl004
+            {<point name="input.a.page1.glfbl004" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glfbl004
+            #add-point:ON CHANGE glfbl004
+            {<point name="input.g.page1.glfbl004" />}
+            #END add-point
+ 
+         #----<<glfb003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glfb003
+            #add-point:BEFORE FIELD glfb003
+            {<point name="input.b.page1.glfb003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glfb003
+            
+            #add-point:AFTER FIELD glfb003
+            {<point name="input.a.page1.glfb003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glfb003
+            #add-point:ON CHANGE glfb003
+            {<point name="input.g.page1.glfb003" />}
+            #END add-point
+ 
+         #----<<glfcl001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glfcl001
+            #add-point:BEFORE FIELD glfcl001
+            {<point name="input.b.page1.glfcl001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glfcl001
+            
+            #add-point:AFTER FIELD glfcl001
+            {<point name="input.a.page1.glfcl001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glfcl001
+            #add-point:ON CHANGE glfcl001
+            {<point name="input.g.page1.glfcl001" />}
+            #END add-point
+ 
+         #----<<glfcl003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD glfcl003
+            #add-point:BEFORE FIELD glfcl003
+            {<point name="input.b.page1.glfcl003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD glfcl003
+            
+            #add-point:AFTER FIELD glfcl003
+            {<point name="input.a.page1.glfcl003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE glfcl003
+            #add-point:ON CHANGE glfcl003
+            {<point name="input.g.page1.glfcl003" />}
+            #END add-point
+ 
+ 
+         #---------------------<  Detail: page1  >---------------------
+         #----<<chk>>----
+         #Ctrlp:input.c.page1.chk
+         ON ACTION controlp INFIELD chk
+            #add-point:ON ACTION controlp INFIELD chk
+            {<point name="input.c.page1.chk" />}
+            #END add-point
+ 
+         #----<<glfbseq>>----
+         #Ctrlp:input.c.page1.glfbseq
+         ON ACTION controlp INFIELD glfbseq
+            #add-point:ON ACTION controlp INFIELD glfbseq
+            {<point name="input.c.page1.glfbseq" />}
+            #END add-point
+ 
+         #----<<glfbseq1>>----
+         #Ctrlp:input.c.page1.glfbseq1
+         ON ACTION controlp INFIELD glfbseq1
+            #add-point:ON ACTION controlp INFIELD glfbseq1
+            {<point name="input.c.page1.glfbseq1" />}
+            #END add-point
+ 
+         #----<<glfb002>>----
+         #Ctrlp:input.c.page1.glfb002
+         ON ACTION controlp INFIELD glfb002
+            #add-point:ON ACTION controlp INFIELD glfb002
+            {<point name="input.c.page1.glfb002" />}
+            #END add-point
+ 
+         #----<<glfbl004>>----
+         #Ctrlp:input.c.page1.glfbl004
+         ON ACTION controlp INFIELD glfbl004
+            #add-point:ON ACTION controlp INFIELD glfbl004
+            {<point name="input.c.page1.glfbl004" />}
+            #END add-point
+ 
+         #----<<glfb003>>----
+         #Ctrlp:input.c.page1.glfb003
+         ON ACTION controlp INFIELD glfb003
+            #add-point:ON ACTION controlp INFIELD glfb003
+            {<point name="input.c.page1.glfb003" />}
+            #END add-point
+ 
+         #----<<glfcl001>>----
+         #Ctrlp:input.c.page1.glfcl001
+         ON ACTION controlp INFIELD glfcl001
+            #add-point:ON ACTION controlp INFIELD glfcl001
+            {<point name="input.c.page1.glfcl001" />}
+            #END add-point
+ 
+         #----<<glfcl003>>----
+         #Ctrlp:input.c.page1.glfcl003
+         ON ACTION controlp INFIELD glfcl003
+            #add-point:ON ACTION controlp INFIELD glfcl003
+            {<point name="input.c.page1.glfcl003" />}
+            #END add-point
+ 
+ 
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.body.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_agli070_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+</section>
+  <section id="agli070_01.other_dialog" ver="1" status="" src="s">
+<![CDATA[{<point name="other.dialog"/>}
+]]>
+</section>
+  <section id="agli070_01.other_function" ver="1" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+</add_points>

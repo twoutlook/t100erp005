@@ -1,0 +1,1019 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="aist310_04" std_prog="aist310_04" erpver="1.0" module="AIS" ver="1" env="s" zone="t10dev" normal_style="N" booking="Y">
+  <point name="input.a.isafcomp" order="0" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+]]>
+  </point>
+  <point name="input.a.isafdocno" order="0" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+
+]]>
+  </point>
+  <point name="function.aist310_04_xrca_ins" order="2" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+
+PRIVATE FUNCTION aist310_04_xrca_ins()
+   DEFINE l_glaald         LIKE glaa_t.glaald
+   DEFINE l_pmac002_1      LIKE pmac_t.pmac002
+   DEFINE l_pmac002_2      LIKE pmac_t.pmac002
+   DEFINE l_pmaa090        LIKE pmaa_t.pmaa090
+   DEFINE l_pmab087        LIKE pmab_t.pmab087
+   DEFINE l_ooef019        LIKE ooef_t.ooef019
+   DEFINE l_oodb005        LIKE oodb_t.oodb005
+   DEFINE l_pmab081        LIKE pmab_t.pmab081 
+   DEFINE l_ooag003        LIKE ooag_t.ooag003
+   DEFINE l_pmaa008        LIKE pmaa_t.pmaa008
+   DEFINE l_pmaa047        LIKE pmaa_t.pmaa047
+   DEFINE l_ooag004        LIKE ooag_t.ooag004
+   DEFINE l_glaa016        LIKE glaa_t.glaa016
+   DEFINE l_glaa018        LIKE glaa_t.glaa018
+   DEFINE l_ooan005_1      LIKE ooan_t.ooan005
+   DEFINE l_ooan005_2      LIKE ooan_t.ooan005
+   DEFINE l_glaa001        LIKE glaa_t.glaa001
+   DEFINE l_glaa002        LIKE glaa_t.glaa002
+   DEFINE l_glaa020        LIKE glaa_t.glaa020
+   DEFINE l_glaa022        LIKE glaa_t.glaa022
+   DEFINE l_pmabsite       LIKE pmab_t.pmabsite
+   
+   
+   #帳別/本位幣二 幣別/本位幣二匯率採用/使用幣別/匯率參照表號/本位幣三 幣別/本位幣三匯率採用
+   SELECT glaald,glaa016,glaa018,glaa001,glaa002,glaa020,glaa022 
+     INTO l_glaald,l_glaa016,l_glaa018,l_glaa001,l_glaa002,l_glaa020,l_glaa022
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaacomp = g_isaf.isafcomp
+      AND glaa014 = 'Y'
+      AND glaastus = 'Y'
+      
+   CASE 
+      WHEN l_glaa018 = '11'
+           SELECT ooan005 INTO l_ooan005_1
+             FROM ooan_t
+            WHERE  ooanent = g_enterprise
+              AND ooan001 = l_glaa002
+              AND ooan002 = g_isaf.isaf012
+              AND ooan003 = l_glaa002
+              AND ooan004 = g_isaf_m.isaf011
+              
+      WHEN l_glaa018 = '12'
+           SELECT ooan006 INTO l_ooan005_1
+             FROM ooan_t
+            WHERE ooanent = g_enterprise
+              AND ooan001 = l_glaa002
+              AND ooan002 = g_isaf.isaf012
+              AND ooan003 = l_glaa002
+              AND ooan004 = g_isaf_m.isaf011
+       
+      WHEN l_glaa018 = '13'
+           SELECT ooan007 INTO l_ooan005_1
+             FROM ooan_t
+            WHERE ooanent = g_enterprise
+              AND ooan001 = l_glaa002
+              AND ooan002 = g_isaf.isaf012
+              AND ooan003 = l_glaa002
+              AND ooan004 = g_isaf_m.isaf011
+      
+      WHEN l_glaa018 = '21'
+           SELECT ooan008 INTO l_ooan005_1
+             FROM ooan_t
+            WHERE ooanent = g_enterprise
+              AND ooan001 = l_glaa002
+              AND ooan002 = g_isaf.isaf012
+              AND ooan003 = l_glaa002
+              AND ooan004 = g_isaf_m.isaf011
+      
+      WHEN l_glaa018 = '22'  
+           SELECT ooan009 INTO l_ooan005_1
+             FROM ooan_t
+            WHERE ooanent = g_enterprise
+              AND ooan001 = l_glaa002
+              AND ooan002 = g_isaf.isaf012
+              AND ooan003 = l_glaa002
+              AND ooan004 = g_isaf_m.isaf011
+   END CASE
+   
+   CASE 
+      WHEN l_glaa022 = '11'
+           SELECT ooan005 INTO l_ooan005_2
+             FROM ooan_t
+            WHERE ooanent = g_enterprise
+              AND ooan001 = l_glaa002
+              AND ooan002 = g_isaf.isaf012
+              AND ooan003 = l_glaa002
+              AND ooan004 = g_isaf_m.isaf011
+              
+      WHEN l_glaa022 = '12'
+           SELECT ooan006 INTO l_ooan005_2
+             FROM ooan_t
+            WHERE ooanent = g_enterprise
+              AND ooan001 = l_glaa002
+              AND ooan002 = g_isaf.isaf012
+              AND ooan003 = l_glaa002
+              AND ooan004 = g_isaf_m.isaf011
+       
+      WHEN l_glaa022 = '13'
+           SELECT ooan007 INTO l_ooan005_2
+             FROM ooan_t
+            WHERE ooanent = g_enterprise
+              AND ooan001 = l_glaa002
+              AND ooan002 = g_isaf.isaf012
+              AND ooan003 = l_glaa002
+              AND ooan004 = g_isaf_m.isaf011 
+      
+      WHEN l_glaa022 = '21'
+           SELECT ooan008 INTO l_ooan005_2
+             FROM ooan_t
+            WHERE ooanent = g_enterprise
+              AND ooan001 = l_glaa002
+              AND ooan002 = g_isaf.isaf012
+              AND ooan003 = l_glaa002
+              AND ooan004 = g_isaf_m.isaf011
+      
+      WHEN l_glaa022 = '22'  
+           SELECT ooan009 INTO l_ooan005_2
+             FROM ooan_t
+            WHERE ooanent = g_enterprise
+              AND ooan001 = l_glaa002
+              AND ooan002 = g_isaf.isaf012
+              AND ooan003 = l_glaa002
+              AND ooan004 = g_isaf_m.isaf011
+   END CASE
+      
+   #收/付款對象   
+   SELECT pmac002 INTO l_pmac002_1
+     FROM pmac_t
+    WHERE pmacent = g_enterprise
+      AND pmac001 = g_isaf.isaf002
+      AND pmac003 = '1'
+      AND pmac004 = 'Y'
+      
+   #收票對象   
+   SELECT pmac002 INTO l_pmac002_2
+     FROM pmac_t
+    WHERE pmacent = g_enterprise
+      AND pmac001 = g_isaf.isaf002
+      AND pmac003 = '3'
+      AND pmac004 = 'Y'
+      
+   #客戶分類/發票客戶統一編號/關係人否
+   SELECT pmaa090,pmaa008,pmaa047 INTO l_pmaa090,l_pmaa008,l_pmaa047
+     FROM pmaa_t
+    WHERE pmaaent = g_enterprise
+      AND pmaa001 = g_isaf.isaf002
+      
+   #收款條件編號/人員編號
+   SELECT pmabsite INTO l_pmabsite
+     FROM pmab_t
+    WHERE pmabent = g_enterprise
+      AND pmabsite = g_isaf.isaf004
+      AND pmab001 = l_pmac002_1
+      
+   IF cl_null(l_pmabsite) THEN 
+      SELECT pmab087,pmab081 INTO l_pmab087,l_pmab081
+        FROM pmab_t
+       WHERE pmabent = g_enterprise
+         AND pmabsite = g_isaf.isafcomp
+         AND pmab001 = l_pmac002_1
+   ELSE
+      SELECT pmab087,pmab081 INTO l_pmab087,l_pmab081
+        FROM pmab_t
+       WHERE pmabent = g_enterprise
+         AND pmabsite = l_pmabsite
+         AND pmab001 = l_pmac002_1
+   END IF 
+      
+   #查出法人所屬稅區
+   SELECT ooef019 INTO l_ooef019
+     FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_isaf.isafcomp   
+      
+   #含稅否
+   SELECT oodb005 INTO l_oodb005
+     FROM oodb_t
+    WHERE oodbent = g_enterprise
+      AND oodb001 = l_ooef019
+      AND oodb002 = g_isaf.isaf012
+      
+   #部門編號
+   SELECT ooag003 INTO l_ooag003
+     FROM ooag_t 
+    WHERE ooagent = g_enterprise
+      AND ooag001 = l_pmab081   
+      
+   #來源營運中心代碼
+   SELECT ooag004 INTO l_ooag004
+     FROM ooag_t 
+    WHERE ooagent = g_enterprise
+      AND ooag001 = g_isaf.isaf005   
+      
+   
+   LET g_xrca.xrcaent = g_enterprise
+   LET g_xrca.xrcacomp = g_isaf.isafcomp
+   LET g_xrca.xrcald = l_glaald
+   LET g_xrca.xrcadocno = g_isaf_m.xrcadocno
+   LET g_xrca.xrcadocdt = g_isaf_m.isaf011
+   LET g_xrca.xrcastus = 'N'
+   LET g_xrca.xrca001 = '19'
+   LET g_xrca.xrcasite = g_isaf.isaf006
+   LET g_xrca.xrca003 = g_isaf.isaf005
+   LET g_xrca.xrca004 = g_isaf.isaf002
+   LET g_xrca.xrca005 = g_isaf.isaf002
+   LET g_xrca.xrca006 = l_pmaa090
+   LET g_xrca.xrca007 = g_isaf_m.xrca007
+   LET g_xrca.xrca008 = l_pmab087
+   LET g_xrca.xrca009 = g_today      #call 依ooci據點收付款條件計算應收款日／票到期日／分期帳款方式／繳款優惠條件 的應用元件 
+   LET g_xrca.xrca010 = g_today      #call 依ooci據點收付款條件計算應收款日／票到期日／分期帳款方式／繳款優惠條件 的應用元件
+   LET g_xrca.xrca011 = g_isaf.isaf012
+   LET g_xrca.xrca012 = g_isaf.isaf013
+   LET g_xrca.xrca013 = l_oodb005
+   LET g_xrca.xrca014 = l_pmab081
+   LET g_xrca.xrca015 = l_ooag003
+   LET g_xrca.xrca016 = 'aist310'
+   LET g_xrca.xrca017 = '1'
+   LET g_xrca.xrca018 = g_isaf.isafdocno
+   LET g_xrca.xrca019 = NULL
+   LET g_xrca.xrca020 = 'N'
+   LET g_xrca.xrca021 = NULL
+   LET g_xrca.xrca022 = NULL
+   LET g_xrca.xrca023 = g_isaf.isaf002
+   LET g_xrca.xrca024 = l_pmaa008
+   LET g_xrca.xrca025 = g_isaf.isaf016
+   LET g_xrca.xrca026 = g_isaf.isaf018
+   LET g_xrca.xrca027 = g_isaf.isaf009
+   LET g_xrca.xrca028 = g_isaf.isaf010
+   LET g_xrca.xrca029 = g_isaf.isaf015
+   LET g_xrca.xrca030 = g_isaf.isaf026
+   LET g_xrca.xrca031 = g_isaf.isaf027
+   LET g_xrca.xrca032 = g_isaf.isaf028
+   LET g_xrca.xrca033 = NULL
+   LET g_xrca.xrca034 = l_pmac002_1
+   LET g_xrca.xrca035 = NULL
+   LET g_xrca.xrca036 = NULL
+   LET g_xrca.xrca037 = 'Y'
+   LET g_xrca.xrca038 = NULL
+   LET g_xrca.xrca039 = 0
+   LET g_xrca.xrca040 = 'N'
+   LET g_xrca.xrca041 = NULL
+   LET g_xrca.xrca042 = NULL
+   LET g_xrca.xrca043 = NULL
+   LET g_xrca.xrca044 = 0
+   LET g_xrca.xrca045 = NULL
+   LET g_xrca.xrca046 = l_pmaa047
+   LET g_xrca.xrca047 = NULL
+   LET g_xrca.xrca048 = NULL
+   LET g_xrca.xrca049 = l_ooag004
+   LET g_xrca.xrca050 = 1
+   LET g_xrca.xrca051 = NULL
+   LET g_xrca.xrca052 = 0
+   LET g_xrca.xrca100 = g_isaf.isaf014
+   LET g_xrca.xrca101 = g_isaf.isaf015
+   LET g_xrca.xrca103 = g_isaf.isaf023
+   LET g_xrca.xrca104 = g_isaf.isaf024
+   LET g_xrca.xrca108 = g_isaf.isaf025
+   LET g_xrca.xrca113 = g_isaf.isaf026
+   LET g_xrca.xrca114 = g_isaf.isaf027
+   LET g_xrca.xrca118 = g_isaf.isaf028
+   LET g_xrca.xrca120 = l_glaa016
+   LET g_xrca.xrca121 = l_ooan005_1
+   LET g_xrca.xrca123 = g_isaf.isaf023 * l_ooan005_1
+   LET g_xrca.xrca124 = g_isaf.isaf024 * l_ooan005_1
+   LET g_xrca.xrca128 = g_xrca.xrca123 + g_xrca.xrca124
+   LET g_xrca.xrca130 = l_glaa020
+   LET g_xrca.xrca131 = l_ooan005_2
+   LET g_xrca.xrca133 = g_isaf.isaf023 * l_ooan005_2
+   LET g_xrca.xrca134 = g_isaf.isaf024 * l_ooan005_2
+   LET g_xrca.xrca138 = g_xrca.xrca133 + g_xrca.xrca134
+   
+   LET g_xrca.xrcaownid = g_user
+   LET g_xrca.xrcaowndp = g_dept
+   LET g_xrca.xrcacrtid = g_user
+   LET g_xrca.xrcacrtdp = g_dept 
+   LET g_xrca.xrcacrtdt = cl_get_current()
+   LET g_xrca.xrcamoddt = NULL
+   LET g_xrca.xrcacnfdt = NULL
+   LET g_xrca.xrcapstdt = NULL
+   
+   IF cl_null(g_xrca.xrcald) THEN 
+      CALL cl_errmsg('','','','ais-00037',1)
+      LET g_success = 'N'  
+      RETURN       
+   END IF 
+   IF cl_null(g_xrca.xrcadocno) THEN 
+      CALL cl_errmsg('','','','ais-00037',1)
+      LET g_success = 'N'  
+      RETURN       
+   END IF 
+   
+   INSERT INTO xrca_t VALUES(g_xrca.*)
+   IF SQLCA.SQLcode THEN
+      CALL cl_err("g_xrca",SQLCA.sqlcode,1)  
+      LET g_success = 'N'                            
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.aist310_04_xrcb_ins" order="3" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+
+PRIVATE FUNCTION aist310_04_xrcb_ins()
+   DEFINE l_ac    LIKE type_t.num5
+   
+   LET g_sql = "SELECT isahseq,isah001,isah002,isah003,isah004,isah005,isah006,isah007,isah008,",
+               "       isah009,isah010,isah011,isah012 ",
+               "  FROM isah_t ",
+               " WHERE isahent = '",g_enterprise,"'",
+               "   AND isahcomp = '",g_isaf.isafcomp,"'",
+               "   AND isahdocno = '",g_isaf.isafdocno,"'"
+   PREPARE isahstus_pre FROM g_sql
+   DECLARE isahstus_cur CURSOR FOR isahstus_pre
+   
+   LET l_ac = 1
+   FOREACH isahstus_cur INTO g_isah[l_ac].*
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      LET g_xrcb.xrcbent = g_enterprise
+      LET g_xrcb.xrcbld  = g_xrca.xrcald
+      LET g_xrcb.xrcbdocno = g_xrca.xrcadocno
+      LET g_xrcb.xrcbseq = g_isah[l_ac].isahseq
+      LET g_xrcb.xrcbsite = g_xrca.xrca049
+      LET g_xrcb.xrcb001 = 'aist310'
+      LET g_xrcb.xrcb002 = g_isaf.isafdocno
+      LET g_xrcb.xrcb003 = g_isah[l_ac].isahseq
+      LET g_xrcb.xrcb004 = g_isah[l_ac].isah001
+      LET g_xrcb.xrcb005 = g_isah[l_ac].isah002
+      LET g_xrcb.xrcb006 = g_isah[l_ac].isah003
+      LET g_xrcb.xrcb007 = g_isah[l_ac].isah004
+      LET g_xrcb.xrcb008 = NULL
+      LET g_xrcb.xrcblegl = NULL
+      LET g_xrcb.xrcb010 = g_xrca.xrca034
+      LET g_xrcb.xrcb011 = NULL
+      LET g_xrcb.xrcb012 = NULL
+      LET g_xrcb.xrcb013 = NULL
+      LET g_xrcb.xrcb014 = NULL
+      LET g_xrcb.xrcb015 = NULL
+      LET g_xrcb.xrcb016 = NULL
+      LET g_xrcb.xrcb017 = NULL
+      LET g_xrcb.xrcb018 = NULL
+      LET g_xrcb.xrcb019 = NULL
+      LET g_xrcb.xrcb101 = g_isah[l_ac].isah005
+      LET g_xrcb.xrcb103 = g_isah[l_ac].isah006
+      LET g_xrcb.xrcb104 = g_isah[l_ac].isah008
+      LET g_xrcb.xrcb105 = g_isah[l_ac].isah009
+      LET g_xrcb.xrcb106 = 0
+      LET g_xrcb.xrcb111 = g_isah[l_ac].isah005 * g_isaf.isaf015
+      LET g_xrcb.xrcb113 = g_isah[l_ac].isah010
+      LET g_xrcb.xrcb114 = g_isah[l_ac].isah011
+      LET g_xrcb.xrcb115 = g_isah[l_ac].isah012
+      LET g_xrcb.xrcb116 = 0
+      LET g_xrcb.xrcb117 = g_isah[l_ac].isah004
+      LET g_xrcb.xrcb123 = g_isah[l_ac].isah006 * g_xrca.xrca121
+      LET g_xrcb.xrcb124 = g_isah[l_ac].isah008 * g_xrca.xrca121
+      LET g_xrcb.xrcb125 = g_isah[l_ac].isah009 * g_xrca.xrca121
+      LET g_xrcb.xrcb126 = 0
+      LET g_xrcb.xrcb133 = g_isah[l_ac].isah006 * g_xrca.xrca131
+      LET g_xrcb.xrcb134 = g_isah[l_ac].isah008 * g_xrca.xrca131
+      LET g_xrcb.xrcb135 = g_isah[l_ac].isah009 * g_xrca.xrca131
+      LET g_xrcb.xrcb136 = 0
+      
+      IF cl_null(g_xrcb.xrcbld) THEN 
+         LET g_success = 'N'  
+         RETURN       
+      END IF 
+      IF cl_null(g_xrca.xrcadocno) THEN 
+         LET g_success = 'N'  
+         RETURN       
+      END IF 
+      
+      INSERT INTO xrcb_t VALUES(g_xrcb.*)
+      CALL aist310_04_xrcd_ins(l_ac)
+      IF SQLCA.SQLcode  THEN
+         CALL cl_err("g_xrcb",SQLCA.sqlcode,1)  
+         LET g_success = 'N'                        
+      END IF
+      IF g_success = 'N' THEN 
+         EXIT FOREACH
+      END IF 
+      LET l_ac = l_ac + 1
+   END FOREACH 
+END FUNCTION]]>
+  </point>
+  <point name="function.aist310_04_xrcc_ins" order="4" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+
+PRIVATE FUNCTION aist310_04_xrcc_ins()
+   DEFINE l_ac             LIKE type_t.num5
+   DEFINE l_ooib025        LIKE ooib_t.ooib025
+   DEFINE l_xrac003        LIKE xrac_t.xrac003
+   DEFINE l_xrac008        LIKE xrac_t.xrac008
+   
+   SELECT ooib025 INTO l_ooib025   
+     FROM ooib_t
+    WHERE ooibent = g_enterprise
+      AND ooib002 = g_xrca.xrca008
+   
+   IF cl_null(l_ooib025) THEN 
+      LET g_xrcc.xrccent = g_xrca.xrcaent
+      LET g_xrcc.xrccld  = g_xrca.xrcald
+      LET g_xrcc.xrcccomp  = g_xrca.xrcacomp
+      LET g_xrcc.xrccdocno  = g_xrca.xrcadocno
+      LET g_xrcc.xrccseq = 1
+      LET g_xrcc.xrcc001 = 1
+      LET g_xrcc.xrcc002 = 'aist310'
+      LET g_xrcc.xrcc003 = g_today     #call 多帳期計算應收款日及到期日元件;若無多帳期則 = xrca009
+      LET g_xrcc.xrcc004 = g_today     #call 多帳期計算應收款日及到期日元件;若無多帳期則 = xrca010
+      LET g_xrcc.xrcc100 = g_xrca.xrca100
+      LET g_xrcc.xrcc101 = g_xrca.xrca101  
+      LET g_xrcc.xrcc102 = NULL
+      LET g_xrcc.xrcc103 = g_xrca.xrca103 * 1
+      LET g_xrcc.xrcc104 = g_xrca.xrca104 * 1 
+      LET g_xrcc.xrcc105 = g_xrca.xrca103 + g_xrcc.xrcc104
+      LET g_xrcc.xrcc106 = 0
+      LET g_xrcc.xrcc107 = 0
+      LET g_xrcc.xrcc108 = g_xrcc.xrcc105
+      LET g_xrcc.xrcc109 = 0
+      LET g_xrcc.xrcc113 = g_xrca.xrca113 * 1
+      LET g_xrcc.xrcc114 = g_xrca.xrca114 * 1
+      LET g_xrcc.xrcc115 = g_xrcc.xrcc113 + g_xrcc.xrcc114
+      LET g_xrcc.xrcc116 = 0
+      LET g_xrcc.xrcc117 = 0
+      LET g_xrcc.xrcc118 = g_xrcc.xrcc115
+      LET g_xrcc.xrcc119 = 0
+      LET g_xrcc.xrcc120 = g_xrca.xrca120
+      LET g_xrcc.xrcc121 = g_xrca.xrca121  
+      LET g_xrcc.xrcc122 = NULL
+      LET g_xrcc.xrcc123 = g_xrca.xrca123 * 1
+      LET g_xrcc.xrcc124 = g_xrca.xrca124 * 1 
+      LET g_xrcc.xrcc125 = g_xrca.xrca123 + g_xrcc.xrcc124   
+      LET g_xrcc.xrcc126 = 0
+      LET g_xrcc.xrcc127 = 0
+      LET g_xrcc.xrcc128 = g_xrcc.xrcc125
+      LET g_xrcc.xrcc129 = 0
+      LET g_xrcc.xrcc130 = g_xrca.xrca130
+      LET g_xrcc.xrcc131 = g_xrca.xrca131
+      LET g_xrcc.xrcc132 = NULL
+      LET g_xrcc.xrcc133 = g_xrca.xrca133 * 1
+      LET g_xrcc.xrcc134 = g_xrca.xrca134 * 1
+      LET g_xrcc.xrcc135 = g_xrcc.xrcc133 + g_xrcc.xrcc134
+      LET g_xrcc.xrcc136 = 0
+      LET g_xrcc.xrcc137 = 0
+      LET g_xrcc.xrcc138 = g_xrcc.xrcc135
+      LET g_xrcc.xrcc139 = 0
+      
+      IF cl_null(g_xrcc.xrccld) THEN 
+         LET g_success = 'N'  
+         RETURN       
+      END IF 
+      
+      IF cl_null(g_xrcc.xrccdocno) THEN 
+         LET g_success = 'N'  
+         RETURN       
+      END IF 
+      
+      INSERT INTO xrcc_t VALUES(g_xrcc.*)
+      IF SQLCA.SQLcode  THEN
+         CALL cl_err("g_xrcc",SQLCA.sqlcode,1)  
+         LET g_success = 'N'                        
+      END IF
+   ELSE
+      LET g_sql = "SELECT xrac003,xrac008",
+                  "  FROM xrac_t ",
+                  " WHERE xracent = '",g_enterprise,"'",
+                  "   AND xrac001 = '3114'",
+                  "   AND xrac002 = '",l_ooib025,"'"
+      PREPARE xracstus_pre FROM g_sql
+      DECLARE xracstus_cur CURSOR FOR xracstus_pre
+   
+      LET l_ac = 1
+      FOREACH xracstus_cur INTO l_xrac003,l_xrac008
+         LET g_xrcc.xrccent = g_xrca.xrcaent
+         LET g_xrcc.xrccld  = g_xrca.xrcald
+         LET g_xrcc.xrcccomp  = g_xrca.xrcacomp
+         LET g_xrcc.xrccdocno  = g_xrca.xrcadocno
+         LET g_xrcc.xrccseq = l_xrac003
+         LET g_xrcc.xrcc001 = l_xrac003
+         LET g_xrcc.xrcc002 = 'aist310'
+         LET g_xrcc.xrcc003 = g_today     #call 多帳期計算應收款日及到期日元件;若無多帳期則 = xrca009
+         LET g_xrcc.xrcc004 = g_today     #call 多帳期計算應收款日及到期日元件;若無多帳期則 = xrca010
+         LET g_xrcc.xrcc100 = g_xrca.xrca100
+         LET g_xrcc.xrcc101 = g_xrca.xrca101  
+         LET g_xrcc.xrcc102 = NULL
+         LET g_xrcc.xrcc103 = g_xrca.xrca103 * l_xrac008
+         LET g_xrcc.xrcc104 = g_xrca.xrca104 * l_xrac008
+         LET g_xrcc.xrcc105 = g_xrca.xrca103 + g_xrcc.xrcc104
+         LET g_xrcc.xrcc106 = 0
+         LET g_xrcc.xrcc107 = 0
+         LET g_xrcc.xrcc108 = g_xrcc.xrcc105
+         LET g_xrcc.xrcc109 = 0
+         LET g_xrcc.xrcc113 = g_xrca.xrca113 * l_xrac008
+         LET g_xrcc.xrcc114 = g_xrca.xrca114 * l_xrac008
+         LET g_xrcc.xrcc115 = g_xrcc.xrcc113 + g_xrcc.xrcc114
+         LET g_xrcc.xrcc116 = 0
+         LET g_xrcc.xrcc117 = 0
+         LET g_xrcc.xrcc118 = g_xrcc.xrcc115
+         LET g_xrcc.xrcc119 = 0
+         LET g_xrcc.xrcc120 = g_xrca.xrca120
+         LET g_xrcc.xrcc121 = g_xrca.xrca121  
+         LET g_xrcc.xrcc122 = NULL
+         LET g_xrcc.xrcc123 = g_xrca.xrca123 * l_xrac008
+         LET g_xrcc.xrcc124 = g_xrca.xrca124 * l_xrac008
+         LET g_xrcc.xrcc125 = g_xrca.xrca123 + g_xrcc.xrcc124   
+         LET g_xrcc.xrcc126 = 0
+         LET g_xrcc.xrcc127 = 0
+         LET g_xrcc.xrcc128 = g_xrcc.xrcc125
+         LET g_xrcc.xrcc129 = 0
+         LET g_xrcc.xrcc130 = g_xrca.xrca130
+         LET g_xrcc.xrcc131 = g_xrca.xrca131
+         LET g_xrcc.xrcc132 = NULL
+         LET g_xrcc.xrcc133 = g_xrca.xrca133 * l_xrac008
+         LET g_xrcc.xrcc134 = g_xrca.xrca134 * l_xrac008
+         LET g_xrcc.xrcc135 = g_xrcc.xrcc133 + g_xrcc.xrcc134
+         LET g_xrcc.xrcc136 = 0
+         LET g_xrcc.xrcc137 = 0
+         LET g_xrcc.xrcc138 = g_xrcc.xrcc135
+         LET g_xrcc.xrcc139 = 0
+         
+         IF cl_null(g_xrcc.xrccld) THEN 
+            LET g_success = 'N'  
+            RETURN       
+         END IF 
+         
+         IF cl_null(g_xrcc.xrccdocno) THEN 
+            LET g_success = 'N'  
+            RETURN       
+         END IF 
+         
+         INSERT INTO xrcc_t VALUES(g_xrcc.*)
+         IF SQLCA.SQLcode  THEN
+            CALL cl_err("g_xrcc",SQLCA.sqlcode,1)  
+            LET g_success = 'N'       
+            EXIT FOREACH                  
+         END IF
+         LET l_ac = l_ac + 1
+         
+      END FOREACH
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.aist310_04_xrcd_ins" order="5" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+
+PRIVATE FUNCTION aist310_04_xrcd_ins(p_ac)
+   DEFINE p_ac             LIKE type_t.num5
+   
+   LET g_xrcd.xrcdent = g_xrca.xrcaent
+   LET g_xrcd.xrcdcomp = g_xrca.xrcacomp
+   LET g_xrcd.xrcdld = g_xrca.xrcald
+   LET g_xrcd.xrcddocno = g_xrca.xrcadocno
+   LET g_xrcd.xrcdseq = g_isah[p_ac].isahseq
+   LET g_xrcd.xrcd001 = 'aist310'
+   LET g_xrcd.xrcd002 = g_isaf.isaf012
+   LET g_xrcd.xrcd003 = g_isaf.isaf013
+   LET g_xrcd.xrcd004 = 0
+   LET g_xrcd.xrcd005 = g_isah[p_ac].isah004
+   LET g_xrcd.xrcd006 = g_isaf.isaf0121
+   LET g_xrcd.xrcd103 = g_isah[p_ac].isah010
+   LET g_xrcd.xrcd104 = g_isah[p_ac].isah011
+   LET g_xrcd.xrcd105 = g_isah[p_ac].isah012
+   LET g_xrcd.xrcd010 = 0
+   
+   
+   IF cl_null(g_xrcd.xrcdld) THEN 
+      LET g_success = 'N'  
+      RETURN       
+   END IF
+   
+   IF cl_null(g_xrcd.xrcddocno) THEN 
+      LET g_success = 'N'  
+      RETURN       
+   END IF 
+   
+   INSERT INTO xrcd_t VALUES(g_xrcd.*)
+   IF SQLCA.SQLcode  THEN
+      CALL cl_err("g_xrcd",SQLCA.sqlcode,1)  
+      LET g_success = 'N'                        
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="free_style.function" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[PUBLIC FUNCTION aist310_04(--)
+   #add-point:input段變數傳入
+   p_isafdocno,p_isafcomp,p_isaf011 
+   #end add-point
+   )
+   {<Local define>}
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   {</Local define>}
+   #add-point:input段define
+   DEFINE p_isafdocno     LIKE isaf_t.isafdocno
+   DEFINE p_isafcomp      LIKE isaf_t.isafcomp
+   DEFINE p_isaf011       LIKE isaf_t.isaf011
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_ooef004       LIKE ooef_t.ooef004
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aist310_01 WITH FORM cl_ap_formpath("ais","aist310_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   LET g_isaf_m.isafdocno = ''
+   LET g_isaf_m.xrcadocno = ''
+   LET g_isaf_m.isafdocno = p_isafdocno
+   LET g_isaf_m.isaf011 = p_isaf011
+   IF cl_null(g_isaf_m.isaf011) THEN 
+      LET g_isaf_m.isaf011 = g_today
+   END IF 
+   LET g_isaf_m.ooba002 = '703'
+   SELECT * INTO g_isaf.* 
+     FROM isaf_t 
+    WHERE isafent = g_enterprise
+      AND isafcomp = p_isafcomp
+      AND isafdocno = g_isaf_m.isafdocno
+   LET g_flag = 'N'
+   
+   ##单据编号
+   #CALL s_aooi200_gen_docno(p_isafcomp,g_isaf_m.ooba002,g_isaf_m.isaf011)
+   #RETURNING l_success,g_isaf_m.xrcadocno
+   #IF l_success  = 0  THEN
+   #   CALL cl_err(g_isaf_m.xrcadocno,'apm-00003',1)
+   #   LET g_success = 'N'
+   #   RETURN g_success
+   #END IF 
+   #DISPLAY BY NAME g_isaf_m.xrcadocno
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_isaf_m.isafdocno,g_isaf_m.ooba002,g_isaf_m.xrca007,g_isaf_m.isaf011,g_isaf_m.xrcadocno ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+
+            #end add-point
+          
+         #---------------------------<  Master  >---------------------------
+         #----<<isafdocno>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD isafdocno
+            #add-point:BEFORE FIELD isafdocno
+
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD isafdocno
+            
+            #add-point:AFTER FIELD isafdocno
+            #此段落由子樣板a05產生
+            
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE isafdocno
+            #add-point:ON CHANGE isafdocno
+
+            #END add-point
+
+         #----<<ooba002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD ooba002
+            #add-point:BEFORE FIELD ooba002
+
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD ooba002
+            
+            #add-point:AFTER FIELD ooba002
+            
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE ooba002
+            #add-point:ON CHANGE ooba002
+
+            #END add-point
+
+         #----<<xrca007>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD xrca007
+            
+            #add-point:AFTER FIELD xrca007
+            
+            #END add-point
+            
+
+         #此段落由子樣板a01產生
+         BEFORE FIELD xrca007
+            #add-point:BEFORE FIELD xrca007
+
+            #END add-point
+
+         #此段落由子樣板a04產生
+         ON CHANGE xrca007
+            #add-point:ON CHANGE xrca007
+
+            #END add-point
+
+         #----<<isaf011>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD isaf011
+            #add-point:BEFORE FIELD isaf011
+
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD isaf011
+            
+            #add-point:AFTER FIELD isaf011
+            
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE isaf011
+            #add-point:ON CHANGE isaf011
+
+            #END add-point
+
+         #----<<xrcadocno>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD xrcadocno
+            #add-point:BEFORE FIELD xrcadocno
+
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD xrcadocno
+            
+            #add-point:AFTER FIELD xrcadocno
+
+            #END add-point
+            
+
+         #此段落由子樣板a04產生
+         ON CHANGE xrcadocno
+            #add-point:ON CHANGE xrcadocno
+
+            #END add-point
+
+ #欄位檢查
+         #---------------------------<  Master  >---------------------------
+         #----<<isafdocno>>----
+         #Ctrlp:input.c.isafdocno
+         ON ACTION controlp INFIELD isafdocno
+            #add-point:ON ACTION controlp INFIELD isafdocno
+#此段落由子樣板a07產生            
+           
+
+
+            #END add-point
+
+         #----<<ooba002>>----
+         #Ctrlp:input.c.ooba002
+         ON ACTION controlp INFIELD ooba002
+            #add-point:ON ACTION controlp INFIELD ooba002
+#此段落由子樣板a07產生            
+            
+
+
+            #END add-point
+
+         #----<<xrca007>>----
+         #Ctrlp:input.c.xrca007
+         ON ACTION controlp INFIELD xrca007
+            #add-point:ON ACTION controlp INFIELD xrca007
+#此段落由子樣板a07產生            
+            
+
+
+            #END add-point
+
+         #----<<isaf011>>----
+         #Ctrlp:input.c.isaf011
+         ON ACTION controlp INFIELD isaf011
+            #add-point:ON ACTION controlp INFIELD isaf011
+
+            #END add-point
+
+         #----<<xrcadocno>>----
+         #Ctrlp:input.c.xrcadocno
+         ON ACTION controlp INFIELD xrcadocno
+            #add-point:ON ACTION controlp INFIELD xrcadocno
+
+            #END add-point
+
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+         
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         IF g_flag = 'N' THEN
+            CALL s_transaction_begin()
+            LET g_success = 'Y'
+   
+            #单据编号
+            CALL s_aooi200_gen_docno(p_isafcomp,g_isaf_m.ooba002,g_isaf_m.isaf011)
+            RETURNING l_success,g_isaf_m.xrcadocno
+            IF l_success  = 0  THEN
+               CALL cl_err(g_isaf_m.xrcadocno,'apm-00003',1)
+               LET g_success = 'N'
+               RETURN 
+            END IF 
+            DISPLAY g_isaf_m.xrcadocno TO xrcadocno
+         
+            CALL cl_showmsg_init()
+            CALL aist310_04_xrca_ins()
+            CALL aist310_04_xrcb_ins()
+            CALL aist310_04_xrcc_ins()
+            UPDATE isaf_t SET isaf035 = g_isaf_m.xrcadocno
+             WHERE isafent = g_enterprise
+               AND isafcomp = g_isaf.isafcomp
+               AND isafdocno = g_isaf_m.isafdocno      
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("upd isaf_t",SQLCA.sqlcode,1)  
+               LET g_success = 'N'                            
+            END IF 
+            CALL cl_err_showmsg() 
+            IF g_success = 'Y' THEN
+               CALL s_transaction_end('Y','1')
+            END IF
+            IF g_success = 'N' THEN
+               CALL s_transaction_end('N','1')
+            END IF
+            LET g_flag = 'Y'
+            CONTINUE DIALOG 
+         ELSE
+            CALL cl_err('','ais-00042',1)  
+            CONTINUE DIALOG
+         END IF 
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aist310_01 
+   
+   #add-point:input段after input 
+   #IF INT_FLAG THEN
+   #   LET g_success = ''
+   #   RETURN g_success
+   #END IF
+   
+   
+   #CALL aist310_03(g_isaf_m.xrcadocno)
+   RETURN 
+   #end add-point    
+   
+END FUNCTION]]>
+  </point>
+  <point name="free_style.variable" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#單頭 type 宣告
+PRIVATE type type_g_isaf_m        RECORD
+       isafdocno LIKE isaf_t.isafdocno, 
+   ooba002 LIKE type_t.chr80, 
+   xrca007 LIKE xrca_t.xrca007, 
+   xrca007_desc LIKE type_t.chr80, 
+   isaf011 LIKE isaf_t.isaf011, 
+   xrcadocno LIKE type_t.chr80
+       END RECORD
+DEFINE g_isaf_m        type_g_isaf_m
+ 
+DEFINE g_isafcomp_t   LIKE isaf_t.isafcomp    #Key值備份
+DEFINE g_isafdocno_t      LIKE isaf_t.isafdocno    #Key值備份
+
+
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_xrca   RECORD   LIKE xrca_t.* 
+DEFINE g_xrcb   RECORD   LIKE xrcb_t.*
+DEFINE g_xrcc   RECORD   LIKE xrcc_t.*
+DEFINE g_xrcd   RECORD   LIKE xrcd_t.*
+DEFINE g_isaf   RECORD   LIKE isaf_t.*
+DEFINE g_isah   DYNAMIC ARRAY OF RECORD
+                isahseq LIKE isah_t.isahseq, 
+                isah001 LIKE isah_t.isah001, 
+                isah002 LIKE isah_t.isah002, 
+                isah003 LIKE isah_t.isah003, 
+                isah004 LIKE isah_t.isah004, 
+                isah005 LIKE isah_t.isah005, 
+                isah006 LIKE isah_t.isah006, 
+                isah007 LIKE isah_t.isah007, 
+                isah008 LIKE isah_t.isah008, 
+                isah009 LIKE isah_t.isah009,
+                isah010 LIKE isah_t.isah010,
+                isah011 LIKE isah_t.isah011,
+                isah012 LIKE isah_t.isah012
+                END RECORD
+DEFINE g_sql    STRING
+DEFINE g_flag   LIKE type_t.chr1]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE p_isafdocno     LIKE isaf_t.isafdocno
+   DEFINE p_isafcomp      LIKE isaf_t.isafcomp
+   DEFINE p_isaf011       LIKE isaf_t.isaf011
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_ooef004       LIKE ooef_t.ooef004]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   p_isafdocno,p_isafcomp,p_isaf011 ]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF INT_FLAG THEN
+      LET g_success = ''
+      RETURN g_success
+   END IF
+   
+   LET g_success = 'Y'
+
+   #单据编号
+   CALL s_aooi200_gen_docno(p_isafcomp,g_isaf_m.ooba002,g_isaf_m.isaf011)
+   RETURNING l_success,g_isaf_m.xrcadocno
+   IF l_success  = 0  THEN
+      CALL cl_err(g_isaf_m.xrcadocno,'apm-00003',1)
+      LET g_success = 'N'
+      RETURN g_success
+   END IF 
+
+   CALL cl_showmsg_init()
+   CALL aist310_04_xrca_ins()
+   CALL aist310_04_xrcb_ins()
+   CALL aist310_04_xrcc_ins()
+   UPDATE isaf_t SET isaf035 = g_isaf_m.xrcadocno
+    WHERE isafent = g_enterprise
+      AND isafcomp = g_isaf.isafcomp
+      AND isafdocno = g_isaf_m.isafdocno      
+   IF SQLCA.SQLcode  THEN
+      CALL cl_err("upd isaf_t",SQLCA.sqlcode,1)  
+      LET g_success = 'N'                            
+   END IF 
+   CALL cl_err_showmsg()  
+   RETURN g_success]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_isaf_m.isafdocno = ''
+   LET g_isaf_m.xrcadocno = ''
+   LET g_isaf_m.isafdocno = p_isafdocno
+   LET g_isaf_m.isaf011 = p_isaf011
+   IF cl_null(g_isaf_m.isaf011) THEN 
+      LET g_isaf_m.isaf011 = g_today
+   END IF 
+   LET g_isaf_m.ooba002 = '703'
+   SELECT * INTO g_isaf.* 
+     FROM isaf_t 
+    WHERE isafent = g_enterprise
+      AND isafcomp = p_isafcomp
+      AND isafdocno = g_isaf_m.isafdocno]]>
+  </point>
+</add_points>

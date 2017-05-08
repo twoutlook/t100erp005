@@ -1,0 +1,1317 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="apsp621.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2015-12-15 11:10:01), PR版次:0004(2016-10-13 10:11:43)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000049
+#+ Filename...: apsp621
+#+ Description: APS產生工單作業[背景執行]
+#+ Creator....: 01588(2015-12-14 15:16:18)
+#+ Modifier...: 01588 -SD/PR- 07024
+ 
+{</section>}
+ 
+{<section id="apsp621.global" >}
+#應用 p01 樣板自動產生(Version:19)
+#add-point:填寫註解說明 name="global.memo" name="global.memo"
+#160318-00025#47 2016/04/29 By 07959    將重複內容的錯誤訊息置換為公用錯誤訊息(r.v) 
+#160512-00016#9  2016/05/23 By ming     批次處理邏輯加入 psos063 保稅否 
+#160824-00003#1  2016/10/13 By dorislai 生產數量(poso045)，需多扣除APS算出來的已轉工單量(psos024) 
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+        psos001          LIKE psos_t.psos001,     #APS版本
+        sfaadocno        LIKE sfaa_t.sfaadocno,   #工單單別
+        sfaa057          LIKE sfaa_t.sfaa057,     #委外否
+        sfaa017          LIKE sfaa_t.sfaa017,     #部門/廠商
+        l_auto_confirm   LIKE type_t.chr1,        #單據是否自動確認
+        l_delay          LIKE type_t.chr1,        #延遲單據是否不產生
+        l_delay_days     LIKE type_t.num5,        #延遲超過幾天的單據不產生工單
+        psos057          LIKE psos_t.psos057,     #已轉工單
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       psos001 LIKE psos_t.psos001, 
+   psos001_desc LIKE type_t.chr80, 
+   imae012 LIKE imae_t.imae012, 
+   psos012 LIKE psos_t.psos012, 
+   psos011 LIKE psos_t.psos011, 
+   imaa009 LIKE imaa_t.imaa009, 
+   imae011 LIKE imae_t.imae011, 
+   psos054 LIKE psos_t.psos054, 
+   imaf013 LIKE imaf_t.imaf013, 
+   sfaadocno LIKE sfaa_t.sfaadocno, 
+   sfaadocno_desc LIKE type_t.chr80, 
+   sfaa057 LIKE sfaa_t.sfaa057, 
+   sfaa017 LIKE sfaa_t.sfaa017, 
+   sfaa017_desc LIKE type_t.chr80, 
+   l_auto_confirm LIKE type_t.chr500, 
+   l_delay LIKE type_t.chr500, 
+   l_delay_days LIKE type_t.num5, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_oobb007            LIKE type_t.chr1
+DEFINE g_ooef004            LIKE ooef_t.ooef004
+DEFINE g_psos002      LIKE psos_t.psos002
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apsp621.main" >}
+MAIN
+   #add-point:main段define (客製用) name="main.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define name="main.define"
+   
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aps","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+      CALL apsp621_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apsp621 WITH FORM cl_ap_formpath("aps",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL apsp621_init()
+ 
+      #進入選單 Menu (="N")
+      CALL apsp621_ui_dialog()
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_apsp621
+   END IF
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="apsp621.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION apsp621_init()
+ 
+   #add-point:init段define (客製用) name="init.define_customerization"
+   
+   #end add-point
+   #add-point:ui_dialog段define name="init.define"
+   
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL cl_set_combo_scc("imaf013","2022")
+   CALL cl_set_combo_scc("sfaa057","4010")
+   LET g_master.sfaa057 = '1'
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsp621.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION apsp621_ui_dialog()
+ 
+   #add-point:ui_dialog段define (客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define name="ui_dialog.define"
+   DEFINE l_sfaadocno_desc   LIKE type_t.chr80
+   DEFINE l_success          LIKE type_t.num5
+   DEFINE l_sfaa057_o        LIKE sfaa_t.sfaa017
+   DEFINE ls_result          STRING 
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+ 
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2 name="ui_dialog.before_dialog2"
+      LET g_ooef004 = ''
+      SELECT ooef004 INTO g_ooef004
+        FROM ooef_t
+       WHERE ooefent = g_enterprise
+         AND ooef001 = g_site
+      LET l_sfaa057_o = g_master.sfaa057
+      LET g_oobb007 = 'Y'
+      LET g_errshow = 1
+      LET g_master.l_auto_confirm = 'Y'
+      LET g_master.l_delay = 'N'
+      CALL apsp621_set_entry()
+      CALL apsp621_set_no_entry()
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #應用 a57 樣板自動產生(Version:3)
+         INPUT BY NAME g_master.psos001 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前 name="input.m.before_input"
+               
+               #end add-point
+         
+                     #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD psos001
+            
+            #add-point:AFTER FIELD psos001 name="input.a.psos001"
+            DISPLAY '' TO psos001_desc
+            IF NOT cl_null(g_master.psos001) THEN
+               IF NOT apsp621_psos001_chk(g_master.psos001) THEN
+                  LET g_master.psos001 = ''
+                  DISPLAY BY NAME g_master.psos001
+                  DISPLAY '' TO psos001_desc
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            CALL apsp621_psos001_ref()
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD psos001
+            #add-point:BEFORE FIELD psos001 name="input.b.psos001"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE psos001
+            #add-point:ON CHANGE psos001 name="input.g.psos001"
+ 
+            #END add-point 
+ 
+ 
+ 
+                     #Ctrlp:input.c.psos001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD psos001
+            #add-point:ON ACTION controlp INFIELD psos001 name="input.c.psos001"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_master.psos001
+            LET g_qryparam.where = " pscasite = '",g_site,"'"
+            CALL q_psca001()
+            LET g_master.psos001 = g_qryparam.return1
+            DISPLAY BY NAME g_master.psos001
+            CALL apsp621_psos001_ref()
+            NEXT FIELD psos001
+            #END add-point
+ 
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後 name="input.m.after_input"
+               
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...) name="input.other"
+            
+            #end add-point
+         END INPUT
+ 
+ 
+ 
+         
+         #應用 a58 樣板自動產生(Version:3)
+         CONSTRUCT BY NAME g_master.wc ON imae012,psos012,psos011,imaa009,imae011,psos054,imaf013
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct name="cs.head.before_construct"
+               
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #Ctrlp:construct.c.imae012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imae012
+            #add-point:ON ACTION controlp INFIELD imae012 name="construct.c.imae012"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()
+            DISPLAY g_qryparam.return1 TO imae012
+            NEXT FIELD imae012
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imae012
+            #add-point:BEFORE FIELD imae012 name="construct.b.imae012"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imae012
+            
+            #add-point:AFTER FIELD imae012 name="construct.a.imae012"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD psos012
+            #add-point:BEFORE FIELD psos012 name="construct.b.psos012"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD psos012
+            
+            #add-point:AFTER FIELD psos012 name="construct.a.psos012"
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.psos012
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD psos012
+            #add-point:ON ACTION controlp INFIELD psos012 name="construct.c.psos012"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD psos011
+            #add-point:BEFORE FIELD psos011 name="construct.b.psos011"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD psos011
+            
+            #add-point:AFTER FIELD psos011 name="construct.a.psos011"
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.psos011
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD psos011
+            #add-point:ON ACTION controlp INFIELD psos011 name="construct.c.psos011"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.imaa009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imaa009
+            #add-point:ON ACTION controlp INFIELD imaa009 name="construct.c.imaa009"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_rtax001()
+            DISPLAY g_qryparam.return1 TO imaa009
+            NEXT FIELD imaa009
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imaa009
+            #add-point:BEFORE FIELD imaa009 name="construct.b.imaa009"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imaa009
+            
+            #add-point:AFTER FIELD imaa009 name="construct.a.imaa009"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imae011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imae011
+            #add-point:ON ACTION controlp INFIELD imae011 name="construct.c.imae011"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_imcf011()
+            DISPLAY g_qryparam.return1 TO imae011
+            NEXT FIELD imae011
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imae011
+            #add-point:BEFORE FIELD imae011 name="construct.b.imae011"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imae011
+            
+            #add-point:AFTER FIELD imae011 name="construct.a.imae011"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.psos054
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD psos054
+            #add-point:ON ACTION controlp INFIELD psos054 name="construct.c.psos054"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaf001()
+            DISPLAY g_qryparam.return1 TO psos054
+            NEXT FIELD psos054
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD psos054
+            #add-point:BEFORE FIELD psos054 name="construct.b.psos054"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD psos054
+            
+            #add-point:AFTER FIELD psos054 name="construct.a.psos054"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imaf013
+            #add-point:BEFORE FIELD imaf013 name="construct.b.imaf013"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imaf013
+            
+            #add-point:AFTER FIELD imaf013 name="construct.a.imaf013"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imaf013
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imaf013
+            #add-point:ON ACTION controlp INFIELD imaf013 name="construct.c.imaf013"
+            
+            #END add-point
+ 
+ 
+ 
+            
+            #add-point:其他管控 name="cs.other"
+            
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+ 
+      
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         INPUT BY NAME g_master.sfaadocno,g_master.sfaa057,g_master.sfaa017,g_master.l_auto_confirm,g_master.l_delay,
+                       g_master.l_delay_days
+               ATTRIBUTE(WITHOUT DEFAULTS)
+               
+            AFTER FIELD sfaadocno
+               DISPLAY '' TO sfaadocno_desc
+               IF NOT cl_null(g_master.sfaadocno) THEN
+                  CALL s_aooi200_chk_slip(g_site,'',g_master.sfaadocno,'asft300')
+                       RETURNING l_success
+                  IF NOT l_success THEN
+                     LET g_master.sfaadocno = ''
+                     DISPLAY BY NAME g_master.sfaadocno
+                     DISPLAY '' TO sfaadocno_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  #顯示單別說明
+                  CALL s_aooi200_get_slip_desc(g_master.sfaadocno)
+                       RETURNING l_sfaadocno_desc
+                  DISPLAY l_sfaadocno_desc TO sfaadocno_desc
+                
+                  #預設委外類型、可否修改
+                  LET g_oobb007 = ''
+                  SELECT oobb005,oobb007 INTO g_master.sfaa057,g_oobb007
+                    FROM oobb_t
+                   WHERE oobbent = g_enterprise
+                     AND oobb001 = g_ooef004
+                     AND oobb002 = g_master.sfaadocno
+                     AND oobb004 = 'sfaa057'
+                  IF cl_null(g_master.sfaa057) THEN
+                     LET g_master.sfaa057 = '1'
+                  END IF
+                  IF cl_null(g_oobb007) THEN
+                     LET g_oobb007 = 'Y'
+                  END IF
+                  IF g_master.sfaa057 <> l_sfaa057_o THEN
+                     LET g_master.sfaa017 = ''
+                     DISPLAY BY NAME g_master.sfaa017
+                     DISPLAY '' TO sfaa017_desc
+                  END IF
+                  LET l_sfaa057_o = g_master.sfaa057
+               END IF
+               CALL apsp621_set_entry()
+               CALL apsp621_set_no_entry()
+               
+            ON CHANGE sfaa057
+               IF g_master.sfaa057 <> l_sfaa057_o THEN
+                  LET g_master.sfaa017 = ''
+                  DISPLAY BY NAME g_master.sfaa017
+                  DISPLAY '' TO sfaa017_desc
+               END IF
+               LET l_sfaa057_o = g_master.sfaa057
+               
+            AFTER FIELD sfaa017
+               DISPLAY '' TO sfaa017_desc
+               IF NOT cl_null(g_master.sfaa017) THEN
+                  IF NOT apsp621_sfaa017_chk(g_master.sfaa017) THEN
+                     LET g_master.sfaa017 = ''
+                     DISPLAY BY NAME g_master.sfaa017
+                     DISPLAY '' TO sfaa017_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               CALL apsp621_sfaa017_ref()
+         
+            ON ACTION controlp INFIELD sfaadocno
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master.sfaadocno
+               LET g_qryparam.arg1 = g_ooef004
+               LET g_qryparam.arg2 = 'asft300'
+               CALL q_ooba002_1()
+               LET g_master.sfaadocno = g_qryparam.return1
+               DISPLAY BY NAME g_master.sfaadocno
+               #顯示單別說明
+               CALL s_aooi200_get_slip_desc(g_master.sfaadocno)
+                    RETURNING l_sfaadocno_desc
+               DISPLAY l_sfaadocno_desc TO sfaadocno_desc
+               NEXT FIELD sfaadocno
+               
+            ON ACTION controlp INFIELD sfaa017
+               #先選擇是否委外，再決定開部門或廠商的窗
+               IF cl_null(g_master.sfaa057) THEN
+                  NEXT FIELD sfaa057
+               END IF
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master.sfaa017
+               CASE g_master.sfaa057 
+                  WHEN '1'   #部門
+                       LET g_qryparam.arg1 = g_today
+                       CALL q_ooeg001()
+                  WHEN '2'
+                       CALL q_pmaa001_3()
+               END CASE
+               LET g_master.sfaa017 = g_qryparam.return1
+               DISPLAY BY NAME g_master.sfaa017
+               CALL apsp621_sfaa017_ref()
+               NEXT FIELD sfaa017
+               
+            ON CHANGE l_delay
+               CALL apsp621_set_entry()
+               CALL apsp621_set_no_entry()
+         END INPUT
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL apsp621_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog3"
+            
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear name="ui_dialog.before_qbeclear"
+         
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL apsp621_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog name="process.exit_dialog"
+      LET lc_param.psos001 = g_master.psos001
+      LET lc_param.sfaadocno = g_master.sfaadocno
+      LET lc_param.sfaa057 = g_master.sfaa057
+      LET lc_param.sfaa017 = g_master.sfaa017
+      LET lc_param.l_auto_confirm = g_master.l_auto_confirm
+      LET lc_param.l_delay = g_master.l_delay
+      LET lc_param.l_delay_days = g_master.l_delay_days
+      LET lc_param.psos057 = 'N'
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL apsp621_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = apsp621_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule name="process.after_schedule"
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsp621.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION apsp621_transfer_argv(ls_js)
+ 
+   #add-point:transfer_agrv段define (客製用) name="transfer_agrv.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define name="transfer_agrv.define"
+   
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容 name="transfer.argv.define"
+   
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsp621.process" >}
+#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION apsp621_process(ls_js)
+ 
+   #add-point:process段define (客製用) name="process.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define name="process.define"
+   #stellar：
+   #特別注意：
+   #1. type_parameter的record一定要和apsp620、s_apsp620一樣
+   #2. 資料抓取的record一定要和apsp620、s_apsp620一樣
+   DEFINE l_psos        RECORD
+         sel             LIKE type_t.chr1,       #選擇
+         psos054         LIKE psos_t.psos054,    #料號
+         psos054_desc    LIKE type_t.chr80,      #品名
+         psos054_desc_1  LIKE type_t.chr80,      #規格
+         psos055         LIKE psos_t.psos055,    #產品特徵 
+         #160512-00016#9 20160523 add by ming -----(S) 
+         psos063         LIKE psos_t.psos063,    #保稅否  
+         #160512-00016#9 20160523 add by ming -----(E) 
+         imaf013         LIKE imaf_t.imaf013,    #補給策略
+         imaa009         LIKE imaa_t.imaa009,    #產品分類
+         imaa009_desc    LIKE type_t.chr80,      #說明
+         imae011         LIKE imae_t.imae011,    #生管分類
+         imae011_desc    LIKE type_t.chr80,      #說明
+         psos036         LIKE psos_t.psos036,    #生產數量 
+         qty             LIKE psos_t.psos036,    #本次生產數量 
+         imae016         LIKE imae_t.imae016,    #單位
+         imae016_desc    LIKE type_t.chr80,      #說明
+         psos012         LIKE psos_t.psos012,    #預計開工日
+         psos011         LIKE psos_t.psos011,    #預計完工日
+         psos021         LIKE psos_t.psos021,    #需求單號
+         imae012         LIKE imae_t.imae012,    #計劃員
+         imae012_desc    LIKE type_t.chr80,      #全名 
+         psos062         LIKE psos_t.psos062,    #已轉數量 
+         psos057         LIKE psos_t.psos057,    #已轉單號
+         psos058         LIKE psos_t.psos058,    #產生工單單號
+         psos004         LIKE psos_t.psos004,    #APS虛擬單號
+         imaa006         LIKE imaa_t.imaa006     #基礎單位
+                         END RECORD
+DEFINE l_sel_cnt         LIKE type_t.num5
+DEFINE l_tot_success     LIKE type_t.num5
+DEFINE l_success         LIKE type_t.num5
+DEFINE l_str             STRING
+DEFINE la_param          RECORD
+          prog           STRING,
+          param          DYNAMIC ARRAY OF STRING
+                         END RECORD
+DEFINE l_sfaadocno       LIKE sfaa_t.sfaadocno
+DEFINE l_msg             STRING
+DEFINE ls_js1            STRING
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+   LET li_p01_status = 1
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理 name="process.pre_process"
+   IF cl_null(lc_param.wc) THEN
+      LET lc_param.wc = " 1=1"
+   END IF
+   
+   SELECT MAX(psos002) INTO g_psos002
+     FROM psos_t
+    WHERE psosent = g_enterprise
+      AND psossite= g_site
+      AND psos001 = lc_param.psos001
+      AND psos009 = '1'
+      
+   #160824-00003#1-s-mod   
+   ##160512-00016#9 20160523 modify by ming -----(S) 
+   ##LET ls_sql = " SELECT 'Y',psos054,imaal003,imaal004,psos055,imaf013,imaa009,'',imae011,'',psos045, ",
+   #LET ls_sql = " SELECT 'Y',psos054,imaal003,imaal004,psos055,COALESCE(psos063,'N'),imaf013,imaa009,'',imae011,'',psos045, ",
+   ##160512-00016#9 20160523 modify by ming -----(E) 
+   LET ls_sql = " SELECT 'Y',psos054,imaal003,imaal004,psos055,COALESCE(psos063,'N'),imaf013,imaa009,'',imae011,'',(psos045-psos024), ",
+   #160824-00003#1-e-mod
+                "        '',imae016,'',psos012,psos011,psos021,imae012,'',COALESCE(psos062,0),psos057,psos058,psos004, ",
+                "        imaa006 ",
+                "   FROM psos_t ",
+                "   LEFT OUTER JOIN imaal_t ON imaalent = psosent AND imaal001 = psos054 AND imaal002 = '",g_dlang,"'",
+                "   LEFT OUTER JOIN imaa_t ON imaaent = psosent AND imaa001 = psos054 ",
+                "   LEFT OUTER JOIN imaf_t ON imafent = psosent AND imafsite= psossite AND imaf001 = psos054 ",
+                "   LEFT OUTER JOIN imae_t ON imaeent = psosent AND imaesite= psossite AND imae001 = psos054 ",
+                "   LEFT OUTER JOIN psoq_t ON psoqent = psosent AND psoqsite = psossite AND psoq001 = psos001 AND psoq002 = psos002 AND psoq004 = psos021 ",
+                "  WHERE psosent = ",g_enterprise,
+                "    AND psossite='",g_site,"'",
+                "    AND psos001 ='",lc_param.psos001,"'",
+                "    AND psos002 ='",g_psos002,"'",
+                "    AND psos009 = 1 ",  #建議單據(is_new)
+                "    AND ",lc_param.wc CLIPPED
+                
+   #已轉單據是否顯示
+   IF lc_param.psos057 = 'N' THEN
+      #160824-00003#1-s-mod
+      #LET g_sql = g_sql CLIPPED," AND (COALESCE(psos062,0) < psos045 )"
+      LET ls_sql = ls_sql CLIPPED," AND (COALESCE(psos062,0) < (psos045-psos024) )"
+      #160824-00003#1-e-mod
+   END IF
+   
+   #訂單延遲，是否不產生工單
+   IF lc_param.l_delay = 'Y' THEN
+      #160824-00003#1-s-mod
+      #LET g_sql = g_sql CLIPPED," AND psoq024 < (psoq007+",lc_param.l_delay_days,") "
+      LET ls_sql = ls_sql CLIPPED," AND psoq024 < (psoq007+",lc_param.l_delay_days,") "
+      #160824-00003#1-e-mod
+   END IF
+   
+   #160824-00003#1-s-mod
+   #LET g_sql = g_sql CLIPPED," ORDER BY psos054,psos055 "
+   LET ls_sql = ls_sql CLIPPED," ORDER BY psos054,psos055 "
+   #160824-00003#1-e-mod
+ 
+   DECLARE apsp621_process_cs CURSOR FROM ls_sql
+   
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress name="process.count_progress"
+      LET ls_sql = " SELECT COUNT(*) FROM (",ls_sql,")"
+      
+      PREPARE apsp621_process_cnt_cs FROM ls_sql
+      EXECUTE apsp621_process_cnt_cs INTO li_count
+      
+      CALL cl_progress_bar_no_window(li_count)
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE apsp621_process_cs CURSOR FROM ls_sql
+#  FOREACH apsp621_process_cs INTO
+   #add-point:process段process name="process.process"
+   LET l_sel_cnt = 0
+   LET l_tot_success = TRUE
+   LET l_success = TRUE
+   LET l_str = ''
+   CALL s_transaction_begin()
+   CALL cl_err_collect_init()
+   
+   FOREACH apsp621_process_cs INTO 
+      l_psos.sel,l_psos.psos054,l_psos.psos054_desc,l_psos.psos054_desc_1,
+      #160512-00016#9 20160523 modify by ming -----(S) 
+      #l_psos.psos055,l_psos.imaf013,l_psos.imaa009,l_psos.imaa009_desc, 
+      l_psos.psos055,l_psos.psos063,
+      l_psos.imaf013,l_psos.imaa009,l_psos.imaa009_desc,
+      #160512-00016#9 20160523 modify by ming -----(E) 
+      l_psos.imae011,l_psos.imae011_desc,l_psos.psos036,l_psos.qty,
+      l_psos.imae016,
+      l_psos.imae016_desc,l_psos.psos012,l_psos.psos011,l_psos.psos021,
+      l_psos.imae012,l_psos.imae012_desc,l_psos.psos062,l_psos.psos057,
+      l_psos.psos058,
+      l_psos.psos004,
+      l_psos.imaa006
+      
+      IF g_bgjob <> "Y" THEN
+         CALL cl_progress_no_window_ing(l_msg)
+      END IF
+      
+      IF NOT l_success THEN
+         LET l_tot_success = FALSE
+      END IF
+      LET l_success = TRUE
+      
+      #累計選擇'Y'的筆數
+      LET l_sel_cnt = l_sel_cnt + 1
+      
+      #數量由基礎單位轉換為生產單位的數量
+      CALL s_aooi250_convert_qty(l_psos.psos054,l_psos.imaa006,
+                                 l_psos.imae016,l_psos.psos036)
+             RETURNING l_success,l_psos.psos036 
+      IF NOT l_success THEN
+         CONTINUE FOREACH
+      END IF
+             
+      #預設 本次生產數量 
+      #建議量-已轉數量的剩餘數量 
+      LET l_psos.qty = l_psos.psos036 - l_psos.psos062
+      
+      #呼叫應用元件產生工單，並更新psos_t
+      LET ls_js1 = util.JSON.stringify(l_psos)
+      #傳入參數：APS版本、工單單別、委外、部門/廠商、單據是否確認、psos_t資料
+      CALL s_apsp620_process(g_psos002,ls_js,ls_js1)
+           RETURNING l_success,l_sfaadocno
+      IF NOT l_success THEN
+         CONTINUE FOREACH
+      END IF
+      
+      IF NOT cl_null(l_sfaadocno) THEN
+         IF cl_null(l_str) THEN
+            LET l_str = " (sfaadocno = '", l_sfaadocno,"') "
+         ELSE
+            LET l_str = l_str," OR (sfaadocno = '", l_sfaadocno,"') "
+         END IF
+      END IF
+   END FOREACH
+   
+   CALL cl_err_collect_show()
+   LET l_success = l_tot_success
+   
+   IF cl_null(l_sel_cnt) OR l_sel_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'sub-00491'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理 name="process.foreground_finish"
+      IF l_success THEN
+         CALL s_transaction_end('Y','0')
+         IF NOT cl_null(l_str) THEN
+            LET la_param.prog = 'asft300'
+            LET la_param.param[1] = ''
+            LET la_param.param[2] = ''
+            LET la_param.param[3] = l_str
+            LET ls_js = util.JSON.stringify(la_param )
+            CALL cl_cmdrun_wait(ls_js)
+         END IF
+      ELSE
+         CALL s_transaction_end('N','0')
+      END IF
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理 name="process.background_finish"
+      IF l_success THEN
+         CALL s_transaction_end('Y','0')
+      ELSE
+         CALL s_transaction_end('N','0')
+      END IF
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL apsp621_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsp621.get_buffer" >}
+PRIVATE FUNCTION apsp621_get_buffer(p_dialog)
+ 
+   #add-point:process段define (客製用) name="get_buffer.define_customerization"
+   
+   #end add-point
+   DEFINE p_dialog   ui.DIALOG
+   #add-point:process段define name="get_buffer.define"
+   
+   #end add-point
+ 
+   
+   LET g_master.psos001 = p_dialog.getFieldBuffer('psos001')
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理 name="get_buffer.others"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsp621.msgcentre_notify" >}
+PRIVATE FUNCTION apsp621_msgcentre_notify()
+ 
+   #add-point:process段define (客製用) name="msgcentre_notify.define_customerization"
+   
+   #end add-point
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:process段define name="msgcentre_notify.define"
+   
+   #end add-point
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知 name="msg_centre.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsp621.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: APS版本校驗
+# Memo...........:
+# Usage..........: CALL apsp621_psos001_chk(p_psos001)
+#                  RETURNING r_success
+# Input parameter: p_psos001      APS版本
+#                : 
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2015/12/14 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp621_psos001_chk(p_psos001)
+DEFINE p_psos001         LIKE psos_t.psos001
+DEFINE r_success         LIKE type_t.num5
+
+   LET r_success = TRUE
+   
+   IF cl_null(p_psos001) THEN
+      RETURN r_success
+   END IF
+
+   INITIALIZE g_chkparam.* TO NULL
+   LET g_chkparam.arg1 = p_psos001
+   #160318-00025#47  2016/04/29  by pengxin  add(S)
+   LET g_errshow = TRUE #是否開窗 
+   LET g_chkparam.err_str[1] = "aps-00074:sub-01302|apsi002|",cl_get_progname("apsi002",g_lang,"2"),"|:EXEPROGapsi002"
+   #160318-00025#47  2016/04/29  by pengxin  add(E)
+   IF NOT cl_chk_exist("v_psca001") THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: APS版本說明
+# Memo...........:
+# Usage..........: CALL apsp621_psos001_ref()
+#                  
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 2015/12/14 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp621_psos001_ref()
+DEFINE l_psos001_desc    LIKE type_t.chr80
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_master.psos001
+   CALL ap_ref_array2(g_ref_fields,"SELECT pscal003 FROM pscal_t WHERE pscalent='"||g_enterprise||"' AND pscalsite='"||g_site||"' AND pscal001=? AND pscal002='"||g_lang||"'",
+       "") RETURNING g_rtn_fields
+   LET l_psos001_desc = '', g_rtn_fields[1] , ''
+   DISPLAY l_psos001_desc TO psos001_desc
+END FUNCTION
+
+################################################################################
+# Descriptions...: 欄位可輸入
+# Memo...........:
+# Usage..........: CALL apsp621_set_entry()
+#                  
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 2015/12/14 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp621_set_entry()
+
+   CALL cl_set_comp_entry("sfaa057",TRUE)
+   CALL cl_set_comp_entry("l_delay_days",TRUE)
+END FUNCTION
+
+################################################################################
+# Descriptions...: 欄位關閉
+# Memo...........:
+# Usage..........: CALL apsp621_set_no_entry()
+#                  
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 2015/12/14 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp621_set_no_entry()
+   
+   IF NOT cl_null(g_oobb007) AND g_oobb007 = 'N' THEN
+      CALL cl_set_comp_entry("sfaa057",FALSE)
+   END IF
+   
+   IF g_master.l_delay = 'N' THEN
+      CALL cl_set_comp_entry("l_delay_days",FALSE)
+      LET g_master.l_delay_days = ''
+      DISPLAY BY NAME g_master.l_delay_days
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 部門/廠商校驗
+# Memo...........:
+# Usage..........: CALL apsp621_sfaa017_chk(p_sfaa017)
+#                  RETURNING r_success
+# Input parameter: p_sfaa017      部門/廠商
+#                : 
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 2015/12/14 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp621_sfaa017_chk(p_sfaa017)
+DEFINE p_sfaa017         LIKE sfaa_t.sfaa017
+DEFINE r_success         LIKE type_t.num5
+
+   LET r_success = TRUE
+   
+   IF cl_null(p_sfaa017) THEN
+      RETURN r_success
+   END IF
+
+   INITIALIZE g_chkparam.* TO NULL
+   LET g_chkparam.arg1 = p_sfaa017
+   CASE g_master.sfaa057
+      WHEN '1'   #廠內
+           LET g_chkparam.arg2 = g_today
+           #160318-00025#47  2016/04/29  by pengxin  add(S)
+           LET g_errshow = TRUE #是否開窗 
+           LET g_chkparam.err_str[1] = "aoo-00029:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"
+           #160318-00025#47  2016/04/29  by pengxin  add(E)
+           IF NOT cl_chk_exist("v_ooeg001") THEN
+              LET r_success = FALSE
+              RETURN r_success
+           END IF
+      WHEN '2'
+           
+           IF NOT cl_chk_exist("v_pmaa001_1") THEN
+              LET r_success = FALSE
+              RETURN r_success
+           END IF
+   END CASE
+
+   RETURN r_success
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 部門/廠商說明
+# Memo...........:
+# Usage..........: CALL apsp621_sfaa017_ref()
+#                  
+# Input parameter: 
+#                : 
+# Return code....: 
+#                : 
+# Date & Author..: 2015/12/14 By stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apsp621_sfaa017_ref()
+DEFINE l_sfaa017_desc    LIKE type_t.chr80
+
+   CASE g_master.sfaa057
+      WHEN '1'   #廠內
+           INITIALIZE g_ref_fields TO NULL
+           LET g_ref_fields[1] = g_master.sfaa017
+           CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'",
+                "") RETURNING g_rtn_fields
+           LET l_sfaa017_desc = '', g_rtn_fields[1] , ''
+           DISPLAY l_sfaa017_desc TO sfaa017_desc
+      WHEN '2'   #委外
+           INITIALIZE g_ref_fields TO NULL
+           LET g_ref_fields[1] = g_master.sfaa017
+           CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'",
+                "") RETURNING g_rtn_fields
+           LET l_sfaa017_desc = '', g_rtn_fields[1] , ''
+           DISPLAY l_sfaa017_desc TO sfaa017_desc
+   END CASE
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

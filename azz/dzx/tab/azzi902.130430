@@ -1,0 +1,75 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi902" module="azz" jobmode="N" type="i07" industry="std" tpversion="1.0" page="1" tabver="10001">
+  <structure>
+    <section id="global_var">
+      <var id="bs_field" value="gzzd001,gzzd001_desc(chr80)" pk="gzzd001" order=""/>
+      <bs_reference field="gzzd001_desc" ref_field="gzzd001" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+      <var id="head" value="gzzd001,gzzd001_desc(STRING)"/>
+      <var id="body" page="1" record="s_detail1" value="gzzdstus,gzzd002,gzzd003,gzzd004,gzzd005,gzzdmodu,modu_desc(chr80),gzzddate,gzzdoriu,oriu_desc(chr80),gzzdorid,orid_desc(chr80),gzzduser,user_desc(chr80),gzzddept,dept_desc(chr80),gzzdbuid"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="modify" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="reproduce" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi902" method="dialog">
+    <section id="input">
+      <input id="head" field="gzzd001"/>
+      <input id="body" page="1" field="gzzd002,gzzd003,gzzd004,gzzd005,gzzdmodu,gzzddate,gzzdoriu,gzzdorid,gzzduser,gzzddept,gzzdbuid"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzzd001"/>
+      <construct id="body" page="1" field="gzzd002,gzzd003,gzzd004,gzzd005,gzzdmodu,gzzddate,gzzdoriu,gzzdorid,gzzduser,gzzddept,gzzdbuid"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzzd001"/>
+      <set id="head" type="no_entry" field="gzzd001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gzzd001">
+        <after>
+          <reference field="gzzd001_desc" ref_field="gzzd001" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzzd001" state="c"/>
+      </column>
+    </init>
+    <init id="body" page="1">
+      <column id="gzzd_t.gzzdstus"/>
+      <column id="gzzd002"/>
+      <column id="gzzd003"/>
+      <column id="gzzd004"/>
+      <column id="gzzd005"/>
+      <column id="gzzdmodu"/>
+      <column id="modu_desc"/>
+      <column id="gzzddate"/>
+      <column id="gzzdoriu"/>
+      <column id="oriu_desc"/>
+      <column id="gzzdorid"/>
+      <column id="orid_desc"/>
+      <column id="gzzduser"/>
+      <column id="user_desc"/>
+      <column id="gzzddept"/>
+      <column id="dept_desc"/>
+      <column id="gzzdbuid"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzzd_t" pk="gzzd001">
+      <sql id="forupd_sql" type="sql" query="SELECT gzzd001,&apos;&apos; FROM gzzd_t WHERE gzzd001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzzd001,&apos;&apos; FROM gzzd_t" order="gzzd001"/>
+    </head>
+    <body id="gzzd_t" pk="gzzd002,gzzd003,gzzd004" fk="gzzd001">
+      <sql id="forupd_sql_detail" query="SELECT gzzdstus,gzzd002,gzzd003,gzzd004,gzzd005,gzzdmodu,&apos;&apos;,gzzddate,gzzdoriu,&apos;&apos;,gzzdorid,&apos;&apos;,gzzduser,&apos;&apos;,gzzddept,&apos;&apos;,gzzdbuid FROM gzzd_t WHERE gzzd001=? AND gzzd002=? AND gzzd003=? AND gzzd004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzzdstus,gzzd002,gzzd003,gzzd004,gzzd005,gzzdmodu,&apos;&apos;,gzzddate,gzzdoriu,&apos;&apos;,gzzdorid,&apos;&apos;,gzzduser,&apos;&apos;,gzzddept,&apos;&apos;,gzzdbuid FROM gzzd_t WHERE gzzd001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,3223 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="afmt530_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0005(2015-11-09 15:19:56), PR版次:0005(2016-11-09 18:43:18)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000058
+#+ Filename...: afmt530_01
+#+ Description: 投資費用維護
+#+ Creator....: 03538(2015-05-07 14:55:32)
+#+ Modifier...: 03538 -SD/PR- 08171
+ 
+{</section>}
+ 
+{<section id="afmt530_01.global" >}
+#應用 i02 樣板自動產生(Version:38)
+#add-point:填寫註解說明 name="global.memo"
+#150820-00011#4   150825  By Jessy    增加銀行帳戶、存提碼與現金變動碼欄位/市場資金支付Y或N時出款帳戶控制
+#150924-00006#2   150923  By Jessy    1.費用的幣別帶入afmt535應帶入幣別/匯率/原, 並換算本幣(原幣*匯率後進行本幣取位) 2.幣別/金額/匯率可維護
+#151029-00012#1   151029  By 03538    增加本幣金額欄位
+#151109           151109  By albireo  增加取日平均匯率的設定
+#160122-00001#22  160215  By yangtt   添加交易帳戶編號用戶權限空管 
+#160122-00001#22  160316  By xulonga  添加交易帳戶編號用戶權限空管,增加部门权限
+#160321-00016#27  160324  By Jessy    修正azzi920重複定義之錯誤訊息
+#160318-00025#24  160425  BY 07900    校验代码重复错误讯息的修改
+#161104-00024#11  161108  By 08171    程式中DEFINE RECORD LIKE時不可以用*的寫法，要一個一個欄位定義
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS   #(ver:36) add
+   DEFINE mc_data_owner_check LIKE type_t.num5   #(ver:36) add
+END GLOBALS   #(ver:36) add
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_fmmk_d RECORD
+       fmmk001 LIKE fmmk_t.fmmk001, 
+   fmmk002 LIKE fmmk_t.fmmk002, 
+   fmmk003 LIKE fmmk_t.fmmk003, 
+   fmmk003_desc LIKE type_t.chr500, 
+   fmmk006 LIKE fmmk_t.fmmk006, 
+   fmmk012 LIKE fmmk_t.fmmk012, 
+   fmmk010 LIKE fmmk_t.fmmk010, 
+   fmmk010_desc LIKE type_t.chr500, 
+   fmmk011 LIKE fmmk_t.fmmk011, 
+   fmmk011_desc LIKE type_t.chr500, 
+   fmmk004 LIKE fmmk_t.fmmk004, 
+   fmmk009 LIKE fmmk_t.fmmk009, 
+   fmmk005 LIKE fmmk_t.fmmk005, 
+   fmmk013 LIKE fmmk_t.fmmk013
+       END RECORD
+ 
+ 
+ 
+#add-point:自定義模組變數(Module Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_master    RECORD
+          l_fmmjdocno       LIKE fmmj_t.fmmjdocno,
+          l_fmmj003         LIKE fmmj_t.fmmj003,
+          l_fmmj003_desc    STRING,
+          l_fmmjsite        LIKE fmmj_t.fmmjsite,
+          l_fmmjsite_desc   STRING,
+          l_fmma003         LIKE fmma_t.fmma003
+                   END RECORD
+DEFINE g_fmmjdocno          LIKE fmmj_t.fmmjdocno                   
+#DEFINE g_fmmj               RECORD LIKE fmmj_t.* #161104-00024#11 mark
+#161104-00024#11 --s add
+DEFINE g_fmmj RECORD  #投資購買檔
+       fmmjent LIKE fmmj_t.fmmjent, #企業編號
+       fmmjsite LIKE fmmj_t.fmmjsite, #投資組織
+       fmmjdocno LIKE fmmj_t.fmmjdocno, #投資購買單號
+       fmmjdocdt LIKE fmmj_t.fmmjdocdt, #日期
+       fmmj001 LIKE fmmj_t.fmmj001, #投資確認單號
+       fmmj002 LIKE fmmj_t.fmmj002, #交易市場編號
+       fmmj003 LIKE fmmj_t.fmmj003, #投資種類
+       fmmj004 LIKE fmmj_t.fmmj004, #投資標的
+       fmmj005 LIKE fmmj_t.fmmj005, #購買數量
+       fmmj006 LIKE fmmj_t.fmmj006, #幣別
+       fmmj007 LIKE fmmj_t.fmmj007, #單價
+       fmmj008 LIKE fmmj_t.fmmj008, #金額
+       fmmj009 LIKE fmmj_t.fmmj009, #對主本幣匯率
+       fmmj010 LIKE fmmj_t.fmmj010, #質押狀態
+       fmmj011 LIKE fmmj_t.fmmj011, #支付方式
+       fmmj012 LIKE fmmj_t.fmmj012, #出款銀行
+       fmmj013 LIKE fmmj_t.fmmj013, #出款帳戶
+       fmmj014 LIKE fmmj_t.fmmj014, #來源利息單號
+       fmmj015 LIKE fmmj_t.fmmj015, #已宣告未發放股利
+       fmmj016 LIKE fmmj_t.fmmj016, #已到期未領取利息
+       fmmj017 LIKE fmmj_t.fmmj017, #總面值
+       fmmj018 LIKE fmmj_t.fmmj018, #票面年利率
+       fmmj019 LIKE fmmj_t.fmmj019, #複利計算
+       fmmj020 LIKE fmmj_t.fmmj020, #利息支付方式
+       fmmj021 LIKE fmmj_t.fmmj021, #債券到期日
+       fmmj022 LIKE fmmj_t.fmmj022, #計息天數
+       fmmj023 LIKE fmmj_t.fmmj023, #利息自動轉為本金
+       fmmjownid LIKE fmmj_t.fmmjownid, #資料所有者
+       fmmjowndp LIKE fmmj_t.fmmjowndp, #資料所屬部門
+       fmmjcrtid LIKE fmmj_t.fmmjcrtid, #資料建立者
+       fmmjcrtdp LIKE fmmj_t.fmmjcrtdp, #資料建立部門
+       fmmjcrtdt LIKE fmmj_t.fmmjcrtdt, #資料創建日
+       fmmjmodid LIKE fmmj_t.fmmjmodid, #資料修改者
+       fmmjmoddt LIKE fmmj_t.fmmjmoddt, #最近修改日
+       fmmjcnfid LIKE fmmj_t.fmmjcnfid, #資料確認者
+       fmmjcnfdt LIKE fmmj_t.fmmjcnfdt, #資料確認日
+       fmmjpstid LIKE fmmj_t.fmmjpstid, #資料過帳者
+       fmmjpstdt LIKE fmmj_t.fmmjpstdt, #資料過帳日
+       fmmjstus LIKE fmmj_t.fmmjstus, #狀態碼
+       fmmjud001 LIKE fmmj_t.fmmjud001, #自定義欄位(文字)001
+       fmmjud002 LIKE fmmj_t.fmmjud002, #自定義欄位(文字)002
+       fmmjud003 LIKE fmmj_t.fmmjud003, #自定義欄位(文字)003
+       fmmjud004 LIKE fmmj_t.fmmjud004, #自定義欄位(文字)004
+       fmmjud005 LIKE fmmj_t.fmmjud005, #自定義欄位(文字)005
+       fmmjud006 LIKE fmmj_t.fmmjud006, #自定義欄位(文字)006
+       fmmjud007 LIKE fmmj_t.fmmjud007, #自定義欄位(文字)007
+       fmmjud008 LIKE fmmj_t.fmmjud008, #自定義欄位(文字)008
+       fmmjud009 LIKE fmmj_t.fmmjud009, #自定義欄位(文字)009
+       fmmjud010 LIKE fmmj_t.fmmjud010, #自定義欄位(文字)010
+       fmmjud011 LIKE fmmj_t.fmmjud011, #自定義欄位(數字)011
+       fmmjud012 LIKE fmmj_t.fmmjud012, #自定義欄位(數字)012
+       fmmjud013 LIKE fmmj_t.fmmjud013, #自定義欄位(數字)013
+       fmmjud014 LIKE fmmj_t.fmmjud014, #自定義欄位(數字)014
+       fmmjud015 LIKE fmmj_t.fmmjud015, #自定義欄位(數字)015
+       fmmjud016 LIKE fmmj_t.fmmjud016, #自定義欄位(數字)016
+       fmmjud017 LIKE fmmj_t.fmmjud017, #自定義欄位(數字)017
+       fmmjud018 LIKE fmmj_t.fmmjud018, #自定義欄位(數字)018
+       fmmjud019 LIKE fmmj_t.fmmjud019, #自定義欄位(數字)019
+       fmmjud020 LIKE fmmj_t.fmmjud020, #自定義欄位(數字)020
+       fmmjud021 LIKE fmmj_t.fmmjud021, #自定義欄位(日期時間)021
+       fmmjud022 LIKE fmmj_t.fmmjud022, #自定義欄位(日期時間)022
+       fmmjud023 LIKE fmmj_t.fmmjud023, #自定義欄位(日期時間)023
+       fmmjud024 LIKE fmmj_t.fmmjud024, #自定義欄位(日期時間)024
+       fmmjud025 LIKE fmmj_t.fmmjud025, #自定義欄位(日期時間)025
+       fmmjud026 LIKE fmmj_t.fmmjud026, #自定義欄位(日期時間)026
+       fmmjud027 LIKE fmmj_t.fmmjud027, #自定義欄位(日期時間)027
+       fmmjud028 LIKE fmmj_t.fmmjud028, #自定義欄位(日期時間)028
+       fmmjud029 LIKE fmmj_t.fmmjud029, #自定義欄位(日期時間)029
+       fmmjud030 LIKE fmmj_t.fmmjud030, #自定義欄位(日期時間)030
+       fmmj024 LIKE fmmj_t.fmmj024, #首次利息支付日
+       fmmj025 LIKE fmmj_t.fmmj025, #存提碼
+       fmmj026 LIKE fmmj_t.fmmj026, #現金變動碼
+       fmmj027 LIKE fmmj_t.fmmj027, #摘要
+       fmmj028 LIKE fmmj_t.fmmj028, #本幣金額
+       fmmj029 LIKE fmmj_t.fmmj029, #已宣告未發放股利本幣金額
+       fmmj030 LIKE fmmj_t.fmmj030, #已到期未領取利息本幣金額
+       fmmj031 LIKE fmmj_t.fmmj031  #總面值本幣金額
+END RECORD
+#161104-00024#11 --e add
+DEFINE g_glaa                RECORD
+                             glaald    LIKE glaa_t.glaald,
+                             glaacomp  LIKE glaa_t.glaacomp,
+                             glaa001   LIKE glaa_t.glaa001,
+                             glaa025   LIKE glaa_t.glaa025,
+                             glaa026   LIKE glaa_t.glaa026
+                             END RECORD
+DEFINE g_glaa005             LIKE glaa_t.glaa005   #150820-00011#4 取組織下帳套之現金參照表用
+DEFINE g_para_data1          LIKE type_t.chr80     #資金模組匯率來源
+DEFINE g_sql_bank            STRING               #160122-00001#22  160316  By xulonga  add
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_fmmk_d          DYNAMIC ARRAY OF type_g_fmmk_d #單身變數
+DEFINE g_fmmk_d_t        type_g_fmmk_d                  #單身備份
+DEFINE g_fmmk_d_o        type_g_fmmk_d                  #單身備份
+DEFINE g_fmmk_d_mask_o   DYNAMIC ARRAY OF type_g_fmmk_d #單身變數
+DEFINE g_fmmk_d_mask_n   DYNAMIC ARRAY OF type_g_fmmk_d #單身變數
+ 
+      
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_temp_idx           LIKE type_t.num10             #單身 所在筆數(暫存用)
+DEFINE g_detail_idx         LIKE type_t.num10             #單身 所在筆數(所有資料)
+DEFINE g_detail_cnt         LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_chk                BOOLEAN
+DEFINE g_aw                 STRING                        #確定當下點擊的單身
+DEFINE g_log1               STRING                        #log用
+DEFINE g_log2               STRING                        #log用
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="afmt530_01.main" >}
+#應用 a27 樣板自動產生(Version:6)
+#+ 作業開始(子程式類型)
+PUBLIC FUNCTION afmt530_01(--)
+   #add-point:main段變數傳入 name="main.get_var"
+   p_fmmjdocno,
+   p_glaald
+   #end add-point
+   )
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   DEFINE p_fmmjdocno      LIKE fmmj_t.fmmjdocno
+   DEFINE p_glaald         LIKE glaa_t.glaald     
+   #end add-point   
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:作業初始化 name="main.init"
+   IF cl_null(p_fmmjdocno) THEN
+      RETURN
+   ELSE
+      LET g_fmmjdocno = p_fmmjdocno
+      LET g_glaa.glaald = p_glaald
+   END IF
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+ 
+   
+   #add-point:main段define_sql name="main.body.define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = "SELECT fmmk001,fmmk002,fmmk003,fmmk006,fmmk012,fmmk010,fmmk011,fmmk004,fmmk009, 
+       fmmk005,fmmk013 FROM fmmk_t WHERE fmmkent=? AND fmmk001=? AND fmmk002=? FOR UPDATE"
+   #add-point:main段define_sql name="main.body.after_define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE afmt530_01_bcl CURSOR FROM g_forupd_sql
+ 
+ 
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_afmt530_01 WITH FORM cl_ap_formpath("afm","afmt530_01")
+   
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   #程式初始化
+   CALL afmt530_01_init()   
+ 
+   #進入選單 Menu (="N")
+   CALL afmt530_01_ui_dialog() 
+ 
+   #畫面關閉
+   CLOSE WINDOW w_afmt530_01
+ 
+   
+   
+ 
+   #add-point:離開前 name="main.exit"
+   
+   #end add-point
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="afmt530_01.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION afmt530_01_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point
+   #add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="init.pre_function"
+   
+   #end add-point
+   
+   
+   
+   LET g_error_show = 1
+   
+   #add-point:畫面資料初始化 name="init.init"
+   #投資費用處理方式
+   CALL cl_set_combo_scc('l_fmma003','8802')
+   #根據傳入參數抓取資料應付單頭資料
+   INITIALIZE g_fmmj.* TO NULL
+   SELECT * INTO g_fmmj.*
+     FROM fmmj_t
+    WHERE fmmjent = g_enterprise
+      AND fmmjdocno = g_fmmjdocno
+      
+   SELECT fmma003 INTO g_master.l_fmma003
+     FROM fmma_t
+    WHERE fmmaent = g_enterprise
+      AND fmma001 = g_fmmj.fmmj003    
+   
+   LET g_master.l_fmmjdocno = g_fmmj.fmmjdocno
+   LET g_master.l_fmmj003 = g_fmmj.fmmj003
+   LET g_master.l_fmmj003_desc = s_desc_fmma001_desc(g_master.l_fmmj003)
+   LET g_master.l_fmmjsite = g_fmmj.fmmjsite
+   LET g_master.l_fmmjsite_desc = s_desc_get_department_desc(g_master.l_fmmjsite)
+   DISPLAY BY NAME g_master.l_fmmjdocno,g_master.l_fmmj003,g_master.l_fmmj003_desc,
+                   g_master.l_fmmjsite,g_master.l_fmmjsite_desc,g_master.l_fmma003
+   #取得帳套相關資訊                   
+   CALL s_ld_sel_glaa(g_glaa.glaald,'glaacomp|glaa001|glaa025|glaa026')
+        RETURNING g_sub_success,g_glaa.glaacomp,g_glaa.glaa001,g_glaa.glaa025,g_glaa.glaa026  
+   CALL cl_get_para(g_enterprise,g_glaa.glaacomp,'S-FIN-4012') RETURNING g_para_data1  #151109  albireo add   
+   #160122-00001#22  160316  By xulonga--add--str-
+   LET g_sql_bank=NULL
+   CALL s_anmi120_get_bank_account_sql(g_user,g_dept) RETURNING g_sub_success,g_sql_bank
+   #160122-00001#22  160316  By xulonga--add--end-    
+   #end add-point
+   
+   CALL afmt530_01_default_search()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afmt530_01.ui_dialog" >}
+#+ 功能選單 
+PRIVATE FUNCTION afmt530_01_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE la_param  RECORD #串查用
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   DEFINE l_cmd_token           base.StringTokenizer   #報表作業cmdrun使用 
+   DEFINE l_cmd_next            STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_cnt             LIKE type_t.num5       #報表作業cmdrun使用
+   DEFINE l_cmd_prog_arg        STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_arg             STRING                 #報表作業cmdrun使用
+   #add-point:ui_dialog段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   
+   #end add-point 
+   
+   #add-point:Function前置處理  name="ui_dialog.pre_function"
+   
+   #end add-point
+   
+   LET g_action_choice = " "  
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()      
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   
+   LET g_detail_idx = 1
+   
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+ 
+   #end add-point
+   
+   WHILE TRUE
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_fmmk_d.clear()
+ 
+         LET g_wc2 = ' 1=2'
+         LET g_action_choice = ""
+         CALL afmt530_01_init()
+      END IF
+   
+      CALL afmt530_01_b_fill(g_wc2)
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_fmmk_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE DISPLAY 
+               #add-point:ui_dialog段before display  name="ui_dialog.body.before_display"
+               
+               #end add-point
+               #讓各頁籤能夠同步指到特定資料
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               #add-point:ui_dialog段before display2 name="ui_dialog.body.before_display2"
+               
+               #end add-point
+               
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               LET g_temp_idx = l_ac
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont() 
+               #顯示followup圖示
+               #應用 a48 樣板自動產生(Version:3)
+   CALL afmt530_01_set_pk_array()
+   #add-point:ON ACTION agendum name="show.follow_pic"
+   
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+ 
+               #add-point:display array-before row name="ui_dialog.before_row"
+               
+               #end add-point
+         
+            #自訂ACTION(detail_show,page_1)
+            
+               
+         END DISPLAY
+      
+ 
+      
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+    
+         BEFORE DIALOG
+            IF g_temp_idx > 0 THEN
+               LET l_ac = g_temp_idx
+               CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+               LET g_temp_idx = 1
+            END IF
+            LET g_curr_diag = ui.DIALOG.getCurrent()         
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+ 
+            #add-point:ui_dialog段before name="ui_dialog.b_dialog"
+            CALL cl_set_act_visible("logistics,query,output,reproduce", FALSE)
+            IF g_fmmj.fmmjstus NOT MATCHES "[N]" THEN
+               CALL cl_set_act_visible("insert,modify,delete,modify_detail", FALSE)
+            END IF
+            #end add-point
+            NEXT FIELD CURRENT
+      
+         
+         #應用 a67 樣板自動產生(Version:1)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            LET g_aw = ''
+            CALL afmt530_01_show_ownid_msg()
+            #因為不呼叫cl_auth_chk_act()，所以需另外紀錄log，
+            #但紀錄log時需紀錄status，與鴻傑討論後，決議先一律紀錄成功
+            CALL cl_log_act(g_action_choice,TRUE)
+            CALL afmt530_01_modify()
+            #add-point:ON ACTION modify name="menu.modify"
+            
+            #END add-point
+            
+ 
+ 
+ 
+ 
+         #應用 a67 樣板自動產生(Version:1)
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            LET g_aw = g_curr_diag.getCurrentItem()
+            CALL afmt530_01_show_ownid_msg()
+            #因為不呼叫cl_auth_chk_act()，所以需另外紀錄log，
+            #但紀錄log時需紀錄status，與鴻傑討論後，決議先一律紀錄成功
+            CALL cl_log_act(g_action_choice,TRUE)
+            CALL afmt530_01_modify()
+            #add-point:ON ACTION modify_detail name="menu.modify_detail"
+            
+            #END add-point
+            
+ 
+ 
+ 
+ 
+         #應用 a67 樣板自動產生(Version:1)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            CALL afmt530_01_show_ownid_msg()
+            #因為不呼叫cl_auth_chk_act()，所以需另外紀錄log，
+            #但紀錄log時需紀錄status，與鴻傑討論後，決議先一律紀錄成功
+            CALL cl_log_act(g_action_choice,TRUE)
+            CALL afmt530_01_delete()
+            #add-point:ON ACTION delete name="menu.delete"
+            
+            #END add-point
+            
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL afmt530_01_insert()
+               #add-point:ON ACTION insert name="menu.insert"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               
+               #add-point:ON ACTION reproduce name="menu.reproduce"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL afmt530_01_query()
+               #add-point:ON ACTION query name="menu.query"
+               
+               #END add-point
+               #應用 a59 樣板自動產生(Version:3)  
+               CALL g_curr_diag.setCurrentRow("s_detail1",1)
+ 
+ 
+ 
+ 
+            END IF
+ 
+ 
+ 
+ 
+      
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_fmmk_d)
+               LET g_export_id[1]   = "s_detail1"
+ 
+               #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+               
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+            
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice="exit"
+            CANCEL DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            CANCEL DIALOG
+            
+         
+         
+         #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL afmt530_01_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.dialog.related_document"
+               
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL afmt530_01_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.dialog.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL afmt530_01_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.dialog.followup"
+            
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+ 
+         
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afmt530_01.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION afmt530_01_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   
+   #end add-point 
+   
+   #add-point:Function前置處理  name="query.pre_function"
+   
+   #end add-point
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_fmmk_d.clear()
+   
+   LET g_qryparam.state = "c"
+   
+   #wc備份
+   LET ls_wc = g_wc2
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      CONSTRUCT g_wc2 ON fmmk001,fmmk002,fmmk003,fmmk006,fmmk012,fmmk010,fmmk011,fmmk004,fmmk009,fmmk005, 
+          fmmk013 
+ 
+         FROM s_detail1[1].fmmk001,s_detail1[1].fmmk002,s_detail1[1].fmmk003,s_detail1[1].fmmk006,s_detail1[1].fmmk012, 
+             s_detail1[1].fmmk010,s_detail1[1].fmmk011,s_detail1[1].fmmk004,s_detail1[1].fmmk009,s_detail1[1].fmmk005, 
+             s_detail1[1].fmmk013 
+      
+         
+      
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmk001
+            #add-point:BEFORE FIELD fmmk001 name="query.b.page1.fmmk001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmk001
+            
+            #add-point:AFTER FIELD fmmk001 name="query.a.page1.fmmk001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.fmmk001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmk001
+            #add-point:ON ACTION controlp INFIELD fmmk001 name="query.c.page1.fmmk001"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmk002
+            #add-point:BEFORE FIELD fmmk002 name="query.b.page1.fmmk002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmk002
+            
+            #add-point:AFTER FIELD fmmk002 name="query.a.page1.fmmk002"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.fmmk002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmk002
+            #add-point:ON ACTION controlp INFIELD fmmk002 name="query.c.page1.fmmk002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.fmmk003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmk003
+            #add-point:ON ACTION controlp INFIELD fmmk003 name="construct.c.page1.fmmk003"
+            #應用 a08 樣板自動產生(Version:2)
+            #費用類型
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_fmmc001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO fmmk003  #顯示到畫面上
+            NEXT FIELD fmmk003                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmk003
+            #add-point:BEFORE FIELD fmmk003 name="query.b.page1.fmmk003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmk003
+            
+            #add-point:AFTER FIELD fmmk003 name="query.a.page1.fmmk003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmk006
+            #add-point:BEFORE FIELD fmmk006 name="query.b.page1.fmmk006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmk006
+            
+            #add-point:AFTER FIELD fmmk006 name="query.a.page1.fmmk006"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.fmmk006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmk006
+            #add-point:ON ACTION controlp INFIELD fmmk006 name="query.c.page1.fmmk006"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmk012
+            #add-point:BEFORE FIELD fmmk012 name="query.b.page1.fmmk012"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmk012
+            
+            #add-point:AFTER FIELD fmmk012 name="query.a.page1.fmmk012"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.fmmk012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmk012
+            #add-point:ON ACTION controlp INFIELD fmmk012 name="query.c.page1.fmmk012"
+            #開窗c段
+            #150820-00011#4-----s
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            #160122-00001#22--add---str
+            LET g_qryparam.where = " nmas002 IN (",g_sql_bank,")"
+            #160122-00001#22--add---end
+            CALL q_nmas001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO fmmk012  #顯示到畫面上
+            LET g_qryparam.where = " "             #160122-00001#22
+            NEXT FIELD fmmk012                    #返回原欄位
+            #150820-00011#4-----e
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmk010
+            #add-point:BEFORE FIELD fmmk010 name="query.b.page1.fmmk010"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmk010
+            
+            #add-point:AFTER FIELD fmmk010 name="query.a.page1.fmmk010"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.fmmk010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmk010
+            #add-point:ON ACTION controlp INFIELD fmmk010 name="query.c.page1.fmmk010"
+            #150820-00011#4-----s
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " nmad002 IN (SELECT nmaj001 FROM nmaj_t WHERE nmaj002='2'AND nmajstus='Y' AND nmajent = ",g_enterprise," )"
+            CALL q_nmad002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO fmmk010  #顯示到畫面上
+            NEXT FIELD fmmk010                     #返回原欄位
+            #150820-00011#4-----e
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmk011
+            #add-point:BEFORE FIELD fmmk011 name="query.b.page1.fmmk011"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmk011
+            
+            #add-point:AFTER FIELD fmmk011 name="query.a.page1.fmmk011"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.fmmk011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmk011
+            #add-point:ON ACTION controlp INFIELD fmmk011 name="query.c.page1.fmmk011"
+            #150820-00011#4-----s
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " nmai001='",g_glaa005,"'"
+            CALL q_nmai002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO fmmk011  #顯示到畫面上
+            NEXT FIELD fmmk011                     #返回原欄位
+            #150820-00011#4-----e
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.fmmk004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmk004
+            #add-point:ON ACTION controlp INFIELD fmmk004 name="construct.c.page1.fmmk004"
+            #應用 a08 樣板自動產生(Version:2)
+            #幣別
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooai001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO fmmk004  #顯示到畫面上
+            NEXT FIELD fmmk004                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmk004
+            #add-point:BEFORE FIELD fmmk004 name="query.b.page1.fmmk004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmk004
+            
+            #add-point:AFTER FIELD fmmk004 name="query.a.page1.fmmk004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmk009
+            #add-point:BEFORE FIELD fmmk009 name="query.b.page1.fmmk009"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmk009
+            
+            #add-point:AFTER FIELD fmmk009 name="query.a.page1.fmmk009"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.fmmk009
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmk009
+            #add-point:ON ACTION controlp INFIELD fmmk009 name="query.c.page1.fmmk009"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmk005
+            #add-point:BEFORE FIELD fmmk005 name="query.b.page1.fmmk005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmk005
+            
+            #add-point:AFTER FIELD fmmk005 name="query.a.page1.fmmk005"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.fmmk005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmk005
+            #add-point:ON ACTION controlp INFIELD fmmk005 name="query.c.page1.fmmk005"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmk013
+            #add-point:BEFORE FIELD fmmk013 name="query.b.page1.fmmk013"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmk013
+            
+            #add-point:AFTER FIELD fmmk013 name="query.a.page1.fmmk013"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:query.c.page1.fmmk013
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmk013
+            #add-point:ON ACTION controlp INFIELD fmmk013 name="query.c.page1.fmmk013"
+            
+            #END add-point
+ 
+ 
+  
+         
+ 
+      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct name="cs.before_construct"
+            
+            #end add-point 
+      
+      END CONSTRUCT
+  
+      #add-point:query段more_construct name="query.more_construct"
+      
+      #end add-point 
+  
+      BEFORE DIALOG 
+         CALL cl_qbe_init()
+         #add-point:query段before_dialog name="query.before_dialog"
+         
+         #end add-point 
+      
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+      
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         CANCEL DIALOG
+      
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+      CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:query段after_construct name="query.after_construct"
+   
+   #end add-point
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      #LET g_wc2 = ls_wc
+      LET g_wc2 = " 1=2"
+      RETURN
+   ELSE
+      LET g_error_show = 1
+      LET g_detail_idx = 1
+   END IF
+    
+   CALL afmt530_01_b_fill(g_wc2)
+ 
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   END IF
+   
+   LET INT_FLAG = FALSE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afmt530_01.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION afmt530_01_insert()
+   #add-point:insert段define(客製用) name="insert.define_customerization"
+   
+   #end add-point
+   #add-point:delete段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   
+   #end add-point                
+   
+   #add-point:Function前置處理  name="insert.pre_function"
+   
+   #end add-point
+   
+   #add-point:單身新增前 name="insert.b_insert"
+   
+   #end add-point
+   
+   LET g_insert = 'Y'
+   CALL afmt530_01_modify()
+            
+   #add-point:單身新增後 name="insert.a_insert"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afmt530_01.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION afmt530_01_modify()
+   #add-point:modify段define(客製用) name="modify.define_customerization"
+   
+   #end add-point
+   DEFINE  l_cmd                  LIKE type_t.chr1
+   DEFINE  l_ac_t                 LIKE type_t.num10               #未取消的ARRAY CNT 
+   DEFINE  l_n                    LIKE type_t.num10               #檢查重複用  
+   DEFINE  l_cnt                  LIKE type_t.num10               #檢查重複用  
+   DEFINE  l_lock_sw              LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert         LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete         LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count                LIKE type_t.num10
+   DEFINE  l_i                    LIKE type_t.num10
+   DEFINE  ls_return              STRING
+   DEFINE  l_var_keys             DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys           DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                 DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields               DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak         DYNAMIC ARRAY OF STRING
+   DEFINE  li_reproduce           LIKE type_t.num10
+   DEFINE  li_reproduce_target    LIKE type_t.num10
+   DEFINE  lb_reproduce           BOOLEAN
+   DEFINE  l_insert               BOOLEAN
+   #add-point:modify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+ 
+   #end add-point 
+   
+   #add-point:Function前置處理  name="modify.pre_function"
+   
+   #end add-point
+   
+#  LET g_action_choice = ""   #(ver:35) mark
+   
+   LET g_qryparam.state = "i"
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #add-point:modify開始前 name="modify.define_sql"
+   
+   #end add-point
+   
+   LET INT_FLAG = FALSE
+   LET lb_reproduce = FALSE
+   LET l_insert = FALSE
+ 
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+ 
+   #add-point:modify段修改前 name="modify.before_input"
+   
+   #end add-point
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_fmmk_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_detail_cnt,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_fmmk_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL afmt530_01_b_fill(g_wc2)
+            LET g_detail_cnt = g_fmmk_d.getLength()
+         
+         BEFORE ROW
+            #add-point:modify段before row name="input.body.before_row2"
+            #150820-00011#4-----s
+            #若組織非空，取出現金參照表編碼
+            IF NOT cl_null(g_master.l_fmmjsite) THEN
+               LET g_glaa005 = ''
+               SELECT glaa005 INTO g_glaa005 FROM glaa_t
+                WHERE glaaent = g_enterprise AND glaald = g_glaa.glaald
+            END IF
+            #150820-00011#4-----e
+            #end add-point  
+            LET l_insert = FALSE
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+            LET l_cmd = ''
+            LET l_ac_t = l_ac 
+            LET l_ac = g_detail_idx
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+            DISPLAY g_fmmk_d.getLength() TO FORMONLY.cnt
+         
+            CALL s_transaction_begin()
+            LET g_detail_cnt = g_fmmk_d.getLength()
+            
+            IF g_detail_cnt >= l_ac 
+               AND g_fmmk_d[l_ac].fmmk001 IS NOT NULL
+               AND g_fmmk_d[l_ac].fmmk002 IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_fmmk_d_t.* = g_fmmk_d[l_ac].*  #BACKUP
+               LET g_fmmk_d_o.* = g_fmmk_d[l_ac].*  #BACKUP
+               IF NOT afmt530_01_lock_b("fmmk_t") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH afmt530_01_bcl INTO g_fmmk_d[l_ac].fmmk001,g_fmmk_d[l_ac].fmmk002,g_fmmk_d[l_ac].fmmk003, 
+                      g_fmmk_d[l_ac].fmmk006,g_fmmk_d[l_ac].fmmk012,g_fmmk_d[l_ac].fmmk010,g_fmmk_d[l_ac].fmmk011, 
+                      g_fmmk_d[l_ac].fmmk004,g_fmmk_d[l_ac].fmmk009,g_fmmk_d[l_ac].fmmk005,g_fmmk_d[l_ac].fmmk013 
+ 
+                  IF SQLCA.SQLCODE THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = g_fmmk_d_t.fmmk001,":",SQLERRMESSAGE  
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_fmmk_d_mask_o[l_ac].* =  g_fmmk_d[l_ac].*
+                  CALL afmt530_01_fmmk_t_mask()
+                  LET g_fmmk_d_mask_n[l_ac].* =  g_fmmk_d[l_ac].*
+                  
+                  CALL afmt530_01_detail_show()
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            CALL afmt530_01_set_entry_b(l_cmd)
+            CALL afmt530_01_set_no_entry_b(l_cmd)
+            #add-point:modify段before row name="input.body.before_row"
+            CALL afmt530_01_set_entry_b(l_cmd)
+            CALL afmt530_01_set_no_entry_b(l_cmd)
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+ 
+            #其他table進行lock
+            
+ 
+        
+         BEFORE INSERT
+            
+            LET l_insert = TRUE
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_fmmk_d_t.* TO NULL
+            INITIALIZE g_fmmk_d_o.* TO NULL
+            INITIALIZE g_fmmk_d[l_ac].* TO NULL 
+            #公用欄位給值(單身)
+            
+            #自定義預設值(單身1)
+                  LET g_fmmk_d[l_ac].fmmk006 = "Y"
+      LET g_fmmk_d[l_ac].fmmk009 = "0"
+      LET g_fmmk_d[l_ac].fmmk005 = "0"
+      LET g_fmmk_d[l_ac].fmmk013 = "0"
+ 
+            #add-point:modify段before備份 name="input.body.before_bak"
+ 
+            #end add-point
+            LET g_fmmk_d_t.* = g_fmmk_d[l_ac].*     #新輸入資料
+            LET g_fmmk_d_o.* = g_fmmk_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_fmmk_d[li_reproduce_target].* = g_fmmk_d[li_reproduce].*
+ 
+               LET g_fmmk_d[g_fmmk_d.getLength()].fmmk001 = NULL
+               LET g_fmmk_d[g_fmmk_d.getLength()].fmmk002 = NULL
+ 
+            END IF
+            
+ 
+            CALL afmt530_01_set_entry_b(l_cmd)
+            CALL afmt530_01_set_no_entry_b(l_cmd)
+            #add-point:modify段before insert name="input.body.before_insert"
+            LET g_fmmk_d[l_ac].fmmk001 = g_fmmjdocno
+            #預帶項次
+            LET g_fmmk_d[l_ac].fmmk002 = NULL
+            SELECT MAX(fmmk002) INTO g_fmmk_d[l_ac].fmmk002 FROM fmmk_t
+             WHERE fmmkent = g_enterprise
+               AND fmmk001 = g_fmmk_d[l_ac].fmmk001
+            IF cl_null(g_fmmk_d[l_ac].fmmk002) THEN
+               LET g_fmmk_d[l_ac].fmmk002 = 0
+            END IF
+            LET g_fmmk_d[l_ac].fmmk002 = g_fmmk_d[l_ac].fmmk002 + 1   
+            #end add-point  
+  
+         AFTER INSERT
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(1) INTO l_count FROM fmmk_t 
+             WHERE fmmkent = g_enterprise AND fmmk001 = g_fmmk_d[l_ac].fmmk001
+                                       AND fmmk002 = g_fmmk_d[l_ac].fmmk002
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前 name="input.body.b_insert"
+               
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_fmmk_d[g_detail_idx].fmmk001
+               LET gs_keys[2] = g_fmmk_d[g_detail_idx].fmmk002
+               CALL afmt530_01_insert_b('fmmk_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後 name="input.body.a_insert"
+               
+               #end add-point
+            ELSE    
+               INITIALIZE g_fmmk_d[l_ac].* TO NULL
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code   = "std-00006" 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLCODE THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "fmmk_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE
+               LET g_errparam.popup = TRUE 
+               CALL cl_err()
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL afmt530_01_b_fill(g_wc2)
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert name="input.body.a_insert2"
+ 
+               #end add-point
+               ##ERROR 'INSERT O.K'
+               LET g_detail_cnt = g_detail_cnt + 1
+               
+               LET g_wc2 = g_wc2, " OR (fmmk001 = '", g_fmmk_d[l_ac].fmmk001, "' "
+                                  ," AND fmmk002 = '", g_fmmk_d[l_ac].fmmk002, "' "
+ 
+                                  ,")"
+            END IF                
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+            ELSE
+               #add-point:單身刪除ask前 name="input.body.b_delete_ask"
+               
+               #end add-point   
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   = -263 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前 name="input.body.b_delete"
+               
+               #end add-point   
+               
+               DELETE FROM fmmk_t
+                WHERE fmmkent = g_enterprise AND 
+                      fmmk001 = g_fmmk_d_t.fmmk001
+                      AND fmmk002 = g_fmmk_d_t.fmmk002
+ 
+                      
+               #add-point:單身刪除中 name="input.body.m_delete"
+               
+               #end add-point  
+                      
+               IF SQLCA.SQLCODE THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "fmmk_t:",SQLERRMESSAGE 
+                  LET g_errparam.code = SQLCA.SQLCODE
+                  LET g_errparam.popup = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE   
+               ELSE
+                  LET g_detail_cnt = g_detail_cnt-1
+                  
+ 
+                  #add-point:單身刪除後 name="input.body.a_delete"
+                  
+                  #end add-point
+                  #修改歷程記錄(刪除)
+                  CALL afmt530_01_set_pk_array()
+                  LET g_log1 = util.JSON.stringify(g_fmmk_d[l_ac])   #(ver:38)
+                  IF NOT cl_log_modified_record(g_log1,'') THEN    #(ver:38)
+                  ELSE
+                  END IF
+               END IF 
+               CLOSE afmt530_01_bcl
+               #add-point:單身關閉bcl name="input.body.close"
+               
+               #end add-point
+               LET l_count = g_fmmk_d.getLength()
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_fmmk_d_t.fmmk001
+               LET gs_keys[2] = g_fmmk_d_t.fmmk002
+ 
+               #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL afmt530_01_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove"
+      
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+ 
+            END IF 
+              
+         AFTER DELETE 
+            IF l_cmd <> 'd' THEN
+               #add-point:單身刪除後2 name="input.body.after_delete"
+               
+               #end add-point
+                              CALL afmt530_01_delete_b('fmmk_t',gs_keys,"'1'")
+            END IF
+            #如果是最後一筆
+            IF l_ac = (g_fmmk_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+            #add-point:單身刪除後3 name="input.body.after_delete3"
+            
+            #end add-point
+ 
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmk001
+            #add-point:BEFORE FIELD fmmk001 name="input.b.page1.fmmk001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmk001
+            
+            #add-point:AFTER FIELD fmmk001 name="input.a.page1.fmmk001"
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_fmmk_d[g_detail_idx].fmmk001 IS NOT NULL AND g_fmmk_d[g_detail_idx].fmmk002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_fmmk_d[g_detail_idx].fmmk001 != g_fmmk_d_t.fmmk001 OR g_fmmk_d[g_detail_idx].fmmk002 != g_fmmk_d_t.fmmk002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM fmmk_t WHERE "||"fmmkent = '" ||g_enterprise|| "' AND "||"fmmk001 = '"||g_fmmk_d[g_detail_idx].fmmk001 ||"' AND "|| "fmmk002 = '"||g_fmmk_d[g_detail_idx].fmmk002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmk001
+            #add-point:ON CHANGE fmmk001 name="input.g.page1.fmmk001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmk002
+            #add-point:BEFORE FIELD fmmk002 name="input.b.page1.fmmk002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmk002
+            
+            #add-point:AFTER FIELD fmmk002 name="input.a.page1.fmmk002"
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  g_fmmk_d[g_detail_idx].fmmk001 IS NOT NULL AND g_fmmk_d[g_detail_idx].fmmk002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_fmmk_d[g_detail_idx].fmmk001 != g_fmmk_d_t.fmmk001 OR g_fmmk_d[g_detail_idx].fmmk002 != g_fmmk_d_t.fmmk002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM fmmk_t WHERE "||"fmmkent = '" ||g_enterprise|| "' AND "||"fmmk001 = '"||g_fmmk_d[g_detail_idx].fmmk001 ||"' AND "|| "fmmk002 = '"||g_fmmk_d[g_detail_idx].fmmk002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmk002
+            #add-point:ON CHANGE fmmk002 name="input.g.page1.fmmk002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmk003
+            
+            #add-point:AFTER FIELD fmmk003 name="input.a.page1.fmmk003"
+            #投資費用類型
+            LET g_fmmk_d[l_ac].fmmk003_desc = ' '
+            DISPLAY BY NAME g_fmmk_d[l_ac].fmmk003_desc
+            IF NOT cl_null(g_fmmk_d[l_ac].fmmk003) THEN
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_fmmk_d[l_ac].fmmk003 != g_fmmk_d_t.fmmk003 OR g_fmmk_d_t.fmmk003 IS NULL )) THEN
+                  CALL s_afm_fmmc001_chk(g_fmmk_d[l_ac].fmmk003) RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_fmmk_d[l_ac].fmmk003 = g_fmmk_d_t.fmmk003
+                     LET g_fmmk_d[l_ac].fmmk003_desc = s_desc_fmmc001_desc(g_fmmk_d[l_ac].fmmk003)
+                     DISPLAY BY NAME g_fmmk_d[l_ac].fmmk003_desc
+                     NEXT FIELD CURRENT
+                  END IF     
+                  #確認資料無重複
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM fmmk_t WHERE "||"fmmkent = '" ||g_enterprise|| "' AND "||"fmmk001 = '"||g_fmmk_d[g_detail_idx].fmmk001 ||"' AND "|| "fmmk003 = '"||g_fmmk_d[g_detail_idx].fmmk003 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF           
+               END IF        
+            END IF           
+            LET g_fmmk_d[l_ac].fmmk003_desc = s_desc_fmmc001_desc(g_fmmk_d[l_ac].fmmk003)
+            DISPLAY BY NAME g_fmmk_d[l_ac].fmmk003_desc
+            
+            #150820-00011#4-----s
+            IF g_fmmk_d[l_ac].fmmk006 = 'Y' AND cl_null(g_fmmk_d[l_ac].fmmk012) THEN
+               SELECT fmmf003 INTO g_fmmk_d[l_ac].fmmk012
+                 FROM fmmj_t,fmmf_t
+                WHERE fmmjent = fmmfent AND fmmj002 = fmmf002 AND fmmf001 = g_fmmj.fmmjsite
+                  AND fmmjent = g_enterprise AND fmmf002 = g_fmmj.fmmj002
+               DISPLAY BY NAME g_fmmk_d[l_ac].fmmk012
+               
+               #151109 albireo---s
+               IF g_para_data1 = '23' THEN
+                  #銀行日平均匯率
+                  CALL s_anm_get_exrate(g_glaa.glaald,g_glaa.glaacomp,g_fmmk_d[l_ac].fmmk012,g_fmmk_d[l_ac].fmmk004,g_glaa.glaa001,g_fmmj.fmmjdocdt)
+                     RETURNING g_fmmk_d[l_ac].fmmk009
+               ELSE
+                  IF NOT cl_null(g_glaa.glaald) AND NOT cl_null(g_fmmj.fmmjdocdt) AND NOT cl_null(g_fmmk_d[l_ac].fmmk004)
+                     AND NOT cl_null(g_glaa.glaa001)THEN
+                     CALL s_aooi160_get_exrate('2',g_glaa.glaald,g_fmmj.fmmjdocdt,g_fmmk_d[l_ac].fmmk004,g_glaa.glaa001,0,g_glaa.glaa025) 
+                        RETURNING g_fmmk_d[l_ac].fmmk009
+                  END IF
+               END IF
+               DISPLAY BY NAME g_fmmk_d[l_ac].fmmk009
+               #151109 albireo---e
+            END IF
+            #150820-00011#4-----e
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmk003
+            #add-point:BEFORE FIELD fmmk003 name="input.b.page1.fmmk003"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmk003
+            #add-point:ON CHANGE fmmk003 name="input.g.page1.fmmk003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmk006
+            #add-point:BEFORE FIELD fmmk006 name="input.b.page1.fmmk006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmk006
+            
+            #add-point:AFTER FIELD fmmk006 name="input.a.page1.fmmk006"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmk006
+            #add-point:ON CHANGE fmmk006 name="input.g.page1.fmmk006"
+            #150820-00011#4-----s
+            LET g_fmmk_d[l_ac].fmmk012 = ''
+            IF g_fmmk_d[l_ac].fmmk006 = 'Y' THEN
+               SELECT fmmf003 INTO g_fmmk_d[l_ac].fmmk012
+                 FROM fmmj_t,fmmf_t
+                WHERE fmmjent = fmmfent AND fmmj002 = fmmf002 AND fmmf001 = g_fmmj.fmmjsite
+                  AND fmmjent = g_enterprise AND fmmf002 = g_fmmj.fmmj002
+               #151109 albireo---s
+               IF g_para_data1 = '23' THEN
+                  #銀行日平均匯率
+                  CALL s_anm_get_exrate(g_glaa.glaald,g_glaa.glaacomp,g_fmmk_d[l_ac].fmmk012,g_fmmk_d[l_ac].fmmk004,g_glaa.glaa001,g_fmmj.fmmjdocdt)
+                     RETURNING g_fmmk_d[l_ac].fmmk009
+               ELSE
+                  IF NOT cl_null(g_glaa.glaald) AND NOT cl_null(g_fmmj.fmmjdocdt) AND NOT cl_null(g_fmmk_d[l_ac].fmmk004)
+                     AND NOT cl_null(g_glaa.glaa001)THEN
+                     CALL s_aooi160_get_exrate('2',g_glaa.glaald,g_fmmj.fmmjdocdt,g_fmmk_d[l_ac].fmmk004,g_glaa.glaa001,0,g_glaa.glaa025) 
+                        RETURNING g_fmmk_d[l_ac].fmmk009
+                  END IF
+               END IF
+               DISPLAY BY NAME g_fmmk_d[l_ac].fmmk009
+               #151109 albireo---e
+            END IF
+            DISPLAY BY NAME g_fmmk_d[l_ac].fmmk012
+            #150820-00011#4-----e
+            CALL afmt530_01_set_entry_b(l_cmd)
+            CALL afmt530_01_set_no_entry_b(l_cmd)
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmk012
+            #add-point:BEFORE FIELD fmmk012 name="input.b.page1.fmmk012"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmk012
+            
+            #add-point:AFTER FIELD fmmk012 name="input.a.page1.fmmk012"
+            #出款帳戶
+            #150820-00011#4-----s
+            IF NOT cl_null(g_fmmk_d[l_ac].fmmk012) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_fmmk_d[l_ac].fmmk012
+               LET g_chkparam.arg2 = g_fmmj.fmmjsite
+               IF NOT cl_chk_exist("v_nmas002_3") THEN                  
+                  LET g_fmmk_d[l_ac].fmmk012 = ''
+                  DISPLAY BY NAME g_fmmk_d[l_ac].fmmk012
+                  NEXT FIELD CURRENT
+               END IF
+               #160122-00001#22--add---str
+               IF NOT s_anmi120_nmll002_chk(g_fmmk_d[l_ac].fmmk012,g_user) THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = g_fmmk_d[l_ac].fmmk012
+                  LET g_errparam.code   = 'anm-00574' 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  LET g_fmmk_d[l_ac].fmmk012 = ''
+                  DISPLAY BY NAME g_fmmk_d[l_ac].fmmk012
+                  NEXT FIELD CURRENT
+               END IF
+               #160122-00001#22--add---end
+            END IF
+            
+            SELECT nmas003 INTO g_fmmk_d[l_ac].fmmk004
+              FROM nmaa_t,nmas_t
+             WHERE nmaaent = nmasent AND nmaa001 = nmas001 AND nmaa002= g_fmmj.fmmjsite
+               AND nmasent = g_enterprise AND nmas002 = g_fmmk_d[l_ac].fmmk012
+            DISPLAY BY NAME g_fmmk_d[l_ac].fmmk004
+            #151109 albireo---s
+            IF g_para_data1 = '23' THEN
+               #銀行日平均匯率
+               CALL s_anm_get_exrate(g_glaa.glaald,g_glaa.glaacomp,g_fmmk_d[l_ac].fmmk012,g_fmmk_d[l_ac].fmmk004,g_glaa.glaa001,g_fmmj.fmmjdocdt)
+                  RETURNING g_fmmk_d[l_ac].fmmk009
+            ELSE
+               IF NOT cl_null(g_glaa.glaald) AND NOT cl_null(g_fmmj.fmmjdocdt) AND NOT cl_null(g_fmmk_d[l_ac].fmmk004)
+                     AND NOT cl_null(g_glaa.glaa001)THEN
+                  CALL s_aooi160_get_exrate('2',g_glaa.glaald,g_fmmj.fmmjdocdt,g_fmmk_d[l_ac].fmmk004,g_glaa.glaa001,0,g_glaa.glaa025) 
+                     RETURNING g_fmmk_d[l_ac].fmmk009
+               END IF
+            END IF
+            DISPLAY BY NAME g_fmmk_d[l_ac].fmmk009
+            #151106 albireo---e
+            #150820-00011#4-----e
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmk012
+            #add-point:ON CHANGE fmmk012 name="input.g.page1.fmmk012"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmk010
+            
+            #add-point:AFTER FIELD fmmk010 name="input.a.page1.fmmk010"
+            #150820-00011#4-----s
+            LET g_fmmk_d[l_ac].fmmk010_desc = ''
+            DISPLAY BY NAME g_fmmk_d[l_ac].fmmk010_desc
+            IF NOT cl_null(g_fmmk_d[l_ac].fmmk010) THEN 
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_glaa005
+               LET g_chkparam.arg2 = g_fmmk_d[l_ac].fmmk010
+#               LET g_chkparam.where = " nmad002 IN (SELECT nmaj001 FROM nmaj_t WHERE nmaj002='2'AND nmajstus='Y' AND nmajent = ",g_enterprise," )"
+               #160318-00025#24  by 07900 --add-str
+               LET g_errshow = TRUE #是否開窗                   
+               LET g_chkparam.err_str[1] ="agl-00149:sub-01302|anmi172|",cl_get_progname("anmi172",g_lang,"2"),"|:EXEPROGanmi172"
+               #160318-00025#24  by 07900 --add-end
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_nmad002") THEN
+                  IF cl_null(g_fmmk_d[l_ac].fmmk011) THEN 
+                     SELECT nmad003 INTO g_fmmk_d[l_ac].fmmk011
+                       FROM nmad_t
+                      WHERE nmadent = g_enterprise
+                        AND nmad001 = g_glaa005
+                        AND nmad002 = g_fmmk_d[l_ac].fmmk010    
+                     LET g_fmmk_d[l_ac].fmmk011_desc = s_desc_get_nmail004_desc(g_glaa005,g_fmmk_d[l_ac].fmmk011)
+                     DISPLAY BY NAME g_fmmk_d[l_ac].fmmk011,g_fmmk_d[l_ac].fmmk011_desc 
+                  END IF                     
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_fmmk_d[l_ac].fmmk010 = g_fmmk_d_t.fmmk010
+                  LET g_fmmk_d[l_ac].fmmk010_desc = s_desc_get_nmajl003_desc(g_fmmk_d[l_ac].fmmk010)
+                  DISPLAY BY NAME g_fmmk_d[l_ac].fmmk010,g_fmmk_d[l_ac].fmmk010_desc
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            LET g_fmmk_d[l_ac].fmmk010_desc = s_desc_get_nmajl003_desc(g_fmmk_d[l_ac].fmmk010)
+            DISPLAY BY NAME g_fmmk_d[l_ac].fmmk010_desc
+            #150820-00011#4-----e 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmk010
+            #add-point:BEFORE FIELD fmmk010 name="input.b.page1.fmmk010"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmk010
+            #add-point:ON CHANGE fmmk010 name="input.g.page1.fmmk010"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmk011
+            
+            #add-point:AFTER FIELD fmmk011 name="input.a.page1.fmmk011"
+            #150820-00011#4-----s
+            LET g_fmmk_d[l_ac].fmmk011_desc = ''
+            DISPLAY BY NAME g_fmmk_d[l_ac].fmmk011_desc
+            IF NOT cl_null(g_fmmk_d[l_ac].fmmk011) THEN 
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_fmmk_d[l_ac].fmmk011
+               LET g_chkparam.arg2 = g_glaa005
+
+               #呼叫檢查存在並帶值的libraryf
+               IF cl_chk_exist("v_nmai002") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_fmmk_d[l_ac].fmmk011 = ''
+                  LET g_fmmk_d[l_ac].fmmk011_desc = s_desc_get_nmail004_desc(g_glaa005,g_fmmk_d[l_ac].fmmk011)
+                  DISPLAY BY NAME g_fmmk_d[l_ac].fmmk011,g_fmmk_d[l_ac].fmmk011_desc
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            LET g_fmmk_d[l_ac].fmmk011_desc = s_desc_get_nmail004_desc(g_glaa005,g_fmmk_d[l_ac].fmmk011)
+            DISPLAY BY NAME g_fmmk_d[l_ac].fmmk011_desc
+            #150820-00011#4-----e
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmk011
+            #add-point:BEFORE FIELD fmmk011 name="input.b.page1.fmmk011"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmk011
+            #add-point:ON CHANGE fmmk011 name="input.g.page1.fmmk011"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmk004
+            #add-point:BEFORE FIELD fmmk004 name="input.b.page1.fmmk004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmk004
+            
+            #add-point:AFTER FIELD fmmk004 name="input.a.page1.fmmk004"
+            #幣別
+            IF NOT cl_null(g_fmmk_d[l_ac].fmmk004) THEN 
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_fmmk_d[l_ac].fmmk004 != g_fmmk_d_t.fmmk004 OR g_fmmk_d_t.fmmk004 IS NULL )) THEN            
+                  CALL s_aap_ooaj001_chk(g_glaa.glaald,g_fmmk_d[l_ac].fmmk004) RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     #160321-00016#27 --s add
+                     LET g_errparam.replace[1] = 'aooi150'
+                     LET g_errparam.replace[2] = cl_get_progname('aooi150',g_lang,"2")
+                     LET g_errparam.exeprog = 'aooi150'
+                     #160321-00016#27 --e add
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_fmmk_d[l_ac].fmmk004 = g_fmmk_d_t.fmmk004
+                     NEXT FIELD CURRENT
+                  END IF                   
+                  #取得投資組織對應法人主帳套本位幣與費用幣別匯率預設
+                  #albireo 151109-----s
+                  IF g_para_data1 = '23' THEN
+                     #銀行日平均匯率
+                     CALL s_anm_get_exrate(g_glaa.glaald,g_glaa.glaacomp,g_fmmk_d[l_ac].fmmk012,g_fmmk_d[l_ac].fmmk004,g_glaa.glaa001,g_fmmj.fmmjdocdt)
+                        RETURNING g_fmmk_d[l_ac].fmmk009
+                  ELSE
+                  #albireo 151109-----e
+                     IF NOT cl_null(g_glaa.glaald) AND NOT cl_null(g_fmmj.fmmjdocdt) AND NOT cl_null(g_fmmk_d[l_ac].fmmk004)
+                        AND NOT cl_null(g_glaa.glaa001)THEN
+                        CALL s_aooi160_get_exrate('2',g_glaa.glaald,g_fmmj.fmmjdocdt,g_fmmk_d[l_ac].fmmk004,g_glaa.glaa001,0,g_glaa.glaa025) 
+                           RETURNING g_fmmk_d[l_ac].fmmk009
+                     END IF
+                  END IF   #albrieo 151109 add
+                  DISPLAY BY NAME g_fmmk_d[l_ac].fmmk009
+                  CALL afmt530_01_refresh_amt()   #151029-00012#1
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmk004
+            #add-point:ON CHANGE fmmk004 name="input.g.page1.fmmk004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmk009
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_fmmk_d[l_ac].fmmk009,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD fmmk009
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD fmmk009 name="input.a.page1.fmmk009"
+            #150924-00006#2-----s
+            IF NOT cl_null(g_fmmk_d[l_ac].fmmk009) THEN
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_fmmk_d[l_ac].fmmk009 != g_fmmk_d_t.fmmk009 OR g_fmmk_d_t.fmmk009 IS NULL )) THEN
+                  CALL s_curr_round_ld('1',g_glaa.glaald,g_fmmk_d[l_ac].fmmk004,g_fmmk_d[l_ac].fmmk009,3) RETURNING g_sub_success,g_errno,g_fmmk_d[l_ac].fmmk009	
+                  DISPLAY BY NAME g_fmmk_d[l_ac].fmmk009     
+                  CALL afmt530_01_refresh_amt()   #151029-00012#1                  
+               END IF
+            END IF
+            #150924-00006#2-----e
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmk009
+            #add-point:BEFORE FIELD fmmk009 name="input.b.page1.fmmk009"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmk009
+            #add-point:ON CHANGE fmmk009 name="input.g.page1.fmmk009"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmk005
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_fmmk_d[l_ac].fmmk005,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD fmmk005
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD fmmk005 name="input.a.page1.fmmk005"
+            #150924-00006#2-----s
+            IF NOT cl_null(g_fmmk_d[l_ac].fmmk005) THEN
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_fmmk_d[l_ac].fmmk005 != g_fmmk_d_t.fmmk005 OR g_fmmk_d_t.fmmk005 IS NULL )) THEN
+                  CALL s_curr_round_ld('1',g_glaa.glaald,g_fmmk_d[l_ac].fmmk004,g_fmmk_d[l_ac].fmmk005,2) RETURNING g_sub_success,g_errno,g_fmmk_d[l_ac].fmmk005	
+                  DISPLAY BY NAME g_fmmk_d[l_ac].fmmk005      
+                  CALL afmt530_01_refresh_amt()   #151029-00012#1                  
+               END IF
+            END IF
+            #150924-00006#2-----e
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmk005
+            #add-point:BEFORE FIELD fmmk005 name="input.b.page1.fmmk005"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmk005
+            #add-point:ON CHANGE fmmk005 name="input.g.page1.fmmk005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmk013
+            #add-point:BEFORE FIELD fmmk013 name="input.b.page1.fmmk013"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmk013
+            
+            #add-point:AFTER FIELD fmmk013 name="input.a.page1.fmmk013"
+            #151029-00012#1--s
+            IF NOT cl_null(g_fmmk_d[l_ac].fmmk013) THEN
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_fmmk_d[l_ac].fmmk013 != g_fmmk_d_t.fmmk013 OR g_fmmk_d_t.fmmk013 IS NULL )) THEN
+                  CALL s_curr_round_ld('1',g_glaa.glaald,g_glaa.glaa001,g_fmmk_d[l_ac].fmmk013,2) RETURNING g_sub_success,g_errno,g_fmmk_d[l_ac].fmmk013                 
+                  DISPLAY BY NAME g_fmmk_d[l_ac].fmmk013      
+               END IF
+            END IF
+            #151029-00012#1--e
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmk013
+            #add-point:ON CHANGE fmmk013 name="input.g.page1.fmmk013"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.fmmk001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmk001
+            #add-point:ON ACTION controlp INFIELD fmmk001 name="input.c.page1.fmmk001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.fmmk002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmk002
+            #add-point:ON ACTION controlp INFIELD fmmk002 name="input.c.page1.fmmk002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.fmmk003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmk003
+            #add-point:ON ACTION controlp INFIELD fmmk003 name="input.c.page1.fmmk003"
+            #應用 a07 樣板自動產生(Version:2)   
+            #費用類型
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_fmmk_d[l_ac].fmmk003             #給予default值
+            CALL q_fmmc001()                                             #呼叫開窗
+            LET g_fmmk_d[l_ac].fmmk003 = g_qryparam.return1              
+            LET g_fmmk_d[l_ac].fmmk003_desc = s_desc_fmmc001_desc(g_fmmk_d[l_ac].fmmk003)
+            DISPLAY BY NAME g_fmmk_d[l_ac].fmmk003,g_fmmk_d[l_ac].fmmk003_desc                  
+            NEXT FIELD fmmk003                                           #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.fmmk006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmk006
+            #add-point:ON ACTION controlp INFIELD fmmk006 name="input.c.page1.fmmk006"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.fmmk012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmk012
+            #add-point:ON ACTION controlp INFIELD fmmk012 name="input.c.page1.fmmk012"
+            #開窗i段          
+            #150820-00011#4-----s
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_fmmk_d[l_ac].fmmk012  
+            LET g_qryparam.arg1 = g_fmmj.fmmjsite
+            #160122-00001#22--add---str
+            LET g_qryparam.where = " nmas002 IN(",g_sql_bank,")" #160122-00001#22  160316  By xulonga --mod
+            #160122-00001#22--add---end
+            CALL q_nmas002_3()
+            LET g_fmmk_d[l_ac].fmmk012 = g_qryparam.return1
+            DISPLAY BY NAME g_fmmk_d[l_ac].fmmk012
+            LET g_qryparam.where = " "             #160122-00001#22
+            NEXT FIELD fmmk012
+            #150820-00011#4-----e
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.fmmk010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmk010
+            #add-point:ON ACTION controlp INFIELD fmmk010 name="input.c.page1.fmmk010"
+            #150820-00011#4-----s
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_fmmk_d[l_ac].fmmk010  
+            LET g_qryparam.arg1 = g_glaa005
+            LET g_qryparam.where = " nmad002 IN (SELECT nmaj001 FROM nmaj_t WHERE nmaj002='2'AND nmajstus='Y' AND nmajent = ",g_enterprise," )"
+            CALL q_nmad002()                                #呼叫開窗
+            LET g_fmmk_d[l_ac].fmmk010 = g_qryparam.return1    
+            LET g_fmmk_d[l_ac].fmmk010_desc = s_desc_get_nmajl003_desc(g_fmmk_d[l_ac].fmmk010)
+            DISPLAY BY NAME g_fmmk_d[l_ac].fmmk010,g_fmmk_d[l_ac].fmmk010_desc             
+            NEXT FIELD fmmk010                          #返回原欄位
+            #150820-00011#4-----e
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.fmmk011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmk011
+            #add-point:ON ACTION controlp INFIELD fmmk011 name="input.c.page1.fmmk011"
+            #150820-00011#4-----s
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_fmmk_d[l_ac].fmmk011      #給予default值
+            LET g_qryparam.where = " nmai001 = '",g_glaa005,"' " 
+            CALL q_nmai002()                                #呼叫開窗
+            LET g_fmmk_d[l_ac].fmmk011 = g_qryparam.return1        
+            LET g_fmmk_d[l_ac].fmmk011_desc = s_desc_get_nmail004_desc(g_glaa005,g_fmmk_d[l_ac].fmmk011)
+            DISPLAY BY NAME g_fmmk_d[l_ac].fmmk011,g_fmmk_d[l_ac].fmmk011_desc            
+            NEXT FIELD fmmk011                              #返回原欄位
+            #150820-00011#4-----e
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.fmmk004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmk004
+            #add-point:ON ACTION controlp INFIELD fmmk004 name="input.c.page1.fmmk004"
+            #應用 a07 樣板自動產生(Version:2)   
+            #幣別
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " ooaj001='",g_glaa.glaa026,"' "
+            LET g_qryparam.default1 = g_fmmk_d[l_ac].fmmk004             #給予default值            
+            CALL q_ooaj002()                                             #呼叫開窗
+            LET g_fmmk_d[l_ac].fmmk004 = g_qryparam.return1              
+            DISPLAY g_fmmk_d[l_ac].fmmk004 TO fmmk004              
+            NEXT FIELD fmmk004                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.fmmk009
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmk009
+            #add-point:ON ACTION controlp INFIELD fmmk009 name="input.c.page1.fmmk009"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.fmmk005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmk005
+            #add-point:ON ACTION controlp INFIELD fmmk005 name="input.c.page1.fmmk005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.fmmk013
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmk013
+            #add-point:ON ACTION controlp INFIELD fmmk013 name="input.c.page1.fmmk013"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               CLOSE afmt530_01_bcl
+               LET INT_FLAG = 0
+               LET g_fmmk_d[l_ac].* = g_fmmk_d_t.*
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               #add-point:單身取消時 name="input.body.cancel"
+               
+               #end add-point
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = g_fmmk_d[l_ac].fmmk001 
+               LET g_errparam.code   = -263 
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET g_fmmk_d[l_ac].* = g_fmmk_d_t.*
+            ELSE
+               #寫入修改者/修改日期資訊(單身)
+               
+            
+               #add-point:單身修改前 name="input.body.b_update"
+               
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL afmt530_01_fmmk_t_mask_restore('restore_mask_o')
+ 
+               UPDATE fmmk_t SET (fmmk001,fmmk002,fmmk003,fmmk006,fmmk012,fmmk010,fmmk011,fmmk004,fmmk009, 
+                   fmmk005,fmmk013) = (g_fmmk_d[l_ac].fmmk001,g_fmmk_d[l_ac].fmmk002,g_fmmk_d[l_ac].fmmk003, 
+                   g_fmmk_d[l_ac].fmmk006,g_fmmk_d[l_ac].fmmk012,g_fmmk_d[l_ac].fmmk010,g_fmmk_d[l_ac].fmmk011, 
+                   g_fmmk_d[l_ac].fmmk004,g_fmmk_d[l_ac].fmmk009,g_fmmk_d[l_ac].fmmk005,g_fmmk_d[l_ac].fmmk013) 
+ 
+                WHERE fmmkent = g_enterprise AND
+                  fmmk001 = g_fmmk_d_t.fmmk001 #項次   
+                  AND fmmk002 = g_fmmk_d_t.fmmk002  
+ 
+                  
+               #add-point:單身修改中 name="input.body.m_update"
+               
+               #end add-point
+                  
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "fmmk_t" 
+                     LET g_errparam.code = "std-00009" 
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                  WHEN SQLCA.SQLCODE #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "fmmk_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_fmmk_d[g_detail_idx].fmmk001
+               LET gs_keys_bak[1] = g_fmmk_d_t.fmmk001
+               LET gs_keys[2] = g_fmmk_d[g_detail_idx].fmmk002
+               LET gs_keys_bak[2] = g_fmmk_d_t.fmmk002
+               CALL afmt530_01_update_b('fmmk_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                     
+                     #修改歷程記錄(修改)
+                     LET g_log1 = util.JSON.stringify(g_fmmk_d_t)
+                     LET g_log2 = util.JSON.stringify(g_fmmk_d[l_ac])
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN
+                     END IF
+               END CASE
+               
+               #將遮罩欄位進行遮蔽
+               CALL afmt530_01_fmmk_t_mask_restore('restore_mask_n')
+               
+               #add-point:單身修改後 name="input.body.a_update"
+               
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            CALL afmt530_01_unlock_b("fmmk_t")
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code   = 9001 
+               LET g_errparam.popup  = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_fmmk_d[l_ac].* = g_fmmk_d_t.*
+               END IF
+               #add-point:單身after row name="input.body.a_close"
+               
+               #end add-point
+            ELSE
+            END IF
+            #其他table進行unlock
+            
+             #add-point:單身after row name="input.body.a_row"
+            
+            #end add-point
+            
+         AFTER INPUT
+            #add-point:單身input後 name="input.body.a_input"
+            
+            #end add-point
+            #錯誤訊息統整顯示
+            #CALL cl_err_collect_show()
+            #CALL cl_showmsg()
+            
+         ON ACTION controlo   
+            IF l_insert THEN
+               LET li_reproduce = l_ac_t
+               LET li_reproduce_target = l_ac
+               LET g_fmmk_d[li_reproduce_target].* = g_fmmk_d[li_reproduce].*
+ 
+               LET g_fmmk_d[li_reproduce_target].fmmk001 = NULL
+               LET g_fmmk_d[li_reproduce_target].fmmk002 = NULL
+ 
+            ELSE
+               CALL FGL_SET_ARR_CURR(g_fmmk_d.getLength()+1)
+               LET lb_reproduce = TRUE
+               LET li_reproduce = l_ac
+               LET li_reproduce_target = g_fmmk_d.getLength()+1
+            END IF
+            
+      END INPUT
+      
+ 
+      
+ 
+      
+      #add-point:before_more_input name="input.more_input"
+      
+      #end add-point
+      
+      BEFORE DIALOG
+         #CALL cl_err_collect_init()      
+         IF g_temp_idx > 0 THEN
+            LET l_ac = g_temp_idx
+            CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+            LET g_temp_idx = 1
+         END IF
+         #LET g_curr_diag = ui.DIALOG.getCurrent()
+         #add-point:before_dialog name="input.before_dialog"
+         
+         #end add-point
+         CASE g_aw
+            WHEN "s_detail1"
+               NEXT FIELD fmmk001
+ 
+         END CASE
+   
+      ON ACTION accept
+         ACCEPT DIALOG
+      
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         CANCEL DIALOG
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) 
+              RETURNING g_fld_name,g_frm_name 
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang) 
+           
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   
+   END DIALOG 
+    
+   #新增後取消
+   IF l_cmd = 'a' THEN
+      #當取消或無輸入資料按確定時刪除對應資料
+      IF INT_FLAG OR cl_null(g_fmmk_d[g_detail_idx].fmmk001) THEN
+         CALL g_fmmk_d.deleteElement(g_detail_idx)
+ 
+      END IF
+   END IF
+   
+   #修改後取消
+   IF l_cmd = 'u' AND INT_FLAG THEN
+      LET g_fmmk_d[g_detail_idx].* = g_fmmk_d_t.*
+   END IF
+   
+   #add-point:modify段修改後 name="modify.after_input"
+   
+   #end add-point
+ 
+   CLOSE afmt530_01_bcl
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afmt530_01.delete" >}
+#+ 資料刪除
+PRIVATE FUNCTION afmt530_01_delete()
+   #add-point:delete段define(客製用) name="delete.define_customerization"
+   
+   #end add-point
+   DEFINE li_idx          LIKE type_t.num10
+   DEFINE li_ac_t         LIKE type_t.num10
+   DEFINE li_detail_tmp   LIKE type_t.num10
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:delete段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   
+   #end add-point 
+   
+   #add-point:Function前置處理  name="delete.body.before_delete"
+   
+   #end add-point
+   
+   CALL s_transaction_begin()
+   
+   LET li_ac_t = l_ac
+   
+   LET li_detail_tmp = g_detail_idx
+    
+   #lock所有所選資料
+   FOR li_idx = 1 TO g_fmmk_d.getLength()
+      LET g_detail_idx = li_idx
+      #已選擇的資料
+      IF g_curr_diag.isRowSelected(g_curr_diag.getCurrentItem(), li_idx) THEN 
+         #確定是否有被鎖定
+         IF NOT afmt530_01_lock_b("fmmk_t") THEN
+            #已被他人鎖定
+            RETURN
+         END IF
+ 
+         #(ver:35) ---add start---
+         #確定是否有刪除的權限
+         #先確定該table有ownid
+         IF cl_getField("fmmk_t","") THEN
+            IF NOT cl_auth_chk_act_permission("delete") THEN
+               #有目前權限無法刪除的資料
+               RETURN
+            END IF
+         END IF
+         #(ver:35) --- add end ---
+      END IF
+   END FOR
+   
+   #add-point:單身刪除詢問前 name="delete.body.b_delete_ask"
+   
+   #end add-point  
+   
+   #詢問是否確定刪除所選資料
+   IF NOT cl_ask_del_detail() THEN
+      RETURN
+   END IF
+   
+   FOR li_idx = 1 TO g_fmmk_d.getLength()
+      IF g_fmmk_d[li_idx].fmmk001 IS NOT NULL
+         AND g_fmmk_d[li_idx].fmmk002 IS NOT NULL
+ 
+         AND g_curr_diag.isRowSelected(g_curr_diag.getCurrentItem(), li_idx) THEN 
+         
+         #add-point:單身刪除前 name="delete.body.b_delete"
+         
+         #end add-point   
+         
+         DELETE FROM fmmk_t
+          WHERE fmmkent = g_enterprise AND 
+                fmmk001 = g_fmmk_d[li_idx].fmmk001
+                AND fmmk002 = g_fmmk_d[li_idx].fmmk002
+ 
+         #add-point:單身刪除中 name="delete.body.m_delete"
+         #160122-00001#22--add---str      
+          #     AND fmmk012 IN (SELECT nmll001 FROM nmll_t    #160122-00001#22 by 07900 --mark
+          #       WHERE nmllent = g_enterprise                #160122-00001#22 by 07900 --mark
+           #        AND nmll002 = g_user)                     #160122-00001#22 by 07900 --mark
+         #160122-00001#22--add---end
+         #end add-point  
+                
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "fmmk_t:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+            RETURN
+         ELSE
+            LET g_detail_cnt = g_detail_cnt-1
+            LET l_ac = li_idx
+            
+ 
+ 
+            
+ 
+ 
+            #add-point:單身同步刪除前(同層table) name="delete.body.a_delete"
+            
+            #end add-point
+            LET g_detail_idx = li_idx
+                           INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_fmmk_d_t.fmmk001
+               LET gs_keys[2] = g_fmmk_d_t.fmmk002
+ 
+            #add-point:單身同步刪除中(同層table) name="delete.body.a_delete2"
+            
+            #end add-point
+                           CALL afmt530_01_delete_b('fmmk_t',gs_keys,"'1'")
+            #add-point:單身同步刪除後(同層table) name="delete.body.a_delete3"
+            
+            #end add-point
+            #刪除相關文件
+            #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL afmt530_01_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove.func"
+      
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+ 
+            
+         END IF 
+      END IF 
+    
+   END FOR
+   
+   LET g_detail_idx = li_detail_tmp
+            
+   #add-point:單身刪除後 name="delete.after"
+   
+   #end add-point  
+   
+   LET l_ac = li_ac_t
+   
+   #刷新資料
+   CALL afmt530_01_b_fill(g_wc2)
+            
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afmt530_01.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION afmt530_01_b_fill(p_wc2)              #BODY FILL UP
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE p_wc2            STRING
+   DEFINE ls_owndept_list  STRING  #(ver:35) add
+   DEFINE ls_ownuser_list  STRING  #(ver:35) add
+   #add-point:b_fill段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="b_fill.pre_function"
+   
+   #end add-point
+   
+   IF cl_null(p_wc2) THEN
+      LET p_wc2 = " 1=1"
+   END IF
+   
+   #add-point:b_fill段sql之前 name="b_fill.sql_before"
+   LET p_wc2 = " fmmk001 = '",g_fmmjdocno,"'"
+   #end add-point
+ 
+   LET g_sql = "SELECT  DISTINCT t0.fmmk001,t0.fmmk002,t0.fmmk003,t0.fmmk006,t0.fmmk012,t0.fmmk010,t0.fmmk011, 
+       t0.fmmk004,t0.fmmk009,t0.fmmk005,t0.fmmk013  FROM fmmk_t t0",
+               "",
+               
+               " WHERE t0.fmmkent= ?  AND  1=1 AND (", p_wc2, ") "
+ 
+   #(ver:35) ---add start---
+   
+   #(ver:35) --- add end ---
+ 
+   #add-point:b_fill段sql wc name="b_fill.sql_wc"
+   #160122-00001#22--add---str   
+   LET g_sql = g_sql CLIPPED," AND (fmmk012 IN (",g_sql_bank,") OR TRIM(fmmk012) IS NULL )"  #160122-00001#22 By xulonga --mod
+   #160122-00001#22--add---end
+   #end add-point
+   LET g_sql = g_sql, cl_sql_add_filter("fmmk_t"),
+                      " ORDER BY t0.fmmk001,t0.fmmk002"
+   
+   #add-point:b_fill段sql之後 name="b_fill.sql_after"
+   
+   #end add-point
+   
+   #LET g_sql = cl_sql_add_tabid(g_sql,"fmmk_t")            #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE afmt530_01_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR afmt530_01_pb
+   
+   OPEN b_fill_curs USING g_enterprise
+ 
+   CALL g_fmmk_d.clear()
+ 
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs INTO g_fmmk_d[l_ac].fmmk001,g_fmmk_d[l_ac].fmmk002,g_fmmk_d[l_ac].fmmk003,g_fmmk_d[l_ac].fmmk006, 
+       g_fmmk_d[l_ac].fmmk012,g_fmmk_d[l_ac].fmmk010,g_fmmk_d[l_ac].fmmk011,g_fmmk_d[l_ac].fmmk004,g_fmmk_d[l_ac].fmmk009, 
+       g_fmmk_d[l_ac].fmmk005,g_fmmk_d[l_ac].fmmk013
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH b_fill_curs:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+  
+      #add-point:b_fill段資料填充 name="b_fill.fill"
+      
+      #end add-point
+      
+      CALL afmt530_01_detail_show()      
+ 
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code   = 9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+         END IF
+         EXIT FOREACH
+      END IF
+ 
+      LET l_ac = l_ac + 1
+      
+   END FOREACH
+ 
+   LET g_error_show = 0
+   
+ 
+   
+   CALL g_fmmk_d.deleteElement(g_fmmk_d.getLength())   
+ 
+   
+   #將key欄位填到每個page
+   FOR l_ac = 1 TO g_fmmk_d.getLength()
+ 
+      #add-point:b_fill段key值相關欄位 name="b_fill.keys.fill"
+      
+      #end add-point
+   END FOR
+   
+   IF g_cnt > g_fmmk_d.getLength() THEN
+      LET l_ac = g_fmmk_d.getLength()
+   ELSE
+      LET l_ac = g_cnt
+   END IF
+   LET g_cnt = l_ac
+ 
+   #遮罩相關處理
+   FOR l_ac = 1 TO g_fmmk_d.getLength()
+      LET g_fmmk_d_mask_o[l_ac].* =  g_fmmk_d[l_ac].*
+      CALL afmt530_01_fmmk_t_mask()
+      LET g_fmmk_d_mask_n[l_ac].* =  g_fmmk_d[l_ac].*
+   END FOR
+   
+ 
+   
+   LET l_ac = g_cnt
+ 
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.others.fill"
+   
+   #end add-point
+   
+   ERROR "" 
+ 
+   LET g_detail_cnt = g_fmmk_d.getLength()
+   DISPLAY g_detail_idx TO FORMONLY.idx
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   
+   CLOSE b_fill_curs
+   FREE afmt530_01_pb
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afmt530_01.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION afmt530_01_detail_show()
+   #add-point:detail_show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point
+   #add-point:show段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="detail_show.before"
+   #150820-00011#4-----s
+   #若組織非空，取出現金參照表編碼
+   IF NOT cl_null(g_master.l_fmmjsite) THEN
+      LET g_glaa005 = ''
+      SELECT glaa005 INTO g_glaa005 FROM glaa_t
+       WHERE glaaent = g_enterprise AND glaald = g_glaa.glaald
+   END IF
+   #150820-00011#4-----e   
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值page1
+   
+    
+ 
+   
+   #讀入ref值
+   #add-point:show段單身reference name="detail_show.reference"
+   LET g_fmmk_d[l_ac].fmmk003_desc = s_desc_fmmc001_desc(g_fmmk_d[l_ac].fmmk003)
+   DISPLAY BY NAME g_fmmk_d[l_ac].fmmk003_desc
+   
+   #150820-00011#4-----s
+   LET g_fmmk_d[l_ac].fmmk010_desc = s_desc_get_nmajl003_desc(g_fmmk_d[l_ac].fmmk010)
+   LET g_fmmk_d[l_ac].fmmk011_desc = s_desc_get_nmail004_desc(g_glaa005,g_fmmk_d[l_ac].fmmk011)
+   DISPLAY BY NAME g_fmmk_d[l_ac].fmmk010_desc,g_fmmk_d[l_ac].fmmk011_desc
+   #150820-00011#4-----e
+   #end add-point
+   
+ 
+   #add-point:detail_show段之後 name="detail_show.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afmt530_01.set_entry_b" >}
+#+ 單身欄位開啟設定
+PRIVATE FUNCTION afmt530_01_set_entry_b(p_cmd)                                                  
+   #add-point:set_entry_b段define(客製用) name="set_entry_b.define_customerization"
+   
+   #end add-point
+   DEFINE p_cmd   LIKE type_t.chr1         
+   #add-point:set_entry_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry_b.define"
+   
+   #end add-point
+ 
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("",TRUE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry_b段欄位控制 name="set_entry_b.field_control"
+      
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry_b段control name="set_entry_b.set_entry_b"
+   CALL cl_set_comp_entry("fmmk010,fmmk011,fmmk012",TRUE)  #150820-00011#4 增加fmmk010,fmmk011,fmmk012    #150924-00006#2 remove fmmk004,fmmk005,fmmk009
+   #end add-point                                                                   
+                                                                                
+END FUNCTION                                                                 
+ 
+{</section>}
+ 
+{<section id="afmt530_01.set_no_entry_b" >}
+#+ 單身欄位關閉設定
+PRIVATE FUNCTION afmt530_01_set_no_entry_b(p_cmd)                                               
+   #add-point:set_no_entry_b段define(客製用) name="set_no_entry_b.define_customerization"
+   
+   #end add-point   
+   DEFINE p_cmd   LIKE type_t.chr1           
+   #add-point:set_no_entry_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry_b.define"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry_b段欄位控制 name="set_no_entry_b.field_control"
+      
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry_b段control name="set_no_entry_b.set_no_entry_b"
+#151109  albireo  帳戶必輸-----s
+#   IF l_ac > 0 THEN
+#      #使用市場資金帳戶為Y時,不開放輸入收支單號
+#      IF g_fmmk_d[l_ac].fmmk006 = 'Y' THEN
+#         CALL cl_set_comp_entry("fmmk012",FALSE) #150820-00011#4 移除fmmk007/008 增加l_mmj013
+##      ELSE
+##         CALL cl_set_comp_entry("fmmk004,fmmk005,fmmk009",FALSE)    #150924-00006#2 改為可維護
+#      END IF
+#   END IF
+#151109 albrieo  帳戶必輸-----e
+   #end add-point       
+                                                                                
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afmt530_01.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION afmt530_01_default_search()
+   #add-point:default_search段define(客製用) name="default_search.define_customerization"
+   
+   #end add-point
+   DEFINE li_idx  LIKE type_t.num10
+   DEFINE li_cnt  LIKE type_t.num10
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="default_search.before"
+   
+   #end add-point  
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " fmmk001 = '", g_argv[01], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " fmmk002 = '", g_argv[02], "' AND "
+   END IF
+ 
+   
+   #add-point:default_search段after sql name="default_search.after_sql"
+   
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET ls_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_wc2 = ls_wc
+   ELSE
+      LET g_wc2 = " 1=1"
+      #預設查詢條件
+      LET g_wc2 = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc2) THEN
+         LET g_wc2 = " 1=1"
+      END IF
+   END IF
+ 
+   #add-point:default_search段結束前 name="default_search.after"
+   
+   #end add-point  
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afmt530_01.delete_b" >}
+#+ 刪除單身後其他table連動
+PRIVATE FUNCTION afmt530_01_delete_b(ps_table,ps_keys_bak,ps_page)
+   #add-point:delete_b段define(客製用) name="delete_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:delete_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="delete_b.pre_function"
+   
+   #end add-point
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "fmmk_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      IF ps_table <> 'fmmk_t' THEN
+         #add-point:delete_b段刪除前 name="delete_b.b_delete"
+         
+         #end add-point     
+         
+         DELETE FROM fmmk_t
+          WHERE fmmkent = g_enterprise AND
+            fmmk001 = ps_keys_bak[1] AND fmmk002 = ps_keys_bak[2]
+         
+         #add-point:delete_b段刪除中 name="delete_b.m_delete"
+         
+         #end add-point  
+            
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = ":",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE
+            LET g_errparam.popup = FALSE 
+            CALL cl_err()
+         END IF
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_fmmk_d.deleteElement(li_idx) 
+      END IF 
+ 
+      
+      #add-point:delete_b段刪除後 name="delete_b.a_delete"
+      
+      #end add-point
+      
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afmt530_01.insert_b" >}
+#+ 新增單身後其他table連動
+PRIVATE FUNCTION afmt530_01_insert_b(ps_table,ps_keys,ps_page)
+   #add-point:insert_b段define(客製用) name="insert_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:insert_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="insert_b.pre_function"
+   
+   #end add-point
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "fmmk_t,"
+   #IF ls_group.getIndexOf(ps_table,1) > 0 THEN
+      
+      #add-point:insert_b段新增前 name="insert_b.b_insert"
+      
+      #end add-point    
+      INSERT INTO fmmk_t
+                  (fmmkent,
+                   fmmk001,fmmk002
+                   ,fmmk003,fmmk006,fmmk012,fmmk010,fmmk011,fmmk004,fmmk009,fmmk005,fmmk013) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2]
+                   ,g_fmmk_d[l_ac].fmmk003,g_fmmk_d[l_ac].fmmk006,g_fmmk_d[l_ac].fmmk012,g_fmmk_d[l_ac].fmmk010, 
+                       g_fmmk_d[l_ac].fmmk011,g_fmmk_d[l_ac].fmmk004,g_fmmk_d[l_ac].fmmk009,g_fmmk_d[l_ac].fmmk005, 
+                       g_fmmk_d[l_ac].fmmk013)
+      #add-point:insert_b段新增中 name="insert_b.m_insert"
+      
+      #end add-point    
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "fmmk_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+      END IF
+      #add-point:insert_b段新增後 name="insert_b.a_insert"
+      
+      #end add-point    
+   #END IF
+   
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afmt530_01.update_b" >}
+#+ 修改單身後其他table連動
+PRIVATE FUNCTION afmt530_01_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   #add-point:update_b段define(客製用) name="update_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_page          STRING
+   DEFINE ps_table         STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num10
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="update_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="update_b.pre_function"
+   
+   #end add-point
+   
+   #比對新舊值, 判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #若key無變動, 不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+    
+   #若key有變動, 則連動其他table的資料   
+   #判斷是否是同一群組的table
+   LET ls_group = "fmmk_t,"
+   IF ls_group.getIndexOf(ps_table,1) > 0 AND ps_table <> "fmmk_t" THEN
+      #add-point:update_b段修改前 name="update_b.b_update"
+      
+      #end add-point     
+      UPDATE fmmk_t 
+         SET (fmmk001,fmmk002
+              ,fmmk003,fmmk006,fmmk012,fmmk010,fmmk011,fmmk004,fmmk009,fmmk005,fmmk013) 
+              = 
+             (ps_keys[1],ps_keys[2]
+              ,g_fmmk_d[l_ac].fmmk003,g_fmmk_d[l_ac].fmmk006,g_fmmk_d[l_ac].fmmk012,g_fmmk_d[l_ac].fmmk010, 
+                  g_fmmk_d[l_ac].fmmk011,g_fmmk_d[l_ac].fmmk004,g_fmmk_d[l_ac].fmmk009,g_fmmk_d[l_ac].fmmk005, 
+                  g_fmmk_d[l_ac].fmmk013) 
+         WHERE fmmkent = g_enterprise AND fmmk001 = ps_keys_bak[1] AND fmmk002 = ps_keys_bak[2]
+      #add-point:update_b段修改中 name="update_b.m_update"
+      
+      #end add-point 
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "fmmk_t" 
+            LET g_errparam.code = "std-00009" 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+         WHEN SQLCA.SQLCODE #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "fmmk_t:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+         OTHERWISE
+            
+      END CASE
+      #add-point:update_b段修改後 name="update_b.a_update"
+      
+      #end add-point 
+      RETURN
+   END IF
+   
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afmt530_01.lock_b" >}
+#+ 連動lock其他單身table資料
+PRIVATE FUNCTION afmt530_01_lock_b(ps_table)
+   #add-point:lock_b段define(客製用) name="lock_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:lock_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="lock_b.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="lock_b.pre_function"
+   
+   #end add-point
+   
+   #先刷新資料
+   #CALL afmt530_01_b_fill(g_wc2)
+   
+   #鎖定整組table
+   #LET ls_group = ""
+   #僅鎖定自身table
+   LET ls_group = "fmmk_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN afmt530_01_bcl USING g_enterprise,
+                                       g_fmmk_d[g_detail_idx].fmmk001,g_fmmk_d[g_detail_idx].fmmk002
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "afmt530_01_bcl:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   
+   END IF
+                                    
+ 
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afmt530_01.unlock_b" >}
+#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION afmt530_01_unlock_b(ps_table)
+   #add-point:unlock_b段define(客製用) name="unlock_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   #add-point:unlock_b段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="unlock_b.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="unlock_b.pre_function"
+   
+   #end add-point
+   
+   LET ls_group = ""
+   
+   #IF ls_group.getIndexOf(ps_table,1) THEN
+      CLOSE afmt530_01_bcl
+   #END IF
+   
+ 
+   
+   #add-point:unlock_b段結束前 name="unlock_b.after"
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afmt530_01.modify_detail_chk" >}
+#+ 單身輸入判定(因應modify_detail)
+PRIVATE FUNCTION afmt530_01_modify_detail_chk(ps_record)
+   #add-point:modify_detail_chk段define(客製用) name="modify_detail_chk.define_customerization"
+   
+   #end add-point
+   DEFINE ps_record STRING
+   DEFINE ls_return STRING
+   #add-point:modify_detail_chk段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify_detail_chk.define"
+   
+   #end add-point
+   
+   #add-point:modify_detail_chk段開始前 name="modify_detail_chk.before"
+   
+   #end add-point
+   
+   #根據sr名稱確定該page第一個欄位的名稱
+   CASE ps_record
+      WHEN "s_detail1" 
+         LET ls_return = "fmmk001"
+ 
+      #add-point:modify_detail_chk段自訂page控制 name="modify_detail_chk.page_control"
+      
+      #end add-point
+   END CASE
+    
+   #add-point:modify_detail_chk段結束前 name="modify_detail_chk.after"
+   
+   #end add-point
+   
+   RETURN ls_return
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afmt530_01.show_ownid_msg" >}
+#+ 判斷是否顯示只能修改自己權限資料的訊息
+#(ver:35) ---add start---
+PRIVATE FUNCTION afmt530_01_show_ownid_msg()
+   #add-point:show_ownid_msg段define(客製用) name="show_ownid_msg.define_customerization"
+   
+   #end add-point
+   #add-point:show_ownid_msg段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show_ownid_msg.define"
+   
+   #end add-point
+  
+ 
+   
+ 
+END FUNCTION
+#(ver:35) --- add end ---
+ 
+{</section>}
+ 
+{<section id="afmt530_01.mask_functions" >}
+&include "erp/afm/afmt530_01_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="afmt530_01.set_pk_array" >}
+   #應用 a51 樣板自動產生(Version:8)
+#+ 給予pk_array內容
+PRIVATE FUNCTION afmt530_01_set_pk_array()
+   #add-point:set_pk_array段define name="set_pk_array.define_customerization"
+   
+   #end add-point
+   #add-point:set_pk_array段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_pk_array.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="set_pk_array.before"
+   
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_fmmk_d[l_ac].fmmk001
+   LET g_pk_array[1].column = 'fmmk001'
+   LET g_pk_array[2].values = g_fmmk_d[l_ac].fmmk002
+   LET g_pk_array[2].column = 'fmmk002'
+   
+   #add-point:set_pk_array段之後 name="set_pk_array.after"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="afmt530_01.state_change" >}
+   
+ 
+{</section>}
+ 
+{<section id="afmt530_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="afmt530_01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 重新推算金額
+# Date & Author..: 15/10/30 By 03538(#151029-00012#1)
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afmt530_01_refresh_amt()
+   LET g_fmmk_d[l_ac].fmmk013 = g_fmmk_d[l_ac].fmmk005 * g_fmmk_d[l_ac].fmmk009
+   IF cl_null(g_fmmk_d[l_ac].fmmk013) THEN LET g_fmmk_d[l_ac].fmmk013 = 0 END IF         
+   CALL s_curr_round_ld('1',g_glaa.glaald,g_glaa.glaa001,g_fmmk_d[l_ac].fmmk013,2) RETURNING g_sub_success,g_errno,g_fmmk_d[l_ac].fmmk013
+   DISPLAY BY NAME g_fmmk_d[l_ac].fmmk013
+END FUNCTION
+
+ 
+{</section>}
+ 

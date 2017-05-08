@@ -1,0 +1,626 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axrp138" std_prog="axrp138" erpver="1.0" ver="1" module="AXR" type="M" booking="Y" designer_ver="1.0" class="p" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：出貨應收批次立帳作業
+作業功能：
+作業類型：批次處理作業
+輸入模式：批次 P003_00
+作業資料來源(Master)：
+ 資料來源表：xmdk_t(出货/签收/销退单单头档)
+                        xmdl_t(出货/签收/销退单单明細檔) 
+
+            資料目的表：xrca_t(應收主檔)
+                        xrcb_t(應收明細檔) 
+                        xrcc_t(多帳期明細檔) 
+                        xrcd_t(交易稅明細檔) 
+
+(一）符合條件資料
+　　  select * from xmdk_t, xmdl_t 
+           where   xmdksite 所屬法人 = 帳套條件所屬法人  
+　　　　　     and xmdl022 - xmdl0038  (依帳套) 已立帳數量 > 0 
+
+
+(二)資料處理
+　　 2.1 可立帳數  where 
+          let xrcb007 =  xmdl022 - xmdl038 (依帳套)  已立帳數量 
+     2.2.回寫
+           寫入應收檔後要  回寫出貨單之立帳數量  
+            　update xmdl_t set xmdl038(依帳套) = xmdl038 + xrcb007 
+           
+     2.3 彙總條件: 汇总的话都要按相同币别、税别、付款条件
+                   (参数选择不是按单据+项次+账期冲账的） 
+                   作为天然的汇总条件。
+　　　　　　　　　
+　　　　　　　　　if 出貨單之單據性質　=　銷退單時時立 帳款單性質 =22銷退待抵單
+                  else  
+　　　　　　　　　　 　銷退單時時立 帳款單性質 =12 出貨應收單
+                  end if 
+                  帳款單性質則為固定的彙總條件
+                  立帳日期若為空白,表示依單據日期立帳,單據日期則為固定的彙總條件
+                  帳款類別空白時:取交易對象慣用帳款類別 pmab105,同樣為固定 GROUP 條件 
+
+
+         2.3.1.依出貨單號 : 一張出貨單對應一張應收單
+         2.3.2.交易客戶   :  
+               group 欄位
+                   xmdk007（交易客戶）
+                   xmdk008 (收款客戶) 
+                   xmdk016 (幣別)
+　　　　　　　　　 xmdk014 (稅別）
+                   if  收款條件空白時則 
+                       參考參數 s-fin-1002 ='1' or '2' #沖帳不依項次沖
+　　　　　　　　　     加上 xmdk010 　收款條件
+                   else 
+                       表示全部為相同收款條件，無彙總問題
+　　　　　　　　　 end if 
+　　　　　　　　　 if  匯率基準 = '1'依原單匯率 then 
+                       grpup 欄位加上 匯率 xmdk017 
+                   end if 
+                   
+ 
+                   P.S 業務人員在 xrcb051 故可不為 group 條件之一
+                 　    應收單頭的業務人員取　site =法人之 pmab081 及其所屬部門
+　　　　　　　　　　　 
+　　　　　　　
+         2.3.3.業務人員 :  
+               group 欄位
+                   xmdk007（交易客戶）
+                   xmdk008 (收款客戶) 
+                   xmdk016 (幣別)
+　　　　　　　　　 xmdk014 (稅別）
+                   xmdk003 (業務人員）　　＃xrcb051 業務人員
+                   if  收款條件空白時則 
+                       參考參數 s-fin-1002 ='1' or '2' #沖帳不依項次沖
+　　　　　　　　　     加上 xmdk010 　收款條件
+                   else 
+                       表示全部為相同收款條件，無彙總問題
+　　　　　　　　　 end if 
+ 　　　　　　　　　if  匯率基準 = '1'依原單匯率 then 
+                       grpup 欄位加上 匯率 xmdk017 
+                   end if 
+
+                   P.S.應收單頭的業務人員取 xmdk003 
+
+       2.3.4.業務部門　 
+               group 欄位
+                   xmdk007（交易客戶）
+                   xmdk008 (收款客戶) 
+                   xmdk016 (幣別)
+　　　　　　　　　 xmdk014 (稅別）
+                   xmdk004 (業務部門）　　
+                   if  收款條件空白時則 
+                       參考參數 s-fin-1002 ='1' or '2' #沖帳不依項次沖
+　　　　　　　　　     加上 xmdk010 　收款條件 
+                   else 
+                       表示全部為相同收款條件，無彙總問題
+　　　　　　　　　 end if
+　　　　　　　　　 if  匯率基準 = '1'依原單匯率 then 
+                       grpup 欄位加上 匯率 xmdk017 
+                   end if 
+ 
+                   P.S. 業務人員在 xrcb051 故可不為 group 條件之一
+                      　應收單頭的業務人員取　site =法人之 pmab081 及其所屬部門
+
+ 
+   2.4 自動沖銷
+       2.4.1 沖帳順序:1.先沖暫估單 (未在自動沖帳選項中) 
+                      2.以待抵單日期為排序, 先立帳者先沖 
+       2.4.2 沖暫估單時寫入 xrcf_t 应收冲暂估明细档
+             沖暫估條件: 同一帳款對象 xrca004  + 收款對象xrca005 
+                          and xrcc108 - xrcc109 > 0 
+             根據勾選的 選自動沖銷待抵款
+             自動產生一筆沖帳檔 xrce_t 
+             第一條件順位：　where  xrca004 + xrca005 相同
+　　　　　　　　　　　　　　　不分勾選項目，以待抵單日期為排序, 先立帳者先沖 
+　　　　　　　尚有餘額者，取不同交易對象未沖銷待抵單
+                          xrca004 不過濾，但 xrca005 相同 
+ 
+　　　　2.4.3  沖銷類型:  
+              if  押金待抵時, xrce002 =32 押金沖銷
+              else 
+                  xrce002 = 31 待抵單沖銷
+              end if     
+
+       2.4.4 沖暫估之資料處理
+             依產生之應收單項次自動沖暫估
+　　　　　　　where 　同一帳款對象 xrca004  + 收款對象xrca005 
+                      and 來源單據＋項次相同
+                      and xrcc108 - xrcc109 > 0 　 #有未沖銷金額 
+        
+        if  有符合條件之暫估單 then 
+             xrcb023 = 'Y' 
+             
+        ----沖暫估檔之處理--- 
+        xrcfent 企業代碼 = xrcaent 
+        xrcfld 帳別     = xrcald
+        xrcfdocno 帳款單號  = xrcadocno 
+        xrcfseq   帳款單身項次 = xrcbseq #依沖暫估
+        xrcfseq2 沖銷項次
+                  max(xrcfseq2)+1  
+                  group by  xrcfent,xrcfld,xrcfdocno,
+                            xrcfseq
+        xrce001 作業來源='axrt300' 
+        xrcf002 沖銷類型 ='01' 
+        xrcf007 沖銷數量 
+                        先進先出沖銷暫估單據(交易單可分批立暫估,一次立帳沖銷。)
+                        CASE  xrcb007<= 原暫估可沖銷數量xrcf007 
+                          THEN  =xrcb007立帳數量  EXIT   LOOP
+                        CASE  xrcb007 > 原暫估可沖銷數量xrcf007 
+                          THEN  =xrcf007可沖銷數量  並查找有無符合的下一筆LOOP
+        xrcf008 參考號碼     = 原暫估單 
+        xrcf009 參考單號項次 = 原暫估單項次
+        xrcf010 期別  = 取原暫估單帳款單沖銷帳期
+        
+        xrcf020 稅別 =取原暫估單帳款單身對應之稅別
+        
+        xrcf021 待沖銷應收會科 = 原暫估單.xrcb029
+        xrcf022 待沖銷未稅會科(收入) =  科目(xrcf022)預設方式:
+                        CASE 沖銷當期暫估單者 
+                          OR 暫估收入科目為資產類glac007<>'4','5'科目者
+                          。取原暫估單收入科目(xrcb021)沖轉
+                        CASE 沖銷非當期暫估單者
+                           。取本帳款單身同項次收入科目(xrcb021)對沖
+        xrcf023 待沖銷稅額會科   = 取帳款類別設定之會科("8304_27.待開銷項稅額科目")
+        xrcf024 沖銷價差科目     = 取原暫估單之帳款類別取帳別
+                                           設定差異科目'8304_11沖暫估差異歸屬科目 
+        xrcf025 沖銷匯差科目     = 依原暫估單之帳款類別取差異科目'8304_11沖暫估匯差歸屬科目'
+        xrcf101 原幣單價         = 原暫估單.xrcb101
+        xrcf102 原幣匯率         = 原暫估單.xrca101
+        xrcf103 原幣未稅金額     = xrcf007* 未稅單價xrcf101
+        xrcf104 原幣稅額         = 沖銷原暫估稅額
+        xrcf105 原幣含稅金額     = xrcf007* 含稅單價xrcf101
+        xrcf106 原幣沖銷差異金額 = 立帳價格 - 原暫估價格
+        xrcf111 本幣單價         = 原暫估單價
+        xrcf113 本幣未稅金額     = 原幣沖銷金額*原暫估單匯率
+        xrcf114 本幣稅額         = 沖銷稅額*匯率
+        xrcf115 本幣含稅金額     = 原幣含稅金額*原暫估單匯率
+        xrcf116 本幣價差金額     = 本幣匯差金額
+                                 [(xrcb115/xrcb007)*xrcf007] - xrcf115 -xrcf116
+                                 = 立帳價格 - 原暫估價格 - 已認列之本幣價差
+                                   立帳價格應先換算回同沖銷數量下的單價。
+                                   [(xrcb115/xrcb007)*xrcf007] - xrcf115 -xrcf116
+                                 = 立帳價格 - 原暫估價格 - 已認列之本幣價差
+                                   立帳價格應先換算回同沖銷數量下的單價。
+        xrcf117 本幣匯差金額  = [(xrcb115/xrcb007)*xrcf007] - xrcf115 -xrcf116
+                              = 立帳價格 - 原暫估價格 - 已認列之本幣價差
+                                立帳價格應先換算回同沖銷數量下的單價。
+]]>
+  </all>
+  <field cite_std="N" name="glav_t.glav002" ver="1" src="s" column="glav002" table="glav_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glav_t.glav006" ver="1" src="s" column="glav006" table="glav_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="&lt;=" max="13.000" min_compare="&gt;=" min="1.000" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stbg_t.stbg003" ver="1" src="s" column="stbg003" table="stbg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stbg_t.stbg004" ver="1" src="s" column="stbg004" table="stbg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stbg_t.stbg005" ver="1" src="s" column="stbg005" table="stbg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stbg_t.stbg014" ver="1" src="s" column="stbg014" table="stbg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stbg_t.stbgdocno" ver="1" src="s" column="stbgdocno" table="stbg_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrca007_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrca008_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrca007" ver="1" src="s" column="xrca007" table="xrca_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[可空白
+非空白時則本批立帳都以條件帳款類別立帳
+空白時取客戶慣用類別 pmab105  
+]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrca008" ver="1" src="s" column="xrca008" table="xrca_t" attribute="" type="" req="N" i_zoom="q_ooib001_1" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrcadocdt" ver="1" src="s" column="xrcadocdt" table="xrca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="DateEdit" status="">
+    <![CDATA[可空白
+如果画面上的立账日期是空白的，那
+就是按发票日期立账，那么就不能把不同的发票日期的单据汇总在一起
+
+]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrcadocno" ver="1" src="s" column="xrcadocno" table="xrca_t" attribute="" type="" req="Y" i_zoom="q_ooba002_3" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[開窗單別, 
+立帳依據：1.蓝字发票应收立账，開單別視窗 where 　對應作業編號= 'axrt300' 
+          2.红字发票应收抵扣，開單別視窗 where 　對應作業編號= 'axrt340' 
+
+
+]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrcald" ver="1" src="s" column="xrcald" table="xrca_t" attribute="" type="" req="Y" i_zoom="q_authorised_ld" c_zoom="q_authorised_ld" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[帳套: 
+  ●欄位控管：
+     資料欄位:xrcald  /可INPUT
+     允許空白: No
+     預設值:　GLOBAL 帳套別；帳務人員所屬法人的主帳套。可更改。
+     校驗：1.必須存在於glaald 且為 主帳套 glaa014 = 'Y' 或是平行帳套glaa008='Y'且為獨立作業glaa023='Y' 
+           2.檢查使用者帳別權限　call 元件
+           3.該［帳套別］的所屬法人，隸屬於［帳務中心］範圍下。
+     帶值:                
+           1.帳套名稱(glaal002)
+ 　　　　　2.帳套歸屬法人glaacomp 放到應付xrcacomp 顯示
+
+　  開窗： 有效帳套、主帳套或平行帳套且採獨立作帳者(glaa023='1')
+]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrcasite" ver="1" src="s" column="xrcasite" table="xrca_t" attribute="" type="" req="Y" i_zoom="q_xrah002_1" c_zoom="q_xrah002_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[帳務中心: 
+  ●欄位控管：
+     資料欄位:xrcasite /可Display可Input
+     允許空白:No
+     預設值:  依登錄人員帳號取得工號, 依工號串取員工基本資料的所屬的site
+              去axri020 串取最上層組織 xrah002 
+                 where 組織類型 xrah001 = '1' 應收帳務中心
+                 and xrah007 = 'Y'  #目前版本 
+     校驗：必須存在於 xrah002
+           條件:                
+                 where 組織類型 xrah001 = '1' 應收帳務中心
+                 and xrah007 = 'Y'  #目前版本 
+     帶值: 帳務中心名稱ooeal003 
+            
+         
+
+　●開窗處理：
+     1.查詢時：
+       查詢欄位：q_xrca
+       回值類型：單一回值
+     2.新增/修改時：
+       查詢欄位：q_xrah
+           where 組織類型 xrah001 = '1' 應收帳務中心
+           and xrah007 = 'Y'  #目前版本 
+       回值類型：單一回值
+]]>
+  </field>
+  <field cite_std="N" name="xrcadocno_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_check1" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="d">
+    <![CDATA[自動沖同一帳款客戶,同一收款客戶 帳款單性質=21 之訂金待抵
+
+]]>
+  </field>
+  <field cite_std="N" name="b_check2" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="d">
+    <![CDATA[自動沖同一帳款客戶,同一收款客戶 帳款單性質=23 之预收待抵单
+]]>
+  </field>
+  <field cite_std="N" name="b_check3" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="d">
+    <![CDATA[自動沖同一帳款客戶,同一收款客戶 帳款單性質=29 之  其他扣抵单
+ 名詞要為其他扣抵單還是雜項待抵? 
+]]>
+  </field>
+  <field cite_std="N" name="b_check4" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="d">
+    <![CDATA[自動沖同一帳款客戶,同一收款客戶 帳款單性質=25 之押金待抵
+]]>
+  </field>
+  <field cite_std="N" name="b_check5" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_comb1" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ComboBox" status="d">
+    <![CDATA[依原單匯率
+依立帳日匯率
+依立帳日月平均匯率
+]]>
+  </field>
+  <field cite_std="N" name="buttonedit_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="buttonedit_2" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dateedit_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stbd_t.stbd001" ver="1" src="s" column="stbd001" table="stbd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooef001_14" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stbd_t.stbd002" ver="1" src="s" column="stbd002" table="stbd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_pmaa001_10" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stbd_t.stbd021" ver="1" src="s" column="stbd021" table="stbd_t" attribute="" type="" req="N" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stbd_t.stbd022" ver="1" src="s" column="stbd022" table="stbd_t" attribute="" type="" req="N" i_zoom="q_ooeg001_4" c_zoom="q_ooeg001_4" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stbe_t.stbedocno" ver="1" src="s" column="stbedocno" table="stbe_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stbe_t.stbesite" ver="1" src="s" column="stbesite" table="stbe_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooef001_14" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrca003_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="FFLabel" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrca011_desc" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="FFLabel" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrca003" ver="1" src="s" column="xrca003" table="xrca_t" attribute="" type="" req="N" i_zoom="q_ooag001" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrca011" ver="1" src="s" column="xrca011" table="xrca_t" attribute="" type="" req="N" i_zoom="q_oodb002_5" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="xrcald_desc" src="s" depend_field="xrca_t.xrcald" correspon_key="xrcaent,xrcald" ref_table="glaal_t" ref_fk="glaalent,glaalld" ref_dlang="glaal001" ref_rtn="glaal002" status=""/>
+    <rfield cite_std="N" ver="1" name="xrcasite_desc" src="s" depend_field="xrca_t.xrcasite" correspon_key="xrcaent,xrcasite" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_check1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="b_check2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="b_check3" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="b_check4" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="b_check5" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="b_comb1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="buttonedit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="buttonedit_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="dateedit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="glav_t.glav002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glav_t.glav006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="stbd_t.stbd001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="stbd_t.stbd002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="stbd_t.stbd021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="stbd_t.stbd022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="stbe_t.stbedocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="stbe_t.stbesite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="stbg_t.stbg003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stbg_t.stbg004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stbg_t.stbg005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stbg_t.stbg014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stbg_t.stbgdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca003_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="xrca007_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca008_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca011_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrca003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrca007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrca008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrca011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrcadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrcadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrcald" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrcasite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcadocno_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="lbl_axrp13_gp1" text="帳套及法人" lstr=""/>
+    <sfield name="lbl_xrcasite" text="帳務中心" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_xrcald" text="帳套" lstr=""/>
+    <sfield name="lbl_glaal002" text="說明" lstr=""/>
+    <sfield name="lbl_axrp13_gp4" text="選項" lstr=""/>
+    <sfield name="lbl_glav002" text="會計年度" lstr=""/>
+    <sfield name="lbl_glav006" text="會計期別" lstr=""/>
+    <sfield name="group_input3" text="選項" lstr=""/>
+    <sfield name="lbl_xrcadocno" text="應收單別" lstr=""/>
+    <sfield name="lbl_xrca008" text="收款條件" lstr=""/>
+    <sfield name="lbl_xrca007" text="帳款類別" lstr=""/>
+    <sfield name="lbl_xrcadocdt" text="立帳日期" lstr=""/>
+    <sfield name="group_qbe" text="QBE條件輸入" lstr=""/>
+    <sfield name="lbl_stbg005" text="交易對象" lstr=""/>
+    <sfield name="lbl_stbg004" text="合同編號" lstr=""/>
+    <sfield name="lbl_stbgdocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_stbg014" text="營運據點" lstr=""/>
+    <sfield name="lbl_stbg003" text="單據日期" lstr=""/>
+    <sfield name="group_input" text="隱藏" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_master" text="拋轉傳票條件" lstr=""/>
+    <sfield name="lbl_glapdocno" text="傳票憑證單別" lstr=""/>
+    <sfield name="lbl_glapdocdt" text="傳票憑證日期" lstr=""/>
+    <sfield name="lbl_flag" text="補傳票空號" lstr=""/>
+    <sfield name="lbl_glap010" text="傳票號碼" lstr=""/>
+    <sfield name="lbl_docno_e" text="~" lstr=""/>
+    <sfield name="lbl_accept" text="執行" lstr=""/>
+    <sfield name="lbl_cancel" text="取消" lstr=""/>
+    <sfield name="accept" text="確認" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="lbl_docno" text="應收單號" lstr=""/>
+    <sfield name="lbl_seq" text="項次" lstr=""/>
+    <sfield name="lbl_glaq002" text="會計科目" lstr=""/>
+    <sfield name="lbl_glaq002_desc" text="科目編號" lstr=""/>
+    <sfield name="lbl_glaq017" text="營運據點" lstr=""/>
+    <sfield name="lbl_glaq017_desc" text="營運據點" lstr=""/>
+    <sfield name="lbl_glaq018" text="部門編號" lstr=""/>
+    <sfield name="lbl_glaq018_desc" text="部門" lstr=""/>
+    <sfield name="lbl_glaq019" text="利潤/成本中心" lstr=""/>
+    <sfield name="lbl_glaq019_desc" text="利潤/成本中心" lstr=""/>
+    <sfield name="lbl_glaq020" text="區域" lstr=""/>
+    <sfield name="lbl_glaq020_desc" text="區域" lstr=""/>
+    <sfield name="lbl_glaq021" text="交易客商" lstr=""/>
+    <sfield name="lbl_glaq021_desc" text="交易客商" lstr=""/>
+    <sfield name="lbl_glaq022" text="帳款客戶" lstr=""/>
+    <sfield name="lbl_glaq022_desc" text="帳款客戶" lstr=""/>
+    <sfield name="lbl_glaq023" text="客群" lstr=""/>
+    <sfield name="lbl_glaq023_desc" text="客群" lstr=""/>
+    <sfield name="lbl_glaq024" text="產品類別" lstr=""/>
+    <sfield name="lbl_glaq024_desc" text="產品類別" lstr=""/>
+    <sfield name="lbl_glaq025" text="人員" lstr=""/>
+    <sfield name="lbl_glaq025_desc" text="人員" lstr=""/>
+    <sfield name="lbl_glaq027" text="專案編號" lstr=""/>
+    <sfield name="lbl_glaq028" text="WBS" lstr=""/>
+    <sfield name="lbl_glaq029" text="核算項(一)" lstr=""/>
+    <sfield name="lbl_glaq029_desc" text="核算項(一)" lstr=""/>
+    <sfield name="lbl_glaq030" text="核算項(二)" lstr=""/>
+    <sfield name="lbl_glaq030_desc" text="核算項(二)" lstr=""/>
+    <sfield name="lbl_glaq031" text="核算項(三)" lstr=""/>
+    <sfield name="lbl_glaq031_desc" text="核算項(三)" lstr=""/>
+    <sfield name="lbl_glaq032" text="核算項(四)" lstr=""/>
+    <sfield name="lbl_glaq032_desc" text="核算項(四)" lstr=""/>
+    <sfield name="lbl_glaq033" text="核算項(五)" lstr=""/>
+    <sfield name="lbl_glaq033_desc" text="核算項(五)" lstr=""/>
+    <sfield name="lbl_glaq034" text="核算項(六)" lstr=""/>
+    <sfield name="lbl_glaq034_desc" text="核算項(六)" lstr=""/>
+    <sfield name="lbl_glaq035" text="核算項(七)" lstr=""/>
+    <sfield name="lbl_glaq035_desc" text="核算項(七)" lstr=""/>
+    <sfield name="lbl_glaq036" text="核算項(八)" lstr=""/>
+    <sfield name="lbl_glaq036_desc" text="核算項(八)" lstr=""/>
+    <sfield name="lbl_glaq037" text="核算項(九)" lstr=""/>
+    <sfield name="lbl_glaq037_desc" text="核算項(九)" lstr=""/>
+    <sfield name="lbl_glaq038" text="核算項(十)" lstr=""/>
+    <sfield name="lbl_glaq038_desc" text="核算項(十)" lstr=""/>
+    <sfield name="lbl_source" text="科目來源" lstr=""/>
+    <sfield name="lbl_sw" text="借/貸" lstr=""/>
+    <sfield name="lbl_glaq001" text="摘要" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_docdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_pmaal004" text="交易對象簡稱" lstr=""/>
+    <sfield name="lbl_glaqseq" text="項次" lstr=""/>
+    <sfield name="lbl_lc_subject" text="會計科目" lstr=""/>
+    <sfield name="lbl_glaq003" text="借方金額" lstr=""/>
+    <sfield name="lbl_glaq004" text="貸方金額" lstr=""/>
+    <sfield name="lbl_glaq040" text="借方金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_glaq041" text="貸方金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_glaq043" text="借方金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_glaq044" text="貸方金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_rtaxl003" text="說明" lstr=""/>
+    <sfield name="lbl_glbc004" text="現金變動碼" lstr=""/>
+    <sfield name="lbl_glaq051" text="經營方式" lstr=""/>
+    <sfield name="lbl_glaq026" text="預算編號" lstr=""/>
+    <sfield name="lbl_glaq052" text="渠道" lstr=""/>
+    <sfield name="lbl_oojdl003" text="說明" lstr=""/>
+    <sfield name="lbl_glaq053" text="品牌" lstr=""/>
+    <sfield name="lbl_page_1" text="資產類" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_glac002" text="會計科目編號" lstr=""/>
+    <sfield name="lbl_glacl004" text="說明" lstr=""/>
+    <sfield name="lbl_glac003" text="統制/明細別" lstr=""/>
+    <sfield name="lbl_glac009" text="內部管理科目" lstr=""/>
+    <sfield name="lbl_page_2" text="負債類" lstr=""/>
+    <sfield name="lbl_page_3" text="公用類" lstr=""/>
+    <sfield name="lbl_page_4" text="股東權益類" lstr=""/>
+    <sfield name="lbl_page_5" text="成本類" lstr=""/>
+    <sfield name="lbl_page_6" text="損益類" lstr=""/>
+    <sfield name="lbl_glaqdocno" text="單號" lstr=""/>
+    <sfield name="lbl_glaqld" text="帳別" lstr=""/>
+    <sfield name="lbl_glaq005" text="幣別" lstr=""/>
+    <sfield name="lbl_glaq006" text="匯率" lstr=""/>
+    <sfield name="lbl_glaq010" text="原幣金額" lstr=""/>
+    <sfield name="lbl_page1" text="固定核算項" lstr=""/>
+    <sfield name="lbl_page2" text="自由核算項" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_axrt300_07_xrcbdocno" text="單號_隱藏" lstr=""/>
+    <sfield name="lbl_axrt300_07_xrcbld" text="帳別_隱藏" lstr=""/>
+    <sfield name="lbl_xrcbseq" text="項次" lstr=""/>
+    <sfield name="lbl_xrcb047" text="摘要" lstr=""/>
+    <sfield name="lbl_xrcb029" text="應收帳款科目" lstr=""/>
+    <sfield name="lbl_xrcb021" text="收入會計科目" lstr=""/>
+    <sfield name="lbl_xrcb051" text="業務人員" lstr=""/>
+    <sfield name="lbl_xrcb010" text="業務部門" lstr=""/>
+    <sfield name="lbl_xrcb011" text="責任中心" lstr=""/>
+    <sfield name="lbl_xrcb024" text="區域" lstr=""/>
+    <sfield name="lbl_xrcb036" text="客群" lstr=""/>
+    <sfield name="lbl_xrcb012" text="產品類別" lstr=""/>
+    <sfield name="lbl_xrcb015" text="專案代號" lstr=""/>
+    <sfield name="lbl_xrcb016" text="WBS編號" lstr=""/>
+    <sfield name="lbl_xrcb033" text="經營方式" lstr=""/>
+    <sfield name="lbl_xrcb034" text="渠道" lstr=""/>
+    <sfield name="lbl_xrcb035" text="品牌" lstr=""/>
+    <sfield name="lbl_xrcb037" text="自由核算項一" lstr=""/>
+    <sfield name="lbl_xrcb038" text="自由核算項二" lstr=""/>
+    <sfield name="lbl_xrcb039" text="自由核算項三" lstr=""/>
+    <sfield name="lbl_xrcb040" text="自由核算項四" lstr=""/>
+    <sfield name="lbl_xrcb041" text="自由核算項五" lstr=""/>
+    <sfield name="lbl_xrcb042" text="自由核算項六" lstr=""/>
+    <sfield name="lbl_xrcb043" text="自由核算項七" lstr=""/>
+    <sfield name="lbl_xrcb044" text="自由核算項八" lstr=""/>
+    <sfield name="lbl_xrcb045" text="自由核算項九" lstr=""/>
+    <sfield name="lbl_xrcb046" text="自由核算項十" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sfield name="lbl_glapld" text="帳別" lstr=""/>
+    <sfield name="page_1" text="固定核算項" lstr=""/>
+    <sfield name="lbl_glgald" text="帳別編號" lstr=""/>
+    <sfield name="lbl_glgacomp" text="歸屬法人" lstr=""/>
+    <sfield name="lbl_glaa001" text="帳簿幣別" lstr=""/>
+    <sfield name="lbl_glgadocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_glgadocdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_glga100" text="系統/類別" lstr=""/>
+    <sfield name="lbl_glga007" text="傳票號碼" lstr=""/>
+    <sfield name="lbl_glga008" text="傳票日期" lstr=""/>
+    <sfield name="lbl_glga006" text="附件張數" lstr=""/>
+    <sfield name="lbl_glgbseq" text="項次" lstr=""/>
+    <sfield name="lbl_glgb001" text="摘要" lstr=""/>
+    <sfield name="lbl_glgb002" text="科目編號" lstr=""/>
+    <sfield name="lbl_glgb005" text="幣別" lstr=""/>
+    <sfield name="lbl_glgb006" text="匯率" lstr=""/>
+    <sfield name="lbl_glgb010" text="原幣金額" lstr=""/>
+    <sfield name="lbl_glgb003" text="借方金額" lstr=""/>
+    <sfield name="lbl_glgb004" text="貸方金額" lstr=""/>
+    <sfield name="lbl_glgb039" text="匯率(本位幣二)" lstr=""/>
+    <sfield name="lbl_glgb040" text="借方金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_glgb041" text="貸方金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_amt2" text="金額(本位幣二)" lstr=""/>
+    <sfield name="lbl_glgb042" text="匯率(本位幣三)" lstr=""/>
+    <sfield name="lbl_glgb043" text="借方金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_glgb044" text="貸方金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_amt3" text="金額(本位幣三)" lstr=""/>
+    <sfield name="lbl_glgb017" text="營運據點" lstr=""/>
+    <sfield name="lbl_glgb018" text="部門編號" lstr=""/>
+    <sfield name="lbl_glgb019" text="利潤/成本中心" lstr=""/>
+    <sfield name="lbl_glgb020" text="區域" lstr=""/>
+    <sfield name="lbl_glgb021" text="交易客商" lstr=""/>
+    <sfield name="lbl_glgb022" text="帳款客商" lstr=""/>
+    <sfield name="lbl_glgb023" text="客群" lstr=""/>
+    <sfield name="lbl_glgb024" text="產品類別" lstr=""/>
+    <sfield name="lbl_glgb051" text="經營方式" lstr=""/>
+    <sfield name="lbl_glgb052" text="渠道" lstr=""/>
+    <sfield name="lbl_glgb053" text="品牌" lstr=""/>
+    <sfield name="lbl_glgb025" text="人員" lstr=""/>
+    <sfield name="lbl_glgb027" text="專案編號" lstr=""/>
+    <sfield name="lbl_glgb028" text="WBS" lstr=""/>
+    <sfield name="lbl_glgb055" text="現金變動碼" lstr=""/>
+    <sfield name="lbl_glgb029" text="自由核算項一" lstr=""/>
+    <sfield name="lbl_glgb030" text="自由核算項二" lstr=""/>
+    <sfield name="lbl_glgb031" text="自由核算項三" lstr=""/>
+    <sfield name="lbl_glgb032" text="自由核算項四" lstr=""/>
+    <sfield name="lbl_glgb033" text="自由核算項五" lstr=""/>
+    <sfield name="lbl_glgb034" text="自由核算項六" lstr=""/>
+    <sfield name="lbl_glgb035" text="自由核算項七" lstr=""/>
+    <sfield name="lbl_glgb036" text="自由核算項八" lstr=""/>
+    <sfield name="lbl_glgb037" text="自由核算項九" lstr=""/>
+    <sfield name="lbl_glgb038" text="自由核算項十" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

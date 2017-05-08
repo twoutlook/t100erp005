@@ -1,0 +1,700 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="azzp951.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0018(2015-03-16 17:52:25), PR版次:0018(2016-02-16 17:32:10)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000183
+#+ Filename...: azzp951
+#+ Description: watchdog喚醒工具
+#+ Creator....: 01856(2014-07-31 14:57:03)
+#+ Modifier...: 01856 -SD/PR- 00824
+ 
+{</section>}
+ 
+{<section id="azzp951.global" >}
+#應用 i00 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+IMPORT util
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+GLOBALS
+   DEFINE g_schedule_id   LIKE gzpe_t.gzpe001     #報表背景執行的排程編號
+   DEFINE g_schedule_seq  LIKE gzpe_t.gzpe002     #報表背景執行的排程序號
+END GLOBALS
+DEFINE g_gen_ch   base.Channel
+DEFINE gc_ent     LIKE gzpa_t.gzpaent  #enterprise code
+DEFINE gs_temp    STRING
+DEFINE g_gzpc003  LIKE gzpc_t.gzpc003
+DEFINE g_gzpc004  LIKE gzpc_t.gzpc004
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzp951.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define
+   DEFINE la_param   RECORD
+             sessionkey   STRING,
+             parent       STRING,
+             background   LIKE type_t.chr1,
+             prog         STRING,
+             account      STRING,
+             actionid     STRING,
+             param        DYNAMIC ARRAY OF STRING,
+             notify       STRING
+             END RECORD
+   DEFINE ls_param   STRING
+   DEFINE li_sleep   LIKE type_t.num10
+   DEFINE li_times   LIKE type_t.num10
+   #end add-point    
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+   
+   LET g_bgjob = "Y"
+   LET g_prog = "azzp951"
+   LET g_account = FGL_GETENV("LOGNAME")
+   LET li_times = 1
+
+   #測試傳入的編號
+   IF NOT cl_null(ARG_VAL(1)) THEN 
+      CALL util.JSON.parse(ARG_VAL(1),la_param)
+      IF NOT cl_null(la_param.param[1]) THEN
+         LET ls_param = la_param.param[1]
+         LET gc_ent = FGL_GETENV("TOPENT") 
+         DISPLAY "參數:",ls_param ," 企業編號:",gc_ent
+      END IF 
+   END IF
+    
+   IF g_account = "tiptop" AND cl_null(ls_param) THEN
+      #背景批次迴圈
+      WHILE TRUE
+         #執行超過1500次時，重新執行
+#         IF li_times > 1500 THEN
+#            RUN "r.r azzp951" WITHOUT WAITING
+#            EXIT PROGRAM
+#         END IF
+            
+         LET g_bgjob = "Y"       #重新再設定
+         LET g_prog = "azzp951"  #重新再設定
+         #連結資料庫後執行工作
+         CALL cl_db_connect("ds",FALSE)
+         IF NOT azzp951_cycle(li_times) THEN
+            EXIT WHILE    #如果參數改變成不執行批次背景，由此處離開
+         END IF
+
+         #查看參數確認休息時間:自我算出下次啟動時間
+         LET li_sleep = cl_ap_background_job("azzp951") #每分鐘啟動一次
+         CALL cl_db_disconnect_current()
+
+         LET li_times = li_times + 1
+         SLEEP li_sleep
+      END WHILE
+   ELSE
+      CALL cl_db_connect("ds",FALSE)
+
+      IF cl_get_para(g_enterprise,g_site,"A-SYS-0005") IS NOT NULL AND
+         cl_get_para(g_enterprise,g_site,"A-SYS-0005") = "Y" THEN
+      ELSE
+         DISPLAY "INFO: 系統設置為不允許執行背景作業(azzs010/A-SYS-0005)"
+         EXIT PROGRAM
+      END IF
+
+      IF cl_null(ls_param) THEN
+      ELSE
+         CASE 
+            WHEN ls_param = "kill"
+               CALL s_azzp950_kill_ps("azzp951")
+               CALL s_azzp950_kill_ps("azzp953")
+         #   OTHERWISE
+         #      CALL azzp951_only_job_start(ls_param)
+         END CASE  
+      END IF 
+
+      CALL cl_db_disconnect_current()
+   END IF
+ 
+
+ 
+
+ 
+
+END MAIN
+{</section>}
+ 
+{<section id="azzp951.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+PRIVATE FUNCTION azzp951_cycle(li_times)
+   DEFINE ld_now        DATETIME YEAR TO FRACTION(3)
+   DEFINE li_times      LIKE type_t.num10
+
+   #檢查參數是否繼續執行背景批次
+   IF cl_get_para(g_enterprise,g_site,"A-SYS-0005") IS NOT NULL AND
+      cl_get_para(g_enterprise,g_site,"A-SYS-0005") = "Y" THEN
+   ELSE
+      LET gs_temp = "INFO: 系統設置改為不允許執行背景作業(azzs010/A-SYS-0005)"
+      CALL azzp951_output_log(gs_temp)
+      RETURN FALSE
+   END IF
+
+   CALL azzp951_channel()
+
+   LET ld_now = cl_get_current()
+   LET gs_temp = "-------------Start 時間:",ld_now,"------(",li_times,")----------"
+   CALL azzp951_output_log(gs_temp)
+
+   CALL azzp951_detail_job(ld_now)
+   CALL azzp951_execute_log()
+
+   LET ld_now = cl_get_current()
+   LET gs_temp = "-------------End   時間:",ld_now,"-------GO TO 休眠------------"
+   CALL azzp951_output_log(gs_temp)
+   CALL g_gen_ch.close()
+
+   RETURN TRUE
+END FUNCTION
+
+PRIVATE FUNCTION azzp951_detail_job(ld_now)
+   DEFINE ld_now        DATETIME YEAR TO SECOND  #MINUTE
+   DEFINE lc_gzpc000    LIKE gzpc_t.gzpc000
+   DEFINE lc_gzpc003    LIKE gzpc_t.gzpc003
+   DEFINE ls_msg        STRING
+   DEFINE lc_gzpc002    LIKE gzpc_t.gzpc002  #TIMESTAMP(0)
+   DEFINE ls_sql        STRING
+   DEFINE ls_cmd        STRING
+
+   #第一layer 看目前時間=排程執行時間 啟動job
+   DECLARE gzpc_cs CURSOR FOR
+    SELECT gzpcent,gzpc000,gzpc002,gzpc003 FROM gzpc_t
+   #SELECT gzpcent,gzpc000,gzpc003 FROM gzpc_t
+   # WHERE gzpc002 <= ld_now
+     WHERE gzpc003 = "A"    #標示為自動啟動
+       AND gzpc004 = "N"    #目前狀態為N:Normal的
+     ORDER BY gzpcent ASC,gzpc002 ASC
+
+  #FOREACH gzpc_cs INTO gc_ent,lc_gzpc000,lc_gzpc003
+   FOREACH gzpc_cs INTO gc_ent,lc_gzpc000,lc_gzpc002,lc_gzpc003
+      IF lc_gzpc002 IS NULL OR lc_gzpc002 > ld_now THEN
+         CONTINUE FOREACH
+      END IF
+
+      LET gs_temp = "  新JOB: ENT:",gc_ent," gzpc000=",lc_gzpc000," 狀態=",lc_gzpc003
+      CALL azzp951_output_log(gs_temp)
+
+      #151019-00001 ---modify start---
+   #   CALL azzp951_job_start(gc_ent,lc_gzpc000)
+   
+      #傳入參數說明
+      #參數1：企業編號
+      #參數2：排程執行序號
+      LET ls_cmd = "r.r azzp953 ",gc_ent," ",lc_gzpc000
+      CALL azzp951_output_log("啟動azzp953:" || ls_cmd )
+      RUN ls_cmd
+      #151019-00001 --- modify end ---
+   END FOREACH
+
+    #151019-00001 ---mark start---
+    #以下動作改由azzp953處理
+#   #第二layer 看job 完成 啟動下一個job 要有順序性 第一個序號執行完，才能執行第二個 以此類推
+#   #重新scan gzpc_t 來啟動未完成的job
+#   DECLARE gzpc_cs2 CURSOR FOR
+#    SELECT gzpcent,gzpc000,gzpc002,gzpc003 FROM gzpc_t
+#     WHERE gzpc003 = "A"     #標示為自動啟動
+#       AND gzpc004 = "R"     #執行中的
+#     ORDER BY gzpcent ASC,gzpc002 ASC
+
+#   FOREACH gzpc_cs2 INTO gc_ent,lc_gzpc000,lc_gzpc002,lc_gzpc003
+#      LET gs_temp = "  老JOB: ENT:",gc_ent," gzpc000=",lc_gzpc000," 狀態=",lc_gzpc003
+#      CALL azzp951_output_log(gs_temp)
+#      CALL azzp951_job_scan(gc_ent,lc_gzpc000)
+#   END FOREACH
+
+#   CLOSE gzpc_cs
+#   CLOSE gzpc_cs2
+#   FREE gzpc_cs
+#   FREE gzpc_cs2
+   
+#   #第三layer 把新JOB的狀態gzpc004 Z->R，這樣可以讓很快速結束的有機會慢慢寫
+#   UPDATE gzpc_t SET gzpc004 = "R" WHERE gzpc004 = "Z"
+   #151019-00001 --- mark end ---
+   
+   #第四layer 高頻排程執行
+   CALL azzp951_job_high_frequence(ld_now)
+
+END FUNCTION
+
+PRIVATE FUNCTION azzp951_channel()
+   DEFINE ls_log_file STRING
+   DEFINE ls_begin    STRING
+   DEFINE lt_time     INTERVAL HOUR TO MINUTE
+
+   LET ls_begin = TODAY USING "yyyymmdd"
+
+   LET g_gen_ch = base.Channel.create()
+
+   LET ls_log_file = "azzp951_",ls_begin CLIPPED ,".log"
+   LET ls_log_file = os.Path.join(FGL_GETENV("LOGDIR"),ls_log_file)
+   
+   IF NOT os.Path.exists(ls_log_file) THEN
+      CALL g_gen_ch.openFile(ls_log_file, "w")
+   ELSE
+      CALL g_gen_ch.openFile(ls_log_file, "a")
+   END IF
+
+END FUNCTION
+
+PRIVATE FUNCTION azzp951_output_log(p_msg)
+   DEFINE p_msg   STRING
+
+   CALL g_gen_ch.writeLine(p_msg)
+END FUNCTION
+
+PRIVATE FUNCTION azzp951_execute_log()
+   DEFINE lc_lopa001 LIKE lopa_t.lopa001
+   DEFINE lc_lopa002 DATETIME YEAR TO SECOND
+
+   LET lc_lopa001 = FGL_GETPID()
+#   LET lc_lopa002 = CURRENT YEAR TO SECOND
+   LET lc_lopa002 = cl_get_current()
+   #刪除其他紀錄
+   DELETE FROM lopa_t
+   #只新增現在最後一筆的執行紀錄
+   INSERT INTO lopa_t(lopa001,lopa002) VALUES(lc_lopa001,lc_lopa002)
+
+END FUNCTION
+
+PRIVATE FUNCTION azzp951_kill_azzp951_ps()
+   DEFINE ls_id       STRING
+   DEFINE lch_pipe    base.Channel
+   DEFINE ls_tmp      STRING
+   DEFINE ls_tmp2     STRING
+   DEFINE ls_cmd      STRING
+   DEFINE li_chk      LIKE type_t.num5
+   DEFINE ls_self_pid STRING
+
+   LET li_chk = FALSE
+   LET lch_pipe = base.Channel.create()
+   LET ls_self_pid = FGL_GETPID()
+   
+  #LET ls_cmd = "ps -ef --sort=start_time | grep azzp951 | grep '",FGL_GETENV("ZONE") CLIPPED,"' | grep -v grep | awk '{print $1 \" \" $2 }' "
+   LET ls_cmd = "ps -efwww | grep --line-buffered azzp951 | grep --line-buffered '",FGL_GETENV("ZONE") CLIPPED,"' | grep -v grep | awk '{print $1 \" \" $2 }' "
+
+   CALL lch_pipe.openPipe(ls_cmd, "r")
+   WHILE lch_pipe.read(ls_tmp)
+       IF ls_tmp.trim() IS NULL THEN CONTINUE WHILE END IF
+       LET ls_tmp2 = ls_tmp
+       DISPLAY "PID:",ls_tmp2
+       LET ls_id = ls_tmp2.subString(ls_tmp2.getIndexOf(" ",1)+1,ls_tmp2.getLength())
+       IF ls_id = ls_self_pid THEN
+       ELSE
+          LET ls_cmd = "kill ",ls_id
+          RUN ls_cmd
+       END IF
+   END WHILE
+   CALL lch_pipe.close()
+END FUNCTION
+
+################################################################################
+# Descriptions...: 高頻執行作業
+# Usage..........: CALL azzp951_job_high_frequence()
+################################################################################
+PRIVATE FUNCTION azzp951_job_high_frequence(ld_now)
+   DEFINE ld_now        DATETIME YEAR TO SECOND  #MINUTE
+   DEFINE lc_gzpgent    LIKE gzpg_t.gzpgent
+   DEFINE lc_gzpg001    LIKE gzpg_t.gzpg001  #排程編號
+   DEFINE lc_gzpg002    LIKE gzpg_t.gzpg002  #排程作業
+   DEFINE lc_gzpg003    LIKE gzpg_t.gzpg003  #間隔時間
+   DEFINE lc_gzpg004    LIKE gzpg_t.gzpg004  #起始時間
+   DEFINE lc_gzpg005    LIKE gzpg_t.gzpg005  #結束時間
+   DEFINE lc_gzpg006    LIKE gzpg_t.gzpg006  #執行營運據點
+   DEFINE lc_gzpg007    LIKE gzpg_t.gzpg007  #執行使用者編號
+   DEFINE lc_gzpg009    LIKE gzpg_t.gzpg009  #前一程序未完成時不執行新程序
+   DEFINE lc_gzpg010    LIKE gzpg_t.gzpg010  #排程執行時間
+   DEFINE lc_gzpg011    LIKE gzpg_t.gzpg011  #容許等待時間(分鐘)
+   DEFINE lc_gzpg012    LIKE gzpg_t.gzpg012  #超過容許時間是否mail通知
+   DEFINE lc_gzpg013    LIKE gzpg_t.gzpg013  #收件者mail
+   DEFINE lc_gzpg014    LIKE gzpg_t.gzpg014  #已通知
+   DEFINE lc_gzpg015    LIKE gzpg_t.gzpg015  #sessionkey
+   DEFINE lc_gzpg016    LIKE gzpg_t.gzpg016  #PID
+   DEFINE la_param      RECORD
+            prog         STRING,
+            actionid     STRING,
+            userid       STRING,
+            background   LIKE type_t.chr1,
+            param        DYNAMIC ARRAY OF STRING,
+            gzpgent      LIKE gzpg_t.gzpgent,
+            gzpg001      LIKE gzpg_t.gzpg001
+                        END RECORD
+   DEFINE ls_js         STRING
+   DEFINE ls_sessionkey STRING
+   DEFINE lc_ent_bak    STRING
+   DEFINE ld_minute     DATETIME MINUTE TO MINUTE
+   DEFINE li_minute     LIKE type_t.num5
+   DEFINE ls_minute     STRING 
+   DEFINE ls_hostname   LIKE gzdd_t.gzdd002
+   DEFINE ls_status     LIKE type_t.num5
+   DEFINE lc_overtime   LIKE type_t.chr1    #是否已超過容許時間
+   DEFINE lc_clean_sessionkey   LIKE type_t.chr1
+   
+   
+   LET ls_hostname = cl_get_ap_hostname()
+   LET lc_clean_sessionkey = "Y"
+
+   DECLARE gzpg_cs3 CURSOR FOR
+    SELECT gzpgent,gzpg001,gzpg002,gzpg003,gzpg004,
+           gzpg005,gzpg006,gzpg007,gzpg009,gzpg010,
+           gzpg011,gzpg012,gzpg013,gzpg014,gzpg015,
+           gzpg016
+      FROM gzpg_t, gzdd_t
+     WHERE gzpgstus = "Y"    #標示為生效
+       AND gzpg008 = gzdd002
+       AND gzpg008 = ls_hostname
+       AND gzdd003 = "Y"
+     ORDER BY gzpgent ASC,gzpg003 DESC
+
+   LET ld_minute = ld_now
+   LET ls_minute = ld_minute
+   LET li_minute = ls_minute
+
+   FOREACH gzpg_cs3 INTO lc_gzpgent,lc_gzpg001,lc_gzpg002,lc_gzpg003,lc_gzpg004,
+                         lc_gzpg005,lc_gzpg006,lc_gzpg007,lc_gzpg009,lc_gzpg010,
+                         lc_gzpg011,lc_gzpg012,lc_gzpg013,lc_gzpg014,lc_gzpg015,
+                         lc_gzpg016
+      IF SQLCA.SQLCODE THEN
+         EXIT FOREACH
+      END IF
+      
+      IF lc_gzpg004 < ld_now OR ld_now > lc_gzpg005 THEN
+         CONTINUE FOREACH
+      END IF
+      
+      IF ( li_minute MOD lc_gzpg003 ) <> 0 THEN
+         CONTINUE FOREACH
+      END IF
+
+      #檢核前一程序是否已執行完成
+      IF lc_gzpg009 = "Y" THEN
+         LET ls_status = azzp951_chk_process_exists(lc_gzpg002,lc_gzpg015,lc_gzpg016)
+         IF ls_status THEN   #若前一程式還存在
+            #檢核是否已超過容許等待時間
+            IF lc_gzpg011 > 0 THEN
+               LET lc_overtime = azzp951_chk_allowed_time(ld_now,lc_gzpg010,lc_gzpg011)
+               IF lc_overtime = "Y" THEN
+                  LET gs_temp = "排程作業:",lc_gzpg001,"舊排程還在進行，所以新排程不往下進行，\n",
+                                "但已超過容許等待時間，\n",
+                                "排程開始執行時間為",lc_gzpg004," 目前時間為",ld_now," 容許等待時間為",lc_gzpg011,"分鐘"
+                  CALL azzp951_output_log(gs_temp)
+                  
+                  IF lc_gzpg012 = "Y" AND lc_gzpg014 = "N" THEN
+                     CALL azzp951_send_mail(lc_gzpgent,lc_gzpg001)
+            
+                     UPDATE gzpg_t SET gzpg014 = "Y"
+                      WHERE gzpgent = lc_gzpgent
+                        AND gzpg001 = lc_gzpg001
+                     
+                     LET gs_temp = gs_temp,"\n",
+                                   "已mail通知",lc_gzpg013
+                  END IF
+                  
+                  CALL azzp951_output_log(gs_temp)
+                  
+               ELSE
+                  LET gs_temp = "排程作業:",lc_gzpg001,"舊排程還在執行中，但未超過容許等待時間，所以新排程不往下進行"
+                  CALL azzp951_output_log(gs_temp)
+               END IF
+            END IF
+            LET lc_clean_sessionkey = "N"   #要保留sessionkey以便後續檢查該程序是否還在執行
+            CONTINUE FOREACH
+         END IF
+      END IF
+
+      IF NOT cl_null(lc_gzpg015) AND lc_clean_sessionkey = "Y" THEN
+         LET lc_gzpg015 = ""
+         UPDATE gzpg_t SET gzpg015 = ""
+          WHERE gzpgent = lc_gzpgent
+            AND gzpg001 = lc_gzpg001
+      END IF
+
+      LET gs_temp = "  高頻JOB: ENT:",lc_gzpgent," 作業=",lc_gzpg002
+      CALL azzp951_output_log(gs_temp)
+      
+      INITIALIZE la_param.* TO NULL
+      LET la_param.prog = lc_gzpg002 CLIPPED
+      LET la_param.background = "Y"
+      LET la_param.gzpgent = lc_gzpgent CLIPPED
+      LET la_param.gzpg001 = lc_gzpg001 CLIPPED
+      LET ls_js = util.JSON.stringify( la_param )
+
+      #員工編號及營業據點
+      CALL FGL_SETENV("BACKGROUND_START","azzp951")
+      CALL FGL_SETENV("BACKGROUND_LOGNAME",lc_gzpg007)  #使用者編號
+      CALL FGL_SETENV("BACKGROUND_SITE",lc_gzpg006)     #營運據點
+   
+      #實施企業
+      LET lc_ent_bak = FGL_GETENV("TOPENT")
+      CALL FGL_SETENV("TOPENT",lc_gzpgent)
+      LET ls_sessionkey = cl_cmdrun(ls_js)
+
+      LET gs_temp = "           設定TOPENT=",lc_gzpgent," STATUS=",STATUS," ORIG=",lc_ent_bak," SESSION=",ls_sessionkey
+      CALL azzp951_output_log(gs_temp) 
+      LET gs_temp = "ls_js:",ls_js
+      CALL azzp951_output_log(gs_temp)
+      #更新相關資訊
+      #16/02/01 sessionkey改由cl_cmdrun寫入
+   #   LET lc_gzpg015 = ls_sessionkey
+      UPDATE gzpg_t SET gzpg010 = ld_now, gzpg014 = "N"   #, gzpg015 = lc_gzpg015
+       WHERE gzpgent = lc_gzpgent
+         AND gzpg001 = lc_gzpg001
+
+      LET gs_temp = "UPDATE gzpg_t sqlca:",sqlca.sqlcode ," lc_gzpgent:",lc_gzpgent ," lc_gzpg001:",lc_gzpg001
+      CALL azzp951_output_log(gs_temp)    
+      CALL FGL_SETENV("TOPENT",lc_ent_bak)
+      CALL FGL_SETENV("BACKGROUND_START"," ")
+   END FOREACH
+
+   CLOSE gzpg_cs3
+   FREE gzpg_cs3
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢查排程執行是否已超過容許時間
+# Memo...........:
+# Usage..........: CALL azzp951_chk_allowed_time(pc_gzpg010,pc_gzpg011)
+#                  RETURNING li_overtime
+# Input parameter: ld_now         目前執行時間
+#                : pc_gzpg010     排程執行時間
+#                : pc_gzpg011     容許等待時間(分鐘)
+# Return code....: li_overtime    Y / N
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp951_chk_allowed_time(ld_now,pc_gzpg010,pc_gzpg011)
+   DEFINE ld_now         DATETIME YEAR TO SECOND
+   DEFINE pc_gzpg010     LIKE gzpg_t.gzpg010
+   DEFINE pc_gzpg011     LIKE gzpg_t.gzpg011
+   DEFINE li_overtime    LIKE type_t.chr1
+   DEFINE ls_str         STRING
+   DEFINE l_i            LIKE type_t.num5
+   DEFINE ls_days        LIKE type_t.num5
+   DEFINE ls_hours       LIKE type_t.num5
+   DEFINE ls_minutes     LIKE type_t.num5
+   DEFINE ls_tot_minutes LIKE type_t.num10
+
+   
+   LET li_overtime = "N"
+   
+   IF cl_null(pc_gzpg010) THEN
+      RETURN li_overtime
+   END IF
+
+   # 取得現在與排程開始執行的差異時間
+   LET ls_str = ld_now - pc_gzpg010
+
+   # 上述所取得的時間格式
+   # 例  現在時間       2016-01-09 17:20:17
+   #     排程執行時間   2014-12-07 15:30:17
+   #     差異時間       398 01:50:00    其中398為天數
+   LET l_i = ls_str.getIndexOf(":",1)
+
+   # 取得差異時間的天數、時數、分鐘數
+   LET ls_days = ls_str.subString(1,l_i-4)
+   LET ls_hours = ls_str.subString(l_i-2,l_i-1)
+   LET ls_minutes = ls_str.subString(l_i+1,l_i+2)
+
+   # 計算差異的總分鐘數
+   LET ls_tot_minutes = 0
+   IF ls_days > 0 THEN
+      LET ls_tot_minutes = ls_tot_minutes + (ls_days * 24 * 60)
+   END IF
+   
+   IF ls_hours > 0 THEN
+      LET ls_tot_minutes = ls_tot_minutes + (ls_hours * 60)
+   END IF
+
+   IF ls_minutes > 0 THEN
+      LET ls_tot_minutes = ls_tot_minutes + ls_minutes
+   END IF
+   
+   # 確認是否已超過容許等待時間
+   IF ls_tot_minutes > pc_gzpg011 THEN
+      LET li_overtime = "Y"
+   END IF
+   
+   RETURN li_overtime
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 寄送郵件彙總
+# Memo...........:
+# Usage..........: CALL azzp951_send_mail(pc_gzpgent,pc_gzpg001)
+#                  RETURNING 回传参数
+# Input parameter: pc_gzpgent     企業編號
+#                : pc_gzpg001     排程編號
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp951_send_mail(pc_gzpgent,pc_gzpg001)
+   DEFINE pc_gzpgent    LIKE gzpg_t.gzpgent
+   DEFINE pc_gzpg001    LIKE gzpg_t.gzpg001
+   DEFINE ls_file       STRING
+   DEFINE lc_channel    base.Channel
+   DEFINE ls_text       STRING
+   DEFINE ls_tmp        STRING
+   DEFINE li_cnt        LIKE type_t.num5
+   DEFINE ls_run_cmd    STRING
+   DEFINE ls_gzpg002    LIKE gzpg_t.gzpg002    #執行作業
+   DEFINE ls_gzpg010    LIKE gzpg_t.gzpg010    #排程執行時間
+   DEFINE ls_gzpg011    LIKE gzpg_t.gzpg011    #容許等待時間(分鐘)
+   DEFINE ls_gzpg013    LIKE gzpg_t.gzpg013    #收件者mail
+   
+   
+   #信件暫存檔案路徑
+   #每一筆新的檔案把之前一筆delete 保持最新的一筆
+   LET ls_file = "azzp951_mail_",pc_gzpg001,".txt"
+   LET ls_file = os.Path.join(FGL_GETENV("TEMPDIR"),ls_file)
+
+   #信件檔案
+   IF os.Path.exists(ls_file) THEN
+      IF os.Path.delete(ls_file) THEN
+      END IF
+   END IF
+   LET lc_channel = base.Channel.create()
+   CALL lc_channel.openFile( ls_file CLIPPED, "w" )
+   CALL lc_channel.setDelimiter("")
+   
+   SELECT gzpg002,gzpg010,gzpg011,gzpg013
+     INTO ls_gzpg002,ls_gzpg010,ls_gzpg011,ls_gzpg013
+     FROM gzpg_t
+    WHERE gzpgent = pc_gzpgent
+      AND gzpg001 = pc_gzpg001
+   
+   LET li_cnt =  1
+ 
+   #信件主旨
+   INITIALIZE g_xml.* TO NULL
+
+   LET g_xml.subject = "[T100高頻排程執行超過容許等待時間] 排程編號:",pc_gzpg001," 作業編號:",ls_gzpg002
+   LET ls_text = "[T100高頻排程執行超過容許等待時間] \n排程編號:",pc_gzpg001," 作業編號:",ls_gzpg002,"\n"
+   LET ls_text = ls_text,"本次執行細節\n"
+   LET ls_text = ls_text,"==================================================\n"
+   LET ls_text = ls_text,"執行作業:",ls_gzpg002,"\n"
+   LET ls_text = ls_text,"執行時間:","由", ls_gzpg010 ,"起\n"
+   LET ls_text = ls_text,"容許等待時間(分鐘):",ls_gzpg011 ,"\n"
+   LET ls_text = ls_text,"備註:","\n"
+   LET ls_text = ls_text,"執行狀況: 作業",ls_gzpg002,"排程執行已超過容許時間","\n"
+   LET ls_text = ls_text,"個別項目執行可參考 $LOGDIR/azzp951_",TODAY USING "yyyymmdd",".log\n\n"
+
+   CALL azzp951_output_log("信件內容:" || ls_text)
+   CALL lc_channel.write(ls_text)
+
+   #信件本文
+   LET g_xml.body = ls_file
+
+   #收件者
+   LET g_xml.recipient = ls_gzpg013 CLIPPED
+   LET ls_tmp = "e-mail:",g_xml.recipient
+   CALL azzp951_output_log(ls_tmp)
+      
+   #寄發mail
+   CALL cl_jmail() RETURNING ls_tmp
+   LET gs_temp = "send_mail:",ls_tmp
+   CALL azzp951_output_log(gs_temp)
+   LET gs_temp = "send_mail: 排程編號 ", pc_gzpg001," 收件者mail ",ls_gzpg013
+   CALL azzp951_output_log(gs_temp)
+
+   CALL lc_channel.close()
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 檢核排程作業是否還在執行
+# Memo...........:
+# Usage..........: CALL azzp951_chk_process_exists(ps_gzpg002,ps_gzpg015,ps_gzpg016)
+#                  RETURNING li_status
+# Input parameter: ps_gzpg002     排程作業
+#                : ps_gzpg015     sessionkey
+#                : ps_gzpg016     PID
+# Return code....: li_status      TRUE / FALSE
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp951_chk_process_exists(ps_gzpg002,ps_gzpg015,ps_gzpg016)
+   DEFINE ps_gzpg002    LIKE gzpg_t.gzpg002
+   DEFINE ps_gzpg015    LIKE gzpg_t.gzpg015
+   DEFINE ps_gzpg016    LIKE gzpg_t.gzpg016
+   DEFINE ls_cmd        STRING
+   DEFINE lch_pipe      base.Channel
+   DEFINE ls_tmp        STRING
+   DEFINE ls_tmp2       STRING
+   DEFINE li_status     LIKE type_t.num5
+   
+   
+   IF cl_null(ps_gzpg016) THEN
+      LET ls_cmd = "排程作業:",ps_gzpg002,"因為沒有PID的資訊，因此使用ps -ef的方式檢查process是否存在"
+      CALL azzp951_output_log(ls_cmd)
+      
+      LET ls_cmd = "ps -efwww | grep --line-buffered  ",ps_gzpg002 CLIPPED,
+                   "|grep --line-buffered '",FGL_GETENV("ZONE") CLIPPED,"'",
+                   "|grep --line-buffered 'fglrun-bin'",
+                   "|grep --line-buffered ",ps_gzpg015 CLIPPED,
+                   "|grep -iv --line-buffered 'ps -ef'"
+   ELSE
+      LET ls_cmd = "ps -p ",ps_gzpg016 CLIPPED,
+                   "|grep -iv --line-buffered 'PID'"
+   END IF
+   CALL azzp951_output_log(ls_cmd)
+
+   LET lch_pipe = base.Channel.create()
+   LET ls_tmp = ""
+   LET ls_tmp2 = ""
+
+   CALL lch_pipe.openPipe(ls_cmd, "r")
+   WHILE TRUE
+      LET ls_tmp = lch_pipe.readLine()
+      IF lch_pipe.isEof() THEN
+         EXIT WHILE
+      END IF
+      LET ls_tmp2 = ls_tmp2,ls_tmp
+   END WHILE
+
+   IF ls_tmp2.getLength() > 0 THEN
+      LET li_status = TRUE
+   ELSE
+      LET li_status = FALSE
+   END IF
+   
+   CALL lch_pipe.close()
+
+   RETURN li_status
+   
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

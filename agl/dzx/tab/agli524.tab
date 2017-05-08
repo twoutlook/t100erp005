@@ -1,0 +1,129 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli524" module="agl" jobmode="N" type="i07" industry="std" fix_arg="10" crtid="05016" crtdt="2015-03-30 17:32:06" modid="05016" moddt="2015-04-02 16:29:52" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="合併報表會計科目沖銷規則_MULTI科目核算項值設定">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gldw002,gldw002_desc(chr80),gldw001,gldw001_desc(chr80),gldw004,gldw004_desc(chr80),gldw003,gldw003_desc(chr80),gldw006,gldw006_desc(chr80),gldw005,gldw005_desc(chr80),gldw007,gldw008,gldw009,gldw010,gldw010_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gldwstus,gldw011,gldw011_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gldw011,gldwownid,gldwownid_desc(chr500),gldwowndp,gldwowndp_desc(chr500),gldwcrtid,gldwcrtid_desc(chr500),gldwcrtdp,gldwcrtdp_desc(chr500),gldwcrtdt,gldwmodid,gldwmodid_desc(chr500),gldwmoddt"/>
+      <var id="bs_field" value="gldw001,gldw002,gldw003,gldw004,gldw005,gldw006,gldw007,gldw008,gldw009,gldw010" pk="gldw001,gldw002,gldw003,gldw004,gldw005,gldw006,gldw007,gldw008,gldw009,gldw010" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="agli524" method="dialog">
+    <section id="input">
+      <input id="head" field="gldw002,gldw001,gldw004,gldw003,gldw006,gldw005,gldw007,gldw008,gldw009,gldw010"/>
+      <input id="body" page="1" field="gldwstus,gldw011" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gldw002,gldw001,gldw004,gldw004_desc,gldw003,gldw006,gldw005,gldw007,gldw008,gldw009,gldw010"/>
+      <construct id="body" page="1" field="gldwstus,gldw011"/>
+      <construct id="body" page="2" field="gldwownid,gldwowndp,gldwcrtid,gldwcrtdp,gldwcrtdt,gldwmodid,gldwmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gldw001,gldw002,gldw003,gldw004,gldw005,gldw006,gldw007,gldw008,gldw009,gldw010"/>
+      <set id="head" type="no_entry" field="gldw001,gldw002,gldw003,gldw004,gldw005,gldw006,gldw007,gldw008,gldw009,gldw010"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gldw002">
+        <after/>
+      </column>
+      <column id="gldw002_desc"/>
+      <column id="gldw001">
+        <after/>
+      </column>
+      <column id="gldw001_desc"/>
+      <column id="gldw004">
+        <after/>
+      </column>
+      <column id="gldw004_desc"/>
+      <column id="gldw003">
+        <after/>
+      </column>
+      <column id="gldw003_desc"/>
+      <column id="gldw006">
+        <after/>
+      </column>
+      <column id="gldw006_desc"/>
+      <column id="gldw005">
+        <after/>
+      </column>
+      <column id="gldw005_desc"/>
+      <column id="gldw007" type="S" default="0"/>
+      <column id="gldw008"/>
+      <column id="gldw009"/>
+      <column id="gldw010">
+        <after/>
+      </column>
+      <column id="gldw010_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="gldwstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="gldw011">
+        <after/>
+      </column>
+      <column id="gldw011_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gldwownid">
+        <after>
+          <reference field="gldwownid_desc" ref_field="gldw_t.gldwownid" map_field="gldwownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gldwownid_desc"/>
+      <column id="gldwowndp">
+        <after>
+          <reference field="gldwowndp_desc" ref_field="gldw_t.gldwowndp" map_field="gldwowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gldwowndp_desc"/>
+      <column id="gldwcrtid">
+        <after>
+          <reference field="gldwcrtid_desc" ref_field="gldw_t.gldwcrtid" map_field="gldwcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gldwcrtid_desc"/>
+      <column id="gldwcrtdp">
+        <after>
+          <reference field="gldwcrtdp_desc" ref_field="gldw_t.gldwcrtdp" map_field="gldwcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gldwcrtdp_desc"/>
+      <column id="gldwcrtdt"/>
+      <column id="gldwmodid">
+        <after>
+          <reference field="gldwmodid_desc" ref_field="gldw_t.gldwmodid" map_field="gldwmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gldwmodid_desc"/>
+      <column id="gldwmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gldw_t" pk="gldw001,gldw002,gldw003,gldw004,gldw005,gldw006,gldw007,gldw008,gldw009,gldw010">
+      <sql id="forupd_sql" type="sql" query="SELECT gldw002,&apos;&apos;,gldw001,&apos;&apos;,gldw004,&apos;&apos;,gldw003,&apos;&apos;,gldw006,&apos;&apos;,gldw005,&apos;&apos;,gldw007,gldw008,gldw009,gldw010,&apos;&apos; FROM gldw_t WHERE gldwent= ? AND gldw001=? AND gldw002=? AND gldw003=? AND gldw004=? AND gldw005=? AND gldw006=? AND gldw007=? AND gldw008=? AND gldw009=? AND gldw010=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gldw002,&apos;&apos;,gldw001,&apos;&apos;,gldw004,&apos;&apos;,gldw003,&apos;&apos;,gldw006,&apos;&apos;,gldw005,&apos;&apos;,gldw007,gldw008,gldw009,gldw010,&apos;&apos; FROM gldw_t" order="gldw001,gldw002,gldw003,gldw004,gldw005,gldw006,gldw007,gldw008,gldw009,gldw010"/>
+    </head>
+    <body id="gldw_t" page="1,2" linked="" pk="gldw011" fk="gldw001,gldw002,gldw003,gldw004,gldw005,gldw006,gldw007,gldw008,gldw009,gldw010">
+      <sql id="forupd_sql_detail" query="SELECT gldwstus,gldw011,&apos;&apos;,&apos;&apos;,gldwownid,&apos;&apos;,gldwowndp,&apos;&apos;,gldwcrtid,&apos;&apos;,gldwcrtdp,&apos;&apos;,gldwcrtdt,gldwmodid,&apos;&apos;,gldwmoddt FROM gldw_t WHERE gldwent=? AND gldw001=? AND gldw002=? AND gldw003=? AND gldw004=? AND gldw005=? AND gldw006=? AND gldw007=? AND gldw008=? AND gldw009=? AND gldw010=? AND gldw011=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gldwstus,gldw011,&apos;&apos;,&apos;&apos;,gldwownid,&apos;&apos;,gldwowndp,&apos;&apos;,gldwcrtid,&apos;&apos;,gldwcrtdp,&apos;&apos;,gldwcrtdt,gldwmodid,&apos;&apos;,gldwmoddt FROM gldw_t WHERE gldwent= ? AND gldw001=? AND gldw002=? AND gldw003=? AND gldw004=? AND gldw005=? AND gldw006=? AND gldw007=? AND gldw008=? AND gldw009=? AND gldw010=?"/>
+    </body>
+  </dataset>
+</assembly>
+

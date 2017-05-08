@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="awsp500_01" module="aws" jobmode="N" type="c01a" industry="std" fix_arg="0" crtid="05775" crtdt="2015-10-16 15:48:33" modid="05775" moddt="2015-10-16 16:12:37" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="PLM程式">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="imaa001,imaa001_desc(chr80),imaal003"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="aws" filename="awsp500_01" method="dialog">
+    <section id="input">
+      <input id="head" field="imaa001,imaal003"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="imaa001,imaal003"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="imaa001"/>
+      <set id="head" type="no_entry" field="imaa001"/>
+    </init>
+    <init id="head">
+      <column id="imaa001">
+        <after>
+          <reference field="imaa001_desc" ref_field="imaa_t.imaa001" map_field="imaaent,imaa001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="imaa001_desc"/>
+      <column id="imaal003"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="imaa_t" pk="imaa001">
+      <sql id="forupd_sql" type="sql" query="SELECT imaa001,&apos;&apos;,&apos;&apos; FROM imaa_t WHERE imaaent= ? AND imaa001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="imaa001"/>
+      <sql id="append" type="lang" target="imaal_t.imaal003" table="imaal_t" fk="imaa001" pk="imaal001,imaal002" field="imaal003"/>
+    </head>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,2841 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="abgq055.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:7(2015-09-08 16:06:23), PR版次:0007(2017-01-17 10:20:07)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000064
+#+ Filename...: abgq055
+#+ Description: 預算現金流量表
+#+ Creator....: 02291(2015-08-19 14:31:39)
+#+ Modifier...: 02291 -SD/PR- 06821
+ 
+{</section>}
+ 
+{<section id="abgq055.global" >}
+#應用 q04 樣板自動產生(Version:32)
+#add-point:填寫註解說明 name="global.memo"
+#160318-00005#4  160321 By Jessy   修正azzi920重複定義之錯誤訊息
+#160321-00016#23 160324 By Jessy   修正azzi920重複定義之錯誤訊息(sub)
+#160407-00008#2  160408 By albireo 修正abgq055  bgbi bgbh串連邏輯
+#161003-00014#7  161019 By Hans    修改不取 bgbh ,只取 bgbi
+#161006-00005#23 161028 By 08732   組織類型與職能開窗調整
+#161003-00014#22 161110 By 08171   新增列印功能
+#161206-00002#2  161206 By Hans    資料來源改取 bgbc才能跟全面預算共用
+#161129-00019#10 170117 By 06821   預算組織權限,不卡 azzi800 有權限, 改call 元件s_abg2_get_budget_site(...)
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_master        RECORD
+       bgbi002 LIKE bgbi_t.bgbi002, 
+   bgbi002_desc LIKE type_t.chr80, 
+   bgbi003 LIKE bgbi_t.bgbi003, 
+   bgaa003 LIKE type_t.chr500, 
+   bgbi004 LIKE bgbi_t.bgbi004, 
+   bgbi004_desc LIKE type_t.chr80, 
+   bgbh005 LIKE type_t.chr500, 
+   bgbi006 LIKE bgbi_t.bgbi006, 
+   bgbi006_1 LIKE type_t.num5, 
+   a LIKE type_t.chr500, 
+   c LIKE type_t.chr500
+       END RECORD
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_detail RECORD
+       
+       nmail003 LIKE type_t.chr500, 
+   nmai004 LIKE type_t.chr500, 
+   bgbi027 LIKE bgbi_t.bgbi027
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數-標準(Module Variable)  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_bgaa009             LIKE bgaa_t.bgaa009
+
+ TYPE type_g_detail2 RECORD
+       
+       bgbi004 LIKE bgbi_t.bgbi004
+       END RECORD
+ 
+DEFINE g_detail2            DYNAMIC ARRAY OF type_g_detail2
+DEFINE g_userorga           STRING   #161006-00005#23   add 
+DEFINE g_ooef001_str        STRING   #161129-00019#10 add
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_master            type_g_master
+DEFINE g_master_t          type_g_master
+ 
+   
+ 
+DEFINE g_detail            DYNAMIC ARRAY OF type_g_detail
+DEFINE g_detail_t          type_g_detail
+ 
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                 STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_cnt_sql             STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE l_ac                  LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_current_page        LIKE type_t.num5              #目前所在頁數
+DEFINE g_current_row         LIKE type_t.num10             #目前所在筆數
+DEFINE g_current_idx         LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10             #單身 總筆數(所有資料)
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_master_idx          LIKE type_t.num10
+DEFINE g_detail_idx          LIKE type_t.num10             #單身 所在筆數(所有資料)
+DEFINE g_detail_idx2         LIKE type_t.num10
+DEFINE g_hyper_url           STRING                        #hyperlink的主要網址
+DEFINE g_msg                 STRING
+DEFINE g_jump                LIKE type_t.num10
+DEFINE g_no_ask              LIKE type_t.num5
+DEFINE g_row_count           LIKE type_t.num10
+DEFINE g_qbe_hidden          LIKE type_t.num5              #qbe頁籤折疊
+DEFINE g_tot_cnt             LIKE type_t.num10             #計算總筆數
+DEFINE g_num_in_page         LIKE type_t.num10             #每頁筆數
+DEFINE g_page_act_list       STRING                        #分頁ACTION清單
+DEFINE g_current_row_tot     LIKE type_t.num10             #目前所在總筆數
+DEFINE g_page_start_num      LIKE type_t.num10             #目前頁面起始筆數
+DEFINE g_page_end_num        LIKE type_t.num10             #目前頁面結束筆數
+DEFINE g_master_row_move     LIKE type_t.chr1              #是否為單頭筆數更動
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+DEFINE g_detail_page_action STRING
+DEFINE g_pagestart          LIKE type_t.num10
+ 
+ 
+ 
+DEFINE g_wc_filter_table           STRING
+ 
+ 
+ 
+#add-point:自定義模組變數-客製(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="abgq055.main" >}
+ #應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("abg","")
+ 
+   #add-point:作業初始化 name="main.init"
+   
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = " ", 
+                      " FROM ",
+                      " "
+   #add-point:SQL_define name="main.after_define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE abgq055_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT  ",
+               " FROM  t0",
+               
+               " WHERE  "
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   
+   #end add-point
+   PREPARE abgq055_master_referesh FROM g_sql
+ 
+   #add-point:main段define_sql name="main.body.define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = ""
+   #add-point:main段define_sql name="main.body.after_define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE abgq055_bcl CURSOR FROM g_forupd_sql
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_abgq055 WITH FORM cl_ap_formpath("abg",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL abgq055_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL abgq055_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_abgq055
+      
+   END IF 
+   
+   CLOSE abgq055_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="abgq055.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION abgq055_init()
+   #add-point:init段define-客製 name="init.define_customerization"
+   
+   #end add-point
+   #add-point:init段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="init.before_function"
+   
+   #end add-point
+ 
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1" 
+   LET g_error_show  = 1
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_master_row_move = "Y"
+   
+     
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL s_fin_create_account_center_tmp()
+   CALL abgq055_create_tmp()
+   #161129-00019#10 --s mark
+   ##161006-00005#23  add ---s
+   #CALL s_fin_azzi800_sons_query(g_today)
+   #CALL s_fin_account_center_sons_str() RETURNING g_userorga
+   #CALL s_fin_get_wc_str(g_userorga) RETURNING g_userorga
+   ##161006-00005#23  add ---e
+   #161129-00019#10 --e mark
+   #end add-point
+ 
+   CALL abgq055_default_search()
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgq055.default_search" >}
+PRIVATE FUNCTION abgq055_default_search()
+   #add-point:default_search段define-客製 name="default_search.define_customerization"
+   
+   #end add-point
+   #add-point:default_search段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point
+ 
+ 
+   #add-point:default_search段開始前 name="default_search.before"
+   
+   #end add-point
+ 
+   
+ 
+   IF NOT cl_null(g_wc) THEN
+      LET g_wc = g_wc.subString(1,g_wc.getLength()-5)
+   ELSE
+      #預設查詢條件
+      LET g_wc = " 1=2"
+   END IF
+ 
+   #add-point:default_search段結束前 name="default_search.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgq055.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION abgq055_ui_dialog() 
+   #add-point:ui_dialog段define-客製 name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num10
+   DEFINE ls_result STRING
+   DEFINE la_param  RECORD
+                    prog       STRING,
+                    actionid   STRING,
+                    background LIKE type_t.chr1,
+                    param      DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   DEFINE ls_wc     STRING
+   DEFINE lc_action_choice_old    STRING
+   #add-point:ui_dialog段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   DEFINE l_n       LIKE type_t.num5
+   DEFINE l_orga    STRING   #161006-00005#23   add
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="ui_dialog.before_function"
+   
+   #end add-point
+ 
+   CLEAR FORM  
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   CALL cl_get_num_in_page() RETURNING g_num_in_page
+ 
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   LET g_current_idx = 1
+   LET g_action_choice = " "
+   LET lc_action_choice_old = ""
+   LET g_current_row_tot = 0
+   LET g_page_start_num = 1
+   LET g_page_end_num = g_num_in_page
+   LET g_master_row_move = "Y"
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   LET l_ac = 1
+ 
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   CALL abgq055_ui_dialog_1()
+
+   RETURN
+   #end add-point
+ 
+   
+ 
+   IF NOT cl_null(g_wc) AND g_wc != " 1=2" THEN
+      CALL abgq055_cs()
+   END IF
+ 
+   WHILE li_exit = FALSE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         INITIALIZE g_master.* TO NULL
+         CALL g_detail.clear()
+ 
+         LET g_wc  = " 1=2"
+         LET g_wc2 = " 1=1"
+         LET g_action_choice = ""
+         LET g_detail_page_action = "detail_first"
+         LET g_pagestart = 1
+         LET g_current_row_tot = 0
+         LET g_page_start_num = 1
+         LET g_page_end_num = g_num_in_page
+         LET g_master_row_move = "Y"
+         LET g_detail_idx = 1
+         LET g_detail_idx2 = 1
+ 
+         CALL abgq055_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:input段落 name="ui_dialog.input"
+          INPUT g_master.bgbi002,g_master.bgbi003,g_master.bgbi006,g_master.bgbi006_1,g_master.a 
+           FROM b_bgbi002,b_bgbi003,b_bgbi006,bgbi006_1,a
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            BEFORE INPUT
+               LET g_master.a = '0'
+               DISPLAY BY NAME g_master.a
+               
+            AFTER FIELD b_bgbi002
+               IF NOT cl_null(g_master.bgbi002) THEN
+                  #單獨檢查預算編號
+                  CALL s_abg_bgaa001_chk(g_master.bgbi002) RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_master.bgbi002 = ''
+                     LET g_master.bgbi002_desc = s_desc_get_budget_desc(g_master.bgbi002) 
+                     DISPLAY BY NAME g_master.bgbi002,g_master.bgbi002_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  #161003-00014#7---s---
+                  LET l_n = 0 
+                  SELECT COUNT(1) INTO l_n FROM bgbi_t WHERE bgbient = g_enterprise AND bgbi002 = g_master.bgbi002
+                  IF cl_null(l_n) THEN LET l_n = 0 END  IF
+                  IF l_n = 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'abg-00178'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_master.bgbi002 = ''
+                     LET g_master.bgbi002_desc = s_desc_get_budget_desc(g_master.bgbi002) 
+                     DISPLAY BY NAME g_master.bgbi002,g_master.bgbi002_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  #161003-00014#7---e---
+                  CALL abgq055_bgbi002_desc()
+                  LET g_master.bgbi002_desc = s_desc_get_budget_desc(g_master.bgbi002) 
+                  DISPLAY BY NAME g_master.bgbi002,g_master.bgbi002_desc
+               END IF
+
+            #應用 a03 樣板自動產生(Version:2)
+            ON ACTION controlp INFIELD b_bgbi002
+               #add-point:ON ACTION controlp INFIELD b_bgbi002
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master.bgbi002
+               LET g_qryparam.where = " bgaa001 IN (SELECT DISTINCT bgbi002 FROM bgbi_t WHERE bgbient = ",g_enterprise," )" #161003-00014#7
+               CALL q_bgaa001()
+               LET g_master.bgbi002 = g_qryparam.return1
+               LET g_master.bgbi002_desc = s_desc_get_budget_desc(g_master.bgbi002) 
+               DISPLAY BY NAME g_master.bgbi002,g_master.bgbi002_desc
+               CALL abgq055_bgbi002_desc()
+               DISPLAY BY NAME g_master.bgbi002
+               NEXT FIELD b_bgbi002
+               #END add-point
+            
+            AFTER FIELD b_bgbi003
+               IF NOT cl_null(g_master.bgbi003) THEN
+                  LET l_n = 0
+                  #161003-00014#7---s---
+                  # SELECT COUNT(*) INTO l_n FROM bgbh_t 
+                  #  WHERE bgbhent = g_enterprise AND bgbh002 = g_master.bgbi003
+                   SELECT COUNT(*) INTO l_n FROM bgbi_t 
+                    WHERE bgbient = g_enterprise AND bgbi003 = g_master.bgbi003   
+                  #161003-00014#7---e---                    
+                  IF l_n = 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     #LET g_errparam.code = 'abg-00105' #160318-00005#4 mark
+                     LET g_errparam.code = 'sub-01308'  #160318-00005#4 add
+                     LET g_errparam.extend = ''
+                     #161003-00014#7---s---
+                     #160318-00005#4 --s add                    
+                     #LET g_errparam.replace[1] = 'abgt025'
+                     #LET g_errparam.replace[2] = cl_get_progname('abgt025',g_lang,"2")
+                     #LET g_errparam.exeprog = 'abgt025'                 
+                     #160318-00005#4 --e add
+                     LET g_errparam.replace[1] = 'abgt023'
+                     LET g_errparam.replace[2] = cl_get_progname('abgt023',g_lang,"2")
+                     LET g_errparam.exeprog = 'abgt023'
+                     #161003-00014#7---e---
+                     LET g_errparam.popup = FALSE
+                     CALL cl_err()
+                     NEXT FIELD b_bgbi003
+                  END IF
+                  IF NOT cl_null(g_master.bgbi002) THEN
+                     LET l_n = 0
+                     #161003-00014#7---s---
+                     #SELECT COUNT(*) INTO l_n FROM bgbh_t 
+                     # WHERE bgbhent = g_enterprise AND bgbh002 = g_master.bgbi003
+                     #   AND bgbh001 = g_master.bgbi002
+                     SELECT COUNT(*) INTO l_n FROM bgbi_t      
+                      WHERE bgbient = g_enterprise AND bgbi003 = g_master.bgbi003     
+                        AND bgbi002 = g_master.bgbi002     
+                      #161003-00014#7---e---   
+                     IF l_n = 0 THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'abg-00106'
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = FALSE
+                        CALL cl_err()
+                        NEXT FIELD b_bgbi003
+                     END IF
+                  END IF
+               END IF
+
+            #應用 a03 樣板自動產生(Version:2)
+            ON ACTION controlp INFIELD b_bgbi003
+               #add-point:ON ACTION controlp INFIELD b_bgbi003
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master.bgbi003
+               #161003-00014#7---s---
+               #IF NOT cl_null(g_master.bgbi002) THEN
+               #   LET g_qryparam.where = " bgbh001 = '",g_master.bgbi002,"'"
+               #END IF
+               #CALL q_bgbh002()
+               IF NOT cl_null(g_master.bgbi002) THEN
+                  LET g_qryparam.where = " bgbi002 = '",g_master.bgbi002,"'"
+               END IF
+               CALL q_bgbi003()
+               #161003-00014#7---e---
+               LET g_master.bgbi003 = g_qryparam.return1
+               DISPLAY BY NAME g_master.bgbi002
+               LET g_qryparam.where = ''
+               NEXT FIELD b_bgbi003
+               #END add-point
+            
+            AFTER FIELD b_bgbi006
+               IF NOT cl_null(g_master.bgbi006) THEN
+                  IF NOT cl_null(g_master.bgbi006_1) THEN
+                     IF g_master.bgbi006>g_master.bgbi006_1 THEN
+                         INITIALIZE g_errparam TO NULL
+                         LET g_errparam.code = 'agl-00227'
+                         LET g_errparam.extend = ''
+                         LET g_errparam.popup = FALSE
+                         CALL cl_err()
+                         NEXT FIELD b_bgbi006
+                     END IF
+                  END IF
+               END IF
+            
+            AFTER FIELD bgbi006_1
+               IF NOT cl_null(g_master.bgbi006_1) THEN
+                  IF NOT cl_null(g_master.bgbi006) THEN
+                     IF g_master.bgbi006>g_master.bgbi006_1 THEN
+                         INITIALIZE g_errparam TO NULL
+                         LET g_errparam.code = 'agl-00227'
+                         LET g_errparam.extend = ''
+                         LET g_errparam.popup = FALSE
+                         CALL cl_err()
+                         NEXT FIELD bgbi006_1
+                     END IF
+                  END IF
+               END IF
+               
+            AFTER INPUT
+            
+         END INPUT
+         #end add-point
+ 
+         #add-point:construct段落 name="ui_dialog.construct"
+         CONSTRUCT BY NAME g_wc2 ON b_bgbi004
+            BEFORE CONSTRUCT
+ 
+            #Ctrlp:construct.c.b_bgbi004
+            #應用 a03 樣板自動產生(Version:2)
+            ON ACTION controlp INFIELD b_bgbi004
+               #add-point:ON ACTION controlp INFIELD b_bgbi004
+               #161006-00005#23  add----s
+               CALL s_fin_abg_center_sons_query(g_master.bgbi002,'','')
+               CALL s_fin_account_center_sons_str() RETURNING l_orga  
+               CALL s_fin_get_wc_str(l_orga) RETURNING l_orga
+               #161006-00005#23  add----e
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+		         LET g_qryparam.reqry = FALSE
+		         #LET g_qryparam.where = "ooef205 = 'Y'"   #161006-00005#23   mark
+               #CALL q_ooef001()                         #161006-00005#23   mark
+               LET g_qryparam.where = "ooef001 IN ", g_userorga," AND ooef001 IN ", l_orga   #161006-00005#23   add             
+               CALL q_ooef001_77()                       #161006-00005#23   add               #呼叫開窗
+               DISPLAY g_qryparam.return1 TO b_bgbi004 #顯示到畫面上
+               LET g_qryparam.where = ""
+               
+               NEXT FIELD b_bgbi004                    #返回原欄位
+               #END add-point
+         END CONSTRUCT
+         #end add-point
+     
+         DISPLAY ARRAY g_detail TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               CALL abgq055_detail_action_trans()
+               LET g_master_idx = l_ac
+               CALL abgq055_b_fill2()
+ 
+               #add-point:input段before row name="input.body.before_row"
+               
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+            #add-point:page1自定義行為 name="ui_dialog.body.page1.action"
+            
+            #end add-point
+ 
+         END DISPLAY
+ 
+ 
+ 
+         #add-point:ui_dialog段define name="ui_dialog.more_displayarray"
+         
+         #end add-point
+    
+         BEFORE DIALOG
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            CALL abgq055_fetch('')
+ 
+            #add-point:ui_dialog段before dialog name="ui_dialog.bef_dialog"
+            
+            #end add-point
+            NEXT FIELD bgbi002
+ 
+         AFTER DIALOG
+            #add-point:ui_dialog段 after dialog name="ui_dialog.after_dialog"
+            
+            #end add-point
+            
+         ON ACTION exit
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            INITIALIZE g_wc_filter TO NULL
+            IF cl_null(g_wc) THEN
+               LET g_wc = " 1=1"
+            END IF
+ 
+ 
+   
+            IF cl_null(g_wc2) THEN
+               LET g_wc2 = " 1=1"
+            END IF
+ 
+ 
+ 
+            #add-point:ON ACTION accept name="ui_dialog.accept"
+            
+            #end add-point
+ 
+            CALL abgq055_cs()
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum name="ui_dialog.agendum"
+            
+            #end add-point
+            CALL cl_user_overview()
+ 
+         ON ACTION exporttoexcel   #匯出excel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_detail)
+               LET g_export_id[1]   = "s_detail1"
+ 
+               #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+               
+               #end add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+ 
+ 
+         ON ACTION datarefresh   # 重新整理
+            #為避免按上下筆影響效能，所以有作一些處理
+            LET lc_action_choice_old = g_action_choice
+            LET g_action_choice = "fetch"
+            CALL abgq055_fetch('F')
+            LET g_action_choice = lc_action_choice_old
+ 
+         ON ACTION qbehidden     #qbe頁籤折疊
+            IF g_qbe_hidden THEN
+               CALL gfrm_curr.setElementHidden("qbe",0)
+               CALL gfrm_curr.setElementImage("qbehidden","16/mainhidden.png")
+               LET g_qbe_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("qbe",1)
+               CALL gfrm_curr.setElementImage("qbehidden","16/worksheethidden.png")
+               LET g_qbe_hidden = 1     #hidden
+            END IF
+ 
+         ON ACTION datainfo   #串查至主維護程式
+            #add-point:ON ACTION datainfo name="ui_dialog.datainfo"
+            
+            #end add-point
+            CALL abgq055_maintain_prog()
+ 
+         ON ACTION first   # 第一筆
+            #為避免按上下筆影響效能，所以有作一些處理
+            LET lc_action_choice_old = g_action_choice
+            LET g_action_choice = "fetch"
+            CALL abgq055_fetch('F')
+            LET g_action_choice = lc_action_choice_old
+ 
+         ON ACTION previous   # 上一筆
+            #為避免按上下筆影響效能，所以有作一些處理
+            LET lc_action_choice_old = g_action_choice
+            LET g_action_choice = "fetch"
+            CALL abgq055_fetch('P')
+            LET g_action_choice = lc_action_choice_old
+ 
+         ON ACTION jump   # 跳至第幾筆
+            #為避免按上下筆影響效能，所以有作一些處理
+            LET lc_action_choice_old = g_action_choice
+            LET g_action_choice = "fetch"
+            CALL abgq055_fetch('/')
+            LET g_action_choice = lc_action_choice_old
+ 
+         ON ACTION next   # 下一筆
+            #為避免按上下筆影響效能，所以有作一些處理
+            LET lc_action_choice_old = g_action_choice
+            LET g_action_choice = "fetch"
+            CALL abgq055_fetch('N')
+            LET g_action_choice = lc_action_choice_old
+ 
+         ON ACTION last   # 最後一筆
+            #為避免按上下筆影響效能，所以有作一些處理
+            LET lc_action_choice_old = g_action_choice
+            LET g_action_choice = "fetch"
+            CALL abgq055_fetch('L')
+            LET g_action_choice = lc_action_choice_old
+ 
+         ON ACTION detail_first               #page first
+            LET g_action_choice = "detail_first"
+            LET g_detail_page_action = "detail_first"
+            LET g_master_row_move = "N"
+            CALL abgq055_b_fill()
+ 
+         ON ACTION detail_previous                #page previous
+            LET g_action_choice = "detail_previous"
+            LET g_detail_page_action = "detail_previous"
+            LET g_master_row_move = "N"
+            CALL abgq055_b_fill()
+ 
+         ON ACTION detail_next                #page next
+            LET g_action_choice = "detail_next"
+            LET g_detail_page_action = "detail_next"
+            LET g_master_row_move = "N"
+            CALL abgq055_b_fill()
+ 
+         ON ACTION detail_last                #page last
+            LET g_action_choice = "detail_last"
+            LET g_detail_page_action = "detail_last"
+            LET g_master_row_move = "N"
+            CALL abgq055_b_fill()
+ 
+         
+         
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               
+               #add-point:ON ACTION insert name="menu.insert"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+ 
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+ 
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               
+               #add-point:ON ACTION query name="menu.query"
+               
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+ 
+      
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+ 
+         #add-point:查詢方案相關ACTION設定前 name="ui_dialog.set_qbe_action_before"
+         
+         #end add-point
+ 
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+            #add-point:條件清除後 name="ui_dialog.qbeclear"
+            
+            #end add-point 
+ 
+         #add-point:查詢方案相關ACTION設定後 name="ui_dialog.set_qbe_action_after"
+         
+         #end add-point 
+ 
+      END DIALOG 
+   
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgq055.cs" >}
+#+ 組單頭CURSOR
+PRIVATE FUNCTION abgq055_cs()
+   #add-point:cs段define-客製 name="cs.define_customerization"
+   
+   #end add-point
+   #add-point:cs段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="cs.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="cs.before_function"
+   
+   #end add-point
+ 
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+ 
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+   IF g_wc2 = " 1=1" THEN
+      #add-point:cs段單頭sql組成(未下單身條件) name="cs.sql_define_1"
+      
+      #end add-point
+   ELSE
+      #add-point:cs段單頭sql組成(有下單身條件) name="cs.sql_define_2"
+      
+      #end add-point
+   END IF
+ 
+   PREPARE abgq055_pre FROM g_sql
+   DECLARE abgq055_curs SCROLL CURSOR WITH HOLD FOR abgq055_pre
+   OPEN abgq055_curs
+ 
+   #add-point:cs段單頭總筆數計算 name="cs.head_total_row_count"
+   LET g_wc2= cl_replace_str(g_wc2,'ooef001','bgbi004')
+   #161003-00014#7---s---
+   #LET g_cnt_sql = " SELECT COUNT(UNIQUE bgbi004) FROM bgbh_t,bgbi_t ",
+   #                "  WHERE bgbhent = bgbient AND bgbh001 = bgbi002 ",
+   #                "    AND bgbh002 = bgbi003 AND bgbh003 = bgbi004 ",
+   #                "    AND bgbh004 = bgbi005 ",
+   #                "    AND bgbhent = ",g_enterprise," AND bgbh001 ='",g_master.bgbi002,"'",
+   #                "    AND bgbh002 = '",g_master.bgbi003,"'",
+   #                "    AND bgbi006 >=",g_master.bgbi006," AND bgbi006 <= ",g_master.bgbi006_1,
+   #                "    AND bgbi004 IN",g_wc2 CLIPPED
+   #IF g_master.a = '0' THEN
+   #   LET g_cnt_sql = g_cnt_sql CLIPPED," AND bgbh006 = '1'"
+   #ELSE
+   #   LET g_cnt_sql = g_cnt_sql CLIPPED," AND bgbh006 = '2'"
+   #END IF
+   #161206-00002#2---s---
+   #LET g_cnt_sql = " SELECT COUNT(UNIQUE bgbi004) FROM bgbi_t ",
+   #                "  WHERE bgbient = ",g_enterprise,"  ",
+   #                "    AND bgbi002 = '",g_master.bgbi002,"'",
+   #                "    AND bgbi003 = '",g_master.bgbi003,"'",
+   #                "    AND bgbi006 >=",g_master.bgbi006," AND bgbi006 <= ",g_master.bgbi006_1,
+   #                "    AND bgbi004 IN",g_wc2 CLIPPED
+   #IF g_master.a = '0' THEN
+   #   LET g_cnt_sql = g_cnt_sql CLIPPED," AND bgbi044 = '1'"
+   #ELSE
+   #   LET g_cnt_sql = g_cnt_sql CLIPPED," AND bgbi044 = '2'"
+   #END IF
+   LET g_cnt_sql = " SELECT COUNT(UNIQUE bgbc003) FROM bgbc_t ",
+                   "  WHERE bgbcent = ",g_enterprise,"  ",
+                   "    AND bgbc001 = '",g_master.bgbi002,"'",
+                   "    AND bgbc002 = '",g_master.bgbi003,"'",
+                   "    AND bgbc006 >=",g_master.bgbi006," AND bgbc006 <= ",g_master.bgbi006_1,#161206-00002#2---e---
+                   "    AND bgbc003 IN",g_wc2 CLIPPED
+   #161206-00002#2 ---e---                   
+   #161003-00014#7 ---e---
+   #end add-point
+   PREPARE abgq055_precount FROM g_cnt_sql
+   EXECUTE abgq055_precount INTO g_row_count
+ 
+   IF SQLCA.SQLCODE THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = '' 
+      LET g_errparam.code   = SQLCA.SQLCODE 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+ 
+   ELSE
+      CALL abgq055_fetch("F")
+   END IF
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgq055.fetch" >}
+#+ 抓取單頭資料
+PRIVATE FUNCTION abgq055_fetch(p_flag)
+   #add-point:fetch段define-客製 name="fetch.define_customerization"
+   
+   #end add-point
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="fetch.before_function"
+   
+   #end add-point
+ 
+   MESSAGE ""
+ 
+   #FETCH段CURSOR移動
+   #應用 qs18 樣板自動產生(Version:3)
+   #add-point:fetch段CURSOR移動 name="fetch.cursor_action"
+   CALL abgq055_fetch1(p_flag)
+   RETURN
+   #end add-point
+ 
+ 
+ 
+ 
+ 
+   IF SQLCA.sqlcode THEN
+      # 清空右側畫面欄位值，但須保留左側qbe查詢條件
+      INITIALIZE g_master.* TO NULL
+      DISPLAY g_master.* TO b_bgbi002,bgbi002_desc,b_bgbi003,b_bgaa003,b_bgbi004,bgbi004_desc,b_bgbh005, 
+          b_bgbi006,bgbi006_1,a,c
+      CALL g_detail.clear()
+ 
+      #add-point:陣列清空 name="fetch.array_clear"
+      
+      #end add-point
+      DISPLAY '' TO FORMONLY.h_index
+      DISPLAY '' TO FORMONLY.h_count
+      DISPLAY '' TO FORMONLY.idx
+      DISPLAY '' TO FORMONLY.cnt
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = '' 
+      LET g_errparam.code   = '-100' 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+      RETURN
+   ELSE
+      CASE p_flag
+         WHEN 'F' LET g_current_idx = 1
+         WHEN 'P' LET g_current_idx = g_current_idx - 1
+         WHEN 'N' LET g_current_idx = g_current_idx + 1
+         WHEN 'L' LET g_current_idx = g_row_count
+         WHEN '/' LET g_current_idx = g_jump
+      END CASE
+      DISPLAY g_current_idx TO FORMONLY.h_index
+      DISPLAY g_row_count TO FORMONLY.h_count
+      CALL cl_navigator_setting( g_current_idx, g_row_count )
+   END IF
+ 
+   #add-point:fetch結束前 name="fetch.after"
+   DISPLAY g_current_idx TO FORMONLY.h_index
+   LET g_master.bgbi004 = g_detail2[g_current_idx].bgbi004
+   LET g_master.bgbi004_desc = s_desc_get_department_desc(g_detail2[g_current_idx].bgbi004)
+   #end add-point
+ 
+   LET g_master_row_move = "Y"
+   #重新顯示
+   CALL abgq055_show()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgq055.show" >}
+PRIVATE FUNCTION abgq055_show()
+   #add-point:show段define-客製 name="show.define_customerization"
+   
+   #end add-point
+   DEFINE ls_sql    STRING
+   #add-point:show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show.define"
+  
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="show.before_function"
+   
+   #end add-point
+ 
+   DISPLAY g_master.* TO b_bgbi002,bgbi002_desc,b_bgbi003,b_bgaa003,b_bgbi004,bgbi004_desc,b_bgbh005, 
+       b_bgbi006,bgbi006_1,a,c
+ 
+   #讀入ref值
+   #add-point:show段單身reference name="show.head.reference"
+   
+   #end add-point
+ 
+   LET g_detail_page_action = "detail_first"
+   LET g_pagestart = 1
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   CALL abgq055_b_fill()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgq055.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION abgq055_b_fill()
+   #add-point:b_fill段define-客製 name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc           STRING
+   DEFINE ls_sql_rank     STRING
+   #add-point:b_fill段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   DEFINE l_sql               STRING
+   DEFINE l_str1              STRING
+   DEFINE l_gzcb002           LIKE gzcb_t.gzcb002
+   DEFINE l_n                 LIKE type_t.num5
+   DEFINE l_flag2             LIKE type_t.num5
+   DEFINE l_bgbi038           LIKE bgbi_t.bgbi038
+   DEFINE l_bgbi027           LIKE bgbi_t.bgbi027
+   DEFINE l_sum               LIKE type_t.num20_6
+   DEFINE l_nmak002           LIKE nmak_t.nmak002
+   DEFINE l_nmai002           LIKE nmai_t.nmai002
+   DEFINE l_nmai003           LIKE nmai_t.nmai003
+   DEFINE l_nmai002_t         LIKE nmai_t.nmai002
+   DEFINE l_nmai003_t         LIKE nmai_t.nmai003
+   #end add-point
+ 
+   LET g_wc = g_wc, cl_sql_auth_filter()   #(ver:32) add cl_sql_auth_filter()
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   CALL abgq055_b_fill1()
+   RETURN
+   #end add-point
+ 
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+   CALL g_detail.clear()
+ 
+   #add-point:陣列清空 name="b_fill.array_clear"
+   
+   #end add-point
+ 
+   LET l_ac = 1
+ 
+   # b_fill段sql組成及FOREACH撰寫
+   #應用 qs09 樣板自動產生(Version:3)
+   #+ b_fill段資料取得(包含sql組成及FOREACH段撰寫)
+   #add-point:b_fill段sql name="b_fill.sql"
+  #CALL abgq055_get_data()
+   SELECT COUNT(*) INTO l_n FROM abgq055_tmp 
+   DISPLAY "abgq055_tmp:",l_n
+   LET l_n = 0
+   LET l_sql = " SELECT DISTINCT nmai002,nmai003,nmak002,bgbi027,flag2 FROM abgq055_tmp ",
+               " WHERE bgbi002 = '",g_master.bgbi002,"' AND bgbi003 = '",g_master.bgbi003,"'"
+               
+   
+   IF NOT cl_null(g_master.bgbi004) THEN
+      LET l_sql = l_sql CLIPPED ,"   AND bgbi004 = '",g_master.bgbi004,"'"
+   END IF
+   LET l_sql = l_sql CLIPPED ,"  ORDER BY nmak002 asc nulls first,nmai003 asc nulls first,nmai002 asc nulls first,flag2"
+   
+   PREPARE b_fill_prep1 FROM l_sql
+   DECLARE b_fill_curs1 CURSOR FOR b_fill_prep1
+   #end add-point
+ 
+ 
+ 
+ 
+ 
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.others.fill"
+   LET l_n = 1
+   LET l_nmai002_t = ''
+   FOREACH b_fill_curs1 INTO l_nmai002,l_nmai003,l_nmak002,l_bgbi027,l_flag2
+      IF cl_null(l_nmai002) AND cl_null(l_nmai003) THEN
+         CALL s_desc_gzcbl004_desc('8026',l_nmak002) RETURNING g_detail[l_ac].nmail003
+         LET g_detail[l_ac].nmai004 = ''
+         LET g_detail[l_ac].bgbi027 = ''
+      ELSE
+         IF cl_null(l_nmai002) AND NOT cl_null(l_nmai003) AND l_bgbi027 = 0 THEN
+            SELECT nmakl003 INTO g_detail[l_ac].nmail003 FROM nmakl_t
+             WHERE nmaklent = g_enterprise AND nmakl001 = l_nmai003
+               AND nmakl002 = g_dlang
+            LET l_str1 = 2 SPACES,l_nmai003," ",g_detail[l_ac].nmail003
+            LET g_detail[l_ac].nmail003 = l_str1
+            LET g_detail[l_ac].nmai004 = ''
+            LET g_detail[l_ac].bgbi027 = ''
+         ELSE
+            IF l_nmai002 IS NOT NULL THEN
+               SELECT nmail004 INTO g_detail[l_ac].nmail003 FROM nmail_t
+                WHERE nmailent = g_enterprise AND nmail001 = g_bgaa009
+                  AND nmail002 = l_nmai002 AND nmail003 = g_dlang
+               LET l_str1 = 5 SPACES,l_nmai002," ",g_detail[l_ac].nmail003
+               LET g_detail[l_ac].nmail003 = l_str1
+               LET g_detail[l_ac].bgbi027 = l_bgbi027
+               IF l_flag2 = '1' THEN
+                  IF cl_null(l_nmai003_t) OR l_nmai003_t <> l_nmai003 THEN
+                     LET l_n = 1 
+                     LET l_nmai003_t = l_nmai003
+                  ELSE
+                     LET l_nmai003_t = l_nmai003
+                     LET l_n = l_n + 1
+                  END IF
+                  LET g_detail[l_ac].nmai004 = l_n
+               ELSE
+                  LET g_detail[l_ac].nmail003 = 5 SPACES,cl_getmsg('aps-00134',g_dlang)
+                  LET g_detail[l_ac].nmai004 = ''
+               END IF
+            END IF
+         END IF
+      END IF
+      LET l_ac = l_ac + 1
+   END FOREACH
+   #end add-point
+ 
+   CALL g_detail.deleteElement(g_detail.getLength())
+ 
+   #add-point:陣列長度調整 name="b_fill.array_deleteElement"
+   
+   #end add-point
+ 
+   LET g_error_show = 0
+ 
+   #單身總筆數顯示
+   LET g_detail_cnt = g_detail.getLength()
+ 
+   #調整單身index指標，避免翻頁後指到空白筆數
+   CALL abgq055_detail_index_setting()
+ 
+   #重新計算單身筆數並呈現
+   CALL abgq055_detail_action_trans()
+ 
+   CALL abgq055_b_fill2()
+ 
+   
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgq055.b_fill2" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION abgq055_b_fill2()
+   #add-point:b_fill2段define-客製 name="b_fill2.define_customerization"
+   
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:b_fill2段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill2.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="b_fill2.before_function"
+   
+   #end add-point
+ 
+   LET li_ac = 1
+ 
+   #單身組成
+   #應用 qs11 樣板自動產生(Version:3)
+   #+ b_fill2段table資料取得(包含sql組成及資料填充)
+   #add-point:sql組成 name="b_fill2.fill"
+   
+   #end add-point
+ 
+ 
+ 
+ 
+ 
+ 
+   #add-point:單身填充後 name="b_fill2.after_fill"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgq055.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION abgq055_detail_show(ps_page)
+   #add-point:show段define-客製 name="detail_show.define_customerization"
+   
+   #end add-point
+   DEFINE ps_page    STRING
+   DEFINE ls_sql     STRING
+   #add-point:show段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   
+   #end add-point
+ 
+   #add-point:detail_show段之前 name="detail_show.before"
+   
+   #end add-point
+ 
+   
+ 
+   #讀入ref值
+   IF ps_page.getIndexOf("'1'",1) > 0 THEN
+      #帶出公用欄位reference值page1
+      
+ 
+      #add-point:show段單身reference name="detail_show.body.reference"
+      
+      #end add-point
+   END IF
+ 
+ 
+ 
+   #add-point:detail_show段之後 name="detail_show.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgq055.maintain_prog" >}
+#+ 串查至主維護程式
+PRIVATE FUNCTION abgq055_maintain_prog()
+   #add-point:maintain_prog段define-客製 name="maintain_prog.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js      STRING
+   DEFINE la_param   RECORD
+                     prog       STRING,
+                     actionid   STRING,
+                     background LIKE type_t.chr1,
+                     param      DYNAMIC ARRAY OF STRING
+                     END RECORD
+   DEFINE ls_j       LIKE type_t.num5
+   #add-point:maintain_prog段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="maintain_prog.define"
+   
+   #end add-point
+ 
+ 
+   #add-point:maintain_prog段開始前 name="maintain_prog.before"
+   
+   #end add-point
+ 
+   LET la_param.prog = ""
+ 
+ 
+ 
+   IF NOT cl_null(la_param.prog) THEN
+      LET ls_js = util.JSON.stringify(la_param)
+      CALL cl_cmdrun_wait(ls_js)
+   END IF
+ 
+   #add-point:maintain_prog段結束前 name="maintain_prog.after"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgq055.detail_action_trans" >}
+#+ 單身分頁筆數顯示及action圖片顯示切換功能
+PRIVATE FUNCTION abgq055_detail_action_trans()
+   #add-point:detail_action_trans段define-客製 name="detail_action_trans.define_customerization"
+   
+   #end add-point
+   #add-point:detail_action_trans段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_action_trans.define"
+   
+   #end add-point
+ 
+   #add-point:FUNCTION前置處理 name="detail_action_trans.before_function"
+   
+   #end add-point
+ 
+   #因應單身切頁功能，筆數計算方式調整
+   LET g_current_row_tot = g_pagestart + g_detail_idx - 1
+   DISPLAY g_current_row_tot TO FORMONLY.idx
+   DISPLAY g_tot_cnt TO FORMONLY.cnt
+ 
+   #顯示單身頁面的起始與結束筆數
+   LET g_page_start_num = g_pagestart
+   LET g_page_end_num = g_pagestart + g_num_in_page - 1
+   DISPLAY g_page_start_num TO FORMONLY.p_start
+   DISPLAY g_page_end_num TO FORMONLY.p_end
+ 
+   #目前不支援跳頁功能
+   LET g_page_act_list = "detail_first,detail_previous,'',detail_next,detail_last"
+   CALL cl_navigator_detail_page_setting(g_page_act_list,g_current_row_tot,g_pagestart,g_num_in_page,g_tot_cnt)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgq055.detail_index_setting" >}
+#+ 單身切頁後，index重新調整，避免翻頁後指到空白筆數
+PRIVATE FUNCTION abgq055_detail_index_setting()
+   #add-point:detail_index_setting段define-客製 name="detail_index_setting.define_customerization"
+   
+   #end add-point
+   DEFINE li_redirect     BOOLEAN
+   DEFINE ldig_curr       ui.Dialog
+   #add-point:detail_index_setting段define-標準  (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_index_setting.define"
+   
+   #end add-point
+ 
+ 
+   #add-point:FUNCTION前置處理 name="detail_index_setting.before_function"
+   
+   #end add-point
+ 
+   IF g_master_row_move = "Y" THEN
+      LET g_detail_idx = 1
+      LET li_redirect = TRUE
+   ELSE
+      IF g_curr_diag IS NOT NULL THEN
+         CASE
+            WHEN g_curr_diag.getCurrentRow("s_detail1") <= "0"
+               LET g_detail_idx = 1
+               IF g_detail.getLength() THEN
+                  LET li_redirect = TRUE
+               END IF
+            WHEN g_curr_diag.getCurrentRow("s_detail1") > g_detail.getLength() AND g_detail.getLength() > 0
+               LET g_detail_idx = g_detail.getLength()
+               LET li_redirect = TRUE
+            WHEN g_curr_diag.getCurrentRow("s_detail1") != g_detail_idx
+               IF g_detail_idx > g_detail.getLength() THEN
+                  LET g_detail_idx = g_detail.getLength()
+               END IF
+               LET li_redirect = TRUE
+         END CASE
+      END IF
+   END IF
+ 
+   IF li_redirect THEN
+      LET ldig_curr = ui.Dialog.getCurrent()
+      CALL ldig_curr.setCurrentRow("s_detail1", g_detail_idx)
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgq055.mask_functions" >}
+ &include "erp/abg/abgq055_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="abgq055.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 預算編號帶週期與幣別欄位值
+# Memo...........:
+# Date & Author..: 2015/08/20 yangtt
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgq055_bgbi002_desc()
+   SELECT bgaa002,bgaa003,bgaa009
+     INTO g_master.bgbh005,g_master.bgaa003,g_bgaa009
+     FROM bgaa_t
+    WHERE bgaaent = g_enterprise
+      AND bgaa001 = g_master.bgbi002
+   DISPLAY g_master.bgbh005 TO b_bgbh005
+   DISPLAY g_master.bgaa003 TO b_bgaa003
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgq055_ui_dialog_1()
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num10
+   DEFINE ls_result STRING
+   DEFINE la_param  RECORD
+                    prog       STRING,
+                    actionid   STRING,
+                    background LIKE type_t.chr1,
+                    param      DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   DEFINE ls_wc     STRING
+   DEFINE lc_action_choice_old    STRING
+   #add-point:ui_dialog段define-標準
+   DEFINE l_n       LIKE type_t.num5
+   DEFINE l_flag           LIKE type_t.num5
+   
+   LET l_flag=TRUE
+   #end add-point
+   #add-point:ui_dialog段define-客製
+
+   #end add-point
+ 
+   CLEAR FORM  
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   CALL cl_get_num_in_page() RETURNING g_num_in_page
+ 
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   LET g_current_idx = 1
+   LET g_action_choice = " "
+   LET lc_action_choice_old = ""
+   LET g_current_row_tot = 0
+   LET g_page_start_num = 1
+   LET g_page_end_num = g_num_in_page
+   LET g_master_row_move = "Y"
+   LET g_detail_idx = 1
+   LET g_detail_idx2 = 1
+   LET l_ac = 1
+ 
+   #add-point:ui_dialog段before dialog 
+   CALL abgq055_create_x01tmp()
+   #end add-point
+ 
+   
+ 
+   IF NOT cl_null(g_wc) AND g_wc != " 1=2" THEN
+      CALL abgq055_cs()
+   END IF
+ 
+   WHILE li_exit = FALSE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         INITIALIZE g_master.* TO NULL
+         CALL g_detail.clear()
+ 
+         LET g_wc  = " 1=2"
+         LET g_wc2 = " 1=1"
+         LET g_action_choice = ""
+         LET g_detail_page_action = "detail_first"
+         LET g_pagestart = 1
+         LET g_current_row_tot = 0
+         LET g_page_start_num = 1
+         LET g_page_end_num = g_num_in_page
+         LET g_master_row_move = "Y"
+         LET g_detail_idx = 1
+         LET g_detail_idx2 = 1
+ 
+         CALL abgq055_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:input段落
+         
+         #end add-point
+ 
+         #add-point:construct段落
+         
+         #end add-point
+     
+         DISPLAY ARRAY g_detail TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               CALL abgq055_detail_action_trans()
+               LET g_master_idx = l_ac
+               CALL abgq055_b_fill2()
+ 
+               #add-point:input段before row
+
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+            #add-point:page1自定義行為
+
+            #end add-point
+ 
+         END DISPLAY
+ 
+ 
+ 
+         #add-point:ui_dialog段define
+
+         #end add-point
+    
+         BEFORE DIALOG
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            CALL abgq055_fetch('')
+ 
+            #add-point:ui_dialog段before dialog
+            CALL abgq055_construct()
+            CALL abgq055_fetch1('F')
+            #end add-point
+
+ 
+         AFTER DIALOG
+            #add-point:ui_dialog段 after dialog
+            
+            #end add-point
+            
+         ON ACTION exit
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+ 
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum
+
+            #end add-point
+            CALL cl_user_overview()
+ 
+         ON ACTION exporttoexcel   #匯出excel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_detail)
+               LET g_export_id[1]   = "s_detail1"
+ 
+               #add-point:ON ACTION exporttoexcel
+
+               #end add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+ 
+ 
+         ON ACTION datarefresh   # 重新整理
+            #為避免按上下筆影響效能，所以有作一些處理
+            LET lc_action_choice_old = g_action_choice
+            LET g_action_choice = "fetch"
+            CALL abgq055_fetch('F')
+            LET g_action_choice = lc_action_choice_old
+ 
+         ON ACTION qbehidden     #qbe頁籤折疊
+            IF g_qbe_hidden THEN
+               CALL gfrm_curr.setElementHidden("qbe",0)
+               CALL gfrm_curr.setElementImage("qbehidden","16/mainhidden.png")
+               LET g_qbe_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("qbe",1)
+               CALL gfrm_curr.setElementImage("qbehidden","16/worksheethidden.png")
+               LET g_qbe_hidden = 1     #hidden
+            END IF
+ 
+         ON ACTION datainfo   #串查至主維護程式
+            #add-point:ON ACTION datainfo
+
+            #end add-point
+            CALL abgq055_maintain_prog()
+ 
+         ON ACTION first   # 第一筆
+            #為避免按上下筆影響效能，所以有作一些處理
+            LET lc_action_choice_old = g_action_choice
+            LET g_action_choice = "fetch"
+            CALL abgq055_fetch('F')
+            LET g_action_choice = lc_action_choice_old
+ 
+         ON ACTION previous   # 上一筆
+            #為避免按上下筆影響效能，所以有作一些處理
+            LET lc_action_choice_old = g_action_choice
+            LET g_action_choice = "fetch"
+            CALL abgq055_fetch('P')
+            LET g_action_choice = lc_action_choice_old
+ 
+         ON ACTION jump   # 跳至第幾筆
+            #為避免按上下筆影響效能，所以有作一些處理
+            LET lc_action_choice_old = g_action_choice
+            LET g_action_choice = "fetch"
+            CALL abgq055_fetch('/')
+            LET g_action_choice = lc_action_choice_old
+ 
+         ON ACTION next   # 下一筆
+            #為避免按上下筆影響效能，所以有作一些處理
+            LET lc_action_choice_old = g_action_choice
+            LET g_action_choice = "fetch"
+            CALL abgq055_fetch('N')
+            LET g_action_choice = lc_action_choice_old
+ 
+         ON ACTION last   # 最後一筆
+            #為避免按上下筆影響效能，所以有作一些處理
+            LET lc_action_choice_old = g_action_choice
+            LET g_action_choice = "fetch"
+            CALL abgq055_fetch('L')
+            LET g_action_choice = lc_action_choice_old
+ 
+         ON ACTION detail_first               #page first
+            LET g_action_choice = "detail_first"
+            LET g_detail_page_action = "detail_first"
+            LET g_master_row_move = "N"
+            CALL abgq055_b_fill()
+ 
+         ON ACTION detail_previous                #page previous
+            LET g_action_choice = "detail_previous"
+            LET g_detail_page_action = "detail_previous"
+            LET g_master_row_move = "N"
+            CALL abgq055_b_fill()
+ 
+         ON ACTION detail_next                #page next
+            LET g_action_choice = "detail_next"
+            LET g_detail_page_action = "detail_next"
+            LET g_master_row_move = "N"
+            CALL abgq055_b_fill()
+ 
+         ON ACTION detail_last                #page last
+            LET g_action_choice = "detail_last"
+            LET g_detail_page_action = "detail_last"
+            LET g_master_row_move = "N"
+            CALL abgq055_b_fill()
+
+ 
+         #應用 a43 樣板自動產生(Version:2)
+#         ON ACTION output
+#            LET g_action_choice="output"
+#            IF cl_auth_chk_act("output") THEN
+#               
+#               #add-point:ON ACTION output
+#
+#               #END add-point
+#               
+#               
+#            END IF
+         #161003-00014#22 --s add
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+               CALL abgq055_ins_x01_tmp()                  #161003-00014#22 add
+               CALL abgq055_x01(' 1=1','abgq055_x01_tmp')  #161003-00014#22 add
+               #END add-point
+               
+               
+            END IF
+        #161003-00014#22 --e add
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               
+               #add-point:ON ACTION query
+               #清除畫面及相關資料
+               CLEAR FORM
+               INITIALIZE g_master.* TO NULL
+               CALL g_detail.clear()
+               
+               LET g_wc  = " 1=2"
+               LET g_wc2 = " 1=1"
+               LET g_action_choice = ""
+               LET g_detail_page_action = "detail_first"
+               LET g_pagestart = 1
+               LET g_current_row_tot = 0
+               LET g_page_start_num = 1
+               LET g_page_end_num = g_num_in_page
+               LET g_master_row_move = "Y"
+               LET g_detail_idx = 1
+               LET g_detail_idx2 = 1
+               
+               CALL abgq055_init()
+               CALL abgq055_construct()
+               CALL abgq055_fetch1('F')
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+      
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+ 
+         #add-point:查詢方案相關ACTION設定前
+
+         #end add-point
+ 
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+            #add-point:條件清除後
+            #清除畫面及相關資料
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL
+            CALL g_detail.clear()
+            
+            LET g_wc  = " 1=2"
+            LET g_wc2 = " 1=1"
+            LET g_action_choice = ""
+            LET g_detail_page_action = "detail_first"
+            LET g_pagestart = 1
+            LET g_current_row_tot = 0
+            LET g_page_start_num = 1
+            LET g_page_end_num = g_num_in_page
+            LET g_master_row_move = "Y"
+            LET g_detail_idx = 1
+            LET g_detail_idx2 = 1
+            
+            CALL abgq055_init()
+            #end add-point 
+ 
+         #add-point:查詢方案相關ACTION設定後
+
+         #end add-point 
+ 
+      END DIALOG 
+   
+   END WHILE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 獲取預算組織資料
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgq055_ooef001_str()
+   DEFINE ls_wc         STRING
+   DEFINE l_sql         STRING
+   DEFINE l_ooef001     LIKE ooef_t.ooef001
+   DEFINE tok           base.StringTokenizer
+   DEFINE l_str         STRING
+   
+#   IF cl_null(g_master.bgbi002) THEN  
+#      RETURN
+#   END IF
+   LET g_wc2= cl_replace_str(g_wc2,'b_bgbi004','ooef001')
+   LET l_sql = " SELECT UNIQUE ooef001 FROM ooef_t ",
+               "  WHERE ooefent = ",g_enterprise," AND ",g_wc2 CLIPPED,
+               "    AND ooef001 IN (SELECT ooef001 FROM s_fin_tmp1 )"
+   PREPARE ooef001_prep FROM l_sql
+   DECLARE ooef001_curs CURSOR FOR ooef001_prep
+   
+   LET g_wc2 = ''
+   LET ls_wc = ''
+   
+   FOREACH ooef001_curs INTO l_ooef001
+      #抓取預算組織資料
+      IF g_master.a = '0' THEN
+         IF cl_null(ls_wc)THEN
+            LET ls_wc = l_ooef001 CLIPPED
+         ELSE
+            LET ls_wc = ls_wc CLIPPED,",",l_ooef001 CLIPPED,""
+         END IF 
+      ELSE
+         CALL s_fin_abg_center_sons_query(g_master.bgbi002,l_ooef001,'N')
+         #取得帳務組織下所有組織
+         CALL s_fin_account_center_sons_str() RETURNING ls_wc 
+      END IF
+      #將取回的字串轉換為SQL條件
+      #CALL s_fin_get_wc_str(ls_wc) RETURNING ls_wc
+      WHENEVER ERROR CONTINUE
+      LET tok = base.StringTokenizer.create(ls_wc,",")
+      WHILE tok.hasMoreTokens()
+         IF cl_null(l_str) THEN
+            LET l_str = tok.nextToken()
+         ELSE
+            LET l_str = l_str,"','",tok.nextToken()
+         END IF
+      END WHILE
+      
+   END FOREACH
+   
+   LET g_wc2 = "('",l_str,"')"
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgq055_get_data()
+   DEFINE l_sql               STRING
+   DEFINE l_gzcb002           LIKE gzcb_t.gzcb002
+   DEFINE l_cnt               LIKE type_t.num5
+   DEFINE l_n                 LIKE type_t.num5
+   DEFINE l_bgbi002           LIKE bgbi_t.bgbi002
+   DEFINE l_bgbi003           LIKE bgbi_t.bgbi003
+   DEFINE l_bgbi004           LIKE bgbi_t.bgbi004
+   DEFINE l_bgbi038           LIKE bgbi_t.bgbi038
+   DEFINE l_bgbi027           LIKE bgbi_t.bgbi027
+   DEFINE l_sum               LIKE type_t.num20_6
+   DEFINE l_nmak002           LIKE nmak_t.nmak002
+   DEFINE l_nmai002           LIKE nmai_t.nmai002
+   DEFINE l_nmai003           LIKE nmai_t.nmai003
+   DEFINE l_nmak002_t         LIKE nmak_t.nmak002
+   DEFINE l_nmai003_t         LIKE nmai_t.nmai003
+   DEFINE l_bgae038           LIKE bgae_t.bgae038
+   DEFINE l_glac002           LIKE glac_t.glac002
+   DEFINE l_bgaa008           LIKE bgaa_t.bgaa008
+   DEFINE l_bgaa012           LIKE bgaa_t.bgaa012
+   DEFINE l_bgbh004           LIKE bgbh_t.bgbh004
+   DEFINE l_bgbc008           LIKE bgbc_t.bgbc008 #161206-00002#2 
+   DEFINE l_bgbc009           LIKE bgbc_t.bgbc009 #161206-00002#2 
+   DEFINE l_acctype           LIKE type_t.chr1    #161206-00002#2 
+   
+   DELETE FROM abgq055_tmp
+   
+   LET l_sql = " INSERT INTO abgq055_tmp ",
+               " SELECT '','','','','',gzcb002,'',0,'1' FROM gzcb_t WHERE gzcb001 = '8026'"
+   PREPARE gzcb_prep FROM l_sql
+
+   LET l_sql = " UPDATE abgq055_tmp SET bgbi002 = ?,",
+               "                        bgbi003 = ?,",
+               "                        bgbi004 = ? ",
+               "  WHERE bgbi002 is null AND bgbi003 is null AND bgbi004 is null ",
+               "    AND nmai002 is null AND nmai003 is null AND nmak002 is not null AND flag2 = '1'"
+   
+      
+   PREPARE gzcb_prep1 FROM l_sql
+  #DECLARE gzcb_curs CURSOR FOR gzcb_prep
+   
+   LET l_sql = " INSERT INTO abgq055_tmp",
+               " SELECT '','','','',nmak001,nmak002,'',0,'1' FROM nmak_t ",
+               "  WHERE nmakent = ",g_enterprise,
+               "    AND nmakstus = 'Y'"
+   PREPARE nmak_prep FROM l_sql
+  
+   LET l_sql = " UPDATE abgq055_tmp SET bgbi002 = ?,",
+              "                        bgbi003 = ?,",
+              "                        bgbi004 = ? ",
+              "  WHERE bgbi002 is null AND bgbi003 is null AND bgbi004 is null ",
+              "    AND nmai002 is null AND nmai003 IS NOT null AND nmak002 is not null AND flag2 = '1'"
+   
+               
+   PREPARE nmak_prep1 FROM l_sql
+   
+   LET l_sql = " INSERT INTO abgq055_tmp",
+               " SELECT '','','',nmai002,nmai003,nmak002,nmai004,0,'1' FROM nmai_t,nmak_t ",
+               "  WHERE nmaient = nmakent AND nmai003 = nmak001 ",
+               "    AND nmaient = ",g_enterprise," AND nmai001 = '",g_bgaa009,"'"
+   PREPARE nmai_prep FROM l_sql
+
+   LET l_sql = " UPDATE abgq055_tmp SET bgbi002 = ?,",
+               "                        bgbi003 = ?,",
+               "                        bgbi004 = ? ",
+               "  WHERE bgbi002 is null AND bgbi003 is null AND bgbi004 is null ",
+               "    AND nmai002 is not null AND nmai003 IS NOT null AND nmak002 is not null AND flag2 = '1'"
+   
+    PREPARE nmai_prep1 FROM l_sql
+
+   LET l_sql = " UPDATE abgq055_tmp SET bgbi027 = ?",
+               "  WHERE bgbi002=? AND bgbi003=? AND bgbi004=? ",
+               "    AND nmai002=? AND nmai003=? AND nmak002=? AND flag2 = '1'"
+
+   PREPARE abgq055_tmp_upd FROM l_sql
+   
+   #若現金變動碼為5時
+   #161003-00014#7---s---
+   #LET l_sql = " SELECT SUM(bgbi027) FROM bgbh_t,bgbi_t ",
+   #                "  WHERE bgbhent = bgbient AND bgbh001 = bgbi002 ",
+   #                "    AND bgbh002 = bgbi003 AND bgbh003 = bgbi004 ",
+   #                "    AND bgbh004 = bgbi005 ",
+   #                "    AND bgbh006 = bgbi044 ",   #albireo 160408   #160407-00008#2
+   #                "    AND bgbhent = ",g_enterprise," AND bgbh001 ='",g_master.bgbi002,"'",
+   #                "    AND bgbh002 = '",g_master.bgbi003,"'",
+   #                "    AND bgbi006 >=",g_master.bgbi006," AND bgbi006 <= ",g_master.bgbi006_1,
+   #                "    AND bgbi005 = ? AND bgbi004 = '",g_master.bgbi004,"'"
+   #
+   #IF g_master.a = '0' THEN
+   #   LET l_sql = l_sql CLIPPED," AND bgbh006 = '1' "
+   #ELSE
+   #   LET l_sql = l_sql CLIPPED," AND bgbh006 = '2' "
+   #END IF
+   #161206-00002#2---s---
+   # LET l_sql = " SELECT SUM(bgbi027) FROM bgbi_t ",
+   #                 "  WHERE bgbient = ",g_enterprise," ",
+   #                 "    AND bgbi002 ='",g_master.bgbi002,"'",
+   #                 "    AND bgbi003 = '",g_master.bgbi003,"'",
+   #                 "    AND bgbi006 >=",g_master.bgbi006," AND bgbi006 <= ",g_master.bgbi006_1,
+   #                 "    AND bgbi005 = ? AND bgbi004 = '",g_master.bgbi004,"'"
+   # IF g_master.a = '0' THEN
+   #    LET l_sql = l_sql CLIPPED," AND bgbi044 = '1' "
+   # ELSE
+   #    LET l_sql = l_sql CLIPPED," AND bgbi044 = '2' "
+   # END IF
+   LET l_sql = " SELECT SUM(bgbc008),SUM(bgbc009)FROM bgbc_t ",
+                   "  WHERE bgbcent = ",g_enterprise," ",
+                   "    AND bgbc001 ='",g_master.bgbi002,"'",
+                   "    AND bgbc002 = '",g_master.bgbi003,"'",
+                   "    AND bgbc006 >=",g_master.bgbi006," AND bgbc006 <= ",g_master.bgbi006_1,
+                   "    AND bgbc007 = ? AND bgbc003 = '",g_master.bgbi004,"'"
+
+   #161206-00002#2---e---
+   #161003-00014#7 ---e---
+   
+   PREPARE bgbi027_prep FROM l_sql
+   #161003-00014#7 ---s---
+   #LET l_sql = " SELECT UNIQUE bgbh004 FROM bgbh_t ",
+   #            "  WHERE bgbhent = ",g_enterprise," AND bgbh001 = '",g_master.bgbi002,"'",
+   #            "    AND bgbh002 = '",g_master.bgbi003,"'",
+   #            "    AND bgbh003 = '",g_master.bgbi004,"'" 
+   #IF g_master.a = '0' THEN
+   #   LET l_sql = l_sql CLIPPED," AND bgbh006 = '1' "
+   #ELSE
+   #   LET l_sql = l_sql CLIPPED," AND bgbh006 = '2' "
+   #END IF
+   #161206-00002#2---s---
+   #LET l_sql = " SELECT UNIQUE bgbi005 FROM bgbi_t ",
+   #            "  WHERE bgbient = ",g_enterprise," AND bgbi002 = '",g_master.bgbi002,"'",
+   #            "    AND bgbi003 = '",g_master.bgbi003,"'",
+   #            "    AND bgbi004 = '",g_master.bgbi004,"'" 
+   #IF g_master.a = '0' THEN
+   #   LET l_sql = l_sql CLIPPED," AND bgbi044 = '1' "
+   #ELSE
+   #   LET l_sql = l_sql CLIPPED," AND bgbi044 = '2' "
+   #END IF   
+   LET l_sql = " SELECT UNIQUE bgbc007 FROM bgbc_t ",
+              "  WHERE bgbcent = ",g_enterprise," AND bgbc001 = '",g_master.bgbi002,"'",
+              "    AND bgbc002 = '",g_master.bgbi003,"'",
+              "    AND bgbc003 = '",g_master.bgbi004,"'" 
+   #161206-00002#2 ---e---
+   #161003-00014#7 ---e---
+   PREPARE bgbh004_prep FROM l_sql
+   DECLARE bgbh004_curs CURSOR FOR bgbh004_prep
+   #161003-00014#7 ---s---
+   #LET l_sql = " SELECT bgbi002,bgbi003,bgbi004,bgbi038,SUM(bgbi027) FROM bgbh_t,bgbi_t ",
+   #                "  WHERE bgbhent = bgbient AND bgbh001 = bgbi002 ",
+   #                "    AND bgbh002 = bgbi003 AND bgbh003 = bgbi004 ",
+   #                "    AND bgbh004 = bgbi005 ",
+   #                "    AND bgbhent = ",g_enterprise," AND bgbh001 ='",g_master.bgbi002,"'",
+   #                "    AND bgbh006 = bgbi044 ",   #albireo 160408   #160407-00008#2
+   #                "    AND bgbh002 = '",g_master.bgbi003,"'",
+   #                "    AND bgbi006 >=",g_master.bgbi006," AND bgbi006 <= ",g_master.bgbi006_1,
+   #                "    AND bgbi004 = '",g_master.bgbi004,"'"       
+   #                
+   #IF g_master.a = '0' THEN
+   #   LET l_sql = l_sql CLIPPED," AND bgbh006 = '1' "
+   #ELSE
+   #   LET l_sql = l_sql CLIPPED," AND bgbh006 = '2' "
+   #END IF
+   #LET l_sql = l_sql CLIPPED," GROUP BY bgbi002,bgbi003,bgbi004,bgbi038 "
+   #161206-00002#2---s---
+   #LET l_sql = " SELECT bgbi002,bgbi003,bgbi004,bgbi038,SUM(bgbi027) FROM bgbi_t ",
+   #                "  WHERE bgbient = ",g_enterprise," AND bgbi002 ='",g_master.bgbi002,"'",
+   #                "    AND bgbi003 = '",g_master.bgbi003,"'",
+   #                "    AND bgbi006 >=",g_master.bgbi006," AND bgbi006 <= ",g_master.bgbi006_1,
+   #                "    AND bgbi004 = '",g_master.bgbi004,"'"       
+   #                
+   #IF g_master.a = '0' THEN
+   #   LET l_sql = l_sql CLIPPED," AND bgbi044 = '1' "
+   #ELSE
+   #   LET l_sql = l_sql CLIPPED," AND bgbi044 = '2' "
+   #END IF
+   #LET l_sql = l_sql CLIPPED," GROUP BY bgbi002,bgbi003,bgbi004,bgbi038 "
+
+   LET l_sql = " SELECT bgbc001,bgbc002,bgbc003,bgbc039, ",
+               " SUM(CASE WHEN (SELECT bgae002 FROM bgae_t WHERE bgaeent= ",g_enterprise," AND bgae001 = bgbc007                       ",
+               "                                            AND bgae006 = (SELECT bgaa008 FROM bgaa_t WHERE bgaaent = ",g_enterprise," ", 
+               "                                            AND bgaa001 ='",g_master.bgbi002,"')) = 1 THEN bgbc008 ELSE bgbc009 END )            ",    
+               "   FROM bgbc_t ",
+               "  WHERE bgbcent = ",g_enterprise," AND bgbc001 ='",g_master.bgbi002,"'",
+               "    AND bgbc002 = '",g_master.bgbi003,"'",
+               "    AND bgbc006 >=",g_master.bgbi006," AND bgbc006 <= ",g_master.bgbi006_1,
+               "    AND bgbc003 = '",g_master.bgbi004,"'"       
+                   
+   LET l_sql = l_sql CLIPPED," GROUP BY bgbc001,bgbc002,bgbc003,bgbc039 "
+   #161206-00002#2---e---       
+          
+   PREPARE q055_bgbi038_prep FROM l_sql
+   DECLARE q055_bgbi038_curs CURSOR FOR q055_bgbi038_prep
+   
+   LET l_sum = 0
+   LET l_nmai003_t = ' '
+   LET l_nmak002_t = ' '
+   EXECUTE gzcb_prep #將大類插入臨時表
+   EXECUTE nmak_prep #將分類插入臨時表
+   EXECUTE nmai_prep #將現金變動碼插入臨時表
+   FOREACH q055_bgbi038_curs INTO l_bgbi002,l_bgbi003,l_bgbi004,l_nmai002,l_bgbi027 
+       
+#       LET l_cnt = 1
+#       FOREACH gzcb_curs INTO l_gzcb002
+#          INSERT INTO abgq055_tmp VALUES(l_bgbi002,l_bgbi003,l_bgbi004,'','',l_gzcb002,l_cnt,0,'1')
+#          LET l_cnt = l_cnt + 1
+#       END FOREACH
+      #EXECUTE gzcb_prep #將大類插入臨時表
+       EXECUTE gzcb_prep1 USING l_bgbi002,l_bgbi003,l_bgbi004
+      #EXECUTE nmak_prep #將分類插入臨時表
+       EXECUTE nmak_prep1 USING l_bgbi002,l_bgbi003,l_bgbi004
+      #EXECUTE nmai_prep #將現金變動碼插入臨時表
+       EXECUTE nmai_prep1 USING l_bgbi002,l_bgbi003,l_bgbi004
+       
+       
+#       IF cl_null(l_nmai002) THEN
+#          CONTINUE FOREACH
+#       END IF
+
+       SELECT nmak001,nmak002 INTO l_nmai003,l_nmak002 FROM nmai_t,nmak_t    #分類大類
+        WHERE nmakent = nmaient AND nmak001 = nmai003
+          AND nmakent = g_enterprise AND nmai002 = l_nmai002
+          AND nmai001 = g_bgaa009
+       
+       #更新臨時表金額
+       EXECUTE abgq055_tmp_upd USING l_bgbi027,l_bgbi002,l_bgbi003,l_bgbi004,l_nmai002,l_nmai003,l_nmak002
+       
+
+       IF cl_null(l_nmai002) THEN LET l_nmai002 = ' ' END IF
+       IF cl_null(l_nmai003) THEN LET l_nmai003 = ' ' END IF
+       IF cl_null(l_nmak002) THEN LET l_nmak002 = ' ' END IF
+
+   END FOREACH
+   #大類為5.現金及現金等價物，取abgi010
+   SELECT bgaa012,bgaa008 INTO l_bgaa012,l_bgaa008 FROM bgaa_t
+    WHERE bgaaent = g_enterprise AND bgaa001 = g_master.bgbi002
+      AND bgaastus = 'Y'
+   FOREACH bgbh004_curs INTO l_bgbh004
+      IF l_bgaa012 = 'Y' THEN  #agli020
+         LET l_sql = " SELECT UNIQUE glac002 FROM glac_t ",
+                     "  WHERE glacent = ",g_enterprise," AND glac001 = '",l_bgaa008,"'",
+                     "    AND glac016 = 'Y' AND glac002 ='",l_bgbh004,"'"
+         PREPARE glac_prep FROM l_sql
+         DECLARE glac_curs CURSOR FOR glac_prep
+         FOREACH glac_curs INTO l_glac002
+            #161206-00002#2---s---
+            #EXECUTE bgbi027_prep USING l_glac002 INTO l_bgbi027
+            EXECUTE bgbi027_prep USING l_glac002 INTO l_bgbc008,l_bgbc009 
+            CALL s_abg_bgae001_acctype(g_master.bgbi002,l_glac002)RETURNING l_acctype  #取科目借餘或貸餘
+            IF l_acctype = 1 THEN 
+               LET l_bgbi027 = l_bgbc008
+            ELSE
+               LET l_bgbi027 = l_bgbc009
+            END IF
+            #161206-00002#2---e---
+            IF cl_null(l_bgbi027) THEN
+               LET l_bgbi027 = 0 
+            END IF
+            INSERT INTO abgq055_tmp VALUES(g_master.bgbi002,g_master.bgbi003,g_master.bgbi004,l_glac002,'50','5','',l_bgbi027,'1')
+         END FOREACH
+      ELSE   #abgi040
+         LET l_sql = " SELECT bgae001 FROM bgae_t",
+                    #"  WHERE bgaeent = ",g_enterprise," AND bgae006 = '",l_bgaa012,"'", #161003-00014#7
+                    "  WHERE bgaeent = ",g_enterprise," AND bgae006 = '",l_bgaa008,"'",  #161003-00014#7
+                    "    AND bgae036 = '1' AND bgae001 = '",l_bgbh004,"'"
+
+         PREPARE bgae_prep FROM l_sql
+         DECLARE bgae_curs CURSOR FOR bgae_prep
+         FOREACH bgae_curs INTO l_glac002
+            #161206-00002#2---s---
+            #EXECUTE bgbi027_prep USING l_glac002 INTO l_bgbi027
+            EXECUTE bgbi027_prep USING l_glac002 INTO l_bgbc008,l_bgbc009 #161206-00002#2
+            CALL s_abg_bgae001_acctype(g_master.bgbi002,l_glac002)RETURNING l_acctype  #取科目借餘或貸餘
+            IF l_acctype = 1 THEN 
+               LET l_bgbi027 = l_bgbc008
+            ELSE
+               LET l_bgbi027 = l_bgbc009
+            END IF
+            #161206-00002#2---e---
+            IF cl_null(l_bgbi027) THEN
+               LET l_bgbi027 = 0 
+            END IF
+            INSERT INTO abgq055_tmp VALUES(g_master.bgbi002,g_master.bgbi003,g_master.bgbi004,l_glac002,'50','5','',l_bgbi027,'1')
+         END FOREACH 
+      END IF
+   END FOREACH
+              
+   LET l_sql = " INSERT INTO abgq055_tmp ",
+               " SELECT bgbi002,bgbi003,bgbi004,'a',nmai003,nmak002,'',SUM(bgbi027),'2' FROM abgq055_tmp ",
+               "  GROUP BY bgbi002,bgbi003,bgbi004,'2',nmai003,nmak002,'','2'"
+    
+    
+   PREPARE abgq055_tmp_sum_ins_prep FROM l_sql
+   EXECUTE abgq055_tmp_sum_ins_prep
+   DELETE FROM abgq055_tmp WHERE flag2='2' AND nmai003 is null
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgq055_create_tmp()
+   WHENEVER ERROR CONTINUE
+   DROP TABLE abgq055_tmp
+   CREATE TEMP TABLE abgq055_tmp(
+      bgbi002        LIKE bgbi_t.bgbi002,
+      bgbi003        LIKE bgbi_t.bgbi003,
+      bgbi004        LIKE bgbi_t.bgbi004,
+      nmai002        LIKE nmai_t.nmai002,   #現金變動碼
+      nmai003        LIKE nmai_t.nmai003,   #變動分類碼
+      nmak002        LIKE nmak_t.nmak002,   #大類
+      nmai004        LIKE nmai_t.nmai004,   #行序
+      bgbi027        LIKE bgbi_t.bgbi027,   #核准金額
+      flag2          LIKE type_t.num5       #合計，排序用
+   )
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgq055_set_page()
+   DEFINE li_idx      LIKE type_t.num5
+   DEFINE l_sql       STRING
+   
+   LET li_idx = 1
+   #161003-00014#7---s---
+   #LET l_sql = " SELECT UNIQUE bgbi004 FROM bgbh_t,bgbi_t ",
+   #                "  WHERE bgbhent = bgbient AND bgbh001 = bgbi002 ",
+   #                "    AND bgbh002 = bgbi003 AND bgbh003 = bgbi004 ",
+   #                "    AND bgbh004 = bgbi005  ",
+   #                "    AND bgbhent = ",g_enterprise," AND bgbh001 ='",g_master.bgbi002,"'",
+   #                "    AND bgbh002 = '",g_master.bgbi003,"'",
+   #                "    AND bgbi006 >=",g_master.bgbi006," AND bgbi006 <= ",g_master.bgbi006_1,
+   #                "    AND bgbi004 IN",g_wc2 CLIPPED
+   #IF g_master.a = '0' THEN
+   #   LET l_sql = l_sql CLIPPED," AND bgbh006 = '1' "
+   #ELSE
+   #   LET l_sql = l_sql CLIPPED," AND bgbh006 = '2' "
+   #END IF            
+   #LET l_sql = " SELECT UNIQUE bgbi004 FROM bgbi_t ",
+   #                "  WHERE bgbient = ",g_enterprise," AND bgbi002 ='",g_master.bgbi002,"'",
+   #                "    AND bgbi003 = '",g_master.bgbi003,"'",
+   #                "    AND bgbi006 >=",g_master.bgbi006," AND bgbi006 <= ",g_master.bgbi006_1,
+   #                "    AND bgbi004 IN",g_wc2 CLIPPED
+   #IF g_master.a = '0' THEN
+   #   LET l_sql = l_sql CLIPPED," AND bgbi044 = '1' "
+   #ELSE
+   #   LET l_sql = l_sql CLIPPED," AND bgbi044 = '2' "
+   #END IF    
+   #161206-00002#2  ---s---
+   LET l_sql = " SELECT UNIQUE bgbc003 FROM bgbc_t ",
+                   "  WHERE bgbcent = ",g_enterprise," AND bgbc001 ='",g_master.bgbi002,"'",
+                   "    AND bgbc002 = '",g_master.bgbi003,"'",
+                   "    AND bgbc006 >=",g_master.bgbi006," AND bgbc006 <= ",g_master.bgbi006_1,
+                   "    AND bgbc003 IN",g_wc2 CLIPPED      
+   #161206-00002#2  ---e---
+   #161003-00014#7---e---
+   
+   PREPARE ooef001_page_prep FROM l_sql
+   DECLARE ooef001_page_curs CURSOR FOR ooef001_page_prep
+   FOREACH ooef001_page_curs INTO g_detail2[li_idx].bgbi004
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'FOREACH aglq760_sel_s_cr'
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+       
+         EXIT FOREACH
+      END IF
+      LET li_idx = li_idx + 1
+      IF li_idx > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 9035
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+       
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   
+   LET li_idx=li_idx - 1
+   CALL g_detail2.deleteElement(g_detail2.getLength())
+   LET g_header_cnt = g_detail2.getLength()
+  #LET g_rec_b = li_idx
+   DISPLAY g_header_cnt TO FORMONLY.h_count
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgq055_fetch1(p_flag)
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define-標準
+
+   #end add-point
+   #add-point:fetch段define-客製
+
+   #end add-point
+ 
+   MESSAGE ""
+ 
+   #FETCH段CURSOR移動
+   #應用 qs18 樣板自動產生(Version:2)
+   #add-point:fetch段CURSOR移動
+   
+
+   #end add-point
+
+   CASE p_flag
+      WHEN 'F' LET g_current_idx = 1
+      WHEN 'P' LET g_current_idx = g_current_idx - 1
+      WHEN 'N' LET g_current_idx = g_current_idx + 1
+      WHEN 'L' LET g_current_idx = g_row_count
+      WHEN '/' LET g_current_idx = g_jump
+   END CASE
+   DISPLAY g_current_idx TO FORMONLY.h_index
+   DISPLAY g_row_count TO FORMONLY.h_count
+   CALL cl_navigator_setting( g_current_idx, g_row_count )
+
+ 
+   #add-point:fetch結束前
+   DISPLAY g_current_idx TO FORMONLY.h_index
+   LET g_master.bgbi004 = g_detail2[g_current_idx].bgbi004
+   LET g_master.bgbi004_desc = s_desc_get_department_desc(g_detail2[g_current_idx].bgbi004)
+   CALL abgq055_get_data()
+   #end add-point
+ 
+   LET g_master_row_move = "Y"
+   #重新顯示
+   CALL abgq055_show()
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgq055_b_fill1()
+DEFINE ls_wc           STRING
+   DEFINE ls_sql_rank     STRING
+   #add-point:b_fill段define-標準
+   DEFINE l_sql               STRING
+   DEFINE l_str1              STRING
+   DEFINE l_gzcb002           LIKE gzcb_t.gzcb002
+   DEFINE l_n                 LIKE type_t.num5
+   DEFINE l_flag2             LIKE type_t.num5
+   DEFINE l_bgbi038           LIKE bgbi_t.bgbi038
+   DEFINE l_bgbi027           LIKE bgbi_t.bgbi027
+   DEFINE l_sum               LIKE type_t.num20_6
+   DEFINE l_nmak002           LIKE nmak_t.nmak002
+   DEFINE l_nmai002           LIKE nmai_t.nmai002
+   DEFINE l_nmai003           LIKE nmai_t.nmai003
+   DEFINE l_nmai004           LIKE nmai_t.nmai004
+   DEFINE l_nmai002_t         LIKE nmai_t.nmai002
+   DEFINE l_nmai003_t         LIKE nmai_t.nmai003
+   #end add-point
+   #add-point:b_fill段define-客製
+
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+
+   #end add-point
+ 
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+   CALL g_detail.clear()
+ 
+   #add-point:陣列清空
+
+   #end add-point
+ 
+   LET l_ac = 1
+ 
+   # b_fill段sql組成及FOREACH撰寫
+   #應用 qs09 樣板自動產生(Version:2)
+   #+ b_fill段資料取得(包含sql組成及FOREACH段撰寫)
+   #add-point:b_fill段sql
+  #CALL abgq055_get_data()
+   SELECT COUNT(*) INTO l_n FROM abgq055_tmp 
+   DISPLAY "abgq055_tmp:",l_n
+   LET l_n = 0
+   LET l_sql = " SELECT DISTINCT nmai002,nmai003,nmak002,nmai004,bgbi027,flag2 FROM abgq055_tmp ",
+               " WHERE bgbi002 = '",g_master.bgbi002,"' AND bgbi003 = '",g_master.bgbi003,"'"
+               
+   
+   IF NOT cl_null(g_master.bgbi004) THEN
+      LET l_sql = l_sql CLIPPED ,"   AND bgbi004 = '",g_master.bgbi004,"'"
+   END IF
+   LET l_sql = l_sql CLIPPED ,"  ORDER BY nmak002 asc nulls first,nmai003 asc nulls first,nmai002 asc nulls first,flag2"
+   
+   PREPARE b_fill_prep FROM l_sql
+   DECLARE b_fill_curs CURSOR FOR b_fill_prep
+   #end add-point
+ 
+ 
+ 
+ 
+   #add-point:b_fill段資料填充(其他單身)
+   LET l_n = 1
+   LET l_nmai002_t = ''
+   FOREACH b_fill_curs INTO l_nmai002,l_nmai003,l_nmak002,l_nmai004,l_bgbi027,l_flag2
+      LET g_detail[l_ac].nmai004 = l_nmai004
+      IF cl_null(l_nmai002) AND cl_null(l_nmai003) THEN
+         CALL s_desc_gzcbl004_desc('8026',l_nmak002) RETURNING g_detail[l_ac].nmail003
+        #LET g_detail[l_ac].nmai004 = l_nmai004
+         LET g_detail[l_ac].bgbi027 = ''
+      ELSE
+         IF cl_null(l_nmai002) AND NOT cl_null(l_nmai003) AND l_bgbi027 = 0 THEN
+            SELECT nmakl003 INTO g_detail[l_ac].nmail003 FROM nmakl_t
+             WHERE nmaklent = g_enterprise AND nmakl001 = l_nmai003
+               AND nmakl002 = g_dlang
+            LET l_str1 = 2 SPACES,l_nmai003," ",g_detail[l_ac].nmail003
+            LET g_detail[l_ac].nmail003 = l_str1
+           #LET g_detail[l_ac].nmai004 = l_nmai004
+            LET g_detail[l_ac].bgbi027 = ''
+         ELSE
+            IF l_nmai002 IS NOT NULL THEN
+               SELECT nmail004 INTO g_detail[l_ac].nmail003 FROM nmail_t
+                WHERE nmailent = g_enterprise AND nmail001 = g_bgaa009
+                  AND nmail002 = l_nmai002 AND nmail003 = g_dlang
+               LET l_str1 = 5 SPACES,l_nmai002," ",g_detail[l_ac].nmail003
+               LET g_detail[l_ac].nmail003 = l_str1
+               LET g_detail[l_ac].bgbi027 = l_bgbi027
+               IF l_flag2 = '1' THEN
+                  IF cl_null(l_nmai003_t) OR l_nmai003_t <> l_nmai003 THEN
+                     IF l_nmai003 = '50' AND l_nmak002 = '5' THEN
+                        LET l_n = 1 
+                        LET g_detail[l_ac].nmai004 = l_n
+                     END IF
+                     LET l_nmai003_t = l_nmai003
+                  ELSE
+                     LET l_nmai003_t = l_nmai003
+                     IF l_nmai003 = '50' AND l_nmak002 = '5' THEN
+                        LET l_n = l_n + 1
+                        LET g_detail[l_ac].nmai004 = l_n
+                     END IF
+                  END IF
+               ELSE
+                  LET g_detail[l_ac].nmail003 = 5 SPACES,cl_getmsg('aps-00134',g_dlang)
+                 #LET g_detail[l_ac].nmai004 = ''
+               END IF
+            END IF
+         END IF
+      END IF
+     #LET g_detail[l_ac].nmai004 = l_nmai004
+      LET l_ac = l_ac + 1
+   END FOREACH
+   #end add-point
+
+ 
+   #add-point:陣列長度調整
+
+   #end add-point
+ 
+   LET g_error_show = 0
+ 
+   #單身總筆數顯示
+   LET g_detail_cnt = g_detail.getLength()
+ 
+   #調整單身index指標，避免翻頁後指到空白筆數
+   CALL abgq055_detail_index_setting()
+ 
+   #重新計算單身筆數並呈現
+   CALL abgq055_detail_action_trans()
+ 
+   CALL abgq055_b_fill2()
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgq055_construct()
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num10
+   DEFINE ls_result STRING
+   DEFINE la_param  RECORD
+                    prog       STRING,
+                    actionid   STRING,
+                    background LIKE type_t.chr1,
+                    param      DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   DEFINE ls_wc     STRING
+   DEFINE lc_action_choice_old    STRING
+   DEFINE l_orga    STRING   #161006-00005#23   add
+   #add-point:ui_dialog段define-標準
+   DEFINE l_n       LIKE type_t.num5
+   DEFINE l_flag           LIKE type_t.num5
+   
+   LET l_flag=TRUE
+   #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:input段落
+          INPUT g_master.bgbi002,g_master.bgbi003,g_master.bgbi006,g_master.bgbi006_1,g_master.a 
+           FROM b_bgbi002,b_bgbi003,b_bgbi006,bgbi006_1,a
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            BEFORE INPUT
+               LET g_master.a = '0'
+               DISPLAY BY NAME g_master.a
+               
+            AFTER FIELD b_bgbi002
+               IF NOT cl_null(g_master.bgbi002) THEN
+                  #單獨檢查預算編號
+                  CALL s_fin_budget_chk(g_master.bgbi002) RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     #160321-00016#23 --s add
+                     LET g_errparam.replace[1] = 'abgi010'
+                     LET g_errparam.replace[2] = cl_get_progname('abgi040',g_lang,"2")
+                     LET g_errparam.exeprog = 'abgi010'
+                     #160321-00016#23 --e add
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_master.bgbi002 = ''
+                     LET g_master.bgbi002_desc = s_desc_get_budget_desc(g_master.bgbi002) 
+                     DISPLAY BY NAME g_master.bgbi002,g_master.bgbi002_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  #161003-00014#7---s---
+                  LET l_n = 0 
+                  SELECT COUNT(1) INTO l_n FROM bgbi_t WHERE bgbient = g_enterprise AND bgbi002 = g_master.bgbi002
+                  IF cl_null(l_n) THEN LET l_n = 0 END  IF
+                  IF l_n = 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'abg-00178'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_master.bgbi002 = ''
+                     LET g_master.bgbi002_desc = s_desc_get_budget_desc(g_master.bgbi002) 
+                     DISPLAY BY NAME g_master.bgbi002,g_master.bgbi002_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  #161003-00014#7---e---
+                  CALL s_fin_abg_center_sons_query(g_master.bgbi002,'','')
+                  CALL abgq055_bgbi002_desc()
+                  LET g_master.bgbi002_desc = s_desc_get_budget_desc(g_master.bgbi002) 
+                  DISPLAY BY NAME g_master.bgbi002,g_master.bgbi002_desc
+               END IF
+
+            #應用 a03 樣板自動產生(Version:2)
+            ON ACTION controlp INFIELD b_bgbi002
+               #add-point:ON ACTION controlp INFIELD b_bgbi002
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master.bgbi002
+               LET g_qryparam.where = " bgaa001 IN (SELECT DISTINCT bgbi002 FROM bgbi_t WHERE bgbient = ",g_enterprise," )" #161003-00014#7
+               CALL q_bgaa001()
+               LET g_master.bgbi002 = g_qryparam.return1
+               LET g_master.bgbi002_desc = s_desc_get_budget_desc(g_master.bgbi002) 
+               DISPLAY BY NAME g_master.bgbi002,g_master.bgbi002_desc
+               CALL abgq055_bgbi002_desc()
+               DISPLAY BY NAME g_master.bgbi002
+               LET g_qryparam.where = ''
+               NEXT FIELD b_bgbi002
+               #END add-point
+            
+            AFTER FIELD b_bgbi003
+               IF NOT cl_null(g_master.bgbi003) THEN
+                  LET l_n = 0
+                 # SELECT COUNT(*) INTO l_n FROM bgbh_t 
+                 #  WHERE bgbhent = g_enterprise AND bgbh002 = g_master.bgbi003
+                  SELECT COUNT(*) INTO l_n FROM bgbi_t 
+                   WHERE bgbient = g_enterprise AND bgbi003 = g_master.bgbi003
+                  IF l_n = 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     #LET g_errparam.code = 'abg-00105' #160318-00005#4 mark
+                     LET g_errparam.code = 'sub-01308'  #160318-00005#4 add
+                     LET g_errparam.extend = ''
+                     #161003-00014#7 ---s---
+                     #160318-00005#4 --s add
+                     #LET g_errparam.replace[1] = 'abgt025'
+                     #LET g_errparam.replace[2] = cl_get_progname('abgt025',g_lang,"2")
+                     #LET g_errparam.exeprog = 'abgt025'
+                     #160318-00005#4 --e add
+                     LET g_errparam.replace[1] = 'abgt023'
+                     LET g_errparam.replace[2] = cl_get_progname('abgt023',g_lang,"2")
+                     LET g_errparam.exeprog = 'abgt023'
+                      #161003-00014#7 ---e---
+                     LET g_errparam.popup = FALSE
+                     CALL cl_err()
+                     NEXT FIELD b_bgbi003
+                  END IF
+                  IF NOT cl_null(g_master.bgbi002) THEN
+                     LET l_n = 0
+                    #161003-00014#7 ---s--- 
+                    #SELECT COUNT(*) INTO l_n FROM bgbh_t 
+                    # WHERE bgbhent = g_enterprise AND bgbh002 = g_master.bgbi003
+                    #   AND bgbh001 = g_master.bgbi002                    
+                    SELECT COUNT(*) INTO l_n FROM bgbi_t 
+                     WHERE bgbient = g_enterprise AND bgbi003 = g_master.bgbi003
+                       AND bgbi002 = g_master.bgbi002
+                    #161003-00014#7 ---e---
+                     IF l_n = 0 THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'abg-00106'
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = FALSE
+                        CALL cl_err()
+                        NEXT FIELD b_bgbi003
+                     END IF
+                  END IF
+               END IF
+
+            #應用 a03 樣板自動產生(Version:2)
+            ON ACTION controlp INFIELD b_bgbi003
+               #add-point:ON ACTION controlp INFIELD b_bgbi003
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master.bgbi003
+               #161003-00014#7  ---s---
+               #IF NOT cl_null(g_master.bgbi002) THEN
+               #   LET g_qryparam.where = " bgbh001 = '",g_master.bgbi002,"'"
+               #END IF
+               #CALL q_bgbh002()
+               IF NOT cl_null(g_master.bgbi002) THEN
+                  LET g_qryparam.where = " bgbi002 = '",g_master.bgbi002,"'"
+               END IF
+               CALL q_bgbi003()
+               #161003-00014#7  ---e---
+               LET g_master.bgbi003 = g_qryparam.return1
+               DISPLAY BY NAME g_master.bgbi002
+               LET g_qryparam.where = ''
+               NEXT FIELD b_bgbi003
+               #END add-point
+            
+            AFTER FIELD b_bgbi006
+               IF NOT cl_null(g_master.bgbi006  AND g_master.bgbi006<> 0 ) AND (NOT cl_null(g_master.bgbi006_1) AND g_master.bgbi006_1<> 0) THEN
+                  IF g_master.bgbi006>g_master.bgbi006_1 THEN
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = 'agl-00227'
+                      LET g_errparam.extend = ''
+                      LET g_errparam.popup = FALSE
+                      CALL cl_err()
+                      NEXT FIELD b_bgbi006
+                  END IF
+               END IF
+            
+            AFTER FIELD bgbi006_1
+               IF NOT cl_null(g_master.bgbi006_1  AND g_master.bgbi006_1<> 0) AND NOT cl_null(g_master.bgbi006  AND g_master.bgbi006 <> 0 ) THEN
+                  IF g_master.bgbi006>g_master.bgbi006_1 THEN
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = 'agl-00227'
+                      LET g_errparam.extend = ''
+                      LET g_errparam.popup = FALSE
+                      CALL cl_err()
+                      NEXT FIELD bgbi006_1
+                  END IF
+               END IF
+               
+            AFTER INPUT
+               
+               
+         END INPUT
+         #end add-point
+ 
+         #add-point:construct段落
+         CONSTRUCT BY NAME g_wc2 ON b_bgbi004
+            BEFORE CONSTRUCT
+ 
+            #Ctrlp:construct.c.b_bgbi004
+            #應用 a03 樣板自動產生(Version:2)
+            ON ACTION controlp INFIELD b_bgbi004
+               #add-point:ON ACTION controlp INFIELD b_bgbi004
+               #161129-00019#10 --s mark
+               ##161006-00005#23  add----s
+               #CALL s_fin_abg_center_sons_query(g_master.bgbi002,'','')
+               #CALL s_fin_account_center_sons_str() RETURNING l_orga  
+               #CALL s_fin_get_wc_str(l_orga) RETURNING l_orga
+               ##161006-00005#23  add----e
+               #161129-00019#10 --e mark
+               #161129-00019#10 --s add
+               #檢查預算組織是否在abgi090中可操作的組織中
+               CALL s_abg2_get_budget_site('','',g_user,'07') RETURNING g_ooef001_str
+               CALL s_fin_get_wc_str(g_ooef001_str) RETURNING g_ooef001_str
+               #161129-00019#10 --e add                 
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+		         LET g_qryparam.reqry = FALSE
+		         #LET g_qryparam.where = " ooef001 IN (SELECT ooef001 FROM s_fin_tmp1) "   #161006-00005#23   mark
+               #CALL q_ooef001()                         #161006-00005#23   mark
+               #LET g_qryparam.where = "ooef001 IN ", g_userorga," AND ooef001 IN ", l_orga #161129-00019#10 mark
+               LET g_qryparam.where = "ooef001 IN ", g_ooef001_str                          #161129-00019#10 add
+               CALL q_ooef001_77()                       #161006-00005#23   add    #呼叫開窗
+               DISPLAY g_qryparam.return1 TO b_bgbi004 #顯示到畫面上
+               LET g_qryparam.where = ""
+               
+               NEXT FIELD b_bgbi004                    #返回原欄位
+               #END add-point
+            
+            AFTER CONSTRUCT
+               
+         
+         END CONSTRUCT
+         #end add-point
+            
+      
+         ON ACTION cancel
+            LET INT_FLAG = 1
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            INITIALIZE g_wc_filter TO NULL
+            IF cl_null(g_wc) THEN
+               LET g_wc = " 1=1"
+            END IF
+ 
+ 
+   
+            IF cl_null(g_wc2) THEN
+               LET g_wc2 = " 1=1"
+            END IF
+ 
+ 
+            #add-point:ON ACTION accept
+            CALL abgq055_ooef001_str()
+            CALL abgq055_set_page()
+            CALL abgq055_cs()
+            ACCEPT DIALOG
+           #CALL abgq055_get_data()
+            #end add-point
+ 
+ 
+      
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      RETURN
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 報表列印臨時表
+# Memo...........: 161003-00014#22
+# Usage..........: CALL abgq055_create_x01tmp()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 20161110 By 08171
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgq055_create_x01tmp()
+   DROP TABLE abgq055_x01_tmp;
+   CREATE TEMP TABLE abgq055_x01_tmp(   
+      bgbient        LIKE bgbi_t.bgbient, 
+      bgbi002        LIKE type_t.chr500,  
+      bgbi003        LIKE bgbi_t.bgbi003, 
+      bgaa003        LIKE type_t.chr500,  
+      bgbi004        LIKE type_t.chr500,  
+      bgbh005        LIKE type_t.chr500,
+      bgbi006        LIKE type_t.chr500,    
+      a              LIKE type_t.chr500,  
+      nmail003       LIKE type_t.chr500,  
+      nmai004        LIKE type_t.chr500,  
+      bgbi027        LIKE bgbi_t.bgbi027  
+   )
+END FUNCTION
+
+################################################################################
+# Descriptions...: 列印的值
+# Memo...........: #161003-00014#22
+# Usage..........: CALL abgq055_ins_x01_tmp()
+#                  RETURNING 無
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2016/11/10 By 08171
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgq055_ins_x01_tmp()
+DEFINE l_bgbi002        LIKE type_t.chr500 
+DEFINE l_bgbi004        LIKE type_t.chr500 
+DEFINE l_bgbi006        LIKE type_t.chr500
+DEFINE l_a              LIKE type_t.chr500
+DEFINE l_gzzd003        LIKE type_t.chr500
+DEFINE l_i              LIKE type_t.num5
+   #抓選項說明↓
+   IF g_master.a = '0' THEN
+      LET l_gzzd003 = 'cbo_a.1'
+   ELSE
+      LET l_gzzd003 = 'cbo_a.2'
+   END IF
+   
+   SELECT gzzd005 INTO l_a
+     FROM gzzd_t
+    WHERE gzzd001 = 'abgq055'
+    AND gzzd002 = g_dlang
+    AND gzzd004 = 's'
+    AND gzzd003 = l_gzzd003
+   #↑
+   LET l_bgbi002 = g_master.bgbi002,':',s_desc_get_budget_desc(g_master.bgbi002)
+   LET l_bgbi004 = g_master.bgbi004,':',s_desc_get_department_desc(g_master.bgbi004)
+   LET l_bgbi006 = g_master.bgbi006,'-',g_master.bgbi006_1
+   DELETE FROM abgq055_x01_tmp
+   LET l_i = 1
+   FOR l_i = 1 TO g_detail.getLength()
+      INSERT INTO abgq055_x01_tmp
+         VALUES(g_enterprise,            
+                l_bgbi002,
+                g_master.bgbi003,
+                g_master.bgaa003,
+                l_bgbi004,
+                g_master.bgbh005,
+                l_bgbi006,
+                l_a,
+                g_detail[l_i].nmail003,
+                g_detail[l_i].nmai004,
+                g_detail[l_i].bgbi027
+                )
+
+   END FOR
+
+END FUNCTION
+
+ 
+{</section>}
+ 

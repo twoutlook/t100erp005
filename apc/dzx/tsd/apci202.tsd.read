@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="apci202" std_prog="apci202" erpver="1.0" ver="4" module="APC" type="M" booking="N" designer_ver="1.0" class="i" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="pcab_t" main="Y" head="N" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="pcac_t" main="N" head="N" pk="" fk_detail="" parent="pcab_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail3" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[ 程式說明及目的：設定收銀人員資訊。
+標準作業功能取消：複製
+            作業類型：基本資料維護作業
+            輸入模式：單檔多欄模式F002_0
+    作業資料來源：單頭-pcab_t(收銀人員資訊檔
+                                單身-pcac_t(收銀人員可用組織及可用收銀機設定檔)
+          TopMenu：(1) 明細操作
+                                      (1.1) 修改密碼
+                                              (1.1.1)與重設密碼共用同一子視窗，於此功能進入時，原密碼應顯示
+                                              (1.1.2)開啟 "修改密碼/重設密碼" 的子視窗供USER輸入
+                                              (1.1.3)當pcab008 = 空白時，子視窗的原密碼 = 空白且Noentry
+                                              (1.1.4)輸入完密碼後，將輸入的"設定新密碼" UPDATE 回 pcab008，且UPDATE pcab009=pcab009+1,pcab010=NOW(日期+時間)
+                                      (1.2) 重設密碼
+                                              (1.2.1)與修改密碼共用同一子視窗，於此功能進入時，原密碼應隱藏不可輸入
+                                              (1.2.2)開啟 "修改密碼/重設密碼" 的子視窗供USER輸入
+                                              (1.2.3)輸入完密碼後，將輸入的"設定新密碼" UPDATE 回 pcab008，且UPDATE pcab009=pcab009+1,pcab010=NOW(日期+時間)
+                                (2) 相關資料
+                                      (2.1) 員工資料維護]]>
+  </all>
+  <field cite_std="N" name="l_pcab_pos_flag" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[待POS相關規劃
+計算與處理：當pcabstamp > 收銀機傳輸記錄的 timestamp時，此欄位為'N' 否則為'Y']]>
+  </field>
+  <field cite_std="N" name="l_pcac_pos_flag" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[待POS相關規劃
+計算與處理：當pcacstamp > 收銀機傳輸記錄的 timestamp時，此欄位為'N' 否則為'Y']]>
+  </field>
+  <field cite_std="N" name="pcab001_2" ver="1" src="s" column="pcab001" table="pcab_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_pcab001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pcab_t.pcab001" ver="1" src="s" column="pcab001" table="pcab_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_pcab001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[資料欄位：pcab001(收銀人員編號)
+開窗處理： q_pcab001 (新增時不提供開窗)]]>
+  </field>
+  <field cite_std="N" name="pcab_t.pcab002" ver="1" src="s" column="pcab002" table="pcab_t" attribute="" type="" req="N" i_zoom="q_ooag001_8" c_zoom="q_ooag001_8" chk_ref="v_ooag001_3" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[資料欄位：pcab002(員工編號)
+        校驗： v_ooag001_3
+　　帶值：自動帶出 姓名/所屬部門(名稱)/所屬組織
+開窗處理：q_ooag001_8 (新增時不提供開窗)
+欄位控制：有輸入員工編號時, 姓名/所屬部門(名稱)/所屬組織 控制不可輸入]]>
+  </field>
+  <field cite_std="N" name="pcab_t.pcab003" ver="1" src="s" column="pcab003" table="pcab_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[資料欄位：pcab003(員工姓名)
+　　帶值：當員工編號有輸入值時，此欄位由員工全名帶出，且NoEntry；員工編號空白時，此欄位值可輸入
+]]>
+  </field>
+  <field cite_std="N" name="pcab_t.pcab004" ver="2" src="s" column="pcab004" table="pcab_t" attribute="" type="" req="N" i_zoom="q_ooed004" c_zoom="q_ooed004" chk_ref="v_ooed004" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[ 資料欄位：pcab004(所屬組織)
+        預設值：[T:員工資料檔].[C:歸屬營運據點]
+            校驗： IF s_aooi500_setpoint(g_prog,'pcab004') THEN
+                             s_aooi500_chk(g_prog,'pcab004',g_pcab_d[l_ac].pcab004,g_site)
+                         ELSE
+                               v_ooed004, arg1(組織編號) = pcab004
+                                                      arg2(組織類型) = 8(營運) , 
+                                                      arg3(指定組織編號) = g_site
+                         END IF
+　　    帶值：自動帶出組織說明
+計算及處理：當員工編號有輸入時，此欄位不可輸入，於輸入員後編號後直接帶出員工所屬營運據點；員工編號未輸入時才可輸入部門編號
+    開窗處理： IF s_aooi500_setpoint(g_prog,'pcab004') THEN
+                             q_ooef001_24, 查詢, LET g_qryparam.where = s_aooi500_q_where(g_prog,'pcab004',g_site,'C')
+                                                         編輯, LET g_qryparam.where = s_aooi500_q_where(g_prog,'pcab004',g_site,'i')
+                         ELSE
+                             q_ooed004, arg1(營運中心) = g_site
+                                                    arg2(組織類型) = 8(營運)
+                         END IF]]>
+  </field>
+  <field cite_std="N" name="pcab_t.pcab005" ver="1" src="s" column="pcab005" table="pcab_t" attribute="" type="" req="N" i_zoom="q_ooeg001_4" c_zoom="q_ooeg001_4" chk_ref="v_ooeg001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[資料欄位：pcab005(所屬部門)
+        預設值：[T:員工資料檔].[C:歸屬部門]
+            校驗：v_ooeg001, arg1 = pcab005, arg2= g_today
+計算及處理：當員工編號有輸入時，此欄位不可輸入，於輸入員後編號後直接帶出員工所屬部門；員工編號未輸入時才可輸入部門編號
+    開窗處理：q_ooeg001_4, arg1 = g_today
+]]>
+  </field>
+  <field cite_std="N" name="pcab_t.pcab006" ver="1" src="s" column="pcab006" table="pcab_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6031" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[資料欄位：pcab006(職能)
+    預設值：1.收銀員
+計算及處理：SCC：6031]]>
+  </field>
+  <field cite_std="N" name="pcab_t.pcab007" ver="1" src="s" column="pcab007" table="pcab_t" attribute="" type="" req="Y" i_zoom="q_pcaf001" c_zoom="q_pcaf001" chk_ref="v_pcaf001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[資料欄位：pcab007(權限編號)
+        預設值：無
+            校驗：v_pcaf001
+計算及處理：無
+    開窗處理：q_pcaf001 (回傳 pcaf001 & pcafl003)]]>
+  </field>
+  <field cite_std="N" name="pcab_t.pcab008" ver="1" src="s" column="pcab008" table="pcab_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[資料欄位：pcab008(密碼)
+    欄位控管：新增可Input，修改時Read Only
+        預設值：空白
+計算及處理：應用MASK處理不可直接顯示出值。]]>
+  </field>
+  <field cite_std="N" name="pcab_t.pcab009" ver="1" src="s" column="pcab009" table="pcab_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pcab_t.pcab010" ver="1" src="s" column="pcab010" table="pcab_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pcab_t.pcab011" ver="1" src="s" column="pcab011" table="pcab_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pcab_t.pcab012" ver="1" src="s" column="pcab012" table="pcab_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="100" max_compare="&lt;=" max="100.000" min_compare="&gt;=" min="1.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[資料欄位：pcab012(最大折扣率)
+        校驗：輸入值應介於1~100]]>
+  </field>
+  <field cite_std="N" name="pcab_t.pcabcrtdp" ver="1" src="s" column="pcabcrtdp" table="pcab_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pcab_t.pcabcrtdt" ver="1" src="s" column="pcabcrtdt" table="pcab_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pcab_t.pcabcrtid" ver="1" src="s" column="pcabcrtid" table="pcab_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pcab_t.pcabmoddt" ver="1" src="s" column="pcabmoddt" table="pcab_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pcab_t.pcabmodid" ver="1" src="s" column="pcabmodid" table="pcab_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pcab_t.pcabowndp" ver="1" src="s" column="pcabowndp" table="pcab_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pcab_t.pcabownid" ver="1" src="s" column="pcabownid" table="pcab_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pcab_t.pcabstamp" ver="2" src="s" column="pcabstamp" table="pcab_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[時間戳記：pcabstamp
+計算或處理：待POS相關規劃
+
+[150325-00001#2 調整]
+新增或修改時須透過LIB取值並更新]]>
+  </field>
+  <field cite_std="N" name="pcab_t.pcabstus" ver="1" src="s" column="pcabstus" table="pcab_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pcab_t.pcabunit" ver="1" src="s" column="pcabunit" table="pcab_t" attribute="" type="" req="N" i_zoom="q_ooef001_34" c_zoom="q_ooef001_34" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[制定組織：pcabunit
+預設值：使用s_aooi500_default 取預設值]]>
+  </field>
+  <field cite_std="N" name="pcac_t.pcac002" ver="2" src="s" column="pcac002" table="pcac_t" attribute="" type="" req="Y" i_zoom="q_ooed004" c_zoom="q_ooed004" chk_ref="v_ooed004" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[ 資料欄位：pcac002(可用組織)
+        預設值：[T:員工資料檔].[C:歸屬營運據點]
+  校驗/帶值：(1) IF s_aooi500_setpoint(g_prog,'pcac002') THEN
+                                  s_aooi500_chk(g_prog,'pcac002',g_pcab3_d[l_ac].pcac002,g_site)
+                             ELSE
+                                   v_ooed004, arg1(組織編號) = pcac002
+                                                         arg2(組織類型) = 8(營運) , 
+                                                         arg3(指定組織編號) = g_site
+                            END IF  
+                        (2)本欄位與企業編號(pcab_t)/收銀人員(pcac001)/收銀機編號(pcac003)為KEY，不可重複　　              
+計算及處理：組織編號+收銀機編號=空白 & 組織編號+收銀機編號有設定值，兩者只可擇一
+　　　　　　允許同組織不同收銀機編號（前提是收銀機編號都須設定）
+                       錯誤訊息：apc-00019
+    開窗處理： IF s_aooi500_setpoint(g_prog,'pcac002') THEN
+                             q_ooef001_24, 查詢, LET g_qryparam.where = s_aooi500_q_where(g_prog,'pcac002',g_site,'C')
+                                                         編輯, LET g_qryparam.where = s_aooi500_q_where(g_prog,'pcac002',g_site,'i')
+                         ELSE
+                               q_ooed004, arg1(營運中心) = g_site
+                                                      arg2(組織類型) = 8(營運)
+                         END IF
+]]>
+  </field>
+  <field cite_std="N" name="pcac_t.pcac003" ver="1" src="s" column="pcac003" table="pcac_t" attribute="" type="" req="N" i_zoom="q_pcaa001_1" c_zoom="q_pcaa001_1" chk_ref="v_pcaa001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[資料欄位：pcac003(可用收銀機)
+        預設值：空格
+            校驗：(1)v_pcaa001, arg1(營運組織) = pcac002
+                                                  arg2(收銀機編號) = pcac003
+                        (2)本欄位與企業編號(pcab_t)/收銀人員(pcac001)/組織編號(pcac002)為KEY，不可重複
+　　    帶值：自動帶出收銀機名稱
+計算及處理：輸入收銀機前須先確認組織不可為空白
+                        組織編號+收銀機編號=空白 & 組織編號+收銀機編號有設定值，兩者只可擇一
+　　　　　　允許同組織不同收銀機編號（前提是收銀機編號都須設定）
+                        錯誤訊息：apc-00019
+    開窗處理：q_pcaa001_1, arg1(營運組織) = pcac002
+                        新增時開窗開放多選；修改時只可單選]]>
+  </field>
+  <field cite_std="N" name="pcac_t.pcacstamp" ver="2" src="s" column="pcacstamp" table="pcac_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[時間戳記：pcacstamp
+待POS相關規劃
+
+[150325-00001#2 調整]
+新增或修改時須透過LIB取值並更新]]>
+  </field>
+  <field cite_std="N" name="pcac_t.pcacstus" ver="1" src="s" column="pcacstus" table="pcac_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pcac_t.pcacunit" ver="1" src="s" column="pcacunit" table="pcac_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[制定組織：pcacunit]]>
+  </field>
+  <field cite_std="N" name="pswd" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[無論密碼長度，統一顯示]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="pcab001_2_desc" src="s" depend_field="pcab001_2" correspon_key="pcabent,pcab001" ref_table="apcb_t" ref_fk="pcabent,pcab001" ref_dlang="" ref_rtn="apcb003" status=""/>
+    <rfield cite_std="N" ver="1" name="pcab004_desc" src="s" depend_field="pcab_t.pcab004" correspon_key="pcabent,pcab004" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pcab005_desc" src="s" depend_field="pcab_t.pcab005" correspon_key="pcabent,pcab005" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pcab007_desc" src="s" depend_field="pcab_t.pcab007" correspon_key="pcab007" ref_table="pcafl_t" ref_fk="pcafl001" ref_dlang="pcafl002" ref_rtn="pcafl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pcabcrtdp_desc" src="s" depend_field="pcab_t.pcabcrtdp" correspon_key="pcabcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pcabcrtid_desc" src="s" depend_field="pcab_t.pcabcrtid" correspon_key="pcabcrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="pcabmodid_desc" src="s" depend_field="pcab_t.pcabmodid" correspon_key="pcabmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="pcabowndp_desc" src="s" depend_field="pcab_t.pcabowndp" correspon_key="pcabowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pcabownid_desc" src="s" depend_field="pcab_t.pcabownid" correspon_key="pcabownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="pcac002_desc" src="s" depend_field="pcac_t.pcac002" correspon_key="pcacent,pcac002" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="pcac003_desc" src="s" depend_field="pcac_t.pcac003" correspon_key="pcacent,pcac002,pcac003" ref_table="pcaal_t" ref_fk="pcaalent,pcaalsite,pcaal001" ref_dlang="pcaal002" ref_rtn="pcaal003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="l_pcab_pos_flag" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="l_pcac_pos_flag" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pcab001_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pcab_t.pcab001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pcab_t.pcab002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pcab_t.pcab003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="pcab_t.pcab004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pcab_t.pcab005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pcab_t.pcab006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pcab_t.pcab007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pcab_t.pcab008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pcab_t.pcab009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pcab_t.pcab010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pcab_t.pcab011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pcab_t.pcab012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pcab_t.pcabcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pcab_t.pcabcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pcab_t.pcabcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pcab_t.pcabmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pcab_t.pcabmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pcab_t.pcabowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pcab_t.pcabownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="pcab_t.pcabstamp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pcab_t.pcabstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pcab_t.pcabunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="pcac_t.pcac002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pcac_t.pcac003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="pcac_t.pcacstamp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pcac_t.pcacstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pcac_t.pcacunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pswd" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="change_pwd" ver="1" src="s" type="di1,db1" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reset_pwd" ver="1" src="s" type="di1,db1" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_pcab001" text="收銀人員編號" lstr=""/>
+    <sfield name="lbl_apcb003" text="來源業務單據項次" lstr=""/>
+    <sfield name="lbl_pcab008" text="原密碼" lstr=""/>
+    <sfield name="lbl_pcab008_new" text="設置新密碼" lstr=""/>
+    <sfield name="lbl_pcab008_chk" text="確認新密碼" lstr=""/>
+    <sfield name="accept" text="確認" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="bpage_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_pcabstus" text="有效" lstr=""/>
+    <sfield name="lbl_pcab002" text="員工編號" lstr=""/>
+    <sfield name="lbl_pcab003" text="收銀人員姓名" lstr=""/>
+    <sfield name="lbl_pcab005" text="所屬部門" lstr=""/>
+    <sfield name="lbl_pcab005_desc" text="部門名稱" lstr=""/>
+    <sfield name="lbl_pcab004" text="所屬組織" lstr=""/>
+    <sfield name="lbl_pcab004_desc" text="組織說明" lstr=""/>
+    <sfield name="lbl_pswd" text="密碼" lstr=""/>
+    <sfield name="lbl_pcab006" text="職能" lstr=""/>
+    <sfield name="lbl_pcab007" text="權限編號" lstr=""/>
+    <sfield name="lbl_pcafl003" text="權限名稱" lstr=""/>
+    <sfield name="lbl_pcab011" text="是否強行登入" lstr=""/>
+    <sfield name="lbl_pcab012" text="最大折扣率" lstr=""/>
+    <sfield name="lbl_pcab009" text="密碼修改次數" lstr=""/>
+    <sfield name="lbl_pcab010" text="密碼最後修改日期" lstr=""/>
+    <sfield name="lbl_pcab_pos_flag" text="已傳中間庫" lstr=""/>
+    <sfield name="lbl_pcabstamp" text="時間戳記" lstr=""/>
+    <sfield name="lbl_pcabunit" text="制定組織" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="ownid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="owndp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="crtid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="crtdp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="modid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="page_2.apci202" text="收銀人員組織及收銀機權限" lstr=""/>
+    <sfield name="lbl_pcacstus" text="有效" lstr=""/>
+    <sfield name="lbl_pcac002" text="可用組織" lstr=""/>
+    <sfield name="lbl_pcac002_desc" text="組織說明" lstr=""/>
+    <sfield name="lbl_pcac003" text="收銀機編號" lstr=""/>
+    <sfield name="lbl_pcaal003" text="收銀機名稱" lstr=""/>
+    <sfield name="lbl_pcac_pos_flag" text="已傳中間庫" lstr=""/>
+    <sfield name="lbl_pcacstamp" text="時間戳記" lstr=""/>
+    <sfield name="lbl_pcacunit" text="制定組織" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="change_pwd" text="修改密碼" lstr=""/>
+    <sact name="reset_pwd" text="重設密碼" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

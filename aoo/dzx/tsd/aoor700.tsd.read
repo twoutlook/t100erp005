@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aoor700" std_prog="aoor700" erpver="1.0" ver="1" module="AOO" type="M" booking="N" designer_ver="1.0" class="r" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="R" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="gzzo_t" main="N" head="N" pk="gzzo001" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="gzzol_t" main="N" head="N" pk="gzzol001,gzzol002" fk_detail="gzzol003" parent="gzzo_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status=""/>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：提供未完成確認或過帳單據之查核
+作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：報表
+輸入模式：報表（子作業）R001_00
+作業資料來源(Master)：
+ 資料來源表：所有交易檔
+
+作業資料來源(Detail)：
+ 資料來源表：所有交易明細檔
+
+補充說明:本作業須同步完成aooi199 [C:於aoor700揭露]之畫面欄位新增
+1.將單據別符合aooi199[C:模組別]符已選擇模組編號且[C:於aoor700揭露]有勾選
+  且單據日期符合指定之"資料日期區間"起迄之單據撈出
+2.若上述單據之可選單據狀態碼選項於azzi600[C:系統應用欄位四]之設定值,
+  若均小於等於單據狀態碼(xxxxstus)於azzi600[C:系統應用欄位四]之設定值者須排除
+3.若是畫面"列印作廢單據"有勾選,則除上述單據外,若單據狀態碼(xxxxstus)='X'者亦須列印
+4.若是畫面"列印不影響庫存單據"未勾選,則排除可選單據狀態碼選項無'S'之單據
+]]>
+  </all>
+  <field cite_std="N" name="bdate" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="DateEdit" status="">
+    <![CDATA[資料日期區間-起(bdate):
+1.不允許空白
+2.預設值:無
+3.若edate不為空值,則輸入值不可大於edate
+]]>
+  </field>
+  <field cite_std="N" name="edate" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="DateEdit" status="">
+    <![CDATA[資料日期區間-迄(edate):
+1.不允許空白
+2.預設值:無
+3.若bdate不為空值,則輸入值不可小於edate
+]]>
+  </field>
+  <field cite_std="N" name="gzzo_t.gzzo001" ver="1" src="s" column="gzzo001" table="gzzo_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[1.於畫面開啟時,將aooi199 [C:於aoor700揭露]有勾選之模組別及名稱全部顯示
+]]>
+  </field>
+  <field cite_std="N" name="gzzol_t.gzzol003" ver="1" src="s" column="gzzol003" table="gzzol_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="pageskip" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="print" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="selected" ver="1" src="s" column="gzzo001" table="gzzo_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="selected_1" ver="1" src="s" column="gzzol003" table="gzzol_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="show" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="edit_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="gzzo001.gzzo001_sel" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="bdate" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="edate" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="edit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="gzzo001.gzzo001_sel" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="gzzo_t.gzzo001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="gzzol_t.gzzol003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="pageskip" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="print" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="selected" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="selected_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="show" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="action_1" ver="1" src="s" type="" gen_code="" status="d">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="action_5" ver="1" src="s" type="" gen_code="" status="d">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="allin" ver="1" src="s" type="mi" gen_code="Y" status="">
+    <![CDATA[將左邊單身之模組別全部新增至右邊單身，並將左邊單身資料全部刪除,並重新顯示單身畫面
+]]>
+  </act>
+  <act cite_std="N" id="allout" ver="1" src="s" type="mi" gen_code="Y" status="">
+    <![CDATA[將右邊單身之模組別全部新增至左邊單身，並將右邊單身資料全部刪除,並重新顯示單身畫面
+]]>
+  </act>
+  <act cite_std="N" id="button_1" ver="1" src="s" type="" gen_code="" status="d">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="button_2" ver="1" src="s" type="" gen_code="" status="d">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="button_3" ver="1" src="s" type="" gen_code="" status="d">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="button_4" ver="1" src="s" type="" gen_code="" status="d">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="in" ver="1" src="s" type="mi" gen_code="Y" status="">
+    <![CDATA[將左邊單身被選取之模組別新增至右邊單身，並將左邊單身該筆資料刪除,並重新顯示單身畫面
+]]>
+  </act>
+  <act cite_std="N" id="out" ver="1" src="s" type="mi" gen_code="Y" status="">
+    <![CDATA[將右邊單身被選取之模組別新增至左邊單身，並將右邊單身該筆資料刪除,並重新顯示單身畫面
+]]>
+  </act>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="group_module" text="模組選擇" lstr=""/>
+    <sfield name="lbl_gzzo001" text="模組編號" lstr=""/>
+    <sfield name="lbl_gzzol003" text="模組名稱" lstr=""/>
+    <sfield name="button_allin" text="&gt;&gt;" lstr=""/>
+    <sfield name="button_in" text="&gt;" lstr=""/>
+    <sfield name="button_out" text="&lt;" lstr=""/>
+    <sfield name="button_allout" text="&lt;&lt;" lstr=""/>
+    <sfield name="lbl_selected" text="已選擇模組編號" lstr=""/>
+    <sfield name="lbl_selected_1" text="模組名稱" lstr=""/>
+    <sfield name="group_input" text="其他條件" lstr=""/>
+    <sfield name="lbl_bdate" text="資料日期區間" lstr=""/>
+    <sfield name="lbl_edate" text="~" lstr=""/>
+    <sfield name="lbl_print" text="列印已作廢單據" lstr=""/>
+    <sfield name="lbl_pageskip" text="依模組類別跳頁" lstr=""/>
+    <sfield name="lbl_show" text="顯示不影響庫存異動單據" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_oojk001" text="簽核代號" lstr=""/>
+    <sfield name="lbl_oojk004_str" text="簽核關卡" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="allin" text="" lstr=""/>
+    <sact name="allout" text="" lstr=""/>
+    <sact name="in" text="" lstr=""/>
+    <sact name="out" text="" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

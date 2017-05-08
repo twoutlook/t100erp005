@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adet407_01" module="ade" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="04226" crtdt="2014-06-30 14:19:23" modid="04226" moddt="2014-07-01 10:16:13" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="營業款保全對帳匯入檔案">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="deaxdocno,deax003,path(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adet407_01" method="dialog">
+    <section id="input">
+      <input id="head" field="deaxdocno,deax003,path"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="deaxdocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_deaxdocno" state="c"/>
+      </column>
+      <column id="deax003"/>
+      <column id="path"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="deax_t" pk="deaxdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT deaxdocno,deax003,&apos;&apos; FROM deax_t WHERE deaxent= ? AND deaxdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="deaxdocno"/>
+    </head>
+  </dataset>
+</assembly>
+

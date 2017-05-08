@@ -1,0 +1,1610 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="ainr705_g03.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:3(2016-12-31 11:02:22), PR版次:0003(2016-12-31 12:07:43)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000000
+#+ Filename...: ainr705_g03
+#+ Description: ...
+#+ Creator....: 06137(2016-12-05 14:52:25)
+#+ Modifier...: 06814 -SD/PR- 06814
+ 
+{</section>}
+ 
+{<section id="ainr705_g03.global" readonly="Y" >}
+#報表 g01 樣板自動產生(Version:13)
+#add-point:填寫註解說明 name="global.memo"
+#161220-00037#5  20161226 by 06814         1.取值改为抓单身状态码indj023='N.未结束' and 此次分配量indj010-已装箱量indj022>0的部分，如抓不到单身，则不打印单头
+#                                          2.数量抓取逻辑改为此次分配量indj010-已装箱量indj022
+#                                          3.顯示顏色編碼
+#161231-00003#1  20161231 by 06814         1.bug调整，产品特征超过10列分页的时候，小计数量不对
+#                                          2.产品特征超过10列分页的时候，控制不显示时候,应该是本商品，本颜色，所有尺码分货数量全部为0时才不显示，
+#                                            如第一页无数量，第二页有数量，那本行在第一页还是要显示一条数量部分空白的行
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+PRIVATE TYPE sr1_r RECORD
+   indient LIKE indi_t.indient, 
+   indisite LIKE indi_t.indisite, 
+   indidocno LIKE indi_t.indidocno, 
+   indidocdt LIKE indi_t.indidocdt, 
+   indistus LIKE indi_t.indistus, 
+   indi000 LIKE indi_t.indi000, 
+   indi001 LIKE indi_t.indi001, 
+   indi003 LIKE indi_t.indi003, 
+   indi004 LIKE indi_t.indi004, 
+   indi007 LIKE indi_t.indi007, 
+   indiunit LIKE indi_t.indiunit, 
+   indj001 LIKE indj_t.indj001, 
+   indj004 LIKE indj_t.indj004, 
+   indj020 LIKE indj_t.indj020, 
+   l_indj020_desc LIKE pmaal_t.pmaal003, 
+   l_inam012 LIKE inam_t.inam012, 
+   l_inam014 LIKE inam_t.inam014, 
+   l_inam018 LIKE inam_t.inam018, 
+   indj008 LIKE indj_t.indj008, 
+   l_indj0101 LIKE indj_t.indj010, 
+   l_indj0102 LIKE indj_t.indj010, 
+   l_indj0103 LIKE indj_t.indj010, 
+   l_indj0104 LIKE indj_t.indj010, 
+   l_indj0105 LIKE indj_t.indj010, 
+   l_indj0106 LIKE indj_t.indj010, 
+   l_indj0107 LIKE indj_t.indj010, 
+   l_indj0108 LIKE indj_t.indj010, 
+   l_indj0109 LIKE indj_t.indj010, 
+   l_indj01010 LIKE indj_t.indj010, 
+   l_pageno LIKE type_t.chr30, 
+   l_order LIKE type_t.chr30
+END RECORD
+ 
+PRIVATE TYPE sr2_r RECORD
+   ooff013 LIKE ooff_t.ooff013
+END RECORD
+ 
+ 
+DEFINE tm RECORD
+       wc STRING,                  #where condition 
+       type LIKE type_t.chr1          #列印對象類型
+       END RECORD
+DEFINE sr DYNAMIC ARRAY OF sr1_r                   #宣告sr為sr1_t資料結構的動態陣列
+DEFINE g_select        STRING
+DEFINE g_from          STRING
+DEFINE g_where         STRING
+DEFINE g_order         STRING
+DEFINE g_sql           STRING                         #report_select_prep,REPORT段使用
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_inam014        ARRAY[11] OF VARCHAR(1000)   
+DEFINE l_total LIKE type_t.num10
+#纵向合计
+TYPE r_sum   RECORD 
+                 sum01  LIKE type_t.num20_6, 
+                 sum02  LIKE type_t.num20_6,
+                 sum03  LIKE type_t.num20_6,
+                 sum04  LIKE type_t.num20_6,
+                 sum05  LIKE type_t.num20_6,
+                 sum06  LIKE type_t.num20_6,
+                 sum07  LIKE type_t.num20_6,
+                 sum08  LIKE type_t.num20_6,
+                 sum09  LIKE type_t.num20_6,
+                 sum10  LIKE type_t.num20_6
+             END RECORD 
+#end add-point
+ 
+{</section>}
+ 
+{<section id="ainr705_g03.main" readonly="Y" >}
+PUBLIC FUNCTION ainr705_g03(p_arg1,p_arg2)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition 
+DEFINE  p_arg2 LIKE type_t.chr1         #tm.type  列印對象類型
+#add-point:init段define (客製用) name="component_name.define_customerization"
+
+#end add-point
+#add-point:init段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component_name.define"
+DEFINE l_session_id    LIKE type_t.num20
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.type = p_arg2
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   LET g_template="ainr705_g03"
+   
+   SELECT USERENV('SESSIONID') INTO l_session_id FROM DUAL
+   DISPLAY "------------------------------"
+   DISPLAY "SessionId: ",l_session_id   
+   DISPLAY "------------------------------"
+   CALL ainr705_g03_create_tmp_table()     
+   LET g_sql = " INSERT INTO ainr705_tmp1(indient    ,indisite   ,indidocdt  ,indistus   ,indi000    , ",
+               "                          indi001    ,indi003    ,indi004    ,indi007    ,indiunit   , ",
+               "                          indj001    ,indj020    ,indj020_desc , ",
+               "                          docno      ,item       ,imaal003   ,inam012    ,inam014    , ",
+               "                          inam018    ,unit       ,qty        ,condition) ",
+               " VALUES (?,?,?,?,?,?,?,?,?,?, ",
+               "         ?,?,?,?,?,?,?,?,?,?, ",
+               "         ?,?) "
+   PREPARE ainr705_ins_tmp1 FROM g_sql
+   CALL ainr705_g03_ins_tmp_table(tm.wc)  
+   #end add-point
+   #報表元件代號
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'   
+   
+   LET g_rep_code = "ainr705_g03"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #主報表select子句準備
+   CALL ainr705_g03_sel_prep()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料存入array
+   CALL ainr705_g03_ins_data()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料印出
+   CALL ainr705_g03_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainr705_g03.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION ainr705_g03_sel_prep()
+   #add-point:sel_prep段define (客製用) name="sel_prep.define_customerization"
+   
+   #end add-point
+   #add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+   
+   #end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+   
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   
+   #end add-point
+   LET g_select = " SELECT indient,indisite,indidocno,indidocdt,indistus,indi000,indi001,indi003,indi004, 
+       indi007,indiunit,indj001,indj004,indj020,'','','','',indj008,0,0,0,0,0,0,0,0,0,0,0,''"
+ 
+   #add-point:sel_prep g_from name="sel_prep.g_from"
+   
+   #end add-point
+    LET g_from = " FROM  indi_t  LEFT OUTER JOIN ( SELECT indj_t.* FROM indj_t  ) x  ON indi_t.indient  
+        = x.indjent AND indi_t.indidocno = x.indjdocno"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+   
+   #end add-point
+    LET g_where = " WHERE indi_t.indi000 = '1' AND " ,tm.wc CLIPPED 
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   
+   #end add-point
+    LET g_order = " ORDER BY indidocno,indj004"
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("indi_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED ," ",g_order CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段 
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   LET g_sql = " SELECT indient ,       indisite ,      indidocno ,     indidocdt ,     indistus , ",
+               "        indi000 ,       indi001 ,       indi003 ,       indi004 ,       indi007 ,  ",
+               "        indiunit ,      indj001 ,       indj004 ,       indj020 ,       l_indj020_desc , ",
+               "        l_inam012 ,     '' l_inam014 ,  l_inam018 ,     indj008 ,       SUM(l_indj0101) ,    ",            
+               "        SUM(l_indj0102) ,    SUM(l_indj0103) ,    SUM(l_indj0104) ,    SUM(l_indj0105) ,    SUM(l_indj0106), ", 
+               "        SUM(l_indj0107) ,    SUM(l_indj0108) ,    SUM(l_indj0109) ,    SUM(l_indj01010) ,   page_no , ",
+               "        trim(indidocno)||'.'||trim(TO_CHAR(page_no,'0000')) ",               
+               "   FROM ainr705_print_tmp ",
+               " GROUP BY indient ,       indisite ,      indidocno ,     indidocdt ,     indistus , ",
+               "          indi000 ,       indi001 ,       indi003 ,       indi004 ,       indi007 ,  ",
+               "          indiunit ,      indj001 ,       indj004 ,       indj020 ,       l_indj020_desc , ", 
+               "          l_inam012 ,     l_inam018 ,     indj008 ,       page_no ,    ",
+               "          trim(indidocno)||'.'||trim(TO_CHAR(page_no,'0000')) ",               
+               "  ORDER BY indidocno,page_no,indj004,l_inam012 " 
+   DISPLAY "g_sql:",g_sql               
+   #end add-point
+   PREPARE ainr705_g03_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()   
+      LET g_rep_success = 'N'    
+   END IF
+   DECLARE ainr705_g03_curs CURSOR FOR ainr705_g03_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainr705_g03.ins_data" readonly="Y" >}
+PRIVATE FUNCTION ainr705_g03_ins_data()
+#主報表record(用於select子句)
+   DEFINE sr_s RECORD 
+   indient LIKE indi_t.indient, 
+   indisite LIKE indi_t.indisite, 
+   indidocno LIKE indi_t.indidocno, 
+   indidocdt LIKE indi_t.indidocdt, 
+   indistus LIKE indi_t.indistus, 
+   indi000 LIKE indi_t.indi000, 
+   indi001 LIKE indi_t.indi001, 
+   indi003 LIKE indi_t.indi003, 
+   indi004 LIKE indi_t.indi004, 
+   indi007 LIKE indi_t.indi007, 
+   indiunit LIKE indi_t.indiunit, 
+   indj001 LIKE indj_t.indj001, 
+   indj004 LIKE indj_t.indj004, 
+   indj020 LIKE indj_t.indj020, 
+   l_indj020_desc LIKE pmaal_t.pmaal003, 
+   l_inam012 LIKE inam_t.inam012, 
+   l_inam014 LIKE inam_t.inam014, 
+   l_inam018 LIKE inam_t.inam018, 
+   indj008 LIKE indj_t.indj008, 
+   l_indj0101 LIKE indj_t.indj010, 
+   l_indj0102 LIKE indj_t.indj010, 
+   l_indj0103 LIKE indj_t.indj010, 
+   l_indj0104 LIKE indj_t.indj010, 
+   l_indj0105 LIKE indj_t.indj010, 
+   l_indj0106 LIKE indj_t.indj010, 
+   l_indj0107 LIKE indj_t.indj010, 
+   l_indj0108 LIKE indj_t.indj010, 
+   l_indj0109 LIKE indj_t.indj010, 
+   l_indj01010 LIKE indj_t.indj010, 
+   l_pageno LIKE type_t.chr30, 
+   l_order LIKE type_t.chr30
+ END RECORD
+   DEFINE l_cnt           LIKE type_t.num10
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point   
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    
+    #end add-point
+ 
+    CALL sr.clear()                                  #rep sr
+    LET l_cnt = 1
+    FOREACH ainr705_g03_curs INTO sr_s.*
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()       
+          LET g_rep_success = 'N'    
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       
+       #end add-point
+ 
+       #add-point:ins_data段before_arr name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #set rep array value
+       LET sr[l_cnt].indient = sr_s.indient
+       LET sr[l_cnt].indisite = sr_s.indisite
+       LET sr[l_cnt].indidocno = sr_s.indidocno
+       LET sr[l_cnt].indidocdt = sr_s.indidocdt
+       LET sr[l_cnt].indistus = sr_s.indistus
+       LET sr[l_cnt].indi000 = sr_s.indi000
+       LET sr[l_cnt].indi001 = sr_s.indi001
+       LET sr[l_cnt].indi003 = sr_s.indi003
+       LET sr[l_cnt].indi004 = sr_s.indi004
+       LET sr[l_cnt].indi007 = sr_s.indi007
+       LET sr[l_cnt].indiunit = sr_s.indiunit
+       LET sr[l_cnt].indj001 = sr_s.indj001
+       LET sr[l_cnt].indj004 = sr_s.indj004
+       LET sr[l_cnt].indj020 = sr_s.indj020
+       LET sr[l_cnt].l_indj020_desc = sr_s.l_indj020_desc
+       LET sr[l_cnt].l_inam012 = sr_s.l_inam012
+       LET sr[l_cnt].l_inam014 = sr_s.l_inam014
+       LET sr[l_cnt].l_inam018 = sr_s.l_inam018
+       LET sr[l_cnt].indj008 = sr_s.indj008
+       LET sr[l_cnt].l_indj0101 = sr_s.l_indj0101
+       LET sr[l_cnt].l_indj0102 = sr_s.l_indj0102
+       LET sr[l_cnt].l_indj0103 = sr_s.l_indj0103
+       LET sr[l_cnt].l_indj0104 = sr_s.l_indj0104
+       LET sr[l_cnt].l_indj0105 = sr_s.l_indj0105
+       LET sr[l_cnt].l_indj0106 = sr_s.l_indj0106
+       LET sr[l_cnt].l_indj0107 = sr_s.l_indj0107
+       LET sr[l_cnt].l_indj0108 = sr_s.l_indj0108
+       LET sr[l_cnt].l_indj0109 = sr_s.l_indj0109
+       LET sr[l_cnt].l_indj01010 = sr_s.l_indj01010
+       LET sr[l_cnt].l_pageno = sr_s.l_pageno
+       LET sr[l_cnt].l_order = sr_s.l_order
+ 
+ 
+       #add-point:ins_data段after_arr name="ins_data.after.save"
+       
+       #end add-point
+       LET l_cnt = l_cnt + 1
+    END FOREACH
+    CALL sr.deleteElement(l_cnt)
+ 
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainr705_g03.rep_data" readonly="Y" >}
+PRIVATE FUNCTION ainr705_g03_rep_data()
+   DEFINE HANDLER         om.SaxDocumentHandler
+   DEFINE l_i             INTEGER
+ 
+    #判斷是否有報表資料，若回彈出訊息視窗
+    IF sr.getLength() = 0 THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = "adz-00285"
+       LET g_errparam.extend = NULL
+       LET g_errparam.popup  = FALSE
+       LET g_errparam.replace[1] = ''
+       CALL cl_err()  
+       RETURN 
+    END IF
+    WHILE TRUE   
+       #add-point:rep_data段印前 name="rep_data.before"
+       
+       #end add-point     
+       LET handler = cl_gr_handler()
+       IF handler IS NOT NULL THEN
+          START REPORT ainr705_g03_rep TO XML HANDLER handler
+          FOR l_i = 1 TO sr.getLength()
+             OUTPUT TO REPORT ainr705_g03_rep(sr[l_i].*)
+             #報表中斷列印時，顯示錯誤訊息
+             IF fgl_report_getErrorStatus() THEN
+                DISPLAY "FGL: STOPPING REPORT msg=\"",fgl_report_getErrorString(),"\""
+                EXIT FOR
+             END IF                  
+          END FOR
+          FINISH REPORT ainr705_g03_rep
+       END IF
+       #add-point:rep_data段印完 name="rep_data.after"
+       
+       #end add-point       
+       IF g_rep_flag = TRUE THEN
+          LET g_rep_flag = FALSE
+          EXIT WHILE
+       END IF
+    END WHILE
+    #add-point:rep_data段離開while印完前 name="rep_data.end.before"
+    
+    #end add-point
+    CALL cl_gr_close_report()
+    #add-point:rep_data段離開while印完後 name="rep_data.end.after"
+    
+    #end add-point    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainr705_g03.rep" readonly="Y" >}
+PRIVATE REPORT ainr705_g03_rep(sr1)
+DEFINE sr1 sr1_r
+DEFINE sr2 sr2_r
+DEFINE l_subrep01_show  LIKE type_t.chr1,
+       l_subrep02_show  LIKE type_t.chr1,
+       l_subrep03_show  LIKE type_t.chr1,
+       l_subrep04_show  LIKE type_t.chr1
+DEFINE l_cnt           LIKE type_t.num10
+DEFINE l_sub_sql       STRING
+#add-point:rep段define  (客製用) name="rep.define_customerization"
+
+#end add-point
+#add-point:rep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep.define"
+DEFINE l_inam0141      LIKE type_t.chr1000
+DEFINE l_inam0142      LIKE type_t.chr1000
+DEFINE l_inam0143      LIKE type_t.chr1000
+DEFINE l_inam0144      LIKE type_t.chr1000
+DEFINE l_inam0145      LIKE type_t.chr1000
+DEFINE l_inam0146      LIKE type_t.chr1000
+DEFINE l_inam0147      LIKE type_t.chr1000
+DEFINE l_inam0148      LIKE type_t.chr1000
+DEFINE l_inam0149      LIKE type_t.chr1000
+DEFINE l_inam01410     LIKE type_t.chr1000
+DEFINE l_indj010_sum   LIKE type_t.num10
+DEFINE l_indj010_total LIKE type_t.num10
+DEFINE l_title         LIKE type_t.chr1000
+DEFINE l_sql           STRING
+DEFINE l_sum r_sum
+DEFINE i               LIKE type_t.num5
+DEFINE l_title_tmp     LIKE type_t.chr1000
+#end add-point
+ 
+    #add-point:rep段ORDER_before name="rep.order.before"
+    
+    #end add-point
+    ORDER  BY sr1.l_order,sr1.indj004,sr1.l_inam012,sr1.indj001,sr1.indj020
+    #add-point:rep段ORDER_after name="rep.order.after"
+    
+    #end add-point
+    
+    FORMAT
+       FIRST PAGE HEADER          
+          PRINTX g_user,g_pdate,g_rep_code,g_company,g_ptime,g_user_name,g_date_fmt
+          PRINTX tm.*
+          PRINTX g_grNumFmt.*
+          PRINTX g_rep_wcchp
+ 
+          #讀取beforeGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.l_order
+            #報表 d05 樣板自動產生(Version:6)
+            CALL cl_gr_title_clear()  #清除title變數值 
+            #add-point:rep.header  #公司資訊(不在公用變數內) name="rep.header"
+            #调整报表表头名称
+            IF tm.type = '1' THEN
+               CALL cl_getmsg('ain-00852',g_dlang) RETURNING l_title_tmp
+               #LET g_grPageHeader.title0201 = "门店期货拣货单"
+            ELSE
+               CALL cl_getmsg('ain-00853',g_dlang) RETURNING l_title_tmp
+               #LET g_grPageHeader.title0201 = "客户期货拣货单"
+            END IF
+            LET g_grPageHeader.title0201 = l_title_tmp             
+            LET g_rep_docno = sr1.indidocno
+            CALL cl_gr_init_pageheader() #表頭資訊
+            PRINTX g_grPageHeader.*
+            PRINTX g_grPageFooter.*              
+#            #end add-point:rep.header 
+#            LET g_rep_docno = sr1.l_order
+#            CALL cl_gr_init_pageheader() #表頭資訊
+#            PRINTX g_grPageHeader.*
+#            PRINTX g_grPageFooter.*
+#            #add-point:rep.apr.signstr.before name="rep.apr.signstr.before"
+                          
+            #end add-point:rep.apr.signstr.before   
+            LET g_doc_key = 'indient=' ,sr1.indient,'{+}indidocno=' ,sr1.indidocno         
+            CALL cl_gr_init_apr(sr1.l_order)
+            #add-point:rep.apr.signstr name="rep.apr.signstr"
+                          
+            #end add-point:rep.apr.signstr
+            PRINTX g_grSign.*
+ 
+ 
+ 
+           #add-point:rep.b_group.l_order.before name="rep.b_group.l_order.before"
+           
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub01.before name="rep.sub01.before"
+           #用來判斷此筆資料的單號是否超過一頁
+           LET l_sql = "SELECT COUNT(1) FROM ( " ,
+                       "SELECT UNIQUE indidocno, page_no ",
+                       "  FROM ainr705_print_tmp ",
+                       " WHERE indidocno = ? )"
+           PREPARE ainr705_page_cnt FROM l_sql  
+
+           #如單號有多頁時，橫向總計(同箱的最後一頁顯示)
+           LET l_sql = " SELECT SUM(COALESCE(l_indj0101,0) ",
+                       "          + COALESCE(l_indj0102,0) ",
+                       "          + COALESCE(l_indj0103,0) ",
+                       "          + COALESCE(l_indj0104,0) ",
+                       "          + COALESCE(l_indj0105,0) ",
+                       "          + COALESCE(l_indj0106,0) ",
+                       "          + COALESCE(l_indj0107,0) ",
+                       "          + COALESCE(l_indj0108,0) ",
+                       "          + COALESCE(l_indj0109,0) ",
+                       "          + COALESCE(l_indj01010,0)) FROM ainr705_print_tmp ",
+                       #" WHERE indidocno=? AND indj004=? AND l_inam012 =? "  #161231-00003#1 20161231 mark by beckxie
+                       " WHERE indidocno=? AND indj001 = ? AND indj020 = ? AND indj004=? AND l_inam012 =? "  #161231-00003#1 20161231 add by beckxie
+           PREPARE ainr705_indj010_sum FROM l_sql
+           
+           CALL g_inam014.clear()
+           LET i = 1
+           LET l_sql = " SELECT inam014 FROM inam014_tmp",
+                       " WHERE indidocno = ? ",  
+                       "   AND page_no = ? ",    
+                       " ORDER BY i"
+           PREPARE ainr705_sel_inam014_pre FROM l_sql
+           DECLARE ainr705_sel_inam014_cs CURSOR FOR ainr705_sel_inam014_pre          
+           FOREACH ainr705_sel_inam014_cs 
+             USING sr1.indidocno,sr1.l_pageno INTO g_inam014[i] 
+              LET i = i + 1
+           END FOREACH           
+           LET l_inam0141 = g_inam014[1]
+           LET l_inam0142 = g_inam014[2]
+           LET l_inam0143 = g_inam014[3]
+           LET l_inam0144 = g_inam014[4]
+           LET l_inam0145 = g_inam014[5]
+           LET l_inam0146 = g_inam014[6]
+           LET l_inam0147  = g_inam014[7]
+           LET l_inam0148  = g_inam014[8]
+           LET l_inam0149  = g_inam014[9]
+           LET l_inam01410 = g_inam014[10]
+
+           PRINTX l_inam0141
+           PRINTX l_inam0142
+           PRINTX l_inam0143
+           PRINTX l_inam0144
+           PRINTX l_inam0145
+           PRINTX l_inam0146 
+           PRINTX l_inam0147 
+           PRINTX l_inam0148 
+           PRINTX l_inam0149 
+           PRINTX l_inam01410 
+           LET l_title=NULL
+           LET l_sql=
+           "SELECT  listagg(oocql004,'/') within GROUP(ORDER BY imeb001,imeb002) ",
+           "  FROM imeb_t,oocql_t ",
+           " WHERE imebent=oocqlent ",
+           "   AND oocql001='273' ",
+           "   AND oocql002=imeb004 ",
+           "   AND imeb001=(SELECT DISTINCT imaa005 FROM imaa_t WHERE imaaent=",g_enterprise," AND imaa001='",sr1.indj004,"') ",
+           "   AND imebent=",g_enterprise,
+           "   AND imeb012='N'",
+           "   AND oocql003='",g_dlang,"'"
+           PREPARE erwei_title_pre FROM l_sql
+           EXECUTE erwei_title_pre into l_title
+           PRINTX l_title
+           INITIALIZE l_sum.* TO NULL  #清空縱向小計
+           #end add-point:rep.sub01.before
+ 
+           #add-point:rep.sub01.sql name="rep.sub01.sql"
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='2' AND ooffent = '", 
+                sr1.indient CLIPPED ,"'", " AND  ooff002 = '", sr1.indidocno CLIPPED ,"'" 
+#           #end add-point:rep.sub01.sql
+# 
+#           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='2' AND ooff004=0 AND ooffent = '", 
+#                sr1.indient CLIPPED ,"'", " AND  ooff003 = '", sr1.l_order CLIPPED ,"'"
+# 
+#           #add-point:rep.sub01.afsql name="rep.sub01.afsql"
+           
+           #end add-point:rep.sub01.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep01_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE ainr705_g03_repcur01_cnt_pre FROM l_sub_sql
+           EXECUTE ainr705_g03_repcur01_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep01_show ="Y"
+           END IF
+           PRINTX l_subrep01_show
+           START REPORT ainr705_g03_subrep01
+           DECLARE ainr705_g03_repcur01 CURSOR FROM g_sql
+           FOREACH ainr705_g03_repcur01 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "ainr705_g03_repcur01:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub01.foreach name="rep.sub01.foreach"
+              
+              #end add-point:rep.sub01.foreach
+              OUTPUT TO REPORT ainr705_g03_subrep01(sr2.*)
+           END FOREACH
+           FINISH REPORT ainr705_g03_subrep01
+           #add-point:rep.sub01.after name="rep.sub01.after"
+           
+           #end add-point:rep.sub01.after
+ 
+ 
+ 
+           #add-point:rep.b_group.l_order.after name="rep.b_group.l_order.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.indj004
+ 
+           #add-point:rep.b_group.indj004.before name="rep.b_group.indj004.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.b_group.indj004.after name="rep.b_group.indj004.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.l_inam012
+ 
+           #add-point:rep.b_group.l_inam012.before name="rep.b_group.l_inam012.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.b_group.l_inam012.after name="rep.b_group.l_inam012.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.indj001
+ 
+           #add-point:rep.b_group.indj001.before name="rep.b_group.indj001.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.b_group.indj001.after name="rep.b_group.indj001.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.indj020
+ 
+           #add-point:rep.b_group.indj020.before name="rep.b_group.indj020.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.b_group.indj020.after name="rep.b_group.indj020.after"
+           
+           #end add-point:
+ 
+ 
+ 
+ 
+       ON EVERY ROW
+          #add-point:rep.everyrow.before name="rep.everyrow.before"
+          
+          #end add-point:rep.everyrow.before
+ 
+          #單身前備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub02.before name="rep.sub02.before"
+           
+           #end add-point:rep.sub02.before
+ 
+           #add-point:rep.sub02.sql name="rep.sub02.sql"
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='2' AND ooffent = '", 
+                sr1.indient CLIPPED ,"'", " AND  ooff002 = '", sr1.indidocno CLIPPED ,"'"," AND  ooff003 = '", sr1.l_pageno CLIPPED ,"'" 
+#           #end add-point:rep.sub02.sql
+# 
+#           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='2' AND ooffent = '", 
+#                sr1.indient CLIPPED ,"'", " AND  ooff003 = '", sr1.l_order CLIPPED ,"'"
+# 
+#           #add-point:rep.sub02.afsql name="rep.sub02.afsql"
+           
+           #end add-point:rep.sub02.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep02_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE ainr705_g03_repcur02_cnt_pre FROM l_sub_sql
+           EXECUTE ainr705_g03_repcur02_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep02_show ="Y"
+           END IF
+           PRINTX l_subrep02_show
+           START REPORT ainr705_g03_subrep02
+           DECLARE ainr705_g03_repcur02 CURSOR FROM g_sql
+           FOREACH ainr705_g03_repcur02 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "ainr705_g03_repcur02:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub02.foreach name="rep.sub02.foreach"
+              
+              #end add-point:rep.sub02.foreach
+              OUTPUT TO REPORT ainr705_g03_subrep02(sr2.*)
+           END FOREACH
+           FINISH REPORT ainr705_g03_subrep02
+           #add-point:rep.sub02.after name="rep.sub02.after"
+           
+           #end add-point:rep.sub02.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.beforerow name="rep.everyrow.beforerow"
+          LET l_indj010_sum = 0
+          #先判斷此筆資料是否有超過一頁(超過一頁的話，第一頁橫向加總空白，第二頁是整箱合計)
+          EXECUTE ainr705_page_cnt USING sr1.indidocno INTO l_cnt   
+          IF (l_cnt = 1) THEN          
+             IF cl_null(sr1.l_indj0101)  THEN LET sr1.l_indj0101  = 0 END IF            
+             IF cl_null(sr1.l_indj0102)  THEN LET sr1.l_indj0102  = 0 END IF            
+             IF cl_null(sr1.l_indj0103)  THEN LET sr1.l_indj0103  = 0 END IF
+             IF cl_null(sr1.l_indj0104)  THEN LET sr1.l_indj0104  = 0 END IF            
+             IF cl_null(sr1.l_indj0105)  THEN LET sr1.l_indj0105  = 0 END IF            
+             IF cl_null(sr1.l_indj0106)  THEN LET sr1.l_indj0106  = 0 END IF                               
+             IF cl_null(sr1.l_indj0107)  THEN LET sr1.l_indj0107  = 0 END IF
+             IF cl_null(sr1.l_indj0108)  THEN LET sr1.l_indj0108  = 0 END IF
+             IF cl_null(sr1.l_indj0109)  THEN LET sr1.l_indj0109  = 0 END IF
+             IF cl_null(sr1.l_indj01010) THEN LET sr1.l_indj01010 = 0 END IF
+             #小計
+             LET l_indj010_sum = sr1.l_indj0101+sr1.l_indj0102+sr1.l_indj0103+sr1.l_indj0104+sr1.l_indj0105+
+                                 sr1.l_indj0106+sr1.l_indj0107+sr1.l_indj0108+sr1.l_indj0109+sr1.l_indj01010
+          ELSE       #同單號大於一頁(IF (l_cnt > 1) THEN)         
+             IF (l_cnt != sr1.l_pageno) THEN
+                LET l_indj010_sum = ''
+             ELSE
+                #EXECUTE ainr705_indj010_sum USING sr1.indidocno,sr1.indj004,sr1.l_inam012 INTO l_indj010_sum   #161231-00003#1 20161231 mark by beckxie
+                EXECUTE ainr705_indj010_sum USING sr1.indidocno,sr1.indj001,sr1.indj020,sr1.indj004,sr1.l_inam012 INTO l_indj010_sum   #161231-00003#1 20161231 add by beckxie
+             END IF
+          END IF
+          #161017-00051#9 Add By Ken 161118(E)
+          PRINTX l_indj010_sum
+          
+          #纵向小计
+          IF cl_null(l_sum.sum01) THEN LET  l_sum.sum01= 0 END IF            
+          IF cl_null(l_sum.sum02) THEN LET  l_sum.sum02= 0 END IF            
+          IF cl_null(l_sum.sum03) THEN LET  l_sum.sum03= 0 END IF           
+          IF cl_null(l_sum.sum04) THEN LET  l_sum.sum04= 0 END IF            
+          IF cl_null(l_sum.sum05) THEN LET  l_sum.sum05= 0 END IF            
+          IF cl_null(l_sum.sum06) THEN LET  l_sum.sum06= 0 END IF          
+          IF cl_null(l_sum.sum07) THEN LET  l_sum.sum07= 0 END IF
+          IF cl_null(l_sum.sum08) THEN LET  l_sum.sum08= 0 END IF
+          IF cl_null(l_sum.sum09) THEN LET  l_sum.sum09= 0 END IF
+          IF cl_null(l_sum.sum10) THEN LET  l_sum.sum10= 0 END IF
+          LET l_sum.sum01=l_sum.sum01+ sr1.l_indj0101 
+          LET l_sum.sum02=l_sum.sum02+ sr1.l_indj0102 
+          LET l_sum.sum03=l_sum.sum03+ sr1.l_indj0103 
+          LET l_sum.sum04=l_sum.sum04+ sr1.l_indj0104 
+          LET l_sum.sum05=l_sum.sum05+ sr1.l_indj0105 
+          LET l_sum.sum06=l_sum.sum06+ sr1.l_indj0106           
+          LET l_sum.sum07=l_sum.sum07+ sr1.l_indj0107
+          LET l_sum.sum08=l_sum.sum08+ sr1.l_indj0108
+          LET l_sum.sum09=l_sum.sum09+ sr1.l_indj0109
+          LET l_sum.sum10=l_sum.sum10+ sr1.l_indj01010
+          #end add-point:rep.everyrow.beforerow
+            
+          PRINTX sr1.*
+ 
+          #add-point:rep.everyrow.afterrow name="rep.everyrow.afterrow"
+          
+          #end add-point:rep.everyrow.afterrow
+ 
+          #單身後備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub03.before name="rep.sub03.before"
+           
+           #end add-point:rep.sub03.before
+ 
+           #add-point:rep.sub03.sql name="rep.sub03.sql"
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='1' AND ooff002 = '", 
+                sr1.indient CLIPPED ,"'", " AND  ooff002 = '", sr1.indidocno CLIPPED ,"'"," AND  ooff003 = '", sr1.l_pageno CLIPPED ,"'" 
+#           #end add-point:rep.sub03.sql
+# 
+#           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='1' AND ooff003 = '", 
+#                sr1.indient CLIPPED ,"'"
+# 
+#           #add-point:rep.sub03.afsql name="rep.sub03.afsql"
+           
+           #end add-point:rep.sub03.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep03_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE ainr705_g03_repcur03_cnt_pre FROM l_sub_sql
+           EXECUTE ainr705_g03_repcur03_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep03_show ="Y"
+           END IF
+           PRINTX l_subrep03_show
+           START REPORT ainr705_g03_subrep03
+           DECLARE ainr705_g03_repcur03 CURSOR FROM g_sql
+           FOREACH ainr705_g03_repcur03 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "ainr705_g03_repcur03:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub03.foreach name="rep.sub03.foreach"
+              
+              #end add-point:rep.sub03.foreach
+              OUTPUT TO REPORT ainr705_g03_subrep03(sr2.*)
+           END FOREACH
+           FINISH REPORT ainr705_g03_subrep03
+           #add-point:rep.sub03.after name="rep.sub03.after"
+           
+           #end add-point:rep.sub03.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.after name="rep.everyrow.after"
+          
+          #end add-point:rep.everyrow.after        
+ 
+          #讀取afterGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.l_order
+ 
+           #add-point:rep.a_group.l_order.before name="rep.a_group.l_order.before"
+           
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub04.before name="rep.sub04.before"
+           EXECUTE ainr705_page_cnt USING sr1.indidocno INTO l_cnt  
+           
+           LET l_sub_sql = " SELECT SUM(COALESCE(l_indj0101,0) ",
+                           "          + COALESCE(l_indj0102,0) ",
+                           "          + COALESCE(l_indj0103,0) ",
+                           "          + COALESCE(l_indj0104,0) ",
+                           "          + COALESCE(l_indj0105,0) ",
+                           "          + COALESCE(l_indj0106,0) ",
+                           "          + COALESCE(l_indj0107,0) ",
+                           "          + COALESCE(l_indj0108,0) ",
+                           "          + COALESCE(l_indj0109,0) ",
+                           "          + COALESCE(l_indj01010,0)) FROM ainr705_print_tmp ",
+                           " WHERE indidocno=?   "                      
+           PREPARE ainr705_g03_indj010_total FROM l_sub_sql                      
+           EXECUTE ainr705_g03_indj010_total INTO l_indj010_total USING sr1.indidocno
+           IF (l_cnt > 1) THEN 
+              IF (l_cnt != sr1.l_pageno) THEN
+                 LET l_indj010_total = ''  
+              ELSE
+                 IF cl_null(l_indj010_total) THEN LET l_indj010_total = 0 END IF
+              END IF              
+           ELSE
+              IF cl_null(l_indj010_total) THEN LET l_indj010_total = 0 END IF
+           END IF
+           
+           PRINTX l_indj010_total 
+           PRINTX l_sum.*  
+           #end add-point:rep.sub04.before
+ 
+           #add-point:rep.sub04.sql name="rep.sub04.sql"
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='1' AND ooffent = '", 
+                sr1.indient CLIPPED ,"'", " AND  ooff002 = '", sr1.indidocno CLIPPED ,"'"
+#           #end add-point:rep.sub04.sql
+# 
+#           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='1' AND ooff004=0 AND ooffent = '", 
+#                sr1.indient CLIPPED ,"'", " AND  ooff003 = '", sr1.l_order CLIPPED ,"'"
+# 
+#           #add-point:rep.sub04.afsql name="rep.sub04.afsql"
+           
+           #end add-point:rep.sub04.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep04_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE ainr705_g03_repcur04_cnt_pre FROM l_sub_sql
+           EXECUTE ainr705_g03_repcur04_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep04_show ="Y"
+           END IF
+           PRINTX l_subrep04_show
+           START REPORT ainr705_g03_subrep04
+           DECLARE ainr705_g03_repcur04 CURSOR FROM g_sql
+           FOREACH ainr705_g03_repcur04 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "ainr705_g03_repcur04:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub04.foreach name="rep.sub04.foreach"
+              
+              #end add-point:rep.sub04.foreach
+              OUTPUT TO REPORT ainr705_g03_subrep04(sr2.*)
+           END FOREACH
+           FINISH REPORT ainr705_g03_subrep04
+           #add-point:rep.sub04.after name="rep.sub04.after"
+           
+           #end add-point:rep.sub04.after
+ 
+ 
+ 
+           #add-point:rep.a_group.l_order.after name="rep.a_group.l_order.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.indj004
+ 
+           #add-point:rep.a_group.indj004.before name="rep.a_group.indj004.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.a_group.indj004.after name="rep.a_group.indj004.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.l_inam012
+ 
+           #add-point:rep.a_group.l_inam012.before name="rep.a_group.l_inam012.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.a_group.l_inam012.after name="rep.a_group.l_inam012.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.indj001
+ 
+           #add-point:rep.a_group.indj001.before name="rep.a_group.indj001.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.a_group.indj001.after name="rep.a_group.indj001.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.indj020
+ 
+           #add-point:rep.a_group.indj020.before name="rep.a_group.indj020.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.a_group.indj020.after name="rep.a_group.indj020.after"
+           
+           #end add-point:
+ 
+ 
+ 
+       ON LAST ROW
+            #add-point:rep.lastrow.before name="rep.lastrow.before"  
+                    
+            #end add-point :rep.lastrow.before
+ 
+            #add-point:rep.lastrow.after name="rep.lastrow.after"
+            
+            #end add-point :rep.lastrow.after
+END REPORT
+ 
+{</section>}
+ 
+{<section id="ainr705_g03.subrep_str" readonly="Y" >}
+#讀取子報表樣板
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT ainr705_g03_subrep01(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub01.define_customerization" 
+
+#end add-point
+#add-point:sub01.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub01.define" 
+
+#end add-point:sub01.define
+ 
+    #add-point:sub01.order.before name="sub01.order.before" 
+    
+    #end add-point:sub01.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub01.everyrow.before name="sub01.everyrow.before" 
+                          
+            #end add-point:sub01.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub01.everyrow.after name="sub01.everyrow.after" 
+            
+            #end add-point:sub01.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT ainr705_g03_subrep02(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub02.define_customerization" 
+
+#end add-point
+#add-point:sub02.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub02.define" 
+
+#end add-point:sub02.define
+ 
+    #add-point:sub02.order.before name="sub02.order.before" 
+    
+    #end add-point:sub02.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub02.everyrow.before name="sub02.everyrow.before" 
+                          
+            #end add-point:sub02.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub02.everyrow.after name="sub02.everyrow.after" 
+            
+            #end add-point:sub02.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT ainr705_g03_subrep03(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub03.define_customerization" 
+
+#end add-point
+#add-point:sub03.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub03.define" 
+
+#end add-point:sub03.define
+ 
+    #add-point:sub03.order.before name="sub03.order.before" 
+    
+    #end add-point:sub03.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub03.everyrow.before name="sub03.everyrow.before" 
+                          
+            #end add-point:sub03.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub03.everyrow.after name="sub03.everyrow.after" 
+            
+            #end add-point:sub03.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT ainr705_g03_subrep04(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub04.define_customerization" 
+
+#end add-point
+#add-point:sub04.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub04.define" 
+
+#end add-point:sub04.define
+ 
+    #add-point:sub04.order.before name="sub04.order.before" 
+    
+    #end add-point:sub04.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub04.everyrow.before name="sub04.everyrow.before" 
+                          
+            #end add-point:sub04.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub04.everyrow.after name="sub04.everyrow.after" 
+            
+            #end add-point:sub04.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="ainr705_g03.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 建立暫存表
+# Memo...........:
+# Usage..........: CALL ainr705_g03_create_tmp_table()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2016/12/5 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ainr705_g03_create_tmp_table()
+   DROP TABLE ainr705_tmp1;
+
+   IF NOT (SQLCA.sqlcode = 0 OR SQLCA.sqlcode = -206) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'ainr705_tmp1'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N'
+      RETURN
+   END IF
+
+   CREATE TEMP TABLE ainr705_tmp1(  
+                   indient     SMALLINT, 
+                   indisite    VARCHAR(10), 
+                   indidocdt   DATE, 
+                   indistus    VARCHAR(10), 
+                   indi000     VARCHAR(10), 
+                   indi001     DATE, 
+                   indi003     VARCHAR(20), 
+                   indi004     VARCHAR(10), 
+                   indi007     VARCHAR(10), 
+                   indiunit    VARCHAR(10),
+                   indj001     VARCHAR(20),
+                   indj020     VARCHAR(10),
+                   indj020_desc  VARCHAR(255),
+                   docno       VARCHAR(20),               #單號  
+                   item        VARCHAR(100),                  #料件编号
+                   imaal003    VARCHAR(255),               #品名
+                   inam012     VARCHAR(1000),                 #特徵一值(顏色)
+                   inam014     VARCHAR(1000),                 #特徵二值(尺寸)
+                   inam018     VARCHAR(1000),                 #特徵四值(拉頭名稱)
+                   unit        VARCHAR(10),                 #單位                  
+                   qty         DECIMAL(20,6),                 #數量 
+                   condition   VARCHAR(1000)     #分组条件                   
+                   )
+
+   IF SQLCA.sqlcode != 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create ainr705_tmp1'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N'
+      RETURN
+   END IF
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 寫入暫存表
+# Memo...........:
+# Usage..........: CALL ainr705_g03_ins_tmp_table(p_wc)
+# Input parameter: p_wc           查詢條件
+# Return code....: 
+# Date & Author..: 2016/12/5 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ainr705_g03_ins_tmp_table(p_wc)
+DEFINE p_wc             STRING
+DEFINE l_sql            STRING
+DEFINE l_indient        LIKE indi_t.indient
+DEFINE l_indisite       LIKE indi_t.indisite     #物流組織
+DEFINE l_indiunit       LIKE indi_t.indiunit     #配送中心
+DEFINE l_indidocno      LIKE indi_t.indidocno    #配送單號
+DEFINE l_indidocdt      LIKE indi_t.indidocdt    #單據日期
+DEFINE l_indi000        LIKE indi_t.indi000      #單據類型
+DEFINE l_indi001        LIKE indi_t.indi001
+DEFINE l_indi003        LIKE indi_t.indi003      #物流人員
+DEFINE l_indi004        LIKE indi_t.indi004      #物流部門
+DEFINE l_indi005        LIKE indi_t.indi005      #備註
+DEFINE l_indi007        LIKE indi_t.indi007      #需求類型
+DEFINE l_indistus       LIKE indi_t.indistus     #狀態
+DEFINE l_indj001        LIKE indj_t.indj001      #來源單號(需求單號)
+DEFINE l_indj004        LIKE indj_t.indj004      #商品編號
+DEFINE l_imaal003       LIKE imaal_t.imaal003    #品名
+DEFINE l_indj005        LIKE indj_t.indj005      #產品特徵
+DEFINE l_indj008        LIKE indj_t.indj008      #單位
+DEFINE l_indj010        LIKE indj_t.indj010      #分配數量
+DEFINE l_indj020        LIKE indj_t.indj020      #需求對象
+DEFINE l_indj020_desc   LIKE pmaal_t.pmaal003
+DEFINE l_condition      LIKE type_t.chr1000      
+DEFINE l_imaa005        LIKE imaa_t.imaa005
+DEFINE l_inam012        LIKE inam_t.inam012
+DEFINE l_inam014        LIKE inam_t.inam014
+DEFINE l_inam018        LIKE inam_t.inam018
+DEFINE l_imec003        LIKE imec_t.imec003
+DEFINE l_imecl005       LIKE imecl_t.imecl005
+DEFINE l_imeb012        LIKE imeb_t.imeb012
+DEFINE l_cnt2           LIKE type_t.num5
+DEFINE l_docno_tmp      LIKE indi_t.indidocno
+DEFINE l_sub_sql        STRING
+DEFINE l_inam014_cnt    LIKE type_t.num10
+DEFINE l_pageno         LIKE type_t.num10
+DEFINE l_pagecnt        LIKE type_t.num10      #單號的第幾頁
+DEFINE l_ii             LIKE type_t.num10 
+DEFINE l_print_show     LIKE type_t.chr1
+DEFINE l_item           LIKE type_t.chr1000
+DEFINE l_qty_sum        LIKE pmdn_t.pmdn007
+DEFINE l_i              INTEGER
+DEFINE tok              base.StringTokenizer
+
+   #把資料整理成明細
+   LET l_sql = "SELECT indient,  indisite,  indiunit,   indidocno,  indidocdt, ",
+               "       indi000,  indi001,   indi003,    indi004,    indi007,   ",
+               "       indj001,  indj004,   indj005,    imaal003,   indj008,   ",
+               #"       indj010,  indj020,   ",   #161220-00037#5 20161226 mark by beckxie
+               #数量抓取逻辑改为此次分配量indj010-已装箱量indj022
+               "       COALESCE(indj010,0)-COALESCE(indj022,0),  indj020,   ",   #161220-00037#5 20161226 add by beckxie
+               "       CASE WHEN indi007 = '3' THEN pmaal003 ELSE ooefl003 END pmaal003,   indistus   ",
+               "  FROM indi_t ",
+               #取值改为抓单身状态码indj023='N.未结束' and 此次分配量indj010-已装箱量indj022>0的部分，如抓不到单身，则不打印单头
+               #"  LEFT JOIN indj_t ON indient = indjent AND indidocno = indjdocno ",   #161220-00037#5 20161226 mark by beckxie
+               "  ,indj_t ",                                                            #161220-00037#5 20161226  add by beckxie
+               "  LEFT JOIN imaal_t ON indjent = imaalent AND indj004 = imaal001 AND imaal002 = '",g_dlang,"'",
+               "  LEFT JOIN pmaal_t ON indjent = pmaalent AND indj020 = pmaal001 AND pmaal002 = '",g_dlang,"'",
+               "  LEFT JOIN ooefl_t ON indjent = ooeflent AND indj020 = ooefl001 AND ooefl002 = '",g_dlang,"'",
+               " WHERE indi000 = '1' AND indient = ",g_enterprise," AND " ,p_wc CLIPPED,
+               "   AND indient = indjent AND indidocno = indjdocno AND indj023 = 'N' AND indj010 >indj022 "   #161220-00037#5 20161226 add by beckxie
+   PREPARE ainr705_sel_indi_pre FROM l_sql
+   DECLARE ainr705_sel_indi_cur CURSOR FOR ainr705_sel_indi_pre
+   FOREACH ainr705_sel_indi_cur INTO l_indient,   l_indisite,    l_indiunit,l_indidocno,   l_indidocdt,
+                                     l_indi000,   l_indi001 ,    l_indi003, l_indi004,     l_indi007,
+                                     l_indj001,   l_indj004,     l_indj005, l_imaal003,    l_indj008,
+                                     l_indj010,   l_indj020,     l_indj020_desc,l_indistus
+       IF NOT cl_null(l_indj005) THEN
+         LET l_imaa005=NULL
+         SELECT imaa005 INTO l_imaa005 FROM imaa_t WHERE imaaent=g_enterprise and imaa001=l_indj004
+         LET l_inam012=NULL
+         LET l_inam014=NULL
+         LET l_inam018=NULL
+       
+         LET l_cnt2=1
+         LET tok = base.StringTokenizer.createExt(l_indj005,'_','',TRUE)
+         WHILE tok.hasMoreTokens()
+            LET l_imec003=tok.nextToken()
+            LET l_imeb012='N'
+            SELECT imeb012 INTO l_imeb012 FROM imeb_t
+             WHERE imebent=g_enterprise AND imeb002=l_cnt2
+               AND imeb001=l_imaa005
+               
+            CASE l_imeb012
+            #纵向
+            WHEN 'N'
+              LET l_imecl005=NULL
+              SELECT imecl005 INTO l_imecl005
+                FROM imec_t 
+                LEFT OUTER JOIN imecl_t ON imecent = imeclent AND imec001 = imecl001 
+                                       AND imec002 = imecl002 AND imec003 = imecl003  AND imecl004 = g_lang
+               WHERE imecent = g_enterprise AND imec001 = l_imaa005 AND imec002 = l_cnt2
+                 AND imec003 = l_imec003 AND imecstus = 'Y'
+              IF cl_null(l_inam012) THEN
+                 #LET l_inam012 = l_imecl005                #161220-00037#5 20161226 mark by beckxie
+                 LET l_inam012 = l_imec003,'·',l_imecl005   #161220-00037#5 20161226  add by beckxie
+              ELSE
+                 #LET l_inam012 = l_inam012,'/',l_imecl005                #161220-00037#5 20161226 mark by beckxie
+                 LET l_inam012 = l_inam012,'/',l_imec003,'·',l_imecl005   #161220-00037#5 20161226  add by beckxie
+              END IF 
+            #横向
+            WHEN 'Y'
+              LET l_imecl005=NULL
+              SELECT imecl005 INTO l_imecl005
+                FROM imec_t 
+                LEFT OUTER JOIN imecl_t ON imecent = imeclent AND imec001 = imecl001 
+                                       AND imec002 = imecl002 AND imec003 = imecl003  AND imecl004 = g_lang
+               WHERE imecent = g_enterprise AND imec001 = l_imaa005 AND imec002 = l_cnt2
+                 AND imec003 = l_imec003 AND imecstus = 'Y'
+               LET l_inam014 = l_imecl005
+            OTHERWISE
+              EXIT WHILE
+            END CASE 
+            LET l_cnt2=l_cnt2+1
+         END WHILE
+        
+          IF NOT cl_null(l_inam012) AND cl_null(l_inam014) THEN
+            LET l_inam014 = "t-*"
+          END IF 
+          IF NOT cl_null(l_inam012) AND NOT cl_null(l_inam014) THEN
+            EXECUTE ainr705_ins_tmp1 USING l_indient,     l_indisite,    l_indidocdt,  l_indistus, l_indi000,
+                                           l_indi001,     l_indi003,     l_indi004,    l_indi007,  l_indiunit,
+                                           l_indj001,     l_indj020,     l_indj020_desc,
+                                           l_indidocno,   l_indj004,     l_imaal003,   l_inam012,  l_inam014,    
+                                           l_inam018,     l_indj008,     l_indj010,    l_condition
+          END IF 
+        END IF 
+   END FOREACH
+
+   CALL ainr705_g03_create_print_tmp()
+   #把明細資料整理成二維資料
+   LET l_sql = "SELECT UNIQUE docno ",
+               "  FROM ainr705_tmp1 ORDER BY docno "
+   PREPARE ainr705_sel_tmp1 FROM l_sql
+   DECLARE ainr705_sel_tmp1_cur CURSOR FOR ainr705_sel_tmp1
+   FOREACH ainr705_sel_tmp1_cur INTO l_docno_tmp  
+      
+      LET l_sub_sql = " SELECT DISTINCT inam014 FROM ainr705_tmp1 ",
+                  " WHERE docno=? ",
+                  " ORDER BY inam014"
+      PREPARE inam014_ins FROM l_sub_sql
+      DECLARE inam014_ins_cs CURSOR FOR inam014_ins
+      
+      #計算橫軸個數
+      LET l_sql = "SELECT COUNT(1) FROM (",l_sub_sql,")"
+      PREPARE inam014_cnt_pre FROM l_sql            
+      
+      EXECUTE inam014_cnt_pre INTO l_inam014_cnt USING l_docno_tmp
+      FREE inam014_cnt_pre
+                   
+      IF NOT cl_null(l_inam014_cnt) THEN
+         LET l_pageno = (l_inam014_cnt -1)/10   #每頁10筆
+         LET l_pageno = l_pageno +1
+         LET l_pagecnt = 1    
+         OPEN inam014_ins_cs USING l_docno_tmp
+         LET l_i=1
+         FOREACH inam014_ins_cs INTO l_inam014
+            INSERT INTO inam014_tmp VALUES(l_i,l_docno_tmp,l_pagecnt,l_inam014)  
+            IF l_i MOD 10 = 0 THEN            
+               LET l_i = 0
+               LET l_pagecnt = l_pagecnt + 1
+            END IF
+            LET l_i=l_i+1
+         END FOREACH
+      
+         FOR l_i = 1 to l_pageno
+            CALL ainr705_g03_indi_tmp(l_docno_tmp,l_i)
+         END FOR  
+      END IF
+   END FOREACH
+END FUNCTION
+
+################################################################################
+# Descriptions...: 建立列印用暫存表
+# Memo...........:
+# Usage..........: CALL ainr705_g03_create_print_tmp()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2016/12/05 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ainr705_g03_create_print_tmp()
+   DROP TABLE ainr705_print_tmp   
+   IF NOT (SQLCA.sqlcode = 0 OR SQLCA.sqlcode = -206) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'ainr705_pring_tmp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N'
+      RETURN
+   END IF
+
+   CREATE TEMP TABLE ainr705_print_tmp(    
+               indient  SMALLINT, 
+               indisite  VARCHAR(10), 
+               indidocno  VARCHAR(20), 
+               indidocdt  DATE, 
+               indistus  VARCHAR(10), 
+               indi000  VARCHAR(10), 
+               indi001  DATE, 
+               indi003  VARCHAR(20), 
+               indi004  VARCHAR(10), 
+               indi007  VARCHAR(10), 
+               indiunit  VARCHAR(10), 
+               indj001  VARCHAR(20), 
+               indj004  VARCHAR(40), 
+               l_imaal003  VARCHAR(255),
+               indj020  VARCHAR(10), 
+               l_indj020_desc  VARCHAR(255), 
+               l_inam012  VARCHAR(30), 
+               l_inam014  VARCHAR(30), 
+               l_inam018  VARCHAR(30), 
+               indj008  VARCHAR(10), 
+               l_indj0101  DECIMAL(20,6), 
+               l_indj0102  DECIMAL(20,6), 
+               l_indj0103  DECIMAL(20,6), 
+               l_indj0104  DECIMAL(20,6), 
+               l_indj0105  DECIMAL(20,6), 
+               l_indj0106  DECIMAL(20,6), 
+               l_indj0107  DECIMAL(20,6), 
+               l_indj0108  DECIMAL(20,6), 
+               l_indj0109  DECIMAL(20,6), 
+               l_indj01010  DECIMAL(20,6),
+               page_no    SMALLINT
+                   )
+
+   IF SQLCA.sqlcode != 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create ainr705_print_tmp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N'
+      RETURN
+   END IF    
+
+   DROP TABLE inam014_tmp
+   IF NOT (SQLCA.sqlcode = 0 OR SQLCA.sqlcode = -206) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'inam014_tmp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N'
+      RETURN
+   END IF
+   
+   CREATE TEMP TABLE inam014_tmp
+   (
+    i          decimal(5,0),
+    indidocno   VARCHAR(20), 
+    page_no     SMALLINT,
+    inam014     VARCHAR(30)
+    )
+   IF SQLCA.sqlcode != 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create inam014_tmp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N'
+      RETURN
+   END IF 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 計算交叉表數值區資料總和
+# Memo...........:
+# Usage..........: CALL ainr705_g03_indi_tmp(p_indidocno,p_i)
+#                  RETURNING 回传参数
+# Input parameter: p_indidocno    配送單號
+#                : p_i            第幾頁
+# Return code....: 
+# Date & Author..: 2016/12/05 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION ainr705_g03_indi_tmp(p_indidocno,p_i)
+DEFINE p_indidocno  LIKE indi_t.indidocno
+DEFINE p_i          LIKE type_t.num5
+DEFINE l_n          LIKE type_t.num5
+DEFINE l_i          LIKE type_t.num5
+DEFINE l_max        LIKE type_t.num5
+DEFINE l_max2       LIKE type_t.num5
+DEFINE l_a          LIKE type_t.num5
+DEFINE l_b          LIKE type_t.num5
+DEFINE l_sql        STRING
+DEFINE l_indj010    STRING
+DEFINE l_vi         varchar(3)
+DEFINE i            LIKE type_t.num5
+
+   CALL g_inam014.clear()
+
+   SELECT COUNT(DISTINCT inam014) INTO l_n 
+     FROM ainr705_tmp1
+    WHERE docno=p_indidocno 
+   LET l_i = (l_n-1)/10
+   LET l_i = l_i +1
+   IF l_i = p_i THEN
+      LET l_max = l_n
+   ELSE
+      LET l_max = p_i*10
+   END IF
+   
+   IF l_max mod 10 = 0 THEN 
+      LET l_max2 = 10
+   ELSE
+      LET l_max2 = l_max mod 10
+   END IF   
+
+   LET l_a = 10-9
+   LET l_b = 10     
+   LET l_sql = " SELECT inam014 FROM inam014_tmp",
+               "  WHERE i >=? AND i<=? AND indidocno = '",p_indidocno,"' ",
+               "    AND page_no = ",p_i," ",    
+               "  ORDER BY i"
+   PREPARE inam014_pr FROM l_sql
+   DECLARE inam014_cs CURSOR FOR inam014_pr
+   OPEN inam014_cs USING l_a,l_b
+   LET i=1
+   FOREACH inam014_cs INTO g_inam014[i]
+      IF i = l_max2 THEN
+         EXIT FOREACH
+      ELSE
+         LET i=i+1
+      END IF
+   END FOREACH
+   
+   LET l_sql = " INSERT INTO ainr705_print_tmp(indient   ,indisite  ,indidocno ,indidocdt ,indistus  , ",
+               "                               indi000   ,indi001   ,indi003   ,indi004   ,indi007   , ",
+               "                               indiunit  ,indj001   ,indj004   ,l_imaal003  ,indj020   , ",
+               "                               l_indj020_desc , ",
+               "                               l_inam012 ,l_inam014 ,l_inam018 ,indj008   ,page_no " 
+   FOR i=1 to l_max2
+      CASE i WHEN 1  LET l_indj010 = 'l_indj0101'
+             WHEN 2  LET l_indj010 = 'l_indj0102'
+             WHEN 3  LET l_indj010 = 'l_indj0103'
+             WHEN 4  LET l_indj010 = 'l_indj0104'
+             WHEN 5  LET l_indj010 = 'l_indj0105'
+             WHEN 6  LET l_indj010 = 'l_indj0106'
+             WHEN 7  LET l_indj010 = 'l_indj0107'
+             WHEN 8  LET l_indj010 = 'l_indj0108'
+             WHEN 9  LET l_indj010 = 'l_indj0109'
+             WHEN 10 LET l_indj010 = 'l_indj01010'
+      END CASE
+      LET l_sql = l_sql , ",",l_indj010
+   END FOR
+   
+   LET l_sql = l_sql," ) SELECT indient    ,indisite   ,docno      ,indidocdt  ,indistus   ,  ",
+                     "          indi000    ,indi001    ,indi003    ,indi004    ,indi007    ,  ",
+                     "          indiunit   ,indj001    ,item       ,imaal003   ,indj020    ,  ",
+                     "          indj020_desc, ",
+                     "          inam012    ,inam014    ,inam018    ,unit       , ",
+                     "          ",p_i, " " 
+   FOR i=1 to l_max2
+      LET l_vi = i
+      LET l_sql = l_sql," ,sum(A",l_vi,")"
+   END FOR
+   LET l_sql = l_sql,"  FROM (SELECT indient    ,indisite   ,docno      ,indidocdt  ,indistus   ,  ",
+                     "               indi000    ,indi001    ,indi003    ,indi004    ,indi007    ,  ",
+                     "               indiunit   ,indj001    ,item       ,imaal003   ,indj020    ,  ",
+                     "               indj020_desc, ",
+                     "               inam012    ,inam014    ,inam018    ,unit        "
+ 
+   FOR i=1 to l_max2
+      LET l_vi = i
+      LET l_sql = l_sql,",CASE WHEN inam014 = '",g_inam014[i],"'",
+                        " THEN qty ELSE 0 END A",l_vi
+   END FOR
+   LET l_sql = l_sql,  "  FROM ainr705_tmp1 ",
+               " WHERE docno='",p_indidocno,"'",
+               "   ) "
+               ," GROUP BY indient    ,indisite   ,docno      ,indidocdt  ,indistus   ,  ",
+                 "         indi000    ,indi001    ,indi003    ,indi004    ,indi007    ,  ",
+                 "         indiunit   ,indj001    ,item       ,imaal003   ,indj020    ,  ",
+                 "         indj020_desc, ",
+                 "         inam012    ,inam014    ,inam018    ,unit        "
+                              
+   PREPARE indi_print_pr FROM l_sql
+
+   EXECUTE indi_print_pr
+END FUNCTION
+
+ 
+{</section>}
+ 
+{<section id="ainr705_g03.other_report" readonly="Y" >}
+{<point name="other.report"/>}
+ 
+{</section>}
+ 

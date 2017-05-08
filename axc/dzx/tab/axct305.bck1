@@ -1,0 +1,93 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axct305" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="00537" crtdt="" modid="02295" moddt="2016-08-31 16:34:44" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="期初在製數量成本次要素開帳作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcdbcomp,xcdbcomp_desc(chr80),xcdb004,xcdb005,xcdbld,xcdbld_desc(chr80),xcdb003,xcdb003_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcdb001,xcdb006,xcdb007,xcdb008,xcdb009,xcdb011,xcdb010,xcdb002,xcdb101,xcdb102"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcdb001,xcdb006,xcdb007,xcdb008,xcdb009,xcdb011,xcdb010,xcdb002,xcdb101,xcdb102"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="xcdb001,xcdb006,xcdb007,xcdb008,xcdb009,xcdb011,xcdb010,xcdb002,xcdb101,xcdb102"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="import_format"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="import"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axct305" method="dialog">
+    <section id="input">
+      <input id="head" field="xcdbcomp,xcdb004,xcdb005,xcdbld,xcdb003"/>
+      <input id="body" page="1" field="xcdb001,xcdb006,xcdb007,xcdb008,xcdb009,xcdb011,xcdb010,xcdb002,xcdb101,xcdb102" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcdbcomp,xcdb004,xcdb005,xcdbld,xcdb003"/>
+      <construct id="body" page="1" field="xcdb001,xcdb006,xcdb007,xcdb008,xcdb009,xcdb011,xcdb010,xcdb002,xcdb101,xcdb102"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcdbld,xcdb003,xcdb004,xcdb005"/>
+      <set id="head" type="no_entry" field="xcdbld,xcdb003,xcdb004,xcdb005"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcdbcomp">
+        <after>
+          <reference field="xcdbcomp_desc" ref_field="xcdb_t.xcdbcomp" map_field="xcdbent,xcdbcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcdbcomp_desc"/>
+      <column id="xcdb004"/>
+      <column id="xcdb005"/>
+      <column id="xcdbld">
+        <after>
+          <reference field="xcdbld_desc" ref_field="xcdb_t.xcdbld" map_field="xcdbent,xcdbld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcdbld_desc"/>
+      <column id="xcdb003" type="S" default="1">
+        <after>
+          <reference field="xcdb003_desc" ref_field="xcdb_t.xcdb003" map_field="xcdbent,xcdb003" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcdb003_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcdb001" type="S" default="1" def_scc="8914"/>
+      <column id="xcdb006"/>
+      <column id="xcdb007"/>
+      <column id="xcdb008"/>
+      <column id="xcdb009"/>
+      <column id="xcdb011"/>
+      <column id="xcdb010" def_scc="8918">
+        <after>
+          <check chkid="v_xcau001" id="isExist"/>
+        </after>
+        <controlp form="q_xcau001" state="i"/>
+        <controlp form="q_xcau001" state="c"/>
+      </column>
+      <column id="xcdb002"/>
+      <column id="xcdb101"/>
+      <column id="xcdb102"/>
+    </init>
+    <init id="body" page="2"/>
+    <init id="body" page="3"/>
+  </form>
+  <dataset>
+    <head id="xcdb_t" pk="xcdbld,xcdb003,xcdb004,xcdb005">
+      <sql id="forupd_sql" type="sql" query="SELECT xcdbcomp,&apos;&apos;,xcdb004,xcdb005,xcdbld,&apos;&apos;,xcdb003,&apos;&apos; FROM xcdb_t WHERE xcdbent= ? AND xcdbld=? AND xcdb003=? AND xcdb004=? AND xcdb005=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcdbcomp,&apos;&apos;,xcdb004,xcdb005,xcdbld,&apos;&apos;,xcdb003,&apos;&apos; FROM xcdb_t" order="xcdbld,xcdb003,xcdb004,xcdb005"/>
+    </head>
+    <body id="xcdb_t" page="1,2,3" linked="" pk="xcdb001,xcdb002,xcdb006,xcdb007,xcdb008,xcdb009,xcdb010" fk="xcdbld,xcdb003,xcdb004,xcdb005">
+      <sql id="forupd_sql_detail" query="SELECT xcdb001,xcdb006,xcdb007,xcdb008,xcdb009,xcdb011,xcdb010,xcdb002,xcdb101,xcdb102,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xcdb_t WHERE xcdbent=? AND xcdbld=? AND xcdb003=? AND xcdb004=? AND xcdb005=? AND xcdb001=? AND xcdb002=? AND xcdb006=? AND xcdb007=? AND xcdb008=? AND xcdb009=? AND xcdb010=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcdb001,xcdb006,xcdb007,xcdb008,xcdb009,xcdb011,xcdb010,xcdb002,xcdb101,xcdb102,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xcdb_t WHERE xcdbent= ? AND xcdbld=? AND xcdb003=? AND xcdb004=? AND xcdb005=?"/>
+    </body>
+  </dataset>
+</assembly>
+

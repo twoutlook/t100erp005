@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="apjm200_01" std_prog="apjm200_01" erpver="1.0" module="APJ" ver="1" env="s" zone="t10dev" normal_style="Y" booking="Y">
+  <point name="input.a.pjba001" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_pjba_m.pjba001) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_pjba_m.pjba001 != g_pjba001_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM pjba_t WHERE "||"pjbaent = '" ||g_enterprise|| "' AND "||"pjba001 = '"||g_pjba_m.pjba001 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+  </point>
+  <point name="input.a.pjba008" order="0" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL apjm200_01_pjba008_desc(g_pjba_m.pjba008)
+            IF NOT cl_null(g_pjba_m.pjba008) THEN
+               IF NOT s_aooi070_chk_exist('4',g_pjba_m.pjba008) THEN
+                  LET g_pjba_m.pjba008 = g_pjba_m_t.pjba008
+                  CALL apjm200_01_pjba008_desc(g_pjba_m.pjba008)
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+]]>
+  </point>
+  <point name="input.c.pjba008" order="0" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_pjba_m.pjba008             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = 4 #
+
+            CALL q_ooal002_0()                                #呼叫開窗
+
+            LET g_pjba_m.pjba008 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_pjba_m.pjba008 TO pjba008              #顯示到畫面上
+
+            NEXT FIELD pjba008                          #返回原欄位
+
+]]>
+  </point>
+  <point name="show.head.reference" order="0" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_pjba_m.pjba001
+   CALL ap_ref_array2(g_ref_fields," SELECT pjbal003 FROM pjbal_t WHERE pjbalent = '"||g_enterprise||"' AND pjbal001 = ? AND pjbal002 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_pjba_m.pjbal003 = g_rtn_fields[1] 
+   DISPLAY g_pjba_m.pjbal003 TO pjbal003
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_pjba_m.pjba008
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooall004 FROM ooall_t WHERE ooallent='"||g_enterprise||"' AND ooall001='4' AND ooall002=? AND ooall003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_pjba_m.pjba008_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_pjba_m.pjba008_desc
+]]>
+  </point>
+  <point name="function.apjm200_01_pjba008_desc" order="1" ver="1" cite_std="N" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION apjm200_01_pjba008_desc(p_pjba008)
+DEFINE p_pjba008   LIKE pjba_t.pjba008
+    INITIALIZE g_ref_fields TO NULL
+    LET g_ref_fields[1] = p_pjba008 
+    CALL ap_ref_array2(g_ref_fields,"SELECT ooall004 FROM ooall_t WHERE ooallent='"||g_enterprise||"' AND ooall001='4' AND ooall002=? AND ooall003='"||g_dlang||"'","") RETURNING g_rtn_fields
+    LET g_pjba_m.pjba008_desc = '', g_rtn_fields[1] , ''
+    DISPLAY BY NAME g_pjba_m.pjba008_desc
+END FUNCTION]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_pjba_m_t    type_g_pjba_m]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE p_pjba001       LIKE pjba_t.pjba001
+   DEFINE p_pjba003       LIKE pjba_t.pjba003
+   DEFINE l_pjbb   RECORD LIKE pjbb_t.*
+   DEFINE l_date          LIKE type_t.dat
+   DEFINE l_pjbc   RECORD LIKE pjbc_t.*
+   DEFINE l_work_date_b   LIKE type_t.dat
+   DEFINE l_work_date_e   LIKE type_t.dat
+   DEFINE l_work_days     LIKE type_t.num5
+   DEFINE l_work_hours    LIKE type_t.num5
+   DEFINE l_flag          LIKE type_t.num5
+   DEFINE l_para          LIKE type_t.num5]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[p_pjba001,p_pjba003]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF NOT INT_FLAG THEN
+      LET g_success = TRUE
+      DECLARE sel_pjbb_curs CURSOR FOR  SELECT * FROM pjbb_t WHERE pjbbent = g_enterprise
+                                    AND pjbb001 = p_pjba003
+      FOREACH sel_pjbb_curs INTO l_pjbb.*
+         IF SQLCA.SQLCODE THEN
+            LET g_success = FALSE
+            RETURN g_success
+         END IF                                      #計算WBS 日期
+         IF NOT cl_null(l_pjbb.pjbb005) AND NOT cl_null(l_pjbb.pjbb006) THEN
+            LET l_date = g_pjba_m.pjba005 + (l_pjbb.pjbb006 - l_pjbb.pjbb005)
+            
+
+            
+            UPDATE pjbb_t SET pjbb005 = g_pjba_m.pjba005,
+                              pjbb006 = l_date
+                        WHERE pjbbent = g_enterprise
+                          AND pjbb001 = p_pjba001
+                          AND pjbb002 = l_pjbb.pjbb002
+            IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] = 0 THEN
+               LET g_success = FALSE
+               RETURN g_success
+            END IF
+            IF g_pjba_m.pjba007 MATCHES '[12]' THEN
+               IF g_pjba_m.pjba007 = '1' THEN
+                  LET l_flag = -1 
+               ELSE
+                  LET l_flag = 1 
+               END IF
+               LET l_work_date_b = s_date_get_latest_work_date(g_site,g_pjba_m.pjba008,'2',l_flag,g_pjba_m.pjba005)
+               LET l_work_date_e = s_date_get_latest_work_date(g_site,g_pjba_m.pjba008,'2',l_flag,l_date)
+               
+               CALL cl_get_para(g_enterprise,g_site,'E-COM-0007') RETURNING l_para
+               LET l_work_days = l_work_date_e - l_work_date_b
+               LET l_work_hours =  l_work_days * l_para 
+               UPDATE pjbb_t SET pjbb007 = l_work_days,
+                                 pjbb008 = l_work_hours
+                        WHERE pjbbent = g_enterprise
+                          AND pjbb001 = p_pjba001
+                          AND pjbb002 = l_pjbb.pjbb002
+               IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] = 0 THEN
+                  LET g_success = FALSE
+                  RETURN g_success
+               END IF
+            END IF
+         END IF         
+      END FOREACH
+      
+      DECLARE sel_pjbc_curs CURSOR FOR                       #計算成員生效失效日期
+        SELECT * FROM pjbc_t WHERE pjbcent = g_enterprise
+           AND pjbc001 = p_pjba003
+      FOREACH sel_pjbc_curs INTO l_pjbc.*
+         IF SQLCA.SQLCODE THEN
+            LET g_success = FALSE
+            RETURN g_success
+         END IF
+         LET l_date = g_pjba_m.pjba005 + (l_pjbc.pjbc005 - l_pjbc.pjbc004)
+         UPDATE pjbc_t SET pjbc004 = g_pjba_m.pjba005,
+                              pjbc005 = l_date
+                        WHERE pjbcent = g_enterprise
+                          AND pjbc001 = p_pjba001
+                          AND pjbc002 = l_pjbc.pjbc002
+                          AND pjbc003 = l_pjbc.pjbc003
+         IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] = 0 THEN
+            LET g_success = FALSE
+            RETURN g_success
+         END IF
+      END FOREACH        
+   ELSE
+      LET g_success = FALSE
+   END IF
+   IF g_success THEN
+      UPDATE pjba_t SET pjba007 = g_pjba_m.pjba007,
+                        pjba008 = g_pjba_m.pjba008
+                  WHERE pjbaent = g_enterprise
+                    AND pjba001 = p_pjba001
+      IF SQLCA.SQLCODE THEN
+         LET g_success = FALSE
+      END IF
+   END IF
+   RETURN g_success]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[    CALL cl_set_combo_scc('pjba007','16008')
+   LET g_pjba_m.pjba007 = '1'
+   SELECT ooef008 INTO g_pjba_m.pjba008 FROM ooef_t
+    WHERE ooefent = g_enterprise AND ooef001 = 'ALL'
+   CALL apjm200_01_pjba008_desc(g_pjba_m.pjba008)
+   SELECT pjbb005 INTO g_pjba_m.pjba005 FROM pjbb_t
+    WHERE pjbbent = g_enterprise AND pjbb001 = p_pjba003 AND ROWNUM = 1
+      ORDER BY pjbb002 
+   LET g_pjba_m_t.* = g_pjba_m.*]]>
+  </point>
+</add_points>

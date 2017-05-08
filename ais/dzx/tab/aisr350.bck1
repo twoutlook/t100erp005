@@ -1,0 +1,56 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisr350" module="ais" jobmode="N" type="r01" industry="std" fix_arg="0" crtid="04152" crtdt="2015-01-15 16:39:42" modid="04152" moddt="2015-03-13 11:46:06" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="業務往來對帳單列印">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="isafsite,l_isafsite_desc(chr80),isafdocdt,isafdocdt_2(dat),isafcomp,isaf003,isaf001,isafdocno,isafstus"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="ais" filename="aisr350" method="dialog">
+    <section id="input">
+      <input id="head" field="isafsite,isafdocdt,isafdocdt_2"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="isafcomp,isaf003,isaf001,isafdocno,isafstus"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="isafsite">
+        <after/>
+      </column>
+      <column id="l_isafsite_desc"/>
+      <column id="isafdocdt"/>
+      <column id="isafdocdt_2"/>
+      <column id="isafcomp">
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="isaf003">
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="isaf001" type="S" default="1" def_scc="9715"/>
+      <column id="isafdocno">
+        <controlp form="q_isafdocno" state="c"/>
+      </column>
+      <column id="isafstus" scc="13" type="S" default="Y">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="S" pic="posted"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+        <after>
+          <check id="range" st="N" st_type="0" errno="azz-00080" ow="1"/>
+        </after>
+      </column>
+    </init>
+  </form>
+</assembly>
+

@@ -1,0 +1,509 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ FOURJS_START_COPYRIGHT(D,2011)
+ Property of Four Js*
+ (c) Copyright Four Js 2011, 2014. All Rights Reserved.
+ * Trademark of Four Js Development Tools Europe Ltd
+   in the United States and elsewhere
+ 
+ This file can be modified by licensees according to the
+ product manual.
+ FOURJS_END_COPYRIGHT
+ -->
+<!-- 
+Modify.........: No:FUN-T100 2014/03/14 by tsai_yen
+-->
+<html
+	xmlns='http://www.w3.org/1999/xhtml'
+	xmlns:gwc='http://www.4js.com/GWC'
+>
+	<head>
+		<meta
+			content='text/html; charset=utf-8'
+			http-equiv='Content-Type'
+		/>
+	</head>
+
+	<body>
+
+<gwc:snippet-root
+	gwc:define='
+		traditionalWindow false;
+	'
+>
+	<div
+		gwc:condition='application/ui/name &amp;&amp; !application/state/ended'
+
+		data-g-layout-container=''
+	>
+		<div
+			gwc:define='
+				hasStartMenu application/ui/StartMenu ? true : false;
+				startMenuPosition (hasStartMenu &amp;&amp; window) ? window/style["startMenuPosition"] : "none";
+				startMenuPosition switch(true, [!hasStartMenu||startMenuPosition=="none",isTouch,startMenuPosition!="menu"], ["none","tree","tree"],"menu");
+				hasStartMenu hasStartMenu &amp;&amp; startMenuPosition != "none";
+				hasTopMenu application/ui/TopMenu || (window &amp;&amp; window/form/topmenu);
+			'
+			gwc:condition='!traditionalMode'
+			gwc:omit-tag='true'
+		>
+			<div
+				class='gUIFrame'
+
+				data-g-id='LayoutSettingsContainer,applications/{application/ui/name}/layoutContainers/frame'
+				data-g-layout-container=''
+			>
+				<div
+					gwc:condition='startMenuPosition == "tree" || (isTouch &amp;&amp; hasTopMenu)'
+					gwc:omit-tag='true'
+				>
+					<div
+						data-g-layout-policy='"minWidth": 16, {isTouch ? "\"widthPolicy\": \"Fixed\"," : null} "heightPolicy": "Fixed"'
+					>
+						<div
+							gwc:omit-tag='!isTouch'
+
+							class='gSideBar navigation-style'
+
+							data-g-id='SideBar'
+						>
+							<div
+								gwc:condition='isTouch &amp;&amp; hasTopMenu'
+
+								class='gSideBarPanel'
+							>
+								<div
+									class='gTopMenu gSideBarElement gSStar gSTopMenu gSWindow {prefix("gc", window/class)}'
+
+									data-g-id='TopMenu'
+								>
+									<ul
+									>
+										<div
+											gwc:condition='application/ui/topmenu'
+											gwc:replace='application/ui/topmenu'
+										/>
+										<div
+											gwc:condition='window/form/topmenu'
+											gwc:replace='window/form/topmenu'
+										/>
+									</ul>
+								</div>
+								<div
+									class='gSideBarHandle navigation-element-style'
+								/>
+							</div>
+
+							<div
+								gwc:condition='hasStartMenu'
+								gwc:omit-tag='!isTouch'
+
+								class='gSideBarPanel'
+							>
+								<div
+									gwc:omit-tag='isTouch'
+
+									class='gStartMenuContainer navigation-style'
+								>
+									<div
+										
+										class='gStartMenu gSideBarElement gSStar gSStartMenu gSWindow {prefix("gc", window/class)}'
+										data-g-qa-idRef='{auiid(application/ui/StartMenu/id)}'
+									>
+										<h2
+											gwc:condition='application/ui/StartMenu/text'
+
+											class='gStartMenuTitle'
+										>{application/ui/StartMenu/text}</h2>
+
+										<ul
+											gwc:content='application/ui/StartMenu'
+										/>
+									</div>
+								</div>
+
+								<div
+									gwc:condition='isTouch'
+
+									class='gSideBarHandle navigation-element-style'
+								/>
+							</div>
+						</div>
+					</div>
+					<div
+						gwc:condition='!isTouch &amp;&amp; hasStartMenu'
+						gwc:content='includeSnippet("GridLayoutSplitter")'
+
+						class='gMovableElementHandle gHorizontalSplitter'
+
+						data-g-id='MovableElement,1,horizontal'
+						data-g-layout-item='"column": 1'
+					/>
+				</div>
+				<div
+					data-g-layout-container=''
+					data-g-layout-item='"column": 2'
+				>
+					<!-- first the topmost normal window -->
+					<div
+						gwc:define='tw application/ui/topmostNormalWindow'
+						gwc:condition='tw'
+						gwc:content='tw'
+
+						data-g-layout-item='"row": 1'
+					/>
+
+					<!-- the modal window -->
+					<div
+						gwc:condition='application/ui/window &amp;&amp; application/ui/window/style["windowType"] == "modal"'
+
+						class='gModalWindowContainer'
+
+						data-g-layout-container=''
+						data-g-layout-item='"row": 1'
+					>
+						<div
+							class='gModalWindowBackground'
+
+							data-g-layout-item='"isEmpty": true'
+						/>
+
+						<div
+							gwc:define='tw application/ui/window'
+							gwc:replace='tw'
+						/>
+					</div>
+
+                    <!-- FUN-T100 mark START -->
+                    <!-- 
+					<div
+						gwc:condition='startMenuPosition == "menu" || (!isTouch &amp;&amp; hasTopMenu)'
+
+						class='gTopMenu gTopMenuContainer gSStar gSTopMenu gSWindow {window ? prefix("gc", window/class) : null} navigation-style topmenu-style'
+
+						data-g-id='TopMenu'
+						data-g-layout-item='"row": 0, "columnSpan": 3'
+						data-g-layout-policy='"minWidth": 0'
+					>
+						<ul>
+							<div
+								gwc:condition='startMenuPosition == "menu"'
+								gwc:replace='application/ui/startmenu'
+							/>
+							<div
+								gwc:condition='application/ui/topmenu &amp;&amp; application/ui/topmenu/items/length'
+								gwc:replace='application/ui/topmenu'
+							/>
+							<div
+								gwc:condition='window/form/topmenu &amp;&amp; window/form/topmenu/items/length'
+								gwc:replace='window/form/topmenu'
+							/>
+						</ul>
+					</div>
+                     -->
+                    <!-- FUN-T100 mark END -->
+                    <!-- FUN-T100 START -->
+                    <div data-g-layout-item='"row": 0'>
+                        <div data-g-layout-container=''>   <!-- FUN-T100 -->
+                            <div data-g-layout-item='"row": 0,"column": 0' data-g-layout-policy='"widthHint": "45px", "widthPolicy": "Fixed","heightHint": "27px", "heightPolicy": "Fixed"'>
+                                <img src='{imageURI(tplImages+"logo/logo.png")}' class='logo_img' />
+                            </div>
+                            <div data-g-layout-item='"row": 0,"column": 1'>
+                                <div data-g-layout-container=''>
+                                    <div data-g-layout-item='"row": 0' data-g-layout-policy='"heightHint": "7px", "heightPolicy": "Fixed"' />
+                                    <!--                                     
+                                    <div data-g-layout-item='"row": 1' class="gHeaderTitle gcreference">
+                                        <gwc:dummy
+                                             gwc:define='
+                                                 mainprog_si 0;
+                                                 mainprog_ei indexOf(title, ")");
+                                                 mainprog_ei (mainprog_ei > 0 ? mainprog_ei+1 : mainprog_ei);
+                                                 mainprog (mainprog_ei > 0 ? substring(title, mainprog_si, mainprog_ei) : title);'
+                                             gwc:omit-tag='true'
+                                        >{mainprog}
+                                        </gwc:dummy>
+                                    </div>
+                                     -->
+                                    <!-- 4js -->
+                                    <div
+                                        gwc:condition='startMenuPosition == "menu" || (!isTouch &amp;&amp; hasTopMenu)'
+
+                                        class='gTopMenu gTopMenuContainer gSStar gSTopMenu gSWindow {window ? prefix("gc", window/class) : null} navigation-style topmenu-style'
+
+                                        data-g-id='TopMenu'
+                                        data-g-layout-item='"row": 1'
+                                        data-g-layout-policy='"minWidth": 0'
+                                    >
+                                        <ul>
+                                            <div
+                                                gwc:condition='startMenuPosition == "menu"'
+                                                gwc:replace='application/ui/startmenu'
+                                            />
+                                            <div
+                                                gwc:condition='application/ui/topmenu &amp;&amp; application/ui/topmenu/items/length'
+                                                gwc:replace='application/ui/topmenu'
+                                            />
+                                            <div
+                                                gwc:condition='window/form/topmenu &amp;&amp; window/form/topmenu/items/length'
+                                                gwc:replace='window/form/topmenu'
+                                            />
+                                        </ul>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                            <div data-g-layout-item='"row": 1' data-g-layout-policy='"heightHint": "5px", "heightPolicy": "Fixed"' />
+                        </div>
+                    </div>
+                    <!-- FUN-T100 END -->
+				</div>
+			</div>
+		</div>
+
+		<div
+			gwc:condition='traditionalMode &amp;&amp; application/ui/window'
+			gwc:omit-tag='true'
+		>
+			<div
+				gwc:define='
+					tw (application/ui/topmostnormalwindow ? application/ui/topmostnormalwindow : application/ui/window);
+					hasToolBar application/ui/toolbar;
+					hasRingMenu (tw/menu &amp;&amp; tw/menu/class != "dialog" &amp;&amp; tw/menu/class != "winmsg" &amp;&amp; tw/menu/class != "popup");
+					hasDialog tw/dialog;
+					hasMenuOrDialog hasRingMenu || hasDialog;
+					menuActionPanelPositionClass (switch(hasDialog ? tw/style["actionPanelPosition"] : tw/style["ringMenuPosition"], ["left", "top", "bottom", "right"], ["gMenuActionPanelLeft", "gMenuActionPanelTop", "gMenuActionPanelBottom", "gMenuActionPanelRight"]));
+					ew 0.5 * 1.4;
+					eh 1.5;
+					cw 0.5;
+					ch 1;
+					actiontextalign "AlignCenter";
+					ringmenutextalign "AlignCenter";
+					actiontexthidden "";
+					ringmenutexthidden "";
+				'
+
+				class='gUIFrame'
+				style='
+					font-size: 100%;
+					text-align: center;
+					letter-spacing: {0}em;
+				'
+
+				data-g-layout-container=''
+			>
+				<div
+					gwc:define='
+						toolBarPositionClass "gToolBarTop";
+					'
+					gwc:condition='hasToolBar'
+
+					data-g-layout-item='"row": 0'
+				>
+					<div
+						gwc:replace='includeSnippet("ToolBarHelper")'
+					/>
+				</div>
+
+				<gwc:dummy
+					gwc:condition='hasMenuOrDialog'
+					gwc:omit-tag='true'
+				>
+					<div
+						gwc:condition='(menuActionPanelPositionClass == "gMenuActionPanelTop") || (menuActionPanelPositionClass == "gMenuActionPanelBottom")'
+						gwc:content='hasRingMenu ? tw/menu : tw/dialog'
+
+						class='gMenuActionPanel {menuActionPanelPositionClass} navigation-style actionpanel-style'
+
+						data-g-layout-item='"row": 1'
+					/>
+
+					<gwc:dummy
+						gwc:condition='(menuActionPanelPositionClass == "gMenuActionPanelLeft") || (menuActionPanelPositionClass == "gMenuActionPanelRight")'
+						gwc:omit-tag='true'
+					>
+						<div
+							gwc:content='includeSnippet("GridLayoutSplitter")'
+
+							class='gMovableElementHandle gHorizontalSplitter'
+
+							data-g-id='MovableElement,1,horizontal'
+							data-g-layout-item='"row": 2, "column": 1'
+						/>
+
+						<div
+							gwc:content='hasRingMenu ? tw/menu : tw/dialog'
+
+							class='gMenuActionPanel {menuActionPanelPositionClass} navigation-style actionpanel-style'
+
+							data-g-layout-item='"row": 2, "column": 2'
+						/>
+					</gwc:dummy>
+				</gwc:dummy>
+
+				<div
+					class='gFixed'
+
+					data-g-layout-item='"row": 2, "column": 0, "isXSpacer": true, "isYSpacer": true'
+				>
+					<div
+						class='gFixedScrollView'
+
+						data-g-layout-policy='"widthHint": "40px", "widthPolicy": "Fixed", "heightHint": "40px", "heightPolicy": "Fixed"'
+					>
+						<div
+							gwc:define='
+								traditionalWidth application/ui/width ? application/ui/width : 80;
+								traditionalHeight application/ui/height ? application/ui/height : 25;
+							'
+
+							style='
+								width: {traditionalWidth * ew}em;
+								height: {traditionalHeight * eh}em;
+								overflow: hidden;
+								margin: 0;
+								padding: 0;
+								position: relative;
+								display: inline-block;
+							'
+
+							data-g-layout-item='"row": 0, "column": 1'
+						>
+							<gwc:dummy
+								gwc:define='
+									traditionalWindow true;
+									renderNoLayout true;
+								'
+								gwc:repeat='w application/ui/windows'
+								gwc:omit-tag='true'
+							>
+								<div
+									gwc:define='
+										bgcolor w/ttybackgroundcolor || "white";
+									'
+									gwc:condition='w/border'
+
+									style='
+										left: {(w/posx - 1) * ew}em;
+										top: {(w/posy - 0.5) * eh}em;
+										width: {(w/width + 2) * ew}em;
+										height: {(w/height + 1) * eh}em;
+										position: absolute;
+										background-color: {bgcolor};
+										overflow: hidden;
+										margin: 0px;
+										padding: 0px;
+										border-radius: 8px;
+										border: 1px solid #777;
+									'
+								/>
+
+								<div
+									gwc:define='
+										bgcolor w/ttybackgroundcolor || "white";
+									'
+									gwc:content='w'
+
+									style='
+										left: {w/posx * ew}em;
+										top: {w/posy * eh}em;
+										width: {w/width * ew}em;
+										height: {w/height * eh}em;
+										position: absolute;
+										background-color: {bgcolor};
+										overflow: hidden;
+										margin: 0px;
+										padding: 0px;
+									'
+								/>
+							</gwc:dummy>
+						</div>
+
+						<div
+							gwc:condition='isTouch'
+
+							class='gTMNavBar'
+
+							data-g-layout-item='"isEmpty": true'
+						>
+							<button
+								id='up'
+								onclick='gwc.api.fireAcceleratorByName("prevrow");'
+							/>
+
+							<button
+								id='down'
+								onclick='gwc.api.fireAcceleratorByName("nextrow");'
+							/>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div
+			gwc:condition='menu &amp;&amp; menu/class in ["dialog", "winmsg"]'
+
+			class='gAlertMenuContainer'
+
+			data-g-layout-container=''
+		>
+			<div
+				class='gBackground'
+			/>
+
+			<div
+				gwc:define='
+					actiontextalign "AlignCenter";
+					ringmenutextalign "AlignCenter";
+					actiontexthidden "";
+					ringmenutexthidden "";
+				'
+				gwc:replace='menu'
+			/>
+		</div>
+
+		<div
+			gwc:condition='menu &amp;&amp; menu/class == "popup"'
+
+			class='gPopupMenuContainer'
+
+			data-g-layout-container=''
+		>
+			<div
+				class='gBackground'
+
+				data-g-layout-item='"isXSpacer": true, "isYSpacer": true'
+			/>
+
+			<div
+				gwc:define='
+					actiontextalign "AlignCenter";
+					ringmenutextalign "AlignCenter";
+					actiontexthidden "";
+					ringmenutexthidden "";
+				'
+				gwc:content='menu'
+			/>
+		</div>
+
+		<div
+			id='gCalendarPlace'
+
+			data-g-layout-item='"isEmpty": true'
+		/>
+
+		<div
+			gwc:condition='!traditionalMode &amp;&amp; uiError &amp;&amp; !hasSmallScreen &amp;&amp; !menu'
+			gwc:content='object(translate(uiError, ["&amp;", "&lt;", "&gt;", "&#10;", " "], ["&amp;amp;", "&amp;lt;", "&amp;gt;", "&lt;br/&gt;", "&amp;#160;"]))'
+
+			class='gErrorTooltip gError error-style'
+			id='gErrorTooltip'
+			style='{application/ui/error/ttycolor ? "color: " + application/ui/error/ttycolor + ";" : null}{application/ui/error/ttybackgroundcolor ? "background: " + application/ui/error/ttybackgroundcolor + ";" : null}{application/ui/error/ttytextdecoration ? "text-decoration: " + application/ui/error/ttytextdecoration + ";" : null}{application/ui/error/ttyfontweight ? "font-weight: " + application/ui/error/ttyfontweight + ";" : null}'
+
+			data-g-layout-item='"isEmpty": true'
+		/>
+	</div>
+</gwc:snippet-root>
+
+	</body>
+</html>

@@ -1,0 +1,398 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aslr501_x01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:2(2016-12-14 17:25:33), PR版次:0002(2016-12-09 15:53:28)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000003
+#+ Filename...: aslr501_x01
+#+ Description: ...
+#+ Creator....: 05423(2016-10-29 22:27:47)
+#+ Modifier...: 08172 -SD/PR- 08172
+ 
+{</section>}
+ 
+{<section id="aslr501_x01.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:8)
+#add-point:填寫註解說明 name="global.memo"
+#161110-00008#4 2016/12/09 by 08172   修改aslr501门店库存分布报表，增加商品编号、产品，分类imaa009、标牌价金额字段
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #where condition 
+       type LIKE type_t.chr2          #site type
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aslr501_x01.main" readonly="Y" >}
+PUBLIC FUNCTION aslr501_x01(p_arg1,p_arg2)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition 
+DEFINE  p_arg2 LIKE type_t.chr2         #tm.type  site type
+#add-point:init段define(客製用) name="component.define_customerization"
+
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.type = p_arg2
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "aslr501_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL aslr501_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL aslr501_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL aslr501_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL aslr501_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL aslr501_x01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aslr501_x01.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION aslr501_x01_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "inagent.inag_t.inagent,inagsite.inag_t.inagsite,l_inagsite_desc.ooefl_t.ooefl003,imaa001.imaa_t.imaa001,l_imaal003.imaal_t.imaal003,imaa009.imaa_t.imaa009,l_imaa009_desc.rtaxl_t.rtaxl003,imaa116.imaa_t.imaa116,imaa154.imaa_t.imaa154,imaa133.imaa_t.imaa133,l_imaa133_desc.oocql_t.oocql004,inag009.inag_t.inag009" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   
+   #end add-point:create_tmp.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aslr501_x01.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION aslr501_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aslr501_x01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aslr501_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   LET g_select = " SELECT inagent,inagsite,",  #161110-00008#4 add inagent by 08172
+                  " (SELECT ooefl003 FROM ooefl_t WHERE ooefl001 = inagsite AND ooefl002 = '",g_dlang,"' AND ooeflent = inagent) inagsite_desc,",
+                  #161110-00008#4 -s by 08172
+                  " imaa001,",
+                  " (SELECT imaal003 FROM imaal_t WHERE imaal001 = imaa001 AND imaal002 = '",g_dlang,"' AND imaalent = imaaent) imaa001_desc,",
+                  " imaa009,",
+                  " (SELECT rtaxl003 FROM rtaxl_t WHERE rtaxl001 = imaa009 AND rtaxl002 = '",g_dlang,"' AND rtaxlent = imaaent) imaa009_desc,",
+                  " imaa116,",
+                  #161110-00008#4 -e by 08172
+                  " imaa154,imaa133,",
+                  " (SELECT oocql004 FROM oocql_t WHERE oocql001 = '2007' AND oocql002 = imaa133 AND oocql003 = '",g_dlang,"' AND oocqlent = imaaent ) imaa133_desc,",
+                  " inag009"
+#   #end add-point
+#   LET g_select = " SELECT inagent,inagsite,NULL,imaa001,NULL,imaa009,NULL,imaa116,imaa154,imaa133,NULL, 
+#       inag009"
+# 
+#   #add-point:sel_prep g_from name="sel_prep.g_from"
+   LET g_from = " FROM inag_t INNER JOIN imaa_t ON imaa001 = inag001 AND imaaent = inagent AND imaastus = 'Y'", #161110-00008#4 add imaastus by 08172
+                "             INNER JOIN ooef_t ON ooef001 = inagsite AND ooefent = inagent AND ooefstus = 'Y'" #161110-00008#4 add ooefstus by 08172
+#   #end add-point
+#    LET g_from = " FROM inag_t,imaa_t"
+# 
+#   #add-point:sel_prep g_where name="sel_prep.g_where"
+   
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("inag_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   #161110-00008#4 -s by 08172
+   LET g_sql = " SELECT inagent,inagsite,inagsite_desc,imaa001,imaa001_desc,imaa009,imaa009_desc,",
+               "        imaa116,imaa154,imaa133,imaa133_desc,SUM(COALESCE(inag009,0))",
+               "   FROM (",g_sql,")",
+               "  GROUP BY inagent,inagsite,inagsite_desc,imaa001,imaa001_desc,imaa009,imaa009_desc,",
+               "           imaa116,imaa154,imaa133,imaa133_desc"
+   #161110-00008#4 -s by 08172
+   #end add-point
+   PREPARE aslr501_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE aslr501_x01_curs CURSOR FOR aslr501_x01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aslr501_x01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION aslr501_x01_ins_data()
+DEFINE sr RECORD 
+   inagent LIKE inag_t.inagent, 
+   inagsite LIKE inag_t.inagsite, 
+   l_inagsite_desc LIKE ooefl_t.ooefl003, 
+   imaa001 LIKE imaa_t.imaa001, 
+   l_imaal003 LIKE imaal_t.imaal003, 
+   imaa009 LIKE imaa_t.imaa009, 
+   l_imaa009_desc LIKE rtaxl_t.rtaxl003, 
+   imaa116 LIKE imaa_t.imaa116, 
+   imaa154 LIKE imaa_t.imaa154, 
+   imaa133 LIKE imaa_t.imaa133, 
+   l_imaa133_desc LIKE oocql_t.oocql004, 
+   inag009 LIKE inag_t.inag009
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+DEFINE l_table            LIKE type_t.chr100    #161110-00008#4 by 08172
+DEFINE l_money_merge      STRING                #161110-00008#4 by 08172
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH aslr501_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       IF NOT cl_null(sr.l_inagsite_desc) AND NOT cl_null(sr.inagsite) THEN
+          LET sr.l_inagsite_desc = sr.inagsite,'\n',sr.l_inagsite_desc
+       END IF
+       IF NOT cl_null(sr.l_imaa133_desc) AND NOT cl_null(sr.imaa133) THEN
+          LET sr.l_imaa133_desc = sr.imaa133,'-',sr.l_imaa133_desc
+       END IF
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.inagent,sr.inagsite,sr.l_inagsite_desc,sr.imaa001,sr.l_imaal003,sr.imaa009,sr.l_imaa009_desc,sr.imaa116,sr.imaa154,sr.imaa133,sr.l_imaa133_desc,sr.inag009
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "aslr501_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    #161110-00008#4 -s by 08172
+    LET l_table = g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED
+    LET l_money_merge = " MERGE INTO ",l_table," O",
+                        " USING (SELECT inagent,inagsite,imaa001,imaa009,imaa154,SUM(COALESCE(inag009*imaa116,0)) A",
+                        "          FROM ",l_table,
+                        "         GROUP BY inagent,inagsite,imaa001,imaa009,imaa154) U",
+                        " ON (     O.inagent = U.inagent",
+                        "      AND O.inagsite = U.inagsite",
+                        "      AND O.imaa001 = U.imaa001",
+                        "      AND O.imaa009 = U.imaa009",
+                        "      AND O.imaa154 = U.imaa154 )",
+                        " WHEN MATCHED THEN",
+                        "    UPDATE SET O.imaa116 = U.A"
+    PREPARE l_money_merge_pr FROM l_money_merge 
+    EXECUTE l_money_merge_pr
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "l_money_merge_pr"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+       END IF
+    #161110-00008#4 -e by 08172
+    #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aslr501_x01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION aslr501_x01_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+DEFINE l_type     LIKE type_t.chr50
+DEFINE l_title    LIKE type_t.chr100
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    SELECT gzcbl004 INTO l_type
+      FROM gzcbl_t
+     WHERE gzcbl001 = '6541'
+       AND gzcbl002 = tm.type
+       AND gzcbl003 = g_dlang
+    SELECT gzdel003 INTO l_title
+      FROM gzdel_t
+     WHERE gzdel001 = 'aslr501_x01'
+       AND gzdel002 = g_dlang
+       
+    LET g_rep_code_desc = l_type CLIPPED,l_title CLIPPED
+    LET g_xgrid.title2  = g_rep_code_desc
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    
+    #end add-point:rep_data.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aslr501_x01.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

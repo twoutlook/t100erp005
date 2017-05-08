@@ -1,0 +1,55 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aoop160" module="aoo" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="00593" crtdt="2015-04-28 15:27:01" modid="00593" moddt="2015-05-06 17:48:12" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="產生日匯率批次作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="ooam001,ooam001_desc(chr80),ooam003,ooam003_desc(chr80),ooam005,ooam004,ooam007,type(chr500),ratetype(chr500),excel(chr500),stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="browser"/>
+      <action id="download"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aoop160" method="dialog">
+    <section id="input">
+      <input id="head" field="ooam001,ooam003,ooam005,ooam004,ooam007,type,ratetype,excel"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="ooam001">
+        <after>
+          <reference field="ooam001_desc" ref_field="ooam001" map_field="ooam001" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;1&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooal002_3" state="i"/>
+      </column>
+      <column id="ooam001_desc"/>
+      <column id="ooam003">
+        <after>
+          <reference field="ooam003_desc" ref_field="ooam_t.ooam003" map_field="ooament,ooam003" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooai001" state="i"/>
+      </column>
+      <column id="ooam003_desc"/>
+      <column id="ooam005" type="S" default="1">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ooam004"/>
+      <column id="ooam007" type="S" default="N"/>
+      <column id="type"/>
+      <column id="ratetype"/>
+      <column id="excel"/>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

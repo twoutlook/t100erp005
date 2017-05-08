@@ -1,0 +1,753 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="apsr002_x01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:8(2016-11-03 12:12:38), PR版次:0008(2016-11-03 12:17:09)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000080
+#+ Filename...: apsr002_x01
+#+ Description: 訂單配置計畫表
+#+ Creator....: 05231(2014-07-16 10:50:49)
+#+ Modifier...: 06978 -SD/PR- 06978
+ 
+{</section>}
+ 
+{<section id="apsr002_x01.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:7)
+#add-point:填寫註解說明
+#160420-00010#1  16/05/31  By Sarah     數量抓錯成參考欄位(xmdc009)，請修正為抓psoq022
+#160503-00030#14 16/06/15  By 06821     效能調整 
+#160608-00013#2  16/06/20  By ming      psph007=pspa006  調整為  psph010=pspa006 
+#160818-00022#1  16/09/21  By drosiali  修正樹沒展出來的問題
+#161102-00068#1  16/11/03  By ywtsai    因訂單配置來源不只訂單，故取消料號取xmdc_t，改取psph017與psph019
+#end add-point
+#add-point:填寫註解說明
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING                   #where condition
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_para          LIKE type_t.num5
+DEFINE g_id            LIKE type_t.num10
+DEFINE g_psph009       LIKE psph_t.psph009
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apsr002_x01.main" readonly="Y" >}
+PUBLIC FUNCTION apsr002_x01(p_arg1)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition
+#add-point:init段define(客製用) name="component.define_customerization"
+
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "apsr002_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL apsr002_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL apsr002_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL apsr002_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL apsr002_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL apsr002_x01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsr002_x01.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION apsr002_x01_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "l_psph009.psph_t.psph009,psph040.psph_t.psph040,l_imaal003.imaal_t.imaal003,l_imaal004.imaal_t.imaal004,psph019.psph_t.psph019,l_count.type_t.num20_6,l_psph016_desc.gzcbl_t.gzcbl004,l_psph024.type_t.chr1000,l_pid.type_t.num10,l_id.type_t.num10" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   
+   #end add-point:create_tmp.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsr002_x01.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION apsr002_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsr002_x01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION apsr002_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+#160503-00030#14 --s mark
+##150604 by whitney add start
+#DEFINE l_sql         STRING
+#DEFINE l_psph002     LIKE psph_t.psph002
+##150604 by whitney add end
+#160503-00030#14 --e mark
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   CALL cl_get_para(g_enterprise,g_site,'E-COM-0005') RETURNING g_para
+   #160503-00030#14 --s mark
+   ##150604 by whitney add start
+   #LET l_psph002 = ''
+   #LET l_sql = " SELECT MAX(psph002) FROM psph_t WHERE ",tm.wc CLIPPED
+   #PREPARE sel_psph002_pre FROM l_sql
+   #EXECUTE sel_psph002_pre INTO l_psph002
+   #FREE sel_psph002_pre
+   ##150604 by whitney add end
+   #160503-00030#14 --e mark
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+
+#150604 by whitney modify start
+#    LET g_select =
+#       " SELECT DISTINCT a.psph009,'','','','','','','','',a.psphent,a.psphsite,'','','','',a.psph001,a.psph002,''"
+##       " SELECT DISTINCT a.psph009,'','','','','','','',a.psph020,a.psphent,a.psphsite,'','',a.psph016,a.psph024,a.psph001,a.psph002,a.psph003"
+    #LET g_select = " SELECT DISTINCT psph009,'','','','','','','','',psphent,psphsite,'','','','',psph001,psph002,'' "  #160503-00030#14 mark
+    #160503-00030#14 --s add
+    #LET g_select = " SELECT DISTINCT psph009,'','','','',",                #161102-00068#1 mark
+    LET g_select = " SELECT DISTINCT psph009,psph017,'','',psph019,",       #161102-00068#1 add
+                   #數量
+                   "        (SELECT psoq022 FROM psoq_t WHERE psoqent = psphent AND psoqsite = psphsite AND psoq001 = psph001 AND psoq002 = psph002 AND psoq004 = psph009),",
+                   "        '','','',psphent,psphsite,'','','','',psph001,psph002,'' "
+    #160503-00030#14 --e add
+#150604 by whitney modify end
+
+#   #end add-point
+#   LET g_select = " SELECT '',psph040,'','',psph019,NULL,'','',psph020,psphent,psphsite,NULL,NULL,psph016, 
+#       psph024,psph001,psph002,psph003"
+# 
+#   #add-point:sel_prep g_from name="sel_prep.g_from"
+
+#150604 by whitney mark start
+#    LET g_from =
+#       " FROM psph_t a LEFT JOIN imaal_t c ON c.imaalent = a.psphent AND c.imaal001=a.psph040  AND c.imaal002='",g_dlang,"'  ", 
+#       "               LEFT JOIN inayl_t  d ON d.inaylent  = a.psphent AND d.inayl001=a.psph024 AND d.inayl002= '",g_dlang,"'",
+#       "               LEFT JOIN gzcbl_t e ON e.gzcbl001 = '4027' AND e.gzcbl002=a.psph016  AND e.gzcbl003='",g_dlang,"', ",
+#       " ( SELECT psphent,psphsite,psph001,max(psph002) AS psph002 FROM psph_t GROUP BY psphent,psphsite,psph001) b, ",
+#       "      xmda_t f "
+#150604 by whitney mark end
+
+   #end add-point
+    LET g_from = " FROM psph_t"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+
+#150604 by whitney modify start
+#     LET g_where = " WHERE " ,tm.wc CLIPPED ," AND a.psphent = b.psphent AND a.psphsite = b.psphsite ",
+#                                             " AND a.psph001 = b.psph001 AND a.psph002  = b.psph002 AND a.psph016 != '0' "#,
+##                                             " AND substr(a.psph009,1,",g_para,") = f.xmdadocno and  a.psphent = f.xmdaent "
+     #LET g_where = " WHERE psph016 != '0' AND psph002 = '",l_psph002,"' AND ",tm.wc CLIPPED #160503-00030#14 mark
+     LET g_where = " WHERE psph016 != '0' AND psph002 = (SELECT MAX(psph002) FROM psph_t WHERE ",tm.wc CLIPPED ,") AND ",tm.wc CLIPPED #160503-00030#14 add
+#150604 by whitney modify end
+
+#   #end add-point
+#    LET g_where = " WHERE " ,tm.wc CLIPPED
+# 
+#   #add-point:sel_prep g_order name="sel_prep.g_order"
+   
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("psph_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   LET g_sql = g_sql," ORDER BY psph009" 
+   #end add-point
+   PREPARE apsr002_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE apsr002_x01_curs CURSOR FOR apsr002_x01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsr002_x01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION apsr002_x01_ins_data()
+DEFINE sr RECORD 
+   l_psph009 LIKE psph_t.psph009, 
+   psph040 LIKE psph_t.psph040, 
+   l_imaal003 LIKE imaal_t.imaal003, 
+   l_imaal004 LIKE imaal_t.imaal004, 
+   psph019 LIKE psph_t.psph019, 
+   l_count LIKE type_t.num20_6, 
+   l_psph016_desc LIKE gzcbl_t.gzcbl004, 
+   l_psph024 LIKE type_t.chr1000, 
+   psph020 LIKE psph_t.psph020, 
+   psphent LIKE psph_t.psphent, 
+   psphsite LIKE psph_t.psphsite, 
+   l_pid LIKE type_t.num10, 
+   l_id LIKE type_t.num10, 
+   psph016 LIKE psph_t.psph016, 
+   psph024 LIKE psph_t.psph024, 
+   psph001 LIKE psph_t.psph001, 
+   psph002 LIKE psph_t.psph002, 
+   psph003 LIKE psph_t.psph003
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+#160503-00030#14 --s mark
+#程式處理段已被mark，不須宣告
+#DEFINE l_sql          STRING
+#DEFINE l_sql2         STRING
+#160503-00030#14 --e mark
+DEFINE l_psph009      STRING
+DEFINE l_type         LIKE type_t.num10
+DEFINE l_pid          LIKE type_t.num10  
+DEFINE l_id           LIKE type_t.num10  
+DEFINE l_xmdadocno    LIKE xmda_t.xmdadocno
+DEFINE l_xmdcseq      LIKE xmdc_t.xmdcseq
+DEFINE l_n            LIKE type_t.num5
+DEFINE l_n1           LIKE type_t.num5
+DEFINE l_success      LIKE type_t.num5
+#160503-00030#14 --s mark
+#程式處理段已被mark，不須宣告
+#DEFINE sr1 RECORD 
+#   psph008            LIKE psph_t.psph008,
+#   psph040            LIKE psph_t.psph040,
+#   psph019            LIKE psph_t.psph019,
+#   psph026            LIKE psph_t.psph026,
+#   psph016            LIKE psph_t.psph016,
+#   psph024            LIKE psph_t.psph024,
+#   psph003            LIKE psph_t.psph003,
+#   l_imaal003         LIKE imaal_t.imaal003,
+#   l_imaal004         LIKE imaal_t.imaal004,
+#   l_psph016_desc     LIKE gzcbl_t.gzcbl004,
+#   l_inayl003         LIKE inayl_t.inayl003,
+#   l_psph024_inayl003 LIKE type_t.chr1000
+#END RECORD
+#DEFINE sr2 RECORD 
+#   psph010            LIKE psph_t.psph010,
+#   psph040            LIKE psph_t.psph040,
+#   psph019            LIKE psph_t.psph019,
+#   psph026            LIKE psph_t.psph026,
+#   psph016            LIKE psph_t.psph016,
+#   psph024            LIKE psph_t.psph024,
+#   l_imaal003         LIKE imaal_t.imaal003,
+#   l_imaal004         LIKE imaal_t.imaal004,
+#   l_psph016_desc     LIKE gzcbl_t.gzcbl004,
+#   l_inayl003         LIKE inayl_t.inayl003,
+#   l_psph024_inayl003 LIKE type_t.chr1000
+#END RECORD
+#160503-00030#14 --e mark
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    LET l_type = 1
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH apsr002_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       LET sr.l_pid = ''
+       IF l_type = 1 THEN
+          LET sr.l_id = 1
+          LET g_id = 1
+       ELSE
+          LET g_id = g_id + 1
+          LET sr.l_id = g_id
+       END IF
+       LET l_psph009 = sr.l_psph009
+       LET g_psph009 = sr.l_psph009
+       #161102-00068#1 mark---start---
+       #LET l_xmdadocno = l_psph009.subString(1,g_para)
+       #LET l_n = l_psph009.getIndexOf('-',g_para)+1
+       #LET l_n1 = l_psph009.getIndexOf('-',l_n)-1
+       #LET l_xmdcseq = l_psph009.subString(l_n,l_n1)
+       #161102-00068#1 mark---end---
+#160420-00010#1-s
+#       SELECT xmdc001,xmdc012,xmdc009 INTO sr.psph040,sr.psph019,sr.l_count
+       #SELECT xmdc001,xmdc012 INTO sr.psph040,sr.psph019     #161102-00068#1 mark
+#160420-00010#1-e
+       #161102-00068#1 mark---start---
+       #  FROM xmdc_t
+       # WHERE xmdcdocno = l_xmdadocno
+       #   AND xmdcseq = l_xmdcseq
+       #   AND xmdcent = sr.psphent
+       #   AND xmdcsite = sr.psphsite
+       #161102-00068#1 mark---end---
+       CALL s_desc_get_item_desc(sr.psph040) RETURNING sr.l_imaal003,sr.l_imaal004
+       
+       #160503-00030#14 --s mark
+##160420-00010#1-s
+#       #數量抓錯成參考欄位(xmdc009)，請修正為抓psoq022
+#       SELECT psoq022 INTO sr.l_count
+#         FROM psoq_t
+#        WHERE psoqent = sr.psphent
+#          AND psoqsite = sr.psphsite
+#          AND psoq001 = sr.psph001
+#          AND psoq002 = sr.psph002
+#          AND psoq004 = sr.l_psph009
+##160420-00010#1-e
+       #160503-00030#14 --e mark
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.l_psph009,sr.psph040,sr.l_imaal003,sr.l_imaal004,sr.psph019,sr.l_count,sr.l_psph016_desc,sr.l_psph024,sr.l_pid,sr.l_id
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "apsr002_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       LET l_pid = g_id
+#       LET l_sql = "  SELECT DISTINCT psph008,psph040,psph019,psph020,psph016,psph024,psph003",
+#                   "    FROM psph_t ",
+#                   "   WHERE psphent = ",sr.psphent,
+#                   "     AND psphsite = '",sr.psphsite,"'",
+#                   "     AND psph001 = '",sr.psph001,"'",
+#                   "     AND psph002 = '",sr.psph002,"'",
+#                   "     AND psph003 = ",sr.psph003,
+#                   "     AND psph009 = '",sr.l_psph009,"'",
+#                   "ORDER BY psph008"
+#       PREPARE apsr002_x01_prepare_pid FROM l_sql
+#       DECLARE apsr002_x01_pid CURSOR FOR apsr002_x01_prepare_pid
+#       FOREACH apsr002_x01_pid INTO sr1.*
+#          IF STATUS THEN
+#          INITIALIZE g_errparam TO NULL
+#          LET g_errparam.extend = 'foreach:'
+#          LET g_errparam.code   = STATUS
+#          LET g_errparam.popup  = TRUE
+#          CALL cl_err()
+#          LET g_rep_success = 'N'
+#          EXIT FOREACH
+#          END IF
+#          LET g_id = g_id + 1
+#          LET l_id = g_id
+#          LET sr1.l_inayl003 = ''
+#          CALL s_desc_get_item_desc(sr1.psph040) RETURNING sr1.l_imaal003,sr1.l_imaal004
+#          CALL s_desc_gzcbl004_desc(4027,sr1.psph016) RETURNING sr1.l_psph016_desc
+#          IF sr1.psph016 = 'I' THEN
+#             CALL s_desc_get_stock_desc(g_site,sr1.psph024) RETURNING sr1.l_inayl003
+#             IF cl_null(sr1.l_inayl003) THEN
+#                IF cl_null(sr1.psph024) THEN
+#                   LET sr1.l_psph024_inayl003 =''
+#                ELSE
+#                   LET sr1.l_psph024_inayl003 = sr1.psph024
+#                END IF
+#             ELSE
+#                LET sr1.l_psph024_inayl003 = sr1.psph024 || '.' || sr1.l_inayl003
+#             END IF
+#          ELSE
+#             LET sr1.l_psph024_inayl003 =''
+#          END IF
+#          #-----EXECUTE-----(S)
+#          EXECUTE insert_prep USING sr1.psph008,sr1.psph040,sr1.l_imaal003,sr1.l_imaal004,sr1.psph019,sr1.psph020,sr1.l_psph016_desc,sr1.l_psph024_inayl003,l_pid,l_id
+# 
+#          IF SQLCA.sqlcode THEN
+#             INITIALIZE g_errparam TO NULL
+#             LET g_errparam.extend = "apsr002_x01_execute"
+#             LET g_errparam.code   = SQLCA.sqlcode
+#             LET g_errparam.popup  = FALSE
+#             CALL cl_err()       
+#             LET g_rep_success = 'N'
+#             EXIT FOREACH
+#          END IF
+#          #-----EXECUTE-----(E)
+#          LET l_pid = g_id
+#          LET l_sql2 = "  SELECT DISTINCT psph010,psph040,psph019,psph020,psph016,psph024",
+#                       "    FROM psph_t ",
+#                       "   WHERE psphent = ",sr.psphent,
+#                       "     AND psphsite = '",sr.psphsite,"'",
+#                       "     AND psph001 = '",sr.psph001,"'",
+#                       "     AND psph002 = '",sr.psph002,"'",
+#                       "     AND psph003 = ",sr1.psph003,
+#                       "     AND psph009 = '",sr.l_psph009,"'",
+#                       "     AND psph008 = '",sr1.psph008,"'",
+#                       "ORDER BY psph010"
+#          PREPARE apsr002_x01_prepare_id FROM l_sql
+#          DECLARE apsr002_x01_id CURSOR FOR apsr002_x01_prepare_id
+#          FOREACH apsr002_x01_id INTO sr1.*
+#             IF STATUS THEN
+#             INITIALIZE g_errparam TO NULL
+#             LET g_errparam.extend = 'foreach:'
+#             LET g_errparam.code   = STATUS
+#             LET g_errparam.popup  = TRUE
+#             CALL cl_err()
+#             LET g_rep_success = 'N'
+#             EXIT FOREACH
+#             END IF
+#             LET g_id = g_id + 1
+#             LET l_id = g_id
+#             LET sr2.l_inayl003 = ''
+#             CALL s_desc_get_item_desc(sr2.psph040) RETURNING sr2.l_imaal003,sr2.l_imaal004
+#             CALL s_desc_gzcbl004_desc(4027,sr2.psph016) RETURNING sr2.l_psph016_desc
+#             IF sr2.psph016 = 'I' THEN
+#                CALL s_desc_get_stock_desc(g_site,sr2.psph024) RETURNING sr2.l_inayl003
+#                IF cl_null(sr2.l_inayl003) THEN
+#                   IF cl_null(sr2.psph024) THEN
+#                      LET sr2.l_psph024_inayl003 =''
+#                   ELSE
+#                      LET sr2.l_psph024_inayl003 = sr2.psph024
+#                   END IF
+#                ELSE
+#                   LET sr2.l_psph024_inayl003 = sr2.psph024 || '.' || sr2.l_inayl003
+#                END IF
+#             ELSE
+#                LET sr2.l_psph024_inayl003 =''
+#             END IF
+#             #-----EXECUTE-----(S)
+#             EXECUTE insert_prep USING sr2.psph010,sr2.psph040,sr2.l_imaal003,sr2.l_imaal004,sr2.psph019,sr2.psph020,sr2.l_psph016_desc,sr2.l_psph024_inayl003,l_pid,l_id
+#             
+#             IF SQLCA.sqlcode THEN
+#                INITIALIZE g_errparam TO NULL
+#                LET g_errparam.extend = "apsr002_x01_execute"
+#                LET g_errparam.code   = SQLCA.sqlcode
+#                LET g_errparam.popup  = FALSE
+#                CALL cl_err()       
+#                LET g_rep_success = 'N'
+#                EXIT FOREACH
+#             END IF
+#             #-----EXECUTE-----(E)
+#          END FOREACH
+#       END FOREACH
+       CALL apsr002_x01_bom(l_type,sr.l_pid,sr.l_id,sr.psphent,sr.psphsite,sr.psph001,sr.psph002,sr.l_psph009)
+       RETURNING l_success
+       LET l_type = l_type + 1
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsr002_x01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION apsr002_x01_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    
+    #end add-point:rep_data.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apsr002_x01.other_function" readonly="Y" >}
+################################################################################
+# Descriptions...: 展BOM
+# Memo...........:
+# Usage..........: CALL apsr002_x01_bom (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: p_type 樹狀type
+#                : p_pid 樹狀pid
+#                : p_id 樹狀id
+#                : p_psphent 企業編號
+#                : p_psphsite 營運據點
+#                : p_psph001 aps版本
+#                : p_psph002 執行日期時間
+# Date & Author..: 2014/10/16 by ShiunYo
+################################################################################
+PRIVATE FUNCTION apsr002_x01_bom(p_type,p_pid,p_id,p_psphent,p_psphsite,p_psph001,p_psph002,p_psph009)
+   DEFINE p_type         LIKE type_t.num10
+   DEFINE p_pid          LIKE type_t.num10
+   DEFINE p_id           LIKE type_t.num10
+   DEFINE p_psphent      LIKE psph_t.psphent
+   DEFINE p_psphsite     LIKE psph_t.psphsite
+   DEFINE p_psph001      LIKE psph_t.psph001
+   DEFINE p_psph002      LIKE psph_t.psph002
+   DEFINE p_psph009      LIKE psph_t.psph009
+   DEFINE l_ac           LIKE type_t.num5
+   DEFINE l_sql          STRING
+   DEFINE l_psphlen      LIKE type_t.num5
+   DEFINE l_type         LIKE type_t.num10 
+   DEFINE l_pid          LIKE type_t.num10 
+   DEFINE l_id           LIKE type_t.num10
+   #DEFINE l_imaal003     LIKE imaal_t.imaal003 #160503-00030#14 mark
+   #DEFINE l_imaal004     LIKE imaal_t.imaal004 #160503-00030#14 mark
+   #DEFINE l_inayl003     LIKE inayl_t.inayl003 #160503-00030#14 mark
+   DEFINE l_success      LIKE type_t.num5
+   DEFINE l_psph     DYNAMIC ARRAY OF RECORD
+          psph010        LIKE psph_t.psph010,#供給單號
+          psph040        LIKE psph_t.psph040,#料件編號
+          psph019        LIKE psph_t.psph019,#日期
+          psph026        LIKE psph_t.psph026,#數量
+          psph016        LIKE psph_t.psph016,#供給類型
+          l_psph016_desc LIKE gzcbl_t.gzcbl004,#供給類型(說明)
+          psph024        LIKE psph_t.psph024,#供給庫位
+          l_psph024_desc LIKE type_t.chr1000,#供給庫位(代碼.說明)
+          l_imaal003     LIKE imaal_t.imaal003,#品名      #160503-00030#14 add
+          l_imaal004     LIKE imaal_t.imaal004,#規格      #160503-00030#14 add
+          l_inayl003     LIKE inayl_t.inayl003 #庫位說明  #160503-00030#14 add
+#          l_ac           LIKE type_t.num5
+   END RECORD
+   #LET l_sql = "   SELECT psph010,psph040,psph019,psph026,psph016,'',psph024,'','' ", #160503-00030#14 mark
+   #160503-00030#14 --s add
+   LET l_sql = "   SELECT psph010,psph040,psph019,psph026,psph016,",
+               "          (SELECT gzcbl004 FROM gzcb_t,gzcbl_t WHERE gzcb001 = '4027' AND gzcb002 = psph016 AND gzcb001 = gzcbl001  AND gzcb002 = gzcbl002 AND gzcbl003 = '",g_dlang,"' ),",
+               "          psph024, ",
+               "          (CASE WHEN psph016 = 'I' AND ((SELECT inayl003 FROM inay_t LEFT OUTER JOIN inayl_t ON inayent = inaylent AND inay001 = inayl001 AND inayl002 = '",g_dlang,"' ",
+               "                                          WHERE inayent  = psphent AND inay001  = psph024) IS NOT NULL)",
+               "                THEN psph024||'.'||(SELECT inayl003 FROM inay_t LEFT OUTER JOIN inayl_t ON inayent = inaylent AND inay001 = inayl001 AND inayl002 = '",g_dlang,"'  ",
+               "                                     WHERE inayent  = psphent AND inay001  = psph024) ",
+               "                WHEN psph016 = 'I' AND ((SELECT inayl003 FROM inay_t LEFT OUTER JOIN inayl_t ON inayent = inaylent AND inay001 = inayl001 AND inayl002 = '",g_dlang,"'  ",
+               "                                          WHERE inayent  = psphent AND inay001  = psph024) IS NULL) ",
+               "                THEN psph024  ELSE '' END), ",
+               "          (SELECT imaal003 FROM imaal_t WHERE imaalent = psphent AND imaal001 = psph040 AND imaal002 = '",g_dlang,"' ),",
+               "          (SELECT imaal004 FROM imaal_t WHERE imaalent = psphent AND imaal001 = psph040 AND imaal002 = '",g_dlang,"' ), ",
+               "          (CASE WHEN psph016 = 'I' THEN (SELECT inayl003 FROM inay_t LEFT OUTER JOIN inayl_t ON inayent = inaylent AND inay001 = inayl001 AND inayl002 ='",g_dlang,"'  ",
+               "                                          WHERE inayent = psphent AND inay001  = psph024) ELSE '' END) ",
+   #160503-00030#14 --e add
+               "     FROM psph_t ",
+               "    WHERE psphent = ",p_psphent,
+               "      AND psphsite = '",p_psphsite,"'",
+               "      AND psph001 = '",p_psph001,"'",
+               "      AND psph002 = '",p_psph002,"'",
+               #160818-00022#1-s-mod
+               ##160608-00013#2 20160620 modify by ming -----(S) 
+               ##"      AND psph007 = '",p_psph009,"'",
+               #"      AND psph010 = '",p_psph009,"'",
+               ##160608-00013#2 20160620 modify by ming -----(E) 
+               "      AND psph011 = '",p_psph009,"'",
+               #160818-00022#1-e-mod
+               "      AND psph009 = '",g_psph009,"'",
+               "      AND psph016 != '0'"
+   PREPARE apsr002_x01_prepare_bom FROM l_sql
+   DECLARE apsr002_x01_bom CURSOR FOR apsr002_x01_prepare_bom
+   LET l_ac = l_ac + 1
+   FOREACH apsr002_x01_bom INTO l_psph[l_ac].*
+      IF STATUS THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.code   = STATUS
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         LET g_rep_success = 'N'
+         EXIT FOREACH
+      END IF
+      LET l_ac = l_ac + 1
+   END FOREACH
+   LET l_type = p_type
+   LET l_pid = p_id
+   LET l_psphlen = l_psph.getLength() - 1
+   IF l_psphlen < 0 THEN
+      LET l_psphlen = 0
+   END IF
+   #輸出
+   FOR l_ac = 1 TO l_psphlen
+           LET p_id = p_id + 1
+           IF p_id < g_id THEN
+              LET p_id = g_id +1 
+           END IF
+           IF p_id = g_id THEN
+              LET p_id = p_id + 1
+           END IF
+           LET g_id = p_id
+           LET l_id = g_id
+           
+           #160503-00030#14 --s mark
+           #INITIALIZE l_imaal003,l_imaal004,l_inayl003 TO NULL
+           #CALL s_desc_get_item_desc(l_psph[l_ac].psph040) RETURNING l_imaal003,l_imaal004
+           #CALL s_desc_gzcbl004_desc(4027,l_psph[l_ac].psph016) RETURNING l_psph[l_ac].l_psph016_desc
+           #IF l_psph[l_ac].psph016 = 'I' THEN
+           #   CALL s_desc_get_stock_desc (p_psphsite,l_psph[l_ac].psph024) RETURNING l_inayl003  
+           #   CALL apsr002_x01_assemble(l_psph[l_ac].psph024,l_inayl003,'.') RETURNING l_psph[l_ac].l_psph024_desc
+           #END IF
+           #160503-00030#14 --e mark
+##           IF l_psph[l_ac].l_ac <> (g_id+2) THEN
+##              LET p_id = p_id + l_id_add
+##              IF p_id < g_id THEN
+##                 LET p_id = g_id +1 
+##              END IF
+##              IF p_id = g_id THEN
+##                 LET p_id = p_id + 1
+##              END IF
+##              LET g_id = p_id
+##              LET l_id = g_id
+##           END IF
+           #EXECUTE insert_prep USING l_psph[l_ac].psph010,l_psph[l_ac].psph040,l_imaal003,l_imaal004,l_psph[l_ac].psph019,l_psph[l_ac].psph026,l_psph[l_ac].l_psph016_desc,l_psph[l_ac].l_psph024_desc,l_pid,l_id                            #160503-00030#14 mark
+           EXECUTE insert_prep USING l_psph[l_ac].psph010,l_psph[l_ac].psph040,l_psph[l_ac].l_imaal003,l_psph[l_ac].l_imaal004,l_psph[l_ac].psph019,l_psph[l_ac].psph026,l_psph[l_ac].l_psph016_desc,l_psph[l_ac].l_psph024_desc,l_pid,l_id   #160503-00030#14 add
+           
+           IF NOT cl_null(l_psph[l_ac].psph010) THEN
+               CALL apsr002_x01_bom(l_type,l_pid,l_id,p_psphent,p_psphsite,p_psph001,p_psph002,l_psph[l_ac].psph010)
+               RETURNING l_success
+           END IF
+   END FOR
+   
+#   IF g_first = 'N' THEN
+#      LET p_id = p_id + 1
+#      IF g_id < p_id THEN
+#         LET g_id = p_id
+#      END IF
+#   END IF
+   RETURN l_psphlen
+END FUNCTION
+
+PRIVATE FUNCTION apsr002_x01_assemble(p_str1,p_str2,p_mid)
+   DEFINE p_str1     STRING
+   DEFINE p_str2     STRING
+   DEFINE r_assemble STRING
+   DEFINE p_mid   LIKE type_t.chr1
+   IF cl_null(p_str1) OR cl_null(p_str2) THEN
+      LET r_assemble = p_str1 , p_mid , p_str2
+   ELSE
+      LET r_assemble = p_str1 || p_mid || p_str2
+   END IF
+   IF cl_null(p_str1) AND cl_null(p_str2) THEN
+      INITIALIZE r_assemble TO NULL
+   END IF
+   RETURN r_assemble
+END FUNCTION
+
+ 
+{</section>}
+ 

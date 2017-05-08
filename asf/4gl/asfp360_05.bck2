@@ -1,0 +1,1677 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="asfp360_05.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0007(2014-10-10 17:55:10), PR版次:0007(2016-10-18 11:28:24)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000098
+#+ Filename...: asfp360_05
+#+ Description: 來源工單挑選2-單顆挑選
+#+ Creator....: 00768(2014-08-25 11:29:28)
+#+ Modifier...: 00768 -SD/PR- 05384
+ 
+{</section>}
+ 
+{<section id="asfp360_05.global" >}
+#應用 p00 樣板自動產生(Version:4)
+#add-point:填寫註解說明
+#150101 单位转换率改写
+#150119 对数量做单位取位
+#160727-00019#17 2016/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp3 ——> asfp360_tmp04,asfp360_05_temp4 ——> asfp360_tmp05
+#160901-00062    2016/09/01 by liuym 工单单颗挪料应该是不卡控两张工单生产料号要一样， 只有成套挪料才管控
+#161013-00051#1  2016/10/18 By shiun  整批調整據點組織開窗
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+GLOBALS "../../asf/4gl/asfp360.inc"
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asfp360_05.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asfp360_05.global_variable" >}
+#add-point:自定義模組變數(Module Variable)
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE g_error_show          LIKE type_t.num5
+
+DEFINE l_ac                  LIKE type_t.num5
+DEFINE g_detail_idx1         LIKE type_t.num5              #單身1目前所在筆數
+DEFINE g_detail_idx3         LIKE type_t.num5              #單身3目前所在筆數
+DEFINE g_detail_idx4         LIKE type_t.num5              #單身4目前所在筆數
+
+DEFINE g_current_page        LIKE type_t.num5
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asfp360_05.other_dialog" >}
+
+DIALOG asfp360_05_construct()
+   DEFINE l_success    LIKE type_t.num5
+   
+   CONSTRUCT g_wc_05 ON sfaadocno,sfaa010,sfaa002,sfaa017,sfaa018
+        FROM sfaadocno_05a,sfaa010_05a,sfaa002_05a,sfaa017_05a,sfaa018_05a
+      BEFORE CONSTRUCT
+
+      AFTER CONSTRUCT
+
+      ON ACTION controlp INFIELD sfaadocno_05a  #工單單號
+         #開窗c段
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'c'
+         LET g_qryparam.reqry = FALSE
+         LET g_qryparam.where = " sfaasite = '",g_site,"' AND sfaastus='F'"
+         CALL q_sfaadocno_1()                     #呼叫開窗
+         DISPLAY g_qryparam.return1 TO sfaadocno_05a  #顯示到畫面上
+         NEXT FIELD sfaadocno_05a                  #返回原欄位
+
+      ON ACTION controlp INFIELD sfaa010_05a  #生產料號
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'c'
+         LET g_qryparam.reqry = FALSE
+         CALL q_imaa001_9()                     #呼叫開窗
+         DISPLAY g_qryparam.return1 TO sfaa010_05a  #顯示到畫面上
+         NEXT FIELD sfaa010_05a                     #返回原欄位
+      
+      ON ACTION controlp INFIELD sfaa002_05a  #生管員
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'c'
+         LET g_qryparam.reqry = FALSE
+         CALL q_ooag001()                      #呼叫開窗
+         DISPLAY g_qryparam.return1 TO sfaa002_05a  #顯示到畫面上
+         NEXT FIELD sfaa002_05a                     #返回原欄位
+      
+      ON ACTION controlp INFIELD sfaa017_05a  #部門廠商
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'c'
+         LET g_qryparam.reqry = FALSE
+         CALL q_ooeg001_1()                     #呼叫開窗
+         DISPLAY g_qryparam.return1 TO sfaa017_05a  #顯示到畫面上
+         NEXT FIELD sfaa017_05a                     #返回原欄位
+      
+      ON ACTION controlp INFIELD sfaa018_05a  #協作據點
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'c'
+         LET g_qryparam.reqry = FALSE
+         #mod--161013-00051#1 By shiun--(S)
+#         CALL q_ooef001()                           #呼叫開窗
+         CALL q_ooef001_1()
+         #mod--161013-00051#1 By shiun--(E)
+         DISPLAY g_qryparam.return1 TO sfaa018_05a  #顯示到畫面上
+         NEXT FIELD sfaa018_05a                    #返回原欄位
+      
+      ON ACTION sel_from_05  #匹配來源工單
+         CALL asfp360_05_gen_b() RETURNING l_success
+         CALL asfp360_05_show()
+
+   END CONSTRUCT
+END DIALOG
+
+DIALOG asfp360_05_display1()
+   DISPLAY ARRAY g_asfp360_05_d1 TO s_asfp360_05_detail1.* ATTRIBUTE(COUNT = g_rec_b05_1)
+      BEFORE DISPLAY
+         CALL FGL_SET_ARR_CURR(g_detail_idx1)
+         LET l_ac = DIALOG.getCurrentRow("s_asfp360_05_detail1")
+         LET g_current_page = 1
+         CALL asfp360_05_idx_chk()
+
+      BEFORE ROW
+         CALL asfp360_05_idx_chk()
+         LET l_ac = DIALOG.getCurrentRow("s_asfp360_05_detail1")
+         LET g_detail_idx1 = l_ac
+         
+         CALL asfp360_05_b_fill3(g_asfp360_05_d1[g_detail_idx1].sfba002,g_asfp360_05_d1[g_detail_idx1].sfba003,
+                                 g_asfp360_05_d1[g_detail_idx1].sfba004,g_asfp360_05_d1[g_detail_idx1].sfba005,
+                                 g_asfp360_05_d1[g_detail_idx1].sfba006,g_asfp360_05_d1[g_detail_idx1].sfba021,
+                                 g_asfp360_05_d1[g_detail_idx1].sfba014,g_asfp360_05_d1[g_detail_idx1].unitr)
+         IF g_rec_b05_3 = 0 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  'ain-00308'
+            LET g_errparam.extend =  ''
+            LET g_errparam.popup = FALSE
+            CALL cl_err()
+         END IF
+
+   END DISPLAY
+END DIALOG
+
+DIALOG asfp360_05_display3()
+   DISPLAY ARRAY g_asfp360_05_d3 TO s_asfp360_05_detail3.* ATTRIBUTE(COUNT = g_rec_b05_3)
+      BEFORE DISPLAY
+         CALL FGL_SET_ARR_CURR(g_detail_idx3)
+         LET l_ac = DIALOG.getCurrentRow("s_asfp360_05_detail3")
+         LET g_current_page = 3
+         CALL asfp360_05_idx_chk()
+
+      BEFORE ROW
+        CALL asfp360_05_idx_chk()
+        LET l_ac = DIALOG.getCurrentRow("s_asfp360_05_detail3")
+        LET g_detail_idx3 = l_ac
+        CALL asfp360_05_b_fill4(g_asfp360_05_d1[g_detail_idx1].sfba002,g_asfp360_05_d1[g_detail_idx1].sfba003,
+                                g_asfp360_05_d1[g_detail_idx1].sfba004,g_asfp360_05_d1[g_detail_idx1].sfba005,
+                                g_asfp360_05_d1[g_detail_idx1].sfba006,g_asfp360_05_d1[g_detail_idx1].sfba021,
+                                g_asfp360_05_d1[g_detail_idx1].sfba014,g_asfp360_05_d1[g_detail_idx1].unitr,
+                                g_asfp360_05_d3[g_detail_idx3].sfaadocno,g_asfp360_05_d3[g_detail_idx3].sfbaseq,
+                                g_asfp360_05_d3[g_detail_idx3].sfbaseq1)
+        
+   END DISPLAY
+END DIALOG
+
+DIALOG asfp360_05_display4()
+   DISPLAY ARRAY g_asfp360_05_d4 TO s_asfp360_05_detail4.* ATTRIBUTE(COUNT = g_rec_b05_4)
+      BEFORE DISPLAY
+         CALL FGL_SET_ARR_CURR(g_detail_idx4)
+         LET l_ac = DIALOG.getCurrentRow("s_asfp360_05_detail4")
+         LET g_current_page = 4
+         CALL asfp360_05_idx_chk()
+
+      BEFORE ROW
+        CALL asfp360_05_idx_chk()
+        LET l_ac = DIALOG.getCurrentRow("s_asfp360_05_detail4")
+        LET g_detail_idx4 = l_ac
+
+   END DISPLAY
+END DIALOG
+
+DIALOG asfp360_05_input3()
+   DEFINE l_success    LIKE type_t.num5
+   DEFINE l_rate       LIKE inaj_t.inaj014  #单位换算率
+   DEFINE l_count      LIKE type_t.num5
+   
+   INPUT ARRAY g_asfp360_05_d3 FROM s_asfp360_05_detail3.*
+       ATTRIBUTE(COUNT = g_rec_b05_3,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+               INSERT ROW = FALSE,DELETE ROW = FALSE,APPEND ROW = FALSE)
+
+       BEFORE INPUT
+          IF cl_null(g_detail_idx1) OR g_detail_idx1 = 0 THEN
+             LET g_detail_idx1 = 1
+          END IF
+          CALL asfp360_05_b_fill3(g_asfp360_05_d1[g_detail_idx1].sfba002,g_asfp360_05_d1[g_detail_idx1].sfba003,
+                                  g_asfp360_05_d1[g_detail_idx1].sfba004,g_asfp360_05_d1[g_detail_idx1].sfba005,
+                                  g_asfp360_05_d1[g_detail_idx1].sfba006,g_asfp360_05_d1[g_detail_idx1].sfba021,
+                                  g_asfp360_05_d1[g_detail_idx1].sfba014,g_asfp360_05_d1[g_detail_idx1].unitr)
+          LET g_rec_b05_3 = g_asfp360_05_d3.getLength()
+
+       BEFORE ROW
+          LET l_ac = ARR_CURR()
+          LET g_detail_idx3 = l_ac
+          LET g_asfp360_05_d3_t.* = g_asfp360_05_d3[l_ac].*  #BACKUP
+          LET g_asfp360_05_d3_o.* = g_asfp360_05_d3[l_ac].*  #BACKUP*
+          CALL asfp360_05_b_fill4(g_asfp360_05_d1[g_detail_idx1].sfba002,g_asfp360_05_d1[g_detail_idx1].sfba003,
+                                  g_asfp360_05_d1[g_detail_idx1].sfba004,g_asfp360_05_d1[g_detail_idx1].sfba005,
+                                  g_asfp360_05_d1[g_detail_idx1].sfba006,g_asfp360_05_d1[g_detail_idx1].sfba021,
+                                  g_asfp360_05_d1[g_detail_idx1].sfba014,g_asfp360_05_d1[g_detail_idx1].unitr,
+                                  g_asfp360_05_d3[g_detail_idx3].sfaadocno,g_asfp360_05_d3[g_detail_idx3].sfbaseq,
+                                  g_asfp360_05_d3[g_detail_idx3].sfbaseq1)
+          CALL cl_set_comp_entry("outqty_05b3",TRUE)
+          IF g_asfp360_05_d3[l_ac].sel = 'N' THEN
+             CALL cl_set_comp_entry("outqty_05b3",FALSE)
+          END IF
+          
+       ON CHANGE sel_05b3
+          #检查
+          CALL asfp360_05_chk_column_b3(l_ac,'sel_05b3') RETURNING l_success
+          IF NOT l_success THEN
+             LET g_asfp360_05_d3[l_ac].sel = g_asfp360_05_d3_o.sel
+             NEXT FIELD CURRENT
+          END IF
+
+          IF g_asfp360_05_d3[l_ac].sel = 'N' THEN
+             LET g_asfp360_05_d3[l_ac].outqty = 0
+             LET g_asfp360_05_d3[l_ac].outqtyr= 0
+          END IF
+
+          CALL s_transaction_begin()
+          #更新临时表
+          CALL asfp360_05_upd_temp3(l_ac) RETURNING l_success
+          IF NOT l_success THEN
+             LET g_asfp360_05_d3[l_ac].sel = g_asfp360_05_d3_o.sel
+             CALL s_transaction_end('N','0')
+             NEXT FIELD CURRENT
+          END IF
+          #刷新单身显示
+          CALL asfp360_05_b_fill1()
+          #旧值备份
+          LET g_asfp360_05_d3_o.sel =g_asfp360_05_d3[l_ac].sel
+          CALL s_transaction_end('Y','0')
+          
+          CALL cl_set_comp_entry("outqty_05b3",TRUE)
+          IF g_asfp360_05_d3[l_ac].sel = 'N' THEN
+             CALL cl_set_comp_entry("outqty_05b3",FALSE)
+          END IF
+
+       ON CHANGE outqty_05b3
+          #add 150119 单位取位
+          IF NOT cl_null(g_asfp360_05_d3[l_ac].outqty) THEN
+             CALL s_aooi250_get_msg(g_asfp360_05_d3[l_ac].sfba014) RETURNING l_success,g_ooca002,g_ooca004
+             IF l_success THEN
+                CALL s_num_round(g_ooca004,g_asfp360_05_d3[l_ac].outqty,g_ooca002) RETURNING g_asfp360_05_d3[l_ac].outqty
+                #DISPLAY BY NAME g_asfp360_05_d3[l_ac].outqty
+             END IF
+          END IF
+          #add 150119 end
+          #检查
+          CALL asfp360_05_chk_column_b3(l_ac,'outqty_05b3') RETURNING l_success
+          IF NOT l_success THEN
+             LET g_asfp360_05_d3[l_ac].outqty = g_asfp360_05_d3_o.outqty
+             NEXT FIELD CURRENT
+          END IF
+          #计算参考单位数量
+          #计算换算率
+          IF cl_null(g_asfp360_05_d3[l_ac].unitr) THEN
+             LET g_asfp360_05_d3[l_ac].outqtyr = 0
+          ELSE
+             #mod 150101
+             #CALL s_aimi190_get_convert(g_asfp360_05_d3[l_ac].sfba006,g_asfp360_05_d3[l_ac].sfba014,g_asfp360_05_d3[l_ac].unitr)
+             #   RETURNING l_success,l_rate
+             #IF NOT l_success THEN
+             #   LET l_rate = 1
+             #END IF
+             #LET g_asfp360_05_d3[l_ac].outqtyr = g_asfp360_05_d3[l_ac].outqty * l_rate
+             CALL s_aooi250_convert_qty(g_asfp360_05_d3[l_ac].sfba006,g_asfp360_05_d3[l_ac].sfba014,g_asfp360_05_d3[l_ac].unitr,g_asfp360_05_d3[l_ac].outqty)
+                RETURNING l_success,g_asfp360_05_d3[l_ac].outqtyr
+             IF NOT l_success THEN
+                LET g_asfp360_05_d3[l_ac].outqtyr = g_asfp360_05_d3[l_ac].outqty
+             END IF
+             #mod 150101 end
+          END IF
+          CALL s_transaction_begin()
+          #更新临时表
+          CALL asfp360_05_upd_temp3(l_ac) RETURNING l_success
+          IF NOT l_success THEN
+             LET g_asfp360_05_d3[l_ac].outqty = g_asfp360_05_d3_o.outqty
+             LET g_asfp360_05_d3[l_ac].outqtyr= g_asfp360_05_d3_o.outqtyr
+             CALL s_transaction_end('N','0')
+             NEXT FIELD CURRENT
+          END IF
+          #刷新单身显示
+          #CALL asfp360_05_b_fill3(g_asfp360_05_d1[g_detail_idx1].sfba002,g_asfp360_05_d1[g_detail_idx1].sfba003,
+          #                        g_asfp360_05_d1[g_detail_idx1].sfba004,g_asfp360_05_d1[g_detail_idx1].sfba005,
+          #                        g_asfp360_05_d1[g_detail_idx1].sfba006,g_asfp360_05_d1[g_detail_idx1].sfba021,
+          #                        g_asfp360_05_d1[g_detail_idx1].sfba014,g_asfp360_05_d1[g_detail_idx1].unitr)
+          CALL asfp360_05_b_fill1()
+          #旧值备份
+          LET g_asfp360_05_d3_o.outqty = g_asfp360_05_d3[l_ac].outqty
+          CALL s_transaction_end('Y','0')
+
+       ON ROW CHANGE
+
+       AFTER ROW
+
+       AFTER INPUT
+          #这里不能检查，因为上一步也会走到这里
+          #若不检查，也不能做更新的动作，否则数据就可能会不对
+
+       #此处不好用，还需输入数量，并对数量做管控
+       #ON ACTION selall
+       #   CALL asfp360_05_sel_all("Y")
+       #
+       #ON ACTION selnone
+       #   CALL asfp360_05_sel_all("N")
+
+   END INPUT
+
+END DIALOG
+
+DIALOG asfp360_05_input4()
+   DEFINE l_qty_sum    LIKE sfdc_t.sfdc007
+   DEFINE l_imaf071    LIKE imaf_t.imaf071
+   DEFINE l_imaf081    LIKE imaf_t.imaf081
+   DEFINE l_success    LIKE type_t.num5
+
+   INPUT ARRAY g_asfp360_05_d4 FROM s_asfp360_05_detail4.*
+       ATTRIBUTE(COUNT = g_rec_b05_4,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+               INSERT ROW = FALSE,DELETE ROW = FALSE,APPEND ROW = FALSE)
+       BEFORE INPUT
+          CALL asfp360_05_b_fill4(g_asfp360_05_d1[g_detail_idx1].sfba002,g_asfp360_05_d1[g_detail_idx1].sfba003,
+                                  g_asfp360_05_d1[g_detail_idx1].sfba004,g_asfp360_05_d1[g_detail_idx1].sfba005,
+                                  g_asfp360_05_d1[g_detail_idx1].sfba006,g_asfp360_05_d1[g_detail_idx1].sfba021,
+                                  g_asfp360_05_d1[g_detail_idx1].sfba014,g_asfp360_05_d1[g_detail_idx1].unitr,
+                                  g_asfp360_05_d3[g_detail_idx3].sfaadocno,g_asfp360_05_d3[g_detail_idx3].sfbaseq,
+                                  g_asfp360_05_d3[g_detail_idx3].sfbaseq1)
+          LET g_rec_b05_4 = g_asfp360_05_d4.getLength()
+
+       BEFORE ROW
+          LET l_ac = ARR_CURR()
+          LET g_detail_idx4 = l_ac
+          LET g_asfp360_05_d4_t.* = g_asfp360_05_d4[l_ac].*  #BACKUP
+          LET g_asfp360_05_d4_o.* = g_asfp360_05_d4[l_ac].*  #BACKUP*
+          CALL cl_set_comp_entry("outqty_05b4",TRUE)
+          IF g_asfp360_05_d4[l_ac].sel = 'N' THEN
+             CALL cl_set_comp_entry("outqty_05b4",FALSE)
+          END IF
+
+
+       ON CHANGE sel_05b4
+          #检查
+          CALL asfp360_05_chk_column_b4(l_ac,'sel_05b4') RETURNING l_success
+          IF NOT l_success THEN
+             LET g_asfp360_05_d4[l_ac].sel = g_asfp360_05_d4_o.sel
+             NEXT FIELD CURRENT
+          END IF
+          IF g_asfp360_05_d4[l_ac].sel = 'N' THEN
+             LET g_asfp360_05_d4[l_ac].outqty = 0
+          END IF
+          CALL s_transaction_begin()
+          #更新临时表
+          CALL asfp360_05_upd_temp4(l_ac) RETURNING l_success
+          IF NOT l_success THEN
+             LET g_asfp360_05_d4[l_ac].sel = g_asfp360_05_d4_o.sel
+             CALL s_transaction_end('N','0')
+             NEXT FIELD CURRENT
+          END IF
+          #刷新单身显示
+          #CALL asfp360_05_b_fill4(g_asfp360_05_d1[g_detail_idx1].sfba002,g_asfp360_05_d1[g_detail_idx1].sfba003,
+          #                        g_asfp360_05_d1[g_detail_idx1].sfba004,g_asfp360_05_d1[g_detail_idx1].sfba005,
+          #                        g_asfp360_05_d1[g_detail_idx1].sfba006,g_asfp360_05_d1[g_detail_idx1].sfba021,
+          #                        g_asfp360_05_d1[g_detail_idx1].sfba014,g_asfp360_05_d1[g_detail_idx1].unitr,
+          #                        g_asfp360_05_d3[g_detail_idx3].sfaadocno,g_asfp360_05_d3[g_detail_idx3].sfbaseq,
+          #                        g_asfp360_05_d3[g_detail_idx3].sfbaseq1)
+          #旧值备份
+          LET g_asfp360_05_d4_o.sel =g_asfp360_05_d4[l_ac].sel
+          CALL s_transaction_end('Y','0')
+
+          CALL cl_set_comp_entry("outqty_05b4",TRUE)
+          IF g_asfp360_05_d4[l_ac].sel = 'N' THEN
+             CALL cl_set_comp_entry("outqty_05b4",FALSE)
+          END IF
+
+       ON CHANGE outqty_05b4
+          #add 150119 单位取位
+          IF NOT cl_null(g_asfp360_05_d1[g_detail_idx1].sfba014) THEN
+             CALL s_aooi250_get_msg(g_asfp360_05_d1[g_detail_idx1].sfba014) RETURNING l_success,g_ooca002,g_ooca004
+             IF l_success THEN
+                CALL s_num_round(g_ooca004,g_asfp360_05_d4[l_ac].outqty,g_ooca002) RETURNING g_asfp360_05_d4[l_ac].outqty
+                #DISPLAY BY NAME g_asfp360_05_d4[l_ac].outqty
+             END IF
+          END IF
+          #add 150119 end
+          #检查
+          CALL asfp360_05_chk_column_b4(l_ac,'outqty_05b4') RETURNING l_success
+          IF NOT l_success THEN
+             LET g_asfp360_05_d4[l_ac].outqty = g_asfp360_05_d4_o.outqty
+             NEXT FIELD CURRENT
+          END IF
+          CALL s_transaction_begin()
+          #更新临时表
+          CALL asfp360_05_upd_temp4(l_ac) RETURNING l_success
+          IF NOT l_success THEN
+             LET g_asfp360_05_d4[l_ac].outqty = g_asfp360_05_d4_o.outqty
+             CALL s_transaction_end('N','0')
+             NEXT FIELD CURRENT
+          END IF
+          #刷新单身显示
+          #CALL asfp360_05_b_fill4(g_asfp360_05_d1[g_detail_idx1].sfba002,g_asfp360_05_d1[g_detail_idx1].sfba003,
+          #                        g_asfp360_05_d1[g_detail_idx1].sfba004,g_asfp360_05_d1[g_detail_idx1].sfba005,
+          #                        g_asfp360_05_d1[g_detail_idx1].sfba006,g_asfp360_05_d1[g_detail_idx1].sfba021,
+          #                        g_asfp360_05_d1[g_detail_idx1].sfba014,g_asfp360_05_d1[g_detail_idx1].unitr,
+          #                        g_asfp360_05_d3[g_detail_idx3].sfaadocno,g_asfp360_05_d3[g_detail_idx3].sfbaseq,
+          #                        g_asfp360_05_d3[g_detail_idx3].sfbaseq1)
+          #旧值备份
+          LET g_asfp360_05_d4_o.outqty = g_asfp360_05_d4[l_ac].outqty
+          CALL s_transaction_end('Y','0')
+
+
+       ON ROW CHANGE
+
+       AFTER ROW
+
+
+       AFTER INPUT
+          #能否进入到下一步的判断不能写在这，因为上一步也会走到这段
+          #CALL asfp360_02_upd_temp('0') RETURNING l_success #更新temp3 temp2
+          #IF NOT l_success THEN
+          #   NEXT FIELD sel_02_5
+          #END IF
+
+       #此处不好用，还需输入数量，并对数量做管控
+       #ON ACTION selall
+       #   CALL asfp360_05_sel_all("Y")
+       #
+       #ON ACTION selnone
+       #   CALL asfp360_05_sel_all("N")
+
+   END INPUT
+END DIALOG
+
+ 
+{</section>}
+ 
+{<section id="asfp360_05.other_function" readonly="Y" >}
+
+PUBLIC FUNCTION asfp360_05_init()
+   WHENEVER ERROR CONTINUE
+
+   CALL cl_set_comp_required("sfaadocno",FALSE)
+
+   CALL cl_set_comp_visible("sfba005_05b1",FALSE) #bom料号放画面方便计算用，不显示于画面中
+   
+   #當整體參數有使用參考單位時才顯示
+   IF g_ref_unit = 'N' THEN
+      CALL cl_set_comp_visible("unitr_05b1,plan_inqtyr_05b1,inqtyr_sum_05b1",FALSE) #參考單位
+      CALL cl_set_comp_visible("unitr_05b3,outqtyr_05b3",FALSE) #參考單位
+   END IF
+END FUNCTION
+
+PUBLIC FUNCTION asfp360_05_create_temp_table()
+   DEFINE r_success         LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+
+   IF NOT asfp360_05_drop_temp_table() THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   CREATE TEMP TABLE asfp360_tmp04(   #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp3 ——> asfp360_tmp04
+      sel            LIKE type_t.chr1,      #选择
+      sfba002       LIKE sfba_t.sfba002,   #部位
+      sfba003       LIKE sfba_t.sfba003,   #作业
+      sfba004       LIKE sfba_t.sfba004,   #作业序
+      sfba005       LIKE sfba_t.sfba005,   #BOM料号
+      sfba006       LIKE sfba_t.sfba006,   #发料料号
+      sfba021       LIKE sfba_t.sfba021,   #特征
+      sfba014       LIKE sfba_t.sfba014,   #单位
+      unitr         LIKE sfba_t.sfba014,   #参考单位
+      sfaadocno      LIKE sfaa_t.sfaadocno, #工单单号--key
+      sfaa010        LIKE sfaa_t.sfaa010,   #生产料号
+      sfaa012        LIKE sfaa_t.sfaa012,   #生产数量
+      sfaa049        LIKE sfaa_t.sfaa049,   #已发套数
+      sfaa050        LIKE sfaa_t.sfaa050,   #已入库量
+      sfaa019        LIKE sfaa_t.sfaa019,   #预计开工日
+      sfaa020        LIKE sfaa_t.sfaa020,   #预计完工日
+      sfbaseq        LIKE sfba_t.sfbaseq,  #项次--key
+      sfbaseq1       LIKE sfba_t.sfbaseq1, #项序--key
+      sfba013        LIKE sfba_t.sfba013,  #应发
+      sfba016        LIKE sfba_t.sfba016,  #已发
+      can_outqty     LIKE sfaa_t.sfaa049,  #可拨出数量
+      outqty         LIKE sfba_t.sfba016,  #拟拨出数量
+      outqtyr        LIKE sfba_t.sfba016   #参考单位拨出数量
+      )
+   IF SQLCA.sqlcode != 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create asfp360_tmp04'  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp3 ——> asfp360_tmp04
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   CREATE UNIQUE INDEX asfp360_tmp04_01 on asfp360_tmp04 (sfba002,sfba003,sfba004,sfba005,sfba006,sfba021,sfba014,unitr,sfaadocno,sfbaseq,sfbaseq1)  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp3 ——> asfp360_tmp04
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create index asfp360_tmp04'  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp3 ——> asfp360_tmp04
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   CREATE TEMP TABLE asfp360_tmp05(  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp4 ——> asfp360_tmp05
+      sel            LIKE type_t.chr1,
+      sfba002       LIKE sfba_t.sfba002,   #部位
+      sfba003       LIKE sfba_t.sfba003,   #作业
+      sfba004       LIKE sfba_t.sfba004,   #作业序
+      sfba005       LIKE sfba_t.sfba005,   #BOM料号
+      sfba006       LIKE sfba_t.sfba006,   #发料料号
+      sfba021       LIKE sfba_t.sfba021,   #特征
+      sfba014       LIKE sfba_t.sfba014,   #单位
+      unitr         LIKE sfba_t.sfba014,   #参考单位
+      sfaadocno      LIKE sfaa_t.sfaadocno, #工单单号
+      sfbaseq        LIKE sfba_t.sfbaseq,   #工单项次
+      sfbaseq1       LIKE sfba_t.sfbaseq1,  #工单项序
+      inaodocno      LIKE inao_t.inaodocno,#发料单号
+      inaoseq        LIKE inao_t.inaoseq,  #项次
+      inaoseq1       LIKE inao_t.inaoseq1, #项序
+      inaoseq2       LIKE inao_t.inaoseq2, #序号
+      inao001        LIKE inao_t.inao001,  #料件编号
+      inao008        LIKE inao_t.inao008,  #制造批号
+      inao009        LIKE inao_t.inao009,  #制造序号
+      inao010        LIKE inao_t.inao010,  #制造日期
+      can_outqty     LIKE inao_t.inao012,  #可拨出数量
+      outqty         LIKE inao_t.inao012   #数量
+      )
+   IF SQLCA.sqlcode != 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create asfp360_tmp05'  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp4 ——> asfp360_tmp05
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   CREATE UNIQUE INDEX asfp360_tmp05_01 on asfp360_tmp05 (sfba002,sfba003,sfba004,sfba005,sfba006,sfba021,sfba014,unitr,sfaadocno,sfbaseq,sfbaseq1,inaodocno,inaoseq,inaoseq1,inaoseq2)  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp4 ——> asfp360_tmp05
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create index asfp360_tmp05'  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp4 ——> asfp360_tmp05
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   RETURN r_success
+
+END FUNCTION
+
+PUBLIC FUNCTION asfp360_05_drop_temp_table()
+   DEFINE r_success          LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+
+   LET r_success = TRUE
+   
+   DROP TABLE asfp360_tmp04   #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp3 ——> asfp360_tmp04
+   IF NOT (SQLCA.sqlcode = 0 OR SQLCA.sqlcode = -206) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'drop asfp360_tmp04'  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp3 ——> asfp360_tmp04
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   DROP TABLE asfp360_tmp05  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp4 ——> asfp360_tmp05
+   IF NOT (SQLCA.sqlcode = 0 OR SQLCA.sqlcode = -206) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'drop asfp360_tmp05'  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp4 ——> asfp360_tmp05
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   RETURN r_success
+
+END FUNCTION
+
+PUBLIC FUNCTION asfp360_05_delete_temp_table()
+   WHENEVER ERROR CONTINUE
+
+   DELETE FROM asfp360_tmp04   #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp3 ——> asfp360_tmp04
+   DELETE FROM asfp360_tmp05   #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp4 ——> asfp360_tmp05
+END FUNCTION
+
+PUBLIC FUNCTION asfp360_05_b_fill1()
+   DEFINE p_flag       LIKE type_t.chr1   #Y展开 N不展开
+   DEFINE l_sql        STRING
+   DEFINE l_ac_l       LIKE type_t.num5
+   DEFINE l_rate       LIKE inaj_t.inaj014  #单位换算率
+   DEFINE l_success    LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+   CALL g_asfp360_05_d1.clear()
+
+   LET l_sql = "SELECT sfbaseq,sfbaseq1,sfba002,a.oocql004,sfba003,b.oocql004,",
+               "       sfba004,sfba005,sfba006,imaal003,imaal004, ",
+               "       sfba021,sfba014,oocal003,sfba013,sfba016,no_issue_qty, ",
+               "       plan_inqty,unitr,plan_inqtyr,inqty_sum,inqtyr_sum ",
+               "  FROM asfp360_02_temp LEFT OUTER JOIN imaal_t   ON imaalent = "||g_enterprise||" AND imaal001=sfba006 AND imaal002= '"||g_dlang||"' ",
+               "                       LEFT OUTER JOIN oocql_t a ON a.oocql001= '215' AND a.oocql002 = sfba002 AND a.oocqlent = "||g_enterprise||" AND a.oocql003 = '"||g_dlang||"' ",
+               "                       LEFT OUTER JOIN oocql_t b ON b.oocql001= '221' AND b.oocql002 = sfba003 AND b.oocqlent = "||g_enterprise||" AND b.oocql003 = '"||g_dlang||"' ",
+               "                       LEFT OUTER JOIN oocal_t   ON oocalent = "||g_enterprise||" AND oocal001 = sfba014 AND oocal002 = '"||g_dlang||"' ",
+               " WHERE sel = 'Y' ",
+               "   AND plan_inqty > 0 ",  #拟拨入数量
+               " ORDER BY sfbaseq,sfbaseq1"
+   PREPARE asfp360_05_b_fill1_p FROM l_sql
+   DECLARE asfp360_05_b_fill1_c CURSOR FOR asfp360_05_b_fill1_p
+   LET l_ac_l = 1
+   ERROR "Searching!"
+   FOREACH asfp360_05_b_fill1_c INTO g_asfp360_05_d1[l_ac_l].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:asfp360_05_b_fill1_c"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+
+      LET l_ac_l = l_ac_l + 1
+      IF l_ac_l > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ""
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   LET g_rec_b05_1 = l_ac_l - 1
+   CALL g_asfp360_05_d1.deleteElement(g_asfp360_05_d1.getLength())
+
+   CLOSE asfp360_05_b_fill1_c
+   FREE asfp360_05_b_fill1_p
+
+END FUNCTION
+
+PUBLIC FUNCTION asfp360_05_b_fill3(p_sfba002,p_sfba003,p_sfba004,p_sfba005,p_sfba006,p_sfba021,p_sfba014,p_unitr)
+   DEFINE p_sfba002       LIKE sfba_t.sfba002   #部位
+   DEFINE p_sfba003       LIKE sfba_t.sfba003   #作业
+   DEFINE p_sfba004       LIKE sfba_t.sfba004   #作业序
+   DEFINE p_sfba005       LIKE sfba_t.sfba005   #BOM料号
+   DEFINE p_sfba006       LIKE sfba_t.sfba006   #发料料号
+   DEFINE p_sfba021       LIKE sfba_t.sfba021   #特征
+   DEFINE p_sfba014       LIKE sfba_t.sfba014   #单位
+   DEFINE p_unitr         LIKE sfba_t.sfba014   #参考单位
+   DEFINE l_ac_l          LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+   CALL g_asfp360_05_d3.clear()
+   
+   IF NOT cl_null(p_unitr) THEN
+      LET g_sql = "SELECT sel,sfaadocno,sfaa010,d.imaal003,d.imaal004, ",
+                  "       sfaa012,sfaa049,sfaa050,sfaa019,sfaa020, ",
+                  "       sfbaseq,sfbaseq1,sfba002,a.oocql004,sfba003,b.oocql004, ",
+                  "       sfba004,sfba005,sfba006,c.imaal003,c.imaal004,sfba021,sfba014,oocal003, ",
+                  "       sfba013,sfba016,can_outqty,outqty,unitr,outqtyr ",
+                  "  FROM asfp360_tmp04 LEFT OUTER JOIN imaal_t c ON c.imaalent = "||g_enterprise||" AND c.imaal001=sfba006 AND c.imaal002= '"||g_dlang||"' ",  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp3 ——> asfp360_tmp04
+                  "                        LEFT OUTER JOIN imaal_t d ON d.imaalent = "||g_enterprise||" AND d.imaal001=sfaa010 AND d.imaal002= '"||g_dlang||"' ",
+                  "                        LEFT OUTER JOIN oocql_t a ON a.oocql001= '215' AND a.oocql002 = sfba002 AND a.oocqlent = "||g_enterprise||" AND a.oocql003 = '"||g_dlang||"' ",
+                  "                        LEFT OUTER JOIN oocql_t b ON b.oocql001= '221' AND b.oocql002 = sfba003 AND b.oocqlent = "||g_enterprise||" AND b.oocql003 = '"||g_dlang||"' ",
+                  "                        LEFT OUTER JOIN oocal_t   ON oocalent = "||g_enterprise||" AND oocal001 = sfba014 AND oocal002 = '"||g_dlang||"' ",
+                  "  WHERE sfba002 = '",p_sfba002,"' ",
+                  "    AND sfba003 = '",p_sfba003,"' ",
+                  "    AND sfba004 = '",p_sfba004,"' ",
+                  "    AND sfba005 = '",p_sfba005,"' ",
+                  "    AND sfba006 = '",p_sfba006,"' ",
+                  "    AND sfba021 = '",p_sfba021,"' ",
+                  "    AND sfba014 = '",p_sfba014,"' ",
+                  "    AND unitr   = '",p_unitr,"' ",
+                  " ORDER BY sfaadocno,sfbaseq,sfbaseq1"
+   ELSE
+      LET g_sql = "SELECT sel,sfaadocno,sfaa010,d.imaal003,d.imaal004, ",
+                  "       sfaa012,sfaa049,sfaa050,sfaa019,sfaa020, ",
+                  "       sfbaseq,sfbaseq1,sfba002,a.oocql004,sfba003,b.oocql004, ",
+                  "       sfba004,sfba005,sfba006,c.imaal003,c.imaal004,sfba021,sfba014,oocal003, ",
+                  "       sfba013,sfba016,can_outqty,outqty,unitr,outqtyr ",
+                  "  FROM asfp360_tmp04 LEFT OUTER JOIN imaal_t c ON c.imaalent = "||g_enterprise||" AND c.imaal001=sfba006 AND c.imaal002= '"||g_dlang||"' ",  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp3 ——> asfp360_tmp04
+                  "                        LEFT OUTER JOIN imaal_t d ON d.imaalent = "||g_enterprise||" AND d.imaal001=sfaa010 AND d.imaal002= '"||g_dlang||"' ",
+                  "                        LEFT OUTER JOIN oocql_t a ON a.oocql001= '215' AND a.oocql002 = sfba002 AND a.oocqlent = "||g_enterprise||" AND a.oocql003 = '"||g_dlang||"' ",
+                  "                        LEFT OUTER JOIN oocql_t b ON b.oocql001= '221' AND b.oocql002 = sfba003 AND b.oocqlent = "||g_enterprise||" AND b.oocql003 = '"||g_dlang||"' ",
+                  "                        LEFT OUTER JOIN oocal_t   ON oocalent = "||g_enterprise||" AND oocal001 = sfba014 AND oocal002 = '"||g_dlang||"' ",
+                  "  WHERE sfba002 = '",p_sfba002,"' ",
+                  "    AND sfba003 = '",p_sfba003,"' ",
+                  "    AND sfba004 = '",p_sfba004,"' ",
+                  "    AND sfba005 = '",p_sfba005,"' ",
+                  "    AND sfba006 = '",p_sfba006,"' ",
+                  "    AND sfba021 = '",p_sfba021,"' ",
+                  "    AND sfba014 = '",p_sfba014,"' ",
+                  "    AND unitr IS NULL ",
+                  " ORDER BY sfaadocno,sfbaseq,sfbaseq1"
+   END IF
+            
+   PREPARE asfp360_05_b_fill3_p FROM g_sql
+   DECLARE asfp360_05_b_fill3_c CURSOR FOR asfp360_05_b_fill3_p
+   LET l_ac_l = 1
+   FOREACH asfp360_05_b_fill3_c INTO g_asfp360_05_d3[l_ac_l].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:asfp360_05_b_fill3_c"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+
+      LET l_ac_l = l_ac_l + 1
+
+      IF l_ac_l > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ""
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   CALL g_asfp360_05_d3.deleteElement(g_asfp360_05_d3.getLength())
+
+   FREE asfp360_05_b_fill3_p
+
+END FUNCTION
+
+PUBLIC FUNCTION asfp360_05_b_fill4(p_sfba002,p_sfba003,p_sfba004,p_sfba005,p_sfba006,p_sfba021,p_sfba014,p_unitr,p_sfaadocno,p_sfbaseq,p_sfbaseq1)
+   DEFINE p_sfba002       LIKE sfba_t.sfba002   #部位
+   DEFINE p_sfba003       LIKE sfba_t.sfba003   #作业
+   DEFINE p_sfba004       LIKE sfba_t.sfba004   #作业序
+   DEFINE p_sfba005       LIKE sfba_t.sfba005   #BOM料号
+   DEFINE p_sfba006       LIKE sfba_t.sfba006   #发料料号
+   DEFINE p_sfba021       LIKE sfba_t.sfba021   #特征
+   DEFINE p_sfba014       LIKE sfba_t.sfba014   #单位
+   DEFINE p_unitr         LIKE sfba_t.sfba014   #参考单位
+   DEFINE p_sfaadocno      LIKE sfaa_t.sfaadocno #工单单号
+   DEFINE p_sfbaseq        LIKE sfba_t.sfbaseq   #工单项次
+   DEFINE p_sfbaseq1       LIKE sfba_t.sfbaseq1  #工单项序
+   DEFINE l_inaodocno      LIKE inao_t.inaodocno #发料单号
+   DEFINE l_ac_l           LIKE type_t.num5
+   
+   WHENEVER ERROR CONTINUE
+   CALL g_asfp360_05_d4.clear()
+
+   IF NOT cl_null(p_unitr) THEN
+      LET g_sql = "SELECT sel,inaodocno,inaoseq,inaoseq1,inaoseq2,inao001,imaal003,imaal004, ",
+                  "       inao008,inao009,inao010,can_outqty,outqty ",
+                  "  FROM asfp360_tmp05 LEFT OUTER JOIN imaal_t ON imaalent = "||g_enterprise||" AND imaal001=sfba006 AND imaal002= '"||g_dlang||"' ",  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp4 ——> asfp360_tmp05
+                  " WHERE sfba002 = '",p_sfba002,"' ",   #部位
+                  "   AND sfba003 = '",p_sfba003,"' ",   #作业
+                  "   AND sfba004 = '",p_sfba004,"' ",   #作业序
+                  "   AND sfba005 = '",p_sfba005,"' ",   #BOM料号
+                  "   AND sfba006 = '",p_sfba006,"' ",   #发料料号
+                  "   AND sfba021 = '",p_sfba021,"' ",   #特征
+                  "   AND sfba014 = '",p_sfba014,"' ",   #单位
+                  "   AND unitr   = '",p_unitr,"' ",   #参考单位
+                  "   AND sfaadocno = '",p_sfaadocno,"' ",
+                  "   AND sfbaseq = ",p_sfbaseq,
+                  "   AND sfbaseq1= ",p_sfbaseq1,
+                  " ORDER BY inaodocno,inaoseq,inaoseq1,inaoseq2"
+   ELSE
+      LET g_sql = "SELECT sel,inaodocno,inaoseq,inaoseq1,inaoseq2,inao001,imaal003,imaal004, ",
+                  "       inao008,inao009,inao010,can_outqty,outqty ",
+                  "  FROM asfp360_tmp05 LEFT OUTER JOIN imaal_t ON imaalent = "||g_enterprise||" AND imaal001=sfba006 AND imaal002= '"||g_dlang||"' ",  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp4 ——> asfp360_tmp05
+                  " WHERE sfba002 = '",p_sfba002,"' ",   #部位
+                  "   AND sfba003 = '",p_sfba003,"' ",   #作业
+                  "   AND sfba004 = '",p_sfba004,"' ",   #作业序
+                  "   AND sfba005 = '",p_sfba005,"' ",   #BOM料号
+                  "   AND sfba006 = '",p_sfba006,"' ",   #发料料号
+                  "   AND sfba021 = '",p_sfba021,"' ",   #特征
+                  "   AND sfba014 = '",p_sfba014,"' ",   #单位
+                  "   AND unitr IS NULL ",   #参考单位
+                  "   AND sfaadocno = '",p_sfaadocno,"' ",
+                  "   AND sfbaseq = ",p_sfbaseq,
+                  "   AND sfbaseq1= ",p_sfbaseq1,
+                  " ORDER BY inaodocno,inaoseq,inaoseq1,inaoseq2"
+   END IF
+   PREPARE asfp360_05_b_fill4_p FROM g_sql
+   DECLARE asfp360_05_b_fill4_c CURSOR FOR asfp360_05_b_fill4_p
+   LET l_ac_l = 1
+   FOREACH asfp360_05_b_fill4_c INTO g_asfp360_05_d4[l_ac_l].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:asfp360_05_b_fill4_c"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+
+      LET l_ac_l = l_ac_l + 1
+
+      IF l_ac_l > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ""
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   CALL g_asfp360_05_d4.deleteElement(g_asfp360_05_d4.getLength())
+
+   FREE asfp360_05_b_fill4_p
+END FUNCTION
+
+PUBLIC FUNCTION asfp360_05_idx_chk()
+   IF g_current_page = 1 THEN
+      LET g_detail_idx1 = g_curr_diag.getCurrentRow("s_asfp360_05_detail1")
+      IF g_detail_idx1 > g_asfp360_05_d1.getLength() THEN
+         LET g_detail_idx1 = g_asfp360_05_d1.getLength()
+      END IF
+      IF g_detail_idx1 = 0 AND g_asfp360_05_d1.getLength() <> 0 THEN
+         LET g_detail_idx1 = 1
+      END IF
+   END IF
+   IF g_current_page = 3 THEN
+      LET g_detail_idx3 = g_curr_diag.getCurrentRow("s_asfp360_05_detail3")
+      IF g_detail_idx3 > g_asfp360_05_d3.getLength() THEN
+         LET g_detail_idx3 = g_asfp360_05_d3.getLength()
+      END IF
+      IF g_detail_idx3 = 0 AND g_asfp360_05_d3.getLength() <> 0 THEN
+         LET g_detail_idx3 = 1
+      END IF
+   END IF
+   IF g_current_page = 4 THEN
+      LET g_detail_idx4 = g_curr_diag.getCurrentRow("s_asfp360_05_detail4")
+      IF g_detail_idx4 > g_asfp360_05_d4.getLength() THEN
+         LET g_detail_idx4 = g_asfp360_05_d4.getLength()
+      END IF
+      IF g_detail_idx4 = 0 AND g_asfp360_05_d4.getLength() <> 0 THEN
+         LET g_detail_idx4 = 1
+      END IF
+   END IF
+END FUNCTION
+
+PUBLIC FUNCTION asfp360_05_gen_b()
+   DEFINE r_success    LIKE type_t.num5
+   DEFINE l_cnt        LIKE type_t.num5
+   DEFINE l_sql        STRING
+   DEFINE l_success    LIKE type_t.num5
+   DEFINE l_sfaa010    LIKE sfaa_t.sfaa010  #需求工单生产料号
+   DEFINE l_sfaa011    LIKE sfaa_t.sfaa011  #需求工单特性
+   ##
+   DEFINE l_sfba002       LIKE sfba_t.sfba002   #部位
+   DEFINE l_sfba003       LIKE sfba_t.sfba003   #作业
+   DEFINE l_sfba004       LIKE sfba_t.sfba004   #作业序
+   DEFINE l_sfba005       LIKE sfba_t.sfba005   #BOM料号
+   DEFINE l_sfba006       LIKE sfba_t.sfba006   #发料料号
+   DEFINE l_sfba021       LIKE sfba_t.sfba021   #特征
+   DEFINE l_sfba014       LIKE sfba_t.sfba014   #单位
+   DEFINE l_unitr         LIKE sfba_t.sfba014   #参考单位
+   ##
+   DEFINE l_temp3     RECORD
+                      sel            LIKE type_t.chr1,      #选择
+                      sfba002       LIKE sfba_t.sfba002,   #部位
+                      sfba003       LIKE sfba_t.sfba003,   #作业
+                      sfba004       LIKE sfba_t.sfba004,   #作业序
+                      sfba005       LIKE sfba_t.sfba005,   #BOM料号
+                      sfba006       LIKE sfba_t.sfba006,   #发料料号
+                      sfba021       LIKE sfba_t.sfba021,   #特征
+                      sfba014       LIKE sfba_t.sfba014,   #单位
+                      unitr         LIKE sfba_t.sfba014,   #参考单位
+                      sfaadocno      LIKE sfaa_t.sfaadocno, #工单单号--key
+                      sfaa010        LIKE sfaa_t.sfaa010,   #生产料号
+                      sfaa012        LIKE sfaa_t.sfaa012,   #生产数量
+                      sfaa049        LIKE sfaa_t.sfaa049,   #已发套数
+                      sfaa050        LIKE sfaa_t.sfaa050,   #已入库量
+                      sfaa019        LIKE sfaa_t.sfaa019,   #预计开工日
+                      sfaa020        LIKE sfaa_t.sfaa020,   #预计完工日
+                      sfbaseq        LIKE sfba_t.sfbaseq,  #项次--key
+                      sfbaseq1       LIKE sfba_t.sfbaseq1, #项序--key
+                      sfba013        LIKE sfba_t.sfba013,  #应发
+                      sfba016        LIKE sfba_t.sfba016,  #已发
+                      can_outqty     LIKE sfaa_t.sfaa049,  #可拨出数量
+                      outqty         LIKE sfba_t.sfba016,  #拟拨出数量
+                      outqtyr        LIKE sfba_t.sfba016   #参考单位拨出数量
+                      END RECORD
+   DEFINE l_sfba010   LIKE sfba_t.sfba010  #QPA 分子
+   DEFINE l_sfba011   LIKE sfba_t.sfba011  #QPA 分母
+   DEFINE l_imaf071    LIKE imaf_t.imaf071
+   DEFINE l_imaf081    LIKE imaf_t.imaf081
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+
+   #获取来源工单备料asfp360_05_temp3
+   SELECT sfaa010,sfaa011 INTO l_sfaa010,l_sfaa011
+     FROM sfaa_t 
+    WHERE sfaaent   = g_enterprise
+      AND sfaadocno = g_sfaadocno_01
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = g_sfaadocno_01
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   SELECT COUNT(*) INTO l_cnt FROM asfp360_tmp04  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp3 ——> asfp360_tmp04
+   IF l_cnt > 0 THEN
+      #是否重新產生？
+      IF cl_ask_confirm('anm-00164') THEN
+         CALL asfp360_05_delete_temp_table()
+      ELSE
+         RETURN r_success
+      END IF
+   END IF
+   
+   LET l_sql = "SELECT 'N',sfba002,sfba003,sfba004,sfba005,sfba006,sfba021,sfba014,imaf015, ",
+               "       sfaadocno,sfaa010,sfaa012,sfaa049,sfaa050,sfaa019,sfaa020, ",
+               "       sfbaseq,sfbaseq1,sfba013,sfba016,0,0,0, ",
+               "       sfba010,sfba011,imaf071,imaf081 ",
+               "  FROM sfaa_t,sfba_t LEFT JOIN imaf_t ON imafent="||g_enterprise||" AND imafsite='"||g_site||"' AND imaf001=sfba006 ",
+               " WHERE sfaaent = sfbaent AND sfaadocno=sfbadocno ",
+               "   AND sfaaent =",g_enterprise,
+               "   AND sfaasite='",g_site,"'",
+#160901-00062 mark------s---------     
+#               "   AND sfaa010 = '",l_sfaa010,"' ",  #需求工单生产料号
+#               "   AND sfaa011 = '",l_sfaa011,"' ",  #需求工单特性
+#160901-00062 mark------e---------  
+               "   AND ",g_wc_05 CLIPPED,
+               "   AND sfaadocno !='",g_sfaadocno_01,"' ",  #非需求工单
+               "   AND sfaastus = 'F' AND sfaa047 IS NULL ", #已发放，尚未结案
+               "   AND sfba016 > 0 ",
+               "   AND EXISTS ",  #asfp360_02_temp中存在的
+               "             (SELECT 1 FROM asfp360_02_temp ",
+               "               WHERE asfp360_02_temp.sfba002 = sfba_t.sfba002 ",
+               "                 AND asfp360_02_temp.sfba003 = sfba_t.sfba003 ",
+               "                 AND asfp360_02_temp.sfba004 = sfba_t.sfba004 ",
+               "                 AND asfp360_02_temp.sfba005 = sfba_t.sfba005 ",
+               "                 AND asfp360_02_temp.sfba006 = sfba_t.sfba006 ",
+               "                 AND asfp360_02_temp.sfba021 = sfba_t.sfba021 ",
+               "                 AND asfp360_02_temp.sfba014 = sfba_t.sfba014 ",
+               "                 AND asfp360_02_temp.sel     = 'Y' ",
+               "                 AND asfp360_02_temp.plan_inqty > 0 ",  #拟拨入数量
+               "             )"
+   PREPARE asfp360_05_gen_b_p FROM l_sql
+   DECLARE asfp360_05_gen_b_c CURSOR FOR asfp360_05_gen_b_p
+   FOREACH asfp360_05_gen_b_c INTO l_temp3.*,l_sfba010,l_sfba011,l_imaf071,l_imaf081
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:asfp360_05_gen_b_c"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   
+      #可拨出数量=已发数量-已入库量*標準QPA分子/標準QPA分母
+      LET l_temp3.can_outqty = l_temp3.sfba016 - l_temp3.sfaa050 * l_sfba010 / l_sfba011
+      IF l_temp3.can_outqty <= 0 THEN
+         CONTINUE FOREACH
+      END IF
+      LET l_temp3.outqty  = 0  #拟拨出数量
+      LET l_temp3.outqtyr = 0  #参考单位拨出数量
+      INSERT INTO asfp360_tmp04(sel,  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp3 ——> asfp360_tmp04
+                                   sfba002,sfba003,sfba004,sfba005,
+                                   sfba006,sfba021,sfba014,unitr,
+                                   sfaadocno,sfaa010,sfaa012,sfaa049,
+                                   sfaa050,sfaa019,sfaa020,
+                                   sfbaseq,sfbaseq1,sfba013,sfba016,
+                                   can_outqty,outqty,outqtyr)
+         VALUES (l_temp3.sel,
+                 l_temp3.sfba002   ,l_temp3.sfba003 ,l_temp3.sfba004,l_temp3.sfba005,
+                 l_temp3.sfba006   ,l_temp3.sfba021 ,l_temp3.sfba014,l_temp3.unitr,
+                 l_temp3.sfaadocno ,l_temp3.sfaa010 ,l_temp3.sfaa012,l_temp3.sfaa049,
+                 l_temp3.sfaa050   ,l_temp3.sfaa019 ,l_temp3.sfaa020,
+                 l_temp3.sfbaseq   ,l_temp3.sfbaseq1,l_temp3.sfba013,l_temp3.sfba016,
+                 l_temp3.can_outqty,l_temp3.outqty  ,l_temp3.outqtyr)
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "INSERT asfp360_tmp04"  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp3 ——> asfp360_tmp04
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+
+      #获取批序号asfp360_05_temp4
+      IF l_imaf071='1' OR l_imaf081='1' THEN
+         CALL asfp360_05_get_temp4(l_temp3.sfba002   ,l_temp3.sfba003 ,l_temp3.sfba004,l_temp3.sfba005,
+                                   l_temp3.sfba006   ,l_temp3.sfba021 ,l_temp3.sfba014,l_temp3.unitr,
+                                   l_temp3.sfaadocno,l_temp3.sfbaseq,l_temp3.sfbaseq1,l_temp3.outqty) RETURNING l_success
+         IF NOT l_success THEN
+            LET r_success = FALSE
+            RETURN r_success
+         END IF
+      END IF
+   END FOREACH
+   CLOSE asfp360_05_gen_b_c
+   FREE asfp360_05_gen_b_p
+
+   RETURN r_success
+   
+END FUNCTION
+
+PUBLIC FUNCTION asfp360_05_get_temp4(p_sfba002,p_sfba003,p_sfba004,p_sfba005,p_sfba006,p_sfba021,p_sfba014,p_unitr,p_sfaadocno,p_sfbaseq,p_sfbaseq1,p_outqty)
+   DEFINE p_sfba002       LIKE sfba_t.sfba002   #部位
+   DEFINE p_sfba003       LIKE sfba_t.sfba003   #作业
+   DEFINE p_sfba004       LIKE sfba_t.sfba004   #作业序
+   DEFINE p_sfba005       LIKE sfba_t.sfba005   #BOM料号
+   DEFINE p_sfba006       LIKE sfba_t.sfba006   #发料料号
+   DEFINE p_sfba021       LIKE sfba_t.sfba021   #特征
+   DEFINE p_sfba014       LIKE sfba_t.sfba014   #单位
+   DEFINE p_unitr         LIKE sfba_t.sfba014   #参考单位
+   DEFINE p_sfaadocno      LIKE sfaa_t.sfaadocno #工单单号
+   DEFINE p_sfbaseq        LIKE sfba_t.sfbaseq   #工单项次
+   DEFINE p_sfbaseq1       LIKE sfba_t.sfbaseq1  #工单项序
+   DEFINE p_outqty     LIKE sfba_t.sfba016   #拟拨出数量
+   DEFINE r_success    LIKE type_t.num5
+   DEFINE l_temp4      RECORD
+                       sel            LIKE type_t.chr1,     #选择
+                       sfba002       LIKE sfba_t.sfba002,   #部位
+                       sfba003       LIKE sfba_t.sfba003,   #作业
+                       sfba004       LIKE sfba_t.sfba004,   #作业序
+                       sfba005       LIKE sfba_t.sfba005,   #BOM料号
+                       sfba006       LIKE sfba_t.sfba006,   #发料料号
+                       sfba021       LIKE sfba_t.sfba021,   #特征
+                       sfba014       LIKE sfba_t.sfba014,   #单位
+                       unitr         LIKE sfba_t.sfba014,   #参考单位
+                       sfaadocno      LIKE sfaa_t.sfaadocno, #工单单号
+                       sfbaseq        LIKE sfba_t.sfbaseq,   #工单项次
+                       sfbaseq1       LIKE sfba_t.sfbaseq1,  #工单项序
+                       inaodocno      LIKE inao_t.inaodocno,#发料单号
+                       inaoseq        LIKE inao_t.inaoseq,  #项次
+                       inaoseq1       LIKE inao_t.inaoseq1, #项序
+                       inaoseq2       LIKE inao_t.inaoseq2, #序号
+                       inao001        LIKE inao_t.inao001,  #料件编号
+                       inao008        LIKE inao_t.inao008,  #制造批号
+                       inao009        LIKE inao_t.inao009,  #制造序号
+                       inao010        LIKE inao_t.inao010,  #制造日期
+                       can_outqty     LIKE inao_t.inao012,  #可拨出数量
+                       outqty         LIKE inao_t.inao012   #数量
+                       END RECORD
+   DEFINE l_qty        LIKE inao_t.inao012  #待分配数量
+   DEFINE l_back_qty   LIKE inao_t.inao012  #已退数量
+   DEFINE l_str1       STRING    #发料单号
+   DEFINE l_sfdadocno  LIKE sfda_t.sfdadocno
+   DEFINE l_sql        STRING
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+
+   LET l_qty = p_outqty   #待分配数量=拟拨出数量
+   LET l_sql = "SELECT 'N', ",
+               "       '','','','', ",
+               "       '','','','', ",
+               "       '',0,0, ",
+               "       inaodocno,inaoseq,inaoseq1,inaoseq2, ",
+               "       inao001,inao008,inao009,inao010, ",
+               "       inao012,0  ",
+               "  FROM inao_t  ",
+               " WHERE inaoent = ",g_enterprise,
+               "   AND inao012 > 0 ",
+               "   AND EXISTS ",  #工单所在的发料单号,此处需要已过账的
+               "             (SELECT 1 FROM sfda_t,sfdc_t,sfdd_t ",
+               "               WHERE sfdaent = sfdcent AND sfdadocno = sfdcdocno ",
+               "                 AND sfdcent = sfddent AND sfdcdocno = sfdddocno AND sfdcseq = sfddseq ",
+               "                 AND inaoent = sfdcent AND inaodocno = sfdcdocno AND inaoseq = sfdcseq AND inaoseq1 = sfddseq1  ",
+               "                 AND sfdcent = ",g_enterprise,
+               "                 AND sfdc001 = '",p_sfaadocno,"' ",
+               "                 AND sfdc002 = ",p_sfbaseq,
+               "                 AND sfdc003 = ",p_sfbaseq1,
+               "                 AND sfdc017 = -1 ",  #发料
+               "                 AND sfdastus= 'S' ",
+               "                 AND inao012 > 0 ",
+               "             )",
+               " ORDER BY inaodocno,inaoseq,inaoseq1,inaoseq2"
+   PREPARE asfp360_05_get_temp4_p FROM l_sql
+   DECLARE asfp360_05_get_temp4_c CURSOR FOR asfp360_05_get_temp4_p
+   FOREACH asfp360_05_get_temp4_c INTO l_temp4.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:asfp360_05_get_temp4_c"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+
+      LET l_temp4.sfba002   = p_sfba002   #部位
+      LET l_temp4.sfba003   = p_sfba003   #作业
+      LET l_temp4.sfba004   = p_sfba004   #作业序
+      LET l_temp4.sfba005   = p_sfba005   #BOM料号
+      LET l_temp4.sfba006   = p_sfba006   #发料料号
+      LET l_temp4.sfba021   = p_sfba021   #特征
+      LET l_temp4.sfba014   = p_sfba014   #单位
+      LET l_temp4.unitr     = p_unitr     #参考单位
+      LET l_temp4.sfaadocno = p_sfaadocno
+      LET l_temp4.sfbaseq   = p_sfbaseq
+      LET l_temp4.sfbaseq1  = p_sfbaseq1
+      
+      #可拨出数量需减去退料数量,没数量的不用产生出来供拨出用
+      CALL asfp360_03_get_back_qty(l_temp4.sfaadocno,l_temp4.sfbaseq,l_temp4.sfbaseq1,l_temp4.inao008,l_temp4.inao009) RETURNING l_back_qty
+      LET l_temp4.can_outqty = l_temp4.can_outqty - l_back_qty
+      IF l_temp4.can_outqty <= 0 THEN
+         CONTINUE FOREACH
+      END IF
+      
+      IF l_qty <= l_temp4.can_outqty THEN
+         IF l_qty = 0 THEN
+            LET l_temp4.sel = 'N'
+         ELSE
+            LET l_temp4.sel = 'Y'
+         END IF
+         LET l_temp4.outqty = l_qty
+         LET l_qty = 0
+      ELSE
+         LET l_temp4.sel = 'Y'
+         LET l_temp4.outqty = l_temp4.can_outqty
+         LET l_qty = l_qty - l_temp4.can_outqty
+      END IF
+
+      INSERT INTO asfp360_tmp05(sel       ,   #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp4 ——> asfp360_tmp05
+                                   sfba002,sfba003,sfba004,sfba005,
+                                   sfba006,sfba021,sfba014,unitr,
+                                   sfaadocno ,sfbaseq   ,sfbaseq1  ,
+                                   inaodocno ,inaoseq   ,inaoseq1  ,inaoseq2  ,
+                                   inao001   ,inao008   ,inao009   ,inao010   ,
+                                   can_outqty,outqty    )
+         VALUES(l_temp4.sel       ,
+                l_temp4.sfba002   ,l_temp4.sfba003   ,l_temp4.sfba004   ,ltemp4.sfba005,
+                l_temp4.sfba006   ,l_temp4.sfba021   ,l_temp4.sfba014   ,ltemp4.unitr,
+                l_temp4.sfaadocno ,l_temp4.sfbaseq   ,l_temp4.sfbaseq1  ,
+                l_temp4.inaodocno ,l_temp4.inaoseq   ,l_temp4.inaoseq1  ,l_temp4.inaoseq2  ,
+                l_temp4.inao001   ,l_temp4.inao008   ,l_temp4.inao009   ,l_temp4.inao010   ,
+                l_temp4.can_outqty,l_temp4.outqty    )
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "INSERT asfp360_tmp05"  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp4 ——> asfp360_tmp05
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      
+   END FOREACH
+   
+   RETURN r_success
+END FUNCTION
+
+PUBLIC FUNCTION asfp360_05_upd_temp3(p_ac)
+   DEFINE p_ac         LIKE type_t.num5  #更新哪笔
+   DEFINE r_success    LIKE type_t.num5
+   DEFINE l_success    LIKE type_t.num5
+   DEFINE l_plan_inqty LIKE sfba_t.sfba013    #拟拨入数量
+   DEFINE l_inqty_sum  LIKE sfba_t.sfba013    #来源拨出数量合计
+   DEFINE l_inqty_sum_o LIKE sfba_t.sfba013    #来源拨出数量合计
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+
+   ##更新需求工单，备料中已拨入数量(此处用旧值_o而非_t因为，栏位没变动一次就直接更新数据库)
+   ##先检查拨出数量合计不可大于需求数量
+   #IF NOT cl_null(g_asfp360_05_d1[g_detail_idx1].unitr) THEN
+   #   SELECT plan_inqty,inqty_sum INTO l_plan_inqty,l_inqty_sum
+   #     FROM asfp360_02_temp
+   #    WHERE sfba002 = g_asfp360_05_d1[g_detail_idx1].sfba002
+   #      AND sfba003 = g_asfp360_05_d1[g_detail_idx1].sfba003
+   #      AND sfba004 = g_asfp360_05_d1[g_detail_idx1].sfba004
+   #      AND sfba005 = g_asfp360_05_d1[g_detail_idx1].sfba005
+   #      AND sfba006 = g_asfp360_05_d1[g_detail_idx1].sfba006
+   #      AND sfba021 = g_asfp360_05_d1[g_detail_idx1].sfba021
+   #      AND sfba014 = g_asfp360_05_d1[g_detail_idx1].sfba014
+   #      AND unitr   = g_asfp360_05_d1[g_detail_idx1].unitr
+   #ELSE
+   #   SELECT plan_inqty,inqty_sum INTO l_plan_inqty,l_inqty_sum
+   #     FROM asfp360_02_temp
+   #    WHERE sfba002 = g_asfp360_05_d1[g_detail_idx1].sfba002
+   #      AND sfba003 = g_asfp360_05_d1[g_detail_idx1].sfba003
+   #      AND sfba004 = g_asfp360_05_d1[g_detail_idx1].sfba004
+   #      AND sfba005 = g_asfp360_05_d1[g_detail_idx1].sfba005
+   #      AND sfba006 = g_asfp360_05_d1[g_detail_idx1].sfba006
+   #      AND sfba021 = g_asfp360_05_d1[g_detail_idx1].sfba021
+   #      AND sfba014 = g_asfp360_05_d1[g_detail_idx1].sfba014
+   #      AND unitr IS NULL
+   #END IF
+   #LET l_inqty_sum_o = l_inqty_sum
+   #LET l_inqty_sum = l_inqty_sum + g_asfp360_05_d3[p_ac].outqty   - g_asfp360_05_d3_o.outqty
+   #IF l_inqty_sum > l_plan_inqty THEN
+   #    #拨出数量合计%1不可大于需求数量%2,此处最多可拨出%3
+   #    INITIALIZE g_errparam TO NULL
+   #    LET g_errparam.code = 'asf-00433'
+   #    LET g_errparam.extend = ''
+   #    LET g_errparam.popup = TRUE
+   #    LET g_errparam.replace[1] = l_inqty_sum
+   #    LET g_errparam.replace[2] = l_plan_inqty
+   #    LET g_errparam.replace[3] = l_plan_inqty - l_inqty_sum_o + g_asfp360_05_d3_o.outqty
+   #    CALL cl_err()
+   #    LET r_success=FALSE
+   #    RETURN r_success
+   #END IF
+   #
+   #IF NOT cl_null() THEN
+   #   UPDATE asfp360_02_temp SET inqty_sum = inqty_sum + g_asfp360_05_d3[p_ac].outqty   - g_asfp360_05_d3_o.outqty,
+   #                              inqtyr_sum= inqtyr_sum + g_asfp360_05_d3[p_ac].outqtyr - g_asfp360_05_d3_o.outqtyr
+   #    WHERE sfba002 = g_asfp360_05_d1[g_detail_idx1].sfba002
+   #      AND sfba003 = g_asfp360_05_d1[g_detail_idx1].sfba003
+   #      AND sfba004 = g_asfp360_05_d1[g_detail_idx1].sfba004
+   #      AND sfba005 = g_asfp360_05_d1[g_detail_idx1].sfba005
+   #      AND sfba006 = g_asfp360_05_d1[g_detail_idx1].sfba006
+   #      AND sfba021 = g_asfp360_05_d1[g_detail_idx1].sfba021
+   #      AND sfba014 = g_asfp360_05_d1[g_detail_idx1].sfba014
+   #      AND unitr   = g_asfp360_05_d1[g_detail_idx1].unitr
+   #ELSE
+   #   UPDATE asfp360_02_temp SET inqty_sum = inqty_sum + g_asfp360_05_d3[p_ac].outqty   - g_asfp360_05_d3_o.outqty,
+   #                              inqtyr_sum= inqtyr_sum + g_asfp360_05_d3[p_ac].outqtyr - g_asfp360_05_d3_o.outqtyr
+   #    WHERE sfba002 = g_asfp360_05_d1[g_detail_idx1].sfba002
+   #      AND sfba003 = g_asfp360_05_d1[g_detail_idx1].sfba003
+   #      AND sfba004 = g_asfp360_05_d1[g_detail_idx1].sfba004
+   #      AND sfba005 = g_asfp360_05_d1[g_detail_idx1].sfba005
+   #      AND sfba006 = g_asfp360_05_d1[g_detail_idx1].sfba006
+   #      AND sfba021 = g_asfp360_05_d1[g_detail_idx1].sfba021
+   #      AND sfba014 = g_asfp360_05_d1[g_detail_idx1].sfba014
+   #      AND unitr IS NULL
+   #END IF
+   #IF SQLCA.sqlcode THEN
+   #   INITIALIZE g_errparam TO NULL
+   #   LET g_errparam.code = SQLCA.sqlcode
+   #   LET g_errparam.extend = "UPDATE asfp360_02_temp"
+   #   LET g_errparam.popup = TRUE
+   #   CALL cl_err()
+   #   LET r_success = FALSE
+   #   RETURN r_success
+   #END IF
+   
+   #检查通过再进行更新
+   IF NOT cl_null(g_asfp360_05_d1[g_detail_idx1].unitr) THEN
+      UPDATE asfp360_tmp04 SET sel    = g_asfp360_05_d3[p_ac].sel,  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp3 ——> asfp360_tmp04
+                                  outqty = g_asfp360_05_d3[p_ac].outqty,  #拟拨出数量
+                                  outqtyr= g_asfp360_05_d3[p_ac].outqtyr  #参考单位拨出数量
+       WHERE sfba002   = g_asfp360_05_d1[g_detail_idx1].sfba002   #部位
+         AND sfba003   = g_asfp360_05_d1[g_detail_idx1].sfba003   #作业
+         AND sfba004   = g_asfp360_05_d1[g_detail_idx1].sfba004   #作业序
+         AND sfba005   = g_asfp360_05_d1[g_detail_idx1].sfba005   #BOM料号
+         AND sfba006   = g_asfp360_05_d1[g_detail_idx1].sfba006   #发料料号
+         AND sfba021   = g_asfp360_05_d1[g_detail_idx1].sfba021   #特征
+         AND sfba014   = g_asfp360_05_d1[g_detail_idx1].sfba014   #单位
+         AND unitr     = g_asfp360_05_d1[g_detail_idx1].unitr     #参考单位
+         AND sfaadocno = g_asfp360_05_d3[p_ac].sfaadocno  #工单号
+         AND sfbaseq   = g_asfp360_05_d3[p_ac].sfbaseq    #项次
+         AND sfbaseq1  = g_asfp360_05_d3[p_ac].sfbaseq1   #项序
+   ELSE
+      UPDATE asfp360_tmp04 SET sel    = g_asfp360_05_d3[p_ac].sel,  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp3 ——> asfp360_tmp04
+                                  outqty = g_asfp360_05_d3[p_ac].outqty,  #拟拨出数量
+                                  outqtyr= g_asfp360_05_d3[p_ac].outqtyr  #参考单位拨出数量
+       WHERE sfba002   = g_asfp360_05_d1[g_detail_idx1].sfba002   #部位
+         AND sfba003   = g_asfp360_05_d1[g_detail_idx1].sfba003   #作业
+         AND sfba004   = g_asfp360_05_d1[g_detail_idx1].sfba004   #作业序
+         AND sfba005   = g_asfp360_05_d1[g_detail_idx1].sfba005   #BOM料号
+         AND sfba006   = g_asfp360_05_d1[g_detail_idx1].sfba006   #发料料号
+         AND sfba021   = g_asfp360_05_d1[g_detail_idx1].sfba021   #特征
+         AND sfba014   = g_asfp360_05_d1[g_detail_idx1].sfba014   #单位
+         AND unitr IS NULL     #参考单位
+         AND sfaadocno = g_asfp360_05_d3[p_ac].sfaadocno  #工单号
+         AND sfbaseq   = g_asfp360_05_d3[p_ac].sfbaseq    #项次
+         AND sfbaseq1  = g_asfp360_05_d3[p_ac].sfbaseq1   #项序
+   END IF
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'upd asfp360_tmp04'   #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp3 ——> asfp360_tmp04
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #检查并更新asfp360_02_temp需求拨入总数量
+   CALL asfp360_05_upd_02_temp()
+      RETURNING l_success
+   IF NOT l_success THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+PUBLIC FUNCTION asfp360_05_upd_temp4(p_ac)
+   DEFINE p_ac         LIKE type_t.num5  #更新哪笔
+   DEFINE r_success    LIKE type_t.num5
+   DEFINE l_success    LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+   
+   IF NOT cl_null(g_asfp360_05_d1[g_detail_idx1].unitr) THEN
+      UPDATE asfp360_tmp05 SET sel    = g_asfp360_05_d4[p_ac].sel,  #拟拨出数量  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp4 ——> asfp360_tmp05
+                                  outqty = g_asfp360_05_d4[p_ac].outqty #参考单位拨出数量
+       WHERE sfba002   = g_asfp360_05_d1[g_detail_idx1].sfba002   #部位
+         AND sfba003   = g_asfp360_05_d1[g_detail_idx1].sfba003   #作业
+         AND sfba004   = g_asfp360_05_d1[g_detail_idx1].sfba004   #作业序
+         AND sfba005   = g_asfp360_05_d1[g_detail_idx1].sfba005   #BOM料号
+         AND sfba006   = g_asfp360_05_d1[g_detail_idx1].sfba006   #发料料号
+         AND sfba021   = g_asfp360_05_d1[g_detail_idx1].sfba021   #特征
+         AND sfba014   = g_asfp360_05_d1[g_detail_idx1].sfba014   #单位
+         AND unitr     = g_asfp360_05_d1[g_detail_idx1].unitr   #参考单位
+         AND sfaadocno = g_asfp360_05_d3[g_detail_idx3].sfaadocno  #工单号
+         AND sfbaseq   = g_asfp360_05_d3[g_detail_idx3].sfbaseq    #项次
+         AND sfbaseq1  = g_asfp360_05_d3[g_detail_idx3].sfbaseq1   #项序
+         AND inaodocno = g_asfp360_05_d4[p_ac].inaodocno
+         AND inaoseq   = g_asfp360_05_d4[p_ac].inaoseq  
+         AND inaoseq1  = g_asfp360_05_d4[p_ac].inaoseq1 
+         AND inaoseq2  = g_asfp360_05_d4[p_ac].inaoseq2 
+   ELSE
+      UPDATE asfp360_tmp05 SET sel    = g_asfp360_05_d4[p_ac].sel,  #拟拨出数量  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp4 ——> asfp360_tmp05
+                                  outqty = g_asfp360_05_d4[p_ac].outqty #参考单位拨出数量
+       WHERE sfba002   = g_asfp360_05_d1[g_detail_idx1].sfba002   #部位
+         AND sfba003   = g_asfp360_05_d1[g_detail_idx1].sfba003   #作业
+         AND sfba004   = g_asfp360_05_d1[g_detail_idx1].sfba004   #作业序
+         AND sfba005   = g_asfp360_05_d1[g_detail_idx1].sfba005   #BOM料号
+         AND sfba006   = g_asfp360_05_d1[g_detail_idx1].sfba006   #发料料号
+         AND sfba021   = g_asfp360_05_d1[g_detail_idx1].sfba021   #特征
+         AND sfba014   = g_asfp360_05_d1[g_detail_idx1].sfba014   #单位
+         AND unitr IS NULL   #参考单位
+         AND sfaadocno = g_asfp360_05_d3[g_detail_idx3].sfaadocno  #工单号
+         AND sfbaseq   = g_asfp360_05_d3[g_detail_idx3].sfbaseq    #项次
+         AND sfbaseq1  = g_asfp360_05_d3[g_detail_idx3].sfbaseq1   #项序
+         AND inaodocno = g_asfp360_05_d4[p_ac].inaodocno
+         AND inaoseq   = g_asfp360_05_d4[p_ac].inaoseq  
+         AND inaoseq1  = g_asfp360_05_d4[p_ac].inaoseq1 
+         AND inaoseq2  = g_asfp360_05_d4[p_ac].inaoseq2 
+   END IF
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'upd asfp360_tmp05'  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp4 ——> asfp360_tmp05
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+PUBLIC FUNCTION asfp360_05_chk_column_b3(p_ac,p_column)
+   DEFINE p_ac         LIKE type_t.num5  #传参为null或0 代表全体检查
+   DEFINE p_column     LIKE type_t.chr20
+   DEFINE r_success    LIKE type_t.num5
+   DEFINE l_success    LIKE type_t.num5
+   DEFINE l_idx        LIKE type_t.num5
+   DEFINE l_plan_inqty LIKE sfba_t.sfba013    #拟拨入数量
+   DEFINE l_inqty_sum  LIKE sfba_t.sfba013    #来源拨出数量合计
+   DEFINE l_inqty_sum_o LIKE sfba_t.sfba013    #来源拨出数量合计
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+
+   CASE p_column
+      WHEN 'sel_05b3'
+           IF cl_null(g_asfp360_05_d3[l_ac].sel) THEN
+              #此字段不可为空
+              INITIALIZE g_errparam TO NULL
+              LET g_errparam.code = 'aqc-00006'
+              LET g_errparam.extend = ''
+              LET g_errparam.popup = TRUE
+              CALL cl_err()
+              LET r_success=FALSE
+              RETURN r_success
+           END IF
+           IF g_asfp360_05_d3[l_ac].sel NOT MATCHES '[NY]' THEN
+              #请输入Y/N
+              INITIALIZE g_errparam TO NULL
+              LET g_errparam.code = 'agl-00144'
+              LET g_errparam.extend = ''
+              LET g_errparam.popup = TRUE
+              CALL cl_err()
+              LET r_success=FALSE
+              RETURN r_success
+           END IF
+      WHEN 'outqty_05b3'  #拟拨出数量
+           IF cl_null(g_asfp360_05_d3[p_ac].outqty) THEN
+              #此字段不可为空
+              INITIALIZE g_errparam TO NULL
+              LET g_errparam.code = 'aqc-00006'
+              LET g_errparam.extend = ''
+              LET g_errparam.popup = TRUE
+              CALL cl_err()
+              LET r_success=FALSE
+              RETURN r_success
+           END IF
+           IF g_asfp360_05_d3[p_ac].outqty > g_asfp360_05_d3[p_ac].can_outqty THEN
+              #不可大于可拨出数量%1
+              INITIALIZE g_errparam TO NULL
+              LET g_errparam.code = 'asf-00435'
+              LET g_errparam.extend = ''
+              LET g_errparam.popup = TRUE
+              LET g_errparam.replace[1] = g_asfp360_05_d3[p_ac].can_outqty
+              CALL cl_err()
+              LET r_success=FALSE
+              RETURN r_success
+           END IF
+           
+           #检查拨出数量合计不可大于需求数量
+           IF NOT cl_null(g_asfp360_05_d1[g_detail_idx1].unitr) THEN
+              SELECT plan_inqty,inqty_sum INTO l_plan_inqty,l_inqty_sum
+                FROM asfp360_02_temp
+               WHERE sfba002 = g_asfp360_05_d1[g_detail_idx1].sfba002
+                 AND sfba003 = g_asfp360_05_d1[g_detail_idx1].sfba003
+                 AND sfba004 = g_asfp360_05_d1[g_detail_idx1].sfba004
+                 AND sfba005 = g_asfp360_05_d1[g_detail_idx1].sfba005
+                 AND sfba006 = g_asfp360_05_d1[g_detail_idx1].sfba006
+                 AND sfba021 = g_asfp360_05_d1[g_detail_idx1].sfba021
+                 AND sfba014 = g_asfp360_05_d1[g_detail_idx1].sfba014
+                 AND unitr   = g_asfp360_05_d1[g_detail_idx1].unitr
+           ELSE
+              SELECT plan_inqty,inqty_sum INTO l_plan_inqty,l_inqty_sum
+                FROM asfp360_02_temp
+               WHERE sfba002 = g_asfp360_05_d1[g_detail_idx1].sfba002
+                 AND sfba003 = g_asfp360_05_d1[g_detail_idx1].sfba003
+                 AND sfba004 = g_asfp360_05_d1[g_detail_idx1].sfba004
+                 AND sfba005 = g_asfp360_05_d1[g_detail_idx1].sfba005
+                 AND sfba006 = g_asfp360_05_d1[g_detail_idx1].sfba006
+                 AND sfba021 = g_asfp360_05_d1[g_detail_idx1].sfba021
+                 AND sfba014 = g_asfp360_05_d1[g_detail_idx1].sfba014
+                 AND unitr IS NULL
+           END IF
+           LET l_inqty_sum_o = l_inqty_sum
+           LET l_inqty_sum = l_inqty_sum + g_asfp360_05_d3[p_ac].outqty   - g_asfp360_05_d3_o.outqty #(此处用旧值_o而非_t因为，栏位没变动一次就直接更新数据库)
+           IF l_inqty_sum > l_plan_inqty THEN
+               #拨出数量合计%1不可大于需求数量%2,此处最多可拨出%3
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'asf-00433'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               LET g_errparam.replace[1] = l_inqty_sum
+               LET g_errparam.replace[2] = l_plan_inqty
+               LET g_errparam.replace[3] = l_plan_inqty - l_inqty_sum_o + g_asfp360_05_d3_o.outqty
+               CALL cl_err()
+               LET r_success=FALSE
+               RETURN r_success
+           END IF
+      OTHERWISE
+   END CASE
+   
+   RETURN r_success
+END FUNCTION
+
+PUBLIC FUNCTION asfp360_05_chk_column_b4(p_ac,p_column)
+DEFINE p_ac       LIKE type_t.num5  #传参为null或0 代表全体检查
+DEFINE p_column   LIKE type_t.chr20
+DEFINE r_success  LIKE type_t.num5
+DEFINE l_success  LIKE type_t.num5
+DEFINE l_idx      LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+
+   CASE p_column
+      WHEN 'sel_05b4'  #选择
+           #不可为空
+           IF cl_null(g_asfp360_05_d4[l_ac].sel) THEN
+              #此字段不可为空
+              INITIALIZE g_errparam TO NULL
+              LET g_errparam.code = 'aqc-00006'
+              LET g_errparam.extend = ''
+              LET g_errparam.popup = TRUE
+              CALL cl_err()
+              LET r_success=FALSE
+              RETURN r_success
+           END IF
+           IF g_asfp360_05_d4[l_ac].sel NOT MATCHES '[NY]' THEN
+              #请输入Y/N
+              INITIALIZE g_errparam TO NULL
+              LET g_errparam.code = 'agl-00144'
+              LET g_errparam.extend = ''
+              LET g_errparam.popup = TRUE
+              CALL cl_err()
+              LET r_success=FALSE
+              RETURN r_success
+           END IF
+      WHEN 'outqty_05b4'  #数量
+           #不可为空
+           IF cl_null(g_asfp360_05_d4[l_ac].outqty) THEN
+              #此字段不可为空
+              INITIALIZE g_errparam TO NULL
+              LET g_errparam.code = 'aqc-00006'
+              LET g_errparam.extend = ''
+              LET g_errparam.popup = TRUE
+              CALL cl_err()
+           END IF
+           IF g_asfp360_05_d4[l_ac].outqty > g_asfp360_05_d4[p_ac].can_outqty THEN
+              #不可大于可拨出数量%1
+              INITIALIZE g_errparam TO NULL
+              LET g_errparam.code = 'asf-00432'
+              LET g_errparam.extend = ''
+              LET g_errparam.popup = TRUE
+              LET g_errparam.replace[1] = g_asfp360_05_d4[p_ac].can_outqty
+              CALL cl_err()
+              LET r_success=FALSE
+              RETURN r_success
+           END IF
+      OTHERWISE
+   END CASE
+   
+   RETURN r_success
+END FUNCTION
+
+PUBLIC FUNCTION asfp360_05_show()
+
+   WHENEVER ERROR CONTINUE
+   
+   CALL asfp360_05_b_fill1()
+   
+   IF cl_null(g_detail_idx1) OR g_detail_idx1 = 0 THEN
+      LET g_detail_idx1 = 1
+   END IF
+   CALL asfp360_05_b_fill3(g_asfp360_05_d1[g_detail_idx1].sfba002,g_asfp360_05_d1[g_detail_idx1].sfba003,
+                           g_asfp360_05_d1[g_detail_idx1].sfba004,g_asfp360_05_d1[g_detail_idx1].sfba005,
+                           g_asfp360_05_d1[g_detail_idx1].sfba006,g_asfp360_05_d1[g_detail_idx1].sfba021,
+                           g_asfp360_05_d1[g_detail_idx1].sfba014,g_asfp360_05_d1[g_detail_idx1].unitr)
+   
+   IF cl_null(g_detail_idx3) OR g_detail_idx3 = 0 THEN
+      LET g_detail_idx3 = 1
+   END IF
+   CALL asfp360_05_b_fill4(g_asfp360_05_d1[g_detail_idx1].sfba002,g_asfp360_05_d1[g_detail_idx1].sfba003,
+                           g_asfp360_05_d1[g_detail_idx1].sfba004,g_asfp360_05_d1[g_detail_idx1].sfba005,
+                           g_asfp360_05_d1[g_detail_idx1].sfba006,g_asfp360_05_d1[g_detail_idx1].sfba021,
+                           g_asfp360_05_d1[g_detail_idx1].sfba014,g_asfp360_05_d1[g_detail_idx1].unitr,
+                           g_asfp360_05_d3[g_detail_idx3].sfaadocno,g_asfp360_05_d3[g_detail_idx3].sfbaseq,
+                           g_asfp360_05_d3[g_detail_idx3].sfbaseq1)
+END FUNCTION
+
+#更新需求数量
+PUBLIC FUNCTION asfp360_05_upd_02_temp()
+   DEFINE r_success    LIKE type_t.num5
+   DEFINE l_success    LIKE type_t.num5
+   DEFINE l_plan_inqty LIKE sfba_t.sfba013    #拟拨入数量
+   DEFINE l_inqty_sum  LIKE sfba_t.sfba013    #来源拨出数量合计
+   DEFINE l_inqtyr_sum  LIKE sfba_t.sfba013    #来源拨出数量合计
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+   
+   #先检查拨出数量合计不可大于需求数量
+   
+   #计算拟拨入数量:l_plan_inqty
+   IF NOT cl_null(g_asfp360_05_d1[g_detail_idx1].unitr) THEN
+      SELECT plan_inqty INTO l_plan_inqty
+        FROM asfp360_02_temp
+       WHERE sfba002 = g_asfp360_05_d1[g_detail_idx1].sfba002
+         AND sfba003 = g_asfp360_05_d1[g_detail_idx1].sfba003
+         AND sfba004 = g_asfp360_05_d1[g_detail_idx1].sfba004
+         AND sfba005 = g_asfp360_05_d1[g_detail_idx1].sfba005
+         AND sfba006 = g_asfp360_05_d1[g_detail_idx1].sfba006
+         AND sfba021 = g_asfp360_05_d1[g_detail_idx1].sfba021
+         AND sfba014 = g_asfp360_05_d1[g_detail_idx1].sfba014
+         AND unitr   = g_asfp360_05_d1[g_detail_idx1].unitr
+   ELSE
+      SELECT plan_inqty INTO l_plan_inqty
+        FROM asfp360_02_temp
+       WHERE sfba002 = g_asfp360_05_d1[g_detail_idx1].sfba002
+         AND sfba003 = g_asfp360_05_d1[g_detail_idx1].sfba003
+         AND sfba004 = g_asfp360_05_d1[g_detail_idx1].sfba004
+         AND sfba005 = g_asfp360_05_d1[g_detail_idx1].sfba005
+         AND sfba006 = g_asfp360_05_d1[g_detail_idx1].sfba006
+         AND sfba021 = g_asfp360_05_d1[g_detail_idx1].sfba021
+         AND sfba014 = g_asfp360_05_d1[g_detail_idx1].sfba014
+         AND unitr IS NULL
+   END IF
+   #计算来源拨出数量合计:l_inqty_sum
+   IF NOT cl_null(g_asfp360_05_d1[g_detail_idx1].unitr) THEN
+      SELECT SUM(outqty),SUM(outqtyr) INTO l_inqty_sum,l_inqtyr_sum
+        FROM asfp360_tmp04  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp3 ——> asfp360_tmp04
+       WHERE sel     = 'Y'
+         AND sfba002 = g_asfp360_05_d1[g_detail_idx1].sfba002
+         AND sfba003 = g_asfp360_05_d1[g_detail_idx1].sfba003
+         AND sfba004 = g_asfp360_05_d1[g_detail_idx1].sfba004
+         AND sfba005 = g_asfp360_05_d1[g_detail_idx1].sfba005
+         AND sfba006 = g_asfp360_05_d1[g_detail_idx1].sfba006
+         AND sfba021 = g_asfp360_05_d1[g_detail_idx1].sfba021
+         AND sfba014 = g_asfp360_05_d1[g_detail_idx1].sfba014
+         AND unitr   = g_asfp360_05_d1[g_detail_idx1].unitr
+   ELSE
+      SELECT SUM(outqty),SUM(outqtyr) INTO l_inqty_sum,l_inqtyr_sum
+        FROM asfp360_tmp04  #160727-00019#17   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 asfp360_05_temp3 ——> asfp360_tmp04
+       WHERE sel     = 'Y'
+         AND sfba002 = g_asfp360_05_d1[g_detail_idx1].sfba002
+         AND sfba003 = g_asfp360_05_d1[g_detail_idx1].sfba003
+         AND sfba004 = g_asfp360_05_d1[g_detail_idx1].sfba004
+         AND sfba005 = g_asfp360_05_d1[g_detail_idx1].sfba005
+         AND sfba006 = g_asfp360_05_d1[g_detail_idx1].sfba006
+         AND sfba021 = g_asfp360_05_d1[g_detail_idx1].sfba021
+         AND sfba014 = g_asfp360_05_d1[g_detail_idx1].sfba014
+         AND unitr IS NULL
+   END IF
+   IF cl_null(l_inqty_sum) THEN LET l_inqty_sum = 0 END IF
+   IF cl_null(l_inqtyr_sum) THEN LET l_inqtyr_sum = 0 END IF
+   
+   IF l_inqty_sum > l_plan_inqty THEN
+       #拨出数量合计%1不可大于需求数量%2
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = 'asf-00436'
+       LET g_errparam.extend = ''
+       LET g_errparam.popup = TRUE
+       LET g_errparam.replace[1] = l_inqty_sum
+       LET g_errparam.replace[2] = l_plan_inqty
+       CALL cl_err()
+       LET r_success=FALSE
+       RETURN r_success
+   END IF
+   
+   IF NOT cl_null(g_asfp360_05_d1[g_detail_idx1].unitr) THEN
+      UPDATE asfp360_02_temp SET inqty_sum = l_inqty_sum,  #inqty_sum + g_asfp360_03_d3[p_ac].outqty   - g_asfp360_03_d3_o.outqty,
+                                 inqtyr_sum= l_inqtyr_sum  #inqtyr_sum + g_asfp360_03_d3[p_ac].outqtyr - g_asfp360_03_d3_o.outqtyr
+       WHERE sfba002 = g_asfp360_05_d1[g_detail_idx1].sfba002
+         AND sfba003 = g_asfp360_05_d1[g_detail_idx1].sfba003
+         AND sfba004 = g_asfp360_05_d1[g_detail_idx1].sfba004
+         AND sfba005 = g_asfp360_05_d1[g_detail_idx1].sfba005
+         AND sfba006 = g_asfp360_05_d1[g_detail_idx1].sfba006
+         AND sfba021 = g_asfp360_05_d1[g_detail_idx1].sfba021
+         AND sfba014 = g_asfp360_05_d1[g_detail_idx1].sfba014
+         AND unitr   = g_asfp360_05_d1[g_detail_idx1].unitr
+   ELSE
+      UPDATE asfp360_02_temp SET inqty_sum = l_inqty_sum,  #inqty_sum + g_asfp360_03_d3[p_ac].outqty   - g_asfp360_03_d3_o.outqty,
+                                 inqtyr_sum= l_inqtyr_sum  #inqtyr_sum + g_asfp360_03_d3[p_ac].outqtyr - g_asfp360_03_d3_o.outqtyr
+       WHERE sfba002 = g_asfp360_05_d1[g_detail_idx1].sfba002
+         AND sfba003 = g_asfp360_05_d1[g_detail_idx1].sfba003
+         AND sfba004 = g_asfp360_05_d1[g_detail_idx1].sfba004
+         AND sfba005 = g_asfp360_05_d1[g_detail_idx1].sfba005
+         AND sfba006 = g_asfp360_05_d1[g_detail_idx1].sfba006
+         AND sfba021 = g_asfp360_05_d1[g_detail_idx1].sfba021
+         AND sfba014 = g_asfp360_05_d1[g_detail_idx1].sfba014
+         AND unitr IS NULL
+   END IF
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "UPDATE asfp360_02_temp"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   RETURN r_success
+END FUNCTION
+
+ 
+{</section>}
+ 

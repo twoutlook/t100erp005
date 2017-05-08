@@ -1,0 +1,3454 @@
+<add_points prog="aooi360" std_prog="aooi360" erpver="1.0" module="AOO" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="construct.c.ooffcrtdp" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooffcrtdp  #顯示到畫面上
+
+            NEXT FIELD ooffcrtdp                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.ooffcrtid" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooffcrtid  #顯示到畫面上
+
+            NEXT FIELD ooffcrtid                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.ooffmodid" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooffmodid  #顯示到畫面上
+
+            NEXT FIELD ooffmodid                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.ooffowndp" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooffowndp  #顯示到畫面上
+
+            NEXT FIELD ooffowndp                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.ooffownid" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO ooffownid  #顯示到畫面上
+
+            NEXT FIELD ooffownid                     #返回原欄位
+
+]]>
+</point>
+  <point name="function.aooi360_chk_ooff_copy" cite_std="N" status="u" order="1" ver="1" cite_ver="" new="Y" src="s" mark_hard="N">
+<![CDATA[# 複製KEY值檢查
+PRIVATE FUNCTION aooi360_chk_ooff_copy(p_ooff)
+DEFINE p_ooff  RECORD LIKE ooff_t.*
+
+   IF NOT cl_null(p_ooff.ooff001) AND NOT cl_null(p_ooff.ooff002) AND NOT cl_null(p_ooff.ooff003) 
+      AND NOT cl_null(p_ooff.ooff004) AND NOT cl_null(p_ooff.ooff005) 
+      AND NOT cl_null(p_ooff.ooff006) AND NOT cl_null(p_ooff.ooff007) 
+      AND NOT cl_null(p_ooff.ooff008) AND NOT cl_null(p_ooff.ooff009) 
+      AND NOT cl_null(p_ooff.ooff010) AND NOT cl_null(p_ooff.ooff011) AND NOT cl_null(p_ooff.ooff012) THEN 
+      IF NOT ap_chk_notDup(p_ooff.ooff001||"~"||p_ooff.ooff012,"SELECT COUNT(*) FROM ooff_t WHERE "||"ooffent = '" ||g_enterprise|| "' AND "||"ooff001 = '"||p_ooff.ooff001 ||"' AND "|| "ooff002 = '"||p_ooff.ooff002 ||
+                              "' AND "|| "ooff003 = '"||p_ooff.ooff003 ||"' AND "|| "ooff004 = '"|| p_ooff.ooff004 ||"' AND "|| 
+                              "ooff005 = '"||p_ooff.ooff005 ||"' AND "|| "ooff006 = '"||p_ooff.ooff006 ||
+                              "' AND "|| "ooff007 = '"||p_ooff.ooff007 ||"' AND "|| "ooff008 = '"||p_ooff.ooff008 ||"' AND "|| 
+                              "ooff009 = '"||p_ooff.ooff009 ||"' AND "|| "ooff010 = '"||p_ooff.ooff010 ||"' AND "|| 
+                              "ooff011 = '"||p_ooff.ooff011 ||"' AND "|| "ooff012 = '"||p_ooff.ooff012 ||"'",'std-00004',0) THEN 
+         RETURN FALSE
+      END IF
+   END IF
+   RETURN TRUE
+END FUNCTION]]>
+</point>
+  <point name="input.a.ooff001" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_ooff_m.ooff001) AND NOT cl_null(g_ooff_m.ooff002) AND NOT cl_null(g_ooff_m.ooff003) AND NOT cl_null(g_ooff_m.ooff004) AND NOT cl_null(g_ooff_m.ooff005) AND NOT cl_null(g_ooff_m.ooff006) AND NOT cl_null(g_ooff_m.ooff007) AND NOT cl_null(g_ooff_m.ooff008) AND NOT cl_null(g_ooff_m.ooff009) AND NOT cl_null(g_ooff_m.ooff010) AND NOT cl_null(g_ooff_m.ooff011) AND NOT cl_null(g_ooff_m.ooff012) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_ooff_m.ooff001 != g_ooff001_t  OR g_ooff_m.ooff002 != g_ooff002_t  OR g_ooff_m.ooff003 != g_ooff003_t  OR g_ooff_m.ooff004 != g_ooff004_t  OR g_ooff_m.ooff005 != g_ooff005_t  OR g_ooff_m.ooff006 != g_ooff006_t  OR g_ooff_m.ooff007 != g_ooff007_t  OR g_ooff_m.ooff008 != g_ooff008_t  OR g_ooff_m.ooff009 != g_ooff009_t  OR g_ooff_m.ooff010 != g_ooff010_t  OR g_ooff_m.ooff011 != g_ooff011_t  OR g_ooff_m.ooff012 != g_ooff012_t ))) THEN 
+                  IF NOT ap_chk_notDup(g_ooff_m.ooff001,"SELECT COUNT(*) FROM ooff_t WHERE "||"ooffent = '" ||g_enterprise|| "' AND "||"ooff001 = '"||g_ooff_m.ooff001 ||"' AND "|| "ooff002 = '"||g_ooff_m.ooff002 ||"' AND "|| "ooff003 = '"||g_ooff_m.ooff003 ||"' AND "|| "ooff004 = '"||g_ooff_m.ooff004 ||"' AND "|| "ooff005 = '"||g_ooff_m.ooff005 ||"' AND "|| "ooff006 = '"||g_ooff_m.ooff006 ||"' AND "|| "ooff007 = '"||g_ooff_m.ooff007 ||"' AND "|| "ooff008 = '"||g_ooff_m.ooff008 ||"' AND "|| "ooff009 = '"||g_ooff_m.ooff009 ||"' AND "|| "ooff010 = '"||g_ooff_m.ooff010 ||"' AND "|| "ooff011 = '"||g_ooff_m.ooff011 ||"' AND "|| "ooff012 = '"||g_ooff_m.ooff012 ||"'",'std-00004',0) THEN 
+                     LET g_ooff_m.ooff001 = g_ooff001_t
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.ooff002" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_ooff_m.ooff001) AND NOT cl_null(g_ooff_m.ooff002) AND NOT cl_null(g_ooff_m.ooff003) AND NOT cl_null(g_ooff_m.ooff004) AND NOT cl_null(g_ooff_m.ooff005) AND NOT cl_null(g_ooff_m.ooff006) AND NOT cl_null(g_ooff_m.ooff007) AND NOT cl_null(g_ooff_m.ooff008) AND NOT cl_null(g_ooff_m.ooff009) AND NOT cl_null(g_ooff_m.ooff010) AND NOT cl_null(g_ooff_m.ooff011) AND NOT cl_null(g_ooff_m.ooff012) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_ooff_m.ooff001 != g_ooff001_t  OR g_ooff_m.ooff002 != g_ooff002_t  OR g_ooff_m.ooff003 != g_ooff003_t  OR g_ooff_m.ooff004 != g_ooff004_t  OR g_ooff_m.ooff005 != g_ooff005_t  OR g_ooff_m.ooff006 != g_ooff006_t  OR g_ooff_m.ooff007 != g_ooff007_t  OR g_ooff_m.ooff008 != g_ooff008_t  OR g_ooff_m.ooff009 != g_ooff009_t  OR g_ooff_m.ooff010 != g_ooff010_t  OR g_ooff_m.ooff011 != g_ooff011_t  OR g_ooff_m.ooff012 != g_ooff012_t ))) THEN 
+                  IF NOT ap_chk_notDup(g_ooff_m.ooff002,"SELECT COUNT(*) FROM ooff_t WHERE "||"ooffent = '" ||g_enterprise|| "' AND "||"ooff001 = '"||g_ooff_m.ooff001 ||"' AND "|| "ooff002 = '"||g_ooff_m.ooff002 ||"' AND "|| "ooff003 = '"||g_ooff_m.ooff003 ||"' AND "|| "ooff004 = '"||g_ooff_m.ooff004 ||"' AND "|| "ooff005 = '"||g_ooff_m.ooff005 ||"' AND "|| "ooff006 = '"||g_ooff_m.ooff006 ||"' AND "|| "ooff007 = '"||g_ooff_m.ooff007 ||"' AND "|| "ooff008 = '"||g_ooff_m.ooff008 ||"' AND "|| "ooff009 = '"||g_ooff_m.ooff009 ||"' AND "|| "ooff010 = '"||g_ooff_m.ooff010 ||"' AND "|| "ooff011 = '"||g_ooff_m.ooff011 ||"' AND "|| "ooff012 = '"||g_ooff_m.ooff012 ||"'",'std-00004',0) THEN 
+                     LET g_ooff_m.ooff002 = g_ooff_m_t.ooff002
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.ooff003" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_ooff_m.ooff001) AND NOT cl_null(g_ooff_m.ooff002) AND NOT cl_null(g_ooff_m.ooff003) AND NOT cl_null(g_ooff_m.ooff004) AND NOT cl_null(g_ooff_m.ooff005) AND NOT cl_null(g_ooff_m.ooff006) AND NOT cl_null(g_ooff_m.ooff007) AND NOT cl_null(g_ooff_m.ooff008) AND NOT cl_null(g_ooff_m.ooff009) AND NOT cl_null(g_ooff_m.ooff010) AND NOT cl_null(g_ooff_m.ooff011) AND NOT cl_null(g_ooff_m.ooff012) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_ooff_m.ooff001 != g_ooff001_t  OR g_ooff_m.ooff002 != g_ooff002_t  OR g_ooff_m.ooff003 != g_ooff003_t  OR g_ooff_m.ooff004 != g_ooff004_t  OR g_ooff_m.ooff005 != g_ooff005_t  OR g_ooff_m.ooff006 != g_ooff006_t  OR g_ooff_m.ooff007 != g_ooff007_t  OR g_ooff_m.ooff008 != g_ooff008_t  OR g_ooff_m.ooff009 != g_ooff009_t  OR g_ooff_m.ooff010 != g_ooff010_t  OR g_ooff_m.ooff011 != g_ooff011_t  OR g_ooff_m.ooff012 != g_ooff012_t ))) THEN 
+                  IF NOT ap_chk_notDup(g_ooff_m.ooff003,"SELECT COUNT(*) FROM ooff_t WHERE "||"ooffent = '" ||g_enterprise|| "' AND "||"ooff001 = '"||g_ooff_m.ooff001 ||"' AND "|| "ooff002 = '"||g_ooff_m.ooff002 ||"' AND "|| "ooff003 = '"||g_ooff_m.ooff003 ||"' AND "|| "ooff004 = '"||g_ooff_m.ooff004 ||"' AND "|| "ooff005 = '"||g_ooff_m.ooff005 ||"' AND "|| "ooff006 = '"||g_ooff_m.ooff006 ||"' AND "|| "ooff007 = '"||g_ooff_m.ooff007 ||"' AND "|| "ooff008 = '"||g_ooff_m.ooff008 ||"' AND "|| "ooff009 = '"||g_ooff_m.ooff009 ||"' AND "|| "ooff010 = '"||g_ooff_m.ooff010 ||"' AND "|| "ooff011 = '"||g_ooff_m.ooff011 ||"' AND "|| "ooff012 = '"||g_ooff_m.ooff012 ||"'",'std-00004',0) THEN 
+                     LET g_ooff_m.ooff003 = g_ooff_m_t.ooff003
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.ooff004" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_ooff_m.ooff001) AND NOT cl_null(g_ooff_m.ooff002) AND NOT cl_null(g_ooff_m.ooff003) AND NOT cl_null(g_ooff_m.ooff004) AND NOT cl_null(g_ooff_m.ooff005) AND NOT cl_null(g_ooff_m.ooff006) AND NOT cl_null(g_ooff_m.ooff007) AND NOT cl_null(g_ooff_m.ooff008) AND NOT cl_null(g_ooff_m.ooff009) AND NOT cl_null(g_ooff_m.ooff010) AND NOT cl_null(g_ooff_m.ooff011) AND NOT cl_null(g_ooff_m.ooff012) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_ooff_m.ooff001 != g_ooff001_t  OR g_ooff_m.ooff002 != g_ooff002_t  OR g_ooff_m.ooff003 != g_ooff003_t  OR g_ooff_m.ooff004 != g_ooff004_t  OR g_ooff_m.ooff005 != g_ooff005_t  OR g_ooff_m.ooff006 != g_ooff006_t  OR g_ooff_m.ooff007 != g_ooff007_t  OR g_ooff_m.ooff008 != g_ooff008_t  OR g_ooff_m.ooff009 != g_ooff009_t  OR g_ooff_m.ooff010 != g_ooff010_t  OR g_ooff_m.ooff011 != g_ooff011_t  OR g_ooff_m.ooff012 != g_ooff012_t ))) THEN 
+                  IF NOT ap_chk_notDup(g_ooff_m.ooff004,"SELECT COUNT(*) FROM ooff_t WHERE "||"ooffent = '" ||g_enterprise|| "' AND "||"ooff001 = '"||g_ooff_m.ooff001 ||"' AND "|| "ooff002 = '"||g_ooff_m.ooff002 ||"' AND "|| "ooff003 = '"||g_ooff_m.ooff003 ||"' AND "|| "ooff004 = '"||g_ooff_m.ooff004 ||"' AND "|| "ooff005 = '"||g_ooff_m.ooff005 ||"' AND "|| "ooff006 = '"||g_ooff_m.ooff006 ||"' AND "|| "ooff007 = '"||g_ooff_m.ooff007 ||"' AND "|| "ooff008 = '"||g_ooff_m.ooff008 ||"' AND "|| "ooff009 = '"||g_ooff_m.ooff009 ||"' AND "|| "ooff010 = '"||g_ooff_m.ooff010 ||"' AND "|| "ooff011 = '"||g_ooff_m.ooff011 ||"' AND "|| "ooff012 = '"||g_ooff_m.ooff012 ||"'",'std-00004',0) THEN 
+                     LET g_ooff_m.ooff004 = g_ooff_m_t.ooff004
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.ooff005" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_ooff_m.ooff001) AND NOT cl_null(g_ooff_m.ooff002) AND NOT cl_null(g_ooff_m.ooff003) AND NOT cl_null(g_ooff_m.ooff004) AND NOT cl_null(g_ooff_m.ooff005) AND NOT cl_null(g_ooff_m.ooff006) AND NOT cl_null(g_ooff_m.ooff007) AND NOT cl_null(g_ooff_m.ooff008) AND NOT cl_null(g_ooff_m.ooff009) AND NOT cl_null(g_ooff_m.ooff010) AND NOT cl_null(g_ooff_m.ooff011) AND NOT cl_null(g_ooff_m.ooff012) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_ooff_m.ooff001 != g_ooff001_t  OR g_ooff_m.ooff002 != g_ooff002_t  OR g_ooff_m.ooff003 != g_ooff003_t  OR g_ooff_m.ooff004 != g_ooff004_t  OR g_ooff_m.ooff005 != g_ooff005_t  OR g_ooff_m.ooff006 != g_ooff006_t  OR g_ooff_m.ooff007 != g_ooff007_t  OR g_ooff_m.ooff008 != g_ooff008_t  OR g_ooff_m.ooff009 != g_ooff009_t  OR g_ooff_m.ooff010 != g_ooff010_t  OR g_ooff_m.ooff011 != g_ooff011_t  OR g_ooff_m.ooff012 != g_ooff012_t ))) THEN 
+                  IF NOT ap_chk_notDup(g_ooff_m.ooff005,"SELECT COUNT(*) FROM ooff_t WHERE "||"ooffent = '" ||g_enterprise|| "' AND "||"ooff001 = '"||g_ooff_m.ooff001 ||"' AND "|| "ooff002 = '"||g_ooff_m.ooff002 ||"' AND "|| "ooff003 = '"||g_ooff_m.ooff003 ||"' AND "|| "ooff004 = '"||g_ooff_m.ooff004 ||"' AND "|| "ooff005 = '"||g_ooff_m.ooff005 ||"' AND "|| "ooff006 = '"||g_ooff_m.ooff006 ||"' AND "|| "ooff007 = '"||g_ooff_m.ooff007 ||"' AND "|| "ooff008 = '"||g_ooff_m.ooff008 ||"' AND "|| "ooff009 = '"||g_ooff_m.ooff009 ||"' AND "|| "ooff010 = '"||g_ooff_m.ooff010 ||"' AND "|| "ooff011 = '"||g_ooff_m.ooff011 ||"' AND "|| "ooff012 = '"||g_ooff_m.ooff012 ||"'",'std-00004',0) THEN 
+                     LET g_ooff_m.ooff005 = g_ooff_m_t.ooff005
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.ooff006" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_ooff_m.ooff001) AND NOT cl_null(g_ooff_m.ooff002) AND NOT cl_null(g_ooff_m.ooff003) AND NOT cl_null(g_ooff_m.ooff004) AND NOT cl_null(g_ooff_m.ooff005) AND NOT cl_null(g_ooff_m.ooff006) AND NOT cl_null(g_ooff_m.ooff007) AND NOT cl_null(g_ooff_m.ooff008) AND NOT cl_null(g_ooff_m.ooff009) AND NOT cl_null(g_ooff_m.ooff010) AND NOT cl_null(g_ooff_m.ooff011) AND NOT cl_null(g_ooff_m.ooff012) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_ooff_m.ooff001 != g_ooff001_t  OR g_ooff_m.ooff002 != g_ooff002_t  OR g_ooff_m.ooff003 != g_ooff003_t  OR g_ooff_m.ooff004 != g_ooff004_t  OR g_ooff_m.ooff005 != g_ooff005_t  OR g_ooff_m.ooff006 != g_ooff006_t  OR g_ooff_m.ooff007 != g_ooff007_t  OR g_ooff_m.ooff008 != g_ooff008_t  OR g_ooff_m.ooff009 != g_ooff009_t  OR g_ooff_m.ooff010 != g_ooff010_t  OR g_ooff_m.ooff011 != g_ooff011_t  OR g_ooff_m.ooff012 != g_ooff012_t ))) THEN 
+                  IF NOT ap_chk_notDup(g_ooff_m.ooff006,"SELECT COUNT(*) FROM ooff_t WHERE "||"ooffent = '" ||g_enterprise|| "' AND "||"ooff001 = '"||g_ooff_m.ooff001 ||"' AND "|| "ooff002 = '"||g_ooff_m.ooff002 ||"' AND "|| "ooff003 = '"||g_ooff_m.ooff003 ||"' AND "|| "ooff004 = '"||g_ooff_m.ooff004 ||"' AND "|| "ooff005 = '"||g_ooff_m.ooff005 ||"' AND "|| "ooff006 = '"||g_ooff_m.ooff006 ||"' AND "|| "ooff007 = '"||g_ooff_m.ooff007 ||"' AND "|| "ooff008 = '"||g_ooff_m.ooff008 ||"' AND "|| "ooff009 = '"||g_ooff_m.ooff009 ||"' AND "|| "ooff010 = '"||g_ooff_m.ooff010 ||"' AND "|| "ooff011 = '"||g_ooff_m.ooff011 ||"' AND "|| "ooff012 = '"||g_ooff_m.ooff012 ||"'",'std-00004',0) THEN 
+                     LET g_ooff_m.ooff006 = g_ooff_m_t.ooff006
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.ooff007" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_ooff_m.ooff001) AND NOT cl_null(g_ooff_m.ooff002) AND NOT cl_null(g_ooff_m.ooff003) AND NOT cl_null(g_ooff_m.ooff004) AND NOT cl_null(g_ooff_m.ooff005) AND NOT cl_null(g_ooff_m.ooff006) AND NOT cl_null(g_ooff_m.ooff007) AND NOT cl_null(g_ooff_m.ooff008) AND NOT cl_null(g_ooff_m.ooff009) AND NOT cl_null(g_ooff_m.ooff010) AND NOT cl_null(g_ooff_m.ooff011) AND NOT cl_null(g_ooff_m.ooff012) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_ooff_m.ooff001 != g_ooff001_t  OR g_ooff_m.ooff002 != g_ooff002_t  OR g_ooff_m.ooff003 != g_ooff003_t  OR g_ooff_m.ooff004 != g_ooff004_t  OR g_ooff_m.ooff005 != g_ooff005_t  OR g_ooff_m.ooff006 != g_ooff006_t  OR g_ooff_m.ooff007 != g_ooff007_t  OR g_ooff_m.ooff008 != g_ooff008_t  OR g_ooff_m.ooff009 != g_ooff009_t  OR g_ooff_m.ooff010 != g_ooff010_t  OR g_ooff_m.ooff011 != g_ooff011_t  OR g_ooff_m.ooff012 != g_ooff012_t ))) THEN 
+                  IF NOT ap_chk_notDup(g_ooff_m.ooff007,"SELECT COUNT(*) FROM ooff_t WHERE "||"ooffent = '" ||g_enterprise|| "' AND "||"ooff001 = '"||g_ooff_m.ooff001 ||"' AND "|| "ooff002 = '"||g_ooff_m.ooff002 ||"' AND "|| "ooff003 = '"||g_ooff_m.ooff003 ||"' AND "|| "ooff004 = '"||g_ooff_m.ooff004 ||"' AND "|| "ooff005 = '"||g_ooff_m.ooff005 ||"' AND "|| "ooff006 = '"||g_ooff_m.ooff006 ||"' AND "|| "ooff007 = '"||g_ooff_m.ooff007 ||"' AND "|| "ooff008 = '"||g_ooff_m.ooff008 ||"' AND "|| "ooff009 = '"||g_ooff_m.ooff009 ||"' AND "|| "ooff010 = '"||g_ooff_m.ooff010 ||"' AND "|| "ooff011 = '"||g_ooff_m.ooff011 ||"' AND "|| "ooff012 = '"||g_ooff_m.ooff012 ||"'",'std-00004',0) THEN 
+                     LET g_ooff_m.ooff007 = g_ooff_m_t.ooff007
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.ooff008" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_ooff_m.ooff001) AND NOT cl_null(g_ooff_m.ooff002) AND NOT cl_null(g_ooff_m.ooff003) AND NOT cl_null(g_ooff_m.ooff004) AND NOT cl_null(g_ooff_m.ooff005) AND NOT cl_null(g_ooff_m.ooff006) AND NOT cl_null(g_ooff_m.ooff007) AND NOT cl_null(g_ooff_m.ooff008) AND NOT cl_null(g_ooff_m.ooff009) AND NOT cl_null(g_ooff_m.ooff010) AND NOT cl_null(g_ooff_m.ooff011) AND NOT cl_null(g_ooff_m.ooff012) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_ooff_m.ooff001 != g_ooff001_t  OR g_ooff_m.ooff002 != g_ooff002_t  OR g_ooff_m.ooff003 != g_ooff003_t  OR g_ooff_m.ooff004 != g_ooff004_t  OR g_ooff_m.ooff005 != g_ooff005_t  OR g_ooff_m.ooff006 != g_ooff006_t  OR g_ooff_m.ooff007 != g_ooff007_t  OR g_ooff_m.ooff008 != g_ooff008_t  OR g_ooff_m.ooff009 != g_ooff009_t  OR g_ooff_m.ooff010 != g_ooff010_t  OR g_ooff_m.ooff011 != g_ooff011_t  OR g_ooff_m.ooff012 != g_ooff012_t ))) THEN 
+                  IF NOT ap_chk_notDup(g_ooff_m.ooff008,"SELECT COUNT(*) FROM ooff_t WHERE "||"ooffent = '" ||g_enterprise|| "' AND "||"ooff001 = '"||g_ooff_m.ooff001 ||"' AND "|| "ooff002 = '"||g_ooff_m.ooff002 ||"' AND "|| "ooff003 = '"||g_ooff_m.ooff003 ||"' AND "|| "ooff004 = '"||g_ooff_m.ooff004 ||"' AND "|| "ooff005 = '"||g_ooff_m.ooff005 ||"' AND "|| "ooff006 = '"||g_ooff_m.ooff006 ||"' AND "|| "ooff007 = '"||g_ooff_m.ooff007 ||"' AND "|| "ooff008 = '"||g_ooff_m.ooff008 ||"' AND "|| "ooff009 = '"||g_ooff_m.ooff009 ||"' AND "|| "ooff010 = '"||g_ooff_m.ooff010 ||"' AND "|| "ooff011 = '"||g_ooff_m.ooff011 ||"' AND "|| "ooff012 = '"||g_ooff_m.ooff012 ||"'",'std-00004',0) THEN 
+                     LET g_ooff_m.ooff008 = g_ooff_m_t.ooff008
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.ooff009" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_ooff_m.ooff001) AND NOT cl_null(g_ooff_m.ooff002) AND NOT cl_null(g_ooff_m.ooff003) AND NOT cl_null(g_ooff_m.ooff004) AND NOT cl_null(g_ooff_m.ooff005) AND NOT cl_null(g_ooff_m.ooff006) AND NOT cl_null(g_ooff_m.ooff007) AND NOT cl_null(g_ooff_m.ooff008) AND NOT cl_null(g_ooff_m.ooff009) AND NOT cl_null(g_ooff_m.ooff010) AND NOT cl_null(g_ooff_m.ooff011) AND NOT cl_null(g_ooff_m.ooff012) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_ooff_m.ooff001 != g_ooff001_t  OR g_ooff_m.ooff002 != g_ooff002_t  OR g_ooff_m.ooff003 != g_ooff003_t  OR g_ooff_m.ooff004 != g_ooff004_t  OR g_ooff_m.ooff005 != g_ooff005_t  OR g_ooff_m.ooff006 != g_ooff006_t  OR g_ooff_m.ooff007 != g_ooff007_t  OR g_ooff_m.ooff008 != g_ooff008_t  OR g_ooff_m.ooff009 != g_ooff009_t  OR g_ooff_m.ooff010 != g_ooff010_t  OR g_ooff_m.ooff011 != g_ooff011_t  OR g_ooff_m.ooff012 != g_ooff012_t ))) THEN 
+                  IF NOT ap_chk_notDup(g_ooff_m.ooff009,"SELECT COUNT(*) FROM ooff_t WHERE "||"ooffent = '" ||g_enterprise|| "' AND "||"ooff001 = '"||g_ooff_m.ooff001 ||"' AND "|| "ooff002 = '"||g_ooff_m.ooff002 ||"' AND "|| "ooff003 = '"||g_ooff_m.ooff003 ||"' AND "|| "ooff004 = '"||g_ooff_m.ooff004 ||"' AND "|| "ooff005 = '"||g_ooff_m.ooff005 ||"' AND "|| "ooff006 = '"||g_ooff_m.ooff006 ||"' AND "|| "ooff007 = '"||g_ooff_m.ooff007 ||"' AND "|| "ooff008 = '"||g_ooff_m.ooff008 ||"' AND "|| "ooff009 = '"||g_ooff_m.ooff009 ||"' AND "|| "ooff010 = '"||g_ooff_m.ooff010 ||"' AND "|| "ooff011 = '"||g_ooff_m.ooff011 ||"' AND "|| "ooff012 = '"||g_ooff_m.ooff012 ||"'",'std-00004',0) THEN 
+                     LET g_ooff_m.ooff009 = g_ooff_m_t.ooff009
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.ooff010" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_ooff_m.ooff001) AND NOT cl_null(g_ooff_m.ooff002) AND NOT cl_null(g_ooff_m.ooff003) AND NOT cl_null(g_ooff_m.ooff004) AND NOT cl_null(g_ooff_m.ooff005) AND NOT cl_null(g_ooff_m.ooff006) AND NOT cl_null(g_ooff_m.ooff007) AND NOT cl_null(g_ooff_m.ooff008) AND NOT cl_null(g_ooff_m.ooff009) AND NOT cl_null(g_ooff_m.ooff010) AND NOT cl_null(g_ooff_m.ooff011) AND NOT cl_null(g_ooff_m.ooff012) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_ooff_m.ooff001 != g_ooff001_t  OR g_ooff_m.ooff002 != g_ooff002_t  OR g_ooff_m.ooff003 != g_ooff003_t  OR g_ooff_m.ooff004 != g_ooff004_t  OR g_ooff_m.ooff005 != g_ooff005_t  OR g_ooff_m.ooff006 != g_ooff006_t  OR g_ooff_m.ooff007 != g_ooff007_t  OR g_ooff_m.ooff008 != g_ooff008_t  OR g_ooff_m.ooff009 != g_ooff009_t  OR g_ooff_m.ooff010 != g_ooff010_t  OR g_ooff_m.ooff011 != g_ooff011_t  OR g_ooff_m.ooff012 != g_ooff012_t ))) THEN 
+                  IF NOT ap_chk_notDup(g_ooff_m.ooff010,"SELECT COUNT(*) FROM ooff_t WHERE "||"ooffent = '" ||g_enterprise|| "' AND "||"ooff001 = '"||g_ooff_m.ooff001 ||"' AND "|| "ooff002 = '"||g_ooff_m.ooff002 ||"' AND "|| "ooff003 = '"||g_ooff_m.ooff003 ||"' AND "|| "ooff004 = '"||g_ooff_m.ooff004 ||"' AND "|| "ooff005 = '"||g_ooff_m.ooff005 ||"' AND "|| "ooff006 = '"||g_ooff_m.ooff006 ||"' AND "|| "ooff007 = '"||g_ooff_m.ooff007 ||"' AND "|| "ooff008 = '"||g_ooff_m.ooff008 ||"' AND "|| "ooff009 = '"||g_ooff_m.ooff009 ||"' AND "|| "ooff010 = '"||g_ooff_m.ooff010 ||"' AND "|| "ooff011 = '"||g_ooff_m.ooff011 ||"' AND "|| "ooff012 = '"||g_ooff_m.ooff012 ||"'",'std-00004',0) THEN 
+                     LET g_ooff_m.ooff010 = g_ooff_m_t.ooff010
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.ooff011" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_ooff_m.ooff001) AND NOT cl_null(g_ooff_m.ooff002) AND NOT cl_null(g_ooff_m.ooff003) AND NOT cl_null(g_ooff_m.ooff004) AND NOT cl_null(g_ooff_m.ooff005) AND NOT cl_null(g_ooff_m.ooff006) AND NOT cl_null(g_ooff_m.ooff007) AND NOT cl_null(g_ooff_m.ooff008) AND NOT cl_null(g_ooff_m.ooff009) AND NOT cl_null(g_ooff_m.ooff010) AND NOT cl_null(g_ooff_m.ooff011) AND NOT cl_null(g_ooff_m.ooff012) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_ooff_m.ooff001 != g_ooff001_t  OR g_ooff_m.ooff002 != g_ooff002_t  OR g_ooff_m.ooff003 != g_ooff003_t  OR g_ooff_m.ooff004 != g_ooff004_t  OR g_ooff_m.ooff005 != g_ooff005_t  OR g_ooff_m.ooff006 != g_ooff006_t  OR g_ooff_m.ooff007 != g_ooff007_t  OR g_ooff_m.ooff008 != g_ooff008_t  OR g_ooff_m.ooff009 != g_ooff009_t  OR g_ooff_m.ooff010 != g_ooff010_t  OR g_ooff_m.ooff011 != g_ooff011_t  OR g_ooff_m.ooff012 != g_ooff012_t ))) THEN 
+                  IF NOT ap_chk_notDup(g_ooff_m.ooff011,"SELECT COUNT(*) FROM ooff_t WHERE "||"ooffent = '" ||g_enterprise|| "' AND "||"ooff001 = '"||g_ooff_m.ooff001 ||"' AND "|| "ooff002 = '"||g_ooff_m.ooff002 ||"' AND "|| "ooff003 = '"||g_ooff_m.ooff003 ||"' AND "|| "ooff004 = '"||g_ooff_m.ooff004 ||"' AND "|| "ooff005 = '"||g_ooff_m.ooff005 ||"' AND "|| "ooff006 = '"||g_ooff_m.ooff006 ||"' AND "|| "ooff007 = '"||g_ooff_m.ooff007 ||"' AND "|| "ooff008 = '"||g_ooff_m.ooff008 ||"' AND "|| "ooff009 = '"||g_ooff_m.ooff009 ||"' AND "|| "ooff010 = '"||g_ooff_m.ooff010 ||"' AND "|| "ooff011 = '"||g_ooff_m.ooff011 ||"' AND "|| "ooff012 = '"||g_ooff_m.ooff012 ||"'",'std-00004',0) THEN 
+                     LET g_ooff_m.ooff011 = g_ooff_m_t.ooff011
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.ooff012" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_ooff_m.ooff001) AND NOT cl_null(g_ooff_m.ooff002) AND NOT cl_null(g_ooff_m.ooff003) AND NOT cl_null(g_ooff_m.ooff004) AND NOT cl_null(g_ooff_m.ooff005) AND NOT cl_null(g_ooff_m.ooff006) AND NOT cl_null(g_ooff_m.ooff007) AND NOT cl_null(g_ooff_m.ooff008) AND NOT cl_null(g_ooff_m.ooff009) AND NOT cl_null(g_ooff_m.ooff010) AND NOT cl_null(g_ooff_m.ooff011) AND NOT cl_null(g_ooff_m.ooff012) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_ooff_m.ooff001 != g_ooff001_t  OR g_ooff_m.ooff002 != g_ooff002_t  OR g_ooff_m.ooff003 != g_ooff003_t  OR g_ooff_m.ooff004 != g_ooff004_t  OR g_ooff_m.ooff005 != g_ooff005_t  OR g_ooff_m.ooff006 != g_ooff006_t  OR g_ooff_m.ooff007 != g_ooff007_t  OR g_ooff_m.ooff008 != g_ooff008_t  OR g_ooff_m.ooff009 != g_ooff009_t  OR g_ooff_m.ooff010 != g_ooff010_t  OR g_ooff_m.ooff011 != g_ooff011_t  OR g_ooff_m.ooff012 != g_ooff012_t ))) THEN 
+                  IF NOT ap_chk_notDup(g_ooff_m.ooff012,"SELECT COUNT(*) FROM ooff_t WHERE "||"ooffent = '" ||g_enterprise|| "' AND "||"ooff001 = '"||g_ooff_m.ooff001 ||"' AND "|| "ooff002 = '"||g_ooff_m.ooff002 ||"' AND "|| "ooff003 = '"||g_ooff_m.ooff003 ||"' AND "|| "ooff004 = '"||g_ooff_m.ooff004 ||"' AND "|| "ooff005 = '"||g_ooff_m.ooff005 ||"' AND "|| "ooff006 = '"||g_ooff_m.ooff006 ||"' AND "|| "ooff007 = '"||g_ooff_m.ooff007 ||"' AND "|| "ooff008 = '"||g_ooff_m.ooff008 ||"' AND "|| "ooff009 = '"||g_ooff_m.ooff009 ||"' AND "|| "ooff010 = '"||g_ooff_m.ooff010 ||"' AND "|| "ooff011 = '"||g_ooff_m.ooff011 ||"' AND "|| "ooff012 = '"||g_ooff_m.ooff012 ||"'",'std-00004',0) THEN 
+                     LET g_ooff_m.ooff012 = g_ooff_m_t.ooff012
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.ooffcrtdp" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooff_m.ooffcrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_ooff_m.ooffcrtdp_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_ooff_m.ooffcrtdp_desc
+]]>
+</point>
+  <point name="input.a.ooffcrtid" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooff_m.ooffcrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_ooff_m.ooffcrtid_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_ooff_m.ooffcrtid_desc
+]]>
+</point>
+  <point name="input.a.ooffmodid" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooff_m.ooffmodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_ooff_m.ooffmodid_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_ooff_m.ooffmodid_desc
+]]>
+</point>
+  <point name="input.a.ooffowndp" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooff_m.ooffowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_ooff_m.ooffowndp_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_ooff_m.ooffowndp_desc
+]]>
+</point>
+  <point name="input.a.ooffownid" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooff_m.ooffownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_ooff_m.ooffownid_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_ooff_m.ooffownid_desc
+]]>
+</point>
+  <point name="input.master_input.comme" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[               LET g_qryparam.reqry = FALSE
+
+               LET g_qryparam.default1 = g_ooff_m.ooff013  #給予default值
+
+               #給予arg
+               LET g_qryparam.where = "(oofe008 > '",g_today,"' OR oofe008 IS NULL)"
+               CALL q_oofe007()                                #呼叫開窗
+               IF cl_null(g_ooff_m.ooff013) THEN
+                  LET g_ooff_m.ooff013  = g_qryparam.return1
+               ELSE
+                  LET g_ooff_m.ooff013  = g_ooff_m.ooff013||'\n'||g_qryparam.return1              #將開窗取得的值回傳到變數
+               END IF
+               DISPLAY g_ooff_m.ooff013  TO ooff013           #顯示到畫面上
+               LET g_qryparam.where = ""
+               NEXT FIELD ooff013]]>
+</point>
+  <point name="input.master_input.define" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[               LET g_qryparam.reqry = FALSE
+
+               LET g_qryparam.default1 = g_ooff_m.ooff013  #給予default值
+
+               #給予arg
+               LET g_qryparam.where = "(oofd013 > '",g_today,"' OR oofd013 IS NULL)"
+               CALL q_oofd012()                                #呼叫開窗
+               IF cl_null(g_ooff_m.ooff013) THEN
+                  LET g_ooff_m.ooff013  = g_qryparam.return1
+               ELSE
+                  LET g_ooff_m.ooff013  = g_ooff_m.ooff013||'\n'||g_qryparam.return1              #將開窗取得的值回傳到變數
+               END IF
+               DISPLAY g_ooff_m.ooff013  TO ooff013           #顯示到畫面上
+               LET g_qryparam.where = ""
+               NEXT FIELD ooff013]]>
+</point>
+  <point name="insert.default" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[      INITIALIZE g_ooff_m_t.* TO NULL]]>
+</point>
+  <point name="reproduce.a.ooff001" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[         LET l_ooff.ooff001 = l_newno
+         IF NOT aooi360_chk_ooff_copy(l_ooff.*) THEN
+            LET l_newno = ''
+            DISPLAY l_newno TO ooff001
+            NEXT FIELD ooff001
+         END IF
+         LET l_ooff.ooff001 = l_newno]]>
+</point>
+  <point name="reproduce.a.ooff002" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[         LET l_ooff.ooff002 = l_newno02
+         IF NOT aooi360_chk_ooff_copy(l_ooff.*) THEN
+            LET l_newno02 = ''
+            DISPLAY l_newno02 TO ooff002
+            NEXT FIELD ooff002
+         END IF
+         LET l_ooff.ooff002 = l_newno02]]>
+</point>
+  <point name="reproduce.a.ooff003" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[         LET l_ooff.ooff003 = l_newno03
+         IF NOT aooi360_chk_ooff_copy(l_ooff.*) THEN
+            LET l_newno03 = ''
+            DISPLAY l_newno03 TO ooff003
+            NEXT FIELD ooff003
+         END IF
+         LET l_ooff.ooff003 = l_newno03]]>
+</point>
+  <point name="reproduce.a.ooff004" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[         LET l_ooff.ooff004 = l_newno04
+         IF NOT aooi360_chk_ooff_copy(l_ooff.*) THEN
+            LET l_newno04 = ''
+            DISPLAY l_newno04 TO ooff004
+            NEXT FIELD ooff004
+         END IF
+         LET l_ooff.ooff004 = l_newno04]]>
+</point>
+  <point name="reproduce.a.ooff005" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[         LET l_ooff.ooff005 = l_newno05
+         IF NOT aooi360_chk_ooff_copy(l_ooff.*) THEN
+            LET l_newno05 = ''
+            DISPLAY l_newno05 TO ooff005
+            NEXT FIELD ooff005
+         END IF
+         LET l_ooff.ooff005 = l_newno05]]>
+</point>
+  <point name="reproduce.a.ooff006" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[         LET l_ooff.ooff006 = l_newno06
+         IF NOT aooi360_chk_ooff_copy(l_ooff.*) THEN
+            LET l_newno06 = ''
+            DISPLAY l_newno06 TO ooff006
+            NEXT FIELD ooff006
+         END IF
+         LET l_ooff.ooff006 = l_newno06]]>
+</point>
+  <point name="reproduce.a.ooff007" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[         LET l_ooff.ooff007 = l_newno07
+         IF NOT aooi360_chk_ooff_copy(l_ooff.*) THEN
+            LET l_newno07 = ''
+            DISPLAY l_newno07 TO ooff007
+            NEXT FIELD ooff007
+         END IF
+         LET l_ooff.ooff007 = l_newno07]]>
+</point>
+  <point name="reproduce.a.ooff008" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[         LET l_ooff.ooff008 = l_newno08
+         IF NOT aooi360_chk_ooff_copy(l_ooff.*) THEN
+            LET l_newno08 = ''
+            DISPLAY l_newno08 TO ooff008
+            NEXT FIELD ooff008
+         END IF
+         LET l_ooff.ooff008 = l_newno08]]>
+</point>
+  <point name="reproduce.a.ooff009" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[         LET l_ooff.ooff009 = l_newno09
+         IF NOT aooi360_chk_ooff_copy(l_ooff.*) THEN
+            LET l_newno09 = ''
+            DISPLAY l_newno09 TO ooff009
+            NEXT FIELD ooff009
+         END IF
+         LET l_ooff.ooff009 = l_newno09]]>
+</point>
+  <point name="reproduce.a.ooff010" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[         LET l_ooff.ooff010 = l_newno10
+         IF NOT aooi360_chk_ooff_copy(l_ooff.*) THEN
+            LET l_newno10 = ''
+            DISPLAY l_newno10 TO ooff010
+            NEXT FIELD ooff010
+         END IF
+         LET l_ooff.ooff010 = l_newno10]]>
+</point>
+  <point name="reproduce.a.ooff011" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[         LET l_ooff.ooff011 = l_newno11
+         IF NOT aooi360_chk_ooff_copy(l_ooff.*) THEN
+            LET l_newno11 = ''
+            DISPLAY l_newno11 TO ooff011
+            NEXT FIELD ooff011
+         END IF
+         LET l_ooff.ooff011 = l_newno11]]>
+</point>
+  <point name="reproduce.a.ooff012" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[         LET l_ooff.ooff012 = l_newno12
+         IF NOT aooi360_chk_ooff_copy(l_ooff.*) THEN
+            LET l_newno12 = ''
+            DISPLAY l_newno11 TO ooff012
+            NEXT FIELD ooff012
+         END IF
+         LET l_ooff.ooff012 = l_newno12]]>
+</point>
+  <point name="reproduce.define" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[   DEFINE l_ooff      RECORD LIKE ooff_t.*]]>
+</point>
+  <point name="show.head.reference" cite_std="N" status="" order="" ver="1" cite_ver="" new="N" src="s" mark_hard="N">
+<![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooff_m.ooffownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_ooff_m.ooffownid_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_ooff_m.ooffownid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooff_m.ooffowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_ooff_m.ooffowndp_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_ooff_m.ooffowndp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooff_m.ooffcrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_ooff_m.ooffcrtid_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_ooff_m.ooffcrtid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooff_m.ooffcrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_ooff_m.ooffcrtdp_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_ooff_m.ooffcrtdp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_ooff_m.ooffmodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_ooff_m.ooffmodid_desc = '('|| g_rtn_fields[1] || ')'
+            DISPLAY BY NAME g_ooff_m.ooffmodid_desc
+]]>
+</point>
+  <point name="global.memo" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="global.inc" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="global.variable" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="main.define" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="main.init" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="main.define_sql" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="main.after_define_sql" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="main.before_close" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="init.define" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="init.init" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="menu.default.insert" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.action_default" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_dialog" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="menu2.delete" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="menu2.output" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="menu2.modify" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="menu2.reproduce" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="menu2.insert" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="menu2.query" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.after_dialog" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="menu.delete" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="menu.output" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="menu.modify" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="menu.reproduce" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="menu.insert" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="menu.query" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.define" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.wc" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.cnt_sql" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.before_pre" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.reference" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="cs.define" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="cs.before_construct" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.ooff001" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.ooff001" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.ooff001" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.ooff014" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.ooff014" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.ooff014" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.ooff012" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.ooff012" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.ooff012" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.ooff002" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.ooff002" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.ooff002" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.ooff003" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.ooff003" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.ooff003" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.ooff004" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.ooff004" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.ooff004" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.ooff005" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.ooff005" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.ooff005" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.ooff006" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.ooff006" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.ooff006" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.ooff007" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.ooff007" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.ooff007" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.ooff008" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.ooff008" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.ooff008" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.ooff009" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.ooff009" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.ooff009" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.ooff010" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.ooff010" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.ooff010" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.ooff011" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.ooff011" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.ooff011" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.ooff013" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.ooff013" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.ooff013" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.ooffstus" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.ooffstus" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.ooffstus" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.ooffownid" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.ooffownid" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.ooffowndp" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.ooffowndp" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.ooffcrtid" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.ooffcrtid" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.ooffcrtdp" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.ooffcrtdp" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.ooffcrtdt" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.ooffmodid" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.ooffmodid" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.ooffmoddt" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="cs.more_construct" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="cs.b_dialog" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="cs.after_construct" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="filter.cs_ctrl" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="filter.add_cs" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="filter.b_dialog" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="query.define" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="fetch.define" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="fetch.action_control" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="insert.define" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="insert.after_insert" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="modify.define" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="modify.before_input" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="modify.after_input" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.define" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.after_set_entry" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.before_input" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.before.input" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.ooff001" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.ooff001" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.ooff014" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.ooff014" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.ooff014" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.ooff012" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.ooff012" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.ooff002" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.ooff002" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.ooff003" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.ooff003" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.ooff004" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.ooff004" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.ooff005" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.ooff005" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.ooff006" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.ooff006" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.ooff007" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.ooff007" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.ooff008" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.ooff008" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.ooff009" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.ooff009" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.ooff010" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.ooff010" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.ooff011" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.ooff011" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.ooff013" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.ooff013" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.ooff013" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.ooffstus" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.ooffstus" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.ooffstus" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.ooff001" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.ooff014" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.ooff012" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.ooff002" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.ooff003" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.ooff004" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.ooff005" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.ooff006" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.ooff007" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.ooff008" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.ooff009" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.ooff010" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.ooff011" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.ooff013" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.ooffstus" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.b_insert" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.m_insert" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.a_insert" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.b_update" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.m_update" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.a_update" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.more_input" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="input.after_input" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.head.b_input" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.head.b_insert" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.head.m_insert" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.head.a_insert" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="reproduce.after_reproduce" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="show.define" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="show.before" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="show.after" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="delete.define" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="delete.head.b_delete" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="delete.head.m_delete" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="delete.head.a_delete" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="ui_browser_refresh.define" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.define" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.field_control" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.after_control" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.define" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.field_control" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.after_control" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="default_search.define" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="default_search.before" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="default_search.after" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="statechange.define" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="statechange.before" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="statechange.before_menu" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="statechange.inactive" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="statechange.active" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="statechange.more_control" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="statechange.b_update" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="statechange.a_update" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <point name="statechange.after" cite_std="N" status="">
+<![CDATA[]]>
+</point>
+  <section id="aooi360.browser_fill" ver="1" status="" src="s">
+<![CDATA[#+ 瀏覽頁簽資料填充(一般單檔)
+PRIVATE FUNCTION aooi360_browser_fill(p_wc,ps_page_action) 
+   {<Local define>}
+   DEFINE p_wc              STRING
+   DEFINE ps_page_action    STRING
+   DEFINE l_searchcol       STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sql_rank        STRING
+   {</Local define>}
+   #add-point:browser_fill段define
+   {<point name="browser_fill.define"/>}
+   #end add-point
+   
+   CLEAR FORM
+   INITIALIZE g_ooff_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   CALL g_browser.clear()
+   
+   #搜尋用
+   IF cl_null(g_searchcol) OR g_searchcol = "0" THEN
+      LET l_searchcol = "ooff001"
+   ELSE
+      LET l_searchcol = g_searchcol
+   END IF
+ 
+   LET p_wc = p_wc.trim() #當查詢按下Q時 按下放棄 g_wc = "  " 所以要清掉空白
+   IF cl_null(p_wc) THEN  #p_wc 查詢條件
+      LET p_wc = " 1=1 " 
+   END IF
+   
+   #add-point:browser_fill段wc控制
+   {<point name="browser_fill.wc"/>}
+   #end add-point
+ 
+   LET g_sql = " SELECT COUNT(*) FROM ooff_t ",
+               "  ",
+               "  ",
+               " WHERE ooffent = '" ||g_enterprise|| "' AND ", 
+               p_wc CLIPPED
+                
+   #add-point:browser_fill段cnt_sql
+   {<point name="browser_fill.cnt_sql"/>}
+   #end add-point
+				
+   PREPARE header_cnt_pre FROM g_sql
+   EXECUTE header_cnt_pre INTO g_browser_cnt
+   FREE header_cnt_pre 
+   
+   #若超過最大顯示筆數
+   
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count
+   DISPLAY g_browser_cnt TO FORMONLY.h_count
+   
+   LET g_wc = p_wc
+   #LET g_page_action = ps_page_action          # Keep Action
+   
+   IF ps_page_action = "F" OR
+      ps_page_action = "P"  OR
+      ps_page_action = "N"  OR
+      ps_page_action = "L"  THEN
+      LET g_page_action = ps_page_action
+   END IF
+ 
+   CASE ps_page_action
+      
+      WHEN "F" 
+         LET g_pagestart = 1
+      
+      WHEN "P"  
+         LET g_pagestart = g_pagestart - g_max_browse
+         IF g_pagestart < 1 THEN
+            LET g_pagestart = 1
+         END IF
+      
+      WHEN "N"  
+         LET g_pagestart = g_pagestart + g_max_browse
+         IF g_pagestart > g_browser_cnt THEN
+            LET g_pagestart = g_browser_cnt - (g_browser_cnt mod g_max_browse) + 1
+            WHILE g_pagestart > g_browser_cnt 
+               LET g_pagestart = g_pagestart - g_max_browse
+            END WHILE
+         END IF
+      
+      WHEN "L"  
+         LET g_pagestart = g_browser_cnt - (g_browser_cnt mod g_max_browse) + 1
+         WHILE g_pagestart > g_browser_cnt 
+            LET g_pagestart = g_pagestart - g_max_browse
+         END WHILE
+         
+      WHEN '/'
+         LET g_pagestart = g_jump
+         IF g_pagestart > g_browser_cnt THEN
+            LET g_pagestart = 1
+            CALL cl_err(g_jump,'azz-998',0)
+         END IF
+         
+      OTHERWISE
+         
+   END CASE
+   
+   LET l_sql_rank = "SELECT ooffstus,ooff001,ooff002,ooff003,ooff004,ooff005,ooff006,ooff007,ooff008, 
+       ooff009,ooff010,ooff011,ooff012,RANK() OVER(ORDER BY ooff001 ",
+                    ",ooff002 ",
+                    ",ooff003 ",
+                    ",ooff004 ",
+                    ",ooff005 ",
+                    ",ooff006 ",
+                    ",ooff007 ",
+                    ",ooff008 ",
+                    ",ooff009 ",
+                    ",ooff010 ",
+                    ",ooff011 ",
+                    ",ooff012 ",
+ 
+                    g_order,
+                    ") AS RANK ",
+                    " FROM ooff_t ",
+                    "  ",
+                    "  ",
+                    " WHERE ooffent = '" ||g_enterprise|| "' AND ", g_wc
+ 
+   #add-point:browser_fill段before_pre
+   {<point name="browser_fill.before_pre"/>}
+   #end add-point					
+					
+   #定義翻頁CURSOR
+   LET g_sql= " SELECT ooffstus,ooff001,ooff002,ooff003,ooff004,ooff005,ooff006,ooff007,ooff008,ooff009, 
+       ooff010,ooff011,ooff012 FROM (",l_sql_rank,") ",
+              "  WHERE RANK >= ", g_pagestart,
+              "    AND RANK <  ", (g_pagestart + g_max_browse) , 
+              "  ORDER BY ",l_searchcol," ",g_order
+ 
+   PREPARE browse_pre FROM g_sql
+   DECLARE browse_cur CURSOR FOR browse_pre
+ 
+   CALL g_browser.clear()
+   LET g_cnt = 1
+   FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_ooff001,g_browser[g_cnt].b_ooff002, 
+       g_browser[g_cnt].b_ooff003,g_browser[g_cnt].b_ooff004,g_browser[g_cnt].b_ooff005,g_browser[g_cnt].b_ooff006, 
+       g_browser[g_cnt].b_ooff007,g_browser[g_cnt].b_ooff008,g_browser[g_cnt].b_ooff009,g_browser[g_cnt].b_ooff010, 
+       g_browser[g_cnt].b_ooff011,g_browser[g_cnt].b_ooff012
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("foreach:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      
+      
+      #add-point:browser_fill段reference
+      {<point name="browser_fill.reference"/>}
+      #end add-point
+      
+      LET g_browser[g_cnt].b_statepic = cl_get_actipic(g_browser[g_cnt].b_statepic)
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         CALL cl_err("Max_Row:"||g_max_rec USING "<<<<<","std-00002",0)
+         EXIT FOREACH
+      END IF
+   END FOREACH
+ 
+   CALL g_browser.deleteElement(g_cnt)
+   LET g_header_cnt = g_browser_cnt
+   LET g_rec_b = g_cnt - 1
+   LET g_current_cnt = g_browser_cnt
+   LET g_cnt = 0
+   
+   
+   FREE browse_pre
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+   ELSE
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   END IF
+   
+END FUNCTION
+ 
+ 
+]]>
+</section>
+  <section id="aooi360.construct" ver="1" status="" src="s">
+<![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION aooi360_construct()
+   {<Local define>}
+   DEFINE ls_return      STRING
+   DEFINE ls_result      STRING 
+   DEFINE ls_wc          STRING 
+   {</Local define>}
+   #add-point:cs段define
+   {<point name="cs.define"/>}
+   #end add-point
+   
+   CLEAR FORM
+   INITIALIZE g_ooff_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   LET g_current_row = 1
+ 
+   LET g_qryparam.state = "c"
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #螢幕上取條件
+      CONSTRUCT BY NAME g_wc ON 
+      
+         BEFORE CONSTRUCT                                    
+            #add-point:cs段more_construct
+            {<point name="cs.before_construct"/>}
+            #end add-point             
+      
+         #公用欄位開窗相關處理
+         
+      
+         #一般欄位
+         #---------------------------<  Master  >---------------------------
+ 
+           
+      END CONSTRUCT
+      
+      #add-point:cs段more_construct
+      {<point name="cs.more_construct"/>}
+      #end add-point   
+	  
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog
+         {<point name="cs.b_dialog"/>}
+         #end add-point  
+	  
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+  
+   #add-point:cs段after_construct
+   {<point name="cs.after_construct"/>}
+   #end add-point
+  
+   #LET g_wc = g_wc CLIPPED,cl_get_extra_cond("", "")
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aooi360.default_search" ver="1" status="" src="s">
+<![CDATA[#+ 外部參數搜尋
+PRIVATE FUNCTION aooi360_default_search()
+   {<Local define>}
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   {</Local define>}
+   #add-point:default_search段define
+   {<point name="default_search.define"/>}
+   #end add-point  
+   
+   #add-point:default_search段開始前
+   {<point name="default_search.before"/>}
+   #end add-point  
+   
+   LET g_pagestart = 1
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   IF NOT cl_null(g_argv[1]) THEN
+      LET ls_wc = ls_wc, " ooff001 = '", g_argv[1], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " ooff002 = '", g_argv[02], "' AND "
+   END IF
+ 
+   IF NOT cl_null(g_argv[03]) THEN
+      LET ls_wc = ls_wc, " ooff003 = '", g_argv[03], "' AND "
+   END IF
+ 
+   IF NOT cl_null(g_argv[04]) THEN
+      LET ls_wc = ls_wc, " ooff004 = '", g_argv[04], "' AND "
+   END IF
+ 
+   IF NOT cl_null(g_argv[05]) THEN
+      LET ls_wc = ls_wc, " ooff005 = '", g_argv[05], "' AND "
+   END IF
+ 
+   IF NOT cl_null(g_argv[06]) THEN
+      LET ls_wc = ls_wc, " ooff006 = '", g_argv[06], "' AND "
+   END IF
+ 
+   IF NOT cl_null(g_argv[07]) THEN
+      LET ls_wc = ls_wc, " ooff007 = '", g_argv[07], "' AND "
+   END IF
+ 
+   IF NOT cl_null(g_argv[08]) THEN
+      LET ls_wc = ls_wc, " ooff008 = '", g_argv[08], "' AND "
+   END IF
+ 
+   IF NOT cl_null(g_argv[09]) THEN
+      LET ls_wc = ls_wc, " ooff009 = '", g_argv[09], "' AND "
+   END IF
+ 
+   IF NOT cl_null(g_argv[10]) THEN
+      LET ls_wc = ls_wc, " ooff010 = '", g_argv[10], "' AND "
+   END IF
+ 
+   IF NOT cl_null(g_argv[11]) THEN
+      LET ls_wc = ls_wc, " ooff011 = '", g_argv[11], "' AND "
+   END IF
+ 
+   IF NOT cl_null(g_argv[12]) THEN
+      LET ls_wc = ls_wc, " ooff012 = '", g_argv[12], "' AND "
+   END IF
+ 
+ 
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      LET g_default = FALSE
+      #預設查詢條件
+      LET g_wc = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=1"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前
+   {<point name="default_search.after"/>}
+   #end add-point  
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aooi360.delete" ver="1" status="" src="s">
+<![CDATA[#+ 資料刪除 
+PRIVATE FUNCTION aooi360_delete()
+   {<Local define>}
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   {</Local define>}
+   #add-point:delete段define
+   {<point name="delete.define"/>}
+   #end add-point  
+   
+   IF g_ooff_m.ooff001 IS NULL
+   OR g_ooff_m.ooff002 IS NULL
+ 
+   OR g_ooff_m.ooff003 IS NULL
+ 
+   OR g_ooff_m.ooff004 IS NULL
+ 
+   OR g_ooff_m.ooff005 IS NULL
+ 
+   OR g_ooff_m.ooff006 IS NULL
+ 
+   OR g_ooff_m.ooff007 IS NULL
+ 
+   OR g_ooff_m.ooff008 IS NULL
+ 
+   OR g_ooff_m.ooff009 IS NULL
+ 
+   OR g_ooff_m.ooff010 IS NULL
+ 
+   OR g_ooff_m.ooff011 IS NULL
+ 
+   OR g_ooff_m.ooff012 IS NULL
+ 
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+ 
+   CALL aooi360_show()
+   
+   CALL s_transaction_begin()
+    
+   LET g_ooff001_t = g_ooff_m.ooff001
+   LET g_ooff002_t = g_ooff_m.ooff002
+ 
+   LET g_ooff003_t = g_ooff_m.ooff003
+ 
+   LET g_ooff004_t = g_ooff_m.ooff004
+ 
+   LET g_ooff005_t = g_ooff_m.ooff005
+ 
+   LET g_ooff006_t = g_ooff_m.ooff006
+ 
+   LET g_ooff007_t = g_ooff_m.ooff007
+ 
+   LET g_ooff008_t = g_ooff_m.ooff008
+ 
+   LET g_ooff009_t = g_ooff_m.ooff009
+ 
+   LET g_ooff010_t = g_ooff_m.ooff010
+ 
+   LET g_ooff011_t = g_ooff_m.ooff011
+ 
+   LET g_ooff012_t = g_ooff_m.ooff012
+ 
+ 
+   
+   
+ 
+   OPEN aooi360_cl USING g_enterprise,
+                           g_ooff_m.ooff001
+                           ,g_ooff_m.ooff002
+ 
+                           ,g_ooff_m.ooff003
+ 
+                           ,g_ooff_m.ooff004
+ 
+                           ,g_ooff_m.ooff005
+ 
+                           ,g_ooff_m.ooff006
+ 
+                           ,g_ooff_m.ooff007
+ 
+                           ,g_ooff_m.ooff008
+ 
+                           ,g_ooff_m.ooff009
+ 
+                           ,g_ooff_m.ooff010
+ 
+                           ,g_ooff_m.ooff011
+ 
+                           ,g_ooff_m.ooff012
+ 
+ 
+   IF STATUS THEN
+      CALL cl_err("OPEN aooi360_cl:", STATUS, 0)
+      CLOSE aooi360_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   FETCH aooi360_cl INTO 
+   IF SQLCA.sqlcode THEN
+      CALL cl_err(g_ooff_m.ooff001,SQLCA.sqlcode,0)
+      RETURN
+   END IF
+   
+   IF cl_ask_delete() THEN
+      INITIALIZE g_doc.* TO NULL
+      LET g_doc.column1 = "ooff001"
+      LET g_doc.value1 = g_ooff_m.ooff001
+      CALL cl_doc_remove()
+ 
+      #add-point:單頭刪除前
+      {<point name="delete.head.b_delete" mark="Y"/>}
+      #end add-point
+ 
+      DELETE FROM ooff_t 
+       WHERE ooffent = g_enterprise AND ooff001 = g_ooff_m.ooff001 
+         AND ooff002 = g_ooff_m.ooff002 
+ 
+         AND ooff003 = g_ooff_m.ooff003 
+ 
+         AND ooff004 = g_ooff_m.ooff004 
+ 
+         AND ooff005 = g_ooff_m.ooff005 
+ 
+         AND ooff006 = g_ooff_m.ooff006 
+ 
+         AND ooff007 = g_ooff_m.ooff007 
+ 
+         AND ooff008 = g_ooff_m.ooff008 
+ 
+         AND ooff009 = g_ooff_m.ooff009 
+ 
+         AND ooff010 = g_ooff_m.ooff010 
+ 
+         AND ooff011 = g_ooff_m.ooff011 
+ 
+         AND ooff012 = g_ooff_m.ooff012 
+ 
+ 
+ 
+      #add-point:單頭刪除中
+      {<point name="delete.head.m_delete"/>}
+      #end add-point
+         
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("ooff_t",SQLCA.sqlcode,0)
+         CALL s_transaction_end('N','0')
+      END IF
+  
+      
+      
+      #add-point:單頭刪除後
+      {<point name="delete.head.a_delete"/>}
+      #end add-point
+      
+          
+      
+      CLEAR FORM
+      CALL aooi360_ui_browser_refresh()
+      IF g_browser_cnt > 0 THEN
+         CALL aooi360_fetch("P")
+      ELSE
+         CALL aooi360_browser_fill(" 1=1 ","F")
+      END IF
+      
+   END IF
+ 
+   CLOSE aooi360_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-D
+   CALL cl_flow_notify(g_ooff_m.ooff001,"D")
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aooi360.description" ver="1" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(版次:2) Build-000141
+#+ 
+#+ Filename...: aooi360
+#+ Description: 備註維護作業
+#+ Creator....: 02482(13/08/12)
+#+ Modifier...: 02482(14/01/21)
+#+ Buildtype..: 應用 i01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="aooi360.fetch" ver="1" status="" src="s">
+<![CDATA[#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION aooi360_fetch(p_fl)
+ 
+   {<Local define>}
+   DEFINE p_fl       LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   {</Local define>}
+ 
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point  
+   
+   CASE p_fl
+      WHEN "F" LET g_current_idx = 1
+      WHEN "P"
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN "N"
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN "L" 
+         LET g_current_idx = g_header_cnt        
+      WHEN "/"
+         IF (NOT g_no_ask) THEN      
+            CALL cl_getmsg("fetch", g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,": " FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl"
+            END PROMPT
+            
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT CASE  
+            END IF           
+         END IF
+         IF g_jump > 0 THEN
+            LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE     
+   END CASE
+   
+   LET g_browser_cnt = g_browser.getLength()
+ 
+   #瀏覽頁筆數顯示
+   LET g_browser_idx = g_pagestart+g_current_idx-1
+   DISPLAY g_browser_idx TO FORMONLY.b_index        #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.b_count        #總筆數
+   DISPLAY g_browser_idx TO FORMONLY.h_index        #當下筆數
+   DISPLAY g_browser_cnt TO FORMONLY.h_count        #總筆數
+   CALL ui.Interface.refresh()
+   
+   #單頭筆數顯示
+   #DISPLAY g_browser_idx TO FORMONLY.idx            #當下筆數
+   #DISPLAY g_browser_cnt TO FORMONLY.cnt            #總筆數
+   
+   
+   
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   # 設定browse索引
+ 
+   CALL cl_navigator_setting(g_browser_idx, g_browser_cnt )
+ 
+   #代表沒有資料, 無需做後續資料撈取之動作
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+ 
+   LET g_ooff_m.ooff001 = g_browser[g_current_idx].b_ooff001
+   LET g_ooff_m.ooff002 = g_browser[g_current_idx].b_ooff002
+ 
+   LET g_ooff_m.ooff003 = g_browser[g_current_idx].b_ooff003
+ 
+   LET g_ooff_m.ooff004 = g_browser[g_current_idx].b_ooff004
+ 
+   LET g_ooff_m.ooff005 = g_browser[g_current_idx].b_ooff005
+ 
+   LET g_ooff_m.ooff006 = g_browser[g_current_idx].b_ooff006
+ 
+   LET g_ooff_m.ooff007 = g_browser[g_current_idx].b_ooff007
+ 
+   LET g_ooff_m.ooff008 = g_browser[g_current_idx].b_ooff008
+ 
+   LET g_ooff_m.ooff009 = g_browser[g_current_idx].b_ooff009
+ 
+   LET g_ooff_m.ooff010 = g_browser[g_current_idx].b_ooff010
+ 
+   LET g_ooff_m.ooff011 = g_browser[g_current_idx].b_ooff011
+ 
+   LET g_ooff_m.ooff012 = g_browser[g_current_idx].b_ooff012
+ 
+ 
+                       
+   #重讀DB,因TEMP有不被更新特性
+    SELECT UNIQUE 
+ INTO 
+ FROM ooff_t
+ WHERE ooffent = g_enterprise AND ooff001 = g_ooff_m.ooff001 AND ooff002 = g_ooff_m.ooff002 AND ooff003 = g_ooff_m.ooff003 AND ooff004 = g_ooff_m.ooff004 AND ooff005 = g_ooff_m.ooff005 AND ooff006 = g_ooff_m.ooff006 AND ooff007 = g_ooff_m.ooff007 AND ooff008 = g_ooff_m.ooff008 AND ooff009 = g_ooff_m.ooff009 AND ooff010 = g_ooff_m.ooff010 AND ooff011 = g_ooff_m.ooff011 AND ooff012 = g_ooff_m.ooff012
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("ooff_t",SQLCA.sqlcode,0)
+      INITIALIZE g_ooff_m.* TO NULL
+      RETURN
+   END IF
+   
+   #add-point:fetch段action控制
+   {<point name="fetch.action_control"/>}
+   #end add-point  
+   
+   
+   
+   #重新顯示
+   CALL aooi360_show()
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aooi360.filter" ver="1" status="" src="s">
+<![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION aooi360_filter()
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+      #add-point:filter段add_cs
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+         #add-point:filter段b_dialog
+         {<point name="filter.b_dialog"/>}
+         #end add-point  
+ 
+ 
+ 
+ 
+ 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aooi360.filter_parser" ver="1" status="" src="s">
+<![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION aooi360_filter_parser(ps_field)
+   {<Local define>}
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   {</Local define>}
+ 
+ 
+ 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aooi360.global" ver="1" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+{<Module define>}
+ 
+#單頭 type 宣告
+PRIVATE TYPE type_g_ooff_m RECORD
+       
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_ooff_m        type_g_ooff_m
+DEFINE g_ooff_m_t      type_g_ooff_m                #備份舊值
+   
+ 
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD                   #資料瀏覽之欄位  
+         b_statepic     LIKE type_t.chr50,
+            b_ooff001 LIKE ooff_t.ooff001,
+      b_ooff002 LIKE ooff_t.ooff002,
+      b_ooff003 LIKE ooff_t.ooff003,
+      b_ooff004 LIKE ooff_t.ooff004,
+      b_ooff005 LIKE ooff_t.ooff005,
+      b_ooff006 LIKE ooff_t.ooff006,
+      b_ooff007 LIKE ooff_t.ooff007,
+      b_ooff008 LIKE ooff_t.ooff008,
+      b_ooff009 LIKE ooff_t.ooff009,
+      b_ooff010 LIKE ooff_t.ooff010,
+      b_ooff011 LIKE ooff_t.ooff011,
+      b_ooff012 LIKE ooff_t.ooff012
+         #,rank           LIKE type_t.num10
+      END RECORD 
+          
+#無單頭append欄位定義
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+  
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE g_jump                LIKE type_t.num10             #查詢指定的筆數 
+DEFINE g_no_ask              LIKE type_t.num5              #是否開啟指定筆視窗 
+DEFINE g_rec_b               LIKE type_t.num5              #單身筆數                         
+DEFINE l_ac                  LIKE type_t.num5              #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_pagestart           LIKE type_t.num5              #page起始筆數
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_state               STRING
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_aw                  STRING             #確定當下點擊的單身
+ 
+#快速搜尋用
+DEFINE g_searchcol           STRING             #查詢欄位代碼
+DEFINE g_searchstr           STRING             #查詢欄位字串
+DEFINE g_order               STRING             #查詢排序模式
+ 
+#Browser用
+DEFINE g_current_idx         LIKE type_t.num5   #Browser 所在筆數(當下page)
+DEFINE g_current_row         LIKE type_t.num5   #Browser 所在筆數(暫存用)
+DEFINE g_current_cnt         LIKE type_t.num10  #Browser 總筆數(當下page)
+DEFINE g_browser_idx         LIKE type_t.num5   #Browser 所在筆數(所有資料)
+DEFINE g_browser_cnt         LIKE type_t.num5   #Browser 總筆數(所有資料)
+DEFINE g_tmp_page            LIKE type_t.num5   
+DEFINE g_row_index           LIKE type_t.num5
+DEFINE g_chk                 BOOLEAN
+DEFINE g_default             BOOLEAN            #是否有外部參數查詢
+ 
+{</Module define>}
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="aooi360.init" ver="1" status="" src="s">
+<![CDATA[#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION aooi360_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   
+   
+   LET g_error_show = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+   CALL aooi360_default_search()
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aooi360.input" ver="1" status="" src="s">
+<![CDATA[#+ 資料輸入
+PRIVATE FUNCTION aooi360_input(p_cmd)
+   {<Local define>}
+   DEFINE p_cmd           LIKE type_t.chr1
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_n             LIKE type_t.num5        #檢查重複用  
+   DEFINE l_cnt           LIKE type_t.num5        #檢查重複用  
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否  
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   {</Local define>}
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #切換畫面
+   
+   CALL cl_set_head_visible("","YES")  
+   
+   IF p_cmd = 'r' THEN
+      #此段落的r動作等同於a
+      LET p_cmd = 'a'
+   END IF
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   LET g_qryparam.state = "i"
+   
+   #控制key欄位可否輸入
+   CALL aooi360_set_entry(p_cmd)
+   #add-point:set_entry後
+   {<point name="input.after_set_entry"/>}
+   #end add-point
+   CALL aooi360_set_no_entry(p_cmd)
+   #add-point:資料輸入前
+   {<point name="input.before_input"/>}
+   #end add-point
+   
+   DISPLAY BY NAME 
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #單頭段
+      INPUT BY NAME  
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+ 
+         ON ACTION comme
+ 
+            LET g_action_choice="comme"
+            IF cl_auth_chk_act("comme") THEN 
+               #add-point:ON ACTION comme
+               {<point name="input.master_input.comme" />}
+               #END add-point
+            END IF
+ 
+ 
+         ON ACTION define
+ 
+            LET g_action_choice="define"
+            IF cl_auth_chk_act("define") THEN 
+               #add-point:ON ACTION define
+               {<point name="input.master_input.define" />}
+               #END add-point
+            END IF
+ 
+         
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            #其他table資料備份(確定是否更改用)
+            
+            #add-point:input開始前
+            {<point name="input.before.input"/>}
+            #end add-point
+   
+         #---------------------------<  Master  >---------------------------
+ #欄位檢查
+         #---------------------------<  Master  >---------------------------
+ #欄位開窗
+ 
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+                
+            CALL cl_showmsg()   #錯誤訊息統整顯示
+ 
+            IF p_cmd <> "u" THEN
+               LET l_count = 1  
+ 
+               SELECT COUNT(*) INTO l_count FROM ooff_t
+                WHERE ooffent = g_enterprise AND ooff001 = g_ooff_m.ooff001
+                  AND ooff002 = g_ooff_m.ooff002
+ 
+                  AND ooff003 = g_ooff_m.ooff003
+ 
+                  AND ooff004 = g_ooff_m.ooff004
+ 
+                  AND ooff005 = g_ooff_m.ooff005
+ 
+                  AND ooff006 = g_ooff_m.ooff006
+ 
+                  AND ooff007 = g_ooff_m.ooff007
+ 
+                  AND ooff008 = g_ooff_m.ooff008
+ 
+                  AND ooff009 = g_ooff_m.ooff009
+ 
+                  AND ooff010 = g_ooff_m.ooff010
+ 
+                  AND ooff011 = g_ooff_m.ooff011
+ 
+                  AND ooff012 = g_ooff_m.ooff012
+ 
+ 
+               IF l_count = 0 THEN
+               
+                  #add-point:單頭新增前
+                  {<point name="input.head.b_insert" mark="Y"/>}
+                  #end add-point
+               
+                  INSERT INTO ooff_t (ooffent,)
+                  VALUES (g_enterprise,) 
+                  
+                  #add-point:單頭新增中
+                  {<point name="input.head.m_insert"/>}
+                  #end add-point
+                  
+                  IF SQLCA.sqlcode THEN
+                     CALL cl_err("ooff_t",SQLCA.sqlcode,1)  
+                     CONTINUE DIALOG
+                  END IF
+                  
+                  
+                  
+                  #資料多語言用-增/改
+                  
+                  
+                  #add-point:單頭新增後
+                  {<point name="input.head.a_insert"/>}
+                  #end add-point
+                  
+                  CALL s_transaction_end('Y','0')
+               ELSE
+                  CALL cl_err( "g_ooff_m.ooff001", "std-00006", 0 )
+                  CALL s_transaction_end('N','0')
+               END IF 
+            ELSE
+               #add-point:單頭修改前
+               {<point name="input.head.b_update" mark="Y"/>}
+               #end add-point
+               UPDATE ooff_t SET () = ()
+                WHERE ooffent = g_enterprise AND ooff001 = g_ooff001_t #
+                  AND ooff002 = g_ooff002_t
+ 
+                  AND ooff003 = g_ooff003_t
+ 
+                  AND ooff004 = g_ooff004_t
+ 
+                  AND ooff005 = g_ooff005_t
+ 
+                  AND ooff006 = g_ooff006_t
+ 
+                  AND ooff007 = g_ooff007_t
+ 
+                  AND ooff008 = g_ooff008_t
+ 
+                  AND ooff009 = g_ooff009_t
+ 
+                  AND ooff010 = g_ooff010_t
+ 
+                  AND ooff011 = g_ooff011_t
+ 
+                  AND ooff012 = g_ooff012_t
+ 
+ 
+               #add-point:單頭修改中
+               {<point name="input.head.m_update"/>}
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL cl_err("ooff_t","std-00009",1)
+                     CALL s_transaction_end('N','0')
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     CALL cl_err("ooff_t",SQLCA.sqlcode,1)  
+                     CALL s_transaction_end('N','0')
+                  OTHERWISE
+                     
+                     #資料多語言用-增/改
+                     
+                     #add-point:單頭修改後
+                     {<point name="input.head.a_update"/>}
+                     #end add-point
+                     CALL s_transaction_end('Y','0')
+               END CASE
+            END IF
+           #controlp
+      END INPUT
+          
+      #add-point:input段more input 
+      {<point name="input.more_input"/>}
+      #end add-point
+          
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         CALL cl_set_head_visible("","AUTO")
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input 
+   {<point name="input.after_input"/>}
+   #end add-point    
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aooi360.insert" ver="1" status="" src="s">
+<![CDATA[#+ 資料新增
+PRIVATE FUNCTION aooi360_insert()
+   #add-point:insert段define
+   {<point name="insert.define"/>}
+   #end add-point    
+   
+   CLEAR FORM                    #清畫面欄位內容
+ 
+   INITIALIZE g_ooff_m.* LIKE ooff_t.*             #DEFAULT 設定
+   LET g_ooff001_t = NULL
+   LET g_ooff002_t = NULL
+ 
+   LET g_ooff003_t = NULL
+ 
+   LET g_ooff004_t = NULL
+ 
+   LET g_ooff005_t = NULL
+ 
+   LET g_ooff006_t = NULL
+ 
+   LET g_ooff007_t = NULL
+ 
+   LET g_ooff008_t = NULL
+ 
+   LET g_ooff009_t = NULL
+ 
+   LET g_ooff010_t = NULL
+ 
+   LET g_ooff011_t = NULL
+ 
+   LET g_ooff012_t = NULL
+ 
+ 
+   
+   CALL s_transaction_begin()
+   
+   WHILE TRUE
+      #六階樹狀給值
+ 
+      
+      #公用欄位給值
+      
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+      
+ 
+      #add-point:單頭預設值
+      {<point name="insert.default"/>}
+      #end add-point   
+     
+      CALL aooi360_input("a")
+      
+      #add-point:單頭輸入後
+      {<point name="insert.after_insert"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_ooff_m.* = g_ooff_m_t.*
+         CALL aooi360_show()
+         CALL cl_err("",9001,0)
+         EXIT WHILE
+      END IF
+ 
+      LET g_rec_b = 0
+      EXIT WHILE
+   END WHILE
+   
+   LET g_ooff001_t = g_ooff_m.ooff001
+   LET g_ooff002_t = g_ooff_m.ooff002
+ 
+   LET g_ooff003_t = g_ooff_m.ooff003
+ 
+   LET g_ooff004_t = g_ooff_m.ooff004
+ 
+   LET g_ooff005_t = g_ooff_m.ooff005
+ 
+   LET g_ooff006_t = g_ooff_m.ooff006
+ 
+   LET g_ooff007_t = g_ooff_m.ooff007
+ 
+   LET g_ooff008_t = g_ooff_m.ooff008
+ 
+   LET g_ooff009_t = g_ooff_m.ooff009
+ 
+   LET g_ooff010_t = g_ooff_m.ooff010
+ 
+   LET g_ooff011_t = g_ooff_m.ooff011
+ 
+   LET g_ooff012_t = g_ooff_m.ooff012
+ 
+ 
+   
+   LET g_state = "Y"
+ 
+   LET g_wc = g_wc,  
+              " OR ( ooffent = '" ||g_enterprise|| "' AND",
+              " ooff001 = '", g_ooff_m.ooff001 CLIPPED, "' "
+              ," AND ooff002 = '", g_ooff_m.ooff002 CLIPPED, "' "
+ 
+              ," AND ooff003 = '", g_ooff_m.ooff003 CLIPPED, "' "
+ 
+              ," AND ooff004 = '", g_ooff_m.ooff004 CLIPPED, "' "
+ 
+              ," AND ooff005 = '", g_ooff_m.ooff005 CLIPPED, "' "
+ 
+              ," AND ooff006 = '", g_ooff_m.ooff006 CLIPPED, "' "
+ 
+              ," AND ooff007 = '", g_ooff_m.ooff007 CLIPPED, "' "
+ 
+              ," AND ooff008 = '", g_ooff_m.ooff008 CLIPPED, "' "
+ 
+              ," AND ooff009 = '", g_ooff_m.ooff009 CLIPPED, "' "
+ 
+              ," AND ooff010 = '", g_ooff_m.ooff010 CLIPPED, "' "
+ 
+              ," AND ooff011 = '", g_ooff_m.ooff011 CLIPPED, "' "
+ 
+              ," AND ooff012 = '", g_ooff_m.ooff012 CLIPPED, "' "
+ 
+ 
+              , ") "
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aooi360.main" ver="1" status="" src="s">
+<![CDATA[#+ 此段落由子樣板a26產生
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aoo","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = "SELECT  FROM ooff_t WHERE ooffent= ? AND ooff001=? AND ooff002=? AND ooff003=?  
+       AND ooff004=? AND ooff005=? AND ooff006=? AND ooff007=? AND ooff008=? AND ooff009=? AND ooff010=?  
+       AND ooff011=? AND ooff012=? FOR UPDATE"
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   DECLARE aooi360_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+ 
+   ELSE
+      
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aooi360 WITH FORM cl_ap_formpath("aoo",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aooi360_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aooi360_ui_dialog() 
+	  
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_aooi360
+      
+   END IF 
+   
+   CLOSE aooi360_cl
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+]]>
+</section>
+  <section id="aooi360.modify" ver="1" status="" src="s">
+<![CDATA[#+ 資料修改
+PRIVATE FUNCTION aooi360_modify()
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point
+   
+   IF g_ooff_m.ooff001 IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF 
+   
+    SELECT UNIQUE 
+ INTO 
+ FROM ooff_t
+ WHERE ooffent = g_enterprise AND ooff001 = g_ooff_m.ooff001 AND ooff002 = g_ooff_m.ooff002 AND ooff003 = g_ooff_m.ooff003 AND ooff004 = g_ooff_m.ooff004 AND ooff005 = g_ooff_m.ooff005 AND ooff006 = g_ooff_m.ooff006 AND ooff007 = g_ooff_m.ooff007 AND ooff008 = g_ooff_m.ooff008 AND ooff009 = g_ooff_m.ooff009 AND ooff010 = g_ooff_m.ooff010 AND ooff011 = g_ooff_m.ooff011 AND ooff012 = g_ooff_m.ooff012
+ 
+   ERROR ""
+  
+   LET g_ooff001_t = g_ooff_m.ooff001
+   LET g_ooff002_t = g_ooff_m.ooff002
+ 
+   LET g_ooff003_t = g_ooff_m.ooff003
+ 
+   LET g_ooff004_t = g_ooff_m.ooff004
+ 
+   LET g_ooff005_t = g_ooff_m.ooff005
+ 
+   LET g_ooff006_t = g_ooff_m.ooff006
+ 
+   LET g_ooff007_t = g_ooff_m.ooff007
+ 
+   LET g_ooff008_t = g_ooff_m.ooff008
+ 
+   LET g_ooff009_t = g_ooff_m.ooff009
+ 
+   LET g_ooff010_t = g_ooff_m.ooff010
+ 
+   LET g_ooff011_t = g_ooff_m.ooff011
+ 
+   LET g_ooff012_t = g_ooff_m.ooff012
+ 
+ 
+   
+   CALL s_transaction_begin()
+   
+   OPEN aooi360_cl USING g_enterprise,g_ooff_m.ooff001,g_ooff_m.ooff002,g_ooff_m.ooff003,g_ooff_m.ooff004,g_ooff_m.ooff005,g_ooff_m.ooff006,g_ooff_m.ooff007,g_ooff_m.ooff008,g_ooff_m.ooff009,g_ooff_m.ooff010,g_ooff_m.ooff011,g_ooff_m.ooff012
+   IF STATUS THEN
+      CALL cl_err("OPEN aooi360_cl:", STATUS, 1)
+      CLOSE aooi360_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #鎖住將被更改或取消的資料
+   FETCH aooi360_cl INTO 
+ 
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("ooff_t",SQLCA.sqlcode,0)
+      CLOSE aooi360_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   
+ 
+   CALL aooi360_show()
+   
+   WHILE TRUE
+      LET g_ooff_m.ooff001 = g_ooff001_t
+      LET g_ooff_m.ooff002 = g_ooff002_t
+ 
+      LET g_ooff_m.ooff003 = g_ooff003_t
+ 
+      LET g_ooff_m.ooff004 = g_ooff004_t
+ 
+      LET g_ooff_m.ooff005 = g_ooff005_t
+ 
+      LET g_ooff_m.ooff006 = g_ooff006_t
+ 
+      LET g_ooff_m.ooff007 = g_ooff007_t
+ 
+      LET g_ooff_m.ooff008 = g_ooff008_t
+ 
+      LET g_ooff_m.ooff009 = g_ooff009_t
+ 
+      LET g_ooff_m.ooff010 = g_ooff010_t
+ 
+      LET g_ooff_m.ooff011 = g_ooff011_t
+ 
+      LET g_ooff_m.ooff012 = g_ooff012_t
+ 
+ 
+      
+      #寫入修改者/修改日期資訊
+      
+      
+      #add-point:modify段修改前
+      {<point name="modify.before_input"/>}
+      #end add-point
+ 
+      CALL aooi360_input("u")     #欄位更改
+ 
+      #add-point:modify段修改後
+      {<point name="modify.after_input"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_ooff_m.* = g_ooff_m_t.*
+         CALL aooi360_show()
+         CALL cl_err("",9001,0)
+         EXIT WHILE
+      END IF
+ 
+      EXIT WHILE
+      
+   END WHILE
+ 
+   #修改歷程記錄
+   IF NOT cl_log_modified_record(g_ooff_m.ooff001,g_site) THEN 
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE aooi360_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-U
+   CALL cl_flow_notify(g_ooff_m.ooff001,"U")
+   
+   LET g_worksheet_hidden = 0
+   
+END FUNCTION   
+]]>
+</section>
+  <section id="aooi360.other_dialog" ver="1" status="" src="s">
+<![CDATA[ 
+]]>
+</section>
+  <section id="aooi360.other_function" ver="1" status="" src="s">
+<![CDATA[   
+{<point name="other.function"/>}
+]]>
+</section>
+  <section id="aooi360.query" ver="1" status="" src="s">
+<![CDATA[#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION aooi360_query()
+   {<Local define>}
+   DEFINE ls_wc STRING
+   {</Local define>}
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point
+   
+   LET INT_FLAG = 0
+   LET ls_wc = g_wc
+   
+   #切換畫面
+ 
+   CALL g_browser.clear() 
+ 
+   IF g_worksheet_hidden THEN  #browser panel 單身折疊
+      CALL gfrm_curr.setElementHidden("worksheet_vbox",0)
+      CALL gfrm_curr.setElementImage("worksheethidden","worksheethidden-24.png")
+      LET g_worksheet_hidden = 0
+   END IF
+   IF g_header_hidden THEN    #單頭折疊
+      CALL gfrm_curr.setElementHidden("worksheet_detail",0)
+      CALL gfrm_curr.setElementImage("controls","headerhidden-24")
+      LET g_header_hidden = 0
+   END IF
+ 
+   INITIALIZE g_ooff_m.* TO NULL
+   ERROR ""
+ 
+   DISPLAY " " TO FORMONLY.b_count
+   DISPLAY " " TO FORMONLY.h_count
+   CALL aooi360_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      LET g_wc = ls_wc
+      CALL aooi360_browser_fill(g_wc,"F")
+      CALL aooi360_fetch("")
+      RETURN
+   ELSE
+      LET g_current_row = 1
+      LET g_current_cnt = 0
+   END IF
+   
+   LET g_error_show = 1
+   CALL aooi360_browser_fill(g_wc,"F")   # 移到第一頁
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||")")
+   
+   #備份搜尋條件
+   LET ls_wc = g_wc
+   
+   #第一層模糊搜尋
+   IF g_browser.getLength() = 0 THEN
+      LET g_wc = cl_wc_parser(ls_wc)
+      LET g_error_show = 1
+      CALL aooi360_browser_fill(g_wc,"F")
+   END IF
+   
+   #第二層助記碼搜尋
+   IF g_browser.getLength() = 0 THEN
+ 
+      
+      
+      IF NOT cl_null(g_wc) THEN
+         LET g_error_show = 1
+         CALL aooi360_browser_fill(g_wc,"F")
+      END IF
+      
+   END IF
+    
+   IF g_browser.getLength() = 0 THEN
+      CALL cl_err("","-100",1)
+   ELSE
+      CALL aooi360_fetch("F") 
+   END IF
+   
+   LET g_wc_filter = ""
+   
+END FUNCTION
+]]>
+</section>
+  <section id="aooi360.reproduce" ver="1" status="" src="s">
+<![CDATA[#+ 資料複製
+PRIVATE FUNCTION aooi360_reproduce()
+   {<Local define>}
+   DEFINE l_newno     LIKE ooff_t.ooff001 
+   DEFINE l_oldno     LIKE ooff_t.ooff001 
+   DEFINE l_newno02     LIKE ooff_t.ooff002 
+   DEFINE l_oldno02     LIKE ooff_t.ooff002 
+ 
+   DEFINE l_newno03     LIKE ooff_t.ooff003 
+   DEFINE l_oldno03     LIKE ooff_t.ooff003 
+ 
+   DEFINE l_newno04     LIKE ooff_t.ooff004 
+   DEFINE l_oldno04     LIKE ooff_t.ooff004 
+ 
+   DEFINE l_newno05     LIKE ooff_t.ooff005 
+   DEFINE l_oldno05     LIKE ooff_t.ooff005 
+ 
+   DEFINE l_newno06     LIKE ooff_t.ooff006 
+   DEFINE l_oldno06     LIKE ooff_t.ooff006 
+ 
+   DEFINE l_newno07     LIKE ooff_t.ooff007 
+   DEFINE l_oldno07     LIKE ooff_t.ooff007 
+ 
+   DEFINE l_newno08     LIKE ooff_t.ooff008 
+   DEFINE l_oldno08     LIKE ooff_t.ooff008 
+ 
+   DEFINE l_newno09     LIKE ooff_t.ooff009 
+   DEFINE l_oldno09     LIKE ooff_t.ooff009 
+ 
+   DEFINE l_newno10     LIKE ooff_t.ooff010 
+   DEFINE l_oldno10     LIKE ooff_t.ooff010 
+ 
+   DEFINE l_newno11     LIKE ooff_t.ooff011 
+   DEFINE l_oldno11     LIKE ooff_t.ooff011 
+ 
+   DEFINE l_newno12     LIKE ooff_t.ooff012 
+   DEFINE l_oldno12     LIKE ooff_t.ooff012 
+ 
+ 
+   DEFINE l_master    RECORD LIKE ooff_t.*
+   DEFINE l_cnt       LIKE type_t.num5
+   {</Local define>}
+ 
+   #add-point:reproduce段define
+   {<point name="reproduce.define"/>}
+   #end add-point   
+   
+   #切換畫面
+   
+   IF g_ooff_m.ooff001 IS NULL
+      OR g_ooff_m.ooff002 IS NULL
+ 
+      OR g_ooff_m.ooff003 IS NULL
+ 
+      OR g_ooff_m.ooff004 IS NULL
+ 
+      OR g_ooff_m.ooff005 IS NULL
+ 
+      OR g_ooff_m.ooff006 IS NULL
+ 
+      OR g_ooff_m.ooff007 IS NULL
+ 
+      OR g_ooff_m.ooff008 IS NULL
+ 
+      OR g_ooff_m.ooff009 IS NULL
+ 
+      OR g_ooff_m.ooff010 IS NULL
+ 
+      OR g_ooff_m.ooff011 IS NULL
+ 
+      OR g_ooff_m.ooff012 IS NULL
+ 
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+   
+   LET g_ooff001_t = g_ooff_m.ooff001
+   LET g_ooff002_t = g_ooff_m.ooff002
+ 
+   LET g_ooff003_t = g_ooff_m.ooff003
+ 
+   LET g_ooff004_t = g_ooff_m.ooff004
+ 
+   LET g_ooff005_t = g_ooff_m.ooff005
+ 
+   LET g_ooff006_t = g_ooff_m.ooff006
+ 
+   LET g_ooff007_t = g_ooff_m.ooff007
+ 
+   LET g_ooff008_t = g_ooff_m.ooff008
+ 
+   LET g_ooff009_t = g_ooff_m.ooff009
+ 
+   LET g_ooff010_t = g_ooff_m.ooff010
+ 
+   LET g_ooff011_t = g_ooff_m.ooff011
+ 
+   LET g_ooff012_t = g_ooff_m.ooff012
+ 
+ 
+   
+   LET g_ooff_m.ooff001 = ""
+   LET g_ooff_m.ooff002 = ""
+ 
+   LET g_ooff_m.ooff003 = ""
+ 
+   LET g_ooff_m.ooff004 = ""
+ 
+   LET g_ooff_m.ooff005 = ""
+ 
+   LET g_ooff_m.ooff006 = ""
+ 
+   LET g_ooff_m.ooff007 = ""
+ 
+   LET g_ooff_m.ooff008 = ""
+ 
+   LET g_ooff_m.ooff009 = ""
+ 
+   LET g_ooff_m.ooff010 = ""
+ 
+   LET g_ooff_m.ooff011 = ""
+ 
+   LET g_ooff_m.ooff012 = ""
+ 
+ 
+    
+   CALL aooi360_set_entry("a")
+   CALL aooi360_set_no_entry("a")
+   
+   #公用欄位給予預設值
+   
+   
+   #add-point:複製輸入前
+   {<point name="reproduce.head.b_input"/>}
+   #end add-point
+   
+   CALL aooi360_input("r")
+ 
+   
+   
+   IF INT_FLAG  THEN
+      LET INT_FLAG = 0
+      RETURN
+   END IF
+   
+   CALL s_transaction_begin()
+   
+   #add-point:單頭複製前
+   {<point name="reproduce.head.b_insert" mark="Y"/>}
+   #end add-point
+   
+   #add-point:單頭複製中
+   {<point name="reproduce.head.m_insert"/>}
+   #end add-point
+   
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("ooff_t",SQLCA.sqlcode,1)
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:單頭複製後
+   {<point name="reproduce.head.a_insert"/>}
+   #end add-point
+   
+   CALL s_transaction_end('Y','0')
+   
+   LET g_state = "Y"
+   
+   LET g_wc = g_wc,  
+              " OR (",
+              " ooff001 = '", g_ooff_m.ooff001 CLIPPED, "' "
+              ," AND ooff002 = '", g_ooff_m.ooff002 CLIPPED, "' "
+ 
+              ," AND ooff003 = '", g_ooff_m.ooff003 CLIPPED, "' "
+ 
+              ," AND ooff004 = '", g_ooff_m.ooff004 CLIPPED, "' "
+ 
+              ," AND ooff005 = '", g_ooff_m.ooff005 CLIPPED, "' "
+ 
+              ," AND ooff006 = '", g_ooff_m.ooff006 CLIPPED, "' "
+ 
+              ," AND ooff007 = '", g_ooff_m.ooff007 CLIPPED, "' "
+ 
+              ," AND ooff008 = '", g_ooff_m.ooff008 CLIPPED, "' "
+ 
+              ," AND ooff009 = '", g_ooff_m.ooff009 CLIPPED, "' "
+ 
+              ," AND ooff010 = '", g_ooff_m.ooff010 CLIPPED, "' "
+ 
+              ," AND ooff011 = '", g_ooff_m.ooff011 CLIPPED, "' "
+ 
+              ," AND ooff012 = '", g_ooff_m.ooff012 CLIPPED, "' "
+ 
+ 
+              , ") "
+   
+   LET g_ooff001_t = g_ooff_m.ooff001
+   LET g_ooff002_t = g_ooff_m.ooff002
+ 
+   LET g_ooff003_t = g_ooff_m.ooff003
+ 
+   LET g_ooff004_t = g_ooff_m.ooff004
+ 
+   LET g_ooff005_t = g_ooff_m.ooff005
+ 
+   LET g_ooff006_t = g_ooff_m.ooff006
+ 
+   LET g_ooff007_t = g_ooff_m.ooff007
+ 
+   LET g_ooff008_t = g_ooff_m.ooff008
+ 
+   LET g_ooff009_t = g_ooff_m.ooff009
+ 
+   LET g_ooff010_t = g_ooff_m.ooff010
+ 
+   LET g_ooff011_t = g_ooff_m.ooff011
+ 
+   LET g_ooff012_t = g_ooff_m.ooff012
+ 
+ 
+   
+   #add-point:完成複製段落後
+   {<point name="reproduce.after_reproduce" />}
+   #end add-point
+                   
+END FUNCTION
+]]>
+</section>
+  <section id="aooi360.set_entry" ver="1" status="" src="s">
+<![CDATA[#+ 單頭欄位開啟設定
+PRIVATE FUNCTION aooi360_set_entry(p_cmd)
+   {<Local define>}
+   DEFINE p_cmd LIKE type_t.chr1
+   {</Local define>}
+   #add-point:set_entry段define
+   {<point name="set_entry.define"/>}
+   #end add-point     
+ 
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("ooff001,ooff002,ooff003,ooff004,ooff005,ooff006,ooff007,ooff008,ooff009,ooff010,ooff011,ooff012",TRUE)
+      #add-point:set_entry段欄位控制
+      {<point name="set_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry段欄位控制後
+   {<point name="set_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aooi360.set_no_entry" ver="1" status="" src="s">
+<![CDATA[#+ 單頭欄位關閉設定
+PRIVATE FUNCTION aooi360_set_no_entry(p_cmd)
+   {<Local define>}
+   DEFINE p_cmd LIKE type_t.chr1
+   {</Local define>}
+   #add-point:set_no_entry段define
+   {<point name="set_no_entry.define"/>}
+   #end add-point     
+ 
+   IF p_cmd = "u" THEN
+      CALL cl_set_comp_entry("ooff001,ooff002,ooff003,ooff004,ooff005,ooff006,ooff007,ooff008,ooff009,ooff010,ooff011,ooff012",FALSE)
+      #add-point:set_no_entry段欄位控制
+      {<point name="set_no_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry段欄位控制後
+   {<point name="set_no_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aooi360.show" ver="1" status="" src="s">
+<![CDATA[#+ 單頭資料重新顯示 
+PRIVATE FUNCTION aooi360_show()
+   #add-point:show段define
+   {<point name="show.define"/>}
+   #end add-point  
+   
+   #add-point:show段之前
+   {<point name="show.before"/>}
+   #end add-point
+   
+   
+   
+   LET g_ooff_m_t.* = g_ooff_m.*      #保存單頭舊值
+   
+   #在browser 移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()
+   
+   #帶出公用欄位reference值
+   
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference
+   {<point name="show.head.reference"/>}
+   #end add-point
+ 
+   #將資料輸出到畫面上
+   DISPLAY BY NAME 
+   
+   #顯示狀態(stus)圖片
+   
+ 
+   #add-point:show段之後
+   {<point name="show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="aooi360.state_change" ver="1" status="" src="s">
+<![CDATA[   
+]]>
+</section>
+  <section id="aooi360.ui_browser_refresh" ver="1" status="" src="s">
+<![CDATA[#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION aooi360_ui_browser_refresh()
+   {<Local define>}
+   DEFINE l_i  LIKE type_t.num10
+   {</Local define>}
+ 
+   #add-point:ui_browser_refresh段define
+   {<point name="ui_browser_refresh.define"/>}
+   #end add-point     
+ 
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_ooff001 = g_ooff_m.ooff001 THEN  
+         CALL g_browser.deleteElement(l_i)
+         LET g_header_cnt = g_header_cnt - 1
+       END IF
+   END FOR
+   
+   DISPLAY g_header_cnt TO FORMONLY.b_count     #page count
+   DISPLAY g_header_cnt TO FORMONLY.h_count     #page count
+   LET g_browser_cnt = g_browser_cnt-1
+   IF g_current_idx > g_browser_cnt THEN        #確定browse 筆數指在同一筆
+      LET g_current_idx = g_browser_cnt
+   END IF
+  
+END FUNCTION
+]]>
+</section>
+  <section id="aooi360.ui_dialog" ver="1" status="" src="s">
+<![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION aooi360_ui_dialog() 
+   {<Local define>}
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_wc    STRING
+   {</Local define>}
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+   
+   LET li_exit = FALSE
+   LET g_current_row = 0
+   LET g_current_idx = 1
+   
+   
+   #action default動作
+   #+ 此段落由子樣板a42產生
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice="insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL aooi360_insert()
+            #add-point:ON ACTION insert
+            {<point name="menu.default.insert" />}
+            #END add-point
+         END IF
+ 
+      #add-point:action default自訂
+      {<point name="ui_dialog.action_default"/>}
+      #end add-point
+      OTHERWISE
+         
+   END CASE
+ 
+ 
+   
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE li_exit = FALSE
+      
+      CALL aooi360_browser_fill(g_wc,"")
+      
+      #判斷前一個動作是否為新增, 若是的話切換到新增的筆數
+      IF g_state = "Y" THEN
+         FOR li_idx = 1 TO g_browser.getLength()
+            IF g_browser[li_idx].b_ooff001 = g_ooff001_t
+               AND g_browser[li_idx].b_ooff002 = g_ooff002_t
+ 
+               AND g_browser[li_idx].b_ooff003 = g_ooff003_t
+ 
+               AND g_browser[li_idx].b_ooff004 = g_ooff004_t
+ 
+               AND g_browser[li_idx].b_ooff005 = g_ooff005_t
+ 
+               AND g_browser[li_idx].b_ooff006 = g_ooff006_t
+ 
+               AND g_browser[li_idx].b_ooff007 = g_ooff007_t
+ 
+               AND g_browser[li_idx].b_ooff008 = g_ooff008_t
+ 
+               AND g_browser[li_idx].b_ooff009 = g_ooff009_t
+ 
+               AND g_browser[li_idx].b_ooff010 = g_ooff010_t
+ 
+               AND g_browser[li_idx].b_ooff011 = g_ooff011_t
+ 
+               AND g_browser[li_idx].b_ooff012 = g_ooff012_t
+ 
+ 
+               THEN
+               LET g_current_row = li_idx
+               EXIT FOR
+            END IF
+         END FOR
+         LET g_state = ""
+      END IF
+    
+      IF g_main_hidden = 0 THEN
+         MENU
+            BEFORE MENU 
+                  
+               CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               
+               #還原為原本指定筆數
+               IF g_current_row > 0 THEN
+                  LET g_current_idx = g_current_row
+               END IF
+               
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL aooi360_fetch("")   
+               END IF               
+         
+            #ON ACTION statechange
+            #   CALL aooi360_statechange()
+            #   LET g_action_choice="statechange"
+               
+            ON ACTION first
+               CALL aooi360_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            ON ACTION next
+               CALL aooi360_fetch("N")
+               LET g_current_row = g_current_idx
+            
+            ON ACTION jump
+               CALL aooi360_fetch("/")
+               LET g_current_row = g_current_idx
+            
+            ON ACTION previous
+               CALL aooi360_fetch("P")
+               LET g_current_row = g_current_idx
+            
+            ON ACTION last 
+               CALL aooi360_fetch("L")  
+               #CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               #CALL fgl_set_arr_curr(g_current_idx)
+               LET g_current_row = g_current_idx
+            
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU 
+            
+            ON ACTION close
+               LET li_exit = TRUE
+               EXIT MENU
+            
+            ON ACTION mainhidden       #主頁摺疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               EXIT MENU
+               
+            ON ACTION worksheethidden   #瀏覽頁折疊
+            
+            #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("worksheet_detail",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("worksheet_detail",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+          
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL aooi360_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL aooi360_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     CALL cl_err("","-100",1)
+                     CLEAR FORM
+                  ELSE
+                     CALL aooi360_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+            
+            
+            
+ 
+         ON ACTION delete
+ 
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN 
+               CALL aooi360_delete()
+               #add-point:ON ACTION delete
+               {<point name="menu2.delete" />}
+               #END add-point
+            END IF
+ 
+ 
+         ON ACTION insert
+ 
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN 
+               CALL aooi360_insert()
+               #add-point:ON ACTION insert
+               {<point name="menu2.insert" />}
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+ 
+         ON ACTION modify
+ 
+            LET g_aw = ''
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN 
+               CALL aooi360_modify()
+               #add-point:ON ACTION modify
+               {<point name="menu2.modify" />}
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+ 
+         ON ACTION output
+ 
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN 
+               #add-point:ON ACTION output
+               {<point name="menu2.output" />}
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+ 
+         ON ACTION query
+ 
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN 
+               CALL aooi360_query()
+               #add-point:ON ACTION query
+               {<point name="menu2.query" />}
+               #END add-point
+            END IF
+ 
+ 
+         ON ACTION reproduce
+ 
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN 
+               CALL aooi360_reproduce()
+               #add-point:ON ACTION reproduce
+               {<point name="menu2.reproduce" />}
+               #END add-point
+               EXIT MENU
+            END IF
+ 
+            
+            
+            ON ACTION related_document
+               CALL cl_doc()
+            
+            #主選單用ACTION
+            &include "main_menu.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END MENU
+      
+      ELSE
+      
+         DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+           
+      
+            #左側瀏覽頁簽
+            DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTE(COUNT=g_rec_b)
+            
+               BEFORE ROW
+                  #回歸舊筆數位置 (回到當時異動的筆數)
+                  LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+                  IF g_current_idx = 0 THEN
+                     LET g_current_idx = 1
+                  END IF
+                  LET g_current_row = g_current_idx  #目前指標
+                  LET g_current_sw = TRUE
+                  CALL cl_show_fld_cont()     
+                  
+                  #當每次點任一筆資料都會需要用到               
+                  CALL aooi360_fetch("")      
+                  
+               
+            
+            END DISPLAY
+ 
+         
+            #add-point:ui_dialog段define
+            {<point name="ui_dialog.more_displayarray"/>}
+            #end add-point
+         
+            BEFORE DIALOG
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL aooi360_fetch("")   
+               END IF               
+               
+            AFTER DIALOG
+               #add-point:ui_dialog段 after dialog
+               {<point name="ui_dialog.after_dialog"/>}
+               #end add-point
+            
+            #ON ACTION statechange
+            #   CALL aooi360_statechange()
+            #   LET g_action_choice="statechange"
+            #   EXIT DIALOG
+         
+ 
+            ON ACTION first
+               CALL aooi360_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            ON ACTION next
+               CALL aooi360_fetch("N")
+               LET g_current_row = g_current_idx
+         
+            ON ACTION jump
+               CALL aooi360_fetch("/")
+               LET g_current_row = g_current_idx
+         
+            ON ACTION previous
+               CALL aooi360_fetch("P")
+               LET g_current_row = g_current_idx
+         
+            ON ACTION last 
+               CALL aooi360_fetch("L")  
+               #CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               #CALL fgl_set_arr_curr(g_current_idx)
+               LET g_current_row = g_current_idx
+         
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+         
+            ON ACTION close
+               LET li_exit = TRUE
+               EXIT DIALOG
+         
+            ON ACTION mainhidden       #主頁摺疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               EXIT DIALOG
+               
+         
+            #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("worksheet_detail",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("worksheet_detail",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+ 
+            #快速搜尋
+               
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL aooi360_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL aooi360_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     CALL cl_err("","-100",1)
+                     CLEAR FORM
+                  ELSE
+                     CALL aooi360_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+			   
+            
+ 
+         ON ACTION delete
+ 
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN 
+               CALL aooi360_delete()
+               #add-point:ON ACTION delete
+               {<point name="menu.delete" />}
+               #END add-point
+            END IF
+ 
+ 
+         ON ACTION insert
+ 
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN 
+               CALL aooi360_insert()
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION modify
+ 
+            LET g_aw = ''
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN 
+               CALL aooi360_modify()
+               #add-point:ON ACTION modify
+               {<point name="menu.modify" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION output
+ 
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN 
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION query
+ 
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN 
+               CALL aooi360_query()
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+            END IF
+ 
+ 
+         ON ACTION reproduce
+ 
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN 
+               CALL aooi360_reproduce()
+               #add-point:ON ACTION reproduce
+               {<point name="menu.reproduce" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+            
+            
+ 
+            ON ACTION related_document
+               CALL cl_doc()
+ 
+            #主選單用ACTION
+            &include "main_menu.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END DIALOG 
+      
+      END IF
+      
+   END WHILE
+ 
+END FUNCTION
+]]>
+</section>
+</add_points>

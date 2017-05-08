@@ -1,0 +1,136 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aimi094" module="aim" jobmode="N" type="i08" industry="std" fix_arg="0" crtid="05384" crtdt="2015-08-20 15:08:57" modid="05384" moddt="2015-08-25 17:15:20" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="規則化規格設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="imeg001,imegl004,imegl005,imegstus,imeg004,imeg004_desc(chr80),imeg003,imegl004_2(chr500),imeg006,imeg007,imeg008,imeg009,imeg010,imeg011,imeg012,imeg005,imegownid,imegownid_desc(chr80),imegowndp,imegowndp_desc(chr80),imegcrtid,imegcrtid_desc(chr80),imegcrtdp,imegcrtdp_desc(chr80),imegcrtdt,imegmodid,imegmodid_desc(chr80),imegmoddt,imeg002"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="imeh003,imehl005"/>
+      <var id="bs_field" value="imeg001,imeg003,imeg004" pk="imeg001,imeg003" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="aim" filename="aimi094" method="dialog">
+    <section id="input">
+      <input id="head" field="imeg001,imegl004,imegl005,imegstus,imeg004,imeg003,imegl004_2,imeg006,imeg007,imeg008,imeg009,imeg010,imeg011,imeg012,imeg005,imeg002"/>
+      <input id="body" page="1" field="imeh003,imehl005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="imeg001,imegl004,imegl005,imegstus,imeg004,imeg003,imegl004_2,imeg006,imeg007,imeg008,imeg009,imeg010,imeg011,imeg012,imeg005,imegownid,imegowndp,imegcrtid,imegcrtdp,imegcrtdt,imegmodid,imegmoddt,imeg002"/>
+      <construct id="body" page="1" field="imeh003,imehl005"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="imeg001,imeg003"/>
+      <set id="head" type="no_entry" field="imeg001,imeg003"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="imeg001">
+        <controlp form="q_imee001" state="c"/>
+      </column>
+      <column id="imegl004"/>
+      <column id="imegl005"/>
+      <column id="imegstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="imeg004">
+        <after>
+          <reference field="imeg004_desc" ref_field="imeg001,imeg004" map_field="imeg001,imeg004" ref_sql="SELECT imegl004 FROM imegl_t WHERE imeglent=$varg_enterprise$var AND imegl001=? AND imegl002=? AND imegl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imee003" state="i"/>
+        <controlp form="q_imee003" state="c"/>
+      </column>
+      <column id="imeg004_desc"/>
+      <column id="imeg003">
+        <controlp form="q_imee003" state="c"/>
+      </column>
+      <column id="imegl004_2"/>
+      <column id="imeg006" def_scc="48"/>
+      <column id="imeg007"/>
+      <column id="imeg008" type="S" default="1" def_scc="51"/>
+      <column id="imeg009">
+        <after>
+          <check id="range" st="255" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="imeg010"/>
+      <column id="imeg011"/>
+      <column id="imeg012"/>
+      <column id="imeg005"/>
+      <column id="imegownid">
+        <after>
+          <reference field="imegownid_desc" ref_field="imeg_t.imegownid" map_field="imegownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imegownid_desc"/>
+      <column id="imegowndp">
+        <after>
+          <reference field="imegowndp_desc" ref_field="imeg_t.imegowndp" map_field="imegowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imegowndp_desc"/>
+      <column id="imegcrtid">
+        <after>
+          <reference field="imegcrtid_desc" ref_field="imeg_t.imegcrtid" map_field="imegcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imegcrtid_desc"/>
+      <column id="imegcrtdp">
+        <after>
+          <reference field="imegcrtdp_desc" ref_field="imeg_t.imegcrtdp" map_field="imegcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imegcrtdp_desc"/>
+      <column id="imegcrtdt"/>
+      <column id="imegmodid">
+        <after>
+          <reference field="imegmodid_desc" ref_field="imeg_t.imegmodid" map_field="imegmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imegmodid_desc"/>
+      <column id="imegmoddt"/>
+      <column id="imeg002"/>
+    </init>
+    <init id="body" page="1">
+      <column id="imeh003">
+        <controlp form="q_imef003" state="c"/>
+      </column>
+      <column id="imehl005"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="imeg_t" lid="imeg003" pid="imeg004" type="imeg001" pk="imeg001,imeg003">
+      <sql id="forupd_sql" type="sql" query="SELECT imeg001,&apos;&apos;,&apos;&apos;,imegstus,imeg004,&apos;&apos;,imeg003,&apos;&apos;,imeg006,imeg007,imeg008,imeg009,imeg010,imeg011,imeg012,imeg005,imegownid,&apos;&apos;,imegowndp,&apos;&apos;,imegcrtid,&apos;&apos;,imegcrtdp,&apos;&apos;,imegcrtdt,imegmodid,&apos;&apos;,imegmoddt,imeg002 FROM imeg_t WHERE imegent= ? AND imeg001=? AND imeg003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT imeg001,&apos;&apos;,&apos;&apos;,imegstus,imeg004,&apos;&apos;,imeg003,&apos;&apos;,imeg006,imeg007,imeg008,imeg009,imeg010,imeg011,imeg012,imeg005,imegownid,&apos;&apos;,imegowndp,&apos;&apos;,imegcrtid,&apos;&apos;,imegcrtdp,&apos;&apos;,imegcrtdt,imegmodid,&apos;&apos;,imegmoddt,imeg002 FROM imeg_t" order="imeg001,imeg003"/>
+      <sql id="append" type="lang" target="imegl_t.imegl004,imegl_t.imegl005" table="imegl_t" fk="imeg001,&apos; &apos;" pk="imegl001,imegl002,imegl003" field="imegl004,imegl005"/>
+      <sql id="append" type="lang" target="imegl004_2" table="imegl_t" fk="imeg001,imeg003" pk="imegl001,imegl002,imegl003" field="imegl004"/>
+    </head>
+    <body id="imeh_t" page="1" linked="" pk="imeh003" fk="imeh001,imeh002">
+      <sql id="forupd_sql_detail" query="SELECT imeh003,&apos;&apos; FROM imeh_t WHERE imehent=? AND imeh001=? AND imeh002=? AND imeh003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT imeh003,&apos;&apos; FROM imeh_t WHERE imehent=? AND imeh001=? AND imeh002=?"/>
+      <sql id="detail_append" type="lang" target="imehl_t.imehl005" table="imehl_t" fk="imeg001,imeg003,imeh003" pk="imehl001,imehl002,imehl003,imehl004" field="imehl005"/>
+    </body>
+  </dataset>
+</assembly>
+

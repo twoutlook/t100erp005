@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisq531_03" module="ais" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="05016" crtdt="2016-03-02 15:15:28" modid="05016" moddt="2016-03-03 10:49:53" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="列印碼異動清單">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="isaxcomp,isax001,isax002,isax003"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ais" filename="aisq531_03" method="dialog">
+    <section id="input">
+      <input id="head" field="isaxcomp,isax001,isax002,isax003"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="isaxcomp"/>
+      <column id="isax001"/>
+      <column id="isax002" type="S" default="0"/>
+      <column id="isax003" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="isax_t" pk="isaxseq,isax001,isax002,isax003">
+      <sql id="forupd_sql" type="sql" query="SELECT isaxcomp,isax001,isax002,isax003 FROM isax_t WHERE isaxent= ? AND isaxseq=? AND isax001=? AND isax002=? AND isax003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="isaxseq,isax001,isax002,isax003"/>
+    </head>
+  </dataset>
+</assembly>
+

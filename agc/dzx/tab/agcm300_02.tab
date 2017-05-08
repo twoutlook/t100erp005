@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agcm300_02" module="agc" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="01726" crtdt="2013-11-12 10:44:14" modid="01726" moddt="2014-06-30 16:48:52" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="券種基本資料維護作業 -發行面額設定">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gcar001,gcar002,gcar002_desc(chr500),gcar005,gcar003,gcar003_desc(chr500),gcarstus"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="agc" filename="agcm300_02" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="gcar001,gcar002,gcar005,gcar003,gcarstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="gcar001,gcar002,gcar005,gcar003,gcarstus"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="gcar001"/>
+      <column id="gcar002">
+        <after>
+          <reference field="gcar002_desc" ref_field="gcar002" map_field="gcar002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2071&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="gcar002_desc"/>
+      <column id="gcar005"/>
+      <column id="gcar003">
+        <after>
+          <reference field="gcar003_desc" ref_field="gcar_t.gcar003" map_field="gcarent,gcar003" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtdx001_1" state="i"/>
+        <controlp form="q_gcar003" state="c"/>
+      </column>
+      <column id="gcar003_desc"/>
+      <column id="gcarstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <body id="gcar_t" page="1" linked="" pk="gcar001,gcar002">
+      <sql id="forupd_sql_detail" query="SELECT gcar001,gcar002,&apos;&apos;,gcar005,gcar003,&apos;&apos;,gcarstus FROM gcar_t WHERE gcarent=? AND gcar001=? AND gcar002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gcar001,gcar002,&apos;&apos;,gcar005,gcar003,&apos;&apos;,gcarstus FROM gcar_t WHERE gcarent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

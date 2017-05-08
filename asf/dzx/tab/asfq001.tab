@@ -1,0 +1,145 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asfq001" module="asf" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="03079" crtdt="2014-08-19 14:14:01" modid="01534" moddt="2015-11-11 19:52:23" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="待發放工單查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="sfaa003,sfaadocno,sfaadocdt,sfaa002,sfaa010,sfaa012,sfaa019,sfaa020,radio01,check01"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),sfaa003,sfaadocno,prog_b_sfaadocno(string),sfaadocdt,sfaa002,sfaa002_desc(chr500),sfaa010,sfaa010_desc(chr500),sfaa010_desc_1(chr500),sfaa012,sfaa019,sfaa020,sfaastus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="sfbaseq,sfbaseq1,sfba006,sfba006_desc(chr500),sfba006_desc_1(chr500),sfba021,sfba014,sfba014_desc(chr500),sfba013,sfba019,sfba019_desc(chr500),sfba020,sfba020_desc(chr500),inag008,qty01(num20_6),inan010,qty02(num20_6),str01(chr500),qty03(num20_6)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),sfaa003(b_sfaa003),sfaadocno(b_sfaadocno),prog_b_sfaadocno(prog_b_sfaadocno),sfaadocdt(b_sfaadocdt),sfaa002(b_sfaa002),sfaa002_desc(b_sfaa002_desc),sfaa010(b_sfaa010),sfaa010_desc(b_sfaa010_desc),sfaa010_desc_1(b_sfaa010_desc_1),sfaa012(b_sfaa012),sfaa019(b_sfaa019),sfaa020(b_sfaa020),sfaastus(b_sfaastus)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="sfbaseq(b_sfbaseq),sfbaseq1(b_sfbaseq1),sfba006(b_sfba006),sfba006_desc(b_sfba006_desc),sfba006_desc_1(b_sfba006_desc_1),sfba021(b_sfba021),sfba014(b_sfba014),sfba014_desc(b_sfba014_desc),sfba013(b_sfba013),sfba019(b_sfba019),sfba019_desc(b_sfba019_desc),sfba020(b_sfba020),sfba020_desc(b_sfba020_desc),inag008(b_inag008),qty01(qty01),inan010(b_inan010),qty02(qty02),str01(str01),qty03(qty03)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+      <action id="updstus"/>
+    </section>
+    <section id="detail_show" page="1">
+      <cluster id="prog_b_sfaadocno" qry_field="sfaadocno" prog="asft300" parameter="sfaadocno"/>
+      <cluster id="prog_asft300" qry_field="sfaadocno" prog="saft300" parameter="sfaadocno"/>
+      <action id="detail_qrystr" mode="popup">
+        <action id="prog_asft300" prog="asft300" parameter="sfaadocno"/>
+        <action id="prog_saft300" prog="saft300" parameter="sfaadocno"/>
+      </action>
+    </section>
+  </structure>
+  <form id="0" module="asf" filename="asfq001" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="sfaa003,sfaadocno,sfaadocdt,sfaa002,sfaa010,sfaa012,sfaa019,sfaa020,sfaastus" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="sfbaseq,sfbaseq1,sfba006,sfba021,sfba014,sfba013,sfba019,sfba020,inag008,inan010" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="sfaa003(b_sfaa003),sfaadocno(b_sfaadocno),sfaadocdt(b_sfaadocdt),sfaa002(b_sfaa002),sfaa010(b_sfaa010),sfaa012(b_sfaa012),sfaa019(b_sfaa019),sfaa020(b_sfaa020),sfaastus(b_sfaastus)"/>
+      <construct id="body" page="2" field="sfbaseq(b_sfbaseq),sfbaseq1(b_sfbaseq1),sfba006(b_sfba006),sfba021(b_sfba021),sfba014(b_sfba014),sfba013(b_sfba013),sfba019(b_sfba019),sfba020(b_sfba020),inag008(b_inag008),inan010(b_inan010)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="sfaa003" def_scc="4007"/>
+      <column id="sfaadocno">
+        <controlp form="q_sfaadocno_1" state="c"/>
+      </column>
+      <column id="prog_b_sfaadocno"/>
+      <column id="sfaadocdt"/>
+      <column id="sfaa002">
+        <after>
+          <reference field="sfaa002_desc" ref_field="sfaa002" map_field="sfaa002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="sfaa002_desc"/>
+      <column id="sfaa010">
+        <after>
+          <reference field="sfaa010_desc" ref_field="sfaa010" map_field="sfaa010" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001_9" state="c"/>
+      </column>
+      <column id="sfaa010_desc"/>
+      <column id="sfaa010_desc_1"/>
+      <column id="sfaa012">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="sfaa019"/>
+      <column id="sfaa020"/>
+      <column id="sfaastus" scc="13" type="S" default="N">
+        <stus id="C" pic="closed"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="F" pic="released"/>
+        <stus id="M" pic="costing_closed"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="sfbaseq">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="sfbaseq1">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="sfba006">
+        <after>
+          <reference field="sfba006_desc" ref_field="sfba006" map_field="sfba006" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001_10" state="c"/>
+      </column>
+      <column id="sfba006_desc"/>
+      <column id="sfba006_desc_1"/>
+      <column id="sfba021"/>
+      <column id="sfba014">
+        <after>
+          <reference field="sfba014_desc" ref_field="sfba014" map_field="sfba014" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="sfba014_desc"/>
+      <column id="sfba013" type="S" default="0"/>
+      <column id="sfba019">
+        <after>
+          <reference field="sfba019_desc" ref_field="sfbasite,sfba019" map_field="sfbasite,sfba019" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaasite=? AND inaa001=? "/>
+        </after>
+        <controlp form="q_inaa001_2" state="c"/>
+      </column>
+      <column id="sfba019_desc"/>
+      <column id="sfba020">
+        <after>
+          <reference field="sfba020_desc" ref_field="sfbasite,sfba020" map_field="sfbasite,sfba020" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inabsite=? AND inab001=? "/>
+        </after>
+        <controlp form="q_inab002_3" state="c"/>
+      </column>
+      <column id="sfba020_desc"/>
+      <column id="inag008"/>
+      <column id="qty01"/>
+      <column id="inan010" type="S" default="0"/>
+      <column id="qty02"/>
+      <column id="str01"/>
+      <column id="qty03"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="sfaa_t" page="1" linked="" pk="sfaadocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,sfaa003,sfaadocno,sfaadocdt,sfaa002,&apos;&apos;,sfaa010,&apos;&apos;,&apos;&apos;,sfaa012,sfaa019,sfaa020,sfaastus FROM sfaa_t WHERE sfaaent= ? AND 1=1 "/>
+    </body>
+    <body id="sfba_t" page="2" linked="" pk="sfbaseq,sfbaseq1" fk="sfbadocno" detail="Y">
+      <sql id="b_fill_sql" query="SELECT sfbaseq,sfbaseq1,sfba006,&apos;&apos;,&apos;&apos;,sfba021,sfba014,&apos;&apos;,sfba013,sfba019,&apos;&apos;,sfba020,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM sfba_t WHERE sfbaent=? AND sfbadocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,69 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrq530" module="axr" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="05016" crtdt="2016-05-13 09:27:47" modid="05016" moddt="2016-05-13 09:27:47" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="銷售信用狀餘額查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xrgacomp,xrgadocno,xrga004,xrga004_desc(chr500),xrga006,xrga008,xrga008_desc(chr500),xrga001,xrga011,xrga100,xrga103,xrga104,l_amt(num20_6)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xrgacomp(b_xrgacomp),xrgadocno(b_xrgadocno),xrga004(b_xrga004),xrga004_desc(b_xrga004_desc),xrga006(b_xrga006),xrga008(b_xrga008),xrga008_desc(b_xrga008_desc),xrga001(b_xrga001),xrga011(b_xrga011),xrga100(b_xrga100),xrga103(b_xrga103),xrga104(b_xrga104),l_amt(l_amt)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axrq530" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="xrgacomp,xrgadocno,xrga004,xrga006,xrga008,xrga001,xrga011,xrga100" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="xrgacomp(b_xrgacomp),xrgadocno(b_xrgadocno),xrga004(b_xrga004),xrga006(b_xrga006),xrga008(b_xrga008),xrga001(b_xrga001),xrga011(b_xrga011),xrga100(b_xrga100),xrga103(b_xrga103),xrga104(b_xrga104)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="xrgacomp">
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="xrgadocno">
+        <controlp form="q_xrgadocno" state="c"/>
+      </column>
+      <column id="xrga004">
+        <after>
+          <reference field="xrga004_desc" ref_field="xrga004" map_field="xrga004" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_1" state="c"/>
+      </column>
+      <column id="xrga004_desc"/>
+      <column id="xrga006" def_scc="8517"/>
+      <column id="xrga008">
+        <after>
+          <reference field="xrga008_desc" ref_field="xrga008" map_field="xrga008" ref_sql="SELECT nmabl003 FROM nmabl_t WHERE nmablent=$varg_enterprise$var AND nmabl001=? AND nmabl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmab001" state="c"/>
+      </column>
+      <column id="xrga008_desc"/>
+      <column id="xrga001">
+        <controlp form="q_xrga001" state="c"/>
+      </column>
+      <column id="xrga011"/>
+      <column id="xrga100"/>
+      <column id="xrga103" type="S" default="0"/>
+      <column id="xrga104" type="S" default="0"/>
+      <column id="l_amt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="xrga_t" page="1" linked="" pk="xrgacomp,xrgadocno">
+      <sql id="b_fill_sql" query="SELECT xrgacomp,xrgadocno,xrga004,&apos;&apos;,xrga006,xrga008,&apos;&apos;,xrga001,xrga011,xrga100,xrga103,xrga104,&apos;&apos; FROM xrga_t WHERE xrgaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,4158 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="ainq130.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0007(2016-02-14 16:36:38), PR版次:0007(2016-09-18 16:22:52)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000088
+#+ Filename...: ainq130
+#+ Description: 庫存交易明細查詢作業
+#+ Creator....: 02295(2014-07-17 16:49:28)
+#+ Modifier...: 02295 -SD/PR- 02294
+ 
+{</section>}
+ 
+{<section id="ainq130.global" >}
+#應用 i01 樣板自動產生(Version:50)
+#add-point:填寫註解說明 name="global.memo"
+#150310-00003#1   2016/02/14 By xianghui 增加理由码说明栏位
+#160816-00001#3  16/08/16 By 08742     抓取理由碼改CALL sub
+#160913-00055#2    2016/09/18  By lixiang  交易对象栏位开窗调整为q_pmaa001_25
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"  
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE TYPE type_g_inaj_m RECORD
+       inaj005 LIKE inaj_t.inaj005, 
+   imaal003 LIKE type_t.chr80, 
+   imaal004 LIKE type_t.chr80, 
+   inaj006 LIKE inaj_t.inaj006, 
+   inaj006_desc LIKE type_t.chr80, 
+   inaj008 LIKE inaj_t.inaj008, 
+   inaj008_desc LIKE type_t.chr80, 
+   inaj009 LIKE inaj_t.inaj009, 
+   inaj009_desc LIKE type_t.chr80, 
+   inaj010 LIKE inaj_t.inaj010, 
+   inaj007 LIKE inaj_t.inaj007, 
+   inajsite LIKE inaj_t.inajsite, 
+   inaj001 LIKE inaj_t.inaj001, 
+   inaj002 LIKE inaj_t.inaj002, 
+   inaj003 LIKE inaj_t.inaj003, 
+   inaj022 LIKE inaj_t.inaj022, 
+   inaj015 LIKE inaj_t.inaj015, 
+   inaj035 LIKE inaj_t.inaj035, 
+   inaj035_desc LIKE type_t.chr80, 
+   inaj036 LIKE inaj_t.inaj036, 
+   inaj011 LIKE inaj_t.inaj011, 
+   inaj012 LIKE inaj_t.inaj012, 
+   inaj012_desc LIKE type_t.chr80, 
+   inaj013 LIKE inaj_t.inaj013, 
+   inaj014 LIKE inaj_t.inaj014, 
+   inaj027 LIKE inaj_t.inaj027, 
+   inaj026 LIKE inaj_t.inaj026, 
+   inaj026_desc LIKE type_t.chr80, 
+   inaj004 LIKE inaj_t.inaj004, 
+   inaj017 LIKE inaj_t.inaj017, 
+   inaj017_desc LIKE type_t.chr80, 
+   inaj018 LIKE inaj_t.inaj018, 
+   inaj018_desc LIKE type_t.chr80, 
+   inaj016 LIKE inaj_t.inaj016, 
+   inaj016_desc LIKE type_t.chr80, 
+   inaj037 LIKE inaj_t.inaj037, 
+   inaj038 LIKE inaj_t.inaj038, 
+   inaj039 LIKE inaj_t.inaj039, 
+   inaj044 LIKE inaj_t.inaj044, 
+   inaj020 LIKE inaj_t.inaj020, 
+   inaj028 LIKE inaj_t.inaj028, 
+   inaj029 LIKE inaj_t.inaj029, 
+   inaj040 LIKE inaj_t.inaj040, 
+   inaj041 LIKE inaj_t.inaj041, 
+   inaj043 LIKE inaj_t.inaj043, 
+   inaj042 LIKE inaj_t.inaj042, 
+   inaj030 LIKE inaj_t.inaj030, 
+   inaj031 LIKE inaj_t.inaj031, 
+   inaj032 LIKE inaj_t.inaj032, 
+   inaj033 LIKE inaj_t.inaj033, 
+   inaj034 LIKE inaj_t.inaj034, 
+   inaj023 LIKE inaj_t.inaj023, 
+   inaj024 LIKE inaj_t.inaj024, 
+   inaj025 LIKE inaj_t.inaj025, 
+   inaj025_desc LIKE type_t.chr80
+       END RECORD
+ 
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD  #查詢方案用陣列 
+         b_statepic     LIKE type_t.chr50,
+            b_inajsite LIKE inaj_t.inajsite,
+      b_inaj001 LIKE inaj_t.inaj001,
+      b_inaj002 LIKE inaj_t.inaj002,
+      b_inaj003 LIKE inaj_t.inaj003,
+      b_inaj004 LIKE inaj_t.inaj004
+      END RECORD 
+ 
+#add-point:自定義模組變數(Module Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_inaj_m        type_g_inaj_m  #單頭變數宣告
+DEFINE g_inaj_m_t      type_g_inaj_m  #單頭舊值宣告(系統還原用)
+DEFINE g_inaj_m_o      type_g_inaj_m  #單頭舊值宣告(其他用途)
+DEFINE g_inaj_m_mask_o type_g_inaj_m  #轉換遮罩前資料
+DEFINE g_inaj_m_mask_n type_g_inaj_m  #轉換遮罩後資料
+ 
+   DEFINE g_inajsite_t LIKE inaj_t.inajsite
+DEFINE g_inaj001_t LIKE inaj_t.inaj001
+DEFINE g_inaj002_t LIKE inaj_t.inaj002
+DEFINE g_inaj003_t LIKE inaj_t.inaj003
+DEFINE g_inaj004_t LIKE inaj_t.inaj004
+ 
+   
+ 
+   
+ 
+DEFINE g_wc                  STRING                        #儲存查詢條件
+DEFINE g_wc_t                STRING                        #備份查詢條件
+DEFINE g_wc_filter           STRING                        #儲存過濾查詢條件
+DEFINE g_wc_filter_t         STRING                        #備份過濾查詢條件
+DEFINE g_sql                 STRING                        #資料撈取用SQL(含reference)
+DEFINE g_forupd_sql          STRING                        #資料鎖定用SQL
+DEFINE g_cnt                 LIKE type_t.num10             #指標/統計用變數
+DEFINE g_jump                LIKE type_t.num10             #查詢指定的筆數 
+DEFINE g_no_ask              LIKE type_t.num5              #是否開啟指定筆視窗 
+DEFINE g_rec_b               LIKE type_t.num10             #單身筆數                         
+DEFINE l_ac                  LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_pagestart           LIKE type_t.num10             #page起始筆數
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_state               STRING                        #確認前一個動作是否為新增/複製
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_error_show          LIKE type_t.num5              #是否顯示資料過多的錯誤訊息
+DEFINE g_aw                  STRING                        #確定當下點擊的單身(modify_detail用)
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+DEFINE g_log1                STRING                        #cl_log_modified_record用(舊值)
+DEFINE g_log2                STRING                        #cl_log_modified_record用(新值)
+ 
+#快速搜尋用
+DEFINE g_searchcol           STRING                        #查詢欄位代碼
+DEFINE g_searchstr           STRING                        #查詢欄位字串
+DEFINE g_order               STRING                        #查詢排序模式
+ 
+#Browser用
+DEFINE g_current_idx         LIKE type_t.num10             #Browser 所在筆數(當下page)
+DEFINE g_current_row         LIKE type_t.num10             #Browser 所在筆數(暫存用)
+DEFINE g_current_cnt         LIKE type_t.num10             #Browser 總筆數(當下page)
+DEFINE g_browser_idx         LIKE type_t.num10             #Browser 所在筆數(所有資料)
+DEFINE g_browser_cnt         LIKE type_t.num10             #Browser 總筆數(所有資料)
+DEFINE g_row_index           LIKE type_t.num10             #階層樹狀用指標
+DEFINE g_add_browse          STRING                        #新增填充用WC
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization" 
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="ainq130.main" >}
+#應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("ain","")
+ 
+   #add-point:作業初始化 name="main.init"
+   LET  g_argv[01] = g_site
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = " SELECT inaj005,'','',inaj006,'',inaj008,'',inaj009,'',inaj010,inaj007,inajsite, 
+       inaj001,inaj002,inaj003,inaj022,inaj015,inaj035,'',inaj036,inaj011,inaj012,'',inaj013,inaj014, 
+       inaj027,inaj026,'',inaj004,inaj017,'',inaj018,'',inaj016,'',inaj037,inaj038,inaj039,inaj044,inaj020, 
+       inaj028,inaj029,inaj040,inaj041,inaj043,inaj042,inaj030,inaj031,inaj032,inaj033,inaj034,inaj023, 
+       inaj024,inaj025,''", 
+                      " FROM inaj_t",
+                      " WHERE inajent= ? AND inajsite=? AND inaj001=? AND inaj002=? AND inaj003=? AND  
+                          inaj004=? FOR UPDATE"
+   #add-point:SQL_define name="main.after_define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE ainq130_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT DISTINCT t0.inaj005,t0.inaj006,t0.inaj008,t0.inaj009,t0.inaj010,t0.inaj007,t0.inajsite, 
+       t0.inaj001,t0.inaj002,t0.inaj003,t0.inaj022,t0.inaj015,t0.inaj035,t0.inaj036,t0.inaj011,t0.inaj012, 
+       t0.inaj013,t0.inaj014,t0.inaj027,t0.inaj026,t0.inaj004,t0.inaj017,t0.inaj018,t0.inaj016,t0.inaj037, 
+       t0.inaj038,t0.inaj039,t0.inaj044,t0.inaj020,t0.inaj028,t0.inaj029,t0.inaj040,t0.inaj041,t0.inaj043, 
+       t0.inaj042,t0.inaj030,t0.inaj031,t0.inaj032,t0.inaj033,t0.inaj034,t0.inaj023,t0.inaj024,t0.inaj025, 
+       t1.inayl003 ,t2.inab003 ,t3.gzzal003 ,t4.oocal003 ,t5.oocal003 ,t6.ooefl003 ,t7.pmaal003 ,t8.ooag011", 
+ 
+               " FROM inaj_t t0",
+                              " LEFT JOIN inayl_t t1 ON t1.inaylent="||g_enterprise||" AND t1.inayl001=t0.inaj008 AND t1.inayl002='"||g_dlang||"' ",
+               " LEFT JOIN inab_t t2 ON t2.inabent="||g_enterprise||" AND t2.inabsite=t0.inajsite AND t2.inab001=t0.inaj008 AND t2.inab002=t0.inaj009  ",
+               " LEFT JOIN gzzal_t t3 ON t3.gzzal001=t0.inaj035 AND t3.gzzal002='"||g_lang||"' ",
+               " LEFT JOIN oocal_t t4 ON t4.oocalent="||g_enterprise||" AND t4.oocal001=t0.inaj012 AND t4.oocal002='"||g_dlang||"' ",
+               " LEFT JOIN oocal_t t5 ON t5.oocalent="||g_enterprise||" AND t5.oocal001=t0.inaj026 AND t5.oocal002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t6 ON t6.ooeflent="||g_enterprise||" AND t6.ooefl001=t0.inaj017 AND t6.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN pmaal_t t7 ON t7.pmaalent="||g_enterprise||" AND t7.pmaal001=t0.inaj018 AND t7.pmaal002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t8 ON t8.ooagent="||g_enterprise||" AND t8.ooag001=t0.inaj025  ",
+ 
+               " WHERE t0.inajent = " ||g_enterprise|| " AND t0.inajsite = ? AND t0.inaj001 = ? AND t0.inaj002 = ? AND t0.inaj003 = ? AND t0.inaj004 = ?"
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   
+   #end add-point
+   PREPARE ainq130_master_referesh FROM g_sql
+ 
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_ainq130 WITH FORM cl_ap_formpath("ain",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL ainq130_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL ainq130_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_ainq130
+      
+   END IF 
+   
+   CLOSE ainq130_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="ainq130.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION ainq130_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point
+   #add-point:init段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="init.pre_function"
+   
+   #end add-point
+   
+   #定義combobox狀態
+   
+   
+   LET g_error_show = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   #add-point:畫面資料初始化 name="init.init"
+   CALL cl_set_combo_scc('inaj015','24')
+   CALL cl_set_combo_scc('inaj036','200')
+   CALL cl_set_combo_scc('inaj030','3029')
+   IF cl_get_para(g_enterprise,g_site,'S-BAS-0036') = 'N' THEN
+      CALL cl_set_comp_visible("inaj006,inaj006_desc",FALSE)
+   END IF   
+   #end add-point
+   
+   #根據外部參數進行搜尋
+   CALL ainq130_default_search()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq130.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION ainq130_ui_dialog() 
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit   LIKE type_t.num10       #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num10       #指標變數
+   DEFINE ls_wc     STRING                  #wc用
+   DEFINE la_param  RECORD                  #程式串查用變數
+          prog       STRING,
+          actionid   STRING,
+          background LIKE type_t.chr1,
+          param      DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING                  #轉換後的json字串
+   DEFINE l_cmd_token           base.StringTokenizer   #報表作業cmdrun使用 
+   DEFINE l_cmd_next            STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_cnt             LIKE type_t.num5       #報表作業cmdrun使用
+   DEFINE l_cmd_prog_arg        STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_arg             STRING                 #報表作業cmdrun使用
+   #add-point:ui_dialog段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   DEFINE l_slip     LIKE oobal_t.oobal002
+   DEFINE l_prog     LIKE oobx_t.oobx004
+   DEFINE r_success  LIKE type_t.num5
+   #end add-point
+   
+   #add-point:Function前置處理  name="ui_dialog.pre_function"
+   
+   #end add-point
+   
+   LET li_exit = FALSE
+   LET g_current_row = 0
+   LET g_current_idx = 0
+ 
+   
+   #action default動作
+   
+   
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   
+   #end add-point
+ 
+   WHILE li_exit = FALSE
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_browser.clear()       
+         INITIALIZE g_inaj_m.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL ainq130_init()
+      END IF
+      
+    
+      #確保g_current_idx位於正常區間內
+      #小於,等於0則指到第1筆
+      IF g_current_idx <= 0 THEN
+         LET g_current_idx = 1
+      END IF
+               
+      IF g_main_hidden = 0 THEN
+         MENU
+            BEFORE MENU 
+               #先填充browser資料
+               CALL ainq130_browser_fill(g_wc,"")
+               CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               
+               #還原為原本指定筆數
+               IF g_current_row > 0 THEN
+                  LET g_current_idx = g_current_row
+               END IF
+ 
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL ainq130_fetch("")   
+               END IF               
+               #add-point:ui_dialog段 before menu name="ui_dialog.before_menu"
+               
+               #end add-point
+            
+ 
+ 
+               
+            #第一筆資料
+            ON ACTION first
+               CALL ainq130_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            #下一筆資料
+            ON ACTION next
+               CALL ainq130_fetch("N")
+               LET g_current_row = g_current_idx
+            
+            #指定筆資料
+            ON ACTION jump
+               CALL ainq130_fetch("/")
+               LET g_current_row = g_current_idx
+            
+            #上一筆資料
+            ON ACTION previous
+               CALL ainq130_fetch("P")
+               LET g_current_row = g_current_idx
+            
+            #最後筆資料
+            ON ACTION last 
+               CALL ainq130_fetch("L")  
+               LET g_current_row = g_current_idx
+            
+            #離開程式
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU 
+            
+            #離開程式
+            ON ACTION close
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU
+            
+            #主頁摺疊
+            ON ACTION mainhidden   
+               LET g_action_choice = "mainhidden"            
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+                  CALL cl_notice()
+               END IF
+               EXIT MENU
+               
+            ON ACTION worksheethidden   #瀏覽頁折疊
+            
+            #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+          
+            #查詢方案用
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL ainq130_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            #查詢方案用
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL ainq130_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "-100" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL ainq130_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+            
+            
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu2.output"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu2.quickprint"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL ainq130_query()
+               #add-point:ON ACTION query name="menu2.query"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo name="menu2.datainfo"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION prog_inaj001
+            LET g_action_choice="prog_inaj001"
+            IF cl_auth_chk_act("prog_inaj001") THEN
+               
+               #add-point:ON ACTION prog_inaj001 name="menu2.prog_inaj001"
+               #應用 a41 樣板自動產生(Version:2)
+               #使用JSON格式組合參數與作業編號(串查)
+               LET l_slip = ''
+               LET l_prog = ''
+               IF NOT cl_null(g_inaj_m.inaj001) THEN
+                  CALL s_aooi200_get_slip(g_inaj_m.inaj001) RETURNING r_success,l_slip
+                  IF NOT cl_null(l_slip) THEN
+                     SELECT oobx004 INTO l_prog
+                       FROM oobx_t
+                      WHERE oobxent = g_enterprise
+                        AND oobx001 = l_slip
+                  END IF
+                  IF NOT cl_null(l_prog) THEN
+                     INITIALIZE la_param.* TO NULL
+                     LET la_param.prog     = l_prog
+                     LET la_param.param[1] = g_inaj_m.inaj001
+                     
+                     LET ls_js = util.JSON.stringify(la_param)
+                     CALL cl_cmdrun_wait(ls_js)
+                  END IF
+               END IF
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+            
+            
+            
+            #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL ainq130_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.menu.related_document"
+               
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL ainq130_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.menu.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL ainq130_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.menu.followup"
+            
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+ 
+            
+            #主選單用ACTION
+            &include "main_menu_exit_menu.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END MENU
+      
+      ELSE
+      
+         DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+           
+      
+            #左側瀏覽頁簽
+            DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTE(COUNT=g_rec_b)
+            
+               BEFORE ROW
+                  #回歸舊筆數位置 (回到當時異動的筆數)
+                  LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+                  IF g_current_idx = 0 THEN
+                     LET g_current_idx = 1
+                  END IF
+                  LET g_current_row = g_current_idx  #目前指標
+                  LET g_current_sw = TRUE
+                  CALL cl_show_fld_cont()     
+                  
+                  #當每次點任一筆資料都會需要用到               
+                  CALL ainq130_fetch("")
+ 
+               ON ACTION qbefield_user   #欄位隱藏設定 
+                  LET g_action_choice="qbefield_user"
+                  CALL cl_ui_qbefield_user()
+    
+               
+            
+            END DISPLAY
+ 
+            #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+            
+            #end add-point
+ 
+         
+            BEFORE DIALOG
+               #先填充browser資料
+               IF g_action_choice <> "mainhidden" THEN
+                  CALL ainq130_browser_fill(g_wc,"")
+               END IF
+ 
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL ainq130_fetch("")   
+               END IF          
+               CALL cl_notice()
+               
+               #add-point:ui_dialog段before name="ui_dialog.b_dialog"
+               
+               #end add-point  
+            
+            AFTER DIALOG
+               #add-point:ui_dialog段 after dialog name="ui_dialog.after_dialog"
+               
+               #end add-point
+            
+ 
+ 
+         
+            
+            
+            #第一筆資料
+            ON ACTION first
+               CALL ainq130_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            #下一筆資料
+            ON ACTION next
+               CALL ainq130_fetch("N")
+               LET g_current_row = g_current_idx
+         
+            #指定筆資料
+            ON ACTION jump
+               CALL ainq130_fetch("/")
+               LET g_current_row = g_current_idx
+         
+            #上一筆資料
+            ON ACTION previous
+               CALL ainq130_fetch("P")
+               LET g_current_row = g_current_idx
+          
+            #最後筆資料
+            ON ACTION last 
+               CALL ainq130_fetch("L")  
+               LET g_current_row = g_current_idx
+         
+            #離開程式
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+         
+            #離開程式
+            ON ACTION close
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+    
+            #主頁摺疊
+            ON ACTION mainhidden 
+               LET g_action_choice = "mainhidden"                
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+                  CALL cl_notice()
+               END IF
+               #EXIT DIALOG
+               
+         
+            ON ACTION exporttoexcel
+               LET g_action_choice="exporttoexcel"
+               IF cl_auth_chk_act("exporttoexcel") THEN
+                  #browser
+                  CALL g_export_node.clear()
+                  LET g_export_node[1] = base.typeInfo.create(g_browser)
+                  LET g_export_id[1]   = "s_browse"
+                  CALL cl_export_to_excel()
+               END IF
+         
+            #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+ 
+            
+            #查詢方案用
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL ainq130_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            #查詢方案用
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL ainq130_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "-100" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL ainq130_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+               
+            
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL ainq130_query()
+               #add-point:ON ACTION query name="menu.query"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo name="menu.datainfo"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION prog_inaj001
+            LET g_action_choice="prog_inaj001"
+            IF cl_auth_chk_act("prog_inaj001") THEN
+               
+               #add-point:ON ACTION prog_inaj001 name="menu.prog_inaj001"
+               #應用 a41 樣板自動產生(Version:2)
+               #使用JSON格式組合參數與作業編號(串查)
+               LET l_slip = ''
+               LET l_prog = ''
+               IF NOT cl_null(g_inaj_m.inaj001) THEN
+                  CALL s_aooi200_get_slip(g_inaj_m.inaj001) RETURNING r_success,l_slip
+                  IF NOT cl_null(l_slip) THEN
+                     SELECT oobx004 INTO l_prog
+                       FROM oobx_t
+                      WHERE oobxent = g_enterprise
+                        AND oobx001 = l_slip
+                  END IF
+                  IF NOT cl_null(l_prog) THEN
+                     INITIALIZE la_param.* TO NULL
+                     LET la_param.prog     = l_prog
+                     LET la_param.param[1] = g_inaj_m.inaj001
+                     
+                     LET ls_js = util.JSON.stringify(la_param)
+                     CALL cl_cmdrun_wait(ls_js)
+                  END IF
+               END IF
+
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+            
+            
+ 
+            #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL ainq130_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.dialog.related_document"
+               
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL ainq130_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.dialog.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL ainq130_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.dialog.followup"
+            
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+ 
+ 
+            #主選單用ACTION
+            &include "main_menu_exit_dialog.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END DIALOG 
+      
+      END IF
+      
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      
+      #end add-point
+      
+      #(ver:50) ---start---
+      IF li_exit THEN
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         EXIT WHILE
+      END IF
+      #(ver:50) --- end ---
+ 
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq130.browser_fill" >}
+#應用 a29 樣板自動產生(Version:15)
+#+ 瀏覽頁簽資料填充(一般單檔)
+PRIVATE FUNCTION ainq130_browser_fill(p_wc,ps_page_action) 
+   #add-point:browser_fill段define name="browser_fill.define_customerization"
+   
+   #end add-point
+   DEFINE p_wc              STRING
+   DEFINE ls_wc             STRING
+   DEFINE ps_page_action    STRING
+   DEFINE l_searchcol       STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="browser_fill.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="browser_fill.pre_function"
+   
+   #end add-point
+   
+   LET l_searchcol = "inajsite,inaj001,inaj002,inaj003,inaj004"
+ 
+   LET p_wc = p_wc.trim() #當查詢按下Q時 按下放棄 g_wc = "  " 所以要清掉空白
+   IF cl_null(p_wc) THEN  #p_wc 查詢條件
+      LET p_wc = " 1=1 " 
+   END IF
+   #add-point:browser_fill段wc控制 name="browser_fill.wc"
+   
+   #end add-point
+ 
+   LET g_sql = " SELECT COUNT(1) FROM inaj_t ",
+               "  ",
+               "  ",
+               " WHERE inajent = " ||g_enterprise|| " AND ", 
+               p_wc CLIPPED, cl_sql_add_filter("inaj_t")
+                
+   #add-point:browser_fill段cnt_sql name="browser_fill.cnt_sql"
+   
+   #end add-point
+                
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE header_cnt_pre FROM g_sql
+      EXECUTE header_cnt_pre INTO g_browser_cnt
+      FREE header_cnt_pre 
+   END IF
+   
+   #若超過最大顯示筆數
+   IF g_browser_cnt > g_max_browse THEN
+      IF g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_browser_cnt 
+         LET g_errparam.code   = 9035
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+      END IF
+   END IF
+   
+   
+   IF ps_page_action = "F" OR
+      ps_page_action = "P"  OR
+      ps_page_action = "N"  OR
+      ps_page_action = "L"  THEN
+      LET g_page_action = ps_page_action
+   END IF
+   
+   IF cl_null(g_add_browse) THEN
+      #清除畫面
+      CLEAR FORM
+      INITIALIZE g_inaj_m.* TO NULL
+      CALL g_browser.clear()
+      LET g_cnt = 1
+      LET ls_wc = p_wc
+   ELSE
+      LET ls_wc = g_add_browse
+      LET g_cnt = g_current_idx
+   END IF
+   
+   LET g_sql = " SELECT '',t0.inajsite,t0.inaj001,t0.inaj002,t0.inaj003,t0.inaj004",
+               " FROM inaj_t t0 ",
+               "  ",
+               
+               " WHERE t0.inajent = " ||g_enterprise|| " AND ", ls_wc, cl_sql_add_filter("inaj_t")
+   #add-point:browser_fill段fill_wc name="browser_fill.fill_wc"
+   
+   #end add-point 
+   LET g_sql = g_sql, " ORDER BY ",l_searchcol," ",g_order
+   #add-point:browser_fill段before_pre name="browser_fill.before_pre"
+ 
+   #end add-point                    
+ 
+   #LET g_sql = cl_sql_add_tabid(g_sql,"inaj_t")             #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE browse_pre FROM g_sql
+      DECLARE browse_cur CURSOR FOR browse_pre
+      
+      FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_inajsite,g_browser[g_cnt].b_inaj001, 
+          g_browser[g_cnt].b_inaj002,g_browser[g_cnt].b_inaj003,g_browser[g_cnt].b_inaj004
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "foreach:" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+         
+         
+         
+         #add-point:browser_fill段reference name="browser_fill.reference"
+         
+         #end add-point
+         
+         
+         
+         LET g_cnt = g_cnt + 1
+         IF g_cnt > g_max_rec THEN
+            EXIT FOREACH
+         END IF
+      END FOREACH
+ 
+      FREE browse_pre
+ 
+   END IF
+ 
+   #清空g_add_browse, 並指定指標位置
+   IF NOT cl_null(g_add_browse) THEN
+      LET g_add_browse = ""
+      CALL g_curr_diag.setCurrentRow("s_browse",g_current_idx)
+   END IF
+   
+   IF cl_null(g_browser[g_cnt].b_inajsite) THEN
+      CALL g_browser.deleteElement(g_cnt)
+   END IF
+   
+   LET g_header_cnt = g_browser.getLength()
+   LET g_current_cnt = g_browser.getLength()
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_rec_b = g_browser.getLength()
+   LET g_cnt = 0
+   DISPLAY g_browser_cnt TO FORMONLY.b_count
+   DISPLAY g_browser_cnt TO FORMONLY.h_count
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+   
+   #add-point:browser_fill段結束前 name="browser_fill.after"
+   
+   #end add-point   
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="ainq130.construct" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION ainq130_construct()
+   #add-point:cs段define(客製用) name="cs.define_customerization"
+   
+   #end add-point
+   DEFINE ls_return      STRING
+   DEFINE ls_result      STRING 
+   DEFINE ls_wc          STRING 
+   #add-point:cs段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="cs.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="cs.pre_function"
+   
+   #end add-point
+   
+   #清空畫面&資料初始化
+   CLEAR FORM
+   INITIALIZE g_inaj_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   LET g_current_row = 1
+ 
+   LET g_qryparam.state = "c"
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #螢幕上取條件
+      CONSTRUCT BY NAME g_wc ON inaj005,imaal003,imaal004,inaj006,inaj006_desc,inaj008,inaj009,inaj010, 
+          inaj007,inajsite,inaj001,inaj002,inaj003,inaj022,inaj015,inaj035,inaj036,inaj011,inaj012,inaj013, 
+          inaj014,inaj027,inaj026,inaj004,inaj017,inaj018,inaj016,inaj016_desc,inaj037,inaj038,inaj039, 
+          inaj044,inaj020,inaj028,inaj029,inaj040,inaj041,inaj043,inaj042,inaj030,inaj031,inaj032,inaj033, 
+          inaj034,inaj023,inaj024,inaj025
+      
+         BEFORE CONSTRUCT                                    
+            #add-point:cs段more_construct name="cs.before_construct"
+            
+            #end add-point             
+      
+         #公用欄位開窗相關處理
+         
+      
+         #一般欄位
+                  #Ctrlp:construct.c.inaj005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj005
+            #add-point:ON ACTION controlp INFIELD inaj005 name="construct.c.inaj005"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaj005  #顯示到畫面上
+            NEXT FIELD inaj005                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj005
+            #add-point:BEFORE FIELD inaj005 name="construct.b.inaj005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj005
+            
+            #add-point:AFTER FIELD inaj005 name="construct.a.inaj005"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imaal003
+            #add-point:BEFORE FIELD imaal003 name="construct.b.imaal003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imaal003
+            
+            #add-point:AFTER FIELD imaal003 name="construct.a.imaal003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imaal003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imaal003
+            #add-point:ON ACTION controlp INFIELD imaal003 name="construct.c.imaal003"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD imaal004
+            #add-point:BEFORE FIELD imaal004 name="construct.b.imaal004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD imaal004
+            
+            #add-point:AFTER FIELD imaal004 name="construct.a.imaal004"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.imaal004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD imaal004
+            #add-point:ON ACTION controlp INFIELD imaal004 name="construct.c.imaal004"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj006
+            #add-point:BEFORE FIELD inaj006 name="construct.b.inaj006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj006
+            
+            #add-point:AFTER FIELD inaj006 name="construct.a.inaj006"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj006
+            #add-point:ON ACTION controlp INFIELD inaj006 name="construct.c.inaj006"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj006_desc
+            #add-point:BEFORE FIELD inaj006_desc name="construct.b.inaj006_desc"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj006_desc
+            
+            #add-point:AFTER FIELD inaj006_desc name="construct.a.inaj006_desc"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj006_desc
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj006_desc
+            #add-point:ON ACTION controlp INFIELD inaj006_desc name="construct.c.inaj006_desc"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.inaj008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj008
+            #add-point:ON ACTION controlp INFIELD inaj008 name="construct.c.inaj008"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaj008  #顯示到畫面上
+            NEXT FIELD inaj008                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj008
+            #add-point:BEFORE FIELD inaj008 name="construct.b.inaj008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj008
+            
+            #add-point:AFTER FIELD inaj008 name="construct.a.inaj008"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj009
+            #add-point:ON ACTION controlp INFIELD inaj009 name="construct.c.inaj009"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inab002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaj009  #顯示到畫面上
+            NEXT FIELD inaj009                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj009
+            #add-point:BEFORE FIELD inaj009 name="construct.b.inaj009"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj009
+            
+            #add-point:AFTER FIELD inaj009 name="construct.a.inaj009"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj010
+            #add-point:ON ACTION controlp INFIELD inaj010 name="construct.c.inaj010"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaj010()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaj010  #顯示到畫面上
+            NEXT FIELD inaj010                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj010
+            #add-point:BEFORE FIELD inaj010 name="construct.b.inaj010"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj010
+            
+            #add-point:AFTER FIELD inaj010 name="construct.a.inaj010"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj007
+            #add-point:BEFORE FIELD inaj007 name="construct.b.inaj007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj007
+            
+            #add-point:AFTER FIELD inaj007 name="construct.a.inaj007"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj007
+            #add-point:ON ACTION controlp INFIELD inaj007 name="construct.c.inaj007"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inajsite
+            #add-point:BEFORE FIELD inajsite name="construct.b.inajsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inajsite
+            
+            #add-point:AFTER FIELD inajsite name="construct.a.inajsite"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inajsite
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inajsite
+            #add-point:ON ACTION controlp INFIELD inajsite name="construct.c.inajsite"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.inaj001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj001
+            #add-point:ON ACTION controlp INFIELD inaj001 name="construct.c.inaj001"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaj001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaj001  #顯示到畫面上
+            NEXT FIELD inaj001                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj001
+            #add-point:BEFORE FIELD inaj001 name="construct.b.inaj001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj001
+            
+            #add-point:AFTER FIELD inaj001 name="construct.a.inaj001"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj002
+            #add-point:BEFORE FIELD inaj002 name="construct.b.inaj002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj002
+            
+            #add-point:AFTER FIELD inaj002 name="construct.a.inaj002"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj002
+            #add-point:ON ACTION controlp INFIELD inaj002 name="construct.c.inaj002"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj003
+            #add-point:BEFORE FIELD inaj003 name="construct.b.inaj003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj003
+            
+            #add-point:AFTER FIELD inaj003 name="construct.a.inaj003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj003
+            #add-point:ON ACTION controlp INFIELD inaj003 name="construct.c.inaj003"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj022
+            #add-point:BEFORE FIELD inaj022 name="construct.b.inaj022"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj022
+            
+            #add-point:AFTER FIELD inaj022 name="construct.a.inaj022"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj022
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj022
+            #add-point:ON ACTION controlp INFIELD inaj022 name="construct.c.inaj022"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj015
+            #add-point:BEFORE FIELD inaj015 name="construct.b.inaj015"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj015
+            
+            #add-point:AFTER FIELD inaj015 name="construct.a.inaj015"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj015
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj015
+            #add-point:ON ACTION controlp INFIELD inaj015 name="construct.c.inaj015"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj035
+            #add-point:BEFORE FIELD inaj035 name="construct.b.inaj035"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj035
+            
+            #add-point:AFTER FIELD inaj035 name="construct.a.inaj035"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj035
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj035
+            #add-point:ON ACTION controlp INFIELD inaj035 name="construct.c.inaj035"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj036
+            #add-point:BEFORE FIELD inaj036 name="construct.b.inaj036"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj036
+            
+            #add-point:AFTER FIELD inaj036 name="construct.a.inaj036"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj036
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj036
+            #add-point:ON ACTION controlp INFIELD inaj036 name="construct.c.inaj036"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj011
+            #add-point:BEFORE FIELD inaj011 name="construct.b.inaj011"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj011
+            
+            #add-point:AFTER FIELD inaj011 name="construct.a.inaj011"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj011
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj011
+            #add-point:ON ACTION controlp INFIELD inaj011 name="construct.c.inaj011"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.inaj012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj012
+            #add-point:ON ACTION controlp INFIELD inaj012 name="construct.c.inaj012"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooca001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaj012  #顯示到畫面上
+            NEXT FIELD inaj012                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj012
+            #add-point:BEFORE FIELD inaj012 name="construct.b.inaj012"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj012
+            
+            #add-point:AFTER FIELD inaj012 name="construct.a.inaj012"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj013
+            #add-point:BEFORE FIELD inaj013 name="construct.b.inaj013"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj013
+            
+            #add-point:AFTER FIELD inaj013 name="construct.a.inaj013"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj013
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj013
+            #add-point:ON ACTION controlp INFIELD inaj013 name="construct.c.inaj013"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj014
+            #add-point:BEFORE FIELD inaj014 name="construct.b.inaj014"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj014
+            
+            #add-point:AFTER FIELD inaj014 name="construct.a.inaj014"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj014
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj014
+            #add-point:ON ACTION controlp INFIELD inaj014 name="construct.c.inaj014"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj027
+            #add-point:BEFORE FIELD inaj027 name="construct.b.inaj027"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj027
+            
+            #add-point:AFTER FIELD inaj027 name="construct.a.inaj027"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj027
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj027
+            #add-point:ON ACTION controlp INFIELD inaj027 name="construct.c.inaj027"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.inaj026
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj026
+            #add-point:ON ACTION controlp INFIELD inaj026 name="construct.c.inaj026"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooca001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaj026  #顯示到畫面上
+            NEXT FIELD inaj026                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj026
+            #add-point:BEFORE FIELD inaj026 name="construct.b.inaj026"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj026
+            
+            #add-point:AFTER FIELD inaj026 name="construct.a.inaj026"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj004
+            #add-point:BEFORE FIELD inaj004 name="construct.b.inaj004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj004
+            
+            #add-point:AFTER FIELD inaj004 name="construct.a.inaj004"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj004
+            #add-point:ON ACTION controlp INFIELD inaj004 name="construct.c.inaj004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.inaj017
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj017
+            #add-point:ON ACTION controlp INFIELD inaj017 name="construct.c.inaj017"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaj017  #顯示到畫面上
+            NEXT FIELD inaj017                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj017
+            #add-point:BEFORE FIELD inaj017 name="construct.b.inaj017"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj017
+            
+            #add-point:AFTER FIELD inaj017 name="construct.a.inaj017"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj018
+            #add-point:ON ACTION controlp INFIELD inaj018 name="construct.c.inaj018"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            #CALL q_pmaa001()                           #呼叫開窗  #160913-00055#2 
+            CALL q_pmaa001_25()        #160913-00055#2
+            DISPLAY g_qryparam.return1 TO inaj018  #顯示到畫面上
+            NEXT FIELD inaj018                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj018
+            #add-point:BEFORE FIELD inaj018 name="construct.b.inaj018"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj018
+            
+            #add-point:AFTER FIELD inaj018 name="construct.a.inaj018"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj016
+            #add-point:BEFORE FIELD inaj016 name="construct.b.inaj016"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj016
+            
+            #add-point:AFTER FIELD inaj016 name="construct.a.inaj016"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj016
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj016
+            #add-point:ON ACTION controlp INFIELD inaj016 name="construct.c.inaj016"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj016_desc
+            #add-point:BEFORE FIELD inaj016_desc name="construct.b.inaj016_desc"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj016_desc
+            
+            #add-point:AFTER FIELD inaj016_desc name="construct.a.inaj016_desc"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj016_desc
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj016_desc
+            #add-point:ON ACTION controlp INFIELD inaj016_desc name="construct.c.inaj016_desc"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.inaj037
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj037
+            #add-point:ON ACTION controlp INFIELD inaj037 name="construct.c.inaj037"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaa005()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaj037  #顯示到畫面上
+            NEXT FIELD inaj037                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj037
+            #add-point:BEFORE FIELD inaj037 name="construct.b.inaj037"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj037
+            
+            #add-point:AFTER FIELD inaj037 name="construct.a.inaj037"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj038
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj038
+            #add-point:ON ACTION controlp INFIELD inaj038 name="construct.c.inaj038"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_pjaa001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaj038  #顯示到畫面上
+            NEXT FIELD inaj038                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj038
+            #add-point:BEFORE FIELD inaj038 name="construct.b.inaj038"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj038
+            
+            #add-point:AFTER FIELD inaj038 name="construct.a.inaj038"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj039
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj039
+            #add-point:ON ACTION controlp INFIELD inaj039 name="construct.c.inaj039"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_pjbb002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaj039  #顯示到畫面上
+            NEXT FIELD inaj039                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj039
+            #add-point:BEFORE FIELD inaj039 name="construct.b.inaj039"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj039
+            
+            #add-point:AFTER FIELD inaj039 name="construct.a.inaj039"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj044
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj044
+            #add-point:ON ACTION controlp INFIELD inaj044 name="construct.c.inaj044"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaj044()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaj044  #顯示到畫面上
+            NEXT FIELD inaj044                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj044
+            #add-point:BEFORE FIELD inaj044 name="construct.b.inaj044"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj044
+            
+            #add-point:AFTER FIELD inaj044 name="construct.a.inaj044"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj020
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj020
+            #add-point:ON ACTION controlp INFIELD inaj020 name="construct.c.inaj020"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaj020()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaj020  #顯示到畫面上
+            NEXT FIELD inaj020                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj020
+            #add-point:BEFORE FIELD inaj020 name="construct.b.inaj020"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj020
+            
+            #add-point:AFTER FIELD inaj020 name="construct.a.inaj020"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj028
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj028
+            #add-point:ON ACTION controlp INFIELD inaj028 name="construct.c.inaj028"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaj028()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaj028  #顯示到畫面上
+            NEXT FIELD inaj028                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj028
+            #add-point:BEFORE FIELD inaj028 name="construct.b.inaj028"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj028
+            
+            #add-point:AFTER FIELD inaj028 name="construct.a.inaj028"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj029
+            #add-point:BEFORE FIELD inaj029 name="construct.b.inaj029"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj029
+            
+            #add-point:AFTER FIELD inaj029 name="construct.a.inaj029"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj029
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj029
+            #add-point:ON ACTION controlp INFIELD inaj029 name="construct.c.inaj029"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.inaj040
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj040
+            #add-point:ON ACTION controlp INFIELD inaj040 name="construct.c.inaj040"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaj040()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaj040  #顯示到畫面上
+            NEXT FIELD inaj040                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj040
+            #add-point:BEFORE FIELD inaj040 name="construct.b.inaj040"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj040
+            
+            #add-point:AFTER FIELD inaj040 name="construct.a.inaj040"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj041
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj041
+            #add-point:ON ACTION controlp INFIELD inaj041 name="construct.c.inaj041"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaj041()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaj041  #顯示到畫面上
+            NEXT FIELD inaj041                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj041
+            #add-point:BEFORE FIELD inaj041 name="construct.b.inaj041"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj041
+            
+            #add-point:AFTER FIELD inaj041 name="construct.a.inaj041"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj043
+            #add-point:BEFORE FIELD inaj043 name="construct.b.inaj043"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj043
+            
+            #add-point:AFTER FIELD inaj043 name="construct.a.inaj043"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj043
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj043
+            #add-point:ON ACTION controlp INFIELD inaj043 name="construct.c.inaj043"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj042
+            #add-point:BEFORE FIELD inaj042 name="construct.b.inaj042"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj042
+            
+            #add-point:AFTER FIELD inaj042 name="construct.a.inaj042"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj042
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj042
+            #add-point:ON ACTION controlp INFIELD inaj042 name="construct.c.inaj042"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj030
+            #add-point:BEFORE FIELD inaj030 name="construct.b.inaj030"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj030
+            
+            #add-point:AFTER FIELD inaj030 name="construct.a.inaj030"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj030
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj030
+            #add-point:ON ACTION controlp INFIELD inaj030 name="construct.c.inaj030"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.inaj031
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj031
+            #add-point:ON ACTION controlp INFIELD inaj031 name="construct.c.inaj031"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaj031()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaj031  #顯示到畫面上
+            NEXT FIELD inaj031                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj031
+            #add-point:BEFORE FIELD inaj031 name="construct.b.inaj031"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj031
+            
+            #add-point:AFTER FIELD inaj031 name="construct.a.inaj031"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj032
+            #add-point:BEFORE FIELD inaj032 name="construct.b.inaj032"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj032
+            
+            #add-point:AFTER FIELD inaj032 name="construct.a.inaj032"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj032
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj032
+            #add-point:ON ACTION controlp INFIELD inaj032 name="construct.c.inaj032"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.inaj033
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj033
+            #add-point:ON ACTION controlp INFIELD inaj033 name="construct.c.inaj033"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_inaj033()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO inaj033  #顯示到畫面上
+            NEXT FIELD inaj033                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj033
+            #add-point:BEFORE FIELD inaj033 name="construct.b.inaj033"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj033
+            
+            #add-point:AFTER FIELD inaj033 name="construct.a.inaj033"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj034
+            #add-point:BEFORE FIELD inaj034 name="construct.b.inaj034"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj034
+            
+            #add-point:AFTER FIELD inaj034 name="construct.a.inaj034"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj034
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj034
+            #add-point:ON ACTION controlp INFIELD inaj034 name="construct.c.inaj034"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj023
+            #add-point:BEFORE FIELD inaj023 name="construct.b.inaj023"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj023
+            
+            #add-point:AFTER FIELD inaj023 name="construct.a.inaj023"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj023
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj023
+            #add-point:ON ACTION controlp INFIELD inaj023 name="construct.c.inaj023"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj024
+            #add-point:BEFORE FIELD inaj024 name="construct.b.inaj024"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj024
+            
+            #add-point:AFTER FIELD inaj024 name="construct.a.inaj024"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj024
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj024
+            #add-point:ON ACTION controlp INFIELD inaj024 name="construct.c.inaj024"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj025
+            #add-point:BEFORE FIELD inaj025 name="construct.b.inaj025"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj025
+            
+            #add-point:AFTER FIELD inaj025 name="construct.a.inaj025"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.inaj025
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj025
+            #add-point:ON ACTION controlp INFIELD inaj025 name="construct.c.inaj025"
+            
+            #END add-point
+ 
+ 
+ 
+           
+      END CONSTRUCT
+      
+      #add-point:cs段more_construct name="cs.more_construct"
+      
+      #end add-point   
+      
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog name="cs.b_dialog"
+         
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+  
+   #add-point:cs段after_construct name="cs.after_construct"
+   LET g_wc = g_wc," AND inajsite ='",g_site,"'"
+   #end add-point
+  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq130.query" >}
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION ainq130_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc STRING
+   #add-point:query段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="query.pre_function"
+   
+   #end add-point
+   
+   LET INT_FLAG = 0
+   LET ls_wc = g_wc
+   
+   #切換畫面
+ 
+   CALL g_browser.clear() 
+ 
+   #browser panel折疊
+   IF g_worksheet_hidden THEN
+      CALL gfrm_curr.setElementHidden("worksheet_vbox",0)
+      CALL gfrm_curr.setElementImage("worksheethidden","worksheethidden-24.png")
+      LET g_worksheet_hidden = 0
+   END IF
+   
+   #單頭折疊
+   IF g_header_hidden THEN
+      CALL gfrm_curr.setElementHidden("vb_master",0)
+      CALL gfrm_curr.setElementImage("controls","headerhidden-24")
+      LET g_header_hidden = 0
+   END IF
+ 
+   INITIALIZE g_inaj_m.* TO NULL
+   ERROR ""
+ 
+   DISPLAY " " TO FORMONLY.b_count
+   DISPLAY " " TO FORMONLY.h_count
+   CALL ainq130_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      #LET g_wc = ls_wc
+      LET g_wc = " 1=2"
+      CALL ainq130_browser_fill(g_wc,"F")
+      CALL ainq130_fetch("")
+      RETURN
+   ELSE
+      LET g_current_row = 1
+      LET g_current_cnt = 0
+   END IF
+   
+   #根據條件從新抓取資料
+   LET g_error_show = 1
+   CALL ainq130_browser_fill(g_wc,"F")   # 移到第一頁
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||")")
+   
+   #備份搜尋條件
+   LET ls_wc = g_wc
+   
+   IF g_browser.getLength() = 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "-100" 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   ELSE
+      CALL ainq130_fetch("F") 
+   END IF
+   
+   LET g_wc_filter = ""
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq130.fetch" >}
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION ainq130_fetch(p_fl)
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point
+   DEFINE p_fl       LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="fetch.pre_function"
+   
+   #end add-point
+   
+   #根據傳入的條件決定抓取的資料
+   CASE p_fl
+      WHEN "F" 
+         LET g_current_idx = 1
+      WHEN "P"
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN "N"
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN "L" 
+         #LET g_current_idx = g_header_cnt        
+         LET g_current_idx = g_browser.getLength()    
+      WHEN "/"
+         #詢問要指定的筆數
+         IF (NOT g_no_ask) THEN      
+            CALL cl_getmsg("fetch", g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,": " FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl"
+            END PROMPT
+            
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT CASE  
+            END IF           
+         END IF
+         IF g_jump > 0 THEN
+            LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE     
+   END CASE
+ 
+   #筆數顯示
+   LET g_browser_idx = g_current_idx 
+   IF g_browser_cnt > 0 THEN
+      DISPLAY g_browser_idx TO FORMONLY.b_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.b_count #總筆數
+      DISPLAY g_browser_idx TO FORMONLY.h_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.h_count #總筆數
+   ELSE
+      DISPLAY '' TO FORMONLY.b_index #當下筆數
+      DISPLAY '' TO FORMONLY.b_count #總筆數
+      DISPLAY '' TO FORMONLY.h_index #當下筆數
+      DISPLAY '' TO FORMONLY.h_count #總筆數
+   END IF
+   
+   
+   
+   #避免超出browser資料筆數上限
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_browser_idx = g_browser.getLength()
+      LET g_current_idx = g_browser.getLength() 
+   END IF
+   
+   # 設定browse索引
+   CALL cl_navigator_setting(g_browser_idx, g_browser_cnt) 
+ 
+   #代表沒有資料, 無需做後續資料撈取之動作
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+ 
+   #根據選定的筆數給予key欄位值
+   LET g_inaj_m.inajsite = g_browser[g_current_idx].b_inajsite
+   LET g_inaj_m.inaj001 = g_browser[g_current_idx].b_inaj001
+   LET g_inaj_m.inaj002 = g_browser[g_current_idx].b_inaj002
+   LET g_inaj_m.inaj003 = g_browser[g_current_idx].b_inaj003
+   LET g_inaj_m.inaj004 = g_browser[g_current_idx].b_inaj004
+ 
+                       
+   #讀取單頭所有欄位資料
+   EXECUTE ainq130_master_referesh USING g_inaj_m.inajsite,g_inaj_m.inaj001,g_inaj_m.inaj002,g_inaj_m.inaj003, 
+       g_inaj_m.inaj004 INTO g_inaj_m.inaj005,g_inaj_m.inaj006,g_inaj_m.inaj008,g_inaj_m.inaj009,g_inaj_m.inaj010, 
+       g_inaj_m.inaj007,g_inaj_m.inajsite,g_inaj_m.inaj001,g_inaj_m.inaj002,g_inaj_m.inaj003,g_inaj_m.inaj022, 
+       g_inaj_m.inaj015,g_inaj_m.inaj035,g_inaj_m.inaj036,g_inaj_m.inaj011,g_inaj_m.inaj012,g_inaj_m.inaj013, 
+       g_inaj_m.inaj014,g_inaj_m.inaj027,g_inaj_m.inaj026,g_inaj_m.inaj004,g_inaj_m.inaj017,g_inaj_m.inaj018, 
+       g_inaj_m.inaj016,g_inaj_m.inaj037,g_inaj_m.inaj038,g_inaj_m.inaj039,g_inaj_m.inaj044,g_inaj_m.inaj020, 
+       g_inaj_m.inaj028,g_inaj_m.inaj029,g_inaj_m.inaj040,g_inaj_m.inaj041,g_inaj_m.inaj043,g_inaj_m.inaj042, 
+       g_inaj_m.inaj030,g_inaj_m.inaj031,g_inaj_m.inaj032,g_inaj_m.inaj033,g_inaj_m.inaj034,g_inaj_m.inaj023, 
+       g_inaj_m.inaj024,g_inaj_m.inaj025,g_inaj_m.inaj008_desc,g_inaj_m.inaj009_desc,g_inaj_m.inaj035_desc, 
+       g_inaj_m.inaj012_desc,g_inaj_m.inaj026_desc,g_inaj_m.inaj017_desc,g_inaj_m.inaj018_desc,g_inaj_m.inaj025_desc 
+ 
+   
+   #遮罩相關處理
+   LET g_inaj_m_mask_o.* =  g_inaj_m.*
+   CALL ainq130_inaj_t_mask()
+   LET g_inaj_m_mask_n.* =  g_inaj_m.*
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL ainq130_set_act_visible()
+   CALL ainq130_set_act_no_visible()
+ 
+   #add-point:fetch段action控制 name="fetch.action_control"
+   
+   #end add-point  
+   
+   
+   
+   #保存單頭舊值
+   LET g_inaj_m_t.* = g_inaj_m.*
+   LET g_inaj_m_o.* = g_inaj_m.*
+   
+   
+   #重新顯示
+   CALL ainq130_show()
+   
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq130.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION ainq130_insert()
+   #add-point:insert段define(客製用) name="insert.define_customerization"
+   
+   #end add-point
+   #add-point:insert段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="insert.pre_function"
+   
+   #end add-point
+   
+   CLEAR FORM #清畫面欄位內容
+   INITIALIZE g_inaj_m.* TO NULL             #DEFAULT 設定
+   LET g_inajsite_t = NULL
+   LET g_inaj001_t = NULL
+   LET g_inaj002_t = NULL
+   LET g_inaj003_t = NULL
+   LET g_inaj004_t = NULL
+ 
+   
+   #add-point:insert段before name="insert.before"
+   
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   
+   WHILE TRUE
+      
+      #公用欄位給值
+      
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+            LET g_inaj_m.inaj011 = "0"
+      LET g_inaj_m.inaj027 = "0"
+ 
+ 
+      #add-point:單頭預設值 name="insert.default"
+      
+      #end add-point   
+     
+      #顯示狀態(stus)圖片
+      
+     
+      #資料輸入
+      CALL ainq130_input("a")
+      
+      #add-point:單頭輸入後 name="insert.after_insert"
+      
+      #end add-point
+      
+      IF INT_FLAG THEN
+         #取消
+         LET INT_FLAG = 0
+         DISPLAY g_current_cnt TO FORMONLY.h_count     #總筆數
+         DISPLAY g_current_idx TO FORMONLY.h_index     #當下筆數
+         INITIALIZE g_inaj_m.* TO NULL
+         CALL ainq130_show()
+         CALL s_transaction_end('N','0')
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         RETURN
+      END IF
+ 
+      LET g_rec_b = 0
+      EXIT WHILE
+   END WHILE
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL ainq130_set_act_visible()
+   CALL ainq130_set_act_no_visible()
+ 
+   #將新增的資料併入搜尋條件中
+   LET g_state = "insert"
+   
+   LET g_inajsite_t = g_inaj_m.inajsite
+   LET g_inaj001_t = g_inaj_m.inaj001
+   LET g_inaj002_t = g_inaj_m.inaj002
+   LET g_inaj003_t = g_inaj_m.inaj003
+   LET g_inaj004_t = g_inaj_m.inaj004
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " inajent = " ||g_enterprise|| " AND",
+                      " inajsite = '", g_inaj_m.inajsite, "' "
+                      ," AND inaj001 = '", g_inaj_m.inaj001, "' "
+                      ," AND inaj002 = '", g_inaj_m.inaj002, "' "
+                      ," AND inaj003 = '", g_inaj_m.inaj003, "' "
+                      ," AND inaj004 = '", g_inaj_m.inaj004, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL ainq130_browser_fill("","")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+ 
+   #撈取異動後的資料(主要是帶出reference)
+   EXECUTE ainq130_master_referesh USING g_inaj_m.inajsite,g_inaj_m.inaj001,g_inaj_m.inaj002,g_inaj_m.inaj003, 
+       g_inaj_m.inaj004 INTO g_inaj_m.inaj005,g_inaj_m.inaj006,g_inaj_m.inaj008,g_inaj_m.inaj009,g_inaj_m.inaj010, 
+       g_inaj_m.inaj007,g_inaj_m.inajsite,g_inaj_m.inaj001,g_inaj_m.inaj002,g_inaj_m.inaj003,g_inaj_m.inaj022, 
+       g_inaj_m.inaj015,g_inaj_m.inaj035,g_inaj_m.inaj036,g_inaj_m.inaj011,g_inaj_m.inaj012,g_inaj_m.inaj013, 
+       g_inaj_m.inaj014,g_inaj_m.inaj027,g_inaj_m.inaj026,g_inaj_m.inaj004,g_inaj_m.inaj017,g_inaj_m.inaj018, 
+       g_inaj_m.inaj016,g_inaj_m.inaj037,g_inaj_m.inaj038,g_inaj_m.inaj039,g_inaj_m.inaj044,g_inaj_m.inaj020, 
+       g_inaj_m.inaj028,g_inaj_m.inaj029,g_inaj_m.inaj040,g_inaj_m.inaj041,g_inaj_m.inaj043,g_inaj_m.inaj042, 
+       g_inaj_m.inaj030,g_inaj_m.inaj031,g_inaj_m.inaj032,g_inaj_m.inaj033,g_inaj_m.inaj034,g_inaj_m.inaj023, 
+       g_inaj_m.inaj024,g_inaj_m.inaj025,g_inaj_m.inaj008_desc,g_inaj_m.inaj009_desc,g_inaj_m.inaj035_desc, 
+       g_inaj_m.inaj012_desc,g_inaj_m.inaj026_desc,g_inaj_m.inaj017_desc,g_inaj_m.inaj018_desc,g_inaj_m.inaj025_desc 
+ 
+   
+   
+   #遮罩相關處理
+   LET g_inaj_m_mask_o.* =  g_inaj_m.*
+   CALL ainq130_inaj_t_mask()
+   LET g_inaj_m_mask_n.* =  g_inaj_m.*
+   
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_inaj_m.inaj005,g_inaj_m.imaal003,g_inaj_m.imaal004,g_inaj_m.inaj006,g_inaj_m.inaj006_desc, 
+       g_inaj_m.inaj008,g_inaj_m.inaj008_desc,g_inaj_m.inaj009,g_inaj_m.inaj009_desc,g_inaj_m.inaj010, 
+       g_inaj_m.inaj007,g_inaj_m.inajsite,g_inaj_m.inaj001,g_inaj_m.inaj002,g_inaj_m.inaj003,g_inaj_m.inaj022, 
+       g_inaj_m.inaj015,g_inaj_m.inaj035,g_inaj_m.inaj035_desc,g_inaj_m.inaj036,g_inaj_m.inaj011,g_inaj_m.inaj012, 
+       g_inaj_m.inaj012_desc,g_inaj_m.inaj013,g_inaj_m.inaj014,g_inaj_m.inaj027,g_inaj_m.inaj026,g_inaj_m.inaj026_desc, 
+       g_inaj_m.inaj004,g_inaj_m.inaj017,g_inaj_m.inaj017_desc,g_inaj_m.inaj018,g_inaj_m.inaj018_desc, 
+       g_inaj_m.inaj016,g_inaj_m.inaj016_desc,g_inaj_m.inaj037,g_inaj_m.inaj038,g_inaj_m.inaj039,g_inaj_m.inaj044, 
+       g_inaj_m.inaj020,g_inaj_m.inaj028,g_inaj_m.inaj029,g_inaj_m.inaj040,g_inaj_m.inaj041,g_inaj_m.inaj043, 
+       g_inaj_m.inaj042,g_inaj_m.inaj030,g_inaj_m.inaj031,g_inaj_m.inaj032,g_inaj_m.inaj033,g_inaj_m.inaj034, 
+       g_inaj_m.inaj023,g_inaj_m.inaj024,g_inaj_m.inaj025,g_inaj_m.inaj025_desc
+ 
+   #add-point:新增結束後 name="insert.after"
+   
+   #end add-point 
+ 
+ 
+   #功能已完成,通報訊息中心
+   CALL ainq130_msgcentre_notify('insert')
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq130.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION ainq130_modify()
+   #add-point:modify段define(客製用) name="modify.define_customerization"
+   
+   #end add-point
+   #add-point:modify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="modify.pre_function"
+   
+   #end add-point
+   
+   #先確定key值無遺漏
+   IF g_inaj_m.inajsite IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF 
+ 
+   ERROR ""
+  
+   #備份key值
+   LET g_inajsite_t = g_inaj_m.inajsite
+   LET g_inaj001_t = g_inaj_m.inaj001
+   LET g_inaj002_t = g_inaj_m.inaj002
+   LET g_inaj003_t = g_inaj_m.inaj003
+   LET g_inaj004_t = g_inaj_m.inaj004
+ 
+   
+   CALL s_transaction_begin()
+   
+   #先lock資料
+   OPEN ainq130_cl USING g_enterprise,g_inaj_m.inajsite,g_inaj_m.inaj001,g_inaj_m.inaj002,g_inaj_m.inaj003,g_inaj_m.inaj004
+   IF SQLCA.SQLCODE THEN    #(ver:49)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN ainq130_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.popup = TRUE 
+      CLOSE ainq130_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE ainq130_master_referesh USING g_inaj_m.inajsite,g_inaj_m.inaj001,g_inaj_m.inaj002,g_inaj_m.inaj003, 
+       g_inaj_m.inaj004 INTO g_inaj_m.inaj005,g_inaj_m.inaj006,g_inaj_m.inaj008,g_inaj_m.inaj009,g_inaj_m.inaj010, 
+       g_inaj_m.inaj007,g_inaj_m.inajsite,g_inaj_m.inaj001,g_inaj_m.inaj002,g_inaj_m.inaj003,g_inaj_m.inaj022, 
+       g_inaj_m.inaj015,g_inaj_m.inaj035,g_inaj_m.inaj036,g_inaj_m.inaj011,g_inaj_m.inaj012,g_inaj_m.inaj013, 
+       g_inaj_m.inaj014,g_inaj_m.inaj027,g_inaj_m.inaj026,g_inaj_m.inaj004,g_inaj_m.inaj017,g_inaj_m.inaj018, 
+       g_inaj_m.inaj016,g_inaj_m.inaj037,g_inaj_m.inaj038,g_inaj_m.inaj039,g_inaj_m.inaj044,g_inaj_m.inaj020, 
+       g_inaj_m.inaj028,g_inaj_m.inaj029,g_inaj_m.inaj040,g_inaj_m.inaj041,g_inaj_m.inaj043,g_inaj_m.inaj042, 
+       g_inaj_m.inaj030,g_inaj_m.inaj031,g_inaj_m.inaj032,g_inaj_m.inaj033,g_inaj_m.inaj034,g_inaj_m.inaj023, 
+       g_inaj_m.inaj024,g_inaj_m.inaj025,g_inaj_m.inaj008_desc,g_inaj_m.inaj009_desc,g_inaj_m.inaj035_desc, 
+       g_inaj_m.inaj012_desc,g_inaj_m.inaj026_desc,g_inaj_m.inaj017_desc,g_inaj_m.inaj018_desc,g_inaj_m.inaj025_desc 
+ 
+ 
+   #檢查是否允許此動作
+   IF NOT ainq130_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #遮罩相關處理
+   LET g_inaj_m_mask_o.* =  g_inaj_m.*
+   CALL ainq130_inaj_t_mask()
+   LET g_inaj_m_mask_n.* =  g_inaj_m.*
+   
+   
+ 
+   #顯示資料
+   CALL ainq130_show()
+   
+   WHILE TRUE
+      LET g_inaj_m.inajsite = g_inajsite_t
+      LET g_inaj_m.inaj001 = g_inaj001_t
+      LET g_inaj_m.inaj002 = g_inaj002_t
+      LET g_inaj_m.inaj003 = g_inaj003_t
+      LET g_inaj_m.inaj004 = g_inaj004_t
+ 
+      
+      #寫入修改者/修改日期資訊
+      
+      
+      #add-point:modify段修改前 name="modify.before_input"
+      
+      #end add-point
+ 
+      #資料輸入
+      CALL ainq130_input("u")     
+ 
+      #add-point:modify段修改後 name="modify.after_input"
+      
+      #end add-point
+      
+      IF INT_FLAG THEN
+         CALL s_transaction_end('N','0')
+         LET INT_FLAG = 0
+         LET g_inaj_m.* = g_inaj_m_t.*
+         CALL ainq130_show()
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         EXIT WHILE
+      END IF
+ 
+      #若有modid跟moddt則進行update
+ 
+ 
+      EXIT WHILE
+      
+   END WHILE
+ 
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL ainq130_set_act_visible()
+   CALL ainq130_set_act_no_visible()
+ 
+   #組合新增資料的條件
+   LET g_add_browse = " inajent = " ||g_enterprise|| " AND",
+                      " inajsite = '", g_inaj_m.inajsite, "' "
+                      ," AND inaj001 = '", g_inaj_m.inaj001, "' "
+                      ," AND inaj002 = '", g_inaj_m.inaj002, "' "
+                      ," AND inaj003 = '", g_inaj_m.inaj003, "' "
+                      ," AND inaj004 = '", g_inaj_m.inaj004, "' "
+ 
+   #填到對應位置
+   CALL ainq130_browser_fill(g_wc,"")
+ 
+   CLOSE ainq130_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL ainq130_msgcentre_notify('modify')
+   
+   LET g_worksheet_hidden = 0
+   
+END FUNCTION   
+ 
+{</section>}
+ 
+{<section id="ainq130.input" >}
+#+ 資料輸入
+PRIVATE FUNCTION ainq130_input(p_cmd)
+   #add-point:input段define(客製用) name="input.define_customerization"
+   
+   #end add-point
+   DEFINE p_cmd           LIKE type_t.chr1
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_n             LIKE type_t.num10       #檢查重複用  
+   DEFINE l_cnt           LIKE type_t.num10       #檢查重複用  
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否  
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_i             LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num10
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="input.pre_function"
+   
+   #end add-point
+   
+   #切換至輸入畫面
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_inaj_m.inaj005,g_inaj_m.imaal003,g_inaj_m.imaal004,g_inaj_m.inaj006,g_inaj_m.inaj006_desc, 
+       g_inaj_m.inaj008,g_inaj_m.inaj008_desc,g_inaj_m.inaj009,g_inaj_m.inaj009_desc,g_inaj_m.inaj010, 
+       g_inaj_m.inaj007,g_inaj_m.inajsite,g_inaj_m.inaj001,g_inaj_m.inaj002,g_inaj_m.inaj003,g_inaj_m.inaj022, 
+       g_inaj_m.inaj015,g_inaj_m.inaj035,g_inaj_m.inaj035_desc,g_inaj_m.inaj036,g_inaj_m.inaj011,g_inaj_m.inaj012, 
+       g_inaj_m.inaj012_desc,g_inaj_m.inaj013,g_inaj_m.inaj014,g_inaj_m.inaj027,g_inaj_m.inaj026,g_inaj_m.inaj026_desc, 
+       g_inaj_m.inaj004,g_inaj_m.inaj017,g_inaj_m.inaj017_desc,g_inaj_m.inaj018,g_inaj_m.inaj018_desc, 
+       g_inaj_m.inaj016,g_inaj_m.inaj016_desc,g_inaj_m.inaj037,g_inaj_m.inaj038,g_inaj_m.inaj039,g_inaj_m.inaj044, 
+       g_inaj_m.inaj020,g_inaj_m.inaj028,g_inaj_m.inaj029,g_inaj_m.inaj040,g_inaj_m.inaj041,g_inaj_m.inaj043, 
+       g_inaj_m.inaj042,g_inaj_m.inaj030,g_inaj_m.inaj031,g_inaj_m.inaj032,g_inaj_m.inaj033,g_inaj_m.inaj034, 
+       g_inaj_m.inaj023,g_inaj_m.inaj024,g_inaj_m.inaj025,g_inaj_m.inaj025_desc
+   
+   CALL cl_set_head_visible("","YES")  
+   
+   #a-新增,r-複製,u-修改
+   IF p_cmd = 'r' THEN
+      #此段落的r動作等同於a
+      LET p_cmd = 'a'
+   END IF
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   LET g_qryparam.state = "i"
+   
+   #控制key欄位可否輸入
+   CALL ainq130_set_entry(p_cmd)
+   #add-point:set_entry後 name="input.after_set_entry"
+   
+   #end add-point
+   CALL ainq130_set_no_entry(p_cmd)
+   
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+   #add-point:資料輸入前 name="input.before_input"
+   
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #單頭段
+      INPUT BY NAME g_inaj_m.inaj005 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            #其他table資料備份(確定是否更改用)
+            
+            #add-point:input開始前 name="input.before.input"
+            
+            #end add-point
+   
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inaj005
+            #add-point:BEFORE FIELD inaj005 name="input.b.inaj005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inaj005
+            
+            #add-point:AFTER FIELD inaj005 name="input.a.inaj005"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inaj005
+            #add-point:ON CHANGE inaj005 name="input.g.inaj005"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.inaj005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inaj005
+            #add-point:ON ACTION controlp INFIELD inaj005 name="input.c.inaj005"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #若點選cancel則離開dialog
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            
+            #錯誤訊息統整顯示
+            #CALL cl_err_collect_show()
+            #CALL cl_showmsg()
+  
+            IF p_cmd <> "u" THEN
+               #當p_cmd不為u代表為新增/複製
+               LET l_count = 1  
+ 
+               #確定新增的資料不存在(不重複)
+               SELECT COUNT(1) INTO l_count FROM inaj_t
+                WHERE inajent = g_enterprise AND inajsite = g_inaj_m.inajsite
+                  AND inaj001 = g_inaj_m.inaj001
+                  AND inaj002 = g_inaj_m.inaj002
+                  AND inaj003 = g_inaj_m.inaj003
+                  AND inaj004 = g_inaj_m.inaj004
+ 
+               IF l_count = 0 THEN
+               
+                  #add-point:單頭新增前 name="input.head.b_insert"
+                  
+                  #end add-point
+               
+                  #將新增的單頭資料寫入資料庫
+                  INSERT INTO inaj_t (inajent,inaj005,inaj006,inaj008,inaj009,inaj010,inaj007,inajsite, 
+                      inaj001,inaj002,inaj003,inaj022,inaj015,inaj035,inaj036,inaj011,inaj012,inaj013, 
+                      inaj014,inaj027,inaj026,inaj004,inaj017,inaj018,inaj016,inaj037,inaj038,inaj039, 
+                      inaj044,inaj020,inaj028,inaj029,inaj040,inaj041,inaj043,inaj042,inaj030,inaj031, 
+                      inaj032,inaj033,inaj034,inaj023,inaj024,inaj025)
+                  VALUES (g_enterprise,g_inaj_m.inaj005,g_inaj_m.inaj006,g_inaj_m.inaj008,g_inaj_m.inaj009, 
+                      g_inaj_m.inaj010,g_inaj_m.inaj007,g_inaj_m.inajsite,g_inaj_m.inaj001,g_inaj_m.inaj002, 
+                      g_inaj_m.inaj003,g_inaj_m.inaj022,g_inaj_m.inaj015,g_inaj_m.inaj035,g_inaj_m.inaj036, 
+                      g_inaj_m.inaj011,g_inaj_m.inaj012,g_inaj_m.inaj013,g_inaj_m.inaj014,g_inaj_m.inaj027, 
+                      g_inaj_m.inaj026,g_inaj_m.inaj004,g_inaj_m.inaj017,g_inaj_m.inaj018,g_inaj_m.inaj016, 
+                      g_inaj_m.inaj037,g_inaj_m.inaj038,g_inaj_m.inaj039,g_inaj_m.inaj044,g_inaj_m.inaj020, 
+                      g_inaj_m.inaj028,g_inaj_m.inaj029,g_inaj_m.inaj040,g_inaj_m.inaj041,g_inaj_m.inaj043, 
+                      g_inaj_m.inaj042,g_inaj_m.inaj030,g_inaj_m.inaj031,g_inaj_m.inaj032,g_inaj_m.inaj033, 
+                      g_inaj_m.inaj034,g_inaj_m.inaj023,g_inaj_m.inaj024,g_inaj_m.inaj025) 
+                  
+                  #add-point:單頭新增中 name="input.head.m_insert"
+                  
+                  #end add-point
+                  
+                  #若寫入錯誤則提示錯誤訊息並返回輸入頁面
+                  IF SQLCA.SQLCODE THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "inaj_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  
+                  
+                  #資料多語言用-增/改
+                  
+                  
+                  #add-point:單頭新增後 name="input.head.a_insert"
+                  
+                  #end add-point
+                  
+                  CALL s_transaction_end('Y','0')
+               ELSE
+                  CALL s_transaction_end('N','0')
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = g_inaj_m.inajsite
+                  LET g_errparam.code   = "std-00006" 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+               END IF 
+            ELSE
+               #add-point:單頭修改前 name="input.head.b_update"
+               
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL ainq130_inaj_t_mask_restore('restore_mask_o')
+               
+               UPDATE inaj_t SET (inaj005,inaj006,inaj008,inaj009,inaj010,inaj007,inajsite,inaj001,inaj002, 
+                   inaj003,inaj022,inaj015,inaj035,inaj036,inaj011,inaj012,inaj013,inaj014,inaj027,inaj026, 
+                   inaj004,inaj017,inaj018,inaj016,inaj037,inaj038,inaj039,inaj044,inaj020,inaj028,inaj029, 
+                   inaj040,inaj041,inaj043,inaj042,inaj030,inaj031,inaj032,inaj033,inaj034,inaj023,inaj024, 
+                   inaj025) = (g_inaj_m.inaj005,g_inaj_m.inaj006,g_inaj_m.inaj008,g_inaj_m.inaj009,g_inaj_m.inaj010, 
+                   g_inaj_m.inaj007,g_inaj_m.inajsite,g_inaj_m.inaj001,g_inaj_m.inaj002,g_inaj_m.inaj003, 
+                   g_inaj_m.inaj022,g_inaj_m.inaj015,g_inaj_m.inaj035,g_inaj_m.inaj036,g_inaj_m.inaj011, 
+                   g_inaj_m.inaj012,g_inaj_m.inaj013,g_inaj_m.inaj014,g_inaj_m.inaj027,g_inaj_m.inaj026, 
+                   g_inaj_m.inaj004,g_inaj_m.inaj017,g_inaj_m.inaj018,g_inaj_m.inaj016,g_inaj_m.inaj037, 
+                   g_inaj_m.inaj038,g_inaj_m.inaj039,g_inaj_m.inaj044,g_inaj_m.inaj020,g_inaj_m.inaj028, 
+                   g_inaj_m.inaj029,g_inaj_m.inaj040,g_inaj_m.inaj041,g_inaj_m.inaj043,g_inaj_m.inaj042, 
+                   g_inaj_m.inaj030,g_inaj_m.inaj031,g_inaj_m.inaj032,g_inaj_m.inaj033,g_inaj_m.inaj034, 
+                   g_inaj_m.inaj023,g_inaj_m.inaj024,g_inaj_m.inaj025)
+                WHERE inajent = g_enterprise AND inajsite = g_inajsite_t #
+                  AND inaj001 = g_inaj001_t
+                  AND inaj002 = g_inaj002_t
+                  AND inaj003 = g_inaj003_t
+                  AND inaj004 = g_inaj004_t
+ 
+               #add-point:單頭修改中 name="input.head.m_update"
+               
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL s_transaction_end('N','0')
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "inaj_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  WHEN SQLCA.SQLCODE #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "inaj_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  OTHERWISE
+                     
+                     #資料多語言用-增/改
+                     
+                     
+                     #將遮罩欄位進行遮蔽
+                     CALL ainq130_inaj_t_mask_restore('restore_mask_n')
+                     
+                     #add-point:單頭修改後 name="input.head.a_update"
+                     
+                     #end add-point
+                     #修改歷程記錄(單頭修改)
+                     LET g_log1 = util.JSON.stringify(g_inaj_m_t)
+                     LET g_log2 = util.JSON.stringify(g_inaj_m)
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                        CALL s_transaction_end('N','0')
+                     ELSE
+                        CALL s_transaction_end('Y','0')
+                     END IF
+               END CASE
+               
+            END IF
+           #controlp
+      END INPUT
+      
+      #add-point:input段more input  name="input.more_input"
+      
+      #end add-point
+    
+      BEFORE DIALOG
+         #CALL cl_err_collect_init()
+         #add-point:input段before_dialog  name="input.before_dialog"
+         
+         #end add-point
+          
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      #放棄輸入
+      ON ACTION cancel
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      #在dialog 右上角 (X)
+      ON ACTION close 
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+    
+      #toolbar 離開
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input  name="input.after_input"
+   
+   #end add-point    
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq130.reproduce" >}
+#+ 資料複製
+PRIVATE FUNCTION ainq130_reproduce()
+   #add-point:reproduce段define(客製用) name="reproduce.define_customerization"
+   
+   #end add-point
+   DEFINE l_newno     LIKE inaj_t.inajsite 
+   DEFINE l_oldno     LIKE inaj_t.inajsite 
+   DEFINE l_newno02     LIKE inaj_t.inaj001 
+   DEFINE l_oldno02     LIKE inaj_t.inaj001 
+   DEFINE l_newno03     LIKE inaj_t.inaj002 
+   DEFINE l_oldno03     LIKE inaj_t.inaj002 
+   DEFINE l_newno04     LIKE inaj_t.inaj003 
+   DEFINE l_oldno04     LIKE inaj_t.inaj003 
+   DEFINE l_newno05     LIKE inaj_t.inaj004 
+   DEFINE l_oldno05     LIKE inaj_t.inaj004 
+ 
+   DEFINE l_master    RECORD LIKE inaj_t.* #此變數樣板目前無使用
+   DEFINE l_cnt       LIKE type_t.num10
+   #add-point:reproduce段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="reproduce.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="reproduce.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   
+   #先確定key值無遺漏
+   IF g_inaj_m.inajsite IS NULL
+      OR g_inaj_m.inaj001 IS NULL
+      OR g_inaj_m.inaj002 IS NULL
+      OR g_inaj_m.inaj003 IS NULL
+      OR g_inaj_m.inaj004 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #備份key值
+   LET g_inajsite_t = g_inaj_m.inajsite
+   LET g_inaj001_t = g_inaj_m.inaj001
+   LET g_inaj002_t = g_inaj_m.inaj002
+   LET g_inaj003_t = g_inaj_m.inaj003
+   LET g_inaj004_t = g_inaj_m.inaj004
+ 
+   
+   #清空key值
+   LET g_inaj_m.inajsite = ""
+   LET g_inaj_m.inaj001 = ""
+   LET g_inaj_m.inaj002 = ""
+   LET g_inaj_m.inaj003 = ""
+   LET g_inaj_m.inaj004 = ""
+ 
+    
+   CALL ainq130_set_entry("a")
+   CALL ainq130_set_no_entry("a")
+   
+   #公用欄位給予預設值
+   
+   
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前 name="reproduce.head.b_input"
+   
+   #end add-point
+   
+   #顯示狀態(stus)圖片
+   
+   
+   #清空key欄位的desc
+   
+   
+   #資料輸入
+   CALL ainq130_input("r")
+   
+   IF INT_FLAG THEN
+      #取消
+      INITIALIZE g_inaj_m.* TO NULL
+      CALL ainq130_show()
+      CALL s_transaction_end('N','0')
+      LET INT_FLAG = 0
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = 9001 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   CALL s_transaction_begin()
+   
+   #add-point:單頭複製前 name="reproduce.head.b_insert"
+   
+   #end add-point
+   
+   #add-point:單頭複製中 name="reproduce.head.m_insert"
+   
+   #end add-point
+   
+   IF SQLCA.SQLCODE THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "inaj_t:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.popup = TRUE 
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #add-point:單頭複製後 name="reproduce.head.a_insert"
+   
+   #end add-point
+   
+   CALL s_transaction_end('Y','0')
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL ainq130_set_act_visible()
+   CALL ainq130_set_act_no_visible()
+ 
+   #將新增的資料併入搜尋條件中
+   LET g_state = "insert"
+   
+   LET g_inajsite_t = g_inaj_m.inajsite
+   LET g_inaj001_t = g_inaj_m.inaj001
+   LET g_inaj002_t = g_inaj_m.inaj002
+   LET g_inaj003_t = g_inaj_m.inaj003
+   LET g_inaj004_t = g_inaj_m.inaj004
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " inajent = " ||g_enterprise|| " AND",
+                      " inajsite = '", g_inaj_m.inajsite, "' "
+                      ," AND inaj001 = '", g_inaj_m.inaj001, "' "
+                      ," AND inaj002 = '", g_inaj_m.inaj002, "' "
+                      ," AND inaj003 = '", g_inaj_m.inaj003, "' "
+                      ," AND inaj004 = '", g_inaj_m.inaj004, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL ainq130_browser_fill("","")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   #add-point:完成複製段落後 name="reproduce.after_reproduce"
+   
+   #end add-point
+              
+              
+   #功能已完成,通報訊息中心
+   CALL ainq130_msgcentre_notify('reproduce')
+                 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq130.show" >}
+#+ 資料顯示 
+PRIVATE FUNCTION ainq130_show()
+   #add-point:show段define(客製用) name="show.define_customerization"
+   
+   #end add-point
+   #add-point:show段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show.define"
+   DEFINE l_success LIKE type_t.num5
+   DEFINE l_acc     LIKE gzcb_t.gzcb004  #150310-00003#1
+   #end add-point  
+   
+   #add-point:show段Function前置處理  name="show.before"
+   
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值
+   
+    
+   #顯示followup圖示
+   #應用 a48 樣板自動產生(Version:3)
+   CALL ainq130_set_pk_array()
+   #add-point:ON ACTION agendum name="show.follow_pic"
+   
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+ 
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference name="show.head.reference"
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_inaj_m.inaj005
+   CALL ap_ref_array2(g_ref_fields,"SELECT imaal003,imaal004 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_inaj_m.imaal003 = g_rtn_fields[1]
+   LET g_inaj_m.imaal004 = g_rtn_fields[2]  
+   CALL s_feature_description(g_inaj_m.inaj005,g_inaj_m.inaj006) RETURNING l_success,g_inaj_m.inaj006_desc  
+
+   #150310-00003#1--b
+   LET l_acc = ''
+   #SELECT gzcb004 INTO l_acc FROM gzcb_t WHERE gzcb001 = '24' AND gzcb002 = g_inaj_m.inaj015    #160816-00001#3 mark
+   
+   LET l_acc = s_fin_get_scc_value('24',g_inaj_m.inaj015,'2')  #160816-00001#3  Add
+   
+   CALL s_desc_get_acc_desc(l_acc,g_inaj_m.inaj016) RETURNING g_inaj_m.inaj016_desc 
+   #150310-00003#1--e  
+   #end add-point
+ 
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_inaj_m.inaj005,g_inaj_m.imaal003,g_inaj_m.imaal004,g_inaj_m.inaj006,g_inaj_m.inaj006_desc, 
+       g_inaj_m.inaj008,g_inaj_m.inaj008_desc,g_inaj_m.inaj009,g_inaj_m.inaj009_desc,g_inaj_m.inaj010, 
+       g_inaj_m.inaj007,g_inaj_m.inajsite,g_inaj_m.inaj001,g_inaj_m.inaj002,g_inaj_m.inaj003,g_inaj_m.inaj022, 
+       g_inaj_m.inaj015,g_inaj_m.inaj035,g_inaj_m.inaj035_desc,g_inaj_m.inaj036,g_inaj_m.inaj011,g_inaj_m.inaj012, 
+       g_inaj_m.inaj012_desc,g_inaj_m.inaj013,g_inaj_m.inaj014,g_inaj_m.inaj027,g_inaj_m.inaj026,g_inaj_m.inaj026_desc, 
+       g_inaj_m.inaj004,g_inaj_m.inaj017,g_inaj_m.inaj017_desc,g_inaj_m.inaj018,g_inaj_m.inaj018_desc, 
+       g_inaj_m.inaj016,g_inaj_m.inaj016_desc,g_inaj_m.inaj037,g_inaj_m.inaj038,g_inaj_m.inaj039,g_inaj_m.inaj044, 
+       g_inaj_m.inaj020,g_inaj_m.inaj028,g_inaj_m.inaj029,g_inaj_m.inaj040,g_inaj_m.inaj041,g_inaj_m.inaj043, 
+       g_inaj_m.inaj042,g_inaj_m.inaj030,g_inaj_m.inaj031,g_inaj_m.inaj032,g_inaj_m.inaj033,g_inaj_m.inaj034, 
+       g_inaj_m.inaj023,g_inaj_m.inaj024,g_inaj_m.inaj025,g_inaj_m.inaj025_desc
+   
+   #儲存PK
+   LET l_ac = g_current_idx
+   CALL ainq130_set_pk_array()
+   
+   #顯示狀態(stus)圖片
+   
+ 
+   #顯示有特殊格式設定的欄位或說明
+   CALL cl_show_fld_cont()
+ 
+   #add-point:show段之後 name="show.after"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq130.delete" >}
+#+ 資料刪除 
+PRIVATE FUNCTION ainq130_delete()
+   #add-point:delete段define(客製用) name="delete.define_customerization"
+   
+   #end add-point
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="delete.pre_function"
+   
+   #end add-point
+   
+   #先確定key值無遺漏
+   IF g_inaj_m.inajsite IS NULL
+   OR g_inaj_m.inaj001 IS NULL
+   OR g_inaj_m.inaj002 IS NULL
+   OR g_inaj_m.inaj003 IS NULL
+   OR g_inaj_m.inaj004 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   CALL s_transaction_begin()
+    
+   LET g_inajsite_t = g_inaj_m.inajsite
+   LET g_inaj001_t = g_inaj_m.inaj001
+   LET g_inaj002_t = g_inaj_m.inaj002
+   LET g_inaj003_t = g_inaj_m.inaj003
+   LET g_inaj004_t = g_inaj_m.inaj004
+ 
+   
+   
+ 
+   OPEN ainq130_cl USING g_enterprise,g_inaj_m.inajsite,g_inaj_m.inaj001,g_inaj_m.inaj002,g_inaj_m.inaj003,g_inaj_m.inaj004
+   IF SQLCA.SQLCODE THEN    #(ver:49)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN ainq130_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.popup = TRUE 
+      CLOSE ainq130_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE ainq130_master_referesh USING g_inaj_m.inajsite,g_inaj_m.inaj001,g_inaj_m.inaj002,g_inaj_m.inaj003, 
+       g_inaj_m.inaj004 INTO g_inaj_m.inaj005,g_inaj_m.inaj006,g_inaj_m.inaj008,g_inaj_m.inaj009,g_inaj_m.inaj010, 
+       g_inaj_m.inaj007,g_inaj_m.inajsite,g_inaj_m.inaj001,g_inaj_m.inaj002,g_inaj_m.inaj003,g_inaj_m.inaj022, 
+       g_inaj_m.inaj015,g_inaj_m.inaj035,g_inaj_m.inaj036,g_inaj_m.inaj011,g_inaj_m.inaj012,g_inaj_m.inaj013, 
+       g_inaj_m.inaj014,g_inaj_m.inaj027,g_inaj_m.inaj026,g_inaj_m.inaj004,g_inaj_m.inaj017,g_inaj_m.inaj018, 
+       g_inaj_m.inaj016,g_inaj_m.inaj037,g_inaj_m.inaj038,g_inaj_m.inaj039,g_inaj_m.inaj044,g_inaj_m.inaj020, 
+       g_inaj_m.inaj028,g_inaj_m.inaj029,g_inaj_m.inaj040,g_inaj_m.inaj041,g_inaj_m.inaj043,g_inaj_m.inaj042, 
+       g_inaj_m.inaj030,g_inaj_m.inaj031,g_inaj_m.inaj032,g_inaj_m.inaj033,g_inaj_m.inaj034,g_inaj_m.inaj023, 
+       g_inaj_m.inaj024,g_inaj_m.inaj025,g_inaj_m.inaj008_desc,g_inaj_m.inaj009_desc,g_inaj_m.inaj035_desc, 
+       g_inaj_m.inaj012_desc,g_inaj_m.inaj026_desc,g_inaj_m.inaj017_desc,g_inaj_m.inaj018_desc,g_inaj_m.inaj025_desc 
+ 
+   
+   
+   #檢查是否允許此動作
+   IF NOT ainq130_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_inaj_m_mask_o.* =  g_inaj_m.*
+   CALL ainq130_inaj_t_mask()
+   LET g_inaj_m_mask_n.* =  g_inaj_m.*
+   
+   #將最新資料顯示到畫面上
+   CALL ainq130_show()
+   
+   IF cl_ask_delete() THEN
+ 
+      #add-point:單頭刪除前 name="delete.head.b_delete"
+      
+      #end add-point
+ 
+      #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL ainq130_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove"
+      
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+ 
+ 
+      DELETE FROM inaj_t 
+       WHERE inajent = g_enterprise AND inajsite = g_inaj_m.inajsite 
+         AND inaj001 = g_inaj_m.inaj001 
+         AND inaj002 = g_inaj_m.inaj002 
+         AND inaj003 = g_inaj_m.inaj003 
+         AND inaj004 = g_inaj_m.inaj004 
+ 
+ 
+      #add-point:單頭刪除中 name="delete.head.m_delete"
+      
+      #end add-point
+         
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "inaj_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+      END IF
+  
+      
+      
+      #add-point:單頭刪除後 name="delete.head.a_delete"
+      
+      #end add-point
+      
+       
+ 
+      #修改歷程記錄(刪除)
+      LET g_log1 = util.JSON.stringify(g_inaj_m)   #(ver:49)
+      IF NOT cl_log_modified_record(g_log1,'') THEN    #(ver:49)
+         CLOSE ainq130_cl
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      
+      CLEAR FORM
+      CALL ainq130_ui_browser_refresh()
+      
+      #確保畫面上保有資料
+      IF g_browser_cnt > 0 THEN
+         #CALL ainq130_browser_fill(g_wc,"")
+         CALL ainq130_fetch("P")
+      ELSE
+         CLEAR FORM
+      END IF
+      CALL s_transaction_end('Y','0')
+   ELSE    
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE ainq130_cl
+ 
+   #功能已完成,通報訊息中心
+   CALL ainq130_msgcentre_notify('delete')
+ 
+   #add-point:單頭刪除完成後 name="delete.a_delete"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq130.ui_browser_refresh" >}
+#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION ainq130_ui_browser_refresh()
+   #add-point:ui_browser_refresh段define(客製用) name="ui_browser_refresh.define_customerization"
+   
+   #end add-point
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_browser_refresh.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="ui_browser_refresh.pre_function"
+   
+   #end add-point
+   
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_header_cnt  = g_browser.getLength()
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_inajsite = g_inaj_m.inajsite
+         AND g_browser[l_i].b_inaj001 = g_inaj_m.inaj001
+         AND g_browser[l_i].b_inaj002 = g_inaj_m.inaj002
+         AND g_browser[l_i].b_inaj003 = g_inaj_m.inaj003
+         AND g_browser[l_i].b_inaj004 = g_inaj_m.inaj004
+ 
+         THEN
+         CALL g_browser.deleteElement(l_i)
+       END IF
+   END FOR
+   LET g_browser_cnt = g_browser_cnt - 1
+   LET g_header_cnt = g_header_cnt - 1
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count     #page count
+   DISPLAY g_header_cnt  TO FORMONLY.h_count     #page count
+  
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+      CLEAR FORM
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq130.set_entry" >}
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION ainq130_set_entry(p_cmd)
+   #add-point:set_entry段define(客製用) name="set_entry.define_customerization" 
+   
+   #end add-point
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_entry段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry.define"
+   
+   #end add-point     
+    
+   #add-point:Function前置處理 name="set_entry.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("inajsite,inaj001,inaj002,inaj003,inaj004",TRUE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry段欄位控制 name="set_entry.field_control"
+      
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry段欄位控制後 name="set_entry.after_control"
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq130.set_no_entry" >}
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION ainq130_set_no_entry(p_cmd)
+   #add-point:set_no_entry段define(客製用) name="set_no_entry.define_customerization"
+   
+   #end add-point
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_no_entry段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_no_entry.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("inajsite,inaj001,inaj002,inaj003,inaj004",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry段欄位控制 name="set_no_entry.field_control"
+      
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry段欄位控制後 name="set_no_entry.after_control"
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq130.set_act_visible" >}
+#+ 單頭權限開啟
+PRIVATE FUNCTION ainq130_set_act_visible()
+   #add-point:set_act_visible段define(客製用) name="set_act_visible.define_customerization" 
+   
+   #end add-point  
+   #add-point:set_act_visible段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible.define"
+   
+   #end add-point
+   #add-point:set_act_visible段 name="set_act_visible.set_act_visible"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq130.set_act_no_visible" >}
+#+ 單頭權限關閉
+PRIVATE FUNCTION ainq130_set_act_no_visible()
+   #add-point:set_act_no_visible段define(客製用) name="set_act_no_visible.define_customerization"
+   
+   #end add-point
+   #add-point:set_act_no_visible段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible.define"
+   
+   #end add-point
+   #add-point:set_act_no_visible段 name="set_act_no_visible.set_act_no_visible"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq130.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION ainq130_default_search()
+   #add-point:default_search段define(客製用) name="default_search.define_customerization" 
+   
+   #end add-point
+   DEFINE li_idx  LIKE type_t.num10
+   DEFINE li_cnt  LIKE type_t.num10
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="default_search.pre_function"
+   
+   #end add-point
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   #add-point:default_search段開始前 name="default_search.before"
+   
+   #end add-point  
+   
+   #根據外部參數(g_argv)組合wc
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " inajsite = '", g_argv[01], "' AND "
+   END IF
+   
+   IF NOT cl_null(g_argv[02]) THEN
+      LET ls_wc = ls_wc, " inaj001 = '", g_argv[02], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[03]) THEN
+      LET ls_wc = ls_wc, " inaj002 = '", g_argv[03], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[04]) THEN
+      LET ls_wc = ls_wc, " inaj003 = '", g_argv[04], "' AND "
+   END IF
+   IF NOT cl_null(g_argv[05]) THEN
+      LET ls_wc = ls_wc, " inaj004 = '", g_argv[05], "' AND "
+   END IF
+ 
+   
+   #add-point:default_search段after sql name="default_search.after_sql"
+   
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      #若有外部參數則根據該參數組合
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      #若無外部參數則預設為1=2
+      LET g_default = FALSE
+      #預設查詢條件
+      LET g_wc = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=2"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前 name="default_search.after"
+   LET g_wc = g_wc," AND 1=0 "
+   #end add-point  
+ 
+   IF g_wc.getIndexOf(" 1=2", 1) THEN
+      LET g_default = TRUE
+   END IF
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq130.mask_functions" >}
+&include "erp/ain/ainq130_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="ainq130.state_change" >}
+   
+ 
+{</section>}
+ 
+{<section id="ainq130.signature" >}
+   
+ 
+{</section>}
+ 
+{<section id="ainq130.set_pk_array" >}
+   #應用 a51 樣板自動產生(Version:8)
+#+ 給予pk_array內容
+PRIVATE FUNCTION ainq130_set_pk_array()
+   #add-point:set_pk_array段define name="set_pk_array.define_customerization"
+   
+   #end add-point
+   #add-point:set_pk_array段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_pk_array.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="set_pk_array.before"
+   
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_inaj_m.inajsite
+   LET g_pk_array[1].column = 'inajsite'
+   LET g_pk_array[2].values = g_inaj_m.inaj001
+   LET g_pk_array[2].column = 'inaj001'
+   LET g_pk_array[3].values = g_inaj_m.inaj002
+   LET g_pk_array[3].column = 'inaj002'
+   LET g_pk_array[4].values = g_inaj_m.inaj003
+   LET g_pk_array[4].column = 'inaj003'
+   LET g_pk_array[5].values = g_inaj_m.inaj004
+   LET g_pk_array[5].column = 'inaj004'
+   
+   #add-point:set_pk_array段之後 name="set_pk_array.after"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="ainq130.other_dialog" readonly="Y" >}
+ 
+ 
+{</section>}
+ 
+{<section id="ainq130.msgcentre_notify" >}
+#應用 a66 樣板自動產生(Version:6)
+PRIVATE FUNCTION ainq130_msgcentre_notify(lc_state)
+   #add-point:msgcentre_notify段define name="msgcentre_notify.define_customerization"
+   
+   #end add-point   
+   DEFINE lc_state LIKE type_t.chr80
+   #add-point:msgcentre_notify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="msgcentre_notify.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="msgcentre_notify.pre_function"
+   
+   #end add-point
+   
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = lc_state
+ 
+   #PK資料填寫
+   CALL ainq130_set_pk_array()
+   #單頭資料填寫
+   LET g_msgparam.data[1] = util.JSON.stringify(g_inaj_m)
+ 
+   #add-point:msgcentre其他通知 name="msgcentre_notify.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="ainq130.action_chk" >}
+#+ 修改/刪除前行為檢查(是否可允許此動作), 若有其他行為須管控也可透過此段落
+PRIVATE FUNCTION ainq130_action_chk()
+   #add-point:action_chk段define(客製用) name="action_chk.define_customerization" 
+   
+   #end add-point
+   #add-point:action_chk段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="action_chk.define"
+   
+   #end add-point
+   
+   #add-point:action_chk段action_chk name="action_chk.action_chk"
+   
+   #end add-point
+   
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainq130.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

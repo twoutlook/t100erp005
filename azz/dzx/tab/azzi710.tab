@@ -1,0 +1,132 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi710" module="azz" jobmode="N" type="t02" industry="std" fix_arg="1" crtid="00544" crtdt="2015-02-05 11:33:20" modid="00824" moddt="2015-08-25 17:13:47" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="訊息中心設定">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzkastus,gzka001,gzka001_desc(chr500),gzka002,gzka002_desc(chr500),gzka003,gzka008,gzka012,gzka005,gzka010,gzka011,gzka006,gzka006_desc(chr500),gzka007,gzka013"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gzka001,gzka002,gzka003,gzka008,gzka012,gzkaownid,gzkaownid_desc(chr500),gzkaowndp,gzkaowndp_desc(chr500),gzkacrtid,gzkacrtid_desc(chr500),gzkacrtdp,gzkacrtdp_desc(chr500),gzkacrtdt,gzkamodid,gzkamodid_desc(chr500),gzkamoddt"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="gzkb003,gzkb004,gzkb005,gzkb011,gzkb012"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi710" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="gzkastus,gzka001,gzka002,gzka003,gzka008,gzka012,gzka005,gzka010,gzka011,gzka006,gzka007,gzka013" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="gzkb003,gzkb004,gzkb005,gzkb011,gzkb012" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="gzkastus,gzka001,gzka002,gzka003,gzka008,gzka012,gzka005,gzka010,gzka011,gzka006,gzka007,gzka013"/>
+      <construct id="body" page="2" field="gzkaownid,gzkaowndp,gzkacrtid,gzkacrtdp,gzkacrtdt,gzkamodid,gzkamoddt"/>
+      <construct id="body" page="3" field="gzkb003,gzkb004,gzkb005,gzkb011,gzkb012"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzkastus" scc="50" type="S" default="N">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="gzka001">
+        <after>
+          <reference field="gzka001_desc" ref_field="gzka_t.gzka001" map_field="gzka001" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzzz001_1" state="i"/>
+        <controlp form="q_gzka001" state="c"/>
+      </column>
+      <column id="gzka001_desc"/>
+      <column id="gzka002">
+        <after>
+          <reference field="gzka002_desc" ref_field="gzka002" map_field="gzka002" ref_sql="SELECT gzzq004 FROM gzzq_t WHERE gzzq001=&apos;standard&apos; AND gzzq002=? AND gzzq003=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzka002" state="i"/>
+      </column>
+      <column id="gzka002_desc"/>
+      <column id="gzka003" def_scc="188"/>
+      <column id="gzka008"/>
+      <column id="gzka012" def_scc="207"/>
+      <column id="gzka005" type="S" default="2" def_scc="181"/>
+      <column id="gzka010" type="S" default="2" def_scc="301"/>
+      <column id="gzka011"/>
+      <column id="gzka006">
+        <after>
+          <reference field="gzka006_desc" ref_field="gzka_t.gzka006" map_field="gzka006" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+      </column>
+      <column id="gzka006_desc"/>
+      <column id="gzka007">
+        <controlp form="q_gzka002" state="i"/>
+      </column>
+      <column id="gzka013" def_scc="206"/>
+    </init>
+    <init id="body" page="2">
+      <column id="gzkaownid">
+        <after>
+          <reference field="gzkaownid_desc" ref_field="gzka_t.gzkaownid" map_field="gzkaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzkaownid_desc"/>
+      <column id="gzkaowndp">
+        <after>
+          <reference field="gzkaowndp_desc" ref_field="gzka_t.gzkaowndp" map_field="gzkaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzkaowndp_desc"/>
+      <column id="gzkacrtid">
+        <after>
+          <reference field="gzkacrtid_desc" ref_field="gzka_t.gzkacrtid" map_field="gzkacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzkacrtid_desc"/>
+      <column id="gzkacrtdp">
+        <after>
+          <reference field="gzkacrtdp_desc" ref_field="gzka_t.gzkacrtdp" map_field="gzkacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="gzkacrtdp_desc"/>
+      <column id="gzkacrtdt"/>
+      <column id="gzkamodid">
+        <after>
+          <reference field="gzkamodid_desc" ref_field="gzka_t.gzkamodid" map_field="gzkamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="gzkamodid_desc"/>
+      <column id="gzkamoddt"/>
+    </init>
+    <init id="body" page="3">
+      <column id="gzkb003" def_scc="187"/>
+      <column id="gzkb004"/>
+      <column id="gzkb005"/>
+      <column id="gzkb011" def_scc="184"/>
+      <column id="gzkb012" def_scc="177"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="gzka_t" page="1,2" linked="" pk="gzka001,gzka002,gzka003,gzka008,gzka012">
+      <sql id="forupd_sql_detail" query="SELECT gzkastus,gzka001,&apos;&apos;,gzka002,&apos;&apos;,gzka003,gzka008,gzka012,gzka005,gzka010,gzka011,gzka006,&apos;&apos;,gzka007,gzka013,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,gzkaownid,&apos;&apos;,gzkaowndp,&apos;&apos;,gzkacrtid,&apos;&apos;,gzkacrtdp,&apos;&apos;,gzkacrtdt,gzkamodid,&apos;&apos;,gzkamoddt FROM gzka_t WHERE gzkaent=? AND gzka001=? AND gzka002=? AND gzka003=? AND gzka008=? AND gzka012=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzkastus,gzka001,&apos;&apos;,gzka002,&apos;&apos;,gzka003,gzka008,gzka012,gzka005,gzka010,gzka011,gzka006,&apos;&apos;,gzka007,gzka013,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,gzkaownid,&apos;&apos;,gzkaowndp,&apos;&apos;,gzkacrtid,&apos;&apos;,gzkacrtdp,&apos;&apos;,gzkacrtdt,gzkamodid,&apos;&apos;,gzkamoddt FROM gzka_t WHERE gzkaent= ? AND 1=1 "/>
+    </body>
+    <body id="gzkb_t" page="3" linked="" pk="gzkb003,gzkb004" fk="gzkb001,gzkb002,gzkb009,gzkb010,gzkb013" detail="Y">
+      <sql id="forupd_sql_detail" query="SELECT gzkb003,gzkb004,gzkb005,gzkb011,gzkb012 FROM gzkb_t WHERE gzkbent=? AND gzkb001=? AND gzkb002=? AND gzkb009=? AND gzkb010=? AND gzkb013=? AND gzkb003=? AND gzkb004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzkb003,gzkb004,gzkb005,gzkb011,gzkb012 FROM gzkb_t WHERE gzkbent=? AND gzkb001=? AND gzkb002=? AND gzkb009=? AND gzkb010=? AND gzkb013=?"/>
+    </body>
+  </dataset>
+</assembly>
+

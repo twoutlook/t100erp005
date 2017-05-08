@@ -1,0 +1,837 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="axmp500" std_prog="axmp500" erpver="1.0" module="AXM" ver="3" env="s" zone="t10prd" booking="Y" type="M" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="P" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <point name="function.axmp500_aic_closed" order="1" ver="3" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[#多角結案
+PRIVATE FUNCTION axmp500_aic_closed(p_xmdcseq,p_xmda031,p_xmda050)
+   DEFINE p_xmdcseq       LIKE xmdc_t.xmdcseq    
+   DEFINE p_xmda031       LIKE xmda_t.xmda031    #多角來源單號
+   DEFINE p_xmda050       LIKE xmda_t.xmda050    #多角流程代碼
+   DEFINE l_icab003       LIKE icab_t.icab003    #多角營運據點   
+   DEFINE l_pmdldocno     LIKE pmdl_t.pmdldocno     #採購單單號
+   DEFINE l_sfaadocno     LIKE sfaa_t.sfaadocno     #工單單號
+   DEFINE l_xmdadocno     LIKE xmda_t.xmdadocno     #訂單單號   
+   DEFINE l_sql           STRING
+   DEFINE l_success       LIKE type_t.num5   
+
+   LET l_sql = "SELECT icab003 ",
+               "  FROM icaa_t,icab_t ",
+               " WHERE icaaent = '",g_enterprise,"' " ,
+               "   AND icaa001 = '",p_xmda050,"' " ,
+               "   AND icaa001 = icab001 "
+
+   PREPARE axmp500_sel_pr_aic FROM l_sql
+   DECLARE axmp500_sel_cs_aic CURSOR FOR axmp500_sel_pr_aic
+   
+   #各站營運據點依多角流程序號取得各站 訂單/採購單/工單 單號做結案
+   FOREACH axmp500_sel_cs_aic INTO l_icab003           
+     #訂單單號
+     LET l_xmdadocno = ''
+     SELECT xmdadocno INTO l_xmdadocno
+       FROM xmda_t
+      WHERE xmdaent = g_enterprise
+        AND xmdasite = l_icab003
+        AND xmda031 = p_xmda031
+     IF NOT cl_null(l_xmdadocno) THEN
+        IF p_xmdcseq > 0 THEN
+           CALL s_axmp510_xmdc045_closed('1',l_xmdadocno,p_xmdcseq,'',l_icab003) RETURNING l_success 
+        ELSE                  
+           CALL s_axmp510_xmda045_closed(l_xmdadocno,l_icab003) RETURNING l_success
+           CALL s_axmp510_xmda046_closed(l_xmdadocno,l_icab003) RETURNING l_success
+           CALL s_axmp510_xmda047_closed(l_xmdadocno,l_icab003) RETURNING l_success
+           CALL s_axmp510_xmdastus_closed('1',l_xmdadocno,l_icab003) RETURNING l_success
+        END IF                              
+     END IF                       
+     #採購單單號
+     LET l_pmdldocno = ''
+     SELECT pmdldocno INTO l_pmdldocno
+       FROM pmdl_t
+      WHERE pmdlent = g_enterprise
+        AND pmdlsite = l_icab003
+        AND pmdl031 = p_xmda031
+     IF NOT cl_null(l_pmdldocno) THEN
+        IF p_xmdcseq > 0 THEN
+           CALL s_apmp510_pmdn045_closed('1',l_pmdldocno,p_xmdcseq,'',l_icab003) RETURNING l_success 
+        ELSE                  
+           CALL s_apmp510_pmdl047_closed(l_pmdldocno,l_icab003) RETURNING l_success
+           CALL s_apmp510_pmdl048_closed(l_pmdldocno,l_icab003) RETURNING l_success
+           CALL s_apmp510_pmdl049_closed(l_pmdldocno,l_icab003) RETURNING l_success
+           CALL s_apmp510_pmdlstus_closed('1',l_pmdldocno,l_icab003) RETURNING l_success
+        END IF  
+     END IF
+     ##工單單號
+     #LET l_sfaadocno = ''
+     #SELECT sfaadocno INTO l_sfaadocno
+     #  FROM sfaa_t
+     # WHERE sfaaent = g_enterprise
+     #   AND sfaasite = l_icab003
+     #   AND sfaa067 = p_xmda031
+     #IF NOT cl_null(l_sfaadocno) THEN
+     #   #CALL s_asfp500_close_wo    工单结案
+     #END IF          
+   END FOREACH   
+
+END FUNCTION]]>
+  </point>
+  <point name="construct.c.xmda002" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmda002  #顯示到畫面上
+            NEXT FIELD xmda002                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.xmda003" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmda003  #顯示到畫面上
+            NEXT FIELD xmda003                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.xmda004" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001_3()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmda004  #顯示到畫面上
+            NEXT FIELD xmda004                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.xmdadocno" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_xmdadocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdadocno  #顯示到畫面上
+            NEXT FIELD xmdadocno                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.xmdc001" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_imaf001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO xmdc001  #顯示到畫面上
+            NEXT FIELD xmdc001                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="global.parameter" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="global.variable" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE g_xmda DYNAMIC ARRAY OF RECORD
+       xmdadocno   LIKE xmda_t.xmdadocno
+    END RECORD     ]]>
+  </point>
+  <point name="main.background" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   display "g_argv[1]",g_argv[1]
+   LET lc_param.wc = DOWNSHIFT(g_argv[1])
+   LET ls_js = util.JSON.stringify(lc_param)]]>
+  </point>
+  <point name="process.background_finish" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      IF cl_chk_process_exists(g_parentsession,g_account) THEN
+            CALL cl_ask_confirm("std-00012") RETURNING li_stus
+      END IF
+      DISPLAY "!!!!程序已完成!!!"]]>
+  </point>
+  <point name="process.count_progress" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      LET li_count = l_cnt * 4  
+      CALL cl_progress_bar_no_window(li_count)]]>
+  </point>
+  <point name="process.define" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE i           LIKE type_t.num5
+   DEFINE l_sql       STRING   
+   DEFINE l_cnt       LIKE type_t.num5 
+   DEFINE l_no_cnt    LIKE type_t.num5        #失敗總筆數
+   DEFINE l_no_cnt2   LIKE type_t.num5        #失敗筆數   
+   DEFINE l_msg       STRING 
+   DEFINE l_xmdcdocno LIKE xmdc_t.xmdcdocno
+   DEFINE l_xmdcseq   LIKE xmdc_t.xmdcseq   
+   DEFINE l_xmda006   LIKE xmda_t.xmda006    #多角性質
+   DEFINE l_xmda031   LIKE xmda_t.xmda031    #多角來源單號
+   DEFINE l_xmda050   LIKE xmda_t.xmda050    #多角流程代碼
+]]>
+  </point>
+  <point name="process.exit_dialog" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF    
+      IF lc_param.wc = ' 1=1' THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'apm-00379'
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+         CONTINUE WHILE
+      ELSE
+         LET g_bgjob = "N"            
+      END IF  ]]>
+  </point>
+  <point name="process.pre_process" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET l_cnt = 1                                                          
+   LET ls_sql = "SELECT DISTINCT xmdadocno FROM xmdc_t,xmda_t ",
+                " WHERE xmdcdocno = xmdadocno ",                        
+                "   AND xmdcent = '",g_enterprise,"'", 
+                "   AND xmdasite = '",g_site,"'",                
+                "   AND xmdastus = 'Y' ",                               
+                "   AND ",lc_param.wc   
+  
+   PREPARE axmp500_sel_pr FROM ls_sql                                   
+   DECLARE axmp500_sel_cs CURSOR FOR axmp500_sel_pr                     
+   FOREACH axmp500_sel_cs INTO g_xmda[l_cnt].*                         
+     IF SQLCA.sqlcode THEN                                              
+        EXIT FOREACH                                                    
+     END IF                                                             
+     LET l_cnt = l_cnt + 1                                            
+   END FOREACH                                                          
+   CALL g_xmda.deleteelement(l_cnt)                                    
+   LET l_cnt = l_cnt - 1   ]]>
+  </point>
+  <point name="process.process" order="" ver="3" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL cl_showmsg_init() 
+   LET l_no_cnt = 0     
+   IF l_cnt > 0 THEN                                                                         
+      FOR i = 1 TO l_cnt                                                                     
+          IF g_bgjob <> "Y" THEN                                                              
+             LET l_msg = cl_getmsg_parm("apm-00402", g_lang,g_xmda[i].xmdadocno )             
+             CALL cl_progress_no_window_ing(l_msg)                                            
+          END IF                                                                                                                                                        
+          LET l_no_cnt2 = 0                                                                                  
+          #若為銷售多角，需做各據點多角結案
+          LET l_xmda006 = ''
+          LET l_xmda031 = ''
+          LET l_xmda050 = ''         
+          SELECT xmda006,xmda031,xmda050
+            INTO l_xmda006,l_xmda031,l_xmda050
+            FROM xmda_t
+           WHERE xmdaent = g_enterprise
+             AND xmdasite = g_site
+             AND xmdadocno = g_xmda[i].xmdadocno  
+
+          CALL s_transaction_begin()                                                          
+          #抓取單身資料                                                                       
+          LET l_sql = "SELECT DISTINCT xmdcdocno,xmdcseq FROM xmdc_t,xmda_t ",                
+                      " WHERE xmdcdocno = xmdadocno ",                                        
+                      "   AND xmdaent = '",g_enterprise,"'",    
+                      "   AND xmdasite = '",g_site,"'",                      
+                      "   AND xmdastus = 'Y' ",                                               
+                      "   AND xmdcdocno = '",g_xmda[i].xmdadocno,"'",                         
+                      "   AND ",lc_param.wc
+                      
+          PREPARE axmp500_sel_pr2 FROM l_sql                                                  
+          DECLARE axmp500_sel_cs2 CURSOR FOR axmp500_sel_pr2                                  
+          FOREACH axmp500_sel_cs2 INTO l_xmdcdocno,l_xmdcseq                                  
+            IF SQLCA.sqlcode THEN                                                             
+               EXIT FOREACH                                                                   
+            END IF
+            #單身狀態結案              
+            IF NOT s_axmp510_xmdc045_closed('1',l_xmdcdocno,l_xmdcseq,'',g_site) THEN 
+               LET l_no_cnt2 = l_no_cnt2 + 1               
+            #ELSE   
+            #   IF l_xmda006 = '2' AND NOT cl_null(l_xmda031) THEN              #多角結案       
+            #      CALL axmp500_aic_closed(l_xmdcseq,l_xmda031,l_xmda050)
+            #  END IF                     
+            END IF                                                                                                                                                                      
+          END FOREACH 
+          #物流結案          
+          IF NOT s_axmp510_xmda045_closed(g_xmda[i].xmdadocno,g_site) THEN
+             LET l_no_cnt2 = l_no_cnt2 + 1             
+          END IF                                                                              
+          IF l_no_cnt2 = 0 THEN                                                                  
+             CALL s_transaction_end("Y","0")                                                  
+          ELSE                                                                                
+             CALL s_transaction_end("N","0")
+             LET l_no_cnt = l_no_cnt + 1
+          END IF                                                                              
+                                                                                              
+          #帳流結案                                                                           
+          IF g_bgjob <> "Y" THEN                                                              
+             LET l_msg = cl_getmsg_parm("apm-00403", g_lang,g_xmda[i].xmdadocno)             
+             CALL cl_progress_no_window_ing(l_msg)                                            
+          END IF                                                                              
+          CALL s_transaction_begin()                                                          
+          IF NOT s_axmp510_xmda046_closed(g_xmda[i].xmdadocno,g_site) THEN
+             CALL s_transaction_end('N','0')   
+             LET l_no_cnt = l_no_cnt + 1
+          ELSE                                                                                
+             CALL s_transaction_end('Y','0')                                                                                                            
+          END IF                                                                              
+          #金流結案                                                                           
+          IF g_bgjob <> "Y" THEN                                                              
+             LET l_msg = cl_getmsg_parm("apm-00404", g_lang,g_xmda[i].xmdadocno)             
+             CALL cl_progress_no_window_ing(l_msg)                                            
+          END IF                                                                              
+          CALL s_transaction_begin()                                                          
+          IF NOT s_axmp510_xmda047_closed(g_xmda[i].xmdadocno,g_site) THEN 
+             CALL s_transaction_end('N','0') 
+             LET l_no_cnt = l_no_cnt + 1             
+          ELSE                                                                                
+             CALL s_transaction_end('Y','0')                                                                                                            
+          END IF                                                                              
+          #狀態結案                                                                           
+          IF g_bgjob <> "Y" THEN                                                              
+             LET l_msg = cl_getmsg_parm("apm-00405", g_lang,g_xmda[i].xmdadocno)             
+             CALL cl_progress_no_window_ing(l_msg)                                            
+          END IF                                                                              
+          CALL s_transaction_begin()                                                          
+          IF NOT s_axmp510_xmdastus_closed('1',g_xmda[i].xmdadocno,g_site) THEN          
+             CALL s_transaction_end('N','0')  
+             LET l_no_cnt = l_no_cnt + 1             
+          ELSE                                                                                
+             CALL s_transaction_end('Y','0')                                                                                                             
+          END IF
+         #IF l_xmda006 = '2' AND NOT cl_null(l_xmda031) THEN              #多角結案       
+         #   CALL axmp500_aic_closed(0,l_xmda031,l_xmda050)
+         #END IF           
+      END FOR                                                                                 
+   END IF                                                                                     
+   IF l_no_cnt > 0 THEN                                                                      
+      CALL cl_showmsg()                                                                       
+   END IF                                                                                     
+     ]]>
+  </point>
+  <point name="transfer.argv.define" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET la_cmdrun.param[1] = la_param.wc]]>
+  </point>
+  <point name="ui_dialog.more_construct" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[         CONSTRUCT BY NAME lc_param.wc ON xmdadocno,xmdadocdt,xmda004,xmda002,xmda003,xmdc001
+            BEFORE CONSTRUCT
+               CALL cl_qbe_init()
+               
+            ON ACTION controlp INFIELD xmdadocno            #訂購單單號
+               #開窗c段
+                INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'c'
+                LET g_qryparam.reqry = FALSE
+                LET g_qryparam.where = " xmdastus = 'Y' "
+                CALL q_xmdadocno()                           #呼叫開窗
+                DISPLAY g_qryparam.return1 TO xmdadocno      #顯示到畫面上
+                NEXT FIELD xmdadocno                         #返回原欄位
+
+            ON ACTION controlp INFIELD xmda004               #客戶
+               #開窗c段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.where = " pmaastus = 'Y' "
+               CALL q_pmaa001_3()                         #呼叫開窗
+               DISPLAY g_qryparam.return1 TO xmda004      #顯示到畫面上
+               NEXT FIELD xmda004                         #返回原欄位 
+ 
+            ON ACTION controlp INFIELD xmda002            #業務人員
+               #開窗c段
+                INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'c'
+                LET g_qryparam.reqry = FALSE
+                LET g_qryparam.where = " ooagstus = 'Y' "
+                CALL q_ooag001()                           #呼叫開窗
+                DISPLAY g_qryparam.return1 TO xmda002      #顯示到畫面上
+                NEXT FIELD xmda002                         #返回原欄位              
+
+            ON ACTION controlp INFIELD xmda003            #業務部門
+               #開窗c段
+                INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'c'
+                LET g_qryparam.reqry = FALSE
+                LET g_qryparam.where = " ooegstus = 'Y' "
+                CALL q_ooeg001()                           #呼叫開窗
+                DISPLAY g_qryparam.return1 TO xmda003      #顯示到畫面上
+                NEXT FIELD xmda003                         #返回原欄位   
+                
+            ON ACTION controlp INFIELD xmdc001             #料件編號
+               #開窗c段
+                INITIALIZE g_qryparam.* TO NULL
+                LET g_qryparam.state = 'c'
+                LET g_qryparam.reqry = FALSE
+                LET g_qryparam.where = " imafstus = 'Y' "
+                CALL q_imaf001()                           #呼叫開窗
+                DISPLAY g_qryparam.return1 TO xmdc001      #顯示到畫面上
+                NEXT FIELD xmdc001                         #返回原欄位 
+                
+         END CONSTRUCT]]>
+  </point>
+  <point name="ui_dialog.more_displayarray" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <section id="axmp500.description" ver="26" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:3,PR版次:3) Build-000088
+#+ 
+#+ Filename...: axmp500
+#+ Description: 訂單自動結案作業
+#+ Creator....: 02040(2014-03-28 15:39:54)
+#+ Modifier...: 02040(2014-08-06 14:26:19) -SD/PR-
+]]>
+  </section>
+  <section id="axmp500.get_buffer" ver="3" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION axmp500_get_buffer(p_dialog)
+   DEFINE p_dialog   ui.DIALOG
+   
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理
+   {<point name="get_buffer.others"/>}
+   #end add-point
+END FUNCTION
+]]>
+  </section>
+  <section id="axmp500.global" ver="6" status="" src="s" readonly="">
+    <![CDATA[#應用 p01 樣板自動產生(Version:10)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       xmdadocno LIKE xmda_t.xmdadocno, 
+   xmdadocdt LIKE xmda_t.xmdadocdt, 
+   xmda004 LIKE xmda_t.xmda004, 
+   xmda002 LIKE xmda_t.xmda002, 
+   xmda003 LIKE xmda_t.xmda003, 
+   xmdc001 LIKE xmdc_t.xmdc001, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="axmp500.init" ver="3" status="" src="s" readonly="">
+    <![CDATA[#+ 初始化作業
+PRIVATE FUNCTION axmp500_init()
+   #add-point:init段define 
+   {<point name="init.define" edit="s"/>}
+   #end add-point
+   #add-point:init段define (客製用)
+   {<point name="init.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="axmp500.main" ver="4" status="" src="s" readonly="">
+    <![CDATA[MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define 
+   {<point name="main.define" edit="s"/>}
+   #end add-point 
+   #add-point:main段define (客製用)
+   {<point name="main.define_customerization" edit="c"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("axm","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+      CALL axmp500_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_axmp500 WITH FORM cl_ap_formpath("axm",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL axmp500_init()
+ 
+      #進入選單 Menu (="N")
+      CALL axmp500_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_axmp500
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+  </section>
+  <section id="axmp500.msgcentre_notify" ver="1" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION axmp500_msgcentre_notify()
+ 
+   DEFINE lc_state LIKE type_t.chr5
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知
+   {<point name="msg_centre.process"/>}
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="axmp500.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="axmp500.process" ver="4" status="" src="s" readonly="">
+    <![CDATA[#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION axmp500_process(ls_js)
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define 
+   {<point name="process.define" edit="s"/>}
+   #end add-point
+   #add-point:process段define (客製用)
+   {<point name="process.define_customerization" edit="c"/>}
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE axmp500_process_cs CURSOR FROM ls_sql
+#  FOREACH axmp500_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL axmp500_msgcentre_notify()
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="axmp500.transfer_argv" ver="2" status="" src="s" readonly="">
+    <![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION axmp500_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define 
+   {<point name="transfer_agrv.define" edit="s"/>}
+   #end add-point
+   #add-point:transfer_agrv段define (客製用)
+   {<point name="transfer_agrv.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+  </section>
+  <section id="axmp500.ui_dialog" ver="16" status="" src="s" readonly="">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION axmp500_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define 
+   {<point name="ui_dialog.define" edit="s"/>}
+   #end add-point
+   #add-point:ui_dialog段define (客製用)
+   {<point name="ui_dialog.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2
+      {<point name="ui_dialog.before_dialog2"/>}
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         
+         
+         
+      
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL axmp500_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog
+            {<point name="ui_dialog.before_dialog3"/>}
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear
+         {<point name="ui_dialog.before_qbeclear" mark="Y"/>}
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear
+            {<point name="ui_dialog.qbeclear"/>}
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL axmp500_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL axmp500_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = axmp500_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule
+         {<point name="process.after_schedule"/>}
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

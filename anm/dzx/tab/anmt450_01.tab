@@ -1,0 +1,46 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmt450_01" module="anm" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="03080" crtdt="2015-06-24 14:45:12" modid="01531" moddt="2016-10-11 09:23:46" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="自動產生單身">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="nmckcomp,nmckcomp_desc(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmt450_01" method="dialog">
+    <section id="input">
+      <input id="head" field="nmckcomp"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="nmckcomp">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+          <reference field="nmckcomp_desc" ref_field="nmck_t.nmckcomp" map_field="nmckent,nmckcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="nmckcomp_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="nmck_t" pk="nmckcomp,nmckdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT nmckcomp,&apos;&apos; FROM nmck_t WHERE nmckent= ? AND nmckcomp=? AND nmckdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="nmckcomp,nmckdocno"/>
+    </head>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,619 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="aist310_02" std_prog="aist310_02" erpver="1.0" module="AIS" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.aist310_02_isafdocno_chk" order="1" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[# isafdocno欄位檢查
+PRIVATE FUNCTION aist310_02_isafdocno_chk()
+   DEFINE  l_n             LIKE type_t.num5 
+   
+   SELECT count(*) INTO l_n
+     FROM isaf_t
+    WHERE isafent = g_enterprise
+      AND isafdocno = g_isaf_m.isafdocno
+   
+   IF l_n = 0 THEN
+      CALL cl_err(g_isaf_m.isafdocno,'ais-00029',1)
+      RETURN FALSE
+   END IF
+   
+   RETURN TRUE
+END FUNCTION]]>
+  </point>
+  <point name="function.aist310_02_isaesite_chk" order="2" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[# isaesite欄位檢查
+PRIVATE FUNCTION aist310_02_isaesite_chk()
+   DEFINE  l_n             LIKE type_t.num5 
+   
+   #判斷是否存在于aooi120中
+   LET l_n = 0 
+   SELECT count(*) INTO l_n
+     FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_isaf_m.isaesite
+    
+   IF l_n = 0 THEN 
+      LET g_isaf_m.isaesite_desc = ''
+      DISPLAY g_isaf_m.isaesite_desc TO isaesite_desc
+      CALL cl_err(g_isaf_m.isaesite,'aoo-00090',1)
+      RETURN FALSE
+   END IF
+   
+   #判斷是否有效
+   LET l_n = 0 
+   SELECT count(*) INTO l_n
+     FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_isaf_m.isaesite
+      AND ooefstus = 'Y'
+    
+   IF l_n = 0 THEN 
+      LET g_isaf_m.isaesite_desc = ''
+      DISPLAY g_isaf_m.isaesite_desc TO isaesite_desc
+      CALL cl_err(g_isaf_m.isaesite,'aoo-00091',1)
+      RETURN FALSE
+   END IF
+   
+   #帶值
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_isaf_m.isaesite
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_isaf_m.isaesite_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_isaf_m.isaesite_desc
+
+      
+   RETURN TRUE
+END FUNCTION]]>
+  </point>
+  <point name="function.aist310_02_isae004_chk" order="3" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[# isae004欄位檢查
+PRIVATE FUNCTION aist310_02_isae004_chk()
+   DEFINE l_n               LIKE type_t.num5 
+   DEFINE l_year            LIKE type_t.num5
+   DEFINE l_month_str       LIKE type_t.num5
+   DEFINE l_month_end       LIKE type_t.num5
+   
+   LET l_year = YEAR(g_isaf_m.date)
+   LET l_month_str = MONTH(g_isaf_m.date)
+   LET l_month_end = MONTH(g_isaf_m.date)
+   
+   #判斷資料是否存在
+   SELECT count(*) INTO l_n
+     FROM isae_t
+    WHERE isaeent = g_enterprise
+      AND isaesite = g_isaf_m.isaesite
+      AND isae001 = l_year
+      AND isae002 <= l_month_str
+      AND isae003 >= l_month_end
+      AND isae004 = g_isaf_m.isae004
+      
+   IF l_n = 0 THEN 
+      CALL cl_err(g_isaf_m.isae004,'ais-00030',1)
+      RETURN FALSE
+   END IF
+   
+   #判斷資料是否有效
+   SELECT count(*) INTO l_n
+     FROM isae_t
+    WHERE isaeent = g_enterprise
+      AND isaesite = g_isaf_m.isaesite
+      AND isae001 = l_year
+      AND isae002 <= l_month_str
+      AND isae003 >= l_month_end
+      AND isae004 = g_isaf_m.isae004
+      AND isaestus = 'Y'
+      
+   IF l_n = 0 THEN 
+      CALL cl_err(g_isaf_m.isae004,'ais-00031',1)
+      RETURN FALSE
+   END IF
+   
+   RETURN TRUE
+END FUNCTION]]>
+  </point>
+  <point name="function.aist310_02_isae_get" order="4" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[# 抓取發票代碼/發票號碼
+PRIVATE FUNCTION aist310_02_isae_get()
+   DEFINE l_isae005         LIKE isae_t.isae005
+   DEFINE l_isae006         LIKE isae_t.isae006
+   DEFINE l_isae013         LIKE isae_t.isae013
+   DEFINE l_ooef019         LIKE ooef_t.ooef019
+   DEFINE l_isaf010         LIKE isaf_t.isaf010
+   DEFINE l_isae011         LIKE isae_t.isae011
+   DEFINE l_isae014         LIKE isae_t.isae014
+   DEFINE l_success         LIKE type_t.num5
+   DEFINE l_year            LIKE type_t.num5
+   DEFINE l_month_str       LIKE type_t.num5
+   DEFINE l_month_end       LIKE type_t.num5
+   DEFINE l_num             LIKE type_t.num20
+   DEFINE l_isae013_str     STRING
+   DEFINE l_len             LIKE type_t.num5
+   
+   LET l_year = YEAR(g_isaf_m.date)
+   LET l_month_str = MONTH(g_isaf_m.date)
+   LET l_month_end = MONTH(g_isaf_m.date)
+   
+   #查出法人所屬稅區
+   SELECT ooef019 INTO l_ooef019
+     FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_isafcomp
+   
+   #IF 稅區使用字軌 
+      SELECT isae005,isae013,isae011,isae014 INTO l_isae005,l_isae013,l_isae011,l_isae014
+        FROM isae_t
+       WHERE isaeent = g_enterprise
+         AND isaesite = g_isaf_m.isaesite
+         AND isae004 = g_isaf_m.isae004
+         AND isae012 > isae014
+         AND isae001 = l_year
+         AND isae002 <= l_month_str
+         AND isae003 >= l_month_end
+         
+      LET l_isaf010 = l_isae005 CLIPPED,l_isae013
+   #ELSE 
+   #   SELECT isae006,isae013 into l_isae006,l_isae013
+   #     FROM isae_t 
+   #    WHERE isae001 = l_ooef019
+   #      AND isae004 = g_isaf_m.isae004
+   #      AND isae012 > isae014        
+   #END IF 
+   
+   
+   #最後一張發票則不再把下次列印號碼 +1 
+   #CALL s_chr_alphanumeric(l_isae013,1) RETURNING l_success
+   #IF l_success = TRUE THEN
+   #   IF l_isae013 < l_isae011 THEN 
+   #      LET l_num = l_isae013
+   #      LET l_num = l_num + 1
+   #      LET l_isae013 = l_num
+   #   END IF 
+   #END IF
+   
+   LET l_isae013_str = l_isae013
+   LET l_len = l_isae013_str.getLength()
+   
+   LET l_isae014 = l_isae014 + 1 
+   
+   IF l_isae013 < l_isae011 THEN 
+      UPDATE isae_t SET isae013 = lpad(isae013 + 1 ,l_len,'0'), 
+                        isae014 = l_isae014
+       WHERE isaeent = g_enterprise
+         AND isaesite = g_isaf_m.isaesite
+         AND isae004 = g_isaf_m.isae004
+         AND isae012 > isae014
+         AND isae001 = l_year
+         AND isae002 <= l_month_str
+         AND isae003 >= l_month_end
+   ELSE
+      UPDATE isae_t SET isae013 = l_isae013, 
+                        isae014 = l_isae014
+       WHERE isaeent = g_enterprise
+         AND isaesite = g_isaf_m.isaesite
+         AND isae004 = g_isaf_m.isae004
+         AND isae012 > isae014
+         AND isae001 = l_year
+         AND isae002 <= l_month_str
+         AND isae003 >= l_month_end
+   END IF
+
+   IF SQLCA.SQLcode  THEN
+      CALL cl_err("g_xrcb",SQLCA.sqlcode,1)  
+      LET g_success = 'N'                 
+   ELSE
+      LET g_success = 'Y'           
+   END IF
+      
+   UPDATE isaf_t SET isaf011 = l_isaf010,
+                     isaf014 = g_isaf_m.date
+    WHERE isafent = g_enterprise
+      AND isafcomp = g_isafcomp
+      AND isafdocno = g_isaf_m.isafdocno
+   
+   IF SQLCA.SQLcode  THEN
+      CALL cl_err("g_xrcb",SQLCA.sqlcode,1)  
+      LET g_success = 'N'                 
+   ELSE
+      LET g_success = 'Y'           
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_isafcomp            LIKE isaf_t.isafcomp]]>
+  </point>
+  <point name="input.a.isae004" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_isaf_m.isae004) THEN 
+               IF NOT aist310_02_isae004_chk() THEN 
+                  LET g_isaf_m.isae004 = ''
+                  NEXT FIELD isae004
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.a.isaesite" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_isaf_m.isaesite) THEN 
+               IF NOT aist310_02_isaesite_chk() THEN
+                  LET g_isaf_m.isaesite = ''
+                  NEXT FIELD isaesite
+               END IF
+            END IF
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_isaf_m.isaesite
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_isaf_m.isaesite_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_isaf_m.isaesite_desc
+]]>
+  </point>
+  <point name="input.a.isafcomp" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+
+
+]]>
+  </point>
+  <point name="input.a.isafdocno" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_isaf_m.isafdocno) THEN 
+               IF NOT aist310_02_isafdocno_chk() THEN 
+                  LET g_isaf_m.isafdocno = ''
+                  NEXT FIELD isafdocno
+               END IF 
+            END IF
+]]>
+  </point>
+  <point name="input.action" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[        ]]>
+  </point>
+  <point name="input.before_input" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            DISPLAY g_isaf_m.date TO date]]>
+  </point>
+  <point name="input.c.isae004" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_isaf_m.isae004             #給予default值
+            LET g_qryparam.where = " isaesite = '",g_isaf_m.isaesite,"'",
+                                   "  AND isae001 = '",l_year,"'",
+                                   "  AND isae002 <= '",l_month_str,"'",
+                                   "  AND isae003 >= '",l_month_end,"'"
+            #給予arg
+
+            CALL q_isae004()                                #呼叫開窗
+
+            LET g_isaf_m.isae004 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_isaf_m.isae004 TO isae004              #顯示到畫面上
+
+            NEXT FIELD isae004                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.isaesite" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_isaf_m.isaesite             #給予default值
+
+            #給予arg
+
+            CALL q_ooef001()                                #呼叫開窗
+
+            LET g_isaf_m.isaesite = g_qryparam.return1              #將開窗取得的值回傳到變數
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_isaf_m.isaesite
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_isaf_m.isaesite_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_isaf_m.isaesite_desc
+            DISPLAY g_isaf_m.isaesite TO isaesite              #顯示到畫面上
+
+            NEXT FIELD isaesite                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.isafdocno" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_isaf_m.isafdocno             #給予default值
+
+            #給予arg
+
+            CALL q_isafdocno()                                #呼叫開窗
+
+            LET g_isaf_m.isafdocno = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_isaf_m.isafdocno TO isafdocno              #顯示到畫面上
+
+            NEXT FIELD isafdocno                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE p_isafcomp             LIKE isaf_t.isafcomp
+   DEFINE p_isafdocno            LIKE isaf_t.isafdocno
+   DEFINE l_year                 LIKE type_t.num5
+   DEFINE l_month_str            LIKE type_t.num5
+   DEFINE l_month_end            LIKE type_t.num5]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   p_isafdocno,p_isafcomp]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF INT_FLAG THEN
+      LET g_success = ''
+      RETURN g_success
+   END IF
+   
+   call aist310_02_isae_get()
+   RETURN g_success]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_isaf_m.isaesite = ''
+   LET g_isaf_m.isae004 = ''
+   LET g_isaf_m.isafdocno = p_isafdocno
+   LET g_isafcomp = p_isafcomp
+   LET g_isaf_m.date = g_today
+   LET l_year = YEAR(g_isaf_m.date)
+   LET l_month_str = MONTH(g_isaf_m.date)
+   LET l_month_end = MONTH(g_isaf_m.date)
+    ]]>
+  </point>
+  <point name="show.head.reference" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_isaf_m.isaesite
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_isaf_m.isaesite_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_isaf_m.isaesite_desc
+]]>
+  </point>
+  <section id="aist310_02.description" ver="1" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(版次:1) Build-000102
+#+ 
+#+ Filename...: aist310_02
+#+ Description: ...
+#+ Creator....: 02114(2014/02/11)
+#+ Modifier...: 02114(2014/02/11)
+#+ Buildtype..: 應用 c01b 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="aist310_02.global" ver="1" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+{<Module define>}
+#單頭 type 宣告
+PRIVATE type type_g_isaf_m        RECORD
+       isafdocno LIKE isaf_t.isafdocno, 
+   isaesite LIKE type_t.chr10, 
+   isaesite_desc LIKE type_t.chr80, 
+   date LIKE type_t.chr80, 
+   isae004 LIKE type_t.chr10
+       END RECORD
+DEFINE g_isaf_m        type_g_isaf_m
+ 
+   DEFINE g_isafdocno_t LIKE isaf_t.isafdocno
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+{</Module define>} 
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="aist310_02.input" ver="1" status="" src="s">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION aist310_02(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   {<Local define>}
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   {</Local define>}
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aist310_02 WITH FORM cl_ap_formpath("ais","aist310_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_isaf_m.isafdocno,g_isaf_m.isaesite,g_isaf_m.isae004 ATTRIBUTE(WITHOUT DEFAULTS) 
+
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+         #---------------------------<  Master  >---------------------------
+         #----<<isafdocno>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD isafdocno
+            #add-point:BEFORE FIELD isafdocno
+            {<point name="input.b.isafdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD isafdocno
+            
+            #add-point:AFTER FIELD isafdocno
+            {<point name="input.a.isafdocno" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE isafdocno
+            #add-point:ON CHANGE isafdocno
+            {<point name="input.g.isafdocno" />}
+            #END add-point
+ 
+         #----<<isaesite>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD isaesite
+            
+            #add-point:AFTER FIELD isaesite
+            {<point name="input.a.isaesite" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD isaesite
+            #add-point:BEFORE FIELD isaesite
+            {<point name="input.b.isaesite" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE isaesite
+            #add-point:ON CHANGE isaesite
+            {<point name="input.g.isaesite" />}
+            #END add-point
+ 
+         #----<<isae004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD isae004
+            #add-point:BEFORE FIELD isae004
+            {<point name="input.b.isae004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD isae004
+            
+            #add-point:AFTER FIELD isae004
+            {<point name="input.a.isae004" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE isae004
+            #add-point:ON CHANGE isae004
+            {<point name="input.g.isae004" />}
+            #END add-point
+ 
+ #欄位檢查
+         #---------------------------<  Master  >---------------------------
+         #----<<isafdocno>>----
+         #Ctrlp:input.c.isafdocno
+         ON ACTION controlp INFIELD isafdocno
+            #add-point:ON ACTION controlp INFIELD isafdocno
+            {<point name="input.c.isafdocno" />}
+            #END add-point
+ 
+         #----<<isaesite>>----
+         #Ctrlp:input.c.isaesite
+         ON ACTION controlp INFIELD isaesite
+            #add-point:ON ACTION controlp INFIELD isaesite
+            {<point name="input.c.isaesite" />}
+            #END add-point
+ 
+         #----<<isae004>>----
+         #Ctrlp:input.c.isae004
+         ON ACTION controlp INFIELD isae004
+            #add-point:ON ACTION controlp INFIELD isae004
+            {<point name="input.c.isae004" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aist310_02 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aist310_02.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.dialog"/>}
+{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

@@ -1,0 +1,208 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axrt380_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2016-01-25 17:41:34), PR版次:0002(1900-01-01 00:00:00)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000036
+#+ Filename...: axrt380_01
+#+ Description: 自動產生單身
+#+ Creator....: 02114(2015-06-16 09:53:55)
+#+ Modifier...: 02114 -SD/PR- 00000
+ 
+{</section>}
+ 
+{<section id="axrt380_01.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_xrca_m        RECORD
+       lbl_a LIKE type_t.chr500
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+DEFINE g_xrca_m        type_g_xrca_m
+ 
+   
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axrt380_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION axrt380_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axrt380_01 WITH FORM cl_ap_formpath("axr","axrt380_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   LET g_xrca_m.lbl_a = '1'
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_xrca_m.lbl_a ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD lbl_a
+            #add-point:BEFORE FIELD lbl_a name="input.b.lbl_a"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD lbl_a
+            
+            #add-point:AFTER FIELD lbl_a name="input.a.lbl_a"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE lbl_a
+            #add-point:ON CHANGE lbl_a name="input.g.lbl_a"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.lbl_a
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD lbl_a
+            #add-point:ON ACTION controlp INFIELD lbl_a name="input.c.lbl_a"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      LET g_xrca_m.lbl_a = ''
+   END IF
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axrt380_01 
+   
+   #add-point:input段after input name="input.post_input"
+   RETURN g_xrca_m.lbl_a
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrt380_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="axrt380_01.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

@@ -1,0 +1,316 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aint320" module="ain" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="01534" crtdt="2014-04-16 17:06:28" modid="01534" moddt="2016-09-18 15:07:46" sdver="0011" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="調撥申請單維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="indadocno,indadocdt,inda001,inda001_desc(chr80),indadocno_desc(chr80),indasite,inda101,inda101_desc(chr80),indastus,inda003,inda003_desc(chr80),inda005,inda151,inda151_desc(chr80),inda109,inda102,inda103,inda104,inda007,inda105,inda105_desc(chr80),l_inda105_desc(chr500),inda106,inda106_desc(chr80),inda107,inda107_desc(chr80),inda108,inda108_desc(chr80),inda006,indaownid,indaownid_desc(chr80),indaowndp,indaowndp_desc(chr80),indacrtid,indacrtid_desc(chr80),indacrtdp,indacrtdp_desc(chr80),indacrtdt,indamodid,indamodid_desc(chr80),indamoddt,indacnfid,indacnfid_desc(chr80),indacnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="indbsite,indbseq,indb001,indb001_desc(chr500),indb001_desc_desc(chr500),indb003,indb003_desc(chr500),indb101,indb102,indb102_desc(chr500),indb103,indb103_desc(chr500),indb104,indb005,indb005_desc(chr500),indb008,indb105,indb105_desc(chr500),indb106,indb107,indb107_desc(chr500),indb108,indb108_desc(chr500),indb014,indb014_desc(chr500),indb151,indb151_desc(chr500),indb013,indb011,indb012,indb015,indb015_desc(chr500),indb016,indb016_desc(chr500),indb017,indb017_desc(chr500)"/>
+      <var id="bs_field" value="indadocno,indasite,indadocdt,inda001,inda001_desc(chr80),inda101,inda101_desc(chr80)" pk="indadocno" order=""/>
+      <bs_reference field="inda001_desc" ref_field="inda001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="inda101_desc" ref_field="inda101" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ain" filename="aint320" method="dialog">
+    <section id="input">
+      <input id="head" field="indadocno,indadocdt,inda001,indasite,inda101,indastus,inda003,inda005,inda151,inda109,inda102,inda103,inda104,inda007,inda105,l_inda105_desc,inda106,inda107,inda108,inda006"/>
+      <input id="body" page="1" field="indbsite,indbseq,indb001,indb003,indb101,indb102,indb103,indb103_desc,indb104,indb005,indb008,indb105,indb106,indb107,indb108,indb014,indb151,indb013,indb011,indb012,indb015,indb016,indb017" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="indadocno,indadocdt,inda001,indasite,inda101,indastus,inda003,inda005,inda151,inda109,inda102,inda103,inda104,inda007,inda105,inda106,inda107,inda108,inda006,indaownid,indaowndp,indacrtid,indacrtdp,indacrtdt,indamodid,indamoddt,indacnfid,indacnfdt"/>
+      <construct id="body" page="1" field="indbsite,indbseq,indb001,indb003,indb101,indb102,indb103,indb103_desc,indb104,indb005,indb008,indb105,indb106,indb107,indb108,indb014,indb151,indb013,indb011,indb012,indb015,indb016,indb017"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="indadocno"/>
+      <set id="head" type="no_entry" field="indadocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="indadocno">
+        <after/>
+        <controlp form="q_ooba002_8" state="i"/>
+        <controlp form="q_indadocno_1" state="c"/>
+      </column>
+      <column id="indadocdt"/>
+      <column id="inda001">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="inda001_desc" ref_field="inda_t.inda001" map_field="inda001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="inda001_desc"/>
+      <column id="indadocno_desc"/>
+      <column id="indasite">
+        <controlp form="q_ooef001_4" state="c"/>
+      </column>
+      <column id="inda101">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="inda101_desc" ref_field="inda_t.inda101" map_field="inda101" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_4" state="i"/>
+        <controlp form="q_ooeg001_4" state="c"/>
+      </column>
+      <column id="inda101_desc"/>
+      <column id="indastus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="C" pic="closed"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="T" pic="org_approved"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="inda003">
+        <after>
+          <check chkid="v_ooef001_13" id="isExist"/>
+          <reference field="inda003_desc" ref_field="inda_t.inda003" map_field="indaent,inda003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_12" state="i"/>
+        <controlp form="q_ooef001_12" state="c"/>
+      </column>
+      <column id="inda003_desc"/>
+      <column id="inda005"/>
+      <column id="inda151">
+        <after>
+          <check chkid="v_oocq002_1" id="isExist"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="inda151_desc"/>
+      <column id="inda109" type="S" default="1"/>
+      <column id="inda102" type="S" default="1"/>
+      <column id="inda103" type="S" default="N"/>
+      <column id="inda104" type="S" default="N"/>
+      <column id="inda007" type="S" default="N"/>
+      <column id="inda105">
+        <after>
+          <check chkid="v_oofb019_5" id="isExist"/>
+        </after>
+        <controlp form="q_oofb019_3" state="i"/>
+        <controlp form="q_oofb019_3" state="c"/>
+      </column>
+      <column id="inda105_desc"/>
+      <column id="l_inda105_desc"/>
+      <column id="inda106">
+        <after>
+          <check chkid="v_oocq002_1" id="isExist"/>
+          <reference field="inda106_desc" ref_field="inda106" map_field="inda106" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;263&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="inda106_desc"/>
+      <column id="inda107">
+        <after/>
+      </column>
+      <column id="inda107_desc"/>
+      <column id="inda108">
+        <after/>
+      </column>
+      <column id="inda108_desc"/>
+      <column id="inda006"/>
+      <column id="indaownid">
+        <after>
+          <reference field="indaownid_desc" ref_field="inda_t.indaownid" map_field="indaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="indaownid_desc"/>
+      <column id="indaowndp">
+        <after>
+          <reference field="indaowndp_desc" ref_field="inda_t.indaowndp" map_field="indaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="indaowndp_desc"/>
+      <column id="indacrtid">
+        <after>
+          <reference field="indacrtid_desc" ref_field="inda_t.indacrtid" map_field="indacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="indacrtid_desc"/>
+      <column id="indacrtdp">
+        <after>
+          <reference field="indacrtdp_desc" ref_field="inda_t.indacrtdp" map_field="indacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="indacrtdp_desc"/>
+      <column id="indacrtdt"/>
+      <column id="indamodid">
+        <after>
+          <reference field="indamodid_desc" ref_field="inda_t.indamodid" map_field="indamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="indamodid_desc"/>
+      <column id="indamoddt"/>
+      <column id="indacnfid">
+        <after>
+          <reference field="indacnfid_desc" ref_field="inda_t.indacnfid" map_field="indacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="indacnfid_desc"/>
+      <column id="indacnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="indbsite"/>
+      <column id="indbseq">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="indb001">
+        <after>
+          <check chkid="v_imaf001_1" id="isExist"/>
+          <reference field="indb001_desc" ref_field="indb_t.indb001" map_field="indbent,indb001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001_14" state="i"/>
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="indb001_desc">
+        <after>
+          <reference field="indb001_desc_desc" ref_field="indb_t.indb001" map_field="indb001" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="indb001_desc_desc"/>
+      <column id="indb003">
+        <after/>
+        <controlp form="q_inag002_1" state="c"/>
+      </column>
+      <column id="indb003_desc"/>
+      <column id="indb101">
+        <controlp form="q_inag003_2" state="i"/>
+        <controlp form="q_inag003" state="c"/>
+      </column>
+      <column id="indb102">
+        <after/>
+        <controlp form="q_inag004_9" state="i"/>
+        <controlp form="q_inag004_11" state="c"/>
+      </column>
+      <column id="indb102_desc"/>
+      <column id="indb103">
+        <after/>
+        <controlp form="q_inag004_9" state="i"/>
+        <controlp form="q_inag005_12" state="c"/>
+      </column>
+      <column id="indb103_desc"/>
+      <column id="indb104">
+        <controlp form="q_inag004_9" state="i"/>
+        <controlp form="q_inag006_2" state="c"/>
+      </column>
+      <column id="indb005">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="indb005_desc" ref_field="indb_t.indb005" map_field="indbent,indb005" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inag007_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="indb005_desc"/>
+      <column id="indb008" type="S" default="0"/>
+      <column id="indb105">
+        <after>
+          <reference field="indb105_desc" ref_field="indb_t.indb105" map_field="indb105" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="indb105_desc"/>
+      <column id="indb106" type="S" default="0"/>
+      <column id="indb107">
+        <after>
+          <check chkid="v_inaa001" id="isExist"/>
+          <reference field="indb107_desc" ref_field="indb_t.indb107" map_field="indb107" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inaa001_4" state="i"/>
+        <controlp form="q_inaa001_4" state="c"/>
+      </column>
+      <column id="indb107_desc"/>
+      <column id="indb108">
+        <after>
+          <check chkid="v_inab002" id="isExist"/>
+          <reference field="indb108_desc" ref_field="indbsite,indb107,indb108" map_field="indbsite,indb107,indb108" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inabsite=? AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inab002_8" state="i"/>
+        <controlp form="q_inab002_8" state="c"/>
+      </column>
+      <column id="indb108_desc"/>
+      <column id="indb014">
+        <after>
+          <check chkid="v_imao002" id="isExist"/>
+          <reference field="indb014_desc" ref_field="indb_t.indb014" map_field="indb014" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imao002" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="indb014_desc"/>
+      <column id="indb151">
+        <after>
+          <check chkid="v_oocq002_1" id="isExist"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="indb151_desc"/>
+      <column id="indb013"/>
+      <column id="indb011" type="S" default="0"/>
+      <column id="indb012" type="S" default="0"/>
+      <column id="indb015">
+        <after>
+          <check chkid="v_pjba001" id="isExist"/>
+          <reference field="indb015_desc" ref_field="indb_t.indb015" map_field="indb015" ref_sql="SELECT pjbal003 FROM pjbal_t WHERE pjbalent=$varg_enterprise$var AND pjbal001=? AND pjbal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pjba001" state="i"/>
+        <controlp form="q_pjba001" state="c"/>
+      </column>
+      <column id="indb015_desc"/>
+      <column id="indb016">
+        <after>
+          <check chkid="v_pjbb002" id="isExist"/>
+          <reference field="indb016_desc" ref_field="indb015,indb016" map_field="indb015,indb016" ref_sql="SELECT pjbbl004 FROM pjbbl_t WHERE pjbblent=$varg_enterprise$var AND pjbbl001=? AND pjbbl002=? AND pjbbl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pjbb002_1" state="i"/>
+        <controlp form="q_pjbb002_1" state="c"/>
+      </column>
+      <column id="indb016_desc"/>
+      <column id="indb017">
+        <after>
+          <check chkid="v_pjbm002" id="isExist"/>
+          <reference field="indb017_desc" ref_field="indb015,indb017" map_field="indb015,indb017" ref_sql="SELECT pjbml004 FROM pjbml_t WHERE pjbmlent=$varg_enterprise$var AND pjbml001=? AND pjbml002=? AND pjbml003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pjbm002" state="i"/>
+        <controlp form="q_pjbm002" state="c"/>
+      </column>
+      <column id="indb017_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="inda_t" pk="indadocno">
+      <sql id="forupd_sql" type="sql" query="SELECT indadocno,indadocdt,inda001,&apos;&apos;,&apos;&apos;,indasite,inda101,&apos;&apos;,indastus,inda003,&apos;&apos;,inda005,inda151,&apos;&apos;,inda109,inda102,inda103,inda104,inda007,inda105,&apos;&apos;,&apos;&apos;,inda106,&apos;&apos;,inda107,&apos;&apos;,inda108,&apos;&apos;,inda006,indaownid,&apos;&apos;,indaowndp,&apos;&apos;,indacrtid,&apos;&apos;,indacrtdp,&apos;&apos;,indacrtdt,indamodid,&apos;&apos;,indamoddt,indacnfid,&apos;&apos;,indacnfdt FROM inda_t WHERE indaent= ? AND indadocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT indadocno,indadocdt,inda001,&apos;&apos;,&apos;&apos;,indasite,inda101,&apos;&apos;,indastus,inda003,&apos;&apos;,inda005,inda151,&apos;&apos;,inda109,inda102,inda103,inda104,inda007,inda105,&apos;&apos;,&apos;&apos;,inda106,&apos;&apos;,inda107,&apos;&apos;,inda108,&apos;&apos;,inda006,indaownid,&apos;&apos;,indaowndp,&apos;&apos;,indacrtid,&apos;&apos;,indacrtdp,&apos;&apos;,indacrtdt,indamodid,&apos;&apos;,indamoddt,indacnfid,&apos;&apos;,indacnfdt FROM inda_t" order="indadocno"/>
+    </head>
+    <body id="indb_t" page="1" linked="" pk="indbseq" fk="indbdocno">
+      <sql id="forupd_sql_detail" query="SELECT indbsite,indbseq,indb001,&apos;&apos;,&apos;&apos;,indb003,&apos;&apos;,indb101,indb102,&apos;&apos;,indb103,&apos;&apos;,indb104,indb005,&apos;&apos;,indb008,indb105,&apos;&apos;,indb106,indb107,&apos;&apos;,indb108,&apos;&apos;,indb014,&apos;&apos;,indb151,&apos;&apos;,indb013,indb011,indb012,indb015,&apos;&apos;,indb016,&apos;&apos;,indb017,&apos;&apos; FROM indb_t WHERE indbent=? AND indbdocno=? AND indbseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT indbsite,indbseq,indb001,&apos;&apos;,&apos;&apos;,indb003,&apos;&apos;,indb101,indb102,&apos;&apos;,indb103,&apos;&apos;,indb104,indb005,&apos;&apos;,indb008,indb105,&apos;&apos;,indb106,indb107,&apos;&apos;,indb108,&apos;&apos;,indb014,&apos;&apos;,indb151,&apos;&apos;,indb013,indb011,indb012,indb015,&apos;&apos;,indb016,&apos;&apos;,indb017,&apos;&apos; FROM indb_t WHERE indbent=? AND indbdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

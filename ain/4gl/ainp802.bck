@@ -1,0 +1,943 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="ainp802.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0008(2015-11-16 13:52:59), PR版次:0008(2016-04-15 09:05:45)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000160
+#+ Filename...: ainp802
+#+ Description: 盤點準備資料產生作業
+#+ Creator....: 01251(2014-03-06 15:56:43)
+#+ Modifier...: 01251 -SD/PR- 04226
+ 
+{</section>}
+ 
+{<section id="ainp802.global" >}
+#應用 p01 樣板自動產生(Version:18)
+#add-point:填寫註解說明
+#Memos
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   checkbox1 LIKE type_t.chr1, 
+   checkbox2 LIKE type_t.chr1,     
+   inea002 LIKE inea_t.inea002,   #151013-00001#22 add   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       ineaunit LIKE inea_t.ineaunit, 
+   ineb001 LIKE ineb_t.ineb001, 
+   ineadocno LIKE inea_t.ineadocno, 
+   inea002 LIKE inea_t.inea002, 
+   lim_date LIKE type_t.chr500, 
+   lim_time LIKE type_t.chr500, 
+   checkbox1 LIKE type_t.chr1, 
+   checkbox2 LIKE type_t.chr1,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable)
+ 
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="ainp802.main" >}
+MAIN
+   #add-point:main段define (客製用)
+   
+   #end add-point 
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define 
+   DEFINE l_success LIKE type_t.num5 #150308-00001#1  By Ken 150309         
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("ain","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+         
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call
+      CALL s_aooi500_create_temp() RETURNING l_success    
+      INITIALIZE g_master.lim_date,g_master.lim_time TO NULL                   
+      #end add-point
+      CALL ainp802_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_ainp802 WITH FORM cl_ap_formpath("ain",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL ainp802_init()
+ 
+      #進入選單 Menu (="N")
+      CALL ainp802_ui_dialog()
+ 
+      #add-point:畫面關閉前
+                  
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_ainp802
+   END IF
+ 
+   #add-point:作業離開前
+   CALL s_aooi500_drop_temp() RETURNING l_success #150308-00001#1  By Ken 150309
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="ainp802.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION ainp802_init()
+ 
+   #add-point:init段define (客製用)
+   
+   #end add-point
+   #add-point:ui_dialog段define 
+   DEFINE l_success LIKE type_t.num5 #150308-00001#1  By Ken 150309         
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   CALL s_aooi500_create_temp() RETURNING l_success #150308-00001#1  By Ken 150309         
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainp802.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION ainp802_ui_dialog()
+ 
+   #add-point:ui_dialog段define (客製用)
+   
+   #end add-point
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define 
+   DEFINE l_date         LIKE inea_t.inea002   
+
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog
+   LET g_master.inea002='' #151013-00001#22 add
+   LET g_bgjob = "N"
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2
+ 
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #應用 a57 樣板自動產生(Version:3)
+         INPUT BY NAME g_master.inea002,g_master.lim_date,g_master.lim_time,g_master.checkbox1,g_master.checkbox2  
+ 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前 name="input.m.before_input"
+               
+               #end add-point
+         
+                     #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD inea002
+            #add-point:BEFORE FIELD inea002 name="input.b.inea002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD inea002
+            
+            #add-point:AFTER FIELD inea002 name="input.a.inea002"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE inea002
+            #add-point:ON CHANGE inea002 name="input.g.inea002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD lim_date
+            #add-point:BEFORE FIELD lim_date name="input.b.lim_date"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD lim_date
+            
+            #add-point:AFTER FIELD lim_date name="input.a.lim_date"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE lim_date
+            #add-point:ON CHANGE lim_date name="input.g.lim_date"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD lim_time
+            #add-point:BEFORE FIELD lim_time name="input.b.lim_time"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD lim_time
+            
+            #add-point:AFTER FIELD lim_time name="input.a.lim_time"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE lim_time
+            #add-point:ON CHANGE lim_time name="input.g.lim_time"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD checkbox1
+            #add-point:BEFORE FIELD checkbox1 name="input.b.checkbox1"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD checkbox1
+            
+            #add-point:AFTER FIELD checkbox1 name="input.a.checkbox1"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE checkbox1
+            #add-point:ON CHANGE checkbox1 name="input.g.checkbox1"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD checkbox2
+            #add-point:BEFORE FIELD checkbox2 name="input.b.checkbox2"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD checkbox2
+            
+            #add-point:AFTER FIELD checkbox2 name="input.a.checkbox2"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE checkbox2
+            #add-point:ON CHANGE checkbox2 name="input.g.checkbox2"
+            
+            #END add-point 
+ 
+ 
+ 
+                     #Ctrlp:input.c.inea002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD inea002
+            #add-point:ON ACTION controlp INFIELD inea002 name="input.c.inea002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.lim_date
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD lim_date
+            #add-point:ON ACTION controlp INFIELD lim_date name="input.c.lim_date"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.lim_time
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD lim_time
+            #add-point:ON ACTION controlp INFIELD lim_time name="input.c.lim_time"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.checkbox1
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD checkbox1
+            #add-point:ON ACTION controlp INFIELD checkbox1 name="input.c.checkbox1"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.checkbox2
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD checkbox2
+            #add-point:ON ACTION controlp INFIELD checkbox2 name="input.c.checkbox2"
+            
+            #END add-point
+ 
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後 name="input.m.after_input"
+               
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...) name="input.other"
+            
+            #end add-point
+         END INPUT
+ 
+ 
+ 
+         
+         #應用 a58 樣板自動產生(Version:3)
+         CONSTRUCT BY NAME g_master.wc ON ineaunit,ineb001,ineadocno
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct name="cs.head.before_construct"
+               
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #Ctrlp:construct.c.ineaunit
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ineaunit
+            #add-point:ON ACTION controlp INFIELD ineaunit name="construct.c.ineaunit"
+            #此段落由子樣板a08產生
+            #開窗c段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+#               LET g_qryparam.arg1 = g_site
+#               LET g_qryparam.arg2 = '8'
+#               CALL q_ooed004_3()                           #呼叫開窗
+               LET g_qryparam.where = s_aooi500_q_where(g_prog,'ineaunit',g_site,'c') #150308-00001#1  By Ken add 'c' 150309
+               CALL q_ooef001_24()
+               DISPLAY g_qryparam.return1 TO ineaunit       #顯示到畫面上
+               NEXT FIELD ineaunit                          #返回原欄位            
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ineaunit
+            #add-point:BEFORE FIELD ineaunit name="construct.b.ineaunit"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ineaunit
+            
+            #add-point:AFTER FIELD ineaunit name="construct.a.ineaunit"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.ineb001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ineb001
+            #add-point:ON ACTION controlp INFIELD ineb001 name="construct.c.ineb001"
+			   INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+			      LET g_qryparam.reqry = FALSE
+#		         LET g_qryparam.arg1 = g_site 
+#               LET g_qryparam.arg2 = '8'
+#               CALL q_ooed004_3()                           #呼叫開窗
+               IF s_aooi500_setpoint(g_prog,'ineb001') THEN
+                  LET g_qryparam.where = s_aooi500_q_where(g_prog,'ineb001',g_site,'c') #150308-00001#1  By Ken add 'c' 150309
+                  CALL q_ooef001_24() 
+               ELSE
+                  LET g_qryparam.arg1 = g_site 
+                  LET g_qryparam.arg2 = '8'
+                  CALL q_ooed004_3()  
+               END IF
+               DISPLAY g_qryparam.return1 TO ineb001       #顯示到畫面上
+               NEXT FIELD ineb001                          #返回原欄位
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ineb001
+            #add-point:BEFORE FIELD ineb001 name="construct.b.ineb001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ineb001
+            
+            #add-point:AFTER FIELD ineb001 name="construct.a.ineb001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.ineadocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD ineadocno
+            #add-point:ON ACTION controlp INFIELD ineadocno name="construct.c.ineadocno"
+            #此段落由子樣板a08產生
+            #開窗c段
+		       INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_ineadocno()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO ineadocno  #顯示到畫面上
+               NEXT FIELD ineadocno                     #返回原欄位                
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD ineadocno
+            #add-point:BEFORE FIELD ineadocno name="construct.b.ineadocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD ineadocno
+            
+            #add-point:AFTER FIELD ineadocno name="construct.a.ineadocno"
+            
+            #END add-point
+            
+ 
+ 
+ 
+            
+            #add-point:其他管控 name="cs.other"
+            
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+ 
+      
+         #add-point:ui_dialog段construct
+                                
+         #end add-point
+         #add-point:ui_dialog段input
+                            
+                
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+                 
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL ainp802_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog
+               IF cl_null(g_master.checkbox1) THEN
+                  LET g_master.checkbox1 = 'Y'
+               END IF               
+               IF cl_null(g_master.checkbox2) THEN
+                  LET g_master.checkbox2 = 'Y'
+               END IF
+               DISPLAY g_master.checkbox1 TO checkbox1
+               DISPLAY g_master.checkbox2 TO checkbox2
+               LET g_master.lim_date = g_today
+               LET g_master.lim_time = '07:00:00'
+               DISPLAY g_master.lim_date TO lim_date
+               DISPLAY g_master.lim_time TO lim_time 
+               #151013-00001#22 add--begin---
+               IF cl_null(g_master.inea002) THEN
+                  LET l_date=cl_get_para(g_enterprise,g_site,'S-CIR-0003')
+                  LET g_master.inea002=l_date-1   
+               END IF
+               DISPLAY g_master.inea002 TO inea002    
+               #151013-00001#22 add--end---               
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear
+         
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear
+            
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL ainp802_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog
+      LET lc_param.checkbox1 = g_master.checkbox1 
+      LET lc_param.checkbox2 = g_master.checkbox2     
+      LET lc_param.inea002 = g_master.inea002    #151013-00001#22 add   
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL ainp802_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = ainp802_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainp802.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION ainp802_transfer_argv(ls_js)
+ 
+   #add-point:transfer_agrv段define (客製用)
+   
+   #end add-point
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define 
+   
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容
+        
+        
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainp802.process" >}
+#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION ainp802_process(ls_js)
+ 
+   #add-point:process段define (客製用)
+   
+   #end add-point
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define 
+   DEFINE l_success   LIKE type_t.num5   
+   DEFINE l_date         LIKE inea_t.inea002   
+   DEFINE l_cnt         LIKE type_t.num5   #160225-00040#8 160310 By pomelo add
+   DEFINE l_msg         STRING             #160225-00040#8 160310 By pomelo add
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+   LET li_p01_status = 1
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理
+   #151013-00001#22 mark---being---
+   #LET l_date=cl_get_para(g_enterprise,g_site,'S-CIR-0003')
+   #LET l_date=l_date-1
+   #IF cl_null(lc_param.wc) THEN
+   #   LET lc_param.wc = " inea002 = '",l_date,"' "
+   #END IF
+   #151013-00001#22 mark---end---
+   #151013-00001#22---begin---   
+   IF cl_null(lc_param.inea002) THEN
+      LET l_date=cl_get_para(g_enterprise,g_site,'S-CIR-0003')
+      LET lc_param.inea002=l_date-1
+   END IF
+   IF cl_null(lc_param.wc) THEN
+      LET lc_param.wc = " 1=1"
+   END IF
+   LET lc_param.wc =lc_param.wc," AND inea002='",lc_param.inea002,"'"
+   #151013-00001#22---end---      
+   IF cl_null(lc_param.checkbox1) THEN
+      LET lc_param.checkbox1 = 'Y'
+   END IF
+   IF cl_null(lc_param.checkbox2) THEN
+      LET lc_param.checkbox2 = 'Y'
+   END IF         
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      #160225-00040#8 160310 By pomelo add(S)
+      LET l_cnt = 2
+      IF lc_param.checkbox1 = 'Y' THEN
+         LET l_cnt = l_cnt + 1
+      END IF
+      IF lc_param.checkbox2 = 'Y' THEN
+         LET l_cnt = l_cnt + 1
+      END IF       
+      CALL cl_progress_bar_no_window(l_cnt)
+      #160225-00040#8 160310 By pomelo add(E)
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE ainp802_process_cs CURSOR FROM ls_sql
+#  FOREACH ainp802_process_cs INTO
+   #add-point:process段process
+   #160225-00040#8 160310 By pomelo add(S)
+   LET l_msg = cl_getmsg('ain-00747',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#8 160310 By pomelo add(E)
+   CALL ainp802_inea_check(lc_param.wc,g_site) RETURNING l_success 
+   IF l_success THEN
+      #CALL s_ainp802_insert(g_master.wc,g_master.checkbox1,g_master.checkbox2,g_site) RETURNING l_success         
+      CALL s_ainp802_insert(lc_param.wc,lc_param.checkbox1,lc_param.checkbox2,g_site,g_master.lim_date,g_master.lim_time) RETURNING l_success  
+   END IF
+   
+   DISPLAY '',0 TO stagenow,stagecomplete  #160225-00040#8 160310 By pomelo add
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+     IF l_success THEN     
+        CALL s_ainp802_01_dialog(lc_param.wc,lc_param.checkbox1,lc_param.checkbox2,g_site) 
+     END IF      
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+       CALL s_aooi500_drop_temp() RETURNING l_success    #20150913 add by dongsz
+                 
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL ainp802_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainp802.get_buffer" >}
+PRIVATE FUNCTION ainp802_get_buffer(p_dialog)
+ 
+   #add-point:process段define (客製用)
+   
+   #end add-point
+   DEFINE p_dialog   ui.DIALOG
+   #add-point:process段define
+   
+   #end add-point
+ 
+   
+   LET g_master.inea002 = p_dialog.getFieldBuffer('inea002')
+   LET g_master.lim_date = p_dialog.getFieldBuffer('lim_date')
+   LET g_master.lim_time = p_dialog.getFieldBuffer('lim_time')
+   LET g_master.checkbox1 = p_dialog.getFieldBuffer('checkbox1')
+   LET g_master.checkbox2 = p_dialog.getFieldBuffer('checkbox2')
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainp802.msgcentre_notify" >}
+PRIVATE FUNCTION ainp802_msgcentre_notify()
+ 
+   #add-point:process段define (客製用)
+   
+   #end add-point
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:process段define
+   
+   #end add-point
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainp802.other_function" readonly="Y" >}
+#add-point:自定義元件(Function)
+
+################################################################################
+# Descriptions...: 檢查是否存在滿足條件的盤點計劃
+# Memo...........:
+# Usage..........: CALL ainp802_inea_check(p_string,p_site,p_inea002)
+#                  RETURNING r_success
+# Input parameter: p_string      盤點計劃過濾條件
+#                : p_site        組織編號
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 20140313 By huangrh
+# Modify.........: 
+################################################################################
+PUBLIC FUNCTION ainp802_inea_check(p_string,p_site)
+DEFINE p_string         STRING
+DEFINE p_site           LIKE inea_t.ineasite
+DEFINE l_count          LIKE type_t.num5
+DEFINE r_success        LIKE type_t.num5
+DEFINE l_sql            STRING
+
+
+  LET l_count=0
+  LET r_success=TRUE
+  
+  IF cl_null(p_string) THEN
+     LET p_string=" 1=1 "
+  END IF  
+  LET l_sql="  SELECT COUNT(*) ",
+            "    FROM inea_t,ineb_t",
+            "   WHERE ineaent=inebent",
+            "     AND ineadocno=inebdocno ",
+            "     AND ineastus='Y'",
+            "     AND inebstus='Y'",
+            "     AND (ineaunit='",p_site,"' OR ineb001='",p_site,"')",
+            "     AND ineaent='",g_enterprise,"'",            
+            "     AND ",p_string CLIPPED,
+            "     AND NOT EXISTS( SELECT 1  FROM ineg_t ",
+            "                               WHERE inegent='",g_enterprise,"'",
+            "                                 AND inegsite=ineb_t.ineb001",
+            "                                 AND ineg002=ineb_t.inebdocno",
+            "                                 AND ineg001='4'",
+            "                                 AND inegstus<>'X' )"
+   
+  PREPARE ainp802_inea_check_pre FROM l_sql 
+  EXECUTE ainp802_inea_check_pre INTO l_count
+  
+  IF cl_null(l_count) OR l_count=0 THEN
+     INITIALIZE g_errparam TO NULL
+     LET g_errparam.code = "100"
+     LET g_errparam.extend = ''
+     LET g_errparam.popup = TRUE
+     CALL cl_err()
+
+     LET r_success=FALSE
+     RETURN r_success
+  END IF
+
+
+  RETURN r_success
+  
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

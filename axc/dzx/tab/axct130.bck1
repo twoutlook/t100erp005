@@ -1,0 +1,122 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axct130" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02291" crtdt="2014-03-11 00:00:00" modid="02291" moddt="2014-03-11 21:04:59" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="聯產品期分配率設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcbpsite,xcbpsite_desc(chr80),xcbp003,imag014(chr500),xcbp001,xcbp002,imaal003(chr500)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcbp004,xcbp004_desc(chr500),xcbp005,xcbp006"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcbp004,xcbpownid,xcbpownid_desc(chr500),xcbpowndp,xcbpowndp_desc(chr500),xcbpcrtid,xcbpcrtid_desc(chr500),xcbpcrtdp,xcbpcrtdp_desc(chr500),xcbpcrtdt,xcbpmodid,xcbpmodid_desc(chr500),xcbpmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axct130" method="dialog">
+    <section id="input">
+      <input id="head" field="xcbpsite,xcbp003,xcbp001,xcbp002"/>
+      <input id="body" page="1" field="xcbp004,xcbp004_desc,xcbp005,xcbp006" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcbpsite,xcbp003,xcbp001,xcbp002"/>
+      <construct id="body" page="1" field="xcbp004,xcbp004_desc,xcbp005,xcbp006"/>
+      <construct id="body" page="2" field="xcbpownid,xcbpowndp,xcbpcrtid,xcbpcrtdp,xcbpcrtdt,xcbpmodid,xcbpmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcbpsite,xcbp001,xcbp002,xcbp003"/>
+      <set id="head" type="no_entry" field="xcbpsite,xcbp001,xcbp002,xcbp003"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcbpsite">
+        <after>
+          <reference field="xcbpsite_desc" ref_field="xcbp_t.xcbpsite" map_field="xcbpsite,xcbpent" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_10" state="i"/>
+        <controlp form="q_ooef001_10" state="c"/>
+      </column>
+      <column id="xcbpsite_desc"/>
+      <column id="xcbp003">
+        <controlp form="q_imag001_1" state="i"/>
+        <controlp form="q_imag001_1" state="c"/>
+      </column>
+      <column id="imag014"/>
+      <column id="xcbp001"/>
+      <column id="xcbp002"/>
+      <column id="imaal003"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcbp004">
+        <after/>
+        <controlp form="q_imag001_1" state="i"/>
+        <controlp form="q_imag001_1" state="c"/>
+      </column>
+      <column id="xcbp004_desc"/>
+      <column id="xcbp005">
+        <controlp form="q_imaa006" state="c"/>
+      </column>
+      <column id="xcbp006">
+        <after>
+          <check id="range" st="100" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="xcbpownid">
+        <after>
+          <reference field="xcbpownid_desc" ref_field="xcbp_t.xcbpownid" map_field="xcbpownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcbpownid_desc"/>
+      <column id="xcbpowndp">
+        <after>
+          <reference field="xcbpowndp_desc" ref_field="xcbp_t.xcbpowndp" map_field="xcbpowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcbpowndp_desc"/>
+      <column id="xcbpcrtid">
+        <after>
+          <reference field="xcbpcrtid_desc" ref_field="xcbp_t.xcbpcrtid" map_field="xcbpcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcbpcrtid_desc"/>
+      <column id="xcbpcrtdp">
+        <after>
+          <reference field="xcbpcrtdp_desc" ref_field="xcbp_t.xcbpcrtdp" map_field="xcbpcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xcbpcrtdp_desc"/>
+      <column id="xcbpcrtdt"/>
+      <column id="xcbpmodid">
+        <after>
+          <reference field="xcbpmodid_desc" ref_field="xcbp_t.xcbpmodid" map_field="xcbpmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xcbpmodid_desc"/>
+      <column id="xcbpmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcbp_t" pk="xcbpsite,xcbp001,xcbp002,xcbp003">
+      <sql id="forupd_sql" type="sql" query="SELECT xcbpsite,&apos;&apos;,xcbp003,&apos;&apos;,xcbp001,xcbp002,&apos;&apos; FROM xcbp_t WHERE xcbpent= ? AND xcbpsite=? AND xcbp001=? AND xcbp002=? AND xcbp003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcbpsite,&apos;&apos;,xcbp003,&apos;&apos;,xcbp001,xcbp002,&apos;&apos; FROM xcbp_t" order="xcbpsite,xcbp001,xcbp002,xcbp003"/>
+    </head>
+    <body id="xcbp_t" page="1,2" linked="" pk="xcbp004" fk="xcbpsite,xcbp001,xcbp002,xcbp003">
+      <sql id="forupd_sql_detail" query="SELECT xcbp004,&apos;&apos;,xcbp005,xcbp006,&apos;&apos;,xcbpownid,&apos;&apos;,xcbpowndp,&apos;&apos;,xcbpcrtid,&apos;&apos;,xcbpcrtdp,&apos;&apos;,xcbpcrtdt,xcbpmodid,&apos;&apos;,xcbpmoddt FROM xcbp_t WHERE xcbpent=? AND xcbpsite=? AND xcbp001=? AND xcbp002=? AND xcbp003=? AND xcbp004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcbp004,&apos;&apos;,xcbp005,xcbp006,&apos;&apos;,xcbpownid,&apos;&apos;,xcbpowndp,&apos;&apos;,xcbpcrtid,&apos;&apos;,xcbpcrtdp,&apos;&apos;,xcbpcrtdt,xcbpmodid,&apos;&apos;,xcbpmoddt FROM xcbp_t WHERE xcbpent= ? AND xcbpsite=? AND xcbp001=? AND xcbp002=? AND xcbp003=?"/>
+    </body>
+  </dataset>
+</assembly>
+

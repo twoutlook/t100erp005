@@ -1,0 +1,168 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi160" module="aoo" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02298" crtdt="2013-08-27 15:54:21" modid="01534" moddt="2015-11-04 16:30:12" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="匯率維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="ooam001,ooam001_desc(chr80),ooam003,ooam003_desc(chr80),ooam005,ooam004,ooam007,ooamstus,ooamownid,ooamownid_desc(chr80),ooamowndp,ooamowndp_desc(chr80),ooamcrtid,ooamcrtid_desc(chr80),ooamcrtdp,ooamcrtdp_desc(chr80),ooamcrtdt,ooammodid,ooammodid_desc(chr80),ooammoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="ooan002,ooan002_desc(chr500),ooan012,ooam003(chr10),ooam003_1_desc(chr500),ooan013,ooan005,ooan006,ooan007,ooan008,ooan009,ooan010,ooan011"/>
+      <var id="bs_field" value="ooam001,ooam001_desc(chr80),ooam003,ooam005,ooam004" pk="ooam001,ooam003,ooam004" order=""/>
+      <bs_reference field="ooam001_desc" ref_field="ooam001" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;1&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="auto_input_rate"/>
+      <action id="prog_ooam001" prog="aooi071" parameter="ooam001"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi160" method="dialog">
+    <section id="input">
+      <input id="head" field="ooam001,ooam003,ooam005,ooam004,ooam007,ooamstus"/>
+      <input id="body" page="1" field="ooan002,ooan012,ooam003,ooam003_1_desc,ooan013,ooan005,ooan006,ooan007,ooan008,ooan009,ooan010,ooan011" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="ooam003,ooam005,ooam004,ooam007,ooamstus,ooamownid,ooamowndp,ooamcrtid,ooamcrtdp,ooamcrtdt,ooammodid,ooammoddt"/>
+      <construct id="body" page="1" field="ooan002,ooan012,ooam003,ooam003_1_desc,ooan013,ooan005,ooan006,ooan007,ooan008,ooan009,ooan010,ooan011"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="ooam001,ooam003,ooam004"/>
+      <set id="head" type="no_entry" field="ooam001,ooam003,ooam004"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="ooam001">
+        <after>
+          <reference field="ooam001_desc" ref_field="ooam001" map_field="ooam001" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;1&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooal002_3" state="i"/>
+        <controlp form="q_ooal002_17" state="c"/>
+      </column>
+      <column id="ooam001_desc"/>
+      <column id="ooam003">
+        <after>
+          <reference field="ooam003_desc" ref_field="ooam_t.ooam003" map_field="ooament,ooam003" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="ooam003_desc"/>
+      <column id="ooam005" type="S" default="1">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ooam004"/>
+      <column id="ooam007" type="S" default="N"/>
+      <column id="ooamstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="ooamownid">
+        <after>
+          <reference field="ooamownid_desc" ref_field="ooam_t.ooamownid" map_field="ooamownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ooamownid_desc"/>
+      <column id="ooamowndp">
+        <after>
+          <reference field="ooamowndp_desc" ref_field="ooam_t.ooamowndp" map_field="ooamowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="ooamowndp_desc"/>
+      <column id="ooamcrtid">
+        <after>
+          <reference field="ooamcrtid_desc" ref_field="ooam_t.ooamcrtid" map_field="ooamcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ooamcrtid_desc"/>
+      <column id="ooamcrtdp">
+        <after>
+          <reference field="ooamcrtdp_desc" ref_field="ooam_t.ooamcrtdp" map_field="ooamcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="ooamcrtdp_desc"/>
+      <column id="ooamcrtdt"/>
+      <column id="ooammodid">
+        <after>
+          <reference field="ooammodid_desc" ref_field="ooam_t.ooammodid" map_field="ooammodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ooammodid_desc"/>
+      <column id="ooammoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="ooan002">
+        <after>
+          <reference field="ooan002_desc" ref_field="ooan_t.ooan002" map_field="ooanent,ooan002" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="ooan002_desc"/>
+      <column id="ooan012">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ooam003">
+        <after>
+          <reference field="ooam003_desc" ref_field="ooam_t.ooam003" map_field="ooament,ooam003" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="ooam003_1_desc"/>
+      <column id="ooan013" type="S" default="1"/>
+      <column id="ooan005">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ooan006">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ooan007">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ooan008">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ooan009">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ooan010"/>
+      <column id="ooan011" type="S" default="1" def_scc="45"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="ooam_t" pk="ooam001,ooam003,ooam004">
+      <sql id="forupd_sql" type="sql" query="SELECT ooam001,&apos;&apos;,ooam003,&apos;&apos;,ooam005,ooam004,ooam007,ooamstus,ooamownid,&apos;&apos;,ooamowndp,&apos;&apos;,ooamcrtid,&apos;&apos;,ooamcrtdp,&apos;&apos;,ooamcrtdt,ooammodid,&apos;&apos;,ooammoddt FROM ooam_t WHERE ooament= ? AND ooam001=? AND ooam003=? AND ooam004=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT ooam001,&apos;&apos;,ooam003,&apos;&apos;,ooam005,ooam004,ooam007,ooamstus,ooamownid,&apos;&apos;,ooamowndp,&apos;&apos;,ooamcrtid,&apos;&apos;,ooamcrtdp,&apos;&apos;,ooamcrtdt,ooammodid,&apos;&apos;,ooammoddt FROM ooam_t" order="ooam001,ooam003,ooam004"/>
+    </head>
+    <body id="ooan_t" page="1" linked="" pk="ooan002" fk="ooan001,ooan003,ooan004">
+      <sql id="forupd_sql_detail" query="SELECT ooan002,&apos;&apos;,ooan012,&apos;&apos;,&apos;&apos;,ooan013,ooan005,ooan006,ooan007,ooan008,ooan009,ooan010,ooan011 FROM ooan_t WHERE ooanent=? AND ooan001=? AND ooan003=? AND ooan004=? AND ooan002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT ooan002,&apos;&apos;,ooan012,&apos;&apos;,&apos;&apos;,ooan013,ooan005,ooan006,ooan007,ooan008,ooan009,ooan010,ooan011 FROM ooan_t WHERE ooanent=? AND ooan001=? AND ooan003=? AND ooan004=?"/>
+    </body>
+  </dataset>
+</assembly>
+

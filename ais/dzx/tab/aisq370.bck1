@@ -1,0 +1,137 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisq370" module="ais" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="08732" crtdt="2016-09-07 10:54:02" modid="08732" moddt="2016-09-09 09:28:16" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="應付發票清單查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isamcomp,isamcomp_desc(chr500),isamdocno,isamseq,isam001,isam002,isam002_desc(chr500),isam011,isam009,isam010,isam008,isam008_desc(chr500),isam012,isam012_desc(chr500),isam0121,isam013,isam014,isam015,isam023,isam024,isam025,isam026,isam027,isam028,isamownid,isamownid_desc(chr500),isamowndp,isamowndp_desc(chr6),isamcrtid,isamcrtid_desc(chr500),isamcrtdp,isamcrtdp_desc(chr6),isamcrtdt,isammodid,isammodid_desc(chr500),isammoddt,isamcnfid,isamcnfid_desc(chr500),isamcnfdt"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isamcomp(b_isamcomp),isamcomp_desc(b_isamcomp_desc),isamdocno(b_isamdocno),isamseq(b_isamseq),isam001(b_isam001),isam002(b_isam002),isam002_desc(b_isam002_desc),isam011(b_isam011),isam009(b_isam009),isam010(b_isam010),isam008(b_isam008),isam008_desc(b_isam008_desc),isam012(b_isam012),isam012_desc(b_isam012_desc),isam0121(b_isam0121),isam013(b_isam013),isam014(b_isam014),isam015(b_isam015),isam023(b_isam023),isam024(b_isam024),isam025(b_isam025),isam026(b_isam026),isam027(b_isam027),isam028(b_isam028),isamownid(b_isamownid),isamownid_desc(b_isamownid_desc),isamowndp(b_isamowndp),isamowndp_desc(b_isamowndp_desc),isamcrtid(b_isamcrtid),isamcrtid_desc(b_isamcrtid_desc),isamcrtdp(b_isamcrtdp),isamcrtdp_desc(b_isamcrtdp_desc),isamcrtdt(b_isamcrtdt),isammodid(b_isammodid),isammodid_desc(b_isammodid_desc),isammoddt(b_isammoddt),isamcnfid(b_isamcnfid),isamcnfid_desc(b_isamcnfid_desc),isamcnfdt(b_isamcnfdt)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+    <section id="detail_show" page="1">
+      <action id="prog_aisq370"/>
+    </section>
+  </structure>
+  <form id="0" module="ais" filename="aisq370" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="isamcomp,isamdocno,isamseq,isam001,isam002,isam011,isam009,isam010,isam008,isam012,isam0121,isam013,isam014,isam015,isam023,isam024,isam025,isam026,isam027,isam028" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="isamcomp(b_isamcomp),isamdocno(b_isamdocno),isamseq(b_isamseq),isam001(b_isam001),isam002(b_isam002),isam011(b_isam011),isam009(b_isam009),isam010(b_isam010),isam008(b_isam008),isam012(b_isam012),isam0121(b_isam0121),isam013(b_isam013),isam014(b_isam014),isam015(b_isam015),isam023(b_isam023),isam024(b_isam024),isam025(b_isam025),isam026(b_isam026),isam027(b_isam027),isam028(b_isam028),isamownid(b_isamownid),isamowndp(b_isamowndp),isamcrtid(b_isamcrtid),isamcrtdp(b_isamcrtdp),isamcrtdt(b_isamcrtdt),isammodid(b_isammodid),isammoddt(b_isammoddt),isamcnfid(b_isamcnfid),isamcnfdt(b_isamcnfdt)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="isamcomp">
+        <after>
+          <reference field="isamcomp_desc" ref_field="isamcomp" map_field="isament,isamcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="isamcomp_desc"/>
+      <column id="isamdocno">
+        <controlp form="q_isamdocno" state="c"/>
+      </column>
+      <column id="isamseq"/>
+      <column id="isam001"/>
+      <column id="isam002">
+        <after>
+          <reference field="isam002_desc" ref_field="isam002" map_field="isament,isam002" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="isam002_desc"/>
+      <column id="isam011"/>
+      <column id="isam009"/>
+      <column id="isam010">
+        <controlp form="q_isam010" state="c"/>
+      </column>
+      <column id="isam008">
+        <after>
+          <check chkid="v_isac002_2" id="isExist"/>
+          <reference field="isam008_desc" ref_field="isamcomp,isam008" map_field="isamcomp,isam008" ref_sql="SELECT isacl004 FROM isacl_t WHERE isaclent=$varg_enterprise$var AND isacl001=? AND isacl002=? AND isacl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_isac002" state="c"/>
+      </column>
+      <column id="isam008_desc"/>
+      <column id="isam012">
+        <after>
+          <reference field="isam012_desc" ref_field="isam012" map_field="isam012" ref_sql="SELECT oodbl004 FROM oodbl_t WHERE oodblent=$varg_enterprise$var AND oodbl001=&apos;&apos; AND oodbl002=? AND oodbl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oodb002_5" state="c"/>
+      </column>
+      <column id="isam012_desc"/>
+      <column id="isam0121"/>
+      <column id="isam013"/>
+      <column id="isam014">
+        <controlp form="q_ooaj002_1" state="c"/>
+      </column>
+      <column id="isam015"/>
+      <column id="isam023"/>
+      <column id="isam024"/>
+      <column id="isam025"/>
+      <column id="isam026"/>
+      <column id="isam027"/>
+      <column id="isam028"/>
+      <column id="isamownid">
+        <after>
+          <reference field="isamownid_desc" ref_field="isamownid" map_field="isamownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isamownid_desc"/>
+      <column id="isamowndp">
+        <after>
+          <reference field="isamowndp_desc" ref_field="isamowndp" map_field="isamowndp" ref_sql="SELECT ooefl002 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? "/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="isamowndp_desc"/>
+      <column id="isamcrtid">
+        <after>
+          <reference field="isamcrtid_desc" ref_field="isamcrtid" map_field="isamcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isamcrtid_desc"/>
+      <column id="isamcrtdp">
+        <after>
+          <reference field="isamcrtdp_desc" ref_field="isamcrtdp" map_field="isamcrtdp" ref_sql="SELECT ooefl002 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? "/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="isamcrtdp_desc"/>
+      <column id="isamcrtdt"/>
+      <column id="isammodid">
+        <after>
+          <reference field="isammodid_desc" ref_field="isammodid" map_field="isammodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isammodid_desc"/>
+      <column id="isammoddt"/>
+      <column id="isamcnfid">
+        <after>
+          <reference field="isamcnfid_desc" ref_field="isamcnfid" map_field="isamcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isamcnfid_desc"/>
+      <column id="isamcnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="isam_t" page="1" linked="" pk="isamdocno,isamseq">
+      <sql id="b_fill_sql" query="SELECT isamcomp,&apos;&apos;,isamdocno,isamseq,isam001,isam002,&apos;&apos;,isam011,isam009,isam010,isam008,&apos;&apos;,isam012,&apos;&apos;,isam0121,isam013,isam014,isam015,isam023,isam024,isam025,isam026,isam027,isam028,isamownid,&apos;&apos;,isamowndp,&apos;&apos;,isamcrtid,&apos;&apos;,isamcrtdp,&apos;&apos;,isamcrtdt,isammodid,&apos;&apos;,isammoddt,isamcnfid,&apos;&apos;,isamcnfdt FROM isam_t WHERE isament= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

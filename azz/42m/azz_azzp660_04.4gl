@@ -1,0 +1,1385 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="azzp660_04.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0010(2016-05-30 10:19:09), PR版次:0010(2016-12-02 11:04:22)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000036
+#+ Filename...: azzp660_04
+#+ Description: 資料欄位處理
+#+ Creator....: 03079(2016-03-10 13:57:23)
+#+ Modifier...: 07024 -SD/PR- 07024
+ 
+{</section>}
+ 
+{<section id="azzp660_04.global" >}
+#應用 p00 樣板自動產生(Version:5)
+#add-point:填寫註解說明 name="main.memo"
+#160519-00036#1  2016/05/30  By dorislai  "欄位資料處理"步驟增加的處理:1.增加一欄位"限制SCC選項"
+#                                                                    2.DISPLAY時，移動單身筆數，該欄位資訊也要顯示在欄位訊息
+#160620-00026#1  2016/06/28  By ming      如果gzan013被清空的話，就把相關的資料清除欄位的說明改用dzebl_t
+#160910-00014#1  2016/09/30  By Whitney   第四步每筆單身存檔後更新資料處理順序
+#160720-00023#1  2016/10/11  By Whitney   cmdrun azzp662
+#161128-00013#7  2016/11/30  By dorislai  修正gzan020排序問題
+#161128-00013#8  2016/12/01  By Whitney   azzp662執行錯誤要提示訊息
+#end add-point
+#add-point:填寫註解說明(客製用) name="main.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="main.import"
+IMPORT util  #160720-00023#1
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔 name="global.inc"
+GLOBALS "../../azz/4gl/azzp660.inc"
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzp660_04.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+DEFINE g_gzan      DYNAMIC ARRAY OF RECORD
+                      gzan003       LIKE gzan_t.gzan003,     #表格編號 
+                      gzan004       LIKE gzan_t.gzan004,     #欄位代號 
+                      gzan004_desc  LIKE type_t.chr1000,     #說明 
+                      gzan005       LIKE gzan_t.gzan005,     #匯出 
+                      gzan008       LIKE gzan_t.gzan008,     #資料類型 
+                      gzan009       LIKE gzan_t.gzan009,     #必要 
+                      gzan010       LIKE gzan_t.gzan010,     #預設值  
+                      gzan017       LIKE gzan_t.gzan017,     #限制SCC選項  #160519-00036#1-add
+                      gzan011       LIKE gzan_t.gzan011,     #條件給值 
+                      gzan012       LIKE gzan_t.gzan012,     #關聯欄位給值 
+                      gzan013       LIKE gzan_t.gzan013      #應用元件/校驗 
+                   END RECORD
+DEFINE g_gzan_t    RECORD 
+                      gzan003       LIKE gzan_t.gzan003, 
+                      gzan004       LIKE gzan_t.gzan004,
+                      gzan004_desc  LIKE type_t.chr1000,
+                      gzan005       LIKE gzan_t.gzan005,
+                      gzan008       LIKE gzan_t.gzan008,
+                      gzan009       LIKE gzan_t.gzan009,
+                      gzan010       LIKE gzan_t.gzan010,
+                      gzan017       LIKE gzan_t.gzan017,     #160519-00036#1-add
+                      gzan011       LIKE gzan_t.gzan011,
+                      gzan012       LIKE gzan_t.gzan012,
+                      gzan013       LIKE gzan_t.gzan013
+                   END RECORD
+DEFINE g_gzan_o    RECORD
+                      gzan003       LIKE gzan_t.gzan003, 
+                      gzan004       LIKE gzan_t.gzan004,
+                      gzan004_desc  LIKE type_t.chr1000,
+                      gzan005       LIKE gzan_t.gzan005,
+                      gzan008       LIKE gzan_t.gzan008,
+                      gzan009       LIKE gzan_t.gzan009,
+                      gzan010       LIKE gzan_t.gzan010,
+                      gzan017       LIKE gzan_t.gzan017,     #160519-00036#1-add
+                      gzan011       LIKE gzan_t.gzan011,
+                      gzan012       LIKE gzan_t.gzan012,
+                      gzan013       LIKE gzan_t.gzan013
+                   END RECORD
+
+DEFINE g_table_idx LIKE type_t.num10 
+
+#顏色處理 
+DEFINE g_gzan_color DYNAMIC ARRAY OF RECORD
+                       gzan003       STRING,
+                       gzan004       STRING,
+                       gzan004_desc  STRING,
+                       gzan005       STRING,
+                       gzan008       STRING,
+                       gzan009       STRING,
+                       gzan010       STRING,
+                       gzan011       STRING,
+                       gzan012       STRING,
+                       gzan013       STRING,
+                       gzan017       STRING  #160519-00036#1-add
+                    END RECORD
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzp660_04.global_variable" >}
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="azzp660_04.other_dialog" >}
+
+################################################################################
+# Descriptions...: Table Tree的顯示
+# Memo...........:
+# Usage..........: CALL azzp660_04_display01()
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+DIALOG azzp660_04_display01()
+   DISPLAY ARRAY g_table_tree TO s_p660_04_table.*
+           ATTRIBUTE(COUNT = g_table_tree.getLength())
+
+      BEFORE DISPLAY
+
+      BEFORE ROW
+         LET g_table_idx = DIALOG.getCurrentRow("s_p660_04_table")
+
+         CALL azzp660_04_field_b_fill()
+   END DISPLAY
+END DIALOG
+
+################################################################################
+# Descriptions...: 匯出欄位的顯示
+# Memo...........:
+# Usage..........: CALL azzp660_04_display02()
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+DIALOG azzp660_04_display02()
+   #160519-00036#1-add-(S)
+   DEFINE l_detail_idx      LIKE type_t.num5
+   DEFINE l_str             STRING
+   DEFINE l_source_spec_ver STRING
+   DEFINE l_dzaf010         LIKE dzaf_t.dzaf010  
+   DEFINE l_gzzz002         LIKE gzzz_t.gzzz002     #程式編號
+   #160519-00036#1-add-(E)
+
+    DISPLAY ARRAY g_gzan TO s_p660_04_output_detail1.*
+           ATTRIBUTE(COUNT = g_gzan.getLength())
+      BEFORE DISPLAY
+         CALL DIALOG.setCellAttributes(g_gzan_color) 
+      BEFORE ROW
+         #160519-00036#1-add-(S)
+         #取得作業的程式編號(l_gzzz002)、取得建構版次(l_source_spec_ver)、取得辨識(l_dzaf010)
+         CALL azzp660_04_get_dzaf() RETURNING l_gzzz002,l_source_spec_ver,l_dzaf010
+         LET l_detail_idx =  DIALOG.getCurrentRow("s_p660_04_output_detail1")
+         #取得欄位的提示訊息
+         CALL azzp660_04_get_field_message(g_gzan[l_detail_idx].gzan004,g_gzan[l_detail_idx].gzan008,l_gzzz002,l_source_spec_ver,l_dzaf010,g_gzan[l_detail_idx].gzan017)  #160531-00026#1
+              RETURNING l_str
+         DISPLAY l_str TO p660_04_fieldmemo
+         #160519-00036#1-add-(E)
+   END DISPLAY
+
+END DIALOG
+
+ 
+{</section>}
+ 
+{<section id="azzp660_04.other_function" readonly="Y" >}
+
+PUBLIC FUNCTION azzp660_04_init()
+  
+   CALL cl_set_combo_scc("p660_04_table_type","256") 
+   CALL cl_set_combo_scc("p660_04_gzan008","219")
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取得欄位 
+# Memo...........:
+# Usage..........: CALL azzp660_04_field_b_fill()
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzp660_04_field_b_fill()
+   DEFINE l_sql      STRING
+   DEFINE l_i        LIKE type_t.num5 
+   DEFINE l_gzan010  STRING
+   DEFINE l_length   LIKE type_t.num5
+
+   CALL g_gzan.clear() 
+   #160620-00026#1 20160628 modify -----(S) 
+   ##160519-00036#1-mod-(S)
+   ##LET l_sql = "SELECT '',dzeb002,dzeb003,'N','','N','','','','' ",
+   #LET l_sql = "SELECT '',dzeb002,dzeb003,'N','','N','','','','','' ",
+   ##160519-00036#1-mod-(E)
+   LET l_sql = "SELECT '',dzeb002,(SELECT dzebl003 FROM dzebl_t ", 
+               "                    WHERE dzebl001 = dzeb002 ", 
+               "                      AND dzebl002 = '",g_dlang,"'), ", 
+               "       'N','','N','','','','','' ",
+   #160620-00026#1 20160628 modify -----(E) 
+               "  FROM dzeb_t ",
+               " WHERE dzeb001 = '",g_table_tree[g_table_idx].tableid,"' ",
+               " ORDER BY dzeb021 "
+   PREPARE azzp660_04_dzeb_b_fill_prep FROM l_sql
+   DECLARE azzp660_04_dzeb_b_fill_curs CURSOR FOR azzp660_04_dzeb_b_fill_prep
+   #160519-00036#1-add-gzan017
+   LET l_sql = "SELECT gzan003,gzan005,gzan008,gzan009,gzan010,gzan017,gzan011,gzan012,gzan013 ",
+               "  FROM gzan_t ",
+               " WHERE gzan001 = '",g_gzal.gzal001,"' ",
+               "   AND gzan002 = '",g_gzal.gzal002,"' ",
+               "   AND gzan003 = ? ",
+               "   AND gzan004 = ? "
+   PREPARE azzp660_04_get_gzan_prep FROM l_sql
+
+   LET l_i = 1
+   FOREACH azzp660_04_dzeb_b_fill_curs INTO g_gzan[l_i].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'foreach'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF 
+      
+      EXECUTE azzp660_04_get_gzan_prep USING g_table_tree[g_table_idx].tableid,
+                                             g_gzan[l_i].gzan004
+         INTO g_gzan[l_i].gzan003, 
+              g_gzan[l_i].gzan005,g_gzan[l_i].gzan008,
+              g_gzan[l_i].gzan009,g_gzan[l_i].gzan010,
+              g_gzan[l_i].gzan017, #160519-00036#1-add
+              g_gzan[l_i].gzan011,g_gzan[l_i].gzan012,
+              g_gzan[l_i].gzan013
+
+      IF cl_null(g_gzan[l_i].gzan005) THEN
+         LET g_gzan[l_i].gzan005 = 'N'
+      END IF
+
+      IF cl_null(g_gzan[l_i].gzan009) THEN
+         LET g_gzan[l_i].gzan009 = 'N'
+      END IF 
+      
+      #先把預設值丟到String的變數之中，檢查目前是否有值 
+      #如果有值，就把空白清掉，空白被清掉就沒有值，代表此預設值存放空白 
+      #所以要加上單引號
+      LET l_gzan010 = g_gzan[l_i].gzan010
+      IF l_gzan010.getLength() > 0 THEN
+         LET l_gzan010 = cl_replace_str(l_gzan010,' ','')
+         IF l_gzan010.getLength() = 0 THEN
+            LET g_gzan[l_i].gzan010 = "'",g_gzan[l_i].gzan010,"'"
+         END IF
+      END IF
+      
+      CALL azzp660_04_detail_color(l_i)
+
+      LET l_i = l_i + 1
+
+   END FOREACH
+
+   CALL g_gzan.deleteElement(l_i)
+END FUNCTION
+
+################################################################################
+# Descriptions...: 單身欄位的輸入 
+# Memo...........:
+# Usage..........: CALL azzp660_04_b()
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzp660_04_b()
+   DEFINE l_n       LIKE type_t.num10 
+   DEFINE l_success LIKE type_t.num5 
+   DEFINE l_sql     STRING 
+   DEFINE l_str     STRING 
+   DEFINE l_gzzz002         LIKE gzzz_t.gzzz002     #程式編號  
+   DEFINE l_module          LIKE gzzo_t.gzzo001     #模組代號 
+   DEFINE l_dzaf            RECORD
+                               dzaf001     LIKE dzaf_t.dzaf001,
+                               dzaf002     LIKE dzaf_t.dzaf002,
+                               dzaf003     LIKE dzaf_t.dzaf003,
+                               dzaf004     LIKE dzaf_t.dzaf004,
+                               dzaf005     LIKE dzaf_t.dzaf005,
+                               dzaf006     LIKE dzaf_t.dzaf006,
+                               dzaf007     LIKE dzaf_t.dzaf007,
+                               dzaf008     LIKE dzaf_t.dzaf008,
+                               dzaf009     LIKE dzaf_t.dzaf009,
+                               dzaf010     LIKE dzaf_t.dzaf010
+                            END RECORD
+   DEFINE l_err_msg         STRING
+   DEFINE l_source_spec_ver STRING
+   DEFINE l_dzaf010         LIKE dzaf_t.dzaf010  
+   DEFINE l_gzan010         LIKE gzan_t.gzan010
+   #160720-00023#1-s
+   DEFINE la_param          RECORD
+          prog              STRING,
+          background        LIKE type_t.chr1,
+          param             DYNAMIC ARRAY OF STRING,
+          return_session    LIKE type_t.chr1
+                            END RECORD
+   DEFINE ls_js             STRING
+   #160720-00023#1-e
+   #161128-00013#8-s
+   DEFINE ls_cmd            STRING
+   DEFINE lb_result         LIKE type_t.num5
+   DEFINE ls_err_msg        STRING
+   #161128-00013#8-e
+#160720-00023#1-s
+DEFINE lc_param             RECORD
+       gzal001              LIKE gzal_t.gzal001,
+       gzal002              LIKE gzal_t.gzal002
+                        END RECORD
+#160720-00023#1-e
+
+   #160519-00036#1-mod-(S)
+#   #取得作業的程式編號 
+#   LET l_gzzz002 = ''
+#   CALL s_azzp660_get_prog_code(g_gzal.gzal001) RETURNING l_gzzz002
+#
+#   LET l_module = s_azzp660_find_module(l_gzzz002,"M")
+#
+#   #取得建構版次 
+#   CALL s_azzp660_get_curr_ver_info(l_gzzz002,"M",l_module)
+#        RETURNING l_dzaf.*,l_err_msg
+#   IF cl_null(l_err_msg) THEN
+#      LET l_source_spec_ver = l_dzaf.dzaf003
+#      LET l_source_spec_ver = l_source_spec_ver.trim()
+#      LET l_dzaf010 = l_dzaf.dzaf010
+#   END IF
+   #取得作業的程式編號(l_gzzz002)、取得建構版次(l_source_spec_ver)、取得辨識(l_dzaf010)
+   CALL azzp660_04_get_dzaf() RETURNING l_gzzz002,l_source_spec_ver,l_dzaf010
+   #160519-00036#1-mod-(E)
+   
+   DIALOG ATTRIBUTE(UNBUFFERED)
+      INPUT ARRAY g_gzan FROM s_p660_04_output_detail1.*
+            ATTRIBUTE(COUNT = g_gzan.getLength(),MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                      INSERT ROW = FALSE,
+                      DELETE ROW = FALSE,
+                      APPEND ROW = FALSE)
+         BEFORE INPUT
+
+         BEFORE ROW 
+            LET l_n = DIALOG.getCurrentRow("s_p660_04_output_detail1") 
+            
+            #顯示提示訊息 
+            #160519-00036#1-mod-(S)
+#            CALL azzp660_04_get_field_message(g_gzan[l_n].gzan004,l_gzzz002,l_source_spec_ver,l_dzaf010)
+#                 RETURNING l_str
+            CALL azzp660_04_get_field_message(g_gzan[l_n].gzan004,g_gzan[l_n].gzan008,l_gzzz002,l_source_spec_ver,l_dzaf010,g_gzan[l_n].gzan017)  #160531-00026#1
+                 RETURNING l_str
+            #160519-00036#1-mod-(E)
+            DISPLAY l_str TO p660_04_fieldmemo
+
+            #記錄舊值
+            LET g_gzan_t.* = g_gzan[l_n].*
+            LET g_gzan_o.* = g_gzan[l_n].*
+
+            CALL azzp660_04_new_set_entry(l_n)
+            CALL azzp660_04_new_set_no_entry(l_n)
+
+         AFTER FIELD p660_04_gzan008
+            IF g_gzan[l_n].gzan005 = 'Y' THEN
+               IF g_gzan[l_n].gzan008 = '8' OR g_gzan[l_n].gzan008 = '9' THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = ''
+                  LET g_errparam.code   = 'azz-00994'     #匯出的欄位不可選擇此資料類型！ 
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()
+
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            
+            LET g_gzan_o.gzan008 = g_gzan[l_n].gzan008
+
+            CALL azzp660_04_new_set_entry(l_n)
+            CALL azzp660_04_new_set_no_entry(l_n)
+
+         AFTER FIELD p660_04_gzan009
+
+         AFTER FIELD p660_04_gzan010
+            #160519-00036#1-mod-(S)
+#            IF NOT cl_null(g_gzan[l_n].gzan010) AND
+#               (g_gzan_o.gzan010 IS NULL OR g_gzan_o.gzan010 <> g_gzan[l_n].gzan010) THEN
+            IF NOT cl_null(g_gzan[l_n].gzan010) THEN
+            #160519-00036#1-mod-(E) 
+               #檢查是否為global的變數值 
+               IF g_gzan[l_n].gzan008 = '2' THEN
+                  CALL s_azzp660_chk_global_var(g_gzan[l_n].gzan010)
+                       RETURNING l_success
+                  IF NOT l_success THEN
+                     #因為sub內已有cl_err()所以這裡只需卡住欄位即可 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+
+               #檢查是否為整數的流水號 
+               IF g_gzan[l_n].gzan008 = '3' THEN
+                  CALL s_azzp660_chk_num(g_gzan[l_n].gzan010)
+                       RETURNING l_success
+                  IF NOT l_success THEN
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               #160519-00036#1-add-(S)
+               IF NOT cl_null(g_gzan[l_n].gzan017) THEN
+                  IF NOT azzp660_04_gzan010_chk(g_gzan[l_n].gzan010,g_gzan[l_n].gzan017) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = ''
+                     LET g_errparam.code   = 'azz-01029' #輸入的預設值，與欄位"限制SCC選項"不相符！
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+                     LET g_gzan[l_n].gzan010 = g_gzan_o.gzan010
+                     NEXT FIELD p660_04_gzan010
+                  END IF
+               END IF
+               #160519-00036#1-add-(E)
+               LET g_gzan_o.gzan010 = g_gzan[l_n].gzan010
+            END IF
+         
+         #160519-00036#1-add-(S)
+         BEFORE FIELD p660_04_gzan017
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = ''
+            LET g_errparam.code   = 'azz-01031' #限制SCC栏位，请以逗号( , )分隔SCC值，EX:1,2,3
+            LET g_errparam.popup  = FALSE
+            CALL cl_err()
+            
+         AFTER FIELD p660_04_gzan017
+            IF NOT cl_null(g_gzan[l_n].gzan017) AND NOT cl_null(g_gzan[l_n].gzan010)THEN
+               IF NOT azzp660_04_gzan010_chk(g_gzan[l_n].gzan010,g_gzan[l_n].gzan017) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = ''
+                  LET g_errparam.code   = 'azz-01029' #輸入的預設值，與欄位"限制SCC選項"不相符！
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()
+                  LET g_gzan[l_n].gzan010 = g_gzan_o.gzan010
+                  #欄位的提示訊息
+                  CALL azzp660_04_get_field_message(g_gzan[l_n].gzan004,g_gzan[l_n].gzan008,l_gzzz002,l_source_spec_ver,l_dzaf010,g_gzan[l_n].gzan017)  #160531-00026#1
+                       RETURNING l_str
+                  DISPLAY l_str TO p660_04_fieldmemo
+                  NEXT FIELD p660_04_gzan010
+               END IF
+            END IF
+            LET g_gzan_o.gzan017 = g_gzan[l_n].gzan017
+            #欄位的提示訊息
+            CALL azzp660_04_get_field_message(g_gzan[l_n].gzan004,g_gzan[l_n].gzan008,l_gzzz002,l_source_spec_ver,l_dzaf010,g_gzan[l_n].gzan017)  #160531-00026#1
+                 RETURNING l_str
+            DISPLAY l_str TO p660_04_fieldmemo
+         #160519-00036#1-add-(E)
+         
+         AFTER FIELD p660_04_gzan011
+            DISPLAY "通過了gzan011"
+
+         AFTER FIELD p660_04_gzan012
+            DISPLAY "通過了gzan012" 
+            
+         AFTER FIELD p660_04_gzan013
+            DISPLAY "通過了gzan013"
+
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ''
+               LET g_errparam.code   = 9001
+               LET g_errparam.popup  = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0 
+               EXIT DIALOG
+            END IF 
+            
+            LET l_gzan010 = cl_replace_str(g_gzan[l_n].gzan010,"'",'')
+            
+            #160620-00026#1 20160628 add -----(S) 
+            IF cl_null(g_gzan[l_n].gzan013) THEN
+               UPDATE gzan_t SET gzan014 = '',
+                                 gzan015 = '',
+                                 gzan016 = ''
+                WHERE gzan001 = g_gzal.gzal001
+                  AND gzan002 = g_gzal.gzal002
+                  AND gzan004 = g_gzan[l_n].gzan004
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = 'upd gzan_t'
+                  LET g_errparam.code   = SQLCA.sqlcode
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()
+               END IF
+
+               DELETE FROM gzap_t WHERE gzap001 = g_gzal.gzal001
+                                    AND gzap002 = g_gzal.gzal002
+                                    AND gzap004 = g_gzan[l_n].gzan004
+            END IF
+            #160620-00026#1 20160628 add -----(E) 
+            
+            UPDATE gzan_t SET gzan008 = g_gzan[l_n].gzan008,
+                              gzan009 = g_gzan[l_n].gzan009,
+                              gzan010 = l_gzan010,
+                              gzan011 = g_gzan[l_n].gzan011,
+                              gzan012 = g_gzan[l_n].gzan012,
+                              gzan013 = g_gzan[l_n].gzan013,
+                              gzan017 = g_gzan[l_n].gzan017  #160615-00020#1-add
+             WHERE gzan001 = g_gzal.gzal001
+               AND gzan002 = g_gzal.gzal002
+               AND gzan004 = g_gzan[l_n].gzan004
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = 'upd temp gzan_t'
+               LET g_errparam.code   = SQLCA.sqlcode
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+            END IF
+            #CALL azzp660_04_upd_gzan020(g_gzal.gzal001,g_gzal.gzal002,g_gzan[l_n].gzan003,g_gzan[l_n].gzan004)  #161019-00025#1
+
+         ON ACTION controlp INFIELD p660_04_gzan011
+            DISPLAY "這是gzan011的開窗"
+            CALL s_azzp660_open_s01(g_gzal.gzal001,g_gzal.gzal002, 
+                                    g_gzan[l_n].gzan003,g_gzan[l_n].gzan004) 
+                 RETURNING l_success,g_gzan[l_n].gzan011  
+             
+            DISPLAY g_gzan[l_n].gzan011 TO p660_04_gzan011
+
+         ON ACTION controlp INFIELD p660_04_gzan012
+            DISPLAY "這是gzan012的開窗" 
+            CALL s_azzp660_open_s02(g_gzal.gzal001,g_gzal.gzal002,
+                                    g_gzan[l_n].gzan003,g_gzan[l_n].gzan004)
+                 RETURNING g_gzan[l_n].gzan012
+
+         ON ACTION controlp INFIELD p660_04_gzan013
+            DISPLAY "這是gzan013的開窗" 
+            CALL s_azzp660_open_s03(g_gzal.gzal001,g_gzal.gzal002, 
+                                    g_gzan[l_n].gzan003,g_gzan[l_n].gzan004) 
+                 RETURNING g_gzan[l_n].gzan013 
+            #CALL azzp660_04_upd_gzan020(g_gzal.gzal001,g_gzal.gzal002,g_gzan[l_n].gzan003,g_gzan[l_n].gzan004)  #161019-00025#1
+
+         ON ACTION accept 
+            LET l_gzan010 = cl_replace_str(g_gzan[l_n].gzan010,"'",'')  
+            
+            #160620-00026#1 20160628 add -----(S) 
+            IF cl_null(g_gzan[l_n].gzan013) THEN
+               UPDATE gzan_t SET gzan014 = '',
+                                 gzan015 = '',
+                                 gzan016 = ''
+                WHERE gzan001 = g_gzal.gzal001
+                  AND gzan002 = g_gzal.gzal002
+                  AND gzan004 = g_gzan[l_n].gzan004
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = 'upd gzan_t'
+                  LET g_errparam.code   = SQLCA.sqlcode
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()
+               END IF
+
+               DELETE FROM gzap_t WHERE gzap001 = g_gzal.gzal001
+                                    AND gzap002 = g_gzal.gzal002
+                                    AND gzap004 = g_gzan[l_n].gzan004
+            END IF
+            #160620-00026#1 20160628 add -----(E) 
+            
+            UPDATE gzan_t SET gzan008 = g_gzan[l_n].gzan008,
+                              gzan009 = g_gzan[l_n].gzan009,
+                              gzan010 = l_gzan010,
+                              gzan011 = g_gzan[l_n].gzan011,
+                              gzan012 = g_gzan[l_n].gzan012,
+                              gzan013 = g_gzan[l_n].gzan013,
+                              gzan017 = g_gzan[l_n].gzan017  #160615-00020#1-add
+             WHERE gzan001 = g_gzal.gzal001
+               AND gzan002 = g_gzal.gzal002
+               AND gzan004 = g_gzan[l_n].gzan004
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = 'upd temp gzan_t'
+               LET g_errparam.code   = SQLCA.sqlcode
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+            END IF 
+            CALL azzp660_04_upd_gzan020(g_gzal.gzal001,g_gzal.gzal002,g_gzan[l_n].gzan003)  #161019-00025#1
+            #160519-00036#1-add-(S)
+            #取得欄位的提示訊息
+            CALL azzp660_04_get_field_message(g_gzan[l_n].gzan004,g_gzan[l_n].gzan008,l_gzzz002,l_source_spec_ver,l_dzaf010,g_gzan[l_n].gzan017)  #160531-00026#1
+                 RETURNING l_str
+            DISPLAY l_str TO p660_04_fieldmemo
+            #160519-00036#1-add-(E)
+            #160720-00023#1-s
+            LET lc_param.gzal001 = g_gzal.gzal001
+            LET lc_param.gzal002 = g_gzal.gzal002
+            LET ls_js = util.JSON.stringify( lc_param )
+            #161128-00013#8-s
+            #INITIALIZE la_param.* TO NULL
+            #LET la_param.background = "Y"
+            #LET la_param.prog = 'azzp662'
+            #LET la_param.param[1] = ls_js
+            #LET la_param.return_session = "Y"
+            #LET ls_js = util.JSON.stringify( la_param )
+            #IF NOT cl_cmdrun(ls_js) THEN
+            LET ls_cmd = "r.r azzp662 ","'",ls_js,"'"
+            CALL cl_cmdrun_openpipe('r.r',ls_cmd,TRUE) RETURNING lb_result,ls_err_msg
+            IF NOT lb_result THEN
+            #161128-00013#8-e
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ls_err_msg
+               LET g_errparam.code   = "azz-01132"
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+               CONTINUE DIALOG
+            ELSE
+               ACCEPT DIALOG
+            END IF
+            #160720-00023#1-e
+
+         ON ACTION cancel
+            LET g_gzan[l_n].* = g_gzan_t.*
+            EXIT DIALOG
+
+         ON ACTION exit 
+            LET g_gzan[l_n].* = g_gzan_t.*
+            EXIT DIALOG
+
+         ON ACTION close 
+            LET g_gzan[l_n].* = g_gzan_t.* 
+            EXIT DIALOG
+
+      END INPUT
+   END DIALOG 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 欄位輸入_全開
+# Memo...........:
+# Usage..........: CALL azzp660_04_new_set_entry(p_n)
+# Input parameter: p_n:資料列
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzp660_04_new_set_entry(p_n)
+   DEFINE p_n     LIKE type_t.num10
+
+   CALL cl_set_comp_entry("p660_04_gzan008,p660_04_gzan009,p660_04_gzan010",TRUE)
+   CALL cl_set_comp_entry("p660_04_gzan011,p660_04_gzan012,p660_04_gzan013",TRUE)
+END FUNCTION
+
+################################################################################
+# Descriptions...: 欄位輸入_有條件關
+# Memo...........:
+# Usage..........: CALL azzp660_04_new_set_no_entry(p_n)
+# Input parameter: p_n:資料 列
+# Date & Author..: 2016/05/06 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzp660_04_new_set_no_entry(p_n)
+   DEFINE p_n     LIKE type_t.num10
+
+   CASE g_gzan[p_n].gzan008
+      WHEN 1   #固定值  
+         CALL cl_set_comp_entry("p660_04_gzan011,p660_04_gzan012,p660_04_gzan013",FALSE)
+      WHEN 2   #全域變數 
+         CALL cl_set_comp_entry("p660_04_gzan011,p660_04_gzan012,p660_04_gzan013",FALSE)
+      WHEN 3   #流水號 
+         CALL cl_set_comp_entry("p660_04_gzan011,p660_04_gzan012,p660_04_gzan013",FALSE)
+      WHEN 4   #計算處理  
+         CALL cl_set_comp_entry("p660_04_gzan011,p660_04_gzan012,p660_04_gzan013",FALSE)
+      WHEN 5   #條件給值  
+         CALL cl_set_comp_entry("p660_04_gzan012,p660_04_gzan013",FALSE)
+      WHEN 6   #關聯欄位給值  
+         CALL cl_set_comp_entry("p660_04_gzan011,p660_04_gzan013",FALSE)
+      WHEN 7   #應用元件/校驗  
+         CALL cl_set_comp_entry("p660_04_gzan011,p660_04_gzan012",FALSE)
+      WHEN 8   #紀錄舊系統單號  
+         CALL cl_set_comp_entry("p660_04_gzan009,p660_04_gzan010",FALSE)
+         CALL cl_set_comp_entry("p660_04_gzan011,p660_04_gzan012,p660_04_gzan013",FALSE)
+      WHEN 9   #存放匯入序號  
+         CALL cl_set_comp_entry("p660_04_gzan009,p660_04_gzan010",FALSE)
+         CALL cl_set_comp_entry("p660_04_gzan011,p660_04_gzan012,p660_04_gzan013",FALSE)
+   END CASE
+END FUNCTION
+
+################################################################################
+# Descriptions...: #單身文字顏色初始化
+# Memo...........:
+# Usage..........: CALL azzp660_04_detail_init_color(p_ac)
+# Input parameter: p_ac：資料列
+# Date & Author..: 2016/03/31 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp660_04_detail_init_color(p_ac)
+   DEFINE p_ac     LIKE type_t.num10
+   #單身文字顏色初始化 
+
+   LET g_gzan_color[p_ac].gzan003      = 'black'
+   LET g_gzan_color[p_ac].gzan004      = 'black'
+   LET g_gzan_color[p_ac].gzan004_desc = 'black'
+   LET g_gzan_color[p_ac].gzan005      = 'black'
+   LET g_gzan_color[p_ac].gzan008      = 'black'
+   LET g_gzan_color[p_ac].gzan009      = 'black'
+   LET g_gzan_color[p_ac].gzan010      = 'black'
+   LET g_gzan_color[p_ac].gzan011      = 'black'
+   LET g_gzan_color[p_ac].gzan012      = 'black'
+   LET g_gzan_color[p_ac].gzan013      = 'black'
+   LET g_gzan_color[p_ac].gzan017      = 'black' #160519-00036#1-add
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 改變單身顯示的顏色
+# Memo...........:
+# Usage..........: CALL azzp660_04_detail_color(p_ac)
+# Input parameter: p_ac：資料列
+# Date & Author..: 2016/03/31 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp660_04_detail_color(p_ac)
+   DEFINE p_ac     LIKE type_t.num10
+
+   CALL azzp660_04_detail_init_color(p_ac)
+
+   IF g_gzan[p_ac].gzan005 = 'Y' THEN
+      LET g_gzan_color[p_ac].gzan003      = 'red'
+      LET g_gzan_color[p_ac].gzan004      = 'red'
+      LET g_gzan_color[p_ac].gzan004_desc = 'red'
+      LET g_gzan_color[p_ac].gzan005      = 'red'
+      LET g_gzan_color[p_ac].gzan008      = 'red'
+      LET g_gzan_color[p_ac].gzan009      = 'red'
+      LET g_gzan_color[p_ac].gzan010      = 'red'
+      LET g_gzan_color[p_ac].gzan011      = 'red'
+      LET g_gzan_color[p_ac].gzan012      = 'red'
+      LET g_gzan_color[p_ac].gzan013      = 'red'
+      LET g_gzan_color[p_ac].gzan017      = 'red' #160519-00036#1-add
+   END IF
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取得欄位的提示訊息
+# Memo...........:
+# Usage..........: CALL azzp660_04_get_field_message(p_gzan004,p_gzan008,p_prog,p_spec_ver,p_dzaf010,p_gzan017)
+#                  RETURNING r_str 
+# Input parameter: p_gzan004:欄位代號
+#                : p_gzan017:限制SCC選項  (#160519-00036#1)
+# Return code....: r_str:訊息 
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2016/04/13 By ming
+# Modify.........: 2016/05/25 By dorislai add-p_gzan017(#160519-00036#1)
+# Modify.........: 160531-00026#1 by whitney add p_gzan008
+################################################################################
+PRIVATE FUNCTION azzp660_04_get_field_message(p_gzan004,p_gzan008,p_prog,p_spec_ver,p_dzaf010,p_gzan017)
+   DEFINE p_gzan004     LIKE gzan_t.gzan004
+   DEFINE p_gzan008     LIKE gzan_t.gzan008  #160531-00026#1
+   DEFINE p_prog        LIKE gzzz_t.gzzz002
+   DEFINE p_spec_ver    STRING
+   DEFINE p_dzaf010     LIKE dzaf_t.dzaf010
+   DEFINE p_gzan017     LIKE gzan_t.gzan017 #160519-00036#1-add
+   DEFINE r_str         STRING
+
+   DEFINE l_dzep010     LIKE dzep_t.dzep010     #資料控件  
+   DEFINE l_dzep011     LIKE dzep_t.dzep011     #系統分類碼(SCC) 
+   DEFINE l_sql         STRING
+   DEFINE l_str         STRING
+   DEFINE l_gzcb002     LIKE gzcb_t.gzcb002
+   DEFINE l_gzcbl004    LIKE gzcbl_t.gzcbl004
+
+   DEFINE l_dzeb007     LIKE dzeb_t.dzeb007     #資料型態  
+   DEFINE l_dzeb008     LIKE dzeb_t.dzeb008     #資料長度  
+   
+   DEFINE l_dzac015     LIKE dzac_t.dzac015
+   DEFINE l_dzac016     LIKE dzac_t.dzac016
+   DEFINE l_dzac020     LIKE dzac_t.dzac020
+   DEFINE l_dzac021     LIKE dzac_t.dzac021
+   DEFINE l_gzan012     LIKE gzan_t.gzan012
+   DEFINE l_operator    LIKE dzac_t.dzac020
+   
+   DEFINE l_gzcbl002    LIKE gzcbl_t.gzcbl002  #160531-00026#1
+
+   LET r_str = ''
+   LET l_str = '' 
+   
+   LET l_sql = "SELECT dzac015,dzac016,dzac020,dzac021 ",
+               "  FROM dzac_t INNER JOIN dzaa_t ON dzaa001 = dzac001 ",
+               "                               AND dzaa003 = dzac003 ",
+               "                               AND dzaa004 = dzac004 ",
+               "                               AND dzaa006 = dzac012 ",
+               " WHERE dzaa001  = '",p_prog,"' ",
+               "   AND dzaa002  = '",p_spec_ver,"' ",
+               "   AND dzaa005  = '1' ",
+               "   AND dzaa009  = '",p_dzaf010,"' ",
+               "   AND dzaastus = 'Y' ",
+               "   AND dzac002  = '",p_gzan004,"' "
+   PREPARE azzp660_04_get_dzac_prep FROM l_sql
+   DECLARE azzp660_04_get_dzac_curs CURSOR FOR azzp660_04_get_dzac_prep
+
+   FOREACH azzp660_04_get_dzac_curs INTO l_dzac015,l_dzac016,l_dzac020,l_dzac021
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = 'foreach'
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      EXIT FOREACH
+   END FOREACH
+
+   SELECT dzep010,dzep011 INTO l_dzep010,l_dzep011
+     FROM dzep_t
+    WHERE dzep002 = p_gzan004
+
+   #資料型態：
+   LET l_str = cl_getmsg("azz-01019",g_lang)       
+
+   LET l_dzeb007 = ''
+   LET l_dzeb008 = '' 
+   SELECT dzeb007,dzeb008 INTO l_dzeb007,l_dzeb008
+     FROM dzeb_t
+    WHERE dzeb002 = p_gzan004
+   
+   LET l_str = l_str CLIPPED,l_dzeb007
+   IF NOT cl_null(l_dzeb008) THEN
+      LET l_str = l_str CLIPPED,"(",l_dzeb008,")"
+   END IF
+   
+   IF l_dzeb007 = "number" THEN
+      LET l_str = l_str CLIPPED,"\n",cl_getmsg("azz-00813",g_lang),"："     #數字   
+      IF NOT cl_null(l_dzac016) THEN
+         LET l_operator = l_dzac021
+         CASE
+            WHEN l_dzac021 = "<"
+               LET l_operator = ">"
+            WHEN l_dzac021 = "<="
+               LET l_operator = ">="
+            WHEN l_dzac021 = ">"
+               LET l_operator = "<"
+            WHEN l_dzac021 = ">="
+               LET l_operator = "<="
+         END CASE
+         LET l_str = l_str CLIPPED,l_dzac016,l_operator
+      END IF
+      LET l_str = l_str CLIPPED,"x"
+      IF NOT cl_null(l_dzac015) THEN
+         LET l_str = l_str CLIPPED,l_dzac020,l_dzac015
+      END IF
+   END IF
+   
+   CASE l_dzep010
+      WHEN '01'     #ButtonEdit  
+
+      WHEN '02'     #CheckBox  
+         #只會有Y跟N 
+         #可輸入Y/N
+         LET l_str = l_str CLIPPED,"\n",cl_getmsg("azz-01020",g_lang)
+
+      WHEN '03'     #ComboBox  
+         #要去找azzi600的SCC資料來顯示說明   
+         #160519-00036#1-mod-(S)
+#         LET l_sql = "SELECT gzcb002,gzcbl004 ",
+#                     "  FROM gzcb_t LEFT JOIN gzcbl_t ON gzcbl001 = gzcb001 ",
+#                     "                               AND gzcbl002 = gzcb002",
+#                     "                               AND gzcbl003 = '",g_dlang,"' ",
+#                     " WHERE gzcb001 = '",l_dzep011,"' ",  
+#                     " ORDER BY gzcb012 "
+         LET l_sql = "SELECT gzcb002,gzcbl004 ",
+                     "  FROM gzcb_t LEFT JOIN gzcbl_t ON gzcbl001 = gzcb001 ",
+                     "                               AND gzcbl002 = gzcb002",
+                     "                               AND gzcbl003 = '",g_dlang,"' ",
+                     " WHERE gzcb001 = '",l_dzep011,"' "
+         IF NOT cl_null(p_gzan017) THEN
+            LET p_gzan017 = cl_replace_str(p_gzan017,"'","")    #排除user輸入'1','2','3'的狀況 EX:'1','2','3'→1,2,3
+            LET p_gzan017 = cl_replace_str(p_gzan017," ","")    #把空白拿掉
+            LET p_gzan017 = cl_replace_str(p_gzan017,",","','") #將1,2,3加入'  EX:1,2,3→ 1','2','3
+            LET l_sql = l_sql CLIPPED," AND gzcb002 IN ('",p_gzan017,"')"
+         END IF
+         LET l_sql = l_sql CLIPPED ," ORDER BY gzcb012 "
+         #160519-00036#1-mod-(E)
+         PREPARE azzp660_04_get_scc_explain_prep FROM l_sql
+         DECLARE azzp660_04_get_scc_explain_curs CURSOR FOR azzp660_04_get_scc_explain_prep
+       
+         #SCC可輸入選項：
+         LET l_str = l_str CLIPPED,"\n",cl_getmsg("azz-01021",g_lang),"\n"
+         IF NOT cl_null(l_dzep011) THEN
+            FOREACH azzp660_04_get_scc_explain_curs INTO l_gzcb002,l_gzcbl004
+               LET l_str = l_str CLIPPED,l_gzcb002,".",l_gzcbl004,"\n"
+            END FOREACH 
+         END IF
+         LET r_str = l_str
+
+      WHEN '04'     #DateEdit  
+         
+      WHEN '05'     #Edit  
+         
+      WHEN '06'     #FFImage  
+      WHEN '07'     #FFLabel  
+      WHEN '08'     #ProgressBar  
+      WHEN '09'     #RadioGroup  
+      WHEN '10'     #Slider  
+      WHEN '11'     #SpinEdit  
+      WHEN '12'     #TextEdit  
+      WHEN '13'     #TimeEdit  
+      WHEN '14'     #Field  
+      WHEN '15'     #WebComponent  
+      WHEN '28'     #Phantom  
+   END CASE 
+   
+   LET l_gzan012 = ''
+   SELECT gzan012 INTO l_gzan012
+     FROM gzan_t
+    WHERE gzan001 = g_gzal.gzal001
+      AND gzan002 = g_gzal.gzal002
+      AND gzan004 = p_gzan004
+   IF NOT cl_null(l_gzan012) THEN
+      LET l_str = l_str CLIPPED,"\n",cl_getmsg("azz-01022",g_lang),"\n"
+      LET l_str = l_str CLIPPED,l_gzan012
+   END IF
+   
+   #160531-00026#1-s
+   IF p_gzan008 = '2' THEN
+      LET l_gzcbl004 = ''
+      SELECT gzcbl004 INTO l_gzcbl004
+        FROM gzcbl_t
+       WHERE gzcbl001 = '219'
+         AND gzcbl002 = '2'
+         AND gzcbl003 = g_lang
+      LET l_str = l_str CLIPPED,"\n",l_gzcbl004
+      LET l_gzcbl002 = ''
+      LET l_gzcbl004 = ''
+      LET l_sql = " SELECT gzcbl002,gzcbl004",
+                    " FROM gzcbl_t",
+                   " WHERE gzcbl001='210' AND gzcbl003='",g_lang,"'",
+                   " ORDER BY gzcbl002"
+      PREPARE azzp660_04_scc_prep FROM l_sql
+      DECLARE azzp660_04_scc_curs CURSOR FOR azzp660_04_scc_prep
+      FOREACH azzp660_04_scc_curs INTO l_gzcbl002,l_gzcbl004
+         CASE l_gzcbl002
+            WHEN '1'
+               LET l_gzcbl004 = cl_replace_str(l_gzcbl004,':TODAY','g_today')
+            WHEN '2'
+               LET l_gzcbl004 = cl_replace_str(l_gzcbl004,':SITE','g_site')
+            WHEN '3'
+               LET l_gzcbl004 = cl_replace_str(l_gzcbl004,':LANG','g_lang')
+            WHEN '4'
+               LET l_gzcbl004 = cl_replace_str(l_gzcbl004,':DLANG','g_dlang')
+            WHEN '5'
+               LET l_gzcbl004 = cl_replace_str(l_gzcbl004,':ENT','g_enterprise')
+            WHEN '6'
+               LET l_gzcbl004 = cl_replace_str(l_gzcbl004,':LEGAL','g_legal')
+            WHEN '7'
+               LET l_gzcbl004 = cl_replace_str(l_gzcbl004,':USER','g_user')
+            WHEN '8'
+               LET l_gzcbl004 = cl_replace_str(l_gzcbl004,':DEPT','g_dept')
+         END CASE
+         LET l_str = l_str CLIPPED,"\n",l_gzcbl002,"：",l_gzcbl004
+      END FOREACH
+   END IF
+   #160531-00026#1-e
+   
+   LET r_str = l_str 
+
+   RETURN r_str
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 預設職欄位檢查
+# Memo...........:
+# Usage..........: CALL azzp660_04_gzan010_chk(p_gzan010,p_gzan017)
+#                  RETURNING r_success
+# Input parameter: p_gzan010   預設值
+#                : p_gzan017   限制SCC選項
+# Return code....: r_success   TRUE/FALSE
+# Date & Author..: 2016/05/24 By dorislai (#160519-00036#1)
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp660_04_gzan010_chk(p_gzan010,p_gzan017)
+   DEFINE p_gzan010  LIKE gzan_t.gzan010
+   DEFINE p_gzan017  LIKE gzan_t.gzan017
+   DEFINE r_success  LIKE type_t.num5
+   DEFINE l_n        LIKE type_t.num5
+   DEFINE l_n1       LIKE type_t.num5
+   DEFINE l_str      STRING
+   DEFINE l_gzan017  STRING
+   
+   LET p_gzan010 = cl_replace_str(p_gzan010,"'","") #把'拿掉
+   LET p_gzan010 = cl_replace_str(p_gzan010," ","") #把空白拿掉
+   
+   LET l_gzan017 = p_gzan017
+   
+   LET r_success = FALSE #有比對到為TRUE / 沒比對到FALSE
+   LET l_n  = 1          #紀錄指定擷取的起始位子
+   LET l_n1 = 0          #紀錄指定擷取的截止位子
+   WHILE TRUE
+      LET l_n1 = l_gzan017.getIndexOf(',',l_n)     #取,位子
+      LET l_str = l_gzan017.subString(l_n,l_n1-1)  #擷取內容 EX:1,2,3，會開始分別擷取1;再來是2；再來是3
+      #若欄位"預設值"有等於欄位"限制SCC選項"，則表示預設值的檢查通過
+      IF p_gzan010 = l_str THEN
+         LET r_success = TRUE
+         EXIT WHILE
+      END IF
+      #l_n1=0，表示1:已經抓到最後一個了          EX → 1:欄位輸入 2,3,4 抓完3後，後面的4沒有','可以辨別位置，所以l_n會為0
+      #            2:限制SCC選項只有輸入一個值   EX → 2:欄位輸入 2     沒有','辨識位子，所以l_n會為0
+      IF l_n1 = 0 THEN
+         #抓取最後一個的值 or 抓欄位中唯一的一個值
+         IF l_gzan017.getLength() > 0 THEN
+            LET l_str = l_gzan017.subString(l_n,l_gzan017.getLength())
+         END IF
+         #若欄位"預設值"有等於欄位"限制SCC選項"，則表示預設值的檢查通過
+         IF p_gzan010 = l_str THEN
+            LET r_success = TRUE
+         END IF
+         EXIT WHILE
+      ELSE
+         LET l_n = l_n1 + 1 #從記錄到','的位子+1，以便下次找尋','的位子
+      END IF
+   END WHILE
+   
+   RETURN r_success
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取得程式相關資訊
+# Memo...........:
+# Usage..........: CALL azzp660_04_get_dzaf()
+#                  RETURNING r_gzzz002,
+#                            r_source_spec_ver,
+#                            r_dzaf010
+# Input parameter: 
+# Return code....: r_gzzz002          建構版號
+#                : r_source_spec_ver  規格版號
+#                : r_dzaf010          識別標示
+# Date & Author..: 2016/05/30 By (160519-00036#1)
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzp660_04_get_dzaf()
+   DEFINE l_dzaf            RECORD
+                               dzaf001     LIKE dzaf_t.dzaf001,
+                               dzaf002     LIKE dzaf_t.dzaf002,
+                               dzaf003     LIKE dzaf_t.dzaf003,
+                               dzaf004     LIKE dzaf_t.dzaf004,
+                               dzaf005     LIKE dzaf_t.dzaf005,
+                               dzaf006     LIKE dzaf_t.dzaf006,
+                               dzaf007     LIKE dzaf_t.dzaf007,
+                               dzaf008     LIKE dzaf_t.dzaf008,
+                               dzaf009     LIKE dzaf_t.dzaf009,
+                               dzaf010     LIKE dzaf_t.dzaf010
+                            END RECORD
+   DEFINE l_module          LIKE gzzo_t.gzzo001     #模組代號 
+   DEFINE l_err_msg         STRING
+   DEFINE r_gzzz002         LIKE gzzz_t.gzzz002     #程式編號  
+   DEFINE r_source_spec_ver STRING
+   DEFINE r_dzaf010         LIKE dzaf_t.dzaf010  
+  
+   #取得作業的程式編號 
+   LET r_gzzz002 = ''
+   CALL s_azzp660_get_prog_code(g_gzal.gzal001) RETURNING r_gzzz002
+  
+   LET l_module = s_azzp660_find_module(r_gzzz002,"M")
+  
+   #取得建構版次 
+   CALL s_azzp660_get_curr_ver_info(r_gzzz002,"M",l_module)
+        RETURNING l_dzaf.*,l_err_msg
+   IF cl_null(l_err_msg) THEN
+      LET r_source_spec_ver = l_dzaf.dzaf003
+      LET r_source_spec_ver = r_source_spec_ver.trim()
+      LET r_dzaf010 = l_dzaf.dzaf010
+  END IF
+  
+  RETURN r_gzzz002,r_source_spec_ver,r_dzaf010
+END FUNCTION
+
+################################################################################
+# Descriptions...: 依照有使用/被使用的參數重排順序
+# Memo...........:
+# Usage..........: CALL azzp660_04_upd_gzan020(p_gzan001,p_gzan002,p_gzan003)
+# Input parameter: 
+# Return code....: 
+# Date & Author..: #160910-00014#1 By whitney
+# Modify.........: #161019-00025#1 
+################################################################################
+PRIVATE FUNCTION azzp660_04_upd_gzan020(p_gzan001,p_gzan002,p_gzan003)
+DEFINE p_gzan001    LIKE gzan_t.gzan001
+DEFINE p_gzan002    LIKE gzan_t.gzan002
+DEFINE p_gzan003    LIKE gzan_t.gzan003
+DEFINE l_n          LIKE type_t.num5
+DEFINE l_gzan020    LIKE gzan_t.gzan020
+DEFINE l_field      LIKE gzan_t.gzan004
+DEFINE l_n_order    LIKE gzan_t.gzan020
+DEFINE l_o_order    LIKE gzan_t.gzan020
+DEFINE l_n_order_o  LIKE gzan_t.gzan020
+DEFINE l_o_order_o  LIKE gzan_t.gzan020
+DEFINE l_gzan004    LIKE gzan_t.gzan004
+   #161128-00013#7-s-add
+   #邏輯說明：1.存tmp  1-1.用遞迴方式，抓取此欄位的上一個需先填寫的欄位，順序先以1.2.3...一直往下存
+   #         2.gzan_t 2-1.將剛剛存的tmp，從最大的n_order開始抓取，順序填寫為1.2.3....，
+   #                      假設tmp存的順序是1.2.3.4，存至table的順序就會是否1.2.3.4
+   #         EX:    1         2       3                3         2         1
+   #         tep: xcca005->xcca004->xccacomp   gzan_t:xcca005->xcca004->xccacomp 
+   #                     ->xccald ->xccacomp                 ->xccald ->xccacomp
+   #             若 xcca110的上一層是否xcca005，
+   #  會變成  EX:   1         2        3        4              4         3         2         1
+   #         tep: xcca110->xcca005->xcca004->xccacomp   gzan_t:xcca110->xcca005->xcca004->xccacomp 
+   #                              ->xccald ->xccacomp                          ->xccald ->xccacomp
+   #161128-00013#7-e-add
+   #未設定
+   UPDATE gzan_t SET gzan020 = 0
+    WHERE gzan001 = p_gzan001
+      AND gzan002 = p_gzan002
+      AND gzan003 = p_gzan003
+
+   #固定值、全域變數、日期時間、舊系統單號、匯入序號
+   UPDATE gzan_t SET gzan020 = 1
+    WHERE gzan001 = p_gzan001
+      AND gzan002 = p_gzan002
+      AND gzan003 = p_gzan003
+      AND ((gzan010 IS NOT NULL AND (gzan008 = '1' OR gzan008 = '2' OR gzan008 IS NULL))
+       OR (gzan013 = 'cl_get_current')
+       OR (gzan008 IN ('8','9')))
+   
+   #計算處理、條件給值、關聯欄位給值、應用元件/校驗
+   UPDATE gzan_t SET gzan020 = 2
+    WHERE gzan001 = p_gzan001
+      AND gzan002 = p_gzan002
+      AND gzan003 = p_gzan003
+      AND gzan008 IN ('4','5','6','7')
+      AND gzan020 <> 1
+   
+   #流水號
+   UPDATE gzan_t SET gzan020 = 99
+    WHERE gzan001 = p_gzan001
+      AND gzan002 = p_gzan002
+      AND gzan003 = p_gzan003
+      AND gzan008 = 3
+   
+   DELETE FROM p660_04_t1
+   
+   DECLARE azzp660_04_upd_gzan020_cs CURSOR FOR
+   SELECT gzan004 FROM gzan_t
+    WHERE gzan001 = p_gzan001
+      AND gzan002 = p_gzan002
+      AND gzan003 = p_gzan003
+      AND gzan020 = 2
+   FOREACH azzp660_04_upd_gzan020_cs INTO l_gzan004
+      #161128-00013#7-s-mod
+      #CALL azzp660_04_ins_p660_04_t1(p_gzan001,p_gzan002,p_gzan003,l_gzan004,l_gzan004,1)
+      LET l_n = 0
+      SELECT COUNT(1) INTO l_n FROM p660_04_t1
+       WHERE s_field = l_gzan004
+      IF l_n = 0 THEN
+         CALL azzp660_04_ins_p660_04_t1(p_gzan001,p_gzan002,p_gzan003,l_gzan004,l_gzan004,1)
+      END IF
+      #161128-00013#7-e-mod
+   END FOREACH
+   
+   LET l_n = 0
+   SELECT COUNT(1) INTO l_n FROM p660_04_t1
+   IF l_n = 0 THEN
+      RETURN
+   END IF
+   
+   LET l_gzan020 = ''
+   DECLARE azzp660_04_upd_gzan020_c CURSOR FOR
+      SELECT s_field,n_order,o_order FROM p660_04_t1
+       ORDER BY n_order DESC,o_order
+   #161128-00013#7-s-add
+   LET l_n_order_o = ''
+   LET l_o_order_o = ''
+   #161128-00013#7-e-add
+   FOREACH azzp660_04_upd_gzan020_c INTO l_field,l_n_order,l_o_order
+      IF cl_null(l_n_order_o) THEN LET l_n_order_o = l_n_order END IF
+      IF cl_null(l_o_order_o) THEN LET l_o_order_o = l_o_order END IF
+      
+      IF cl_null(l_gzan020) THEN
+         LET l_gzan020 = l_o_order
+         CONTINUE FOREACH
+      END IF
+      
+      IF l_n_order_o = l_n_order AND
+         l_o_order_o = l_o_order THEN
+         IF l_o_order = l_gzan020 THEN
+            CONTINUE FOREACH
+         ELSE
+            UPDATE gzan_t SET gzan020 = l_gzan020
+             WHERE gzan001 = p_gzan001
+               AND gzan002 = p_gzan002
+               AND gzan003 = p_gzan003
+               AND gzan004 = l_field
+            CONTINUE FOREACH
+         END IF
+      END IF
+      
+      LET l_gzan020 = l_gzan020 + 1
+      UPDATE gzan_t SET gzan020 = l_gzan020
+       WHERE gzan001 = p_gzan001
+         AND gzan002 = p_gzan002
+         AND gzan003 = p_gzan003
+         AND gzan004 = l_field
+      #161128-00013#7-s-add
+      IF l_n_order_o <> l_n_order THEN 
+         LET l_n_order_o = l_n_order
+      END IF
+      #161128-00013#7-e-add
+   END FOREACH
+      
+END FUNCTION
+
+################################################################################
+# Descriptions...: 建立Temp Table
+# Memo...........:
+# Usage..........: CALL azzp660_04_create_temp_table()
+# Date & Author..: 160910-00014 By whitney
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzp660_04_create_temp_table()
+
+   CREATE TEMP TABLE p660_04_t1( 
+      f_field         VARCHAR(20),          #使用欄位
+      s_field         VARCHAR(20),          #被使用參數關聯欄位
+      n_order         SMALLINT,          #新順序
+      o_order         SMALLINT     #舊順序
+   )
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 移除Temp Table
+# Memo...........:
+# Usage..........: CALL azzp660_04_drop_temp_table()
+# Date & Author..: 160910-00014 By whitney
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzp660_04_drop_temp_table()
+   DROP TABLE p660_04_t1
+END FUNCTION
+
+################################################################################
+# Descriptions...: 
+# Memo...........:
+# Usage..........: CALL azzp660_04_ins_p660_04_t1(p_gzap001,p_gzap002,p_gzap003,p_gzap004,p_gzap006,p_order)
+# Input parameter: 
+# Return code....: 
+# Date & Author..: #160910-00014#1 By whitney
+# Modify.........: #161019-00025#1 
+################################################################################
+PRIVATE FUNCTION azzp660_04_ins_p660_04_t1(p_gzap001,p_gzap002,p_gzap003,p_gzap004,p_gzap006,p_order)
+DEFINE p_gzap001    LIKE gzap_t.gzap001
+DEFINE p_gzap002    LIKE gzap_t.gzap002
+DEFINE p_gzap003    LIKE gzap_t.gzap003
+DEFINE p_gzap004    LIKE gzap_t.gzap004
+DEFINE p_gzap006    LIKE gzap_t.gzap006
+DEFINE p_order      LIKE gzan_t.gzan020
+DEFINE l_n          LIKE type_t.num5
+DEFINE l_n1         LIKE type_t.num5    #161128-00013#7-add
+DEFINE l_gzan010    LIKE gzan_t.gzan010
+DEFINE l_gzan011    LIKE gzan_t.gzan011
+DEFINE l_gzan012    LIKE gzan_t.gzan012
+DEFINE l_gzan020    LIKE gzan_t.gzan020
+DEFINE l_sql0       STRING
+DEFINE l_sql1       STRING
+DEFINE l_sql2       STRING
+DEFINE l_ac         LIKE type_t.num5
+DEFINE l_n_order    LIKE gzan_t.gzan020 #161128-00013#7-add
+DEFINE l_gzap  DYNAMIC ARRAY OF RECORD
+    gzap006    LIKE gzap_t.gzap006
+           END RECORD
+
+   LET l_n = 0
+   SELECT COUNT(1) INTO l_n FROM p660_04_t1
+    WHERE s_field = p_gzap006
+   #161128-00013#7-s-mod
+   #IF l_n > 0 THEN
+   #   LET l_n = 0
+   #   SELECT COUNT(1) INTO l_n FROM p660_04_t1
+   #    WHERE f_field = p_gzap004 AND s_field = p_gzap006
+   #   IF l_n = 0 THEN
+   #      UPDATE p660_04_t1 SET f_field = p_gzap004 ,
+   #                            n_order = p_order
+   #       WHERE s_field = p_gzap006
+   #      RETURN
+   #   ELSE
+   #      RETURN
+   #   END IF
+   #END IF
+   IF l_n > 0 THEN
+      #避免兩個變數，互為輸入值
+      IF p_gzap004 <> p_gzap006 THEN
+         LET l_n1 = 0
+         SELECT COUNT(1) INTO l_n1 FROM p660_04_t1
+          WHERE (f_field=p_gzap004 AND s_field=p_gzap006) OR (f_field=p_gzap006 AND s_field=p_gzap004)
+         IF l_n1 > 0 THEN
+            RETURN
+         END IF
+      END IF
+      #抓取在TMP的階層
+      LET l_n_order = ''
+      SELECT n_order INTO l_n_order FROM p660_04_t1
+       WHERE s_field = p_gzap006
+      #階層有比較後面，才替換，否則RETURN
+      IF l_n_order < p_order THEN
+         UPDATE p660_04_t1 SET f_field = p_gzap004 ,
+                               n_order = p_order
+          WHERE s_field = p_gzap006
+      ELSE
+         RETURN
+      END IF
+   END IF
+   #161128-00013#7-e-mod
+   LET l_gzan010 = ''
+   LET l_gzan011 = ''
+   LET l_gzan012 = ''
+   LET l_gzan020 = 0
+   SELECT gzan010,gzan011,gzan012,gzan020
+     INTO l_gzan010,l_gzan011,l_gzan012,l_gzan020
+     FROM gzan_t
+    WHERE gzan001 = p_gzap001
+      AND gzan002 = p_gzap002
+      AND gzan003 = p_gzap003
+      AND gzan004 = p_gzap006
+   IF l_n = 0 THEN #161128-00013#7-add
+      IF l_gzan020 = 2 THEN
+         INSERT INTO p660_04_t1 VALUES(p_gzap004,p_gzap006,p_order,l_gzan020)
+      ELSE
+         RETURN
+      END IF
+   END IF #161128-00013#7-add
+   
+   LET p_order = p_order + 1
+   LET p_gzap004 = p_gzap006
+   LET l_sql0 = l_gzan010
+   LET l_sql1 = l_gzan011
+   LET l_sql2 = l_gzan012
+   
+   LET l_ac = 1
+   DECLARE azzp660_04_ins_p660_04_t1_c1 CURSOR FOR
+      SELECT dzeb002 FROM dzeb_t WHERE dzeb001 = p_gzap003
+   FOREACH azzp660_04_ins_p660_04_t1_c1 INTO l_gzap[l_ac].gzap006
+      LET l_ac = l_ac + 1
+   END FOREACH
+   CALL l_gzap.deleteElement(l_ac)
+   
+   FOR l_ac = 1 TO l_gzap.getLength()
+      #161128-00013#7-s-add
+      IF p_gzap004 = l_gzap[l_ac].gzap006 THEN 
+         CONTINUE FOR 
+      END IF
+      #161128-00013#7-e-add
+      #計算處理
+      IF l_sql0.getIndexOf(l_gzap[l_ac].gzap006,1) <> 0 THEN
+         CALL azzp660_04_ins_p660_04_t1(p_gzap001,p_gzap002,p_gzap003,p_gzap004,l_gzap[l_ac].gzap006,p_order)
+         CONTINUE FOR
+      END IF
+      
+      #條件給值
+      IF l_sql1.getIndexOf(l_gzap[l_ac].gzap006,1) <> 0 THEN
+         CALL azzp660_04_ins_p660_04_t1(p_gzap001,p_gzap002,p_gzap003,p_gzap004,l_gzap[l_ac].gzap006,p_order)
+         CONTINUE FOR
+      END IF
+      
+      #關聯欄位給值
+      IF l_sql2.getIndexOf(l_gzap[l_ac].gzap006,1) <> 0 THEN
+         CALL azzp660_04_ins_p660_04_t1(p_gzap001,p_gzap002,p_gzap003,p_gzap004,l_gzap[l_ac].gzap006,p_order)
+         CONTINUE FOR
+      END IF
+      
+      #應用元件/校驗
+      LET l_n = 0
+      SELECT COUNT(1) INTO l_n FROM gzap_t
+       WHERE gzap001 = p_gzap001
+         AND gzap002 = p_gzap002
+         AND gzap003 = p_gzap003
+         AND gzap004 = p_gzap004
+         AND gzap006 = l_gzap[l_ac].gzap006
+      IF l_n > 0 THEN
+         CALL azzp660_04_ins_p660_04_t1(p_gzap001,p_gzap002,p_gzap003,p_gzap004,l_gzap[l_ac].gzap006,p_order)
+      END IF
+      
+   END FOR
+
+END FUNCTION
+
+ 
+{</section>}
+ 

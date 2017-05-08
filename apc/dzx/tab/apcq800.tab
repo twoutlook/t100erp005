@@ -1,0 +1,57 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apcq800" module="apc" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="01251" crtdt="2015-11-17 15:05:19" modid="01251" moddt="2015-11-17 18:27:30" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="錢箱金額超限查詢">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="rtjasite,rtja036,rtja037,pcab003,check"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),rtjasite,rtjasite_desc(chr500),rtja036,rtja038,rtja037,pcab003,rtja031,pcau010,rtjf031,l_rtjf031over(num20_6)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),rtjasite(b_rtjasite),rtjasite_desc(b_rtjasite_desc),rtja036(b_rtja036),rtja038(b_rtja038),rtja037(b_rtja037),pcab003(b_pcab003),rtja031(b_rtja031),pcau010(b_pcau010),rtjf031(b_rtjf031),l_rtjf031over(l_rtjf031over)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="apc" filename="apcq800" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="rtjasite,rtja036,rtja038,rtja037,pcab003,rtja031,pcau010,rtjf031" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="rtjasite(b_rtjasite),rtja036(b_rtja036),rtja038(b_rtja038),rtja037(b_rtja037),pcab003(b_pcab003),rtja031(b_rtja031),pcau010(b_pcau010),rtjf031(b_rtjf031)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="rtjasite">
+        <after>
+          <check chkid="v_ooed004" id="isExist"/>
+          <reference field="rtjasite_desc" ref_field="rtjasite" map_field="rtjaent,rtjasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="rtjasite_desc"/>
+      <column id="rtja036"/>
+      <column id="rtja038"/>
+      <column id="rtja037"/>
+      <column id="pcab003"/>
+      <column id="rtja031" type="S" default="0"/>
+      <column id="pcau010" type="S" default="0"/>
+      <column id="rtjf031" type="S" default="0"/>
+      <column id="l_rtjf031over"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="rtja_t" page="1" linked="" pk="rtjadocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,rtjasite,&apos;&apos;,rtja036,rtja038,rtja037,&apos;&apos;,rtja031,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM rtja_t WHERE rtjaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

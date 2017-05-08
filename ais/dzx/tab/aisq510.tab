@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisq510" module="ais" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="05016" crtdt="2016-01-14 14:11:51" modid="05016" moddt="2016-01-15 12:00:57" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="電子發票匯出紀錄查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isav001,isav001_desc(chr500),isav003,isav007,isavseq,isav009(timestamp),isav008,isav004,isav005(timestamp),isav010,isav010_desc(chr500),isav011,isav012,isav013,isavcomp,isavcomp_desc(chr500),isav002"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isav001(b_isav001),isav001_desc(isav001_desc),isav003(b_isav003),isav007(b_isav007),isavseq(b_isavseq),isav009(b_isav009),isav008(b_isav008),isav004(b_isav004),isav005(b_isav005),isav010(b_isav010),isav010_desc(isav010_desc),isav011(b_isav011),isav012(b_isav012),isav013(b_isav013),isavcomp(b_isavcomp),isavcomp_desc(isavcomp_desc),isav002(b_isav002)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ais" filename="aisq510" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="isav001,isav007,isavseq,isav009,isav008,isav004,isav005,isav010,isav011,isav012,isav013,isav002" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="isav001(b_isav001),isav007(b_isav007),isav008(b_isav008),isav004(b_isav004),isav010(b_isav010),isav011(b_isav011),isav012(b_isav012),isav013(b_isav013),isav002(b_isav002)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="isav001">
+        <after/>
+      </column>
+      <column id="isav001_desc"/>
+      <column id="isav003"/>
+      <column id="isav007"/>
+      <column id="isavseq" type="S" default="0"/>
+      <column id="isav009"/>
+      <column id="isav008"/>
+      <column id="isav004"/>
+      <column id="isav005"/>
+      <column id="isav010"/>
+      <column id="isav010_desc"/>
+      <column id="isav011"/>
+      <column id="isav012"/>
+      <column id="isav013"/>
+      <column id="isavcomp">
+        <after/>
+      </column>
+      <column id="isavcomp_desc"/>
+      <column id="isav002"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="isav_t" page="1" linked="" pk="isav001,isav002,isav003,isav004,isav005">
+      <sql id="b_fill_sql" query="SELECT isav001,&apos;&apos;,isav003,isav007,isavseq,isav009,isav008,isav004,isav005,isav010,&apos;&apos;,isav011,isav012,isav013,isavcomp,&apos;&apos;,isav002 FROM isav_t WHERE isavent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

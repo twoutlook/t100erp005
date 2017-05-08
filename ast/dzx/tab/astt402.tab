@@ -1,0 +1,165 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astt402" module="ast" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="06189" crtdt="2015-04-22 20:43:25" modid="07142" moddt="2016-06-21 16:26:00" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="供應商人員合約異動申請作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="steqsite,steqsite_desc(chr80),steqdocdt,steqdocno,stequnit,stequnit_desc(chr80),steq000,steq001,steq002,steq015,steq003,steq003_desc(chr500),steq004,steq004_desc(chr80),steq005,steq006,steq007,steq008,steq009,steq010,steq011,steq012,steq013,steq013_desc(chr80),steqacti,steq014,steqstus,steqownid,steqownid_desc(chr80),steqowndp,steqowndp_desc(chr80),steqcrtid,steqcrtid_desc(chr80),steqcrtdp,steqcrtdp_desc(chr80),steqcrtdt,steqmodid,steqmodid_desc(chr80),steqmoddt,steqcnfid,steqcnfid_desc(chr80),steqcnfdt"/>
+      <var id="bs_field" value="stequnit,stequnit_desc(chr80),steqsite,steqsite_desc(chr80),steqdocdt,steqdocno,steq000,steq001,steq002,steq003,steq004,steq004_desc(chr80),steq005,steq006,steq007,steq008,steq009,steq010,steq011,steq012,steq013,steq013_desc(chr80),steqacti,steq014" pk="steqdocno" order=""/>
+      <bs_reference field="stequnit_desc" ref_field="stequnit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="steqsite_desc" ref_field="steqsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="steq004_desc" ref_field="steq004" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+      <bs_reference field="steq013_desc" ref_field="steq013" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="astt402" method="dialog">
+    <section id="input">
+      <input id="head" field="steqsite,steqdocdt,steqdocno,stequnit,steq000,steq001,steq002,steq015,steq003,steq003_desc,steq004,steq005,steq006,steq007,steq008,steq009,steq010,steq011,steq012,steq013,steqacti,steq014,steqstus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="steqsite,steqdocdt,steqdocno,stequnit,steq000,steq001,steq002,steq015,steq003,steq003_desc,steq004,steq005,steq006,steq007,steq008,steq009,steq010,steq011,steq012,steq013,steqacti,steq014,steqstus,steqownid,steqowndp,steqcrtid,steqcrtdp,steqcrtdt,steqmodid,steqmoddt,steqcnfid,steqcnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="steqdocno"/>
+      <set id="head" type="no_entry" field="steqdocno"/>
+    </init>
+    <init id="head">
+      <column id="steqsite">
+        <after>
+          <reference field="steqsite_desc" ref_field="steq_t.steqsite" map_field="steqent,steqsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="steqsite_desc"/>
+      <column id="steqdocdt"/>
+      <column id="steqdocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_steqdocno" state="c"/>
+      </column>
+      <column id="stequnit">
+        <after>
+          <reference field="stequnit_desc" ref_field="steq_t.stequnit" map_field="steqent,stequnit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stequnit_desc"/>
+      <column id="steq000"/>
+      <column id="steq001">
+        <controlp form="q_stfq001" state="c"/>
+      </column>
+      <column id="steq002"/>
+      <column id="steq015"/>
+      <column id="steq003">
+        <after>
+          <check chkid="v_mhae001" id="isExist"/>
+        </after>
+        <controlp form="q_mhae001" state="i"/>
+        <controlp form="q_mhae001" state="c"/>
+      </column>
+      <column id="steq003_desc"/>
+      <column id="steq004">
+        <after>
+          <check chkid="v_pmaa001_1" id="isExist"/>
+          <reference field="steq004_desc" ref_field="steq_t.steq004" map_field="steqent,steq004" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_1" state="i"/>
+        <controlp form="q_pmaa001_1" state="c"/>
+      </column>
+      <column id="steq004_desc"/>
+      <column id="steq005">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="steq006" type="S" default="0"/>
+      <column id="steq007"/>
+      <column id="steq008" type="S" default="0"/>
+      <column id="steq009" type="S" default="0"/>
+      <column id="steq010"/>
+      <column id="steq011" type="S" default="0"/>
+      <column id="steq012" type="S" default="0"/>
+      <column id="steq013">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="steq013_desc" ref_field="steq_t.steq013" map_field="steqent,steq013" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_6" state="i"/>
+        <controlp form="q_ooag001_6" state="c"/>
+      </column>
+      <column id="steq013_desc"/>
+      <column id="steqacti"/>
+      <column id="steq014"/>
+      <column id="steqstus" scc="13">
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="steqownid">
+        <after>
+          <reference field="steqownid_desc" ref_field="steq_t.steqownid" map_field="steqownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="steqownid_desc"/>
+      <column id="steqowndp">
+        <after>
+          <reference field="steqowndp_desc" ref_field="steq_t.steqowndp" map_field="steqowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="steqowndp_desc"/>
+      <column id="steqcrtid">
+        <after>
+          <reference field="steqcrtid_desc" ref_field="steq_t.steqcrtid" map_field="steqcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="steqcrtid_desc"/>
+      <column id="steqcrtdp">
+        <after>
+          <reference field="steqcrtdp_desc" ref_field="steq_t.steqcrtdp" map_field="steqcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="steqcrtdp_desc"/>
+      <column id="steqcrtdt"/>
+      <column id="steqmodid">
+        <after>
+          <reference field="steqmodid_desc" ref_field="steq_t.steqmodid" map_field="steqmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="steqmodid_desc"/>
+      <column id="steqmoddt"/>
+      <column id="steqcnfid">
+        <after>
+          <reference field="steqcnfid_desc" ref_field="steq_t.steqcnfid" map_field="steqcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="steqcnfid_desc"/>
+      <column id="steqcnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="steq_t" pk="steqdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT steqsite,&apos;&apos;,steqdocdt,steqdocno,stequnit,&apos;&apos;,steq000,steq001,steq002,steq015,steq003,&apos;&apos;,steq004,&apos;&apos;,steq005,steq006,steq007,steq008,steq009,steq010,steq011,steq012,steq013,&apos;&apos;,steqacti,steq014,steqstus,steqownid,&apos;&apos;,steqowndp,&apos;&apos;,steqcrtid,&apos;&apos;,steqcrtdp,&apos;&apos;,steqcrtdt,steqmodid,&apos;&apos;,steqmoddt,steqcnfid,&apos;&apos;,steqcnfdt FROM steq_t WHERE steqent= ? AND steqdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT steqdocno FROM steq_t" order="steqdocno"/>
+    </head>
+  </dataset>
+</assembly>
+

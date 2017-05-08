@@ -1,0 +1,181 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aqcm300" module="aqc" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02295" crtdt="2014-12-18 18:13:18" modid="02295" moddt="2014-12-23 11:27:48" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="Xbar-R Chart 數據維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="qcbksite,qcbk001,qcbk002,qcbk000,qcbk005,qcbk003,qcbk004,qcbk006,qcbk007,qcbk008,qcbk009,imaal003,imaal004,qcbk010,qcbk010_desc(chr80),qcbk011,qcbk011_desc(chr80),qcbk022,qcbk023,qcbk012,qcbk013,qcbk014,qcbk015,qcbk016,qcbk017,qcbk018,qcbk019,qcbk020,qcbk021,qcbkstus,qcbkownid,qcbkownid_desc(chr80),qcbkowndp,qcbkowndp_desc(chr80),qcbkcrtid,qcbkcrtid_desc(chr80),qcbkcrtdp,qcbkcrtdp_desc(chr80),qcbkcrtdt,qcbkmodid,qcbkmodid_desc(chr80),qcbkmoddt,qcbkcnfid,qcbkcnfid_desc(chr80),qcbkcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="qcblseq,qcbl009,qcbl003,qcbl004,qcbl005,qcbl006,qcbl007,qcbl008"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="qcbmseq1,qcbm003"/>
+      <var id="bs_field" value="qcbk001,qcbk002,qcbk000,qcbk003,qcbk004,qcbk008,qcbk008_desc(chr80),qcbk008_desc_1(chr80),qcbksite" pk="qcbksite,qcbk001,qcbk002" order=""/>
+      <bs_reference field="qcbk008_desc" ref_field="qcbk008" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+      <bs_reference field="qcbk008_desc_1" ref_field="qcbk008" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aqc" filename="aqcm300" method="dialog">
+    <section id="input">
+      <input id="head" field="qcbksite,qcbk001,qcbk002,qcbk022,qcbk023,qcbkstus"/>
+      <input id="body" page="1" field="qcblseq,qcbl009,qcbl003,qcbl004" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="qcbmseq1,qcbm003" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="qcbksite,qcbk001,qcbk002,qcbk000,qcbk005,qcbk003,qcbk004,qcbk006,qcbk007,qcbk008,qcbk009,imaal003,imaal004,qcbk010,qcbk010_desc,qcbk011,qcbk022,qcbk023,qcbk012,qcbk013,qcbk014,qcbk015,qcbk016,qcbk017,qcbk018,qcbk019,qcbk020,qcbk021,qcbkstus,qcbkownid,qcbkowndp,qcbkcrtid,qcbkcrtdp,qcbkcrtdt,qcbkmodid,qcbkmoddt,qcbkcnfid,qcbkcnfdt"/>
+      <construct id="body" page="1" field="qcblseq,qcbl009,qcbl003,qcbl004,qcbl005,qcbl006,qcbl007,qcbl008"/>
+      <construct id="body" page="2" field="qcbmseq1,qcbm003"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="qcbksite,qcbk001,qcbk002"/>
+      <set id="head" type="no_entry" field="qcbksite,qcbk001,qcbk002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="qcbksite"/>
+      <column id="qcbk001">
+        <after>
+          <check chkid="v_qcbadcono" id="isExist"/>
+        </after>
+        <controlp form="q_qcbadocno" state="i"/>
+        <controlp form="q_qcbadocno" state="c"/>
+      </column>
+      <column id="qcbk002"/>
+      <column id="qcbk000" def_scc="5056"/>
+      <column id="qcbk005" def_scc="5060"/>
+      <column id="qcbk003"/>
+      <column id="qcbk004"/>
+      <column id="qcbk006"/>
+      <column id="qcbk007"/>
+      <column id="qcbk008">
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="qcbk009"/>
+      <column id="imaal003"/>
+      <column id="imaal004"/>
+      <column id="qcbk010">
+        <after/>
+      </column>
+      <column id="qcbk010_desc"/>
+      <column id="qcbk011">
+        <after>
+          <reference field="qcbk011_desc" ref_field="qcbk011" map_field="qcbk011" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1051&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="qcbk011_desc"/>
+      <column id="qcbk022"/>
+      <column id="qcbk023"/>
+      <column id="qcbk012"/>
+      <column id="qcbk013"/>
+      <column id="qcbk014"/>
+      <column id="qcbk015"/>
+      <column id="qcbk016"/>
+      <column id="qcbk017"/>
+      <column id="qcbk018"/>
+      <column id="qcbk019"/>
+      <column id="qcbk020"/>
+      <column id="qcbk021"/>
+      <column id="qcbkstus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="qcbkownid">
+        <after>
+          <reference field="qcbkownid_desc" ref_field="qcbk_t.qcbkownid" map_field="qcbkownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="qcbkownid_desc"/>
+      <column id="qcbkowndp">
+        <after>
+          <reference field="qcbkowndp_desc" ref_field="qcbk_t.qcbkowndp" map_field="qcbkowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="qcbkowndp_desc"/>
+      <column id="qcbkcrtid">
+        <after>
+          <reference field="qcbkcrtid_desc" ref_field="qcbk_t.qcbkcrtid" map_field="qcbkcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="qcbkcrtid_desc"/>
+      <column id="qcbkcrtdp">
+        <after>
+          <reference field="qcbkcrtdp_desc" ref_field="qcbk_t.qcbkcrtdp" map_field="qcbkcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="qcbkcrtdp_desc"/>
+      <column id="qcbkcrtdt"/>
+      <column id="qcbkmodid">
+        <after>
+          <reference field="qcbkmodid_desc" ref_field="qcbk_t.qcbkmodid" map_field="qcbkmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="qcbkmodid_desc"/>
+      <column id="qcbkmoddt"/>
+      <column id="qcbkcnfid">
+        <after>
+          <reference field="qcbkcnfid_desc" ref_field="qcbk_t.qcbkcnfid" map_field="qcbkcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="qcbkcnfid_desc"/>
+      <column id="qcbkcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="qcblseq">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="qcbl009">
+        <after>
+          <check chkid="v_qcbadcono" id="isExist"/>
+        </after>
+        <controlp form="q_qcbadocno" state="i"/>
+        <controlp form="q_qcbadocno" state="c"/>
+      </column>
+      <column id="qcbl003"/>
+      <column id="qcbl004"/>
+      <column id="qcbl005"/>
+      <column id="qcbl006" type="S" default="0"/>
+      <column id="qcbl007" type="S" default="0"/>
+      <column id="qcbl008" type="S" default="0"/>
+    </init>
+    <init id="body" page="2">
+      <column id="qcbmseq1">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="qcbm003" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="qcbk_t" pk="qcbksite,qcbk001,qcbk002">
+      <sql id="forupd_sql" type="sql" query="SELECT qcbksite,qcbk001,qcbk002,qcbk000,qcbk005,qcbk003,qcbk004,qcbk006,qcbk007,qcbk008,qcbk009,&apos;&apos;,&apos;&apos;,qcbk010,&apos;&apos;,qcbk011,&apos;&apos;,qcbk022,qcbk023,qcbk012,qcbk013,qcbk014,qcbk015,qcbk016,qcbk017,qcbk018,qcbk019,qcbk020,qcbk021,qcbkstus,qcbkownid,&apos;&apos;,qcbkowndp,&apos;&apos;,qcbkcrtid,&apos;&apos;,qcbkcrtdp,&apos;&apos;,qcbkcrtdt,qcbkmodid,&apos;&apos;,qcbkmoddt,qcbkcnfid,&apos;&apos;,qcbkcnfdt FROM qcbk_t WHERE qcbkent= ? AND qcbksite=? AND qcbk001=? AND qcbk002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT qcbksite,qcbk001,qcbk002,qcbk000,qcbk005,qcbk003,qcbk004,qcbk006,qcbk007,qcbk008,qcbk009,&apos;&apos;,&apos;&apos;,qcbk010,&apos;&apos;,qcbk011,&apos;&apos;,qcbk022,qcbk023,qcbk012,qcbk013,qcbk014,qcbk015,qcbk016,qcbk017,qcbk018,qcbk019,qcbk020,qcbk021,qcbkstus,qcbkownid,&apos;&apos;,qcbkowndp,&apos;&apos;,qcbkcrtid,&apos;&apos;,qcbkcrtdp,&apos;&apos;,qcbkcrtdt,qcbkmodid,&apos;&apos;,qcbkmoddt,qcbkcnfid,&apos;&apos;,qcbkcnfdt FROM qcbk_t" order="qcbksite,qcbk001,qcbk002"/>
+    </head>
+    <body id="qcbl_t" page="1" linked="" pk="qcblseq" fk="qcblsite,qcbl001,qcbl002">
+      <sql id="forupd_sql_detail" query="SELECT qcblseq,qcbl009,qcbl003,qcbl004,qcbl005,qcbl006,qcbl007,qcbl008 FROM qcbl_t WHERE qcblent=? AND qcblsite=? AND qcbl001=? AND qcbl002=? AND qcblseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT qcblseq,qcbl009,qcbl003,qcbl004,qcbl005,qcbl006,qcbl007,qcbl008 FROM qcbl_t WHERE qcblent=? AND qcblsite=? AND qcbl001=? AND qcbl002=?"/>
+    </body>
+    <body id="qcbm_t" page="2" linked="" detail="Y" master="qcbl_t" default_site="Y" pk="qcbmseq1" fk="qcbmsite,qcbm001,qcbm002,qcbmseq">
+      <sql id="forupd_sql_detail" query="SELECT qcbmseq1,qcbm003 FROM qcbm_t WHERE qcbment=? AND qcbmsite=? AND qcbm001=? AND qcbm002=? AND qcbmseq=? AND qcbmseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT qcbmseq1,qcbm003 FROM qcbm_t WHERE qcbment=? AND qcbmsite=? AND qcbm001=? AND qcbm002=? AND qcbmseq=?"/>
+    </body>
+  </dataset>
+</assembly>
+

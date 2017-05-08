@@ -1,0 +1,1179 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="ammp403" std_prog="ammp403" erpver="1.0" module="AMM" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.ammp403_mmaz002_ref" order="1" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#disply mmaz002
+PRIVATE FUNCTION ammp403_mmaz002_ref()
+   INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = g_mmay3_d[l_ac].mmaz002
+       CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+       LET g_mmay3_d[l_ac].mmaz002_desc = '', g_rtn_fields[1] , ''
+       DISPLAY  g_mmay3_d[l_ac].mmaz002_desc to s_detail3[l_ac].mmaz002_desc
+             
+END FUNCTION]]>
+  </point>
+  <point name="function.ammp403_mmaz003_ref" order="2" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#display mmaz003
+PRIVATE FUNCTION ammp403_mmaz003_ref()
+   SELECT inaa002 INTO g_mmay3_d[l_ac].mmaz003_desc FROM inaa_t
+    WHERE inaa001 = g_mmay3_d[l_ac].mmaz003 AND inaaent=g_enterprise
+   DISPLAY  g_mmay3_d[l_ac].mmaz003_desc to s_detail3[l_ac].mmaz003_desc    
+END FUNCTION]]>
+  </point>
+  <point name="function.ammp403_mmaz005_ref" order="3" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#display mmaz005
+PRIVATE FUNCTION ammp403_mmaz005_ref()
+   SELECT inaa002 INTO g_mmay3_d[l_ac].mmaz005_desc FROM inaa_t
+    WHERE inaa001 = g_mmay3_d[l_ac].mmaz005 AND inaaent=g_enterprise
+   DISPLAY  g_mmay3_d[l_ac].mmaz005_desc to s_detail3[l_ac].mmaz005_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.ammp403_mmaz004_ref" order="4" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#display mmaz004
+PRIVATE FUNCTION ammp403_mmaz004_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_mmay3_d[l_ac].mmaz004
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_mmay3_d[l_ac].mmaz004_desc = '', g_rtn_fields[1] , ''
+   DISPLAY  g_mmay3_d[l_ac].mmaz004_desc to s_detail3[l_ac].mmaz004_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.ammp403_mmaz001_ref" order="5" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#display mmaz001
+PRIVATE FUNCTION ammp403_mmaz001_ref()
+   SELECT mmanl003 INTO g_mmay3_d[l_ac].mmaz001_desc FROM mmaz_t
+    WHERE mmanl001 =  g_mmay3_d[l_ac].mmaz001 AND mmanl002 = g_dlang
+      AND mmanlent =  g_enterprise
+   DISPLAY  g_mmay3_d[l_ac].mmaz001_desc to s_detail3[l_ac].mmaz001_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.ammp403_detail_input" order="6" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#input s_detail3
+PRIVATE FUNCTION ammp403_detail_input(p_cmd)
+   DEFINE  p_cmd                 LIKE type_t.chr1
+   DEFINE  l_cmd                 LIKE type_t.chr1
+   DEFINE  l_ac_t                LIKE type_t.num5                #未取消的ARRAY CNT 
+   DEFINE  l_n                   LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_cnt                 LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_lock_sw             LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert        LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete        LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count               LIKE type_t.num5
+   DEFINE  l_i                   LIKE type_t.num5
+   DEFINE  ls_return             STRING
+   DEFINE  l_var_keys            DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys          DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields              DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak        DYNAMIC ARRAY OF STRING
+   DEFINE  lb_reproduce          BOOLEAN
+   DEFINE  li_reproduce          LIKE type_t.num5
+   DEFINE  li_reproduce_target   LIKE type_t.num5
+   {</Local define>}
+   #add-point:input段define
+
+   #end add-point 
+   
+   LET g_action_choice = ""
+   
+   LET g_qryparam.state = "i"
+   LET g_forupd_sql = "SELECT mmazseq,mmaz002,'',mmaz003,'',mmaz004,'',mmaz005,'',mmaz001,'',mmaz006, 
+       mmaz007 FROM mmaz_t WHERE mmazent=? AND mmazdocno=? AND mmazseq=? FOR UPDATE"
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE ammp403_bcl4 CURSOR FROM g_forupd_sql
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   LET INT_FLAG = 0
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   #實際單身段落
+      INPUT ARRAY g_mmay3_d FROM s_detail3.*
+         ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                 INSERT ROW = l_allow_insert, #此頁面insert功能由產生器控制, 手動之設定無效! 
+
+                 DELETE ROW = l_allow_delete,
+                 APPEND ROW = l_allow_insert)
+                 
+         #自訂ACTION(detail_input,page_3)
+         
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_mmay3_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            LET g_detail_cnt = g_mmay3_d.getLength()
+            #add-point:資料輸入前
+
+            #end add-point
+ 
+         BEFORE INSERT
+            
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_mmay3_d[l_ac].* TO NULL 
+            
+            LET g_mmay3_d_t.* = g_mmay3_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL ammp403_set_entry_b("a")
+            CALL ammp403_set_no_entry_b("a")
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_mmay3_d[li_reproduce_target].* = g_mmay3_d[li_reproduce].*
+ 
+               LET g_mmay3_d[li_reproduce_target].mmazseq = NULL
+            END IF
+            #公用欄位給值(單身3)
+            
+            #add-point:input段before insert
+
+            #end add-point  
+            
+         BEFORE ROW 
+            LET p_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx2 = l_ac
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_n TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            
+            LET g_detail_cnt = g_mmay3_d.getLength()
+            
+            IF g_detail_cnt >= l_ac 
+               AND g_mmay3_d[l_ac].mmazseq IS NOT NULL
+            THEN 
+               LET l_cmd='u'
+               LET g_mmay3_d_t.* = g_mmay3_d[l_ac].*  #BACKUP
+               IF NOT ammp403_lock_mmaz("mmaz_t") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH ammp403_bcl4 INTO g_mmay3_d[l_ac].mmazseq,g_mmay3_d[l_ac].mmaz002,g_mmay3_d[l_ac].mmaz002_desc, 
+                      g_mmay3_d[l_ac].mmaz003,g_mmay3_d[l_ac].mmaz003_desc,g_mmay3_d[l_ac].mmaz004,g_mmay3_d[l_ac].mmaz004_desc, 
+                      g_mmay3_d[l_ac].mmaz005,g_mmay3_d[l_ac].mmaz005_desc,g_mmay3_d[l_ac].mmaz001,g_mmay3_d[l_ac].mmaz001_desc, 
+                      g_mmay3_d[l_ac].mmaz006,g_mmay3_d[l_ac].mmaz007
+                  IF SQLCA.sqlcode THEN
+                     CALL cl_err('',SQLCA.sqlcode,1)
+                     LET l_lock_sw = "Y"
+                  END IF
+                  CALL cl_show_fld_cont()
+                  CALL ammp403_detail_show()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            CALL ammp403_set_entry_b(l_cmd)
+            CALL ammp403_set_no_entry_b(l_cmd)
+            #add-point:input段before row
+
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+            
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+               CALL g_mmay3_d.deleteElement(l_ac)
+               NEXT FIELD mmazseq
+            END IF
+            IF g_mmay3_d[l_ac].mmazseq IS NOT NULL
+            THEN
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  CALL cl_err("", -263, 1)
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身3刪除前
+
+               #end add-point  
+               
+               DELETE FROM mmaz_t
+                WHERE mmazent = g_enterprise AND
+                   mmazdocno = g_master.mmaydocno
+                   AND mmazseq = g_mmay3_d_t.mmazseq
+                   
+               #add-point:單身3刪除中
+
+               #end add-point  
+                   
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("mmay_t",SQLCA.sqlcode,1)
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_detail_cnt = g_detail_cnt-1
+                  
+                  #add-point:單身3刪除後
+
+                  #end add-point
+                  CALL s_transaction_end('Y','0')
+               END IF 
+               CLOSE ammp403_bcl
+               LET l_count = g_mmay_d.getLength()
+            END IF 
+                           INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_mmay_d[g_detail_idx].mmaydocno
+               LET gs_keys[2] = g_mmay3_d[g_detail_idx2].mmazseq
+ 
+            
+         AFTER DELETE 
+            #add-point:單身AFTER DELETE 
+
+            #end add-point
+                           CALL ammp403_delete_b('mmaz_t',gs_keys,"'3'")
+ 
+         AFTER INSERT    
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM mmaz_t 
+             WHERE mmazent = g_enterprise AND
+                   mmazdocno = g_master.mmaydocno
+                   AND mmazseq = g_mmay3_d[g_detail_idx2].mmazseq
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身3新增前
+
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_mmay_d[g_detail_idx].mmaydocno
+               LET gs_keys[2] = g_mmay3_d[g_detail_idx2].mmazseq
+               CALL ammp403_insert_b('mmaz_t',gs_keys,"'3'")
+                           
+               #add-point:單身新增後3
+
+               #end add-point
+            ELSE    
+               CALL cl_err('INSERT',"std-00006",1)
+               INITIALIZE g_mmay_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("mmaz_t",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL ammp403_b_fill(g_wc)
+               #資料多語言用-增/改
+               
+               #add-point:單身新增後
+
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ERROR 'INSERT O.K'
+               LET g_detail_cnt = g_detail_cnt + 1
+            END IF
+            
+         ON ROW CHANGE 
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               LET g_mmay3_d[l_ac].* = g_mmay3_d_t.*
+               CLOSE ammp403_bcl4
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+            
+            IF l_lock_sw = 'Y' THEN
+               CALL cl_err('',-263,1)
+               LET g_mmay3_d[l_ac].* = g_mmay3_d_t.*
+            ELSE
+               #寫入修改者/修改日期資訊(單身3)
+               
+               
+               #add-point:單身page3修改前
+               let g_master.mmaydocno=g_mmay_d[g_master_idx].mmaydocno
+               #end add-point
+               
+               UPDATE mmaz_t SET (mmazseq,mmaz002,mmaz003,mmaz004,mmaz005,mmaz001,mmaz006,mmaz007) = (g_mmay3_d[l_ac].mmazseq, 
+                   g_mmay3_d[l_ac].mmaz002,g_mmay3_d[l_ac].mmaz003,g_mmay3_d[l_ac].mmaz004,g_mmay3_d[l_ac].mmaz005, 
+                   g_mmay3_d[l_ac].mmaz001,g_mmay3_d[l_ac].mmaz006,g_mmay3_d[l_ac].mmaz007) #自訂欄位頁簽 
+
+                WHERE mmazent = g_enterprise AND
+                   mmazdocno = g_master.mmaydocno
+                   AND mmazseq = g_mmay3_d_t.mmazseq
+                   
+               #add-point:單身修改中
+
+               #end add-point
+                   
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL cl_err("mmaz_t","std-00009",1)
+                     CALL s_transaction_end('N','0')
+                     LET g_mmay3_d[l_ac].* = g_mmay3_d_t.*
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     CALL cl_err("mmaz_t",SQLCA.sqlcode,1)  
+                     CALL s_transaction_end('N','0')
+                     LET g_mmay3_d[l_ac].* = g_mmay3_d_t.*
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_mmay_d[g_detail_idx].mmaydocno
+               LET gs_keys_bak[1] = g_mmay_d[g_detail_idx].mmaydocno
+               LET gs_keys[2] = g_mmay3_d[g_detail_idx2].mmazseq
+               LET gs_keys_bak[2] = g_mmay3_d_t.mmazseq
+               CALL ammp403_update_b('mmaz_t',gs_keys,gs_keys_bak,"'3'")
+                     #資料多語言用-增/改
+                     
+               END CASE
+               #add-point:單身page3修改後
+
+               #end add-point
+            END IF
+         
+         #---------------------<  Detail: page3  >---------------------
+         #----<<mmazseq>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD mmazseq
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_mmay3_d[l_ac].mmazseq,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD mmazseq
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD mmazseq
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mmazseq
+            #add-point:BEFORE FIELD mmazseq
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mmazseq
+            #add-point:ON CHANGE mmazseq
+
+            #END add-point
+ 
+         #----<<mmaz002>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD mmaz002
+            
+            #add-point:AFTER FIELD mmaz002
+            LET g_mmay3_d[l_ac].mmaz002_desc = NULL
+            DISPLAY BY NAME g_mmay3_d[l_ac].mmaz002_desc
+            
+            IF NOT cl_null(g_mmay3_d[l_ac].mmaz002) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_mmay3_d[l_ac].mmaz002!= g_mmay3_d_t.mmaz002 OR g_mmay3_d_t.mmaz002 IS NULL  ))) THEN 
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+ 
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_mmay3_d[l_ac].mmaz002
+                  LET g_chkparam.arg2 = '2'
+                  LET g_chkparam.arg3 = g_site
+
+
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_ooed004") THEN
+
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_mmay3_d[l_ac].mmaz002 = g_mmay3_d_t.mmaz002
+                     CALL ammp403_mmaz002_ref()
+                     NEXT FIELD mmaz002
+                  END IF
+               END IF
+            END IF
+            CALL ammp403_mmaz002_ref()
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mmaz002
+            #add-point:BEFORE FIELD mmaz002
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mmaz002
+            #add-point:ON CHANGE mmaz002
+
+            #END add-point
+ 
+         #----<<mmaz003>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD mmaz003
+            
+            #add-point:AFTER FIELD mmaz003
+            LET g_mmay3_d[l_ac].mmaz003_desc = NULL
+            DISPLAY BY NAME g_mmay3_d[l_ac].mmaz003_desc
+            
+            IF NOT cl_null(g_mmay3_d[l_ac].mmaz003) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_mmay3_d[l_ac].mmaz003!= g_mmay3_d_t.mmaz003 OR g_mmay3_d_t.mmaz003 IS NULL  ))) THEN 
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+ 
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_mmay3_d[l_ac].mmaz002
+                  LET g_chkparam.arg2 = g_mmay3_d[l_ac].mmaz003
+
+
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_inaa001") THEN
+
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_mmay3_d[l_ac].mmaz003 = g_mmay3_d_t.mmaz003
+                     CALL ammp403_mmaz003_ref()
+                     NEXT FIELD mmaz003
+                  END IF
+               END IF
+            END IF
+            CALL ammp403_mmaz003_ref()
+            
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mmaz003
+            #add-point:BEFORE FIELD mmaz003
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mmaz003
+            #add-point:ON CHANGE mmaz003
+
+            #END add-point
+ 
+         #----<<mmaz004>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD mmaz004
+            
+            #add-point:AFTER FIELD mmaz004
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mmaz004
+            #add-point:BEFORE FIELD mmaz004
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mmaz004
+            #add-point:ON CHANGE mmaz004
+
+            #END add-point
+ 
+         #----<<mmaz005>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD mmaz005
+            
+            #add-point:AFTER FIELD mmaz005
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_mmay3_d[l_ac].mmaz005
+            CALL ap_ref_array2(g_ref_fields,"SELECT inaa002 FROM inaa_t WHERE inaaent='"||g_enterprise||"' AND inaa001=? ","") RETURNING g_rtn_fields
+            LET g_mmay3_d[l_ac].mmaz005_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_mmay3_d[l_ac].mmaz005_desc
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mmaz005
+            #add-point:BEFORE FIELD mmaz005
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mmaz005
+            #add-point:ON CHANGE mmaz005
+
+            #END add-point
+ 
+         #----<<mmaz001>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD mmaz001
+            
+            #add-point:AFTER FIELD mmaz001
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mmaz001
+            #add-point:BEFORE FIELD mmaz001
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mmaz001
+            #add-point:ON CHANGE mmaz001
+
+            #END add-point
+ 
+         #----<<mmaz006>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD mmaz006
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_mmay3_d[l_ac].mmaz006,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD mmaz006
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD mmaz006
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mmaz006
+            #add-point:BEFORE FIELD mmaz006
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mmaz006
+            #add-point:ON CHANGE mmaz006
+
+            #END add-point
+ 
+         #----<<mmaz007>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD mmaz007
+            #add-point:BEFORE FIELD mmaz007
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mmaz007
+            
+            #add-point:AFTER FIELD mmaz007
+            IF NOT cl_ap_chk_Range(g_mmay3_d[l_ac].mmaz007,"0.000","1","","","azz-00079",1) THEN
+               let g_mmay3_d[l_ac].mmaz007 = g_mmay3_d_t.mmaz007
+               NEXT FIELD mmaz007
+            END IF
+            IF NOT cl_null(g_mmay3_d[l_ac].mmaz007) THEN
+               IF g_mmay3_d[l_ac].mmaz007<> g_mmay3_d[l_ac].mmaz006 THEN
+                  IF cl_ask_confirm('art-00220') THEN
+                  ELSE
+                     NEXT FIELD mmaz007
+                  END IF
+               END IF
+            END IF
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mmaz007
+            #add-point:ON CHANGE mmaz007
+
+            #END add-point
+ 
+ 
+         #---------------------<  Detail: page3  >---------------------
+         #----<<mmazseq>>----
+         #Ctrlp:input.c.page3.mmazseq
+         ON ACTION controlp INFIELD mmazseq
+            #add-point:ON ACTION controlp INFIELD mmazseq
+
+            #END add-point
+ 
+         #----<<mmaz002>>----
+         #Ctrlp:input.c.page3.mmaz002
+         ON ACTION controlp INFIELD mmaz002
+            #add-point:ON ACTION controlp INFIELD mmaz002
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_mmay3_d[l_ac].mmaz002            #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_site #
+            LET g_qryparam.arg2 = "2" #
+
+            CALL q_ooed004()                                #呼叫開窗
+
+            LET g_mmay3_d[l_ac].mmaz002 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_mmay3_d[l_ac].mmaz002 TO mmaz002              #顯示到畫面上
+            CALL ammp403_mmaz002_ref()
+            NEXT FIELD mmaz002                          #返回原欄位
+            #END add-point
+ 
+         #----<<mmaz003>>----
+         #Ctrlp:input.c.page3.mmaz003
+         ON ACTION controlp INFIELD mmaz003
+            #add-point:ON ACTION controlp INFIELD mmaz003
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_mmay3_d[l_ac].mmaz003             #給予default值
+            LET g_qryparam.where = "inaasite = '",g_mmay3_d[l_ac].mmaz002,"'"
+            #給予arg
+
+            CALL q_inaa001_3()                                #呼叫開窗
+
+            LET g_mmay3_d[l_ac].mmaz003 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            LET g_qryparam.where = NULL 
+            DISPLAY g_mmay3_d[l_ac].mmaz003 TO mmaz003              #顯示到畫面上
+            call ammp403_mmaz003_ref()
+            #END add-point
+ 
+         #----<<mmaz004>>----
+         #Ctrlp:input.c.page3.mmaz004
+         ON ACTION controlp INFIELD mmaz004
+            #add-point:ON ACTION controlp INFIELD mmaz004
+
+            #END add-point
+ 
+         #----<<mmaz005>>----
+         #Ctrlp:input.c.page3.mmaz005
+         ON ACTION controlp INFIELD mmaz005
+            #add-point:ON ACTION controlp INFIELD mmaz005
+
+            #END add-point
+ 
+         #----<<mmaz001>>----
+         #Ctrlp:input.c.page3.mmaz001
+         ON ACTION controlp INFIELD mmaz001
+            #add-point:ON ACTION controlp INFIELD mmaz001
+
+            #END add-point
+ 
+         #----<<mmaz006>>----
+         #Ctrlp:input.c.page3.mmaz006
+         ON ACTION controlp INFIELD mmaz006
+            #add-point:ON ACTION controlp INFIELD mmaz006
+
+            #END add-point
+ 
+         #----<<mmaz007>>----
+         #Ctrlp:input.c.page3.mmaz007
+         ON ACTION controlp INFIELD mmaz007
+            #add-point:ON ACTION controlp INFIELD mmaz007
+
+            #END add-point
+ 
+ 
+ 
+         AFTER ROW
+            LET l_ac = ARR_CURR()
+            LET l_ac_t = l_ac
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_mmay3_d[l_ac].* = g_mmay3_d_t.*
+               END IF
+               CLOSE ammp403_bcl4
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+            
+            #其他table進行unlock
+            
+ 
+            CALL ammp403_unlock_b("mmaz_t")
+            CALL s_transaction_end('Y','0')
+ 
+         AFTER INPUT
+            #add-point:input段after input 
+
+            #end add-point   
+ 
+         ON ACTION controlo   
+            CALL FGL_SET_ARR_CURR(g_mmay3_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_mmay3_d.getLength()+1
+ 
+      END INPUT
+      BEFORE DIALOG 
+         LET g_curr_diag = ui.DIALOG.getCurrent()
+         IF g_master_idx > 0 THEN
+            IF g_master_idx > g_mmay_d.getLength() THEN
+               LET g_master_idx = g_mmay_d.getLength()
+            END IF
+            CALL DIALOG.setCurrentRow("s_detail1", g_master_idx)
+            LET l_ac = g_master_idx
+         END IF 
+         LET g_master_idx = l_ac
+         #add-point:input段input_array"
+
+         #end add-point
+   
+      ON ACTION accept
+         ACCEPT DIALOG
+      
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) 
+              RETURNING g_fld_name,g_frm_name 
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang) 
+           
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   
+   END DIALOG 
+   
+   #add-point:input段修改後
+
+   #end add-point
+ 
+   CLOSE ammp403_bcl4
+   CALL s_transaction_end('Y','0')  
+END FUNCTION]]>
+  </point>
+  <point name="function.ammp403_lock_mmaz" order="7" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#lock mmaz
+PRIVATE FUNCTION ammp403_lock_mmaz(ps_table)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+   LET ls_group = "mmaz_t"
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN ammp403_bcl4 USING g_enterprise,
+                                             g_mmay_d[g_master_idx].mmaydocno,
+                                             g_mmay3_d[l_ac].mmazseq
+ 
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("ammp403_bcl4",SQLCA.sqlcode,1)
+         RETURN FALSE
+      END IF
+   END IF
+ 
+ 
+   
+   RETURN TRUE
+END FUNCTION]]>
+  </point>
+  <point name="b_fill.sql_after" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_sql = "SELECT  UNIQUE 'N',mmaydocno,mmay002,'',mmay001,'',mmaysite,'',mmaystus,'',mmayownid, 
+               '',mmayowndp,'',mmaycrtid,'',mmaycrtdp,'',mmaycrtdt,mmaymodid,'',mmaymoddt,mmaycnfid,'',mmaycnfdt FROM mmay_t",  
+               " LEFT JOIN mmaz_t ON mmazent = mmayent AND mmaydocno = mmazdocno",
+ 
+ 
+               "",
+               " WHERE mmayent= ? AND 1=1 AND ", p_wc2
+   let g_sql = g_sql, " AND mmay001 = '",g_site,"' AND mmaystus='Y' "
+   LET g_sql = g_sql, " ORDER BY mmay_t.mmaydocno"]]>
+  </point>
+  <point name="construct.a.page1.mmaydocno" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            ]]>
+  </point>
+  <point name="construct.c.page1.mmay001" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '2'
+            CALL q_ooed004_2()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mmay001  #顯示到畫面上
+
+            NEXT FIELD mmay001                     #返回原欄位]]>
+  </point>
+  <point name="construct.c.page1.mmaydocno" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_mmaydocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mmaydocno  #顯示到畫面上
+               #DISPLAY g_qryparam.return2 TO mmaydocdt #單據日期 
+
+            NEXT FIELD mmaydocno                     #返回原欄位]]>
+  </point>
+  <point name="construct.c.page1.mmaysite" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+			LET g_qryparam.arg1 = '2'
+            CALL q_ooed004_2()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mmaysite  #顯示到畫面上
+
+            NEXT FIELD mmaysite                     #返回原欄位
+
+]]>
+  </point>
+  <point name="cs.body2.before_construct" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF cl_null(g_wc2_table2) THEN
+               LET g_wc2_table2 = " 1=1"
+            END IF]]>
+  </point>
+  <point name="detail_show.after" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET l_ac = l_ac_t ]]>
+  </point>
+  <point name="detail_show.before" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET l_ac_t = l_ac]]>
+  </point>
+  <point name="detail_show.body.reference" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   FOR l_ac = 1 TO g_mmay_d.getLength()
+      #add-point:ref_show段d_reference
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = g_mmay_d[l_ac].mmaysite
+       CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+       LET g_mmay_d[l_ac].mmaysite_desc = '', g_rtn_fields[1] , ''
+       DISPLAY BY NAME g_mmay_d[l_ac].mmaysite_desc
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = g_mmay_d[l_ac].mmay001
+       CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+       LET g_mmay_d[l_ac].mmay001_desc = '', g_rtn_fields[1] , ''
+       DISPLAY BY NAME g_mmay_d[l_ac].mmay001_desc
+       
+       
+
+      #end add-point
+   END FOR
+   for l_ac = 1 to g_mmay2_d.getLength()
+       INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_mmay2_d[l_ac].mmayownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_mmay2_d[l_ac].mmayownid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_mmay2_d[l_ac].mmayownid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_mmay2_d[l_ac].mmayowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_mmay2_d[l_ac].mmayowndp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_mmay2_d[l_ac].mmayowndp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_mmay2_d[l_ac].mmaycrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_mmay2_d[l_ac].mmaycrtid_desc =  g_rtn_fields[1]
+            DISPLAY BY NAME g_mmay2_d[l_ac].mmaycrtid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_mmay2_d[l_ac].mmaycrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_mmay2_d[l_ac].mmaycrtdp_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_mmay2_d[l_ac].mmaycrtdp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_mmay2_d[l_ac].mmaymodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_mmay2_d[l_ac].mmaymodid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_mmay2_d[l_ac].mmaymodid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_mmay2_d[l_ac].mmaycnfid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_mmay2_d[l_ac].mmaycnfid_desc = g_rtn_fields[1]
+            DISPLAY BY NAME g_mmay2_d[l_ac].mmaycnfid_desc
+   end for
+   FOR l_ac = 1 TO g_mmay3_d.getLength()
+      #add-point:ref_show段d_reference
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = g_mmay3_d[l_ac].mmaz002
+       CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+       LET g_mmay3_d[l_ac].mmaz002_desc = '', g_rtn_fields[1] , ''
+       DISPLAY BY NAME g_mmay3_d[l_ac].mmaz002_desc
+       INITIALIZE g_ref_fields TO NULL
+       LET g_ref_fields[1] = g_mmay3_d[l_ac].mmaz004
+       CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+       LET g_mmay3_d[l_ac].mmaz004_desc = '', g_rtn_fields[1] , ''
+       DISPLAY BY NAME g_mmay3_d[l_ac].mmaz004_desc
+       SELECT inaa002 INTO g_mmay3_d[l_ac].mmaz003_desc FROM inaa_t
+        WHERE inaa001 = g_mmay3_d[l_ac].mmaz003 AND inaaent=g_enterprise
+       SELECT inaa002 INTO g_mmay3_d[l_ac].mmaz005_desc FROM inaa_t
+        WHERE inaa001 = g_mmay3_d[l_ac].mmaz005 AND inaaent=g_enterprise
+       DISPLAY BY NAME g_mmay3_d[l_ac].mmaz003_desc
+       DISPLAY BY NAME g_mmay3_d[l_ac].mmaz005_desc 
+       SELECT mmanl003 INTO g_mmay3_d[l_ac].mmaz001_desc FROM mmaz_t
+        WHERE mmanl001 =  g_mmay3_d[l_ac].mmaz001 AND mmanl002 = g_dlang
+          AND mmanlent =  g_enterprise
+       DISPLAY BY NAME g_mmay3_d[l_ac].mmaz001_desc          
+       
+
+      #end add-point
+   END FOR]]>
+  </point>
+  <point name="detail_show.define" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_ac_t LIKE type_t.num10 #l_ac暫存用]]>
+  </point>
+  <point name="fetch.fill2" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      call ammp403_mmaz001_ref()
+      call ammp403_mmaz002_ref()
+      call ammp403_mmaz003_ref()
+      call ammp403_mmaz004_ref()
+      call ammp403_mmaz005_ref()]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE   l_cmd  STRING]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL cl_set_combo_scc_part('mmaystus','13','N,Y,X')]]>
+  </point>
+  <point name="input.a.page1.mmaysite" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_mmay_d[l_ac].mmaysite
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_mmay_d[l_ac].mmaysite_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_mmay_d[l_ac].mmaysite_desc
+]]>
+  </point>
+  <point name="input.a.page3.mmaz002" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            LET g_mmay3_d[l_ac].mmaz002_desc = NULL
+            DISPLAY BY NAME g_mmay3_d[l_ac].mmaz002_desc
+            
+            IF NOT cl_null(g_mmay3_d[l_ac].mmaz002) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_mmay3_d[l_ac].mmaz002!= g_mmay3_d_t.mmaz002 OR g_mmay3_d_t.mmaz002 IS NULL  ))) THEN 
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+ 
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_mmay3_d[l_ac].mmaz002
+                  LET g_chkparam.arg2 = '2'
+                  LET g_chkparam.arg3 = g_site
+
+
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_ooed004") THEN
+
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_mmay3_d[l_ac].mmaz002 = g_mmay3_d_t.mmaz002
+                     CALL ammp403_mmaz002_ref()
+                     NEXT FIELD mmaz002
+                  END IF
+               END IF
+            END IF
+            CALL ammp403_mmaz002_ref()
+]]>
+  </point>
+  <point name="input.a.page3.mmaz003" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            LET g_mmay3_d[l_ac].mmaz003_desc = NULL
+            DISPLAY BY NAME g_mmay3_d[l_ac].mmaz003_desc
+            
+            IF NOT cl_null(g_mmay3_d[l_ac].mmaz003) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_mmay3_d[l_ac].mmaz003!= g_mmay3_d_t.mmaz003 OR g_mmay3_d_t.mmaz003 IS NULL  ))) THEN 
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+ 
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_mmay3_d[l_ac].mmaz002
+                  LET g_chkparam.arg2 = g_mmay3_d[l_ac].mmaz003
+
+
+                  #呼叫檢查存在並帶值的library
+                  IF cl_chk_exist("v_inaa001") THEN
+
+                  ELSE
+                     #檢查失敗時後續處理
+                     LET g_mmay3_d[l_ac].mmaz003 = g_mmay3_d_t.mmaz003
+                     CALL ammp403_mmaz003_ref()
+                     NEXT FIELD mmaz003
+                  END IF
+               END IF
+            END IF
+            CALL ammp403_mmaz003_ref()
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_mmay3_d[l_ac].mmaz003
+            CALL ap_ref_array2(g_ref_fields,"SELECT inaa002 FROM inaa_t WHERE inaaent='"||g_enterprise||"' AND inaa001=? ","") RETURNING g_rtn_fields
+            LET g_mmay3_d[l_ac].mmaz003_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_mmay3_d[l_ac].mmaz003_desc
+]]>
+  </point>
+  <point name="input.a.page3.mmaz005" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_mmay3_d[l_ac].mmaz005
+            CALL ap_ref_array2(g_ref_fields,"SELECT inaa002 FROM inaa_t WHERE inaaent='"||g_enterprise||"' AND inaa001=? ","") RETURNING g_rtn_fields
+            LET g_mmay3_d[l_ac].mmaz005_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_mmay3_d[l_ac].mmaz005_desc
+]]>
+  </point>
+  <point name="input.a.page3.mmaz007" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_ap_chk_Range(g_mmay3_d[l_ac].mmaz007,"0","1","","","azz-00079",1) THEN
+               let g_mmay3_d[l_ac].mmaz007 = g_mmay3_d_t.mmaz007
+               NEXT FIELD mmaz007
+            END IF
+            IF NOT cl_null(g_mmay3_d[l_ac].mmaz007) THEN
+               IF g_mmay3_d[l_ac].mmaz007<> g_mmay3_d[l_ac].mmaz006 THEN
+                  IF cl_ask_confirm('art-00220') THEN
+                  ELSE
+                     NEXT FIELD mmaz007
+                  END IF
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.body3.b_update" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               let g_master.mmaydocno=g_mmay_d[g_master_idx].mmaydocno]]>
+  </point>
+  <point name="input.c.page3.mmaz002" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_mmay3_d[l_ac].mmaz002            #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_site #
+            LET g_qryparam.arg2 = "2" #
+
+            CALL q_ooed004()                                #呼叫開窗
+
+            LET g_mmay3_d[l_ac].mmaz002 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_mmay3_d[l_ac].mmaz002 TO mmaz002              #顯示到畫面上
+            CALL ammp403_mmaz002_ref()
+            NEXT FIELD mmaz002                          #返回原欄位]]>
+  </point>
+  <point name="input.c.page3.mmaz003" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_mmay3_d[l_ac].mmaz003             #給予default值
+            LET g_qryparam.where = "inaasite = '",g_mmay3_d[l_ac].mmaz002,"'"
+            #給予arg
+
+            CALL q_inaa001_3()                                #呼叫開窗
+
+            LET g_mmay3_d[l_ac].mmaz003 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            LET g_qryparam.where = NULL 
+            DISPLAY g_mmay3_d[l_ac].mmaz003 TO mmaz003              #顯示到畫面上
+            call ammp403_mmaz003_ref()]]>
+  </point>
+  <point name="menu.open_ammt402" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               LET l_cmd = "ammt402 '",g_mmay_d[l_ac].mmaydocno,"' "
+               CALL cl_cmdrun_wait(l_cmd)]]>
+  </point>
+  <point name="query.more_construct" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="ui_dialog.more_displayarray" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[#         INPUT ARRAY g_mmay3_d TO s_detail3.*
+#            ATTRIBUTES(COUNT=g_detail_cnt)  
+#         
+#            BEFORE DISPLAY 
+#               CALL FGL_SET_ARR_CURR(g_detail_idx2)
+#         
+#            BEFORE ROW
+#               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail3")
+#               LET l_ac = g_detail_idx
+#               DISPLAY g_detail_idx TO FORMONLY.idx
+#               CALL cl_show_fld_cont() 
+# 
+#               #LET g_master_idx = l_ac
+#               #CALL ammp403_fetch()
+#               
+#            #自訂ACTION(detail_show,page_3)
+#            
+#               
+#         END INPUT
+         
+         
+         ON ACTION insert
+ 
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN 
+               CALL ammp403_insert()
+               #add-point:ON ACTION insert
+
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION modify
+ 
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN 
+               CALL ammp403_modify()
+               #add-point:ON ACTION modify
+
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION modify_detail
+ 
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN 
+               CALL ammp403_detail_input('u')
+               #add-point:ON ACTION modify_detail
+
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION output
+ 
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN 
+               #add-point:ON ACTION output
+
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION query
+ 
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN 
+               CALL ammp403_query()
+               #add-point:ON ACTION query
+
+               #END add-point
+            END IF
+            
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_mmay_d.getLength()
+               LET g_mmay_d[li_idx].sel = "Y"
+            END FOR
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_mmay_d.getLength()
+               LET g_mmay_d[li_idx].sel = "N"
+            END FOR
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_mmay_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_mmay_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_mmay_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_mmay_d[li_idx].sel = "N"
+               END IF
+            END FOR
+      
+  ]]>
+  </point>
+</add_points>

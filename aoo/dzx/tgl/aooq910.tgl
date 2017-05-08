@@ -1,0 +1,548 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="aooq910.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0011(2015-02-12 11:53:59), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000055
+#+ Filename...: aooq910
+#+ Description: 歷史報表查詢作業
+#+ Creator....: 00742(2014-12-24 14:32:33)
+#+ Modifier...: 00742 -SD/PR-
+
+{</section>}
+
+{<section id="aooq910.global" >}
+#應用 q01 樣板自動產生(Version:6)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_detail RECORD
+         name           STRING,                 #節點名稱          
+         pid            STRING,                 #父節點id
+         id             STRING,                 #節點id
+         has_children   BOOLEAN,                #1:有子節點 null:無子節點          
+         exp            BOOLEAN,                #0:不展開 1:展開
+         level          LIKE type_t.num5,       #階層
+         path           STRING,                 #節點路徑，以"."隔開
+         values         LIKE type_t.chr1000,    #此節點的值
+         site           LIKE ooef_t.ooef001,    #此節點歸屬的營運中心(最上階)
+         bdate          LIKE type_t.dat,        #起始日 (for時間查詢)
+         edate          LIKE type_t.dat         #截止日 (for時間查詢)                
+         END RECORD
+
+#user-define add
+PRIVATE TYPE type_g_detail2 RECORD
+         oojpent        LIKE oojp_t.oojpent,    #企業編號
+         oojpsite       LIKE oojp_t.oojpsite,   #營運據點
+         oojp001        LIKE oojp_t.oojp001,    #作業編號
+         oojp001_desc   LIKE gzzal_t.gzzal003,  #程式名稱
+         oojp002        LIKE oojp_t.oojp002,    #製表人
+         oojp002_desc   LIKE ooag_t.ooag011,    #製表人全名
+         oojp003        LIKE oojp_t.oojp003,    #角色
+         oojp004        LIKE oojp_t.oojp004,    #建立時間
+         filesize       LIKE type_t.num20,      #檔案大小
+         oojp005        LIKE oojp_t.oojp005,    #歷史報表檔名
+         gzzz005        LIKE gzzz_t.gzzz005,    #模組
+         filedat        like type_t.dat         #檔案日期
+         END RECORD
+
+#end user-define add
+ 
+#模組變數(Module Variables)
+DEFINE g_detail            DYNAMIC ARRAY OF type_g_detail
+DEFINE g_detail_t          type_g_detail
+ 
+ 
+ DEFINE g_browser_root  DYNAMIC ARRAY OF INTEGER   #root資料所在
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                 STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE l_ac                  LIKE type_t.num5              #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_current_page        LIKE type_t.num5              #目前所在頁數
+DEFINE g_current_row         LIKE type_t.num5              #目前所在筆數
+DEFINE g_current_idx         LIKE type_t.num5
+DEFINE g_detail_cnt          LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_row_index           LIKE type_t.num10
+DEFINE g_master_idx          LIKE type_t.num5
+DEFINE g_detail_idx          LIKE type_t.num5              #單身 所在筆數(所有資料)
+DEFINE g_detail_idx2         LIKE type_t.num5
+DEFINE g_hyper_url           STRING                        #hyperlink的主要網址
+DEFINE g_qbe_hidden          LIKE type_t.num5              #qbe頁籤折疊
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+ 
+ 
+DEFINE g_wc_filter_table           STRING
+ 
+ 
+ 
+#add-point:自定義模組變數-標準(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+#add-point:自定義模組變數-客製(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+##end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="aooq910.main" >}
+#應用 a26 樣板自動產生(Version:2)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define
+{<point name="main.define"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aoo","")
+ 
+   #add-point:作業初始化
+{<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+{<point name="main.define_sql" />}
+   #end add-point
+
+   #add-point:SQL_define
+{<point name="main.after_define_sql"/>}
+   #end add-point
+ 
+   #add-point:SQL_define
+{<point name="main.after_refresh_sql"/>}
+   #end add-point
+
+ 
+   #add-point:main段define_sql
+{<point name="main.body.define_sql" mark="Y"/>}
+   #end add-point 
+
+   #add-point:main段define_sql
+{<point name="main.body.after_define_sql"/>}
+   #end add-point
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+{<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aooq910 WITH FORM cl_ap_formpath("aoo",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aooq910_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aooq910_ui_dialog() 
+      
+      #add-point:畫面關閉前
+{<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_aooq910
+      
+   END IF
+   
+ 
+   #add-point:作業離開前
+{<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+
+{</section>}
+
+{<section id="aooq910.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+{<point name="other.function"/>}
+#end add-point
+
+{</section>}
+
+{<section id="aooq910.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aooq910_ui_dialog() 
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num5
+   DEFINE ls_result STRING
+   DEFINE ls_wc     STRING
+   DEFINE lc_action_choice_old   STRING
+   #add-point:ui_dialog段define-標準
+{<point name="ui_dialog.define" edit="s"/>}
+   #end add-point
+   #add-point:ui_dialog段define-客製
+{<point name="ui_dialog.define_customerization" edit="c"/>}
+   #end add-point
+   
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+ 
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   LET g_current_row = 0
+   LET g_current_idx = 1
+   LET g_action_choice = " "
+   LET lc_action_choice_old = ""
+   LET l_ac = 1
+ 
+   #add-point:ui_dialog段before dialog 
+{<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+  
+   WHILE li_exit = FALSE
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:input段落
+{<point name="ui_dialog.input"/>}
+         #end add-point
+ 
+         #add-point:construct段落
+{<point name="ui_dialog.construct" mark="Y"/>}
+         #end add-point
+     
+         DISPLAY ARRAY g_detail TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+ 
+            BEFORE ROW
+ 
+               #add-point:input段before row
+{<point name="input.body.before_row" mark="Y"/>}
+               #end add-point
+ 
+            #應用 qs20 樣板自動產生(Version:2)
+            ON EXPAND (g_detail_idx)
+               #樹展開
+ 
+            ON COLLAPSE (g_detail_idx)
+               #樹關閉
+ 
+ 
+ 
+ 
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+         END DISPLAY
+ 
+ 
+ 
+         #add-point:ui_dialog段自定義display array
+{<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+      
+         BEFORE DIALOG
+            #CALL DIALOG.setSelectionMode("s_detail1", 1)
+            #add-point:ui_dialog段before dialog
+{<point name="ui_dialog.bef_dialog"/>}
+            #end add-point
+            #NEXT FIELD oojp001
+ 
+         AFTER DIALOG
+            #add-point:ui_dialog段 after dialog
+{<point name="ui_dialog.after_dialog"/>}
+            #end add-point
+            
+         ON ACTION exit
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum
+{<point name="ui_dialog.agendum"/>}
+            #end add-point
+            CALL cl_user_overview()
+ 
+         ON ACTION exporttoexcel   #匯出excel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               CALL g_export_node.clear()
+               LET g_export_node[1] = base.typeInfo.create(g_detail2)
+               LET g_export_id[1]   = "s_detail2"
+ 
+               #add-point:ON ACTION exporttoexcel
+{<point name="menu.exporttoexcel" />}
+               #END add-point
+               CALL cl_export_to_excel_getpage()
+               CALL cl_export_to_excel()
+            END IF
+ 
+         ON ACTION datarefresh   # 重新整理
+            
+ 
+         ON ACTION qbehidden     #qbe頁籤折疊
+            IF g_qbe_hidden THEN
+               CALL gfrm_curr.setElementHidden("qbe",0)
+               CALL gfrm_curr.setElementImage("qbehidden","16/mainhidden.png")
+               LET g_qbe_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("qbe",1)
+               CALL gfrm_curr.setElementImage("qbehidden","16/worksheethidden.png")
+               LET g_qbe_hidden = 1     #hidden
+            END IF
+ 
+         
+         
+         
+         #應用 a43 樣板自動產生(Version:2)
+#         ON ACTION insert
+#            LET g_action_choice="insert"
+#            IF cl_auth_chk_act("insert") THEN
+               
+               #add-point:ON ACTION insert
+{<point name="menu.insert" />}
+               #END add-point
+               
+#               EXIT DIALOG
+#            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION refresh
+            LET g_action_choice="refresh"
+            IF cl_auth_chk_act("refresh") THEN
+               
+               #add-point:ON ACTION refresh
+{<point name="menu.refresh" />}
+               #END add-point
+               
+               EXIT DIALOG
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+#         ON ACTION output
+#            LET g_action_choice="output"
+#            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+{<point name="menu.output" />}
+               #END add-point
+               
+#               EXIT DIALOG
+#            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               
+               #add-point:ON ACTION query
+{<point name="menu.query" />}
+               #END add-point
+               
+               
+            END IF
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:2)
+         ON ACTION datainfo
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN
+               
+               #add-point:ON ACTION datainfo
+{<point name="menu.datainfo" />}
+               #END add-point
+               
+               EXIT DIALOG
+            END IF
+ 
+ 
+ 
+      
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+ 
+ 
+         #add-point:查詢方案相關ACTION設定前
+{<point name="ui_dialog.set_qbe_action_before" mark="Y"/>}
+         #end add-point
+ 
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+ 
+         #add-point:查詢方案相關ACTION設定後
+{<point name="ui_dialog.set_qbe_action_after"/>}
+         #end add-point
+ 
+      END DIALOG 
+   
+   END WHILE
+ 
+END FUNCTION
+
+{</section>}
+
+{<section id="aooq910.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION aooq910_b_fill()
+{<point name="b_fill.define" edit="s"/>}
+
+{<point name="b_fill.define_customerization" edit="c"/>}
+
+{<point name="b_fill.sql_before"/>}
+
+{<point name="b_fill.array_clear" />}
+
+{<point name="b_fill.sql"/>}
+   #無論用哪一種排序, 最上層的節點都是營運中心
+{<point name="b_fill.others.fill"/>}
+
+{<point name="b_fill.array_deleteElement" />}
+END FUNCTION
+
+{</section>}
+
+{<section id="aooq910.b_fill2" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION aooq910_b_fill2(p_pid,p_level,p_site)
+{<point name="b_fill2.define" edit="s"/>}
+
+{<point name="b_fill2.define_customerization" edit="c"/>}
+
+{<point name="b_fill2.fill" />}
+
+{<point name="b_fill2.after_fill" />}
+END FUNCTION
+
+{</section>}
+
+{<section id="aooq910.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION aooq910_detail_show(p_act)
+{<point name="detail_show.define" edit="s"/>}
+
+{<point name="detail_show.define_customerization" edit="c"/>}
+
+{<point name="detail_show.before"/>}
+
+{<point name="detail_show.body.reference"/>}
+
+{<point name="detail_show.after"/>}
+END FUNCTION
+
+{</section>}
+
+{<section id="aooq910.tree_expand" >}
+#應用 qs21 樣板自動產生(Version:3)
+#+ tree節點展開程式段
+PRIVATE FUNCTION aooq910_tree_expand()
+#不使用
+{<point name="tree_expand.define" edit="s"/>}
+
+{<point name="tree_expand.define_customerization" edit="c"/>}
+
+{<point name="tree_expand.expcode_1"/>}
+
+{<point name="tree_expand.expcode_2"/>}
+
+{<point name="tree_expand.sql"/>}
+END FUNCTION
+
+{</section>}
+
+{<section id="aooq910.desc_show" >}
+#應用 qs22 樣板自動產生(Version:3)
+#+ tree節點名稱顯示程式段
+PRIVATE FUNCTION aooq910_desc_show(p_key1)
+#不使用
+{<point name="desc_show.define" edit="s"/>}
+ 
+{<point name="desc_show.define_customerization" edit="c"/>}
+
+{<point name="desc_show.name"/>}
+END FUNCTION
+
+{</section>}
+
+{<section id="aooq910.chk_isnode" >}
+#應用 qs23 樣板自動產生(Version:3)
+#+ 搜尋該節點下是否還有子節點
+PRIVATE FUNCTION aooq910_chk_isnode()
+#不使用
+{<point name="chk_isnode.define" edit="s"/>}
+
+{<point name="chk_isnode.define_customerization" edit="c"/>}
+
+{<point name="chk_isnode.row_count_sql"/>}
+
+{<point name="chk_isnode.execute_sql_1"/>}
+
+{<point name="chk_isnode.execute_sql_2"/>}
+END FUNCTION
+
+{</section>}
+

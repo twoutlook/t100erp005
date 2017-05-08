@@ -1,0 +1,242 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aimm208" module="aim" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="05384" crtdt="2016-05-17 15:03:00" modid="05384" moddt="2016-05-18 10:49:22" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="集團預設料件據點分銷商品資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="imaa001,imaa002,imaal003(chr500),imaal004(chr500),imaal005(chr10),imaa009,imaa009_desc(chr80),imaa003,imaa003_desc(chr80),imaa004,imaa005,imaa005_desc(chr80),imaa006,imaa006_desc(chr80),imaa010,imaa010_desc(chr80),l_s1(chr500),imaa108,imaa100,imaa109,imaa114,imaa114_desc(chr80),imaa143,imaa143_desc(chr80),imaaownid,imaaownid_desc(chr80),imaaowndp,imaaowndp_desc(chr80),imaacrtid,imaacrtid_desc(chr80),imaacrtdp,imaacrtdp_desc(chr80),imaacrtdt,imaamodid,imaamodid_desc(chr80),imaamoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="imaystus,imay002,imay003,imay004,imay004_desc(chr500),imay005,imay006,imay018,imay007,imay008,imay009,imay015,imay015_desc(chr500),imay010,imay016,imay016_desc(chr500),imay011,imay017,imay017_desc(chr500),imay012,imay013,imay014"/>
+      <var id="bs_field" value="imaa001,imaa001_desc(chr80),imaa001_desc_desc(chr80),imaa009,imaa009_desc(chr80),imaa003,imaa003_desc(chr80)" pk="imaa001" order=""/>
+      <bs_reference field="imaa001_desc" ref_field="imaa001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+      <bs_reference field="imaa001_desc_desc" ref_field="imaa001" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+      <bs_reference field="imaa009_desc" ref_field="imaa009" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+      <bs_reference field="imaa003_desc" ref_field="imaa003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;200&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="open_aimm202"/>
+      <action id="open_aimm207"/>
+      <action id="open_aimm200"/>
+      <action id="open_aimm206"/>
+      <action id="open_aimm204"/>
+      <action id="open_aimm210"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="open_aimm201"/>
+      <action id="open_aimm203"/>
+      <action id="open_aimm205"/>
+      <action id="prog_imaa009" lib="cl_user_contact" parameter="&quot;aimi010&quot;, &quot;rtax_t&quot;, &quot;rtax001&quot;, &quot;rtax001&quot;,g_imae_m.imaa009,g_imaa_m.imaa009"/>
+      <action id="prog_imaa003" lib="cl_user_contact" parameter="&quot;aimi100&quot;, &quot;imca_t&quot;, &quot;imca001&quot;, &quot;imca001&quot;,g_imae_m.imaa003,g_imaa_m.imaa003"/>
+    </section>
+  </structure>
+  <form id="0" module="aim" filename="aimm208" method="dialog">
+    <section id="input">
+      <input id="head" field="imaa001,imaal003,imaal004,imaal005,imaa009,imaa003,imaa004,imaa005,imaa006,imaa010,imaa108,imaa100,imaa109,imaa114,imaa143"/>
+      <input id="body" page="1" field="imaystus,imay002,imay003,imay004,imay005,imay006,imay018,imay007,imay008,imay009,imay015,imay010,imay016,imay011,imay017,imay012,imay013,imay014" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="imaa001,imaa002,imaal003,imaal004,imaal005,imaa009,imaa003,imaa004,imaa005,imaa006,imaa010,imaa108,imaa100,imaa109,imaa114,imaa143,imaaownid,imaaowndp,imaacrtid,imaacrtdp,imaacrtdt,imaamodid,imaamoddt"/>
+      <construct id="body" page="1" field="imaystus,imay002,imay003,imay004,imay005,imay006,imay018,imay007,imay008,imay009,imay015,imay010,imay016,imay011,imay017,imay012,imay013,imay014"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="imaa001"/>
+      <set id="head" type="no_entry" field="imaa001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="imaa001">
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="imaa002"/>
+      <column id="imaal003"/>
+      <column id="imaal004"/>
+      <column id="imaal005"/>
+      <column id="imaa009">
+        <after>
+          <reference field="imaa009_desc" ref_field="imaa_t.imaa009" map_field="imaaent,imaa001" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="imaa009_desc"/>
+      <column id="imaa003">
+        <after>
+          <reference field="imaa003_desc" ref_field="imaa003" map_field="imaa003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;200&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imca001_1" state="c"/>
+      </column>
+      <column id="imaa003_desc"/>
+      <column id="imaa004" def_scc="1001"/>
+      <column id="imaa005">
+        <after>
+          <reference field="imaa005_desc" ref_field="imaa_t.imaa005" map_field="imaa005" ref_sql="SELECT imeal003 FROM imeal_t WHERE imealent=$varg_enterprise$var AND imeal001=? AND imeal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imea001" state="c"/>
+      </column>
+      <column id="imaa005_desc"/>
+      <column id="imaa006">
+        <after>
+          <reference field="imaa006_desc" ref_field="imaa_t.imaa006" map_field="imaaent,imaa006" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="imaa006_desc"/>
+      <column id="imaa010">
+        <after>
+          <reference field="imaa010_desc" ref_field="imaa010" map_field="imaa010" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;210&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imaa010_desc"/>
+      <column id="l_s1"/>
+      <column id="imaa108" def_scc="2002"/>
+      <column id="imaa100" def_scc="2003"/>
+      <column id="imaa109" def_scc="2004"/>
+      <column id="imaa114">
+        <after>
+          <check chkid="v_ooai001" id="isExist"/>
+          <reference field="imaa114_desc" ref_field="imaa_t.imaa114" map_field="imaaent,imaa114" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="imaa114_desc"/>
+      <column id="imaa143">
+        <after>
+          <check chkid="v_dbba001" id="isExist"/>
+          <reference field="imaa143_desc" ref_field="imaa_t.imaa143" map_field="imaa143" ref_sql="SELECT dbbal003 FROM dbbal_t WHERE dbbalent=$varg_enterprise$var AND dbbal001=? AND dbbal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_dbba001_1" state="i"/>
+        <controlp form="q_dbba001_1" state="c"/>
+      </column>
+      <column id="imaa143_desc"/>
+      <column id="imaaownid">
+        <after>
+          <reference field="imaaownid_desc" ref_field="imaa_t.imaaownid" map_field="imaaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imaaownid_desc"/>
+      <column id="imaaowndp">
+        <after>
+          <reference field="imaaowndp_desc" ref_field="imaa_t.imaaowndp" map_field="imaaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imaaowndp_desc"/>
+      <column id="imaacrtid">
+        <after>
+          <reference field="imaacrtid_desc" ref_field="imaa_t.imaacrtid" map_field="imaacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imaacrtid_desc"/>
+      <column id="imaacrtdp">
+        <after>
+          <reference field="imaacrtdp_desc" ref_field="imaa_t.imaacrtdp" map_field="imaacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imaacrtdp_desc"/>
+      <column id="imaacrtdt"/>
+      <column id="imaamodid">
+        <after>
+          <reference field="imaamodid_desc" ref_field="imaa_t.imaamodid" map_field="imaamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imaamodid_desc"/>
+      <column id="imaamoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="imaystus" scc="17">
+        <stus id="Y" pic="active"/>
+        <stus id="N" pic="inactive"/>
+      </column>
+      <column id="imay002" def_scc="2003"/>
+      <column id="imay003">
+        <controlp form="q_imay003" state="c"/>
+      </column>
+      <column id="imay004">
+        <after>
+          <reference field="imay004_desc" ref_field="imay_t.imay004" map_field="imay004" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="imay004_desc"/>
+      <column id="imay005" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imay006"/>
+      <column id="imay018" def_scc="6749"/>
+      <column id="imay007" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imay008" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imay009" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imay015">
+        <after>
+          <reference field="imay015_desc" ref_field="imay_t.imay015" map_field="imayent,imay015" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="imay015_desc"/>
+      <column id="imay010" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imay016">
+        <after>
+          <reference field="imay016_desc" ref_field="imay_t.imay016" map_field="imayent,imay016" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="imay016_desc"/>
+      <column id="imay011">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imay017">
+        <after>
+          <reference field="imay017_desc" ref_field="imay_t.imay017" map_field="imaaent,imaa017" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="imay017_desc"/>
+      <column id="imay012"/>
+      <column id="imay013"/>
+      <column id="imay014"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="imaa_t" pk="imaa001">
+      <sql id="forupd_sql" type="sql" query="SELECT imaa001,imaa002,&apos;&apos;,&apos;&apos;,&apos;&apos;,imaa009,&apos;&apos;,imaa003,&apos;&apos;,imaa004,imaa005,&apos;&apos;,imaa006,&apos;&apos;,imaa010,&apos;&apos;,&apos;&apos;,imaa108,imaa100,imaa109,imaa114,&apos;&apos;,imaa143,&apos;&apos;,imaaownid,&apos;&apos;,imaaowndp,&apos;&apos;,imaacrtid,&apos;&apos;,imaacrtdp,&apos;&apos;,imaacrtdt,imaamodid,&apos;&apos;,imaamoddt FROM imaa_t WHERE imaaent= ? AND imaa001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT imaa001,imaa002,&apos;&apos;,&apos;&apos;,&apos;&apos;,imaa009,&apos;&apos;,imaa003,&apos;&apos;,imaa004,imaa005,&apos;&apos;,imaa006,&apos;&apos;,imaa010,&apos;&apos;,&apos;&apos;,imaa108,imaa100,imaa109,imaa114,&apos;&apos;,imaa143,&apos;&apos;,imaaownid,&apos;&apos;,imaaowndp,&apos;&apos;,imaacrtid,&apos;&apos;,imaacrtdp,&apos;&apos;,imaacrtdt,imaamodid,&apos;&apos;,imaamoddt FROM imaa_t" order="imaa001"/>
+    </head>
+    <body id="imay_t" page="1" linked="" pk="imay003" fk="imay001">
+      <sql id="forupd_sql_detail" query="SELECT imaystus,imay002,imay003,imay004,&apos;&apos;,imay005,imay006,imay018,imay007,imay008,imay009,imay015,&apos;&apos;,imay010,imay016,&apos;&apos;,imay011,imay017,&apos;&apos;,imay012,imay013,imay014 FROM imay_t WHERE imayent=? AND imay001=? AND imay003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT imaystus,imay002,imay003,imay004,&apos;&apos;,imay005,imay006,imay018,imay007,imay008,imay009,imay015,&apos;&apos;,imay010,imay016,&apos;&apos;,imay011,imay017,&apos;&apos;,imay012,imay013,imay014 FROM imay_t WHERE imayent=? AND imay001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

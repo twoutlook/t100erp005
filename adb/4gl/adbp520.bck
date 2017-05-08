@@ -1,0 +1,1584 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="adbp520.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0016(2016-08-04 17:50:42), PR版次:0016(2017-02-14 18:57:53)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000269
+#+ Filename...: adbp520
+#+ Description: 訂單轉出通單批次處理作業
+#+ Creator....: 01752(2014-05-27 11:40:35)
+#+ Modifier...: 02749 -SD/PR- 02749
+ 
+{</section>}
+ 
+{<section id="adbp520.global" >}
+#應用 p02 樣板自動產生(Version:22)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#160831-00048#1  2016/08/31 By 06137    cl_cmdrun_wait() 改用 cl_cmdrun()
+#160809-00015#1  2016/08/29 by lori     訂單單號開窗依aooi500過濾組織, r.q 移除 ooed_t 相關設定 
+#160908-00023#1  2016/09/10 By 06137    订单单号栏位开窗应过滤掉已结案的订单单号
+#161006-00008#5  2016/10/18 By 08729    處理組織開窗
+#170109-00037#3  2017/01/16 By 06814    批次LOCK處理1.UI勾選LOCK檢查
+#170214-00047#1  2017/02/14 By 02749    修正查詢時的資料發散問題
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10             #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num10             #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)  #注意要在add-point內寫入END RECORD name="global.variable"
+            sel               LIKE type_t.chr1,
+            xmda202           LIKE xmda_t.xmda202,
+            xmda202_desc      LIKE ooefl_t.ooefl003,
+            xmdadocno         LIKE xmda_t.xmdadocno,
+            xmda005           LIKE xmda_t.xmda005,
+            xmda004           LIKE xmda_t.xmda004,
+            xmda004_desc      LIKE pmaal_t.pmaal004,
+            xmda021           LIKE xmda_t.xmda021,
+            xmda021_desc      LIKE pmaal_t.pmaal004,
+            xmdd211           LIKE xmdd_t.xmdd211,
+            xmdd211_desc      LIKE pmaal_t.pmaal004,
+            xmddunit          LIKE xmdd_t.xmddunit,
+            xmddunit_desc     LIKE ooefl_t.ooefl003,
+            xmdd229           LIKE xmdd_t.xmdd229,
+            xmddseq           LIKE xmdd_t.xmddseq,
+            xmddseq1          LIKE xmdd_t.xmddseq1,
+            xmddseq2          LIKE xmdd_t.xmddseq2,
+            xmja002           LIKE xmja_t.xmja002,
+            xmdd001           LIKE xmdd_t.xmdd001,
+            xmdd001_desc      LIKE imaal_t.imaal003,
+            xmdd001_desc_desc LIKE imaal_t.imaal004,
+            xmdd002           LIKE xmdd_t.xmdd002,
+            xmdd201           LIKE xmdd_t.xmdd201,
+            xmdd201_desc      LIKE oocal_t.oocal003,
+            xmdd202           LIKE xmdd_t.xmdd202,
+            xmdd004           LIKE xmdd_t.xmdd004,
+            xmdd004_desc      LIKE oocal_t.oocal003,
+            xmdd006           LIKE xmdd_t.xmdd006,
+            xmdd024           LIKE xmdd_t.xmdd024,
+            xmdd024_desc      LIKE oocal_t.oocal003,
+            xmdd025           LIKE xmdd_t.xmdd025,
+            xmdd011           LIKE xmdd_t.xmdd011,
+            xmdd207           LIKE xmdd_t.xmdd207,
+            xmdd207_desc      LIKE pmaal_t.pmaal004,
+            xmdd208           LIKE xmdd_t.xmdd208,
+            xmdd208_desc      LIKE oofb_t.oofb011,
+            xmdd209           LIKE xmdd_t.xmdd209,
+            xmdd209_desc      LIKE dbadl_t.dbadl003,
+            xmdd031           LIKE xmdd_t.xmdd031,
+            xmdd015           LIKE xmdd_t.xmdd015,
+            xmdd016           LIKE xmdd_t.xmdd016,
+            xmdd017           LIKE xmdd_t.xmdd017,
+            xmdd220           LIKE xmdd_t.xmdd220,
+            xmdd220_desc      LIKE dbbcl_t.dbbcl003,
+            xmdd221           LIKE xmdd_t.xmdd221 
+                     END RECORD
+DEFINE g_xmda005            LIKE xmda_t.xmda005
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num10              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明 name="global.argv"
+DEFINE g_detail_d_t  type_g_detail_d
+DEFINE g_detail_d_o  type_g_detail_d
+#end add-point
+ 
+{</section>}
+ 
+{<section id="adbp520.main" >}
+#+ 作業開始 
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   DEFINE ls_js  STRING
+   #add-point:main段define name="main.define"
+   DEFINE l_success     LIKE type_t.num5
+   #end add-point   
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("adb","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_adbp520 WITH FORM cl_ap_formpath("adb",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL adbp520_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL adbp520_ui_dialog() 
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_adbp520
+   END IF 
+   
+   #add-point:作業離開前 name="main.exit"
+   CALL s_adbp520_drop_temp_table() RETURNING l_success
+   CALL s_aooi500_drop_temp() RETURNING l_success #150308-00001#1  By Ken 150309   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="adbp520.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION adbp520_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point   
+   #add-point:init段define name="init.define"
+   DEFINE l_success         LIKE type_t.num5
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL s_aooi500_create_temp() RETURNING l_success #150308-00001#1  By Ken 150309   
+   CALL cl_set_combo_scc_part('xmda005','2063','1,2,3,6')
+   CALL cl_set_combo_scc_part('b_xmda005','2063','1,2,3,6')
+   CALL cl_set_combo_scc('b_xmdd229','6064')
+   CALL cl_set_combo_scc('b_xmdd017','2058')
+   CALL s_adbp520_create_temp_table() RETURNING l_success 
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbp520.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION adbp520_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point 
+   DEFINE li_idx   LIKE type_t.num10
+   #add-point:ui_dialog段define name="init.init"
+   DEFINE l_cons    RECORD
+            xmda202    STRING,
+            xmda004    STRING,
+            xmdd211    STRING,
+            xmda201    STRING,
+            xmdadocno  STRING,
+            xmddsite   STRING,
+            xmda023    STRING,
+            xmdd011    STRING,
+            xmdd208    STRING,
+            xmddunit   STRING,
+            xmdd209    STRING            
+                    END RECORD
+   DEFINE l_xmdh016   LIKE xmdh_t.xmdh016
+   DEFINE l_xmdd004   LIKE xmdd_t.xmdd004
+   DEFINE l_success   LIKE type_t.num5
+   DEFINE l_cnt       LIKE type_t.num5
+   DEFINE l_str       STRING
+   DEFINE la_param    RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                      END RECORD
+   DEFINE ls_js       STRING
+   DEFINE l_msg       STRING   #160225-00040#18 2016/04/13 s983961--add
+   DEFINE l_where     STRING   #160809-00015#1 160829 by lori    
+   DEFINE l_cnt1      LIKE type_t.num5   #170109-00037#3 20170117 add by beckxie
+   #end add-point 
+   
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   INITIALIZE l_cons.* TO NULL
+   #170109-00037#3 20170117 add by beckxie---S
+   LET g_sql = "SELECT xmdddocno,xmddseq,xmddseq1,xmddseq2 ",
+               "  FROM xmda_t,xmdd_t ",
+               " WHERE xmdaent = xmddent ",
+               "   AND xmdadocno = xmdddocno ",
+               "   AND xmddent = ",g_enterprise,
+               "   AND xmdddocno = ? ",
+               "   AND xmddseq = ? ",
+               "   AND xmddseq1 = ? ",
+               "   AND xmddseq2 = ? ",
+               "   FOR UPDATE SKIP LOCKED "
+   PREPARE adbp520_chk_lock_xmdd FROM g_sql 
+   #170109-00037#3 20170117 add by beckxie---E
+   #end add-point
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_detail_d.clear()
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL adbp520_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         CONSTRUCT BY NAME g_wc  ON xmda202,xmda004,xmda201,xmdadocno,xmda023 
+            BEFORE CONSTRUCT
+               CALL cl_set_act_visible("filter",FALSE)
+               
+            ON ACTION controlp
+               CASE
+                  WHEN INFIELD(xmda202)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     #161006-00008#5-add(s)
+                     IF s_aooi500_setpoint(g_prog,'xmda202') THEN
+                        LET g_qryparam.where = s_aooi500_q_where(g_prog,'xmda202',g_site,'c')
+                        CALL q_ooef001_24()                   
+                     ELSE
+                        CALL q_ooef001_19()
+                     END IF
+                     #161006-00008#5-add(e)
+                     #160803-00002#1 160804 by lori mark and add---(S)
+                     #LET g_qryparam.arg1 = 'G'
+                     #CALL q_ooef001_3()
+                     #CALL q_ooef001_19()           #161006-00008#5 mark
+                     #160803-00002#1 160804 by lori mark and add---(E)
+                     DISPLAY g_qryparam.return1 TO xmda202  #顯示到畫面上
+                     NEXT FIELD CURRENT
+                  WHEN INFIELD(xmda004)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     LET g_qryparam.arg1 = 'ALL'
+                     CALL q_pmaa001_6()
+                     DISPLAY g_qryparam.return1 TO xmda004  #顯示到畫面上
+                     NEXT FIELD CURRENT
+                     
+                  WHEN INFIELD(xmda201)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_pmaa001_3()
+                     DISPLAY g_qryparam.return1 TO xmda201  #顯示到畫面上
+                     NEXT FIELD CURRENT
+                     
+                  WHEN INFIELD(xmdadocno)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE     
+
+			            #160809-00015#1 160829 by lori add---(S)
+			            LET l_where = ""
+                     LET l_where = s_aooi500_q_where('adbt500','xmdasite',g_site,'c')
+                     LET l_where = cl_str_replace(l_where,"ooef001","xmdasite")
+                     #LET g_qryparam.where = l_where                           #160908-00023#1 Mark BY ken 160910
+                     #160809-00015#1 160829 by lori add---(E)
+                     LET g_qryparam.where = l_where , " AND xmdastus !='C' "   #160908-00023#1 Add By Ken 160910
+                     CALL q_xmdadocno_5()
+                     DISPLAY g_qryparam.return1 TO xmdadocno #顯示到畫面上
+                     NEXT FIELD CURRENT
+
+                  WHEN INFIELD(xmda023)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE    
+                     LET g_qryparam.arg1 = '1'   #銷售渠道(通路)                     
+                     CALL q_oojd001_1()
+                     DISPLAY g_qryparam.return1 TO xmda023   #顯示到畫面上
+                     NEXT FIELD CURRENT
+                     
+               END CASE
+               
+            AFTER CONSTRUCT
+                 LET l_cons.xmda202  = GET_FLDBUF(xmda202)
+                 LET l_cons.xmda004  = GET_FLDBUF(xmda004)
+                 LET l_cons.xmda201  = GET_FLDBUF(xmda201)
+                 LET l_cons.xmdadocno= GET_FLDBUF(xmdadocno)
+                 LET l_cons.xmda023  = GET_FLDBUF(xmda023)
+                 
+         END CONSTRUCT
+
+         CONSTRUCT BY NAME g_wc2 ON xmdd211,xmddsite,xmdd011,xmdd208,xmddunit,xmdd209
+            BEFORE CONSTRUCT
+               CALL cl_set_act_visible("filter",FALSE)  
+            ON ACTION controlp
+               CASE
+                  WHEN INFIELD(xmdd211)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_pmac002_4()                       #呼叫開窗
+                     DISPLAY g_qryparam.return1 TO xmdd211    #顯示到畫面上
+                     NEXT FIELD CURRENT                       #返回原欄位
+                  WHEN INFIELD(xmddsite)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     LET g_qryparam.where = s_aooi500_q_where(g_prog,'xmddsite',g_site,'c') #150308-00001#1  By Ken add 'c' 150309
+                     CALL q_ooef001_24()
+                     DISPLAY g_qryparam.return1 TO xmddsite          #顯示到畫面上
+                     NEXT FIELD CURRENT
+                  WHEN INFIELD(xmdd208)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_oofb019_2()
+                     DISPLAY g_qryparam.return1 TO xmdd208   #顯示到畫面上
+                     NEXT FIELD CURRENT
+                  WHEN INFIELD(xmddunit)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     LET g_qryparam.where = s_aooi500_q_where(g_prog,'xmddunit',g_site,'c') #150308-00001#1  By Ken add 'c' 150309
+                     CALL q_ooef001_24()
+                     DISPLAY g_qryparam.return1 TO xmddunit  #顯示到畫面上
+                     NEXT FIELD CURRENT
+                  WHEN INFIELD(xmdd209)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_dbad001()
+                     DISPLAY g_qryparam.return1 TO xmdd209   #顯示到畫面上
+                     NEXT FIELD CURRENT
+               END CASE
+               
+            AFTER CONSTRUCT
+                 LET l_cons.xmdd211  = GET_FLDBUF(xmdd211)
+                 LET l_cons.xmddsite = GET_FLDBUF(xmddsite)
+                 LET l_cons.xmdd011  = GET_FLDBUF(xmdd011)
+                 LET l_cons.xmdd208  = GET_FLDBUF(xmdd208)
+                 LET l_cons.xmddunit = GET_FLDBUF(xmddunit)
+                 LET l_cons.xmdd209  = GET_FLDBUF(xmdd209)
+
+         END CONSTRUCT        
+
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         INPUT g_xmda005 FROM xmda005
+            BEFORE INPUT
+               CALL cl_set_act_visible("filter",FALSE)
+         END INPUT
+         
+         INPUT ARRAY g_detail_d FROM s_detail1.*
+             ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                     INSERT ROW = FALSE,DELETE ROW = FALSE, APPEND ROW = FALSE)
+            BEFORE INPUT     
+               CALL cl_set_act_visible("filter",FALSE)
+               
+            BEFORE ROW
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_master_idx = l_ac
+               LET g_detail_d_t.* = g_detail_d[l_ac].*
+               LET g_detail_d_o.* = g_detail_d[l_ac].*
+               DISPLAY l_ac TO FORMONLY.h_index
+               CALL adbp520_set_entry_b()    
+               CALL adbp520_set_no_entry_b()   
+               
+            AFTER FIELD sel
+               CALL adbp520_set_entry_b()    
+               CALL adbp520_set_no_entry_b()    
+               
+
+               
+            AFTER FIELD b_xmdd202           
+               IF NOT cl_null(g_detail_d[l_ac].xmdd202) THEN
+                  CALL s_aooi250_take_decimals(g_detail_d[l_ac].xmdd201,g_detail_d[l_ac].xmdd202) RETURNING l_success,g_detail_d[l_ac].xmdd202
+                  IF NOT cl_ap_chk_Range(g_detail_d[l_ac].xmdd202,"0.000","1","","","azz-00079",1) THEN
+                     LET g_detail_d[l_ac].xmdd202 = g_detail_d_o.xmdd202
+                     NEXT FIELD b_xmdd202
+                  END IF
+                  IF NOT adbp520_chk_xmdd202() THEN
+                     LET g_detail_d[l_ac].xmdd202 = g_detail_d_o.xmdd202
+                     NEXT FIELD b_xmdd202
+                  END IF
+                  IF NOT cl_null(g_detail_d[l_ac].xmdd004) THEN
+                     CALL s_aooi250_convert_qty(g_detail_d[l_ac].xmdd001,g_detail_d[l_ac].xmdd201,g_detail_d[l_ac].xmdd004,g_detail_d[l_ac].xmdd202) RETURNING l_success,g_detail_d[l_ac].xmdd006
+                  END IF
+                  IF NOT cl_null(g_detail_d[l_ac].xmdd024) THEN
+                     CALL s_aooi250_convert_qty(g_detail_d[l_ac].xmdd001,g_detail_d[l_ac].xmdd201,g_detail_d[l_ac].xmdd024,g_detail_d[l_ac].xmdd202) RETURNING l_success,g_detail_d[l_ac].xmdd025
+                  END IF
+               END IF
+               LET g_detail_d_o.xmdd202 = g_detail_d[l_ac].xmdd202
+               LET g_detail_d_o.xmdd006 = g_detail_d[l_ac].xmdd006
+               LET g_detail_d_o.xmdd025 = g_detail_d[l_ac].xmdd025
+               
+             AFTER FIELD b_xmdd006               
+               IF NOT cl_null(g_detail_d[l_ac].xmdd006) THEN
+                  IF g_detail_d[l_ac].xmdd006 <> g_detail_d_o.xmdd006 OR cl_null(g_detail_d_o.xmdd006) THEN
+                     CALL s_aooi250_take_decimals(g_detail_d[l_ac].xmdd004,g_detail_d[l_ac].xmdd006) RETURNING l_success,g_detail_d[l_ac].xmdd006
+                     IF NOT cl_ap_chk_Range(g_detail_d[l_ac].xmdd006,"0.000","0","","","azz-00079",1) THEN
+                        LET g_detail_d[l_ac].xmdd006 = g_detail_d_o.xmdd006
+                        NEXT FIELD b_xmdd006
+                     END IF                     
+                     IF NOT adbp520_chk_xmdd006(g_detail_d[l_ac].xmdd006) THEN
+                        LET g_detail_d[l_ac].xmdd006 = g_detail_d_o.xmdd006
+                        NEXT FIELD b_xmdd006
+                     END IF
+                     IF NOT cl_null(g_detail_d[l_ac].xmdd201) THEN
+                        CALL s_aooi250_convert_qty(g_detail_d[l_ac].xmdd001,g_detail_d[l_ac].xmdd004,g_detail_d[l_ac].xmdd201,g_detail_d[l_ac].xmdd006) RETURNING l_success,g_detail_d[l_ac].xmdd202
+                     END IF
+                     IF NOT cl_null(g_detail_d[l_ac].xmdd024) THEN
+                        CALL s_aooi250_convert_qty(g_detail_d[l_ac].xmdd001,g_detail_d[l_ac].xmdd004,g_detail_d[l_ac].xmdd024,g_detail_d[l_ac].xmdd006) RETURNING l_success,g_detail_d[l_ac].xmdd025
+                     END IF
+                  END IF
+               ELSE
+                  LET g_detail_d[l_ac].xmdd202 = ''
+                  LET g_detail_d[l_ac].xmdd025 = ''
+               END IF               
+               LET g_detail_d_o.xmdd006 = g_detail_d[l_ac].xmdd006
+               LET g_detail_d_o.xmdd202 = g_detail_d[l_ac].xmdd202
+               LET g_detail_d_o.xmdd025 = g_detail_d[l_ac].xmdd025
+               CALL adbp520_set_entry_b()    
+               CALL adbp520_set_no_entry_b()   
+               
+            AFTER FIELD b_xmdd025
+               IF NOT cl_null(g_detail_d[l_ac].xmdd025) THEN
+                  IF NOT cl_null(g_detail_d[l_ac].xmdd024) THEN            
+                     CALL s_aooi250_take_decimals(g_detail_d[l_ac].xmdd024,g_detail_d[l_ac].xmdd025) RETURNING l_success,g_detail_d[l_ac].xmdd025            
+                  END IF
+                  IF NOT cl_ap_chk_Range(g_detail_d[l_ac].xmdd025,"0.000","1","","","azz-00079",1) THEN
+                     LET g_detail_d[l_ac].xmdd025 = g_detail_d_o.xmdd025
+                     NEXT FIELD b_xmdd025
+                  END IF
+               END IF
+               
+            ON CHANGE sel
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               CALL cl_err_collect_init()   #170109-00037#3 20170117 add by beckxie
+               CALL adbp520_upd_s_adbp520_temp1()      
+               CALL cl_err_collect_show()   #170109-00037#3 20170117 add by beckxie
+               
+            ON ROW CHANGE
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               CALL cl_err_collect_init()   #170109-00037#3 20170117 add by beckxie
+               CALL adbp520_upd_s_adbp520_temp1()
+               CALL cl_err_collect_show()   #170109-00037#3 20170117 add by beckxie
+                          
+         END INPUT 
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2 name="ui_dialog.before_dialog2"
+            CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+            CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+           
+            IF cl_null(g_xmda005) THEN
+               LET g_xmda005 = '1'
+               DISPLAY g_xmda005 TO xmda005
+            END IF
+            DISPLAY l_cons.xmda202   TO xmda202
+            DISPLAY l_cons.xmda004   TO xmda004
+            DISPLAY l_cons.xmdd211   TO xmdd211
+            DISPLAY l_cons.xmdadocno TO xmdadocno
+            DISPLAY l_cons.xmddsite  TO xmddsite
+            DISPLAY l_cons.xmda023   TO xmda023
+            DISPLAY l_cons.xmdd011   TO xmdd011
+            DISPLAY l_cons.xmdd208   TO xmdd208
+            DISPLAY l_cons.xmddunit  TO xmddunit
+            DISPLAY l_cons.xmdd209   TO xmdd209
+
+            NEXT FIELD xmda202
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            #add-point:ui_dialog段on action selall name="ui_dialog.selall.befroe"
+            CALL cl_err_collect_init()   #170109-00037#3 20170117 add by beckxie
+            #end add-point            
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+               #add-point:ui_dialog段on action selall name="ui_dialog.for.onaction_selall"
+               LET l_ac = li_idx
+               CALL adbp520_upd_s_adbp520_temp1()
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selall name="ui_dialog.onaction_selall"
+            CALL cl_err_collect_show()   #170109-00037#3 20170117 add by beckxie
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+               #add-point:ui_dialog段on action selnone name="ui_dialog.for.onaction_selnone"
+               LET l_ac = li_idx
+               CALL adbp520_upd_s_adbp520_temp1()
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selnone name="ui_dialog.onaction_selnone"
+ 
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel name="ui_dialog.onaction_sel"
+            LET l_ac = DIALOG.getCurrentRow("s_detail1")
+            CALL cl_err_collect_init()   #170109-00037#3 20170117 add by beckxie
+            IF l_ac > 0 THEN
+               CALL adbp520_upd_s_adbp520_temp1()
+               DISPLAY BY NAME g_detail_d[l_ac].sel
+            END IF
+            CALL cl_err_collect_show()   #170109-00037#3 20170117 add by beckxie
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel name="ui_dialog.onaction_unsel"
+            LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               IF l_ac > 0 THEN
+               CALL adbp520_upd_s_adbp520_temp1()
+            DISPLAY BY NAME g_detail_d[l_ac].sel
+            END IF
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL adbp520_filter()
+            #add-point:ON ACTION filter name="menu.filter"
+            
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            #add-point:ui_dialog段accept之前 name="menu.filter"
+            
+            #end add-point
+            CALL adbp520_query()
+             
+         # 條件清除
+         ON ACTION qbeclear
+            #add-point:ui_dialog段 name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            #add-point:ui_dialog段datarefresh name="ui_dialog.datarefresh"
+            
+            #end add-point
+            CALL adbp520_b_fill()
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         ON ACTION batch_execute 
+            #160225-00040#18 2016/04/13 s983961--add(s)
+            IF g_bgjob <> "Y" THEN
+               CALL cl_progress_bar_no_window(4)
+            END IF   
+            #160225-00040#18 2016/04/13 s983961--add(e)
+             
+            #160225-00040#18 2016/04/13 s983961--add(s)
+            LET l_msg = cl_getmsg('ade-00114',g_lang)   
+            CALL cl_progress_no_window_ing(l_msg)
+            #160225-00040#18 2016/04/13 s983961--add(e)        
+            CALL cl_err_collect_init()   #170109-00037#3 20170117 add by beckxie
+            IF l_ac > 0 THEN 
+               #By benson ----S---- 
+               #因為資料改成出通數量xmdd006為主,如果不加這段會在某些操作情境下產生錯誤的資料
+               IF NOT cl_null(g_detail_d[l_ac].xmdd006) THEN
+                  IF g_detail_d[l_ac].xmdd006 <> g_detail_d_o.xmdd006 OR cl_null(g_detail_d_o.xmdd006) THEN
+                     CALL s_aooi250_take_decimals(g_detail_d[l_ac].xmdd004,g_detail_d[l_ac].xmdd006) RETURNING l_success,g_detail_d[l_ac].xmdd006
+                     IF NOT cl_ap_chk_Range(g_detail_d[l_ac].xmdd006,"0.000","0","","","azz-00079",1) THEN
+                        LET g_detail_d[l_ac].xmdd006 = g_detail_d_o.xmdd006
+                        CONTINUE DIALOG
+                     END IF                     
+                     IF NOT adbp520_chk_xmdd006(g_detail_d[l_ac].xmdd006) THEN
+                        LET g_detail_d[l_ac].xmdd006 = g_detail_d_o.xmdd006
+                        CONTINUE DIALOG
+                     END IF
+                     IF NOT cl_null(g_detail_d[l_ac].xmdd201) THEN
+                        CALL s_aooi250_convert_qty(g_detail_d[l_ac].xmdd001,g_detail_d[l_ac].xmdd004,g_detail_d[l_ac].xmdd201,g_detail_d[l_ac].xmdd006) RETURNING l_success,g_detail_d[l_ac].xmdd202
+                     END IF
+                     IF NOT cl_null(g_detail_d[l_ac].xmdd024) THEN
+                        CALL s_aooi250_convert_qty(g_detail_d[l_ac].xmdd001,g_detail_d[l_ac].xmdd004,g_detail_d[l_ac].xmdd024,g_detail_d[l_ac].xmdd006) RETURNING l_success,g_detail_d[l_ac].xmdd025
+                     END IF
+                  END IF
+               ELSE
+                  LET g_detail_d[l_ac].xmdd202 = ''
+                  LET g_detail_d[l_ac].xmdd025 = ''
+               END IF       
+               #By benson ----E----                
+               IF NOT adbp520_chk_data() THEN
+                  CALL cl_err_collect_show()   #170109-00037#3 20170117 add by beckxie
+                  CONTINUE DIALOG
+               END IF
+               #170109-00037#3 20170117 add by beckxie---S
+               LET l_cnt1 = 0
+               SELECT COUNT(*)
+                 INTO l_cnt1
+                 FROM s_adbp520_temp1
+                WHERE sel = 'Y'
+                
+               #170109-00037#3 20170117 add by beckxie---E
+               CALL adbp520_upd_s_adbp520_temp1()
+            END IF
+            
+            LET l_cnt = 0
+            SELECT COUNT(*)
+              INTO l_cnt
+              FROM s_adbp520_temp1
+             WHERE sel = 'Y'
+            IF l_cnt > 0 THEN            
+               #160225-00040#18 2016/04/13 s983961--add(s)
+               LET l_msg = cl_getmsg('ast-00329',g_lang)   
+               CALL cl_progress_no_window_ing(l_msg)
+               #160225-00040#18 2016/04/13 s983961--add(e)              
+               CALL s_transaction_begin()
+               CALL s_adbp520('1','') RETURNING l_success,l_str
+               IF l_success THEN
+                  CALL s_transaction_end('Y','1')
+
+                  LET la_param.prog = 'adbt520'
+                  LET la_param.param[1] = ''
+                  LET la_param.param[2] = l_str
+                  LET ls_js = util.JSON.stringify(la_param )
+                  #CALL cl_cmdrun_wait(ls_js)   #160831-00048#1 Mark BY ken 160831
+                  CALL cl_cmdrun(ls_js)         #160831-00048#1 Add BY ken 160831
+               ELSE
+                  CALL s_transaction_end('N','1')
+               END IF
+               DELETE FROM s_adbp520_temp2
+               CALL adbp520_b_fill()
+            ELSE
+               INITIALIZE g_errparam TO NULL
+               #170109-00037#3 20170116 add by beckxie---S
+               IF l_cnt1 > 0 THEN
+                  LET g_errparam.code = 'ast-00867'
+               ELSE
+               #170109-00037#3 20170116 add by beckxie---E
+                  LET g_errparam.code = 'adb-00078'
+               END IF   #170109-00037#2 20170116 add by beckxie
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               #160225-00040#18 2016/04/13 s983961--add(s)
+               LET l_msg = cl_getmsg('ast-00329',g_lang)   
+               CALL cl_progress_no_window_ing(l_msg)
+               #160225-00040#18 2016/04/13 s983961--add(e)    
+               #160225-00040#18 2016/04/13 s983961--add(s)
+               LET l_msg = cl_getmsg('ast-00330',g_lang)   
+               CALL cl_progress_no_window_ing(l_msg)
+               #160225-00040#18 2016/04/13 s983961--add(e) 
+               #160225-00040#18 2016/04/13 s983961--add(s)
+                LET l_msg = cl_getmsg('std-00012',g_lang)
+                CALL cl_progress_no_window_ing(l_msg)  
+                CALL cl_err_collect_show()   
+                #160225-00040#18 2016/04/13 s983961--add(e)  
+               CONTINUE DIALOG
+            END IF
+            
+            #160225-00040#18 2016/04/13 s983961--add(s)
+            LET l_msg = cl_getmsg('std-00012',g_lang)
+            CALL cl_progress_no_window_ing(l_msg)  
+            CALL cl_err_collect_show()   
+            #160225-00040#18 2016/04/13 s983961--add(e)  
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #(ver:22) ---start---
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      
+      #end add-point
+      #(ver:22) --- end ---
+ 
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #(ver:22) ---start---
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         #(ver:22) --- end ---
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbp520.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION adbp520_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define name="query.define"
+  #DEFINE l_sel       LIKE type_t.chr1
+  #DEFINE l_xmdddocno LIKE xmdd_t.xmdddocno
+  #DEFINE l_xmddseq   LIKE xmdd_t.xmddseq
+  #DEFINE l_xmddseq1  LIKE xmdd_t.xmddseq
+  #DEFINE l_xmddseq2  LIKE xmdd_t.xmddseq
+  #DEFINE l_xmdd202   LIKE xmdd_t.xmdd202
+  #DEFINE l_xmdd006   LIKE xmdd_t.xmdd006
+  #DEFINE l_xmdd025   LIKE xmdd_t.xmdd025
+  #DEFINE l_i         LIKE type_t.num5
+   #end add-point 
+    
+   #add-point:cs段after_construct name="query.after_construct"
+   IF l_ac > 0 THEN
+      CALL adbp520_upd_s_adbp520_temp1()
+   END IF
+   DELETE FROM s_adbp520_temp2
+
+   INSERT INTO s_adbp520_temp2
+        SELECT sel,     xmddent,xmdddocno, xmddseq, xmddseq1,xmddseq2, xmdd202, xmdd006, xmdd025,
+               xmda004, xmda021,xmda022,   xmda203, xmda200, xmda201,  xmda002, xmda003,
+               xmda009, xmda010,xmda015,   xmdd019, xmda035, xmda024,  xmda005, xmda023, xmda048, xmda049,
+               xmdd222, xmdd220, xmddunit
+          FROM s_adbp520_temp1
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL adbp520_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   END IF
+   
+   #add-point:cs段after_query name="query.cs_after_query"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbp520.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION adbp520_b_fill()
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define name="b_fill.define"
+   DEFINE l_cnt           LIKE type_t.num5
+   DEFINE l_xmdd202       LIKE xmdd_t.xmdd202
+   DEFINE l_xmdd006       LIKE xmdd_t.xmdd006
+   DEFINE l_xmdd025       LIKE xmdd_t.xmdd025
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_xmdh016       LIKE xmdh_t.xmdh016
+   DEFINE l_xmdd004       LIKE xmdd_t.xmdd004    #銷售單位
+   DEFINE l_xmdasite      LIKE xmda_t.xmdasite
+   DEFINE l_xmdastus      LIKE xmda_t.xmdastus
+   DEFINE l_slip          LIKE type_t.chr10
+   DEFINE l_ooac004       LIKE ooac_t.ooac004
+   DEFINE l_xmda022    LIKE xmda_t.xmda022 
+   DEFINE l_xmda203    LIKE xmda_t.xmda203 
+   DEFINE l_xmda200    LIKE xmda_t.xmda200 
+   DEFINE l_xmda201    LIKE xmda_t.xmda201 
+   DEFINE l_xmda002    LIKE xmda_t.xmda002 
+   DEFINE l_xmda003    LIKE xmda_t.xmda003 
+   DEFINE l_xmda009    LIKE xmda_t.xmda009 
+   DEFINE l_xmda010    LIKE xmda_t.xmda010 
+   DEFINE l_xmda015    LIKE xmda_t.xmda015 
+   DEFINE l_xmdd019    LIKE xmdd_t.xmdd019
+   DEFINE l_xmda035    LIKE xmda_t.xmda035 
+   DEFINE l_xmda024    LIKE xmda_t.xmda024
+   DEFINE l_xmda023    LIKE xmda_t.xmda023
+   DEFINE l_xmda048    LIKE xmda_t.xmda048
+   DEFINE l_xmda049    LIKE xmda_t.xmda049   
+   DEFINE l_xmdd222    LIKE xmdd_t.xmdd222 
+   DEFINE l_xmdd220    LIKE xmdd_t.xmdd220 
+   DEFINE l_xmddunit   LIKE xmdd_t.xmddunit  
+   DEFINE l_where      STRING
+   #end add-point
+ 
+   LET g_wc = g_wc, cl_sql_auth_filter()   #(ver:21) add cl_sql_auth_filter()
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   DELETE FROM s_adbp520_temp1
+   
+   LET l_where = s_aooi500_sql_where(g_prog,'xmdasite')
+   
+   #160729-00027#1 160729 by lori mark---(S)
+   #LET g_sql = "SELECT      'N', xmda202,     '',xmdadocno, xmda005,",
+   #            "        xmda004,      '',xmda021,       '', xmdd211,", 
+   #            "             '',xmddunit,     '',  xmdd229, xmddseq,",
+   #            "       xmddseq1,xmddseq2, xmja002,xmdd001,     '',       '',",
+   #            "        xmdd002, xmdd201,      '',xmdd202,  xmdd004,",
+   #            "             '', xmdd006, xmdd024,",
+   #            "             '', xmdd025, xmdd011,xmdd207,       '',",
+   #            "        xmdd208,      '', xmdd209,     '',  xmdd031,",
+   #            "        xmdd015, xmdd016, xmdd017,xmdd220,       '',",
+   #            "        xmdd221, xmda022, xmda203, xmda200,",
+   #            "        xmda201, xmda002, xmda003, xmda009, xmda010,",
+   #            "        xmda015, xmdd019, xmda035, xmda024, xmda023, xmda048, xmda049,",
+   #            "        xmdd222, xmdd220, xmddunit ",
+   #            "  FROM xmda_t,xmdd_t,xmja_t",
+   #            " WHERE xmdaent = xmddent AND xmdadocno = xmdddocno ",
+   #            "   AND xmjaent = xmddent AND xmjadocno = xmdddocno AND xmddseq = xmjaseq ",
+   #            "   AND xmddent = ? ",
+   #            "   AND ",g_wc CLIPPED,
+   #            "   AND ",g_wc2 CLIPPED ,
+   #            "   AND xmda005 = '",g_xmda005,"'",
+   #            "   AND xmdasite IS NOT NULL",
+   #            "   AND xmdastus = 'Y'",
+   #            "   AND xmdd004 IS NOT NULL",   #當銷售單位 或 包裝單位 其中一個為空值時,則不顯示於畫面上
+   #            "   AND xmdd201 IS NOT NULL"
+   #160729-00027#1 160729 by lori mark---(E)
+   
+   #160729-00027#1 160729 by lori add---(S)
+   #效能優化
+   LET g_sql = "SELECT        'N', ",
+               "          xmda202, ",
+               " (SELECT ooefl003 FROM ooefl_t WHERE ooeflent=",g_enterprise," AND ooefl001=xmda202 AND ooefl002='",g_dlang,"'), ",
+               "        xmdadocno, ",
+               "          xmda005, ",
+               "          xmda004, ",
+               " (SELECT pmaal004 FROM pmaal_t WHERE pmaalent=",g_enterprise," AND pmaal001=xmda004 AND pmaal002='",g_dlang,"'), ",
+               "          xmda021, ",
+               " (SELECT pmaal004 FROM pmaal_t WHERE pmaalent=",g_enterprise," AND pmaal001=xmda021 AND pmaal002='",g_dlang,"'), ",
+               "          xmdd211, ", 
+               " (SELECT pmaal004 FROM pmaal_t WHERE pmaalent=",g_enterprise," AND pmaal001=xmdd211 AND pmaal002='",g_dlang,"'), ",
+               "         xmddunit, ",
+               " (SELECT ooefl003 FROM ooefl_t WHERE ooeflent=",g_enterprise," AND ooefl001=xmddunit AND ooefl002='",g_dlang,"'), ",
+               "          xmdd229,  xmddseq, xmddseq1, xmddseq2,  xmja002, ",
+               "          xmdd001, imaal003, imaal004, ",
+               "          xmdd002, ",
+               "          xmdd201, ",
+               " (SELECT oocal003 FROM oocal_t WHERE oocalent=",g_enterprise," AND oocal001=xmdd201 AND oocal002='",g_dlang,"'), ",
+               "          xmdd202, ",
+               "          xmdd004, ",
+               " (SELECT oocal003 FROM oocal_t WHERE oocalent=",g_enterprise," AND oocal001=xmdd004 AND oocal002='",g_dlang,"'), ",
+               "          xmdd006, ",
+               "          xmdd024, ",
+               " (SELECT oocal003 FROM oocal_t WHERE oocalent=",g_enterprise," AND oocal001=xmdd024 AND oocal002='",g_dlang,"'), ",
+               "          xmdd025, ",
+               "          xmdd011, ",
+               "          xmdd207, ",
+               " (SELECT pmaal004 FROM pmaal_t WHERE pmaalent=",g_enterprise," AND pmaal001=xmdd207 AND pmaal002='",g_dlang,"'), ",
+               "          xmdd208, ",   #送貨地址 要先找到 送貨客戶的聯絡對象識別碼
+              #170214-00047#1 170214 by 02749 mod---(S) 
+              #" (SELECT  oofb011 FROM oofb_t WHERE  oofbent=",g_enterprise," AND oofb002=oofa001 AND oofb019=xmdd208), ",
+               " (SELECT  oofb011 FROM oofb_t,oofa_t ",
+               "   WHERE  oofbent = oofaent AND oofb002=oofa001 ",
+               "     AND  oofbent=",g_enterprise,
+               "     AND  oofb019=xmdd208 AND oofaent=xmddent AND oofa002 = '3' AND oofa003 = xmdd211), ",
+              #170214-00047#1 170214 by 02749 mod---(#) 
+               "          xmdd209, ",
+               " (SELECT dbadl003 FROM dbadl_t WHERE dbadlent=",g_enterprise," AND dbadl001=xmdd209 AND dbadl002='",g_dlang,"'), ",
+               "          xmdd031, ",
+               "          xmdd015, xmdd016, xmdd017, ",
+               "          xmdd220, ",
+               " (SELECT dbbcl003 FROM dbbcl_t WHERE dbbclent=",g_enterprise," AND dbbcl001=xmdd220 AND dbbcl002='",g_dlang,"'), ",
+               "          xmdd221, xmda022, xmda203,  xmda200, xmda201, ",
+               "          xmda002, xmda003, xmda009,  xmda010, xmda015, ",
+               "          xmdd019, xmda035, xmda024,  xmda023, xmda048,",
+               "          xmda049, xmdd222, xmdd220, xmddunit ",
+               "  FROM xmda_t,",
+               "       xmdd_t LEFT JOIN imaal_t ON imaalent=xmddent AND imaal001=xmdd001 AND imaal002='",g_dlang,"' ",
+              #"              LEFT JOIN oofa_t  ON oofaent=xmddent  AND oofa002 = '3'    AND oofa003 = xmdd211, ",     #170214-00047#1 170214 by 02749 mark
+               "      ,xmja_t ",                                                                                       #170214-00047#1 170214 by 02749 mod:table前加上,
+               " WHERE xmdaent = xmddent AND xmdadocno = xmdddocno ",
+               "   AND xmjaent = xmddent AND xmjadocno = xmdddocno AND xmddseq = xmjaseq ",
+               "   AND xmddent = ? ",
+               "   AND ",g_wc CLIPPED,
+               "   AND ",g_wc2 CLIPPED ,
+               "   AND xmda005 = '",g_xmda005,"'",
+               "   AND xmdasite IS NOT NULL",
+               "   AND xmdastus = 'Y'",
+               "   AND xmdd004 IS NOT NULL",   #當銷售單位 或 包裝單位 其中一個為空值時,則不顯示於畫面上
+               "   AND xmdd201 IS NOT NULL"   
+   #160729-00027#1 160729 by lori add---(E)
+   
+   LET g_sql = g_sql CLIPPED," AND ",l_where
+   #end add-point
+ 
+   PREPARE adbp520_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR adbp520_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空 name="b_fill.clear"
+ 
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into name="b_fill.foreach_into"
+   g_detail_d[l_ac].sel,          g_detail_d[l_ac].xmda202,      g_detail_d[l_ac].xmda202_desc, g_detail_d[l_ac].xmdadocno,
+   g_detail_d[l_ac].xmda005,      g_detail_d[l_ac].xmda004,      g_detail_d[l_ac].xmda004_desc, g_detail_d[l_ac].xmda021,
+   g_detail_d[l_ac].xmda021_desc, g_detail_d[l_ac].xmdd211,      g_detail_d[l_ac].xmdd211_desc, g_detail_d[l_ac].xmddunit,
+   g_detail_d[l_ac].xmddunit_desc,
+   g_detail_d[l_ac].xmdd229,      g_detail_d[l_ac].xmddseq,      g_detail_d[l_ac].xmddseq1,     g_detail_d[l_ac].xmddseq2,
+   g_detail_d[l_ac].xmja002,
+   g_detail_d[l_ac].xmdd001,      g_detail_d[l_ac].xmdd001_desc, g_detail_d[l_ac].xmdd001_desc_desc, g_detail_d[l_ac].xmdd002,
+   g_detail_d[l_ac].xmdd201,      g_detail_d[l_ac].xmdd201_desc, g_detail_d[l_ac].xmdd202,      g_detail_d[l_ac].xmdd004,
+   g_detail_d[l_ac].xmdd004_desc, g_detail_d[l_ac].xmdd006,      g_detail_d[l_ac].xmdd024,
+   g_detail_d[l_ac].xmdd024_desc, g_detail_d[l_ac].xmdd025,      g_detail_d[l_ac].xmdd011,      g_detail_d[l_ac].xmdd207,
+   g_detail_d[l_ac].xmdd207_desc, g_detail_d[l_ac].xmdd208,      g_detail_d[l_ac].xmdd208_desc, g_detail_d[l_ac].xmdd209,
+   g_detail_d[l_ac].xmdd209_desc, g_detail_d[l_ac].xmdd031,      g_detail_d[l_ac].xmdd015,      g_detail_d[l_ac].xmdd016,
+   g_detail_d[l_ac].xmdd017,      g_detail_d[l_ac].xmdd220,      g_detail_d[l_ac].xmdd220_desc, g_detail_d[l_ac].xmdd221,
+   l_xmda022, l_xmda203, l_xmda200, l_xmda201, l_xmda002, 
+   l_xmda003, l_xmda009, l_xmda010, l_xmda015, l_xmdd019, 
+   l_xmda035, l_xmda024, l_xmda023, l_xmda048, l_xmda049,
+   l_xmdd222, l_xmdd220, l_xmddunit 
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充 name="b_fill.foreach_iside"
+      #如訂單的單據別參數"訂單需走出通單"D-BAS-0077 為'N' 則表示不允許轉成出貨單通知單(即不符合此作業的核心)
+      SELECT xmdasite,xmdastus
+        INTO l_xmdasite,l_xmdastus
+        FROM xmda_t
+       WHERE xmdaent = g_enterprise
+         AND xmdadocno = g_detail_d[l_ac].xmdadocno
+      IF cl_null(l_xmdasite) THEN
+         CONTINUE FOREACH
+      END IF
+      
+      CALL s_aooi200_get_slip(g_detail_d[l_ac].xmdadocno) RETURNING l_success,l_slip
+      IF l_success THEN 
+         CALL cl_get_doc_para(g_enterprise,l_xmdasite,l_slip,'D-BAS-0077') RETURNING l_ooac004
+         
+         IF l_ooac004 = 'N' THEN
+            CONTINUE FOREACH 
+         END IF
+      ELSE 
+         CONTINUE FOREACH
+      END IF      
+      
+      #檢查 當可轉出通數量已經為0或單位數量轉換出現異常時,則不顯示於畫面上
+      LET l_xmdh016 = 0 
+      CALL s_adbt520_xmdd006_xmdd031(g_detail_d[l_ac].xmdadocno, g_detail_d[l_ac].xmddseq,g_detail_d[l_ac].xmddseq1,
+                                     g_detail_d[l_ac].xmddseq2 ,0,0) RETURNING l_xmdh016
+      IF NOT cl_null(g_errno) OR l_xmdh016 <= 0 THEN
+         CONTINUE FOREACH 
+      ELSE
+         LET g_detail_d[l_ac].xmdd006 = l_xmdh016
+         CALL s_aooi250_convert_qty(g_detail_d[l_ac].xmdd001,g_detail_d[l_ac].xmdd004,g_detail_d[l_ac].xmdd201,l_xmdh016) RETURNING l_success,l_xmdh016
+         IF l_success THEN
+            LET g_detail_d[l_ac].xmdd202 = l_xmdh016
+         END IF
+      END IF          
+      IF NOT cl_null(g_detail_d[l_ac].xmdd024) THEN
+         LET l_xmdd025 = 0
+         CALL s_aooi250_convert_qty(g_detail_d[l_ac].xmdd001,g_detail_d[l_ac].xmdd201,g_detail_d[l_ac].xmdd024,g_detail_d[l_ac].xmdd202) RETURNING l_success,l_xmdd025
+         IF l_success THEN
+            LET g_detail_d[l_ac].xmdd025 = l_xmdd025
+         END IF
+      END IF
+      #在b_fill時 如果已在暫存的temp_table 中,則將temp_table 的值顯示於畫面
+      LET l_cnt = 0
+      LET l_xmdd202 = ''
+      LET l_xmdd006 = ''
+      LET l_xmdd025 = ''
+      SELECT COUNT(*),xmdd202,xmdd006,xmdd025
+        INTO l_cnt,l_xmdd202,l_xmdd006,l_xmdd025
+        FROM s_adbp520_temp2
+       WHERE xmddent = g_enterprise
+         AND xmdddocno = g_detail_d[l_ac].xmdadocno
+         AND xmddseq   = g_detail_d[l_ac].xmddseq
+         AND xmddseq1  = g_detail_d[l_ac].xmddseq1
+         AND xmddseq2  = g_detail_d[l_ac].xmddseq2
+         AND sel = 'Y'
+       GROUP BY xmdd202,xmdd006,xmdd025
+
+      IF l_cnt = 1 THEN
+         LET g_detail_d[l_ac].sel     = 'Y'
+         LET g_detail_d[l_ac].xmdd202 = l_xmdd202
+         LET g_detail_d[l_ac].xmdd004 = l_xmdd004
+         LET g_detail_d[l_ac].xmdd025 = l_xmdd025
+      END IF
+
+      #將這一次b_fill 的值 寫到主要的temp中
+      INSERT INTO s_adbp520_temp1
+      VALUES(g_detail_d[l_ac].sel,g_enterprise,g_detail_d[l_ac].xmdadocno,
+             g_detail_d[l_ac].xmddseq,g_detail_d[l_ac].xmddseq1,g_detail_d[l_ac].xmddseq2,
+             g_detail_d[l_ac].xmdd202,g_detail_d[l_ac].xmdd006, g_detail_d[l_ac].xmdd025, g_detail_d[l_ac].xmda004,g_detail_d[l_ac].xmda021,
+             l_xmda022, l_xmda203, l_xmda200, l_xmda201, l_xmda002, 
+             l_xmda003, l_xmda009, l_xmda010, l_xmda015, l_xmdd019, 
+             l_xmda035, l_xmda024, g_detail_d[l_ac].xmda005,l_xmda023,l_xmda048,l_xmda049,
+             l_xmdd222, l_xmdd220, l_xmddunit )
+      
+      
+      #end add-point
+      
+      CALL adbp520_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.other_table"
+   CALL g_detail_d.deleteElement(l_ac)
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE adbp520_sel
+   
+   LET l_ac = 1
+   CALL adbp520_fetch()
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.after_b_fill"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbp520.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION adbp520_fetch()
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define name="fetch.define"
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後 name="fetch.after_fill"
+   
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbp520.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION adbp520_detail_show()
+   #add-point:show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point
+   #add-point:show段define name="detail_show.define"
+   DEFINE l_oofa001     LIKE oofa_t.oofa001
+   #end add-point
+   
+   #add-point:detail_show段 name="detail_show.detail_show"
+   #160729-00027#1 160729 by lori mark---(S)
+   #效能優化
+   #INITIALIZE g_ref_fields TO NULL
+   #LET g_ref_fields[1] = g_detail_d[l_ac].xmda202
+   #CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   #LET g_detail_d[l_ac].xmda202_desc = '', g_rtn_fields[1] , ''
+   #
+   #INITIALIZE g_ref_fields TO NULL
+   #LET g_ref_fields[1] = g_detail_d[l_ac].xmda004
+   #CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   #LET g_detail_d[l_ac].xmda004_desc = '', g_rtn_fields[1] , ''
+   #
+   #INITIALIZE g_ref_fields TO NULL
+   #LET g_ref_fields[1] = g_detail_d[l_ac].xmda021
+   #CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   #LET g_detail_d[l_ac].xmda021_desc = '', g_rtn_fields[1] , ''
+   #
+   #INITIALIZE g_ref_fields TO NULL
+   #LET g_ref_fields[1] = g_detail_d[l_ac].xmdd211
+   #CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   #LET g_detail_d[l_ac].xmdd211_desc = '', g_rtn_fields[1] , ''
+   #
+   #INITIALIZE g_ref_fields TO NULL
+   #LET g_ref_fields[1] = g_detail_d[l_ac].xmddunit
+   #CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   #LET g_detail_d[l_ac].xmddunit_desc = '', g_rtn_fields[1] , ''
+   #
+   #INITIALIZE g_ref_fields TO NULL
+   #LET g_ref_fields[1] = g_detail_d[l_ac].xmdd001
+   #CALL ap_ref_array2(g_ref_fields,"SELECT imaal003,imaal004 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   #LET g_detail_d[l_ac].xmdd001_desc = '', g_rtn_fields[1] , ''
+   #LET g_detail_d[l_ac].xmdd001_desc_desc = '', g_rtn_fields[2] , ''
+   #
+   #INITIALIZE g_ref_fields TO NULL
+   #LET g_ref_fields[1] = g_detail_d[l_ac].xmdd201
+   #CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   #LET g_detail_d[l_ac].xmdd201_desc = '', g_rtn_fields[1] , ''
+   #
+   #INITIALIZE g_ref_fields TO NULL
+   #LET g_ref_fields[1] = g_detail_d[l_ac].xmdd004
+   #CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   #LET g_detail_d[l_ac].xmdd004_desc = '', g_rtn_fields[1] , ''
+   #
+   #INITIALIZE g_ref_fields TO NULL
+   #LET g_ref_fields[1] = g_detail_d[l_ac].xmdd024
+   #CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   #LET g_detail_d[l_ac].xmdd024_desc = '', g_rtn_fields[1] , ''
+   #
+   #INITIALIZE g_ref_fields TO NULL
+   #LET g_ref_fields[1] = g_detail_d[l_ac].xmdd207
+   #CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   #LET g_detail_d[l_ac].xmdd207_desc = '', g_rtn_fields[1] , ''
+   #
+   ##送貨地址 要先找到 送貨客戶的聯絡對象識別碼
+   #LET l_oofa001 = ''
+   #SELECT oofa001 INTO l_oofa001
+   # FROM oofa_t
+   # WHERE oofaent = g_enterprise
+   #   AND oofa002 = '3'
+   #   AND oofa003 = g_detail_d[l_ac].xmdd211
+   #
+   #INITIALIZE g_ref_fields TO NULL
+   #LET g_ref_fields[1] = l_oofa001
+   #LET g_ref_fields[2] = g_detail_d[l_ac].xmdd208
+   #CALL ap_ref_array2(g_ref_fields,"SELECT oofb011 FROM oofb_t WHERE oofbent='"||g_enterprise||"' AND oofb002 = ? AND oofb019=? ","") RETURNING g_rtn_fields
+   #LET g_detail_d[l_ac].xmdd208_desc = '', g_rtn_fields[1] , ''
+   #
+   #INITIALIZE g_ref_fields TO NULL
+   #LET g_ref_fields[1] = g_detail_d[l_ac].xmdd209
+   #CALL ap_ref_array2(g_ref_fields,"SELECT dbadl003 FROM dbadl_t WHERE dbadlent='"||g_enterprise||"' AND dbadl001=? AND dbadl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   #LET g_detail_d[l_ac].xmdd209_desc = '', g_rtn_fields[1] , ''
+   #
+   #INITIALIZE g_ref_fields TO NULL
+   #LET g_ref_fields[1] = g_detail_d[l_ac].xmdd220
+   #CALL ap_ref_array2(g_ref_fields,"SELECT dbbcl003 FROM dbbcl_t WHERE dbbclent='"||g_enterprise||"' AND dbbcl001=? AND dbbcl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   #LET g_detail_d[l_ac].xmdd220_desc = '', g_rtn_fields[1] , ''
+   #160729-00027#1 160729 by lori mark---(E)
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbp520.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION adbp520_filter()
+   #add-point:filter段define(客製用) name="filter.define_customerization"
+   
+   #end add-point    
+   #add-point:filter段define name="filter.define"
+   
+   #end add-point
+   
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define name="filter.detail_cnt"
+   
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL adbp520_b_fill()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbp520.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION adbp520_filter_parser(ps_field)
+   #add-point:filter段define(客製用) name="filter_parser.define_customerization"
+   
+   #end add-point    
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define name="filter_parser.define"
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbp520.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION adbp520_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = adbp520_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbp520.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+PRIVATE FUNCTION adbp520_upd_s_adbp520_temp1()
+#170109-00037#3 20170117 add by beckxie---S
+DEFINE l_xmdddocno  LIKE xmdd_t.xmdddocno
+DEFINE l_xmddseq    LIKE xmdd_t.xmddseq
+DEFINE l_xmddseq1   LIKE xmdd_t.xmddseq1
+DEFINE l_xmddseq2   LIKE xmdd_t.xmddseq2
+#170109-00037#3 20170117 add by beckxie---E
+
+   #170109-00037#3 20170117 add by beckxie---S
+   #UI勾選LOCK檢查
+   IF g_detail_d[l_ac].sel = 'Y' THEN
+      CALL s_transaction_begin()
+      LET l_xmdddocno = ''
+      LET l_xmddseq = ''
+      LET l_xmddseq1 = '' 
+      LET l_xmddseq2 = ''
+      EXECUTE adbp520_chk_lock_xmdd USING g_detail_d[l_ac].xmdadocno,g_detail_d[l_ac].xmddseq,g_detail_d[l_ac].xmddseq1,g_detail_d[l_ac].xmddseq2
+                                     INTO l_xmdddocno,l_xmddseq,l_xmddseq1,l_xmddseq2
+      IF cl_null(l_xmdddocno) OR cl_null(l_xmddseq) OR cl_null(l_xmddseq1) OR cl_null(l_xmddseq2) THEN
+         LET g_detail_d[l_ac].sel = 'N'
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = ''
+         LET g_errparam.code   = 'apm-01120'
+         LET g_errparam.replace[1] = g_detail_d[l_ac].xmdadocno
+         LET g_errparam.replace[2] = g_detail_d[l_ac].xmddseq
+         LET g_errparam.replace[3] = g_detail_d[l_ac].xmddseq1
+         LET g_errparam.replace[4] = g_detail_d[l_ac].xmddseq2 
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+         UPDATE s_adbp520_temp1 SET sel = g_detail_d[l_ac].sel
+          WHERE xmddent = g_enterprise
+            AND xmdddocno = g_detail_d[l_ac].xmdadocno
+            AND xmddseq   = g_detail_d[l_ac].xmddseq
+            AND xmddseq1  = g_detail_d[l_ac].xmddseq1
+            AND xmddseq2  = g_detail_d[l_ac].xmddseq2 
+      ELSE
+         UPDATE s_adbp520_temp1 SET sel = g_detail_d[l_ac].sel,
+                                 xmdd202 = g_detail_d[l_ac].xmdd202,
+                                 xmdd006 = g_detail_d[l_ac].xmdd006,
+                                 xmdd025 = g_detail_d[l_ac].xmdd025
+          WHERE xmddent = g_enterprise
+            AND xmdddocno = g_detail_d[l_ac].xmdadocno
+            AND xmddseq   = g_detail_d[l_ac].xmddseq
+            AND xmddseq1  = g_detail_d[l_ac].xmddseq1
+            AND xmddseq2  = g_detail_d[l_ac].xmddseq2 
+      END IF 
+    
+      CALL s_transaction_end('Y',0)
+   ELSE
+   #170109-00037#3 20170117 add by beckxie---E
+      UPDATE s_adbp520_temp1 SET sel = g_detail_d[l_ac].sel,
+                                 xmdd202 = g_detail_d[l_ac].xmdd202,
+                                 xmdd006 = g_detail_d[l_ac].xmdd006,
+                                 xmdd025 = g_detail_d[l_ac].xmdd025
+       WHERE xmddent = g_enterprise
+         AND xmdddocno = g_detail_d[l_ac].xmdadocno
+         AND xmddseq   = g_detail_d[l_ac].xmddseq
+         AND xmddseq1  = g_detail_d[l_ac].xmddseq1
+         AND xmddseq2  = g_detail_d[l_ac].xmddseq2      
+   END IF   #170109-00037#3 20170117 add by beckxie
+END FUNCTION
+
+PRIVATE FUNCTION adbp520_set_entry_b()
+   CALL cl_set_comp_entry("b_xmdd202,b_xmdd006,b_xmdd025",TRUE)
+END FUNCTION
+
+PRIVATE FUNCTION adbp520_set_no_entry_b()
+   DEFINE l_xmdc022      LIKE xmdc_t.xmdc022
+   
+   LET l_xmdc022 = ''
+   SELECT xmdc022 INTO l_xmdc022 FROM xmdc_t
+    WHERE xmdcent = g_enterprise
+      AND xmdcdocno = g_detail_d[l_ac].xmdadocno
+      AND xmdcseq   = g_detail_d[l_ac].xmddseq
+   IF l_xmdc022 = 'N' THEN
+      CALL cl_set_comp_entry("b_xmdd202,b_xmdd006",FALSE)
+   END IF
+   
+   IF g_detail_d[l_ac].sel = 'N' THEN
+      CALL cl_set_comp_entry("b_xmdd202,b_xmdd006,b_xmdd025",FALSE)
+   END IF
+   IF NOT cl_null(g_detail_d[l_ac].xmdd006) THEN
+      CALL cl_set_comp_entry("b_xmdd202",FALSE)
+   END IF
+   IF cl_null(g_detail_d[l_ac].xmdd024) THEN
+      CALL cl_set_comp_entry("b_xmdd025",FALSE)
+   END IF
+END FUNCTION
+#於整批處理前,校驗當下那筆資料(l_ac)的正確性
+PRIVATE FUNCTION adbp520_chk_data()
+   DEFINE r_success  LIKE type_t.chr1
+
+   LET r_success = TRUE
+
+   IF g_detail_d[l_ac].sel = 'Y' AND (cl_null(g_detail_d[l_ac].xmdd202) OR cl_null(g_detail_d[l_ac].xmdd006)) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = ''
+      LET g_errparam.code   = 'adb-00282'
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   IF NOT cl_ap_chk_Range(g_detail_d[l_ac].xmdd202,"0.000","1","","","azz-00079",1) THEN
+      LET g_detail_d[l_ac].xmdd202 = g_detail_d_t.xmdd202
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   IF NOT cl_ap_chk_Range(g_detail_d[l_ac].xmdd006,"0.000","0","","","azz-00079",1) THEN
+      LET g_detail_d[l_ac].xmdd006 = g_detail_d_t.xmdd006
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   IF NOT adbp520_chk_xmdd006(g_detail_d[l_ac].xmdd006) THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   IF NOT cl_ap_chk_Range(g_detail_d[l_ac].xmdd025,"0.000","1","","","azz-00079",1) THEN
+      LET g_detail_d[l_ac].xmdd025 = g_detail_d_t.xmdd025
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   RETURN r_success
+END FUNCTION
+
+PRIVATE FUNCTION adbp520_chk_xmdd202()
+   DEFINE l_xmdh016   LIKE xmdh_t.xmdh016
+   DEFINE l_xmdd004   LIKE xmdd_t.xmdd004
+   DEFINE l_xmdd202   LIKE xmdd_t.xmdd202
+   DEFINE l_success   LIKE type_t.num5
+   DEFINE l_cnt       LIKE type_t.num5
+   DEFINE l_str       STRING
+   DEFINE r_success   LIKE type_t.num5
+
+   LET r_success = TRUE
+
+   CALL s_aooi250_convert_qty(g_detail_d[l_ac].xmdd001,g_detail_d[l_ac].xmdd201,g_detail_d[l_ac].xmdd004,g_detail_d[l_ac].xmdd202) RETURNING l_success,l_xmdh016
+   IF l_success THEN
+      IF NOT adbp520_chk_xmdd006(l_xmdh016) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   ELSE
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   RETURN r_success
+END FUNCTION
+
+PRIVATE FUNCTION adbp520_chk_xmdd006(p_xmdh016)
+   DEFINE p_xmdh016   LIKE xmdh_t.xmdh016
+   DEFINE l_xmdh016   LIKE xmdh_t.xmdh016
+   DEFINE l_xmdd004   LIKE xmdd_t.xmdd004
+   DEFINE l_xmdd202   LIKE xmdd_t.xmdd202
+   DEFINE l_success   LIKE type_t.num5
+   DEFINE l_cnt       LIKE type_t.num5
+   DEFINE l_str       STRING
+   DEFINE r_success   LIKE type_t.num5
+
+   LET r_success = TRUE
+
+   CALL s_adbt520_xmdd006_xmdd031(g_detail_d[l_ac].xmdadocno, g_detail_d[l_ac].xmddseq,g_detail_d[l_ac].xmddseq1,
+                                  g_detail_d[l_ac].xmddseq2 ,0,0) RETURNING l_xmdh016
+                                  
+   IF p_xmdh016 > l_xmdh016 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'adb-00122'
+      LET g_errparam.extend = p_xmdh016
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   RETURN r_success
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

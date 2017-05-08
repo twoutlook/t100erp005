@@ -1,0 +1,71 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmq970" module="anm" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="02291" crtdt="2015-10-15 14:08:53" modid="02291" moddt="2015-10-28 15:02:45" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="資金計劃狀況查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmbj001,nmbj001_desc(chr500),nmbj002,nmbj002_desc(chr500),nmbj003,nmbj004,nmbj005,nmbj005_desc(chr500),nmbj006,nmbj007,nmbj008,nmbc103(num20_6),amt1(num20_6),amt2(num20_6)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmbj001(b_nmbj001),nmbj001_desc(b_nmbj001_desc),nmbj002(b_nmbj002),nmbj002_desc(b_nmbj002_desc),nmbj003(b_nmbj003),nmbj004(b_nmbj004),nmbj005(b_nmbj005),nmbj005_desc(b_nmbj005_desc),nmbj006(b_nmbj006),nmbj007(b_nmbj007),nmbj008(b_nmbj008),nmbc103(nmbc103),amt1(amt1),amt2(amt2)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmq970" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="nmbj001,nmbj002,nmbj003,nmbj004,nmbj005,nmbj006,nmbj007,nmbj008" insert="N" append="Y" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="nmbj001(b_nmbj001),nmbj002(b_nmbj002),nmbj003(b_nmbj003),nmbj004(b_nmbj004),nmbj005(b_nmbj005),nmbj006(b_nmbj006),nmbj007(b_nmbj007),nmbj008(b_nmbj008)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="nmbj001">
+        <after>
+          <reference field="nmbj001_desc" ref_field="nmbj001" map_field="nmbjent,nmbj001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmbh004" state="i"/>
+        <controlp form="q_nmbh004" state="c"/>
+      </column>
+      <column id="nmbj001_desc"/>
+      <column id="nmbj002">
+        <after>
+          <check chkid="v_ooia001_1" id="isExist"/>
+          <reference field="nmbj002_desc" ref_field="nmbj002" map_field="nmbj002" ref_sql="SELECT nmbdl004 FROM nmbdl_t WHERE nmbdlent=$varg_enterprise$var AND nmbdl001=? AND nmbdl002=? AND nmbdl003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="nmbj002_desc"/>
+      <column id="nmbj003"/>
+      <column id="nmbj004"/>
+      <column id="nmbj005">
+        <after>
+          <check chkid="v_pmaa001_3" id="isExist"/>
+          <reference field="nmbj005_desc" ref_field="nmbj005" map_field="nmbjent,nmbj005" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_13" state="c"/>
+      </column>
+      <column id="nmbj005_desc"/>
+      <column id="nmbj006"/>
+      <column id="nmbj007"/>
+      <column id="nmbj008"/>
+      <column id="nmbc103"/>
+      <column id="amt1"/>
+      <column id="amt2"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="nmbj_t" page="1" linked="" pk="nmbjdocno,nmbjseq">
+      <sql id="b_fill_sql" query="SELECT nmbj001,&apos;&apos;,nmbj002,&apos;&apos;,nmbj003,nmbj004,nmbj005,&apos;&apos;,nmbj006,nmbj007,nmbj008,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM nmbj_t WHERE nmbjent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

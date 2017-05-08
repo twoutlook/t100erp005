@@ -1,0 +1,77 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aect801_01" module="aec" jobmode="N" type="c03a" industry="std" fix_arg="0" crtid="01258" crtdt="2014-08-14 20:22:23" modid="01258" moddt="2014-12-08 15:42:55" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="多上站作業資料">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="eccbdocno,eccb003,eccb004,eccb004_desc(chr80),eccb005"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="ecceseq,ecce004,ecce004_desc(chr500),ecce005,ecce901,ecce905,ecce905_desc(chr500),ecce906,ecce001,ecce002,ecce900,ecce902"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="insert" chk="N" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aec" filename="aect801_01" method="dialog">
+    <section id="input">
+      <input id="head" field="eccb004,eccb005"/>
+      <input id="body" page="1" field="ecceseq,ecce004,ecce005,ecce901,ecce905,ecce906,ecce001,ecce002,ecce900,ecce902" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="eccbdocno,eccb003,eccb004,eccb005"/>
+      <construct id="body" page="1" field="ecceseq,ecce004,ecce005,ecce901,ecce905,ecce906,ecce001,ecce002,ecce900,ecce902"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="eccbdocno,eccb003"/>
+      <set id="head" type="no_entry" field="eccbdocno,eccb003"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="eccbdocno"/>
+      <column id="eccb003"/>
+      <column id="eccb004">
+        <after>
+          <reference field="eccb004_desc" ref_field="eccb_t.eccb004" map_field="eccbent,eccb004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="eccb004_desc"/>
+      <column id="eccb005"/>
+    </init>
+    <init id="body" page="1">
+      <column id="ecceseq"/>
+      <column id="ecce004">
+        <after>
+          <reference field="ecce004_desc" ref_field="ecce_t.ecce004" map_field="ecceent,ecce004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ecbb004" state="i"/>
+      </column>
+      <column id="ecce004_desc"/>
+      <column id="ecce005"/>
+      <column id="ecce901" type="S" default="3" def_scc="5448"/>
+      <column id="ecce905">
+        <after>
+          <reference field="ecce905_desc" ref_field="ecce905" map_field="ecce905" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;215&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="ecce905_desc"/>
+      <column id="ecce906"/>
+      <column id="ecce001"/>
+      <column id="ecce002"/>
+      <column id="ecce900"/>
+      <column id="ecce902"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="eccb_t" pk="eccbdocno,eccb003">
+      <sql id="forupd_sql" type="sql" query="SELECT eccbdocno,eccb003,eccb004,&apos;&apos;,eccb005 FROM eccb_t WHERE eccbent= ? AND eccbsite= ? AND eccbdocno=? AND eccb003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT eccbdocno,eccb003,eccb004,&apos;&apos;,eccb005 FROM eccb_t" order="eccbdocno,eccb003"/>
+    </head>
+    <body id="ecce_t" page="1" linked="" pk="ecceseq" fk="eccedocno,ecce003">
+      <sql id="forupd_sql_detail" query="SELECT ecceseq,ecce004,&apos;&apos;,ecce005,ecce901,ecce905,&apos;&apos;,ecce906,ecce001,ecce002,ecce900,ecce902 FROM ecce_t WHERE ecceent=? AND eccesite=? AND eccedocno=? AND ecce003=? AND ecceseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT ecceseq,ecce004,&apos;&apos;,ecce005,ecce901,ecce905,&apos;&apos;,ecce906,ecce001,ecce002,ecce900,ecce902 FROM ecce_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,167 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axct950" module="axc" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="00768" crtdt="2015-12-21 11:36:26" modid="02295" moddt="2016-08-04 15:19:36" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="內部收入成本維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcjesite,xcjesite_desc(chr80),xcje007,xcje007_desc(chr80),xcjeld,xcjeld_desc(chr80),xcjedocno,xcjedocdt,xcje002(num5),xcje003(num5),xcje001,xcje006,xcje006_desc(chr80),xcje004,xcje005,xcjestus"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcjfseq,xcjf015,xcjf015_desc(chr500),xcjf010,xcjf011,xcjf012,xcjf014,xcjf013,xcjf019,xcjf016,xcjf016_desc(chr500),xcjf016_desc_3(chr500),xcjf022,xcjf101,xcjf102,xcjf110,xcjf200,xcjf201,xcjf210,xcjf211,xcjf220,xcjf221"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcjfseq_0(num10),xcjf011_0(chr1),xcjf010_0(chr1),xcjf028_0(chr500),xcjf028_0_desc(chr500),xcjf029_0(chr500),xcjf029_0_desc(chr500),xcjf030_0(chr500),xcjf031_0(chr10),xcjf032_0(chr10),xcjf033_0(chr10),xcjf034_0(chr10),xcjf035_0(chr10),xcjf036_0(chr10),xcjf037_0(chr10),xcjf038_0(chr10),xcjf039_0(chr10),xcjf040_0(chr10),xcjf041_0(chr20),xcjf042_0(chr20),xcjf043_0(chr30),xcjf044_0(chr10),xcjf045_0(chr10),xcjf046_0(chr10),xcjf047_0(chr10),xcjf048_0(chr10),xcjf049_0(chr10),xcjf050_0(chr10),xcjf051_0(chr10),xcjf052_0(chr10),xcjf053_0(chr10)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="open_pre"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="open_axct950_s01"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="gen_voucher"/>
+      <action id="query" type="standard"/>
+      <action id="redo_gen_voucher"/>
+      <action id="inter_oem"/>
+      <action id="open_voucher"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axct950" method="dialog">
+    <section id="input">
+      <input id="head" field="xcjesite,xcje007,xcjeld,xcjedocno,xcjedocdt,xcje002,xcje003,xcje001,xcje006,xcje004,xcje005,xcjestus"/>
+      <input id="body" page="1" field="xcjfseq,xcjf015,xcjf010,xcjf014,xcjf013,xcjf016,xcjf022,xcjf101,xcjf102,xcjf110,xcjf200,xcjf201,xcjf210,xcjf211,xcjf220,xcjf221" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="xcjfseq_0,xcjf011_0,xcjf010_0,xcjf028_0,xcjf029_0,xcjf030_0,xcjf031_0,xcjf032_0,xcjf033_0,xcjf034_0,xcjf035_0,xcjf036_0,xcjf037_0,xcjf038_0,xcjf039_0,xcjf040_0,xcjf041_0,xcjf042_0,xcjf043_0,xcjf044_0,xcjf045_0,xcjf046_0,xcjf047_0,xcjf048_0,xcjf049_0,xcjf050_0,xcjf051_0,xcjf052_0,xcjf053_0" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcjesite,xcje007,xcjeld,xcjedocno,xcjedocdt,xcje002,xcje003,xcje001,xcje006,xcje004,xcje005,xcjestus"/>
+      <construct id="body" page="1" field="xcjfseq,xcjf015,xcjf010,xcjf014,xcjf013,xcjf016,xcjf022,xcjf101,xcjf102,xcjf110,xcjf200,xcjf201,xcjf210,xcjf211,xcjf220,xcjf221"/>
+      <construct id="body" page="2" field="xcjfseq_0,xcjf011_0,xcjf010_0,xcjf028_0,xcjf029_0,xcjf030_0,xcjf031_0,xcjf032_0,xcjf033_0,xcjf034_0,xcjf035_0,xcjf036_0,xcjf037_0,xcjf038_0,xcjf039_0,xcjf040_0,xcjf041_0,xcjf042_0,xcjf043_0,xcjf044_0,xcjf045_0,xcjf046_0,xcjf047_0,xcjf048_0,xcjf049_0,xcjf050_0,xcjf051_0,xcjf052_0,xcjf053_0"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcjeld,xcjedocno"/>
+      <set id="head" type="no_entry" field="xcjeld,xcjedocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcjesite">
+        <after>
+          <reference field="xcjesite_desc" ref_field="xcje_t.xcjesite" map_field="xcjeent,xcjecomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcjesite_desc"/>
+      <column id="xcje007">
+        <after>
+          <reference field="xcje007_desc" ref_field="xcje_t.xcje007" map_field="xcje007" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="xcje007_desc"/>
+      <column id="xcjeld">
+        <after>
+          <reference field="xcjeld_desc" ref_field="xcje_t.xcjeld" map_field="xcjeent,xcjeld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcjeld_desc"/>
+      <column id="xcjedocno"/>
+      <column id="xcjedocdt"/>
+      <column id="xcje002"/>
+      <column id="xcje003"/>
+      <column id="xcje001"/>
+      <column id="xcje006">
+        <after>
+          <reference field="xcje006_desc" ref_field="xcje_t.xcje006" map_field="xcje006" ref_sql="SELECT xcjal003 FROM xcjal_t WHERE xcjalent=$varg_enterprise$var AND xcjal001=? AND xcjal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcje006_desc"/>
+      <column id="xcje004"/>
+      <column id="xcje005"/>
+      <column id="xcjestus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+    </init>
+    <init id="body" page="1">
+      <column id="xcjfseq"/>
+      <column id="xcjf015">
+        <after>
+          <reference field="xcjf015_desc" ref_field="xcjf_t.xcjf015" map_field="xcjfent,xcjf015" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcjf015_desc"/>
+      <column id="xcjf010"/>
+      <column id="xcjf011"/>
+      <column id="xcjf012"/>
+      <column id="xcjf014"/>
+      <column id="xcjf013"/>
+      <column id="xcjf019"/>
+      <column id="xcjf016">
+        <after>
+          <reference field="xcjf016_desc" ref_field="xcjf_t.xcjf016" map_field="xcjf016" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcjf016_desc"/>
+      <column id="xcjf016_desc_3"/>
+      <column id="xcjf022" type="S" default="0"/>
+      <column id="xcjf101"/>
+      <column id="xcjf102" type="S" default="0"/>
+      <column id="xcjf110" type="S" default="0"/>
+      <column id="xcjf200"/>
+      <column id="xcjf201" type="S" default="0"/>
+      <column id="xcjf210"/>
+      <column id="xcjf211" type="S" default="0"/>
+      <column id="xcjf220"/>
+      <column id="xcjf221" type="S" default="0"/>
+    </init>
+    <init id="body" page="2">
+      <column id="xcjfseq_0"/>
+      <column id="xcjf011_0"/>
+      <column id="xcjf010_0"/>
+      <column id="xcjf028_0">
+        <after>
+          <reference field="xcjf028_0_desc" ref_field="xcjf028" map_field="xcjf028" ref_sql="SELECT glacl004 FROM glacl_t WHERE glaclent=$varg_enterprise$var AND glacl001=&apos;&apos; AND glacl002=? AND glacl003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcjf028_0_desc"/>
+      <column id="xcjf029_0">
+        <after>
+          <reference field="xcjf029_0_desc" ref_field="xcjf029" map_field="xcjf029" ref_sql="SELECT glacl004 FROM glacl_t WHERE glaclent=$varg_enterprise$var AND glacl001=&apos;&apos; AND glacl002=? AND glacl003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcjf029_0_desc"/>
+      <column id="xcjf030_0"/>
+      <column id="xcjf031_0"/>
+      <column id="xcjf032_0"/>
+      <column id="xcjf033_0"/>
+      <column id="xcjf034_0"/>
+      <column id="xcjf035_0"/>
+      <column id="xcjf036_0"/>
+      <column id="xcjf037_0"/>
+      <column id="xcjf038_0"/>
+      <column id="xcjf039_0"/>
+      <column id="xcjf040_0"/>
+      <column id="xcjf041_0"/>
+      <column id="xcjf042_0"/>
+      <column id="xcjf043_0"/>
+      <column id="xcjf044_0"/>
+      <column id="xcjf045_0"/>
+      <column id="xcjf046_0"/>
+      <column id="xcjf047_0"/>
+      <column id="xcjf048_0"/>
+      <column id="xcjf049_0"/>
+      <column id="xcjf050_0"/>
+      <column id="xcjf051_0"/>
+      <column id="xcjf052_0"/>
+      <column id="xcjf053_0"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xcje_t" pk="xcjeld,xcjedocno">
+      <sql id="forupd_sql" type="sql" query="SELECT xcjesite,&apos;&apos;,xcje007,&apos;&apos;,xcjeld,&apos;&apos;,xcjedocno,xcjedocdt,&apos;&apos;,&apos;&apos;,xcje001,xcje006,&apos;&apos;,xcje004,xcje005,xcjestus FROM xcje_t WHERE xcjeent= ? AND xcjeld=? AND xcjedocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcjesite,&apos;&apos;,xcje007,&apos;&apos;,xcjeld,&apos;&apos;,xcjedocno,xcjedocdt,&apos;&apos;,&apos;&apos;,xcje001,xcje006,&apos;&apos;,xcje004,xcje005,xcjestus FROM xcje_t" order="xcjeld,xcjedocno"/>
+    </head>
+    <body id="xcjf_t" page="1,2" linked="" pk="xcjfseq" fk="xcjfld,xcjfdocno">
+      <sql id="forupd_sql_detail" query="SELECT xcjfseq,xcjf015,&apos;&apos;,xcjf010,xcjf011,xcjf012,xcjf014,xcjf013,xcjf019,xcjf016,&apos;&apos;,&apos;&apos;,xcjf022,xcjf101,xcjf102,xcjf110,xcjf200,xcjf201,xcjf210,xcjf211,xcjf220,xcjf221,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xcjf_t WHERE xcjfent=? AND xcjfld=? AND xcjfdocno=? AND xcjfseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcjfseq,xcjf015,&apos;&apos;,xcjf010,xcjf011,xcjf012,xcjf014,xcjf013,xcjf019,xcjf016,&apos;&apos;,&apos;&apos;,xcjf022,xcjf101,xcjf102,xcjf110,xcjf200,xcjf201,xcjf210,xcjf211,xcjf220,xcjf221,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xcjf_t WHERE xcjfent=? AND xcjfld=? AND xcjfdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

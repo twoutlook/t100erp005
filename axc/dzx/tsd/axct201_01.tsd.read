@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axct201_01" std_prog="axct201_01" erpver="1.0" ver="3" module="AXC" type="S" booking="N" designer_ver="1.0" class="I" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="xcbl_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status=""/>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[逻辑:
+1.根据年度(xcbl002)、期别(xcbl003)、帐套(xcblld)的条件从“成本要素分摊设置档(xcba_t)”中的费用类型(xcba001)、成本中心(xcba004)、分摊方式(xcba007)、科目编号(xcba005)、部门编号(xcba006)、分摊权数(xcba009)，进行FOREACH循环计算。
+2.根据年度(xcbl002)、期别(xcbl003)、帐套(xcblld)、科目编号(xcba005)和部门编号(xcba006)从总账科目期统计档()中抓取数据，具体对应如下：
+    法人组织(xcblcomp)=按账套(xcblld)归属的法人组织
+     账套(xcblld)=画面条件的账套(xcblld)
+     费用类型(xcbl001)=费用类型(xcba001)
+     年度(xcbl002)=画面条件的年度(xcbl002)
+     期别(xcbl003)=画面条件的期别(xcbl003)
+     成本中心(xcbl004)=成本中心(xcba004)
+     分摊方式(xcbl005)=分摊方式(xcba007)
+     项次(xcblseq)=项次(xcblseq)+1
+     科目编号(xcbl010)=科目编号(glar001)
+     营运组织(xcbl011) =营运据点(glar012)
+     部门(xcbl012)= 部门(glar013)
+     交易对象(xcbl013)=交易对象(glar016)
+     客群(xcbl014)=客群(glar018)
+     区域(xcbl015)=区域(glar015)
+     成本中心(xcbl016)=成本中心(glar014)
+     经营类别(xcbl017)=暂时空白
+     渠道(xcbl018)=暂时空白
+     品类(xcbl019)=品类(glar019)
+     品牌(xcbl020)=暂时空白
+     项目编号(xcbl021)=项目编号(glar022)
+     WBS(xcbl022)=WBS(glar023)
+     
+     如果科目正常余额形态是借方
+          根据该科目抓取结转类凭证的发生额(sum(贷方金额-借方金额)且分主本位币、功能币二、三)，如果抓不到给0。可以设计一个元件来实现。
+          分摊成本(xcbl100)=(借方金额(glar005)-贷方金额(glar006)+结转类凭证发生额)*分摊权数(xcba009)
+          分摊成本本位币二(xcbl110)=(借方金额(glar034)-贷方金额(glar035)+结转类凭证发生额)*分摊权数(xcba009)
+          分摊成本本位币三(xcbl120)=(借方金额(glar036)-贷方金额(glar037)+结转类凭证发生额)*分摊权数(xcba009)
+     如果科目正常余额形态是贷方
+          根据该科目抓取结转类凭证的发生额(sum(借方金额-贷方金额)且分主本位币、功能币二、三)，如果抓不到给0。可以设计一个元件来实现。
+          分摊成本(xcbl100)=(贷方金额(glar005)-借方金额(glar006)+结转类凭证发生额)*分摊权数(xcba009)
+          分摊成本本位币二(xcbl110)=(贷方金额(glar034)-借方金额(glar035)+结转类凭证发生额)*分摊权数(xcba009)
+          分摊成本本位币三(xcbl120)=(贷方金额(glar036)-借方金额(glar037)+结转类凭证发生额)*分摊权数(xcba009)
+3.INSERT INTO xcbl_t
+
+
+]]>
+  </all>
+  <field cite_std="N" name="xcbl_t.xcbl002" ver="1" src="s" column="xcbl002" table="xcbl_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[年度:
+默认值为成本参数设置处的现行成本计算年度
+校验:
+1.不允许空白
+2.录入值不能<现行成本计算年度
+]]>
+  </field>
+  <field cite_std="N" name="xcbl_t.xcbl003" ver="1" src="s" column="xcbl003" table="xcbl_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[期别:
+默认值为成本参数设置处的现行成本计算期别
+校验:
+1.不允许空白
+2.期别+年度的组合,不能小于现行成本计算年度期别+期别]]>
+  </field>
+  <field cite_std="N" name="xcbl_t.xcblld" ver="1" src="s" column="xcblld" table="xcbl_t" attribute="" type="" req="Y" i_zoom="q_authorised_ld" c_zoom="q_authorised_ld" chk_ref="v_glaald" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[帐别:
+默认值为成本参数设置处的总帐管理系统使用帐套编号
+校验:
+1.不允许空白
+2.帐别资料档的有资值]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="xcblld_desc" src="s" depend_field="xcbl_t.xcblld" correspon_key="xcblent,xcblld" ref_table="glaal_t" ref_fk="glaalent,glaalld" ref_dlang="glaal001" ref_rtn="glaal002" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="xcbl_t.xcbl002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcbl_t.xcbl003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xcbl_t.xcblld" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_xcbl002" text="年度" lstr=""/>
+    <sfield name="lbl_xcbl003" text="期別" lstr=""/>
+    <sfield name="lbl_xcblld" text="帳別" lstr=""/>
+    <sfield name="lbl_glaal002" text="說明" lstr=""/>
+    <sact name="delete" text="刪除" lstr=""/>
+    <sact name="insert" text="新增" lstr=""/>
+    <sact name="modify" text="更改" lstr=""/>
+    <sact name="output" text="列印" lstr=""/>
+    <sact name="query" text="查詢" lstr=""/>
+    <sact name="reproduce" text="複製" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

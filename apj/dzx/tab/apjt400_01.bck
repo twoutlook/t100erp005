@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apjt400_01" module="apj" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="01534" crtdt="2017-01-05 17:52:23" modid="01534" moddt="2017-01-06 15:43:07" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="依分攤科目截取">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pjeb002,pjeb003,pjebld,pjebld_desc(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apj" filename="apjt400_01" method="dialog">
+    <section id="input">
+      <input id="head" field="pjeb002,pjeb003,pjebld"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="pjeb002"/>
+      <column id="pjeb003">
+        <after>
+          <check id="range" bt="1" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pjebld">
+        <after>
+          <check chkid="v_glaald_5" id="isExist"/>
+          <reference field="pjebld_desc" ref_field="pjeb_t.pjebld" map_field="pjebld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_glaald_04" state="i"/>
+        <controlp form="q_glaald_04" state="c"/>
+      </column>
+      <column id="pjebld_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pjeb_t" pk="pjebld,pjeb002,pjeb003,pjebseq">
+      <sql id="forupd_sql" type="sql" query="SELECT pjeb002,pjeb003,pjebld,&apos;&apos; FROM pjeb_t WHERE pjebent= ? AND pjebld=? AND pjeb002=? AND pjeb003=? AND pjebseq=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="pjebld,pjeb002,pjeb003,pjebseq"/>
+    </head>
+  </dataset>
+</assembly>
+

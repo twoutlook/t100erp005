@@ -1,0 +1,403 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="anmt460_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0006(2015-08-11 14:07:15), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000060
+#+ Filename...: anmt460_01
+#+ Description: 產生匯款付訖單
+#+ Creator....: 04152(2015-08-07 16:42:27)
+#+ Modifier...: 04152 -SD/PR-
+
+{</section>}
+
+{<section id="anmt460_01.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+{<point name="global.memo" />}
+#end add-point
+#add-point:填寫註解說明(客製用)
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_nmch_m        RECORD
+       nmchsite LIKE nmch_t.nmchsite, 
+   nmchsite_desc LIKE type_t.chr80, 
+   nmchcomp LIKE nmch_t.nmchcomp, 
+   nmchcomp_desc LIKE type_t.chr80, 
+   nmchdocno LIKE nmch_t.nmchdocno, 
+   nmchdocdt LIKE nmch_t.nmchdocdt, 
+   nmch003 LIKE nmch_t.nmch003, 
+   nmch003_desc LIKE type_t.chr80, 
+   nmck012 LIKE nmck_t.nmck012, 
+   docno_480 LIKE type_t.chr500
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_nmch_m        type_g_nmch_m
+ 
+   DEFINE g_nmchcomp_t LIKE nmch_t.nmchcomp
+DEFINE g_nmchdocno_t LIKE nmch_t.nmchdocno
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+
+{</section>}
+
+{<section id="anmt460_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION anmt460_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_anmt460_01 WITH FORM cl_ap_formpath("anm","anmt460_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_nmch_m.nmchsite,g_nmch_m.nmchcomp,g_nmch_m.nmchdocno,g_nmch_m.nmchdocdt,g_nmch_m.nmch003, 
+          g_nmch_m.nmck012,g_nmch_m.docno_480 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmchsite
+            
+            #add-point:AFTER FIELD nmchsite name="input.a.nmchsite"
+            {<point name="input.a.nmchsite" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmchsite
+            #add-point:BEFORE FIELD nmchsite name="input.b.nmchsite"
+            {<point name="input.b.nmchsite" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmchsite
+            #add-point:ON CHANGE nmchsite name="input.g.nmchsite"
+            {<point name="input.g.nmchsite" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmchcomp
+            
+            #add-point:AFTER FIELD nmchcomp name="input.a.nmchcomp"
+            {<point name="input.a.nmchcomp" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmchcomp
+            #add-point:BEFORE FIELD nmchcomp name="input.b.nmchcomp"
+            {<point name="input.b.nmchcomp" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmchcomp
+            #add-point:ON CHANGE nmchcomp name="input.g.nmchcomp"
+            {<point name="input.g.nmchcomp" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmchdocno
+            #add-point:BEFORE FIELD nmchdocno name="input.b.nmchdocno"
+            {<point name="input.b.nmchdocno" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmchdocno
+            
+            #add-point:AFTER FIELD nmchdocno name="input.a.nmchdocno"
+            {<point name="input.a.nmchdocno" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmchdocno
+            #add-point:ON CHANGE nmchdocno name="input.g.nmchdocno"
+            {<point name="input.g.nmchdocno" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmchdocdt
+            #add-point:BEFORE FIELD nmchdocdt name="input.b.nmchdocdt"
+            {<point name="input.b.nmchdocdt" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmchdocdt
+            
+            #add-point:AFTER FIELD nmchdocdt name="input.a.nmchdocdt"
+            {<point name="input.a.nmchdocdt" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmchdocdt
+            #add-point:ON CHANGE nmchdocdt name="input.g.nmchdocdt"
+            {<point name="input.g.nmchdocdt" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmch003
+            
+            #add-point:AFTER FIELD nmch003 name="input.a.nmch003"
+            {<point name="input.a.nmch003" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmch003
+            #add-point:BEFORE FIELD nmch003 name="input.b.nmch003"
+            {<point name="input.b.nmch003" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmch003
+            #add-point:ON CHANGE nmch003 name="input.g.nmch003"
+            {<point name="input.g.nmch003" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmck012
+            #add-point:BEFORE FIELD nmck012 name="input.b.nmck012"
+            {<point name="input.b.nmck012" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmck012
+            
+            #add-point:AFTER FIELD nmck012 name="input.a.nmck012"
+            {<point name="input.a.nmck012" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmck012
+            #add-point:ON CHANGE nmck012 name="input.g.nmck012"
+            {<point name="input.g.nmck012" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD docno_480
+            #add-point:BEFORE FIELD docno_480 name="input.b.docno_480"
+            {<point name="input.b.docno_480" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD docno_480
+            
+            #add-point:AFTER FIELD docno_480 name="input.a.docno_480"
+            {<point name="input.a.docno_480" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE docno_480
+            #add-point:ON CHANGE docno_480 name="input.g.docno_480"
+            {<point name="input.g.docno_480" />}
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.nmchsite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmchsite
+            #add-point:ON ACTION controlp INFIELD nmchsite name="input.c.nmchsite"
+            {<point name="input.c.nmchsite" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmchcomp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmchcomp
+            #add-point:ON ACTION controlp INFIELD nmchcomp name="input.c.nmchcomp"
+            {<point name="input.c.nmchcomp" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmchdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmchdocno
+            #add-point:ON ACTION controlp INFIELD nmchdocno name="input.c.nmchdocno"
+            {<point name="input.c.nmchdocno" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmchdocdt
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmchdocdt
+            #add-point:ON ACTION controlp INFIELD nmchdocdt name="input.c.nmchdocdt"
+            {<point name="input.c.nmchdocdt" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmch003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmch003
+            #add-point:ON ACTION controlp INFIELD nmch003 name="input.c.nmch003"
+            {<point name="input.c.nmch003" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmck012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmck012
+            #add-point:ON ACTION controlp INFIELD nmck012 name="input.c.nmck012"
+            {<point name="input.c.nmck012" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.docno_480
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD docno_480
+            #add-point:ON ACTION controlp INFIELD docno_480 name="input.c.docno_480"
+            {<point name="input.c.docno_480" />}
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_anmt460_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+
+{</section>}
+
+{<section id="anmt460_01.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+
+{</section>}
+
+{<section id="anmt460_01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+
+{</section>}
+

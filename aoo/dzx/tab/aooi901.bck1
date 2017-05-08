@@ -1,0 +1,205 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi901" module="aoo" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="02003" crtdt="2014-09-15 17:27:58" modid="07142" moddt="2016-07-02 17:34:55" sdver="0009" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="款別依據點設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="ooiesite,ooiesite_desc(chr80),rtaa001(chr10),rtaa001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="ooiestus,ooie001,ooie001_desc(chr500),ooia002(chr10),ooie002,ooie002_desc(chr500),ooie031,ooie037,ooie038,ooie003,ooie004,ooie005,ooie006,ooie007,ooie008,ooiestamp(timestamp),ooie030,ooie030_desc(chr500),ooie032,ooie033,ooie034,ooie035,ooie036,ooie036_desc(chr500),ooie040,ooie040_desc(chr500),ooie039"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="ooie001,ooieownid,ooieownid_desc(chr500),ooieowndp,ooieowndp_desc(chr500),ooiecrtid,ooiecrtid_desc(chr500),ooiecrtdp,ooiecrtdp_desc(chr500),ooiecrtdt,ooiemodid,ooiemodid_desc(chr500),ooiemoddt"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="ooie001,ooie001_1_desc(chr500),ooie009,ooie010(chr500),ooie011(chr500),ooie012,ooie013,ooie014,ooie015,ooie016,ooie017,ooie018,ooie019,ooie020,ooie021,ooie022,ooie023,ooie024,ooie025,ooie026,ooie027,ooie028,ooie029,ooiepos"/>
+      <var id="bs_field" value="ooiesite,ooiesite_desc(chr80),rtaa001(rtaa_t.rtaa001),rtaa001_desc(chr80)" pk="ooiesite" order=""/>
+      <bs_reference field="ooiesite_desc" ref_field="ooiesite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="rtaa001_desc" ref_field="rtaa001" ref_sql="SELECT rtaal003 FROM rtaal_t WHERE rtaalent=$varg_enterprise$var AND rtaal001=? AND rtaal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="handling_fee"/>
+      <action id="modify" type="standard"/>
+      <action id="aooi901_01"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="aooi901_02"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi901" method="dialog">
+    <section id="input">
+      <input id="head" field="ooiesite"/>
+      <input id="body" page="1" field="ooiestus,ooie001,ooie002,ooie031,ooie037,ooie038,ooie003,ooie004,ooie005,ooie006,ooie007,ooie008,ooiestamp,ooie030,ooie032,ooie033,ooie034,ooie035,ooie036,ooie040,ooie039" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="ooie009,ooie010,ooie011,ooie012,ooie013,ooie014,ooie015,ooie016,ooie017,ooie018,ooie019,ooie020,ooie021,ooie022,ooie023,ooie024,ooie025,ooie026,ooie027,ooie028,ooie029,ooiepos" insert="N" append="Y" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="ooiesite,rtaa001"/>
+      <construct id="body" page="1" field="ooiestus,ooie001,ooie002,ooie031,ooie037,ooie038,ooie003,ooie004,ooie005,ooie006,ooie007,ooie008,ooiestamp,ooie030,ooie032,ooie033,ooie034,ooie035,ooie036,ooie040,ooie039"/>
+      <construct id="body" page="2" field="ooieownid,ooieowndp,ooiecrtid,ooiecrtdp,ooiecrtdt,ooiemodid,ooiemoddt"/>
+      <construct id="body" page="3" field="ooie009,ooie010,ooie011,ooie012,ooie013,ooie014,ooie015,ooie016,ooie017,ooie018,ooie019,ooie020,ooie021,ooie022,ooie023,ooie024,ooie025,ooie026,ooie027,ooie028,ooie029,ooiepos"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="ooiesite"/>
+      <set id="head" type="no_entry" field="ooiesite"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="ooiesite">
+        <after>
+          <reference field="ooiesite_desc" ref_field="ooie_t.ooiesite" map_field="ooieent,ooiesite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="ooiesite_desc"/>
+      <column id="rtaa001">
+        <after>
+          <reference field="rtaa001_desc" ref_field="rtaa001" map_field="rtaaent,rtaa001" ref_sql="SELECT rtaal003 FROM rtaal_t WHERE rtaalent=$varg_enterprise$var AND rtaal001=? AND rtaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtaa001_4" state="c"/>
+      </column>
+      <column id="rtaa001_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="ooiestus" scc="50" type="S" default="Y">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="ooie001">
+        <after>
+          <reference field="ooie001_desc" ref_field="ooie_t.ooie001" map_field="ooieent,ooie001" ref_sql="SELECT ooial003 FROM ooial_t WHERE ooialent=$varg_enterprise$var AND ooial001=? AND ooial002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooia001_04" state="i"/>
+        <controlp form="q_ooia001_04" state="c"/>
+      </column>
+      <column id="ooie001_desc"/>
+      <column id="ooia002" type="S" default="10"/>
+      <column id="ooie002">
+        <after>
+          <reference field="ooie002_desc" ref_field="ooie_t.ooie002" map_field="ooieent,ooie002" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooaj002" state="i"/>
+        <controlp form="q_ooaj002" state="c"/>
+      </column>
+      <column id="ooie002_desc"/>
+      <column id="ooie031" type="S" default="0">
+        <after>
+          <check id="range" st="100" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="ooie037" type="S" default="0"/>
+      <column id="ooie038" type="S" default="0"/>
+      <column id="ooie003" type="S" default="N"/>
+      <column id="ooie004"/>
+      <column id="ooie005"/>
+      <column id="ooie006" type="S" default="0"/>
+      <column id="ooie007"/>
+      <column id="ooie008" type="S" default="N"/>
+      <column id="ooiestamp"/>
+      <column id="ooie030">
+        <after/>
+      </column>
+      <column id="ooie030_desc"/>
+      <column id="ooie032"/>
+      <column id="ooie033" type="S" default="1"/>
+      <column id="ooie034" type="S" default="Y"/>
+      <column id="ooie035" type="S" default="N"/>
+      <column id="ooie036">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+          <reference field="ooie036_desc" ref_field="ooie036" map_field="ooie036" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="ooie036_desc"/>
+      <column id="ooie040">
+        <after>
+          <reference field="ooie040_desc" ref_field="ooie_t.ooie040" map_field="ooie040" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_4" state="i"/>
+        <controlp form="q_ooeg001_4" state="c"/>
+      </column>
+      <column id="ooie040_desc"/>
+      <column id="ooie039" type="S" default="N"/>
+    </init>
+    <init id="body" page="2">
+      <column id="ooieownid">
+        <after>
+          <reference field="ooieownid_desc" ref_field="ooie_t.ooieownid" map_field="ooieownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ooieownid_desc"/>
+      <column id="ooieowndp">
+        <after>
+          <reference field="ooieowndp_desc" ref_field="ooie_t.ooieowndp" map_field="ooieowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="ooieowndp_desc"/>
+      <column id="ooiecrtid">
+        <after>
+          <reference field="ooiecrtid_desc" ref_field="ooie_t.ooiecrtid" map_field="ooiecrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ooiecrtid_desc"/>
+      <column id="ooiecrtdp">
+        <after>
+          <reference field="ooiecrtdp_desc" ref_field="ooie_t.ooiecrtdp" map_field="ooiecrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="ooiecrtdp_desc"/>
+      <column id="ooiecrtdt"/>
+      <column id="ooiemodid">
+        <after>
+          <reference field="ooiemodid_desc" ref_field="ooie_t.ooiemodid" map_field="ooiemodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ooiemodid_desc"/>
+      <column id="ooiemoddt"/>
+    </init>
+    <init id="body" page="3">
+      <column id="ooie001_1_desc"/>
+      <column id="ooie009"/>
+      <column id="ooie010"/>
+      <column id="ooie011"/>
+      <column id="ooie012" type="S" default="N"/>
+      <column id="ooie013" type="S" default="N"/>
+      <column id="ooie014">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ooie015" type="S" default="N"/>
+      <column id="ooie016" type="S" default="N"/>
+      <column id="ooie017" type="S" default="Y"/>
+      <column id="ooie018" type="S" default="N"/>
+      <column id="ooie019" type="S" default="N"/>
+      <column id="ooie020" type="S" default="N"/>
+      <column id="ooie021" type="S" default="N"/>
+      <column id="ooie022" type="S" default="N"/>
+      <column id="ooie023" type="S" default="N"/>
+      <column id="ooie024"/>
+      <column id="ooie025"/>
+      <column id="ooie026"/>
+      <column id="ooie027"/>
+      <column id="ooie028"/>
+      <column id="ooie029"/>
+      <column id="ooiepos"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="ooie_t" pk="ooiesite">
+      <sql id="forupd_sql" type="sql" query="SELECT ooiesite,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM ooie_t WHERE ooieent= ? AND ooiesite=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT ooiesite,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM ooie_t" order="ooiesite"/>
+    </head>
+    <body id="ooie_t" page="1,2,3" linked="" pk="ooie001" fk="ooiesite">
+      <sql id="forupd_sql_detail" query="SELECT ooiestus,ooie001,&apos;&apos;,&apos;&apos;,ooie002,&apos;&apos;,ooie031,ooie037,ooie038,ooie003,ooie004,ooie005,ooie006,ooie007,ooie008,ooiestamp,ooie030,&apos;&apos;,ooie032,ooie033,ooie034,ooie035,ooie036,&apos;&apos;,ooie040,&apos;&apos;,ooie039,&apos;&apos;,ooieownid,&apos;&apos;,ooieowndp,&apos;&apos;,ooiecrtid,&apos;&apos;,ooiecrtdp,&apos;&apos;,ooiecrtdt,ooiemodid,&apos;&apos;,ooiemoddt,&apos;&apos;,&apos;&apos;,ooie009,&apos;&apos;,&apos;&apos;,ooie012,ooie013,ooie014,ooie015,ooie016,ooie017,ooie018,ooie019,ooie020,ooie021,ooie022,ooie023,ooie024,ooie025,ooie026,ooie027,ooie028,ooie029,ooiepos FROM ooie_t WHERE ooieent=? AND ooiesite=? AND ooie001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT ooiestus,ooie001,&apos;&apos;,&apos;&apos;,ooie002,&apos;&apos;,ooie031,ooie037,ooie038,ooie003,ooie004,ooie005,ooie006,ooie007,ooie008,ooiestamp,ooie030,&apos;&apos;,ooie032,ooie033,ooie034,ooie035,ooie036,&apos;&apos;,ooie040,&apos;&apos;,ooie039,&apos;&apos;,ooieownid,&apos;&apos;,ooieowndp,&apos;&apos;,ooiecrtid,&apos;&apos;,ooiecrtdp,&apos;&apos;,ooiecrtdt,ooiemodid,&apos;&apos;,ooiemoddt,&apos;&apos;,&apos;&apos;,ooie009,&apos;&apos;,&apos;&apos;,ooie012,ooie013,ooie014,ooie015,ooie016,ooie017,ooie018,ooie019,ooie020,ooie021,ooie022,ooie023,ooie024,ooie025,ooie026,ooie027,ooie028,ooie029,ooiepos FROM ooie_t WHERE ooieent= ? AND ooiesite=?"/>
+    </body>
+  </dataset>
+</assembly>
+

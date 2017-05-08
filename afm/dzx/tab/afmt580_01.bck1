@@ -1,0 +1,71 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmt580_01" module="afm" jobmode="N" type="c02a" industry="std" fix_arg="0" crtid="05016" crtdt="2015-05-08 14:27:17" modid="05016" moddt="2015-11-23 11:45:16" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="收息費用維護">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="fmnddocno,fmndseq,fmnd001,fmnd001_desc(chr500),fmnd005,fmnd008,fmnd010,fmnd010_desc(chr500),fmnd009,fmnd009_desc(chr500),fmnd002,fmnd004,fmnd003,fmnd011"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmt580_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="fmnddocno,fmndseq,fmnd001,fmnd001_desc,fmnd005,fmnd008,fmnd010,fmnd009,fmnd002,fmnd004,fmnd003,fmnd011" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="fmnddocno,fmndseq,fmnd001,fmnd001_desc,fmnd005,fmnd008,fmnd010,fmnd009,fmnd002,fmnd004,fmnd003,fmnd011"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="fmnddocno"/>
+      <column id="fmndseq"/>
+      <column id="fmnd001">
+        <after/>
+      </column>
+      <column id="fmnd001_desc"/>
+      <column id="fmnd005" type="S" default="Y"/>
+      <column id="fmnd008"/>
+      <column id="fmnd010">
+        <after/>
+      </column>
+      <column id="fmnd010_desc"/>
+      <column id="fmnd009">
+        <after/>
+      </column>
+      <column id="fmnd009_desc"/>
+      <column id="fmnd002">
+        <controlp form="q_ooaj002_1" state="i"/>
+        <controlp form="q_ooaj002_1" state="c"/>
+      </column>
+      <column id="fmnd004" type="S" default="1">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmnd003" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmnd011" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="fmnd_t" page="1" linked="" pk="fmnddocno,fmndseq">
+      <sql id="forupd_sql_detail" query="SELECT fmnddocno,fmndseq,fmnd001,&apos;&apos;,fmnd005,fmnd008,fmnd010,&apos;&apos;,fmnd009,&apos;&apos;,fmnd002,fmnd004,fmnd003,fmnd011 FROM fmnd_t WHERE fmndent=? AND fmnddocno=? AND fmndseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT fmnddocno,fmndseq,fmnd001,&apos;&apos;,fmnd005,fmnd008,fmnd010,&apos;&apos;,fmnd009,&apos;&apos;,fmnd002,fmnd004,fmnd003,fmnd011 FROM fmnd_t WHERE fmndent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

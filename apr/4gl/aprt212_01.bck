@@ -1,0 +1,10934 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="aprt212_01.description" >}
+#+ Version..: T100-ERP-1.00.00(版次:1) Build-000166
+#+ 
+#+ Filename...: aprt212_01
+#+ Description: ...
+#+ Creator....: 02482(2014/03/19)
+#+ Modifier...: 02482(2014/03/20)
+#+ Buildtype..: 應用 t01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+ 
+{</section>}
+ 
+{<section id="aprt212_01.global" >}
+# Modify......: NO.160318-00005#40   2016/03/30   By 07900    重复错误讯息修改
+# Modify......: NO.160318-00025#50   2016/04/26   By 07673    將重複內容的錯誤訊息置換為公用錯誤訊息
+# Modify......: NO.161108-00016#1    2016/11/09   by 08742    修改 g_browser_cnt等定义数值大小
+    
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds 
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_prda_m        RECORD
+       prda017 LIKE prda_t.prda017, 
+   prda019 LIKE prda_t.prda019, 
+   prda020 LIKE prda_t.prda020, 
+   prda022 LIKE prda_t.prda022, 
+   prda018 LIKE prda_t.prda018, 
+   prda021 LIKE prda_t.prda021, 
+   prda023 LIKE prda_t.prda023, 
+   prdadocno LIKE prda_t.prdadocno
+       END RECORD
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_prdj_d        RECORD
+       prdjacti LIKE prdj_t.prdjacti, 
+       prdj002 LIKE prdj_t.prdj002, 
+   prdj003 LIKE prdj_t.prdj003, 
+   prdj004 LIKE prdj_t.prdj004, 
+   prdj004_desc LIKE type_t.chr10, 
+   prdj004_desc1 LIKE type_t.chr80, 
+   prdj005 LIKE prdj_t.prdj005, 
+   prdj006 LIKE prdj_t.prdj006, 
+   prdj00601 LIKE type_t.num20_6, 
+   prdj00602 LIKE type_t.num20_6, 
+   prdj00603 LIKE type_t.num20_6,
+   prdjsite LIKE prdj_t.prdjsite, 
+   prdjunit LIKE prdj_t.prdjunit, 
+   prdj001 LIKE prdj_t.prdj001
+       END RECORD
+PRIVATE TYPE type_g_prdj2_d RECORD
+       prdkacti LIKE prdk_t.prdkacti,
+       prdk002 LIKE prdk_t.prdk002, 
+   prdk003 LIKE prdk_t.prdk003, 
+   prdk004 LIKE prdk_t.prdk004, 
+   prdk005 LIKE prdk_t.prdk005, 
+   prdk005_desc LIKE type_t.chr500, 
+   prdk006 LIKE prdk_t.prdk006, 
+   prdk007 LIKE prdk_t.prdk007, 
+   prdk007_desc LIKE type_t.chr500, 
+   prdk008 LIKE prdk_t.prdk008, 
+   prdk009 LIKE prdk_t.prdk009, 
+   prdk010 LIKE prdk_t.prdk010, 
+   prdk011 LIKE prdk_t.prdk011, 
+   prdk012 LIKE prdk_t.prdk012, 
+   prdk001 LIKE prdk_t.prdk001, 
+   prdksite LIKE prdk_t.prdksite, 
+   prdkunit LIKE prdk_t.prdkunit
+       END RECORD
+ 
+ 
+#模組變數(Module Variables)
+DEFINE g_prda_m          type_g_prda_m
+DEFINE g_prda_m_t        type_g_prda_m
+ 
+   DEFINE g_prdadocno_t LIKE prda_t.prdadocno
+ 
+ 
+DEFINE g_prdj_d          DYNAMIC ARRAY OF type_g_prdj_d
+DEFINE g_prdj_d_t        type_g_prdj_d
+DEFINE g_prdj2_d   DYNAMIC ARRAY OF type_g_prdj2_d
+DEFINE g_prdj2_d_t type_g_prdj2_d
+ 
+ 
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD    #資料瀏覽之欄位 
+         b_statepic     LIKE type_t.chr50,
+            b_prdadocno LIKE prda_t.prdadocno
+      END RECORD 
+      
+DEFINE g_browser_f  RECORD    #資料瀏覽之欄位 
+         b_statepic     LIKE type_t.chr50,
+            b_prdadocno LIKE prda_t.prdadocno
+      END RECORD 
+      
+#無單頭append欄位定義
+#無單身append欄位定義
+ 
+DEFINE g_wc                  STRING
+DEFINE g_wc_t                STRING
+DEFINE g_wc2                 STRING                          #單身CONSTRUCT結果
+DEFINE g_wc2_table1          STRING
+DEFINE g_wc2_table2   STRING
+ 
+ 
+ 
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+ 
+DEFINE g_sql                 STRING
+DEFINE g_forupd_sql          STRING
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_current_idx         LIKE type_t.num10     
+DEFINE g_jump                LIKE type_t.num10        
+DEFINE g_no_ask              LIKE type_t.num5        
+#DEFINE g_rec_b               LIKE type_t.num5             #單身筆數   #161108-00016#1   2016/11/09  by 08742 mark                      
+DEFINE g_rec_b               LIKE type_t.num10             #單身筆數    #161108-00016#1   2016/11/09  by 08742 add                   
+#DEFINE l_ac                  LIKE type_t.num5             #161108-00016#1   2016/11/09  by 08742 mark       
+DEFINE l_ac                  LIKE type_t.num10             #161108-00016#1   2016/11/09  by 08742 add 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog
+    
+#DEFINE g_pagestart           LIKE type_t.num5             #161108-00016#1   2016/11/09  by 08742 mark 
+DEFINE g_pagestart           LIKE type_t.num10             #161108-00016#1   2016/11/09  by 08742 add #page起始筆數         
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_state               STRING       
+ 
+#161108-00016#1   2016/11/09  by 08742 -S
+#DEFINE g_detail_cnt          LIKE type_t.num5             #單身總筆數 
+#DEFINE g_detail_idx          LIKE type_t.num5             #單身目前所在筆數
+#DEFINE g_detail_idx2         LIKE type_t.num5             #單身2目前所在筆數
+#DEFINE g_browser_cnt         LIKE type_t.num5             #Browser總筆數
+#DEFINE g_browser_idx         LIKE type_t.num5             #Browser目前所在筆數
+#DEFINE g_temp_idx            LIKE type_t.num5             #Browser目前所在筆數(暫存用)
+DEFINE g_detail_cnt          LIKE type_t.num10             #單身總筆數  
+DEFINE g_detail_idx          LIKE type_t.num10             #單身目前所在筆數
+DEFINE g_detail_idx2         LIKE type_t.num10             #單身2目前所在筆數
+DEFINE g_browser_cnt         LIKE type_t.num10             
+DEFINE g_browser_idx         LIKE type_t.num10             #Browser目前所在筆數
+DEFINE g_temp_idx            LIKE type_t.num10             #Browser目前所在筆數(暫存用)
+#161108-00016#1   2016/11/09  by 08742 -E
+ 
+DEFINE g_searchcol           STRING                        #查詢欄位代碼
+DEFINE g_searchstr           STRING                        #查詢欄位字串
+DEFINE g_order               STRING                        #查詢排序欄位
+                                                        
+#DEFINE g_current_row         LIKE type_t.num5             #Browser所在筆數  #161108-00016#1   2016/11/09  by 08742 mark
+DEFINE g_current_row         LIKE type_t.num10             #Browser所在筆數  #161108-00016#1   2016/11/09  by 08742 add
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+#DEFINE g_current_page        LIKE type_t.num5             #目前所在頁數     #161108-00016#1   2016/11/09  by 08742 mark
+DEFINE g_current_page        LIKE type_t.num10             #目前所在頁數     #161108-00016#1   2016/11/09  by 08742 add
+DEFINE g_insert              LIKE type_t.chr5              #是否導到其他page
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys               DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak           DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_bfill               LIKE type_t.chr5              #是否刷新單身
+DEFINE g_error_show          LIKE type_t.num5              #
+ 
+DEFINE g_wc_frozen           STRING                        #凍結欄位使用
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_aw                  STRING                        #確定當下點擊的單身
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+ 
+#add-point:自定義模組變數(Module Variable)
+ TYPE type_g_prdj3_d RECORD
+       prdc002           LIKE prdc_t.prdc002,
+       prdc003           LIKE prdc_t.prdc003, 
+       prdc004           LIKE prdc_t.prdc004, 
+       prdc004_desc      LIKE type_t.chr80
+       END RECORD
+              
+DEFINE g_prdj3_d         DYNAMIC ARRAY OF type_g_prdj3_d
+DEFINE g_prdj3_d_t       type_g_prdj3_d
+DEFINE g_prdadocno       LIKE prda_t.prdadocno
+DEFINE g_type            LIKE type_t.chr1
+DEFINE g_type1           LIKE type_t.chr1
+DEFINE g_type2           LIKE type_t.chr1
+DEFINE g_prdj003_o       LIKE prdj_t.prdj003
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aprt212_01.main" >}
+#+ 此段落由子樣板a27產生
+#+ 資料輸入
+PUBLIC FUNCTION aprt212_01(--)
+   #add-point:main段變數傳入
+   p_prdadocno,p_type,p_type1,p_type2
+   #end add-point
+   )
+   #add-point:main段define
+   DEFINE p_prdadocno       LIKE prda_t.prdadocno
+   DEFINE p_type            LIKE type_t.chr1
+   DEFINE p_type1           LIKE type_t.chr1
+   DEFINE p_type2           LIKE type_t.chr1
+   #end add-point   
+ 
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:作業初始化
+   LET g_prdadocno = p_prdadocno
+   LET g_prda_m.prdadocno = g_prdadocno
+   LET g_type = p_type
+   LET g_type1 = p_type1
+   LET g_type2 = p_type2
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   
+   #end add-point
+   LET g_forupd_sql = "SELECT prda017,prda019,prda020,prda022,prda018,prda021,prda023,prdadocno FROM  
+       prda_t WHERE prdaent= ? AND prdadocno=? FOR UPDATE"
+   #add-point:SQL_define
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)   #轉換不同資料庫語法
+   DECLARE aprt212_01_cl CURSOR FROM g_forupd_sql     # LOCK CURSOR
+ 
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aprt212_01 WITH FORM cl_ap_formpath("apr","aprt212_01")
+   
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   #程式初始化
+   CALL aprt212_01_init()   
+ 
+   #進入選單 Menu (="N")
+   CALL aprt212_01_ui_dialog() 
+ 
+   #畫面關閉
+   CLOSE WINDOW w_aprt212_01
+ 
+   CLOSE aprt212_01_cl
+   
+   
+ 
+   #add-point:離開前
+   CALL cl_set_act_visible("insert", TRUE)
+   #end add-point
+ 
+END FUNCTION
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aprt212_01.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION aprt212_01_init()
+   #add-point:init段define
+   
+   #end add-point    
+   
+   LET g_bfill       = "Y"
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_error_show  = 1
+   LET l_ac = 1
+   
+      CALL cl_set_combo_scc('prda017','6561') 
+   CALL cl_set_combo_scc('prda018','6562') 
+   CALL cl_set_combo_scc('prda021','6563') 
+   CALL cl_set_combo_scc('prdk004','6517') 
+   CALL cl_set_combo_scc('prdk010','6525') 
+ 
+   LET gwin_curr = ui.Window.getCurrent()  #取得現行畫面
+   LET gfrm_curr = gwin_curr.getForm()     #取出物件化後的畫面物件
+ 
+   #add-point:畫面資料初始化
+   CALL cl_set_combo_scc_part('prda019','6714','2,3')
+   LET g_sql = "SELECT prda017,prda019,prda020,prda022,prda018,prda021,prda023,prdadocno FROM  
+       prda_t WHERE prdaent = '",g_enterprise,"' AND prdadocno=? "
+   PREPARE aprt212_01_master_referesh FROM g_sql
+   IF g_type2 = 'Y' THEN
+      CALL cl_set_comp_visible('prda020',TRUE)
+   ELSE
+      CALL cl_set_comp_visible('prda020',FALSE)
+   END IF
+   CALL cl_set_act_visible("insert", FALSE)
+   CALL cl_set_combo_scc('prdj004_desc','6567')
+   CALL cl_set_combo_scc_part('prdk004','6517','4,5,6,7,8,9,A,B,C,D,E,F,G,H,I,J,K,L,M,N,P')
+   #CALL cl_set_combo_scc_part('prdc003','6517','1,2')      #150324-00004#1--mark by dongsz
+   CALL aprt212_01_prdc003_display()                        #150324-00004#1--add by dongsz
+   #end add-point
+   
+   CALL aprt212_01_default_search()
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.ui_dialog" >}
+#+ 功能選單
+PRIVATE FUNCTION aprt212_01_ui_dialog()
+   DEFINE li_idx    LIKE type_t.num5
+   DEFINE ls_wc     STRING
+   DEFINE lb_first  BOOLEAN
+   DEFINE la_param  RECORD
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   #add-point:ui_dialog段define
+   
+   #end add-point
+   
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+ 
+   
+   #action default動作
+   #+ 此段落由子樣板a42產生
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice="insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL aprt212_01_insert()
+            #add-point:ON ACTION insert
+            
+            #END add-point
+         END IF
+ 
+      #add-point:action default自訂
+      
+      #end add-point
+      OTHERWISE
+         
+   END CASE
+ 
+ 
+   
+   LET lb_first = TRUE
+   
+   #add-point:ui_dialog段before dialog 
+   IF g_type = 'N' THEN
+      CALL cl_set_act_visible("modify,modify_detail,delete", FALSE)
+   ELSE
+      CALL cl_set_act_visible("modify,modify_detail,delete", TRUE)
+   END IF
+   #end add-point
+   
+   WHILE TRUE 
+   
+      CALL aprt212_01_browser_fill("")
+            
+      #判斷前一個動作是否為新增, 若是的話切換到新增的筆數
+      IF g_state = "Y" THEN
+         FOR li_idx = 1 TO g_browser.getLength()
+            IF g_browser[li_idx].b_prdadocno = g_prdadocno_t
+ 
+               THEN
+               LET g_current_row = li_idx
+               LET g_current_idx = li_idx
+               EXIT FOR
+            END IF
+         END FOR
+         LET g_state = ""
+      END IF
+            
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+         #左側瀏覽頁簽
+ 
+ 
+               
+      
+         
+        
+         DISPLAY ARRAY g_prdj_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+    
+            BEFORE ROW
+               CALL aprt212_01_idx_chk()
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_detail_idx = l_ac
+               
+               #add-point:page1, before row動作
+               
+               #end add-point
+               
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_current_page = 1
+               CALL aprt212_01_idx_chk()
+               #add-point:page1自定義行為
+               CALL aprt212_01_b_fill_1()
+               #end add-point
+               
+            #自訂ACTION(detail_show,page_1)
+            
+               
+            #add-point:page1自定義行為
+            
+            #end add-point
+               
+         END DISPLAY
+        
+         DISPLAY ARRAY g_prdj2_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b)  
+    
+            BEFORE ROW
+               CALL aprt212_01_idx_chk()
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_detail_idx = l_ac
+               
+               #add-point:page2, before row動作
+               
+               #end add-point
+               
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_current_page = 2
+               CALL aprt212_01_idx_chk()
+               #add-point:page2自定義行為
+               
+               #end add-point
+      
+            #自訂ACTION(detail_show,page_2)
+            
+         
+            #add-point:page2自定義行為
+            
+            #end add-point
+         
+         END DISPLAY
+ 
+         
+         #add-point:ui_dialog段自定義display array
+         DISPLAY ARRAY g_prdj3_d TO s_detail3.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+    
+            BEFORE ROW
+               CALL aprt212_01_idx_chk()
+               LET l_ac = DIALOG.getCurrentRow("s_detail3")
+               CALL aprt212_01_b_fill_1()
+ 
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               LET l_ac = DIALOG.getCurrentRow("s_detail3")
+               LET g_current_page = 1
+               CALL aprt212_01_idx_chk()
+               CALL aprt212_01_b_fill_1()
+               
+         END DISPLAY
+         #end add-point
+         
+      
+         BEFORE DIALOG
+            CALL cl_navigator_setting(g_current_idx, g_detail_cnt)
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            LET g_page = "first"
+            LET g_current_sw = FALSE
+            #回歸舊筆數位置 (回到當時異動的筆數)
+            LET g_current_row = g_current_idx #目前指標
+            IF g_current_idx = 0 THEN
+               LET g_current_idx = 1
+            END IF
+            LET g_current_sw = TRUE
+            
+            IF g_current_idx > g_browser.getLength() THEN
+               LEt g_current_idx = g_browser.getLength()
+            END IF 
+            
+            #有資料才進行fetch
+            IF g_current_idx <> 0 THEN
+               CALL aprt212_01_fetch('') # reload data
+            END IF
+            #LET g_detail_idx = 1
+            CALL aprt212_01_ui_detailshow() #Setting the current row 
+            
+            #筆數顯示
+            LET g_current_page = 1
+            CALL aprt212_01_idx_chk()
+            
+            #add-point:ui_dialog段before_dialog2
+            IF g_type = 'N' THEN
+               CALL cl_set_act_visible("modify,modify_detail,delete", FALSE)
+            ELSE
+               CALL cl_set_act_visible("modify,modify_detail,delete", TRUE)
+            END IF
+            CALL cl_set_act_visible("insert", FALSE)
+            #end add-point
+            
+            IF lb_first THEN
+               LET lb_first = FALSE
+               NEXT FIELD prdj002
+            END IF
+        
+         #ON ACTION statechange
+         #   CALL aprt212_01_statechange()
+         #   LET g_action_choice = "statechange"
+         #   EXIT DIALOG
+      
+         
+          
+         ON ACTION queryplansel
+            CALL cl_dlg_qryplan_select() RETURNING ls_wc
+            #不是空條件才寫入g_wc跟重新找資料
+            IF NOT cl_null(ls_wc) THEN
+               LET g_wc = ls_wc
+               CALL aprt212_01_browser_fill("F")   #browser_fill()會將notice區塊清空
+               CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+            END IF
+ 
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               LET g_wc = ls_wc
+               #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+               CALL aprt212_01_browser_fill("F")
+               IF g_browser_cnt = 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = "-100"
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+ 
+                  CLEAR FORM
+               ELSE
+                  CALL aprt212_01_fetch("F")
+               END IF
+            END IF
+            #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+            CALL cl_notice()
+          
+         
+         
+         ON ACTION first
+            CALL aprt212_01_fetch('F')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL aprt212_01_idx_chk()
+            
+         ON ACTION previous
+            CALL aprt212_01_fetch('P')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL aprt212_01_idx_chk()
+            
+         ON ACTION jump
+            CALL aprt212_01_fetch('/')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL aprt212_01_idx_chk()
+            
+         ON ACTION next
+            CALL aprt212_01_fetch('N')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL aprt212_01_idx_chk()
+            
+         ON ACTION last
+            CALL aprt212_01_fetch('L')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL aprt212_01_idx_chk()
+            
+         ON ACTION close
+            LET INT_FLAG = FALSE
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+          
+         ON ACTION exit
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION mainhidden       #主頁摺疊
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+               CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+            END IF
+            
+       
+         ON ACTION controls      #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+            IF g_header_hidden THEN
+               CALL gfrm_curr.setElementHidden("vb_master",0)
+               CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+               LET g_header_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("vb_master",1)
+               CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+               LET g_header_hidden = 1     #hidden     
+            END IF
+    
+         
+ 
+         ON ACTION delete
+ 
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN 
+               CALL aprt212_01_delete()
+               #add-point:ON ACTION delete
+               
+               #END add-point
+            END IF
+ 
+ 
+         ON ACTION insert
+ 
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN 
+               CALL aprt212_01_insert()
+               #add-point:ON ACTION insert
+               
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION modify
+ 
+            LET g_aw = ''
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN 
+               CALL aprt212_01_modify()
+               #add-point:ON ACTION modify
+               
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION modify_detail
+ 
+            LET g_aw = g_curr_diag.getCurrentItem()
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN 
+               CALL aprt212_01_modify()
+               #add-point:ON ACTION modify_detail
+               
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION output
+ 
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN 
+               #add-point:ON ACTION output
+               
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+         
+         #+ 此段落由子樣板a46產生
+         #新增相關文件
+         ON ACTION related_document
+            CALL aprt212_01_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document
+               
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL aprt212_01_set_pk_array()
+            #add-point:ON ACTION agendum
+            
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL aprt212_01_set_pk_array()
+            #add-point:ON ACTION followup
+            
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+         
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl" 
+            CONTINUE DIALOG
+            
+      END DIALOG
+    
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+    
+   END WHILE    
+      
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.browser_fill" >}
+#+ 瀏覽頁簽資料填充
+PRIVATE FUNCTION aprt212_01_browser_fill(ps_page_action)
+   DEFINE ps_page_action    STRING
+   DEFINE l_wc              STRING
+   DEFINE l_wc2             STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sub_sql         STRING
+   DEFINE l_sql_rank        STRING
+   DEFINE l_searchcol       STRING
+   #add-point:browser_fill段define
+   
+   #end add-point    
+ 
+   #清除畫面
+   CLEAR FORM                
+   INITIALIZE g_prda_m.* TO NULL
+   CALL g_prdj_d.clear()        
+   CALL g_prdj2_d.clear() 
+ 
+   CALL g_browser.clear()
+   
+   #搜尋用
+   IF cl_null(g_searchcol) OR g_searchcol = '0' THEN
+      LET l_searchcol = "prdadocno"
+ 
+   ELSE
+      LET l_searchcol = g_searchcol
+   END IF
+   
+   LET l_wc  = g_wc.trim() 
+   LET l_wc2 = g_wc2.trim()
+   IF cl_null(l_wc) THEN  #p_wc 查詢條件
+      RETURN
+   END IF
+   
+   #add-point:browser_fill,foreach前
+   
+   #end add-point
+   
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件                      
+      LET l_sub_sql = " SELECT UNIQUE prdadocno ",
+ 
+                        " FROM prda_t ",
+                              " ",
+                              " LEFT JOIN prdj_t ON prdjent = prdaent AND prdadocno = prdjdocno ",
+                              " LEFT JOIN prdk_t ON prdkent = prdaent AND prdadocno = prdkdocno", 
+ 
+ 
+ 
+                              " ", 
+                              " ", 
+                       " WHERE prdaent = '" ||g_enterprise|| "' AND prdjent = '" ||g_enterprise|| "' AND ",l_wc, " AND ", l_wc2, cl_sql_add_filter("prda_t")
+ 
+   ELSE
+      #單身未輸入搜尋條件
+      LET l_sub_sql = " SELECT UNIQUE prdadocno ",
+ 
+                        " FROM prda_t ", 
+                              " ",
+                              " ",
+                        "WHERE prdaent = '" ||g_enterprise|| "' AND ",l_wc CLIPPED, cl_sql_add_filter("prda_t")
+   END IF
+   
+   LET g_sql = " SELECT COUNT(*) FROM (",l_sub_sql,")"
+   
+   #add-point:browser_fill,count前
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件                      
+      LET l_sub_sql = " SELECT UNIQUE prdadocno ",
+ 
+                        " FROM prda_t ",
+                              " ",
+                              " LEFT JOIN prdj_t ON prdjent = prdaent AND prdadocno = prdjdocno ",
+ 
+                              " LEFT JOIN prdk_t ON prdkent = prdaent AND prdjdocno = prdkdocno AND prdj002 = prdk002", 
+ 
+ 
+                              " ", 
+                              " ", 
+                       " WHERE prdaent = '" ||g_enterprise|| "' AND prdjent = '" ||g_enterprise|| "' AND prdadocno = '"||g_prdadocno||"' AND ",l_wc, " AND ", l_wc2
+ 
+   ELSE
+      #單身未輸入搜尋條件
+      LET l_sub_sql = " SELECT UNIQUE prdadocno ",
+ 
+                        " FROM prda_t ", 
+                              " ",
+                              " ",
+                        "WHERE prdaent = '" ||g_enterprise|| "' AND prdadocno = '"||g_prdadocno||"' AND ",l_wc CLIPPED
+ 
+   END IF
+   
+   LET g_sql = " SELECT COUNT(*) FROM (",l_sub_sql,")"
+   #end add-point
+   
+   PREPARE header_cnt_pre FROM g_sql
+   EXECUTE header_cnt_pre INTO g_browser_cnt   #總筆數
+   FREE header_cnt_pre
+ 
+   DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+   
+   #LET g_page_action = ps_page_action          # Keep Action
+   
+   IF ps_page_action = "F" OR
+      ps_page_action = "P" OR
+      ps_page_action = "N" OR
+      ps_page_action = "L" THEN
+      LET g_page_action = ps_page_action
+   END IF
+   
+   CASE ps_page_action
+      WHEN "F" 
+         LET g_pagestart = 1
+          
+      WHEN "P"  
+         LET g_pagestart = g_pagestart - 1
+         IF g_pagestart < 1 THEN
+            LET g_pagestart = 1
+         END IF
+          
+      WHEN "N"  
+         LET g_pagestart = g_pagestart + 1
+         IF g_pagestart > g_browser_cnt THEN
+            LET g_pagestart = g_browser_cnt - (g_browser_cnt mod 1) + 1
+            WHILE g_pagestart > g_browser_cnt 
+               LET g_pagestart = g_pagestart - 1
+            END WHILE
+         END IF
+      
+      WHEN "L"  
+         LET g_pagestart = g_browser_cnt - (g_browser_cnt mod 1) + 1
+         WHILE g_pagestart > g_browser_cnt 
+            LET g_pagestart = g_pagestart - 1
+         END WHILE
+         
+      WHEN '/'
+         LET g_pagestart = g_jump
+         IF g_pagestart > g_browser_cnt THEN
+            LET g_pagestart = 1
+         END IF
+         
+   END CASE
+  
+   #單身有輸入查詢條件且非null
+   IF g_wc2 <> " 1=1" AND NOT cl_null(g_wc2) THEN 
+      #依照prdadocno Browser欄位定義(取代原本bs_sql功能)
+      LET l_sql_rank = "SELECT DISTINCT prdastus,prdadocno,DENSE_RANK() OVER(ORDER BY prdadocno ",g_order, 
+          ") AS RANK ",
+                        " FROM prda_t ",
+                              " ",
+                              " LEFT JOIN prdj_t ON prdjent = prdaent AND prdadocno = prdjdocno ",
+                              " LEFT JOIN prdk_t ON prdkent = prdaent AND prdadocno = prdkdocno",
+ 
+ 
+ 
+                              " ",
+                              " ",
+                       " ",
+                       " WHERE prdaent = '" ||g_enterprise|| "' AND ",g_wc," AND ",g_wc2, cl_sql_add_filter("prda_t")
+   ELSE
+      #單身無輸入資料
+      LET l_sql_rank = "SELECT DISTINCT prdastus,prdadocno,DENSE_RANK() OVER(ORDER BY prdadocno ",g_order, 
+          ") AS RANK ",
+                       " FROM prda_t ",
+                            "  ",
+                            "  ",
+                       " WHERE prdaent = '" ||g_enterprise|| "' AND ", g_wc, cl_sql_add_filter("prda_t")
+   END IF
+   
+   #定義翻頁CURSOR
+   LET g_sql= "SELECT prdastus,prdadocno FROM (",l_sql_rank,") WHERE ",
+              " RANK >= ",1," AND RANK<",1+g_max_browse,
+              " ORDER BY ",l_searchcol," ",g_order
+               
+   #add-point:browser_fill,before_prepare
+   #單身有輸入查詢條件且非null
+   IF g_wc2 <> " 1=1" AND NOT cl_null(g_wc2) THEN 
+      #依照prdadocno Browser欄位定義(取代原本bs_sql功能)
+      LET l_sql_rank = "SELECT DISTINCT prdastus,prdadocno,DENSE_RANK() OVER(ORDER BY prdadocno ",g_order, 
+          ") AS RANK ",
+                        " FROM prda_t ",
+                              " ",
+                              " LEFT JOIN prdj_t ON prdjent = prdaent AND prdadocno = prdjdocno ",
+ 
+                              " LEFT JOIN prdk_t ON prdkent = prdaent AND prdjdocno = prdkdocno AND prdj002 = prdk002",
+ 
+ 
+                              " ",
+                              " ",
+                       " ",
+                       " WHERE prdaent = '" ||g_enterprise|| "' AND prdadocno = '"||g_prdadocno||"' AND ",g_wc," AND ",g_wc2
+   ELSE
+      #單身無輸入資料
+      LET l_sql_rank = "SELECT DISTINCT prdastus,prdadocno,DENSE_RANK() OVER(ORDER BY prdadocno ",g_order, 
+          ") AS RANK ",
+                       " FROM prda_t ",
+                            "  ",
+                            "  ",
+                       " WHERE prdaent = '" ||g_enterprise|| "' AND prdadocno = '"||g_prdadocno||"' AND ", g_wc
+   END IF
+   
+   #定義翻頁CURSOR
+   LET g_sql= "SELECT prdastus,prdadocno FROM (",l_sql_rank,") WHERE ",
+              " RANK >= ",1," AND RANK<",1+g_max_browse,
+              " ORDER BY ",l_searchcol," ",g_order
+   #end add-point
+               
+   PREPARE browse_pre FROM g_sql
+   DECLARE browse_cur CURSOR FOR browse_pre
+   
+   #add-point:browser_fill,open
+   
+   #end add-point
+ 
+   CALL g_browser.clear()
+   LET g_cnt = 1
+   FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_prdadocno
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+  
+      
+  
+      #add-point:browser_fill段reference
+      
+      #end add-point
+  
+      
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 9035
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+ 
+   CALL g_browser.deleteElement(g_cnt)
+   LET g_header_cnt = g_browser.getLength()
+ 
+   LET g_rec_b = g_cnt - 1
+   LET g_detail_cnt = g_rec_b
+   LET g_cnt = 0
+   
+   FREE browse_pre
+   
+   #add-point:browser_fill段結束前
+   
+   #end add-point
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+   ELSE
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   END IF
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.ui_headershow" >}
+#+ 單頭資料重新顯示
+PRIVATE FUNCTION aprt212_01_ui_headershow()
+   #add-point:ui_headershow段define
+   
+   #end add-point    
+   
+   LET g_prda_m.prdadocno = g_browser[g_current_idx].b_prdadocno   
+ 
+   EXECUTE aprt212_01_master_referesh USING g_prda_m.prdadocno INTO g_prda_m.prda017,g_prda_m.prda019, 
+       g_prda_m.prda020,g_prda_m.prda022,g_prda_m.prda018,g_prda_m.prda021,g_prda_m.prda023,g_prda_m.prdadocno 
+ 
+   CALL aprt212_01_show()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.ui_detailshow" >}
+#+ 單身資料重新顯示
+PRIVATE FUNCTION aprt212_01_ui_detailshow()
+   #add-point:ui_detailshow段define
+   
+   #end add-point    
+   
+   #add-point:ui_detailshow段before
+   
+   #end add-point    
+   
+   IF g_curr_diag IS NOT NULL THEN
+      CALL g_curr_diag.setCurrentRow("s_detail1",g_detail_idx)      
+      CALL g_curr_diag.setCurrentRow("s_detail2",g_detail_idx)
+ 
+   END IF
+   
+   #add-point:ui_detailshow段after
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.ui_browser_refresh" >}
+#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION aprt212_01_ui_browser_refresh()
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define
+   
+   #end add-point    
+   
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_prdadocno = g_prda_m.prdadocno 
+ 
+         THEN  
+         CALL g_browser.deleteElement(l_i)
+         LET g_header_cnt = g_header_cnt - 1
+      END IF
+   END FOR
+ 
+   LET g_browser_cnt = g_browser_cnt - 1
+   IF g_current_row > g_browser_cnt THEN        #確定browse 筆數指在同一筆
+      LET g_current_row = g_browser_cnt
+   END IF
+ 
+   #DISPLAY g_browser_cnt TO FORMONLY.b_count    #總筆數的顯示
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.construct" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION aprt212_01_construct()
+   DEFINE ls_return   STRING
+   DEFINE ls_result   STRING 
+   DEFINE ls_wc       STRING 
+   #add-point:cs段define
+   
+   #end add-point    
+ 
+   #清除畫面
+   CLEAR FORM                
+   INITIALIZE g_prda_m.* TO NULL
+   CALL g_prdj_d.clear()        
+   CALL g_prdj2_d.clear() 
+ 
+   
+   LET g_action_choice = ""
+    
+   INITIALIZE g_wc TO NULL
+   INITIALIZE g_wc2 TO NULL
+   
+   INITIALIZE g_wc2_table1 TO NULL
+   INITIALIZE g_wc2_table2 TO NULL
+ 
+ 
+    
+   LET g_qryparam.state = 'c'
+   
+   #add-point:cs段開始前
+   
+   #end add-point 
+   
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+      #單頭
+      CONSTRUCT BY NAME g_wc ON prda017,prda019,prda020,prda022,prda018,prda021,prda023,prdadocno
+ 
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct
+            
+            #end add-point 
+            
+         #公用欄位開窗相關處理
+         
+            
+         #一般欄位開窗相關處理    
+         #---------------------------<  Master  >---------------------------
+         #----<<prda017>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prda017
+            #add-point:BEFORE FIELD prda017
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prda017
+            
+            #add-point:AFTER FIELD prda017
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.prda017
+         ON ACTION controlp INFIELD prda017
+            #add-point:ON ACTION controlp INFIELD prda017
+            
+            #END add-point
+ 
+         #----<<prda019>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prda019
+            #add-point:BEFORE FIELD prda019
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prda019
+            
+            #add-point:AFTER FIELD prda019
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.prda019
+         ON ACTION controlp INFIELD prda019
+            #add-point:ON ACTION controlp INFIELD prda019
+            
+            #END add-point
+ 
+         #----<<prda020>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prda020
+            #add-point:BEFORE FIELD prda020
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prda020
+            
+            #add-point:AFTER FIELD prda020
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.prda020
+         ON ACTION controlp INFIELD prda020
+            #add-point:ON ACTION controlp INFIELD prda020
+            
+            #END add-point
+ 
+         #----<<prda022>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prda022
+            #add-point:BEFORE FIELD prda022
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prda022
+            
+            #add-point:AFTER FIELD prda022
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.prda022
+         ON ACTION controlp INFIELD prda022
+            #add-point:ON ACTION controlp INFIELD prda022
+            
+            #END add-point
+ 
+         #----<<prda018>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prda018
+            #add-point:BEFORE FIELD prda018
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prda018
+            
+            #add-point:AFTER FIELD prda018
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.prda018
+         ON ACTION controlp INFIELD prda018
+            #add-point:ON ACTION controlp INFIELD prda018
+            
+            #END add-point
+ 
+         #----<<prda021>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prda021
+            #add-point:BEFORE FIELD prda021
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prda021
+            
+            #add-point:AFTER FIELD prda021
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.prda021
+         ON ACTION controlp INFIELD prda021
+            #add-point:ON ACTION controlp INFIELD prda021
+            
+            #END add-point
+ 
+         #----<<prda023>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prda023
+            #add-point:BEFORE FIELD prda023
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prda023
+            
+            #add-point:AFTER FIELD prda023
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.prda023
+         ON ACTION controlp INFIELD prda023
+            #add-point:ON ACTION controlp INFIELD prda023
+            
+            #END add-point
+ 
+         #----<<prdadocno>>----
+         #Ctrlp:construct.c.prdadocno
+         ON ACTION controlp INFIELD prdadocno
+            #add-point:ON ACTION controlp INFIELD prdadocno
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_prdadocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO prdadocno  #顯示到畫面上
+
+            NEXT FIELD prdadocno                     #返回原欄位
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdadocno
+            #add-point:BEFORE FIELD prdadocno
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdadocno
+            
+            #add-point:AFTER FIELD prdadocno
+            
+            #END add-point
+            
+ 
+ 
+         
+      END CONSTRUCT
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc2_table1 ON prdj002,prdj003,prdj004,prdj005,prdj006,prdj00603,prdjacti,prdjsite, 
+          prdjunit,prdj001
+           FROM s_detail1[1].prdj002,s_detail1[1].prdj003,s_detail1[1].prdj004,s_detail1[1].prdj005, 
+               s_detail1[1].prdj006,s_detail1[1].prdj00603,s_detail1[1].prdjacti,s_detail1[1].prdjsite, 
+               s_detail1[1].prdjunit,s_detail1[1].prdj001
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct
+            
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+       #---------------------<  Detail: page1  >---------------------
+         #----<<prdj002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj002
+            #add-point:BEFORE FIELD prdj002
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj002
+            
+            #add-point:AFTER FIELD prdj002
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prdj002
+         ON ACTION controlp INFIELD prdj002
+            #add-point:ON ACTION controlp INFIELD prdj002
+            
+            #END add-point
+ 
+         #----<<prdj003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj003
+            #add-point:BEFORE FIELD prdj003
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj003
+            
+            #add-point:AFTER FIELD prdj003
+ 
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prdj003
+         ON ACTION controlp INFIELD prdj003
+            #add-point:ON ACTION controlp INFIELD prdj003
+            
+            #END add-point
+ 
+         #----<<prdj004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj004
+            #add-point:BEFORE FIELD prdj004
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj004
+            
+            #add-point:AFTER FIELD prdj004
+ 
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prdj004
+         ON ACTION controlp INFIELD prdj004
+            #add-point:ON ACTION controlp INFIELD prdj004
+            
+            #END add-point
+ 
+         #----<<prdj004_desc>>----
+         #----<<prdj004_desc1>>----
+         #----<<prdj005>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj005
+            #add-point:BEFORE FIELD prdj005
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj005
+            
+            #add-point:AFTER FIELD prdj005
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prdj005
+         ON ACTION controlp INFIELD prdj005
+            #add-point:ON ACTION controlp INFIELD prdj005
+            
+            #END add-point
+ 
+         #----<<prdj006>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj006
+            #add-point:BEFORE FIELD prdj006
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj006
+            
+            #add-point:AFTER FIELD prdj006
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prdj006
+         ON ACTION controlp INFIELD prdj006
+            #add-point:ON ACTION controlp INFIELD prdj006
+            
+            #END add-point
+ 
+         #----<<prdj00601>>----
+         #----<<prdj00602>>----
+         #----<<prdj00603>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj00603
+            #add-point:BEFORE FIELD prdj00603
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj00603
+            
+            #add-point:AFTER FIELD prdj00603
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prdj00603
+         ON ACTION controlp INFIELD prdj00603
+            #add-point:ON ACTION controlp INFIELD prdj00603
+            
+            #END add-point
+ 
+         #----<<prdjacti>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdjacti
+            #add-point:BEFORE FIELD prdjacti
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdjacti
+            
+            #add-point:AFTER FIELD prdjacti
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prdjacti
+         ON ACTION controlp INFIELD prdjacti
+            #add-point:ON ACTION controlp INFIELD prdjacti
+            
+            #END add-point
+ 
+         #----<<prdjsite>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdjsite
+            #add-point:BEFORE FIELD prdjsite
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdjsite
+            
+            #add-point:AFTER FIELD prdjsite
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prdjsite
+         ON ACTION controlp INFIELD prdjsite
+            #add-point:ON ACTION controlp INFIELD prdjsite
+            
+            #END add-point
+ 
+         #----<<prdjunit>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdjunit
+            #add-point:BEFORE FIELD prdjunit
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdjunit
+            
+            #add-point:AFTER FIELD prdjunit
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prdjunit
+         ON ACTION controlp INFIELD prdjunit
+            #add-point:ON ACTION controlp INFIELD prdjunit
+            
+            #END add-point
+ 
+         #----<<prdj001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj001
+            #add-point:BEFORE FIELD prdj001
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj001
+            
+            #add-point:AFTER FIELD prdj001
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page1.prdj001
+         ON ACTION controlp INFIELD prdj001
+            #add-point:ON ACTION controlp INFIELD prdj001
+            
+            #END add-point
+ 
+   
+       
+      END CONSTRUCT
+      
+      CONSTRUCT g_wc2_table2 ON prdk002,prdk003,prdk004,prdk005,prdk006,prdk007,prdk008,prdk009,prdk010, 
+          prdk011,prdk012,prdkacti,prdk001,prdksite,prdkunit
+           FROM s_detail2[1].prdk002,s_detail2[1].prdk003,s_detail2[1].prdk004,s_detail2[1].prdk005, 
+               s_detail2[1].prdk006,s_detail2[1].prdk007,s_detail2[1].prdk008,s_detail2[1].prdk009,s_detail2[1].prdk010, 
+               s_detail2[1].prdk011,s_detail2[1].prdk012,s_detail2[1].prdkacti,s_detail2[1].prdk001, 
+               s_detail2[1].prdksite,s_detail2[1].prdkunit
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct
+            
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理(table 2)
+       
+       
+       #單身一般欄位開窗相關處理       
+       #---------------------<  Detail: page2  >---------------------
+         #----<<prdk002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk002
+            #add-point:BEFORE FIELD prdk002
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk002
+            
+            #add-point:AFTER FIELD prdk002
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.prdk002
+         ON ACTION controlp INFIELD prdk002
+            #add-point:ON ACTION controlp INFIELD prdk002
+            
+            #END add-point
+ 
+         #----<<prdk003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk003
+            #add-point:BEFORE FIELD prdk003
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk003
+            
+            #add-point:AFTER FIELD prdk003
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.prdk003
+         ON ACTION controlp INFIELD prdk003
+            #add-point:ON ACTION controlp INFIELD prdk003
+            
+            #END add-point
+ 
+         #----<<prdk004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk004
+            #add-point:BEFORE FIELD prdk004
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk004
+            
+            #add-point:AFTER FIELD prdk004
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.prdk004
+         ON ACTION controlp INFIELD prdk004
+            #add-point:ON ACTION controlp INFIELD prdk004
+            
+            #END add-point
+ 
+         #----<<prdk005>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk005
+            #add-point:BEFORE FIELD prdk005
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk005
+            
+            #add-point:AFTER FIELD prdk005
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.prdk005
+         ON ACTION controlp INFIELD prdk005
+            #add-point:ON ACTION controlp INFIELD prdk005
+            
+            #END add-point
+ 
+         #----<<prdk005_desc>>----
+         #----<<prdk006>>----
+         #Ctrlp:construct.c.page2.prdk006
+         ON ACTION controlp INFIELD prdk006
+            #add-point:ON ACTION controlp INFIELD prdk006
+            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_imay003_2()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO prdk006  #顯示到畫面上
+
+            NEXT FIELD prdk006                     #返回原欄位
+
+
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk006
+            #add-point:BEFORE FIELD prdk006
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk006
+            
+            #add-point:AFTER FIELD prdk006
+            
+            #END add-point
+            
+ 
+         #----<<prdk007>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk007
+            #add-point:BEFORE FIELD prdk007
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk007
+            
+            #add-point:AFTER FIELD prdk007
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.prdk007
+         ON ACTION controlp INFIELD prdk007
+            #add-point:ON ACTION controlp INFIELD prdk007
+            
+            #END add-point
+ 
+         #----<<prdk007_desc>>----
+         #----<<prdk008>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk008
+            #add-point:BEFORE FIELD prdk008
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk008
+            
+            #add-point:AFTER FIELD prdk008
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.prdk008
+         ON ACTION controlp INFIELD prdk008
+            #add-point:ON ACTION controlp INFIELD prdk008
+            
+            #END add-point
+ 
+         #----<<prdk009>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk009
+            #add-point:BEFORE FIELD prdk009
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk009
+            
+            #add-point:AFTER FIELD prdk009
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.prdk009
+         ON ACTION controlp INFIELD prdk009
+            #add-point:ON ACTION controlp INFIELD prdk009
+            
+            #END add-point
+ 
+         #----<<prdk010>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk010
+            #add-point:BEFORE FIELD prdk010
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk010
+            
+            #add-point:AFTER FIELD prdk010
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.prdk010
+         ON ACTION controlp INFIELD prdk010
+            #add-point:ON ACTION controlp INFIELD prdk010
+            
+            #END add-point
+ 
+         #----<<prdk011>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk011
+            #add-point:BEFORE FIELD prdk011
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk011
+            
+            #add-point:AFTER FIELD prdk011
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.prdk011
+         ON ACTION controlp INFIELD prdk011
+            #add-point:ON ACTION controlp INFIELD prdk011
+            
+            #END add-point
+ 
+         #----<<prdk012>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk012
+            #add-point:BEFORE FIELD prdk012
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk012
+            
+            #add-point:AFTER FIELD prdk012
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.prdk012
+         ON ACTION controlp INFIELD prdk012
+            #add-point:ON ACTION controlp INFIELD prdk012
+            
+            #END add-point
+ 
+         #----<<prdkacti>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdkacti
+            #add-point:BEFORE FIELD prdkacti
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdkacti
+            
+            #add-point:AFTER FIELD prdkacti
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.prdkacti
+         ON ACTION controlp INFIELD prdkacti
+            #add-point:ON ACTION controlp INFIELD prdkacti
+            
+            #END add-point
+ 
+         #----<<prdk001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk001
+            #add-point:BEFORE FIELD prdk001
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk001
+            
+            #add-point:AFTER FIELD prdk001
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.prdk001
+         ON ACTION controlp INFIELD prdk001
+            #add-point:ON ACTION controlp INFIELD prdk001
+            
+            #END add-point
+ 
+         #----<<prdksite>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdksite
+            #add-point:BEFORE FIELD prdksite
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdksite
+            
+            #add-point:AFTER FIELD prdksite
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.prdksite
+         ON ACTION controlp INFIELD prdksite
+            #add-point:ON ACTION controlp INFIELD prdksite
+            
+            #END add-point
+ 
+         #----<<prdkunit>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdkunit
+            #add-point:BEFORE FIELD prdkunit
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdkunit
+            
+            #add-point:AFTER FIELD prdkunit
+            
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.page2.prdkunit
+         ON ACTION controlp INFIELD prdkunit
+            #add-point:ON ACTION controlp INFIELD prdkunit
+            
+            #END add-point
+ 
+   
+       
+      END CONSTRUCT
+ 
+ 
+      
+ 
+      
+      #add-point:cs段add_cs(本段內只能出現新的CONSTRUCT指令)
+      
+      #end add-point
+ 
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog
+         
+         #end add-point  
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   END DIALOG
+   
+   #組合g_wc2
+   LET g_wc2 = g_wc2_table1
+   IF g_wc2_table2 <> " 1=1" THEN
+      LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+   END IF
+ 
+ 
+ 
+ 
+   
+   #add-point:cs段結束前
+   
+   #end add-point    
+ 
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.query" >}
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION aprt212_01_query()
+   DEFINE ls_wc STRING
+   #add-point:query段define
+   
+   #end add-point   
+ 
+   #切換畫面
+   
+   LET ls_wc = g_wc
+   
+   LET INT_FLAG = 0
+   CALL cl_navigator_setting( g_current_idx, g_detail_cnt )
+   ERROR ""
+   
+   #清除畫面及相關資料
+   CLEAR FORM
+   CALL g_browser.clear()       
+   CALL g_prdj_d.clear()
+   CALL g_prdj2_d.clear()
+ 
+   
+   #add-point:query段other
+   
+   #end add-point   
+   
+   DISPLAY ' ' TO FORMONLY.idx
+   DISPLAY ' ' TO FORMONLY.cnt
+   DISPLAY ' ' TO FORMONLY.b_index
+   DISPLAY ' ' TO FORMONLY.b_count
+   DISPLAY ' ' TO FORMONLY.h_index
+   DISPLAY ' ' TO FORMONLY.h_count
+   
+   CALL aprt212_01_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      LET g_wc = ls_wc
+      CALL aprt212_01_browser_fill("")
+      CALL aprt212_01_fetch("")
+      RETURN
+   END IF
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||") AND ("||g_wc2||")")
+   
+   #搜尋後資料初始化
+   LET g_detail_cnt  = 0
+   LET g_current_idx = 1
+   LET g_current_row = 0
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_error_show  = 1
+   LET g_wc_filter   = ""
+   LET l_ac = 1
+   CALL FGL_SET_ARR_CURR(1)
+   CALL aprt212_01_browser_fill("F")
+         
+   IF g_browser_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "-100"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+ 
+   ELSE
+      CALL aprt212_01_fetch("F") 
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.fetch" >}
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION aprt212_01_fetch(p_flag)
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define
+   
+   #end add-point    
+   
+   IF g_browser_cnt = 0 THEN
+      RETURN
+   END IF
+   
+   CASE p_flag
+      WHEN 'F' LET g_current_idx = 1
+      WHEN 'L' LET g_current_idx = g_header_cnt        
+      WHEN 'P'
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN 'N'
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN '/'
+         IF (NOT g_no_ask) THEN    
+            CALL cl_set_act_visible("accept,cancel", TRUE)    
+            CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,':' FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl" 
+            END PROMPT
+ 
+            CALL cl_set_act_visible("accept,cancel", FALSE)    
+            IF INT_FLAG THEN
+                LET INT_FLAG = 0
+                EXIT CASE  
+            END IF           
+         END IF
+         
+         IF g_jump > 0 AND g_jump <= g_browser.getLength() THEN
+             LET g_current_idx = g_jump
+         END IF
+         
+         LET g_no_ask = FALSE  
+   END CASE 
+   
+   CALL aprt212_01_browser_fill(p_flag)
+   
+   
+   LET g_detail_cnt = g_header_cnt                  
+   
+   #單身總筆數顯示
+   #LET g_detail_idx = 1
+   IF g_detail_cnt > 0 THEN
+      #LET g_detail_idx = 1
+      DISPLAY g_detail_idx TO FORMONLY.idx  
+   ELSE
+      LET g_detail_idx = 0
+      DISPLAY ' ' TO FORMONLY.idx    
+   END IF
+   
+   #瀏覽頁筆數顯示
+   LET g_pagestart = g_current_idx
+   DISPLAY g_pagestart TO FORMONLY.b_index   #當下筆數
+   DISPLAY g_pagestart TO FORMONLY.h_index   #當下筆數
+   
+   CALL cl_navigator_setting( g_pagestart, g_browser_cnt )
+   
+   #代表沒有資料
+   IF g_current_idx = 0 OR g_browser.getLength() = 0 THEN
+      RETURN
+   END IF
+   
+   #超出範圍
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   LET g_prda_m.prdadocno = g_browser[g_current_idx].b_prdadocno
+ 
+   
+   #重讀DB,因TEMP有不被更新特性
+   EXECUTE aprt212_01_master_referesh USING g_prda_m.prdadocno INTO g_prda_m.prda017,g_prda_m.prda019, 
+       g_prda_m.prda020,g_prda_m.prda022,g_prda_m.prda018,g_prda_m.prda021,g_prda_m.prda023,g_prda_m.prdadocno 
+ 
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "prda_t"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+ 
+      INITIALIZE g_prda_m.* TO NULL
+      RETURN
+   END IF
+   
+   #add-point:fetch段action控制
+   
+   #end add-point  
+   
+   
+   
+   #add-point:fetch結束前
+   
+   #end add-point
+   
+   #LET g_data_owner =       
+   #LET g_data_group =   
+   
+   #重新顯示   
+   CALL aprt212_01_show()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION aprt212_01_insert()
+   #add-point:insert段define
+
+   #end add-point    
+   
+   #清畫面欄位內容
+   CLEAR FORM                    
+   CALL g_prdj_d.clear()   
+   CALL g_prdj2_d.clear()  
+ 
+ 
+   INITIALIZE g_prda_m.* LIKE prda_t.*             #DEFAULT 設定
+   
+   LET g_prdadocno_t = NULL
+ 
+   
+   CALL s_transaction_begin()
+   WHILE TRUE
+      #公用欄位給值(單頭)
+      
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+            LET g_prda_m.prda017 = "1"
+      LET g_prda_m.prda019 = "2"
+      LET g_prda_m.prda022 = "0"
+      LET g_prda_m.prda018 = "1"
+      LET g_prda_m.prda021 = "0"
+      LET g_prda_m.prda023 = "0"
+ 
+  
+      #add-point:單頭預設值
+
+      #end add-point 
+     
+      CALL aprt212_01_input("a")
+      
+      #add-point:單頭輸入後
+
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_prda_m.* = g_prda_m_t.*
+         CALL aprt212_01_show()
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 9001
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+ 
+         CALL s_transaction_end('N','0')
+         EXIT WHILE
+      END IF
+      
+      CALL g_prdj_d.clear()
+      CALL g_prdj2_d.clear()
+ 
+ 
+      LET g_rec_b = 0
+      CALL s_transaction_end('Y','0')
+      EXIT WHILE
+        
+   END WHILE
+   
+   LET g_state = "Y"
+   
+   LET g_prdadocno_t = g_prda_m.prdadocno
+ 
+   
+   LET g_wc = g_wc,  
+              " OR ( prdaent = '" ||g_enterprise|| "' AND",
+              " prdadocno = '", g_prda_m.prdadocno CLIPPED, "' "
+ 
+              , ") "
+   
+   CLOSE aprt212_01_cl
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION aprt212_01_modify()
+   DEFINE l_new_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key  DYNAMIC ARRAY OF STRING
+   #add-point:modify段define
+   
+   #end add-point    
+   
+   IF g_prda_m.prdadocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "std-00003"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+ 
+      RETURN
+   END IF
+   
+   EXECUTE aprt212_01_master_referesh USING g_prda_m.prdadocno INTO g_prda_m.prda017,g_prda_m.prda019, 
+       g_prda_m.prda020,g_prda_m.prda022,g_prda_m.prda018,g_prda_m.prda021,g_prda_m.prda023,g_prda_m.prdadocno 
+ 
+ 
+   ERROR ""
+  
+   LET g_prdadocno_t = g_prda_m.prdadocno
+ 
+   CALL s_transaction_begin()
+   
+   OPEN aprt212_01_cl USING g_enterprise,g_prda_m.prdadocno
+ 
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "OPEN aprt212_01_cl:"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+ 
+      CLOSE aprt212_01_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #鎖住將被更改或取消的資料
+   FETCH aprt212_01_cl INTO g_prda_m.prda017,g_prda_m.prda019,g_prda_m.prda020,g_prda_m.prda022,g_prda_m.prda018, 
+       g_prda_m.prda021,g_prda_m.prda023,g_prda_m.prdadocno
+ 
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = g_prda_m.prdadocno
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+ 
+      CLOSE aprt212_01_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   
+   
+   #add-point:modify段show之前
+   IF cl_null(g_prda_m.prda017) THEN
+      LET g_prda_m.prda017 = "1"
+   END IF
+   IF cl_null(g_prda_m.prda019) THEN
+      LET g_prda_m.prda019 = "2"
+   END IF
+   IF cl_null(g_prda_m.prda022) THEN
+      LET g_prda_m.prda022 = "0"
+   END IF
+   IF cl_null(g_prda_m.prda018) THEN
+      LET g_prda_m.prda018 = "1"
+   END IF
+   IF cl_null(g_prda_m.prda021) THEN
+      LET g_prda_m.prda021 = "0"
+   END IF
+   IF cl_null(g_prda_m.prda023) THEN
+      LET g_prda_m.prda023 = "0"
+   END IF
+   IF cl_null(g_prda_m.prda020) THEN
+      LET g_prda_m.prda020 = "N"
+   END IF
+   UPDATE prda_t 
+      SET (prda017,prda019,prda020,prda022,prda018,prda021,prda023) = (g_prda_m.prda017,g_prda_m.prda019,g_prda_m.prda020,g_prda_m.prda022,g_prda_m.prda018,g_prda_m.prda021,g_prda_m.prda023)
+    WHERE prdaent = g_enterprise AND prdadocno = g_prda_m.prdadocno
+   CALL aprt212_01_set_comp_visible()
+   #end add-point  
+   
+   CALL aprt212_01_show()
+   WHILE TRUE
+      LET g_prdadocno_t = g_prda_m.prdadocno
+ 
+      
+      #寫入修改者/修改日期資訊(單頭)
+      
+      
+      #add-point:modify段修改前
+      
+      #end add-point
+      
+      CALL aprt212_01_input("u")     #欄位更改
+ 
+      #add-point:modify段修改後
+      
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_prda_m.* = g_prda_m_t.*
+         CALL aprt212_01_show()
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 9001
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+ 
+         CALL s_transaction_end('N','0')
+         EXIT WHILE
+      END IF
+      
+      #若單頭key欄位有變更
+      IF g_prda_m.prdadocno != g_prdadocno_t 
+ 
+      THEN
+         CALL s_transaction_begin()
+         
+         #add-point:單身fk修改前
+         
+         #end add-point
+         
+         #更新單身key值
+         UPDATE prdj_t SET prdjdocno = g_prda_m.prdadocno
+ 
+          WHERE prdjent = g_enterprise AND prdjdocno = g_prdadocno_t
+ 
+            
+         #add-point:單身fk修改中
+         
+         #end add-point
+ 
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00009"
+               LET g_errparam.extend = "prdj_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+ 
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+            WHEN SQLCA.sqlcode #其他錯誤
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "prdj_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+  
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+         END CASE
+         
+         #add-point:單身fk修改後
+         
+         #end add-point
+         
+         #更新單身key值
+         #add-point:單身fk修改前
+         
+         #end add-point
+         UPDATE prdk_t
+            SET prdkdocno = g_prda_m.prdadocno
+ 
+          WHERE prdkent = g_enterprise AND
+                prdkdocno = g_prdadocno_t
+ 
+         #add-point:單身fk修改中
+         
+         #end add-point
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00009"
+               LET g_errparam.extend = "prdk_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+ 
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+            WHEN SQLCA.sqlcode #其他錯誤
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "prdk_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+  
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+         END CASE
+         #add-point:單身fk修改後
+         
+         #end add-point
+ 
+ 
+         
+ 
+         
+         #UPDATE 多語言table key值
+         
+         
+ 
+         CALL s_transaction_end('Y','0')
+      END IF
+    
+      EXIT WHILE
+   END WHILE
+ 
+   #修改歷程記錄
+   IF NOT cl_log_modified_record(g_prda_m.prdadocno,g_site) THEN 
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE aprt212_01_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-U
+   CALL cl_flow_notify(g_prda_m.prdadocno,'U')
+ 
+END FUNCTION   
+ 
+{</section>}
+ 
+{<section id="aprt212_01.input" >}
+#+ 資料輸入
+PRIVATE FUNCTION aprt212_01_input(p_cmd)
+   DEFINE  p_cmd                 LIKE type_t.chr1
+   DEFINE  l_cmd_t               LIKE type_t.chr1
+   DEFINE  l_cmd                 LIKE type_t.chr1
+   DEFINE  l_n                   LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_cnt                 LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_lock_sw             LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert        LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete        LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count               LIKE type_t.num5
+   DEFINE  l_i                   LIKE type_t.num5
+   DEFINE  l_insert              BOOLEAN
+   DEFINE  ls_return             STRING
+   DEFINE  l_var_keys            DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys          DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields              DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak        DYNAMIC ARRAY OF STRING
+   DEFINE  lb_reproduce          BOOLEAN
+   DEFINE  li_reproduce          LIKE type_t.num5
+   DEFINE  li_reproduce_target   LIKE type_t.num5
+   #add-point:input段define
+   DEFINE  l_n1                  LIKE type_t.num5
+   DEFINE  l_n2                  LIKE type_t.num5
+   DEFINE  l_prda026             LIKE prda_t.prda026
+   DEFINE  l_n3                  LIKE type_t.num5
+   DEFINE  l_prdk005             LIKE prdk_t.prdk005
+   #end add-point  
+ 
+   #先做狀態判定
+   IF p_cmd = 'r' THEN
+      LET l_cmd_t = 'r'
+      LET p_cmd   = 'a'
+   ELSE
+      LET l_cmd_t = p_cmd
+   END IF   
+   
+   #切換畫面
+ 
+   CALL cl_set_head_visible("","YES")  
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   #add-point:input段define_sql
+   LET l_n3 = 0
+   SELECT COUNT(*) INTO l_n3
+     FROM prdb_t
+    WHERE prdbent = g_enterprise
+      AND prdbdocno = g_prdadocno
+   IF l_n3 = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'apr-00297'
+      LET g_errparam.extend = g_prdadocno
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      RETURN
+   END IF
+   #end add-point 
+   LET g_forupd_sql = "SELECT prdj002,prdj003,prdj004,'','',prdj005,prdj006,'','','',prdjacti,prdjsite, 
+       prdjunit,prdj001 FROM prdj_t WHERE prdjent=? AND prdjdocno=? AND prdj002=? AND prdj003=? AND  
+       prdj004=? FOR UPDATE"
+   #add-point:input段define_sql
+   LET g_forupd_sql = "SELECT prdj002,prdj003,'','','',prdj005,'','','','',prdjacti,prdjsite, 
+       prdjunit,prdj001 FROM prdj_t WHERE prdjent=? AND prdjdocno=? AND prdj002=? AND prdj003 = ? FOR UPDATE"
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE aprt212_01_bcl CURSOR FROM g_forupd_sql
+   
+   #add-point:input段define_sql
+  
+   #end add-point    
+   LET g_forupd_sql = "SELECT prdk002,prdk003,prdk004,prdk005,'',prdk006,prdk007,'',prdk008,prdk009, 
+       prdk010,prdk011,prdk012,prdkacti,prdk001,prdksite,prdkunit FROM prdk_t WHERE prdkent=? AND prdkdocno=?  
+       AND prdk002=? AND prdk003=? AND prdk004=? AND prdk005=? AND prdk007=? FOR UPDATE"
+   #add-point:input段define_sql
+   LET g_forupd_sql = "SELECT prdk002,prdk003,prdk004,prdk005,'',prdk006,prdk007,'',prdk008,prdk009, 
+       prdk010,prdk011,prdk012,prdkacti,prdk001,prdksite,prdkunit FROM prdk_t WHERE prdkent=? AND prdkdocno=?  
+       AND prdk002=? AND prdk003=? AND prdk004=? AND prdk005=?  FOR UPDATE"
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE aprt212_01_bcl2 CURSOR FROM g_forupd_sql
+ 
+ 
+   
+ 
+ 
+   #add-point:input段define_sql
+   LET g_forupd_sql = "SELECT prdj002,prdj003,prdj004,'','',prdj005,prdj006,'','','',prdjacti,prdjsite, 
+       prdjunit,prdj001 FROM prdj_t WHERE prdjent=? AND prdjdocno=? AND prdj002=? AND prdj003=? AND  
+       prdj004=? FOR UPDATE"
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE aprt212_01_bcl3 CURSOR FROM g_forupd_sql
+   #end add-point 
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   LET g_qryparam.state = 'i'
+   
+   #控制key欄位可否輸入
+   CALL aprt212_01_set_entry(p_cmd)
+   #add-point:set_entry後
+
+   #end add-point
+   CALL aprt212_01_set_no_entry(p_cmd)
+ 
+   DISPLAY BY NAME g_prda_m.prda017,g_prda_m.prda019,g_prda_m.prda020,g_prda_m.prda022,g_prda_m.prda018, 
+       g_prda_m.prda021,g_prda_m.prda023,g_prda_m.prdadocno
+   
+   LET lb_reproduce = FALSE
+   
+   #add-point:資料輸入前
+   LET g_errshow = 1
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #單頭段
+      INPUT BY NAME g_prda_m.prda017,g_prda_m.prda019,g_prda_m.prda020,g_prda_m.prda022,g_prda_m.prda018,g_prda_m.prda021, 
+          g_prda_m.prda023,g_prda_m.prdadocno 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+     
+         BEFORE INPUT
+            
+            IF l_cmd_t = 'r' THEN
+               
+            END IF
+            #add-point:資料輸入前
+
+            #end add-point
+ 
+         #---------------------------<  Master  >---------------------------
+         #----<<prda017>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prda017
+            #add-point:BEFORE FIELD prda017
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prda017
+            
+            #add-point:AFTER FIELD prda017
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prda017
+            #add-point:ON CHANGE prda017
+
+            #END add-point
+ 
+         #----<<prda019>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prda019
+            #add-point:BEFORE FIELD prda019
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prda019
+            
+            #add-point:AFTER FIELD prda019
+            SELECT prda026 INTO l_prda026
+              FROM prda_t
+             WHERE prdaent = g_enterprise
+               AND prdadocno = g_prdadocno
+            IF l_prda026 <> '4' AND g_prda_m.prda019 = '3' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'apr-00276'
+               LET g_errparam.extend = g_prda_m.prda019
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_prda_m.prda019 = g_prda_m_t.prda019
+               NEXT FIELD prda019
+            END IF
+            CALL aprt212_01_set_comp_visible()
+            DELETE FROM prdj_t WHERE prdjent = g_enterprise AND prdjdocno = g_prdadocno
+            DELETE FROM prdk_t WHERE prdkent = g_enterprise AND prdkdocno = g_prdadocno
+            CALL aprt212_01_b_fill()
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prda019
+            #add-point:ON CHANGE prda019
+            CALL aprt212_01_set_comp_visible()
+            DELETE FROM prdj_t WHERE prdjent = g_enterprise AND prdjdocno = g_prdadocno
+            DELETE FROM prdk_t WHERE prdkent = g_enterprise AND prdkdocno = g_prdadocno
+            CALL aprt212_01_b_fill()
+            #END add-point
+ 
+         #----<<prda022>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prda022
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_prda_m.prda022,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD prda022
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD prda022
+            IF NOT cl_null(g_prda_m.prda022) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prda022
+            #add-point:BEFORE FIELD prda022
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prda022
+            #add-point:ON CHANGE prda022
+
+            #END add-point
+ 
+         #----<<prda018>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prda018
+            #add-point:BEFORE FIELD prda018
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prda018
+            
+            #add-point:AFTER FIELD prda018
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prda018
+            #add-point:ON CHANGE prda018
+
+            #END add-point
+ 
+         #----<<prda021>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prda021
+            #add-point:BEFORE FIELD prda021
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prda021
+            
+            #add-point:AFTER FIELD prda021
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prda021
+            #add-point:ON CHANGE prda021
+
+            #END add-point
+ 
+         #----<<prda023>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prda023
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_prda_m.prda023,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD prda023
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD prda023
+            IF NOT cl_null(g_prda_m.prda023) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prda023
+            #add-point:BEFORE FIELD prda023
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prda023
+            #add-point:ON CHANGE prda023
+
+            #END add-point
+ 
+         #----<<prdadocno>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdadocno
+            #add-point:BEFORE FIELD prdadocno
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdadocno
+            
+            #add-point:AFTER FIELD prdadocno
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_prda_m.prdadocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_prda_m.prdadocno != g_prdadocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM prda_t WHERE "||"prdaent = '" ||g_enterprise|| "' AND "||"prdadocno = '"||g_prda_m.prdadocno ||"'",'std-00004',1) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+
+            #END add-point
+            
+         AFTER FIELD prda020
+         
+         BEFORE FIELD prda020
+         
+         ON CHANGE prda020
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdadocno
+            #add-point:ON CHANGE prdadocno
+
+            #END add-point
+ 
+ #欄位檢查
+         #---------------------------<  Master  >---------------------------
+         #----<<prda017>>----
+         #Ctrlp:input.c.prda017
+         ON ACTION controlp INFIELD prda017
+            #add-point:ON ACTION controlp INFIELD prda017
+
+            #END add-point
+ 
+         #----<<prda019>>----
+         #Ctrlp:input.c.prda019
+         ON ACTION controlp INFIELD prda019
+            #add-point:ON ACTION controlp INFIELD prda019
+
+            #END add-point
+ 
+         #----<<prda022>>----
+         #Ctrlp:input.c.prda022
+         ON ACTION controlp INFIELD prda022
+            #add-point:ON ACTION controlp INFIELD prda022
+
+            #END add-point
+ 
+         #----<<prda018>>----
+         #Ctrlp:input.c.prda018
+         ON ACTION controlp INFIELD prda018
+            #add-point:ON ACTION controlp INFIELD prda018
+
+            #END add-point
+ 
+         #----<<prda021>>----
+         #Ctrlp:input.c.prda021
+         ON ACTION controlp INFIELD prda021
+            #add-point:ON ACTION controlp INFIELD prda021
+
+            #END add-point
+ 
+         #----<<prda023>>----
+         #Ctrlp:input.c.prda023
+         ON ACTION controlp INFIELD prda023
+            #add-point:ON ACTION controlp INFIELD prda023
+
+            #END add-point
+ 
+         #----<<prdadocno>>----
+         #Ctrlp:input.c.prdadocno
+         ON ACTION controlp INFIELD prdadocno
+            #add-point:ON ACTION controlp INFIELD prdadocno
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_prda_m.prdadocno             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            LET g_qryparam.arg2 = "" #
+
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_prda_m.prdadocno = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_prda_m.prdadocno TO prdadocno              #顯示到畫面上
+
+            NEXT FIELD prdadocno                          #返回原欄位
+
+
+            #END add-point
+ 
+ #欄位開窗
+            
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+ 
+            CALL cl_showmsg()      #錯誤訊息統整顯示
+            DISPLAY BY NAME g_prda_m.prdadocno             
+ 
+                            
+            IF p_cmd <> 'u' THEN
+    
+               CALL s_transaction_begin()
+               
+               #add-point:單頭新增前
+
+               #end add-point
+               
+               INSERT INTO prda_t (prdaent,prda017,prda019,prda020,prda022,prda018,prda021,prda023,prdadocno) 
+
+               VALUES (g_enterprise,g_prda_m.prda017,g_prda_m.prda019,g_prda_m.prda020,g_prda_m.prda022,g_prda_m.prda018, 
+                   g_prda_m.prda021,g_prda_m.prda023,g_prda_m.prdadocno) 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "g_prda_m"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+  
+                  CALL s_transaction_end('N','0')
+                  CONTINUE DIALOG
+               END IF
+               
+               #add-point:單頭新增中
+
+               #end add-point
+               
+               
+               
+               
+               #add-point:單頭新增後
+
+               #end add-point
+               CALL s_transaction_end('Y','0') 
+               
+               IF l_cmd_t = 'r' AND p_cmd = 'a' THEN
+                  CALL aprt212_01_detail_reproduce()
+               END IF
+               
+               LET p_cmd = 'u'
+            ELSE
+               CALL s_transaction_begin()
+            
+               #add-point:單頭修改前
+
+               #end add-point
+               
+               UPDATE prda_t SET (prda017,prda019,prda020,prda022,prda018,prda021,prda023,prdadocno) = (g_prda_m.prda017, 
+                   g_prda_m.prda019,g_prda_m.prda020,g_prda_m.prda022,g_prda_m.prda018,g_prda_m.prda021,g_prda_m.prda023, 
+                   g_prda_m.prdadocno)
+                WHERE prdaent = g_enterprise AND prdadocno = g_prdadocno_t
+ 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "prda_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+  
+                  CALL s_transaction_end('N','0')
+                  CONTINUE DIALOG
+               END IF
+               
+               #add-point:單頭修改中
+
+               #end add-point
+               
+               
+               
+               CALL s_transaction_end('Y','0')
+               
+               #add-point:單頭修改後
+
+               #end add-point
+            END IF
+            
+            LET g_prdadocno_t = g_prda_m.prdadocno
+ 
+            #controlp
+      END INPUT
+   
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_prdj_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_prdj_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL aprt212_01_b_fill()
+            LET g_rec_b = g_prdj_d.getLength()
+            #add-point:資料輸入前
+            CALL cl_set_act_visible("insert", TRUE)
+            #end add-point
+         
+         BEFORE ROW
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN aprt212_01_cl USING g_enterprise,g_prda_m.prdadocno
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  STATUS
+               LET g_errparam.extend = "OPEN aprt212_01_cl:"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               CLOSE aprt212_01_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            LET g_rec_b = g_prdj_d.getLength()
+            IF g_prda_m.prda019 = '2' THEN
+               IF g_rec_b >= l_ac AND g_prdj_d[l_ac].prdj002 IS NOT NULL AND g_prdj_d[l_ac].prdj003 IS NOT NULL THEN
+                  LET l_cmd='u'
+                  LET g_prdj_d_t.* = g_prdj_d[l_ac].*  #BACKUP
+                  CALL aprt212_01_set_entry_b(l_cmd)
+                  #add-point:modify段after_set_entry_b
+                  LET g_prdj003_o = g_prdj_d[l_ac].prdj003
+                  #end add-point  
+                  CALL aprt212_01_set_no_entry_b(l_cmd)
+                  IF NOT aprt212_01_lock_b("prdj_t","'1'") THEN
+                     LET l_lock_sw='Y'
+                  ELSE
+                     FETCH aprt212_01_bcl INTO g_prdj_d[l_ac].prdj002,g_prdj_d[l_ac].prdj003,g_prdj_d[l_ac].prdj004, 
+                         g_prdj_d[l_ac].prdj004_desc,g_prdj_d[l_ac].prdj004_desc1,g_prdj_d[l_ac].prdj005, 
+                         g_prdj_d[l_ac].prdj006,g_prdj_d[l_ac].prdj00601,g_prdj_d[l_ac].prdj00602,g_prdj_d[l_ac].prdj00603, 
+                         g_prdj_d[l_ac].prdjacti,g_prdj_d[l_ac].prdjsite,g_prdj_d[l_ac].prdjunit,g_prdj_d[l_ac].prdj001 
+               
+                     IF SQLCA.sqlcode THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = SQLCA.sqlcode
+                        LET g_errparam.extend = g_prdj_d_t.prdj002
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+
+                        LET l_lock_sw = "Y"
+                     END IF
+                     LET g_prdj003_o = g_prdj_d[l_ac].prdj003
+                     LET g_bfill = "N"
+                     CALL aprt212_01_show()
+                     LET g_bfill = "Y"
+                     
+                     CALL cl_show_fld_cont()
+                  END IF
+               ELSE
+                  LET l_cmd='a'
+               END IF
+            ELSE
+               IF g_rec_b >= l_ac AND g_prdj_d[l_ac].prdj002 IS NOT NULL AND g_prdj_d[l_ac].prdj003 IS NOT NULL AND g_prdj_d[l_ac].prdj004 IS NOT NULL THEN
+                  LET l_cmd='u'
+                  LET g_prdj_d_t.* = g_prdj_d[l_ac].*  #BACKUP
+                  CALL aprt212_01_set_entry_b(l_cmd)
+                  #add-point:modify段after_set_entry_b
+                  LET g_prdj003_o = g_prdj_d[l_ac].prdj003
+                  #end add-point  
+                  CALL aprt212_01_set_no_entry_b(l_cmd)
+                  IF NOT aprt212_01_lock_b("prdj_t","'1'") THEN
+                     LET l_lock_sw='Y'
+                  ELSE
+                     FETCH aprt212_01_bcl3 INTO g_prdj_d[l_ac].prdj002,g_prdj_d[l_ac].prdj003,g_prdj_d[l_ac].prdj004, 
+                         g_prdj_d[l_ac].prdj004_desc,g_prdj_d[l_ac].prdj004_desc1,g_prdj_d[l_ac].prdj005, 
+                         g_prdj_d[l_ac].prdj006,g_prdj_d[l_ac].prdj00601,g_prdj_d[l_ac].prdj00602,g_prdj_d[l_ac].prdj00603, 
+                         g_prdj_d[l_ac].prdjacti,g_prdj_d[l_ac].prdjsite,g_prdj_d[l_ac].prdjunit,g_prdj_d[l_ac].prdj001 
+               
+                     IF SQLCA.sqlcode THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = SQLCA.sqlcode
+                        LET g_errparam.extend = g_prdj_d_t.prdj002
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+
+                        LET l_lock_sw = "Y"
+                     END IF
+                     LET g_prdj003_o = g_prdj_d[l_ac].prdj003
+                     LET g_bfill = "N"
+                     CALL aprt212_01_show()
+                     LET g_bfill = "Y"
+                     
+                     CALL cl_show_fld_cont()
+                  END IF
+               ELSE
+                  LET l_cmd='a'
+               END IF
+            END IF
+            #add-point:modify段before row
+
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+        
+         BEFORE INSERT
+            
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_prdj_d[l_ac].* TO NULL 
+                  LET g_prdj_d[l_ac].prdjacti = "Y"
+ 
+ 
+            LET g_prdj_d_t.* = g_prdj_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL aprt212_01_set_entry_b(l_cmd)
+            #add-point:modify段after_set_entry_b
+
+            #end add-point
+            CALL aprt212_01_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_prdj_d[li_reproduce_target].* = g_prdj_d[li_reproduce].*
+ 
+               LET g_prdj_d[li_reproduce_target].prdj002 = NULL
+               LET g_prdj_d[li_reproduce_target].prdj003 = NULL
+ 
+               LET g_prdj_d[li_reproduce_target].prdj004 = NULL
+ 
+ 
+            END IF
+            #公用欄位給值(單身)
+            
+            
+            #add-point:modify段before insert
+            SELECT MAX(prdj002) +1 INTO g_prdj_d[l_ac].prdj002
+              FROM prdj_t
+             WHERE prdjent = g_enterprise
+               AND prdjdocno = g_prdadocno
+            IF cl_null(g_prdj_d[l_ac].prdj002) THEN
+               LET g_prdj_d[l_ac].prdj002 = 1
+            END IF
+            IF g_type1 <> 'Y' THEN
+               LET g_prdj_d[l_ac].prdj003 = 0
+            END IF
+            LET g_prdj_d[l_ac].prdj006 = 0
+            LET g_prdj_d[l_ac].prdj00601 = 0
+            LET g_prdj_d[l_ac].prdj00602 = 0
+            LET g_prdj_d[l_ac].prdj00603 = 0
+            LET g_prdj003_o = g_prdj_d[l_ac].prdj003
+            LET g_prdj_d[l_ac].prdjunit = g_site
+            LET g_prdj_d[l_ac].prdjsite = g_site
+            SELECT prda001 INTO g_prdj_d[l_ac].prdj001 
+              FROM prda_t
+             WHERE prdaent = g_enterprise
+               AND prdadocno = g_prdadocno
+            CALL aprt212_01_set_entry_b(l_cmd)
+            CALL aprt212_01_set_no_entry_b(l_cmd)   
+            #end add-point  
+  
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            #add-point:單身新增
+
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM prdj_t 
+             WHERE prdjent = g_enterprise AND prdjdocno = g_prda_m.prdadocno
+ 
+               AND prdj002 = g_prdj_d[l_ac].prdj002
+               AND prdj003 = g_prdj_d[l_ac].prdj003
+ 
+               AND prdj004 = g_prdj_d[l_ac].prdj004
+ 
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前
+
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_prda_m.prdadocno
+               LET gs_keys[2] = g_prdj_d[g_detail_idx].prdj002
+               LET gs_keys[3] = g_prdj_d[g_detail_idx].prdj003
+               LET gs_keys[4] = g_prdj_d[g_detail_idx].prdj004
+               CALL aprt212_01_insert_b('prdj_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後
+               IF g_prda_m.prda019 = '2' THEN
+                  DELETE FROM  prdj_t
+                   WHERE prdjent = g_enterprise
+                     AND prdjdocno = g_prda_m.prdadocno
+                     AND prdj002 = g_prdj_d_t.prdj002
+                     AND prdj003 = g_prdj_d_t.prdj003
+                  DELETE FROM  prdj_t
+                   WHERE prdjent = g_enterprise
+                     AND prdjdocno = g_prda_m.prdadocno
+                     AND prdj002 = g_prdj_d[g_detail_idx].prdj002
+                     AND prdj003 = g_prdj_d[g_detail_idx].prdj003
+                  IF SQLCA.SQLcode  THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "del_prdj_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+  
+                     CALL s_transaction_end('N','0')  
+                  END IF
+                  INSERT INTO prdj_t(prdjent,prdjdocno,prdj002,prdj003,prdj004,prdj005,prdj006,prdjacti,prdjsite,prdjunit,prdj001)
+                  SELECT g_enterprise,g_prda_m.prdadocno,g_prdj_d[g_detail_idx].prdj002,g_prdj_d[g_detail_idx].prdj003,prdb002,g_prdj_d[g_detail_idx].prdj005,g_prdj_d[g_detail_idx].prdj00601,g_prdj_d[g_detail_idx].prdjacti,g_prdj_d[g_detail_idx].prdjsite,g_prdj_d[g_detail_idx].prdjunit,g_prdj_d[g_detail_idx].prdj001
+                    FROM prdb_t
+                   WHERE prdbent = g_enterprise
+                     AND prdbdocno = g_prda_m.prdadocno
+                     AND prdb003 = '1'
+                     AND prdb004 = g_prdj_d[g_detail_idx].prdj003
+                  IF SQLCA.SQLcode  THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "prdj_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+  
+                     CALL s_transaction_end('N','0')
+                  END IF       
+                  INSERT INTO prdj_t(prdjent,prdjdocno,prdj002,prdj003,prdj004,prdj005,prdj006,prdjacti,prdjsite,prdjunit,prdj001)
+                  SELECT g_enterprise,g_prda_m.prdadocno,g_prdj_d[g_detail_idx].prdj002,g_prdj_d[g_detail_idx].prdj003,prdb002,g_prdj_d[g_detail_idx].prdj005,g_prdj_d[g_detail_idx].prdj00602,g_prdj_d[g_detail_idx].prdjacti,g_prdj_d[g_detail_idx].prdjsite,g_prdj_d[g_detail_idx].prdjunit,g_prdj_d[g_detail_idx].prdj001
+                    FROM prdb_t
+                   WHERE prdbent = g_enterprise
+                     AND prdbdocno = g_prda_m.prdadocno
+                     AND prdb003 = '2'
+                     AND prdb004 = g_prdj_d[g_detail_idx].prdj003
+                  IF SQLCA.SQLcode  THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "prdj_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+  
+                     CALL s_transaction_end('N','0')
+                  END IF    
+                  INSERT INTO prdj_t(prdjent,prdjdocno,prdj002,prdj003,prdj004,prdj005,prdj006,prdjacti,prdjsite,prdjunit,prdj001)
+                  SELECT g_enterprise,g_prda_m.prdadocno,g_prdj_d[g_detail_idx].prdj002,g_prdj_d[g_detail_idx].prdj003,prdb002,g_prdj_d[g_detail_idx].prdj005,g_prdj_d[g_detail_idx].prdj00603,g_prdj_d[g_detail_idx].prdjacti,g_prdj_d[g_detail_idx].prdjsite,g_prdj_d[g_detail_idx].prdjunit,g_prdj_d[g_detail_idx].prdj001
+                    FROM prdb_t
+                   WHERE prdbent = g_enterprise
+                     AND prdbdocno = g_prda_m.prdadocno
+                     AND prdb003 = '3'
+                     AND prdb004 = g_prdj_d[g_detail_idx].prdj003
+                  IF SQLCA.SQLcode  THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "prdj_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+  
+                     CALL s_transaction_end('N','0')
+                  END IF 
+               END IF
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               INITIALIZE g_prdj_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "prdj_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+  
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL aprt212_01_b_fill()
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert
+
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' AND g_prdj_d.getLength() < l_ac THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+               CALL g_prdj_d.deleteElement(l_ac)
+               NEXT FIELD prdj002
+            END IF
+            IF g_prda_m.prda019 = '2' THEN
+               IF g_prdj_d[l_ac].prdj002 IS NOT NULL
+                  AND g_prdj_d_t.prdj003 IS NOT NULL
+               
+                  THEN 
+                  
+                  IF NOT cl_ask_del_detail() THEN
+                     CANCEL DELETE
+                  END IF
+                  IF l_lock_sw = "Y" THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code =  -263
+                     LET g_errparam.extend = ""
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     CANCEL DELETE
+                  END IF
+                  
+                  #add-point:單身刪除前
+                  LET l_n2 = 0 
+                  SELECT COUNT(*) INTO l_n2
+                    FROM prdk_t
+                   WHERE prdkent = g_enterprise
+                     AND prdkdocno = g_prda_m.prdadocno
+                     AND prdk002 = g_prdj_d_t.prdj002
+                  IF l_n2 > 0 THEN
+                     #150325-00003#3--mark by dongsz--str---
+#                     INITIALIZE g_errparam TO NULL
+#                     LET g_errparam.code = 'apr-00263'
+#                     LET g_errparam.extend = g_prdj_d_t.prdj002
+#                     LET g_errparam.popup = TRUE
+#                     CALL cl_err()
+#
+#                     CALL s_transaction_end('N','0')
+#                     CANCEL DELETE
+                     #150325-00003#3--mark by dongsz--end---
+                     #150325-00003#3--add by dongsz--str---
+                     IF cl_ask_confirm('apr-00353') THEN
+                        DELETE FROM prdk_t
+                         WHERE prdkent = g_enterprise
+                           AND prdkdocno = g_prda_m.prdadocno
+                           AND prdk002 = g_prdj_d_t.prdj002
+                        IF SQLCA.sqlcode THEN
+                           INITIALIZE g_errparam TO NULL
+                           LET g_errparam.code = SQLCA.sqlcode
+                           LET g_errparam.extend = "prdk_t"
+                           LET g_errparam.popup = TRUE
+                           CALL cl_err()                         
+                           CALL s_transaction_end('N','0')
+                           CANCEL DELETE
+                        END IF                            
+                     ELSE
+                        CALL s_transaction_end('N','0')
+                        CANCEL DELETE
+                     END IF
+                     #150325-00003#3--add by dongsz--end---
+                  END IF
+                  #end add-point 
+                  
+                  DELETE FROM prdj_t
+                   WHERE prdjent = g_enterprise AND prdjdocno = g_prda_m.prdadocno AND
+               
+                         prdj002 = g_prdj_d_t.prdj002
+                     AND prdj003 = g_prdj_d_t.prdj003
+               
+               
+                 
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "prdj_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     CALL s_transaction_end('N','0')
+                     CANCEL DELETE   
+                  ELSE
+                     LET g_rec_b = g_rec_b-1
+                     
+                     #add-point:單身刪除後
+               
+                     #end add-point
+                     CALL s_transaction_end('Y','0')
+                  END IF 
+                  CLOSE aprt212_01_bcl
+                  LET l_count = g_prdj_d.getLength()
+               END IF 
+               
+          ELSE
+             IF g_prdj_d[l_ac].prdj002 IS NOT NULL
+                  AND g_prdj_d_t.prdj003 IS NOT NULL
+                  AND g_prdj_d_t.prdj004 IS NOT NULL
+                  THEN 
+                  
+                  IF NOT cl_ask_del_detail() THEN
+                     CANCEL DELETE
+                  END IF
+                  IF l_lock_sw = "Y" THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code =  -263
+                     LET g_errparam.extend = ""
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     CANCEL DELETE
+                  END IF
+                  
+                  #add-point:單身刪除前
+                  LET l_n2 = 0 
+                  SELECT COUNT(*) INTO l_n2
+                    FROM prdk_t
+                   WHERE prdkent = g_enterprise
+                     AND prdkdocno = g_prda_m.prdadocno
+                     AND prdk002 = g_prdj_d_t.prdj002
+                  IF l_n2 > 0 THEN
+                     #150325-00003#3--mark by dongsz--str---
+#                     INITIALIZE g_errparam TO NULL
+#                     LET g_errparam.code = 'apr-00263'
+#                     LET g_errparam.extend = g_prdj_d_t.prdj002
+#                     LET g_errparam.popup = TRUE
+#                     CALL cl_err()
+#
+#                     CALL s_transaction_end('N','0')
+#                     CANCEL DELETE
+                     #150325-00003#3--mark by dongsz--end---
+                     #150325-00003#3--add by dongsz--str---
+                     IF cl_ask_confirm('apr-00353') THEN
+                        DELETE FROM prdk_t
+                         WHERE prdkent = g_enterprise
+                           AND prdkdocno = g_prda_m.prdadocno
+                           AND prdk002 = g_prdj_d_t.prdj002
+                        IF SQLCA.sqlcode THEN
+                           INITIALIZE g_errparam TO NULL
+                           LET g_errparam.code = SQLCA.sqlcode
+                           LET g_errparam.extend = "prdk_t"
+                           LET g_errparam.popup = TRUE
+                           CALL cl_err()                         
+                           CALL s_transaction_end('N','0')
+                           CANCEL DELETE
+                        END IF                            
+                     ELSE
+                        CALL s_transaction_end('N','0')
+                        CANCEL DELETE
+                     END IF
+                     #150325-00003#3--add by dongsz--end---
+                  END IF
+                  #end add-point 
+                  
+                  DELETE FROM prdj_t
+                   WHERE prdjent = g_enterprise AND prdjdocno = g_prda_m.prdadocno AND
+               
+                         prdj002 = g_prdj_d_t.prdj002
+                     AND prdj003 = g_prdj_d_t.prdj003
+               
+                     AND prdj004 = g_prdj_d_t.prdj004
+               
+               
+                     
+                  #add-point:單身刪除中
+               
+                  #end add-point 
+                  
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "prdj_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     CALL s_transaction_end('N','0')
+                     CANCEL DELETE   
+                  ELSE
+                     LET g_rec_b = g_rec_b-1
+                     
+                     #add-point:單身刪除後
+               
+                     #end add-point
+                     CALL s_transaction_end('Y','0')
+                  END IF 
+                  CLOSE aprt212_01_bcl3
+                  LET l_count = g_prdj_d.getLength()
+               END IF 
+          END IF     
+                         
+               
+              
+         AFTER DELETE 
+            #add-point:單身刪除後2
+
+            #end add-point
+            CALL aprt212_01_delete_b('prdj_t',gs_keys,"'1'")
+            CALL aprt212_01_b_fill()
+ 
+         #---------------------<  Detail: page1  >---------------------
+         #----<<prdj002>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj002
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_prdj_d[l_ac].prdj002,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD prdj002
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD prdj002
+             
+
+            #此段落由子樣板a05產生
+            IF g_prda_m.prdadocno IS NOT NULL AND g_prdj_d[g_detail_idx].prdj002 IS NOT NULL AND g_prdj_d[g_detail_idx].prdj003 IS NOT NULL AND g_prdj_d[g_detail_idx].prdj004 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_prda_m.prdadocno != g_prdadocno_t OR g_prdj_d[g_detail_idx].prdj002 != g_prdj_d_t.prdj002 OR g_prdj_d[g_detail_idx].prdj003 != g_prdj_d_t.prdj003 OR g_prdj_d[g_detail_idx].prdj004 != g_prdj_d_t.prdj004)) THEN 
+                  IF NOT ap_chk_notDup(g_prdj_d[l_ac].prdj002,"SELECT COUNT(*) FROM prdj_t WHERE "||"prdjent = '" ||g_enterprise|| "' AND "||"prdjdocno = '"||g_prda_m.prdadocno ||"' AND "|| "prdj002 = '"||g_prdj_d[g_detail_idx].prdj002 ||"' AND "|| "prdj003 = '"||g_prdj_d[g_detail_idx].prdj003 ||"' AND "|| "prdj004 = '"||g_prdj_d[g_detail_idx].prdj004 ||"'",'std-00004',1) THEN 
+                     LET g_prdj_d[l_ac].prdj002 = g_prdj_d_t.prdj002
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            IF g_prda_m.prda019 = '2' THEN
+               IF NOT cl_null(g_prdj_d[l_ac].prdj002) AND g_prdj_d[g_detail_idx].prdj003 IS NOT NULL  THEN
+                  IF (l_cmd = 'u' AND g_prdj_d[l_ac].prdj002 != g_prdj_d_t.prdj002) OR l_cmd = 'a' THEN
+                     IF NOT ap_chk_notDup(g_prdj_d[l_ac].prdj002,"SELECT COUNT(*) FROM prdj_t WHERE "||"prdjent = '" ||g_enterprise|| "' AND "||"prdjdocno = '"||g_prda_m.prdadocno ||"' AND "|| "prdj002 = '"||g_prdj_d[g_detail_idx].prdj002 ||"' AND "|| "prdj003 = '"||g_prdj_d[g_detail_idx].prdj003 ||"'",'apr-00294',1) THEN 
+                        LET g_prdj_d[l_ac].prdj002 = g_prdj_d_t.prdj002
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF
+            END IF   
+            IF NOT cl_null(g_prdj_d_t.prdj002) THEN 
+               IF l_cmd = 'u' AND g_prdj_d[l_ac].prdj002 != g_prdj_d_t.prdj002 THEN
+                  LET l_n2 = 0 
+                  SELECT COUNT(*) INTO l_n2
+                    FROM prdk_t
+                   WHERE prdkent = g_enterprise
+                     AND prdkdocno = g_prda_m.prdadocno
+                     AND prdk002 = g_prdj_d_t.prdj002
+                  IF l_n2 > 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'apr-00263'
+                     LET g_errparam.extend = g_prdj_d_t.prdj002
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_prdj_d[l_ac].prdj002 = g_prdj_d_t.prdj002
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj002
+            #add-point:BEFORE FIELD prdj002
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdj002
+            #add-point:ON CHANGE prdj002
+
+            #END add-point
+ 
+         #----<<prdj003>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj003
+            
+            #add-point:AFTER FIELD prdj003
+            #此段落由子樣板a05產生
+            IF  g_prda_m.prdadocno IS NOT NULL AND g_prdj_d[g_detail_idx].prdj002 IS NOT NULL AND g_prdj_d[g_detail_idx].prdj003 IS NOT NULL AND g_prdj_d[g_detail_idx].prdj004 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_prda_m.prdadocno != g_prdadocno_t OR g_prdj_d[g_detail_idx].prdj002 != g_prdj_d_t.prdj002 OR g_prdj_d[g_detail_idx].prdj003 != g_prdj_d_t.prdj003 OR g_prdj_d[g_detail_idx].prdj004 != g_prdj_d_t.prdj004)) THEN 
+                  IF NOT ap_chk_notDup(g_prdj_d[l_ac].prdj003,"SELECT COUNT(*) FROM prdj_t WHERE "||"prdjent = '" ||g_enterprise|| "' AND "||"prdjdocno = '"||g_prda_m.prdadocno ||"' AND "|| "prdj002 = '"||g_prdj_d[g_detail_idx].prdj002 ||"' AND "|| "prdj003 = '"||g_prdj_d[g_detail_idx].prdj003 ||"' AND "|| "prdj004 = '"||g_prdj_d[g_detail_idx].prdj004 ||"'",'std-00004',1) THEN 
+                     LET g_prdj_d[l_ac].prdj003 = g_prdj_d_t.prdj003
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            IF g_prda_m.prda019 = '2' THEN
+               IF NOT cl_null(g_prdj_d[l_ac].prdj002) AND g_prdj_d[g_detail_idx].prdj003 IS NOT NULL  THEN
+                  IF (l_cmd = 'u' AND g_prdj_d[l_ac].prdj003 != g_prdj_d_t.prdj003) OR l_cmd = 'a' THEN
+                     IF NOT ap_chk_notDup(g_prdj_d[l_ac].prdj003,"SELECT COUNT(*) FROM prdj_t WHERE "||"prdjent = '" ||g_enterprise|| "' AND "||"prdjdocno = '"||g_prda_m.prdadocno ||"' AND "|| "prdj002 = '"||g_prdj_d[g_detail_idx].prdj002 ||"' AND "|| "prdj003 = '"||g_prdj_d[g_detail_idx].prdj003 ||"'",'apr-00294',1) THEN 
+                        LET g_prdj_d[l_ac].prdj003 = g_prdj_d_t.prdj003
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF
+            END IF
+            IF NOT cl_null(g_prdj_d[l_ac].prdj003) THEN
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_prdadocno
+               LET g_chkparam.arg2 = g_prdj_d[l_ac].prdj003
+               LET g_errshow = TRUE   #160318-00025#50
+               LET g_chkparam.err_str[1] = "apr-00150:sub-01302|aprt213|",cl_get_progname("aprt213",g_lang,"2"),"|:EXEPROGaprt213"    #160318-00025#50
+               #呼叫檢查存在並帶值的library
+               IF NOT cl_chk_exist("v_prdh002") THEN
+                  LET g_prdj_d[l_ac].prdj003 = g_prdj_d_t.prdj003
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            IF NOT cl_null(g_prdj_d[l_ac].prdj004) AND NOT cl_null(g_prdj_d[l_ac].prdj003) THEN
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_prdadocno
+               LET g_chkparam.arg2 = g_prdj_d[l_ac].prdj004
+               LET g_chkparam.arg3 = g_prdj_d[l_ac].prdj003
+               LET g_errshow = TRUE   #160318-00025#50
+               LET g_chkparam.err_str[1] = "apr-00142:apr-00152"    #160318-00025#50
+               #呼叫檢查存在並帶值的library
+               IF NOT cl_chk_exist("v_prdb002") THEN
+                  LET g_prdj_d[l_ac].prdj003 = g_prdj_d_t.prdj003
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            IF g_prdj_d[l_ac].prdj003 <> g_prdj003_o THEN
+               LET g_prdj_d[l_ac].prdj004 = ''
+               LET g_prdj_d[l_ac].prdj004_desc = ''
+               LET g_prdj_d[l_ac].prdj004_desc1 = ''
+            END IF
+            LET g_prdj003_o = g_prdj_d[l_ac].prdj003
+            CALL aprt212_01_set_entry_b(l_cmd)
+            CALL aprt212_01_set_no_entry_b(l_cmd)
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj003
+            #add-point:BEFORE FIELD prdj003
+ 
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdj003
+            #add-point:ON CHANGE prdj003
+
+            #END add-point
+ 
+         #----<<prdj004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj004
+            #add-point:BEFORE FIELD prdj004
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj004
+            
+            #add-point:AFTER FIELD prdj004
+            CALL aprt212_01_prdj_desc()
+            IF g_prda_m.prdadocno IS NOT NULL AND g_prdj_d[g_detail_idx].prdj002 IS NOT NULL AND g_prdj_d[g_detail_idx].prdj003 IS NOT NULL AND g_prdj_d[g_detail_idx].prdj004 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_prda_m.prdadocno != g_prdadocno_t OR g_prdj_d[g_detail_idx].prdj002 != g_prdj_d_t.prdj002 OR g_prdj_d[g_detail_idx].prdj003 != g_prdj_d_t.prdj003 OR g_prdj_d[g_detail_idx].prdj004 != g_prdj_d_t.prdj004)) THEN 
+                  IF NOT ap_chk_notDup(g_prdj_d[l_ac].prdj004,"SELECT COUNT(*) FROM prdj_t WHERE "||"prdjent = '" ||g_enterprise|| "' AND "||"prdjdocno = '"||g_prda_m.prdadocno ||"' AND "|| "prdj002 = '"||g_prdj_d[g_detail_idx].prdj002 ||"' AND "|| "prdj003 = '"||g_prdj_d[g_detail_idx].prdj003 ||"' AND "|| "prdj004 = '"||g_prdj_d[g_detail_idx].prdj004 ||"'",'std-00004',1) THEN 
+                     LET g_prdj_d[l_ac].prdj004 = g_prdj_d_t.prdj004
+                     CALL aprt212_01_prdj_desc()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            IF NOT cl_null(g_prdj_d[l_ac].prdj004) AND NOT cl_null(g_prdj_d[l_ac].prdj003) THEN
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_prdadocno
+               LET g_chkparam.arg2 = g_prdj_d[l_ac].prdj004
+               LET g_chkparam.arg3 = g_prdj_d[l_ac].prdj003
+               LET g_errshow = TRUE   #160318-00025#50
+               LET g_chkparam.err_str[1] = "apr-00142:apr-00152"    #160318-00025#50
+               #呼叫檢查存在並帶值的library
+               IF NOT cl_chk_exist("v_prdb002") THEN
+                  LET g_prdj_d[l_ac].prdj004 = g_prdj_d_t.prdj004
+                  CALL aprt212_01_prdj_desc()
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            CALL aprt212_01_set_entry_b(l_cmd)
+            CALL aprt212_01_set_no_entry_b(l_cmd)
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdj004
+            #add-point:ON CHANGE prdj004
+
+            #END add-point
+ 
+         #----<<prdj005>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj005
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_prdj_d[l_ac].prdj005,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD prdj005
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD prdj005
+            IF NOT cl_null(g_prdj_d[l_ac].prdj005) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj005
+            #add-point:BEFORE FIELD prdj005
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdj005
+            #add-point:ON CHANGE prdj005
+
+            #END add-point
+ 
+         #----<<prdj006>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj006
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_prdj_d[l_ac].prdj006,"0.000000","1","","","azz-00079",1) THEN
+               NEXT FIELD prdj006
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD prdj006
+            IF NOT cl_null(g_prdj_d[l_ac].prdj006) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj006
+            #add-point:BEFORE FIELD prdj006
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdj006
+            #add-point:ON CHANGE prdj006
+
+            #END add-point
+ 
+         #----<<prdj00601>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj00601
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_prdj_d[l_ac].prdj00601,"0.000000","1","","","azz-00079",1) THEN
+               NEXT FIELD prdj00601
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD prdj00601
+            IF NOT cl_null(g_prdj_d[l_ac].prdj00601) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj00601
+            #add-point:BEFORE FIELD prdj00601
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdj00601
+            #add-point:ON CHANGE prdj00601
+
+            #END add-point
+ 
+         #----<<prdj00602>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj00602
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_prdj_d[l_ac].prdj00602,"0.000000","1","","","azz-00079",1) THEN
+               NEXT FIELD prdj00602
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD prdj00602
+            IF NOT cl_null(g_prdj_d[l_ac].prdj00602) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj00602
+            #add-point:BEFORE FIELD prdj00602
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdj00602
+            #add-point:ON CHANGE prdj00602
+
+            #END add-point
+ 
+         #----<<prdj00603>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj00603
+            #add-point:BEFORE FIELD prdj00603
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj00603
+            
+            #add-point:AFTER FIELD prdj00603
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdj00603
+            #add-point:ON CHANGE prdj00603
+
+            #END add-point
+ 
+         #----<<prdjacti>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdjacti
+            #add-point:BEFORE FIELD prdjacti
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdjacti
+            
+            #add-point:AFTER FIELD prdjacti
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdjacti
+            #add-point:ON CHANGE prdjacti
+
+            #END add-point
+ 
+         #----<<prdjsite>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdjsite
+            #add-point:BEFORE FIELD prdjsite
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdjsite
+            
+            #add-point:AFTER FIELD prdjsite
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdjsite
+            #add-point:ON CHANGE prdjsite
+
+            #END add-point
+ 
+         #----<<prdjunit>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdjunit
+            #add-point:BEFORE FIELD prdjunit
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdjunit
+            
+            #add-point:AFTER FIELD prdjunit
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdjunit
+            #add-point:ON CHANGE prdjunit
+
+            #END add-point
+ 
+         #----<<prdj001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj001
+            #add-point:BEFORE FIELD prdj001
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj001
+            
+            #add-point:AFTER FIELD prdj001
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdj001
+            #add-point:ON CHANGE prdj001
+
+            #END add-point
+ 
+ 
+         #---------------------<  Detail: page1  >---------------------
+         #----<<prdj002>>----
+         #Ctrlp:input.c.page1.prdj002
+         ON ACTION controlp INFIELD prdj002
+            #add-point:ON ACTION controlp INFIELD prdj002
+
+            #END add-point
+ 
+         #----<<prdj003>>----
+         #Ctrlp:input.c.page1.prdj003
+         ON ACTION controlp INFIELD prdj003
+            #add-point:ON ACTION controlp INFIELD prdj003
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_prdj_d[l_ac].prdj003             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_prdadocno
+
+            CALL q_prdh002()                                #呼叫開窗
+
+            LET g_prdj_d[l_ac].prdj003 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_prdj_d[l_ac].prdj003 TO prdj003              #顯示到畫面上
+
+            NEXT FIELD prdj003                          #返回原欄位
+
+
+            #END add-point
+ 
+         #----<<prdj004>>----
+         #Ctrlp:input.c.page1.prdj004
+         ON ACTION controlp INFIELD prdj004
+            #add-point:ON ACTION controlp INFIELD prdj004
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_prdj_d[l_ac].prdj004             #給予default值
+
+            IF cl_null(g_prdj_d[l_ac].prdj003) THEN
+               LET g_prdj_d[l_ac].prdj003 = 0
+            END IF
+            #給予arg
+            LET g_qryparam.arg1 = g_prdadocno
+            LET g_qryparam.arg2 = g_prdj_d[l_ac].prdj003  
+            CALL q_prdb002()                                #呼叫開窗
+
+            LET g_prdj_d[l_ac].prdj004 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_prdj_d[l_ac].prdj004 TO prdj004              #顯示到畫面上
+            CALL aprt212_01_prdj_desc()
+            NEXT FIELD prdj004                          #返回原欄位
+
+
+            #END add-point
+ 
+         #----<<prdj005>>----
+         #Ctrlp:input.c.page1.prdj005
+         ON ACTION controlp INFIELD prdj005
+            #add-point:ON ACTION controlp INFIELD prdj005
+
+            #END add-point
+ 
+         #----<<prdj006>>----
+         #Ctrlp:input.c.page1.prdj006
+         ON ACTION controlp INFIELD prdj006
+            #add-point:ON ACTION controlp INFIELD prdj006
+
+            #END add-point
+ 
+         #----<<prdj00601>>----
+         #Ctrlp:input.c.page1.prdj00601
+         ON ACTION controlp INFIELD prdj00601
+            #add-point:ON ACTION controlp INFIELD prdj00601
+
+            #END add-point
+ 
+         #----<<prdj00602>>----
+         #Ctrlp:input.c.page1.prdj00602
+         ON ACTION controlp INFIELD prdj00602
+            #add-point:ON ACTION controlp INFIELD prdj00602
+
+            #END add-point
+ 
+         #----<<prdj00603>>----
+         #Ctrlp:input.c.page1.prdj00603
+         ON ACTION controlp INFIELD prdj00603
+            #add-point:ON ACTION controlp INFIELD prdj00603
+
+            #END add-point
+ 
+         #----<<prdjacti>>----
+         #Ctrlp:input.c.page1.prdjacti
+         ON ACTION controlp INFIELD prdjacti
+            #add-point:ON ACTION controlp INFIELD prdjacti
+
+            #END add-point
+ 
+         #----<<prdjsite>>----
+         #Ctrlp:input.c.page1.prdjsite
+         ON ACTION controlp INFIELD prdjsite
+            #add-point:ON ACTION controlp INFIELD prdjsite
+
+            #END add-point
+ 
+         #----<<prdjunit>>----
+         #Ctrlp:input.c.page1.prdjunit
+         ON ACTION controlp INFIELD prdjunit
+            #add-point:ON ACTION controlp INFIELD prdjunit
+
+            #END add-point
+ 
+         #----<<prdj001>>----
+         #Ctrlp:input.c.page1.prdj001
+         ON ACTION controlp INFIELD prdj001
+            #add-point:ON ACTION controlp INFIELD prdj001
+
+            #END add-point
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_prdj_d[l_ac].* = g_prdj_d_t.*
+               CLOSE aprt212_01_bcl
+               CLOSE aprt212_01_bcl3
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = g_prdj_d[l_ac].prdj002
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_prdj_d[l_ac].* = g_prdj_d_t.*
+            ELSE
+            
+               #add-point:單身修改前
+
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身)
+               
+      
+               
+               
+               #add-point:單身修改後
+               IF g_prda_m.prda019 = '2' THEN
+                  DELETE FROM  prdj_t
+                   WHERE prdjent = g_enterprise
+                     AND prdjdocno = g_prda_m.prdadocno
+                     AND prdj002 = g_prdj_d_t.prdj002
+                     AND prdj003 = g_prdj_d_t.prdj003
+                  DELETE FROM  prdj_t
+                   WHERE prdjent = g_enterprise
+                     AND prdjdocno = g_prda_m.prdadocno
+                     AND prdj002 = g_prdj_d[g_detail_idx].prdj002
+                     AND prdj003 = g_prdj_d[g_detail_idx].prdj003
+                  IF SQLCA.SQLcode  THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "del_prdj_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+  
+                     CALL s_transaction_end('N','0')  
+                  END IF
+                  INSERT INTO prdj_t(prdjent,prdjdocno,prdj002,prdj003,prdj004,prdj005,prdj006,prdjacti,prdjsite,prdjunit,prdj001)
+                  SELECT g_enterprise,g_prda_m.prdadocno,g_prdj_d[g_detail_idx].prdj002,g_prdj_d[g_detail_idx].prdj003,prdb002,g_prdj_d[g_detail_idx].prdj005,g_prdj_d[g_detail_idx].prdj00601,g_prdj_d[g_detail_idx].prdjacti,g_prdj_d[g_detail_idx].prdjsite,g_prdj_d[g_detail_idx].prdjunit,g_prdj_d[g_detail_idx].prdj001
+                    FROM prdb_t
+                   WHERE prdbent = g_enterprise
+                     AND prdbdocno = g_prda_m.prdadocno
+                     AND prdb003 = '1'
+                     AND prdb004 = g_prdj_d[g_detail_idx].prdj003
+                  IF SQLCA.SQLcode  THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "prdj_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+  
+                     CALL s_transaction_end('N','0')
+                  END IF       
+                  INSERT INTO prdj_t(prdjent,prdjdocno,prdj002,prdj003,prdj004,prdj005,prdj006,prdjacti,prdjsite,prdjunit,prdj001)
+                  SELECT g_enterprise,g_prda_m.prdadocno,g_prdj_d[g_detail_idx].prdj002,g_prdj_d[g_detail_idx].prdj003,prdb002,g_prdj_d[g_detail_idx].prdj005,g_prdj_d[g_detail_idx].prdj00602,g_prdj_d[g_detail_idx].prdjacti,g_prdj_d[g_detail_idx].prdjsite,g_prdj_d[g_detail_idx].prdjunit,g_prdj_d[g_detail_idx].prdj001
+                    FROM prdb_t
+                   WHERE prdbent = g_enterprise
+                     AND prdbdocno = g_prda_m.prdadocno
+                     AND prdb003 = '2'
+                     AND prdb004 = g_prdj_d[g_detail_idx].prdj003
+                  IF SQLCA.SQLcode  THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "prdj_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+  
+                     CALL s_transaction_end('N','0')
+                  END IF    
+                  INSERT INTO prdj_t(prdjent,prdjdocno,prdj002,prdj003,prdj004,prdj005,prdj006,prdjacti,prdjsite,prdjunit,prdj001)
+                  SELECT g_enterprise,g_prda_m.prdadocno,g_prdj_d[g_detail_idx].prdj002,g_prdj_d[g_detail_idx].prdj003,prdb002,g_prdj_d[g_detail_idx].prdj005,g_prdj_d[g_detail_idx].prdj00603,g_prdj_d[g_detail_idx].prdjacti,g_prdj_d[g_detail_idx].prdjsite,g_prdj_d[g_detail_idx].prdjunit,g_prdj_d[g_detail_idx].prdj001
+                    FROM prdb_t
+                   WHERE prdbent = g_enterprise
+                     AND prdbdocno = g_prda_m.prdadocno
+                     AND prdb003 = '3'
+                     AND prdb004 = g_prdj_d[g_detail_idx].prdj003
+                  IF SQLCA.SQLcode  THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "prdj_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+  
+                     CALL s_transaction_end('N','0')
+                  END IF 
+               ELSE
+                  UPDATE prdj_t SET (prdjdocno,prdj002,prdj003,prdj004,prdj005,prdj006,prdjacti,prdjsite, 
+                      prdjunit,prdj001) = (g_prda_m.prdadocno,g_prdj_d[l_ac].prdj002,g_prdj_d[l_ac].prdj003, 
+                      g_prdj_d[l_ac].prdj004,g_prdj_d[l_ac].prdj005,g_prdj_d[l_ac].prdj006,g_prdj_d[l_ac].prdjacti, 
+                      g_prdj_d[l_ac].prdjsite,g_prdj_d[l_ac].prdjunit,g_prdj_d[l_ac].prdj001)
+                   WHERE prdjent = g_enterprise AND prdjdocno = g_prda_m.prdadocno 
+                  
+                     AND prdj002 = g_prdj_d_t.prdj002 #項次   
+                     AND prdj003 = g_prdj_d_t.prdj003  
+                  
+                     AND prdj004 = g_prdj_d_t.prdj004  
+                
+                  CASE
+                     WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = "std-00009"
+                        LET g_errparam.extend = "prdj_t"
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+
+                        CALL s_transaction_end('N','0')
+                        LET g_prdj_d[l_ac].* = g_prdj_d_t.*
+                     WHEN SQLCA.sqlcode #其他錯誤
+                        INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "prdj_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                        LET g_prdj_d[l_ac].* = g_prdj_d_t.*                     
+                        CALL s_transaction_end('N','0')
+                     OTHERWISE
+                                       INITIALIZE gs_keys TO NULL 
+                  LET gs_keys[1] = g_prda_m.prdadocno
+                  LET gs_keys_bak[1] = g_prdadocno_t
+                  LET gs_keys[2] = g_prdj_d[g_detail_idx].prdj002
+                  LET gs_keys_bak[2] = g_prdj_d_t.prdj002
+                  LET gs_keys[3] = g_prdj_d[g_detail_idx].prdj003
+                  LET gs_keys_bak[3] = g_prdj_d_t.prdj003
+                  LET gs_keys[4] = g_prdj_d[g_detail_idx].prdj004
+                  LET gs_keys_bak[4] = g_prdj_d_t.prdj004
+                  CALL aprt212_01_update_b('prdj_t',gs_keys,gs_keys_bak,"'1'")
+                        
+                  END CASE
+               END IF
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            #add-point:單身after_row
+
+            #end add-point
+            CALL aprt212_01_unlock_b("prdj_t","'1'")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            
+              
+         AFTER INPUT
+            #add-point:input段after input 
+
+            #end add-point 
+ 
+         ON ACTION controlo    
+            CALL FGL_SET_ARR_CURR(g_prdj_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_prdj_d.getLength()+1
+            
+         #ON ACTION cancel
+         #   LET INT_FLAG = 1
+         #   LET g_detail_idx = 1
+         #   EXIT DIALOG 
+ 
+      END INPUT
+      
+      INPUT ARRAY g_prdj2_d FROM s_detail2.*
+         ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                 INSERT ROW = l_allow_insert, #此頁面insert功能由產生器控制, 手動之設定無效! 
+
+                 DELETE ROW = l_allow_delete,
+                 APPEND ROW = l_allow_insert)
+                 
+         #自訂ACTION(detail_input,page_2)
+         
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_prdj2_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL aprt212_01_b_fill()
+            LET g_rec_b = g_prdj2_d.getLength()
+            #add-point:資料輸入前
+            CALL cl_set_act_visible("insert", TRUE)
+            #end add-point
+            
+         BEFORE INSERT
+            
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_prdj2_d[l_ac].* TO NULL 
+                  LET g_prdj2_d[l_ac].prdk010 = "2"
+      LET g_prdj2_d[l_ac].prdkacti = "Y"
+ 
+ 
+            LET g_prdj2_d_t.* = g_prdj2_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL aprt212_01_set_entry_b(l_cmd)
+            #add-point:modify段after_set_entry_b
+
+            #end add-point
+            CALL aprt212_01_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_prdj2_d[li_reproduce_target].* = g_prdj2_d[li_reproduce].*
+ 
+               LET g_prdj2_d[li_reproduce_target].prdk002 = NULL
+               LET g_prdj2_d[li_reproduce_target].prdk003 = NULL
+ 
+               LET g_prdj2_d[li_reproduce_target].prdk004 = NULL
+ 
+               LET g_prdj2_d[li_reproduce_target].prdk005 = NULL
+ 
+               LET g_prdj2_d[li_reproduce_target].prdk007 = NULL
+ 
+            END IF
+            #公用欄位給值(單身2)
+            
+            
+            #add-point:modify段before insert
+            LET g_prdj2_d[l_ac].prdk002 = g_prdj_d[g_detail_idx].prdj002
+            SELECT MAX(prdk003) +1 INTO g_prdj2_d[l_ac].prdk003
+              FROM prdk_t
+             WHERE prdkent = g_enterprise
+               AND prdkdocno = g_prdadocno
+               AND prdk002 = g_prdj_d[g_detail_idx].prdj002
+            IF cl_null(g_prdj2_d[l_ac].prdk003) THEN
+               LET g_prdj2_d[l_ac].prdk003 = 1
+            END IF
+            LET g_prdj2_d[l_ac].prdk012 = 0
+            LET g_prdj2_d[l_ac].prdk004 = '4'
+            CALL aprt212_01_set_entry_b(l_cmd)
+            CALL aprt212_01_set_no_entry_b(l_cmd)
+            #end add-point  
+            
+         BEFORE ROW     
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+              
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN aprt212_01_cl USING g_enterprise,g_prda_m.prdadocno
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  STATUS
+               LET g_errparam.extend = "OPEN aprt212_01_cl:"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               CLOSE aprt212_01_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_prdj2_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND g_prdj2_d[l_ac].prdk002 IS NOT NULL
+               AND g_prdj2_d[l_ac].prdk003 IS NOT NULL
+ 
+               AND g_prdj2_d[l_ac].prdk004 IS NOT NULL
+ 
+               AND g_prdj2_d[l_ac].prdk005 IS NOT NULL
+ 
+            THEN 
+               LET l_cmd='u'
+               LET g_prdj2_d_t.* = g_prdj2_d[l_ac].*  #BACKUP
+               CALL aprt212_01_set_entry_b(l_cmd)
+               #add-point:modify段after_set_entry_b
+
+               #end add-point  
+               CALL aprt212_01_set_no_entry_b(l_cmd)
+               IF NOT aprt212_01_lock_b("prdk_t","'2'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH aprt212_01_bcl2 INTO g_prdj2_d[l_ac].prdk002,g_prdj2_d[l_ac].prdk003,g_prdj2_d[l_ac].prdk004, 
+                      g_prdj2_d[l_ac].prdk005,g_prdj2_d[l_ac].prdk005_desc,g_prdj2_d[l_ac].prdk006,g_prdj2_d[l_ac].prdk007, 
+                      g_prdj2_d[l_ac].prdk007_desc,g_prdj2_d[l_ac].prdk008,g_prdj2_d[l_ac].prdk009,g_prdj2_d[l_ac].prdk010, 
+                      g_prdj2_d[l_ac].prdk011,g_prdj2_d[l_ac].prdk012,g_prdj2_d[l_ac].prdkacti,g_prdj2_d[l_ac].prdk001, 
+                      g_prdj2_d[l_ac].prdksite,g_prdj2_d[l_ac].prdkunit
+                   IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  LET g_bfill = "N"
+                  CALL aprt212_01_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row
+
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+            
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' AND g_prdj2_d.getLength() < l_ac THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+               CALL g_prdj2_d.deleteElement(l_ac)
+               NEXT FIELD prdk002
+            END IF
+         
+            IF g_prdj2_d[l_ac].prdk002 IS NOT NULL
+               AND g_prdj2_d_t.prdk003 IS NOT NULL
+ 
+               AND g_prdj2_d_t.prdk004 IS NOT NULL
+ 
+               AND g_prdj2_d_t.prdk005 IS NOT NULL
+ 
+            THEN
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code =  -263
+                     LET g_errparam.extend = ""
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身2刪除前
+
+               #end add-point    
+               
+               DELETE FROM prdk_t
+                WHERE prdkent = g_enterprise AND prdkdocno = g_prda_m.prdadocno AND
+                      prdk002 = g_prdj2_d_t.prdk002
+                  AND prdk003 = g_prdj2_d_t.prdk003
+ 
+                  AND prdk004 = g_prdj2_d_t.prdk004
+ 
+                  AND prdk005 = g_prdj2_d_t.prdk005
+ 
+                  
+               #add-point:單身2刪除中
+
+               #end add-point    
+                  
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "prdj_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_rec_b = g_rec_b-1
+                  
+                  #add-point:單身2刪除後
+
+                  #end add-point
+                  CALL s_transaction_end('Y','0')
+               END IF 
+               CLOSE aprt212_01_bcl
+               CLOSE aprt212_01_bcl3
+               LET l_count = g_prdj_d.getLength()
+            END IF 
+            
+                           INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_prda_m.prdadocno
+               LET gs_keys[2] = g_prdj2_d[g_detail_idx].prdk002
+               LET gs_keys[3] = g_prdj2_d[g_detail_idx].prdk003
+               LET gs_keys[4] = g_prdj2_d[g_detail_idx].prdk004
+               LET gs_keys[5] = g_prdj2_d[g_detail_idx].prdk005
+ 
+            
+         AFTER DELETE 
+            #add-point:單身AFTER DELETE 
+
+            #end add-point
+                           CALL aprt212_01_delete_b('prdk_t',gs_keys,"'2'")
+ 
+         AFTER INSERT    
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            #add-point:單身2新增前
+
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM prdk_t 
+             WHERE prdkent = g_enterprise AND prdkdocno = g_prda_m.prdadocno
+               AND prdk002 = g_prdj2_d[l_ac].prdk002
+               AND prdk003 = g_prdj2_d[l_ac].prdk003
+ 
+               AND prdk004 = g_prdj2_d[l_ac].prdk004
+ 
+               AND prdk005 = g_prdj2_d[l_ac].prdk005
+
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身2新增前
+
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_prda_m.prdadocno
+               LET gs_keys[2] = g_prdj2_d[g_detail_idx].prdk002
+               LET gs_keys[3] = g_prdj2_d[g_detail_idx].prdk003
+               LET gs_keys[4] = g_prdj2_d[g_detail_idx].prdk004
+               LET gs_keys[5] = g_prdj2_d[g_detail_idx].prdk005
+               CALL aprt212_01_insert_b('prdk_t',gs_keys,"'2'")
+                           
+               #add-point:單身新增後2
+
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               INITIALIZE g_prdj_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "prdk_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+  
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL aprt212_01_b_fill()
+               #資料多語言用-增/改
+               
+               #add-point:單身新增後
+
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+            
+         ON ROW CHANGE 
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_prdj2_d[l_ac].* = g_prdj2_d_t.*
+               CLOSE aprt212_01_bcl2
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+            
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_prdj2_d[l_ac].* = g_prdj2_d_t.*
+            ELSE
+               #add-point:單身page2修改前
+
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身2)
+               
+               
+               UPDATE prdk_t SET (prdkdocno,prdk002,prdk003,prdk004,prdk005,prdk006,prdk007,prdk008, 
+                   prdk009,prdk010,prdk011,prdk012,prdkacti,prdk001,prdksite,prdkunit) = (g_prda_m.prdadocno, 
+                   g_prdj2_d[l_ac].prdk002,g_prdj2_d[l_ac].prdk003,g_prdj2_d[l_ac].prdk004,g_prdj2_d[l_ac].prdk005, 
+                   g_prdj2_d[l_ac].prdk006,g_prdj2_d[l_ac].prdk007,g_prdj2_d[l_ac].prdk008,g_prdj2_d[l_ac].prdk009, 
+                   g_prdj2_d[l_ac].prdk010,g_prdj2_d[l_ac].prdk011,g_prdj2_d[l_ac].prdk012,g_prdj2_d[l_ac].prdkacti, 
+                   g_prdj2_d[l_ac].prdk001,g_prdj2_d[l_ac].prdksite,g_prdj2_d[l_ac].prdkunit) #自訂欄位頁簽 
+
+                WHERE prdkent = g_enterprise AND prdkdocno = g_prda_m.prdadocno
+                  AND prdk002 = g_prdj2_d_t.prdk002 #項次 
+                  AND prdk003 = g_prdj2_d_t.prdk003
+ 
+                  AND prdk004 = g_prdj2_d_t.prdk004
+ 
+                  AND prdk005 = g_prdj2_d_t.prdk005
+ 
+                  
+               #add-point:單身page2修改中
+
+               #end add-point
+                  
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = "std-00009"
+                     LET g_errparam.extend = "prdk_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     CALL s_transaction_end('N','0')
+                     LET g_prdj2_d[l_ac].* = g_prdj2_d_t.*
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "prdk_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+  
+                     CALL s_transaction_end('N','0')
+                     LET g_prdj2_d[l_ac].* = g_prdj2_d_t.*
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_prda_m.prdadocno
+               LET gs_keys_bak[1] = g_prdadocno_t
+               LET gs_keys[2] = g_prdj2_d[g_detail_idx].prdk002
+               LET gs_keys_bak[2] = g_prdj2_d_t.prdk002
+               LET gs_keys[3] = g_prdj2_d[g_detail_idx].prdk003
+               LET gs_keys_bak[3] = g_prdj2_d_t.prdk003
+               LET gs_keys[4] = g_prdj2_d[g_detail_idx].prdk004
+               LET gs_keys_bak[4] = g_prdj2_d_t.prdk004
+               LET gs_keys[5] = g_prdj2_d[g_detail_idx].prdk005
+               LET gs_keys_bak[5] = g_prdj2_d_t.prdk005
+               CALL aprt212_01_update_b('prdk_t',gs_keys,gs_keys_bak,"'2'")
+                     #資料多語言用-增/改
+                     
+               END CASE
+               #add-point:單身page2修改後
+
+               #end add-point
+            END IF
+         
+         #---------------------<  Detail: page2  >---------------------
+         #----<<prdk002>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk002
+            
+            #add-point:AFTER FIELD prdk002
+            #此段落由子樣板a05產生
+            IF g_prda_m.prdadocno IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk002 IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk003 IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk004 IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk005 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_prda_m.prdadocno != g_prdadocno_t OR  g_prdj2_d[g_detail_idx].prdk002 != g_prdj2_d_t.prdk002 OR g_prdj2_d[g_detail_idx].prdk003 != g_prdj2_d_t.prdk003 OR g_prdj2_d[g_detail_idx].prdk004 != g_prdj2_d_t.prdk004 OR g_prdj2_d[g_detail_idx].prdk005 != g_prdj2_d_t.prdk005 )) THEN   
+                  IF NOT ap_chk_notDup(g_prdj2_d[l_ac].prdk002,"SELECT COUNT(*) FROM prdk_t WHERE "||"prdkent = '" ||g_enterprise|| "' AND "||"prdkdocno = '"||g_prda_m.prdadocno ||"' AND "|| "prdk002 = '"||g_prdj2_d[g_detail_idx].prdk002 ||"' AND "|| "prdk003 = '"||g_prdj2_d[g_detail_idx].prdk003 ||"' AND "|| "prdk004 = '"||g_prdj2_d[g_detail_idx].prdk004 ||"' AND "|| "prdk005 = '"||g_prdj2_d[g_detail_idx].prdk005 ||"' ",'std-00004',1) THEN 
+                     LET g_prdj2_d[l_ac].prdk002 = g_prdj2_d_t.prdk002 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            IF NOT cl_null(g_prdj2_d[l_ac].prdk002) THEN
+               LET l_n2 = 0
+               SELECT COUNT(*) INTO l_n2
+                 FROM prdj_t
+                WHERE prdjent = g_enterprise
+                  AND prdjdocno = g_prdadocno
+                  AND prdj002 = g_prdj2_d[l_ac].prdk002
+               IF l_n2 = 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'apr-00151'
+                  LET g_errparam.extend = g_prdj2_d[l_ac].prdk002
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_prdj2_d[l_ac].prdk002 = g_prdj2_d_t.prdk002   
+                  NEXT FIELD CURRENT
+               END IF
+               LET l_n2 = 0
+               SELECT COUNT(*) INTO l_n2
+                 FROM prdj_t
+                WHERE prdjent = g_enterprise
+                  AND prdjdocno = g_prdadocno
+                  AND prdj002 = g_prdj2_d[l_ac].prdk002
+                  AND prdjacti = 'Y'
+               IF l_n2 = 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'apr-00152'  
+                  LET g_errparam.extend = g_prdj2_d[l_ac].prdk002               
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_prdj2_d[l_ac].prdk002 = g_prdj2_d_t.prdk002   
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk002
+            #add-point:BEFORE FIELD prdk002
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdk002
+            #add-point:ON CHANGE prdk002
+
+            #END add-point
+ 
+         #----<<prdk003>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk003
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_prdj2_d[l_ac].prdk003,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD prdk003
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD prdk003
+            #此段落由子樣板a05產生
+             IF g_prda_m.prdadocno IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk002 IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk003 IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk004 IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk005 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_prda_m.prdadocno != g_prdadocno_t OR  g_prdj2_d[g_detail_idx].prdk002 != g_prdj2_d_t.prdk002 OR g_prdj2_d[g_detail_idx].prdk003 != g_prdj2_d_t.prdk003 OR g_prdj2_d[g_detail_idx].prdk004 != g_prdj2_d_t.prdk004 OR g_prdj2_d[g_detail_idx].prdk005 != g_prdj2_d_t.prdk005 )) THEN   
+                  IF NOT ap_chk_notDup(g_prdj2_d[l_ac].prdk003,"SELECT COUNT(*) FROM prdk_t WHERE "||"prdkent = '" ||g_enterprise|| "' AND "||"prdkdocno = '"||g_prda_m.prdadocno ||"' AND "|| "prdk002 = '"||g_prdj2_d[g_detail_idx].prdk002 ||"' AND "|| "prdk003 = '"||g_prdj2_d[g_detail_idx].prdk003 ||"' AND "|| "prdk004 = '"||g_prdj2_d[g_detail_idx].prdk004 ||"' AND "|| "prdk005 = '"||g_prdj2_d[g_detail_idx].prdk005 ||"' ",'std-00004',1) THEN 
+                     LET g_prdj2_d[l_ac].prdk003 = g_prdj2_d_t.prdk003  
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk003
+            #add-point:BEFORE FIELD prdk003
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdk003
+            #add-point:ON CHANGE prdk003
+
+            #END add-point
+ 
+         #----<<prdk004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk004
+            #add-point:BEFORE FIELD prdk004
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk004
+            
+            #add-point:AFTER FIELD prdk004
+            #此段落由子樣板a05產生
+            IF g_prda_m.prdadocno IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk002 IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk003 IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk004 IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk005 IS NOT NULL THEN  
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_prda_m.prdadocno != g_prdadocno_t OR  g_prdj2_d[g_detail_idx].prdk002 != g_prdj2_d_t.prdk002 OR g_prdj2_d[g_detail_idx].prdk003 != g_prdj2_d_t.prdk003 OR g_prdj2_d[g_detail_idx].prdk004 != g_prdj2_d_t.prdk004 OR g_prdj2_d[g_detail_idx].prdk005 != g_prdj2_d_t.prdk005 )) THEN   
+                  IF NOT ap_chk_notDup(g_prdj2_d[l_ac].prdk004,"SELECT COUNT(*) FROM prdk_t WHERE "||"prdkent = '" ||g_enterprise|| "' AND "||"prdkdocno = '"||g_prda_m.prdadocno ||"' AND "|| "prdk002 = '"||g_prdj2_d[g_detail_idx].prdk002 ||"' AND "|| "prdk003 = '"||g_prdj2_d[g_detail_idx].prdk003 ||"' AND "|| "prdk004 = '"||g_prdj2_d[g_detail_idx].prdk004 ||"' AND "|| "prdk005 = '"||g_prdj2_d[g_detail_idx].prdk005 ||"' ",'std-00004',1) THEN 
+                     LET g_prdj2_d[l_ac].prdk004 = g_prdj2_d_t.prdk004  
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+#            IF l_cmd = 'a' OR (l_cmd = 'u' AND g_prdj2_d[l_ac].prdk004 != g_prdj2_d_t.prdk004) THEN
+#               LET g_prdj2_d[l_ac].prdk005 = ''
+#               LET g_prdj2_d[l_ac].prdk005_desc = ''
+#               DISPLAY BY NAME g_prdj2_d[l_ac].prdk005
+#               DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+#            END IF
+            IF l_cmd = 'a' AND  (g_prdj2_d[l_ac].prdk004 <> 'M' OR g_prdj2_d[l_ac].prdk004 <> 'P' )THEN
+               LET g_prdj2_d[l_ac].prdk009 = 0
+            END IF
+            CALL aprt212_01_set_entry_b(l_cmd)
+            CALL aprt212_01_set_no_entry_b(l_cmd)
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdk004
+            #add-point:ON CHANGE prdk004
+            LET g_prdj2_d[l_ac].prdk005 = ''
+            LET g_prdj2_d[l_ac].prdk005_desc = ''
+            LET g_prdj2_d[l_ac].prdk006 = ''
+            LET g_prdj2_d[l_ac].prdk007 = ''
+            LET g_prdj2_d[l_ac].prdk007_desc = ''
+            DISPLAY BY NAME g_prdj2_d[l_ac].prdk005
+            DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+            DISPLAY BY NAME g_prdj2_d[l_ac].prdk006
+            DISPLAY BY NAME g_prdj2_d[l_ac].prdk007
+            DISPLAY BY NAME g_prdj2_d[l_ac].prdk007_desc
+            CALL aprt212_01_set_entry_b(l_cmd)
+            CALL aprt212_01_set_no_entry_b(l_cmd)
+            #END add-point
+ 
+         #----<<prdk005>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk005
+            
+            #add-point:AFTER FIELD prdk005
+            #此段落由子樣板a05產生
+            CALL aprt212_01_prdk_desc()
+            IF g_prda_m.prdadocno IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk002 IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk003 IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk004 IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk005 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_prda_m.prdadocno != g_prdadocno_t OR  g_prdj2_d[g_detail_idx].prdk002 != g_prdj2_d_t.prdk002 OR g_prdj2_d[g_detail_idx].prdk003 != g_prdj2_d_t.prdk003 OR g_prdj2_d[g_detail_idx].prdk004 != g_prdj2_d_t.prdk004 OR g_prdj2_d[g_detail_idx].prdk005 != g_prdj2_d_t.prdk005 )) THEN  
+                  IF NOT ap_chk_notDup(g_prdj2_d[l_ac].prdk005,"SELECT COUNT(*) FROM prdk_t WHERE "||"prdkent = '" ||g_enterprise|| "' AND "||"prdkdocno = '"||g_prda_m.prdadocno ||"' AND "|| "prdk002 = '"||g_prdj2_d[g_detail_idx].prdk002 ||"' AND "|| "prdk003 = '"||g_prdj2_d[g_detail_idx].prdk003 ||"' AND "|| "prdk004 = '"||g_prdj2_d[g_detail_idx].prdk004 ||"' AND "|| "prdk005 = '"||g_prdj2_d[g_detail_idx].prdk005 ||"' ",'std-00004',1) THEN 
+                     LET g_prdj2_d[l_ac].prdk005 = g_prdj2_d_t.prdk005  
+                     CALL aprt212_01_prdk_desc()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            IF NOT cl_null(g_prdj2_d[l_ac].prdk005) AND NOT cl_null(g_prdj2_d[l_ac].prdk004)THEN
+               IF NOT aprt212_01_chk_prdk005() THEN
+                  LET g_prdj2_d[l_ac].prdk005 = g_prdj2_d_t.prdk005  
+                  CALL aprt212_01_prdk_desc()
+                  NEXT FIELD CURRENT
+               END IF
+               IF g_prdj2_d[l_ac].prdk004 = '4' THEN
+                  #150312-00002#6 Modify-S By Ken 150319 原rtdx033改抓imaa106
+                  SELECT rtdx002   #,rtdx033 
+                    INTO g_prdj2_d[l_ac].prdk006  #,g_prdj2_d[l_ac].prdk007
+                    FROM rtdx_t
+                   WHERE rtdxent = g_enterprise
+                     AND rtdxsite = g_site
+                     AND rtdx001 = g_prdj2_d[l_ac].prdk005
+
+                  CALL aprt212_01_get_imaa106(g_prdj2_d[l_ac].prdk005) RETURNING g_prdj2_d[l_ac].prdk007             
+                  ##150312-00002#6 Modify-E
+                  CALL aprt212_01_prdk_desc()
+               END IF
+            END IF
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk005
+            #add-point:BEFORE FIELD prdk005
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdk005
+            #add-point:ON CHANGE prdk005
+
+            #END add-point
+ 
+         #----<<prdk006>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk006
+            #add-point:BEFORE FIELD prdk006
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk006
+            
+            #add-point:AFTER FIELD prdk006
+            IF NOT cl_null(g_prdj2_d[l_ac].prdk006) THEN
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_prdj2_d[l_ac].prdk006
+               #呼叫檢查存在並帶值的library
+               IF NOT cl_chk_exist("v_imay003_1") THEN
+                  LET g_prdj2_d[l_ac].prdk006 = g_prdj2_d_t.prdk006
+                  NEXT FIELD CURRENT
+               END IF
+               IF g_prdj2_d[l_ac].prdk004 = '4' THEN
+                  LET l_n1 = 0
+                  SELECT COUNT(*) INTO l_n1
+                    FROM imay_t
+                   WHERE imayent = g_enterprise
+                     AND imay003 = g_prdj2_d[l_ac].prdk006
+                  IF l_n1 = 1 THEN
+                     SELECT imay001 INTO l_prdk005
+                       FROM imay_t
+                      WHERE imayent = g_enterprise
+                        AND imay003 = g_prdj2_d[l_ac].prdk006
+                     #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                     INITIALIZE g_chkparam.* TO NULL
+                     #設定g_chkparam.*的參數
+                     LET g_chkparam.arg1 = l_prdk005
+                     LET g_chkparam.arg2 = g_site
+                     #呼叫檢查存在並帶值的library
+                     IF NOT cl_chk_exist("v_rtdx001_1") THEN
+                        LET g_prdj2_d[l_ac].prdk006 = g_prdj2_d_t.prdk006
+                        NEXT FIELD CURRENT
+                        RETURN FALSE
+                     END IF
+                     LET g_prdj2_d[l_ac].prdk005 = l_prdk005
+                     #150312-00002#6 Modify-S By Ken 150319 原rtdx033改抓imaa106
+                     #SELECT rtdx033 INTO g_prdj2_d[l_ac].prdk007
+                     #  FROM rtdx_t
+                     # WHERE rtdxent = g_enterprise
+                     #   AND rtdxsite = g_site
+                     #   AND rtdx001 = g_prdj2_d[l_ac].prdk005
+                      
+                     CALL aprt212_01_get_imaa106(g_prdj2_d[l_ac].prdk005) RETURNING g_prdj2_d[l_ac].prdk007                        
+                     #150312-00002#6 Modify-E   
+                     CALL aprt212_01_prdk_desc()
+                  END IF
+               END IF
+               CALL aprt212_01_prdk_desc()
+            END IF
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdk006
+            #add-point:ON CHANGE prdk006
+
+            #END add-point
+ 
+         #----<<prdk007>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk007
+            
+            #add-point:AFTER FIELD prdk007
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk007
+            #add-point:BEFORE FIELD prdk007
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdk007
+            #add-point:ON CHANGE prdk007
+
+            #END add-point
+ 
+         #----<<prdk008>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk008
+            #add-point:BEFORE FIELD prdk008
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk008
+            
+            #add-point:AFTER FIELD prdk008
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdk008
+            #add-point:ON CHANGE prdk008
+
+            #END add-point
+ 
+         #----<<prdk009>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk009
+            #add-point:BEFORE FIELD prdk009
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk009
+            
+            #add-point:AFTER FIELD prdk009
+            IF NOT cl_ap_chk_Range(g_prdj2_d[l_ac].prdk009,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD prdk009
+            END IF
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdk009
+            #add-point:ON CHANGE prdk009
+
+            #END add-point
+ 
+         #----<<prdk010>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk010
+            #add-point:BEFORE FIELD prdk010
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk010
+            
+            #add-point:AFTER FIELD prdk010
+            CALL aprt212_01_set_entry_b(l_cmd)
+            CALL aprt212_01_set_no_entry_b(l_cmd)
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdk010
+            #add-point:ON CHANGE prdk010
+            CALL aprt212_01_set_entry_b(l_cmd)
+            CALL aprt212_01_set_no_entry_b(l_cmd)
+            #END add-point
+ 
+         #----<<prdk011>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk011
+            #add-point:BEFORE FIELD prdk011
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk011
+            
+            #add-point:AFTER FIELD prdk011
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdk011
+            #add-point:ON CHANGE prdk011
+
+            #END add-point
+ 
+         #----<<prdk012>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk012
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_prdj2_d[l_ac].prdk012,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD prdk012
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD prdk012
+            IF NOT cl_null(g_prdj2_d[l_ac].prdk012) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk012
+            #add-point:BEFORE FIELD prdk012
+
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdk012
+            #add-point:ON CHANGE prdk012
+
+            #END add-point
+ 
+         #----<<prdkacti>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdkacti
+            #add-point:BEFORE FIELD prdkacti
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdkacti
+            
+            #add-point:AFTER FIELD prdkacti
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdkacti
+            #add-point:ON CHANGE prdkacti
+
+            #END add-point
+ 
+         #----<<prdk001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk001
+            #add-point:BEFORE FIELD prdk001
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk001
+            
+            #add-point:AFTER FIELD prdk001
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdk001
+            #add-point:ON CHANGE prdk001
+
+            #END add-point
+ 
+         #----<<prdksite>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdksite
+            #add-point:BEFORE FIELD prdksite
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdksite
+            
+            #add-point:AFTER FIELD prdksite
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdksite
+            #add-point:ON CHANGE prdksite
+
+            #END add-point
+ 
+         #----<<prdkunit>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdkunit
+            #add-point:BEFORE FIELD prdkunit
+
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdkunit
+            
+            #add-point:AFTER FIELD prdkunit
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdkunit
+            #add-point:ON CHANGE prdkunit
+
+            #END add-point
+ 
+ 
+         #---------------------<  Detail: page2  >---------------------
+         #----<<prdk002>>----
+         #Ctrlp:input.c.page2.prdk002
+         ON ACTION controlp INFIELD prdk002
+            #add-point:ON ACTION controlp INFIELD prdk002
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_prdj2_d[l_ac].prdk002             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_prdadocno
+
+            CALL q_prdj002()                                #呼叫開窗
+
+            LET g_prdj2_d[l_ac].prdk002 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_prdj2_d[l_ac].prdk002 TO prdk002              #顯示到畫面上
+
+            NEXT FIELD prdk002                          #返回原欄位
+
+
+            #END add-point
+ 
+         #----<<prdk003>>----
+         #Ctrlp:input.c.page2.prdk003
+         ON ACTION controlp INFIELD prdk003
+            #add-point:ON ACTION controlp INFIELD prdk003
+
+            #END add-point
+ 
+         #----<<prdk004>>----
+         #Ctrlp:input.c.page2.prdk004
+         ON ACTION controlp INFIELD prdk004
+            #add-point:ON ACTION controlp INFIELD prdk004
+
+            #END add-point
+ 
+         #----<<prdk005>>----
+         #Ctrlp:input.c.page2.prdk005
+         ON ACTION controlp INFIELD prdk005
+            #add-point:ON ACTION controlp INFIELD prdk005
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_prdj2_d[l_ac].prdk005   #給予default值
+            IF g_prdj2_d[l_ac].prdk004 = '4' THEN
+               LET g_qryparam.arg1 = g_site
+               CALL q_rtdx001_12()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = '5' THEN
+               CALL q_rtax001()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = '6' THEN
+               LET g_qryparam.arg1 = '2000'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = '7' THEN
+               LET g_qryparam.arg1 = '2001'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = '8' THEN
+               LET g_qryparam.arg1 = '2002'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = '9' THEN
+               LET g_qryparam.arg1 = '2003'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'A' THEN
+               LET g_qryparam.arg1 = '2004'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'B' THEN
+               LET g_qryparam.arg1 = '2005'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'C' THEN
+               LET g_qryparam.arg1 = '2006'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'D' THEN
+               LET g_qryparam.arg1 = '2007'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'E' THEN
+               LET g_qryparam.arg1 = '2008'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'F' THEN
+               LET g_qryparam.arg1 = '2009'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'G' THEN
+               LET g_qryparam.arg1 = '2010'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'H' THEN
+               LET g_qryparam.arg1 = '2011'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'I' THEN
+               LET g_qryparam.arg1 = '2012'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'J' THEN
+               LET g_qryparam.arg1 = '2013'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'K' THEN
+               LET g_qryparam.arg1 = '2014'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'L' THEN
+               LET g_qryparam.arg1 = '2015'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'M' OR g_prdj2_d[l_ac].prdk004 = 'P' THEN
+               CALL q_mman001()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'N' THEN
+               CALL q_gcaf001()
+            END IF
+            LET g_prdj2_d[l_ac].prdk005  = g_qryparam.return1   #將開窗取得的值回傳到變數
+            DISPLAY g_prdj2_d[l_ac].prdk005 TO prdk005         #顯示到畫面上
+            IF g_prdj2_d[l_ac].prdk004 = '4' THEN
+               #150312-00002#6 Modify-S By Ken 150319 原rtdx033改抓imaa106
+               SELECT rtdx002  #,rtdx033 
+                 INTO g_prdj2_d[l_ac].prdk006  #,g_prdj2_d[l_ac].prdk007
+                 FROM rtdx_t
+                WHERE rtdxent = g_enterprise
+                  AND rtdxsite = g_site
+                  AND rtdx001 = g_prdj2_d[l_ac].prdk005
+               
+               CALL aprt212_01_get_imaa106(g_prdj2_d[l_ac].prdk005) RETURNING g_prdj2_d[l_ac].prdk007                 
+               #150312-00002#6 Modify-E                  
+            END IF
+            CALL aprt212_01_prdk_desc()
+            NEXT FIELD prdk005
+            #END add-point
+ 
+         #----<<prdk006>>----
+         #Ctrlp:input.c.page2.prdk006
+         ON ACTION controlp INFIELD prdk006
+            #add-point:ON ACTION controlp INFIELD prdk006
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_prdj2_d[l_ac].prdk006             #給予default值
+
+            #給予arg
+            LET g_qryparam.where = " imay001 IN(SELECT rtdx001 FROM rtdx_t WHERE rtdxent = '",g_enterprise,"' AND rtdxsite = '",g_site,"' AND rtdxstus = 'Y')"
+            CALL q_imay003_2()                                #呼叫開窗
+
+            LET g_prdj2_d[l_ac].prdk006 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_prdj2_d[l_ac].prdk006 TO prdk006              #顯示到畫面上
+
+            NEXT FIELD prdk006                          #返回原欄位
+
+
+            #END add-point
+ 
+         #----<<prdk007>>----
+         #Ctrlp:input.c.page2.prdk007
+         ON ACTION controlp INFIELD prdk007
+            #add-point:ON ACTION controlp INFIELD prdk007
+
+            #END add-point
+ 
+         #----<<prdk008>>----
+         #Ctrlp:input.c.page2.prdk008
+         ON ACTION controlp INFIELD prdk008
+            #add-point:ON ACTION controlp INFIELD prdk008
+
+            #END add-point
+ 
+         #----<<prdk009>>----
+         #Ctrlp:input.c.page2.prdk009
+         ON ACTION controlp INFIELD prdk009
+            #add-point:ON ACTION controlp INFIELD prdk009
+
+            #END add-point
+ 
+         #----<<prdk010>>----
+         #Ctrlp:input.c.page2.prdk010
+         ON ACTION controlp INFIELD prdk010
+            #add-point:ON ACTION controlp INFIELD prdk010
+
+            #END add-point
+ 
+         #----<<prdk011>>----
+         #Ctrlp:input.c.page2.prdk011
+         ON ACTION controlp INFIELD prdk011
+            #add-point:ON ACTION controlp INFIELD prdk011
+
+            #END add-point
+ 
+         #----<<prdk012>>----
+         #Ctrlp:input.c.page2.prdk012
+         ON ACTION controlp INFIELD prdk012
+            #add-point:ON ACTION controlp INFIELD prdk012
+
+            #END add-point
+ 
+         #----<<prdkacti>>----
+         #Ctrlp:input.c.page2.prdkacti
+         ON ACTION controlp INFIELD prdkacti
+            #add-point:ON ACTION controlp INFIELD prdkacti
+
+            #END add-point
+ 
+         #----<<prdk001>>----
+         #Ctrlp:input.c.page2.prdk001
+         ON ACTION controlp INFIELD prdk001
+            #add-point:ON ACTION controlp INFIELD prdk001
+
+            #END add-point
+ 
+         #----<<prdksite>>----
+         #Ctrlp:input.c.page2.prdksite
+         ON ACTION controlp INFIELD prdksite
+            #add-point:ON ACTION controlp INFIELD prdksite
+
+            #END add-point
+ 
+         #----<<prdkunit>>----
+         #Ctrlp:input.c.page2.prdkunit
+         ON ACTION controlp INFIELD prdkunit
+            #add-point:ON ACTION controlp INFIELD prdkunit
+
+            #END add-point
+ 
+ 
+ 
+         AFTER ROW
+            #add-point:單身page2 after_row
+
+            #end add-point
+            LET l_ac = ARR_CURR()
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_prdj2_d[l_ac].* = g_prdj2_d_t.*
+               END IF
+               CLOSE aprt212_01_bcl2
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+            
+            #其他table進行unlock
+            
+            CALL aprt212_01_unlock_b("prdk_t","'2'")
+            CALL s_transaction_end('Y','0')
+ 
+         AFTER INPUT
+            #add-point:input段after input 
+
+            #end add-point   
+    
+         ON ACTION controlo
+            CALL FGL_SET_ARR_CURR(g_prdj2_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_prdj2_d.getLength()+1
+ 
+      END INPUT
+ 
+      #add-point:自定義input
+
+      #end add-point
+      
+      BEFORE DIALOG 
+         #add-point:input段before dialog
+
+         #end add-point    
+         #新增時強制從單頭開始填
+         IF p_cmd = 'a' THEN
+            NEXT FIELD prdadocno
+         ELSE
+            CASE g_aw
+               WHEN "s_detail1"
+                  NEXT FIELD prdj002
+               WHEN "s_detail2"
+                  NEXT FIELD prdk002
+ 
+ 
+            END CASE
+         END IF
+    
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         CALL cl_set_head_visible("","AUTO")
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+         
+   END DIALOG
+    
+   RETURN
+
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+ 
+{</section>}
+ 
+{<section id="aprt212_01.input.head" >}
+      #單頭段
+      INPUT BY NAME g_prda_m.prda017,g_prda_m.prda019,g_prda_m.prda020,g_prda_m.prda022,g_prda_m.prda018, 
+          g_prda_m.prda021,g_prda_m.prda023,g_prda_m.prdadocno 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+     
+         BEFORE INPUT
+            
+            IF l_cmd_t = 'r' THEN
+               
+            END IF
+            #add-point:資料輸入前
+            
+            #end add-point
+ 
+         #---------------------------<  Master  >---------------------------
+         #----<<prda017>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prda017
+            #add-point:BEFORE FIELD prda017
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prda017
+            
+            #add-point:AFTER FIELD prda017
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prda017
+            #add-point:ON CHANGE prda017
+            
+            #END add-point
+ 
+         #----<<prda019>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prda019
+            #add-point:BEFORE FIELD prda019
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prda019
+            
+            #add-point:AFTER FIELD prda019
+            CALL aprt212_01_set_comp_visible()
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prda019
+            #add-point:ON CHANGE prda019
+            CALL aprt212_01_set_comp_visible()
+            #END add-point
+ 
+         #----<<prda020>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prda020
+            #add-point:BEFORE FIELD prda020
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prda020
+            
+            #add-point:AFTER FIELD prda020
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prda020
+            #add-point:ON CHANGE prda020
+            
+            #END add-point
+ 
+         #----<<prda022>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prda022
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_prda_m.prda022,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD prda022
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD prda022
+            IF NOT cl_null(g_prda_m.prda022) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prda022
+            #add-point:BEFORE FIELD prda022
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prda022
+            #add-point:ON CHANGE prda022
+            
+            #END add-point
+ 
+         #----<<prda018>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prda018
+            #add-point:BEFORE FIELD prda018
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prda018
+            
+            #add-point:AFTER FIELD prda018
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prda018
+            #add-point:ON CHANGE prda018
+            
+            #END add-point
+ 
+         #----<<prda021>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prda021
+            #add-point:BEFORE FIELD prda021
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prda021
+            
+            #add-point:AFTER FIELD prda021
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prda021
+            #add-point:ON CHANGE prda021
+            
+            #END add-point
+ 
+         #----<<prda023>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prda023
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_prda_m.prda023,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD prda023
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD prda023
+            IF NOT cl_null(g_prda_m.prda023) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prda023
+            #add-point:BEFORE FIELD prda023
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prda023
+            #add-point:ON CHANGE prda023
+            
+            #END add-point
+ 
+         #----<<prdadocno>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdadocno
+            #add-point:BEFORE FIELD prdadocno
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdadocno
+            
+            #add-point:AFTER FIELD prdadocno
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_prda_m.prdadocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_prda_m.prdadocno != g_prdadocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM prda_t WHERE "||"prdaent = '" ||g_enterprise|| "' AND "||"prdadocno = '"||g_prda_m.prdadocno ||"'",'std-00004',1) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdadocno
+            #add-point:ON CHANGE prdadocno
+            
+            #END add-point
+ 
+ #欄位檢查
+         #---------------------------<  Master  >---------------------------
+         #----<<prda017>>----
+         #Ctrlp:input.c.prda017
+         ON ACTION controlp INFIELD prda017
+            #add-point:ON ACTION controlp INFIELD prda017
+            
+            #END add-point
+ 
+         #----<<prda019>>----
+         #Ctrlp:input.c.prda019
+         ON ACTION controlp INFIELD prda019
+            #add-point:ON ACTION controlp INFIELD prda019
+            
+            #END add-point
+ 
+         #----<<prda020>>----
+         #Ctrlp:input.c.prda020
+         ON ACTION controlp INFIELD prda020
+            #add-point:ON ACTION controlp INFIELD prda020
+            
+            #END add-point
+ 
+         #----<<prda022>>----
+         #Ctrlp:input.c.prda022
+         ON ACTION controlp INFIELD prda022
+            #add-point:ON ACTION controlp INFIELD prda022
+            
+            #END add-point
+ 
+         #----<<prda018>>----
+         #Ctrlp:input.c.prda018
+         ON ACTION controlp INFIELD prda018
+            #add-point:ON ACTION controlp INFIELD prda018
+            
+            #END add-point
+ 
+         #----<<prda021>>----
+         #Ctrlp:input.c.prda021
+         ON ACTION controlp INFIELD prda021
+            #add-point:ON ACTION controlp INFIELD prda021
+            
+            #END add-point
+ 
+         #----<<prda023>>----
+         #Ctrlp:input.c.prda023
+         ON ACTION controlp INFIELD prda023
+            #add-point:ON ACTION controlp INFIELD prda023
+            
+            #END add-point
+ 
+         #----<<prdadocno>>----
+         #Ctrlp:input.c.prdadocno
+         ON ACTION controlp INFIELD prdadocno
+            #add-point:ON ACTION controlp INFIELD prdadocno
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_prda_m.prdadocno             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            LET g_qryparam.arg2 = "" #
+
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_prda_m.prdadocno = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_prda_m.prdadocno TO prdadocno              #顯示到畫面上
+
+            NEXT FIELD prdadocno                          #返回原欄位
+
+
+            #END add-point
+ 
+ #欄位開窗
+            
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+ 
+            CALL cl_showmsg()      #錯誤訊息統整顯示
+            DISPLAY BY NAME g_prda_m.prdadocno             
+ 
+                            
+            IF p_cmd <> 'u' THEN
+    
+               CALL s_transaction_begin()
+               
+               #add-point:單頭新增前
+               
+               #end add-point
+               
+               INSERT INTO prda_t (prdaent,prda017,prda019,prda020,prda022,prda018,prda021,prda023,prdadocno) 
+ 
+               VALUES (g_enterprise,g_prda_m.prda017,g_prda_m.prda019,g_prda_m.prda020,g_prda_m.prda022, 
+                   g_prda_m.prda018,g_prda_m.prda021,g_prda_m.prda023,g_prda_m.prdadocno) 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "g_prda_m"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+  
+                  CALL s_transaction_end('N','0')
+                  CONTINUE DIALOG
+               END IF
+               
+               #add-point:單頭新增中
+               
+               #end add-point
+               
+               
+               
+               
+               #add-point:單頭新增後
+               
+               #end add-point
+               CALL s_transaction_end('Y','0') 
+               
+               IF l_cmd_t = 'r' AND p_cmd = 'a' THEN
+                  CALL aprt212_01_detail_reproduce()
+               END IF
+               
+               LET p_cmd = 'u'
+            ELSE
+               CALL s_transaction_begin()
+            
+               #add-point:單頭修改前
+               
+               #end add-point
+               
+               UPDATE prda_t SET (prda017,prda019,prda020,prda022,prda018,prda021,prda023,prdadocno) = (g_prda_m.prda017, 
+                   g_prda_m.prda019,g_prda_m.prda020,g_prda_m.prda022,g_prda_m.prda018,g_prda_m.prda021, 
+                   g_prda_m.prda023,g_prda_m.prdadocno)
+                WHERE prdaent = g_enterprise AND prdadocno = g_prdadocno_t
+ 
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "prda_t"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+  
+                  CALL s_transaction_end('N','0')
+                  CONTINUE DIALOG
+               END IF
+               
+               #add-point:單頭修改中
+               
+               #end add-point
+               
+               
+               
+               CALL s_transaction_end('Y','0')
+               
+               #add-point:單頭修改後
+               
+               #end add-point
+            END IF
+            
+            LET g_prdadocno_t = g_prda_m.prdadocno
+ 
+            #controlp
+            
+      END INPUT
+   
+ 
+{</section>}
+ 
+{<section id="aprt212_01.input.body" >}
+   
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_prdj_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_prdj_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL aprt212_01_b_fill()
+            LET g_rec_b = g_prdj_d.getLength()
+            #add-point:資料輸入前
+            CALL cl_set_act_visible("insert", TRUE)
+            #end add-point
+         
+         BEFORE ROW
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN aprt212_01_cl USING g_enterprise,g_prda_m.prdadocno
+ 
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  STATUS
+               LET g_errparam.extend = "OPEN aprt212_01_cl:"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+ 
+               CLOSE aprt212_01_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_prdj_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND g_prdj_d[l_ac].prdj002 IS NOT NULL
+               AND g_prdj_d[l_ac].prdj003 IS NOT NULL
+               AND g_prdj_d[l_ac].prdj004 IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_prdj_d_t.* = g_prdj_d[l_ac].*  #BACKUP
+               CALL aprt212_01_set_entry_b(l_cmd)
+               #add-point:modify段after_set_entry_b
+               
+               #end add-point  
+               CALL aprt212_01_set_no_entry_b(l_cmd)
+               IF NOT aprt212_01_lock_b("prdj_t","'1'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH aprt212_01_bcl INTO g_prdj_d[l_ac].prdj002,g_prdj_d[l_ac].prdj003,g_prdj_d[l_ac].prdj004, 
+                      g_prdj_d[l_ac].prdj004_desc,g_prdj_d[l_ac].prdj004_desc1,g_prdj_d[l_ac].prdj005, 
+                      g_prdj_d[l_ac].prdj006,g_prdj_d[l_ac].prdj00601,g_prdj_d[l_ac].prdj00602,g_prdj_d[l_ac].prdj00603, 
+                      g_prdj_d[l_ac].prdjacti,g_prdj_d[l_ac].prdjsite,g_prdj_d[l_ac].prdjunit,g_prdj_d[l_ac].prdj001 
+ 
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = g_prdj_d_t.prdj002
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+ 
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  LET g_bfill = "N"
+                  CALL aprt212_01_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row
+            
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+        
+         BEFORE INSERT
+            
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_prdj_d[l_ac].* TO NULL 
+                  LET g_prdj_d[l_ac].prdjacti = "Y"
+ 
+ 
+            LET g_prdj_d_t.* = g_prdj_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL aprt212_01_set_entry_b(l_cmd)
+            #add-point:modify段after_set_entry_b
+            
+            #end add-point
+            CALL aprt212_01_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_prdj_d[li_reproduce_target].* = g_prdj_d[li_reproduce].*
+ 
+               LET g_prdj_d[li_reproduce_target].prdj002 = NULL
+               LET g_prdj_d[li_reproduce_target].prdj003 = NULL
+               LET g_prdj_d[li_reproduce_target].prdj004 = NULL
+ 
+            END IF
+            #公用欄位給值(單身)
+            
+            
+            #add-point:modify段before insert
+            SELECT MAX(prdj002) +1 INTO g_prdj_d[l_ac].prdj002
+              FROM prdj_t
+             WHERE prdjent = g_enterprise
+               AND prdjdocno = g_prdadocno
+            IF cl_null(g_prdj_d[l_ac].prdj002) THEN
+               LET g_prdj_d[l_ac].prdj002 = 1
+            END IF
+            IF g_type1 <> 'Y' THEN
+               LET g_prdj_d[l_ac].prdj003 = 0
+            END IF
+            LET g_prdj_d[l_ac].prdjunit = g_site
+            LET g_prdj_d[l_ac].prdjsite = g_site
+            SELECT prda001 INTO g_prdj_d[l_ac].prdj001 
+              FROM prda_t
+             WHERE prdaent = g_enterprise
+               AND prdadocno = g_prdadocno
+            CALL aprt212_01_set_entry_b(l_cmd)
+            CALL aprt212_01_set_no_entry_b(l_cmd)   
+            #end add-point  
+  
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+ 
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            #add-point:單身新增
+            
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM prdj_t 
+             WHERE prdjent = g_enterprise AND prdjdocno = g_prda_m.prdadocno
+ 
+               AND prdj002 = g_prdj_d[l_ac].prdj002
+               AND prdj003 = g_prdj_d[l_ac].prdj003
+               AND prdj004 = g_prdj_d[l_ac].prdj004
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前
+               
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_prda_m.prdadocno
+               LET gs_keys[2] = g_prdj_d[g_detail_idx].prdj002
+               LET gs_keys[3] = g_prdj_d[g_detail_idx].prdj003
+               LET gs_keys[4] = g_prdj_d[g_detail_idx].prdj004
+               CALL aprt212_01_insert_b('prdj_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後
+               IF g_prda_m.prda019 = '2' THEN
+                  DELETE FROM  prdj_t
+                   WHERE prdjent = g_enterprise
+                     AND prdjdocno = g_prda_m.prdadocno
+                     AND prdj002 = g_prdj_d_t.prdj002
+                     AND prdj003 = g_prdj_d_t.prdj003
+                  DELETE FROM  prdj_t
+                   WHERE prdjent = g_enterprise
+                     AND prdjdocno = g_prda_m.prdadocno
+                     AND prdj002 = g_prdj_d[g_detail_idx].prdj002
+                     AND prdj003 = g_prdj_d[g_detail_idx].prdj003
+                  IF SQLCA.SQLcode  THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "del_prdj_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+  
+                     CALL s_transaction_end('N','0') 
+                     CANCEL INSERT                     
+                  END IF
+                  INSERT INTO prdj_t(prdjent,prdjdocno,prdj002,prdj003,prdj004,prdj005,prdj006,prdjacti,prdjsite,prdjunit,prdj001)
+                  SELECT g_enterprise,g_prda_m.prdadocno,g_prdj_d[g_detail_idx].prdj002,g_prdj_d[g_detail_idx].prdj003,prdb002,g_prdj_d[g_detail_idx].prdj005,g_prdj_d[g_detail_idx].prdj00601,g_prdj_d[g_detail_idx].prdjacti,g_prdj_d[g_detail_idx].prdjsite,g_prdj_d[g_detail_idx].prdjunit,g_prdj_d[g_detail_idx].prdj001
+                    FROM prdb_t
+                   WHERE prdbent = g_enterprise
+                     AND prdbdocno = g_prda_m.prdadocno
+                     AND prdb003 = '1'
+                     AND prdb004 = g_prdj_d[g_detail_idx].prdj003
+                  IF SQLCA.SQLcode  THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "prdj_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+  
+                     CALL s_transaction_end('N','0')
+                     CANCEL INSERT
+                  END IF       
+                  INSERT INTO prdj_t(prdjent,prdjdocno,prdj002,prdj003,prdj004,prdj005,prdj006,prdjacti,prdjsite,prdjunit,prdj001)
+                  SELECT g_enterprise,g_prda_m.prdadocno,g_prdj_d[g_detail_idx].prdj002,g_prdj_d[g_detail_idx].prdj003,prdb002,g_prdj_d[g_detail_idx].prdj005,g_prdj_d[g_detail_idx].prdj00602,g_prdj_d[g_detail_idx].prdjacti,g_prdj_d[g_detail_idx].prdjsite,g_prdj_d[g_detail_idx].prdjunit,g_prdj_d[g_detail_idx].prdj001
+                    FROM prdb_t
+                   WHERE prdbent = g_enterprise
+                     AND prdbdocno = g_prda_m.prdadocno
+                     AND prdb003 = '2'
+                     AND prdb004 = g_prdj_d[g_detail_idx].prdj003
+                  IF SQLCA.SQLcode  THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "prdj_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+  
+                     CALL s_transaction_end('N','0')
+                     CANCEL INSERT
+                  END IF    
+                  INSERT INTO prdj_t(prdjent,prdjdocno,prdj002,prdj003,prdj004,prdj005,prdj006,prdjacti,prdjsite,prdjunit,prdj001)
+                  SELECT g_enterprise,g_prda_m.prdadocno,g_prdj_d[g_detail_idx].prdj002,g_prdj_d[g_detail_idx].prdj003,prdb002,g_prdj_d[g_detail_idx].prdj005,g_prdj_d[g_detail_idx].prdj00603,g_prdj_d[g_detail_idx].prdjacti,g_prdj_d[g_detail_idx].prdjsite,g_prdj_d[g_detail_idx].prdjunit,g_prdj_d[g_detail_idx].prdj001
+                    FROM prdb_t
+                   WHERE prdbent = g_enterprise
+                     AND prdbdocno = g_prda_m.prdadocno
+                     AND prdb003 = '3'
+                     AND prdb004 = g_prdj_d[g_detail_idx].prdj003
+                  IF SQLCA.SQLcode  THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "prdj_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+  
+                     CALL s_transaction_end('N','0')
+                     CANCEL INSERT
+                  END IF 
+               END IF
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+ 
+               INITIALIZE g_prdj_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "prdj_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+  
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL aprt212_01_b_fill()
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert
+               
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' AND g_prdj_d.getLength() < l_ac THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+               CALL g_prdj_d.deleteElement(l_ac)
+               NEXT FIELD prdj002
+            END IF
+         
+            IF g_prdj_d[l_ac].prdj002 IS NOT NULL
+               AND g_prdj_d_t.prdj003 IS NOT NULL
+               AND g_prdj_d_t.prdj004 IS NOT NULL
+ 
+               THEN 
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  -263
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+ 
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前
+               
+               #end add-point 
+               
+               DELETE FROM prdj_t
+                WHERE prdjent = g_enterprise AND prdjdocno = g_prda_m.prdadocno AND
+ 
+                      prdj002 = g_prdj_d_t.prdj002
+                  AND prdj003 = g_prdj_d_t.prdj003
+                  AND prdj004 = g_prdj_d_t.prdj004
+ 
+                  
+               #add-point:單身刪除中
+               
+               #end add-point 
+               
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "prdj_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+ 
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_rec_b = g_rec_b-1
+                  
+                  #add-point:單身刪除後
+                  
+                  #end add-point
+                  CALL s_transaction_end('Y','0')
+               END IF 
+               CLOSE aprt212_01_bcl
+               LET l_count = g_prdj_d.getLength()
+            END IF 
+            
+                           INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_prda_m.prdadocno
+               LET gs_keys[2] = g_prdj_d[g_detail_idx].prdj002
+               LET gs_keys[3] = g_prdj_d[g_detail_idx].prdj003
+               LET gs_keys[4] = g_prdj_d[g_detail_idx].prdj004
+ 
+              
+         AFTER DELETE 
+            #add-point:單身刪除後2
+            
+            #end add-point
+                           CALL aprt212_01_delete_b('prdj_t',gs_keys,"'1'")
+ 
+         #---------------------<  Detail: page1  >---------------------
+         #----<<prdj002>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj002
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_prdj_d[l_ac].prdj002,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD prdj002
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD prdj002
+            IF NOT cl_null(g_prdj_d[l_ac].prdj002) THEN 
+            END IF 
+
+            #此段落由子樣板a05產生
+            IF g_prda_m.prdadocno IS NOT NULL AND g_prdj_d[g_detail_idx].prdj002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_prda_m.prdadocno != g_prdadocno_t OR g_prdj_d[g_detail_idx].prdj002 != g_prdj_d_t.prdj002)) THEN 
+                  IF NOT ap_chk_notDup(g_prdj_d[l_ac].prdj002,"SELECT COUNT(*) FROM prdj_t WHERE "||"prdjent = '" ||g_enterprise|| "' AND "||"prdjdocno = '"||g_prda_m.prdadocno ||"' AND "|| "prdj002 = '"||g_prdj_d[g_detail_idx].prdj002 ||"'",'std-00004',1) THEN 
+                     LET g_prdj_d[l_ac].prdj002 = g_prdj_d_t.prdj002
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj002
+            #add-point:BEFORE FIELD prdj002
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdj002
+            #add-point:ON CHANGE prdj002
+            
+            #END add-point
+ 
+         #----<<prdj003>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj003
+            
+            #add-point:AFTER FIELD prdj003
+            #此段落由子樣板a05產生
+            IF  g_prda_m.prdadocno IS NOT NULL AND g_prdj_d[g_detail_idx].prdj002 IS NOT NULL AND g_prdj_d[g_detail_idx].prdj003 IS NOT NULL AND g_prdj_d[g_detail_idx].prdj004 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_prda_m.prdadocno != g_prdadocno_t OR g_prdj_d[g_detail_idx].prdj002 != g_prdj_d_t.prdj002 OR g_prdj_d[g_detail_idx].prdj003 != g_prdj_d_t.prdj003 OR g_prdj_d[g_detail_idx].prdj004 != g_prdj_d_t.prdj004)) THEN 
+                  IF NOT ap_chk_notDup(g_prdj_d[l_ac].prdj003,"SELECT COUNT(*) FROM prdj_t WHERE "||"prdjent = '" ||g_enterprise|| "' AND "||"prdjdocno = '"||g_prda_m.prdadocno ||"' AND "|| "prdj002 = '"||g_prdj_d[g_detail_idx].prdj002 ||"' AND "|| "prdj003 = '"||g_prdj_d[g_detail_idx].prdj003 ||"' AND "|| "prdj004 = '"||g_prdj_d[g_detail_idx].prdj004 ||"'",'std-00004',1) THEN 
+                     LET g_prdj_d[l_ac].prdj003 = g_prdj_d_t.prdj003
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            IF NOT cl_null(g_prdj_d[l_ac].prdj003) THEN
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_prdadocno
+               LET g_chkparam.arg2 = g_prdj_d[l_ac].prdj003
+               LET g_errshow = TRUE   #160318-00025#50
+               LET g_chkparam.err_str[1] = "apr-00150:sub-01302|aprt213|",cl_get_progname("aprt213",g_lang,"2"),"|:EXEPROGaprt213"    #160318-00025#50
+               #呼叫檢查存在並帶值的library
+               IF NOT cl_chk_exist("v_prdh002") THEN
+                  LET g_prdj_d[l_ac].prdj003 = g_prdj_d_t.prdj003
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            IF NOT cl_null(g_prdj_d[l_ac].prdj004) AND NOT cl_null(g_prdj_d[l_ac].prdj003) THEN
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_prdadocno
+               LET g_chkparam.arg2 = g_prdj_d[l_ac].prdj004
+               LET g_chkparam.arg3 = g_prdj_d[l_ac].prdj003
+               LET g_errshow = TRUE   #160318-00025#50
+               LET g_chkparam.err_str[1] = "apr-00142:apr-00152"    #160318-00025#50
+               #呼叫檢查存在並帶值的library
+               IF NOT cl_chk_exist("v_prdb002") THEN
+                  LET g_prdj_d[l_ac].prdj003 = g_prdj_d_t.prdj003
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            CALL aprt212_01_set_entry_b(l_cmd)
+            CALL aprt212_01_set_no_entry_b(l_cmd)
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj003
+            #add-point:BEFORE FIELD prdj003
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdj003
+            #add-point:ON CHANGE prdj003
+            
+            #END add-point
+ 
+         #----<<prdj004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj004
+            #add-point:BEFORE FIELD prdj004
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj004
+            
+            #add-point:AFTER FIELD prdj004
+            CALL aprt212_01_prdj_desc()
+            IF g_prda_m.prdadocno IS NOT NULL AND g_prdj_d[g_detail_idx].prdj002 IS NOT NULL AND g_prdj_d[g_detail_idx].prdj003 IS NOT NULL AND g_prdj_d[g_detail_idx].prdj004 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_prda_m.prdadocno != g_prdadocno_t OR g_prdj_d[g_detail_idx].prdj002 != g_prdj_d_t.prdj002 OR g_prdj_d[g_detail_idx].prdj003 != g_prdj_d_t.prdj003 OR g_prdj_d[g_detail_idx].prdj004 != g_prdj_d_t.prdj004)) THEN 
+                  IF NOT ap_chk_notDup(g_prdj_d[l_ac].prdj004,"SELECT COUNT(*) FROM prdj_t WHERE "||"prdjent = '" ||g_enterprise|| "' AND "||"prdjdocno = '"||g_prda_m.prdadocno ||"' AND "|| "prdj002 = '"||g_prdj_d[g_detail_idx].prdj002 ||"' AND "|| "prdj003 = '"||g_prdj_d[g_detail_idx].prdj003 ||"' AND "|| "prdj004 = '"||g_prdj_d[g_detail_idx].prdj004 ||"'",'std-00004',1) THEN 
+                     LET g_prdj_d[l_ac].prdj004 = g_prdj_d_t.prdj004
+                     CALL aprt212_01_prdj_desc()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            IF NOT cl_null(g_prdj_d[l_ac].prdj004) AND NOT cl_null(g_prdj_d[l_ac].prdj003) THEN
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_prdadocno
+               LET g_chkparam.arg2 = g_prdj_d[l_ac].prdj004
+               LET g_chkparam.arg3 = g_prdj_d[l_ac].prdj003
+               LET g_errshow = TRUE   #160318-00025#50
+               LET g_chkparam.err_str[1] = "apr-00142:apr-00152"    #160318-00025#50
+               #呼叫檢查存在並帶值的library
+               IF NOT cl_chk_exist("v_prdb002") THEN
+                  LET g_prdj_d[l_ac].prdj004 = g_prdj_d_t.prdj004
+                  CALL aprt212_01_prdj_desc()
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            CALL aprt212_01_set_entry_b(l_cmd)
+            CALL aprt212_01_set_no_entry_b(l_cmd)
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdj004
+            #add-point:ON CHANGE prdj004
+            
+            #END add-point
+ 
+         #----<<prdj004_desc>>----
+         #----<<prdj004_desc1>>----
+         #----<<prdj005>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj005
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_prdj_d[l_ac].prdj005,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD prdj005
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD prdj005
+            IF NOT cl_null(g_prdj_d[l_ac].prdj005) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj005
+            #add-point:BEFORE FIELD prdj005
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdj005
+            #add-point:ON CHANGE prdj005
+            
+            #END add-point
+ 
+         #----<<prdj006>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj006
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_prdj_d[l_ac].prdj006,"0.000000","1","","","azz-00079",1) THEN
+               NEXT FIELD prdj006
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD prdj006
+            IF NOT cl_null(g_prdj_d[l_ac].prdj006) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj006
+            #add-point:BEFORE FIELD prdj006
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdj006
+            #add-point:ON CHANGE prdj006
+            
+            #END add-point
+ 
+         #----<<prdj00601>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj00601
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_prdj_d[l_ac].prdj00601,"0.000000","1","","","azz-00079",1) THEN
+               NEXT FIELD prdj00601
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD prdj00601
+            IF NOT cl_null(g_prdj_d[l_ac].prdj00601) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj00601
+            #add-point:BEFORE FIELD prdj00601
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdj00601
+            #add-point:ON CHANGE prdj00601
+            
+            #END add-point
+ 
+         #----<<prdj00602>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj00602
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_prdj_d[l_ac].prdj00602,"0.000000","1","","","azz-00079",1) THEN
+               NEXT FIELD prdj00602
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD prdj00602
+            IF NOT cl_null(g_prdj_d[l_ac].prdj00602) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj00602
+            #add-point:BEFORE FIELD prdj00602
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdj00602
+            #add-point:ON CHANGE prdj00602
+            
+            #END add-point
+ 
+         #----<<prdj00603>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj00603
+            #add-point:BEFORE FIELD prdj00603
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj00603
+            
+            #add-point:AFTER FIELD prdj00603
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdj00603
+            #add-point:ON CHANGE prdj00603
+            
+            #END add-point
+ 
+         #----<<prdjacti>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdjacti
+            #add-point:BEFORE FIELD prdjacti
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdjacti
+            
+            #add-point:AFTER FIELD prdjacti
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdjacti
+            #add-point:ON CHANGE prdjacti
+            
+            #END add-point
+ 
+         #----<<prdjsite>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdjsite
+            #add-point:BEFORE FIELD prdjsite
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdjsite
+            
+            #add-point:AFTER FIELD prdjsite
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdjsite
+            #add-point:ON CHANGE prdjsite
+            
+            #END add-point
+ 
+         #----<<prdjunit>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdjunit
+            #add-point:BEFORE FIELD prdjunit
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdjunit
+            
+            #add-point:AFTER FIELD prdjunit
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdjunit
+            #add-point:ON CHANGE prdjunit
+            
+            #END add-point
+ 
+         #----<<prdj001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdj001
+            #add-point:BEFORE FIELD prdj001
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdj001
+            
+            #add-point:AFTER FIELD prdj001
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdj001
+            #add-point:ON CHANGE prdj001
+            
+            #END add-point
+ 
+ 
+         #---------------------<  Detail: page1  >---------------------
+         #----<<prdj002>>----
+         #Ctrlp:input.c.page1.prdj002
+         ON ACTION controlp INFIELD prdj002
+            #add-point:ON ACTION controlp INFIELD prdj002
+            
+            #END add-point
+ 
+         #----<<prdj003>>----
+         #Ctrlp:input.c.page1.prdj003
+         ON ACTION controlp INFIELD prdj003
+            #add-point:ON ACTION controlp INFIELD prdj003
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_prdj_d[l_ac].prdj003             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_prdadocno
+
+            CALL q_prdh002()                                #呼叫開窗
+
+            LET g_prdj_d[l_ac].prdj003 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_prdj_d[l_ac].prdj003 TO prdj003              #顯示到畫面上
+
+            NEXT FIELD prdj003                          #返回原欄位
+
+
+            #END add-point
+ 
+         #----<<prdj004>>----
+         #Ctrlp:input.c.page1.prdj004
+         ON ACTION controlp INFIELD prdj004
+            #add-point:ON ACTION controlp INFIELD prdj004
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_prdj_d[l_ac].prdj004             #給予default值
+            IF cl_null(g_prdj_d[l_ac].prdj003) THEN
+               LET g_prdj_d[l_ac].prdj003 = 0
+            END IF
+            #給予arg
+            LET g_qryparam.arg1 = g_prdadocno
+            LET g_qryparam.arg2 = g_prdj_d[l_ac].prdj003  
+            CALL q_prdb002()                                #呼叫開窗
+
+            LET g_prdj_d[l_ac].prdj004 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_prdj_d[l_ac].prdj004 TO prdj004              #顯示到畫面上
+            CALL aprt212_01_prdj_desc()
+            NEXT FIELD prdj004                          #返回原欄位
+
+
+            #END add-point
+ 
+         #----<<prdj004_desc>>----
+         #----<<prdj004_desc1>>----
+         #----<<prdj005>>----
+         #Ctrlp:input.c.page1.prdj005
+         ON ACTION controlp INFIELD prdj005
+            #add-point:ON ACTION controlp INFIELD prdj005
+            
+            #END add-point
+ 
+         #----<<prdj006>>----
+         #Ctrlp:input.c.page1.prdj006
+         ON ACTION controlp INFIELD prdj006
+            #add-point:ON ACTION controlp INFIELD prdj006
+            
+            #END add-point
+ 
+         #----<<prdj00601>>----
+         #Ctrlp:input.c.page1.prdj00601
+         ON ACTION controlp INFIELD prdj00601
+            #add-point:ON ACTION controlp INFIELD prdj00601
+            
+            #END add-point
+ 
+         #----<<prdj00602>>----
+         #Ctrlp:input.c.page1.prdj00602
+         ON ACTION controlp INFIELD prdj00602
+            #add-point:ON ACTION controlp INFIELD prdj00602
+            
+            #END add-point
+ 
+         #----<<prdj00603>>----
+         #Ctrlp:input.c.page1.prdj00603
+         ON ACTION controlp INFIELD prdj00603
+            #add-point:ON ACTION controlp INFIELD prdj00603
+            
+            #END add-point
+ 
+         #----<<prdjacti>>----
+         #Ctrlp:input.c.page1.prdjacti
+         ON ACTION controlp INFIELD prdjacti
+            #add-point:ON ACTION controlp INFIELD prdjacti
+            
+            #END add-point
+ 
+         #----<<prdjsite>>----
+         #Ctrlp:input.c.page1.prdjsite
+         ON ACTION controlp INFIELD prdjsite
+            #add-point:ON ACTION controlp INFIELD prdjsite
+            
+            #END add-point
+ 
+         #----<<prdjunit>>----
+         #Ctrlp:input.c.page1.prdjunit
+         ON ACTION controlp INFIELD prdjunit
+            #add-point:ON ACTION controlp INFIELD prdjunit
+            
+            #END add-point
+ 
+         #----<<prdj001>>----
+         #Ctrlp:input.c.page1.prdj001
+         ON ACTION controlp INFIELD prdj001
+            #add-point:ON ACTION controlp INFIELD prdj001
+            
+            #END add-point
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+ 
+               LET INT_FLAG = 0
+               LET g_prdj_d[l_ac].* = g_prdj_d_t.*
+               CLOSE aprt212_01_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = g_prdj_d[l_ac].prdj002
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+ 
+               LET g_prdj_d[l_ac].* = g_prdj_d_t.*
+            ELSE
+            
+               #add-point:單身修改前
+               
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身)
+               
+      
+               UPDATE prdj_t SET (prdjdocno,prdj002,prdj003,prdj004,prdj005,prdj006,prdjacti,prdjsite, 
+                   prdjunit,prdj001) = (g_prda_m.prdadocno,g_prdj_d[l_ac].prdj002,g_prdj_d[l_ac].prdj003, 
+                   g_prdj_d[l_ac].prdj004,g_prdj_d[l_ac].prdj005,g_prdj_d[l_ac].prdj006,g_prdj_d[l_ac].prdjacti, 
+                   g_prdj_d[l_ac].prdjsite,g_prdj_d[l_ac].prdjunit,g_prdj_d[l_ac].prdj001)
+                WHERE prdjent = g_enterprise AND prdjdocno = g_prda_m.prdadocno 
+ 
+                  AND prdj002 = g_prdj_d_t.prdj002 #項次   
+                  AND prdj003 = g_prdj_d_t.prdj003  
+                  AND prdj004 = g_prdj_d_t.prdj004  
+ 
+                  
+               #add-point:單身修改中
+               
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = "std-00009"
+                     LET g_errparam.extend = "prdj_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+ 
+                     CALL s_transaction_end('N','0')
+                     LET g_prdj_d[l_ac].* = g_prdj_d_t.*
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "prdj_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+ 
+                     LET g_prdj_d[l_ac].* = g_prdj_d_t.*                     
+                     CALL s_transaction_end('N','0')
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_prda_m.prdadocno
+               LET gs_keys_bak[1] = g_prdadocno_t
+               LET gs_keys[2] = g_prdj_d[g_detail_idx].prdj002
+               LET gs_keys_bak[2] = g_prdj_d_t.prdj002
+               LET gs_keys[3] = g_prdj_d[g_detail_idx].prdj003
+               LET gs_keys_bak[3] = g_prdj_d_t.prdj003
+               LET gs_keys[4] = g_prdj_d[g_detail_idx].prdj004
+               LET gs_keys_bak[4] = g_prdj_d_t.prdj004
+               CALL aprt212_01_update_b('prdj_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                     
+               END CASE
+               
+               #add-point:單身修改後
+               IF g_prda_m.prda019 = '2' THEN
+                  DELETE FROM  prdj_t
+                   WHERE prdjent = g_enterprise
+                     AND prdjdocno = g_prda_m.prdadocno
+                     AND prdj002 = g_prdj_d_t.prdj002
+                     AND prdj003 = g_prdj_d_t.prdj003
+                  DELETE FROM  prdj_t
+                   WHERE prdjent = g_enterprise
+                     AND prdjdocno = g_prda_m.prdadocno
+                     AND prdj002 = g_prdj_d[g_detail_idx].prdj002
+                     AND prdj003 = g_prdj_d[g_detail_idx].prdj003
+                  IF SQLCA.SQLcode  THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "del_prdj_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+  
+                     CALL s_transaction_end('N','0')  
+                  END IF
+                  INSERT INTO prdj_t(prdjent,prdjdocno,prdj002,prdj003,prdj004,prdj005,prdj006,prdjacti,prdjsite,prdjunit,prdj001)
+                              VALUES(g_enterprise, g_prda_m.prdadocno,g_prdj_d[g_detail_idx].prdj002,g_prdj_d[g_detail_idx].prdj003,1,g_prdj_d[g_detail_idx].prdj005,g_prdj_d[g_detail_idx].prdj00601,g_prdj_d[g_detail_idx].prdjacti,g_prdj_d[g_detail_idx].prdjsite,g_prdj_d[g_detail_idx].prdjunit,g_prdj_d[g_detail_idx].prdj001)        
+                  IF SQLCA.SQLcode  THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "prdj_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+  
+                     CALL s_transaction_end('N','0')
+                  END IF                  
+                  INSERT INTO prdj_t(prdjent,prdjdocno,prdj002,prdj003,prdj004,prdj005,prdj006,prdjacti,prdjsite,prdjunit,prdj001)
+                              VALUES(g_enterprise, g_prda_m.prdadocno,g_prdj_d[g_detail_idx].prdj002,g_prdj_d[g_detail_idx].prdj003,2,g_prdj_d[g_detail_idx].prdj005,g_prdj_d[g_detail_idx].prdj00602,g_prdj_d[g_detail_idx].prdjacti,g_prdj_d[g_detail_idx].prdjsite,g_prdj_d[g_detail_idx].prdjunit,g_prdj_d[g_detail_idx].prdj001)        
+                  IF SQLCA.SQLcode  THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "prdj_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+  
+                     CALL s_transaction_end('N','0') 
+                  END IF
+                  INSERT INTO prdj_t(prdjent,prdjdocno,prdj002,prdj003,prdj004,prdj005,prdj006,prdjacti,prdjsite,prdjunit,prdj001)
+                              VALUES(g_enterprise, g_prda_m.prdadocno,g_prdj_d[g_detail_idx].prdj002,g_prdj_d[g_detail_idx].prdj003,3,g_prdj_d[g_detail_idx].prdj005,g_prdj_d[g_detail_idx].prdj00603,g_prdj_d[g_detail_idx].prdjacti,g_prdj_d[g_detail_idx].prdjsite,g_prdj_d[g_detail_idx].prdjunit,g_prdj_d[g_detail_idx].prdj001)   
+                  IF SQLCA.SQLcode  THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = "prdj_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+  
+                     CALL s_transaction_end('N','0')  
+                  END IF
+               END IF
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            #add-point:單身after_row
+            
+            #end add-point
+            CALL aprt212_01_unlock_b("prdj_t","'1'")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            
+              
+         AFTER INPUT
+            #add-point:input段after input 
+            
+            #end add-point 
+ 
+         ON ACTION controlo    
+            CALL FGL_SET_ARR_CURR(g_prdj_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_prdj_d.getLength()+1
+            
+         #ON ACTION cancel
+         #   LET INT_FLAG = 1
+         #   LET g_detail_idx = 1
+         #   EXIT DIALOG 
+ 
+      END INPUT
+      
+      INPUT ARRAY g_prdj2_d FROM s_detail2.*
+         ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                 INSERT ROW = l_allow_insert, #此頁面insert功能由產生器控制, 手動之設定無效! 
+ 
+                 DELETE ROW = l_allow_delete,
+                 APPEND ROW = l_allow_insert)
+                 
+         #自訂ACTION(detail_input,page_2)
+         
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_prdj2_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL aprt212_01_b_fill()
+            LET g_rec_b = g_prdj2_d.getLength()
+            #add-point:資料輸入前
+            CALL cl_set_act_visible("insert", TRUE)
+            #end add-point
+            
+         BEFORE INSERT
+            
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_prdj2_d[l_ac].* TO NULL 
+                  LET g_prdj2_d[l_ac].prdk010 = "2"
+      LET g_prdj2_d[l_ac].prdkacti = "Y"
+ 
+ 
+            LET g_prdj2_d_t.* = g_prdj2_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL aprt212_01_set_entry_b(l_cmd)
+            #add-point:modify段after_set_entry_b
+            
+            #end add-point
+            CALL aprt212_01_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_prdj2_d[li_reproduce_target].* = g_prdj2_d[li_reproduce].*
+ 
+               LET g_prdj2_d[li_reproduce_target].prdk002 = NULL
+               LET g_prdj2_d[li_reproduce_target].prdk003 = NULL
+               LET g_prdj2_d[li_reproduce_target].prdk004 = NULL
+               LET g_prdj2_d[li_reproduce_target].prdk005 = NULL
+               LET g_prdj2_d[li_reproduce_target].prdk007 = NULL
+            END IF
+            #公用欄位給值(單身2)
+            
+            
+            #add-point:modify段before insert
+            SELECT MAX(prdk003) +1 INTO g_prdj2_d[l_ac].prdk003
+              FROM prdk_t
+             WHERE prdkent = g_enterprise
+               AND prdkdocno = g_prdadocno
+               AND prdk002 = g_prdj_d[g_detail_idx].prdj002
+            IF cl_null(g_prdj2_d[l_ac].prdk003) THEN
+               LET g_prdj2_d[l_ac].prdk003 = 1
+            END IF
+            LET g_prdj2_d[l_ac].prdk004 = '4'
+            CALL aprt212_01_set_entry_b(l_cmd)
+            CALL aprt212_01_set_no_entry_b(l_cmd)
+            #end add-point  
+            
+         BEFORE ROW     
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+              
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN aprt212_01_cl USING g_enterprise,g_prda_m.prdadocno
+            IF STATUS THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  STATUS
+               LET g_errparam.extend = "OPEN aprt212_01_cl:"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+ 
+               CLOSE aprt212_01_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_prdj2_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND g_prdj2_d[l_ac].prdk002 IS NOT NULL
+               AND g_prdj2_d[l_ac].prdk003 IS NOT NULL
+               AND g_prdj2_d[l_ac].prdk004 IS NOT NULL
+               AND g_prdj2_d[l_ac].prdk005 IS NOT NULL
+               AND g_prdj2_d[l_ac].prdk007 IS NOT NULL
+            THEN 
+               LET l_cmd='u'
+               LET g_prdj2_d_t.* = g_prdj2_d[l_ac].*  #BACKUP
+               CALL aprt212_01_set_entry_b(l_cmd)
+               #add-point:modify段after_set_entry_b
+               
+               #end add-point  
+               CALL aprt212_01_set_no_entry_b(l_cmd)
+               IF NOT aprt212_01_lock_b("prdk_t","'2'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH aprt212_01_bcl2 INTO g_prdj2_d[l_ac].prdk002,g_prdj2_d[l_ac].prdk003,g_prdj2_d[l_ac].prdk004, 
+                      g_prdj2_d[l_ac].prdk005,g_prdj2_d[l_ac].prdk005_desc,g_prdj2_d[l_ac].prdk006,g_prdj2_d[l_ac].prdk007, 
+                      g_prdj2_d[l_ac].prdk007_desc,g_prdj2_d[l_ac].prdk008,g_prdj2_d[l_ac].prdk009,g_prdj2_d[l_ac].prdk010, 
+                      g_prdj2_d[l_ac].prdk011,g_prdj2_d[l_ac].prdk012,g_prdj2_d[l_ac].prdkacti,g_prdj2_d[l_ac].prdk001, 
+                      g_prdj2_d[l_ac].prdksite,g_prdj2_d[l_ac].prdkunit
+                   IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+ 
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  LET g_bfill = "N"
+                  CALL aprt212_01_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row
+            
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+            
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' AND g_prdj2_d.getLength() < l_ac THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+               CALL g_prdj2_d.deleteElement(l_ac)
+               NEXT FIELD prdk002
+            END IF
+         
+            IF g_prdj2_d[l_ac].prdk002 IS NOT NULL
+               AND g_prdj2_d_t.prdk003 IS NOT NULL
+               AND g_prdj2_d_t.prdk004 IS NOT NULL
+               AND g_prdj2_d_t.prdk005 IS NOT NULL
+               AND g_prdj2_d_t.prdk007 IS NOT NULL
+            THEN
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  -263
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+ 
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身2刪除前
+               
+               #end add-point    
+               
+               DELETE FROM prdk_t
+                WHERE prdkent = g_enterprise AND prdkdocno = g_prda_m.prdadocno AND
+                      prdk002 = g_prdj2_d_t.prdk002
+                  AND prdk003 = g_prdj2_d_t.prdk003
+                  AND prdk004 = g_prdj2_d_t.prdk004
+                  AND prdk005 = g_prdj2_d_t.prdk005
+                  AND prdk007 = g_prdj2_d_t.prdk007
+                  
+               #add-point:單身2刪除中
+               
+               #end add-point    
+                  
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "prdj_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+ 
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_rec_b = g_rec_b-1
+                  
+                  #add-point:單身2刪除後
+                  
+                  #end add-point
+                  CALL s_transaction_end('Y','0')
+               END IF 
+               CLOSE aprt212_01_bcl
+               LET l_count = g_prdj_d.getLength()
+            END IF 
+            
+                           INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_prda_m.prdadocno
+               LET gs_keys[2] = g_prdj2_d[g_detail_idx].prdk002
+               LET gs_keys[3] = g_prdj2_d[g_detail_idx].prdk003
+               LET gs_keys[4] = g_prdj2_d[g_detail_idx].prdk004
+               LET gs_keys[5] = g_prdj2_d[g_detail_idx].prdk005
+               LET gs_keys[6] = g_prdj2_d[g_detail_idx].prdk007
+ 
+            
+         AFTER DELETE 
+            #add-point:單身AFTER DELETE 
+            
+            #end add-point
+                           CALL aprt212_01_delete_b('prdk_t',gs_keys,"'2'")
+ 
+         AFTER INSERT    
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+ 
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            #add-point:單身2新增前
+            
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM prdk_t 
+             WHERE prdkent = g_enterprise AND prdkdocno = g_prda_m.prdadocno
+               AND prdk002 = g_prdj2_d[l_ac].prdk002
+               AND prdk003 = g_prdj2_d[l_ac].prdk003
+               AND prdk004 = g_prdj2_d[l_ac].prdk004
+               AND prdk005 = g_prdj2_d[l_ac].prdk005
+               AND prdk007 = g_prdj2_d[l_ac].prdk007
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身2新增前
+               
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_prda_m.prdadocno
+               LET gs_keys[2] = g_prdj2_d[g_detail_idx].prdk002
+               LET gs_keys[3] = g_prdj2_d[g_detail_idx].prdk003
+               LET gs_keys[4] = g_prdj2_d[g_detail_idx].prdk004
+               LET gs_keys[5] = g_prdj2_d[g_detail_idx].prdk005
+               LET gs_keys[6] = g_prdj2_d[g_detail_idx].prdk007
+               CALL aprt212_01_insert_b('prdk_t',gs_keys,"'2'")
+                           
+               #add-point:單身新增後2
+               
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+ 
+               INITIALIZE g_prdj_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "prdk_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+  
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL aprt212_01_b_fill()
+               #資料多語言用-增/改
+               
+               #add-point:單身新增後
+               
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+            
+         ON ROW CHANGE 
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+ 
+               LET INT_FLAG = 0
+               LET g_prdj2_d[l_ac].* = g_prdj2_d_t.*
+               CLOSE aprt212_01_bcl2
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+            
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+ 
+               LET g_prdj2_d[l_ac].* = g_prdj2_d_t.*
+            ELSE
+               #add-point:單身page2修改前
+               
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身2)
+               
+               
+               UPDATE prdk_t SET (prdkdocno,prdk002,prdk003,prdk004,prdk005,prdk006,prdk007,prdk008, 
+                   prdk009,prdk010,prdk011,prdk012,prdkacti,prdk001,prdksite,prdkunit) = (g_prda_m.prdadocno, 
+                   g_prdj2_d[l_ac].prdk002,g_prdj2_d[l_ac].prdk003,g_prdj2_d[l_ac].prdk004,g_prdj2_d[l_ac].prdk005, 
+                   g_prdj2_d[l_ac].prdk006,g_prdj2_d[l_ac].prdk007,g_prdj2_d[l_ac].prdk008,g_prdj2_d[l_ac].prdk009, 
+                   g_prdj2_d[l_ac].prdk010,g_prdj2_d[l_ac].prdk011,g_prdj2_d[l_ac].prdk012,g_prdj2_d[l_ac].prdkacti, 
+                   g_prdj2_d[l_ac].prdk001,g_prdj2_d[l_ac].prdksite,g_prdj2_d[l_ac].prdkunit) #自訂欄位頁簽 
+ 
+                WHERE prdkent = g_enterprise AND prdkdocno = g_prda_m.prdadocno
+                  AND prdk002 = g_prdj2_d_t.prdk002 #項次 
+                  AND prdk003 = g_prdj2_d_t.prdk003
+                  AND prdk004 = g_prdj2_d_t.prdk004
+                  AND prdk005 = g_prdj2_d_t.prdk005
+                  AND prdk007 = g_prdj2_d_t.prdk007
+                  
+               #add-point:單身page2修改中
+               
+               #end add-point
+                  
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = "std-00009"
+                     LET g_errparam.extend = "prdk_t"
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+ 
+                     CALL s_transaction_end('N','0')
+                     LET g_prdj2_d[l_ac].* = g_prdj2_d_t.*
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "prdk_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+  
+                     CALL s_transaction_end('N','0')
+                     LET g_prdj2_d[l_ac].* = g_prdj2_d_t.*
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_prda_m.prdadocno
+               LET gs_keys_bak[1] = g_prdadocno_t
+               LET gs_keys[2] = g_prdj2_d[g_detail_idx].prdk002
+               LET gs_keys_bak[2] = g_prdj2_d_t.prdk002
+               LET gs_keys[3] = g_prdj2_d[g_detail_idx].prdk003
+               LET gs_keys_bak[3] = g_prdj2_d_t.prdk003
+               LET gs_keys[4] = g_prdj2_d[g_detail_idx].prdk004
+               LET gs_keys_bak[4] = g_prdj2_d_t.prdk004
+               LET gs_keys[5] = g_prdj2_d[g_detail_idx].prdk005
+               LET gs_keys_bak[5] = g_prdj2_d_t.prdk005
+               LET gs_keys[6] = g_prdj2_d[g_detail_idx].prdk007
+               LET gs_keys_bak[6] = g_prdj2_d_t.prdk007
+               CALL aprt212_01_update_b('prdk_t',gs_keys,gs_keys_bak,"'2'")
+                     #資料多語言用-增/改
+                     
+               END CASE
+               #add-point:單身page2修改後
+               
+               #end add-point
+            END IF
+         
+         #---------------------<  Detail: page2  >---------------------
+         #----<<prdk002>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk002
+            
+            #add-point:AFTER FIELD prdk002
+            #此段落由子樣板a05產生
+            IF g_prda_m.prdadocno IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk002 IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk003 IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk004 IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk005 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_prda_m.prdadocno != g_prdadocno_t OR  g_prdj2_d[g_detail_idx].prdk002 != g_prdj2_d_t.prdk002 OR g_prdj2_d[g_detail_idx].prdk003 != g_prdj2_d_t.prdk003 OR g_prdj2_d[g_detail_idx].prdk004 != g_prdj2_d_t.prdk004 OR g_prdj2_d[g_detail_idx].prdk005 != g_prdj2_d_t.prdk005 )) THEN    
+                  IF NOT ap_chk_notDup(g_prdj2_d[l_ac].prdk002,"SELECT COUNT(*) FROM prdk_t WHERE "||"prdkent = '" ||g_enterprise|| "' AND "||"prdkdocno = '"||g_prda_m.prdadocno ||"' AND "|| "prdk002 = '"||g_prdj2_d[g_detail_idx].prdk002 ||"' AND "|| "prdk003 = '"||g_prdj2_d[g_detail_idx].prdk003 ||"' AND "|| "prdk004 = '"||g_prdj2_d[g_detail_idx].prdk004 ||"' AND "|| "prdk005 = '"||g_prdj2_d[g_detail_idx].prdk005 ||"' ",'std-00004',1) THEN 
+                     LET g_prdj2_d[l_ac].prdk002 = g_prdj2_d_t.prdk002   
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            IF NOT cl_null(g_prdj2_d[l_ac].prdk002) THEN
+               LET l_n2 = 0
+               SELECT COUNT(*) INTO l_n2
+                 FROM prdj_t
+                WHERE prdjent = g_enterprise
+                  AND prdjdocno = g_prdadocno
+                  AND prdj002 = g_prdj2_d[l_ac].prdk002
+               IF l_n2 = 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'apr-00151'
+                  LET g_errparam.extend = g_prdj2_d[l_ac].prdk002
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_prdj2_d[l_ac].prdk002 = g_prdj2_d_t.prdk002   
+                  NEXT FIELD CURRENT
+               END IF
+               LET l_n2 = 0
+               SELECT COUNT(*) INTO l_n2
+                 FROM prdj_t
+                WHERE prdjent = g_enterprise
+                  AND prdjdocno = g_prdadocno
+                  AND prdj002 = g_prdj2_d[l_ac].prdk002
+                  AND prdjacti = 'Y'
+               IF l_n2 = 0 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'apr-00152'  
+                  LET g_errparam.extend = g_prdj2_d[l_ac].prdk002
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_prdj2_d[l_ac].prdk002 = g_prdj2_d_t.prdk002   
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk002
+            #add-point:BEFORE FIELD prdk002
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdk002
+            #add-point:ON CHANGE prdk002
+            
+            #END add-point
+ 
+         #----<<prdk003>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk003
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_prdj2_d[l_ac].prdk003,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD prdk003
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD prdk003
+            #此段落由子樣板a05產生
+             IF g_prda_m.prdadocno IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk002 IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk003 IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk004 IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk005 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_prda_m.prdadocno != g_prdadocno_t OR  g_prdj2_d[g_detail_idx].prdk002 != g_prdj2_d_t.prdk002 OR g_prdj2_d[g_detail_idx].prdk003 != g_prdj2_d_t.prdk003 OR g_prdj2_d[g_detail_idx].prdk004 != g_prdj2_d_t.prdk004 OR g_prdj2_d[g_detail_idx].prdk005 != g_prdj2_d_t.prdk005 )) THEN    
+                  IF NOT ap_chk_notDup(g_prdj2_d[l_ac].prdk003,"SELECT COUNT(*) FROM prdk_t WHERE "||"prdkent = '" ||g_enterprise|| "' AND "||"prdkdocno = '"||g_prda_m.prdadocno ||"' AND "|| "prdk002 = '"||g_prdj2_d[g_detail_idx].prdk002 ||"' AND "|| "prdk003 = '"||g_prdj2_d[g_detail_idx].prdk003 ||"' AND "|| "prdk004 = '"||g_prdj2_d[g_detail_idx].prdk004 ||"' AND "|| "prdk005 = '"||g_prdj2_d[g_detail_idx].prdk005 ||"' ",'std-00004',1) THEN 
+                     LET g_prdj2_d[l_ac].prdk003 = g_prdj2_d_t.prdk003   
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk003
+            #add-point:BEFORE FIELD prdk003
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdk003
+            #add-point:ON CHANGE prdk003
+            
+            #END add-point
+ 
+         #----<<prdk004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk004
+            #add-point:BEFORE FIELD prdk004
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk004
+            
+            #add-point:AFTER FIELD prdk004
+            #此段落由子樣板a05產生
+            IF g_prda_m.prdadocno IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk002 IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk003 IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk004 IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk005 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_prda_m.prdadocno != g_prdadocno_t OR  g_prdj2_d[g_detail_idx].prdk002 != g_prdj2_d_t.prdk002 OR g_prdj2_d[g_detail_idx].prdk003 != g_prdj2_d_t.prdk003 OR g_prdj2_d[g_detail_idx].prdk004 != g_prdj2_d_t.prdk004 OR g_prdj2_d[g_detail_idx].prdk005 != g_prdj2_d_t.prdk005 )) THEN    
+                  IF NOT ap_chk_notDup(g_prdj2_d[l_ac].prdk004,"SELECT COUNT(*) FROM prdk_t WHERE "||"prdkent = '" ||g_enterprise|| "' AND "||"prdkdocno = '"||g_prda_m.prdadocno ||"' AND "|| "prdk002 = '"||g_prdj2_d[g_detail_idx].prdk002 ||"' AND "|| "prdk003 = '"||g_prdj2_d[g_detail_idx].prdk003 ||"' AND "|| "prdk004 = '"||g_prdj2_d[g_detail_idx].prdk004 ||"' AND "|| "prdk005 = '"||g_prdj2_d[g_detail_idx].prdk005 ||"' ",'std-00004',1) THEN 
+                     LET g_prdj2_d[l_ac].prdk004 = g_prdj2_d_t.prdk004  
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+#            IF l_cmd = 'a' OR (l_cmd = 'u' AND g_prdj2_d[l_ac].prdk004 != g_prdj2_d_t.prdk004) THEN
+#               LET g_prdj2_d[l_ac].prdk005 = ''
+#               LET g_prdj2_d[l_ac].prdk005_desc = ''
+#               DISPLAY BY NAME g_prdj2_d[l_ac].prdk005
+#               DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+#            END IF
+            CALL aprt212_01_set_entry_b(l_cmd)
+            CALL aprt212_01_set_no_entry_b(l_cmd)
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdk004
+            #add-point:ON CHANGE prdk004
+            LET g_prdj2_d[l_ac].prdk005 = ''
+            LET g_prdj2_d[l_ac].prdk005_desc = ''
+            LET g_prdj2_d[l_ac].prdk006 = ''
+            LET g_prdj2_d[l_ac].prdk007 = ''
+            LET g_prdj2_d[l_ac].prdk007_desc = ''
+            DISPLAY BY NAME g_prdj2_d[l_ac].prdk005
+            DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+            DISPLAY BY NAME g_prdj2_d[l_ac].prdk006
+            DISPLAY BY NAME g_prdj2_d[l_ac].prdk007
+            DISPLAY BY NAME g_prdj2_d[l_ac].prdk007_desc
+            CALL aprt212_01_set_entry_b(l_cmd)
+            CALL aprt212_01_set_no_entry_b(l_cmd)
+            #END add-point
+ 
+         #----<<prdk005>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk005
+            
+            #add-point:AFTER FIELD prdk005
+            #此段落由子樣板a05產生
+            CALL aprt212_01_prdk_desc()
+            IF g_prda_m.prdadocno IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk002 IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk003 IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk004 IS NOT NULL AND g_prdj2_d[g_detail_idx].prdk005 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_prda_m.prdadocno != g_prdadocno_t OR  g_prdj2_d[g_detail_idx].prdk002 != g_prdj2_d_t.prdk002 OR g_prdj2_d[g_detail_idx].prdk003 != g_prdj2_d_t.prdk003 OR g_prdj2_d[g_detail_idx].prdk004 != g_prdj2_d_t.prdk004 OR g_prdj2_d[g_detail_idx].prdk005 != g_prdj2_d_t.prdk005 )) THEN   
+                  IF NOT ap_chk_notDup(g_prdj2_d[l_ac].prdk005,"SELECT COUNT(*) FROM prdk_t WHERE "||"prdkent = '" ||g_enterprise|| "' AND "||"prdkdocno = '"||g_prda_m.prdadocno ||"' AND "|| "prdk002 = '"||g_prdj2_d[g_detail_idx].prdk002 ||"' AND "|| "prdk003 = '"||g_prdj2_d[g_detail_idx].prdk003 ||"' AND "|| "prdk004 = '"||g_prdj2_d[g_detail_idx].prdk004 ||"' AND "|| "prdk005 = '"||g_prdj2_d[g_detail_idx].prdk005 ||"' ",'std-00004',1) THEN 
+                     LET g_prdj2_d[l_ac].prdk005 = g_prdj2_d_t.prdk005  
+                     CALL aprt212_01_prdk_desc()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            IF NOT cl_null(g_prdj2_d[l_ac].prdk005) AND NOT cl_null(g_prdj2_d[l_ac].prdk004)THEN
+               IF NOT aprt212_01_chk_prdk005() THEN
+                  LET g_prdj2_d[l_ac].prdk005 = g_prdj2_d_t.prdk005  
+                  CALL aprt212_01_prdk_desc()
+                  NEXT FIELD CURRENT
+               END IF
+               IF g_prdj2_d[l_ac].prdk004 = '4' THEN
+                  #150312-00002#6 Modify-S By Ken 150319 原rtdx033改抓imaa106
+                  SELECT rtdx002  #,rtdx033 
+                    INTO g_prdj2_d[l_ac].prdk006  #,g_prdj2_d[l_ac].prdk007
+                    FROM rtdx_t
+                   WHERE rtdxent = g_enterprise
+                     AND rtdxsite = g_site
+                     AND rtdx001 = g_prdj2_d[l_ac].prdk005
+                  
+                  CALL aprt212_01_get_imaa106(g_prdj2_d[l_ac].prdk005) RETURNING g_prdj2_d[l_ac].prdk007                    
+                  #150312-00002#6 Modify-E
+                  CALL aprt212_01_prdk_desc()
+               END IF
+            END IF
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk005
+            #add-point:BEFORE FIELD prdk005
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdk005
+            #add-point:ON CHANGE prdk005
+            
+            #END add-point
+ 
+         #----<<prdk005_desc>>----
+         #----<<prdk006>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk006
+            #add-point:BEFORE FIELD prdk006
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk006
+            
+            #add-point:AFTER FIELD prdk006
+            IF NOT cl_null(g_prdj2_d[l_ac].prdk006) THEN
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_prdj2_d[l_ac].prdk006
+               #呼叫檢查存在並帶值的library
+               IF NOT cl_chk_exist("v_imay003_1") THEN
+                  LET g_prdj2_d[l_ac].prdk006 = g_prdj2_d_t.prdk006
+                  NEXT FIELD CURRENT
+               END IF
+               IF g_prdj2_d[l_ac].prdk004 = '4' THEN
+                  LET l_n1 = 0
+                  SELECT COUNT(*) INTO l_n1
+                    FROM imay_t
+                   WHERE imayent = g_enterprise
+                     AND imay003 = g_prdj2_d[l_ac].prdk006
+                  IF l_n1 = 1 THEN
+                     SELECT imay001 INTO l_prdk005
+                       FROM imay_t
+                      WHERE imayent = g_enterprise
+                        AND imay003 = g_prdj2_d[l_ac].prdk006
+                     #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                     INITIALIZE g_chkparam.* TO NULL
+                     #設定g_chkparam.*的參數
+                     LET g_chkparam.arg1 = l_prdk005
+                     LET g_chkparam.arg2 = g_site
+                     #呼叫檢查存在並帶值的library
+                     IF NOT cl_chk_exist("v_rtdx001_1") THEN
+                        LET g_prdj2_d[l_ac].prdk006 = g_prdj2_d_t.prdk006
+                        NEXT FIELD CURRENT
+                        RETURN FALSE
+                     END IF
+                     LET g_prdj2_d[l_ac].prdk005 = l_prdk005
+                     #150312-00002#6 Modify-S By Ken 150319 原rtdx033改抓imaa106
+                     #SELECT rtdx033 INTO g_prdj2_d[l_ac].prdk007
+                     #  FROM rtdx_t
+                     # WHERE rtdxent = g_enterprise
+                     #   AND rtdxsite = g_site
+                     #   AND rtdx001 = g_prdj2_d[l_ac].prdk005
+                     
+                     CALL aprt212_01_get_imaa106(g_prdj2_d[l_ac].prdk005) RETURNING g_prdj2_d[l_ac].prdk007  
+                     #150312-00002#6 Modify-E                         
+                     CALL aprt212_01_prdk_desc()
+                  END IF
+               END IF
+               CALL aprt212_01_prdk_desc()
+            END IF
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdk006
+            #add-point:ON CHANGE prdk006
+            
+            #END add-point
+ 
+         #----<<prdk007>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk007
+            
+            #add-point:AFTER FIELD prdk007
+ 
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk007
+            #add-point:BEFORE FIELD prdk007
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdk007
+            #add-point:ON CHANGE prdk007
+            
+            #END add-point
+ 
+         #----<<prdk007_desc>>----
+         #----<<prdk008>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk008
+            #add-point:BEFORE FIELD prdk008
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk008
+            
+            #add-point:AFTER FIELD prdk008
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdk008
+            #add-point:ON CHANGE prdk008
+            
+            #END add-point
+ 
+         #----<<prdk009>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk009
+            #add-point:BEFORE FIELD prdk009
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk009
+            
+            #add-point:AFTER FIELD prdk009
+            IF NOT cl_null(g_prdj2_d[l_ac].prdk009) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdk009
+            #add-point:ON CHANGE prdk009
+            
+            #END add-point
+ 
+         #----<<prdk010>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk010
+            #add-point:BEFORE FIELD prdk010
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk010
+            
+            #add-point:AFTER FIELD prdk010
+            CALL aprt212_01_set_entry_b(l_cmd)
+            CALL aprt212_01_set_no_entry_b(l_cmd)
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdk010
+            #add-point:ON CHANGE prdk010
+            CALL aprt212_01_set_entry_b(l_cmd)
+            CALL aprt212_01_set_no_entry_b(l_cmd)
+            #END add-point
+ 
+         #----<<prdk011>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk011
+            #add-point:BEFORE FIELD prdk011
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk011
+            
+            #add-point:AFTER FIELD prdk011
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdk011
+            #add-point:ON CHANGE prdk011
+            
+            #END add-point
+ 
+         #----<<prdk012>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk012
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_prdj2_d[l_ac].prdk012,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD prdk012
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD prdk012
+            IF NOT cl_null(g_prdj2_d[l_ac].prdk012) THEN 
+            END IF 
+
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk012
+            #add-point:BEFORE FIELD prdk012
+            
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdk012
+            #add-point:ON CHANGE prdk012
+            
+            #END add-point
+ 
+         #----<<prdkacti>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdkacti
+            #add-point:BEFORE FIELD prdkacti
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdkacti
+            
+            #add-point:AFTER FIELD prdkacti
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdkacti
+            #add-point:ON CHANGE prdkacti
+            
+            #END add-point
+ 
+         #----<<prdk001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdk001
+            #add-point:BEFORE FIELD prdk001
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdk001
+            
+            #add-point:AFTER FIELD prdk001
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdk001
+            #add-point:ON CHANGE prdk001
+            
+            #END add-point
+ 
+         #----<<prdksite>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdksite
+            #add-point:BEFORE FIELD prdksite
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdksite
+            
+            #add-point:AFTER FIELD prdksite
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdksite
+            #add-point:ON CHANGE prdksite
+            
+            #END add-point
+ 
+         #----<<prdkunit>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD prdkunit
+            #add-point:BEFORE FIELD prdkunit
+            
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD prdkunit
+            
+            #add-point:AFTER FIELD prdkunit
+            
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE prdkunit
+            #add-point:ON CHANGE prdkunit
+            
+            #END add-point
+ 
+ 
+         #---------------------<  Detail: page2  >---------------------
+         #----<<prdk002>>----
+         #Ctrlp:input.c.page2.prdk002
+         ON ACTION controlp INFIELD prdk002
+            #add-point:ON ACTION controlp INFIELD prdk002
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_prdj2_d[l_ac].prdk002             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_prdadocno
+
+            CALL q_prdj002()                                #呼叫開窗
+
+            LET g_prdj2_d[l_ac].prdk002 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_prdj2_d[l_ac].prdk002 TO prdk002              #顯示到畫面上
+
+            NEXT FIELD prdk002                          #返回原欄位
+
+
+            #END add-point
+ 
+         #----<<prdk003>>----
+         #Ctrlp:input.c.page2.prdk003
+         ON ACTION controlp INFIELD prdk003
+            #add-point:ON ACTION controlp INFIELD prdk003
+            
+            #END add-point
+ 
+         #----<<prdk004>>----
+         #Ctrlp:input.c.page2.prdk004
+         ON ACTION controlp INFIELD prdk004
+            #add-point:ON ACTION controlp INFIELD prdk004
+            
+            #END add-point
+ 
+         #----<<prdk005>>----
+         #Ctrlp:input.c.page2.prdk005
+         ON ACTION controlp INFIELD prdk005
+            #add-point:ON ACTION controlp INFIELD prdk005
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_prdj2_d[l_ac].prdk005   #給予default值
+            IF g_prdj2_d[l_ac].prdk004 = '4' THEN
+               LET g_qryparam.arg1 = g_site
+               CALL q_rtdx001_12()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = '5' THEN
+               CALL q_rtax001()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = '6' THEN
+               LET g_qryparam.arg1 = '2000'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = '7' THEN
+               LET g_qryparam.arg1 = '2001'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = '8' THEN
+               LET g_qryparam.arg1 = '2002'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = '9' THEN
+               LET g_qryparam.arg1 = '2003'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'A' THEN
+               LET g_qryparam.arg1 = '2004'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'B' THEN
+               LET g_qryparam.arg1 = '2005'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'C' THEN
+               LET g_qryparam.arg1 = '2006'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'D' THEN
+               LET g_qryparam.arg1 = '2007'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'E' THEN
+               LET g_qryparam.arg1 = '2008'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'F' THEN
+               LET g_qryparam.arg1 = '2009'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'G' THEN
+               LET g_qryparam.arg1 = '2010'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'H' THEN
+               LET g_qryparam.arg1 = '2011'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'I' THEN
+               LET g_qryparam.arg1 = '2012'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'J' THEN
+               LET g_qryparam.arg1 = '2013'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'K' THEN
+               LET g_qryparam.arg1 = '2014'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'L' THEN
+               LET g_qryparam.arg1 = '2015'
+               CALL q_oocq002()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'M' THEN
+               CALL q_mman001()
+            END IF
+            IF g_prdj2_d[l_ac].prdk004 = 'N' THEN
+               CALL q_gcaf001()
+            END IF
+            LET g_prdj2_d[l_ac].prdk005  = g_qryparam.return1   #將開窗取得的值回傳到變數
+            DISPLAY g_prdj2_d[l_ac].prdk005 TO prdk005         #顯示到畫面上
+            IF g_prdj2_d[l_ac].prdk004 = '4' THEN
+               #150312-00002#6 Modify-S By Ken 150319 原rtdx033改抓imaa106
+               SELECT rtdx002  #,rtdx033 
+                 INTO g_prdj2_d[l_ac].prdk006   #,g_prdj2_d[l_ac].prdk007
+                 FROM rtdx_t
+                WHERE rtdxent = g_enterprise
+                  AND rtdxsite = g_site
+                  AND rtdx001 = g_prdj2_d[l_ac].prdk005
+               
+               CALL aprt212_01_get_imaa106(g_prdj2_d[l_ac].prdk005) RETURNING g_prdj2_d[l_ac].prdk007
+               #150312-00002#6 Modify-E                  
+            END IF
+            CALL aprt212_01_prdk_desc()
+            NEXT FIELD prdk005
+            #END add-point
+ 
+         #----<<prdk005_desc>>----
+         #----<<prdk006>>----
+         #Ctrlp:input.c.page2.prdk006
+         ON ACTION controlp INFIELD prdk006
+            #add-point:ON ACTION controlp INFIELD prdk006
+#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_prdj2_d[l_ac].prdk006             #給予default值
+
+            #給予arg
+            LET g_qryparam.where = " imay001 IN(SELECT rtdx001 FROM rtdx_t WHERE rtdxent = '",g_enterprise,"' AND rtdxsite = '",g_site,"' AND rtdxstus = 'Y')"
+            CALL q_imay003_2()                                #呼叫開窗
+
+            LET g_prdj2_d[l_ac].prdk006 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_prdj2_d[l_ac].prdk006 TO prdk006              #顯示到畫面上
+
+            NEXT FIELD prdk006                          #返回原欄位
+
+
+            #END add-point
+ 
+         #----<<prdk007>>----
+         #Ctrlp:input.c.page2.prdk007
+         ON ACTION controlp INFIELD prdk007
+            #add-point:ON ACTION controlp INFIELD prdk007
+            
+            #END add-point
+ 
+         #----<<prdk007_desc>>----
+         #----<<prdk008>>----
+         #Ctrlp:input.c.page2.prdk008
+         ON ACTION controlp INFIELD prdk008
+            #add-point:ON ACTION controlp INFIELD prdk008
+            
+            #END add-point
+ 
+         #----<<prdk009>>----
+         #Ctrlp:input.c.page2.prdk009
+         ON ACTION controlp INFIELD prdk009
+            #add-point:ON ACTION controlp INFIELD prdk009
+            
+            #END add-point
+ 
+         #----<<prdk010>>----
+         #Ctrlp:input.c.page2.prdk010
+         ON ACTION controlp INFIELD prdk010
+            #add-point:ON ACTION controlp INFIELD prdk010
+            
+            #END add-point
+ 
+         #----<<prdk011>>----
+         #Ctrlp:input.c.page2.prdk011
+         ON ACTION controlp INFIELD prdk011
+            #add-point:ON ACTION controlp INFIELD prdk011
+            
+            #END add-point
+ 
+         #----<<prdk012>>----
+         #Ctrlp:input.c.page2.prdk012
+         ON ACTION controlp INFIELD prdk012
+            #add-point:ON ACTION controlp INFIELD prdk012
+            
+            #END add-point
+ 
+         #----<<prdkacti>>----
+         #Ctrlp:input.c.page2.prdkacti
+         ON ACTION controlp INFIELD prdkacti
+            #add-point:ON ACTION controlp INFIELD prdkacti
+            
+            #END add-point
+ 
+         #----<<prdk001>>----
+         #Ctrlp:input.c.page2.prdk001
+         ON ACTION controlp INFIELD prdk001
+            #add-point:ON ACTION controlp INFIELD prdk001
+            
+            #END add-point
+ 
+         #----<<prdksite>>----
+         #Ctrlp:input.c.page2.prdksite
+         ON ACTION controlp INFIELD prdksite
+            #add-point:ON ACTION controlp INFIELD prdksite
+            
+            #END add-point
+ 
+         #----<<prdkunit>>----
+         #Ctrlp:input.c.page2.prdkunit
+         ON ACTION controlp INFIELD prdkunit
+            #add-point:ON ACTION controlp INFIELD prdkunit
+            
+            #END add-point
+ 
+ 
+ 
+         AFTER ROW
+            #add-point:單身page2 after_row
+            
+            #end add-point
+            LET l_ac = ARR_CURR()
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+ 
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_prdj2_d[l_ac].* = g_prdj2_d_t.*
+               END IF
+               CLOSE aprt212_01_bcl2
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+            
+            #其他table進行unlock
+            
+            CALL aprt212_01_unlock_b("prdk_t","'2'")
+            CALL s_transaction_end('Y','0')
+ 
+         AFTER INPUT
+            #add-point:input段after input 
+            
+            #end add-point   
+    
+         ON ACTION controlo
+            CALL FGL_SET_ARR_CURR(g_prdj2_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_prdj2_d.getLength()+1
+ 
+      END INPUT
+ 
+      
+ 
+      
+ 
+      
+ 
+      
+ 
+{</section>}
+ 
+{<section id="aprt212_01.input.other" >}
+      
+      #add-point:自定義input
+      
+      #end add-point
+      
+      BEFORE DIALOG 
+         #add-point:input段before dialog
+         
+         #end add-point    
+         #新增時強制從單頭開始填
+         IF p_cmd = 'a' THEN
+            NEXT FIELD prdadocno
+         ELSE
+            CASE g_aw
+               WHEN "s_detail1"
+                  NEXT FIELD prdj002
+               WHEN "s_detail2"
+                  NEXT FIELD prdk002
+ 
+            END CASE
+         END IF
+    
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         #add-point:input段accept 
+         
+         #end add-point    
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+         
+   END DIALOG
+    
+   #add-point:input段after input 
+   
+   #end add-point    
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.show" >}
+#+ 單頭資料重新顯示及單身資料重抓
+PRIVATE FUNCTION aprt212_01_show()
+   DEFINE l_ac_t    LIKE type_t.num5
+   #add-point:show段define
+   
+   #end add-point  
+ 
+   #add-point:show段之前
+   
+   #end add-point
+   
+   
+   
+   LET g_prda_m_t.* = g_prda_m.*      #保存單頭舊值
+   
+   IF g_bfill = "Y" THEN
+      CALL aprt212_01_b_fill() #單身填充
+      CALL aprt212_01_b_fill2('0') #單身填充
+   END IF
+     
+   #帶出公用欄位reference值
+   
+   
+   #顯示followup圖示
+   #+ 此段落由子樣板a48產生
+   CALL aprt212_01_set_pk_array()
+   #add-point:ON ACTION agendum
+   
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+ 
+ 
+   
+   LET l_ac_t = l_ac
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference
+   CALL aprt212_01_set_comp_visible()
+   #end add-point
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_prda_m.prda017,g_prda_m.prda019,g_prda_m.prda020,g_prda_m.prda022,g_prda_m.prda018, 
+       g_prda_m.prda021,g_prda_m.prda023,g_prda_m.prdadocno
+   
+   #顯示狀態(stus)圖片
+   
+   
+   #讀入ref值(單身)
+   FOR l_ac = 1 TO g_prdj_d.getLength()
+      #帶出公用欄位reference值
+      
+      #add-point:show段單身reference
+      CALL aprt212_01_prdj_desc()
+      #end add-point
+   END FOR
+   
+   FOR l_ac = 1 TO g_prdj2_d.getLength()
+      #帶出公用欄位reference值
+      
+      #add-point:show段單身reference
+      CALL aprt212_01_prdk_desc()      
+      #end add-point
+   END FOR
+ 
+   
+    
+   
+   #add-point:show段other
+   
+   #end add-point  
+   
+   LET l_ac = l_ac_t
+   
+   #移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()     
+ 
+   CALL aprt212_01_detail_show()
+   
+   #add-point:show段之後
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.detail_show" >}
+#+ 單身reference detail_show
+PRIVATE FUNCTION aprt212_01_detail_show()
+   #add-point:detail_show段define
+   
+   #end add-point  
+ 
+   #add-point:detail_show段之前
+   
+   #end add-point
+   
+   #add-point:detail_show段之後
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.reproduce" >}
+#+ 資料複製
+PRIVATE FUNCTION aprt212_01_reproduce()
+   DEFINE l_newno     LIKE prda_t.prdadocno 
+   DEFINE l_oldno     LIKE prda_t.prdadocno 
+ 
+   DEFINE l_master    RECORD LIKE prda_t.*
+   DEFINE l_detail    RECORD LIKE prdj_t.*
+   DEFINE l_detail2    RECORD LIKE prdk_t.*
+ 
+ 
+ 
+   DEFINE l_cnt       LIKE type_t.num5
+   #add-point:reproduce段define
+   
+   #end add-point   
+ 
+   #切換畫面
+   
+   IF g_prda_m.prdadocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "std-00003"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+ 
+      RETURN
+   END IF
+    
+   LET g_prdadocno_t = g_prda_m.prdadocno
+ 
+    
+   LET g_prda_m.prdadocno = ""
+ 
+    
+   CALL aprt212_01_set_entry('a')
+   CALL aprt212_01_set_no_entry('a')
+ 
+   CALL cl_set_head_visible("","YES")
+ 
+   #公用欄位給予預設值
+   
+   
+   #add-point:複製輸入前
+   
+   #end add-point
+   
+   CALL aprt212_01_input("r")
+   
+   
+   
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      RETURN
+   END IF
+ 
+   LET g_state = "Y"
+   
+   LET g_wc = g_wc,  
+              " OR (",
+              " prdadocno = '", g_prda_m.prdadocno CLIPPED, "' "
+ 
+              , ") "
+   
+   #add-point:完成複製段落後
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.detail_reproduce" >}
+#+ 單身自動複製
+PRIVATE FUNCTION aprt212_01_detail_reproduce()
+   DEFINE ls_sql      STRING
+   DEFINE ld_date     DATETIME YEAR TO SECOND
+   DEFINE l_detail    RECORD LIKE prdj_t.*
+   DEFINE l_detail2    RECORD LIKE prdk_t.*
+ 
+ 
+ 
+   #add-point:delete段define
+   
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   
+   LET ld_date = cl_get_current()
+   
+   DROP TABLE aprt212_01_detail
+   
+   #add-point:單身複製前1
+   
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   LET ls_sql = "CREATE GLOBAL TEMPORARY TABLE aprt212_01_detail AS ",
+                "SELECT * FROM prdj_t "
+   PREPARE repro_tbl FROM ls_sql
+   EXECUTE repro_tbl
+   FREE repro_tbl
+                
+   #將符合條件的資料丟入TEMP TABLE
+   INSERT INTO aprt212_01_detail SELECT * FROM prdj_t 
+                                         WHERE prdjent = g_enterprise AND prdjdocno = g_prdadocno_t
+ 
+   
+   #將key修正為調整後   
+   UPDATE aprt212_01_detail 
+      #更新key欄位
+      SET prdjdocno = g_prda_m.prdadocno
+ 
+      #更新共用欄位
+      
+                                       
+  
+   #將資料塞回原table   
+   INSERT INTO prdj_t SELECT * FROM aprt212_01_detail
+   
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "reproduce"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+ 
+      RETURN
+   END IF
+   
+   #add-point:單身複製中1
+   
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE aprt212_01_detail
+   
+   #add-point:單身複製後1
+   
+   #end add-point
+ 
+   #add-point:單身複製前
+   
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   LET ls_sql = 
+      "CREATE GLOBAL TEMPORARY TABLE aprt212_01_detail AS ",
+      "SELECT * FROM prdk_t "
+   PREPARE repro_tbl2 FROM ls_sql
+   EXECUTE repro_tbl2
+   FREE repro_tbl2
+      
+   #將符合條件的資料丟入TEMP TABLE
+   INSERT INTO aprt212_01_detail SELECT * FROM prdk_t
+                                         WHERE prdkent = g_enterprise AND prdkdocno = g_prdadocno_t
+ 
+ 
+   #將key修正為調整後   
+   UPDATE aprt212_01_detail SET prdkdocno = g_prda_m.prdadocno
+ 
+  
+   #將資料塞回原table   
+   INSERT INTO prdk_t SELECT * FROM aprt212_01_detail
+   
+   #add-point:單身複製中
+   
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE aprt212_01_detail
+   
+   #add-point:單身複製後
+   
+   #end add-point
+ 
+ 
+   
+ 
+   
+   #多語言複製段落
+   
+   
+   CALL s_transaction_end('Y','0')
+   
+   #已新增完, 調整資料內容(修改時使用)
+   LET g_prdadocno_t = g_prda_m.prdadocno
+ 
+   
+   DROP TABLE aprt212_01_detail
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.delete" >}
+#+ 資料刪除
+PRIVATE FUNCTION aprt212_01_delete()
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define
+   
+   #end add-point     
+   
+   IF g_prda_m.prdadocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "std-00003"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+ 
+      RETURN
+   END IF
+ 
+   EXECUTE aprt212_01_master_referesh USING g_prda_m.prdadocno INTO g_prda_m.prda017,g_prda_m.prda019, 
+       g_prda_m.prda020,g_prda_m.prda022,g_prda_m.prda018,g_prda_m.prda021,g_prda_m.prda023,g_prda_m.prdadocno 
+ 
+   
+   
+ 
+   CALL aprt212_01_show()
+   
+   CALL s_transaction_begin()
+ 
+   OPEN aprt212_01_cl USING g_enterprise,g_prda_m.prdadocno
+ 
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "OPEN aprt212_01_cl:"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+ 
+      CLOSE aprt212_01_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   FETCH aprt212_01_cl INTO g_prda_m.prda017,g_prda_m.prda019,g_prda_m.prda020,g_prda_m.prda022,g_prda_m.prda018, 
+       g_prda_m.prda021,g_prda_m.prda023,g_prda_m.prdadocno              #鎖住將被更改或取消的資料 
+ 
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = g_prda_m.prdadocno
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+          #資料被他人LOCK
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:delete段before ask
+   
+   #end add-point 
+ 
+   IF cl_ask_del_master() THEN              #確認一下
+   
+      #add-point:單頭刪除前
+      
+      #end add-point   
+      
+      #+ 此段落由子樣板a47產生
+      #刪除相關文件
+      CALL aprt212_01_set_pk_array()
+      #add-point:相關文件刪除前
+      
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+  
+  
+      #資料備份
+      LET g_prdadocno_t = g_prda_m.prdadocno
+ 
+ 
+      DELETE FROM prda_t
+       WHERE prdaent = g_enterprise AND prdadocno = g_prda_m.prdadocno
+ 
+       
+      #add-point:單頭刪除中
+      
+      #end add-point
+       
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = g_prda_m.prdadocno
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+ 
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      
+      #add-point:單頭刪除後
+      
+      #end add-point
+  
+      #add-point:單身刪除前
+      
+      #end add-point
+      
+      DELETE FROM prdj_t
+       WHERE prdjent = g_enterprise AND prdjdocno = g_prda_m.prdadocno
+ 
+ 
+      #add-point:單身刪除中
+      
+      #end add-point
+         
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "prdj_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+ 
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF    
+ 
+      #add-point:單身刪除後
+      
+      #end add-point
+      
+            
+                                                               
+      #add-point:單身刪除前
+      
+      #end add-point
+      DELETE FROM prdk_t
+       WHERE prdkent = g_enterprise AND
+             prdkdocno = g_prda_m.prdadocno
+      #add-point:單身刪除中
+      
+      #end add-point
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "prdk_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+ 
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF      
+ 
+      #add-point:單身刪除後
+      
+      #end add-point
+ 
+ 
+ 
+ 
+                                                               
+      CLEAR FORM
+      CALL g_prdj_d.clear() 
+      CALL g_prdj2_d.clear()       
+ 
+     
+      CALL aprt212_01_ui_browser_refresh()  
+      CALL aprt212_01_ui_headershow()  
+      CALL aprt212_01_ui_detailshow()
+       
+      IF g_browser_cnt > 0 THEN 
+         CALL aprt212_01_fetch('P')
+         DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+      ELSE
+         LET g_wc = " 1=1"
+         CALL aprt212_01_browser_fill("F")
+      END IF
+      
+      #單頭多語言刪除
+      
+      
+      #單身多語言刪除
+      
+      
+ 
+ 
+ 
+   
+   END IF
+ 
+   CALL s_transaction_end('Y','0')
+   
+   CLOSE aprt212_01_cl
+ 
+   #流程通知預埋點-D
+   CALL cl_flow_notify(g_prda_m.prdadocno,'D')
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION aprt212_01_b_fill()
+   DEFINE p_wc2      STRING
+   #add-point:b_fill段define
+   
+   #end add-point     
+ 
+   CALL g_prdj_d.clear()    #g_prdj_d 單頭及單身 
+   CALL g_prdj2_d.clear()
+ 
+ 
+   #add-point:b_fill段sql_before
+   #判斷是否填充
+   IF aprt212_01_fill_chk(1) THEN
+   
+      LET g_sql = "SELECT  UNIQUE prdj002,prdj003,prdj004,'','',prdj005,prdj006,'','','',prdjacti,prdjsite, 
+          prdjunit,prdj001 FROM prdj_t",   
+                  " INNER JOIN prda_t ON prdadocno = prdjdocno ",
+ 
+                  #"",
+                  
+                  "",
+                  " WHERE"
+      #add-point:b_fill段sql_before
+      
+      IF g_prda_m.prda019 = '2' THEN
+         LET g_sql = "SELECT  UNIQUE prdjacti,prdj002,prdj003,'','','',prdj005,'','','','',prdjsite,prdjunit,prdj001 FROM prdj_t",   
+                     " INNER JOIN prda_t ON prdadocno = prdjdocno ",
+                     " WHERE prdaent = ? AND prdadocno = ? "
+      ELSE
+         LET g_sql = "SELECT  UNIQUE prdjacti,prdj002,prdj003,prdj004,'','',prdj005,prdj006,'','','',prdjsite,prdjunit,prdj001 FROM prdj_t",   
+                  " INNER JOIN prda_t ON prdadocno = prdjdocno ",
+                  " WHERE prdaent = ? AND prdadocno = ? "
+      END IF
+      #end add-point
+      IF NOT cl_null(g_wc2_table1) THEN
+         LET g_sql = g_sql CLIPPED, " AND ", g_wc2_table1 CLIPPED
+      END IF
+      
+      #子單身的WC
+      
+      
+      LET g_sql = g_sql, " ORDER BY prdj_t.prdj002,prdj_t.prdj003"
+      
+      #add-point:單身填充控制
+
+      #end add-point
+      
+      PREPARE aprt212_01_pb11 FROM g_sql
+      DECLARE b_fill_cs11 CURSOR FOR aprt212_01_pb11
+      
+      LET g_cnt = l_ac
+      LET l_ac = 1
+      
+      OPEN b_fill_cs11 USING g_enterprise,g_prda_m.prdadocno
+ 
+                                               
+      FOREACH b_fill_cs11 INTO g_prdj_d[l_ac].prdjacti,g_prdj_d[l_ac].prdj002,g_prdj_d[l_ac].prdj003,g_prdj_d[l_ac].prdj004,g_prdj_d[l_ac].prdj004_desc, 
+          g_prdj_d[l_ac].prdj004_desc1,g_prdj_d[l_ac].prdj005,g_prdj_d[l_ac].prdj006,g_prdj_d[l_ac].prdj00601, 
+          g_prdj_d[l_ac].prdj00602,g_prdj_d[l_ac].prdj00603,g_prdj_d[l_ac].prdjsite, 
+          g_prdj_d[l_ac].prdjunit,g_prdj_d[l_ac].prdj001
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH:"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充
+         CALL aprt212_01_prdj_desc()
+         #end add-point
+      
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec AND g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  9035
+            LET g_errparam.extend =  ''
+            LET g_errparam.popup = FALSE
+            CALL cl_err()
+
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+      LET g_error_show = 0
+   
+   END IF
+   
+   #判斷是否填充
+   IF aprt212_01_fill_chk(2) THEN
+      LET g_sql = "SELECT  UNIQUE prdkacti,prdk002,prdk003,prdk004,prdk005,'',prdk006,prdk007,'',prdk008,prdk009, 
+          prdk010,prdk011,prdk012,prdk001,prdksite,prdkunit FROM prdk_t",   
+                  " INNER JOIN prda_t ON prdadocno = prdkdocno ",
+ 
+                  "",
+                  
+                  " WHERE"   
+      #add-point:b_fill段sql_before
+      LET g_sql = "SELECT  UNIQUE prdkacti,prdk002,prdk003,prdk004,prdk005,'',prdk006,prdk007,'',prdk008,prdk009, 
+          prdk010,prdk011,prdk012,prdk001,prdksite,prdkunit FROM prdk_t",   
+                  " INNER JOIN prda_t ON prdadocno = prdkdocno ",
+                  " WHERE prdaent = ? AND prdadocno = ? " 
+      #end add-point
+      IF NOT cl_null(g_wc2_table2) THEN
+         LET g_sql = g_sql CLIPPED," AND ",g_wc2_table2 CLIPPED
+      END IF
+      
+      #子單身的WC
+      
+      
+      LET g_sql = g_sql, " ORDER BY prdk_t.prdk002,prdk_t.prdk003,prdk_t.prdk004,prdk_t.prdk005,prdk_t.prdk007"
+      
+      #add-point:單身填充控制
+
+      #end add-point
+      
+      PREPARE aprt212_01_pb21 FROM g_sql
+      DECLARE b_fill_cs21 CURSOR FOR aprt212_01_pb21
+      
+      LET l_ac = 1
+      
+      OPEN b_fill_cs21 USING g_enterprise,g_prda_m.prdadocno
+ 
+                                               
+      FOREACH b_fill_cs21 INTO g_prdj2_d[l_ac].prdkacti,g_prdj2_d[l_ac].prdk002,g_prdj2_d[l_ac].prdk003,g_prdj2_d[l_ac].prdk004, 
+          g_prdj2_d[l_ac].prdk005,g_prdj2_d[l_ac].prdk005_desc,g_prdj2_d[l_ac].prdk006,g_prdj2_d[l_ac].prdk007, 
+          g_prdj2_d[l_ac].prdk007_desc,g_prdj2_d[l_ac].prdk008,g_prdj2_d[l_ac].prdk009,g_prdj2_d[l_ac].prdk010, 
+          g_prdj2_d[l_ac].prdk011,g_prdj2_d[l_ac].prdk012,g_prdj2_d[l_ac].prdk001, 
+          g_prdj2_d[l_ac].prdksite,g_prdj2_d[l_ac].prdkunit
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH:"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充
+
+         #end add-point
+      
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  9035
+            LET g_errparam.extend =  ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+   END IF
+ 
+ 
+   
+   #add-point:browser_fill段其他table處理
+
+   #end add-point
+   
+   CALL g_prdj_d.deleteElement(g_prdj_d.getLength())
+   CALL g_prdj2_d.deleteElement(g_prdj2_d.getLength())
+ 
+ 
+   
+ 
+   LET l_ac = g_cnt
+   LET g_cnt = 0  
+   
+   FREE aprt212_01_pb11
+   FREE aprt212_01_pb21
+ 
+   RETURN
+   #end add-point
+   
+   #判斷是否填充
+   IF aprt212_01_fill_chk(1) THEN
+   
+      LET g_sql = "SELECT  UNIQUE prdj002,prdj003,prdj004,'','',prdj005,prdj006,'','','',prdjacti,prdjsite, 
+          prdjunit,prdj001 FROM prdj_t",   
+                  " INNER JOIN prda_t ON prdadocno = prdjdocno ",
+ 
+                  #"",
+                  
+                  "",
+                  " WHERE"
+      #add-point:b_fill段sql_before
+      
+      IF g_prda_m.prda019 = '2' THEN
+         LET g_sql = "SELECT  UNIQUE prdj002,prdj003,'','','',prdj005,'','','','',prdjacti,prdjsite,prdjunit,prdj001 FROM prdj_t",   
+                     " INNER JOIN prda_t ON prdadocno = prdjdocno ",
+                     " WHERE prdaent = ? AND prdadocno = ? "
+      ELSE
+         LET g_sql = "SELECT  UNIQUE prdj002,prdj003,prdj004,'','',prdj005,prdj006,'','','',prdjacti,prdjsite,prdjunit,prdj001 FROM prdj_t",   
+                  " INNER JOIN prda_t ON prdadocno = prdjdocno ",
+                  " WHERE prdaent = ? AND prdadocno = ? "
+      END IF
+      #end add-point
+      IF NOT cl_null(g_wc2_table1) THEN
+         LET g_sql = g_sql CLIPPED, " AND ", g_wc2_table1 CLIPPED
+      END IF
+      
+      #子單身的WC
+      
+      
+      LET g_sql = g_sql, " ORDER BY prdj_t.prdj002,prdj_t.prdj003,prdj_t.prdj004"
+      
+      #add-point:單身填充控制
+ 
+      #end add-point
+      
+      PREPARE aprt212_01_pb FROM g_sql
+      DECLARE b_fill_cs CURSOR FOR aprt212_01_pb
+      
+      LET g_cnt = l_ac
+      LET l_ac = 1
+      
+      OPEN b_fill_cs USING g_enterprise,g_prda_m.prdadocno
+ 
+                                               
+      FOREACH b_fill_cs INTO g_prdj_d[l_ac].prdj002,g_prdj_d[l_ac].prdj003,g_prdj_d[l_ac].prdj004,g_prdj_d[l_ac].prdj004_desc, 
+          g_prdj_d[l_ac].prdj004_desc1,g_prdj_d[l_ac].prdj005,g_prdj_d[l_ac].prdj006,g_prdj_d[l_ac].prdj00601, 
+          g_prdj_d[l_ac].prdj00602,g_prdj_d[l_ac].prdj00603,g_prdj_d[l_ac].prdjacti,g_prdj_d[l_ac].prdjsite, 
+          g_prdj_d[l_ac].prdjunit,g_prdj_d[l_ac].prdj001
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH:"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+ 
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充
+         CALL aprt212_01_prdj_desc()
+         #end add-point
+      
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec THEN
+            IF g_error_show = 1 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code =  9035
+               LET g_errparam.extend =  ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+ 
+            END IF
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+      LET g_error_show = 0
+   
+   END IF
+   
+   #判斷是否填充
+   IF aprt212_01_fill_chk(2) THEN
+      LET g_sql = "SELECT  UNIQUE prdk002,prdk003,prdk004,prdk005,'',prdk006,prdk007,'',prdk008,prdk009, 
+          prdk010,prdk011,prdk012,prdkacti,prdk001,prdksite,prdkunit FROM prdk_t",   
+                  " INNER JOIN prda_t ON prdadocno = prdkdocno ",
+ 
+                  "",
+                  
+                  " WHERE"   
+      #add-point:b_fill段sql_before
+      LET g_sql = "SELECT  UNIQUE prdk002,prdk003,prdk004,prdk005,'',prdk006,prdk007,'',prdk008,prdk009, 
+          prdk010,prdk011,prdk012,prdkacti,prdk001,prdksite,prdkunit FROM prdk_t",   
+                  " INNER JOIN prda_t ON prdadocno = prdkdocno ",
+                  " WHERE prdaent = ? AND prdadocno = ? " 
+      #end add-point
+      IF NOT cl_null(g_wc2_table2) THEN
+         LET g_sql = g_sql CLIPPED," AND ",g_wc2_table2 CLIPPED
+      END IF
+      
+      #子單身的WC
+      
+      
+      LET g_sql = g_sql, " ORDER BY prdk_t.prdk002,prdk_t.prdk003,prdk_t.prdk004,prdk_t.prdk005,prdk_t.prdk007"
+      
+      #add-point:單身填充控制
+      
+      #end add-point
+      
+      PREPARE aprt212_01_pb2 FROM g_sql
+      DECLARE b_fill_cs2 CURSOR FOR aprt212_01_pb2
+      
+      LET l_ac = 1
+      
+      OPEN b_fill_cs2 USING g_enterprise,g_prda_m.prdadocno
+ 
+                                               
+      FOREACH b_fill_cs2 INTO g_prdj2_d[l_ac].prdk002,g_prdj2_d[l_ac].prdk003,g_prdj2_d[l_ac].prdk004, 
+          g_prdj2_d[l_ac].prdk005,g_prdj2_d[l_ac].prdk005_desc,g_prdj2_d[l_ac].prdk006,g_prdj2_d[l_ac].prdk007, 
+          g_prdj2_d[l_ac].prdk007_desc,g_prdj2_d[l_ac].prdk008,g_prdj2_d[l_ac].prdk009,g_prdj2_d[l_ac].prdk010, 
+          g_prdj2_d[l_ac].prdk011,g_prdj2_d[l_ac].prdk012,g_prdj2_d[l_ac].prdkacti,g_prdj2_d[l_ac].prdk001, 
+          g_prdj2_d[l_ac].prdksite,g_prdj2_d[l_ac].prdkunit
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH:"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+ 
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充
+         
+         #end add-point
+      
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  9035
+            LET g_errparam.extend =  ''
+            LET g_errparam.popup = FALSE
+            CALL cl_err()
+ 
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+   END IF
+ 
+ 
+   
+   #add-point:browser_fill段其他table處理
+   
+   #end add-point
+   
+   CALL g_prdj_d.deleteElement(g_prdj_d.getLength())
+   CALL g_prdj2_d.deleteElement(g_prdj2_d.getLength())
+ 
+   
+ 
+   LET l_ac = g_cnt
+   LET g_cnt = 0  
+   
+   FREE aprt212_01_pb
+   FREE aprt212_01_pb2
+ 
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.delete_b" >}
+#+ 刪除單身後其他table連動
+PRIVATE FUNCTION aprt212_01_delete_b(ps_table,ps_keys_bak,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:delete_b段define
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前
+
+      #end add-point    
+      
+      #add-point:delete_b段刪除中
+      IF g_prda_m.prda019 = '2' THEN
+         DELETE FROM prdj_t
+          WHERE prdjent = g_enterprise AND
+         prdjdocno = ps_keys_bak[1] AND prdj002 = ps_keys_bak[2] AND prdj003 = ps_keys_bak[3]
+      ELSE
+         DELETE FROM prdj_t
+          WHERE prdjent = g_enterprise AND
+         prdjdocno = ps_keys_bak[1] AND prdj002 = ps_keys_bak[2] AND prdj003 = ps_keys_bak[3] AND prdj004 = ps_keys_bak[4]
+      END IF
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = ""
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+      END IF
+      #add-point:delete_b段刪除後
+
+      #end add-point   
+   END IF
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前
+
+      #end add-point    
+      DELETE FROM prdk_t
+       WHERE prdkent = g_enterprise AND
+         prdkdocno = ps_keys_bak[1] AND prdk002 = ps_keys_bak[2] AND prdk003 = ps_keys_bak[3] AND prdk004 = ps_keys_bak[4] AND prdk005 = ps_keys_bak[5]
+      #add-point:delete_b段刪除中
+
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "prdk_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+      END IF
+      #add-point:delete_b段刪除後
+
+      #end add-point    
+   END IF
+   RETURN
+   #end add-point     
+ 
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前
+      
+      #end add-point    
+      DELETE FROM prdj_t
+       WHERE prdjent = g_enterprise AND
+         prdjdocno = ps_keys_bak[1] AND prdj002 = ps_keys_bak[2] AND prdj003 = ps_keys_bak[3] AND prdj004 = ps_keys_bak[4]
+      #add-point:delete_b段刪除中
+      IF g_prda_m.prda019 = '2' THEN
+         DELETE FROM prdj_t
+          WHERE prdjent = g_enterprise AND
+         prdjdocno = ps_keys_bak[1] AND prdj002 = ps_keys_bak[2] AND prdj003 = ps_keys_bak[3]
+      END IF
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = ""
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+ 
+      END IF
+      #add-point:delete_b段刪除後
+      
+      #end add-point   
+   END IF
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前
+      
+      #end add-point    
+      DELETE FROM prdk_t
+       WHERE prdkent = g_enterprise AND
+         prdkdocno = ps_keys_bak[1] AND prdk002 = ps_keys_bak[2] AND prdk003 = ps_keys_bak[3] AND prdk004 = ps_keys_bak[4] AND prdk005 = ps_keys_bak[5] AND prdk007 = ps_keys_bak[6]
+      #add-point:delete_b段刪除中
+      
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "prdk_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+ 
+      END IF
+      #add-point:delete_b段刪除後
+      
+      #end add-point    
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:delete_b段other
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.insert_b" >}
+#+ 新增單身後其他table連動
+PRIVATE FUNCTION aprt212_01_insert_b(ps_table,ps_keys,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE ls_page     STRING
+   #add-point:insert_b段define
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前
+
+      #end add-point 
+      INSERT INTO prdj_t
+                  (prdjent,
+                   prdjdocno,
+                   prdj002,prdj003,prdj004
+                   ,prdj005,prdj006,prdjacti,prdjsite,prdjunit,prdj001) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4]
+                   ,g_prdj_d[g_detail_idx].prdj005,g_prdj_d[g_detail_idx].prdj006,g_prdj_d[g_detail_idx].prdjacti, 
+                       g_prdj_d[g_detail_idx].prdjsite,g_prdj_d[g_detail_idx].prdjunit,g_prdj_d[g_detail_idx].prdj001) 
+
+      #add-point:insert_b段資料新增中
+
+      #end add-point 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "prdj_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+      END IF
+      #add-point:insert_b段資料新增後
+
+      #end add-point 
+   END IF
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前
+
+      #end add-point 
+      INSERT INTO prdk_t
+                  (prdkent,
+                   prdkdocno,
+                   prdk002,prdk003,prdk004,prdk005,prdk007
+                   ,prdk006,prdk008,prdk009,prdk010,prdk011,prdk012,prdkacti,prdk001,prdksite,prdkunit) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4],ps_keys[5],g_prdj2_d[g_detail_idx].prdk007
+                   ,g_prdj2_d[g_detail_idx].prdk006,g_prdj2_d[g_detail_idx].prdk008,g_prdj2_d[g_detail_idx].prdk009, 
+                       g_prdj2_d[g_detail_idx].prdk010,g_prdj2_d[g_detail_idx].prdk011,g_prdj2_d[g_detail_idx].prdk012, 
+                       g_prdj2_d[g_detail_idx].prdkacti,g_prdj2_d[g_detail_idx].prdk001,g_prdj2_d[g_detail_idx].prdksite, 
+                       g_prdj2_d[g_detail_idx].prdkunit)
+      #add-point:insert_b段資料新增中
+
+      #end add-point
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "prdk_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+      END IF
+      #add-point:insert_b段資料新增後
+
+      #end add-point
+   END IF
+ 
+   RETURN
+   #end add-point     
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前
+      
+      #end add-point 
+      INSERT INTO prdj_t
+                  (prdjent,
+                   prdjdocno,
+                   prdj002,prdj003,prdj004
+                   ,prdj005,prdj006,prdjacti,prdjsite,prdjunit,prdj001) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4]
+                   ,g_prdj_d[g_detail_idx].prdj005,g_prdj_d[g_detail_idx].prdj006,g_prdj_d[g_detail_idx].prdjacti, 
+                       g_prdj_d[g_detail_idx].prdjsite,g_prdj_d[g_detail_idx].prdjunit,g_prdj_d[g_detail_idx].prdj001) 
+ 
+      #add-point:insert_b段資料新增中
+      
+      #end add-point 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "prdj_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+ 
+      END IF
+      #add-point:insert_b段資料新增後
+      
+      #end add-point 
+   END IF
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前
+      
+      #end add-point 
+      INSERT INTO prdk_t
+                  (prdkent,
+                   prdkdocno,
+                   prdk002,prdk003,prdk004,prdk005,prdk007
+                   ,prdk006,prdk008,prdk009,prdk010,prdk011,prdk012,prdkacti,prdk001,prdksite,prdkunit) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4],ps_keys[5],ps_keys[6]
+                   ,g_prdj2_d[g_detail_idx].prdk006,g_prdj2_d[g_detail_idx].prdk008,g_prdj2_d[g_detail_idx].prdk009, 
+                       g_prdj2_d[g_detail_idx].prdk010,g_prdj2_d[g_detail_idx].prdk011,g_prdj2_d[g_detail_idx].prdk012, 
+                       g_prdj2_d[g_detail_idx].prdkacti,g_prdj2_d[g_detail_idx].prdk001,g_prdj2_d[g_detail_idx].prdksite, 
+                       g_prdj2_d[g_detail_idx].prdkunit)
+      #add-point:insert_b段資料新增中
+      
+      #end add-point
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "prdk_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+ 
+      END IF
+      #add-point:insert_b段資料新增後
+      
+      #end add-point
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:insert_b段other
+   
+   #end add-point     
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.update_b" >}
+#+ 修改單身後其他table連動
+PRIVATE FUNCTION aprt212_01_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   DEFINE ps_table         STRING
+   DEFINE ps_page          STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num5 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "prdj_t" THEN
+      #add-point:update_b段修改前
+
+      #end add-point     
+      UPDATE prdj_t 
+         SET (prdjdocno,
+              prdj002,prdj003,prdj004
+              ,prdj005,prdj006,prdjacti,prdjsite,prdjunit,prdj001) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4]
+              ,g_prdj_d[g_detail_idx].prdj005,g_prdj_d[g_detail_idx].prdj006,g_prdj_d[g_detail_idx].prdjacti, 
+                  g_prdj_d[g_detail_idx].prdjsite,g_prdj_d[g_detail_idx].prdjunit,g_prdj_d[g_detail_idx].prdj001)  
+
+         WHERE prdjent = g_enterprise AND prdjdocno = ps_keys_bak[1] AND prdj002 = ps_keys_bak[2] AND prdj003 = ps_keys_bak[3] AND prdj004 = ps_keys_bak[4]
+      #add-point:update_b段修改中
+
+      #end add-point   
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = "std-00009"
+            LET g_errparam.extend = "prdj_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "prdj_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+  
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      #add-point:update_b段修改後
+
+      #end add-point  
+   END IF
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "prdk_t" THEN
+      #add-point:update_b段修改前
+
+      #end add-point     
+      UPDATE prdk_t 
+         SET (prdkdocno,
+              prdk002,prdk003,prdk004,prdk005,prdk007
+              ,prdk006,prdk008,prdk009,prdk010,prdk011,prdk012,prdkacti,prdk001,prdksite,prdkunit) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4],ps_keys[5],g_prdj2_d[g_detail_idx].prdk007
+              ,g_prdj2_d[g_detail_idx].prdk006,g_prdj2_d[g_detail_idx].prdk008,g_prdj2_d[g_detail_idx].prdk009, 
+                  g_prdj2_d[g_detail_idx].prdk010,g_prdj2_d[g_detail_idx].prdk011,g_prdj2_d[g_detail_idx].prdk012, 
+                  g_prdj2_d[g_detail_idx].prdkacti,g_prdj2_d[g_detail_idx].prdk001,g_prdj2_d[g_detail_idx].prdksite, 
+                  g_prdj2_d[g_detail_idx].prdkunit) 
+         WHERE prdkent = g_enterprise AND prdkdocno = ps_keys_bak[1] AND prdk002 = ps_keys_bak[2] AND prdk003 = ps_keys_bak[3] AND prdk004 = ps_keys_bak[4] AND prdk005 = ps_keys_bak[5] AND prdk007 = ps_keys_bak[6]
+      #add-point:update_b段修改中
+
+      #end add-point  
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = "std-00009"
+            LET g_errparam.extend = "prdk_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "prdk_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+  
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      #add-point:update_b段修改後
+
+      #end add-point  
+   END IF
+   RETURN
+   #end add-point     
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "prdj_t" THEN
+      #add-point:update_b段修改前
+      
+      #end add-point     
+      UPDATE prdj_t 
+         SET (prdjdocno,
+              prdj002,prdj003,prdj004
+              ,prdj005,prdj006,prdjacti,prdjsite,prdjunit,prdj001) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4]
+              ,g_prdj_d[g_detail_idx].prdj005,g_prdj_d[g_detail_idx].prdj006,g_prdj_d[g_detail_idx].prdjacti, 
+                  g_prdj_d[g_detail_idx].prdjsite,g_prdj_d[g_detail_idx].prdjunit,g_prdj_d[g_detail_idx].prdj001)  
+ 
+         WHERE prdjent = g_enterprise AND prdjdocno = ps_keys_bak[1] AND prdj002 = ps_keys_bak[2] AND prdj003 = ps_keys_bak[3] AND prdj004 = ps_keys_bak[4]
+      #add-point:update_b段修改中
+      
+      #end add-point   
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = "std-00009"
+            LET g_errparam.extend = "prdj_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+ 
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "prdj_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+  
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      #add-point:update_b段修改後
+      
+      #end add-point  
+   END IF
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "prdk_t" THEN
+      #add-point:update_b段修改前
+      
+      #end add-point     
+      UPDATE prdk_t 
+         SET (prdkdocno,
+              prdk002,prdk003,prdk004,prdk005,prdk007
+              ,prdk006,prdk008,prdk009,prdk010,prdk011,prdk012,prdkacti,prdk001,prdksite,prdkunit) 
+              = 
+             (ps_keys[1],ps_keys[2],ps_keys[3],ps_keys[4],ps_keys[5],ps_keys[6]
+              ,g_prdj2_d[g_detail_idx].prdk006,g_prdj2_d[g_detail_idx].prdk008,g_prdj2_d[g_detail_idx].prdk009, 
+                  g_prdj2_d[g_detail_idx].prdk010,g_prdj2_d[g_detail_idx].prdk011,g_prdj2_d[g_detail_idx].prdk012, 
+                  g_prdj2_d[g_detail_idx].prdkacti,g_prdj2_d[g_detail_idx].prdk001,g_prdj2_d[g_detail_idx].prdksite, 
+                  g_prdj2_d[g_detail_idx].prdkunit) 
+         WHERE prdkent = g_enterprise AND prdkdocno = ps_keys_bak[1] AND prdk002 = ps_keys_bak[2] AND prdk003 = ps_keys_bak[3] AND prdk004 = ps_keys_bak[4] AND prdk005 = ps_keys_bak[5] AND prdk007 = ps_keys_bak[6]
+      #add-point:update_b段修改中
+      
+      #end add-point  
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = "std-00009"
+            LET g_errparam.extend = "prdk_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+ 
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "prdk_t"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+  
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      #add-point:update_b段修改後
+      
+      #end add-point  
+   END IF
+ 
+ 
+   
+ 
+   
+ 
+   
+   #add-point:update_b段other
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.lock_b" >}
+#+ 連動lock其他單身table資料
+PRIVATE FUNCTION aprt212_01_lock_b(ps_table,ps_page)
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:lock_b段define
+   LET ls_group = "prdj_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      IF g_prda_m.prda019 = '2' THEN
+         OPEN aprt212_01_bcl USING g_enterprise,
+                                       g_prda_m.prdadocno,g_prdj_d[g_detail_idx].prdj002,g_prdj_d[g_detail_idx].prdj003
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "aprt212_01_bcl"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            RETURN FALSE
+         END IF
+      ELSE
+         OPEN aprt212_01_bcl3 USING g_enterprise,
+                                          g_prda_m.prdadocno,g_prdj_d[g_detail_idx].prdj002,g_prdj_d[g_detail_idx].prdj003, 
+                                              g_prdj_d[g_detail_idx].prdj004
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "aprt212_01_bcl3"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            RETURN FALSE
+         END IF
+      END IF
+                                       
+      
+   
+   END IF
+                                    
+   #鎖定整組table
+   #LET ls_group = "'2',"
+   #僅鎖定自身table
+   LET ls_group = "prdk_t"
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN aprt212_01_bcl2 USING g_enterprise,
+                                             g_prda_m.prdadocno,g_prdj2_d[g_detail_idx].prdk002,g_prdj2_d[g_detail_idx].prdk003, 
+                                                 g_prdj2_d[g_detail_idx].prdk004,g_prdj2_d[g_detail_idx].prdk005
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "aprt212_01_bcl2"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         RETURN FALSE
+      END IF
+   END IF
+ 
+   RETURN TRUE
+   #end add-point   
+   
+   #先刷新資料
+   #CALL aprt212_01_b_fill()
+   
+   #鎖定整組table
+   #LET ls_group = "'1',"
+   #僅鎖定自身table
+   LET ls_group = "prdj_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      OPEN aprt212_01_bcl USING g_enterprise,
+                                       g_prda_m.prdadocno,g_prdj_d[g_detail_idx].prdj002,g_prdj_d[g_detail_idx].prdj003, 
+                                           g_prdj_d[g_detail_idx].prdj004     
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "aprt212_01_bcl"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+ 
+         RETURN FALSE
+      END IF
+   END IF
+                                    
+   #鎖定整組table
+   #LET ls_group = "'2',"
+   #僅鎖定自身table
+   LET ls_group = "prdk_t"
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN aprt212_01_bcl2 USING g_enterprise,
+                                             g_prda_m.prdadocno,g_prdj2_d[g_detail_idx].prdk002,g_prdj2_d[g_detail_idx].prdk003, 
+                                                 g_prdj2_d[g_detail_idx].prdk004,g_prdj2_d[g_detail_idx].prdk005, 
+                                                 g_prdj2_d[g_detail_idx].prdk007
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "aprt212_01_bcl2"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+ 
+         RETURN FALSE
+      END IF
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:lock_b段other
+   
+   #end add-point  
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.unlock_b" >}
+#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION aprt212_01_unlock_b(ps_table,ps_page)
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:unlock_b段define
+   
+   #end add-point  
+   
+   LET ls_group = "'1',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE aprt212_01_bcl
+   END IF
+   
+   LET ls_group = "'2',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE aprt212_01_bcl2
+   END IF
+ 
+ 
+   
+ 
+ 
+   #add-point:unlock_b段other
+   
+   #end add-point  
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.set_entry" >}
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION aprt212_01_set_entry(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1  
+   #add-point:set_entry段define
+   
+   #end add-point       
+ 
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("prdadocno",TRUE)
+      #add-point:set_entry段欄位控制
+      
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry段欄位控制後
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.set_no_entry" >}
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION aprt212_01_set_no_entry(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry段define
+   
+   #end add-point     
+ 
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("prdadocno",FALSE)
+      #add-point:set_no_entry段欄位控制
+      
+      #end add-point 
+   END IF 
+   
+   #add-point:set_no_entry段欄位控制後
+  
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.set_entry_b" >}
+#+ 單身欄位開啟設定
+PRIVATE FUNCTION aprt212_01_set_entry_b(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_entry_b段define
+   
+   #end add-point     
+   #add-point:set_entry_b段
+   CALL cl_set_comp_entry("prdk006,prdk009,prdk010,prdk011,prdk012",TRUE)
+   CALL aprt212_01_cl_set_comp_entry("prdj00601",TRUE)
+   CALL aprt212_01_cl_set_comp_entry("prdj00602",TRUE)
+   CALL aprt212_01_cl_set_comp_entry("prdj00603",TRUE)
+   #end add-point  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.set_no_entry_b" >}
+#+ 單身欄位關閉設定
+PRIVATE FUNCTION aprt212_01_set_no_entry_b(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry_b段define
+   DEFINE l_n1      LIKE type_t.num5
+   DEFINE l_n2      LIKE type_t.num5
+   DEFINE l_n3      LIKE type_t.num5
+   #end add-point    
+   #add-point:set_no_entry_b段
+   IF g_prdj2_d[l_ac].prdk004 <> 'M' AND g_prdj2_d[l_ac].prdk004 <> 'P'  THEN
+      CALL cl_set_comp_entry("prdk009,prdk010,prdk011,prdk012",FAlSE)
+      LET g_prdj2_d[l_ac].prdk009 = ''
+      LET g_prdj2_d[l_ac].prdk010 = ''
+      LET g_prdj2_d[l_ac].prdk011 = ''
+      LET g_prdj2_d[l_ac].prdk012 = ''
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 <> '4' THEN
+      CALL cl_set_comp_entry("prdk006",FAlSE)
+      LET g_prdj2_d[l_ac].prdk006 = ''
+      LET g_prdj2_d[l_ac].prdk007 = ''
+      LET g_prdj2_d[l_ac].prdk007_desc = ''
+      CALL aprt212_01_prdk_desc()
+   END IF
+   IF g_prdj2_d[l_ac].prdk010 <> '1' THEN
+      CALL cl_set_comp_entry("prdk011",FALSE)
+      LET g_prdj2_d[l_ac].prdk011 = ''
+   END IF
+   IF g_prdj2_d[l_ac].prdk010 <> '2' AND g_prdj2_d[l_ac].prdk010 <> '3' THEN
+      CALL cl_set_comp_entry("prdk012",FALSE)
+      LET g_prdj2_d[l_ac].prdk012 = ''
+   END IF
+   LET l_n1 = 0
+   SELECT COUNT(*) INTO l_n1
+     FROM prdb_t
+    WHERE prdbent = g_enterprise
+      AND prdbdocno = g_prdadocno
+      AND prdb003 = '1'
+      AND prdb004 = g_prdj_d[l_ac].prdj003
+      
+   LET l_n2 = 0
+   SELECT COUNT(*) INTO l_n2
+     FROM prdb_t
+    WHERE prdbent = g_enterprise
+      AND prdbdocno = g_prdadocno
+      AND prdb003  = '2'
+      AND prdb004 = g_prdj_d[l_ac].prdj003
+
+   LET l_n3 = 0
+   SELECT COUNT(*) INTO l_n3
+     FROM prdb_t
+    WHERE prdbent = g_enterprise
+      AND prdbdocno = g_prdadocno
+      AND prdb003  = '3'
+      AND prdb004 = g_prdj_d[l_ac].prdj003
+      
+   IF g_prda_m.prda019 = '3' THEN
+      CALL aprt212_01_cl_set_comp_entry("prdj00601",FALSE)
+      LET g_prdj_d[l_ac].prdj00601 = ''
+      CALL aprt212_01_cl_set_comp_entry("prdj00602",FALSE)
+      LET g_prdj_d[l_ac].prdj00602 = ''
+      CALL aprt212_01_cl_set_comp_entry("prdj00603",FALSE)
+      LET g_prdj_d[l_ac].prdj00603 = ''
+   ELSE
+      IF l_n1 = 0 THEN
+         CALL aprt212_01_cl_set_comp_entry('prdj00601',FALSE)
+         LET g_prdj_d[l_ac].prdj00601 = ''
+      END IF
+      IF l_n2 = 0 THEN
+         CALL aprt212_01_cl_set_comp_entry('prdj00602',FALSE)
+         LET g_prdj_d[l_ac].prdj00602 = ''
+      END IF
+      IF l_n3 = 0 THEN
+         CALL aprt212_01_cl_set_comp_entry('prdj00603',FALSE)
+         LET g_prdj_d[l_ac].prdj00603 = ''
+      END IF
+   END IF   
+   #end add-point     
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION aprt212_01_default_search()
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define
+   
+   #end add-point  
+   
+   #add-point:default_search段開始前
+   
+   #end add-point  
+   
+   LET g_pagestart = 1
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   IF NOT cl_null(g_argv[1]) THEN
+      LET ls_wc = ls_wc, " prdadocno = '", g_argv[1], "' AND "
+   END IF
+   
+ 
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      LET g_default = FALSE
+      #預設查詢條件
+      LET g_wc = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=1"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前
+   
+   #end add-point  
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.state_change" >}
+   
+ 
+{</section>}
+ 
+{<section id="aprt212_01.idx_chk" >}
+#+ 單身筆數變更
+PRIVATE FUNCTION aprt212_01_idx_chk()
+   #add-point:idx_chk段define
+   
+   #end add-point  
+   
+   IF g_current_page = 1 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail1")
+      IF g_detail_idx > g_prdj_d.getLength() THEN
+         LET g_detail_idx = g_prdj_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_prdj_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_prdj_d.getLength() TO FORMONLY.cnt
+   END IF
+   
+   IF g_current_page = 2 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail2")
+      IF g_detail_idx > g_prdj2_d.getLength() THEN
+         LET g_detail_idx = g_prdj2_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_prdj2_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_prdj2_d.getLength() TO FORMONLY.cnt
+   END IF
+ 
+   
+   #add-point:idx_chk段other
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.b_fill2" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION aprt212_01_b_fill2(pi_idx)
+   DEFINE pi_idx          LIKE type_t.num5
+   DEFINE li_ac           LIKE type_t.num5
+   DEFINE ls_chk          LIKE type_t.chr1
+   #add-point:b_fill2段define
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+ 
+      
+   #add-point:單身填充後
+   
+   #end add-point
+    
+   LET l_ac = li_ac
+   
+   CALL aprt212_01_detail_show()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.fill_chk" >}
+#+ 單身填充確認
+PRIVATE FUNCTION aprt212_01_fill_chk(ps_idx)
+   DEFINE ps_idx        LIKE type_t.chr10
+   #add-point:fill_chk段define
+   
+   #end add-point
+   
+   #全部為1=1 or null時回傳true
+   IF (cl_null(g_wc2_table1) OR g_wc2_table1.trim() = '1=1')  AND 
+      (cl_null(g_wc2_table2) OR g_wc2_table2.trim() = '1=1') THEN
+      #add-point:fill_chk段define
+      
+      #end add-point
+      RETURN TRUE
+   END IF
+   
+   #第一單身
+   IF ps_idx = 1 AND
+      ((NOT cl_null(g_wc2_table1) AND g_wc2_table1.trim() <> '1=1')) THEN
+      RETURN TRUE
+   END IF
+   
+   #根據wc判定是否需要填充
+   IF ps_idx = 2 AND
+      ((NOT cl_null(g_wc2_table2) AND g_wc2_table2.trim() <> '1=1')) THEN
+      RETURN TRUE
+   END IF
+ 
+ 
+ 
+   RETURN FALSE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprt212_01.signature" >}
+   
+ 
+{</section>}
+ 
+{<section id="aprt212_01.set_pk_array" >}
+   #+ 此段落由子樣板a51產生
+#+ 給予pk_array內容
+PRIVATE FUNCTION aprt212_01_set_pk_array()
+   #add-point:set_pk_array段define
+   
+   #end add-point
+   
+   #add-point:set_pk_array段之前
+   
+   #end add-point  
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_prda_m.prdadocno
+   LET g_pk_array[1].column = 'prdadocno'
+ 
+   
+   #add-point:set_pk_array段之後
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aprt212_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aprt212_01.other_function" readonly="Y" >}
+################################################################################
+# Descriptions...: 畫面UI的呈現方式
+# Memo...........:
+# Usage..........: CALL aprt212_01_set_comp_visible()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/03/20 By xumm
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aprt212_01_set_comp_visible()
+DEFINE l_n1      LIKE type_t.num5
+DEFINE l_n2      LIKE type_t.num5
+DEFINE l_n3      LIKE type_t.num5
+
+   LET l_n1 = 0
+   SELECT COUNT(*) INTO l_n1
+     FROM prdb_t
+    WHERE prdbent = g_enterprise
+      AND prdbdocno = g_prdadocno
+      AND prdb003  = '1'
+      
+   LET l_n2 = 0
+   SELECT COUNT(*) INTO l_n2
+     FROM prdb_t
+    WHERE prdbent = g_enterprise
+      AND prdbdocno = g_prdadocno
+      AND prdb003  = '2'
+
+   LET l_n3 = 0
+   SELECT COUNT(*) INTO l_n3
+     FROM prdb_t
+    WHERE prdbent = g_enterprise
+      AND prdbdocno = g_prdadocno
+      AND prdb003  = '3'
+   CALL cl_set_comp_visible('bpage03',TRUE)
+   CALL cl_set_comp_visible('prdj004',TRUE)
+   CALL cl_set_comp_visible('prdj003',TRUE)
+   CALL cl_set_comp_visible('prdj004_desc',TRUE)
+   CALL cl_set_comp_visible('prdj004_desc1',TRUE)
+   CALL cl_set_comp_visible('prdj006',TRUE)
+   CALL cl_set_comp_visible('prdj00601',TRUE)
+   CALL cl_set_comp_visible('prdj00602',TRUE)
+   CALL cl_set_comp_visible('prdj00603',TRUE)
+   IF g_prda_m.prda019 = '3' THEN
+      CALL cl_set_comp_visible('prdj00601',FALSE)
+      CALL cl_set_comp_visible('prdj00602',FALSE)
+      CALL cl_set_comp_visible('prdj00603',FALSE)
+   ELSE
+      IF l_n1 = 0 THEN
+         CALL cl_set_comp_visible('prdj00601',FALSE)
+      END IF
+      IF l_n2 = 0 THEN
+         CALL cl_set_comp_visible('prdj00602',FALSE)
+      END IF
+      IF l_n3 = 0 THEN
+         CALL cl_set_comp_visible('prdj00603',FALSE)
+      END IF
+      CALL cl_set_comp_visible('bpage03',FALSE)
+      CALL cl_set_comp_visible('prdj004',FALSE)
+      CALL cl_set_comp_visible('prdj004_desc',FALSE)
+      CALL cl_set_comp_visible('prdj004_desc1',FALSE)
+      CALL cl_set_comp_visible('prdj006',FALSE)
+   END IF
+   IF g_type1 <> 'Y' THEN
+      CALL cl_set_comp_visible('prdj003',FALSE)
+   END IF 
+END FUNCTION
+################################################################################
+# Descriptions...: 换赠单身对象类别，对象说明显示
+# Memo...........:
+# Usage..........: CALL aprt212_01_prdj_desc()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/03/20 By xumm
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aprt212_01_prdj_desc()
+DEFINE l_sql             STRING
+DEFINE l_prdb003         LIKE prdb_t.prdb003
+DEFINE l_prdc003         LIKE prdc_t.prdc003
+DEFINE l_prdc004         LIKE prdc_t.prdc004
+DEFINE l_desc            LIKE type_t.chr80
+DEFINE l_str             STRING
+DEFINE l_oocq004         LIKE oocq_t.oocq004     #150324-00004#1--add by dongsz
+
+
+    IF NOT cl_null(g_prdj_d[l_ac].prdj004) THEN
+       SELECT prdb003 INTO g_prdj_d[l_ac].prdj004_desc
+         FROM prdb_t
+        WHERE prdbent = g_enterprise
+          AND prdbdocno = g_prdadocno
+          AND prdb002 = g_prdj_d[l_ac].prdj004
+          AND prdb004 = g_prdj_d[l_ac].prdj003
+       LET l_str = ''   
+       LET l_desc = ''
+       LET l_sql = " SELECT prdb003,prdc003,prdc004",
+                   "   FROM prdb_t,prdc_t",
+                   "  WHERE prdcent = '",g_enterprise,"'",
+                   "    AND prdcdocno = '",g_prdadocno,"'",
+                   "    AND prdc002 = '",g_prdj_d[l_ac].prdj004,"'",
+                   "    AND prdbent = prdcent ",
+                   "    AND prdbdocno = prdcdocno ",
+                   "    AND prdb002 = prdc002 ",
+                   "    AND prdb004 = '",g_prdj_d[l_ac].prdj003,"'"
+       PREPARE aprt212_01_sel_prdc_pb FROM l_sql
+       DECLARE aprt212_01_sel_prdc_cs CURSOR FOR aprt212_01_sel_prdc_pb
+       FOREACH aprt212_01_sel_prdc_cs INTO l_prdb003,l_prdc003,l_prdc004
+          IF l_prdb003 = '2' THEN
+             #150324-00004#1--mark by dongsz--str---
+#             IF l_prdc003 = '1' THEN
+#                INITIALIZE g_ref_fields TO NULL
+#                LET g_ref_fields[1] = l_prdc004
+#                CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2024' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+#                LET l_desc = g_rtn_fields[1]
+#             END IF
+#             IF l_prdc003 = '2' THEN
+#                INITIALIZE g_ref_fields TO NULL
+#                LET g_ref_fields[1] = l_prdc004
+#                CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2025' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+#                LET l_desc = g_rtn_fields[1]
+#             END IF
+             #150324-00004#1--mark by dongsz--end---
+             #150324-00004#1--add by dongsz--str---
+             SELECT oocq004 INTO l_oocq004
+               FROM oocq_t
+              WHERE oocqent = g_enterprise
+                AND oocq001 = '2049'
+                AND oocq002 = l_prdc003
+             INITIALIZE g_ref_fields TO NULL
+             LET g_ref_fields[1] = l_oocq004
+             LET g_ref_fields[2] = l_prdc004
+             CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001=? AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+             LET l_desc = g_rtn_fields[1]
+             #150324-00004#1--add by dongsz--end---
+          END IF
+          IF l_prdb003 = '3' THEN
+             IF l_prdc003 = '1' THEN
+                INITIALIZE g_ref_fields TO NULL
+                LET g_ref_fields[1] = l_prdc004
+                CALL ap_ref_array2(g_ref_fields,"SELECT pmaal003 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+                LET l_desc = g_rtn_fields[1]
+             END IF
+             IF l_prdc003 = '2' THEN
+                INITIALIZE g_ref_fields TO NULL
+                LET g_ref_fields[1] = l_prdc004
+                CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='281' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+                LET l_desc = g_rtn_fields[1]
+             END IF
+             IF l_prdc003 = '3' THEN
+                INITIALIZE g_ref_fields TO NULL
+                LET g_ref_fields[1] = l_prdc004
+                CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2061' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+                LET l_desc = g_rtn_fields[1]
+             END IF
+             IF l_prdc003 = '4' THEN
+                INITIALIZE g_ref_fields TO NULL
+                LET g_ref_fields[1] = l_prdc004
+                CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2062' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+                LET l_desc = g_rtn_fields[1]
+             END IF
+             IF l_prdc003 = '5' THEN
+                INITIALIZE g_ref_fields TO NULL
+                LET g_ref_fields[1] = l_prdc004
+                CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2063' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+                LET l_desc = g_rtn_fields[1]
+             END IF
+             IF l_prdc003 = '6' THEN
+                INITIALIZE g_ref_fields TO NULL
+                LET g_ref_fields[1] = l_prdc004
+                CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2064' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+                LET l_desc = g_rtn_fields[1]
+             END IF
+             IF l_prdc003 = '7' THEN
+                INITIALIZE g_ref_fields TO NULL
+                LET g_ref_fields[1] = l_prdc004
+                CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2065' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+                LET l_desc = g_rtn_fields[1]
+             END IF
+             IF l_prdc003 = '8' THEN
+                INITIALIZE g_ref_fields TO NULL
+                LET g_ref_fields[1] = l_prdc004
+                CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2066' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+                LET l_desc = g_rtn_fields[1]
+             END IF
+             IF l_prdc003 = '9' THEN
+                INITIALIZE g_ref_fields TO NULL
+                LET g_ref_fields[1] = l_prdc004
+                CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2067' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+                LET l_desc = g_rtn_fields[1]
+             END IF
+             IF l_prdc003 = '10' THEN
+                INITIALIZE g_ref_fields TO NULL
+                LET g_ref_fields[1] = l_prdc004
+                CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2068' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+                LET l_desc = g_rtn_fields[1]
+             END IF
+             IF l_prdc003 = '11' THEN
+                INITIALIZE g_ref_fields TO NULL
+                LET g_ref_fields[1] = l_prdc004
+                CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2069' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+                LET l_desc = g_rtn_fields[1]
+             END IF
+             IF l_prdc003 = '12' THEN
+                INITIALIZE g_ref_fields TO NULL
+                LET g_ref_fields[1] = l_prdc004
+                CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2070' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+                LET l_desc = g_rtn_fields[1]
+             END IF
+          END IF
+          IF l_desc IS NOT NULL THEN
+             IF l_str IS NULL THEN
+                LET l_str = l_desc
+             ELSE
+                LET l_str = l_str,',',l_desc
+             END IF
+          END IF
+       END FOREACH
+       IF g_prdj_d[l_ac].prdj004_desc = '1' THEN
+          CALL cl_getmsg('apr-00300',g_lang) RETURNING l_str
+       END IF
+       LET g_prdj_d[l_ac].prdj004_desc1 = l_str
+       
+       DISPLAY BY NAME g_prdj_d[l_ac].prdj004_desc
+       DISPLAY BY NAME g_prdj_d[l_ac].prdj004_desc1
+    END IF
+    IF g_prda_m.prda019 = '2' THEN
+       SELECT prdj006 INTO g_prdj_d[l_ac].prdj00601
+         FROM prdj_t
+        WHERE prdjent = g_enterprise
+          AND prdjdocno = g_prdadocno
+          AND prdj002 = g_prdj_d[l_ac].prdj002
+          AND prdj003 = g_prdj_d[l_ac].prdj003
+          AND prdj004 = (SELECT MIN(prdb002) FROM prdb_t
+                          WHERE prdbent = g_enterprise
+                            AND prdbdocno = g_prdadocno
+                            AND prdb003 = '1'
+                            AND prdb004 = g_prdj_d[l_ac].prdj003)
+       SELECT prdj006 INTO g_prdj_d[l_ac].prdj00602
+         FROM prdj_t
+        WHERE prdjent = g_enterprise
+          AND prdjdocno = g_prdadocno
+          AND prdj002 = g_prdj_d[l_ac].prdj002
+          AND prdj003 = g_prdj_d[l_ac].prdj003
+          AND prdj004 = (SELECT MIN(prdb002) FROM prdb_t
+                          WHERE prdbent = g_enterprise
+                            AND prdbdocno = g_prdadocno
+                            AND prdb003 = '2'
+                            AND prdb004 = g_prdj_d[l_ac].prdj003)
+       SELECT prdj006 INTO g_prdj_d[l_ac].prdj00603
+         FROM prdj_t
+        WHERE prdjent = g_enterprise
+          AND prdjdocno = g_prdadocno
+          AND prdj002 = g_prdj_d[l_ac].prdj002
+          AND prdj003 = g_prdj_d[l_ac].prdj003
+          AND prdj004 = (SELECT MIN(prdb002) FROM prdb_t
+                          WHERE prdbent = g_enterprise
+                            AND prdbdocno = g_prdadocno
+                            AND prdb003 = '3'
+                            AND prdb004 = g_prdj_d[l_ac].prdj003)
+       DISPLAY BY NAME g_prdj_d[l_ac].prdj00601,g_prdj_d[l_ac].prdj00602,g_prdj_d[l_ac].prdj00603        
+    END IF
+END FUNCTION
+################################################################################
+# Descriptions...: 对象商品范围单身参考栏位显示
+# Memo...........:
+# Usage..........: CALL aprt212_01_prdk_desc()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/03/20 By xumm
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aprt212_01_prdk_desc()
+   IF g_prdj2_d[l_ac].prdk004 = '4' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_prdj2_d[l_ac].prdk005
+      CALL ap_ref_array2(g_ref_fields,"SELECT imaal003 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_prdj2_d[l_ac].prdk005_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = '5' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_prdj2_d[l_ac].prdk005
+      CALL ap_ref_array2(g_ref_fields,"SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent='"||g_enterprise||"' AND rtaxl001=? AND rtaxl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_prdj2_d[l_ac].prdk005_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = '6' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_prdj2_d[l_ac].prdk005
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001= '2000' AND oocql002 = ? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_prdj2_d[l_ac].prdk005_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = '7' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_prdj2_d[l_ac].prdk005
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001= '2001' AND oocql002 = ? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_prdj2_d[l_ac].prdk005_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = '8' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_prdj2_d[l_ac].prdk005
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001= '2002' AND oocql002 = ? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_prdj2_d[l_ac].prdk005_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = '9' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_prdj2_d[l_ac].prdk005
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001= '2003' AND oocql002 = ? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_prdj2_d[l_ac].prdk005_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'A' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_prdj2_d[l_ac].prdk005
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001= '2004' AND oocql002 = ? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_prdj2_d[l_ac].prdk005_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'B' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_prdj2_d[l_ac].prdk005
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001= '2005' AND oocql002 = ? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_prdj2_d[l_ac].prdk005_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'C' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_prdj2_d[l_ac].prdk005
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001= '2006' AND oocql002 = ? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_prdj2_d[l_ac].prdk005_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'D' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_prdj2_d[l_ac].prdk005
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001= '2007' AND oocql002 = ? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_prdj2_d[l_ac].prdk005_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'E' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_prdj2_d[l_ac].prdk005
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001= '2008' AND oocql002 = ? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_prdj2_d[l_ac].prdk005_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'F' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_prdj2_d[l_ac].prdk005
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001= '2009' AND oocql002 = ? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_prdj2_d[l_ac].prdk005_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'G' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_prdj2_d[l_ac].prdk005
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001= '2010' AND oocql002 = ? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_prdj2_d[l_ac].prdk005_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'H' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_prdj2_d[l_ac].prdk005
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001= '2011' AND oocql002 = ? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_prdj2_d[l_ac].prdk005_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'I' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_prdj2_d[l_ac].prdk005
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001= '2012' AND oocql002 = ? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_prdj2_d[l_ac].prdk005_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'J' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_prdj2_d[l_ac].prdk005
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001= '2013' AND oocql002 = ? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_prdj2_d[l_ac].prdk005_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'K' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_prdj2_d[l_ac].prdk005
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001= '2014' AND oocql002 = ? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_prdj2_d[l_ac].prdk005_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'L' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_prdj2_d[l_ac].prdk005
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001= '2015' AND oocql002 = ? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_prdj2_d[l_ac].prdk005_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'M' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_prdj2_d[l_ac].prdk005
+      CALL ap_ref_array2(g_ref_fields,"SELECT mmanl003 FROM mmanl_t WHERE mmanlent='"||g_enterprise||"' AND mmanl001 = ? AND mmanl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_prdj2_d[l_ac].prdk005_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'N' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_prdj2_d[l_ac].prdk005
+      CALL ap_ref_array2(g_ref_fields,"SELECT gcafl003 FROM gcafl_t WHERE gcaflent='"||g_enterprise||"' AND gcafl001 = ? AND gcafl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_prdj2_d[l_ac].prdk005_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'P' THEN
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_prdj2_d[l_ac].prdk005
+      CALL ap_ref_array2(g_ref_fields,"SELECT mmanl003 FROM mmanl_t WHERE mmanlent='"||g_enterprise||"' AND mmanl001 = ? AND mmanl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_prdj2_d[l_ac].prdk005_desc = '', g_rtn_fields[1] , ''
+      DISPLAY BY NAME g_prdj2_d[l_ac].prdk005_desc
+   END IF
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_prdj2_d[l_ac].prdk007
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_prdj2_d[l_ac].prdk007_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_prdj2_d[l_ac].prdk007_desc
+END FUNCTION
+################################################################################
+# Descriptions...: 對象屬性頁簽資料填充
+# Memo...........:
+# Usage..........: CALL aprt212_01_b_fill_1()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/03/20 By xumm
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aprt212_01_b_fill_1()
+DEFINE l_prdb003    LIKE prdb_t.prdb003
+DEFINE l_oocq004    LIKE oocq_t.oocq004       #150324-00004#1--add by dongsz
+   
+   IF cl_null(g_detail_idx) OR g_detail_idx = 0 THEN
+      LET g_detail_idx = 1
+   END IF
+   CALL g_prdj3_d.clear()  
+   
+   LET g_sql = "SELECT UNIQUE prdb003,prdc002,prdc003,prdc004,'' FROM prdb_t,prdc_t,prda_t",   
+               " WHERE prdcdocno = prdadocno AND prdcent = prdaent ",
+               "   AND prdbent = prdcent ",
+               "   AND prdbdocno = prdcdocno ",
+               "   AND prdb002 = prdc002 ",
+               "   AND prdcent = ? AND prdcdocno = ? ",
+               "   AND prdc002 = '",g_prdj_d[g_detail_idx].prdj004,"' "
+#               "   AND prdc002 IN (SELECT prdj004 FROM prdj_t WHERE prdjdocno = '",g_prda_m.prdadocno,"' AND prdjent = '",g_enterprise,"' )"
+   LET g_sql = g_sql, " ORDER BY prdc_t.prdc002,prdc_t.prdc003,prdc_t.prdc004"
+   
+   PREPARE aprt212_01_pb3 FROM g_sql
+   DECLARE b_fill_cs3 CURSOR FOR aprt212_01_pb3
+   
+   LET g_cnt = l_ac
+   LET l_ac = 1
+   
+   OPEN b_fill_cs3 USING g_enterprise,g_prda_m.prdadocno
+ 
+                                            
+   FOREACH b_fill_cs3 INTO l_prdb003,g_prdj3_d[l_ac].prdc002,g_prdj3_d[l_ac].prdc003,g_prdj3_d[l_ac].prdc004,g_prdj3_d[l_ac].prdc004_desc
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      IF l_prdb003 = '2' THEN
+         #CALL cl_set_combo_scc_part('prdc003','6517','1,2')     #150324-00004#1--mark by dongsz
+         CALL aprt212_01_prdc003_display()                       #150324-00004#1--add by dongsz
+         #150324-00004#1--mark by dongsz--str---
+#         IF g_prdj3_d[l_ac].prdc003 = '1' THEN
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_prdj3_d[l_ac].prdc004
+#            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2024' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_prdj3_d[l_ac].prdc004_desc = g_rtn_fields[1]
+#         END IF
+#         IF g_prdj3_d[l_ac].prdc003 = '2' THEN
+#            INITIALIZE g_ref_fields TO NULL
+#            LET g_ref_fields[1] = g_prdj3_d[l_ac].prdc004
+#            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2025' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+#            LET g_prdj3_d[l_ac].prdc004_desc = g_rtn_fields[1]
+#         END IF
+         #150324-00004#1--mark by dongsz--end---
+         #150324-00004#1--add by dongsz--str---
+         SELECT oocq004 INTO l_oocq004
+           FROM oocq_t
+          WHERE oocqent = g_enterprise
+            AND oocq001 = '2049'
+            AND oocq002 = g_prdj3_d[l_ac].prdc003
+         INITIALIZE g_ref_fields TO NULL
+         LET g_ref_fields[1] = l_oocq004
+         LET g_ref_fields[2] = g_prdj3_d[l_ac].prdc004
+         CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001=? AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+         LET g_prdj3_d[l_ac].prdc004_desc = g_rtn_fields[1]
+         #150324-00004#1--add by dongsz--end---
+      END IF
+      IF l_prdb003 = '3' THEN
+         CALL cl_set_combo_scc('prdc003','6035')
+         IF g_prdj3_d[l_ac].prdc003 = '1' THEN
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_prdj3_d[l_ac].prdc004
+            CALL ap_ref_array2(g_ref_fields,"SELECT pmaal003 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_prdj3_d[l_ac].prdc004_desc = g_rtn_fields[1]
+         END IF
+         IF g_prdj3_d[l_ac].prdc003 = '2' THEN
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_prdj3_d[l_ac].prdc004
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='281' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_prdj3_d[l_ac].prdc004_desc = g_rtn_fields[1]
+         END IF
+         IF g_prdj3_d[l_ac].prdc003 = '3' THEN
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_prdj3_d[l_ac].prdc004
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2061' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_prdj3_d[l_ac].prdc004_desc = g_rtn_fields[1]
+         END IF
+         IF g_prdj3_d[l_ac].prdc003 = '4' THEN
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_prdj3_d[l_ac].prdc004
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2062' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_prdj3_d[l_ac].prdc004_desc = g_rtn_fields[1]
+         END IF
+         IF g_prdj3_d[l_ac].prdc003 = '5' THEN
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_prdj3_d[l_ac].prdc004
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2063' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_prdj3_d[l_ac].prdc004_desc = g_rtn_fields[1]
+         END IF
+         IF g_prdj3_d[l_ac].prdc003 = '6' THEN
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_prdj3_d[l_ac].prdc004
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2064' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_prdj3_d[l_ac].prdc004_desc = g_rtn_fields[1]
+         END IF
+         IF g_prdj3_d[l_ac].prdc003 = '7' THEN
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_prdj3_d[l_ac].prdc004
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2065' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_prdj3_d[l_ac].prdc004_desc = g_rtn_fields[1]
+         END IF
+         IF g_prdj3_d[l_ac].prdc003 = '8' THEN
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_prdj3_d[l_ac].prdc004
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2066' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_prdj3_d[l_ac].prdc004_desc = g_rtn_fields[1]
+         END IF
+         IF g_prdj3_d[l_ac].prdc003 = '9' THEN
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_prdj3_d[l_ac].prdc004
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2067' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_prdj3_d[l_ac].prdc004_desc = g_rtn_fields[1]
+         END IF
+         IF g_prdj3_d[l_ac].prdc003 = '10' THEN
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_prdj3_d[l_ac].prdc004
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2068' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_prdj3_d[l_ac].prdc004_desc = g_rtn_fields[1]
+         END IF
+         IF g_prdj3_d[l_ac].prdc003 = '11' THEN
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_prdj3_d[l_ac].prdc004
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2069' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_prdj3_d[l_ac].prdc004_desc = g_rtn_fields[1]
+         END IF
+         IF g_prdj3_d[l_ac].prdc003 = '12' THEN
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_prdj3_d[l_ac].prdc004
+            CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='2070' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_prdj3_d[l_ac].prdc004_desc = g_rtn_fields[1]
+         END IF
+      END IF
+      
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec AND g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   
+   CALL g_prdj3_d.deleteElement(g_prdj3_d.getLength())
+   
+   LET l_ac = g_cnt
+   LET g_cnt = 0  
+   
+   FREE aprt212_01_pb3
+   
+END FUNCTION
+################################################################################
+# Descriptions...: 属性代码检查
+# Memo...........:
+# Usage..........: CALL aprt212_01_chk_prdk005()
+#                  RETURNING TRUE/FALSE
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/03/20 By xumm
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aprt212_01_chk_prdk005()
+DEFINE l_gcafstus      LIKE gcaf_t.gcafstus
+DEFINE l_mmanstus      LIKE mman_t.mmanstus
+
+
+   IF g_prdj2_d[l_ac].prdk004 = '4' THEN
+      #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+      INITIALIZE g_chkparam.* TO NULL
+      #設定g_chkparam.*的參數
+      LET g_chkparam.arg1 = g_prdj2_d[l_ac].prdk005
+      LET g_chkparam.arg2 = g_site
+      #呼叫檢查存在並帶值的library
+      IF NOT cl_chk_exist("v_rtdx001_1") THEN
+         RETURN FALSE
+      END IF
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = '5' THEN
+      #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+      INITIALIZE g_chkparam.* TO NULL
+      #設定g_chkparam.*的參數
+      LET g_chkparam.arg1 = g_prdj2_d[l_ac].prdk005
+      #呼叫檢查存在並帶值的library
+      IF NOT cl_chk_exist("v_rtax001_1") THEN
+         RETURN FALSE
+      END IF
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = '6' THEN
+      IF NOT s_azzi650_chk_exist('2000',g_prdj2_d[l_ac].prdk005) THEN
+         RETURN FALSE
+      END IF
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = '7' THEN
+      IF NOT s_azzi650_chk_exist('2001',g_prdj2_d[l_ac].prdk005) THEN
+         RETURN FALSE
+      END IF
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = '8' THEN
+      IF NOT s_azzi650_chk_exist('2002',g_prdj2_d[l_ac].prdk005) THEN
+         RETURN FALSE
+      END IF
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = '9' THEN
+      IF NOT s_azzi650_chk_exist('2003',g_prdj2_d[l_ac].prdk005) THEN
+         RETURN FALSE
+      END IF
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'A' THEN
+      IF NOT s_azzi650_chk_exist('2004',g_prdj2_d[l_ac].prdk005) THEN
+         RETURN FALSE
+      END IF
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'B' THEN
+      IF NOT s_azzi650_chk_exist('2005',g_prdj2_d[l_ac].prdk005) THEN
+         RETURN FALSE
+      END IF
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'C' THEN
+      IF NOT s_azzi650_chk_exist('2006',g_prdj2_d[l_ac].prdk005) THEN
+         RETURN FALSE
+      END IF
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'D' THEN
+      IF NOT s_azzi650_chk_exist('2007',g_prdj2_d[l_ac].prdk005) THEN
+         RETURN FALSE
+      END IF
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'E' THEN
+      IF NOT s_azzi650_chk_exist('2008',g_prdj2_d[l_ac].prdk005) THEN
+         RETURN FALSE
+      END IF
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'F' THEN
+      IF NOT s_azzi650_chk_exist('2009',g_prdj2_d[l_ac].prdk005) THEN
+         RETURN FALSE
+      END IF
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'G' THEN
+      IF NOT s_azzi650_chk_exist('2010',g_prdj2_d[l_ac].prdk005) THEN
+         RETURN FALSE
+      END IF
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'H' THEN
+      IF NOT s_azzi650_chk_exist('2011',g_prdj2_d[l_ac].prdk005) THEN
+         RETURN FALSE
+      END IF
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'I' THEN
+      IF NOT s_azzi650_chk_exist('2012',g_prdj2_d[l_ac].prdk005) THEN
+         RETURN FALSE
+      END IF
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'J' THEN
+      IF NOT s_azzi650_chk_exist('2013',g_prdj2_d[l_ac].prdk005) THEN
+         RETURN FALSE
+      END IF
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'K' THEN
+      IF NOT s_azzi650_chk_exist('2014',g_prdj2_d[l_ac].prdk005) THEN
+         RETURN FALSE
+      END IF
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'L' THEN
+      IF NOT s_azzi650_chk_exist('2015',g_prdj2_d[l_ac].prdk005) THEN
+         RETURN FALSE
+      END IF
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'M' OR g_prdj2_d[l_ac].prdk004 = 'P' THEN
+      SELECT mmanstus INTO l_mmanstus
+        FROM mman_t
+       WHERE mmanent = g_enterprise
+         AND mman001 = g_prdj2_d[l_ac].prdk005
+      IF SQLCA.sqlcode = 100 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'apr-00088'
+         LET g_errparam.extend = g_prdj2_d[l_ac].prdk005
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         RETURN FALSE
+      END IF
+      IF l_mmanstus = 'X' THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'sub-01307'  #apr-00089  #160318-00005#40  By 07900 --mod
+         LET g_errparam.extend = g_prdj2_d[l_ac].prdk005
+         #160318-00005#40  By 07900 --add-str
+         LET g_errparam.replace[1] = 'ammm320'
+         LET g_errparam.replace[2] = cl_get_progname("ammm320",g_lang,"2")
+         LET g_errparam.exeprog = 'ammm320'
+         #160318-00005#40  By 07900 --add-end
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         RETURN FALSE
+      END IF
+      IF l_mmanstus = 'N' THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'sub-01302'  #apr-00090  #160318-00005#40  By 07900 --mod
+         LET g_errparam.extend = g_prdj2_d[l_ac].prdk005
+         #160318-00005#40  By 07900 --add-str
+         LET g_errparam.replace[1] = 'ammm320'
+         LET g_errparam.replace[2] = cl_get_progname("ammm320",g_lang,"2")
+         LET g_errparam.exeprog = 'ammm320'
+         #160318-00005#40  By 07900 --add-end
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         RETURN FALSE
+      END IF
+   END IF
+   IF g_prdj2_d[l_ac].prdk004 = 'N' THEN
+      SELECT gcafstus INTO l_gcafstus
+        FROM gcaf_t
+       WHERE gcafent = g_enterprise
+         AND gcaf001 = g_prdj2_d[l_ac].prdk005
+      IF SQLCA.sqlcode = 100 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'apr-00085'
+         LET g_errparam.extend = g_prdj2_d[l_ac].prdk005
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         RETURN FALSE
+      END IF
+      IF l_gcafstus = 'X' THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'sub-01307'  #apr-00086  #160318-00005#40  By 07900 --mod
+         LET g_errparam.extend = g_prdj2_d[l_ac].prdk005
+         #160318-00005#40  By 07900 --add-str
+         LET g_errparam.replace[1] = 'agcm300'
+         LET g_errparam.replace[2] = cl_get_progname("agcm300",g_lang,"2")
+         LET g_errparam.exeprog = 'agcm300'
+         #160318-00005#40  By 07900 --add-end
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         RETURN FALSE
+      END IF
+      IF l_gcafstus = 'N' THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'sub-01302'  #apr-00087  #160318-00005#40  By 07900 --mod
+         LET g_errparam.extend = g_prdj2_d[l_ac].prdk005
+         #160318-00005#40  By 07900 --add-str
+         LET g_errparam.replace[1] = 'agcm300'
+         LET g_errparam.replace[2] = cl_get_progname("agcm300",g_lang,"2")
+         LET g_errparam.exeprog = 'agcm300'
+         #160318-00005#40  By 07900 --add-end
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         RETURN FALSE
+      END IF  
+   END IF
+   RETURN TRUE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 動態設定元件是否需輸入值
+# Memo...........:
+# Usage..........: CALL aprt212_01_cl_set_comp_entry(ps_fields,pi_entry)
+# Input parameter: ps_fields   欄位名稱
+#                : pi_entry    是否進入欄位
+# Date & Author..: 2014/05/09 By xumm
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aprt212_01_cl_set_comp_entry(ps_fields,pi_entry)
+DEFINE ps_fields       STRING,
+       pi_entry        LIKE type_t.num5
+DEFINE lst_fields      base.StringTokenizer,
+       ls_field_name   STRING
+DEFINE lwin_curr       ui.Window
+DEFINE lnode_win       om.DomNode,
+       llst_items      om.NodeList,
+       li_i            LIKE type_t.num5,
+       lnode_item      om.DomNode,
+       ls_item_name    STRING
+
+   IF g_bgjob = 'Y' AND g_gui_type NOT MATCHES "[13]"  THEN
+      RETURN
+   END IF
+
+   IF (ps_fields IS NULL) THEN
+      RETURN
+   END IF
+
+   LET ps_fields = ps_fields.toLowerCase()
+
+   LET lst_fields = base.StringTokenizer.create(ps_fields, ",")
+
+   LET lwin_curr = ui.Window.getCurrent()
+   LET lnode_win = lwin_curr.getNode()
+
+   LET llst_items = lnode_win.selectByPath("//Form//*")
+
+   WHILE lst_fields.hasMoreTokens()
+     LET ls_field_name = lst_fields.nextToken()
+     LET ls_field_name = ls_field_name.trim()
+
+     IF (ls_field_name.getLength() > 0) THEN
+        FOR li_i = 1 TO llst_items.getLength()
+            LET lnode_item = llst_items.item(li_i)
+            LET ls_item_name = lnode_item.getAttribute("colName")
+
+            IF (ls_item_name IS NULL) THEN
+               LET ls_item_name = lnode_item.getAttribute("name")
+
+               IF (ls_item_name IS NULL) THEN
+                  CONTINUE FOR
+               END IF
+            END IF
+
+            LET ls_item_name = ls_item_name.trim()
+            IF (ls_item_name.equals(ls_field_name)) THEN
+               IF (pi_entry) THEN
+                  CALL lnode_item.setAttribute("noEntry", "0")
+                  CALL lnode_item.setAttribute("active", "1")
+               ELSE
+                  CALL lnode_item.setAttribute("noEntry", "1")
+                  CALL lnode_item.setAttribute("active", "0")
+               END IF
+
+               EXIT FOR
+            END IF
+        END FOR
+     END IF
+   END WHILE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 取料件主檔的銷售計價單位
+# Memo...........:
+# Usage..........: CALL aprt212_01_get_imaa106(p_prdk005)
+#                  RETURNING r_imaa106
+# Input parameter: p_prdk005      屬性代碼
+# Return code....: r_imaa106      銷售計價單位
+# Date & Author..: 2015-03-19 By Ken
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aprt212_01_get_imaa106(p_prdk005)
+DEFINE p_prdk005      LIKE prdk_t.prdk005
+DEFINE r_imaa106      LIKE imaa_t.imaa106
+
+  LET r_imaa106 = ''
+  
+  SELECT imaa106 
+    INTO r_imaa106
+    FROM imaa_t
+   WHERE imaaent = g_enterprise
+     AND imaa001 = p_prdk005
+
+   RETURN r_imaa106
+  
+END FUNCTION
+
+################################################################################
+# Descriptions...: 顯示會員的對象屬性
+# Memo...........:
+# Usage..........: CALL aprt212_01_prdc003_display()
+# Date & Author..: 20150409 By dongsz
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aprt212_01_prdc003_display()
+DEFINE l_oocq002      LIKE oocq_t.oocq002
+DEFINE l_oocql004     LIKE oocql_t.oocql004
+DEFINE l_cnt          LIKE type_t.num5
+DEFINE l_sql          STRING
+DEFINE cb004          ui.ComboBox
+   
+   LET cb004 = ui.ComboBox.forName('prdc003')
+   CALL cb004.clear()
+   
+   LET l_cnt = 0
+   LET l_sql = " SELECT DISTINCT oocq002,oocql004 ",
+               "   FROM oocq_t LEFT JOIN oocql_t ON oocqent = oocqlent AND oocq001 = oocql001 AND oocq002 = oocql002 AND oocql003 = '",g_dlang,"' ",
+               "  WHERE oocqent = ",g_enterprise," ",
+               "    AND oocq001 = '2049' ",
+               "    AND oocqstus = 'Y' ",
+               "  ORDER BY oocq002 "
+   PREPARE sel_oocq_pre FROM l_sql
+   DECLARE sel_oocq_cs  CURSOR FOR sel_oocq_pre
+   LET l_cnt = 1
+   FOREACH sel_oocq_cs  INTO l_oocq002,l_oocql004
+      LET l_oocql004 = l_oocq002,':',l_oocql004
+      IF cl_null(l_oocql004) THEN
+         CALL cb004.addItem(l_oocq002,l_oocq002)
+      ELSE
+         CALL cb004.addItem(l_oocq002,l_oocql004)
+      END IF
+      LET l_cnt = l_cnt+1
+   END FOREACH
+END FUNCTION
+
+ 
+{</section>}
+ 

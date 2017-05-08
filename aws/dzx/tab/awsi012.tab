@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="awsi012" module="aws" jobmode="N" type="i13" industry="std" crtid="00544" crtdt="2013/12/18" modid="01251" moddt="2014/06/28" sdver="2" tabver="10001" description="單據性質簽核設定維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="wsab001,wsab001_desc(chr80),wsab002,wsab003,wsab003_desc(chr80),wsab004,wsab004_desc(chr80),wsab006"/>
+      <var id="bs_field" value="wsab001,wsab002,wsab003,wsab004,wsab006" pk="wsab001,wsab002,wsab003,wsab004" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aws" filename="awsi012" method="dialog">
+    <section id="input">
+      <input id="head" field="wsab001,wsab002,wsab003,wsab004,wsab006"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="wsab001,wsab002,wsab003,wsab004,wsab006"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="wsab001,wsab002,wsab003,wsab004"/>
+      <set id="head" type="no_entry" field="wsab001,wsab002,wsab003,wsab004"/>
+    </init>
+    <init id="head">
+      <column id="wsab001">
+        <after>
+          <reference field="wsab001_desc" ref_field="wsab001" map_field="wsab001" ref_sql="SELECT gzcbl004 FROM gzcbl_t WHERE gzcbl001=&apos;24&apos; AND gzcbl002=? AND gzcbl003=$varg_lang$var"/>
+        </after>
+      </column>
+      <column id="wsab001_desc"/>
+      <column id="wsab002"/>
+      <column id="wsab003">
+        <after>
+          <reference field="wsab003_desc" ref_field="wsab002,wsab003" map_field="wsab002,wsab003" ref_sql="SELECT oobal004 FROM oobal_t WHERE oobalent=$varg_enterprise$var AND oobal001=? AND oobal002=? AND oobal003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="wsab003_desc"/>
+      <column id="wsab004">
+        <after>
+          <reference field="wsab004_desc" ref_field="wsab_t.wsab004" map_field="wsabent,wsab004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="wsab004_desc"/>
+      <column id="wsab006"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="wsab_t" lid="wsab001" type="wsab003" type2="wsab006" type3="" type4="" type5="" type6="" desc="wsab002" pk="wsab001,wsab002,wsab003,wsab004">
+      <sql id="forupd_sql" type="sql" query="SELECT wsab001,&apos;&apos;,wsab002,wsab003,&apos;&apos;,wsab004,&apos;&apos;,wsab006 FROM wsab_t WHERE wsabent= ? AND wsab001=? AND wsab002=? AND wsab003=? AND wsab004=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT wsab001,wsab002,wsab003,wsab004 FROM wsab_t" order="wsab001,wsab002,wsab003,wsab004"/>
+    </head>
+  </dataset>
+</assembly>
+

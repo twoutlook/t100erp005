@@ -1,0 +1,583 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aooi714" std_prog="aooi714" erpver="1.0" ver="2" module="AOO" type="M" booking="Y" class="i" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items="delete,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="ooib_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Tree" status=""/>
+    </tbl>
+  </table>
+  <tree name="s_browse" ver="1" src="s" kind="" att="" cite_std="N" status="">
+    <type no="1" table="ooib_t" col="ooib001"/>
+    <type2 no="2" table="" col=""/>
+    <type3 no="3" table="" col=""/>
+    <type4 no="4" table="" col=""/>
+    <type5 no="5" table="" col=""/>
+    <type6 no="6" table="" col=""/>
+    <id no="7" table="ooib_t" col="ooib002"/>
+    <desc no="9" table="" col=""/>
+    <pid no="" table="" col=""/>
+    <speed no="" table="" col=""/>
+    <stype no="" table="" col=""/>
+    <sid no="" table="" col=""/>
+    <spid no="" table="" col=""/>
+  </tree>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 
+ １設置整體適用收付帳的帳期原則及款項收取天數原則，應用於交易單據時，依其交易型態或對象別指定帳款的收付條件。
+ ２收付款條件設定後的功能有二：一為推出應收付款日, 二為推出帳款兌現到期日； 推算出日期後, 可以做為資金預估及收款績效分析。
+ ３同程式依作業區分成＂收款條件維護作業＂、＂付款條件維護作業＂。
+ 
+
+作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：基本資料維護作業
+輸入模式：單檔搭配上方樹狀瀏覽模式F001_vt
+作業資料來源(Master)：
+ 資料來源表：收付款條件主檔ooib_t(資料檔)
+                                             ooibl_t(收付款條件多語言資料檔)
+ 關聯資料表： 
+
+ 關聯資料表：ooibs_t(提速檔)
+
+樹狀瀏覽設定：
+ (1)快速查詢下拉選項：xxxx001(Key1)
+可選項：
+　１。收款條件編號
+　２。款別類型
+　３。帳款起算基準
+
+ (2)樹狀設定：
+    父節點：收付款條件編號
+    子節點：收付款條件編號
+ (3)樹狀顯示欄位：
+    欄位1：編號
+    欄位2：名稱
+
+欄位串查：（不需要請刪除）
+    欄位1：款別類型  串查程式：azzi600 系統分類碼
+     
+補充說明：(輸入此作的補充說明事項)
+１。同程式aooi714依作業區分成＂收款條件維護作業＂、＂付款條件維護作業＂。
+ 。收款條件維護作業（aooi714）　參數：＂１＂
+ 。付款條件維護作業（aooi716）　參數：＂２＂
+２。資料依傳入參數限定　ooib001=參數
+３。部份 LABEL文字，依作業不同區分其顯示內容。 以" () "表達者，即參數為＂２＂時之付款文字說明。
+   。應收(付)款日
+   。收(付)款兌現日
+
+推算應收付日時:
+   1.判斷是否依讓交易對象之結帳日為計算依據。
+   2.供應商檔及客戶檔皆會有此字段設定，若該對象有勾選者，依其指定之結帳日作運算。
+     否則應本企業之法人帳務設定檔為計算依據(axri001)。
+推算兌付日:
+   1.必須判斷，依交易對象之收付款日計算否。
+   2.供應商檔及客戶檔皆會有此字段設定，若該對象有勾選者，依其指定之各段付日作判斷運算。
+     否則應本企業之法人帳務設定檔為計算依據(axri001)。
+資料處理：
+    1.有效資料才可以修改
+    2.無效資料才可以刪除
+
+TOPMENU:[相關資料]--[(axri012)多帳期設定作業]
+                  [相關作業]--[(aooi716)付款條件維護作業]
+                                  --[(aooi902)收付款條件據點層設定作業]
+                                  --[(agli160)常用科目設定作業]
+                  [相關查詢]--[(aooi903)法人帳務應用設定作業]
+
+系統作業流程：
+     系統分類維護作業    ——>    收付款條件維護作業    ——>   收付款條件據點層設定作業     ——>  常用科目設定作業
+           (azzi600)                               (aooi714)                                    (aooi902)                                      (agli160)]]>
+  </all>
+  <mi_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[]]>
+  </mi_all>
+  <field cite_std="N" name="b_date1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_date2" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_ooib001" ver="1" src="s" column="ooib001" table="ooib_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_ooib002" ver="1" src="s" column="ooib002" table="ooib_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_ooib004" ver="1" src="s" column="ooib004" table="ooib_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="8310" default="" max="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_ooib006" ver="1" src="s" column="ooib006" table="ooib_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="N" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_ooibstus" ver="1" src="s" column="ooibstus" table="ooib_t" attribute="C822" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_date1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_date2" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_ooibl004" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooib_t.ooib001" ver="1" src="s" column="ooib001" table="ooib_t" attribute="C001" type="varchar2(1)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooib_t.ooib002" ver="1" src="s" column="ooib002" table="ooib_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="" c_zoom="q_ooib001_1" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：收付款條件編號
+   ●欄位控管：
+     資料欄位:[F.收付款條件編號]
+     預設值: 無
+     校驗:1.不允許空白
+            2. 不可重複
+     查詢時開窗：收款條件維護作業 aooi714 : q_ooib001_1
+                         付款條件維護作業 aooi716: q_ooib001_2]]>
+  </field>
+  <field cite_std="N" name="ooib_t.ooib004" ver="1" src="s" column="ooib004" table="ooib_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="8310" default="10" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：款別類型
+   ●欄位控管：
+     資料欄位:[F.款別類型]
+     預設值: 無
+     校驗:1.不允許空白
+             2.SCC:8310
+補充說明：
+信用狀L/C (Letter of Credit)
+指進口地銀行(開狀銀行)應顧客(通常為買方)的請求與指示，開給第三人(通常為賣方)的一張附有條件的付款保證文書。銀行向第三人承諾，如果該第三人能履行該文書所規定的條件，並提示對應之單據，即可獲得開銀行的付款擔保。
+
+付款交單D/P (Documents against Payment)
+賣方按照買賣契約之約定，於貨物裝運後，開出匯票連同貨運單據(如提單、商業發票、包裝單等)，委託其往來銀行寄交進口地的銀行代向買方收取貨款，而買方則必須先付清貨款後，始能取得單據辦理提貨手續。
+
+承兌交單D/A (Documents against Acceptance)
+此方式與D/P類似，唯代收銀行收到貨運單據及匯票時，僅通知買方在匯票上承兌，即交付單據給買方辦理提貨手續，待規定付款期限到期時，再行付款。
+
+憑單據付款 CAD (Cash Against Documents)
+賣方按照買賣契約之約定，於貨物裝運後，將貨運單據(如提單、商業發票、包裝單等)於出口地交予買方或其代理人時，即可自買方或代理人處取得貨款。
+
+貨到付款 COD (Cash On Delivery)
+貨物裝運後，賣方或其代理人將貨運單據(如提單、商業發票、包裝單等)交予買方辦理提貨手續後，始可自買方處取得貨款。
+]]>
+  </field>
+  <field cite_std="N" name="ooib_t.ooib005" ver="1" src="s" column="ooib005" table="ooib_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="q_ooid001_1" c_zoom="q_ooid001_1" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：慣用繳款優惠條件
+   ●欄位控管：
+     資料欄位:[F.慣用繳款優惠條件]
+     預設值: 無
+     校驗:1.存在繳款優惠條件設定檔且有效
+資料來源表：繳款優惠條件設定檔（ooid_t）
+　條　件：
+      IF 作業參數='2'
+            適用類型＝　’１’ or  　’０’　
+　　　  AND 有效資料
+      IF 作業參數='1'
+           適用類型＝　’2’　or  　’０’　
+　　　 AND 有效資料]]>
+  </field>
+  <field cite_std="N" name="ooib_t.ooib006" ver="1" src="s" column="ooib006" table="ooib_t" attribute="C001" type="varchar2(1)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[欄位名稱：訂金收取否
+   ●欄位控管：
+     資料欄位:[F.訂金收(付)款否]
+     預設值:'N' 
+     校驗:1.不允許空白
+            2. Y/N
+     計算或處理:
+                    1.當為勾選取('Y')者，表示該筆交易須支付訂金。訂金收取比例則由交易單輸入。
+]]>
+  </field>
+  <field cite_std="N" name="ooib_t.ooib007" ver="1" src="s" column="ooib007" table="ooib_t" attribute="C001" type="varchar2(1)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[欄位名稱：現付交易否
+   ●欄位控管：
+     資料欄位:[F.現付交易否]
+     預設值:'N' 
+     校驗:1.不允許空白
+            2. Y/N
+     計算或處理:
+                     1.當為勾選取('Y')者，表示該筆交易須支付或收款完成後，交易單始得承認。
+                        故無帳期計算問題，下方之日數設定，全數歸0。且不須輸入下方日數字段。
+                     2.影响下方日數設定可輸入與否。]]>
+  </field>
+  <field cite_std="N" name="ooib_t.ooib011" ver="1" src="s" column="ooib011" table="ooib_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="8312" default="01" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：應收付款起算基準
+   ●欄位控管：
+     資料欄位:[F.應收付款起算基準]
+     預設值: 無
+     校驗:1.不允許空白
+             2.SCC:8312
+SCC_8312帳款起算基準 
+01 依交易單日
+02 依交易單日次月初
+03 發票日
+04 發票日次月初
+05 入帳日
+06 入帳次月初
+07 入出庫日
+30 依公司結算日
+31 依對象結算日
+以下取消顯示：
+90 依應收付款日
+91 應收付款日次月初]]>
+  </field>
+  <field cite_std="N" name="ooib_t.ooib012" ver="1" src="s" column="ooib012" table="ooib_t" attribute="N402" type="number(5,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max="&lt;=4" min="&gt;=0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：應收付款日加(季)
+   ●欄位控管：
+     資料欄位:[F.應收付款日加(季)]
+     預設值: 0
+     校驗:1.not null
+             2.0-4]]>
+  </field>
+  <field cite_std="N" name="ooib_t.ooib013" ver="1" src="s" column="ooib013" table="ooib_t" attribute="N402" type="number(5,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max="&lt;=12" min="&gt;=0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：應收付款日加(月)
+   ●欄位控管：
+     資料欄位:[F.應收付款日加(月)]
+     預設值: 0
+     校驗:1.not null
+             2.0-12]]>
+  </field>
+  <field cite_std="N" name="ooib_t.ooib014" ver="1" src="s" column="ooib014" table="ooib_t" attribute="N402" type="number(5,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max="&lt;=,365" min="&gt;=,-365" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：應收付款日加(日)
+   ●欄位控管：
+     資料欄位:[F.應收付款日加(日)]
+     預設值: 0
+     校驗:1.not null
+             2.-365~365]]>
+  </field>
+  <field cite_std="N" name="ooib_t.ooib021" ver="1" src="s" column="ooib021" table="ooib_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="8312" default="01" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[欄位名稱：帳款兌現起算基準
+   ●欄位控管：
+     資料欄位:[F.帳款兌現起算基準]
+     預設值: 無
+     校驗:1.不允許空白
+             2.SCC:8312]]>
+  </field>
+  <field cite_std="N" name="ooib_t.ooib022" ver="1" src="s" column="ooib022" table="ooib_t" attribute="N402" type="number(5,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max="&lt;=4" min="&gt;=0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：帳款兌現日加(季)
+   ●欄位控管：
+     資料欄位:[F.帳款兌現日加(季)]
+     預設值: 0
+     校驗:1.not null
+             2.0-4]]>
+  </field>
+  <field cite_std="N" name="ooib_t.ooib023" ver="1" src="s" column="ooib023" table="ooib_t" attribute="N402" type="number(5,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max="&lt;=12" min="&gt;=0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：帳款兌現日加(月)
+   ●欄位控管：
+     資料欄位:[F.帳款兌現日加(月)]
+     預設值: 0
+     校驗:1.not null
+             2.0-12]]>
+  </field>
+  <field cite_std="N" name="ooib_t.ooib024" ver="1" src="s" column="ooib024" table="ooib_t" attribute="N402" type="number(5,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max="&lt;=365" min="&gt;=-365" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[欄位名稱：帳款兌現日加(日)
+   ●欄位控管：
+     資料欄位:[F.帳款兌現日加(日)]
+     預設值: 0
+     校驗:1.not null
+             2.-365~365]]>
+  </field>
+  <field cite_std="N" name="ooib_t.ooib025" ver="1" src="s" column="ooib025" table="ooib_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：慣用多帳期類型　
+   ●欄位控管：
+     資料欄位:[F.慣用多帳期類型　]
+     預設值: 無
+     校驗:1.允許空白
+             2.ACC:3114
+             3.存在多賬期設定中且有效]]>
+  </field>
+  <field cite_std="N" name="ooib_t.ooibcrtdp" ver="1" src="s" column="ooibcrtdp" table="ooib_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooib_t.ooibcrtdt" ver="1" src="s" column="ooibcrtdt" table="ooib_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooib_t.ooibcrtid" ver="1" src="s" column="ooibcrtid" table="ooib_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooib_t.ooibmoddt" ver="1" src="s" column="ooibmoddt" table="ooib_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooib_t.ooibmodid" ver="1" src="s" column="ooibmodid" table="ooib_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooib_t.ooibowndp" ver="1" src="s" column="ooibowndp" table="ooib_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooib_t.ooibownid" ver="1" src="s" column="ooibownid" table="ooib_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooib_t.ooibstus" ver="1" src="s" column="ooibstus" table="ooib_t" attribute="C822" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="1" name="prog_ooib004" depend_field="ooib_t.ooib004" src="s" status="">
+      <program order="1" type="1" name="azzi600"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="ooib005_desc" src="s" depend_field="ooib_t.ooib005" correspon_key="ooibent,ooib005" ref_table="ooidl_t" ref_fk="ooidlent,ooidl001" ref_dlang="ooidl002" ref_rtn="ooidl003" status=""/>
+    <rfield cite_std="N" ver="1" name="ooib025_desc" src="s" depend_field="ooib_t.ooib025" correspon_key="ooibent,&apos;3114&apos;,ooib025" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="ooibcrtdp_desc" src="s" depend_field="ooib_t.ooibcrtdp" correspon_key="ooibcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="ooibcrtid_desc" src="s" depend_field="ooib_t.ooibcrtid" correspon_key="&apos;2&apos;,ooibcrtid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="ooibmodid_desc" src="s" depend_field="ooib_t.ooibmodid" correspon_key="&apos;2&apos;,ooibmodid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="ooibowndp_desc" src="s" depend_field="ooib_t.ooibowndp" correspon_key="ooibowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="ooibownid_desc" src="s" depend_field="ooib_t.ooibownid" correspon_key="&apos;2&apos;,ooibownid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+  </ref_field>
+  <multi_lang>
+    <mfield cite_std="N" ver="1" name="ooibl_t.ooibl004" src="s" depend_field="ooib_t.ooib002" correspon_key="ooibent,ooib002" lang_table="ooibl_t" lang_fk="ooiblent,ooibl002" lang_dlang="ooibl003" lang_rtn="ooibl004" status="">
+      <![CDATA[]]>
+    </mfield>
+  </multi_lang>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_date1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_date2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_ooib001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_ooib002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_ooib004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_ooib006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_ooibstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_date1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_date2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_ooibl004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooib_t.ooib001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooib_t.ooib002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooib_t.ooib004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooib_t.ooib005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooib_t.ooib006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooib_t.ooib007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooib_t.ooib011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooib_t.ooib012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooib_t.ooib013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooib_t.ooib014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooib_t.ooib021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooib_t.ooib022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooib_t.ooib023" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooib_t.ooib024" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooib_t.ooib025" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooib_t.ooibcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooib_t.ooibcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooib_t.ooibcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooib_t.ooibmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooib_t.ooibmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooib_t.ooibowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooib_t.ooibownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooib_t.ooibstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="cbo_searchcol.0" text="選擇查詢欄位" lstr=""/>
+    <sfield name="lbl_ooib002" text="收付款條件編號" lstr=""/>
+    <sfield name="rdo_expand.1" text="上推" lstr=""/>
+    <sfield name="rdo_expand.2" text="下展" lstr=""/>
+    <sfield name="rdo_expand.3" text="全部" lstr=""/>
+    <sfield name="lbl_name" text="樹狀節點說明" lstr=""/>
+    <sfield name="lbl_ooib001" text="收款/付款" lstr=""/>
+    <sfield name="lbl_ooib004" text="款別類型" lstr=""/>
+    <sfield name="lbl_ooib006" text="訂金收取否" lstr=""/>
+    <sfield name="lbl_ooibstus" text="狀態碼" lstr=""/>
+    <sfield name="lbl_treetotal" text="共" lstr=""/>
+    <sfield name="lbl_treerows" text="筆" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_ooibl004" text="說明" lstr=""/>
+    <sfield name="lbl_ooib007" text="現付交易否(須結款後始得交易確認者)" lstr=""/>
+    <sfield name="lbl_ooib025" text="慣用多帳期類型　" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_ooib005" text="慣用繳款優惠方案" lstr=""/>
+    <sfield name="lbl_ooidl003" text="說明" lstr=""/>
+    <sfield name="lbl_ooib011" text="應收付款起算基準" lstr=""/>
+    <sfield name="lbl_date1" text="加計" lstr=""/>
+    <sfield name="lbl_ooib012" text="應收付款日加(季)" lstr=""/>
+    <sfield name="lbl_ooib012_1" text="季/" lstr=""/>
+    <sfield name="lbl_ooib013" text="應收付款日加(月)" lstr=""/>
+    <sfield name="lbl_ooib013_1" text="月/" lstr=""/>
+    <sfield name="lbl_ooib014" text="應收付款日加(日)" lstr=""/>
+    <sfield name="lbl_ooib014_1" text="天數" lstr=""/>
+    <sfield name="lbl_ooib021" text="帳款兌現起算基準" lstr=""/>
+    <sfield name="lbl_date2" text="加計" lstr=""/>
+    <sfield name="lbl_ooib022" text="帳款兌現日加(季)" lstr=""/>
+    <sfield name="lbl_ooib022_1" text="季/" lstr=""/>
+    <sfield name="lbl_ooib023" text="帳款兌現日加(月)" lstr=""/>
+    <sfield name="lbl_ooib023_1" text="月/" lstr=""/>
+    <sfield name="lbl_ooib024" text="帳款兌現日加(日)" lstr=""/>
+    <sfield name="lbl_ooib024_1" text="天數" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_collect_gzze001" text="訊息代碼" lstr=""/>
+    <sfield name="lbl_collect_gzze003" text="訊息內容" lstr=""/>
+    <sfield name="lbl_collect_gzze006" text="進階訊息" lstr=""/>
+    <sfield name="lbl_cl_err_s02_accept" text="確定" lstr=""/>
+    <sfield name="lbl_err_detail" text="進階訊息" lstr=""/>
+    <sfield name="lbl_suggest_exe" text="建議執行" lstr=""/>
+    <sfield name="lbl_err_contact" text="反應問題" lstr=""/>
+    <sfield name="lbl_cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="lbl_group_cl_err_s01" text="進階訊息" lstr=""/>
+    <sfield name="lbl_gzze001" text="訊息代碼:" lstr=""/>
+    <sfield name="lbl_gzze006" text="訊息內容:" lstr=""/>
+    <sfield name="lbl_sqlerrd2" text="SQL錯誤碼:" lstr=""/>
+    <sfield name="lbl_gzxm001" text="QBE編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm005" text="設為首頁-自動查詢方案" lstr=""/>
+    <sfield name="lbl_gzxm002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxm003" text="員工編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm004" text="設為預設查詢條件" lstr=""/>
+    <sfield name="cl_qbe_s02.bpage_1" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn005" text="欄位說明" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="cl_qbe_s02_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s02_Cancel" text="取消" lstr=""/>
+    <sfield name="lbl_funid" text="函式代碼" lstr=""/>
+    <sfield name="lbl_fundesc" text="函式說明" lstr=""/>
+    <sfield name="cl_qbe_s01_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s01_Cancel" text="取消" lstr=""/>
+    <sfield name="cl_qbe_s03.bpage_1" text="查詢方案列表" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxmstus" text="有效" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm004" text="預設" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm005" text="顯示於首頁" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm009" text="順序" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxml005" text="查詢方案說明" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm007" text="自設SQL條件" lstr=""/>
+    <sfield name="cl_qbe_s03.page_2" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn004" text="序號" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn005" text="條件欄位" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="page_cl_doc_s01_page1" text="相關文件清單" lstr=""/>
+    <sfield name="lbl_loaa006" text="文件版本" lstr=""/>
+    <sfield name="lbl_loaa007" text="文件序號" lstr=""/>
+    <sfield name="lbl_loaa011" text="文件型態" lstr=""/>
+    <sfield name="lbl_loaa013" text="文件說明" lstr=""/>
+    <sfield name="lbl_loaa010" text="文件原始檔名" lstr=""/>
+    <sfield name="btn_upload" text="本地文件上傳" lstr=""/>
+    <sfield name="btn_crt_text" text="新建純文字紀錄" lstr=""/>
+    <sfield name="btn_doccrt_url" text="新建URL" lstr=""/>
+    <sfield name="btn_docopen" text="文件下載" lstr=""/>
+    <sfield name="btn_docupdate" text="文件資料修改" lstr=""/>
+    <sfield name="btn_docremove" text="文件刪除" lstr=""/>
+    <sfield name="btn_exit" text="關閉功能" lstr=""/>
+    <sfield name="page_cl_doc_s01_page2" text="文件基本資料" lstr=""/>
+    <sfield name="lbl_loaa004" text="用途類別" lstr=""/>
+    <sfield name="lbl_loaa005" text="預設顯示圖片" lstr=""/>
+    <sfield name="lbl_loaa012" text="文件位置(URL)" lstr=""/>
+    <sfield name="page_cl_doc_s01_page4" text="權限設定" lstr=""/>
+    <sfield name="group_read" text="讀取權限" lstr=""/>
+    <sfield name="group_modify" text="修改權限" lstr=""/>
+    <sfield name="page_cl_doc_s01_page3" text="異動資訊" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="btn_doccancel" text="放棄修改" lstr=""/>
+    <sfield name="btn_docmodify" text="資料存檔" lstr=""/>
+    <sfield name="lbl_gzxp007_1" text="選擇分類" lstr=""/>
+    <sfield name="add_catalog" text="" lstr=""/>
+    <sfield name="lbl_gzxp007_2" text="自訂分類" lstr=""/>
+    <sfield name="lbl_gzxp008" text="追蹤說明" lstr=""/>
+    <sfield name="accept" text="確定" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="follow_list" text="待追蹤" lstr=""/>
+    <sfield name="signature_list" text="待簽核" lstr=""/>
+    <sfield name="announcement" text="作業公告" lstr=""/>
+    <sfield name="cancelfollow" text="取消追蹤" lstr=""/>
+    <sfield name="assigncatalog" text="指定分類" lstr=""/>
+    <sfield name="cl_user_overview_s01.lbl_name" text="" lstr=""/>
+    <sfield name="lbl_gzxp002" text="作業名稱" lstr=""/>
+    <sfield name="lbl_gzxp006" text="單據日期" lstr=""/>
+    <sfield name="add_favorite_catalog" text="新增目錄" lstr=""/>
+    <sfield name="modify_favorite_desc" text="修改" lstr=""/>
+    <sfield name="favorite_del" text="移除" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_oocq002" text="應用分類碼" lstr=""/>
+    <sfield name="lbl_ooid001" text="優惠條件編號" lstr=""/>
+    <sfield name="lbl_ooid011" text="提前收款天數以上(1)" lstr=""/>
+    <sfield name="lbl_ooid012" text="折扣利率(1)" lstr=""/>
+    <sfield name="lbl_ooid021" text="提前收款天數以上(2)" lstr=""/>
+    <sfield name="lbl_ooid022" text="折扣利率(2)" lstr=""/>
+    <sfield name="lbl_ooid031" text="提前收款天數以上(3)" lstr=""/>
+    <sfield name="lbl_ooid032" text="折扣利率(3)" lstr=""/>
+    <sfield name="lbl_ooag001" text="員工編號" lstr=""/>
+    <sfield name="lbl_ooea001" text="組織編號" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_ooibl002" text="收付款條件編號" lstr=""/>
+    <sfield name="lbl_ooibl003" text="語言別" lstr=""/>
+    <sfield name="lbl_ooibl005" text="助記碼" lstr=""/>
+    <sfield name="cl_ask_s04_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s03_Test" text="測試" lstr=""/>
+    <sfield name="cl_ask_s03_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s01_Choice" text="選擇" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="cl_progress_bar_Current" text="目前進度" lstr=""/>
+    <sfield name="cl_progress_bar_Total" text="全部" lstr=""/>
+    <sfield name="cl_progress_bar_%" text="%" lstr=""/>
+    <sfield name="lbl_select" text="選擇" lstr=""/>
+    <sfield name="lbl_gzgdl002" text="樣版說明" lstr=""/>
+    <sfield name="lbl_gzgd003" text="客製否" lstr=""/>
+    <sfield name="lbl_gzgd007" text="樣版名稱(4rp)" lstr=""/>
+    <sfield name="lbl_rep_fmt" text="輸出格式" lstr=""/>
+    <sfield name="lbl_outputformat_1" text="預覽與列印(SVG)" lstr=""/>
+    <sfield name="lbl_outputformat_2" text="Adobe Acrobat (PDF)" lstr=""/>
+    <sfield name="lbl_outputformat_3" text="Microsoft Excel (XLS)" lstr=""/>
+    <sfield name="lbl_outputformat_4" text="Microsoft Excel (XLS) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_5" text="Microsoft Excel (XLSX)" lstr=""/>
+    <sfield name="lbl_outputformat_6" text="Microsoft Excel (XLSX) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_7" text="Microsoft Word (RTF)" lstr=""/>
+    <sfield name="lbl_outputformat_8" text="網頁 (HTML)" lstr=""/>
+    <sfield name="lbl_outputformat_9" text="郵件 (Mail)" lstr=""/>
+    <sfield name="lbl_set_default" text="設為預設樣版" lstr=""/>
+    <sfield name="lbl_btn_accept" text="確定" lstr=""/>
+    <sfield name="lbl_btn_cancel" text="放棄" lstr=""/>
+    <sfield name="lbl_gzza003" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzza001" text="程式編號" lstr=""/>
+    <sfield name="lbl_gzza002" text="程式類別" lstr=""/>
+    <sfield name="lbl_gzde002" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzde001" text="規格編號" lstr=""/>
+    <sfield name="lbl_gzdel003" text="說明" lstr=""/>
+    <sfield name="lbl_gzdf002" text="子畫面規格編號" lstr=""/>
+    <sfield name="lbl_gzdfl003" text="子畫面檔案名稱" lstr=""/>
+    <sfield name="lbl_gzcbl004" text="說明" lstr=""/>
+    <sfield name="lbl_gzde003" text="規格類別" lstr=""/>
+    <sfield name="lbl_dzfv004" text="畫面代號" lstr=""/>
+    <sfield name="lbl_dzfv005" text="主/子程式" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

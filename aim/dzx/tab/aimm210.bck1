@@ -1,0 +1,186 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aimm210" module="aim" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="04441" crtdt="2015-07-31 11:27:52" modid="04441" moddt="2016-05-30 13:47:04" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="集團預設料件據點關務資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="iman001,imaa002,imaal003,imaal004,imaal005,imaa009,imaa009_desc(chr80),imaa003,imaa003_desc(chr80),imaa004,imaa005,imaa005_desc(chr80),imaa006,imaa006_desc(chr80),imaa010,imaa010_desc(chr80),imanstus,iman011,iman011_desc(chr80),iman012,iman013,iman014,imanownid,imanownid_desc(chr80),imanowndp,imanowndp_desc(chr80),imancrtid,imancrtid_desc(chr80),imancrtdp,imancrtdp_desc(chr80),imancrtdt,imanmodid,imanmodid_desc(chr80),imanmoddt,iman021,iman022,iman023,iman024,iman025,iman031,iman032,iman033,iman034"/>
+      <var id="bs_field" value="iman001,iman001_desc(chr80),iman001_desc_desc(chr80),imaa009(imaa_t.imaa009),imaa009_desc(chr80),imaa003(imaa_t.imaa003),imaa003_desc(chr80),iman011,iman011_desc(chr80)" pk="iman001" order=""/>
+      <bs_reference field="iman001_desc" ref_field="iman001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+      <bs_reference field="iman001_desc_desc" ref_field="iman001" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+      <bs_reference field="imaa009_desc" ref_field="imaa009" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+      <bs_reference field="imaa003_desc" ref_field="imaa003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;200&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+      <bs_reference field="iman011_desc" ref_field="iman011" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;229&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="open_aimm202"/>
+      <action id="open_aimm207"/>
+      <action id="open_aimm200"/>
+      <action id="open_aimm206"/>
+      <action id="open_aimm204"/>
+      <action id="output"/>
+      <action id="aimm201_01"/>
+      <action id="query" type="standard"/>
+      <action id="open_aimm201"/>
+      <action id="open_aimm203"/>
+      <action id="open_aimm205"/>
+      <action id="open_aimm208"/>
+      <action id="prog_imaa009" lib="cl_user_contact" parameter="&quot;aimi010&quot;, &quot;rtax_t&quot;, &quot;rtax001&quot;, &quot;rtax001&quot;,g_imaf_m.imaa009,g_imaa_m.imaa009"/>
+      <action id="prog_imaa003" lib="cl_user_contact" parameter="&quot;aimi100&quot;, &quot;imca_t&quot;, &quot;imca001&quot;, &quot;imca001&quot;,g_imaf_m.imaa003,g_imaa_m.imaa003"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="aim" filename="aimm210" method="dialog">
+    <section id="input">
+      <input id="head" field="imaal003,imaal004,imaal005,iman011,iman012,iman013,iman014,iman021,iman022,iman023,iman024,iman025,iman031,iman032,iman033,iman034"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="iman001,imaa002,imaal003,imaal004,imaal005,imaa009,imaa003,imaa004,imaa005,imaa006,imaa010,iman011,iman012,iman013,iman014,imanownid,imanowndp,imancrtid,imancrtdp,imancrtdt,imanmodid,imanmoddt,iman021,iman022,iman023,iman024,iman025,iman031,iman032,iman033,iman034"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="iman001"/>
+      <set id="head" type="no_entry" field="iman001"/>
+    </init>
+    <init id="head">
+      <column id="iman001">
+        <controlp form="q_imaa001" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="imaa002"/>
+      <column id="imaal003"/>
+      <column id="imaal004"/>
+      <column id="imaal005"/>
+      <column id="imaa009">
+        <after>
+          <reference field="imaa009_desc" ref_field="imaa_t.imaa009" map_field="imaaent,imaa009" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001" state="i"/>
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="imaa009_desc"/>
+      <column id="imaa003">
+        <after>
+          <reference field="imaa003_desc" ref_field="imaa003" map_field="imaa003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;200&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imca001_1" state="i"/>
+        <controlp form="q_imca001_1" state="c"/>
+      </column>
+      <column id="imaa003_desc"/>
+      <column id="imaa004" def_scc="1001"/>
+      <column id="imaa005">
+        <after>
+          <reference field="imaa005_desc" ref_field="imaa_t.imaa005" map_field="imaa005" ref_sql="SELECT imeal003 FROM imeal_t WHERE imealent=$varg_enterprise$var AND imeal001=? AND imeal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imea001" state="i"/>
+        <controlp form="q_imea001" state="c"/>
+      </column>
+      <column id="imaa005_desc"/>
+      <column id="imaa006">
+        <after>
+          <reference field="imaa006_desc" ref_field="imaa_t.imaa006" map_field="imaaent,imaa006" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="imaa006_desc"/>
+      <column id="imaa010">
+        <after>
+          <reference field="imaa010_desc" ref_field="imaa010" map_field="imaa010" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;210&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="imaa010_desc"/>
+      <column id="imanstus" scc="50">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="iman011">
+        <after>
+          <reference field="iman011_desc" ref_field="iman011" map_field="iman011" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;229&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="iman011_desc"/>
+      <column id="iman012" type="S" default="N"/>
+      <column id="iman013" def_scc="1022"/>
+      <column id="iman014" def_scc="1023"/>
+      <column id="imanownid">
+        <after>
+          <reference field="imanownid_desc" ref_field="iman_t.imanownid" map_field="imanownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imanownid_desc"/>
+      <column id="imanowndp">
+        <after>
+          <reference field="imanowndp_desc" ref_field="iman_t.imanowndp" map_field="imanowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imanowndp_desc"/>
+      <column id="imancrtid">
+        <after>
+          <reference field="imancrtid_desc" ref_field="iman_t.imancrtid" map_field="imancrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imancrtid_desc"/>
+      <column id="imancrtdp">
+        <after>
+          <reference field="imancrtdp_desc" ref_field="iman_t.imancrtdp" map_field="imancrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imancrtdp_desc"/>
+      <column id="imancrtdt"/>
+      <column id="imanmodid">
+        <after>
+          <reference field="imanmodid_desc" ref_field="iman_t.imanmodid" map_field="imanmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imanmodid_desc"/>
+      <column id="imanmoddt"/>
+      <column id="iman021"/>
+      <column id="iman022" type="S" default="0">
+        <after>
+          <check id="range" st="100" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="iman023"/>
+      <column id="iman024" type="S" default="0">
+        <after>
+          <check id="range" st="100" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="iman025" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="iman031" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="iman032"/>
+      <column id="iman033"/>
+      <column id="iman034" type="S" default="N"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="iman_t" pk="iman001">
+      <sql id="forupd_sql" type="sql" query="SELECT iman001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,imanstus,iman011,&apos;&apos;,iman012,iman013,iman014,imanownid,&apos;&apos;,imanowndp,&apos;&apos;,imancrtid,&apos;&apos;,imancrtdp,&apos;&apos;,imancrtdt,imanmodid,&apos;&apos;,imanmoddt,iman021,iman022,iman023,iman024,iman025,iman031,iman032,iman033,iman034 FROM iman_t WHERE imanent= ? AND imansite= ? AND iman001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT iman001 FROM iman_t" order="iman001"/>
+      <sql id="append" type="lang" target="imaal_t.imaal003,imaal_t.imaal004,imaal_t.imaal005" table="imaal_t" fk="iman001" pk="imaal001,imaal002" field="imaal003,imaal004,imaal005"/>
+    </head>
+  </dataset>
+</assembly>
+

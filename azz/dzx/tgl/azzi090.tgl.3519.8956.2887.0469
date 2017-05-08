@@ -1,0 +1,1359 @@
+#+ 程式版本......: T6 Version 1.00.00 Build-0054 at 13/02/04
+#
+#+ 程式代碼......: azzi090
+#+ 設計人員......: ernestliou
+#樣板功能名稱: code_i02 標準單檔多欄(單table)
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+{<Module define>}
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_gztd_d RECORD
+       gztdstus LIKE gztd_t.gztdstus, 
+   gztd001 LIKE gztd_t.gztd001, 
+   gztd002 LIKE gztd_t.gztd002, 
+   gztd004 LIKE gztd_t.gztd004, 
+   gztd003 LIKE gztd_t.gztd003, 
+   gztd005 LIKE gztd_t.gztd005, 
+   gztd006 LIKE gztd_t.gztd006, 
+   gztd007 LIKE gztd_t.gztd007, 
+   gztd008 LIKE gztd_t.gztd008, 
+   gztdmodu LIKE gztd_t.gztdmodu, 
+   modu_desc LIKE type_t.chr80, 
+   gztddate DATETIME YEAR TO SECOND, 
+   gztdoriu LIKE gztd_t.gztdoriu, 
+   oriu_desc LIKE type_t.chr80, 
+   gztdorid LIKE gztd_t.gztdorid, 
+   orid_desc LIKE type_t.chr80, 
+   gztduser LIKE gztd_t.gztduser, 
+   user_desc LIKE type_t.chr80, 
+   gztddept LIKE gztd_t.gztddept, 
+   dept_desc LIKE type_t.chr80, 
+   gztdbuid DATETIME YEAR TO SECOND
+       END RECORD
+
+ 
+#無單身append欄位定義
+ 
+#模組變數(Module Variables)
+DEFINE g_gztd_d          DYNAMIC ARRAY OF type_g_gztd_d
+DEFINE g_gztd_d_t        type_g_gztd_d
+
+      
+DEFINE g_wc2                STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                  #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num5        #目前處理的ARRAY CNT 
+DEFINE g_curr_diag          ui.Dialog               #Current Dialog
+DEFINE g_temp_idx           LIKE type_t.num5        #單身 所在筆數(暫存用)
+DEFINE g_detail_idx         LIKE type_t.num5        #單身 所在筆數(所有資料)
+DEFINE g_detail_cnt         LIKE type_t.num5        #單身 總筆數(所有資料)
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+{</Module define>}
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#+ 作業開始
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("azz","N")
+   
+   #add-point:作業初始化
+   {<point name="main.init"/>}
+   #end add-point
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+ 
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_azzi090 WITH FORM cl_ap_formpath("azz",g_prog)
+ 
+      CALL azzi090_init()   
+         
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      CALL azzi090_default_search()
+   
+      #進入選單 Menu (="N")
+      CALL azzi090_ui_dialog() 
+ 
+      #畫面關閉
+      CLOSE WINDOW w_azzi090
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")     
+   
+END MAIN
+ 
+ 
+#+ 畫面資料初始化
+PRIVATE FUNCTION azzi090_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point   
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+ 
+ 
+#+ 功能選單 
+PRIVATE FUNCTION azzi090_ui_dialog()
+   {<Local define>}
+   DEFINE li_idx   LIKE type_t.num5
+   {</Local define>}
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point 
+ 
+   LET g_action_choice = " "          
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+   
+   WHILE TRUE
+   
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         DISPLAY ARRAY g_gztd_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt) 
+      
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               LET g_temp_idx = l_ac
+               IF g_gztd_d[l_ac].gztdstus = "Y" THEN
+                  CALL cl_set_act_visible("void", TRUE)
+                  CALL cl_set_act_visible("valid", FALSE)
+               ELSE
+                  CALL cl_set_act_visible("valid", TRUE)
+                  CALL cl_set_act_visible("void", FALSE)
+               END IF
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               CALL cl_show_fld_cont() 
+         END DISPLAY
+      
+
+      
+         #add-point:ui_dialog段define
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         
+         BEFORE DIALOG
+            IF g_temp_idx > 0 THEN
+               LET l_ac = g_temp_idx
+               CALL DIALOG.setCurrentRow("s_detail1",l_ac)
+               LET g_temp_idx = 1
+            END IF
+            LET g_curr_diag = ui.DIALOG.getCurrent()         
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            NEXT FIELD CURRENT
+      
+         
+
+
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_chk_act_auth() THEN 
+               CALL azzi090_query()
+            #add-point:ON ACTION query
+            {<point name="menu.query" />}
+            #END add-point
+
+                EXIT DIALOG
+            END IF
+
+
+
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_chk_act_auth() THEN 
+               CALL azzi090_modify()
+            #add-point:ON ACTION modify
+            {<point name="menu.modify" />}
+            #END add-point
+
+                EXIT DIALOG
+            END IF
+
+      
+         # 全選修改狀態
+         ON ACTION valid
+            CALL azzi090_statechange("Y")
+            #資料重讀
+            CALL azzi090_b_fill(g_wc2)
+            EXIT DIALOG
+            
+         ON ACTION void
+            CALL azzi090_statechange("N")
+            #資料重讀
+            CALL azzi090_b_fill(g_wc2)
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice="exit"
+            EXIT WHILE
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT WHILE
+      
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+	  
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+ 
+#+ QBE資料查詢
+PRIVATE FUNCTION azzi090_query()
+   {<Local define>}
+   DEFINE ls_wc      LIKE type_t.chr500
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   {</Local define>}
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point 
+   
+   LET INT_FLAG = 0
+   CLEAR FORM
+   CALL g_gztd_d.clear()
+   
+   #wc備份
+   LET ls_wc = g_wc2
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      CONSTRUCT g_wc2 ON gztdstus,gztd001,gztd002,gztd004,gztd003,gztd005,gztd006,gztd007,gztd008,gztdmodu,gztddate,gztdoriu,gztdorid,gztduser,gztddept,gztdbuid                        
+         FROM s_detail1[1].gztdstus,s_detail1[1].gztd001,s_detail1[1].gztd002,s_detail1[1].gztd004,s_detail1[1].gztd003,s_detail1[1].gztd005,s_detail1[1].gztd006,s_detail1[1].gztd007,s_detail1[1].gztd008,s_detail1[1].gztdmodu,s_detail1[1].gztddate,s_detail1[1].gztdoriu,s_detail1[1].gztdorid,s_detail1[1].gztduser,s_detail1[1].gztddept,s_detail1[1].gztdbuid 
+      
+         #----<<gztdmodu>>----
+         ON ACTION controlp INFIELD gztdmodu
+            CALL q_common("gztd_t","gztdmodu",TRUE,FALSE,g_gztd_d[l_ac].gztdmodu) RETURNING ls_return
+            DISPLAY ls_return TO gztdmodu
+            NEXT FIELD gztdmodu
+      
+         #----<<gztdoriu>>----
+         ON ACTION controlp INFIELD gztdoriu
+            CALL q_common("gztd_t","gztdoriu",TRUE,FALSE,g_gztd_d[l_ac].gztdoriu) RETURNING ls_return
+            DISPLAY ls_return TO gztdoriu
+            NEXT FIELD gztdoriu
+      
+         #----<<gztduser>>----
+         ON ACTION controlp INFIELD gztduser
+            CALL q_common("gztd_t","gztduser",TRUE,FALSE,g_gztd_d[l_ac].gztduser) RETURNING ls_return
+            DISPLAY ls_return TO gztduser
+            NEXT FIELD gztduser
+      
+         #----<<gztdorid>>----
+         ON ACTION controlp INFIELD gztdorid
+            CALL q_common("gztd_t","gztdorid",TRUE,FALSE,g_gztd_d[l_ac].gztdorid) RETURNING ls_return
+            DISPLAY ls_return TO gztdorid
+            NEXT FIELD gztdorid
+      
+         #----<<gztddept>>----
+         ON ACTION controlp INFIELD gztddept
+            CALL q_common("gztd_t","gztddept",TRUE,FALSE,g_gztd_d[l_ac].gztddept) RETURNING ls_return
+            DISPLAY ls_return TO gztddept
+            NEXT FIELD gztddept
+ 
+         #----<<gztdbuid>>----
+         AFTER FIELD gztdbuid
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<gztddate>>----
+         AFTER FIELD gztddate
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+      
+         #---------------------<  Detail: page     1  >---------------------
+         #----<<gztdstus>>----
+         #Ctrlp:query.c.gztdstus
+         ON ACTION controlp INFIELD gztdstus
+            #add-point:ON ACTION controlp INFIELD gztdstus
+            {<point name="query.c.page1.gztdstus" />}
+            #END add-point
+
+         #----<<gztd001>>----
+         #Ctrlp:query.c.gztd001
+         ON ACTION controlp INFIELD gztd001
+            #add-point:ON ACTION controlp INFIELD gztd001
+            {<point name="query.c.page1.gztd001" />}
+            #END add-point
+
+         #----<<gztd002>>----
+         #Ctrlp:query.c.gztd002
+         ON ACTION controlp INFIELD gztd002
+            #add-point:ON ACTION controlp INFIELD gztd002
+            {<point name="query.c.page1.gztd002" />}
+            #END add-point
+
+         #----<<gztd004>>----
+         #Ctrlp:query.c.gztd004
+         ON ACTION controlp INFIELD gztd004
+            #add-point:ON ACTION controlp INFIELD gztd004
+            {<point name="query.c.page1.gztd004" />}
+            #END add-point
+
+         #----<<gztd003>>----
+         #Ctrlp:query.c.gztd003
+         ON ACTION controlp INFIELD gztd003
+            #add-point:ON ACTION controlp INFIELD gztd003
+            {<point name="query.c.page1.gztd003" />}
+            #END add-point
+
+         #----<<gztd005>>----
+         #Ctrlp:query.c.gztd005
+         ON ACTION controlp INFIELD gztd005
+            #add-point:ON ACTION controlp INFIELD gztd005
+            {<point name="query.c.page1.gztd005" />}
+            #END add-point
+
+         #----<<gztd006>>----
+         #Ctrlp:query.c.gztd006
+         ON ACTION controlp INFIELD gztd006
+            #add-point:ON ACTION controlp INFIELD gztd006
+            {<point name="query.c.page1.gztd006" />}
+            #END add-point
+
+         #----<<gztd007>>----
+         #Ctrlp:query.c.gztd007
+         ON ACTION controlp INFIELD gztd007
+            #add-point:ON ACTION controlp INFIELD gztd007
+            {<point name="query.c.page1.gztd007" />}
+            #END add-point
+
+         #----<<gztd008>>----
+         #Ctrlp:query.c.gztd008
+         ON ACTION controlp INFIELD gztd008
+            #add-point:ON ACTION controlp INFIELD gztd008
+            {<point name="query.c.page1.gztd008" />}
+            #END add-point
+
+         #----<<gztdmodu>>----
+         #----<<modu_desc>>----
+         #----<<gztddate>>----
+         #----<<gztdoriu>>----
+         #----<<oriu_desc>>----
+         #----<<gztdorid>>----
+         #----<<orid_desc>>----
+         #----<<gztduser>>----
+         #----<<user_desc>>----
+         #----<<gztddept>>----
+         #----<<dept_desc>>----
+         #----<<gztdbuid>>----
+  
+      
+         BEFORE CONSTRUCT
+            CALL cl_qbe_init()
+      
+         ON ACTION qbe_select
+            CALL cl_qbe_select()
+      
+         ON ACTION qbe_save
+            CALL cl_qbe_save()
+      
+      END CONSTRUCT
+  
+      #add-point:query段more_construct
+      {<point name="query.more_construct"/>}
+      #end add-point 
+	  
+	  ON ACTION accept
+	     EXIT DIALOG
+		 
+	  ON ACTION cancel
+	     LET INT_FLAG = 1
+		 EXIT DIALOG
+	  
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   LET g_wc2 = g_wc2 CLIPPED, cl_get_extra_cond("g_gztd_d[l_ac].gztduser", "")
+ 
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      #還原
+      #LET g_wc2 = ls_wc
+	  LET g_wc2 = " 1=1"
+   END IF
+  
+   CALL azzi090_b_fill(g_wc2)
+   
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      CALL cl_err("",-100,1)
+   END IF
+   
+   LET INT_FLAG = FALSE
+   
+END FUNCTION
+ 
+ 
+#+ 資料修改
+PRIVATE FUNCTION azzi090_modify()
+   {<Local define>}
+   DEFINE l_ac_t          LIKE type_t.num5     #未取消的ARRAY CNT      
+   DEFINE l_n             LIKE type_t.num5     #檢查重複用             
+   DEFINE l_lock_sw       LIKE type_t.chr1     #單身鎖住否            
+   DEFINE p_cmd           LIKE type_t.chr1     #處理狀態              
+   DEFINE l_allow_insert  LIKE type_t.chr1     #可新增否
+   DEFINE l_allow_delete  LIKE type_t.chr1     
+   DEFINE l_insert        LIKE type_t.num5     #輸入時判斷是否在inser狀態
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   {</Local define>}
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point 
+   
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   LET l_allow_insert = cl_detail_input_auth("insert")
+   LET l_allow_delete = cl_detail_input_auth("delete")
+ 
+   LET g_forupd_sql = "SELECT gztdstus,gztd001,gztd002,gztd004,gztd003,gztd005,gztd006,gztd007,gztd008,gztdmodu,'',gztddate,gztdoriu,'',gztdorid,'',gztduser,'',gztddept,'',gztdbuid FROM gztd_t WHERE gztd001=? FOR UPDATE"
+   LET g_forupd_sql = cl_forupd_sql(g_forupd_sql)
+   DECLARE azzi090_bcl CURSOR FROM g_forupd_sql      # LOCK CURSOR
+ 
+   INPUT ARRAY g_gztd_d FROM s_detail1.*
+         ATTRIBUTE (WITHOUT DEFAULTS, UNBUFFERED, FIELD ORDER FORM,
+                    COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,
+                    INSERT ROW = l_allow_insert, DELETE ROW = l_allow_delete,
+                    APPEND ROW = l_allow_insert)
+      #自訂ACTION
+      
+ 
+      BEFORE INPUT
+         IF g_detail_cnt != 0 THEN
+            CALL fgl_set_arr_curr(l_ac)
+         END IF
+ 
+      BEFORE ROW
+         LET p_cmd="" 
+         LET l_ac = ARR_CURR()
+         LET l_lock_sw = "N"            #DEFAULT
+         LET l_n  = ARR_COUNT()
+ 
+         IF g_detail_cnt>=l_ac THEN
+            BEGIN WORK
+            LET p_cmd="u"
+ 
+            LET g_before_input_done = FALSE                                      
+            CALL azzi090_set_entry_b(p_cmd)                                           
+            CALL azzi090_set_no_entry_b(p_cmd)                                        
+            LET g_before_input_done = TRUE                                       
+            
+            LET g_gztd_d_t.* = g_gztd_d[l_ac].*  #BACKUP
+ 
+            OPEN azzi090_bcl USING g_gztd_d_t.gztd001
+
+            IF STATUS THEN
+               CALL cl_err("OPEN azzi090_bcl:", STATUS, 1)
+               LET l_lock_sw = "Y"
+            ELSE 
+               FETCH azzi090_bcl INTO g_gztd_d[l_ac].gztdstus,g_gztd_d[l_ac].gztd001,g_gztd_d[l_ac].gztd002,g_gztd_d[l_ac].gztd004,g_gztd_d[l_ac].gztd003,g_gztd_d[l_ac].gztd005,g_gztd_d[l_ac].gztd006,g_gztd_d[l_ac].gztd007,g_gztd_d[l_ac].gztd008,g_gztd_d[l_ac].gztdmodu,g_gztd_d[l_ac].modu_desc,g_gztd_d[l_ac].gztddate,g_gztd_d[l_ac].gztdoriu,g_gztd_d[l_ac].oriu_desc,g_gztd_d[l_ac].gztdorid,g_gztd_d[l_ac].orid_desc,g_gztd_d[l_ac].gztduser,g_gztd_d[l_ac].user_desc,g_gztd_d[l_ac].gztddept,g_gztd_d[l_ac].dept_desc,g_gztd_d[l_ac].gztdbuid 
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err(g_gztd_d_t.gztd001,SQLCA.sqlcode,1)
+                  LET l_lock_sw = "Y"
+               END IF
+            END IF
+            
+            CALL azzi090_detail_show()      
+            CALL cl_show_fld_cont() 
+ 
+            
+ 
+            #add-point:modify段before_row
+            {<point name="modify.before_row"/>}
+            #end add-point  
+         END IF
+  
+      BEFORE INSERT
+         LET l_insert = TRUE
+         LET l_n = ARR_COUNT()
+         LET p_cmd="a"   
+                                                        
+         LET g_before_input_done = FALSE                                        
+         CALL azzi090_set_entry_b(p_cmd)                                             
+         CALL azzi090_set_no_entry_b(p_cmd)                                          
+         LET g_before_input_done = TRUE                                         
+ 
+         INITIALIZE g_gztd_d[l_ac].* TO NULL      
+ 
+         LET g_gztd_d_t.* = g_gztd_d[l_ac].*         #新輸入資料
+         CALL cl_show_fld_cont()  
+         LET g_gztd_d[l_ac].gztdstus = "Y"
+         LET g_gztd_d[l_ac].gztdbuid = cl_get_current()
+         LET g_gztd_d[l_ac].gztddate = cl_get_current()
+         LET g_gztd_d[l_ac].gztdmodu = g_user
+         LET g_gztd_d[l_ac].gztduser = g_user
+         LET g_gztd_d[l_ac].gztdoriu = g_user
+         LET g_gztd_d[l_ac].gztdorid = g_dept
+         LET g_gztd_d[l_ac].gztddept = g_dept
+         
+        
+                  
+         CALL azzi090_detail_show()  
+         #add-point:modify段before insert
+         {<point name="modify.before_insert"/>}
+         #end add-point  
+         NEXT FIELD gztd001
+ 
+      AFTER INSERT
+         LET l_insert = FALSE
+         IF INT_FLAG THEN
+            CALL cl_err("",9001,0)
+            LET INT_FLAG = 0
+            CLOSE azzi090_bcl
+            CANCEL INSERT
+         END IF
+      
+         BEGIN WORK                    
+ 
+         #add-point:單身新增前
+         {<point name="modify.b_insert"/>}
+         #end add-point
+ 
+         INSERT INTO gztd_t
+                (gztdstus,gztd001,gztd002,gztd004,gztd003,gztd005,gztd006,gztd007,gztd008,gztdmodu,gztddate,gztdoriu,gztdorid,gztduser,gztddept,gztdbuid)
+         VALUES (g_gztd_d[l_ac].gztdstus,g_gztd_d[l_ac].gztd001,g_gztd_d[l_ac].gztd002,g_gztd_d[l_ac].gztd004,g_gztd_d[l_ac].gztd003,g_gztd_d[l_ac].gztd005,g_gztd_d[l_ac].gztd006,g_gztd_d[l_ac].gztd007,g_gztd_d[l_ac].gztd008,g_gztd_d[l_ac].gztdmodu,g_gztd_d[l_ac].gztddate,g_gztd_d[l_ac].gztdoriu,g_gztd_d[l_ac].gztdorid,g_gztd_d[l_ac].gztduser,g_gztd_d[l_ac].gztddept,g_gztd_d[l_ac].gztdbuid)
+                
+         IF SQLCA.sqlcode THEN
+            CALL cl_err("gztd_t",SQLCA.sqlcode,1)  
+            ROLLBACK WORK              
+            CANCEL INSERT
+         ELSE
+            #add-point:after_insert
+            {<point name="modify.after_insert"/>}
+            #end add-point
+            #資料多語言用-增/改
+            
+            ERROR "INSERT O.K"
+            LET g_detail_cnt=g_detail_cnt+1
+            DISPLAY g_detail_cnt TO FORMONLY.cnt
+            CALL azzi090_detail_show()      
+         END IF
+         
+         #add-point:單身新增後
+         {<point name="modify.a_insert"/>}
+         #end add-point
+ 
+      BEFORE DELETE                            #是否取消單身
+         IF g_gztd_d_t.gztd001 IS NOT NULL THEN
+ 
+            #add-point:單身刪除前
+            {<point name="modify.b_delete"/>}
+            #end add-point
+ 
+            IF NOT cl_ask_delete() THEN
+               ROLLBACK WORK
+               CANCEL DELETE
+            END IF
+ 
+            IF l_lock_sw = "Y" THEN 
+               CALL cl_err("", -263, 1) 
+               ROLLBACK WORK
+               CANCEL DELETE 
+            END IF 
+            
+            DELETE FROM gztd_t
+             WHERE  gztd001 = g_gztd_d_t.gztd001
+
+            IF SQLCA.sqlcode THEN
+               CALL cl_err("gztd_t",SQLCA.sqlcode,1) 
+               ROLLBACK WORK
+               CANCEL DELETE
+               EXIT INPUT
+            ELSE
+               ERROR "DELETE O.K."
+               LET g_detail_cnt=g_detail_cnt-1
+               DISPLAY g_detail_cnt TO FORMONLY.cnt
+            END IF
+            
+            #add-point:單身刪除後
+            {<point name="modify.a_delete"/>}
+            #end add-point
+            
+         END IF
+      
+      AFTER DELETE 
+         #add-point:單身刪除後2
+         {<point name="modify.after_delete"/>}
+         #end add-point
+ 
+      ON ROW CHANGE
+         IF INT_FLAG THEN                 #新增程式段
+            CALL cl_err("",9001,0)
+            LET INT_FLAG = 0
+            LET g_gztd_d[l_ac].* = g_gztd_d_t.*
+            CLOSE azzi090_bcl
+            ROLLBACK WORK
+            EXIT INPUT
+         END IF
+ 
+         IF l_lock_sw = "Y" THEN
+            CALL cl_err(g_gztd_d[l_ac].gztd001,-263,0)
+            LET g_gztd_d[l_ac].* = g_gztd_d_t.*
+         ELSE
+            LET g_gztd_d[l_ac].gztdmodu = g_user                  #修改者
+            LET g_gztd_d[l_ac].gztddate = cl_get_current()        #修改日期
+            
+            #add-point:單身修改前
+            {<point name="modify.b_update"/>}
+            #end add-point
+      
+            UPDATE gztd_t
+               SET (gztdstus,gztd001,gztd002,gztd004,gztd003,gztd005,gztd006,gztd007,gztd008,gztdmodu,gztddate,gztdoriu,gztdorid,gztduser,gztddept,gztdbuid) = 
+                   (g_gztd_d[l_ac].gztdstus,g_gztd_d[l_ac].gztd001,g_gztd_d[l_ac].gztd002,g_gztd_d[l_ac].gztd004,g_gztd_d[l_ac].gztd003,g_gztd_d[l_ac].gztd005,g_gztd_d[l_ac].gztd006,g_gztd_d[l_ac].gztd007,g_gztd_d[l_ac].gztd008,g_gztd_d[l_ac].gztdmodu,g_gztd_d[l_ac].gztddate,g_gztd_d[l_ac].gztdoriu,g_gztd_d[l_ac].gztdorid,g_gztd_d[l_ac].gztduser,g_gztd_d[l_ac].gztddept,g_gztd_d[l_ac].gztdbuid)
+             WHERE  gztd001 = g_gztd_d_t.gztd001 
+
+            IF SQLCA.sqlcode THEN
+               CALL cl_err("gztd_t",SQLCA.sqlcode,1)
+               ROLLBACK WORK
+               LET g_gztd_d[l_ac].* = g_gztd_d_t.*
+            ELSE
+               ERROR "UPDATE O.K"
+               #add-point:on_row_change
+               {<point name="modify.on_row_change"/>}
+               #end add-point
+               #資料多語言用-增/改
+               
+               CALL azzi090_detail_show()      
+            END IF
+            
+            #add-point:單身修改後
+            {<point name="modify.a_update"/>}
+            #end add-point
+         END IF
+ 
+      AFTER ROW
+         LET l_ac = ARR_CURR()
+         LET l_ac_t = l_ac
+ 
+         IF INT_FLAG THEN
+            CALL cl_err("",9001,0)
+            LET INT_FLAG = 0
+            IF p_cmd="u" THEN
+               LET g_gztd_d[l_ac].* = g_gztd_d_t.*
+            END IF
+            CLOSE azzi090_bcl      
+            ROLLBACK WORK
+            EXIT INPUT
+         END IF
+         CLOSE azzi090_bcl
+         COMMIT WORK
+        
+      #---------------------<  Detail: page     1  >---------------------
+         #----<<gztdstus>>----
+         BEFORE FIELD gztdstus
+            #add-point:BEFORE FIELD gztdstus
+            {<point name="input.b.page1.gztdstus" />}
+            #END add-point
+
+         AFTER FIELD gztdstus
+            #add-point:AFTER FIELD gztdstus
+            {<point name="input.a.page1.gztdstus" />}
+            #END add-point
+
+         ON CHANGE gztdstus
+            #add-point:ON CHANGE gztdstus
+            {<point name="input.g.page1.gztdstus" />}
+            #END add-point
+
+         #----<<gztd001>>----
+         BEFORE FIELD gztd001
+            #add-point:BEFORE FIELD gztd001
+            {<point name="input.b.page1.gztd001" />}
+            #END add-point
+
+         AFTER FIELD gztd001
+            #add-point:AFTER FIELD gztd001
+            {<point name="input.a.page1.gztd001" />}
+            #END add-point
+
+         ON CHANGE gztd001
+            #add-point:ON CHANGE gztd001
+            {<point name="input.g.page1.gztd001" />}
+            #END add-point
+
+         #----<<gztd002>>----
+         BEFORE FIELD gztd002
+            #add-point:BEFORE FIELD gztd002
+            {<point name="input.b.page1.gztd002" />}
+            #END add-point
+
+         AFTER FIELD gztd002
+            #add-point:AFTER FIELD gztd002
+            {<point name="input.a.page1.gztd002" />}
+            #END add-point
+
+         ON CHANGE gztd002
+            #add-point:ON CHANGE gztd002
+            {<point name="input.g.page1.gztd002" />}
+            #END add-point
+
+         #----<<gztd004>>----
+         BEFORE FIELD gztd004
+            #add-point:BEFORE FIELD gztd004
+            {<point name="input.b.page1.gztd004" />}
+            #END add-point
+
+         AFTER FIELD gztd004
+            #add-point:AFTER FIELD gztd004
+            {<point name="input.a.page1.gztd004" />}
+            #END add-point
+
+         ON CHANGE gztd004
+            #add-point:ON CHANGE gztd004
+            {<point name="input.g.page1.gztd004" />}
+            #END add-point
+
+         #----<<gztd003>>----
+         BEFORE FIELD gztd003
+            #add-point:BEFORE FIELD gztd003
+            {<point name="input.b.page1.gztd003" />}
+            #END add-point
+
+         AFTER FIELD gztd003
+            #add-point:AFTER FIELD gztd003
+            {<point name="input.a.page1.gztd003" />}
+            #END add-point
+
+         ON CHANGE gztd003
+            #add-point:ON CHANGE gztd003
+            {<point name="input.g.page1.gztd003" />}
+            #END add-point
+
+         #----<<gztd005>>----
+         BEFORE FIELD gztd005
+            #add-point:BEFORE FIELD gztd005
+            {<point name="input.b.page1.gztd005" />}
+            #END add-point
+
+         AFTER FIELD gztd005
+            #add-point:AFTER FIELD gztd005
+            {<point name="input.a.page1.gztd005" />}
+            #END add-point
+
+         ON CHANGE gztd005
+            #add-point:ON CHANGE gztd005
+            {<point name="input.g.page1.gztd005" />}
+            #END add-point
+
+         #----<<gztd006>>----
+         BEFORE FIELD gztd006
+            #add-point:BEFORE FIELD gztd006
+            {<point name="input.b.page1.gztd006" />}
+            #END add-point
+
+         AFTER FIELD gztd006
+            #add-point:AFTER FIELD gztd006
+            {<point name="input.a.page1.gztd006" />}
+            #END add-point
+
+         ON CHANGE gztd006
+            #add-point:ON CHANGE gztd006
+            {<point name="input.g.page1.gztd006" />}
+            #END add-point
+
+         #----<<gztd007>>----
+         BEFORE FIELD gztd007
+            #add-point:BEFORE FIELD gztd007
+            {<point name="input.b.page1.gztd007" />}
+            #END add-point
+
+         AFTER FIELD gztd007
+            #add-point:AFTER FIELD gztd007
+            {<point name="input.a.page1.gztd007" />}
+            #END add-point
+
+         ON CHANGE gztd007
+            #add-point:ON CHANGE gztd007
+            {<point name="input.g.page1.gztd007" />}
+            #END add-point
+
+         #----<<gztd008>>----
+         BEFORE FIELD gztd008
+            #add-point:BEFORE FIELD gztd008
+            {<point name="input.b.page1.gztd008" />}
+            #END add-point
+
+         AFTER FIELD gztd008
+            #add-point:AFTER FIELD gztd008
+            {<point name="input.a.page1.gztd008" />}
+            #END add-point
+
+         ON CHANGE gztd008
+            #add-point:ON CHANGE gztd008
+            {<point name="input.g.page1.gztd008" />}
+            #END add-point
+
+         #----<<gztdmodu>>----
+         BEFORE FIELD gztdmodu
+            #add-point:BEFORE FIELD gztdmodu
+            {<point name="input.b.page1.gztdmodu" />}
+            #END add-point
+
+         AFTER FIELD gztdmodu
+            #add-point:AFTER FIELD gztdmodu
+            {<point name="input.a.page1.gztdmodu" />}
+            #END add-point
+
+         ON CHANGE gztdmodu
+            #add-point:ON CHANGE gztdmodu
+            {<point name="input.g.page1.gztdmodu" />}
+            #END add-point
+
+         #----<<modu_desc>>----
+         #----<<gztddate>>----
+         BEFORE FIELD gztddate
+            #add-point:BEFORE FIELD gztddate
+            {<point name="input.b.page1.gztddate" />}
+            #END add-point
+
+         AFTER FIELD gztddate
+            #add-point:AFTER FIELD gztddate
+            {<point name="input.a.page1.gztddate" />}
+            #END add-point
+
+         ON CHANGE gztddate
+            #add-point:ON CHANGE gztddate
+            {<point name="input.g.page1.gztddate" />}
+            #END add-point
+
+         #----<<gztdoriu>>----
+         BEFORE FIELD gztdoriu
+            #add-point:BEFORE FIELD gztdoriu
+            {<point name="input.b.page1.gztdoriu" />}
+            #END add-point
+
+         AFTER FIELD gztdoriu
+            #add-point:AFTER FIELD gztdoriu
+            {<point name="input.a.page1.gztdoriu" />}
+            #END add-point
+
+         ON CHANGE gztdoriu
+            #add-point:ON CHANGE gztdoriu
+            {<point name="input.g.page1.gztdoriu" />}
+            #END add-point
+
+         #----<<oriu_desc>>----
+         #----<<gztdorid>>----
+         BEFORE FIELD gztdorid
+            #add-point:BEFORE FIELD gztdorid
+            {<point name="input.b.page1.gztdorid" />}
+            #END add-point
+
+         AFTER FIELD gztdorid
+            #add-point:AFTER FIELD gztdorid
+            {<point name="input.a.page1.gztdorid" />}
+            #END add-point
+
+         ON CHANGE gztdorid
+            #add-point:ON CHANGE gztdorid
+            {<point name="input.g.page1.gztdorid" />}
+            #END add-point
+
+         #----<<orid_desc>>----
+         #----<<gztduser>>----
+         BEFORE FIELD gztduser
+            #add-point:BEFORE FIELD gztduser
+            {<point name="input.b.page1.gztduser" />}
+            #END add-point
+
+         AFTER FIELD gztduser
+            #add-point:AFTER FIELD gztduser
+            {<point name="input.a.page1.gztduser" />}
+            #END add-point
+
+         ON CHANGE gztduser
+            #add-point:ON CHANGE gztduser
+            {<point name="input.g.page1.gztduser" />}
+            #END add-point
+
+         #----<<user_desc>>----
+         #----<<gztddept>>----
+         BEFORE FIELD gztddept
+            #add-point:BEFORE FIELD gztddept
+            {<point name="input.b.page1.gztddept" />}
+            #END add-point
+
+         AFTER FIELD gztddept
+            #add-point:AFTER FIELD gztddept
+            {<point name="input.a.page1.gztddept" />}
+            #END add-point
+
+         ON CHANGE gztddept
+            #add-point:ON CHANGE gztddept
+            {<point name="input.g.page1.gztddept" />}
+            #END add-point
+
+         #----<<dept_desc>>----
+         #----<<gztdbuid>>----
+         BEFORE FIELD gztdbuid
+            #add-point:BEFORE FIELD gztdbuid
+            {<point name="input.b.page1.gztdbuid" />}
+            #END add-point
+
+         AFTER FIELD gztdbuid
+            #add-point:AFTER FIELD gztdbuid
+            {<point name="input.a.page1.gztdbuid" />}
+            #END add-point
+
+         ON CHANGE gztdbuid
+            #add-point:ON CHANGE gztdbuid
+            {<point name="input.g.page1.gztdbuid" />}
+            #END add-point
+
+
+      #---------------------<  Detail: page     1  >---------------------
+         #----<<gztdstus>>----
+         #Ctrlp:input.c.gztdstus
+         ON ACTION controlp INFIELD gztdstus
+            #add-point:ON ACTION controlp INFIELD gztdstus
+            {<point name="input.c.page1.gztdstus" />}
+            #END add-point
+
+         #----<<gztd001>>----
+         #Ctrlp:input.c.gztd001
+         ON ACTION controlp INFIELD gztd001
+            #add-point:ON ACTION controlp INFIELD gztd001
+            {<point name="input.c.page1.gztd001" />}
+            #END add-point
+
+         #----<<gztd002>>----
+         #Ctrlp:input.c.gztd002
+         ON ACTION controlp INFIELD gztd002
+            #add-point:ON ACTION controlp INFIELD gztd002
+            {<point name="input.c.page1.gztd002" />}
+            #END add-point
+
+         #----<<gztd004>>----
+         #Ctrlp:input.c.gztd004
+         ON ACTION controlp INFIELD gztd004
+            #add-point:ON ACTION controlp INFIELD gztd004
+            {<point name="input.c.page1.gztd004" />}
+            #END add-point
+
+         #----<<gztd003>>----
+         #Ctrlp:input.c.gztd003
+         ON ACTION controlp INFIELD gztd003
+            #add-point:ON ACTION controlp INFIELD gztd003
+            {<point name="input.c.page1.gztd003" />}
+            #END add-point
+
+         #----<<gztd005>>----
+         #Ctrlp:input.c.gztd005
+         ON ACTION controlp INFIELD gztd005
+            #add-point:ON ACTION controlp INFIELD gztd005
+            {<point name="input.c.page1.gztd005" />}
+            #END add-point
+
+         #----<<gztd006>>----
+         #Ctrlp:input.c.gztd006
+         ON ACTION controlp INFIELD gztd006
+            #add-point:ON ACTION controlp INFIELD gztd006
+            {<point name="input.c.page1.gztd006" />}
+            #END add-point
+
+         #----<<gztd007>>----
+         #Ctrlp:input.c.gztd007
+         ON ACTION controlp INFIELD gztd007
+            #add-point:ON ACTION controlp INFIELD gztd007
+            {<point name="input.c.page1.gztd007" />}
+            #END add-point
+
+         #----<<gztd008>>----
+         #Ctrlp:input.c.gztd008
+         ON ACTION controlp INFIELD gztd008
+            #add-point:ON ACTION controlp INFIELD gztd008
+            {<point name="input.c.page1.gztd008" />}
+            #END add-point
+
+         #----<<gztdmodu>>----
+         #Ctrlp:input.c.gztdmodu
+         ON ACTION controlp INFIELD gztdmodu
+            #add-point:ON ACTION controlp INFIELD gztdmodu
+            {<point name="input.c.page1.gztdmodu" />}
+            #END add-point
+
+         #----<<modu_desc>>----
+         #----<<gztddate>>----
+         #Ctrlp:input.c.gztddate
+         ON ACTION controlp INFIELD gztddate
+            #add-point:ON ACTION controlp INFIELD gztddate
+            {<point name="input.c.page1.gztddate" />}
+            #END add-point
+
+         #----<<gztdoriu>>----
+         #Ctrlp:input.c.gztdoriu
+         ON ACTION controlp INFIELD gztdoriu
+            #add-point:ON ACTION controlp INFIELD gztdoriu
+            {<point name="input.c.page1.gztdoriu" />}
+            #END add-point
+
+         #----<<oriu_desc>>----
+         #----<<gztdorid>>----
+         #Ctrlp:input.c.gztdorid
+         ON ACTION controlp INFIELD gztdorid
+            #add-point:ON ACTION controlp INFIELD gztdorid
+            {<point name="input.c.page1.gztdorid" />}
+            #END add-point
+
+         #----<<orid_desc>>----
+         #----<<gztduser>>----
+         #Ctrlp:input.c.gztduser
+         ON ACTION controlp INFIELD gztduser
+            #add-point:ON ACTION controlp INFIELD gztduser
+            {<point name="input.c.page1.gztduser" />}
+            #END add-point
+
+         #----<<user_desc>>----
+         #----<<gztddept>>----
+         #Ctrlp:input.c.gztddept
+         ON ACTION controlp INFIELD gztddept
+            #add-point:ON ACTION controlp INFIELD gztddept
+            {<point name="input.c.page1.gztddept" />}
+            #END add-point
+
+         #----<<dept_desc>>----
+         #----<<gztdbuid>>----
+         #Ctrlp:input.c.gztdbuid
+         ON ACTION controlp INFIELD gztdbuid
+            #add-point:ON ACTION controlp INFIELD gztdbuid
+            {<point name="input.c.page1.gztdbuid" />}
+            #END add-point
+
+
+      
+      
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name 
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang) 
+           
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE INPUT
+   END INPUT
+ 
+   CLOSE azzi090_bcl
+   COMMIT WORK
+   
+END FUNCTION
+ 
+ 
+#+ 單身陣列填充
+PRIVATE FUNCTION azzi090_b_fill(p_wc2)              #BODY FILL UP
+   {<Local define>}
+   DEFINE p_wc2           STRING
+   {</Local define>}
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point
+ 
+   LET g_sql = "SELECT gztdstus,gztd001,gztd002,gztd004,gztd003,gztd005,gztd006,gztd007,gztd008,gztdmodu,'',gztddate,gztdoriu,'',gztdorid,'',gztduser,'',gztddept,'',gztdbuid FROM gztd_t WHERE 1=1  AND ", p_wc2 CLIPPED,           #單身
+               " ORDER BY gztd001" 
+  
+   PREPARE azzi090_pb FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR azzi090_pb
+   
+   
+ 
+   CALL g_gztd_d.clear()
+
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+   FOREACH b_fill_curs INTO g_gztd_d[l_ac].gztdstus,g_gztd_d[l_ac].gztd001,g_gztd_d[l_ac].gztd002,g_gztd_d[l_ac].gztd004,g_gztd_d[l_ac].gztd003,g_gztd_d[l_ac].gztd005,g_gztd_d[l_ac].gztd006,g_gztd_d[l_ac].gztd007,g_gztd_d[l_ac].gztd008,g_gztd_d[l_ac].gztdmodu,g_gztd_d[l_ac].modu_desc,g_gztd_d[l_ac].gztddate,g_gztd_d[l_ac].gztdoriu,g_gztd_d[l_ac].oriu_desc,g_gztd_d[l_ac].gztdorid,g_gztd_d[l_ac].orid_desc,g_gztd_d[l_ac].gztduser,g_gztd_d[l_ac].user_desc,g_gztd_d[l_ac].gztddept,g_gztd_d[l_ac].dept_desc,g_gztd_d[l_ac].gztdbuid
+
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+  
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.fill"/>}
+      #end add-point
+ 
+
+      CALL azzi090_detail_show()      
+      
+      #add-point:單身資料抓取
+      {<point name="bfill.foreach"/>}
+      #end add-point
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         CALL cl_err( "", 9035, 0 )
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+ 
+   CALL g_gztd_d.deleteElement(l_ac) 
+   ERROR "" 
+
+ 
+   LET g_detail_cnt = l_ac - 1
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+END FUNCTION
+ 
+#+ 顯示相關資料
+PRIVATE FUNCTION azzi090_detail_show()      
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+   
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+   
+   #帶出預設欄位之值
+   LET g_gztd_d[l_ac].modu_desc = cl_get_username(g_gztd_d[l_ac].gztdmodu)
+   LET g_gztd_d[l_ac].oriu_desc = cl_get_username(g_gztd_d[l_ac].gztdoriu)
+   LET g_gztd_d[l_ac].user_desc = cl_get_username(g_gztd_d[l_ac].gztduser)
+   LET g_gztd_d[l_ac].dept_desc = cl_get_deptname(g_gztd_d[l_ac].gztddept)
+   LET g_gztd_d[l_ac].orid_desc = cl_get_deptname(g_gztd_d[l_ac].gztdorid)
+#  LET g_gztd_d[l_ac].actipic   = cl_get_actipic(g_gztd_d[l_ac].gztdstus)
+   
+   #讀入ref值
+   
+   
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+ 
+ 
+#+ 單身欄位開啟設定
+PRIVATE FUNCTION azzi090_set_entry_b(p_cmd)                                                  
+   {<Local define>}
+   DEFINE p_cmd   LIKE type_t.chr1         
+   {</Local define>}
+   #add-point:set_entry_b段define
+   {<point name="set_entry_b.define"/>}
+   #end add-point
+                                                                          
+   IF p_cmd = "a" AND ( NOT g_before_input_done ) THEN 
+      CALL cl_set_comp_entry("",TRUE)
+   END IF                                                                       
+                                                                                
+END FUNCTION                                                                    
+                                                                                
+ 
+#+ 單身欄位關閉設定
+PRIVATE FUNCTION azzi090_set_no_entry_b(p_cmd)                                               
+   {<Local define>}
+   DEFINE p_cmd   LIKE type_t.chr1           
+   {</Local define>}
+   #add-point:set_no_entry_b段define
+   {<point name="set_no_entry_b.define"/>}
+   #end add-point   
+                                                                                
+   IF p_cmd = "u" AND ( NOT g_before_input_done ) AND g_chkey = "N" THEN
+      CALL cl_set_comp_entry("",FALSE)
+   END IF                                                                       
+                                                                                
+END FUNCTION  
+ 
+#+ 外部參數搜尋, 施工中
+PRIVATE FUNCTION azzi090_default_search()
+   {<Local define>}
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   {</Local define>}
+   #add-point:default_search段define
+   {<point name="default_search.define"/>}
+   #end add-point  
+   
+   IF NOT cl_null(g_argv[1]) THEN
+      LET ls_wc = ls_wc, " gztd001 = '", g_argv[1], "' AND "
+   END IF
+   
+
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET ls_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_wc2 = ls_wc
+      CALL azzi090_b_fill(g_wc2)
+   ELSE
+      LET g_wc2 = " 1=1"
+      CALL azzi090_b_fill(g_wc2)
+   END IF
+ 
+END FUNCTION
+ 
+#確認碼變更
+PRIVATE FUNCTION azzi090_statechange(pc_state)
+   {<Local define>}
+   DEFINE pc_state  LIKE type_t.chr5
+   DEFINE lc_state  LIKE type_t.chr5
+   DEFINE ls_sql    STRING
+   DEFINE li_idx    LIKE type_t.num5
+   DEFINE li_cnt    LIKE type_t.num5
+   DEFINE li_state  LIKE type_t.num5
+   {</Local define>}
+   #add-point:statechange段define
+   {<point name="statechange.define"/>}
+   #end add-point 
+   
+   #add-point:statechange段開始前
+   {<point name="statechange.before"/>}
+   #end add-point  
+   
+   ERROR ""
+   
+   LET li_idx = l_ac
+   
+   LET li_state = 1
+   LET li_cnt = 0
+   
+   #add-point:stus修改前
+   {<point name="statechange.b_update"/>}
+   #end add-point   
+   
+   FOR l_ac = 1 TO g_gztd_d.getLength()
+   
+      IF NOT g_curr_diag.isRowSelected("s_detail1", l_ac) OR
+         g_gztd_d[l_ac].gztdstus = pc_state THEN
+         CONTINUE FOR
+      END IF
+      
+      IF g_gztd_d[l_ac].gztd001 IS NULL
+
+      THEN
+         CALL cl_err("","std-00003",0)
+         RETURN
+      END IF
+      
+      BEGIN WORK
+      
+      LET lc_state = pc_state
+      
+      LET ls_sql = " SELECT gztdstus FROM gztd_t ",
+                   " WHERE  gztd001 = '",g_gztd_d[l_ac].gztd001,"'",
+
+                   " FOR UPDATE NOWAIT"
+                   
+      PREPARE upd_state FROM ls_sql
+      DECLARE upd_state_cur CURSOR FOR upd_state
+      
+      OPEN upd_state_cur
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("",SQLCA.sqlcode,0)
+         CLOSE upd_state_cur
+         ROLLBACK WORK
+         LET li_cnt = li_cnt + 1
+         LET li_state = 2
+         CONTINUE FOR
+      END IF
+      
+      UPDATE gztd_t SET gztdstus = lc_state 
+       WHERE  gztd001 = g_gztd_d[l_ac].gztd001
+
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("",SQLCA.sqlcode,0)
+         CLOSE upd_state_cur
+         ROLLBACK WORK
+         LET li_cnt = li_cnt + 1
+         LET li_state = 2
+         CONTINUE FOR
+      END IF
+      
+      COMMIT WORK
+      
+      CLOSE upd_state_cur
+ 
+   END FOR
+   
+   #add-point:stus修改後
+   {<point name="statechange.a_update"/>}
+   #end add-point
+   
+   CASE li_state
+      WHEN 1
+      WHEN 2
+         CALL cl_err(li_cnt,"std-00009",1)
+   END CASE
+   
+   LET l_ac = li_idx
+   
+   #add-point:statechange段結束前
+   {<point name="statechange.after"/>}
+   #end add-point 
+ 
+END FUNCTION
+ 
+#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+ 
+

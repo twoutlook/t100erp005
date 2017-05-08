@@ -1,0 +1,108 @@
+<spec prog="axrt400_01" std_prog="axrt400_01" erpver="1.0" ver="1" module="AXR" booking="Y" normal_style="Y" class="I" template="F001_00" env="s" zone="t10dev">
+  <toolbar items="" />
+  <prog_rel />
+  <ref_field />
+  <multi_lang />
+  <help_code />
+  <strings>
+    <sfield name="lbl_group1" text="沖銷方式" comment="" lstr="" />
+    <sfield name="lbl_group2" text="已收款資料範圍" comment="" lstr="" />
+    <sfield name="lbl_lbl_docno_1" text="收支單號範圍" comment="" lstr="" />
+    <sfield name="lbl_group3" text="沖銷單據範圍" comment="" lstr="" />
+    <sfield name="lbl_lbl_docno_2" text="交易單號範圍" comment="" lstr="" />
+    <sfield name="lbl_group4" text="應付帳款單據範圍" comment="" lstr="" />
+    <sfield name="lbl_check_1" text="應付帳款單" comment="" lstr="" />
+    <sfield name="lbl_check" text="多選" comment="" lstr="" />
+    <sfield name="lbl_lbl_docno_4" text="帳款單號範圍" comment="" lstr="" />
+  </strings>
+  <sa_spec />
+  <table ver="1" cite_std="N">
+    <tbl name="xrda_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status="" def_pk="" def_fk_master="" def_fk_detail="" />
+  </table>
+  <all cite_std="" ver="1" src="s" status="">
+<![CDATA[    首次新增者,開啟自動沖帳作業,供快速輸入.
+　非首次新增者,則可算行於單身開窗.
+    依所選擇內容,寫入沖帳單身資料.
+　參考EXCEL表之對應內容.]]>
+</all>
+  <field cite_std="" name="check" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+<![CDATA[暫無規格,不處理]]>
+</field>
+  <field cite_std="" name="lbl_a" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max="" min="" can_edit="Y" can_query="Y" widget="RadioGroup" status="">
+<![CDATA[   選項:1.全部算動沖帳;2.僅沖帳至收入相符;3.依指定範圍產生
+   單選項（三選一）
+   資料範圍輸入：
+　    1.選擇前二項者，表示由系統自行將未沖帳之資料全數產生至沖帳單中,故下方資料範圍不輸入.
+　    2.第2項者,另處理以先進先出方式沖銷.
+　    3.前2項,由系統自動產生;選擇第3項者,則可輸入下方資料範圍,並依其指定內容產生.
+
+   邏輯:
+      一.全部未沖帳款自動產生
+         依［核銷客戶.xrda004］取同對象資料產生。
+　　         1.取收款資料範圍：　
+               銀存收支單據主檔（nmba_t）、銀存收支單據明細檔（nmbb_t）
+                  條件：已確認單據、同對象(nmba004 IN (核銷客戶,收付款客戶))、異動別.nmbb001= '1存入'、
+       　            尚有未沖金額(原幣金額-己沖原幣金額 > 0 )
+       　            且收支日期＜＝單據日期
+               應收票據主檔（nmcn_t） 
+                  條件：已確認單據、同對象(nmcn009 IN (核銷客戶,收款客戶)) OR 單次交易識別碼相同者、尚有未沖金額
+       　            AND 收票日期nmcndocdt<=單據日期 AND 非作廢資料nmcnstus='Y' AND nmcn012 NOT IN ('6','7','9')
+　　         2.取帳款資料範圍：
+               多帳期明細(xrcc_t)
+               應收憑單單身(xrcb_t)
+                  link條件：　帳套　AND 單號xrccdocno=xrcbdocno AND 單身項次xrccseq=xrcbseq
+               應收帳款單單頭(xrca_t)
+                  link條件：　帳套　AND 單號xrccdocno=xrcadocno AND 帳款客戶.xrca004=核銷客戶
+   　                AND　已確認單　AND　單據日期<= 沖銷單日期.xrdadocdt
+                     SCC系統應用檔案(gzcb_t) ='8302'
+                     WHERE xrca001=SCC-gzcb002 and SCC-gzcb003='1' AND SCC-gzcb001='8302' 
+　　         3.寫入"沖銷明細檔(xrce_t)"，資料對應方式請參考EXCEL表。
+　　         4.同幣別資料者,才互沖.以原幣加減沖銷後,本幣之差異額列為　匯差損益.
+                 本幣帳款＞收款:12.匯兌收益;　反之(11.匯損).
+                 原幣收款金額＞可沖帳款原幣:列為　20.溢收
+ 
+      二.僅沖帳至帳款與收入相符
+         依[核銷客戶.xrda004]取同對象資料,依已收款項之金額,取得可沖銷之帳款資料;帳款沖銷依先進先出方式沖銷.
+　　         1.取收款資料範圍：　同第一項說明。
+               可沖銷總額記錄＝p_rec_total
+　　         2.取帳款資料範圍：　同第二項說明。
+               可沖銷總額記錄＝p_doc_total
+　　         3.總金額作比較,取最小值者,作為沖銷金額依據(p_vef_amount).
+　　         4.寫入＂沖銷明細檔(xrce_t)＂，資料對應方式請參考EXCEL表。
+               第1項收款資料寫入沖銷明細檔時,沖銷金額作合計,且合計之金額須 = p_vef_amount,最後差異金額則填入最後一筆資料之可沖銷額.
+               第2項帳款資料寫入時,依可沖銷之金額,扣除 p_vef_amount,
+ 
+      三.依指定範圍產生]]>
+</field>
+  <field cite_std="" name="lbl_docno1" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="axrt400_02" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+<![CDATA[開窗挑選,回傳勾選後之單據編號(可字串組合方式).
+axrt400_02(已收款項及票據資料挑選)]]>
+</field>
+  <field cite_std="" name="lbl_docno2" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="axrt400_04" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+<![CDATA[開窗　
+。應收單身(xrcb_t)
+ １。作業來源範圍。
+ ２。沖帳時須關聯link多帳期明細檔（xrcc_t）
+。開窗判別,依SITE參數"S-FIN-1002.是否沖帳至帳款明細項次(Y/N)"
+  取帳套別所屬法人，取參數檔 (oob_t)"aoos020據點級參數",代碼為ooab001='S-FIN-1002' 的設定值ooab003
+  。ooab003='N'
+　 axrt400_04(沖銷交易單挑選)
+  。ooab003='Y'
+　 axrt400_05(沖銷交易單明細挑選)
+　。傳入單據性質為’０’。
+  。二支開作業差別在於依單身項次（xrccseq）作GROUP呈現否。]]>
+</field>
+  <field cite_std="" name="lbl_docno3" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+<![CDATA[暫無規格,不處理]]>
+</field>
+  <exclude ver="1" cite_std="N" src="s">
+    <widget name="buttonedit1" status="" />
+    <widget name="buttonedit2" status="" />
+    <widget name="buttonedit3" status="" />
+    <widget name="combobox1" status="" />
+    <widget name="lbl_docno1" status="" />
+    <widget name="lbl_docno2" status="" />
+    <widget name="lbl_docno3" status="" />
+    <widget name="lbl_docno4" status="" />
+  </exclude>
+</spec>

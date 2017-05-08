@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adeq140" module="ade" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="02749" crtdt="2016-11-14 18:13:02" modid="02749" moddt="2016-11-15 20:20:14" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="門店會員折扣、積點、轉儲統計查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="rtjasite,l_date_s,l_date_e"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),rtjasite,rtjasite_desc(chr500),l_discount(num20_6),l_discount_y(num20_6),l_point(num15_3),l_point_y(num15_3),l_txn_point(num15_3),l_txn_point_y(num15_3),l_gift_value(num20_6),l_gift_value_y(num20_6),l_gift_point(num15_3),l_gift_point_y(num15_3),l_gift_price(num20_6),l_gift_price_y(num20_6),l_add_price(num20_6),l_add_price_y(num20_6)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),rtjasite(b_rtjasite),rtjasite_desc(b_rtjasite_desc),l_discount(l_discount),l_discount_y(l_discount_y),l_point(l_point),l_point_y(l_point_y),l_txn_point(l_txn_point),l_txn_point_y(l_txn_point_y),l_gift_value(l_gift_value),l_gift_value_y(l_gift_value_y),l_gift_point(l_gift_point),l_gift_point_y(l_gift_point_y),l_gift_price(l_gift_price),l_gift_price_y(l_gift_price_y),l_add_price(l_add_price),l_add_price_y(l_add_price_y)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adeq140" method="dialog">
+    <section id="input"/>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="rtjasite(b_rtjasite)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="rtjasite">
+        <after>
+          <check chkid="v_ooed004" id="isExist"/>
+          <reference field="rtjasite_desc" ref_field="rtjasite" map_field="rtjaent,rtjasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="rtjasite_desc"/>
+      <column id="l_discount"/>
+      <column id="l_discount_y"/>
+      <column id="l_point"/>
+      <column id="l_point_y"/>
+      <column id="l_txn_point"/>
+      <column id="l_txn_point_y"/>
+      <column id="l_gift_value"/>
+      <column id="l_gift_value_y"/>
+      <column id="l_gift_point"/>
+      <column id="l_gift_point_y"/>
+      <column id="l_gift_price"/>
+      <column id="l_gift_price_y"/>
+      <column id="l_add_price"/>
+      <column id="l_add_price_y"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="rtja_t" page="1" linked="" pk="rtjadocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,rtjasite,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM rtja_t WHERE rtjaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

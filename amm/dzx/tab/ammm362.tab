@@ -1,0 +1,225 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammm362" module="amm" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="01533" crtdt="2014-04-09 00:00:00" modid="02749" moddt="2016-10-03 14:22:34" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="4" tabver="10001" description="生效營運組織換贈規則設定作業-外社卡">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mmby004,mmbyunit,mmbyunit_desc(chr80),mmbysite,mmbysite_desc(chr80),mmby001,mmby002,mmbyl004,mmbyl005,mmby006,mmby019,mmby005,mmby005_desc(chr80),mmby009,mmby010,mmby011,mmby012,mmby014,mmby015,mmby024,mmby013,mmby016,mmby017,mmbystus,mmbyownid,mmbyownid_desc(chr80),mmbyowndp,mmbyowndp_desc(chr80),mmbycrtid,mmbycrtid_desc(chr80),mmbycrtdp,mmbycrtdp_desc(chr80),mmbycrtdt,mmbymodid,mmbymodid_desc(chr80),mmbymoddt,mmbycnfid,mmbycnfid_desc(chr80),mmbycnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mmci001,mmci002,mmci006,mmci003,mmci004,mmci005,mmciacti"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="mmcj001,mmcj002,mmcj003,mmcj004,mmcj005,mmcj005_desc(chr500),mmcj006,mmcj006_desc(chr500),mmcj007,mmcj008,mmcj009,mmcj010,mmcj011,mmcj012,mmcjacti"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="mmbs001,mmbs003,mmbs004,mmbs004_desc(chr500),mmbs005,mmbsacti"/>
+      <var id="body" page="4" record="s_detail4" page_id="4" value="mmck001,mmck002,mmck003,mmck004,mmck005,mmck006,mmck007,mmck008,mmck009,mmckacti"/>
+      <var id="bs_field" value="mmbysite,mmbysite_desc(chr80),mmbyunit,mmbyunit_desc(chr80),mmby004,mmby001,mmby002,mmby005,mmby005_desc(chr80),mmby006,mmby009,mmby010,mmby011,mmby012,mmby014,mmby015,mmby016,mmby013,mmby017" pk="mmbysite,mmby001,mmby002" order=""/>
+      <bs_reference field="mmbysite_desc" ref_field="mmbysite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="mmbyunit_desc" ref_field="mmbyunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="mmby005_desc" ref_field="mmby005" ref_sql="SELECT mmanl003 FROM mmanl_t WHERE mmanlent=$varg_enterprise$var AND mmanl001=? AND mmanl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="issue"/>
+      <action id="query" type="standard"/>
+      <action id="remark"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="amm" filename="ammm362" method="dialog">
+    <section id="input">
+      <input id="head" field="mmby004,mmbyunit,mmbysite,mmby001,mmby002,mmbyl004,mmbyl005,mmby006,mmby019,mmby005,mmby009,mmby010,mmby011,mmby012,mmby014,mmby015,mmby024,mmby013,mmby016,mmby017,mmbystus"/>
+      <input id="body" page="1" field="mmci001,mmci006" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="mmcj004,mmcj005,mmcj006,mmcj008,mmcj012" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="mmbs001,mmbs003,mmbs004" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="4" field="mmck001,mmck002,mmck003,mmck005,mmck006,mmck008,mmck009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mmbyunit,mmbysite,mmby001,mmby002,mmbyl004,mmbyl005,mmby006,mmby019,mmby005,mmby009,mmby010,mmby011,mmby012,mmby014,mmby015,mmby024,mmby013,mmby016,mmby017,mmbystus,mmbyownid,mmbyowndp,mmbycrtid,mmbycrtdp,mmbycrtdt,mmbymodid,mmbymoddt,mmbycnfid,mmbycnfdt"/>
+      <construct id="body" page="1" field="mmci001,mmci006"/>
+      <construct id="body" page="2" field="mmcj004,mmcj005,mmcj006,mmcj008,mmcj012"/>
+      <construct id="body" page="3" field="mmbs001,mmbs003,mmbs004"/>
+      <construct id="body" page="4" field="mmck001,mmck002,mmck003,mmck005,mmck006,mmck008,mmck009"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mmbysite,mmby001,mmby002"/>
+      <set id="head" type="no_entry" field="mmbysite,mmby001,mmby002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="mmby004" type="S" default="2" def_scc="6516"/>
+      <column id="mmbyunit">
+        <after>
+          <reference field="mmbyunit_desc" ref_field="mmby_t.mmbyunit" map_field="mmbyent,mmbyunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="i"/>
+        <controlp form="q_ooea001_4" state="c"/>
+      </column>
+      <column id="mmbyunit_desc"/>
+      <column id="mmbysite">
+        <after>
+          <reference field="mmbysite_desc" ref_field="mmby_t.mmbysite" map_field="mmbyent,mmbysite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="mmbysite_desc"/>
+      <column id="mmby001">
+        <controlp form="q_mmby001" state="c"/>
+      </column>
+      <column id="mmby002" type="S" default="1"/>
+      <column id="mmbyl004"/>
+      <column id="mmbyl005"/>
+      <column id="mmby006"/>
+      <column id="mmby019" def_scc="6856"/>
+      <column id="mmby005">
+        <after>
+          <reference field="mmby005_desc" ref_field="mmby_t.mmby005" map_field="mmbyent,mmby005" ref_sql="SELECT mmanl003 FROM mmanl_t WHERE mmanlent=$varg_enterprise$var AND mmanl001=? AND mmanl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mman001" state="i"/>
+        <controlp form="q_mman001" state="c"/>
+      </column>
+      <column id="mmby005_desc"/>
+      <column id="mmby009" def_scc="6534"/>
+      <column id="mmby010" def_scc="6535"/>
+      <column id="mmby011" def_scc="6536"/>
+      <column id="mmby012"/>
+      <column id="mmby014"/>
+      <column id="mmby015"/>
+      <column id="mmby024" type="S" default="N"/>
+      <column id="mmby013"/>
+      <column id="mmby016"/>
+      <column id="mmby017"/>
+      <column id="mmbystus" scc="50">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="mmbyownid">
+        <after>
+          <reference field="mmbyownid_desc" ref_field="mmby_t.mmbyownid" map_field="mmbyownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmbyownid_desc"/>
+      <column id="mmbyowndp">
+        <after>
+          <reference field="mmbyowndp_desc" ref_field="mmby_t.mmbyowndp" map_field="mmbyowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mmbyowndp_desc"/>
+      <column id="mmbycrtid">
+        <after>
+          <reference field="mmbycrtid_desc" ref_field="mmby_t.mmbycrtid" map_field="mmbycrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmbycrtid_desc"/>
+      <column id="mmbycrtdp">
+        <after>
+          <reference field="mmbycrtdp_desc" ref_field="mmby_t.mmbycrtdp" map_field="mmbycrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mmbycrtdp_desc"/>
+      <column id="mmbycrtdt"/>
+      <column id="mmbymodid">
+        <after>
+          <reference field="mmbymodid_desc" ref_field="mmby_t.mmbymodid" map_field="mmbymodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmbymodid_desc"/>
+      <column id="mmbymoddt"/>
+      <column id="mmbycnfid">
+        <after>
+          <reference field="mmbycnfid_desc" ref_field="mmby_t.mmbycnfid" map_field="mmbycnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmbycnfid_desc"/>
+      <column id="mmbycnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="mmci001"/>
+      <column id="mmci002"/>
+      <column id="mmci006" type="S" default="ALL" def_scc="6201"/>
+      <column id="mmci003"/>
+      <column id="mmci004"/>
+      <column id="mmci005"/>
+      <column id="mmciacti"/>
+    </init>
+    <init id="body" page="2">
+      <column id="mmcj001"/>
+      <column id="mmcj002"/>
+      <column id="mmcj003"/>
+      <column id="mmcj004" type="S" default="4" def_scc="6517"/>
+      <column id="mmcj005">
+        <after/>
+        <controlp form="q_mmcj005" state="c"/>
+      </column>
+      <column id="mmcj005_desc"/>
+      <column id="mmcj006">
+        <after>
+          <reference field="mmcj006_desc" ref_field="mmcj_t.mmcj006" map_field="mmcj006" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="mmcj006_desc"/>
+      <column id="mmcj007"/>
+      <column id="mmcj008" type="S" default="0" def_scc="6537"/>
+      <column id="mmcj009"/>
+      <column id="mmcj010"/>
+      <column id="mmcj011"/>
+      <column id="mmcj012" type="S" default="1" def_scc="6538"/>
+      <column id="mmcjacti"/>
+    </init>
+    <init id="body" page="3">
+      <column id="mmbs001"/>
+      <column id="mmbs003"/>
+      <column id="mmbs004">
+        <after/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="mmbs004_desc"/>
+      <column id="mmbs005"/>
+      <column id="mmbsacti"/>
+    </init>
+    <init id="body" page="4">
+      <column id="mmck001"/>
+      <column id="mmck002"/>
+      <column id="mmck003" type="S" default="1"/>
+      <column id="mmck004"/>
+      <column id="mmck005"/>
+      <column id="mmck006"/>
+      <column id="mmck007"/>
+      <column id="mmck008" def_scc="6520"/>
+      <column id="mmck009" def_scc="30"/>
+      <column id="mmckacti"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="mmby_t" pk="mmbysite,mmby001,mmby002">
+      <sql id="forupd_sql" type="sql" query="SELECT mmby004,mmbyunit,&apos;&apos;,mmbysite,&apos;&apos;,mmby001,mmby002,&apos;&apos;,&apos;&apos;,mmby006,mmby019,mmby005,&apos;&apos;,mmby009,mmby010,mmby011,mmby012,mmby014,mmby015,mmby024,mmby013,mmby016,mmby017,mmbystus,mmbyownid,&apos;&apos;,mmbyowndp,&apos;&apos;,mmbycrtid,&apos;&apos;,mmbycrtdp,&apos;&apos;,mmbycrtdt,mmbymodid,&apos;&apos;,mmbymoddt,mmbycnfid,&apos;&apos;,mmbycnfdt FROM mmby_t WHERE mmbyent= ? AND mmbysite=? AND mmby001=? AND mmby002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mmby004,mmbyunit,&apos;&apos;,mmbysite,&apos;&apos;,mmby001,mmby002,&apos;&apos;,&apos;&apos;,mmby006,mmby019,mmby005,&apos;&apos;,mmby009,mmby010,mmby011,mmby012,mmby014,mmby015,mmby024,mmby013,mmby016,mmby017,mmbystus,mmbyownid,&apos;&apos;,mmbyowndp,&apos;&apos;,mmbycrtid,&apos;&apos;,mmbycrtdp,&apos;&apos;,mmbycrtdt,mmbymodid,&apos;&apos;,mmbymoddt,mmbycnfid,&apos;&apos;,mmbycnfdt FROM mmby_t" order="mmbysite,mmby001,mmby002"/>
+      <sql id="append" type="lang" target="mmbyl_t.mmbyl004,mmbyl_t.mmbyl005" table="mmbyl_t" fk="mmby001,mmby002" pk="mmbyl001,mmbyl002,mmbyl003" field="mmbyl004,mmbyl005"/>
+    </head>
+    <body id="mmci_t" page="1" linked="" pk="mmcidocno,mmci003,mmci006" fk="">
+      <sql id="forupd_sql_detail" query="SELECT mmci001,mmci002,mmci006,mmci003,mmci004,mmci005,mmciacti FROM mmci_t WHERE mmcient=? AND mmcidocno=? AND mmci003=? AND mmci006=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mmci001,mmci002,mmci006,mmci003,mmci004,mmci005,mmciacti FROM mmci_t WHERE mmcient=? AND mmcisite=? AND mmci001=?"/>
+    </body>
+    <body id="mmcj_t" page="2" linked="" pk="mmcjdocno,mmcj003,mmcj004,mmcj005" fk="">
+      <sql id="forupd_sql_detail" query="SELECT mmcj001,mmcj002,mmcj003,mmcj004,mmcj005,&apos;&apos;,mmcj006,&apos;&apos;,mmcj007,mmcj008,mmcj009,mmcj010,mmcj011,mmcj012,mmcjacti FROM mmcj_t WHERE mmcjent=? AND mmcjdocno=? AND mmcj003=? AND mmcj004=? AND mmcj005=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mmcj001,mmcj002,mmcj003,mmcj004,mmcj005,&apos;&apos;,mmcj006,&apos;&apos;,mmcj007,mmcj008,mmcj009,mmcj010,mmcj011,mmcj012,mmcjacti FROM mmcj_t WHERE mmcjent=? AND mmcjsite=? AND mmcj001=?"/>
+    </body>
+    <body id="mmbs_t" page="3" linked="" pk="mmbsdocno,mmbs004" fk="">
+      <sql id="forupd_sql_detail" query="SELECT mmbs001,mmbs003,mmbs004,&apos;&apos;,mmbs005,mmbsacti FROM mmbs_t WHERE mmbsent=? AND mmbsdocno=? AND mmbs004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mmbs001,mmbs003,mmbs004,&apos;&apos;,mmbs005,mmbsacti FROM mmbs_t WHERE mmbsent=? AND mmbssite=? AND mmbs001=?"/>
+    </body>
+    <body id="mmck_t" page="4" linked="" pk="mmckdocno,mmck003" fk="">
+      <sql id="forupd_sql_detail" query="SELECT mmck001,mmck002,mmck003,mmck004,mmck005,mmck006,mmck007,mmck008,mmck009,mmckacti FROM mmck_t WHERE mmckent=? AND mmckdocno=? AND mmck003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mmck001,mmck002,mmck003,mmck004,mmck005,mmck006,mmck007,mmck008,mmck009,mmckacti FROM mmck_t WHERE mmckent=? AND mmcksite=? AND mmck001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

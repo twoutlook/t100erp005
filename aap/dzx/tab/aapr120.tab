@@ -1,0 +1,60 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aapr120" module="aap" jobmode="N" type="r01" industry="std" fix_arg="0" crtid="08729" crtdt="2016-11-11 10:17:43" modid="08729" moddt="2016-11-11 10:17:43" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="供應商貨款對帳憑單列印">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="apbb004,apbb004_desc(chr80),apbbcomp,apbbcomp_desc(chr80),apbb003,apbbdocno,apbbdocdt,apbb051,apbb052,apbb002,apbb044,apbbstus"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="aap" filename="aapr120" method="dialog">
+    <section id="input">
+      <input id="head" field="apbb004,apbbcomp,apbb003,apbb044,apbbstus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="apbbdocno,apbbdocdt,apbb051,apbb052,apbb002"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="apbb004">
+        <after>
+          <reference field="apbb004_desc" ref_field="apbb_t.apbb004" map_field="apbbent,apbb004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="apbb004_desc"/>
+      <column id="apbbcomp">
+        <after>
+          <reference field="apbbcomp_desc" ref_field="apbb_t.apbbcomp" map_field="apbbent,apbbcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="apbbcomp_desc"/>
+      <column id="apbb003" type="S" default="2"/>
+      <column id="apbbdocno">
+        <controlp form="q_isamdocno" state="c"/>
+      </column>
+      <column id="apbbdocdt"/>
+      <column id="apbb051"/>
+      <column id="apbb052"/>
+      <column id="apbb002">
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="apbb044" type="S" default="1"/>
+      <column id="apbbstus" scc="13" type="S" default="3">
+        <stus id="Y" pic="confirmed"/>
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+    </init>
+  </form>
+</assembly>
+

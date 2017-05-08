@@ -1,0 +1,67 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmt460_01" module="anm" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="04152" crtdt="2015-08-07 16:42:27" modid="04152" moddt="2015-08-11 14:07:15" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="產生匯款付訖單">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="nmchsite,nmchsite_desc(chr80),nmchcomp,nmchcomp_desc(chr80),nmchdocno,nmchdocdt,nmch003,nmch003_desc(chr80),nmck012,docno_480(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmt460_01" method="dialog">
+    <section id="input">
+      <input id="head" field="nmchsite,nmchcomp,nmchdocno,nmchdocdt,nmch003,nmck012,docno_480"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="nmchsite">
+        <after>
+          <reference field="nmchsite_desc" ref_field="nmch_t.nmchsite" map_field="nmchent,nmchsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="nmchsite_desc"/>
+      <column id="nmchcomp">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+          <reference field="nmchcomp_desc" ref_field="nmch_t.nmchcomp" map_field="nmchent,nmchcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="nmchcomp_desc"/>
+      <column id="nmchdocno">
+        <controlp form="q_ooba002" state="i"/>
+        <controlp form="q_nmchdocno" state="c"/>
+      </column>
+      <column id="nmchdocdt"/>
+      <column id="nmch003">
+        <after>
+          <check chkid="v_nmas002_1" id="isExist"/>
+          <reference field="nmch003_desc" ref_field="nmch_t.nmch003" map_field="nmchent,nmch003" ref_sql="SELECT nmaal003 FROM nmaal_t WHERE nmaalent=$varg_enterprise$var AND nmaal001=? AND nmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmas_01" state="i"/>
+        <controlp form="q_nmas_01" state="c"/>
+      </column>
+      <column id="nmch003_desc"/>
+      <column id="nmck012"/>
+      <column id="docno_480"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="nmch_t" pk="nmchcomp,nmchdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT nmchsite,&apos;&apos;,nmchcomp,&apos;&apos;,nmchdocno,nmchdocdt,nmch003,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM nmch_t WHERE nmchent= ? AND nmchcomp=? AND nmchdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="nmchcomp,nmchdocno"/>
+    </head>
+  </dataset>
+</assembly>
+

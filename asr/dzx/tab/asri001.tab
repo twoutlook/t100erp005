@@ -1,0 +1,105 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asri001" module="asr" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="02482" crtdt="2013-12-11 09:41:44" modid="02295" moddt="2014-06-28 13:55:16" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="重覆性生產計畫基本資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="srza001,srza002,srza012,srza012_desc(chr80),srzastus,srza003,srza004,srza006,srza007,srza008,srza009,srza010,srza005,srza011,srzaownid,srzaownid_desc(chr80),srzaowndp,srzaowndp_desc(chr80),srzacrtid,srzacrtid_desc(chr80),srzacrtdp,srzacrtdp_desc(chr80),srzacrtdt,srzamodid,srzamodid_desc(chr80),srzamoddt"/>
+      <var id="bs_field" value="srza001,srza002,srza012,srza003,srza004,srza005,srza006,srza007,srza008,srza009,srza010,srza011" pk="srza001" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="asr" filename="asri001" method="dialog">
+    <section id="input">
+      <input id="head" field="srza001,srza002,srza012,srzastus,srza003,srza004,srza006,srza007,srza008,srza009,srza010,srza005,srza011"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="srza001,srza002,srza012,srzastus,srza003,srza004,srza006,srza007,srza008,srza009,srza010,srza005,srza011,srzaownid,srzaowndp,srzacrtid,srzacrtdp,srzacrtdt,srzamodid,srzamoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="srza001"/>
+      <set id="head" type="no_entry" field="srza001"/>
+    </init>
+    <init id="head">
+      <column id="srza001">
+        <controlp form="q_srza001" state="c"/>
+      </column>
+      <column id="srza002"/>
+      <column id="srza012">
+        <after>
+          <check chkid="v_ooha001_1" id="isExist"/>
+          <reference field="srza012_desc" ref_field="srza_t.srza012" map_field="srza012" ref_sql="SELECT oohal003 FROM oohal_t WHERE oohalent=$varg_enterprise$var AND oohal001=? AND oohal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooha001_2" state="i"/>
+        <controlp form="q_ooha001_2" state="c"/>
+      </column>
+      <column id="srza012_desc"/>
+      <column id="srzastus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="srza003" type="S" default="N"/>
+      <column id="srza004" type="S" default="Y"/>
+      <column id="srza006" type="S" default="1" def_scc="4053"/>
+      <column id="srza007" type="S" default="1" def_scc="4053"/>
+      <column id="srza008" type="S" default="N"/>
+      <column id="srza009" type="S" default="Y"/>
+      <column id="srza010" type="S" default="Y"/>
+      <column id="srza005" type="S" default="Y"/>
+      <column id="srza011" type="S" default="1" def_scc="5400"/>
+      <column id="srzaownid">
+        <after>
+          <reference field="srzaownid_desc" ref_field="srza_t.srzaownid" map_field="srzaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="srzaownid_desc"/>
+      <column id="srzaowndp">
+        <after>
+          <reference field="srzaowndp_desc" ref_field="srza_t.srzaowndp" map_field="srzaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="srzaowndp_desc"/>
+      <column id="srzacrtid">
+        <after>
+          <reference field="srzacrtid_desc" ref_field="srza_t.srzacrtid" map_field="srzacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="srzacrtid_desc"/>
+      <column id="srzacrtdp">
+        <after>
+          <reference field="srzacrtdp_desc" ref_field="srza_t.srzacrtdp" map_field="srzacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="srzacrtdp_desc"/>
+      <column id="srzacrtdt"/>
+      <column id="srzamodid">
+        <after>
+          <reference field="srzamodid_desc" ref_field="srza_t.srzamodid" map_field="srzamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="srzamodid_desc"/>
+      <column id="srzamoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="srza_t" pk="srza001">
+      <sql id="forupd_sql" type="sql" query="SELECT srza001,srza002,srza012,&apos;&apos;,srzastus,srza003,srza004,srza006,srza007,srza008,srza009,srza010,srza005,srza011,srzaownid,&apos;&apos;,srzaowndp,&apos;&apos;,srzacrtid,&apos;&apos;,srzacrtdp,&apos;&apos;,srzacrtdt,srzamodid,&apos;&apos;,srzamoddt FROM srza_t WHERE srzaent= ? AND srzasite= ? AND srza001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT srza001 FROM srza_t" order="srza001"/>
+    </head>
+  </dataset>
+</assembly>
+

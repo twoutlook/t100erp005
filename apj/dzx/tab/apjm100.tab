@@ -1,0 +1,131 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apjm100" module="apj" jobmode="N" type="i01" industry="std" fix_arg="0" crtid="05423" crtdt="2015-11-13 11:26:09" modid="05423" moddt="2015-11-13 16:55:12" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="專案立項申請作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pjab006,pjab006_desc(chr80),pjab001,pjabl003,pjabl004,pjab002,pjab004,pjab004_desc(chr80),pjab003,pjab003_desc(chr80),pjab005,pjabstus,pjabownid,pjabownid_desc(chr80),pjabowndp,pjabowndp_desc(chr80),pjabcrtid,pjabcrtid_desc(chr80),pjabcrtdp,pjabcrtdp_desc(chr80),pjabcrtdt,pjabmodid,pjabmodid_desc(chr80),pjabmoddt,pjabcnfid,pjabcnfid_desc(chr80),pjabcnfdt"/>
+      <var id="bs_field" value="pjab001,pjab001_desc(chr80),pjab002,pjab003,pjab003_desc(chr80),pjab004,pjab004_desc(chr80)" pk="pjab001" order=""/>
+      <bs_reference field="pjab001_desc" ref_field="pjab001" ref_sql="SELECT pjabl003 FROM pjabl_t WHERE pjablent=$varg_enterprise$var AND pjabl001=? AND pjabl002=$varg_dlang$var"/>
+      <bs_reference field="pjab003_desc" ref_field="pjab003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="pjab004_desc" ref_field="pjab004" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="apj" filename="apjm100" method="dialog">
+    <section id="input">
+      <input id="head" field="pjab006,pjab001,pjabl003,pjabl004,pjab002,pjab004,pjab003,pjab005,pjabstus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pjab006,pjab001,pjabl003,pjabl004,pjab002,pjab004,pjab003,pjab005,pjabstus,pjabownid,pjabowndp,pjabcrtid,pjabcrtdp,pjabcrtdt,pjabmodid,pjabmoddt,pjabcnfid,pjabcnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pjab001"/>
+      <set id="head" type="no_entry" field="pjab001"/>
+    </init>
+    <init id="head">
+      <column id="pjab006">
+        <after>
+          <check chkid="v_pjaa001_1" id="isExist"/>
+          <reference field="pjab006_desc" ref_field="pjab_t.pjab006" map_field="pjab006" ref_sql="SELECT pjaal003 FROM pjaal_t WHERE pjaalent=$varg_enterprise$var AND pjaal001=? AND pjaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pjaa001" state="i"/>
+        <controlp form="q_pjaa001" state="c"/>
+      </column>
+      <column id="pjab006_desc"/>
+      <column id="pjab001">
+        <controlp form="q_pjab001" state="c"/>
+      </column>
+      <column id="pjabl003"/>
+      <column id="pjabl004"/>
+      <column id="pjab002"/>
+      <column id="pjab004">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="pjab004_desc" ref_field="pjab_t.pjab004" map_field="pjab004" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pjab004_desc"/>
+      <column id="pjab003">
+        <after>
+          <check chkid="v_ooeg001_2" id="isExist"/>
+          <reference field="pjab003_desc" ref_field="pjab_t.pjab003" map_field="pjab003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="pjab003_desc"/>
+      <column id="pjab005"/>
+      <column id="pjabstus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="X" pic="invalid"/>
+        <stus id="Y" pic="confirmed"/>
+      </column>
+      <column id="pjabownid">
+        <after>
+          <reference field="pjabownid_desc" ref_field="pjab_t.pjabownid" map_field="pjabownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pjabownid_desc"/>
+      <column id="pjabowndp">
+        <after>
+          <reference field="pjabowndp_desc" ref_field="pjab_t.pjabowndp" map_field="pjabowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pjabowndp_desc"/>
+      <column id="pjabcrtid">
+        <after>
+          <reference field="pjabcrtid_desc" ref_field="pjab_t.pjabcrtid" map_field="pjabcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pjabcrtid_desc"/>
+      <column id="pjabcrtdp">
+        <after>
+          <reference field="pjabcrtdp_desc" ref_field="pjab_t.pjabcrtdp" map_field="pjabcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pjabcrtdp_desc"/>
+      <column id="pjabcrtdt"/>
+      <column id="pjabmodid">
+        <after>
+          <reference field="pjabmodid_desc" ref_field="pjab_t.pjabmodid" map_field="pjabmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pjabmodid_desc"/>
+      <column id="pjabmoddt"/>
+      <column id="pjabcnfid">
+        <after>
+          <reference field="pjabcnfid_desc" ref_field="pjab_t.pjabcnfid" map_field="pjabcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pjabcnfid_desc"/>
+      <column id="pjabcnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pjab_t" pk="pjab001">
+      <sql id="forupd_sql" type="sql" query="SELECT pjab006,&apos;&apos;,pjab001,&apos;&apos;,&apos;&apos;,pjab002,pjab004,&apos;&apos;,pjab003,&apos;&apos;,pjab005,pjabstus,pjabownid,&apos;&apos;,pjabowndp,&apos;&apos;,pjabcrtid,&apos;&apos;,pjabcrtdp,&apos;&apos;,pjabcrtdt,pjabmodid,&apos;&apos;,pjabmoddt,pjabcnfid,&apos;&apos;,pjabcnfdt FROM pjab_t WHERE pjabent= ? AND pjab001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pjab001 FROM pjab_t" order="pjab001"/>
+      <sql id="append" type="lang" target="pjabl_t.pjabl003,pjabl_t.pjabl004" table="pjabl_t" fk="pjab001" pk="pjabl001,pjabl002" field="pjabl003,pjabl004"/>
+    </head>
+  </dataset>
+</assembly>
+

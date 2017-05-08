@@ -1,0 +1,104 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="awsi101" module="aws" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="07375" crtdt="2016-06-03 09:54:04" modid="07375" moddt="2016-06-03 09:54:04" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="整合產品參數編號設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="wseu003"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="wseu001,wseul002"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="wseu001,wseuownid,wseuownid_desc(chr500),wseuowndp,wseuowndp_desc(chr500),wseucrtid,wseucrtid_desc(chr500),wseucrtdp,wseucrtdp_desc(chr500),wseucrtdt,wseumodid,wseumodid_desc(chr500),wseumoddt"/>
+      <var id="bs_field" value="wseu003" pk="wseu003" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="aws" filename="awsi101" method="dialog">
+    <section id="input">
+      <input id="head" field="wseu003"/>
+      <input id="body" page="1" field="wseu001,wseul002" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="wseu003"/>
+      <construct id="body" page="1" field="wseu001,wseul002"/>
+      <construct id="body" page="2" field="wseuownid,wseuowndp,wseucrtid,wseucrtdp,wseucrtdt,wseumodid,wseumoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="wseu003"/>
+      <set id="head" type="no_entry" field="wseu003"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="wseu003" def_scc="227"/>
+    </init>
+    <init id="body" page="1">
+      <column id="wseu001"/>
+      <column id="wseul002"/>
+    </init>
+    <init id="body" page="2">
+      <column id="wseuownid">
+        <after>
+          <reference field="wseuownid_desc" ref_field="wseu_t.wseuownid" map_field="wseuownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="wseuownid_desc"/>
+      <column id="wseuowndp">
+        <after>
+          <reference field="wseuowndp_desc" ref_field="wseu_t.wseuowndp" map_field="wseuowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="wseuowndp_desc"/>
+      <column id="wseucrtid">
+        <after>
+          <reference field="wseucrtid_desc" ref_field="wseu_t.wseucrtid" map_field="wseucrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="wseucrtid_desc"/>
+      <column id="wseucrtdp">
+        <after>
+          <reference field="wseucrtdp_desc" ref_field="wseu_t.wseucrtdp" map_field="wseucrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="wseucrtdp_desc"/>
+      <column id="wseucrtdt"/>
+      <column id="wseumodid">
+        <after>
+          <reference field="wseumodid_desc" ref_field="wseu_t.wseumodid" map_field="wseumodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="wseumodid_desc"/>
+      <column id="wseumoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="wseu_t" pk="wseu003">
+      <sql id="forupd_sql" type="sql" query="SELECT wseu003 FROM wseu_t WHERE wseu003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT wseu003 FROM wseu_t" order="wseu003"/>
+    </head>
+    <body id="wseu_t" page="1,2" linked="" pk="wseu001" fk="wseu003">
+      <sql id="forupd_sql_detail" query="SELECT wseu001,&apos;&apos;,&apos;&apos;,wseuownid,&apos;&apos;,wseuowndp,&apos;&apos;,wseucrtid,&apos;&apos;,wseucrtdp,&apos;&apos;,wseucrtdt,wseumodid,&apos;&apos;,wseumoddt FROM wseu_t WHERE wseu003=? AND wseu001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT wseu001,&apos;&apos;,&apos;&apos;,wseuownid,&apos;&apos;,wseuowndp,&apos;&apos;,wseucrtid,&apos;&apos;,wseucrtdp,&apos;&apos;,wseucrtdt,wseumodid,&apos;&apos;,wseumoddt FROM wseu_t WHERE wseu003=?"/>
+      <sql id="detail_append" type="lang" target="wseul_t.wseul002" table="wseul_t" fk="wseu001,wseu003" pk="wseul001,wseul003,wseul004" field="wseul002"/>
+    </body>
+  </dataset>
+</assembly>
+

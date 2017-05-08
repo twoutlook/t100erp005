@@ -1,0 +1,128 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apci122" module="apc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="03247" crtdt="2014-02-12 17:14:43" modid="06189" moddt="2015-06-10 14:54:39" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="POS門店參數維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="pcaksite,pcaksite_desc(chr80),pcakunit,pcak001"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pcakstus,pcak002,pcak002_desc(chr500),pcak003,pcak003_desc(chr500),pcakstamp(timestamp),pcakpos(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="pcak002,pcakownid,pcakownid_desc(chr500),pcakowndp,pcakowndp_desc(chr500),pcakcrtid,pcakcrtid_desc(chr500),pcakcrtdp,pcakcrtdp_desc(chr500),pcakcrtdt,pcakmodid,pcakmodid_desc(chr500),pcakmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apc" filename="apci122" method="dialog">
+    <section id="input">
+      <input id="head" field="pcaksite,pcakunit,pcak001"/>
+      <input id="body" page="1" field="pcakstus,pcak002,pcak003,pcakstamp,pcakpos" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="pcaksite,pcakunit,pcak001"/>
+      <construct id="body" page="1" field="pcakstus,pcak002,pcak003,pcakstamp,pcakpos"/>
+      <construct id="body" page="2" field="pcakownid,pcakowndp,pcakcrtid,pcakcrtdp,pcakcrtdt,pcakmodid,pcakmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="pcaksite,pcak001"/>
+      <set id="head" type="no_entry" field="pcaksite,pcak001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="pcaksite">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+          <reference field="pcaksite_desc" ref_field="pcak_t.pcaksite" map_field="pcakent,pcaksite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="pcaksite_desc"/>
+      <column id="pcakunit"/>
+      <column id="pcak001"/>
+    </init>
+    <init id="body" page="1">
+      <column id="pcakstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pcak002">
+        <after>
+          <check chkid="v_pcai001" id="isExist"/>
+          <reference field="pcak002_desc" ref_field="pcak_t.pcak002" map_field="pcakent,pcak002" ref_sql="SELECT pcail003 FROM pcail_t WHERE pcailent=$varg_enterprise$var AND pcail001=? AND pcail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pcai001" state="i"/>
+        <controlp form="q_pcai001" state="c"/>
+      </column>
+      <column id="pcak002_desc"/>
+      <column id="pcak003">
+        <after>
+          <check chkid="v_pcaj002" id="isExist"/>
+          <reference field="pcak003_desc" ref_field="pcak002,pcak003" map_field="pcak002,pcak003" ref_sql="SELECT pcajl004 FROM pcajl_t WHERE pcajlent=$varg_enterprise$var AND pcajl001=? AND pcajl002=? AND pcajl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pcaj002_2" state="i"/>
+        <controlp form="q_pcaj002_1" state="c"/>
+      </column>
+      <column id="pcak003_desc"/>
+      <column id="pcakstamp"/>
+      <column id="pcakpos" type="S" default="N"/>
+    </init>
+    <init id="body" page="2">
+      <column id="pcakownid">
+        <after>
+          <reference field="pcakownid_desc" ref_field="pcak_t.pcakownid" map_field="pcakownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcakownid_desc"/>
+      <column id="pcakowndp">
+        <after>
+          <reference field="pcakowndp_desc" ref_field="pcak_t.pcakowndp" map_field="pcakowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pcakowndp_desc"/>
+      <column id="pcakcrtid">
+        <after>
+          <reference field="pcakcrtid_desc" ref_field="pcak_t.pcakcrtid" map_field="pcakcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcakcrtid_desc"/>
+      <column id="pcakcrtdp">
+        <after>
+          <reference field="pcakcrtdp_desc" ref_field="pcak_t.pcakcrtdp" map_field="pcakcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pcakcrtdp_desc"/>
+      <column id="pcakcrtdt"/>
+      <column id="pcakmodid">
+        <after>
+          <reference field="pcakmodid_desc" ref_field="pcak_t.pcakmodid" map_field="pcakmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcakmodid_desc"/>
+      <column id="pcakmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="pcak_t" pk="pcaksite,pcak001">
+      <sql id="forupd_sql" type="sql" query="SELECT pcaksite,&apos;&apos;,pcakunit,pcak001 FROM pcak_t WHERE pcakent= ? AND pcaksite=? AND pcak001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT pcaksite,&apos;&apos;,pcakunit,pcak001 FROM pcak_t" order="pcaksite,pcak001"/>
+    </head>
+    <body id="pcak_t" page="1,2" linked="" pk="pcak002" fk="pcaksite,pcak001">
+      <sql id="forupd_sql_detail" query="SELECT pcakstus,pcak002,&apos;&apos;,pcak003,&apos;&apos;,pcakstamp,&apos;&apos;,&apos;&apos;,pcakownid,&apos;&apos;,pcakowndp,&apos;&apos;,pcakcrtid,&apos;&apos;,pcakcrtdp,&apos;&apos;,pcakcrtdt,pcakmodid,&apos;&apos;,pcakmoddt FROM pcak_t WHERE pcakent=? AND pcaksite=? AND pcak001=? AND pcak002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pcakstus,pcak002,&apos;&apos;,pcak003,&apos;&apos;,pcakstamp,&apos;&apos;,&apos;&apos;,pcakownid,&apos;&apos;,pcakowndp,&apos;&apos;,pcakcrtid,&apos;&apos;,pcakcrtdp,&apos;&apos;,pcakcrtdt,pcakmodid,&apos;&apos;,pcakmoddt FROM pcak_t WHERE pcakent= ? AND pcaksite=? AND pcak001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

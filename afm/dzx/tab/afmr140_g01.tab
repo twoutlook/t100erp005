@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmr140_g01" module="afm" jobmode="N" type="g01" industry="std" crtid="08729" crtdt="2016-09-21 11:16:25" modid="08729" moddt="2016-09-26 11:05:13" sdver="1" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition)">
+    <var seq="1" value="fmcrcomp,fmcrdocdt,fmcrdocno,fmcrent,fmcrsite,fmcrstus,fmcs001,fmcs002,fmcs003,fmcs004,fmcs005,fmcs006,fmcs007,fmcs008,fmcs009,fmcs010,fmcs011,fmcs012,fmcs013,fmcs014,fmcs015,fmcs016,fmcs021,fmcscomp,fmcsseq,ooefl_t_ooefl003(ooefl003|ooefl_t.ooefl003),t1_ooefl003(ooefl003|t1.ooefl003),x_t2_ooefl003(ooefl003|x.t2_ooefl003),x_nmajl_t_nmajl003(nmajl003|x.nmajl_t_nmajl003),l_fmcrcomp_ooefl003(chr1000|trim(fmcrcomp)||&apos;.&apos;||trim((SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = fmcr_t.fmcrcomp AND ooefl_t.ooeflent = fmcr_t.fmcrent AND ooefl_t.ooefl002 = g_dlang))),l_fmcrsite_ooefl003(chr1000|trim(fmcrsite)||&apos;.&apos;||trim((SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = fmcr_t.fmcrsite AND ooefl_t.ooeflent = fmcr_t.fmcrent AND ooefl_t.ooefl002 = g_dlang))),l_fmcs003_ooefl003(chr1000|trim(fmcs003)||&apos;.&apos;||trim(x.t2_ooefl003)),l_fmcs004_nmaal003(chr100|&apos;&apos;)"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="fmcrcomp,fmcrdocdt,fmcrdocno,fmcrent,fmcrsite,fmcrstus,fmcs001,fmcs002,fmcs003,fmcs004,fmcs005,fmcs006,fmcs007,fmcs008,fmcs009,fmcs010,fmcs011,fmcs012,fmcs013,fmcs014,fmcs015,fmcs016,fmcs021,fmcscomp,fmcsseq,ooefl_t_ooefl003(ooefl003|( SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = fmcr_t.fmcrsite AND ooefl_t.ooeflent = fmcr_t.fmcrent AND ooefl_t.ooefl002 = g_dlang)),t1_ooefl003(ooefl003|( SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = fmcr_t.fmcrcomp AND ooefl_t.ooeflent = fmcr_t.fmcrent AND ooefl_t.ooefl002 = g_dlang)),x_t2_ooefl003(ooefl003|x.t2_ooefl003),x_nmajl_t_nmajl003(nmajl003|x.nmajl_t_nmajl003),l_fmcrcomp_ooefl003(chr1000|trim(fmcrcomp)||&apos;.&apos;||trim((SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = fmcr_t.fmcrcomp AND ooefl_t.ooeflent = fmcr_t.fmcrent AND ooefl_t.ooefl002 = g_dlang))),l_fmcrsite_ooefl003(chr1000|trim(fmcrsite)||&apos;.&apos;||trim((SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = fmcr_t.fmcrsite AND ooefl_t.ooeflent = fmcr_t.fmcrent AND ooefl_t.ooefl002 = g_dlang))),l_fmcs003_ooefl003(chr1000|trim(fmcs003)||&apos;.&apos;||trim(x.t2_ooefl003)),l_fmcs004_nmaal003(chr100|&apos;&apos;)"/>
+    <sql id="g_from" query="fmcr_t LEFT OUTER JOIN ( SELECT fmcs_t.*,( SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooeflent = fmcs_t.fmcsent AND ooefl_t.ooefl001 = fmcs_t.fmcs003 AND ooefl_t.ooefl002 = g_dlang) t2_ooefl003,( SELECT nmajl003 FROM nmajl_t WHERE nmajl_t.nmajlent = fmcs_t.fmcsent AND nmajl_t.nmajl001 = fmcs_t.fmcs006 AND nmajl_t.nmajl002 = g_dlang) nmajl_t_nmajl003 FROM fmcs_t ) x  ON fmcr_t.fmcrent = x.fmcsent AND fmcr_t.fmcrdocno = x.fmcsdocno"/>
+    <sql id="g_where" query="" maintable="fmcr_t"/>
+    <sql id="g_order" query="fmcrdocno,fmcsseq"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" name="fmcrdocno,fmcsseq"/>
+    <section id="b_group" reptype="d01">
+      <rep type="fmcrdocno" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="fmcrent,fmcrdocno"/>
+      <rep type="fmcsseq"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="fmcrent,fmcrdocno,fmcsseq"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="fmcrent,fmcrdocno,fmcsseq"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="fmcrdocno" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="fmcrent,fmcrdocno"/>
+      <rep type="fmcsseq"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

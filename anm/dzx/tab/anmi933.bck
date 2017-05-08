@@ -1,0 +1,122 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmi933" module="anm" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02291" crtdt="2015-10-13 09:25:38" modid="02114" moddt="2016-02-22 16:14:17" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="收支項目內容設定">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="nmef001"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmef002,nmef002_desc(chr500),nmbd003(chr1),nmbd004(chr1),nmef003,nmef003_desc(chr500),nmef004,nmef005,nmefstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="nmef002,nmef003,nmefownid,nmefownid_desc(chr500),nmefowndp,nmefowndp_desc(chr500),nmefcrtid,nmefcrtid_desc(chr500),nmefcrtdp,nmefcrtdp_desc(chr500),nmefcrtdt,nmefmodid,nmefmodid_desc(chr500),nmefmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmi933" method="dialog">
+    <section id="input">
+      <input id="head" field="nmef001"/>
+      <input id="body" page="1" field="nmef002,nmbd003,nmbd004,nmef003,nmef003_desc,nmef004,nmef005,nmefstus" insert="N" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="nmef001"/>
+      <construct id="body" page="1" field="nmef002,nmbd003,nmbd004,nmef003,nmef003_desc,nmef004,nmef005,nmefstus"/>
+      <construct id="body" page="2" field="nmefownid,nmefowndp,nmefcrtid,nmefcrtdp,nmefcrtdt,nmefmodid,nmefmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="nmef001"/>
+      <set id="head" type="no_entry" field="nmef001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="nmef001">
+        <after>
+          <check chkid="v_nmbd001" id="isExist"/>
+        </after>
+        <controlp form="q_nmbd001" state="i"/>
+        <controlp form="q_nmbd001" state="c"/>
+      </column>
+    </init>
+    <init id="body" page="1">
+      <column id="nmef002">
+        <after>
+          <reference field="nmef002_desc" ref_field="nmef001,nmef002" map_field="nmef001,nmef002" ref_sql="SELECT nmbdl004 FROM nmbdl_t WHERE nmbdlent=$varg_enterprise$var AND nmbdl001=? AND nmbdl002=? AND nmbdl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmbd002" state="c"/>
+      </column>
+      <column id="nmef002_desc"/>
+      <column id="nmbd003"/>
+      <column id="nmbd004"/>
+      <column id="nmef003" def_scc="8543">
+        <after/>
+        <controlp form="q_gzcb001" state="i"/>
+        <controlp form="q_gzcb001" state="c"/>
+      </column>
+      <column id="nmef003_desc"/>
+      <column id="nmef004" type="S" default="8544" def_scc="8544"/>
+      <column id="nmef005" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="nmefstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="nmefownid">
+        <after>
+          <reference field="nmefownid_desc" ref_field="nmef_t.nmefownid" map_field="nmefownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmefownid_desc"/>
+      <column id="nmefowndp">
+        <after>
+          <reference field="nmefowndp_desc" ref_field="nmef_t.nmefowndp" map_field="nmefowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmefowndp_desc"/>
+      <column id="nmefcrtid">
+        <after>
+          <reference field="nmefcrtid_desc" ref_field="nmef_t.nmefcrtid" map_field="nmefcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmefcrtid_desc"/>
+      <column id="nmefcrtdp">
+        <after>
+          <reference field="nmefcrtdp_desc" ref_field="nmef_t.nmefcrtdp" map_field="nmefcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmefcrtdp_desc"/>
+      <column id="nmefcrtdt"/>
+      <column id="nmefmodid">
+        <after>
+          <reference field="nmefmodid_desc" ref_field="nmef_t.nmefmodid" map_field="nmefmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmefmodid_desc"/>
+      <column id="nmefmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="nmef_t" pk="nmef001">
+      <sql id="forupd_sql" type="sql" query="SELECT nmef001 FROM nmef_t WHERE nmefent= ? AND nmef001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT nmef001 FROM nmef_t" order="nmef001"/>
+    </head>
+    <body id="nmef_t" page="1,2" linked="" pk="nmef002,nmef003" fk="nmef001">
+      <sql id="forupd_sql_detail" query="SELECT nmef002,&apos;&apos;,&apos;&apos;,&apos;&apos;,nmef003,&apos;&apos;,nmef004,nmef005,nmefstus,&apos;&apos;,&apos;&apos;,nmefownid,&apos;&apos;,nmefowndp,&apos;&apos;,nmefcrtid,&apos;&apos;,nmefcrtdp,&apos;&apos;,nmefcrtdt,nmefmodid,&apos;&apos;,nmefmoddt FROM nmef_t WHERE nmefent=? AND nmef001=? AND nmef002=? AND nmef003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmef002,&apos;&apos;,&apos;&apos;,&apos;&apos;,nmef003,&apos;&apos;,nmef004,nmef005,nmefstus,&apos;&apos;,&apos;&apos;,nmefownid,&apos;&apos;,nmefowndp,&apos;&apos;,nmefcrtid,&apos;&apos;,nmefcrtdp,&apos;&apos;,nmefcrtdt,nmefmodid,&apos;&apos;,nmefmoddt FROM nmef_t WHERE nmefent= ? AND nmef001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

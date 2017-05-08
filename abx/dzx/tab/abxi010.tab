@@ -1,0 +1,93 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abxi010" module="abx" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="02210" crtdt="2015-05-05 17:21:45" modid="07024" moddt="2016-09-05 09:37:32" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="保稅BOM起始編號設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bxaasite,bxaastus,bxaa001,bxaa002,bxaa003"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="bxaasite,bxaa001,bxaa003,bxaaownid,bxaaownid_desc(chr500),bxaaowndp,bxaaowndp_desc(chr500),bxaacrtid,bxaacrtid_desc(chr500),bxaacrtdp,bxaacrtdp_desc(chr500),bxaacrtdt,bxaamodid,bxaamodid_desc(chr500),bxaamoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abx" filename="abxi010" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="bxaasite,bxaastus,bxaa001,bxaa002,bxaa003" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="bxaasite,bxaastus,bxaa001,bxaa002,bxaa003"/>
+      <construct id="body" page="2" field="bxaaownid,bxaaowndp,bxaacrtid,bxaacrtdp,bxaacrtdt,bxaamodid,bxaamoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="bxaasite"/>
+      <column id="bxaastus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="bxaa001"/>
+      <column id="bxaa002" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bxaa003"/>
+    </init>
+    <init id="body" page="2">
+      <column id="bxaaownid">
+        <after>
+          <reference field="bxaaownid_desc" ref_field="bxaa_t.bxaaownid" map_field="bxaaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxaaownid_desc"/>
+      <column id="bxaaowndp">
+        <after>
+          <reference field="bxaaowndp_desc" ref_field="bxaa_t.bxaaowndp" map_field="bxaaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bxaaowndp_desc"/>
+      <column id="bxaacrtid">
+        <after>
+          <reference field="bxaacrtid_desc" ref_field="bxaa_t.bxaacrtid" map_field="bxaacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxaacrtid_desc"/>
+      <column id="bxaacrtdp">
+        <after>
+          <reference field="bxaacrtdp_desc" ref_field="bxaa_t.bxaacrtdp" map_field="bxaacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bxaacrtdp_desc"/>
+      <column id="bxaacrtdt"/>
+      <column id="bxaamodid">
+        <after>
+          <reference field="bxaamodid_desc" ref_field="bxaa_t.bxaamodid" map_field="bxaamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxaamodid_desc"/>
+      <column id="bxaamoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="bxaa_t" page="1,2" linked="" pk="bxaasite,bxaa001,bxaa003">
+      <sql id="forupd_sql_detail" query="SELECT bxaasite,bxaastus,bxaa001,bxaa002,bxaa003,&apos;&apos;,&apos;&apos;,&apos;&apos;,bxaaownid,&apos;&apos;,bxaaowndp,&apos;&apos;,bxaacrtid,&apos;&apos;,bxaacrtdp,&apos;&apos;,bxaacrtdt,bxaamodid,&apos;&apos;,bxaamoddt FROM bxaa_t WHERE bxaaent=? AND bxaasite=? AND bxaa001=? AND bxaa003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bxaasite,bxaastus,bxaa001,bxaa002,bxaa003,&apos;&apos;,&apos;&apos;,&apos;&apos;,bxaaownid,&apos;&apos;,bxaaowndp,&apos;&apos;,bxaacrtid,&apos;&apos;,bxaacrtdp,&apos;&apos;,bxaacrtdt,bxaamodid,&apos;&apos;,bxaamoddt FROM bxaa_t WHERE bxaaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

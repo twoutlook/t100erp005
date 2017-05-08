@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzq910" module="azz" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="00845" crtdt="2016-12-13 18:18:37" modid="00845" moddt="2016-12-13 18:18:37" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="程式連結清單查詢">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzzl001"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzzl003,gzzl002,gzzl004"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzq910" method="dialog">
+    <section id="input">
+      <input id="head" field="gzzl001"/>
+      <input id="body" page="1" field="gzzl003,gzzl002,gzzl004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzzl001"/>
+      <construct id="body" page="1" field="gzzl003,gzzl002,gzzl004"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzzl001"/>
+      <set id="head" type="no_entry" field="gzzl001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gzzl001"/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzzl003"/>
+      <column id="gzzl002"/>
+      <column id="gzzl004"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzzl_t" pk="gzzl001">
+      <sql id="forupd_sql" type="sql" query="SELECT gzzl001 FROM gzzl_t WHERE gzzl001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzzl001 FROM gzzl_t" order="gzzl001"/>
+    </head>
+    <body id="gzzl_t" page="1" linked="" pk="gzzl002" fk="gzzl001">
+      <sql id="forupd_sql_detail" query="SELECT gzzl003,gzzl002,gzzl004 FROM gzzl_t WHERE gzzl001=? AND gzzl002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzzl003,gzzl002,gzzl004 FROM gzzl_t WHERE gzzl001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

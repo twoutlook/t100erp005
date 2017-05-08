@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="asfp370_01" std_prog="asfp370_01" erpver="1.0" module="ASF" ver="1" env="s" zone="t10dev" booking="N" type="S" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="Y" status=""/>
+  </other>
+  <point name="function.asfp370_01" order="" ver="1" cite_std="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PUBLIC FUNCTION asfp370_01(--)
+   #add-point:construct段變數傳入
+
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:construct段define
+
+   #end add-point
+
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_asfp370_01 WITH FORM cl_ap_formpath("asf","asfp370_01")
+
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+
+   LET g_qryparam.state = "i"
+
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+
+   #輸入前處理
+   #add-point:單頭前置處理
+
+   #end add-point
+
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+      #輸入開始
+      CONSTRUCT BY NAME g_wc_m ON sfdadocno
+
+         BEFORE CONSTRUCT
+            #add-point:單頭輸入前處理
+
+            #end add-point
+
+         AFTER CONSTRUCT
+            #add-point:單頭輸入後處理
+
+            #end add-point
+
+
+
+
+
+      END CONSTRUCT
+
+      #輸入開始
+      CONSTRUCT g_wc ON sfdb001,sfdb002,sfdb003,sfdb004,sfdb005
+           FROM s_detail1[1].sfdb001,s_detail1[1].sfdb002,s_detail1[1].sfdb003,s_detail1[1].sfdb004,
+               s_detail1[1].sfdb005
+
+         #自訂ACTION
+         #add-point:自訂ACTION
+
+         #end add-point
+
+         BEFORE CONSTRUCT
+            #add-point:單頭輸入前處理
+
+            #end add-point
+
+         AFTER CONSTRUCT
+            #add-point:單頭輸入後處理
+
+            #end add-point
+
+         #單身公用欄位開窗相關處理
+
+
+         #單身一般欄位開窗相關處理
+
+
+      END CONSTRUCT
+
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION close
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION exit
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+
+   END DIALOG
+
+   #add-point:畫面關閉前
+
+   #end add-point
+
+   #畫面關閉
+   CLOSE WINDOW w_asfp370_01
+
+   #add-point:construct段after construct
+
+   #end add-point
+
+END FUNCTION]]>
+  </point>
+  <section id="asfp370.free_style_variable" ver="1" status="" src="s">
+    <![CDATA[#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="asfp370.global" ver="1" status="" src="s">
+    <![CDATA[#add-point:註解編寫項目
+{<point name="main.memo" />}
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="main.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+]]>
+  </section>
+  <section id="asfp370.global_variable" ver="1" status="" src="s">
+    <![CDATA[#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="asfp370.other_dialog" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="asfp370.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="asfp370_01.description" ver="1" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000012
+#+ 
+#+ Filename...: asfp370_01
+#+ Description: ...
+#+ Creator....: 00768(2014/07/03)
+#+ Modifier...: 00768(2014/07/03)
+#+ Buildtype..: 應用 p00 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="asfp370_01.global" ver="1" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+DEFINE g_rec_b            LIKE type_t.num5   
+DEFINE g_wc_m             STRING
+DEFINE g_wc               STRING 
+DEFINE g_ref_fields       DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields       DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point       
+]]>
+  </section>
+  <section id="asfp370_01.input" ver="1" status="" src="s">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION asfp370_01(--)
+   #add-point:construct段變數傳入
+   {<point name="construct.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:construct段define
+   {<point name="construct.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_asfp370_01 WITH FORM cl_ap_formpath("asf","asfp370_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="construct.pre_construct"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      CONSTRUCT BY NAME g_wc_m ON sfdadocno 
+      
+         BEFORE CONSTRUCT
+            #add-point:單頭輸入前處理
+            {<point name="construct.head.before_construct"/>}
+            #end add-point
+            
+         AFTER CONSTRUCT
+            #add-point:單頭輸入後處理
+            {<point name="construct.head.after_construct"/>}
+            #end add-point
+            
+         
+ 
+         
+       
+      END CONSTRUCT
+ 
+      #輸入開始
+      CONSTRUCT g_wc ON sfdb001,sfdb002,sfdb003,sfdb004,sfdb005 
+           FROM s_detail1[1].sfdb001,s_detail1[1].sfdb002,s_detail1[1].sfdb003,s_detail1[1].sfdb004, 
+               s_detail1[1].sfdb005 
+         
+         #自訂ACTION
+         #add-point:自訂ACTION
+         {<point name="construct.action"/>}
+         #end add-point
+         
+         BEFORE CONSTRUCT
+            #add-point:單頭輸入前處理
+            {<point name="construct.body.before_construct"/>}
+            #end add-point
+            
+         AFTER CONSTRUCT
+            #add-point:單頭輸入後處理
+            {<point name="construct.body.after_construct"/>}
+            #end add-point
+            
+         #單身公用欄位開窗相關處理
+         
+           
+         #單身一般欄位開窗相關處理
+           
+            
+      END CONSTRUCT
+      
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+         
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="construct.before_close"/>}
+   #end add-point 
+   
+   #畫面關閉
+   CLOSE WINDOW w_asfp370_01 
+   
+   #add-point:construct段after construct 
+   {<point name="construct.post_construct"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="asfp370_01.other_dialog" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="asfp370_01.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

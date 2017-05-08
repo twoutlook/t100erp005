@@ -1,0 +1,145 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi051" module="aoo" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="02159" crtdt="2016-05-11 11:03:07" modid="02159" moddt="2016-05-11 11:03:07" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="街道資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="ooco001,ooco001_desc(chr80),ooco002,ooco002_desc(chr80),ooco003,ooco003_desc(chr80),ooco004,ooco004_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="oocostus,ooco005,oocol007,oocol008"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="ooco005,oocoownid,oocoownid_desc(chr500),oocoowndp,oocoowndp_desc(chr500),oococrtid,oococrtid_desc(chr500),oococrtdp,oococrtdp_desc(chr500),oococrtdt,oocomodid,oocomodid_desc(chr500),oocomoddt"/>
+      <var id="bs_field" value="ooco001,ooco002,ooco003,ooco004" pk="ooco001,ooco002,ooco003,ooco004" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi051" method="dialog">
+    <section id="input">
+      <input id="head" field="ooco001,ooco002,ooco003,ooco004"/>
+      <input id="body" page="1" field="oocostus,ooco005,oocol007,oocol008" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="ooco001,ooco002,ooco003,ooco004"/>
+      <construct id="body" page="1" field="oocostus,ooco005,oocol007,oocol008"/>
+      <construct id="body" page="2" field="oocoownid,oocoowndp,oococrtid,oococrtdp,oococrtdt,oocomodid,oocomoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="ooco001,ooco002,ooco003,ooco004"/>
+      <set id="head" type="no_entry" field="ooco001,ooco002,ooco003,ooco004"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="ooco001">
+        <after>
+          <check chkid="v_oocg001" id="isExist"/>
+          <reference field="ooco001_desc" ref_field="ooco_t.ooco001" map_field="oocoent,ooco001" ref_sql="SELECT oocgl003 FROM oocgl_t WHERE oocglent=$varg_enterprise$var AND oocgl001=? AND oocgl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocg001" state="i"/>
+        <controlp form="q_oocg001" state="c"/>
+      </column>
+      <column id="ooco001_desc"/>
+      <column id="ooco002">
+        <after>
+          <check chkid="v_ooci002_1" id="isExist"/>
+          <reference field="ooco002_desc" ref_field="ooco001,ooco002" map_field="ooco001,ooco002" ref_sql="SELECT oocil004 FROM oocil_t WHERE oocilent=$varg_enterprise$var AND oocil001=? AND oocil002=? AND oocil003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooci002" state="i"/>
+        <controlp form="q_ooci002" state="c"/>
+      </column>
+      <column id="ooco002_desc"/>
+      <column id="ooco003">
+        <after>
+          <check chkid="v_oock003" id="isExist"/>
+          <reference field="ooco003_desc" ref_field="ooco001,ooco002,ooco003" map_field="ooco001,ooco002,ooco003" ref_sql="SELECT oockl005 FROM oockl_t WHERE oocklent=$varg_enterprise$var AND oockl001=? AND oockl002=? AND oockl003=? AND oockl004=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oock003" state="i"/>
+        <controlp form="q_oock003" state="c"/>
+      </column>
+      <column id="ooco003_desc"/>
+      <column id="ooco004">
+        <after>
+          <check chkid="v_oocm004" id="isExist"/>
+          <reference field="ooco004_desc" ref_field="ooco001,ooco002,ooco003,ooco004" map_field="ooco001,ooco002,ooco003,ooco004" ref_sql="SELECT oocml006 FROM oocml_t WHERE oocmlent=$varg_enterprise$var AND oocml001=? AND oocml002=? AND oocml003=? AND oocml004=? AND oocml005=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocm004" state="i"/>
+        <controlp form="q_oocm004" state="c"/>
+      </column>
+      <column id="ooco004_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="oocostus" scc="50">
+        <stus id="N" pic="open"/>
+        <stus id="X" pic="void"/>
+        <stus id="Y" pic="valid"/>
+      </column>
+      <column id="ooco005">
+        <controlp form="q_ooco005" state="c"/>
+      </column>
+      <column id="oocol007"/>
+      <column id="oocol008"/>
+    </init>
+    <init id="body" page="2">
+      <column id="oocoownid">
+        <after>
+          <reference field="oocoownid_desc" ref_field="ooco_t.oocoownid" map_field="oocoownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oocoownid_desc"/>
+      <column id="oocoowndp">
+        <after>
+          <reference field="oocoowndp_desc" ref_field="ooco_t.oocoowndp" map_field="oocoowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oocoowndp_desc"/>
+      <column id="oococrtid">
+        <after>
+          <reference field="oococrtid_desc" ref_field="ooco_t.oococrtid" map_field="oococrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oococrtid_desc"/>
+      <column id="oococrtdp">
+        <after>
+          <reference field="oococrtdp_desc" ref_field="ooco_t.oococrtdp" map_field="oococrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oococrtdp_desc"/>
+      <column id="oococrtdt"/>
+      <column id="oocomodid">
+        <after>
+          <reference field="oocomodid_desc" ref_field="ooco_t.oocomodid" map_field="oocomodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oocomodid_desc"/>
+      <column id="oocomoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="ooco_t" pk="ooco001,ooco002,ooco003,ooco004">
+      <sql id="forupd_sql" type="sql" query="SELECT ooco001,&apos;&apos;,ooco002,&apos;&apos;,ooco003,&apos;&apos;,ooco004,&apos;&apos; FROM ooco_t WHERE oocoent= ? AND ooco001=? AND ooco002=? AND ooco003=? AND ooco004=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT ooco001,&apos;&apos;,ooco002,&apos;&apos;,ooco003,&apos;&apos;,ooco004,&apos;&apos; FROM ooco_t" order="ooco001,ooco002,ooco003,ooco004"/>
+    </head>
+    <body id="ooco_t" page="1,2" linked="" pk="ooco005" fk="ooco001,ooco002,ooco003,ooco004">
+      <sql id="forupd_sql_detail" query="SELECT oocostus,ooco005,&apos;&apos;,&apos;&apos;,&apos;&apos;,oocoownid,&apos;&apos;,oocoowndp,&apos;&apos;,oococrtid,&apos;&apos;,oococrtdp,&apos;&apos;,oococrtdt,oocomodid,&apos;&apos;,oocomoddt FROM ooco_t WHERE oocoent=? AND ooco001=? AND ooco002=? AND ooco003=? AND ooco004=? AND ooco005=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT oocostus,ooco005,&apos;&apos;,&apos;&apos;,&apos;&apos;,oocoownid,&apos;&apos;,oocoowndp,&apos;&apos;,oococrtid,&apos;&apos;,oococrtdp,&apos;&apos;,oococrtdt,oocomodid,&apos;&apos;,oocomoddt FROM ooco_t WHERE oocoent= ? AND ooco001=? AND ooco002=? AND ooco003=? AND ooco004=?"/>
+      <sql id="detail_append" type="lang" target="oocol_t.oocol007,oocol_t.oocol008" table="oocol_t" fk="ooco001,ooco002,ooco003,ooco004,ooco005" pk="oocol001,oocol002,oocol003,oocol004,oocol005,oocol006" field="oocol007,oocol008"/>
+    </body>
+  </dataset>
+</assembly>
+

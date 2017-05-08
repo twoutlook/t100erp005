@@ -1,0 +1,64 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afat501_01" module="afa" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="06816" crtdt="2015-10-08 14:45:53" modid="06816" moddt="2015-10-09 14:34:04" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="折畢再提批次產生">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="chk_1(chr500),faaj013,faaj012,faah006(chr10),faah007(chr10),faah003(chr20)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="afa" filename="afat501_01" method="dialog">
+    <section id="input">
+      <input id="head" field="chk_1,faaj013,faaj012"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="chk_1"/>
+      <column id="faaj013"/>
+      <column id="faaj012">
+        <after>
+          <check id="range" st="100" st_type="1" errno="azz-00080" ow="1"/>
+        </after>
+      </column>
+      <column id="faah006">
+        <after>
+          <check chkid="v_faac001" id="isExist"/>
+        </after>
+        <controlp form="q_faac001" state="i"/>
+        <controlp form="q_faac001" state="c"/>
+      </column>
+      <column id="faah007">
+        <after>
+          <check chkid="v_faad001" id="isExist"/>
+        </after>
+        <controlp form="q_faad001" state="i"/>
+        <controlp form="q_faad001" state="c"/>
+      </column>
+      <column id="faah003">
+        <after>
+          <check chkid="v_faah003_1" id="isExist"/>
+        </after>
+        <controlp form="q_faah003_1" state="i"/>
+        <controlp form="q_faah003_1" state="c"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="faaj_t" pk="faajld,faaj000,faaj001,faaj002,faaj037">
+      <sql id="forupd_sql" type="sql" query="SELECT &apos;&apos;,faaj013,faaj012,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM faaj_t WHERE faajent= ? AND faajld=? AND faaj000=? AND faaj001=? AND faaj002=? AND faaj037=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="faajld,faaj000,faaj001,faaj002,faaj037"/>
+    </head>
+  </dataset>
+</assembly>
+

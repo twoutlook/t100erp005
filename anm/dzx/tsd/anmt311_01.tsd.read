@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="anmt311_01" std_prog="anmt311_01" erpver="1.0" ver="4" module="ANM" type="S" booking="N" designer_ver="1.0" class="T" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items=""/>
+  <table ver="1" cite_std="N">
+    <tbl name="nmbs_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status=""/>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[LET 作業來源 nmbs001 ='anmt311' 
+
+批次產生或單身輸入時取值原則
+                     
+nmbtent 企業編號    
+nmbtcomp 法人    
+nmbtld 帳別(套)編號     
+nmbtdocno 帳務編號    
+nmbtseq 項次    
+nmbt001 單據來源 ='anmt310' or 'anmt540'    
+nmbt002 來源單號 = nmbadocno     
+nmbt003 來源單項次 = nmbbseq  
+nmbt011 票據號碼 = nmbb030  
+nmbt012 票據日期 = nmbb031   
+nmbt013 申請人 = g_user   
+nmbt014 銀行帳號 = nmbb003  
+nmbt015 結算方式    
+nmbt016 收支項目     
+nmbt017 營運據點   = nmbacomp   
+nmbt018 部門   = nmba001   
+nmbt019 利潤/成本中心 =  以nmba001 串 ooeg004   
+nmbt020 區域     
+nmbt021 交易客商 = nmba004    
+nmbt022 帳款客商 = nmba004    
+nmbt023 客群     
+nmbt024 產品類別     
+nmbt025 人員 = nmba009   
+nmbt026 預算編號     
+nmbt027 專案編號     
+nmbt028 WBS     
+nmbt100 幣別 =nmbb004 
+#--以下為主帳套時取法   
+nmbt101 匯率        =nmbb005 
+nmbt121 本位幣二匯率 依帳套原則換算 依帳套原則換算  
+nmbt131 本位幣三匯率 依帳套原則換算 依帳套原則換算  
+nmbt103     原幣金額      =nmbb006     
+nmbt113     本幣金額      =nmbb007     
+nmbt123     本位幣二金額  視帳套原則換算
+nmbt133     本位幣三金額  視帳套原則換算
+#--end --
+
+#-平行帳套金額取法
+
+ 取得帳套代碼
+ select * from glaa_t 
+    where glaald = 平行帳套
+ let nmbt101 = 依帳套幣別glaa001  取得匯率
+ 匯率來源 :資金模組匯率來源 ;參數:S-FIN-4004
+ 匯率日期 : 單據日期 (nmbadocdt 或 nmcqdocdt ) 
+ nmbt113   = nmbt103 * nmbt101 
+ 
+ 平行帳套若有啟用本位幣二或三 
+
+ nmbt121:次帳套二本位幣二匯率:  依帳套本位幣換算基準,  取得匯率
+         匯率來源 :資金模組匯率來源 ;參數:S-FIN-4004
+         匯率日期 :單據日期 (nmbadocdt 或 nmcqdocdt )  
+  
+ nmbt123: 依次帳套本位幣金額: #本位幣換算基準 1.交易原幣2.帳簿幣別
+          換算  
+ nmbt131 及 nmbt133 同樣原則 
+
+   ]]>
+  </all>
+  <field cite_std="N" name="a" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="c" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[IF  平行帳套同步產生 = 'Y' THEN 
+    產生帳套不可輸入
+ELSE 
+    開窗為法人下之平行帳套 + 主帳套 
+END IF ]]>
+  </field>
+  <field cite_std="N" name="d" ver="3" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="docno_311" ver="2" src="s" column="" table="" attribute="" type="" req="N" i_zoom="q_ooba002" c_zoom="q_nmbsdocno" chk_ref="v_ooba002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="e" ver="4" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="nmba_t.nmbadocdt" ver="1" src="s" column="nmbadocdt" table="nmba_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="nmba_t.nmbadocno" ver="1" src="s" column="nmbadocno" table="nmba_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_nmbadocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[可空白
+因為繳款單和銀存收支單是同一table 
+故在資料來源可同時選用
+
+開窗欄位: 注意交易對象取單身欄位
+
+來源作業類型  單號       異動別    交易對象  款別分類  款別說明     幣別    原幣金額  主帳套本幣金額
+ 　nmba003    nmbadocno  nmbb001   nmbb026    nmbb029   ooial003 　nmbb004   nmbb057     nmbb058 ]]>
+  </field>
+  <field cite_std="N" name="nmbb_t.nmbb026" ver="1" src="s" column="nmbb026" table="nmbb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_pmaa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="nmbs_t.nmbscomp" ver="1" src="s" column="nmbscomp" table="nmbs_t" attribute="" type="" req="Y" i_zoom="q_ooef001_2" c_zoom="" chk_ref="v_ooef001_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[default : g_user 所屬法人
+]]>
+  </field>
+  <field cite_std="N" name="nmbs_t.nmbsdocdt" ver="2" src="s" column="nmbsdocdt" table="nmbs_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="nmbs_t.nmbsdocno" ver="1" src="s" column="nmbsdocno" table="nmbs_t" attribute="" type="" req="Y" i_zoom="q_ooba002" c_zoom="q_nmbsdocno" chk_ref="v_ooba002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="nmbs_t.nmbsld" ver="1" src="s" column="nmbsld" table="nmbs_t" attribute="" type="" req="Y" i_zoom="q_authorised_ld" c_zoom="q_authorised_ld" chk_ref="v_glaald_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="nmbscomp_desc" src="s" depend_field="nmbs_t.nmbscomp" correspon_key="nmbsent,nmbscomp" ref_table="ooef_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooef003" status=""/>
+    <rfield cite_std="N" ver="1" name="nmbsld_desc" src="s" depend_field="nmbs_t.nmbsld" correspon_key="nmbsent,nmbsld" ref_table="glaal_t" ref_fk="glaalent,glaalld" ref_dlang="glaal001" ref_rtn="glaal002" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="a" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="c" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="d" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="docno_311" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="e" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="nmba_t.nmbadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="nmba_t.nmbadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="nmbb_t.nmbb026" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="nmbs_t.nmbscomp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="nmbs_t.nmbsdocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="nmbs_t.nmbsdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="nmbs_t.nmbsld" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_master_311" text="　　" lstr=""/>
+    <sfield name="l_group1" text="轉檔條件" lstr=""/>
+    <sfield name="lbl_nmbscomp" text="法人代碼" lstr=""/>
+    <sfield name="lbl_ooef003" text="法人否" lstr=""/>
+    <sfield name="lbl_source_311" text="資料來源" lstr=""/>
+    <sfield name="lbl_b" text="銀存收支單" lstr=""/>
+    <sfield name="lbl_a" text="繳款單" lstr=""/>
+    <sfield name="lbl_d" text="轉備用金" lstr=""/>
+    <sfield name="lbl_e" text="繳款匯總單" lstr=""/>
+    <sfield name="lbl_c" text="平行帳套同步產生" lstr=""/>
+    <sfield name="lbl_nmbsld" text="產生帳套" lstr=""/>
+    <sfield name="lbl_nmbsdocno_1" text="帳務單別" lstr=""/>
+    <sfield name="lbl_nmbsdocdt" text="帳務日期" lstr=""/>
+    <sfield name="lbl_docno_311" text="帳務單號" lstr=""/>
+    <sfield name="l_group2" text="繳款/收支單來源 QBE" lstr=""/>
+    <sfield name="lbl_nmbadocno" text="繳款/收支單號" lstr=""/>
+    <sfield name="lbl_nmbadocdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_nmbb026" text="交易對象" lstr=""/>
+    <sact name="delete" text="刪除" lstr=""/>
+    <sact name="insert" text="新增" lstr=""/>
+    <sact name="modify" text="更改" lstr=""/>
+    <sact name="output" text="列印" lstr=""/>
+    <sact name="query" text="查詢" lstr=""/>
+    <sact name="reproduce" text="複製" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="4" cite_std="N" src="s">
+    <widget name="nmba_t.nmbadocdt" status="u"/>
+    <widget name="nmba_t.nmbadocno" status="u"/>
+    <widget name="nmbb_t.nmbb026" status="u"/>
+  </exclude>
+</spec>

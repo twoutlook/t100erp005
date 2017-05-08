@@ -1,0 +1,1160 @@
+#該程式已解開Section, 不再透過樣板產出!
+{<section id="apmp490.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0011(2016-01-30 10:18:55), PR版次:0011(2016-08-03 16:29:01)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000121
+#+ Filename...: apmp490
+#+ Description: 引導式請購轉採購作業
+#+ Creator....: 03079(2014-07-29 00:00:00)
+#+ Modifier...: 03079 -SD/PR- 08734
+ 
+{</section>}
+ 
+{<section id="apmp490.global" >}
+#應用 i00 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#160105-00013#1..........2016/01/05 By ming..........:取消lock請購單頭，讓不用的user在同時操作時 
+#                                                     不會因為其他人已經lock而無法處理同一筆請購單中的其他項次 
+#160706-00037#1..........2016/07/07 By 03079          處理lock問題 
+#160727-00019#11   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 p490_01_lock_b_t ——> p490_lock_t,p490_03_pmdn_rel_t ——> p490_pmdn_t,p490_03_pmdp_rel_t ——> p490_pmdp_t
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+IMPORT util
+
+IMPORT FGL apm_apmp490_01 
+IMPORT FGL apm_apmp490_02
+IMPORT FGL apm_apmp490_03
+IMPORT FGL apm_apmp490_04 
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable)
+#為了作業方便 共用其他程式的global  
+GLOBALS "../../apm/4gl/apmp490_01.inc" 
+GLOBALS "../../apm/4gl/apmp490_02.inc" 
+GLOBALS "../../apm/4gl/apmp490_03.inc" 
+GLOBALS "../../apm/4gl/apmp490_04.inc"
+
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable)
+DEFINE li_step              LIKE type_t.num5
+DEFINE gwin_curr            ui.Window
+DEFINE gfrm_curr            ui.Form
+DEFINE g_forupd_sql         STRING
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_wc                 STRING 
+
+DEFINE g_step1_mode         LIKE type_t.chr10     #記錄第一步的模式為何  
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apmp490.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define
+
+   #end add-point    
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("apm","")
+ 
+   #add-point:作業初始化
+ 
+   #end add-point
+ 
+   #add-point:SQL_define
+
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE apmp490_cl CURSOR FROM g_forupd_sql 
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apmp490 WITH FORM cl_ap_formpath("apm",g_code)
+   
+      #程式初始化
+      CALL apmp490_init()
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+      
+      #建立各程式的temp table 
+      CALL apmp490_01_create_temp_table() 
+      CALL apmp490_02_create_temp_table() 
+      CALL apmp490_03_create_temp_table() 
+      CALL apmp490_04_create_temp_table()
+ 
+      LET li_step = 1
+      
+      WHILE TRUE
+         CASE li_step
+            WHEN 1
+               CALL apmp490_ui_dialog_step1() RETURNING li_step
+            WHEN 2
+               CALL apmp490_ui_dialog_step2() RETURNING li_step
+            WHEN 3
+               CALL apmp490_ui_dialog_step3() RETURNING li_step 
+            WHEN 4 
+               CALL apmp490_ui_dialog_step4() RETURNING li_step 
+            WHEN 0
+               EXIT WHILE
+            OTHERWISE
+               EXIT WHILE
+         END CASE
+      END WHILE
+      
+      #程式運作完了要記得把temp table刪掉 
+      CALL apmp490_01_drop_temp_table()
+      CALL apmp490_02_drop_temp_table() 
+      CALL apmp490_03_drop_temp_table()
+      CALL apmp490_04_drop_temp_table()
+     
+      #畫面關閉
+      CLOSE WINDOW w_apmp490
+   END IF
+ 
+   #add-point:作業離開前
+
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+ 
+{</section>}
+ 
+{<section id="apmp490.other_function" readonly="Y" >}
+#add-point:自定義元件(Function)
+
+PRIVATE FUNCTION apmp490_init()
+   #add-point:init段define
+
+   #end add-point
+
+   LET g_error_show = 1
+   LET g_errshow = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+   
+   #畫面嵌入 
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("apm", "apmp490_01"), "main_grid01", "Group", "master")
+   CALL apmp490_01_init()    #apmp490_01的畫面預設   
+   
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("apm", "apmp490_02"), "main_grid02", "Group", "master")
+   CALL apmp490_02_init()    #apmp490_02的畫面預設   
+   
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("apm", "apmp490_03"), "main_grid03", "Group", "master")
+   CALL apmp490_03_init()    #apmp490_03的畫面預設   
+   
+   CALL cl_ui_replace_sub_window(cl_ap_formpath("apm", "apmp490_04"), "main_grid04", "Group", "master") 
+   CALL apmp490_04_init()
+
+   #先將嵌入的畫面都隱藏  
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL apmp490_set_vbox_visible('0')
+
+   #add-point:畫面資料初始化
+   LET  g_step1_mode = 'i'    #記錄第一步的模式為何  
+   #end add-point
+
+END FUNCTION
+
+PRIVATE FUNCTION apmp490_process(ls_js)
+   DEFINE ls_js       STRING
+   #DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+
+   #end add-point
+
+   #CALL util.JSON.parse(ls_js,lc_param)
+
+   #add-point:process段前處理
+
+   #end add-point
+
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+
+      #end add-point
+   END IF
+
+   #主SQL及相關FOREACH前置處理
+#  DECLARE apmp490_process_cs CURSOR FROM ls_sql
+#  FOREACH apmp490_process_cs INTO
+   #add-point:process段process
+
+   #end add-point
+#  END FOREACH
+
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+
+      #end add-point
+      CALL cl_ask_confirm("std-00012") RETURNING li_stus
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+
+      #end add-point
+   END IF
+END FUNCTION
+
+PRIVATE FUNCTION apmp490_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   #DEFINE la_param    type_parameter
+
+   #CALL util.JSON.parse(ls_js,la_param)
+
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+
+   #end add-point
+
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+
+PRIVATE FUNCTION apmp490_ui_dialog_step1()
+   DEFINE li_exit      LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx       LIKE type_t.num5
+   DEFINE ls_js        STRING
+   DEFINE ls_wc        STRING
+   
+   DEFINE l_msg        STRING
+   DEFINE l_cnt        LIKE type_t.num5
+   DEFINE l_success    LIKE type_t.num5
+   DEFINE l_flag       LIKE type_t.num5
+                     
+   #設定左方的流程圖  
+   CALL apmp490_set_step_img('1') 
+   
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL apmp490_set_vbox_visible('1')
+   
+   #設定下方的button的 顯示 與 隱藏  
+   CALL apmp490_set_act_visible('1') 
+
+   #設定左方流程說明 
+   CALL apmp490_set_memo('1') 
+   
+   #由g_action_choice所存的內容來決定之後會做的動作  
+   LET g_action_choice = NULL
+   
+   #設定右方的button開關 
+   CALL apmp490_01_set_act_visible(g_step1_mode)
+   
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM) 
+         SUBDIALOG apm_apmp490_01.apmp490_01_input01 
+         SUBDIALOG apm_apmp490_01.apmp490_01_construct 
+         #SUBDIALOG apm_apmp490_01.apmp490_01_display      #單身先display 點擊進入後才可勾選 
+         #單身修改成直接可勾選 
+         SUBDIALOG apm_apmp490_01.apmp490_01_body_input
+ 
+         BEFORE DIALOG
+            DISPLAY g_pmdadocno TO pmdadocno
+            DISPLAY g_pmdadocdt TO pmdadocdt
+            DISPLAY g_pmdb030 TO pmdb030
+            DISPLAY g_pmdb004 TO pmdb004
+            DISPLAY g_imaf153 TO imaf153
+            DISPLAY g_imaf141 TO imaf141        
+         
+         ON ACTION Search              #搜尋  
+            IF cl_null(g_apmp490_01_input.pmdldocno) THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'apm-00532'   #單別不可為空
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+               
+               NEXT FIELD pmdldocno
+            END IF 
+            
+            #檢核輸入的單據別是否可以被key人員對應的控制組使用,'4' 為採購控制組類型
+            CALL s_control_chk_doc('1',g_apmp490_01_input.pmdldocno,'4',g_user,g_dept,'','')
+                 RETURNING l_success,l_flag
+            IF l_success THEN
+               IF NOT l_flag THEN
+                  NEXT FIELD pmdldocno
+               END IF
+            ELSE
+               NEXT FIELD pmdldocno
+            END IF
+            IF NOT s_aooi200_chk_slip(g_site,'',g_apmp490_01_input.pmdldocno,'apmt500') THEN
+               NEXT FIELD pmdldocno
+            END IF
+            
+            IF cl_null(g_apmp490_01_wc) THEN
+               LET g_apmp490_01_wc = ' 1=1'
+            END IF
+            IF g_apmp490_01_input.cb01 = 'Y' AND
+               cl_null(g_apmp490_01_input.imaf142) THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'apm-00533'   #採購員不可為空
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+                
+               NEXT FIELD imaf142
+            END IF 
+            
+            #解決重覆搜尋請購單資料後，寫入底稿的功能失效問題 
+            LET g_step1_mode = 'i' 
+            
+            #160706-00037#1 20160707 -----(S) 
+            CALL s_transaction_begin() 
+            #160706-00037#1 20160707 -----(E) 
+            
+            CALL apmp490_01_b_fill(g_apmp490_01_wc) 
+            
+            #160706-00037#1 20160707 -----(S) 
+            CALL s_transaction_end('Y','0') 
+            #160706-00037#1 20160707 -----(E) 
+            
+         ON ACTION sel_all             #全選 
+            CALL apmp490_01_sel_all('Y')
+
+         ON ACTION nosel_all           #全不選 
+            CALL apmp490_01_sel_all('N')
+
+         ON ACTION change_sel          #反向選取 
+            CALL apmp490_01_change_sel()
+
+         ON ACTION see_pmdb_tmp
+            LET g_step1_mode = 'd'
+            #設定右方button開關
+            CALL apmp490_01_set_act_visible(g_step1_mode)
+
+            CALL apmp490_01_b_fill_tmp(' 1=1') 
+            
+         ON ACTION del_pmdb_tmp
+            IF cl_ask_confirm_parm("adz-00165","") THEN   #請問是否要刪除底稿資料？ 
+               CALL apmp490_01_del_tmp()
+               CALL apmp490_01_b_fill_tmp(' 1=1')
+            END IF
+         ON ACTION sel_mode
+            LET g_step1_mode = 'i'
+            #設定右方button開關
+            CALL apmp490_01_set_act_visible(g_step1_mode)
+
+            CALL apmp490_01_b_fill(g_apmp490_01_wc)
+            
+         ON ACTION save                #寫入底稿  
+            IF g_step1_mode = 'i' THEN       #需要是請購資料模式才可使用此功能  
+               CALL apmp490_01_save()
+
+               #160706-00037#1 20160707 -----(S) 
+               CALL s_transaction_begin() 
+               #160706-00037#1 20160707 -----(E) 
+
+               CALL apmp490_01_b_fill(g_apmp490_01_wc)
+               
+               #160706-00037#1 20160707 -----(S) 
+               CALL s_transaction_end('Y','0') 
+               #160706-00037#1 20160707 -----(E) 
+            END IF
+
+         ON ACTION next_step           #進行分配   
+            #計算底稿的temp table筆數是否有大於0 
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt FROM p490_01_pmdb_t
+            IF cl_null(l_cnt) THEN
+               LET l_cnt = 0
+            END IF
+            IF l_cnt = 0 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'apm-00534'   #請購底稿尚未寫入資料！  
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+   
+               CONTINUE DIALOG
+            END IF
+
+            LET g_pmdadocno = GET_FLDBUF(pmdadocno)
+            LET g_pmdadocdt = GET_FLDBUF(pmdadocdt)
+            LET g_pmdb030   = GET_FLDBUF(pmdb030)
+            LET g_pmdb004   = GET_FLDBUF(pmdb004)
+            LET g_imaf153   = GET_FLDBUF(imaf153)
+            LET g_imaf141   = GET_FLDBUF(imaf141)
+
+            LET g_action_choice = "next_step"
+            EXIT DIALOG 
+            
+         ON ACTION step01
+            #此action是為了讓button的圖片有顏色 
+            EXIT DIALOG
+
+         ON ACTION step02
+            #跟進行分配做一樣的檢查    
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt FROM p490_01_pmdb_t
+            IF cl_null(l_cnt) THEN
+               LET l_cnt = 0
+            END IF
+            IF l_cnt = 0 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'apm-00534'  #請購底稿尚未寫入資料！
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+     
+               CONTINUE DIALOG
+            END IF
+
+            LET g_action_choice = "next_step"
+            EXIT DIALOG
+            
+         ON ACTION CLOSE
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+   
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+   
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+         CONTINUE DIALOG
+         
+      END DIALOG
+   
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF 
+      
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+ 
+   END WHILE 
+     
+   CASE g_action_choice
+      WHEN "next_step"
+         RETURN 2
+      OTHERWISE
+         RETURN 0
+   END CASE
+   
+END FUNCTION
+
+PRIVATE FUNCTION apmp490_ui_dialog_step2()
+   DEFINE l_msg       STRING
+   DEFINE l_cnt       LIKE type_t.num5
+   DEFINE l_success   LIKE type_t.chr1 
+   DEFINE l_sql       STRING
+   DEFINE l_where     STRING
+   DEFINE l_pmdbdocno LIKE pmdb_t.pmdbdocno
+   DEFINE l_pmdbseq   LIKE pmdb_t.pmdbseq
+   #160706-00037#1 20160707 -----(S) 
+   DEFINE l_docno     LIKE pmdb_t.pmdbdocno
+   DEFINE l_seq       LIKE pmdb_t.pmdbseq
+   #160706-00037#1 20160707 -----(E) 
+
+   #設定左方的流程圖  
+   CALL apmp490_set_step_img('2') 
+   
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL apmp490_set_vbox_visible('2')
+   
+   #設定下方的button的 顯示 與 隱藏  
+   CALL apmp490_set_act_visible('2') 
+   
+   #設定左方流程說明 
+   CALL apmp490_set_memo('2') 
+   
+   #160706-00037#1 20160707 -----(S) 
+   CALL s_transaction_begin()
+
+   CALL cl_err_collect_init()
+
+   LET l_sql = "SELECT pmdbdocno,pmdbseq ",
+               "  FROM p490_lock_t ",  #160727-00019#11   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 p490_01_lock_b_t ——> p490_lock_t
+               " ORDER BY pmdbdocno,pmdbseq "
+   PREPARE p490_chk_lock_prep FROM l_sql
+   DECLARE p490_chk_lock_curs CURSOR WITH HOLD FOR p490_chk_lock_prep
+
+   LET l_sql = "SELECT pmdbdocno,pmdbseq ",
+               "  FROM pmdb_t ",
+               " WHERE pmdbent   = '",g_enterprise,"' ",
+               "   AND pmdbdocno = ? ",
+               "   AND pmdbseq   = ? ",
+               "   FOR UPDATE SKIP LOCKED "
+   PREPARE p490_test_lock_prep FROM l_sql
+
+   FOREACH p490_chk_lock_curs INTO l_pmdbdocno,l_pmdbseq
+      EXECUTE p490_test_lock_prep USING l_pmdbdocno,l_pmdbseq
+                                   INTO l_docno,l_seq
+      IF cl_null(l_docno) OR cl_null(l_seq) THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = ''
+         LET g_errparam.code   = 'apm-01117'
+         LET g_errparam.popup  = TRUE
+         LET g_errparam.replace[1] = l_pmdbdocno
+         LET g_errparam.replace[2] = l_pmdbseq 
+         CALL cl_err()
+
+         DELETE FROM p490_01_pmdb_t
+          WHERE pmdbdocno = l_pmdbdocno
+            AND pmdbseq   = l_pmdbseq
+         DELETE FROM p490_lock_t  #160727-00019#11   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 p490_01_lock_b_t ——> p490_lock_t
+          WHERE pmdbdocno = l_pmdbdocno
+            AND pmdbseq   = l_pmdbseq
+      END IF
+   END FOREACH
+
+   CALL cl_err_collect_show()
+
+   CALL s_transaction_end('Y','0')
+   #160706-00037#1 20160707 -----(E) 
+   
+   CALL s_transaction_begin()
+
+   #160105-00013#1 20160105 mark by ming -----(S) 
+   #不再lock單頭，開放讓不同user使用相同的請購單 
+   #LET l_sql = "SELECT pmdadocno ",
+   #            "  FROM pmda_t ",
+   #            " WHERE pmdadocno IN (SELECT pmdadocno ",
+   #            "                       FROM p490_01_lock_h_t) ",
+   #            "   FOR UPDATE "
+   #PREPARE apmp490_02_lock_head_prep FROM l_sql
+   #DECLARE apmp490_02_lock_head_curs CURSOR FOR apmp490_02_lock_head_prep
+   #160105-00013#1 20160105 mark by ming -----(E) 
+
+   LET l_sql = "SELECT pmdbdocno,pmdbseq ",
+               "  FROM p490_lock_t ",  #160727-00019#11   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 p490_01_lock_b_t ——> p490_lock_t
+               " ORDER BY pmdbdocno,pmdbseq "
+   PREPARE apmp490_02_lock_prep FROM l_sql
+   DECLARE apmp490_02_lock_curs CURSOR FOR apmp490_02_lock_prep
+
+   LET l_sql = "SELECT pmdbdocno,pmdbseq ",
+               "  FROM pmdb_t ",
+               " WHERE "
+
+   LET l_where = ''
+   FOREACH apmp490_02_lock_curs INTO l_pmdbdocno,l_pmdbseq
+      IF cl_null(l_where) THEN
+         LET l_where = "(pmdbdocno = '",l_pmdbdocno,"' AND pmdbseq = '",l_pmdbseq,"')"
+      ELSE
+         LET l_where = l_where," OR ","(pmdbdocno = '",l_pmdbdocno,"' AND pmdbseq = '",l_pmdbseq,"')"
+      END IF
+   END FOREACH
+   LET l_sql = l_sql,l_where," FOR UPDATE " 
+   PREPARE apmp490_02_lock_body_prep FROM l_sql
+   DECLARE apmp490_02_lock_body_curs CURSOR FOR apmp490_02_lock_body_prep
+
+   #160105-00013#1 20160105 mark by ming -----(S) 
+   #不再lock單頭資料，讓不同user使用相同的請購單 
+   #OPEN apmp490_02_lock_head_curs
+   #160105-00013#1 20160105 mark by ming -----(E) 
+   OPEN apmp490_02_lock_body_curs
+
+   LET g_action_choice = NULL
+
+   #進入第二步的時候 就要產生資料了 
+   CALL apmp490_02_b_fill_01('1=1')
+
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         SUBDIALOG apm_apmp490_02.apmp490_02_input01
+         SUBDIALOG apm_apmp490_02.apmp490_02_display01
+         SUBDIALOG apm_apmp490_02.apmp490_02_display02
+         SUBDIALOG apm_apmp490_02.apmp490_02_display03
+         SUBDIALOG apm_apmp490_02.apmp490_02_display04
+
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION show_data        #產生分配資料   
+            CALL apmp490_02_b_fill_01('1=1')
+            EXIT DIALOG 
+
+         ON ACTION del_data         #刪除第二步中所選擇的資料 
+            CALL apmp490_02_del_data()
+
+         ON ACTION apmp490_02_modify_detail
+            CALL apmp490_02_b()
+
+         ON ACTION back_step        #選擇請購資料 
+            LET g_action_choice = "back_step"
+            EXIT DIALOG
+
+         ON ACTION all_delete       #全部刪除 
+            DELETE FROM p490_02_pmdn_t;    #刪除採購底稿   
+            DELETE FROM p490_01_pmdb_t;    #刪除請購底稿  
+            #將第二步的畫面清空 回到預設值 
+            CALL apmp490_02_default()
+            EXIT DIALOG
+
+         ON ACTION next_step        #採購調整 
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt FROM p490_01_pmdb_t;
+            IF cl_null(l_cnt) THEN
+               LET l_cnt = 0
+            END IF
+            IF l_cnt = 0 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'apm-00535'   #請購底稿資料已被清除！  
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+    
+               CONTINUE DIALOG
+            END IF
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt FROM p490_02_pmdn_t
+            IF cl_null(l_cnt) THEN
+               LET l_cnt = 0
+            END IF
+            IF l_cnt = 0 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'apm-00536'   #尚未產生採購底稿資料  
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+     
+               CONTINUE DIALOG
+            END IF
+
+            CALL apmp490_02_basic_chk() RETURNING l_success
+            IF l_success = 'N' THEN
+               CONTINUE DIALOG
+            END IF
+
+            LET g_action_choice = "next_step"
+            CALL apmp490_02_ins_pmdl_t()
+            EXIT DIALOG
+
+         ON ACTION step01
+            LET g_action_choice = "back_step"
+            EXIT DIALOG
+
+         ON ACTION step02
+            EXIT DIALOG 
+            
+         ON ACTION step03
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt FROM p490_01_pmdb_t;
+            IF cl_null(l_cnt) THEN
+               LET l_cnt = 0
+            END IF
+            IF l_cnt = 0 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'apm-00535'   #請購底稿資料已被清除！  
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+    
+               CONTINUE DIALOG
+            END IF
+
+            LET l_cnt = 0
+            SELECT COUNT(*) INTO l_cnt FROM p490_02_pmdn_t
+            IF cl_null(l_cnt) THEN
+               LET l_cnt = 0
+            END IF
+            IF l_cnt = 0 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'apm-00536'   #尚未產生採購底稿資料  
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+     
+               CONTINUE DIALOG
+            END IF
+
+            LET g_action_choice = "next_step"
+            CALL apmp490_02_ins_pmdl_t()
+
+            EXIT DIALOG 
+            
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+         CONTINUE DIALOG
+         
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = TRUE
+         EXIT WHILE
+      END IF
+
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+
+   END WHILE
+
+   CALL s_transaction_end('Y','0')
+
+   CASE g_action_choice
+      WHEN "back_step"
+         RETURN 1
+      WHEN "next_step"
+         RETURN 3
+      OTHERWISE
+         RETURN 0
+   END CASE
+END FUNCTION
+
+PRIVATE FUNCTION apmp490_ui_dialog_step3()
+   DEFINE l_msg       STRING
+   DEFINE l_pmdl      RECORD LIKE pmdl_t.* 
+   DEFINE l_sql       STRING
+   DEFINE l_where     STRING
+   DEFINE l_pmdbdocno LIKE pmdb_t.pmdbdocno
+   DEFINE l_pmdbseq   LIKE pmdb_t.pmdbseq
+
+   #設定左方的流程圖  
+   CALL apmp490_set_step_img('3') 
+   
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL apmp490_set_vbox_visible('3') 
+   
+   #設定下方的button的 顯示 與 隱藏  
+   CALL apmp490_set_act_visible('3')
+   
+   #設定左方流程說明 
+   CALL apmp490_set_memo('3') 
+   
+   CALL s_transaction_begin()
+
+   #160105-00013#1 20160105 mark by ming -----(S) 
+   #不再lock請購單頭，讓不同user能使用相同的請購單 
+   #LET l_sql = "SELECT pmdadocno ",
+   #            "  FROM pmda_t ",
+   #            " WHERE pmdadocno IN (SELECT pmdadocno ",
+   #            "                       FROM p490_01_lock_h_t) ",
+   #            "   FOR UPDATE "
+   #PREPARE apmp490_03_lock_head_prep FROM l_sql
+   #DECLARE apmp490_03_lock_head_curs CURSOR FOR apmp490_03_lock_head_prep
+   #160105-00013#1 20160105 mark by ming -----(E) 
+
+   LET l_sql = "SELECT pmdbdocno,pmdbseq ",
+               "  FROM p490_lock_t ",  #160727-00019#11   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 p490_01_lock_b_t ——> p490_lock_t
+               " ORDER BY pmdbdocno,pmdbseq "
+   PREPARE apmp490_03_lock_prep FROM l_sql
+   DECLARE apmp490_03_lock_curs CURSOR FOR apmp490_03_lock_prep
+
+   LET l_sql = "SELECT pmdbdocno,pmdbseq ",
+               "  FROM pmdb_t ",
+               " WHERE "
+
+   LET l_where = ''
+   FOREACH apmp490_03_lock_curs INTO l_pmdbdocno,l_pmdbseq
+      IF cl_null(l_where) THEN
+         LET l_where = "(pmdbdocno = '",l_pmdbdocno,"' AND pmdbseq = '",l_pmdbseq,"')"
+      ELSE
+         LET l_where = l_where," OR ","(pmdbdocno = '",l_pmdbdocno,"' AND pmdbseq = '",l_pmdbseq,"')"
+      END IF
+   END FOREACH
+   LET l_sql = l_sql,l_where," FOR UPDATE " 
+   PREPARE apmp490_03_lock_body_prep FROM l_sql
+   DECLARE apmp490_03_lock_body_curs CURSOR FOR apmp490_03_lock_body_prep
+
+   #160105-00013#1 20160105 mark by ming -----(S) 
+   #不再lock請購單頭，讓不同user能使用相同的請購單 
+   #OPEN apmp490_03_lock_head_curs
+   #160105-00013#1 20160105 mark by ming -----(E) 
+   OPEN apmp490_03_lock_body_curs
+
+   CALL apmp490_03_create_data() 
+   
+   CALL apmp490_03_b_fill01(' 1=1')
+
+   LET g_action_choice = NULL
+   
+   #依請購單拆分 
+   LET g_apmp490_03_input.p490_03_chk01 = 'N'
+   IF g_apmp490_02_input.scb02 = '3' THEN
+      #如果第二步的匯總方式設定為「3.不匯總」時，就是依請購單拆分  
+      LET g_apmp490_03_input.p490_03_chk01 = 'Y'
+   END IF
+   DISPLAY BY NAME g_apmp490_03_input.p490_03_chk01
+
+   CALL apmp490_03_set_entry()
+   CALL apmp490_03_set_no_entry()
+
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         SUBDIALOG apm_apmp490_03.apmp490_03_input01
+         SUBDIALOG apm_apmp490_03.apmp490_03_display01
+         SUBDIALOG apm_apmp490_03.apmp490_03_display02
+         SUBDIALOG apm_apmp490_03.apmp490_03_display03
+         SUBDIALOG apm_apmp490_03.apmp490_03_display04
+
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION back_step
+            LET g_action_choice = "back_step"
+            EXIT DIALOG
+
+         ON ACTION next_step
+            LET g_action_choice = "next_step" 
+
+            EXIT DIALOG
+
+         ON ACTION step02
+            LET g_action_choice = "back_step"
+            EXIT DIALOG
+
+         ON ACTION step03
+            EXIT DIALOG
+
+         ON ACTION step04
+            LET g_action_choice = "next_step"
+
+            EXIT DIALOG 
+            
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+         CONTINUE DIALOG 
+         
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF
+
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+
+   END WHILE 
+   
+   CALL s_transaction_end('Y','0')
+   
+   CASE g_action_choice
+      WHEN "back_step"
+         RETURN 2 
+      WHEN "next_step"
+         #在離開transaction 進入最後一步之前處理資料 
+         CALL apmp490_03_ins_pmdl(g_apmp490_01_input.pmdldocno)
+         RETURN 4
+      WHEN "menu"
+         RETURN 0
+      OTHERWISE
+         RETURN 0
+   END CASE
+END FUNCTION
+
+PRIVATE FUNCTION apmp490_ui_dialog_step4()
+   DEFINE l_msg     STRING 
+   DEFINE l_where   STRING
+
+   #設定左方的流程圖  
+   CALL apmp490_set_step_img('4') 
+
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL apmp490_set_vbox_visible('4') 
+   
+   #設定下方的button的 顯示 與 隱藏  
+   CALL apmp490_set_act_visible('4')
+
+   #設定左方流程說明 
+   CALL apmp490_set_memo('4')
+
+   LET g_action_choice = NULL
+
+   CALL apmp490_04_b_fill_01(' 1=1')
+
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         SUBDIALOG apm_apmp490_04.apmp490_04_display01
+         SUBDIALOG apm_apmp490_04.apmp490_04_display02
+         SUBDIALOG apm_apmp490_04.apmp490_04_display03
+         SUBDIALOG apm_apmp490_04.apmp490_04_display04
+
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+
+         ON ACTION continue 
+            LET g_action_choice = "continue"
+            EXIT DIALOG
+
+         ON ACTION step01                    #因為是第四步了 所以可以回到第一步 
+            LET g_action_choice = "continue"
+            EXIT DIALOG
+
+         ON ACTION step04 
+            EXIT DIALOG
+
+         ON ACTION open_apmt500     #採購單維護   
+            CALL apmp490_04_open_apmt500()
+            EXIT DIALOG
+
+         ON ACTION out_apmt500      #採購單列印 
+            CALL apmp490_04_output_apmt500() RETURNING l_where
+            LET g_rep_wc = "pmdlent = "|| g_enterprise ||" AND pmdldocno IN ("||l_where||")"
+            CALL apmr500_g01(g_rep_wc,'N')
+            EXIT DIALOG
+
+         ON ACTION over             #結束  
+            LET g_action_choice = "over"
+            EXIT DIALOG 
+            
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+         CONTINUE DIALOG  
+         
+      END DIALOG
+
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      END IF
+
+      IF NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+   END WHILE
+
+   CASE g_action_choice
+
+      WHEN "continue" 
+         #將資料都設回初始值 
+         CLEAR FORM
+         LET g_step1_mode = 'i'
+         INITIALIZE g_apmp490_01_input.* TO NULL
+         LET g_apmp490_01_wc = ''
+         CALL apmp490_01_init()
+
+         INITIALIZE g_apmp490_02_input.* TO NULL
+         CALL apmp490_02_init()
+
+         CALL apmp490_03_init()
+
+         CALL apmp490_04_init()
+      
+         DELETE FROM p490_01_pmdb_t;
+         DELETE FROM p490_02_pmdn_t;
+         DELETE FROM p490_02_pmdb_t;
+         DELETE FROM p490_03_pmdl_t;
+         DELETE FROM p490_03_pmdn_t;
+         DELETE FROM p490_03_pmdp_t;
+         DELETE FROM p490_03_pmdo_t;
+         DELETE FROM p490_03_pmdq_t;
+         DELETE FROM p490_pmdn_t;  #160727-00019#11   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 p490_03_pmdn_rel_t ——> p490_pmdn_t
+         DELETE FROM p490_pmdp_t;  #160727-00019#11   16/08/03 By 08734 临时表长度超过15码的减少到15码以下 p490_03_pmdp_rel_t ——> p490_pmdp_t
+         DELETE FROM p490_04_pmdl_t;
+         DELETE FROM p490_04_pmdn_t;
+         DELETE FROM p490_04_pmdp_t;
+         DELETE FROM p490_04_pmdo_t;
+         RETURN 1 
+      WHEN "menu"
+         RETURN 0
+      OTHERWISE
+         RETURN 0
+   END CASE
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 設定左方流程圖片
+# Memo...........:
+# Usage..........: CALL apmp490_set_step_img(p_step)
+# Input parameter: p_step：第幾步驟的圖
+# Date & Author..: 2014/06/20 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmp490_set_step_img(p_step)
+   DEFINE p_step     LIKE type_t.num5 
+      
+   #將圖片設定為預設值 
+   CALL gfrm_curr.setElementImage("step01","32/step01.png") 
+   CALL gfrm_curr.setElementImage("step02","32/step02.png") 
+   CALL gfrm_curr.setElementImage("step03","32/step03.png")
+   CALL gfrm_curr.setElementImage("step04","32/step04.png")  
+   
+   #文字顏色設定 
+   CALL gfrm_curr.setElementStyle("step01","menuitem")
+   CALL gfrm_curr.setElementStyle("step02","menuitem")
+   CALL gfrm_curr.setElementStyle("step03","menuitem")
+   CALL gfrm_curr.setElementStyle("step04","menuitem")
+   
+   #設定圖片為亮燈的
+   CASE p_step 
+      WHEN 1 
+         CALL gfrm_curr.setElementImage("step01","32/step01on.png")   #有on的是顏色不同的圖 
+         CALL gfrm_curr.setElementStyle("step01","menuitemfocus")
+      WHEN 2 
+         CALL gfrm_curr.setElementImage("step02","32/step02on.png")   #有on的是顏色不同的圖 
+         CALL gfrm_curr.setElementStyle("step02","menuitemfocus")
+      WHEN 3 
+         CALL gfrm_curr.setElementImage("step03","32/step03on.png")   #有on的是顏色不同的圖 
+         CALL gfrm_curr.setElementStyle("step03","menuitemfocus")
+      WHEN 4 
+         CALL gfrm_curr.setElementImage("step04","32/step04on.png")   #有on的是顏色不同的圖 
+         CALL gfrm_curr.setElementStyle("step04","menuitemfocus")
+   END CASE 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 設定每一步的畫面顯示與隱藏
+# Memo...........:
+# Usage..........: CALL apmp490_set_vbox_visible(p_step)
+# Input parameter: p_step：步驟
+# Date & Author..: 2014/06/20 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmp490_set_vbox_visible(p_step)
+   DEFINE p_step     LIKE type_t.num5 
+   
+   #設定嵌入畫面的 顯示 與 隱藏 
+   CALL cl_set_comp_visible("main_vbox01",FALSE)       
+   CALL cl_set_comp_visible("main_vbox02",FALSE)
+   CALL cl_set_comp_visible("main_vbox03",FALSE) 
+   CALL cl_set_comp_visible("main_vbox04",FALSE) 
+   
+   CASE p_step 
+      WHEN 1  
+         CALL cl_set_comp_visible("main_vbox01",TRUE)       
+      WHEN 2 
+         CALL cl_set_comp_visible("main_vbox02",TRUE)       
+      WHEN 3 
+         CALL cl_set_comp_visible("main_vbox03",TRUE)       
+      WHEN 4 
+         CALL cl_set_comp_visible("main_vbox04",TRUE)       
+   END CASE 
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 設定各步驟的action顯示
+# Memo...........:
+# Usage..........: CALL apmp490_set_act_visible(p_step)
+# Input parameter: p_step：步驟
+# Date & Author..: 2014/06/20 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmp490_set_act_visible(p_step)
+   DEFINE p_step     LIKE type_t.num5 
+   
+   #設定下方的button的 顯示 與 隱藏  
+   CALL cl_set_comp_visible("save",FALSE)              #儲存底稿  
+   CALL cl_set_comp_visible("back_step",FALSE)         #上一步  
+   CALL cl_set_comp_visible("next_step",FALSE)         #下一步 
+   CALL cl_set_comp_visible("continue",FALSE)          #處理其他資料 
+   CALL cl_set_comp_visible("open_apmt500",FALSE)      #採購單維護 
+   CALL cl_set_comp_visible("out_apmt500",FALSE)       #採購單列印 
+   CALL cl_set_comp_visible("over",FALSE)              #結束 
+                                                       
+   CASE p_step                                         
+      WHEN 1                                           
+         CALL cl_set_comp_visible("save",TRUE)         #儲存底稿 
+         CALL cl_set_comp_visible("next_step",TRUE)    #下一步
+      WHEN 2                                           
+         CALL cl_set_comp_visible("back_step",TRUE)    #上一步 
+         CALL cl_set_comp_visible("next_step",TRUE)    #下一步
+      WHEN 3                                           
+         CALL cl_set_comp_visible("back_step",TRUE)    #上一步 
+         CALL cl_set_comp_visible("next_step",TRUE)    #下一步
+      WHEN 4 
+         CALL cl_set_comp_visible("continue",TRUE)     #處理其他資料 
+         CALL cl_set_comp_visible("open_apmt500",TRUE) #採購單維護 
+         CALL cl_set_comp_visible("out_apmt500",TRUE)  #採購單列印 
+         CALL cl_set_comp_visible("over",TRUE)         #結束 
+   END CASE 
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 設定各步驟提示文字
+# Memo...........:
+# Usage..........: CALL apmp490_set_memo(p_step)
+# Input parameter: p_step：步驟
+# Date & Author..: 2014/06/20 By ming
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION apmp490_set_memo(p_step)
+   DEFINE p_step     LIKE type_t.num5  
+   DEFINE l_msg      STRING
+   
+   LET l_msg = '' 
+
+   CASE p_step 
+      WHEN 1 
+         LET l_msg = cl_getmsg("apm-00523",g_lang) 
+         #選擇已確認且未完全採購之請購單資料，寫入底稿以利進行後續分配處理
+      WHEN 2 
+         LET l_msg = cl_getmsg("apm-00524",g_lang)
+         #將請購資料進行匯總，並進行採購供應商設定，與採購數量分配頁面提供歷史採購相關資料，以利參考 
+      WHEN 3 
+         LET l_msg = cl_getmsg("apm-00525",g_lang)
+         #可依不同方式產生單身資料，並進行採購單頭及單身資料調整 
+      WHEN 4 
+         LET l_msg = cl_getmsg("apm-00526",g_lang) 
+         #顯示採購單建立結果，並可直接列印或開始採購作業，進行後續動作  
+   END CASE 
+   
+   DISPLAY l_msg TO FORMONLY.main_memo
+   
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

@@ -1,0 +1,283 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aecm200" module="aec" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02482" crtdt="2013-09-23 11:12:38" modid="02295" moddt="2016-04-05 11:13:32" sdver="0010" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="料件製程資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="ecba001,ecba001_desc(chr500),ecba001_desc1(chr500),ecba002,ecba003,ecba004,ecba005,ecba006,ecba007,ecbastus,ooeb013(chr500),ecbacrtid,ecbacrtid_desc(chr80),ecbacrtdp,ecbacrtdp_desc(chr80),ecbacrtdt,ecbaownid,ecbaownid_desc(chr80),ecbaowndp,ecbaowndp_desc(chr80),ecbamodid,ecbamodid_desc(chr80),ecbamoddt,ecbacnfid,ecbacnfid_desc(chr80),ecbacnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="ecbb003,ecbb004,ecbb004_desc(chr500),ecbb005,ecbb006,ecbb007,ecbb008,ecbb008_desc(chr500),ecbb009,ecbb010,ecbb010_desc(chr500),ecbb011,ecbb012,ecbb012_desc(chr500),ecbb037,ecbb037_desc(chr500),ecbb038,ecbb038_desc(chr500),ecbb024,ecbb025,ecbb026,ecbb027,ecbb034,ecbb013,ecbb014,ecbb014_desc(chr500),ecbb015,ecbb016,ecbb017,ecbb018,ecbb019,ecbb020,ecbb030,ecbb031,ecbb032,ecbb021,ecbb022,ecbb023,ecbb033,ecbb028,ecbb029,ecbb035,ecbb036,ooff013(chr500)"/>
+      <var id="bs_field" value="ecba001,ecba001_desc(chr80),ecba001_desc1(chr80),ecba002,ecba003" pk="ecba001,ecba002" order=""/>
+      <bs_reference field="ecba001_desc" ref_field="ecba001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="checkout"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="resource"/>
+      <action id="stand"/>
+      <action id="bom"/>
+      <action id="checkin"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="checkout"/>
+      <action id="stand"/>
+      <action id="checkin"/>
+    </section>
+    <section id="master_input">
+      <action id="wc_flow_init"/>
+    </section>
+  </structure>
+  <form id="0" module="aec" filename="aecm200" method="dialog">
+    <section id="input">
+      <input id="head" field="ecba001,ecba002,ecba003,ecba004,ecba005,ecba006,ecba007,ecbastus,ooeb013"/>
+      <input id="body" page="1" field="ecbb003,ecbb004,ecbb005,ecbb006,ecbb007,ecbb008,ecbb009,ecbb010,ecbb011,ecbb012,ecbb037,ecbb038,ecbb024,ecbb025,ecbb026,ecbb027,ecbb034,ecbb013,ecbb014,ecbb015,ecbb016,ecbb017,ecbb018,ecbb019,ecbb020,ecbb030,ecbb031,ecbb032,ecbb021,ecbb022,ecbb023,ecbb033,ecbb028,ecbb029,ecbb035,ecbb036,ooff013" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="ecba001,ecba002,ecba003,ecba004,ecba005,ecba006,ecba007,ecbastus,ooeb013,ecbacrtid,ecbacrtdp,ecbacrtdt,ecbaownid,ecbaowndp,ecbamodid,ecbamoddt,ecbacnfid,ecbacnfdt"/>
+      <construct id="body" page="1" field="ecbb003,ecbb004,ecbb005,ecbb006,ecbb007,ecbb008,ecbb009,ecbb010,ecbb011,ecbb012,ecbb037,ecbb038,ecbb024,ecbb025,ecbb026,ecbb027,ecbb034,ecbb013,ecbb014,ecbb015,ecbb016,ecbb017,ecbb018,ecbb019,ecbb020,ecbb030,ecbb031,ecbb032,ecbb021,ecbb022,ecbb023,ecbb033,ecbb028,ecbb029,ecbb035,ecbb036,ooff013"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="ecba001,ecba002"/>
+      <set id="head" type="no_entry" field="ecba001,ecba002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="ecba001">
+        <after>
+          <check chkid="v_imaf001_1" id="isExist"/>
+        </after>
+        <controlp form="q_imaf001_6" state="i"/>
+        <controlp form="q_imaf001_6" state="c"/>
+      </column>
+      <column id="ecba001_desc"/>
+      <column id="ecba001_desc1"/>
+      <column id="ecba002"/>
+      <column id="ecba003"/>
+      <column id="ecba004"/>
+      <column id="ecba005"/>
+      <column id="ecba006"/>
+      <column id="ecba007"/>
+      <column id="ecbastus" scc="50" type="S" default="N">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="ooeb013"/>
+      <column id="ecbacrtid">
+        <after>
+          <reference field="ecbacrtid_desc" ref_field="ecba_t.ecbacrtid" map_field="ecbacrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ecbacrtid_desc"/>
+      <column id="ecbacrtdp">
+        <after>
+          <reference field="ecbacrtdp_desc" ref_field="ecba_t.ecbacrtdp" map_field="ecbacrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="ecbacrtdp_desc"/>
+      <column id="ecbacrtdt"/>
+      <column id="ecbaownid">
+        <after>
+          <reference field="ecbaownid_desc" ref_field="ecba_t.ecbaownid" map_field="ecbaownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ecbaownid_desc"/>
+      <column id="ecbaowndp">
+        <after>
+          <reference field="ecbaowndp_desc" ref_field="ecba_t.ecbaowndp" map_field="ecbaowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="ecbaowndp_desc"/>
+      <column id="ecbamodid">
+        <after>
+          <reference field="ecbamodid_desc" ref_field="ecba_t.ecbamodid" map_field="ecbamodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ecbamodid_desc"/>
+      <column id="ecbamoddt"/>
+      <column id="ecbacnfid">
+        <after>
+          <reference field="ecbacnfid_desc" ref_field="ecba_t.ecbacnfid" map_field="ecbacnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="ecbacnfid_desc"/>
+      <column id="ecbacnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="ecbb003">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ecbb004">
+        <after>
+          <reference field="ecbb004_desc" ref_field="ecbb004" map_field="ecbb004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="ecbb004_desc"/>
+      <column id="ecbb005">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ecbb006" type="S" default="1" def_scc="1202"/>
+      <column id="ecbb007"/>
+      <column id="ecbb008">
+        <after>
+          <reference field="ecbb008_desc" ref_field="ecbb008" map_field="ecbb008" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ecbb004" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="ecbb008_desc"/>
+      <column id="ecbb009"/>
+      <column id="ecbb010">
+        <after>
+          <reference field="ecbb010_desc" ref_field="ecbb010" map_field="ecbb010" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="ecbb010_desc"/>
+      <column id="ecbb011"/>
+      <column id="ecbb012">
+        <after>
+          <check chkid="v_ecaa001_1" id="isExist"/>
+          <reference field="ecbb012_desc" ref_field="ecbb_t.ecbb012" map_field="ecbb012" ref_sql="SELECT ecaa002 FROM ecaa_t WHERE ecaaent=$varg_enterprise$var AND ecaa001=? "/>
+        </after>
+        <controlp form="q_ecaa001_1" state="i"/>
+        <controlp form="q_ecaa001_1" state="c"/>
+      </column>
+      <column id="ecbb012_desc"/>
+      <column id="ecbb037">
+        <after>
+          <reference field="ecbb037_desc" ref_field="ecbb037" map_field="ecbb037" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1103&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="ecbb037_desc"/>
+      <column id="ecbb038">
+        <after>
+          <reference field="ecbb038_desc" ref_field="ecbb038" map_field="ecbb038" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;1103&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="ecbb038_desc"/>
+      <column id="ecbb024" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ecbb025" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ecbb026" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ecbb027" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ecbb034" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ecbb013" type="S" default="N"/>
+      <column id="ecbb014">
+        <after>
+          <check chkid="v_pmaa001_1" id="isExist"/>
+          <reference field="ecbb014_desc" ref_field="ecbb_t.ecbb014" map_field="ecbb014" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_1" state="i"/>
+        <controlp form="q_pmaa001_1" state="c"/>
+      </column>
+      <column id="ecbb014_desc"/>
+      <column id="ecbb015" type="S" default="N"/>
+      <column id="ecbb016" type="S" default="N"/>
+      <column id="ecbb017" type="S" default="Y"/>
+      <column id="ecbb018" type="S" default="N"/>
+      <column id="ecbb019" type="S" default="N"/>
+      <column id="ecbb020" type="S" default="N"/>
+      <column id="ecbb030">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+        </after>
+        <controlp form="q_ooca001" state="i"/>
+        <controlp form="q_ooca001" state="c"/>
+      </column>
+      <column id="ecbb031" type="S" default="1">
+        <after>
+          <check id="range" bt="0.000000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ecbb032" type="S" default="1">
+        <after>
+          <check id="range" bt="0.000000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ecbb021">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+        </after>
+        <controlp form="q_ooca001" state="i"/>
+        <controlp form="q_ooca001" state="c"/>
+      </column>
+      <column id="ecbb022" type="S" default="1">
+        <after>
+          <check id="range" bt="0.000000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ecbb023" type="S" default="1">
+        <after>
+          <check id="range" bt="0.000000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ecbb033" type="S" default="N"/>
+      <column id="ecbb028">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ecbb029">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="ecbb035" type="S" default="0"/>
+      <column id="ecbb036" type="S" default="0"/>
+      <column id="ooff013"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="ecba_t" pk="ecba001,ecba002">
+      <sql id="forupd_sql" type="sql" query="SELECT ecba001,&apos;&apos;,&apos;&apos;,ecba002,ecba003,ecba004,ecba005,ecba006,ecba007,ecbastus,&apos;&apos;,ecbacrtid,&apos;&apos;,ecbacrtdp,&apos;&apos;,ecbacrtdt,ecbaownid,&apos;&apos;,ecbaowndp,&apos;&apos;,ecbamodid,&apos;&apos;,ecbamoddt,ecbacnfid,&apos;&apos;,ecbacnfdt FROM ecba_t WHERE ecbaent= ? AND ecbasite= ? AND ecba001=? AND ecba002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT ecba001,&apos;&apos;,&apos;&apos;,ecba002,ecba003,ecba004,ecba005,ecba006,ecba007,ecbastus,&apos;&apos;,ecbacrtid,&apos;&apos;,ecbacrtdp,&apos;&apos;,ecbacrtdt,ecbaownid,&apos;&apos;,ecbaowndp,&apos;&apos;,ecbamodid,&apos;&apos;,ecbamoddt,ecbacnfid,&apos;&apos;,ecbacnfdt FROM ecba_t" order="ecba001,ecba002"/>
+    </head>
+    <body id="ecbb_t" page="1" linked="" pk="ecbb003" fk="ecbb001,ecbb002">
+      <sql id="forupd_sql_detail" query="SELECT ecbb003,ecbb004,&apos;&apos;,ecbb005,ecbb006,ecbb007,ecbb008,&apos;&apos;,ecbb009,ecbb010,&apos;&apos;,ecbb011,ecbb012,&apos;&apos;,ecbb037,&apos;&apos;,ecbb038,&apos;&apos;,ecbb024,ecbb025,ecbb026,ecbb027,ecbb034,ecbb013,ecbb014,&apos;&apos;,ecbb015,ecbb016,ecbb017,ecbb018,ecbb019,ecbb020,ecbb030,ecbb031,ecbb032,ecbb021,ecbb022,ecbb023,ecbb033,ecbb028,ecbb029,ecbb035,ecbb036,&apos;&apos; FROM ecbb_t WHERE ecbbent=? AND ecbbsite=? AND ecbb001=? AND ecbb002=? AND ecbb003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT ecbb003,ecbb004,&apos;&apos;,ecbb005,ecbb006,ecbb007,ecbb008,&apos;&apos;,ecbb009,ecbb010,&apos;&apos;,ecbb011,ecbb012,&apos;&apos;,ecbb037,&apos;&apos;,ecbb038,&apos;&apos;,ecbb024,ecbb025,ecbb026,ecbb027,ecbb034,ecbb013,ecbb014,&apos;&apos;,ecbb015,ecbb016,ecbb017,ecbb018,ecbb019,ecbb020,ecbb030,ecbb031,ecbb032,ecbb021,ecbb022,ecbb023,ecbb033,ecbb028,ecbb029,ecbb035,ecbb036,&apos;&apos; FROM ecbb_t WHERE ecbbent=? AND ecbbsite=? AND ecbb001=? AND ecbb002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

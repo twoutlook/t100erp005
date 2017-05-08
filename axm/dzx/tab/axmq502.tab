@@ -1,0 +1,154 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axmq502" module="axm" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="07024" crtdt="2015-12-21 17:14:39" modid="07024" moddt="2015-12-22 16:29:15" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="訂單備置量清單查詢">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="xmdadocno,xmdadocdt,xmda004,xmda002,xmda003,xmdc001,xmdr004,l_xmda004,l_xmdadocno,l_xmdc001,l_xmda002,l_xmda003,l_xmdr004"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xmda004,xmda004_desc(chr500),xmdadocno,xmdadocdt,xmdc001,xmdc001_desc1(chr500),xmdc001_desc2(chr500),xmdc002,xmdc002_desc(chr500),xmda002,xmda002_desc(chr500),xmda003,xmda003_desc(chr500),xmdr004,xmdr004_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xmda004,xmda004_2_desc(chr500),xmdadocno,xmdadocdt,xmda002,xmda002_2_desc(chr500),xmda003,xmda003_2_desc(chr500),xmdcseq,xmddseq1,xmddseq2,xmdc001,xmdc001_2_desc1(chr500),xmdc001_2_desc2(chr500),xmdc002,xmdc002_2_desc(chr500),xmdc006,xmdc006_desc(chr500),xmdd006,xmdr004,xmdr004_2_desc(chr500),xmdr005,xmdr005_desc(chr500),xmdr006,xmdr003,xmdr007,xmdr007_desc(chr500),xmdr010,xmdr010_desc(chr500),xmdr008,xmdr009"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xmda004(b_xmda004),xmda004_desc(b_xmda004_desc),xmdadocno(b_xmdadocno),xmdadocdt(b_xmdadocdt),xmdc001(b_xmdc001),xmdc001_desc1(b_xmdc001_desc1),xmdc001_desc2(b_xmdc001_desc2),xmdc002(b_xmdc002),xmdc002_desc(b_xmdc002_desc),xmda002(b_xmda002),xmda002_desc(b_xmda002_desc),xmda003(b_xmda003),xmda003_desc(b_xmda003_desc),xmdr004(b_xmdr004),xmdr004_desc(b_xmdr004_desc)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xmda004_2(xmda004_2),xmda004_2_desc(xmda004_2_desc),xmdadocno_2(xmdadocno_2),xmdadocdt_2(xmdadocdt_2),xmda002_2(xmda002_2),xmda002_2_desc(xmda002_2_desc),xmda003_2(xmda003_2),xmda003_2_desc(xmda003_2_desc),xmdcseq(b_xmdcseq),xmddseq1(b_xmddseq1),xmddseq2(b_xmddseq2),xmdc001_2(xmdc001_2),xmdc001_2_desc1(xmdc001_2_desc1),xmdc001_2_desc2(xmdc001_2_desc2),xmdc002_2(xmdc002_2),xmdc002_2_desc(xmdc002_2_desc),xmdc006(b_xmdc006),xmdc006_desc(b_xmdc006_desc),xmdd006(b_xmdd006),xmdr004_2(xmdr004_2),xmdr004_2_desc(xmdr004_2_desc),xmdr005(b_xmdr005),xmdr005_desc(b_xmdr005_desc),xmdr006(b_xmdr006),xmdr003(b_xmdr003),xmdr007(b_xmdr007),xmdr007_desc(b_xmdr007_desc),xmdr010(b_xmdr010),xmdr010_desc(b_xmdr010_desc),xmdr008(b_xmdr008),xmdr009(b_xmdr009)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="axm" filename="axmq502" method="dialog">
+    <section id="input">
+      <input id="body" page="2" field="xmdc006,xmdr010" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="xmda004(b_xmda004),xmdadocno(b_xmdadocno),xmdadocdt(b_xmdadocdt),xmdc001(b_xmdc001),xmdc002(b_xmdc002),xmda002(b_xmda002),xmda003(b_xmda003),xmdr004(b_xmdr004)"/>
+      <construct id="body" page="2" field="xmdcseq(b_xmdcseq),xmddseq1(b_xmddseq1),xmddseq2(b_xmddseq2),xmdc006(b_xmdc006),xmdd006(b_xmdd006),xmdr005(b_xmdr005),xmdr006(b_xmdr006),xmdr003(b_xmdr003),xmdr007(b_xmdr007),xmdr010(b_xmdr010),xmdr008(b_xmdr008),xmdr009(b_xmdr009)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="xmda004">
+        <after>
+          <reference field="xmda004_desc" ref_field="xmda004" map_field="xmdaent,xmda004" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_6" state="c"/>
+      </column>
+      <column id="xmda004_desc"/>
+      <column id="xmdadocno">
+        <controlp form="q_xmdadocno" state="c"/>
+      </column>
+      <column id="xmdadocdt"/>
+      <column id="xmdc001">
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="xmdc001_desc1"/>
+      <column id="xmdc001_desc2"/>
+      <column id="xmdc002">
+        <after/>
+      </column>
+      <column id="xmdc002_desc"/>
+      <column id="xmda002">
+        <after>
+          <reference field="xmda002_desc" ref_field="xmda002" map_field="pmdlent,pmdl002" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xmda002_desc"/>
+      <column id="xmda003">
+        <after>
+          <reference field="xmda003_desc" ref_field="xmda003" map_field="xmdaent,xmda003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="xmda003_desc"/>
+      <column id="xmdr004">
+        <after>
+          <reference field="xmdr004_desc" ref_field="xmdrsite,xmdr004" map_field="xmdrsite,xmdr004" ref_sql="SELECT inaa002 FROM inaa_t WHERE inaaent=$varg_enterprise$var AND inaasite=? AND inaa001=? "/>
+        </after>
+      </column>
+      <column id="xmdr004_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="xmda004_2">
+        <after/>
+      </column>
+      <column id="xmda004_2_desc"/>
+      <column id="xmdadocno_2"/>
+      <column id="xmdadocdt_2"/>
+      <column id="xmda002_2">
+        <after/>
+      </column>
+      <column id="xmda002_2_desc"/>
+      <column id="xmda003_2">
+        <after/>
+      </column>
+      <column id="xmda003_2_desc"/>
+      <column id="xmdcseq"/>
+      <column id="xmddseq1"/>
+      <column id="xmddseq2"/>
+      <column id="xmdc001_2"/>
+      <column id="xmdc001_2_desc1"/>
+      <column id="xmdc001_2_desc2"/>
+      <column id="xmdc002_2">
+        <after/>
+      </column>
+      <column id="xmdc002_2_desc"/>
+      <column id="xmdc006">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="xmdc006_desc" ref_field="xmdc006" map_field="xmdcent,xmdc006" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="xmdc006_desc"/>
+      <column id="xmdd006" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmdr004_2">
+        <after/>
+      </column>
+      <column id="xmdr004_2_desc"/>
+      <column id="xmdr005">
+        <after>
+          <reference field="xmdr005_desc" ref_field="xmdrsite,xmdr004,xmdr005" map_field="xmdrsite,xmdr004,xmdr005" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inabsite=? AND inab001=? AND inab002=? "/>
+        </after>
+      </column>
+      <column id="xmdr005_desc"/>
+      <column id="xmdr006"/>
+      <column id="xmdr003"/>
+      <column id="xmdr007">
+        <after>
+          <reference field="xmdr007_desc" ref_field="xmdr007" map_field="xmdrent,xmdr007" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmdr007_desc"/>
+      <column id="xmdr010">
+        <after>
+          <reference field="xmdr010_desc" ref_field="xmdr010" map_field="xmdrent,xmdr010" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xmdr010_desc"/>
+      <column id="xmdr008">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="xmdr009"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="xmda_t" page="1,2" linked="" pk="xmdadocno">
+      <sql id="b_fill_sql" query="SELECT xmda004,&apos;&apos;,xmdadocno,xmdadocdt,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,xmda002,&apos;&apos;,xmda003,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xmda_t WHERE xmdaent= ? AND 1=1 "/>
+      <sql id="detail_append" type="single" table="xmdc_t" pk="xmdcdocno,xmdcseq" field="xmdcseq,xmdc006"/>
+      <sql id="detail_append" type="single" table="xmdd_t" pk="xmdddocno,xmddseq,xmddseq1,xmddseq2" field="xmdcseq,xmdc006,xmddseq1,xmddseq2,xmdd006"/>
+      <sql id="detail_append" type="single" table="xmdr_t" pk="xmdrdocno,xmdrseq,xmdrseq1,xmdrseq2,xmdr001,xmdr002,xmdr003,xmdr004,xmdr005,xmdr006,xmdr007" field="xmdcseq,xmdc006,xmddseq1,xmddseq2,xmdd006,xmdr005,xmdr006,xmdr003,xmdr007,xmdr010,xmdr008,xmdr009"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,454 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="anmq430_x01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:3(2016-11-30 14:54:09), PR版次:0003(2016-11-30 14:53:27)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000039
+#+ Filename...: anmq430_x01
+#+ Description: ...
+#+ Creator....: 06816(2015-10-23 09:42:26)
+#+ Modifier...: 03080 -SD/PR- 03080
+ 
+{</section>}
+ 
+{<section id="anmq430_x01.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:8)
+#add-point:填寫註解說明 name="global.memo"
+#160526-00037#1   2016/06/17 By 02599   報表改為採用明細+子報表模式
+#161125-00036#3   161130     By albireo 增加實際兌現日
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #WHERE條件 
+       a1 STRING                   #TEMP TABLE名稱
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_tmp_table           STRING
+#end add-point
+ 
+{</section>}
+ 
+{<section id="anmq430_x01.main" readonly="Y" >}
+PUBLIC FUNCTION anmq430_x01(p_arg1,p_arg2)
+DEFINE  p_arg1 STRING                  #tm.wc  WHERE條件 
+DEFINE  p_arg2 STRING                  #tm.a1  TEMP TABLE名稱
+#add-point:init段define(客製用) name="component.define_customerization"
+
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.a1 = p_arg2
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   LET g_tmp_table = tm.a1
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "anmq430_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL anmq430_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL anmq430_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL anmq430_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL anmq430_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL anmq430_x01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmq430_x01.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION anmq430_x01_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "nmckdocno.nmck_t.nmckdocno,nmck005.nmck_t.nmck005,l_nmck005_desc.type_t.chr500,nmck004.nmck_t.nmck004,l_nmck004_desc.type_t.chr500,nmck024.nmck_t.nmck024,nmck025.nmck_t.nmck025,nmck002.nmck_t.nmck002,l_nmck002_desc.type_t.chr500,nmckdocdt.nmck_t.nmckdocdt,nmck011.nmck_t.nmck011,nmck012.nmck_t.nmck012,nmck100.nmck_t.nmck100,nmck103.nmck_t.nmck103,nmck101.nmck_t.nmck101,nmck113.nmck_t.nmck113,l_nmck030.type_t.chr500,nmck031.nmck_t.nmck031,l_nmck026_desc.type_t.chr500,nmckcomp.nmck_t.nmckcomp,l_keys.type_t.chr1000" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   #160526-00037#1--add--str--
+   #子報表TEMP TABLE的欄位SQL   
+   LET g_sql = "nmchdocdt.nmch_t.nmchdocdt,l_nmch001.type_t.chr500,nmchdocno.nmch_t.nmchdocno,nmci103.nmci_t.nmci103,nmci113.nmci_t.nmci113,l_nmchstus.type_t.chr500,l_key.type_t.chr1000" 
+   
+   #建立TEMP TABLE,子報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,2) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #160526-00037#1--add--end
+   #end add-point:create_tmp.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmq430_x01.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION anmq430_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         #160526-00037#1--add--str--
+         WHEN 2
+         #子報表 PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[2] CLIPPED," VALUES(?,?,?,?,?,?,?)"
+         PREPARE insert_prep1 FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #160526-00037#1--add--end
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmq430_x01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION anmq430_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+ 
+#   #end add-point
+#   LET g_select = " SELECT '',nmckdocno,nmck005,NULL,nmck004,'',nmck024,nmck025,nmck002,'',nmckdocdt, 
+#       nmck011,nmck012,nmck100,nmck103,nmck101,nmck113,'',nmck031,'',nmckcomp,''"
+# 
+#   #add-point:sel_prep g_from name="sel_prep.g_from"
+ 
+#   #end add-point
+#    LET g_from = " FROM nmck_t,nmch_t"
+# 
+#   #add-point:sel_prep g_where name="sel_prep.g_where"
+ 
+#   #end add-point
+#    LET g_where = " WHERE " ,tm.wc CLIPPED
+# 
+#   #add-point:sel_prep g_order name="sel_prep.g_order"
+   
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+ 
+#   #end add-point:sel_prep.sql.before
+#   LET g_where = g_where ,cl_sql_add_filter("nmck_t")   #資料過濾功能
+#   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+#   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+# 
+#   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   LET g_sql = "SELECT * FROM ",g_tmp_table CLIPPED
+              ," ORDER BY seq " #160526-00037#1 add
+   #end add-point
+   PREPARE anmq430_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE anmq430_x01_curs CURSOR FOR anmq430_x01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmq430_x01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION anmq430_x01_ins_data()
+DEFINE sr RECORD 
+   l_seq LIKE type_t.num10, 
+   nmckdocno LIKE nmck_t.nmckdocno, 
+   nmck005 LIKE nmck_t.nmck005, 
+   l_nmck005_desc LIKE type_t.chr500, 
+   nmck004 LIKE nmck_t.nmck004, 
+   l_nmck004_desc LIKE type_t.chr500, 
+   nmck024 LIKE nmck_t.nmck024, 
+   nmck025 LIKE nmck_t.nmck025, 
+   nmck002 LIKE nmck_t.nmck002, 
+   l_nmck002_desc LIKE type_t.chr500, 
+   nmckdocdt LIKE nmck_t.nmckdocdt, 
+   nmck011 LIKE nmck_t.nmck011, 
+   nmck012 LIKE nmck_t.nmck012, 
+   nmck100 LIKE nmck_t.nmck100, 
+   nmck103 LIKE nmck_t.nmck103, 
+   nmck101 LIKE nmck_t.nmck101, 
+   nmck113 LIKE nmck_t.nmck113, 
+   l_nmck030 LIKE type_t.chr500, 
+   nmck031 LIKE nmck_t.nmck031, 
+   l_nmck026_desc LIKE type_t.chr500, 
+   nmckcomp LIKE nmck_t.nmckcomp, 
+   l_keys LIKE type_t.chr1000
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+#160526-00037#1--add--str--
+DEFINE sr1 RECORD 
+   nmchdocdt LIKE nmch_t.nmchdocdt,
+   l_nmch001 LIKE type_t.chr500, 
+   nmchdocno LIKE nmch_t.nmchdocno, 
+   nmci103   LIKE nmci_t.nmci103,  
+   nmci113   LIKE nmci_t.nmci113,  
+   l_nmchstus LIKE type_t.chr500,
+   l_key     LIKE type_t.chr1000
+         END RECORD
+DEFINE l_nmch001_desc LIKE type_t.chr500
+DEFINE l_nmch001_1_desc LIKE type_t.chr500
+DEFINE l_nmchstus_desc LIKE type_t.chr500
+DEFINE l_nmckstus  LIKE nmck_t.nmckstus
+#160526-00037#1--add--end
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    #160526-00037#1--add--str--
+    #抓取子報表
+    #票據異動歷程資料
+    LET g_sql = " SELECT nmchdocdt,nmch001,nmchdocno,nmci103,nmci113,nmchstus,nmci003||'-'||nmchcomp",
+                "   FROM nmch_t,nmci_t ",
+                "  WHERE nmchent = nmcient AND nmchdocno = nmcidocno AND nmchcomp = nmcicomp",
+                "    AND nmchent = ",g_enterprise," AND nmci003 = ? ",
+                "    AND nmchcomp = ? ",
+                "  ORDER BY nmchdocdt,nmch001 "
+    PREPARE anmq430_x01_prepare1 FROM g_sql
+    DECLARE anmq430_x01_curs1 CURSOR FOR anmq430_x01_prepare1  
+    
+    #票況=1.開票
+    CALL s_desc_gzcbl004_desc('8711',1)  RETURNING l_nmch001_1_desc
+    LET l_nmch001_1_desc="1:",l_nmch001_1_desc
+    #160526-00037#1--add--end
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH anmq430_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.nmckdocno,sr.nmck005,sr.l_nmck005_desc,sr.nmck004,sr.l_nmck004_desc,sr.nmck024,sr.nmck025,sr.nmck002,sr.l_nmck002_desc,sr.nmckdocdt,sr.nmck011,sr.nmck012,sr.nmck100,sr.nmck103,sr.nmck101,sr.nmck113,sr.l_nmck030,sr.nmck031,sr.l_nmck026_desc,sr.nmckcomp,sr.l_keys
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "anmq430_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       #160526-00037#1--add--str--
+       #抓取子報表資料
+       #第一筆：開票單
+       SELECT nmckstus INTO l_nmckstus FROM nmck_t
+        WHERE nmckent = g_enterprise AND nmckdocno = sr.nmckdocno
+          AND nmckcomp = sr.nmckcomp
+       #狀態碼
+       CALL s_desc_gzcbl004_desc('13',l_nmckstus)  RETURNING l_nmchstus_desc
+       LET l_nmchstus_desc=l_nmckstus,":",l_nmchstus_desc
+       EXECUTE insert_prep1 USING sr.nmckdocdt,l_nmch001_1_desc,sr.nmckdocno,sr.nmck103,sr.nmck113,
+                                  l_nmchstus_desc,sr.l_keys
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "insert_prep1"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+       #票據異動歷程資料
+       FOREACH anmq430_x01_curs1 USING sr.nmckdocno,sr.nmckcomp
+                                 INTO sr1.nmchdocdt,sr1.l_nmch001,sr1.nmchdocno,sr1.nmci103,sr1.nmci113,
+                                      sr1.l_nmchstus,sr1.l_key                             
+          IF STATUS THEN
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.extend = 'foreach:anmq430_x01_curs1'
+             LET g_errparam.code   = STATUS
+             LET g_errparam.popup  = TRUE
+             CALL cl_err()
+             LET g_rep_success = 'N'
+             EXIT FOREACH
+          END IF
+          #票況
+          CALL s_desc_gzcbl004_desc('8714',sr1.l_nmch001)  RETURNING l_nmch001_desc
+          LET sr1.l_nmch001=sr1.l_nmch001,":",l_nmch001_desc
+          #狀態碼
+          CALL s_desc_gzcbl004_desc('13',sr1.l_nmchstus)  RETURNING l_nmchstus_desc
+          LET sr1.l_nmchstus=sr1.l_nmchstus,":",l_nmchstus_desc
+          EXECUTE insert_prep1 USING sr1.nmchdocdt,sr1.l_nmch001,sr1.nmchdocno,sr1.nmci103,sr1.nmci113,
+                                     sr1.l_nmchstus,sr1.l_key
+          IF SQLCA.sqlcode THEN
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.extend = "insert_prep1"
+             LET g_errparam.code   = SQLCA.sqlcode
+             LET g_errparam.popup  = FALSE
+             CALL cl_err()       
+             LET g_rep_success = 'N'
+             EXIT FOREACH
+          END IF
+       END FOREACH
+       #160526-00037#1--add--end
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmq430_x01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION anmq430_x01_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    
+    #end add-point:rep_data.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmq430_x01.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

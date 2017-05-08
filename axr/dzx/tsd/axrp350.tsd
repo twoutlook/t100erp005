@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="axrp350" std_prog="axrp350" erpver="1.0" ver="1" module="AXR" booking="Y" class="p" template="" env="s" zone="t10dev">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="Y" status=""/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="1" cite_std="N">
+    <tbl name="xrca_t" main="N" head="N" pk="xrcaent,xrcald,xrcadocno" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：
+ 帳款單產生傳票作業。
+ 可由帳款單呼叫，表示依所在單據單張產生傳票；可獨立執行輸入產生範圍
+
+作業功能：說明/離開
+作業類型：批次執行作業
+輸入模式：　F001_00　　　
+作業資料來源(Master)：
+ 資料來源表：應收憑單單頭(xrca_t)
+
+補充說明：
+。外部呼叫者，則上半段ＱＢＥ不輸入，直接顯示傳入之參數值。
+。獨立執行者，則可輸入ＱＢＥ來源範圍。
+
+
+檢核: 若發票條件的開票年度.月份期間   isae001/isae002/isae003 
+      與取出的 xrca061依應收預開發票日期 不合時, 則顯示錯誤訊息
+
+參考 AR應收單轉發票各欄位處理.xls
+(1).發票明細：表示寫入 isah_t 的原則
+　　　　1.依品號：：依xrcb004 group 形成發票明細　
+        2.依來源項次明細:依 xrcbseq 形成發票明細檔
+        3.自行輸入:不寫入 isah_t , 由user 自行至發票作業輸入
+
+(2).發票號碼取號原則，依xrca028發票類型，取發票日期對應的年月區間
+　  依發票簿號序取得目前發票類型對應的發票簿號
+　　
+　　2.1 若發票己開日期大於 xrca061 預開發票日期，則以已開日期為寫到發票檔的日期
+　　　　
+　　2.2 取號的排序要依 發票日期　＋　發票客戶 + 應收單號 
+　　　　若為依客戶＋發票日期彙開則需做　發票客戶＋發票日期 group sum 開在一起
+　　　（取號這部份做成元件）
+
+　　2.3 電子發票則 call 發票取號元件：s_invoice_get 
+　　　　電子發票在本作業先取號.其他類型在發票列印時取號
+　    　傳入參數：營運據點= 依發票簿去串營運據點
+                  開票部門  = 發票條件開票部門
+                  發票類型  = 發票條件發票類型 
+                  發票日期  = 發票條件發票日期(或 xrca061依應收預開發票日期）　
+                  電子發票否= 依條件   
+                  開立方式  = 依條件
+
+
+(3).發票的起號和迄號,依發票類型設定的可列印明細筆數isac006 為主, 若超過筆數則為二張發票
+    故為發票起號和發票迄號可能為二張或多張
+    故需在第一張發票記錄發票起號和迄號
+ 
+(4).發票檔寫入完成後 
+　　if  營運據點慣用發票條件的 isaq005 發票取得時機點 
+        if  為產生時回寫,  then  call 發票元件
+           並 call axrp350_02 發票預覽
+        else  
+     　　　　call發票列印的程式 aisr310 ,
+    　　       傳參數:
+                      開票部門 
+                      發票類型
+                      電子發票否
+                      開立方式
+                      發票年度
+                      發票月份
+                 
+　　　　　　　 QBE條件：傳入開票單號 
+
+　　　　且產生單身符合條件資料,且為全勾選
+               
+    　　則依發票類型套用發票報表(isac007) 模版（目前尚未處理）
+    　　發票簿及折讓證明單,紅字發票有不同的模版 
+　　　　發票明細為自行輸入時則表示 isah_t 在本階段沒有資料，故無法 call 列印發票程式
+         
+    else 
+       update xrcb027 發票代碼
+             ,xrcb028 發票號碼
+             ,xrcb117  已開發票金額
+
+        開啟axrp350_02 電子發票預覽分鏡內容
+　　end 
+    
+
+
+(5).抓取交易稅明細轉到發票檔時應只取 "T01" 增值稅
+    若發票明細依品號時, 必須以 xrcb004 產品編號,做group sum 處理
+
+    select xrcborga,xrcb027,xrcb028,
+        xrcb004 ,xrcb005,xrcb006,
+        xrcd005 ,xrcd003,xrcb101,
+        xrcd103,xrcd104,xrcd105 
+        from xrcb_t , xrcd_t ,ooef_t  
+        where xrcbent = xrcdent      # 企業代碼
+          and xrcbdocno = xrcddocno  # 單號
+          and xrcbseq  = xrcdseq      # 序號
+          and xrcbcomp = ooef001     # 法人
+          and ooef019  = oodb001      # 稅區
+          and xrcd002  = oodb002     # 稅別
+          and oodb003  =  'T01'       #--增值稅
+          and QBE 條件...
+          and xrca028 發票類型 =發票條件的發票類型 
+          若發票明細依品號時, 必須以 xrcb004 產品編號,做group sum 處理
+          group by xrcbdocno,xrcborga , xrcb027,xrcb028 , xrcb004 
+       
+         以此為發票明細 isah的來源, 若筆數超過一張發票明細限制,則要再取第二發票號碼
+ 　　　
+　　　
+
+                   
+
+
+
+ 
+
+
+]]>
+  </all>
+  <field cite_std="N" name="amt" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="check" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glaacomp" ver="1" src="s" column="glaacomp" table="glaa_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="q_ooea001_2" c_zoom="q_ooea001_2" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[歸屬法人: 
+  ●欄位控管：
+     資料欄位:glaacomp  /可Display
+     允許空白:No
+     預設值:由帳套帶出
+     校驗：無]]>
+  </field>
+  <field cite_std="N" name="isae001" ver="1" src="s" column="isae001" table="isae_t" attribute="N401" type="number(5,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[年度:
+  ●欄位控管：
+    資料欄位: isae001 /可Display可Input
+    預設值:  無
+    不可空白
+    下拉選項比照 aooi410 行事曆作法, 下拉2000 年到 2100 
+    SCC 43]]>
+  </field>
+  <field cite_std="N" name="isae002" ver="1" src="s" column="isae002" table="isae_t" attribute="N402" type="number(5,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[起始月份:
+  ●欄位控管：
+    資料欄位: isae002 /可Display可Input
+    預設值:  無
+    不可空白
+    下拉選項   1 月到  12月
+    SCC 39]]>
+  </field>
+  <field cite_std="N" name="isae018" ver="1" src="s" column="" table="isae_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="isae_t.isae009" ver="1" src="s" column="isae009" table="isae_t" attribute="C550" type="varchar2(2)" req="Y" i_zoom="q_isac002" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：發票類型
+   ●欄位控管：
+     資料欄位:[T:發票簿資料檔].[C:發票類型]/可input及Display
+     預設值:無
+     校驗: 1.不可空白
+           2.輸入的資料必須存在於發票類型檔,若不存在,則報資料不存在的錯
+           3.輸入的資料必須在發票類型檔中有效,若無效,則報資料無效的錯]]>
+  </field>
+  <field cite_std="N" name="isae_t.isaesite" ver="1" src="s" column="isaesite" table="isae_t" attribute="C007" type="varchar2(10)" req="Y" i_zoom="q_ooef001" c_zoom="q_isaesite" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="seq" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrca004" ver="1" src="s" column="xrca004" table="xrca_t" attribute="C004" type="varchar2(10)" req="N" i_zoom="q_pmaa001" c_zoom="q_pmaa001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrca028" ver="1" src="s" column="xrca028" table="xrca_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="q_isac002" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrca061" ver="1" src="s" column="xrca061" table="xrca_t" attribute="D001" type="date()" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrca003" ver="1" src="s" column="xrca003" table="xrca_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrca004" ver="1" src="s" column="xrca004" table="xrca_t" attribute="C004" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_pmaa001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrcadocdt" ver="1" src="s" column="xrcadocdt" table="xrca_t" attribute="D001" type="date()" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrcadocno" ver="1" src="s" column="xrcadocno" table="xrca_t" attribute="C203" type="varchar2(20)" req="N" i_zoom="" c_zoom="q_xrcadocno" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrca_t.xrcald" ver="1" src="s" column="xrcald" table="xrca_t" attribute="C501" type="varchar2(5)" req="Y" i_zoom="q_authorised_ld" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[帳套: 
+  ●欄位控管：
+     資料欄位:xrcald  /可Display 可input 
+     允許空白:No
+     預設值:帳務人員所屬法人之主帳套
+     校驗：1.必須存在於glaald 且為 主帳套 glaa014 = 'Y' 或是平行帳套glaa008='Y' 
+               2.檢查使用者帳別權限CALL s_ld_chk_authorization
+     帶值:                
+           1.帳套名稱(glaal002)
+ 　　　2.帳套歸屬法人glaacomp  ]]>
+  </field>
+  <field cite_std="N" name="xrcadocdt" ver="1" src="s" column="xrcadocdt" table="xrca_t" attribute="D001" type="date()" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcadocno" ver="1" src="s" column="xrcadocno" table="xrca_t" attribute="C203" type="varchar2(20)" req="Y" i_zoom="q_ooba002_3" c_zoom="q_xrcadocno" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcb002" ver="1" src="s" column="xrcb002" table="xrcb_t" attribute="C203" type="varchar2(20)" req="N" i_zoom="q_isafdocno" c_zoom="q_isafdocno" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcb003" ver="1" src="s" column="xrcb003" table="xrcb_t" attribute="N004" type="number(10,0)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcb005" ver="1" src="s" column="xrcb005" table="xrcb_t" attribute="C302" type="varchar2(255)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcb_t.xrcb002" ver="1" src="s" column="xrcb002" table="xrcb_t" attribute="C203" type="varchar2(20)" req="N" i_zoom="" c_zoom="q_xrcb002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcb_t.xrcb004" ver="1" src="s" column="xrcb004" table="xrcb_t" attribute="C301" type="varchar2(40)" req="N" i_zoom="" c_zoom="q_imaa001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="xrcb_t.xrcborga" ver="1" src="s" column="xrcborga" table="xrcb_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooef001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="glaacomp_desc" src="s" depend_field="" correspon_key="glaaent,glaacomp" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="isae009_desc" src="s" depend_field="isae_t.isae009" correspon_key="" ref_table="" ref_fk="" ref_dlang="" ref_rtn="" status=""/>
+    <rfield cite_std="N" ver="1" name="isae018_desc" src="s" depend_field="isae_t.isae018" correspon_key="isaeent,isae018" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="isaesite_desc" src="s" depend_field="isae_t.isaesite" correspon_key="isaeent,isaesite" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="xrcald_desc" src="s" depend_field="" correspon_key="xrcaent,xrcald" ref_table="glaal_t" ref_fk="glaalent,glaalld" ref_dlang="glaal001" ref_rtn="glaal002" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="amt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="check" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glaacomp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isae009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="isae_t.isaesite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="seq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca028" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca061" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrca003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrca004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrcadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrcadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrca_t.xrcald" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcb002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcb003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcb005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcb_t.xrcb002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcb_t.xrcb004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="xrcb_t.xrcborga" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="Conversion" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_group" text="發票條件" lstr=""/>
+    <sfield name="lbl_isae007" text="電子發票" lstr=""/>
+    <sfield name="lbl_isae008" text="開立方式" lstr=""/>
+    <sfield name="lbl_isae004" text="發票簿號" lstr=""/>
+    <sfield name="lbl_isae017" text="已開發票日期" lstr=""/>
+    <sfield name="lbl_isae006" text="發票代碼" lstr=""/>
+    <sfield name="lbl_isae013" text="起始列印發票號碼" lstr=""/>
+    <sfield name="lbl_isafdocno" text="發票單別" lstr=""/>
+    <sfield name="lbl_isafdocdt_type" text="發票日期原則" lstr=""/>
+    <sfield name="lbl_isaf014" text="指定發票日期" lstr=""/>
+    <sfield name="lbl_isah_type" text="發票明細" lstr=""/>
+    <sfield name="lbl_total_type" text="彙總開立方式" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_page1" text="基本查詢" lstr=""/>
+    <sfield name="lbl_group1" text="應收單條件" lstr=""/>
+    <sfield name="lbl_xrcald" text="帳套" lstr=""/>
+    <sfield name="lbl_glaal002" text="說明" lstr=""/>
+    <sfield name="lbl_glaacomp" text="歸屬法人" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_group2" text="發票條件" lstr=""/>
+    <sfield name="lbl_isae001" text="開票年度" lstr=""/>
+    <sfield name="lbl_isae002" text="月份" lstr=""/>
+    <sfield name="lbl_isae018" text="開票部門" lstr=""/>
+    <sfield name="lbl_isaesite" text="營運據點" lstr=""/>
+    <sfield name="lbl_isae009" text="發票類型" lstr=""/>
+    <sfield name="lbl_glapdocno" text="傳票憑證單別" lstr=""/>
+    <sfield name="lbl_isacl004" text="說明" lstr=""/>
+    <sfield name="lbl_group3" text="QBE 條件範圍" lstr=""/>
+    <sfield name="lbl_xrca004" text="帳款客户範圍" lstr=""/>
+    <sfield name="lbl_xrcadocdt" text="立帳日期範圍" lstr=""/>
+    <sfield name="lbl_xrcadocno" text="帳款单號範圍" lstr=""/>
+    <sfield name="lbl_xrca003" text="帳務人員範圍" lstr=""/>
+    <sfield name="lbl_xrcborga" text="來源組織範圍" lstr=""/>
+    <sfield name="lbl_xrcb002" text="來源單據範圍" lstr=""/>
+    <sfield name="lbl_xrcb004" text="產品編號範圍" lstr=""/>
+    <sfield name="lbl_Conversion" text="轉檔" lstr=""/>
+    <sfield name="lbl_page2" text="符合條件資料" lstr=""/>
+    <sfield name="lbl_check" text="選擇" lstr=""/>
+    <sfield name="lbl_xrcadocno_1" text="應收帳款單號碼" lstr=""/>
+    <sfield name="lbl_seq" text="項次" lstr=""/>
+    <sfield name="lbl_xrcadocdt_1" text="帳款日期" lstr=""/>
+    <sfield name="lbl_xrca004_1" text="帳款客戶編號" lstr=""/>
+    <sfield name="lbl_xrca061" text="預開發票日期" lstr=""/>
+    <sfield name="lbl_xrca028" text="發票類型" lstr=""/>
+    <sfield name="lbl_xrcb002_1" text="來源單號" lstr=""/>
+    <sfield name="lbl_xrcb003" text="項次" lstr=""/>
+    <sfield name="lbl_xrcb005" text="品名規格" lstr=""/>
+    <sfield name="lbl_amt" text="未開發票金額" lstr=""/>
+    <sfield name="lbl_qty" text="未開發票數量" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="cl_err_s01_Detail" text="詳細資訊" lstr=""/>
+    <sfield name="cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="add_favorite_catalog" text="新增目錄" lstr=""/>
+    <sfield name="modify_favorite_desc" text="修改" lstr=""/>
+    <sfield name="favorite_del" text="移除" lstr=""/>
+    <sfield name="add_catalog" text="" lstr=""/>
+    <sfield name="accept" text="確定" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" lstr=""/>
+    <sfield name="lbl_glaald" text="帳別編號" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_glaa004" text="會計科目參照表號" lstr=""/>
+    <sfield name="lbl_glaa008" text="平行記帳否" lstr=""/>
+    <sfield name="lbl_glaa014" text="主帳套" lstr=""/>
+    <sfield name="lbl_glaastus" text="狀態碼" lstr=""/>
+    <sfield name="lbl_ooef001" text="組織編號" lstr=""/>
+    <sfield name="lbl_isac002" text="發票類型" lstr=""/>
+    <sfield name="lbl_gzxm001" text="QBE編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm005" text="查詢方案名稱" lstr=""/>
+    <sfield name="lbl_gzxm002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxm003" text="員工編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm004" text="設為預設查詢條件" lstr=""/>
+    <sfield name="cl_qbe_s02.bpage_1" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn005" text="欄位說明" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="cl_qbe_s02_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s02_Cancel" text="取消" lstr=""/>
+    <sfield name="lbl_funid" text="函式代碼" lstr=""/>
+    <sfield name="lbl_fundesc" text="函式說明" lstr=""/>
+    <sfield name="cl_qbe_s01_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s01_Cancel" text="取消" lstr=""/>
+    <sfield name="cl_qbe_s03.bpage_1" text="查詢方案列表" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxmstus" text="有效" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm004" text="預設" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm009" text="順序" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxml005" text="查詢方案說明" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm007" text="自設SQL條件" lstr=""/>
+    <sfield name="cl_qbe_s03.page_2" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn004" text="序號" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn005" text="條件欄位" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="lbl_pmaa001" text="交易對象編號" lstr=""/>
+    <sfield name="lbl_pmaal004" text="交易對象簡稱" lstr=""/>
+    <sfield name="lbl_xrca001" text="帳款單性質" lstr=""/>
+    <sfield name="lbl_xrcasite" text="帳務中心" lstr=""/>
+    <sfield name="lbl_ooag001" text="員工編號" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_imaa001" text="料號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="cl_ask_s04_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s03_Test" text="測試" lstr=""/>
+    <sfield name="cl_ask_s03_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s01_Choice" text="選擇" lstr=""/>
+    <sfield name="lbl_isae005" text="發票字軌" lstr=""/>
+    <sfield name="lbl_ooba002" text="單據別編號" lstr=""/>
+    <sfield name="lbl_oobxl003" text="說明" lstr=""/>
+    <sfield name="lbl_oobxl004" text="助記碼" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" lstr=""/>
+    <sact name="Conversion" text="" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

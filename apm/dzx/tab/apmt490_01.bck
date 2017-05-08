@@ -1,0 +1,71 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apmt490_01" module="apm" jobmode="N" type="c02b" industry="std" fix_arg="0" crtid="01588" crtdt="2014-02-17 18:13:40" modid="01588" moddt="2014-10-15 10:23:48" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="累計量定價維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pmecdocno,pmec900,pmecsite,pmecseq,pmecseq1,pmec001,pmec002,pmec003,pmec004,pmec005,pmec901,pmec902,pmec902_desc(chr500),pmec903"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apm" filename="apmt490_01" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="pmecdocno,pmec900,pmecsite,pmecseq,pmecseq1,pmec001,pmec002,pmec003,pmec004,pmec005,pmec902,pmec903" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="pmecdocno"/>
+      <column id="pmec900"/>
+      <column id="pmecsite"/>
+      <column id="pmecseq"/>
+      <column id="pmecseq1"/>
+      <column id="pmec001">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pmec002">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pmec003" type="S" default="0">
+        <after>
+          <check id="range" st="100" st_type="1" errno="azz-00087" bt="0" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="pmec004"/>
+      <column id="pmec005"/>
+      <column id="pmec901"/>
+      <column id="pmec902">
+        <after>
+          <reference field="pmec902_desc" ref_field="pmec902" map_field="pmec902" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;267&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="pmec902_desc"/>
+      <column id="pmec903"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="pmec_t" page="1" linked="" pk="pmecdocno,pmec900,pmecseq,pmecseq1">
+      <sql id="forupd_sql_detail" query="SELECT pmecdocno,pmec900,pmecsite,pmecseq,pmecseq1,pmec001,pmec002,pmec003,pmec004,pmec005,pmec901,pmec902,&apos;&apos;,pmec903 FROM pmec_t WHERE pmecent=? AND pmecdocno=? AND pmec900=? AND pmecseq=? AND pmecseq1=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pmecdocno,pmec900,pmecsite,pmecseq,pmecseq1,pmec001,pmec002,pmec003,pmec004,pmec005,pmec901,pmec902,&apos;&apos;,pmec903 FROM pmec_t WHERE pmecent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

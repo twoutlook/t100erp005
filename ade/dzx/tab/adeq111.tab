@@ -1,0 +1,83 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adeq111" module="ade" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="06815" crtdt="2015-09-16 18:21:54" modid="06815" moddt="2015-09-17 14:48:55" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="部門商品實時銷售與庫存查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),rtjasite,rtjasite_desc(chr500),rtaw001,rtaw001_desc(chr500),imaa101,imaa101_desc(chr500),rtjb003,rtjb004,imaal003(chr500),imaal004(chr500),l_rtdx003(chr10),rtjb010,l_scount(num15_3),rtjb013,rtjb013_desc(chr500),l_sell(num20_6),l_account(num20_6),rtjbdocno,rtjbseq"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),rtjasite(b_rtjasite),rtjasite_desc(b_rtjasite_desc),rtaw001(b_rtaw001),rtaw001_desc(b_rtaw001_desc),imaa101(b_imaa101),imaa101_desc(b_imaa101_desc),rtjb003(b_rtjb003),rtjb004(b_rtjb004),imaal003(b_imaal003),imaal004(b_imaal004),l_rtdx003(l_rtdx003),rtjb010(b_rtjb010),l_scount(l_scount),rtjb013(b_rtjb013),rtjb013_desc(b_rtjb013_desc),l_sell(l_sell),l_account(l_account),rtjbdocno(b_rtjbdocno),rtjbseq(b_rtjbseq)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adeq111" method="dialog">
+    <section id="input"/>
+    <section id="construct">
+      <construct id="body" page="1" field="rtjasite(b_rtjasite),rtaw001(b_rtaw001),imaa101(b_imaa101),rtjb003(b_rtjb003),rtjb004(b_rtjb004),rtjb010(b_rtjb010),rtjb013(b_rtjb013),rtjbdocno(b_rtjbdocno),rtjbseq(b_rtjbseq)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="rtjasite">
+        <after>
+          <reference field="rtjasite_desc" ref_field="rtjasite" map_field="rtjbent,rtjasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="rtjasite_desc"/>
+      <column id="rtaw001">
+        <after>
+          <reference field="rtaw001_desc" ref_field="rtaw001" map_field="rtjbent,rtaxlent,rtaxl001" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001_3" state="c"/>
+      </column>
+      <column id="rtaw001_desc"/>
+      <column id="imaa101">
+        <after>
+          <reference field="imaa101_desc" ref_field="imaa101" map_field="rtjbent,imaa101" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="imaa101_desc"/>
+      <column id="rtjb003">
+        <controlp form="q_imay003_2" state="c"/>
+      </column>
+      <column id="rtjb004">
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="imaal003"/>
+      <column id="imaal004"/>
+      <column id="l_rtdx003"/>
+      <column id="rtjb010" type="S" default="0"/>
+      <column id="l_scount"/>
+      <column id="rtjb013">
+        <after>
+          <reference field="rtjb013_desc" ref_field="rtjb013" map_field="rtjb013" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="rtjb013_desc"/>
+      <column id="l_sell"/>
+      <column id="l_account"/>
+      <column id="rtjbdocno"/>
+      <column id="rtjbseq"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="rtjb_t" page="1" linked="" pk="rtjbdocno,rtjbseq">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,rtjb003,rtjb004,&apos;&apos;,&apos;&apos;,&apos;&apos;,rtjb010,&apos;&apos;,rtjb013,&apos;&apos;,&apos;&apos;,&apos;&apos;,rtjbdocno,rtjbseq FROM rtjb_t WHERE rtjbent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

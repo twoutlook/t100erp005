@@ -1,0 +1,543 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="afmt585_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0005(2015-05-26 16:26:27), PR版次:0005(2016-10-19 14:18:08)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000040
+#+ Filename...: afmt585_01
+#+ Description: 收息作業帳務單
+#+ Creator....: 05016(2015-05-21 17:54:46)
+#+ Modifier...: 05016 -SD/PR- 08732
+ 
+{</section>}
+ 
+{<section id="afmt585_01.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#Memos
+#160705-00042#11   2016/07/15 By sakura   查詢程式段q_ooba002_1開窗，呼叫開窗前的g_qryparam.arg若是要傳入程式代號，要改傳入g_prog
+#161006-00005#14   2016/10/19 By 08732    組織類型與職能開窗調整
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_fmmw_m        RECORD
+       fmmwsite LIKE fmmw_t.fmmwsite, 
+   fmmw001 LIKE fmmw_t.fmmw001, 
+   fmmwdocno LIKE fmmw_t.fmmwdocno, 
+   fmmwdocdt LIKE fmmw_t.fmmwdocdt
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_wc_t585_01     STRING
+DEFINE g_fmmwdocno      LIKE fmmw_t.fmmwdocno
+DEFINE g_fmmw001        LIKE fmmw_t.fmmw001
+DEFINE g_fmmw002        LIKE fmmw_t.fmmw002
+DEFINE g_fmmw003        LIKE fmmw_t.fmmw003
+DEFINE g_wc_fmmwsite    STRING
+DEFINE g_wc_fmmw001     STRING   #帳套範圍
+DEFINE g_fmmvsite       LIKE type_t.chr500
+DEFINE g_fmmvdocno      LIKE type_t.chr500
+#end add-point
+ 
+DEFINE g_fmmw_m        type_g_fmmw_m
+ 
+   DEFINE g_fmmwdocno_t LIKE fmmw_t.fmmwdocno
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="afmt585_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION afmt585_01(--)
+   #add-point:input段變數傳入
+   p_fmmwdocno,p_type
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE p_fmmwdocno     LIKE fmmw_t.fmmwdocno
+   DEFINE p_type          LIKE type_t.chr1
+   DEFINE r_success       LIKE type_t.num5
+   DEFINE l_array       DYNAMIC ARRAY OF RECORD
+                        chr  LIKE type_t.chr1000,
+                        dat  LIKE type_t.dat
+                        END RECORD
+   DEFINE l_glaa        RECORD
+                        glaacomp        LIKE glaa_t.glaacomp,
+                        glaa024         LIKE glaa_t.glaa024,
+                        glaa026         LIKE glaa_t.glaa026,
+                        glaa003         LIKE glaa_t.glaa003
+                        END RECORD
+   DEFINE l_strdat      LIKE type_t.dat
+   DEFINE l_enddat      LIKE type_t.dat
+
+   WHENEVER ERROR CONTINUE
+ 
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_afmt585_01 WITH FORM cl_ap_formpath("afm","afmt585_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   CALL cl_set_comp_visible('master',TRUE)
+   IF p_type = '2' THEN
+      CALL cl_set_comp_visible('master',FALSE)
+   END IF
+   
+   INITIALIZE g_fmmw_m.* TO NULL
+   INITIALIZE g_wc_fmmwsite TO NULL
+   INITIALIZE g_wc_fmmw001 TO NULL
+   LET r_success = TRUE
+   IF NOT cl_null(p_fmmwdocno) THEN
+      SELECT fmmwsite,fmmw001,fmmwdocdt
+        INTO g_fmmw_m.fmmwsite,g_fmmw_m.fmmw001,g_fmmw_m.fmmwdocdt
+        FROM fmmw_t
+       WHERE fmmwent = g_enterprise AND fmmwdocno = p_fmmwdocno
+      
+      CALL s_ld_sel_glaa(g_fmmw_m.fmmw001,'glaacomp|glaa024|glaa026|glaa003')
+               RETURNING g_sub_success,l_glaa.*
+      #取得年月
+      CALL s_fin_date_get_period_value(l_glaa.glaa003,g_fmmw_m.fmmw001,g_fmmw_m.fmmwdocdt)
+          RETURNING g_sub_success,g_fmmw002,g_fmmw003
+      #取得日期
+      CALL s_fin_date_get_period_range(l_glaa.glaa003,g_fmmw002,g_fmmw003)
+               RETURNING l_strdat,l_enddat 
+
+      CALL s_fin_account_center_sons_query('3',g_fmmw_m.fmmwsite,g_fmmw_m.fmmwdocdt,'1')
+      CALL s_fin_account_center_sons_str() RETURNING g_wc_fmmwsite
+      CALL s_fin_get_wc_str(g_wc_fmmwsite) RETURNING g_wc_fmmwsite
+      CALL s_fin_account_center_ld_str() RETURNING g_wc_fmmw001
+      CALL s_fin_get_wc_str(g_wc_fmmw001) RETURNING g_wc_fmmw001
+         
+   ELSE
+      #帳務組織/帳套/法人預設
+      LET g_fmmw_m.fmmwdocdt = g_today
+      CALL s_aap_get_default_apcasite('','','')RETURNING g_sub_success,g_errno,g_fmmw_m.fmmwsite,
+                                                      g_fmmw_m.fmmw001,l_glaa.glaacomp
+      CALL s_ld_sel_glaa(g_fmmw_m.fmmw001,'glaacomp|glaa024|glaa026|glaa003')
+               RETURNING g_sub_success,l_glaa.*
+               
+      #取得年月
+      CALL s_fin_date_get_period_value(l_glaa.glaa003,g_fmmw_m.fmmw001,g_fmmw_m.fmmwdocdt)
+          RETURNING g_sub_success,g_fmmw002,g_fmmw003
+      #取得日期
+      CALL s_fin_date_get_period_range(l_glaa.glaa003,g_fmmw002,g_fmmw003)
+               RETURNING l_strdat,l_enddat 
+      CALL s_fin_account_center_sons_query('3',g_fmmw_m.fmmwsite,g_fmmw_m.fmmwdocdt,'1')
+      CALL s_fin_account_center_sons_str() RETURNING g_wc_fmmwsite
+      CALL s_fin_get_wc_str(g_wc_fmmwsite) RETURNING g_wc_fmmwsite
+      CALL s_fin_account_center_ld_str() RETURNING g_wc_fmmw001
+      CALL s_fin_get_wc_str(g_wc_fmmw001) RETURNING g_wc_fmmw001
+      LET g_fmmw_m.fmmwdocno = ''
+   END IF
+
+   
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_fmmw_m.fmmwsite,g_fmmw_m.fmmw001,g_fmmw_m.fmmwdocno,g_fmmw_m.fmmwdocdt ATTRIBUTE(WITHOUT  
+          DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmwsite
+            #add-point:BEFORE FIELD fmmwsite name="input.b.fmmwsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmwsite
+            
+            #add-point:AFTER FIELD fmmwsite name="input.a.fmmwsite"
+            IF NOT cl_null(g_fmmw_m.fmmwsite) THEN
+               CALL s_fin_account_center_with_ld_chk(g_fmmw_m.fmmwsite,g_fmmw_m.fmmw001,g_user,'3','N','',g_fmmw_m.fmmwdocdt) RETURNING g_sub_success,g_errno
+               IF NOT g_sub_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_fmmw_m.fmmwsite = ''
+                  LET g_fmmw_m.fmmw001  = ''
+                  DISPLAY BY NAME g_fmmw_m.fmmwsite
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            CALL s_fin_account_center_sons_query('3',g_fmmw_m.fmmwsite,g_fmmw_m.fmmwdocdt,'1')
+            CALL s_fin_account_center_sons_str() RETURNING g_wc_fmmwsite
+            CALL s_fin_get_wc_str(g_wc_fmmwsite) RETURNING g_wc_fmmwsite
+            CALL s_fin_account_center_ld_str() RETURNING g_wc_fmmw001
+            CALL s_fin_get_wc_str(g_wc_fmmw001) RETURNING g_wc_fmmw001
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmwsite
+            #add-point:ON CHANGE fmmwsite name="input.g.fmmwsite"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmw001
+            #add-point:BEFORE FIELD fmmw001 name="input.b.fmmw001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmw001
+            
+            #add-point:AFTER FIELD fmmw001 name="input.a.fmmw001"
+            IF NOT cl_null(g_fmmw_m.fmmw001) THEN
+               CALL s_fin_account_center_with_ld_chk(g_fmmw_m.fmmwsite,g_fmmw_m.fmmw001,g_user,'3','N',g_wc_fmmw001,g_fmmw_m.fmmwdocdt) RETURNING g_sub_success,g_errno
+               IF NOT g_sub_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = g_errno
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_fmmw_m.fmmw001 = ''
+                  NEXT FIELD CURRENT
+               END IF
+               CALL s_ld_sel_glaa(g_fmmw_m.fmmw001,'glaacomp|glaa024|glaa026|glaa003')
+               RETURNING g_sub_success,l_glaa.*
+               #取得年月
+               CALL s_fin_date_get_period_value(l_glaa.glaa003,g_fmmw_m.fmmw001,g_fmmw_m.fmmwdocdt)
+               RETURNING g_sub_success,g_fmmw002,g_fmmw003
+               #取得日期區間
+               CALL s_fin_date_get_period_range(l_glaa.glaa003,g_fmmw002,g_fmmw003)
+               RETURNING l_strdat,l_enddat                                                        
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmw001
+            #add-point:ON CHANGE fmmw001 name="input.g.fmmw001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmwdocno
+            #add-point:BEFORE FIELD fmmwdocno name="input.b.fmmwdocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmwdocno
+            
+            #add-point:AFTER FIELD fmmwdocno name="input.a.fmmwdocno"
+            IF NOT cl_null(g_fmmw_m.fmmwdocno) THEN
+               IF NOT s_aooi200_fin_chk_docno(g_fmmw_m.fmmw001,'','',g_fmmw_m.fmmwdocno,g_fmmw_m.fmmwdocdt,g_prog) THEN
+                  LET g_fmmw_m.fmmwdocno = ''
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmwdocno
+            #add-point:ON CHANGE fmmwdocno name="input.g.fmmwdocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD fmmwdocdt
+            #add-point:BEFORE FIELD fmmwdocdt name="input.b.fmmwdocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD fmmwdocdt
+            
+            #add-point:AFTER FIELD fmmwdocdt name="input.a.fmmwdocdt"
+            CALL s_fin_date_get_period_value(l_glaa.glaa003,g_fmmw_m.fmmw001,g_fmmw_m.fmmwdocdt)
+               RETURNING g_sub_success,g_fmmw002,g_fmmw003
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE fmmwdocdt
+            #add-point:ON CHANGE fmmwdocdt name="input.g.fmmwdocdt"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.fmmwsite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmwsite
+            #add-point:ON ACTION controlp INFIELD fmmwsite name="input.c.fmmwsite"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_fmmw_m.fmmwsite       #給予default值
+            #LET g_qryparam.where = " ooef204 = 'Y' "   #161006-00005#14   mark 
+            #CALL q_ooef001()     #161006-00005#14   mark                    
+            CALL q_ooef001_46()   #161006-00005#14   add                                #呼叫開窗
+            LET g_fmmw_m.fmmwsite = g_qryparam.return1        #將開窗取得的值回傳到變數
+            DISPLAY BY NAME g_fmmw_m.fmmwsite
+            NEXT FIELD fmmwsite
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmw001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmw001
+            #add-point:ON ACTION controlp INFIELD fmmw001 name="input.c.fmmw001"
+             INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_fmmw_m.fmmw001
+            LET g_qryparam.where = "  glaald IN ",g_wc_fmmw001
+            LET g_qryparam.arg1 = g_user                                 #人員權限
+            LET g_qryparam.arg2 = g_dept                                 #部門權限
+            CALL q_authorised_ld()
+            LET g_fmmw_m.fmmw001 = g_qryparam.return1
+            DISPLAY BY NAME g_fmmw_m.fmmw001
+            NEXT FIELD fmmw001
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmwdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmwdocno
+            #add-point:ON ACTION controlp INFIELD fmmwdocno name="input.c.fmmwdocno"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_fmmw_m.fmmwdocno
+            LET g_qryparam.arg1 = l_glaa.glaa024
+            #LET g_qryparam.arg2 = 'afmt585'   #160705-00042#11 160715 by sakura mark
+            LET g_qryparam.arg2 = g_prog       #160705-00042#11 160715 by sakura add
+            CALL q_ooba002_1()
+            LET g_fmmw_m.fmmwdocno = g_qryparam.return1
+            DISPLAY BY NAME g_fmmw_m.fmmwdocno
+            NEXT FIELD fmmwdocno
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.fmmwdocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD fmmwdocdt
+            #add-point:ON ACTION controlp INFIELD fmmwdocdt name="input.c.fmmwdocdt"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+     CONSTRUCT g_wc_t585_01 ON fmmvsite,fmmvdocno
+           FROM fmmvsite,fmmvdocno
+
+         ON ACTION controlp INFIELD fmmvsite
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where    = " ooef017 = '",l_glaa.glaacomp,"' AND ooef001 IN ",g_wc_fmmwsite
+            #                         " AND ooef206='Y' "   #161006-00005#14   mark
+            #CALL q_ooef001()   #161006-00005#14   mark
+            CALL q_ooef001_33()   #161006-000005#14   add
+            LET g_fmmvsite = g_qryparam.return1
+            DISPLAY  g_fmmvsite to fmmvsite
+
+          ON ACTION controlp INFIELD fmmvdocno
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " fmmvstus = 'Y' AND fmmvdocdt BETWEEN '",l_strdat,"' AND '",g_fmmw_m.fmmwdocdt,"' ",
+                                   " AND fmmvsite IN ",g_wc_fmmwsite ,
+#                                   #151110-00004#2-----s
+                                    " AND fmmvdocno NOT IN (",
+                                    "             SELECT fmmx002 FROM fmmx_t,fmmw_t ",
+                                    "              WHERE fmmxent = ",g_enterprise," ",
+                                    "                AND fmmxent = fmmwent ",
+                                    "                AND fmmxdocno = fmmwdocno ",
+                                    "                AND fmmwstus <> 'X' ",
+                                    "            )"
+                                    #151110-00004#2　-----e
+#
+            CALL q_fmmvdocno()
+            LET g_fmmvdocno = g_qryparam.return1
+            DISPLAY g_fmmvdocno TO fmmvdocno
+            NEXT FIELD fmmvdocno
+
+      END CONSTRUCT
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_afmt585_01 
+   
+   #add-point:input段after input 
+   IF INT_FLAG THEN
+      LET r_success= FALSE
+      LET INT_FLAG = 0
+   ELSE
+      CALL s_fin_date_get_period_range(l_glaa.glaa003,g_fmmw002,g_fmmw003)
+               RETURNING l_strdat,l_enddat
+      IF cl_null(p_fmmwdocno)THEN
+         #產生單頭+單身
+         #p_array
+         CALL l_array.clear()
+         #取得會計參照表號    
+         CALL s_ld_sel_glaa(g_fmmw_m.fmmw001,'glaacomp|glaa024|glaa026|glaa003')
+               RETURNING g_sub_success,l_glaa.*
+         #傳入日期 取得年月
+         CALL s_fin_date_get_period_value(l_glaa.glaa003,g_fmmw_m.fmmw001,g_fmmw_m.fmmwdocdt)
+            RETURNING g_sub_success,g_fmmw002,g_fmmw003
+         LET l_array[1].chr = g_fmmw_m.fmmwsite   # 帳務中心
+         LET l_array[2].chr = g_fmmw_m.fmmw001    # 帳別
+         LET l_array[3].chr = g_fmmw_m.fmmwdocno  # 單別
+         LET l_array[4].chr = g_fmmw002    # 年度
+         LET l_array[5].chr = g_fmmw003    # 期別
+         LET l_array[6].dat = g_fmmw_m.fmmwdocdt  # 日期     
+         LET g_wc_t585_01 = g_wc_t585_01 CLIPPED," AND fmmvdocdt BETWEEN '",l_strdat,"' AND '",g_fmmw_m.fmmwdocdt,"' ", 
+                                                 " AND fmmvsite IN ", g_wc_fmmwsite
+         CALL cl_err_collect_init()                                        
+         CALL s_afmt585_ins_fmmw(l_array,g_wc_t585_01)RETURNING g_sub_success,g_fmmw_m.fmmwdocno 
+         CALL cl_err_collect_show()
+       ELSE
+          #產生單身
+          #p_array 
+          #1.fmmwdocno 單號
+          #2.fmmw001   帳套
+          #3.fmmwdocdt 日期 
+          CALL l_array.clear()
+          LET l_array[1].chr = p_fmmwdocno
+          LET l_array[2].chr = g_fmmw_m.fmmwsite
+          LET l_array[3].chr = g_fmmw_m.fmmw001
+          LET l_array[4].chr = l_glaa.glaacomp
+          LET l_array[5].dat = g_fmmw_m.fmmwdocdt                     
+          LET g_wc_t585_01 = g_wc_t585_01 CLIPPED, " AND fmmvdocdt BETWEEN '",l_strdat,"' AND '",g_fmmw_m.fmmwdocdt,"' ", 
+                                                   " AND fmmvsite IN ", g_wc_fmmwsite
+          CALL cl_err_collect_init()
+          CALL s_afmt585_ins_fmmx(l_array,g_wc_t585_01)RETURNING g_sub_success 
+          CALL cl_err_collect_show()
+          LET g_fmmw_m.fmmwdocno = p_fmmwdocno
+      END IF
+      IF NOT g_sub_success THEN
+         LET r_success = FALSE
+      END IF
+
+   END IF
+   CALL cl_set_comp_visible('master',TRUE)
+
+   RETURN r_success,g_fmmw_m.fmmwdocno
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="afmt585_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="afmt585_01.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 

@@ -1,0 +1,1041 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="anmp440" std_prog="anmp440" erpver="1.0" module="ANM" ver="1" env="s" zone="t10prd" booking="N" type="M" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="W" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="function.anmp440_create_tmp" order="1" ver="1" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 建立臨時表
+# Memo...........: #150518-00043#12
+# Usage..........: CALL anmp440_create_tmp()
+# Date & Author..: 150601 By Jessy
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmp440_create_tmp()
+   DROP TABLE anmp440_tmp
+   CREATE TEMP TABLE anmp440_tmp(
+      nmcksite LIKE nmck_t.nmcksite,
+      sel      LIKE type_t.chr1,
+      nmck005  LIKE nmck_t.nmck005,
+      nmck015  LIKE nmck_t.nmck015,
+      nmck025  LIKE nmck_t.nmck025,
+      nmck011  LIKE nmck_t.nmck011,
+      nmck103  LIKE nmck_t.nmck103
+   );
+END FUNCTION]]>
+  </point>
+  <point name="function.anmp440_qbe_clear" order="1" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 清除條件並還原預設
+# Memo...........: #150518-00043#12
+# Usage..........: CALL anmp440_qbe_clear()
+# Date & Author..: 150602 By Jessy
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmp440_qbe_clear()
+   CLEAR FORM
+   INITIALIZE g_master1.* TO NULL
+   CALL g_detail_d.clear()
+   
+   CALL s_fin_account_center_sons_query('6',g_master1.nmcksite,g_today,'1')
+   CALL s_fin_account_center_sons_str() RETURNING g_wc_nmcksite
+   CALL s_fin_get_wc_str(g_wc_nmcksite) RETURNING g_wc_nmcksite
+   #取得資金中心底下的法人範圍               
+   CALL s_fin_account_center_comp_str() RETURNING g_wc_nmckcomp
+   CALL s_fin_get_wc_str(g_wc_nmckcomp) RETURNING g_wc_nmckcomp 
+   LET g_master1.nmcksite = g_site
+   LET g_master1.nmcksite_desc = s_desc_get_department_desc(g_master1.nmcksite)
+   LET g_master1.nmckcomp = g_master1.nmckcomp
+   LET g_master1.nmckcomp_desc = s_desc_get_ooefl006_desc(g_master1.nmckcomp)
+   LET g_master1.nmck035 = g_today
+   DISPLAY BY NAME g_master1.nmcksite,g_master1.nmckcomp,g_master1.nmcksite_desc,g_master1.nmckcomp_desc,g_master1.nmck035
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.anmp440_process" order="2" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 資料處理
+# Memo...........:
+# Usage..........: CALL anmp440_process()
+# Date & Author..: 150603 By Jessy
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmp440_process()
+DEFINE l_n         LIKE type_t.num5
+DEFINE l_cnt       LIKE type_t.num5
+
+   IF cl_null(g_master1.nmcksite) OR cl_null(g_master1.nmckcomp) OR cl_null(g_master1.nmck035) THEN
+      INITIALIZE g_errparam.* TO NULL
+      LET g_errparam.code = 'aap-00332'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #總共有幾筆資料要跑
+   LET l_cnt = 0
+   FOR l_n = 1 TO g_detail_d.getLength()
+      IF g_detail_d[l_n].sel = "Y" THEN
+         LET l_cnt = l_cnt + 1
+      END IF
+   END FOR
+   
+   IF l_cnt = 0 THEN
+      #未選擇資料
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'adb-00078'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      RETURN
+   END IF
+   CALL cl_progress_bar_no_window(l_cnt)
+   
+   FOR l_n = 1 TO g_detail_d.getLength()
+      IF g_detail_d[l_n].sel = "Y" THEN
+         #回寫異動/寄領日期和經辦人
+         CALL anmp440_writeback_date(g_master1.nmck035,g_master1.nmckcomp,g_detail_d[l_n].nmck025) RETURNING g_sub_success
+      END IF
+   END FOR
+   
+   #顯示執行成功的訊息
+   IF g_sub_success THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'adz-00217'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      CALL anmp440_b_fill()
+   ELSE
+   #執行失敗
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'adz-00218'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      CALL anmp440_b_fill()
+   END IF
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.anmp440_nmckcomp_chk" order="3" ver="1" cite_std="N" new="Y" status="d" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="function.anmp440_nmcksite_chk" order="3" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 檢核組織
+# Memo...........:
+# Usage..........: CALL anmp440_nmcksite_chk()
+# Date & Author..: 150603 By Jessy
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmp440_nmcksite_chk()
+DEFINE l_ooefstus          LIKE ooef_t.ooefstus
+DEFINE r_success           LIKE type_t.num5
+DEFINE r_errno             LIKE gzze_t.gzze001
+
+   LET r_success = TRUE
+   LET r_errno = ''
+   
+   SELECT ooefstus INTO l_ooefstus
+     FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_master1.nmcksite  
+   CASE 
+      WHEN SQLCA.SQLCODE = 100 LET r_errno = 'aoo-00094' LET r_success = FALSE
+      WHEN l_ooefstus = 'N'    LET r_errno = 'aoo-00095' LET r_success = FALSE  
+   END CASE
+   
+   RETURN r_success,r_errno
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.anmp440_writeback_date" order="4" ver="1" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 回寫日期和經辦人
+# Memo...........:
+# Usage..........: CALL anmp440_writeback_date(p_nmck035,p_nmckcomp,p_nmck025)
+# Date & Author..: 150603 By Jessy
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmp440_writeback_date(p_nmck035,p_nmckcomp,p_nmck025)
+DEFINE p_nmck035  LIKE nmck_t.nmck035
+DEFINE p_nmckcomp LIKE nmck_t.nmckcomp
+DEFINE p_nmck025  LIKE nmck_t.nmck025
+DEFINE r_success  LIKE type_t.num5
+   
+   LET r_success = TRUE
+   IF NOT cl_null(p_nmck035) THEN
+      UPDATE nmck_t
+         SET nmck035 = p_nmck035,
+             nmck022 = g_user,
+             nmckmoddt = g_today
+       WHERE nmckent = g_enterprise
+         AND nmckcomp = p_nmckcomp
+         AND nmck025 = p_nmck025
+         
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'UPDATE nmck_t wrong'
+         LET g_errparam.popup = TRUE
+         LET g_errparam.sqlerr = SQLCA.SQLCODE
+         CALL cl_err()
+         LET r_success = FALSE
+      END IF
+   END IF
+    
+   RETURN r_success
+
+END FUNCTION]]>
+  </point>
+  <point name="b_fill.after_b_fill" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DISPLAY l_ac TO FORMONLY.h_index]]>
+  </point>
+  <point name="b_fill.foreach_into" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[      g_detail_d[l_ac].*]]>
+  </point>
+  <point name="b_fill.foreach_iside" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="b_fill.other_table" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   IF g_detail_d.getLength() > 0 THEN
+      CALL g_detail_d.deleteElement(g_detail_d.getLength())
+   END IF]]>
+  </point>
+  <point name="b_fill.sql_before" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   IF cl_null(g_master1.wc) THEN
+      LET g_master1.wc =" 1=1 "
+   END IF
+   LET g_sql =" SELECT 'N',nmck005,nmck015,nmck025,nmck011,nmck103 ",
+              "  FROM nmck_t ",    
+              "  WHERE nmckent = ? ",
+              "    AND nmcksite = '",g_master1.nmcksite,"' ", #資金中心條件
+              "    AND nmckcomp = '",g_master1.nmckcomp,"' ", #法人條件
+              "    AND nmck034 = '2' ",                       #自取
+              "    AND nmck025  IS NOT NULL ",                #票據號碼非空白
+              "    AND nmckstus ='Y' ",
+              "    AND nmck026 in (0,1,2) ",                  #票況        
+              "    AND nmck035  IS NULL ",                    #領取日期
+              "    AND ",g_master1.wc
+              ]]>
+  </point>
+  <point name="global.argv" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="global.import" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="global.memo" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   sel     LIKE type_t.chr1,
+   nmck005 LIKE nmck_t.nmck005,
+   nmck015 LIKE nmck_t.nmck015,
+   nmck025 LIKE nmck_t.nmck025,
+   nmck011 LIKE nmck_t.nmck011,
+   nmck103 LIKE nmck_t.nmck103
+END RECORD
+
+TYPE type_master_1 RECORD
+   nmcksite        LIKE nmck_t.nmcksite,
+   nmcksite_desc   LIKE type_t.chr500,
+   nmckcomp        LIKE nmck_t.nmckcomp,
+   nmckcomp_desc   LIKE type_t.chr500,
+   nmck035         LIKE nmck_t.nmck035,
+   wc              STRING
+END RECORD
+
+DEFINE g_master1     type_master_1  
+
+DEFINE l_origin_str  STRING
+DEFINE g_wc_nmcksite STRING
+DEFINE g_wc_nmckcomp STRING
+DEFINE g_apcald      LIKE glaa_t.glaald]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   #展組織下階成員所需之暫存檔
+   CALL s_fin_create_account_center_tmp()
+   CALL cl_set_combo_scc('nmck026','8711') ]]>
+  </point>
+  <point name="query.after_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="ui_dialog.before_dialog" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   CALL anmp440_qbe_clear()]]>
+  </point>
+  <point name="ui_dialog.more_action" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[         ON ACTION batch_execute
+            CALL anmp440_process()]]>
+  </point>
+  <point name="ui_dialog.more_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[         CONSTRUCT BY NAME g_master1.wc ON nmck005,nmck025,nmck003,nmckdocno,nmckdocdt,nmck004
+         ON ACTION controlp INFIELD nmck005
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmaa001_10()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmck005  #顯示到畫面上
+         NEXT FIELD nmck005
+         
+         ON ACTION controlp INFIELD nmck025
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = g_master1.nmcksite
+            LET g_qryparam.arg2 = g_master1.nmckcomp
+            LET g_qryparam.where = "nmck026 IN (0,1,2) AND nmck034 = '2' AND nmck025 IS NOT NULL AND nmckstus = 'Y'"
+            CALL q_nmck025_1()
+            DISPLAY g_qryparam.return1 TO nmck025
+         NEXT FIELD nmck025
+         
+         ON ACTION controlp INFIELD nmck003
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmck003  #顯示到畫面上
+         NEXT FIELD nmck003
+         
+         ON ACTION controlp INFIELD nmckdocno
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " nmck002 IN (SELECT ooia001 FROM ooia_t  WHERE ooia002 = '30' AND ooiaent = ",g_enterprise," ) AND nmckstus = 'Y' AND nmckcomp IN ",g_wc_nmckcomp CLIPPED
+            CALL q_nmckdocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmckdocno  #顯示到畫面上
+         NEXT FIELD nmckdocno
+         
+         ON ACTION controlp INFIELD nmck004
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_nmas_01()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmck004  #顯示到畫面上
+         NEXT FIELD nmck004
+         END CONSTRUCT]]>
+  </point>
+  <point name="ui_dialog.more_displayarray" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="ui_dialog.more_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[         INPUT BY NAME g_master1.nmcksite,g_master1.nmckcomp,g_master1.nmck035
+            ATTRIBUTE(WITHOUT DEFAULTS)
+         
+            AFTER FIELD nmcksite
+               IF NOT cl_null(g_master1.nmcksite) THEN 
+                  CALL s_fin_account_center_with_ld_chk(g_master1.nmcksite,'',g_user,'6','N','',g_today) RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_master1.nmcksite = g_site
+                     LET g_master1.nmcksite_desc = s_desc_get_department_desc(g_master1.nmcksite)
+                     LET g_master1.nmckcomp = ''
+                     LET g_master1.nmckcomp_desc = ''
+                     LET g_wc_nmcksite = ''
+                     LET g_wc_nmckcomp = ''
+                     DISPLAY BY NAME g_master1.nmcksite,g_master1.nmcksite_desc,g_master1.nmckcomp,g_master1.nmckcomp_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  #資金中心預設主帳套及主帳套所屬法人及其他預設值         
+                  CALL s_fin_orga_get_comp_ld(g_master1.nmcksite) RETURNING g_sub_success,g_errno,g_master1.nmckcomp,g_apcald   
+                  CALL s_fin_account_center_sons_query('6',g_master1.nmcksite,g_today,'1')
+                  #取得資金中心底下的法人範圍               
+                  CALL s_fin_account_center_comp_str() RETURNING g_wc_nmckcomp
+                  CALL s_fin_get_wc_str(g_wc_nmckcomp) RETURNING g_wc_nmckcomp 
+                  LET g_master1.nmcksite_desc = s_desc_get_department_desc(g_master1.nmcksite)
+                  LET g_master1.nmckcomp_desc = s_desc_get_ooefl006_desc(g_master1.nmckcomp)
+                  DISPLAY BY NAME g_master1.nmcksite,g_master1.nmcksite_desc,g_master1.nmckcomp,g_master1.nmckcomp_desc
+               ELSE                        
+                  LET g_master1.nmcksite_desc = ''
+                  LET g_master1.nmckcomp      = ''
+                  LET g_master1.nmckcomp_desc = ''
+                  LET g_wc_nmcksite = ''
+                  LET g_wc_nmckcomp = ''
+                  DISPLAY BY NAME g_master1.nmcksite,g_master1.nmcksite_desc,g_master1.nmckcomp,g_master1.nmckcomp_desc
+               END IF
+           
+            AFTER FIELD nmckcomp
+               IF NOT cl_null(g_master1.nmckcomp) THEN
+                  #取得資金組織底下所屬的法人範圍
+                  CALL s_fin_account_center_comp_str() RETURNING g_wc_nmckcomp
+                  #將取回的字串轉換為SQL條件
+                  CALL s_fin_get_wc_str(g_wc_nmckcomp) RETURNING g_wc_nmckcomp
+                  CALL anmp440_nmcksite_chk() RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_master1.nmckcomp = ''
+                     LET g_master1.nmckcomp_desc = ''
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  #比對輸入的法人是否在資金組織下
+                  IF s_chr_get_index_of(g_wc_nmckcomp,g_master1.nmckcomp,'1') = 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'anm-00274'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_master1.nmckcomp = ''
+                     LET g_master1.nmckcomp_desc = ''
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+
+            ON ACTION controlp INFIELD nmcksite
+               #開窗i段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master1.nmcksite    #給予default值
+               LET g_qryparam.where = " ooef206 = 'Y'"            
+               CALL q_ooef001()                                #呼叫開窗
+               LET g_master1.nmcksite = g_qryparam.return1              
+               LET g_master1.nmcksite_desc = s_desc_get_department_desc(g_master1.nmcksite)
+               DISPLAY BY NAME g_master1.nmcksite,g_master1.nmcksite_desc                
+               NEXT FIELD nmcksite  
+            
+            ON ACTION controlp INFIELD nmckcomp
+               #開窗i段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_master1.nmckcomp    #給予default值
+               CALL s_fin_account_center_sons_query('6',g_master1.nmcksite,g_today,'1')
+               #取得資金中心底下的法人範圍               
+               CALL s_fin_account_center_comp_str() RETURNING g_wc_nmckcomp
+               CALL s_fin_get_wc_str(g_wc_nmckcomp) RETURNING g_wc_nmckcomp
+               LET g_master1.nmckcomp_desc = s_desc_get_ooefl006_desc(g_master1.nmckcomp)
+               DISPLAY BY NAME g_master1.nmckcomp,g_master1.nmckcomp_desc               
+               LET g_qryparam.where = " ooef003 = 'Y' AND ooef001 IN ",g_wc_nmckcomp CLIPPED
+               CALL q_ooef017_01()                                #呼叫開窗
+               LET g_master1.nmckcomp = g_qryparam.return1  
+               LET g_master1.nmckcomp_desc = s_desc_get_ooefl006_desc(g_master1.nmckcomp)
+               DISPLAY BY NAME g_master1.nmckcomp,g_master1.nmckcomp_desc            
+               NEXT FIELD nmckcomp                          #返回原欄位
+
+         END INPUT 
+         
+         INPUT ARRAY g_detail_d FROM s_detail1.*
+             ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                       INSERT ROW = FALSE,
+                       DELETE ROW = FALSE,
+                       APPEND ROW = FALSE)
+            BEFORE ROW
+               LET l_ac = ARR_CURR()
+               DISPLAY l_ac TO FORMONLY.h_index
+         END INPUT
+]]>
+  </point>
+  <point name="ui_dialog.qbeclear" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            CALL anmp440_qbe_clear()]]>
+  </point>
+  <section id="anmp440.b_fill" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION anmp440_b_fill()
+ 
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define
+   {<point name="b_fill.define" edit="s"/>}
+   #end add-point
+   #add-point:b_fill段define
+   {<point name="b_fill.define_customerization" edit="c"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   PREPARE anmp440_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR anmp440_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空
+   {<point name="b_fill.clear"/>}
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into
+   {<point name="b_fill.foreach_into"/>}
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充
+      {<point name="b_fill.foreach_iside"/>}
+      #end add-point
+      
+      CALL anmp440_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.other_table"/>}
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE anmp440_sel
+   
+   LET l_ac = 1
+   CALL anmp440_fetch()
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.after_b_fill"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="anmp440.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000000
+#+ 
+#+ Filename...: anmp440
+#+ Description: 應付票據領取作業
+#+ Creator....: 06821(2015-06-01 10:39:37)
+#+ Modifier...: 06821(2015-06-03 15:38:17) -SD/PR-
+]]>
+  </section>
+  <section id="anmp440.detail_show" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION anmp440_detail_show()
+   #add-point:show段define
+   {<point name="detail_show.define" edit="s"/>}
+   #end add-point
+   #add-point:show段define
+   {<point name="detail_show.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #add-point:detail_show段
+   {<point name="detail_show.detail_show"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="anmp440.fetch" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION anmp440_fetch()
+ 
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define
+   {<point name="fetch.define" edit="s"/>}
+   #end add-point
+   #add-point:fetch段define
+   {<point name="fetch.define_customerization" edit="c"/>}
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後
+   {<point name="fetch.after_fill" />}
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="anmp440.filter" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION anmp440_filter()
+   #add-point:filter段define
+   {<point name="filter.define" edit="s"/>}
+   #end add-point    
+   #add-point:filter段define
+   {<point name="filter.define_customerization" edit="c"/>}
+   #end add-point    
+   
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define
+   {<point name="filter.detail_cnt"/>}
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL anmp440_b_fill()
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="anmp440.filter_parser" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ filter欄位解析
+PRIVATE FUNCTION anmp440_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define
+   {<point name="filter_parser.define" edit="s"/>}
+   #end add-point    
+   #add-point:filter段define
+   {<point name="filter_parser.define_customerization" edit="c"/>}
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="anmp440.filter_show" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION anmp440_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = anmp440_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="anmp440.global" ver="2" status="" src="s" readonly="">
+    <![CDATA[#應用 p02 樣板自動產生(Version:13)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+#add-point:增加匯入變數檔
+#{<point name="global.inc" />}
+##end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10             #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num10             #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num10              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="anmp440.init" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 畫面資料初始化
+PRIVATE FUNCTION anmp440_init()
+   #add-point:init段define
+   {<point name="init.define" edit="s"/>}
+   #end add-point   
+   #add-point:init段define
+   {<point name="init.define_customerization" edit="c"/>}
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="anmp440.main" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 作業開始 
+MAIN
+   DEFINE ls_js  STRING
+   #add-point:main段define
+   {<point name="main.define" edit="s"/>}
+   #end add-point   
+   #add-point:main段define
+   {<point name="main.define_customerization" edit="c"/>}
+   #end add-point   
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("anm","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_anmp440 WITH FORM cl_ap_formpath("anm",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL anmp440_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL anmp440_ui_dialog() 
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_anmp440
+   END IF 
+   
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+  </section>
+  <section id="anmp440.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="anmp440.query" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION anmp440_query()
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+   {<point name="query.define" edit="s" />}
+   #end add-point 
+   #add-point:query段define
+   {<point name="query.define_customerization" edit="c" />}
+   #end add-point 
+    
+   #add-point:cs段after_construct
+   {<point name="query.after_construct" />}
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL anmp440_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   END IF
+   
+   #add-point:cs段after_query
+   {<point name="query.cs段after_query" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="anmp440.ui_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION anmp440_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num10
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define" edit="s"/>}
+   #end add-point 
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define_customerization" edit="c"/>}
+   #end add-point 
+   
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_detail_d.clear()
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL anmp440_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2
+            {<point name="ui_dialog.before_dialog2"/>}
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            #add-point:ui_dialog段on action selall
+            {<point name="ui_dialog.selall.befroe"/>}
+            #end add-point            
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+               #add-point:ui_dialog段on action selall
+               {<point name="ui_dialog.for.onaction_selall"/>}
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selall
+            {<point name="ui_dialog.onaction_selall"/>}
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+               #add-point:ui_dialog段on action selnone
+               {<point name="ui_dialog.for.onaction_selnone"/>}
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selnone
+            {<point name="ui_dialog.onaction_selnone"/>}
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel
+            {<point name="ui_dialog.onaction_sel"/>}
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel
+            {<point name="ui_dialog.onaction_unsel"/>}
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL anmp440_filter()
+            #add-point:ON ACTION filter
+            {<point name="menu.filter" />}
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            #add-point:ui_dialog段accept之前
+            {<point name="ui_dialog.before_accept"/>}
+            #end add-point
+            CALL anmp440_query()
+             
+         # 條件清除
+         ON ACTION qbeclear
+            #add-point:ui_dialog段
+            {<point name="ui_dialog.qbeclear"/>}
+            #end add-point
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            #add-point:ui_dialog段datarefresh
+            {<point name="ui_dialog.datarefresh"/>}
+            #end add-point
+            CALL anmp440_b_fill()
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

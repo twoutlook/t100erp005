@@ -1,0 +1,1324 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="abgi070_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0001(2016-04-28 10:50:58), PR版次:0001(2016-04-28 16:01:14)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000025
+#+ Filename...: abgi070_01
+#+ Description: 公式設定
+#+ Creator....: 03080(2016-04-28 10:36:09)
+#+ Modifier...: 03080 -SD/PR- 03080
+ 
+{</section>}
+ 
+{<section id="abgi070_01.global" >}
+#應用 c03b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+ 
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+IMPORT util
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_glfb_m        RECORD
+       glfb011 LIKE glfb_t.glfb011, 
+   glfb012 LIKE glfb_t.glfb012, 
+   glfb005_02 LIKE type_t.chr500, 
+   glfb004 LIKE glfb_t.glfb004, 
+   glfc001 LIKE type_t.chr500, 
+   glfb005 LIKE glfb_t.glfb005, 
+   amt LIKE type_t.chr500
+       END RECORD
+DEFINE g_glfb_m        type_g_glfb_m
+ 
+   
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_glfb_d        RECORD
+       chk LIKE type_t.chr500, 
+   glfbseq LIKE type_t.chr500, 
+   glfbseq1 LIKE type_t.chr500, 
+   glfb002 LIKE type_t.chr500, 
+   glfbl004 LIKE type_t.chr500, 
+   glfb003 LIKE type_t.chr500, 
+   glfcl001 LIKE type_t.chr500, 
+   glfcl003 LIKE type_t.chr500
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_glfa                RECORD LIKE glfa_t.*
+DEFINE g_str                 STRING
+DEFINE g_glfb                DYNAMIC ARRAY OF RECORD
+       glfbseq               LIKE glfb_t.glfbseq,
+       glfbseq1              LIKE glfb_t.glfbseq1
+       END RECORD
+DEFINE dis_x                 DYNAMIC ARRAY OF STRING
+DEFINE g_flag                LIKE type_t.num5
+DEFINE g_glfbseq             LIKE glfb_t.glfbseq
+DEFINE g_glfbseq1            LIKE glfb_t.glfbseq1
+DEFINE g_wc                  STRING
+#end add-point
+ 
+DEFINE g_glfb_d          DYNAMIC ARRAY OF type_g_glfb_d
+DEFINE g_glfb_d_t        type_g_glfb_d
+ 
+ 
+DEFINE g_glfb001_t   LIKE glfb_t.glfb001    #Key值備份
+DEFINE g_glfbseq_t      LIKE glfb_t.glfbseq    #Key值備份
+DEFINE g_glfbseq1_t      LIKE glfb_t.glfbseq1    #Key值備份
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10
+DEFINE l_ac                  LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+     
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="abgi070_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION abgi070_01(--)
+   #add-point:input段變數傳入
+   p_glfa001,p_glfbseq,p_glfbseq1,p_glfb004,p_glfb005  #150827-00036#13 add p_glfb004,p_glfb005
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE p_glfa001       LIKE glfa_t.glfa001
+   DEFINE p_glfbseq       LIKE glfb_t.glfbseq
+   DEFINE p_glfbseq1      LIKE glfb_t.glfbseq1
+   DEFINE p_glfb004       LIKE glfb_t.glfb004  
+   DEFINE p_glfb005       LIKE glfb_t.glfb005  
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_str,l_str1    STRING
+   DEFINE l_str2          STRING
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_num,l_num1    LIKE type_t.num5
+   DEFINE l_glfb005_o     LIKE glfb_t.glfb005
+   DEFINE l_glfa007       LIKE glfa_t.glfa007
+   DEFINE l_glfa006       LIKE glfa_t.glfa006 
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_abgi070_01 WITH FORM cl_ap_formpath("abg","abgi070_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   LET g_glfbseq=p_glfbseq
+   LET g_glfbseq1=p_glfbseq1
+   INITIALIZE g_glfb_m.* TO NULL
+   SELECT glfa_t.* INTO g_glfa.* FROM glfa_t
+    WHERE glfaent=g_enterprise AND glfa001=p_glfa001
+    
+   IF g_prog = 'agli070' THEN 
+      IF g_glfbseq1='A' OR g_glfbseq1='C' THEN
+         LET g_glfa.glfa007=0
+      END IF
+   END IF 
+   
+   CALL cl_set_combo_scc('glfb004','9935')
+   LET g_flag=FALSE
+   LET l_num=0
+   LET l_num1=0
+   
+   #增加传入的公式来源和公式
+   IF NOT cl_null(p_glfb004) AND NOT cl_null(p_glfb005) THEN
+      LET g_glfb_m.glfb004=p_glfb004
+      LET g_glfb_m.glfb005=p_glfb005
+   ELSE
+
+      SELECT glfb004,glfb005 INTO g_glfb_m.glfb004,g_glfb_m.glfb005 
+        FROM glfb_t
+       WHERE glfbent=g_enterprise AND glfb001=p_glfa001
+         AND glfbseq=g_glfbseq AND glfbseq1=g_glfbseq1
+      LET p_glfb004=g_glfb_m.glfb004
+      LET p_glfb005=g_glfb_m.glfb005
+   END IF 
+   DISPLAY BY NAME g_glfb_m.glfb004,g_glfb_m.glfb005
+   #用于逐步撤销
+   IF NOT cl_null(g_glfb_m.glfb005) THEN
+      LET l_num = l_num + 1
+      LET dis_x[l_num] = g_glfb_m.glfb005
+   END IF
+   #预设变量类型
+   IF cl_null(g_glfb_m.glfb004) THEN
+      LET g_glfb_m.glfb004='2'
+   END IF
+   #根据变量类型设置table显示内容
+   IF g_glfb_m.glfb004='2' THEN
+      CALL cl_set_comp_visible("glfcl001,glfcl003",TRUE)
+      CALL cl_set_comp_visible("glfbseq,glfbseq1,glfbl004,glfb003",FALSE)
+   ELSE
+      CALL cl_set_comp_visible("glfcl001,glfcl003",FALSE)
+      CALL cl_set_comp_visible("glfbseq,glfbseq1,glfbl004,glfb003",TRUE) 
+   END IF
+   
+   #当是agli075调用时根据设置资料显示画面
+   IF g_prog = 'agli075' THEN
+      CALL cl_set_comp_visible("grid_1,lbl_01,lbl_02",TRUE)
+      SELECT glfb011,glfb012 INTO g_glfb_m.glfb011,g_glfb_m.glfb012 
+        FROM glfb_t
+       WHERE glfbent=g_enterprise AND glfb001=p_glfa001
+         AND glfbseq=g_glfbseq AND glfbseq1=g_glfbseq1
+      IF cl_null(g_glfb_m.glfb011) THEN
+         LET g_glfb_m.glfb011='2'
+      END IF
+      IF cl_null(g_glfb_m.glfb012) THEN
+         LET g_glfb_m.glfb012='1'
+      END IF
+      LET g_glfb_m.glfb005_02 = g_glfb_m.glfb005
+      DISPLAY BY NAME g_glfb_m.glfb011,g_glfb_m.glfb012,g_glfb_m.glfb005_02
+      IF g_glfb_m.glfb011='1' THEN
+         CALL cl_set_comp_visible('glfb005_02',TRUE)
+         CALL cl_set_comp_visible('glfb012,lbl_hbox,lbl_hbox1',FALSE)
+      ELSE
+         CALL cl_set_comp_visible('glfb005_02',FALSE)
+         CALL cl_set_comp_visible('glfb012,lbl_hbox,lbl_hbox1',TRUE)
+      END IF
+   ELSE
+      CALL cl_set_comp_visible("grid_1,lbl_01,lbl_02",FALSE)
+   END IF
+   
+   CALL abgi070_01_b_fill()
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      INPUT BY NAME g_glfb_m.glfb011,g_glfb_m.glfb012,g_glfb_m.glfb005_02,g_glfb_m.glfb004,g_glfb_m.glfb005, 
+          g_glfb_m.amt ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+ 
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glfb011
+            #add-point:BEFORE FIELD glfb011 name="input.b.glfb011"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glfb011
+            
+            #add-point:AFTER FIELD glfb011 name="input.a.glfb011"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glfb011
+            #add-point:ON CHANGE glfb011 name="input.g.glfb011"
+            IF NOT cl_null(g_glfb_m.glfb011) THEN
+               IF g_glfb_m.glfb011='1' THEN
+                  CALL cl_set_comp_visible('glfb005_02',TRUE)
+                  CALL cl_set_comp_visible('glfb012,lbl_hbox,lbl_hbox1',FALSE)
+               ELSE
+                  CALL cl_set_comp_visible('glfb005_02',FALSE)
+                  CALL cl_set_comp_visible('glfb012,lbl_hbox,lbl_hbox1',TRUE)
+               END IF
+            END IF
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glfb012
+            #add-point:BEFORE FIELD glfb012 name="input.b.glfb012"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glfb012
+            
+            #add-point:AFTER FIELD glfb012 name="input.a.glfb012"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glfb012
+            #add-point:ON CHANGE glfb012 name="input.g.glfb012"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glfb005_02
+            #add-point:BEFORE FIELD glfb005_02 name="input.b.glfb005_02"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glfb005_02
+            
+            #add-point:AFTER FIELD glfb005_02 name="input.a.glfb005_02"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glfb005_02
+            #add-point:ON CHANGE glfb005_02 name="input.g.glfb005_02"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glfb004
+            #add-point:BEFORE FIELD glfb004 name="input.b.glfb004"
+            IF cl_null(g_glfb_m.glfb004) THEN
+               LET g_glfb_m.glfb004='2'
+               CALL cl_set_comp_visible("glfcl001,glfcl003",TRUE)
+               CALL cl_set_comp_visible("glfbseq,glfbseq1,glfbl004",FALSE)
+               CALL abgi070_01_b_fill()
+            END IF
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glfb004
+            
+            #add-point:AFTER FIELD glfb004 name="input.a.glfb004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glfb004
+            #add-point:ON CHANGE glfb004 name="input.g.glfb004"
+            #150827-00036#13--mod--str--
+            CALL cl_set_comp_visible("glfcl001,glfcl003,glfbseq,glfbseq1,glfbl004,glfb003",FALSE)
+            IF g_glfb_m.glfb004='1' THEN
+               CALL cl_set_comp_visible("glfbseq,glfbseq1,glfbl004,glfb003,",TRUE)
+               #151201-00004#3--add--str--
+               IF g_prog = 'agli075' THEN
+                  CALL cl_set_comp_visible("glfbl004,glfb003,",FALSE)
+               END IF
+               #151201-00004#3--add--end
+            END IF
+            IF g_glfb_m.glfb004='2' THEN
+               CALL cl_set_comp_visible("glfcl001,glfcl003",TRUE)
+            END IF
+            IF g_glfb_m.glfb004='3' THEN
+               CALL g_glfb_d.clear()
+               #调用agli201，维护变量
+               CALL abgi070_01_cmdrun()
+            ELSE
+               CALL abgi070_01_b_fill()
+            END IF
+            #150827-00036#13--mod--end
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glfb005
+            #add-point:BEFORE FIELD glfb005 name="input.b.glfb005"
+            LET l_glfb005_o = g_glfb_m.glfb005
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glfb005
+            
+            #add-point:AFTER FIELD glfb005 name="input.a.glfb005"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glfb005
+            #add-point:ON CHANGE glfb005 name="input.g.glfb005"
+            IF g_glfb_m.glfb004='1' THEN
+               #公式维护不可以用本身变量计算,否则会出现死循环
+               LET l_str=g_glfbseq1,g_glfbseq USING '<<'
+               LET l_str1=g_glfb_m.glfb005
+               IF l_str1.getIndexOf(l_str,1)>0 THEN
+                  LET g_glfb_m.glfb005=l_glfb005_o
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'agl-00254'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+
+                  NEXT FIELD glfb005
+               END IF
+            END IF            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD amt
+            #add-point:BEFORE FIELD amt name="input.b.amt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD amt
+            
+            #add-point:AFTER FIELD amt name="input.a.amt"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE amt
+            #add-point:ON CHANGE amt name="input.g.amt"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.glfb011
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glfb011
+            #add-point:ON ACTION controlp INFIELD glfb011 name="input.c.glfb011"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glfb012
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glfb012
+            #add-point:ON ACTION controlp INFIELD glfb012 name="input.c.glfb012"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glfb005_02
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glfb005_02
+            #add-point:ON ACTION controlp INFIELD glfb005_02 name="input.c.glfb005_02"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glfb004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glfb004
+            #add-point:ON ACTION controlp INFIELD glfb004 name="input.c.glfb004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glfb005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glfb005
+            #add-point:ON ACTION controlp INFIELD glfb005 name="input.c.glfb005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.amt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD amt
+            #add-point:ON ACTION controlp INFIELD amt name="input.c.amt"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+   
+      INPUT ARRAY g_glfb_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD chk
+            #add-point:BEFORE FIELD chk name="input.b.page1.chk"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD chk
+            
+            #add-point:AFTER FIELD chk name="input.a.page1.chk"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE chk
+            #add-point:ON CHANGE chk name="input.g.page1.chk"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glfbseq
+            #add-point:BEFORE FIELD glfbseq name="input.b.page1.glfbseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glfbseq
+            
+            #add-point:AFTER FIELD glfbseq name="input.a.page1.glfbseq"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glfbseq
+            #add-point:ON CHANGE glfbseq name="input.g.page1.glfbseq"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glfbseq1
+            #add-point:BEFORE FIELD glfbseq1 name="input.b.page1.glfbseq1"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glfbseq1
+            
+            #add-point:AFTER FIELD glfbseq1 name="input.a.page1.glfbseq1"
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glfbseq1
+            #add-point:ON CHANGE glfbseq1 name="input.g.page1.glfbseq1"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glfb002
+            #add-point:BEFORE FIELD glfb002 name="input.b.page1.glfb002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glfb002
+            
+            #add-point:AFTER FIELD glfb002 name="input.a.page1.glfb002"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glfb002
+            #add-point:ON CHANGE glfb002 name="input.g.page1.glfb002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glfbl004
+            #add-point:BEFORE FIELD glfbl004 name="input.b.page1.glfbl004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glfbl004
+            
+            #add-point:AFTER FIELD glfbl004 name="input.a.page1.glfbl004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glfbl004
+            #add-point:ON CHANGE glfbl004 name="input.g.page1.glfbl004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glfb003
+            #add-point:BEFORE FIELD glfb003 name="input.b.page1.glfb003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glfb003
+            
+            #add-point:AFTER FIELD glfb003 name="input.a.page1.glfb003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glfb003
+            #add-point:ON CHANGE glfb003 name="input.g.page1.glfb003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glfcl001
+            #add-point:BEFORE FIELD glfcl001 name="input.b.page1.glfcl001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glfcl001
+            
+            #add-point:AFTER FIELD glfcl001 name="input.a.page1.glfcl001"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glfcl001
+            #add-point:ON CHANGE glfcl001 name="input.g.page1.glfcl001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glfcl003
+            #add-point:BEFORE FIELD glfcl003 name="input.b.page1.glfcl003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glfcl003
+            
+            #add-point:AFTER FIELD glfcl003 name="input.a.page1.glfcl003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glfcl003
+            #add-point:ON CHANGE glfcl003 name="input.g.page1.glfcl003"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.chk
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD chk
+            #add-point:ON ACTION controlp INFIELD chk name="input.c.page1.chk"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.glfbseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glfbseq
+            #add-point:ON ACTION controlp INFIELD glfbseq name="input.c.page1.glfbseq"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.glfbseq1
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glfbseq1
+            #add-point:ON ACTION controlp INFIELD glfbseq1 name="input.c.page1.glfbseq1"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.glfb002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glfb002
+            #add-point:ON ACTION controlp INFIELD glfb002 name="input.c.page1.glfb002"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.glfbl004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glfbl004
+            #add-point:ON ACTION controlp INFIELD glfbl004 name="input.c.page1.glfbl004"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.glfb003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glfb003
+            #add-point:ON ACTION controlp INFIELD glfb003 name="input.c.page1.glfb003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.glfcl001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glfcl001
+            #add-point:ON ACTION controlp INFIELD glfcl001 name="input.c.page1.glfcl001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.glfcl003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glfcl003
+            #add-point:ON ACTION controlp INFIELD glfcl003 name="input.c.page1.glfcl003"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      CONSTRUCT BY NAME g_wc ON glfc001
+         BEFORE CONSTRUCT
+         
+         ON ACTION controlp INFIELD glfc001
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            IF g_glfb_m.glfb004='2' OR g_glfb_m.glfb004='3' THEN
+               LET g_qryparam.where=" glfc002='",g_glfa.glfa004,"'"
+               #報表設定公式
+               CALL q_glfc001()
+            ELSE
+               LET g_qryparam.where=" glfb001='",g_glfa.glfa001,"' AND glfbseq <> ",g_glfbseq," AND glfbseq1 ='",g_glfbseq1,"'"
+               #表內公式
+               CALL q_glfb()
+            END IF               
+            DISPLAY g_qryparam.return1 TO glfc001 
+            NEXT FIELD glfc001
+            
+      END CONSTRUCT 
+      
+      ON ACTION calculate
+         IF cl_null(g_glfb_m.glfb005) AND NOT cl_null(g_glfb_m.glfc001) THEN
+            LET g_glfb_m.glfb005=g_glfb_m.glfc001
+         END IF
+         LET l_str=g_glfb_m.glfb005
+         LET l_str1=l_str.substring(l_str.getLength(),l_str.getLength())
+         IF l_str1 MATCHES '[\\+\\-\\*\\/\\(]' OR l_str1='-' THEN
+            LET l_str=l_str.substring(1,l_str.getLength()-1)
+            LET g_glfb_m.glfb005=l_str
+         END IF
+         CALL cl_err_collect_init()
+
+         IF g_prog = 'agli075' THEN
+            #上一年度
+            IF g_glfb_m.glfb012 = '2' THEN
+               LET l_glfa006 = g_glfa.glfa006 - 1
+            ELSE
+               LET l_glfa006 = g_glfa.glfa006
+            END IF
+                                #帳別           #年度    #起始期別       #截止期別       #小數位數     #單位       
+            CALL s_analy_form_2(g_glfa.glfa005,l_glfa006,g_glfa.glfa007,g_glfa.glfa007,g_glfa.glfa009,g_glfa.glfa008,
+                                #報表模板編號   #計算公式       #法人 #含審計調整傳票否 #傳票狀態
+                                g_glfa.glfa001,g_glfb_m.glfb005,'', '', '')
+            RETURNING l_success,g_glfb_m.amt
+         ELSE
+
+            IF g_glfa.glfa002='1' OR g_glfa.glfa002='3' THEN
+               IF p_glfbseq1='A' OR p_glfbseq1='C' THEN
+                  LET l_glfa007=0
+               ELSE
+                  LET l_glfa007=g_glfa.glfa007
+               END IF
+                                 #帳別          #年度           #起始期別  #截止期別       #小數位數       #單位            
+               CALL s_analy_form(g_glfa.glfa005,g_glfa.glfa006,l_glfa007,l_glfa007,g_glfa.glfa009,g_glfa.glfa008,
+                                 #報表模板編號   #取數公式來源     #計算公式        #法人 #含審計調整傳票否 #傳票狀態
+                                 g_glfa.glfa001,g_glfb_m.glfb004,g_glfb_m.glfb005,'', '', '')
+               RETURNING l_success,g_glfb_m.amt
+            ELSE
+               IF p_glfbseq1='A' THEN
+                                       #帳別          #年度           #起始期別       #截止期別       #小數位數       #單位            
+                  CALL s_analy_form(g_glfa.glfa005,g_glfa.glfa010,g_glfa.glfa011,g_glfa.glfa012,g_glfa.glfa009,g_glfa.glfa008,
+                                    #報表模板編號   #取數公式來源     #計算公式        #法人 #含審計調整傳票否 #傳票狀態
+                                    g_glfa.glfa001,g_glfb_m.glfb004,g_glfb_m.glfb005,'', '', '')
+                  RETURNING l_success,g_glfb_m.amt
+               ELSE
+                                    #帳別          #年度           #起始期別       #截止期別       #小數位數       #單位            
+                  CALL s_analy_form(g_glfa.glfa005,g_glfa.glfa013,g_glfa.glfa014,g_glfa.glfa015,g_glfa.glfa009,g_glfa.glfa008,
+                                    #報表模板編號   #取數公式來源     #計算公式        #法人 #含審計調整傳票否 #傳票狀態
+                                    g_glfa.glfa001,g_glfb_m.glfb004,g_glfb_m.glfb005,'', '', '')
+                  RETURNING l_success,g_glfb_m.amt
+               END IF
+            END IF
+         END IF 
+         CALL cl_err_collect_show()
+         LET g_glfb_m.glfc001=''
+         DISPLAY BY NAME g_glfb_m.glfc001,g_glfb_m.glfb005,g_glfb_m.amt
+      
+      #導入右邊公式
+      ON ACTION add_col
+         CALL abgi070_01_get_formula('1') RETURNING l_str
+         LET g_glfb_m.glfb005=g_glfb_m.glfb005,l_str
+         LET l_num = l_num + 1
+         LET dis_x[l_num] = l_str
+         CALL abgi070_01_check('N')
+         
+      #+
+      ON ACTION plus
+         CALL abgi070_01_get_formula('2') RETURNING l_str
+         LET g_glfb_m.glfb005=g_glfb_m.glfb005,l_str
+         LET l_num = l_num + 1
+         LET dis_x[l_num] = l_str
+         CALL abgi070_01_check('N')
+         
+      #-
+      ON ACTION minus
+         CALL abgi070_01_get_formula('3') RETURNING l_str
+         LET g_glfb_m.glfb005=g_glfb_m.glfb005,l_str
+         LET l_num = l_num + 1
+         LET dis_x[l_num] = l_str
+         CALL abgi070_01_check('N')
+         
+      #*
+      ON ACTION multiply
+         CALL abgi070_01_get_formula('4') RETURNING l_str
+         LET g_glfb_m.glfb005=g_glfb_m.glfb005,l_str
+         LET l_num = l_num + 1
+         LET dis_x[l_num] = l_str
+         CALL abgi070_01_check('N')
+         
+      #/
+      ON ACTION division
+         CALL abgi070_01_get_formula('5') RETURNING l_str
+         LET g_glfb_m.glfb005=g_glfb_m.glfb005,l_str
+         LET l_num = l_num + 1
+         LET dis_x[l_num] = l_str
+         CALL abgi070_01_check('N')
+         
+      #(
+      ON ACTION left
+         CALL abgi070_01_get_formula('6') RETURNING l_str
+         LET g_glfb_m.glfb005=g_glfb_m.glfb005,l_str
+         LET l_num = l_num + 1
+         LET dis_x[l_num] = l_str
+         CALL abgi070_01_check('N')
+         
+      #)
+      ON ACTION right
+         CALL abgi070_01_get_formula('7') RETURNING l_str
+         LET g_glfb_m.glfb005=g_glfb_m.glfb005,l_str
+         LET l_num = l_num + 1
+         LET dis_x[l_num] = l_str
+         CALL abgi070_01_check('N')
+      
+      #取消上步操作
+      ON ACTION del_col
+         IF l_num = 0 THEN
+         ELSE
+            LET l_str1 = dis_x[l_num]
+            LET l_str = g_glfb_m.glfb005
+            LET l_num1 = l_str.getLength() - l_str1.getLength()
+            LET g_glfb_m.glfb005 = l_str.substring(1,l_num1)
+            LET l_num = l_num - 1
+            DISPLAY BY NAME g_glfb_m.glfb005 
+         END IF
+      
+      ON ACTION search
+         CALL abgi070_01_b_fill()
+         
+      ON ACTION check_all
+         CALL abgi070_01_check('Y')
+         
+      ON ACTION check_none
+         CALL abgi070_01_check('N')
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   IF INT_FLAG THEN
+      LET INT_FLAG=FALSE
+      LET g_glfb_m.glfb004=p_glfb004
+      LET g_glfb_m.glfb005=p_glfb005
+   END IF
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_abgi070_01 
+   
+   #add-point:input段after input 
+   LET l_str=g_glfb_m.glfb005
+   LET l_str1=l_str.substring(l_str.getLength(),l_str.getLength())
+   IF l_str1 MATCHES '[\\+\\-\\*\\/\\(]' OR l_str1='-' THEN
+      LET l_str=l_str.substring(1,l_str.getLength()-1)
+      LET g_glfb_m.glfb005=l_str
+   END IF
+   
+   IF g_prog = 'agli075' THEN
+      #公式类型为2.数字时，计算金额，检查公式是否正确
+      IF g_glfb_m.glfb011 = '2' THEN
+         CALL cl_err_collect_init()
+         #上一年度
+         IF g_glfb_m.glfb012 = '2' THEN
+            LET l_glfa006 = g_glfa.glfa006 - 1
+         ELSE
+            LET l_glfa006 = g_glfa.glfa006
+         END IF
+                             #帳別          #年度     #起始期別       #截止期別       #小數位數       #單位    
+         CALL s_analy_form_2(g_glfa.glfa005,l_glfa006,g_glfa.glfa007,g_glfa.glfa007,g_glfa.glfa009,g_glfa.glfa008,
+                             #報表模板編號   #計算公式       #法人 #含審計調整傳票否 #傳票狀態
+                             g_glfa.glfa001,g_glfb_m.glfb005,'', '', '')
+         RETURNING l_success,g_glfb_m.amt
+         CALL cl_err_collect_show()
+      ELSE
+         LET g_glfb_m.glfb005 = g_glfb_m.glfb005_02
+      END IF
+      #agli075返回值与agli070不同，agli075需要返回公式属性、公式、计算年度
+      RETURN g_glfb_m.glfb011,g_glfb_m.glfb005,g_glfb_m.glfb012
+   ELSE
+      CALL cl_err_collect_init()
+      IF g_glfa.glfa002='1' OR g_glfa.glfa002='3' THEN
+         IF p_glfbseq1='A' OR p_glfbseq1='C' THEN
+            LET l_glfa007=0
+         ELSE
+            LET l_glfa007=g_glfa.glfa007
+         END IF
+                           #帳別          #年度           #起始期別  #截止期別      #小數位數       #單位            
+         CALL s_analy_form(g_glfa.glfa005,g_glfa.glfa006,l_glfa007,l_glfa007,g_glfa.glfa009,g_glfa.glfa008,
+                           #報表模板編號   #取數公式來源     #計算公式        #法人 #含審計調整傳票否 #傳票狀態
+                           g_glfa.glfa001,g_glfb_m.glfb004,g_glfb_m.glfb005,'', '', '')
+         RETURNING l_success,g_glfb_m.amt
+      ELSE
+          #本期數
+          IF p_glfbseq1='A' THEN
+                                  #帳別          #年度           #起始期別       #截止期別       #小數位數       #單位            
+             CALL s_analy_form(g_glfa.glfa005,g_glfa.glfa010,g_glfa.glfa011,g_glfa.glfa012,g_glfa.glfa009,g_glfa.glfa008,
+                               #報表模板編號   #取數公式來源     #計算公式        #法人 #含審計調整傳票否 #傳票狀態
+                               g_glfa.glfa001,g_glfb_m.glfb004,g_glfb_m.glfb005,'', '', '')
+             RETURNING l_success,g_glfb_m.amt
+          ELSE #上期數
+                               #帳別          #年度           #起始期別       #截止期別       #小數位數       #單位            
+             CALL s_analy_form(g_glfa.glfa005,g_glfa.glfa013,g_glfa.glfa014,g_glfa.glfa015,g_glfa.glfa009,g_glfa.glfa008,
+                               #報表模板編號   #取數公式來源     #計算公式        #法人 #含審計調整傳票否 #傳票狀態
+                               g_glfa.glfa001,g_glfb_m.glfb004,g_glfb_m.glfb005,'', '', '')
+             RETURNING l_success,g_glfb_m.amt
+          END IF 
+      END IF
+      CALL cl_err_collect_show()
+      RETURN g_glfb_m.glfb004,g_glfb_m.glfb005,g_glfb_m.amt
+   END IF
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgi070_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="abgi070_01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 公式變量檢查
+# Memo...........:
+# Usage..........: CALL abgi070_01_glfc001_chk(p_glfc001)
+# Date & Author..: 2014/5/15 By wangrr
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgi070_01_glfc001_chk(p_glfc001)
+   DEFINE p_glfc001       LIKE glfc_t.glfc001
+   DEFINE l_str           LIKE type_t.chr10
+   DEFINE l_chr           LIKE type_t.chr1
+   DEFINE l_num           LIKE type_t.num5
+   DEFINE l_cnt           LIKE type_t.num5
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_str1          STRING
+   
+   LET g_errno=''
+   IF g_glfb_m.glfb004='1' THEN
+      LET l_str1=p_glfc001
+      LET l_num=l_str1.getIndexOf('|',1)
+      IF l_num>0 THEN
+         LET g_flag=TRUE
+         FOR l_i = 1 TO g_glfb.getLength()
+            SELECT COUNT(*) INTO l_cnt FROM glfb_t 
+             WHERE glfbent=g_enterprise AND glfb001=g_glfa.glfa001
+               AND glfbseq=g_glfb[l_i].glfbseq AND glfbseq1=g_glfb[l_i].glfbseq1
+            IF l_cnt=0 THEN
+               LET g_errno='agl-00241'
+               EXIT FOR
+            END IF            
+         END FOR
+      ELSE
+         LET g_flag=FALSE
+         LET l_chr=l_str1.substring(1,1)
+         LET l_num=l_str1.substring(2,l_str1.getLength())
+         SELECT COUNT(*) INTO l_cnt FROM glfb_t 
+          WHERE glfbent=g_enterprise AND glfb001=g_glfa.glfa001
+            AND glfbseq=l_num AND glfbseq1=l_chr
+         IF l_cnt=0 THEN
+            LET g_errno='agl-00241'
+         END IF
+      END IF
+   ELSE
+      SELECT COUNT(*) INTO l_cnt FROM glfc_t
+      WHERE glfcent=g_enterprise AND glfc001=p_glfc001
+      IF l_cnt=0 THEN
+         LET g_errno='agl-00240'
+      END IF
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 填充單身
+# Memo...........:
+# Usage..........: CALL abgi070_01_b_fill()
+# Date & Author..: 2014/5/20 By wangrr
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgi070_01_b_fill()
+   DEFINE l_sql          STRING
+   DEFINE l_sql1         STRING
+   DEFINE l_ac           LIKE type_t.num5
+   
+   IF cl_null(g_glfb_m.glfb004) THEN
+      RETURN
+   END IF
+   
+   IF g_glfb_m.glfb004='1' THEN
+      LET l_sql=" SELECT 'N',glfbseq,glfbseq1,glfb002,glfbl004,glfb003,'','' ",
+                "   FROM glfb_t ",
+                "   LEFT JOIN glfbl_t ON glfbent=glfblent AND glfb001 = glfbl001 AND glfbseq = glfblseq AND glfb002 = glfbl002 AND glfbl003 = '",g_lang,"'",
+                "  WHERE glfbent = ",g_enterprise," AND glfb001 ='",g_glfa.glfa001,"'",
+#                "    AND glfbseq <> ",g_glfbseq," AND glfbseq1 ='",g_glfbseq1,"'" #151201-00004#3 mark
+                "    AND glfbseq <> ",g_glfbseq 
+      IF g_prog = "agli070" THEN
+         LET l_sql=l_sql," AND glfbseq1 ='",g_glfbseq1,"'"
+      END IF
+      
+      IF NOT cl_null(g_wc) AND g_wc <> " 1=1" THEN
+         LET l_sql1=cl_replace_str(g_wc,"glfc001","glfbseq")
+         LET l_sql=l_sql," AND ",l_sql1
+      END IF
+
+      IF g_prog = 'agli075' THEN
+         LET l_sql=l_sql," ORDER BY glfbseq,glfbseq1"
+      ELSE
+
+      LET l_sql=l_sql," ORDER BY glfb003,glfbseq1"   #150928    
+      END IF
+   ELSE
+      LET l_sql=" SELECT DISTINCT 'N','','','','','',glfc001,glfcl003 ",
+                "   FROM glfc_t ",
+                "   LEFT JOIN glfcl_t ON glfcent=glfclent AND glfc001=glfcl001 AND glfcl002 = '",g_lang,"'",
+                "  WHERE glfcent = ",g_enterprise," AND glfc002='",g_glfa.glfa004,"'"," AND glfc013 = '4' "
+      IF NOT cl_null(g_wc) AND g_wc <> " 1=1" THEN
+         LET l_sql=l_sql," AND ",g_wc
+      END IF
+      LET l_sql=l_sql," ORDER BY glfc001 "
+   END IF
+   PREPARE abgi070_01_sel_pr FROM l_sql
+   DECLARE abgi070_01_sel_cs CURSOR FOR abgi070_01_sel_pr
+   
+   CALL g_glfb_d.clear()
+   LET l_ac=1
+   FOREACH abgi070_01_sel_cs INTO g_glfb_d[l_ac].chk,g_glfb_d[l_ac].glfbseq,g_glfb_d[l_ac].glfbseq1,
+                                  g_glfb_d[l_ac].glfb002,g_glfb_d[l_ac].glfbl004,g_glfb_d[l_ac].glfb003,
+                                  g_glfb_d[l_ac].glfcl001,g_glfb_d[l_ac].glfcl003
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.extend = 'FOREACH'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF 
+   END FOREACH
+   LET l_ac=l_ac-1
+   CALL g_glfb_d.deleteElement(g_glfb_d.getLength())
+END FUNCTION
+
+################################################################################
+# Descriptions...: 獲取計算公式
+# Memo...........:
+# Usage..........: CALL abgi070_01_get_formula(p_type)
+#                  RETURNING r_str
+# Input parameter: p_type         類型
+# Return code....: r_str          公式組合結果
+# Date & Author..: 2014/5/20 By wangrr
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgi070_01_get_formula(p_type)
+   DEFINE p_type        LIKE type_t.chr1
+   DEFINE l_i           LIKE type_t.num5
+   DEFINE l_chr         LIKE type_t.chr1
+   DEFINE l_str,l_str1  STRING
+   DEFINE r_str         STRING
+   DEFINE l_str2        STRING  
+   DEFINE l_str3        STRING 
+   
+   LET r_str=""
+   #運算符
+
+   CASE p_type
+      WHEN '2' LET l_str2="+"
+      WHEN '3' LET l_str2="-"
+      WHEN '4' LET l_str2="*"
+      WHEN '5' LET l_str2="/"
+      WHEN '6' LET l_str2="(" 
+      WHEN '7' LET l_str2=")"
+   END CASE
+   #当运算符为‘()’时直接返回
+   IF p_type='6' OR p_type='7' THEN
+      LET r_str=l_str2   
+      RETURN r_str
+   END IF
+
+
+   #選擇的公式
+   LET l_str1=""
+   FOR l_i=1 TO g_glfb_d.getLength()
+      IF g_glfb_d[l_i].chk='Y' THEN
+         IF g_glfb_m.glfb004 ='1' THEN
+            #項目列+行
+            LET l_str=g_glfb_d[l_i].glfbseq1,g_glfb_d[l_i].glfbseq USING '<<<<'
+         ELSE
+            #公式編號
+            LET l_str=g_glfb_d[l_i].glfcl001
+         END IF
+         #当是agli075中设置公式时，变量要加上特殊字符标识
+         IF g_prog='agli075' THEN
+            IF g_glfb_m.glfb004 ='1' THEN
+               LET l_str='I',l_str
+            ELSE
+               LET l_str='V',l_str
+            END IF
+         END IF
+         
+         LET l_str1=l_str1,l_str,l_str2 
+      END IF
+   END FOR
+   IF NOT cl_null(l_str1) THEN
+      LET l_chr=l_str1.substring(l_str1.getLength(),l_str1.getLength())
+      IF l_chr MATCHES '[\\+\\-\\*\\/]' OR l_chr='-' THEN
+         LET l_str1=l_str1.substring(1,l_str1.getLength()-1)
+      END IF
+      IF NOT cl_null(g_glfb_m.glfb005) THEN
+         LET l_str3=g_glfb_m.glfb005
+         LET l_str3=l_str3.trim()
+         LET l_chr=l_str3.substring(l_str3.getLength(),l_str3.getLength())
+         IF l_chr NOT MATCHES '[\\+\\-\\*\\/]' AND l_chr <> '-' THEN
+            LET l_str1=l_str2,l_str1
+         END IF
+      END IF
+   ELSE
+      LET l_str1 = l_str2 
+   END IF
+   #運算符+公式
+   LET r_str=r_str,l_str1
+   
+   RETURN r_str
+END FUNCTION
+
+################################################################################
+# Descriptions...: 全選/全不選
+# Memo...........:
+# Usage..........: CALL abgi070_01_check(p_type)
+# Input parameter: p_type         類型
+# Date & Author..: 2014/5/20 By wangrr
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgi070_01_check(p_type)
+   DEFINE p_type        LIKE type_t.chr1
+   DEFINE l_i           LIKE type_t.num5
+   
+   FOR l_i=1 TO g_glfb_d.getLength()
+       LET g_glfb_d[l_i].chk=p_type
+   END FOR
+END FUNCTION
+
+################################################################################
+# Descriptions...: 当变量类型为3.科目时，调出agli201维护总账变量
+# Memo...........:
+# Usage..........: CALL abgi070_01_cmdrun()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 2015/10/20 By 02599
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgi070_01_cmdrun()
+   DEFINE l_sql             STRING
+   DEFINE l_glfc001         LIKE glfc_t.glfc001
+   DEFINE l_glfc001_n       LIKE glfc_t.glfc001
+   DEFINE l_str             STRING
+   DEFINE l_n               LIKE type_t.num10           
+   DEFINE la_param          RECORD
+          prog              STRING,
+          param             DYNAMIC ARRAY OF STRING
+                            END RECORD
+   DEFINE ls_js             STRING
+   
+   LET l_sql="SELECT glfc001 FROM glfc_t ",
+             " WHERE glfcent=",g_enterprise," AND glfc001 LIKE 'SYS%' ",
+             " ORDER BY glfc001 DESC"
+   DECLARE abgi070_01_glfc_cs CURSOR FROM l_sql
+   
+   #1).抓取agli201中最大的系统编码的变量编号,并编出下一个变量编码
+   OPEN abgi070_01_glfc_cs
+   FETCH abgi070_01_glfc_cs INTO l_glfc001
+   CLOSE abgi070_01_glfc_cs
+   IF cl_null(l_glfc001) THEN
+      LET l_glfc001_n="SYS0000001"
+   ELSE
+      LET l_str=l_glfc001
+      LET l_str=l_str.subString(4,10)
+      LET l_n=l_str+1
+      LET l_str=l_n
+      FOR l_n=l_str.getLength()+1 TO 7
+         LET l_str="0",l_str
+      END FOR
+      LET l_glfc001_n="SYS",l_str
+   END IF
+   #2).调出agli201维护变量
+   INITIALIZE la_param.* TO NULL
+   LET la_param.prog = 'abgi201'
+   LET la_param.param[1] = l_glfc001_n       #变量编号
+   LET la_param.param[2] = g_glfa.glfa004    #科目参照表号 
+   LET la_param.param[3] = 'agli070'         #标示agli070调用agli201，且画面开启后直接进入input录入单身状态
+   LET ls_js = util.JSON.stringify( la_param )
+   CALL cl_cmdrun_wait(ls_js)
+   #3).重新抓取agli201中最大的系统编码的变量编号，判断是否有增加这个变量，如果增加，将该变量显示在数值公式栏位中
+   OPEN abgi070_01_glfc_cs
+   FETCH abgi070_01_glfc_cs INTO l_glfc001
+   CLOSE abgi070_01_glfc_cs
+   IF l_glfc001 = l_glfc001_n THEN
+      LET g_glfb_m.glfb005 = l_glfc001_n
+      DISPLAY g_glfb_m.glfb005 TO glfb005
+   END IF
+END FUNCTION
+
+ 
+{</section>}
+ 

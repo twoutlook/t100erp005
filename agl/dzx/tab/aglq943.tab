@@ -1,0 +1,86 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglq943" module="agl" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="06821" crtdt="2016-03-18 09:23:22" modid="06821" moddt="2016-03-18 11:01:21" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="合併現金流量表直接法導入資料查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glefld,glefld_desc(chr80),glef001,glef001_desc(chr80),glef002,glef002_desc(chr80),glef003,glef003_desc(chr80),glef004,glef005,glef009,glef012,glef015"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glef006,glef006_desc(chr500),glef007,glef007_desc(chr500),glef008,glef010,glef011,glef013,glef014,glef016,glef017"/>
+      <var id="bs_field" value="glefld,glef001,glef002,glef004,glef005" pk="glefld,glef001,glef002,glef004,glef005" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="aglq943" method="dialog">
+    <section id="input">
+      <input id="head" field="glefld,glef001,glef002,glef004,glef005"/>
+      <input id="body" page="1" field="glef006,glef007,glef008" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="glefld,glef001,glef002,glef004,glef005"/>
+      <construct id="body" page="1" field="glef006,glef007,glef008"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="glefld,glef001,glef002,glef004,glef005"/>
+      <set id="head" type="no_entry" field="glefld,glef001,glef002,glef004,glef005"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="glefld">
+        <after/>
+      </column>
+      <column id="glefld_desc"/>
+      <column id="glef001">
+        <after/>
+      </column>
+      <column id="glef001_desc"/>
+      <column id="glef002">
+        <after/>
+      </column>
+      <column id="glef002_desc"/>
+      <column id="glef003">
+        <after/>
+      </column>
+      <column id="glef003_desc"/>
+      <column id="glef004"/>
+      <column id="glef005"/>
+      <column id="glef009"/>
+      <column id="glef012"/>
+      <column id="glef015"/>
+    </init>
+    <init id="body" page="1">
+      <column id="glef006">
+        <after/>
+      </column>
+      <column id="glef006_desc"/>
+      <column id="glef007">
+        <after/>
+      </column>
+      <column id="glef007_desc"/>
+      <column id="glef008"/>
+      <column id="glef010"/>
+      <column id="glef011" type="S" default="0"/>
+      <column id="glef013"/>
+      <column id="glef014" type="S" default="0"/>
+      <column id="glef016"/>
+      <column id="glef017" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="glef_t" pk="glefld,glef001,glef002,glef004,glef005">
+      <sql id="forupd_sql" type="sql" query="SELECT glefld,&apos;&apos;,glef001,&apos;&apos;,glef002,&apos;&apos;,glef003,&apos;&apos;,glef004,glef005,glef009,glef012,glef015 FROM glef_t WHERE glefent= ? AND glefld=? AND glef001=? AND glef002=? AND glef004=? AND glef005=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT glefld,&apos;&apos;,glef001,&apos;&apos;,glef002,&apos;&apos;,glef003,&apos;&apos;,glef004,glef005,glef009,glef012,glef015 FROM glef_t" order="glefld,glef001,glef002,glef004,glef005"/>
+    </head>
+    <body id="glef_t" page="1" linked="" pk="glef006,glef008" fk="glefld,glef001,glef002,glef004,glef005">
+      <sql id="forupd_sql_detail" query="SELECT glef006,&apos;&apos;,glef007,&apos;&apos;,glef008,glef010,glef011,glef013,glef014,glef016,glef017 FROM glef_t WHERE glefent=? AND glefld=? AND glef001=? AND glef002=? AND glef004=? AND glef005=? AND glef006=? AND glef008=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glef006,&apos;&apos;,glef007,&apos;&apos;,glef008,glef010,glef011,glef013,glef014,glef016,glef017 FROM glef_t WHERE glefent= ? AND glefld=? AND glef001=? AND glef002=? AND glef004=? AND glef005=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,1845 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="adbt510_03.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0007(2015-03-09 10:39:01), PR版次:0007(2016-12-30 14:40:47)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000122
+#+ Filename...: adbt510_03
+#+ Description: 分銷訂單變更多交期明細維護作業
+#+ Creator....: 02748(2014-06-24 10:35:07)
+#+ Modifier...: 06137 -SD/PR- 06137
+ 
+{</section>}
+ 
+{<section id="adbt510_03.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#160318-00025#3   2016/04/11  By 07675       將重複內容的錯誤訊息置換為公用錯誤訊息(r.v）
+#160824-00007#49  2016/10/24  By 06137       修正舊值備份寫法
+#161104-00002#1   2016/11/07  by lori        變數定義與INSERT調整不使用*
+#161228-00033#1   2016/12/29  By 06137       後續T100 應會有不同的DB支持  ROWNUM只適用於ORACLE DB 予以改寫 應將rownum寫法移除，ORDER BY 後FETCH FIRST抓第一筆
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+GLOBALS
+DEFINE g_xmek007       LIKE xmek_t.xmek007
+END GLOBALS
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_xmej_d        RECORD
+       xmejdocno LIKE xmej_t.xmejdocno, 
+   xmejseq LIKE xmej_t.xmejseq, 
+   xmejseq2 LIKE xmej_t.xmejseq2, 
+   xmej900 LIKE xmej_t.xmej900, 
+   xmej901 LIKE xmej_t.xmej901, 
+   xmej002 LIKE xmej_t.xmej002, 
+   xmej003 LIKE xmej_t.xmej003, 
+   xmej004 LIKE xmej_t.xmej004, 
+   xmej005 LIKE xmej_t.xmej005, 
+   xmej005_desc LIKE type_t.chr500, 
+   xmejsite LIKE xmej_t.xmejsite, 
+   xmejunit LIKE xmej_t.xmejunit, 
+   xmejunit_desc LIKE type_t.chr500, 
+   xmej006 LIKE xmej_t.xmej006, 
+   xmej200 LIKE xmej_t.xmej200, 
+   xmej200_desc LIKE type_t.chr500, 
+   xmej201 LIKE xmej_t.xmej201, 
+   xmej201_desc LIKE type_t.chr500, 
+   xmej202 LIKE xmej_t.xmej202
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_xmejdocno     LIKE xmej_t.xmejdocno
+DEFINE g_xmejseq       LIKE xmej_t.xmejseq  
+DEFINE g_xmej900       LIKE xmej_t.xmej900
+DEFINE g_xmjb025       LIKE xmjb_t.xmjb025
+DEFINE g_xmee201       LIKE xmee_t.xmee201
+DEFINE g_xmej_d_o        type_g_xmej_d     #160824-00007#49 Add By Ken 161024
+#end add-point
+ 
+DEFINE g_xmej_d          DYNAMIC ARRAY OF type_g_xmej_d
+DEFINE g_xmej_d_t        type_g_xmej_d
+ 
+ 
+DEFINE g_xmejdocno_t   LIKE xmej_t.xmejdocno    #Key值備份
+DEFINE g_xmejseq_t      LIKE xmej_t.xmejseq    #Key值備份
+DEFINE g_xmejseq2_t      LIKE xmej_t.xmejseq2    #Key值備份
+DEFINE g_xmej900_t      LIKE xmej_t.xmej900    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point    
+ 
+{</section>}
+ 
+{<section id="adbt510_03.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION adbt510_03(--)
+   #add-point:input段變數傳入 name="input.get_var"
+          p_xmejdocno,p_xmejseq,p_xmej900,p_xmjb014,p_xmjb030,p_xmjbsite,p_xmjb025
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE p_xmejdocno     LIKE xmej_t.xmejdocno
+   DEFINE p_xmejseq       LIKE xmej_t.xmejseq
+   DEFINE p_xmej900       LIKE xmej_t.xmej900
+   DEFINE p_xmjb014       LIKE xmjb_t.xmjb014
+   DEFINE p_xmjb030       LIKE xmjb_t.xmjb030
+   DEFINE p_xmjbsite      LIKE xmjb_t.xmjbsite
+   DEFINE p_xmjb025       LIKE xmjb_t.xmjb025
+   DEFINE r_xmej003       LIKE xmej_t.xmej003
+   DEFINE r_xmej004       LIKE xmej_t.xmej004
+   DEFINE r_xmej005       LIKE xmej_t.xmej005
+   DEFINE l_lock_sw       LIKE type_t.chr1
+   DEFINE l_forupd_sql    STRING
+   DEFINE l_n             LIKE type_t.num5                #檢查重複用  
+   DEFINE l_cnt           LIKE type_t.num5
+   DEFINE l_xmej002       LIKE xmej_t.xmej002
+   DEFINE l_xmej003       LIKE xmej_t.xmej003
+   DEFINE l_xmeeunit      LIKE xmej_t.xmejunit
+   DEFINE l_xmee004       LIKE xmee_t.xmee004
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_xmdh016       LIKE xmdh_t.xmdh016
+   DEFINE l_xmdl018       LIKE xmdl_t.xmdl018
+   DEFINE l_xmee022       LIKE xmee_t.xmee022
+   #lori522612  150116  add ----------------------(S)
+   DEFINE l_xmee023       LIKE xmee_t.xmee023
+   DEFINE l_xmjb003       LIKE xmjb_t.xmjb003
+   DEFINE l_xmjb037       LIKE xmjb_t.xmjb037
+   DEFINE l_xmjb038       LIKE xmjb_t.xmjb038
+   DEFINE l_xmjb039       LIKE xmjb_t.xmjb039
+   DEFINE l_xmjb040       LIKE xmjb_t.xmjb040
+   #lori522612  150116  add ----------------------(E)
+   DEFINE l_xmjb014       LIKE xmjb_t.xmjb014
+   DEFINE l_xmjb030       LIKE xmjb_t.xmjb030
+   DEFINE l_xmjbsite      LIKE xmjb_t.xmjbsite
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_errno         LIKE type_t.chr10
+   DEFINE l_sql           STRING             #161228-00033#1 Add By Ken 161229
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_adbt510_03 WITH FORM cl_ap_formpath("adb","adbt510_03")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   WHENEVER ERROR CONTINUE
+   
+   LET g_xmejdocno = p_xmejdocno
+   LET g_xmejseq = p_xmejseq
+   LET g_xmej900 = p_xmej900
+
+   
+   LET g_xmee201 = ''
+   LET l_xmeeunit = ''
+   #lori522612  150116  add
+   #新增查詢 xmee023
+   SELECT xmee201,xmeeunit,xmee022,xmee023
+     INTO g_xmee201,l_xmeeunit,l_xmee022,l_xmee023
+     FROM xmee_t
+    WHERE xmeeent = g_enterprise
+      AND xmeedocno = p_xmejdocno
+      AND xmee900 = p_xmej900
+   IF cl_null(g_xmjb025) THEN
+      LET g_xmjb025 = l_xmee022
+   END IF
+   IF NOT cl_null(p_xmjb025) THEN
+      LET g_xmjb025 = p_xmjb025
+   ELSE
+      LET g_xmjb025 = l_xmee022
+   END IF
+   
+   #lori522612  150116
+   #新增查詢 xmjb003,xmjb037/xmjb038/xmjb039/xmjb040
+   SELECT xmjb003,xmjb014,xmjb030,xmjbsite,
+          xmjb037,xmjb038,xmjb039,xmjb040
+     INTO l_xmjb003,l_xmjb014,l_xmjb030,l_xmjbsite,
+          l_xmjb037,l_xmjb038,l_xmjb039,l_xmjb040
+     FROM xmjb_t
+    WHERE xmjbent = g_enterprise
+      AND xmjbdocno = p_xmejdocno
+      AND xmjbseq = p_xmejseq
+      AND xmjb900 = p_xmej900
+   IF cl_null(p_xmjb014) THEN
+      LET p_xmjb014 = l_xmjb014
+   END IF
+   IF cl_null(p_xmjb030) THEN
+      LET p_xmjb030 = l_xmjb030
+   END IF
+   IF cl_null(p_xmjbsite) THEN
+      LET p_xmjbsite = l_xmjbsite
+   END IF
+   
+   LET l_forupd_sql = "SELECT xmejdocno,xmejseq,xmejseq2,xmej900,xmej901,xmej002,xmej003,xmej004,xmej005,'',xmejsite,xmejunit,'',xmej006,xmej200,'',xmej201,'',xmej202 FROM xmej_t WHERE xmejent = ? AND xmejdocno = ? AND xmejseq = ? AND xmejseq2 = ? AND xmej900 = ? FOR UPDATE"
+   LET l_forupd_sql = cl_sql_forupd(l_forupd_sql)
+   DECLARE adbt510_03_bcl CURSOR FROM l_forupd_sql
+
+   WHILE TRUE 
+      CALL adbt510_03_b_fill()
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_xmej_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+                  
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+            #CALL adbt510_03_b_fill()
+            LET g_rec_b = g_xmej_d.getLength()
+            IF p_xmjb030 = 'N' THEN
+               CALL cl_set_act_visible("insert,delete", FALSE)
+               CALL cl_set_comp_entry("xmej002,xmej003,xmej004",FALSE) 
+               CALL cl_set_comp_required("xmej005",FALSE)               
+            END IF
+
+            IF NOT cl_null(g_xmee201) THEN
+               CALL cl_set_comp_required("xmej200",TRUE)
+            ELSE
+               CALL cl_set_comp_required("xmej200",FALSE)
+            END IF
+            IF NOT cl_null(l_xmeeunit) THEN
+               CALL cl_set_comp_entry("xmejunit",FALSE)
+            ELSE
+               CALL cl_set_comp_entry("xmejunit",TRUE)
+            END IF
+            
+          BEFORE ROW 
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+   
+            LET g_rec_b = g_xmej_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND NOT cl_null(g_xmej_d[l_ac].xmejdocno)
+               AND NOT cl_null(g_xmej_d[l_ac].xmejseq) 
+               AND NOT cl_null(g_xmej_d[l_ac].xmejseq2)
+               AND NOT cl_null(g_xmej_d[l_ac].xmej900)                
+            THEN
+               LET l_cmd='u'
+			      LET g_xmej_d_t.* = g_xmej_d[l_ac].*  #BACKUP
+			      LET g_xmej_d_o.* = g_xmej_d[l_ac].*  #BACKUP    #160824-00007#49 Add By Ken 161024
+			      CALL cl_set_act_visible("delete", TRUE)
+			      SELECT COUNT(*) INTO l_cnt
+			        FROM xmdl_t,xmdk_t
+			       WHERE xmdlent = xmdkent
+			         AND xmdldocno = xmdkdocno
+			         AND xmdlent = g_enterprise
+			         AND xmdkstus <> 'X'
+			         AND xmdl003 = g_xmej_d[l_ac].xmejdocno
+			         AND xmdl004 = g_xmej_d[l_ac].xmejseq
+			         AND xmdl006 = g_xmej_d[l_ac].xmejseq2
+			      IF l_cnt = 0 THEN
+			         SELECT COUNT(*) INTO l_cnt
+			           FROM xmdh_t,xmdg_t
+			          WHERE xmdhent = xmdgent
+			            AND xmdhdocno = xmdgdocno
+			            AND xmdhent = g_enterprise
+			            AND xmdgstus <> 'X'
+			            AND xmdh001 = g_xmej_d[l_ac].xmejdocno
+			            AND xmdh002 = g_xmej_d[l_ac].xmejseq
+			            AND xmdh004 = g_xmej_d[l_ac].xmejseq2
+			      END IF
+			      IF l_cnt > 0 THEN
+			         CALL cl_set_act_visible("delete", FALSE)
+			      END IF
+			   
+			      OPEN adbt510_03_bcl USING g_enterprise,g_xmej_d[l_ac].xmejdocno,g_xmej_d[l_ac].xmejseq,g_xmej_d[l_ac].xmejseq2,g_xmej_d[l_ac].xmej900
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = SQLCA.sqlcode
+                  LET g_errparam.extend = "adbt510_03_bcl"
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH adbt510_03_bcl INTO g_xmej_d[l_ac].xmejdocno,g_xmej_d[l_ac].xmejseq,g_xmej_d[l_ac].xmejseq2,
+                                            g_xmej_d[l_ac].xmej900,g_xmej_d[l_ac].xmej901,
+                                            g_xmej_d[l_ac].xmej002,g_xmej_d[l_ac].xmej003,g_xmej_d[l_ac].xmej004,
+                                            g_xmej_d[l_ac].xmej005,g_xmej_d[l_ac].xmej005_desc,g_xmej_d[l_ac].xmejsite,g_xmej_d[l_ac].xmejunit,
+                                            g_xmej_d[l_ac].xmejunit_desc,g_xmej_d[l_ac].xmej006,g_xmej_d[l_ac].xmej200,
+                                            g_xmej_d[l_ac].xmej200_desc,g_xmej_d[l_ac].xmej201,g_xmej_d[l_ac].xmej201_desc,
+                                            g_xmej_d[l_ac].xmej202
+                  
+                  IF SQLCA.sqlcode THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = SQLCA.sqlcode
+                     LET g_errparam.extend = g_xmej_d[l_ac].xmejdocno
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET l_lock_sw = "Y"
+                  END IF
+				      CALL s_desc_get_acc_desc('274',g_xmej_d[l_ac].xmej005) RETURNING g_xmej_d[l_ac].xmej005_desc
+				      CALL s_desc_get_department_desc(g_xmej_d[l_ac].xmejunit) RETURNING g_xmej_d[l_ac].xmejunit_desc
+				      CALL s_desc_get_stock_desc(g_xmej_d[l_ac].xmejunit,g_xmej_d[l_ac].xmej200) RETURNING g_xmej_d[l_ac].xmej200_desc
+                  CALL s_desc_get_locator_desc(g_xmej_d[l_ac].xmejunit,g_xmej_d[l_ac].xmej200,g_xmej_d[l_ac].xmej201) RETURNING g_xmej_d[l_ac].xmej201_desc
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+        
+         BEFORE INSERT
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_xmej_d[l_ac].* TO NULL          
+            
+            IF cl_null(p_xmjbsite) THEN
+               LET g_xmej_d[l_ac].xmejsite = g_site
+            ELSE
+               LET g_xmej_d[l_ac].xmejsite = p_xmjbsite
+            END IF
+
+            IF cl_null(l_xmeeunit) THEN
+               LET g_xmej_d[l_ac].xmejunit = g_site
+            ELSE
+               LET g_xmej_d[l_ac].xmejunit = l_xmeeunit
+            END IF
+            IF NOT cl_null(g_xmee201) THEN
+               CALL adbt510_03_get_xmej200(p_xmejdocno,p_xmejseq,p_xmej900)
+            END IF
+            
+            LET g_xmej_d[l_ac].xmejdocno = g_xmejdocno
+            LET g_xmej_d[l_ac].xmejseq = g_xmejseq
+            LET g_xmej_d[l_ac].xmej900 = g_xmej900
+            CALL s_desc_get_acc_desc('274',g_xmej_d[l_ac].xmej005) RETURNING g_xmej_d[l_ac].xmej005_desc
+            DISPLAY BY NAME g_xmej_d[l_ac].xmej005_desc  
+            CALL s_desc_get_department_desc(g_xmej_d[l_ac].xmejunit) RETURNING g_xmej_d[l_ac].xmejunit_desc
+            
+            LET g_xmej_d[l_ac].xmej006 = 'N'
+            
+            SELECT MAX(xmejseq2)+1 INTO g_xmej_d[l_ac].xmejseq2 
+              FROM xmej_t 
+             WHERE xmejent = g_enterprise 
+              AND xmejdocno = g_xmejdocno 
+              AND xmejseq = g_xmejseq
+              AND xmej900 = g_xmej900
+            IF cl_null(g_xmej_d[l_ac].xmejseq2) OR g_xmej_d[l_ac].xmejseq2 = 0 THEN
+               LET g_xmej_d[l_ac].xmejseq2 = 1
+            END IF
+            LET g_xmej_d[l_ac].xmej901 = '3'   #單身新增
+            LET g_xmej_d_t.* = g_xmej_d[l_ac].*     #新輸入資料
+            LET g_xmej_d_o.* = g_xmej_d[l_ac].*     #新輸入資料   #160824-00007#49 Add By Ken 161024
+             
+            CALL cl_show_fld_cont()
+            
+            
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+            IF cl_null(g_xmej_d[l_ac].xmej200) THEN
+               LET g_xmej_d[l_ac].xmej200 = ' '
+            END IF
+            IF cl_null(g_xmej_d[l_ac].xmej201) THEN
+               LET g_xmej_d[l_ac].xmej201 = ' '
+            END IF
+            IF cl_null(g_xmej_d[l_ac].xmej202) THEN
+               LET g_xmej_d[l_ac].xmej202 = ' '
+            END IF
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM xmej_t 
+             WHERE xmejent = g_enterprise AND xmejdocno = g_xmej_d[l_ac].xmejdocno
+               AND xmejseq = g_xmej_d[l_ac].xmejseq
+               AND xmejseq2 = g_xmej_d[l_ac].xmejseq2
+               AND xmej900 = g_xmej_d[l_ac].xmej900
+      
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               INSERT INTO xmej_t (xmejent,xmejsite,xmejunit,xmejdocno,xmejseq,xmejseq2,xmej900,xmej901,xmej002,xmej003,xmej004,xmej005,xmej006,xmej200,xmej201,xmej202)
+                  VALUES (g_enterprise,g_xmej_d[l_ac].xmejsite,g_xmej_d[l_ac].xmejunit,g_xmej_d[l_ac].xmejdocno,g_xmej_d[l_ac].xmejseq,g_xmej_d[l_ac].xmejseq2,
+                          g_xmej_d[l_ac].xmej900,g_xmej_d[l_ac].xmej901,g_xmej_d[l_ac].xmej002,g_xmej_d[l_ac].xmej003,g_xmej_d[l_ac].xmej004,g_xmej_d[l_ac].xmej005,
+                          g_xmej_d[l_ac].xmej006,g_xmej_d[l_ac].xmej200,g_xmej_d[l_ac].xmej201,g_xmej_d[l_ac].xmej202)
+            ELSE    
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = "std-00006"
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               INITIALIZE g_xmej_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "xmej_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+  
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               IF NOT adbt510_03_xmej_ins_xmek(g_xmej_d[l_ac].*) THEN  #寫入歷程檔
+                  LET g_xmej_d[l_ac].* = g_xmej_d_t.*
+                  CALL s_transaction_end('N','0')
+                  CANCEL INSERT
+               END IF  
+               CALL s_transaction_end('Y','0')
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF NOT cl_null(g_xmej_d[l_ac].xmejdocno)
+               AND NOT cl_null(g_xmej_d[l_ac].xmejseq) 
+               AND NOT cl_null(g_xmej_d[l_ac].xmejseq2)
+               AND NOT cl_null(g_xmej_d[l_ac].xmej900) THEN 
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code =  -263
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  CANCEL DELETE
+               END IF
+
+               DELETE FROM xmej_t
+                WHERE xmejent = g_enterprise AND xmejdocno = g_xmej_d_t.xmejdocno
+                  AND xmejseq = g_xmej_d_t.xmejseq
+                  AND xmejseq2 = g_xmej_d_t.xmejseq2
+                  AND xmej900 = g_xmej_d_t.xmej900
+
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "xmej_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF 
+               CLOSE adbt510_03_bcl
+               LET l_count = g_xmej_d.getLength()
+            END IF 
+            
+        ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 9001
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               LET INT_FLAG = 0
+               LET g_xmej_d[l_ac].* = g_xmej_d_t.*
+               CLOSE adbt510_03_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG
+            END IF
+            IF cl_null(g_xmej_d[l_ac].xmej200) THEN
+               LET g_xmej_d[l_ac].xmej200 = ' '
+            END IF
+            IF cl_null(g_xmej_d[l_ac].xmej201) THEN
+               LET g_xmej_d[l_ac].xmej201 = ' '
+            END IF
+            IF cl_null(g_xmej_d[l_ac].xmej202) THEN
+               LET g_xmej_d[l_ac].xmej202 = ' '
+            END IF
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = -263
+               LET g_errparam.extend = g_xmej_d[l_ac].xmej002
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+               LET g_xmej_d[l_ac].* = g_xmej_d_t.*
+            ELSE
+               IF g_xmej_d[l_ac].xmej901 = '1' THEN
+                  LET g_xmej_d[l_ac].xmej901 = '2'
+               END IF
+            
+               UPDATE xmej_t SET (xmejseq2,xmej002,xmej003,xmej004,xmej005,xmej006,xmej200,xmej201,xmej202,xmejunit,xmej901) = (g_xmej_d[l_ac].xmejseq2,g_xmej_d[l_ac].xmej002,g_xmej_d[l_ac].xmej003,g_xmej_d[l_ac].xmej004,g_xmej_d[l_ac].xmej005,g_xmej_d[l_ac].xmej006,g_xmej_d[l_ac].xmej200,g_xmej_d[l_ac].xmej201,g_xmej_d[l_ac].xmej202,g_xmej_d[l_ac].xmejunit,g_xmej_d[l_ac].xmej901)
+                WHERE xmejent = g_enterprise 
+                  AND xmejdocno = g_xmej_d_t.xmejdocno
+                  AND xmejseq = g_xmej_d_t.xmejseq
+                  AND xmejseq2 = g_xmej_d_t.xmejseq2
+                  AND xmej900 = g_xmej_d_t.xmej900
+
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = SQLCA.sqlcode
+               LET g_errparam.extend = "xmej_t"
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+                  LET g_xmej_d[l_ac].* = g_xmej_d_t.*
+                  CALL s_transaction_end('N','0')
+               ELSE
+                  IF NOT adbt510_03_xmej_ins_xmek(g_xmej_d[l_ac].*) THEN  #寫入歷程檔
+                     LET g_xmej_d[l_ac].* = g_xmej_d_t.*
+                     CALL s_transaction_end('N','0')
+                  END IF   
+                  CALL s_transaction_end('Y','0')
+                  IF p_xmjb030 = 'N' THEN
+                     EXIT DIALOG
+                  END IF
+               END IF
+            END IF
+            
+         AFTER ROW
+            CLOSE adbt510_03_bcl
+            CALL s_transaction_end('Y','0')
+            IF p_xmjb030 = 'N' THEN
+               NEXT FIELD CURRENT
+            END IF
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmej901
+            #add-point:BEFORE FIELD xmej901 name="input.b.page1.xmej901"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmej901
+            
+            #add-point:AFTER FIELD xmej901 name="input.a.page1.xmej901"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmej901
+            #add-point:ON CHANGE xmej901 name="input.g.page1.xmej901"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmej002
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_xmej_d[l_ac].xmej002,"0.000","1","","","azz-00079",1) THEN
+               NEXT FIELD xmej002
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD xmej002 name="input.a.page1.xmej002"
+            IF NOT cl_null(g_xmej_d[l_ac].xmej002) THEN
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmej_d[l_ac].xmej002 != g_xmej_d_t.xmej002 OR cl_null(g_xmej_d_t.xmej002))) THEN
+                  LET l_xmej002 = 0
+                  #已維護的分批數量
+                  #SELECT SUM(xmej002) INTO l_xmej002 FROM xmej_t 
+                  # WHERE xmejent = g_enterprise AND xmejdocno = g_xmejdocno AND xmejseq = g_xmejseq
+                  #   AND xmejseq2 <> g_xmej_d[l_ac].xmejseq2
+                  #   AND xmej900 = g_xmej900
+                 
+                  FOR l_i = 1 TO g_xmej_d.getLength()
+                     LET l_xmej002 = l_xmej002 + g_xmej_d[l_i].xmej002
+                  END FOR
+                  
+                  #分批數量總合+本分批數量不可以大於採購數量
+                  IF l_xmej002 > p_xmjb014 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'axm-00294'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_xmej_d[l_ac].xmej002 = g_xmej_d_t.xmej002
+                     NEXT FIELD CURRENT
+                  END IF
+#                  #己輸入的分批數量必須>=此訂單+項次+分批序對應的(已轉出通單數量但未轉出貨單數量)+(已轉出貨單數量) ->不包括作廢
+#			         #已轉出貨			      
+#			      　　SELECT SUM(xmdl018) INTO l_xmdl018
+#			      　　  FROM xmdl_t,xmdk_t
+#			      　　 WHERE xmdlent = xmdkent
+#			      　　   AND xmdldocno = xmdkdocno
+#			      　　   AND xmdlent = g_enterprise
+#			      　　   AND xmdkstus <> 'X'
+#			      　　   AND xmdl003 = g_xmej_d[l_ac].xmejdocno
+#			      　　   AND xmdl004 = g_xmej_d[l_ac].xmejseq
+#			      　　   AND xmdl006 = g_xmej_d[l_ac].xmejseq2
+#			         IF cl_null(l_xmdl018) THEN LET l_xmdl018 = 0 END IF
+#			         #已轉出通未轉出貨數
+#			         SELECT SUM(xmdh016 - COALESCE(xmdh030,0)) INTO l_xmdh016
+#			           FROM xmdh_t,xmdg_t
+#			          WHERE xmdhent = xmdgent
+#			            AND xmdhdocno = xmdgdocno
+#			            AND xmdhent = g_enterprise
+#			            AND xmdgstus <> 'X'
+#			            AND xmdh001 = g_xmej_d[l_ac].xmejdocno
+#			            AND xmdh002 = g_xmej_d[l_ac].xmejseq
+#			            AND xmdh004 = g_xmej_d[l_ac].xmejseq2
+#			         IF cl_null(l_xmdh016) THEN LET l_xmdh016 = 0 END IF
+#			         
+#			         IF g_xmej_d[l_ac].xmej002 < l_xmdh016 + l_xmdl018 THEN
+#                     INITIALIZE g_errparam TO NULL
+#                     LET g_errparam.code = 'adb-00209'
+#                     LET g_errparam.extend = ''
+#                     LET g_errparam.popup = TRUE
+#                     CALL cl_err()
+#
+#                     LET g_xmej_d[l_ac].xmej002 = g_xmej_d_t.xmej002
+#                     NEXT FIELD CURRENT
+#			         END IF
+               END IF
+            END IF 
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmej002
+            #add-point:BEFORE FIELD xmej002 name="input.b.page1.xmej002"
+                        
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmej002
+            #add-point:ON CHANGE xmej002 name="input.g.page1.xmej002"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmej003
+            #add-point:BEFORE FIELD xmej003 name="input.b.page1.xmej003"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmej003
+            
+            #add-point:AFTER FIELD xmej003 name="input.a.page1.xmej003"
+            IF g_xmej_d[l_ac].xmej003 > g_xmej_d[l_ac].xmej004 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'adb-00079'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               NEXT FIELD xmej003
+            END IF      
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmej003
+            #add-point:ON CHANGE xmej003 name="input.g.page1.xmej003"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmej004
+            #add-point:BEFORE FIELD xmej004 name="input.b.page1.xmej004"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmej004
+            
+            #add-point:AFTER FIELD xmej004 name="input.a.page1.xmej004"
+            IF g_xmej_d[l_ac].xmej004 < g_xmej_d[l_ac].xmej003 THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'adb-00079'
+               LET g_errparam.extend = ''
+               LET g_errparam.popup = FALSE
+               CALL cl_err()
+
+               NEXT FIELD xmej004
+            END IF            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmej004
+            #add-point:ON CHANGE xmej004 name="input.g.page1.xmej004"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmej005
+            
+            #add-point:AFTER FIELD xmej005 name="input.a.page1.xmej005"
+            IF NOT cl_null(g_xmej_d[l_ac].xmej005) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmej_d[l_ac].xmej005 != g_xmej_d_t.xmej005 OR cl_null(g_xmej_d_t.xmej005))) THEN
+                  IF NOT s_azzi650_chk_exist('274',g_xmej_d[l_ac].xmej005) THEN
+                     LET g_xmej_d[l_ac].xmej005 = g_xmej_d_t.xmej005
+                     CALL s_desc_get_acc_desc('274',g_xmej_d[l_ac].xmej005) RETURNING g_xmej_d[l_ac].xmej005_desc
+                     DISPLAY BY NAME g_xmej_d[l_ac].xmej005_desc 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF 
+            CALL s_desc_get_acc_desc('274',g_xmej_d[l_ac].xmej005) RETURNING g_xmej_d[l_ac].xmej005_desc
+            DISPLAY BY NAME g_xmej_d[l_ac].xmej005_desc 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmej005
+            #add-point:BEFORE FIELD xmej005 name="input.b.page1.xmej005"
+                        
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmej005
+            #add-point:ON CHANGE xmej005 name="input.g.page1.xmej005"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmejsite
+            #add-point:BEFORE FIELD xmejsite name="input.b.page1.xmejsite"
+                        
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmejsite
+            
+            #add-point:AFTER FIELD xmejsite name="input.a.page1.xmejsite"
+       
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmejsite
+            #add-point:ON CHANGE xmejsite name="input.g.page1.xmejsite"
+                        
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmejunit
+            
+            #add-point:AFTER FIELD xmejunit name="input.a.page1.xmejunit"
+            #已有出通貨出貨單不可修改
+            #IF l_cmd = 'u' AND (g_xmej_d[l_ac].xmejunit != g_xmej_d_t.xmejunit OR cl_null(g_xmej_d_t.xmejunit)) THEN    #160824-00007#49 Mark By Ken 161024
+            IF (g_xmej_d[l_ac].xmejunit != g_xmej_d_o.xmejunit OR cl_null(g_xmej_d_o.xmejunit)) THEN     #160824-00007#49 Add By Ken 161024
+               IF NOT adbt510_03_xmdl_chk() THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'adb-00312'
+                  LET g_errparam.extend = ""
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  
+                  #LET g_xmej_d[l_ac].xmejunit = g_xmej_d_t.xmejunit   #160824-00007#49 Mark By Ken 161024
+                  LET g_xmej_d[l_ac].xmejunit = g_xmej_d_o.xmejunit    #160824-00007#49 Add By Ken 161024
+                  CALL s_desc_get_department_desc(g_xmej_d[l_ac].xmejunit) RETURNING g_xmej_d[l_ac].xmejunit_desc
+                  DISPLAY BY NAME g_xmej_d[l_ac].xmejunit_desc
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            IF NOT cl_null(g_xmej_d[l_ac].xmejunit) THEN 
+               #IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmej_d[l_ac].xmejunit != g_xmej_d_t.xmejunit OR cl_null(g_xmej_d_t.xmejunit))) THEN   #160824-00007#49 Mark By Ken 161024
+               IF (g_xmej_d[l_ac].xmejunit != g_xmej_d_o.xmejunit OR cl_null(g_xmej_d_o.xmejunit)) THEN         #160824-00007#49 Add By Ken 161024                   
+                  #此段落由子樣板a19產生
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+#                  INITIALIZE g_chkparam.* TO NULL
+#                  
+#                  #設定g_chkparam.*的參數
+#                  LET g_chkparam.arg1 = g_xmej_d[l_ac].xmejunit
+#                  LET g_chkparam.arg2 = '2'
+#                  LET g_chkparam.arg3 = g_site
+#                     
+#                  #呼叫檢查存在並帶值的library
+#                  IF cl_chk_exist("v_ooed004") THEN
+                  CALL s_aooi500_chk(g_prog,'xmejunit',g_xmej_d[l_ac].xmejunit,g_site) RETURNING l_success,l_errno
+                  IF NOT l_success THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = '' 
+                     LET g_errparam.code   = l_errno 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     
+                     IF NOT cl_null(g_xmee201) THEN
+                        CALL adbt510_03_get_xmej200(p_xmejdocno,p_xmejseq,p_xmej900)
+                        CALL s_desc_get_stock_desc(g_xmej_d[l_ac].xmejunit,g_xmej_d[l_ac].xmej200) RETURNING g_xmej_d[l_ac].xmej200_desc
+                        CALL s_desc_get_locator_desc(g_xmej_d[l_ac].xmejunit,g_xmej_d[l_ac].xmej200,g_xmej_d[l_ac].xmej201) RETURNING g_xmej_d[l_ac].xmej201_desc
+                        DISPLAY BY NAME g_xmej_d[l_ac].xmej200_desc,g_xmej_d[l_ac].xmej201_desc
+                     END IF
+                  ELSE
+                     #檢查失敗時後續處理
+                     #LET g_xmej_d[l_ac].xmejunit = g_xmej_d_t.xmejunit   #160824-00007#49 Mark By Ken 161024
+                     LET g_xmej_d[l_ac].xmejunit = g_xmej_d_o.xmejunit    #160824-00007#49 Add By Ken 161024
+                     CALL s_desc_get_department_desc(g_xmej_d[l_ac].xmejunit) RETURNING g_xmej_d[l_ac].xmejunit_desc
+                     DISPLAY BY NAME g_xmej_d[l_ac].xmejunit_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF    
+
+            END IF 
+            CALL s_desc_get_department_desc(g_xmej_d[l_ac].xmejunit) RETURNING g_xmej_d[l_ac].xmejunit_desc 
+            DISPLAY BY NAME g_xmej_d[l_ac].xmejunit_desc
+            LET g_xmej_d_o.* = g_xmej_d[l_ac].*    #160824-00007#49 Add By Ken 161024
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmejunit
+            #add-point:BEFORE FIELD xmejunit name="input.b.page1.xmejunit"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmejunit
+            #add-point:ON CHANGE xmejunit name="input.g.page1.xmejunit"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmej200
+            
+            #add-point:AFTER FIELD xmej200 name="input.a.page1.xmej200"
+            IF NOT cl_null(g_xmej_d[l_ac].xmej200) THEN 
+               #IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmej_d[l_ac].xmej200 != g_xmej_d_t.xmej200 OR cl_null(g_xmej_d_t.xmej200))) THEN    #160824-00007#49 Mark By Ken 161024
+               IF (g_xmej_d[l_ac].xmej200 != g_xmej_d_o.xmej200 OR cl_null(g_xmej_d_o.xmej200)) THEN      #160824-00007#49 Add By Ken 161024
+                  #此段落由子樣板a19產生
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  #lori522612  150116  add ----------------------(S)
+                  ##設定g_chkparam.*的參數
+                  #LET g_chkparam.arg1 = g_xmej_d[l_ac].xmejunit
+                  #LET g_chkparam.arg2 = g_xmej_d[l_ac].xmej200
+                  #   
+                  ##呼叫檢查存在並帶值的library
+                  #IF cl_chk_exist("v_inaa001_1") THEN
+                  #
+                  #須依發貨組織範圍設定符合的庫位清單 
+                  LET g_chkparam.arg1 = g_xmej_d[l_ac].xmejunit  #發貨組織
+                  LET g_chkparam.arg2 = g_xmej_d[l_ac].xmej200   #庫位
+                  LET g_chkparam.arg3 = l_xmjb003   #料件編號
+                  LET g_chkparam.arg4 = l_xmee023   #銷售渠道編號
+                  LET g_chkparam.arg5 = l_xmjb037   #區域編號
+                  LET g_chkparam.arg6 = l_xmjb038   #省州編號 
+                  LET g_chkparam.arg7 = l_xmjb039   #縣市編號
+                  LET g_chkparam.arg8 = l_xmjb040   #地區編號
+                  #160318-00025#3--add--str
+                  LET g_errshow = TRUE 
+                  LET g_chkparam.err_str[1] = "aim-00065:sub-01302|aini001|",cl_get_progname("aini001",g_lang,"2"),"|:EXEPROGaini001"
+                  #160318-00025#3--add--end
+                  IF cl_chk_exist("v_inaa001_16") THEN
+                  #lori522612  150116  add ----------------------(E)
+                     #檢查成功時後續處理
+                     #LET  = g_chkparam.return1
+                     #DISPLAY BY NAME 
+                     IF NOT cl_null(g_xmee201) THEN
+                        IF NOT adbt510_03_chk_xmej200(p_xmejdocno,p_xmejseq,p_xmej900,'1') THEN
+                           #LET g_xmej_d[l_ac].xmej200 = g_xmej_d_t.xmej200    #160824-00007#49 Mark By Ken 161024
+                           LET g_xmej_d[l_ac].xmej200 = g_xmej_d_o.xmej200     #160824-00007#49 Add By Ken 161024
+                           CALL s_desc_get_stock_desc(g_xmej_d[l_ac].xmejunit,g_xmej_d[l_ac].xmej200) RETURNING g_xmej_d[l_ac].xmej200_desc
+                           DISPLAY BY NAME g_xmej_d[l_ac].xmej200_desc
+                           NEXT FIELD CURRENT
+                        END IF
+                     END IF
+                  ELSE
+                     #檢查失敗時後續處理
+                     #LET g_xmej_d[l_ac].xmej200 = g_xmej_d_t.xmej200    #160824-00007#49 Mark By Ken 161024
+                     LET g_xmej_d[l_ac].xmej200 = g_xmej_d_o.xmej200     #160824-00007#49 Add By Ken 161024
+                     CALL s_desc_get_stock_desc(g_xmej_d[l_ac].xmejunit,g_xmej_d[l_ac].xmej200) RETURNING g_xmej_d[l_ac].xmej200_desc
+                     DISPLAY BY NAME g_xmej_d[l_ac].xmej200_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF 
+            CALL s_desc_get_stock_desc(g_xmej_d[l_ac].xmejunit,g_xmej_d[l_ac].xmej200) RETURNING g_xmej_d[l_ac].xmej200_desc
+            DISPLAY BY NAME g_xmej_d[l_ac].xmej200_desc
+            LET g_xmej_d_o.* = g_xmej_d[l_ac].*    #160824-00007#49 Add By Ken 161024
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmej200
+            #add-point:BEFORE FIELD xmej200 name="input.b.page1.xmej200"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmej200
+            #add-point:ON CHANGE xmej200 name="input.g.page1.xmej200"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmej201
+            
+            #add-point:AFTER FIELD xmej201 name="input.a.page1.xmej201"
+            IF NOT cl_null(g_xmej_d[l_ac].xmej201) THEN 
+               #IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_xmej_d[l_ac].xmej201 != g_xmej_d_t.xmej201 OR cl_null(g_xmej_d_t.xmej201))) THEN
+               IF (g_xmej_d[l_ac].xmej201 != g_xmej_d_o.xmej201 OR cl_null(g_xmej_d_o.xmej201)) THEN
+                  #此段落由子樣板a19產生
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_xmej_d[l_ac].xmejunit
+                  LET g_chkparam.arg2 = g_xmej_d[l_ac].xmej200
+                  LET g_chkparam.arg3 = g_xmej_d[l_ac].xmej201
+                  #160318-00025#3--add--str
+                  LET g_errshow = TRUE 
+                  LET g_chkparam.err_str[1] = "aim-00063:sub-01302|aini002|",cl_get_progname("aini002",g_lang,"2"),"|:EXEPROGaini002"
+                  #160318-00025#3--add--end
+                  #呼叫檢查存在並帶值的library
+                  #lori522612  150116  add ----------------------(S)
+                  #IF cl_chk_exist("v_inab002_1") THEN
+                  IF cl_chk_exist("v_inab002") THEN
+                  #lori522612  150116  add ----------------------(E)
+                     #檢查成功時後續處理
+                     #LET  = g_chkparam.return1
+                     #DISPLAY BY NAME 
+                     IF NOT cl_null(g_xmee201) THEN
+                        IF NOT adbt510_03_chk_xmej200(p_xmejdocno,p_xmejseq,p_xmej900,'2') THEN
+                           #LET g_xmej_d[l_ac].xmej201 = g_xmej_d_t.xmej201     #160824-00007#49 Mark By Ken 161024
+                           LET g_xmej_d[l_ac].xmej201 = g_xmej_d_o.xmej201      #160824-00007#49 Add By Ken 161024 
+                           CALL s_desc_get_locator_desc(g_xmej_d[l_ac].xmejunit,g_xmej_d[l_ac].xmej200,g_xmej_d[l_ac].xmej201) RETURNING g_xmej_d[l_ac].xmej201_desc
+                           DISPLAY BY NAME g_xmej_d[l_ac].xmej201_desc
+                           NEXT FIELD CURRENT
+                        END IF
+                     END IF
+                  ELSE
+                     #檢查失敗時後續處理
+                     #LET g_xmej_d[l_ac].xmej201 = g_xmej_d_t.xmej201     #160824-00007#49 Mark By Ken 161024
+                     LET g_xmej_d[l_ac].xmej201 = g_xmej_d_o.xmej201      #160824-00007#49 Add By Ken 161024                
+                     CALL s_desc_get_locator_desc(g_xmej_d[l_ac].xmejunit,g_xmej_d[l_ac].xmej200,g_xmej_d[l_ac].xmej201) RETURNING g_xmej_d[l_ac].xmej201_desc
+                     DISPLAY BY NAME g_xmej_d[l_ac].xmej201_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF 
+            CALL s_desc_get_locator_desc(g_xmej_d[l_ac].xmejunit,g_xmej_d[l_ac].xmej200,g_xmej_d[l_ac].xmej201) RETURNING g_xmej_d[l_ac].xmej201_desc
+            DISPLAY BY NAME g_xmej_d[l_ac].xmej201_desc
+            LET g_xmej_d_o.* = g_xmej_d[l_ac].*    #160824-00007#49 Add By Ken 161024
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmej201
+            #add-point:BEFORE FIELD xmej201 name="input.b.page1.xmej201"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmej201
+            #add-point:ON CHANGE xmej201 name="input.g.page1.xmej201"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD xmej202
+            #add-point:BEFORE FIELD xmej202 name="input.b.page1.xmej202"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD xmej202
+            
+            #add-point:AFTER FIELD xmej202 name="input.a.page1.xmej202"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE xmej202
+            #add-point:ON CHANGE xmej202 name="input.g.page1.xmej202"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.xmej901
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmej901
+            #add-point:ON ACTION controlp INFIELD xmej901 name="input.c.page1.xmej901"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmej002
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmej002
+            #add-point:ON ACTION controlp INFIELD xmej002 name="input.c.page1.xmej002"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmej003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmej003
+            #add-point:ON ACTION controlp INFIELD xmej003 name="input.c.page1.xmej003"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmej004
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmej004
+            #add-point:ON ACTION controlp INFIELD xmej004 name="input.c.page1.xmej004"
+                        
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmej005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmej005
+            #add-point:ON ACTION controlp INFIELD xmej005 name="input.c.page1.xmej005"
+                                    INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmej_d[l_ac].xmej005             #給予default值
+            
+            #給予arg
+            LET g_qryparam.arg1 = "274" #
+
+            CALL q_oocq002()                                #呼叫開窗
+
+            LET g_xmej_d[l_ac].xmej005 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xmej_d[l_ac].xmej005 TO xmej005              #顯示到畫面上
+            CALL s_desc_get_acc_desc('274',g_xmej_d[l_ac].xmej005) RETURNING g_xmej_d[l_ac].xmej005_desc
+            DISPLAY BY NAME g_xmej_d[l_ac].xmej005_desc
+
+            NEXT FIELD xmej005                          #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmejsite
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmejsite
+            #add-point:ON ACTION controlp INFIELD xmejsite name="input.c.page1.xmejsite"
+                
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmejunit
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmejunit
+            #add-point:ON ACTION controlp INFIELD xmejunit name="input.c.page1.xmejunit"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmej_d[l_ac].xmejunit             #給予default值
+
+            #給予arg
+#            LET g_qryparam.arg1 = g_site
+#            LET g_qryparam.arg2 = '2'
+#            
+#            CALL q_ooed004_3()                                #呼叫開窗
+            LET g_qryparam.where = s_aooi500_q_where(g_prog,'xmejunit',g_site,'i') #150308-00001#1  By Ken add 'i' 150309
+            CALL q_ooef001_24()
+            LET g_xmej_d[l_ac].xmejunit = g_qryparam.return1              
+
+            DISPLAY g_xmej_d[l_ac].xmejunit TO xmejunit              #
+            CALL s_desc_get_department_desc(g_xmej_d[l_ac].xmejunit) RETURNING g_xmej_d[l_ac].xmejunit_desc
+            DISPLAY BY NAME g_xmej_d[l_ac].xmejunit_desc
+            NEXT FIELD xmejunit                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmej200
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmej200
+            #add-point:ON ACTION controlp INFIELD xmej200 name="input.c.page1.xmej200"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmej_d[l_ac].xmej200             #給予default值
+            IF cl_null(g_xmee201) THEN
+               #給予arg
+               #lori522612  150116  add ----------------------(S)
+               #LET g_qryparam.arg1 = g_xmej_d[l_ac].xmejunit     
+               #CALL q_inaa001_4()                                #呼叫開窗
+               #
+               #依發貨組織範圍設定提供符合的庫位清單
+               LET g_qryparam.arg1 = l_xmjb003   #料件編號
+               LET g_qryparam.arg2 = l_xmee023   #銷售渠道編號
+               LET g_qryparam.arg3 = l_xmjb037   #區域編號
+               LET g_qryparam.arg4 = l_xmjb038   #省州編號
+               LET g_qryparam.arg5 = l_xmjb039   #縣市編號
+               LET g_qryparam.arg6 = l_xmjb040   #地區編號
+               LET g_qryparam.arg7 = g_xmej_d[l_ac].xmejunit   #發貨組織
+               
+               CALL q_inaa001_24()
+               #lori522612  150116  add ----------------------(E)
+               LET g_xmej_d[l_ac].xmej200 = g_qryparam.return1           
+            ELSE
+               LET g_qryparam.arg1 = g_xmej_d[l_ac].xmejunit
+               LET g_qryparam.arg2 = g_xmee201
+               CALL q_dbag004_1()
+               LET g_xmej_d[l_ac].xmej200 = g_qryparam.return1 
+            END IF            
+
+            DISPLAY g_xmej_d[l_ac].xmej200 TO xmej200              #
+            CALL s_desc_get_stock_desc(g_xmej_d[l_ac].xmejunit,g_xmej_d[l_ac].xmej200) RETURNING g_xmej_d[l_ac].xmej200_desc
+            CALL s_desc_get_locator_desc(g_xmej_d[l_ac].xmejunit,g_xmej_d[l_ac].xmej200,g_xmej_d[l_ac].xmej201) RETURNING g_xmej_d[l_ac].xmej201_desc
+            DISPLAY BY NAME g_xmej_d[l_ac].xmej201_desc,g_xmej_d[l_ac].xmej201_desc 
+            NEXT FIELD xmej200                          #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmej201
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmej201
+            #add-point:ON ACTION controlp INFIELD xmej201 name="input.c.page1.xmej201"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xmej_d[l_ac].xmej201             #給予default值
+            IF cl_null(g_xmee201) THEN
+               #給予arg
+               IF NOT cl_null(g_xmej_d[l_ac].xmej200) THEN
+                  
+                  LET g_qryparam.arg1 = g_xmej_d[l_ac].xmejunit
+                  LET g_qryparam.arg2 = g_xmej_d[l_ac].xmej200
+                  
+                  #lori522612  150116  add ----------------------(S)
+                  #CALL q_inab002_8()                                #呼叫開窗
+                  #依庫位提供儲位基本開窗
+                  CALL q_inab002_6()
+                  #lori522612  150116  add ----------------------(E)
+               ELSE
+                  LET g_qryparam.arg1 = g_xmej_d[l_ac].xmejunit
+               
+                  CALL q_inab002_10()                                #呼叫開窗
+               END IF
+            ELSE
+               LET g_qryparam.arg1 = g_xmej_d[l_ac].xmejunit
+               LET g_qryparam.arg2 = g_xmee201
+               CALL q_dbag004_2()
+               LET g_xmej_d[l_ac].xmej201 = g_qryparam.return1 
+            END IF
+
+            LET g_xmej_d[l_ac].xmej201 = g_qryparam.return1              
+
+            DISPLAY g_xmej_d[l_ac].xmej201 TO xmej201              #
+            CALL s_desc_get_locator_desc(g_xmej_d[l_ac].xmejunit,g_xmej_d[l_ac].xmej200,g_xmej_d[l_ac].xmej201) RETURNING g_xmej_d[l_ac].xmej201_desc
+            DISPLAY BY NAME g_xmej_d[l_ac].xmej201_desc 
+            NEXT FIELD xmej201                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.xmej202
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD xmej202
+            #add-point:ON ACTION controlp INFIELD xmej202 name="input.c.page1.xmej202"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            IF p_xmjb030 = 'N' THEN
+               CALL cl_set_act_visible("insert,delete", TRUE)
+               CALL cl_set_comp_entry("xmej002,xmej003,xmej004",TRUE) 
+            END IF 
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input name="input.more_input"
+            
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+      CALL cl_set_act_visible("delete", TRUE)
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         CLOSE adbt510_03_bcl
+         CALL s_transaction_end('N','0')
+         EXIT WHILE
+      END IF
+      
+      LET l_xmej002 = 0
+      SELECT SUM(xmej002) INTO l_xmej002
+        FROM xmej_t WHERE xmejent = g_enterprise
+         AND xmejdocno = g_xmejdocno
+         AND xmejseq = g_xmejseq
+         AND xmej900 = g_xmej900
+      IF cl_null(l_xmej002) THEN
+         LET l_xmej002 = 0
+      END IF 
+      
+      IF l_xmej002 <> p_xmjb014 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'axm-00415'
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE         
+         CALL cl_err()         
+         CONTINUE WHILE
+      END IF     
+      EXIT WHILE
+   END WHILE 
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_adbt510_03 
+   
+   #add-point:input段after input name="input.post_input"
+   #離開時回傳交貨日期最早的那一分批序的約定交貨日期、預計簽收日期
+   LET l_xmej003 = ''
+   LET r_xmej003 = ''
+   LET r_xmej004 = ''
+
+
+   SELECT MIN(xmej003) INTO l_xmej003 
+     FROM xmej_t 
+    WHERE xmejent = g_enterprise 
+      AND xmejdocno = g_xmejdocno 
+      AND xmejseq = g_xmejseq
+      AND xmej900 = g_xmej900
+   IF NOT cl_null(l_xmej003) THEN
+      #161228-00033#1 Mark By Ken 161229(S)
+      #SELECT xmej003,xmej004 INTO r_xmej003,r_xmej004 FROM xmej_t
+      # WHERE xmejent = g_enterprise 
+      #   AND xmejdocno = g_xmejdocno 
+      #   AND xmejseq = g_xmejseq 
+      #   AND xmej900 = g_xmej900
+      #   AND xmej003 = l_xmej003 
+      #   AND rownum = 1
+      #161228-00033#1 Mark By Ken 161229(E)
+      #161228-00033#1 Add By Ken 161229(S)
+      LET l_sql = "SELECT xmej003,xmej004 ", 
+                  "  FROM xmej_t ",
+                  " WHERE xmejent = ",g_enterprise ,
+                  "   AND xmejdocno = '",g_xmejdocno ,"' ",
+                  "   AND xmejseq = '", g_xmejseq ,"' ",
+                  "   AND xmej900 = '", g_xmej900 ,"' ",
+                  "   AND xmej003 = '", l_xmej003 ,"' "
+      PREPARE adbt510_03_xmej_sel FROM l_sql
+      DECLARE adbt510_03_xmej_sel_cur SCROLL CURSOR FOR adbt510_03_xmej_sel
+      OPEN adbt510_03_xmej_sel_cur
+      FETCH FIRST adbt510_03_xmej_sel_cur INTO r_xmej003,r_xmej004
+      FREE adbt510_03_xmej_sel
+      CLOSE adbt510_03_xmej_sel_cur
+      #161228-00033#1 Add By Ken 161229(E)
+   END IF
+   RETURN r_xmej003,r_xmej004         
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adbt510_03.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="adbt510_03.other_function" readonly="Y" >}
+
+PRIVATE FUNCTION adbt510_03_b_fill()
+DEFINE l_sql       STRING
+        
+       LET l_sql = "SELECT xmejdocno,xmejseq,xmejseq2,xmej900,xmej901,xmej002,xmej003,xmej004,xmej005,'',xmejsite,xmejunit,'',xmej006,xmej200,'',xmej201,'',xmej202 FROM xmej_t WHERE xmejent = '",g_enterprise,"' AND xmejdocno = '",g_xmejdocno,"' AND xmejseq = '",g_xmejseq,"' AND xmej900 = '",g_xmej900,"' "
+       PREPARE adbt510_03_pb FROM l_sql
+       DECLARE b_fill_curs CURSOR FOR adbt510_03_pb
+    
+       CALL g_xmej_d.clear()
+       LET l_ac = 1
+       FOREACH b_fill_curs INTO g_xmej_d[l_ac].*
+          IF SQLCA.sqlcode THEN
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.code = SQLCA.sqlcode
+             LET g_errparam.extend = "FOREACH:"
+             LET g_errparam.popup = TRUE
+             CALL cl_err()
+
+             EXIT FOREACH
+          END IF
+          
+          CALL s_desc_get_acc_desc('274',g_xmej_d[l_ac].xmej005) RETURNING g_xmej_d[l_ac].xmej005_desc
+			 CALL s_desc_get_department_desc(g_xmej_d[l_ac].xmejunit) RETURNING g_xmej_d[l_ac].xmejunit_desc
+			 CALL s_desc_get_stock_desc(g_xmej_d[l_ac].xmejunit,g_xmej_d[l_ac].xmej200) RETURNING g_xmej_d[l_ac].xmej200_desc
+			 CALL s_desc_get_locator_desc(g_xmej_d[l_ac].xmejunit,g_xmej_d[l_ac].xmej200,g_xmej_d[l_ac].xmej201) RETURNING g_xmej_d[l_ac].xmej201_desc
+          LET l_ac = l_ac + 1
+          IF l_ac > g_max_rec THEN
+             #CALL cl_err( "", 9035, 0 )
+             EXIT FOREACH
+          END IF
+    
+       END FOREACH
+       CALL g_xmej_d.deleteElement(g_xmej_d.getLength())
+       LET g_rec_b = l_ac - 1
+       DISPLAY g_rec_b TO FORMONLY.cnt
+       CLOSE b_fill_curs
+       FREE adbt510_03_pb
+END FUNCTION
+
+PRIVATE FUNCTION adbt510_03_get_xmej200(p_xmeedocno,p_xmjbseq,p_xmee900)
+   DEFINE p_xmeedocno     LIKE xmee_t.xmeedocno
+   DEFINE p_xmjbseq       LIKE xmjb_t.xmjbseq
+   DEFINE p_xmee900       LIKE xmee_t.xmee900
+   DEFINE l_xmee004       LIKE xmee_t.xmee004
+   DEFINE l_success       LIKE type_t.num5
+              
+   SELECT dbag004,dbag005
+     INTO g_xmej_d[l_ac].xmej200,g_xmej_d[l_ac].xmej201
+     FROM dbag_t
+    WHERE dbagent = g_enterprise
+      AND dbagsite = g_xmej_d[l_ac].xmejunit
+      AND dbag001 = '1'
+      AND dbag002 = g_xmee201
+      #AND dbag003 = g_xmjb025
+
+   
+END FUNCTION
+
+PRIVATE FUNCTION adbt510_03_chk_xmej200(p_xmeedocno,p_xmjbseq,p_xmee900,p_type)
+   DEFINE p_xmeedocno     LIKE xmee_t.xmeedocno
+   DEFINE p_xmjbseq       LIKE xmjb_t.xmjbseq
+   DEFINE p_xmee900       LIKE xmee_t.xmee900
+   DEFINE p_type          LIKE type_t.chr1
+   DEFINE r_success       LIKE type_t.num5
+   DEFINE l_xmee004       LIKE xmee_t.xmee004
+   DEFINE l_cnt           LIKE type_t.num5
+     
+   LET r_success = TRUE     
+
+   IF p_type = '1' THEN
+      INITIALIZE g_chkparam.* TO NULL
+      LET g_chkparam.arg1 = g_xmej_d[l_ac].xmejunit
+      LET g_chkparam.arg2 = g_xmee201
+      LET g_chkparam.arg3 = g_xmej_d[l_ac].xmej200
+      #160318-00025#3--add--str
+      LET g_errshow = TRUE 
+      LET g_chkparam.err_str[1] = "adb-00027:sub-01302|adbi251|",cl_get_progname("adbi251",g_lang,"2"),"|:EXEPROGadbi251"
+      #160318-00025#3--add--end
+      IF NOT cl_chk_exist("v_dbag004_1") THEN
+         LET r_success = FALSE
+      END IF
+   ELSE
+      INITIALIZE g_chkparam.* TO NULL
+      LET g_chkparam.arg1 = g_xmej_d[l_ac].xmejunit
+      LET g_chkparam.arg2 = g_xmee201
+      LET g_chkparam.arg3 = g_xmej_d[l_ac].xmej200
+      LET g_chkparam.arg4 = g_xmej_d[l_ac].xmej201
+      #160318-00025#3--add--str
+      LET g_errshow = TRUE 
+      LET g_chkparam.err_str[1] = "adb-00027:sub-01302|adbi251|",cl_get_progname("adbi251",g_lang,"2"),"|:EXEPROGadbi251"
+      #160318-00025#3--add--end
+      IF NOT cl_chk_exist("v_dbag004_2") THEN
+         LET r_success = FALSE
+      END IF
+   END IF
+
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 將多期匯總檔有修改的欄位新增到變更歷程檔內
+# Memo...........:
+# Usage..........: CALL adbt510_03_xmej_ins_xmek(p_xmej_d)
+#                  RETURNING r_success
+# Input parameter: p_xmej_d        單身ARRAY
+#                : 
+# Return code....: r_success      TRUE/FALSE
+#                : 
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION adbt510_03_xmej_ins_xmek(p_xmej_d)
+   DEFINE p_xmej_d          type_g_xmej_d
+   DEFINE r_success         LIKE type_t.num5
+  #DEFINE l_xmdf            RECORD LIKE xmdf_t.*   #161104-00002#1 161107 by lori mark
+   #161104-00002#1 161107 by lori add---(S)
+   DEFINE l_xmdf            RECORD
+             xmdfent     LIKE xmdf_t.xmdfent   ,   #企業編號
+             xmdfsite    LIKE xmdf_t.xmdfsite  ,   #營運據點
+             xmdfunit    LIKE xmdf_t.xmdfunit  ,   #發貨組織  
+             xmdfdocno   LIKE xmdf_t.xmdfdocno ,   #訂單單號
+             xmdfseq     LIKE xmdf_t.xmdfseq   ,   #訂單項次
+             xmdfseq2    LIKE xmdf_t.xmdfseq2  ,   #分批序
+             xmdf002     LIKE xmdf_t.xmdf002   ,   #分批數量
+             xmdf003     LIKE xmdf_t.xmdf003   ,   #約定交貨日期
+             xmdf004     LIKE xmdf_t.xmdf004   ,   #預計簽收日
+             xmdf005     LIKE xmdf_t.xmdf005   ,   #出貨時段
+             xmdf006     LIKE xmdf_t.xmdf006   ,   #MRP凍結否
+             xmdf007     LIKE xmdf_t.xmdf007   ,   #交期類型
+             xmdf200     LIKE xmdf_t.xmdf200   ,   #庫區/庫位
+             xmdf201     LIKE xmdf_t.xmdf201   ,   #儲位
+             xmdf202     LIKE xmdf_t.xmdf202   ,   #批號
+             xmdf203	    LIKE xmdf_t.xmdf203	      #庫存管理特徵
+   
+                            END RECORD
+   #161104-00002#1 161107 by lori add---(E)
+   
+   DEFINE l_xmekseq         LIKE xmek_t.xmekseq    #訂單項次
+   DEFINE l_xmekseq2        LIKE xmek_t.xmekseq2   #分批序
+   DEFINE l_flag            LIKE type_t.num5       #單身是否有修改
+
+   LET r_success = TRUE
+
+   IF p_xmej_d.xmej901 = '1' THEN       #未變更不需寫入歷程檔內  
+      RETURN r_success
+   END IF
+
+   INITIALIZE l_xmdf.* TO NULL
+   LET l_flag = FALSE
+
+   IF p_xmej_d.xmej901 = '2' THEN     
+      SELECT xmdfseq,xmdfseq2,xmdf002,xmdf003,xmdf004,
+             xmdf005,xmdf006,xmdfunit,xmdf200,xmdf201,xmdf202
+        INTO l_xmdf.xmdfseq,l_xmdf.xmdfseq2,l_xmdf.xmdf002,l_xmdf.xmdf003,l_xmdf.xmdf004,
+             l_xmdf.xmdf005,l_xmdf.xmdf006,l_xmdf.xmdfunit,l_xmdf.xmdf200,l_xmdf.xmdf201,l_xmdf.xmdf202      
+        FROM xmdf_t 
+       WHERE xmdfent = g_enterprise
+         AND xmdfdocno = p_xmej_d.xmejdocno
+         AND xmdfseq = p_xmej_d.xmejseq
+         AND xmdfseq2 = p_xmej_d.xmejseq2 
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'sel xmdf_t'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         RETURN r_success
+      END IF 
+   END IF                    
+   LET l_xmekseq = p_xmej_d.xmejseq
+   LET l_xmekseq2 = p_xmej_d.xmejseq2
+ 
+ 
+    #訂單項次
+   IF p_xmej_d.xmej901 = '3' OR (p_xmej_d.xmej901 = '2' AND
+      ((p_xmej_d.xmejseq <> l_xmdf.xmdfseq) OR
+      (p_xmej_d.xmejseq IS NULL AND l_xmdf.xmdfseq IS NOT NULL) OR
+      (p_xmej_d.xmejseq IS NOT NULL AND l_xmdf.xmdfseq IS NULL))) THEN
+      #其說明的SQL
+      LET g_xmek007 = ''
+      #新增資料到變更歷程檔
+      IF NOT s_adbt510_ins_xmek(l_xmekseq,0,l_xmekseq2,"xmdfseq",p_xmej_d.xmej901,l_xmdf.xmdfseq,p_xmej_d.xmejseq,p_xmej_d.xmejdocno,p_xmej_d.xmej900) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      LET l_flag = TRUE
+   ELSE
+      #資料一樣，表示無變更，將變更歷程檔刪除
+      IF NOT s_adbt510_del_xmek(l_xmekseq,0,l_xmekseq2,"xmdfseq",p_xmej_d.xmejdocno,p_xmej_d.xmej900) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF
+ 
+   #分批序
+   IF p_xmej_d.xmej901 = '3' OR (p_xmej_d.xmej901 = '2' AND
+      ((p_xmej_d.xmejseq2 <> l_xmdf.xmdfseq2) OR
+      (p_xmej_d.xmejseq2 IS NULL AND l_xmdf.xmdfseq2 IS NOT NULL) OR
+      (p_xmej_d.xmejseq2 IS NOT NULL AND l_xmdf.xmdfseq2 IS NULL))) THEN
+      #其說明的SQL
+      LET g_xmek007 = ''
+      #新增資料到變更歷程檔
+      IF NOT s_adbt510_ins_xmek(l_xmekseq,0,l_xmekseq2,"xmdfseq2",p_xmej_d.xmej901,l_xmdf.xmdfseq2,p_xmej_d.xmejseq2,p_xmej_d.xmejdocno,p_xmej_d.xmej900) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      LET l_flag = TRUE
+   ELSE
+      #資料一樣，表示無變更，將變更歷程檔刪除
+      IF NOT s_adbt510_del_xmek(l_xmekseq,0,l_xmekseq2,"xmdfseq2",p_xmej_d.xmejdocno,p_xmej_d.xmej900) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF
+
+   #分批數量
+   IF p_xmej_d.xmej901 = '3' OR (p_xmej_d.xmej901 = '2' AND
+      ((p_xmej_d.xmej002 <> l_xmdf.xmdf002) OR
+      (p_xmej_d.xmej002 IS NULL AND l_xmdf.xmdf002 IS NOT NULL) OR
+      (p_xmej_d.xmej002 IS NOT NULL AND l_xmdf.xmdf002 IS NULL))) THEN
+      #其說明的SQL
+      LET g_xmek007 = ''
+      #新增資料到變更歷程檔
+      IF NOT s_adbt510_ins_xmek(l_xmekseq,0,l_xmekseq2,"xmdf002",p_xmej_d.xmej901,l_xmdf.xmdf002,p_xmej_d.xmej002,p_xmej_d.xmejdocno,p_xmej_d.xmej900) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      LET l_flag = TRUE
+   ELSE
+      #資料一樣，表示無變更，將變更歷程檔刪除
+      IF NOT s_adbt510_del_xmek(l_xmekseq,0,l_xmekseq2,"xmdf002",p_xmej_d.xmejdocno,p_xmej_d.xmej900) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF
+   
+   #約定交貨日期
+   IF p_xmej_d.xmej901 = '3' OR (p_xmej_d.xmej901 = '2' AND
+      ((p_xmej_d.xmej003 <> l_xmdf.xmdf003) OR
+      (p_xmej_d.xmej003 IS NULL AND l_xmdf.xmdf003 IS NOT NULL) OR
+      (p_xmej_d.xmej003 IS NOT NULL AND l_xmdf.xmdf003 IS NULL))) THEN
+      #其說明的SQL
+      LET g_xmek007 = ''
+      #新增資料到變更歷程檔
+      IF NOT s_adbt510_ins_xmek(l_xmekseq,0,l_xmekseq2,"xmdf003",p_xmej_d.xmej901,l_xmdf.xmdf003,p_xmej_d.xmej003,p_xmej_d.xmejdocno,p_xmej_d.xmej900) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      LET l_flag = TRUE
+   ELSE
+      #資料一樣，表示無變更，將變更歷程檔刪除
+      IF NOT s_adbt510_del_xmek(l_xmekseq,0,l_xmekseq2,"xmdf003",p_xmej_d.xmejdocno,p_xmej_d.xmej900) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF
+
+   #預計簽收日
+   IF p_xmej_d.xmej901 = '3' OR (p_xmej_d.xmej901 = '2' AND
+      ((p_xmej_d.xmej004 <> l_xmdf.xmdf004) OR
+      (p_xmej_d.xmej004 IS NULL AND l_xmdf.xmdf004 IS NOT NULL) OR
+      (p_xmej_d.xmej004 IS NOT NULL AND l_xmdf.xmdf004 IS NULL))) THEN
+      #其說明的SQL
+      LET g_xmek007 = ''
+      #新增資料到變更歷程檔
+      IF NOT s_adbt510_ins_xmek(l_xmekseq,0,l_xmekseq2,"xmdf004",p_xmej_d.xmej901,l_xmdf.xmdf004,p_xmej_d.xmej004,p_xmej_d.xmejdocno,p_xmej_d.xmej900) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      LET l_flag = TRUE
+   ELSE
+      #資料一樣，表示無變更，將變更歷程檔刪除
+      IF NOT s_adbt510_del_xmek(l_xmekseq,0,l_xmekseq2,"xmdf004",p_xmej_d.xmejdocno,p_xmej_d.xmej900) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF
+   
+   #出貨時段
+   IF p_xmej_d.xmej901 = '3' OR (p_xmej_d.xmej901 = '2' AND
+      ((p_xmej_d.xmej005 <> l_xmdf.xmdf005) OR
+      (p_xmej_d.xmej005 IS NULL AND l_xmdf.xmdf005 IS NOT NULL) OR
+      (p_xmej_d.xmej005 IS NOT NULL AND l_xmdf.xmdf005 IS NULL))) THEN
+      #其說明的SQL
+      LET g_xmek007 = "SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='274' AND oocql002=? AND oocql003='"||g_dlang||"' "
+      #新增資料到變更歷程檔
+      IF NOT s_adbt510_ins_xmek(l_xmekseq,0,l_xmekseq2,"xmdf005",p_xmej_d.xmej901,l_xmdf.xmdf005,p_xmej_d.xmej005,p_xmej_d.xmejdocno,p_xmej_d.xmej900) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      LET l_flag = TRUE
+   ELSE
+      #資料一樣，表示無變更，將變更歷程檔刪除
+      IF NOT s_adbt510_del_xmek(l_xmekseq,0,l_xmekseq2,"xmdf005",p_xmej_d.xmejdocno,p_xmej_d.xmej900) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF  
+
+   #MRP凍結否
+   IF p_xmej_d.xmej901 = '3' OR (p_xmej_d.xmej901 = '2' AND
+      ((p_xmej_d.xmej006 <> l_xmdf.xmdf006) OR
+      (p_xmej_d.xmej006 IS NULL AND l_xmdf.xmdf006 IS NOT NULL) OR
+      (p_xmej_d.xmej006 IS NOT NULL AND l_xmdf.xmdf006 IS NULL))) THEN
+      #其說明的SQL
+      LET g_xmek007 = ''
+      #新增資料到變更歷程檔
+      IF NOT s_adbt510_ins_xmek(l_xmekseq,0,l_xmekseq2,"xmdf006",p_xmej_d.xmej901,l_xmdf.xmdf006,p_xmej_d.xmej006,p_xmej_d.xmejdocno,p_xmej_d.xmej900) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      LET l_flag = TRUE
+   ELSE
+      #資料一樣，表示無變更，將變更歷程檔刪除
+      IF NOT s_adbt510_del_xmek(l_xmekseq,0,l_xmekseq2,"xmdf006",p_xmej_d.xmejdocno,p_xmej_d.xmej900) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF
+   #發貨組織
+   IF p_xmej_d.xmej901 = '3' OR (p_xmej_d.xmej901 = '2' AND
+      ((p_xmej_d.xmejunit <> l_xmdf.xmdfunit) OR
+      (p_xmej_d.xmejunit IS NULL AND l_xmdf.xmdfunit IS NOT NULL) OR
+      (p_xmej_d.xmejunit IS NOT NULL AND l_xmdf.xmdfunit IS NULL))) THEN
+      #其說明的SQL
+      LET g_xmek007 = "SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"' "
+      #新增資料到變更歷程檔
+      IF NOT s_adbt510_ins_xmek(l_xmekseq,0,l_xmekseq2,"xmdfunit",p_xmej_d.xmej901,l_xmdf.xmdfunit,p_xmej_d.xmejunit,p_xmej_d.xmejdocno,p_xmej_d.xmej900) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      LET l_flag = TRUE
+   ELSE
+      #資料一樣，表示無變更，將變更歷程檔刪除
+      IF NOT s_adbt510_del_xmek(l_xmekseq,0,l_xmekseq2,"xmdfunit",p_xmej_d.xmejdocno,p_xmej_d.xmej900) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF  
+   #倉庫
+   IF p_xmej_d.xmej901 = '3' OR (p_xmej_d.xmej901 = '2' AND
+      ((p_xmej_d.xmej200 <> l_xmdf.xmdf200) OR
+      (p_xmej_d.xmej200 IS NULL AND l_xmdf.xmdf200 IS NOT NULL) OR
+      (p_xmej_d.xmej200 IS NOT NULL AND l_xmdf.xmdf200 IS NULL))) THEN
+      #其說明的SQL
+      LET g_xmek007 = "SELECT inayl003 FROM inayl_t WHERE inaylent='"||g_enterprise||"' AND inayl001=? AND inayl002='"||g_dlang||"' "
+      #新增資料到變更歷程檔
+      IF NOT s_adbt510_ins_xmek(l_xmekseq,0,l_xmekseq2,"xmdf200",p_xmej_d.xmej901,l_xmdf.xmdf200,p_xmej_d.xmej200,p_xmej_d.xmejdocno,p_xmej_d.xmej900) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      LET l_flag = TRUE
+   ELSE
+      #資料一樣，表示無變更，將變更歷程檔刪除
+      IF NOT s_adbt510_del_xmek(l_xmekseq,0,l_xmekseq2,"xmdf200",p_xmej_d.xmejdocno,p_xmej_d.xmej900) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF  
+   
+   #儲位
+   IF p_xmej_d.xmej901 = '3' OR (p_xmej_d.xmej901 = '2' AND
+      ((p_xmej_d.xmej201 <> l_xmdf.xmdf201) OR
+      (p_xmej_d.xmej201 IS NULL AND l_xmdf.xmdf201 IS NOT NULL) OR
+      (p_xmej_d.xmej201 IS NOT NULL AND l_xmdf.xmdf201 IS NULL))) THEN
+      #其說明的SQL
+      LET g_xmek007 = "SELECT inab003 FROM inab_t WHERE inabent='"||g_enterprise||"' AND inab001=? AND inab002=? AND inabsite=? "
+      #新增資料到變更歷程檔
+      IF NOT s_adbt510_ins_xmek(l_xmekseq,0,l_xmekseq2,"xmdf201",p_xmej_d.xmej901,l_xmdf.xmdf201,p_xmej_d.xmej201,p_xmej_d.xmejdocno,p_xmej_d.xmej900) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      LET l_flag = TRUE
+   ELSE
+      #資料一樣，表示無變更，將變更歷程檔刪除
+      IF NOT s_adbt510_del_xmek(l_xmekseq,0,l_xmekseq2,"xmdf201",p_xmej_d.xmejdocno,p_xmej_d.xmej900) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF  
+   #批號
+   IF p_xmej_d.xmej901 = '3' OR (p_xmej_d.xmej901 = '2' AND
+      ((p_xmej_d.xmej202 <> l_xmdf.xmdf202) OR
+      (p_xmej_d.xmej202 IS NULL AND l_xmdf.xmdf202 IS NOT NULL) OR
+      (p_xmej_d.xmej202 IS NOT NULL AND l_xmdf.xmdf202 IS NULL))) THEN
+      #其說明的SQL
+      LET g_xmek007 = ''
+      #新增資料到變更歷程檔
+      IF NOT s_adbt510_ins_xmek(l_xmekseq,0,l_xmekseq2,"xmdf202",p_xmej_d.xmej901,l_xmdf.xmdf202,p_xmej_d.xmej202,p_xmej_d.xmejdocno,p_xmej_d.xmej900) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+      LET l_flag = TRUE
+   ELSE
+      #資料一樣，表示無變更，將變更歷程檔刪除
+      IF NOT s_adbt510_del_xmek(l_xmekseq,0,l_xmekseq2,"xmdf202",p_xmej_d.xmejdocno,p_xmej_d.xmej900) THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF 
+
+   #表示此筆單身與訂單該筆單身一致
+   IF l_flag = FALSE THEN
+      UPDATE xmej_t SET xmej901 = '1'
+       WHERE xmejent = g_enterprise
+         AND xmejdocno = p_xmej_d.xmejdocno
+         AND xmejseq = p_xmej_d.xmejseq
+         AND xmejseq2 = p_xmej_d.xmejseq2 
+         AND xmej900 = p_xmej_d.xmej900
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'xmej_t'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF
+
+   RETURN r_success 
+END FUNCTION
+
+PRIVATE FUNCTION adbt510_03_xmdl_chk()
+DEFINE r_success     LIKE type_t.chr1
+DEFINE l_cnt         LIKE type_t.num5
+ 
+   LET r_success = TRUE
+   #出貨單
+   LET l_cnt = 0
+	SELECT COUNT(*) INTO l_cnt
+	  FROM xmdl_t,xmdk_t
+	 WHERE xmdlent = xmdkent
+	   AND xmdldocno = xmdkdocno
+	   AND xmdlent = g_enterprise
+	   AND xmdkstus <> 'X'
+	   AND xmdl003 = g_xmej_d[l_ac].xmejdocno
+	   AND xmdl004 = g_xmej_d[l_ac].xmejseq
+	   AND xmdl006 = g_xmej_d[l_ac].xmejseq2
+	IF l_cnt > 0  THEN
+   	LET r_success = FALSE
+   	RETURN r_success
+   END IF
+   LET l_cnt = 0
+	#出通單
+	SELECT COUNT(*) INTO l_cnt
+	  FROM xmdh_t,xmdg_t
+	 WHERE xmdhent = xmdgent
+	   AND xmdhdocno = xmdgdocno
+	   AND xmdhent = g_enterprise
+	   AND xmdgstus <> 'X'
+	   AND xmdh001 = g_xmej_d[l_ac].xmejdocno
+	   AND xmdh002 = g_xmej_d[l_ac].xmejseq
+	   AND xmdh004 = g_xmej_d[l_ac].xmejseq2
+	   
+	IF l_cnt > 0  THEN
+   	LET r_success = FALSE
+   	RETURN r_success
+   END IF 
+   
+	RETURN r_success   
+END FUNCTION
+
+ 
+{</section>}
+ 

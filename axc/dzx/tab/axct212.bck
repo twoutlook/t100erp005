@@ -1,0 +1,89 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axct212" module="axc" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="00768" crtdt="2014-09-11 18:44:50" modid="00768" moddt="2014-09-15 14:50:24" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="工時費用成本次要素統計和維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xcdrcomp,xcdrcomp_desc(chr80),xcdrld,xcdrld_desc(chr80),xcdr002,xcdr003,xcdr001,xcdr001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xcdr004,xcdr005,xcau003(num10),xcdr006,xcdr010,xcdr011,xcdr021,xcdr020,xcdr101,xcdr102,xcdr104,xcdr103,xcdr105"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xcdr004,xcdr005,xcau003,xcdr006,xcdr010,xcdr011,xcdr021,xcdr020,xcdr111,xcdr112,xcdr114,xcdr113,xcdr115"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="xcdr004,xcdr005,xcau003,xcdr006,xcdr010,xcdr011,xcdr021,xcdr020,xcdr121,xcdr122,xcdr124,xcdr123,xcdr125"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axc" filename="axct212" method="dialog">
+    <section id="input">
+      <input id="head" field="xcdrcomp,xcdrld,xcdr002,xcdr003,xcdr001"/>
+      <input id="body" page="1" field="xcdr004,xcdr005,xcdr006,xcdr010,xcdr011,xcdr021,xcdr020,xcdr101,xcdr102" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xcdrcomp,xcdrld,xcdr002,xcdr003,xcdr001"/>
+      <construct id="body" page="1" field="xcdr004,xcdr005,xcdr006,xcdr010,xcdr011,xcdr021,xcdr020,xcdr101,xcdr102,xcdr104,xcdr103,xcdr105"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xcdrld,xcdr001,xcdr002,xcdr003"/>
+      <set id="head" type="no_entry" field="xcdrld,xcdr001,xcdr002,xcdr003"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xcdrcomp">
+        <after>
+          <reference field="xcdrcomp_desc" ref_field="xcdr_t.xcdrcomp" map_field="xcbkent,xcbkcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcdrcomp_desc"/>
+      <column id="xcdrld">
+        <after>
+          <reference field="xcdrld_desc" ref_field="xcdr_t.xcdrld" map_field="xcbkent,xcbkld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcdrld_desc"/>
+      <column id="xcdr002"/>
+      <column id="xcdr003"/>
+      <column id="xcdr001">
+        <after>
+          <reference field="xcdr001_desc" ref_field="xcdr_t.xcdr001" map_field="xcbkent,xcbk001" ref_sql="SELECT xcatl003 FROM xcatl_t WHERE xcatlent=$varg_enterprise$var AND xcatl001=? AND xcatl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xcdr001_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="xcdr004"/>
+      <column id="xcdr005"/>
+      <column id="xcau003"/>
+      <column id="xcdr006"/>
+      <column id="xcdr010"/>
+      <column id="xcdr011"/>
+      <column id="xcdr021"/>
+      <column id="xcdr020"/>
+      <column id="xcdr101"/>
+      <column id="xcdr102"/>
+      <column id="xcdr104"/>
+      <column id="xcdr103"/>
+      <column id="xcdr105"/>
+    </init>
+    <init id="body" page="2"/>
+    <init id="body" page="3"/>
+  </form>
+  <dataset>
+    <head id="xcdr_t" pk="xcdrld,xcdr001,xcdr002,xcdr003">
+      <sql id="forupd_sql" type="sql" query="SELECT xcdrcomp,&apos;&apos;,xcdrld,&apos;&apos;,xcdr002,xcdr003,xcdr001,&apos;&apos; FROM xcdr_t WHERE xcdrent= ? AND xcdrld=? AND xcdr001=? AND xcdr002=? AND xcdr003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xcdrcomp,&apos;&apos;,xcdrld,&apos;&apos;,xcdr002,xcdr003,xcdr001,&apos;&apos; FROM xcdr_t" order="xcdrld,xcdr001,xcdr002,xcdr003"/>
+    </head>
+    <body id="xcdr_t" page="1,2,3" linked="" pk="xcdr004,xcdr005,xcdr006" fk="xcdrld,xcdr001,xcdr002,xcdr003">
+      <sql id="forupd_sql_detail" query="SELECT xcdr004,xcdr005,&apos;&apos;,xcdr006,xcdr010,xcdr011,xcdr021,xcdr020,xcdr101,xcdr102,xcdr104,xcdr103,xcdr105,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xcdr_t WHERE xcdrent=? AND xcdrld=? AND xcdr001=? AND xcdr002=? AND xcdr003=? AND xcdr004=? AND xcdr005=? AND xcdr006=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xcdr004,xcdr005,&apos;&apos;,xcdr006,xcdr010,xcdr011,xcdr021,xcdr020,xcdr101,xcdr102,xcdr104,xcdr103,xcdr105,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xcdr_t WHERE xcdrent= ? AND xcdrld=? AND xcdr001=? AND xcdr002=? AND xcdr003=?"/>
+    </body>
+  </dataset>
+</assembly>
+

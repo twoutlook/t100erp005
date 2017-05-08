@@ -1,0 +1,111 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="amhi805" module="amh" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="06814" crtdt="2016-05-03 10:24:40" modid="06814" moddt="2016-05-06 11:05:05" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="圖紙內容顯示設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mhbk001"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mhbk002,mhbk003,mhbk003_desc(chr500),mhbk004,mhbk005,mhbkstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="mhbk002,mhbkownid,mhbkownid_desc(chr500),mhbkowndp,mhbkowndp_desc(chr500),mhbkcrtid,mhbkcrtid_desc(chr500),mhbkcrtdp,mhbkcrtdp_desc(chr500),mhbkcrtdt,mhbkmodid,mhbkmodid_desc(chr500),mhbkmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="amh" filename="amhi805" method="dialog">
+    <section id="input">
+      <input id="head" field="mhbk001"/>
+      <input id="body" page="1" field="mhbk002,mhbk003,mhbk004,mhbk005,mhbkstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mhbk001"/>
+      <construct id="body" page="1" field="mhbk002,mhbk003,mhbk004,mhbk005,mhbkstus"/>
+      <construct id="body" page="2" field="mhbkownid,mhbkowndp,mhbkcrtid,mhbkcrtdp,mhbkcrtdt,mhbkmodid,mhbkmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mhbk001"/>
+      <set id="head" type="no_entry" field="mhbk001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="mhbk001" type="S" default="1" def_scc="6927"/>
+    </init>
+    <init id="body" page="1">
+      <column id="mhbk002"/>
+      <column id="mhbk003">
+        <after>
+          <check chkid="v_gzcb002" id="isExist"/>
+          <reference field="mhbk003_desc" ref_field="mhbk003" map_field="mhbk003" ref_sql="SELECT gzcbl004 FROM gzcbl_t WHERE gzcbl001=&apos;6931&apos; AND gzcbl002=? AND gzcbl003=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzcb001" state="i"/>
+        <controlp form="q_gzcb001" state="c"/>
+      </column>
+      <column id="mhbk003_desc"/>
+      <column id="mhbk004" type="S" default="N"/>
+      <column id="mhbk005" type="S" default="N"/>
+      <column id="mhbkstus" scc="50" type="S" default="Y">
+        <stus id="N" pic="open"/>
+        <stus id="X" pic="void"/>
+        <stus id="Y" pic="valid"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="mhbkownid">
+        <after>
+          <reference field="mhbkownid_desc" ref_field="mhbk_t.mhbkownid" map_field="mhbkownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhbkownid_desc"/>
+      <column id="mhbkowndp">
+        <after>
+          <reference field="mhbkowndp_desc" ref_field="mhbk_t.mhbkowndp" map_field="mhbkowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhbkowndp_desc"/>
+      <column id="mhbkcrtid">
+        <after>
+          <reference field="mhbkcrtid_desc" ref_field="mhbk_t.mhbkcrtid" map_field="mhbkcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhbkcrtid_desc"/>
+      <column id="mhbkcrtdp">
+        <after>
+          <reference field="mhbkcrtdp_desc" ref_field="mhbk_t.mhbkcrtdp" map_field="mhbkcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mhbkcrtdp_desc"/>
+      <column id="mhbkcrtdt"/>
+      <column id="mhbkmodid">
+        <after>
+          <reference field="mhbkmodid_desc" ref_field="mhbk_t.mhbkmodid" map_field="mhbkmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mhbkmodid_desc"/>
+      <column id="mhbkmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="mhbk_t" pk="mhbk001">
+      <sql id="forupd_sql" type="sql" query="SELECT mhbk001 FROM mhbk_t WHERE mhbkent= ? AND mhbk001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mhbk001 FROM mhbk_t" order="mhbk001"/>
+    </head>
+    <body id="mhbk_t" page="1,2" linked="" pk="mhbk002" fk="mhbk001">
+      <sql id="forupd_sql_detail" query="SELECT mhbk002,mhbk003,&apos;&apos;,mhbk004,mhbk005,mhbkstus,&apos;&apos;,mhbkownid,&apos;&apos;,mhbkowndp,&apos;&apos;,mhbkcrtid,&apos;&apos;,mhbkcrtdp,&apos;&apos;,mhbkcrtdt,mhbkmodid,&apos;&apos;,mhbkmoddt FROM mhbk_t WHERE mhbkent=? AND mhbk001=? AND mhbk002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mhbk002,mhbk003,&apos;&apos;,mhbk004,mhbk005,mhbkstus,&apos;&apos;,mhbkownid,&apos;&apos;,mhbkowndp,&apos;&apos;,mhbkcrtid,&apos;&apos;,mhbkcrtdp,&apos;&apos;,mhbkcrtdt,mhbkmodid,&apos;&apos;,mhbkmoddt FROM mhbk_t WHERE mhbkent= ? AND mhbk001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

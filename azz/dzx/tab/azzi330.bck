@@ -1,0 +1,110 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi330" module="azz" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02716" crtdt="2014-09-23 13:37:48" modid="04010" moddt="2015-06-17 11:39:31" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="報表元件表頭表尾設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="gzgm003,gzgm003_desc(chr80),gzgm002"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzgm001(chr500),gzgm001_desc(chr500),gzgm004,gzgmstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="gzgmownid,gzgmownid_desc(chr500),gzgmowndp,gzgmowndp_desc(chr500),gzgmcrtid,gzgmcrtid_desc(chr500),gzgmcrtdp,gzgmcrtdp_desc(chr500),gzgmcrtdt,gzgmmodid,gzgmmodid_desc(chr500),gzgmmoddt,gzgm001"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="set_head"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="del_item"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi330" method="dialog">
+    <section id="input">
+      <input id="head" field="gzgm003,gzgm002"/>
+      <input id="body" page="1" field="gzgm001,gzgm004,gzgmstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="gzgm003,gzgm002"/>
+      <construct id="body" page="1" field="gzgm001,gzgm004,gzgmstus"/>
+      <construct id="body" page="2" field="gzgmownid,gzgmowndp,gzgmcrtid,gzgmcrtdp,gzgmcrtdt,gzgmmodid,gzgmmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="gzgm002"/>
+      <set id="head" type="no_entry" field="gzgm002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="gzgm003">
+        <after>
+          <reference field="gzgm003_desc" ref_field="gzgm_t.gzgm003" map_field="gzgm003" ref_sql="SELECT gzgjl003 FROM gzgjl_t WHERE gzgjl001=? AND gzgjl002=$varg_lang$var"/>
+        </after>
+      </column>
+      <column id="gzgm003_desc"/>
+      <column id="gzgm002"/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzgm001">
+        <after>
+          <reference field="gzgm001_desc" ref_field="gzgm_t.gzgm001" map_field="gzgm001" ref_sql="SELECT gzgdl002 FROM gzgdl_t WHERE gzgdl000=? AND gzgdl001=$varg_lang$var"/>
+        </after>
+      </column>
+      <column id="gzgm001_desc"/>
+      <column id="gzgm004"/>
+      <column id="gzgmstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="gzgmownid">
+        <after>
+          <reference field="gzgmownid_desc" ref_field="gzgm_t.gzgmownid" map_field="gzgmownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="gzgmownid_desc"/>
+      <column id="gzgmowndp">
+        <after>
+          <reference field="gzgmowndp_desc" ref_field="gzgm_t.gzgmowndp" map_field="gzgmowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="gzgmowndp_desc"/>
+      <column id="gzgmcrtid">
+        <after>
+          <reference field="gzgmcrtid_desc" ref_field="gzgm_t.gzgmcrtid" map_field="gzgmcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="gzgmcrtid_desc"/>
+      <column id="gzgmcrtdp">
+        <after>
+          <reference field="gzgmcrtdp_desc" ref_field="gzgm_t.gzgmcrtdp" map_field="gzgmcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="gzgmcrtdp_desc"/>
+      <column id="gzgmcrtdt"/>
+      <column id="gzgmmodid">
+        <after>
+          <reference field="gzgmmodid_desc" ref_field="gzgm_t.gzgmmodid" map_field="gzgmmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="gzgmmodid_desc"/>
+      <column id="gzgmmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="gzgm_t" pk="gzgm002">
+      <sql id="forupd_sql" type="sql" query="SELECT gzgm003,&apos;&apos;,gzgm002 FROM gzgm_t WHERE gzgm002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT gzgm003,&apos;&apos;,gzgm002 FROM gzgm_t" order="gzgm002"/>
+    </head>
+    <body id="gzgm_t" page="1,2" linked="" pk="gzgm001" fk="gzgm002">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,&apos;&apos;,gzgm004,gzgmstus,gzgmownid,&apos;&apos;,gzgmowndp,&apos;&apos;,gzgmcrtid,&apos;&apos;,gzgmcrtdp,&apos;&apos;,gzgmcrtdt,gzgmmodid,&apos;&apos;,gzgmmoddt,&apos;&apos; FROM gzgm_t WHERE gzgm002=? AND gzgm001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,gzgm004,gzgmstus,gzgmownid,&apos;&apos;,gzgmowndp,&apos;&apos;,gzgmcrtid,&apos;&apos;,gzgmcrtdp,&apos;&apos;,gzgmcrtdt,gzgmmodid,&apos;&apos;,gzgmmoddt,&apos;&apos; FROM gzgm_t WHERE gzgm002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

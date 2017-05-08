@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="apmr001_x01" std_prog="apmr001_x01" erpver="1.0" module="APM" ver="2" env="s" zone="t10tst" booking="Y" type="X" identity="s" section_flag="N">
+  <other>
+    <code_template value="X" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="component.get_var" order="" ver="1" cite_std="" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[p_arg1,p_arg2]]>
+  </point>
+  <point name="ins_data.define" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE l_ooag011 LIKE ooag_t.ooag011
+DEFINE l_imaf142 LIKE imaf_t.imaf142]]>
+  </point>
+  <point name="ins_data.foreach" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[      IF tm.a1 = 'Y' AND sr.pmdb032 MATCHES "[234]" THEN
+         CONTINUE FOREACH
+      END IF
+      #帶出請購人員
+      CALL s_desc_get_person_desc(sr.pmda002) RETURNING sr.l_pmda002_ooag011
+          
+      #帶出品名、規格
+      CALL s_desc_get_item_desc(sr.pmdb004) RETURNING sr.l_imaal003_desc,sr.l_imaal004_desc
+      
+      #帶出緊急度
+      CALL s_desc_gzcbl004_desc('2036',sr.pmdb033) RETURNING sr.l_pmdb033_desc
+      CALL s_desc_gzcbl004_desc('2035',sr.pmdb032) RETURNING sr.l_pmdb032_desc
+      CALL s_desc_gzcbl004_desc('13',sr.pmdastus) RETURNING sr.l_pmdastus_desc
+      #帶出採購員 
+      LET l_imaf142 = ''
+      LET l_ooag011 = ''
+           
+       SELECT imaf142 INTO sr.l_imaf142
+         FROM imaf_t        
+        WHERE imafent = sr.pmdaent  
+          AND imafsite = sr.pmdasite
+          AND imaf001  = sr.pmdb004
+          
+       CALL s_desc_get_person_desc(sr.l_imaf142) RETURNING sr.l_imaf142_desc
+       IF cl_null(sr.pmdb006) THEN 
+          LET sr.pmdb006 = 0 
+       END IF
+       IF cl_null(sr.pmdb049) THEN 
+          LET sr.pmdb049 = 0 
+       END IF
+       #未採購量計算   
+       LET sr.l_pmdb006_049_count = sr.pmdb006 - sr.pmdb049  
+              ]]>
+  </point>
+  <point name="sel_prep.g_from" order="" ver="2" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="Y">
+    <![CDATA[    LET g_from = " FROM pmdb_t LEFT OUTER JOIN pmda_t ON pmda_t.pmdaent = pmdb_t.pmdbent AND pmda_t.pmdadocno = pmdb_t.pmdbdocno",
+                 "             LEFT OUTER JOIN imaa_t ON imaa_t.imaaent = pmdb_t.pmdbent AND imaa_t.imaa001 = pmdb_t.pmdb004",
+                 "             LEFT OUTER JOIN imaf_t ON imaf_t.imafent = pmdb_t.pmdbent AND imaf_t.imafsite = pmdb_t.pmdbsite AND imaf_t.imaf001 = pmdb_t.pmdb004"]]>
+  </point>
+  <section id="apmr001_x01.create_tmptable" ver="14" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION apmr001_x01_create_tmptable()
+ 
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before
+   {<point name="create_tmp.before"/>}
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "pmdadocno.pmda_t.pmdadocno,pmdadocdt.pmda_t.pmdadocdt,l_pmdastus_desc.gzcbl_t.gzcbl004,pmda002.pmda_t.pmda002,l_pmda002_ooag011.type_t.chr80,pmdb004.pmdb_t.pmdb004,l_imaal003_desc.type_t.chr100,l_imaal004_desc.type_t.chr200,pmdb030.pmdb_t.pmdb030,l_pmdb032_desc.gzcbl_t.gzcbl004,l_pmdb033_desc.type_t.chr30,pmdb006.pmdb_t.pmdb006,pmdb007.pmdb_t.pmdb007,pmdb049.pmdb_t.pmdb049,l_pmdb006_049_count.type_t.chr200,l_imaf142.imaf_t.imaf142,l_imaf142_desc.type_t.chr100,pmdb050.pmdb_t.pmdb050" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after
+   {<point name="create_tmp.after"/>}
+   #end add-point:create_tmp.after
+END FUNCTION
+]]>
+  </section>
+  <section id="apmr001_x01.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000100
+#+ 
+#+ Filename...: apmr001_x01
+#+ Description: 請購明細表
+#+ Creator....: 05229(2014-06-04 16:19:06)
+#+ Modifier...: 05384(2015-01-30 11:07:09) -SD/PR-
+]]>
+  </section>
+  <section id="apmr001_x01.global" ver="5" status="" src="s" readonly="">
+    <![CDATA[#報表 x01 樣板自動產生(Version:1)
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #where condition 
+       a1 LIKE type_t.chr1          #未完全採購
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+ 
+#add-point:自定義環境變數(Global Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="apmr001_x01.ins_data" ver="21" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION apmr001_x01_ins_data()
+DEFINE sr RECORD 
+   pmdadocno LIKE pmda_t.pmdadocno, 
+   pmdadocdt LIKE pmda_t.pmdadocdt, 
+   l_pmdastus_desc LIKE gzcbl_t.gzcbl004, 
+   pmda002 LIKE pmda_t.pmda002, 
+   l_pmda002_ooag011 LIKE type_t.chr80, 
+   pmdb004 LIKE pmdb_t.pmdb004, 
+   l_imaal003_desc LIKE type_t.chr100, 
+   l_imaal004_desc LIKE type_t.chr200, 
+   pmdb005 LIKE pmdb_t.pmdb005, 
+   pmdb030 LIKE pmdb_t.pmdb030, 
+   l_pmdb032_desc LIKE gzcbl_t.gzcbl004, 
+   l_pmdb033_desc LIKE type_t.chr30, 
+   pmdb006 LIKE pmdb_t.pmdb006, 
+   pmdb007 LIKE pmdb_t.pmdb007, 
+   pmdb049 LIKE pmdb_t.pmdb049, 
+   l_pmdb006_049_count LIKE type_t.chr200, 
+   l_imaf142 LIKE imaf_t.imaf142, 
+   l_imaf142_desc LIKE type_t.chr100, 
+   pmdb050 LIKE pmdb_t.pmdb050, 
+   pmdaent LIKE pmda_t.pmdaent, 
+   pmdb033 LIKE pmdb_t.pmdb033, 
+   pmdb032 LIKE pmdb_t.pmdb032, 
+   pmdasite LIKE pmda_t.pmdasite, 
+   pmdastus LIKE pmda_t.pmdastus
+ END RECORD
+#add-point:ins_data段define
+{<point name="ins_data.define"/>}
+#end add-point
+ 
+    #add-point:ins_data段before
+    {<point name="ins_data.before"/>}
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH apmr001_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach
+       {<point name="ins_data.foreach"/>}
+       #end add-point
+ 
+       #add-point:ins_data段before.save
+       {<point name="ins_data.before.save"/>}
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.pmdadocno,sr.pmdadocdt,sr.l_pmdastus_desc,sr.pmda002,sr.l_pmda002_ooag011,sr.pmdb004,sr.l_imaal003_desc,sr.l_imaal004_desc,sr.pmdb030,sr.l_pmdb032_desc,sr.l_pmdb033_desc,sr.pmdb006,sr.pmdb007,sr.pmdb049,sr.l_pmdb006_049_count,sr.l_imaf142,sr.l_imaf142_desc,sr.pmdb050
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "apmr001_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save
+       {<point name="ins_data.after.save"/>}
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after
+    {<point name="ins_data.after"/>}
+    #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmr001_x01.ins_prep" ver="11" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION apmr001_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define
+{<point name="ins_prep.define"/>}
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段
+         {<point name="insert_prep"/>}
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+]]>
+  </section>
+  <section id="apmr001_x01.main" ver="7" status="" src="s" readonly="">
+    <![CDATA[PUBLIC FUNCTION apmr001_x01(p_arg1,p_arg2)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition 
+DEFINE  p_arg2 LIKE type_t.chr1         #tm.a1  未完全採購
+#add-point:init段define
+{<point name="component.define"/>}
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.a1 = p_arg2
+ 
+   #add-point:報表元件參數準備
+   {<point name="component.arg.prep" />}
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "apmr001_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL apmr001_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL apmr001_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL apmr001_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL apmr001_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL apmr001_x01_rep_data()
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmr001_x01.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="apmr001_x01.rep_data" ver="2" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION apmr001_x01_rep_data()
+#add-point:rep_data.define
+{<point name="rep_data.define"/>}
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before
+    {<point name="rep_data.before"/>}
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after
+    {<point name="rep_data.after"/>}
+    #end add-point:rep_data.after
+END FUNCTION
+]]>
+  </section>
+  <section id="apmr001_x01.sel_prep" ver="20" status="" src="s" readonly="">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION apmr001_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define
+{<point name="sel_prep.define"/>}
+#end add-point
+ 
+   #add-point:sel_prep before
+   {<point name="sel_prep.before" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep g_select
+   {<point name="sel_prep.g_select" mark="Y"/>}
+   #end add-point
+   LET g_select = " SELECT pmdadocno,pmdadocdt,'',pmda002,'',pmdb004,NULL,NULL,pmdb005,pmdb030,'',NULL, 
+       pmdb006,pmdb007,pmdb049,NULL,'','',pmdb050,pmdaent,pmdb033,pmdb032,pmdasite,pmdastus"
+ 
+   #add-point:sel_prep g_from
+   {<point name="sel_prep.g_from" mark="Y"/>}
+   #end add-point
+    LET g_from = " FROM pmda_t,pmdb_t"
+ 
+   #add-point:sel_prep g_where
+   {<point name="sel_prep.g_where" mark="Y"/>}
+   #end add-point
+    LET g_where = " WHERE pmda_t.pmdastus <> 'X' AND " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order
+   {<point name="sel_prep.g_order" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before
+   {<point name="sel_prep.sql.before" mark="Y"/>}
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("pmda_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after
+   {<point name="sel_prep.sql.after" mark="Y"/>}
+   #end add-point
+   PREPARE apmr001_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE apmr001_x01_curs CURSOR FOR apmr001_x01_prepare
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

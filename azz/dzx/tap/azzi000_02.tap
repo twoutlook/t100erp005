@@ -1,0 +1,846 @@
+<add_points prog="azzi000_02" std_prog="azzi000_02" erpver="1.0" module="AZZ" ver="2" env="s" zone="t10dev" booking="Y" type="S" identity="s">
+  <other>
+    <code_template value="F" status="" />
+    <free_style value="N" status="" />
+  </other>
+  <point name="function.azzi000_02_update" cite_std="N" status="d" ver="1" src="s" new="Y" order="3" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 儲存使用者設定
+# Memo...........: 
+# Usage..........: CALL azzi000_02_update()
+# Input parameter: None
+# Return code....: None
+# Date & Author..: 2014/06/16 By Saki
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi000_02_update()
+   DEFINE li_i        LIKE type_t.num5
+   DEFINE li_cnt      LIKE type_t.num5
+   DEFINE li_error    BOOLEAN
+   DEFINE lc_gzxa001  LIKE gzxa_t.gzxa001
+   DEFINE ls_js       STRING
+
+   #首頁功能
+   LET ls_js = util.JSON.stringify(g_gzxq_d)
+   CALL s_azzi000_gzxq_update(g_account, ls_js)
+
+   #地圖, 語言, 營運據點
+   LET g_forupd_sql = "SELECT gzxa001 FROM gzxa_t WHERE gzxaent = ? AND gzxa001 = ? FOR UPDATE"
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE azzi000_02_gzxa_cl CURSOR FROM g_forupd_sql
+
+   LET g_sql = "UPDATE gzxa_t SET gzxa007 = ?, gzxa009 = ?, gzxa010 = ?",
+               " WHERE gzxaent = '", g_enterprise, "' AND gzxa001 = '", g_account,"'"
+   PREPARE azzi000_02_gzxa_upd_pre FROM g_sql
+
+   CALL s_transaction_begin()
+   OPEN azzi000_02_gzxa_cl USING g_enterprise,g_account
+   IF STATUS THEN
+      CALL cl_err("", "azz-00212", 0)
+      CLOSE azzi000_02_gzxa_cl
+      CALL s_transaction_end('N','0')
+   ELSE
+      #鎖住將被更改或取消的資料
+      FETCH azzi000_02_gzxa_cl INTO lc_gzxa001
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("", "azz-00212", 0)
+         CLOSE azzi000_02_gzxa_cl
+         CALL s_transaction_end('N','0')
+      ELSE
+         #修改資料
+         EXECUTE azzi000_02_gzxa_upd_pre USING g_gzxa007, g_gzxa009, g_gzxa010
+         IF SQLCA.sqlcode THEN
+            CALL cl_err("", "azz-00212", 0)
+            CLOSE azzi000_02_gzxa_cl
+            CALL s_transaction_end('N','0')
+         ELSE
+            CALL s_transaction_end('Y','0')
+         END IF
+      END IF
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.azzi000_02_fill" cite_std="N" status="u" ver="1" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 設定資料抓取
+# Memo...........: 
+# Usage..........: CALL azzi000_02_fill()
+# Input parameter: None
+# Return code....: None
+# Date & Author..: 2014/06/16 By Saki
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi000_02_fill()
+   DEFINE li_cnt   LIKE type_t.num5
+   DEFINE ls_js    STRING
+
+   LET g_sql = "SELECT gzxa007, gzxa009, gzxa010 FROM gzxa_t",
+               " WHERE gzxaent = '", g_enterprise, "' AND gzxa001 = '", g_account,"'"
+   PREPARE azzi000_02_fill_gzxa_pre FROM g_sql
+   EXECUTE azzi000_02_fill_gzxa_pre INTO g_gzxa007, g_gzxa009, g_gzxa010
+
+   CALL s_azzi000_gzxq_fill(g_account) RETURNING ls_js
+   CALL util.JSON.parse(ls_js, g_gzxq_d)
+
+   IF g_gzxq_d.getLength() > 0 THEN
+      LET g_boardtype = "0"
+   ELSE
+      LET g_boardtype = "1"
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.azzi000_02_init" cite_std="N" status="u" ver="1" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 子程式初始化
+# Memo...........: 
+# Usage..........: CALL azzi000_02_init()
+# Input parameter: None
+# Return code....: None
+# Date & Author..: 2014/06/16 By Saki
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi000_02_init()
+   DEFINE lc_gzxq003    LIKE gzxq_t.gzxq003
+   DEFINE lc_gzcbl004   LIKE gzcbl_t.gzcbl004
+   DEFINE ls_values     STRING
+   DEFINE ls_descs      STRING
+
+   CALL cl_load_4ad_formlevel("azzi001")
+
+   LET g_sql = "SELECT gzxq003, gzcbl004 FROM gzxq_t",
+               "  LEFT JOIN gzcbl_t ON gzxq003 = gzcbl002 AND gzcbl001 = '118' AND gzcbl003 = '",g_dlang,"'",
+               " WHERE gzxqent = '", g_enterprise, "' AND gzxq001 = 'default'",
+               " ORDER BY gzxq002"
+   PREPARE azzi000_02_init_getgzxq_pre FROM g_sql
+   DECLARE azzi000_02_init_getgzxq_curs CURSOR FOR azzi000_02_init_getgzxq_pre
+   FOREACH azzi000_02_init_getgzxq_curs INTO lc_gzxq003, lc_gzcbl004
+      LET ls_values = ls_values, lc_gzxq003, ","
+      LET ls_descs = ls_descs, lc_gzcbl004, ","
+   END FOREACH
+   LET ls_values = ls_values.subString(1, ls_values.getLength()-1)
+   LET ls_descs = ls_descs.subString(1, ls_descs.getLength()-1)
+   CALL cl_set_combo_items("gzxq003", ls_values, ls_descs)
+   CALL cl_set_combo_scc("gzxa009", "108")
+   CALL cl_set_combo_items("gzxq_t.gzxq004", "1,2,3,4,5,6", "1,2,3,4,5,6")
+   CALL cl_set_combo_items("gzxq_t.gzxq005", "1,2,3", "1,2,3")
+   CALL cl_set_combo_lang("gzxa010")
+   CALL cl_set_combo_authed_site("gzxa007")
+
+   DISPLAY g_account TO gzxa_t.gzxa001
+
+   LET g_parameter[1].id = "homepage"
+   LET g_parameter[1].comp = "s_detail1"
+   LET g_parameter[2].id = "map"
+   LET g_parameter[2].comp = "grid_map"
+   LET g_parameter[3].id = "language"
+   LET g_parameter[3].comp = "grid_language"
+   LET g_parameter[4].id = "organization"
+   LET g_parameter[4].comp = "grid_organization"
+   LET g_parameter[5].id = "password"
+   LET g_parameter[5].comp = "grid_password"
+   LET g_parameter[6].id = "signature"
+   LET g_parameter[6].comp = "grid_signature"
+
+END FUNCTION]]>
+</point>
+  <point name="function.azzi000_02_update" cite_std="N" status="u" ver="1" src="s" new="Y" order="3" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 儲存使用者設定
+# Memo...........: 
+# Usage..........: CALL azzi000_02_update()
+# Input parameter: None
+# Return code....: None
+# Date & Author..: 2014/06/16 By Saki
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi000_02_update()
+   DEFINE li_i        LIKE type_t.num5
+   DEFINE li_cnt      LIKE type_t.num5
+   DEFINE li_error    BOOLEAN
+   DEFINE lc_gzxa001  LIKE gzxa_t.gzxa001
+   DEFINE ls_js       STRING
+
+   #首頁功能
+   LET ls_js = util.JSON.stringify(g_gzxq_d)
+   CALL s_azzi000_gzxq_update(g_account, ls_js)
+
+   #地圖, 語言, 營運據點
+   LET g_forupd_sql = "SELECT gzxa001 FROM gzxa_t WHERE gzxaent = ? AND gzxa001 = ? FOR UPDATE"
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE azzi000_02_gzxa_cl CURSOR FROM g_forupd_sql
+
+   LET g_sql = "UPDATE gzxa_t SET gzxa007 = ?, gzxa009 = ?, gzxa010 = ?",
+               " WHERE gzxaent = '", g_enterprise, "' AND gzxa001 = '", g_account,"'"
+   PREPARE azzi000_02_gzxa_upd_pre FROM g_sql
+
+   CALL s_transaction_begin()
+   OPEN azzi000_02_gzxa_cl USING g_enterprise,g_account
+   IF STATUS THEN
+      CALL cl_err("", "azz-00212", 0)
+      CLOSE azzi000_02_gzxa_cl
+      CALL s_transaction_end('N','0')
+   ELSE
+      #鎖住將被更改或取消的資料
+      FETCH azzi000_02_gzxa_cl INTO lc_gzxa001
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("", "azz-00212", 0)
+         CLOSE azzi000_02_gzxa_cl
+         CALL s_transaction_end('N','0')
+      ELSE
+         #修改資料
+         EXECUTE azzi000_02_gzxa_upd_pre USING g_gzxa007, g_gzxa009, g_gzxa010
+         IF SQLCA.sqlcode THEN
+            CALL cl_err("", "azz-00212", 0)
+            CLOSE azzi000_02_gzxa_cl
+            CALL s_transaction_end('N','0')
+         ELSE
+            CALL s_transaction_end('Y','0')
+         END IF
+      END IF
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.azzi000_02_update_passwd" cite_std="N" status="u" ver="1" src="s" new="Y" order="4" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 修改使用者密碼
+# Memo...........: 
+# Usage..........: CALL azzi000_02_update_passwd()
+# Input parameter: None
+# Return code....: None
+# Date & Author..: 2014/06/16 By Saki
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION azzi000_02_update_passwd()
+   DEFINE lc_gzxd001   LIKE gzxd_t.gzxd001
+
+   LET g_forupd_sql = "SELECT gzxd001 FROM gzxd_t WHERE gzxdent = ? AND gzxd001 = ? FOR UPDATE"
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   DECLARE azzi000_02_update_passwd_cl CURSOR FROM g_forupd_sql
+
+   CALL s_transaction_begin()
+   OPEN azzi000_02_update_passwd_cl USING g_enterprise, g_account
+   IF STATUS THEN
+      CALL cl_err("", "azz-00212", 0)
+      CLOSE azzi000_02_update_passwd_cl
+      CALL s_transaction_end('N','0')
+   ELSE
+      #鎖住將被更改或取消的資料
+      FETCH azzi000_02_update_passwd_cl INTO lc_gzxd001
+      #資料被他人LOCK, 或是sql執行時出現錯誤
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("", "azz-00212", 0)
+         CLOSE azzi000_02_update_passwd_cl
+         CALL s_transaction_end('N','0')
+      ELSE
+         UPDATE gzxd_t SET gzxd002 = g_gzxd002
+          WHERE gzxdent = g_enterprise AND gzxd001 = g_account
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+               CALL cl_err("gzxd_t","std-00009",1)
+               CALL s_transaction_end('N','0')
+            WHEN SQLCA.sqlcode #其他錯誤
+               CALL cl_err("gzxd_t",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')
+            OTHERWISE
+               CALL cl_err("", "azz-00214", 0)
+               CALL s_transaction_end('Y','0')
+         END CASE
+      END IF
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="global.import" cite_std="N" status="u" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[IMPORT util]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[GLOBALS
+   DEFINE g_notneed_labeltag   BOOLEAN
+END GLOBALS]]>
+</point>
+  <point name="global.variable" cite_std="N" status="u" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[DEFINE g_parameter           DYNAMIC ARRAY OF RECORD
+         id                  LIKE type_t.chr50,   #參數ID ( Action ID )
+         comp                LIKE type_t.chr50,   #對應畫面檔元件(參數群組包起來的container)
+         img                 LIKE type_t.chr200   #圖片路徑
+                             END RECORD
+DEFINE g_sql                 STRING
+DEFINE g_forupd_sql          STRING
+DEFINE g_gzxa007             LIKE gzxa_t.gzxa007
+DEFINE g_gzxa009             LIKE gzxa_t.gzxa009
+DEFINE g_gzxa010             LIKE gzxa_t.gzxa010
+DEFINE g_gzxd002             LIKE gzxd_t.gzxd002
+DEFINE g_gzxd002_2           LIKE gzxd_t.gzxd002
+DEFINE g_boardtype           LIKE type_t.chr1
+
+DEFINE g_html   STRING   #TinyMCE HTML editor test]]>
+</point>
+  <point name="input.a.page1.gzxq001" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_gzxq_d[g_detail_idx].gzxq001 IS NOT NULL AND g_gzxq_d[g_detail_idx].gzxq002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_gzxq_d[g_detail_idx].gzxq001 != g_gzxq_d_t.gzxq001 OR g_gzxq_d[g_detail_idx].gzxq002 != g_gzxq_d_t.gzxq002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzxq_t WHERE "||"gzxqent = '" ||g_enterprise|| "' AND "||"gzxq001 = '"||g_gzxq_d[g_detail_idx].gzxq001 ||"' AND "|| "gzxq002 = '"||g_gzxq_d[g_detail_idx].gzxq002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page1.gzxq002" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.gzxq003" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            IF cl_null(g_gzxq_d[l_ac].gzxq003) THEN
+               INITIALIZE g_gzxq_d[l_ac].* TO NULL
+            END IF]]>
+</point>
+  <point name="input.action" cite_std="N" status="u" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[         BEFORE ROW
+            LET l_ac = DIALOG.getCurrentRow("s_detail1")
+            #依照SCC-118決定是否可挑選資料數
+            IF NOT cl_null(g_gzxq_d[l_ac].gzxq003) THEN
+               EXECUTE azzi000_02_gzcb_pre USING g_gzxq_d[l_ac].gzxq003 INTO lc_gzcb005, lc_gzcb006, lc_gzcb007
+               IF lc_gzcb007 = "Y" THEN
+                  CALL cl_set_comp_entry("gzxq006", TRUE)
+               ELSE
+                  CALL cl_set_comp_entry("gzxq006", FALSE)
+               END IF
+               IF cl_null(g_gzxq_d[l_ac].gzxq004) THEN
+                  LET g_gzxq_d[l_ac].gzxq004 = lc_gzcb005
+                  DISPLAY BY NAME g_gzxq_d[l_ac].gzxq004
+               END IF
+               IF cl_null(g_gzxq_d[l_ac].gzxq005) THEN
+                  LET g_gzxq_d[l_ac].gzxq005 = lc_gzcb006
+                  DISPLAY BY NAME g_gzxq_d[l_ac].gzxq005
+               END IF
+            END IF]]>
+</point>
+  <point name="input.b.page1.gzxq002" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            IF cl_null(g_gzxq_d[l_ac].gzxq002) THEN
+               LET g_gzxq_d[l_ac].gzxq002 = l_ac
+            END IF]]>
+</point>
+  <point name="input.b.page1.gzxq003" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            IF cl_null(g_gzxq_d[l_ac].gzxq002) THEN
+               LET g_gzxq_d[l_ac].gzxq002 = l_ac
+            END IF]]>
+</point>
+  <point name="input.before_input" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="input.define" cite_std="N" status="u" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   DEFINE lc_gzcb005      LIKE gzcb_t.gzcb005
+   DEFINE lc_gzcb006      LIKE gzcb_t.gzcb006
+   DEFINE lc_gzcb007      LIKE gzcb_t.gzcb007
+   DEFINE lwin_curr       ui.Window
+   DEFINE lfrm_curr       ui.Form]]>
+</point>
+  <point name="input.g.page1.gzxq002" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.gzxq003" cite_std="N" status="u" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #給預設值
+            IF NOT cl_null(g_gzxq_d[l_ac].gzxq003) THEN
+               #依照SCC-118決定是否可挑選資料數
+               EXECUTE azzi000_02_gzcb_pre USING g_gzxq_d[l_ac].gzxq003 INTO lc_gzcb005, lc_gzcb006, lc_gzcb007
+               IF lc_gzcb007 = "Y" THEN
+                  CALL cl_set_comp_entry("gzxq006", TRUE)
+                  IF cl_null(g_gzxq_d[l_ac].gzxq006) THEN
+                     LET g_gzxq_d[l_ac].gzxq006 = 4
+                  END IF
+               ELSE
+                  CALL cl_set_comp_entry("gzxq006", FALSE)
+                  LET g_gzxq_d[l_ac].gzxq006 = ""
+               END IF
+               DISPLAY BY NAME g_gzxq_d[l_ac].gzxq006
+               IF cl_null(g_gzxq_d[l_ac].gzxq004) THEN
+                  LET g_gzxq_d[l_ac].gzxq004 = lc_gzcb005
+                  DISPLAY BY NAME g_gzxq_d[l_ac].gzxq004
+               END IF
+               IF cl_null(g_gzxq_d[l_ac].gzxq005) THEN
+                  LET g_gzxq_d[l_ac].gzxq005 = lc_gzcb006
+                  DISPLAY BY NAME g_gzxq_d[l_ac].gzxq005
+               END IF
+            END IF]]>
+</point>
+  <point name="input.more_input" cite_std="N" status="u" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[      INPUT g_boardtype, g_gzxa009, g_gzxa010, g_gzxa007
+       FROM FORMONLY.board, gzxa_t.gzxa009, gzxa_t.gzxa010, gzxa_t.gzxa007
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         BEFORE INPUT
+            #預設值
+            IF cl_null(g_gzxa009) THEN
+               LET g_gzxa009 = "0"
+            END IF
+         ON CHANGE board
+            IF g_boardtype = "1" THEN
+               #轉成系統預設
+               CALL lfrm_curr.setElementHidden("s_detail1", TRUE)
+               IF g_gzxq_d.getLength() > 0 THEN
+                  IF cl_ask_confirm("azz-00221") THEN
+                     CALL s_azzi000_gzxq_maintain("d", g_account)
+                     CALL g_gzxq_d.clear()
+                  ELSE
+                     LET g_boardtype = "0"
+                     CALL lfrm_curr.setElementHidden("s_detail1", FALSE)
+                  END IF
+                  DISPLAY g_boardtype TO FORMONLY.board
+               END IF
+            ELSE
+               CALL lfrm_curr.setElementHidden("s_detail1", FALSE)
+            END IF
+      END INPUT
+
+      INPUT g_gzxd002, g_gzxd002_2
+       FROM gzxd_t.gzxd002, FORMONLY.gzxd002_2
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         BEFORE INPUT
+            #為了讓畫面上不要讓使用者按錯鍵
+            CALL DIALOG.setActionActive("accept_us", FALSE)
+         AFTER INPUT
+            CALL DIALOG.setActionActive("accept_us", TRUE)
+         ON ACTION confirm
+            IF cl_null(g_gzxd002) THEN
+               CALL cl_err("", "azz-00213", 0)
+            ELSE
+               IF cl_null(g_gzxd002_2) THEN
+                  CALL cl_err("", "azz-00018", 0)
+               ELSE
+                  CALL azzi000_02_update_passwd()
+               END IF
+            END IF
+      END INPUT
+
+      INPUT g_html FROM html ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         ON ACTION show
+            DISPLAY g_html
+      END INPUT
+      
+      ON ACTION homepage
+         NEXT FIELD board
+      ON ACTION map
+         NEXT FIELD gzxa009
+      ON ACTION language
+         NEXT FIELD gzxa010
+      ON ACTION organization
+         NEXT FIELD gzxa007
+      ON ACTION password
+         NEXT FIELD gzxd002
+      ON ACTION signature
+      ON ACTION accept_us
+         CALL azzi000_02_update()
+         ACCEPT DIALOG
+      ON ACTION cancel_us
+         EXIT DIALOG]]>
+</point>
+  <point name="input.pre_input" cite_std="N" status="u" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   LET lwin_curr = ui.Window.getCurrent()
+   LET lfrm_curr = lwin_curr.getForm()
+   CALL azzi000_02_init()
+   CALL azzi000_02_fill()
+   IF g_gzxq_d.getLength() <= 0 THEN
+      CALL lfrm_curr.setElementHidden("s_detail1", TRUE)
+   ELSE
+      CALL lfrm_curr.setElementHidden("s_detail1", FALSE)
+   END IF
+   LET g_sql = "SELECT gzcb005, gzcb006, gzcb007 FROM gzcb_t WHERE gzcb001 = '118' AND gzcb002 = ?"
+   PREPARE azzi000_02_gzcb_pre FROM g_sql]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.get_var" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.gzxq004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.gzxq004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.gzxq004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.gzxq005" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.gzxq005" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.gzxq005" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.gzxq006" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.gzxq006" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.gzxq006" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.gzxq002" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.gzxq003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.gzxq004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.gzxq005" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.gzxq006" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.other" cite_std="N" status="u" ver="" src="s" new="Y">
+<![CDATA[         AFTER INSERT
+            IF cl_null(g_gzxq_d[l_ac].gzxq003) THEN
+               CALL g_gzxq_d.deleteElement(l_ac)
+            ELSE
+               IF cl_null(g_gzxq_d[l_ac].gzxq004) THEN
+                  NEXT FIELD gzxq004
+               END IF
+               IF cl_null(g_gzxq_d[l_ac].gzxq005) THEN
+                  NEXT FIELD gzxq005
+               END IF
+            END IF
+         ON ROW CHANGE
+            IF cl_null(g_gzxq_d[l_ac].gzxq003) THEN
+               CALL g_gzxq_d.deleteElement(l_ac)
+            ELSE
+               IF cl_null(g_gzxq_d[l_ac].gzxq004) THEN
+                  NEXT FIELD gzxq004
+               END IF
+               IF cl_null(g_gzxq_d[l_ac].gzxq005) THEN
+                  NEXT FIELD gzxq005
+               END IF
+            END IF]]>
+</point>
+  <point name="input.after_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.before_close" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.post_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <section id="azzi000_02.description" ver="1" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000068
+#+ 
+#+ Filename...: azzi000_02
+#+ Description: ...
+#+ Creator....: 00413(2014/06/16)
+#+ Modifier...: 00413(2014/07/03)
+#+ Buildtype..: 應用 c02b 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="azzi000_02.global" ver="2" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_gzxq_d        RECORD
+       gzxq002 LIKE gzxq_t.gzxq002, 
+   gzxq003 LIKE gzxq_t.gzxq003, 
+   gzxq004 LIKE gzxq_t.gzxq004, 
+   gzxq005 LIKE gzxq_t.gzxq005, 
+   gzxq006 LIKE gzxq_t.gzxq006
+       END RECORD
+ 
+ 
+DEFINE g_gzxq_d          DYNAMIC ARRAY OF type_g_gzxq_d
+DEFINE g_gzxq_d_t        type_g_gzxq_d
+ 
+ 
+DEFINE g_gzxq001_t   LIKE gzxq_t.gzxq001    #Key值備份
+DEFINE g_gzxq002_t      LIKE gzxq_t.gzxq002    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num5
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num5  
+DEFINE g_detail_idx          LIKE type_t.num5  
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point	
+]]>
+</section>
+  <section id="azzi000_02.input" ver="3" status="" src="s">
+<![CDATA[#+ 資料輸入
+PUBLIC FUNCTION azzi000_02(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_azzi000_02 WITH FORM cl_ap_formpath("azz","azzi000_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_gzxq_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #此段落由子樣板a01產生
+         BEFORE FIELD gzxq002
+            #add-point:BEFORE FIELD gzxq002
+            {<point name="input.b.page1.gzxq002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzxq002
+            
+            #add-point:AFTER FIELD gzxq002
+            {<point name="input.a.page1.gzxq002" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gzxq002
+            #add-point:ON CHANGE gzxq002
+            {<point name="input.g.page1.gzxq002" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzxq003
+            #add-point:BEFORE FIELD gzxq003
+            {<point name="input.b.page1.gzxq003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzxq003
+            
+            #add-point:AFTER FIELD gzxq003
+            {<point name="input.a.page1.gzxq003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gzxq003
+            #add-point:ON CHANGE gzxq003
+            {<point name="input.g.page1.gzxq003" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzxq004
+            #add-point:BEFORE FIELD gzxq004
+            {<point name="input.b.page1.gzxq004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzxq004
+            
+            #add-point:AFTER FIELD gzxq004
+            {<point name="input.a.page1.gzxq004" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gzxq004
+            #add-point:ON CHANGE gzxq004
+            {<point name="input.g.page1.gzxq004" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzxq005
+            #add-point:BEFORE FIELD gzxq005
+            {<point name="input.b.page1.gzxq005" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzxq005
+            
+            #add-point:AFTER FIELD gzxq005
+            {<point name="input.a.page1.gzxq005" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gzxq005
+            #add-point:ON CHANGE gzxq005
+            {<point name="input.g.page1.gzxq005" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzxq006
+            #add-point:BEFORE FIELD gzxq006
+            {<point name="input.b.page1.gzxq006" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzxq006
+            
+            #add-point:AFTER FIELD gzxq006
+            {<point name="input.a.page1.gzxq006" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gzxq006
+            #add-point:ON CHANGE gzxq006
+            {<point name="input.g.page1.gzxq006" />}
+            #END add-point
+ 
+ 
+                  #Ctrlp:input.c.page1.gzxq002
+         ON ACTION controlp INFIELD gzxq002
+            #add-point:ON ACTION controlp INFIELD gzxq002
+            {<point name="input.c.page1.gzxq002" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.gzxq003
+         ON ACTION controlp INFIELD gzxq003
+            #add-point:ON ACTION controlp INFIELD gzxq003
+            {<point name="input.c.page1.gzxq003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.gzxq004
+         ON ACTION controlp INFIELD gzxq004
+            #add-point:ON ACTION controlp INFIELD gzxq004
+            {<point name="input.c.page1.gzxq004" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.gzxq005
+         ON ACTION controlp INFIELD gzxq005
+            #add-point:ON ACTION controlp INFIELD gzxq005
+            {<point name="input.c.page1.gzxq005" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.gzxq006
+         ON ACTION controlp INFIELD gzxq006
+            #add-point:ON ACTION controlp INFIELD gzxq006
+            {<point name="input.c.page1.gzxq006" />}
+            #END add-point
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...)
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_azzi000_02 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+</section>
+  <section id="azzi000_02.other_dialog" ver="1" status="" src="s">
+<![CDATA[{<point name="other.dialog"/>}
+]]>
+</section>
+  <section id="azzi000_02.other_function" ver="1" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+</add_points>

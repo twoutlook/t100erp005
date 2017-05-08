@@ -1,0 +1,147 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afai050" module="afa" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02416" crtdt="2014-02-18 17:07:05" modid="01727" moddt="2015-12-01 09:45:04" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="單一部門依帳套設定折舊作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="faaeld,faaeld_desc(chr80),glaacomp(chr10),glaacomp_desc(chr80),glaa004(chr5),glaa004_desc(chr80),glaa014(chr1),glaa008(chr1)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="faaestus,faae001,faae001_desc(chr500),faae002,faae002_desc(chr500),faae003,faae003_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="faae001,faae002,faaeownid,faaeownid_desc(chr500),faaeowndp,faaeowndp_desc(chr500),faaecrtid,faaecrtid_desc(chr500),faaecrtdp,faaecrtdp_desc(chr500),faaecrtdt,faaemodid,faaemodid_desc(chr500),faaemoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="afai050_01"/>
+      <action id="query" type="standard"/>
+      <action id="afai050_03"/>
+      <action id="afai050_02"/>
+    </section>
+  </structure>
+  <form id="0" module="afa" filename="afai050" method="dialog">
+    <section id="input">
+      <input id="head" field="faaeld,glaacomp,glaa004"/>
+      <input id="body" page="1" field="faaestus,faae001,faae002,faae003,faae003_desc" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="faaeld,glaacomp,glaacomp_desc,glaa004,glaa004_desc"/>
+      <construct id="body" page="1" field="faaestus,faae001,faae002,faae003,faae003_desc"/>
+      <construct id="body" page="2" field="faaeownid,faaeowndp,faaecrtid,faaecrtdp,faaecrtdt,faaemodid,faaemoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="faaeld"/>
+      <set id="head" type="no_entry" field="faaeld"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="faaeld">
+        <after>
+          <check chkid="v_glaald_1" id="isExist"/>
+          <reference field="faaeld_desc" ref_field="faae_t.faaeld" map_field="faaeent,faaeld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="faaeld_desc"/>
+      <column id="glaacomp">
+        <after/>
+        <controlp form="q_ooea001" state="c"/>
+      </column>
+      <column id="glaacomp_desc">
+        <controlp form="q_ooea001" state="c"/>
+      </column>
+      <column id="glaa004">
+        <after/>
+        <controlp form="q_ooal002" state="c"/>
+      </column>
+      <column id="glaa004_desc"/>
+      <column id="glaa014" type="S" default="N"/>
+      <column id="glaa008" type="S" default="N"/>
+    </init>
+    <init id="body" page="1">
+      <column id="faaestus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="faae001">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="faae001_desc" ref_field="faae_t.faae001" map_field="faaeent,faae001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_4" state="i"/>
+        <controlp form="q_ooeg001_4" state="c"/>
+      </column>
+      <column id="faae001_desc"/>
+      <column id="faae002">
+        <after>
+          <check chkid="v_faac001" id="isExist"/>
+          <reference field="faae002_desc" ref_field="faae_t.faae002" map_field="faaeent,faae002" ref_sql="SELECT faacl003 FROM faacl_t WHERE faaclent=$varg_enterprise$var AND faacl001=? AND faacl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_faac001" state="i"/>
+        <controlp form="q_faac001" state="c"/>
+      </column>
+      <column id="faae002_desc"/>
+      <column id="faae003">
+        <after>
+          <check chkid="v_glac002_3" id="isExist"/>
+        </after>
+      </column>
+      <column id="faae003_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="faaeownid">
+        <after>
+          <reference field="faaeownid_desc" ref_field="faae_t.faaeownid" map_field="faaeownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="faaeownid_desc"/>
+      <column id="faaeowndp">
+        <after>
+          <reference field="faaeowndp_desc" ref_field="faae_t.faaeowndp" map_field="faaeowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="faaeowndp_desc"/>
+      <column id="faaecrtid">
+        <after>
+          <reference field="faaecrtid_desc" ref_field="faae_t.faaecrtid" map_field="faaecrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="faaecrtid_desc"/>
+      <column id="faaecrtdp">
+        <after>
+          <reference field="faaecrtdp_desc" ref_field="faae_t.faaecrtdp" map_field="faaecrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="faaecrtdp_desc"/>
+      <column id="faaecrtdt"/>
+      <column id="faaemodid">
+        <after>
+          <reference field="faaemodid_desc" ref_field="faae_t.faaemodid" map_field="faaemodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="faaemodid_desc"/>
+      <column id="faaemoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="faae_t" pk="faaeld">
+      <sql id="forupd_sql" type="sql" query="SELECT faaeld,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM faae_t WHERE faaeent= ? AND faaeld=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT faaeld,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM faae_t" order="faaeld"/>
+    </head>
+    <body id="faae_t" page="1,2" linked="" pk="faae001,faae002" fk="faaeld">
+      <sql id="forupd_sql_detail" query="SELECT faaestus,faae001,&apos;&apos;,faae002,&apos;&apos;,faae003,&apos;&apos;,&apos;&apos;,&apos;&apos;,faaeownid,&apos;&apos;,faaeowndp,&apos;&apos;,faaecrtid,&apos;&apos;,faaecrtdp,&apos;&apos;,faaecrtdt,faaemodid,&apos;&apos;,faaemoddt FROM faae_t WHERE faaeent=? AND faaeld=? AND faae001=? AND faae002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT faaestus,faae001,&apos;&apos;,faae002,&apos;&apos;,faae003,&apos;&apos;,&apos;&apos;,&apos;&apos;,faaeownid,&apos;&apos;,faaeowndp,&apos;&apos;,faaecrtid,&apos;&apos;,faaecrtdp,&apos;&apos;,faaecrtdt,faaemodid,&apos;&apos;,faaemoddt FROM faae_t WHERE faaeent= ? AND faaeld=?"/>
+    </body>
+  </dataset>
+</assembly>
+

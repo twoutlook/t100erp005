@@ -1,0 +1,130 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apci121" module="apc" jobmode="N" type="t02" industry="std" fix_arg="0" crtid="03247" crtdt="2014-02-27 09:49:55" modid="03247" moddt="2014-02-27 00:00:00" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="POS參數基本資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="pcaistus,pcai001,pcail003,pcai002,pcai003,pcai004,pcaistamp(timestamp),pcaipos(chr500),pcaiunit"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="pcai001,pcaiownid,pcaiownid_desc(chr500),pcaiowndp,pcaiowndp_desc(chr500),pcaicrtid,pcaicrtid_desc(chr500),pcaicrtdp,pcaicrtdp_desc(chr500),pcaicrtdt,pcaimodid,pcaimodid_desc(chr500),pcaimoddt"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="pcajstus,pcaj002,pcajl004,pcaj003,pcajunit"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="3">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="apc" filename="apci121" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="pcaistus,pcai001,pcail003,pcai002,pcai003,pcai004,pcaistamp,pcaipos,pcaiunit" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="pcajstus,pcaj002,pcajl004,pcaj003,pcajunit" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="pcaistus,pcai001,pcail003,pcai002,pcai003,pcai004,pcaistamp,pcaipos,pcaiunit"/>
+      <construct id="body" page="2" field="pcaiownid,pcaiowndp,pcaicrtid,pcaicrtdp,pcaicrtdt,pcaimodid,pcaimoddt"/>
+      <construct id="body" page="3" field="pcajstus,pcaj002,pcajl004,pcaj003,pcajunit"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="pcaistus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pcai001">
+        <controlp form="q_pcai001" state="c"/>
+      </column>
+      <column id="pcail003"/>
+      <column id="pcai002" def_scc="6022"/>
+      <column id="pcai003">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="pcai004" def_scc="6023"/>
+      <column id="pcaistamp"/>
+      <column id="pcaipos" type="S" default="N"/>
+      <column id="pcaiunit"/>
+    </init>
+    <init id="body" page="2">
+      <column id="pcaiownid">
+        <after>
+          <reference field="pcaiownid_desc" ref_field="pcai_t.pcaiownid" map_field="pcaiownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcaiownid_desc"/>
+      <column id="pcaiowndp">
+        <after>
+          <reference field="pcaiowndp_desc" ref_field="pcai_t.pcaiowndp" map_field="pcaiowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pcaiowndp_desc"/>
+      <column id="pcaicrtid">
+        <after>
+          <reference field="pcaicrtid_desc" ref_field="pcai_t.pcaicrtid" map_field="pcaicrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcaicrtid_desc"/>
+      <column id="pcaicrtdp">
+        <after>
+          <reference field="pcaicrtdp_desc" ref_field="pcai_t.pcaicrtdp" map_field="pcaicrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pcaicrtdp_desc"/>
+      <column id="pcaicrtdt"/>
+      <column id="pcaimodid">
+        <after>
+          <reference field="pcaimodid_desc" ref_field="pcai_t.pcaimodid" map_field="pcaimodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pcaimodid_desc"/>
+      <column id="pcaimoddt"/>
+    </init>
+    <init id="body" page="3">
+      <column id="pcajstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pcaj002">
+        <controlp form="q_pcaj002" state="c"/>
+      </column>
+      <column id="pcajl004"/>
+      <column id="pcaj003" type="S" default="N"/>
+      <column id="pcajunit"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="pcai_t" page="1,2" linked="" pk="pcai001">
+      <sql id="forupd_sql_detail" query="SELECT pcaistus,pcai001,&apos;&apos;,pcai002,pcai003,pcai004,pcaistamp,&apos;&apos;,pcaiunit,&apos;&apos;,pcaiownid,&apos;&apos;,pcaiowndp,&apos;&apos;,pcaicrtid,&apos;&apos;,pcaicrtdp,&apos;&apos;,pcaicrtdt,pcaimodid,&apos;&apos;,pcaimoddt FROM pcai_t WHERE pcaient=? AND pcai001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pcaistus,pcai001,&apos;&apos;,pcai002,pcai003,pcai004,pcaistamp,&apos;&apos;,pcaiunit,&apos;&apos;,pcaiownid,&apos;&apos;,pcaiowndp,&apos;&apos;,pcaicrtid,&apos;&apos;,pcaicrtdp,&apos;&apos;,pcaicrtdt,pcaimodid,&apos;&apos;,pcaimoddt FROM pcai_t WHERE pcaient= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="pcail_t.pcail003" table="pcail_t" fk="pcai001" pk="pcail001,pcail002" field="pcail003"/>
+    </body>
+    <body id="pcaj_t" page="3" linked="" pk="pcaj002" fk="pcaj001" detail="Y">
+      <sql id="forupd_sql_detail" query="SELECT pcajstus,pcaj002,&apos;&apos;,pcaj003,pcajunit FROM pcaj_t WHERE pcajent=? AND pcaj001=? AND pcaj002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT pcajstus,pcaj002,&apos;&apos;,pcaj003,pcajunit FROM pcaj_t WHERE pcajent=? AND pcaj001=?"/>
+      <sql id="detail_append" type="lang" target="pcajl_t.pcajl004" table="pcajl_t" fk="pcai001,pcaj002" pk="pcajl001,pcajl002,pcajl003" field="pcajl004"/>
+    </body>
+  </dataset>
+</assembly>
+

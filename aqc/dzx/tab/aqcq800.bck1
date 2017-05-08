@@ -1,0 +1,95 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aqcq800" module="aqc" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="02295" crtdt="2014-09-12 09:57:49" modid="02295" moddt="2016-04-25 14:39:29" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="品質分數統計查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="imaa009,qcaq003,qcaq004,qcaq007,qcaq005,qcaq006,l_qcaq005,l_qcaq003,l_qcaq007,l_qcaq004,l_qcaq006,l_imaa009"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="imaa009,imaa009_desc(chr500),qcaq003,qcaq003_desc(chr500),qcaq003_desc_1(chr500),qcaq005,qcaq005_desc(chr500),qcaq007,qcaq007_desc(chr500),qcaq004,qcaq004_desc(chr500),qcaq006,qcaq006_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="l_totalname(chr500),l_jan(chr500),l_feb(chr500),l_mar(chr500),l_apr(chr500),l_may(chr500),l_jun(chr500),l_jul(chr500),l_aug(chr500),l_sept(chr500),l_oct(chr500),l_nov(chr500),l_dec(chr500),l_allyear(chr500)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="imaa009(b_imaa009),imaa009_desc(b_imaa009_desc),qcaq003(b_qcaq003),qcaq003_desc(b_qcaq003_desc),qcaq003_desc_1(b_qcaq003_desc_1),qcaq005(b_qcaq005),qcaq005_desc(b_qcaq005_desc),qcaq007(b_qcaq007),qcaq007_desc(b_qcaq007_desc),qcaq004(b_qcaq004),qcaq004_desc(b_qcaq004_desc),qcaq006(b_qcaq006),qcaq006_desc(b_qcaq006_desc)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="l_totalname(l_totalname),l_jan(l_jan),l_feb(l_feb),l_mar(l_mar),l_apr(l_apr),l_may(l_may),l_jun(l_jun),l_jul(l_jul),l_aug(l_aug),l_sept(l_sept),l_oct(l_oct),l_nov(l_nov),l_dec(l_dec),l_allyear(l_allyear)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="n_year"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+      <action id="p_year"/>
+    </section>
+  </structure>
+  <form id="0" module="aqc" filename="aqcq800" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="imaa009,qcaq003,qcaq005,qcaq007,qcaq004,qcaq004_desc,qcaq006" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="imaa009(b_imaa009),qcaq003(b_qcaq003),qcaq005(b_qcaq005),qcaq007(b_qcaq007),qcaq004(b_qcaq004),qcaq006(b_qcaq006)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="imaa009">
+        <after>
+          <reference field="imaa009_desc" ref_field="imaa009" map_field="imaa009" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="imaa009_desc"/>
+      <column id="qcaq003">
+        <after>
+          <reference field="qcaq003_desc" ref_field="qcaq003" map_field="qcaq003" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="qcaq003_desc"/>
+      <column id="qcaq003_desc_1"/>
+      <column id="qcaq005">
+        <after>
+          <reference field="qcaq005_desc" ref_field="qcaq005" map_field="qcaq005" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="qcaq005_desc"/>
+      <column id="qcaq007">
+        <after>
+          <reference field="qcaq007_desc" ref_field="qcaq007" map_field="qcaq007" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;221&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="qcaq007_desc"/>
+      <column id="qcaq004">
+        <after/>
+      </column>
+      <column id="qcaq004_desc"/>
+      <column id="qcaq006">
+        <after>
+          <reference field="qcaq006_desc" ref_field="qcaq006" map_field="qcaq006" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="qcaq006_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="l_totalname"/>
+      <column id="l_jan"/>
+      <column id="l_feb"/>
+      <column id="l_mar"/>
+      <column id="l_apr"/>
+      <column id="l_may"/>
+      <column id="l_jun"/>
+      <column id="l_jul"/>
+      <column id="l_aug"/>
+      <column id="l_sept"/>
+      <column id="l_oct"/>
+      <column id="l_nov"/>
+      <column id="l_dec"/>
+      <column id="l_allyear"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="qcaq_t" page="1,2" linked="" pk="qcaq000,qcaq001,qcaq002,qcaq003,qcaq004,qcaq005,qcaq006,qcaq007">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,&apos;&apos;,qcaq003,&apos;&apos;,&apos;&apos;,qcaq005,&apos;&apos;,qcaq007,&apos;&apos;,qcaq004,&apos;&apos;,qcaq006,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM qcaq_t WHERE qcaqent= ? AND qcaqsite= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

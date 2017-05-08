@@ -1,0 +1,294 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aimm219" module="aim" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="01534" crtdt="2014-11-26 17:24:04" modid="01534" moddt="2014-11-28 14:25:17" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="料件製造資料快速維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="imaesite,imaesite_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="imaestus(chr10),imae001,imae001_desc(chr500),imae001_desc_desc(chr500),imae011,imae011_desc(chr500),imae012,imae012_desc(chr500),imae016,imae016_desc(chr500),imae017,imae018,imae041,imae041_desc(chr500),imae042,imae042_desc(chr500),imae051,imae052,imae078,imae079,imae071,imae072,imae073,imae074,imae075,imae081,imae081_desc(chr500),imae082,imae083,imae085,imae101,imae101_desc(chr500),imae102,imae102_desc(chr500),imae103,imae103_desc(chr500),imae104,imae104_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="imae001,imae001_2_desc(chr500),imae001_2_desc_desc(chr500),imaeownid,imaeownid_desc(chr500),imaeowndp,imaeowndp_desc(chr500),imaecrtid,imaecrtid_desc(chr500),imaecrtdp,imaecrtdp_desc(chr500),imaecrtdt,imaemodid,imaemodid_desc(chr500),imaemoddt,imaecnfid,imaecnfid_desc(chr500),imaecnfdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="aimm201_01"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aim" filename="aimm219" method="dialog">
+    <section id="input">
+      <input id="head" field="imaesite"/>
+      <input id="body" page="1" field="imaestus,imae001,imae011,imae012,imae016,imae017,imae018,imae041,imae042,imae051,imae052,imae078,imae079,imae071,imae072,imae073,imae074,imae075,imae081,imae082,imae083,imae085,imae101,imae102,imae103,imae104" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="imaesite"/>
+      <construct id="body" page="1" field="imaestus,imae001,imae011,imae012,imae016,imae017,imae018,imae041,imae042,imae051,imae052,imae078,imae079,imae071,imae072,imae073,imae074,imae075,imae081,imae082,imae083,imae085,imae101,imae102,imae103,imae104"/>
+      <construct id="body" page="2" field="imaeownid,imaeowndp,imaecrtid,imaecrtdp,imaecrtdt,imaemodid,imaemoddt,imaecnfid,imaecnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="imaesite"/>
+      <set id="head" type="no_entry" field="imaesite"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="imaesite">
+        <after>
+          <reference field="imaesite_desc" ref_field="imae_t.imaesite" map_field="imaesite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="imaesite_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="imaestus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="A" pic="approved"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="imae001">
+        <after>
+          <reference field="imae001_desc" ref_field="imae_t.imae001" map_field="imaeent,imae001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="imae001_desc">
+        <after>
+          <reference field="imae001_desc_desc" ref_field="imae_t.imae001" map_field="imae001" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="imae001_desc_desc"/>
+      <column id="imae011">
+        <after>
+          <reference field="imae011_desc" ref_field="imae011" map_field="imae011" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;204&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imcf011" state="i"/>
+        <controlp form="q_imcf011" state="c"/>
+      </column>
+      <column id="imae011_desc"/>
+      <column id="imae012">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="imae012_desc" ref_field="imae_t.imae012" map_field="imae012" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_2" state="i"/>
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="imae012_desc"/>
+      <column id="imae016">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="imae016_desc" ref_field="imae_t.imae016" map_field="imaeent,imae016" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="imae016_desc"/>
+      <column id="imae017" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imae018" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imae041">
+        <after>
+          <check chkid="v_inay001" id="isExist"/>
+          <reference field="imae041_desc" ref_field="imae_t.imae041" map_field="imae041" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inay001" state="i"/>
+        <controlp form="q_inay001" state="c"/>
+      </column>
+      <column id="imae041_desc"/>
+      <column id="imae042">
+        <after>
+          <check chkid="v_inab002" id="isExist"/>
+          <reference field="imae042_desc" ref_field="imae041,imae042" map_field="imae041,imae042" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inab002_8" state="i"/>
+        <controlp form="q_inab002_8" state="c"/>
+      </column>
+      <column id="imae042_desc"/>
+      <column id="imae051" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imae052" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imae078" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imae079" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imae071" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imae072" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imae073" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imae074" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imae075" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imae081">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="imae081_desc" ref_field="imae_t.imae081" map_field="imaeent,imae081" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="imae081_desc"/>
+      <column id="imae082" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imae083" type="S" default="0">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imae085">
+        <after>
+          <check id="range" bt="0.000" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="imae101">
+        <after>
+          <check chkid="v_inay001" id="isExist"/>
+          <reference field="imae101_desc" ref_field="imae_t.imae101" map_field="imae101" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inay001" state="i"/>
+        <controlp form="q_inay001" state="c"/>
+      </column>
+      <column id="imae101_desc"/>
+      <column id="imae102">
+        <after>
+          <check chkid="v_inab002" id="isExist"/>
+          <reference field="imae102_desc" ref_field="imae101,imae102" map_field="imae101,imae102" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inab002_8" state="i"/>
+        <controlp form="q_inab002_8" state="c"/>
+      </column>
+      <column id="imae102_desc"/>
+      <column id="imae103">
+        <after>
+          <check chkid="v_inay001" id="isExist"/>
+          <reference field="imae103_desc" ref_field="imae_t.imae103" map_field="imae103" ref_sql="SELECT inayl003 FROM inayl_t WHERE inaylent=$varg_enterprise$var AND inayl001=? AND inayl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_inay001" state="i"/>
+        <controlp form="q_inay001" state="c"/>
+      </column>
+      <column id="imae103_desc"/>
+      <column id="imae104">
+        <after>
+          <check chkid="v_inab002" id="isExist"/>
+          <reference field="imae104_desc" ref_field="imae103,imae104" map_field="imae103,imae104" ref_sql="SELECT inab003 FROM inab_t WHERE inabent=$varg_enterprise$var AND inab001=? AND inab002=? "/>
+        </after>
+        <controlp form="q_inab002_8" state="i"/>
+        <controlp form="q_inab002_8" state="c"/>
+      </column>
+      <column id="imae104_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="imae001_2_desc">
+        <after>
+          <reference field="imae001_2_desc_desc" ref_field="imae001_2" map_field="imae001_2" ref_sql="SELECT imaal004 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="imae001_2_desc_desc"/>
+      <column id="imaeownid">
+        <after>
+          <reference field="imaeownid_desc" ref_field="imae_t.imaeownid" map_field="imaeownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imaeownid_desc"/>
+      <column id="imaeowndp">
+        <after>
+          <reference field="imaeowndp_desc" ref_field="imae_t.imaeowndp" map_field="imaeowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imaeowndp_desc"/>
+      <column id="imaecrtid">
+        <after>
+          <reference field="imaecrtid_desc" ref_field="imae_t.imaecrtid" map_field="imaecrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imaecrtid_desc"/>
+      <column id="imaecrtdp">
+        <after>
+          <reference field="imaecrtdp_desc" ref_field="imae_t.imaecrtdp" map_field="imaecrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imaecrtdp_desc"/>
+      <column id="imaecrtdt"/>
+      <column id="imaemodid">
+        <after>
+          <reference field="imaemodid_desc" ref_field="imae_t.imaemodid" map_field="imaemodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imaemodid_desc"/>
+      <column id="imaemoddt"/>
+      <column id="imaecnfid">
+        <after>
+          <reference field="imaecnfid_desc" ref_field="imae_t.imaecnfid" map_field="imaecnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imaecnfid_desc"/>
+      <column id="imaecnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="imae_t" pk="imaesite">
+      <sql id="forupd_sql" type="sql" query="SELECT imaesite,&apos;&apos; FROM imae_t WHERE imaeent= ? AND imaesite=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT imaesite,&apos;&apos; FROM imae_t" order="imaesite"/>
+    </head>
+    <body id="imae_t" page="1,2" linked="" pk="imae001" fk="imaesite">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,imae001,&apos;&apos;,&apos;&apos;,imae011,&apos;&apos;,imae012,&apos;&apos;,imae016,&apos;&apos;,imae017,imae018,imae041,&apos;&apos;,imae042,&apos;&apos;,imae051,imae052,imae078,imae079,imae071,imae072,imae073,imae074,imae075,imae081,&apos;&apos;,imae082,imae083,imae085,imae101,&apos;&apos;,imae102,&apos;&apos;,imae103,&apos;&apos;,imae104,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,imaeownid,&apos;&apos;,imaeowndp,&apos;&apos;,imaecrtid,&apos;&apos;,imaecrtdp,&apos;&apos;,imaecrtdt,imaemodid,&apos;&apos;,imaemoddt,imaecnfid,&apos;&apos;,imaecnfdt FROM imae_t WHERE imaeent=? AND imaesite=? AND imae001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,imae001,&apos;&apos;,&apos;&apos;,imae011,&apos;&apos;,imae012,&apos;&apos;,imae016,&apos;&apos;,imae017,imae018,imae041,&apos;&apos;,imae042,&apos;&apos;,imae051,imae052,imae078,imae079,imae071,imae072,imae073,imae074,imae075,imae081,&apos;&apos;,imae082,imae083,imae085,imae101,&apos;&apos;,imae102,&apos;&apos;,imae103,&apos;&apos;,imae104,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,imaeownid,&apos;&apos;,imaeowndp,&apos;&apos;,imaecrtid,&apos;&apos;,imaecrtdp,&apos;&apos;,imaecrtdt,imaemodid,&apos;&apos;,imaemoddt,imaecnfid,&apos;&apos;,imaecnfdt FROM imae_t WHERE imaeent= ? AND imaesite=?"/>
+    </body>
+  </dataset>
+</assembly>
+

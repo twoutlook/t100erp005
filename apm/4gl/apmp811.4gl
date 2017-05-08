@@ -1,0 +1,1046 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="apmp811.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0006(2015-07-10 14:38:56), PR版次:0006(2017-02-20 11:23:33)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000199
+#+ Filename...: apmp811
+#+ Description: 供應商績效評核定性評分整批產生作業
+#+ Creator....: 04226(2014-04-03 11:10:37)
+#+ Modifier...: 06815 -SD/PR- 01996
+ 
+{</section>}
+ 
+{<section id="apmp811.global" >}
+#應用 p01 樣板自動產生(Version:19)
+#add-point:填寫註解說明 name="global.memo" name="global.memo"
+#Memos
+#160711-00040#24 17/02/20 By xujing   T類作業的單別開窗的where條件(找CALL q_ooba002_開頭的)增加如下程式段
+#                                          CALL s_control_get_docno_sql(g_user,g_dept) RETURNING l_success,l_sql
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+        pmchdocno            LIKE pmch_t.pmchdocno,
+        pmchdocdt            LIKE pmch_t.pmchdocdt,
+        select               LIKE type_t.chr1,
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       pmcc001 LIKE pmcc_t.pmcc001, 
+   pmcc002 LIKE type_t.chr10, 
+   pmce004 LIKE type_t.chr10, 
+   pmchdocno LIKE pmch_t.pmchdocno, 
+   pmchdocdt LIKE pmch_t.pmchdocdt, 
+   select LIKE type_t.chr1, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+DEFINE g_ooef004         LIKE ooef_t.ooef004
+DEFINE g_cnt_t           LIKE type_t.num5      #成功筆數
+DEFINE g_cnt_f           LIKE type_t.num5      #失敗筆數
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apmp811.main" >}
+MAIN
+   #add-point:main段define (客製用) name="main.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define name="main.define"
+   
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("apm","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   #2015/07/10 s983961--mark(s)新版背景處理調整
+   #LET lc_param.pmchdocno = g_argv[1]             #單據編號(必傳值)
+   #LET lc_param.pmchdocdt = DOWNSHIFT(g_argv[2])  #單據日期(必傳值)
+   #LET lc_param.select = g_argv[3]                #評分資料排序(必傳值 1.依供應商 2.依評核項目)
+   #LET lc_param.wc = g_argv[4]                    #條件(必傳值)
+   #LET ls_js = util.JSON.stringify(lc_param)
+   
+   ##IF NOT cl_null(lc_param.wc1) AND NOT cl_null(lc_param.pmchdocno) AND
+   #IF NOT cl_null(lc_param.wc) AND NOT cl_null(lc_param.pmchdocno) AND
+   #   NOT cl_null(lc_param.pmchdocdt) AND NOT cl_null(lc_param.select) THEN
+   #   LET g_bgjob = "Y"
+   #ELSE
+   #   LET g_bgjob = "N"
+   #   #LET lc_param.wc1 = " 1=1"
+   #END IF
+   #2015/07/10 s983961--mark(e)新版背景處理調整
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+      CALL apmp811_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_apmp811 WITH FORM cl_ap_formpath("apm",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL apmp811_init()
+ 
+      #進入選單 Menu (="N")
+      CALL apmp811_ui_dialog()
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_apmp811
+   END IF
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="apmp811.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION apmp811_init()
+ 
+   #add-point:init段define (客製用) name="init.define_customerization"
+   
+   #end add-point
+   #add-point:ui_dialog段define name="init.define"
+   
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL cl_set_combo_scc('select','6045') #2015/07/10 s983961--mark新版背景處理調整
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp811.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION apmp811_ui_dialog()
+ 
+   #add-point:ui_dialog段define (客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define name="ui_dialog.define"
+   DEFINE r_success       LIKE type_t.num5
+   DEFINE r_doctype       LIKE rtai_t.rtai004
+   DEFINE  l_sql1          STRING     #160711-00040#24 add
+   DEFINE l_success       LIKE type_t.num5 #160711-00040#24 add
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2 name="ui_dialog.before_dialog2"
+      
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #應用 a57 樣板自動產生(Version:3)
+         INPUT BY NAME g_master.pmcc001,g_master.pmcc002,g_master.pmce004,g_master.pmchdocno,g_master.pmchdocdt, 
+             g_master.select 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前 name="input.m.before_input"
+               #預設單別
+               LET r_success = ''
+               LET r_doctype = ''
+               CALL s_arti200_get_def_doc_type(g_site,'apmt811','1')
+                  RETURNING r_success,r_doctype
+               LET g_master.pmchdocno = r_doctype
+               #預設單據日期
+               LET g_master.pmchdocdt = g_today
+               #預設評分資料排序
+               LET g_master.select = '1'
+               DISPLAY BY NAME g_master.pmchdocno,g_master.pmchdocdt,g_master.select
+               #end add-point
+         
+                     #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmcc001
+            #add-point:BEFORE FIELD pmcc001 name="input.b.pmcc001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmcc001
+            
+            #add-point:AFTER FIELD pmcc001 name="input.a.pmcc001"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmcc001
+            #add-point:ON CHANGE pmcc001 name="input.g.pmcc001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmcc002
+            #add-point:BEFORE FIELD pmcc002 name="input.b.pmcc002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmcc002
+            
+            #add-point:AFTER FIELD pmcc002 name="input.a.pmcc002"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmcc002
+            #add-point:ON CHANGE pmcc002 name="input.g.pmcc002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmce004
+            #add-point:BEFORE FIELD pmce004 name="input.b.pmce004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmce004
+            
+            #add-point:AFTER FIELD pmce004 name="input.a.pmce004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmce004
+            #add-point:ON CHANGE pmce004 name="input.g.pmce004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmchdocno
+            #add-point:BEFORE FIELD pmchdocno name="input.b.pmchdocno"
+ 
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmchdocno
+            
+            #add-point:AFTER FIELD pmchdocno name="input.a.pmchdocno"
+            IF NOT cl_null(g_master.pmchdocno) THEN
+               IF NOT s_aooi200_chk_slip(g_site,'',g_master.pmchdocno,'apmt811') THEN
+                  LET g_master.pmchdocno = ''
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmchdocno
+            #add-point:ON CHANGE pmchdocno name="input.g.pmchdocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD pmchdocdt
+            #add-point:BEFORE FIELD pmchdocdt name="input.b.pmchdocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD pmchdocdt
+            
+            #add-point:AFTER FIELD pmchdocdt name="input.a.pmchdocdt"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE pmchdocdt
+            #add-point:ON CHANGE pmchdocdt name="input.g.pmchdocdt"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD select
+            #add-point:BEFORE FIELD select name="input.b.select"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD select
+            
+            #add-point:AFTER FIELD select name="input.a.select"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE select
+            #add-point:ON CHANGE select name="input.g.select"
+            
+            #END add-point 
+ 
+ 
+ 
+                     #Ctrlp:input.c.pmcc001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmcc001
+            #add-point:ON ACTION controlp INFIELD pmcc001 name="input.c.pmcc001"
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmcc001()                           #呼叫開窗
+            LET g_master.pmcc001 = g_qryparam.return1         
+            DISPLAY g_master.pmcc001 TO pmcc001        #顯示到畫面上
+            NEXT FIELD pmcc001                         #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmcc002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmcc002
+            #add-point:ON ACTION controlp INFIELD pmcc002 name="input.c.pmcc002"
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_rtax001_1()                         #呼叫開窗
+            LET g_master.pmcc002 = g_qryparam.return1         
+            DISPLAY g_master.pmcc002 TO pmcc002        #顯示到畫面上
+            NEXT FIELD pmcc002                         #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmce004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmce004
+            #add-point:ON ACTION controlp INFIELD pmce004 name="input.c.pmce004"
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = g_today
+            CALL q_ooeg001()                           #呼叫開窗
+            LET g_master.pmce004 = g_qryparam.return1         
+            DISPLAY g_master.pmce004 TO pmce004        #顯示到畫面上
+            NEXT FIELD pmce004                         #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmchdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmchdocno
+            #add-point:ON ACTION controlp INFIELD pmchdocno name="input.c.pmchdocno"
+            LET g_ooef004 = ''
+            SELECT ooef004 INTO g_ooef004 FROM ooef_t
+             WHERE ooefent = g_enterprise
+               AND ooef001 = g_site
+            IF cl_null(g_ooef004) THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.code = 'art-00007'
+               LET g_errparam.extend = g_site
+               LET g_errparam.popup = TRUE
+               CALL cl_err()
+
+            END IF
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = g_ooef004
+            LET g_qryparam.arg2 = 'apmt811'
+            LET g_qryparam.default1 = g_master.pmchdocno
+            #160711-00040#24 add(s)
+            CALL s_control_get_docno_sql(g_user,g_dept)
+                RETURNING l_success,l_sql1
+            IF NOT cl_null(l_sql1) THEN
+               LET g_qryparam.where = l_sql1
+            END IF
+            #160711-00040#24 add(e)
+            CALL q_ooba002_1()                         #呼叫開窗
+            #150504-00044#1 150506 by pomelo add(S)
+            LET g_master.pmchdocno = g_qryparam.return1
+            DISPLAY g_master.pmchdocno TO pmchdocno
+            #150504-00044#1 150506 by pomelo add(E)
+            #DISPLAY g_qryparam.return1 TO pmchdocno    #顯示到畫面上 150504-00044#1 150506 by pomelo mark
+            NEXT FIELD pmchdocno                       #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.pmchdocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD pmchdocdt
+            #add-point:ON ACTION controlp INFIELD pmchdocdt name="input.c.pmchdocdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.select
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD select
+            #add-point:ON ACTION controlp INFIELD select name="input.c.select"
+            
+            #END add-point
+ 
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後 name="input.m.after_input"
+               
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...) name="input.other"
+            
+            #end add-point
+         END INPUT
+ 
+ 
+ 
+         
+         
+      
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         
+
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL apmp811_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog3"
+            
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear name="ui_dialog.before_qbeclear"
+         
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL apmp811_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog name="process.exit_dialog"
+      IF NOT cl_null(g_master.pmcc001) THEN
+         CONSTRUCT lc_param.wc ON pmcc001,pmcc002,pmce004 FROM pmcc001,pmcc002,pmce004
+            BEFORE CONSTRUCT
+               DISPLAY g_master.pmcc001,g_master.pmcc002,g_master.pmce004
+                    TO pmcc001,pmcc002,pmce004
+               EXIT CONSTRUCT
+         END CONSTRUCT
+      END IF
+      LET lc_param.pmchdocno = g_master.pmchdocno
+      LET lc_param.pmchdocdt = g_master.pmchdocdt
+      LET lc_param.select    = g_master.select   
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL apmp811_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = apmp811_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule name="process.after_schedule"
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp811.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION apmp811_transfer_argv(ls_js)
+ 
+   #add-point:transfer_agrv段define (客製用) name="transfer_agrv.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define name="transfer_agrv.define"
+   
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容 name="transfer.argv.define"
+   #背景處理時不需另外傳參數
+   #LET la_cmdrun.param[1] = la_param.pmchdocno
+   #LET la_cmdrun.param[2] = la_param.pmchdocdt     
+   #LET la_cmdrun.param[3] = la_param.select
+   #LET la_cmdrun.param[4] = la_param.wc
+   #LET la_cmdrun.param[5] = la_param.wc1
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp811.process" >}
+#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION apmp811_process(ls_js)
+ 
+   #add-point:process段define (客製用) name="process.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define name="process.define"
+   DEFINE l_msg       STRING
+   DEFINE l_str       STRING
+   DEFINE l_msg1      STRING           #160225-00040#12 20160328 add by beckxie
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+   LET li_p01_status = 1
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理 name="process.pre_process"
+   
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress name="process.count_progress"
+      CALL cl_progress_bar_no_window(2)   #160225-00040#12 20160328 add by beckxie
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE apmp811_process_cs CURSOR FROM ls_sql
+#  FOREACH apmp811_process_cs INTO
+   #add-point:process段process name="process.process"
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg1 = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg1)
+   #160225-00040#12 20160328 add by beckxie---E
+   CALL apmp811_sel_data(ls_js)
+   #160225-00040#12 20160328 add by beckxie---S
+   LET l_msg1 = cl_getmsg('std-00012',g_lang)
+   CALL cl_progress_no_window_ing(l_msg1)
+   #160225-00040#12 20160328 add by beckxie---E
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理 name="process.foreground_finish"
+      IF NOT (g_cnt_t= 0 AND g_cnt_f = 0) THEN
+         LET l_msg = cl_getmsg('apm-00455',g_dlang)
+         LET l_msg = l_msg,g_cnt_t
+         LET l_str = cl_getmsg('apm-00456',g_dlang)
+         LET l_str = l_str,g_cnt_f
+         LET l_msg = l_msg,",",l_str
+         CALL cl_ask_confirm2("",l_msg) RETURNING li_stus
+         RETURN
+      END IF
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理 name="process.background_finish"
+      
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL apmp811_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp811.get_buffer" >}
+PRIVATE FUNCTION apmp811_get_buffer(p_dialog)
+ 
+   #add-point:process段define (客製用) name="get_buffer.define_customerization"
+   
+   #end add-point
+   DEFINE p_dialog   ui.DIALOG
+   #add-point:process段define name="get_buffer.define"
+   
+   #end add-point
+ 
+   
+   LET g_master.pmcc001 = p_dialog.getFieldBuffer('pmcc001')
+   LET g_master.pmcc002 = p_dialog.getFieldBuffer('pmcc002')
+   LET g_master.pmce004 = p_dialog.getFieldBuffer('pmce004')
+   LET g_master.pmchdocno = p_dialog.getFieldBuffer('pmchdocno')
+   LET g_master.pmchdocdt = p_dialog.getFieldBuffer('pmchdocdt')
+   LET g_master.select = p_dialog.getFieldBuffer('select')
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理 name="get_buffer.others"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp811.msgcentre_notify" >}
+PRIVATE FUNCTION apmp811_msgcentre_notify()
+ 
+   #add-point:process段define (客製用) name="msgcentre_notify.define_customerization"
+   
+   #end add-point
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:process段define name="msgcentre_notify.define"
+   
+   #end add-point
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知 name="msg_centre.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="apmp811.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: SQL準備
+# Memo...........:
+# Usage..........: CALL apmp811_sql_pre(p_wc)
+# Input parameter: p_wc          條件
+# Return code....: 無
+# Date & Author..: 2014/04/03 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmp811_sql_pre(p_wc)
+DEFINE p_wc          STRING
+DEFINE p_wc1         STRING
+DEFINE l_sql         STRING
+
+   #[T:供應商評核項目設定檔]pmcc_t、[T:供應商評核定性項目設定檔]pmct_t中抓取符合條件資料
+   LET l_sql = "SELECT DISTINCT pmcc001,pmcc002,pmce004",
+               "  FROM pmcc_t,pmce_t",
+               " WHERE pmccent = pmceent",
+               "   AND pmcc001 = pmce001",
+               "   AND pmcc002 = pmce002",
+               "   AND pmccent = ",g_enterprise,
+               "   AND pmccstus = 'Y'",
+               "   AND ",p_wc,
+               " ORDER BY pmcc001,pmcc002,pmce004"
+   PREPARE apmp811_sel_data FROM l_sql
+   DECLARE apmp811_sel_data_curs CURSOR FOR apmp811_sel_data
+   
+   LET l_sql = "SELECT COUNT(*)",
+               "  FROM pmch_t",
+               " WHERE pmchent = ",g_enterprise,
+               "   AND pmch001 = ?",
+               "   AND pmch002 = ?",
+               "   AND pmch003 = ?",
+               "   AND (pmchstus = 'N' OR pmchstus = 'Y')"
+   PREPARE apmp811_chk_repeat FROM l_sql
+   DECLARE apmp811_chk_repeat_curs CURSOR FOR apmp811_chk_repeat
+END FUNCTION
+
+################################################################################
+# Descriptions...: 撈出符合QBE的資料
+# Memo...........:
+# Usage..........: CALL apmp811_sel_data(ls_js)
+# Input parameter: ls_js
+# Return code....: 無
+# Date & Author..: 2014/04/03 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmp811_sel_data(ls_js)
+DEFINE ls_js         STRING
+DEFINE lc_param      type_parameter
+DEFINE l_errmsg      STRING
+DEFINE l_success     LIKE type_t.num5
+DEFINE l_flag        LIKE type_t.num5
+DEFINE l_cnt         LIKE type_t.num5
+DEFINE l_sel         RECORD
+       pmcc001       LIKE pmcc_t.pmcc001,
+       pmcc002       LIKE pmcc_t.pmcc002,
+       pmce004       LIKE pmce_t.pmce004
+                     END RECORD
+
+   CALL util.JSON.parse(ls_js,lc_param)
+   CALL s_transaction_begin()
+   CALL cl_showmsg_init()
+
+   LET l_success = TRUE
+   LET g_cnt_t = 0
+   LET g_cnt_f = 0
+   CALL apmp811_sql_pre(lc_param.wc)
+   
+   INITIALIZE l_sel.* TO NULL
+   FOREACH apmp811_sel_data_curs INTO l_sel.pmcc001,l_sel.pmcc002,l_sel.pmce004
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg("",'','foreach apmp811_sel_data_curs',SQLCA.sqlcode,1)
+         LET l_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      #檢核[C:評核期別]+[C:評核品類]+[C:評核部門]不可重複(單據已存在，且非作廢狀態)
+      IF cl_null(l_sel.pmce004) THEN
+         #此評核期別+評核品類的評核部門為空！;請確認[供應商績效評核項目設定作業apmi810]！
+         CALL cl_errmsg("pmcc001,pmcc002",l_sel.pmcc001 || " / " || l_sel.pmcc002,'','apm-00458',1)
+         LET g_cnt_f = g_cnt_f + 1
+         CONTINUE FOREACH
+      END IF
+      
+      LET l_cnt = 0
+      #[C:評核期別]+[C:評核品類]+[C:評核部門]不可重複(單據已存在，且非作廢狀態)
+      EXECUTE apmp811_chk_repeat USING l_sel.pmcc001,l_sel.pmcc002,l_sel.pmce004
+         INTO l_cnt
+      IF l_cnt >= 1 THEN
+         LET l_errmsg = l_sel.pmcc001,'/',l_sel.pmcc002,'/',l_sel.pmce004
+         #[評核期別]+[評核品類]+[評核部門]不可重複！;請查詢[供應商績效評核項目設定作業apmi810]后重新輸入！
+         CALL cl_errmsg("pmcc001,pmcc002,pmce004",l_errmsg,'','apm-00005',1)
+         LET g_cnt_f = g_cnt_f + 1
+         CONTINUE FOREACH
+      END IF
+      
+      LET l_flag = ''
+      CALL apmp811_ins_pmch(l_sel.pmcc001,l_sel.pmcc002,l_sel.pmce004,lc_param.pmchdocno,lc_param.pmchdocdt,lc_param.select)
+         RETURNING l_flag
+      IF NOT l_flag THEN
+         LET l_success = FALSE
+         #del_單頭_單身_單據自動編號
+         CONTINUE FOREACH
+      END IF
+      LET g_cnt_t = g_cnt_t + 1
+   END FOREACH
+   IF l_success THEN
+      CALL s_transaction_end('Y','0') 
+   ELSE
+      CALL s_transaction_end('N','0')
+      LET g_cnt_t = 0
+      LET g_cnt_f = 0
+   END IF
+   CALL cl_err_showmsg()
+END FUNCTION
+
+################################################################################
+# Descriptions...: 新增供應商評核定性評分單頭檔(pmch_t)
+# Memo...........:
+# Usage..........: CALL apmp811_ins_pmch(p_pmcc001,p_pmcc002,p_pmce004,p_pmchdocno,p_pmchdocdt,p_select)
+#                  RETURNING r_success
+# Input parameter: p_pmcc001      評核期別
+#                : p_pmcc002      評核品類
+#                : p_pmce004      評分部門
+#                : p_pmchdocno    單別
+#                : p_pmchdocdt    單據日期
+#                : p_select       評分資料排序
+# Return code....: r_success      True/False
+# Date & Author..: 2014/04/07 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmp811_ins_pmch(p_pmcc001,p_pmcc002,p_pmce004,p_pmchdocno,p_pmchdocdt,p_select)
+DEFINE p_pmcc001            LIKE pmcc_t.pmcc001
+DEFINE p_pmcc002            LIKE pmcc_t.pmcc002
+DEFINE p_pmce004            LIKE pmce_t.pmce004
+DEFINE p_pmchdocno          LIKE pmch_t.pmchdocno
+DEFINE p_pmchdocdt          LIKE pmch_t.pmchdocdt
+DEFINE p_select             LIKE type_t.chr1
+DEFINE l_pmch               RECORD
+       pmchent              LIKE pmch_t.pmchent, 
+       pmchdocno            LIKE pmch_t.pmchdocno,
+       pmchdocdt            LIKE pmch_t.pmchdocdt,
+       pmch001              LIKE pmch_t.pmch001,
+       pmch002              LIKE pmch_t.pmch002,
+       pmch003              LIKE pmch_t.pmch003,
+       pmch004              LIKE pmch_t.pmch004,
+       pmchstus             LIKE pmch_t.pmchstus,
+       pmchownid            LIKE pmch_t.pmchownid,
+       pmchowndp            LIKE pmch_t.pmchowndp,
+       pmchcrtid            LIKE pmch_t.pmchcrtid,
+       pmchcrtdp            LIKE pmch_t.pmchcrtdp,
+       pmchcrtdt            DATETIME YEAR TO SECOND
+                            END RECORD
+DEFINE l_pmchdocno          LIKE pmch_t.pmchdocno
+DEFINE l_flag               LIKE type_t.num5
+DEFINE r_success            LIKE type_t.num5
+DEFINE r_errno              LIKE type_t.chr10
+DEFINE l_errmsg             STRING
+    
+   LET r_success = TRUE
+   INITIALIZE l_pmch.* TO NULL
+   LET l_errmsg = p_pmcc001,'/',p_pmcc002,'/',p_pmce004
+   
+   LET l_pmchdocno = ''
+   CALL s_aooi200_gen_docno(g_site,p_pmchdocno,p_pmchdocdt,'apmt811')
+      RETURNING l_flag,l_pmchdocno
+   IF NOT l_flag THEN
+      #單據編號自動編號錯誤！;單據編號的自動編號可能發生問題,請聯絡MIS或相關人員處理
+      CALL cl_errmsg("pmcc001,pmcc002,pmce004",l_errmsg,'','apm-00459',1)
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   LET l_pmch.pmchent   = g_enterprise
+   LET l_pmch.pmchdocno = l_pmchdocno
+   LET l_pmch.pmchdocdt = p_pmchdocdt
+   LET l_pmch.pmch001   = p_pmcc001
+   LET l_pmch.pmch002   = p_pmcc002
+   LET l_pmch.pmch003   = p_pmce004
+   LET l_pmch.pmch004   = ''
+   LET l_pmch.pmchstus  = 'N'
+   LET l_pmch.pmchownid = g_user
+   LET l_pmch.pmchowndp = g_dept
+   LET l_pmch.pmchcrtid = g_user
+   LET l_pmch.pmchcrtdp = g_dept
+   LET l_pmch.pmchcrtdt = cl_get_current()
+   
+   INSERT INTO pmch_t (pmchent,   pmchdocno, pmchdocdt, pmch001, pmch002, pmch003, pmch004, pmchstus,
+                       pmchownid, pmchowndp, pmchcrtid, pmchcrtdp, pmchcrtdt)
+      VALUES (l_pmch.pmchent, l_pmch.pmchdocno, l_pmch.pmchdocdt, l_pmch.pmch001, l_pmch.pmch002,
+              l_pmch.pmch003, l_pmch.pmch004, l_pmch.pmchstus, l_pmch.pmchownid, l_pmch.pmchowndp,
+              l_pmch.pmchcrtid, l_pmch.pmchcrtdp, l_pmch.pmchcrtdt)
+   IF SQLCA.sqlcode THEN
+      CALL cl_errmsg('','','Ins pmch_t','SQLCA.sqlcode',1)
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #新增單身 供應商評核定性評分明細檔(pmci_t)
+   CALL s_apmt811_ins_pmci(l_pmch.pmchdocno,l_pmch.pmch001,l_pmch.pmch002,l_pmch.pmch003,p_select) 
+      RETURNING l_flag,r_errno
+   IF NOT l_flag THEN
+      LET r_success = FALSE
+      CALL cl_errmsg('','','s_apmt811_ins_pmci',r_errno,1)
+      RETURN r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

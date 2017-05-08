@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="aglt370_02" std_prog="aglt370_02" erpver="1.0" module="AGL" ver="3" env="s" zone="t10prd" booking="N" type="S" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <point name="function.aglt370_02_glam_ins" order="1" ver="2" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[# 插入常用分攤傳票單身檔
+PRIVATE FUNCTION aglt370_02_glam_ins()
+   DEFINE l_glandocno     LIKE glan_t.glandocno
+   DEFINE l_glanld        LIKE glan_t.glanld
+   DEFINE l_glan001       LIKE glan_t.glan001
+   DEFINE l_ac            LIKE type_t.num5
+   DEFINE l_n             LIKE type_t.num5
+   DEFINE l_glam003       LIKE glam_t.glam003
+   DEFINE l_glam004       LIKE glam_t.glam004
+   DEFINE l_glaacomp      LIKE glaa_t.glaacomp
+   DEFINE l_glamseq       LIKE glam_t.glamseq
+   
+   SELECT glaacomp INTO l_glaacomp
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald = g_glanld
+      
+   SELECT COUNT(*) INTO l_n
+     FROM glan_t,glam_t
+    WHERE glanent = glament
+      AND glandocno = glamdocno
+      AND glanld = glamld
+      AND glan001 = glam002
+      AND glanent = g_enterprise
+      AND glandocno = g_glandocno
+      AND glanld = g_glanld
+      
+   IF l_n > 0 THEN 
+      IF cl_ask_confirm('agl-00196') THEN
+         DELETE FROM glam_t 
+          WHERE glament = g_enterprise
+            AND glamdocno = g_glandocno
+            AND glamld = g_glanld
+            AND glam002 IN (SELECT glan001
+                              FROM glan_t,glam_t
+                             WHERE glanent = glament
+                               AND glandocno = glamdocno
+                               AND glanld = glamld
+                               AND glan001 = glam002
+                               AND glanent = g_enterprise
+                               AND glandocno = g_glandocno
+                               AND glanld = g_glanld)
+          LET g_sql = " SELECT * FROM glan_t", 
+                      "  WHERE glanent = '",g_enterprise,"'",
+                      "    AND glandocno = '",g_glandocno,"'",
+                      "    AND glanld = '",g_glanld,"'"
+      ELSE
+         LET g_sql = " SELECT * FROM glan_t", 
+                      "  WHERE glanent = '",g_enterprise,"'",
+                      "    AND glandocno = '",g_glandocno,"'",
+                      "    AND glanld = '",g_glanld,"'",
+                      "    AND glan001 NOT IN (SELECT glan001 ",
+                      "                          FROM glan_t,glam_t ",
+                      "                         WHERE glanent = glament ",
+                      "                           AND glandocno = glamdocno ",
+                      "                           AND glanld = glamld ",
+                      "                           AND glan001 = glam002 ",
+                      "                           AND glanent = '",g_enterprise,"'",
+                      "                           AND glandocno = '",g_glandocno,"'",
+                      "                           AND glanld = '",g_glanld,"')"
+      END IF 
+   ELSE
+      LET g_sql = " SELECT * FROM glan_t", 
+                      "  WHERE glanent = '",g_enterprise,"'",
+                      "    AND glandocno = '",g_glandocno,"'",
+                      "    AND glanld = '",g_glanld,"'"
+   END IF
+   
+   #LET g_sql = " SELECT * FROM glan_t", 
+   #            "  WHERE glanent = '",g_enterprise,"'",
+   #            "    AND glandocno = '",g_glandocno,"'",
+   #            "    AND glanld = '",g_glanld,"'"
+   PREPARE aglt370_02_pb FROM g_sql
+   DECLARE aglt370_02_cs CURSOR FOR aglt370_02_pb
+   
+   SELECT MAX(glamseq)+1 INTO l_glamseq 
+     FROM glam_t
+    WHERE glament = g_enterprise
+      AND glamdocno = g_glandocno
+      AND glamld = g_glanld
+   IF cl_null(l_glamseq) THEN 
+      LET l_glamseq = 1
+   END IF 
+   
+   LET l_ac = l_glamseq
+   FOREACH aglt370_02_cs INTO g_glan.*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      IF g_str = 'aglt380' THEN 
+         LET l_glam003 = ''
+         LET l_glam004 = ''
+      ELSE
+         LET l_glam003 = 0
+         LET l_glam004 = 0
+      END IF
+      
+      INSERT INTO glam_t(glament,glamcomp,glamdocno,glamld,glamseq,glam002,glam003,glam004,
+                         glam007,glam008,glam009,glam010,glam011,glam012,
+                         glam013,glam014,glam015,glam017,glam018,glam051,glam052,glam053)
+        VALUES(g_enterprise,l_glaacomp,g_glan.glandocno,g_glan.glanld,l_ac,g_glan.glan001,l_glam003,l_glam004,
+               g_glan.glan003,g_glan.glan004,g_glan.glan005,g_glan.glan006,g_glan.glan007,
+               g_glan.glan008,g_glan.glan009,g_glan.glan010,g_glan.glan011,
+               g_glan.glan013,g_glan.glan014,g_glan.glan051,g_glan.glan052,g_glan.glan053)
+      IF SQLCA.SQLcode  THEN
+         LET g_success = 'N'
+      ELSE
+         LET g_success = 'Y'
+      END IF
+      LET l_ac = l_ac + 1
+   END FOREACH 
+  
+   IF g_success = 'N' THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = "glam_t"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+  
+      CALL s_transaction_end('N','0') 
+   ELSE
+      CALL s_transaction_end('Y','0')
+      ERROR "INSERT O.K"
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE g_glandocno     LIKE glan_t.glandocno
+DEFINE g_glanld        LIKE glan_t.glanld
+DEFINE g_sql           STRING 
+DEFINE g_glan   RECORD   LIKE glan_t.* 
+DEFINE g_str             LIKE type_t.chr10]]>
+  </point>
+  <point name="input.a.chose" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_glan_m.chose) THEN 
+               IF g_glan_m.chose NOT MATCHES '[Yy]' AND g_glan_m.chose NOT MATCHES '[Nn]' THEN
+                  DISPLAY '' TO chose
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'agl-00144'
+                  LET g_errparam.extend = g_glan_m.chose
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  LET g_glan_m.chose = ''
+               END IF
+            END IF ]]>
+  </point>
+  <point name="input.a.glandocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+]]>
+  </point>
+  <point name="input.a.glanld" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+            ]]>
+  </point>
+  <point name="input.a.glanseq" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a05產生
+    ]]>
+  </point>
+  <point name="input.action" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[         ]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE p_glandocno     LIKE glan_t.glandocno
+   DEFINE p_glanld        LIKE glan_t.glanld
+   DEFINE p_str           LIKE type_t.chr10]]>
+  </point>
+  <point name="input.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   p_glandocno,p_glanld,p_str]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   IF INT_FLAG THEN
+      LET INT_FLAG = FALSE
+      LET g_success = 'N'
+      RETURN g_success
+   END IF
+   
+   IF g_glan_m.chose = 'Y' THEN 
+      CALL aglt370_02_glam_ins()
+      LET g_success = 'Y'
+   ELSE
+      LET g_success = 'N' 
+   END IF 
+   RETURN g_success ]]>
+  </point>
+  <point name="input.pre_input" order="" ver="3" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_glandocno = p_glandocno
+   LET g_glanld = p_glanld
+   LET g_glan_m.chose = 'Y'
+   LET g_str = p_str
+   LET INT_FLAG = FALSE]]>
+  </point>
+  <section id="aglt370_02.description" ver="8" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:3,PR版次:3) Build-000234
+#+ 
+#+ Filename...: aglt370_02
+#+ Description: 單身科目產生
+#+ Creator....: 02114(2013-11-13 11:38:42)
+#+ Modifier...: 02114(2013-12-02 00:00:00) -SD/PR-
+]]>
+  </section>
+  <section id="aglt370_02.global" ver="5" status="" src="s" readonly="">
+    <![CDATA[#應用 c01b 樣板自動產生(Version:5)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_glan_m        RECORD
+       chose LIKE type_t.chr500
+       END RECORD
+DEFINE g_glan_m        type_g_glan_m
+ 
+   
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="aglt370_02.input" ver="5" status="" src="s" readonly="">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION aglt370_02(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define" edit="s"/>}
+   #end add-point
+   #add-point:input段define
+   {<point name="input.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aglt370_02 WITH FORM cl_ap_formpath("agl","aglt370_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_glan_m.chose ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD chose
+            #add-point:BEFORE FIELD chose
+            {<point name="input.b.chose" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD chose
+            
+            #add-point:AFTER FIELD chose
+            {<point name="input.a.chose" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE chose
+            #add-point:ON CHANGE chose
+            {<point name="input.g.chose" />}
+            #END add-point 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.chose
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD chose
+            #add-point:ON ACTION controlp INFIELD chose
+            {<point name="input.c.chose" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aglt370_02 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aglt370_02.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="aglt370_02.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

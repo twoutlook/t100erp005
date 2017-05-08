@@ -1,0 +1,104 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmi934" module="anm" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="00942" crtdt="2016-03-02 14:20:34" modid="02114" moddt="2016-03-16 10:27:34" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="資金模擬主交易帳戶維護">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="nmfbcomp,nmfbcomp_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="nmfb001,nmfb002,nmfb003"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="nmfb001,nmfbownid,nmfbownid_desc(chr500),nmfbowndp,nmfbowndp_desc(chr500),nmfbcrtid,nmfbcrtid_desc(chr500),nmfbcrtdp,nmfbcrtdp_desc(chr500),nmfbcrtdt,nmfbmodid,nmfbmodid_desc(chr500),nmfbmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmi934" method="dialog">
+    <section id="input">
+      <input id="head" field="nmfbcomp"/>
+      <input id="body" page="1" field="nmfb001,nmfb002,nmfb003" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="nmfbcomp"/>
+      <construct id="body" page="1" field="nmfb001,nmfb002,nmfb003"/>
+      <construct id="body" page="2" field="nmfbownid,nmfbowndp,nmfbcrtid,nmfbcrtdp,nmfbcrtdt,nmfbmodid,nmfbmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="nmfbcomp"/>
+      <set id="head" type="no_entry" field="nmfbcomp"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="nmfbcomp">
+        <after>
+          <check chkid="v_ooef001_1" id="isExist"/>
+          <reference field="nmfbcomp_desc" ref_field="nmfb_t.nmfbcomp" map_field="nmfbcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="nmfbcomp_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="nmfb001"/>
+      <column id="nmfb002"/>
+      <column id="nmfb003"/>
+    </init>
+    <init id="body" page="2">
+      <column id="nmfbownid">
+        <after>
+          <reference field="nmfbownid_desc" ref_field="nmfb_t.nmfbownid" map_field="nmfbownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmfbownid_desc"/>
+      <column id="nmfbowndp">
+        <after>
+          <reference field="nmfbowndp_desc" ref_field="nmfb_t.nmfbowndp" map_field="nmfbowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmfbowndp_desc"/>
+      <column id="nmfbcrtid">
+        <after>
+          <reference field="nmfbcrtid_desc" ref_field="nmfb_t.nmfbcrtid" map_field="nmfbcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmfbcrtid_desc"/>
+      <column id="nmfbcrtdp">
+        <after>
+          <reference field="nmfbcrtdp_desc" ref_field="nmfb_t.nmfbcrtdp" map_field="nmfbcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmfbcrtdp_desc"/>
+      <column id="nmfbcrtdt"/>
+      <column id="nmfbmodid">
+        <after>
+          <reference field="nmfbmodid_desc" ref_field="nmfb_t.nmfbmodid" map_field="nmfbmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmfbmodid_desc"/>
+      <column id="nmfbmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="nmfb_t" pk="nmfbcomp">
+      <sql id="forupd_sql" type="sql" query="SELECT nmfbcomp,&apos;&apos; FROM nmfb_t WHERE nmfbent= ? AND nmfbcomp=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT nmfbcomp,&apos;&apos; FROM nmfb_t" order="nmfbcomp"/>
+    </head>
+    <body id="nmfb_t" page="1,2" linked="" pk="nmfb001" fk="nmfbcomp">
+      <sql id="forupd_sql_detail" query="SELECT nmfb001,nmfb002,nmfb003,&apos;&apos;,nmfbownid,&apos;&apos;,nmfbowndp,&apos;&apos;,nmfbcrtid,&apos;&apos;,nmfbcrtdp,&apos;&apos;,nmfbcrtdt,nmfbmodid,&apos;&apos;,nmfbmoddt FROM nmfb_t WHERE nmfbent=? AND nmfbcomp=? AND nmfb001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT nmfb001,nmfb002,nmfb003,&apos;&apos;,nmfbownid,&apos;&apos;,nmfbowndp,&apos;&apos;,nmfbcrtid,&apos;&apos;,nmfbcrtdp,&apos;&apos;,nmfbcrtdt,nmfbmodid,&apos;&apos;,nmfbmoddt FROM nmfb_t WHERE nmfbent= ? AND nmfbcomp=?"/>
+    </body>
+  </dataset>
+</assembly>
+

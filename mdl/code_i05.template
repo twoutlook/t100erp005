@@ -1,0 +1,2626 @@
+{<section id="${app_id}.global" >}
+#應用 i05 樣板自動產生(Version:37)
+#add-point:填寫註解說明
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用)
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import" />}
+#end add-point
+  
+SCHEMA ds 
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_${master_var_title} RECORD
+   ${master_fields_define}
+                                  END RECORD
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+                                  
+#模組變數(Module Variables)
+DEFINE ${master_var_title}          type_${master_var_title}
+DEFINE ${master_var_title}_t        type_${master_var_title}
+DEFINE ${master_var_title}_o        type_${master_var_title}
+ 
+   ${master_key_t_define}
+ 
+${master_lid_define_mark}DEFINE g_${master_field_lid}_t        LIKE ${master_tbl_name}.${master_field_lid}
+${master_pid_define_mark}${master_pid_mark}DEFINE g_${master_field_pid}_t        LIKE ${master_tbl_name}.${master_field_pid}
+${master_type_define_mark}${master_type_mark}DEFINE g_${master_field_type}_t      LIKE ${master_tbl_name}.${master_field_type}
+ 
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD    #資料瀏覽之欄位
+       b_show          LIKE type_t.chr100,    #外顯欄位
+       b_pid           LIKE type_t.chr100,    #父節點id
+       b_id            LIKE type_t.chr100,    #本身節點id
+       b_exp           LIKE type_t.chr100,    #是否展開
+       b_hasC          LIKE type_t.num5,      #是否有子節點
+       b_isExp         LIKE type_t.num5,      #是否已展開
+       b_expcode       LIKE type_t.num5,      #展開值
+       #tree自定義欄位
+       ${browser_fields_define}
+                   END RECORD
+ 
+DEFINE g_browser_root  DYNAMIC ARRAY OF INTEGER    #root資料所在
+       
+#多table用變數
+${master_multi_table_define}
+ 
+DEFINE g_wc                  STRING
+DEFINE g_sql                 STRING
+DEFINE g_forupd_sql          STRING
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_current_idx         LIKE type_t.num10
+DEFINE g_jump                LIKE type_t.num10
+DEFINE g_no_ask              LIKE type_t.num5
+DEFINE g_rec_b               LIKE type_t.num10
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_curr_diag           ui.Dialog                #Current Dialog
+ 
+DEFINE g_pagestart           LIKE type_t.num10         
+DEFINE gwin_curr             ui.Window                #Current Window
+DEFINE gfrm_curr             ui.Form                  #Current Form
+DEFINE g_page_action         STRING                   #page action
+DEFINE g_header_hidden       LIKE type_t.num5         #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5         #隱藏工作Panel
+DEFINE g_browser_cnt         LIKE type_t.num10        #total count
+DEFINE g_page                STRING                   #第幾頁
+DEFINE g_current_row         LIKE type_t.num10        #Browser所在筆數
+DEFINE g_current_sw          LIKE type_t.num10        #Browser所在筆數用開關
+ 
+DEFINE g_searchcol           LIKE type_t.chr200
+DEFINE g_searchstr           LIKE type_t.chr200
+DEFINE g_searchtype          LIKE type_t.chr200
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_row_index           LIKE type_t.num10
+DEFINE g_root_search         BOOLEAN
+DEFINE g_first               LIKE type_t.num5  #標示是否要啟動s_browse重查
+DEFINE g_aw                  STRING            #確定當下點擊的單身
+DEFINE g_log1                STRING            #log用
+DEFINE g_log2                STRING            #log用
+DEFINE g_add_browse          STRING            #新增填充用WC
+DEFINE g_add_idx             LIKE type_t.num5  #新增資料指標
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+{</section>}
+ 
+{<section id="${app_id}.main" >}
+${general_main_function}
+{</section>}
+ 
+{<section id="${app_id}.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION ${general_prefix}_init()
+   #add-point:init段define name="init.define_customerization"
+   {<point name="init.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   {<point name="init.define"/>}
+   #end add-point 
+   
+   #add-point:Function前置處理  name="init.pre_function"
+   {<point name="init.pre_function"/>}
+   #end add-point
+   
+   ${general_define_combo_stus}
+   ${general_define_combo}
+   LET g_add_idx = 1
+   LET g_current_idx = 1
+    
+   #add-point:畫面資料初始化 name="init.init"
+   {<point name="init.init"/>}
+   #end add-point
+   
+   CALL ${general_prefix}_default_search()
+    
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION ${general_prefix}_ui_dialog()
+   #add-point:ui_dialog段define name="ui_dialog.define_customerization"
+   {<point name="ui_dialog.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE li_exit      LIKE type_t.num5    #判別是否為離開作業
+   DEFINE la_param  RECORD
+          prog       STRING,
+          actionid   STRING,
+          background LIKE type_t.chr1,
+          param      DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE l_cmd_token           base.StringTokenizer   #報表作業cmdrun使用 
+   DEFINE l_cmd_next            STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_cnt             LIKE type_t.num5       #報表作業cmdrun使用
+   DEFINE l_cmd_prog_arg        STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_arg             STRING                 #報表作業cmdrun使用
+   #add-point:ui_dialog段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="ui_dialog.pre_function"
+   {<point name="ui_dialog.pre_function"/>}
+   #end add-point
+   
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm() 
+ 
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE li_exit = FALSE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_browser.clear()       
+         INITIALIZE ${master_var_title}.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         LET g_first = 1
+         CALL ${general_prefix}_init()
+      END IF
+ 
+      #當瀏覽頁簽被設定關閉時,使用MENU (開啟時使用DIALOG)
+      IF g_worksheet_hidden = 1 THEN
+ 
+         LET g_current_sw = FALSE
+ 
+         #回歸舊筆數位置 (回到當時異動的筆數)
+         LET g_current_idx = g_current_row
+         LET g_current_sw = TRUE
+         CALL cl_show_fld_cont() 
+         ${master_type_mark}IF g_current_idx > 0 THEN
+         CALL ${general_prefix}_fetch("")    #當每次點任一筆資料都會需要用到
+         ${master_type_mark}END IF
+ 
+         MENU
+            #add-point:ui_dialog段其他頁簽的 display array(in menu) name="ui_dialog.more_displayarray_in_menu"
+            {<point name="ui_dialog.more_displayarray_in_menu"/>}
+            #end add-point
+            
+            ${general_mark_stus}ON ACTION statechange
+            ${general_mark_stus}   LET g_action_choice = "statechange"
+            ${general_mark_stus}   CALL ${general_prefix}_statechange()
+            
+            #ACTION表單列
+            ON ACTION first
+               LET g_current_idx = 1
+               CALL ${general_prefix}_fetch("")
+               LET g_current_row = g_current_idx
+            
+            ON ACTION next
+               LET g_current_idx = g_current_idx + 1
+               CALL ${general_prefix}_fetch("")
+               LET g_current_row = g_current_idx
+ 
+            ON ACTION jump
+               CALL ${general_prefix}_fetch("/")
+               LET g_current_row = g_current_idx
+ 
+            ON ACTION previous
+               LET g_current_idx = g_current_idx - 1
+               CALL ${general_prefix}_fetch("")
+               LET g_current_row = g_current_idx
+ 
+            ON ACTION last 
+               LET g_current_idx = g_browser_cnt
+               CALL ${general_prefix}_fetch("") 
+               LET g_current_row = g_current_idx
+ 
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU 
+ 
+            ON ACTION close
+               LET li_exit = TRUE
+               EXIT MENU
+ 
+            ON ACTION mainhidden       #主頁摺疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementImage("mainhidden","16/worksheethidden.png")
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementImage("mainhidden","16/worksheethidden.png")
+                  LET g_main_hidden = 1
+               END IF
+               EXIT MENU
+         
+            ON ACTION worksheethidden   #瀏覽頁折疊
+               IF g_worksheet_hidden THEN
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  CALL gfrm_curr.setElementImage("worksheethidden","16/mainhidden.png")
+                  LET g_worksheet_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  CALL gfrm_curr.setElementImage("worksheethidden","16/mainhidden.png")
+                  LET g_worksheet_hidden = 1
+               END IF
+               EXIT MENU
+         
+            ON ACTION controls      #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden
+               END IF
+ 
+            ${general_action_call_in_menu}
+ 
+            ${general_menu_signature2}
+ 
+            ${master_related_document_menu}
+            
+            &include "main_menu_exit_menu.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+ 
+         END MENU
+ 
+      ELSE
+         #第一次進入程式, 或啟動重新查詢
+         IF g_first = 0 THEN 
+            CALL ${general_prefix}_browser_fill(g_wc,g_searchtype)
+            LET g_first = 1
+         END IF
+      
+         DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         
+            INPUT g_searchstr,g_searchcol,g_searchtype FROM formonly.searchstr,formonly.cbo_searchcol,formonly.rdo_searchtype
+               BEFORE INPUT
+            END INPUT
+            
+            #左側瀏覽頁簽
+            DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTE(COUNT=g_rec_b)
+ 
+               BEFORE DISPLAY
+                  CALL DIALOG.setSelectionMode("s_browse",1) #設定為單選
+ 
+               BEFORE ROW
+                  #add-point:ui_dialog段before row1 name="ui_dialog.before_row1"
+                  {<point name="ui_dialog.before_row1"/>}
+                  #end add-point
+                  #回歸舊筆數位置 (回到當時異動的筆數)
+                  LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+                  IF g_current_row > 1 AND g_current_sw = FALSE THEN
+                     CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+                     LET g_current_idx = g_current_row
+                  END IF
+                  #add-point:ui_dialog段before row2 name="ui_dialog.before_row2"
+                  {<point name="ui_dialog.before_row2"/>}
+                  #end add-point
+                  LET g_current_row = g_current_idx #目前指標
+                  LET g_current_sw = TRUE
+                  CALL cl_show_fld_cont() 
+                  CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+ 
+                  CALL ${general_prefix}_fetch("")  #當每次點任一筆資料都會需要用到
+ 
+               ON EXPAND (g_row_index)
+                  #樹展開
+                  CALL ${general_prefix}_browser_expand(g_row_index)
+                  LET g_browser[g_row_index].b_isExp = 1
+ 
+               ON COLLAPSE (g_row_index)
+                  #樹關閉
+                  
+               #add-point:ui_dialog段action name="ui_dialog.tree_action"
+               {<point name="ui_dialog.tree_action"/>}
+               #end add-point
+ 
+            END DISPLAY
+ 
+            #add-point:ui_dialog段其他頁簽的 display array name="ui_dialog.more_displayarray"
+            {<point name="ui_dialog.more_displayarray"/>}
+            #end add-point
+ 
+            BEFORE DIALOG
+               #action default動作(判定是否要先執行特定動作)
+               ${general_action_default}
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               LET g_current_sw = FALSE
+ 
+               #add-point:ui_dialog,before dialog1 name="ui_dialog.b_dialog1"
+               {<point name="ui_dialog.b_dialog1"/>}
+               #end add-point
+               #回歸舊筆數位置 (回到當時異動的筆數)
+               LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+               IF g_current_row > 1 AND g_current_sw = FALSE THEN
+                  IF g_current_row > g_browser.getLength() THEN
+                     LET g_current_row = g_browser.getLength()
+                  END IF 
+                  CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+                  LET g_current_idx = g_current_row
+               END IF
+               #add-point:ui_dialog,before dialog2 name="ui_dialog.b_dialog2"
+               {<point name="ui_dialog.b_dialog2"/>}
+               #end add-point
+               LET g_current_row = g_current_idx #目前指標
+               LET g_current_sw = TRUE
+               CALL cl_show_fld_cont() 
+               CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+               ${master_type_mark}IF g_current_idx > 0 THEN
+               CALL ${general_prefix}_fetch("")            #當每次點任一筆資料都會需要用到
+               ${master_type_mark}END IF
+               #add-point:ui_dialog,before dialog name="ui_dialog.b_dialog"
+               {<point name="ui_dialog.b_dialog"/>}
+               #end add-point
+ 
+            AFTER DIALOG 
+               #add-point:ui_dialog,after dialog name="ui_dialog.a_dialog"
+               {<point name="ui_dialog.a_dialog"/>}
+               #end add-point
+ 
+            ${general_mark_stus}ON ACTION statechange
+            ${general_mark_stus}   LET g_action_choice = "statechange"
+            ${general_mark_stus}   CALL ${general_prefix}_statechange()
+ 
+            #一般搜尋
+            ON ACTION searchdata
+               LET g_searchstr = GET_FLDBUF(searchstr)
+               LET g_searchcol = GET_FLDBUF(cbo_searchcol)
+               #若無輸入關鍵字則查找出所有資料
+               IF g_searchcol="0" AND NOT cl_null(g_searchstr) THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "searchcol:" 
+                  LET g_errparam.code = "std-00001" 
+                  LET g_errparam.popup = FALSE 
+                  CALL cl_err()
+                  CONTINUE DIALOG
+               END IF 
+               IF NOT cl_null(g_searchstr) THEN
+                  LET g_wc = " lower(", g_searchcol, ") LIKE '%", g_searchstr, "%'"
+                  LET g_wc = g_wc.toLowerCase()
+               ELSE
+                  LET g_wc = " 1=1 "
+               END IF
+               LET g_first = 0 #啟動重查
+               EXIT DIALOG
+ 
+            #進階搜尋
+            #ON ACTION advancesearch
+ 
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+            
+            ON ACTION close
+               LET li_exit = TRUE
+               EXIT DIALOG
+            
+            ON ACTION mainhidden       #主頁摺疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementImage("mainhidden","16/worksheethidden.png")
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementImage("mainhidden","16/mainhidden.png")
+                  LET g_main_hidden = 1
+               END IF
+               EXIT DIALOG
+ 
+            ON ACTION worksheethidden   #瀏覽頁折疊
+               IF g_worksheet_hidden THEN
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  CALL gfrm_curr.setElementImage("worksheethidden","16/worksheethidden.png")
+                  LET g_worksheet_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  CALL gfrm_curr.setElementImage("worksheethidden","16/worksheethidden.png")
+                  LET g_worksheet_hidden = 1
+               END IF
+               EXIT DIALOG
+ 
+            ON ACTION controls      #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden
+               END IF
+ 
+            ${general_action_call}
+ 
+            ${general_menu_signature}
+            
+            ${master_related_document}
+            
+            &include "main_menu_exit_dialog.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END DIALOG 
+      
+      END IF
+      
+   END WHILE
+ 
+END FUNCTION 
+{</section>}
+ 
+{<section id="${app_id}.browser_fill" >}
+#+ 瀏覽頁簽where條件組成
+PRIVATE FUNCTION ${general_prefix}_browser_fill(p_wc,p_type)
+   #add-point:browser_fill段define name="browser_fill.define_customerization"
+   {<point name="browser_fill.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_wc       STRING 
+   DEFINE p_type     LIKE type_t.chr10
+   DEFINE l_cnt      LIKE type_t.num10
+   DEFINE l_cnt2     LIKE type_t.num10   
+   #add-point:browser_fill段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="browser_fill.define"
+   {<point name="browser_fill.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="browser_fill.before_fill"
+   {<point name="browser_fill.before_fill"/>}
+   #end add-point
+ 
+   CALL g_browser.clear()
+   CLEAR FORM
+   LET l_cnt = 0
+   LET l_cnt2 = 0
+   
+   DROP TABLE ${general_prefix}_tmp
+   
+   #Create temp table
+   CREATE TEMP TABLE ${general_prefix}_tmp
+   (
+      ${browser_tmp_tbl_define},
+      #僅含browser的欄位
+      exp_code  VARCHAR(5)
+   );
+ 
+   #先確定搜尋範圍(若無條件搜尋則只找root出來)
+   SELECT COUNT(1) INTO l_cnt FROM ${master_tbl_name} WHERE ${master_append_wc} 1=1
+   
+   #取得符合p_wc的所有資料
+   LET g_sql = "SELECT COUNT(1)",
+               " FROM ${master_tbl_name} ",
+               " ${master_append_join} ",
+               " WHERE ${master_append_wc_s} ",p_wc ,cl_sql_add_filter("${master_tbl_name}")
+   #add-point:browser_fill段cnt wc name="browser_fill.cnt_wc"
+   {<point name="browser_fill.cnt_wc"/>}
+   #end add-point
+              
+   PREPARE master_cnt FROM g_sql
+   DECLARE master_cntcur CURSOR FOR master_cnt
+   OPEN master_cntcur
+   IF SQLCA.SQLCODE THEN   #(ver:36)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN master_cntcur:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE   #(ver:36)
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+
+   FETCH master_cntcur INTO l_cnt2
+   LET g_root_search = FALSE
+   
+   IF l_cnt2 = 0 THEN
+      #INITIALIZE g_errparam TO NULL 
+      #LET g_errparam.extend = "" 
+      #LET g_errparam.code = "-100" 
+      #LET g_errparam.popup = TRUE 
+      #CALL cl_err()
+      RETURN
+   END IF
+   
+   ${master_pid_mark}IF l_cnt = l_cnt2 THEN
+   ${master_pid_mark}   #未輸入條件時則只查找root節點
+   ${master_pid_mark}   LET p_wc = " ${master_field_lid} = ${master_field_pid} "
+   ${master_pid_mark}   LET g_root_search = TRUE
+   ${master_pid_mark}END IF
+ 
+   #取得符合p_wc的所有資料
+   LET g_sql = "SELECT ${browser_fields_all_tree} ",
+               " FROM ${master_tbl_name}",
+               " ${master_append_join} ",
+               " WHERE ${master_append_wc_s} ",p_wc ,cl_sql_add_filter("${master_tbl_name}")
+   #add-point:browser_fill段sql wc name="browser_fill.sql_wc"
+   {<point name="browser_fill.sql_wc"/>}
+   #end add-point
+   #LET g_sql = cl_sql_add_tabid(g_sql,"${master_tbl_name}")             #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料           
+   PREPARE master_ext FROM g_sql
+   DECLARE master_extcur CURSOR FOR master_ext
+   
+   #單筆update
+   #LET g_sql = "SELECT '','','','','','','',${browser_fields_all_tree} ",
+   #            " FROM ${master_tbl_name}",
+   #            " ${master_append_join} ",
+   #            " WHERE ${master_append_wc_s} ",
+   #            " ${master_field_pk01} = ?"
+   #            #master_keys - Start -
+   #            ," ${master_field_pk${key}} = ?"
+   #            #keys -  End  -
+                
+   LET g_sql = " SELECT ${browser_fields_all}${browser_reference_select_field} ",
+               " FROM ${master_tbl_name} t0",
+               " ${master_join_all} ",
+               ${browser_reference_join_sql}
+               " WHERE ${master_append_wc_s} ",
+               " ${master_field_pk01} = ?"
+               #master_keys - Start -
+               ," AND ${master_field_pk${key}} = ?"
+               #keys -  End  -
+ 
+               
+   #add-point:browser_fill段sql wc name="browser_fill.refresh"
+   {<point name="browser_fill.refresh"/>}
+   #end add-point
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料           
+   PREPARE master_refresh FROM g_sql
+   DECLARE master_refreshcur CURSOR FOR master_refresh
+ 
+   #搜尋建構樹所需的節點
+   CASE p_type
+      WHEN "1" #上推
+         CALL ${general_prefix}_match_node(p_wc,p_type) 
+      WHEN "2" #下展
+         #CALL ${general_prefix}_find_speed_tbl(p_wc,p_type) 
+         CALL ${general_prefix}_match_node(p_wc,p_type) 
+      WHEN "3" #全部
+         CALL ${general_prefix}_match_node(p_wc,p_type) 
+   END CASE
+ 
+   CALL ${general_prefix}_browser_create(p_type)
+     
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.match_node" >}
+PRIVATE FUNCTION ${general_prefix}_match_node(p_wc,p_type)
+   #add-point:match_node段define name="match_node.define_customerization"
+   {<point name="match_node.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_wc         LIKE type_t.chr200
+   DEFINE p_type       LIKE type_t.chr10
+   DEFINE ls_code      LIKE type_t.chr50
+   DEFINE ls_code2     LIKE type_t.chr50
+   DEFINE l_bstmp      RECORD    #body欄位
+          ${browser_tmp_tbl_define}
+          #僅含單身table的欄位
+   END RECORD 
+   DEFINE l_child_list DYNAMIC ARRAY OF RECORD    #body欄位
+          ${browser_tmp_tbl_define}
+          #僅含單身table的欄位
+   END RECORD
+   DEFINE li_cnt       LIKE type_t.num10   #(ver:35) add
+   #add-point:match_node段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="match_node.define"
+   {<point name="match_node.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="match_node.pre_function"
+   {<point name="match_node.pre_function"/>}
+   #end add-point
+   
+   #先找出符合條件的節點並給予展開值
+   CASE p_type
+      WHEN 1
+         LET ls_code = "0" #展開值0則無法展開
+      WHEN 2
+         LET ls_code = "2"
+      WHEN 3
+         LET ls_code = "2"
+   END CASE
+   
+   IF cl_null("${master_field_pid}") THEN
+      LET ls_code = "0"
+   END IF 
+   
+   CALL s_transaction_begin()
+ 
+   LET g_sql = " INSERT INTO ${general_prefix}_tmp (${browser_fields_insert_tmp},exp_code) VALUES (${browser_fields_qm},?)"
+   PREPARE master_tmp FROM g_sql
+   
+   IF g_root_search THEN
+      #DECLARE master_tmp_cur CURSOR FOR master_tmp
+      #OPEN master_tmp_cur
+      FOREACH master_extcur INTO l_bstmp.*
+         EXECUTE master_tmp USING l_bstmp.*,ls_code
+         #PUT master_tmp_cur FROM l_bstmp.*,ls_code
+      END FOREACH
+      #FLUSH master_tmp_cur
+      CALL s_transaction_end("Y","0")
+      RETURN
+   END IF
+ 
+   #(ver:35) ---modify start---
+   FOREACH master_extcur INTO l_bstmp.*
+      #(ver:35) add ${master_field_pid}
+      IF ${general_prefix}_tmp_tbl_chk(l_bstmp.${master_field_lid},l_bstmp.${master_field_pid},ls_code   #(ver:35) add ${master_field_pid}
+                  ${master_type_mark},l_bstmp.${master_field_type}
+                  ) THEN
+         EXECUTE master_tmp USING l_bstmp.*,ls_code
+      END IF
+ 
+      LET l_child_list[l_child_list.getLength()+1].* = l_bstmp.*
+   END FOREACH
+
+   #找出符合條件的節點的所有祖先並給予展開值
+   CASE p_type
+      WHEN 1
+         LET ls_code2 = "1"
+      WHEN 2
+         LET ls_code2 = "-1"
+      WHEN 3
+         LET ls_code2 = "1"
+   END CASE
+
+   WHILE TRUE
+      IF l_child_list.getLength() <= 0 THEN
+         EXIT WHILE
+      END IF
+
+      #若pid欄位存在才進行後續處理
+      #擷取該節點的所有父節點
+      IF cl_null(l_child_list[1].${master_field_lid}) THEN
+         IF l_child_list.getLength() = 1 THEN
+            EXIT WHILE
+         ELSE
+            CALL l_child_list.deleteElement(1)
+            CONTINUE WHILE
+         END IF
+      END IF
+
+      #確認是否有父節點
+      LET g_sql = " SELECT COUNT(1) ",
+                  " FROM ${master_tbl_name} t0",
+                  " WHERE ${master_append_wc_s} ${master_field_lid} = ? ",
+                  ${master_type_mark}" AND ${master_field_type} = ? ",
+                  cl_sql_add_filter("gzwe_t")
+      PREPARE master_getparent_cnt FROM g_sql
+      EXECUTE master_getparent_cnt USING l_child_list[1].${master_field_pid} INTO li_cnt
+      IF li_cnt <= 0 THEN
+         CALL l_child_list.deleteElement(1)
+         CONTINUE WHILE
+      END IF
+
+      #擷取該節點的父節點到temp table中
+      LET g_sql = " SELECT ${browser_fields_all_tree} ",
+                  " FROM ${master_tbl_name} t0",
+                  " WHERE ${master_append_wc_s} ${master_field_lid} = ? ",
+                  ${master_type_mark}" AND ${master_field_type} = ? ",
+                  cl_sql_add_filter("${master_tbl_name}")
+      PREPARE master_getparent_up FROM g_sql
+      DECLARE master_getparent_up_cur CURSOR FOR master_getparent_up
+      
+   #  EXECUTE master_getparent_up USING l_child_list[1].${master_field_pid}
+   #                                    ${master_type_mark},l_child_list[1].${master_field_type}
+   #                                    INTO l_bstmp.*
+      FOREACH master_getparent_up_cur USING l_child_list[1].${master_field_pid}
+                                        INTO l_bstmp.*
+
+         IF SQLCA.SQLCODE THEN
+            FREE master_getparent_up
+            EXIT WHILE
+         END IF
+         #FREE master_getparent_up
+      
+         #確定該節點是否存在於temp table中
+         IF STATUS = 0 AND ${general_prefix}_tmp_tbl_chk(l_bstmp.${master_field_lid},l_bstmp.${master_field_pid},ls_code2
+                     ${master_type_mark},l_bstmp.${master_field_type}
+                     ) THEN
+            EXECUTE master_tmp USING l_bstmp.*,ls_code2
+
+            #若已找到root，表示已到根結點
+            IF l_bstmp.${master_field_lid} = l_bstmp.${master_field_pid} THEN
+               CALL l_child_list.deleteElement(1)
+               CONTINUE WHILE
+            END IF
+
+            LET l_child_list[l_child_list.getLength()+1].* = l_bstmp.*
+         END IF
+      END FOREACH
+      CALL l_child_list.deleteElement(1)
+   END WHILE
+   #(ver:35) --- modify end ---
+
+   CLOSE master_tmp
+   
+   CALL s_transaction_end("Y","0")
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.tmp_tbl_chk" >}
+#+ TEMP TABLE CHK
+#PRIVATE FUNCTION ${general_prefix}_tmp_tbl_chk(ps_id,pi_code${master_func_type})
+PRIVATE FUNCTION ${general_prefix}_tmp_tbl_chk(ps_id,ps_pid,pi_code${master_func_type})   #(ver:35) modify
+   #add-point:tmp_tbl_chk段define name="tmp_tbl_chk.define_customerization"
+   {<point name="tmp_tbl_chk.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ps_id       STRING
+   DEFINE ps_pid      STRING   #(ver:35) add
+   DEFINE pi_code     LIKE type_t.num10
+   DEFINE ps_type     STRING
+   DEFINE ls_id       LIKE type_t.chr500
+   DEFINE ls_pid      LIKE type_t.chr500   #(ver:35) add
+   DEFINE ls_search   LIKE type_t.chr500
+   DEFINE ls_type     LIKE type_t.chr500
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE li_code     LIKE type_t.num10   
+   #add-point:tmp_tbl_chk段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="tmp_tbl_chk.define"
+   {<point name="tmp_tbl_chk.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="tmp_tbl_chk.pre_function"
+   {<point name="tmp_tbl_chk.pre_function"/>}
+   #end add-point
+   
+   LET ls_id = ps_id
+   LET ls_pid = ps_pid   #(ver:35) add
+   ${master_type_mark}LET ls_type = ps_type
+  
+   IF cl_null(ls_id) THEN
+      RETURN TRUE
+   END IF
+   
+   LET g_sql = " SELECT COUNT(1) FROM ${general_prefix}_tmp ", 
+               " WHERE ${master_field_lid} = ? ",
+                 " AND ${master_field_pid} = ? "   #(ver:35) add
+               ${master_type_mark} ," AND ${master_field_type} = ? "
+ 
+   PREPARE ${general_prefix}_get_cnt FROM g_sql
+   EXECUTE ${general_prefix}_get_cnt USING ls_id ,ls_pid   #(ver:35) add ls_pid
+                                           ${master_type_mark},ls_type
+                                     INTO li_cnt
+   FREE ${general_prefix}_get_cnt
+ 
+   IF li_cnt = 0 OR SQLCA.SQLCODE THEN
+      RETURN TRUE
+   ELSE
+      #資料已存在, 確定是否需要更新展開值
+      LET g_sql = " SELECT exp_code FROM ${general_prefix}_tmp ",
+                  " WHERE ${master_field_lid} = ? ",
+                    " AND ${master_field_pid} = ? "   #(ver:35) add
+                  ${master_type_mark} ," AND ${master_field_type} = ? "
+ 
+      PREPARE ${general_prefix}_chk_exp FROM g_sql
+      EXECUTE ${general_prefix}_chk_exp USING ls_id ,ls_pid   #(ver;35) add ls_pid
+                                              ${master_type_mark},ls_type
+                                        INTO li_code
+      FREE ${general_prefix}_chk_exp
+      
+      #若新展開值>原展開值則做更新
+      IF pi_code > li_code THEN
+         LET g_sql = " UPDATE ${general_prefix}_tmp SET (exp_code) = ('",pi_code,"') ",
+                     " WHERE ${master_field_lid} = ? ",
+                       " AND ${master_field_pid} = ? "   #(ver:35) add
+                     ${master_type_mark} ," AND ${master_field_type} = ? "
+         PREPARE ${general_prefix}_upd_exp FROM g_sql
+         EXECUTE ${general_prefix}_upd_exp USING ls_id ,ls_pid   #(ver:35) add ls_pid
+                                                 ${master_type_mark},ls_type
+         FREE ${general_prefix}_upd_exp
+      END IF
+      
+      RETURN FALSE
+   END IF
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.browser_expand" >}
+#+ Tree子節點展開
+PRIVATE FUNCTION ${general_prefix}_browser_expand(p_id)
+   #add-point:browser_expand段define name="browser_expand.define_customerization"
+   {<point name="browser_expand.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_id          LIKE type_t.num10
+   DEFINE l_id          LIKE type_t.num10
+   DEFINE l_cnt         LIKE type_t.num10
+   DEFINE l_keyvalue    LIKE type_t.chr50
+   DEFINE l_typevalue   LIKE type_t.chr50
+   DEFINE l_type        LIKE type_t.chr50
+   DEFINE l_sql         STRING
+   DEFINE ls_source     LIKE type_t.chr500
+   DEFINE ls_exp_code   LIKE type_t.chr500
+   DEFINE l_return      LIKE type_t.num5
+   DEFINE ls_ent_wc     LIKE type_t.chr500
+   #add-point:browser_expand段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="browser_expand.define"
+   {<point name="browser_expand.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="browser_expand.pre_function"
+   {<point name="browser_expand.pre_function"/>}
+   #end add-point
+   
+   #若已經展開
+   IF g_browser[p_id].b_isExp = 1 THEN
+      RETURN
+   END IF
+   
+   ${master_pid_mark}LET l_return = FALSE
+ 
+   ${master_pid_mark}LET l_keyvalue = g_browser[p_id].b_${master_field_lid}
+   ${master_pid_mark}${master_type_mark}LET l_typevalue = g_browser[p_id].b_${master_field_type}
+   
+   CASE g_browser[p_id].b_expcode
+      WHEN -1
+         CALL g_browser.deleteElement(p_id)
+      WHEN 0
+         RETURN
+      WHEN 1
+         LET ls_source = "${general_prefix}_tmp"
+         LET ls_exp_code = "exp_code"
+      WHEN 2
+         LET ls_source = "${master_tbl_name}"
+         LET ls_exp_code = "'2'"
+         LET ls_ent_wc = " ${master_append_wc_s} "
+   END CASE
+    
+   ${master_pid_mark}LET l_sql = " SELECT DISTINCT '','','','FALSE','','',",ls_exp_code,",${browser_fields_all_tree}${browser_reference_select_field} ",
+   ${master_pid_mark}            " FROM ",ls_source,
+   ${master_pid_mark}            ${browser_reference_join_sql}
+   ${master_pid_mark}            " WHERE ",ls_ent_wc,"${master_field_pid} = '", l_keyvalue,
+   ${master_pid_mark}            "' AND ${master_field_lid} <> ${master_field_pid}",
+   ${master_pid_mark}            ${master_type_mark}" AND ${master_field_type} = '", l_typevalue,"'", 
+   ${master_pid_mark}            " ORDER BY ${master_field_lid}"
+   
+   #add-point:browser_expand段before_pre name="browser_expand.before_pre"
+   {<point name="browser_expand.before_pre"/>}
+   #end add-point
+   
+   ${master_pid_mark}LET l_sql = cl_sql_add_mask(l_sql)              #遮蔽特定資料
+   ${master_pid_mark}PREPARE tree_expand FROM l_sql
+   ${master_pid_mark}DECLARE tree_ex_cur CURSOR FOR tree_expand
+  
+   ${master_pid_mark}LET l_id = p_id + 1
+   ${master_pid_mark}LET g_cnt = p_id + 1
+   ${master_pid_mark}CALL g_browser.insertElement(l_id)
+   ${master_pid_mark}LET l_cnt = 1
+   ${master_pid_mark}FOREACH tree_ex_cur INTO g_browser[l_id].*${browser_reference_fetch_field} 
+   ${master_pid_mark}   #pid=父節點id
+   ${master_pid_mark}   LET g_browser[l_id].b_pid = g_browser[p_id].b_id
+   ${master_pid_mark}   #id=本身節點id(採流水號遞增)
+   ${master_pid_mark}   LET g_browser[l_id].b_id = g_browser[p_id].b_id||"."||l_cnt
+   ${master_pid_mark}   #hasC=確認該節點是否有子孫
+   ${master_pid_mark}   CALL ${general_prefix}_desc_show(l_id)
+   ${master_pid_mark}   LET g_browser[l_id].b_hasC = ${general_prefix}_chk_hasC(l_id)
+   ${master_pid_mark}   LET l_id = l_id + 1
+   ${master_pid_mark}   LET g_cnt = l_id
+   ${master_pid_mark}   CALL g_browser.insertElement(l_id)
+   ${master_pid_mark}   LET l_cnt = l_cnt + 1
+   ${master_pid_mark}   LET l_return = TRUE
+   ${master_pid_mark}END FOREACH
+   
+   #刪除空資料
+   ${master_pid_mark}CALL g_browser.deleteElement(l_id)
+   DISPLAY g_browser.getLength() TO FORMONLY.h_count 
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.browser_create" >}
+PRIVATE FUNCTION ${general_prefix}_browser_create(p_type)
+   #add-point:browser_create name="browser_create.define_customerization"
+   {<point name="browser_create.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_type   LIKE type_t.chr50
+   DEFINE l_pid    LIKE type_t.chr50
+   #add-point:browser_create(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="browser_create.define"
+   {<point name="browser_create.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="browser_create.pre_function"
+   {<point name="browser_create.pre_function"/>}
+   #end add-point
+   
+   #先找出所有的帳別資料
+   ${master_type_mark}LET g_sql = " SELECT DISTINCT ${master_field_type} FROM ${general_prefix}_tmp ORDER BY ${master_field_type}"
+   ${master_type_mark}PREPARE master_type FROM g_sql
+   ${master_type_mark}DECLARE master_typecur CURSOR FOR master_type
+   ${master_type_mark}INITIALIZE g_browser_root TO NULL
+   
+   LET l_ac = 1
+   ${master_type_mark}FOREACH master_typecur INTO g_browser[l_ac].b_${master_field_type}
+      #確定root節點所在
+      ${master_type_mark}LET g_browser_root[g_browser_root.getLength()+1] = l_ac
+      #此處為帳別部分(LV-1)
+      ${master_type_mark}LET g_browser[l_ac].b_${master_field_lid}  = g_browser[l_ac].b_${master_field_type}
+      ${master_type_mark}LET g_browser[l_ac].b_${master_field_type} = g_browser[l_ac].b_${master_field_type}
+      ${master_type_mark}LET g_browser[l_ac].b_pid = "0" CLIPPED
+      ${master_type_mark}LET g_browser[l_ac].b_id = l_ac USING "<<<"
+      ${master_type_mark}LET g_browser[l_ac].b_exp = TRUE
+      ${master_type_mark}LET g_browser[l_ac].b_hasC = TRUE
+      ${master_type_mark}LET l_pid = g_browser[l_ac].b_id CLIPPED
+      ${master_type_mark}LET l_ac = l_ac + 1
+      
+      #抓出LV2的所有資料
+      #LET g_sql = " SELECT DISTINCT ${browser_fields_all},exp_code FROM ${general_prefix}_tmp a ",
+      LET g_sql = " SELECT DISTINCT '','','','FALSE','','',exp_code,${browser_fields_all_tree}${browser_reference_select_field} FROM ${general_prefix}_tmp a ",
+                  ${browser_reference_join_sql}
+                  " WHERE ",
+                  ${master_type_mark}"a.${master_field_type} = ? ",
+                  ${master_pid_mark}${master_type_mark}" AND ",
+                  ${master_pid_mark}" (( SELECT COUNT(1) FROM ${general_prefix}_tmp b WHERE a.${master_field_pid} = b.${master_field_lid} ", 
+                  ${master_pid_mark}${master_type_mark}" AND a.${master_field_type} = b.${master_field_type}",
+                  ${master_pid_mark}") = 0 OR ", 
+                  ${master_pid_mark}" a.${master_field_lid} = a.${master_field_pid} )", 
+                  " ORDER BY a.${master_field_lid}"
+      #add-point:browser_create.before_pre name="browser_create.before_pre"
+      {<point name="browser_create.before_pre"/>}
+      #end add-point
+ 
+      PREPARE master_getLV2 FROM g_sql
+      DECLARE master_getLV2cur CURSOR FOR master_getLV2
+      
+      #以下為一般資料root(LV-2)
+      ${master_type_mark}#OPEN master_getLV2cur USING g_browser[l_ac-1].b_${master_field_type}   #(ver:36)
+
+      LET g_cnt = l_ac
+      FOREACH master_getLV2cur   #(ver:36) #(ver:37)
+         ${master_type_mark}USING g_browser[l_ac-1].b_${master_field_type}   #(ver:36)
+         INTO g_browser[g_cnt].*${browser_reference_fetch_field}    #(ver:36)
+         #(ver:36) ---add start---
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = "Browser Create FOREACH ERROR"
+            LET g_errparam.code = SQLCA.SQLCODE
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            RETURN
+         END IF
+         #(ver:36) --- add end ---
+
+         #去除多餘空白
+         #LET g_browser[g_cnt].b_${master_field_lid} = g_browser[g_cnt].b_${master_field_lid} CLIPPED
+         LET g_browser[g_cnt].b_pid = l_pid
+         LET g_browser[g_cnt].b_id  = l_pid,".",g_cnt USING "<<<"
+         LET g_browser[g_cnt].b_exp = FALSE
+         #(ver:35) ---modify start---
+         #LET g_browser[g_cnt].b_expcode = 2
+         CASE g_browser[g_cnt].b_expcode
+            WHEN 2
+               LET g_browser[g_cnt].b_hasC = ${general_prefix}_chk_hasC(g_cnt)
+            WHEN 1
+               LET g_browser[g_cnt].b_hasC = ${general_prefix}_chk_hasC(g_cnt)
+            WHEN 0
+               LET g_browser[g_cnt].b_hasC = FALSE
+            WHEN -1
+               #向下查找到展開值不等於-1得節點(temp table中查找)
+               LET g_cnt = ${general_prefix}_find_node(g_cnt)
+         END CASE
+         #(ver:35) --- modify end ---
+         IF cl_null("${master_field_pid}") THEN
+            LET g_browser[g_cnt].b_hasC = FALSE
+         ELSE
+            LET g_browser[g_cnt].b_hasC = TRUE
+         END IF
+ 
+         LET g_cnt = g_cnt + 1
+      END FOREACH
+      LET l_ac = g_browser.getLength()
+ 
+   ${master_type_mark}END FOREACH
+   
+   #組合描述欄位&刪除多於資料
+   FOR l_ac = 1 TO g_browser.getLength()
+      IF cl_null(g_browser[l_ac].b_${master_field_lid}) THEN
+         CALL g_browser.deleteElement(l_ac)
+         LET l_ac = l_ac - 1
+      ELSE
+         CALL ${general_prefix}_desc_show(l_ac)
+      END IF
+   END FOR
+   CALL g_browser.deleteElement(l_ac)
+ 
+   LET g_browser_cnt = g_browser.getLength() - g_browser_root.getLength()
+ 
+   ${master_pid_mark}FREE tree_expand
+   FREE master_getLV2
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.desc_show" >}
+#+ 組合顯示在畫面上的資訊
+PRIVATE FUNCTION ${general_prefix}_desc_show(pi_ac)
+   #add-point:desc_show段define name="desc_show.define_customerization"
+   {<point name="desc_show.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE pi_ac   LIKE type_t.num10
+   DEFINE li_tmp  LIKE type_t.num10   
+   #add-point:desc_show段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="desc_show.define"
+   {<point name="desc_show.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="desc_show.pre_function"
+   {<point name="desc_show.pre_function"/>}
+   #end add-point
+   
+   LET li_tmp = l_ac
+   LET l_ac = pi_ac
+   
+   ${browser_vars_reference}
+   #add-point:browser_create段desc處理 name="desc_show.show"
+   {<point name="desc_show.show"/>} 
+   #end add-point
+ 
+   LET l_ac = li_tmp
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.find_node" >}
+#+ 尋找符合條件的節點
+PRIVATE FUNCTION ${general_prefix}_find_node(pi_ac)
+   #add-point:find_node段define name="find_node.define_customerization"
+   {<point name="find_node.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE pi_ac   LIKE type_t.num10
+   DEFINE li_idx  LIKE type_t.num10
+   DEFINE li_tmp  LIKE type_t.num10
+   DEFINE ls_pid  STRING
+   #add-point:find_node段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="find_node.define"
+   {<point name="find_node.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="find_node.pre_function"
+   {<point name="find_node.pre_function"/>}
+   #end add-point
+   
+   LET ls_pid = g_browser[pi_ac].b_pid
+   
+   LET g_sql = " SELECT DISTINCT '','','','FALSE','','',exp_code,${browser_fields_all_tree} ",
+               " FROM ${general_prefix}_tmp ",
+               " WHERE ${master_field_pid} = ? AND ${master_field_pid} <> ${master_field_lid}",
+               " ORDER BY ${master_field_lid}"
+   PREPARE master_getNode FROM g_sql
+   DECLARE master_getNodecur CURSOR FOR master_getNode
+   
+   LET li_idx = pi_ac
+   WHILE li_idx <= g_browser.getLength()
+      IF g_browser[li_idx].b_expcode = -1 THEN
+      #  OPEN master_getNodecur USING g_browser[li_idx].b_${master_field_lid}   #(ver:36)
+         FOREACH master_getNodecur USING g_browser[li_idx].b_${master_field_lid} INTO g_browser[g_browser.getLength()+1].*   #(ver:36)
+
+            #(ver:36) ---start---
+            IF SQLCA.SQLCODE THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "FOREACH ",SQLERRMESSAGE
+               LET g_errparam.code = SQLCA.SQLCODE
+               LET g_errparam.popup = TRUE 
+               CALL cl_err()
+               RETURN
+            END IF
+            #(ver:36) --- end ---
+            CALL ${general_prefix}_desc_show(g_browser.getLength())
+            LET g_browser[g_browser.getLength()].b_pid = ls_pid
+            LET g_browser[g_browser.getLength()].b_id = g_browser.getLength()
+            LET g_browser[g_browser.getLength()].b_hasC = ${general_prefix}_chk_hasC(g_browser.getLength())
+         END FOREACH
+         CALL g_browser.deleteElement(li_idx)
+         CALL g_browser.deleteElement(g_browser.getLength())
+      ELSE
+         LET li_idx = li_idx + 1
+      END IF
+   
+   END WHILE
+   
+   FREE master_getNode
+   
+   RETURN g_browser.getLength()
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.chk_hasC" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION ${general_prefix}_chk_hasC(pi_id)
+   #add-point:chk_hasC段define name="chk_hasC.define_customerization"
+   {<point name="chk_hasC.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE pi_id    LIKE type_t.num10
+   DEFINE li_cnt   LIKE type_t.num10
+   #add-point:chk_hasC段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="chk_hasC.define"
+   {<point name="chk_hasC.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="chk_hasC.pre_function"
+   {<point name="chk_hasC.pre_function"/>}
+   #end add-point
+   
+   LET g_sql = "SELECT COUNT(${master_field_pid}) FROM ${general_prefix}_tmp ",
+               " WHERE ",
+                ${master_pid_mark}"${master_field_pid} = ? AND ",
+                ${master_pid_mark}"exp_code <> '-1' AND ${master_field_lid} <> ${master_field_pid} "
+                ${master_pid_mark}${master_type_mark} ," AND ",
+                ${master_type_mark}"${master_field_type} = ?"
+ 
+   PREPARE ${general_prefix}_temp_chk FROM g_sql
+ 
+   LET g_sql = "SELECT COUNT(1) FROM ${master_tbl_name} ",
+               " WHERE ${master_append_wc_s} ", 
+               ${master_pid_mark}"${master_field_lid} <> ${master_field_pid} AND ",
+               ${master_pid_mark}"${master_field_pid} = ? ",
+               ${master_pid_mark}${master_type_mark} " AND ",
+               ${master_type_mark}"${master_field_type} = ?",
+               cl_sql_add_filter("${master_tbl_name}")
+   
+   PREPARE ${general_prefix}_master_chk FROM g_sql
+   
+   CASE g_browser[pi_id].b_expcode 
+      WHEN -1
+         RETURN FALSE
+      WHEN 0
+         RETURN FALSE
+      WHEN 1
+         EXECUTE ${general_prefix}_temp_chk 
+           USING g_browser[pi_id].b_${master_field_lid}
+                 ${master_type_mark},g_browser[pi_id].b_${master_field_type}
+            INTO li_cnt
+         FREE ${general_prefix}_temp_chk
+      WHEN 2 
+         EXECUTE ${general_prefix}_master_chk 
+           USING g_browser[pi_id].b_${master_field_lid}
+                 ${master_type_mark},g_browser[pi_id].b_${master_field_type}
+            INTO li_cnt
+         FREE ${general_prefix}_master_chk
+   END CASE
+    
+   IF li_cnt > 0 THEN
+      RETURN TRUE
+   ELSE
+      RETURN FALSE
+   END IF
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.construct" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION ${general_prefix}_construct()
+   #add-point:cs段define name="cs.define_customerization"
+   {<point name="cs.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ls_wc       STRING
+   DEFINE ls_return   STRING
+   DEFINE ls_result   STRING 
+   #add-point:cs段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="cs.define"
+   {<point name="cs.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="cs.pre_function"
+   {<point name="cs.pre_function"/>}
+   #end add-point
+   
+   #清除畫面
+   CLEAR FORM
+   INITIALIZE ${master_var_title}.* TO NULL
+   INITIALIZE g_wc TO NULL
+   LET g_qryparam.state = "c"
+    
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      CONSTRUCT BY NAME g_wc ON ${master_fields_qbe} 
+      
+         BEFORE CONSTRUCT
+            #add-point:cs段more_construct name="cs.before_construct"
+            {<point name="cs.before_construct"/>}
+            #end add-point 
+            
+         ${master_commons_ctrlp}
+ 
+         ${master_fields_ctrlp}
+       
+      END CONSTRUCT
+  
+      #add-point:cs段more_construct name="cs.more_construct"
+      {<point name="cs.more_construct"/>}
+      #end add-point
+         
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段before dialog name="cs.before_dialog"
+         {<point name="cs.before_dialog"/>}
+         #end add-point
+      
+      ON ACTION qbe_select     #條件查詢
+         CALL cl_qbe_list('m') RETURNING ls_wc
+      
+      ON ACTION qbe_save       #條件儲存
+         CALL cl_qbe_save()
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+      CONTINUE DIALOG
+ 
+   END DIALOG
+ 
+   #add-point:cs段after_construct name="cs.after_construct"
+   {<point name="cs.after_construct"/>}
+   #end add-point
+   
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.query" >}
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION ${general_prefix}_query()
+   #add-point:query段define name="query.define_customerization"
+   {<point name="query.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ls_wc STRING
+   #add-point:query段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   {<point name="query.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="query.before_query"
+   {<point name="query.before_query"/>}
+   #end add-point
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+   
+   LET INT_FLAG = 0
+   LET ls_wc = g_wc
+ 
+   #CLEAR FORM
+   #CALL g_browser.clear()
+ 
+   DISPLAY " " TO FORMONLY.h_count
+ 
+   CALL ${general_prefix}_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      #LET g_wc = ls_wc
+      LET g_wc = " 1=2"
+      #add-point:query段取消 name="query.cancel"
+      {<point name="query.cancel"/>}
+      #end add-point
+      #CALL ${general_prefix}_browser_fill(g_wc,g_searchtype)
+      CALL ${general_prefix}_fetch("")
+      RETURN
+   ELSE
+      LET g_current_row = 1
+      LET g_browser_cnt = 0
+      LET g_current_idx = 1
+      CALL g_browser.clear()
+      LET g_first = 0  #設定重新查詢資料後顯示
+   END IF
+ 
+   LET g_searchtype = "3"
+   LET g_searchcol = "0"
+   CALL ${general_prefix}_browser_fill(g_wc,g_searchtype)
+   
+   IF g_browser_cnt > 0 THEN
+      CALL ${general_prefix}_fetch("")
+   ELSE
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "-100" 
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #第一層模糊搜尋
+   #IF g_browser_cnt = 0 THEN
+   #   LET g_wc = cl_wc_parser(g_wc)
+   #   CALL ${general_prefix}_browser_fill(g_wc,g_searchtype)
+   #END IF
+   
+   #第二層速記碼搜尋
+   #IF g_browser_cnt = 0 THEN
+   #   INITIALIZE g_errparam TO NULL 
+   #   LET g_errparam.extend = "" 
+   #   LET g_errparam.code = "-100" 
+   #   LET g_errparam.popup = TRUE 
+   #   CALL cl_err()
+   #END IF
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.fetch" >}
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION ${general_prefix}_fetch(p_flag)
+   #add-point:fetch段define name="fetch.define_customerization"
+   {<point name="fetch.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   DEFINE ls_chk     STRING
+   DEFINE li_idx     LIKE type_t.num10
+   #add-point:fetch段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   {<point name="fetch.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="fetch.befroe_fetch"
+   {<point name="fetch.befroe_fetch"/>}
+   #end add-point 
+ 
+   ${master_type_mark}LET ls_chk = g_browser[g_current_idx].b_id 
+   ${master_type_mark}IF ls_chk.getIndexOf(".",1) = 0 THEN
+   ${master_type_mark}   INITIALIZE ${master_var_title}.* TO NULL
+   ${master_type_mark}   DISPLAY BY NAME ${master_var_title}.*
+   ${master_type_mark}   CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+   #${master_type_mark}   DISPLAY "" TO FORMONLY.h_index
+   ${master_type_mark}   RETURN
+   ${master_type_mark}END IF
+ 
+   #瀏覽頁筆數顯示
+   LET li_idx = 1
+   FOR li_idx = 1 TO g_browser_root.getLength()
+      IF g_browser_root[li_idx] > g_current_idx THEN
+       EXIT FOR
+      END IF
+   END FOR
+   LET li_idx = g_current_idx - li_idx + 1
+   #DISPLAY li_idx TO FORMONLY.h_index   #當下筆數
+ 
+   IF p_flag = "/" THEN
+      IF (NOT g_no_ask) THEN      
+         CALL cl_getmsg("fetch",g_lang) RETURNING ls_msg
+         LET INT_FLAG = 0
+ 
+         PROMPT ls_msg CLIPPED,": " FOR g_jump
+            #交談指令共用ACTION
+            &include "common_action.4gl" 
+         END PROMPT
+ 
+         IF INT_FLAG THEN
+            LET INT_FLAG = 0
+         ELSE
+            IF g_jump > 0 AND g_jump <= g_browser.getLength() THEN
+               LET g_current_idx = g_jump
+            END IF
+            LET g_no_ask = FALSE  
+         END IF           
+      END IF
+   END IF    
+   
+   #若無資料則離開
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+ 
+   LET ${master_var_lid} = g_browser[g_current_idx].b_${master_field_lid}
+   ${master_pid_mark}LET ${master_var_pid} = g_browser[g_current_idx].b_${master_field_pid}
+   ${master_type_mark}LET ${master_var_type} = g_browser[g_current_idx].b_${master_field_type}
+    
+   #add-point:fetch段refresh前 name="fetch.before_refresh"
+   {<point name="fetch.before_refresh"/>}
+   #end add-point
+    
+   #重讀DB,因TEMP有不被更新特性
+   ${master_refresh} 
+   
+   IF SQLCA.SQLCODE THEN
+       INITIALIZE g_errparam TO NULL 
+       LET g_errparam.extend = "${master_tbl_name}:",SQLERRMESSAGE 
+       LET g_errparam.code = SQLCA.SQLCODE 
+       LET g_errparam.popup = TRUE 
+       CALL cl_err()
+       INITIALIZE ${master_var_title}.* TO NULL
+       RETURN
+   END IF
+   
+   #若無資料則關閉相關功能
+   IF g_browser.getLength() = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+   ELSE
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   END IF
+   
+   #add-point:fetch段after_fetch name="fetch.after_fetch"
+   {<point name="fetch.after_fetch"/>}
+   #end add-point
+ 
+   ${master_owner_define}
+   
+   #保存單頭舊值
+   LET ${master_var_title}_t.* = ${master_var_title}.*
+   LET ${master_var_title}_o.* = ${master_var_title}.*
+   
+   #重新顯示
+   CALL ${general_prefix}_show()
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   DISPLAY g_browser.getLength() TO FORMONLY.h_count 
+ 
+   ${general_signature_chk}
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION ${general_prefix}_insert(l_dialog)
+   #add-point:insert段define name="insert.define_customerization"
+   {<point name="insert.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_dialog   ui.DIALOG
+   DEFINE li_addpos  LIKE type_t.num10 #新增節點時產出的畫面實際位置
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE li_cnt     LIKE type_t.num10
+   #add-point:insert段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   {<point name="insert.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="insert.pre_function"
+   {<point name="insert.pre_function"/>}
+   #end add-point
+   
+   LET g_${master_field_pk01}_t = ${master_var_pk01}
+   #master_keys - Start -
+   LET g_${master_field_pk${key}}_t = ${master_var_pk${key}}
+   #keys -  End  -
+   LET g_${master_field_lid}_t = ${master_var_lid}
+   ${master_type_mark}LET g_${master_field_type}_t = ${master_var_type}
+ 
+   #清畫面欄位內容
+   CLEAR ${master_var_title}.*
+ 
+ 
+   #add-point:單頭預設值 name="insert.before_insert"
+   {<point name="insert.before_insert"/>}
+   #end add-point 
+ 
+   INITIALIZE ${master_var_title}.* LIKE ${master_tbl_name}.*
+   DISPLAY BY NAME ${master_vars_all}
+   CALL s_transaction_begin()
+ 
+   #其他table資料備份(確定是否更改用)
+   ${master_multi_table_bak}
+ 
+   WHILE TRUE
+      #給予pid,type預設值
+      ${master_pid_mark}LET ${master_var_pid} = g_${master_field_lid}_t
+      ${master_type_mark}LET ${master_var_type} = g_${master_field_type}_t
+      ${master_insert_define}
+      
+      CALL gfrm_curr.setElementImage("statechange", "authstatus/valid.png")
+  
+      ${master_define_append}
+      
+      #單頭預設值
+      ${master_fields_default}
+     
+      #add-point:單頭預設值 name="insert.default"
+      {<point name="insert.default"/>}
+      #end add-point 
+ 
+      CALL ${general_prefix}_input("a")
+      
+      #add-point:單頭輸入後 name="insert.after_insert"
+      {<point name="insert.after_insert"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET ${master_var_title}.* = ${master_var_title}_t.*
+         CALL ${general_prefix}_show()
+         INITIALIZE g_errparam TO NULL
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code = 9001 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+         EXIT WHILE
+      ELSE
+         #分兩種狀況-1.根節點, 2.非根節點
+         IF ${master_var_pid} = ${master_var_lid} THEN
+            #為根節點
+            LET li_addpos = g_browser.getLength() + 1
+            ${master_pid_mark}LET g_browser[li_addpos].b_${master_field_pid} = ${master_var_pid}
+            ${master_lid_mark}LET g_browser[li_addpos].b_${master_field_lid} = ${master_var_lid}
+            LET g_browser[li_addpos].b_exp  = FALSE
+            LET g_browser[li_addpos].b_hasC = FALSE
+            LET g_browser[li_addpos].b_id  = '0.add',g_add_idx USING "<<<"
+            LET g_browser[li_addpos].b_pid = '0',g_add_idx USING "<<<"
+            LET g_add_idx = g_add_idx + 1
+            CALL ${general_prefix}_desc_show(li_addpos)
+            LET g_current_idx = li_addpos
+         ELSE
+            #非根節點, 開始搜尋其父節點(已展開才做處理)
+            LET li_cnt = g_cnt
+            IF g_browser.getLength() > 0 THEN
+               FOR li_idx = 1 TO g_browser.getLength()
+                  IF g_browser[li_idx].b_${master_field_lid} = ${master_var_pid} THEN
+                     LET li_addpos = l_dialog.appendNode("s_browse",li_idx)
+                     LET g_cnt = li_addpos
+                     ${master_pid_mark}LET g_browser[li_addpos].b_${master_field_pid} = ${master_var_pid}
+                     ${master_lid_mark}LET g_browser[li_addpos].b_${master_field_lid} = ${master_var_lid}
+                     EXECUTE master_refreshcur USING g_browser[li_addpos].b_${master_field_pk01}
+                                                     #master_keys - Start -
+                                                     ,g_browser[li_addpos].b_${master_field_pk${key}}
+                                                     #keys -  End  -
+                                                INTO ${browser_vars_all}${browser_reference_fetch_field}
+                     LET g_browser[li_addpos].b_exp  = FALSE
+                     LET g_browser[li_addpos].b_hasC = FALSE
+                     LET g_browser[li_addpos].b_id  = g_browser[li_idx].b_id, '.add',g_add_idx USING "<<<"
+                     LET g_browser[li_addpos].b_pid = g_browser[li_idx].b_id
+                     LET g_add_idx = g_add_idx + 1
+                     CALL ${general_prefix}_desc_show(li_addpos)
+                     #打開父節點
+                     LET g_browser[li_idx].b_hasC = TRUE
+                     LET g_browser[li_idx].b_exp = TRUE
+                     LET g_current_idx = li_addpos
+                     EXIT FOR
+                  END IF
+               END FOR
+            END IF
+            LET g_cnt = li_cnt
+         END IF
+      END IF
+      
+      LET g_rec_b = 0
+      EXIT WHILE
+   END WHILE
+   
+   #撈取異動後的資料(主要是帶出reference)
+   ${master_refresh}
+   
+   #將資料顯示到畫面上
+   DISPLAY BY NAME ${master_vars_all}
+   
+   #功能已完成,通報訊息中心
+   CALL ${general_prefix}_msgcentre_notify('insert')
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION ${general_prefix}_modify()
+   #add-point:modify段define name="modify.define_customerization"
+   {<point name="modify.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:modify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   {<point name="modify.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="modify.pre_function"
+   {<point name="modify.pre_function"/>}
+   #end add-point
+   
+   IF ${master_var_pk01} IS NULL
+      #detail_keys - Start -
+   OR ${master_var_pk${key}} IS NULL
+      #keys -  End  -
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "std-00003" 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF 
+   
+   ${master_refresh}
+ 
+   #檢查是否允許此動作
+   IF NOT ${general_prefix}_action_chk() THEN
+      RETURN
+   END IF
+  
+   LET g_${master_field_pk01}_t = ${master_var_pk01}
+   #master_keys - Start -
+   LET g_${master_field_pk${key}}_t = ${master_var_pk${key}}
+   #keys -  End  -
+   
+   CALL s_transaction_begin()
+   
+   OPEN ${general_prefix}_cl USING ${master_var_append}${master_var_allkeys}
+   IF SQLCA.SQLCODE THEN   #(ver:36)
+      CLOSE ${general_prefix}_cl
+      CALL s_transaction_end("N","0")
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN ${general_prefix}_cl:" 
+      LET g_errparam.code = SQLCA.SQLCODE   #(ver:36)
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #鎖住將被更改或取消的資料
+   FETCH ${general_prefix}_cl INTO ${master_vars_all}
+ 
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.SQLCODE THEN
+      CLOSE ${general_prefix}_cl
+      CALL s_transaction_end("N","0")
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = ${master_var_lid},":",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   #其他table資料備份(確定是否更改用)
+   ${master_multi_table_bak}
+
+   CALL ${general_prefix}_show()
+   WHILE TRUE
+      LET ${master_var_pk01} = g_${master_field_pk01}_t
+      #master_keys - Start -
+      LET ${master_var_pk${key}} = g_${master_field_pk${key}}_t
+      #keys -  End  -
+      
+      #寫入修改者/修改日期資訊
+      ${master_upder_define}
+ 
+      #add-point:modify段修改前 name="modify.before_input"
+      {<point name="modify.before_input"/>}
+      #end add-point
+      
+      CALL ${general_prefix}_input("u")     #欄位更改
+ 
+      #add-point:modify段修改後 name="modify.after_input"
+      {<point name="modify.after_input"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET ${master_var_title}.* = ${master_var_title}_t.*
+         CALL ${general_prefix}_show()
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code = 9001 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+ 
+         EXIT WHILE
+      END IF
+ 
+      #若有modid跟moddt則進行update
+      ${general_modify_mark}UPDATE ${master_tbl_name} SET (${master_modify_fields_update}) = (${master_modify_vars_update})
+      ${general_modify_mark} WHERE ${master_append_wc} ${master_field_pk01} = g_${master_field_pk01}_t
+         #master_keys - Start -
+         ${general_modify_mark}AND ${master_field_pk${key}} = g_${master_field_pk${key}}_t
+         #keys -  End  -
+      
+      EXIT WHILE
+  
+   END WHILE
+ 
+   CLOSE ${general_prefix}_cl
+   CALL s_transaction_end("Y","0")
+ 
+   #功能已完成,通報訊息中心
+   CALL ${general_prefix}_msgcentre_notify('modify')
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.check" >}
+#+ 避免資料錯誤
+PRIVATE FUNCTION ${general_prefix}_check(ps_id${master_func_pid_and_type})
+   #add-point:check段define name="check.define_customerization"
+   {<point name="check.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ps_id       STRING
+   DEFINE ps_pid      STRING
+   DEFINE ps_type     STRING
+   DEFINE ls_pid      LIKE type_t.chr100
+   DEFINE ls_id       LIKE type_t.chr100
+   DEFINE ls_type     LIKE type_t.chr100
+   DEFINE ls_return   LIKE type_t.num5
+   DEFINE ls_sql      STRING
+   DEFINE li_cnt      LIKE type_t.num10
+   #add-point:check段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="check.define"
+   {<point name="check.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="check.pre_function"
+   {<point name="check.pre_function"/>}
+   #end add-point
+   
+   #從該節點往上檢查, 若出現ID重複的狀況代表會導致無限迴圈
+   LET ls_sql = " SELECT ${master_field_lid},${master_field_pid} FROM ",
+                " (SELECT ${master_field_lid},${master_field_pid} FROM ${master_tbl_name} WHERE ${master_append_wc_s} ${master_field_lid}<>${master_field_pid})",
+                " WHERE ${master_field_lid} = '",ps_id,"' OR ${master_field_pid} = '",ps_id,"'",
+                " START WITH ${master_field_lid}='",ps_pid,"'",
+                " CONNECT BY PRIOR ${master_field_pid}=${master_field_lid} "
+ 
+   PREPARE check_cnt FROM ls_sql
+   DECLARE check_cntcur CURSOR FOR check_cnt
+   OPEN check_cntcur
+   IF SQLCA.SQLCODE THEN   #(ver:36)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN check_cntcur:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE   #(ver:36)
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+      RETURN FALSE
+   END IF
+
+   FETCH check_cntcur INTO li_cnt
+ 
+   IF li_cnt > 0 THEN
+      LET ls_return = TRUE
+   ELSE
+      LET ls_return = FALSE
+   END IF
+   
+   RETURN ls_return 
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.reproduce" >}
+#+ 資料複製
+PRIVATE FUNCTION ${general_prefix}_reproduce(l_dialog)
+   #add-point:reproduce段define name="reproduce.define_customerization"
+   {<point name="reproduce.define_customerization" edit="c" mark="Y"/>}
+   #end add-point   
+   DEFINE l_dialog      ui.DIALOG
+   DEFINE li_addpos     LIKE type_t.num10
+   DEFINE l_newno           LIKE ${master_tbl_name}.${master_field_pk01} 
+   DEFINE l_oldno           LIKE ${master_tbl_name}.${master_field_pk01} 
+   #master_keys - Start -
+   DEFINE l_newno${key}     LIKE ${master_tbl_name}.${master_field_pk${key}} 
+   DEFINE l_oldno${key}     LIKE ${master_tbl_name}.${master_field_pk${key}} 
+   #keys -  End  -
+   DEFINE l_master          RECORD LIKE ${master_tbl_name}.*
+   DEFINE l_cnt             LIKE type_t.num10  
+   DEFINE li_idx            LIKE type_t.num10  
+   DEFINE li_cnt            LIKE type_t.num10  
+   #add-point:reproduce段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="reproduce.define"
+   {<point name="reproduce.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="reproduce.before_reproduce"
+   {<point name="reproduce.before_reproduce"/>}
+   #end add-point
+ 
+   #檢查PK欄位是否均有值,若全部為NULL時退出
+   IF ${master_var_pk01} IS NULL
+      #detail_keys - Start -
+   OR ${master_var_pk${key}} IS NULL
+      #keys -  End  -
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "std-00003" 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF 
+ 
+   ${master_refresh}
+ 
+   #檢查如果有子節點(hasC=1)則顯示錯誤訊息後退出
+ 
+   ERROR ""
+ 
+   CALL cl_set_head_visible("","YES")
+ 
+   ${general_repro_reset}
+
+   LET ${master_var_pk01} = ""
+   #master_keys - Start -
+   LET ${master_var_pk${key}} = ""
+   #keys -  End  -
+   ${master_insert_define}
+   
+   CALL s_transaction_begin()
+   
+   #其他table資料備份(確定是否更改用)
+   ${master_multi_table_bak}
+ 
+   #add-point:複製輸入前 name="reproduce.head.b_input"
+   {<point name="reproduce.head.b_input"/>}
+   #end add-point
+   
+   #直接呼叫輸入
+   CALL ${general_prefix}_input("r")
+ 
+   #add-point:完成複製段落後 name="reproduce.after_reproduce"
+   {<point name="reproduce.after_reproduce" />}
+   #end add-point
+ 
+   IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET ${master_var_title}.* = ${master_var_title}_t.*
+         CALL ${general_prefix}_show()
+         INITIALIZE g_errparam TO NULL
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code = 9001 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+      ELSE
+         #分兩種狀況-1.根節點, 2.非根節點
+         IF ${master_var_pid} = ${master_var_lid} THEN
+            #為根節點
+            LET li_addpos = g_browser.getLength() + 1
+            ${master_pid_mark}LET g_browser[li_addpos].b_${master_field_pid} = ${master_var_pid}
+            ${master_lid_mark}LET g_browser[li_addpos].b_${master_field_lid} = ${master_var_lid}
+            LET g_browser[li_addpos].b_exp  = FALSE
+            LET g_browser[li_addpos].b_hasC = FALSE
+            LET g_browser[li_addpos].b_id  = '0.add',g_add_idx USING "<<<"
+            LET g_browser[li_addpos].b_pid = '0',g_add_idx USING "<<<"
+            LET g_add_idx = g_add_idx + 1
+            CALL ${general_prefix}_desc_show(li_addpos)
+            LET g_current_idx = li_addpos
+         ELSE
+            #非根節點, 開始搜尋其父節點(已展開才做處理)
+            LET li_cnt = g_cnt
+            IF g_browser.getLength() > 0 THEN
+               FOR li_idx = 1 TO g_browser.getLength()
+                  IF g_browser[li_idx].b_${master_field_lid} = ${master_var_pid} THEN
+                     LET li_addpos = l_dialog.appendNode("s_browse",li_idx)
+                     LET g_cnt = li_addpos
+                     ${master_pid_mark}LET g_browser[li_addpos].b_${master_field_pid} = ${master_var_pid}
+                     ${master_lid_mark}LET g_browser[li_addpos].b_${master_field_lid} = ${master_var_lid}
+                     EXECUTE master_refreshcur USING g_browser[li_addpos].b_${master_field_pk01}
+                                                     #master_keys - Start -
+                                                     ,g_browser[li_addpos].b_${master_field_pk${key}}
+                                                     #keys -  End  -
+                                                INTO ${browser_vars_all}${browser_reference_fetch_field}
+                     LET g_browser[li_addpos].b_exp  = FALSE
+                     LET g_browser[li_addpos].b_hasC = FALSE
+                     LET g_browser[li_addpos].b_id  = g_browser[li_idx].b_id, '.add',g_add_idx USING "<<<"
+                     LET g_browser[li_addpos].b_pid = g_browser[li_idx].b_id
+                     LET g_add_idx = g_add_idx + 1
+                     CALL ${general_prefix}_desc_show(li_addpos)
+                     #打開父節點
+                     LET g_browser[li_idx].b_hasC = TRUE
+                     LET g_browser[li_idx].b_exp = TRUE
+                     LET g_current_idx = li_addpos
+                     EXIT FOR
+                  END IF
+               END FOR
+            END IF
+            LET g_cnt = li_cnt 
+         END IF
+      END IF
+ 
+   #功能已完成,通報訊息中心
+   CALL ${general_prefix}_msgcentre_notify('reproduce')
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.input" >}
+#+ 資料輸入
+PRIVATE FUNCTION ${general_prefix}_input(p_cmd)
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_cmd           LIKE type_t.chr1
+   DEFINE l_cmd_t         LIKE type_t.chr1
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_n             LIKE type_t.num10       #檢查重複用
+   DEFINE l_cnt           LIKE type_t.num10       #檢查重複用
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_i             LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num10
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="input.pre_function"
+   {<point name="input.pre_function"/>}
+   #end add-point
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+ 
+   #將資料輸出到畫面上
+   DISPLAY BY NAME ${master_vars_all}
+ 
+   #先做狀態判定
+   IF p_cmd = 'r' THEN
+      LET l_cmd_t = 'r' 
+      LET p_cmd   = 'a'
+   ELSE
+      LET l_cmd_t = p_cmd
+   END IF  
+   
+   CALL cl_set_head_visible("","YES")
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+   LET g_qryparam.state = "i"
+   
+   #控制key欄位可否輸入
+   CALL ${general_prefix}_set_entry(p_cmd)
+   #add-point:set_entry後 name="input.after_set_entry"
+   {<point name="input.after_set_entry"/>}
+   #end add-point
+   CALL ${general_prefix}_set_no_entry(p_cmd)
+   #add-point:set_no_entry後 name="input.after_set_no_entry"
+   {<point name="input.after_set_no_entry"/>}
+   #end add-point
+ 
+   DISPLAY BY NAME ${master_input_fields}
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #單頭段
+      INPUT BY NAME ${master_input_fields} 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂單頭ACTION
+         ${master_iaction_call}
+         
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            
+            #add-point:input段define name="input.action"
+            {<point name="input.action"/>}
+            #end add-point
+          
+         ${master_fields_check} #欄位檢查
+         ${master_fields_ctrlp_i} #欄位開窗
+ 
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+ 
+            ${master_pid_mark}#避免資料錯誤的檢查
+            ${master_pid_mark}IF ${general_prefix}_check(${master_var_lid},${master_var_pid}
+            ${master_pid_mark}   ${master_type_mark},${master_var_type}
+            ${master_pid_mark}   ) THEN
+            ${master_pid_mark}   INITIALIZE g_errparam TO NULL 
+            ${master_pid_mark}   LET g_errparam.extend = "" 
+            ${master_pid_mark}   LET g_errparam.code = "std-00020" 
+            ${master_pid_mark}   LET g_errparam.popup = TRUE 
+            ${master_pid_mark}   CALL cl_err()
+            ${master_pid_mark}   NEXT FIELD CURRENT
+            ${master_pid_mark}END IF
+ 
+            #CALL cl_err_collect_show()   #錯誤訊息統整顯示
+            #CALL cl_showmsg()
+            DISPLAY BY NAME ${master_var_lid}
+ 
+            #實體新增/修改/複製段落的處理
+            CASE
+               WHEN p_cmd = "a" OR p_cmd = "r"
+                  LET l_count = 1
+ 
+                  SELECT COUNT(1) INTO l_count FROM ${master_tbl_name}
+                   WHERE ${master_append_wc} ${master_field_pk01} = ${master_var_pk01}
+                         #master_keys - Start -
+                     AND ${master_field_pk${key}} = ${master_var_pk${key}}
+                         #keys -  End  -
+                         #
+                  IF l_count = 0 THEN
+                     #add-point:單頭新增前 name="input.head.b_insert"
+                     {<point name="input.head.b_insert" mark="Y"/>}
+                     #end add-point
+ 
+                     INSERT INTO ${master_tbl_name} (${master_field_append}${master_fields_update})
+                     VALUES (${master_var_append}${master_vars_update}) 
+ 
+                     #add-point:單頭新增中 name="input.head.m_insert"
+                     {<point name="input.head.m_insert"/>}
+                     #end add-point
+ 
+                     IF SQLCA.SQLCODE THEN
+                        INITIALIZE g_errparam TO NULL 
+                        LET g_errparam.extend = "${master_var_title}:",SQLERRMESSAGE 
+                        LET g_errparam.code = SQLCA.SQLCODE 
+                        LET g_errparam.popup = TRUE 
+                        CALL cl_err()
+                        CONTINUE DIALOG
+                     END IF
+                  
+                     #提速檔資料建置
+                     ${master_pid_mark}IF ${master_var_lid} <> ${master_var_pid} THEN
+                     ${master_pid_mark}   #CALL n_${master_spped_tbl_pre}_generate_child(${master_var_lid},${master_var_pid})
+                     ${master_pid_mark}END IF
+                     
+                     #add-point:單頭新增後 name="input.head.a_insert"
+                     {<point name="input.head.a_insert"/>}
+                     #end add-point
+                     
+                     #資料多語言用-增/改
+                     ${master_multi_language}
+                     CALL s_transaction_end("Y","0")
+                  ELSE
+                     CALL s_transaction_end("N","0")
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend =  ${master_var_lid} 
+                     LET g_errparam.code =  "std-00006" 
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                  END IF 
+ 
+               #修改段落
+               WHEN p_cmd = "u"  
+                  #add-point:單頭修改前 name="input.head.b_update"
+                  {<point name="input.head.b_update" mark="Y"/>}
+                  #end add-point
+                  UPDATE ${master_tbl_name} SET (${master_fields_update}) = (${master_vars_update})
+                   WHERE ${master_append_wc} ${master_field_pk01} = g_${master_field_pk01}_t #${pk_list}
+                     #master_keys - Start -
+                     AND ${master_field_pk${key}} = g_${master_field_pk${key}}_t
+                     #keys -  End  -
+                  #add-point:單頭修改中 name="input.head.m_update"
+                  {<point name="input.head.m_update"/>}
+                  #end add-point
+                  CASE
+                     WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                        CALL s_transaction_end('N','0')
+                        INITIALIZE g_errparam TO NULL 
+                        LET g_errparam.extend = "${master_tbl_name}" 
+                        LET g_errparam.code = "std-00009" 
+                        LET g_errparam.popup = TRUE 
+                        CALL cl_err()
+                        
+                     WHEN SQLCA.SQLCODE #其他錯誤
+                        INITIALIZE g_errparam TO NULL 
+                        LET g_errparam.extend = "${master_tbl_name}:",SQLERRMESSAGE 
+                        LET g_errparam.code = SQLCA.SQLCODE 
+                        LET g_errparam.popup = TRUE 
+                        CALL s_transaction_end('N','0')
+                        CALL cl_err()
+                        
+                     OTHERWISE
+                        #add-point:單頭修改後 name="input.head.a_update"
+                        {<point name="input.head.a_update"/>}
+                        #end add-point
+    
+                        #資料多語言用-增/改
+                        ${master_multi_language}
+                        LET g_log1 = util.JSON.stringify(${master_var_title}_t)
+                        LET g_log2 = util.JSON.stringify(${master_var_title})
+                        IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                           CALL s_transaction_end('N','0')
+                        ELSE
+                           CALL s_transaction_end('Y','0')
+                        END IF
+                  END CASE
+ 
+               OTHERWISE 
+            END CASE
+ 
+           #controlp
+      END INPUT
+      
+      #add-point:input段more input  name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+      
+      BEFORE DIALOG
+         #CALL cl_err_collect_init()    
+         #add-point:before dialog name="input.before_dialog"
+         {<point name="input.before_dialog"/>}
+         #end add-point
+          
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden
+         END IF
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      #在dialog button (放棄)
+      ON ACTION cancel
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      #在dialog 右上角 (X)
+      ON ACTION close       
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      #toolbar 離開
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+           
+   END DIALOG
+   
+   #add-point:input段after input  name="input.after_input"
+   {<point name="input.after_input"/>}
+   #end add-point
+    
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.show" >}
+#+ 單頭資料重新顯示及單身資料重抓
+PRIVATE FUNCTION ${general_prefix}_show()
+   #add-point:show段define name="show.define_customerization"
+   {<point name="show.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:show段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show.define"
+   {<point name="show.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="show.before"
+   {<point name="show.before"/>}
+   #end add-point
+   
+   ${general_display_site}    
+   
+   #帶出公用欄位reference值
+   ${master_commons_ref}
+ 
+   #顯示followup圖示
+   ${master_related_document_show}
+   
+   #讀入ref值(單頭)
+   #add-point:reference段之後 name="show.head.reference"
+   {<point name="show.head.reference"/>}
+   #end add-point
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME ${master_vars_all}
+ 
+   #顯示狀態(stus)圖片
+   ${general_state_show}
+ 
+   #顯示有特殊格式設定的欄位或說明
+   CALL cl_show_fld_cont()   
+ 
+   #add-point:show段之後 name="show.after"
+   {<point name="show.after"/>}
+   #end add-point
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.delete" >}
+#+ 資料刪除
+PRIVATE FUNCTION ${general_prefix}_delete(l_dialog)
+   #add-point:delete段define name="delete.define_customerization"
+   {<point name="delete.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_dialog        ui.DIALOG
+   DEFINE li_status       LIKE type_t.num5  #SQL實體資料刪除狀態
+   DEFINE li_cnt          LIKE type_t.num10 #查看本階是否有兄弟資料
+   #add-point:delete段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   {<point name="delete.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="delete.pre_function"
+   {<point name="delete.pre_function"/>}
+   #end add-point
+   
+   IF ${master_var_pk01} IS NULL
+      #detail_keys - Start -
+   OR ${master_var_pk${key}} IS NULL
+      #keys -  End  -
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "std-00003" 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #add-point:delete段before_delete name="delete.before_delete"
+   {<point name="delete.before_delete"/>}
+   #end add-point
+ 
+   ${master_refresh}
+    
+   #檢查是否允許此動作
+   IF NOT ${general_prefix}_action_chk() THEN
+      RETURN
+   END IF
+    
+   CALL ${general_prefix}_show()
+   
+   #Transaction開始
+   CALL s_transaction_begin()
+   
+   ${master_multi_table_bak}
+ 
+   OPEN ${general_prefix}_cl USING ${master_var_append}${master_var_allkeys}
+   IF SQLCA.SQLCODE THEN   #(ver:36)
+      CLOSE ${general_prefix}_cl
+      CALL s_transaction_end("N","0")
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN ${general_prefix}_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE   #(ver:36)
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #鎖住將被更改或取消的資料
+   FETCH ${general_prefix}_cl INTO ${master_vars_all}
+   IF SQLCA.SQLCODE THEN
+      CALL s_transaction_end("N","0")
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = ${master_var_lid},":",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #add-point:delete段before_delete name="delete.before_delete_ask"
+   {<point name="delete.before_delete_ask"/>}
+   #end add-point
+ 
+   #(ver:35) ---modify start---
+   #(ver:35) 為避免刪除全部子節點可能會對其他節點造成影響，現改為只刪除當下節點
+   #先判斷是否有子節點(hasC) 詢問是否砍除全部
+#  IF g_browser[g_current_idx].b_hasC THEN
+#     IF cl_ask_delete_all_node() THEN
+#        LET li_status = ${general_prefix}_sql_delete(TRUE)
+#     ELSE
+#        LET li_status = FALSE
+#     END IF
+#  ELSE
+      #如果沒有子節點,詢問是否刪除本筆資料
+      IF cl_ask_delete() THEN
+         LET li_status = ${general_prefix}_sql_delete(FALSE)
+      ELSE
+         LET li_status = FALSE
+      END IF
+#  END IF
+   #(ver:35) --- modify end ---
+ 
+   #檢查實體砍除是否發生意外中止
+   IF NOT li_status THEN
+      CALL s_transaction_end("N","0")
+      CLOSE ${general_prefix}_cl
+      RETURN
+   END IF
+ 
+   #刪除節點與資料內容
+   CALL l_dialog.deleteNode("s_browse",g_current_idx)  #deleteNode會順便幫忙做deleteElement
+ 
+   #確認這一階還有沒有兄弟 (有:不異動上階屬性/否:上階hasC及exp設定成0)
+   #SELECT COUNT(1) INTO li_cnt
+   #  FROM ${master_tbl_name}
+   # WHERE ${master_field_pid} = ${master_var_pid}
+   #IF g_current_idx > 1 THEN
+   #   IF li_cnt = 0  THEN
+   #      LET g_browser[g_current_idx - 1].b_hasC = 0
+   #      LET g_browser[g_current_idx - 1].b_exp = 0
+   #   END IF
+   #END IF
+ 
+   #add-point:單頭刪除後 name="delete.head.a_delete"
+   {<point name="delete.head.a_delete"/>}
+   #end add-point
+   
+   IF g_current_idx > 1 THEN
+      LET g_current_idx = g_current_idx - 1
+   END IF
+   
+   IF g_browser.getLength() > 0 THEN
+      CALL ${general_prefix}_fetch("")
+   END IF
+ 
+   LET g_log1 = util.JSON.stringify(${master_var_title})   #(ver:36)
+   IF NOT cl_log_modified_record(g_log1,'') THEN   #(ver:36)
+      CLOSE ${general_prefix}_cl
+      CALL s_transaction_end('N','0')
+   ELSE
+      CLOSE ${general_prefix}_cl
+      CALL s_transaction_end('Y','0')
+   END IF
+ 
+   #功能已完成,通報訊息中心
+   CALL ${general_prefix}_msgcentre_notify('delete')
+    
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.sql_delete" >}
+#+ 實體刪除FUNCTION 
+PRIVATE FUNCTION ${general_prefix}_sql_delete(li_node)
+   #add-point:sql_delete段define name="sql_delet.define_customerization"
+   {<point name="sql_delet.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE li_node         LIKE type_t.num5  #TRUE:砍除Node Tree/FALSE:砍除Single Node
+   DEFINE li_return       LIKE type_t.num5
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE ls_sql          STRING
+   DEFINE li_cnt          LIKE type_t.num10   #(ver:35) add
+   #add-point:sql_delete段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sql_delet.define"
+   {<point name="sql_delet.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="sql_delet.pre_function"
+   {<point name="sql_delet.pre_function"/>}
+   #end add-point
+   
+   LET li_return = TRUE
+ 
+   ${master_related_document_remove} 
+ 
+   #add-point:單頭刪除前 name="delete.head.b_delete"
+   {<point name="delete.head.b_delete" mark="Y"/>}
+   #end add-point
+   
+   IF li_node = TRUE THEN
+      #砍除該節點以下所有節點
+      LET ls_sql = " SELECT ${master_field_lid},${master_field_pid} FROM ",
+                   " (SELECT ${master_field_lid},${master_field_pid} FROM ${master_tbl_name} WHERE ${master_append_wc_s} ${master_field_lid}<>${master_field_pid})",
+                   " START WITH ${master_field_pid}='",${master_var_pid},"'",
+                   " CONNECT BY PRIOR ${master_field_lid} = ${master_field_pid}"
+ 
+   ELSE 
+   
+   END IF
+ 
+   #刪除當下節點
+   DELETE FROM ${master_tbl_name}
+    WHERE ${master_append_wc} ${master_field_pk01} = ${master_var_pk01}
+      #master_keys - Start -
+      AND ${master_field_pk${key}} = ${master_var_pk${key}}
+      #keys -  End  -
+ 
+   #add-point:單頭刪除中 name="delete.head.m_delete"
+   {<point name="delete.head.m_delete"/>}
+   #end add-point
+ 
+   IF SQLCA.SQLCODE THEN
+      CALL s_transaction_end("N","0")
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "${master_tbl_name}:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+   END IF
+ 
+   #(ver:35) ---modify start---
+   # 若此節點還有存在在其他節點下，則多語言資料不可刪除
+   LET li_cnt = 0
+   LET ls_sql = " SELECT COUNT(1) FROM ${master_tbl_name}",
+                 " WHERE ${master_append_wc_s} ${master_field_lid} = '",${master_var_lid},"'"
+
+   PREPARE master_chk_node_exist FROM ls_sql
+   EXECUTE master_chk_node_exist INTO li_cnt
+   IF li_cnt <= 0 THEN
+      ${master_multi_table_delete}
+   END IF
+   #(ver:35) --- modify end ---
+ 
+   RETURN li_return
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.set_entry" >}
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION ${general_prefix}_set_entry(p_cmd)
+   #add-point:set_entry段define name="set_entry.define_customerization"
+   {<point name="set_entry.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_cmd   LIKE type_t.chr1 
+   #add-point:set_entry段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry.define"
+   {<point name="set_entry.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="set_entry.pre_function"
+   {<point name="set_entry.pre_function"/>}
+   #end add-point
+   
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("${master_entry_fields}",TRUE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry段欄位控制 name="set_entry.field_control"
+      {<point name="set_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry段欄位控制後 name="set_entry.after_control"
+   {<point name="set_entry.after_control"/>}
+   #end add-point 
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.set_no_entry" >}
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION ${general_prefix}_set_no_entry(p_cmd)
+   #add-point:set_no_entry段define name="set_no_entry.define_customerization"
+   {<point name="set_no_entry.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_cmd   LIKE type_t.chr1
+   #add-point:set_no_entry段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry.define"
+   {<point name="set_no_entry.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="set_no_entry.pre_function"
+   {<point name="set_no_entry.pre_function"/>}
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("${master_no_entry_fields}",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry段欄位控制 name="set_no_entry.field_control"
+      {<point name="set_no_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry段欄位控制後 name="set_no_entry.after_control"
+   {<point name="set_no_entry.after_control"/>}
+   #end add-point
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.default_search" >}
+#+ 外部參數預設搜尋
+PRIVATE FUNCTION ${general_prefix}_default_search()
+   #add-point:default_search段define name="default_search.define_customerization"
+   {<point name="default_search.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE li_idx  LIKE type_t.num10
+   DEFINE li_cnt  LIKE type_t.num10
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   {<point name="default_search.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="default_search.before"
+   {<point name="default_search.before"/>}
+   #end add-point  
+   
+   IF g_searchtype = 0 OR cl_null(g_searchtype) THEN
+      LET g_searchtype = 3
+   END IF 
+   
+   IF NOT cl_null(g_argv[${general_para01}]) THEN
+      LET ls_wc = ls_wc, " ${master_field_pk01} = '", g_argv[${general_para01}], "' AND "
+   END IF
+   
+   #master_keys - Start -
+   IF NOT cl_null(g_argv[${general_para${key}}]) THEN
+      LET ls_wc = ls_wc, " ${master_field_pk${key}} = '", g_argv[${general_para${key}}], "' AND "
+   END IF
+   #keys -  End  -
+   
+   #add-point:default_search段after sql name="default_search.after_sql"
+   {<point name="default_search.after_sql"/>}
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET ls_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_wc = ls_wc
+   ELSE
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=2"
+      END IF
+   END IF
+   
+   #CALL ${general_prefix}_browser_fill(g_wc,g_searchtype)
+ 
+   #add-point:default_search段結束前 name="default_search.after"
+   {<point name="default_search.after"/>}
+   #end add-point
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.state_change" >}
+   ${general_state_change}
+{</section>}
+ 
+{<section id="${app_id}.set_pk_array" >}
+   ${master_set_pk_array}
+{</section>}
+ 
+{<section id="${app_id}.msgcentre_notify" >}
+${general_msgcentre_notify}
+{</section>}
+ 
+{<section id="${app_id}.action_chk" >}
+PRIVATE FUNCTION ${general_prefix}_action_chk()
+   #add-point:action_chk段define(客製用) name="action_chk.define_customerization"
+   {<point name="action_chk.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:action_chk段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="action_chk.define"
+   {<point name="action_chk.define"/>}
+   #end add-point
+   
+   #add-point:action_chk段action_chk name="action_chk.action_chk"
+   {<point name="action_chk.action_chk"/>}
+   #end add-point
+   
+   RETURN TRUE
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="${app_id}.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+

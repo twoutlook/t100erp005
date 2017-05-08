@@ -1,0 +1,117 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abmm206" module="abm" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="02482" crtdt="2014-01-16 16:05:16" modid="02295" moddt="2016-06-27 10:19:01" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="集團研發全主件替代維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bmea003,imaal003(chr500),imaal004(chr500),imae081(chr10),bmea001,bmea002,bmea004,bmea005,bmea006,bmea007"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bmea008,bmea008_desc(chr500),bmea008_desc1(chr500),bmea019,bmea019_desc(chr500),bmea009,bmea010,bmea011,bmea012,bmea013,bmea014,bmea015,bmea016,bmea017,bmea018"/>
+      <var id="bs_field" value="bmea003,bmea003_desc(chr80),bmea003_desc1(imaal_t.imaal004),bmea003_desc2(imae_t.imae081),bmea001,bmea002,bmea004,bmea005,bmea006,bmea007" pk="bmea001,bmea002,bmea003,bmea004,bmea005,bmea006,bmea007" order=""/>
+      <bs_reference field="bmea003_desc" ref_field="bmea003" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abm" filename="abmm206" method="dialog">
+    <section id="input">
+      <input id="head" field="bmea003,bmea001,bmea002,bmea004,bmea005,bmea006,bmea007"/>
+      <input id="body" page="1" field="bmea008,bmea019,bmea009,bmea010,bmea011,bmea012,bmea013,bmea014,bmea015,bmea016,bmea017,bmea018" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bmea003,bmea001,bmea002,bmea004,bmea005,bmea006,bmea007"/>
+      <construct id="body" page="1" field="bmea008,bmea019,bmea009,bmea010,bmea011,bmea012,bmea013,bmea014,bmea015,bmea016,bmea017,bmea018"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bmea001,bmea002,bmea003,bmea004,bmea005,bmea006,bmea007"/>
+      <set id="head" type="no_entry" field="bmea001,bmea002,bmea003,bmea004,bmea005,bmea006,bmea007"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bmea003">
+        <after>
+          <check chkid="v_imaf001_1" id="isExist"/>
+        </after>
+        <controlp form="q_imaf001_6" state="i"/>
+        <controlp form="q_imaf001_6" state="c"/>
+      </column>
+      <column id="imaal003"/>
+      <column id="imaal004"/>
+      <column id="imae081"/>
+      <column id="bmea001"/>
+      <column id="bmea002"/>
+      <column id="bmea004"/>
+      <column id="bmea005"/>
+      <column id="bmea006"/>
+      <column id="bmea007" def_scc="1103"/>
+    </init>
+    <init id="body" page="1">
+      <column id="bmea008">
+        <after>
+          <check chkid="v_imaf001_1" id="isExist"/>
+          <reference field="bmea008_desc" ref_field="bmea_t.bmea008" map_field="bmea008" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001_6" state="i"/>
+        <controlp form="q_imaf001_6" state="c"/>
+      </column>
+      <column id="bmea008_desc"/>
+      <column id="bmea008_desc1"/>
+      <column id="bmea019">
+        <after>
+          <reference field="bmea019_desc" ref_field="bmea_t.bmea019" map_field="bmea019" ref_sql="SELECT imecl005 FROM imecl_t WHERE imeclent=$varg_enterprise$var AND imecl003=? AND imecl004=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="bmea019_desc"/>
+      <column id="bmea009"/>
+      <column id="bmea010"/>
+      <column id="bmea011" type="S" default="1">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bmea012" type="S" default="1">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bmea013">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+        </after>
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="bmea014" type="S" default="N"/>
+      <column id="bmea015" type="S" default="99">
+        <after>
+          <check id="range" st="99.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="bmea016" type="S" default="1" def_scc="1105"/>
+      <column id="bmea017" type="S" default="100">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="bmea018" type="S" default="1" def_scc="1104"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bmea_t" pk="bmea001,bmea002,bmea003,bmea004,bmea005,bmea006,bmea007">
+      <sql id="forupd_sql" type="sql" query="SELECT bmea003,&apos;&apos;,&apos;&apos;,&apos;&apos;,bmea001,bmea002,bmea004,bmea005,bmea006,bmea007 FROM bmea_t WHERE bmeaent= ? AND bmeasite= ? AND bmea001=? AND bmea002=? AND bmea003=? AND bmea004=? AND bmea005=? AND bmea006=? AND bmea007=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bmea003,&apos;&apos;,&apos;&apos;,&apos;&apos;,bmea001,bmea002,bmea004,bmea005,bmea006,bmea007 FROM bmea_t" order="bmea001,bmea002,bmea003,bmea004,bmea005,bmea006,bmea007"/>
+    </head>
+    <body id="bmea_t" page="1" linked="" pk="bmea008,bmea019" fk="bmea001,bmea002,bmea003,bmea004,bmea005,bmea006,bmea007">
+      <sql id="forupd_sql_detail" query="SELECT bmea008,&apos;&apos;,&apos;&apos;,bmea019,&apos;&apos;,bmea009,bmea010,bmea011,bmea012,bmea013,bmea014,bmea015,bmea016,bmea017,bmea018 FROM bmea_t WHERE bmeaent=? AND bmeasite=? AND bmea001=? AND bmea002=? AND bmea003=? AND bmea004=? AND bmea005=? AND bmea006=? AND bmea007=? AND bmea008=? AND bmea019=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bmea008,&apos;&apos;,&apos;&apos;,bmea019,&apos;&apos;,bmea009,bmea010,bmea011,bmea012,bmea013,bmea014,bmea015,bmea016,bmea017,bmea018 FROM bmea_t WHERE bmeaent= ? AND bmeasite= ? AND bmea001=? AND bmea002=? AND bmea003=? AND bmea004=? AND bmea005=? AND bmea006=? AND bmea007=?"/>
+    </body>
+  </dataset>
+</assembly>
+

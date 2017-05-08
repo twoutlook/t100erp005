@@ -1,0 +1,1349 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="afap250" std_prog="afap250" erpver="1.0" module="AFA" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.afap250_ld_ref" order="1" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 带值
+# Memo...........:
+# Usage..........: CALL afap250_ld_ref(p_faamld,p_glaa010,p_glaa011) 
+#                  RETURNING r_faamld_desc,r_faamcomp,r_faamcomp_desc,r_faamacc,r_faamacc_desc
+# Input parameter: p_faamld 帐套别,p_glaa010,p_glaa011
+# Return code....: r_faamld_desc,r_faamcomp,r_faamcomp_desc,r_faamacc,r_faamacc_desc,r_glaa010,r_glaa011
+################################################################################
+PRIVATE FUNCTION afap250_ld_ref(p_faamld,p_glaa010,p_glaa011)
+   DEFINE p_faamld LIKE glaa_t.glaald
+   DEFINE p_glaa010 LIKE glaa_t.glaa010
+   DEFINE p_glaa011 LIKE glaa_t.glaa011
+   DEFINE l_glaa015 LIKE glaa_t.glaa015
+   DEFINE l_glaa016 LIKE glaa_t.glaa016
+   DEFINE l_glaa019 LIKE glaa_t.glaa019
+   DEFINE l_glaa020 LIKE glaa_t.glaa020
+   DEFINE l_dzeb003 LIKE dzeb_t.dzeb003
+   DEFINE r_faamld_desc LIKE type_t.chr500,
+          r_faamcomp  LIKE glaa_t.glaacomp,
+          r_faamcomp_desc LIKE type_t.chr500,
+          r_faamacc   LIKE glaa_t.glaa004,
+          r_faamacc_desc LIKE type_t.chr500,
+          r_glaa010 LIKE glaa_t.glaa010,
+          r_glaa011 LIKE glaa_t.glaa011
+   
+   LET r_faamld_desc = ''
+   LET r_faamcomp = ''
+   LET r_faamcomp_desc = ''
+   LET r_faamacc = ''
+   LET r_faamacc_desc = ''
+   
+   SELECT glaal002,glaacomp,ooefl003,glaa004,ooall004,glaa010,glaa011
+     INTO r_faamld_desc,r_faamcomp,r_faamcomp_desc,r_faamacc,r_faamacc_desc,r_glaa010,r_glaa011
+     FROM glaa_t LEFT OUTER JOIN glaal_t ON glaaent = glaalent AND glaald = glaalld AND glaal001 = 'zh_TW' 
+     LEFT OUTER JOIN ooefl_t ON ooeflent = glaaent AND ooefl001 = glaacomp AND ooefl002 = 'zh_TW' 
+     LEFT OUTER JOIN ooall_t ON ooallent = glaaent AND ooall001 = '0' AND ooall002 = glaa004 AND ooall003 = 'zh_TW'
+    WHERE glaaent = '99' AND glaald = p_faamld
+   IF (NOT cl_null(p_glaa010) AND p_glaa010 != 0) AND (NOT cl_null(p_glaa011) AND p_glaa011 != 0) THEN 
+      LET r_glaa010 = p_glaa010
+      LET r_glaa011 = p_glaa011
+   END IF 
+   
+   CALL afap250_current_chk(p_faamld) RETURNING l_glaa015,l_glaa016,l_glaa019,l_glaa020
+   IF l_glaa015 = 'Y' THEN
+      CALL cl_set_comp_visible('glaq040,glaq041,faam030,faam034,faam032',TRUE)
+      SELECT dzeb003 INTO l_dzeb003 FROM dzeb_t WHERE dzeb001 = 'glaq_t' AND dzeb002 = 'glaq003'
+      CALL cl_set_comp_att_text('glaq040',l_dzeb003||"("||l_glaa016||")")
+      SELECT dzeb003 INTO l_dzeb003 FROM dzeb_t WHERE dzeb001 = 'glaq_t' AND dzeb002 = 'glaq004'
+      CALL cl_set_comp_att_text('glaq041',l_dzeb003||"("||l_glaa016||")")
+   ELSE
+      CALL cl_set_comp_visible('glaq040,glaq041,faam030,faam034,faam032',FALSE)
+   END IF 
+   IF l_glaa019 = 'Y' THEN
+      CALL cl_set_comp_visible('glaq043,glaq044,faam038,faam042,faam040',TRUE)
+      SELECT dzeb003 INTO l_dzeb003 FROM dzeb_t WHERE dzeb001 = 'glaq_t' AND dzeb002 = 'glaq003'
+      CALL cl_set_comp_att_text('glaq043',l_dzeb003||"("||l_glaa020||")")
+      SELECT dzeb003 INTO l_dzeb003 FROM dzeb_t WHERE dzeb001 = 'glaq_t' AND dzeb002 = 'glaq004'
+      CALL cl_set_comp_att_text('glaq044',l_dzeb003||"("||l_glaa020||")")
+   ELSE
+      CALL cl_set_comp_visible('glaq043,glaq044,faam038,faam042,faam040',FALSE)
+   END IF 
+   RETURN r_faamld_desc,r_faamcomp,r_faamcomp_desc,r_faamacc,r_faamacc_desc,r_glaa010,r_glaa011
+END FUNCTION]]>
+  </point>
+  <point name="function.afap250_ld_chk" order="2" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 帐别检查
+# Memo...........:
+# Usage..........: CALL afap250_ld_chk(p_ld)
+#                  RETURNING r_success
+# Input parameter: p_ld   账套别
+# Return code....: r_success 成功否
+################################################################################
+PRIVATE FUNCTION afap250_ld_chk(p_ld)
+   DEFINE p_ld LIKE glaa_t.glaald
+   DEFINE r_success LIKE type_t.num5
+   DEFINE l_glaald LIKE glaa_t.glaald
+   DEFINE l_glaa014 LIKE glaa_t.glaa014
+   DEFINE l_glaa008 LIKE glaa_t.glaa008
+   DEFINE l_glaastus LIKE glaa_t.glaastus
+   
+   LET r_success = TRUE 
+   
+   SELECT glaald,glaa014,glaa008,glaastus INTO l_glaald,l_glaa014,l_glaa008,l_glaastus
+     FROM glaa_t WHERE glaaent = g_enterprise AND glaald = p_ld
+     
+   IF cl_null(l_glaald) THEN 
+      CALL cl_err(p_ld,'agl-00016',1)
+      LET r_success = FALSE
+   ELSE
+      IF l_glaastus != 'Y' THEN 
+         CALL cl_err(p_ld,'agl-00051',1)
+         LET r_success = FALSE
+      ELSE
+         CALL s_ld_chk_authorization(g_user,p_ld) RETURNING r_success
+         IF r_success = FALSE THEN
+            CALL cl_err(p_ld,'axr-00022',1)
+         ELSE
+            IF l_glaa014 = 'Y' OR l_glaa008 = 'Y' THEN 
+            ELSE
+               CALL cl_err(p_ld,'axr-00021',1)
+               LET r_success = FALSE
+            END IF 
+         END IF
+      END IF 
+   END IF 
+    
+   RETURN r_success
+END FUNCTION]]>
+  </point>
+  <point name="function.afap250_fisrt_body_fill" order="3" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#填充第一个单身
+PRIVATE FUNCTION afap250_fisrt_body_fill()
+   DEFINE ls_cnt LIKE type_t.num10
+   DEFINE ls_sql STRING
+   
+   CALL g_glaq_d.clear()
+   LET ls_sql = "SELECT '',faamld,faam022,'',faam009,ooefl003,sum(faam013),0,sum(faam033),0,sum(faam041),0,'' FROM faam_t ",
+                "  LEFT OUTER JOIN ooefl_t ON ooeflent = faament AND ooefl001 = faam009 AND ooefl002 = '",g_dlang,"'",
+                " WHERE faament = '",g_enterprise,"' AND faamld = '",g_faamld,"' ",
+                "   AND faam007 IN ('1','3') AND faam006 = '1' ",
+                "   AND (faam024 IS NULL OR faam024 = '' ) ",
+                "   AND faam004 = '",g_faamyear,"' AND faam005 = '",g_faammonth,"' ",
+                " GROUP BY faamld,faam022,faam009,ooefl003 ",
+                " UNION ",
+                "SELECT '',faamld,faam021,'',faam009,ooefl003,0,sum(faam013),0,sum(faam033),0,sum(faam041),'' FROM faam_t ",
+                "  LEFT OUTER JOIN ooefl_t ON ooeflent = faament AND ooefl001 = faam009 AND ooefl002 = '",g_dlang,"'",
+                " WHERE faament = '",g_enterprise,"' AND faamld = '",g_faamld,"' ",
+                "   AND faam007 IN ('1','3') AND faam006 = '1' ",
+                "   AND (faam024 IS NULL OR faam024 = '' ) ",
+                "   AND faam004 = '",g_faamyear,"' AND faam005 = '",g_faammonth,"' ",
+                " GROUP BY faamld,faam021,faam009,ooefl003 "
+   PREPARE afap250_first_body_pre FROM ls_sql
+   DECLARE afap250_first_body_cs CURSOR FOR afap250_first_body_pre
+   LET ls_cnt = 1
+   FOREACH afap250_first_body_cs INTO g_glaq_d[ls_cnt].*
+      LET g_glaq_d[ls_cnt].l_number = ls_cnt
+      
+      SELECT glacl004 INTO g_glaq_d[ls_cnt].glaq002_desc
+        FROM glacl_t 
+       WHERE glaclent =g_enterprise AND glacl001 = g_faamacc AND glacl003 = g_dlang 
+         AND glacl002 = g_glaq_d[ls_cnt].glaq002
+      LET g_glaq_d[ls_cnt].glaq002_desc = g_glaq_d[ls_cnt].glaq002,'\n',g_glaq_d[ls_cnt].glaq002_desc,'\n',g_glaq_d[ls_cnt].glaq018_desc
+      LET ls_cnt = ls_cnt + 1
+   END FOREACH
+   CALL g_glaq_d.deleteElement(g_glaq_d.getLength())
+   LET g_rec_b1 = g_glaq_d.getLength()
+END FUNCTION]]>
+  </point>
+  <point name="function.afap250_second_body_fill" order="4" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#填充第二个单身
+PRIVATE FUNCTION afap250_second_body_fill()
+   DEFINE ls_cnt LIKE type_t.num10
+   DEFINE ls_sql STRING
+   
+   CALL g_faam_d.clear()
+   LET ls_sql = "SELECT '',faam001,faam002,faam007,faam009,faam011,faam015,faam014, ",
+                "       faam030,faam034,faam032,faam038,faam042,faam040,faam021,faam022 FROM faam_t ",
+                " WHERE faament = '",g_enterprise,"' AND faamld = '",g_faamld,"' ",
+                "   AND faam007 IN ('1','3') AND faam006 = '1' ",
+                "   AND (faam024 IS NULL OR faam024 = '' ) ",
+                "   AND faam004 = '",g_faamyear,"' AND faam005 = '",g_faammonth,"' ",
+                " ORDER BY faam001,faam002 "
+   PREPARE afap250_second_body_pre FROM ls_sql
+   DECLARE afap250_second_body_cs CURSOR FOR afap250_second_body_pre
+   LET ls_cnt = 1
+   FOREACH afap250_second_body_cs INTO g_faam_d[ls_cnt].*
+      LET g_faam_d[ls_cnt].l_number2 = ls_cnt
+      LET ls_cnt = ls_cnt + 1
+   END FOREACH
+   CALL g_faam_d.deleteElement(g_faam_d.getLength())
+   LET g_rec_b2 = g_faam_d.getLength()
+END FUNCTION]]>
+  </point>
+  <point name="function.afap250_s01" order="5" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#控制子画面
+PRIVATE FUNCTION afap250_s01(p_faamld,p_faam004,p_faam005,p_glaq002,p_faam009)
+   DEFINE p_faamld LIKE faam_t.faamld
+   DEFINE p_faam004 LIKE faam_t.faam004
+   DEFINE p_faam005 LIKE faam_t.faam005
+   DEFINE p_glaq002 LIKE glaq_t.glaq002
+   DEFINE p_faam009 LIKE faam_t.faam009
+   DEFINE l_allow_insert LIKE type_t.num5
+   DEFINE l_allow_delete LIKE type_t.num5
+   DEFINE l_success LIKE type_t.num5
+   DEFINE l_str     STRING
+   DEFINE l_errno   LIKE type_t.chr10
+   DEFINE l_wc      STRING 
+   DEFINE ls_sql    STRING
+   DEFINE l_glaa015 LIKE glaa_t.glaa015
+   DEFINE l_glaa016 LIKE glaa_t.glaa016
+   DEFINE l_glaa019 LIKE glaa_t.glaa019
+   DEFINE l_glaa020 LIKE glaa_t.glaa020
+   
+   DEFINE l_lock_sw              LIKE type_t.chr1                #單身鎖住否
+   DEFINE l_cmd                  LIKE type_t.chr1
+   
+   OPEN WINDOW w_afap250_s01 WITH FORM cl_ap_formpath("afa","afap250_s01")
+   CALL cl_ui_init()
+   CALL cl_set_combo_scc('faam007','9912')
+    CALL afap250_current_chk(p_faamld) RETURNING l_glaa015,l_glaa016,l_glaa019,l_glaa020
+   IF l_glaa015 = 'Y' THEN
+      CALL cl_set_comp_visible('faam030,faam034,faam032',TRUE)
+   ELSE
+      CALL cl_set_comp_visible('faam030,faam034,faam032',FALSE)
+   END IF 
+   IF l_glaa019 = 'Y' THEN
+      CALL cl_set_comp_visible('faam038,faam042,faam040',TRUE)
+   ELSE
+      CALL cl_set_comp_visible('faam038,faam042,faam040',FALSE)
+   END IF
+   LET l_allow_insert = FALSE
+   LET l_allow_delete = FALSE
+   LET l_wc = " faamld = '",p_faamld,"' AND faam004 = '",p_faam004,"' AND faam005 = '",p_faam005,"' ",
+              " AND faam009 = '",p_faam009,"' AND (faam021 = '",p_glaq002,"' OR faam022 = '",p_glaq002,"') "
+   LET ls_sql = "SELECT faamld,faam001,faam002,faam004,faam005,faam007,faam011,faam015,faam014,faam030,",
+                "       faam034,faam032,faam038,faam042,faam040,faam021,faam022,faamsite,faam009,faam026,faam027,",
+                "       faam028,faam029 FROM faam_t ",
+                " WHERE faament = '",g_enterprise,"' AND faam007 IN ('1','3') AND faam006 = '1' ",
+                " AND faamld = '",p_faamld,"' AND faam004 = '",p_faam004,"' AND faam005 = '",p_faam005,"' ",
+                "   AND faam001 = ? AND faam002 = ? "
+                #"   AND ",l_wc
+   PREPARE afap250_pre FROM ls_sql
+   DECLARE afap250_bcl CURSOR FOR afap250_pre
+   CALL afap250_s01_set_entry('')
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+       #Page1 預設值產生於此處
+      INPUT ARRAY g_faam2_d FROM s_detail3.*
+         ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         BEFORE INPUT
+            CALL afap250_s01_b_fill(l_wc)
+         BEFORE ROW
+            LET g_detail_idx = DIALOG.getCurrentRow("s_detail3")
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET l_lock_sw = 'N'            #DEFAULT
+
+            CALL s_transaction_begin()
+            LET g_detail_cnt = g_faam2_d.getLength()
+            IF g_detail_cnt >= l_ac AND g_faam2_d[l_ac].faam001 IS NOT NULL THEN
+               LET l_cmd='u'
+               LET g_faam2_d_t.* = g_faam2_d[l_ac].*  #BACKUP
+               IF NOT afap250_lock_b("faam") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH afap250_bcl INTO g_faam2_d[l_ac].*
+                  IF SQLCA.sqlcode THEN
+                     CALL cl_err(g_faam2_d_t.faam001||g_faam2_d_t.faam002,SQLCA.sqlcode,1)
+                     LET l_lock_sw = "Y"
+                  END IF
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            CALL afap250_s01_set_entry(g_faam2_d_t.faam022)
+         BEFORE INSERT
+         
+         #累折科目
+         AFTER FIELD faam021
+            IF NOT cl_null(g_faam2_d[l_ac].faam021) THEN
+               CALL afap250_glap006_chk(g_faam2_d[l_ac].faam021)
+               IF NOT cl_null(g_errno) THEN
+                  CALL cl_err(g_faam2_d[l_ac].faam021,g_errno,1)
+                  LET g_faam2_d[l_ac].faam021 = g_faam2_d_t.faam021
+                  NEXT FIELD faam021
+               END IF
+            END IF
+         ON ACTION controlp INFIELD faam021
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.default1 = g_faam2_d[l_ac].faam021            #給予default值
+            #給予arg
+            LET g_qryparam.where = "glac001 = '",g_faamacc,"' AND  glac003 <>'1' AND glac006 = '1'"
+            CALL aglt310_04()                                #呼叫開窗
+            LET g_faam2_d[l_ac].faam021 = g_qryparam.return1
+            DISPLAY g_faam2_d[l_ac].faam021 TO faam021             #顯示到畫面上
+            LET g_qryparam.where = ""
+            NEXT FIELD faam021
+         #折旧科目
+         AFTER FIELD faam022
+            IF NOT cl_null(g_faam2_d[l_ac].faam022) THEN
+               CALL afap250_glap006_chk(g_faam2_d[l_ac].faam022)
+               IF NOT cl_null(g_errno) THEN
+                  CALL cl_err(g_faam2_d[l_ac].faam022,g_errno,1)
+                  LET g_faam2_d[l_ac].faam022 = g_faam2_d_t.faam022
+                  NEXT FIELD faam022
+               END IF
+               CALL afap250_s01_set_entry(g_faam2_d_t.faam022)
+            END IF 
+         ON ACTION controlp INFIELD faam022
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.default1 = g_faam2_d[l_ac].faam022            #給予default值
+            #給予arg
+            LET g_qryparam.where = "glac001 = '",g_faamacc,"' AND  glac003 <>'1' AND glac006 = '1'"
+            CALL aglt310_04()                                #呼叫開窗
+            LET g_faam2_d[l_ac].faam022 = g_qryparam.return1
+            DISPLAY g_faam2_d[l_ac].faam022 TO faam022             #顯示到畫面上
+            LET g_qryparam.where = ""
+            NEXT FIELD faam022 
+         #营运据点
+         AFTER FIELD faamsite
+            IF NOT cl_null(g_faam2_d[l_ac].faamsite ) THEN
+              CALL s_get_orga('2',g_faam2_d[l_ac].faamsite ,g_today)
+              RETURNING l_success,g_faam2_d[l_ac].faamsite ,l_str,l_errno
+              IF l_success = FALSE THEN
+                 CALL cl_err(g_faam2_d[l_ac].faamsite,l_errno,1)
+                 LET g_faam2_d[l_ac].faamsite  = g_faam2_d_t.faamsite 
+                 NEXT FIELD faamsite
+              END IF
+            END IF
+            
+         ON ACTION controlp INFIELD faamsite
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.default1 = g_faam2_d[l_ac].faamsite            #給予default值
+
+            #給予arg
+            LET g_qryparam.where ="ooed001 = '2' AND ooed006<='",g_today,"' AND (ooed007 IS NULL OR ooed007 >='",g_today,"')"
+            CALL q_ooed004_1()                                      #呼叫開窗
+
+            LET g_faam2_d[l_ac].faamsite = g_qryparam.return1              #將開窗取得的值回傳到變數
+            DISPLAY g_faam2_d[l_ac].faamsite TO faamsite
+            
+         #部门
+         AFTER FIELD faam009
+             IF NOT cl_null(g_faam2_d[l_ac].faam009) THEN
+               CALL s_get_orga('6',g_faam2_d[l_ac].faam009,g_today)
+               RETURNING l_success,g_faam2_d[l_ac].faam009,l_str,l_errno
+               IF l_success = FALSE THEN
+                  CALL cl_err(g_faam2_d[l_ac].faam009,l_errno,1)
+                  LET g_faam2_d[l_ac].faam009 = g_faam2_d_t.faam009
+                  NEXT FIELD faam009
+               END IF
+            END IF
+         ON ACTION controlp INFIELD faam009
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.default1 = g_faam2_d[l_ac].faam009             
+            LET g_qryparam.where ="ooed001 = '6' AND ooed006<='",g_today,"' AND (ooed007 IS NULL OR ooed007 >='",g_today,"')"
+            CALL q_ooed004_1()                                #呼叫開窗
+            LET g_qryparam.where =''
+            LET g_faam2_d[l_ac].faam009 = g_qryparam.return1
+            DISPLAY g_faam2_d[l_ac].faam009 TO faam009
+            NEXT FIELD faam009
+            
+         #交易对象
+         AFTER FIELD faam026
+            IF NOT cl_null(g_faam2_d[l_ac].faam026) THEN
+               CALL afap250_businessman_chk(g_faam2_d[l_ac].faam026) 
+               IF NOT cl_null(g_errno) THEN
+                  CALL cl_err(g_faam2_d[l_ac].faam026,g_errno,1)
+                  LET g_faam2_d[l_ac].faam026 = g_faam2_d_t.faam026
+                  NEXT FIELD faam026
+               END IF 
+            END IF
+         ON ACTION controlp INFIELD faam026
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.default1 = g_faam2_d[l_ac].faam026             #給予default值
+            CALL q_pmaa001()                                #呼叫開窗
+            LET g_faam2_d[l_ac].faam026 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            DISPLAY g_faam2_d[l_ac].faam026 TO faam026              #顯示到畫面上
+            NEXT FIELD faam026
+         #無規劃，暫時不寫
+         #专案项目
+#         AFTER FIELD faam028
+#         
+#         ON ACTION controlp INFIELD faam028
+#         
+#         #WBS
+#         AFTER FIELD faam029
+#         
+#         ON ACTION controlp INFIELD faam029
+         
+         
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               LET g_faam2_d[l_ac].* = g_faam2_d_t.*
+               CLOSE afap250_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG
+            END IF
+
+            IF l_lock_sw = 'Y' THEN
+               CALL cl_err(g_faam2_d[l_ac].faam001,-263,1)
+               LET g_faam2_d[l_ac].* = g_faam2_d_t.*
+            ELSE
+
+               #寫入修改者/修改日期資訊(單身)
+               UPDATE faam_t SET faam021 = g_faam2_d[l_ac].faam021,faam022 = g_faam2_d[l_ac].faam022,
+                                 faamsite = g_faam2_d[l_ac].faamsite,faam009 = g_faam2_d[l_ac].faam009,
+                                 faam026 = g_faam2_d[l_ac].faam026,faam028 = g_faam2_d[l_ac].faam028,
+                                 faam029 = g_faam2_d[l_ac].faam029
+                WHERE faament = g_enterprise AND faamld = g_faam2_d_t.faamld AND faam001 = g_faam2_d_t.faam001 AND faam002 = g_faam2_d_t.faam002
+                  AND faam004 = g_faam2_d_t.faam004 AND faam005 = g_faam2_d_t.faam005 AND faam006 = '1' 
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL cl_err("faam_t","std-00009",1)
+                     CALL s_transaction_end('N','0')
+                    WHEN SQLCA.sqlcode #其他錯誤
+                     CALL cl_err("faam_t",SQLCA.sqlcode,1)
+                     CALL s_transaction_end('N','0')
+                  OTHERWISE
+               END CASE
+            END IF
+
+         AFTER INSERT
+         
+         AFTER ROW
+            CLOSE afap250_bcl
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            CALL cl_multitable_unlock()
+         AFTER INPUT
+         
+      END INPUT
+      ON ACTION ACCEPT
+         ACCEPT DIALOG
+      ON ACTION CANCEL
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+   END DIALOG
+   #畫面關閉
+   IF INT_FLAG THEN
+      CALL s_transaction_end('N','0')
+      CLOSE WINDOW w_afap250_s01
+      LET INT_FLAG = FALSE 
+      RETURN
+   END IF 
+   
+   CLOSE afap250_bcl
+   CALL s_transaction_end('Y','0')
+   CLOSE WINDOW w_afap250_s01
+   LET INT_FLAG = FALSE  
+END FUNCTION]]>
+  </point>
+  <point name="function.afap250_s01_b_fill" order="6" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#子画面资料填充
+PRIVATE FUNCTION afap250_s01_b_fill(p_wc)
+   DEFINE p_wc STRING
+   DEFINE ls_sql STRING
+   DEFINE ls_cnt LIKE type_t.num10
+   CALL g_faam2_d.clear()
+   LET ls_sql = "SELECT faamld,faam001,faam002,faam004,faam005,faam007,faam011,faam015,faam014,faam030,",
+                "       faam034,faam032,faam038,faam042,faam040,faam021,faam022,faamsite,faam009,faam026,faam027,",
+                "       faam028,faam029 FROM faam_t ",
+                " WHERE faament = '",g_enterprise,"' AND faam007 IN ('1','3') AND faam006 = '1' ", 
+                "   AND (faam024 IS NULL OR faam024 = '' ) ",
+                "   AND ",p_wc
+   PREPARE afap250_s01_b_fill_pre FROM ls_sql
+   DECLARE afap250_s01_b_fill_cs CURSOR FOR afap250_s01_b_fill_pre
+   LET ls_cnt = 1
+   FOREACH afap250_s01_b_fill_cs INTO g_faam2_d[ls_cnt].*
+      LET ls_cnt = ls_cnt +1
+   END FOREACH
+   CALL g_faam2_d.deleteElement(g_faam2_d.getLength())
+   let g_detail_cnt = g_faam2_d.getLength()
+END FUNCTION]]>
+  </point>
+  <point name="function.afap250_lock_b" order="7" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION afap250_lock_b(ps_table)
+   DEFINE ps_table STRING
+   DEFINE ls_group STRING
+
+   LET ls_group = "faam_t"
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      OPEN afap250_bcl USING g_faam2_d[l_ac].faam001,g_faam2_d[l_ac].faam002
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("afap250_bcl",SQLCA.sqlcode,1)
+         RETURN FALSE
+      END IF
+   END IF
+   RETURN TRUE
+
+END FUNCTION]]>
+  </point>
+  <point name="function.afap250_businessman_chk" order="8" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION afap250_businessman_chk(p_pmaa001)
+   DEFINE p_pmaa002     LIKE pmaa_t.pmaa002
+   DEFINE p_pmaa001     LIKE pmaa_t.pmaa001
+   DEFINE l_pmaastus    LIKE pmaa_t.pmaastus
+
+   LET g_errno = ''
+   SELECT pmaastus INTO l_pmaastus FROM pmaa_t
+    WHERE pmaaent = g_enterprise
+      AND pmaa001 = p_pmaa001
+
+   CASE
+      WHEN SQLCA.SQLCODE = 100   LET g_errno = 'apm-00028'
+      WHEN l_pmaastus = 'N'      LET g_errno = 'apm-00029'
+   END CASE
+END FUNCTION]]>
+  </point>
+  <point name="function.afap250_throw" order="9" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#抛转总账
+PRIVATE FUNCTION afap250_throw()
+   DEFINE l_success LIKE type_t.num5
+   DEFINE ls_sql    STRING
+   DEFINE l_glapdocno LIKE glap_t.glapdocno
+   DEFINE l_glapdocdt LIKE glap_t.glapdocdt
+   DEFINE l_glap      RECORD LIKE glap_t.*
+   DEFINE l_glaq      RECORD LIKE glaq_t.*
+   DEFINE ls_sql_count STRING
+   DEFINE ls_cnt      LIKE type_t.num10
+   DEFINE l_oobastus       LIKE ooba_t.oobastus
+   DEFINE l_glaa003   LIKE glaa_t.glaa003
+   DEFINE l_ooef004   LIKE ooef_t.ooef004
+   INITIALIZE l_glap.* TO NULL
+   #g_faamld,g_faamyear,g_faammonth
+   OPEN WINDOW w_afap250_s02 WITH FORM cl_ap_formpath("afa","afap250_s02")
+   CALL cl_ui_init()
+   SELECT ooef004 INTO l_ooef004 FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_site
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      INPUT l_glapdocno,l_glapdocdt FROM glapdocno,glapdocdt
+         BEFORE INPUT
+            
+         AFTER FIELD glapdocno
+            IF NOT cl_null(l_glapdocno) THEN
+               LET g_errno = ''
+               SELECT oobastus INTO l_oobastus
+                 FROM ooba_t LEFT OUTER JOIN oobx_t ON (oobaent=oobxent AND ooba002=oobx001)
+                WHERE oobaent = g_enterprise
+                  AND ooba001 = l_ooef004      #单据别参照表号
+                  AND ooba002 = l_glapdocno    #单据别
+                  AND oobx002 = 'AGL'          #模组
+                  AND oobx003 = 'aglt310'      #单据性质
+               CASE
+                  WHEN SQLCA.SQLCODE =100  LET g_errno = 'aim-00056'
+                  WHEN l_oobastus = 'N'    LET g_errno = 'aim-00057'
+               END CASE
+               IF NOT cl_null(g_errno) THEN
+                  CALL cl_err(l_glapdocno,g_errno,1)
+                  LET l_glapdocno = ''
+                  NEXT FIELD glapdocno
+               END IF 
+            END IF 
+         ON ACTION CONTROLP INFIELD glapdocno
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = l_glapdocno          #給予default值
+
+            #給予arg
+            LET g_qryparam.where = "ooba001 = '",l_ooef004,"' AND oobx002 = 'AGL' AND oobx003 = 'aglt310' "
+            CALL q_ooba002_4()                                #呼叫開窗
+
+            LET l_glapdocno = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY l_glapdocno TO glapdocno              #顯示到畫面上
+            LET g_qryparam.where = ""
+            NEXT FIELD glapdocno
+       END INPUT
+
+      ON ACTION accept
+         ACCEPT DIALOG
+      ON ACTION cancel
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+      ON ACTION close
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION exit
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+   END DIALOG
+   CLOSE WINDOW w_afap250_s02
+   IF INT_FLAG THEN
+      LET INT_FLAG = FALSE
+      RETURN
+   END IF 
+   LET INT_FLAG = FALSE 
+  
+   #开启事务
+   CALL s_transaction_begin()
+   CALL s_aooi200_gen_docno(g_site,l_glapdocno,l_glapdocdt)
+      RETURNING l_success,l_glapdocno
+   IF NOT l_success THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF    
+   #glaq
+   LET ls_sql = "SELECT '",g_enterprise,"','",g_faamcomp,"','",g_faamld,"','",l_glapdocno,"',",
+                " '',faam022,sum(faam013),0,",
+                "faam011,faam012,'','',sum(faam013),sum(faam013),'','','",g_user,"','','','',",
+                "faamsite,faam009,'','','','','','','",g_user,"',faam027,faam028,faam029,",
+                "'','','','','','','','','','',faam031,sum(faam033),0,faam039,sum(faam041),0 FROM faam_t",
+                " WHERE faament = '",g_enterprise,"' AND faamld = '",g_faamld,"' ",
+                "   AND faam004 = '",g_faamyear,"' AND faam005 = '",g_faammonth,"' ",
+                "   AND faam007 IN ('1','3') AND faam006 = '1' ", 
+                "   AND (faam024 IS NULL OR faam024 = '' ) ",
+                " GROUP BY faamld,faam022,faam011,faam012,faamsite,faam009,faam027,faam028,",
+                " faam029,faam031,faam039 "
+   LET ls_sql_count = " SELECT COUNT(*) FROM (",ls_sql,")"
+   PREPARE afap250_throw_glaq_count FROM ls_sql_count
+   EXECUTE afap250_throw_glaq_count INTO ls_cnt 
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("count",SQLCA.sqlcode,1)
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   IF ls_cnt <= 0 THEN 
+      CALL cl_err('','-400',1)
+      RETURN
+   END IF 
+   LET ls_sql = ls_sql ,
+                " UNION ",
+                "SELECT '",g_enterprise,"','",g_faamcomp,"','",g_faamld,"','",l_glapdocno,"',",
+                " '',faam021,0,sum(faam013),",
+                "faam011,faam012,'','',sum(faam013),sum(faam013),'','','",g_user,"','','','',",
+                "faamsite,faam009,'','','','','','','",g_user,"',faam027,faam028,faam029,",
+                "'','','','','','','','','','',faam031,0,sum(faam033),faam039,0,sum(faam041) FROM faam_t",
+                " WHERE faament = '",g_enterprise,"' AND faamld = '",g_faamld,"' ",
+                "   AND faam007 IN ('1','3') AND faam006 = '1' ",
+                "   AND (faam024 IS NULL OR faam024 = '' ) ",
+                "   AND faam004 = '",g_faamyear,"' AND faam005 = '",g_faammonth,"' ",
+                " GROUP BY faamld,faam021,faam011,faam012,faamsite,faam009,faam027,faam028,",
+                " faam029,faam031,faam039 "
+   PREPARE afap250_throw_faam_pre FROM ls_sql
+   DECLARE afap250_throw_faam_cs CURSOR FOR afap250_throw_faam_pre
+
+   LET ls_sql = "INSERT INTO glaq_t(glaqent,glaqcomp,glaqld,glaqdocno,glaqseq,glaq001,glaq002,glaq003,glaq004,",
+                "glaq005,glaq006,glaq007,glaq008,glaq009,glaq010,glaq011,glaq012,glaq013,glaq014,glaq015,glaq016,",
+                "glaq017,glaq018,glaq019,glaq020,glaq021,glaq022,glaq023,glaq024,glaq025,",
+                "glaq026,glaq027,glaq028,glaq029,glaq030,glaq031,glaq032,glaq033,glaq034,glaq035,glaq036,glaq037,",
+                "glaq038,glaq039,glaq040,glaq041,glaq042,glaq043,glaq044) ",
+                " VALUES(?,?,?,?,?,?,?,?,?,  " ,
+                "?,?,?,?,?,?,?,?,?,?,?,?,   ",
+                "?,?,?,?,?,?,?,?,?,   ",
+                "?,?,?,?,?,?,?,?,?,?,?,?, "  ,
+                "?,?,?,?,?,?,?)"
+   PREPARE afap250_throw_glaq_pre FROM ls_sql
+   LET ls_cnt = 1
+   FOREACH afap250_throw_faam_cs INTO l_glaq.glaqent,l_glaq.glaqcomp,l_glaq.glaqld,l_glaq.glaqdocno,l_glaq.glaq001,l_glaq.glaq002,l_glaq.glaq003,l_glaq.glaq004,
+              l_glaq.glaq005,l_glaq.glaq006,l_glaq.glaq007,l_glaq.glaq008,l_glaq.glaq009,l_glaq.glaq010,l_glaq.glaq011,l_glaq.glaq012,l_glaq.glaq013,l_glaq.glaq014,l_glaq.glaq015,l_glaq.glaq016,
+              l_glaq.glaq017,l_glaq.glaq018,l_glaq.glaq019,l_glaq.glaq020,l_glaq.glaq021,l_glaq.glaq022,l_glaq.glaq023,l_glaq.glaq024,l_glaq.glaq025,
+              l_glaq.glaq026,l_glaq.glaq027,l_glaq.glaq028,l_glaq.glaq029,l_glaq.glaq030,l_glaq.glaq031,l_glaq.glaq032,l_glaq.glaq033,l_glaq.glaq034,l_glaq.glaq035,l_glaq.glaq036,l_glaq.glaq037,
+              l_glaq.glaq038,l_glaq.glaq039,l_glaq.glaq040,l_glaq.glaq041,l_glaq.glaq042,l_glaq.glaq043,l_glaq.glaq044
+      LET l_glaq.glaqseq = ls_cnt
+      EXECUTE afap250_throw_glaq_pre USING l_glaq.glaqent,l_glaq.glaqcomp,l_glaq.glaqld,l_glaq.glaqdocno,l_glaq.glaqseq,l_glaq.glaq001,l_glaq.glaq002,l_glaq.glaq003,l_glaq.glaq004,
+              l_glaq.glaq005,l_glaq.glaq006,l_glaq.glaq007,l_glaq.glaq008,l_glaq.glaq009,l_glaq.glaq010,l_glaq.glaq011,l_glaq.glaq012,l_glaq.glaq013,l_glaq.glaq014,l_glaq.glaq015,l_glaq.glaq016,
+              l_glaq.glaq017,l_glaq.glaq018,l_glaq.glaq019,l_glaq.glaq020,l_glaq.glaq021,l_glaq.glaq022,l_glaq.glaq023,l_glaq.glaq024,l_glaq.glaq025,
+              l_glaq.glaq026,l_glaq.glaq027,l_glaq.glaq028,l_glaq.glaq029,l_glaq.glaq030,l_glaq.glaq031,l_glaq.glaq032,l_glaq.glaq033,l_glaq.glaq034,l_glaq.glaq035,l_glaq.glaq036,l_glaq.glaq037,
+              l_glaq.glaq038,l_glaq.glaq039,l_glaq.glaq040,l_glaq.glaq041,l_glaq.glaq042,l_glaq.glaq043,l_glaq.glaq044
+      LET ls_cnt = ls_cnt +1
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("glaq_m",SQLCA.sqlcode,1)
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+   END FOREACH
+   
+   #glap
+   LET l_glap.glapent = g_enterprise
+   LET l_glap.glapld = g_faamld
+   LET l_glap.glapcomp = g_faamcomp
+   LET l_glap.glapdocno = l_glapdocno
+   LET l_glap.glapdocdt = l_glapdocdt
+   LET l_glap.glap001 = '1'
+   SELECT glaa003 INTO l_glaa003 FROM glaa_t WHERE glaaent = g_enterprise AND glaald = g_faamld
+   
+   SELECT glav002,glav005,glav006,glav007 INTO l_glap.glap002,l_glap.glap003,l_glap.glap004,l_glap.glap005 FROM glav_t
+    WHERE glavent = g_enterprise AND glav001 = l_glaa003 AND glav004 = l_glapdocdt
+   LET l_glap.glap006 = ''
+   LET l_glap.glap007 = 'FA'
+   LET l_glap.glap008 = 'afap250'
+   LET l_glap.glap009 = ''
+   SELECT sum(glaq003),sum(glaq004) INTO l_glap.glap010,l_glap.glap011 FROM glaq_t
+    WHERE glaqent = g_enterprise AND glaqld = g_faamld AND glaqdocno = l_glapdocno
+   LET l_glap.glap012 = 0
+   LET l_glap.glap013 = 0 
+   LET l_glap.glap014 = 'N'
+   LET l_glap.glap015 = ''
+   LET l_glap.glap016 = ''
+   LET l_glap.glap017 = ''
+   LET l_glap.glapownid = g_user
+   LET l_glap.glapowndp = g_dept
+   LET l_glap.glapcrtid = g_user
+   LET l_glap.glapcrtdp = g_dept
+   LET l_glap.glapcrtdt = cl_get_current()
+   LET l_glap.glapmodid = ''
+   LET l_glap.glapmoddt = ''
+   LET l_glap.glapcnfid = ''
+   LET l_glap.glapcnfdt = ''
+   LET l_glap.glappstid = ''
+   LET l_glap.glappstdt = ''
+   LET l_glap.glapstus = 'N'
+   INSERT INTO glap_t values(l_glap.*)
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("glap_m",SQLCA.sqlcode,1)
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   UPDATE faam_t SET faam024 = l_glap.glapdocno WHERE faament = g_enterprise AND faamld = g_faamld
+      AND faam007 IN ('1','3') AND faam006 = '1' 
+      AND faam004 = g_faamyear AND faam005 = g_faammonth
+   #关闭事务
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("upd faam_t",SQLCA.sqlcode,1)
+      CALL s_transaction_end('N','0')
+   ELSE
+      CALL s_transaction_end('Y','1')
+   END IF
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.afap250_glap006_chk" order="10" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION afap250_glap006_chk(p_glap006)
+   DEFINE p_glap006    LIKE glap_t.glap006
+   DEFINE l_glacstus   LIKE glac_t.glacstus
+   DEFINE l_glac003    LIKE glac_t.glac003
+   DEFINE l_glac006    LIKE glac_t.glac006
+
+   LET g_errno = ''
+   SELECT glacstus,glac003,glac006 INTO l_glacstus,l_glac003,l_glac006 FROM glac_t
+    WHERE glacent = g_enterprise
+      AND glac001 = g_faamacc  #会计科目参照表号
+      AND glac002 = p_glap006
+
+   CASE
+      WHEN SQLCA.SQLCODE = 100   LET g_errno = 'agl-00011'
+      WHEN l_glacstus = 'N'      LET g_errno = 'agl-00012'
+      WHEN l_glac003 = '1'       LET g_errno = 'agl-00013'  #必须为非统治类科目
+      WHEN l_glac006 <>'1'       LET g_errno = 'agl-00030'  #须为账户性质
+   END CASE
+END FUNCTION]]>
+  </point>
+  <point name="function.afap250_s01_set_entry" order="11" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION afap250_s01_set_entry(p_glaq002)
+   #科目核算项
+   DEFINE l_glad005       LIKE glad_t.glad005
+   DEFINE l_glad007       LIKE glad_t.glad007
+   DEFINE l_glad008       LIKE glad_t.glad008
+   DEFINE l_glad009       LIKE glad_t.glad009
+   DEFINE l_glad010       LIKE glad_t.glad010
+   DEFINE l_glad027       LIKE glad_t.glad027
+   DEFINE l_glad011       LIKE glad_t.glad011
+   DEFINE l_glad012       LIKE glad_t.glad012
+   DEFINE l_glad013       LIKE glad_t.glad013
+   DEFINE l_glad014       LIKE glad_t.glad014
+   DEFINE l_glad015       LIKE glad_t.glad015
+   DEFINE l_glad016       LIKE glad_t.glad016
+   DEFINE p_glaq002       LIKE glaq_t.glaq002
+   
+   CALL s_voucher_fix_acc_open_chk(g_faamld,p_glaq002,g_faamacc)
+   RETURNING l_glad007,l_glad008,l_glad009,l_glad010,l_glad027,l_glad011,l_glad012,l_glad013,l_glad014,l_glad015,l_glad016
+   CALL cl_set_comp_entry('faam009,faam026,faam027,faam029',false)
+   CALL cl_set_comp_entry('',FALSE)
+   #部门
+   IF l_glad007 = 'Y' THEN 
+      CALL cl_set_comp_entry('faam009',TRUE)
+      CALL cl_set_comp_required('faam009',TRUE)
+   ELSE
+      CALL cl_set_comp_entry('faam009',FALSE)
+      CALL cl_set_comp_required('faam009',FALSE)
+   END IF 
+   #交易客商
+   IF l_glad010 = 'Y' THEN
+      CALL cl_set_comp_entry('faam026',TRUE)
+      CALL cl_set_comp_required('faam026',TRUE)
+   ELSE
+      CALL cl_set_comp_entry('faam026',FALSE)
+      CALL cl_set_comp_required('faam026',FALSE)
+   END IF 
+   IF l_glad015 = 'Y' THEN
+      CALL cl_set_comp_entry('faam027',TRUE)
+      CALL cl_set_comp_required('faam027',TRUE)
+   ELSE
+      CALL cl_set_comp_entry('faam027',FALSE)
+      CALL cl_set_comp_required('faam027',FALSE)
+   END IF 
+   IF l_glad016 = 'Y' THEN
+      CALL cl_set_comp_entry('faam029',TRUE)
+      CALL cl_set_comp_required('faam029',TRUE)
+   ELSE
+      CALL cl_set_comp_entry('faam029',FALSE)
+      CALL cl_set_comp_required('faam029',FALSE)
+   END IF 
+   
+END FUNCTION]]>
+  </point>
+  <point name="function.afap250_current_chk" order="12" ver="1" cite_std="" cite_ver="" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION afap250_current_chk(p_glaald)
+   DEFINE p_glaald LIKE glaa_t.glaald
+   DEFINE r_glaa015 LIKE glaa_t.glaa015
+   DEFINE r_glaa016 LIKE glaa_t.glaa016
+   DEFINE r_glaa019 LIKE glaa_t.glaa019
+   DEFINE r_glaa020 LIKE glaa_t.glaa020
+   
+   SELECT glaa015,glaa016,glaa019,glaa020 INTO r_glaa015,r_glaa016,r_glaa019,r_glaa020
+     FROM glaa_t
+    WHERE glaaent = g_enterprise AND glaald = p_glaald
+   RETURN  r_glaa015,r_glaa016,r_glaa019,r_glaa020
+END FUNCTION]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_detail_idx         LIKE type_t.num5              #單身 所在筆數(所有資料)
+DEFINE g_detail_cnt         LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE l_ac      LIKE type_t.num5
+TYPE type_g_glaq_d    RECORD
+   l_number LIKE type_t.num10,
+   glaqld   LIKE glaq_t.glaqld,
+   glaq002  LIKE glaq_t.glaq002,
+   glaq002_desc LIKE type_t.chr500,
+   glaq018  LIKE glaq_t.glaq018,
+   glaq018_desc LIKE type_t.chr500,
+   glaq003  LIKE glaq_t.glaq003,
+   glaq004  LIKE glaq_t.glaq004,
+   glaq040  LIKE glaq_t.glaq040,
+   glaq041  LIKE glaq_t.glaq041,
+   glaq043  LIKE glaq_t.glaq043,
+   glaq044  LIKE glaq_t.glaq044,
+   type001  LIKE type_t.chr1
+   END RECORD
+DEFINE g_glaq_d DYNAMIC ARRAY OF type_g_glaq_d
+DEFINE g_detail_idx1         LIKE type_t.num5
+DEFINE l_ac1                LIKE type_t.num5
+DEFINE g_rec_b1              LIKE type_t.num5
+TYPE type_g_faam_d    RECORD
+   l_number2 LIKE type_t.num10,
+   faam001 LIKE faam_t.faam001,
+   faam002 LIKE faam_t.faam002,
+   faam007 LIKE faam_t.faam007,
+   faam009 LIKE faam_t.faam009,
+   faam011 LIKE faam_t.faam011,
+   faam015 LIKE faam_t.faam015,
+   faam014 LIKE faam_t.faam014,
+   faam030 LIKE faam_t.faam030,
+   faam034 LIKE faam_t.faam034,
+   faam032 LIKE faam_t.faam032,
+   faam038 LIKE faam_t.faam038,
+   faam042 LIKE faam_t.faam042,
+   faam040 LIKE faam_t.faam040,
+   faam021 LIKE faam_t.faam021,
+   faam022 LIKE faam_t.faam022
+   END RECORD
+TYPE type_g_faam2_d    RECORD
+   faamld  LIKE faam_t.faamld,
+   faam001 LIKE faam_t.faam001,
+   faam002 LIKE faam_t.faam002,
+   faam004 LIKE faam_t.faam004,
+   faam005 LIKE faam_t.faam005,
+   faam007 LIKE faam_t.faam007,
+   faam011 LIKE faam_t.faam011,
+   faam015 LIKE faam_t.faam015,
+   faam014 LIKE faam_t.faam014,
+   faam030 LIKE faam_t.faam030,
+   faam034 LIKE faam_t.faam034,
+   faam032 LIKE faam_t.faam032,
+   faam038 LIKE faam_t.faam038,
+   faam042 LIKE faam_t.faam042,
+   faam040 LIKE faam_t.faam040,
+   faam021 LIKE faam_t.faam021,
+   faam022 LIKE faam_t.faam022,
+   faamsite LIKE faam_t.faamsite,
+   faam009 LIKE faam_t.faam009,
+   faam026 LIKE faam_t.faam026,
+   faam027 LIKE faam_t.faam027,
+   faam028 LIKE faam_t.faam028,
+   faam029 LIKE faam_t.faam029
+   END RECORD
+DEFINE g_faam2_d DYNAMIC ARRAY OF type_g_faam2_d
+DEFINE g_faam2_d_t  type_g_faam2_d
+DEFINE g_faam_d DYNAMIC ARRAY OF type_g_faam_d
+DEFINE g_detail_idx2         LIKE type_t.num5
+DEFINE l_ac2                 LIKE type_t.num5
+DEFINE g_rec_b2              LIKE type_t.num5
+DEFINE g_faamld    LIKE faam_t.faamld,
+       g_faamld_desc LIKE type_t.chr500,
+       g_faamcomp  LIKE glaa_t.glaacomp,
+       g_faamcomp_desc LIKE type_t.chr500,
+       g_faamacc   LIKE glaa_t.glaa004,
+       g_faamacc_desc LIKE type_t.chr500,
+       g_faamyear  LIKE faam_t.faam004,
+       g_faammonth LIKE faam_t.faam005]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL cl_set_combo_scc('faam007','9912')]]>
+  </point>
+  <point name="main.define" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT]]>
+  </point>
+  <point name="process.exit_dialog" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      LET ls_faamld = g_faamld
+      LET ls_faamyear = g_faamyear
+      LET ls_faammonth = g_faammonth]]>
+  </point>
+  <point name="process.process" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="ui_dialog.define" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_glav006 LIKE glav_t.glav006
+   DEFINE ls_faamld    LIKE faam_t.faamld,
+       ls_faamyear  LIKE faam_t.faam004,
+       ls_faammonth LIKE faam_t.faam005]]>
+  </point>
+  <point name="ui_dialog.more_displayarray" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         
+         ]]>
+  </point>
+  <point name="ui_dialog.more_input" order="" ver="1" cite_std="" cite_ver="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         INPUT g_faamld,g_faamyear,g_faammonth FROM l_glaald,l_year,l_month
+            BEFORE INPUT
+               IF cl_null(g_faamld) THEN LET g_faamld = ls_faamld END IF 
+               IF cl_null(g_faamyear) THEN LET g_faamyear = ls_faamyear END IF 
+               IF cl_null(g_faammonth) THEN LET g_faammonth = ls_faammonth END IF 
+
+               
+            AFTER FIELD l_glaald
+               DISPLAY '' TO l_ld_desc
+               DISPLAY '' TO l_comp
+               DISPLAY '' TO l_comp_desc
+               DISPLAY '' TO l_acc
+               DISPLAY '' TO l_acc_desc
+               IF NOT cl_null(g_faamld) THEN 
+                  IF NOT afap250_ld_chk(g_faamld) THEN 
+                     LET g_faamld = ''
+                     DISPLAY '' TO l_ld_desc
+                     DISPLAY '' TO l_comp
+                     DISPLAY '' TO l_comp_desc
+                     DISPLAY '' TO l_acc
+                     DISPLAY '' TO l_acc_desc
+                     NEXT FIELD l_glaald
+                  END IF 
+               END IF 
+               CALL afap250_ld_ref(g_faamld,g_faamyear,g_faammonth) 
+                  RETURNING g_faamld_desc,g_faamcomp,g_faamcomp_desc,g_faamacc,g_faamacc_desc,g_faamyear,g_faammonth
+               DISPLAY g_faamld_desc TO l_ld_desc
+               DISPLAY g_faamcomp TO l_comp
+               DISPLAY g_faamcomp_desc TO l_comp_desc
+               DISPLAY g_faamacc TO l_acc
+               DISPLAY g_faamacc_desc TO l_acc_desc
+               CALL afap250_fisrt_body_fill()
+               CALL afap250_second_body_fill()
+               
+            ON ACTION controlp INFIELD l_glaald
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_faamld             #給予default值
+               #給予arg
+               LET g_qryparam.arg1 = g_user
+               LET g_qryparam.arg2 = g_dept
+               LET g_qryparam.where = " (glaa014 = 'Y' OR glaa008 = 'Y') "
+               CALL q_authorised_ld()                                  #呼叫開窗
+               LET g_faamld = g_qryparam.return1
+               DISPLAY g_faamld TO l_glaald
+               CALL afap250_ld_ref(g_faamld,g_faamyear,g_faammonth) 
+                  RETURNING g_faamld_desc,g_faamcomp,g_faamcomp_desc,g_faamacc,g_faamacc_desc,g_faamyear,g_faammonth
+               DISPLAY g_faamld_desc TO l_ld_desc
+               DISPLAY g_faamcomp TO l_comp
+               DISPLAY g_faamcomp_desc TO l_comp_desc
+               DISPLAY g_faamacc TO l_acc
+               DISPLAY g_faamacc_desc TO l_acc_desc
+               CALL afap250_fisrt_body_fill()
+               CALL afap250_second_body_fill()
+               
+            AFTER FIELD l_year
+               IF NOT cl_null(g_faamyear) THEN 
+                  IF g_faamyear <= 0 THEN 
+                     CALL cl_err('','',1)
+                     NEXT FIELD l_year
+                  END IF 
+               END IF 
+               CALL afap250_fisrt_body_fill()
+               CALL afap250_second_body_fill()
+               
+            BEFORE FIELD l_month
+               IF cl_null(g_faamyear) THEN 
+                  NEXT FIELD l_year
+               END IF 
+            
+            AFTER FIELD l_month
+               IF NOT cl_null(g_faammonth) THEN 
+                  IF g_faammonth <= 0 THEN 
+                     CALL cl_err('','',1)
+                     NEXT FIELD l_month
+                  END IF 
+                  SELECT max(glav006) INTO l_glav006 FROM glav_t WHERE glavent = g_enterprise
+                     AND glav001 = g_faamacc AND glav002 = g_faamyear
+                  IF g_faammonth > l_glav006 THEN 
+                     CALL cl_err('','',1)
+                     NEXT FIELD l_month
+                  END IF 
+               END IF
+               CALL afap250_fisrt_body_fill()
+               CALL afap250_second_body_fill()
+               
+            ON ACTION act_generate
+               CALL afap250_fisrt_body_fill()
+               CALL afap250_second_body_fill()
+            ON ACTION act_throw
+               CALL afap250_throw()
+               CALL afap250_fisrt_body_fill()
+               CALL afap250_second_body_fill()
+         END INPUT
+         
+         DISPLAY ARRAY g_glaq_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b1) #page1
+
+            BEFORE ROW
+               LET l_ac1 = DIALOG.getCurrentRow("s_detail1")
+               LET g_detail_idx1 = l_ac1
+               DISPLAY g_detail_idx1 TO h_index
+
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail_idx1)
+               LET l_ac1 = DIALOG.getCurrentRow("s_detail1")
+               DISPLAY g_rec_b1 TO h_count
+
+            ON ACTION afap250_s01
+               IF l_ac1 <= g_glaq_d.getLength() AND l_ac1 != 0 THEN
+                  CALL afap250_s01(g_faamld,g_faamyear,g_faammonth,g_glaq_d[l_ac1].glaq002,g_glaq_d[l_ac1].glaq018)
+                  CALL afap250_fisrt_body_fill()
+                  CALL afap250_second_body_fill()
+               END IF
+         END DISPLAY
+         DISPLAY ARRAY g_faam_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b2) #page1
+
+            BEFORE ROW
+               LET l_ac2 = DIALOG.getCurrentRow("s_detail2")
+               LET g_detail_idx2 = l_ac2
+               DISPLAY g_detail_idx2 TO h_index
+
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail_idx1)
+               LET l_ac2 = DIALOG.getCurrentRow("s_detail2")
+               DISPLAY g_rec_b2 TO h_count
+               
+         END DISPLAY  ]]>
+  </point>
+  <section id="afap250.description" ver="1" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(版次:1) Build-000000
+#+ 
+#+ Filename...: afap250
+#+ Description: 折舊底稿產生傳票作業
+#+ Creator....: 02299(2014/02/27)
+#+ Modifier...: 02299(2014/02/28)
+#+ Buildtype..: 應用 p01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="afap250.global" ver="1" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS
+   DEFINE gwin_curr  ui.Window
+   DEFINE gfrm_curr  ui.Form
+   DEFINE g_schedule RECORD
+      cycle    LIKE type_t.chr1,
+      gzpa002  LIKE gzpa_t.gzpa002, #排程說明
+      gzpa003  LIKE gzpa_t.gzpa003, #排程執行週期 (D:每天)
+      gzpa004  LIKE gzpa_t.gzpa004  #排程起始時間
+      #gzpa005  LIKE gzpa_t.gzpa005, #排程結束時間
+      #gzpa008  LIKE gzpa_t.gzpa008, #執行結果處理
+      #gzpa009  LIKE gzpa_t.gzpa009  #執行結果郵件通知人
+                    END RECORD
+END GLOBALS
+ 
+{<Module define>}
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="afap250.init" ver="1" status="" src="s">
+    <![CDATA[#+ 初始化作業
+PRIVATE FUNCTION afap250_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("cycle","75")
+   CALL cl_set_combo_scc("gzpa003","80")
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="afap250.main" ver="1" status="" src="s">
+    <![CDATA[MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("afa","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+      CALL afap250_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_afap250 WITH FORM cl_ap_formpath("afa",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL afap250_init()
+ 
+      #進入選單 Menu (="N")
+      CALL afap250_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_afap250
+   END IF
+ 
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+  </section>
+  <section id="afap250.other_function" ver="1" status="" src="s">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="afap250.process" ver="1" status="" src="s">
+    <![CDATA[#+ 資料處理
+PRIVATE FUNCTION afap250_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   {<point name="process.define"/>}
+   #end add-point
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE afap250_process_cs CURSOR FROM ls_sql
+#  FOREACH afap250_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm("std-00012") RETURNING li_stus
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+   END IF
+END FUNCTION
+]]>
+  </section>
+  <section id="afap250.transfer_argv" ver="1" status="" src="s">
+    <![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION afap250_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+ 
+   CALL util.JSON.parse(ls_js,la_param)
+ 
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+  </section>
+  <section id="afap250.ui_dialog" ver="1" status="" src="s">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION afap250_ui_dialog()
+   {<Local define>}
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter
+   {</Local define>}
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+ 
+         ON ACTION qbe_select
+#saki       CALL cl_qbe_select()
+ 
+         ON ACTION qbe_save
+#saki       CALL cl_qbe_save()
+ 
+         ON ACTION batch_execute
+            ACCEPT DIALOG
+ 
+         ON ACTION batch_qbeclear         
+            CLEAR FORM
+            #INITIALIZE g_schedule.*  TO NULL
+            INITIALIZE lc_param.*  TO NULL
+ 
+         ON ACTION CLOSE 
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #交談指令共用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         &include "common_action.4gl"
+      END DIALOG
+ 
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         CASE
+            WHEN g_schedule.cycle = 0
+               CALL afap250_process(ls_js)
+            WHEN g_schedule.cycle = 1
+               LET ls_js = afap250_transfer_argv(ls_js)
+               CALL cl_cmdrun(ls_js)
+            WHEN g_schedule.cycle = 2
+               DISPLAY "INFO:寫入排程"
+         END CASE
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

@@ -1,0 +1,63 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglq501" module="agl" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="02599" crtdt="2015-10-08 17:30:55" modid="02599" moddt="2015-10-10 15:09:18" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="傳票過帳後檢查">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),glar001,glar001_desc(chr500),glar009,odamt1(num20_6),odamt2(num20_6),oddiff(num20_6),ocamt1(num20_6),ocamt2(num20_6),ocdiff(num20_6),damt1(num20_6),damt2(num20_6),ddiff(num20_6),camt1(num20_6),camt2(num20_6),cdiff(num20_6)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),glar001(b_glar001),glar001_desc(b_glar001_desc),glar009(b_glar009),odamt1(odamt1),odamt2(odamt2),oddiff(oddiff),ocamt1(ocamt1),ocamt2(ocamt2),ocdiff(ocdiff),damt1(damt1),damt2(damt2),ddiff(ddiff),camt1(camt1),camt2(camt2),cdiff(cdiff)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="aglq501" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="glar001,glar009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="glar001(b_glar001),glar009(b_glar009)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="glar001">
+        <after>
+          <reference field="glar001_desc" ref_field="glar001" map_field="glar001" ref_sql="SELECT glacl004 FROM glacl_t WHERE glaclent=$varg_enterprise$var AND glacl001=&apos;&apos; AND glacl002=? AND glacl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="glar001_desc"/>
+      <column id="glar009">
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="odamt1"/>
+      <column id="odamt2"/>
+      <column id="oddiff"/>
+      <column id="ocamt1"/>
+      <column id="ocamt2"/>
+      <column id="ocdiff"/>
+      <column id="damt1"/>
+      <column id="damt2"/>
+      <column id="ddiff"/>
+      <column id="camt1"/>
+      <column id="camt2"/>
+      <column id="cdiff"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="glar_t" page="1" linked="" pk="glarld,glar001,glar002,glar003,glar004">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,glar001,&apos;&apos;,glar009,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM glar_t WHERE glarent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

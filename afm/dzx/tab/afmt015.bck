@@ -1,0 +1,167 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmt015" module="afm" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="02291" crtdt="2015-11-03 14:44:03" modid="02291" moddt="2015-11-04 13:58:47" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="融資申請單">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="fmcesite,fmcesite_desc(chr80),fmcecomp,fmcecomp_desc(chr80),fmcedocno,fmcedocdt,fmcestus,fmceownid,fmceownid_desc(chr80),fmceowndp,fmceowndp_desc(chr80),fmcecrtid,fmcecrtid_desc(chr80),fmcecrtdp,fmcecrtdp_desc(chr80),fmcecrtdt,fmcemodid,fmcemodid_desc(chr80),fmcemoddt,fmcecnfid,fmcecnfid_desc(chr80),fmcecnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="fmcfseq,fmcf007,fmcf007_desc(chr500),fmcf001,fmcf001_desc(chr500),fmcf002,fmcf002_desc(chr500),fmcf003,fmcf004,fmcf005,fmcf006"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmt015" method="dialog">
+    <section id="input">
+      <input id="head" field="fmcesite,fmcecomp,fmcedocno,fmcedocdt,fmcestus"/>
+      <input id="body" page="1" field="fmcfseq,fmcf007,fmcf001,fmcf002,fmcf003,fmcf004,fmcf005,fmcf006" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="fmcesite,fmcecomp,fmcedocno,fmcedocdt,fmcestus,fmceownid,fmceowndp,fmcecrtid,fmcecrtdp,fmcecrtdt,fmcemodid,fmcemoddt,fmcecnfid,fmcecnfdt"/>
+      <construct id="body" page="1" field="fmcfseq,fmcf007,fmcf001,fmcf002,fmcf003,fmcf004,fmcf005,fmcf006"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="fmcedocno"/>
+      <set id="head" type="no_entry" field="fmcedocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="fmcesite">
+        <after>
+          <check chkid="v_ooef001_42" id="isExist"/>
+          <reference field="fmcesite_desc" ref_field="fmce_t.fmcesite" map_field="fmcesite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="fmcesite_desc"/>
+      <column id="fmcecomp">
+        <after>
+          <check chkid="v_ooef001_42" id="isExist"/>
+          <reference field="fmcecomp_desc" ref_field="fmce_t.fmcecomp" map_field="fmcecomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="fmcecomp_desc"/>
+      <column id="fmcedocno">
+        <controlp form="q_fmcedocno" state="c"/>
+      </column>
+      <column id="fmcedocdt"/>
+      <column id="fmcestus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="fmceownid">
+        <after>
+          <reference field="fmceownid_desc" ref_field="fmce_t.fmceownid" map_field="fmceownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmceownid_desc"/>
+      <column id="fmceowndp">
+        <after>
+          <reference field="fmceowndp_desc" ref_field="fmce_t.fmceowndp" map_field="fmceowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmceowndp_desc"/>
+      <column id="fmcecrtid">
+        <after>
+          <reference field="fmcecrtid_desc" ref_field="fmce_t.fmcecrtid" map_field="fmcecrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmcecrtid_desc"/>
+      <column id="fmcecrtdp">
+        <after>
+          <reference field="fmcecrtdp_desc" ref_field="fmce_t.fmcecrtdp" map_field="fmcecrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="fmcecrtdp_desc"/>
+      <column id="fmcecrtdt"/>
+      <column id="fmcemodid">
+        <after>
+          <reference field="fmcemodid_desc" ref_field="fmce_t.fmcemodid" map_field="fmcemodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmcemodid_desc"/>
+      <column id="fmcemoddt"/>
+      <column id="fmcecnfid">
+        <after>
+          <reference field="fmcecnfid_desc" ref_field="fmce_t.fmcecnfid" map_field="fmcecnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="fmcecnfid_desc"/>
+      <column id="fmcecnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="fmcfseq" type="S" default="0"/>
+      <column id="fmcf007">
+        <after>
+          <check chkid="v_ooef001_42" id="isExist"/>
+          <reference field="fmcf007_desc" ref_field="fmcf_t.fmcf007" map_field="fmcfent,fmcf007" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="fmcf007_desc"/>
+      <column id="fmcf001">
+        <after>
+          <reference field="fmcf001_desc" ref_field="fmcf_t.fmcf001" map_field="fmcf001" ref_sql="SELECT fmaal003 FROM fmaal_t WHERE fmaalent=$varg_enterprise$var AND fmaal001=? AND fmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="fmcf001_desc"/>
+      <column id="fmcf002">
+        <after>
+          <check chkid="v_ooai001" id="isExist"/>
+          <reference field="fmcf002_desc" ref_field="fmcf_t.fmcf002" map_field="fmcf002" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="fmcf002_desc"/>
+      <column id="fmcf003" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmcf004" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmcf005" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="fmcf006"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="fmce_t" pk="fmcedocno">
+      <sql id="forupd_sql" type="sql" query="SELECT fmcesite,&apos;&apos;,fmcecomp,&apos;&apos;,fmcedocno,fmcedocdt,fmcestus,fmceownid,&apos;&apos;,fmceowndp,&apos;&apos;,fmcecrtid,&apos;&apos;,fmcecrtdp,&apos;&apos;,fmcecrtdt,fmcemodid,&apos;&apos;,fmcemoddt,fmcecnfid,&apos;&apos;,fmcecnfdt FROM fmce_t WHERE fmceent= ? AND fmcedocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT fmcesite,&apos;&apos;,fmcecomp,&apos;&apos;,fmcedocno,fmcedocdt,fmcestus,fmceownid,&apos;&apos;,fmceowndp,&apos;&apos;,fmcecrtid,&apos;&apos;,fmcecrtdp,&apos;&apos;,fmcecrtdt,fmcemodid,&apos;&apos;,fmcemoddt,fmcecnfid,&apos;&apos;,fmcecnfdt FROM fmce_t" order="fmcedocno"/>
+    </head>
+    <body id="fmcf_t" page="1" linked="" pk="fmcfseq" fk="fmcfdocno">
+      <sql id="forupd_sql_detail" query="SELECT fmcfseq,fmcf007,&apos;&apos;,fmcf001,&apos;&apos;,fmcf002,&apos;&apos;,fmcf003,fmcf004,fmcf005,fmcf006 FROM fmcf_t WHERE fmcfent=? AND fmcfdocno=? AND fmcfseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT fmcfseq,fmcf007,&apos;&apos;,fmcf001,&apos;&apos;,fmcf002,&apos;&apos;,fmcf003,fmcf004,fmcf005,fmcf006 FROM fmcf_t WHERE fmcfent=? AND fmcfdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,122 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abxt002" module="abx" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="01534" crtdt="2016-10-24 09:54:40" modid="01534" moddt="2016-10-24 16:36:56" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="保稅(銷售+報廢+外運)折合數量維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bxge004,bxgesite"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bxge000,bxge001,bxge002,bxge003,bxge005,bxge005_desc(chr500),bxge005_desc_1(chr500),iman012(chr1),bxge007"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="bxge000,bxge001,bxge002,bxge003,bxgesite,bxgeownid,bxgeownid_desc(chr500),bxgeowndp,bxgeowndp_desc(chr500),bxgecrtid,bxgecrtid_desc(chr500),bxgecrtdp,bxgecrtdp_desc(chr500),bxgecrtdt,bxgemodid,bxgemodid_desc(chr500),bxgemoddt,bxgecnfid,bxgecnfid_desc(chr500),bxgecnfdt"/>
+      <var id="bs_field" value="bxge004,bxgesite" pk="bxgesite,bxge004" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abx" filename="abxt002" method="dialog">
+    <section id="input">
+      <input id="head" field="bxge004,bxgesite"/>
+      <input id="body" page="1" field="bxge000,bxge001,bxge002,bxge003,bxge005,iman012,bxge007" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bxge004,bxgesite"/>
+      <construct id="body" page="1" field="bxge000,bxge001,bxge002,bxge003,bxge005,iman012,bxge007"/>
+      <construct id="body" page="2" field="bxgeownid,bxgeowndp,bxgecrtid,bxgecrtdp,bxgecrtdt,bxgemodid,bxgemoddt,bxgecnfid,bxgecnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bxgesite,bxge004"/>
+      <set id="head" type="no_entry" field="bxgesite,bxge004"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bxge004"/>
+      <column id="bxgesite"/>
+    </init>
+    <init id="body" page="1">
+      <column id="bxge000" def_scc="4079"/>
+      <column id="bxge001"/>
+      <column id="bxge002"/>
+      <column id="bxge003"/>
+      <column id="bxge005">
+        <after>
+          <reference field="bxge005_desc" ref_field="bxge_t.bxge005" map_field="bxge005" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="bxge005_desc"/>
+      <column id="bxge005_desc_1"/>
+      <column id="iman012"/>
+      <column id="bxge007" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="bxgeownid">
+        <after>
+          <reference field="bxgeownid_desc" ref_field="bxge_t.bxgeownid" map_field="bxgeownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxgeownid_desc"/>
+      <column id="bxgeowndp">
+        <after>
+          <reference field="bxgeowndp_desc" ref_field="bxge_t.bxgeowndp" map_field="bxgeowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bxgeowndp_desc"/>
+      <column id="bxgecrtid">
+        <after>
+          <reference field="bxgecrtid_desc" ref_field="bxge_t.bxgecrtid" map_field="bxgecrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxgecrtid_desc"/>
+      <column id="bxgecrtdp">
+        <after>
+          <reference field="bxgecrtdp_desc" ref_field="bxge_t.bxgecrtdp" map_field="bxgecrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bxgecrtdp_desc"/>
+      <column id="bxgecrtdt"/>
+      <column id="bxgemodid">
+        <after>
+          <reference field="bxgemodid_desc" ref_field="bxge_t.bxgemodid" map_field="bxgemodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxgemodid_desc"/>
+      <column id="bxgemoddt"/>
+      <column id="bxgecnfid">
+        <after>
+          <reference field="bxgecnfid_desc" ref_field="bxge_t.bxgecnfid" map_field="bxgecnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bxgecnfid_desc"/>
+      <column id="bxgecnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bxge_t" pk="bxgesite,bxge004">
+      <sql id="forupd_sql" type="sql" query="SELECT bxge004,bxgesite FROM bxge_t WHERE bxgeent= ? AND bxgesite=? AND bxge004=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bxge004,bxgesite FROM bxge_t" order="bxgesite,bxge004"/>
+    </head>
+    <body id="bxge_t" page="1,2" linked="" pk="bxge000,bxge001,bxge002,bxge003" fk="bxgesite,bxge004">
+      <sql id="forupd_sql_detail" query="SELECT bxge000,bxge001,bxge002,bxge003,bxge005,&apos;&apos;,&apos;&apos;,&apos;&apos;,bxge007,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,bxgeownid,&apos;&apos;,bxgeowndp,&apos;&apos;,bxgecrtid,&apos;&apos;,bxgecrtdp,&apos;&apos;,bxgecrtdt,bxgemodid,&apos;&apos;,bxgemoddt,bxgecnfid,&apos;&apos;,bxgecnfdt FROM bxge_t WHERE bxgeent=? AND bxgesite=? AND bxge004=? AND bxge000=? AND bxge001=? AND bxge002=? AND bxge003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bxge000,bxge001,bxge002,bxge003,bxge005,&apos;&apos;,&apos;&apos;,&apos;&apos;,bxge007,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,bxgeownid,&apos;&apos;,bxgeowndp,&apos;&apos;,bxgecrtid,&apos;&apos;,bxgecrtdp,&apos;&apos;,bxgecrtdt,bxgemodid,&apos;&apos;,bxgemoddt,bxgecnfid,&apos;&apos;,bxgecnfdt FROM bxge_t WHERE bxgeent= ? AND bxgesite=? AND bxge004=?"/>
+    </body>
+  </dataset>
+</assembly>
+

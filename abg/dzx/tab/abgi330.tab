@@ -1,0 +1,87 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abgi330" module="abg" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="08732" crtdt="2016-08-05 09:06:26" modid="08732" moddt="2016-08-08 16:34:16" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="模擬收入項目計價因子設置">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bgcc001,bgcc001_desc(chr500),bgccstus,bgccownid,bgccownid_desc(chr500),bgccowndp,bgccowndp_desc(chr500),bgcccrtid,bgcccrtid_desc(chr500),bgcccrtdp,bgcccrtdp_desc(chr500),bgcccrtdt,bgccmodid,bgccmodid_desc(chr500),bgccmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="abg" filename="abgi330" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="bgcc001,bgcc001_desc,bgccstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="bgcc001,bgcc001_desc,bgccstus,bgccownid,bgccowndp,bgcccrtid,bgcccrtdp,bgcccrtdt,bgccmodid,bgccmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="bgcc001">
+        <controlp form="q_bgcc001" state="c"/>
+      </column>
+      <column id="bgcc001_desc"/>
+      <column id="bgccstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="bgccownid">
+        <after>
+          <reference field="bgccownid_desc" ref_field="bgcc_t.bgccownid" map_field="bgccownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgccownid_desc"/>
+      <column id="bgccowndp">
+        <after>
+          <reference field="bgccowndp_desc" ref_field="bgcc_t.bgccowndp" map_field="bgccowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgccowndp_desc"/>
+      <column id="bgcccrtid">
+        <after>
+          <reference field="bgcccrtid_desc" ref_field="bgcc_t.bgcccrtid" map_field="bgcccrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgcccrtid_desc"/>
+      <column id="bgcccrtdp">
+        <after>
+          <reference field="bgcccrtdp_desc" ref_field="bgcc_t.bgcccrtdp" map_field="bgcccrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgcccrtdp_desc"/>
+      <column id="bgcccrtdt"/>
+      <column id="bgccmodid">
+        <after>
+          <reference field="bgccmodid_desc" ref_field="bgcc_t.bgccmodid" map_field="bgccmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgccmodid_desc"/>
+      <column id="bgccmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="bgcc_t" page="1" linked="" pk="bgcc001">
+      <sql id="forupd_sql_detail" query="SELECT bgcc001,&apos;&apos;,bgccstus,bgccownid,&apos;&apos;,bgccowndp,&apos;&apos;,bgcccrtid,&apos;&apos;,bgcccrtdp,&apos;&apos;,bgcccrtdt,bgccmodid,&apos;&apos;,bgccmoddt FROM bgcc_t WHERE bgccent=? AND bgcc001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bgcc001,&apos;&apos;,bgccstus,bgccownid,&apos;&apos;,bgccowndp,&apos;&apos;,bgcccrtid,&apos;&apos;,bgcccrtdp,&apos;&apos;,bgcccrtdt,bgccmodid,&apos;&apos;,bgccmoddt FROM bgcc_t WHERE bgccent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="bgcc001_desc" table="bgccl_t" fk="bgcc001" pk="bgccl001,bgccl002" field="bgccl003"/>
+    </body>
+  </dataset>
+</assembly>
+

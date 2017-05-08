@@ -1,0 +1,35 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aecr001_g01" module="aec" jobmode="N" type="g01" industry="std" crtid="05423" crtdt="2014-08-07 11:16:27" modid="05423" moddt="2015-05-05 10:32:22" sdver="3" tabver="10001" description="...">
+  <define arg="tm.wc(STRING|where condition),tm.print(STRING|print subrep)">
+    <var seq="1" value="ecba001,ecba002,ecba003,ecbb003,l_ecbb004_ecbb005(chr30|trim(ecbb004)||&apos;/&apos;||trim(ecbb005)),l_ecbb008_ecbb009(chr30|trim(ecbb008)||&apos;/&apos;||trim(ecbb009)),l_ecbb010_ecbb011(chr30|trim(ecbb010)||&apos;/&apos;||trim(ecbb011)),ecbb012,ecbb030,l_ecbb031_ecbb032(chr30|trim(ecbb031)||&apos;/&apos;||trim(ecbb032)),ecbb021,l_ecbb022_ecbb023(chr30|trim(ecbb022)||&apos;/&apos;||trim(ecbb023)),ecbb024,ecbb025,ecbb026,ecbb027,ecbb013,ecbb015,ecbb016,ecbb017,ecbb018,ecbb019,ecbb020,ecbb014,ecbaent,ecbb004,ecbb005,ecbb008,ecbb009,ecbb010,ecbb011,l_ecbb014_desc(chr30|NULL),l_imaa005_desc(chr30|NULL),l_imaal003(chr30|NULL),l_imaal004(chr30|NULL),l_order(chr50|NULL),l_ecbb012_desc(chr80|NULL),ecbasite"/>
+    <var seq="2" value="ooff013"/>
+  </define>
+  <selprep>
+    <sql id="g_select" query="ecba001(ecba001|ecba001),ecba002(ecba002|ecba002),ecba003(ecba003|ecba003),ecbb003(ecbb003|ecbb003),l_ecbb004_ecbb005(chr30|trim(ecbb004)||&apos;/&apos;||trim(ecbb005)),l_ecbb008_ecbb009(chr30|trim(ecbb008)||&apos;/&apos;||trim(ecbb009)),l_ecbb010_ecbb011(chr30|trim(ecbb010)||&apos;/&apos;||trim(ecbb011)),ecbb012(ecbb012|ecbb012),ecbb030(ecbb030|ecbb030),l_ecbb031_ecbb032(chr30|trim(ecbb031)||&apos;/&apos;||trim(ecbb032)),ecbb021(ecbb021|ecbb021),l_ecbb022_ecbb023(chr30|trim(ecbb022)||&apos;/&apos;||trim(ecbb023)),ecbb024(ecbb024|ecbb024),ecbb025(ecbb025|ecbb025),ecbb026(ecbb026|ecbb026),ecbb027(ecbb027|ecbb027),ecbb013(ecbb013|ecbb013),ecbb015(ecbb015|ecbb015),ecbb016(ecbb016|ecbb016),ecbb017(ecbb017|ecbb017),ecbb018(ecbb018|ecbb018),ecbb019(ecbb019|ecbb019),ecbb020(ecbb020|ecbb020),ecbb014(ecbb014|ecbb014),ecbaent(ecbaent|ecbaent),ecbb004(ecbb004|ecbb004),ecbb005(ecbb005|ecbb005),ecbb008(ecbb008|ecbb008),ecbb009(ecbb009|ecbb009),ecbb010(ecbb010|ecbb010),ecbb011(ecbb011|ecbb011),l_ecbb014_desc(chr30|NULL),l_imaa005_desc(chr30|NULL),l_imaal003(chr30|NULL),l_imaal004(chr30|NULL),l_order(chr50|NULL),l_ecbb012_desc(chr80|NULL),ecbasite(ecbasite|ecbasite)"/>
+    <sql id="g_from" query="ecba_t,ecbb_t"/>
+    <sql id="g_where" query="" maintable="ecba_t"/>
+    <sql id="g_order" query="ecba001,ecba002,ecbb003"/>
+  </selprep>
+  <mainrep>
+    <section id="repOrder" type="EXTERNAL" name="l_order,ecbb003"/>
+    <section id="b_group" reptype="d01">
+      <rep type="l_order" subtype="d03" sub_seq="01" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;2&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="ecbaent,l_order"/>
+      <rep type="ecbb003"/>
+    </section>
+    <section id="everyrow">
+      <rep type="before" subtype="d03" sub_seq="02" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;2&apos; AND " pk="ooffent,ooff003,ooff004" where="ecbaent,l_order,ecbb003"/>
+      <rep type="after" subtype="d03" sub_seq="03" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;7&apos; AND ooff012=&apos;1&apos; AND " pk="ooffent,ooff003,ooff004" where="ecbaent,l_order,ecbb003"/>
+    </section>
+    <section id="a_group" reptype="d01">
+      <rep type="l_order" subtype="d03" sub_seq="04" recordseq="2" sub_query=" SELECT ooff013 FROM ooff_t WHERE ooffstus=&apos;Y&apos; and ooff001=&apos;6&apos; AND ooff012=&apos;1&apos; AND ooff004=0 AND " pk="ooffent,ooff003" where="ecbaent,l_order"/>
+      <rep type="ecbb003"/>
+    </section>
+  </mainrep>
+  <subrep>
+    <subreptag id="01" recordseq="2"/>
+    <subreptag id="02" recordseq="2"/>
+    <subreptag id="03" recordseq="2"/>
+    <subreptag id="04" recordseq="2"/>
+  </subrep>
+</assembly>
+

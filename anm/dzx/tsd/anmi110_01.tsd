@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="anmi110_01" std_prog="anmi110_01" erpver="1.0" ver="1" module="ANM" booking="Y" normal_style="Y" class="I" template="F001_00" env="s" zone="t10dev">
+  <toolbar items=""/>
+  <table ver="1">
+    <tbl name="nmac_t" parent="" main="Y" src="s" status=""/>
+  </table>
+  <all src="s" ver="1" cite_std="" cite_ver="" status="">
+    <![CDATA[程式說明及目的：透過日曆檔，產生出銀行假日檔的資料。
+作業功能：確定/放棄
+作業類型：子作業
+輸入模式：單檔(子作業)F001_00
+作業資料來源(Master)：
+	資料來源表：ooga_t(日曆檔)
+	            ooall_t(參照表多語言檔)
+
+逻辑处理：
+當執行"確認"時,
+1.先抓取符合日期起迄範圍的[T:日曆檔]資料
+  SELECT * FROM ooga_t WHERE ooga001 BETWEEN 日期起 AND 日期迄
+                         AND ooga002 IN (畫面上星期有勾選的值)
+  一一將資料寫入[T:行事曆假日檔]
+  [T:節假日表資料檔].[C:企業編號]=g_enterprise
+  [T:節假日表資料檔].[C:節假日表編號]=輸入條件的[C:節假日表編號]
+  [T:節假日表資料檔].[C:日期]=[T:日曆檔].[C:日期]
+  [T:節假日表資料檔].[C:休假類型]='1' (例假日)
+  若资料已经存在则直接报错返回
+2.若產生成功,則顯示"產生完成"訊息;
+  若產生失敗,則顯示"產生失敗"訊息
+
+取消：
+當執行"放棄"後,不做任何更新,直接離開
+
+
+
+
+]]>
+  </all>
+  <field column="nmac002" name="bdate" ver="1" table="nmac_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[日期起：
+   ●欄位控管：
+     資料欄位:[C:日期起]/Input Only
+     預設值:Null
+            若[C:日期起]有輸入值,則[C:日期迄]預設值=[C:日期起]+1年-1天;
+            分三种情况：
+            1.如果起始日期为1月1日，则截止日期为本年度最后一天
+            2.如果输入日期为5,7,8,10,12月份的一号，则截止日期为：下一年度的对应上月份的30号，
+              比如：2013/05/01---->2014/04/30
+              如果输入日期为2,4,6,9,11月份的一号，则截止日期为：下一年度的对应上月份的31号，
+              比如：2013/04/01---->2014/03/31
+            3.如果为3月1日，则截止日期算法
+              判断下年度是否为闰年
+              闰年的话：截止日期 = 下年度的2月29号
+              平年的话：截止日期 = 下年度的2月28号
+     校驗:不可空白
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field column="nmac002" name="edate" ver="1" table="nmac_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[日期迄：
+   ●欄位控管：
+     資料欄位:[C:日期迄]/Input Only
+     預設值:若[C:日期起]有輸入值,則[C:日期迄]預設值=[C:日期起]+1年-1天;
+            若[C:日期起]無輸入值,則[C:日期迄]預設值=Null
+     校驗:1.本欄位值不可小於[C:日期起]
+          2.不可空白
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field column="ooga002" name="fri" ver="1" table="ooga_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" cite_std="N" cite_ver="" status="">
+    <![CDATA[預設不打勾]]>
+  </field>
+  <field column="" name="lbl_bdate_1" ver="1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="" name="lbl_nmac001" ver="1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="ooga002" name="mon" ver="1" table="ooga_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" cite_std="N" cite_ver="" status="">
+    <![CDATA[預設不打勾]]>
+  </field>
+  <field column="ooga002" name="sat" ver="1" table="ooga_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" cite_std="N" cite_ver="" status="">
+    <![CDATA[預設打勾
+]]>
+  </field>
+  <field column="ooga002" name="sun" ver="1" table="ooga_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" cite_std="N" cite_ver="" status="">
+    <![CDATA[預設打勾
+]]>
+  </field>
+  <field column="ooga002" name="thu" ver="1" table="ooga_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" cite_std="N" cite_ver="" status="">
+    <![CDATA[預設不打勾]]>
+  </field>
+  <field column="ooga002" name="tue" ver="1" table="ooga_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" cite_std="N" cite_ver="" status="">
+    <![CDATA[預設不打勾]]>
+  </field>
+  <field column="ooga002" name="wed" ver="1" table="ooga_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" cite_std="N" cite_ver="" status="">
+    <![CDATA[預設不打勾]]>
+  </field>
+  <field column="nmac001" name="nmac_t.nmac001" ver="1" table="nmac_t" attribute="C812" type="varchar2(5)" req="Y" i_zoom="q_ooal002" c_zoom="q_ooal002" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[行事曆參照表號：
+   ●欄位控管：
+     資料欄位:[T:節假日表資料檔].[C:節假日表編號]/Input Only
+     預設值:無
+     校驗:1.不允許空白
+          2.輸入值須存在[T:參照表檔].[C:參照表號]且[C:參照表類型]=4
+     帶值:帶出[T:參照表多語言檔].[C:說明]到參照表說明顯示
+     計算或處理:無
+
+   ●開窗處理：
+     參考函式：q_ooal002
+     查詢欄位：[T:行事曆檔].[C:行事曆參照表號],[T:參照表多語言檔].[C:說明]
+     過濾條件：[T:參照表檔].[C:參照表類型]=4
+     回值類型：單一回值
+]]>
+  </field>
+  <field column="" name="lbl_week_1" ver="1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield src="s" ver="1" name="nmac001_desc" depend_filed="nmac_t.nmac001" correspon_key="nmacent,&apos;4&apos;,nmac001" ref_table="ooall_t" ref_fk="ooallent,ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code/>
+  <strings>
+    <sfield name="lbl_nmac001" text="節假日表編號" comment="" lstr=""/>
+    <sfield name="lbl_bdate_1" text="日期起訖" comment="" lstr=""/>
+    <sfield name="lbl_label1_1" text="~" comment="" lstr=""/>
+    <sfield name="lbl_week_1" text="星期(例假日勾選)" comment="" lstr=""/>
+    <sfield name="lbl_mon_1" text="一" comment="" lstr=""/>
+    <sfield name="lbl_tue_1" text="二" comment="" lstr=""/>
+    <sfield name="lbl_wed_1" text="三" comment="" lstr=""/>
+    <sfield name="lbl_thu_1" text="四" comment="" lstr=""/>
+    <sfield name="lbl_fri_1" text="五" comment="" lstr=""/>
+    <sfield name="lbl_sat_1" text="六" comment="" lstr=""/>
+    <sfield name="lbl_sun_1" text="日" comment="" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" comment="" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" comment="" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" comment="" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="1"/>
+</spec>

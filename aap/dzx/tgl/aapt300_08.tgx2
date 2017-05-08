@@ -1,0 +1,1931 @@
+{<section id="aapt300_08.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0015(2016-10-11 18:15:30), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000127
+#+ Filename...: aapt300_08
+#+ Description: 其他訊息
+#+ Creator....: 02097(2014-09-25 17:19:08)
+#+ Modifier...: 05016 -SD/PR-
+{</section>}
+ 
+ 
+ 
+{<section id="aapt300_08.global" >}
+#應用 c02b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_apcb_d        RECORD
+       apcbdocno LIKE apcb_t.apcbdocno, 
+   apcbld LIKE apcb_t.apcbld, 
+   apcbseq LIKE apcb_t.apcbseq, 
+   apcb047 LIKE apcb_t.apcb047, 
+   apcb021 LIKE apcb_t.apcb021, 
+   l_apcb021_desc LIKE type_t.chr500, 
+   apcb029 LIKE apcb_t.apcb029, 
+   l_apcb029_desc LIKE type_t.chr500, 
+   apcb051 LIKE apcb_t.apcb051, 
+   l_apcb051_desc LIKE type_t.chr500, 
+   apcb010 LIKE apcb_t.apcb010, 
+   l_apcb010_desc LIKE type_t.chr500, 
+   apcb011 LIKE apcb_t.apcb011, 
+   l_apcb011_desc LIKE type_t.chr500, 
+   apcb024 LIKE apcb_t.apcb024, 
+   l_apcb024_desc LIKE type_t.chr500, 
+   apcb012 LIKE apcb_t.apcb012, 
+   l_apcb012_desc LIKE type_t.chr500, 
+   apcb015 LIKE apcb_t.apcb015, 
+   l_apcb015_desc LIKE type_t.chr500, 
+   apcb016 LIKE apcb_t.apcb016, 
+   l_apcb016_desc LIKE type_t.chr500, 
+   apcb017 LIKE apcb_t.apcb017, 
+   l_apcb017_desc LIKE type_t.chr500, 
+   apcb033 LIKE apcb_t.apcb033, 
+   apcb034 LIKE apcb_t.apcb034, 
+   l_apcb034_desc LIKE type_t.chr500, 
+   apcb035 LIKE apcb_t.apcb035, 
+   l_apcb035_desc LIKE type_t.chr500, 
+   apcb036 LIKE apcb_t.apcb036, 
+   l_apcb036_desc LIKE type_t.chr500, 
+   apcb054 LIKE apcb_t.apcb054, 
+   l_apcb054_desc LIKE type_t.chr500, 
+   apcb055 LIKE apcb_t.apcb055, 
+   l_apcb055_desc LIKE type_t.chr500, 
+   apcb037 LIKE apcb_t.apcb037, 
+   l_apcb037_desc LIKE type_t.chr500, 
+   apcb038 LIKE apcb_t.apcb038, 
+   l_apcb038_desc LIKE type_t.chr500, 
+   apcb039 LIKE apcb_t.apcb039, 
+   l_apcb039_desc LIKE type_t.chr500, 
+   apcb040 LIKE apcb_t.apcb040, 
+   l_apcb040_desc LIKE type_t.chr500, 
+   apcb041 LIKE apcb_t.apcb041, 
+   l_apcb041_desc LIKE type_t.chr500, 
+   apcb042 LIKE apcb_t.apcb042, 
+   l_apcb042_desc LIKE type_t.chr500, 
+   apcb043 LIKE apcb_t.apcb043, 
+   l_apcb043_desc LIKE type_t.chr500, 
+   apcb044 LIKE apcb_t.apcb044, 
+   l_apcb044_desc LIKE type_t.chr500, 
+   apcb045 LIKE apcb_t.apcb045, 
+   l_apcb045_desc LIKE type_t.chr500, 
+   apcb046 LIKE apcb_t.apcb046, 
+   l_apcb046_desc LIKE type_t.chr500, 
+   img1 LIKE type_t.chr500
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_apcb_d          DYNAMIC ARRAY OF type_g_apcb_d
+DEFINE g_apcb_d_t        type_g_apcb_d
+ 
+ 
+DEFINE g_apcbld_t   LIKE apcb_t.apcbld    #Key值備份
+DEFINE g_apcbdocno_t      LIKE apcb_t.apcbdocno    #Key值備份
+DEFINE g_apcbseq_t      LIKE apcb_t.apcbseq    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10 
+DEFINE g_detail_idx          LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point    
+{</section>}
+ 
+{<section id="aapt300_08.input" >}    
+#+ 資料輸入
+PUBLIC FUNCTION aapt300_08(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aapt300_08 WITH FORM cl_ap_formpath("aap","aapt300_08")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_apcb_d FROM s_detail1_aapt300_08.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+         
+         #自訂ACTION
+         #add-point:單身前置處理 name="input.action"
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.before_input"
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcbdocno
+            #add-point:BEFORE FIELD apcbdocno name="input.b.page1_aapt300_08.apcbdocno"
+            {<point name="input.b.page1_aapt300_08.apcbdocno" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcbdocno
+            
+            #add-point:AFTER FIELD apcbdocno name="input.a.page1_aapt300_08.apcbdocno"
+            {<point name="input.a.page1_aapt300_08.apcbdocno" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcbdocno
+            #add-point:ON CHANGE apcbdocno name="input.g.page1_aapt300_08.apcbdocno"
+            {<point name="input.g.page1_aapt300_08.apcbdocno" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcbld
+            #add-point:BEFORE FIELD apcbld name="input.b.page1_aapt300_08.apcbld"
+            {<point name="input.b.page1_aapt300_08.apcbld" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcbld
+            
+            #add-point:AFTER FIELD apcbld name="input.a.page1_aapt300_08.apcbld"
+            {<point name="input.a.page1_aapt300_08.apcbld" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcbld
+            #add-point:ON CHANGE apcbld name="input.g.page1_aapt300_08.apcbld"
+            {<point name="input.g.page1_aapt300_08.apcbld" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcbseq
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_apcb_d[l_ac].apcbseq,"1.000","1","","","azz-00079",1) THEN
+               NEXT FIELD apcbseq
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD apcbseq name="input.a.page1_aapt300_08.apcbseq"
+            {<point name="input.a.page1_aapt300_08.apcbseq" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcbseq
+            #add-point:BEFORE FIELD apcbseq name="input.b.page1_aapt300_08.apcbseq"
+            {<point name="input.b.page1_aapt300_08.apcbseq" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcbseq
+            #add-point:ON CHANGE apcbseq name="input.g.page1_aapt300_08.apcbseq"
+            {<point name="input.g.page1_aapt300_08.apcbseq" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb047
+            #add-point:BEFORE FIELD apcb047 name="input.b.page1_aapt300_08.apcb047"
+            {<point name="input.b.page1_aapt300_08.apcb047" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb047
+            
+            #add-point:AFTER FIELD apcb047 name="input.a.page1_aapt300_08.apcb047"
+            {<point name="input.a.page1_aapt300_08.apcb047" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb047
+            #add-point:ON CHANGE apcb047 name="input.g.page1_aapt300_08.apcb047"
+            {<point name="input.g.page1_aapt300_08.apcb047" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb021
+            #add-point:BEFORE FIELD apcb021 name="input.b.page1_aapt300_08.apcb021"
+            {<point name="input.b.page1_aapt300_08.apcb021" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb021
+            
+            #add-point:AFTER FIELD apcb021 name="input.a.page1_aapt300_08.apcb021"
+            {<point name="input.a.page1_aapt300_08.apcb021" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb021
+            #add-point:ON CHANGE apcb021 name="input.g.page1_aapt300_08.apcb021"
+            {<point name="input.g.page1_aapt300_08.apcb021" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb029
+            #add-point:BEFORE FIELD apcb029 name="input.b.page1_aapt300_08.apcb029"
+            {<point name="input.b.page1_aapt300_08.apcb029" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb029
+            
+            #add-point:AFTER FIELD apcb029 name="input.a.page1_aapt300_08.apcb029"
+            {<point name="input.a.page1_aapt300_08.apcb029" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb029
+            #add-point:ON CHANGE apcb029 name="input.g.page1_aapt300_08.apcb029"
+            {<point name="input.g.page1_aapt300_08.apcb029" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb051
+            #add-point:BEFORE FIELD apcb051 name="input.b.page1_aapt300_08.apcb051"
+            {<point name="input.b.page1_aapt300_08.apcb051" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb051
+            
+            #add-point:AFTER FIELD apcb051 name="input.a.page1_aapt300_08.apcb051"
+            {<point name="input.a.page1_aapt300_08.apcb051" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb051
+            #add-point:ON CHANGE apcb051 name="input.g.page1_aapt300_08.apcb051"
+            {<point name="input.g.page1_aapt300_08.apcb051" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apcb051_desc
+            #add-point:BEFORE FIELD l_apcb051_desc name="input.b.page1_aapt300_08.l_apcb051_desc"
+            {<point name="input.b.page1_aapt300_08.l_apcb051_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apcb051_desc
+            
+            #add-point:AFTER FIELD l_apcb051_desc name="input.a.page1_aapt300_08.l_apcb051_desc"
+            {<point name="input.a.page1_aapt300_08.l_apcb051_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apcb051_desc
+            #add-point:ON CHANGE l_apcb051_desc name="input.g.page1_aapt300_08.l_apcb051_desc"
+            {<point name="input.g.page1_aapt300_08.l_apcb051_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb010
+            #add-point:BEFORE FIELD apcb010 name="input.b.page1_aapt300_08.apcb010"
+            {<point name="input.b.page1_aapt300_08.apcb010" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb010
+            
+            #add-point:AFTER FIELD apcb010 name="input.a.page1_aapt300_08.apcb010"
+            {<point name="input.a.page1_aapt300_08.apcb010" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb010
+            #add-point:ON CHANGE apcb010 name="input.g.page1_aapt300_08.apcb010"
+            {<point name="input.g.page1_aapt300_08.apcb010" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apcb010_desc
+            #add-point:BEFORE FIELD l_apcb010_desc name="input.b.page1_aapt300_08.l_apcb010_desc"
+            {<point name="input.b.page1_aapt300_08.l_apcb010_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apcb010_desc
+            
+            #add-point:AFTER FIELD l_apcb010_desc name="input.a.page1_aapt300_08.l_apcb010_desc"
+            {<point name="input.a.page1_aapt300_08.l_apcb010_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apcb010_desc
+            #add-point:ON CHANGE l_apcb010_desc name="input.g.page1_aapt300_08.l_apcb010_desc"
+            {<point name="input.g.page1_aapt300_08.l_apcb010_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb011
+            #add-point:BEFORE FIELD apcb011 name="input.b.page1_aapt300_08.apcb011"
+            {<point name="input.b.page1_aapt300_08.apcb011" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb011
+            
+            #add-point:AFTER FIELD apcb011 name="input.a.page1_aapt300_08.apcb011"
+            {<point name="input.a.page1_aapt300_08.apcb011" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb011
+            #add-point:ON CHANGE apcb011 name="input.g.page1_aapt300_08.apcb011"
+            {<point name="input.g.page1_aapt300_08.apcb011" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apcb011_desc
+            #add-point:BEFORE FIELD l_apcb011_desc name="input.b.page1_aapt300_08.l_apcb011_desc"
+            {<point name="input.b.page1_aapt300_08.l_apcb011_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apcb011_desc
+            
+            #add-point:AFTER FIELD l_apcb011_desc name="input.a.page1_aapt300_08.l_apcb011_desc"
+            {<point name="input.a.page1_aapt300_08.l_apcb011_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apcb011_desc
+            #add-point:ON CHANGE l_apcb011_desc name="input.g.page1_aapt300_08.l_apcb011_desc"
+            {<point name="input.g.page1_aapt300_08.l_apcb011_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb024
+            #add-point:BEFORE FIELD apcb024 name="input.b.page1_aapt300_08.apcb024"
+            {<point name="input.b.page1_aapt300_08.apcb024" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb024
+            
+            #add-point:AFTER FIELD apcb024 name="input.a.page1_aapt300_08.apcb024"
+            {<point name="input.a.page1_aapt300_08.apcb024" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb024
+            #add-point:ON CHANGE apcb024 name="input.g.page1_aapt300_08.apcb024"
+            {<point name="input.g.page1_aapt300_08.apcb024" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apcb024_desc
+            #add-point:BEFORE FIELD l_apcb024_desc name="input.b.page1_aapt300_08.l_apcb024_desc"
+            {<point name="input.b.page1_aapt300_08.l_apcb024_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apcb024_desc
+            
+            #add-point:AFTER FIELD l_apcb024_desc name="input.a.page1_aapt300_08.l_apcb024_desc"
+            {<point name="input.a.page1_aapt300_08.l_apcb024_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apcb024_desc
+            #add-point:ON CHANGE l_apcb024_desc name="input.g.page1_aapt300_08.l_apcb024_desc"
+            {<point name="input.g.page1_aapt300_08.l_apcb024_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb012
+            #add-point:BEFORE FIELD apcb012 name="input.b.page1_aapt300_08.apcb012"
+            {<point name="input.b.page1_aapt300_08.apcb012" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb012
+            
+            #add-point:AFTER FIELD apcb012 name="input.a.page1_aapt300_08.apcb012"
+            {<point name="input.a.page1_aapt300_08.apcb012" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb012
+            #add-point:ON CHANGE apcb012 name="input.g.page1_aapt300_08.apcb012"
+            {<point name="input.g.page1_aapt300_08.apcb012" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apcb012_desc
+            #add-point:BEFORE FIELD l_apcb012_desc name="input.b.page1_aapt300_08.l_apcb012_desc"
+            {<point name="input.b.page1_aapt300_08.l_apcb012_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apcb012_desc
+            
+            #add-point:AFTER FIELD l_apcb012_desc name="input.a.page1_aapt300_08.l_apcb012_desc"
+            {<point name="input.a.page1_aapt300_08.l_apcb012_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apcb012_desc
+            #add-point:ON CHANGE l_apcb012_desc name="input.g.page1_aapt300_08.l_apcb012_desc"
+            {<point name="input.g.page1_aapt300_08.l_apcb012_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb015
+            #add-point:BEFORE FIELD apcb015 name="input.b.page1_aapt300_08.apcb015"
+            {<point name="input.b.page1_aapt300_08.apcb015" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb015
+            
+            #add-point:AFTER FIELD apcb015 name="input.a.page1_aapt300_08.apcb015"
+            {<point name="input.a.page1_aapt300_08.apcb015" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb015
+            #add-point:ON CHANGE apcb015 name="input.g.page1_aapt300_08.apcb015"
+            {<point name="input.g.page1_aapt300_08.apcb015" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apcb015_desc
+            #add-point:BEFORE FIELD l_apcb015_desc name="input.b.page1_aapt300_08.l_apcb015_desc"
+            {<point name="input.b.page1_aapt300_08.l_apcb015_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apcb015_desc
+            
+            #add-point:AFTER FIELD l_apcb015_desc name="input.a.page1_aapt300_08.l_apcb015_desc"
+            {<point name="input.a.page1_aapt300_08.l_apcb015_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apcb015_desc
+            #add-point:ON CHANGE l_apcb015_desc name="input.g.page1_aapt300_08.l_apcb015_desc"
+            {<point name="input.g.page1_aapt300_08.l_apcb015_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb016
+            #add-point:BEFORE FIELD apcb016 name="input.b.page1_aapt300_08.apcb016"
+            {<point name="input.b.page1_aapt300_08.apcb016" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb016
+            
+            #add-point:AFTER FIELD apcb016 name="input.a.page1_aapt300_08.apcb016"
+            {<point name="input.a.page1_aapt300_08.apcb016" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb016
+            #add-point:ON CHANGE apcb016 name="input.g.page1_aapt300_08.apcb016"
+            {<point name="input.g.page1_aapt300_08.apcb016" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apcb016_desc
+            #add-point:BEFORE FIELD l_apcb016_desc name="input.b.page1_aapt300_08.l_apcb016_desc"
+            {<point name="input.b.page1_aapt300_08.l_apcb016_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apcb016_desc
+            
+            #add-point:AFTER FIELD l_apcb016_desc name="input.a.page1_aapt300_08.l_apcb016_desc"
+            {<point name="input.a.page1_aapt300_08.l_apcb016_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apcb016_desc
+            #add-point:ON CHANGE l_apcb016_desc name="input.g.page1_aapt300_08.l_apcb016_desc"
+            {<point name="input.g.page1_aapt300_08.l_apcb016_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb017
+            #add-point:BEFORE FIELD apcb017 name="input.b.page1_aapt300_08.apcb017"
+            {<point name="input.b.page1_aapt300_08.apcb017" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb017
+            
+            #add-point:AFTER FIELD apcb017 name="input.a.page1_aapt300_08.apcb017"
+            {<point name="input.a.page1_aapt300_08.apcb017" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb017
+            #add-point:ON CHANGE apcb017 name="input.g.page1_aapt300_08.apcb017"
+            {<point name="input.g.page1_aapt300_08.apcb017" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apcb017_desc
+            #add-point:BEFORE FIELD l_apcb017_desc name="input.b.page1_aapt300_08.l_apcb017_desc"
+            {<point name="input.b.page1_aapt300_08.l_apcb017_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apcb017_desc
+            
+            #add-point:AFTER FIELD l_apcb017_desc name="input.a.page1_aapt300_08.l_apcb017_desc"
+            {<point name="input.a.page1_aapt300_08.l_apcb017_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apcb017_desc
+            #add-point:ON CHANGE l_apcb017_desc name="input.g.page1_aapt300_08.l_apcb017_desc"
+            {<point name="input.g.page1_aapt300_08.l_apcb017_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb033
+            #add-point:BEFORE FIELD apcb033 name="input.b.page1_aapt300_08.apcb033"
+            {<point name="input.b.page1_aapt300_08.apcb033" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb033
+            
+            #add-point:AFTER FIELD apcb033 name="input.a.page1_aapt300_08.apcb033"
+            {<point name="input.a.page1_aapt300_08.apcb033" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb033
+            #add-point:ON CHANGE apcb033 name="input.g.page1_aapt300_08.apcb033"
+            {<point name="input.g.page1_aapt300_08.apcb033" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb034
+            #add-point:BEFORE FIELD apcb034 name="input.b.page1_aapt300_08.apcb034"
+            {<point name="input.b.page1_aapt300_08.apcb034" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb034
+            
+            #add-point:AFTER FIELD apcb034 name="input.a.page1_aapt300_08.apcb034"
+            {<point name="input.a.page1_aapt300_08.apcb034" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb034
+            #add-point:ON CHANGE apcb034 name="input.g.page1_aapt300_08.apcb034"
+            {<point name="input.g.page1_aapt300_08.apcb034" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apcb034_desc
+            #add-point:BEFORE FIELD l_apcb034_desc name="input.b.page1_aapt300_08.l_apcb034_desc"
+            {<point name="input.b.page1_aapt300_08.l_apcb034_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apcb034_desc
+            
+            #add-point:AFTER FIELD l_apcb034_desc name="input.a.page1_aapt300_08.l_apcb034_desc"
+            {<point name="input.a.page1_aapt300_08.l_apcb034_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apcb034_desc
+            #add-point:ON CHANGE l_apcb034_desc name="input.g.page1_aapt300_08.l_apcb034_desc"
+            {<point name="input.g.page1_aapt300_08.l_apcb034_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb035
+            #add-point:BEFORE FIELD apcb035 name="input.b.page1_aapt300_08.apcb035"
+            {<point name="input.b.page1_aapt300_08.apcb035" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb035
+            
+            #add-point:AFTER FIELD apcb035 name="input.a.page1_aapt300_08.apcb035"
+            {<point name="input.a.page1_aapt300_08.apcb035" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb035
+            #add-point:ON CHANGE apcb035 name="input.g.page1_aapt300_08.apcb035"
+            {<point name="input.g.page1_aapt300_08.apcb035" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apcb035_desc
+            #add-point:BEFORE FIELD l_apcb035_desc name="input.b.page1_aapt300_08.l_apcb035_desc"
+            {<point name="input.b.page1_aapt300_08.l_apcb035_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apcb035_desc
+            
+            #add-point:AFTER FIELD l_apcb035_desc name="input.a.page1_aapt300_08.l_apcb035_desc"
+            {<point name="input.a.page1_aapt300_08.l_apcb035_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apcb035_desc
+            #add-point:ON CHANGE l_apcb035_desc name="input.g.page1_aapt300_08.l_apcb035_desc"
+            {<point name="input.g.page1_aapt300_08.l_apcb035_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb036
+            #add-point:BEFORE FIELD apcb036 name="input.b.page1_aapt300_08.apcb036"
+            {<point name="input.b.page1_aapt300_08.apcb036" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb036
+            
+            #add-point:AFTER FIELD apcb036 name="input.a.page1_aapt300_08.apcb036"
+            {<point name="input.a.page1_aapt300_08.apcb036" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb036
+            #add-point:ON CHANGE apcb036 name="input.g.page1_aapt300_08.apcb036"
+            {<point name="input.g.page1_aapt300_08.apcb036" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apcb036_desc
+            #add-point:BEFORE FIELD l_apcb036_desc name="input.b.page1_aapt300_08.l_apcb036_desc"
+            {<point name="input.b.page1_aapt300_08.l_apcb036_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apcb036_desc
+            
+            #add-point:AFTER FIELD l_apcb036_desc name="input.a.page1_aapt300_08.l_apcb036_desc"
+            {<point name="input.a.page1_aapt300_08.l_apcb036_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apcb036_desc
+            #add-point:ON CHANGE l_apcb036_desc name="input.g.page1_aapt300_08.l_apcb036_desc"
+            {<point name="input.g.page1_aapt300_08.l_apcb036_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb054
+            #add-point:BEFORE FIELD apcb054 name="input.b.page1_aapt300_08.apcb054"
+            {<point name="input.b.page1_aapt300_08.apcb054" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb054
+            
+            #add-point:AFTER FIELD apcb054 name="input.a.page1_aapt300_08.apcb054"
+            {<point name="input.a.page1_aapt300_08.apcb054" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb054
+            #add-point:ON CHANGE apcb054 name="input.g.page1_aapt300_08.apcb054"
+            {<point name="input.g.page1_aapt300_08.apcb054" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apcb054_desc
+            #add-point:BEFORE FIELD l_apcb054_desc name="input.b.page1_aapt300_08.l_apcb054_desc"
+            {<point name="input.b.page1_aapt300_08.l_apcb054_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apcb054_desc
+            
+            #add-point:AFTER FIELD l_apcb054_desc name="input.a.page1_aapt300_08.l_apcb054_desc"
+            {<point name="input.a.page1_aapt300_08.l_apcb054_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apcb054_desc
+            #add-point:ON CHANGE l_apcb054_desc name="input.g.page1_aapt300_08.l_apcb054_desc"
+            {<point name="input.g.page1_aapt300_08.l_apcb054_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb055
+            #add-point:BEFORE FIELD apcb055 name="input.b.page1_aapt300_08.apcb055"
+            {<point name="input.b.page1_aapt300_08.apcb055" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb055
+            
+            #add-point:AFTER FIELD apcb055 name="input.a.page1_aapt300_08.apcb055"
+            {<point name="input.a.page1_aapt300_08.apcb055" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb055
+            #add-point:ON CHANGE apcb055 name="input.g.page1_aapt300_08.apcb055"
+            {<point name="input.g.page1_aapt300_08.apcb055" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apcb055_desc
+            #add-point:BEFORE FIELD l_apcb055_desc name="input.b.page1_aapt300_08.l_apcb055_desc"
+            {<point name="input.b.page1_aapt300_08.l_apcb055_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apcb055_desc
+            
+            #add-point:AFTER FIELD l_apcb055_desc name="input.a.page1_aapt300_08.l_apcb055_desc"
+            {<point name="input.a.page1_aapt300_08.l_apcb055_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apcb055_desc
+            #add-point:ON CHANGE l_apcb055_desc name="input.g.page1_aapt300_08.l_apcb055_desc"
+            {<point name="input.g.page1_aapt300_08.l_apcb055_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb037
+            #add-point:BEFORE FIELD apcb037 name="input.b.page1_aapt300_08.apcb037"
+            {<point name="input.b.page1_aapt300_08.apcb037" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb037
+            
+            #add-point:AFTER FIELD apcb037 name="input.a.page1_aapt300_08.apcb037"
+            {<point name="input.a.page1_aapt300_08.apcb037" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb037
+            #add-point:ON CHANGE apcb037 name="input.g.page1_aapt300_08.apcb037"
+            {<point name="input.g.page1_aapt300_08.apcb037" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apcb037_desc
+            #add-point:BEFORE FIELD l_apcb037_desc name="input.b.page1_aapt300_08.l_apcb037_desc"
+            {<point name="input.b.page1_aapt300_08.l_apcb037_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apcb037_desc
+            
+            #add-point:AFTER FIELD l_apcb037_desc name="input.a.page1_aapt300_08.l_apcb037_desc"
+            {<point name="input.a.page1_aapt300_08.l_apcb037_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apcb037_desc
+            #add-point:ON CHANGE l_apcb037_desc name="input.g.page1_aapt300_08.l_apcb037_desc"
+            {<point name="input.g.page1_aapt300_08.l_apcb037_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb038
+            #add-point:BEFORE FIELD apcb038 name="input.b.page1_aapt300_08.apcb038"
+            {<point name="input.b.page1_aapt300_08.apcb038" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb038
+            
+            #add-point:AFTER FIELD apcb038 name="input.a.page1_aapt300_08.apcb038"
+            {<point name="input.a.page1_aapt300_08.apcb038" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb038
+            #add-point:ON CHANGE apcb038 name="input.g.page1_aapt300_08.apcb038"
+            {<point name="input.g.page1_aapt300_08.apcb038" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apcb038_desc
+            #add-point:BEFORE FIELD l_apcb038_desc name="input.b.page1_aapt300_08.l_apcb038_desc"
+            {<point name="input.b.page1_aapt300_08.l_apcb038_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apcb038_desc
+            
+            #add-point:AFTER FIELD l_apcb038_desc name="input.a.page1_aapt300_08.l_apcb038_desc"
+            {<point name="input.a.page1_aapt300_08.l_apcb038_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apcb038_desc
+            #add-point:ON CHANGE l_apcb038_desc name="input.g.page1_aapt300_08.l_apcb038_desc"
+            {<point name="input.g.page1_aapt300_08.l_apcb038_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb039
+            #add-point:BEFORE FIELD apcb039 name="input.b.page1_aapt300_08.apcb039"
+            {<point name="input.b.page1_aapt300_08.apcb039" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb039
+            
+            #add-point:AFTER FIELD apcb039 name="input.a.page1_aapt300_08.apcb039"
+            {<point name="input.a.page1_aapt300_08.apcb039" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb039
+            #add-point:ON CHANGE apcb039 name="input.g.page1_aapt300_08.apcb039"
+            {<point name="input.g.page1_aapt300_08.apcb039" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apcb039_desc
+            #add-point:BEFORE FIELD l_apcb039_desc name="input.b.page1_aapt300_08.l_apcb039_desc"
+            {<point name="input.b.page1_aapt300_08.l_apcb039_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apcb039_desc
+            
+            #add-point:AFTER FIELD l_apcb039_desc name="input.a.page1_aapt300_08.l_apcb039_desc"
+            {<point name="input.a.page1_aapt300_08.l_apcb039_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apcb039_desc
+            #add-point:ON CHANGE l_apcb039_desc name="input.g.page1_aapt300_08.l_apcb039_desc"
+            {<point name="input.g.page1_aapt300_08.l_apcb039_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb040
+            #add-point:BEFORE FIELD apcb040 name="input.b.page1_aapt300_08.apcb040"
+            {<point name="input.b.page1_aapt300_08.apcb040" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb040
+            
+            #add-point:AFTER FIELD apcb040 name="input.a.page1_aapt300_08.apcb040"
+            {<point name="input.a.page1_aapt300_08.apcb040" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb040
+            #add-point:ON CHANGE apcb040 name="input.g.page1_aapt300_08.apcb040"
+            {<point name="input.g.page1_aapt300_08.apcb040" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apcb040_desc
+            #add-point:BEFORE FIELD l_apcb040_desc name="input.b.page1_aapt300_08.l_apcb040_desc"
+            {<point name="input.b.page1_aapt300_08.l_apcb040_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apcb040_desc
+            
+            #add-point:AFTER FIELD l_apcb040_desc name="input.a.page1_aapt300_08.l_apcb040_desc"
+            {<point name="input.a.page1_aapt300_08.l_apcb040_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apcb040_desc
+            #add-point:ON CHANGE l_apcb040_desc name="input.g.page1_aapt300_08.l_apcb040_desc"
+            {<point name="input.g.page1_aapt300_08.l_apcb040_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb041
+            #add-point:BEFORE FIELD apcb041 name="input.b.page1_aapt300_08.apcb041"
+            {<point name="input.b.page1_aapt300_08.apcb041" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb041
+            
+            #add-point:AFTER FIELD apcb041 name="input.a.page1_aapt300_08.apcb041"
+            {<point name="input.a.page1_aapt300_08.apcb041" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb041
+            #add-point:ON CHANGE apcb041 name="input.g.page1_aapt300_08.apcb041"
+            {<point name="input.g.page1_aapt300_08.apcb041" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apcb041_desc
+            #add-point:BEFORE FIELD l_apcb041_desc name="input.b.page1_aapt300_08.l_apcb041_desc"
+            {<point name="input.b.page1_aapt300_08.l_apcb041_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apcb041_desc
+            
+            #add-point:AFTER FIELD l_apcb041_desc name="input.a.page1_aapt300_08.l_apcb041_desc"
+            {<point name="input.a.page1_aapt300_08.l_apcb041_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apcb041_desc
+            #add-point:ON CHANGE l_apcb041_desc name="input.g.page1_aapt300_08.l_apcb041_desc"
+            {<point name="input.g.page1_aapt300_08.l_apcb041_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb042
+            #add-point:BEFORE FIELD apcb042 name="input.b.page1_aapt300_08.apcb042"
+            {<point name="input.b.page1_aapt300_08.apcb042" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb042
+            
+            #add-point:AFTER FIELD apcb042 name="input.a.page1_aapt300_08.apcb042"
+            {<point name="input.a.page1_aapt300_08.apcb042" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb042
+            #add-point:ON CHANGE apcb042 name="input.g.page1_aapt300_08.apcb042"
+            {<point name="input.g.page1_aapt300_08.apcb042" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apcb042_desc
+            #add-point:BEFORE FIELD l_apcb042_desc name="input.b.page1_aapt300_08.l_apcb042_desc"
+            {<point name="input.b.page1_aapt300_08.l_apcb042_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apcb042_desc
+            
+            #add-point:AFTER FIELD l_apcb042_desc name="input.a.page1_aapt300_08.l_apcb042_desc"
+            {<point name="input.a.page1_aapt300_08.l_apcb042_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apcb042_desc
+            #add-point:ON CHANGE l_apcb042_desc name="input.g.page1_aapt300_08.l_apcb042_desc"
+            {<point name="input.g.page1_aapt300_08.l_apcb042_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb043
+            #add-point:BEFORE FIELD apcb043 name="input.b.page1_aapt300_08.apcb043"
+            {<point name="input.b.page1_aapt300_08.apcb043" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb043
+            
+            #add-point:AFTER FIELD apcb043 name="input.a.page1_aapt300_08.apcb043"
+            {<point name="input.a.page1_aapt300_08.apcb043" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb043
+            #add-point:ON CHANGE apcb043 name="input.g.page1_aapt300_08.apcb043"
+            {<point name="input.g.page1_aapt300_08.apcb043" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apcb043_desc
+            #add-point:BEFORE FIELD l_apcb043_desc name="input.b.page1_aapt300_08.l_apcb043_desc"
+            {<point name="input.b.page1_aapt300_08.l_apcb043_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apcb043_desc
+            
+            #add-point:AFTER FIELD l_apcb043_desc name="input.a.page1_aapt300_08.l_apcb043_desc"
+            {<point name="input.a.page1_aapt300_08.l_apcb043_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apcb043_desc
+            #add-point:ON CHANGE l_apcb043_desc name="input.g.page1_aapt300_08.l_apcb043_desc"
+            {<point name="input.g.page1_aapt300_08.l_apcb043_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb044
+            #add-point:BEFORE FIELD apcb044 name="input.b.page1_aapt300_08.apcb044"
+            {<point name="input.b.page1_aapt300_08.apcb044" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb044
+            
+            #add-point:AFTER FIELD apcb044 name="input.a.page1_aapt300_08.apcb044"
+            {<point name="input.a.page1_aapt300_08.apcb044" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb044
+            #add-point:ON CHANGE apcb044 name="input.g.page1_aapt300_08.apcb044"
+            {<point name="input.g.page1_aapt300_08.apcb044" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apcb044_desc
+            #add-point:BEFORE FIELD l_apcb044_desc name="input.b.page1_aapt300_08.l_apcb044_desc"
+            {<point name="input.b.page1_aapt300_08.l_apcb044_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apcb044_desc
+            
+            #add-point:AFTER FIELD l_apcb044_desc name="input.a.page1_aapt300_08.l_apcb044_desc"
+            {<point name="input.a.page1_aapt300_08.l_apcb044_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apcb044_desc
+            #add-point:ON CHANGE l_apcb044_desc name="input.g.page1_aapt300_08.l_apcb044_desc"
+            {<point name="input.g.page1_aapt300_08.l_apcb044_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb045
+            #add-point:BEFORE FIELD apcb045 name="input.b.page1_aapt300_08.apcb045"
+            {<point name="input.b.page1_aapt300_08.apcb045" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb045
+            
+            #add-point:AFTER FIELD apcb045 name="input.a.page1_aapt300_08.apcb045"
+            {<point name="input.a.page1_aapt300_08.apcb045" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb045
+            #add-point:ON CHANGE apcb045 name="input.g.page1_aapt300_08.apcb045"
+            {<point name="input.g.page1_aapt300_08.apcb045" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apcb045_desc
+            #add-point:BEFORE FIELD l_apcb045_desc name="input.b.page1_aapt300_08.l_apcb045_desc"
+            {<point name="input.b.page1_aapt300_08.l_apcb045_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apcb045_desc
+            
+            #add-point:AFTER FIELD l_apcb045_desc name="input.a.page1_aapt300_08.l_apcb045_desc"
+            {<point name="input.a.page1_aapt300_08.l_apcb045_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apcb045_desc
+            #add-point:ON CHANGE l_apcb045_desc name="input.g.page1_aapt300_08.l_apcb045_desc"
+            {<point name="input.g.page1_aapt300_08.l_apcb045_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD apcb046
+            #add-point:BEFORE FIELD apcb046 name="input.b.page1_aapt300_08.apcb046"
+            {<point name="input.b.page1_aapt300_08.apcb046" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD apcb046
+            
+            #add-point:AFTER FIELD apcb046 name="input.a.page1_aapt300_08.apcb046"
+            {<point name="input.a.page1_aapt300_08.apcb046" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE apcb046
+            #add-point:ON CHANGE apcb046 name="input.g.page1_aapt300_08.apcb046"
+            {<point name="input.g.page1_aapt300_08.apcb046" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD l_apcb046_desc
+            #add-point:BEFORE FIELD l_apcb046_desc name="input.b.page1_aapt300_08.l_apcb046_desc"
+            {<point name="input.b.page1_aapt300_08.l_apcb046_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD l_apcb046_desc
+            
+            #add-point:AFTER FIELD l_apcb046_desc name="input.a.page1_aapt300_08.l_apcb046_desc"
+            {<point name="input.a.page1_aapt300_08.l_apcb046_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE l_apcb046_desc
+            #add-point:ON CHANGE l_apcb046_desc name="input.g.page1_aapt300_08.l_apcb046_desc"
+            {<point name="input.g.page1_aapt300_08.l_apcb046_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD img1
+            #add-point:BEFORE FIELD img1 name="input.b.page1_aapt300_08.img1"
+            {<point name="input.b.page1_aapt300_08.img1" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD img1
+            
+            #add-point:AFTER FIELD img1 name="input.a.page1_aapt300_08.img1"
+            {<point name="input.a.page1_aapt300_08.img1" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE img1
+            #add-point:ON CHANGE img1 name="input.g.page1_aapt300_08.img1"
+            {<point name="input.g.page1_aapt300_08.img1" />}
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1_aapt300_08.apcbdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcbdocno
+            #add-point:ON ACTION controlp INFIELD apcbdocno name="input.c.page1_aapt300_08.apcbdocno"
+            {<point name="input.c.page1_aapt300_08.apcbdocno" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcbld
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcbld
+            #add-point:ON ACTION controlp INFIELD apcbld name="input.c.page1_aapt300_08.apcbld"
+            {<point name="input.c.page1_aapt300_08.apcbld" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcbseq
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcbseq
+            #add-point:ON ACTION controlp INFIELD apcbseq name="input.c.page1_aapt300_08.apcbseq"
+            {<point name="input.c.page1_aapt300_08.apcbseq" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb047
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb047
+            #add-point:ON ACTION controlp INFIELD apcb047 name="input.c.page1_aapt300_08.apcb047"
+            {<point name="input.c.page1_aapt300_08.apcb047" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb021
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb021
+            #add-point:ON ACTION controlp INFIELD apcb021 name="input.c.page1_aapt300_08.apcb021"
+            {<point name="input.c.page1_aapt300_08.apcb021" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb029
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb029
+            #add-point:ON ACTION controlp INFIELD apcb029 name="input.c.page1_aapt300_08.apcb029"
+            {<point name="input.c.page1_aapt300_08.apcb029" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb051
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb051
+            #add-point:ON ACTION controlp INFIELD apcb051 name="input.c.page1_aapt300_08.apcb051"
+            {<point name="input.c.page1_aapt300_08.apcb051" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.l_apcb051_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apcb051_desc
+            #add-point:ON ACTION controlp INFIELD l_apcb051_desc name="input.c.page1_aapt300_08.l_apcb051_desc"
+            {<point name="input.c.page1_aapt300_08.l_apcb051_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb010
+            #add-point:ON ACTION controlp INFIELD apcb010 name="input.c.page1_aapt300_08.apcb010"
+            {<point name="input.c.page1_aapt300_08.apcb010" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.l_apcb010_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apcb010_desc
+            #add-point:ON ACTION controlp INFIELD l_apcb010_desc name="input.c.page1_aapt300_08.l_apcb010_desc"
+            {<point name="input.c.page1_aapt300_08.l_apcb010_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb011
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb011
+            #add-point:ON ACTION controlp INFIELD apcb011 name="input.c.page1_aapt300_08.apcb011"
+            {<point name="input.c.page1_aapt300_08.apcb011" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.l_apcb011_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apcb011_desc
+            #add-point:ON ACTION controlp INFIELD l_apcb011_desc name="input.c.page1_aapt300_08.l_apcb011_desc"
+            {<point name="input.c.page1_aapt300_08.l_apcb011_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb024
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb024
+            #add-point:ON ACTION controlp INFIELD apcb024 name="input.c.page1_aapt300_08.apcb024"
+            {<point name="input.c.page1_aapt300_08.apcb024" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.l_apcb024_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apcb024_desc
+            #add-point:ON ACTION controlp INFIELD l_apcb024_desc name="input.c.page1_aapt300_08.l_apcb024_desc"
+            {<point name="input.c.page1_aapt300_08.l_apcb024_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb012
+            #add-point:ON ACTION controlp INFIELD apcb012 name="input.c.page1_aapt300_08.apcb012"
+            {<point name="input.c.page1_aapt300_08.apcb012" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.l_apcb012_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apcb012_desc
+            #add-point:ON ACTION controlp INFIELD l_apcb012_desc name="input.c.page1_aapt300_08.l_apcb012_desc"
+            {<point name="input.c.page1_aapt300_08.l_apcb012_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb015
+            #add-point:ON ACTION controlp INFIELD apcb015 name="input.c.page1_aapt300_08.apcb015"
+            {<point name="input.c.page1_aapt300_08.apcb015" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.l_apcb015_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apcb015_desc
+            #add-point:ON ACTION controlp INFIELD l_apcb015_desc name="input.c.page1_aapt300_08.l_apcb015_desc"
+            {<point name="input.c.page1_aapt300_08.l_apcb015_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb016
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb016
+            #add-point:ON ACTION controlp INFIELD apcb016 name="input.c.page1_aapt300_08.apcb016"
+            {<point name="input.c.page1_aapt300_08.apcb016" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.l_apcb016_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apcb016_desc
+            #add-point:ON ACTION controlp INFIELD l_apcb016_desc name="input.c.page1_aapt300_08.l_apcb016_desc"
+            {<point name="input.c.page1_aapt300_08.l_apcb016_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb017
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb017
+            #add-point:ON ACTION controlp INFIELD apcb017 name="input.c.page1_aapt300_08.apcb017"
+            {<point name="input.c.page1_aapt300_08.apcb017" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.l_apcb017_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apcb017_desc
+            #add-point:ON ACTION controlp INFIELD l_apcb017_desc name="input.c.page1_aapt300_08.l_apcb017_desc"
+            {<point name="input.c.page1_aapt300_08.l_apcb017_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb033
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb033
+            #add-point:ON ACTION controlp INFIELD apcb033 name="input.c.page1_aapt300_08.apcb033"
+            {<point name="input.c.page1_aapt300_08.apcb033" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb034
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb034
+            #add-point:ON ACTION controlp INFIELD apcb034 name="input.c.page1_aapt300_08.apcb034"
+            {<point name="input.c.page1_aapt300_08.apcb034" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.l_apcb034_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apcb034_desc
+            #add-point:ON ACTION controlp INFIELD l_apcb034_desc name="input.c.page1_aapt300_08.l_apcb034_desc"
+            {<point name="input.c.page1_aapt300_08.l_apcb034_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb035
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb035
+            #add-point:ON ACTION controlp INFIELD apcb035 name="input.c.page1_aapt300_08.apcb035"
+            {<point name="input.c.page1_aapt300_08.apcb035" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.l_apcb035_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apcb035_desc
+            #add-point:ON ACTION controlp INFIELD l_apcb035_desc name="input.c.page1_aapt300_08.l_apcb035_desc"
+            {<point name="input.c.page1_aapt300_08.l_apcb035_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb036
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb036
+            #add-point:ON ACTION controlp INFIELD apcb036 name="input.c.page1_aapt300_08.apcb036"
+            {<point name="input.c.page1_aapt300_08.apcb036" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.l_apcb036_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apcb036_desc
+            #add-point:ON ACTION controlp INFIELD l_apcb036_desc name="input.c.page1_aapt300_08.l_apcb036_desc"
+            {<point name="input.c.page1_aapt300_08.l_apcb036_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb054
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb054
+            #add-point:ON ACTION controlp INFIELD apcb054 name="input.c.page1_aapt300_08.apcb054"
+            {<point name="input.c.page1_aapt300_08.apcb054" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.l_apcb054_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apcb054_desc
+            #add-point:ON ACTION controlp INFIELD l_apcb054_desc name="input.c.page1_aapt300_08.l_apcb054_desc"
+            {<point name="input.c.page1_aapt300_08.l_apcb054_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb055
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb055
+            #add-point:ON ACTION controlp INFIELD apcb055 name="input.c.page1_aapt300_08.apcb055"
+            {<point name="input.c.page1_aapt300_08.apcb055" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.l_apcb055_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apcb055_desc
+            #add-point:ON ACTION controlp INFIELD l_apcb055_desc name="input.c.page1_aapt300_08.l_apcb055_desc"
+            {<point name="input.c.page1_aapt300_08.l_apcb055_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb037
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb037
+            #add-point:ON ACTION controlp INFIELD apcb037 name="input.c.page1_aapt300_08.apcb037"
+            {<point name="input.c.page1_aapt300_08.apcb037" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.l_apcb037_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apcb037_desc
+            #add-point:ON ACTION controlp INFIELD l_apcb037_desc name="input.c.page1_aapt300_08.l_apcb037_desc"
+            {<point name="input.c.page1_aapt300_08.l_apcb037_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb038
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb038
+            #add-point:ON ACTION controlp INFIELD apcb038 name="input.c.page1_aapt300_08.apcb038"
+            {<point name="input.c.page1_aapt300_08.apcb038" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.l_apcb038_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apcb038_desc
+            #add-point:ON ACTION controlp INFIELD l_apcb038_desc name="input.c.page1_aapt300_08.l_apcb038_desc"
+            {<point name="input.c.page1_aapt300_08.l_apcb038_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb039
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb039
+            #add-point:ON ACTION controlp INFIELD apcb039 name="input.c.page1_aapt300_08.apcb039"
+            {<point name="input.c.page1_aapt300_08.apcb039" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.l_apcb039_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apcb039_desc
+            #add-point:ON ACTION controlp INFIELD l_apcb039_desc name="input.c.page1_aapt300_08.l_apcb039_desc"
+            {<point name="input.c.page1_aapt300_08.l_apcb039_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb040
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb040
+            #add-point:ON ACTION controlp INFIELD apcb040 name="input.c.page1_aapt300_08.apcb040"
+            {<point name="input.c.page1_aapt300_08.apcb040" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.l_apcb040_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apcb040_desc
+            #add-point:ON ACTION controlp INFIELD l_apcb040_desc name="input.c.page1_aapt300_08.l_apcb040_desc"
+            {<point name="input.c.page1_aapt300_08.l_apcb040_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb041
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb041
+            #add-point:ON ACTION controlp INFIELD apcb041 name="input.c.page1_aapt300_08.apcb041"
+            {<point name="input.c.page1_aapt300_08.apcb041" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.l_apcb041_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apcb041_desc
+            #add-point:ON ACTION controlp INFIELD l_apcb041_desc name="input.c.page1_aapt300_08.l_apcb041_desc"
+            {<point name="input.c.page1_aapt300_08.l_apcb041_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb042
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb042
+            #add-point:ON ACTION controlp INFIELD apcb042 name="input.c.page1_aapt300_08.apcb042"
+            {<point name="input.c.page1_aapt300_08.apcb042" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.l_apcb042_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apcb042_desc
+            #add-point:ON ACTION controlp INFIELD l_apcb042_desc name="input.c.page1_aapt300_08.l_apcb042_desc"
+            {<point name="input.c.page1_aapt300_08.l_apcb042_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb043
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb043
+            #add-point:ON ACTION controlp INFIELD apcb043 name="input.c.page1_aapt300_08.apcb043"
+            {<point name="input.c.page1_aapt300_08.apcb043" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.l_apcb043_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apcb043_desc
+            #add-point:ON ACTION controlp INFIELD l_apcb043_desc name="input.c.page1_aapt300_08.l_apcb043_desc"
+            {<point name="input.c.page1_aapt300_08.l_apcb043_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb044
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb044
+            #add-point:ON ACTION controlp INFIELD apcb044 name="input.c.page1_aapt300_08.apcb044"
+            {<point name="input.c.page1_aapt300_08.apcb044" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.l_apcb044_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apcb044_desc
+            #add-point:ON ACTION controlp INFIELD l_apcb044_desc name="input.c.page1_aapt300_08.l_apcb044_desc"
+            {<point name="input.c.page1_aapt300_08.l_apcb044_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb045
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb045
+            #add-point:ON ACTION controlp INFIELD apcb045 name="input.c.page1_aapt300_08.apcb045"
+            {<point name="input.c.page1_aapt300_08.apcb045" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.l_apcb045_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apcb045_desc
+            #add-point:ON ACTION controlp INFIELD l_apcb045_desc name="input.c.page1_aapt300_08.l_apcb045_desc"
+            {<point name="input.c.page1_aapt300_08.l_apcb045_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.apcb046
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD apcb046
+            #add-point:ON ACTION controlp INFIELD apcb046 name="input.c.page1_aapt300_08.apcb046"
+            {<point name="input.c.page1_aapt300_08.apcb046" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.l_apcb046_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD l_apcb046_desc
+            #add-point:ON ACTION controlp INFIELD l_apcb046_desc name="input.c.page1_aapt300_08.l_apcb046_desc"
+            {<point name="input.c.page1_aapt300_08.l_apcb046_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1_aapt300_08.img1
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD img1
+            #add-point:ON ACTION controlp INFIELD img1 name="input.c.page1_aapt300_08.img1"
+            {<point name="input.c.page1_aapt300_08.img1" />}
+            #END add-point
+ 
+ 
+ 
+ 
+         #自訂ACTION
+         #add-point:單身其他段落處理(EX:on row change, etc...) name="input.other"
+         {<point name="input.other"/>}
+         #end add-point
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理 name="input.after_input"
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         #add-point:cancel name="input.cancel"
+         {<point name="input.cancel"/>}
+         #end add-point
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_aapt300_08 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="aapt300_08.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+{</section>}
+{<section id="aapt300_08.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+ 

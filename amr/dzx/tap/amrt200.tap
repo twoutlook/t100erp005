@@ -1,0 +1,5865 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="amrt200" std_prog="amrt200" erpver="1.0" module="AMR" ver="1" env="s" zone="t10dev" booking="Y" type="M" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="function.amrt200_mrdc003_ref" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 領用人員
+# Memo...........:
+# Usage..........: CALL amrt200_mrdc003_ref()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/05/08 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION amrt200_mrdc003_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_mrdc_m.mrdc003
+   CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ", 
+       "") RETURNING g_rtn_fields
+   LET g_mrdc_m.mrdc003_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_mrdc_m.mrdc003_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.amrt200_mrdc004_ref" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 領用部門
+# Memo...........:
+# Usage..........: CALL amrt200_mrdc004_ref()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/05/08 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION amrt200_mrdc004_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_mrdc_m.mrdc004
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_lang||"'", 
+       "") RETURNING g_rtn_fields
+   LET g_mrdc_m.mrdc004_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_mrdc_m.mrdc004_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.amrt200_mrdc006_ref" order="3" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 使用對象
+# Memo...........:
+# Usage..........: CALL amrt200_mrdc006_ref()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/05/08 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION amrt200_mrdc006_ref()
+
+   CASE g_mrdc_m.mrdc005
+      WHEN "1"   #1.部門
+         INITIALIZE g_ref_fields TO NULL
+         LET g_ref_fields[1] = g_mrdc_m.mrdc006
+         CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+         LET g_mrdc_m.mrdc006_desc = '', g_rtn_fields[1] , ''
+         DISPLAY BY NAME g_mrdc_m.mrdc006_desc
+      WHEN "2"   #2.據點
+         INITIALIZE g_ref_fields TO NULL
+         LET g_ref_fields[1] = g_mrdc_m.mrdc006
+         CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+         LET g_mrdc_m.mrdc006_desc = '', g_rtn_fields[1] , ''
+         DISPLAY BY NAME g_mrdc_m.mrdc006_desc
+      WHEN "3"   #3.廠商
+         INITIALIZE g_ref_fields TO NULL
+         LET g_ref_fields[1] = g_mrdc_m.mrdc006
+         CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+         LET g_mrdc_m.mrdc006_desc = '', g_rtn_fields[1] , ''
+         DISPLAY BY NAME g_mrdc_m.mrdc006_desc
+      WHEN "4"   #4.客戶
+         INITIALIZE g_ref_fields TO NULL
+         LET g_ref_fields[1] = g_mrdc_m.mrdc006
+         CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+         LET g_mrdc_m.mrdc006_desc = '', g_rtn_fields[1] , ''
+         DISPLAY BY NAME g_mrdc_m.mrdc006_desc
+   END CASE
+END FUNCTION]]>
+  </point>
+  <point name="function.amrt200_mrdd001_ref" order="4" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 資源編號
+# Memo...........:
+# Usage..........: CALL amrt200_mrdd001_ref()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/05/09 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION amrt200_mrdd001_ref()
+   INITIALIZE g_ref_fields TO NULL 
+   LET g_ref_fields[1] = g_mrdc_m.mrdcsite
+   LET g_ref_fields[2] = g_mrdd_d[l_ac].mrdd001
+   CALL ap_ref_array2(g_ref_fields," SELECT mrba004,mrba008,mrba009 FROM mrba_t WHERE mrbaent = '"||g_enterprise||"' AND mrbasite = ? AND mrba001 = ? ","") RETURNING g_rtn_fields 
+   LET g_mrdd_d[l_ac].mrba004 = g_rtn_fields[1] 
+   LET g_mrdd_d[l_ac].mrba008 = g_rtn_fields[2] 
+   LET g_mrdd_d[l_ac].mrba009 = g_rtn_fields[3] 
+   DISPLAY BY NAME g_mrdd_d[l_ac].mrba004,g_mrdd_d[l_ac].mrba008,g_mrdd_d[l_ac].mrba009
+END FUNCTION]]>
+  </point>
+  <point name="function.amrt200_mrdc003_values" order="5" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 領用人員帶出隸屬部門
+# Memo...........:
+# Usage..........: CALL amrt200_mrdc003_values()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/05/09 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION amrt200_mrdc003_values()
+   SELECT ooag003 INTO g_mrdc_m.mrdc004
+     FROM ooag_t
+    WHERE ooagent = g_enterprise
+      AND ooag001 = g_mrdc_m.mrdc003
+END FUNCTION]]>
+  </point>
+  <point name="function.amrt200_set_no_required" order="6" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 欄位必要輸入控卡
+# Memo...........:
+# Usage..........: CALL amrt200_set_no_required()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/05/09 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION amrt200_set_no_required()
+   CALL cl_set_comp_required("mrdc002",FALSE)
+END FUNCTION]]>
+  </point>
+  <point name="function.amrt200_set_required" order="7" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 欄位必要輸入控卡
+# Memo...........:
+# Usage..........: CALL amrt200_set_required()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/05/09 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION amrt200_set_required()
+   IF g_mrdc_m.mrdc001 = "6" THEN
+      CALL cl_set_comp_required("mrdc002",TRUE)
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.amrt200_mrdd004_ref" order="8" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 參考作業編號
+# Memo...........:
+# Usage..........: CALL amrt200_mrdd004_ref()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/05/09 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION amrt200_mrdd004_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_mrdd_d[l_ac].mrdd004
+   CALL ap_ref_array2(g_ref_fields,"SELECT oocql004 FROM oocql_t WHERE oocqlent='"||g_enterprise||"' AND oocql001='221' AND oocql002=? AND oocql003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_mrdd_d[l_ac].mrdd004_desc = '', g_rtn_fields[1] , ''
+   #DISPLAY BY NAME g_mrdd_d[l_ac].mrdd004_desc
+END FUNCTION]]>
+  </point>
+  <point name="function.amrt200_mrdd005_ref" order="9" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 參考機器編號
+# Memo...........:
+# Usage..........: CALL amrt200_mrdd005_ref()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/05/10 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION amrt200_mrdd005_ref()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_site
+   LET g_ref_fields[2] = g_mrdd_d[l_ac].mrdd005
+   CALL ap_ref_array2(g_ref_fields,"SELECT mrba004 FROM mrba_t WHERE mrbaent='"||g_enterprise||"' AND mrbasite=? AND mrba001=? ","") RETURNING g_rtn_fields
+   LET g_mrdd_d[l_ac].mrdd005_desc = '', g_rtn_fields[1] , ''
+   #DISPLAY BY NAME g_mrdd_d[l_ac].mrdd004_desc
+END FUNCTION]]>
+  </point>
+  <point name="b_fill.fill" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         CALL amrt200_mrdd001_ref()
+         CALL amrt200_mrdd004_ref()
+         CALL amrt200_mrdd005_ref()]]>
+  </point>
+  <point name="browser_fill.before_count" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_wc = g_wc," AND mrdcsite = '",g_site,"'"]]>
+  </point>
+  <point name="browser_fill.before_foreach" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET l_wc = l_wc," AND mrdcsite = '",g_site,"'"]]>
+  </point>
+  <point name="construct.c.mrdc003" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrdc003  #顯示到畫面上
+            NEXT FIELD mrdc003                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.mrdc004" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrdc004  #顯示到畫面上
+            NEXT FIELD mrdc004                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.mrdc006" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_mrdc006()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrdc006  #顯示到畫面上
+            NEXT FIELD mrdc006                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.mrdccnfid" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrdccnfid  #顯示到畫面上
+            NEXT FIELD mrdccnfid                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.mrdccrtdp" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrdccrtdp  #顯示到畫面上
+            NEXT FIELD mrdccrtdp                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.mrdccrtid" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrdccrtid  #顯示到畫面上
+            NEXT FIELD mrdccrtid                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.mrdcdocno" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_mrdcdocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrdcdocno  #顯示到畫面上
+            NEXT FIELD mrdcdocno                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.mrdcmodid" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrdcmodid  #顯示到畫面上
+            NEXT FIELD mrdcmodid                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.mrdcowndp" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrdcowndp  #顯示到畫面上
+            NEXT FIELD mrdcowndp                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.mrdcownid" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrdcownid  #顯示到畫面上
+            NEXT FIELD mrdcownid                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1.mrdd001" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_mrba001_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrdd001  #顯示到畫面上
+            NEXT FIELD mrdd001                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1.mrdd004" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '221'
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrdd004  #顯示到畫面上
+            NEXT FIELD mrdd004                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.page1.mrdd005" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_mrba001_6()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO mrdd005  #顯示到畫面上
+            NEXT FIELD mrdd005                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="delete.head.a_delete" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      IF NOT s_aooi200_del_docno(g_mrdc_m.mrdcdocno,g_mrdc_m.mrdcdocdt) THEN
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF]]>
+  </point>
+  <point name="fetch.action_control" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF g_mrdc_m.mrdcstus = 'N' THEN
+      CALL cl_set_act_visible("modify,modify_detail,delete",TRUE)
+   ELSE
+      CALL cl_set_act_visible("modify,modify_detail,delete",FALSE)
+   END IF]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_ooef004             LIKE ooef_t.ooef004]]>
+  </point>
+  <point name="init.init" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL cl_set_combo_scc('b_mrdc001','5211') 
+   CALL cl_set_combo_scc('b_mrdc005','5212') 
+   LET g_ooef004 = ''
+   SELECT ooef004
+     INTO g_ooef004
+     FROM ooef_t
+    WHERE ooef001 = g_site
+      AND ooefent = g_enterprise
+   IF cl_null(g_ooef004) THEN
+      CALL cl_err(g_site,'art-00007',1)
+   END IF
+   LET g_errshow = 1]]>
+  </point>
+  <point name="input.a.mrdc001" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL amrt200_set_no_required()
+            CALL amrt200_set_required()]]>
+  </point>
+  <point name="input.a.mrdc003" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            LET g_mrdc_m.mrdc003_desc = ' '
+            DISPLAY BY NAME g_mrdc_m.mrdc003_desc
+            IF NOT cl_null(g_mrdc_m.mrdc003) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_mrdc_m.mrdc003 != g_mrdc_m_t.mrdc003 OR g_mrdc_m_t.mrdc003 IS NULL )) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_mrdc_m.mrdc003
+                  IF NOT cl_chk_exist("v_ooag001") THEN
+                     LET g_mrdc_m.mrdc003 = g_mrdc_m_t.mrdc003
+                     CALL amrt200_mrdc003_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            IF cl_null(g_mrdc_m.mrdc004) THEN
+               CALL amrt200_mrdc003_values()
+               CALL amrt200_mrdc004_ref()
+            END IF
+            CALL amrt200_mrdc003_ref()]]>
+  </point>
+  <point name="input.a.mrdc004" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            LET g_mrdc_m.mrdc004_desc = ' '
+            DISPLAY BY NAME g_mrdc_m.mrdc004_desc
+            IF NOT cl_null(g_mrdc_m.mrdc001) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_mrdc_m.mrdc004 != g_mrdc_m_t.mrdc004 OR g_mrdc_m_t.mrdc004 IS NULL )) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_mrdc_m.mrdc004
+                  LET g_chkparam.arg2 = g_mrdc_m.mrdcdocdt
+                  IF NOT cl_chk_exist("v_ooeg001") THEN
+                     LET g_mrdc_m.mrdc004 = g_mrdc_m_t.mrdc004
+                     CALL amrt200_mrdc004_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL amrt200_mrdc004_ref()]]>
+  </point>
+  <point name="input.a.mrdc005" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.a.mrdc006" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            LET g_mrdc_m.mrdc006_desc = ''
+            DISPLAY BY NAME g_mrdc_m.mrdc006_desc
+            IF NOT cl_null(g_mrdc_m.mrdc006) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_mrdc_m.mrdc006 != g_mrdc_m_t.mrdc006 OR g_mrdc_m_t.mrdc006 IS NULL )) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  CASE g_mrdc_m.mrdc005
+                     WHEN '1'    #部門
+                        LET g_chkparam.arg1 = g_mrdc_m.mrdc006
+                        LET g_chkparam.arg2 = g_mrdc_m.mrdcdocdt
+                        IF NOT cl_chk_exist("v_ooeg001") THEN
+                           IF g_mrdc_m.mrdc005 = g_mrdc_m_t.mrdc005 THEN
+                              LET g_mrdc_m.mrdc006 = g_mrdc_m_t.mrdc006
+                           ELSE
+                              LET g_mrdc_m.mrdc006 = ''
+                           END IF
+                           CALL amrt200_mrdc006_ref()
+                           NEXT FIELD CURRENT
+                        END IF
+                     WHEN '2'    #據點
+                        LET g_chkparam.arg1 = g_mrdc_m.mrdc006
+                        IF NOT cl_chk_exist("v_ooef001") THEN
+                           IF g_mrdc_m.mrdc005 = g_mrdc_m_t.mrdc005 THEN
+                              LET g_mrdc_m.mrdc006 = g_mrdc_m_t.mrdc006
+                           ELSE
+                              LET g_mrdc_m.mrdc006 = ''
+                           END IF
+                           CALL amrt200_mrdc006_ref()
+                           NEXT FIELD CURRENT
+                        END IF
+                     WHEN '3'    #廠商
+                        LET g_chkparam.arg1 = g_mrdc_m.mrdc006
+                        IF NOT cl_chk_exist("v_pmaa001_1") THEN
+                           IF g_mrdc_m.mrdc005 = g_mrdc_m_t.mrdc005 THEN
+                              LET g_mrdc_m.mrdc006 = g_mrdc_m_t.mrdc006
+                           ELSE
+                              LET g_mrdc_m.mrdc006 = ''
+                           END IF
+                           CALL amrt200_mrdc006_ref()
+                           NEXT FIELD CURRENT
+                        END IF
+                     WHEN '4'    #客戶
+                        LET g_chkparam.arg1 = g_mrdc_m.mrdc006
+                        IF NOT cl_chk_exist("v_pmaa001_3") THEN
+                           IF g_mrdc_m.mrdc005 = g_mrdc_m_t.mrdc005 THEN
+                              LET g_mrdc_m.mrdc006 = g_mrdc_m_t.mrdc006
+                           ELSE
+                              LET g_mrdc_m.mrdc006 = ''
+                           END IF
+                           CALL amrt200_mrdc006_ref()
+                           NEXT FIELD CURRENT
+                        END IF
+                  END CASE
+               END IF
+            END IF
+            CALL amrt200_mrdc006_ref()]]>
+  </point>
+  <point name="input.a.mrdcdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL s_aooi200_get_slip_desc(g_mrdc_m.mrdcdocno) RETURNING g_mrdc_m.mrdcdocno_desc
+            DISPLAY BY NAME g_mrdc_m.mrdcdocno_desc
+            IF  NOT cl_null(g_mrdc_m.mrdcdocno) THEN
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_mrdc_m.mrdcdocno != g_mrdcdocno_t )) THEN
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mrdc_t WHERE "||"mrdcent = '" ||g_enterprise|| "' AND "||"mrdcdocno = '"||g_mrdc_m.mrdcdocno ||"'",'std-00004',0) THEN 
+                     LET g_mrdc_m.mrdcdocno = g_mrdcdocno_t
+                     CALL s_aooi200_get_slip_desc(g_mrdc_m.mrdcdocno) RETURNING g_mrdc_m.mrdcdocno_desc
+                     DISPLAY BY NAME g_mrdc_m.mrdcdocno,g_mrdc_m.mrdcdocno_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  IF NOT s_aooi200_chk_slip(g_site,'',g_mrdc_m.mrdcdocno,g_prog) THEN
+                     LET g_mrdc_m.mrdcdocno = g_mrdcdocno_t
+                     CALL s_aooi200_get_slip_desc(g_mrdc_m.mrdcdocno) RETURNING g_mrdc_m.mrdcdocno_desc
+                     DISPLAY BY NAME g_mrdc_m.mrdcdocno,g_mrdc_m.mrdcdocno_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL s_aooi200_get_slip_desc(g_mrdc_m.mrdcdocno) RETURNING g_mrdc_m.mrdcdocno_desc
+                  DISPLAY BY NAME g_mrdc_m.mrdcdocno_desc
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.a.page1.mrdd001" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            LET g_mrdd_d[l_ac].mrba004 = ' '
+            LET g_mrdd_d[l_ac].mrba008 = ' '
+            LET g_mrdd_d[l_ac].mrba009 = ' '
+            DISPLAY BY NAME g_mrdd_d[l_ac].mrba004,g_mrdd_d[l_ac].mrba008,g_mrdd_d[l_ac].mrba009
+            IF NOT cl_null(g_mrdd_d[l_ac].mrdd001) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_mrdd_d[l_ac].mrdd001 != g_mrdd_d_t.mrdd001 OR g_mrdd_d_t.mrdd001 IS NULL )) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_mrdd_d[l_ac].mrdd001
+                  IF NOT cl_chk_exist("v_mrba001_5") THEN
+                     LET g_mrdd_d[l_ac].mrdd001 = g_mrdd_d_t.mrdd001
+                     CALL amrt200_mrdd001_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL amrt200_mrdd001_ref()]]>
+  </point>
+  <point name="input.a.page1.mrdd002" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_mrdd_d[l_ac].mrdd002) THEN 
+               #且<="目前可借出數量"
+            END IF ]]>
+  </point>
+  <point name="input.a.page1.mrdd004" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            LET g_mrdd_d[l_ac].mrdd004_desc = ' '
+            DISPLAY BY NAME g_mrdd_d[l_ac].mrdd004_desc
+            IF NOT cl_null(g_mrdd_d[l_ac].mrdd004) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_mrdd_d[l_ac].mrdd004 != g_mrdd_d_t.mrdd004 OR g_mrdd_d_t.mrdd004 IS NULL )) THEN
+                  IF NOT s_azzi650_chk_exist('221',g_mrdd_d[l_ac].mrdd004) THEN
+                     LET g_mrdd_d[l_ac].mrdd004 = g_mrdd_d_t.mrdd004
+                     CALL amrt200_mrdd004_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL amrt200_mrdd004_ref()]]>
+  </point>
+  <point name="input.a.page1.mrdd005" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_mrdd_d[l_ac].mrdd005) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_mrdd_d[l_ac].mrdd005 != g_mrdd_d_t.mrdd005 OR g_mrdd_d_t.mrdd005 IS NULL )) THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_chkparam.arg1 = g_mrdd_d[l_ac].mrdd005
+                  IF NOT cl_chk_exist("v_mrba001_7") THEN
+                     LET g_mrdd_d[l_ac].mrdd005 = g_mrdd_d_t.mrdd005
+                     CALL amrt200_mrdd005_ref()
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+			   CALL amrt200_mrdd005_ref()]]>
+  </point>
+  <point name="input.a.page1.mrdd009" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g_mrdd_d[l_ac].mrdd009) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_mrdd_d[l_ac].mrdd009 != g_mrdd_d_t.mrdd009 OR g_mrdd_d_t.mrdd009 IS NULL )) THEN
+                  IF NOT cl_null(g_mrdc_m.mrdcdocdt) AND g_mrdd_d[l_ac].mrdd009 < g_mrdc_m.mrdcdocdt THEN
+                     #預計歸還日 不可以小於 單頭領用日期！
+                     CALL cl_err('','amr-00059',1)
+                     LET g_mrdd_d[l_ac].mrdd009 = g_mrdd_d_t.mrdd009
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF]]>
+  </point>
+  <point name="input.a.page1.mrddseq" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_ap_chk_Range(g_mrdd_d[l_ac].mrddseq,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD mrddseq
+            END IF
+            #此段落由子樣板a05產生
+            IF  g_mrdc_m.mrdcdocno IS NOT NULL AND g_mrdd_d[g_detail_idx].mrddseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_mrdc_m.mrdcdocno != g_mrdcdocno_t OR g_mrdd_d[g_detail_idx].mrddseq != g_mrdd_d_t.mrddseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM mrdd_t WHERE "||"mrddent = '" ||g_enterprise|| "' AND mrddsite = '" ||g_site|| "' AND "||"mrdddocno = '"||g_mrdc_m.mrdcdocno ||"' AND "|| "mrddseq = '"||g_mrdd_d[g_detail_idx].mrddseq ||"'",'std-00004',0) THEN 
+                     LET g_mrdd_d[g_detail_idx].mrddseq = g_mrdd_d_t.mrddseq
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.after_set_entry" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL amrt200_set_no_required()
+   CALL amrt200_set_required()]]>
+  </point>
+  <point name="input.b.mrdc001" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            ]]>
+  </point>
+  <point name="input.b.mrdc005" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            ]]>
+  </point>
+  <point name="input.body.before_insert" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            SELECT MAX(mrddseq)+1 INTO g_mrdd_d[l_ac].mrddseq
+              FROM mrdd_t
+             WHERE mrddent = g_enterprise
+               AND mrdddocno = g_mrdc_m.mrdcdocno
+            IF cl_null(g_mrdd_d[l_ac].mrddseq) THEN
+               LET g_mrdd_d[l_ac].mrddseq = 1
+            END IF]]>
+  </point>
+  <point name="input.c.mrdc003" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_mrdc_m.mrdc003             #給予default值
+
+            #給予arg
+            CALL q_ooag001()                                #呼叫開窗
+            LET g_mrdc_m.mrdc003 = g_qryparam.return1    
+            DISPLAY g_mrdc_m.mrdc003 TO mrdc003
+            CALL amrt200_mrdc003_ref()
+            NEXT FIELD mrdc003                          #返回原欄位]]>
+  </point>
+  <point name="input.c.mrdc004" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_mrdc_m.mrdc004             #給予default值
+            LET g_qryparam.default2 = "" #g_mrdc_m.ooeg001 #部門編號
+            
+            #給予arg
+            LET g_qryparam.arg1 = g_mrdc_m.mrdcdocdt
+            CALL q_ooeg001()                                #呼叫開窗
+            LET g_mrdc_m.mrdc004 = g_qryparam.return1              
+            #LET g_mrdc_m.ooeg001 = g_qryparam.return2 
+            DISPLAY g_mrdc_m.mrdc004 TO mrdc004              #
+            #DISPLAY g_mrdc_m.ooeg001 TO ooeg001 #部門編號
+            CALL amrt200_mrdc004_ref()
+            NEXT FIELD mrdc004                          #返回原欄位]]>
+  </point>
+  <point name="input.c.mrdc006" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_mrdc_m.mrdc006             #給予default值
+            
+            CASE g_mrdc_m.mrdc005
+               WHEN '1'    #部門
+                  LET g_qryparam.arg1 = g_mrdc_m.mrdcdocdt
+                  CALL q_ooeg001()
+               WHEN '2'    #據點
+                  CALL q_ooef001()
+               WHEN '3'    #廠商
+                  LET g_qryparam.where = " (pmaa002='1' OR pmaa002 = '3')"
+                  CALL q_pmaa001_8()
+               WHEN '4'    #客戶
+                  LET g_qryparam.where = " (pmaa002='2' OR pmaa002 = '3')"
+                  CALL q_pmaa001_8()
+            END CASE
+            LET g_mrdc_m.mrdc006 = g_qryparam.return1    
+            DISPLAY g_mrdc_m.mrdc006 TO mrdc006
+            CALL amrt200_mrdc006_ref()
+            NEXT FIELD mrdc006                          #返回原欄位]]>
+  </point>
+  <point name="input.c.mrdcdocno" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_mrdc_m.mrdcdocno             #給予default值
+            
+            #給予arg
+            LET g_qryparam.arg1 = g_ooef004
+            LET g_qryparam.arg2 = g_prog
+            CALL q_ooba002_1()                                #呼叫開窗
+            LET g_mrdc_m.mrdcdocno = g_qryparam.return1   
+            DISPLAY g_mrdc_m.mrdcdocno TO mrdcdocno
+            CALL s_aooi200_get_slip_desc(g_mrdc_m.mrdcdocno) RETURNING g_mrdc_m.mrdcdocno_desc
+            NEXT FIELD mrdcdocno                          #返回原欄位]]>
+  </point>
+  <point name="input.c.page1.mrdd001" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_mrdd_d[l_ac].mrdd001             #給予default值
+
+            #給予arg
+            CALL q_mrba001_4()                                #呼叫開窗
+            LET g_mrdd_d[l_ac].mrdd001 = g_qryparam.return1    
+            DISPLAY g_mrdd_d[l_ac].mrdd001 TO mrdd001
+            CALL amrt200_mrdd001_ref()
+            NEXT FIELD mrdd001                          #返回原欄位]]>
+  </point>
+  <point name="input.c.page1.mrdd004" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_mrdd_d[l_ac].mrdd004             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "221"
+            CALL q_oocq002()                                #呼叫開窗
+            LET g_mrdd_d[l_ac].mrdd004 = g_qryparam.return1   
+            DISPLAY g_mrdd_d[l_ac].mrdd004 TO mrdd004
+            CALL amrt200_mrdd004_ref()
+            NEXT FIELD mrdd004                          #返回原欄位]]>
+  </point>
+  <point name="input.c.page1.mrdd005" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_mrdd_d[l_ac].mrdd005             #給予default值
+
+            #給予arg
+            CALL q_mrba001_6()                                #呼叫開窗
+            LET g_mrdd_d[l_ac].mrdd005 = g_qryparam.return1  
+            DISPLAY g_mrdd_d[l_ac].mrdd005 TO mrdd005 
+            CALL amrt200_mrdd005_ref()
+            NEXT FIELD mrdd005                          #返回原欄位]]>
+  </point>
+  <point name="input.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_flag           LIKE type_t.num5]]>
+  </point>
+  <point name="input.g.mrdc005" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            LET g_mrdc_m.mrdc006 = ''
+            LET g_mrdc_m.mrdc006_desc = ''
+            DISPLAY BY NAME g_mrdc_m.mrdc006,g_mrdc_m.mrdc006_desc]]>
+  </point>
+  <point name="input.head.b_insert" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                IF NOT s_aooi200_chk_slip(g_site,'',g_mrdc_m.mrdcdocno,g_prog) THEN
+                  LET g_mrdc_m.mrdcdocno = ''
+                  NEXT FIELD mrdcdocno
+               END IF
+
+               CALL s_aooi200_gen_docno(g_site,g_mrdc_m.mrdcdocno,g_mrdc_m.mrdcdocdt,g_prog) RETURNING l_flag,g_mrdc_m.mrdcdocno
+               IF NOT l_flag THEN
+                  NEXT FIELD mrdcdocno
+               END IF]]>
+  </point>
+  <point name="input.head.m_insert" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.m.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            CALL cl_showmsg_init()]]>
+  </point>
+  <point name="insert.default" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      LET g_mrdc_m.mrdcsite = g_site
+      LET g_mrdc_m.mrdcdocdt = g_today
+      LET g_mrdc_m.mrdc003 = g_user
+      LET g_mrdc_m.mrdc004 = g_dept
+      CALL amrt200_mrdc003_ref()
+      CALL amrt200_mrdc004_ref()
+      LET r_success = ''
+      LET r_doctype = ''
+      CALL s_arti200_get_def_doc_type(g_mrdc_m.mrdcsite,g_prog,'1')
+         RETURNING r_success,r_doctype
+      LET g_mrdc_m.mrdcdocno = r_doctype
+      CALL s_aooi200_get_slip_desc(g_mrdc_m.mrdcdocno) RETURNING g_mrdc_m.mrdcdocno_desc
+      DISPLAY BY NAME g_mrdc_m.mrdcdocno_desc
+      LET g_mrdc_m_t.* = g_mrdc_m.*]]>
+  </point>
+  <point name="insert.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE r_success       LIKE type_t.num5
+   DEFINE r_doctype       LIKE rtai_t.rtai004]]>
+  </point>
+  <point name="modify.before_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      #「D抽單 / R已拒絕」狀況碼更改資料後，需還原為「N未確認」
+      IF g_mrdc_m.mrdcstus MATCHES "[DR]" THEN 
+         LET g_mrdc_m.mrdcstus = "N"
+      END IF]]>
+  </point>
+  <point name="reproduce.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE r_success       LIKE type_t.num5
+   DEFINE r_doctype       LIKE rtai_t.rtai004]]>
+  </point>
+  <point name="reproduce.head.b_input" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_mrdc_m.mrdccnfid = ""
+   LET g_mrdc_m.mrdccnfdt = ""
+   LET g_mrdc_m.mrdcsite = g_site
+   LET g_mrdc_m.mrdcdocdt = g_today
+   LET g_mrdc_m.mrdc003 = g_user
+   LET g_mrdc_m.mrdc004 = g_dept
+   CALL amrt200_mrdc003_ref()
+   CALL amrt200_mrdc004_ref()
+   LET r_success = ''
+   LET r_doctype = ''
+   CALL s_arti200_get_def_doc_type(g_mrdc_m.mrdcsite,g_prog,'1')
+      RETURNING r_success,r_doctype
+   LET g_mrdc_m.mrdcdocno = r_doctype
+   CALL s_aooi200_get_slip_desc(g_mrdc_m.mrdcdocno) RETURNING g_mrdc_m.mrdcdocno_desc
+   DISPLAY BY NAME g_mrdc_m.mrdcdocno_desc
+   LET g_mrdc_m_t.* = g_mrdc_m.*]]>
+  </point>
+  <point name="send.after_send" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[ ]]>
+  </point>
+  <point name="send.before_send" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   #確認前檢核段
+   IF NOT s_amrt200_conf_chk(g_mrdc_m.mrdcdocno) THEN
+      CLOSE amrt200_cl
+      CALL s_transaction_end('N','0')
+   END IF]]>
+  </point>
+  <point name="set_entry.field_control" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      CALL cl_set_comp_entry("mrdcdocdt",TRUE)]]>
+  </point>
+  <point name="set_no_entry.field_control" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      CALL cl_set_comp_entry("mrdcdocdt",FALSE)]]>
+  </point>
+  <point name="show.body.reference" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      CALL amrt200_mrdd001_ref()]]>
+  </point>
+  <point name="show.head.reference" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL s_aooi200_get_slip_desc(g_mrdc_m.mrdcdocno) RETURNING g_mrdc_m.mrdcdocno_desc
+   CALL amrt200_mrdc003_ref()
+   CALL amrt200_mrdc004_ref()
+   CALL amrt200_mrdc006_ref()
+   
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_mrdc_m.mrdcownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_mrdc_m.mrdcownid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_mrdc_m.mrdcownid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_mrdc_m.mrdcowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_mrdc_m.mrdcowndp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_mrdc_m.mrdcowndp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_mrdc_m.mrdccrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_mrdc_m.mrdccrtid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_mrdc_m.mrdccrtid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_mrdc_m.mrdccrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_mrdc_m.mrdccrtdp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_mrdc_m.mrdccrtdp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_mrdc_m.mrdcmodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_mrdc_m.mrdcmodid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_mrdc_m.mrdcmodid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_mrdc_m.mrdccnfid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_mrdc_m.mrdccnfid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_mrdc_m.mrdccnfid_desc
+]]>
+  </point>
+  <point name="statechange.a_update" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF g_mrdc_m.mrdcstus = 'N' THEN
+      CALL cl_set_act_visible("modify,modify_detail,delete",TRUE)
+   ELSE
+      CALL cl_set_act_visible("modify,modify_detail,delete",FALSE)
+   END IF]]>
+  </point>
+  <point name="statechange.b_update" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL s_transaction_begin()
+   OPEN amrt200_cl USING g_enterprise,g_mrdc_m.mrdcdocno
+   IF STATUS THEN
+      CALL cl_err("OPEN amrt200_cl:", STATUS, 1)
+      CLOSE amrt200_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   CALL cl_showmsg_init()
+   
+   #未確認改確認(N->Y)
+   IF lc_state = 'Y' AND g_mrdc_m.mrdcstus = 'N' THEN
+      CALL s_amrt200_conf_chk(g_mrdc_m.mrdcdocno) RETURNING l_success
+      IF NOT l_success THEN
+         CALL s_transaction_end('N','0')
+         CALL cl_showmsg()
+         RETURN
+      ELSE
+         IF cl_ask_confirm('aim-00108') THEN
+            CALL s_amrt200_conf_upd(g_mrdc_m.mrdcdocno) RETURNING l_success
+            IF NOT l_success THEN
+               CALL s_transaction_end('N','0')
+               CALL cl_showmsg()
+               RETURN
+            ELSE
+               CALL s_transaction_end('Y','0')
+               CALL cl_showmsg()
+            END IF
+         ELSE
+            CALL s_transaction_end('N','0')
+            CALL cl_showmsg()
+            RETURN
+         END IF
+      END IF
+   END IF
+   #確認改未確認(Y->N)
+   IF lc_state = 'N' AND g_mrdc_m.mrdcstus = 'Y' THEN
+      CALL s_amrt200_unconf_chk(g_mrdc_m.mrdcdocno) RETURNING l_success
+      IF NOT l_success THEN
+         CALL s_transaction_end('N','0')
+         CALL cl_showmsg()
+         RETURN
+      ELSE
+         IF cl_ask_confirm('aim-00110') THEN
+            CALL s_amrt200_unconf_upd(g_mrdc_m.mrdcdocno) RETURNING l_success
+            IF NOT l_success THEN
+               CALL s_transaction_end('N','0')
+               CALL cl_showmsg()
+               RETURN
+            ELSE
+               CALL s_transaction_end('Y','0')
+               CALL cl_showmsg()
+            END IF
+         ELSE
+            CALL s_transaction_end('N','0')
+            CALL cl_showmsg()
+            RETURN
+         END IF
+      END IF
+   END IF
+   #未確認改作廢(N->X)
+   IF lc_state = 'X' AND g_mrdc_m.mrdcstus = 'N' THEN
+      CALL s_amrt200_invalid_chk(g_mrdc_m.mrdcdocno) RETURNING l_success
+      IF NOT l_success THEN
+         CALL s_transaction_end('N','0')
+         CALL cl_showmsg()
+         RETURN
+      ELSE
+         IF cl_ask_confirm('aim-00109') THEN
+            CALL s_amrt200_invalid_upd(g_mrdc_m.mrdcdocno) RETURNING l_success
+            IF NOT l_success THEN
+               CALL s_transaction_end('N','0')
+               CALL cl_showmsg()
+               RETURN
+            ELSE
+               CALL s_transaction_end('Y','0')
+               CALL cl_showmsg()
+            END IF
+         ELSE
+            CALL s_transaction_end('N','0')
+            CALL cl_showmsg()
+            RETURN
+         END IF
+      END IF
+   END IF]]>
+  </point>
+  <point name="statechange.before" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF g_mrdc_m.mrdcstus = 'X' THEN
+      RETURN
+   END IF]]>
+  </point>
+  <point name="statechange.before_menu" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      CALL cl_set_act_visible("unconfirmed,invalid,confirmed",TRUE)
+      CASE g_mrdc_m.mrdcstus
+         WHEN "N"
+            CALL cl_set_act_visible("unconfirmed,",FALSE)
+
+         WHEN "X"
+            CALL cl_set_act_visible("unconfirmed,confirmed",FALSE)
+
+         WHEN "Y"
+            CALL cl_set_act_visible("invalid,confirmed",FALSE)
+      END CASE]]>
+  </point>
+  <point name="statechange.define" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   DEFINE l_success  LIKE type_t.num5]]>
+  </point>
+  <section id="amrt200.b_fill" ver="6" status="" src="s">
+    <![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION amrt200_b_fill()
+   DEFINE p_wc2      STRING
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point     
+ 
+   CALL g_mrdd_d.clear()    #g_mrdd_d 單頭及單身 
+ 
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+   
+   #判斷是否填充
+   IF amrt200_fill_chk(1) THEN
+   
+      LET g_sql = "SELECT  UNIQUE mrddseq,mrdd001,mrdd002,mrdd003,mrdd004,mrdd005,mrdd009,mrdd006,mrdd007, 
+          mrdd008 ,t1.oocql004 ,t2.mrba004 FROM mrdd_t",   
+                  " INNER JOIN mrdc_t ON mrdcdocno = mrdddocno ",
+ 
+                  #"",
+                  
+                  "",
+                                 " LEFT JOIN oocql_t t1 ON t1.oocqlent='"||g_enterprise||"' AND t1.oocql001='221' AND t1.oocql002=mrdd004 AND t1.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN mrba_t t2 ON t2.mrbaent='"||g_enterprise||"' AND t2.mrba001=mrdd005  ",
+ 
+                  " WHERE mrddent=? AND mrdddocno=?"
+      LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+      #add-point:b_fill段sql_before
+      {<point name="b_fill.body.fill_sql"/>}
+      #end add-point
+      IF NOT cl_null(g_wc2_table1) THEN
+         LET g_sql = g_sql CLIPPED, " AND ", g_wc2_table1 CLIPPED
+      END IF
+      
+      #子單身的WC
+      
+      
+      LET g_sql = g_sql, " ORDER BY mrdd_t.mrddseq"
+      
+      #add-point:單身填充控制
+      {<point name="b_fill.sql"/>}
+      #end add-point
+      
+      LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+      PREPARE amrt200_pb FROM g_sql
+      DECLARE b_fill_cs CURSOR FOR amrt200_pb
+      
+      LET g_cnt = l_ac
+      LET l_ac = 1
+      
+      OPEN b_fill_cs USING g_enterprise,g_mrdc_m.mrdcdocno
+                                               
+      FOREACH b_fill_cs INTO g_mrdd_d[l_ac].mrddseq,g_mrdd_d[l_ac].mrdd001,g_mrdd_d[l_ac].mrdd002,g_mrdd_d[l_ac].mrdd003, 
+          g_mrdd_d[l_ac].mrdd004,g_mrdd_d[l_ac].mrdd005,g_mrdd_d[l_ac].mrdd009,g_mrdd_d[l_ac].mrdd006, 
+          g_mrdd_d[l_ac].mrdd007,g_mrdd_d[l_ac].mrdd008,g_mrdd_d[l_ac].mrdd004_desc,g_mrdd_d[l_ac].mrdd005_desc 
+
+         IF SQLCA.sqlcode THEN
+            CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充
+         {<point name="b_fill.fill"/>}
+         #end add-point
+      
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec THEN
+            IF g_error_show = 1 THEN
+               CALL cl_err( '', 9035, 1)
+            END IF
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+      LET g_error_show = 0
+   
+   END IF
+   
+ 
+   
+   #add-point:browser_fill段其他table處理
+   {<point name="browser_fill.other_fill"/>}
+   #end add-point
+   
+   CALL g_mrdd_d.deleteElement(g_mrdd_d.getLength())
+ 
+   
+ 
+   LET l_ac = g_cnt
+   LET g_cnt = 0  
+   
+   FREE amrt200_pb
+ 
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.b_fill2" ver="2" status="" src="s">
+    <![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION amrt200_b_fill2(pi_idx)
+   DEFINE pi_idx          LIKE type_t.num5
+   DEFINE li_ac           LIKE type_t.num5
+   DEFINE ls_chk          LIKE type_t.chr1
+   #add-point:b_fill2段define
+   {<point name="b_fill2.define"/>}
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   IF g_detail_idx <= 0 THEN
+      RETURN
+   END IF
+   
+ 
+      
+   #add-point:單身填充後
+   {<point name="b_fill2.after_fill" />}
+   #end add-point
+    
+   LET l_ac = li_ac
+   
+   CALL amrt200_detail_show()
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.browser_fill" ver="8" status="" src="s">
+    <![CDATA[#+ 瀏覽頁簽資料填充
+PRIVATE FUNCTION amrt200_browser_fill(ps_page_action)
+   DEFINE ps_page_action    STRING
+   DEFINE l_wc              STRING
+   DEFINE l_wc2             STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sub_sql         STRING
+   DEFINE l_sql_rank        STRING
+   DEFINE l_searchcol       STRING
+   #add-point:browser_fill段define
+   {<point name="browser_fill.define"/>}
+   #end add-point    
+ 
+   #清除畫面
+   CLEAR FORM                
+   INITIALIZE g_mrdc_m.* TO NULL
+   CALL g_mrdd_d.clear()        
+ 
+   CALL g_browser.clear()
+   
+   #搜尋用
+   IF cl_null(g_searchcol) OR g_searchcol = '0' THEN
+      LET l_searchcol = "mrdcdocno"
+   ELSE
+      LET l_searchcol = g_searchcol
+   END IF
+   
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   LET l_wc  = g_wc.trim() 
+   LET l_wc2 = g_wc2.trim()
+ 
+   #add-point:browser_fill,foreach前
+   {<point name="browser_fill.before_foreach"/>}
+   #end add-point
+    
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件                      
+      LET l_sub_sql = " SELECT UNIQUE mrdcdocno ",
+                      " FROM mrdc_t ",
+                      " ",
+                      " LEFT JOIN mrdd_t ON mrddent = mrdcent AND mrdcdocno = mrdddocno ",
+ 
+ 
+                      " ", 
+                      " ", 
+                      " WHERE mrdcent = '" ||g_enterprise|| "' AND mrddent = '" ||g_enterprise|| "' AND ",l_wc, " AND ", l_wc2, cl_sql_add_filter("mrdc_t")
+   ELSE
+      #單身未輸入搜尋條件
+      LET l_sub_sql = " SELECT UNIQUE mrdcdocno ",
+                      " FROM mrdc_t ", 
+                      "  ",
+                      "  ",
+                      " WHERE mrdcent = '" ||g_enterprise|| "' AND ",l_wc CLIPPED, cl_sql_add_filter("mrdc_t")
+   END IF
+   
+   LET g_sql = " SELECT COUNT(*) FROM (",l_sub_sql,")"
+   
+   #add-point:browser_fill,count前
+   {<point name="browser_fill.before_count"/>}
+   #end add-point
+   
+   PREPARE header_cnt_pre FROM g_sql
+   EXECUTE header_cnt_pre INTO g_browser_cnt   #總筆數
+   FREE header_cnt_pre
+ 
+   DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+ 
+   #依照mrdcdocno,mrdcdocdt,mrdc001,mrdc003,'',mrdc004,'',mrdc005,mrdccrtid,'',mrdccrtdt,mrdcmodid,'',mrdcmoddt Browser欄位定義(取代原本bs_sql功能)
+   LET g_sql = " SELECT DISTINCT mrdcstus,mrdcdocno,mrdcdocdt,mrdc001,mrdc003,'',mrdc004,'',mrdc005, 
+       mrdccrtid,'',mrdccrtdt,mrdcmodid,'',mrdcmoddt,t1.oofa011 ,t2.ooefl003 ,t3.oofa011 ,t4.oofa011 ", 
+
+               " FROM mrdc_t ",
+               "  ",
+               "  LEFT JOIN mrdd_t ON mrddent = mrdcent AND mrdcdocno = mrdddocno ",
+ 
+ 
+               "  ",
+               "  ",
+                              " LEFT JOIN oofa_t t1 ON t1.oofaent='"||g_enterprise||"' AND t1.oofa002='2' AND t1.oofa003=mrdc003  ",
+               " LEFT JOIN ooefl_t t2 ON t2.ooeflent='"||g_enterprise||"' AND t2.ooefl001=mrdc004 AND t2.ooefl002='"||g_lang||"' ",
+               " LEFT JOIN oofa_t t3 ON t3.oofaent='"||g_enterprise||"' AND t3.oofa002='2' AND t3.oofa003=mrdccrtid  ",
+               " LEFT JOIN oofa_t t4 ON t4.oofaent='"||g_enterprise||"' AND t4.oofa002='2' AND t4.oofa003=mrdcmodid  ",
+ 
+               " WHERE mrdcent = '" ||g_enterprise|| "' AND ",l_wc," AND ",l_wc2, cl_sql_add_filter("mrdc_t"),
+               " ORDER BY ",l_searchcol," ",g_order
+ 
+   #add-point:browser_fill,before_prepare
+   {<point name="browser_fill.before_prepare"/>}
+   #end add-point
+        
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   PREPARE browse_pre FROM g_sql
+   DECLARE browse_cur CURSOR FOR browse_pre
+   
+   #add-point:browser_fill,open
+   {<point name="browser_fill.open"/>}
+   #end add-point
+ 
+   CALL g_browser.clear()
+   LET g_cnt = 1
+   FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_mrdcdocno,g_browser[g_cnt].b_mrdcdocdt, 
+       g_browser[g_cnt].b_mrdc001,g_browser[g_cnt].b_mrdc003,g_browser[g_cnt].b_mrdc003_desc,g_browser[g_cnt].b_mrdc004, 
+       g_browser[g_cnt].b_mrdc004_desc,g_browser[g_cnt].b_mrdc005,g_browser[g_cnt].b_mrdccrtid,g_browser[g_cnt].b_mrdccrtid_desc, 
+       g_browser[g_cnt].b_mrdccrtdt,g_browser[g_cnt].b_mrdcmodid,g_browser[g_cnt].b_mrdcmodid_desc,g_browser[g_cnt].b_mrdcmoddt, 
+       g_browser[g_cnt].b_mrdc003_desc,g_browser[g_cnt].b_mrdc004_desc,g_browser[g_cnt].b_mrdccrtid_desc, 
+       g_browser[g_cnt].b_mrdcmodid_desc
+      IF SQLCA.sqlcode THEN
+         CALL cl_err('foreach:',SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+  
+      #add-point:browser_fill段reference
+      {<point name="browser_fill.reference"/>}
+      #end add-point
+  
+            #此段落由子樣板a24產生
+      CASE g_browser[g_cnt].b_statepic
+         WHEN "N"
+            LET g_browser[g_cnt].b_statepic = "stus/16/unconfirmed.png"
+         WHEN "X"
+            LET g_browser[g_cnt].b_statepic = "stus/16/invalid.png"
+         WHEN "Y"
+            LET g_browser[g_cnt].b_statepic = "stus/16/confirmed.png"
+         WHEN "A"
+            LET g_browser[g_cnt].b_statepic = "stus/16/approved.png"
+         WHEN "D"
+            LET g_browser[g_cnt].b_statepic = "stus/16/withdraw.png"
+         WHEN "R"
+            LET g_browser[g_cnt].b_statepic = "stus/16/rejection.png"
+         WHEN "W"
+            LET g_browser[g_cnt].b_statepic = "stus/16/signing.png"
+         WHEN "J"
+            LET g_browser[g_cnt].b_statepic = "stus/16/reconciliate.png"
+         WHEN "K"
+            LET g_browser[g_cnt].b_statepic = "stus/16/unreconciliate.png"
+         
+      END CASE
+ 
+ 
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         CALL cl_err('',9035,0)
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+ 
+   CALL g_browser.deleteElement(g_cnt)
+   LET g_header_cnt = g_browser.getLength()
+ 
+   LET g_rec_b = g_cnt - 1
+   LET g_detail_cnt = g_rec_b
+   LET g_cnt = 0
+   
+   FREE browse_pre
+   
+   #add-point:browser_fill段結束前
+   {<point name="browser_fill.after"/>}
+   #end add-point
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", FALSE)
+   ELSE
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   END IF
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.browser_search" ver="2" status="" src="s">
+    <![CDATA[#+ 瀏覽頁簽資料搜尋
+PRIVATE FUNCTION amrt200_browser_search(p_type)
+   DEFINE p_type LIKE type_t.chr10
+   #add-point:browser_search段define
+   {<point name="browser_search.define"/>}
+   #end add-point    
+   
+   #若無輸入關鍵字則查找出所有資料
+   IF NOT cl_null(g_searchstr) AND g_searchcol='0' THEN
+      CALL cl_err("searchcol","std-00005",0)
+      RETURN FALSE 
+   END IF 
+   
+   IF NOT cl_null(g_searchstr) THEN
+      LET g_wc = " lower(", g_searchcol, ") LIKE '%", g_searchstr, "%'"
+      LET g_wc = g_wc.toLowerCase()
+   ELSE
+      LET g_wc = " 1=1 "
+   END IF         
+   
+   #若為排序搜尋則添加以下條件
+   IF cl_null(g_searchcol) OR g_searchcol = "0" THEN
+      LET g_wc = g_wc, " ORDER BY mrdcdocno"
+   ELSE
+      LET g_wc = g_wc, " ORDER BY ", g_searchcol
+   END IF 
+ 
+   CALL amrt200_browser_fill("F")
+   RETURN TRUE
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.construct" ver="6" status="" src="s">
+    <![CDATA[#+ QBE資料查詢
+PRIVATE FUNCTION amrt200_construct()
+   DEFINE ls_return   STRING
+   DEFINE ls_result   STRING 
+   DEFINE ls_wc       STRING 
+   #add-point:cs段define
+   {<point name="cs.define"/>}
+   #end add-point    
+ 
+   #清除畫面
+   CLEAR FORM                
+   INITIALIZE g_mrdc_m.* TO NULL
+   CALL g_mrdd_d.clear()        
+ 
+   
+   LET g_action_choice = ""
+    
+   INITIALIZE g_wc TO NULL
+   INITIALIZE g_wc2 TO NULL
+   
+   INITIALIZE g_wc2_table1 TO NULL
+ 
+    
+   LET g_qryparam.state = 'c'
+   
+   #add-point:cs段開始前
+   {<point name="cs.before_construct"/>}
+   #end add-point 
+   
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+      #單頭
+      CONSTRUCT BY NAME g_wc ON mrdcdocno,mrdcdocdt,mrdc001,mrdc002,mrdc003,mrdc004,mrdcsite,mrdcstus, 
+          mrdc005,mrdc006,mrdc007,mrdc008,mrdcownid,mrdcowndp,mrdccrtid,mrdccrtdp,mrdccrtdt,mrdcmodid, 
+          mrdcmoddt,mrdccnfid,mrdccnfdt
+ 
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct
+            {<point name="cs.head.before_construct"/>}
+            #end add-point 
+            
+         #公用欄位開窗相關處理
+         #此段落由子樣板a11產生
+         ##----<<mrdccrtdt>>----
+         AFTER FIELD mrdccrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<mrdcmoddt>>----
+         AFTER FIELD mrdcmoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<mrdccnfdt>>----
+         AFTER FIELD mrdccnfdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<mrdcpstdt>>----
+ 
+ 
+            
+         #一般欄位開窗相關處理    
+                  #Ctrlp:construct.c.mrdcdocno
+         ON ACTION controlp INFIELD mrdcdocno
+            #add-point:ON ACTION controlp INFIELD mrdcdocno
+            {<point name="construct.c.mrdcdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdcdocno
+            #add-point:BEFORE FIELD mrdcdocno
+            {<point name="construct.b.mrdcdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdcdocno
+            
+            #add-point:AFTER FIELD mrdcdocno
+            {<point name="construct.a.mrdcdocno" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdcdocdt
+            #add-point:BEFORE FIELD mrdcdocdt
+            {<point name="construct.b.mrdcdocdt" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdcdocdt
+            
+            #add-point:AFTER FIELD mrdcdocdt
+            {<point name="construct.a.mrdcdocdt" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrdcdocdt
+         ON ACTION controlp INFIELD mrdcdocdt
+            #add-point:ON ACTION controlp INFIELD mrdcdocdt
+            {<point name="construct.c.mrdcdocdt" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdc001
+            #add-point:BEFORE FIELD mrdc001
+            {<point name="construct.b.mrdc001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdc001
+            
+            #add-point:AFTER FIELD mrdc001
+            {<point name="construct.a.mrdc001" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrdc001
+         ON ACTION controlp INFIELD mrdc001
+            #add-point:ON ACTION controlp INFIELD mrdc001
+            {<point name="construct.c.mrdc001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdc002
+            #add-point:BEFORE FIELD mrdc002
+            {<point name="construct.b.mrdc002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdc002
+            
+            #add-point:AFTER FIELD mrdc002
+            {<point name="construct.a.mrdc002" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrdc002
+         ON ACTION controlp INFIELD mrdc002
+            #add-point:ON ACTION controlp INFIELD mrdc002
+            {<point name="construct.c.mrdc002" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.mrdc003
+         ON ACTION controlp INFIELD mrdc003
+            #add-point:ON ACTION controlp INFIELD mrdc003
+            {<point name="construct.c.mrdc003" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdc003
+            #add-point:BEFORE FIELD mrdc003
+            {<point name="construct.b.mrdc003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdc003
+            
+            #add-point:AFTER FIELD mrdc003
+            {<point name="construct.a.mrdc003" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrdc004
+         ON ACTION controlp INFIELD mrdc004
+            #add-point:ON ACTION controlp INFIELD mrdc004
+            {<point name="construct.c.mrdc004" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdc004
+            #add-point:BEFORE FIELD mrdc004
+            {<point name="construct.b.mrdc004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdc004
+            
+            #add-point:AFTER FIELD mrdc004
+            {<point name="construct.a.mrdc004" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdcsite
+            #add-point:BEFORE FIELD mrdcsite
+            {<point name="construct.b.mrdcsite" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdcsite
+            
+            #add-point:AFTER FIELD mrdcsite
+            {<point name="construct.a.mrdcsite" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrdcsite
+         ON ACTION controlp INFIELD mrdcsite
+            #add-point:ON ACTION controlp INFIELD mrdcsite
+            {<point name="construct.c.mrdcsite" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdcstus
+            #add-point:BEFORE FIELD mrdcstus
+            {<point name="construct.b.mrdcstus" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdcstus
+            
+            #add-point:AFTER FIELD mrdcstus
+            {<point name="construct.a.mrdcstus" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrdcstus
+         ON ACTION controlp INFIELD mrdcstus
+            #add-point:ON ACTION controlp INFIELD mrdcstus
+            {<point name="construct.c.mrdcstus" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdc005
+            #add-point:BEFORE FIELD mrdc005
+            {<point name="construct.b.mrdc005" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdc005
+            
+            #add-point:AFTER FIELD mrdc005
+            {<point name="construct.a.mrdc005" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrdc005
+         ON ACTION controlp INFIELD mrdc005
+            #add-point:ON ACTION controlp INFIELD mrdc005
+            {<point name="construct.c.mrdc005" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.mrdc006
+         ON ACTION controlp INFIELD mrdc006
+            #add-point:ON ACTION controlp INFIELD mrdc006
+            {<point name="construct.c.mrdc006" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdc006
+            #add-point:BEFORE FIELD mrdc006
+            {<point name="construct.b.mrdc006" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdc006
+            
+            #add-point:AFTER FIELD mrdc006
+            {<point name="construct.a.mrdc006" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdc007
+            #add-point:BEFORE FIELD mrdc007
+            {<point name="construct.b.mrdc007" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdc007
+            
+            #add-point:AFTER FIELD mrdc007
+            {<point name="construct.a.mrdc007" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrdc007
+         ON ACTION controlp INFIELD mrdc007
+            #add-point:ON ACTION controlp INFIELD mrdc007
+            {<point name="construct.c.mrdc007" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdc008
+            #add-point:BEFORE FIELD mrdc008
+            {<point name="construct.b.mrdc008" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdc008
+            
+            #add-point:AFTER FIELD mrdc008
+            {<point name="construct.a.mrdc008" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrdc008
+         ON ACTION controlp INFIELD mrdc008
+            #add-point:ON ACTION controlp INFIELD mrdc008
+            {<point name="construct.c.mrdc008" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.mrdcownid
+         ON ACTION controlp INFIELD mrdcownid
+            #add-point:ON ACTION controlp INFIELD mrdcownid
+            {<point name="construct.c.mrdcownid" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdcownid
+            #add-point:BEFORE FIELD mrdcownid
+            {<point name="construct.b.mrdcownid" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdcownid
+            
+            #add-point:AFTER FIELD mrdcownid
+            {<point name="construct.a.mrdcownid" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrdcowndp
+         ON ACTION controlp INFIELD mrdcowndp
+            #add-point:ON ACTION controlp INFIELD mrdcowndp
+            {<point name="construct.c.mrdcowndp" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdcowndp
+            #add-point:BEFORE FIELD mrdcowndp
+            {<point name="construct.b.mrdcowndp" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdcowndp
+            
+            #add-point:AFTER FIELD mrdcowndp
+            {<point name="construct.a.mrdcowndp" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrdccrtid
+         ON ACTION controlp INFIELD mrdccrtid
+            #add-point:ON ACTION controlp INFIELD mrdccrtid
+            {<point name="construct.c.mrdccrtid" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdccrtid
+            #add-point:BEFORE FIELD mrdccrtid
+            {<point name="construct.b.mrdccrtid" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdccrtid
+            
+            #add-point:AFTER FIELD mrdccrtid
+            {<point name="construct.a.mrdccrtid" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.mrdccrtdp
+         ON ACTION controlp INFIELD mrdccrtdp
+            #add-point:ON ACTION controlp INFIELD mrdccrtdp
+            {<point name="construct.c.mrdccrtdp" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdccrtdp
+            #add-point:BEFORE FIELD mrdccrtdp
+            {<point name="construct.b.mrdccrtdp" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdccrtdp
+            
+            #add-point:AFTER FIELD mrdccrtdp
+            {<point name="construct.a.mrdccrtdp" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdccrtdt
+            #add-point:BEFORE FIELD mrdccrtdt
+            {<point name="construct.b.mrdccrtdt" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.mrdcmodid
+         ON ACTION controlp INFIELD mrdcmodid
+            #add-point:ON ACTION controlp INFIELD mrdcmodid
+            {<point name="construct.c.mrdcmodid" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdcmodid
+            #add-point:BEFORE FIELD mrdcmodid
+            {<point name="construct.b.mrdcmodid" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdcmodid
+            
+            #add-point:AFTER FIELD mrdcmodid
+            {<point name="construct.a.mrdcmodid" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdcmoddt
+            #add-point:BEFORE FIELD mrdcmoddt
+            {<point name="construct.b.mrdcmoddt" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.mrdccnfid
+         ON ACTION controlp INFIELD mrdccnfid
+            #add-point:ON ACTION controlp INFIELD mrdccnfid
+            {<point name="construct.c.mrdccnfid" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdccnfid
+            #add-point:BEFORE FIELD mrdccnfid
+            {<point name="construct.b.mrdccnfid" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdccnfid
+            
+            #add-point:AFTER FIELD mrdccnfid
+            {<point name="construct.a.mrdccnfid" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdccnfdt
+            #add-point:BEFORE FIELD mrdccnfdt
+            {<point name="construct.b.mrdccnfdt" />}
+            #END add-point
+ 
+ 
+         
+      END CONSTRUCT
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc2_table1 ON mrddseq,mrdd001,mrdd002,mrdd003,mrdd004,mrdd005,mrdd009,mrdd006,mrdd007, 
+          mrdd008
+           FROM s_detail1[1].mrddseq,s_detail1[1].mrdd001,s_detail1[1].mrdd002,s_detail1[1].mrdd003, 
+               s_detail1[1].mrdd004,s_detail1[1].mrdd005,s_detail1[1].mrdd009,s_detail1[1].mrdd006,s_detail1[1].mrdd007, 
+               s_detail1[1].mrdd008
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct
+            {<point name="cs.body.before_construct"/>}
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+          
+       
+      END CONSTRUCT
+      
+ 
+      
+ 
+      
+      #add-point:cs段add_cs(本段內只能出現新的CONSTRUCT指令)
+      {<point name="cs.add_cs"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog
+         {<point name="cs.b_dialog"/>}
+         #end add-point  
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   END DIALOG
+   
+   #組合g_wc2
+   LET g_wc2 = g_wc2_table1
+ 
+ 
+ 
+   
+   #add-point:cs段結束前
+   {<point name="cs.after_construct"/>}
+   #end add-point    
+ 
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.default_search" ver="2" status="" src="s">
+    <![CDATA[#+ 外部參數搜尋
+PRIVATE FUNCTION amrt200_default_search()
+   DEFINE li_idx  LIKE type_t.num5
+   DEFINE li_cnt  LIKE type_t.num5
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define
+   {<point name="default_search.define"/>}
+   #end add-point  
+   
+   #add-point:default_search段開始前
+   {<point name="default_search.before"/>}
+   #end add-point  
+   
+   LET g_pagestart = 1
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " mrdcdocno = '", g_argv[01], "' AND "
+   END IF
+   
+ 
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      LET g_default = FALSE
+      #預設查詢條件
+      LET g_wc = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=1"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前
+   {<point name="default_search.after"/>}
+   #end add-point  
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.delete" ver="8" status="" src="s">
+    <![CDATA[#+ 資料刪除
+PRIVATE FUNCTION amrt200_delete()
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define
+   {<point name="delete.define"/>}
+   #end add-point     
+   
+   IF g_mrdc_m.mrdcdocno IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+ 
+   EXECUTE amrt200_master_referesh USING g_mrdc_m.mrdcdocno INTO g_mrdc_m.mrdcdocno,g_mrdc_m.mrdcdocdt, 
+       g_mrdc_m.mrdc001,g_mrdc_m.mrdc002,g_mrdc_m.mrdc003,g_mrdc_m.mrdc004,g_mrdc_m.mrdcsite,g_mrdc_m.mrdcstus, 
+       g_mrdc_m.mrdc005,g_mrdc_m.mrdc006,g_mrdc_m.mrdc007,g_mrdc_m.mrdc008,g_mrdc_m.mrdcownid,g_mrdc_m.mrdcowndp, 
+       g_mrdc_m.mrdccrtid,g_mrdc_m.mrdccrtdp,g_mrdc_m.mrdccrtdt,g_mrdc_m.mrdcmodid,g_mrdc_m.mrdcmoddt, 
+       g_mrdc_m.mrdccnfid,g_mrdc_m.mrdccnfdt,g_mrdc_m.mrdc003_desc,g_mrdc_m.mrdc004_desc,g_mrdc_m.mrdc006_desc, 
+       g_mrdc_m.mrdcownid_desc,g_mrdc_m.mrdcowndp_desc,g_mrdc_m.mrdccrtid_desc,g_mrdc_m.mrdccrtdp_desc, 
+       g_mrdc_m.mrdcmodid_desc,g_mrdc_m.mrdccnfid_desc
+   
+   
+ 
+   CALL amrt200_show()
+   
+   CALL s_transaction_begin()
+ 
+   OPEN amrt200_cl USING g_enterprise,g_mrdc_m.mrdcdocno
+   IF STATUS THEN
+      CALL cl_err("OPEN amrt200_cl:", STATUS, 1)
+      CLOSE amrt200_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE amrt200_master_referesh USING g_mrdc_m.mrdcdocno INTO g_mrdc_m.mrdcdocno,g_mrdc_m.mrdcdocdt, 
+       g_mrdc_m.mrdc001,g_mrdc_m.mrdc002,g_mrdc_m.mrdc003,g_mrdc_m.mrdc004,g_mrdc_m.mrdcsite,g_mrdc_m.mrdcstus, 
+       g_mrdc_m.mrdc005,g_mrdc_m.mrdc006,g_mrdc_m.mrdc007,g_mrdc_m.mrdc008,g_mrdc_m.mrdcownid,g_mrdc_m.mrdcowndp, 
+       g_mrdc_m.mrdccrtid,g_mrdc_m.mrdccrtdp,g_mrdc_m.mrdccrtdt,g_mrdc_m.mrdcmodid,g_mrdc_m.mrdcmoddt, 
+       g_mrdc_m.mrdccnfid,g_mrdc_m.mrdccnfdt,g_mrdc_m.mrdc003_desc,g_mrdc_m.mrdc004_desc,g_mrdc_m.mrdc006_desc, 
+       g_mrdc_m.mrdcownid_desc,g_mrdc_m.mrdcowndp_desc,g_mrdc_m.mrdccrtid_desc,g_mrdc_m.mrdccrtdp_desc, 
+       g_mrdc_m.mrdcmodid_desc,g_mrdc_m.mrdccnfid_desc
+ 
+   IF SQLCA.sqlcode THEN
+      CALL cl_err(g_mrdc_m.mrdcdocno,SQLCA.sqlcode,0)          #資料被他人LOCK
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:delete段before ask
+   {<point name="delete.before_ask"/>}
+   #end add-point 
+ 
+   IF cl_ask_del_master() THEN              #確認一下
+   
+      #add-point:單頭刪除前
+      {<point name="delete.head.b_delete" mark="Y"/>}
+      #end add-point   
+      
+      #+ 此段落由子樣板a47產生
+      #刪除相關文件
+      CALL amrt200_set_pk_array()
+      #add-point:相關文件刪除前
+      {<point name="delete.befroe.related_document_remove"/>}
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+  
+  
+      #資料備份
+      LET g_mrdcdocno_t = g_mrdc_m.mrdcdocno
+ 
+ 
+      DELETE FROM mrdc_t
+       WHERE mrdcent = g_enterprise AND mrdcdocno = g_mrdc_m.mrdcdocno
+ 
+       
+      #add-point:單頭刪除中
+      {<point name="delete.head.m_delete"/>}
+      #end add-point
+       
+      IF SQLCA.sqlcode THEN
+         CALL cl_err(g_mrdc_m.mrdcdocno,SQLCA.sqlcode,0) 
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      
+      #add-point:單頭刪除後
+      {<point name="delete.head.a_delete"/>}
+      #end add-point
+  
+      #add-point:單身刪除前
+      {<point name="delete.body.b_delete" mark="Y"/>}
+      #end add-point
+      
+      DELETE FROM mrdd_t
+       WHERE mrddent = g_enterprise AND mrdddocno = g_mrdc_m.mrdcdocno
+ 
+ 
+      #add-point:單身刪除中
+      {<point name="delete.body.m_delete"/>}
+      #end add-point
+         
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("mrdd_t",SQLCA.sqlcode,0) 
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF    
+ 
+      #add-point:單身刪除後
+      {<point name="delete.body.a_delete"/>}
+      #end add-point
+      
+            
+                                                               
+ 
+ 
+ 
+                                                               
+      CLEAR FORM
+      CALL g_mrdd_d.clear() 
+ 
+     
+      #CALL amrt200_ui_browser_refresh()  
+      CALL amrt200_ui_headershow()  
+      CALL amrt200_ui_detailshow()
+       
+      IF g_browser_cnt > 0 THEN 
+         CALL amrt200_browser_fill("")
+         CALL amrt200_fetch('P')
+         DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+      ELSE
+         LET g_wc = " 1=1"
+         CALL amrt200_browser_fill("F")
+      END IF
+      
+      #單頭多語言刪除
+      
+      
+      #單身多語言刪除
+      
+ 
+ 
+   
+      #add-point:多語言刪除
+      {<point name="delete.lang.delete"/>}
+      #end add-point
+   
+   END IF
+ 
+   CALL s_transaction_end('Y','0')
+   
+   CLOSE amrt200_cl
+ 
+   #流程通知預埋點-D
+   CALL cl_flow_notify(g_mrdc_m.mrdcdocno,'D')
+    
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.delete_b" ver="2" status="" src="s">
+    <![CDATA[#+ 刪除單身後其他table連動
+PRIVATE FUNCTION amrt200_delete_b(ps_table,ps_keys_bak,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   #add-point:delete_b段define
+   {<point name="delete_b.define"/>}
+   #end add-point     
+ 
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前
+      {<point name="delete_b.b_delete" mark="Y"/>}
+      #end add-point    
+      DELETE FROM mrdd_t
+       WHERE mrddent = g_enterprise AND
+         mrdddocno = ps_keys_bak[1] AND mrddseq = ps_keys_bak[2]
+      #add-point:delete_b段刪除中
+      {<point name="delete_b.m_delete"/>}
+      #end add-point    
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("",SQLCA.sqlcode,0)
+      END IF
+      #add-point:delete_b段刪除後
+      {<point name="delete_b.a_delete"/>}
+      #end add-point   
+   END IF
+   
+ 
+   
+ 
+   
+   #add-point:delete_b段other
+   {<point name="delete_b.other"/>}
+   #end add-point  
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.description" ver="83" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000115
+#+ 
+#+ Filename...: amrt200
+#+ Description: 資源領用維護作業
+#+ Creator....: 04226(2014/05/07)
+#+ Modifier...: 04226(2014/06/17)
+#+ Buildtype..: 應用 t01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="amrt200.detail_reproduce" ver="4" status="" src="s">
+    <![CDATA[#+ 單身自動複製
+PRIVATE FUNCTION amrt200_detail_reproduce()
+   DEFINE ls_sql      STRING
+   DEFINE ld_date     DATETIME YEAR TO SECOND
+   DEFINE l_detail    RECORD LIKE mrdd_t.*
+ 
+ 
+   #add-point:delete段define
+   {<point name="detail_reproduce.define"/>}
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   
+   LET ld_date = cl_get_current()
+   
+   DROP TABLE amrt200_detail
+   
+   #add-point:單身複製前1
+   {<point name="detail_reproduce.body.table1.b_insert" mark="Y"/>}
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   LET ls_sql = "CREATE GLOBAL TEMPORARY TABLE amrt200_detail AS ",
+                "SELECT * FROM mrdd_t "
+   PREPARE repro_tbl FROM ls_sql
+   EXECUTE repro_tbl
+   FREE repro_tbl
+                
+   #將符合條件的資料丟入TEMP TABLE
+   INSERT INTO amrt200_detail SELECT * FROM mrdd_t 
+                                         WHERE mrddent = g_enterprise AND mrdddocno = g_mrdcdocno_t
+ 
+   
+   #將key修正為調整後   
+   UPDATE amrt200_detail 
+      #更新key欄位
+      SET mrdddocno = g_mrdc_m.mrdcdocno
+ 
+      #更新共用欄位
+      
+                                       
+  
+   #將資料塞回原table   
+   INSERT INTO mrdd_t SELECT * FROM amrt200_detail
+   
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("reproduce",SQLCA.sqlcode,1)
+      RETURN
+   END IF
+   
+   #add-point:單身複製中1
+   {<point name="detail_reproduce.body.table1.m_insert"/>}
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE amrt200_detail
+   
+   #add-point:單身複製後1
+   {<point name="detail_reproduce.body.table1.a_insert"/>}
+   #end add-point
+ 
+ 
+   
+ 
+   
+   #多語言複製段落
+   
+   
+   CALL s_transaction_end('Y','0')
+   
+   #已新增完, 調整資料內容(修改時使用)
+   LET g_mrdcdocno_t = g_mrdc_m.mrdcdocno
+ 
+   
+   DROP TABLE amrt200_detail
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.detail_show" ver="2" status="" src="s">
+    <![CDATA[#+ 第二階單身reference
+PRIVATE FUNCTION amrt200_detail_show()
+   #add-point:detail_show段define
+   {<point name="detail_show.define"/>}
+   #end add-point  
+ 
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+   
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.fetch" ver="4" status="" src="s">
+    <![CDATA[#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION amrt200_fetch(p_flag)
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point    
+   
+   IF g_browser_cnt = 0 THEN
+      RETURN
+   END IF
+   
+   CASE p_flag
+      WHEN 'F' LET g_current_idx = 1
+      WHEN 'L' LET g_current_idx = g_header_cnt        
+      WHEN 'P'
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN 'N'
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN '/'
+         IF (NOT g_no_ask) THEN    
+            CALL cl_set_act_visible("accept,cancel", TRUE)    
+            CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,':' FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl" 
+            END PROMPT
+ 
+            CALL cl_set_act_visible("accept,cancel", FALSE)    
+            IF INT_FLAG THEN
+                LET INT_FLAG = 0
+                EXIT CASE  
+            END IF           
+         END IF
+         
+         IF g_jump > 0 AND g_jump <= g_browser.getLength() THEN
+             LET g_current_idx = g_jump
+         END IF
+         
+         LET g_no_ask = FALSE  
+   END CASE 
+   
+   
+   CALL g_curr_diag.setCurrentRow("s_browse", g_current_idx) #設定browse 索引
+   
+   LET g_detail_cnt = g_header_cnt                  
+   
+   #單身總筆數顯示
+   #LET g_detail_idx = 1
+   IF g_detail_cnt > 0 THEN
+      #LET g_detail_idx = 1
+      DISPLAY g_detail_idx TO FORMONLY.idx  
+   ELSE
+      LET g_detail_idx = 0
+      DISPLAY ' ' TO FORMONLY.idx    
+   END IF
+   
+   #瀏覽頁筆數顯示
+   LET g_browser_idx = g_pagestart+g_current_idx-1
+   DISPLAY g_browser_idx TO FORMONLY.b_index   #當下筆數
+   DISPLAY g_browser_idx TO FORMONLY.h_index   #當下筆數
+   
+   CALL cl_navigator_setting( g_current_idx, g_browser_cnt )
+   
+   #代表沒有資料
+   IF g_current_idx = 0 OR g_browser.getLength() = 0 THEN
+      RETURN
+   END IF
+   
+   #超出範圍
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   LET g_mrdc_m.mrdcdocno = g_browser[g_current_idx].b_mrdcdocno
+ 
+   
+   #重讀DB,因TEMP有不被更新特性
+   EXECUTE amrt200_master_referesh USING g_mrdc_m.mrdcdocno INTO g_mrdc_m.mrdcdocno,g_mrdc_m.mrdcdocdt, 
+       g_mrdc_m.mrdc001,g_mrdc_m.mrdc002,g_mrdc_m.mrdc003,g_mrdc_m.mrdc004,g_mrdc_m.mrdcsite,g_mrdc_m.mrdcstus, 
+       g_mrdc_m.mrdc005,g_mrdc_m.mrdc006,g_mrdc_m.mrdc007,g_mrdc_m.mrdc008,g_mrdc_m.mrdcownid,g_mrdc_m.mrdcowndp, 
+       g_mrdc_m.mrdccrtid,g_mrdc_m.mrdccrtdp,g_mrdc_m.mrdccrtdt,g_mrdc_m.mrdcmodid,g_mrdc_m.mrdcmoddt, 
+       g_mrdc_m.mrdccnfid,g_mrdc_m.mrdccnfdt,g_mrdc_m.mrdc003_desc,g_mrdc_m.mrdc004_desc,g_mrdc_m.mrdc006_desc, 
+       g_mrdc_m.mrdcownid_desc,g_mrdc_m.mrdcowndp_desc,g_mrdc_m.mrdccrtid_desc,g_mrdc_m.mrdccrtdp_desc, 
+       g_mrdc_m.mrdcmodid_desc,g_mrdc_m.mrdccnfid_desc
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("mrdc_t",SQLCA.sqlcode,1)
+      INITIALIZE g_mrdc_m.* TO NULL
+      RETURN
+   END IF
+   
+   #add-point:fetch段action控制
+   {<point name="fetch.action_control"/>}
+   #end add-point  
+   
+   
+   
+   #add-point:fetch結束前
+   {<point name="fetch.after" />}
+   #end add-point
+   
+   #LET g_data_owner =       
+   #LET g_data_group =   
+   
+   #重新顯示   
+   CALL amrt200_show()
+ 
+   #+ 此段落由子樣板a56產生
+   #檢查此單據是否需顯示BPM簽核狀況按鈕 
+   IF cl_bpm_chk() THEN
+      CALL cl_set_act_visible("bpm_status",TRUE)
+   ELSE
+      CALL cl_set_act_visible("bpm_status",FALSE)
+   END IF
+ 
+ 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.fill_chk" ver="2" status="" src="s">
+    <![CDATA[#+ 單身填充確認
+PRIVATE FUNCTION amrt200_fill_chk(ps_idx)
+   DEFINE ps_idx        LIKE type_t.chr10
+   #add-point:fill_chk段define
+   {<point name="fill_chk.define"/>}
+   #end add-point
+   
+   #add-point:fill_chk段before_chk
+   {<point name="fill_chk.before_chk"/>}
+   #end add-point
+   
+   #全部為1=1 or null時回傳true
+   IF (cl_null(g_wc2_table1) OR g_wc2_table1.trim() = '1=1') THEN
+      #add-point:fill_chk段other_chk
+      {<point name="fill_chk.other_chk"/>}
+      #end add-point
+      RETURN TRUE
+   END IF
+   
+   #第一單身
+   IF ps_idx = 1 AND
+      ((NOT cl_null(g_wc2_table1) AND g_wc2_table1.trim() <> '1=1')) THEN
+      RETURN TRUE
+   END IF
+   
+   #根據wc判定是否需要填充
+ 
+ 
+   RETURN FALSE
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.filter" ver="1" status="" src="s">
+    <![CDATA[#+ 此段落由子樣板a50產生
+#+ filter過濾功能
+PRIVATE FUNCTION amrt200_filter()
+   #add-point:filter段define
+   {<point name="filter.define"/>}
+   #end add-point   
+ 
+   #切換畫面
+   IF NOT g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF   
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter.trim()
+   LET g_wc_t = g_wc
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter_t, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON mrdcdocno,mrdcdocdt,mrdc001,mrdc003,mrdc004,mrdc005,mrdccrtid,mrdccrtdt, 
+          mrdcmodid,mrdcmoddt
+                          FROM s_browse[1].b_mrdcdocno,s_browse[1].b_mrdcdocdt,s_browse[1].b_mrdc001, 
+                              s_browse[1].b_mrdc003,s_browse[1].b_mrdc004,s_browse[1].b_mrdc005,s_browse[1].b_mrdccrtid, 
+                              s_browse[1].b_mrdccrtdt,s_browse[1].b_mrdcmodid,s_browse[1].b_mrdcmoddt 
+
+ 
+         BEFORE CONSTRUCT
+               DISPLAY amrt200_filter_parser('mrdcdocno') TO s_browse[1].b_mrdcdocno
+            DISPLAY amrt200_filter_parser('mrdcdocdt') TO s_browse[1].b_mrdcdocdt
+            DISPLAY amrt200_filter_parser('mrdc001') TO s_browse[1].b_mrdc001
+            DISPLAY amrt200_filter_parser('mrdc003') TO s_browse[1].b_mrdc003
+            DISPLAY amrt200_filter_parser('mrdc004') TO s_browse[1].b_mrdc004
+            DISPLAY amrt200_filter_parser('mrdc005') TO s_browse[1].b_mrdc005
+            DISPLAY amrt200_filter_parser('mrdccrtid') TO s_browse[1].b_mrdccrtid
+            DISPLAY amrt200_filter_parser('mrdccrtdt') TO s_browse[1].b_mrdccrtdt
+            DISPLAY amrt200_filter_parser('mrdcmodid') TO s_browse[1].b_mrdcmodid
+            DISPLAY amrt200_filter_parser('mrdcmoddt') TO s_browse[1].b_mrdcmoddt
+      
+         #add-point:filter段cs_ctrl
+         {<point name="filter.cs_ctrl"/>}
+         #end add-point
+      
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog
+         {<point name="filter.b_dialog"/>}
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = "   AND   ", g_wc_filter, "   "
+      LET g_wc = g_wc , g_wc_filter
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+      LET g_wc = g_wc_t
+   END IF
+ 
+      CALL amrt200_filter_show('mrdcdocno')
+   CALL amrt200_filter_show('mrdcdocdt')
+   CALL amrt200_filter_show('mrdc001')
+   CALL amrt200_filter_show('mrdc003')
+   CALL amrt200_filter_show('mrdc004')
+   CALL amrt200_filter_show('mrdc005')
+   CALL amrt200_filter_show('mrdccrtid')
+   CALL amrt200_filter_show('mrdccrtdt')
+   CALL amrt200_filter_show('mrdcmodid')
+   CALL amrt200_filter_show('mrdcmoddt')
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.filter_parser" ver="1" status="" src="s">
+    <![CDATA[#+ filter過濾功能
+PRIVATE FUNCTION amrt200_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num5
+   DEFINE li_tmp2    LIKE type_t.num5
+   DEFINE ls_var     STRING
+   #add-point:filter段define
+   {<point name="filter_parser.define"/>}
+   #end add-point    
+ 
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.filter_show" ver="1" status="" src="s">
+    <![CDATA[#+ 顯示過濾條件
+PRIVATE FUNCTION amrt200_filter_show(ps_field)
+   DEFINE ps_field         STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.b_", ps_field
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = amrt200_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.global" ver="6" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+        
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds 
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_mrdc_m        RECORD
+       mrdcdocno LIKE mrdc_t.mrdcdocno, 
+   mrdcdocno_desc LIKE type_t.chr80, 
+   mrdcdocdt LIKE mrdc_t.mrdcdocdt, 
+   mrdc001 LIKE mrdc_t.mrdc001, 
+   mrdc002 LIKE mrdc_t.mrdc002, 
+   mrdc003 LIKE mrdc_t.mrdc003, 
+   mrdc003_desc LIKE type_t.chr80, 
+   mrdc004 LIKE mrdc_t.mrdc004, 
+   mrdc004_desc LIKE type_t.chr80, 
+   mrdcsite LIKE mrdc_t.mrdcsite, 
+   mrdcstus LIKE mrdc_t.mrdcstus, 
+   mrdc005 LIKE mrdc_t.mrdc005, 
+   mrdc006 LIKE mrdc_t.mrdc006, 
+   mrdc006_desc LIKE type_t.chr80, 
+   mrdc007 LIKE mrdc_t.mrdc007, 
+   mrdc008 LIKE mrdc_t.mrdc008, 
+   mrdcownid LIKE mrdc_t.mrdcownid, 
+   mrdcownid_desc LIKE type_t.chr80, 
+   mrdcowndp LIKE mrdc_t.mrdcowndp, 
+   mrdcowndp_desc LIKE type_t.chr80, 
+   mrdccrtid LIKE mrdc_t.mrdccrtid, 
+   mrdccrtid_desc LIKE type_t.chr80, 
+   mrdccrtdp LIKE mrdc_t.mrdccrtdp, 
+   mrdccrtdp_desc LIKE type_t.chr80, 
+   mrdccrtdt DATETIME YEAR TO SECOND, 
+   mrdcmodid LIKE mrdc_t.mrdcmodid, 
+   mrdcmodid_desc LIKE type_t.chr80, 
+   mrdcmoddt DATETIME YEAR TO SECOND, 
+   mrdccnfid LIKE mrdc_t.mrdccnfid, 
+   mrdccnfid_desc LIKE type_t.chr80, 
+   mrdccnfdt DATETIME YEAR TO SECOND
+       END RECORD
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_mrdd_d        RECORD
+       mrddseq LIKE mrdd_t.mrddseq, 
+   mrdd001 LIKE mrdd_t.mrdd001, 
+   mrba004 LIKE type_t.chr80, 
+   mrba008 LIKE type_t.chr80, 
+   mrba009 LIKE type_t.chr80, 
+   mrdd002 LIKE mrdd_t.mrdd002, 
+   mrdd003 LIKE mrdd_t.mrdd003, 
+   mrdd004 LIKE mrdd_t.mrdd004, 
+   mrdd004_desc LIKE type_t.chr500, 
+   mrdd005 LIKE mrdd_t.mrdd005, 
+   mrdd005_desc LIKE type_t.chr500, 
+   mrdd009 LIKE mrdd_t.mrdd009, 
+   mrdd006 LIKE mrdd_t.mrdd006, 
+   mrdd007 LIKE mrdd_t.mrdd007, 
+   mrdd008 LIKE mrdd_t.mrdd008
+       END RECORD
+ 
+ 
+#模組變數(Module Variables)
+DEFINE g_mrdc_m          type_g_mrdc_m
+DEFINE g_mrdc_m_t        type_g_mrdc_m
+ 
+   DEFINE g_mrdcdocno_t LIKE mrdc_t.mrdcdocno
+ 
+ 
+DEFINE g_mrdd_d          DYNAMIC ARRAY OF type_g_mrdd_d
+DEFINE g_mrdd_d_t        type_g_mrdd_d
+ 
+ 
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD    #資料瀏覽之欄位 
+         b_statepic     LIKE type_t.chr50,
+            b_mrdcdocno LIKE mrdc_t.mrdcdocno,
+      b_mrdcdocdt LIKE mrdc_t.mrdcdocdt,
+      b_mrdc001 LIKE mrdc_t.mrdc001,
+      b_mrdc003 LIKE mrdc_t.mrdc003,
+   b_mrdc003_desc LIKE type_t.chr80,
+      b_mrdc004 LIKE mrdc_t.mrdc004,
+   b_mrdc004_desc LIKE type_t.chr80,
+      b_mrdc005 LIKE mrdc_t.mrdc005,
+      b_mrdccrtid LIKE mrdc_t.mrdccrtid,
+   b_mrdccrtid_desc LIKE type_t.chr80,
+      b_mrdccrtdt LIKE mrdc_t.mrdccrtdt,
+      b_mrdcmodid LIKE mrdc_t.mrdcmodid,
+   b_mrdcmodid_desc LIKE type_t.chr80,
+      b_mrdcmoddt LIKE mrdc_t.mrdcmoddt
+      END RECORD 
+      
+DEFINE g_browser_f  RECORD    #資料瀏覽之欄位 
+         b_statepic     LIKE type_t.chr50,
+            b_mrdcdocno LIKE mrdc_t.mrdcdocno,
+      b_mrdcdocdt LIKE mrdc_t.mrdcdocdt,
+      b_mrdc001 LIKE mrdc_t.mrdc001,
+      b_mrdc003 LIKE mrdc_t.mrdc003,
+   b_mrdc003_desc LIKE type_t.chr80,
+      b_mrdc004 LIKE mrdc_t.mrdc004,
+   b_mrdc004_desc LIKE type_t.chr80,
+      b_mrdc005 LIKE mrdc_t.mrdc005,
+      b_mrdccrtid LIKE mrdc_t.mrdccrtid,
+   b_mrdccrtid_desc LIKE type_t.chr80,
+      b_mrdccrtdt LIKE mrdc_t.mrdccrtdt,
+      b_mrdcmodid LIKE mrdc_t.mrdcmodid,
+   b_mrdcmodid_desc LIKE type_t.chr80,
+      b_mrdcmoddt LIKE mrdc_t.mrdcmoddt
+      END RECORD 
+      
+ 
+DEFINE g_wc                  STRING
+DEFINE g_wc_t                STRING
+DEFINE g_wc2                 STRING                          #單身CONSTRUCT結果
+DEFINE g_wc2_table1          STRING
+ 
+ 
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+ 
+DEFINE g_sql                 STRING
+DEFINE g_forupd_sql          STRING
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_current_idx         LIKE type_t.num10     
+DEFINE g_jump                LIKE type_t.num10        
+DEFINE g_no_ask              LIKE type_t.num5        
+DEFINE g_rec_b               LIKE type_t.num5           
+DEFINE l_ac                  LIKE type_t.num5    
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog
+    
+DEFINE g_pagestart           LIKE type_t.num5           
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_state               STRING       
+ 
+DEFINE g_detail_cnt          LIKE type_t.num5              #單身總筆數
+DEFINE g_detail_idx          LIKE type_t.num5              #單身目前所在筆數
+DEFINE g_detail_idx2         LIKE type_t.num5              #單身2目前所在筆數
+DEFINE g_browser_cnt         LIKE type_t.num5              #Browser總筆數
+DEFINE g_browser_idx         LIKE type_t.num5              #Browser目前所在筆數
+DEFINE g_temp_idx            LIKE type_t.num5              #Browser目前所在筆數(暫存用)
+ 
+DEFINE g_searchcol           STRING                        #查詢欄位代碼
+DEFINE g_searchstr           STRING                        #查詢欄位字串
+DEFINE g_order               STRING                        #查詢排序欄位
+                                                        
+DEFINE g_current_row         LIKE type_t.num5              #Browser所在筆數
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_current_page        LIKE type_t.num5              #目前所在頁數
+DEFINE g_insert              LIKE type_t.chr5              #是否導到其他page
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys               DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak           DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_bfill               LIKE type_t.chr5              #是否刷新單身
+DEFINE g_error_show          LIKE type_t.num5              #
+ 
+DEFINE g_wc_frozen           STRING                        #凍結欄位使用
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_aw                  STRING                        #確定當下點擊的單身
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+DEFINE g_log1                STRING                        #log用
+DEFINE g_log2                STRING                        #log用
+DEFINE g_loc                 LIKE type_t.chr5              #判斷游標所在位置
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="amrt200.idx_chk" ver="1" status="" src="s">
+    <![CDATA[#+ 單身筆數變更
+PRIVATE FUNCTION amrt200_idx_chk()
+   #add-point:idx_chk段define
+   {<point name="idx_chk.define"/>}
+   #end add-point  
+   
+   IF g_current_page = 1 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail1")
+      IF g_detail_idx > g_mrdd_d.getLength() THEN
+         LET g_detail_idx = g_mrdd_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_mrdd_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_mrdd_d.getLength() TO FORMONLY.cnt
+   END IF
+   
+ 
+   
+   #add-point:idx_chk段other
+   {<point name="idx_chk.other"/>}
+   #end add-point  
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.init" ver="5" status="" src="s">
+    <![CDATA[#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION amrt200_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point    
+   
+   LET g_bfill       = "Y"
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_error_show  = 1
+   LET l_ac = 1
+      CALL cl_set_combo_scc_part('mrdcstus','13','N,X,Y,A,D,R,W,J,K')
+ 
+      CALL cl_set_combo_scc('mrdc001','5211') 
+   CALL cl_set_combo_scc('mrdc005','5212') 
+   CALL cl_set_combo_scc('mrdd007','5442') 
+ 
+   LET gwin_curr = ui.Window.getCurrent()  #取得現行畫面
+   LET gfrm_curr = gwin_curr.getForm()     #取出物件化後的畫面物件
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init"/>}
+   #end add-point
+   
+   CALL amrt200_default_search()
+    
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.input" ver="5" status="" src="s">
+    <![CDATA[#+ 資料輸入
+PRIVATE FUNCTION amrt200_input(p_cmd)
+   DEFINE  p_cmd                 LIKE type_t.chr1
+   DEFINE  l_cmd_t               LIKE type_t.chr1
+   DEFINE  l_cmd                 LIKE type_t.chr1
+   DEFINE  l_n                   LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_cnt                 LIKE type_t.num5                #檢查重複用  
+   DEFINE  l_lock_sw             LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert        LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete        LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count               LIKE type_t.num5
+   DEFINE  l_i                   LIKE type_t.num5
+   DEFINE  l_insert              BOOLEAN
+   DEFINE  ls_return             STRING
+   DEFINE  l_var_keys            DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys          DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields              DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak        DYNAMIC ARRAY OF STRING
+   DEFINE  lb_reproduce          BOOLEAN
+   DEFINE  li_reproduce          LIKE type_t.num5
+   DEFINE  li_reproduce_target   LIKE type_t.num5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point  
+ 
+   #先做狀態判定
+   IF p_cmd = 'r' THEN
+      LET l_cmd_t = 'r'
+      LET p_cmd   = 'a'
+   ELSE
+      LET l_cmd_t = p_cmd
+   END IF   
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+ 
+   CALL cl_set_head_visible("","YES")  
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   #add-point:input段define_sql
+   {<point name="input.define_sql" mark="Y"/>}
+   #end add-point 
+   LET g_forupd_sql = "SELECT mrddseq,mrdd001,mrdd002,mrdd003,mrdd004,mrdd005,mrdd009,mrdd006,mrdd007, 
+       mrdd008 FROM mrdd_t WHERE mrddent=? AND mrdddocno=? AND mrddseq=? FOR UPDATE"
+   #add-point:input段define_sql
+   {<point name="input.after_define_sql"/>}
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE amrt200_bcl CURSOR FROM g_forupd_sql
+   
+ 
+   
+ 
+ 
+   #add-point:input段define_sql
+   {<point name="input.other_sql"/>}
+   #end add-point 
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   LET g_qryparam.state = 'i'
+   
+   #控制key欄位可否輸入
+   CALL amrt200_set_entry(p_cmd)
+   #add-point:set_entry後
+   {<point name="input.after_set_entry"/>}
+   #end add-point
+   CALL amrt200_set_no_entry(p_cmd)
+ 
+   DISPLAY BY NAME g_mrdc_m.mrdcdocno,g_mrdc_m.mrdcdocdt,g_mrdc_m.mrdc001,g_mrdc_m.mrdc002,g_mrdc_m.mrdc003, 
+       g_mrdc_m.mrdc004,g_mrdc_m.mrdcsite,g_mrdc_m.mrdcstus,g_mrdc_m.mrdc005,g_mrdc_m.mrdc006,g_mrdc_m.mrdc007, 
+       g_mrdc_m.mrdc008
+   
+   LET lb_reproduce = FALSE
+   
+   #add-point:資料輸入前
+   {<point name="input.before_input"/>}
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+]]>
+  </section>
+  <section id="amrt200.input.body" ver="14" status="" src="s">
+    <![CDATA[   
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_mrdd_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_mrdd_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL amrt200_b_fill()
+            LET g_rec_b = g_mrdd_d.getLength()
+            #add-point:資料輸入前
+            {<point name="input.d.before_input"/>}
+            #end add-point
+         
+         BEFORE ROW
+            #add-point:modify段before row2
+            {<point name="input.body.before_row2"/>}
+            #end add-point  
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN amrt200_cl USING g_enterprise,g_mrdc_m.mrdcdocno
+            IF STATUS THEN
+               CALL cl_err("OPEN amrt200_cl:", STATUS, 1)
+               CLOSE amrt200_cl
+               CALL s_transaction_end('N','0')
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_mrdd_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND g_mrdd_d[l_ac].mrddseq IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_mrdd_d_t.* = g_mrdd_d[l_ac].*  #BACKUP
+               CALL amrt200_set_entry_b(l_cmd)
+               #add-point:modify段after_set_entry_b
+               {<point name="input.body.after_set_entry_b"/>}
+               #end add-point  
+               CALL amrt200_set_no_entry_b(l_cmd)
+               IF NOT amrt200_lock_b("mrdd_t","'1'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH amrt200_bcl INTO g_mrdd_d[l_ac].mrddseq,g_mrdd_d[l_ac].mrdd001,g_mrdd_d[l_ac].mrdd002, 
+                      g_mrdd_d[l_ac].mrdd003,g_mrdd_d[l_ac].mrdd004,g_mrdd_d[l_ac].mrdd005,g_mrdd_d[l_ac].mrdd009, 
+                      g_mrdd_d[l_ac].mrdd006,g_mrdd_d[l_ac].mrdd007,g_mrdd_d[l_ac].mrdd008
+                  IF SQLCA.sqlcode THEN
+                     CALL cl_err(g_mrdd_d_t.mrddseq,SQLCA.sqlcode,1)
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  LET g_bfill = "N"
+                  CALL amrt200_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row
+            {<point name="input.body.before_row"/>}
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+            #其他table進行lock
+            
+        
+         BEFORE INSERT
+            
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_mrdd_d[l_ac].* TO NULL 
+            
+            LET g_mrdd_d_t.* = g_mrdd_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL amrt200_set_entry_b(l_cmd)
+            #add-point:modify段after_set_entry_b
+            {<point name="input.body.insert.after_set_entry_b"/>}
+            #end add-point
+            CALL amrt200_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_mrdd_d[li_reproduce_target].* = g_mrdd_d[li_reproduce].*
+ 
+               LET g_mrdd_d[li_reproduce_target].mrddseq = NULL
+ 
+            END IF
+            #公用欄位給值(單身)
+            
+            
+            #add-point:modify段before insert
+            {<point name="input.body.before_insert"/>}
+            #end add-point  
+  
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            #add-point:單身新增
+            {<point name="input.body.b_a_insert"/>}
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(*) INTO l_count FROM mrdd_t 
+             WHERE mrddent = g_enterprise AND mrdddocno = g_mrdc_m.mrdcdocno
+ 
+               AND mrddseq = g_mrdd_d[l_ac].mrddseq
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前
+               {<point name="input.body.b_insert"/>}
+               #end add-point
+            
+               #同步新增到同層的table
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_mrdc_m.mrdcdocno
+               LET gs_keys[2] = g_mrdd_d[g_detail_idx].mrddseq
+               CALL amrt200_insert_b('mrdd_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後
+               {<point name="input.body.a_insert"/>}
+               #end add-point
+            ELSE    
+               CALL cl_err('INSERT',"std-00006",1)
+               INITIALIZE g_mrdd_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLcode  THEN
+               CALL cl_err("mrdd_t",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')                    
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL amrt200_b_fill()
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert
+               {<point name="input.body.a_insert2"/>}
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' AND g_mrdd_d.getLength() < l_ac THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+               CALL g_mrdd_d.deleteElement(l_ac)
+               NEXT FIELD mrddseq
+            END IF
+         
+            IF g_mrdd_d[l_ac].mrddseq IS NOT NULL
+ 
+               THEN 
+               
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  CALL cl_err("", -263, 1)
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前
+               {<point name="input.body.b_delete" mark="Y"/>}
+               #end add-point 
+               
+               DELETE FROM mrdd_t
+                WHERE mrddent = g_enterprise AND mrdddocno = g_mrdc_m.mrdcdocno AND
+ 
+                      mrddseq = g_mrdd_d_t.mrddseq
+ 
+                  
+               #add-point:單身刪除中
+               {<point name="input.body.m_delete"/>}
+               #end add-point 
+               
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("mrdd_t",SQLCA.sqlcode,1)
+                  CALL s_transaction_end('N','0')
+                  CANCEL DELETE   
+               ELSE
+                  LET g_rec_b = g_rec_b-1
+                  
+                  #add-point:單身刪除後
+                  {<point name="input.body.a_delete"/>}
+                  #end add-point
+                  CALL s_transaction_end('Y','0')
+               END IF 
+               CLOSE amrt200_bcl
+               LET l_count = g_mrdd_d.getLength()
+            END IF 
+            
+                           INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_mrdc_m.mrdcdocno
+               LET gs_keys[2] = g_mrdd_d[g_detail_idx].mrddseq
+ 
+              
+         AFTER DELETE 
+            #add-point:單身刪除後2
+            {<point name="input.body.after_delete"/>}
+            #end add-point
+                           CALL amrt200_delete_b('mrdd_t',gs_keys,"'1'")
+ 
+                  #此段落由子樣板a02產生
+         AFTER FIELD mrddseq
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_mrdd_d[l_ac].mrddseq,"1","1","","","azz-00079",1) THEN
+               NEXT FIELD mrddseq
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD mrddseq
+            {<point name="input.a.page1.mrddseq" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrddseq
+            #add-point:BEFORE FIELD mrddseq
+            {<point name="input.b.page1.mrddseq" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrddseq
+            #add-point:ON CHANGE mrddseq
+            {<point name="input.g.page1.mrddseq" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdd001
+            
+            #add-point:AFTER FIELD mrdd001
+            {<point name="input.a.page1.mrdd001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdd001
+            #add-point:BEFORE FIELD mrdd001
+            {<point name="input.b.page1.mrdd001" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrdd001
+            #add-point:ON CHANGE mrdd001
+            {<point name="input.g.page1.mrdd001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdd002
+            #此段落由子樣板a15產生
+            IF NOT cl_ap_chk_Range(g_mrdd_d[l_ac].mrdd002,"0","0","","","azz-00079",1) THEN
+               NEXT FIELD mrdd002
+            END IF
+ 
+ 
+            #add-point:AFTER FIELD mrdd002
+            {<point name="input.a.page1.mrdd002" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdd002
+            #add-point:BEFORE FIELD mrdd002
+            {<point name="input.b.page1.mrdd002" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrdd002
+            #add-point:ON CHANGE mrdd002
+            {<point name="input.g.page1.mrdd002" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdd003
+            #add-point:BEFORE FIELD mrdd003
+            {<point name="input.b.page1.mrdd003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdd003
+            
+            #add-point:AFTER FIELD mrdd003
+            {<point name="input.a.page1.mrdd003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrdd003
+            #add-point:ON CHANGE mrdd003
+            {<point name="input.g.page1.mrdd003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdd004
+            
+            #add-point:AFTER FIELD mrdd004
+            {<point name="input.a.page1.mrdd004" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdd004
+            #add-point:BEFORE FIELD mrdd004
+            {<point name="input.b.page1.mrdd004" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrdd004
+            #add-point:ON CHANGE mrdd004
+            {<point name="input.g.page1.mrdd004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdd005
+            
+            #add-point:AFTER FIELD mrdd005
+            {<point name="input.a.page1.mrdd005" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdd005
+            #add-point:BEFORE FIELD mrdd005
+            {<point name="input.b.page1.mrdd005" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrdd005
+            #add-point:ON CHANGE mrdd005
+            {<point name="input.g.page1.mrdd005" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdd009
+            #add-point:BEFORE FIELD mrdd009
+            {<point name="input.b.page1.mrdd009" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdd009
+            
+            #add-point:AFTER FIELD mrdd009
+            {<point name="input.a.page1.mrdd009" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrdd009
+            #add-point:ON CHANGE mrdd009
+            {<point name="input.g.page1.mrdd009" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdd006
+            #add-point:BEFORE FIELD mrdd006
+            {<point name="input.b.page1.mrdd006" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdd006
+            
+            #add-point:AFTER FIELD mrdd006
+            {<point name="input.a.page1.mrdd006" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrdd006
+            #add-point:ON CHANGE mrdd006
+            {<point name="input.g.page1.mrdd006" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdd007
+            #add-point:BEFORE FIELD mrdd007
+            {<point name="input.b.page1.mrdd007" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdd007
+            
+            #add-point:AFTER FIELD mrdd007
+            {<point name="input.a.page1.mrdd007" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrdd007
+            #add-point:ON CHANGE mrdd007
+            {<point name="input.g.page1.mrdd007" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdd008
+            #add-point:BEFORE FIELD mrdd008
+            {<point name="input.b.page1.mrdd008" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdd008
+            
+            #add-point:AFTER FIELD mrdd008
+            {<point name="input.a.page1.mrdd008" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrdd008
+            #add-point:ON CHANGE mrdd008
+            {<point name="input.g.page1.mrdd008" />}
+            #END add-point
+ 
+ 
+                  #Ctrlp:input.c.page1.mrddseq
+         ON ACTION controlp INFIELD mrddseq
+            #add-point:ON ACTION controlp INFIELD mrddseq
+            {<point name="input.c.page1.mrddseq" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.mrdd001
+         ON ACTION controlp INFIELD mrdd001
+            #add-point:ON ACTION controlp INFIELD mrdd001
+            {<point name="input.c.page1.mrdd001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.mrdd002
+         ON ACTION controlp INFIELD mrdd002
+            #add-point:ON ACTION controlp INFIELD mrdd002
+            {<point name="input.c.page1.mrdd002" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.mrdd003
+         ON ACTION controlp INFIELD mrdd003
+            #add-point:ON ACTION controlp INFIELD mrdd003
+            {<point name="input.c.page1.mrdd003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.mrdd004
+         ON ACTION controlp INFIELD mrdd004
+            #add-point:ON ACTION controlp INFIELD mrdd004
+            {<point name="input.c.page1.mrdd004" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.mrdd005
+         ON ACTION controlp INFIELD mrdd005
+            #add-point:ON ACTION controlp INFIELD mrdd005
+            {<point name="input.c.page1.mrdd005" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.mrdd009
+         ON ACTION controlp INFIELD mrdd009
+            #add-point:ON ACTION controlp INFIELD mrdd009
+            {<point name="input.c.page1.mrdd009" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.mrdd006
+         ON ACTION controlp INFIELD mrdd006
+            #add-point:ON ACTION controlp INFIELD mrdd006
+            {<point name="input.c.page1.mrdd006" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.mrdd007
+         ON ACTION controlp INFIELD mrdd007
+            #add-point:ON ACTION controlp INFIELD mrdd007
+            {<point name="input.c.page1.mrdd007" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.page1.mrdd008
+         ON ACTION controlp INFIELD mrdd008
+            #add-point:ON ACTION controlp INFIELD mrdd008
+            {<point name="input.c.page1.mrdd008" />}
+            #END add-point
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               CALL cl_err('',9001,0)
+               LET INT_FLAG = 0
+               LET g_mrdd_d[l_ac].* = g_mrdd_d_t.*
+               CLOSE amrt200_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               CALL cl_err(g_mrdd_d[l_ac].mrddseq,-263,1)
+               LET g_mrdd_d[l_ac].* = g_mrdd_d_t.*
+            ELSE
+            
+               #add-point:單身修改前
+               {<point name="input.body.b_update" mark="Y"/>}
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身)
+               
+      
+               UPDATE mrdd_t SET (mrdddocno,mrddseq,mrdd001,mrdd002,mrdd003,mrdd004,mrdd005,mrdd009, 
+                   mrdd006,mrdd007,mrdd008) = (g_mrdc_m.mrdcdocno,g_mrdd_d[l_ac].mrddseq,g_mrdd_d[l_ac].mrdd001, 
+                   g_mrdd_d[l_ac].mrdd002,g_mrdd_d[l_ac].mrdd003,g_mrdd_d[l_ac].mrdd004,g_mrdd_d[l_ac].mrdd005, 
+                   g_mrdd_d[l_ac].mrdd009,g_mrdd_d[l_ac].mrdd006,g_mrdd_d[l_ac].mrdd007,g_mrdd_d[l_ac].mrdd008) 
+
+                WHERE mrddent = g_enterprise AND mrdddocno = g_mrdc_m.mrdcdocno 
+ 
+                  AND mrddseq = g_mrdd_d_t.mrddseq #項次   
+ 
+                  
+               #add-point:單身修改中
+               {<point name="input.body.m_update"/>}
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL cl_err("mrdd_t","std-00009",1)
+                     CALL s_transaction_end('N','0')
+                     LET g_mrdd_d[l_ac].* = g_mrdd_d_t.*
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     CALL cl_err("mrdd_t",SQLCA.sqlcode,1)
+                     LET g_mrdd_d[l_ac].* = g_mrdd_d_t.*                     
+                     CALL s_transaction_end('N','0')
+                  OTHERWISE
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_mrdc_m.mrdcdocno
+               LET gs_keys_bak[1] = g_mrdcdocno_t
+               LET gs_keys[2] = g_mrdd_d[g_detail_idx].mrddseq
+               LET gs_keys_bak[2] = g_mrdd_d_t.mrddseq
+               CALL amrt200_update_b('mrdd_t',gs_keys,gs_keys_bak,"'1'")
+                     #資料多語言用-增/改
+                     
+               END CASE
+               
+               LET g_log1 = util.JSON.stringify(g_mrdc_m),util.JSON.stringify(g_mrdd_d_t)
+               LET g_log2 = util.JSON.stringify(g_mrdc_m),util.JSON.stringify(g_mrdd_d[l_ac])
+               
+               IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               END IF
+               
+               #add-point:單身修改後
+               {<point name="input.body.a_update"/>}
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            #add-point:單身after_row
+            {<point name="input.body.after_row"/>}
+            #end add-point
+            CALL amrt200_unlock_b("mrdd_t","'1'")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            #add-point:單身after_row2
+            {<point name="input.body.after_row2"/>}
+            #end add-point
+              
+         AFTER INPUT
+            #add-point:input段after input 
+            {<point name="input.body.after_input"/>}
+            #end add-point 
+ 
+         ON ACTION controlo    
+            CALL FGL_SET_ARR_CURR(g_mrdd_d.getLength()+1)
+            LET lb_reproduce = TRUE
+            LET li_reproduce = l_ac
+            LET li_reproduce_target = g_mrdd_d.getLength()+1
+            
+         #ON ACTION cancel
+         #   LET INT_FLAG = 1
+         #   LET g_detail_idx = 1
+         #   EXIT DIALOG 
+ 
+      END INPUT
+      
+ 
+      
+ 
+      
+ 
+      
+ 
+      
+]]>
+  </section>
+  <section id="amrt200.input.head" ver="6" status="" src="s">
+    <![CDATA[      #單頭段
+      INPUT BY NAME g_mrdc_m.mrdcdocno,g_mrdc_m.mrdcdocdt,g_mrdc_m.mrdc001,g_mrdc_m.mrdc002,g_mrdc_m.mrdc003, 
+          g_mrdc_m.mrdc004,g_mrdc_m.mrdcsite,g_mrdc_m.mrdcstus,g_mrdc_m.mrdc005,g_mrdc_m.mrdc006,g_mrdc_m.mrdc007, 
+          g_mrdc_m.mrdc008 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+     
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            
+            IF l_cmd_t = 'r' THEN
+               
+            END IF
+            #add-point:資料輸入前
+            {<point name="input.m.before_input"/>}
+            #end add-point
+ 
+                  #此段落由子樣板a02產生
+         AFTER FIELD mrdcdocno
+            
+            #add-point:AFTER FIELD mrdcdocno
+            {<point name="input.a.mrdcdocno" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdcdocno
+            #add-point:BEFORE FIELD mrdcdocno
+            {<point name="input.b.mrdcdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrdcdocno
+            #add-point:ON CHANGE mrdcdocno
+            {<point name="input.g.mrdcdocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdcdocdt
+            #add-point:BEFORE FIELD mrdcdocdt
+            {<point name="input.b.mrdcdocdt" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdcdocdt
+            
+            #add-point:AFTER FIELD mrdcdocdt
+            {<point name="input.a.mrdcdocdt" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrdcdocdt
+            #add-point:ON CHANGE mrdcdocdt
+            {<point name="input.g.mrdcdocdt" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdc001
+            #add-point:BEFORE FIELD mrdc001
+            {<point name="input.b.mrdc001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdc001
+            
+            #add-point:AFTER FIELD mrdc001
+            {<point name="input.a.mrdc001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrdc001
+            #add-point:ON CHANGE mrdc001
+            {<point name="input.g.mrdc001" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdc002
+            #add-point:BEFORE FIELD mrdc002
+            {<point name="input.b.mrdc002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdc002
+            
+            #add-point:AFTER FIELD mrdc002
+            {<point name="input.a.mrdc002" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrdc002
+            #add-point:ON CHANGE mrdc002
+            {<point name="input.g.mrdc002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdc003
+            
+            #add-point:AFTER FIELD mrdc003
+            {<point name="input.a.mrdc003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdc003
+            #add-point:BEFORE FIELD mrdc003
+            {<point name="input.b.mrdc003" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrdc003
+            #add-point:ON CHANGE mrdc003
+            {<point name="input.g.mrdc003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdc004
+            
+            #add-point:AFTER FIELD mrdc004
+            {<point name="input.a.mrdc004" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdc004
+            #add-point:BEFORE FIELD mrdc004
+            {<point name="input.b.mrdc004" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrdc004
+            #add-point:ON CHANGE mrdc004
+            {<point name="input.g.mrdc004" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdcsite
+            #add-point:BEFORE FIELD mrdcsite
+            {<point name="input.b.mrdcsite" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdcsite
+            
+            #add-point:AFTER FIELD mrdcsite
+            {<point name="input.a.mrdcsite" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrdcsite
+            #add-point:ON CHANGE mrdcsite
+            {<point name="input.g.mrdcsite" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdcstus
+            #add-point:BEFORE FIELD mrdcstus
+            {<point name="input.b.mrdcstus" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdcstus
+            
+            #add-point:AFTER FIELD mrdcstus
+            {<point name="input.a.mrdcstus" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrdcstus
+            #add-point:ON CHANGE mrdcstus
+            {<point name="input.g.mrdcstus" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdc005
+            #add-point:BEFORE FIELD mrdc005
+            {<point name="input.b.mrdc005" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdc005
+            
+            #add-point:AFTER FIELD mrdc005
+            {<point name="input.a.mrdc005" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrdc005
+            #add-point:ON CHANGE mrdc005
+            {<point name="input.g.mrdc005" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdc006
+            
+            #add-point:AFTER FIELD mrdc006
+            {<point name="input.a.mrdc006" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdc006
+            #add-point:BEFORE FIELD mrdc006
+            {<point name="input.b.mrdc006" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrdc006
+            #add-point:ON CHANGE mrdc006
+            {<point name="input.g.mrdc006" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdc007
+            #add-point:BEFORE FIELD mrdc007
+            {<point name="input.b.mrdc007" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdc007
+            
+            #add-point:AFTER FIELD mrdc007
+            {<point name="input.a.mrdc007" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrdc007
+            #add-point:ON CHANGE mrdc007
+            {<point name="input.g.mrdc007" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD mrdc008
+            #add-point:BEFORE FIELD mrdc008
+            {<point name="input.b.mrdc008" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD mrdc008
+            
+            #add-point:AFTER FIELD mrdc008
+            {<point name="input.a.mrdc008" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE mrdc008
+            #add-point:ON CHANGE mrdc008
+            {<point name="input.g.mrdc008" />}
+            #END add-point
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.mrdcdocno
+         ON ACTION controlp INFIELD mrdcdocno
+            #add-point:ON ACTION controlp INFIELD mrdcdocno
+            {<point name="input.c.mrdcdocno" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.mrdcdocdt
+         ON ACTION controlp INFIELD mrdcdocdt
+            #add-point:ON ACTION controlp INFIELD mrdcdocdt
+            {<point name="input.c.mrdcdocdt" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.mrdc001
+         ON ACTION controlp INFIELD mrdc001
+            #add-point:ON ACTION controlp INFIELD mrdc001
+            {<point name="input.c.mrdc001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.mrdc002
+         ON ACTION controlp INFIELD mrdc002
+            #add-point:ON ACTION controlp INFIELD mrdc002
+            {<point name="input.c.mrdc002" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.mrdc003
+         ON ACTION controlp INFIELD mrdc003
+            #add-point:ON ACTION controlp INFIELD mrdc003
+            {<point name="input.c.mrdc003" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.mrdc004
+         ON ACTION controlp INFIELD mrdc004
+            #add-point:ON ACTION controlp INFIELD mrdc004
+            {<point name="input.c.mrdc004" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.mrdcsite
+         ON ACTION controlp INFIELD mrdcsite
+            #add-point:ON ACTION controlp INFIELD mrdcsite
+            {<point name="input.c.mrdcsite" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.mrdcstus
+         ON ACTION controlp INFIELD mrdcstus
+            #add-point:ON ACTION controlp INFIELD mrdcstus
+            {<point name="input.c.mrdcstus" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.mrdc005
+         ON ACTION controlp INFIELD mrdc005
+            #add-point:ON ACTION controlp INFIELD mrdc005
+            {<point name="input.c.mrdc005" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.mrdc006
+         ON ACTION controlp INFIELD mrdc006
+            #add-point:ON ACTION controlp INFIELD mrdc006
+            {<point name="input.c.mrdc006" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.mrdc007
+         ON ACTION controlp INFIELD mrdc007
+            #add-point:ON ACTION controlp INFIELD mrdc007
+            {<point name="input.c.mrdc007" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.mrdc008
+         ON ACTION controlp INFIELD mrdc008
+            #add-point:ON ACTION controlp INFIELD mrdc008
+            {<point name="input.c.mrdc008" />}
+            #END add-point
+ 
+ #欄位開窗
+            
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+ 
+            CALL cl_showmsg()      #錯誤訊息統整顯示
+            DISPLAY BY NAME g_mrdc_m.mrdcdocno
+                        
+            #add-point:單頭INPUT後
+            {<point name="input.head.after_input"/>}
+            #end add-point
+                        
+            IF p_cmd <> 'u' THEN
+    
+               CALL s_transaction_begin()
+               
+               #add-point:單頭新增前
+               {<point name="input.head.b_insert" mark="Y"/>}
+               #end add-point
+               
+               INSERT INTO mrdc_t (mrdcent,mrdcdocno,mrdcdocdt,mrdc001,mrdc002,mrdc003,mrdc004,mrdcsite, 
+                   mrdcstus,mrdc005,mrdc006,mrdc007,mrdc008,mrdcownid,mrdcowndp,mrdccrtid,mrdccrtdp, 
+                   mrdccrtdt,mrdccnfid,mrdccnfdt)
+               VALUES (g_enterprise,g_mrdc_m.mrdcdocno,g_mrdc_m.mrdcdocdt,g_mrdc_m.mrdc001,g_mrdc_m.mrdc002, 
+                   g_mrdc_m.mrdc003,g_mrdc_m.mrdc004,g_mrdc_m.mrdcsite,g_mrdc_m.mrdcstus,g_mrdc_m.mrdc005, 
+                   g_mrdc_m.mrdc006,g_mrdc_m.mrdc007,g_mrdc_m.mrdc008,g_mrdc_m.mrdcownid,g_mrdc_m.mrdcowndp, 
+                   g_mrdc_m.mrdccrtid,g_mrdc_m.mrdccrtdp,g_mrdc_m.mrdccrtdt,g_mrdc_m.mrdccnfid,g_mrdc_m.mrdccnfdt)  
+
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("g_mrdc_m",SQLCA.sqlcode,1)  
+                  CALL s_transaction_end('N','0')
+                  CONTINUE DIALOG
+               END IF
+               
+               #add-point:單頭新增中
+               {<point name="input.head.m_insert"/>}
+               #end add-point
+               
+               
+               
+               
+               #add-point:單頭新增後
+               {<point name="input.head.a_insert"/>}
+               #end add-point
+               CALL s_transaction_end('Y','0') 
+               
+               IF l_cmd_t = 'r' AND p_cmd = 'a' THEN
+                  CALL amrt200_detail_reproduce()
+               END IF
+               
+               LET p_cmd = 'u'
+            ELSE
+               CALL s_transaction_begin()
+            
+               #add-point:單頭修改前
+               {<point name="input.head.b_update" mark="Y"/>}
+               #end add-point
+               
+               UPDATE mrdc_t SET (mrdcdocno,mrdcdocdt,mrdc001,mrdc002,mrdc003,mrdc004,mrdcsite,mrdcstus, 
+                   mrdc005,mrdc006,mrdc007,mrdc008,mrdcownid,mrdcowndp,mrdccrtid,mrdccrtdp,mrdccrtdt, 
+                   mrdccnfid,mrdccnfdt) = (g_mrdc_m.mrdcdocno,g_mrdc_m.mrdcdocdt,g_mrdc_m.mrdc001,g_mrdc_m.mrdc002, 
+                   g_mrdc_m.mrdc003,g_mrdc_m.mrdc004,g_mrdc_m.mrdcsite,g_mrdc_m.mrdcstus,g_mrdc_m.mrdc005, 
+                   g_mrdc_m.mrdc006,g_mrdc_m.mrdc007,g_mrdc_m.mrdc008,g_mrdc_m.mrdcownid,g_mrdc_m.mrdcowndp, 
+                   g_mrdc_m.mrdccrtid,g_mrdc_m.mrdccrtdp,g_mrdc_m.mrdccrtdt,g_mrdc_m.mrdccnfid,g_mrdc_m.mrdccnfdt) 
+
+                WHERE mrdcent = g_enterprise AND mrdcdocno = g_mrdcdocno_t
+ 
+               IF SQLCA.sqlcode THEN
+                  CALL cl_err("mrdc_t",SQLCA.sqlcode,1)  
+                  CALL s_transaction_end('N','0')
+                  CONTINUE DIALOG
+               END IF
+               
+               #add-point:單頭修改中
+               {<point name="input.head.m_update"/>}
+               #end add-point
+               
+               
+               
+               
+               LET g_log1 = util.JSON.stringify(g_mrdc_m_t)
+               LET g_log2 = util.JSON.stringify(g_mrdc_m)
+               IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF
+               
+               #add-point:單頭修改後
+               {<point name="input.head.a_update"/>}
+               #end add-point
+            END IF
+            
+            LET g_mrdcdocno_t = g_mrdc_m.mrdcdocno
+ 
+            #controlp
+            
+      END INPUT
+   
+]]>
+  </section>
+  <section id="amrt200.input.other" ver="1" status="" src="s">
+    <![CDATA[      
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+      
+      BEFORE DIALOG 
+         #add-point:input段before dialog
+         {<point name="input.before_dialog"/>}
+         #end add-point    
+         #新增時強制從單頭開始填
+         IF p_cmd = 'a' THEN
+            NEXT FIELD mrdcdocno
+         ELSE
+            CASE g_aw
+               WHEN "s_detail1"
+                  NEXT FIELD mrddseq
+ 
+            END CASE
+         END IF
+    
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         #add-point:input段accept 
+         {<point name="input.accept"/>}
+         #end add-point    
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+         
+   END DIALOG
+    
+   #add-point:input段after input 
+   {<point name="input.after_input"/>}
+   #end add-point    
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.insert" ver="4" status="" src="s">
+    <![CDATA[#+ 資料新增
+PRIVATE FUNCTION amrt200_insert()
+   #add-point:insert段define
+   {<point name="insert.define"/>}
+   #end add-point    
+   
+   #清畫面欄位內容
+   CLEAR FORM                    
+   CALL g_mrdd_d.clear()   
+ 
+ 
+   INITIALIZE g_mrdc_m.* LIKE mrdc_t.*             #DEFAULT 設定
+   
+   LET g_mrdcdocno_t = NULL
+ 
+   
+   CALL s_transaction_begin()
+   WHILE TRUE
+      #公用欄位給值(單頭)
+      #此段落由子樣板a14產生    
+      LET g_mrdc_m.mrdcownid = g_user
+      LET g_mrdc_m.mrdcowndp = g_dept
+      LET g_mrdc_m.mrdccrtid = g_user
+      LET g_mrdc_m.mrdccrtdp = g_dept 
+      LET g_mrdc_m.mrdccrtdt = cl_get_current()
+      LET g_mrdc_m.mrdcmodid = ""
+      LET g_mrdc_m.mrdcmoddt = ""
+      LET g_mrdc_m.mrdcstus = "N"
+ 
+ 
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+            LET g_mrdc_m.mrdc001 = "5"
+      LET g_mrdc_m.mrdcstus = "N"
+      LET g_mrdc_m.mrdc005 = "1"
+ 
+  
+      #add-point:單頭預設值
+      {<point name="insert.default"/>}
+      #end add-point 
+     
+      CALL amrt200_input("a")
+      
+      #add-point:單頭輸入後
+      {<point name="insert.after_insert"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_mrdc_m.* = g_mrdc_m_t.*
+         CALL amrt200_show()
+         CALL cl_err('',9001,0)
+         CALL s_transaction_end('N','0')
+         EXIT WHILE
+      END IF
+      
+      CALL g_mrdd_d.clear()
+ 
+ 
+      LET g_rec_b = 0
+      CALL s_transaction_end('Y','0')
+      EXIT WHILE
+        
+   END WHILE
+   
+   LET g_state = "Y"
+   LET g_current_idx = 1 
+   
+   LET g_mrdcdocno_t = g_mrdc_m.mrdcdocno
+ 
+   
+   LET g_wc = g_wc,  
+              " OR ( mrdcent = '" ||g_enterprise|| "' AND",
+              " mrdcdocno = '", g_mrdc_m.mrdcdocno CLIPPED, "' "
+ 
+              , ") "
+   
+   CLOSE amrt200_cl
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.insert_b" ver="2" status="" src="s">
+    <![CDATA[#+ 新增單身後其他table連動
+PRIVATE FUNCTION amrt200_insert_b(ps_table,ps_keys,ps_page)
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE ls_page     STRING
+   #add-point:insert_b段define
+   {<point name="insert_b.define"/>}
+   #end add-point     
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前
+      {<point name="insert_b.before_insert" mark="Y"/>}
+      #end add-point 
+      INSERT INTO mrdd_t
+                  (mrddent,
+                   mrdddocno,
+                   mrddseq
+                   ,mrdd001,mrdd002,mrdd003,mrdd004,mrdd005,mrdd009,mrdd006,mrdd007,mrdd008) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2]
+                   ,g_mrdd_d[g_detail_idx].mrdd001,g_mrdd_d[g_detail_idx].mrdd002,g_mrdd_d[g_detail_idx].mrdd003, 
+                       g_mrdd_d[g_detail_idx].mrdd004,g_mrdd_d[g_detail_idx].mrdd005,g_mrdd_d[g_detail_idx].mrdd009, 
+                       g_mrdd_d[g_detail_idx].mrdd006,g_mrdd_d[g_detail_idx].mrdd007,g_mrdd_d[g_detail_idx].mrdd008) 
+
+      #add-point:insert_b段資料新增中
+      {<point name="insert_b.m_insert"/>}
+      #end add-point 
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("mrdd_t",SQLCA.sqlcode,0)
+      END IF
+      #add-point:insert_b段資料新增後
+      {<point name="insert_b.after_insert"/>}
+      #end add-point 
+   END IF
+   
+ 
+   
+ 
+   
+   #add-point:insert_b段other
+   {<point name="insert_b.other"/>}
+   #end add-point     
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.lock_b" ver="2" status="" src="s">
+    <![CDATA[#+ 連動lock其他單身table資料
+PRIVATE FUNCTION amrt200_lock_b(ps_table,ps_page)
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:lock_b段define
+   {<point name="lock_b.define"/>}
+   #end add-point   
+   
+   #先刷新資料
+   #CALL amrt200_b_fill()
+   
+   #鎖定整組table
+   #LET ls_group = "'1',"
+   #僅鎖定自身table
+   LET ls_group = "mrdd_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      OPEN amrt200_bcl USING g_enterprise,
+                                       g_mrdc_m.mrdcdocno,g_mrdd_d[g_detail_idx].mrddseq     
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("amrt200_bcl",SQLCA.sqlcode,1)
+         RETURN FALSE
+      END IF
+   END IF
+                                    
+ 
+   
+ 
+   
+   #add-point:lock_b段other
+   {<point name="lock_b.other"/>}
+   #end add-point  
+   
+   RETURN TRUE
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.main" ver="4" status="" src="s">
+    <![CDATA[#+ 此段落由子樣板a26產生
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("amr","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = " SELECT mrdcdocno,'',mrdcdocdt,mrdc001,mrdc002,mrdc003,'',mrdc004,'',mrdcsite, 
+       mrdcstus,mrdc005,mrdc006,'',mrdc007,mrdc008,mrdcownid,'',mrdcowndp,'',mrdccrtid,'',mrdccrtdp, 
+       '',mrdccrtdt,mrdcmodid,'',mrdcmoddt,mrdccnfid,'',mrdccnfdt", 
+                      " FROM mrdc_t",
+                      " WHERE mrdcent= ? AND mrdcdocno=? FOR UPDATE"
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE amrt200_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT UNIQUE mrdcdocno,mrdcdocdt,mrdc001,mrdc002,mrdc003,mrdc004,mrdcsite,mrdcstus, 
+       mrdc005,mrdc006,mrdc007,mrdc008,mrdcownid,mrdcowndp,mrdccrtid,mrdccrtdp,mrdccrtdt,mrdcmodid,mrdcmoddt, 
+       mrdccnfid,mrdccnfdt,t1.oofa011 ,t2.ooefl003 ,t3.ooefl003 ,t4.oofa011 ,t5.ooefl003 ,t6.oofa011 , 
+       t7.ooefl003 ,t8.oofa011 ,t9.oofa011",
+               " FROM mrdc_t",
+                              " LEFT JOIN oofa_t t1 ON t1.oofaent='"||g_enterprise||"' AND t1.oofa002='2' AND t1.oofa003=mrdc003  ",
+               " LEFT JOIN ooefl_t t2 ON t2.ooeflent='"||g_enterprise||"' AND t2.ooefl001=mrdc004 AND t2.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t3 ON t3.ooeflent='"||g_enterprise||"' AND t3.ooefl001=mrdc006 AND t3.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN oofa_t t4 ON t4.oofaent='"||g_enterprise||"' AND t4.oofa002='2' AND t4.oofa003=mrdcownid  ",
+               " LEFT JOIN ooefl_t t5 ON t5.ooeflent='"||g_enterprise||"' AND t5.ooefl001=mrdcowndp AND t5.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN oofa_t t6 ON t6.oofaent='"||g_enterprise||"' AND t6.oofa002='2' AND t6.oofa003=mrdccrtid  ",
+               " LEFT JOIN ooefl_t t7 ON t7.ooeflent='"||g_enterprise||"' AND t7.ooefl001=mrdccrtdp AND t7.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN oofa_t t8 ON t8.oofaent='"||g_enterprise||"' AND t8.oofa002='2' AND t8.oofa003=mrdcmodid  ",
+               " LEFT JOIN oofa_t t9 ON t9.oofaent='"||g_enterprise||"' AND t9.oofa002='2' AND t9.oofa003=mrdccnfid  ",
+ 
+               " WHERE mrdcent = '" ||g_enterprise|| "' AND mrdcdocno = ?"
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define
+   {<point name="main.after_refresh_sql"/>}
+   #end add-point
+   PREPARE amrt200_master_referesh FROM g_sql
+ 
+ 
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_amrt200 WITH FORM cl_ap_formpath("amr",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL amrt200_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL amrt200_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_amrt200
+      
+   END IF 
+   
+   CLOSE amrt200_cl
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+]]>
+  </section>
+  <section id="amrt200.modify" ver="6" status="" src="s">
+    <![CDATA[#+ 資料修改
+PRIVATE FUNCTION amrt200_modify()
+   DEFINE l_new_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key  DYNAMIC ARRAY OF STRING
+   #add-point:modify段define
+   {<point name="modify.define"/>}
+   #end add-point    
+   
+   IF g_mrdc_m.mrdcdocno IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+   
+   EXECUTE amrt200_master_referesh USING g_mrdc_m.mrdcdocno INTO g_mrdc_m.mrdcdocno,g_mrdc_m.mrdcdocdt, 
+       g_mrdc_m.mrdc001,g_mrdc_m.mrdc002,g_mrdc_m.mrdc003,g_mrdc_m.mrdc004,g_mrdc_m.mrdcsite,g_mrdc_m.mrdcstus, 
+       g_mrdc_m.mrdc005,g_mrdc_m.mrdc006,g_mrdc_m.mrdc007,g_mrdc_m.mrdc008,g_mrdc_m.mrdcownid,g_mrdc_m.mrdcowndp, 
+       g_mrdc_m.mrdccrtid,g_mrdc_m.mrdccrtdp,g_mrdc_m.mrdccrtdt,g_mrdc_m.mrdcmodid,g_mrdc_m.mrdcmoddt, 
+       g_mrdc_m.mrdccnfid,g_mrdc_m.mrdccnfdt,g_mrdc_m.mrdc003_desc,g_mrdc_m.mrdc004_desc,g_mrdc_m.mrdc006_desc, 
+       g_mrdc_m.mrdcownid_desc,g_mrdc_m.mrdcowndp_desc,g_mrdc_m.mrdccrtid_desc,g_mrdc_m.mrdccrtdp_desc, 
+       g_mrdc_m.mrdcmodid_desc,g_mrdc_m.mrdccnfid_desc
+ 
+   ERROR ""
+  
+   LET g_mrdcdocno_t = g_mrdc_m.mrdcdocno
+ 
+   CALL s_transaction_begin()
+   
+   OPEN amrt200_cl USING g_enterprise,g_mrdc_m.mrdcdocno
+   IF STATUS THEN
+      CALL cl_err("OPEN amrt200_cl:", STATUS, 1)
+      CLOSE amrt200_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE amrt200_master_referesh USING g_mrdc_m.mrdcdocno INTO g_mrdc_m.mrdcdocno,g_mrdc_m.mrdcdocdt, 
+       g_mrdc_m.mrdc001,g_mrdc_m.mrdc002,g_mrdc_m.mrdc003,g_mrdc_m.mrdc004,g_mrdc_m.mrdcsite,g_mrdc_m.mrdcstus, 
+       g_mrdc_m.mrdc005,g_mrdc_m.mrdc006,g_mrdc_m.mrdc007,g_mrdc_m.mrdc008,g_mrdc_m.mrdcownid,g_mrdc_m.mrdcowndp, 
+       g_mrdc_m.mrdccrtid,g_mrdc_m.mrdccrtdp,g_mrdc_m.mrdccrtdt,g_mrdc_m.mrdcmodid,g_mrdc_m.mrdcmoddt, 
+       g_mrdc_m.mrdccnfid,g_mrdc_m.mrdccnfdt,g_mrdc_m.mrdc003_desc,g_mrdc_m.mrdc004_desc,g_mrdc_m.mrdc006_desc, 
+       g_mrdc_m.mrdcownid_desc,g_mrdc_m.mrdcowndp_desc,g_mrdc_m.mrdccrtid_desc,g_mrdc_m.mrdccrtdp_desc, 
+       g_mrdc_m.mrdcmodid_desc,g_mrdc_m.mrdccnfid_desc
+ 
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      CALL cl_err(g_mrdc_m.mrdcdocno,SQLCA.sqlcode,0)
+      CLOSE amrt200_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   
+   
+   #add-point:modify段show之前
+   {<point name="modify.before_show"/>}
+   #end add-point  
+   
+   CALL amrt200_show()
+   WHILE TRUE
+      LET g_mrdcdocno_t = g_mrdc_m.mrdcdocno
+ 
+      
+      #寫入修改者/修改日期資訊(單頭)
+      LET g_mrdc_m.mrdcmodid = g_user 
+LET g_mrdc_m.mrdcmoddt = cl_get_current()
+ 
+      
+      #add-point:modify段修改前
+      {<point name="modify.before_input"/>}
+      #end add-point
+      
+      #欄位更改
+      CALL amrt200_input("u")
+ 
+      #add-point:modify段修改後
+      {<point name="modify.after_input"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         LET g_mrdc_m.* = g_mrdc_m_t.*
+         CALL amrt200_show()
+         CALL cl_err('',9001,0)
+         CALL s_transaction_end('N','0')
+         EXIT WHILE
+      END IF 
+      
+      #若有modid跟moddt則進行update
+      UPDATE mrdc_t SET (mrdcmodid,mrdcmoddt) = (g_mrdc_m.mrdcmodid,g_mrdc_m.mrdcmoddt)
+       WHERE mrdcent = g_enterprise AND mrdcdocno = g_mrdcdocno_t
+ 
+                  
+      #若單頭key欄位有變更
+      IF g_mrdc_m.mrdcdocno != g_mrdcdocno_t 
+ 
+      THEN
+         CALL s_transaction_begin()
+         
+         #add-point:單身fk修改前
+         {<point name="modify.body.b_fk_update" mark="Y"/>}
+         #end add-point
+         
+         #更新單身key值
+         UPDATE mrdd_t SET mrdddocno = g_mrdc_m.mrdcdocno
+ 
+          WHERE mrddent = g_enterprise AND mrdddocno = g_mrdcdocno_t
+ 
+            
+         #add-point:單身fk修改中
+         {<point name="modify.body.m_fk_update"/>}
+         #end add-point
+ 
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+               CALL cl_err("mrdd_t","std-00009",1)
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+            WHEN SQLCA.sqlcode #其他錯誤
+               CALL cl_err("mrdd_t",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')
+               CONTINUE WHILE
+         END CASE
+         
+         #add-point:單身fk修改後
+         {<point name="modify.body.a_fk_update"/>}
+         #end add-point
+         
+ 
+         
+ 
+         
+         #UPDATE 多語言table key值
+         
+ 
+         CALL s_transaction_end('Y','0')
+      END IF
+    
+      EXIT WHILE
+   END WHILE
+ 
+   #修改歷程記錄
+   #IF NOT cl_log_modified_record(g_mrdc_m.mrdcdocno,g_site) THEN 
+   #   CALL s_transaction_end('N','0')
+   #END IF
+ 
+   CLOSE amrt200_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #流程通知預埋點-U
+   CALL cl_flow_notify(g_mrdc_m.mrdcdocno,'U')
+ 
+END FUNCTION   
+]]>
+  </section>
+  <section id="amrt200.other_dialog" ver="2" status="" src="s">
+    <![CDATA[   
+]]>
+  </section>
+  <section id="amrt200.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="amrt200.query" ver="2" status="" src="s">
+    <![CDATA[#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION amrt200_query()
+   DEFINE ls_wc STRING
+   #add-point:query段define
+   {<point name="query.define"/>}
+   #end add-point   
+ 
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF   
+   
+   LET ls_wc = g_wc
+   
+   LET INT_FLAG = 0
+   CALL cl_navigator_setting( g_current_idx, g_detail_cnt )
+   ERROR ""
+   
+   #清除畫面及相關資料
+   CLEAR FORM
+   CALL g_browser.clear()       
+   CALL g_mrdd_d.clear()
+ 
+   
+   #add-point:query段other
+   {<point name="query.other"/>}
+   #end add-point   
+   
+   DISPLAY ' ' TO FORMONLY.idx
+   DISPLAY ' ' TO FORMONLY.cnt
+   DISPLAY ' ' TO FORMONLY.b_index
+   DISPLAY ' ' TO FORMONLY.b_count
+   DISPLAY ' ' TO FORMONLY.h_index
+   DISPLAY ' ' TO FORMONLY.h_count
+   
+   CALL amrt200_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      LET g_wc = ls_wc
+      CALL amrt200_browser_fill("")
+      CALL amrt200_fetch("")
+      RETURN
+   END IF
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||") AND ("||g_wc2||")")
+   
+   #搜尋後資料初始化 
+   LET g_detail_cnt  = 0
+   LET g_current_idx = 1
+   LET g_current_row = 0
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_error_show  = 1
+   LET g_wc_filter   = ""
+   LET l_ac = 1
+   CALL FGL_SET_ARR_CURR(1)
+      CALL amrt200_filter_show('mrdcdocno')
+   CALL amrt200_filter_show('mrdcdocdt')
+   CALL amrt200_filter_show('mrdc001')
+   CALL amrt200_filter_show('mrdc003')
+   CALL amrt200_filter_show('mrdc004')
+   CALL amrt200_filter_show('mrdc005')
+   CALL amrt200_filter_show('mrdccrtid')
+   CALL amrt200_filter_show('mrdccrtdt')
+   CALL amrt200_filter_show('mrdcmodid')
+   CALL amrt200_filter_show('mrdcmoddt')
+   CALL amrt200_browser_fill("F")
+         
+   IF g_browser_cnt = 0 THEN
+      CALL cl_err("","-100",1)
+   ELSE
+      CALL amrt200_fetch("F") 
+   END IF
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.reproduce" ver="4" status="" src="s">
+    <![CDATA[#+ 資料複製
+PRIVATE FUNCTION amrt200_reproduce()
+   DEFINE l_newno     LIKE mrdc_t.mrdcdocno 
+   DEFINE l_oldno     LIKE mrdc_t.mrdcdocno 
+ 
+   DEFINE l_master    RECORD LIKE mrdc_t.*
+   DEFINE l_detail    RECORD LIKE mrdd_t.*
+ 
+ 
+   DEFINE l_cnt       LIKE type_t.num5
+   #add-point:reproduce段define
+   {<point name="reproduce.define"/>}
+   #end add-point   
+ 
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+   
+   IF g_mrdc_m.mrdcdocno IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+    
+   LET g_mrdcdocno_t = g_mrdc_m.mrdcdocno
+ 
+    
+   LET g_mrdc_m.mrdcdocno = ""
+ 
+    
+   CALL amrt200_set_entry('a')
+   CALL amrt200_set_no_entry('a')
+ 
+   CALL cl_set_head_visible("","YES")
+ 
+   #公用欄位給予預設值
+   #此段落由子樣板a14產生    
+      LET g_mrdc_m.mrdcownid = g_user
+      LET g_mrdc_m.mrdcowndp = g_dept
+      LET g_mrdc_m.mrdccrtid = g_user
+      LET g_mrdc_m.mrdccrtdp = g_dept 
+      LET g_mrdc_m.mrdccrtdt = cl_get_current()
+      LET g_mrdc_m.mrdcmodid = ""
+      LET g_mrdc_m.mrdcmoddt = ""
+      LET g_mrdc_m.mrdcstus = "N"
+ 
+ 
+   
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前
+   {<point name="reproduce.head.b_input"/>}
+   #end add-point
+   
+   CALL amrt200_input("r")
+   
+      LET g_mrdc_m.mrdcdocno_desc = ''
+   DISPLAY BY NAME g_mrdc_m.mrdcdocno_desc
+ 
+   
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      RETURN
+   END IF
+ 
+   LET g_state = "Y"
+   LET g_current_idx = 1 
+   
+   LET g_wc = g_wc,  
+              " OR (",
+              " mrdcdocno = '", g_mrdc_m.mrdcdocno CLIPPED, "' "
+ 
+              , ") "
+   
+   #add-point:完成複製段落後
+   {<point name="reproduce.after_reproduce" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.set_entry" ver="1" status="" src="s">
+    <![CDATA[#+ 單頭欄位開啟設定
+PRIVATE FUNCTION amrt200_set_entry(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1  
+   #add-point:set_entry段define
+   {<point name="set_entry.define"/>}
+   #end add-point       
+ 
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("mrdcdocno",TRUE)
+      #add-point:set_entry段欄位控制
+      {<point name="set_entry.field_control"/>}
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry段欄位控制後
+   {<point name="set_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.set_entry_b" ver="1" status="" src="s">
+    <![CDATA[#+ 單身欄位開啟設定
+PRIVATE FUNCTION amrt200_set_entry_b(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_entry_b段define
+   {<point name="set_entry_b.define"/>}
+   #end add-point     
+   #add-point:set_entry_b段
+   {<point name="set_entry_b.set_entry_b"/>}
+   #end add-point  
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.set_no_entry" ver="1" status="" src="s">
+    <![CDATA[#+ 單頭欄位關閉設定
+PRIVATE FUNCTION amrt200_set_no_entry(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry段define
+   {<point name="set_no_entry.define"/>}
+   #end add-point     
+ 
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("mrdcdocno",FALSE)
+      #add-point:set_no_entry段欄位控制
+      {<point name="set_no_entry.field_control"/>}
+      #end add-point 
+   END IF 
+   
+   #add-point:set_no_entry段欄位控制後
+   {<point name="set_no_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.set_no_entry_b" ver="1" status="" src="s">
+    <![CDATA[#+ 單身欄位關閉設定
+PRIVATE FUNCTION amrt200_set_no_entry_b(p_cmd)
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry_b段define
+   {<point name="set_no_entry_b.define"/>}
+   #end add-point    
+   #add-point:set_no_entry_b段
+   {<point name="set_no_entry_b.set_no_entry_b"/>}
+   #end add-point     
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.set_pk_array" ver="1" status="" src="s">
+    <![CDATA[   #+ 此段落由子樣板a51產生
+#+ 給予pk_array內容
+PRIVATE FUNCTION amrt200_set_pk_array()
+   #add-point:set_pk_array段define
+   {<point name="set_pk_array.define"/>}
+   #end add-point
+   
+   #add-point:set_pk_array段之前
+   {<point name="set_pk_array.before"/>}
+   #end add-point  
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_mrdc_m.mrdcdocno
+   LET g_pk_array[1].column = 'mrdcdocno'
+ 
+   
+   #add-point:set_pk_array段之後
+   {<point name="set_pk_array.after"/>}
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+]]>
+  </section>
+  <section id="amrt200.show" ver="7" status="" src="s">
+    <![CDATA[#+ 單頭資料重新顯示及單身資料重抓
+PRIVATE FUNCTION amrt200_show()
+   DEFINE l_ac_t    LIKE type_t.num5
+   #add-point:show段define
+   {<point name="show.define"/>}
+   #end add-point  
+ 
+   #add-point:show段之前
+   {<point name="show.before"/>}
+   #end add-point
+   
+   
+   
+   LET g_mrdc_m_t.* = g_mrdc_m.*      #保存單頭舊值
+   
+   IF g_bfill = "Y" THEN
+      CALL amrt200_b_fill() #單身填充
+      CALL amrt200_b_fill2('0') #單身填充
+   END IF
+     
+   #帶出公用欄位reference值
+   #此段落由子樣板a12產生
+      #LET g_mrdc_m.mrdcownid_desc = cl_get_username(g_mrdc_m.mrdcownid)
+      #LET g_mrdc_m.mrdcowndp_desc = cl_get_deptname(g_mrdc_m.mrdcowndp)
+      #LET g_mrdc_m.mrdccrtid_desc = cl_get_username(g_mrdc_m.mrdccrtid)
+      #LET g_mrdc_m.mrdccrtdp_desc = cl_get_deptname(g_mrdc_m.mrdccrtdp)
+      #LET g_mrdc_m.mrdcmodid_desc = cl_get_username(g_mrdc_m.mrdcmodid)
+      #LET g_mrdc_m.mrdccnfid_desc = cl_get_deptname(g_mrdc_m.mrdccnfid)
+      
+ 
+ 
+   
+   #顯示followup圖示
+   #+ 此段落由子樣板a48產生
+   CALL amrt200_set_pk_array()
+   #add-point:ON ACTION agendum
+   {<point name="show.follow_pic"/>}
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+ 
+ 
+   
+   LET l_ac_t = l_ac
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference
+   {<point name="show.head.reference"/>}
+   #end add-point
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_mrdc_m.mrdcdocno,g_mrdc_m.mrdcdocno_desc,g_mrdc_m.mrdcdocdt,g_mrdc_m.mrdc001,g_mrdc_m.mrdc002, 
+       g_mrdc_m.mrdc003,g_mrdc_m.mrdc003_desc,g_mrdc_m.mrdc004,g_mrdc_m.mrdc004_desc,g_mrdc_m.mrdcsite, 
+       g_mrdc_m.mrdcstus,g_mrdc_m.mrdc005,g_mrdc_m.mrdc006,g_mrdc_m.mrdc006_desc,g_mrdc_m.mrdc007,g_mrdc_m.mrdc008, 
+       g_mrdc_m.mrdcownid,g_mrdc_m.mrdcownid_desc,g_mrdc_m.mrdcowndp,g_mrdc_m.mrdcowndp_desc,g_mrdc_m.mrdccrtid, 
+       g_mrdc_m.mrdccrtid_desc,g_mrdc_m.mrdccrtdp,g_mrdc_m.mrdccrtdp_desc,g_mrdc_m.mrdccrtdt,g_mrdc_m.mrdcmodid, 
+       g_mrdc_m.mrdcmodid_desc,g_mrdc_m.mrdcmoddt,g_mrdc_m.mrdccnfid,g_mrdc_m.mrdccnfid_desc,g_mrdc_m.mrdccnfdt 
+
+   
+   #顯示狀態(stus)圖片
+         #此段落由子樣板a21產生
+      CASE g_mrdc_m.mrdcstus
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "J"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/reconciliate.png")
+         WHEN "K"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unreconciliate.png")
+         
+      END CASE
+ 
+ 
+   
+   #讀入ref值(單身)
+   FOR l_ac = 1 TO g_mrdd_d.getLength()
+      #add-point:show段單身reference
+      {<point name="show.body.reference"/>}
+      #end add-point
+   END FOR
+   
+ 
+   
+    
+   
+   #add-point:show段other
+   {<point name="show.other"/>}
+   #end add-point  
+   
+   LET l_ac = l_ac_t
+   
+   #移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()     
+ 
+   CALL amrt200_detail_show()
+   
+   #add-point:show段之後
+   {<point name="show.after"/>}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.signature" ver="4" status="" src="s">
+    <![CDATA[   #此段落由子樣板a39產生
+#+ BPM提交
+PRIVATE FUNCTION amrt200_send()
+ 
+   #add-point:send段define
+   {<point name="send.define"/>}
+   #end add-point 
+ 
+   IF g_mrdc_m.mrdcdocno IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN FALSE
+   END IF
+ 
+   #重新取得與顯示完整單據資料(最新單據資料)
+   EXECUTE amrt200_master_referesh USING g_mrdc_m.mrdcdocno INTO g_mrdc_m.mrdcdocno,g_mrdc_m.mrdcdocdt, 
+       g_mrdc_m.mrdc001,g_mrdc_m.mrdc002,g_mrdc_m.mrdc003,g_mrdc_m.mrdc004,g_mrdc_m.mrdcsite,g_mrdc_m.mrdcstus, 
+       g_mrdc_m.mrdc005,g_mrdc_m.mrdc006,g_mrdc_m.mrdc007,g_mrdc_m.mrdc008,g_mrdc_m.mrdcownid,g_mrdc_m.mrdcowndp, 
+       g_mrdc_m.mrdccrtid,g_mrdc_m.mrdccrtdp,g_mrdc_m.mrdccrtdt,g_mrdc_m.mrdcmodid,g_mrdc_m.mrdcmoddt, 
+       g_mrdc_m.mrdccnfid,g_mrdc_m.mrdccnfdt,g_mrdc_m.mrdc003_desc,g_mrdc_m.mrdc004_desc,g_mrdc_m.mrdc006_desc, 
+       g_mrdc_m.mrdcownid_desc,g_mrdc_m.mrdcowndp_desc,g_mrdc_m.mrdccrtid_desc,g_mrdc_m.mrdccrtdp_desc, 
+       g_mrdc_m.mrdcmodid_desc,g_mrdc_m.mrdccnfid_desc
+ 
+   ERROR ""
+   
+   CALL s_transaction_begin()
+ 
+   OPEN amrt200_cl USING g_enterprise,g_mrdc_m.mrdcdocno
+   IF STATUS THEN
+      CALL cl_err("OPEN amrt200_cl:", STATUS, 1)
+      CLOSE amrt200_cl
+      CALL s_transaction_end('N','0')
+      RETURN FALSE
+   END IF
+ 
+   #鎖住將被更改的資料
+   FETCH amrt200_cl INTO g_mrdc_m.mrdcdocno,g_mrdc_m.mrdcdocno_desc,g_mrdc_m.mrdcdocdt,g_mrdc_m.mrdc001, 
+       g_mrdc_m.mrdc002,g_mrdc_m.mrdc003,g_mrdc_m.mrdc003_desc,g_mrdc_m.mrdc004,g_mrdc_m.mrdc004_desc, 
+       g_mrdc_m.mrdcsite,g_mrdc_m.mrdcstus,g_mrdc_m.mrdc005,g_mrdc_m.mrdc006,g_mrdc_m.mrdc006_desc,g_mrdc_m.mrdc007, 
+       g_mrdc_m.mrdc008,g_mrdc_m.mrdcownid,g_mrdc_m.mrdcownid_desc,g_mrdc_m.mrdcowndp,g_mrdc_m.mrdcowndp_desc, 
+       g_mrdc_m.mrdccrtid,g_mrdc_m.mrdccrtid_desc,g_mrdc_m.mrdccrtdp,g_mrdc_m.mrdccrtdp_desc,g_mrdc_m.mrdccrtdt, 
+       g_mrdc_m.mrdcmodid,g_mrdc_m.mrdcmodid_desc,g_mrdc_m.mrdcmoddt,g_mrdc_m.mrdccnfid,g_mrdc_m.mrdccnfid_desc, 
+       g_mrdc_m.mrdccnfdt
+   
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      CALL cl_err(g_mrdc_m.mrdcdocno,SQLCA.sqlcode,0)
+      CLOSE amrt200_cl
+      CALL s_transaction_end('N','0')
+      RETURN FALSE
+   END IF
+ 
+   #依據單據個數，需要指定所有單身條件為" 1=1"  (單身有幾個就要設幾個)
+   LET g_wc2_table1 = " 1=1"
+ 
+ 
+   CALL amrt200_show()
+   CALL amrt200_set_pk_array()
+   
+   #add-point: 提交前的ADP
+   {<point name="send.before_send" />}
+   #end add-point
+   
+   #公用變數初始化
+   CALL cl_bpm_data_init()
+                  
+   #依照主檔/單身個數產生 CALL cl_bpm_set_master_data() / cl_bpm_set_detail_data() 
+   #單頭固定為 CALL cl_bpm_set_master_data(util.JSONObject.fromFGL(xxxx)) 傳入參數: (1)單頭陣列  ; 回傳值: 無
+   CALL cl_bpm_set_master_data(util.JSONObject.fromFGL(g_mrdc_m))
+                              
+   #單身固定為 CALL cl_bpm_set_detail_data(s_detailX, util.JSONArray.fromFGL(xxxx)) 傳入參數: (1)單身SR名稱  (2)單身陣列  ; 回傳值: 無
+   CALL cl_bpm_set_detail_data("s_detail1", util.JSONArray.fromFGL(g_mrdd_d))
+ 
+ 
+   # cl_bpm_cli() 裡有包含以前的aws_condition()=>送簽資料檢核和更新單據狀況碼為'W'
+   # cl_bpm_cli() 傳入參數:無  ;  回傳值: 0 開單失敗; 1 開單成功
+ 
+   #開單失敗
+   IF NOT cl_bpm_cli() THEN 
+      CLOSE amrt200_cl
+      CALL s_transaction_end('N','0')
+      RETURN FALSE
+   END IF
+ 
+   #add-point: 提交後的ADP
+   {<point name="send.after_send" />}
+   #end add-point
+   
+   #完成狀態更新
+   CLOSE amrt200_cl
+   CALL s_transaction_end('Y','0')
+             
+   #此段落不需要刪除資料,但是否需要refresh圖片樣式???
+   #CALL amrt200_ui_browser_refresh()
+ 
+   #重新指定此筆單據資料狀態圖片=>送簽中
+   LET g_browser[g_current_row].b_statepic = "stus/16/signing.png"
+ 
+   #重新取得單頭/單身資料,DISPLAY在畫面上
+   CALL amrt200_ui_headershow()
+   CALL amrt200_ui_detailshow()
+ 
+   RETURN TRUE
+   
+END FUNCTION
+ 
+ 
+#此段落由子樣板a40產生
+#+ BPM抽單
+PRIVATE FUNCTION amrt200_draw_out()
+ 
+   #add-point:draw段define
+   {<point name="draw.define"/>}
+   #end add-point
+ 
+   #檢查資料是否存在
+   IF g_mrdc_m.mrdcdocno IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN FALSE
+   END IF
+ 
+   #LOCK主檔資料
+   CALL s_transaction_begin()
+ 
+   #進行BPM抽單功能
+   OPEN amrt200_cl USING g_enterprise,g_mrdc_m.mrdcdocno
+   IF STATUS THEN
+      CALL cl_err("OPEN amrt200_cl:", STATUS, 1)
+      CLOSE amrt200_cl
+      CALL s_transaction_end('N','0')
+      RETURN FALSE
+   END IF
+ 
+   #鎖住將被更改的資料
+   FETCH amrt200_cl INTO g_mrdc_m.mrdcdocno,g_mrdc_m.mrdcdocno_desc,g_mrdc_m.mrdcdocdt,g_mrdc_m.mrdc001, 
+       g_mrdc_m.mrdc002,g_mrdc_m.mrdc003,g_mrdc_m.mrdc003_desc,g_mrdc_m.mrdc004,g_mrdc_m.mrdc004_desc, 
+       g_mrdc_m.mrdcsite,g_mrdc_m.mrdcstus,g_mrdc_m.mrdc005,g_mrdc_m.mrdc006,g_mrdc_m.mrdc006_desc,g_mrdc_m.mrdc007, 
+       g_mrdc_m.mrdc008,g_mrdc_m.mrdcownid,g_mrdc_m.mrdcownid_desc,g_mrdc_m.mrdcowndp,g_mrdc_m.mrdcowndp_desc, 
+       g_mrdc_m.mrdccrtid,g_mrdc_m.mrdccrtid_desc,g_mrdc_m.mrdccrtdp,g_mrdc_m.mrdccrtdp_desc,g_mrdc_m.mrdccrtdt, 
+       g_mrdc_m.mrdcmodid,g_mrdc_m.mrdcmodid_desc,g_mrdc_m.mrdcmoddt,g_mrdc_m.mrdccnfid,g_mrdc_m.mrdccnfid_desc, 
+       g_mrdc_m.mrdccnfdt
+   
+   #資料被他人LOCK, 或是sql執行時出現錯誤
+   IF SQLCA.sqlcode THEN
+      CALL cl_err(g_mrdc_m.mrdcdocno,SQLCA.sqlcode,0)
+      CLOSE amrt200_cl
+      CALL s_transaction_end('N','0')
+      RETURN FALSE
+   END IF
+ 
+   #抽單失敗
+   IF NOT cl_bpm_draw_out() THEN 
+      CLOSE amrt200_cl
+      CALL s_transaction_end('N','0')
+      RETURN FALSE
+   END IF    
+ 
+   #完成狀態更新
+   CLOSE amrt200_cl
+   CALL s_transaction_end('Y','0')
+          
+   #重新指定此筆單據資料狀態圖片=>抽單
+   LET g_browser[g_current_row].b_statepic = "stus/16/draw_out.png"
+ 
+   #重新取得單頭/單身資料,DISPLAY在畫面上
+   CALL amrt200_ui_headershow()  
+   CALL amrt200_ui_detailshow()
+ 
+   RETURN TRUE
+   
+END FUNCTION
+ 
+ 
+ 
+]]>
+  </section>
+  <section id="amrt200.state_change" ver="7" status="" src="s">
+    <![CDATA[   #+ 此段落由子樣板a09產生
+#+ 確認碼變更
+PRIVATE FUNCTION amrt200_statechange()
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:statechange段define
+   {<point name="statechange.define"/>}
+   #end add-point  
+   
+   #add-point:statechange段開始前
+   {<point name="statechange.before"/>}
+   #end add-point  
+   
+   ERROR ""     #清空畫面右下側ERROR區塊
+ 
+   IF g_mrdc_m.mrdcdocno IS NULL
+ 
+   THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+ 
+   MENU "" ATTRIBUTES (STYLE="popup")
+      BEFORE MENU
+         HIDE OPTION "approved"
+         HIDE OPTION "rejection"
+         CASE g_mrdc_m.mrdcstus
+            WHEN "N"
+               HIDE OPTION "unconfirmed"
+            WHEN "X"
+               HIDE OPTION "invalid"
+            WHEN "Y"
+               HIDE OPTION "confirmed"
+            WHEN "A"
+               HIDE OPTION "approved"
+            WHEN "D"
+               HIDE OPTION "withdraw"
+            WHEN "R"
+               HIDE OPTION "rejection"
+            WHEN "W"
+               HIDE OPTION "signing"
+            WHEN "J"
+               HIDE OPTION "reconciliate"
+            WHEN "K"
+               HIDE OPTION "unreconciliate"
+            
+         END CASE
+     
+      #add-point:menu前
+      {<point name="statechange.before_menu"/>}
+      #end add-point
+      
+      ON ACTION unconfirmed
+         LET lc_state = "N"
+         #add-point:action控制
+         {<point name="statechange.unconfirmed"/>}
+         #end add-point
+         EXIT MENU
+      ON ACTION invalid
+         LET lc_state = "X"
+         #add-point:action控制
+         {<point name="statechange.invalid"/>}
+         #end add-point
+         EXIT MENU
+      ON ACTION confirmed
+         LET lc_state = "Y"
+         #add-point:action控制
+         {<point name="statechange.confirmed"/>}
+         #end add-point
+         EXIT MENU
+      ON ACTION approved
+         LET lc_state = "A"
+         #add-point:action控制
+         {<point name="statechange.approved"/>}
+         #end add-point
+         EXIT MENU
+      #ON ACTION withdraw
+      #   LET lc_state = "D"
+      #   #add-point:action控制
+      #   {<point name="statechange.withdraw"/>}
+      #   #end add-point
+      #   EXIT MENU
+      ON ACTION rejection
+         LET lc_state = "R"
+         #add-point:action控制
+         {<point name="statechange.rejection"/>}
+         #end add-point
+         EXIT MENU
+      #ON ACTION signing
+      #   LET lc_state = "W"
+      #   #add-point:action控制
+      #   {<point name="statechange.signing"/>}
+      #   #end add-point
+      #   EXIT MENU
+      ON ACTION reconciliate
+         LET lc_state = "J"
+         #add-point:action控制
+         {<point name="statechange.reconciliate"/>}
+         #end add-point
+         EXIT MENU
+      ON ACTION unreconciliate
+         LET lc_state = "K"
+         #add-point:action控制
+         {<point name="statechange.unreconciliate"/>}
+         #end add-point
+         EXIT MENU
+      
+      #此段落由子樣板a36產生
+      #提交
+      ON ACTION signing
+         IF cl_auth_chk_act("signing") THEN
+            IF NOT amrt200_send() THEN
+               RETURN
+            END IF
+         END IF
+         LET lc_state = ''   #因為_send()已有執行update動作
+ 
+         EXIT MENU
+ 
+      #抽單
+      ON ACTION withdraw
+         IF cl_auth_chk_act("withdraw") THEN
+            IF NOT amrt200_draw_out() THEN
+               RETURN
+            END IF
+         END IF
+         LET lc_state = ''   #因為_draw_out()已有執行update動作
+         EXIT MENU
+ 
+ 
+      
+      #add-point:stus控制
+      {<point name="statechange.more_control"/>}
+      #end add-point
+      
+   END MENU
+   
+   IF (lc_state <> "N" 
+      AND lc_state <> "X"
+      AND lc_state <> "Y"
+      AND lc_state <> "A"
+      AND lc_state <> "D"
+      AND lc_state <> "R"
+      AND lc_state <> "W"
+      AND lc_state <> "J"
+      AND lc_state <> "K"
+      ) OR 
+      cl_null(lc_state) THEN
+      RETURN
+   END IF
+   
+   #add-point:stus修改前
+   {<point name="statechange.b_update"/>}
+   #end add-point
+      
+   UPDATE mrdc_t SET mrdcstus = lc_state 
+    WHERE mrdcent = g_enterprise AND mrdcdocno = g_mrdc_m.mrdcdocno
+ 
+  
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("",SQLCA.sqlcode,0)
+   ELSE
+      CASE lc_state
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "J"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/reconciliate.png")
+         WHEN "K"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unreconciliate.png")
+         
+      END CASE
+      LET g_mrdc_m.mrdcstus = lc_state
+      DISPLAY BY NAME g_mrdc_m.mrdcstus
+   END IF
+ 
+   #add-point:stus修改後
+   {<point name="statechange.a_update"/>}
+   #end add-point
+ 
+   #add-point:statechange段結束前
+   {<point name="statechange.after"/>}
+   #end add-point  
+ 
+END FUNCTION
+ 
+ 
+]]>
+  </section>
+  <section id="amrt200.ui_browser_refresh" ver="2" status="" src="s">
+    <![CDATA[#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION amrt200_ui_browser_refresh()
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define
+   {<point name="ui_browser_refresh.define"/>}
+   #end add-point    
+   
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_mrdcdocno = g_mrdc_m.mrdcdocno 
+ 
+         THEN  
+         CALL g_browser.deleteElement(l_i)
+         LET g_header_cnt = g_header_cnt - 1
+         EXIT FOR
+      END IF
+   END FOR
+ 
+   LET g_browser_cnt = g_browser_cnt - 1
+   IF g_current_row > g_browser_cnt THEN        #確定browse 筆數指在同一筆
+      LET g_current_row = g_browser_cnt
+   END IF
+ 
+   #DISPLAY g_browser_cnt TO FORMONLY.b_count    #總筆數的顯示
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.ui_detailshow" ver="1" status="" src="s">
+    <![CDATA[#+ 單身資料重新顯示
+PRIVATE FUNCTION amrt200_ui_detailshow()
+   #add-point:ui_detailshow段define
+   {<point name="ui_detailshow.define"/>}
+   #end add-point    
+   
+   #add-point:ui_detailshow段before
+   {<point name="ui_detailshow.before"/>}
+   #end add-point    
+   
+   IF g_curr_diag IS NOT NULL THEN
+      CALL g_curr_diag.setCurrentRow("s_detail1",g_detail_idx)      
+ 
+   END IF
+   
+   #add-point:ui_detailshow段after
+   {<point name="ui_detailshow.after"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.ui_dialog" ver="4" status="" src="s">
+    <![CDATA[#+ 功能選單
+PRIVATE FUNCTION amrt200_ui_dialog()
+   DEFINE li_idx    LIKE type_t.num5
+   DEFINE ls_wc     STRING
+   DEFINE lb_first  BOOLEAN
+   DEFINE la_param  RECORD
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+   
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+ 
+   CALL gfrm_curr.setElementImage("logo","logo/applogo.png") 
+   IF g_default THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   ELSE
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF
+   
+   #action default動作
+   #+ 此段落由子樣板a42產生
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice="insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL amrt200_insert()
+            #add-point:ON ACTION insert
+            {<point name="menu.default.insert" />}
+            #END add-point
+         END IF
+ 
+      #add-point:action default自訂
+      {<point name="ui_dialog.action_default"/>}
+      #end add-point
+      OTHERWISE
+         
+   END CASE
+ 
+ 
+   
+   LET lb_first = TRUE
+   
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+   
+   WHILE TRUE 
+   
+      CALL amrt200_browser_fill("")
+      CALL lib_cl_dlg.cl_dlg_before_display()
+      CALL cl_notice()
+            
+      #判斷前一個動作是否為新增, 若是的話切換到新增的筆數
+      IF g_state = "Y" THEN
+         FOR li_idx = 1 TO g_browser.getLength()
+            IF g_browser[li_idx].b_mrdcdocno = g_mrdcdocno_t
+ 
+               THEN
+               LET g_current_row = li_idx
+               LET g_current_idx = li_idx
+               EXIT FOR
+            END IF
+         END FOR
+         LET g_state = ""
+      END IF
+            
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+         #左側瀏覽頁簽
+         DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTES(COUNT=g_header_cnt)
+ 
+            BEFORE ROW
+               #回歸舊筆數位置 (回到當時異動的筆數)
+               LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+               IF g_current_row > 1 AND g_current_idx = 1 AND g_current_sw = FALSE THEN
+                  CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+                  LET g_current_idx = g_current_row
+               END IF
+               LET g_current_row = g_current_idx #目前指標
+               LET g_current_sw = TRUE
+ 
+               IF g_current_idx > g_browser.getLength() THEN
+                  LET g_current_idx = g_browser.getLength()
+               END IF 
+               
+               CALL amrt200_fetch('') # reload data
+               LET l_ac = 1
+               CALL amrt200_ui_detailshow() #Setting the current row 
+      
+               CALL amrt200_idx_chk()
+               #NEXT FIELD mrddseq
+         
+         END DISPLAY
+        
+         DISPLAY ARRAY g_mrdd_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+    
+            BEFORE ROW
+               CALL amrt200_idx_chk()
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_detail_idx = l_ac
+               
+               #add-point:page1, before row動作
+               {<point name="ui_dialog.page1.before_row"/>}
+               #end add-point
+               
+            BEFORE DISPLAY
+               #如果一直都在單頭則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_detail_idx)
+               END IF
+               LET g_loc = 'm'
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_current_page = 1
+               CALL amrt200_idx_chk()
+               #add-point:page1自定義行為
+               {<point name="ui_dialog.page1.before_display"/>}
+               #end add-point
+               
+            #自訂ACTION(detail_show,page_1)
+            
+               
+            #add-point:page1自定義行為
+            {<point name="ui_dialog.page1.action"/>}
+            #end add-point
+               
+         END DISPLAY
+        
+ 
+         
+ 
+         
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+         
+         SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+         SUBDIALOG lib_cl_dlg.cl_dlg_relateapps
+      
+         BEFORE DIALOG
+            CALL cl_navigator_setting(g_current_idx, g_detail_cnt)
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            LET g_page = "first"
+            LET g_current_sw = FALSE
+            #回歸舊筆數位置 (回到當時異動的筆數)
+            LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+            IF g_current_row > 1 AND g_current_idx = 1 AND g_current_sw = FALSE THEN
+               CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+               LET g_current_idx = g_current_row
+            END IF
+            LET g_current_row = g_current_idx #目前指標
+            IF g_current_idx = 0 THEN
+               LET g_current_idx = 1
+            END IF
+            LET g_current_sw = TRUE
+            
+            IF g_current_idx > g_browser.getLength() THEN
+               LEt g_current_idx = g_browser.getLength()
+            END IF 
+            
+            #有資料才進行fetch
+            IF g_current_idx <> 0 THEN
+               CALL amrt200_fetch('') # reload data
+            END IF
+            #LET g_detail_idx = 1
+            CALL amrt200_ui_detailshow() #Setting the current row 
+            
+            #筆數顯示
+            LET g_current_page = 1
+            CALL amrt200_idx_chk()
+            
+            #add-point:ui_dialog段before_dialog2
+            {<point name="ui_dialog.before_dialog2"/>}
+            #end add-point
+        
+         ON ACTION statechange
+            LET g_action_choice = "statechange"
+            CALL amrt200_statechange()
+            EXIT DIALOG
+      
+         #此段落由子樣板a32產生
+         #簽核狀況
+         ON ACTION bpm_status
+            #查詢簽核狀況, 統一建立HyperLink
+            CALL cl_bpm_status()
+            #add-point:ON ACTION bpm_status
+            {<point name="menu.bpm_status" />}
+            #END add-point
+ 
+ 
+ 
+ 
+          
+         ON ACTION queryplansel
+            CALL cl_dlg_qryplan_select() RETURNING ls_wc
+            #不是空條件才寫入g_wc跟重新找資料
+            IF NOT cl_null(ls_wc) THEN
+               LET g_wc = ls_wc
+               CALL amrt200_browser_fill("F")   #browser_fill()會將notice區塊清空
+               CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+            END IF
+ 
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               LET g_wc = ls_wc
+               #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+               CALL amrt200_browser_fill("F")
+               IF g_browser_cnt = 0 THEN
+                  CALL cl_err("","-100",1)
+                  CLEAR FORM
+               ELSE
+                  CALL amrt200_fetch("F")
+               END IF
+            END IF
+            #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+            CALL cl_notice()
+          
+         #+ 此段落由子樣板a49產生
+            ON ACTION filter
+               #add-point:filter action
+               {<point name="ui_dialog.action.filter"/>}
+               #end add-point
+               CALL amrt200_filter()
+               EXIT DIALOG
+ 
+ 
+ 
+         
+         ON ACTION first
+            CALL amrt200_fetch('F')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL amrt200_idx_chk()
+            
+         ON ACTION previous
+            CALL amrt200_fetch('P')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL amrt200_idx_chk()
+            
+         ON ACTION jump
+            CALL amrt200_fetch('/')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL amrt200_idx_chk()
+            
+         ON ACTION next
+            CALL amrt200_fetch('N')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL amrt200_idx_chk()
+            
+         ON ACTION last
+            CALL amrt200_fetch('L')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL amrt200_idx_chk()
+            
+         ON ACTION close
+            LET INT_FLAG = FALSE
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+          
+         ON ACTION exit
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION mainhidden       #主頁摺疊
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+               CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+            END IF
+            
+         ON ACTION worksheethidden   #瀏覽頁折疊
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+               CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+            END IF
+            IF lb_first THEN
+               LET lb_first = FALSE
+               NEXT FIELD mrddseq
+            END IF
+       
+         ON ACTION controls      #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+            IF g_header_hidden THEN
+               CALL gfrm_curr.setElementHidden("vb_master",0)
+               CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+               LET g_header_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("vb_master",1)
+               CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+               LET g_header_hidden = 1     #hidden     
+            END IF
+    
+         
+         #+ 此段落由子樣板a43產生
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL amrt200_delete()
+               #add-point:ON ACTION delete
+               {<point name="menu.delete" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL amrt200_insert()
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL amrt200_query()
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+               
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL amrt200_reproduce()
+               #add-point:ON ACTION reproduce
+               {<point name="menu.reproduce" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL amrt200_modify()
+               #add-point:ON ACTION modify
+               {<point name="menu.modify" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = g_curr_diag.getCurrentItem()
+               CALL amrt200_modify()
+               #add-point:ON ACTION modify_detail
+               {<point name="menu.modify_detail" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         
+         #+ 此段落由子樣板a46產生
+         #新增相關文件
+         ON ACTION related_document
+            CALL amrt200_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document
+               {<point name="ui_dialog.dialog.related_document"/>}
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL amrt200_set_pk_array()
+            #add-point:ON ACTION agendum
+            {<point name="ui_dialog.dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL amrt200_set_pk_array()
+            #add-point:ON ACTION followup
+            {<point name="ui_dialog.dialog.followup"/>}
+            #END add-point
+            CALL cl_user_overview_follow(g_mrdc_m.mrdcdocdt)
+ 
+ 
+         
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl" 
+            CONTINUE DIALOG
+            
+      END DIALOG
+    
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+    
+   END WHILE    
+      
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+    
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.ui_headershow" ver="3" status="" src="s">
+    <![CDATA[#+ 單頭資料重新顯示
+PRIVATE FUNCTION amrt200_ui_headershow()
+   #add-point:ui_headershow段define
+   {<point name="ui_headershow.define"/>}
+   #end add-point    
+   
+   LET g_mrdc_m.mrdcdocno = g_browser[g_current_idx].b_mrdcdocno   
+ 
+   EXECUTE amrt200_master_referesh USING g_mrdc_m.mrdcdocno INTO g_mrdc_m.mrdcdocno,g_mrdc_m.mrdcdocdt, 
+       g_mrdc_m.mrdc001,g_mrdc_m.mrdc002,g_mrdc_m.mrdc003,g_mrdc_m.mrdc004,g_mrdc_m.mrdcsite,g_mrdc_m.mrdcstus, 
+       g_mrdc_m.mrdc005,g_mrdc_m.mrdc006,g_mrdc_m.mrdc007,g_mrdc_m.mrdc008,g_mrdc_m.mrdcownid,g_mrdc_m.mrdcowndp, 
+       g_mrdc_m.mrdccrtid,g_mrdc_m.mrdccrtdp,g_mrdc_m.mrdccrtdt,g_mrdc_m.mrdcmodid,g_mrdc_m.mrdcmoddt, 
+       g_mrdc_m.mrdccnfid,g_mrdc_m.mrdccnfdt,g_mrdc_m.mrdc003_desc,g_mrdc_m.mrdc004_desc,g_mrdc_m.mrdc006_desc, 
+       g_mrdc_m.mrdcownid_desc,g_mrdc_m.mrdcowndp_desc,g_mrdc_m.mrdccrtid_desc,g_mrdc_m.mrdccrtdp_desc, 
+       g_mrdc_m.mrdcmodid_desc,g_mrdc_m.mrdccnfid_desc
+   CALL amrt200_show()
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.unlock_b" ver="1" status="" src="s">
+    <![CDATA[#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION amrt200_unlock_b(ps_table,ps_page)
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:unlock_b段define
+   {<point name="unlock_b.define"/>}
+   #end add-point  
+   
+   LET ls_group = "'1',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE amrt200_bcl
+   END IF
+   
+ 
+   
+ 
+ 
+   #add-point:unlock_b段other
+   {<point name="unlock_b.other"/>}
+   #end add-point  
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="amrt200.update_b" ver="4" status="" src="s">
+    <![CDATA[#+ 修改單身後其他table連動
+PRIVATE FUNCTION amrt200_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   DEFINE ps_table         STRING
+   DEFINE ps_page          STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num5 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define
+   {<point name="update_b.define"/>}
+   #end add-point     
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "mrdd_t" THEN
+      #add-point:update_b段修改前
+      {<point name="update_b.before_update" mark="Y"/>}
+      #end add-point     
+      UPDATE mrdd_t 
+         SET (mrdddocno,
+              mrddseq
+              ,mrdd001,mrdd002,mrdd003,mrdd004,mrdd005,mrdd009,mrdd006,mrdd007,mrdd008) 
+              = 
+             (ps_keys[1],ps_keys[2]
+              ,g_mrdd_d[g_detail_idx].mrdd001,g_mrdd_d[g_detail_idx].mrdd002,g_mrdd_d[g_detail_idx].mrdd003, 
+                  g_mrdd_d[g_detail_idx].mrdd004,g_mrdd_d[g_detail_idx].mrdd005,g_mrdd_d[g_detail_idx].mrdd009, 
+                  g_mrdd_d[g_detail_idx].mrdd006,g_mrdd_d[g_detail_idx].mrdd007,g_mrdd_d[g_detail_idx].mrdd008)  
+
+         WHERE mrddent = g_enterprise AND mrdddocno = ps_keys_bak[1] AND mrddseq = ps_keys_bak[2]
+      #add-point:update_b段修改中
+      {<point name="update_b.m_update"/>}
+      #end add-point   
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            CALL cl_err("mrdd_t","std-00009",1)
+            CALL s_transaction_end('N','0')
+         WHEN SQLCA.sqlcode #其他錯誤
+            CALL cl_err("mrdd_t",SQLCA.sqlcode,1)  
+            CALL s_transaction_end('N','0')
+         OTHERWISE
+            
+      END CASE
+      #add-point:update_b段修改後
+      {<point name="update_b.after_update"/>}
+      #end add-point  
+   END IF
+   
+ 
+   
+ 
+   
+ 
+   
+   #add-point:update_b段other
+   {<point name="update_b.other"/>}
+   #end add-point  
+   
+END FUNCTION
+]]>
+  </section>
+</add_points>

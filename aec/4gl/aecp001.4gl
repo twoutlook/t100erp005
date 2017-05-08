@@ -1,0 +1,1400 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aecp001.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2016-12-12 18:05:38), PR版次:0002(2016-12-12 18:11:59)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000058
+#+ Filename...: aecp001
+#+ Description: 料件生產前置時間更新計算作業
+#+ Creator....: 01534(2014-09-17 15:02:29)
+#+ Modifier...: 05423 -SD/PR- 05423
+ 
+{</section>}
+ 
+{<section id="aecp001.global" >}
+#應用 p02 樣板自動產生(Version:22)
+#add-point:填寫註解說明 name="global.memo"
+#Memos
+#161208-00043#1  2016/12/12  By  zhujing   修复工艺编号下查询条件查询不到资料的问题。
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10             #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num10             #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)  #注意要在add-point內寫入END RECORD name="global.variable"
+            sel               LIKE type_t.chr1,
+        ecba001               LIKE ecba_t.ecba001,
+        ecba001_desc          LIKE type_t.chr500,
+        ecba001_desc_desc     LIKE type_t.chr500,
+        imae011               LIKE imae_t.imae011,
+        imae011_desc          LIKE type_t.chr500,
+        imae012               LIKE imae_t.imae012,
+        imae012_desc          LIKE type_t.chr500,
+        ecba002               LIKE ecba_t.ecba002,
+        ecba003               LIKE ecba_t.ecba003,
+        imae071               LIKE imae_t.imae071,
+        imae072               LIKE imae_t.imae072
+    END RECORD
+DEFINE g_detail_idx        LIKE type_t.num5
+
+DEFINE g_detail_d_color     DYNAMIC ARRAY OF RECORD
+            sel               LIKE type_t.chr80,
+        ecba001               LIKE type_t.chr80,
+        ecba001_desc          LIKE type_t.chr500,
+        ecba001_desc_desc     LIKE type_t.chr500,
+        imae011               LIKE type_t.chr80,
+        imae011_desc          LIKE type_t.chr500,
+        imae012               LIKE type_t.chr80,
+        imae012_desc          LIKE type_t.chr500,
+        ecba002               LIKE type_t.chr500,
+        ecba003               LIKE type_t.chr500,
+        imae071               LIKE type_t.chr80,
+        imae072               LIKE type_t.chr80
+    END RECORD
+
+TYPE type_g_ecbb_d RECORD
+           ecbb003              LIKE ecbb_t.ecbb003,
+           ecbb004              LIKE ecbb_t.ecbb004,
+           ecbb004_desc         LIKE type_t.chr500,
+           ecbb005              LIKE ecbb_t.ecbb005,
+           ecbb006              LIKE ecbb_t.ecbb006,
+           ecbb007              LIKE ecbb_t.ecbb007,
+           ecbb008              LIKE ecbb_t.ecbb008,
+           ecbb008_desc         LIKE type_t.chr500,
+           ecbb010              LIKE ecbb_t.ecbb010,
+           ecbb010_desc         LIKE type_t.chr500, 
+           ecbb024              LIKE ecbb_t.ecbb024,
+           ecbb026              LIKE ecbb_t.ecbb026,
+           ecbb034              LIKE ecbb_t.ecbb034,
+           ecbb025              LIKE ecbb_t.ecbb025,
+           ecbb027              LIKE ecbb_t.ecbb027
+    END RECORD
+DEFINE g_detail_cnt2        LIKE type_t.num5
+DEFINE g_detail_idx2        LIKE type_t.num5
+DEFINE l_ac2                LIKE type_t.num5  
+DEFINE g_ecbb_d             DYNAMIC ARRAY OF type_g_ecbb_d
+DEFINE g_hours              LIKE type_t.num5 
+DEFINE g_detail_d_t         DYNAMIC ARRAY OF type_g_detail_d
+DEFINE g_wc_01              STRING
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num10              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aecp001.main" >}
+#+ 作業開始 
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   DEFINE ls_js  STRING
+   #add-point:main段define name="main.define"
+   
+   #end add-point   
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aec","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aecp001 WITH FORM cl_ap_formpath("aec",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aecp001_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aecp001_ui_dialog() 
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_aecp001
+   END IF 
+   
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="aecp001.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION aecp001_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point   
+   #add-point:init段define name="init.define"
+   
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL cl_set_combo_scc('b_ecbb006','1202') 
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aecp001.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aecp001_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point 
+   DEFINE li_idx   LIKE type_t.num10
+   #add-point:ui_dialog段define name="init.init"
+   DEFINE    i                 LIKE type_t.num5
+   DEFINE    m                 LIKE type_t.num5
+   #end add-point 
+   
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+#   CALL aecp001_query()
+   #end add-point
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_detail_d.clear()
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL aecp001_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+#         CONSTRUCT BY NAME g_wc ON imae001,imaa009,imae011,imae012,imae033   #161208-00043#1 marked
+         CONSTRUCT BY NAME g_wc ON imae001,imaa009,imae011,imae012,ecba002    #161208-00043#1 add
+                                                                  
+            BEFORE CONSTRUCT   
+            
+          ON ACTION controlp INFIELD imae001
+             INITIALIZE g_qryparam.* TO NULL
+             LET g_qryparam.state = 'c'
+             LET g_qryparam.reqry = FALSE
+             CALL q_imaa001()                           #呼叫開窗
+             DISPLAY g_qryparam.return1 TO imae001      #顯示到畫面上
+             
+          ON ACTION controlp INFIELD imaa009
+             INITIALIZE g_qryparam.* TO NULL
+             LET g_qryparam.state = 'c'
+             LET g_qryparam.reqry = FALSE
+             CALL q_rtax001()                           #呼叫開窗
+             DISPLAY g_qryparam.return1 TO imaa009      #顯示到畫面上   
+
+          ON ACTION controlp INFIELD imae011
+             INITIALIZE g_qryparam.* TO NULL
+             LET g_qryparam.state = 'c'
+             LET g_qryparam.reqry = FALSE
+             CALL q_imcf011()                           #呼叫開窗
+             DISPLAY g_qryparam.return1 TO imae011      #顯示到畫面上 
+             
+          ON ACTION controlp INFIELD imae012
+             INITIALIZE g_qryparam.* TO NULL
+             LET g_qryparam.state = 'c'
+             LET g_qryparam.reqry = FALSE
+             CALL q_ooag001_2()                         #呼叫開窗
+             DISPLAY g_qryparam.return1 TO imae012      #顯示到畫面上 
+
+#          ON ACTION controlp INFIELD imae033    #161208-00043#1 marked
+          ON ACTION controlp INFIELD ecba002    #161208-00043#1 add
+             INITIALIZE g_qryparam.* TO NULL
+             LET g_qryparam.state = 'c'
+             LET g_qryparam.reqry = FALSE
+             CALL q_ecba002_1()                         #呼叫開窗
+             DISPLAY g_qryparam.return1 TO imae033      #顯示到畫面上 
+             
+         END CONSTRUCT    
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+#         DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+# 
+#            BEFORE DISPLAY
+#               CALL DIALOG.setCellAttributes(g_detail_d_color)
+#               
+#            BEFORE ROW
+#               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+#               LET l_ac = g_detail_idx
+#               DISPLAY g_detail_idx TO FORMONLY.h_index
+#               DISPLAY g_detail_d.getLength() TO FORMONLY.h_count
+#               CALL aecp001_hint_show()
+#               CALL aecp001_fetch()
+#                 
+#         END DISPLAY  
+         INPUT ARRAY g_detail_d FROM s_detail1.*
+             ATTRIBUTE(COUNT = g_detail_cnt,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                  INSERT ROW = FALSE,
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+         
+            BEFORE INPUT
+#               CALL aecp001_b_fill()      #add by lixh 20150206
+               LET g_detail_cnt = g_detail_d.getLength()
+               IF g_detail_d.getLength() > 0 THEN
+                  CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+                  CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+               ELSE
+                  CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+                  CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+               END IF   
+               CALL cl_set_comp_visible("sel",TRUE) 
+               CALL cl_set_comp_entry("b_imae071,b_imae072", FALSE)               
+            BEFORE ROW
+
+               LET l_ac = ARR_CURR()
+            
+               LET g_detail_cnt = g_detail_d.getLength()
+               CALL aecp001_fetch()
+         
+            AFTER FIELD sel
+               IF l_ac <> 0 THEN
+                  IF NOT cl_null(g_detail_d[l_ac].sel) THEN
+                     IF g_detail_d[l_ac].sel NOT MATCHES '[YN]' THEN
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF 
+               
+            ON CHANGE sel
+               
+               IF g_detail_d[l_ac].sel = 'Y' THEN
+                  FOR i = 1 TO g_detail_d.getLength()
+                     IF g_detail_d[l_ac].sel = 'N' THEN
+                        EXIT FOR
+                     END IF   
+                     LET m = i
+                     IF m = l_ac THEN
+                        CONTINUE FOR
+                     END IF
+                     IF g_detail_d[m].sel = 'Y' AND g_detail_d[m].ecba001 = g_detail_d[l_ac].ecba001 THEN
+                        LET g_detail_d[l_ac].sel = 'N'
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'ain-00410'
+                        LET g_errparam.extend = g_detail_d[l_ac].ecba001
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        EXIT FOR
+                     END IF   
+                     LET i = i + 1
+                  END FOR
+               END IF
+            ON ROW CHANGE
+               IF INT_FLAG THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 9001
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+
+                  LET INT_FLAG = 0
+                  NEXT FIELD sel
+               END IF
+                  
+            AFTER ROW
+                  
+            AFTER INPUT
+    
+         END INPUT 
+        
+#       DISPLAY ARRAY g_detail_d_color TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+#
+#          BEFORE DISPLAY
+#
+#          BEFORE ROW
+#              LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+#              LET l_ac = g_detail_idx
+#              DISPLAY g_detail_idx TO FORMONLY.h_index
+#              DISPLAY g_detail_d.getLength() TO FORMONLY.h_count
+#              CALL aecp001_hint_show()
+#              CALL aecp001_fetch()
+#             
+#       END DISPLAY           
+         
+         DISPLAY ARRAY g_ecbb_d TO s_detail2.* ATTRIBUTE(COUNT=g_detail_cnt2)
+ 
+            BEFORE DISPLAY
+  
+            BEFORE ROW
+               LET g_detail_idx2 = DIALOG.getCurrentRow("s_detail2")
+               LET l_ac2 = g_detail_idx2
+               DISPLAY g_detail_idx2 TO FORMONLY.h_index
+               DISPLAY g_ecbb_d.getLength() TO FORMONLY.h_count
+               
+         END DISPLAY         
+         #end add-point
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2 name="ui_dialog.before_dialog2"
+            
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            #add-point:ui_dialog段on action selall name="ui_dialog.selall.befroe"
+            
+            #end add-point            
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+               #add-point:ui_dialog段on action selall name="ui_dialog.for.onaction_selall"
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selall name="ui_dialog.onaction_selall"
+            
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+               #add-point:ui_dialog段on action selnone name="ui_dialog.for.onaction_selnone"
+               
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selnone name="ui_dialog.onaction_selnone"
+            
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel name="ui_dialog.onaction_sel"
+            
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel name="ui_dialog.onaction_unsel"
+            
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL aecp001_filter()
+            #add-point:ON ACTION filter name="menu.filter"
+            
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            #add-point:ui_dialog段accept之前 name="menu.filter"
+            
+            #end add-point
+            CALL aecp001_query()
+             
+         # 條件清除
+         ON ACTION qbeclear
+            #add-point:ui_dialog段 name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            #add-point:ui_dialog段datarefresh name="ui_dialog.datarefresh"
+            
+            #end add-point
+            CALL aecp001_b_fill()
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         ON ACTION again_time
+            LET g_action_choice="again_time"
+            
+            IF cl_auth_chk_act("again_time") THEN
+               OPEN WINDOW w_aecp001_s01 WITH FORM cl_ap_formpath("aec",'aecp001_s01')
+               INPUT g_hours FROM hours ATTRIBUTE(WITHOUT DEFAULTS) 
+                  BEFORE INPUT
+                  
+                  AFTER FIELD hours
+                  
+                  ON ACTION yes         
+                     ACCEPT INPUT
+      
+                  ON ACTION no
+                     LET g_hours = ''
+                     EXIT INPUT                     
+               END INPUT   
+               CLOSE WINDOW w_aecp001_s01
+               
+               CALL aecp001_get_new_time()               
+            END IF
+            
+         ON ACTION adjust_time    #調整生產前置時間
+         
+            LET g_action_choice="adjust_time"
+            
+            IF cl_auth_chk_act("adjust_time") THEN
+               CALL aecp001_input_time()
+            END IF         
+         
+         ON ACTION update_time
+         
+            LET g_action_choice="update_time"
+            
+            IF cl_auth_chk_act("update_time") THEN
+               IF cl_ask_confirm('aec-00045') THEN
+                  CALL aecp001_update_time()
+               END IF   
+            END IF         
+         
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #(ver:22) ---start---
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      
+      #end add-point
+      #(ver:22) --- end ---
+ 
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #(ver:22) ---start---
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         #(ver:22) --- end ---
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aecp001.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION aecp001_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define name="query.define"
+   
+   #end add-point 
+    
+   #add-point:cs段after_construct name="query.after_construct"
+   
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL aecp001_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   END IF
+   
+   #add-point:cs段after_query name="query.cs_after_query"
+#   CONSTRUCT g_wc_01 ON ecba001,imae011,imae012,ecba002
+#
+#        FROM s_detail1[1].ecba001,s_detail1[1].imae011,s_detail1[1].imae012,s_detail1[1].ecba002
+#                   
+#         BEFORE CONSTRUCT   
+#          ON ACTION controlp INFIELD ecba001
+#             INITIALIZE g_qryparam.* TO NULL
+#             LET g_qryparam.state = 'c'
+#             LET g_qryparam.reqry = FALSE
+#             CALL q_imaa001()                           #呼叫開窗
+#             DISPLAY g_qryparam.return1 TO ecba001      #顯示到畫面上
+#             
+##          ON ACTION controlp INFIELD imaa009
+##             INITIALIZE g_qryparam.* TO NULL
+##             LET g_qryparam.state = 'c'
+##             LET g_qryparam.reqry = FALSE
+##             CALL q_rtax001()                           #呼叫開窗
+##             DISPLAY g_qryparam.return1 TO imaa009      #顯示到畫面上   
+#
+#          ON ACTION controlp INFIELD imae011
+#             INITIALIZE g_qryparam.* TO NULL
+#             LET g_qryparam.state = 'c'
+#             LET g_qryparam.reqry = FALSE
+#             CALL q_imcf011()                           #呼叫開窗
+#             DISPLAY g_qryparam.return1 TO imae011      #顯示到畫面上 
+#             
+#          ON ACTION controlp INFIELD imae012
+#             INITIALIZE g_qryparam.* TO NULL
+#             LET g_qryparam.state = 'c'
+#             LET g_qryparam.reqry = FALSE
+#             CALL q_ooag001_2()                         #呼叫開窗
+#             DISPLAY g_qryparam.return1 TO imae012      #顯示到畫面上 
+#
+#          ON ACTION controlp INFIELD ecba002
+#             INITIALIZE g_qryparam.* TO NULL
+#             LET g_qryparam.state = 'c'
+#             LET g_qryparam.reqry = FALSE
+#             CALL q_ecba002_1()                         #呼叫開窗
+#             DISPLAY g_qryparam.return1 TO ecba002      #顯示到畫面上  
+#             
+#   END CONSTRUCT       
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aecp001.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION aecp001_b_fill()
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+   
+   #end add-point
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define name="b_fill.define"
+   DEFINE l_ecba001_t     LIKE ecba_t.ecba001
+   #end add-point
+ 
+   LET g_wc = g_wc, cl_sql_auth_filter()   #(ver:21) add cl_sql_auth_filter()
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+#   LET g_sql = " SELECT 'Y',imae001,'','',imae011,'',imae012,'',imae033,'',imae071,imae072 FROM imae_t,imaa_t ",
+#               "  WHERE imaeent = imaaent AND imae001 = imaa001 ",
+#               "    AND imaeent = ? ",
+#               "    AND imaesite = '",g_site,"'",
+#               "    AND ",g_wc
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF 
+   LET g_sql = " SELECT DISTINCT 'N',ecba001,'','',imae011,'',imae012,'',ecba002,'',imae071,imae072 FROM ecba_t,imae_t,imaa_t ",
+               "  WHERE imaeent = imaaent AND imae001 = imaa001 ",
+               "    AND ecbaent = imaaent AND ecbasite = imaesite AND ecba001 = imae001",
+               "    AND imaeent = ? ",
+               "    AND imaesite = '",g_site,"'",
+               "    AND ",g_wc,
+               "   ORDER BY ecba001"
+
+   #end add-point
+ 
+   PREPARE aecp001_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR aecp001_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空 name="b_fill.clear"
+   CALL g_detail_d_color.clear()
+   LET l_ecba001_t = ''
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into name="b_fill.foreach_into"
+       g_detail_d[l_ac].sel,g_detail_d[l_ac].ecba001,g_detail_d[l_ac].ecba001_desc,g_detail_d[l_ac].ecba001_desc_desc,
+       g_detail_d[l_ac].imae011,g_detail_d[l_ac].imae011_desc,g_detail_d[l_ac].imae012,g_detail_d[l_ac].imae012_desc,
+       g_detail_d[l_ac].ecba002,g_detail_d[l_ac].ecba003,g_detail_d[l_ac].imae071,g_detail_d[l_ac].imae072
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充 name="b_fill.foreach_iside"
+#      IF l_ecba001_t = g_detail_d[l_ac].ecba001 THEN
+#         CONTINUE FOREACH
+#      END IF
+      LET g_detail_d_t[l_ac].* = g_detail_d[l_ac].*
+      IF g_detail_idx = 0 THEN
+         LET g_detail_idx = 1
+      END IF   
+      DISPLAY g_detail_idx TO FORMONLY.h_index
+      LET l_ecba001_t = g_detail_d[l_ac].ecba001
+      #end add-point
+      
+      CALL aecp001_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.other_table"
+   CALL g_detail_d.deleteElement(g_detail_d.getLength())
+   DISPLAY g_detail_idx TO FORMONLY.h_index
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE aecp001_sel
+   
+   CALL aecp001_fetch() 
+   RETURN   
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE aecp001_sel
+   
+   LET l_ac = 1
+   CALL aecp001_fetch()
+   #add-point:b_fill段資料填充(其他單身) name="b_fill.after_b_fill"
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aecp001.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION aecp001_fetch()
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define name="fetch.define"
+   DEFINE l_sql           STRING
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後 name="fetch.after_fill"
+   IF l_ac = 0 THEN
+      RETURN
+   END IF   
+   LET l_sql = " SELECT ecbb003,ecbb004,'',ecbb005,ecbb006,ecbb007,ecbb008,'',ecbb010,'',ecbb024,ecbb026,ecbb034,ecbb025,ecbb027 FROM ecbb_t ",
+               "   LEFT OUTER JOIN imae_t ON imaeent = ecbbent AND imaesite = ecbbsite AND ecbb001 = imae001 AND ecbb002 = imae033 ",
+               "  WHERE ecbbent = '",g_enterprise,"'",
+               "    AND ecbbsite = '",g_site,"'",
+               "    AND ecbb001 = '",g_detail_d[l_ac].ecba001,"'",
+               "    AND ecbb002 = '",g_detail_d[l_ac].ecba002,"'"
+               
+   PREPARE aecp001_ecbb_pre FROM l_sql
+   DECLARE b_fill_ecbb_curs CURSOR FOR aecp001_ecbb_pre
+   
+   CALL g_ecbb_d.clear()
+ 
+   LET l_ac2 = 1  
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_ecbb_curs INTO 
+       g_ecbb_d[l_ac2].ecbb003,g_ecbb_d[l_ac2].ecbb004,g_ecbb_d[l_ac2].ecbb004_desc,g_ecbb_d[l_ac2].ecbb005,g_ecbb_d[l_ac2].ecbb006,g_ecbb_d[l_ac2].ecbb007,
+       g_ecbb_d[l_ac2].ecbb008,g_ecbb_d[l_ac2].ecbb008_desc,g_ecbb_d[l_ac2].ecbb010,g_ecbb_d[l_ac2].ecbb010_desc,g_ecbb_d[l_ac2].ecbb024,
+       g_ecbb_d[l_ac2].ecbb026,g_ecbb_d[l_ac2].ecbb034,g_ecbb_d[l_ac2].ecbb025,g_ecbb_d[l_ac2].ecbb027
+
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      CALL s_desc_get_acc_desc('221',g_ecbb_d[l_ac2].ecbb004) RETURNING g_ecbb_d[l_ac2].ecbb004_desc  
+      CALL s_desc_get_acc_desc('221',g_ecbb_d[l_ac2].ecbb008) RETURNING g_ecbb_d[l_ac2].ecbb008_desc
+      CALL s_desc_get_acc_desc('221',g_ecbb_d[l_ac2].ecbb010) RETURNING g_ecbb_d[l_ac2].ecbb010_desc        
+      
+      LET l_ac2 = l_ac2 + 1
+      IF l_ac2 > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   CALL g_ecbb_d.deleteElement(g_ecbb_d.getLength()) 
+    
+   LET g_detail_cnt2 = l_ac2 - 1 
+#   DISPLAY g_detail_cnt2 TO FORMONLY.h_count
+
+   
+   CLOSE b_fill_ecbb_curs
+   FREE aecp001_ecbb_pre           
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aecp001.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION aecp001_detail_show()
+   #add-point:show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point
+   #add-point:show段define name="detail_show.define"
+   
+   #end add-point
+   
+   #add-point:detail_show段 name="detail_show.detail_show"
+   CALL s_desc_get_item_desc(g_detail_d[l_ac].ecba001) RETURNING g_detail_d[l_ac].ecba001_desc,g_detail_d[l_ac].ecba001_desc_desc
+   CALL s_desc_get_acc_desc('204',g_detail_d[l_ac].imae011) RETURNING g_detail_d[l_ac].imae011_desc
+   CALL s_desc_get_person_desc(g_detail_d[l_ac].imae012) RETURNING g_detail_d[l_ac].imae012_desc
+   CALL aecp001_imae033_ref()
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aecp001.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION aecp001_filter()
+   #add-point:filter段define(客製用) name="filter.define_customerization"
+   
+   #end add-point    
+   #add-point:filter段define name="filter.define"
+   
+   #end add-point
+   
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define name="filter.detail_cnt"
+   
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL aecp001_b_fill()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aecp001.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION aecp001_filter_parser(ps_field)
+   #add-point:filter段define(客製用) name="filter_parser.define_customerization"
+   
+   #end add-point    
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define name="filter_parser.define"
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aecp001.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION aecp001_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = aecp001_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aecp001.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: 製程说明
+# Memo...........:
+# Usage..........: CALL aecp001_imae033_ref()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By lixh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aecp001_imae033_ref()
+DEFINE  ls_sql    STRING 
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_detail_d[l_ac].ecba001
+   LET g_ref_fields[2] = g_detail_d[l_ac].ecba002
+   LET ls_sql = "SELECT ecba003 FROM ecba_t WHERE ecbaent='"||g_enterprise||"' AND ecba001=? AND ecba002 = ? "
+   LET ls_sql = cl_sql_add_mask(ls_sql)              #遮蔽特定資料
+   CALL ap_ref_array2(g_ref_fields,ls_sql,"") RETURNING g_rtn_fields
+   LET g_detail_d[l_ac].ecba003 = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_detail_d[l_ac].ecba003
+END FUNCTION
+
+################################################################################
+# Descriptions...: 製程明細
+# Memo...........:
+# Usage..........: CALL aecp001_b_fill2()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By lixh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aecp001_b_fill2()
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 重新統計生產前置時間
+# Memo...........:
+# Usage..........: CALL aecp001_get_new_time()
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By lixh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aecp001_get_new_time()
+DEFINE i              LIKE type_t.num5
+DEFINE l_imae071      LIKE imae_t.imae071
+DEFINE l_imae072      LIKE imae_t.imae072
+DEFINE l_imae071_1    LIKE imae_t.imae071
+DEFINE l_imae072_1    LIKE imae_t.imae072
+ 
+   CALL g_detail_d_color.clear()
+   
+   FOR i = 1 TO g_detail_d.getLength()
+      LET l_imae071 = 0
+      LET l_imae072 = 0   
+      LET l_imae071_1 = 0
+      LET l_imae072_1 = 0
+      SELECT SUM(ecbb024+ecbb026+ecbb034) INTO l_imae071 FROM ecbb_t
+       WHERE ecbbent = g_enterprise
+         AND ecbbsite = g_site
+         AND ecbb001 = g_detail_d[i].ecba001
+         AND ecbb002 = g_detail_d[i].ecba002
+         AND ecbb006 <> '2'
+         
+#      SELECT SUM(ecbb024+ecbb026+ecbb034) INTO l_imae071_1 FROM ecbb_t
+#       WHERE ecbbent = g_enterprise
+#         AND ecbbsite = g_site
+#         AND ecbb001 = g_detail_d[i].imae001
+#         AND ecbb002 = g_detail_d[i].imae033
+#         AND ecbb006 = '2'         
+      CALL aecp001_get_replace_time(i) RETURNING l_imae071_1,l_imae072_1  
+      LET g_detail_d[i].imae071 = (l_imae071+l_imae071_1)/g_hours  
+      IF cl_null(g_detail_d[i].imae071) THEN LET g_detail_d[i].imae071 = 0 END IF   #add by lixh 20141202
+      IF (NOT cl_null(g_detail_d[i].imae071) AND (g_detail_d[i].imae071 <> g_detail_d_t[i].imae071) OR cl_null(g_detail_d_t[i].imae071))
+         OR (cl_null(g_detail_d[i].imae071) AND NOT cl_null(g_detail_d_t[i].imae071)) THEN
+         LET g_detail_d_color[i].imae071 = 'red'
+      END IF
+
+      SELECT SUM(ecbb025+ecbb027) INTO l_imae072 FROM ecbb_t
+       WHERE ecbbent = g_enterprise
+         AND ecbbsite = g_site
+         AND ecbb001 = g_detail_d[i].ecba001
+         AND ecbb002 = g_detail_d[i].ecba002
+         AND ecbb006 <> '2' 
+         
+#      SELECT SUM(ecbb025+ecbb027) INTO l_imae072_1 FROM ecbb_t
+#       WHERE ecbbent = g_enterprise
+#         AND ecbbsite = g_site
+#         AND ecbb001 = g_detail_d[i].imae001
+#         AND ecbb002 = g_detail_d[i].imae033
+#         AND ecbb006 = '2'         
+         
+      LET g_detail_d[i].imae072 = (l_imae072+l_imae072_1)/g_hours
+      IF cl_null(g_detail_d[i].imae072) THEN LET g_detail_d[i].imae072 = 0 END IF   #add by lixh 20141202
+      IF (NOT cl_null(g_detail_d[i].imae072) AND (g_detail_d[i].imae072 <> g_detail_d_t[i].imae072) OR cl_null(g_detail_d_t[i].imae072))
+         OR (cl_null(g_detail_d[i].imae072) AND NOT cl_null(g_detail_d_t[i].imae072)) THEN
+         LET g_detail_d_color[i].imae072 = 'red'
+      END IF      
+         
+   END FOR  
+   CALL g_detail_d.deleteElement(i)
+   LET i = i - 1
+END FUNCTION
+
+################################################################################
+# Descriptions...: 抓取重計前的值，以show hint顯示
+# Memo...........:
+# Usage..........: CALL aecp001_hint_show()
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By lixh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aecp001_hint_show()
+DEFINE ls_value           STRING   
+DEFINE i                  LIKE type_t.num5
+DEFINE ls_fields          STRING
+
+#   FOR i = 1 TO g_detail_d.getLength()
+      LET ls_value = cl_getmsg('sub-00358',g_dlang)," ",g_detail_d_t[l_ac].imae071
+      LET ls_fields = 'b_imae071'
+      CALL s_hint_show_set_comments(ls_fields,ls_value)
+      LET ls_fields = 'b_imae072'
+      LET ls_value = cl_getmsg('sub-00358',g_dlang)," ",g_detail_d_t[l_ac].imae072
+      CALL s_hint_show_set_comments(ls_fields,ls_value)      
+#   END FOR
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: aecp001_input_time()
+# Memo...........:
+# Usage..........: CALL aecp001_input_time()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By lixh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aecp001_input_time()
+DEFINE    l_allow_insert    LIKE type_t.num5
+DEFINE    l_allow_delete    LIKE type_t.num5
+DEFINE    i                 LIKE type_t.num5
+DEFINE    m                 LIKE type_t.num5
+
+   INPUT ARRAY g_detail_d FROM s_detail1.*
+       ATTRIBUTE(COUNT = g_detail_cnt,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+               INSERT ROW = l_allow_insert, 
+               DELETE ROW = l_allow_delete,
+               APPEND ROW = l_allow_insert)
+               
+      BEFORE INPUT
+         CALL cl_set_comp_entry("b_imae071,b_imae072", TRUE)    
+      BEFORE ROW
+         #add by lixh 20150202
+         LET l_ac = ARR_CURR()
+         
+         LET g_detail_cnt = g_detail_d.getLength()
+         CALL aecp001_fetch() 
+         
+      ON CHANGE sel
+         IF g_detail_d[l_ac].sel = 'Y' THEN
+            FOR i = 1 TO g_detail_d.getLength() 
+               LET m = i
+               IF m = l_ac THEN
+                  CONTINUE FOR
+               END IF
+               IF g_detail_d[m].sel = 'Y' AND g_detail_d[m].ecba001 = g_detail_d[l_ac].ecba001 THEN
+                  LET g_detail_d[l_ac].sel = 'N'
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'ain-00410'
+                  LET g_errparam.extend = g_detail_d[l_ac].ecba001
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  EXIT FOR
+               END IF   
+               LET i = i + 1
+            END FOR
+         END IF
+         
+         ON ACTION accept
+            CALL cl_set_comp_entry("b_imae071,b_imae072", FALSE)   
+            ACCEPT INPUT
+   END INPUT            
+END FUNCTION
+
+################################################################################
+# Descriptions...: 更新生產前置時間
+# Memo...........:
+# Usage..........: CALL aecp001_update_time()
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By lixh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aecp001_update_time()
+DEFINE i            LIKE type_t.num5
+
+   FOR i = 1 TO g_detail_d.getLength() 
+       IF g_detail_d[i].sel = 'N' THEN
+          CONTINUE FOR
+       END IF
+       IF (NOT cl_null(g_detail_d[i].imae071) AND (g_detail_d[i].imae071 <> g_detail_d_t[i].imae071 OR g_detail_d_t[i].imae071 IS NULL)) 
+          OR (NOT cl_null(g_detail_d[i].imae072) AND (g_detail_d[i].imae072 <> g_detail_d_t[i].imae072 OR g_detail_d_t[i].imae072 IS NULL)) THEN
+               
+          UPDATE imae_t SET imae071 = g_detail_d[i].imae071,
+                            imae072 = g_detail_d[i].imae072
+           WHERE imaeent = g_enterprise
+             AND imaesite = g_site
+#             AND imaesite = 'ALL'
+             AND imae001 = g_detail_d[i].ecba001            
+       END IF
+   END FOR
+   CALL g_detail_d.deleteElement(i)
+   CALL aecp001_b_fill()  #重新獲取新值
+END FUNCTION
+
+################################################################################
+# Descriptions...: 獲取取替代群組前置時間
+# Memo...........:
+# Usage..........: CALL aecp001_get_replace_time(p_ac)
+#                  RETURNING l_hours_sum
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By lixh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aecp001_get_replace_time(p_ac)
+DEFINE  l_sum_imae071    LIKE ecbb_t.ecbb024
+DEFINE  l_sum_imae072    LIKE ecbb_t.ecbb024
+DEFINE  l_max_imae071    LIKE ecbb_t.ecbb024
+DEFINE  l_max_imae072    LIKE ecbb_t.ecbb024
+DEFINE  l_hours_imae071  LIKE ecbb_t.ecbb024
+DEFINE  l_hours_imae072  LIKE ecbb_t.ecbb024
+DEFINE  l_hours_sum      LIKE ecbb_t.ecbb024
+DEFINE  l_ecbb008        LIKE ecbb_t.ecbb008
+DEFINE  l_ecbb007        LIKE ecbb_t.ecbb007
+DEFINE  l_ecbb007_1      LIKE ecbb_t.ecbb007
+DEFINE  l_first_stop     LIKE ecbb_t.ecbb004
+DEFINE  l_ecbb003        LIKE ecbb_t.ecbb003
+DEFINE  l_ecbb004        LIKE ecbb_t.ecbb004
+DEFINE  l_sql            STRING   
+DEFINE  l_sql2           STRING 
+DEFINE  l_sql3           STRING 
+DEFINE  p_ac             LIKE type_t.num10
+
+   #抓取替代群組的個數
+   LET l_sql = " SELECT DISTINCT ecbb007 FROM ecbb_t ",
+               "  WHERE ecbbent = '",g_enterprise,"'",
+               "    AND ecbbsite = '",g_site,"'",
+               "    AND ecbb001 = '",g_detail_d[p_ac].ecba001,"'",
+               "    AND ecbb002 = '",g_detail_d[p_ac].ecba002,"'",
+               "    AND ecbb006 = '2'"
+               
+   PREPARE aecp001_ecbb007 FROM l_sql
+   DECLARE aecp001_ecbb007_curs CURSOR FOR aecp001_ecbb007
+   
+   #抓取該替代群組里所有的上站
+   LET l_sql2 = " SELECT DISTINCT ecbb008 FROM ecbb_t ",
+                "  WHERE ecbbent = '",g_enterprise,"'",
+                "    AND ecbbsite = '",g_site,"'",
+                "    AND ecbb001 = '",g_detail_d[p_ac].ecba001,"'",
+                "    AND ecbb002 = '",g_detail_d[p_ac].ecba002,"'",
+                "    AND ecbb006 = '2'",
+                "    AND ecbb007 = ? "   
+                
+   PREPARE aecp001_ecbb008 FROM l_sql2
+   DECLARE aecp001_ecbb008_curs CURSOR FOR aecp001_ecbb008
+   
+   LET l_sql3 = " SELECT DISTINCT ecbb003,ecbb004 FROM ecbb_t ",
+                "  WHERE ecbbent = '",g_enterprise,"'",
+                "    AND ecbbsite = '",g_site,"'",
+                "    AND ecbb001 = '",g_detail_d[p_ac].ecba001,"'",
+                "    AND ecbb002 = '",g_detail_d[p_ac].ecba002,"'",
+                "    AND ecbb006 = '2' ",
+                "    AND ecbb007 = ? ",
+                "    AND ecbb008 = ? "                
+
+   PREPARE aecp001_ecbb004 FROM l_sql3
+   DECLARE aecp001_ecbb004_curs CURSOR FOR aecp001_ecbb004
+   
+   LET l_hours_sum = 0
+   LET l_sum_imae071 = 0
+   LET l_sum_imae072 = 0
+   FOREACH aecp001_ecbb007_curs INTO l_ecbb007   #替代群組數量
+      
+      FOREACH aecp001_ecbb008_curs USING l_ecbb007 INTO l_ecbb008 
+         LET l_ecbb007_1 = ''
+         SELECT DISTINCT ecbb007 INTO l_ecbb007_1 FROM ecbb_t 
+          WHERE ecbbent = g_enterprise
+            AND ecbbsite = g_site
+            AND ecbb001 = g_detail_d[p_ac].ecba001
+            AND ecbb002 = g_detail_d[p_ac].ecba002
+            AND ecbb004 = l_ecbb008
+         IF l_ecbb007_1 IS NULL OR (l_ecbb007_1 <> l_ecbb007) THEN  #首站
+            LET l_first_stop = l_ecbb008   #取到替代群组的首站退出
+            EXIT FOREACH
+         END IF
+      END FOREACH
+      
+      #抓取改替代群組共有幾條替代線,分別計算出每一條線的時間,取最大值
+      LET l_max_imae071 = 0
+      LET l_max_imae072 = 0
+      FOREACH aecp001_ecbb004_curs USING l_ecbb007,l_first_stop INTO l_ecbb003,l_ecbb004 
+         CALL aecp001_get_next_stop(p_ac,l_ecbb007,l_ecbb004,0,0) RETURNING l_hours_imae071,l_hours_imae072
+         IF l_max_imae071 < l_hours_imae071 THEN
+            LET l_max_imae071 = l_hours_imae071
+         END IF    
+         IF l_max_imae072 < l_hours_imae072 THEN
+            LET l_max_imae072 = l_hours_imae072
+         END IF         
+      END FOREACH
+      
+      LET l_sum_imae071 = l_sum_imae071 + l_max_imae071
+      LET l_sum_imae072 = l_sum_imae072 + l_max_imae072
+   END FOREACH
+   
+   RETURN l_sum_imae071,l_sum_imae072
+END FUNCTION
+
+################################################################################
+# Descriptions...: 獲取下一站
+# Memo...........:
+# Usage..........: CALL aecp001_get_next_stop(p_ac,p_ecbb007,p_ecbb004,p_imae071,p_imae072)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By lixh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aecp001_get_next_stop(p_ac,p_ecbb007,p_ecbb004,p_imae071,p_imae072)
+DEFINE   p_ecbb004     LIKE ecbb_t.ecbb004
+DEFINE   p_ecbb007     LIKE ecbb_t.ecbb007
+DEFINE   l_ecbb004     LIKE ecbb_t.ecbb004
+DEFINE   l_imae071     LIKE imae_t.imae071
+DEFINE   l_imae072     LIKE imae_t.imae072
+DEFINE   p_imae071     LIKE imae_t.imae071
+DEFINE   p_imae072     LIKE imae_t.imae072
+DEFINE   p_ac          LIKE type_t.num10
+
+   IF cl_null(p_ecbb004) THEN
+      RETURN p_imae071,p_imae072
+   END IF  
+   SELECT SUM(ecbb024+ecbb026+ecbb034),SUM(ecbb025+ecbb027) INTO l_imae071,l_imae072 FROM ecbb_t 
+    WHERE ecbbent = g_enterprise
+      AND ecbbsite = g_site
+      AND ecbb001 = g_detail_d[p_ac].ecba001
+      AND ecbb002 = g_detail_d[p_ac].ecba002
+      AND ecbb006 = '2'
+      AND ecbb007 = p_ecbb007      #add by lixh  20141128
+      AND ecbb004 = p_ecbb004
+
+   SELECT ecbb004 INTO l_ecbb004 FROM ecbb_t 
+    WHERE ecbbent = g_enterprise
+      AND ecbbsite = g_site
+      AND ecbb001 = g_detail_d[p_ac].ecba001
+      AND ecbb002 = g_detail_d[p_ac].ecba002
+      AND ecbb006 = '2'
+      AND ecbb007 = p_ecbb007      #add by lixh  20141128
+      AND ecbb008 = p_ecbb004
+
+      
+   LET p_imae071 = p_imae071 + l_imae071  
+   LET p_imae072 = p_imae072 + l_imae072 
+   CALL aecp001_get_next_stop(p_ac,p_ecbb007,l_ecbb004,p_imae071,p_imae072) RETURNING p_imae071,p_imae072 
+   
+   RETURN p_imae071,p_imae072    
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

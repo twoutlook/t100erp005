@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aimi103" std_prog="aimi103" erpver="1.0" ver="3" module="AIM" type="M" booking="Y" designer_ver="1.0" class="i" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="imcd_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：可透過本作業維護料件的據點銷售分群資料。
+作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：(基本資料/交易單據)維護作業
+輸入模式：單檔搭配查詢方案模式F001_sc
+作業資料來源(Master)：imcd_t(料件據點銷售分群檔)
+查詢方案設定：
+ (1)系統預設查詢方案：
+    無效料件主分群 stus='N'
+    有效料件主分群 stus='Y'
+ (2)系統預設相關作業：
+    無
+ (3)瀏覽Browse顯示欄位及型態：
+    imcd111(銷售分群)：ButtonEdit
+    oocql004(說明)：Edit
+ (4)傳入參數：
+    g_argv[1]：營運據點'ALL'，若g_argv[1]不為null，則 g_site = g_argv[1]
+    (註：營運據點為'ALL'和其他營運據點的會拆成兩支作業)
+TOPMENU:
+   整單操作:[相關文件]
+   相關作業:[產品分群資料],[庫存分群資料],[採購分群資料],[生管分群資料],[品管分群資料],[成本分群資料],[WMS分群資料]
+]]>
+  </all>
+  <field cite_std="N" name="b_imcd111" ver="1" src="s" column="imcd111" table="imcd_t" attribute="" type="" req="Y" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imcd_t.imcd111" ver="1" src="s" column="imcd111" table="imcd_t" attribute="" type="" req="Y" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[銷售分群：
+   ●欄位控管：
+     資料欄位: [T:料件據點銷售分群檔].[C:銷售分群]/可Display可Input
+     校驗 1.輸入值須存在oocq_t 條件 oocq001 = '202' 
+             2.且oocqstus = 'Y'
+     帶值:自動帶出[T:應用分類碼多語言檔oocql_t].[C:說明oocql004]
+          WHERE [T:應用分類碼多語言檔].[C:應用分類oocql001]=202
+            AND [T:應用分類碼多語言檔].[C:應用分類瑪oocql002]=[C:銷售分群]
+          到本欄位後面顯示
+
+   ●開窗處理：
+        新增開窗函式:q_oocq002  傳入參數arg1='202'
+        查詢開窗函式:q_oocq002
+]]>
+  </field>
+  <field cite_std="N" name="imcd_t.imcd112" ver="3" src="s" column="imcd112" table="imcd_t" attribute="" type="" req="N" i_zoom="q_ooca001_1" c_zoom="q_ooca001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="u">
+    <![CDATA[銷售計價單位：
+   ●欄位控管：
+     資料欄位: [T:料件據點銷售分群檔].[C:銷售單位]/可Display可Input
+     校驗:1.輸入值須存在[T:單位檔ooca_t].[C:單位編號ooca001]且為有效資料
+     帶值:1.顯示時顯示單位的多語言說明
+
+   ●開窗處理：
+        新增開窗函式:q_ooca001_1
+        查詢開窗函式:q_ooca001_1
+]]>
+  </field>
+  <field cite_std="N" name="imcd_t.imcd113" ver="1" src="s" column="imcd113" table="imcd_t" attribute="" type="" req="N" i_zoom="q_ooca001_1" c_zoom="q_ooca001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[銷售計價單位：
+   ●欄位控管：
+     資料欄位: [T:料件據點銷售分群檔].[C:銷售計價單位]/可Display可Input
+     預設值: 1.新增或修改時，進本欄位前，若本欄位為null，則預設值為銷售單位的值
+     校驗:1.輸入值須存在[T:單位檔ooca_t].[C:單位編號ooca001]且為有效資料
+     帶值:1.顯示時顯示單位的多語言說明
+
+   ●開窗處理：
+        新增開窗函式:q_ooca001_1
+        查詢開窗函式:q_ooca001_1
+]]>
+  </field>
+  <field cite_std="N" name="imcd_t.imcd114" ver="1" src="s" column="imcd114" table="imcd_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[銷售批量：
+   ●欄位控管：
+     資料欄位: [T:料件據點銷售分群檔].[C:銷售批量]/可Display可Input
+
+]]>
+  </field>
+  <field cite_std="N" name="imcd_t.imcd115" ver="1" src="s" column="imcd115" table="imcd_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[最小銷售數量：
+   ●欄位控管：
+     資料欄位: [T:料件據點銷售分群檔].[C:最小銷售數量]/可Display可Input
+
+]]>
+  </field>
+  <field cite_std="N" name="imcd_t.imcd116" ver="1" src="s" column="imcd116" table="imcd_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="2025" default="&apos;1&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[批量控管方式：
+   ●欄位控管：
+     資料欄位:[T:料件據點銷售分群檔].[C:銷售批量控管方式]/可Display可Input
+
+]]>
+  </field>
+  <field cite_std="N" name="imcd_t.imcd117" ver="1" src="s" column="imcd117" table="imcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[保證(固)月數：
+   ●欄位控管：
+     資料欄位: [T:料件據點銷售分群檔].[C:保證(固)月數]/可Display可Input
+
+]]>
+  </field>
+  <field cite_std="N" name="imcd_t.imcd118" ver="1" src="s" column="imcd118" table="imcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[保證(固)天數：
+   ●欄位控管：
+     資料欄位: [T:料件據點銷售分群檔].[C:保證(固)天數]/可Display可Input
+]]>
+  </field>
+  <field cite_std="N" name="imcd_t.imcd121" ver="1" src="s" column="imcd121" table="imcd_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="2026" default="&apos;0&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[預設內外銷：
+   ●欄位控管：
+     資料欄位:[T:料件據點銷售分群檔].[C:預設內外銷]/可Display可Input]]>
+  </field>
+  <field cite_std="N" name="imcd_t.imcd122" ver="1" src="s" column="imcd122" table="imcd_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="2027" default="&apos;0&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[接單拆解方式：
+   ●欄位控管：
+     資料欄位:[T:料件據點銷售分群檔].[C:接單拆解方式]/可Display可Input]]>
+  </field>
+  <field cite_std="N" name="imcd_t.imcd123" ver="1" src="s" column="imcd123" table="imcd_t" attribute="" type="" req="N" i_zoom="q_imaa001_3" c_zoom="q_imaa001_3" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[慣用包裝容器：
+   ●欄位控管：
+     資料欄位:[T:料件據點銷售分群檔].[C:慣用包裝容器]/可Display可Input
+     校驗:1.輸入值需存在[T:商品/料件主檔imaa_t]且[T:商品/料件主檔].[T:容器否imaa027]='Y'
+　　　　　　的有效資料
+     帶值:抓取[T:商品/料件多語言檔imaal_t]的[C:品名imaal003]來顯示
+
+   ●開窗處理：
+     查詢或新增/修改時：
+        新增開窗函式:q_imaa001_3   
+        查詢開窗函式:q_imaa001_3
+]]>
+  </field>
+  <field cite_std="N" name="imcd_t.imcd124" ver="1" src="s" column="imcd124" table="imcd_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[銷售備貨提前天數：
+   ●欄位控管：
+     資料欄位: [T:料件據點銷售分群檔].[C:銷售備貨提前天數]/可Display可Input
+
+]]>
+  </field>
+  <field cite_std="N" name="imcd_t.imcd125" ver="1" src="s" column="imcd125" table="imcd_t" attribute="" type="" req="N" i_zoom="q_imaa001_2" c_zoom="q_imaa001_2" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預測料號：
+   ●欄位控管：
+     資料欄位: [T:料件據點銷售分群檔].[C:預測料號]/可Display可Input
+     校驗:1.輸入值需存在[T:料件主檔]且為有效資料
+     帶值:抓取[T:商品/料件主檔]的[C:品名]在本欄位下面顯示
+]]>
+  </field>
+  <field cite_std="N" name="imcd_t.imcd126" ver="1" src="s" column="imcd126" table="imcd_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[出貨替代：
+   ●欄位控管：
+     資料欄位:[T:料件據點銷售分群檔].[C:出貨替代]/可Display可Input
+     其他說明:勾選表示出貨時可做出貨替代
+]]>
+  </field>
+  <field cite_std="N" name="imcd_t.imcd127" ver="1" src="s" column="imcd127" table="imcd_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;N&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[統計除外商品：
+   ●欄位控管：
+     資料欄位:[T:料件據點銷售分群檔].[C:統計除外商品]/可Display可Input
+     其他說明:勾選表示做統計分析時將有勾選的列為同一類型
+]]>
+  </field>
+  <field cite_std="N" name="imcd_t.imcd128" ver="1" src="s" column="imcd128" table="imcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="&lt;=" max="100.000" min_compare="&gt;=" min="0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[銷售超交率：
+   ●欄位控管：
+     資料欄位: [T:料件據點銷售分群檔].[C:銷售超交率]/可Display可Input
+     允許空白:Yes
+     預設值:0
+     校驗:輸入值需介於0~100(含邊界值)
+     帶值:無
+     計算或處理:無
+     其他說明:0代表是不可以超交]]>
+  </field>
+  <field cite_std="N" name="imcd_t.imcdcrtdp" ver="1" src="s" column="imcdcrtdp" table="imcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imcd_t.imcdcrtdt" ver="1" src="s" column="imcdcrtdt" table="imcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imcd_t.imcdcrtid" ver="1" src="s" column="imcdcrtid" table="imcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imcd_t.imcdmoddt" ver="1" src="s" column="imcdmoddt" table="imcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imcd_t.imcdmodid" ver="1" src="s" column="imcdmodid" table="imcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imcd_t.imcdowndp" ver="1" src="s" column="imcdowndp" table="imcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imcd_t.imcdownid" ver="1" src="s" column="imcdownid" table="imcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="imcd_t.imcdstus" ver="1" src="s" column="imcdstus" table="imcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="&apos;Y&apos;" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_imcd111_desc" src="s" depend_field="b_imcd111" correspon_key="imcdent,&apos;202&apos;,imcd111" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="2" name="imcd111_desc" src="s" depend_field="imcd_t.imcd111" correspon_key="&apos;202&apos;,imcd111" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="2" name="imcd112_desc" src="s" depend_field="imcd_t.imcd112" correspon_key="imcd112" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="2" name="imcd113_desc" src="s" depend_field="imcd_t.imcd113" correspon_key="imcd113" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="2" name="imcd123_desc" src="s" depend_field="imcd_t.imcd123" correspon_key="imcd123" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="2" name="imcd125_desc" src="s" depend_field="imcd_t.imcd125" correspon_key="imcd125" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="imcdcrtdp_desc" src="s" depend_field="imcd_t.imcdcrtdp" correspon_key="imcdcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="imcdcrtid_desc" src="s" depend_field="imcd_t.imcdcrtid" correspon_key="imcdcrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="imcdmodid_desc" src="s" depend_field="imcd_t.imcdmodid" correspon_key="imcdmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="imcdowndp_desc" src="s" depend_field="imcd_t.imcdowndp" correspon_key="imcdowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="imcdownid_desc" src="s" depend_field="imcd_t.imcdownid" correspon_key="imcdownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_imcd111" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imcd_t.imcd111" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="imcd_t.imcd112" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="imcd_t.imcd113" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imcd_t.imcd114" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imcd_t.imcd115" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imcd_t.imcd116" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imcd_t.imcd117" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imcd_t.imcd118" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imcd_t.imcd121" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imcd_t.imcd122" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imcd_t.imcd123" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imcd_t.imcd124" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imcd_t.imcd125" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imcd_t.imcd126" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imcd_t.imcd127" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imcd_t.imcd128" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imcd_t.imcdcrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imcd_t.imcdcrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imcd_t.imcdcrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imcd_t.imcdmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imcd_t.imcdmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imcd_t.imcdowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imcd_t.imcdownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imcd_t.imcdstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="about_file" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="open_cg" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[採購分群資料(open_cg)：開啟畫面:[P:料件採購分群維護作業]
+營運據點為'ALL'，調用 aimi104,，其他則調用 aimi114]]>
+  </act>
+  <act cite_std="N" id="open_cp" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[產品分群資料(open_cp)：開啟畫面:[P:料件產品分群維護作業] 
+營運據點為'ALL'，調用 aimi101,，其他則調用 aimi111]]>
+  </act>
+  <act cite_std="N" id="open_kc" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[庫存分群資料(open_kc)：開啟畫面:[P:料件庫存分群維護作業] 
+營運據點為'ALL'，調用 aimi102,，其他則調用 aimi112]]>
+  </act>
+  <act cite_std="N" id="open_pg" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[品管分群資料(open_pg)：開啟畫面:[P:料件品管分群維護作業] 
+營運據點為'ALL'，調用 aimi106,，其他則調用 aimi116]]>
+  </act>
+  <act cite_std="N" id="open_sg" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[生管分群資料(open_sg)：開啟畫面:[P:料件生管分群維護作業] 
+營運據點為'ALL'，調用 aimi105,，其他則調用 aimi115]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_imcd111" text="銷售分群" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_imcd112" text="銷售單位" lstr=""/>
+    <sfield name="lbl_oocal003" text="說明" lstr=""/>
+    <sfield name="lbl_imcd113" text="銷售計價單位" lstr=""/>
+    <sfield name="lbl_imcd114" text="銷售批量" lstr=""/>
+    <sfield name="lbl_imcd115" text="最小銷售數量" lstr=""/>
+    <sfield name="lbl_imcd116" text="銷售批量控管方式" lstr=""/>
+    <sfield name="lbl_imcd117" text="保證(固)月數" lstr=""/>
+    <sfield name="lbl_imcd118" text="保證(固)天數" lstr=""/>
+    <sfield name="lbl_imcdstus" text="狀態碼" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="page_2" text="相關資料" lstr=""/>
+    <sfield name="lbl_imcd121" text="預設內外銷" lstr=""/>
+    <sfield name="lbl_imcd122" text="訂單子件拆解方式" lstr=""/>
+    <sfield name="lbl_imcd123" text="慣用包裝容器" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imcd124" text="銷售備貨提前天數" lstr=""/>
+    <sfield name="lbl_imcd125" text="預測料號" lstr=""/>
+    <sfield name="lbl_imcd126" text="出貨替代" lstr=""/>
+    <sfield name="lbl_imcd127" text="統計除外商品" lstr=""/>
+    <sfield name="lbl_imcd128" text="銷售超交率" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="about_file" text="相關文件" lstr=""/>
+    <sact name="open_cg" text="料件採購分群資料維護作業" lstr=""/>
+    <sact name="open_cp" text="料件產品分群資料維護作業" lstr=""/>
+    <sact name="open_kc" text="料件庫存分群資料維護作業" lstr=""/>
+    <sact name="open_pg" text="料件品管分群資料維護作業" lstr=""/>
+    <sact name="open_sg" text="料件生管分群資料維護作業" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

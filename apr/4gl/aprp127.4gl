@@ -1,0 +1,2608 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aprp127.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0007(2015-09-04 11:52:13), PR版次:0007(2016-11-14 10:04:33)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000101
+#+ Filename...: aprp127
+#+ Description: 電子秤文件導出
+#+ Creator....: 03247(2014-03-26 10:55:35)
+#+ Modifier...: 03247 -SD/PR- 02481
+ 
+{</section>}
+ 
+{<section id="aprp127.global" >}
+#應用 p01 樣板自動產生(Version:19)
+#add-point:填寫註解說明 name="global.memo" name="global.memo"
+#Memos
+#161111-00028#2   2016/11/11  BY 02481    标准程式定义采用宣告模式,弃用.*写法
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目 name="global.import"
+IMPORT JAVA java.io.FileOutputStream
+IMPORT JAVA org.apache.poi.ss.usermodel.IndexedColors
+IMPORT JAVA org.apache.poi.ss.usermodel.Workbook
+IMPORT JAVA org.apache.poi.ss.usermodel.Cell
+IMPORT JAVA org.apache.poi.ss.usermodel.Row
+IMPORT JAVA org.apache.poi.ss.usermodel.Sheet
+IMPORT JAVA org.apache.poi.ss.usermodel.Workbook
+IMPORT JAVA org.apache.poi.xssf.usermodel.XSSFWorkbook
+IMPORT JAVA org.apache.poi.xssf.usermodel.XSSFSheet
+IMPORT JAVA org.apache.poi.xssf.usermodel.XSSFRow
+IMPORT JAVA org.apache.poi.xssf.usermodel.XSSFCell
+IMPORT JAVA org.apache.poi.xssf.usermodel.XSSFCellStyle
+IMPORT JAVA org.apache.poi.xssf.usermodel.XSSFFont 
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+   DEFINE g_chk_jobid          LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable) name="global.parameter"
+   
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       prbhsite LIKE prbh_t.prbhsite, 
+   imaa009 LIKE type_t.chr10, 
+   pmaa001 LIKE type_t.chr500, 
+   prbl001 LIKE prbl_t.prbl001, 
+   imaa001 LIKE type_t.chr500, 
+   prbh001 LIKE type_t.chr500, 
+   prbl003 LIKE prbl_t.prbl003, 
+   prbk001 LIKE type_t.chr20, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+TYPE type_g_prbn_d   RECORD
+   prbn001 LIKE prbn_t.prbn001,
+   prbn002 LIKE prbn_t.prbn002,
+   prbnsite LIKE prbn_t.prbnsite,
+   prbn003 LIKE prbn_t.prbn003,
+   prbn004 LIKE prbn_t.prbn004,
+   prbn005 LIKE prbn_t.prbn005,
+   prbn006 LIKE prbn_t.prbn006,
+   prbn007 LIKE prbn_t.prbn007,
+   prbn008 LIKE prbn_t.prbn008
+      END RECORD
+TYPE type_g_prbt_d   RECORD
+   sel          LIKE type_t.chr1,
+   prbt001      LIKE prbt_t.prbt001,
+   prbt002      LIKE prbt_t.prbt002,
+   prbt003      LIKE prbt_t.prbt003,
+   prbt003_desc LIKE type_t.chr500,
+   prbh006      LIKE prbh_t.prbh006,
+   prbh012      LIKE prbh_t.prbh012,
+   prbh013      LIKE prbh_t.prbh013,
+   prbt004      LIKE prbt_t.prbt004
+      END RECORD
+DEFINE g_prbn_d   DYNAMIC ARRAY OF type_g_prbn_d  
+DEFINE g_prbt_d   DYNAMIC ARRAY OF type_g_prbt_d
+DEFINE g_prbt_d_t type_g_prbt_d
+DEFINE g_prbt_d_o type_g_prbt_d
+
+ TYPE type_ga_table_data RECORD
+            field001, field002, field003, field004, field005,
+            field006, field007, field008, field009, field010,
+            field011, field012, field013, field014, field015,
+            field016, field017, field018, field019, field020,
+            field021, field022, field023, field024, field025,
+            field026, field027, field028, field029, field030,
+            field031, field032, field033, field034, field035,
+            field036, field037, field038, field039, field040,
+            field041, field042, field043, field044, field045,
+            field046, field047, field048, field049, field050,
+            field051, field052, field053, field054, field055,
+            field056, field057, field058, field059, field060,
+            field061, field062, field063, field064, field065,
+            field066, field067, field068, field069, field070,
+            field071, field072, field073, field074, field075,
+            field076, field077, field078, field079, field080,
+            field081, field082, field083, field084, field085,
+            field086, field087, field088, field089, field090,
+            field091, field092, field093, field094, field095,
+            field096, field097, field098, field099, field100
+            LIKE type_t.chr1000
+        END RECORD
+DEFINE ga_table_data DYNAMIC ARRAY OF type_ga_table_data
+
+DEFINE g_rec_b               LIKE type_t.num10
+DEFINE l_ac                  LIKE type_t.num10
+DEFINE g_detail_idx          LIKE type_t.num10
+DEFINE g_site_wc             STRING
+DEFINE g_imaa009_wc          STRING
+DEFINE g_imaa001_wc          STRING
+DEFINE g_prbk001_wc          STRING
+DEFINE g_pmaa001_wc          STRING
+DEFINE g_prbh001_wc          STRING
+DEFINE g_file_id             STRING
+DEFINE g_filename            STRING
+DEFINE g_etl_job             STRING
+DEFINE g_prbhsite            LIKE prbh_t.prbhsite
+DEFINE g_prbl001             LIKE prbl_t.prbl001
+DEFINE g_prbl003             LIKE prbl_t.prbl003
+DEFINE g_prbl004             LIKE prbl_t.prbl004
+DEFINE g_prbl005             LIKE prbl_t.prbl005
+DEFINE g_prbl006             LIKE prbl_t.prbl006
+DEFINE g_aw                  STRING                        #確定當下點擊的單身
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog
+DEFINE g_insert              LIKE type_t.chr5
+DEFINE g_current_page        LIKE type_t.num10                  #目前所在頁數
+DEFINE g_master_idx          LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10              #單身 總筆數(所有資料)
+DEFINE g_filepath            STRING
+DEFINE fo FileOutputStream
+DEFINE workbook XSSFWorkbook
+DEFINE sheet XSSFSheet
+DEFINE row XSSFRow
+DEFINE cell XSSFCell
+DEFINE style XSSFCellStyle
+DEFINE headerFont XSSFFont
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明 name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aprp127.main" >}
+MAIN
+   #add-point:main段define (客製用) name="main.define_customerization"
+   
+   #end add-point 
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define name="main.define"
+   DEFINE l_success   LIKE type_t.num5
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("apr","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js name="main.background"
+   
+   #end add-point
+ 
+   #背景(Y) 或半背景(T) 時不做主畫面開窗
+   IF g_bgjob = "Y" OR g_bgjob = "T" THEN
+      #排程參數由01開始，若不是1開始，表示有保留參數
+      LET ls_js = g_argv[01]
+     #CALL util.JSON.parse(ls_js,g_master)   #p類主要使用l_param,此處不解析
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+      CALL aprp127_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aprp127 WITH FORM cl_ap_formpath("apr",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL aprp127_init()
+ 
+      #進入選單 Menu (="N")
+      CALL aprp127_ui_dialog()
+ 
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_aprp127
+   END IF
+ 
+   #add-point:作業離開前 name="main.exit"
+   CALL s_aooi500_drop_temp() RETURNING l_success
+   CALL aprp127_prbt_del() RETURNING l_success
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="aprp127.init" >}
+#+ 初始化作業
+PRIVATE FUNCTION aprp127_init()
+ 
+   #add-point:init段define (客製用) name="init.define_customerization"
+   
+   #end add-point
+   #add-point:ui_dialog段define name="init.define"
+   DEFINE l_success      LIKE type_t.num5
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL cl_set_combo_scc("prbl003","6036")
+   CALL cl_set_act_visible("sel,unsel,selall,selnone", TRUE)
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+   CALL s_aooi500_create_temp() RETURNING l_success
+   #删除已经导出的单身资料
+   CALL aprp127_prbt_del() RETURNING l_success
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprp127.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aprp127_ui_dialog()
+ 
+   #add-point:ui_dialog段define (客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num10
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE l_dialog ui.DIALOG
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define name="ui_dialog.define"
+   
+   #end add-point
+   
+   #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog"
+   
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2 name="ui_dialog.before_dialog2"
+      
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #應用 a57 樣板自動產生(Version:3)
+         INPUT BY NAME g_master.prbl003 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前 name="input.m.before_input"
+               
+               #end add-point
+         
+                     #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD prbl003
+            #add-point:BEFORE FIELD prbl003 name="input.b.prbl003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD prbl003
+            
+            #add-point:AFTER FIELD prbl003 name="input.a.prbl003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE prbl003
+            #add-point:ON CHANGE prbl003 name="input.g.prbl003"
+            
+            #END add-point 
+ 
+ 
+ 
+                     #Ctrlp:input.c.prbl003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD prbl003
+            #add-point:ON ACTION controlp INFIELD prbl003 name="input.c.prbl003"
+            
+            #END add-point
+ 
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後 name="input.m.after_input"
+               
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...) name="input.other"
+            
+            #end add-point
+         END INPUT
+ 
+ 
+ 
+         
+         #應用 a58 樣板自動產生(Version:3)
+         CONSTRUCT BY NAME g_master.wc ON prbl001
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct name="cs.head.before_construct"
+               
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #Ctrlp:construct.c.prbl001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD prbl001
+            #add-point:ON ACTION controlp INFIELD prbl001 name="construct.c.prbl001"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_prbl001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO prbl001  #顯示到畫面上
+            NEXT FIELD prbl001                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD prbl001
+            #add-point:BEFORE FIELD prbl001 name="construct.b.prbl001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD prbl001
+            
+            #add-point:AFTER FIELD prbl001 name="construct.a.prbl001"
+            
+            #END add-point
+            
+ 
+ 
+ 
+            
+            #add-point:其他管控 name="cs.other"
+            
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+ 
+      
+         #add-point:ui_dialog段construct name="ui_dialog.more_construct"
+         CONSTRUCT BY NAME g_site_wc ON prbhsite
+            BEFORE CONSTRUCT
+
+            ON ACTION controlp INFIELD prbhsite
+               #add-point:ON ACTION controlp INFIELD prbl001
+               #此段落由子樣板a08產生
+               #開窗c段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.where = s_aooi500_q_where(g_prog,'prbhsite',g_site,'c')
+               CALL q_ooef001_24()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO prbhsite  #顯示到畫面上
+               NEXT FIELD prbhsite                     #返回原欄位
+            
+            #應用 a01 樣板自動產生(Version:1)
+            BEFORE FIELD prbhsite
+               #add-point:BEFORE FIELD prbl001
+            
+               #END add-point
+            
+            #應用 a02 樣板自動產生(Version:1)
+            AFTER FIELD prbhsite
+            
+               #add-point:AFTER FIELD prbl001
+               
+               #END add-point
+            
+         END CONSTRUCT
+         CONSTRUCT BY NAME g_prbh001_wc ON prbh001
+            BEFORE CONSTRUCT
+            
+            ON ACTION controlp INFIELD prbh001
+               #add-point:ON ACTION controlp INFIELD prbh001
+               #此段落由子樣板a08產生
+               #開窗c段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_prbh001()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO prbh001  #顯示到畫面上
+               NEXT FIELD prbh001                     #返回原欄位
+            
+            #應用 a01 樣板自動產生(Version:1)
+            BEFORE FIELD prbh001
+               #add-point:BEFORE FIELD prbh001
+            
+               #END add-point
+            
+            #應用 a02 樣板自動產生(Version:1)
+            AFTER FIELD prbh001
+            
+               #add-point:AFTER FIELD prbh001
+               
+               #END add-point
+               
+         END CONSTRUCT
+         CONSTRUCT BY NAME g_imaa009_wc ON imaa009
+            BEFORE CONSTRUCT
+
+            ON ACTION controlp INFIELD imaa009
+               #add-point:ON ACTION controlp INFIELD prbl001
+               #此段落由子樣板a08產生
+               #開窗c段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_rtax001()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO imaa009  #顯示到畫面上
+               NEXT FIELD imaa009                     #返回原欄位
+            
+            #應用 a01 樣板自動產生(Version:1)
+            BEFORE FIELD imaa009
+               #add-point:BEFORE FIELD prbl001
+            
+               #END add-point
+            
+            #應用 a02 樣板自動產生(Version:1)
+            AFTER FIELD imaa009
+            
+               #add-point:AFTER FIELD prbl001
+               
+               #END add-point
+            
+         END CONSTRUCT
+         CONSTRUCT BY NAME g_imaa001_wc ON imaa001
+            BEFORE CONSTRUCT
+
+            ON ACTION controlp INFIELD imaa001
+               #add-point:ON ACTION controlp INFIELD prbl001
+               #此段落由子樣板a08產生
+               #開窗c段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               #20150629--add by dongsz--str---
+               IF NOT cl_null(g_imaa009_wc) THEN
+                  LET g_imaa009_wc = cl_replace_str(g_imaa009_wc,'imaa009','rtaw001')
+                  LET g_qryparam.where = " imaa009 IN (SELECT rtaw002 FROM rtaw_t WHERE rtawent = ",g_enterprise," ",
+                                         "                AND ",g_imaa009_wc,")"
+               END IF
+               #20150629--add by dongsz--end---
+               CALL q_imaa001()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO imaa001  #顯示到畫面上
+               NEXT FIELD imaa001                     #返回原欄位
+            
+            #應用 a01 樣板自動產生(Version:1)
+            BEFORE FIELD imaa001
+               #add-point:BEFORE FIELD prbl001
+            
+               #END add-point
+            
+            #應用 a02 樣板自動產生(Version:1)
+            AFTER FIELD imaa001
+            
+               #add-point:AFTER FIELD prbl001
+               
+               #END add-point
+            
+         END CONSTRUCT
+         CONSTRUCT BY NAME g_prbk001_wc ON prbk001
+            BEFORE CONSTRUCT
+
+            ON ACTION controlp INFIELD prbk001
+               #add-point:ON ACTION controlp INFIELD prbl001
+               #此段落由子樣板a08產生
+               #開窗c段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.where = " prbk003 = '4' AND prbkstus = '2' "
+               CALL q_prbk001()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO prbk001  #顯示到畫面上
+               NEXT FIELD prbk001                     #返回原欄位
+            
+            #應用 a01 樣板自動產生(Version:1)
+            BEFORE FIELD prbk001
+               #add-point:BEFORE FIELD prbl001
+            
+               #END add-point
+            
+            #應用 a02 樣板自動產生(Version:1)
+            AFTER FIELD prbk001
+            
+               #add-point:AFTER FIELD prbl001
+               
+               #END add-point
+            
+         END CONSTRUCT
+         CONSTRUCT BY NAME g_pmaa001_wc ON pmaa001
+            BEFORE CONSTRUCT
+
+            ON ACTION controlp INFIELD pmaa001
+               #add-point:ON ACTION controlp INFIELD prbl001
+               #此段落由子樣板a08產生
+               #開窗c段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.where = " pmaa001 IN (SELECT star003 FROM star_t WHERE starent = ",g_enterprise,") "
+               CALL q_pmaa001_10()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO pmaa001  #顯示到畫面上
+               NEXT FIELD pmaa001                     #返回原欄位
+            
+            #應用 a01 樣板自動產生(Version:1)
+            BEFORE FIELD pmaa001
+               #add-point:BEFORE FIELD prbl001
+            
+               #END add-point
+            
+            #應用 a02 樣板自動產生(Version:1)
+            AFTER FIELD pmaa001
+            
+               #add-point:AFTER FIELD prbl001
+               
+               #END add-point
+            
+         END CONSTRUCT
+         #CONSTRUCT BY NAME lc_param.wc ON prblunit,prbl001,prbl003
+         #   BEFORE CONSTRUCT
+         #      CALL cl_qbe_init()
+		   #
+         #   ON ACTION controlp INFIELD prblunit
+         #      #開窗c段
+         #      INITIALIZE g_qryparam.* TO NULL
+         #      LET g_qryparam.state = "c"
+         #      LET g_qryparam.reqry = FALSE
+         #      LET g_qryparam.arg1 = g_site
+         #      LET g_qryparam.arg2 = '8'
+         #      CALL q_ooed004_3()                     #呼叫開窗
+         #      DISPLAY g_qryparam.return1 TO prblunit  #顯示到畫面上
+         #      NEXT FIELD prblunit                    #返回原欄位
+         #      
+         #   ON ACTION controlp INFIELD prbl001
+         #      #開窗c段
+         #      INITIALIZE g_qryparam.* TO NULL
+         #      LET g_qryparam.state = "c"
+         #      LET g_qryparam.reqry = FALSE
+         #      LET g_qryparam.where = " prblstus = 'Y' "
+         #      CALL q_prbl001()                       #呼叫開窗
+         #      DISPLAY g_qryparam.return1 TO prbl001  #顯示到畫面上
+         #      LET g_qryparam.where = ""
+         #      NEXT FIELD prbl001                     #返回原欄位  
+         #      
+         #END CONSTRUCT
+         #end add-point
+         #add-point:ui_dialog段input name="ui_dialog.more_input"
+         
+         #end add-point
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         DISPLAY ARRAY g_prbn_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b)
+         
+            BEFORE ROW
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_detail_idx = l_ac
+               
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               
+         END DISPLAY
+         
+         DISPLAY ARRAY g_prbt_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b)
+         
+            BEFORE ROW
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_detail_idx = l_ac
+               
+            BEFORE DISPLAY
+               CALL FGL_SET_ARR_CURR(g_detail_idx)
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               
+         END DISPLAY
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         BEFORE DIALOG
+            LET l_dialog = ui.DIALOG.getCurrent()
+            CALL aprp127_get_buffer(l_dialog)
+            #add-point:ui_dialog段before dialog name="ui_dialog.before_dialog3"
+            
+            #end add-point
+ 
+         ON ACTION batch_execute
+            LET g_action_choice = "batch_execute"
+            ACCEPT DIALOG
+ 
+         #add-point:ui_dialog段before_qbeclear name="ui_dialog.before_qbeclear"
+         
+         #end add-point
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE g_master.* TO NULL   #畫面變數清空
+            INITIALIZE lc_param.* TO NULL   #傳遞參數變數清空
+            #add-point:ui_dialog段qbeclear name="ui_dialog.qbeclear"
+            
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action name="ui_dialog.more_action"
+         ON ACTION accept
+            CALL aprp127_query()
+         
+         ON ACTION modify_detail
+            LET g_aw = g_curr_diag.getCurrentItem()
+            CALL aprp127_modify()
+            
+         ON ACTION del_data
+            IF cl_ask_confirm('apr-00463') THEN
+               DELETE FROM prbt_t
+                WHERE prbtent = g_enterprise
+                  AND prbt004 = g_user
+                  AND prbt005 = 'Y'
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = "del prbt"
+                  LET g_errparam.code   = SQLCA.sqlcode
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()
+                  CONTINUE DIALOG
+               END IF
+            END IF
+            CALL aprp127_b_fill()
+           
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail2", 1, -1, 1)
+            #add-point:ui_dialog段on action selall
+
+            #end add-point            
+            FOR li_idx = 1 TO g_prbt_d.getLength()
+               LET g_prbt_d[li_idx].sel = "Y"
+               #add-point:ui_dialog段on action selall
+               UPDATE prbt_t SET prbt005 = 'Y'
+                WHERE prbtent = g_enterprise
+                  AND prbt001 = g_prbt_d[li_idx].prbt001
+                  AND prbt004 = g_user
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selall
+
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail2", 1, -1, 0)
+            FOR li_idx = 1 TO g_prbt_d.getLength()
+               LET g_prbt_d[li_idx].sel = "N"
+               #add-point:ui_dialog段on action selnone
+               UPDATE prbt_t SET prbt005 = 'N'
+                WHERE prbtent = g_enterprise
+                  AND prbt001 = g_prbt_d[li_idx].prbt001
+                  AND prbt004 = g_user
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selnone
+
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_prbt_d.getLength()
+               IF DIALOG.isRowSelected("s_detail2", li_idx) THEN
+                  LET g_prbt_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel
+            FOR li_idx = 1 TO g_prbt_d.getLength()
+               IF DIALOG.isRowSelected("s_detail2", li_idx) THEN
+                  UPDATE prbt_t SET prbt005 = 'Y'
+                   WHERE prbtent = g_enterprise
+                     AND prbt001 = g_prbt_d[li_idx].prbt001
+                     AND prbt004 = g_user
+               END IF
+            END FOR
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_prbt_d.getLength()
+               IF DIALOG.isRowSelected("s_detail2", li_idx) THEN
+                  LET g_prbt_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel
+            FOR li_idx = 1 TO g_prbt_d.getLength()
+               IF DIALOG.isRowSelected("s_detail2", li_idx) THEN
+                  UPDATE prbt_t SET prbt005 = 'N'
+                   WHERE prbtent = g_enterprise
+                     AND prbt001 = g_prbt_d[li_idx].prbt001
+                     AND prbt004 = g_user
+               END IF
+            END FOR
+            #end add-point
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM   
+         INITIALIZE g_master.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL aprp127_init()
+         CONTINUE WHILE
+      END IF
+ 
+      #檢查批次設定是否有錯(或未設定完成)
+      IF NOT cl_schedule_exec_check() THEN
+         CONTINUE WHILE
+      END IF
+      
+      LET lc_param.wc = g_master.wc    #把畫面上的wc傳遞到參數變數
+      #請在下方的add-point內進行把畫面的輸入資料(g_master)轉換到傳遞參數變數(lc_param)的動作
+      #add-point:ui_dialog段exit dialog name="process.exit_dialog"
+      
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)  #r類使用g_master/p類使用lc_param
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         IF g_chk_jobid THEN 
+            LET g_jobid = g_schedule.gzpa001
+         ELSE 
+            LET g_jobid = cl_schedule_get_jobid(g_prog)
+         END IF 
+ 
+         #依照指定模式執行報表列印
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL aprp127_process(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "1"
+                 LET ls_js = aprp127_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+ 
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE  
+ 
+         IF g_schedule.gzpa003 = "2" OR g_schedule.gzpa003 = "3" THEN 
+            CALL cl_ask_confirm3("std-00014","") #設定完成
+         END IF    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule name="process.after_schedule"
+         
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprp127.transfer_argv" >}
+#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION aprp127_transfer_argv(ls_js)
+ 
+   #add-point:transfer_agrv段define (客製用) name="transfer_agrv.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog       STRING,
+             actionid   STRING,
+             background LIKE type_t.chr1,
+             param      DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+   #add-point:transfer_agrv段define name="transfer_agrv.define"
+   
+   #end add-point
+ 
+   LET la_cmdrun.prog = g_prog
+   LET la_cmdrun.background = "Y"
+   LET la_cmdrun.param[1] = ls_js
+ 
+   #add-point:transfer.argv段程式內容 name="transfer.argv.define"
+   
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprp127.process" >}
+#+ 資料處理   (r類使用g_master為主處理/p類使用l_param為主)
+PRIVATE FUNCTION aprp127_process(ls_js)
+ 
+   #add-point:process段define (客製用) name="process.define_customerization"
+   
+   #end add-point
+   DEFINE ls_js         STRING
+   DEFINE lc_param      type_parameter
+   DEFINE li_stus       LIKE type_t.num5
+   DEFINE li_count      LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql        STRING             #主SQL
+   DEFINE li_p01_status LIKE type_t.num5
+   #add-point:process段define name="process.define"
+   DEFINE l_timestamp   STRING  #ETL
+   DEFINE l_target      STRING  #ETL
+   DEFINE l_sql         STRING
+   DEFINE tok           base.stringtokenizer
+   DEFINE l_n           LIKE type_t.num5
+   DEFINE l_len         LIKE type_t.num5
+   DEFINE l_str         LIKE type_t.chr1
+   DEFINE l_where       STRING
+   DEFINE g_filepath    STRING
+   DEFINE l_loop        LIKE type_t.num5   #160225-00040#14 160509 by sakura add 
+   DEFINE l_msg         STRING             #160225-00040#14 160509 by sakura add   
+   #end add-point
+ 
+  #INITIALIZE lc_param TO NULL           #p類不可以清空
+   CALL util.JSON.parse(ls_js,lc_param)  #r類作業被t類呼叫時使用, p類主要解開參數處
+   LET li_p01_status = 1
+ 
+  #IF lc_param.wc IS NOT NULL THEN
+  #   LET g_bgjob = "T"       #特殊情況,此為t類作業鬆耦合串入報表主程式使用
+  #END IF
+ 
+   #add-point:process段前處理 name="process.pre_process"
+   #判断单身是否有资料
+   LET l_n = 0
+   SELECT COUNT(*) INTO l_n
+     FROM prbt_t
+    WHERE prbtent = g_enterprise
+      AND prbt004 = g_user
+   IF l_n < 1 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = ""
+      LET g_errparam.code   = 'apr-00464'
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   IF NOT cl_ask_confirm("lib-012") THEN
+      RETURN
+   END IF
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress name="process.count_progress"
+      #160225-00040#14 160509 by sakura add(S)
+      LET l_loop = 3
+      CALL cl_progress_bar_no_window(l_loop)      
+      #160225-00040#14 160509 by sakura add(E)
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE aprp127_process_cs CURSOR FROM ls_sql
+#  FOREACH aprp127_process_cs INTO
+   #add-point:process段process name="process.process"
+   #160225-00040#14 160509 by sakura add(S) #資料準備
+   LET l_msg = cl_getmsg('ade-00114',g_lang)   
+   CALL cl_progress_no_window_ing(l_msg) 
+   #160225-00040#14 160509 by sakura add(E)   
+   
+   IF cl_null(g_master.wc) THEN
+      LET g_master.wc = " 1=1"
+   END IF
+#   IF cl_null(g_site_wc) THEN
+#      LET g_site_wc = " 1=1 "
+#   END IF
+#   IF cl_null(g_prbh001_wc) THEN
+#      LET g_prbh001_wc = " 1=1 "
+#   END IF
+#   LET g_imaa009_wc = cl_replace_str(g_imaa009_wc,'imaa009','rtaw001')
+#   LET g_pmaa001_wc = cl_replace_str(g_pmaa001_wc,'pmaa001','star003')
+   #20150910 dongsz add
+   LET l_where = s_aooi500_q_where(g_prog,'prbhsite',g_site,'c')
+   LET l_where = cl_replace_str(l_where,'ooef001','prbhsite')
+   LET g_site_wc = g_site_wc," AND ",l_where
+   #20150910 dongsz add
+   LET l_sql = " SELECT DISTINCT prbl001,prbl003,prbl004,prbl005,prbl006 ",
+               "   FROM prbl_t ",
+               "  WHERE prblent = ",g_enterprise," ",
+               "    AND prblstus = 'Y' ",
+               "    AND ",g_master.wc
+   IF NOT cl_null(g_master.prbl003) THEN
+      LET l_sql = l_sql," AND prbl003 = '",g_master.prbl003,"' "
+   END IF
+   #SELECT prbl004,prbl005,prbl006 INTO g_prbl004,g_prbl005,g_prbl006
+   # FROM prbl_t WHERE prbl001 = g_master.prbl001 AND prbl003 = g_master.prbl003
+   PREPARE sel_prbl_pre FROM l_sql
+   DECLARE sel_prbl_cs  CURSOR FOR sel_prbl_pre
+   LET g_prbhsite = NULL
+   LET g_prbl001 = NULL
+   LET g_prbl003 = NULL
+   LET g_prbl004 = NULL
+   LET g_prbl005 = NULL
+   LET g_prbl006 = NULL
+
+   #160225-00040#14 160509 by sakura add(S) #產生資料
+   LET l_msg = cl_getmsg('ast-00330',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)   
+   #160225-00040#14 160509 by sakura add(E)
+
+   FOREACH sel_prbl_cs  INTO g_prbl001,g_prbl003,g_prbl004,g_prbl005,g_prbl006
+      LET l_sql = " SELECT DISTINCT prbhsite FROM prbh_t",
+                  "  WHERE prbhent = ",g_enterprise," ",
+                  "    AND prbhstus = 'Y' ",
+                  "    AND prbhsite = '",g_site,"' ",
+                  "    AND ",g_site_wc
+      PREPARE sel_prbh_pre FROM l_sql
+      DECLARE sel_prbh_cs  CURSOR FOR sel_prbh_pre
+      FOREACH sel_prbh_cs  INTO g_prbhsite
+         IF cl_null(g_prbhsite) THEN
+            CONTINUE FOREACH
+         END IF
+         LET l_timestamp = cl_eai_format_time()
+         LET g_file_id = g_prbhsite CLIPPED,"_",g_prbl001 CLIPPED,"_",l_timestamp
+         LET g_etl_job ="aprp127"
+         IF g_prbl005 = '1' THEN
+            LET g_filename = g_file_id, ".txt"
+         ELSE
+            LET g_filename = g_file_id, ".xlsx"
+         END IF
+         
+         #組合SQL
+         LET g_sql = aprp127_etl_set_sql()
+         
+         #呼叫ETL JOB
+         DISPLAY "g_bgjob:",g_bgjob
+         #CALL aprp127_etl_job()
+         CALL aprp127_poiexcel()
+         #IF g_prbl005 = '1' THEN
+         #   CALL aprp127_poiexcel()
+         #   #CALL aprp127_etl_job()
+         #ELSE
+         #   CALL aprp127_poiexcel()
+         #END IF         
+         
+         
+         DISPLAY "g_bgjob:",g_bgjob
+         #上傳檔案至PC端
+         IF NOT cl_null(g_prbl004) THEN
+            LET l_len = LENGTH(g_prbl004)
+            LET l_str = g_prbl004[l_len,l_len]
+            IF l_str = "\\" THEN
+               LET l_target = g_prbl004 CLIPPED,g_filename
+            ELSE
+               LET l_target = g_prbl004 CLIPPED,"\\",g_filename
+            END IF
+			   LET g_filepath = FGL_GETENV("TEMPDIR"),"/",g_filename
+			   IF cl_client_download_file(g_filepath,l_target) THEN            
+            --IF cl_eai_download_file(g_filename, l_target) THEN
+               DISPLAY "Download OK!!  filepath: ", l_target
+            ELSE
+               DISPLAY "Download fail!!"
+               CONTINUE FOREACH
+            END IF
+         END IF
+      
+         DISPLAY "g_bgjob:",g_bgjob
+         
+         #删除已经导出的单身资料
+         IF NOT aprp127_prbt_del() THEN
+            CONTINUE FOREACH
+         END IF
+         CALL aprp127_b_fill()
+      END FOREACH
+      LET g_prbl001 = NULL
+      LET g_prbl003 = NULL
+      LET g_prbl004 = NULL
+      LET g_prbl005 = NULL
+      LET g_prbl006 = NULL
+   END FOREACH
+   
+   #160225-00040#14 160509 by sakura add(S) #批次作業已執行完成
+   LET l_msg = cl_getmsg('std-00012',g_lang)
+   CALL cl_progress_no_window_ing(l_msg)
+   #160225-00040#14 160509 by sakura add(E)   
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理 name="process.foreground_finish"
+      
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理 name="process.background_finish"
+      
+      #end add-point
+      CALL cl_schedule_exec_call(li_p01_status)
+   END IF
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL aprp127_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprp127.get_buffer" >}
+PRIVATE FUNCTION aprp127_get_buffer(p_dialog)
+ 
+   #add-point:process段define (客製用) name="get_buffer.define_customerization"
+   
+   #end add-point
+   DEFINE p_dialog   ui.DIALOG
+   #add-point:process段define name="get_buffer.define"
+   
+   #end add-point
+ 
+   
+   LET g_master.prbl003 = p_dialog.getFieldBuffer('prbl003')
+ 
+   CALL cl_schedule_get_buffer(p_dialog)
+ 
+   #add-point:get_buffer段其他欄位處理 name="get_buffer.others"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprp127.msgcentre_notify" >}
+PRIVATE FUNCTION aprp127_msgcentre_notify()
+ 
+   #add-point:process段define (客製用) name="msgcentre_notify.define_customerization"
+   
+   #end add-point
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:process段define name="msgcentre_notify.define"
+   
+   #end add-point
+ 
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = "process"
+ 
+   #add-point:msgcentre其他通知 name="msg_centre.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aprp127.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL aprp127_etl_set_sql()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aprp127_etl_set_sql()
+#DEFINE l_prbm       RECORD LIKE prbm_t.*  #161111-00028#2--mark
+#161111-00028#2 ---add---begin-----------
+DEFINE l_prbm RECORD  #電子秤檔案格式定義明細資料表
+       prbment LIKE prbm_t.prbment, #企業編號
+       prbmunit LIKE prbm_t.prbmunit, #應用組織
+       prbm001 LIKE prbm_t.prbm001, #電子秤編號
+       prbm002 LIKE prbm_t.prbm002, #導出順序號
+       prbm003 LIKE prbm_t.prbm003, #描述
+       prbm004 LIKE prbm_t.prbm004, #長度
+       prbm005 LIKE prbm_t.prbm005, #對齊方式
+       prbm006 LIKE prbm_t.prbm006, #填充字符
+       prbm007 LIKE prbm_t.prbm007, #數據來源
+       prbm008 LIKE prbm_t.prbm008, #來源欄位名
+       prbm009 LIKE prbm_t.prbm009, #欄位類型
+       prbm010 LIKE prbm_t.prbm010, #默認值
+       prbmstus LIKE prbm_t.prbmstus, #狀態
+       prbm011 LIKE prbm_t.prbm011 #轉換類型
+END RECORD
+#161111-00028#2 ---add---end-------------
+DEFINE l_id         LIKE prbm_t.prbm002
+DEFINE l_len        LIKE prbm_t.prbm004
+DEFINE l_pad        LIKE prbm_t.prbm005
+DEFINE l_split      LIKE prbm_t.prbm006
+DEFINE l_source     LIKE prbm_t.prbm007
+DEFINE l_field      LIKE type_t.chr500
+DEFINE l_type       LIKE prbm_t.prbm009
+DEFINE l_default    LIKE prbm_t.prbm010
+DEFINE l_prbm011    LIKE prbm_t.prbm011
+DEFINE l_prbu004    LIKE prbu_t.prbu004
+DEFINE l_prbu005    LIKE prbu_t.prbu005
+DEFINE l_change     LIKE type_t.chr500
+DEFINE l_str        STRING
+DEFINE r_str        STRING
+DEFINE l_sql        STRING
+DEFINE l_sql1       STRING 
+DEFINE l_cnt        LIKE type_t.num10
+
+
+   #產生的SQL範例: select rpad(nvl(prbh001,'test'),10,' '), lpad(nvl(prbh002,'test'),10,' ') from prbh_t
+   #指定欄位的對齊方式，欄位長度，填充字符，預設值
+
+   LET l_sql = "SELECT prbm002,prbm004,prbm005,prbm006,prbm007,prbm008,prbm009,prbm010,prbm011 FROM prbm_t",
+               " WHERE prbment= ",g_enterprise ,
+               "   AND prbm001= '",g_prbl001,"'",
+               "   AND prbmstus='Y'  ORDER BY prbm002 "
+   PREPARE prbm FROM l_sql
+   DECLARE prbm_curs CURSOR FOR prbm
+   FOREACH prbm_curs INTO l_id,l_len,l_pad,l_split,l_source,l_field,l_type,l_default,l_prbm011
+
+        LET l_change = ""
+         
+        IF l_split = "1"  THEN #填充字符:空格
+           LET l_split =" "
+        END IF
+        
+        IF l_prbm011 = '1' THEN #值轉換
+           LET l_sql1 = " SELECT DISTINCT prbu004,prbu005 FROM prbu_t ",
+                        "  WHERE prbuent = ",g_enterprise," ",
+                        "    AND prbu001 = '",g_prbl001,"' ",
+                        "    AND prbu002 = ",l_id," "
+           PREPARE aprp127_sel_prebu_pre FROM l_sql1
+           DECLARE aprp127_sel_prebu_cs  CURSOR FOR aprp127_sel_prebu_pre
+           LET l_cnt = 1
+           FOREACH aprp127_sel_prebu_cs  INTO l_prbu004,l_prbu005
+              IF l_type MATCHES "*number*" THEN
+                 IF l_cnt = 1 THEN
+                    LET l_change = " WHEN to_number('",l_prbu004,"') THEN to_number('",l_prbu005,"') "
+                 ELSE
+                    LET l_change = l_change," WHEN to_number('",l_prbu004,"') THEN to_number('",l_prbu005,"') "
+                 END IF
+              END IF
+              IF l_type MATCHES "*date*" THEN
+                 IF l_cnt = 1 THEN
+                    LET l_change = " WHEN to_date('",l_prbu004,"','YYYYMMDD') THEN to_date('",l_prbu005,"','YYYYMMDD') "
+                 ELSE
+                    LET l_change = l_change," WHEN to_date('",l_prbu004,"','YYYYMMDD') THEN to_date('",l_prbu005,"','YYYYMMDD') "
+                 END IF
+              END IF
+              LET l_cnt = l_cnt + 1
+           END FOREACH
+           IF NOT cl_null(l_change) THEN
+              LET l_field = "(CASE ",l_field,l_change," END)"
+           END IF
+        END IF
+        
+        IF l_split <> '0' THEN
+           IF NOT cl_null(l_default) THEN
+              LET l_str = "nvl(", l_field CLIPPED , ",'", l_default ,"')"
+           ELSE
+              #型態為varchar時，需要給一個空格預設值，否則null資料無法增加填充字符
+              IF l_type MATCHES "*varchar*"  THEN
+                 LET l_default = l_split
+                 LET l_str = "nvl(", l_field CLIPPED , ",'", l_default ,"')"
+              ELSE
+                 LET l_str = l_field CLIPPED
+              END IF
+           END IF
+           
+           IF l_pad = "1" THEN  #靠左
+              LET l_str = "rpad(", l_str , ",", l_len ,",'", l_split,"')"
+           ELSE
+              #過濾Excel格式數字欄位，不用特別指定則會自動靠右
+              IF g_prbl005 != '2' AND l_type MATCHES "*varchar*" THEN
+                 LET l_str = "lpad(", l_str , ",", l_len ,",'", l_split,"')"
+              END IF
+           END IF
+        ELSE
+           LET l_str = l_field
+           IF NOT cl_null(l_default) THEN
+              LET l_str = "nvl(",l_field CLIPPED,",'",l_default,"')"
+           END IF
+           LET l_str = "trim(",l_str,")"
+        END IF
+
+        IF cl_null(r_str) THEN
+           LET r_str = l_str
+        ELSE
+           LET r_str = r_str, ", ", l_str
+        END IF
+
+        display r_str
+   END FOREACH
+   
+   IF NOT cl_null(r_str) THEN
+      #LET r_str = "SELECT ", r_str ," FROM ",l_source ,
+      #            " WHERE prbhsite = '" , g_prbhsite ,"'"
+      LET r_str = "SELECT ", r_str ," FROM prbh_t,imaa_t,prbt_t ",
+                  " WHERE prbhent = imaaent AND prbh003 = imaa001 ",
+                  "   AND prbhent = ",g_enterprise," ",
+                  "   AND prbhsite = '",g_prbhsite,"' ",
+                  "   AND prbhent = prbtent AND prbh001 = prbt001 ",
+                  "   AND prbt004 = '",g_user,"' "
+#      IF NOT cl_null(g_imaa009_wc) AND g_imaa009_wc <> " 1=1" THEN
+#         LET r_str = r_str," AND imaa009 IN (SELECT rtaw002 FROM rtaw_t ",
+#                           "                  WHERE rtawent = ",g_enterprise," AND ",g_imaa009_wc,") "
+#      END IF
+#      IF NOT cl_null(g_imaa001_wc) AND g_imaa001_wc <> " 1=1" THEN
+#         LET r_str = r_str," AND ",g_imaa001_wc
+#      END IF
+#      IF NOT cl_null(g_prbk001_wc) AND g_prbk001_wc <> " 1=1" THEN
+#         LET r_str = r_str," AND imaa001 IN (SELECT DISTINCT prbk010 FROM prbk_t WHERE prbkent = ",g_enterprise," ",
+#                           "                    AND ",g_prbk001_wc,") "
+#      END IF
+#      IF NOT cl_null(g_pmaa001_wc) AND g_pmaa001_wc <> " 1=1" THEN
+#         LET r_str = r_str," AND imaa001 IN (SELECT DISTINCT stas003 FROM stas_t,star_t ",
+#                           "                  WHERE stasent = starent AND stasent = ",g_enterprise," ",
+#                           "                    AND stas001 = star001 AND ",g_pmaa001_wc,") "
+#      END IF
+   END IF
+   display r_str
+
+   RETURN r_str
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL aprp127_etl_job()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aprp127_etl_job()
+DEFINE la_param  RECORD
+          prog   STRING,
+          param  DYNAMIC ARRAY OF STRING
+                 END RECORD
+DEFINE ls_js     STRING
+
+
+   #指定 ETL JOB 外部參數
+   LET g_etlparam[1].para_id = "file_name"   #指定檔案名稱
+   LET g_etlparam[1].type = "string"
+   LET g_etlparam[1].value = g_filename
+
+   LET g_etlparam[2].para_id = "g_sql"       #指定 SQL
+   LET g_etlparam[2].type = "string"
+   LET g_etlparam[2].value = g_sql
+
+   LET g_etlparam[3].para_id = "type"        #指定檔案導出格式(1:文字檔/2:excel)
+   LET g_etlparam[3].type = "string"
+   LET g_etlparam[3].value = g_prbl005
+
+   LET g_etlparam[4].para_id = "split"       #數據分隔符
+   LET g_etlparam[4].type = "string"
+   LET g_etlparam[4].value = aprp127_split(g_prbl006)
+
+   LET la_param.prog = 'awsp200'
+   LET la_param.param[1] = g_prog
+   LET la_param.param[2] = "data_export"
+   LET la_param.param[3] = util.JSON.stringify(g_etlparam)
+   LET la_param.param[4] = g_etl_job
+   LET la_param.param[5] = g_file_id
+   
+   LET ls_js = util.JSON.stringify( la_param )
+   CALL cl_cmdrun_wait(ls_js)
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL aprp127_split(p_type)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aprp127_split(p_type)
+DEFINE p_type LIKE type_t.chr1
+DEFINE r_type LIKE type_t.chr1
+
+   CASE p_type
+     WHEN "1"  LET r_type = "|"
+     WHEN "2"  LET r_type = ":"
+     WHEN "3"  LET r_type = ","
+     WHEN "4"  LET r_type = "   "
+   END CASE
+   RETURN r_type
+END FUNCTION
+
+################################################################################
+# Descriptions...: 商品資料單身
+# Memo...........:
+# Usage..........: CALL aprp127_modify()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 20150822 By dongsz
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aprp127_modify()
+DEFINE  l_allow_insert        LIKE type_t.num5                #可新增否
+DEFINE  l_allow_delete        LIKE type_t.num5                #可刪除否
+DEFINE  l_insert              BOOLEAN
+DEFINE  l_cmd                 LIKE type_t.chr1
+DEFINE  l_lock_sw             LIKE type_t.chr1                #單身鎖住否
+DEFINE  l_n                   LIKE type_t.num10                #檢查重複用
+DEFINE  l_count               LIKE type_t.num10
+   
+   LET g_forupd_sql = "SELECT prbt001,prbt002,prbt003,prbt004,prbt005 FROM prbt_t
+       WHERE prbtent=",g_enterprise," AND prbt001=? AND prbt004 = '",g_user,"' FOR UPDATE"
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE aprp127_bcl CURSOR FROM g_forupd_sql
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      INPUT ARRAY g_prbt_d FROM s_detail2.*
+         ATTRIBUTE(COUNT = g_rec_b,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                   INSERT ROW = l_allow_insert,
+                   DELETE ROW = l_allow_delete,
+                   APPEND ROW = l_allow_insert)
+                   
+         BEFORE INPUT
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN
+              CALL FGL_SET_ARR_CURR(g_prbt_d.getLength()+1)
+              LET g_insert = 'N'
+            END IF
+            
+            CALL cl_set_act_visible("delete", TRUE)
+            
+         BEFORE ROW
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET g_current_page = 1
+
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            
+            CALL s_transaction_begin()
+            
+            LET g_rec_b = g_prbt_d.getLength()
+            
+            IF g_rec_b >= l_ac
+               AND g_prbt_d[l_ac].prbt001 IS NOT NULL
+               
+            THEN
+               LET l_cmd='u'
+               LET g_prbt_d_t.* = g_prbt_d[l_ac].* 
+               LET g_prbt_d_o.* = g_prbt_d[l_ac].*
+               OPEN aprp127_bcl USING g_prbt_d[l_ac].prbt001
+               FETCH aprp127_bcl INTO g_prbt_d[l_ac].prbt001,g_prbt_d[l_ac].prbt002,
+                                                                   g_prbt_d[l_ac].prbt003,g_prbt_d[l_ac].prbt004,g_prbt_d[l_ac].sel
+               IF SQLCA.sqlcode THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = g_prbt_d_t.prbt001
+                  LET g_errparam.code   = SQLCA.sqlcode
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()
+                  LET l_lock_sw = "Y"
+               END IF  
+            ELSE
+               LET l_cmd='a'
+            END IF
+            
+         BEFORE INSERT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_prbt_d[l_ac].* TO NULL
+            INITIALIZE g_prbt_d_t.* TO NULL
+            INITIALIZE g_prbt_d_o.* TO NULL
+            #公用欄位給值(單身)
+
+            #自定義預設值
+
+            LET g_prbt_d_t.* = g_prbt_d[l_ac].*     #新輸入資料
+            LET g_prbt_d_o.* = g_prbt_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            LET g_prbt_d[l_ac].sel = 'N'
+            LET g_prbt_d[l_ac].prbt004 = g_user
+            
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ''
+               LET g_errparam.code   = 9001
+               LET g_errparam.popup  = FALSE
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+            
+            LET l_count = 1
+            SELECT COUNT(*) INTO l_count FROM prbt_t
+             WHERE prbtent = g_enterprise AND prbt001 = g_prbt_d[l_ac].prbt001
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN
+               #add-point:單身新增前
+
+               #end add-point
+
+               INSERT INTO prbt_t (prbtent,prbt001,prbt002,prbt003,prbt004,prbt005)
+                  VALUES (g_enterprise,g_prbt_d[l_ac].prbt001,g_prbt_d[l_ac].prbt002,g_prbt_d[l_ac].prbt003,g_user,g_prbt_d[l_ac].sel)
+               
+               #add-point:單身新增後
+
+               #end add-point
+            ELSE
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = 'INSERT'
+               LET g_errparam.code   = "std-00006"
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+               INITIALIZE g_prbt_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            END IF
+            IF SQLCA.SQLcode  THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = "prbt_t"
+               LET g_errparam.code   = SQLCA.sqlcode
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+               CALL s_transaction_end('N','0')
+               CANCEL INSERT
+            ELSE
+               CALL s_transaction_end('Y','0')
+            END IF
+            
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+               #add-point:單身刪除後(=d)
+
+               #end add-point
+            ELSE
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = ""
+                  LET g_errparam.code   = -263
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               #add-point:單身刪除前
+
+               #end add-point
+
+               DELETE FROM prbt_t WHERE prbtent = g_enterprise AND prbt001 = g_prbt_d_t.prbt001
+               IF SQLCA.SQLcode  THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = "del prbt_t"
+                  LET g_errparam.code   = SQLCA.sqlcode
+                  LET g_errparam.popup  = TRUE
+                  CALL cl_err()
+                  CALL s_transaction_end('N','0')
+                  CLOSE aprp127_bcl
+                  CANCEL DELETE
+               ELSE
+                  CALL s_transaction_end('Y','0')
+                  CLOSE aprp127_bcl
+               END IF
+               LET l_count = g_prbt_d.getLength()
+            END IF
+            
+         AFTER DELETE
+            #如果是最後一筆
+            IF l_ac = (g_prbt_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+            
+         BEFORE FIELD prbt001
+            
+         AFTER FIELD prbt001
+            IF NOT cl_null(g_prbt_d[l_ac].prbt001) THEN
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND g_prbt_d[l_ac].prbt001 != g_prbt_d_t.prbt001) THEN  
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM prbt_t WHERE "||"prbtent = '" ||g_enterprise|| "' AND "||"prbt004 = '"||g_user||"' AND "|| "prbt001 = '"||g_prbt_d[l_ac].prbt001||"'",'std-00004',0) THEN
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               LET l_n = 0
+               SELECT COUNT(*) INTO l_n
+                 FROM prbh_t
+                WHERE prbhent = g_enterprise
+                  AND prbhsite = g_site
+                  AND prbh001 = g_prbt_d[l_ac].prbt001
+                  AND prbhstus = 'Y'
+               IF l_n < 1 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = ''
+                  LET g_errparam.code   = 'apr-00125'
+                  LET g_errparam.popup  = FALSE
+                  CALL cl_err()
+                  LET g_prbt_d[l_ac].prbt001 = g_prbt_d_t.prbt001 
+                  DISPLAY BY NAME g_prbt_d[l_ac].prbt001
+                  NEXT FIELD prbt001
+               END IF
+            END IF
+            CALL aprp127_prbt001_ref()
+         
+         ON CHANGE prbt001
+         
+         BEFORE FIELD prbt002
+         
+         AFTER FIELD prbt002
+            IF NOT cl_null(g_prbt_d[l_ac].prbt002) THEN
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND g_prbt_d[l_ac].prbt002 != g_prbt_d_t.prbt002) THEN  
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM prbt_t WHERE "||"prbtent = '" ||g_enterprise|| "' AND "||"prbt004 = '"||g_user||"' AND "|| "prbt002 = '"||g_prbt_d[l_ac].prbt002||"'",'std-00004',0) THEN
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               LET l_n = 0
+               SELECT COUNT(*) INTO l_n
+                 FROM prbh_t
+                WHERE prbhent = g_enterprise
+                  AND prbhsite = g_site
+                  AND prbh004 = g_prbt_d[l_ac].prbt002
+                  AND prbhstus = 'Y'
+               IF l_n < 1 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = ''
+                  LET g_errparam.code   = 'apr-00125'
+                  LET g_errparam.popup  = FALSE
+                  CALL cl_err()
+                  LET g_prbt_d[l_ac].prbt002 = g_prbt_d_t.prbt002  
+                  DISPLAY BY NAME g_prbt_d[l_ac].prbt002
+                  NEXT FIELD prbt002
+               END IF
+            END IF
+            CALL aprp127_prbt001_ref()
+         
+         ON CHANGE prbt002
+         
+         BEFORE FIELD prbt003
+         
+         AFTER FIELD prbt003
+            IF NOT cl_null(g_prbt_d[l_ac].prbt003) THEN
+               LET l_n = 0
+               SELECT COUNT(*) INTO l_n
+                 FROM prbh_t
+                WHERE prbhent = g_enterprise
+                  AND prbhsite = g_site
+                  AND prbh003 = g_prbt_d[l_ac].prbt003
+                  AND prbhstus = 'Y'
+               IF l_n < 1 THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = ''
+                  LET g_errparam.code   = 'apr-00125'
+                  LET g_errparam.popup  = FALSE
+                  CALL cl_err()
+                  LET g_prbt_d[l_ac].prbt003 = g_prbt_d_t.prbt003
+                  DISPLAY BY NAME g_prbt_d[l_ac].prbt003
+                  NEXT FIELD prbt003
+               END IF
+            END IF
+            CALL aprp127_prbt001_ref()
+         
+         ON CHANGE prbt003
+         
+         ON ACTION controlp INFIELD prbt001
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_prbt_d[l_ac].prbt001
+            LET g_qryparam.where = " prbhsite = '",g_site,"' "
+            CALL q_prbh001()
+            LET g_prbt_d[l_ac].prbt001 = g_qryparam.return1
+            DISPLAY g_prbt_d[l_ac].prbt001 TO prbt001
+            NEXT FIELD prbt001
+            
+         ON ACTION controlp INFIELD prbt002
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default6 = g_prbt_d[l_ac].prbt002
+            LET g_qryparam.where = " prbhsite = '",g_site,"' "
+            CALL q_prbh001()
+            LET g_prbt_d[l_ac].prbt002 = g_qryparam.return6
+            DISPLAY g_prbt_d[l_ac].prbt002 TO prbt002
+            NEXT FIELD prbt002
+            
+         ON ACTION controlp INFIELD prbt003
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default3 = g_prbt_d[l_ac].prbt003
+            LET g_qryparam.where = " prbhsite = '",g_site,"' "
+            CALL q_prbh001()
+            LET g_prbt_d[l_ac].prbt003 = g_qryparam.return3
+            DISPLAY g_prbt_d[l_ac].prbt003 TO prbt003
+            NEXT FIELD prbt003
+               
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = ''
+               LET g_errparam.code   = 9001
+               LET g_errparam.popup  = FALSE
+               CALL cl_err()
+               LET INT_FLAG = 0
+               LET g_prbt_d[l_ac].* = g_prbt_d_t.*
+               CLOSE aprp127_bcl
+               CALL s_transaction_end('N','0')
+               EXIT DIALOG
+            END IF
+            
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = g_prbt_d[l_ac].prbt001
+               LET g_errparam.code   = -263
+               LET g_errparam.popup  = TRUE
+               CALL cl_err()
+               LET g_prbt_d[l_ac].* = g_prbt_d_t.*
+            ELSE
+
+               #add-point:單身修改前
+
+               #end add-point
+
+               #寫入修改者/修改日期資訊(單身)
+
+               UPDATE prbt_t SET (prbt001,prbt002,prbt003,prbt005) = (g_prbt_d[l_ac].prbt001,g_prbt_d[l_ac].prbt002,g_prbt_d[l_ac].prbt003,g_prbt_d[l_ac].sel)
+                WHERE prbtent = g_enterprise AND prbt001 = g_prbt_d_t.prbt001
+
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = "prbt_t"
+                     LET g_errparam.code   = "std-00009"
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                     LET g_prbt_d[l_ac].* = g_prbt_d_t.*
+                  WHEN SQLCA.sqlcode #其他錯誤
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = "prbt_t"
+                     LET g_errparam.code   = SQLCA.sqlcode
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+                     CALL s_transaction_end('N','0')
+                     LET g_prbt_d[l_ac].* = g_prbt_d_t.*
+                  OTHERWISE
+                  
+               END CASE
+            END IF
+            
+         AFTER ROW
+            #add-point:單身after_row
+
+            #end add-point
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            #add-point:單身after_row2
+
+            #end add-point
+            
+         AFTER INPUT
+            #add-point:input段after input
+            CALL aprp127_b_fill()
+            #end add-point
+               
+      END INPUT
+      
+      BEFORE DIALOG
+      
+         CASE g_aw
+            WHEN "s_detail2"
+               NEXT FIELD prbt001
+         END CASE
+         
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      ON ACTION cancel
+         LET INT_FLAG = TRUE
+         CANCEL DIALOG
+         
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode())
+              RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang)
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+      
+   END DIALOG
+      
+END FUNCTION
+
+################################################################################
+# Descriptions...: 查詢資料
+# Memo...........:
+# Usage..........: CALL aprp127_query()
+# Date & Author..: 20150904 By dongsz
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aprp127_query()
+DEFINE l_sql      STRING
+   
+   IF cl_null(g_site_wc) THEN
+      LET g_site_wc = " 1=1"
+   END IF
+   IF cl_null(g_prbh001_wc) THEN
+      LET g_prbh001_wc = " 1=1"
+   END IF
+   LET g_imaa009_wc = cl_replace_str(g_imaa009_wc,'imaa009','rtaw001')
+   LET g_pmaa001_wc = cl_replace_str(g_pmaa001_wc,'pmaa001','star003')
+   
+   #先刪除单身数据
+   IF NOT aprp127_prbt_del() THEN
+      RETURN
+   END IF
+   
+   #重新插入表资料
+   LET l_sql = " INSERT INTO prbt_t (prbtent,prbt001,prbt002,prbt003,prbt004,prbt005) ",
+               " SELECT ",g_enterprise,",prbh001,prbh004,prbh003,'",g_user,"','N' ",
+               "   FROM prbh_t,imaa_t ",
+               "  WHERE prbhent = imaaent AND prbhent = ",g_enterprise," ",
+               "    AND prbh003 = imaa001 ",
+               "    AND ",g_site_wc,
+               "    AND prbhsite = '",g_site,"' ",
+               "    AND ",g_prbh001_wc
+   IF NOT cl_null(g_imaa009_wc) AND g_imaa009_wc <> " 1=1" THEN
+      LET l_sql = l_sql," AND imaa009 IN (SELECT rtaw002 FROM rtaw_t ",
+                        "                  WHERE rtawent = ",g_enterprise," AND ",g_imaa009_wc,") "
+   END IF
+   IF NOT cl_null(g_imaa001_wc) AND g_imaa001_wc <> " 1=1" THEN
+      LET l_sql = l_sql," AND ",g_imaa001_wc
+   END IF
+   IF NOT cl_null(g_prbk001_wc) AND g_prbk001_wc <> " 1=1" THEN
+      LET l_sql = l_sql," AND imaa001 IN (SELECT DISTINCT prbk010 FROM prbk_t WHERE prbkent = ",g_enterprise," ",
+                        "                    AND ",g_prbk001_wc,") "
+   END IF
+   IF NOT cl_null(g_pmaa001_wc) AND g_pmaa001_wc <> " 1=1" THEN
+      LET l_sql = l_sql," AND imaa001 IN (SELECT DISTINCT stas003 FROM stas_t,star_t ",
+                        "                  WHERE stasent = starent AND stasent = ",g_enterprise," ",
+                        "                    AND stas001 = star001 AND ",g_pmaa001_wc,") "
+   END IF
+   
+   PREPARE aprp127_ins_prbt FROM l_sql
+   EXECUTE aprp127_ins_prbt
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = "in prbt"
+      LET g_errparam.code   = SQLCA.sqlcode
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      RETURN
+   END IF
+
+   CALL aprp127_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = ""
+      LET g_errparam.code   = -100
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+
+   END IF
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: aprp127_b_fill()
+# Memo...........:
+# Usage..........: CALL aprp127_b_fill()
+# Date & Author..: 20150904 By dongsz
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aprp127_b_fill()
+DEFINE l_sql             STRING
+
+   CALL g_prbt_d.clear()
+   LET l_ac = 1
+
+   LET l_sql = " SELECT DISTINCT prbt005,prbt001,prbt002,prbt003,imaal003,prbh006,prbh012,prbh013,prbt004 ",
+               "   FROM prbt_t LEFT JOIN prbh_t ON prbtent = prbhent AND prbt001 = prbh001 AND prbhsite = '",g_site,"' ",
+               "               LEFT JOIN imaal_t ON prbhent = imaalent AND prbh003 = imaal001 AND imaal002 = '",g_dlang,"' ",
+               "  WHERE prbtent = ? ",
+               "    AND prbt004 = ? ",
+               "  ORDER BY prbt001 "
+   PREPARE aprp127_sel_prbt_pre FROM l_sql
+   DECLARE aprp127_sel_prbt_cs  CURSOR FOR aprp127_sel_prbt_pre
+   FOREACH aprp127_sel_prbt_cs  USING g_enterprise,g_user INTO g_prbt_d[l_ac].sel,g_prbt_d[l_ac].prbt001,g_prbt_d[l_ac].prbt002,
+                                g_prbt_d[l_ac].prbt003,g_prbt_d[l_ac].prbt003_desc,g_prbt_d[l_ac].prbh006,
+                                g_prbt_d[l_ac].prbh012,g_prbt_d[l_ac].prbh013,g_prbt_d[l_ac].prbt004
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.extend = "FOREACH:"
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend =  ""
+            LET g_errparam.code   =  9035
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+
+         END IF
+         EXIT FOREACH
+      END IF
+                                     
+   END FOREACH
+   
+   CALL g_prbt_d.deleteElement(g_prbt_d.getLength())
+   
+   LET g_detail_cnt = l_ac - 1
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: plu带值
+# Memo...........:
+# Usage..........: CALL aprp127_prbt001_ref()
+# Date & Author..: 20150904 By dongsz
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aprp127_prbt001_ref()
+
+   IF NOT cl_null(g_prbt_d[l_ac].prbt001) THEN
+      SELECT prbh003,prbh004 INTO g_prbt_d[l_ac].prbt003,g_prbt_d[l_ac].prbt002
+        FROM prbh_t
+       WHERE prbhent = g_enterprise
+         AND prbhsite = g_site
+         AND prbh001 = g_prbt_d[l_ac].prbt001
+   ELSE
+      SELECT prbh001,prbh004 INTO g_prbt_d[l_ac].prbt001,g_prbt_d[l_ac].prbt002
+        FROM prbh_t
+       WHERE prbhent = g_enterprise
+         AND prbhsite = g_site
+         AND prbh004 = g_prbt_d[l_ac].prbt002
+   END IF
+   
+   #品名
+   SELECT imaal003 INTO g_prbt_d[l_ac].prbt003_desc
+     FROM imaal_t
+    WHERE imaalent = g_enterprise
+      AND imaal001 = g_prbt_d[l_ac].prbt003
+      
+   #单位、价格
+   SELECT prbh006,prbh012,prbh013 
+     INTO g_prbt_d[l_ac].prbh006,g_prbt_d[l_ac].prbh012,g_prbt_d[l_ac].prbh013
+     FROM prbh_t
+    WHERE prbhent = g_enterprise
+      AND prbhsite = g_site
+      AND prbh001 = g_prbt_d[l_ac].prbt001
+   
+END FUNCTION
+
+################################################################################
+# Descriptions...: 删除资料
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aprp127_prbt_del()
+
+   #删除已经导出的单身资料
+   DELETE FROM prbt_t WHERE prbtent = g_enterprise
+                        AND prbt004 = g_user
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = "del prbt"
+      LET g_errparam.code   = SQLCA.sqlcode
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      RETURN FALSE
+   END IF
+   
+   RETURN TRUE
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL aprp127_poiexcel (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2016/2/2 By yc.chao
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aprp127_poiexcel()
+   DEFINE l_sql     STRING
+   DEFINE l_i       LIKE type_t.num5
+   DEFINE l_j       LIKE type_t.num5
+   DEFINE l_cnt     LIKE type_t.num5
+  #DEFINE l_prbm       RECORD LIKE prbm_t.*  #161111-00028#2--mark
+  #161111-00028#2 ---add---begin-----------
+   DEFINE l_prbm RECORD  #電子秤檔案格式定義明細資料表
+       prbment LIKE prbm_t.prbment, #企業編號
+       prbmunit LIKE prbm_t.prbmunit, #應用組織
+       prbm001 LIKE prbm_t.prbm001, #電子秤編號
+       prbm002 LIKE prbm_t.prbm002, #導出順序號
+       prbm003 LIKE prbm_t.prbm003, #描述
+       prbm004 LIKE prbm_t.prbm004, #長度
+       prbm005 LIKE prbm_t.prbm005, #對齊方式
+       prbm006 LIKE prbm_t.prbm006, #填充字符
+       prbm007 LIKE prbm_t.prbm007, #數據來源
+       prbm008 LIKE prbm_t.prbm008, #來源欄位名
+       prbm009 LIKE prbm_t.prbm009, #欄位類型
+       prbm010 LIKE prbm_t.prbm010, #默認值
+       prbmstus LIKE prbm_t.prbmstus, #狀態
+       prbm011 LIKE prbm_t.prbm011 #轉換類型
+      END RECORD
+#161111-00028#2 ---add---end-------------
+
+   DEFINE l_id         LIKE prbm_t.prbm002
+   DEFINE l_len        LIKE prbm_t.prbm004
+   DEFINE l_pad        LIKE prbm_t.prbm005
+   DEFINE l_split      LIKE prbm_t.prbm006
+   DEFINE l_source     LIKE prbm_t.prbm007
+   DEFINE l_field      LIKE type_t.chr500
+   DEFINE l_type       LIKE prbm_t.prbm009
+   DEFINE l_default    LIKE prbm_t.prbm010
+   DEFINE l_prbm011    LIKE prbm_t.prbm011
+   DEFINE l_prbu004    LIKE prbu_t.prbu004
+   DEFINE l_prbu005    LIKE prbu_t.prbu005
+   DEFINE l_change     LIKE type_t.chr500
+   DEFINE l_num_data   FLOAT
+   DEFINE l_str_data   LIKE type_t.chr500 
+   DEFINE l_ac,i,j,x,y INTEGER
+   DEFINE filename  LIKE type_t.chr50
+   DEFINE l_target      STRING  
+   DEFINE l_n           LIKE type_t.num5
+   DEFINE l_str         LIKE type_t.chr1
+   DEFINE buf base.StringBuffer
+   DEFINE l_channel         base.Channel
+   DEFINE l_mode            STRING
+   DEFINE l_spilt       LIKE type_t.chr1
+   DEFINE l_cmd             STRING
+   DEFINE l_out_str     STRING
+   DEFINE g_prbm_t DYNAMIC ARRAY OF RECORD
+         prbm002 like prbm_t.prbm002,
+         prbm004 like prbm_t.prbm004,
+         prbm005 like prbm_t.prbm005,
+         prbm006 like prbm_t.prbm006,
+         prbm007 like prbm_t.prbm007,
+         prbm008 like prbm_t.prbm008,
+         prbm009 like prbm_t.prbm009,
+         prbm010 like prbm_t.prbm010,
+         prbm011 like prbm_t.prbm011
+        END RECORD
+
+    LET buf = base.StringBuffer.create()
+    
+    PREPARE to_excel_pre FROM g_sql
+    DECLARE to_excel_cur CURSOR FOR to_excel_pre
+    
+    LET l_i = 1
+    CALL ga_table_data.clear()
+    FOREACH to_excel_cur INTO ga_table_data[l_i].*
+       LET l_i=l_i+1
+    END FOREACH
+
+    FREE to_excel_cur
+    CALL ga_table_data.deleteElement(l_i)
+    LET l_i = l_i-1  
+
+    LET l_j = 1
+    LET l_sql = "SELECT prbm002,prbm004,prbm005,prbm006,prbm007,prbm008,prbm009,prbm010,prbm011 FROM prbm_t",
+               " WHERE prbment= ",g_enterprise ,
+               "   AND prbm001= '",g_prbl001,"'",
+               "   AND prbmstus='Y'  ORDER BY prbm002 "
+    PREPARE prbm1 FROM l_sql
+    DECLARE prbm1_curs CURSOR FOR prbm1
+    FOREACH prbm1_curs INTO g_prbm_t[l_j].*
+         LET l_j = l_j + 1
+         
+
+    END FOREACH
+    CALL g_prbm_t.deleteElement(l_j)
+    LET l_j = l_j - 1
+
+    --DISPLAY 'l_i:',l_i
+    --DISPLAY 'l_j:',l_j
+    IF g_prbl005 = '1' THEN
+       LET l_spilt = aprp127_split(g_prbl006)
+       LET l_mode = 'w'
+       LET filename = FGL_GETENV("TEMPDIR"),"/",g_filename
+       LET l_channel = base.Channel.create()
+       CALL l_channel.openFile(filename, l_mode)
+       CALL l_channel.setDelimiter("")
+
+       FOR x = 1 TO l_i
+         LET l_out_str = ''
+
+         FOR i = 1 TO l_j
+
+           CASE i
+             WHEN 1
+               LET l_str_data = ga_table_data[x].field001
+             WHEN 2
+               LET l_str_data = ga_table_data[x].field002
+             WHEN 3
+               LET l_str_data = ga_table_data[x].field003
+             WHEN 4
+               LET l_str_data = ga_table_data[x].field004
+             WHEN 5
+               LET l_str_data = ga_table_data[x].field005
+             WHEN 6
+               LET l_str_data = ga_table_data[x].field006
+             WHEN 7
+               LET l_str_data = ga_table_data[x].field007
+             WHEN 8
+               LET l_str_data = ga_table_data[x].field008
+             WHEN 9
+               LET l_str_data = ga_table_data[x].field009
+             WHEN 10
+               LET l_str_data = ga_table_data[x].field010
+             WHEN 11
+               LET l_str_data = ga_table_data[x].field011
+             WHEN 12
+               LET l_str_data = ga_table_data[x].field012
+             WHEN 13
+               LET l_str_data = ga_table_data[x].field013            
+             WHEN 14
+               LET l_str_data = ga_table_data[x].field014
+             WHEN 15
+               LET l_str_data = ga_table_data[x].field015            
+             WHEN 16
+               LET l_str_data = ga_table_data[x].field016
+             WHEN 17
+               LET l_str_data = ga_table_data[x].field017
+             WHEN 18
+               LET l_str_data = ga_table_data[x].field018
+             WHEN 19
+               LET l_str_data = ga_table_data[x].field019
+             WHEN 20
+               LET l_str_data = ga_table_data[x].field020
+             WHEN 21
+               LET l_str_data = ga_table_data[x].field021
+             WHEN 22
+               LET l_str_data = ga_table_data[x].field022
+             WHEN 23
+               LET l_str_data = ga_table_data[x].field023
+             WHEN 24
+               LET l_str_data = ga_table_data[x].field024
+             WHEN 25
+               LET l_str_data = ga_table_data[x].field025
+             WHEN 26
+               LET l_str_data = ga_table_data[x].field026
+             WHEN 27
+               LET l_str_data = ga_table_data[x].field027
+             WHEN 28
+               LET l_str_data = ga_table_data[x].field028          
+             WHEN 29
+               LET l_str_data = ga_table_data[x].field029
+             WHEN 30
+               LET l_str_data = ga_table_data[x].field030  
+             WHEN 31
+               LET l_str_data = ga_table_data[x].field031
+             WHEN 32
+               LET l_str_data = ga_table_data[x].field032
+             WHEN 33
+               LET l_str_data = ga_table_data[x].field033
+             WHEN 34
+               LET l_str_data = ga_table_data[x].field034
+             WHEN 35
+               LET l_str_data = ga_table_data[x].field035
+             WHEN 36
+               LET l_str_data = ga_table_data[x].field036
+             WHEN 37
+               LET l_str_data = ga_table_data[x].field037
+             WHEN 38
+               LET l_str_data = ga_table_data[x].field038
+             WHEN 39
+               LET l_str_data = ga_table_data[x].field039
+             WHEN 40
+               LET l_str_data = ga_table_data[x].field040      
+             WHEN 41
+               LET l_str_data = ga_table_data[x].field041   
+             WHEN 42
+               LET l_str_data = ga_table_data[x].field042    
+             WHEN 43
+               LET l_str_data = ga_table_data[x].field043    
+             WHEN 44
+               LET l_str_data = ga_table_data[x].field044    
+             WHEN 45
+               LET l_str_data = ga_table_data[x].field045    
+             WHEN 46
+               LET l_str_data = ga_table_data[x].field046    
+             WHEN 47
+               LET l_str_data = ga_table_data[x].field047    
+             WHEN 48
+               LET l_str_data = ga_table_data[x].field048    
+             WHEN 49
+               LET l_str_data = ga_table_data[x].field049    
+             WHEN 50
+               LET l_str_data = ga_table_data[x].field050    
+             WHEN 51
+               LET l_str_data = ga_table_data[x].field051
+             WHEN 52
+               LET l_str_data = ga_table_data[x].field052
+             WHEN 53
+               LET l_str_data = ga_table_data[x].field053
+             WHEN 54
+               LET l_str_data = ga_table_data[x].field054
+             WHEN 55
+               LET l_str_data = ga_table_data[x].field055
+             WHEN 56
+               LET l_str_data = ga_table_data[x].field056
+             WHEN 57
+               LET l_str_data = ga_table_data[x].field057
+             WHEN 58
+               LET l_str_data = ga_table_data[x].field058
+             WHEN 59
+               LET l_str_data = ga_table_data[x].field059
+             WHEN 60
+               LET l_str_data = ga_table_data[x].field060      
+             WHEN 61
+               LET l_str_data = ga_table_data[x].field061  
+             WHEN 62
+               LET l_str_data = ga_table_data[x].field062  
+             WHEN 63
+               LET l_str_data = ga_table_data[x].field063  
+             WHEN 64
+               LET l_str_data = ga_table_data[x].field064  
+             WHEN 65
+               LET l_str_data = ga_table_data[x].field065  
+             WHEN 66
+               LET l_str_data = ga_table_data[x].field066  
+             WHEN 67
+               LET l_str_data = ga_table_data[x].field067  
+             WHEN 68
+               LET l_str_data = ga_table_data[x].field068  
+             WHEN 69
+               LET l_str_data = ga_table_data[x].field069  
+             WHEN 70
+               LET l_str_data = ga_table_data[x].field070     
+             WHEN 71
+               LET l_str_data = ga_table_data[x].field071  
+             WHEN 72
+               LET l_str_data = ga_table_data[x].field072  
+             WHEN 73
+               LET l_str_data = ga_table_data[x].field073  
+             WHEN 74
+               LET l_str_data = ga_table_data[x].field074  
+             WHEN 75
+               LET l_str_data = ga_table_data[x].field075  
+             WHEN 76
+               LET l_str_data = ga_table_data[x].field076  
+             WHEN 77
+               LET l_str_data = ga_table_data[x].field077  
+             WHEN 78
+               LET l_str_data = ga_table_data[x].field078  
+             WHEN 79
+               LET l_str_data = ga_table_data[x].field079  
+             WHEN 80
+               LET l_str_data = ga_table_data[x].field080   
+             WHEN 81
+               LET l_str_data = ga_table_data[x].field081 
+             WHEN 82
+               LET l_str_data = ga_table_data[x].field082 
+             WHEN 83
+               LET l_str_data = ga_table_data[x].field083 
+             WHEN 84
+               LET l_str_data = ga_table_data[x].field084 
+             WHEN 85
+               LET l_str_data = ga_table_data[x].field085 
+             WHEN 86
+               LET l_str_data = ga_table_data[x].field086 
+             WHEN 87
+               LET l_str_data = ga_table_data[x].field087 
+             WHEN 88
+               LET l_str_data = ga_table_data[x].field088 
+             WHEN 89
+               LET l_str_data = ga_table_data[x].field089 
+             WHEN 90
+               LET l_str_data = ga_table_data[x].field090    
+             WHEN 91
+               LET l_str_data = ga_table_data[x].field091 
+             WHEN 92
+               LET l_str_data = ga_table_data[x].field092 
+             WHEN 93
+               LET l_str_data = ga_table_data[x].field093 
+             WHEN 94
+               LET l_str_data = ga_table_data[x].field094 
+             WHEN 95
+               LET l_str_data = ga_table_data[x].field095 
+             WHEN 96
+               LET l_str_data = ga_table_data[x].field096 
+             WHEN 97
+               LET l_str_data = ga_table_data[x].field097 
+             WHEN 98
+               LET l_str_data = ga_table_data[x].field098 
+             WHEN 99
+               LET l_str_data = ga_table_data[x].field099 
+             WHEN 100
+               LET l_str_data = ga_table_data[x].field100             
+           END CASE
+           IF i = 1 Then
+              LET l_out_str = l_str_data,l_spilt
+           ELSE
+              IF i = l_j THEN
+                LET l_out_str = l_out_str,l_str_data
+              ELSE
+                LET l_out_str = l_out_str,l_str_data,l_spilt
+              END IF
+           END IF           
+   
+         END FOR
+   
+         CALL l_channel.write(l_out_str) 
+       END FOR
+
+       CALL l_channel.close()
+       IF NOT cl_null(filename) THEN
+          LET l_cmd = "chmod 666 ", filename CLIPPED, " >/dev/null 2>/dev/null"
+          RUN l_cmd
+       END IF       
+    ELSE
+       LET workbook = XSSFWorkbook.create()
+   
+       LET sheet = workbook.createSheet('Sheet1')
+   
+       FOR x = 1 TO l_i
+         LET y = x - 1
+         LET row = sheet.createRow(y)
+         FOR i = 1 TO l_j
+           LET j = i - 1
+           LET cell = row.createCell(j)
+           CASE i
+             WHEN 1
+               LET l_str_data = ga_table_data[x].field001
+             WHEN 2
+               LET l_str_data = ga_table_data[x].field002
+             WHEN 3
+               LET l_str_data = ga_table_data[x].field003
+             WHEN 4
+               LET l_str_data = ga_table_data[x].field004
+             WHEN 5
+               LET l_str_data = ga_table_data[x].field005
+             WHEN 6
+               LET l_str_data = ga_table_data[x].field006
+             WHEN 7
+               LET l_str_data = ga_table_data[x].field007
+             WHEN 8
+               LET l_str_data = ga_table_data[x].field008
+             WHEN 9
+               LET l_str_data = ga_table_data[x].field009
+             WHEN 10
+               LET l_str_data = ga_table_data[x].field010
+             WHEN 11
+               LET l_str_data = ga_table_data[x].field011
+             WHEN 12
+               LET l_str_data = ga_table_data[x].field012
+             WHEN 13
+               LET l_str_data = ga_table_data[x].field013            
+             WHEN 14
+               LET l_str_data = ga_table_data[x].field014
+             WHEN 15
+               LET l_str_data = ga_table_data[x].field015            
+             WHEN 16
+               LET l_str_data = ga_table_data[x].field016
+             WHEN 17
+               LET l_str_data = ga_table_data[x].field017
+             WHEN 18
+               LET l_str_data = ga_table_data[x].field018
+             WHEN 19
+               LET l_str_data = ga_table_data[x].field019
+             WHEN 20
+               LET l_str_data = ga_table_data[x].field020
+             WHEN 21
+               LET l_str_data = ga_table_data[x].field021
+             WHEN 22
+               LET l_str_data = ga_table_data[x].field022
+             WHEN 23
+               LET l_str_data = ga_table_data[x].field023
+             WHEN 24
+               LET l_str_data = ga_table_data[x].field024
+             WHEN 25
+               LET l_str_data = ga_table_data[x].field025
+             WHEN 26
+               LET l_str_data = ga_table_data[x].field026
+             WHEN 27
+               LET l_str_data = ga_table_data[x].field027
+             WHEN 28
+               LET l_str_data = ga_table_data[x].field028          
+             WHEN 29
+               LET l_str_data = ga_table_data[x].field029
+             WHEN 30
+               LET l_str_data = ga_table_data[x].field030  
+             WHEN 31
+               LET l_str_data = ga_table_data[x].field031
+             WHEN 32
+               LET l_str_data = ga_table_data[x].field032
+             WHEN 33
+               LET l_str_data = ga_table_data[x].field033
+             WHEN 34
+               LET l_str_data = ga_table_data[x].field034
+             WHEN 35
+               LET l_str_data = ga_table_data[x].field035
+             WHEN 36
+               LET l_str_data = ga_table_data[x].field036
+             WHEN 37
+               LET l_str_data = ga_table_data[x].field037
+             WHEN 38
+               LET l_str_data = ga_table_data[x].field038
+             WHEN 39
+               LET l_str_data = ga_table_data[x].field039
+             WHEN 40
+               LET l_str_data = ga_table_data[x].field040      
+             WHEN 41
+               LET l_str_data = ga_table_data[x].field041   
+             WHEN 42
+               LET l_str_data = ga_table_data[x].field042    
+             WHEN 43
+               LET l_str_data = ga_table_data[x].field043    
+             WHEN 44
+               LET l_str_data = ga_table_data[x].field044    
+             WHEN 45
+               LET l_str_data = ga_table_data[x].field045    
+             WHEN 46
+               LET l_str_data = ga_table_data[x].field046    
+             WHEN 47
+               LET l_str_data = ga_table_data[x].field047    
+             WHEN 48
+               LET l_str_data = ga_table_data[x].field048    
+             WHEN 49
+               LET l_str_data = ga_table_data[x].field049    
+             WHEN 50
+               LET l_str_data = ga_table_data[x].field050    
+             WHEN 51
+               LET l_str_data = ga_table_data[x].field051
+             WHEN 52
+               LET l_str_data = ga_table_data[x].field052
+             WHEN 53
+               LET l_str_data = ga_table_data[x].field053
+             WHEN 54
+               LET l_str_data = ga_table_data[x].field054
+             WHEN 55
+               LET l_str_data = ga_table_data[x].field055
+             WHEN 56
+               LET l_str_data = ga_table_data[x].field056
+             WHEN 57
+               LET l_str_data = ga_table_data[x].field057
+             WHEN 58
+               LET l_str_data = ga_table_data[x].field058
+             WHEN 59
+               LET l_str_data = ga_table_data[x].field059
+             WHEN 60
+               LET l_str_data = ga_table_data[x].field060      
+             WHEN 61
+               LET l_str_data = ga_table_data[x].field061  
+             WHEN 62
+               LET l_str_data = ga_table_data[x].field062  
+             WHEN 63
+               LET l_str_data = ga_table_data[x].field063  
+             WHEN 64
+               LET l_str_data = ga_table_data[x].field064  
+             WHEN 65
+               LET l_str_data = ga_table_data[x].field065  
+             WHEN 66
+               LET l_str_data = ga_table_data[x].field066  
+             WHEN 67
+               LET l_str_data = ga_table_data[x].field067  
+             WHEN 68
+               LET l_str_data = ga_table_data[x].field068  
+             WHEN 69
+               LET l_str_data = ga_table_data[x].field069  
+             WHEN 70
+               LET l_str_data = ga_table_data[x].field070     
+             WHEN 71
+               LET l_str_data = ga_table_data[x].field071  
+             WHEN 72
+               LET l_str_data = ga_table_data[x].field072  
+             WHEN 73
+               LET l_str_data = ga_table_data[x].field073  
+             WHEN 74
+               LET l_str_data = ga_table_data[x].field074  
+             WHEN 75
+               LET l_str_data = ga_table_data[x].field075  
+             WHEN 76
+               LET l_str_data = ga_table_data[x].field076  
+             WHEN 77
+               LET l_str_data = ga_table_data[x].field077  
+             WHEN 78
+               LET l_str_data = ga_table_data[x].field078  
+             WHEN 79
+               LET l_str_data = ga_table_data[x].field079  
+             WHEN 80
+               LET l_str_data = ga_table_data[x].field080   
+             WHEN 81
+               LET l_str_data = ga_table_data[x].field081 
+             WHEN 82
+               LET l_str_data = ga_table_data[x].field082 
+             WHEN 83
+               LET l_str_data = ga_table_data[x].field083 
+             WHEN 84
+               LET l_str_data = ga_table_data[x].field084 
+             WHEN 85
+               LET l_str_data = ga_table_data[x].field085 
+             WHEN 86
+               LET l_str_data = ga_table_data[x].field086 
+             WHEN 87
+               LET l_str_data = ga_table_data[x].field087 
+             WHEN 88
+               LET l_str_data = ga_table_data[x].field088 
+             WHEN 89
+               LET l_str_data = ga_table_data[x].field089 
+             WHEN 90
+               LET l_str_data = ga_table_data[x].field090    
+             WHEN 91
+               LET l_str_data = ga_table_data[x].field091 
+             WHEN 92
+               LET l_str_data = ga_table_data[x].field092 
+             WHEN 93
+               LET l_str_data = ga_table_data[x].field093 
+             WHEN 94
+               LET l_str_data = ga_table_data[x].field094 
+             WHEN 95
+               LET l_str_data = ga_table_data[x].field095 
+             WHEN 96
+               LET l_str_data = ga_table_data[x].field096 
+             WHEN 97
+               LET l_str_data = ga_table_data[x].field097 
+             WHEN 98
+               LET l_str_data = ga_table_data[x].field098 
+             WHEN 99
+               LET l_str_data = ga_table_data[x].field099 
+             WHEN 100
+               LET l_str_data = ga_table_data[x].field100             
+           END CASE
+           LET l_type = g_prbm_t[i].prbm009
+           CALL buf.append(l_type)
+           #IF buf.equals("number") THEN
+           IF buf.getIndexOf("number",1) > 0 THEN
+             select to_number(l_str_data) into l_num_data from dual
+             CALL cell.setCellType(0)
+             CALL cell.setCellValue(l_num_data)
+           ELSE
+             CALL cell.setCellValue(l_str_data)
+           END IF
+   
+         END FOR
+   
+       END FOR
+    
+      LET filename = FGL_GETENV("TEMPDIR"),"/",g_filename
+      LET fo = FileOutputStream.create(filename);
+      CALL workbook.write(fo);
+      CALL fo.close();
+    END IF  
+
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

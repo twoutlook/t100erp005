@@ -1,0 +1,78 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abxt001" module="abx" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="01534" crtdt="2016-10-21 17:43:23" modid="01534" moddt="2016-10-25 10:09:54" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="保稅庫存折合數量維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bxgc004,bxgcsite"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bxgc000,bxgc001,bxgc002,bxgc003,bxgc003_desc(chr500),bxgc003_desc_1(chr500),iman012(chr1),bxge002(dat),bxge006(num20_6),bxgc005,bxgc006,bxgc007"/>
+      <var id="bs_field" value="bxgc004,bxgcsite" pk="bxgcsite,bxgc004" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abx" filename="abxt001" method="dialog">
+    <section id="input">
+      <input id="head" field="bxgc004,bxgcsite"/>
+      <input id="body" page="1" field="bxgc000,bxgc001,bxgc002,bxgc003,bxgc005,bxgc006,bxgc007" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bxgc004,bxgcsite"/>
+      <construct id="body" page="1" field="bxgc000,bxgc001,bxgc002,bxgc003,iman012,bxgc005,bxgc006,bxgc007"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bxgcsite,bxgc004"/>
+      <set id="head" type="no_entry" field="bxgcsite,bxgc004"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bxgc004"/>
+      <column id="bxgcsite"/>
+    </init>
+    <init id="body" page="1">
+      <column id="bxgc000" def_scc="4079"/>
+      <column id="bxgc001">
+        <controlp form="q_bxgc001" state="c"/>
+      </column>
+      <column id="bxgc002"/>
+      <column id="bxgc003">
+        <after>
+          <reference field="bxgc003_desc" ref_field="bxgc_t.bxgc003" map_field="bxgc003" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="bxgc003_desc"/>
+      <column id="bxgc003_desc_1"/>
+      <column id="iman012"/>
+      <column id="bxge002"/>
+      <column id="bxge006"/>
+      <column id="bxgc005"/>
+      <column id="bxgc006" type="S" default="0">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bxgc007"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bxgc_t" pk="bxgcsite,bxgc004">
+      <sql id="forupd_sql" type="sql" query="SELECT bxgc004,bxgcsite FROM bxgc_t WHERE bxgcent= ? AND bxgcsite=? AND bxgc004=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bxgc004,bxgcsite FROM bxgc_t" order="bxgcsite,bxgc004"/>
+    </head>
+    <body id="bxgc_t" page="1" linked="" pk="bxgc000,bxgc001,bxgc002,bxgc003" fk="bxgcsite,bxgc004">
+      <sql id="forupd_sql_detail" query="SELECT bxgc000,bxgc001,bxgc002,bxgc003,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,bxgc005,bxgc006,bxgc007 FROM bxgc_t WHERE bxgcent=? AND bxgcsite=? AND bxgc004=? AND bxgc000=? AND bxgc001=? AND bxgc002=? AND bxgc003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bxgc000,bxgc001,bxgc002,bxgc003,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,bxgc005,bxgc006,bxgc007 FROM bxgc_t WHERE bxgcent= ? AND bxgcsite=? AND bxgc004=?"/>
+    </body>
+  </dataset>
+</assembly>
+

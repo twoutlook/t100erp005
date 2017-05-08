@@ -1,0 +1,81 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adeq210" module="ade" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="01251" crtdt="2014-01-24 22:48:19" modid="06137" moddt="2015-07-06 17:36:33" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="門店收款日結查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),deby003,debysite,debysite_desc(chr500),deby001,deby002,deby002_desc(chr500),deby004,deby005,deby006,deby007,deby008,deby008_desc(chr500),deby009,deby010,deby012,deby013,deby014,deby015,deby011,deby011_desc(chr500)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),deby003(b_deby003),debysite(b_debysite),debysite_desc(b_debysite_desc),deby001(b_deby001),deby002(b_deby002),deby002_desc(b_deby002_desc),deby004(b_deby004),deby005(b_deby005),deby006(b_deby006),deby007(b_deby007),deby008(b_deby008),deby008_desc(b_deby008_desc),deby009(b_deby009),deby010(b_deby010),deby012(b_deby012),deby013(b_deby013),deby014(b_deby014),deby015(b_deby015),deby011(b_deby011),deby011_desc(b_deby011_desc)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adeq210" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="deby003,debysite,deby001,deby002,deby004,deby005,deby006,deby007,deby008,deby009,deby010,deby012,deby013,deby014,deby015,deby011" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="deby003(b_deby003),debysite(b_debysite),deby001(b_deby001),deby002(b_deby002),deby004(b_deby004),deby005(b_deby005),deby006(b_deby006),deby007(b_deby007),deby008(b_deby008),deby009(b_deby009),deby010(b_deby010),deby012(b_deby012),deby013(b_deby013),deby014(b_deby014),deby015(b_deby015),deby011(b_deby011)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="deby003"/>
+      <column id="debysite">
+        <after>
+          <reference field="debysite_desc" ref_field="debysite" map_field="debyent,debysite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004_3" state="c"/>
+      </column>
+      <column id="debysite_desc"/>
+      <column id="deby001" def_scc="8310"/>
+      <column id="deby002">
+        <after>
+          <reference field="deby002_desc" ref_field="deby002" map_field="debyent,deby002" ref_sql="SELECT ooial003 FROM ooial_t WHERE ooialent=$varg_enterprise$var AND ooial001=? AND ooial002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooia001_04" state="c"/>
+      </column>
+      <column id="deby002_desc"/>
+      <column id="deby004"/>
+      <column id="deby005"/>
+      <column id="deby006"/>
+      <column id="deby007"/>
+      <column id="deby008">
+        <after>
+          <reference field="deby008_desc" ref_field="deby008" map_field="debyent,deby008" ref_sql="SELECT nmabl003 FROM nmabl_t WHERE nmablent=$varg_enterprise$var AND nmabl001=? AND nmabl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_nmab001" state="c"/>
+      </column>
+      <column id="deby008_desc"/>
+      <column id="deby009"/>
+      <column id="deby010"/>
+      <column id="deby012"/>
+      <column id="deby013"/>
+      <column id="deby014"/>
+      <column id="deby015"/>
+      <column id="deby011">
+        <after>
+          <reference field="deby011_desc" ref_field="deby011" map_field="debyent,deby011" ref_sql="SELECT mmanl003 FROM mmanl_t WHERE mmanlent=$varg_enterprise$var AND mmanl001=? AND mmanl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mman001_4" state="c"/>
+      </column>
+      <column id="deby011_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="deby_t" page="1" linked="" pk="debysite,deby002,deby003,deby005,deby011">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,deby003,debysite,&apos;&apos;,deby001,deby002,&apos;&apos;,deby004,deby005,deby006,deby007,deby008,&apos;&apos;,deby009,deby010,deby012,deby013,deby014,deby015,deby011,&apos;&apos; FROM deby_t WHERE debyent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

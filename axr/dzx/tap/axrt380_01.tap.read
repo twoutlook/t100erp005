@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="axrt380_01" std_prog="axrt380_01" erpver="1.0" module="AXR" ver="1" env="s" zone="t10prd" booking="N" type="S" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="input.a.xrcadocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrca_m.xrcadocno
+            CALL ap_ref_array2(g_ref_fields,"SELECT oobxl003 FROM oobxl_t WHERE oobxlent='"||g_enterprise||"' AND oobxl001=? AND oobxl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrca_m.xrcadocno_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrca_m.xrcadocno_desc
+
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  NOT cl_null(g_xrca_m.xrcald) AND NOT cl_null(g_xrca_m.xrcadocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_xrca_m.xrcald != g_xrcald_t  OR g_xrca_m.xrcadocno != g_xrcadocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xrca_t WHERE "||"xrcaent = '" ||g_enterprise|| "' AND "||"xrcald = '"||g_xrca_m.xrcald ||"' AND "|| "xrcadocno = '"||g_xrca_m.xrcadocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.a.xrcald" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrca_m.xrcald
+            CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrca_m.xrcald_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrca_m.xrcald_desc
+
+            #應用 a05 樣板自動產生(Version:2)
+            #確認資料無重複
+            IF  NOT cl_null(g_xrca_m.xrcald) AND NOT cl_null(g_xrca_m.xrcadocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_xrca_m.xrcald != g_xrcald_t  OR g_xrca_m.xrcadocno != g_xrcadocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM xrca_t WHERE "||"xrcaent = '" ||g_enterprise|| "' AND "||"xrcald = '"||g_xrca_m.xrcald ||"' AND "|| "xrcadocno = '"||g_xrca_m.xrcadocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+  </point>
+  <point name="input.before_close" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+      LET g_xrca_m.lbl_a = ''
+   END IF]]>
+  </point>
+  <point name="input.c.xrcadocno" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xrca_m.xrcadocno             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+            LET g_qryparam.arg2 = "" #s
+
+            CALL q_ooba002_3()                                #呼叫開窗
+
+            LET g_xrca_m.xrcadocno = g_qryparam.return1              
+
+            DISPLAY g_xrca_m.xrcadocno TO xrcadocno              #
+
+            NEXT FIELD xrcadocno                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.c.xrcald" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xrca_m.xrcald             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+            LET g_qryparam.arg2 = "" #s
+
+            CALL q_authorised_ld()                                #呼叫開窗
+
+            LET g_xrca_m.xrcald = g_qryparam.return1              
+
+            DISPLAY g_xrca_m.xrcald TO xrcald              #
+
+            NEXT FIELD xrcald                          #返回原欄位
+
+]]>
+  </point>
+  <point name="input.post_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   RETURN g_xrca_m.lbl_a]]>
+  </point>
+  <point name="input.pre_input" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_xrca_m.lbl_a = '1']]>
+  </point>
+  <section id="axrt380_01.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000001
+#+ 
+#+ Filename...: axrt380_01
+#+ Description: 自動產生單身
+#+ Creator....: 02114(2015-06-16 09:53:55)
+#+ Modifier...: 02114(2015-06-16 10:12:21) -SD/PR-
+]]>
+  </section>
+  <section id="axrt380_01.global" ver="2" status="" src="s" readonly="">
+    <![CDATA[#應用 c01b 樣板自動產生(Version:5)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_xrca_m        RECORD
+       lbl_a LIKE type_t.chr500
+       END RECORD
+DEFINE g_xrca_m        type_g_xrca_m
+ 
+   
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="axrt380_01.input" ver="2" status="" src="s" readonly="">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION axrt380_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define" edit="s"/>}
+   #end add-point
+   #add-point:input段define
+   {<point name="input.define_customerization" edit="c"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_axrt380_01 WITH FORM cl_ap_formpath("axr","axrt380_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_xrca_m.lbl_a ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:1)
+         BEFORE FIELD lbl_a
+            #add-point:BEFORE FIELD lbl_a
+            {<point name="input.b.lbl_a" />}
+            #END add-point
+ 
+         #應用 a02 樣板自動產生(Version:1)
+         AFTER FIELD lbl_a
+            
+            #add-point:AFTER FIELD lbl_a
+            {<point name="input.a.lbl_a" />}
+            #END add-point
+            
+ 
+         #應用 a04 樣板自動產生(Version:2)
+         ON CHANGE lbl_a
+            #add-point:ON CHANGE lbl_a
+            {<point name="input.g.lbl_a" />}
+            #END add-point 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.lbl_a
+         #應用 a03 樣板自動產生(Version:2)
+         ON ACTION controlp INFIELD lbl_a
+            #add-point:ON ACTION controlp INFIELD lbl_a
+            {<point name="input.c.lbl_a" />}
+            #END add-point
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_axrt380_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="axrt380_01.other_dialog" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="axrt380_01.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

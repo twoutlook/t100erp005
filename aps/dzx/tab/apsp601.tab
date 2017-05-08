@@ -1,0 +1,66 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apsp601" module="aps" jobmode="N" type="p01" industry="std" fix_arg="0" crtid="04441" crtdt="2015-12-14 15:06:21" modid="07024" moddt="2016-10-06 14:44:58" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="APS產生請購單作業[背景執行]">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="imae012,imaf142,pspc010,pspc045,imaa009,imaf141,pspc050,pspc001,pspc001_desc(chr80),ooba002,ooba002_desc(chr80),chk(chr500),chk6(chr1),chk5(chr500),days(num5),chk1(chr500),chk2(chr500),chk3(chr500),chk4(chr500),stagenow(chr80)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="aps" filename="apsp601" method="dialog">
+    <section id="input">
+      <input id="head" field="pspc001,ooba002,chk,chk6,chk5,days,chk1,chk2,chk3,chk4"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="imae012,imaf142,pspc010,pspc045,imaa009,imaf141,pspc050"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="imae012">
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imaf142">
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pspc010"/>
+      <column id="pspc045"/>
+      <column id="imaa009">
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="imaf141">
+        <controlp form="q_imce141" state="c"/>
+      </column>
+      <column id="pspc050">
+        <controlp form="q_imaf001" state="c"/>
+      </column>
+      <column id="pspc001">
+        <after>
+          <check chkid="v_psca001" id="isExist"/>
+          <reference field="pspc001_desc" ref_field="pspc_t.pspc001" map_field="pspc001" ref_sql="SELECT pscal003 FROM pscal_t WHERE pscalent=$varg_enterprise$var AND pscal001=? AND pscal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_psca001" state="i"/>
+      </column>
+      <column id="pspc001_desc"/>
+      <column id="ooba002">
+        <after/>
+        <controlp form="q_ooba002_1" state="i"/>
+      </column>
+      <column id="ooba002_desc"/>
+      <column id="chk" type="S" default="N"/>
+      <column id="chk6" type="S" default="N"/>
+      <column id="chk5"/>
+      <column id="days"/>
+      <column id="chk1" type="S" default="N"/>
+      <column id="chk2" type="S" default="N"/>
+      <column id="chk3" type="S" default="N"/>
+      <column id="chk4" type="S" default="N"/>
+      <column id="stagenow"/>
+    </init>
+  </form>
+</assembly>
+

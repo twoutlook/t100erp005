@@ -1,0 +1,140 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="arpi988" module="arp" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="04543" crtdt="2016-04-12 15:54:48" modid="04543" moddt="2016-05-05 14:57:45" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="3" tabver="10001" description="APP列印報表維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="rpah001,rpah001_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="rpah002,rpah002_desc(chr500),rpah003,rpah004"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="rpah002,rpahownid,rpahownid_desc(chr500),rpahowndp,rpahowndp_desc(chr500),rpahcrtid,rpahcrtid_desc(chr500),rpahcrtdp,rpahcrtdp_desc(chr500),rpahcrtdt,rpahmodid,rpahmodid_desc(chr500),rpahmoddt"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="rpaistus,rpaiseq,rpai003,rpai003_desc(chr500),rpai004,rpai005,rpai007,rpai006"/>
+      <var id="bs_field" value="rpah001" pk="rpah001" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="arp" filename="arpi988" method="dialog">
+    <section id="input">
+      <input id="head" field="rpah001"/>
+      <input id="body" page="1" field="rpah002,rpah003,rpah004" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="rpaistus,rpaiseq,rpai003,rpai004,rpai005,rpai007,rpai006" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="rpah001"/>
+      <construct id="body" page="1" field="rpah002,rpah003,rpah004"/>
+      <construct id="body" page="2" field="rpahownid,rpahowndp,rpahcrtid,rpahcrtdp,rpahcrtdt,rpahmodid,rpahmoddt"/>
+      <construct id="body" page="3" field="rpaistus,rpaiseq,rpai003,rpai004,rpai005,rpai007,rpai006"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="rpah001"/>
+      <set id="head" type="no_entry" field="rpah001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="rpah001">
+        <after>
+          <check chkid="v_rpzz001_1" id="isExist"/>
+          <reference field="rpah001_desc" ref_field="rpah_t.rpah001" map_field="rpah001" ref_sql="SELECT rpzzl003 FROM rpzzl_t WHERE rpzzl001=? AND rpzzl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rpzz001_1" state="i"/>
+        <controlp form="q_rpzz001" state="c"/>
+      </column>
+      <column id="rpah001_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="rpah002">
+        <after>
+          <check chkid="v_rpde002" id="isExist"/>
+          <reference field="rpah002_desc" ref_field="rpah001,rpah002" map_field="rpah001,rpah002" ref_sql="SELECT rpdel004 FROM rpdel_t WHERE rpdel001=? AND rpdel002=? AND rpdel003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rpde002" state="i"/>
+        <controlp form="q_rpde002" state="c"/>
+      </column>
+      <column id="rpah002_desc"/>
+      <column id="rpah003" type="S" default="s"/>
+      <column id="rpah004" type="S" default="Y"/>
+    </init>
+    <init id="body" page="2">
+      <column id="rpahownid">
+        <after>
+          <reference field="rpahownid_desc" ref_field="rpah_t.rpahownid" map_field="rpahownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rpahownid_desc"/>
+      <column id="rpahowndp">
+        <after>
+          <reference field="rpahowndp_desc" ref_field="rpah_t.rpahowndp" map_field="rpahowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rpahowndp_desc"/>
+      <column id="rpahcrtid">
+        <after>
+          <reference field="rpahcrtid_desc" ref_field="rpah_t.rpahcrtid" map_field="rpahcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rpahcrtid_desc"/>
+      <column id="rpahcrtdp">
+        <after>
+          <reference field="rpahcrtdp_desc" ref_field="rpah_t.rpahcrtdp" map_field="rpahcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rpahcrtdp_desc"/>
+      <column id="rpahcrtdt"/>
+      <column id="rpahmodid">
+        <after>
+          <reference field="rpahmodid_desc" ref_field="rpah_t.rpahmodid" map_field="rpahmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rpahmodid_desc"/>
+      <column id="rpahmoddt"/>
+    </init>
+    <init id="body" page="3">
+      <column id="rpaistus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="rpaiseq" type="S" default="0"/>
+      <column id="rpai003">
+        <after>
+          <check chkid="v_gzzz001_5" id="isExist"/>
+          <reference field="rpai003_desc" ref_field="rpai_t.rpai003" map_field="rpai003" ref_sql="SELECT gzzal003 FROM gzzal_t WHERE gzzal001=? AND gzzal002=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzzz001_7" state="i"/>
+        <controlp form="q_gzzz001_7" state="c"/>
+      </column>
+      <column id="rpai003_desc"/>
+      <column id="rpai004"/>
+      <column id="rpai005"/>
+      <column id="rpai007"/>
+      <column id="rpai006" type="S" default="N"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="rpah_t" pk="rpah001">
+      <sql id="forupd_sql" type="sql" query="SELECT rpah001,&apos;&apos; FROM rpah_t WHERE rpah001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT rpah001,&apos;&apos; FROM rpah_t" order="rpah001"/>
+    </head>
+    <body id="rpah_t" page="1,2" linked="" pk="rpah002" fk="rpah001">
+      <sql id="forupd_sql_detail" query="SELECT rpah002,&apos;&apos;,rpah003,rpah004,&apos;&apos;,rpahownid,&apos;&apos;,rpahowndp,&apos;&apos;,rpahcrtid,&apos;&apos;,rpahcrtdp,&apos;&apos;,rpahcrtdt,rpahmodid,&apos;&apos;,rpahmoddt FROM rpah_t WHERE rpah001=? AND rpah002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rpah002,&apos;&apos;,rpah003,rpah004,&apos;&apos;,rpahownid,&apos;&apos;,rpahowndp,&apos;&apos;,rpahcrtid,&apos;&apos;,rpahcrtdp,&apos;&apos;,rpahcrtdt,rpahmodid,&apos;&apos;,rpahmoddt FROM rpah_t WHERE rpah001=?"/>
+    </body>
+    <body id="rpai_t" page="3" linked="" detail="Y" master="rpah_t" pk="rpaiseq" fk="rpai001,rpai002">
+      <sql id="forupd_sql_detail" query="SELECT rpaistus,rpaiseq,rpai003,&apos;&apos;,rpai004,rpai005,rpai007,rpai006 FROM rpai_t WHERE rpai001=? AND rpai002=? AND rpaiseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rpaistus,rpaiseq,rpai003,&apos;&apos;,rpai004,rpai005,rpai007,rpai006 FROM rpai_t WHERE rpai001=? AND rpai002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

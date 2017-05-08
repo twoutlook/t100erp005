@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+ FOURJS_START_COPYRIGHT(D,2011)
+ Property of Four Js*
+ (c) Copyright Four Js 2011, 2014. All Rights Reserved.
+ * Trademark of Four Js Development Tools Europe Ltd
+   in the United States and elsewhere
+ 
+ This file can be modified by licensees according to the
+ product manual.
+ FOURJS_END_COPYRIGHT
+ -->
+<!-- 
+Modify.........: No:FUN-T100 2014/04/02 by tsai_yen
+-->
+ <html
+	xmlns='http://www.w3.org/1999/xhtml'
+	xmlns:gwc='http://www.4js.com/GWC'
+>
+	<head>
+		<meta
+			content='text/html; charset=utf-8'
+			http-equiv='Content-Type'
+		/>
+	</head>
+
+	<body>
+
+<gwc:snippet-root>
+	<div
+		gwc:define='
+			xStretch stretch == "both" || stretch == "x";
+			yStretch stretch == "both" || stretch == "y";
+			widthPolicy "\"widthHint\": \"" + width + (xStretch ? "*\", " : "\", ") + (xStretch ? "\"minWidth\": 20, " : "") + " \"widthPolicy\": \"Fixed\"";
+			heightPolicy "\"heightHint\": \"" + height + (yStretch ? "*\", " : "\", ") + " \"heightPolicy\": \"All\"";
+			layoutPolicy widthPolicy + ", " + heightPolicy;
+			scrollbar scrollbars ? "gScrollbars_" + scrollbars : "gScrollbars_vertical";
+            l_content (style["textFormat"] == "html" ? value : translate(value, ["&amp;", "&lt;", "&gt;", "&#10;", " "], ["&amp;amp;", "&amp;lt;", "&amp;gt;", "&lt;br/&gt;", "&amp;#160;"]) || "&#xA0;");
+		'
+		gwc:omit-tag='true'
+	><!-- FUN-T100 add l_content -->
+		<textarea
+			gwc:condition='!style["textFormat"] || style["textFormat"] == "plain"'
+
+			class='gWid g{type} gSStar gS{type} {shift ? "gShift_" + shift : ""} {scrollbar} {style["wrapPolicy"] == "anywhere" ? "gWordWrap" : ""} {prefix("gc", class)} widget widget-style widget-style-focus'
+			maxlength='{maxlength || null}'
+			readonly='{isModifiable ? null : ""}'
+            rows='{height}'
+			style='{ttycolor ? "color: " + ttycolor + ";" : null}{ttybackgroundcolor ? "background-color: " + ttybackgroundcolor + ";" : null}{ttyfontfamily ? "font-family: " + ttyfontfamily + ";" : null}{ttytextdecoration ? "text-decoration: " + ttytextdecoration + ";" : null}{ttyfontweight ? "font-weight: " + ttyfontweight + ";" : null}'
+			tabindex='{isModifiable &amp;&amp; tabIndex ? tabIndex : null}'
+			title='{value || comment || null}'
+			wrap='{scrollbars ? switch(scrollbars, ["none", "horizontal", "vertical", "both"], ["HARD", "OFF", "HARD", "OFF"]) : "HARD"}'
+            
+      data-g-qa-name='{type},{name || ""}'
+			data-g-active='{isModifiable || isSelectable}'
+			data-g-focus='{hasFocus || null}'
+			data-g-id='{type},{xdid}'
+			data-g-layout-policy='{renderNoLayout ? null : layoutPolicy}'
+			data-g-modif='{isModifiable || null}'
+			data-g-no-loc-accel='{style["localAccelerators"] != "yes" || null}'
+			data-g-query='{isQuery || null}'
+			data-g-selectable='{isSelectable || null}'
+			data-g-selected='{ignoreSelection ? null : ((isSelectable &amp;&amp; check(isSelected)) || null)}'
+			data-g-state='{hasOnChange ? "1" : ""},{maxLength || -1},{isNumeric ? "1" : ""},{wantReturns ? "1" : ""},{wantTabs ? "1" : ""}'
+			data-g-subtabindex='{isModifiable &amp;&amp; subtabindex ? subtabindex : null}'
+			data-g-value='{filterAmpersand(value)}'
+		/>
+        
+        <!-- FUN-T100 加高度設定,否則html會被縮很小 height:{height * 14.5}px; -->
+		<div
+			gwc:condition='style["textFormat"] == "html" &amp;&amp; !style["customWidget"]'
+			gwc:define='
+				useSandbox !isIOS;
+			'
+
+			class='gWid g{type} gSStar gS{type} {prefix("gc", class)} widget widget-style widget-style-focus'
+			style='height:{height * 14.5}px; {ttycolor ? "color: " + ttycolor + ";" : null}{ttybackgroundcolor ? "background-color: " + ttybackgroundcolor + ";" : null}{ttyfontfamily ? "font-family: " + ttyfontfamily + ";" : null}{ttytextdecoration ? "text-decoration: " + ttytextdecoration + ";" : null}{ttyfontweight ? "font-weight: " + ttyfontweight + ";" : null}'
+			tabindex='{isModifiable &amp;&amp; tabIndex ? tabIndex : null}'
+			title='{comment || null}'
+
+      data-g-qa-name='{type},{name || ""}'
+			data-g-active='{isModifiable || isSelectable}'
+			data-g-focus='{hasFocus || null}'
+			data-g-id='{type}Html,{xdid},{useSandbox?"1":""}'
+			data-g-modif='{isModifiable || null}'
+			data-g-query='{isQuery || null}'
+			data-g-selectable='{isSelectable || null}'
+			data-g-selected='{ignoreSelection ? null : ((isSelectable &amp;&amp; check(isSelected)) || null)}'
+			data-g-subtabindex='{isModifiable &amp;&amp; subtabindex ? subtabindex : null}'
+			data-g-value='{value}'
+		>
+			<div
+				gwc:condition='contains("yes true 1 auto", style["showEditToolBox"])'
+
+				class='gComposerToolbar'
+			>
+				<img
+					gCmd='Bold'
+					src='{imageuri("textbold.png")}'
+				/>
+
+				<img
+					gCmd='Italic'
+					src='{imageuri("textitalic.png")}'
+				/>
+
+				<img
+					gCmd='Underline'
+					src='{imageuri("textunder.png")}'
+				/>
+
+				<img
+					class='gSep'
+					gCmd='JustifyLeft'
+					src='{imageuri("textleft.png")}'
+				/>
+
+				<img
+					gCmd='JustifyCenter'
+					src='{imageuri("textcenter.png")}'
+				/>
+
+				<img
+					gCmd='JustifyRight'
+					src='{imageuri("textright.png")}'
+				/>
+
+				<img
+					gCmd='JustifyFull'
+					src='{imageuri("textjustify.png")}'
+				/>
+
+				<img
+					class='gSep'
+					gCmd='InsertUnorderedList'
+					src='{imageuri("textlistbullet.png")}'
+				/>
+
+				<img
+					gCmd='InsertOrderedList'
+					src='{imageuri("textlistnumbered.png")}'
+				/>
+
+				<img
+					class='gSep'
+					gCmd='Outdent'
+					src='{imageuri("textindentdecrease.png")}'
+				/>
+
+				<img
+					gCmd='Indent'
+					src='{imageuri("textindentincrease.png")}'
+				/>
+
+				<img
+					class='gSep'
+					gCmd='IncreaseFontSize'
+					src='{imageuri("textfontsizeup.png")}'
+				/>
+
+				<img
+					gCmd='DecreaseFontSize'
+					src='{imageuri("textfontsizedown.png")}'
+				/>
+			</div>
+
+			<iframe
+				gwc:condition='useSandbox'
+				frameborder='no'
+				data-g-layout-policy='{renderNoLayout ? null : layoutPolicy + ", \"verticalStretching\": 1"}'
+			/>
+
+			<div
+				gwc:condition='!useSandbox'
+				style='overflow: auto; outline-style: none'
+				data-g-layout-policy='{renderNoLayout ? null : layoutPolicy + ", \"verticalStretching\": 1"}'
+			/>
+		</div>
+
+		<div
+			gwc:condition='style["textFormat"] == "html" &amp;&amp; style["customWidget"] == "TinyMCE"'
+			class='gWid g{type} gSStar gS{type} {prefix("gc", class)} widget'
+			style='{ttycolor ? "color: " + ttycolor + ";" : null}{ttybackgroundcolor ? "background-color: " + ttybackgroundcolor + ";" : null}{ttyfontfamily ? "font-family: " + ttyfontfamily + ";" : null}{ttytextdecoration ? "text-decoration: " + ttytextdecoration + ";" : null}{ttyfontweight ? "font-weight: " + ttyfontweight + ";" : null}'
+			data-g-layout-policy='{renderNoLayout ? null : layoutPolicy}'
+			tabindex='{isModifiable &amp;&amp; tabIndex ? tabIndex : null}'
+			data-g-src='{resourceuri("tinymce/tinymce.min.js", "SetHtml5")}'
+			data-g-toolbar='{contains("yes true 1 auto", style["showEditToolBox"]) ? "bold italic underline | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | fontsizeselect fontselect forecolor backcolor | styleselect | link unlink" : null}'
+			data-g-has-on-change='{hasOnChange || null}'
+			data-g-want-returns='{wantReturns || null}'
+			data-g-want-tabs='{wantTabs || null}'
+      data-g-qa-name='{type},{name || ""}'
+			data-g-active='{isModifiable || isSelectable}'
+			data-g-focus='{hasFocus || null}'
+			data-g-id='{type}RTE,{xdid},rte_{id}'
+			data-g-modif='{isModifiable || null}'
+			data-g-selectable='{isSelectable || null}'
+			data-g-selected='{ignoreSelection ? null : ((isSelectable &amp;&amp; check(isSelected)) || null)}'
+			data-g-subtabindex='{isModifiable &amp;&amp; subtabindex ? subtabindex : null}'
+			data-g-value='{value}'
+		/>
+	</div>
+
+	<gwc:dummy
+		gwc:replace='includeSnippet("UIError")'
+	/>
+</gwc:snippet-root>
+
+	</body>
+</html>

@@ -1,0 +1,1035 @@
+<add_points prog="adbq450" std_prog="adbq450" erpver="1.0" module="ADB" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="b_fill.sql" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   LET g_sql = " SELECT UNIQUE 'N',dbdc003,'','',dbdc004,dbdc006,dbdc005,'',dbdc007,dbdc008 ",
+               "   FROM dbdc_t ",
+               "  WHERE dbdcent = ? AND dbdc000 =? AND dbdc001 = ? ANd dbdc002 = ? "
+   IF NOT cl_null(g_wc2) THEN
+      LET g_sql = g_sql CLIPPED, " AND ", g_wc2 CLIPPED
+   END IF
+
+   LET g_sql = g_sql, " ORDER BY dbdc003 " 
+
+   PREPARE adbq450_pb FROM g_sql
+   DECLARE b_fill_cs CURSOR FOR adbq450_pb
+
+   OPEN b_fill_cs USING g_enterprise,g_master.dbdc000,g_master.dbdc001,g_master.dbdc002
+   
+   FOREACH b_fill_cs INTO g_detail[l_ac].sel,
+                          g_detail[l_ac].dbdc003,g_detail[l_ac].dbdc003_desc,g_detail[l_ac].dbdc003_desc_desc,
+                          g_detail[l_ac].dbdc004,g_detail[l_ac].dbdc006,
+                          g_detail[l_ac].dbdc005,g_detail[l_ac].dbdc005_desc,
+                          g_detail[l_ac].dbdc007,g_detail[l_ac].dbdc008
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_detail[l_ac].dbdc003
+      CALL ap_ref_array2(g_ref_fields,"SELECT imaal003,imaal004 FROM imaal_t WHERE imaalent='"||g_enterprise||"' AND imaal001=? AND imaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_detail[l_ac].dbdc003_desc = '', g_rtn_fields[1] , ''
+      LET g_detail[l_ac].dbdc003_desc_desc = '', g_rtn_fields[2] , ''
+      
+      INITIALIZE g_ref_fields TO NULL
+      LET g_ref_fields[1] = g_detail[l_ac].dbdc005
+      CALL ap_ref_array2(g_ref_fields,"SELECT oocal003 FROM oocal_t WHERE oocalent='"||g_enterprise||"' AND oocal001=? AND oocal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+      LET g_detail[l_ac].dbdc005_desc = '', g_rtn_fields[1] , ''      
+
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            CALL cl_err( '', 9035, 1)
+         END IF
+         EXIT FOREACH
+      END IF      
+   END FOREACH
+
+   LET g_error_show = 0]]>
+</point>
+  <point name="cs.define" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   ]]>
+</point>
+  <point name="cs.head_total_row_count_1" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[      LET g_sql  = " SELECT COUNT(*) FROM ( ",g_sql," )"]]>
+</point>
+  <point name="cs.head_total_row_count_2" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[      LET g_sql  = " SELECT COUNT(*) FROM ( ",g_sql," )"]]>
+</point>
+  <point name="cs.sql_define_1" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[      LET g_sql = " SELECT UNIQUE dbdc000,dbdc001,dbdc002 ",
+                  "   FROM dbdc_t ",
+                  "  WHERE dbdcent = ",g_enterprise," AND dbdc000 = '",g_dbdc000,"' ",
+                  " AND ",g_wc CLIPPED]]>
+</point>
+  <point name="cs.sql_define_2" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[      LET g_sql = " SELECT UNIQUE dbdc000,dbdc001,dbdc002 ",
+                  "   FROM dbdc_t ",
+                  "  WHERE dbdcent = ",g_enterprise," AND dbdc000 = '",g_dbdc000,"' ",
+                  " AND ",g_wc CLIPPED," AND ",g_wc2 CLIPPED]]>
+</point>
+  <point name="fetch.cursor_action" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   CASE p_flag
+      WHEN 'N' FETCH NEXT      adbq450_curs INTO g_master.dbdc000,g_master.dbdc001,g_master.dbdc002
+      WHEN 'P' FETCH PREVIOUS  adbq450_curs INTO g_master.dbdc000,g_master.dbdc001,g_master.dbdc002
+      WHEN 'F' FETCH FIRST     adbq450_curs INTO g_master.dbdc000,g_master.dbdc001,g_master.dbdc002
+      WHEN 'L' FETCH LAST      adbq450_curs INTO g_master.dbdc000,g_master.dbdc001,g_master.dbdc002
+      WHEN '/'
+         IF (NOT g_no_ask) THEN
+            CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+            CALL cl_getmsg('azz-00658',g_dlang) RETURNING ls_msg
+            LET INT_FLAG = 0
+            PROMPT ls_msg CLIPPED,':' FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl"
+            END PROMPT
+            IF INT_FLAG THEN
+                LET INT_FLAG = 0
+                EXIT CASE
+            END IF
+         END IF
+
+         IF g_jump > g_row_count  OR g_jump <= 0 THEN
+            CALL cl_err('','azz-00659',1)
+            LET g_jump = g_current_idx
+         END IF
+
+         IF cl_null(g_jump) THEN
+            LET g_jump = g_current_idx
+         END IF
+
+         FETCH ABSOLUTE g_jump adbq450_curs INTO g_dbdc000,g_master.dbdc001,g_master.dbdc002
+         LET g_no_ask = FALSE   
+   END CASE]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[#argv[1]   dbdc_t.dbdc000   #庫存類型]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[DEFINE g_dbdc000   LIKE dbdc_t.dbdc000]]>
+</point>
+  <point name="init.init" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   CALL cl_set_combo_scc('dbdc000','6054')
+   CALL cl_set_combo_scc('b_dbdc000','6054')]]>
+</point>
+  <point name="main.init" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   LET g_argv[1] = cl_replace_str(g_argv[1], '\"', '')
+   LET g_dbdc000 = g_argv[1]]]>
+</point>
+  <point name="show.head.reference" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_master.dbdc001
+   CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_master.dbdc001_desc = '', g_rtn_fields[1] , ''
+   DISPLAY g_master.dbdc001_desc TO dbdc001_desc
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_master.dbdc002
+   CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_master.dbdc002_desc = '', g_rtn_fields[1] , ''
+   DISPLAY g_master.dbdc002_desc TO dbdc002_desc]]>
+</point>
+  <point name="ui_dialog.construct" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[         CONSTRUCT BY NAME g_wc ON dbdc001,dbdc002
+            ON ACTION controlp
+               CASE
+                  WHEN INFIELD(dbdc001)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_pmaa001_17()                    #呼叫開窗
+                     DISPLAY g_qryparam.return1 TO dbdc001  #顯示到畫面上
+                     NEXT FIELD CURRENT                  
+                  WHEN INFIELD(dbdc002)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_pmac002_1()                     #呼叫開窗
+                     DISPLAY g_qryparam.return1 TO dbdc002  #顯示到畫面上                  
+               END CASE               
+         END CONSTRUCT  
+
+         CONSTRUCT BY NAME g_wc2 ON dbdc003,dbdc004,dbdc005,dbdc006,dbdcsite,dbdc007,dbdc008
+            ON ACTION controlp
+               CASE
+                  WHEN INFIELD(dbdc003)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_imaa001()                       #呼叫開窗
+                     DISPLAY g_qryparam.return1 TO dbdc003  #顯示到畫面上
+                     NEXT FIELD CURRENT                  
+                  WHEN INFIELD(dbdc005)
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_ooca001()                     #呼叫開窗
+                     DISPLAY g_qryparam.return1 TO dbdc005  #顯示到畫面上  
+                  WHEN INFIELD(dbdc006)  
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_dbdb007()                       #呼叫開窗
+                     DISPLAY g_qryparam.return1 TO dbdc006  #顯示到畫面上                    
+                  WHEN INFIELD(dbdcsite) 
+                     INITIALIZE g_qryparam.* TO NULL
+                     LET g_qryparam.state = 'c'
+                     LET g_qryparam.reqry = FALSE
+                     CALL q_ooed004_3()                     #呼叫開窗
+                     DISPLAY g_qryparam.return1 TO dbdcsite  #顯示到畫面上                       
+               END CASE         
+         END CONSTRUCT]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.define_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.after_define_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.after_refresh_sql" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.before_close" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="init.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.body.before_row" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.bef_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.after_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.onaction_selall" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.onaction_selnone" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.onaction_sel" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.onaction_unsel" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.agendum" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.datainfo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.insert" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.query" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="menu.output" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="cs.head_total_row_count" cite_std="N" status="u" ver="" src="s" new="Y">
+<![CDATA[   LET g_cnt_sql = "SELECT COUNT(*) FROM ( ",g_sql," )"]]>
+</point>
+  <point name="fetch.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="fetch.array_clear" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="fetch.after" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="show.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.sql_before" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.array_clear" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.others.fill" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.array_deleteElement" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill2.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill2.fill" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="b_fill2.after_fill" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="detail_show.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="detail_show.before" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="detail_show.body.reference" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="detail_show.after" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <section id="adbq450.b_fill" ver="1" status="" src="s">
+<![CDATA[#+ 單身陣列填充
+PRIVATE FUNCTION adbq450_b_fill()
+   {<Local define>}
+   DEFINE ls_wc           STRING
+   {</Local define>}
+   #add-point:b_fill段define
+   {<point name="b_fill.define"/>}
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   {<point name="b_fill.sql_before"/>}
+   #end add-point
+ 
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+ 
+   CALL g_detail.clear()
+ 
+   #add-point:陣列清空
+   {<point name="b_fill.array_clear" />}
+   #end add-point
+ 
+   
+ 
+   LET l_ac = 1
+ 
+   # b_fill段sql組成及FOREACH撰寫
+   #+ 此段落由子樣板qs09產生
+   #+ b_fill段資料取得(包含sql組成及FOREACH段撰寫)
+   #add-point:b_fill段sql
+   {<point name="b_fill.sql"/>}
+   #end add-point
+ 
+ 
+ 
+   #add-point:b_fill段資料填充(其他單身)
+   {<point name="b_fill.others.fill"/>}
+   #end add-point
+ 
+   CALL g_detail.deleteElement(g_detail.getLength())
+ 
+   #add-point:陣列長度調整
+   {<point name="b_fill.array_deleteElement" />}
+   #end add-point
+ 
+   LET g_error_show = 0
+ 
+   #單身總筆數顯示
+   LET g_detail_cnt = g_detail.getLength()
+   DISPLAY g_detail_cnt TO FORMONLY.cnt
+   IF g_detail_cnt > 0 THEN
+      LET g_detail_idx = 1
+      DISPLAY g_detail_idx TO FORMONLY.idx
+   ELSE
+      LET g_detail_idx = 0
+      DISPLAY ' ' TO FORMONLY.idx
+   END IF
+ 
+   CALL adbq450_b_fill2()
+ 
+   
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="adbq450.b_fill2" ver="1" status="" src="s">
+<![CDATA[#+ 單身陣列填充2
+PRIVATE FUNCTION adbq450_b_fill2()
+   {<Local define>}
+   DEFINE li_ac           LIKE type_t.num5
+   {</Local define>}
+   #add-point:b_fill2段define
+   {<point name="b_fill2.define"/>}
+   #end add-point
+ 
+   LET li_ac = 1
+ 
+   #單身組成
+   #+ 此段落由子樣板qs11產生
+   #+ b_fill2段table資料取得(包含sql組成及資料填充)
+   #add-point:sql組成
+   {<point name="b_fill2.fill" />}
+   #end add-point
+ 
+ 
+ 
+ 
+   #add-point:單身填充後
+   {<point name="b_fill2.after_fill" />}
+   #end add-point
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="adbq450.cs" ver="2" status="" src="s">
+<![CDATA[#+ 組單頭CURSOR
+PRIVATE FUNCTION adbq450_cs()
+   #add-point:cs段define
+   {<point name="cs.define"/>}
+   #end add-point
+ 
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+ 
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+ 
+   IF g_wc2 = " 1=1" THEN
+      #add-point:cs段單頭sql組成(未下單身條件)
+      {<point name="cs.sql_define_1"/>}
+      #end add-point
+   ELSE
+      #add-point:cs段單頭sql組成(有下單身條件)
+      {<point name="cs.sql_define_2"/>}
+      #end add-point
+   END IF
+ 
+   PREPARE adbq450_pre FROM g_sql
+   DECLARE adbq450_curs SCROLL CURSOR WITH HOLD FOR adbq450_pre
+   OPEN adbq450_curs
+ 
+   #add-point:cs段單頭總筆數計算
+   {<point name="cs.head_total_row_count"/>}
+   #end add-point
+   PREPARE adbq450_precount FROM g_cnt_sql
+   EXECUTE adbq450_precount INTO g_row_count
+ 
+   IF SQLCA.SQLCODE THEN
+      CALL cl_err('',SQLCA.SQLCODE,0)
+   ELSE
+      CALL adbq450_fetch("F")
+   END IF
+END FUNCTION
+]]>
+</section>
+  <section id="adbq450.description" ver="27" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000026
+#+ 
+#+ Filename...: adbq450
+#+ Description: 寄銷產品庫存查詢作業
+#+ Creator....: 02749(2014/05/02)
+#+ Modifier...: 02749(2014/05/06)
+#+ Buildtype..: 應用 q04 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="adbq450.detail_show" ver="1" status="" src="s">
+<![CDATA[#+ 顯示相關資料
+PRIVATE FUNCTION adbq450_detail_show()
+   #add-point:show段define
+   {<point name="detail_show.define"/>}
+   #end add-point
+ 
+   #add-point:detail_show段之前
+   {<point name="detail_show.before"/>}
+   #end add-point
+ 
+   
+ 
+   #帶出公用欄位reference值page1
+   
+ 
+ 
+ 
+   #讀入ref值
+   #add-point:show段單身reference
+   {<point name="detail_show.body.reference"/>}
+   #end add-point
+ 
+ 
+ 
+   #add-point:detail_show段之後
+   {<point name="detail_show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="adbq450.fetch" ver="2" status="" src="s">
+<![CDATA[#+ 抓取單頭資料
+PRIVATE FUNCTION adbq450_fetch(p_flag)
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define
+   {<point name="fetch.define"/>}
+   #end add-point
+ 
+   MESSAGE ""
+ 
+   #FETCH段CURSOR移動
+   #+ 此段落由子樣板qs18產生
+   #add-point:fetch段CURSOR移動
+   {<point name="fetch.cursor_action"/>}
+   #end add-point
+ 
+ 
+ 
+   IF SQLCA.sqlcode THEN
+      # 清空右側畫面欄位值，但須保留左側qbe查詢條件
+      INITIALIZE g_master.* TO NULL
+      DISPLAY g_master.* TO b_dbdc000,b_dbdc001,dbdc001_desc,b_dbdc002,dbdc002_desc
+      CALL g_detail.clear()
+ 
+      #add-point:陣列清空
+      {<point name="fetch.array_clear" />}
+      #end add-point
+      DISPLAY '' TO FORMONLY.h_index
+      DISPLAY '' TO FORMONLY.h_count
+      DISPLAY '' TO FORMONLY.idx
+      DISPLAY '' TO FORMONLY.cnt
+      CALL cl_err('','-100',1)
+      RETURN
+   ELSE
+      CASE p_flag
+         WHEN 'F' LET g_current_idx = 1
+         WHEN 'P' LET g_current_idx = g_current_idx - 1
+         WHEN 'N' LET g_current_idx = g_current_idx + 1
+         WHEN 'L' LET g_current_idx = g_row_count
+         WHEN '/' LET g_current_idx = g_jump
+      END CASE
+      DISPLAY g_current_idx TO FORMONLY.h_index
+      DISPLAY g_row_count TO FORMONLY.h_count
+      CALL cl_navigator_setting( g_current_idx, g_row_count )
+   END IF
+ 
+   #add-point:fetch結束前
+   {<point name="fetch.after" />}
+   #end add-point
+ 
+   #重新顯示
+   CALL adbq450_show()
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="adbq450.global" ver="3" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_master        RECORD
+       dbdc000 LIKE dbdc_t.dbdc000, 
+   dbdc001 LIKE dbdc_t.dbdc001, 
+   dbdc001_desc LIKE type_t.chr80, 
+   dbdc002 LIKE dbdc_t.dbdc002, 
+   dbdc002_desc LIKE type_t.chr80
+       END RECORD
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_detail RECORD
+       sel            LIKE type_t.chr1,
+       dbdc003 LIKE dbdc_t.dbdc003, 
+   dbdc003_desc LIKE type_t.chr500, 
+   dbdc003_desc_desc LIKE type_t.chr500, 
+   dbdc004 LIKE dbdc_t.dbdc004, 
+   dbdc006 LIKE dbdc_t.dbdc006, 
+   dbdc005 LIKE dbdc_t.dbdc005, 
+   dbdc005_desc LIKE type_t.chr500, 
+   dbdc007 LIKE dbdc_t.dbdc007, 
+   dbdc008 LIKE dbdc_t.dbdc008, 
+   dbdcsite LIKE dbdc_t.dbdcsite
+       END RECORD
+ 
+ 
+#模組變數(Module Variables)
+DEFINE g_master            type_g_master
+DEFINE g_master_t          type_g_master
+ 
+   
+ 
+DEFINE g_detail            DYNAMIC ARRAY OF type_g_detail
+DEFINE g_detail_t          type_g_detail
+ 
+ 
+ 
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                 STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+DEFINE g_sql                 STRING                        #組 sql 用 
+DEFINE g_cnt_sql             STRING                        #組 sql 用 
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL    
+DEFINE g_cnt                 LIKE type_t.num10              
+DEFINE l_ac                  LIKE type_t.num5              #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_current_page        LIKE type_t.num5              #目前所在頁數
+DEFINE g_current_row         LIKE type_t.num5              #目前所在筆數
+DEFINE g_current_idx         LIKE type_t.num5
+DEFINE g_detail_cnt          LIKE type_t.num5              #單身 總筆數(所有資料)
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_error_show          LIKE type_t.num5
+DEFINE g_master_idx          LIKE type_t.num5
+DEFINE g_detail_idx          LIKE type_t.num5              #單身 所在筆數(所有資料)
+DEFINE g_detail_idx2         LIKE type_t.num5
+DEFINE g_hyper_url           STRING                        #hyperlink的主要網址
+DEFINE g_msg                 STRING
+DEFINE g_jump                LIKE type_t.num10
+DEFINE g_no_ask              LIKE type_t.num5
+DEFINE g_row_count           LIKE type_t.num10
+ 
+#多table用wc
+DEFINE g_wc_table           STRING
+ 
+ 
+ 
+DEFINE g_wc_filter_table           STRING
+ 
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="adbq450.init" ver="1" status="" src="s">
+<![CDATA[#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION adbq450_init()
+ 
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1" 
+   LET g_error_show  = 1
+#  LET g_selcolor    = "#D0E7FD"
+   
+     
+ 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+ 
+END FUNCTION
+]]>
+</section>
+  <section id="adbq450.main" ver="1" status="" src="s">
+<![CDATA[#+ 此段落由子樣板a26產生
+#OPTIONS SHORT CIRCUIT
+#+ 作業開始 
+MAIN
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point   
+ 
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("adb","")
+ 
+   #add-point:作業初始化
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = ""
+   #add-point:SQL_define
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   DECLARE adbq450_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT UNIQUE ",
+               " FROM ",
+               " WHERE  "
+   #add-point:SQL_define
+   {<point name="main.after_refresh_sql"/>}
+   #end add-point
+   PREPARE adbq450_master_referesh FROM g_sql
+ 
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+ 
+   ELSE
+      
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_adbq450 WITH FORM cl_ap_formpath("adb",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL adbq450_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL adbq450_ui_dialog() 
+      
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_adbq450
+      
+   END IF 
+   
+   CLOSE adbq450_cl
+   
+   
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+   
+END MAIN
+ 
+ 
+]]>
+</section>
+  <section id="adbq450.other_function" ver="1" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+  <section id="adbq450.show" ver="2" status="" src="s">
+<![CDATA[PRIVATE FUNCTION adbq450_show()
+   #add-point:show段define
+   {<point name="show.define"/>}
+   #end add-point
+ 
+   DISPLAY g_master.* TO b_dbdc000,b_dbdc001,dbdc001_desc,b_dbdc002,dbdc002_desc
+ 
+   #讀入ref值
+   #add-point:show段單身reference
+   {<point name="show.head.reference"/>}
+   #end add-point
+ 
+   CALL adbq450_b_fill()
+   CALL adbq450_detail_show()
+END FUNCTION
+]]>
+</section>
+  <section id="adbq450.ui_dialog" ver="2" status="" src="s">
+<![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION adbq450_ui_dialog() 
+   {<Local define>}
+   DEFINE li_exit   LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num5
+   DEFINE ls_result STRING
+   {</Local define>}
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+ 
+   CLEAR FORM  
+ 
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+ 
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   LET g_current_row = 0
+   LET g_current_idx = 1
+   LET g_action_choice = " "
+   LET g_main_hidden = 1
+   LET l_ac = 1
+ 
+   #add-point:ui_dialog段before dialog 
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   
+  
+   WHILE li_exit = FALSE
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:input段落
+         {<point name="ui_dialog.input"/>}
+         #end add-point
+ 
+         #add-point:construct段落
+         {<point name="ui_dialog.construct"/>}
+         #end add-point
+     
+         DISPLAY ARRAY g_detail TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+ 
+            BEFORE DISPLAY
+               LET g_current_page = 1
+ 
+            BEFORE ROW
+               LET g_detail_idx = DIALOG.getCurrentRow("s_detail1")
+               LET l_ac = g_detail_idx
+               DISPLAY g_detail_idx TO FORMONLY.idx
+               DISPLAY g_detail.getLength() TO FORMONLY.cnt
+               LET g_master_idx = l_ac
+               CALL adbq450_b_fill2()
+ 
+               #add-point:input段before row
+               {<point name="input.body.before_row"/>}
+               #end add-point
+ 
+            #自訂ACTION(detail_show,page_1)
+            
+ 
+         END DISPLAY
+ 
+ 
+ 
+         #add-point:ui_dialog段define
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+    
+         SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+  
+         BEFORE DIALOG
+            CALL DIALOG.setSelectionMode("s_detail1", 1)
+            CALL adbq450_fetch('')
+ 
+            #add-point:ui_dialog段before dialog
+            {<point name="ui_dialog.bef_dialog"/>}
+            #end add-point
+            NEXT FIELD sel
+ 
+         AFTER DIALOG
+            #add-point:ui_dialog段 after dialog
+            {<point name="ui_dialog.after_dialog"/>}
+            #end add-point
+            
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            FOR li_idx = 1 TO g_detail.getLength()
+               LET g_detail[li_idx].sel = "Y"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selall
+            {<point name="ui_dialog.onaction_selall"/>}
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail.getLength()
+               LET g_detail[li_idx].sel = "N"
+            END FOR
+ 
+            #add-point:ui_dialog段on action selnone
+            {<point name="ui_dialog.onaction_selnone"/>}
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail[li_idx].sel = "Y"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action sel
+            {<point name="ui_dialog.onaction_sel"/>}
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail[li_idx].sel = "N"
+               END IF
+            END FOR
+ 
+            #add-point:ui_dialog段on action unsel
+            {<point name="ui_dialog.onaction_unsel"/>}
+            #end add-point
+ 
+         ON ACTION exit
+            LET g_action_choice="exit"
+            LET INT_FLAG = FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG 
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE
+            LET li_exit = TRUE
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            INITIALIZE g_wc_filter TO NULL
+            IF cl_null(g_wc) THEN
+               LET g_wc = " 1=1"
+            END IF
+ 
+ 
+   
+            IF cl_null(g_wc2) THEN
+               LET g_wc2 = " 1=1"
+            END IF
+ 
+            CALL adbq450_cs()
+            NEXT FIELD sel   # 為了讓一開始的focus停留在單頭
+      
+ 
+         ON ACTION agendum   # 待辦事項
+            #add-point:ON ACTION agendum
+            {<point name="ui_dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+ 
+         ON ACTION qbeclear   # 條件清除
+            CLEAR FORM
+ 
+         ON ACTION datarefresh   # 重新整理
+            CALL adbq450_fetch('F')
+ 
+         ON ACTION first   # 第一筆
+            CALL adbq450_fetch('F')
+ 
+         ON ACTION previous   # 上一筆
+            CALL adbq450_fetch('P')
+ 
+         ON ACTION jump   # 跳至第幾筆
+            CALL adbq450_fetch('/')
+ 
+         ON ACTION next   # 下一筆
+            CALL adbq450_fetch('N')
+ 
+         ON ACTION last   # 最後一筆
+            CALL adbq450_fetch('L')
+ 
+         
+ 
+         
+ 
+         ON ACTION datainfo
+ 
+            LET g_action_choice="datainfo"
+            IF cl_auth_chk_act("datainfo") THEN 
+               #add-point:ON ACTION datainfo
+               {<point name="menu.datainfo" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION insert
+ 
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN 
+               #add-point:ON ACTION insert
+               {<point name="menu.insert" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+ 
+         ON ACTION query
+ 
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN 
+               #add-point:ON ACTION query
+               {<point name="menu.query" />}
+               #END add-point
+            END IF
+ 
+ 
+         ON ACTION output
+ 
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN 
+               #add-point:ON ACTION output
+               {<point name="menu.output" />}
+               #END add-point
+               EXIT DIALOG
+            END IF
+ 
+      
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+ 
+      END DIALOG 
+   
+   END WHILE
+ 
+END FUNCTION
+]]>
+</section>
+</add_points>

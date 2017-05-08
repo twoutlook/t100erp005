@@ -1,0 +1,398 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="agli110_01" std_prog="agli110_01" erpver="1.0" module="AGL" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.agli110_01_glaw_ins" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+ 整批產生glaw資料
+PRIVATE FUNCTION agli110_01_glaw_ins()
+   DEFINE l_glaald       LIKE glaa_t.glaald
+   DEFINE l_glad001      LIKE glad_t.glad001
+   DEFINE l_glaw   RECORD   LIKE glaw_t.* 
+   DEFINE l_n            LIKE type_t.num5
+   
+   LET g_wc = cl_replace_str(g_wc,"glaw001","glaald")
+   LET g_sql = "SELECT glaald FROM glaa_t",
+               " WHERE glaaent = '",g_enterprise,"'",
+               "   AND ",g_wc               
+               
+   PREPARE glaw001_pre FROM g_sql
+   DECLARE glaw001_cur CURSOR FOR glaw001_pre
+   
+   FOREACH glaw001_cur INTO l_glaald
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      LET g_wc1 = cl_replace_str(g_wc1,"glaw002","glad001")
+      LET g_sql = "SELECT glad001 FROM glad_t",
+                  " WHERE gladent = '",g_enterprise,"'",
+                  "   AND gladld = '",l_glaald,"'",
+                  "   AND ",g_wc1
+                  
+      PREPARE glad001_pre FROM g_sql
+      DECLARE glad001_cur CURSOR FOR glad001_pre
+      
+      FOREACH glad001_cur INTO l_glad001
+         IF SQLCA.sqlcode THEN
+            CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+            EXIT FOREACH
+         END IF
+         
+         LET l_glaw.glawent = g_enterprise
+         LET l_glaw.glawstus = 'Y'
+         LET l_glaw.glaw001 = l_glaald
+         LET l_glaw.glaw002 = l_glad001
+         LET l_glaw.glaw003 = g_glaw.glaw003
+         LET l_glaw.glaw004 = l_glad001
+         LET l_glaw.glaw005 = 100
+         LET l_glaw.glaw006 = g_glaw.glaw006
+         LET l_glaw.glaw007 = g_glaw.glaw007
+         
+         SELECT count(*) INTO l_n
+           FROM glaw_t
+          WHERE glawent = g_enterprise
+            AND glaw001 = l_glaald
+            AND glaw002 = l_glad001
+            AND glaw003 = g_glaw.glaw003
+            AND glaw004 = l_glad001
+         IF l_n > 0 THEN 
+            CONTINUE FOREACH 
+         END IF 
+         
+         INSERT INTO glaw_t values(l_glaw.*)
+         IF SQLCA.SQLcode  THEN
+            CALL cl_err("g_glaw",SQLCA.sqlcode,1)  
+            LET g_success = 'N'                 
+         ELSE
+            LET g_success = 'Y'           
+         END IF
+      END FOREACH 
+   END FOREACH 
+END FUNCTION]]>
+  </point>
+  <point name="function.agli110_01_glaw003_chk" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[#+ glaw003欄位檢查
+PRIVATE FUNCTION agli110_01_glaw003_chk()
+   DEFINE l_n            LIKE type_t.num5
+   DEFINE l_glaald       LIKE glaa_t.glaald
+   
+   LET g_wc = cl_replace_str(g_wc,"glaw001","glaald")
+   LET g_sql = "SELECT glaald FROM glaa_t",
+               " WHERE glaaent = '",g_enterprise,"'",
+               "   AND ",g_wc               
+               
+   PREPARE glawld_pre FROM g_sql
+   DECLARE glawld_cur CURSOR FOR glawld_pre
+   
+   LET g_success = 'Y'
+   FOREACH glawld_cur INTO l_glaald
+      IF l_glaald = g_glaw.glaw003 THEN 
+         LET g_glaw.glaw003_desc = ''
+         DISPLAY g_glaw.glaw003_desc TO glaw003_desc
+         CALL cl_err(g_glaw.glaw003,'agl-00112',1)
+         LET g_success = 'N'
+         EXIT FOREACH 
+      END IF 
+   END FOREACH 
+   
+   IF g_success = 'N' THEN 
+      RETURN FALSE
+   END IF
+   
+   #判斷資料是否存在
+   SELECT COUNT(*) INTO l_n
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald = g_glaw.glaw003
+      
+   IF l_n = 0 THEN 
+      LET g_glaw.glaw003_desc = ''
+      DISPLAY g_glaw.glaw003_desc TO glaw003_desc
+      CALL cl_err(g_glaw.glaw003,'ais-00043',1)
+      RETURN FALSE
+   END IF 
+   
+   #判斷資料是否有效
+   SELECT COUNT(*) INTO l_n
+     FROM glaa_t
+    WHERE glaaent = g_enterprise
+      AND glaald = g_glaw.glaw003
+      AND glaastus = 'Y'
+      
+   IF l_n = 0 THEN 
+      LET g_glaw.glaw003_desc = ''
+      DISPLAY g_glaw.glaw003_desc TO glaw003_desc
+      CALL cl_err(g_glaw.glaw003,'ais-00044',1)
+      RETURN FALSE
+   END IF
+   
+   #帶值
+   SELECT glaal002 INTO g_glaw.glaw003_desc
+     FROM glaal_t
+    WHERE glaalent = g_enterprise
+      AND glaalld = g_glaw.glaw003
+      AND glaal001 = g_dlang
+   DISPLAY g_glaw.glaw003_desc TO glaw003_desc 
+   
+   RETURN TRUE
+END FUNCTION]]>
+  </point>
+  <point name="construct.before_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            ON ACTION controlp INFIELD glaw001
+	           INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+               LET g_qryparam.reqry = FALSE
+               CALL q_glaa001_2()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO glaw001  #顯示到畫面上
+
+               NEXT FIELD glaw001                     #返回原欄位
+               ]]>
+  </point>
+  <point name="construct.more_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      CONSTRUCT BY NAME g_wc1 ON glaw002 
+      
+         BEFORE CONSTRUCT
+               
+            ON ACTION controlp INFIELD glaw002
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+		       LET g_qryparam.reqry = FALSE
+               #給予arg
+               LET g_wc = cl_replace_str(g_wc,"glaw001","gladld")
+               LET g_qryparam.where = g_wc
+               CALL q_glad001_2()                           #呼叫開窗
+               DISPLAY g_qryparam.return1 TO glaw002  #顯示到畫面上
+
+               NEXT FIELD glaw002                     #返回原欄位
+            
+      END CONSTRUCT
+      
+      INPUT BY NAME g_glaw.glaw003,g_glaw.glaw006,g_glaw.glaw007 ATTRIBUTE(WITHOUT DEFAULTS)
+         AFTER FIELD glaw003
+            IF NOT cl_null(g_glaw.glaw003) THEN 
+               IF NOT agli110_01_glaw003_chk() THEN 
+                  LET g_glaw.glaw003 = ''
+                  NEXT FIELD glaw003
+               END IF 
+            END IF 
+            
+         AFTER FIELD glaw006
+            IF NOT cl_null(g_glaw.glaw006) THEN 
+               IF g_glaw.glaw006 > g_glaw.glaw007 THEN 
+                  CALL cl_err(g_glaw.glaw006,'ais-00047',1)
+                  NEXT FIELD glaw006
+               END IF
+            END IF 
+            
+         AFTER FIELD glaw007
+            IF NOT cl_null(g_glaw.glaw007) THEN 
+               IF g_glaw.glaw007 < g_glaw.glaw006 THEN 
+                  CALL cl_err(g_glaw.glaw007,'ais-00048',1)
+                  NEXT FIELD glaw007
+               END IF
+            END IF 
+         
+         ON ACTION controlp INFIELD glaw003
+            #add-point:ON ACTION controlp INFIELD glaw003
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_glaw.glaw003             #給予default值
+
+            #給予arg
+
+            CALL q_glaa001_2()                                #呼叫開窗
+
+            LET g_glaw.glaw003 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            SELECT glaal002 INTO g_glaw.glaw003_desc
+              FROM glaal_t
+             WHERE glaalent = g_enterprise
+               AND glaalld = g_glaw.glaw003
+               AND glaal001 = g_dlang
+            DISPLAY g_glaw.glaw003 TO glaw003              #顯示到畫面上
+            DISPLAY g_glaw.glaw003_desc TO glaw003_desc 
+            NEXT FIELD glaw003                          #返回原欄位
+            #END add-point
+            
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+
+            #end add-point
+            
+      END INPUT]]>
+  </point>
+  <point name="construct.post_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF INT_FLAG THEN
+      LET g_success = ''
+      RETURN g_success
+   END IF
+   
+   CALL agli110_01_glaw_ins()
+   RETURN g_success]]>
+  </point>
+  <point name="construct.pre_construct" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   LET g_glaw.glaw006 = g_today
+   LET g_glaw.glaw007 = g_today
+   LET g_glaw.glaw003 = '']]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_glaw_n       RECORD
+       glaw002 LIKE glaw_t.glaw002 
+       END RECORD
+DEFINE g_wc1          STRING
+DEFINE g_glaw       RECORD
+       glaw003 LIKE glaw_t.glaw003, 
+       glaw003_desc LIKE type_t.chr80,
+       glaw006 LIKE glaw_t.glaw006, 
+       glaw007 LIKE glaw_t.glaw007
+       END RECORD
+DEFINE g_sql          STRING       ]]>
+  </point>
+  <section id="agli110_01.description" ver="1" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(版次:1) Build-000079
+#+ 
+#+ Filename...: agli110_01
+#+ Description: ...
+#+ Creator....: 02114(2013/10/24)
+#+ Modifier...: 02114(2013/10/24)
+#+ Buildtype..: 應用 c01c 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="agli110_01.global" ver="1" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+{<Module define>}
+#單頭 type 宣告
+PRIVATE type type_g_glaw_m        RECORD
+       glaw001 LIKE glaw_t.glaw001, 
+   glaw002 LIKE glaw_t.glaw002, 
+   glaw003 LIKE glaw_t.glaw003, 
+   glaw006 LIKE glaw_t.glaw006, 
+   glaw007 LIKE glaw_t.glaw007
+       END RECORD
+DEFINE g_glaw_m        type_g_glaw_m
+DEFINE g_wc           STRING
+{</Module define>} 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point  
+]]>
+  </section>
+  <section id="agli110_01.input" ver="1" status="" src="s">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION agli110_01(--)
+   #add-point:construct段變數傳入
+   {<point name="construct.get_var"/>}
+   #end add-point
+   )
+   {<Local define>}
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   {</Local define>}
+   #add-point:construct段define
+   {<point name="construct.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_agli110_01 WITH FORM cl_ap_formpath("agl","agli110_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   {<point name="construct.pre_construct"/>}
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      CONSTRUCT BY NAME g_wc ON glaw001,glaw002,glaw003,glaw006,glaw007 
+      
+         BEFORE CONSTRUCT
+            #add-point:單頭輸入前處理
+            {<point name="construct.before_construct"/>}
+            #end add-point
+            
+         AFTER CONSTRUCT
+            #add-point:單頭輸入後處理
+            {<point name="construct.after_construct"/>}
+            #end add-point
+            
+         
+ 
+         #---------------------------<  Master  >---------------------------
+ 
+       
+      END CONSTRUCT
+ 
+      #add-point:自定義construct
+      {<point name="construct.more_construct"/>}
+      #end add-point
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+         
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="construct.before_close"/>}
+   #end add-point 
+   
+   #畫面關閉
+   CLOSE WINDOW w_agli110_01 
+   
+   #add-point:construct段after construct 
+   {<point name="construct.post_construct"/>}
+   #end add-point 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="agli110_01.other_dialog" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="agli110_01.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.dialog"/>}
+{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

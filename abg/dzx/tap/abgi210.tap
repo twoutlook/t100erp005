@@ -1,0 +1,1296 @@
+<add_points prog="abgi210" std_prog="abgi210" erpver="1.0" module="ABG" ver="1" env="s" zone="t10dev" normal_style="Y" booking="Y">
+  <point name="input.a.page2.bgawcrtid" cite_std="N" status="d" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bgaw2_d[l_ac].bgawcrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_bgaw2_d[l_ac].bgawcrtid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_bgaw2_d[l_ac].bgawcrtid_desc
+]]>
+</point>
+  <point name="input.a.page2.bgawmodid" cite_std="N" status="d" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bgaw2_d[l_ac].bgawmodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_bgaw2_d[l_ac].bgawmodid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_bgaw2_d[l_ac].bgawmodid_desc
+]]>
+</point>
+  <point name="input.a.page2.bgaw002_2" cite_std="N" status="d" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_bgaw_m.bgaw001) AND NOT cl_null(g_bgaw2_d[l_ac].bgaw002) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_bgaw_m.bgaw001 != g_bgaw001_t OR g_bgaw2_d[l_ac].bgaw002 != g_bgaw2_d_t.bgaw002))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bgaw_t WHERE "||"bgawent = '" ||g_enterprise|| "' AND "||"bgaw001 = '"||g_bgaw_m.bgaw001 ||"' AND "|| "bgaw002 = '"||g_bgaw2_d[l_ac].bgaw002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page2.bgawcrtdp" cite_std="N" status="d" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bgaw2_d[l_ac].bgawcrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bgaw2_d[l_ac].bgawcrtdp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_bgaw2_d[l_ac].bgawcrtdp_desc
+]]>
+</point>
+  <point name="input.a.page2.bgawowndp" cite_std="N" status="d" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bgaw2_d[l_ac].bgawowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bgaw2_d[l_ac].bgawowndp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_bgaw2_d[l_ac].bgawowndp_desc
+]]>
+</point>
+  <point name="input.a.page2.bgawownid" cite_std="N" status="d" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bgaw2_d[l_ac].bgawownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_bgaw2_d[l_ac].bgawownid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_bgaw2_d[l_ac].bgawownid_desc
+]]>
+</point>
+  <point name="menu.undo_confirm" cite_std="N" status="d" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[               IF g_bgaw_m.bgawstus = '2' THEN
+                  CALL abgi210_conf('2')
+               END IF    ]]>
+</point>
+  <point name="reproduce.body.a_insert" cite_std="N" status="d" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[      #多語言複製
+      ]]>
+</point>
+  <point name="reproduce.body.b_insert" cite_std="N" status="d" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[      LET l_detail.bgawstus = '1']]>
+</point>
+  <point name="menu.confirm" cite_std="N" status="d" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[               IF g_bgaw_m.bgawstus = '1' THEN
+                  CALL abgi210_conf('1')
+               END IF      ]]>
+</point>
+  <point name="ref_show.body.reference2" cite_std="N" status="u" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bgaw2_d[l_ac].bgawmodid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_bgaw2_d[l_ac].bgawmodid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_bgaw2_d[l_ac].bgawmodid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bgaw2_d[l_ac].bgawownid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_bgaw2_d[l_ac].bgawownid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_bgaw2_d[l_ac].bgawownid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bgaw2_d[l_ac].bgawowndp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bgaw2_d[l_ac].bgawowndp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_bgaw2_d[l_ac].bgawowndp_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bgaw2_d[l_ac].bgawcrtid
+            CALL ap_ref_array2(g_ref_fields,"SELECT oofa011 FROM oofa_t WHERE oofaent='"||g_enterprise||"' AND oofa002='2' AND oofa003=? ","") RETURNING g_rtn_fields
+            LET g_bgaw2_d[l_ac].bgawcrtid_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_bgaw2_d[l_ac].bgawcrtid_desc
+
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_bgaw2_d[l_ac].bgawcrtdp
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooeal003 FROM ooeal_t WHERE ooealent='"||g_enterprise||"' AND ooeal001=? AND ooeal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_bgaw2_d[l_ac].bgawcrtdp_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_bgaw2_d[l_ac].bgawcrtdp_desc
+
+            LET g_bgaw_d[l_ac].bgaw004_desc =  g_bgaw_d[l_ac].bgaw004]]>
+</point>
+  <point name="ref_show.head.reference" cite_std="N" status="u" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_bgaw_m.bgaw001
+   CALL ap_ref_array2(g_ref_fields," SELECT bgawl003 FROM bgawl_t WHERE bgawlent = '"||g_enterprise||"' AND bgawl001 = ? AND bgawl002 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_bgaw_m.bgawl003 = g_rtn_fields[1] 
+   DISPLAY BY NAME g_bgaw_m.bgawl003
+   
+   
+    CASE g_bgaw_m.bgawstus
+         WHEN "1"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "2"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirm.png")  
+   END CASE
+]]>
+</point>
+  <point name="construct.c.page2.bgawcrtid" cite_std="N" status="u" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bgawcrtid  #顯示到畫面上
+
+            NEXT FIELD bgawcrtid                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.page2.bgawmodid" cite_std="N" status="u" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bgawmodid  #顯示到畫面上
+
+            NEXT FIELD bgawmodid                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.bgaw001" cite_std="N" status="u" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_bgaw001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bgaw001  #顯示到畫面上
+
+            NEXT FIELD bgaw001                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.page2.bgawcrtdp" cite_std="N" status="u" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bgawcrtdp  #顯示到畫面上
+
+            NEXT FIELD bgawcrtdp                     #返回原欄位
+
+]]>
+</point>
+  <point name="input.a.bgaw001" cite_std="N" status="u" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_bgaw_m.bgaw001) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND ( p_cmd = 'u' AND (g_bgaw_m.bgaw001 != g_bgaw001_t ))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bgaw_t WHERE "||"bgawent = '" ||g_enterprise|| "' AND "||"bgaw001 = '"||g_bgaw_m.bgaw001 ||"'",'std-00004',0) THEN 
+                     LET g_bgaw_m.bgaw001 = g_bgaw001_t 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.a.page1.bgaw002" cite_std="N" status="u" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_bgaw_m.bgaw001) AND NOT cl_null(g_bgaw_d[l_ac].bgaw002) THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND ( l_cmd = 'u' AND (g_bgaw_m.bgaw001 != g_bgaw001_t OR g_bgaw_d[l_ac].bgaw002 != g_bgaw_d_t.bgaw002))) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM bgaw_t WHERE "||"bgawent = '" ||g_enterprise|| "' AND "||"bgaw001 = '"||g_bgaw_m.bgaw001 ||"' AND "|| "bgaw002 = '"||g_bgaw_d[l_ac].bgaw002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="construct.c.page2.bgawowndp" cite_std="N" status="u" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooea001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bgawowndp  #顯示到畫面上
+
+            NEXT FIELD bgawowndp                     #返回原欄位
+
+]]>
+</point>
+  <point name="construct.c.page2.bgawownid" cite_std="N" status="u" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO bgawownid  #顯示到畫面上
+
+            NEXT FIELD bgawownid                     #返回原欄位
+
+]]>
+</point>
+  <point name="function.abgi210_ins_b" cite_std="N" status="u" ver="1" src="s" new="Y" order="1" cite_ver="" mark_hard="N">
+<![CDATA[#自動產生單身
+PRIVATE FUNCTION abgi210_ins_b()
+   DEFINE  r_success   LIKE type_t.num5
+   DEFINE  l_i         LIKE type_t.num5
+   DEFINE  l_bgaw      RECORD LIKE bgaw_t.*
+   
+   LET r_success = TRUE
+   INITIALIZE l_bgaw  TO NULL
+   FOR l_i = 1  TO 21
+       INSERT INTO bgaw_t (bgawent,bgaw001,bgawstus,bgaw002,bgaw003,bgaw004,
+                           bgaw005,bgaw006,bgawownid,bgawowndp,
+                           bgawcrtid,bgawcrtdp,bgawcrtdt) 
+       VALUES (g_enterprise,g_bgaw_m.bgaw001,g_bgaw_m.bgawstus,l_i,'1',l_i,
+               'N','2',g_user,g_dept,
+                g_user,g_dept,g_today)  
+               
+       IF SQLCA.SQLCODE THEN
+          CALL cl_err('ins_b',sqlca.sqlcode,1) 
+          LET  r_success = FALSE         
+          EXIT FOR
+       END IF 
+       
+   END FOR
+   RETURN r_success
+  
+END FUNCTION]]>
+</point>
+  <point name="function.abgi210_statechange" cite_std="N" status="u" ver="1" src="s" new="Y" order="2" cite_ver="" mark_hard="N">
+<![CDATA[#+
+PRIVATE FUNCTION abgi210_statechange()
+   DEFINE lc_state LIKE type_t.chr5
+   ERROR ""     #清空畫面右下側ERROR區塊
+
+   IF g_bgaw_m.bgaw001 IS NULL THEN
+      CALL cl_err("","std-00003",0)
+      RETURN
+   END IF
+
+   MENU "" ATTRIBUTES (STYLE="popup")
+      BEFORE MENU
+         CASE g_bgaw_m.bgawstus
+            WHEN "1"
+               HIDE OPTION "unconfirmed"
+            WHEN "2"
+               HIDE OPTION "confirm"
+         END CASE
+         
+      ON ACTION unconfirmed
+         LET lc_state = "1"
+         EXIT MENU
+      ON ACTION confirm
+         LET lc_state = "2"
+         EXIT MENU
+
+   END MENU
+   
+   IF (lc_state <> "1" 
+      AND lc_state <> "2"
+      ) OR 
+      cl_null(lc_state) THEN
+      RETURN
+   END IF
+   
+   #add-point:stus修改前
+
+   #end add-point
+      
+   UPDATE bgaw_t SET bgawstus = lc_state,
+                     bgawmodid = g_user,
+                     bgawmoddt = g_today     
+    WHERE bgawent = g_enterprise AND bgaw001= g_bgaw_m.bgaw001
+  
+   IF SQLCA.sqlcode THEN
+      CALL cl_err("",SQLCA.sqlcode,0)
+   ELSE
+      CASE lc_state
+         WHEN "1"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "2"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirm.png")
+      END CASE
+   END IF
+END FUNCTION]]>
+</point>
+  <point name="function.abgi210_pre" cite_std="N" status="u" ver="1" src="s" new="Y" order="3" cite_ver="" mark_hard="N">
+<![CDATA[#+预览
+PRIVATE FUNCTION abgi210_pre(p_bgaw001)
+    DEFINE p_bgaw001     LIKE bgaw_t.bgaw001
+    DEFINE l_bgaw004     LIKE bgaw_t.bgaw004
+    DEFINE l_bgaw005     LIKE bgaw_t.bgaw005
+    DEFINE l_bgaw006     LIKE bgaw_t.bgaw006
+    DEFINE l_sql         STRING
+    #单头隐藏标记
+    DEFINE l_flag1       LIKE type_t.num5
+    DEFINE l_flag2       LIKE type_t.num5
+    DEFINE l_flag3       LIKE type_t.num5
+    DEFINE l_flag4       LIKE type_t.num5
+    DEFINE l_flag5       LIKE type_t.num5
+
+    #資料檢查
+    #單頭key不可空白
+    IF cl_null(p_bgaw001) THEN
+       CALL cl_err('',-400,1)
+       RETURN 
+    END IF 
+    #隐藏标记初始化
+    LET l_flag1 = 0    
+    LET l_flag2 = 0
+    LET l_flag3 = 0
+    LET l_flag4 = 0
+    LET l_flag5 = 0
+
+    #開出畫面    
+    OPEN WINDOW w_abgi210_s01 WITH FORM cl_ap_formpath("abg","abgi210_s01")
+   
+    LET l_sql = " SELECT bgaw004,bgaw005,bgaw006 FROM bgaw_t ",
+                "  WHERE bgawent = '",g_enterprise,"'" ,
+                "    AND bgaw001 = '",p_bgaw001,"'"               
+
+    PREPARE abgi210_pre  FROM l_sql
+    DECLARE abgi210_cs CURSOR FOR abgi210_pre
+    FOREACH abgi210_cs INTO l_bgaw004,l_bgaw005,l_bgaw006
+        IF SQLCA.sqlcode THEN
+           CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+           CLOSE WINDOW w_abgi210_s01
+           RETURN
+        END IF
+        #期别
+        IF l_bgaw004 = '1' THEN
+           IF l_bgaw005 = 'N' THEN
+              CALL cl_set_comp_visible("lbl_bgaz006,bgaz006,bgaz006_1",FALSE)
+           ELSE
+              IF l_bgaw006 = '2' THEN    #显示單身，单头隐藏
+                 CALL cl_set_comp_visible("bgaz006_1",FALSE)
+                 LET l_flag1 =l_flag1+1
+              ELSE
+                 CALL cl_set_comp_visible("bgaz006",FALSE)
+              END IF 
+           END IF 
+        END IF 
+        
+        #部门
+        IF l_bgaw004 = '2' THEN
+           IF l_bgaw005 = 'N' THEN
+              CALL cl_set_comp_visible("lbl_bgaz007,bgaz007,bgaz007_1",FALSE)
+           ELSE
+              IF l_bgaw006 = '2' THEN    #显示單身，单头隐藏
+                 CALL cl_set_comp_visible("bgaz007_1",FALSE)
+                 LET l_flag1 =l_flag1+1
+              ELSE
+                 CALL cl_set_comp_visible("bgaz007",FALSE)
+              END IF 
+           END IF 
+        END IF 
+        #利润成本中心
+        IF l_bgaw004 = '3' THEN
+           IF l_bgaw005 = 'N' THEN
+              CALL cl_set_comp_visible("bgaz008,bgaz008_1",FALSE)
+           ELSE
+              IF l_bgaw006 = '2' THEN    #显示單身，单头隐藏
+                 CALL cl_set_comp_visible("bgaz008_1",FALSE)
+                LET l_flag1 =l_flag1+1
+              ELSE
+                 CALL cl_set_comp_visible("bgaz008",FALSE)
+              END IF 
+           END IF 
+        END IF  
+        #区域
+        IF l_bgaw004 = '4' THEN
+           IF l_bgaw005 = 'N' THEN
+              CALL cl_set_comp_visible("bgaz009,bgaz009_1",FALSE)
+           ELSE
+              IF l_bgaw006 = '2' THEN    #显示單身，单头隐藏
+                 CALL cl_set_comp_visible("bgaz009_1",FALSE)
+                 LET l_flag1 =l_flag1+1
+              ELSE
+                 CALL cl_set_comp_visible("bgaz009",FALSE)
+              END IF 
+           END IF 
+        END IF 
+        #交易客商
+        IF l_bgaw004 = '5' THEN
+           IF l_bgaw005 = 'N' THEN
+              CALL cl_set_comp_visible("bgaz010,bgaz010_1",FALSE)
+           ELSE
+              IF l_bgaw006 = '2' THEN    #显示單身，单头隐藏
+                 CALL cl_set_comp_visible("bgaz010_1",FALSE)
+                 #LET l_flag5 ='1'
+                 LET l_flag1 =l_flag1+1
+              ELSE
+                 CALL cl_set_comp_visible("bgaz010",FALSE)
+              END IF 
+           END IF 
+        END IF 
+        #收款客商
+        IF l_bgaw004 = '6' THEN
+           IF l_bgaw005 = 'N' THEN
+              CALL cl_set_comp_visible("bgaz011,bgaz011_1",FALSE)
+           ELSE
+              IF l_bgaw006 = '2' THEN    #显示單身，单头隐藏
+                 CALL cl_set_comp_visible("bgaz011_1",FALSE)
+                 LET l_flag2 =l_flag2+1
+              ELSE
+                 CALL cl_set_comp_visible("bgaz011",FALSE)
+              END IF 
+           END IF 
+        END IF 
+        #客群
+        IF l_bgaw004 = '7' THEN
+           IF l_bgaw005 = 'N' THEN
+              CALL cl_set_comp_visible("bgaz012,bgaz012_1",FALSE)
+           ELSE
+              IF l_bgaw006 = '2' THEN    #显示單身，单头隐藏
+                 CALL cl_set_comp_visible("bgaz012_1",FALSE)
+                 LET l_flag2 =l_flag2+1
+              ELSE
+                 CALL cl_set_comp_visible("bgaz012",FALSE)
+              END IF 
+           END IF 
+        END IF 
+        #产品分类
+        IF l_bgaw004 = '8' THEN
+           IF l_bgaw005 = 'N' THEN
+              CALL cl_set_comp_visible("bgaz013,bgaz013_1",FALSE)
+           ELSE
+              IF l_bgaw006 = '2' THEN    #显示單身，单头隐藏
+                 CALL cl_set_comp_visible("bgaz013_1",FALSE)
+                 LET l_flag2 =l_flag2+1
+              ELSE
+                 CALL cl_set_comp_visible("bgaz013",FALSE)
+              END IF 
+           END IF 
+        END IF 
+        #人员
+        IF l_bgaw004 = '9' THEN
+           IF l_bgaw005 = 'N' THEN
+              CALL cl_set_comp_visible("bgaz014,bgaz014_1",FALSE)
+           ELSE
+              IF l_bgaw006 = '2' THEN    #显示單身，单头隐藏
+                 CALL cl_set_comp_visible("bgaz014_1",FALSE)
+                 LET l_flag2 =l_flag2+1
+              ELSE
+                 CALL cl_set_comp_visible("bgaz014",FALSE)
+              END IF 
+           END IF 
+        END IF 
+        #專案編號
+        IF l_bgaw004 = '10' THEN
+           IF l_bgaw005 = 'N' THEN
+              CALL cl_set_comp_visible("bgaz015,bgaz015_1",FALSE)
+           ELSE
+              IF l_bgaw006 = '2' THEN    #显示單身，单头隐藏
+                 CALL cl_set_comp_visible("bgaz015_1",FALSE)
+                 LET l_flag2 =l_flag2+1 
+              ELSE
+                 CALL cl_set_comp_visible("bgaz015",FALSE)
+              END IF 
+           END IF 
+        END IF 
+        #WBS
+        IF l_bgaw004 = '11' THEN
+           IF l_bgaw005 = 'N' THEN
+              CALL cl_set_comp_visible("bgaz016,bgaz016_1",FALSE)
+           ELSE
+              IF l_bgaw006 = '2' THEN    #显示單身，单头隐藏
+                 CALL cl_set_comp_visible("bgaz016_1,grid6",FALSE)
+                 LET l_flag3 = 1
+              ELSE
+                 CALL cl_set_comp_visible("bgaz16",FALSE)
+              END IF 
+           END IF 
+        END IF
+        #自由維度一
+        IF l_bgaw004 = '12' THEN
+           IF l_bgaw005 = 'N' THEN
+              CALL cl_set_comp_visible("bgaz028,bgaz028_1",FALSE)
+           ELSE
+              IF l_bgaw006 = '2' THEN    #显示單身，单头隐藏
+                 CALL cl_set_comp_visible("bgaz028_1",FALSE)
+                 LET l_flag4 =l_flag4+1
+              ELSE
+                 CALL cl_set_comp_visible("bgaz028",FALSE)
+              END IF 
+           END IF 
+        END IF
+        #自由維度二
+        IF l_bgaw004 = '13' THEN
+           IF l_bgaw005 = 'N' THEN
+              CALL cl_set_comp_visible("lbl_bgaz029,bgaz029,bgaz029_1",FALSE)
+           ELSE
+              IF l_bgaw006 = '2' THEN    #显示單身，单头隐藏
+                 CALL cl_set_comp_visible("bgaz029_1",FALSE)
+                 LET l_flag4 =l_flag4+1
+              ELSE
+                 CALL cl_set_comp_visible("bgaz029",FALSE)
+              END IF 
+           END IF 
+        END IF
+        #自由維度三
+        IF l_bgaw004 = '14' THEN
+           IF l_bgaw005 = 'N' THEN
+              CALL cl_set_comp_visible("bgaz030,bgaz030_1",FALSE)
+           ELSE
+              IF l_bgaw006 = '2' THEN    #显示單身，单头隐藏
+                 CALL cl_set_comp_visible("bgaz030_1",FALSE)
+                 LET l_flag4 =l_flag4+1
+              ELSE
+                 CALL cl_set_comp_visible("bgaz030",FALSE)
+              END IF 
+           END IF 
+        END IF
+        #自由維度四
+        IF l_bgaw004 = '15' THEN
+           IF l_bgaw005 = 'N' THEN
+              CALL cl_set_comp_visible("bgaz031,bgaz031_1",FALSE)
+           ELSE
+              IF l_bgaw006 = '2' THEN    #显示單身，单头隐藏
+                 CALL cl_set_comp_visible("bgaz031_1",FALSE)
+                 LET l_flag4 =l_flag4+1
+              ELSE
+                 CALL cl_set_comp_visible("bgaz031",FALSE)
+              END IF 
+           END IF 
+        END IF
+        #自由維度五
+        IF l_bgaw004 = '16' THEN
+           IF l_bgaw005 = 'N' THEN
+              CALL cl_set_comp_visible("bgaz032,bgaz032_1",FALSE)
+           ELSE
+              IF l_bgaw006 = '2' THEN    #显示單身，单头隐藏
+                 CALL cl_set_comp_visible("bgaz032_1",FALSE)
+                 LET l_flag4 =l_flag4+1
+              ELSE
+                 CALL cl_set_comp_visible("bgaz032",FALSE)
+              END IF 
+           END IF 
+        END IF
+        #自由維度六
+        IF l_bgaw004 = '17' THEN
+           IF l_bgaw005 = 'N' THEN
+              CALL cl_set_comp_visible("bgaz033,bgaz033_1",FALSE)
+           ELSE
+              IF l_bgaw006 = '2' THEN    #显示單身，单头隐藏
+                 CALL cl_set_comp_visible("bgaz033_1",FALSE)
+                LET l_flag5 =l_flag5+1
+              ELSE
+                 CALL cl_set_comp_visible("bgaz033",FALSE)
+              END IF 
+           END IF 
+        END IF
+        #自由維度七
+        IF l_bgaw004 = '18' THEN
+           IF l_bgaw005 = 'N' THEN
+              CALL cl_set_comp_visible("bgaz034,bgaz034_1",FALSE)
+              LET l_flag5 =l_flag5+1
+           ELSE
+              IF l_bgaw006 = '2' THEN    #显示單身，单头隐藏
+                 CALL cl_set_comp_visible("bgaz034_1",FALSE)
+                 LET l_flag5 =l_flag5+1
+              ELSE
+                 CALL cl_set_comp_visible("bgaz034",FALSE)
+              END IF 
+           END IF 
+        END IF
+        #自由維度八
+        IF l_bgaw004 = '19' THEN
+           IF l_bgaw005 = 'N' THEN
+              CALL cl_set_comp_visible("bgaz035,bgaz035_1",FALSE)
+           ELSE
+              IF l_bgaw006 = '2' THEN    #显示單身，单头隐藏
+                 CALL cl_set_comp_visible("bgaz035_1",FALSE)
+                 LET l_flag5 =l_flag5+1
+              ELSE
+                 CALL cl_set_comp_visible("bgaz035",FALSE)
+              END IF 
+           END IF 
+        END IF
+        #自由維度九
+        IF l_bgaw004 = '20' THEN
+           IF l_bgaw005 = 'N' THEN
+              CALL cl_set_comp_visible("bgaz036,bgaz036_1",FALSE)
+           ELSE
+              IF l_bgaw006 = '2' THEN    #显示單身，单头隐藏
+                 CALL cl_set_comp_visible("bgaz036_1",FALSE)
+                 LET l_flag5 =l_flag5+1
+              ELSE
+                 CALL cl_set_comp_visible("bgaz036",FALSE)
+              END IF 
+           END IF 
+        END IF
+        #自由維度十
+        IF l_bgaw004 = '21' THEN
+           IF l_bgaw005 = 'N' THEN
+              CALL cl_set_comp_visible("bgaz037,bgaz037_1",FALSE)
+           ELSE
+              IF l_bgaw006 = '2' THEN    #显示單身,单头隐藏
+                 CALL cl_set_comp_visible("bgaz037_1",FALSE)
+                 LET l_flag5 =l_flag5+1
+              ELSE
+                 CALL cl_set_comp_visible("bgaz037",FALSE)
+              END IF 
+           END IF 
+        END IF
+    END FOREACH
+    
+   #该列栏位隐藏，则隐藏掉改grid
+   IF l_flag1 = 5 THEN   
+      CALL cl_set_comp_visible("grid3",FALSE)
+   END IF
+   #该列栏位隐藏，则隐藏掉改grid
+   IF l_flag2 = 5 THEN
+      CALL cl_set_comp_visible("grid7",FALSE)
+   END IF 
+   #该列栏位隐藏，则隐藏掉改grid
+   IF l_flag4 = 5 THEN 
+     CALL cl_set_comp_visible("grid4",FALSE)
+   END IF 
+   #该列栏位隐藏，则隐藏掉改grid
+   IF l_flag5 = 5 THEN
+      CALL cl_set_comp_visible("grid5",FALSE)
+   END IF 
+   #单头栏位全部隐藏，隐藏掉group
+   IF l_flag1+l_flag2+l_flag3+l_flag4+l_flag5 = 21  THEN  
+       CALL cl_set_comp_visible("lbl_group1",FALSE)
+    END IF 
+                   
+    MENU
+       ON ACTION close
+          LET INT_FLAG = TRUE
+          EXIT MENU
+     END MENU  
+     
+     IF INT_FLAG THEN
+        LET INT_FLAG = FALSE
+        CLOSE WINDOW w_abgi210_s01
+        RETURN
+     END IF
+END FUNCTION]]>
+</point>
+  <point name="modify.before_input" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[      IF g_bgaw_m.bgawstus = '2' THEN
+         CALL cl_err(g_bgaw_m.bgawstus,'abg-00010',1)
+         RETURN
+      END IF ]]>
+</point>
+  <point name="reproduce.after_reproduce" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   LET l_sql = " INSERT INTO bgawl_t ",
+                  " SELECT bgawlent,'",l_newno,"',bgawl002,bgawl003,bgawl004 ",
+                  " FROM bgawl_t ",
+                  " WHERE bgawlent ='",g_enterprise,"'",
+                  "   AND bgawl001 = '",g_bgaw001_t,"'"
+
+      PREPARE abgi210_ins_bgawl FROM l_sql
+      EXECUTE abgi210_ins_bgawl
+      
+      IF SQLCA.sqlcode THEN
+         CALL cl_err('Insert bgawl_t error!',SQLCA.sqlcode,1)
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF]]>
+</point>
+  <point name="menu.preview" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[               CALL abgi210_pre(g_bgaw_m.bgaw001)]]>
+</point>
+  <point name="menu.statechange" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[               CALL abgi210_statechange()
+               LET g_action_choice = "statechange"]]>
+</point>
+  <point name="show.before" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[ ]]>
+</point>
+  <point name="ui_dialog.before_dialog" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   ]]>
+</point>
+  <point name="set_no_entry_b.set_no_entry_b段" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   IF p_cmd = 'u' THEN
+      CALL cl_set_comp_entry('bgaw001',FALSE)
+   END IF ]]>
+</point>
+  <point name="reproduce.define" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   DEFINE l_sql       STRING]]>
+</point>
+  <point name="input.before_input" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   #產生單身不可刪除，不可新增
+   LET l_allow_insert = ''
+   LET l_allow_delete = '']]>
+</point>
+  <point name="input.body.b_update" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[               LET g_bgaw2_d[l_ac].bgawmodid = g_user
+               LET g_bgaw2_d[l_ac].bgawmoddt = cl_get_current()]]>
+</point>
+  <point name="delete.body.b_delete" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[      IF g_bgaw_m.bgawstus = '2' THEN
+         CALL cl_err(g_bgaw_m.bgawstus,'abg-00010',1)
+         RETURN
+      END IF ]]>
+</point>
+  <point name="b_fill.fill" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[      LET g_bgaw_d[l_ac].bgaw004_desc=g_bgaw_d[l_ac].bgaw004]]>
+</point>
+  <point name="default_search.before" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   CALL cl_set_combo_scc_part('bgawstus','9412','1,2')]]>
+</point>
+  <point name="input.body.before_insert" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="input.master_input.update_item" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[               IF NOT cl_null(g_bgaw_m.bgaw001) THEN
+                  CALL n_bgawl(g_bgaw_m.bgaw001)
+                  INITIALIZE g_ref_fields TO NULL
+                  LET g_ref_fields[1] = g_bgaw_m.bgaw001
+                  CALL ap_ref_array2(g_ref_fields," SELECT bgawl003 FROM bgawl_t WHERE bgawlent = '"
+                      ||g_enterprise||"' AND bgawl001 = ? AND bgawl002 = '"||g_dlang||"'","") RETURNING g_rtn_fields
+                  LET g_bgaw_m.bgawl003 = g_rtn_fields[1]
+                  DISPLAY BY NAME g_bgaw_m.bgawl003
+               END IF]]>
+</point>
+  <point name="insert.default" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[      CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")]]>
+</point>
+  <point name="input.head.a_update" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[                  ]]>
+</point>
+  <point name="input.define" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   DEFINE l_success        LIKE type_t.num5]]>
+</point>
+  <point name="input.head.a_insert" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[               #產生單身資料
+               CALL abgi210_ins_b()  RETURNING l_success
+               IF l_success  = TRUE THEN
+                  CALL s_transaction_end('Y','0')
+                  CALL abgi210_b_fill('1=1')
+               ELSE
+                  CALL s_transaction_end('N','0')
+                  NEXT FIELD bgaw001
+               END IF  
+               ]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.init" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.define_sql" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.after_define_sql" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.before_close" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="init.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="init.init" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_dialog2" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="menu.delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="menu.insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="menu.modify" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="menu.output" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="menu.query" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="menu.reproduce" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="browser_search.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.before_browser_fill" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="browser_fill.reference" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_headershow.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_detailshow.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_detailshow.before" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_detailshow.after" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ui_browser_refresh.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="cs.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="cs.head.before_construct" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.bgaw001" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.bgaw001" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.bgawl003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.bgawl003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.bgawl003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.bgawstus" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.bgawstus" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.bgawstus" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="cs.body.before_construct" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.bgaw002" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.bgaw002" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1.bgaw002" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.bgaw003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.bgaw003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1.bgaw003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.bgaw004" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.bgaw004" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1.bgaw004" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.bgaw004_desc" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.bgaw004_desc" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1.bgaw004_desc" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.bgaw005" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.bgaw005" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1.bgaw005" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page1.bgaw006" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page1.bgaw006" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.page1.bgaw006" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page2.bgawmodid" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page2.bgawmodid" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page2.bgawmoddt" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page2.bgawownid" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page2.bgawownid" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page2.bgawowndp" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page2.bgawowndp" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page2.bgawcrtid" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page2.bgawcrtid" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page2.bgawcrtdp" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.page2.bgawcrtdp" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.page2.bgawcrtdt" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="cs.more_construct" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="cs.before_dialog" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="cs.after_construct" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="filter.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="filter.add_cs" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="filter.b_dialog" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="filter_parser.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="query.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="query.befroe_query" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="fetch.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="fetch.before_fetch" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="insert.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="insert.after_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify.after_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify.b_key_update" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify.m_key_update" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="modify.a_key_update" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.define_sql" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.after_define_sql" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.after_set_entry" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.after_set_no_entry" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.b_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.bgaw001" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.bgaw001" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.bgawl003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.bgawl003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.bgawl003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.bgawstus" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.bgawstus" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.bgawstus" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.bgaw001" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.bgawl003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.bgawstus" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.b_update" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.head.m_update" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.before_row" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.b_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.m_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.a_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.after_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.b_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.a_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.after_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.bgaw002" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.bgaw002" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.bgaw003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.bgaw003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.bgaw003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.bgaw004" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.bgaw004" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.bgaw004" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.bgaw004_desc" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.bgaw004_desc" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.bgaw004_desc" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.bgaw005" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.bgaw005" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.bgaw005" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.bgaw006" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.bgaw006" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.bgaw006" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.bgaw002" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.bgaw003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.bgaw004" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.bgaw004_desc" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.bgaw005" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.bgaw006" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.m_update" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.a_update" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.body.after_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.page2.action" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.more_inputarray" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.before_dialog" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="show.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="show.after" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ref_show.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="ref_show.body.reference" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="detail_reproduce.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="detail_reproduce.body.table1.b_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="detail_reproduce.body.table1.m_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="detail_reproduce.body.table1.a_insert" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="delete.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.m_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.a_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="b_fill.sql_before" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="bfill.foreach" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="b_fill2.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="b_fill2.after_fill" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="before_delete.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.b_single_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.m_single_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="delete.body.a_single_delete" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="delete_b.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="insert_b.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="update_b.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="lock_b.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="unlock_b.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.field_control" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry.after_control" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.field_control" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry.after_control" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry_b.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_entry_b.set_entry_b" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="set_no_entry_b.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="default_search.define" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="default_search.after" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+</add_points>

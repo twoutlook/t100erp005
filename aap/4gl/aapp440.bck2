@@ -1,0 +1,1715 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aapp440.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2015-12-14 09:45:51), PR版次:0004(2016-10-13 16:30:30)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000036
+#+ Filename...: aapp440
+#+ Description: 發票請款單批次產生核銷單
+#+ Creator....: 02114(2015-12-14 09:45:51)
+#+ Modifier...: 02114 -SD/PR- 08732
+ 
+{</section>}
+ 
+{<section id="aapp440.global" >}
+#應用 p02 樣板自動產生(Version:19)
+#add-point:填寫註解說明
+#160321-00016#20  160323 By Jessy      修正azzi920重複定義之錯誤訊息
+#160318-00025#43  160425 By pengxin    將重複內容的錯誤訊息置換為公用錯誤訊息(r.v)
+#161006-00005#3   161012 By 08732      組織類型與職能開窗調整
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc" 
+#add-point:增加匯入變數檔
+#
+##end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_wc                 STRING
+DEFINE g_wc_t               STRING                        #儲存 user 的查詢條件
+DEFINE g_wc2                STRING
+DEFINE g_wc_filter          STRING
+DEFINE g_wc_filter_t        STRING
+DEFINE g_sql                STRING
+DEFINE g_forupd_sql         STRING                        #SELECT ... FOR UPDATE SQL
+DEFINE g_before_input_done  LIKE type_t.num5
+DEFINE g_cnt                LIKE type_t.num10    
+DEFINE l_ac                 LIKE type_t.num10              
+DEFINE l_ac_d               LIKE type_t.num10             #單身idx 
+DEFINE g_curr_diag          ui.Dialog                     #Current Dialog
+DEFINE gwin_curr            ui.Window                     #Current Window
+DEFINE gfrm_curr            ui.Form                       #Current Form
+DEFINE g_current_page       LIKE type_t.num10             #目前所在頁數
+DEFINE g_ref_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields         DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars           DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys              DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak          DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_insert             LIKE type_t.chr5              #是否導到其他page
+DEFINE g_error_show         LIKE type_t.num5
+DEFINE g_master_idx         LIKE type_t.num10
+ 
+TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+        apeasite            LIKE apea_t.apeasite,
+        apeasite_desc       LIKE type_t.chr80,
+        apeacomp            LIKE apea_t.apeacomp,
+        apeacomp_desc       LIKE type_t.chr80,
+        apea019             LIKE apea_t.apea019,
+        apea020             LIKE apea_t.apea020,
+        type                LIKE type_t.chr1,
+        apdasite            LIKE apda_t.apdasite,
+        apdasite_desc       LIKE type_t.chr80,
+        apdadocno           LIKE apda_t.apdadocno,
+        apda003             LIKE apda_t.apda003,
+        apda003_desc        LIKE type_t.chr80,
+        apdadocdt           LIKE apda_t.apdadocdt,
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+TYPE type_g_detail_d RECORD
+#add-point:自定義模組變數(Module Variable)  #注意要在add-point內寫入END RECORD
+        sel                 LIKE type_t.chr1,
+        apebdocno           LIKE apeb_t.apebdocno,
+        apeadocdt           LIKE apea_t.apeadocdt,
+        apebseq             LIKE apeb_t.apebseq,
+        apeborga            LIKE apeb_t.apeborga,
+        apeborga_desc       LIKE type_t.chr80,
+        apeb002             LIKE apeb_t.apeb002,
+        apeb031             LIKE apeb_t.apeb031,
+        apeb007             LIKE apeb_t.apeb007,
+        apeb008             LIKE apeb_t.apeb008,
+        apeb011             LIKE apeb_t.apeb011,
+        apeb012             LIKE apeb_t.apeb012,
+        apeb100             LIKE apeb_t.apeb100,
+        apeb108             LIKE apeb_t.apeb108,
+        apeb101             LIKE apeb_t.apeb101,
+        apeb118             LIKE apeb_t.apeb118
+                      END RECORD  
+DEFINE g_input        type_parameter
+DEFINE g_ld           LIKE glaa_t.glaald
+DEFINE g_glaa024      LIKE glaa_t.glaa024
+DEFINE g_comp         LIKE apda_t.apdacomp
+DEFINE g_wc_string    STRING
+DEFINE g_sfin3007     LIKE apca_t.apcadocdt
+DEFINE g_rec_b        LIKE type_t.num5
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+DEFINE g_detail_cnt         LIKE type_t.num10              #單身 總筆數(所有資料)
+DEFINE g_detail_d  DYNAMIC ARRAY OF type_g_detail_d
+ 
+#add-point:傳入參數說明
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aapp440.main" >}
+#+ 作業開始 
+MAIN
+   DEFINE ls_js  STRING
+   #add-point:main段define
+   
+   #end add-point   
+   #add-point:main段define
+   
+   #end add-point   
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aap","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aapp440 WITH FORM cl_ap_formpath("aap",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL aapp440_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL aapp440_ui_dialog() 
+ 
+      #add-point:畫面關閉前
+      
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_aapp440
+   END IF 
+   
+   #add-point:作業離開前
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+{</section>}
+ 
+{<section id="aapp440.init" >}
+#+ 畫面資料初始化
+PRIVATE FUNCTION aapp440_init()
+   #add-point:init段define
+   
+   #end add-point   
+   #add-point:init段define
+   
+   #end add-point   
+   
+   LET g_error_show  = 1
+   LET g_wc_filter   = " 1=1"
+   LET g_wc_filter_t = " 1=1"
+ 
+   #add-point:畫面資料初始化
+   CALL s_aapp330_cre_tmp() RETURNING g_sub_success
+   CALL s_fin_create_account_center_tmp()
+   CALL s_fin_account_center_comp_str() RETURNING g_wc_string   #161006-00005#3  add
+   CALL s_fin_get_wc_str(g_wc_string) RETURNING g_wc_string     #161006-00005#3  add
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp440.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aapp440_ui_dialog()
+   DEFINE li_idx   LIKE type_t.num10
+   #add-point:ui_dialog段define
+   DEFINE l_choice     LIKE type_t.chr1
+   #end add-point 
+   #add-point:ui_dialog段define
+   
+   #end add-point 
+   
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   LET g_action_choice = " "  
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+         
+   LET g_detail_cnt = g_detail_d.getLength()
+   #add-point:ui_dialog段before dialog 
+   CALL aapp440_default()
+   #end add-point
+   
+   WHILE TRUE
+ 
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_detail_d.clear()
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL aapp440_init()
+      END IF
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #add-point:ui_dialog段construct
+      
+         #end add-point
+         #add-point:ui_dialog段input
+         INPUT BY NAME g_input.apeasite     ,g_input.apeasite_desc,  
+                       g_input.apeacomp     ,g_input.apeacomp_desc,
+                       g_input.apea019      ,g_input.apea020,            
+                       g_input.type         ,g_input.apdasite,            
+                       g_input.apdasite_desc,g_input.apdadocno,           
+                       g_input.apda003      ,g_input.apda003_desc,        
+                       g_input.apdadocdt     
+               ATTRIBUTE(WITHOUT DEFAULTS)
+               
+            BEFORE INPUT 
+
+               
+            AFTER FIELD apeasite
+               LET g_input.apeasite_desc = ''
+               IF NOT cl_null(g_input.apeasite) THEN
+                  CALL s_fin_account_center_with_ld_chk(g_input.apeasite,'','','6','N','',g_today) RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_input.apeasite = ''
+                     LET g_input.apeasite_desc = s_desc_get_department_desc(g_input.apeasite)
+                     DISPLAY BY NAME g_input.apeasite,g_input.apeasite_desc
+                     NEXT FIELD apeasite
+                  END IF
+               END IF
+               LET g_input.apeasite_desc = s_desc_get_department_desc(g_input.apeasite)
+               DISPLAY BY NAME g_input.apeasite_desc
+               #營運據點取得帳別與法人
+               CALL s_fin_orga_get_comp_ld(g_input.apeasite) RETURNING g_sub_success,g_errno,g_input.apeacomp,g_ld
+               LET g_input.apeacomp_desc = s_desc_get_department_desc(g_input.apeacomp)
+               DISPLAY BY NAME g_input.apeacomp_desc
+               CALL aapp440_visible()
+            
+            AFTER FIELD apeacomp
+               IF NOT cl_null(g_input.apeacomp) THEN
+                  #取得帳務組織下所屬成員
+                  CALL s_fin_account_center_sons_query('6',g_input.apeacomp,g_today,'1')
+                  #取得帳務組織底下所屬的法人範圍
+                  CALL s_fin_account_center_comp_str() RETURNING g_wc_string
+                  #將取回的字串轉換為SQL條件
+                  CALL s_fin_get_wc_str(g_wc_string) RETURNING g_wc_string
+                  #比對輸入的法人是否在資金組織下
+                  IF s_chr_get_index_of(g_wc_string,g_input.apeacomp,'1') = 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'aap-00127'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_input.apeacomp = ''
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL aapp440_visible()
+               END IF
+               LET g_input.apeacomp_desc = s_desc_get_department_desc(g_input.apeacomp)
+               DISPLAY BY NAME g_input.apeacomp_desc 
+
+            ON CHANGE type
+               IF g_input.type = '3' THEN 
+                  CALL cl_set_comp_required('apdadocdt',TRUE)
+               ELSE
+                  CALL cl_set_comp_required('apdadocdt',FALSE)
+               END IF
+               
+            AFTER FIELD apdasite
+               LET g_input.apdasite_desc = ' '
+               DISPLAY BY NAME g_input.apdasite_desc
+               IF NOT cl_null(g_input.apdasite) THEN
+                  #161006-00005#3   mark---s
+                  #校驗代值
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  #INITIALIZE g_chkparam.* TO NULL
+                  #設定g_chkparam.*的參數
+                  #LET g_chkparam.arg1 = g_input.apdasite
+                  #160318-00025#43  2016/04/25  by pengxin  add(S)
+                  #LET g_errshow = TRUE #是否開窗 
+                  #LET g_chkparam.err_str[1] = "aoo-00095:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"
+                  #160318-00025#43  2016/04/25  by pengxin  add(E)
+                  #呼叫檢查存在並帶值的library
+                  #IF NOT cl_chk_exist("v_ooef001") THEN
+                  #   #檢查失敗時後續處理
+                  #   LET g_input.apdasite = ''
+                  #   LET g_input.apdasite_desc = s_desc_get_department_desc(g_input.apdasite)
+                  #   DISPLAY BY NAME g_input.apdasite_desc
+                  #   NEXT FIELD CURRENT
+                  #END IF
+                  #161006-00005#3   mark---e                  
+                  
+                  #161006-00005#3   add---s
+                  CALL s_fin_account_center_with_ld_chk(g_input.apdasite,'','','3','N','',g_today) RETURNING g_sub_success,g_errno
+                  IF NOT g_sub_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     NEXT FIELD apdasite
+                  END IF   
+                  #161006-00005#3   add---e
+                  
+                  #取得所屬法人+帳別
+                  CALL s_fin_orga_get_comp_ld(g_input.apdasite) RETURNING g_sub_success,g_errno,g_comp,g_ld  
+                  CALL s_ld_sel_glaa(g_ld,'glaa024') RETURNING g_sub_success,g_glaa024  
+                  CALL cl_get_para(g_enterprise,g_comp,'S-FIN-3007') RETURNING g_sfin3007                  
+               END IF           
+               LET g_input.apdasite_desc = s_desc_get_department_desc(g_input.apdasite)
+               DISPLAY BY NAME g_input.apdasite_desc
+               
+               CALL aapp440_get_docno() RETURNING g_input.apdadocno
+               
+            AFTER FIELD apda003
+               LET g_input.apda003_desc = ' '
+               DISPLAY BY NAME g_input.apda003_desc
+               IF NOT cl_null(g_input.apda003) THEN
+                  CALL s_voucher_glaq013_chk(g_input.apda003)
+                  IF NOT cl_null(g_errno)THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     #160321-00016#20 --s add
+                     #(s_voucher_glaq013_chk)aoo-00071->sub-01302
+                     LET g_errparam.replace[1] = 'aooi130'
+                     LET g_errparam.replace[2] = cl_get_progname('aooi130',g_lang,"2")
+                     LET g_errparam.exeprog = 'aooi130'
+                     #160321-00016#20 --e add
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                   
+                     LET g_input.apda003 = ''
+                     LET g_input.apda003_desc = s_desc_get_person_desc(g_input.apda003)
+                     DISPLAY BY NAME g_input.apda003_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF           
+               LET g_input.apda003_desc = s_desc_get_person_desc(g_input.apda003)
+               DISPLAY BY NAME g_input.apda003_desc
+               
+            AFTER FIELD apdadocdt
+               IF NOT cl_null(g_input.apdadocdt) THEN               
+                  IF NOT cl_null(g_sfin3007) THEN
+                     IF g_input.apdadocdt <= g_sfin3007 THEN
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'aap-00110'
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        LET g_input.apdadocdt= ''
+                        NEXT FIELD CURRENT
+                     END IF
+                  END IF
+               END IF
+            
+            ON ACTION controlp INFIELD apeasite
+			      INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_input.apeasite
+               #LET g_qryparam.where = " ooef206 = 'Y' "   #161006-00005#3  mark
+               #CALL q_ooef001()                           #161006-00005#3  mark
+               CALL q_ooef001_33()                         #161006-00005#3  add 
+               LET g_input.apeasite = g_qryparam.return1
+               CALL s_desc_get_department_desc(g_input.apeasite) RETURNING g_input.apeasite_desc
+               DISPLAY BY NAME g_input.apeasite,g_input.apeasite_desc
+               NEXT FIELD apeasite   
+            
+            ON ACTION controlp INFIELD apeacomp
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_input.apeacomp
+               IF NOT cl_null(g_input.apeasite) THEN
+                  CALL s_fin_account_center_sons_query('6',g_input.apeasite,g_today,'')
+                  CALL s_fin_account_center_comp_str() RETURNING g_wc_string
+                  CALL s_fin_get_wc_str(g_wc_string) RETURNING g_wc_string
+                  LET g_qryparam.where = "ooef003 = 'Y' AND ooef001 IN ",g_wc_string CLIPPED
+               ELSE
+                  LET g_qryparam.where = "ooef003 = 'Y' AND ooef001 IN ",g_wc_string CLIPPED
+               END IF
+               CALL q_ooef001()
+               LET g_input.apeacomp = g_qryparam.return1
+               DISPLAY BY NAME g_input.apeacomp
+               LET g_input.apeacomp_desc = s_desc_get_department_desc(g_input.apeacomp)
+               DISPLAY BY NAME g_input.apeacomp_desc
+               NEXT FIELD apeacomp   
+                  
+            ON ACTION controlp INFIELD apdasite
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_input.apdasite       #給予default值
+               #CALL q_ooef001()     #161006-00005#3  mark
+               CALL q_ooef001_46()   #161006-00005#3  add                                #呼叫開窗
+               LET g_input.apdasite = g_qryparam.return1        #將開窗取得的值回傳到變數
+               CALL s_desc_get_department_desc(g_input.apdasite) RETURNING g_input.apdasite_desc
+               DISPLAY BY NAME g_input.apdasite,g_input.apdasite_desc
+               NEXT FIELD apdasite   
+
+            ON ACTION controlp INFIELD apdadocno
+               #開窗i段
+               INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+               LET g_qryparam.reqry = FALSE
+               
+               LET g_qryparam.default1 = g_input.apdadocno             #給予default值
+               
+               #給予arg
+               LET g_qryparam.arg1 = g_glaa024
+               LET g_qryparam.arg2 = 'aapt420'
+               
+               CALL q_ooba002_1()                                #呼叫開窗
+               
+               LET g_input.apdadocno = g_qryparam.return1              #將開窗取得的值回傳到變數
+               DISPLAY g_input.apdadocno TO apdadocno              #顯示到畫面上
+               
+               NEXT FIELD apdadocno                          #返回原欄位
+               
+            ON ACTION controlp INFIELD apda003
+		     	   INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'i'
+			      LET g_qryparam.reqry = FALSE
+               LET g_qryparam.default1 = g_input.apda003      #給予default值
+               CALL q_ooag001()                                #呼叫開窗
+               LET g_input.apda003 = g_qryparam.return1       #將開窗取得的值回傳到變數
+               CALL s_desc_get_person_desc(g_input.apda003) RETURNING g_input.apda003_desc
+               DISPLAY BY NAME g_input.apda003,g_input.apda003_desc
+               NEXT FIELD apda003  
+         END INPUT
+         
+         #查詢QBE
+         CONSTRUCT BY NAME g_wc ON apeadocno,apea005,apeb002,apeborga,apeb008,apeb011,apeb100,apeb031
+
+            BEFORE CONSTRUCT
+               CALL cl_qbe_init()
+            
+            AFTER CONSTRUCT
+               #呼叫P次作業
+               
+            ON ACTION controlp INFIELD apeadocno
+   	         INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+   	         LET g_qryparam.reqry = FALSE
+   	         LET g_qryparam.where = "     apeastus = 'Y' AND apeasite = '",g_input.apeasite,"'",
+   	                                " AND apea019 = ",g_input.apea019,
+   	                                " AND apea020 = ",g_input.apea020,
+   	                                " AND apebdocno||apebseq NOT IN (SELECT apce049||apce050 FROM apce_t ",
+                                      "                                 WHERE apceent=",g_enterprise," AND apceld='",g_ld,"'",
+                                      "                                   AND apce049 IS NOT NULL AND apce050 IS NOT NULL ",
+                                      "                                )"
+               CALL q_apeadocno()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO apeadocno  #顯示到畫面上  
+               NEXT FIELD apeadocno                     #返回原欄位  
+               
+            ON ACTION controlp INFIELD apea005
+   	         INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+   	         LET g_qryparam.reqry = FALSE
+               CALL q_apca005()                       #呼叫開窗
+               DISPLAY g_qryparam.return1 TO apea005  #顯示到畫面上  
+               NEXT FIELD apea005                     #返回原欄位 
+   
+            ON ACTION controlp INFIELD apeb002
+   	         INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+   	         LET g_qryparam.reqry = FALSE
+   	         LET g_qryparam.where = " apeastus = 'Y'"
+               CALL q_apeb002_1()
+               DISPLAY g_qryparam.return1 TO apeb002  #顯示到畫面上  
+               NEXT FIELD apeb002                     #返回原欄位  
+               
+            ON ACTION controlp INFIELD apeborga
+			      INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+			      LET g_qryparam.reqry = FALSE
+			      LET g_qryparam.where = " ooef201 = 'Y' AND ooef001 IN ",g_wc_string CLIPPED   #161006-00005#3  add   
+               CALL q_ooef001()                        #呼叫開窗
+               DISPLAY g_qryparam.return1 TO apeborga  #顯示到畫面上
+               NEXT FIELD apeborga                     #返回原欄位
+             
+            ON ACTION controlp INFIELD apeb008
+   	         INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+   	         LET g_qryparam.reqry = FALSE
+   	         LET g_qryparam.where = " apeastus = 'Y'"
+               CALL q_apeb008()
+               DISPLAY g_qryparam.return1 TO apeb008  #顯示到畫面上  
+               NEXT FIELD apeb008  
+
+            ON ACTION controlp INFIELD apeb100
+   	         INITIALIZE g_qryparam.* TO NULL
+               LET g_qryparam.state = 'c'
+   	         LET g_qryparam.reqry = FALSE
+               CALL q_ooai001()
+               DISPLAY g_qryparam.return1 TO apeb100  #顯示到畫面上  
+               NEXT FIELD apeb100   
+         END CONSTRUCT
+         
+         
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         INPUT ARRAY g_detail_d FROM s_detail1.* 
+              ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                        INSERT ROW = FALSE,
+                        DELETE ROW = FALSE,
+                        APPEND ROW = FALSE)
+            BEFORE INPUT
+               IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+                 CALL FGL_SET_ARR_CURR(g_detail_d.getLength()+1) 
+                 LET g_insert = 'N' 
+               END IF 
+             
+            BEFORE ROW
+               LET l_ac = ARR_CURR()
+               LET g_master_idx = l_ac
+               DISPLAY l_ac TO FORMONLY.h_index
+               CALL aapp440_fetch()              
+               
+            ON CHANGE sel
+               IF cl_null(g_input.apdadocdt) AND g_detail_d[l_ac].apeadocdt < = g_sfin3007 THEN  
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code   = 'axc-00226'
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+                  
+                  LET g_detail_d[l_ac].sel = 'N'
+                  EXIT DIALOG
+               END IF
+               
+               UPDATE aapp440_tmp 
+                  SET sel = g_detail_d[l_ac].sel 
+                WHERE apebdocno = g_detail_d[l_ac].apebdocno 
+                  AND apebseq = g_detail_d[l_ac].apebseq
+         
+         END INPUT
+         #end add-point
+ 
+         BEFORE DIALOG
+            IF g_detail_d.getLength() > 0 THEN
+               CALL gfrm_curr.setFieldHidden("formonly.sel", TRUE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", TRUE)
+            ELSE
+               CALL gfrm_curr.setFieldHidden("formonly.sel", FALSE)
+               CALL gfrm_curr.setFieldHidden("formonly.statepic", FALSE)
+            END IF
+            #add-point:ui_dialog段before_dialog2
+            
+            #end add-point
+ 
+         #選擇全部
+         ON ACTION selall
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 1)
+            #add-point:ui_dialog段on action selall
+            
+            #end add-point            
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "Y"
+               #add-point:ui_dialog段on action selall
+               UPDATE aapp440_tmp 
+                  SET sel = g_detail_d[li_idx].sel
+                WHERE apebdocno = g_detail_d[li_idx].apebdocno 
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selall
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF cl_null(g_input.apdadocdt) AND g_detail_d[li_idx].apeadocdt < = g_sfin3007 THEN 
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #end add-point
+ 
+         #取消全部
+         ON ACTION selnone
+            CALL DIALOG.setSelectionRange("s_detail1", 1, -1, 0)
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               LET g_detail_d[li_idx].sel = "N"
+               #add-point:ui_dialog段on action selnone
+               UPDATE aapp440_tmp 
+                  SET sel = g_detail_d[li_idx].sel
+                WHERE apebdocno = g_detail_d[li_idx].apebdocno 
+               #end add-point
+            END FOR
+            #add-point:ui_dialog段on action selnone
+            
+            #end add-point
+ 
+         #勾選所選資料
+         ON ACTION sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "Y"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action sel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  IF cl_null(g_input.apdadocdt) AND g_detail_d[li_idx].apeadocdt < = g_sfin3007 THEN 
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = 'axc-00226'
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     
+                     LET g_detail_d[li_idx].sel = 'N'
+                     EXIT DIALOG
+                  END IF
+                  
+                  LET g_detail_d[li_idx].sel = "Y"
+                  UPDATE aapp440_tmp 
+                     SET sel = g_detail_d[li_idx].sel
+                   WHERE apebdocno = g_detail_d[li_idx].apebdocno
+                     AND apebseq = g_detail_d[li_idx].apebseq
+               END IF
+            END FOR
+            #end add-point
+ 
+         #取消所選資料
+         ON ACTION unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+               END IF
+            END FOR
+            #add-point:ui_dialog段on action unsel
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF DIALOG.isRowSelected("s_detail1", li_idx) THEN
+                  LET g_detail_d[li_idx].sel = "N"
+                  UPDATE aapp440_tmp 
+                     SET sel = g_detail_d[li_idx].sel
+                   WHERE apebdocno = g_detail_d[li_idx].apebdocno
+                     AND apebseq = g_detail_d[li_idx].apebseq
+               END IF
+            END FOR
+            #end add-point
+      
+         ON ACTION filter
+            LET g_action_choice="filter"
+            CALL aapp440_filter()
+            #add-point:ON ACTION filter
+            
+            #END add-point
+            EXIT DIALOG
+      
+         ON ACTION close
+            LET INT_FLAG=FALSE         
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+      
+         ON ACTION exit
+            LET g_action_choice="exit"
+            EXIT DIALOG
+ 
+         ON ACTION accept
+            #add-point:ui_dialog段accept之前
+            
+            #end add-point
+            CALL aapp440_query()
+             
+         # 條件清除
+         ON ACTION qbeclear
+            #add-point:ui_dialog段
+            CLEAR FORM
+            INITIALIZE g_input.* TO NULL
+            CALL aapp440_default()
+            CALL g_detail_d.clear()
+            #end add-point
+ 
+         # 重新整理
+         ON ACTION datarefresh
+            LET g_error_show = 1
+            #add-point:ui_dialog段datarefresh
+            
+            #end add-point
+            CALL aapp440_b_fill()
+ 
+         #add-point:ui_dialog段action
+         ON ACTION batch_execute
+            LET l_choice = FALSE
+            FOR li_idx = 1 TO g_detail_d.getLength()
+               IF g_detail_d[li_idx].sel = 'Y' THEN
+                  LET l_choice = TRUE
+               END IF
+            END FOR
+            #沒選取資料
+            IF NOT l_choice THEN
+                INITIALIZE g_errparam TO NULL
+                LET g_errparam.code = 'axr-00159'
+                LET g_errparam.extend = ''
+                LET g_errparam.popup = TRUE
+                CALL cl_err()
+            ELSE
+               CALL s_transaction_begin()
+               CALL cl_err_collect_init()
+               CALL aapp440_p() RETURNING g_sub_success
+               IF g_sub_success THEN
+                  CALL s_transaction_end('Y',0)
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'adz-00217'   #單據還原成功
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+               ELSE
+                  CALL s_transaction_end('N',0)
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'adz-00218'   #單據還原失敗
+                  LET g_errparam.extend = ''
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+               END IF
+               CALL cl_err_collect_show()
+            END IF
+            CALL aapp440_b_fill()
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+      
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         EXIT WHILE
+      END IF
+      
+   END WHILE
+ 
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp440.query" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION aapp440_query()
+   DEFINE ls_wc      STRING
+   DEFINE ls_return  STRING
+   DEFINE ls_result  STRING 
+   #add-point:query段define
+   
+   #end add-point 
+   #add-point:query段define
+   
+   #end add-point 
+    
+   #add-point:cs段after_construct
+   
+   #end add-point
+        
+   LET g_error_show = 1
+   CALL aapp440_b_fill()
+   LET l_ac = g_master_idx
+   IF g_detail_cnt = 0 AND NOT INT_FLAG THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = -100 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+ 
+   END IF
+   
+   #add-point:cs段after_query
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp440.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION aapp440_b_fill()
+ 
+   DEFINE ls_wc           STRING
+   #add-point:b_fill段define
+   DEFINE l_success             LIKE type_t.num5
+   #end add-point
+   #add-point:b_fill段define
+   
+   #end add-point
+ 
+   #add-point:b_fill段sql_before
+   IF cl_null(g_wc) THEN 
+      LET g_wc = " 1=1 "
+   END IF
+   
+   CALL aapp440_create_tmp() RETURNING l_success
+   DELETE FROM aapp440_tmp
+   
+   LET g_sql = "SELECT 'N',apebdocno,apeadocdt,apebseq,apeborga,'',",
+               "        apeb002,apeb031,apeb007,apeb008,apeb011,apeb012, ",
+               "        apeb100,apeb108,apeb101,apeb118 ",
+               "  FROM apea_t,apeb_t ",
+               " WHERE apeaent = ? ",
+               "   AND apeaent = apebent ",
+               "   AND apeadocno = apebdocno ",
+               "   AND apeasite='",g_input.apeasite,"'",
+               "   AND apeacomp='",g_input.apeacomp,"'",
+               "   AND apea019=",g_input.apea019,
+               "   AND apea020=",g_input.apea020,
+               "   AND apeastus = 'Y' ",
+               "   AND apebdocno||apebseq  NOT IN (SELECT apce049||apce050 FROM apce_t ",
+               "                                       WHERE apceent=",g_enterprise," AND apceld='",g_ld,"'",
+               "                                         AND apce049 IS NOT NULL AND apce050 IS NOT NULL ",
+               "                                )",
+               "   AND ",g_wc,
+               " ORDER BY apebdocno,apeadocdt,apebseq"
+   #end add-point
+ 
+   PREPARE aapp440_sel FROM g_sql
+   DECLARE b_fill_curs CURSOR FOR aapp440_sel
+   
+   CALL g_detail_d.clear()
+   #add-point:b_fill段其他頁簽清空
+
+
+
+   #end add-point
+ 
+   LET g_cnt = l_ac
+   LET l_ac = 1   
+   ERROR "Searching!" 
+ 
+   FOREACH b_fill_curs USING g_enterprise INTO 
+   #add-point:b_fill段foreach_into
+   g_detail_d[l_ac].*
+   #end add-point
+   
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      #add-point:b_fill段資料填充
+      INSERT INTO aapp440_tmp VALUES(g_detail_d[l_ac].*)
+      #end add-point
+      
+      CALL aapp440_detail_show()      
+ 
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         IF g_error_show = 1 THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend =  "" 
+            LET g_errparam.code   =  9035 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+ 
+         END IF
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   LET g_error_show = 0
+   
+   #add-point:b_fill段資料填充(其他單身)
+   CALL g_detail_d.deleteElement(g_detail_d.getLength())
+   #end add-point
+    
+   LET g_detail_cnt = l_ac - 1 
+   DISPLAY g_detail_cnt TO FORMONLY.h_count
+   LET l_ac = g_cnt
+   LET g_cnt = 0
+   
+   CLOSE b_fill_curs
+   FREE aapp440_sel
+   
+   LET l_ac = 1
+   CALL aapp440_fetch()
+   #add-point:b_fill段資料填充(其他單身)
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp440.fetch" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION aapp440_fetch()
+ 
+   DEFINE li_ac           LIKE type_t.num10
+   #add-point:fetch段define
+   
+   #end add-point
+   #add-point:fetch段define
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   #add-point:單身填充後
+   
+   #end add-point 
+   
+   LET l_ac = li_ac
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp440.detail_show" >}
+#+ 顯示相關資料
+PRIVATE FUNCTION aapp440_detail_show()
+   #add-point:show段define
+   
+   #end add-point
+   #add-point:show段define
+   
+   #end add-point
+   
+   #add-point:detail_show段
+   
+   #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp440.filter" >}
+#+ filter過濾功能
+PRIVATE FUNCTION aapp440_filter()
+   #add-point:filter段define
+   
+   #end add-point    
+   #add-point:filter段define
+   
+   #end add-point    
+   
+   DISPLAY ARRAY g_detail_d TO s_detail1.* ATTRIBUTE(COUNT=g_detail_cnt)
+      ON UPDATE
+ 
+   END DISPLAY
+ 
+   LET l_ac = 1
+   LET g_detail_cnt = 1
+   #add-point:filter段define
+   
+   #end add-point    
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter
+   LET g_wc_t = g_wc
+   
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter, '')
+   
+   CALL aapp440_b_fill()
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp440.filter_parser" >}
+#+ filter欄位解析
+PRIVATE FUNCTION aapp440_filter_parser(ps_field)
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define
+   
+   #end add-point    
+   #add-point:filter段define
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp440.filter_show" >}
+#+ Browser標題欄位顯示搜尋條件
+PRIVATE FUNCTION aapp440_filter_show(ps_field,ps_object)
+   DEFINE ps_field         STRING
+   DEFINE ps_object        STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.", ps_object
+ 
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = aapp440_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapp440.other_function" readonly="Y" >}
+#add-point:自定義元件(Function)
+# 發票代碼顯示與隱藏
+PRIVATE FUNCTION aapp440_visible()
+   DEFINE l_isai002     LIKE isai_t.isai002
+   
+   SELECT isai002 INTO l_isai002
+     FROM ooef_t
+     LEFT JOIN isai_t ON ooefent = isaient AND ooef019 = isai001
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_input.apeacomp
+   IF l_isai002 = "1" THEN
+      CALL cl_set_comp_visible('b_apeb007',FALSE)
+   ELSE
+      CALL cl_set_comp_visible('b_apeb007',TRUE)
+   END IF
+END FUNCTION
+# 賦默認值
+PRIVATE FUNCTION aapp440_default()
+   DEFINE l_sql            STRING
+   
+   LET g_input.apeasite = g_site
+   LET g_input.apeasite_desc = s_desc_get_department_desc(g_input.apeasite)
+   DISPLAY BY NAME g_input.apeasite_desc
+   CALL s_fin_orga_get_comp_ld(g_input.apeasite) RETURNING g_sub_success,g_errno,g_input.apeacomp,g_ld
+   LET g_input.apeacomp_desc = s_desc_get_department_desc(g_input.apeacomp)
+   DISPLAY BY NAME g_input.apeacomp_desc
+   LET g_input.apea019 = YEAR(g_today)
+   LET g_input.apea020 = MONTH(g_today)
+   LET g_input.type = '1'
+   LET g_input.apdasite = g_site
+   LET g_input.apdasite_desc = s_desc_get_department_desc(g_input.apdasite)
+   DISPLAY BY NAME g_input.apdasite_desc
+   CALL s_fin_orga_get_comp_ld(g_input.apdasite) RETURNING g_sub_success,g_errno,g_comp,g_ld
+   CALL s_ld_sel_glaa(g_ld,'glaa024') RETURNING g_sub_success,g_glaa024 
+   CALL cl_get_para(g_enterprise,g_comp,'S-FIN-3007') RETURNING g_sfin3007     
+   LET g_input.apda003 = g_user
+   LET g_input.apda003_desc = s_desc_get_person_desc(g_input.apda003)
+   DISPLAY BY NAME g_input.apda003_desc
+   LET g_input.apdadocdt = g_today
+   
+   CALL aapp440_get_docno() RETURNING g_input.apdadocno
+END FUNCTION
+# 抓取默認單別
+PRIVATE FUNCTION aapp440_get_docno()
+   DEFINE l_sql            STRING
+   DEFINE r_docno          LIKE apda_t.apdadocno
+
+   LET r_docno = ''
+   LET l_sql = "SELECT DISTINCT ooba002 ",
+               "  FROM ooba_t ",
+               "  LEFT OUTER JOIN ooac_t ",
+               "    ON ooacent = oobaent ",
+               "   AND ooac001 = ooba001 ",
+               "   AND ooac002 = ooba002 ",
+               " WHERE oobaent = ",g_enterprise,
+               "   AND ooba002 IN (SELECT oobl001 ",
+               "                     FROM oobl_t ",
+               "                    WHERE ooblent = ",g_enterprise,
+               "                      AND oobl002 = 'aapt420')",
+               "   AND oobastus = 'Y' ",
+               "   AND ooba001 = '",g_glaa024,"'",
+               " ORDER BY ooba002 "
+   PREPARE ooba_pre1 FROM l_sql
+   DECLARE ooba_cur1 SCROLL CURSOR WITH HOLD FOR ooba_pre1
+   OPEN ooba_cur1
+   FETCH FIRST ooba_cur1 INTO r_docno
+   CLOSE ooba_cur1
+   
+   RETURN r_docno
+END FUNCTION
+# 創建臨時表
+PRIVATE FUNCTION aapp440_create_tmp()
+   DEFINE r_success       LIKE type_t.num5
+   
+   WHENEVER ERROR CONTINUE
+   LET r_success = FALSE
+   
+   DROP TABLE aapp440_tmp;
+   CREATE TEMP TABLE aapp440_tmp(
+      sel                 LIKE type_t.chr1,
+      apebdocno           LIKE apeb_t.apebdocno,
+      apeadocdt           LIKE apea_t.apeadocdt,
+      apebseq             LIKE apeb_t.apebseq,
+      apeborga            LIKE apeb_t.apeborga,
+      apeborga_desc       LIKE type_t.chr80,
+      apeb002             LIKE apeb_t.apeb002,
+      apeb031             LIKE apeb_t.apeb031,
+      apeb007             LIKE apeb_t.apeb007,
+      apeb008             LIKE apeb_t.apeb008,
+      apeb011             LIKE apeb_t.apeb011,
+      apeb012             LIKE apeb_t.apeb012,
+      apeb100             LIKE apeb_t.apeb100,
+      apeb108             LIKE apeb_t.apeb108,
+      apeb101             LIKE apeb_t.apeb101,
+      apeb118             LIKE apeb_t.apeb118
+   );
+   
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "create" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      
+      RETURN r_success
+   END IF
+   
+   LET r_success = TRUE
+   RETURN r_success
+END FUNCTION
+# 批處理邏輯
+PRIVATE FUNCTION aapp440_p()
+   DEFINE l_sql               STRING
+   DEFINE l_apebdocno         LIKE apeb_t.apebdocno
+   DEFINE l_apeb031           LIKE apeb_t.apeb031
+   DEFINE l_apea005           LIKE apea_t.apea005
+   DEFINE l_apeadocdt         LIKE apea_t.apeadocdt
+   DEFINE l_apda              RECORD LIKE apda_t.*
+   DEFINE l_success           LIKE type_t.num5
+   DEFINE r_success           LIKE type_t.num5
+   DEFINE l_glaa121           LIKE glaa_t.glaa121
+   DEFINE l_ap_slip           LIKE apda_t.apdadocno
+   DEFINE l_dfin0030          LIKE type_t.chr1
+   DEFINE l_apce109_c         LIKE apce_t.apce109
+   DEFINE l_apce119_c         LIKE apce_t.apce119
+   DEFINE l_apce129_c         LIKE apce_t.apce129
+   DEFINE l_apce139_c         LIKE apce_t.apce139
+   
+   LET r_success = TRUE
+   
+   IF g_input.type = '1' THEN    #依請款單號產生 
+      LET l_sql = "SELECT DISTINCT apebdocno,apeb031,apea005,apeadocdt FROM apea_t,apeb_t "
+   END IF
+   
+   IF g_input.type = '2' THEN    #依付款到期日＋付款對象合併產生 
+      LET l_sql = "SELECT DISTINCT '',apeb031,apea005,apeadocdt FROM apea_t,apeb_t "
+   END IF
+   
+   IF g_input.type = '3' THEN    #依付款對象產生 
+      LET l_sql = "SELECT DISTINCT '','',apea005,apeadocdt FROM apea_t,apeb_t "
+   END IF
+   
+   LET l_sql = l_sql," WHERE apeaent = ",g_enterprise,
+                     "   AND apeaent=apebent AND apeadocno=apebdocno",
+                     "   AND apebdocno||apebseq IN (SELECT apebdocno||apebseq FROM aapp440_tmp WHERE sel = 'Y')"
+                     
+   PREPARE aapp440_pre FROM l_sql
+   DECLARE aapp440_cs CURSOR FOR aapp440_pre
+   
+   SELECT glaa121 INTO l_glaa121 FROM glaa_t WHERE glaaent=g_enterprise AND glaald=g_ld
+   
+   FOREACH aapp440_cs INTO l_apebdocno,l_apeb031,l_apea005,l_apeadocdt
+      IF cl_null(g_input.apdadocdt) THEN 
+         LET g_input.apdadocdt = l_apeadocdt
+      END IF
+   
+      LET l_apda.apdaent   = g_enterprise
+      LET l_apda.apdacomp  = g_comp
+      LET l_apda.apdald    = g_ld
+      LET l_apda.apdadocdt = g_input.apdadocdt
+      LET l_apda.apdasite  = g_input.apdasite
+      LET l_apda.apda001   = '45'
+      LET l_apda.apda003   = g_input.apda003
+      LET l_apda.apda004   = ''	         
+      LET l_apda.apda005   = l_apea005
+      LET l_apda.apda006   = ''
+      LET l_apda.apda007   = '0'
+      LET l_apda.apda013   = 'Y'
+      LET l_apda.apda016	= 0
+      #LET l_apda.apda113 =sum(本單之apce119)	#應核銷本幣金額
+      LET l_apda.apda123   =0	           
+      LET l_apda.apda133   =0	        
+      LET l_apda.apdastus  ='N'
+      LET l_apda.apdaownid = g_user
+      LET l_apda.apdaowndp = g_dept
+      LET l_apda.apdacrtid = g_user
+      LET l_apda.apdacrtdp = g_dept
+      LET l_apda.apdacrtdt = cl_get_current()
+      
+      CALL s_aooi200_fin_gen_docno(l_apda.apdald,'','',g_input.apdadocno,l_apda.apdadocdt,'aapt420')
+           RETURNING g_sub_success,l_apda.apdadocno
+      IF g_sub_success  = 0  THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'apm-00003'
+         LET g_errparam.extend = l_apda.apdadocno
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+       
+         LET r_success = FALSE
+      END IF
+      
+      INSERT INTO apda_t VALUES(l_apda.*)
+      
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'insert into apda_t'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         CONTINUE FOREACH
+      END IF
+      #账款单身资料
+      CALL aapp440_ins_apce(l_apda.apdadocno,l_apda.apdald,l_apebdocno,l_apeb031,l_apea005) RETURNING l_success
+      IF l_success = FALSE THEN
+         LET r_success = FALSE
+      END IF
+      #付款单身资料
+      CALL aapp440_ins_apde(l_apda.apdadocno,l_apda.apdald) RETURNING l_success
+      IF l_success = FALSE THEN
+         LET r_success = FALSE
+      END IF
+      
+      #更新单头金额
+      #借方金额
+      SELECT SUM(apce109),SUM(apce119),SUM(apce129),SUM(apce139) 
+        INTO l_apda.apda104,l_apda.apda114,l_apda.apda124,l_apda.apda134
+      FROM apce_t
+      WHERE apceent=g_enterprise AND apceld=l_apda.apdald 
+        AND apcedocno=l_apda.apdadocno AND apce015='D'
+      IF cl_null(l_apda.apda104) THEN LET l_apda.apda104=0 END IF
+      IF cl_null(l_apda.apda114) THEN LET l_apda.apda114=0 END IF
+      IF cl_null(l_apda.apda124) THEN LET l_apda.apda124=0 END IF
+      IF cl_null(l_apda.apda134) THEN LET l_apda.apda134=0 END IF
+      
+      #付款单身贷方金额
+      SELECT SUM(apde109),SUM(apde119),SUM(apde129),SUM(apde139)
+        INTO l_apda.apda105,l_apda.apda115,l_apda.apda125,l_apda.apda135
+      FROM apde_t
+      WHERE apdeent=g_enterprise AND apdeld=l_apda.apdald 
+        AND apdedocno=l_apda.apdadocno AND apde015='C'
+      IF cl_null(l_apda.apda105) THEN LET l_apda.apda105=0 END IF
+      IF cl_null(l_apda.apda115) THEN LET l_apda.apda115=0 END IF
+      IF cl_null(l_apda.apda125) THEN LET l_apda.apda125=0 END IF
+      IF cl_null(l_apda.apda135) THEN LET l_apda.apda135=0 END IF
+      
+      #账款资料的贷方金额
+      SELECT SUM(apce109),SUM(apce119),SUM(apce129),SUM(apce139) 
+        INTO l_apce109_c,l_apce119_c,l_apce129_c,l_apce139_c
+      FROM apce_t
+      WHERE apceent=g_enterprise AND apceld=l_apda.apdald 
+        AND apcedocno=l_apda.apdadocno AND apce015='C'
+      IF cl_null(l_apce109_c) THEN LET l_apce109_c=0 END IF
+      IF cl_null(l_apce119_c) THEN LET l_apce119_c=0 END IF
+      IF cl_null(l_apce129_c) THEN LET l_apce129_c=0 END IF
+      IF cl_null(l_apce139_c) THEN LET l_apce139_c=0 END IF
+      #贷方金额
+      LET l_apda.apda105 = l_apda.apda105 + l_apce109_c
+      LET l_apda.apda115 = l_apda.apda115 + l_apce119_c
+      LET l_apda.apda125 = l_apda.apda125 + l_apce129_c
+      LET l_apda.apda135 = l_apda.apda135 + l_apce139_c
+      
+      #應核銷本幣金額LET apda113 =sum(本單之apce109)	#應核銷本幣金額
+      LET l_apda.apda113 = l_apda.apda114 + l_apce119_c
+      LET l_apda.apda123 = l_apda.apda124 + l_apce129_c
+      LET l_apda.apda133 = l_apda.apda134 + l_apce139_c
+      
+      UPDATE apda_t SET apda113=l_apda.apda113,
+                        apda123=l_apda.apda123,
+                        apda133=l_apda.apda133,
+                        apda104=l_apda.apda104,
+                        apda114=l_apda.apda114,
+                        apda124=l_apda.apda124,
+                        apda134=l_apda.apda134,
+                        apda105=l_apda.apda105,
+                        apda115=l_apda.apda115,
+                        apda125=l_apda.apda125,
+                        apda135=l_apda.apda135
+      WHERE apdaent=g_enterprise AND apdald=l_apda.apdald AND apdadocno=l_apda.apdadocno
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'update apda_t'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+      END IF
+      
+      #产生分录底稿
+      IF r_success =TRUE THEN
+         CALL s_aooi200_fin_get_slip(l_apda.apdadocno) RETURNING l_success,l_ap_slip               
+         CALL s_fin_get_doc_para(l_apda.apdald,l_apda.apdadocno,l_ap_slip,'D-FIN-0030') RETURNING l_dfin0030
+         IF l_glaa121 = 'Y' AND l_dfin0030 = 'Y'THEN
+            CALL s_pre_voucher_ins('AP','P20',l_apda.apdald,l_apda.apdadocno,l_apda.apdadocdt,'2')
+            RETURNING l_success
+            IF l_success = FALSE THEN 
+               LET r_success = FALSE
+            END IF
+         END IF
+      END IF
+   END FOREACH
+   
+   RETURN r_success
+END FUNCTION
+# 插入账款单身
+PRIVATE FUNCTION aapp440_ins_apce(p_apdadocno,p_apdald,p_apebdocno,p_apeb031,p_apea005)
+   DEFINE p_apdadocno             LIKE apda_t.apdadocno
+   DEFINE p_apdald                LIKE apda_t.apdald
+   DEFINE p_apebdocno             LIKE apeb_t.apebdocno
+   DEFINE p_apeb031               LIKE apeb_t.apeb031
+   DEFINE p_apea005               LIKE apea_t.apea005
+   DEFINE l_apeb                  RECORD LIKE apeb_t.*
+   DEFINE l_apce                  RECORD LIKE apce_t.*
+   DEFINE l_apda                  RECORD LIKE apda_t.*
+   DEFINE l_sql                   STRING
+   DEFINE r_success               LIKE type_t.num5
+   DEFINE l_cnt                   LIKE type_t.num5
+   DEFINE l_glaa                  RECORD LIKE glaa_t.*
+   DEFINE l_success               LIKE type_t.num5
+   DEFINE l_rate                  LIKE apce_t.apce101
+   DEFINE ls_js                   STRING
+   DEFINE lc_param                RECORD
+            apca004               LIKE apca_t.apca004
+                   END RECORD
+   
+   LET r_success = TRUE
+   
+   SELECT * INTO l_apda.* FROM apda_t WHERE apdaent = g_enterprise AND apdald = p_apdald AND apdadocno = p_apdadocno
+   
+   LET l_sql = "SELECT apeb_t.* FROM apea_t,apeb_t ",
+               " WHERE apebent = ",g_enterprise,
+               "   AND apeaent = apebent ",
+               "   AND apeadocno = apebdocno "
+   
+   IF g_input.type = '1' THEN    #依請款單號產生 
+      LET l_sql = l_sql," AND apebdocno = '",p_apebdocno,"'"
+   END IF
+   
+   IF g_input.type = '2' THEN    #依付款到期日＋付款對象合併產生 
+      LET l_sql = l_sql," AND apeb031 = '",p_apeb031,"'",
+                        " AND apea005 = '",p_apea005,"'"
+   END IF
+   
+   IF g_input.type = '3' THEN    #依付款對象產生 
+      LET l_sql = l_sql," AND apea005 = '",p_apea005,"'"
+   END IF
+   LET l_sql=l_sql," AND apebdocno||apebseq IN (SELECT apebdocno||apebseq FROM aapp440_tmp WHERE sel = 'Y')"
+   PREPARE aapp440_apce_pre FROM l_sql
+   DECLARE aapp440_apce_cs CURSOR FOR aapp440_apce_pre
+   
+   INITIALIZE l_apce.* TO NULL
+   LET l_apce.apceent   = g_enterprise
+   LET l_apce.apcecomp  = l_apda.apdacomp
+   LET l_apce.apcelegl  = ''
+   LET l_apce.apcesite  = l_apda.apdasite 
+   LET l_apce.apceld    = l_apda.apdald
+   LET l_apce.apcedocno = p_apdadocno
+   LET l_apce.apce001   = 'aapt420'	 
+   LET l_apce.apce104   = 0
+   LET l_apce.apce114   = 0
+   LET l_apce.apce124   = 0
+   LET l_apce.apce134   = 0
+   
+   SELECT * INTO l_glaa.* FROM glaa_t WHERE glaaent=g_enterprise AND glaald=p_apdald
+   
+   FOREACH aapp440_apce_cs INTO l_apeb.*
+   
+      LET l_apce.apceorga  = l_apeb.apeborga
+      SELECT MAX(apceseq)+1 INTO l_apce.apceseq
+        FROM apce_t
+       WHERE apceent = g_enterprise
+         AND apceld = l_apce.apceld
+         AND apcedocno = l_apce.apcedocno
+      IF cl_null(l_apce.apceseq) THEN
+         LET l_apce.apceseq = 1
+      END IF
+      
+      LET l_apce.apce003 = l_apeb.apeb003
+      LET l_apce.apce004 = l_apeb.apeb004
+      LET l_apce.apce005 = l_apeb.apeb005
+      LET l_apce.apce016 = l_apeb.apeb016
+      
+      #業務人員/業務部門
+      SELECT apca014,apca015 INTO l_apce.apce017,l_apce.apce018
+        FROM apca_t
+       WHERE apcaent = g_enterprise
+         AND apcald = l_apce.apceld
+         AND apcadocno = l_apce.apce003
+         
+      #應付款日/#付款(票)到期日
+      SELECT apcc003,apcc004 INTO l_apce.apce031,l_apce.apce032
+        FROM apcc_t
+       WHERE apccent = g_enterprise
+         AND apccdocno = l_apce.apce003
+         AND apccseq = l_apce.apce004
+         AND apcc001 = l_apce.apce005         
+
+      LET l_apce.apce038 = l_apeb.apeb013	
+      LET l_apce.apce047 = l_apeb.apeb007	
+      LET l_apce.apce048 = l_apeb.apeb008	
+      LET l_apce.apce049 = l_apeb.apebdocno
+      LET l_apce.apce050 = l_apeb.apebseq
+      LET l_apce.apce100 = l_apeb.apeb100	
+      LET l_apce.apce101 = l_apeb.apeb101	
+      IF l_apeb.apeb108 < 0 THEN
+         LET l_apce.apce002   = '41'  
+         LET l_apce.apce109 = l_apeb.apeb108 * -1
+         LET l_apce.apce119 = l_apeb.apeb118 * -1
+      ELSE
+         LET l_apce.apce002   = '40'  
+         LET l_apce.apce109 = l_apeb.apeb108
+         LET l_apce.apce119 = l_apeb.apeb118
+      END IF
+      
+      #借贷别apeb015
+      LET l_apce.apce015 = s_fin_get_scc_value('8506',l_apce.apce002,'1')
+      
+      #抓取本位币二三汇率
+      LET lc_param.apca004 = l_apda.apda005
+      LET ls_js = util.JSON.stringify(lc_param)
+      CALL s_fin_get_curr_rate(l_apda.apdacomp,l_apda.apdald,l_apda.apdadocdt,l_apce.apce100,ls_js)
+           RETURNING l_rate,l_apce.apce121,l_apce.apce131
+      #本位币二
+      IF l_glaa.glaa015='Y' THEN
+         LET l_apce.apce120 = l_glaa.glaa016
+         IF l_glaa.glaa017='1' THEN
+            LET l_apce.apce129 = l_apce.apce109 * l_apce.apce121
+         ELSE
+            LET l_apce.apce129 = l_apce.apce119 * l_apce.apce121
+         END IF
+         CALL s_curr_round_ld('1',l_apce.apceld,l_apce.apce120,l_apce.apce129,2) 
+         RETURNING l_success,g_errno,l_apce.apce129
+      ELSE
+         LET l_apce.apce121 = 0
+         LET l_apce.apce129 = 0
+      END IF
+      #本位币三
+      IF l_glaa.glaa019='Y' THEN
+         LET l_apce.apce130 = l_glaa.glaa020
+         IF l_glaa.glaa020='1' THEN
+            LET l_apce.apce139 = l_apce.apce109 * l_apce.apce131
+         ELSE
+            LET l_apce.apce139 = l_apce.apce119 * l_apce.apce131
+         END IF
+         CALL s_curr_round_ld('1',l_apce.apceld,l_apce.apce130,l_apce.apce139,2) 
+         RETURNING l_success,g_errno,l_apce.apce139
+      ELSE
+         LET l_apce.apce131 = 0
+         LET l_apce.apce139 = 0
+      END IF
+      
+      INSERT INTO apce_t VALUES(l_apce.*)
+      
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.extend = 'insert into apce_t'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+      END IF      
+   END FOREACH 
+   
+   #账款单身是否有资料
+   LET l_cnt = 0
+   SELECT COUNT(*) INTO l_cnt FROM apce_t 
+    WHERE apceent=g_enterprise AND apceld=p_apdald AND apcedocno=p_apdadocno
+   IF l_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'aap-00422'
+      LET g_errparam.extend = p_apdadocno
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+      LET r_success = FALSE
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+# 插入付款单身
+PRIVATE FUNCTION aapp440_ins_apde(p_apdadocno,p_apdald)
+   DEFINE p_apdadocno             LIKE apda_t.apdadocno
+   DEFINE p_apdald                LIKE apda_t.apdald
+   DEFINE p_apebdocno             LIKE apeb_t.apebdocno
+   DEFINE p_apeb031               LIKE apeb_t.apeb031
+   DEFINE p_apea005               LIKE apea_t.apea005
+   DEFINE l_apda                  RECORD LIKE apda_t.*
+   DEFINE l_apde                  RECORD LIKE apde_t.*
+   DEFINE l_nmck                  RECORD LIKE nmck_t.*
+   DEFINE l_nmcl                  RECORD LIKE nmcl_t.*
+   DEFINE l_apce050               LIKE apce_t.apce050
+   DEFINE l_glaa015               LIKE glaa_t.glaa015
+   DEFINE l_glaa016               LIKE glaa_t.glaa016
+   DEFINE l_glaa019               LIKE glaa_t.glaa019
+   DEFINE l_glaa020               LIKE glaa_t.glaa020
+   DEFINE l_sql                   STRING
+   DEFINE r_success               LIKE type_t.num5
+   DEFINE l_cnt                   LIKE type_t.num5
+   
+   LET r_success = TRUE
+   
+   SELECT * INTO l_apda.* FROM apda_t WHERE apdaent = g_enterprise AND apdald = p_apdald AND apdadocno = p_apdadocno
+   SELECT glaa015,glaa016,glaa019,glaa020 INTO l_glaa015,l_glaa016,l_glaa019,l_glaa020
+   FROM glaa_t WHERE glaaent=g_enterprise AND glaald=p_apdald
+   INITIALIZE l_apde.* TO NULL
+   LET l_apde.apdeent = g_enterprise         # 企業編號
+   LET l_apde.apdecomp = l_apda.apdacomp	   #  法人
+   LET l_apde.apdeld	= l_apda.apdald	      #  帳套
+   LET l_apde.apdedocno = l_apda.apdadocno	#  沖銷單單號
+   LET l_apde.apdesite = l_apda.apdasite	   #  帳務中心
+   LET l_apde.apde001 = 'aapt420' 	         #  來源作業
+   LET l_apde.apde002 = '10'	               #  沖銷帳款類型
+   
+   LET l_sql="SELECT DISTINCT nmcldocno,nmcl001 ",
+             "  FROM apce_t,nmcl_t",
+             " WHERE apceent=nmclent AND apce049=nmcl001 AND apce050=nmcl002 ",
+             "   AND apceent=",g_enterprise," AND apceld='",p_apdald,"'",
+             "   AND apcedocno='",p_apdadocno,"'",
+             "   AND nmclcomp='",l_apda.apdacomp,"'",
+             " ORDER BY nmcldocno,nmcl001"
+   PREPARE aapp440_sel_pre FROM l_sql
+   DECLARE aapp440_sel_cs CURSOR FOR aapp440_sel_pre
+   
+   FOREACH aapp440_sel_cs INTO l_nmcl.nmcldocno,l_nmcl.nmcl001
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.extend = 'FOREACH aapp440_sel_cs'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+      END IF
+      #項次
+      SELECT MAX(apdeseq)+1 INTO l_apde.apdeseq
+        FROM apde_t
+       WHERE apdeent = g_enterprise
+         AND apdeld = l_apde.apdeld
+         AND apdedocno = l_apde.apdedocno
+      IF cl_null(l_apde.apdeseq) THEN
+         LET l_apde.apdeseq = 1
+      END IF
+      SELECT * INTO l_nmck.* FROM nmck_t
+       WHERE nmckent=g_enterprise AND nmckcomp=l_apda.apdacomp AND nmckdocno=l_nmcl.nmcldocno
+             
+      LET l_apde.apde003 = l_nmck.nmckdocno	  #已付款單號
+      LET l_apde.apde006 = l_nmck.nmck023	     #款別代碼
+      LET l_apde.apde021 = l_nmck.nmck002      #票据类型
+      #帳戶/票券號碼
+      #款别类别为10现金或20银行电汇款
+      IF l_apde.apde006 = '10' OR l_apde.apde006 = '20' THEN
+         LET l_apde.apde008 = l_nmck.nmck004 #帳戶
+         LET l_apde.apde024 = ''
+         #沖銷會科
+         SELECT DISTINCT glab005 INTO l_apde.apde016  #anmi121
+          FROM glab_t
+         WHERE glabent = g_enterprise
+           AND glabld  = l_apde.apdeld
+           AND glab001 = '40'
+           AND glab002 = '40'
+           AND glab003 = l_apde.apde008
+      END IF 
+      #款别类别为30票据
+      IF l_apde.apde006 = '30' THEN
+         LET l_apde.apde008 = ''
+         LET l_apde.apde024 = l_nmck.nmck025  #票券號碼
+         #沖銷會科
+         SELECT DISTINCT glab006 INTO l_apde.apde016  #agli190 
+           FROM glab_t
+          WHERE glabent = g_enterprise
+            AND glabld  = l_apde.apdeld
+            AND glab001 = '21'
+            AND glab002 = '30'
+            AND glab003 = l_apde.apde021
+      END IF
+      
+      LET l_apde.apde009 = 'Y'	             #已轉資料
+      LET l_apde.apde011 = l_nmck.nmck009	    #銀行存提碼
+      LET l_apde.apde012 = l_nmck.nmck010	    #現金變動碼
+      LET l_apde.apde015 = 'C'	             #沖銷加減項
+      LET l_apde.apde032 = l_nmck.nmck011	    #付款日
+      LET l_apde.apde039 = l_nmck.nmck013	    #受款銀行
+      LET l_apde.apde040 = l_nmck.nmck014	    #受款帳號
+      LET l_apde.apde041 = l_nmck.nmck015	    #受款人全名
+      LET l_apde.apde046 = l_nmcl.nmcl001	    #付款申請單
+      LET l_apde.apde047 = ''          	    #付款申請單項次
+      LET l_apde.apde100 = l_nmck.nmck100	    #幣別
+      LET l_apde.apde101 = l_nmck.nmck101	    #匯率
+      LET l_apde.apde104 = 0	                # 幣應稅折抵稅額
+      #沖帳金額, 依該單出現在應付匯款或票據的 單身的金額合計即為沖帳金額
+            #原幣沖帳金額 #本幣沖帳金額 #本位幣二沖帳金額 #本位幣三沖帳金額
+      SELECT SUM(nmcl103),SUM(nmcl113),SUM(nmcl123),SUM(nmcl133)
+        INTO l_apde.apde109,l_apde.apde119,l_apde.apde129,l_apde.apde139
+        FROM nmcl_t
+       WHERE nmclent=g_enterprise AND nmclcomp=l_apde.apdecomp
+         AND nmcldocno=l_nmcl.nmcldocno AND nmcl001=l_nmcl.nmcl001
+      #帳務歸屬組織   
+      SELECT DISTINCT nmclorga,nmcl121,nmcl131 
+        INTO l_apde.apdeorga,l_nmcl.nmcl121,l_nmcl.nmcl131
+        FROM nmcl_t
+       WHERE nmclent=g_enterprise AND nmclcomp=l_apde.apdecomp
+         AND nmcldocno=l_nmcl.nmcldocno AND nmcl001=l_nmcl.nmcl001
+         
+      IF l_glaa015 = 'Y' THEN
+         LET l_apde.apde120 = l_glaa016       #本位幣二幣別
+         LET l_apde.apde121 = l_nmcl.nmcl121  #本位幣二匯率
+      ELSE
+         LET l_apde.apde120 = ''              #本位幣二幣別
+         LET l_apde.apde121 = 0               #本位幣二匯率
+         LET l_apde.apde129 = 0               #本位幣二沖帳金額
+      END IF
+      IF l_glaa019 = 'Y' THEN
+         LET l_apde.apde130 = l_glaa020       #本位幣三幣別
+         LET l_apde.apde131 = l_nmcl.nmcl131  #本位幣三匯率
+      ELSE
+         LET l_apde.apde130 = ''              #本位幣三幣別
+         LET l_apde.apde131 = 0               #本位幣三匯率
+      END IF
+      INSERT INTO apde_t VALUES(l_apde.*)
+      
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.extend = 'insert into apde_t'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+      END IF
+   END FOREACH
+
+   #付款单身是否有资料
+#   LET l_cnt = 0
+#   SELECT COUNT(*) INTO l_cnt FROM apde_t 
+#    WHERE apdeent=g_enterprise AND apdeld=p_apdald AND apdedocno=p_apdadocno
+#   IF l_cnt = 0 THEN
+#      INITIALIZE g_errparam TO NULL
+#      LET g_errparam.code = 'aap-00423'
+#      LET g_errparam.extend = p_apdadocno
+#      LET g_errparam.popup = TRUE
+#      CALL cl_err()
+#      LET r_success = FALSE
+#   END IF
+   RETURN r_success
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

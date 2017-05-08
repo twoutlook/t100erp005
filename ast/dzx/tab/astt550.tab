@@ -1,0 +1,240 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astt550" module="ast" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="06189" crtdt="2015-05-20 16:41:29" modid="06540" moddt="2016-02-25 15:45:31" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="專櫃交款匯總單維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="steusite,steusite_desc(chr80),steudocnt,steudocno,steu002,steu002_desc(chr80),steu001,steu003,steu003_desc(chr80),steu004,steu005,stax004,steu006,steu007,steu010,steu000,steu008,steu009,steu011,steu012,steustus,steuownid,steuownid_desc(chr80),steuowndp,steuowndp_desc(chr80),steucrtid,steucrtid_desc(chr80),steucrtdp,steucrtdp_desc(chr80),steucrtdt,steumodid,steumodid_desc(chr80),steumoddt,steucnfid,steucnfid_desc(chr80),steucnfdt,steupstid,steupstid_desc(chr80),steupstdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="stevseq,stev001,stev002,stev003,stev004,stev024,stev024_desc(chr500),stev005,stev005_desc(chr500),stev006,stev007,stev008,stev008_desc(chr500),stev009,stev009_desc(chr500),stev010,stev011,stev012,stev013,stev014,stev015,stev016,stev028,stev029,stev018,stev017,stevsite,stevsite_desc(chr500),stev020,stev020_desc(chr500),stev019,stev019_desc(chr500),stev025,stev030"/>
+      <var id="bs_field" value="steusite,steusite_desc(chr80),steudocnt,steudocno,steu001,steu002,steu002_desc(chr80),steu003,steu003_desc(chr80),steu004,steu005,steu006,steu007,steu010,steu008,steu009,steu011,steu012" pk="steudocno" order=""/>
+      <bs_reference field="steusite_desc" ref_field="steusite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="steu002_desc" ref_field="steu002" ref_sql="SELECT mhael023 FROM mhael_t WHERE mhaelent=$varg_enterprise$var AND mhael001=? AND mhael022=$varg_dlang$var"/>
+      <bs_reference field="steu003_desc" ref_field="steu003" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="Batch_import"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="astt550" method="dialog">
+    <section id="input">
+      <input id="head" field="steusite,steudocnt,steudocno,steu002,steu001,steu003,steu004,steu005,steu006,steu007,steu010,steu000,steu008,steu009,steu011,steu012,steustus"/>
+      <input id="body" page="1" field="stevseq,stev001,stev002,stev003,stev004,stev024,stev005,stev006,stev007,stev008,stev009,stev009_desc,stev010,stev011,stev012,stev013,stev014,stev015,stev016,stev028,stev029,stev018,stev017,stevsite,stev020,stev019,stev025,stev030" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="steusite,steudocnt,steudocno,steu002,steu001,steu003,steu004,steu005,steu006,steu007,steu010,steu000,steu008,steu009,steu011,steu012,steustus,steuownid,steuowndp,steucrtid,steucrtdp,steucrtdt,steumodid,steumoddt,steucnfid,steucnfdt,steupstid,steupstdt"/>
+      <construct id="body" page="1" field="stevseq,stev001,stev002,stev003,stev004,stev024,stev005,stev006,stev007,stev008,stev009,stev009_desc,stev010,stev011,stev012,stev013,stev014,stev015,stev016,stev028,stev029,stev018,stev017,stevsite,stev020,stev019,stev025,stev030"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="steudocno"/>
+      <set id="head" type="no_entry" field="steudocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="steusite">
+        <after>
+          <reference field="steusite_desc" ref_field="steu_t.steusite" map_field="steuent,steusite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="steusite_desc"/>
+      <column id="steudocnt"/>
+      <column id="steudocno">
+        <controlp form="q_ooba002_1" state="i"/>
+      </column>
+      <column id="steu002">
+        <after>
+          <check chkid="v_mhae001" id="isExist"/>
+          <reference field="steu002_desc" ref_field="steu_t.steu002" map_field="steuent,steu002" ref_sql="SELECT mhael023 FROM mhael_t WHERE mhaelent=$varg_enterprise$var AND mhael001=? AND mhael022=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhae001" state="i"/>
+        <controlp form="q_mhae001" state="c"/>
+      </column>
+      <column id="steu002_desc"/>
+      <column id="steu001">
+        <controlp form="q_stfa001" state="i"/>
+        <controlp form="q_stfa001" state="c"/>
+      </column>
+      <column id="steu003">
+        <after>
+          <reference field="steu003_desc" ref_field="steu_t.steu003" map_field="steuent,steu003" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_10" state="i"/>
+        <controlp form="q_pmaa001_10" state="c"/>
+      </column>
+      <column id="steu003_desc"/>
+      <column id="steu004" def_scc="6013"/>
+      <column id="steu005">
+        <controlp form="q_steu005_01" state="i"/>
+        <controlp form="q_steu005_01" state="c"/>
+      </column>
+      <column id="stax004"/>
+      <column id="steu006"/>
+      <column id="steu007"/>
+      <column id="steu010" type="S" default="Y"/>
+      <column id="steu000"/>
+      <column id="steu008" type="S" default="1"/>
+      <column id="steu009" type="S" default="0"/>
+      <column id="steu011"/>
+      <column id="steu012"/>
+      <column id="steustus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="steuownid">
+        <after>
+          <reference field="steuownid_desc" ref_field="steu_t.steuownid" map_field="steuownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="steuownid_desc"/>
+      <column id="steuowndp">
+        <after>
+          <reference field="steuowndp_desc" ref_field="steu_t.steuowndp" map_field="steuowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="steuowndp_desc"/>
+      <column id="steucrtid">
+        <after>
+          <reference field="steucrtid_desc" ref_field="steu_t.steucrtid" map_field="steucrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="steucrtid_desc"/>
+      <column id="steucrtdp">
+        <after>
+          <reference field="steucrtdp_desc" ref_field="steu_t.steucrtdp" map_field="steucrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="steucrtdp_desc"/>
+      <column id="steucrtdt"/>
+      <column id="steumodid">
+        <after>
+          <reference field="steumodid_desc" ref_field="steu_t.steumodid" map_field="steumodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="steumodid_desc"/>
+      <column id="steumoddt"/>
+      <column id="steucnfid">
+        <after>
+          <reference field="steucnfid_desc" ref_field="steu_t.steucnfid" map_field="steucnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="steucnfid_desc"/>
+      <column id="steucnfdt"/>
+      <column id="steupstid">
+        <after>
+          <reference field="steupstid_desc" ref_field="steu_t.steupstid" map_field="steupstid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="steupstid_desc"/>
+      <column id="steupstdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="stevseq"/>
+      <column id="stev001" def_scc="6703"/>
+      <column id="stev002">
+        <controlp form="q_stbc004_01" state="i"/>
+        <controlp form="q_stbc004_01" state="c"/>
+      </column>
+      <column id="stev003"/>
+      <column id="stev004"/>
+      <column id="stev024">
+        <after>
+          <reference field="stev024_desc" ref_field="stev_t.stev024" map_field="stevent,stev024" ref_sql="SELECT mhael023 FROM mhael_t WHERE mhaelent=$varg_enterprise$var AND mhael001=? AND mhael022=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mhae001" state="c"/>
+      </column>
+      <column id="stev024_desc"/>
+      <column id="stev005">
+        <after>
+          <reference field="stev005_desc" ref_field="stev_t.stev005" map_field="stevent,stev005" ref_sql="SELECT stael003 FROM stael_t WHERE staelent=$varg_enterprise$var AND stael001=? AND stael002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_stad001" state="c"/>
+      </column>
+      <column id="stev005_desc"/>
+      <column id="stev006"/>
+      <column id="stev007"/>
+      <column id="stev008">
+        <after>
+          <reference field="stev008_desc" ref_field="stev_t.stev008" map_field="stevent,stev008" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_aooi001_1" state="c"/>
+      </column>
+      <column id="stev008_desc"/>
+      <column id="stev009">
+        <after/>
+        <controlp form="q_oodb002" state="c"/>
+      </column>
+      <column id="stev009_desc"/>
+      <column id="stev010" def_scc="6006"/>
+      <column id="stev011"/>
+      <column id="stev012" type="S" default="0"/>
+      <column id="stev013" type="S" default="0"/>
+      <column id="stev014" type="S" default="0"/>
+      <column id="stev015" type="S" default="0"/>
+      <column id="stev016" type="S" default="0"/>
+      <column id="stev028" type="S" default="0"/>
+      <column id="stev029" type="S" default="0"/>
+      <column id="stev018">
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="stev017">
+        <controlp form="q_staa001" state="c"/>
+      </column>
+      <column id="stevsite">
+        <after>
+          <reference field="stevsite_desc" ref_field="stev_t.stevsite" map_field="stevent,stevsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="stevsite_desc"/>
+      <column id="stev020">
+        <after>
+          <reference field="stev020_desc" ref_field="stev_t.stev020" map_field="stevent,stev020" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="stev020_desc"/>
+      <column id="stev019">
+        <after>
+          <reference field="stev019_desc" ref_field="stev_t.stev019" map_field="stevent,stev019" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="stev019_desc"/>
+      <column id="stev025" type="S" default="0"/>
+      <column id="stev030"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="steu_t" pk="steudocno">
+      <sql id="forupd_sql" type="sql" query="SELECT steusite,&apos;&apos;,steudocnt,steudocno,steu002,&apos;&apos;,steu001,steu003,&apos;&apos;,steu004,steu005,&apos;&apos;,steu006,steu007,steu010,steu000,steu008,steu009,steu011,steu012,steustus,steuownid,&apos;&apos;,steuowndp,&apos;&apos;,steucrtid,&apos;&apos;,steucrtdp,&apos;&apos;,steucrtdt,steumodid,&apos;&apos;,steumoddt,steucnfid,&apos;&apos;,steucnfdt,steupstid,&apos;&apos;,steupstdt FROM steu_t WHERE steuent= ? AND steudocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT steusite,&apos;&apos;,steudocnt,steudocno,steu002,&apos;&apos;,steu001,steu003,&apos;&apos;,steu004,steu005,&apos;&apos;,steu006,steu007,steu010,steu000,steu008,steu009,steu011,steu012,steustus,steuownid,&apos;&apos;,steuowndp,&apos;&apos;,steucrtid,&apos;&apos;,steucrtdp,&apos;&apos;,steucrtdt,steumodid,&apos;&apos;,steumoddt,steucnfid,&apos;&apos;,steucnfdt,steupstid,&apos;&apos;,steupstdt FROM steu_t" order="steudocno"/>
+    </head>
+    <body id="stev_t" page="1" linked="" pk="stevseq" fk="stevdocno">
+      <sql id="forupd_sql_detail" query="SELECT stevseq,stev001,stev002,stev003,stev004,stev024,&apos;&apos;,stev005,&apos;&apos;,stev006,stev007,stev008,&apos;&apos;,stev009,&apos;&apos;,stev010,stev011,stev012,stev013,stev014,stev015,stev016,stev028,stev029,stev018,stev017,stevsite,&apos;&apos;,stev020,&apos;&apos;,stev019,&apos;&apos;,stev025,stev030 FROM stev_t WHERE stevent=? AND stevdocno=? AND stevseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT stevseq,stev001,stev002,stev003,stev004,stev024,&apos;&apos;,stev005,&apos;&apos;,stev006,stev007,stev008,&apos;&apos;,stev009,&apos;&apos;,stev010,stev011,stev012,stev013,stev014,stev015,stev016,stev028,stev029,stev018,stev017,stevsite,&apos;&apos;,stev020,&apos;&apos;,stev019,&apos;&apos;,stev025,stev030 FROM stev_t WHERE stevent=? AND stevdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,592 @@
+<add_points prog="axrt300_03" std_prog="axrt300_03" erpver="1.0" module="AXR" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="input.a.xrca011" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            CALL axrt300_03_xrca011_desc()
+            IF NOT cl_null(g_xrca_m.xrca011) THEN 
+               IF NOT ap_chk_isExist(g_xrca_m.xrca011,"SELECT COUNT(*) FROM oodb_t,ooef_t WHERE ooefent = oodbent AND ooef019 = oodb001 AND oodbent = '" ||g_enterprise|| "' AND ooef001 = '"||g_xrca.xrcacomp||"' AND oodb002 = ? ",'aoo-00222',1) THEN 
+                  LET g_xrca_m.xrca011 = g_xrca_m_t.xrca011 
+                  NEXT FIELD CURRENT
+               END IF     
+               IF NOT ap_chk_isExist(g_xrca_m.xrca011,"SELECT COUNT(*) FROM oodb_t,ooef_t WHERE ooefent = oodbent AND ooef019 = oodb001 AND oodbent = '" ||g_enterprise|| "' AND ooef001 = '"||g_xrca.xrcacomp||"' AND oodb002 = ? AND oodbstus = 'Y' ",'aoo-00223',1) THEN 
+                  LET g_xrca_m.xrca011 = g_xrca_m_t.xrca011 
+                  NEXT FIELD CURRENT
+               END IF                 
+            END IF ]]>
+</point>
+  <point name="input.a.xrca028" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[            CALL axrt300_03_xrca028_desc()
+            IF NOT cl_null(g_xrca_m.xrca028) THEN 
+               IF NOT ap_chk_isExist(g_xrca_m.xrca028,"SELECT COUNT(*) FROM isac_t,ooef_t WHERE ooef019 = isac001 AND ooefent = isacent AND isacent = '" ||g_enterprise|| "' AND ooef001 = '"||g_xrca.xrcacomp||"' AND "||"isac002 = ? ",'axr-00030',1) THEN 
+                  LET g_xrca_m.xrca028 = g_xrca_m_t.xrca028 
+                  NEXT FIELD CURRENT
+               END IF   
+               IF NOT ap_chk_isExist(g_xrca_m.xrca028,"SELECT COUNT(*) FROM isac_t,ooef_t WHERE ooef019 = isac001 AND ooefent = isacent AND isacent = '" ||g_enterprise|| "' AND ooef001 = '"||g_xrca.xrcacomp||"' AND "||"isac002 = ? AND isacstus = 'Y' ",'axr-00031',1) THEN 
+                  LET g_xrca_m.xrca028 = g_xrca_m_t.xrca028 
+                  NEXT FIELD CURRENT
+               END IF                
+            END IF]]>
+</point>
+  <point name="input.a.xrcadocno" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="input.a.xrcald" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="input.c.xrca011" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default2 = g_xrca_m.xrca011             #給予default值
+            #LET g_qryparam.default1 = "" #g_xrca_m.oodb004 #交易類型
+            #LET g_qryparam.default3 = "" #g_xrca_m.oodb005 #含稅否
+            #LET g_qryparam.default4 = "" #g_xrca_m.oodb006 #稅率
+
+            #給予arg
+            SELECT ooef019 INTO g_ooef019 FROM ooef_t WHERE ooefent = g_enterprise AND ooef001 = g_xrca.xrcacomp
+            LET g_qryparam.where = " oodb004 ='1'" 
+            LET g_qryparam.arg1 = g_ooef019
+            CALL q_oodb002_5()                                #呼叫開窗
+
+            LET g_xrca_m.xrca011 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            #LET g_xrca_m.oodb004 = g_qryparam.return2 #交易類型
+            #LET g_xrca_m.oodb005 = g_qryparam.return3 #含稅否
+            #LET g_xrca_m.oodb006 = g_qryparam.return4 #稅率
+
+            DISPLAY g_xrca_m.xrca011 TO xrca011              #顯示到畫面上
+            #DISPLAY g_xrca_m.oodb004 TO oodb004 #交易類型
+            #DISPLAY g_xrca_m.oodb005 TO oodb005 #含稅否
+            #DISPLAY g_xrca_m.oodb006 TO oodb006 #稅率
+
+            NEXT FIELD xrca011                          #返回原欄位
+
+]]>
+</point>
+  <point name="input.c.xrca028" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xrca_m.xrca028             #給予default值
+            LET g_qryparam.where = " isac001 = (SELECT ooef019 FROM ooef_t WHERE ooefent = '",g_enterprise,"' AND ooef001 ='",g_xrca.xrcacomp,"') AND isac003 ='2'"
+            #給予arg
+
+            CALL q_isac002()                                #呼叫開窗
+
+            LET g_xrca_m.xrca028 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_xrca_m.xrca028 TO xrca028              #顯示到畫面上
+            CALL axrt300_03_xrca028_desc()
+            NEXT FIELD xrca028                          #返回原欄位
+
+]]>
+</point>
+  <point name="show.head.reference" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_xrca_m.xrcald
+            CALL ap_ref_array2(g_ref_fields,"SELECT glaal002 FROM glaal_t WHERE glaalent='"||g_enterprise||"' AND glaalld=? AND glaal001='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_xrca_m.xrcald_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_xrca_m.xrcald_desc
+]]>
+</point>
+  <point name="function.axrt300_03_b_fill" cite_std="N" status="" ver="1" src="s" new="Y" order="1" cite_ver="" mark_hard="N">
+<![CDATA[#+ 單身填充
+PRIVATE FUNCTION axrt300_03_b_fill()
+DEFINE l_sql    STRING  
+
+   CALL g_isaf_d.clear()  
+ 
+   LET l_sql = "SELECT  UNIQUE '',isaf010,isaf011,isaf014,isaf018,isaf103,isaf104,isaf105,isafdocno,isafstus FROM isaf_t",   
+               " WHERE isafent=? AND isafdocno=? ORDER BY isaf011 "
+ 
+   PREPARE axrt300_03_pb FROM l_sql
+   DECLARE b_fill_cs CURSOR FOR axrt300_03_pb
+
+   LET g_cnt = 1
+ 
+   OPEN b_fill_cs USING g_enterprise,g_xrca.xrca018
+   FOREACH b_fill_cs INTO g_isaf_d[g_cnt].*
+      IF SQLCA.sqlcode THEN 
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+     
+      LET g_isaf_d[g_cnt].num = g_cnt
+
+      LET g_cnt = g_cnt + 1
+      IF g_cnt > g_max_rec THEN
+         CALL cl_err( '', 9035, 1)
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   CALL g_isaf_d.deleteElement(g_isaf_d.getLength()) 
+
+   SELECT SUM(isaf103),SUM(isaf104),SUM(isaf105) INTO g_xrca_m.xrca030_2,g_xrca_m.xrca031_2,g_xrca_m.xrca032_2
+     FROM isaf_t
+    WHERE isafent = g_enterprise AND isafdocno = g_xrca.xrca018
+   IF cl_null(g_xrca_m.xrca030_2) THEN LET g_xrca_m.xrca030_2 = 0 END IF 
+   IF cl_null(g_xrca_m.xrca031_2) THEN LET g_xrca_m.xrca031_2 = 0 END IF
+   IF cl_null(g_xrca_m.xrca032_2) THEN LET g_xrca_m.xrca032_2 = 0 END IF    
+END FUNCTION]]>
+</point>
+  <point name="function.axrt300_03_xrca028_desc" cite_std="N" status="" ver="1" src="s" new="Y" order="2" cite_ver="" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt300_03_xrca028_desc()
+DEFINE l_isac001  LIKE isac_t.isac001
+
+   SELECT ooef019 INTO l_isac001 FROM ooef_t
+    WHERE ooef001 = g_xrca.xrcacomp
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = l_isac001
+   LET g_ref_fields[2] = g_xrca_m.xrca028
+   CALL ap_ref_array2(g_ref_fields,"SELECT isacl004 FROM isacl_t WHERE isaclent='"||g_enterprise||"' AND isacl001=? AND isacl002=? AND isacl003='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xrca_m.xrca028_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xrca_m.xrca028_desc
+END FUNCTION]]>
+</point>
+  <point name="function.axrt300_03_xrca011_desc" cite_std="N" status="" ver="1" src="s" new="Y" order="3" cite_ver="" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt300_03_xrca011_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xrca.xrcacomp
+   LET g_ref_fields[2] = g_xrca_m.xrca011
+   CALL ap_ref_array2(g_ref_fields,"SELECT oodbl004 FROM oodbl_t,ooef_t WHERE oodbl001 = ooef019 AND ooef001 = ? AND oodblent='"||g_enterprise||"' AND oodbl002 = ? AND oodbl003= '"||g_lang||"'","") RETURNING g_rtn_fields
+   LET g_xrca_m.xrca011_desc = '', g_rtn_fields[1] , ''
+   DISPLAY BY NAME g_xrca_m.xrca011_desc
+   
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xrca.xrcacomp
+   LET g_ref_fields[2] = g_xrca_m.xrca011
+   CALL ap_ref_array2(g_ref_fields,"SELECT oodb005,oodb006 FROM oodb_t,ooef_t WHERE oodbent = ooefent AND oodb001 = ooef019 AND ooef001 = ? AND oodbent='"||g_enterprise||"' AND oodb002 = ? AND oodb004 = '1' AND oodbstus ='Y' ","") RETURNING g_rtn_fields
+   LET g_xrca_m.xrca013 =  g_rtn_fields[1]  
+   LET g_xrca_m.xrca012 =  g_rtn_fields[2] 
+   DISPLAY BY NAME g_xrca_m.xrca013,g_xrca_m.xrca012  
+END FUNCTION]]>
+</point>
+  <point name="function.axrt300_03_xrca023_desc" cite_std="N" status="" ver="1" src="s" new="Y" order="4" cite_ver="" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt300_03_xrca023_desc()
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_xrca_m.xrca023
+   CALL ap_ref_array2(g_ref_fields,"SELECT pmaal003 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_xrca_m.xrca025 = g_rtn_fields[1] 
+   DISPLAY BY NAME g_xrca_m.xrca025
+END FUNCTION]]>
+</point>
+  <point name="function.axrt300_03_def" cite_std="N" status="" ver="1" src="s" new="Y" order="5" cite_ver="" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt300_03_def()
+   IF cl_null(g_xrca_m.xrca023) THEN 
+      LET g_xrca_m.xrca023 = g_xrca.xrca004
+      CALL axrt300_03_xrca023_desc()
+  
+      LET g_xrca_m.xrca011 = g_xrca.xrca011
+      CALL axrt300_03_xrca011_desc()
+  
+      LET g_xrca_m.xrca060 = '1'
+      LET g_xrca_m.xrca061 = g_xrca.xrca009
+      
+      LET g_xrca_m.xrca030 = g_xrca.xrca103 
+      IF g_xrca_m.xrca060 = '1' THEN 
+         LET g_xrca_m.xrca031 = g_xrca_m.xrca030 * g_xrca_m.xrca012/100
+      END IF
+      LET g_xrca_m.xrca032 = g_xrca_m.xrca031 +g_xrca_m.xrca030
+      
+      SELECT isak003 INTO g_xrca_m.xrca028 FROM isak_t
+       WHERE isakent = g_enterprise AND isaksite = g_xrca.xrcacomp AND isak001 = g_xrca_m.xrca023
+      
+      CALL axrt300_03_xrca028_desc()      
+   END IF
+   CALL axrt300_03_show()
+END FUNCTION]]>
+</point>
+  <point name="function.axrt300_03_show" cite_std="N" status="" ver="1" src="s" new="Y" order="6" cite_ver="" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrt300_03_show()
+   DISPLAY BY NAME g_xrca_m.*
+END FUNCTION]]>
+</point>
+  <point name="global.variable" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[#單身 type 宣告
+ TYPE type_g_isaf_d        RECORD
+  num LIKE type_t.num5, 
+  isaf010 LIKE isaf_t.isaf010, 
+  isaf011 LIKE isaf_t.isaf011, 
+  isaf014 LIKE isaf_t.isaf014,
+  isaf018 LIKE isaf_t.isaf018,  
+  isaf103 LIKE isaf_t.isaf023, 
+  isaf104 LIKE isaf_t.isaf024, 
+  isaf105 LIKE isaf_t.isaf025, 
+  isafdocno LIKE isaf_t.isafdocno, 
+  isafstus LIKE isaf_t.isafstus
+       END RECORD
+ 
+DEFINE g_isaf_d    DYNAMIC ARRAY OF type_g_isaf_d       
+DEFINE g_rec_b     LIKE type_t.num5  
+DEFINE g_cnt       LIKE type_t.num5
+DEFINE g_xrca_m_t   type_g_xrca_m
+DEFINE g_xrca      RECORD LIKE xrca_t.*
+DEFINE g_ooef019   LIKE ooef_t.ooef019]]>
+</point>
+  <point name="input.a.xrca023" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            CALL axrt300_03_xrca023_desc()
+            IF NOT cl_null(g_xrca_m.xrca023) THEN 
+               IF NOT ap_chk_isExist(g_xrca_m.xrca023,"SELECT COUNT(*) FROM pmaa_t WHERE pmaaent = '" ||g_enterprise|| "' AND pmaa001 = ? ",'apm-00028',1) THEN 
+                  LET g_xrca_m.xrca023 = g_xrca_m_t.xrca023 
+                  NEXT FIELD CURRENT
+               END IF  
+               IF NOT ap_chk_isExist(g_xrca_m.xrca023,"SELECT COUNT(*) FROM pmaa_t WHERE pmaaent = '" ||g_enterprise|| "' AND pmaa001 = ? AND pmaastus ='Y' ",'apm-00029',1) THEN 
+                  LET g_xrca_m.xrca023 = g_xrca_m_t.xrca023 
+                  NEXT FIELD CURRENT
+               END IF               
+            END IF]]>
+</point>
+  <point name="input.a.xrca030" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            IF NOT cl_null(g_xrca_m.xrca030) AND g_xrca_m.xrca030 > g_xrca.xrca103 THEN 
+               CALL cl_err(g_xrca_m.xrca030,'axr-00032',1)
+               NEXT FIELD xrca030               
+            END IF
+            LET g_xrca_m.xrca032 = g_xrca_m.xrca031 + g_xrca_m.xrca030
+            DISPLAY BY NAME g_xrca_m.xrca032]]>
+</point>
+  <point name="input.a.xrca031" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            LET g_xrca_m.xrca032 = g_xrca_m.xrca031 + g_xrca_m.xrca030
+            DISPLAY BY NAME g_xrca_m.xrca032]]>
+</point>
+  <point name="input.after_input" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+              
+            CALL cl_showmsg()      #錯誤訊息統整顯示
+            DISPLAY BY NAME g_xrca_m.*   
+               
+            UPDATE xrca_t SET (xrca023,xrca025,xrca028,xrca029,xrca030,xrca031,xrca032)=(g_xrca_m.xrca023,g_xrca_m.xrca025,g_xrca_m.xrca028,g_xrca_m.xrca029,g_xrca_m.xrca030,g_xrca_m.xrca031,g_xrca_m.xrca032)
+             WHERE xrcaent = g_enterprise AND xrcald = p_xrcald
+               AND xrcadocno = p_xrcadocno 
+
+            IF SQLCA.sqlcode THEN
+               CALL cl_err("g_xrca_m",SQLCA.sqlcode,1)  
+               CALL s_transaction_end('N','0')
+            ELSE
+               CALL s_transaction_end('Y','0')
+            END IF
+                    ]]>
+</point>
+  <point name="input.b.xrca011" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            CALL axrt300_03_xrca011_desc()]]>
+</point>
+  <point name="input.b.xrca023" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            CALL axrt300_03_xrca023_desc()]]>
+</point>
+  <point name="input.b.xrca028" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            CALL axrt300_03_xrca028_desc()]]>
+</point>
+  <point name="input.before_input" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            LET g_xrca_m.xrca029 = 1
+            DISPLAY BY NAME g_xrca_m.xrca029]]>
+</point>
+  <point name="input.c.xrca023" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_xrca_m.xrca023             #給予default值
+
+            #給予arg
+            CALL q_pmaa001()                                #呼叫開窗
+
+            LET g_xrca_m.xrca023 = g_qryparam.return1              #將開窗取得的值回傳到變數
+            CALL axrt300_03_xrca023_desc()
+            DISPLAY g_xrca_m.xrca023 TO xrca023              #顯示到畫面上
+            NEXT FIELD xrca023                          #返回原欄位]]>
+</point>
+  <point name="input.define" cite_std="N" status="u" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   DEFINE p_xrcald      LIKE xrca_t.xrcald
+   DEFINE p_xrcadocno   LIKE xrca_t.xrcadocno
+   DEFINE p_xrca018     LIKE xrca_t.xrca018 
+   
+   IF cl_null(p_xrcald) OR cl_null(p_xrcadocno) THEN 
+      RETURN
+   END IF
+   CALL s_transaction_begin() 
+  #INITIALIZE g_xrca_m_t.* LIKE xrca_t.*
+  #INITIALIZE g_xrca.*     LIKE xrca_t.*]]>
+</point>
+  <point name="input.get_var" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   p_xrcald,p_xrcadocno]]>
+</point>
+  <point name="input.more_input" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[      DISPLAY ARRAY g_isaf_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b)
+          
+         BEFORE DISPLAY
+            CONTINUE DIALOG
+      END DISPLAY]]>
+</point>
+  <point name="input.pre_input" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[   CALL cl_set_combo_scc('xrca060','9721')
+   SELECT * INTO g_xrca.* FROM xrca_t WHERE xrcaent = g_enterprise AND xrcald = p_xrcald AND xrcadocno = p_xrcadocno
+   CALL axrt300_03_b_fill()
+   CALL axrt300_03_def()
+   
+   ]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.action" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.xrcadocno" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.xrcadocno" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.xrcald" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.xrcald" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.xrca023" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.pmaa003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.pmaa003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.pmaa003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.xrca025" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.xrca025" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.xrca025" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.xrca011" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.xrca013" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.xrca013" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.xrca013" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.xrca012" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.xrca012" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.xrca012" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.xrca028" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.xrca060" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.xrca060" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.xrca060" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.xrca029" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.xrca029" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.xrca029" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.xrca061" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.xrca061" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.xrca061" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.xrca030" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.xrca030" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.xrca031" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.xrca031" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.xrca032" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.xrca032" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.xrca032" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.xrca030_2" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.xrca030_2" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.xrca030_2" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.xrca031_2" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.xrca031_2" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.xrca031_2" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.b.xrca032_2" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.a.xrca032_2" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.g.xrca032_2" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.xrcadocno" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.xrcald" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.pmaa003" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.xrca025" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.xrca013" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.xrca012" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.xrca060" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.xrca029" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.xrca061" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.xrca030" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.xrca031" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.xrca032" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.xrca030_2" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.xrca031_2" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.c.xrca032_2" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.before_close" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="input.post_input" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+</add_points>

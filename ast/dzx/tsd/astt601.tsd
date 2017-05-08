@@ -1,0 +1,906 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="astt601" std_prog="astt601" erpver="1.0" ver="4" module="AST" type="M" booking="Y" designer_ver="1.0" class="t" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="N" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="stca_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+    <tbl name="stcb_t" main="N" head="N" pk="" fk_detail="" parent="stca_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="stcc_t" main="N" head="N" pk="" fk_detail="" parent="stcb_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail3" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="stcd_t" main="N" head="N" pk="" fk_detail="" parent="stca_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="stcv_t" main="N" head="N" pk="stcvent,stcvdocno,stcvseq" fk_detail="stcvent,stcvdocno" parent="stca_t" fk_master="stcaent,stcadocno" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail4" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 透過申請單維護自營合約，申請單簽核後更新至自營合約主檔中。
+作業功能：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開/確認/未確認/作廢
+作業類型：交易單據 維護作業
+輸入模式：雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)：
+ 資料來源表：stca_t 合約異動申請單頭檔
+
+作業資料來源(Detail)：
+ 資料來源表：stcb_t 合約異動申請單費用設定檔
+                        stcc_t 合約異動申請單費用分段扣率設定檔
+                        stcd_t 合約異動申請單經營範圍設定檔
+
+查詢方案設定：
+ (1)系統預設查詢方案：
+    已確認申請單
+    未確認申請單
+    已作廢申請單
+
+ (2)系統預設相關作業：
+    自營合約模板維護作業 astm201
+    自營合約維護作業     astm301
+
+
+ (3)瀏覽Browse顯示欄位及型態：
+    單頭欄位
+
+
+單頭串查：
+    模板編號：自營合約模板維護作業 astm201
+    合約編號：自營合約維護作業 astm301
+    供應商：供應商主檔維護作業 apmm800
+    幣別：幣別維護作業 aooi140
+    稅目：稅目維護作業 aooi610
+    結算方式：結算方式維護作業 asti201
+
+單身串查：
+    費用編號：費用編號維護作業 asti203
+    條件基準：合約條件計算基準維護作業 asti202
+    計算基準：合約條件計算基準維護作業 asti202
+
+
+補充說明：大陸版"合約"顯示為"合同"
+
+1.當參數設定合約異動走申請規程時，才可執行此作業
+2.合約備註頁籤的畫面是嵌入aooi360_1 子作業, 裡面的欄位處理由aooi360_1來做
+3.供應商、幣別、稅目，人員等依標準規格
+4.作業方式為新增時，於輸入模板號後將模板相關資訊都帶到申請單中，且可修改
+5.作業方式為修改時，"合約有效"(stcaacti)才開放維護，於單據確認時回寫自營合約主檔的狀態(stus)中，
+  當stcaacti='Y'時，更新主檔stus='Y.已確認'
+  當stcaacti='N'時，更新主檔stus='X.無效'
+6.同一供應商+經營方式，應控卡生失效日期區間中不可有重複的合約。
+7.若費用編號存在asti204設定作業。則單身其它欄位的開啟關閉預設值參考asti204.否則按照作業本身的基本邏輯
+]]>
+  </all>
+  <field cite_std="N" name="b_stca000" ver="1" src="s" column="stca000" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="32" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stca001" ver="1" src="s" column="stca001" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stca002" ver="1" src="s" column="stca002" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stca003" ver="1" src="s" column="stca003" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stca004" ver="1" src="s" column="stca004" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stca005" ver="1" src="s" column="stca005" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="6013" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stca006" ver="1" src="s" column="stca006" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stca007" ver="1" src="s" column="stca007" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stca008" ver="1" src="s" column="stca008" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stca009" ver="1" src="s" column="stca009" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stca013" ver="1" src="s" column="stca013" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stca014" ver="1" src="s" column="stca014" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stca015" ver="1" src="s" column="stca015" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stca017" ver="1" src="s" column="stca017" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stca018" ver="1" src="s" column="stca018" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stca019" ver="1" src="s" column="stca019" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stca020" ver="1" src="s" column="stca020" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stca021" ver="1" src="s" column="stca021" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stca022" ver="1" src="s" column="stca022" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stca023" ver="1" src="s" column="stca023" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stca024" ver="1" src="s" column="stca024" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stca025" ver="1" src="s" column="stca025" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stcaacti" ver="1" src="s" column="stcaacti" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stcadocdt" ver="1" src="s" column="stcadocdt" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stcadocno" ver="1" src="s" column="stcadocno" table="stca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_stcasite" ver="1" src="s" column="stcasite" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="next_b" ver="1" src="s" column="" table="" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooff013" ver="1" src="s" column="" table="" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca000" ver="1" src="s" column="stca000" table="stca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="32" default="I" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[
+
+]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca001" ver="1" src="s" column="stca001" table="stca_t" attribute="" type="" req="Y" i_zoom="q_stan001_1" c_zoom="q_stan001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[合約編號：
+   ●欄位控管：
+     校驗:1..作業方式(stca000)='新增'時，檢查合約編號不可重複，且CALL自動編號應用元件
+          2.作業方式(stca000)='修改'時，檢查合約編號需存在 自營合約主檔
+          3.作業方式(stca000)='修改'時，檢查合約編號是否存在於未確認的異動申請單中，如存在，不可再修改
+     帶值:1.當作業方式(stca000)='修改'時，於輸入完合約編號後，將合約資訊全部帶出
+            版本(stca002): 自營合約主檔中的版本號+1
+            合約有效:自營合約主檔中的狀態(stus)='X.無效'時，此欄位='N' ELSE ='Y'
+            合約狀態: ref到合約主檔中的狀態(stus)，NoEntry
+
+   ●開窗處理：
+       作業方式(stca000)='新增'時，不提供開窗
+       作業方式(stca000)='修改'時，依下列開窗
+         參考函式：依標準查詢視窗
+         查詢欄位：自營合約主檔.合約編號,模版編號(說明),供應商(簡稱),簽訂法人(簡稱),簽訂日期
+         回傳方式：單一回傳
+      
+
+
+]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca002" ver="1" src="s" column="stca002" table="stca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[版本：
+   ●欄位控管：
+     預設值:作業方式(stca000)='新增'時，預設1
+]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca003" ver="1" src="s" column="stca003" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca004" ver="1" src="s" column="stca004" table="stca_t" attribute="" type="" req="N" i_zoom="q_stag001" c_zoom="q_stag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[模板編號：
+   ●欄位控管：
+     資料欄位:stca004 /可Display 可Input (作業方式為修改時，NoEntry)
+     校驗: 1..應存在[T:自營合約模板主檔].[C:模板編號]
+     帶值:當作業方式(stca000)='新增'時，輸入模板編號後，將 自營合約模板設定中的資料(主檔stag_t / 費用stah_t / 分段扣率stai_t)對應帶入該維護作業中
+
+   ●開窗處理：
+       參考函式：依標準查詢視窗 
+       查詢欄位：[T:自營合約模板主檔].[C:模板編號],[T:自營合約模板多語言檔].[C:說明]
+     
+]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca005" ver="3" src="s" column="stca005" table="stca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6013" default="11" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="N" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca006" ver="1" src="s" column="stca006" table="stca_t" attribute="" type="" req="Y" i_zoom="q_staa001" c_zoom="q_staa001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[結算方式：
+   ●欄位控管：
+     校驗:應存在[T:結算方式基本資料檔staa_t].[C:結算方式編號]]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca007" ver="1" src="s" column="stca007" table="stca_t" attribute="" type="" req="Y" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[檢查是否存在ACC = 2060  狀態碼為Y]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca008" ver="1" src="s" column="stca008" table="stca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca009" ver="3" src="s" column="stca009" table="stca_t" attribute="" type="" req="Y" i_zoom="q_pmaa001_1" c_zoom="q_pmaa001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[檢查是否存在经销商維護作業apmm800
+]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca010" ver="3" src="s" column="stca010" table="stca_t" attribute="" type="" req="N" i_zoom="q_pmaa001_18" c_zoom="q_pmaa001_18" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca011" ver="1" src="s" column="stca011" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca012" ver="3" src="s" column="stca012" table="stca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca013" ver="1" src="s" column="stca013" table="stca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca014" ver="3" src="s" column="stca014" table="stca_t" attribute="" type="" req="Y" i_zoom="q_ooef001" c_zoom="q_ooef001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[簽訂法人：
+   ●欄位控管：
+     預設值:登入系統的營運據點的法人歸屬
+     校驗: 1..須存在[T:組織基本資料檔].[C:組織編號]且[C:法人組織否] = 'Y']]>
+  </field>
+  <field cite_std="N" name="stca_t.stca015" ver="1" src="s" column="stca015" table="stca_t" attribute="" type="" req="Y" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[輸入的值應存在ooag001，且狀態碼需為 Y.有效
+輸入完員工編號後，應自動帶出員工姓名(以ooag002為key,串到oofa_t中抓取oofa011)]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca016" ver="3" src="s" column="stca016" table="stca_t" attribute="" type="" req="Y" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca017" ver="1" src="s" column="stca017" table="stca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[生效日期：
+   ●欄位控管：
+     預設值:系統日期
+     校驗:1..不可大於失效日期
+]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca018" ver="1" src="s" column="stca018" table="stca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[失效日期：
+   ●欄位控管：
+     預設值:系統日期+1
+     校驗:1..不可小於生效日期]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca019" ver="1" src="s" column="stca019" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca020" ver="1" src="s" column="stca020" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca021" ver="1" src="s" column="stca021" table="stca_t" attribute="" type="" req="Y" i_zoom="q_ooaj002_1" c_zoom="q_aooi001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[輸入的值應存在[T:幣別檔].[C:幣別編號ooai_t]中，且狀態碼需為 Y.有效
+使用當前營運組織的幣別參照表]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca022" ver="1" src="s" column="stca022" table="stca_t" attribute="" type="" req="Y" i_zoom="q_oodb002_1" c_zoom="q_oodb002_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[需要檢查是否存在稅別維護作業且有效
+（检查存在aooi610里）]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca023" ver="3" src="s" column="stca023" table="stca_t" attribute="" type="" req="Y" i_zoom="q_ooib002_2" c_zoom="q_ooib002_2" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[需檢查是否存在收付款方式維護作業。且有效
+（暫保留，未找到該作業）]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca024" ver="3" src="s" column="stca024" table="stca_t" attribute="" type="" req="Y" i_zoom="q_ooef001" c_zoom="q_ooef001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[結算中心：
+   ●欄位控管：
+     校驗:1.須存在[T:組織基本資料檔].[C:組織編號]且[C:結算中心否] = 'Y']]>
+  </field>
+  <field cite_std="N" name="stca_t.stca025" ver="3" src="s" column="stca025" table="stca_t" attribute="" type="" req="Y" i_zoom="q_ooef001" c_zoom="q_ooef001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[採購中心：
+   ●欄位控管：
+     校驗: 1..須存在[T:組織基本資料檔].[C:組織編號]且[C:採購中心否] = 'Y']]>
+  </field>
+  <field cite_std="N" name="stca_t.stca026" ver="1" src="s" column="stca026" table="stca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca027" ver="3" src="s" column="stca027" table="stca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stca_t.stca028" ver="4" src="s" column="stca028" table="stca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stca_t.stcaacti" ver="1" src="s" column="stcaacti" table="stca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[合約有效：
+   ●欄位控管：
+     資料欄位:stccacti /新增:Display Only /修改:可Display可Input
+     預設值:新增:勾選/修改:依合約狀態(stanstus)，IF 'X' then N else Y
+     選項組合:選取為Y，無選取為N
+
+]]>
+  </field>
+  <field cite_std="N" name="stca_t.stcacnfdt" ver="3" src="s" column="stcacnfdt" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stca_t.stcacnfid" ver="3" src="s" column="stcacnfid" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stca_t.stcacrtdp" ver="1" src="s" column="stcacrtdp" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stca_t.stcacrtdt" ver="1" src="s" column="stcacrtdt" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stca_t.stcacrtid" ver="1" src="s" column="stcacrtid" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stca_t.stcadocdt" ver="1" src="s" column="stcadocdt" table="stca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[预设g_today
+]]>
+  </field>
+  <field cite_std="N" name="stca_t.stcadocno" ver="1" src="s" column="stcadocno" table="stca_t" attribute="" type="" req="Y" i_zoom="q_ooba002_1" c_zoom="q_stajdocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[單據編號：
+   ●欄位控管：
+     校驗:
+        1..輸入值須存在[T:單據別檔].[C:單據別]，且 [T:單據別檔].[C:參照表號]=當前登入組織設定的單據別使用參照表
+          錯誤訊息「輸入的單別錯誤，請重新輸入」
+
+     計算或處理:
+        1.新增存檔時，依此欄位輸入的單據別CALL 自動編碼應用元件(s_aooi200_gen_docno)自動編單據編號
+
+]]>
+  </field>
+  <field cite_std="N" name="stca_t.stcamoddt" ver="1" src="s" column="stcamoddt" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stca_t.stcamodid" ver="1" src="s" column="stcamodid" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stca_t.stcaowndp" ver="1" src="s" column="stcaowndp" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stca_t.stcaownid" ver="1" src="s" column="stcaownid" table="stca_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stca_t.stcasite" ver="4" src="s" column="stcasite" table="stca_t" attribute="" type="" req="Y" i_zoom="q_ooef001_24" c_zoom="q_ooef001_24" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="u">
+    <![CDATA[预设g_site
+#20141225
+開窗和校驗根據aooi500設置動態控制
+開窗改用 q_ooef001_24]]>
+  </field>
+  <field cite_std="N" name="stca_t.stcastus" ver="1" src="s" column="stcastus" table="stca_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stca_t.stcaunit" ver="1" src="s" column="stcaunit" table="stca_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcb_t.stcb002" ver="3" src="s" column="stcb002" table="stcb_t" attribute="" type="" req="Y" i_zoom="q_stae001" c_zoom="q_stae001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[費用編號：
+   ●欄位控管：
+     校驗:輸入的值必須存在 [T:費用編號基本資料檔]中，且為有效
+     帶值:自動帶出[C:價款類型]
+
+
+   ●開窗處理：
+       參考函式：依標準查詢視窗 
+       查詢欄位：[T:費用編號基本資料檔].[C:費用編號],[T:費用編號多語言檔].[C:說明]
+       回值類型：新增/修改(單一回值)，查詢(多重回值)
+]]>
+  </field>
+  <field cite_std="N" name="stcb_t.stcb003" ver="1" src="s" column="stcb003" table="stcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcb_t.stcb004" ver="1" src="s" column="stcb004" table="stcb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6006" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcb_t.stcb005" ver="1" src="s" column="stcb005" table="stcb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6007" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcb_t.stcb006" ver="1" src="s" column="stcb006" table="stcb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6008" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcb_t.stcb007" ver="1" src="s" column="stcb007" table="stcb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6009" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcb_t.stcb008" ver="3" src="s" column="stcb008" table="stcb_t" attribute="" type="" req="N" i_zoom="q_stab001" c_zoom="q_stab001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[條件基準：
+   ●欄位控管： 
+     校驗: 1..須存在[T:合約計算及條件基準基本資料檔stab_t].[C:基準編號]]]>
+  </field>
+  <field cite_std="N" name="stcb_t.stcb009" ver="1" src="s" column="stcb009" table="stcb_t" attribute="" type="" req="N" i_zoom="q_stab001" c_zoom="q_stab001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[計算基準：
+   ●欄位控管： 
+     校驗: 1.[C:計算基型]=變動 時，不可空白
+            2.須存在[T:合約計算及條件基準基本資料檔stab_t].[C:基準編號]
+]]>
+  </field>
+  <field cite_std="N" name="stcb_t.stcb010" ver="1" src="s" column="stcb010" table="stcb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[費用淨額：
+   ●欄位控管： 
+     校驗:1.輸入值必須>0
+]]>
+  </field>
+  <field cite_std="N" name="stcb_t.stcb011" ver="1" src="s" column="stcb011" table="stcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[費用比率：
+   ●欄位控管： 
+     校驗:1.當[C:計算類型]= 固定 時，此欄位為空白且不可輸入
+          2.當[C:計算類型]= 變動時，且[C:分量扣點]='無'時，此欄位不可空白且不可 <=0]]>
+  </field>
+  <field cite_std="N" name="stcb_t.stcb012" ver="1" src="s" column="stcb012" table="stcb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6010" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcb_t.stcb013" ver="1" src="s" column="stcb013" table="stcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[保底金額：
+   ●欄位控管： 
+     校驗:當[C:保底否]<>'無保底'時，此欄位不可空白，不可<=0]]>
+  </field>
+  <field cite_std="N" name="stcb_t.stcb014" ver="1" src="s" column="stcb014" table="stcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[保底扣率：
+   ●欄位控管： 
+校驗:如保底否<> '無'，則保底扣率不可小於等於0]]>
+  </field>
+  <field cite_std="N" name="stcb_t.stcb015" ver="1" src="s" column="stcb015" table="stcb_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6011" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcb_t.stcb016" ver="1" src="s" column="stcb016" table="stcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[生效日期不可大於失效日期]]>
+  </field>
+  <field cite_std="N" name="stcb_t.stcb017" ver="1" src="s" column="stcb017" table="stcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[失效日期不可小於生效日期]]>
+  </field>
+  <field cite_std="N" name="stcb_t.stcb018" ver="1" src="s" column="stcb018" table="stcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[下次計算日：
+   ●欄位控管： 
+     帶值:於After Row自動算出該日期]]>
+  </field>
+  <field cite_std="N" name="stcb_t.stcb019" ver="1" src="s" column="stcb019" table="stcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcb_t.stcb020" ver="1" src="s" column="stcb020" table="stcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcb_t.stcbseq" ver="1" src="s" column="stcbseq" table="stcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcb_t.stcbsite" ver="1" src="s" column="stcbsite" table="stcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcb_t.stcbunit" ver="1" src="s" column="stcbunit" table="stcb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcc002" ver="1" src="s" column="stcc002" table="stcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[起始金額：
+   ●欄位控管： 
+     預設值:當同一筆費用無設定資料時，預設1，有設定資料時，預設上一筆區間截止金額+1
+     校驗:1.輸入值必須>0
+          2.不可大於截止金額
+          3.同一筆費用的分段區間不可重疊
+]]>
+  </field>
+  <field cite_std="N" name="stcc003" ver="1" src="s" column="stcc003" table="stcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[截止金額：
+   ●欄位控管： 
+     校驗:1.輸入值必須>0
+          2.不可小於起始金額
+          3.同一筆費用的分段區間不可重疊
+]]>
+  </field>
+  <field cite_std="N" name="stcc004" ver="1" src="s" column="stcc004" table="stcc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[需要大于0]]>
+  </field>
+  <field cite_std="N" name="stccseq2" ver="1" src="s" column="stccseq2" table="stcc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcd_t.stcd002" ver="1" src="s" column="stcd002" table="stcd_t" attribute="" type="" req="Y" i_zoom="q_rtax001_1" c_zoom="q_rtax001_1" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[●欄位控管：
+     資料欄位:stcd002 /可Display可Input
+     預設值:無 
+     校驗:1..輸入值不可重複
+          2輸入值須存在[T:品類基本資料].[C:品類編號] WHERE [C:層級] = 參數指定的管理品類層級，且為有效資料
+
+
+   ●開窗處理：
+       參考函式：依標準查詢視窗
+       查詢欄位：[T:品類基本資料].[C:品類編號],[T:品類多語言資料].[C:說明]
+       過濾條件：[C:層級] = 參數設定的管理品類層級
+       回值類型：新增/修改時(單一回值)，查詢時(多重回值)
+]]>
+  </field>
+  <field cite_std="N" name="stcd_t.stcd003" ver="1" src="s" column="stcd003" table="stcd_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcd_t.stcdseq" ver="1" src="s" column="stcdseq" table="stcd_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcd_t.stcdsite" ver="1" src="s" column="stcdsite" table="stcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcd_t.stcdunit" ver="1" src="s" column="stcdunit" table="stcd_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcv_t.stcv002" ver="1" src="s" column="stcv002" table="stcv_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcv_t.stcv003" ver="1" src="s" column="stcv003" table="stcv_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcv_t.stcv004" ver="1" src="s" column="stcv004" table="stcv_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcv_t.stcv005" ver="1" src="s" column="stcv005" table="stcv_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcv_t.stcv006" ver="1" src="s" column="stcv006" table="stcv_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcv_t.stcvseq" ver="1" src="s" column="stcvseq" table="stcv_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcv_t.stcvsite" ver="1" src="s" column="stcvsite" table="stcv_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stcv_t.stcvunit" ver="1" src="s" column="stcvunit" table="stcv_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="buttonedit_1" ver="4" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="1" name="prog_stca001" depend_field="stca_t.stca001" src="s" status="">
+      <program order="1" type="1" name="astm301"/>
+    </pfield>
+    <pfield cite_std="N" ver="1" name="prog_stca004" depend_field="stca_t.stca004" src="s" status="">
+      <program order="1" type="1" name="astm201"/>
+    </pfield>
+    <pfield cite_std="N" ver="1" name="prog_stca006" depend_field="stca_t.stca006" src="s" status="">
+      <program order="1" type="1" name="asti201"/>
+    </pfield>
+    <pfield cite_std="N" ver="3" name="prog_stca009" depend_field="stca_t.stca009" src="s" status="">
+      <program order="1" type="1" name="adbm200"/>
+    </pfield>
+    <pfield cite_std="N" ver="3" name="prog_stca010" depend_field="stca_t.stca010" src="s" status="">
+      <program order="1" type="1" name="adbm201"/>
+    </pfield>
+    <pfield cite_std="N" ver="1" name="prog_stca021" depend_field="stca_t.stca021" src="s" status="">
+      <program order="1" type="1" name="aooi140"/>
+    </pfield>
+    <pfield cite_std="N" ver="1" name="prog_stca022" depend_field="stca_t.stca022" src="s" status="">
+      <program order="1" type="1" name="aooi610"/>
+    </pfield>
+    <pfield cite_std="N" ver="3" name="stcb_t.stcb002" depend_field="stcb_t.stcb002" src="s" status="">
+      <program order="1" type="1" name="asti203"/>
+    </pfield>
+    <pfield cite_std="N" ver="3" name="stcb_t.stcb008" depend_field="stcb_t.stcb008" src="s" status="">
+      <program order="1" type="1" name="asti205"/>
+    </pfield>
+    <pfield cite_std="N" ver="1" name="prog_stcb009" depend_field="stcb_t.stcb009" src="s" status="">
+      <program order="1" type="1" name="asti202"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="stca004_desc" src="s" depend_field="stca_t.stca004" correspon_key="stcaent,stca004" ref_table="stagl_t" ref_fk="staglent,stagl001" ref_dlang="stagl002" ref_rtn="stagl003" status=""/>
+    <rfield cite_std="N" ver="1" name="stca006_desc" src="s" depend_field="stca_t.stca006" correspon_key="stcaent,stca006" ref_table="staal_t" ref_fk="staalent,staal002" ref_dlang="staal002" ref_rtn="staal003" status=""/>
+    <rfield cite_std="N" ver="1" name="stca007_desc" src="s" depend_field="stca_t.stca007" correspon_key="stcaent,stca007" ref_table="oocql_t" ref_fk="oocqlent,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="stca009_desc" src="s" depend_field="stca_t.stca009" correspon_key="stcaent,stca009" ref_table="pmaal_t" ref_fk="pmaalent,pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="stca010_desc" src="s" depend_field="stca_t.stca010" correspon_key="stcaent,stca010" ref_table="pmaal_t" ref_fk="pmaalent,pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="stca011_desc" src="s" depend_field="stca_t.stca011" correspon_key="&apos;281&apos;,stca011" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="stca012_desc" src="s" depend_field="stca_t.stca012" correspon_key="&apos;2035&apos;,stca012" ref_table="oocql_t" ref_fk="oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="stca014_desc" src="s" depend_field="stca_t.stca014" correspon_key="stcaent,stca014" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="stca015_desc" src="s" depend_field="stca_t.stca015" correspon_key="stca015" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="stca016_desc" src="s" depend_field="stca_t.stca016" correspon_key="stcaent,stca016" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="stca021_desc" src="s" depend_field="stca_t.stca021" correspon_key="stcaent,stca021" ref_table="ooail_t" ref_fk="ooailent,ooail001" ref_dlang="ooail002" ref_rtn="ooail003" status=""/>
+    <rfield cite_std="N" ver="1" name="stca022_desc" src="s" depend_field="stca_t.stca022" correspon_key="stcaent,stca022" ref_table="oodbl_t" ref_fk="oodblent,oodbl002" ref_dlang="oodbl003" ref_rtn="oodbl004" status=""/>
+    <rfield cite_std="N" ver="3" name="stca023_desc" src="s" depend_field="stca_t.stca023" correspon_key="stca023" ref_table="ooibl_t" ref_fk="ooibl002" ref_dlang="ooibl003" ref_rtn="ooibl004" status=""/>
+    <rfield cite_std="N" ver="1" name="stca024_desc" src="s" depend_field="stca_t.stca024" correspon_key="stcaent,stca024" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="stca025_desc" src="s" depend_field="stca_t.stca025" correspon_key="stcaent,stca025" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="stca026_desc" src="s" depend_field="stca_t.stca026" correspon_key="stcaent,stca026" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="4" name="stca028_desc" src="s" depend_field="stca_t.stca028" correspon_key="stca028" ref_table="dbbcl_t" ref_fk="dbbcl001" ref_dlang="dbbcl002" ref_rtn="dbbcl003" status="u"/>
+    <rfield cite_std="N" ver="3" name="stcacnfid_desc" src="s" depend_field="stca_t.stcacnfid" correspon_key="stcacnfid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="stcasite_desc" src="s" depend_field="stca_t.stcasite" correspon_key="stcaent,stcasite" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="stcb002_desc" src="s" depend_field="stcb_t.stcb002" correspon_key="stcbent,stcb002" ref_table="stael_t" ref_fk="staelent,stael001" ref_dlang="stael002" ref_rtn="stael003" status=""/>
+    <rfield cite_std="N" ver="1" name="stcb008_desc" src="s" depend_field="stcb_t.stcb008" correspon_key="stcbent,stcb008" ref_table="stabl_t" ref_fk="stablent,stabl001" ref_dlang="stabl002" ref_rtn="stabl003" status=""/>
+    <rfield cite_std="N" ver="1" name="stcb009_desc" src="s" depend_field="stcb_t.stcb009" correspon_key="stcbent,stcb009" ref_table="stabl_t" ref_fk="stablent,stabl001" ref_dlang="stabl002" ref_rtn="stabl003" status=""/>
+    <rfield cite_std="N" ver="1" name="stcd002_desc" src="s" depend_field="stcd_t.stcd002" correspon_key="stcdent,stcd002" ref_table="rtaxl_t" ref_fk="rtaxlent,rtaxl001" ref_dlang="rtaxl002" ref_rtn="rtaxl003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_stca000" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stca001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stca002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stca003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stca004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stca005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stca006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stca007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stca008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stca009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stca013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stca014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stca015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stca017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stca018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stca019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stca020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stca021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stca022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stca023" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stca024" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stca025" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stcaacti" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stcadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stcadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_stcasite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="buttonedit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="next_b" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooff013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stca000" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stca001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stca002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stca003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stca004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="stca_t.stca005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stca006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stca007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stca008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="stca_t.stca009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="stca_t.stca010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stca011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="stca_t.stca012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stca013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="stca_t.stca014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stca015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="stca_t.stca016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stca017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stca018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stca019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stca020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stca021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stca022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="stca_t.stca023" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="stca_t.stca024" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="stca_t.stca025" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stca026" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="stca_t.stca027" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="stca_t.stca028" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="stca_t.stcaacti" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="stca_t.stcacnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="stca_t.stcacnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stcacrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stcacrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stcacrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stcadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stcadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stcamoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stcamodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stcaowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stcaownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="stca_t.stcasite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="stca_t.stcastus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stca_t.stcaunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="stcb_t.stcb002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcb_t.stcb003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcb_t.stcb004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcb_t.stcb005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcb_t.stcb006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcb_t.stcb007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="stcb_t.stcb008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcb_t.stcb009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcb_t.stcb010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcb_t.stcb011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcb_t.stcb012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcb_t.stcb013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcb_t.stcb014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcb_t.stcb015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcb_t.stcb016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcb_t.stcb017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcb_t.stcb018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcb_t.stcb019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcb_t.stcb020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcb_t.stcbseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcb_t.stcbsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcb_t.stcbunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcc002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcc003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcc004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stccseq2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcd_t.stcd002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcd_t.stcd003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcd_t.stcdseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcd_t.stcdsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcd_t.stcdunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcv_t.stcv002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcv_t.stcv003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcv_t.stcv004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcv_t.stcv005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcv_t.stcv006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcv_t.stcvseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcv_t.stcvsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stcv_t.stcvunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_stcadocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_stcadocdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_stca000" text="申請類型" lstr=""/>
+    <sfield name="lbl_stca001" text="合約編號" lstr=""/>
+    <sfield name="lbl_stca005" text="經營方式" lstr=""/>
+    <sfield name="lbl_stca002" text="版本" lstr=""/>
+    <sfield name="lbl_stca004" text="模板編號" lstr=""/>
+    <sfield name="lbl_stca009" text="經銷商編號" lstr=""/>
+    <sfield name="lbl_stca021" text="幣別" lstr=""/>
+    <sfield name="lbl_stca022" text="稅目" lstr=""/>
+    <sfield name="lbl_stca023" text="收款條件" lstr=""/>
+    <sfield name="lbl_stca006" text="結算方式" lstr=""/>
+    <sfield name="lbl_stca007" text="結算類型" lstr=""/>
+    <sfield name="lbl_stca008" text="對象類型" lstr=""/>
+    <sfield name="lbl_stca013" text="簽訂日期" lstr=""/>
+    <sfield name="lbl_stca014" text="簽訂法人" lstr=""/>
+    <sfield name="lbl_stca015" text="簽訂人員" lstr=""/>
+    <sfield name="lbl_stca024" text="結算中心" lstr=""/>
+    <sfield name="lbl_stca025" text="銷售組織" lstr=""/>
+    <sfield name="lbl_stca017" text="生效日期" lstr=""/>
+    <sfield name="lbl_stca018" text="失效日期" lstr=""/>
+    <sfield name="lbl_stca019" text="清退日期" lstr=""/>
+    <sfield name="lbl_stca020" text="作廢日期" lstr=""/>
+    <sfield name="lbl_stca003" text="文件編號" lstr=""/>
+    <sfield name="lbl_stcasite" text="申請組織" lstr=""/>
+    <sfield name="lbl_stcaacti" text="資料有效" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_staj022" text="申請組織" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_stagl003" text="說明" lstr=""/>
+    <sfield name="lbl_staal003" text="說明" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_pmaal004" text="交易對象簡稱" lstr=""/>
+    <sfield name="lbl_stca010" text="網點編碼" lstr=""/>
+    <sfield name="lbl_stca011" text="客戶分類" lstr=""/>
+    <sfield name="lbl_stcaunit" text="營運組織" lstr=""/>
+    <sfield name="lbl_stcastus" text="狀態碼" lstr=""/>
+    <sfield name="page_other_1" text="其它資料" lstr=""/>
+    <sfield name="lbl_stca027" text="結算合約編號" lstr=""/>
+    <sfield name="lbl_ooail003" text="說明" lstr=""/>
+    <sfield name="lbl_oodbl004" text="說明" lstr=""/>
+    <sfield name="lbl_ooibl004" text="說明" lstr=""/>
+    <sfield name="lbl_stca028" text="銷售範圍" lstr=""/>
+    <sfield name="lbl_dbbcl003" text="說明" lstr=""/>
+    <sfield name="lbl_stca012" text="渠道編號" lstr=""/>
+    <sfield name="lbl_stca026" text="結算地" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_stca016" text="簽訂部門" lstr=""/>
+    <sfield name="lbl_next_b" text="下次結算日" lstr=""/>
+    <sfield name="page_remark" text="備註" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_stcacnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_stcacnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="bpage_1" text="合約扣項" lstr=""/>
+    <sfield name="group6" text="費用設定" lstr=""/>
+    <sfield name="lbl_stcbseq" text="項次" lstr=""/>
+    <sfield name="lbl_stcb002" text="費用編號" lstr=""/>
+    <sfield name="lbl_stael003" text="說明" lstr=""/>
+    <sfield name="lbl_stcb003" text="會計期間" lstr=""/>
+    <sfield name="lbl_stcb004" text="價款類別" lstr=""/>
+    <sfield name="lbl_stcb005" text="計算類型" lstr=""/>
+    <sfield name="lbl_stcb006" text="費用週期" lstr=""/>
+    <sfield name="lbl_stcb007" text="費用週期方式" lstr=""/>
+    <sfield name="lbl_stcb008" text="條件基準" lstr=""/>
+    <sfield name="lbl_stabl003" text="說明" lstr=""/>
+    <sfield name="lbl_stcb009" text="計算基準" lstr=""/>
+    <sfield name="lbl_stcb010" text="條件/固定金額" lstr=""/>
+    <sfield name="lbl_stcb011" text="費用比率" lstr=""/>
+    <sfield name="lbl_stcb012" text="保底" lstr=""/>
+    <sfield name="lbl_stcb013" text="保底金額" lstr=""/>
+    <sfield name="lbl_stcb014" text="保底扣率" lstr=""/>
+    <sfield name="lbl_stcb015" text="分量扣點" lstr=""/>
+    <sfield name="lbl_stcb016" text="生效日期" lstr=""/>
+    <sfield name="lbl_stcb017" text="失效日期" lstr=""/>
+    <sfield name="lbl_stcb018" text="下次計算日" lstr=""/>
+    <sfield name="lbl_stcb019" text="下次費用開始日" lstr=""/>
+    <sfield name="lbl_stcb020" text="下次費用截止日" lstr=""/>
+    <sfield name="lbl_stcbunit" text="營運據點" lstr=""/>
+    <sfield name="lbl_stcbsite" text="申請組織" lstr=""/>
+    <sfield name="group7" text="分段扣率設定" lstr=""/>
+    <sfield name="lbl_stccseq2" text="項次2" lstr=""/>
+    <sfield name="lbl_stcc002" text="起始金額" lstr=""/>
+    <sfield name="lbl_stcc003" text="截止金額" lstr=""/>
+    <sfield name="lbl_stcc004" text="扣率" lstr=""/>
+    <sfield name="page_3" text="經營範圍" lstr=""/>
+    <sfield name="lbl_stcdseq" text="項次" lstr=""/>
+    <sfield name="lbl_stcd002" text="品類/品牌編號" lstr=""/>
+    <sfield name="lbl_rtaxl003" text="說明" lstr=""/>
+    <sfield name="lbl_stcd003" text="可退貨" lstr=""/>
+    <sfield name="lbl_stcdunit" text="營運據點" lstr=""/>
+    <sfield name="lbl_stcdsite" text="申請組織" lstr=""/>
+    <sfield name="page_period" text="結算帳期" lstr=""/>
+    <sfield name="lbl_stcvsite" text="營運組織" lstr=""/>
+    <sfield name="lbl_stcvunit" text="應用組織" lstr=""/>
+    <sfield name="lbl_stcvseq" text="結算帳期" lstr=""/>
+    <sfield name="lbl_stcv002" text="起始日期" lstr=""/>
+    <sfield name="lbl_stcv003" text="截止日期" lstr=""/>
+    <sfield name="lbl_stcv004" text="結算日" lstr=""/>
+    <sfield name="lbl_stcv005" text="結算" lstr=""/>
+    <sfield name="lbl_stcv006" text="結算單號" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_ooff001" text="備註類型" lstr=""/>
+    <sfield name="lbl_ooff002" text="第一KEY值" lstr=""/>
+    <sfield name="lbl_ooff003" text="第二KEY值" lstr=""/>
+    <sfield name="lbl_ooff004" text="第三KEY值" lstr=""/>
+    <sfield name="lbl_ooff005" text="第四KEY值" lstr=""/>
+    <sfield name="lbl_ooff006" text="第五KEY值" lstr=""/>
+    <sfield name="lbl_ooff007" text="第六KEY值" lstr=""/>
+    <sfield name="lbl_ooff008" text="第七KEY值" lstr=""/>
+    <sfield name="lbl_ooff009" text="第八KEY值" lstr=""/>
+    <sfield name="lbl_ooff010" text="第九KEY值" lstr=""/>
+    <sfield name="lbl_ooff011" text="第十KEY值" lstr=""/>
+    <sfield name="lbl_ooff012" text="控制類型" lstr=""/>
+    <sfield name="lbl_ooff013" text="備註說明" lstr=""/>
+    <sfield name="page_s_aooi390_s01_1" text="QBE條件" lstr=""/>
+    <sfield name="lbl_oofg001" text="編碼分類" lstr=""/>
+    <sfield name="lbl_oofg002" text="編碼性質" lstr=""/>
+    <sfield name="cbo_searchcol.0" text="選擇查詢欄位" lstr=""/>
+    <sfield name="lbl_oofg005" text="節點編號" lstr=""/>
+    <sfield name="lbl_oofg006" text="前段節點編號" lstr=""/>
+    <sfield name="rdo_expand.1" text="上推" lstr=""/>
+    <sfield name="rdo_expand.2" text="下展" lstr=""/>
+    <sfield name="rdo_expand.3" text="全部" lstr=""/>
+    <sfield name="lbl_name" text="樹狀節點說明" lstr=""/>
+    <sfield name="page_s_aooi390_s01_2" text="基本資料" lstr=""/>
+    <sfield name="lbl_n0" text="編碼分類" lstr=""/>
+    <sfield name="lbl_n1" text="編碼總長度" lstr=""/>
+    <sfield name="lbl_n2" text="編碼總段數" lstr=""/>
+    <sfield name="lbl_n3" text="自動編號" lstr=""/>
+    <sfield name="page_s_aooi390_s01_3" text="明細資料" lstr=""/>
+    <sfield name="lbl_oofg007" text="段次" lstr=""/>
+    <sfield name="lbl_oofgl004" text="節點名稱" lstr=""/>
+    <sfield name="lbl_oofg009" text="長度" lstr=""/>
+    <sfield name="lbl_oofg016" text="使用轉換表" lstr=""/>
+    <sfield name="lbl_oofg008" text="節點型態" lstr=""/>
+    <sfield name="lbl_value" text="輸入值" lstr=""/>
+    <sfield name="lbl_value_desc" text="說明" lstr=""/>
+    <sfield name="lbl_tbegin" text="第" lstr=""/>
+    <sfield name="lbl_tend" text="組" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="3" cite_std="N" src="s">
+    <widget name="s_detail3" status=""/>
+    <widget name="stcc002" status=""/>
+    <widget name="stcc003" status=""/>
+    <widget name="stcc004" status=""/>
+    <widget name="stccseq2" status=""/>
+  </exclude>
+</spec>

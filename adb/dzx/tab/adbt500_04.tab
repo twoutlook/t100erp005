@@ -1,0 +1,77 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adbt500_04" module="adb" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="02748" crtdt="2014-06-16 15:24:02" modid="02748" moddt="2014-08-11 15:17:26" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="分銷訂單其他資訊維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xmdcdocno,xmdcseq,xmdc027,xmdc031,xmdc031_desc(chr80),xmdc032,xmdc003,xmdc003_desc(chr80),xmdc033,xmdc034,xmdc036,xmdc037,xmdc038,xmdc039"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="adb" filename="adbt500_04" method="dialog">
+    <section id="input">
+      <input id="head" field="xmdcdocno,xmdcseq,xmdc027,xmdc031,xmdc032,xmdc003,xmdc033,xmdc034,xmdc036,xmdc037,xmdc038,xmdc039"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="xmdcdocno"/>
+      <column id="xmdcseq"/>
+      <column id="xmdc027">
+        <after>
+          <check chkid="v_pmao004" id="isExist"/>
+        </after>
+        <controlp form="q_pmao004_1" state="i"/>
+        <controlp form="q_pmao004_1" state="c"/>
+      </column>
+      <column id="xmdc031">
+        <after>
+          <check chkid="v_oocq002_263" id="isExist"/>
+          <reference field="xmdc031_desc" ref_field="pmdn031" map_field="pmdn031" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;263&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="xmdc031_desc"/>
+      <column id="xmdc032" type="S" default="1" def_scc="2097"/>
+      <column id="xmdc003">
+        <after>
+          <check chkid="v_imaa001_3" id="isExist"/>
+          <reference field="xmdc003_desc" ref_field="xmdc_t.xmdc003" map_field="xmdc003" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_imaa001_3" state="c"/>
+      </column>
+      <column id="xmdc003_desc"/>
+      <column id="xmdc033">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="xmdc034">
+        <after>
+          <check id="range" st="100.000" st_type="1" errno="azz-00087" bt="0.000" bt_type="1" ow="1"/>
+        </after>
+      </column>
+      <column id="xmdc036"/>
+      <column id="xmdc037"/>
+      <column id="xmdc038"/>
+      <column id="xmdc039"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xmdc_t" pk="xmdcdocno,xmdcseq">
+      <sql id="forupd_sql" type="sql" query="SELECT xmdcdocno,xmdcseq,xmdc027,xmdc031,&apos;&apos;,xmdc032,xmdc003,&apos;&apos;,xmdc033,xmdc034,xmdc036,xmdc037,xmdc038,xmdc039 FROM xmdc_t WHERE xmdcent= ? AND xmdcdocno=? AND xmdcseq=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="xmdcdocno,xmdcseq"/>
+    </head>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,8632 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="adet407.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0009(2015-03-09 11:45:44), PR版次:0009(2016-10-07 17:56:41)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000149
+#+ Filename...: adet407
+#+ Description: 營業款保全對帳作業
+#+ Creator....: 04226(2014-06-26 10:52:22)
+#+ Modifier...: 06137 -SD/PR- 06137
+ 
+{</section>}
+ 
+{<section id="adet407.global" >}
+#應用 t01 樣板自動產生(Version:79)
+#add-point:填寫註解說明 name="global.memo" 
+#+ Modifier...: 160318-00025#28  2016/04/05  By pengxin  修正azzi920重复定义之错误讯息
+#+ Modifier...: 160818-00017#8   2016/08/24    by 08172  修改删除时重新检查状态
+#160824-00007#72   2016/10/07 by 06137     修正舊值備份寫法
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point 
+ 
+SCHEMA ds 
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_deax_m        RECORD
+       deaxsite LIKE deax_t.deaxsite, 
+   deaxsite_desc LIKE type_t.chr80, 
+   deaxdocdt LIKE deax_t.deaxdocdt, 
+   deaxdocno LIKE deax_t.deaxdocno, 
+   deax001 LIKE deax_t.deax001, 
+   deax001_desc LIKE type_t.chr80, 
+   deax002 LIKE deax_t.deax002, 
+   deax003 LIKE deax_t.deax003, 
+   deax005 LIKE deax_t.deax005, 
+   deax005_desc LIKE type_t.chr80, 
+   deax004 LIKE deax_t.deax004, 
+   deax004_desc LIKE type_t.chr80, 
+   l_sum LIKE type_t.chr500, 
+   deaxunit LIKE deax_t.deaxunit, 
+   deaxstus LIKE deax_t.deaxstus, 
+   deaxownid LIKE deax_t.deaxownid, 
+   deaxownid_desc LIKE type_t.chr80, 
+   deaxowndp LIKE deax_t.deaxowndp, 
+   deaxowndp_desc LIKE type_t.chr80, 
+   deaxcrtid LIKE deax_t.deaxcrtid, 
+   deaxcrtid_desc LIKE type_t.chr80, 
+   deaxcrtdp LIKE deax_t.deaxcrtdp, 
+   deaxcrtdp_desc LIKE type_t.chr80, 
+   deaxcrtdt LIKE deax_t.deaxcrtdt, 
+   deaxmodid LIKE deax_t.deaxmodid, 
+   deaxmodid_desc LIKE type_t.chr80, 
+   deaxmoddt LIKE deax_t.deaxmoddt, 
+   deaxcnfid LIKE deax_t.deaxcnfid, 
+   deaxcnfid_desc LIKE type_t.chr80, 
+   deaxcnfdt LIKE deax_t.deaxcnfdt
+       END RECORD
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_deav_d        RECORD
+       deavseq LIKE deav_t.deavseq, 
+   deavsite LIKE deav_t.deavsite, 
+   deavsite_desc LIKE type_t.chr500, 
+   deavdocdt LIKE deav_t.deavdocdt, 
+   deav001 LIKE deav_t.deav001, 
+   deav002 LIKE deav_t.deav002, 
+   deav002_desc LIKE type_t.chr500, 
+   deav003 LIKE deav_t.deav003, 
+   deav003_desc LIKE type_t.chr500, 
+   deav004 LIKE deav_t.deav004, 
+   deav004_desc LIKE type_t.chr500, 
+   deav005 LIKE deav_t.deav005, 
+   deav005_desc LIKE type_t.chr500, 
+   deav006 LIKE deav_t.deav006, 
+   deav007 LIKE deav_t.deav007, 
+   deav008 LIKE deav_t.deav008, 
+   deav009 LIKE deav_t.deav009, 
+   deav010 LIKE deav_t.deav010, 
+   deav011 LIKE deav_t.deav011, 
+   deav012 LIKE deav_t.deav012, 
+   deav013 LIKE deav_t.deav013, 
+   deav014 LIKE deav_t.deav014, 
+   deav015 LIKE deav_t.deav015, 
+   deav015_desc LIKE type_t.chr500, 
+   deav016 LIKE deav_t.deav016, 
+   deavunit LIKE deav_t.deavunit
+       END RECORD
+PRIVATE TYPE type_g_deav2_d RECORD
+       deauseq LIKE deau_t.deauseq, 
+   deausite LIKE deau_t.deausite, 
+   deausite_desc LIKE type_t.chr500, 
+   deaudocdt LIKE deau_t.deaudocdt, 
+   deau001 LIKE deau_t.deau001, 
+   deau002 LIKE deau_t.deau002, 
+   deau002_desc LIKE type_t.chr500, 
+   deau003 LIKE deau_t.deau003, 
+   deau003_desc LIKE type_t.chr500, 
+   deau004 LIKE deau_t.deau004, 
+   deau004_desc LIKE type_t.chr500, 
+   deau005 LIKE deau_t.deau005, 
+   deau005_desc LIKE type_t.chr500, 
+   deau006 LIKE deau_t.deau006, 
+   deau007 LIKE deau_t.deau007, 
+   deau008 LIKE deau_t.deau008, 
+   deau009 LIKE deau_t.deau009, 
+   deauunit LIKE deau_t.deauunit
+       END RECORD
+ 
+ 
+PRIVATE TYPE type_browser RECORD
+         b_statepic     LIKE type_t.chr50,
+            b_deaxsite LIKE deax_t.deaxsite,
+   b_deaxsite_desc LIKE type_t.chr80,
+      b_deaxdocdt LIKE deax_t.deaxdocdt,
+      b_deaxdocno LIKE deax_t.deaxdocno,
+      b_deax001 LIKE deax_t.deax001,
+   b_deax001_desc LIKE type_t.chr80,
+      b_deax002 LIKE deax_t.deax002,
+      b_deax003 LIKE deax_t.deax003
+       END RECORD
+       
+#add-point:自定義模組變數(Module Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+ TYPE type_g_deav3_d RECORD
+   deanseq       LIKE dean_t.deanseq,   #項次
+   deansite      LIKE dean_t.deansite,  #營運據點
+   deansite_desc LIKE type_t.chr500,    #營運據點簡稱
+   dean001       LIKE dean_t.dean001,   #營業日期
+   dean002       LIKE dean_t.dean002,   #款別分類
+   dean003       LIKE dean_t.dean003,   #款別編號
+   dean003_desc  LIKE type_t.chr500,    #款別說明
+   dean004       LIKE dean_t.dean004,   #卡券種編號
+   dean004_desc  LIKE type_t.chr500,    #卡券種說明
+   dean005       LIKE dean_t.dean005,   #券面額編號
+   dean005_desc  LIKE type_t.chr500,    #券面額說明
+   dean006       LIKE dean_t.dean006,   #幣別
+   dean006_desc  LIKE type_t.chr500,    #幣別說明
+   dean007       LIKE dean_t.dean007,   #存繳數量
+   dean008       LIKE dean_t.dean008,   #存繳金額
+   dean009       LIKE dean_t.dean009    #支票號碼
+                 END RECORD
+DEFINE g_deav3_d          DYNAMIC ARRAY OF type_g_deav3_d
+DEFINE g_site_flag        LIKE type_t.num5
+#end add-point
+       
+#模組變數(Module Variables)
+DEFINE g_deax_m          type_g_deax_m
+DEFINE g_deax_m_t        type_g_deax_m
+DEFINE g_deax_m_o        type_g_deax_m
+DEFINE g_deax_m_mask_o   type_g_deax_m #轉換遮罩前資料
+DEFINE g_deax_m_mask_n   type_g_deax_m #轉換遮罩後資料
+ 
+   DEFINE g_deaxdocno_t LIKE deax_t.deaxdocno
+ 
+ 
+DEFINE g_deav_d          DYNAMIC ARRAY OF type_g_deav_d
+DEFINE g_deav_d_t        type_g_deav_d
+DEFINE g_deav_d_o        type_g_deav_d
+DEFINE g_deav_d_mask_o   DYNAMIC ARRAY OF type_g_deav_d #轉換遮罩前資料
+DEFINE g_deav_d_mask_n   DYNAMIC ARRAY OF type_g_deav_d #轉換遮罩後資料
+DEFINE g_deav2_d          DYNAMIC ARRAY OF type_g_deav2_d
+DEFINE g_deav2_d_t        type_g_deav2_d
+DEFINE g_deav2_d_o        type_g_deav2_d
+DEFINE g_deav2_d_mask_o   DYNAMIC ARRAY OF type_g_deav2_d #轉換遮罩前資料
+DEFINE g_deav2_d_mask_n   DYNAMIC ARRAY OF type_g_deav2_d #轉換遮罩後資料
+ 
+ 
+DEFINE g_browser         DYNAMIC ARRAY OF type_browser
+DEFINE g_browser_f       DYNAMIC ARRAY OF type_browser
+ 
+ 
+DEFINE g_wc                  STRING
+DEFINE g_wc_t                STRING
+DEFINE g_wc2                 STRING                          #單身CONSTRUCT結果
+DEFINE g_wc2_table1          STRING
+DEFINE g_wc2_table2   STRING
+ 
+ 
+ 
+DEFINE g_wc2_extend          STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+ 
+DEFINE g_sql                 STRING
+DEFINE g_forupd_sql          STRING
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_current_idx         LIKE type_t.num10     
+DEFINE g_jump                LIKE type_t.num10        
+DEFINE g_no_ask              LIKE type_t.num5        
+DEFINE g_rec_b               LIKE type_t.num10           
+DEFINE l_ac                  LIKE type_t.num10    
+DEFINE g_curr_diag           ui.Dialog                         #Current Dialog
+                                                               
+DEFINE g_pagestart           LIKE type_t.num10                 
+DEFINE gwin_curr             ui.Window                         #Current Window
+DEFINE gfrm_curr             ui.Form                           #Current Form
+DEFINE g_page_action         STRING                            #page action
+DEFINE g_header_hidden       LIKE type_t.num5                  #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5                  #隱藏工作Panel
+DEFINE g_page                STRING                            #第幾頁
+DEFINE g_state               STRING       
+DEFINE g_header_cnt          LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10                  #單身總筆數
+DEFINE g_detail_idx          LIKE type_t.num10                  #單身目前所在筆數
+DEFINE g_detail_idx_tmp      LIKE type_t.num10                  #單身目前所在筆數
+DEFINE g_detail_idx2         LIKE type_t.num10                  #單身2目前所在筆數
+DEFINE g_detail_idx_list     DYNAMIC ARRAY OF LIKE type_t.num10 #單身2目前所在筆數
+DEFINE g_browser_cnt         LIKE type_t.num10                  #Browser總筆數
+DEFINE g_browser_idx         LIKE type_t.num10                  #Browser目前所在筆數
+DEFINE g_temp_idx            LIKE type_t.num10                  #Browser目前所在筆數(暫存用)
+DEFINE g_order               STRING                             #查詢排序欄位
+                                                        
+DEFINE g_current_row         LIKE type_t.num10                  #Browser所在筆數
+DEFINE g_current_sw          BOOLEAN                            #Browser所在筆數用開關
+DEFINE g_current_page        LIKE type_t.num10                  #目前所在頁數
+DEFINE g_insert              LIKE type_t.chr5                   #是否導到其他page
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys               DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak           DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_bfill               LIKE type_t.chr5              #是否刷新單身
+DEFINE g_error_show          LIKE type_t.num5              #是否顯示筆數提示訊息
+DEFINE g_master_insert       BOOLEAN                       #確認單頭資料是否寫入
+ 
+DEFINE g_wc_frozen           STRING                        #凍結欄位使用
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_aw                  STRING                        #確定當下點擊的單身
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+DEFINE g_log1                STRING                        #log用
+DEFINE g_log2                STRING                        #log用
+DEFINE g_loc                 LIKE type_t.chr5              #判斷游標所在位置
+DEFINE g_add_browse          STRING                        #新增填充用WC
+DEFINE g_update              BOOLEAN                       #確定單頭/身是否異動過
+DEFINE g_idx_group           om.SaxAttributes              #頁籤群組
+DEFINE g_master_commit       LIKE type_t.chr1              #確認單頭是否修改過
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="adet407.main" >}
+#應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   DEFINE l_success LIKE type_t.num5 #150308-00001#1  By Ken 150309
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("ade","")
+ 
+   #add-point:作業初始化 name="main.init"
+   
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = " SELECT deaxsite,'',deaxdocdt,deaxdocno,deax001,'',deax002,deax003,deax005,'', 
+       deax004,'','',deaxunit,deaxstus,deaxownid,'',deaxowndp,'',deaxcrtid,'',deaxcrtdp,'',deaxcrtdt, 
+       deaxmodid,'',deaxmoddt,deaxcnfid,'',deaxcnfdt", 
+                      " FROM deax_t",
+                      " WHERE deaxent= ? AND deaxdocno=? FOR UPDATE"
+   #add-point:SQL_define name="main.after_define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE adet407_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT DISTINCT t0.deaxsite,t0.deaxdocdt,t0.deaxdocno,t0.deax001,t0.deax002,t0.deax003, 
+       t0.deax005,t0.deax004,t0.deaxunit,t0.deaxstus,t0.deaxownid,t0.deaxowndp,t0.deaxcrtid,t0.deaxcrtdp, 
+       t0.deaxcrtdt,t0.deaxmodid,t0.deaxmoddt,t0.deaxcnfid,t0.deaxcnfdt,t1.ooefl003 ,t2.pmaal004 ,t3.ooag011 , 
+       t4.ooefl003 ,t5.ooag011 ,t6.ooefl003 ,t7.ooag011 ,t8.ooefl003 ,t9.ooag011 ,t10.ooag011",
+               " FROM deax_t t0",
+                              " LEFT JOIN ooefl_t t1 ON t1.ooeflent="||g_enterprise||" AND t1.ooefl001=t0.deaxsite AND t1.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN pmaal_t t2 ON t2.pmaalent="||g_enterprise||" AND t2.pmaal001=t0.deax001 AND t2.pmaal002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t3 ON t3.ooagent="||g_enterprise||" AND t3.ooag001=t0.deax005  ",
+               " LEFT JOIN ooefl_t t4 ON t4.ooeflent="||g_enterprise||" AND t4.ooefl001=t0.deax004 AND t4.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t5 ON t5.ooagent="||g_enterprise||" AND t5.ooag001=t0.deaxownid  ",
+               " LEFT JOIN ooefl_t t6 ON t6.ooeflent="||g_enterprise||" AND t6.ooefl001=t0.deaxowndp AND t6.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t7 ON t7.ooagent="||g_enterprise||" AND t7.ooag001=t0.deaxcrtid  ",
+               " LEFT JOIN ooefl_t t8 ON t8.ooeflent="||g_enterprise||" AND t8.ooefl001=t0.deaxcrtdp AND t8.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t9 ON t9.ooagent="||g_enterprise||" AND t9.ooag001=t0.deaxmodid  ",
+               " LEFT JOIN ooag_t t10 ON t10.ooagent="||g_enterprise||" AND t10.ooag001=t0.deaxcnfid  ",
+ 
+               " WHERE t0.deaxent = " ||g_enterprise|| " AND t0.deaxdocno = ?"
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   
+   #end add-point
+   PREPARE adet407_master_referesh FROM g_sql
+ 
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_adet407 WITH FORM cl_ap_formpath("ade",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL adet407_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL adet407_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_adet407
+      
+   END IF 
+   
+   CLOSE adet407_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   CALL s_aooi500_drop_temp() RETURNING l_success #150308-00001#1  By Ken 150309
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="adet407.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION adet407_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point    
+   #add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   DEFINE l_success LIKE type_t.num5 #150308-00001#1  By Ken 150309
+   #end add-point   
+   
+   #add-point:Function前置處理  name="init.pre_function"
+   
+   #end add-point
+   
+   LET g_bfill       = "Y"
+   LET g_detail_idx  = 1 #第一層單身指標
+   LET g_detail_idx2 = 1 #第二層單身指標
+   
+   #各個page指標
+   LET g_detail_idx_list[1] = 1 
+   LET g_detail_idx_list[2] = 1
+ 
+   LET g_error_show  = 1
+   LET l_ac = 1 #單身指標
+      CALL cl_set_combo_scc_part('deaxstus','13','N,Y,A,D,R,W,X')
+ 
+      CALL cl_set_combo_scc('deav001','8310') 
+   CALL cl_set_combo_scc('deau001','8310') 
+ 
+   LET gwin_curr = ui.Window.getCurrent()  #取得現行畫面
+   LET gfrm_curr = gwin_curr.getForm()     #取出物件化後的畫面物件
+   
+   #page群組
+   LET g_idx_group = om.SaxAttributes.create()
+   CALL g_idx_group.addAttribute("'1',","1")
+   CALL g_idx_group.addAttribute("'2',","1")
+ 
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   CALL s_aooi500_create_temp() RETURNING l_success #150308-00001#1  By Ken 150309   
+   CALL cl_set_combo_scc('dean002','8310') 
+   #end add-point
+   
+   #初始化搜尋條件
+   CALL adet407_default_search()
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.ui_dialog" >}
+#+ 功能選單
+PRIVATE FUNCTION adet407_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE ls_wc      STRING
+   DEFINE lb_first   BOOLEAN
+   DEFINE la_wc      DYNAMIC ARRAY OF RECORD
+          tableid    STRING,
+          wc         STRING
+          END RECORD
+   DEFINE la_param   RECORD
+          prog       STRING,
+          actionid   STRING,
+          background LIKE type_t.chr1,
+          param      DYNAMIC ARRAY OF STRING
+          END RECORD
+   DEFINE ls_js      STRING
+   DEFINE la_output  DYNAMIC ARRAY OF STRING   #報表元件鬆耦合使用
+   DEFINE  l_cmd_token           base.StringTokenizer   #報表作業cmdrun使用 
+   DEFINE  l_cmd_next            STRING                 #報表作業cmdrun使用
+   DEFINE  l_cmd_cnt             LIKE type_t.num5       #報表作業cmdrun使用
+   DEFINE  l_cmd_prog_arg        STRING                 #報表作業cmdrun使用
+   DEFINE  l_cmd_arg             STRING                 #報表作業cmdrun使用
+   #add-point:ui_dialog段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="ui_dialog.pre_function"
+   
+   #end add-point
+   
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+ 
+   #因應查詢方案進行處理
+   IF g_default THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   ELSE
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF
+   
+   #action default動作
+   #應用 a42 樣板自動產生(Version:3)
+   #進入程式時預設執行的動作
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice="insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL adet407_insert()
+            #add-point:ON ACTION insert name="menu.default.insert"
+            
+            #END add-point
+         END IF
+ 
+      #add-point:action default自訂 name="ui_dialog.action_default"
+      
+      #end add-point
+      OTHERWISE
+   END CASE
+ 
+ 
+ 
+   
+   LET lb_first = TRUE
+   
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   
+   #end add-point
+   
+   WHILE TRUE 
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_browser.clear()       
+         INITIALIZE g_deax_m.* TO NULL
+         CALL g_deav_d.clear()
+         CALL g_deav2_d.clear()
+ 
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL adet407_init()
+      END IF
+   
+      CALL lib_cl_dlg.cl_dlg_before_display()
+            
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+         #左側瀏覽頁簽
+         DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTES(COUNT=g_header_cnt)
+            BEFORE ROW
+               #回歸舊筆數位置 (回到當時異動的筆數)
+               LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+               IF g_current_row > 1 AND g_current_idx = 1 AND g_current_sw = FALSE THEN
+                  CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+                  LET g_current_idx = g_current_row
+               END IF
+               LET g_current_row = g_current_idx #目前指標
+               LET g_current_sw = TRUE
+         
+               IF g_current_idx > g_browser.getLength() THEN
+                  LET g_current_idx = g_browser.getLength()
+               END IF 
+               
+               CALL adet407_fetch('') # reload data
+               LET l_ac = 1
+               CALL adet407_ui_detailshow() #Setting the current row 
+         
+               CALL adet407_idx_chk()
+               #NEXT FIELD deavseq
+         
+               ON ACTION qbefield_user   #欄位隱藏設定 
+                  LET g_action_choice="qbefield_user"
+                  CALL cl_ui_qbefield_user()
+         END DISPLAY
+    
+         DISPLAY ARRAY g_deav_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+    
+            BEFORE ROW
+               #顯示單身筆數
+               CALL adet407_idx_chk()
+               #確定當下選擇的筆數
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_detail_idx = l_ac
+               LET g_detail_idx_list[1] = l_ac
+               CALL g_idx_group.addAttribute("'1',",l_ac)
+               
+               #add-point:page1, before row動作 name="ui_dialog.page1.before_row"
+               
+               #end add-point
+               
+            BEFORE DISPLAY
+               #如果一直都在單身1則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'1',"))
+               END IF
+               LET g_loc = 'm'
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_current_page = 1
+               #顯示單身筆數
+               CALL adet407_idx_chk()
+               #add-point:page1自定義行為 name="ui_dialog.page1.before_display"
+               
+               #end add-point
+               
+            #自訂ACTION(detail_show,page_1)
+            
+               
+            #add-point:page1自定義行為 name="ui_dialog.page1.action"
+            
+            #end add-point
+               
+         END DISPLAY
+        
+         #第一階單身段落
+         DISPLAY ARRAY g_deav2_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b)  
+    
+            BEFORE ROW
+               #顯示單身筆數
+               CALL adet407_idx_chk()
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_detail_idx = l_ac
+               LET g_detail_idx_list[2] = l_ac
+               CALL g_idx_group.addAttribute("'2',",l_ac)
+               
+               #add-point:page2, before row動作 name="ui_dialog.body2.before_row"
+               
+               #end add-point
+               
+            BEFORE DISPLAY
+               #如果一直都在單身1則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'2',"))
+               END IF
+               LET g_loc = 'm'
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_current_page = 2
+               #顯示單身筆數
+               CALL adet407_idx_chk()
+               #add-point:page2自定義行為 name="ui_dialog.body2.before_display"
+               
+               #end add-point
+      
+            #自訂ACTION(detail_show,page_2)
+            
+         
+            #add-point:page2自定義行為 name="ui_dialog.body2.action"
+            
+            #end add-point
+         
+         END DISPLAY
+ 
+         
+ 
+         
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         DISPLAY ARRAY g_deav3_d TO s_detail3.* ATTRIBUTES(COUNT=g_rec_b)  
+    
+            BEFORE ROW
+               CALL adet407_idx_chk()
+               LET l_ac = DIALOG.getCurrentRow("s_detail3")
+               LET g_detail_idx = l_ac
+               
+            BEFORE DISPLAY
+               #如果一直都在單頭則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_detail_idx)
+               END IF
+               LET g_loc = 'm'
+               LET l_ac = DIALOG.getCurrentRow("s_detail3")
+               LET g_current_page = 3
+               CALL adet407_idx_chk()
+         END DISPLAY
+         #end add-point
+         
+         SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+         SUBDIALOG lib_cl_dlg.cl_dlg_relateapps
+      
+         BEFORE DIALOG
+            #先填充browser資料
+            CALL adet407_browser_fill("")
+            CALL cl_notice()
+            CALL cl_navigator_setting(g_current_idx, g_detail_cnt)
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            LET g_current_sw = FALSE
+            #回歸舊筆數位置 (回到當時異動的筆數)
+            LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+            IF g_current_row > 1 AND g_current_idx = 1 AND g_current_sw = FALSE THEN
+               CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+               LET g_current_idx = g_current_row
+            END IF
+            
+            #確保g_current_idx位於正常區間內
+            #小於,等於0則指到第1筆
+            IF g_current_idx <= 0 THEN
+               LET g_current_idx = 1
+            END IF
+            #超過最大筆數則指到最後1筆
+            IF g_current_idx > g_browser.getLength() THEN
+               LEt g_current_idx = g_browser.getLength()
+            END IF 
+            
+            LET g_current_sw = TRUE
+            LET g_current_row = g_current_idx #目前指標
+            
+            #有資料才進行fetch
+            IF g_current_idx <> 0 THEN
+               CALL adet407_fetch('') # reload data
+            END IF
+            #LET g_detail_idx = 1
+            CALL adet407_ui_detailshow() #Setting the current row 
+            
+            #筆數顯示
+            LET g_current_page = 1
+            CALL adet407_idx_chk()
+            CALL cl_ap_performance_cal()
+            #add-point:ui_dialog段before_dialog2 name="ui_dialog.before_dialog2"
+            
+            #end add-point
+ 
+         #add-point:ui_dialog段more_action name="ui_dialog.more_action"
+         
+         #end add-point
+ 
+         #狀態碼切換
+         ON ACTION statechange
+            LET g_action_choice = "statechange"
+            CALL adet407_statechange()
+            #根據資料狀態切換action狀態
+            CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+            CALL adet407_set_act_visible()   
+            CALL adet407_set_act_no_visible()
+            IF NOT (g_deax_m.deaxdocno IS NULL
+ 
+              ) THEN
+               #組合條件
+               LET g_add_browse = " deaxent = " ||g_enterprise|| " AND",
+                                  " deaxdocno = '", g_deax_m.deaxdocno, "' "
+ 
+               #填到對應位置
+               CALL adet407_browser_fill("")
+            END IF
+         #應用 a32 樣板自動產生(Version:3)
+         #簽核狀況
+         ON ACTION bpm_status
+            #查詢簽核狀況, 統一建立HyperLink
+            CALL cl_bpm_status()
+            #add-point:ON ACTION bpm_status name="menu.bpm_status"
+            
+            #END add-point
+ 
+ 
+ 
+          
+         #查詢方案選擇 
+         ON ACTION queryplansel
+            CALL cl_dlg_qryplan_select() RETURNING ls_wc
+            #不是空條件才寫入g_wc跟重新找資料
+            IF NOT cl_null(ls_wc) THEN
+               CALL util.JSON.parse(ls_wc, la_wc)
+               INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+               INITIALIZE g_wc2_table2 TO NULL
+ 
+ 
+               FOR li_idx = 1 TO la_wc.getLength()
+                  CASE
+                     WHEN la_wc[li_idx].tableid = "deax_t" 
+                        LET g_wc = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "deav_t" 
+                        LET g_wc2_table1 = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "deau_t" 
+                        LET g_wc2_table2 = la_wc[li_idx].wc
+ 
+ 
+                     WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                        LET g_wc2_extend = la_wc[li_idx].wc
+                  END CASE
+               END FOR
+               IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1) 
+                  OR NOT cl_null(g_wc2_table2)
+ 
+ 
+                  OR NOT cl_null(g_wc2_extend)
+                  THEN
+                  #組合g_wc2
+                  IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+                     LET g_wc2 = g_wc2_table1
+                  END IF
+                  IF g_wc2_table2 <> " 1=1" AND NOT cl_null(g_wc2_table2) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+                  END IF
+ 
+ 
+                  IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+                  END IF
+ 
+                  IF g_wc2.subString(1,5) = " AND " THEN
+                     LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+                  END IF
+               END IF
+               CALL adet407_browser_fill("F")   #browser_fill()會將notice區塊清空
+               CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+            END IF
+         
+         #查詢方案選擇
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               CALL util.JSON.parse(ls_wc, la_wc)
+               INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+               INITIALIZE g_wc2_table2 TO NULL
+ 
+ 
+               FOR li_idx = 1 TO la_wc.getLength()
+                  CASE
+                     WHEN la_wc[li_idx].tableid = "deax_t" 
+                        LET g_wc = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "deav_t" 
+                        LET g_wc2_table1 = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "deau_t" 
+                        LET g_wc2_table2 = la_wc[li_idx].wc
+ 
+ 
+                     WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                        LET g_wc2_extend = la_wc[li_idx].wc
+                  END CASE
+               END FOR
+               IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1)
+                  OR NOT cl_null(g_wc2_table2)
+ 
+ 
+                  OR NOT cl_null(g_wc2_extend)
+                  THEN
+                  IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+                     LET g_wc2 = g_wc2_table1
+                  END IF
+                  IF g_wc2_table2 <> " 1=1" AND NOT cl_null(g_wc2_table2) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+                  END IF
+ 
+ 
+                  IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+                  END IF
+                  IF g_wc2.subString(1,5) = " AND " THEN
+                     LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+                  END IF
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL adet407_browser_fill("F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code = "-100" 
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL adet407_fetch("F")
+                  END IF
+               END IF
+            END IF
+            #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+            CALL cl_notice()
+          
+         #應用 a49 樣板自動產生(Version:4)
+            #過濾瀏覽頁資料
+            ON ACTION filter
+               LET g_action_choice = "fetch"
+               #add-point:filter action name="ui_dialog.action.filter"
+               
+               #end add-point
+               CALL adet407_filter()
+               EXIT DIALOG
+ 
+ 
+ 
+         
+         ON ACTION first
+            LET g_action_choice = "fetch"
+            CALL adet407_fetch('F')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL adet407_idx_chk()
+            
+         ON ACTION previous
+            LET g_action_choice = "fetch"
+            CALL adet407_fetch('P')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL adet407_idx_chk()
+            
+         ON ACTION jump
+            LET g_action_choice = "fetch"
+            CALL adet407_fetch('/')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL adet407_idx_chk()
+            
+         ON ACTION next
+            LET g_action_choice = "fetch"
+            CALL adet407_fetch('N')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL adet407_idx_chk()
+            
+         ON ACTION last
+            LET g_action_choice = "fetch"
+            CALL adet407_fetch('L')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL adet407_idx_chk()
+          
+         #excel匯出功能          
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               #browser
+               CALL g_export_node.clear()
+               IF g_main_hidden = 1 THEN
+                  LET g_export_node[1] = base.typeInfo.create(g_browser)
+                  LET g_export_id[1]   = "s_browse"
+                  CALL cl_export_to_excel()
+               #非browser
+               ELSE
+                  LET g_export_node[1] = base.typeInfo.create(g_deav_d)
+                  LET g_export_id[1]   = "s_detail1"
+                  LET g_export_node[2] = base.typeInfo.create(g_deav2_d)
+                  LET g_export_id[2]   = "s_detail2"
+ 
+                  #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+                  #ken---add---s 需求單號：150107-00009 項次：7
+                  LET g_export_node[1] = base.typeInfo.create(g_deav2_d)
+                  LET g_export_id[1]   = "s_detail2"
+                  LET g_export_node[2] = base.typeInfo.create(g_deav3_d)
+                  LET g_export_id[2]   = "s_detail3"                  
+                  LET g_export_node[3] = base.typeInfo.create(g_deav_d)
+                  LET g_export_id[3]   = "s_detail1"
+                  #ken---add---e
+                  #END add-point
+                  CALL cl_export_to_excel_getpage()
+                  CALL cl_export_to_excel()
+               END IF
+            END IF
+        
+         ON ACTION close
+            LET INT_FLAG = FALSE
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+          
+         ON ACTION exit
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+    
+         #主頁摺疊
+         ON ACTION mainhidden       
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+               CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+               CALL cl_notice()
+            END IF
+            
+         #瀏覽頁折疊
+         ON ACTION worksheethidden   
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+               CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+            END IF
+            IF lb_first THEN
+               LET lb_first = FALSE
+               NEXT FIELD deavseq
+            END IF
+       
+         #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+         ON ACTION controls     
+            IF g_header_hidden THEN
+               CALL gfrm_curr.setElementHidden("vb_master",0)
+               CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+               LET g_header_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("vb_master",1)
+               CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+               LET g_header_hidden = 1     #hidden     
+            END IF
+    
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL adet407_delete()
+               #add-point:ON ACTION delete name="menu.delete"
+               #160818-00017#8 -s by 08172
+               CALL adet407_set_act_visible()   
+               CALL adet407_set_act_no_visible()
+               #160818-00017#8 -e by 08172 
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL adet407_insert()
+               #add-point:ON ACTION insert name="menu.insert"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL adet407_query()
+               #add-point:ON ACTION query name="menu.query"
+               
+               #END add-point
+               #應用 a59 樣板自動產生(Version:3)  
+               CALL g_curr_diag.setCurrentRow("s_detail1",1)
+               CALL g_curr_diag.setCurrentRow("s_detail2",1)
+ 
+ 
+ 
+ 
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               
+               #END add-point
+               &include "erp/ade/adet407_rep.4gl"
+               #add-point:ON ACTION output.after name="menu.after_output"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               
+               #END add-point
+               &include "erp/ade/adet407_rep.4gl"
+               #add-point:ON ACTION quickprint.after name="menu.after_quickprint"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL adet407_reproduce()
+               #add-point:ON ACTION reproduce name="menu.reproduce"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL adet407_modify()
+               #add-point:ON ACTION modify name="menu.modify"
+               #160818-00017#8 -s by 08172
+               CALL adet407_set_act_visible()   
+               CALL adet407_set_act_no_visible()
+               #160818-00017#8 -e by 08172 
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = g_curr_diag.getCurrentItem()
+               CALL adet407_modify()
+               #add-point:ON ACTION modify_detail name="menu.modify_detail"
+               #160818-00017#8 -s by 08172
+               CALL adet407_set_act_visible()   
+               CALL adet407_set_act_no_visible()
+               #160818-00017#8 -e by 08172 
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION open_adet407_01
+            LET g_action_choice="open_adet407_01"
+            IF cl_auth_chk_act("open_adet407_01") THEN
+               
+               #add-point:ON ACTION open_adet407_01 name="menu.open_adet407_01"
+               IF NOT adet407_count_deau() THEN
+                  #單身已有匯入資料與差異資料，是否要全部刪除後重新匯入?
+                  IF NOT cl_ask_confirm('ade-00046') THEN
+                     EXIT DIALOG
+                  END IF
+               END IF
+               CALL cl_showmsg_init()
+               CALL adet407_01(g_deax_m.deaxdocno)
+               CALL cl_showmsg()
+               LET g_action_choice = ""
+               LET INT_FLAG = ''
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         
+         #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL adet407_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.dialog.related_document"
+               
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL adet407_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.dialog.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL adet407_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.dialog.followup"
+            
+            #END add-point
+            CALL cl_user_overview_follow(g_deax_m.deaxdocdt)
+ 
+ 
+ 
+         
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+    
+         #交談指令共用ACTION
+         &include "common_action.4gl" 
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #(ver:79) ---add start---
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      
+      #end add-point
+      #(ver:79) --- add end ---
+    
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         EXIT WHILE
+      END IF
+    
+   END WHILE    
+      
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.browser_fill" >}
+#+ 瀏覽頁簽資料填充
+PRIVATE FUNCTION adet407_browser_fill(ps_page_action)
+   #add-point:browser_fill段define(客製用) name="browser_fill.define_customerization"
+   
+   #end add-point  
+   DEFINE ps_page_action    STRING
+   DEFINE l_wc              STRING
+   DEFINE l_wc2             STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sub_sql         STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="browser_fill.define"
+   DEFINE l_where           STRING
+   #end add-point    
+   
+   #add-point:Function前置處理 name="browser_fill.before_browser_fill"
+   
+   #end add-point
+   
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   LET l_wc  = g_wc.trim() 
+   LET l_wc2 = g_wc2.trim()
+ 
+   #add-point:browser_fill,foreach前 name="browser_fill.before_foreach"
+   CALL s_aooi500_sql_where(g_prog,'deaxsite') RETURNING l_where
+   LET l_wc = l_wc," AND ",l_where
+   #end add-point
+   
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件                      
+      LET l_sub_sql = " SELECT DISTINCT deaxdocno ",
+                      " FROM deax_t ",
+                      " ",
+                      " LEFT JOIN deav_t ON deavent = deaxent AND deaxdocno = deavdocno ", "  ",
+                      #add-point:browser_fill段sql(deav_t1) name="browser_fill.cnt.join.}"
+                      
+                      #end add-point
+                      " LEFT JOIN deau_t ON deauent = deaxent AND deaxdocno = deaudocno", "  ",
+                      #add-point:browser_fill段sql(deau_t1) name="browser_fill.cnt.join.deau_t1"
+                      
+                      #end add-point
+ 
+ 
+ 
+                      " ", 
+                      " ", 
+                      " ",                      
+ 
+ 
+ 
+                      " WHERE deaxent = " ||g_enterprise|| " AND deavent = " ||g_enterprise|| " AND ",l_wc, " AND ", l_wc2, cl_sql_add_filter("deax_t")
+   ELSE
+      #單身未輸入搜尋條件
+      LET l_sub_sql = " SELECT DISTINCT deaxdocno ",
+                      " FROM deax_t ", 
+                      "  ",
+                      "  ",
+                      " WHERE deaxent = " ||g_enterprise|| " AND ",l_wc CLIPPED, cl_sql_add_filter("deax_t")
+   END IF
+   
+   #add-point:browser_fill,cnt wc name="browser_fill.cnt_sqlwc"
+   
+   #end add-point
+   
+   LET g_sql = " SELECT COUNT(1) FROM (",l_sub_sql,")"
+   
+   #add-point:browser_fill,count前 name="browser_fill.before_count"
+   
+   #end add-point
+   
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE header_cnt_pre FROM g_sql
+      EXECUTE header_cnt_pre INTO g_browser_cnt   #總筆數
+      FREE header_cnt_pre
+   END IF
+    
+   IF g_browser_cnt > g_max_browse THEN
+      IF g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_browser_cnt
+         LET g_errparam.code = 9035 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+      END IF
+      LET g_browser_cnt = g_max_browse
+   END IF
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+ 
+   #根據行為確定資料填充位置及WC
+   IF cl_null(g_add_browse) THEN
+      #清除畫面
+      CLEAR FORM                
+      INITIALIZE g_deax_m.* TO NULL
+      CALL g_deav_d.clear()        
+      CALL g_deav2_d.clear() 
+ 
+      #add-point:browser_fill g_add_browse段額外處理 name="browser_fill.add_browse.other"
+      
+      #end add-point   
+      CALL g_browser.clear()
+      LET g_cnt = 1
+   ELSE
+      LET l_wc  = g_add_browse
+      LET l_wc2 = " 1=1" 
+      LET g_cnt = g_current_idx
+   END IF
+ 
+   #依照t0.deaxsite,t0.deaxdocdt,t0.deaxdocno,t0.deax001,t0.deax002,t0.deax003 Browser欄位定義(取代原本bs_sql功能)
+   #考量到單身可能下條件, 所以此處需join單身所有table
+   #DISTINCT是為了避免在join時出現重複的資料(如果不加DISTINCT則須在程式中過濾)
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件   
+      LET g_sql = " SELECT DISTINCT t0.deaxstus,t0.deaxsite,t0.deaxdocdt,t0.deaxdocno,t0.deax001,t0.deax002, 
+          t0.deax003,t1.ooefl003 ,t2.pmaal004 ",
+                  " FROM deax_t t0",
+                  "  ",
+                  "  LEFT JOIN deav_t ON deavent = deaxent AND deaxdocno = deavdocno ", "  ", 
+                  #add-point:browser_fill段sql(deav_t1) name="browser_fill.join.deav_t1"
+                  
+                  #end add-point
+                  "  LEFT JOIN deau_t ON deauent = deaxent AND deaxdocno = deaudocno", "  ", 
+                  #add-point:browser_fill段sql(deau_t1) name="browser_fill.join.deau_t1"
+                  
+                  #end add-point
+ 
+ 
+ 
+                  " ", 
+                  " ",                      
+ 
+ 
+ 
+                                 " LEFT JOIN ooefl_t t1 ON t1.ooeflent="||g_enterprise||" AND t1.ooefl001=t0.deaxsite AND t1.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN pmaal_t t2 ON t2.pmaalent="||g_enterprise||" AND t2.pmaal001=t0.deax001 AND t2.pmaal002='"||g_dlang||"' ",
+ 
+                  " WHERE t0.deaxent = " ||g_enterprise|| " AND ",l_wc," AND ",l_wc2, cl_sql_add_filter("deax_t")
+   ELSE
+      #單身無輸入搜尋條件   
+      LET g_sql = " SELECT DISTINCT t0.deaxstus,t0.deaxsite,t0.deaxdocdt,t0.deaxdocno,t0.deax001,t0.deax002, 
+          t0.deax003,t1.ooefl003 ,t2.pmaal004 ",
+                  " FROM deax_t t0",
+                  "  ",
+                                 " LEFT JOIN ooefl_t t1 ON t1.ooeflent="||g_enterprise||" AND t1.ooefl001=t0.deaxsite AND t1.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN pmaal_t t2 ON t2.pmaalent="||g_enterprise||" AND t2.pmaal001=t0.deax001 AND t2.pmaal002='"||g_dlang||"' ",
+ 
+                  " WHERE t0.deaxent = " ||g_enterprise|| " AND ",l_wc, cl_sql_add_filter("deax_t")
+   END IF
+   #add-point:browser_fill,sql wc name="browser_fill.fill_sqlwc"
+   
+   #end add-point
+   LET g_sql = g_sql, " ORDER BY deaxdocno ",g_order
+ 
+   #add-point:browser_fill,before_prepare name="browser_fill.before_prepare"
+   
+   #end add-point
+        
+   #LET g_sql = cl_sql_add_tabid(g_sql,"deax_t") #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql) #遮蔽特定資料
+   
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE browse_pre FROM g_sql
+      DECLARE browse_cur CURSOR FOR browse_pre
+      
+      #add-point:browser_fill段open cursor name="browser_fill.open"
+      
+      #end add-point
+      
+      FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_deaxsite,g_browser[g_cnt].b_deaxdocdt, 
+          g_browser[g_cnt].b_deaxdocno,g_browser[g_cnt].b_deax001,g_browser[g_cnt].b_deax002,g_browser[g_cnt].b_deax003, 
+          g_browser[g_cnt].b_deaxsite_desc,g_browser[g_cnt].b_deax001_desc
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "Foreach:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+      
+         #add-point:browser_fill段reference name="browser_fill.reference"
+         
+         #end add-point
+      
+         #遮罩相關處理
+         CALL adet407_browser_mask()
+      
+               #應用 a24 樣板自動產生(Version:3)
+      #browser顯示圖片
+      CASE g_browser[g_cnt].b_statepic
+         WHEN "N"
+            LET g_browser[g_cnt].b_statepic = "stus/16/unconfirmed.png"
+         WHEN "Y"
+            LET g_browser[g_cnt].b_statepic = "stus/16/confirmed.png"
+         WHEN "A"
+            LET g_browser[g_cnt].b_statepic = "stus/16/approved.png"
+         WHEN "D"
+            LET g_browser[g_cnt].b_statepic = "stus/16/withdraw.png"
+         WHEN "R"
+            LET g_browser[g_cnt].b_statepic = "stus/16/rejection.png"
+         WHEN "W"
+            LET g_browser[g_cnt].b_statepic = "stus/16/signing.png"
+         WHEN "X"
+            LET g_browser[g_cnt].b_statepic = "stus/16/invalid.png"
+         
+      END CASE
+ 
+ 
+ 
+         LET g_cnt = g_cnt + 1
+         IF g_cnt > g_max_browse THEN
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+      FREE browse_pre
+   END IF
+   
+   #清空g_add_browse, 並指定指標位置
+   IF NOT cl_null(g_add_browse) THEN
+      LET g_add_browse = ""
+      CALL g_curr_diag.setCurrentRow("s_browse",g_current_idx)
+   END IF
+   
+   IF cl_null(g_browser[g_cnt].b_deaxdocno) THEN
+      CALL g_browser.deleteElement(g_cnt)
+   END IF
+   
+   LET g_header_cnt  = g_browser.getLength()
+   LET g_browser_cnt = g_browser.getLength()
+   
+   #筆數顯示
+   IF g_browser_cnt > 0 THEN
+      DISPLAY g_browser_idx TO FORMONLY.b_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.b_count #總筆數
+      DISPLAY g_browser_idx TO FORMONLY.h_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.h_count #總筆數
+      DISPLAY g_detail_idx  TO FORMONLY.idx     #單身當下筆數
+      DISPLAY g_detail_cnt  TO FORMONLY.cnt     #單身總筆數
+   ELSE
+      DISPLAY '' TO FORMONLY.b_index #當下筆數
+      DISPLAY '' TO FORMONLY.b_count #總筆數
+      DISPLAY '' TO FORMONLY.h_index #當下筆數
+      DISPLAY '' TO FORMONLY.h_count #總筆數
+      DISPLAY '' TO FORMONLY.idx     #單身當下筆數
+      DISPLAY '' TO FORMONLY.cnt     #單身總筆數
+   END IF
+ 
+   LET g_rec_b = g_cnt - 1
+   LET g_detail_cnt = g_rec_b
+   LET g_cnt = 0
+ 
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+                  
+   
+   #add-point:browser_fill段結束前 name="browser_fill.after"
+   
+   #end add-point   
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.ui_headershow" >}
+#+ 單頭資料重新顯示
+PRIVATE FUNCTION adet407_ui_headershow()
+   #add-point:ui_headershow段define(客製用) name="ui_headershow.define_customerization"
+   
+   #end add-point  
+   #add-point:ui_headershow段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_headershow.define"
+   
+   #end add-point      
+   
+   #add-point:Function前置處理  name="ui_headershow.pre_function"
+   
+   #end add-point
+   
+   LET g_deax_m.deaxdocno = g_browser[g_current_idx].b_deaxdocno   
+ 
+   EXECUTE adet407_master_referesh USING g_deax_m.deaxdocno INTO g_deax_m.deaxsite,g_deax_m.deaxdocdt, 
+       g_deax_m.deaxdocno,g_deax_m.deax001,g_deax_m.deax002,g_deax_m.deax003,g_deax_m.deax005,g_deax_m.deax004, 
+       g_deax_m.deaxunit,g_deax_m.deaxstus,g_deax_m.deaxownid,g_deax_m.deaxowndp,g_deax_m.deaxcrtid, 
+       g_deax_m.deaxcrtdp,g_deax_m.deaxcrtdt,g_deax_m.deaxmodid,g_deax_m.deaxmoddt,g_deax_m.deaxcnfid, 
+       g_deax_m.deaxcnfdt,g_deax_m.deaxsite_desc,g_deax_m.deax001_desc,g_deax_m.deax005_desc,g_deax_m.deax004_desc, 
+       g_deax_m.deaxownid_desc,g_deax_m.deaxowndp_desc,g_deax_m.deaxcrtid_desc,g_deax_m.deaxcrtdp_desc, 
+       g_deax_m.deaxmodid_desc,g_deax_m.deaxcnfid_desc
+   
+   CALL adet407_deax_t_mask()
+   CALL adet407_show()
+      
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.ui_detailshow" >}
+#+ 單身資料重新顯示
+PRIVATE FUNCTION adet407_ui_detailshow()
+   #add-point:ui_detailshow段define(客製用) name="ui_detailshow.define_customerization"
+   
+   #end add-point    
+   #add-point:ui_detailshow段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_detailshow.define"
+   
+   #end add-point    
+ 
+   #add-point:Function前置處理 name="ui_detailshow.before"
+   
+   #end add-point    
+   
+   IF g_curr_diag IS NOT NULL THEN
+      CALL g_curr_diag.setCurrentRow("s_detail1",g_detail_idx)      
+      CALL g_curr_diag.setCurrentRow("s_detail2",g_detail_idx)
+ 
+   END IF
+   
+   #add-point:ui_detailshow段after name="ui_detailshow.after"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.ui_browser_refresh" >}
+#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION adet407_ui_browser_refresh()
+   #add-point:ui_browser_refresh段define(客製用) name="ui_browser_refresh.define_customerization"
+   
+   #end add-point    
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_browser_refresh.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="ui_browser_refresh.pre_function"
+   
+   #end add-point
+   
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_header_cnt  = g_browser.getLength()
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_deaxdocno = g_deax_m.deaxdocno 
+ 
+         THEN
+         CALL g_browser.deleteElement(l_i)
+         EXIT FOR
+      END IF
+   END FOR
+   LET g_browser_cnt = g_browser_cnt - 1
+   LET g_header_cnt = g_header_cnt - 1
+    
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+      CLEAR FORM
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+   
+   #add-point:ui_browser_refresh段after name="ui_browser_refresh.after"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.construct" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION adet407_construct()
+   #add-point:cs段define(客製用) name="cs.define_customerization"
+   
+   #end add-point    
+   DEFINE ls_return   STRING
+   DEFINE ls_result   STRING 
+   DEFINE ls_wc       STRING 
+   DEFINE la_wc       DYNAMIC ARRAY OF RECORD
+          tableid     STRING,
+          wc          STRING
+          END RECORD
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:cs段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="cs.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="cs.pre_function"
+   
+   #end add-point
+    
+   #清除畫面
+   CLEAR FORM                
+   INITIALIZE g_deax_m.* TO NULL
+   CALL g_deav_d.clear()        
+   CALL g_deav2_d.clear() 
+ 
+   
+   LET g_action_choice = ""
+    
+   INITIALIZE g_wc TO NULL
+   INITIALIZE g_wc2 TO NULL
+   
+   INITIALIZE g_wc2_table1 TO NULL
+   INITIALIZE g_wc2_table2 TO NULL
+ 
+ 
+    
+   LET g_qryparam.state = 'c'
+   
+   #add-point:cs段開始前 name="cs.before_construct"
+   
+   #end add-point 
+   
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+      #單頭
+      CONSTRUCT BY NAME g_wc ON deaxsite,deaxdocdt,deaxdocno,deax001,deax002,deax003,deax005,deax004, 
+          deaxunit,deaxstus,deaxownid,deaxowndp,deaxcrtid,deaxcrtdp,deaxcrtdt,deaxmodid,deaxmoddt,deaxcnfid, 
+          deaxcnfdt
+ 
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.head.before_construct"
+            
+            #end add-point 
+            
+         #公用欄位開窗相關處理
+         #應用 a11 樣板自動產生(Version:3)
+         #共用欄位查詢處理  
+         ##----<<deaxcrtdt>>----
+         AFTER FIELD deaxcrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+         #----<<deaxmoddt>>----
+         AFTER FIELD deaxmoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<deaxcnfdt>>----
+         AFTER FIELD deaxcnfdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<deaxpstdt>>----
+ 
+ 
+ 
+            
+         #一般欄位開窗相關處理    
+                  #Ctrlp:construct.c.deaxsite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deaxsite
+            #add-point:ON ACTION controlp INFIELD deaxsite name="construct.c.deaxsite"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = s_aooi500_q_where(g_prog,'deaxsite',g_site,'c') #150308-00001#1  By Ken add 'c' 150309
+            CALL q_ooef001_24()                     #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deaxsite  #顯示到畫面上
+            NEXT FIELD deaxsite                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deaxsite
+            #add-point:BEFORE FIELD deaxsite name="construct.b.deaxsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deaxsite
+            
+            #add-point:AFTER FIELD deaxsite name="construct.a.deaxsite"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deaxdocdt
+            #add-point:BEFORE FIELD deaxdocdt name="construct.b.deaxdocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deaxdocdt
+            
+            #add-point:AFTER FIELD deaxdocdt name="construct.a.deaxdocdt"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.deaxdocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deaxdocdt
+            #add-point:ON ACTION controlp INFIELD deaxdocdt name="construct.c.deaxdocdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.deaxdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deaxdocno
+            #add-point:ON ACTION controlp INFIELD deaxdocno name="construct.c.deaxdocno"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_deaxdocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deaxdocno  #顯示到畫面上
+            NEXT FIELD deaxdocno                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deaxdocno
+            #add-point:BEFORE FIELD deaxdocno name="construct.b.deaxdocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deaxdocno
+            
+            #add-point:AFTER FIELD deaxdocno name="construct.a.deaxdocno"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.deax001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deax001
+            #add-point:ON ACTION controlp INFIELD deax001 name="construct.c.deax001"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = 'ALL'
+            CALL q_pmaa001_6()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deax001  #顯示到畫面上
+            NEXT FIELD deax001                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deax001
+            #add-point:BEFORE FIELD deax001 name="construct.b.deax001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deax001
+            
+            #add-point:AFTER FIELD deax001 name="construct.a.deax001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.deax002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deax002
+            #add-point:ON ACTION controlp INFIELD deax002 name="construct.c.deax002"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_deamdocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deax002  #顯示到畫面上
+            NEXT FIELD deax002                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deax002
+            #add-point:BEFORE FIELD deax002 name="construct.b.deax002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deax002
+            
+            #add-point:AFTER FIELD deax002 name="construct.a.deax002"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deax003
+            #add-point:BEFORE FIELD deax003 name="construct.b.deax003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deax003
+            
+            #add-point:AFTER FIELD deax003 name="construct.a.deax003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.deax003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deax003
+            #add-point:ON ACTION controlp INFIELD deax003 name="construct.c.deax003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.deax005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deax005
+            #add-point:ON ACTION controlp INFIELD deax005 name="construct.c.deax005"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deax005  #顯示到畫面上
+            NEXT FIELD deax005                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deax005
+            #add-point:BEFORE FIELD deax005 name="construct.b.deax005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deax005
+            
+            #add-point:AFTER FIELD deax005 name="construct.a.deax005"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.deax004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deax004
+            #add-point:ON ACTION controlp INFIELD deax004 name="construct.c.deax004"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deax004  #顯示到畫面上
+            NEXT FIELD deax004                     #返回原欄位
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deax004
+            #add-point:BEFORE FIELD deax004 name="construct.b.deax004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deax004
+            
+            #add-point:AFTER FIELD deax004 name="construct.a.deax004"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deaxunit
+            #add-point:BEFORE FIELD deaxunit name="construct.b.deaxunit"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deaxunit
+            
+            #add-point:AFTER FIELD deaxunit name="construct.a.deaxunit"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.deaxunit
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deaxunit
+            #add-point:ON ACTION controlp INFIELD deaxunit name="construct.c.deaxunit"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deaxstus
+            #add-point:BEFORE FIELD deaxstus name="construct.b.deaxstus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deaxstus
+            
+            #add-point:AFTER FIELD deaxstus name="construct.a.deaxstus"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.deaxstus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deaxstus
+            #add-point:ON ACTION controlp INFIELD deaxstus name="construct.c.deaxstus"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.deaxownid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deaxownid
+            #add-point:ON ACTION controlp INFIELD deaxownid name="construct.c.deaxownid"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deaxownid  #顯示到畫面上
+            NEXT FIELD deaxownid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deaxownid
+            #add-point:BEFORE FIELD deaxownid name="construct.b.deaxownid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deaxownid
+            
+            #add-point:AFTER FIELD deaxownid name="construct.a.deaxownid"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.deaxowndp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deaxowndp
+            #add-point:ON ACTION controlp INFIELD deaxowndp name="construct.c.deaxowndp"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deaxowndp  #顯示到畫面上
+            NEXT FIELD deaxowndp                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deaxowndp
+            #add-point:BEFORE FIELD deaxowndp name="construct.b.deaxowndp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deaxowndp
+            
+            #add-point:AFTER FIELD deaxowndp name="construct.a.deaxowndp"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.deaxcrtid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deaxcrtid
+            #add-point:ON ACTION controlp INFIELD deaxcrtid name="construct.c.deaxcrtid"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deaxcrtid  #顯示到畫面上
+            NEXT FIELD deaxcrtid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deaxcrtid
+            #add-point:BEFORE FIELD deaxcrtid name="construct.b.deaxcrtid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deaxcrtid
+            
+            #add-point:AFTER FIELD deaxcrtid name="construct.a.deaxcrtid"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.deaxcrtdp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deaxcrtdp
+            #add-point:ON ACTION controlp INFIELD deaxcrtdp name="construct.c.deaxcrtdp"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deaxcrtdp  #顯示到畫面上
+            NEXT FIELD deaxcrtdp                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deaxcrtdp
+            #add-point:BEFORE FIELD deaxcrtdp name="construct.b.deaxcrtdp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deaxcrtdp
+            
+            #add-point:AFTER FIELD deaxcrtdp name="construct.a.deaxcrtdp"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deaxcrtdt
+            #add-point:BEFORE FIELD deaxcrtdt name="construct.b.deaxcrtdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.deaxmodid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deaxmodid
+            #add-point:ON ACTION controlp INFIELD deaxmodid name="construct.c.deaxmodid"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deaxmodid  #顯示到畫面上
+            NEXT FIELD deaxmodid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deaxmodid
+            #add-point:BEFORE FIELD deaxmodid name="construct.b.deaxmodid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deaxmodid
+            
+            #add-point:AFTER FIELD deaxmodid name="construct.a.deaxmodid"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deaxmoddt
+            #add-point:BEFORE FIELD deaxmoddt name="construct.b.deaxmoddt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.deaxcnfid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deaxcnfid
+            #add-point:ON ACTION controlp INFIELD deaxcnfid name="construct.c.deaxcnfid"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deaxcnfid  #顯示到畫面上
+            NEXT FIELD deaxcnfid                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deaxcnfid
+            #add-point:BEFORE FIELD deaxcnfid name="construct.b.deaxcnfid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deaxcnfid
+            
+            #add-point:AFTER FIELD deaxcnfid name="construct.a.deaxcnfid"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deaxcnfdt
+            #add-point:BEFORE FIELD deaxcnfdt name="construct.b.deaxcnfdt"
+            
+            #END add-point
+ 
+ 
+ 
+         
+      END CONSTRUCT
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc2_table1 ON deavseq,deavsite,deavdocdt,deav001,deav002,deav003,deav004,deav005,deav006, 
+          deav007,deav008,deav009,deav010,deav011,deav012,deav013,deav014,deav015,deav016,deavunit
+           FROM s_detail1[1].deavseq,s_detail1[1].deavsite,s_detail1[1].deavdocdt,s_detail1[1].deav001, 
+               s_detail1[1].deav002,s_detail1[1].deav003,s_detail1[1].deav004,s_detail1[1].deav005,s_detail1[1].deav006, 
+               s_detail1[1].deav007,s_detail1[1].deav008,s_detail1[1].deav009,s_detail1[1].deav010,s_detail1[1].deav011, 
+               s_detail1[1].deav012,s_detail1[1].deav013,s_detail1[1].deav014,s_detail1[1].deav015,s_detail1[1].deav016, 
+               s_detail1[1].deavunit
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.body.before_construct"
+            
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+                #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deavseq
+            #add-point:BEFORE FIELD deavseq name="construct.b.page1.deavseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deavseq
+            
+            #add-point:AFTER FIELD deavseq name="construct.a.page1.deavseq"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.deavseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deavseq
+            #add-point:ON ACTION controlp INFIELD deavseq name="construct.c.page1.deavseq"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.deavsite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deavsite
+            #add-point:ON ACTION controlp INFIELD deavsite name="construct.c.page1.deavsite"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = s_aooi500_q_where(g_prog,'deavsite',g_site,'c') #150308-00001#1  By Ken add 'c' 150309
+            CALL q_ooef001_24()                     #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deavsite  #顯示到畫面上
+            NEXT FIELD deavsite                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deavsite
+            #add-point:BEFORE FIELD deavsite name="construct.b.page1.deavsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deavsite
+            
+            #add-point:AFTER FIELD deavsite name="construct.a.page1.deavsite"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deavdocdt
+            #add-point:BEFORE FIELD deavdocdt name="construct.b.page1.deavdocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deavdocdt
+            
+            #add-point:AFTER FIELD deavdocdt name="construct.a.page1.deavdocdt"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.deavdocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deavdocdt
+            #add-point:ON ACTION controlp INFIELD deavdocdt name="construct.c.page1.deavdocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deav001
+            #add-point:BEFORE FIELD deav001 name="construct.b.page1.deav001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deav001
+            
+            #add-point:AFTER FIELD deav001 name="construct.a.page1.deav001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.deav001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deav001
+            #add-point:ON ACTION controlp INFIELD deav001 name="construct.c.page1.deav001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.deav002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deav002
+            #add-point:ON ACTION controlp INFIELD deav002 name="construct.c.page1.deav002"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooia001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deav002  #顯示到畫面上
+            NEXT FIELD deav002                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deav002
+            #add-point:BEFORE FIELD deav002 name="construct.b.page1.deav002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deav002
+            
+            #add-point:AFTER FIELD deav002 name="construct.a.page1.deav002"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.deav003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deav003
+            #add-point:ON ACTION controlp INFIELD deav003 name="construct.c.page1.deav003"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_mman001_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deav003  #顯示到畫面上
+            NEXT FIELD deav003                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deav003
+            #add-point:BEFORE FIELD deav003 name="construct.b.page1.deav003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deav003
+            
+            #add-point:AFTER FIELD deav003 name="construct.a.page1.deav003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.deav004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deav004
+            #add-point:ON ACTION controlp INFIELD deav004 name="construct.c.page1.deav004"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '2071'
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deav004  #顯示到畫面上
+            NEXT FIELD deav004                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deav004
+            #add-point:BEFORE FIELD deav004 name="construct.b.page1.deav004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deav004
+            
+            #add-point:AFTER FIELD deav004 name="construct.a.page1.deav004"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.deav005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deav005
+            #add-point:ON ACTION controlp INFIELD deav005 name="construct.c.page1.deav005"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooai001()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deav005  #顯示到畫面上
+            NEXT FIELD deav005                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deav005
+            #add-point:BEFORE FIELD deav005 name="construct.b.page1.deav005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deav005
+            
+            #add-point:AFTER FIELD deav005 name="construct.a.page1.deav005"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deav006
+            #add-point:BEFORE FIELD deav006 name="construct.b.page1.deav006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deav006
+            
+            #add-point:AFTER FIELD deav006 name="construct.a.page1.deav006"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.deav006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deav006
+            #add-point:ON ACTION controlp INFIELD deav006 name="construct.c.page1.deav006"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deav007
+            #add-point:BEFORE FIELD deav007 name="construct.b.page1.deav007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deav007
+            
+            #add-point:AFTER FIELD deav007 name="construct.a.page1.deav007"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.deav007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deav007
+            #add-point:ON ACTION controlp INFIELD deav007 name="construct.c.page1.deav007"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.deav008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deav008
+            #add-point:ON ACTION controlp INFIELD deav008 name="construct.c.page1.deav008"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_deav008()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deav008  #顯示到畫面上
+            NEXT FIELD deav008                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deav008
+            #add-point:BEFORE FIELD deav008 name="construct.b.page1.deav008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deav008
+            
+            #add-point:AFTER FIELD deav008 name="construct.a.page1.deav008"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deav009
+            #add-point:BEFORE FIELD deav009 name="construct.b.page1.deav009"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deav009
+            
+            #add-point:AFTER FIELD deav009 name="construct.a.page1.deav009"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.deav009
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deav009
+            #add-point:ON ACTION controlp INFIELD deav009 name="construct.c.page1.deav009"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.deav010
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deav010
+            #add-point:ON ACTION controlp INFIELD deav010 name="construct.c.page1.deav010"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_deamdocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deav010  #顯示到畫面上
+            NEXT FIELD deav010                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deav010
+            #add-point:BEFORE FIELD deav010 name="construct.b.page1.deav010"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deav010
+            
+            #add-point:AFTER FIELD deav010 name="construct.a.page1.deav010"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deav011
+            #add-point:BEFORE FIELD deav011 name="construct.b.page1.deav011"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deav011
+            
+            #add-point:AFTER FIELD deav011 name="construct.a.page1.deav011"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.deav011
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deav011
+            #add-point:ON ACTION controlp INFIELD deav011 name="construct.c.page1.deav011"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deav012
+            #add-point:BEFORE FIELD deav012 name="construct.b.page1.deav012"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deav012
+            
+            #add-point:AFTER FIELD deav012 name="construct.a.page1.deav012"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.deav012
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deav012
+            #add-point:ON ACTION controlp INFIELD deav012 name="construct.c.page1.deav012"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deav013
+            #add-point:BEFORE FIELD deav013 name="construct.b.page1.deav013"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deav013
+            
+            #add-point:AFTER FIELD deav013 name="construct.a.page1.deav013"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.deav013
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deav013
+            #add-point:ON ACTION controlp INFIELD deav013 name="construct.c.page1.deav013"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deav014
+            #add-point:BEFORE FIELD deav014 name="construct.b.page1.deav014"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deav014
+            
+            #add-point:AFTER FIELD deav014 name="construct.a.page1.deav014"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.deav014
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deav014
+            #add-point:ON ACTION controlp INFIELD deav014 name="construct.c.page1.deav014"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.deav015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deav015
+            #add-point:ON ACTION controlp INFIELD deav015 name="construct.c.page1.deav015"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '2114'
+            CALL q_oocq002()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deav015  #顯示到畫面上
+            NEXT FIELD deav015                     #返回原欄位
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deav015
+            #add-point:BEFORE FIELD deav015 name="construct.b.page1.deav015"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deav015
+            
+            #add-point:AFTER FIELD deav015 name="construct.a.page1.deav015"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deav016
+            #add-point:BEFORE FIELD deav016 name="construct.b.page1.deav016"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deav016
+            
+            #add-point:AFTER FIELD deav016 name="construct.a.page1.deav016"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.deav016
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deav016
+            #add-point:ON ACTION controlp INFIELD deav016 name="construct.c.page1.deav016"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deavunit
+            #add-point:BEFORE FIELD deavunit name="construct.b.page1.deavunit"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deavunit
+            
+            #add-point:AFTER FIELD deavunit name="construct.a.page1.deavunit"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.deavunit
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deavunit
+            #add-point:ON ACTION controlp INFIELD deavunit name="construct.c.page1.deavunit"
+            
+            #END add-point
+ 
+ 
+   
+       
+      END CONSTRUCT
+      
+      CONSTRUCT g_wc2_table2 ON deauseq,deausite,deaudocdt,deau001,deau002,deau003,deau004,deau005,deau006, 
+          deau007,deau008,deau009,deauunit
+           FROM s_detail2[1].deauseq,s_detail2[1].deausite,s_detail2[1].deaudocdt,s_detail2[1].deau001, 
+               s_detail2[1].deau002,s_detail2[1].deau003,s_detail2[1].deau004,s_detail2[1].deau005,s_detail2[1].deau006, 
+               s_detail2[1].deau007,s_detail2[1].deau008,s_detail2[1].deau009,s_detail2[1].deauunit
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.body2.before_construct"
+            
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理(table 2)
+       
+       
+       #單身一般欄位開窗相關處理       
+                #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deauseq
+            #add-point:BEFORE FIELD deauseq name="construct.b.page2.deauseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deauseq
+            
+            #add-point:AFTER FIELD deauseq name="construct.a.page2.deauseq"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.deauseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deauseq
+            #add-point:ON ACTION controlp INFIELD deauseq name="construct.c.page2.deauseq"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page2.deausite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deausite
+            #add-point:ON ACTION controlp INFIELD deausite name="construct.c.page2.deausite"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = s_aooi500_q_where(g_prog,'deausite',g_site,'c') #150308-00001#1  By Ken add 'c' 150309
+            CALL q_ooef001_24()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deausite  #顯示到畫面上
+            NEXT FIELD deausite                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deausite
+            #add-point:BEFORE FIELD deausite name="construct.b.page2.deausite"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deausite
+            
+            #add-point:AFTER FIELD deausite name="construct.a.page2.deausite"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deaudocdt
+            #add-point:BEFORE FIELD deaudocdt name="construct.b.page2.deaudocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deaudocdt
+            
+            #add-point:AFTER FIELD deaudocdt name="construct.a.page2.deaudocdt"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.deaudocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deaudocdt
+            #add-point:ON ACTION controlp INFIELD deaudocdt name="construct.c.page2.deaudocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deau001
+            #add-point:BEFORE FIELD deau001 name="construct.b.page2.deau001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deau001
+            
+            #add-point:AFTER FIELD deau001 name="construct.a.page2.deau001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.deau001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deau001
+            #add-point:ON ACTION controlp INFIELD deau001 name="construct.c.page2.deau001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page2.deau002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deau002
+            #add-point:ON ACTION controlp INFIELD deau002 name="construct.c.page2.deau002"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooia001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deau002  #顯示到畫面上
+            NEXT FIELD deau002                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deau002
+            #add-point:BEFORE FIELD deau002 name="construct.b.page2.deau002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deau002
+            
+            #add-point:AFTER FIELD deau002 name="construct.a.page2.deau002"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.deau003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deau003
+            #add-point:ON ACTION controlp INFIELD deau003 name="construct.c.page2.deau003"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_mman001_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deau003  #顯示到畫面上
+            NEXT FIELD deau003                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deau003
+            #add-point:BEFORE FIELD deau003 name="construct.b.page2.deau003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deau003
+            
+            #add-point:AFTER FIELD deau003 name="construct.a.page2.deau003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.deau004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deau004
+            #add-point:ON ACTION controlp INFIELD deau004 name="construct.c.page2.deau004"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = '2071'
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deau004  #顯示到畫面上
+            NEXT FIELD deau004                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deau004
+            #add-point:BEFORE FIELD deau004 name="construct.b.page2.deau004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deau004
+            
+            #add-point:AFTER FIELD deau004 name="construct.a.page2.deau004"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.deau005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deau005
+            #add-point:ON ACTION controlp INFIELD deau005 name="construct.c.page2.deau005"
+            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooai001()                       #呼叫開窗
+            DISPLAY g_qryparam.return1 TO deau005  #顯示到畫面上
+            NEXT FIELD deau005                     #返回原欄位
+    
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deau005
+            #add-point:BEFORE FIELD deau005 name="construct.b.page2.deau005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deau005
+            
+            #add-point:AFTER FIELD deau005 name="construct.a.page2.deau005"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deau006
+            #add-point:BEFORE FIELD deau006 name="construct.b.page2.deau006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deau006
+            
+            #add-point:AFTER FIELD deau006 name="construct.a.page2.deau006"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.deau006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deau006
+            #add-point:ON ACTION controlp INFIELD deau006 name="construct.c.page2.deau006"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deau007
+            #add-point:BEFORE FIELD deau007 name="construct.b.page2.deau007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deau007
+            
+            #add-point:AFTER FIELD deau007 name="construct.a.page2.deau007"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.deau007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deau007
+            #add-point:ON ACTION controlp INFIELD deau007 name="construct.c.page2.deau007"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deau008
+            #add-point:BEFORE FIELD deau008 name="construct.b.page2.deau008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deau008
+            
+            #add-point:AFTER FIELD deau008 name="construct.a.page2.deau008"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.deau008
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deau008
+            #add-point:ON ACTION controlp INFIELD deau008 name="construct.c.page2.deau008"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deau009
+            #add-point:BEFORE FIELD deau009 name="construct.b.page2.deau009"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deau009
+            
+            #add-point:AFTER FIELD deau009 name="construct.a.page2.deau009"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.deau009
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deau009
+            #add-point:ON ACTION controlp INFIELD deau009 name="construct.c.page2.deau009"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deauunit
+            #add-point:BEFORE FIELD deauunit name="construct.b.page2.deauunit"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deauunit
+            
+            #add-point:AFTER FIELD deauunit name="construct.a.page2.deauunit"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.deauunit
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deauunit
+            #add-point:ON ACTION controlp INFIELD deauunit name="construct.c.page2.deauunit"
+            
+            #END add-point
+ 
+ 
+   
+       
+      END CONSTRUCT
+ 
+ 
+      
+ 
+      
+      #add-point:cs段add_cs(本段內只能出現新的CONSTRUCT指令) name="cs.add_cs"
+      
+      #end add-point
+ 
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog name="cs.b_dialog"
+         
+         #end add-point  
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+         IF NOT cl_null(ls_wc) THEN
+            CALL util.JSON.parse(ls_wc, la_wc)
+            INITIALIZE g_wc, g_wc2, g_wc2_table1, g_wc2_extend TO NULL
+            INITIALIZE g_wc2_table2 TO NULL
+ 
+ 
+            FOR li_idx = 1 TO la_wc.getLength()
+               CASE
+                  WHEN la_wc[li_idx].tableid = "deax_t" 
+                     LET g_wc = la_wc[li_idx].wc
+                  WHEN la_wc[li_idx].tableid = "deav_t" 
+                     LET g_wc2_table1 = la_wc[li_idx].wc
+                  WHEN la_wc[li_idx].tableid = "deau_t" 
+                     LET g_wc2_table2 = la_wc[li_idx].wc
+ 
+ 
+               END CASE
+            END FOR
+         END IF
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   END DIALOG
+   
+   #組合g_wc2
+   LET g_wc2 = g_wc2_table1
+   IF g_wc2_table2 <> " 1=1" THEN
+      LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+   END IF
+ 
+ 
+ 
+ 
+   
+   #add-point:cs段結束前 name="cs.after_construct"
+   
+   #end add-point    
+ 
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.filter" >}
+#應用 a50 樣板自動產生(Version:8)
+#+ filter過濾功能
+PRIVATE FUNCTION adet407_filter()
+   #add-point:filter段define name="filter.define_customerization"
+   
+   #end add-point   
+   #add-point:filter段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="filter.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   IF NOT g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF   
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter.trim()
+   LET g_wc_t = g_wc
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter_t, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON deaxsite,deaxdocdt,deaxdocno,deax001,deax002,deax003
+                          FROM s_browse[1].b_deaxsite,s_browse[1].b_deaxdocdt,s_browse[1].b_deaxdocno, 
+                              s_browse[1].b_deax001,s_browse[1].b_deax002,s_browse[1].b_deax003
+ 
+         BEFORE CONSTRUCT
+               DISPLAY adet407_filter_parser('deaxsite') TO s_browse[1].b_deaxsite
+            DISPLAY adet407_filter_parser('deaxdocdt') TO s_browse[1].b_deaxdocdt
+            DISPLAY adet407_filter_parser('deaxdocno') TO s_browse[1].b_deaxdocno
+            DISPLAY adet407_filter_parser('deax001') TO s_browse[1].b_deax001
+            DISPLAY adet407_filter_parser('deax002') TO s_browse[1].b_deax002
+            DISPLAY adet407_filter_parser('deax003') TO s_browse[1].b_deax003
+      
+         #add-point:filter段cs_ctrl name="filter.cs_ctrl"
+         
+         #end add-point
+      
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs name="filter.add_cs"
+      
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog name="filter.b_dialog"
+         
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = "   AND   ", g_wc_filter, "   "
+      LET g_wc = g_wc , g_wc_filter
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+      LET g_wc = g_wc_t
+   END IF
+ 
+      CALL adet407_filter_show('deaxsite')
+   CALL adet407_filter_show('deaxdocdt')
+   CALL adet407_filter_show('deaxdocno')
+   CALL adet407_filter_show('deax001')
+   CALL adet407_filter_show('deax002')
+   CALL adet407_filter_show('deax003')
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.filter_parser" >}
+#+ filter過濾功能
+PRIVATE FUNCTION adet407_filter_parser(ps_field)
+   #add-point:filter段define name="filter_parser.define_customerization"
+   
+   #end add-point    
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_parser.define"
+   
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.filter_show" >}
+#+ 顯示過濾條件
+PRIVATE FUNCTION adet407_filter_show(ps_field)
+   DEFINE ps_field         STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.b_", ps_field
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = adet407_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.query" >}
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION adet407_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point   
+   DEFINE ls_wc STRING
+   #add-point:query段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="query.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF   
+   
+   LET ls_wc = g_wc
+   
+   LET INT_FLAG = 0
+   CALL cl_navigator_setting( g_current_idx, g_detail_cnt )
+   ERROR ""
+   
+   #清除畫面及相關資料
+   CLEAR FORM
+   CALL g_browser.clear()       
+   CALL g_deav_d.clear()
+   CALL g_deav2_d.clear()
+ 
+   
+   #add-point:query段other name="query.other"
+   
+   #end add-point   
+   
+   DISPLAY '' TO FORMONLY.idx
+   DISPLAY '' TO FORMONLY.cnt
+   DISPLAY '' TO FORMONLY.b_index
+   DISPLAY '' TO FORMONLY.b_count
+   DISPLAY '' TO FORMONLY.h_index
+   DISPLAY '' TO FORMONLY.h_count
+   
+   CALL adet407_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      #LET g_wc = ls_wc
+      LET g_wc = " 1=2"
+      CALL adet407_browser_fill("")
+      CALL adet407_fetch("")
+      RETURN
+   END IF
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||") AND ("||g_wc2||")")
+   
+   #搜尋後資料初始化 
+   LET g_detail_cnt  = 0
+   LET g_current_idx = 1
+   LET g_current_row = 0
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_detail_idx_list[1] = 1
+   LET g_detail_idx_list[2] = 1
+ 
+   LET g_error_show  = 1
+   LET g_wc_filter   = ""
+   LET l_ac = 1
+   CALL FGL_SET_ARR_CURR(1)
+      CALL adet407_filter_show('deaxsite')
+   CALL adet407_filter_show('deaxdocdt')
+   CALL adet407_filter_show('deaxdocno')
+   CALL adet407_filter_show('deax001')
+   CALL adet407_filter_show('deax002')
+   CALL adet407_filter_show('deax003')
+   CALL adet407_browser_fill("F")
+         
+   IF g_browser_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "-100" 
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+   ELSE
+      CALL adet407_fetch("F") 
+      #顯示單身筆數
+      CALL adet407_idx_chk()
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.fetch" >}
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION adet407_fetch(p_flag)
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point    
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="fetch.pre_function"
+   
+   #end add-point
+   
+   IF g_browser_cnt = 0 THEN
+      RETURN
+   END IF
+ 
+   #清空第二階單身
+ 
+   
+   CALL cl_ap_performance_next_start()
+   CASE p_flag
+      WHEN 'F' 
+         LET g_current_idx = 1
+      WHEN 'L'  
+         LET g_current_idx = g_browser.getLength()              
+      WHEN 'P'
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN 'N'
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN '/'
+         IF (NOT g_no_ask) THEN    
+            CALL cl_set_act_visible("accept,cancel", TRUE)    
+            CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,':' FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl" 
+            END PROMPT
+ 
+            CALL cl_set_act_visible("accept,cancel", FALSE)    
+            IF INT_FLAG THEN
+                LET INT_FLAG = 0
+                EXIT CASE  
+            END IF           
+         END IF
+         
+         IF g_jump > 0 AND g_jump <= g_browser.getLength() THEN
+             LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE  
+   END CASE 
+ 
+   CALL g_curr_diag.setCurrentRow("s_browse", g_current_idx) #設定browse 索引
+   
+   LET g_current_row = g_current_idx
+   LET g_detail_cnt = g_header_cnt                  
+   
+   #單身總筆數顯示
+   IF g_detail_cnt > 0 THEN
+      #若單身有資料時, idx至少為1
+      IF g_detail_idx <= 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx  
+   ELSE
+      LET g_detail_idx = 0
+      DISPLAY '' TO FORMONLY.idx    
+   END IF
+   
+   #瀏覽頁筆數顯示
+   LET g_browser_idx = g_pagestart+g_current_idx-1
+   DISPLAY g_browser_idx TO FORMONLY.b_index   #當下筆數
+   DISPLAY g_browser_idx TO FORMONLY.h_index   #當下筆數
+   
+   CALL cl_navigator_setting( g_current_idx, g_browser_cnt )
+ 
+   #代表沒有資料
+   IF g_current_idx = 0 OR g_browser.getLength() = 0 THEN
+      RETURN
+   END IF
+   
+   #避免超出browser資料筆數上限
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_browser_idx = g_browser.getLength()
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   LET g_deax_m.deaxdocno = g_browser[g_current_idx].b_deaxdocno
+ 
+   
+   #重讀DB,因TEMP有不被更新特性
+   EXECUTE adet407_master_referesh USING g_deax_m.deaxdocno INTO g_deax_m.deaxsite,g_deax_m.deaxdocdt, 
+       g_deax_m.deaxdocno,g_deax_m.deax001,g_deax_m.deax002,g_deax_m.deax003,g_deax_m.deax005,g_deax_m.deax004, 
+       g_deax_m.deaxunit,g_deax_m.deaxstus,g_deax_m.deaxownid,g_deax_m.deaxowndp,g_deax_m.deaxcrtid, 
+       g_deax_m.deaxcrtdp,g_deax_m.deaxcrtdt,g_deax_m.deaxmodid,g_deax_m.deaxmoddt,g_deax_m.deaxcnfid, 
+       g_deax_m.deaxcnfdt,g_deax_m.deaxsite_desc,g_deax_m.deax001_desc,g_deax_m.deax005_desc,g_deax_m.deax004_desc, 
+       g_deax_m.deaxownid_desc,g_deax_m.deaxowndp_desc,g_deax_m.deaxcrtid_desc,g_deax_m.deaxcrtdp_desc, 
+       g_deax_m.deaxmodid_desc,g_deax_m.deaxcnfid_desc
+   
+   #遮罩相關處理
+   LET g_deax_m_mask_o.* =  g_deax_m.*
+   CALL adet407_deax_t_mask()
+   LET g_deax_m_mask_n.* =  g_deax_m.*
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL adet407_set_act_visible()   
+   CALL adet407_set_act_no_visible()
+   
+   #add-point:fetch段action控制 name="fetch.action_control"
+   
+   #end add-point  
+   
+   
+   
+   #add-point:fetch結束前 name="fetch.after"
+   IF g_deax_m.deaxstus MATCHES "[NDR]" THEN
+      CALL cl_set_act_visible("modify,delete,modify_detail,open_adet407_01",TRUE)
+   ELSE
+      CALL cl_set_act_visible("modify,delete,modify_detail,open_adet407_01",FALSE)
+   END IF
+   #end add-point
+   
+   #保存單頭舊值
+   LET g_deax_m_t.* = g_deax_m.*
+   LET g_deax_m_o.* = g_deax_m.*
+   
+   LET g_data_owner = g_deax_m.deaxownid      
+   LET g_data_dept  = g_deax_m.deaxowndp
+   
+   #重新顯示   
+   CALL adet407_show()
+ 
+   #應用 a56 樣板自動產生(Version:3)
+   #檢查此單據是否需顯示BPM簽核狀況按鈕 
+   IF cl_bpm_chk() THEN
+      CALL cl_set_act_visible("bpm_status",TRUE)
+   ELSE
+      CALL cl_set_act_visible("bpm_status",FALSE)
+   END IF
+ 
+ 
+ 
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION adet407_insert()
+   #add-point:insert段define(客製用) name="insert.define_customerization"
+   
+   #end add-point    
+   #add-point:insert段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_doctype       LIKE rtai_t.rtai004
+   DEFINE l_insert        LIKE type_t.num5
+   #end add-point    
+   
+   #add-point:Function前置處理  name="insert.pre_function"
+   
+   #end add-point
+   
+   #清畫面欄位內容
+   CLEAR FORM                    
+   CALL g_deav_d.clear()   
+   CALL g_deav2_d.clear()  
+ 
+ 
+   INITIALIZE g_deax_m.* TO NULL             #DEFAULT 設定
+   
+   LET g_deaxdocno_t = NULL
+ 
+   
+   LET g_master_insert = FALSE
+   
+   #add-point:insert段before name="insert.before"
+   
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   WHILE TRUE
+      #公用欄位給值(單頭)
+      #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_deax_m.deaxownid = g_user
+      LET g_deax_m.deaxowndp = g_dept
+      LET g_deax_m.deaxcrtid = g_user
+      LET g_deax_m.deaxcrtdp = g_dept 
+      LET g_deax_m.deaxcrtdt = cl_get_current()
+      LET g_deax_m.deaxmodid = g_user
+      LET g_deax_m.deaxmoddt = cl_get_current()
+      LET g_deax_m.deaxstus = 'N'
+ 
+ 
+ 
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+      
+  
+      #add-point:單頭預設值 name="insert.default"
+      CALL s_aooi500_default(g_prog,'deaxsite',g_deax_m.deaxsite)
+         RETURNING l_insert,g_deax_m.deaxsite
+      IF l_insert = FALSE THEN
+         RETURN
+      END IF
+      
+      LET g_deax_m.deaxdocdt = g_today
+      LET g_deax_m.deax004 = g_dept
+      LET g_deax_m.deax005 = g_user
+
+      #營運據點
+      CALL s_desc_get_department_desc(g_deax_m.deaxsite)
+         RETURNING g_deax_m.deaxsite_desc
+      DISPLAY BY NAME g_deax_m.deaxsite_desc
+
+      #部門
+      CALL s_desc_get_department_desc(g_deax_m.deax004)
+         RETURNING g_deax_m.deax004_desc
+      DISPLAY BY NAME g_deax_m.deax004_desc
+
+      #人員
+      CALL s_desc_get_person_desc(g_deax_m.deax005)
+         RETURNING g_deax_m.deax005_desc
+      DISPLAY BY NAME g_deax_m.deax005_desc
+
+      LET l_success = ''
+      LET l_doctype = ''
+      CALL s_arti200_get_def_doc_type(g_deax_m.deaxsite,g_prog,'1')
+         RETURNING l_success,l_doctype
+      LET g_deax_m.deaxdocno = l_doctype
+      
+      LET g_site_flag = FALSE
+      LET g_deax_m_t.* = g_deax_m.*
+      LET g_deax_m_o.* = g_deax_m.*
+      #end add-point 
+      
+      #保存單頭舊值(用於資料輸入錯誤還原預設值時使用)
+      LET g_deax_m_t.* = g_deax_m.*
+      LET g_deax_m_o.* = g_deax_m.*
+      
+      #顯示狀態(stus)圖片
+            #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_deax_m.deaxstus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+ 
+ 
+ 
+    
+      CALL adet407_input("a")
+      
+      #add-point:單頭輸入後 name="insert.after_insert"
+      
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code = 9001 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+      END IF
+      
+      IF NOT g_master_insert THEN
+         DISPLAY g_detail_cnt  TO FORMONLY.h_count    #總筆數
+         DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+         INITIALIZE g_deax_m.* TO NULL
+         INITIALIZE g_deav_d TO NULL
+         INITIALIZE g_deav2_d TO NULL
+ 
+         #add-point:取消新增後 name="insert.cancel"
+         
+         #end add-point 
+         CALL adet407_show()
+         RETURN
+      END IF
+      
+      LET INT_FLAG = 0
+      #CALL g_deav_d.clear()
+      #CALL g_deav2_d.clear()
+ 
+ 
+      LET g_rec_b = 0
+      CALL s_transaction_end('Y','0')
+      EXIT WHILE
+        
+   END WHILE
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL adet407_set_act_visible()   
+   CALL adet407_set_act_no_visible()
+   
+   #將新增的資料併入搜尋條件中
+   LET g_deaxdocno_t = g_deax_m.deaxdocno
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " deaxent = " ||g_enterprise|| " AND",
+                      " deaxdocno = '", g_deax_m.deaxdocno, "' "
+ 
+                      
+   #add-point:組合新增資料的條件後 name="insert.after.add_browse"
+   
+   #end add-point
+      
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL adet407_browser_fill("")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   CLOSE adet407_cl
+   
+   CALL adet407_idx_chk()
+   
+   #撈取異動後的資料(主要是帶出reference)
+   EXECUTE adet407_master_referesh USING g_deax_m.deaxdocno INTO g_deax_m.deaxsite,g_deax_m.deaxdocdt, 
+       g_deax_m.deaxdocno,g_deax_m.deax001,g_deax_m.deax002,g_deax_m.deax003,g_deax_m.deax005,g_deax_m.deax004, 
+       g_deax_m.deaxunit,g_deax_m.deaxstus,g_deax_m.deaxownid,g_deax_m.deaxowndp,g_deax_m.deaxcrtid, 
+       g_deax_m.deaxcrtdp,g_deax_m.deaxcrtdt,g_deax_m.deaxmodid,g_deax_m.deaxmoddt,g_deax_m.deaxcnfid, 
+       g_deax_m.deaxcnfdt,g_deax_m.deaxsite_desc,g_deax_m.deax001_desc,g_deax_m.deax005_desc,g_deax_m.deax004_desc, 
+       g_deax_m.deaxownid_desc,g_deax_m.deaxowndp_desc,g_deax_m.deaxcrtid_desc,g_deax_m.deaxcrtdp_desc, 
+       g_deax_m.deaxmodid_desc,g_deax_m.deaxcnfid_desc
+   
+   
+   #遮罩相關處理
+   LET g_deax_m_mask_o.* =  g_deax_m.*
+   CALL adet407_deax_t_mask()
+   LET g_deax_m_mask_n.* =  g_deax_m.*
+   
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_deax_m.deaxsite,g_deax_m.deaxsite_desc,g_deax_m.deaxdocdt,g_deax_m.deaxdocno,g_deax_m.deax001, 
+       g_deax_m.deax001_desc,g_deax_m.deax002,g_deax_m.deax003,g_deax_m.deax005,g_deax_m.deax005_desc, 
+       g_deax_m.deax004,g_deax_m.deax004_desc,g_deax_m.l_sum,g_deax_m.deaxunit,g_deax_m.deaxstus,g_deax_m.deaxownid, 
+       g_deax_m.deaxownid_desc,g_deax_m.deaxowndp,g_deax_m.deaxowndp_desc,g_deax_m.deaxcrtid,g_deax_m.deaxcrtid_desc, 
+       g_deax_m.deaxcrtdp,g_deax_m.deaxcrtdp_desc,g_deax_m.deaxcrtdt,g_deax_m.deaxmodid,g_deax_m.deaxmodid_desc, 
+       g_deax_m.deaxmoddt,g_deax_m.deaxcnfid,g_deax_m.deaxcnfid_desc,g_deax_m.deaxcnfdt
+   
+   #add-point:新增結束後 name="insert.after"
+   
+   #end add-point 
+   
+   LET g_data_owner = g_deax_m.deaxownid      
+   LET g_data_dept  = g_deax_m.deaxowndp
+   
+   #功能已完成,通報訊息中心
+   CALL adet407_msgcentre_notify('insert')
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION adet407_modify()
+   #add-point:modify段define(客製用) name="modify.define_customerization"
+   
+   #end add-point    
+   DEFINE l_new_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key  DYNAMIC ARRAY OF STRING
+   DEFINE l_wc2_table1          STRING
+   DEFINE l_wc2_table2   STRING
+ 
+ 
+ 
+   #add-point:modify段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="modify.pre_function"
+   
+   #end add-point
+   
+   #保存單頭舊值
+   LET g_deax_m_t.* = g_deax_m.*
+   LET g_deax_m_o.* = g_deax_m.*
+   
+   IF g_deax_m.deaxdocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "std-00003" 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   ERROR ""
+  
+   LET g_deaxdocno_t = g_deax_m.deaxdocno
+ 
+   CALL s_transaction_begin()
+   
+   OPEN adet407_cl USING g_enterprise,g_deax_m.deaxdocno
+   IF SQLCA.SQLCODE THEN   #(ver:78)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN adet407_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+      LET g_errparam.popup = TRUE 
+      CLOSE adet407_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE adet407_master_referesh USING g_deax_m.deaxdocno INTO g_deax_m.deaxsite,g_deax_m.deaxdocdt, 
+       g_deax_m.deaxdocno,g_deax_m.deax001,g_deax_m.deax002,g_deax_m.deax003,g_deax_m.deax005,g_deax_m.deax004, 
+       g_deax_m.deaxunit,g_deax_m.deaxstus,g_deax_m.deaxownid,g_deax_m.deaxowndp,g_deax_m.deaxcrtid, 
+       g_deax_m.deaxcrtdp,g_deax_m.deaxcrtdt,g_deax_m.deaxmodid,g_deax_m.deaxmoddt,g_deax_m.deaxcnfid, 
+       g_deax_m.deaxcnfdt,g_deax_m.deaxsite_desc,g_deax_m.deax001_desc,g_deax_m.deax005_desc,g_deax_m.deax004_desc, 
+       g_deax_m.deaxownid_desc,g_deax_m.deaxowndp_desc,g_deax_m.deaxcrtid_desc,g_deax_m.deaxcrtdp_desc, 
+       g_deax_m.deaxmodid_desc,g_deax_m.deaxcnfid_desc
+   
+   #檢查是否允許此動作
+   IF NOT adet407_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_deax_m_mask_o.* =  g_deax_m.*
+   CALL adet407_deax_t_mask()
+   LET g_deax_m_mask_n.* =  g_deax_m.*
+   
+   
+   
+   #add-point:modify段show之前 name="modify.before_show"
+   
+   #end add-point  
+   
+   #LET l_wc2_table1 = g_wc2_table1
+   #LET g_wc2_table1 = " 1=1"
+   #LET l_wc2_table2 = g_wc2_table2
+   #LET l_wc2_table2 = " 1=1"
+ 
+ 
+ 
+   
+   CALL adet407_show()
+   #add-point:modify段show之後 name="modify.after_show"
+   
+   #end add-point
+   
+   #LET g_wc2_table1 = l_wc2_table1
+   #LET  g_wc2_table2 = l_wc2_table2 
+ 
+ 
+ 
+    
+   WHILE TRUE
+      LET g_deaxdocno_t = g_deax_m.deaxdocno
+ 
+      
+      #寫入修改者/修改日期資訊(單頭)
+      LET g_deax_m.deaxmodid = g_user 
+LET g_deax_m.deaxmoddt = cl_get_current()
+LET g_deax_m.deaxmodid_desc = cl_get_username(g_deax_m.deaxmodid)
+      
+      #add-point:modify段修改前 name="modify.before_input"
+      
+      #end add-point
+      
+      #欄位更改
+      LET g_loc = 'n'
+      LET g_update = FALSE
+      LET g_master_commit = "N"
+      CALL adet407_input("u")
+      LET g_loc = 'n'
+ 
+      #add-point:modify段修改後 name="modify.after_input"
+      
+      #end add-point
+      
+      IF g_update OR NOT INT_FLAG THEN
+         #若有modid跟moddt則進行update
+         UPDATE deax_t SET (deaxmodid,deaxmoddt) = (g_deax_m.deaxmodid,g_deax_m.deaxmoddt)
+          WHERE deaxent = g_enterprise AND deaxdocno = g_deaxdocno_t
+ 
+      END IF
+    
+      IF INT_FLAG THEN
+         CALL s_transaction_end('N','0')
+         LET INT_FLAG = 0
+         #若單頭無commit則還原
+         IF g_master_commit = "N" THEN
+            LET g_deax_m.* = g_deax_m_t.*
+            CALL adet407_show()
+         END IF
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code = 9001 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+         RETURN
+      END IF 
+                  
+      #若單頭key欄位有變更
+      IF g_deax_m.deaxdocno != g_deax_m_t.deaxdocno
+ 
+      THEN
+         CALL s_transaction_begin()
+         
+         #add-point:單身fk修改前 name="modify.body.b_fk_update"
+         
+         #end add-point
+         
+         #更新單身key值
+         UPDATE deav_t SET deavdocno = g_deax_m.deaxdocno
+ 
+          WHERE deavent = g_enterprise AND deavdocno = g_deax_m_t.deaxdocno
+ 
+            
+         #add-point:單身fk修改中 name="modify.body.m_fk_update"
+         
+         #end add-point
+ 
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            #   INITIALIZE g_errparam TO NULL 
+            #   LET g_errparam.extend = "deav_t" 
+            #   LET g_errparam.code = "std-00009" 
+            #   LET g_errparam.popup = TRUE 
+            #   CALL cl_err()
+            #   CALL s_transaction_end('N','0')
+            #   CONTINUE WHILE
+            WHEN SQLCA.SQLCODE #其他錯誤
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "deav_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CONTINUE WHILE
+         END CASE
+         
+         #add-point:單身fk修改後 name="modify.body.a_fk_update"
+         
+         #end add-point
+         
+         #更新單身key值
+         #add-point:單身fk修改前 name="modify.body.b_fk_update2"
+         
+         #end add-point
+         
+         UPDATE deau_t
+            SET deaudocno = g_deax_m.deaxdocno
+ 
+          WHERE deauent = g_enterprise AND
+                deaudocno = g_deaxdocno_t
+ 
+         #add-point:單身fk修改中 name="modify.body.m_fk_update2"
+         
+         #end add-point
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            #   INITIALIZE g_errparam TO NULL 
+            #   LET g_errparam.extend = "deau_t" 
+            #   LET g_errparam.code = "std-00009" 
+            #   LET g_errparam.popup = TRUE 
+            #   CALL cl_err()
+            #   CALL s_transaction_end('N','0')
+            #   CONTINUE WHILE
+            WHEN SQLCA.SQLCODE #其他錯誤
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "deau_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CONTINUE WHILE
+         END CASE
+         #add-point:單身fk修改後 name="modify.body.a_fk_update2"
+         
+         #end add-point
+ 
+ 
+         
+ 
+         
+         #UPDATE 多語言table key值
+         
+         
+ 
+         CALL s_transaction_end('Y','0')
+      END IF
+    
+      EXIT WHILE
+   END WHILE
+ 
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL adet407_set_act_visible()   
+   CALL adet407_set_act_no_visible()
+ 
+   #組合新增資料的條件
+   LET g_add_browse = " deaxent = " ||g_enterprise|| " AND",
+                      " deaxdocno = '", g_deax_m.deaxdocno, "' "
+ 
+   #填到對應位置
+   CALL adet407_browser_fill("")
+ 
+   CLOSE adet407_cl
+   
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL adet407_msgcentre_notify('modify')
+ 
+END FUNCTION 
+ 
+{</section>}
+ 
+{<section id="adet407.input" >}
+#+ 資料輸入
+PRIVATE FUNCTION adet407_input(p_cmd)
+   #add-point:input段define(客製用) name="input.define_customerization"
+   
+   #end add-point  
+   DEFINE  p_cmd                 LIKE type_t.chr1
+   DEFINE  l_cmd_t               LIKE type_t.chr1
+   DEFINE  l_cmd                 LIKE type_t.chr1
+   DEFINE  l_n                   LIKE type_t.num10                #檢查重複用  
+   DEFINE  l_cnt                 LIKE type_t.num10                #檢查重複用  
+   DEFINE  l_lock_sw             LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert        LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete        LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count               LIKE type_t.num10
+   DEFINE  l_i                   LIKE type_t.num10
+   DEFINE  l_ac_t                LIKE type_t.num10
+   DEFINE  l_insert              BOOLEAN
+   DEFINE  ls_return             STRING
+   DEFINE  l_var_keys            DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys          DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields              DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak        DYNAMIC ARRAY OF STRING
+   DEFINE  lb_reproduce          BOOLEAN
+   DEFINE  li_reproduce          LIKE type_t.num10
+   DEFINE  li_reproduce_target   LIKE type_t.num10
+   DEFINE  ls_keys               DYNAMIC ARRAY OF VARCHAR(500)
+   #add-point:input段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE  l_ooef004             LIKE ooef_t.ooef004
+   DEFINE  l_success             LIKE type_t.num5
+   DEFINE  l_errno               LIKE type_t.chr10
+   DEFINE  l_where               STRING
+   #end add-point  
+   
+   #add-point:Function前置處理  name="input.pre_function"
+   
+   #end add-point
+   
+   #先做狀態判定
+   IF p_cmd = 'r' THEN
+      LET l_cmd_t = 'r'
+      LET p_cmd   = 'a'
+   ELSE
+      LET l_cmd_t = p_cmd
+   END IF   
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_deax_m.deaxsite,g_deax_m.deaxsite_desc,g_deax_m.deaxdocdt,g_deax_m.deaxdocno,g_deax_m.deax001, 
+       g_deax_m.deax001_desc,g_deax_m.deax002,g_deax_m.deax003,g_deax_m.deax005,g_deax_m.deax005_desc, 
+       g_deax_m.deax004,g_deax_m.deax004_desc,g_deax_m.l_sum,g_deax_m.deaxunit,g_deax_m.deaxstus,g_deax_m.deaxownid, 
+       g_deax_m.deaxownid_desc,g_deax_m.deaxowndp,g_deax_m.deaxowndp_desc,g_deax_m.deaxcrtid,g_deax_m.deaxcrtid_desc, 
+       g_deax_m.deaxcrtdp,g_deax_m.deaxcrtdp_desc,g_deax_m.deaxcrtdt,g_deax_m.deaxmodid,g_deax_m.deaxmodid_desc, 
+       g_deax_m.deaxmoddt,g_deax_m.deaxcnfid,g_deax_m.deaxcnfid_desc,g_deax_m.deaxcnfdt
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+ 
+   CALL cl_set_head_visible("","YES")  
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   #add-point:input段define_sql name="input.define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = "SELECT deavseq,deavsite,deavdocdt,deav001,deav002,deav003,deav004,deav005,deav006, 
+       deav007,deav008,deav009,deav010,deav011,deav012,deav013,deav014,deav015,deav016,deavunit FROM  
+       deav_t WHERE deavent=? AND deavdocno=? AND deavseq=? FOR UPDATE"
+   #add-point:input段define_sql name="input.after_define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE adet407_bcl CURSOR FROM g_forupd_sql
+   
+   #add-point:input段define_sql name="input.define_sql2"
+   
+   #end add-point    
+   LET g_forupd_sql = "SELECT deauseq,deausite,deaudocdt,deau001,deau002,deau003,deau004,deau005,deau006, 
+       deau007,deau008,deau009,deauunit FROM deau_t WHERE deauent=? AND deaudocno=? AND deauseq=? FOR  
+       UPDATE"
+   #add-point:input段define_sql name="input.after_define_sql2"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE adet407_bcl2 CURSOR FROM g_forupd_sql
+ 
+ 
+   
+ 
+ 
+   #add-point:input段define_sql name="input.other_sql"
+   
+   #end add-point 
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   LET g_qryparam.state = 'i'
+   
+   #控制key欄位可否輸入
+   CALL adet407_set_entry(p_cmd)
+   #add-point:set_entry後 name="input.after_set_entry"
+   
+   #end add-point
+   CALL adet407_set_no_entry(p_cmd)
+ 
+   DISPLAY BY NAME g_deax_m.deaxsite,g_deax_m.deaxdocdt,g_deax_m.deaxdocno,g_deax_m.deax001,g_deax_m.deax002, 
+       g_deax_m.deax003,g_deax_m.deax005,g_deax_m.deax004,g_deax_m.deaxunit,g_deax_m.deaxstus
+   
+   LET lb_reproduce = FALSE
+   LET l_ac_t = 1
+   
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+   
+   #add-point:資料輸入前 name="input.before_input"
+   
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+{</section>}
+ 
+{<section id="adet407.input.head" >}
+      #單頭段
+      INPUT BY NAME g_deax_m.deaxsite,g_deax_m.deaxdocdt,g_deax_m.deaxdocno,g_deax_m.deax001,g_deax_m.deax002, 
+          g_deax_m.deax003,g_deax_m.deax005,g_deax_m.deax004,g_deax_m.deaxunit,g_deax_m.deaxstus 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+     
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            OPEN adet407_cl USING g_enterprise,g_deax_m.deaxdocno
+            IF SQLCA.SQLCODE THEN   #(ver:78)
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN adet407_cl:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+               LET g_errparam.popup = TRUE 
+               CLOSE adet407_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               RETURN
+            END IF
+            
+            IF l_cmd_t = 'r' THEN
+               
+            END IF
+            #因應離開單頭後已寫入資料庫, 若重新回到單頭則視為修改
+            #因此需於此處開啟/關閉欄位
+            CALL adet407_set_entry(p_cmd)
+            #add-point:資料輸入前 name="input.m.before_input"
+            NEXT FIELD deaxsite
+            #end add-point
+            CALL adet407_set_no_entry(p_cmd)
+    
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deaxsite
+            
+            #add-point:AFTER FIELD deaxsite name="input.a.deaxsite"
+            LET g_deax_m.deaxsite_desc = ' '
+            DISPLAY BY NAME g_deax_m.deaxsite_desc
+            IF NOT cl_null(g_deax_m.deaxsite) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_deax_m.deaxsite != g_deax_m_t.deaxsite OR g_deax_m_t.deaxsite IS NULL )) THEN
+                  CALL s_aooi500_chk(g_prog,'deaxsite',g_deax_m.deaxsite,g_deax_m.deaxsite)
+                     RETURNING l_success,l_errno
+                  IF NOT l_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.extend = ""
+                     LET g_errparam.code   = l_errno
+                     LET g_errparam.popup  = TRUE
+                     CALL cl_err()
+                     LET g_deax_m.deaxsite = g_deax_m_t.deaxsite
+                     CALL s_desc_get_department_desc(g_deax_m.deaxsite)
+                        RETURNING g_deax_m.deaxsite_desc
+                     DISPLAY BY NAME g_deax_m.deaxsite_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               IF NOT cl_null(g_deax_m.deaxdocdt) AND NOT cl_null(g_deax_m.deaxsite) THEN
+                  IF NOT s_settledate_chk(g_deax_m.deaxsite,g_deax_m.deaxdocdt) THEN
+                     LET g_deax_m.deaxsite = g_deax_m_t.deaxsite
+                     CALL s_desc_get_department_desc(g_deax_m.deaxsite)
+                        RETURNING g_deax_m.deaxsite_desc
+                     DISPLAY BY NAME g_deax_m.deaxsite_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+               IF NOT cl_null(g_deax_m.deax003) AND NOT cl_null(g_deax_m.deaxsite) THEN
+                  IF NOT s_settledate_chk(g_deax_m.deaxsite,g_deax_m.deax003) THEN
+                      LET g_deax_m.deaxsite = g_deax_m_t.deaxsite
+                     CALL s_desc_get_department_desc(g_deax_m.deaxsite)
+                        RETURNING g_deax_m.deaxsite_desc
+                      DISPLAY BY NAME g_deax_m.deaxsite_desc
+                      NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            LET g_site_flag = TRUE
+            CALL s_desc_get_department_desc(g_deax_m.deaxsite)
+               RETURNING g_deax_m.deaxsite_desc
+            DISPLAY BY NAME g_deax_m.deaxsite_desc
+            CALL adet407_set_entry(p_cmd)
+            CALL adet407_set_no_entry(p_cmd)
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deaxsite
+            #add-point:BEFORE FIELD deaxsite name="input.b.deaxsite"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE deaxsite
+            #add-point:ON CHANGE deaxsite name="input.g.deaxsite"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deaxdocdt
+            #add-point:BEFORE FIELD deaxdocdt name="input.b.deaxdocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deaxdocdt
+            
+            #add-point:AFTER FIELD deaxdocdt name="input.a.deaxdocdt"
+            IF NOT cl_null(g_deax_m.deaxdocdt) AND NOT cl_null(g_deax_m.deaxsite) THEN
+               IF NOT s_settledate_chk(g_deax_m.deaxsite,g_deax_m.deaxdocdt) THEN
+                   LET g_deax_m.deaxdocdt = g_deax_m_t.deaxdocdt
+                   DISPLAY BY NAME g_deax_m.deaxdocdt
+                   NEXT FIELD CURRENT
+               END IF
+            END IF  
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE deaxdocdt
+            #add-point:ON CHANGE deaxdocdt name="input.g.deaxdocdt"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deaxdocno
+            #add-point:BEFORE FIELD deaxdocno name="input.b.deaxdocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deaxdocno
+            
+            #add-point:AFTER FIELD deaxdocno name="input.a.deaxdocno"
+            IF p_cmd = 'a' AND NOT cl_null(g_deax_m.deaxdocno) THEN
+               IF NOT s_aooi200_chk_slip(g_deax_m.deaxsite,'',g_deax_m.deaxdocno,g_prog) THEN
+                  LET g_deax_m.deaxdocno = g_deax_m_t.deaxdocno
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE deaxdocno
+            #add-point:ON CHANGE deaxdocno name="input.g.deaxdocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deax001
+            
+            #add-point:AFTER FIELD deax001 name="input.a.deax001"
+            LET g_deax_m.deax001_desc = ' '
+            DISPLAY BY NAME g_deax_m.deax001_desc
+            IF NOT cl_null(g_deax_m.deax001) THEN
+               IF g_deax_m.deax001 != g_deax_m_t.deax001 OR g_deax_m_t.deax001 IS NULL THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_errshow = TRUE #是否開窗 #160318-00025#28 add
+                  LET g_chkparam.arg1 = g_deax_m.deax001
+                  LET g_chkparam.arg2 = 'ALL'
+                  LET g_chkparam.err_str[1] = "apm-00201:sub-01302|axmm200|",cl_get_progname("axmm200",g_lang,"2"),"|:EXEPROGaxmm200"#要執行的建議程式待補 #160318-00025#28 add
+                  IF NOT cl_chk_exist("v_pmaa001_3") THEN
+                     LET g_deax_m.deax001 = g_deax_m_o.deax001
+                     CALL s_desc_get_trading_partner_abbr_desc(g_deax_m.deax001)
+                        RETURNING g_deax_m.deax001_desc
+                     DISPLAY BY NAME g_deax_m.deax001_desc
+                     NEXT FIELD CURRENT
+                  END IF
+                  LET g_deax_m.deax002 = ''
+                  LET g_deax_m.deax003 = ''
+                  LET g_deax_m.l_sum = 0
+               END IF
+            END IF
+            LET g_deax_m_o.deax001 = g_deax_m.deax001
+            LET g_deax_m_o.deax002 = g_deax_m.deax002
+            CALL s_desc_get_trading_partner_abbr_desc(g_deax_m.deax001)
+               RETURNING g_deax_m.deax001_desc
+            DISPLAY BY NAME g_deax_m.deax001_desc
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deax001
+            #add-point:BEFORE FIELD deax001 name="input.b.deax001"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE deax001
+            #add-point:ON CHANGE deax001 name="input.g.deax001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deax002
+            #add-point:BEFORE FIELD deax002 name="input.b.deax002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deax002
+            
+            #add-point:AFTER FIELD deax002 name="input.a.deax002"
+            IF NOT cl_null(g_deax_m.deax002) THEN
+               IF g_deax_m.deax002 != g_deax_m_o.deax002 OR g_deax_m_o.deax002 IS NULL THEN
+                  INITIALIZE g_chkparam.* TO NULL
+                  #檢查單據 且 帶值
+                  CALL adet407_chk_deax002_ref()
+                  IF NOT cl_null(g_errno) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = g_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_deax_m.deax002 = g_deax_m_o.deax002
+                     NEXT FIELD CURRENT
+                  END IF
+                  CALL adet407_sum_dean008()
+               END IF
+            END IF
+            LET g_deax_m_o.deax001 = g_deax_m.deax001
+            LET g_deax_m_o.deax002 = g_deax_m.deax002
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE deax002
+            #add-point:ON CHANGE deax002 name="input.g.deax002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deax003
+            #add-point:BEFORE FIELD deax003 name="input.b.deax003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deax003
+            
+            #add-point:AFTER FIELD deax003 name="input.a.deax003"
+            IF NOT cl_null(g_deax_m.deax003) AND NOT cl_null(g_deax_m.deaxsite) THEN
+               IF NOT s_settledate_chk(g_deax_m.deaxsite,g_deax_m.deax003) THEN
+                   LET g_deax_m.deax003 = g_deax_m_t.deax003
+                   DISPLAY BY NAME g_deax_m.deax003
+                   NEXT FIELD CURRENT
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE deax003
+            #add-point:ON CHANGE deax003 name="input.g.deax003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deax005
+            
+            #add-point:AFTER FIELD deax005 name="input.a.deax005"
+            LET g_deax_m.deax005_desc = ''
+            DISPLAY BY NAME g_deax_m.deax005_desc
+            IF NOT cl_null(g_deax_m.deax005) THEN
+               #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_deax_m.deax005 != g_deax_m_t.deax005 OR g_deax_m_t.deax005 IS NULL )) THEN   #160824-00007#72 Mark By Ken 161007
+               IF (g_deax_m.deax005 != g_deax_m_o.deax005 OR g_deax_m_o.deax005 IS NULL ) THEN   #160824-00007#72 Add By Ken 161007
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_errshow = TRUE #是否開窗    #160318-00025#28  add
+                  LET g_chkparam.arg1 = g_deax_m.deax005
+                  LET g_chkparam.err_str[1] = "aim-00070:sub-01302|aooi130|",cl_get_progname("aooi130",g_lang,"2"),"|:EXEPROGaooi130"#要執行的建議程式待補 #160318-00025#28  add
+                  IF cl_chk_exist("v_ooag001") THEN
+                     #抓取業務人員對應的部門預設到 deax004
+                     SELECT ooag003 INTO g_deax_m.deax004
+                       FROM ooag_t
+                      WHERE ooagent = g_enterprise
+                        AND ooag001 = g_deax_m.deax005
+                     DISPLAY BY NAME g_deax_m.deax004
+                     CALL s_desc_get_department_desc(g_deax_m.deax004)
+                        RETURNING g_deax_m.deax004_desc
+                     DISPLAY BY NAME g_deax_m.deax004_desc
+                  ELSE
+                     #檢查失敗時後續處理
+                     #LET g_deax_m.deax005 = g_deax_m_t.deax005  #160824-00007#72 Mark By Ken 161007
+                     LET g_deax_m.deax005 = g_deax_m_o.deax005   #160824-00007#72 Add By Ken 161007
+                     DISPLAY BY NAME g_deax_m.deax005
+                     CALL s_desc_get_person_desc(g_deax_m.deax005)
+                        RETURNING g_deax_m.deax005_desc
+                     DISPLAY BY NAME g_deax_m.deax005_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL s_desc_get_person_desc(g_deax_m.deax005)
+               RETURNING g_deax_m.deax005_desc
+            DISPLAY BY NAME g_deax_m.deax005_desc
+            LET g_deax_m_o.* = g_deax_m.*   #160824-00007#72 Add By Ken 161007
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deax005
+            #add-point:BEFORE FIELD deax005 name="input.b.deax005"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE deax005
+            #add-point:ON CHANGE deax005 name="input.g.deax005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deax004
+            
+            #add-point:AFTER FIELD deax004 name="input.a.deax004"
+            LET g_deax_m.deax004_desc = ''
+            DISPLAY BY NAME g_deax_m.deax004_desc
+            IF NOT cl_null(g_deax_m.deax004) THEN
+               #IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_deax_m.deax004 != g_deax_m_t.deax004 OR g_deax_m_t.deax004 IS NULL )) THEN    #160824-00007#72 Mark By Ken 161007
+               IF (g_deax_m.deax004 != g_deax_m_o.deax004 OR g_deax_m_o.deax004 IS NULL ) THEN    #160824-00007#72 Add By Ken 161007
+                  #此段落由子樣板a19產生
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  LET g_errshow = TRUE #是否開窗 #160318-00025#28  add
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_deax_m.deax004
+                  LET g_chkparam.arg2 = g_deax_m.deaxdocdt
+                  LET g_chkparam.err_str[1] = "aoo-00029:sub-01302|aooi125|",cl_get_progname("aooi125",g_lang,"2"),"|:EXEPROGaooi125"#要執行的建議程式待補 #160318-00025#28  add
+                  #呼叫檢查存在的library
+                  IF NOT cl_chk_exist("v_ooeg001") THEN
+                     #檢查失敗時後續處理
+                     #LET g_deax_m.deax004 = g_deax_m_t.deax004  #160824-00007#72 Mark By Ken 161007
+                     LET g_deax_m.deax004 = g_deax_m_o.deax004   #160824-00007#72 Add By Ken 161007
+                     DISPLAY BY NAME g_deax_m.deax004
+                     CALL s_desc_get_department_desc(g_deax_m.deax004)
+                        RETURNING g_deax_m.deax004_desc
+                     DISPLAY BY NAME g_deax_m.deax004_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL s_desc_get_department_desc(g_deax_m.deax004)
+               RETURNING g_deax_m.deax004_desc
+            DISPLAY BY NAME g_deax_m.deax004_desc
+            LET g_deax_m_o.* = g_deax_m.*   #160824-00007#72 Add By Ken 161007
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deax004
+            #add-point:BEFORE FIELD deax004 name="input.b.deax004"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE deax004
+            #add-point:ON CHANGE deax004 name="input.g.deax004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deaxunit
+            #add-point:BEFORE FIELD deaxunit name="input.b.deaxunit"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deaxunit
+            
+            #add-point:AFTER FIELD deaxunit name="input.a.deaxunit"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE deaxunit
+            #add-point:ON CHANGE deaxunit name="input.g.deaxunit"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deaxstus
+            #add-point:BEFORE FIELD deaxstus name="input.b.deaxstus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deaxstus
+            
+            #add-point:AFTER FIELD deaxstus name="input.a.deaxstus"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE deaxstus
+            #add-point:ON CHANGE deaxstus name="input.g.deaxstus"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.deaxsite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deaxsite
+            #add-point:ON ACTION controlp INFIELD deaxsite name="input.c.deaxsite"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_deax_m.deaxsite             #給予default值
+            
+            #給予arg
+            CALL s_aooi500_q_where(g_prog,'deaxsite',g_deax_m.deaxsite,'i') RETURNING l_where #150308-00001#1  By Ken add 'i' 150309
+            LET g_qryparam.where = l_where
+            CALL q_ooef001_24()
+            
+            LET g_deax_m.deaxsite = g_qryparam.return1
+            DISPLAY g_deax_m.deaxsite TO deaxsite
+            CALL s_desc_get_department_desc(g_deax_m.deaxsite)
+               RETURNING g_deax_m.deaxsite_desc
+            DISPLAY BY NAME g_deax_m.deaxsite_desc
+            NEXT FIELD deaxsite                          #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.deaxdocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deaxdocdt
+            #add-point:ON ACTION controlp INFIELD deaxdocdt name="input.c.deaxdocdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.deaxdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deaxdocno
+            #add-point:ON ACTION controlp INFIELD deaxdocno name="input.c.deaxdocno"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_deax_m.deaxdocno             #給予default值
+
+            #給予arg
+            LET l_ooef004 = ''
+            SELECT ooef004 INTO l_ooef004
+              FROM ooef_t
+             WHERE ooef001 = g_deax_m.deaxsite
+               AND ooefent = g_enterprise
+            LET g_qryparam.arg1 = l_ooef004    #單據別參照表號
+            LET g_qryparam.arg2 = g_prog       #程式名稱
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_deax_m.deaxdocno = g_qryparam.return1 
+            DISPLAY g_deax_m.deaxdocno TO deaxdocno
+            NEXT FIELD deaxdocno                          #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.deax001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deax001
+            #add-point:ON ACTION controlp INFIELD deax001 name="input.c.deax001"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_deax_m.deax001             #給予default值
+            LET g_qryparam.arg1 = 'ALL'
+            CALL q_pmaa001_6()                                #呼叫開窗
+            LET g_deax_m.deax001 = g_qryparam.return1
+            DISPLAY g_deax_m.deax001 TO deax001
+            CALL s_desc_get_trading_partner_abbr_desc(g_deax_m.deax001)
+               RETURNING g_deax_m.deax001_desc
+            DISPLAY BY NAME g_deax_m.deax001_desc
+            NEXT FIELD deax001                          #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.deax002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deax002
+            #add-point:ON ACTION controlp INFIELD deax002 name="input.c.deax002"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_deax_m.deax002             #給予default值
+            
+            IF NOT cl_null(g_deax_m.deax001) THEN
+               LET g_qryparam.where = " deam001 = '",g_deax_m.deax001,"'"
+            END IF
+            
+            #給予arg
+            CALL q_deamdocno()                                #呼叫開窗
+            LET g_deax_m.deax002 = g_qryparam.return1
+            DISPLAY g_deax_m.deax002 TO deax002
+            NEXT FIELD deax002                          #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.deax003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deax003
+            #add-point:ON ACTION controlp INFIELD deax003 name="input.c.deax003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.deax005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deax005
+            #add-point:ON ACTION controlp INFIELD deax005 name="input.c.deax005"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_deax_m.deax005             #給予default值
+
+            CALL q_ooag001()                                #呼叫開窗
+            LET g_deax_m.deax005 = g_qryparam.return1
+            DISPLAY g_deax_m.deax005 TO deax005
+            CALL s_desc_get_person_desc(g_deax_m.deax005)
+               RETURNING g_deax_m.deax005_desc
+            DISPLAY BY NAME g_deax_m.deax005_desc
+            NEXT FIELD deax005                          #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.deax004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deax004
+            #add-point:ON ACTION controlp INFIELD deax004 name="input.c.deax004"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_deax_m.deax004      #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_deax_m.deaxdocdt
+            CALL q_ooeg001()                                #呼叫開窗
+            LET g_deax_m.deax004 = g_qryparam.return1
+            DISPLAY g_deax_m.deax004 TO deax004
+            CALL s_desc_get_department_desc(g_deax_m.deax004)
+               RETURNING g_deax_m.deax004_desc
+            DISPLAY BY NAME g_deax_m.deax004_desc
+            NEXT FIELD deax004                          #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.deaxunit
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deaxunit
+            #add-point:ON ACTION controlp INFIELD deaxunit name="input.c.deaxunit"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.deaxstus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deaxstus
+            #add-point:ON ACTION controlp INFIELD deaxstus name="input.c.deaxstus"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+            
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+ 
+            #CALL cl_err_collect_show()      #錯誤訊息統整顯示
+            #CALL cl_showmsg()
+            DISPLAY BY NAME g_deax_m.deaxdocno
+                        
+            #add-point:單頭INPUT後 name="input.head.after_input"
+ 
+            #end add-point
+                        
+            IF p_cmd <> 'u' THEN
+    
+               CALL s_transaction_begin()
+               
+               #add-point:單頭新增前 name="input.head.b_insert"
+               LET g_deax_m.deaxunit = g_deax_m.deaxsite
+               #自動編碼
+               CALL s_aooi200_gen_docno(g_deax_m.deaxsite,g_deax_m.deaxdocno,g_deax_m.deaxdocdt,g_prog)
+                    RETURNING l_success,g_deax_m.deaxdocno
+               IF NOT l_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'apm-00003'
+                  LET g_errparam.extend = g_deax_m.deaxdocno
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  NEXT FIELD deaxdocno
+               END IF
+               DISPLAY BY NAME g_deax_m.deaxdocno
+               #end add-point
+               
+               INSERT INTO deax_t (deaxent,deaxsite,deaxdocdt,deaxdocno,deax001,deax002,deax003,deax005, 
+                   deax004,deaxunit,deaxstus,deaxownid,deaxowndp,deaxcrtid,deaxcrtdp,deaxcrtdt,deaxmodid, 
+                   deaxmoddt,deaxcnfid,deaxcnfdt)
+               VALUES (g_enterprise,g_deax_m.deaxsite,g_deax_m.deaxdocdt,g_deax_m.deaxdocno,g_deax_m.deax001, 
+                   g_deax_m.deax002,g_deax_m.deax003,g_deax_m.deax005,g_deax_m.deax004,g_deax_m.deaxunit, 
+                   g_deax_m.deaxstus,g_deax_m.deaxownid,g_deax_m.deaxowndp,g_deax_m.deaxcrtid,g_deax_m.deaxcrtdp, 
+                   g_deax_m.deaxcrtdt,g_deax_m.deaxmodid,g_deax_m.deaxmoddt,g_deax_m.deaxcnfid,g_deax_m.deaxcnfdt)  
+ 
+               IF SQLCA.SQLCODE THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "g_deax_m:",SQLERRMESSAGE 
+                  LET g_errparam.code = SQLCA.SQLCODE 
+                  LET g_errparam.popup = TRUE 
+                  CALL s_transaction_end('N','0')
+                  CALL cl_err()
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #add-point:單頭新增中 name="input.head.m_insert"
+               
+               #end add-point
+               
+               
+               
+               
+               #add-point:單頭新增後 name="input.head.a_insert"
+               CALL s_transaction_end('Y','0') 
+               CALL cl_showmsg_init()
+               CALL adet407_01(g_deax_m.deaxdocno)
+               CALL cl_showmsg()
+               LET g_action_choice = ""
+               LET INT_FLAG = ''
+               #end add-point
+               CALL s_transaction_end('Y','0') 
+               
+               IF l_cmd_t = 'r' AND p_cmd = 'a' THEN
+                  CALL adet407_detail_reproduce()
+                  #因應特定程式需求, 重新刷新單身資料
+                  CALL adet407_b_fill()
+                  CALL adet407_b_fill2('0')
+               END IF
+               
+               #add-point:單頭新增後 name="input.head.a_insert2"
+               
+               #end add-point
+               
+               LET g_master_insert = TRUE
+               
+               LET p_cmd = 'u'
+            ELSE
+               CALL s_transaction_begin()
+            
+               #add-point:單頭修改前 name="input.head.b_update"
+               
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL adet407_deax_t_mask_restore('restore_mask_o')
+               
+               UPDATE deax_t SET (deaxsite,deaxdocdt,deaxdocno,deax001,deax002,deax003,deax005,deax004, 
+                   deaxunit,deaxstus,deaxownid,deaxowndp,deaxcrtid,deaxcrtdp,deaxcrtdt,deaxmodid,deaxmoddt, 
+                   deaxcnfid,deaxcnfdt) = (g_deax_m.deaxsite,g_deax_m.deaxdocdt,g_deax_m.deaxdocno,g_deax_m.deax001, 
+                   g_deax_m.deax002,g_deax_m.deax003,g_deax_m.deax005,g_deax_m.deax004,g_deax_m.deaxunit, 
+                   g_deax_m.deaxstus,g_deax_m.deaxownid,g_deax_m.deaxowndp,g_deax_m.deaxcrtid,g_deax_m.deaxcrtdp, 
+                   g_deax_m.deaxcrtdt,g_deax_m.deaxmodid,g_deax_m.deaxmoddt,g_deax_m.deaxcnfid,g_deax_m.deaxcnfdt) 
+ 
+                WHERE deaxent = g_enterprise AND deaxdocno = g_deaxdocno_t
+ 
+               IF SQLCA.SQLCODE THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "deax_t:",SQLERRMESSAGE 
+                  LET g_errparam.code = SQLCA.SQLCODE 
+                  LET g_errparam.popup = TRUE 
+                  CALL s_transaction_end('N','0')
+                  CALL cl_err()
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #add-point:單頭修改中 name="input.head.m_update"
+               
+               #end add-point
+               
+               
+               
+               
+               #將遮罩欄位進行遮蔽
+               CALL adet407_deax_t_mask_restore('restore_mask_n')
+               
+               #修改歷程記錄(單頭修改)
+               LET g_log1 = util.JSON.stringify(g_deax_m_t)
+               LET g_log2 = util.JSON.stringify(g_deax_m)
+               IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF
+               
+               #add-point:單頭修改後 name="input.head.a_update"
+               
+               #end add-point
+            END IF
+            
+            LET g_master_commit = "Y"
+            LET g_deaxdocno_t = g_deax_m.deaxdocno
+ 
+            
+      END INPUT
+   
+ 
+{</section>}
+ 
+{<section id="adet407.input.body" >}
+   
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_deav_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                  INSERT ROW = FALSE, 
+                  DELETE ROW = FALSE,
+                  APPEND ROW = FALSE)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            #add-point:資料輸入前 name="input.body.before_input2"
+            
+            #end add-point
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_deav_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL adet407_b_fill()
+            #如果一直都在單身1則控制筆數位置
+            IF g_loc = 'm' AND g_rec_b != 0 THEN
+               CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'1',"))
+            END IF
+            LET g_loc = 'm'
+            LET g_rec_b = g_deav_d.getLength()
+            #add-point:資料輸入前 name="input.d.before_input"
+            
+            #end add-point
+         
+         BEFORE ROW
+            #add-point:modify段before row2 name="input.body.before_row2"
+            
+            #end add-point  
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac_t = l_ac 
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET g_detail_idx_list[1] = l_ac
+            LET g_current_page = 1
+            
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN adet407_cl USING g_enterprise,g_deax_m.deaxdocno
+            IF SQLCA.SQLCODE THEN   #(ver:78)
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN adet407_cl:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+               LET g_errparam.popup = TRUE 
+               CLOSE adet407_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_deav_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND g_deav_d[l_ac].deavseq IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_deav_d_t.* = g_deav_d[l_ac].*  #BACKUP
+               LET g_deav_d_o.* = g_deav_d[l_ac].*  #BACKUP
+               CALL adet407_set_entry_b(l_cmd)
+               #add-point:modify段after_set_entry_b name="input.body.after_set_entry_b"
+               
+               #end add-point  
+               CALL adet407_set_no_entry_b(l_cmd)
+               IF NOT adet407_lock_b("deav_t","'1'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH adet407_bcl INTO g_deav_d[l_ac].deavseq,g_deav_d[l_ac].deavsite,g_deav_d[l_ac].deavdocdt, 
+                      g_deav_d[l_ac].deav001,g_deav_d[l_ac].deav002,g_deav_d[l_ac].deav003,g_deav_d[l_ac].deav004, 
+                      g_deav_d[l_ac].deav005,g_deav_d[l_ac].deav006,g_deav_d[l_ac].deav007,g_deav_d[l_ac].deav008, 
+                      g_deav_d[l_ac].deav009,g_deav_d[l_ac].deav010,g_deav_d[l_ac].deav011,g_deav_d[l_ac].deav012, 
+                      g_deav_d[l_ac].deav013,g_deav_d[l_ac].deav014,g_deav_d[l_ac].deav015,g_deav_d[l_ac].deav016, 
+                      g_deav_d[l_ac].deavunit
+                  IF SQLCA.SQLCODE THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = g_deav_d_t.deavseq,":",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE 
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_deav_d_mask_o[l_ac].* =  g_deav_d[l_ac].*
+                  CALL adet407_deav_t_mask()
+                  LET g_deav_d_mask_n[l_ac].* =  g_deav_d[l_ac].*
+                  
+                  LET g_bfill = "N"
+                  CALL adet407_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row name="input.body.before_row"
+            
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+ 
+            #其他table進行lock
+            
+ 
+        
+         BEFORE INSERT  
+            
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_deav_d[l_ac].* TO NULL 
+            INITIALIZE g_deav_d_t.* TO NULL 
+            INITIALIZE g_deav_d_o.* TO NULL 
+            #公用欄位給值(單身)
+            
+            #自定義預設值
+                  LET g_deav_d[l_ac].deav014 = "N"
+ 
+            #add-point:modify段before備份 name="input.body.insert.before_bak"
+            
+            #end add-point
+            LET g_deav_d_t.* = g_deav_d[l_ac].*     #新輸入資料
+            LET g_deav_d_o.* = g_deav_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL adet407_set_entry_b(l_cmd)
+            #add-point:modify段after_set_entry_b name="input.body.insert.after_set_entry_b"
+            
+            #end add-point
+            CALL adet407_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_deav_d[li_reproduce_target].* = g_deav_d[li_reproduce].*
+ 
+               LET g_deav_d[li_reproduce_target].deavseq = NULL
+ 
+            END IF
+            
+ 
+            #add-point:modify段before insert name="input.body.before_insert"
+            
+            #end add-point  
+  
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = 9001 
+               LET g_errparam.popup = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            #add-point:單身新增 name="input.body.b_a_insert"
+            
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(1) INTO l_count FROM deav_t 
+             WHERE deavent = g_enterprise AND deavdocno = g_deax_m.deaxdocno
+ 
+               AND deavseq = g_deav_d[l_ac].deavseq
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前 name="input.body.b_insert"
+               
+               #end add-point
+            
+               #同步新增到同層的table
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_deax_m.deaxdocno
+               LET gs_keys[2] = g_deav_d[g_detail_idx].deavseq
+               CALL adet407_insert_b('deav_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後 name="input.body.a_insert"
+               
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code = "std-00006" 
+               LET g_errparam.popup = TRUE 
+               INITIALIZE g_deav_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLCODE THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "deav_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')                    
+               CALL cl_err()
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL adet407_b_fill()
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert name="input.body.a_insert2"
+               
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               #ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+               #add-point:單身刪除後(=d) name="input.body.after_delete_d"
+               
+               #end add-point
+            ELSE
+               #add-point:單身刪除前 name="input.body.b_delete_ask"
+               
+               #end add-point 
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code = -263 
+                  LET g_errparam.popup = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前 name="input.body.b_delete"
+               
+               #end add-point 
+               
+               #取得該筆資料key值
+               INITIALIZE gs_keys TO NULL
+               LET gs_keys[01] = g_deax_m.deaxdocno
+ 
+               LET gs_keys[gs_keys.getLength()+1] = g_deav_d_t.deavseq
+ 
+            
+               #刪除同層單身
+               IF NOT adet407_delete_b('deav_t',gs_keys,"'1'") THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE adet407_bcl
+                  CANCEL DELETE
+               END IF
+    
+               #刪除下層單身
+               IF NOT adet407_key_delete_b(gs_keys,'deav_t') THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE adet407_bcl
+                  CANCEL DELETE
+               END IF
+               
+               #刪除多語言
+               
+ 
+               
+               #add-point:單身刪除中 name="input.body.m_delete"
+               
+               #end add-point 
+               
+               CALL s_transaction_end('Y','0')
+               CLOSE adet407_bcl
+            
+               LET g_rec_b = g_rec_b-1
+               #add-point:單身刪除後 name="input.body.a_delete"
+               
+               #end add-point
+               LET l_count = g_deav_d.getLength()
+               
+               #add-point:單身刪除後(<>d) name="input.body.after_delete"
+               
+               #end add-point
+            END IF
+ 
+         AFTER DELETE
+            #如果是最後一筆
+            IF l_ac = (g_deav_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deav014
+            #add-point:BEFORE FIELD deav014 name="input.b.page1.deav014"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deav014
+            
+            #add-point:AFTER FIELD deav014 name="input.a.page1.deav014"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE deav014
+            #add-point:ON CHANGE deav014 name="input.g.page1.deav014"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deav015
+            
+            #add-point:AFTER FIELD deav015 name="input.a.page1.deav015"
+            LET g_deav_d[l_ac].deav015_desc = ' '
+            DISPLAY BY NAME g_deav_d[l_ac].deav015_desc
+            IF NOT cl_null(g_deav_d[l_ac].deav015) THEN
+               IF p_cmd = 'a' OR (p_cmd = 'u' AND (g_deav_d[l_ac].deav015 != g_deav_d_t.deav015 OR g_deav_d_t.deav015 IS NULL )) THEN
+                  IF NOT s_azzi650_chk_exist('2114',g_deav_d[l_ac].deav015) THEN
+                     #LET g_deav_d_t.deav015 = g_deav_d[l_ac].deav015
+                     LET g_deav_d[l_ac].deav015 = g_deav_d_t.deav015 #150612-00018#1 15/06/23 s983961--mod
+                     CALL s_desc_get_acc_desc('2114',g_deav_d[l_ac].deav015)
+                        RETURNING g_deav_d[l_ac].deav015_desc
+                     DISPLAY BY NAME g_deav_d[l_ac].deav015_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+            CALL s_desc_get_acc_desc('2114',g_deav_d[l_ac].deav015)
+               RETURNING g_deav_d[l_ac].deav015_desc
+            DISPLAY BY NAME g_deav_d[l_ac].deav015_desc
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deav015
+            #add-point:BEFORE FIELD deav015 name="input.b.page1.deav015"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE deav015
+            #add-point:ON CHANGE deav015 name="input.g.page1.deav015"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deav016
+            #add-point:BEFORE FIELD deav016 name="input.b.page1.deav016"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deav016
+            
+            #add-point:AFTER FIELD deav016 name="input.a.page1.deav016"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE deav016
+            #add-point:ON CHANGE deav016 name="input.g.page1.deav016"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD deavunit
+            #add-point:BEFORE FIELD deavunit name="input.b.page1.deavunit"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD deavunit
+            
+            #add-point:AFTER FIELD deavunit name="input.a.page1.deavunit"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE deavunit
+            #add-point:ON CHANGE deavunit name="input.g.page1.deavunit"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.deav014
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deav014
+            #add-point:ON ACTION controlp INFIELD deav014 name="input.c.page1.deav014"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.deav015
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deav015
+            #add-point:ON ACTION controlp INFIELD deav015 name="input.c.page1.deav015"
+            #此段落由子樣板a07產生            
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_deav_d[l_ac].deav015             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = '2114'
+            CALL q_oocq002()                                #呼叫開窗
+            LET g_deav_d[l_ac].deav015 = g_qryparam.return1
+            DISPLAY g_deav_d[l_ac].deav015 TO deav015
+            CALL s_desc_get_acc_desc('2114',g_deav_d[l_ac].deav015)
+               RETURNING g_deav_d[l_ac].deav015_desc
+            DISPLAY BY NAME g_deav_d[l_ac].deav015_desc
+            NEXT FIELD deav015                          #返回原欄位
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.deav016
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deav016
+            #add-point:ON ACTION controlp INFIELD deav016 name="input.c.page1.deav016"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.deavunit
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD deavunit
+            #add-point:ON ACTION controlp INFIELD deavunit name="input.c.page1.deavunit"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               LET g_deav_d[l_ac].* = g_deav_d_t.*
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = 9001 
+               LET g_errparam.popup = FALSE 
+               CLOSE adet407_bcl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = g_deav_d[l_ac].deavseq 
+               LET g_errparam.code = -263 
+               LET g_errparam.popup = TRUE 
+               CALL cl_err()
+               LET g_deav_d[l_ac].* = g_deav_d_t.*
+            ELSE
+            
+               #add-point:單身修改前 name="input.body.b_update"
+               
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身)
+               
+      
+               #將遮罩欄位還原
+               CALL adet407_deav_t_mask_restore('restore_mask_o')
+      
+               UPDATE deav_t SET (deavdocno,deavseq,deavsite,deavdocdt,deav001,deav002,deav003,deav004, 
+                   deav005,deav006,deav007,deav008,deav009,deav010,deav011,deav012,deav013,deav014,deav015, 
+                   deav016,deavunit) = (g_deax_m.deaxdocno,g_deav_d[l_ac].deavseq,g_deav_d[l_ac].deavsite, 
+                   g_deav_d[l_ac].deavdocdt,g_deav_d[l_ac].deav001,g_deav_d[l_ac].deav002,g_deav_d[l_ac].deav003, 
+                   g_deav_d[l_ac].deav004,g_deav_d[l_ac].deav005,g_deav_d[l_ac].deav006,g_deav_d[l_ac].deav007, 
+                   g_deav_d[l_ac].deav008,g_deav_d[l_ac].deav009,g_deav_d[l_ac].deav010,g_deav_d[l_ac].deav011, 
+                   g_deav_d[l_ac].deav012,g_deav_d[l_ac].deav013,g_deav_d[l_ac].deav014,g_deav_d[l_ac].deav015, 
+                   g_deav_d[l_ac].deav016,g_deav_d[l_ac].deavunit)
+                WHERE deavent = g_enterprise AND deavdocno = g_deax_m.deaxdocno 
+ 
+                  AND deavseq = g_deav_d_t.deavseq #項次   
+ 
+                  
+               #add-point:單身修改中 name="input.body.m_update"
+               
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     LET g_deav_d[l_ac].* = g_deav_d_t.*
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "deav_t" 
+                     LET g_errparam.code = "std-00009" 
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     
+                  WHEN SQLCA.SQLCODE #其他錯誤
+                     LET g_deav_d[l_ac].* = g_deav_d_t.*  
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "deav_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE 
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()                   
+                     
+                  OTHERWISE
+                     #資料多語言用-增/改
+                     
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_deax_m.deaxdocno
+               LET gs_keys_bak[1] = g_deaxdocno_t
+               LET gs_keys[2] = g_deav_d[g_detail_idx].deavseq
+               LET gs_keys_bak[2] = g_deav_d_t.deavseq
+               CALL adet407_update_b('deav_t',gs_keys,gs_keys_bak,"'1'")
+               END CASE
+ 
+               #將遮罩欄位進行遮蔽
+               CALL adet407_deav_t_mask_restore('restore_mask_n')
+               
+               #判斷key是否有改變
+               INITIALIZE gs_keys TO NULL
+               IF NOT(g_deav_d[g_detail_idx].deavseq = g_deav_d_t.deavseq 
+ 
+                  ) THEN
+                  LET gs_keys[01] = g_deax_m.deaxdocno
+ 
+                  LET gs_keys[gs_keys.getLength()+1] = g_deav_d_t.deavseq
+ 
+                  CALL adet407_key_update_b(gs_keys,'deav_t')
+               END IF
+               
+               #修改歷程記錄(單身修改)
+               LET g_log1 = util.JSON.stringify(g_deax_m),util.JSON.stringify(g_deav_d_t)
+               LET g_log2 = util.JSON.stringify(g_deax_m),util.JSON.stringify(g_deav_d[l_ac])
+               IF NOT cl_log_modified_record_d(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               END IF
+               
+               #add-point:單身修改後 name="input.body.a_update"
+               
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            #add-point:單身after_row name="input.body.after_row"
+            
+            #end add-point
+            CALL adet407_unlock_b("deav_t","'1'")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            #add-point:單身after_row2 name="input.body.after_row2"
+            
+            #end add-point
+              
+         AFTER INPUT
+            #add-point:input段after input  name="input.body.after_input"
+            
+            #end add-point 
+    
+         ON ACTION controlo    
+            IF l_insert THEN
+               LET li_reproduce = l_ac_t
+               LET li_reproduce_target = l_ac
+               LET g_deav_d[li_reproduce_target].* = g_deav_d[li_reproduce].*
+ 
+               LET g_deav_d[li_reproduce_target].deavseq = NULL
+ 
+            ELSE
+               CALL FGL_SET_ARR_CURR(g_deav_d.getLength()+1)
+               LET lb_reproduce = TRUE
+               LET li_reproduce = l_ac
+               LET li_reproduce_target = g_deav_d.getLength()+1
+            END IF
+            
+         #ON ACTION cancel
+         #   LET INT_FLAG = 1
+         #   LET g_detail_idx = 1
+         #   EXIT DIALOG 
+ 
+      END INPUT
+      
+ 
+      
+ 
+      DISPLAY ARRAY g_deav2_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b)  
+    
+         BEFORE ROW
+            CALL adet407_idx_chk()
+            LET l_ac = DIALOG.getCurrentRow("s_detail2")
+            LET g_detail_idx = l_ac
+            
+            #add-point:page2, before row動作 name="input.body2.before_row"
+            
+            #end add-point
+            
+         BEFORE DISPLAY
+            #如果一直都在單身1則控制筆數位置
+            IF g_loc = 'm' THEN
+               CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'2',"))
+            END IF
+            LET g_loc = 'm'
+            LET l_ac = DIALOG.getCurrentRow("s_detail2")
+            CALL adet407_idx_chk()
+            LET g_current_page = 2
+      
+         #add-point:page2自定義行為 name="input.body2.action"
+         
+         #end add-point
+      
+      END DISPLAY
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="adet407.input.other" >}
+      
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      BEFORE DIALOG 
+         #CALL cl_err_collect_init()    
+         #add-point:input段before dialog name="input.before_dialog"
+         
+         #end add-point    
+         #重新導回資料到正確位置上
+         CALL DIALOG.setCurrentRow("s_detail1",g_idx_group.getValue("'1',"))      
+         CALL DIALOG.setCurrentRow("s_detail2",g_idx_group.getValue("'2',"))
+ 
+         #新增時強制從單頭開始填
+         IF p_cmd = 'a' THEN
+            #add-point:input段next_field name="input.next_field"
+            
+            #end add-point  
+            NEXT FIELD deaxdocno
+         ELSE
+            CASE g_aw
+               WHEN "s_detail1"
+                  NEXT FIELD deavseq
+               WHEN "s_detail2"
+                  NEXT FIELD deauseq
+ 
+               #add-point:input段modify_detail  name="input.modify_detail.other"
+               
+               #end add-point  
+            END CASE
+         END IF
+      
+      AFTER DIALOG
+         #add-point:input段after_dialog name="input.after_dialog"
+         
+         #end add-point    
+         
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         #add-point:input段accept  name="input.accept"
+         
+         #end add-point    
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         #add-point:input段cancel name="input.cancel"
+         
+         #end add-point  
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         #各個page指標
+         LET g_detail_idx_list[1] = 1 
+         LET g_detail_idx_list[2] = 1
+ 
+         CALL g_curr_diag.setCurrentRow("s_detail1",1)    
+         CALL g_curr_diag.setCurrentRow("s_detail2",1)
+ 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         #add-point:input段close name="input.close"
+         
+         #end add-point  
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         #add-point:input段exit name="input.exit"
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         #各個page指標
+         LET g_detail_idx_list[1] = 1 
+         LET g_detail_idx_list[2] = 1
+ 
+         CALL g_curr_diag.setCurrentRow("s_detail1",1)    
+         CALL g_curr_diag.setCurrentRow("s_detail2",1)
+ 
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input  name="input.after_input"
+   
+   #end add-point    
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.show" >}
+#+ 單頭資料重新顯示及單身資料重抓
+PRIVATE FUNCTION adet407_show()
+   #add-point:show段define(客製用) name="show.define_customerization"
+   
+   #end add-point  
+   DEFINE l_ac_t    LIKE type_t.num10
+   #add-point:show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="show.before"
+   
+   #end add-point
+   
+   
+   
+   IF g_bfill = "Y" THEN
+      CALL adet407_b_fill() #單身填充
+      CALL adet407_b_fill2('0') #單身填充
+   END IF
+     
+   #帶出公用欄位reference值
+   #應用 a12 樣板自動產生(Version:4)
+ 
+ 
+ 
+   
+   #顯示followup圖示
+   #應用 a48 樣板自動產生(Version:3)
+   CALL adet407_set_pk_array()
+   #add-point:ON ACTION agendum name="show.follow_pic"
+   
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+ 
+   
+   LET l_ac_t = l_ac
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference name="show.head.reference"
+   CALL adet407_sum_dean008()
+   #end add-point
+   
+   #遮罩相關處理
+   LET g_deax_m_mask_o.* =  g_deax_m.*
+   CALL adet407_deax_t_mask()
+   LET g_deax_m_mask_n.* =  g_deax_m.*
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_deax_m.deaxsite,g_deax_m.deaxsite_desc,g_deax_m.deaxdocdt,g_deax_m.deaxdocno,g_deax_m.deax001, 
+       g_deax_m.deax001_desc,g_deax_m.deax002,g_deax_m.deax003,g_deax_m.deax005,g_deax_m.deax005_desc, 
+       g_deax_m.deax004,g_deax_m.deax004_desc,g_deax_m.l_sum,g_deax_m.deaxunit,g_deax_m.deaxstus,g_deax_m.deaxownid, 
+       g_deax_m.deaxownid_desc,g_deax_m.deaxowndp,g_deax_m.deaxowndp_desc,g_deax_m.deaxcrtid,g_deax_m.deaxcrtid_desc, 
+       g_deax_m.deaxcrtdp,g_deax_m.deaxcrtdp_desc,g_deax_m.deaxcrtdt,g_deax_m.deaxmodid,g_deax_m.deaxmodid_desc, 
+       g_deax_m.deaxmoddt,g_deax_m.deaxcnfid,g_deax_m.deaxcnfid_desc,g_deax_m.deaxcnfdt
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_deax_m.deaxstus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+ 
+ 
+ 
+   
+   #讀入ref值(單身)
+   FOR l_ac = 1 TO g_deav_d.getLength()
+      #add-point:show段單身reference name="show.body.reference"
+      
+      #end add-point
+   END FOR
+   
+   FOR l_ac = 1 TO g_deav2_d.getLength()
+      #add-point:show段單身reference name="show.body2.reference"
+      
+      #end add-point
+   END FOR
+ 
+   
+    
+   
+   #add-point:show段other name="show.other"
+   
+   #end add-point  
+   
+   LET l_ac = l_ac_t
+   
+   #移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()     
+ 
+   CALL adet407_detail_show()
+ 
+   #add-point:show段之後 name="show.after"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.detail_show" >}
+#+ 第二階單身reference
+PRIVATE FUNCTION adet407_detail_show()
+   #add-point:detail_show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point  
+   #add-point:detail_show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="detail_show.before"
+   
+   #end add-point
+   
+   #add-point:detail_show段之後 name="detail_show.after"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.reproduce" >}
+#+ 資料複製
+PRIVATE FUNCTION adet407_reproduce()
+   #add-point:reproduce段define(客製用) name="reproduce.define_customerization"
+   
+   #end add-point   
+   DEFINE l_newno     LIKE deax_t.deaxdocno 
+   DEFINE l_oldno     LIKE deax_t.deaxdocno 
+ 
+   DEFINE l_master    RECORD LIKE deax_t.* #此變數樣板目前無使用
+   DEFINE l_detail    RECORD LIKE deav_t.* #此變數樣板目前無使用
+   DEFINE l_detail2    RECORD LIKE deau_t.* #此變數樣板目前無使用
+ 
+ 
+ 
+   DEFINE l_cnt       LIKE type_t.num10
+   #add-point:reproduce段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="reproduce.define"
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_doctype       LIKE rtai_t.rtai004
+   DEFINE l_insert        LIKE type_t.num5
+   #end add-point   
+   
+   #add-point:Function前置處理  name="reproduce.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+   
+   LET g_master_insert = FALSE
+   
+   IF g_deax_m.deaxdocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "std-00003" 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+    
+   LET g_deaxdocno_t = g_deax_m.deaxdocno
+ 
+    
+   LET g_deax_m.deaxdocno = ""
+ 
+ 
+   CALL cl_set_head_visible("","YES")
+ 
+   #公用欄位給予預設值
+   #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_deax_m.deaxownid = g_user
+      LET g_deax_m.deaxowndp = g_dept
+      LET g_deax_m.deaxcrtid = g_user
+      LET g_deax_m.deaxcrtdp = g_dept 
+      LET g_deax_m.deaxcrtdt = cl_get_current()
+      LET g_deax_m.deaxmodid = g_user
+      LET g_deax_m.deaxmoddt = cl_get_current()
+      LET g_deax_m.deaxstus = 'N'
+ 
+ 
+ 
+   
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前 name="reproduce.head.b_input"
+   CALL s_aooi500_default(g_prog,'deaxsite',g_deax_m.deaxsite)
+      RETURNING l_insert,g_deax_m.deaxsite
+   IF l_insert = FALSE THEN
+      RETURN
+   END IF
+      
+   LET g_deax_m.deaxdocdt = g_today
+   LET g_deax_m.deax004 = g_dept
+   LET g_deax_m.deax005 = g_user
+
+   #營運據點
+   CALL s_desc_get_department_desc(g_deax_m.deaxsite)
+      RETURNING g_deax_m.deaxsite_desc
+   DISPLAY BY NAME g_deax_m.deaxsite_desc
+
+   #部門
+   CALL s_desc_get_department_desc(g_deax_m.deax004)
+      RETURNING g_deax_m.deax004_desc
+   DISPLAY BY NAME g_deax_m.deax004_desc
+
+   #人員
+   CALL s_desc_get_person_desc(g_deax_m.deax005)
+      RETURNING g_deax_m.deax005_desc
+   DISPLAY BY NAME g_deax_m.deax005_desc
+
+   LET l_success = ''
+   LET l_doctype = ''
+   CALL s_arti200_get_def_doc_type(g_deax_m.deaxsite,g_prog,'1')
+      RETURNING l_success,l_doctype
+   LET g_deax_m.deaxdocno = l_doctype
+   
+   LET g_site_flag = FALSE
+   LET g_deax_m_t.* = g_deax_m.*
+   LET g_deax_m_o.* = g_deax_m.*
+   #end add-point
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_deax_m.deaxstus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+ 
+ 
+ 
+   
+   #清空key欄位的desc
+   
+   
+   CALL adet407_input("r")
+   
+   IF INT_FLAG AND NOT g_master_insert THEN
+      LET INT_FLAG = 0
+      DISPLAY g_detail_cnt  TO FORMONLY.h_count    #總筆數
+      DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+      LET INT_FLAG = 0
+      INITIALIZE g_deax_m.* TO NULL
+      INITIALIZE g_deav_d TO NULL
+      INITIALIZE g_deav2_d TO NULL
+ 
+      #add-point:複製取消後 name="reproduce.cancel"
+      
+      #end add-point
+      CALL adet407_show()
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = '' 
+      LET g_errparam.code = 9001 
+      LET g_errparam.popup = FALSE 
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL adet407_set_act_visible()   
+   CALL adet407_set_act_no_visible()
+   
+   #將新增的資料併入搜尋條件中
+   LET g_deaxdocno_t = g_deax_m.deaxdocno
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " deaxent = " ||g_enterprise|| " AND",
+                      " deaxdocno = '", g_deax_m.deaxdocno, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL adet407_browser_fill("")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   #add-point:完成複製段落後 name="reproduce.after_reproduce"
+   
+   #end add-point
+   
+   CALL adet407_idx_chk()
+   
+   LET g_data_owner = g_deax_m.deaxownid      
+   LET g_data_dept  = g_deax_m.deaxowndp
+   
+   #功能已完成,通報訊息中心
+   CALL adet407_msgcentre_notify('reproduce')
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.detail_reproduce" >}
+#+ 單身自動複製
+PRIVATE FUNCTION adet407_detail_reproduce()
+   #add-point:delete段define(客製用) name="detail_reproduce.define_customerization"
+   
+   #end add-point    
+   DEFINE ls_sql      STRING
+   DEFINE ld_date     DATETIME YEAR TO SECOND
+   DEFINE l_detail    RECORD LIKE deav_t.* #此變數樣板目前無使用
+   DEFINE l_detail2    RECORD LIKE deau_t.* #此變數樣板目前無使用
+ 
+ 
+ 
+   #add-point:delete段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_reproduce.define"
+   #RETURN   #151104-00002#1 20151117 mark by beckxie
+   #end add-point    
+   
+   #add-point:Function前置處理  name="detail_reproduce.pre_function"
+   RETURN    #151104-00002#1 20151117  add by beckxie
+   #end add-point
+   
+   CALL s_transaction_begin()
+   
+   LET ld_date = cl_get_current()
+   
+   DROP TABLE adet407_detail
+   
+   #add-point:單身複製前1 name="detail_reproduce.body.table1.b_insert"
+   
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   SELECT * FROM deav_t
+    WHERE deavent = g_enterprise AND deavdocno = g_deaxdocno_t
+ 
+    INTO TEMP adet407_detail
+ 
+   #將key修正為調整後   
+   UPDATE adet407_detail 
+      #更新key欄位
+      SET deavdocno = g_deax_m.deaxdocno
+ 
+      #更新共用欄位
+      
+ 
+   #add-point:單身修改前 name="detail_reproduce.body.table1.b_update"
+   
+   #end add-point                                       
+  
+   #將資料塞回原table   
+   INSERT INTO deav_t SELECT * FROM adet407_detail
+   
+   IF SQLCA.SQLCODE THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "reproduce:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE 
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #add-point:單身複製中1 name="detail_reproduce.body.table1.m_insert"
+   
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE adet407_detail
+   
+   #add-point:單身複製後1 name="detail_reproduce.body.table1.a_insert"
+   
+   #end add-point
+ 
+   #add-point:單身複製前 name="detail_reproduce.body.table2.b_insert"
+   
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   SELECT * FROM deau_t 
+    WHERE deauent = g_enterprise AND deaudocno = g_deaxdocno_t
+ 
+    INTO TEMP adet407_detail
+ 
+   #將key修正為調整後   
+   UPDATE adet407_detail SET deaudocno = g_deax_m.deaxdocno
+ 
+  
+   #add-point:單身修改前 name="detail_reproduce.body.table2.b_update"
+   
+   #end add-point    
+ 
+   #將資料塞回原table   
+   INSERT INTO deau_t SELECT * FROM adet407_detail
+   
+   #add-point:單身複製中 name="detail_reproduce.body.table2.m_insert"
+   
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE adet407_detail
+   
+   #add-point:單身複製後 name="detail_reproduce.body.table2.a_insert"
+   
+   #end add-point
+ 
+ 
+   
+ 
+   
+   #多語言複製段落
+   
+   
+   CALL s_transaction_end('Y','0')
+   
+   #已新增完, 調整資料內容(修改時使用)
+   LET g_deaxdocno_t = g_deax_m.deaxdocno
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.delete" >}
+#+ 資料刪除
+PRIVATE FUNCTION adet407_delete()
+   #add-point:delete段define(客製用) name="delete.define_customerization"
+   
+   #end add-point     
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="delete.pre_function"
+   
+   #end add-point
+   
+   IF g_deax_m.deaxdocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "std-00003" 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   
+   
+   CALL s_transaction_begin()
+ 
+   OPEN adet407_cl USING g_enterprise,g_deax_m.deaxdocno
+   IF SQLCA.SQLCODE THEN   #(ver:78)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN adet407_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+      LET g_errparam.popup = TRUE 
+      CLOSE adet407_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE adet407_master_referesh USING g_deax_m.deaxdocno INTO g_deax_m.deaxsite,g_deax_m.deaxdocdt, 
+       g_deax_m.deaxdocno,g_deax_m.deax001,g_deax_m.deax002,g_deax_m.deax003,g_deax_m.deax005,g_deax_m.deax004, 
+       g_deax_m.deaxunit,g_deax_m.deaxstus,g_deax_m.deaxownid,g_deax_m.deaxowndp,g_deax_m.deaxcrtid, 
+       g_deax_m.deaxcrtdp,g_deax_m.deaxcrtdt,g_deax_m.deaxmodid,g_deax_m.deaxmoddt,g_deax_m.deaxcnfid, 
+       g_deax_m.deaxcnfdt,g_deax_m.deaxsite_desc,g_deax_m.deax001_desc,g_deax_m.deax005_desc,g_deax_m.deax004_desc, 
+       g_deax_m.deaxownid_desc,g_deax_m.deaxowndp_desc,g_deax_m.deaxcrtid_desc,g_deax_m.deaxcrtdp_desc, 
+       g_deax_m.deaxmodid_desc,g_deax_m.deaxcnfid_desc
+   
+   
+   #檢查是否允許此動作
+   IF NOT adet407_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_deax_m_mask_o.* =  g_deax_m.*
+   CALL adet407_deax_t_mask()
+   LET g_deax_m_mask_n.* =  g_deax_m.*
+   
+   CALL adet407_show()
+   
+   #add-point:delete段before ask name="delete.before_ask"
+   
+   #end add-point 
+ 
+   IF cl_ask_del_master() THEN              #確認一下
+   
+      #add-point:單頭刪除前 name="delete.head.b_delete"
+      
+      #end add-point   
+      
+      #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL adet407_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove"
+      
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+  
+  
+      #資料備份
+      LET g_deaxdocno_t = g_deax_m.deaxdocno
+ 
+ 
+      DELETE FROM deax_t
+       WHERE deaxent = g_enterprise AND deaxdocno = g_deax_m.deaxdocno
+ 
+       
+      #add-point:單頭刪除中 name="delete.head.m_delete"
+      
+      #end add-point
+       
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_deax_m.deaxdocno,":",SQLERRMESSAGE  
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+         RETURN
+      END IF
+      
+      #add-point:單頭刪除後 name="delete.head.a_delete"
+      IF NOT s_aooi200_del_docno(g_deax_m.deaxdocno,g_deax_m.deaxdocdt) THEN
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      #end add-point
+  
+      #add-point:單身刪除前 name="delete.body.b_delete"
+      
+      #end add-point
+      
+      DELETE FROM deav_t
+       WHERE deavent = g_enterprise AND deavdocno = g_deax_m.deaxdocno
+ 
+ 
+      #add-point:單身刪除中 name="delete.body.m_delete"
+      
+      #end add-point
+         
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "deav_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+         RETURN
+      END IF    
+ 
+      #add-point:單身刪除後 name="delete.body.a_delete"
+      
+      #end add-point
+      
+            
+                                                               
+      #add-point:單身刪除前 name="delete.body.b_delete2"
+      
+      #end add-point
+      DELETE FROM deau_t
+       WHERE deauent = g_enterprise AND
+             deaudocno = g_deax_m.deaxdocno
+      #add-point:單身刪除中 name="delete.body.m_delete2"
+      
+      #end add-point
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "deau_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+         RETURN
+      END IF      
+ 
+      #add-point:單身刪除後 name="delete.body.a_delete2"
+      
+      #end add-point
+ 
+ 
+ 
+ 
+      
+      #修改歷程記錄(刪除)
+      LET g_log1 = util.JSON.stringify(g_deax_m)   #(ver:78)
+      IF NOT cl_log_modified_record(g_log1,'') THEN    #(ver:78)
+         CLOSE adet407_cl
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+             
+      CLEAR FORM
+      CALL g_deav_d.clear() 
+      CALL g_deav2_d.clear()       
+ 
+     
+      CALL adet407_ui_browser_refresh()  
+      #CALL adet407_ui_headershow()  
+      #CALL adet407_ui_detailshow()
+ 
+      #add-point:多語言刪除 name="delete.lang.before_delete"
+      
+      #end add-point
+      
+      #單頭多語言刪除
+      
+      
+      #單身多語言刪除
+      
+      
+ 
+   
+      #add-point:多語言刪除 name="delete.lang.delete"
+      
+      #end add-point
+      
+      IF g_browser_cnt > 0 THEN 
+         #CALL adet407_browser_fill("")
+         CALL adet407_fetch('P')
+         DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+         DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+      ELSE
+         CLEAR FORM
+      END IF
+      
+      CALL s_transaction_end('Y','0')
+   ELSE
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE adet407_cl
+ 
+   #功能已完成,通報訊息中心
+   CALL adet407_msgcentre_notify('delete')
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION adet407_b_fill()
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+   
+   #end add-point     
+   DEFINE p_wc2      STRING
+   DEFINE li_idx     LIKE type_t.num10
+   #add-point:b_fill段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="b_fill.pre_function"
+   
+   #end add-point
+   
+   #清空第一階單身
+   CALL g_deav_d.clear()
+   CALL g_deav2_d.clear()
+ 
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   CALL g_deav3_d.clear()
+   #end add-point
+   
+   #判斷是否填充
+   IF adet407_fill_chk(1) THEN
+      #切換上下筆時不重組SQL
+      IF (g_action_choice = "query" OR cl_null(g_action_choice))
+      #add-point:b_fill段long_sql_if name="b_fill.long_sql_if"
+      
+      #end add-point
+      THEN
+         LET g_sql = "SELECT  DISTINCT deavseq,deavsite,deavdocdt,deav001,deav002,deav003,deav004,deav005, 
+             deav006,deav007,deav008,deav009,deav010,deav011,deav012,deav013,deav014,deav015,deav016, 
+             deavunit ,t1.ooefl003 ,t2.ooial003 ,t3.oocql004 ,t4.ooail003 ,t5.oocql004 FROM deav_t", 
+                
+                     " INNER JOIN deax_t ON deaxent = " ||g_enterprise|| " AND deaxdocno = deavdocno ",
+ 
+                     #"",
+                     
+                     "",
+                     #下層單身所需的join條件
+ 
+                                    " LEFT JOIN ooefl_t t1 ON t1.ooeflent="||g_enterprise||" AND t1.ooefl001=deavsite AND t1.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooial_t t2 ON t2.ooialent="||g_enterprise||" AND t2.ooial001=deav002 AND t2.ooial002='"||g_dlang||"' ",
+               " LEFT JOIN oocql_t t3 ON t3.oocqlent="||g_enterprise||" AND t3.oocql001='2071' AND t3.oocql002=deav004 AND t3.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN ooail_t t4 ON t4.ooailent="||g_enterprise||" AND t4.ooail001=deav005 AND t4.ooail002='"||g_dlang||"' ",
+               " LEFT JOIN oocql_t t5 ON t5.oocqlent="||g_enterprise||" AND t5.oocql001='2114' AND t5.oocql002=deav015 AND t5.oocql003='"||g_dlang||"' ",
+ 
+                     " WHERE deavent=? AND deavdocno=?"
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         #add-point:b_fill段sql_before name="b_fill.body.fill_sql"
+         
+         #end add-point
+         IF NOT cl_null(g_wc2_table1) THEN
+            LET g_sql = g_sql CLIPPED, " AND ", g_wc2_table1 CLIPPED
+         END IF
+         
+         #子單身的WC
+         
+         
+         LET g_sql = g_sql, " ORDER BY deav_t.deavseq"
+         
+         #add-point:單身填充控制 name="b_fill.sql"
+         
+         #end add-point
+         
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         PREPARE adet407_pb FROM g_sql
+         DECLARE b_fill_cs CURSOR FOR adet407_pb
+      END IF
+      
+      LET g_cnt = l_ac
+      LET l_ac = 1
+      
+   #  OPEN b_fill_cs USING g_enterprise,g_deax_m.deaxdocno   #(ver:78)
+                                               
+      FOREACH b_fill_cs USING g_enterprise,g_deax_m.deaxdocno INTO g_deav_d[l_ac].deavseq,g_deav_d[l_ac].deavsite, 
+          g_deav_d[l_ac].deavdocdt,g_deav_d[l_ac].deav001,g_deav_d[l_ac].deav002,g_deav_d[l_ac].deav003, 
+          g_deav_d[l_ac].deav004,g_deav_d[l_ac].deav005,g_deav_d[l_ac].deav006,g_deav_d[l_ac].deav007, 
+          g_deav_d[l_ac].deav008,g_deav_d[l_ac].deav009,g_deav_d[l_ac].deav010,g_deav_d[l_ac].deav011, 
+          g_deav_d[l_ac].deav012,g_deav_d[l_ac].deav013,g_deav_d[l_ac].deav014,g_deav_d[l_ac].deav015, 
+          g_deav_d[l_ac].deav016,g_deav_d[l_ac].deavunit,g_deav_d[l_ac].deavsite_desc,g_deav_d[l_ac].deav002_desc, 
+          g_deav_d[l_ac].deav004_desc,g_deav_d[l_ac].deav005_desc,g_deav_d[l_ac].deav015_desc   #(ver:78) 
+ 
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充 name="b_fill.fill"
+         #卡券種編號
+         CASE g_deav_d[l_ac].deav001
+            WHEN '40' #款別編號=40有價券/禮券類型
+               CALL s_deac_get_gcaf_desc(g_deav_d[l_ac].deav003)
+                  RETURNING g_deav_d[l_ac].deav003_desc
+            WHEN '50' #款別編號=50銀行卡/信用卡
+               CALL s_desc_get_mman_desc(g_deav_d[l_ac].deav003)
+                  RETURNING g_deav_d[l_ac].deav003_desc
+         END CASE
+         DISPLAY BY NAME g_deav_d[l_ac].deav003_desc
+         #end add-point
+      
+         IF l_ac > g_max_rec THEN
+            IF g_error_show = 1 THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = l_ac
+               LET g_errparam.code = 9035 
+               LET g_errparam.popup = TRUE 
+               CALL cl_err()
+            END IF
+            EXIT FOREACH
+         END IF
+         
+         LET l_ac = l_ac + 1
+      END FOREACH
+      LET g_error_show = 0
+   
+   END IF
+    
+   #判斷是否填充
+   IF adet407_fill_chk(2) THEN
+      IF (g_action_choice = "query" OR cl_null(g_action_choice))
+         #add-point:b_fill段long_sql_if name="b_fill.body2.long_sql_if"
+         
+         #end add-point
+      THEN
+         LET g_sql = "SELECT  DISTINCT deauseq,deausite,deaudocdt,deau001,deau002,deau003,deau004,deau005, 
+             deau006,deau007,deau008,deau009,deauunit ,t6.ooefl003 ,t7.ooial003 ,t8.oocql004 ,t9.ooail003 FROM deau_t", 
+                
+                     " INNER JOIN  deax_t ON deaxent = " ||g_enterprise|| " AND deaxdocno = deaudocno ",
+ 
+                     "",
+                     
+                                    " LEFT JOIN ooefl_t t6 ON t6.ooeflent="||g_enterprise||" AND t6.ooefl001=deausite AND t6.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooial_t t7 ON t7.ooialent="||g_enterprise||" AND t7.ooial001=deau002 AND t7.ooial002='"||g_dlang||"' ",
+               " LEFT JOIN oocql_t t8 ON t8.oocqlent="||g_enterprise||" AND t8.oocql001='2071' AND t8.oocql002=deau004 AND t8.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN ooail_t t9 ON t9.ooailent="||g_enterprise||" AND t9.ooail001=deau005 AND t9.ooail002='"||g_dlang||"' ",
+ 
+                     " WHERE deauent=? AND deaudocno=?"   
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         #add-point:b_fill段fill_sql name="b_fill.body2.fill_sql"
+ 
+         #end add-point
+         IF NOT cl_null(g_wc2_table2) THEN
+            LET g_sql = g_sql CLIPPED," AND ",g_wc2_table2 CLIPPED
+         END IF
+         
+         #子單身的WC
+         
+         
+         LET g_sql = g_sql, " ORDER BY deau_t.deauseq"
+         
+         #add-point:單身填充控制 name="b_fill.sql2"
+         
+         #end add-point
+         
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         PREPARE adet407_pb2 FROM g_sql
+         DECLARE b_fill_cs2 CURSOR FOR adet407_pb2
+      END IF
+    
+      LET l_ac = 1
+      
+   #  OPEN b_fill_cs2 USING g_enterprise,g_deax_m.deaxdocno   #(ver:78)
+                                               
+      FOREACH b_fill_cs2 USING g_enterprise,g_deax_m.deaxdocno INTO g_deav2_d[l_ac].deauseq,g_deav2_d[l_ac].deausite, 
+          g_deav2_d[l_ac].deaudocdt,g_deav2_d[l_ac].deau001,g_deav2_d[l_ac].deau002,g_deav2_d[l_ac].deau003, 
+          g_deav2_d[l_ac].deau004,g_deav2_d[l_ac].deau005,g_deav2_d[l_ac].deau006,g_deav2_d[l_ac].deau007, 
+          g_deav2_d[l_ac].deau008,g_deav2_d[l_ac].deau009,g_deav2_d[l_ac].deauunit,g_deav2_d[l_ac].deausite_desc, 
+          g_deav2_d[l_ac].deau002_desc,g_deav2_d[l_ac].deau004_desc,g_deav2_d[l_ac].deau005_desc   #(ver:78) 
+ 
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充 name="b_fill2.fill"
+         #卡券種編號
+         CASE g_deav2_d[l_ac].deau001
+            WHEN '40' #款別編號=40有價券/禮券類型
+               CALL s_deac_get_gcaf_desc(g_deav2_d[l_ac].deau003)
+                  RETURNING g_deav2_d[l_ac].deau003_desc
+            WHEN '50' #款別編號=50銀行卡/信用卡
+               CALL s_desc_get_mman_desc(g_deav2_d[l_ac].deau003)
+                  RETURNING g_deav2_d[l_ac].deau003_desc
+         END CASE
+         DISPLAY BY NAME g_deav2_d[l_ac].deau003_desc
+         #end add-point
+      
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code = 9035 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+   END IF
+ 
+ 
+   
+   #add-point:browser_fill段其他table處理 name="browser_fill.other_fill"
+   IF adet407_fill_chk(3) THEN
+      LET g_sql = "SELECT UNIQUE deanseq,deansite,dean001,dean002,dean003,",
+                  "              dean004,dean005 ,dean006,dean007,dean008,",
+                  "              dean009,t1.ooefl003,t2.ooial003 ,t3.oocql004 ,t4.ooail003",
+                  "  FROM dean_t",
+                  "  LEFT JOIN ooefl_t t1 ON t1.ooeflent='"||g_enterprise||"' AND t1.ooefl001=deansite AND t1.ooefl002='"||g_dlang||"' ",
+                  "  LEFT JOIN ooial_t t2 ON t2.ooialent='"||g_enterprise||"' AND t2.ooial001=dean003 AND t2.ooial002='"||g_dlang||"' ",
+                  "  LEFT JOIN oocql_t t3 ON t3.oocqlent='"||g_enterprise||"' AND t3.oocql001='2071' AND t3.oocql002=dean005 AND t3.oocql003='"||g_dlang||"' ",
+                  "  LEFT JOIN ooail_t t4 ON t4.ooailent='"||g_enterprise||"' AND t4.ooail001=dean006 AND t4.ooail002='"||g_dlang||"' ",
+                  " WHERE deanent=? AND deandocno=?",
+                  " ORDER BY dean_t.deanseq"
+      LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+      PREPARE adet407_pb3 FROM g_sql
+      DECLARE b_fill_cs3 CURSOR FOR adet407_pb3
+      
+      LET l_ac = 1
+      OPEN b_fill_cs3 USING g_enterprise,g_deax_m.deax002
+      FOREACH b_fill_cs3 INTO g_deav3_d[l_ac].deanseq,g_deav3_d[l_ac].deansite,g_deav3_d[l_ac].dean001, 
+                              g_deav3_d[l_ac].dean002,g_deav3_d[l_ac].dean003,g_deav3_d[l_ac].dean004, 
+                              g_deav3_d[l_ac].dean005,g_deav3_d[l_ac].dean006,g_deav3_d[l_ac].dean007,
+                              g_deav3_d[l_ac].dean008,g_deav3_d[l_ac].dean009,g_deav3_d[l_ac].deansite_desc,
+                              g_deav3_d[l_ac].dean003_desc,g_deav3_d[l_ac].dean005_desc,
+                              g_deav3_d[l_ac].dean006_desc
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.sqlcode
+            LET g_errparam.extend = "FOREACH:"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            EXIT FOREACH
+         END IF
+         
+         #卡券種編號
+         CASE g_deav3_d[l_ac].dean002
+            WHEN '40' #款別編號=40有價券/禮券類型
+               CALL s_deac_get_gcaf_desc(g_deav3_d[l_ac].dean004)
+                  RETURNING g_deav3_d[l_ac].dean004_desc
+            WHEN '50' #款別編號=50銀行卡/信用卡
+               CALL s_desc_get_mman_desc(g_deav3_d[l_ac].dean004)
+                  RETURNING g_deav3_d[l_ac].dean004_desc
+            OTHERWISE
+               LET g_deav3_d[l_ac].dean004_desc = ''
+         END CASE
+         
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code =  9035
+            LET g_errparam.extend =  ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+   END IF
+   CALL g_deav3_d.deleteElement(g_deav3_d.getLength())
+   #end add-point
+   
+   CALL g_deav_d.deleteElement(g_deav_d.getLength())
+   CALL g_deav2_d.deleteElement(g_deav2_d.getLength())
+ 
+   
+ 
+   LET l_ac = g_cnt
+   LET g_cnt = 0  
+   
+   FREE adet407_pb
+   FREE adet407_pb2
+ 
+ 
+   
+   LET li_idx = l_ac
+   
+   #遮罩相關處理
+   FOR l_ac = 1 TO g_deav_d.getLength()
+      LET g_deav_d_mask_o[l_ac].* =  g_deav_d[l_ac].*
+      CALL adet407_deav_t_mask()
+      LET g_deav_d_mask_n[l_ac].* =  g_deav_d[l_ac].*
+   END FOR
+   
+   LET g_deav2_d_mask_o.* =  g_deav2_d.*
+   FOR l_ac = 1 TO g_deav2_d.getLength()
+      LET g_deav2_d_mask_o[l_ac].* =  g_deav2_d[l_ac].*
+      CALL adet407_deau_t_mask()
+      LET g_deav2_d_mask_n[l_ac].* =  g_deav2_d[l_ac].*
+   END FOR
+ 
+   
+   LET l_ac = li_idx
+   
+   CALL cl_ap_performance_next_end()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.delete_b" >}
+#+ 刪除單身後其他table連動
+PRIVATE FUNCTION adet407_delete_b(ps_table,ps_keys_bak,ps_page)
+   #add-point:delete_b段define(客製用) name="delete_b.define_customerization"
+   
+   #end add-point     
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:delete_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="delete_b.pre_function"
+   
+   #end add-point
+   
+   LET g_update = TRUE  
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前 name="delete_b.b_delete"
+      
+      #end add-point    
+      DELETE FROM deav_t
+       WHERE deavent = g_enterprise AND
+         deavdocno = ps_keys_bak[1] AND deavseq = ps_keys_bak[2]
+      #add-point:delete_b段刪除中 name="delete_b.m_delete"
+      
+      #end add-point    
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = ":",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_deav_d.deleteElement(li_idx) 
+      END IF 
+ 
+   END IF
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前 name="delete_b.b_delete2"
+      
+      #end add-point    
+      DELETE FROM deau_t
+       WHERE deauent = g_enterprise AND
+             deaudocno = ps_keys_bak[1] AND deauseq = ps_keys_bak[2]
+      #add-point:delete_b段刪除中 name="delete_b.m_delete2"
+      
+      #end add-point    
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "deau_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'2'" THEN 
+         CALL g_deav2_d.deleteElement(li_idx) 
+      END IF 
+ 
+      #add-point:delete_b段刪除後 name="delete_b.a_delete2"
+      
+      #end add-point    
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:delete_b段other name="delete_b.other"
+   
+   #end add-point  
+   
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.insert_b" >}
+#+ 新增單身後其他table連動
+PRIVATE FUNCTION adet407_insert_b(ps_table,ps_keys,ps_page)
+   #add-point:insert_b段define(客製用) name="insert_b.define_customerization"
+   
+   #end add-point     
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE ls_page     STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:insert_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="insert_b.pre_function"
+   
+   #end add-point
+   
+   LET g_update = TRUE  
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前 name="insert_b.before_insert"
+      
+      #end add-point 
+      INSERT INTO deav_t
+                  (deavent,
+                   deavdocno,
+                   deavseq
+                   ,deavsite,deavdocdt,deav001,deav002,deav003,deav004,deav005,deav006,deav007,deav008,deav009,deav010,deav011,deav012,deav013,deav014,deav015,deav016,deavunit) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2]
+                   ,g_deav_d[g_detail_idx].deavsite,g_deav_d[g_detail_idx].deavdocdt,g_deav_d[g_detail_idx].deav001, 
+                       g_deav_d[g_detail_idx].deav002,g_deav_d[g_detail_idx].deav003,g_deav_d[g_detail_idx].deav004, 
+                       g_deav_d[g_detail_idx].deav005,g_deav_d[g_detail_idx].deav006,g_deav_d[g_detail_idx].deav007, 
+                       g_deav_d[g_detail_idx].deav008,g_deav_d[g_detail_idx].deav009,g_deav_d[g_detail_idx].deav010, 
+                       g_deav_d[g_detail_idx].deav011,g_deav_d[g_detail_idx].deav012,g_deav_d[g_detail_idx].deav013, 
+                       g_deav_d[g_detail_idx].deav014,g_deav_d[g_detail_idx].deav015,g_deav_d[g_detail_idx].deav016, 
+                       g_deav_d[g_detail_idx].deavunit)
+      #add-point:insert_b段資料新增中 name="insert_b.m_insert"
+      
+      #end add-point 
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "deav_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_deav_d.insertElement(li_idx) 
+      END IF 
+ 
+      #add-point:insert_b段資料新增後 name="insert_b.after_insert"
+      
+      #end add-point 
+   END IF
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前 name="insert_b.before_insert2"
+      
+      #end add-point 
+      INSERT INTO deau_t
+                  (deauent,
+                   deaudocno,
+                   deauseq
+                   ,deausite,deaudocdt,deau001,deau002,deau003,deau004,deau005,deau006,deau007,deau008,deau009,deauunit) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2]
+                   ,g_deav2_d[g_detail_idx].deausite,g_deav2_d[g_detail_idx].deaudocdt,g_deav2_d[g_detail_idx].deau001, 
+                       g_deav2_d[g_detail_idx].deau002,g_deav2_d[g_detail_idx].deau003,g_deav2_d[g_detail_idx].deau004, 
+                       g_deav2_d[g_detail_idx].deau005,g_deav2_d[g_detail_idx].deau006,g_deav2_d[g_detail_idx].deau007, 
+                       g_deav2_d[g_detail_idx].deau008,g_deav2_d[g_detail_idx].deau009,g_deav2_d[g_detail_idx].deauunit) 
+ 
+      #add-point:insert_b段資料新增中 name="insert_b.m_insert2"
+      
+      #end add-point
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "deau_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'2'" THEN 
+         CALL g_deav2_d.insertElement(li_idx) 
+      END IF 
+ 
+      #add-point:insert_b段資料新增後 name="insert_b.after_insert2"
+      
+      #end add-point
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:insert_b段other name="insert_b.other"
+   
+   #end add-point     
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.update_b" >}
+#+ 修改單身後其他table連動
+PRIVATE FUNCTION adet407_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   #add-point:update_b段define(客製用) name="update_b.define_customerization"
+   
+   #end add-point   
+   DEFINE ps_table         STRING
+   DEFINE ps_page          STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num10 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="update_b.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="update_b.pre_function"
+   
+   #end add-point
+   
+   LET g_update = TRUE   
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "deav_t" THEN
+      #add-point:update_b段修改前 name="update_b.before_update"
+      
+      #end add-point 
+      
+      #將遮罩欄位還原
+      CALL adet407_deav_t_mask_restore('restore_mask_o')
+               
+      UPDATE deav_t 
+         SET (deavdocno,
+              deavseq
+              ,deavsite,deavdocdt,deav001,deav002,deav003,deav004,deav005,deav006,deav007,deav008,deav009,deav010,deav011,deav012,deav013,deav014,deav015,deav016,deavunit) 
+              = 
+             (ps_keys[1],ps_keys[2]
+              ,g_deav_d[g_detail_idx].deavsite,g_deav_d[g_detail_idx].deavdocdt,g_deav_d[g_detail_idx].deav001, 
+                  g_deav_d[g_detail_idx].deav002,g_deav_d[g_detail_idx].deav003,g_deav_d[g_detail_idx].deav004, 
+                  g_deav_d[g_detail_idx].deav005,g_deav_d[g_detail_idx].deav006,g_deav_d[g_detail_idx].deav007, 
+                  g_deav_d[g_detail_idx].deav008,g_deav_d[g_detail_idx].deav009,g_deav_d[g_detail_idx].deav010, 
+                  g_deav_d[g_detail_idx].deav011,g_deav_d[g_detail_idx].deav012,g_deav_d[g_detail_idx].deav013, 
+                  g_deav_d[g_detail_idx].deav014,g_deav_d[g_detail_idx].deav015,g_deav_d[g_detail_idx].deav016, 
+                  g_deav_d[g_detail_idx].deavunit) 
+         WHERE deavent = g_enterprise AND deavdocno = ps_keys_bak[1] AND deavseq = ps_keys_bak[2]
+      #add-point:update_b段修改中 name="update_b.m_update"
+      
+      #end add-point   
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "deav_t" 
+            LET g_errparam.code = "std-00009" 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         WHEN SQLCA.SQLCODE #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "deav_t:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         OTHERWISE
+ 
+      END CASE
+      
+      #將遮罩欄位進行遮蔽
+      CALL adet407_deav_t_mask_restore('restore_mask_n')
+               
+      #add-point:update_b段修改後 name="update_b.after_update"
+      
+      #end add-point  
+   END IF
+   
+   #子表處理
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      
+   END IF
+   
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "deau_t" THEN
+      #add-point:update_b段修改前 name="update_b.before_update2"
+      
+      #end add-point  
+      
+      #將遮罩欄位還原
+      CALL adet407_deau_t_mask_restore('restore_mask_o')
+               
+      UPDATE deau_t 
+         SET (deaudocno,
+              deauseq
+              ,deausite,deaudocdt,deau001,deau002,deau003,deau004,deau005,deau006,deau007,deau008,deau009,deauunit) 
+              = 
+             (ps_keys[1],ps_keys[2]
+              ,g_deav2_d[g_detail_idx].deausite,g_deav2_d[g_detail_idx].deaudocdt,g_deav2_d[g_detail_idx].deau001, 
+                  g_deav2_d[g_detail_idx].deau002,g_deav2_d[g_detail_idx].deau003,g_deav2_d[g_detail_idx].deau004, 
+                  g_deav2_d[g_detail_idx].deau005,g_deav2_d[g_detail_idx].deau006,g_deav2_d[g_detail_idx].deau007, 
+                  g_deav2_d[g_detail_idx].deau008,g_deav2_d[g_detail_idx].deau009,g_deav2_d[g_detail_idx].deauunit)  
+ 
+         WHERE deauent = g_enterprise AND deaudocno = ps_keys_bak[1] AND deauseq = ps_keys_bak[2]
+      #add-point:update_b段修改中 name="update_b.m_update2"
+      
+      #end add-point  
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "deau_t" 
+            LET g_errparam.code = "std-00009" 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         WHEN SQLCA.SQLCODE #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "deau_t:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         OTHERWISE
+          
+      END CASE
+      
+      #將遮罩欄位進行遮蔽
+      CALL adet407_deau_t_mask_restore('restore_mask_n')
+ 
+      #add-point:update_b段修改後 name="update_b.after_update2"
+      
+      #end add-point  
+   END IF
+ 
+   #子表處理
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:update_b段other name="update_b.other"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.key_update_b" >}
+#+ 上層單身key欄位變動後, 連帶修正下層單身key欄位
+PRIVATE FUNCTION adet407_key_update_b(ps_keys_bak,ps_table)
+   #add-point:update_b段define(客製用) name="key_update_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_keys_bak       DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_table          STRING
+   DEFINE l_field_key       DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak    DYNAMIC ARRAY OF STRING
+   DEFINE l_new_key         DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key         DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="key_update_b.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="key_update_b.pre_function"
+   
+   #end add-point
+   
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.key_delete_b" >}
+#+ 上層單身刪除後, 連帶刪除下層單身key欄位
+PRIVATE FUNCTION adet407_key_delete_b(ps_keys_bak,ps_table)
+   #add-point:delete_b段define(客製用) name="key_delete_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_keys_bak       DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_table          STRING
+   DEFINE l_field_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak    DYNAMIC ARRAY OF STRING
+   DEFINE l_new_key         DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key         DYNAMIC ARRAY OF STRING
+   #add-point:delete_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="key_delete_b.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="key_delete_b.pre_function"
+   
+   #end add-point
+   
+ 
+   
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.lock_b" >}
+#+ 連動lock其他單身table資料
+PRIVATE FUNCTION adet407_lock_b(ps_table,ps_page)
+   #add-point:lock_b段define(客製用) name="lock_b.define_customerization"
+   
+   #end add-point   
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:lock_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="lock_b.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="lock_b.pre_function"
+   
+   #end add-point
+    
+   #先刷新資料
+   #CALL adet407_b_fill()
+   
+   #鎖定整組table
+   #LET ls_group = "'1',"
+   #僅鎖定自身table
+   LET ls_group = "deav_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      OPEN adet407_bcl USING g_enterprise,
+                                       g_deax_m.deaxdocno,g_deav_d[g_detail_idx].deavseq     
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "adet407_bcl:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+                                    
+   #鎖定整組table
+   #LET ls_group = "'2',"
+   #僅鎖定自身table
+   LET ls_group = "deau_t"
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN adet407_bcl2 USING g_enterprise,
+                                             g_deax_m.deaxdocno,g_deav2_d[g_detail_idx].deauseq
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "adet407_bcl2:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:lock_b段other name="lock_b.other"
+   
+   #end add-point  
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.unlock_b" >}
+#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION adet407_unlock_b(ps_table,ps_page)
+   #add-point:unlock_b段define(客製用) name="unlock_b.define_customerization"
+   
+   #end add-point  
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:unlock_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="unlock_b.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="unlock_b.pre_function"
+   
+   #end add-point
+    
+   LET ls_group = "'1',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE adet407_bcl
+   END IF
+   
+   LET ls_group = "'2',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE adet407_bcl2
+   END IF
+ 
+ 
+   
+ 
+ 
+   #add-point:unlock_b段other name="unlock_b.other"
+   
+   #end add-point  
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.set_entry" >}
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION adet407_set_entry(p_cmd)
+   #add-point:set_entry段define(客製用) name="set_entry.define_customerization"
+   
+   #end add-point       
+   DEFINE p_cmd   LIKE type_t.chr1  
+   #add-point:set_entry段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry.define"
+   
+   #end add-point       
+   
+   #add-point:Function前置處理  name="set_entry.pre_function"
+   
+   #end add-point
+   
+   CALL cl_set_comp_entry("deaxdocno",TRUE)
+   
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("deaxdocno",TRUE)
+      CALL cl_set_comp_entry("deaxdocdt",TRUE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry段欄位控制 name="set_entry.field_control"
+      CALL cl_set_comp_entry("deaxsite",TRUE)
+      CALL cl_set_comp_entry("deaxdocdt",TRUE)
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry段欄位控制後 name="set_entry.after_control"
+   CALL cl_set_comp_entry("deax001",TRUE)
+   CALL cl_set_comp_entry("deax002",TRUE)
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.set_no_entry" >}
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION adet407_set_no_entry(p_cmd)
+   #add-point:set_no_entry段define(客製用) name="set_no_entry.define_customerization"
+   
+   #end add-point     
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry.define"
+ 
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_no_entry.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("deaxdocno",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry段欄位控制 name="set_no_entry.field_control"
+      CALL cl_set_comp_entry("deaxsite",FALSE)
+      CALL cl_set_comp_entry("deaxdocdt",FALSE)
+      #end add-point 
+   END IF 
+   
+   IF p_cmd = 'u' THEN  #docno,ld欄位確認是絕對關閉
+      CALL cl_set_comp_entry("deaxdocno",FALSE)
+   END IF 
+ 
+#  IF p_cmd = 'u' THEN  #docdt欄位依照設定關閉(FALSE則為設定不同意修正) #(ver:78)
+      IF NOT cl_chk_update_docdt() THEN
+         CALL cl_set_comp_entry("deaxdocdt",FALSE)
+      END IF
+#  END IF 
+   
+   #add-point:set_no_entry段欄位控制後 name="set_no_entry.after_control"
+   IF adet407_count_deau() THEN
+      CALL cl_set_comp_entry("deax001",FALSE)
+      CALL cl_set_comp_entry("deax002",FALSE)
+   END IF
+   
+   #aooi500設定的欄位控卡
+   IF NOT s_aooi500_comp_entry(g_prog,'deaxsite') OR g_site_flag THEN
+      CALL cl_set_comp_entry("deaxsite",FALSE)
+   END IF
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.set_entry_b" >}
+#+ 單身欄位開啟設定
+PRIVATE FUNCTION adet407_set_entry_b(p_cmd)
+   #add-point:set_entry_b段define(客製用) name="set_entry_b.define_customerization"
+   
+   #end add-point     
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_entry_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_entry_b.pre_function"
+   
+   #end add-point
+    
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("",TRUE)
+      #add-point:set_entry段欄位控制 name="set_entry_b.field_control"
+      
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry_b段 name="set_entry_b.set_entry_b"
+   
+   #end add-point  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.set_no_entry_b" >}
+#+ 單身欄位關閉設定
+PRIVATE FUNCTION adet407_set_no_entry_b(p_cmd)
+   #add-point:set_no_entry_b段define(客製用) name="set_no_entry_b.define_customerization"
+   
+   #end add-point    
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry_b.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="set_no_entry_b.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("",FALSE)
+      #add-point:set_no_entry_b段欄位控制 name="set_no_entry_b.field_control"
+      
+      #end add-point 
+   END IF 
+   
+   #add-point:set_no_entry_b段 name="set_no_entry_b.set_no_entry_b"
+   
+   #end add-point     
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.set_act_visible" >}
+#+ 單頭權限開啟
+PRIVATE FUNCTION adet407_set_act_visible()
+   #add-point:set_act_visible段define(客製用) name="set_act_visible.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_visible段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible.define"
+   
+   #end add-point   
+   #add-point:set_act_visible段 name="set_act_visible.set_act_visible"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.set_act_no_visible" >}
+#+ 單頭權限關閉
+PRIVATE FUNCTION adet407_set_act_no_visible()
+   #add-point:set_act_no_visible段define(客製用) name="set_act_no_visible.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_no_visible段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible.define"
+   
+   #end add-point   
+   #add-point:set_act_no_visible段 name="set_act_no_visible.set_act_no_visible"
+   #應用 a63 樣板自動產生(Version:1)
+   IF g_deax_m.deaxstus NOT MATCHES "[NDR]" THEN   # N未確認/D抽單/R已拒絕允許修改
+      CALL cl_set_act_visible("modify,delete,modify_detail", FALSE)
+   END IF
+
+
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.set_act_visible_b" >}
+#+ 單身權限開啟
+PRIVATE FUNCTION adet407_set_act_visible_b()
+   #add-point:set_act_visible_b段define(客製用) name="set_act_visible_b.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_visible_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible_b.define"
+   
+   #end add-point   
+   #add-point:set_act_visible_b段 name="set_act_visible_b.set_act_visible_b"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.set_act_no_visible_b" >}
+#+ 單身權限關閉
+PRIVATE FUNCTION adet407_set_act_no_visible_b()
+   #add-point:set_act_no_visible_b段define(客製用) name="set_act_no_visible_b.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_no_visible_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible_b.define"
+   
+   #end add-point   
+   #add-point:set_act_no_visible_b段 name="set_act_no_visible_b.set_act_no_visible_b"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION adet407_default_search()
+   #add-point:default_search段define(客製用) name="default_search.define_customerization"
+   
+   #end add-point  
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE li_cnt     LIKE type_t.num10
+   DEFINE ls_wc      STRING
+   DEFINE la_wc      DYNAMIC ARRAY OF RECORD
+          tableid    STRING,
+          wc         STRING
+          END RECORD
+   DEFINE ls_where   STRING
+   #add-point:default_search段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="default_search.before"
+   
+   #end add-point  
+   
+   LET g_pagestart = 1
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " deaxdocno = '", g_argv[01], "' AND "
+   END IF
+   
+ 
+   
+   #add-point:default_search段after sql name="default_search.after_sql"
+   
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      #若無外部參數則預設為1=2
+      LET g_default = FALSE
+      
+      #預設查詢條件
+      CALL cl_qbe_get_default_qryplan() RETURNING ls_where
+      IF NOT cl_null(ls_where) THEN
+         CALL util.JSON.parse(ls_where, la_wc)
+         INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+         INITIALIZE g_wc2_table2 TO NULL
+ 
+ 
+         FOR li_idx = 1 TO la_wc.getLength()
+            CASE
+               WHEN la_wc[li_idx].tableid = "deax_t" 
+                  LET g_wc = la_wc[li_idx].wc
+               WHEN la_wc[li_idx].tableid = "deav_t" 
+                  LET g_wc2_table1 = la_wc[li_idx].wc
+               WHEN la_wc[li_idx].tableid = "deau_t" 
+                  LET g_wc2_table2 = la_wc[li_idx].wc
+ 
+ 
+               WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                  LET g_wc2_extend = la_wc[li_idx].wc
+            END CASE
+         END FOR
+         IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1) 
+            OR NOT cl_null(g_wc2_table2)
+ 
+ 
+            OR NOT cl_null(g_wc2_extend)
+            THEN
+            #組合g_wc2
+            IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+               LET g_wc2 = g_wc2_table1
+            END IF
+            IF g_wc2_table2 <> " 1=1" AND NOT cl_null(g_wc2_table2) THEN
+               LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+            END IF
+ 
+ 
+            IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+               LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+            END IF
+         
+            IF g_wc2.subString(1,5) = " AND " THEN
+               LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+            END IF
+         END IF
+      END IF
+    
+      IF cl_null(g_wc) AND cl_null(g_wc2) THEN
+         LET g_wc = " 1=2"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前 name="default_search.after"
+   
+   #end add-point  
+ 
+   IF g_wc.getIndexOf(" 1=2", 1) THEN
+      LET g_default = TRUE
+   END IF
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.state_change" >}
+   #應用 a09 樣板自動產生(Version:17)
+#+ 確認碼變更 
+PRIVATE FUNCTION adet407_statechange()
+   #add-point:statechange段define(客製用) name="statechange.define_customerization"
+   
+   #end add-point  
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:statechange段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="statechange.define"
+   DEFINE l_success   LIKE type_t.num5
+   #end add-point  
+   
+   #add-point:Function前置處理 name="statechange.before"
+   IF g_deax_m.deaxstus = 'X' THEN
+      RETURN
+   END IF
+   #end add-point  
+   
+   ERROR ""     #清空畫面右下側ERROR區塊
+ 
+   IF g_deax_m.deaxdocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   CALL s_transaction_begin()
+   
+   OPEN adet407_cl USING g_enterprise,g_deax_m.deaxdocno
+   IF STATUS THEN
+      CLOSE adet407_cl
+      CALL s_transaction_end('N','0')
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN adet407_cl:" 
+      LET g_errparam.code   = STATUS 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #顯示最新的資料
+   EXECUTE adet407_master_referesh USING g_deax_m.deaxdocno INTO g_deax_m.deaxsite,g_deax_m.deaxdocdt, 
+       g_deax_m.deaxdocno,g_deax_m.deax001,g_deax_m.deax002,g_deax_m.deax003,g_deax_m.deax005,g_deax_m.deax004, 
+       g_deax_m.deaxunit,g_deax_m.deaxstus,g_deax_m.deaxownid,g_deax_m.deaxowndp,g_deax_m.deaxcrtid, 
+       g_deax_m.deaxcrtdp,g_deax_m.deaxcrtdt,g_deax_m.deaxmodid,g_deax_m.deaxmoddt,g_deax_m.deaxcnfid, 
+       g_deax_m.deaxcnfdt,g_deax_m.deaxsite_desc,g_deax_m.deax001_desc,g_deax_m.deax005_desc,g_deax_m.deax004_desc, 
+       g_deax_m.deaxownid_desc,g_deax_m.deaxowndp_desc,g_deax_m.deaxcrtid_desc,g_deax_m.deaxcrtdp_desc, 
+       g_deax_m.deaxmodid_desc,g_deax_m.deaxcnfid_desc
+   
+ 
+   #檢查是否允許此動作
+   IF NOT adet407_action_chk() THEN
+      CLOSE adet407_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_deax_m.deaxsite,g_deax_m.deaxsite_desc,g_deax_m.deaxdocdt,g_deax_m.deaxdocno,g_deax_m.deax001, 
+       g_deax_m.deax001_desc,g_deax_m.deax002,g_deax_m.deax003,g_deax_m.deax005,g_deax_m.deax005_desc, 
+       g_deax_m.deax004,g_deax_m.deax004_desc,g_deax_m.l_sum,g_deax_m.deaxunit,g_deax_m.deaxstus,g_deax_m.deaxownid, 
+       g_deax_m.deaxownid_desc,g_deax_m.deaxowndp,g_deax_m.deaxowndp_desc,g_deax_m.deaxcrtid,g_deax_m.deaxcrtid_desc, 
+       g_deax_m.deaxcrtdp,g_deax_m.deaxcrtdp_desc,g_deax_m.deaxcrtdt,g_deax_m.deaxmodid,g_deax_m.deaxmodid_desc, 
+       g_deax_m.deaxmoddt,g_deax_m.deaxcnfid,g_deax_m.deaxcnfid_desc,g_deax_m.deaxcnfdt
+ 
+   CASE g_deax_m.deaxstus
+      WHEN "N"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+      WHEN "Y"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+      WHEN "A"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+      WHEN "D"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+      WHEN "R"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+      WHEN "W"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+      WHEN "X"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+      
+   END CASE
+ 
+   #add-point:資料刷新後 name="statechange.after_refresh"
+   
+   #end add-point
+ 
+   MENU "" ATTRIBUTES (STYLE="popup")
+      BEFORE MENU
+         HIDE OPTION "approved"
+         HIDE OPTION "rejection"
+         CASE g_deax_m.deaxstus
+            
+            WHEN "N"
+               HIDE OPTION "unconfirmed"
+            WHEN "Y"
+               HIDE OPTION "confirmed"
+            WHEN "A"
+               HIDE OPTION "approved"
+            WHEN "D"
+               HIDE OPTION "withdraw"
+            WHEN "R"
+               HIDE OPTION "rejection"
+            WHEN "W"
+               HIDE OPTION "signing"
+            WHEN "X"
+               HIDE OPTION "invalid"
+         END CASE
+     
+      #add-point:menu前 name="statechange.before_menu"
+      #open皆改為unconfirmed
+      CALL cl_set_act_visible("unconfirmed,invalid,confirmed",TRUE)
+      CALL cl_set_act_visible("open_adbt407_01",TRUE)
+      #提交和抽單一開始先無條件關
+      CALL cl_set_act_visible("signing,withdraw",FALSE)
+
+      CASE g_deax_m.deaxstus
+         WHEN "N"
+            CALL cl_set_act_visible("unconfirmed",FALSE)
+            #需提交至BPM時，則顯示「提交」功能並隱藏「確認」功能
+            IF cl_bpm_chk() THEN
+               CALL cl_set_act_visible("signing",TRUE)
+               CALL cl_set_act_visible("confirmed",FALSE)
+            END IF
+
+         WHEN "X"
+            CALL cl_set_act_visible("unconfirmed,invalid,confirmed",FALSE)
+            CALL cl_set_act_visible("open_adbt407_01",TRUE)
+
+         WHEN "Y"
+            CALL cl_set_act_visible("invalid,confirmed",FALSE)
+            CALL cl_set_act_visible("open_adbt407_01",TRUE)
+
+         #已核准只能顯示確認;其餘應用功能皆隱藏
+         WHEN "A"
+            CALL cl_set_act_visible("confirmed ",TRUE)
+            CALL cl_set_act_visible("unconfirmed,invalid",FALSE)
+            CALL cl_set_act_visible("open_adbt407_01",TRUE)
+
+        #保留修改的功能(如作廢)，隱藏其他應用功能
+         WHEN "R"
+            CALL cl_set_act_visible("confirmed,unconfirmed",FALSE)
+            CALL cl_set_act_visible("open_adbt407_01",TRUE)
+
+         WHEN "D"
+            CALL cl_set_act_visible("confirmed,unconfirmed",FALSE)
+
+         #送簽中只能顯示抽單;其餘應用功能皆隱藏
+         WHEN "W"
+            CALL cl_set_act_visible("withdraw",TRUE)
+            CALL cl_set_act_visible("unconfirmed,invalid,confirmed",FALSE)
+            CALL cl_set_act_visible("open_adbt407_01",TRUE)
+
+      END CASE
+      #end add-point
+      
+      #應用 a36 樣板自動產生(Version:5)
+      #提交
+      ON ACTION signing
+         IF cl_auth_chk_act("signing") THEN
+            IF NOT adet407_send() THEN
+               CALL s_transaction_end('N','0')
+            ELSE
+               CALL s_transaction_end('Y','0')
+            END IF
+            #因應簽核行為, 該動作完成後不再進行後續處理
+            #於此處直接返回
+            CLOSE adet407_cl
+            RETURN
+         END IF
+    
+      #抽單
+      ON ACTION withdraw
+         IF cl_auth_chk_act("withdraw") THEN
+            IF NOT adet407_draw_out() THEN
+               CALL s_transaction_end('N','0')
+            ELSE
+               CALL s_transaction_end('Y','0')
+            END IF
+            #因應簽核行為, 該動作完成後不再進行後續處理
+            #於此處直接返回
+            CLOSE adet407_cl
+            RETURN
+         END IF
+ 
+ 
+ 
+	  
+      ON ACTION unconfirmed
+         IF cl_auth_chk_act("unconfirmed") THEN
+            LET lc_state = "N"
+            #add-point:action控制 name="statechange.unconfirmed"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+      ON ACTION confirmed
+         IF cl_auth_chk_act("confirmed") THEN
+            LET lc_state = "Y"
+            #add-point:action控制 name="statechange.confirmed"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+      ON ACTION approved
+         IF cl_auth_chk_act("approved") THEN
+            LET lc_state = "A"
+            #add-point:action控制 name="statechange.approved"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+      #ON ACTION withdraw
+      #   IF cl_auth_chk_act("withdraw") THEN
+      #      LET lc_state = "D"
+      #      #add-point:action控制 name="statechange.withdraw"
+      #      
+      #      #end add-point
+      #   END IF
+      #   EXIT MENU
+      ON ACTION rejection
+         IF cl_auth_chk_act("rejection") THEN
+            LET lc_state = "R"
+            #add-point:action控制 name="statechange.rejection"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+      #ON ACTION signing
+      #   IF cl_auth_chk_act("signing") THEN
+      #      LET lc_state = "W"
+      #      #add-point:action控制 name="statechange.signing"
+      #      
+      #      #end add-point
+      #   END IF
+      #   EXIT MENU
+      ON ACTION invalid
+         IF cl_auth_chk_act("invalid") THEN
+            LET lc_state = "X"
+            #add-point:action控制 name="statechange.invalid"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+ 
+      #add-point:stus控制 name="statechange.more_control"
+ 
+      #end add-point
+      
+   END MENU
+   
+   #確認被選取的狀態碼在清單中
+   IF (lc_state <> "N" 
+      AND lc_state <> "Y"
+      AND lc_state <> "A"
+      AND lc_state <> "D"
+      AND lc_state <> "R"
+      AND lc_state <> "W"
+      AND lc_state <> "X"
+      ) OR 
+      g_deax_m.deaxstus = lc_state OR cl_null(lc_state) THEN
+      CLOSE adet407_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:stus修改前 name="statechange.b_update"
+   CALL s_transaction_begin()
+   OPEN adet407_cl USING g_enterprise,g_deax_m.deaxdocno
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "OPEN adet407_cl:"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      CLOSE adet407_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   CALL cl_showmsg_init()
+   
+   #未確認改確認(N->Y)
+   IF lc_state = 'Y' AND g_deax_m.deaxstus = 'N' THEN
+      CALL s_adet407_conf_chk(g_deax_m.deaxdocno) RETURNING l_success
+      IF NOT l_success THEN
+         CALL s_transaction_end('N','0')
+         CALL cl_showmsg()
+         RETURN
+      ELSE
+         IF cl_ask_confirm('aim-00108') THEN
+            CALL s_adet407_conf_upd(g_deax_m.deaxdocno) RETURNING l_success
+            IF NOT l_success THEN
+               CALL s_transaction_end('N','0')
+               CALL cl_showmsg()
+               RETURN
+            ELSE
+               CALL s_transaction_end('Y','0')
+               CALL cl_showmsg()
+            END IF
+         ELSE
+            CALL s_transaction_end('N','0')
+            CALL cl_showmsg()
+            RETURN
+         END IF
+      END IF
+   END IF
+   #確認改未確認(Y->N)
+   IF lc_state = 'N' AND g_deax_m.deaxstus = 'Y' THEN
+      CALL s_adet407_unconf_chk(g_deax_m.deaxdocno) RETURNING l_success
+      IF NOT l_success THEN
+         CALL s_transaction_end('N','0')
+         CALL cl_showmsg()
+         RETURN
+      ELSE
+         IF cl_ask_confirm('aim-00110') THEN
+            CALL s_adet407_unconf_upd(g_deax_m.deaxdocno) RETURNING l_success
+            IF NOT l_success THEN
+               CALL s_transaction_end('N','0')
+               CALL cl_showmsg()
+               RETURN
+            ELSE
+               CALL s_transaction_end('Y','0')
+               CALL cl_showmsg()
+            END IF
+         ELSE
+            CALL s_transaction_end('N','0')
+            CALL cl_showmsg()
+            RETURN
+         END IF
+      END IF
+   END IF
+   #未確認改作廢(N->X)
+   IF lc_state = 'X' AND g_deax_m.deaxstus = 'N' THEN
+      CALL s_adet407_invalid_chk(g_deax_m.deaxdocno) RETURNING l_success
+      IF NOT l_success THEN
+         CALL s_transaction_end('N','0')
+         CALL cl_showmsg()
+         RETURN
+      ELSE
+         IF cl_ask_confirm('aim-00109') THEN
+            CALL s_adet407_invalid_upd(g_deax_m.deaxdocno) RETURNING l_success
+            IF NOT l_success THEN
+               CALL s_transaction_end('N','0')
+               CALL cl_showmsg()
+               RETURN
+            ELSE
+               CALL s_transaction_end('Y','0')
+               CALL cl_showmsg()
+            END IF
+         ELSE
+            CALL s_transaction_end('N','0')
+            CALL cl_showmsg()
+            RETURN
+         END IF
+      END IF
+   END IF
+   #end add-point
+   
+   LET g_deax_m.deaxmodid = g_user
+   LET g_deax_m.deaxmoddt = cl_get_current()
+   LET g_deax_m.deaxstus = lc_state
+   
+   #異動狀態碼欄位/修改人/修改日期
+   UPDATE deax_t 
+      SET (deaxstus,deaxmodid,deaxmoddt) 
+        = (g_deax_m.deaxstus,g_deax_m.deaxmodid,g_deax_m.deaxmoddt)     
+    WHERE deaxent = g_enterprise AND deaxdocno = g_deax_m.deaxdocno
+ 
+    
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+   ELSE
+      CASE lc_state
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "A"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/approved.png")
+         WHEN "D"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/withdraw.png")
+         WHEN "R"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/rejection.png")
+         WHEN "W"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/signing.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+    
+      #撈取異動後的資料
+      EXECUTE adet407_master_referesh USING g_deax_m.deaxdocno INTO g_deax_m.deaxsite,g_deax_m.deaxdocdt, 
+          g_deax_m.deaxdocno,g_deax_m.deax001,g_deax_m.deax002,g_deax_m.deax003,g_deax_m.deax005,g_deax_m.deax004, 
+          g_deax_m.deaxunit,g_deax_m.deaxstus,g_deax_m.deaxownid,g_deax_m.deaxowndp,g_deax_m.deaxcrtid, 
+          g_deax_m.deaxcrtdp,g_deax_m.deaxcrtdt,g_deax_m.deaxmodid,g_deax_m.deaxmoddt,g_deax_m.deaxcnfid, 
+          g_deax_m.deaxcnfdt,g_deax_m.deaxsite_desc,g_deax_m.deax001_desc,g_deax_m.deax005_desc,g_deax_m.deax004_desc, 
+          g_deax_m.deaxownid_desc,g_deax_m.deaxowndp_desc,g_deax_m.deaxcrtid_desc,g_deax_m.deaxcrtdp_desc, 
+          g_deax_m.deaxmodid_desc,g_deax_m.deaxcnfid_desc
+      
+      #將資料顯示到畫面上
+      DISPLAY BY NAME g_deax_m.deaxsite,g_deax_m.deaxsite_desc,g_deax_m.deaxdocdt,g_deax_m.deaxdocno, 
+          g_deax_m.deax001,g_deax_m.deax001_desc,g_deax_m.deax002,g_deax_m.deax003,g_deax_m.deax005, 
+          g_deax_m.deax005_desc,g_deax_m.deax004,g_deax_m.deax004_desc,g_deax_m.l_sum,g_deax_m.deaxunit, 
+          g_deax_m.deaxstus,g_deax_m.deaxownid,g_deax_m.deaxownid_desc,g_deax_m.deaxowndp,g_deax_m.deaxowndp_desc, 
+          g_deax_m.deaxcrtid,g_deax_m.deaxcrtid_desc,g_deax_m.deaxcrtdp,g_deax_m.deaxcrtdp_desc,g_deax_m.deaxcrtdt, 
+          g_deax_m.deaxmodid,g_deax_m.deaxmodid_desc,g_deax_m.deaxmoddt,g_deax_m.deaxcnfid,g_deax_m.deaxcnfid_desc, 
+          g_deax_m.deaxcnfdt
+   END IF
+ 
+   #add-point:stus修改後 name="statechange.a_update"
+   
+   #end add-point
+ 
+   #add-point:statechange段結束前 name="statechange.after"
+   
+   #end add-point  
+ 
+   CLOSE adet407_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL adet407_msgcentre_notify('statechange:'||lc_state)
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="adet407.idx_chk" >}
+#+ 顯示正確的單身資料筆數
+PRIVATE FUNCTION adet407_idx_chk()
+   #add-point:idx_chk段define(客製用) name="idx_chk.define_customerization"
+   
+   #end add-point  
+   #add-point:idx_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="idx_chk.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="idx_chk.pre_function"
+   
+   #end add-point
+   
+   IF g_current_page = 1 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail1")
+      IF g_detail_idx > g_deav_d.getLength() THEN
+         LET g_detail_idx = g_deav_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_deav_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_deav_d.getLength() TO FORMONLY.cnt
+   END IF
+   
+   IF g_current_page = 2 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail2")
+      IF g_detail_idx > g_deav2_d.getLength() THEN
+         LET g_detail_idx = g_deav2_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_deav2_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_deav2_d.getLength() TO FORMONLY.cnt
+   END IF
+ 
+   
+   #add-point:idx_chk段other name="idx_chk.other"
+   IF g_current_page = 3 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail3")
+      IF g_detail_idx > g_deav3_d.getLength() THEN
+         LET g_detail_idx = g_deav3_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_deav3_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_deav3_d.getLength() TO FORMONLY.cnt
+   END IF
+   #end add-point  
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.b_fill2" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION adet407_b_fill2(pi_idx)
+   #add-point:b_fill2段define(客製用) name="b_fill2.define_customerization"
+   
+   #end add-point
+   DEFINE pi_idx                 LIKE type_t.num10
+   DEFINE li_ac                  LIKE type_t.num10
+   DEFINE li_detail_idx_tmp      LIKE type_t.num10
+   DEFINE ls_chk                 LIKE type_t.chr1
+   #add-point:b_fill2段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill2.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="b_fill2.pre_function"
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   IF g_detail_idx <= 0 THEN
+      RETURN
+   END IF
+   
+   LET li_detail_idx_tmp = g_detail_idx
+   
+ 
+      
+ 
+      
+   #add-point:單身填充後 name="b_fill2.after_fill"
+   
+   #end add-point
+    
+   LET l_ac = li_ac
+   
+   CALL adet407_detail_show()
+   
+   LET g_detail_idx = li_detail_idx_tmp
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.fill_chk" >}
+#+ 單身填充確認
+PRIVATE FUNCTION adet407_fill_chk(ps_idx)
+   #add-point:fill_chk段define(客製用) name="fill_chk.define_customerization"
+   
+   #end add-point
+   DEFINE ps_idx        LIKE type_t.chr10
+   #add-point:fill_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fill_chk.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="fill_chk.before_chk"
+   IF ps_idx = 3 AND NOT cl_null(g_deax_m.deax001) THEN
+      RETURN TRUE
+   END IF
+   #end add-point
+   
+   #此funtion功能暫時停用(2015/1/12)
+   #無論傳入值為何皆回傳true(代表要填充該單身)
+ 
+   #全部為1=1 or null時回傳true
+   IF (cl_null(g_wc2_table1) OR g_wc2_table1.trim() = '1=1')  AND 
+      (cl_null(g_wc2_table2) OR g_wc2_table2.trim() = '1=1') THEN
+      #add-point:fill_chk段other_chk name="fill_chk.other_chk"
+      
+      #end add-point
+      RETURN TRUE
+   END IF
+   
+   #add-point:fill_chk段after_chk name="fill_chk.after_chk"
+   
+   #end add-point
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.status_show" >}
+PRIVATE FUNCTION adet407_status_show()
+   #add-point:status_show段define(客製用) name="status_show.define_customerization"
+   
+   #end add-point
+   #add-point:status_show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="status_show.define"
+   
+   #end add-point
+   
+   #add-point:status_show段status_show name="status_show.status_show"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.mask_functions" >}
+&include "erp/ade/adet407_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="adet407.signature" >}
+   #應用 a39 樣板自動產生(Version:10)
+#+ BPM提交
+PRIVATE FUNCTION adet407_send()
+   #add-point:send段define(客製用) name="send.define_customerization"
+   
+   #end add-point 
+   #add-point:send段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="send.define"
+   
+   #end add-point 
+   
+   #add-point:Function前置處理  name="send.pre_function"
+   
+   #end add-point
+   
+   #依據單據個數，需要指定所有單身條件為" 1=1"  (單身有幾個就要設幾個)
+   LET g_wc2_table1 = " 1=1"
+   LET g_wc2_table2 = " 1=1"
+ 
+ 
+   CALL adet407_show()
+   CALL adet407_set_pk_array()
+   
+   #add-point: 初始化的ADP name="send.before_send"
+   #確認前檢核段
+   IF NOT s_adet407_conf_chk(g_deax_m.deaxdocno) THEN
+      CLOSE adet407_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   #end add-point
+   
+   #公用變數初始化
+   CALL cl_bpm_data_init()
+                  
+   #依照主檔/單身個數產生 CALL cl_bpm_set_master_data() / cl_bpm_set_detail_data() 
+   #單頭固定為 CALL cl_bpm_set_master_data(util.JSONObject.fromFGL(xxxx)) 傳入參數: (1)單頭陣列  ; 回傳值: 無
+   CALL cl_bpm_set_master_data(util.JSONObject.fromFGL(g_deax_m))
+                              
+   #單身固定為 CALL cl_bpm_set_detail_data(s_detailX, util.JSONArray.fromFGL(xxxx)) 傳入參數: (1)單身SR名稱  (2)單身陣列  ; 回傳值: 無
+   CALL cl_bpm_set_detail_data("s_detail1", util.JSONArray.fromFGL(g_deav_d))
+   CALL cl_bpm_set_detail_data("s_detail2", util.JSONArray.fromFGL(g_deav2_d))
+ 
+ 
+   # cl_bpm_cli() 裡有包含以前的aws_condition()=>送簽資料檢核和更新單據狀況碼為'W'
+   # cl_bpm_cli() 傳入參數:無  ;  回傳值: 0 開單失敗; 1 開單成功
+ 
+   #add-point: 提交前的ADP name="send.before_cli"
+   
+   #end add-point
+ 
+   #開單失敗
+   IF NOT cl_bpm_cli() THEN 
+      RETURN FALSE
+   END IF
+ 
+   #add-point: 提交後的ADP name="send.after_send"
+   
+   #end add-point
+ 
+   #此段落不需要刪除資料,但是否需要refresh圖片樣式???
+   #CALL adet407_ui_browser_refresh()
+ 
+   #重新指定此筆單據資料狀態圖片=>送簽中
+   LET g_browser[g_current_idx].b_statepic = "stus/16/signing.png"
+ 
+   #重新取得單頭/單身資料,DISPLAY在畫面上
+   CALL adet407_ui_headershow()
+   CALL adet407_ui_detailshow()
+ 
+   RETURN TRUE
+   
+END FUNCTION
+ 
+ 
+ 
+#應用 a40 樣板自動產生(Version:9)
+#+ BPM抽單
+PRIVATE FUNCTION adet407_draw_out()
+   #add-point:draw段define name="draw.define_customerization"
+   
+   #end add-point
+   #add-point:draw段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="draw.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="draw.pre_function"
+   
+   #end add-point
+   
+   #抽單失敗
+   IF NOT cl_bpm_draw_out() THEN 
+      RETURN FALSE
+   END IF    
+          
+   #重新指定此筆單據資料狀態圖片=>抽單
+   LET g_browser[g_current_idx].b_statepic = "stus/16/draw_out.png"
+ 
+   #重新取得單頭/單身資料,DISPLAY在畫面上
+   CALL adet407_ui_headershow()  
+   CALL adet407_ui_detailshow()
+ 
+   #add-point:Function後置處理  name="draw.after_function"
+   
+   #end add-point
+ 
+   RETURN TRUE
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="adet407.set_pk_array" >}
+   #應用 a51 樣板自動產生(Version:8)
+#+ 給予pk_array內容
+PRIVATE FUNCTION adet407_set_pk_array()
+   #add-point:set_pk_array段define name="set_pk_array.define_customerization"
+   
+   #end add-point
+   #add-point:set_pk_array段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_pk_array.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="set_pk_array.before"
+   
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_deax_m.deaxdocno
+   LET g_pk_array[1].column = 'deaxdocno'
+ 
+   
+   #add-point:set_pk_array段之後 name="set_pk_array.after"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="adet407.other_dialog" readonly="Y" >}
+   
+ 
+{</section>}
+ 
+{<section id="adet407.msgcentre_notify" >}
+#應用 a66 樣板自動產生(Version:6)
+PRIVATE FUNCTION adet407_msgcentre_notify(lc_state)
+   #add-point:msgcentre_notify段define name="msgcentre_notify.define_customerization"
+   
+   #end add-point   
+   DEFINE lc_state LIKE type_t.chr80
+   #add-point:msgcentre_notify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="msgcentre_notify.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="msgcentre_notify.pre_function"
+   
+   #end add-point
+   
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = lc_state
+ 
+   #PK資料填寫
+   CALL adet407_set_pk_array()
+   #單頭資料填寫
+   LET g_msgparam.data[1] = util.JSON.stringify(g_deax_m)
+ 
+   #add-point:msgcentre其他通知 name="msgcentre_notify.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="adet407.action_chk" >}
+#+ 修改/刪除前行為檢查(是否可允許此動作), 若有其他行為須管控也可透過此段落
+PRIVATE FUNCTION adet407_action_chk()
+   #add-point:action_chk段define(客製用) name="action_chk.define_customerization"
+   
+   #end add-point
+   #add-point:action_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="action_chk.define"
+   
+   #end add-point
+   
+   #add-point:action_chk段action_chk name="action_chk.action_chk"
+   #160818-00017#8 -s by 08172
+   SELECT deaxstus  INTO g_deax_m.deaxstus
+     FROM deax_t
+    WHERE deaxent = g_enterprise
+      AND deaxdocno = g_deax_m.deaxdocno
+   LET g_errno = ''
+   IF (g_action_choice="modify" OR g_action_choice="modify_detail" OR g_action_choice="delete")  THEN
+     CASE g_deax_m.deaxstus
+        WHEN 'W'
+           LET g_errno = 'sub-00180'
+        WHEN 'X'
+           LET g_errno = 'sub-00229'
+        WHEN 'Y'
+           LET g_errno = 'sub-00178'
+        WHEN 'S'
+           LET g_errno = 'sub-00230'
+     END CASE
+
+     IF NOT cl_null(g_errno) THEN
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.code = g_errno
+        LET g_errparam.extend = g_deax_m.deaxdocno
+        LET g_errparam.popup = TRUE
+        CALL cl_err()
+        LET g_errno = NULL
+        CALL adet407_show()
+        RETURN FALSE
+     END IF
+   END IF
+   #160818-00017#8 -e by 08172
+   #end add-point
+      
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="adet407.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 檢查存繳單號保全編號 且 帶值
+# Memo...........:
+# Usage..........: CALL adet407_chk_deax002_ref()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/06/30 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION adet407_chk_deax002_ref()
+DEFINE l_deamstus          LIKE deam_t.deamstus
+DEFINE l_deamdocdt         LIKE deam_t.deamdocdt
+DEFINE l_deam001           LIKE deam_t.deam001
+
+   LET g_errno = ''
+   SELECT deamstus,deamdocdt,deam001
+     INTO l_deamstus,l_deamdocdt,l_deam001
+     FROM deam_t
+    WHERE deament = g_enterprise
+      AND deamdocno = g_deax_m.deax002
+      
+   CASE
+      WHEN SQLCA.sqlcode = 100
+         LET g_errno = 'ade-00042'
+      WHEN l_deamstus <> 'Y'
+         LET g_errno = 'aap-00017'
+      WHEN NOT cl_null(g_deax_m.deax001)
+           AND l_deam001 <> g_deax_m.deax001
+         LET g_errno = 'ade-00045'
+   END CASE
+   
+   IF cl_null(g_errno) THEN
+      LET g_deax_m.deax003 = l_deamdocdt
+      LET g_deax_m.deax001 = l_deam001
+      CALL s_desc_get_trading_partner_abbr_desc(g_deax_m.deax001)
+         RETURNING g_deax_m.deax001_desc
+      DISPLAY BY NAME g_deax_m.deax001_desc
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 單身是否有資料
+# Memo...........:
+# Usage..........: CALL adet407_count_deau()
+#                  RETURNING r_success
+# Input parameter: 無
+# Return code....: r_success      True/False
+# Date & Author..: 2014/06/30 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION adet407_count_deau()
+DEFINE l_cnt      LIKE type_t.num5
+
+   LET l_cnt = 0
+   SELECT COUNT(*) INTO l_cnt
+     FROM deau_t
+    WHERE deauent = g_enterprise
+      AND deaudocno = g_deax_m.deaxdocno
+   
+   IF l_cnt = 0 THEN
+      RETURN FALSE
+   END IF
+   
+   RETURN TRUE
+END FUNCTION
+
+################################################################################
+# Descriptions...: 存繳金額加總
+# Memo...........:
+# Usage..........: CALL adet407_sum_dean008()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/10/08 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION adet407_sum_dean008()
+DEFINE l_ooef016        LIKE ooef_t.ooef016
+DEFINE l_sum            LIKE type_t.num20_6
+DEFINE l_change         LIKE type_t.num20_6
+DEFINE l_sql            STRING
+DEFINE l_dean           RECORD
+       dean001          LIKE dean_t.dean001,
+       dean006          LIKE dean_t.dean006,
+       dean008          LIKE dean_t.dean008
+                        END RECORD
+                        
+                        
+   LET l_ooef016 = ''
+   SELECT ooef016 INTO l_ooef016
+     FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_deax_m.deaxsite
+   
+   LET l_sql = "SELECT dean001,dean006,dean008",
+               "  FROM dean_t",
+               " WHERE deanent = ",g_enterprise,
+               "   AND deandocno = '",g_deax_m.deax002,"'"
+   PREPARE adet407_sum_pre FROM l_sql
+   DECLARE adet407_sum_curs CURSOR FOR adet407_sum_pre
+   
+   LET l_sum = 0
+   FOREACH adet407_sum_curs INTO l_dean.dean001,l_dean.dean006,l_dean.dean008
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "Foreach adet407_sum_curs" 
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+      END IF
+      LET l_change = s_aooi160_get_exrate('1',g_deax_m.deaxsite,l_dean.dean001,l_dean.dean006,l_ooef016,l_dean.dean008,'11')
+      LET l_sum = l_sum + l_change
+   END FOREACH
+   
+   LET g_deax_m.l_sum = l_sum
+   DISPLAY BY NAME g_deax_m.l_sum
+END FUNCTION
+
+ 
+{</section>}
+ 

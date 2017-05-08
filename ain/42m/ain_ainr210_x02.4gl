@@ -1,0 +1,945 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="ainr210_x02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:4(2016-05-26 15:11:03), PR版次:0004(2016-06-03 14:20:49)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000063
+#+ Filename...: ainr210_x02
+#+ Description: ...
+#+ Creator....: 05423(2014-11-10 17:04:05)
+#+ Modifier...: 05423 -SD/PR- 05423
+ 
+{</section>}
+ 
+{<section id="ainr210_x02.global" readonly="Y" >}
+#報表 x01 樣板自動產生(Version:8)
+#add-point:填寫註解說明 name="global.memo"
+#160510-00019#10  2016/05/26 By  zhujing     效能优化
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING,                  #where condition 
+       bdate STRING,                  #begin date 
+       edate STRING,                  #end date 
+       pr STRING                   #print
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+DEFINE g_sql2     STRING #子报表sql
+#end add-point
+ 
+{</section>}
+ 
+{<section id="ainr210_x02.main" readonly="Y" >}
+PUBLIC FUNCTION ainr210_x02(p_arg1,p_arg2,p_arg3,p_arg4)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition 
+DEFINE  p_arg2 STRING                  #tm.bdate  begin date 
+DEFINE  p_arg3 STRING                  #tm.edate  end date 
+DEFINE  p_arg4 STRING                  #tm.pr  print
+#add-point:init段define(客製用) name="component.define_customerization"
+
+#end add-point
+#add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.bdate = p_arg2
+   LET tm.edate = p_arg3
+   LET tm.pr = p_arg4
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "ainr210_x02"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL ainr210_x02_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL ainr210_x02_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL ainr210_x02_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL ainr210_x02_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL ainr210_x02_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainr210_x02.create_tmptable" readonly="Y" >}
+PRIVATE FUNCTION ainr210_x02_create_tmptable()
+ 
+   #清除temptable 陣列
+   CALL g_rep_tmpname.clear()
+   
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before name="create_tmp.before"
+   
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "l_imaa009_desc.type_t.chr30,inag001.inag_t.inag001,imaal_t_imaal003.imaal_t.imaal003,imaal_t_imaal004.imaal_t.imaal004,inag002.inag_t.inag002,inag003.inag_t.inag003,inag004.inag_t.inag004,l_inag004_desc.type_t.chr30,inag005.inag_t.inag005,l_inag005_desc.type_t.chr30,inag006.inag_t.inag006,inag007.inag_t.inag007,l_bcount1.type_t.num10,inag024.inag_t.inag024,l_bcount2.type_t.num10,inagent.inag_t.inagent,inagsite.inag_t.inagsite,l_keys.type_t.chr200" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after name="create_tmp.after"
+   #子報表TEMP TABLE的欄位SQL   
+   LET g_sql = "inaj022.inaj_t.inaj022,l_number1.type_t.num10,l_number2.type_t.num10,l_number3.type_t.num10,l_number4.type_t.num10,inaj005.inaj_t.inaj005,inaj002.inaj_t.inaj002,inaj003.inaj_t.inaj003,inaj004.inaj_t.inaj004,inaj006.inaj_t.inaj006,inaj007.inaj_t.inaj007,inaj008.inaj_t.inaj008,inaj009.inaj_t.inaj009,inaj010.inaj_t.inaj010,inaj012.inaj_t.inaj012,l_key.type_t.chr200" 
+   
+   #建立TEMP TABLE,子報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,2) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #end add-point:create_tmp.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainr210_x02.ins_prep" readonly="Y" >}
+PRIVATE FUNCTION ainr210_x02_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define (客製用) name="ins_prep.define_customerization"
+
+#end add-point:ins_prep.define
+#add-point:ins_prep.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_prep.define"
+
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段 name="insert_prep"
+         WHEN 2
+         #子報表 PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[2] CLIPPED," VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep1 FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainr210_x02.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION ainr210_x02_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define(客製用) name="sel_prep.define_customerization"
+
+#end add-point
+#add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+DEFINE g_order       STRING
+DEFINE l_sql         STRING   #160510-00019#10 add
+DEFINE l_bdate       DATE     #160510-00019#10 add
+DEFINE l_edate       DATE     #160510-00019#10 add
+#end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+ 
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   #160510-00019#10 marked-S
+#   LET g_select = " SELECT DISTINCT rtaxl_t.rtaxl003,inag001,imaal_t.imaal003,imaal_t.imaal004,inag002,inag003, 
+#       inag004,trim(inag004)||'.'||trim(inayl_t.inayl003),inag005,trim(inag005)||'.'||trim(inab003),inag006,inag007,NULL,inag024,NULL,inagent,inagsite,
+#       (trim(inag001)||'-'||trim(inag002)||'-'||trim(inag003)||'-'||trim(inag004)||'-'||trim(inag005)||'-'||trim(inag006)||'-'||trim(inag007)) "
+   #160510-00019#10 marked-E
+   #160510-00019#10 add-S 
+   LET g_select = " SELECT UNIQUE (SELECT rtaxl003 FROM rtaxl_t WHERE rtaxl001 = imaa009 AND rtaxlent = imaaent AND rtaxl002 = '",g_dlang,"') t1_rtaxl003,",
+                  " inag001,",
+                  " (SELECT imaal003 FROM imaal_t WHERE imaalent = inagent AND imaal001 = inag001 AND imaal002 = '",g_dlang,"') t2_imaal003,",
+                  " (SELECT imaal004 FROM imaal_t WHERE imaalent = inagent AND imaal001 = inag001 AND imaal002 = '",g_dlang,"') t2_imaal004,",
+                  " inag002,inag003,inag004, ",
+                  " (SELECT (trim(inayl001)||'.'||trim(inayl003)) FROM inayl_t WHERE inayl001 = inag004 AND inaylent = inagent AND inayl002 = '",g_dlang,"') t3_inayl003,",
+                  " inag005,",
+                  " (SELECT (trim(inab002)||'.'||trim(inab003)) FROM inab_t WHERE inab001 = inag004 AND inab002 = inag005 AND inagsite= inabsite AND inagent = inabent) t4_inab003,",
+                  " inag006,inag007,NULL,inag024,NULL,inagent,inagsite,",
+                  " (trim(inag001)||'-'||trim(inag002)||'-'||trim(inag003)||'-'||trim(inag004)||'-'||trim(inag005)||'-'||trim(inag006)||'-'||trim(inag007)) "
+   #160510-00019#10 add-E   
+#   #end add-point
+#   LET g_select = " SELECT NULL,inag001,imaal_t.imaal003,imaal_t.imaal004,inag002,inag003,inag004,NULL, 
+#       inag005,NULL,inag006,inag007,NULL,inag024,NULL,inagent,inagsite,NULL"
+# 
+#   #add-point:sel_prep g_from name="sel_prep.g_from"
+    LET g_from = " FROM inag_t LEFT OUTER JOIN inab_t ON inag_t.inag005 = inab_t.inab002 AND inag_t.inagsite = inab_t.inabsite AND inag_t.inagent = inab_t.inabent AND inag_t.inag004 = inab_t.inab001 ",
+#                               LEFT OUTER JOIN inaj_t ON inag_t.inag001 = inaj_t.inaj005 AND inag_t.inagsite = inaj_t.inajsite AND inag_t.inagent = inaj_t.inajent  #160510-00019#10 marked-S
+                 "             LEFT OUTER JOIN inat_t ON inag_t.inag001 = inat_t.inat001 AND inag_t.inagsite = inat_t.inatsite AND inag_t.inagent = inat_t.inatent ",
+#                 "             LEFT OUTER JOIN inayl_t ON inag_t.inag004 = inayl_t.inayl001 AND inag_t.inagent = inayl_t.inaylent AND inayl_t.inayl002 = '",g_dlang,"'",   #160510-00019#10 marked-S
+                 "             LEFT OUTER JOIN imaa_t ON inag_t.inag001 = imaa_t.imaa001 AND inag_t.inagent = imaa_t.imaaent ",
+                 "             LEFT OUTER JOIN imaf_t ON inag001 = imaf001 AND inagent = imafent AND inagsite = imafsite ",
+                 "      ,inaj_t"       #160510-00019#10 add
+#                 "             LEFT OUTER JOIN imaal_t ON inag_t.inag001 = imaal_t.imaal001 AND inag_t.inagent = imaal_t.imaalent AND imaal_t.imaal002 = '",g_dlang,"'",   #160510-00019#10 marked-S
+#                 "             LEFT OUTER JOIN rtaxl_t ON imaa_t.imaa009 = rtaxl_t.rtaxl001 AND inag_t.inagent = rtaxl_t.rtaxlent AND rtaxl_t.rtaxl002 = '",g_dlang,"'"    #160510-00019#10 marked-S
+#   #end add-point
+#    LET g_from = " FROM inag_t,inab_t,inaj_t,inat_t,inayl_t,imaa_t,imaal_t"
+# 
+#   #add-point:sel_prep g_where name="sel_prep.g_where"
+   LET g_where = " WHERE " ,tm.wc CLIPPED  
+    #160510-00019#10 add-S
+    LET g_where = g_where CLIPPED, " AND inag001 = inaj005 AND inag002 = inaj006 AND inag003 = inaj007 AND inag004 = inaj008 AND inag005 = inaj009 AND inag007 = inaj012 "
+    LET l_bdate = DATE(tm.bdate)
+    LET l_edate = DATE(tm.edate)
+    IF NOT cl_null(l_bdate) THEN
+       LET g_where = g_where CLIPPED," AND inaj022 >= '",l_bdate,"' "
+    END IF
+    IF NOT cl_null(l_edate) THEN
+       LET g_where = g_where CLIPPED," AND inaj022 <= '",l_edate,"' "
+    END IF
+    #160510-00019#10 add-E
+#   #end add-point
+#    LET g_where = " WHERE " ,tm.wc CLIPPED
+# 
+#   #add-point:sel_prep g_order name="sel_prep.g_order"
+#   LET g_order = " ORDER BY rtaxl_t.rtaxl003,inag001 "   #160510-00019#10 marked
+   LET g_order = " ORDER BY t1_rtaxl003,inag001 "       #160510-00019#10 add
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("inag_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   LET g_sql = g_sql CLIPPED , g_order CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+   #160510-00019#10 add-S
+   LET g_sql2 ="SELECT UNIQUE inaj022,SUM(COALESCE(inaj011,0)*COALESCE(inaj013,0)*COALESCE(inaj004,0)),NULL,SUM(COALESCE(inaj027,0)*COALESCE(inaj004,0)),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+                FROM inaj_t 
+                WHERE (trim(inaj005)||'-'||trim(inaj006)||'-'||trim(inaj007)||'-'||trim(inaj008)||'-'||trim(inaj009)||'-'||trim(inaj010)||'-'||trim(inaj012)) = ? "
+               ," AND inajent = ? AND inajsite = ? "  #160202-00009 by whitney add
+   IF NOT cl_null(tm.edate) THEN
+      LET g_sql2 = g_sql2 CLIPPED," AND inaj022 <= '",tm.edate,"' "
+   END IF
+   IF NOT cl_null(tm.bdate) THEN
+      LET g_sql2 = g_sql2 CLIPPED ," AND inaj022 >= '",tm.bdate,"' "
+   END IF
+   LET g_sql2 = g_sql2 CLIPPED ," GROUP BY inaj022 ORDER BY inaj022 ASC"
+       
+   
+   PREPARE ainr210_x02_prepare5 FROM g_sql2
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE ainr210_x02_curs5 CURSOR FOR ainr210_x02_prepare5
+   
+   LET g_sql2 = "SELECT NVL(inat015,0) FROM inat_t 
+                  WHERE inatent = ",g_enterprise," AND inatsite = '",g_site,"'
+                    AND inat001 = ? AND inat002 = ?
+                    AND inat003 = ? AND inat004 = ?
+                    AND inat005 = ? AND inat006 = ? AND inat007 = ?
+                    AND inat008 = ? AND inat009 = ? "
+   PREPARE ainr210_x01_prepare1 FROM g_sql2
+   DECLARE ainr210_x01_curs1 CURSOR FOR ainr210_x01_prepare1
+   
+   LET g_sql2 = "SELECT  inaj011,inaj013,inaj004,inaj022 FROM inaj_t 
+                 WHERE inaj005 = ? AND inaj022 BETWEEN ? AND ? AND inaj006 = ?
+                 AND inaj007 = ? AND inaj008 = ? AND inaj009 = ? AND inaj010 = ? AND inaj012 = ?
+                 AND inajent = ? AND inajsite = ?
+                 ORDER BY inaj022"
+   PREPARE ainr210_x02_prepare2 FROM g_sql2
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE ainr210_x02_curs2 CURSOR FOR ainr210_x02_prepare2
+   
+   LET g_sql2 = "SELECT inat021 
+         FROM inat_t
+         WHERE inat_t.inat001 = ? AND inat008 = '",YEAR(tm.bdate),"' AND inat002 = ? AND inat003 = ?
+         AND inat004 = ? AND inat005 = ? AND inat006 = ? AND inat007 = ?
+         AND inat009 = ? AND inatent = ? AND inatsite = ? "
+   PREPARE ainr210_x02_prepare3 FROM g_sql2
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE ainr210_x02_curs3 CURSOR FOR ainr210_x02_prepare3
+   
+   LET g_sql2 = "SELECT  inaj027,inaj004,inaj022 FROM inaj_t 
+                 WHERE inaj005 = ? AND inaj022 >= ? AND inaj022 < '",tm.bdate,"' AND inaj006 = ?
+                 AND inaj007 = ? AND inaj008 = ? AND inaj009 = ? AND inaj010 = ? AND inaj012 = ?
+                 AND inajent = ? AND inajsite = ?
+                 ORDER BY inaj022 ASC"
+   
+   PREPARE ainr210_x02_prepare4 FROM g_sql2
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE ainr210_x02_curs4 CURSOR FOR ainr210_x02_prepare4
+   #160510-00019#10 add-E
+   #end add-point
+   PREPARE ainr210_x02_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE ainr210_x02_curs CURSOR FOR ainr210_x02_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainr210_x02.ins_data" readonly="Y" >}
+PRIVATE FUNCTION ainr210_x02_ins_data()
+DEFINE sr RECORD 
+   l_imaa009_desc LIKE type_t.chr30, 
+   inag001 LIKE inag_t.inag001, 
+   imaal_t_imaal003 LIKE imaal_t.imaal003, 
+   imaal_t_imaal004 LIKE imaal_t.imaal004, 
+   inag002 LIKE inag_t.inag002, 
+   inag003 LIKE inag_t.inag003, 
+   inag004 LIKE inag_t.inag004, 
+   l_inag004_desc LIKE type_t.chr30, 
+   inag005 LIKE inag_t.inag005, 
+   l_inag005_desc LIKE type_t.chr30, 
+   inag006 LIKE inag_t.inag006, 
+   inag007 LIKE inag_t.inag007, 
+   l_bcount1 LIKE type_t.num10, 
+   inag024 LIKE inag_t.inag024, 
+   l_bcount2 LIKE type_t.num10, 
+   inagent LIKE inag_t.inagent, 
+   inagsite LIKE inag_t.inagsite, 
+   l_keys LIKE type_t.chr200
+ END RECORD
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+ TYPE sr1_s RECORD
+   inaj022 LIKE inaj_t.inaj022,
+   l_number1 LIKE type_t.num10,#異動數量
+   l_number2 LIKE type_t.num10,#結存數量
+   l_number3 LIKE type_t.num10,#異動參考數量：1.結存數量 = 上一筆的結存數量 + 異動數量 2.如為該群組的第一筆，則為 期初數量 + 異動數量
+   l_number4 LIKE type_t.num10,#參考單位結存數量
+   inaj005 LIKE inaj_t.inaj005,#料件編號
+   inaj002 LIKE inaj_t.inaj002,#項次
+   inaj003 LIKE inaj_t.inaj003,#項序
+   inaj004 LIKE inaj_t.inaj004,#出入庫嗎
+   inaj006 LIKE inaj_t.inaj006,#產品特征
+   inaj007 LIKE inaj_t.inaj007,#庫存管理特征
+   inaj008 LIKE inaj_t.inaj008,#庫位編號
+   inaj009 LIKE inaj_t.inaj009,#儲位編號
+   inaj010 LIKE inaj_t.inaj010,#批號
+   inaj012 LIKE inaj_t.inaj012, #交易單位
+   l_key LIKE type_t.chr200
+   
+END RECORD
+DEFINE sr1 DYNAMIC ARRAY OF sr1_s
+DEFINE l_inaj011 LIKE inaj_t.inaj011
+DEFINE l_inaj013 LIKE inaj_t.inaj013
+DEFINE l_inaj004 LIKE inaj_t.inaj004
+DEFINE l_inaj027 LIKE inaj_t.inaj027
+DEFINE l_cnt1 LIKE type_t.num5
+DEFINE l_cnt2 LIKE type_t.num5
+DEFINE l_cnt3 LIKE type_t.num5
+DEFINE l_num1 LIKE type_t.num10
+DEFINE l_num2 LIKE type_t.num10
+DEFINE l_chk LIKE type_t.num5
+DEFINE l_bdate DATE
+DEFINE l_edate DATE
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    LET l_cnt1 = 0
+    LET l_cnt2 = 0
+    LET l_cnt3 = 0
+    LET l_num1 = 0
+    LET l_num2 = 0
+    LET l_chk = 0
+    LET l_bdate = DATE(tm.bdate)
+    LET l_edate = DATE(tm.edate)
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH ainr210_x02_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       #160510-00019#10 marked-S
+#       IF NOT cl_null(l_edate) AND NOT cl_null(l_bdate) THEN
+#         SELECT count(inaj001) INTO l_chk FROM inaj_t 
+#         WHERE (trim(inaj005)||'-'||trim(inaj006)||'-'||trim(inaj007)||'-'||trim(inaj008)||'-'||trim(inaj009)||'-'||trim(inaj010)||'-'||trim(inaj012)) = sr.l_keys
+#         AND inajent = sr.inagent AND inajsite = sr.inagsite AND inaj022 <= l_edate AND inaj022 >= l_bdate
+#        ELSE
+#         IF cl_null(l_edate) AND cl_null(l_bdate) THEN
+#            SELECT count(inaj001) INTO l_chk FROM inaj_t 
+#            WHERE (trim(inaj005)||'-'||trim(inaj006)||'-'||trim(inaj007)||'-'||trim(inaj008)||'-'||trim(inaj009)||'-'||trim(inaj010)||'-'||trim(inaj012)) = sr.l_keys
+#            AND inajent = sr.inagent AND inajsite = sr.inagsite 
+#         ELSE
+#            IF cl_null(l_bdate) THEN
+#               SELECT count(inaj001) INTO l_chk FROM inaj_t 
+#               WHERE (trim(inaj005)||'-'||trim(inaj006)||'-'||trim(inaj007)||'-'||trim(inaj008)||'-'||trim(inaj009)||'-'||trim(inaj010)||'-'||trim(inaj012)) = sr.l_keys
+#               AND inajent = sr.inagent AND inajsite = sr.inagsite AND inaj022 <= l_edate 
+#            ELSE
+#               SELECT count(inaj001) INTO l_chk FROM inaj_t 
+#               WHERE (trim(inaj005)||'-'||trim(inaj006)||'-'||trim(inaj007)||'-'||trim(inaj008)||'-'||trim(inaj009)||'-'||trim(inaj010)||'-'||trim(inaj012)) = sr.l_keys
+#               AND inajent = sr.inagent AND inajsite = sr.inagsite AND inaj022 >= l_bdate
+#            END IF
+#         END IF
+#       END IF
+#       IF l_chk = 0 THEN
+#         INITIALIZE sr.* TO NULL       
+#         CONTINUE FOREACH
+#       ELSE 
+#         LET l_chk = 0
+#       END IF
+       #160510-00019#10 marked-E
+       
+       IF sr.l_inag004_desc = '.' THEN
+         LET sr.l_inag004_desc = NULL
+       END IF
+       IF sr.l_inag005_desc = '.' THEN
+         LET sr.l_inag005_desc = NULL
+       END IF
+       CALL ainr210_x02_getcount1(sr.*) RETURNING sr.l_bcount1
+       CALL ainr210_x02_getcount2(sr.*) RETURNING sr.l_bcount2
+       #end add-point
+ 
+       #add-point:ins_data段before.save name="ins_data.before.save"
+       #160510-00019#10 marked-S
+#       LET g_sql2 ="SELECT UNIQUE inaj022,SUM(COALESCE(inaj011,0)*COALESCE(inaj013,0)*COALESCE(inaj004,0)),NULL,SUM(COALESCE(inaj027,0)*COALESCE(inaj004,0)),NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+#                    FROM inaj_t 
+#                    WHERE (trim(inaj005)||'-'||trim(inaj006)||'-'||trim(inaj007)||'-'||trim(inaj008)||'-'||trim(inaj009)||'-'||trim(inaj010)||'-'||trim(inaj012)) = '",sr.l_keys CLIPPED,"' "
+#                   ," AND inajent = '",sr.inagent,"' AND inajsite = '",sr.inagsite,"' "  #160202-00009 by whitney add
+#       IF NOT cl_null(tm.edate) THEN
+#         LET g_sql2 = g_sql2 CLIPPED," AND inaj022 <= '",tm.edate,"' "
+#       END IF
+#       IF NOT cl_null(tm.bdate) THEN
+#         LET g_sql2 = g_sql2 CLIPPED ," AND inaj022 >= '",tm.bdate,"' "
+#       END IF
+#       LET g_sql2 = g_sql2 CLIPPED ," GROUP BY inaj022 ORDER BY inaj022 ASC"
+       #160510-00019#10 marked-E
+       
+       LET l_cnt3 = 0
+       LET l_cnt2 = 1
+       CALL sr1.clear()
+       #160510-00019#10 marked-S
+#       PREPARE ainr210_x02_prepare5 FROM g_sql2
+#       IF STATUS THEN
+#         INITIALIZE g_errparam TO NULL
+#         LET g_errparam.extend = 'prepare:'
+#         LET g_errparam.code   = STATUS
+#         LET g_errparam.popup  = TRUE
+#         CALL cl_err()
+#         LET g_rep_success = 'N' 
+#       END IF
+#       DECLARE ainr210_x02_curs5 CURSOR FOR ainr210_x02_prepare5
+#       FOREACH ainr210_x02_curs5 INTO sr1[l_cnt2].* 
+       #160510-00019#10 marked-E
+       FOREACH ainr210_x02_curs5 USING sr.l_keys,sr.inagent,sr.inagsite INTO sr1[l_cnt2].* 
+
+
+#          #顯示異動數量
+#          SELECT UNIQUE inaj011,inaj013,inaj004,inaj027 INTO l_inaj011,l_inaj013,l_inaj004,l_inaj027
+#          FROM inaj_t
+#          WHERE inaj_t.inaj001 = sr1.inaj001 AND inaj005 = sr1.inaj005 AND inaj_t.inaj022 = sr1.inaj022 AND inaj_t.inaj002 = sr1.inaj002 
+#                AND inaj_t.inaj010 = sr.inag006 AND inaj_t.inaj012 = sr.inag007 AND inaj_t.inaj007 = sr.inag003 AND inaj_t.inaj003 = sr1.inaj003 AND inaj_t.inaj004 = sr1.inaj004
+#                AND inaj_t.inaj008 = sr.inag004 AND inaj_t.inaj009 = sr.inag005 AND inaj_t.inajent = sr.inagent AND inaj_t.inajent = sr.inagent
+#          ORDER BY inaj022
+#          IF NOT cl_null(l_inaj011) AND NOT cl_null(l_inaj013) AND NOT cl_null(l_inaj004) THEN
+#            LET sr1.l_number1 = l_inaj011 * l_inaj013 * l_inaj004 #異動數量
+#          ELSE 
+#            LET sr1.l_number1 = 0
+#          END IF
+#          IF NOT cl_null(l_inaj027) AND NOT cl_null(l_inaj004) THEN
+#            LET sr1.l_number3 = l_inaj027 * l_inaj004            #異動參考數量
+#          ELSE 
+#            LET sr1.l_number3 = 0
+#          END IF
+
+          IF (l_cnt2 == 1) THEN
+            LET sr1[l_cnt2].l_number2 = sr.l_bcount1 + sr1[l_cnt2].l_number1
+            LET sr1[l_cnt2].l_number4 = sr.l_bcount2 + sr1[l_cnt2].l_number3
+          ELSE
+            LET sr1[l_cnt2].l_number2 = l_num1 + sr1[l_cnt2].l_number1
+            LET sr1[l_cnt2].l_number4 = l_num2 + sr1[l_cnt2].l_number3
+          END IF
+          LET l_num1 = sr1[l_cnt2].l_number2
+          LET l_num2 = sr1[l_cnt2].l_number4
+          
+          LET sr1[l_cnt2].l_key = sr.l_keys
+#          IF (tm.pr = 'Y') AND (sr1[l_cnt2].l_number2>=0) THEN
+#            LET l_cnt3 = l_cnt3 - 1
+#            CONTINUE FOREACH
+#          END IF
+          
+#          
+#         #子報表EXECUTE
+#          EXECUTE insert_prep1 USING sr1.inaj022,sr1.l_number1,sr1.l_number2,sr1.l_number3,sr1.l_number4,sr1.inaj005,sr1.inaj002,sr1.inaj003,sr1.inaj004,sr1.inaj006,sr1.inaj007,sr1.inaj008,sr1.inaj009,sr1.inaj010,sr1.inaj012,sr1.l_key
+# 
+#          IF SQLCA.sqlcode THEN
+#            INITIALIZE g_errparam TO NULL
+#            LET g_errparam.extend = "ainr210_x02_subrep01_execute"
+#            LET g_errparam.code   = SQLCA.sqlcode
+#            LET g_errparam.popup  = FALSE
+#            CALL cl_err()       
+#            LET g_rep_success = 'N'
+#            EXIT FOREACH
+#          END IF
+          LET l_cnt2 = l_cnt2 + 1
+#          LET l_cnt3 = l_cnt3 + 1
+       END FOREACH
+       LET l_cnt2 = l_cnt2 - 1
+#       IF (tm.pr = 'Y') AND (sr1[l_cnt2].l_number2 >= 0) THEN
+#          LET l_cnt3 = l_cnt3 - 1
+#          CALL sr1.clear()
+#          INITIALIZE sr.* TO NULL
+#          CONTINUE FOREACH
+#       END IF          
+#       FOR l_cnt3 = 1 TO l_cnt2
+#       #子報表EXECUTE
+#          EXECUTE insert_prep1 USING sr1[l_cnt3].inaj022,sr1[l_cnt3].l_number1,sr1[l_cnt3].l_number2,sr1[l_cnt3].l_number3,sr1[l_cnt3].l_number4,sr1[l_cnt3].inaj005,sr1[l_cnt3].inaj002,sr1[l_cnt3].inaj003,sr1[l_cnt3].inaj004,sr1[l_cnt3].inaj006,sr1[l_cnt3].inaj007,sr1[l_cnt3].inaj008,sr1[l_cnt3].inaj009,sr1[l_cnt3].inaj010,sr1[l_cnt3].inaj012,sr1[l_cnt3].l_key
+# 
+#          IF SQLCA.sqlcode THEN
+#            INITIALIZE g_errparam TO NULL
+#            LET g_errparam.extend = "ainr210_x01_subrep01_execute"
+#            LET g_errparam.code   = SQLCA.sqlcode
+#            LET g_errparam.popup  = FALSE
+#            CALL cl_err()       
+#            LET g_rep_success = 'N'
+#            EXIT FOREACH
+#          END IF
+#       END FOR 
+      LET l_cnt1 = 0
+      FOR l_cnt3 = 1 TO l_cnt2
+      #子報表EXECUTE
+         IF (tm.pr = 'Y') AND (sr1[l_cnt3].l_number2 >= 0) THEN
+            CONTINUE FOR
+         ELSE 
+          EXECUTE insert_prep1 USING sr1[l_cnt3].inaj022,sr1[l_cnt3].l_number1,sr1[l_cnt3].l_number2,sr1[l_cnt3].l_number3,sr1[l_cnt3].l_number4,sr1[l_cnt3].inaj005,sr1[l_cnt3].inaj002,sr1[l_cnt3].inaj003,sr1[l_cnt3].inaj004,sr1[l_cnt3].inaj006,sr1[l_cnt3].inaj007,sr1[l_cnt3].inaj008,sr1[l_cnt3].inaj009,sr1[l_cnt3].inaj010,sr1[l_cnt3].inaj012,sr1[l_cnt3].l_key
+          LET l_cnt1 = l_cnt1 + 1
+            
+
+            IF SQLCA.sqlcode THEN
+               INITIALIZE g_errparam TO NULL
+               LET g_errparam.extend = "ainr210_x01_subrep01_execute"
+               LET g_errparam.code   = SQLCA.sqlcode
+               LET g_errparam.popup  = FALSE
+               CALL cl_err()       
+               LET g_rep_success = 'N'
+               EXIT FOREACH
+            END IF
+         END IF
+
+      END FOR
+       
+       IF l_cnt1 = 0 THEN
+         CONTINUE FOREACH
+       END IF
+       LET l_cnt2 = 0
+       LET l_num1 = 0
+       LET l_num2 = 0
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.l_imaa009_desc,sr.inag001,sr.imaal_t_imaal003,sr.imaal_t_imaal004,sr.inag002,sr.inag003,sr.inag004,sr.l_inag004_desc,sr.inag005,sr.l_inag005_desc,sr.inag006,sr.inag007,sr.l_bcount1,sr.inag024,sr.l_bcount2,sr.inagent,sr.inagsite,sr.l_keys
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "ainr210_x02_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save name="ins_data.after.save"
+       
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainr210_x02.rep_data" readonly="Y" >}
+PRIVATE FUNCTION ainr210_x02_rep_data()
+#add-point:rep_data.define (客製用) name="rep_data.define_customerization"
+
+#end add-point:rep_data.define
+#add-point:rep_data.define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep_data.define"
+
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before name="rep_data.before"
+    
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after name="rep_data.after"
+    
+    #end add-point:rep_data.after
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="ainr210_x02.other_function" readonly="Y" >}
+
+PRIVATE FUNCTION ainr210_x02_getcount1(sr2)
+
+DEFINE sr2 RECORD 
+   l_imaa009_desc LIKE type_t.chr30, 
+   inag001 LIKE inag_t.inag001, 
+   imaal_t_imaal003 LIKE imaal_t.imaal003, 
+   imaal_t_imaal004 LIKE imaal_t.imaal004, 
+   inag002 LIKE inag_t.inag002, 
+   inag003 LIKE inag_t.inag003, 
+   inag004 LIKE inag_t.inag004, 
+   l_inag004_desc LIKE type_t.chr30, 
+   inag005 LIKE inag_t.inag005, 
+   l_inag005_desc LIKE type_t.chr30, 
+   inag006 LIKE inag_t.inag006, 
+   inag007 LIKE inag_t.inag007, 
+   l_bcount1 LIKE type_t.num10, 
+   inag024 LIKE inag_t.inag024, 
+   l_bcount2 LIKE type_t.num10, 
+   inagent LIKE inag_t.inagent, 
+   inagsite LIKE inag_t.inagsite, 
+   l_keys LIKE type_t.chr200
+ END RECORD
+DEFINE l_count1 LIKE type_t.num10
+DEFINE inat001 LIKE inat_t.inat001   #料件編號
+DEFINE inat015 LIKE inat_t.inat015
+DEFINE l_rec RECORD
+inaj011 LIKE inaj_t.inaj011,   #交易數量
+inaj013 LIKE inaj_t.inaj013,   #交易單位與庫存單位換算率
+inaj004 LIKE inaj_t.inaj004,   #出入庫碼
+inaj022 LIKE inaj_t.inaj022
+END RECORD
+DEFINE l_sql1 STRING
+DEFINE l_sql2 STRING
+DEFINE l_month LIKE type_t.num5
+DEFINE l_cnt2 LIKE type_t.num5
+DEFINE l_cnt1 LIKE type_t.num5
+#160202-00009 by whitney add (s)
+DEFINE l_year               LIKE type_t.num5
+DEFINE l_inaj023_b          LIKE type_t.dat
+DEFINE l_inaj023_e          LIKE type_t.dat
+DEFINE l_day                LIKE type_t.num5
+#160202-00009 by whitney add (e)
+
+#160202-00009 by whitney mark (s)
+#LET l_month = MONTH(tm.bdate)-1
+#LET l_cnt2 = l_month
+#LET l_sql1 = "SELECT inat015 
+#      FROM inat_t
+#      WHERE inat_t.inat001 ='", sr2.inag001,"' AND inat008 = '",YEAR(tm.bdate),"' AND inat002 = '",sr2.inag002,"' AND inat003 = '",sr2.inag003,"' 
+#      AND inat004 = '",sr2.inag004,"' AND inat005 = '",sr2.inag005,"' AND inat006 = '",sr2.inag006,"' AND inat007 = '",sr2.inag007,"' 
+#      AND inat009 = ? "
+#PREPARE ainr210_x01_prepare1 FROM l_sql1
+#IF STATUS THEN
+#   INITIALIZE g_errparam TO NULL
+#   LET g_errparam.extend = 'prepare:'
+#   LET g_errparam.code   = STATUS
+#   LET g_errparam.popup  = TRUE
+#   CALL cl_err()
+#   LET g_rep_success = 'N' 
+#END IF
+#DECLARE ainr210_x01_curs1 CURSOR FOR ainr210_x01_prepare1
+#
+#FOR l_cnt1 = 1 TO l_cnt2
+#   OPEN ainr210_x01_curs1 USING l_month
+#   FOREACH ainr210_x01_curs1 INTO inat015 
+#   END FOREACH   
+#   IF cl_null(inat015) THEN    
+#      LET l_month = l_month-1
+#      CLOSE ainr210_x01_curs1
+#   ELSE 
+#      EXIT FOR
+#   END IF
+#END FOR
+#IF cl_null(inat015) THEN    
+#   LET inat015 = 0
+#END IF
+#LET l_count1 = inat015  #上期期末數量
+#160202-00009 by whitney mark (e)
+#160202-00009 by whitney add (s)
+   LET l_year = YEAR(tm.bdate)
+   LET l_month = MONTH(tm.bdate)
+   IF l_month ! = 1 THEN
+      LET l_month = l_month - 1
+   ELSE
+      LET l_year = l_year - 1
+      LET l_month = 12
+   END IF
+   #160510-00019#10 marked-S
+#   LET l_sql1 = "SELECT NVL(inat015,0) FROM inat_t 
+#                  WHERE inatent = ",g_enterprise," AND inatsite = '",g_site,"'
+#                    AND inat001 = '",sr2.inag001,"' AND inat002 = '",sr2.inag002,"'
+#                    AND inat003 = '",sr2.inag003,"' AND inat004 = '",sr2.inag004,"'
+#                    AND inat005 = '",sr2.inag005,"' AND inat006 = '",sr2.inag006,"' AND inat007 = '",sr2.inag007,"'
+#                    AND inat008 = '",l_year,"'  AND inat009 = '",l_month,"' "
+#   PREPARE ainr210_x01_prepare1 FROM l_sql1
+#   DECLARE ainr210_x01_curs1 CURSOR FOR ainr210_x01_prepare1
+#   EXECUTE ainr210_x01_curs1 INTO l_count1
+   #160510-00019#10 marked-S
+   EXECUTE ainr210_x01_curs1 USING sr2.inag001,sr2.inag002,sr2.inag003,sr2.inag004,sr2.inag005,sr2.inag006,sr2.inag007,l_year,l_month INTO l_count1   #160510-00019#10 add
+   LET l_inaj023_b = MDY(l_month,1,l_year)
+   LET l_day = DAY(tm.bdate) - 1
+   LET l_inaj023_e = MDY(l_month,l_day,l_year)
+   #160510-00019#10 marked-S
+#LET l_sql2 = "SELECT  inaj011,inaj013,inaj004,inaj022 FROM inaj_t 
+#              WHERE inaj005 = '",sr2.inag001,"' AND inaj022 BETWEEN '",l_inaj023_b,"' AND '",l_inaj023_e ,"' AND inaj006 = '",sr2.inag002,"' 
+#              AND inaj007 = '",sr2.inag003,"' AND inaj008 = '",sr2.inag004,"' AND inaj009 = '",sr2.inag005,"' AND inaj010 = '",sr2.inag006,"' AND inaj012 = '",sr2.inag007,"' 
+#              AND inajent = '",sr2.inagent,"' AND inajsite = '",sr2.inagsite,"' 
+#              ORDER BY inaj022"
+##160202-00009 by whitney add (e)
+##160202-00009 by whitney mark (s)
+##LET l_sql2 = "SELECT  inaj011,inaj013,inaj004,inaj022 FROM inaj_t 
+##              WHERE inaj005 = '",sr2.inag001,"' AND inaj022 >= '",YEAR(tm.bdate),"/",l_month+1,"/01' AND inaj022 < '",tm.bdate,"' AND inaj006 = '",sr2.inag002,"' 
+##              AND inaj007 = '",sr2.inag003,"' AND inaj008 = '",sr2.inag004,"' AND inaj009 = '",sr2.inag005,"' AND inaj010 = '",sr2.inag006,"' AND inaj012 = '",sr2.inag007,"' 
+##              AND inajent = '",sr2.inagent,"' AND inajsite = '",sr2.inagsite,"' 
+##              ORDER BY inaj022"
+##160202-00009 by whitney mark (e)
+#PREPARE ainr210_x02_prepare2 FROM l_sql2
+#IF STATUS THEN
+#   INITIALIZE g_errparam TO NULL
+#   LET g_errparam.extend = 'prepare:'
+#   LET g_errparam.code   = STATUS
+#   LET g_errparam.popup  = TRUE
+#   CALL cl_err()
+#   LET g_rep_success = 'N' 
+#END IF
+#DECLARE ainr210_x02_curs2 CURSOR FOR ainr210_x02_prepare2
+#FOREACH ainr210_x02_curs2 INTO l_rec.inaj011,l_rec.inaj013,l_rec.inaj004,l_rec.inaj022
+   #160510-00019#10 marked-E
+   FOREACH ainr210_x02_curs2 USING sr2.inag001,l_inaj023_b,l_inaj023_e,sr2.inag002,sr2.inag003,sr2.inag004,sr2.inag005,sr2.inag006,sr2.inag007,sr2.inagent,sr2.inagsite INTO l_rec.inaj011,l_rec.inaj013,l_rec.inaj004,l_rec.inaj022 #160510-00019#10 add
+   IF NOT cl_null(l_rec.inaj011) AND NOT cl_null(l_rec.inaj013) AND NOT cl_null(l_rec.inaj004) THEN
+      LET l_count1 = l_count1 + l_rec.inaj011 * l_rec.inaj013 * l_rec.inaj004
+   END IF
+END FOREACH
+
+RETURN l_count1
+#SELECT inat015 INTO count.inat015
+#FROM inat_t
+#WHERE inat_t.inat001 = l_no AND inat008 = YEAR(tm.bdate) AND inat009 =  l_month
+
+END FUNCTION
+
+PRIVATE FUNCTION ainr210_x02_getcount2(sr3)
+DEFINE sr3 RECORD 
+   l_imaa009_desc LIKE type_t.chr30, 
+   inag001 LIKE inag_t.inag001, 
+   imaal_t_imaal003 LIKE imaal_t.imaal003, 
+   imaal_t_imaal004 LIKE imaal_t.imaal004, 
+   inag002 LIKE inag_t.inag002, 
+   inag003 LIKE inag_t.inag003, 
+   inag004 LIKE inag_t.inag004, 
+   l_inag004_desc LIKE type_t.chr30, 
+   inag005 LIKE inag_t.inag005, 
+   l_inag005_desc LIKE type_t.chr30, 
+   inag006 LIKE inag_t.inag006, 
+   inag007 LIKE inag_t.inag007, 
+   l_bcount1 LIKE type_t.num10, 
+   inag024 LIKE inag_t.inag024, 
+   l_bcount2 LIKE type_t.num10, 
+   inagent LIKE inag_t.inagent, 
+   inagsite LIKE inag_t.inagsite, 
+   l_keys LIKE type_t.chr200
+ END RECORD
+DEFINE l_count2 LIKE type_t.num10
+DEFINE inat001 LIKE inat_t.inat001   #料件編號
+DEFINE inat021 LIKE inat_t.inat021
+DEFINE l_rec2 RECORD
+inaj027 LIKE inaj_t.inaj011,   #參考數量
+inaj004 LIKE inaj_t.inaj004,   #出入庫碼
+inaj022 LIKE inaj_t.inaj022
+END RECORD
+DEFINE l_sql3 STRING
+DEFINE l_sql4 STRING
+DEFINE l_month2 LIKE type_t.num5
+DEFINE l_cnt3 LIKE type_t.num5
+DEFINE l_cnt4 LIKE type_t.num5
+DEFINE l_date  LIKE type_t.dat   #160510-00019#10 add
+DEFINE l_year  LIKE type_t.num5  #160510-00019#10 add
+LET l_month2 = MONTH(tm.bdate)-1
+LET l_cnt4 = l_month2
+   #160510-00019#10 marked-S
+#LET l_sql3 = "SELECT inat021 
+#      FROM inat_t
+#      WHERE inat_t.inat001 ='", sr3.inag001,"' AND inat008 = '",YEAR(tm.bdate),"' AND inat002 = '",sr3.inag002,"' AND inat003 = '",sr3.inag003,"' 
+#      AND inat004 = '",sr3.inag004,"' AND inat005 = '",sr3.inag005,"' AND inat006 = '",sr3.inag006,"' AND inat007 = '",sr3.inag007,"' 
+#      AND inat009 = ? "
+#PREPARE ainr210_x02_prepare3 FROM l_sql3
+#IF STATUS THEN
+#   INITIALIZE g_errparam TO NULL
+#   LET g_errparam.extend = 'prepare:'
+#   LET g_errparam.code   = STATUS
+#   LET g_errparam.popup  = TRUE
+#   CALL cl_err()
+#   LET g_rep_success = 'N' 
+#END IF
+#DECLARE ainr210_x02_curs3 CURSOR FOR ainr210_x02_prepare3
+   #160510-00019#10 marked-E
+
+FOR l_cnt3 = 1 TO l_cnt4
+#   OPEN ainr210_x02_curs3 USING l_month2  #160510-00019#10 marked
+#   OPEN ainr210_x02_curs3 USING sr3.inag001,sr3.inag002,sr3.inag003,sr3.inag004,sr3.inag005,sr3.inag006,sr3.inag007,l_month2,sr3.inagent,sr3.inagsite  #160510-00019#10 mod
+#   FOREACH ainr210_x02_curs3 INTO inat021
+   FOREACH ainr210_x02_curs3 USING sr3.inag001,sr3.inag002,sr3.inag003,sr3.inag004,sr3.inag005,sr3.inag006,sr3.inag007,l_month2,sr3.inagent,sr3.inagsite INTO inat021
+   END FOREACH   
+   IF cl_null(inat021) THEN    
+      LET l_month2 = l_month2-1
+#      CLOSE ainr210_x02_curs3
+   ELSE 
+      EXIT FOR
+   END IF
+END FOR
+IF cl_null(inat021) THEN    
+   LET inat021 = 0
+END IF
+LET l_count2 = inat021  #上期期末數量
+
+   #160510-00019#10 marked-S
+#LET l_sql4 = "SELECT  inaj027,inaj004,inaj022 FROM inaj_t 
+#              WHERE inaj005 = '",sr3.inag001,"' AND inaj022 >= '",YEAR(tm.bdate),"/",l_month2+1,"/01' AND inaj022 < '",tm.bdate,"' AND inaj006 = '",sr3.inag002,"' 
+#              AND inaj007 = '",sr3.inag003,"' AND inaj008 = '",sr3.inag004,"' AND inaj009 = '",sr3.inag005,"' AND inaj010 = '",sr3.inag006,"' AND inaj012 = '",sr3.inag007,"' 
+#              AND inajent = '",sr3.inagent,"' AND inajsite = '",sr3.inagsite,"'  
+#              ORDER BY inaj022 ASC"
+#
+#PREPARE ainr210_x02_prepare4 FROM l_sql4
+#IF STATUS THEN
+#   INITIALIZE g_errparam TO NULL
+#   LET g_errparam.extend = 'prepare:'
+#   LET g_errparam.code   = STATUS
+#   LET g_errparam.popup  = TRUE
+#   CALL cl_err()
+#   LET g_rep_success = 'N' 
+#END IF
+#DECLARE ainr210_x02_curs4 CURSOR FOR ainr210_x02_prepare4
+#FOREACH ainr210_x02_curs4 INTO l_rec2.inaj027,l_rec2.inaj004,l_rec2.inaj022
+   #160510-00019#10 marked-S
+   LET l_year = YEAR(tm.bdate)
+   LET l_date = MDY(l_month2+1,'01',l_year)
+   FOREACH ainr210_x02_curs4 USING sr3.inag001,l_date,sr3.inag002,sr3.inag003,sr3.inag004,sr3.inag005,sr3.inag006,sr3.inag007,sr3.inagent,sr3.inagsite INTO l_rec2.inaj027,l_rec2.inaj004,l_rec2.inaj022  #160510-00019#10 mod
+   IF NOT cl_null(l_rec2.inaj027) AND NOT cl_null(l_rec2.inaj004) THEN
+      LET l_count2 = l_count2 + l_rec2.inaj027 * l_rec2.inaj004
+   END IF
+END FOREACH
+
+RETURN l_count2
+END FUNCTION
+
+ 
+{</section>}
+ 

@@ -1,0 +1,141 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="abgi200" module="abg" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02416" crtdt="2014-02-14 16:09:43" modid="05016" moddt="2016-12-26 15:43:35" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="預算匯率維護">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="bgav001,bgav001_desc(chr80),bgav002,bgav002_desc(chr80),bgav007"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="bgav005,bgav005_desc(chr500),bgav008,bgav006,bgav003,bgav004,bgavstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="bgav005,bgav003,bgavownid,bgavownid_desc(chr500),bgavowndp,bgavowndp_desc(chr500),bgavcrtid,bgavcrtid_desc(chr500),bgavcrtdp,bgavcrtdp_desc(chr500),bgavcrtdt,bgavmodid,bgavmodid_desc(chr500),bgavmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="abg" filename="abgi200" method="dialog">
+    <section id="input">
+      <input id="head" field="bgav001,bgav002,bgav007"/>
+      <input id="body" page="1" field="bgav005,bgav008,bgav006,bgav003,bgav004,bgavstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="bgav001,bgav002,bgav007"/>
+      <construct id="body" page="1" field="bgav005,bgav008,bgav006,bgav003,bgav004,bgavstus"/>
+      <construct id="body" page="2" field="bgavownid,bgavowndp,bgavcrtid,bgavcrtdp,bgavcrtdt,bgavmodid,bgavmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="bgav001,bgav002"/>
+      <set id="head" type="no_entry" field="bgav001,bgav002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="bgav001">
+        <after>
+          <check chkid="v_bgaa001" id="isExist"/>
+          <reference field="bgav001_desc" ref_field="bgav_t.bgav001" map_field="bgavent,bgav001" ref_sql="SELECT bgaal003 FROM bgaal_t WHERE bgaalent=$varg_enterprise$var AND bgaal001=? AND bgaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_bgaa001" state="i"/>
+        <controlp form="q_bgaa001" state="c"/>
+      </column>
+      <column id="bgav001_desc"/>
+      <column id="bgav002">
+        <after>
+          <check chkid="v_ooai001" id="isExist"/>
+          <reference field="bgav002_desc" ref_field="bgav_t.bgav002" map_field="bgavent,bgav002" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="bgav002_desc"/>
+      <column id="bgav007" type="S" default="1">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+    <init id="body" page="1">
+      <column id="bgav005">
+        <after>
+          <check chkid="v_ooai001" id="isExist"/>
+          <reference field="bgav005_desc" ref_field="bgav_t.bgav005" map_field="bgavent,bgav005" ref_sql="SELECT ooail003 FROM ooail_t WHERE ooailent=$varg_enterprise$var AND ooail001=? AND ooail002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="bgav005_desc"/>
+      <column id="bgav008" type="S" default="1">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bgav006"/>
+      <column id="bgav003"/>
+      <column id="bgav004">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="bgavstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="bgavownid">
+        <after>
+          <reference field="bgavownid_desc" ref_field="bgav_t.bgavownid" map_field="bgavownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgavownid_desc"/>
+      <column id="bgavowndp">
+        <after>
+          <reference field="bgavowndp_desc" ref_field="bgav_t.bgavowndp" map_field="bgavent,bgavowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgavowndp_desc"/>
+      <column id="bgavcrtid">
+        <after>
+          <reference field="bgavcrtid_desc" ref_field="bgav_t.bgavcrtid" map_field="bgavcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgavcrtid_desc"/>
+      <column id="bgavcrtdp">
+        <after>
+          <reference field="bgavcrtdp_desc" ref_field="bgav_t.bgavcrtdp" map_field="bgavent,bgavcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="bgavcrtdp_desc"/>
+      <column id="bgavcrtdt"/>
+      <column id="bgavmodid">
+        <after>
+          <reference field="bgavmodid_desc" ref_field="bgav_t.bgavmodid" map_field="bgavmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="bgavmodid_desc"/>
+      <column id="bgavmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="bgav_t" pk="bgav001,bgav002">
+      <sql id="forupd_sql" type="sql" query="SELECT bgav001,&apos;&apos;,bgav002,&apos;&apos;,bgav007 FROM bgav_t WHERE bgavent= ? AND bgav001=? AND bgav002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT bgav001,&apos;&apos;,bgav002,&apos;&apos;,bgav007 FROM bgav_t" order="bgav001,bgav002"/>
+    </head>
+    <body id="bgav_t" page="1,2" linked="" pk="bgav003,bgav005" fk="bgav001,bgav002">
+      <sql id="forupd_sql_detail" query="SELECT bgav005,&apos;&apos;,bgav008,bgav006,bgav003,bgav004,bgavstus,&apos;&apos;,&apos;&apos;,bgavownid,&apos;&apos;,bgavowndp,&apos;&apos;,bgavcrtid,&apos;&apos;,bgavcrtdp,&apos;&apos;,bgavcrtdt,bgavmodid,&apos;&apos;,bgavmoddt FROM bgav_t WHERE bgavent=? AND bgav001=? AND bgav002=? AND bgav003=? AND bgav005=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT bgav005,&apos;&apos;,bgav008,bgav006,bgav003,bgav004,bgavstus,&apos;&apos;,&apos;&apos;,bgavownid,&apos;&apos;,bgavowndp,&apos;&apos;,bgavcrtid,&apos;&apos;,bgavcrtdp,&apos;&apos;,bgavcrtdt,bgavmodid,&apos;&apos;,bgavmoddt FROM bgav_t WHERE bgavent= ? AND bgav001=? AND bgav002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

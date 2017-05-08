@@ -1,0 +1,9021 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="anmt960.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0008(2016-03-29 20:40:55), PR版次:0008(2017-01-19 18:14:01)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000033
+#+ Filename...: anmt960
+#+ Description: 內部資金還款作業
+#+ Creator....: 02114(2016-03-28 14:30:14)
+#+ Modifier...: 02114 -SD/PR- 08171
+ 
+{</section>}
+ 
+{<section id="anmt960.global" >}
+#應用 t01 樣板自動產生(Version:79)
+#add-point:填寫註解說明 name="global.memo" 
+#Memos
+#160816-00068#7   2016/08/18 By earl    調整transaction
+#160818-00017#25  2016-08-23 By 08734   删除修改未重新判断状态码
+#160816-00012#3   2016/09/05 By 01531   ANM增加资金中心，帐套，法人三个栏位权限
+#160912-00024#1   2016/09/20 By 01531   来源组织权限控管
+#161006-00005#37  2016/10/28 By 08171   资金中心开窗需调整为q_ooef001_33 新增时where条件限定ooefstus= 'Y'查询时不限定此条件；
+#161128-00061#3   2016/12/01 by 02481   标准程式定义采用宣告模式,弃用.*写法
+#160824-00007#325 2017/01/19 By 08171   新舊值調整
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point 
+ 
+SCHEMA ds 
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_nmbq_m        RECORD
+       nmbq001 LIKE nmbq_t.nmbq001, 
+   nmbq001_desc LIKE type_t.chr80, 
+   nmbqdocno LIKE nmbq_t.nmbqdocno, 
+   nmbqdocdt LIKE nmbq_t.nmbqdocdt, 
+   nmbqstus LIKE nmbq_t.nmbqstus, 
+   nmbqownid LIKE nmbq_t.nmbqownid, 
+   nmbqownid_desc LIKE type_t.chr80, 
+   nmbqowndp LIKE nmbq_t.nmbqowndp, 
+   nmbqowndp_desc LIKE type_t.chr80, 
+   nmbqcrtid LIKE nmbq_t.nmbqcrtid, 
+   nmbqcrtid_desc LIKE type_t.chr80, 
+   nmbqcrtdp LIKE nmbq_t.nmbqcrtdp, 
+   nmbqcrtdp_desc LIKE type_t.chr80, 
+   nmbqcrtdt LIKE nmbq_t.nmbqcrtdt, 
+   nmbqmodid LIKE nmbq_t.nmbqmodid, 
+   nmbqmodid_desc LIKE type_t.chr80, 
+   nmbqmoddt LIKE nmbq_t.nmbqmoddt, 
+   nmbqcnfid LIKE nmbq_t.nmbqcnfid, 
+   nmbqcnfid_desc LIKE type_t.chr80, 
+   nmbqcnfdt LIKE nmbq_t.nmbqcnfdt
+       END RECORD
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_nmbr_d        RECORD
+       nmbrseq LIKE nmbr_t.nmbrseq, 
+   nmbr001 LIKE nmbr_t.nmbr001, 
+   nmbr002 LIKE nmbr_t.nmbr002, 
+   nmbr002_desc LIKE type_t.chr500, 
+   nmbr003 LIKE nmbr_t.nmbr003, 
+   nmbr003_desc LIKE type_t.chr500, 
+   nmbr004 LIKE nmbr_t.nmbr004, 
+   nmbr004_desc LIKE type_t.chr500, 
+   nmbr005 LIKE nmbr_t.nmbr005, 
+   nmbr005_desc LIKE type_t.chr500, 
+   nmbr006 LIKE nmbr_t.nmbr006, 
+   nmbr007 LIKE nmbr_t.nmbr007
+       END RECORD
+PRIVATE TYPE type_g_nmbr2_d RECORD
+       nmbwseq LIKE nmbw_t.nmbwseq, 
+   nmbw001 LIKE nmbw_t.nmbw001, 
+   nmbw004 LIKE nmbw_t.nmbw004, 
+   nmbw004_desc LIKE type_t.chr500, 
+   nmbw002 LIKE nmbw_t.nmbw002, 
+   nmbw003 LIKE nmbw_t.nmbw003, 
+   nmbw005 LIKE nmbw_t.nmbw005, 
+   nmbo008 LIKE type_t.num20_6, 
+   nmbw007 LIKE nmbw_t.nmbw007, 
+   nmbw006 LIKE nmbw_t.nmbw006
+       END RECORD
+ 
+ 
+PRIVATE TYPE type_browser RECORD
+         b_statepic     LIKE type_t.chr50,
+            b_nmbqdocno LIKE nmbq_t.nmbqdocno
+       END RECORD
+       
+#add-point:自定義模組變數(Module Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+ TYPE type_g_nmbr3_d RECORD
+       nmboseq        LIKE type_t.num10, 
+       nmbodocno      LIKE nmbo_t.nmbodocno,
+       seq            LIKE nmbo_t.nmboseq,
+       nmbo001        LIKE type_t.chr10, 
+       nmbo001_desc   LIKE type_t.chr80,
+       nmbo005        LIKE type_t.chr500, 
+       nmaa004        LIKE type_t.chr500, 
+       nmbo008        LIKE type_t.num20_6
+       END RECORD
+DEFINE g_nmbr3_d          DYNAMIC ARRAY OF type_g_nmbr3_d
+DEFINE g_nmbr3_d_t        type_g_nmbr3_d
+DEFINE g_nmbr3_d_o        type_g_nmbr3_d
+DEFINE g_nmbr3_d_mask_o   DYNAMIC ARRAY OF type_g_nmbr3_d #轉換遮罩前資料
+DEFINE g_nmbr3_d_mask_n   DYNAMIC ARRAY OF type_g_nmbr3_d #轉換遮罩後資料
+
+DEFINE g_comp             LIKE glaa_t.glaacomp
+DEFINE g_ld               LIKE glaa_t.glaald
+DEFINE g_comp_wc          STRING
+DEFINE g_nmbr006_str      STRING
+DEFINE g_sql_bank         STRING
+
+#end add-point
+       
+#模組變數(Module Variables)
+DEFINE g_nmbq_m          type_g_nmbq_m
+DEFINE g_nmbq_m_t        type_g_nmbq_m
+DEFINE g_nmbq_m_o        type_g_nmbq_m
+DEFINE g_nmbq_m_mask_o   type_g_nmbq_m #轉換遮罩前資料
+DEFINE g_nmbq_m_mask_n   type_g_nmbq_m #轉換遮罩後資料
+ 
+   DEFINE g_nmbqdocno_t LIKE nmbq_t.nmbqdocno
+ 
+ 
+DEFINE g_nmbr_d          DYNAMIC ARRAY OF type_g_nmbr_d
+DEFINE g_nmbr_d_t        type_g_nmbr_d
+DEFINE g_nmbr_d_o        type_g_nmbr_d
+DEFINE g_nmbr_d_mask_o   DYNAMIC ARRAY OF type_g_nmbr_d #轉換遮罩前資料
+DEFINE g_nmbr_d_mask_n   DYNAMIC ARRAY OF type_g_nmbr_d #轉換遮罩後資料
+DEFINE g_nmbr2_d          DYNAMIC ARRAY OF type_g_nmbr2_d
+DEFINE g_nmbr2_d_t        type_g_nmbr2_d
+DEFINE g_nmbr2_d_o        type_g_nmbr2_d
+DEFINE g_nmbr2_d_mask_o   DYNAMIC ARRAY OF type_g_nmbr2_d #轉換遮罩前資料
+DEFINE g_nmbr2_d_mask_n   DYNAMIC ARRAY OF type_g_nmbr2_d #轉換遮罩後資料
+ 
+ 
+DEFINE g_browser         DYNAMIC ARRAY OF type_browser
+DEFINE g_browser_f       DYNAMIC ARRAY OF type_browser
+ 
+ 
+DEFINE g_wc                  STRING
+DEFINE g_wc_t                STRING
+DEFINE g_wc2                 STRING                          #單身CONSTRUCT結果
+DEFINE g_wc2_table1          STRING
+DEFINE g_wc2_table2   STRING
+ 
+ 
+ 
+DEFINE g_wc2_extend          STRING
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+ 
+DEFINE g_sql                 STRING
+DEFINE g_forupd_sql          STRING
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_current_idx         LIKE type_t.num10     
+DEFINE g_jump                LIKE type_t.num10        
+DEFINE g_no_ask              LIKE type_t.num5        
+DEFINE g_rec_b               LIKE type_t.num10           
+DEFINE l_ac                  LIKE type_t.num10    
+DEFINE g_curr_diag           ui.Dialog                         #Current Dialog
+                                                               
+DEFINE g_pagestart           LIKE type_t.num10                 
+DEFINE gwin_curr             ui.Window                         #Current Window
+DEFINE gfrm_curr             ui.Form                           #Current Form
+DEFINE g_page_action         STRING                            #page action
+DEFINE g_header_hidden       LIKE type_t.num5                  #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5                  #隱藏工作Panel
+DEFINE g_page                STRING                            #第幾頁
+DEFINE g_state               STRING       
+DEFINE g_header_cnt          LIKE type_t.num10
+DEFINE g_detail_cnt          LIKE type_t.num10                  #單身總筆數
+DEFINE g_detail_idx          LIKE type_t.num10                  #單身目前所在筆數
+DEFINE g_detail_idx_tmp      LIKE type_t.num10                  #單身目前所在筆數
+DEFINE g_detail_idx2         LIKE type_t.num10                  #單身2目前所在筆數
+DEFINE g_detail_idx_list     DYNAMIC ARRAY OF LIKE type_t.num10 #單身2目前所在筆數
+DEFINE g_browser_cnt         LIKE type_t.num10                  #Browser總筆數
+DEFINE g_browser_idx         LIKE type_t.num10                  #Browser目前所在筆數
+DEFINE g_temp_idx            LIKE type_t.num10                  #Browser目前所在筆數(暫存用)
+DEFINE g_order               STRING                             #查詢排序欄位
+                                                        
+DEFINE g_current_row         LIKE type_t.num10                  #Browser所在筆數
+DEFINE g_current_sw          BOOLEAN                            #Browser所在筆數用開關
+DEFINE g_current_page        LIKE type_t.num10                  #目前所在頁數
+DEFINE g_insert              LIKE type_t.chr5                   #是否導到其他page
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE gs_keys               DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE gs_keys_bak           DYNAMIC ARRAY OF VARCHAR(500) #同步資料用陣列
+DEFINE g_bfill               LIKE type_t.chr5              #是否刷新單身
+DEFINE g_error_show          LIKE type_t.num5              #是否顯示筆數提示訊息
+DEFINE g_master_insert       BOOLEAN                       #確認單頭資料是否寫入
+ 
+DEFINE g_wc_frozen           STRING                        #凍結欄位使用
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_aw                  STRING                        #確定當下點擊的單身
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+DEFINE g_log1                STRING                        #log用
+DEFINE g_log2                STRING                        #log用
+DEFINE g_loc                 LIKE type_t.chr5              #判斷游標所在位置
+DEFINE g_add_browse          STRING                        #新增填充用WC
+DEFINE g_update              BOOLEAN                       #確定單頭/身是否異動過
+DEFINE g_idx_group           om.SaxAttributes              #頁籤群組
+DEFINE g_master_commit       LIKE type_t.chr1              #確認單頭是否修改過
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="anmt960.main" >}
+#應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("anm","")
+ 
+   #add-point:作業初始化 name="main.init"
+   
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = " SELECT nmbq001,'',nmbqdocno,nmbqdocdt,nmbqstus,nmbqownid,'',nmbqowndp,'',nmbqcrtid, 
+       '',nmbqcrtdp,'',nmbqcrtdt,nmbqmodid,'',nmbqmoddt,nmbqcnfid,'',nmbqcnfdt", 
+                      " FROM nmbq_t",
+                      " WHERE nmbqent= ? AND nmbqdocno=? FOR UPDATE"
+   #add-point:SQL_define name="main.after_define_sql"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE anmt960_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT DISTINCT t0.nmbq001,t0.nmbqdocno,t0.nmbqdocdt,t0.nmbqstus,t0.nmbqownid,t0.nmbqowndp, 
+       t0.nmbqcrtid,t0.nmbqcrtdp,t0.nmbqcrtdt,t0.nmbqmodid,t0.nmbqmoddt,t0.nmbqcnfid,t0.nmbqcnfdt,t1.ooefl003 , 
+       t2.ooag011 ,t3.ooefl003 ,t4.ooag011 ,t5.ooefl003 ,t6.ooag011 ,t7.ooag011",
+               " FROM nmbq_t t0",
+                              " LEFT JOIN ooefl_t t1 ON t1.ooeflent="||g_enterprise||" AND t1.ooefl001=t0.nmbq001 AND t1.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t2 ON t2.ooagent="||g_enterprise||" AND t2.ooag001=t0.nmbqownid  ",
+               " LEFT JOIN ooefl_t t3 ON t3.ooeflent="||g_enterprise||" AND t3.ooefl001=t0.nmbqowndp AND t3.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t4 ON t4.ooagent="||g_enterprise||" AND t4.ooag001=t0.nmbqcrtid  ",
+               " LEFT JOIN ooefl_t t5 ON t5.ooeflent="||g_enterprise||" AND t5.ooefl001=t0.nmbqcrtdp AND t5.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t6 ON t6.ooagent="||g_enterprise||" AND t6.ooag001=t0.nmbqmodid  ",
+               " LEFT JOIN ooag_t t7 ON t7.ooagent="||g_enterprise||" AND t7.ooag001=t0.nmbqcnfid  ",
+ 
+               " WHERE t0.nmbqent = " ||g_enterprise|| " AND t0.nmbqdocno = ?"
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   
+   #end add-point
+   PREPARE anmt960_master_referesh FROM g_sql
+ 
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_anmt960 WITH FORM cl_ap_formpath("anm",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL anmt960_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL anmt960_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_anmt960
+      
+   END IF 
+   
+   CLOSE anmt960_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="anmt960.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION anmt960_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   
+   #end add-point    
+   #add-point:init段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="init.pre_function"
+   
+   #end add-point
+   
+   LET g_bfill       = "Y"
+   LET g_detail_idx  = 1 #第一層單身指標
+   LET g_detail_idx2 = 1 #第二層單身指標
+   
+   #各個page指標
+   LET g_detail_idx_list[1] = 1 
+   LET g_detail_idx_list[2] = 1
+ 
+   LET g_error_show  = 1
+   LET l_ac = 1 #單身指標
+      CALL cl_set_combo_scc_part('nmbqstus','13','N,Y,X')
+ 
+   
+   LET gwin_curr = ui.Window.getCurrent()  #取得現行畫面
+   LET gfrm_curr = gwin_curr.getForm()     #取出物件化後的畫面物件
+   
+   #page群組
+   LET g_idx_group = om.SaxAttributes.create()
+   CALL g_idx_group.addAttribute("'1',","1")
+   CALL g_idx_group.addAttribute("'2',","1")
+ 
+ 
+   #add-point:畫面資料初始化 name="init.init"
+   #展組織下階成員所需之暫存檔
+   CALL s_fin_create_account_center_tmp() 
+   CALL cl_set_combo_scc('nmbw001','8725')
+   LET g_sql_bank = ''
+   CALL s_anmi120_get_bank_account_sql(g_user,g_dept) RETURNING g_sub_success,g_sql_bank
+   #end add-point
+   
+   #初始化搜尋條件
+   CALL anmt960_default_search()
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.ui_dialog" >}
+#+ 功能選單
+PRIVATE FUNCTION anmt960_ui_dialog()
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   
+   #end add-point
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE ls_wc      STRING
+   DEFINE lb_first   BOOLEAN
+   DEFINE la_wc      DYNAMIC ARRAY OF RECORD
+          tableid    STRING,
+          wc         STRING
+          END RECORD
+   DEFINE la_param   RECORD
+          prog       STRING,
+          actionid   STRING,
+          background LIKE type_t.chr1,
+          param      DYNAMIC ARRAY OF STRING
+          END RECORD
+   DEFINE ls_js      STRING
+   DEFINE la_output  DYNAMIC ARRAY OF STRING   #報表元件鬆耦合使用
+   DEFINE  l_cmd_token           base.StringTokenizer   #報表作業cmdrun使用 
+   DEFINE  l_cmd_next            STRING                 #報表作業cmdrun使用
+   DEFINE  l_cmd_cnt             LIKE type_t.num5       #報表作業cmdrun使用
+   DEFINE  l_cmd_prog_arg        STRING                 #報表作業cmdrun使用
+   DEFINE  l_cmd_arg             STRING                 #報表作業cmdrun使用
+   #add-point:ui_dialog段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="ui_dialog.pre_function"
+   
+   #end add-point
+   
+   CALL cl_set_act_visible("accept,cancel", FALSE)
+ 
+   
+   #action default動作
+   #應用 a42 樣板自動產生(Version:3)
+   #進入程式時預設執行的動作
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice="insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL anmt960_insert()
+            #add-point:ON ACTION insert name="menu.default.insert"
+            
+            #END add-point
+         END IF
+ 
+      #add-point:action default自訂 name="ui_dialog.action_default"
+      
+      #end add-point
+      OTHERWISE
+   END CASE
+ 
+ 
+ 
+   
+   LET lb_first = TRUE
+   
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   CALL g_nmbr3_d.clear()
+   #end add-point
+   
+   WHILE TRUE 
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_browser.clear()       
+         INITIALIZE g_nmbq_m.* TO NULL
+         CALL g_nmbr_d.clear()
+         CALL g_nmbr2_d.clear()
+ 
+         LET g_wc  = ' 1=2'
+         LET g_wc2 = ' 1=1'
+         LET g_action_choice = ""
+         CALL anmt960_init()
+      END IF
+   
+            
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+    
+         DISPLAY ARRAY g_nmbr_d TO s_detail1.* ATTRIBUTES(COUNT=g_rec_b) #page1  
+    
+            BEFORE ROW
+               #顯示單身筆數
+               CALL anmt960_idx_chk()
+               #確定當下選擇的筆數
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_detail_idx = l_ac
+               LET g_detail_idx_list[1] = l_ac
+               CALL g_idx_group.addAttribute("'1',",l_ac)
+               
+               #add-point:page1, before row動作 name="ui_dialog.page1.before_row"
+               
+               #end add-point
+               
+            BEFORE DISPLAY
+               #如果一直都在單身1則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'1',"))
+               END IF
+               LET g_loc = 'm'
+               LET l_ac = DIALOG.getCurrentRow("s_detail1")
+               LET g_current_page = 1
+               #顯示單身筆數
+               CALL anmt960_idx_chk()
+               #add-point:page1自定義行為 name="ui_dialog.page1.before_display"
+               
+               #end add-point
+               
+            #自訂ACTION(detail_show,page_1)
+            
+               
+            #add-point:page1自定義行為 name="ui_dialog.page1.action"
+            
+            #end add-point
+               
+         END DISPLAY
+        
+         #第一階單身段落
+         DISPLAY ARRAY g_nmbr2_d TO s_detail2.* ATTRIBUTES(COUNT=g_rec_b)  
+    
+            BEFORE ROW
+               #顯示單身筆數
+               CALL anmt960_idx_chk()
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_detail_idx = l_ac
+               LET g_detail_idx_list[2] = l_ac
+               CALL g_idx_group.addAttribute("'2',",l_ac)
+               
+               #add-point:page2, before row動作 name="ui_dialog.body2.before_row"
+               
+               #end add-point
+               
+            BEFORE DISPLAY
+               #如果一直都在單身1則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'2',"))
+               END IF
+               LET g_loc = 'm'
+               LET l_ac = DIALOG.getCurrentRow("s_detail2")
+               LET g_current_page = 2
+               #顯示單身筆數
+               CALL anmt960_idx_chk()
+               #add-point:page2自定義行為 name="ui_dialog.body2.before_display"
+               
+               #end add-point
+      
+            #自訂ACTION(detail_show,page_2)
+            
+         
+            #add-point:page2自定義行為 name="ui_dialog.body2.action"
+            
+            #end add-point
+         
+         END DISPLAY
+ 
+         
+ 
+         
+         #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+         DISPLAY ARRAY g_nmbr3_d TO s_detail3.* ATTRIBUTES(COUNT=g_rec_b)  
+         
+            BEFORE ROW
+               #顯示單身筆數
+               CALL anmt960_idx_chk()
+               LET l_ac = DIALOG.getCurrentRow("s_detail3")
+               LET g_detail_idx = l_ac
+               LET g_detail_idx_list[3] = l_ac
+               CALL g_idx_group.addAttribute("",l_ac)
+               
+               #add-point:page3, before row動作 name="ui_dialog.body3.before_row"
+         
+               #end add-point
+               
+            BEFORE DISPLAY
+               #如果一直都在單身1則控制筆數位置
+               IF g_loc = 'm' THEN
+                  CALL FGL_SET_ARR_CURR(g_idx_group.getValue(""))
+               END IF
+               LET g_loc = 'm'
+               LET l_ac = DIALOG.getCurrentRow("s_detail3")
+               LET g_current_page = 3
+               #顯示單身筆數
+               CALL anmt960_idx_chk()
+               #add-point:page3自定義行為 name="ui_dialog.body3.before_display"
+         
+               #end add-point
+         
+            #自訂ACTION(detail_show,page_3)
+            
+         
+            #add-point:page3自定義行為 name="ui_dialog.body3.action"
+         
+            #end add-point
+         
+         END DISPLAY
+         #end add-point
+         
+      
+         BEFORE DIALOG
+            #先填充browser資料
+            CALL anmt960_browser_fill("")
+            CALL cl_notice()
+            CALL cl_navigator_setting(g_current_idx, g_detail_cnt)
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            LET g_current_sw = FALSE
+            #回歸舊筆數位置 (回到當時異動的筆數)
+            
+            #確保g_current_idx位於正常區間內
+            #小於,等於0則指到第1筆
+            IF g_current_idx <= 0 THEN
+               LET g_current_idx = 1
+            END IF
+            #超過最大筆數則指到最後1筆
+            IF g_current_idx > g_browser.getLength() THEN
+               LEt g_current_idx = g_browser.getLength()
+            END IF 
+            
+            LET g_current_sw = TRUE
+            LET g_current_row = g_current_idx #目前指標
+            
+            #有資料才進行fetch
+            IF g_current_idx <> 0 THEN
+               CALL anmt960_fetch('') # reload data
+            END IF
+            #LET g_detail_idx = 1
+            CALL anmt960_ui_detailshow() #Setting the current row 
+            
+            #筆數顯示
+            LET g_current_page = 1
+            CALL anmt960_idx_chk()
+            CALL cl_ap_performance_cal()
+            #add-point:ui_dialog段before_dialog2 name="ui_dialog.before_dialog2"
+            
+            #end add-point
+ 
+         #add-point:ui_dialog段more_action name="ui_dialog.more_action"
+         
+         #end add-point
+ 
+         #狀態碼切換
+         ON ACTION statechange
+            LET g_action_choice = "statechange"
+            CALL anmt960_statechange()
+            #根據資料狀態切換action狀態
+            CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+            CALL anmt960_set_act_visible()   
+            CALL anmt960_set_act_no_visible()
+            IF NOT (g_nmbq_m.nmbqdocno IS NULL
+ 
+              ) THEN
+               #組合條件
+               LET g_add_browse = " nmbqent = " ||g_enterprise|| " AND",
+                                  " nmbqdocno = '", g_nmbq_m.nmbqdocno, "' "
+ 
+               #填到對應位置
+               CALL anmt960_browser_fill("")
+            END IF
+         
+          
+         #查詢方案選擇 
+         ON ACTION queryplansel
+            CALL cl_dlg_qryplan_select() RETURNING ls_wc
+            #不是空條件才寫入g_wc跟重新找資料
+            IF NOT cl_null(ls_wc) THEN
+               CALL util.JSON.parse(ls_wc, la_wc)
+               INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+               INITIALIZE g_wc2_table2 TO NULL
+ 
+ 
+               FOR li_idx = 1 TO la_wc.getLength()
+                  CASE
+                     WHEN la_wc[li_idx].tableid = "nmbq_t" 
+                        LET g_wc = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "nmbr_t" 
+                        LET g_wc2_table1 = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "nmbw_t" 
+                        LET g_wc2_table2 = la_wc[li_idx].wc
+ 
+ 
+                     WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                        LET g_wc2_extend = la_wc[li_idx].wc
+                  END CASE
+               END FOR
+               IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1) 
+                  OR NOT cl_null(g_wc2_table2)
+ 
+ 
+                  OR NOT cl_null(g_wc2_extend)
+                  THEN
+                  #組合g_wc2
+                  IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+                     LET g_wc2 = g_wc2_table1
+                  END IF
+                  IF g_wc2_table2 <> " 1=1" AND NOT cl_null(g_wc2_table2) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+                  END IF
+ 
+ 
+                  IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+                  END IF
+ 
+                  IF g_wc2.subString(1,5) = " AND " THEN
+                     LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+                  END IF
+               END IF
+               CALL anmt960_browser_fill("F")   #browser_fill()會將notice區塊清空
+            END IF
+         
+         #查詢方案選擇
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               CALL util.JSON.parse(ls_wc, la_wc)
+               INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+               INITIALIZE g_wc2_table2 TO NULL
+ 
+ 
+               FOR li_idx = 1 TO la_wc.getLength()
+                  CASE
+                     WHEN la_wc[li_idx].tableid = "nmbq_t" 
+                        LET g_wc = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "nmbr_t" 
+                        LET g_wc2_table1 = la_wc[li_idx].wc
+                     WHEN la_wc[li_idx].tableid = "nmbw_t" 
+                        LET g_wc2_table2 = la_wc[li_idx].wc
+ 
+ 
+                     WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                        LET g_wc2_extend = la_wc[li_idx].wc
+                  END CASE
+               END FOR
+               IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1)
+                  OR NOT cl_null(g_wc2_table2)
+ 
+ 
+                  OR NOT cl_null(g_wc2_extend)
+                  THEN
+                  IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+                     LET g_wc2 = g_wc2_table1
+                  END IF
+                  IF g_wc2_table2 <> " 1=1" AND NOT cl_null(g_wc2_table2) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+                  END IF
+ 
+ 
+                  IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+                     LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+                  END IF
+                  IF g_wc2.subString(1,5) = " AND " THEN
+                     LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+                  END IF
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL anmt960_browser_fill("F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code = "-100" 
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL anmt960_fetch("F")
+                  END IF
+               END IF
+            END IF
+            #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+          
+         
+         
+         ON ACTION first
+            LET g_action_choice = "fetch"
+            CALL anmt960_fetch('F')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL anmt960_idx_chk()
+            
+         ON ACTION previous
+            LET g_action_choice = "fetch"
+            CALL anmt960_fetch('P')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL anmt960_idx_chk()
+            
+         ON ACTION jump
+            LET g_action_choice = "fetch"
+            CALL anmt960_fetch('/')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL anmt960_idx_chk()
+            
+         ON ACTION next
+            LET g_action_choice = "fetch"
+            CALL anmt960_fetch('N')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL anmt960_idx_chk()
+            
+         ON ACTION last
+            LET g_action_choice = "fetch"
+            CALL anmt960_fetch('L')
+            LET g_current_row = g_current_idx
+            LET g_curr_diag = ui.DIALOG.getCurrent()
+            CALL anmt960_idx_chk()
+          
+         #excel匯出功能          
+         ON ACTION exporttoexcel
+            LET g_action_choice="exporttoexcel"
+            IF cl_auth_chk_act("exporttoexcel") THEN
+               #browser
+               CALL g_export_node.clear()
+               IF g_main_hidden = 1 THEN
+                  LET g_export_node[1] = base.typeInfo.create(g_browser)
+                  LET g_export_id[1]   = "s_browse"
+                  CALL cl_export_to_excel()
+               #非browser
+               ELSE
+                  LET g_export_node[1] = base.typeInfo.create(g_nmbr_d)
+                  LET g_export_id[1]   = "s_detail1"
+                  LET g_export_node[2] = base.typeInfo.create(g_nmbr2_d)
+                  LET g_export_id[2]   = "s_detail2"
+ 
+                  #add-point:ON ACTION exporttoexcel name="menu.exporttoexcel"
+                  
+                  #END add-point
+                  CALL cl_export_to_excel_getpage()
+                  CALL cl_export_to_excel()
+               END IF
+            END IF
+        
+         ON ACTION close
+            LET INT_FLAG = FALSE
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+          
+         ON ACTION exit
+            LET g_action_choice = "exit"
+            EXIT DIALOG
+    
+         #主頁摺疊
+         ON ACTION mainhidden       
+            IF g_main_hidden THEN
+               CALL gfrm_curr.setElementHidden("mainlayout",0)
+               CALL gfrm_curr.setElementHidden("worksheet",1)
+               LET g_main_hidden = 0
+            ELSE
+               CALL gfrm_curr.setElementHidden("mainlayout",1)
+               CALL gfrm_curr.setElementHidden("worksheet",0)
+               LET g_main_hidden = 1
+               CALL cl_notice()
+            END IF
+            
+       
+         #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+         ON ACTION controls     
+            IF g_header_hidden THEN
+               CALL gfrm_curr.setElementHidden("vb_master",0)
+               CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+               LET g_header_hidden = 0     #visible
+            ELSE
+               CALL gfrm_curr.setElementHidden("vb_master",1)
+               CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+               LET g_header_hidden = 1     #hidden     
+            END IF
+    
+         
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL anmt960_modify()
+               #add-point:ON ACTION modify name="menu.modify"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify_detail
+            LET g_action_choice="modify_detail"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = g_curr_diag.getCurrentItem()
+               CALL anmt960_modify()
+               #add-point:ON ACTION modify_detail name="menu.modify_detail"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL anmt960_delete()
+               #add-point:ON ACTION delete name="menu.delete"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL anmt960_insert()
+               #add-point:ON ACTION insert name="menu.insert"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               
+               #END add-point
+               &include "erp/anm/anmt960_rep.4gl"
+               #add-point:ON ACTION output.after name="menu.after_output"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               
+               #END add-point
+               &include "erp/anm/anmt960_rep.4gl"
+               #add-point:ON ACTION quickprint.after name="menu.after_quickprint"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL anmt960_reproduce()
+               #add-point:ON ACTION reproduce name="menu.reproduce"
+               
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL anmt960_query()
+               #add-point:ON ACTION query name="menu.query"
+               
+               #END add-point
+               #應用 a59 樣板自動產生(Version:3)  
+               CALL g_curr_diag.setCurrentRow("s_detail1",1)
+               CALL g_curr_diag.setCurrentRow("s_detail2",1)
+ 
+ 
+ 
+ 
+            END IF
+ 
+ 
+ 
+ 
+         
+         #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL anmt960_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.dialog.related_document"
+               
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL anmt960_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.dialog.agendum"
+            
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL anmt960_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.dialog.followup"
+            
+            #END add-point
+            CALL cl_user_overview_follow(g_nmbq_m.nmbqdocdt)
+ 
+ 
+ 
+         
+         #主選單用ACTION
+         &include "main_menu_exit_dialog.4gl"
+         &include "relating_action.4gl"
+    
+         #交談指令共用ACTION
+         &include "common_action.4gl" 
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #(ver:79) ---add start---
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      
+      #end add-point
+      #(ver:79) --- add end ---
+    
+      IF g_action_choice = "exit" AND NOT cl_null(g_action_choice) THEN
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         
+         #end add-point
+         EXIT WHILE
+      END IF
+    
+   END WHILE    
+      
+   CALL cl_set_act_visible("accept,cancel", TRUE)
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.browser_fill" >}
+#+ 瀏覽頁簽資料填充
+PRIVATE FUNCTION anmt960_browser_fill(ps_page_action)
+   #add-point:browser_fill段define(客製用) name="browser_fill.define_customerization"
+   
+   #end add-point  
+   DEFINE ps_page_action    STRING
+   DEFINE l_wc              STRING
+   DEFINE l_wc2             STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sub_sql         STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="browser_fill.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理 name="browser_fill.before_browser_fill"
+   
+   #end add-point
+   
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF cl_null(g_wc2) THEN
+      LET g_wc2 = " 1=1"
+   END IF
+   LET l_wc  = g_wc.trim() 
+   LET l_wc2 = g_wc2.trim()
+ 
+   #add-point:browser_fill,foreach前 name="browser_fill.before_foreach"
+   
+   #end add-point
+   
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件                      
+      LET l_sub_sql = " SELECT DISTINCT nmbqdocno ",
+                      " FROM nmbq_t ",
+                      " ",
+                      " LEFT JOIN nmbr_t ON nmbrent = nmbqent AND nmbqdocno = nmbrdocno ", "  ",
+                      #add-point:browser_fill段sql(nmbr_t1) name="browser_fill.cnt.join.}"
+                      
+                      #end add-point
+                      " LEFT JOIN nmbw_t ON nmbwent = nmbqent AND nmbqdocno = nmbwdocno", "  ",
+                      #add-point:browser_fill段sql(nmbw_t1) name="browser_fill.cnt.join.nmbw_t1"
+                      
+                      #end add-point
+ 
+ 
+ 
+                      " ", 
+                      " ", 
+                      " ",                      
+ 
+ 
+ 
+                      " WHERE nmbqent = " ||g_enterprise|| " AND nmbrent = " ||g_enterprise|| " AND ",l_wc, " AND ", l_wc2, cl_sql_add_filter("nmbq_t")
+   ELSE
+      #單身未輸入搜尋條件
+      LET l_sub_sql = " SELECT DISTINCT nmbqdocno ",
+                      " FROM nmbq_t ", 
+                      "  ",
+                      "  ",
+                      " WHERE nmbqent = " ||g_enterprise|| " AND ",l_wc CLIPPED, cl_sql_add_filter("nmbq_t")
+   END IF
+   
+   #add-point:browser_fill,cnt wc name="browser_fill.cnt_sqlwc"
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件                      
+      LET l_sub_sql = " SELECT DISTINCT nmbqdocno ",
+                      "   FROM nmbq_t ",
+                      "   LEFT JOIN nmbr_t ON nmbrent = nmbqent AND nmbqdocno = nmbrdocno ", "  ",
+                      "   LEFT JOIN nmbw_t ON nmbwent = nmbqent AND nmbqdocno = nmbwdocno", "  ",
+                      "  WHERE nmbqent = '" ||g_enterprise|| "' ",
+                      "    AND TRIM(nmbr003) IS NULL",
+                      "    AND nmbrent = '" ||g_enterprise|| "' AND ",l_wc, " AND ", l_wc2, cl_sql_add_filter("nmbq_t"),
+                      "  UNION ",
+                      " SELECT DISTINCT nmbqdocno ",
+                      "   FROM nmbr_t,nmbq_t ",
+                      "  WHERE nmbqent = '" ||g_enterprise|| "'  AND ",l_wc,
+                      "    AND nmbrent = nmbqent AND nmbrdocno = nmbqdocno ",                   
+                      "    AND nmbr003 IN (",g_sql_bank,")",         
+                      "    AND ", l_wc2, cl_sql_add_filter("nmbq_t")
+   ELSE
+      #單身未輸入搜尋條件
+      LET l_sub_sql = " SELECT DISTINCT nmbqdocno ",
+                      "   FROM nmbq_t ", 
+                      "   LEFT JOIN nmbr_t ON nmbrent = nmbqent AND nmbqdocno = nmbrdocno ", "  ",
+                      "   LEFT JOIN nmbw_t ON nmbwent = nmbqent AND nmbqdocno = nmbwdocno", "  ",
+                      "  WHERE nmbqent = '" ||g_enterprise|| "'",
+                      "    AND TRIM(nmbr003) IS NULL",
+                      "    AND ",l_wc CLIPPED, cl_sql_add_filter("nmbq_t"), 
+                      "  UNION ",
+                      " SELECT DISTINCT nmbqdocno ",
+                      "   FROM nmbr_t,nmbq_t ",
+                      "  WHERE nmbqent = '" ||g_enterprise|| "'  AND ",l_wc,
+                      "    AND nmbrent = nmbqent AND nmbrdocno = nmbqdocno ",                   
+                      "    AND nmbr003 IN (",g_sql_bank,")",         
+                      "    AND ", l_wc2, cl_sql_add_filter("nmbq_t")
+   END IF
+   #end add-point
+   
+   LET g_sql = " SELECT COUNT(1) FROM (",l_sub_sql,")"
+   
+   #add-point:browser_fill,count前 name="browser_fill.before_count"
+   
+   #end add-point
+   
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE header_cnt_pre FROM g_sql
+      EXECUTE header_cnt_pre INTO g_browser_cnt   #總筆數
+      FREE header_cnt_pre
+   END IF
+    
+   IF g_browser_cnt > g_max_browse THEN
+      IF g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_browser_cnt
+         LET g_errparam.code = 9035 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+      END IF
+      LET g_browser_cnt = g_max_browse
+   END IF
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+   DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+ 
+   #根據行為確定資料填充位置及WC
+   IF cl_null(g_add_browse) THEN
+      #清除畫面
+      CLEAR FORM                
+      INITIALIZE g_nmbq_m.* TO NULL
+      CALL g_nmbr_d.clear()        
+      CALL g_nmbr2_d.clear() 
+ 
+      #add-point:browser_fill g_add_browse段額外處理 name="browser_fill.add_browse.other"
+      CALL g_nmbr3_d.clear()
+      #end add-point   
+      CALL g_browser.clear()
+      LET g_cnt = 1
+   ELSE
+      LET l_wc  = g_add_browse
+      LET l_wc2 = " 1=1" 
+      LET g_cnt = g_current_idx
+   END IF
+ 
+   #依照t0.nmbqdocno Browser欄位定義(取代原本bs_sql功能)
+   #考量到單身可能下條件, 所以此處需join單身所有table
+   #DISTINCT是為了避免在join時出現重複的資料(如果不加DISTINCT則須在程式中過濾)
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件   
+      LET g_sql = " SELECT DISTINCT t0.nmbqstus,t0.nmbqdocno ",
+                  " FROM nmbq_t t0",
+                  "  ",
+                  "  LEFT JOIN nmbr_t ON nmbrent = nmbqent AND nmbqdocno = nmbrdocno ", "  ", 
+                  #add-point:browser_fill段sql(nmbr_t1) name="browser_fill.join.nmbr_t1"
+                  
+                  #end add-point
+                  "  LEFT JOIN nmbw_t ON nmbwent = nmbqent AND nmbqdocno = nmbwdocno", "  ", 
+                  #add-point:browser_fill段sql(nmbw_t1) name="browser_fill.join.nmbw_t1"
+                  
+                  #end add-point
+ 
+ 
+ 
+                  " ", 
+                  " ",                      
+ 
+ 
+ 
+                  
+                  " WHERE t0.nmbqent = " ||g_enterprise|| " AND ",l_wc," AND ",l_wc2, cl_sql_add_filter("nmbq_t")
+   ELSE
+      #單身無輸入搜尋條件   
+      LET g_sql = " SELECT DISTINCT t0.nmbqstus,t0.nmbqdocno ",
+                  " FROM nmbq_t t0",
+                  "  ",
+                  
+                  " WHERE t0.nmbqent = " ||g_enterprise|| " AND ",l_wc, cl_sql_add_filter("nmbq_t")
+   END IF
+   #add-point:browser_fill,sql wc name="browser_fill.fill_sqlwc"
+   IF g_wc2 <> " 1=1" THEN
+      #單身有輸入搜尋條件   
+      LET g_sql = " SELECT DISTINCT t0.nmbqstus,t0.nmbqdocno ",
+                  "   FROM nmbq_t t0",
+                  "   LEFT JOIN nmbr_t ON nmbrent = nmbqent AND nmbqdocno = nmbrdocno ", "  ", 
+                  "   LEFT JOIN nmbw_t ON nmbwent = nmbqent AND nmbqdocno = nmbwdocno", "  ", 
+                  "  WHERE t0.nmbqent = '" ||g_enterprise|| "'",
+                  "    AND TRIM(nmbr003) IS NULL",
+                  "    AND ",l_wc," AND ",l_wc2, cl_sql_add_filter("nmbq_t"),
+                  "  UNION ",
+                  " SELECT DISTINCT t0.nmbqstus,t0.nmbqdocno ",
+                  "   FROM nmbr_t,nmbq_t t0",
+                  "  WHERE t0.nmbqent = '" ||g_enterprise|| "'  AND ",l_wc,
+                  "    AND nmbrent = nmbqent AND nmbrdocno = nmbqdocno ",
+                  "    AND nmbr003 IN (",g_sql_bank,")", 
+                  "    AND ",l_wc2, cl_sql_add_filter("nmbq_t")
+   ELSE
+      #單身無輸入搜尋條件   
+      LET g_sql = " SELECT DISTINCT t0.nmbqstus,t0.nmbqdocno ",
+                  "   FROM nmbq_t t0",
+                  "   LEFT JOIN nmbr_t ON nmbrent = nmbqent AND nmbqdocno = nmbrdocno ", "  ", 
+                  "   LEFT JOIN nmbw_t ON nmbwent = nmbqent AND nmbqdocno = nmbwdocno", "  ", 
+                  "  WHERE t0.nmbqent = '" ||g_enterprise|| "'",
+                  "    AND TRIM(nmbr003) IS NULL",
+                  "    AND ",l_wc, cl_sql_add_filter("nmbq_t"),
+                  "  UNION ",
+                  " SELECT DISTINCT t0.nmbqstus,t0.nmbqdocno ",
+                  "   FROM nmbr_t,nmbq_t t0",
+                  "  WHERE t0.nmbqent = '" ||g_enterprise|| "'  AND ",l_wc,
+                  "    AND nmbrent = nmbqent AND nmbrdocno = nmbqdocno ",
+                  "    AND nmbr003 IN (",g_sql_bank,")", 
+                  "    AND ",l_wc2, cl_sql_add_filter("nmbq_t")
+   END IF
+   #end add-point
+   LET g_sql = g_sql, " ORDER BY nmbqdocno ",g_order
+ 
+   #add-point:browser_fill,before_prepare name="browser_fill.before_prepare"
+   
+   #end add-point
+        
+   #LET g_sql = cl_sql_add_tabid(g_sql,"nmbq_t") #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql) #遮蔽特定資料
+   
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE browse_pre FROM g_sql
+      DECLARE browse_cur CURSOR FOR browse_pre
+      
+      #add-point:browser_fill段open cursor name="browser_fill.open"
+      
+      #end add-point
+      
+      FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_nmbqdocno
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "Foreach:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+      
+         #add-point:browser_fill段reference name="browser_fill.reference"
+         
+         #end add-point
+      
+      
+               #應用 a24 樣板自動產生(Version:3)
+      #browser顯示圖片
+      CASE g_browser[g_cnt].b_statepic
+         WHEN "N"
+            LET g_browser[g_cnt].b_statepic = "stus/16/unconfirmed.png"
+         WHEN "Y"
+            LET g_browser[g_cnt].b_statepic = "stus/16/confirmed.png"
+         WHEN "X"
+            LET g_browser[g_cnt].b_statepic = "stus/16/invalid.png"
+         
+      END CASE
+ 
+ 
+ 
+         LET g_cnt = g_cnt + 1
+         IF g_cnt > g_max_browse THEN
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+      FREE browse_pre
+   END IF
+   
+   #清空g_add_browse, 並指定指標位置
+   IF NOT cl_null(g_add_browse) THEN
+      LET g_add_browse = ""
+      CALL g_curr_diag.setCurrentRow("s_browse",g_current_idx)
+   END IF
+   
+   IF cl_null(g_browser[g_cnt].b_nmbqdocno) THEN
+      CALL g_browser.deleteElement(g_cnt)
+   END IF
+   
+   LET g_header_cnt  = g_browser.getLength()
+   LET g_browser_cnt = g_browser.getLength()
+   
+   #筆數顯示
+   IF g_browser_cnt > 0 THEN
+      DISPLAY g_browser_idx TO FORMONLY.b_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.b_count #總筆數
+      DISPLAY g_browser_idx TO FORMONLY.h_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.h_count #總筆數
+      DISPLAY g_detail_idx  TO FORMONLY.idx     #單身當下筆數
+      DISPLAY g_detail_cnt  TO FORMONLY.cnt     #單身總筆數
+   ELSE
+      DISPLAY '' TO FORMONLY.b_index #當下筆數
+      DISPLAY '' TO FORMONLY.b_count #總筆數
+      DISPLAY '' TO FORMONLY.h_index #當下筆數
+      DISPLAY '' TO FORMONLY.h_count #總筆數
+      DISPLAY '' TO FORMONLY.idx     #單身當下筆數
+      DISPLAY '' TO FORMONLY.cnt     #單身總筆數
+   END IF
+ 
+   LET g_rec_b = g_cnt - 1
+   LET g_detail_cnt = g_rec_b
+   LET g_cnt = 0
+ 
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+                  
+   
+   #add-point:browser_fill段結束前 name="browser_fill.after"
+   
+   #end add-point   
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.ui_headershow" >}
+#+ 單頭資料重新顯示
+PRIVATE FUNCTION anmt960_ui_headershow()
+   #add-point:ui_headershow段define(客製用) name="ui_headershow.define_customerization"
+   
+   #end add-point  
+   #add-point:ui_headershow段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_headershow.define"
+   
+   #end add-point      
+   
+   #add-point:Function前置處理  name="ui_headershow.pre_function"
+   
+   #end add-point
+   
+   LET g_nmbq_m.nmbqdocno = g_browser[g_current_idx].b_nmbqdocno   
+ 
+   EXECUTE anmt960_master_referesh USING g_nmbq_m.nmbqdocno INTO g_nmbq_m.nmbq001,g_nmbq_m.nmbqdocno, 
+       g_nmbq_m.nmbqdocdt,g_nmbq_m.nmbqstus,g_nmbq_m.nmbqownid,g_nmbq_m.nmbqowndp,g_nmbq_m.nmbqcrtid, 
+       g_nmbq_m.nmbqcrtdp,g_nmbq_m.nmbqcrtdt,g_nmbq_m.nmbqmodid,g_nmbq_m.nmbqmoddt,g_nmbq_m.nmbqcnfid, 
+       g_nmbq_m.nmbqcnfdt,g_nmbq_m.nmbq001_desc,g_nmbq_m.nmbqownid_desc,g_nmbq_m.nmbqowndp_desc,g_nmbq_m.nmbqcrtid_desc, 
+       g_nmbq_m.nmbqcrtdp_desc,g_nmbq_m.nmbqmodid_desc,g_nmbq_m.nmbqcnfid_desc
+   
+   CALL anmt960_nmbq_t_mask()
+   CALL anmt960_show()
+      
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.ui_detailshow" >}
+#+ 單身資料重新顯示
+PRIVATE FUNCTION anmt960_ui_detailshow()
+   #add-point:ui_detailshow段define(客製用) name="ui_detailshow.define_customerization"
+   
+   #end add-point    
+   #add-point:ui_detailshow段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_detailshow.define"
+   
+   #end add-point    
+ 
+   #add-point:Function前置處理 name="ui_detailshow.before"
+   
+   #end add-point    
+   
+   IF g_curr_diag IS NOT NULL THEN
+      CALL g_curr_diag.setCurrentRow("s_detail1",g_detail_idx)      
+      CALL g_curr_diag.setCurrentRow("s_detail2",g_detail_idx)
+ 
+   END IF
+   
+   #add-point:ui_detailshow段after name="ui_detailshow.after"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.ui_browser_refresh" >}
+#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION anmt960_ui_browser_refresh()
+   #add-point:ui_browser_refresh段define(客製用) name="ui_browser_refresh.define_customerization"
+   
+   #end add-point    
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_browser_refresh.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="ui_browser_refresh.pre_function"
+   
+   #end add-point
+   
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_header_cnt  = g_browser.getLength()
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_nmbqdocno = g_nmbq_m.nmbqdocno 
+ 
+         THEN
+         CALL g_browser.deleteElement(l_i)
+         EXIT FOR
+      END IF
+   END FOR
+   LET g_browser_cnt = g_browser_cnt - 1
+   LET g_header_cnt = g_header_cnt - 1
+    
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+      CLEAR FORM
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+   
+   #add-point:ui_browser_refresh段after name="ui_browser_refresh.after"
+   
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.construct" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION anmt960_construct()
+   #add-point:cs段define(客製用) name="cs.define_customerization"
+   
+   #end add-point    
+   DEFINE ls_return   STRING
+   DEFINE ls_result   STRING 
+   DEFINE ls_wc       STRING 
+   DEFINE la_wc       DYNAMIC ARRAY OF RECORD
+          tableid     STRING,
+          wc          STRING
+          END RECORD
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:cs段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="cs.define"
+   DEFINE l_wc        STRING #160816-00012#3
+   #end add-point    
+   
+   #add-point:Function前置處理  name="cs.pre_function"
+   CALL g_nmbr3_d.clear()
+   #end add-point
+    
+   #清除畫面
+   CLEAR FORM                
+   INITIALIZE g_nmbq_m.* TO NULL
+   CALL g_nmbr_d.clear()        
+   CALL g_nmbr2_d.clear() 
+ 
+   
+   LET g_action_choice = ""
+    
+   INITIALIZE g_wc TO NULL
+   INITIALIZE g_wc2 TO NULL
+   
+   INITIALIZE g_wc2_table1 TO NULL
+   INITIALIZE g_wc2_table2 TO NULL
+ 
+ 
+    
+   LET g_qryparam.state = 'c'
+   
+   #add-point:cs段開始前 name="cs.before_construct"
+   
+   #end add-point 
+   
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      
+      #單頭
+      CONSTRUCT BY NAME g_wc ON nmbq001,nmbqdocno,nmbqdocdt,nmbqstus,nmbqownid,nmbqowndp,nmbqcrtid,nmbqcrtdp, 
+          nmbqcrtdt,nmbqmodid,nmbqmoddt,nmbqcnfid,nmbqcnfdt
+ 
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.head.before_construct"
+            
+            #end add-point 
+            
+         #公用欄位開窗相關處理
+         #應用 a11 樣板自動產生(Version:3)
+         #共用欄位查詢處理  
+         ##----<<nmbqcrtdt>>----
+         AFTER FIELD nmbqcrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+         #----<<nmbqmoddt>>----
+         AFTER FIELD nmbqmoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<nmbqcnfdt>>----
+         AFTER FIELD nmbqcnfdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<nmbqpstdt>>----
+ 
+ 
+ 
+            
+         #一般欄位開窗相關處理    
+                  #Ctrlp:construct.c.nmbq001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbq001
+            #add-point:ON ACTION controlp INFIELD nmbq001 name="construct.c.nmbq001"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooef001_33()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbq001  #顯示到畫面上
+            NEXT FIELD nmbq001                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbq001
+            #add-point:BEFORE FIELD nmbq001 name="construct.b.nmbq001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbq001
+            
+            #add-point:AFTER FIELD nmbq001 name="construct.a.nmbq001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.nmbqdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbqdocno
+            #add-point:ON ACTION controlp INFIELD nmbqdocno name="construct.c.nmbqdocno"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_nmbqdocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbqdocno  #顯示到畫面上
+            NEXT FIELD nmbqdocno                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbqdocno
+            #add-point:BEFORE FIELD nmbqdocno name="construct.b.nmbqdocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbqdocno
+            
+            #add-point:AFTER FIELD nmbqdocno name="construct.a.nmbqdocno"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.nmbqdocdt
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbqdocdt
+            #add-point:ON ACTION controlp INFIELD nmbqdocdt name="construct.c.nmbqdocdt"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooef001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbqdocdt  #顯示到畫面上
+            NEXT FIELD nmbqdocdt                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbqdocdt
+            #add-point:BEFORE FIELD nmbqdocdt name="construct.b.nmbqdocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbqdocdt
+            
+            #add-point:AFTER FIELD nmbqdocdt name="construct.a.nmbqdocdt"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbqstus
+            #add-point:BEFORE FIELD nmbqstus name="construct.b.nmbqstus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbqstus
+            
+            #add-point:AFTER FIELD nmbqstus name="construct.a.nmbqstus"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.nmbqstus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbqstus
+            #add-point:ON ACTION controlp INFIELD nmbqstus name="construct.c.nmbqstus"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.nmbqownid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbqownid
+            #add-point:ON ACTION controlp INFIELD nmbqownid name="construct.c.nmbqownid"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbqownid  #顯示到畫面上
+            NEXT FIELD nmbqownid                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbqownid
+            #add-point:BEFORE FIELD nmbqownid name="construct.b.nmbqownid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbqownid
+            
+            #add-point:AFTER FIELD nmbqownid name="construct.a.nmbqownid"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.nmbqowndp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbqowndp
+            #add-point:ON ACTION controlp INFIELD nmbqowndp name="construct.c.nmbqowndp"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbqowndp  #顯示到畫面上
+            NEXT FIELD nmbqowndp                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbqowndp
+            #add-point:BEFORE FIELD nmbqowndp name="construct.b.nmbqowndp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbqowndp
+            
+            #add-point:AFTER FIELD nmbqowndp name="construct.a.nmbqowndp"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.nmbqcrtid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbqcrtid
+            #add-point:ON ACTION controlp INFIELD nmbqcrtid name="construct.c.nmbqcrtid"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbqcrtid  #顯示到畫面上
+            NEXT FIELD nmbqcrtid                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbqcrtid
+            #add-point:BEFORE FIELD nmbqcrtid name="construct.b.nmbqcrtid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbqcrtid
+            
+            #add-point:AFTER FIELD nmbqcrtid name="construct.a.nmbqcrtid"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.nmbqcrtdp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbqcrtdp
+            #add-point:ON ACTION controlp INFIELD nmbqcrtdp name="construct.c.nmbqcrtdp"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbqcrtdp  #顯示到畫面上
+            NEXT FIELD nmbqcrtdp                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbqcrtdp
+            #add-point:BEFORE FIELD nmbqcrtdp name="construct.b.nmbqcrtdp"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbqcrtdp
+            
+            #add-point:AFTER FIELD nmbqcrtdp name="construct.a.nmbqcrtdp"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbqcrtdt
+            #add-point:BEFORE FIELD nmbqcrtdt name="construct.b.nmbqcrtdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.nmbqmodid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbqmodid
+            #add-point:ON ACTION controlp INFIELD nmbqmodid name="construct.c.nmbqmodid"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbqmodid  #顯示到畫面上
+            NEXT FIELD nmbqmodid                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbqmodid
+            #add-point:BEFORE FIELD nmbqmodid name="construct.b.nmbqmodid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbqmodid
+            
+            #add-point:AFTER FIELD nmbqmodid name="construct.a.nmbqmodid"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbqmoddt
+            #add-point:BEFORE FIELD nmbqmoddt name="construct.b.nmbqmoddt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.nmbqcnfid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbqcnfid
+            #add-point:ON ACTION controlp INFIELD nmbqcnfid name="construct.c.nmbqcnfid"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbqcnfid  #顯示到畫面上
+            NEXT FIELD nmbqcnfid                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbqcnfid
+            #add-point:BEFORE FIELD nmbqcnfid name="construct.b.nmbqcnfid"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbqcnfid
+            
+            #add-point:AFTER FIELD nmbqcnfid name="construct.a.nmbqcnfid"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbqcnfdt
+            #add-point:BEFORE FIELD nmbqcnfdt name="construct.b.nmbqcnfdt"
+            
+            #END add-point
+ 
+ 
+ 
+         
+      END CONSTRUCT
+ 
+      #單身根據table分拆construct
+      CONSTRUCT g_wc2_table1 ON nmbrseq,nmbr001,nmbr002,nmbr003,nmbr003_desc,nmbr004,nmbr005,nmbr005_desc, 
+          nmbr006,nmbr007
+           FROM s_detail1[1].nmbrseq,s_detail1[1].nmbr001,s_detail1[1].nmbr002,s_detail1[1].nmbr003, 
+               s_detail1[1].nmbr003_desc,s_detail1[1].nmbr004,s_detail1[1].nmbr005,s_detail1[1].nmbr005_desc, 
+               s_detail1[1].nmbr006,s_detail1[1].nmbr007
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.body.before_construct"
+            
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理
+       
+         
+       #單身一般欄位開窗相關處理
+                #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbrseq
+            #add-point:BEFORE FIELD nmbrseq name="construct.b.page1.nmbrseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbrseq
+            
+            #add-point:AFTER FIELD nmbrseq name="construct.a.page1.nmbrseq"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbrseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbrseq
+            #add-point:ON ACTION controlp INFIELD nmbrseq name="construct.c.page1.nmbrseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbr001
+            #add-point:BEFORE FIELD nmbr001 name="construct.b.page1.nmbr001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbr001
+            
+            #add-point:AFTER FIELD nmbr001 name="construct.a.page1.nmbr001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbr001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbr001
+            #add-point:ON ACTION controlp INFIELD nmbr001 name="construct.c.page1.nmbr001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbr002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbr002
+            #add-point:ON ACTION controlp INFIELD nmbr002 name="construct.c.page1.nmbr002"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            #160816-00012#3 Add  ---(S)---
+            LET g_qryparam.where = " ooef206 = 'Y'"
+            CALL s_axrt300_get_site(g_user,'','1') RETURNING l_wc
+            LET g_qryparam.where = g_qryparam.where," AND ",l_wc CLIPPED
+            #160816-00012#3 Add  ---(E)---           
+            #CALL q_ooef001()                           #呼叫開窗 #161006-00005#37 mark
+            CALL q_ooef001_33()                                  #161006-00005#37 add
+            DISPLAY g_qryparam.return1 TO nmbr002  #顯示到畫面上
+            NEXT FIELD nmbr002                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbr002
+            #add-point:BEFORE FIELD nmbr002 name="construct.b.page1.nmbr002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbr002
+            
+            #add-point:AFTER FIELD nmbr002 name="construct.a.page1.nmbr002"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbr003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbr003
+            #add-point:ON ACTION controlp INFIELD nmbr003 name="construct.c.page1.nmbr003"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " nmas002 IN (",g_sql_bank,")"
+            CALL q_nmas_01()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbr003  #顯示到畫面上
+            NEXT FIELD nmbr003                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbr003
+            #add-point:BEFORE FIELD nmbr003 name="construct.b.page1.nmbr003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbr003
+            
+            #add-point:AFTER FIELD nmbr003 name="construct.a.page1.nmbr003"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbr003_desc
+            #add-point:BEFORE FIELD nmbr003_desc name="construct.b.page1.nmbr003_desc"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbr003_desc
+            
+            #add-point:AFTER FIELD nmbr003_desc name="construct.a.page1.nmbr003_desc"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbr003_desc
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbr003_desc
+            #add-point:ON ACTION controlp INFIELD nmbr003_desc name="construct.c.page1.nmbr003_desc"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbr004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbr004
+            #add-point:ON ACTION controlp INFIELD nmbr004 name="construct.c.page1.nmbr004"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooef001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbr004  #顯示到畫面上
+            NEXT FIELD nmbr004                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbr004
+            #add-point:BEFORE FIELD nmbr004 name="construct.b.page1.nmbr004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbr004
+            
+            #add-point:AFTER FIELD nmbr004 name="construct.a.page1.nmbr004"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbr005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbr005
+            #add-point:ON ACTION controlp INFIELD nmbr005 name="construct.c.page1.nmbr005"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_nmas001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbr005  #顯示到畫面上
+            NEXT FIELD nmbr005                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbr005
+            #add-point:BEFORE FIELD nmbr005 name="construct.b.page1.nmbr005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbr005
+            
+            #add-point:AFTER FIELD nmbr005 name="construct.a.page1.nmbr005"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbr005_desc
+            #add-point:BEFORE FIELD nmbr005_desc name="construct.b.page1.nmbr005_desc"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbr005_desc
+            
+            #add-point:AFTER FIELD nmbr005_desc name="construct.a.page1.nmbr005_desc"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbr005_desc
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbr005_desc
+            #add-point:ON ACTION controlp INFIELD nmbr005_desc name="construct.c.page1.nmbr005_desc"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbr006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbr006
+            #add-point:ON ACTION controlp INFIELD nmbr006 name="construct.c.page1.nmbr006"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_aooi001_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbr006  #顯示到畫面上
+            NEXT FIELD nmbr006                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbr006
+            #add-point:BEFORE FIELD nmbr006 name="construct.b.page1.nmbr006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbr006
+            
+            #add-point:AFTER FIELD nmbr006 name="construct.a.page1.nmbr006"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbr007
+            #add-point:BEFORE FIELD nmbr007 name="construct.b.page1.nmbr007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbr007
+            
+            #add-point:AFTER FIELD nmbr007 name="construct.a.page1.nmbr007"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page1.nmbr007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbr007
+            #add-point:ON ACTION controlp INFIELD nmbr007 name="construct.c.page1.nmbr007"
+            
+            #END add-point
+ 
+ 
+   
+       
+      END CONSTRUCT
+      
+      CONSTRUCT g_wc2_table2 ON nmbwseq,nmbw001,nmbw004,nmbw002,nmbw003,nmbw005,nmbo008,nmbw007,nmbw006 
+ 
+           FROM s_detail2[1].nmbwseq,s_detail2[1].nmbw001,s_detail2[1].nmbw004,s_detail2[1].nmbw002, 
+               s_detail2[1].nmbw003,s_detail2[1].nmbw005,s_detail2[1].nmbo008,s_detail2[1].nmbw007,s_detail2[1].nmbw006 
+ 
+                      
+         BEFORE CONSTRUCT
+            #add-point:cs段before_construct name="cs.body2.before_construct"
+            
+            #end add-point 
+            
+       #單身公用欄位開窗相關處理(table 2)
+       
+       
+       #單身一般欄位開窗相關處理       
+                #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbwseq
+            #add-point:BEFORE FIELD nmbwseq name="construct.b.page2.nmbwseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbwseq
+            
+            #add-point:AFTER FIELD nmbwseq name="construct.a.page2.nmbwseq"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmbwseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbwseq
+            #add-point:ON ACTION controlp INFIELD nmbwseq name="construct.c.page2.nmbwseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbw001
+            #add-point:BEFORE FIELD nmbw001 name="construct.b.page2.nmbw001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbw001
+            
+            #add-point:AFTER FIELD nmbw001 name="construct.a.page2.nmbw001"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmbw001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbw001
+            #add-point:ON ACTION controlp INFIELD nmbw001 name="construct.c.page2.nmbw001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.page2.nmbw004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbw004
+            #add-point:ON ACTION controlp INFIELD nmbw004 name="construct.c.page2.nmbw004"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_nmbr002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbw004  #顯示到畫面上
+            NEXT FIELD nmbw004                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbw004
+            #add-point:BEFORE FIELD nmbw004 name="construct.b.page2.nmbw004"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbw004
+            
+            #add-point:AFTER FIELD nmbw004 name="construct.a.page2.nmbw004"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmbw002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbw002
+            #add-point:ON ACTION controlp INFIELD nmbw002 name="construct.c.page2.nmbw002"
+            #應用 a08 樣板自動產生(Version:3)
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_nmbqdocno()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO nmbw002  #顯示到畫面上
+            NEXT FIELD nmbw002                     #返回原欄位
+    
+
+
+
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbw002
+            #add-point:BEFORE FIELD nmbw002 name="construct.b.page2.nmbw002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbw002
+            
+            #add-point:AFTER FIELD nmbw002 name="construct.a.page2.nmbw002"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbw003
+            #add-point:BEFORE FIELD nmbw003 name="construct.b.page2.nmbw003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbw003
+            
+            #add-point:AFTER FIELD nmbw003 name="construct.a.page2.nmbw003"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmbw003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbw003
+            #add-point:ON ACTION controlp INFIELD nmbw003 name="construct.c.page2.nmbw003"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbw005
+            #add-point:BEFORE FIELD nmbw005 name="construct.b.page2.nmbw005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbw005
+            
+            #add-point:AFTER FIELD nmbw005 name="construct.a.page2.nmbw005"
+            LET g_nmbr2_d_o.* = g_nmbr2_d[l_ac].* #160824-00007#325 170119 By 08171 add
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmbw005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbw005
+            #add-point:ON ACTION controlp INFIELD nmbw005 name="construct.c.page2.nmbw005"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbo008
+            #add-point:BEFORE FIELD nmbo008 name="construct.b.page2.nmbo008"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbo008
+            
+            #add-point:AFTER FIELD nmbo008 name="construct.a.page2.nmbo008"
+            LET g_nmbr2_d_o.* = g_nmbr2_d[l_ac].* #160824-00007#325 170119 By 08171 add
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmbo008
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbo008
+            #add-point:ON ACTION controlp INFIELD nmbo008 name="construct.c.page2.nmbo008"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbw007
+            #add-point:BEFORE FIELD nmbw007 name="construct.b.page2.nmbw007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbw007
+            
+            #add-point:AFTER FIELD nmbw007 name="construct.a.page2.nmbw007"
+            LET g_nmbr2_d_o.* = g_nmbr2_d[l_ac].* #160824-00007#325 170119 By 08171 add
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmbw007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbw007
+            #add-point:ON ACTION controlp INFIELD nmbw007 name="construct.c.page2.nmbw007"
+            
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbw006
+            #add-point:BEFORE FIELD nmbw006 name="construct.b.page2.nmbw006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbw006
+            
+            #add-point:AFTER FIELD nmbw006 name="construct.a.page2.nmbw006"
+            
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.page2.nmbw006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbw006
+            #add-point:ON ACTION controlp INFIELD nmbw006 name="construct.c.page2.nmbw006"
+            
+            #END add-point
+ 
+ 
+   
+       
+      END CONSTRUCT
+ 
+ 
+      
+ 
+      
+      #add-point:cs段add_cs(本段內只能出現新的CONSTRUCT指令) name="cs.add_cs"
+      
+      #end add-point
+ 
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog name="cs.b_dialog"
+         
+         #end add-point  
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+         IF NOT cl_null(ls_wc) THEN
+            CALL util.JSON.parse(ls_wc, la_wc)
+            INITIALIZE g_wc, g_wc2, g_wc2_table1, g_wc2_extend TO NULL
+            INITIALIZE g_wc2_table2 TO NULL
+ 
+ 
+            FOR li_idx = 1 TO la_wc.getLength()
+               CASE
+                  WHEN la_wc[li_idx].tableid = "nmbq_t" 
+                     LET g_wc = la_wc[li_idx].wc
+                  WHEN la_wc[li_idx].tableid = "nmbr_t" 
+                     LET g_wc2_table1 = la_wc[li_idx].wc
+                  WHEN la_wc[li_idx].tableid = "nmbw_t" 
+                     LET g_wc2_table2 = la_wc[li_idx].wc
+ 
+ 
+               END CASE
+            END FOR
+         END IF
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   END DIALOG
+   
+   #組合g_wc2
+   LET g_wc2 = g_wc2_table1
+   IF g_wc2_table2 <> " 1=1" THEN
+      LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+   END IF
+ 
+ 
+ 
+ 
+   
+   #add-point:cs段結束前 name="cs.after_construct"
+   
+   #end add-point    
+ 
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.query" >}
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION anmt960_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   
+   #end add-point   
+   DEFINE ls_wc STRING
+   #add-point:query段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="query.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   
+   LET ls_wc = g_wc
+   
+   LET INT_FLAG = 0
+   CALL cl_navigator_setting( g_current_idx, g_detail_cnt )
+   ERROR ""
+   
+   #清除畫面及相關資料
+   CLEAR FORM
+   CALL g_browser.clear()       
+   CALL g_nmbr_d.clear()
+   CALL g_nmbr2_d.clear()
+ 
+   
+   #add-point:query段other name="query.other"
+   CALL g_nmbr3_d.clear()
+   #end add-point   
+   
+   DISPLAY '' TO FORMONLY.idx
+   DISPLAY '' TO FORMONLY.cnt
+   DISPLAY '' TO FORMONLY.b_index
+   DISPLAY '' TO FORMONLY.b_count
+   DISPLAY '' TO FORMONLY.h_index
+   DISPLAY '' TO FORMONLY.h_count
+   
+   CALL anmt960_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      #LET g_wc = ls_wc
+      LET g_wc = " 1=2"
+      CALL anmt960_browser_fill("")
+      CALL anmt960_fetch("")
+      RETURN
+   END IF
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||") AND ("||g_wc2||")")
+   
+   #搜尋後資料初始化 
+   LET g_detail_cnt  = 0
+   LET g_current_idx = 1
+   LET g_current_row = 0
+   LET g_detail_idx  = 1
+   LET g_detail_idx2 = 1
+   LET g_detail_idx_list[1] = 1
+   LET g_detail_idx_list[2] = 1
+ 
+   LET g_error_show  = 1
+   LET g_wc_filter   = ""
+   LET l_ac = 1
+   CALL FGL_SET_ARR_CURR(1)
+   CALL anmt960_browser_fill("F")
+         
+   IF g_browser_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "-100" 
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+   ELSE
+      CALL anmt960_fetch("F") 
+      #顯示單身筆數
+      CALL anmt960_idx_chk()
+   END IF
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.fetch" >}
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION anmt960_fetch(p_flag)
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   
+   #end add-point    
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="fetch.pre_function"
+   
+   #end add-point
+   
+   IF g_browser_cnt = 0 THEN
+      RETURN
+   END IF
+ 
+   #清空第二階單身
+ 
+   
+   CALL cl_ap_performance_next_start()
+   CASE p_flag
+      WHEN 'F' 
+         LET g_current_idx = 1
+      WHEN 'L'  
+         LET g_current_idx = g_browser.getLength()              
+      WHEN 'P'
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN 'N'
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN '/'
+         IF (NOT g_no_ask) THEN    
+            CALL cl_set_act_visible("accept,cancel", TRUE)    
+            CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,':' FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl" 
+            END PROMPT
+ 
+            CALL cl_set_act_visible("accept,cancel", FALSE)    
+            IF INT_FLAG THEN
+                LET INT_FLAG = 0
+                EXIT CASE  
+            END IF           
+         END IF
+         
+         IF g_jump > 0 AND g_jump <= g_browser.getLength() THEN
+             LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE  
+   END CASE 
+ 
+   
+   LET g_current_row = g_current_idx
+   LET g_detail_cnt = g_header_cnt                  
+   
+   #單身總筆數顯示
+   IF g_detail_cnt > 0 THEN
+      #若單身有資料時, idx至少為1
+      IF g_detail_idx <= 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx  
+   ELSE
+      LET g_detail_idx = 0
+      DISPLAY '' TO FORMONLY.idx    
+   END IF
+   
+   #瀏覽頁筆數顯示
+   LET g_pagestart = g_current_idx
+   DISPLAY g_pagestart TO FORMONLY.b_index   #當下筆數
+   DISPLAY g_pagestart TO FORMONLY.h_index   #當下筆數
+   
+   CALL cl_navigator_setting( g_pagestart, g_browser_cnt )
+ 
+   #代表沒有資料
+   IF g_current_idx = 0 OR g_browser.getLength() = 0 THEN
+      RETURN
+   END IF
+   
+   #避免超出browser資料筆數上限
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_browser_idx = g_browser.getLength()
+      LET g_current_idx = g_browser.getLength()
+   END IF
+   
+   LET g_nmbq_m.nmbqdocno = g_browser[g_current_idx].b_nmbqdocno
+ 
+   
+   #重讀DB,因TEMP有不被更新特性
+   EXECUTE anmt960_master_referesh USING g_nmbq_m.nmbqdocno INTO g_nmbq_m.nmbq001,g_nmbq_m.nmbqdocno, 
+       g_nmbq_m.nmbqdocdt,g_nmbq_m.nmbqstus,g_nmbq_m.nmbqownid,g_nmbq_m.nmbqowndp,g_nmbq_m.nmbqcrtid, 
+       g_nmbq_m.nmbqcrtdp,g_nmbq_m.nmbqcrtdt,g_nmbq_m.nmbqmodid,g_nmbq_m.nmbqmoddt,g_nmbq_m.nmbqcnfid, 
+       g_nmbq_m.nmbqcnfdt,g_nmbq_m.nmbq001_desc,g_nmbq_m.nmbqownid_desc,g_nmbq_m.nmbqowndp_desc,g_nmbq_m.nmbqcrtid_desc, 
+       g_nmbq_m.nmbqcrtdp_desc,g_nmbq_m.nmbqmodid_desc,g_nmbq_m.nmbqcnfid_desc
+   
+   #遮罩相關處理
+   LET g_nmbq_m_mask_o.* =  g_nmbq_m.*
+   CALL anmt960_nmbq_t_mask()
+   LET g_nmbq_m_mask_n.* =  g_nmbq_m.*
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL anmt960_set_act_visible()   
+   CALL anmt960_set_act_no_visible()
+   
+   #add-point:fetch段action控制 name="fetch.action_control"
+   
+   #end add-point  
+   
+   
+   
+   #add-point:fetch結束前 name="fetch.after"
+   
+   #end add-point
+   
+   #保存單頭舊值
+   LET g_nmbq_m_t.* = g_nmbq_m.*
+   LET g_nmbq_m_o.* = g_nmbq_m.*
+   
+   LET g_data_owner = g_nmbq_m.nmbqownid      
+   LET g_data_dept  = g_nmbq_m.nmbqowndp
+   
+   #重新顯示   
+   CALL anmt960_show()
+ 
+   
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION anmt960_insert()
+   #add-point:insert段define(客製用) name="insert.define_customerization"
+   
+   #end add-point    
+   #add-point:insert段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="insert.pre_function"
+   
+   #end add-point
+   
+   #清畫面欄位內容
+   CLEAR FORM                    
+   CALL g_nmbr_d.clear()   
+   CALL g_nmbr2_d.clear()  
+ 
+ 
+   INITIALIZE g_nmbq_m.* TO NULL             #DEFAULT 設定
+   
+   LET g_nmbqdocno_t = NULL
+ 
+   
+   LET g_master_insert = FALSE
+   
+   #add-point:insert段before name="insert.before"
+   CALL g_nmbr3_d.clear()
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   WHILE TRUE
+      #公用欄位給值(單頭)
+      #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_nmbq_m.nmbqownid = g_user
+      LET g_nmbq_m.nmbqowndp = g_dept
+      LET g_nmbq_m.nmbqcrtid = g_user
+      LET g_nmbq_m.nmbqcrtdp = g_dept 
+      LET g_nmbq_m.nmbqcrtdt = cl_get_current()
+      LET g_nmbq_m.nmbqmodid = g_user
+      LET g_nmbq_m.nmbqmoddt = cl_get_current()
+      LET g_nmbq_m.nmbqstus = 'N'
+ 
+ 
+ 
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+      
+  
+      #add-point:單頭預設值 name="insert.default"
+      LET g_nmbq_m.nmbqdocdt = g_today
+       
+      CALL s_anm_get_comp_wc('6',g_nmbq_m.nmbq001,g_nmbq_m.nmbqdocdt) RETURNING g_comp_wc  #160816-00012#3      
+      #end add-point 
+      
+      #保存單頭舊值(用於資料輸入錯誤還原預設值時使用)
+      LET g_nmbq_m_t.* = g_nmbq_m.*
+      LET g_nmbq_m_o.* = g_nmbq_m.*
+      
+      #顯示狀態(stus)圖片
+            #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_nmbq_m.nmbqstus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+ 
+ 
+ 
+    
+      CALL anmt960_input("a")
+      
+      #add-point:單頭輸入後 name="insert.after_insert"
+      
+      #end add-point
+      
+      IF INT_FLAG THEN
+         LET INT_FLAG = 0
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code = 9001 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+      END IF
+      
+      IF NOT g_master_insert THEN
+         DISPLAY g_detail_cnt  TO FORMONLY.h_count    #總筆數
+         DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+         INITIALIZE g_nmbq_m.* TO NULL
+         INITIALIZE g_nmbr_d TO NULL
+         INITIALIZE g_nmbr2_d TO NULL
+ 
+         #add-point:取消新增後 name="insert.cancel"
+         
+         #end add-point 
+         CALL anmt960_show()
+         RETURN
+      END IF
+      
+      LET INT_FLAG = 0
+      #CALL g_nmbr_d.clear()
+      #CALL g_nmbr2_d.clear()
+ 
+ 
+      LET g_rec_b = 0
+      CALL s_transaction_end('Y','0')
+      EXIT WHILE
+        
+   END WHILE
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL anmt960_set_act_visible()   
+   CALL anmt960_set_act_no_visible()
+   
+   #將新增的資料併入搜尋條件中
+   LET g_nmbqdocno_t = g_nmbq_m.nmbqdocno
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " nmbqent = " ||g_enterprise|| " AND",
+                      " nmbqdocno = '", g_nmbq_m.nmbqdocno, "' "
+ 
+                      
+   #add-point:組合新增資料的條件後 name="insert.after.add_browse"
+   
+   #end add-point
+      
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL anmt960_browser_fill("")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   CLOSE anmt960_cl
+   
+   CALL anmt960_idx_chk()
+   
+   #撈取異動後的資料(主要是帶出reference)
+   EXECUTE anmt960_master_referesh USING g_nmbq_m.nmbqdocno INTO g_nmbq_m.nmbq001,g_nmbq_m.nmbqdocno, 
+       g_nmbq_m.nmbqdocdt,g_nmbq_m.nmbqstus,g_nmbq_m.nmbqownid,g_nmbq_m.nmbqowndp,g_nmbq_m.nmbqcrtid, 
+       g_nmbq_m.nmbqcrtdp,g_nmbq_m.nmbqcrtdt,g_nmbq_m.nmbqmodid,g_nmbq_m.nmbqmoddt,g_nmbq_m.nmbqcnfid, 
+       g_nmbq_m.nmbqcnfdt,g_nmbq_m.nmbq001_desc,g_nmbq_m.nmbqownid_desc,g_nmbq_m.nmbqowndp_desc,g_nmbq_m.nmbqcrtid_desc, 
+       g_nmbq_m.nmbqcrtdp_desc,g_nmbq_m.nmbqmodid_desc,g_nmbq_m.nmbqcnfid_desc
+   
+   
+   #遮罩相關處理
+   LET g_nmbq_m_mask_o.* =  g_nmbq_m.*
+   CALL anmt960_nmbq_t_mask()
+   LET g_nmbq_m_mask_n.* =  g_nmbq_m.*
+   
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_nmbq_m.nmbq001,g_nmbq_m.nmbq001_desc,g_nmbq_m.nmbqdocno,g_nmbq_m.nmbqdocdt,g_nmbq_m.nmbqstus, 
+       g_nmbq_m.nmbqownid,g_nmbq_m.nmbqownid_desc,g_nmbq_m.nmbqowndp,g_nmbq_m.nmbqowndp_desc,g_nmbq_m.nmbqcrtid, 
+       g_nmbq_m.nmbqcrtid_desc,g_nmbq_m.nmbqcrtdp,g_nmbq_m.nmbqcrtdp_desc,g_nmbq_m.nmbqcrtdt,g_nmbq_m.nmbqmodid, 
+       g_nmbq_m.nmbqmodid_desc,g_nmbq_m.nmbqmoddt,g_nmbq_m.nmbqcnfid,g_nmbq_m.nmbqcnfid_desc,g_nmbq_m.nmbqcnfdt 
+ 
+   
+   #add-point:新增結束後 name="insert.after"
+   
+   #end add-point 
+   
+   LET g_data_owner = g_nmbq_m.nmbqownid      
+   LET g_data_dept  = g_nmbq_m.nmbqowndp
+   
+   #功能已完成,通報訊息中心
+   CALL anmt960_msgcentre_notify('insert')
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION anmt960_modify()
+   #add-point:modify段define(客製用) name="modify.define_customerization"
+   
+   #end add-point    
+   DEFINE l_new_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key    DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key  DYNAMIC ARRAY OF STRING
+   DEFINE l_wc2_table1          STRING
+   DEFINE l_wc2_table2   STRING
+ 
+ 
+ 
+   #add-point:modify段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="modify.pre_function"
+   
+   #end add-point
+   
+   #保存單頭舊值
+   LET g_nmbq_m_t.* = g_nmbq_m.*
+   LET g_nmbq_m_o.* = g_nmbq_m.*
+   
+   IF g_nmbq_m.nmbqdocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "std-00003" 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   ERROR ""
+  
+   LET g_nmbqdocno_t = g_nmbq_m.nmbqdocno
+ 
+   CALL s_transaction_begin()
+   
+   OPEN anmt960_cl USING g_enterprise,g_nmbq_m.nmbqdocno
+   IF SQLCA.SQLCODE THEN   #(ver:78)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN anmt960_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+      LET g_errparam.popup = TRUE 
+      CLOSE anmt960_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE anmt960_master_referesh USING g_nmbq_m.nmbqdocno INTO g_nmbq_m.nmbq001,g_nmbq_m.nmbqdocno, 
+       g_nmbq_m.nmbqdocdt,g_nmbq_m.nmbqstus,g_nmbq_m.nmbqownid,g_nmbq_m.nmbqowndp,g_nmbq_m.nmbqcrtid, 
+       g_nmbq_m.nmbqcrtdp,g_nmbq_m.nmbqcrtdt,g_nmbq_m.nmbqmodid,g_nmbq_m.nmbqmoddt,g_nmbq_m.nmbqcnfid, 
+       g_nmbq_m.nmbqcnfdt,g_nmbq_m.nmbq001_desc,g_nmbq_m.nmbqownid_desc,g_nmbq_m.nmbqowndp_desc,g_nmbq_m.nmbqcrtid_desc, 
+       g_nmbq_m.nmbqcrtdp_desc,g_nmbq_m.nmbqmodid_desc,g_nmbq_m.nmbqcnfid_desc
+   
+   #檢查是否允許此動作
+   IF NOT anmt960_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_nmbq_m_mask_o.* =  g_nmbq_m.*
+   CALL anmt960_nmbq_t_mask()
+   LET g_nmbq_m_mask_n.* =  g_nmbq_m.*
+   
+   
+   
+   #add-point:modify段show之前 name="modify.before_show"
+   
+   #end add-point  
+   
+   #LET l_wc2_table1 = g_wc2_table1
+   #LET g_wc2_table1 = " 1=1"
+   #LET l_wc2_table2 = g_wc2_table2
+   #LET l_wc2_table2 = " 1=1"
+ 
+ 
+ 
+   
+   CALL anmt960_show()
+   #add-point:modify段show之後 name="modify.after_show"
+   
+   #end add-point
+   
+   #LET g_wc2_table1 = l_wc2_table1
+   #LET  g_wc2_table2 = l_wc2_table2 
+ 
+ 
+ 
+    
+   WHILE TRUE
+      LET g_nmbqdocno_t = g_nmbq_m.nmbqdocno
+ 
+      
+      #寫入修改者/修改日期資訊(單頭)
+      LET g_nmbq_m.nmbqmodid = g_user 
+LET g_nmbq_m.nmbqmoddt = cl_get_current()
+LET g_nmbq_m.nmbqmodid_desc = cl_get_username(g_nmbq_m.nmbqmodid)
+      
+      #add-point:modify段修改前 name="modify.before_input"
+      
+      #end add-point
+      
+      #欄位更改
+      LET g_loc = 'n'
+      LET g_update = FALSE
+      LET g_master_commit = "N"
+      CALL anmt960_input("u")
+      LET g_loc = 'n'
+ 
+      #add-point:modify段修改後 name="modify.after_input"
+      
+      #end add-point
+      
+      IF g_update OR NOT INT_FLAG THEN
+         #若有modid跟moddt則進行update
+         UPDATE nmbq_t SET (nmbqmodid,nmbqmoddt) = (g_nmbq_m.nmbqmodid,g_nmbq_m.nmbqmoddt)
+          WHERE nmbqent = g_enterprise AND nmbqdocno = g_nmbqdocno_t
+ 
+      END IF
+    
+      IF INT_FLAG THEN
+         CALL s_transaction_end('N','0')
+         LET INT_FLAG = 0
+         #若單頭無commit則還原
+         IF g_master_commit = "N" THEN
+            LET g_nmbq_m.* = g_nmbq_m_t.*
+            CALL anmt960_show()
+         END IF
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = '' 
+         LET g_errparam.code = 9001 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+         RETURN
+      END IF 
+                  
+      #若單頭key欄位有變更
+      IF g_nmbq_m.nmbqdocno != g_nmbq_m_t.nmbqdocno
+ 
+      THEN
+         CALL s_transaction_begin()
+         
+         #add-point:單身fk修改前 name="modify.body.b_fk_update"
+         
+         #end add-point
+         
+         #更新單身key值
+         UPDATE nmbr_t SET nmbrdocno = g_nmbq_m.nmbqdocno
+ 
+          WHERE nmbrent = g_enterprise AND nmbrdocno = g_nmbq_m_t.nmbqdocno
+ 
+            
+         #add-point:單身fk修改中 name="modify.body.m_fk_update"
+         
+         #end add-point
+ 
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            #   INITIALIZE g_errparam TO NULL 
+            #   LET g_errparam.extend = "nmbr_t" 
+            #   LET g_errparam.code = "std-00009" 
+            #   LET g_errparam.popup = TRUE 
+            #   CALL cl_err()
+            #   CALL s_transaction_end('N','0')
+            #   CONTINUE WHILE
+            WHEN SQLCA.SQLCODE #其他錯誤
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "nmbr_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CONTINUE WHILE
+         END CASE
+         
+         #add-point:單身fk修改後 name="modify.body.a_fk_update"
+         
+         #end add-point
+         
+         #更新單身key值
+         #add-point:單身fk修改前 name="modify.body.b_fk_update2"
+         
+         #end add-point
+         
+         UPDATE nmbw_t
+            SET nmbwdocno = g_nmbq_m.nmbqdocno
+ 
+          WHERE nmbwent = g_enterprise AND
+                nmbwdocno = g_nmbqdocno_t
+ 
+         #add-point:單身fk修改中 name="modify.body.m_fk_update2"
+         
+         #end add-point
+         CASE
+            WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            #   INITIALIZE g_errparam TO NULL 
+            #   LET g_errparam.extend = "nmbw_t" 
+            #   LET g_errparam.code = "std-00009" 
+            #   LET g_errparam.popup = TRUE 
+            #   CALL cl_err()
+            #   CALL s_transaction_end('N','0')
+            #   CONTINUE WHILE
+            WHEN SQLCA.SQLCODE #其他錯誤
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "nmbw_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CONTINUE WHILE
+         END CASE
+         #add-point:單身fk修改後 name="modify.body.a_fk_update2"
+         
+         #end add-point
+ 
+ 
+         
+ 
+         
+         #UPDATE 多語言table key值
+         
+         
+ 
+         CALL s_transaction_end('Y','0')
+      END IF
+    
+      EXIT WHILE
+   END WHILE
+ 
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL anmt960_set_act_visible()   
+   CALL anmt960_set_act_no_visible()
+ 
+   #組合新增資料的條件
+   LET g_add_browse = " nmbqent = " ||g_enterprise|| " AND",
+                      " nmbqdocno = '", g_nmbq_m.nmbqdocno, "' "
+ 
+   #填到對應位置
+   CALL anmt960_browser_fill("")
+ 
+   CLOSE anmt960_cl
+   
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL anmt960_msgcentre_notify('modify')
+ 
+END FUNCTION 
+ 
+{</section>}
+ 
+{<section id="anmt960.input" >}
+#+ 資料輸入
+PRIVATE FUNCTION anmt960_input(p_cmd)
+   #add-point:input段define(客製用) name="input.define_customerization"
+   
+   #end add-point  
+   DEFINE  p_cmd                 LIKE type_t.chr1
+   DEFINE  l_cmd_t               LIKE type_t.chr1
+   DEFINE  l_cmd                 LIKE type_t.chr1
+   DEFINE  l_n                   LIKE type_t.num10                #檢查重複用  
+   DEFINE  l_cnt                 LIKE type_t.num10                #檢查重複用  
+   DEFINE  l_lock_sw             LIKE type_t.chr1                #單身鎖住否  
+   DEFINE  l_allow_insert        LIKE type_t.num5                #可新增否 
+   DEFINE  l_allow_delete        LIKE type_t.num5                #可刪除否  
+   DEFINE  l_count               LIKE type_t.num10
+   DEFINE  l_i                   LIKE type_t.num10
+   DEFINE  l_ac_t                LIKE type_t.num10
+   DEFINE  l_insert              BOOLEAN
+   DEFINE  ls_return             STRING
+   DEFINE  l_var_keys            DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys          DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars                DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields              DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak        DYNAMIC ARRAY OF STRING
+   DEFINE  lb_reproduce          BOOLEAN
+   DEFINE  li_reproduce          LIKE type_t.num10
+   DEFINE  li_reproduce_target   LIKE type_t.num10
+   DEFINE  ls_keys               DYNAMIC ARRAY OF VARCHAR(500)
+   #add-point:input段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE  l_glaa024             LIKE glaa_t.glaa024
+   DEFINE  l_success             LIKE type_t.num5
+   DEFINE  l_nmbw006             LIKE nmbw_t.nmbw006
+   DEFINE  g_site_wc             STRING #160912-00024#1 
+   DEFINE  l_origin_str          STRING #160912-00024#1 
+   #end add-point  
+   
+   #add-point:Function前置處理  name="input.pre_function"
+   
+   #end add-point
+   
+   #先做狀態判定
+   IF p_cmd = 'r' THEN
+      LET l_cmd_t = 'r'
+      LET p_cmd   = 'a'
+   ELSE
+      LET l_cmd_t = p_cmd
+   END IF   
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_nmbq_m.nmbq001,g_nmbq_m.nmbq001_desc,g_nmbq_m.nmbqdocno,g_nmbq_m.nmbqdocdt,g_nmbq_m.nmbqstus, 
+       g_nmbq_m.nmbqownid,g_nmbq_m.nmbqownid_desc,g_nmbq_m.nmbqowndp,g_nmbq_m.nmbqowndp_desc,g_nmbq_m.nmbqcrtid, 
+       g_nmbq_m.nmbqcrtid_desc,g_nmbq_m.nmbqcrtdp,g_nmbq_m.nmbqcrtdp_desc,g_nmbq_m.nmbqcrtdt,g_nmbq_m.nmbqmodid, 
+       g_nmbq_m.nmbqmodid_desc,g_nmbq_m.nmbqmoddt,g_nmbq_m.nmbqcnfid,g_nmbq_m.nmbqcnfid_desc,g_nmbq_m.nmbqcnfdt 
+ 
+   
+   #切換畫面
+ 
+   CALL cl_set_head_visible("","YES")  
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   #add-point:input段define_sql name="input.define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = "SELECT nmbrseq,nmbr001,nmbr002,nmbr003,nmbr004,nmbr005,nmbr006,nmbr007 FROM nmbr_t  
+       WHERE nmbrent=? AND nmbrdocno=? AND nmbrseq=? FOR UPDATE"
+   #add-point:input段define_sql name="input.after_define_sql"
+   
+   #end add-point 
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE anmt960_bcl CURSOR FROM g_forupd_sql
+   
+   #add-point:input段define_sql name="input.define_sql2"
+   
+   #end add-point    
+   LET g_forupd_sql = "SELECT nmbwseq,nmbw001,nmbw004,nmbw002,nmbw003,nmbw005,nmbw007,nmbw006 FROM nmbw_t  
+       WHERE nmbwent=? AND nmbwdocno=? AND nmbwseq=? FOR UPDATE"
+   #add-point:input段define_sql name="input.after_define_sql2"
+   
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE anmt960_bcl2 CURSOR FROM g_forupd_sql
+ 
+ 
+   
+ 
+ 
+   #add-point:input段define_sql name="input.other_sql"
+   
+   #end add-point 
+ 
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   LET g_qryparam.state = 'i'
+   
+   #控制key欄位可否輸入
+   CALL anmt960_set_entry(p_cmd)
+   #add-point:set_entry後 name="input.after_set_entry"
+   
+   #end add-point
+   CALL anmt960_set_no_entry(p_cmd)
+ 
+   DISPLAY BY NAME g_nmbq_m.nmbq001,g_nmbq_m.nmbqdocno,g_nmbq_m.nmbqdocdt,g_nmbq_m.nmbqstus
+   
+   LET lb_reproduce = FALSE
+   LET l_ac_t = 1
+   
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+   
+   #add-point:資料輸入前 name="input.before_input"
+   LET g_errshow = 1
+
+   CALL s_anm_get_comp_wc('6',g_nmbq_m.nmbq001,g_nmbq_m.nmbqdocdt) RETURNING g_comp_wc  #160816-00012#3
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+{</section>}
+ 
+{<section id="anmt960.input.head" >}
+      #單頭段
+      INPUT BY NAME g_nmbq_m.nmbq001,g_nmbq_m.nmbqdocno,g_nmbq_m.nmbqdocdt,g_nmbq_m.nmbqstus 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+     
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            OPEN anmt960_cl USING g_enterprise,g_nmbq_m.nmbqdocno
+            IF SQLCA.SQLCODE THEN   #(ver:78)
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN anmt960_cl:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+               LET g_errparam.popup = TRUE 
+               CLOSE anmt960_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               RETURN
+            END IF
+            
+            IF l_cmd_t = 'r' THEN
+               
+            END IF
+            #因應離開單頭後已寫入資料庫, 若重新回到單頭則視為修改
+            #因此需於此處開啟/關閉欄位
+            CALL anmt960_set_entry(p_cmd)
+            #add-point:資料輸入前 name="input.m.before_input"
+            
+            #end add-point
+            CALL anmt960_set_no_entry(p_cmd)
+    
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbq001
+            
+            #add-point:AFTER FIELD nmbq001 name="input.a.nmbq001"
+            IF NOT cl_null(g_nmbq_m.nmbq001) THEN    
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL      
+               
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_nmbq_m.nmbq001
+            
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooef001_25") THEN
+                  #檢查成功時後續處理
+#160816-00012#3 mod s---                  
+#                  SELECT ooef017 INTO g_comp
+#                    FROM ooef_t
+#                   WHERE ooefent = g_enterprise
+#                     AND ooef001 = g_nmbq_m.nmbq001
+#                     
+#                  SELECT glaald INTO g_ld
+#                    FROM glaa_t
+#                   WHERE glaacomp = g_comp
+#                     AND glaaent = g_enterprise
+#                     AND glaa014 = 'Y'
+#                  CALL anmt960_get_comp_wc(g_nmbq_m.nmbq001) RETURNING g_comp_wc 
+                  CALL s_anm_get_comp_wc('6',g_nmbq_m.nmbq001,g_nmbq_m.nmbqdocdt) RETURNING g_comp_wc
+#160816-00012#3 mod e---
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_nmbq_m.nmbq001 = g_nmbq_m_t.nmbq001
+                  CALL s_desc_get_department_desc(g_nmbq_m.nmbq001) RETURNING g_nmbq_m.nmbq001_desc
+                  DISPLAY g_nmbq_m.nmbq001_desc TO nmbq001_desc                        
+                  NEXT FIELD CURRENT
+               END IF
+            
+            END IF 
+            CALL s_desc_get_department_desc(g_nmbq_m.nmbq001) RETURNING g_nmbq_m.nmbq001_desc
+            DISPLAY g_nmbq_m.nmbq001_desc TO nmbq001_desc          
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbq001
+            #add-point:BEFORE FIELD nmbq001 name="input.b.nmbq001"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbq001
+            #add-point:ON CHANGE nmbq001 name="input.g.nmbq001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbqdocno
+            #add-point:BEFORE FIELD nmbqdocno name="input.b.nmbqdocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbqdocno
+            
+            #add-point:AFTER FIELD nmbqdocno name="input.a.nmbqdocno"
+            #應用 a05 樣板自動產生(Version:3)
+            #確認資料無重複
+            IF  NOT cl_null(g_nmbq_m.nmbqdocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_nmbq_m.nmbqdocno != g_nmbqdocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM nmbq_t WHERE "||"nmbqent = '" ||g_enterprise|| "' AND "||"nmbqdocno = '"||g_nmbq_m.nmbqdocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+            LET l_glaa024 = ''
+            SELECT glaa024 INTO l_glaa024 FROM glaa_t WHERE glaaent = g_enterprise AND glaald = g_ld
+            IF NOT cl_null(g_ld) THEN 
+               CALL s_aooi200_fin_chk_slip(g_ld,l_glaa024,g_nmbq_m.nmbqdocno,'anmt960') RETURNING l_success
+               IF l_success = FALSE THEN 
+                  LET g_nmbq_m.nmbqdocno = ''
+                  NEXT FIELD nmbqdocno
+               END IF
+            END IF
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbqdocno
+            #add-point:ON CHANGE nmbqdocno name="input.g.nmbqdocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbqdocdt
+            #add-point:BEFORE FIELD nmbqdocdt name="input.b.nmbqdocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbqdocdt
+            
+            #add-point:AFTER FIELD nmbqdocdt name="input.a.nmbqdocdt"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbqdocdt
+            #add-point:ON CHANGE nmbqdocdt name="input.g.nmbqdocdt"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbqstus
+            #add-point:BEFORE FIELD nmbqstus name="input.b.nmbqstus"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbqstus
+            
+            #add-point:AFTER FIELD nmbqstus name="input.a.nmbqstus"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbqstus
+            #add-point:ON CHANGE nmbqstus name="input.g.nmbqstus"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.nmbq001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbq001
+            #add-point:ON ACTION controlp INFIELD nmbq001 name="input.c.nmbq001"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+ 
+            LET g_qryparam.default1 = g_nmbq_m.nmbq001             #給予default值
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+            LET g_qryparam.where = " ooefstus= 'Y' "           #161006-00005#37
+            CALL q_ooef001_33()                                #呼叫開窗
+ 
+            LET g_nmbq_m.nmbq001 = g_qryparam.return1              
+            DISPLAY g_nmbq_m.nmbq001 TO nmbq001              #
+            CALL s_desc_get_department_desc(g_nmbq_m.nmbq001) RETURNING g_nmbq_m.nmbq001_desc
+            DISPLAY g_nmbq_m.nmbq001_desc TO nmbq001_desc      
+            NEXT FIELD nmbq001                          #返回原欄位
+
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmbqdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbqdocno
+            #add-point:ON ACTION controlp INFIELD nmbqdocno name="input.c.nmbqdocno"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+ 
+            LET g_qryparam.default1 = g_nmbq_m.nmbqdocno             #給予default值
+            
+            LET l_glaa024 = ''
+            SELECT glaa024 INTO l_glaa024 FROM glaa_t WHERE glaaent = g_enterprise AND glaald = g_ld
+            
+            LET g_qryparam.arg1 = l_glaa024
+            #LET g_qryparam.arg2 = "anmt960"     #160705-00042#6 160711 by sakura mark
+            LET g_qryparam.arg2 = g_prog         #160705-00042#6 160711 by sakura add
+            CALL q_ooba002_1() 
+ 
+            LET g_nmbq_m.nmbqdocno = g_qryparam.return1              
+
+            DISPLAY g_nmbq_m.nmbqdocno TO nmbqdocno              #
+
+            NEXT FIELD nmbqdocno                          #返回原欄位
+
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmbqdocdt
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbqdocdt
+            #add-point:ON ACTION controlp INFIELD nmbqdocdt name="input.c.nmbqdocdt"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+ 
+            LET g_qryparam.default1 = g_nmbq_m.nmbqdocdt             #給予default值
+            LET g_qryparam.default2 = "" #g_nmbq_m.ooef001 #组织编号
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+ 
+            CALL q_ooef001()                                #呼叫開窗
+ 
+            LET g_nmbq_m.nmbqdocdt = g_qryparam.return1              
+            #LET g_nmbq_m.ooef001 = g_qryparam.return2 
+            DISPLAY g_nmbq_m.nmbqdocdt TO nmbqdocdt              #
+            #DISPLAY g_nmbq_m.ooef001 TO ooef001 #组织编号
+            NEXT FIELD nmbqdocdt                          #返回原欄位
+
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmbqstus
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbqstus
+            #add-point:ON ACTION controlp INFIELD nmbqstus name="input.c.nmbqstus"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+            
+         AFTER INPUT
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+ 
+            #CALL cl_err_collect_show()      #錯誤訊息統整顯示
+            #CALL cl_showmsg()
+            DISPLAY BY NAME g_nmbq_m.nmbqdocno
+                        
+            #add-point:單頭INPUT後 name="input.head.after_input"
+            
+            #end add-point
+                        
+            IF p_cmd <> 'u' THEN
+    
+               CALL s_transaction_begin()
+               
+               #add-point:單頭新增前 name="input.head.b_insert"
+               CALL s_aooi200_fin_gen_docno(g_ld,'','',g_nmbq_m.nmbqdocno,g_nmbq_m.nmbqdocdt,g_prog)
+               RETURNING l_success,g_nmbq_m.nmbqdocno
+               IF l_success  = 0  THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'apm-00003'
+                  LET g_errparam.extend = g_nmbq_m.nmbqdocno
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+
+                  NEXT FIELD nmbqdocno
+               END IF
+               DISPLAY BY NAME g_nmbq_m.nmbqdocno
+               #end add-point
+               
+               INSERT INTO nmbq_t (nmbqent,nmbq001,nmbqdocno,nmbqdocdt,nmbqstus,nmbqownid,nmbqowndp, 
+                   nmbqcrtid,nmbqcrtdp,nmbqcrtdt,nmbqmodid,nmbqmoddt,nmbqcnfid,nmbqcnfdt)
+               VALUES (g_enterprise,g_nmbq_m.nmbq001,g_nmbq_m.nmbqdocno,g_nmbq_m.nmbqdocdt,g_nmbq_m.nmbqstus, 
+                   g_nmbq_m.nmbqownid,g_nmbq_m.nmbqowndp,g_nmbq_m.nmbqcrtid,g_nmbq_m.nmbqcrtdp,g_nmbq_m.nmbqcrtdt, 
+                   g_nmbq_m.nmbqmodid,g_nmbq_m.nmbqmoddt,g_nmbq_m.nmbqcnfid,g_nmbq_m.nmbqcnfdt) 
+               IF SQLCA.SQLCODE THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "g_nmbq_m:",SQLERRMESSAGE 
+                  LET g_errparam.code = SQLCA.SQLCODE 
+                  LET g_errparam.popup = TRUE 
+                  CALL s_transaction_end('N','0')
+                  CALL cl_err()
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #add-point:單頭新增中 name="input.head.m_insert"
+               
+               #end add-point
+               
+               
+               
+               
+               #add-point:單頭新增後 name="input.head.a_insert"
+               
+               #end add-point
+               CALL s_transaction_end('Y','0') 
+               
+               IF l_cmd_t = 'r' AND p_cmd = 'a' THEN
+                  CALL anmt960_detail_reproduce()
+                  #因應特定程式需求, 重新刷新單身資料
+                  CALL anmt960_b_fill()
+                  CALL anmt960_b_fill2('0')
+               END IF
+               
+               #add-point:單頭新增後 name="input.head.a_insert2"
+               
+               #end add-point
+               
+               LET g_master_insert = TRUE
+               
+               LET p_cmd = 'u'
+            ELSE
+               CALL s_transaction_begin()
+            
+               #add-point:單頭修改前 name="input.head.b_update"
+               
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL anmt960_nmbq_t_mask_restore('restore_mask_o')
+               
+               UPDATE nmbq_t SET (nmbq001,nmbqdocno,nmbqdocdt,nmbqstus,nmbqownid,nmbqowndp,nmbqcrtid, 
+                   nmbqcrtdp,nmbqcrtdt,nmbqmodid,nmbqmoddt,nmbqcnfid,nmbqcnfdt) = (g_nmbq_m.nmbq001, 
+                   g_nmbq_m.nmbqdocno,g_nmbq_m.nmbqdocdt,g_nmbq_m.nmbqstus,g_nmbq_m.nmbqownid,g_nmbq_m.nmbqowndp, 
+                   g_nmbq_m.nmbqcrtid,g_nmbq_m.nmbqcrtdp,g_nmbq_m.nmbqcrtdt,g_nmbq_m.nmbqmodid,g_nmbq_m.nmbqmoddt, 
+                   g_nmbq_m.nmbqcnfid,g_nmbq_m.nmbqcnfdt)
+                WHERE nmbqent = g_enterprise AND nmbqdocno = g_nmbqdocno_t
+ 
+               IF SQLCA.SQLCODE THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "nmbq_t:",SQLERRMESSAGE 
+                  LET g_errparam.code = SQLCA.SQLCODE 
+                  LET g_errparam.popup = TRUE 
+                  CALL s_transaction_end('N','0')
+                  CALL cl_err()
+                  NEXT FIELD CURRENT
+               END IF
+               
+               #add-point:單頭修改中 name="input.head.m_update"
+               
+               #end add-point
+               
+               
+               
+               
+               #將遮罩欄位進行遮蔽
+               CALL anmt960_nmbq_t_mask_restore('restore_mask_n')
+               
+               #修改歷程記錄(單頭修改)
+               LET g_log1 = util.JSON.stringify(g_nmbq_m_t)
+               LET g_log2 = util.JSON.stringify(g_nmbq_m)
+               IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               ELSE
+                  CALL s_transaction_end('Y','0')
+               END IF
+               
+               #add-point:單頭修改後 name="input.head.a_update"
+               
+               #end add-point
+            END IF
+            
+            LET g_master_commit = "Y"
+            LET g_nmbqdocno_t = g_nmbq_m.nmbqdocno
+ 
+            
+      END INPUT
+   
+ 
+{</section>}
+ 
+{<section id="anmt960.input.body" >}
+   
+      #Page1 預設值產生於此處
+      INPUT ARRAY g_nmbr_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                  INSERT ROW = l_allow_insert, 
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+ 
+         #自訂ACTION(detail_input,page_1)
+         
+         
+         BEFORE INPUT
+            #add-point:資料輸入前 name="input.body.before_input2"
+            
+            #end add-point
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_nmbr_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL anmt960_b_fill()
+            #如果一直都在單身1則控制筆數位置
+            IF g_loc = 'm' AND g_rec_b != 0 THEN
+               CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'1',"))
+            END IF
+            LET g_loc = 'm'
+            LET g_rec_b = g_nmbr_d.getLength()
+            #add-point:資料輸入前 name="input.d.before_input"
+            
+            #end add-point
+         
+         BEFORE ROW
+            #add-point:modify段before row2 name="input.body.before_row2"
+            
+            #end add-point  
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac_t = l_ac 
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET g_detail_idx_list[1] = l_ac
+            LET g_current_page = 1
+            
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN anmt960_cl USING g_enterprise,g_nmbq_m.nmbqdocno
+            IF SQLCA.SQLCODE THEN   #(ver:78)
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN anmt960_cl:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+               LET g_errparam.popup = TRUE 
+               CLOSE anmt960_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_nmbr_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND g_nmbr_d[l_ac].nmbrseq IS NOT NULL
+ 
+            THEN
+               LET l_cmd='u'
+               LET g_nmbr_d_t.* = g_nmbr_d[l_ac].*  #BACKUP
+               LET g_nmbr_d_o.* = g_nmbr_d[l_ac].*  #BACKUP
+               CALL anmt960_set_entry_b(l_cmd)
+               #add-point:modify段after_set_entry_b name="input.body.after_set_entry_b"
+               
+               #end add-point  
+               CALL anmt960_set_no_entry_b(l_cmd)
+               IF NOT anmt960_lock_b("nmbr_t","'1'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH anmt960_bcl INTO g_nmbr_d[l_ac].nmbrseq,g_nmbr_d[l_ac].nmbr001,g_nmbr_d[l_ac].nmbr002, 
+                      g_nmbr_d[l_ac].nmbr003,g_nmbr_d[l_ac].nmbr004,g_nmbr_d[l_ac].nmbr005,g_nmbr_d[l_ac].nmbr006, 
+                      g_nmbr_d[l_ac].nmbr007
+                  IF SQLCA.SQLCODE THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = g_nmbr_d_t.nmbrseq,":",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE 
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_nmbr_d_mask_o[l_ac].* =  g_nmbr_d[l_ac].*
+                  CALL anmt960_nmbr_t_mask()
+                  LET g_nmbr_d_mask_n[l_ac].* =  g_nmbr_d[l_ac].*
+                  
+                  LET g_bfill = "N"
+                  CALL anmt960_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row name="input.body.before_row"
+            
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+ 
+            #其他table進行lock
+            
+ 
+        
+         BEFORE INSERT  
+            
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_nmbr_d[l_ac].* TO NULL 
+            INITIALIZE g_nmbr_d_t.* TO NULL 
+            INITIALIZE g_nmbr_d_o.* TO NULL 
+            #公用欄位給值(單身)
+            
+            #自定義預設值
+                  LET g_nmbr_d[l_ac].nmbr007 = "0"
+ 
+            #add-point:modify段before備份 name="input.body.insert.before_bak"
+            LET g_nmbr_d[l_ac].nmbr001 = g_nmbq_m.nmbq001
+            SELECT MAX(nmbrseq) INTO g_nmbr_d[l_ac].nmbrseq
+              FROM nmbr_t
+             WHERE nmbrent = g_enterprise 
+               AND nmbrdocno = g_nmbq_m.nmbqdocno
+            IF cl_null(g_nmbr_d[l_ac].nmbrseq) THEN
+               LET g_nmbr_d[l_ac].nmbrseq = 1
+            ELSE
+               LET g_nmbr_d[l_ac].nmbrseq = g_nmbr_d[l_ac].nmbrseq+1
+            END IF
+            
+            #160912-00024#1 add s---
+            LET g_nmbr_d[l_ac].nmbr002 = g_nmbq_m.nmbq001
+            SELECT COUNT(*) INTO l_count FROM ooef_t WHERE ooefent = g_enterprise
+               AND ooef201 = 'Y'
+               AND ooef001 = g_nmbr_d[l_ac].nmbr002
+            IF cl_null(l_count) THEN LET l_count = 0 END IF
+            IF l_count = 0 THEN
+               LET g_nmbr_d[l_ac].nmbr002 = ''
+            END IF  
+            #160912-00024#1 add e---              
+            #end add-point
+            LET g_nmbr_d_t.* = g_nmbr_d[l_ac].*     #新輸入資料
+            LET g_nmbr_d_o.* = g_nmbr_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL anmt960_set_entry_b(l_cmd)
+            #add-point:modify段after_set_entry_b name="input.body.insert.after_set_entry_b"
+            
+            #end add-point
+            CALL anmt960_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_nmbr_d[li_reproduce_target].* = g_nmbr_d[li_reproduce].*
+ 
+               LET g_nmbr_d[li_reproduce_target].nmbrseq = NULL
+ 
+            END IF
+            
+ 
+            #add-point:modify段before insert name="input.body.before_insert"
+            
+            #end add-point  
+  
+         AFTER INSERT
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = 9001 
+               LET g_errparam.popup = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            #add-point:單身新增 name="input.body.b_a_insert"
+            
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(1) INTO l_count FROM nmbr_t 
+             WHERE nmbrent = g_enterprise AND nmbrdocno = g_nmbq_m.nmbqdocno
+ 
+               AND nmbrseq = g_nmbr_d[l_ac].nmbrseq
+ 
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身新增前 name="input.body.b_insert"
+               
+               #end add-point
+            
+               #同步新增到同層的table
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_nmbq_m.nmbqdocno
+               LET gs_keys[2] = g_nmbr_d[g_detail_idx].nmbrseq
+               CALL anmt960_insert_b('nmbr_t',gs_keys,"'1'")
+                           
+               #add-point:單身新增後 name="input.body.a_insert"
+               
+               #end add-point
+            ELSE    
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code = "std-00006" 
+               LET g_errparam.popup = TRUE 
+               INITIALIZE g_nmbr_d[l_ac].* TO NULL
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLCODE THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "nmbr_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')                    
+               CALL cl_err()
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL anmt960_b_fill()
+               #資料多語言用-增/改
+               
+               #add-point:input段-after_insert name="input.body.a_insert2"
+               
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               #ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+              
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+               #add-point:單身刪除後(=d) name="input.body.after_delete_d"
+               
+               #end add-point
+            ELSE
+               #add-point:單身刪除前 name="input.body.b_delete_ask"
+               
+               #end add-point 
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code = -263 
+                  LET g_errparam.popup = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身刪除前 name="input.body.b_delete"
+               
+               #end add-point 
+               
+               #取得該筆資料key值
+               INITIALIZE gs_keys TO NULL
+               LET gs_keys[01] = g_nmbq_m.nmbqdocno
+ 
+               LET gs_keys[gs_keys.getLength()+1] = g_nmbr_d_t.nmbrseq
+ 
+            
+               #刪除同層單身
+               IF NOT anmt960_delete_b('nmbr_t',gs_keys,"'1'") THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE anmt960_bcl
+                  CANCEL DELETE
+               END IF
+    
+               #刪除下層單身
+               IF NOT anmt960_key_delete_b(gs_keys,'nmbr_t') THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE anmt960_bcl
+                  CANCEL DELETE
+               END IF
+               
+               #刪除多語言
+               
+ 
+               
+               #add-point:單身刪除中 name="input.body.m_delete"
+               
+               #end add-point 
+               
+               CALL s_transaction_end('Y','0')
+               CLOSE anmt960_bcl
+            
+               LET g_rec_b = g_rec_b-1
+               #add-point:單身刪除後 name="input.body.a_delete"
+               
+               #end add-point
+               LET l_count = g_nmbr_d.getLength()
+               
+               #add-point:單身刪除後(<>d) name="input.body.after_delete"
+               
+               #end add-point
+            END IF
+ 
+         AFTER DELETE
+            #如果是最後一筆
+            IF l_ac = (g_nmbr_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbrseq
+            #add-point:BEFORE FIELD nmbrseq name="input.b.page1.nmbrseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbrseq
+            
+            #add-point:AFTER FIELD nmbrseq name="input.a.page1.nmbrseq"
+            #應用 a05 樣板自動產生(Version:3)
+            #確認資料無重複
+            IF  g_nmbq_m.nmbqdocno IS NOT NULL AND g_nmbr_d[g_detail_idx].nmbrseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_nmbq_m.nmbqdocno != g_nmbqdocno_t OR g_nmbr_d[g_detail_idx].nmbrseq != g_nmbr_d_t.nmbrseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM nmbr_t WHERE "||"nmbrent = '" ||g_enterprise|| "' AND "||"nmbrdocno = '"||g_nmbq_m.nmbqdocno ||"' AND "|| "nmbrseq = '"||g_nmbr_d[g_detail_idx].nmbrseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbrseq
+            #add-point:ON CHANGE nmbrseq name="input.g.page1.nmbrseq"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbr001
+            #add-point:BEFORE FIELD nmbr001 name="input.b.page1.nmbr001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbr001
+            
+            #add-point:AFTER FIELD nmbr001 name="input.a.page1.nmbr001"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbr001
+            #add-point:ON CHANGE nmbr001 name="input.g.page1.nmbr001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbr002
+            
+            #add-point:AFTER FIELD nmbr002 name="input.a.page1.nmbr002"
+            IF NOT cl_null(g_nmbr_d[l_ac].nmbr002) THEN 
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_nmbr_d[l_ac].nmbr002 != g_nmbr_d_t.nmbr002 OR g_nmbr_d_t.nmbr002 IS NULL )) THEN                         
+#此段落由子樣板a19產生
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_nmbr_d[l_ac].nmbr002
+   
+                     
+                  IF NOT cl_chk_exist("v_ooef001") THEN
+                     #檢查失敗時後續處理
+                     LET g_nmbr_d[l_ac].nmbr002 = g_nmbr_d_t.nmbr002  
+                     CALL s_desc_get_department_desc(g_nmbr_d[l_ac].nmbr002) RETURNING g_nmbr_d[l_ac].nmbr002_desc
+                     DISPLAY g_nmbr_d[l_ac].nmbr002_desc TO nmbr002_desc                     
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  #160912-00024#1 add s---
+                  CALL s_anm_get_site_wc('6',g_nmbq_m.nmbq001,g_nmbq_m.nmbqdocdt) RETURNING g_site_wc
+                  IF cl_null(g_site_wc) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'anm-03020' #该资金中心下无可用运营据点!
+                     LET g_errparam.extend = g_nmbq_m.nmbq001
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_nmbr_d[l_ac].nmbr002 = g_nmbr_d_t.nmbr002  
+                     CALL s_desc_get_department_desc(g_nmbr_d[l_ac].nmbr002) RETURNING g_nmbr_d[l_ac].nmbr002_desc
+                     DISPLAY g_nmbr_d[l_ac].nmbr002_desc TO nmbr002_desc
+                     NEXT FIELD CURRENT
+                  END IF                  
+                  #160912-00024#1 add e---                  
+                  
+                  #檢查輸入組織代碼是否存在資金中心下法人範圍內
+                  #IF s_chr_get_index_of(g_comp_wc,g_nmbr_d[l_ac].nmbr002,1) = 0 THEN #160912-00024#1 
+                  CALL s_anm_get_site_wc('6',g_nmbq_m.nmbq001,g_nmbq_m.nmbqdocdt) RETURNING g_site_wc #160912-00024#1
+                  IF s_chr_get_index_of(g_site_wc,g_nmbr_d[l_ac].nmbr002,1) = 0 THEN #160912-00024#1
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'anm-00274'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_nmbr_d[l_ac].nmbr002 = g_nmbr_d_t.nmbr002  
+                     CALL s_desc_get_department_desc(g_nmbr_d[l_ac].nmbr002) RETURNING g_nmbr_d[l_ac].nmbr002_desc
+                     DISPLAY g_nmbr_d[l_ac].nmbr002_desc TO nmbr002_desc
+                     NEXT FIELD CURRENT                       
+                  END IF 
+                  #還款組織與受款組織不可相同
+                  IF NOT cl_null(g_nmbr_d[l_ac].nmbr004) THEN 
+                     IF g_nmbr_d[l_ac].nmbr002 = g_nmbr_d[l_ac].nmbr004 THEN 
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'anm-02989'
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        LET g_nmbr_d[l_ac].nmbr002 = g_nmbr_d_t.nmbr002  
+                        CALL s_desc_get_department_desc(g_nmbr_d[l_ac].nmbr002) RETURNING g_nmbr_d[l_ac].nmbr002_desc
+                        DISPLAY g_nmbr_d[l_ac].nmbr002_desc TO nmbr002_desc
+                        NEXT FIELD CURRENT         
+                     END IF
+                  END IF
+                  IF NOT cl_null(g_nmbr_d[l_ac].nmbr006) THEN 
+                     CALL anmt960_nmbr002_nmbr006_chk()
+                     
+                     IF NOT cl_null(g_errno) THEN 
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = g_errno
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        LET g_nmbr_d[l_ac].nmbr002 = g_nmbr_d_t.nmbr002  
+                        NEXT FIELD CURRENT 
+                     END IF
+                  END IF
+               END IF        
+            END IF
+            CALL s_desc_get_department_desc(g_nmbr_d[l_ac].nmbr002) RETURNING g_nmbr_d[l_ac].nmbr002_desc
+            DISPLAY g_nmbr_d[l_ac].nmbr002_desc TO nmbr002_desc
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbr002
+            #add-point:BEFORE FIELD nmbr002 name="input.b.page1.nmbr002"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbr002
+            #add-point:ON CHANGE nmbr002 name="input.g.page1.nmbr002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbr003
+            
+            #add-point:AFTER FIELD nmbr003 name="input.a.page1.nmbr003"
+            IF NOT cl_null(g_nmbr_d[l_ac].nmbr003) THEN 
+#此段落由子樣板a19產生
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_nmbr_d[l_ac].nmbr003 != g_nmbr_d_t.nmbr003 OR g_nmbr_d_t.nmbr003 IS NULL )) THEN               
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_nmbr_d[l_ac].nmbr003
+                  LET g_chkparam.arg2 = g_nmbr_d[l_ac].nmbr002
+                     
+                  #呼叫檢查存在並帶值的library
+                  IF NOT cl_chk_exist("v_nmas002_11") THEN
+                     #檢查失敗時後續處理
+                     LET g_nmbr_d[l_ac].nmbr003 = g_nmbr_d_t.nmbr003  
+                     CALL anmt960_nmaa004_get(g_nmbr_d[l_ac].nmbr003) RETURNING g_nmbr_d[l_ac].nmbr003_desc  
+                     DISPLAY g_nmbr_d[l_ac].nmbr003_desc TO nmbr003_desc                   
+                     NEXT FIELD CURRENT
+                  END IF             
+                  #160122-00001#2--add---str
+                  IF NOT s_anmi120_nmll002_chk(g_nmbr_d[l_ac].nmbr003,g_user) THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = g_nmbr_d[l_ac].nmbr003
+                     LET g_errparam.code   = 'anm-00574' 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     LET g_nmbr_d[l_ac].nmbr003 = g_nmbr_d_t.nmbr003                     
+                     NEXT FIELD CURRENT
+ 
+                  END IF
+                  #160122-00001#2--add---end 
+               END IF
+               CALL anmt960_nmaa004_get(g_nmbr_d[l_ac].nmbr003) RETURNING g_nmbr_d[l_ac].nmbr003_desc  
+               DISPLAY g_nmbr_d[l_ac].nmbr003_desc TO nmbr003_desc                              
+              
+            END IF 
+ 
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbr003
+            #add-point:BEFORE FIELD nmbr003 name="input.b.page1.nmbr003"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbr003
+            #add-point:ON CHANGE nmbr003 name="input.g.page1.nmbr003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbr004
+            
+            #add-point:AFTER FIELD nmbr004 name="input.a.page1.nmbr004"
+            IF NOT cl_null(g_nmbr_d[l_ac].nmbr004) THEN 
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_nmbr_d[l_ac].nmbr004 != g_nmbr_d_t.nmbr004 OR g_nmbr_d_t.nmbr004 IS NULL )) THEN                         
+#此段落由子樣板a19產生
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_nmbr_d[l_ac].nmbr004
+   
+                     
+                  IF NOT cl_chk_exist("v_ooef001") THEN
+                     #檢查失敗時後續處理
+                     LET g_nmbr_d[l_ac].nmbr004 = g_nmbr_d_t.nmbr004  
+                     CALL s_desc_get_department_desc(g_nmbr_d[l_ac].nmbr004) RETURNING g_nmbr_d[l_ac].nmbr004_desc
+                     DISPLAY g_nmbr_d[l_ac].nmbr004_desc TO nmbr004_desc                     
+                     NEXT FIELD CURRENT
+                  END IF
+                  #檢查輸入組織代碼是否存在資金中心下法人範圍內
+                  IF s_chr_get_index_of(g_comp_wc,g_nmbr_d[l_ac].nmbr004,1) = 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'anm-00274'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_nmbr_d[l_ac].nmbr004 = g_nmbr_d_t.nmbr004  
+                     CALL s_desc_get_department_desc(g_nmbr_d[l_ac].nmbr004) RETURNING g_nmbr_d[l_ac].nmbr004_desc
+                     DISPLAY g_nmbr_d[l_ac].nmbr004_desc TO nmbr004_desc
+                     NEXT FIELD CURRENT                       
+                  END IF 
+                  #還款組織與受款組織不可相同
+                  IF NOT cl_null(g_nmbr_d[l_ac].nmbr002) THEN 
+                     IF g_nmbr_d[l_ac].nmbr002 = g_nmbr_d[l_ac].nmbr004 THEN 
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = 'anm-02989'
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        LET g_nmbr_d[l_ac].nmbr004 = g_nmbr_d_t.nmbr004  
+                        CALL s_desc_get_department_desc(g_nmbr_d[l_ac].nmbr004) RETURNING g_nmbr_d[l_ac].nmbr004_desc
+                        DISPLAY g_nmbr_d[l_ac].nmbr004_desc TO nmbr004_desc
+                        NEXT FIELD CURRENT         
+                     END IF
+                  END IF                  
+               END IF        
+            END IF
+            CALL s_desc_get_department_desc(g_nmbr_d[l_ac].nmbr004) RETURNING g_nmbr_d[l_ac].nmbr004_desc
+            DISPLAY g_nmbr_d[l_ac].nmbr004_desc TO nmbr004_desc
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbr004
+            #add-point:BEFORE FIELD nmbr004 name="input.b.page1.nmbr004"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbr004
+            #add-point:ON CHANGE nmbr004 name="input.g.page1.nmbr004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbr005
+            
+            #add-point:AFTER FIELD nmbr005 name="input.a.page1.nmbr005"
+            IF NOT cl_null(g_nmbr_d[l_ac].nmbr005) THEN 
+#此段落由子樣板a19產生
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_nmbr_d[l_ac].nmbr005 != g_nmbr_d_t.nmbr005 OR g_nmbr_d_t.nmbr005 IS NULL )) THEN               
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_nmbr_d[l_ac].nmbr005
+                  LET g_chkparam.arg2 = g_nmbr_d[l_ac].nmbr004
+                     
+                  #呼叫檢查存在並帶值的library
+                  IF NOT cl_chk_exist("v_nmas002_11") THEN
+                     #檢查失敗時後續處理
+                     LET g_nmbr_d[l_ac].nmbr005 = g_nmbr_d_t.nmbr005  
+                     CALL anmt960_nmaa004_get(g_nmbr_d[l_ac].nmbr005) RETURNING g_nmbr_d[l_ac].nmbr005_desc  
+                     DISPLAY g_nmbr_d[l_ac].nmbr005_desc TO nmbr005_desc                   
+                     NEXT FIELD CURRENT
+                  END IF             
+                   
+               END IF
+               CALL anmt960_nmaa004_get(g_nmbr_d[l_ac].nmbr005) RETURNING g_nmbr_d[l_ac].nmbr005_desc  
+               DISPLAY g_nmbr_d[l_ac].nmbr005_desc TO nmbr005_desc                              
+              
+            END IF 
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbr005
+            #add-point:BEFORE FIELD nmbr005 name="input.b.page1.nmbr005"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbr005
+            #add-point:ON CHANGE nmbr005 name="input.g.page1.nmbr005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbr006
+            #add-point:BEFORE FIELD nmbr006 name="input.b.page1.nmbr006"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbr006
+            
+            #add-point:AFTER FIELD nmbr006 name="input.a.page1.nmbr006"
+            IF NOT cl_null(g_nmbr_d[l_ac].nmbr006) THEN 
+#應用 a19 樣板自動產生(Version:2)
+               #校驗代值
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg1 = g_nmbr_d[l_ac].nmbr006
+
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist("v_ooai001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  IF NOT cl_null(g_nmbr_d[l_ac].nmbr002) THEN 
+                     CALL anmt960_nmbr002_nmbr006_chk()
+                     
+                     IF NOT cl_null(g_errno) THEN 
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = g_errno
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                        LET g_nmbr_d[l_ac].nmbr006 = g_nmbr_d_t.nmbr006  
+                        NEXT FIELD CURRENT 
+                     END IF
+                  END IF
+               ELSE
+                  #檢查失敗時後續處理
+                  LET g_nmbr_d[l_ac].nmbr006 = g_nmbr_d_t.nmbr006
+                  NEXT FIELD CURRENT
+               END IF
+            END IF 
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbr006
+            #add-point:ON CHANGE nmbr006 name="input.g.page1.nmbr006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbr007
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_nmbr_d[l_ac].nmbr007,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD nmbr007
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD nmbr007 name="input.a.page1.nmbr007"
+            IF NOT cl_null(g_nmbr_d[l_ac].nmbr007) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbr007
+            #add-point:BEFORE FIELD nmbr007 name="input.b.page1.nmbr007"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbr007
+            #add-point:ON CHANGE nmbr007 name="input.g.page1.nmbr007"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.nmbrseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbrseq
+            #add-point:ON ACTION controlp INFIELD nmbrseq name="input.c.page1.nmbrseq"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbr001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbr001
+            #add-point:ON ACTION controlp INFIELD nmbr001 name="input.c.page1.nmbr001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbr002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbr002
+            #add-point:ON ACTION controlp INFIELD nmbr002 name="input.c.page1.nmbr002"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+ 
+            LET g_qryparam.default1 = g_nmbr_d[l_ac].nmbr002             #給予default值
+            #160912-00024#1 mod s---
+            #LET g_qryparam.where = " ooef001 IN ",g_comp_wc 
+            CALL s_anm_get_site_wc('6',g_nmbq_m.nmbq001,g_nmbq_m.nmbqdocdt) RETURNING g_site_wc 
+            CALL s_fin_get_wc_str(g_site_wc) RETURNING l_origin_str                              
+            LET g_qryparam.where = " ooef001 IN ",l_origin_str            
+            #160912-00024#1 mod e---
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+ 
+            #CALL q_ooef001()                                #呼叫開窗  #161006-00005#37 mark
+            CALL q_ooef001_33()                              #161006-00005#37 add
+            LET g_nmbr_d[l_ac].nmbr002 = g_qryparam.return1              
+            DISPLAY g_nmbr_d[l_ac].nmbr002 TO nmbr002              #
+            CALL s_desc_get_department_desc(g_nmbr_d[l_ac].nmbr002) RETURNING g_nmbr_d[l_ac].nmbr002_desc
+            DISPLAY g_nmbr_d[l_ac].nmbr002_desc TO nmbr002_desc
+            NEXT FIELD nmbr002                          #返回原欄位
+
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbr003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbr003
+            #add-point:ON ACTION controlp INFIELD nmbr003 name="input.c.page1.nmbr003"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+ 
+            LET g_qryparam.default1 = g_nmbr_d[l_ac].nmbr003             #給予default值
+            LET g_qryparam.where =  " EXISTS(SELECT 1 FROM nmab_t ",
+                                   "        WHERE nmaa004=nmab001 ",
+                                   "          AND nmaaent=nmabent ",
+                                   "          AND nmaaent=",g_enterprise, 
+                                   "          AND nmab002 = '0')"  ,
+                                    " AND nmas002 IN (",g_sql_bank,")" 
+            #給予arg
+            LET g_qryparam.arg1 = g_nmbr_d[l_ac].nmbr002
+
+ 
+            CALL q_nmas001()                                #呼叫開窗
+ 
+            LET g_nmbr_d[l_ac].nmbr003 = g_qryparam.return1              
+
+            DISPLAY g_nmbr_d[l_ac].nmbr003 TO nmbr003              #
+            CALL anmt960_nmaa004_get(g_nmbr_d[l_ac].nmbr003) RETURNING g_nmbr_d[l_ac].nmbr003_desc
+            DISPLAY g_nmbr_d[l_ac].nmbr003_desc TO nmbr003_desc
+            NEXT FIELD nmbr003                          #返回原欄位
+
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbr004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbr004
+            #add-point:ON ACTION controlp INFIELD nmbr004 name="input.c.page1.nmbr004"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+ 
+            LET g_qryparam.default1 = g_nmbr_d[l_ac].nmbr004             #給予default值
+            LET g_qryparam.where = " ooef001 IN ",g_comp_wc
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+
+ 
+            CALL q_ooef001()                                #呼叫開窗
+ 
+            LET g_nmbr_d[l_ac].nmbr004 = g_qryparam.return1              
+ 
+            DISPLAY g_nmbr_d[l_ac].nmbr004 TO nmbr004              #
+            CALL s_desc_get_department_desc(g_nmbr_d[l_ac].nmbr004) RETURNING g_nmbr_d[l_ac].nmbr004_desc
+            DISPLAY g_nmbr_d[l_ac].nmbr004_desc TO nmbr004_desc
+            NEXT FIELD nmbr004                          #返回原欄位
+
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbr005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbr005
+            #add-point:ON ACTION controlp INFIELD nmbr005 name="input.c.page1.nmbr005"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+ 
+            LET g_qryparam.default1 = g_nmbr_d[l_ac].nmbr005             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = g_nmbr_d[l_ac].nmbr004
+
+ 
+            CALL q_nmas001()                                #呼叫開窗
+ 
+            LET g_nmbr_d[l_ac].nmbr005 = g_qryparam.return1              
+
+            DISPLAY g_nmbr_d[l_ac].nmbr005 TO nmbr005              #
+            CALL anmt960_nmaa004_get(g_nmbr_d[l_ac].nmbr005) RETURNING g_nmbr_d[l_ac].nmbr005_desc
+            DISPLAY g_nmbr_d[l_ac].nmbr005_desc TO nmbr005_desc
+            NEXT FIELD nmbr005                          #返回原欄位
+
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbr006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbr006
+            #add-point:ON ACTION controlp INFIELD nmbr006 name="input.c.page1.nmbr006"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+ 
+            LET g_qryparam.default1 = g_nmbr_d[l_ac].nmbr006             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+
+ 
+            CALL q_aooi001_1()                                #呼叫開窗
+ 
+            LET g_nmbr_d[l_ac].nmbr006 = g_qryparam.return1              
+
+            DISPLAY g_nmbr_d[l_ac].nmbr006 TO nmbr006              #
+
+            NEXT FIELD nmbr006                          #返回原欄位
+
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.nmbr007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbr007
+            #add-point:ON ACTION controlp INFIELD nmbr007 name="input.c.page1.nmbr007"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         ON ROW CHANGE
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               LET g_nmbr_d[l_ac].* = g_nmbr_d_t.*
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = 9001 
+               LET g_errparam.popup = FALSE 
+               CLOSE anmt960_bcl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               EXIT DIALOG 
+            END IF
+              
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = g_nmbr_d[l_ac].nmbrseq 
+               LET g_errparam.code = -263 
+               LET g_errparam.popup = TRUE 
+               CALL cl_err()
+               LET g_nmbr_d[l_ac].* = g_nmbr_d_t.*
+            ELSE
+            
+               #add-point:單身修改前 name="input.body.b_update"
+               
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身)
+               
+      
+               #將遮罩欄位還原
+               CALL anmt960_nmbr_t_mask_restore('restore_mask_o')
+      
+               UPDATE nmbr_t SET (nmbrdocno,nmbrseq,nmbr001,nmbr002,nmbr003,nmbr004,nmbr005,nmbr006, 
+                   nmbr007) = (g_nmbq_m.nmbqdocno,g_nmbr_d[l_ac].nmbrseq,g_nmbr_d[l_ac].nmbr001,g_nmbr_d[l_ac].nmbr002, 
+                   g_nmbr_d[l_ac].nmbr003,g_nmbr_d[l_ac].nmbr004,g_nmbr_d[l_ac].nmbr005,g_nmbr_d[l_ac].nmbr006, 
+                   g_nmbr_d[l_ac].nmbr007)
+                WHERE nmbrent = g_enterprise AND nmbrdocno = g_nmbq_m.nmbqdocno 
+ 
+                  AND nmbrseq = g_nmbr_d_t.nmbrseq #項次   
+ 
+                  
+               #add-point:單身修改中 name="input.body.m_update"
+               
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     LET g_nmbr_d[l_ac].* = g_nmbr_d_t.*
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "nmbr_t" 
+                     LET g_errparam.code = "std-00009" 
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     
+                  WHEN SQLCA.SQLCODE #其他錯誤
+                     LET g_nmbr_d[l_ac].* = g_nmbr_d_t.*  
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "nmbr_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE 
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()                   
+                     
+                  OTHERWISE
+                     #資料多語言用-增/改
+                     
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_nmbq_m.nmbqdocno
+               LET gs_keys_bak[1] = g_nmbqdocno_t
+               LET gs_keys[2] = g_nmbr_d[g_detail_idx].nmbrseq
+               LET gs_keys_bak[2] = g_nmbr_d_t.nmbrseq
+               CALL anmt960_update_b('nmbr_t',gs_keys,gs_keys_bak,"'1'")
+               END CASE
+ 
+               #將遮罩欄位進行遮蔽
+               CALL anmt960_nmbr_t_mask_restore('restore_mask_n')
+               
+               #判斷key是否有改變
+               INITIALIZE gs_keys TO NULL
+               IF NOT(g_nmbr_d[g_detail_idx].nmbrseq = g_nmbr_d_t.nmbrseq 
+ 
+                  ) THEN
+                  LET gs_keys[01] = g_nmbq_m.nmbqdocno
+ 
+                  LET gs_keys[gs_keys.getLength()+1] = g_nmbr_d_t.nmbrseq
+ 
+                  CALL anmt960_key_update_b(gs_keys,'nmbr_t')
+               END IF
+               
+               #修改歷程記錄(單身修改)
+               LET g_log1 = util.JSON.stringify(g_nmbq_m),util.JSON.stringify(g_nmbr_d_t)
+               LET g_log2 = util.JSON.stringify(g_nmbq_m),util.JSON.stringify(g_nmbr_d[l_ac])
+               IF NOT cl_log_modified_record_d(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               END IF
+               
+               #add-point:單身修改後 name="input.body.a_update"
+               
+               #end add-point
+ 
+            END IF
+            
+         AFTER ROW
+            #add-point:單身after_row name="input.body.after_row"
+            
+            #end add-point
+            CALL anmt960_unlock_b("nmbr_t","'1'")
+            CALL s_transaction_end('Y','0')
+            #其他table進行unlock
+            #add-point:單身after_row2 name="input.body.after_row2"
+            
+            #end add-point
+              
+         AFTER INPUT
+            #add-point:input段after input  name="input.body.after_input"
+            
+            #end add-point 
+    
+         ON ACTION controlo    
+            IF l_insert THEN
+               LET li_reproduce = l_ac_t
+               LET li_reproduce_target = l_ac
+               LET g_nmbr_d[li_reproduce_target].* = g_nmbr_d[li_reproduce].*
+ 
+               LET g_nmbr_d[li_reproduce_target].nmbrseq = NULL
+ 
+            ELSE
+               CALL FGL_SET_ARR_CURR(g_nmbr_d.getLength()+1)
+               LET lb_reproduce = TRUE
+               LET li_reproduce = l_ac
+               LET li_reproduce_target = g_nmbr_d.getLength()+1
+            END IF
+            
+         #ON ACTION cancel
+         #   LET INT_FLAG = 1
+         #   LET g_detail_idx = 1
+         #   EXIT DIALOG 
+ 
+      END INPUT
+      
+      INPUT ARRAY g_nmbr2_d FROM s_detail2.*
+         ATTRIBUTE(COUNT = g_rec_b,WITHOUT DEFAULTS, #MAXCOUNT = g_max_rec,
+                 INSERT ROW = l_allow_insert, #此頁面insert功能由產生器控制, 手動之設定無效! 
+ 
+                 DELETE ROW = l_allow_delete,
+                 APPEND ROW = l_allow_insert)
+                 
+         #自訂ACTION(detail_input,page_2)
+         
+         
+         BEFORE INPUT
+            #add-point:資料輸入前 name="input.body2.before_input2"
+            
+            #end add-point
+            IF g_insert = 'Y' AND NOT cl_null(g_insert) THEN 
+              CALL FGL_SET_ARR_CURR(g_nmbr2_d.getLength()+1) 
+              LET g_insert = 'N' 
+           END IF 
+ 
+            CALL anmt960_b_fill()
+            #如果一直都在單身1則控制筆數位置
+            IF g_loc = 'd' AND g_rec_b != 0 THEN
+               CALL FGL_SET_ARR_CURR(g_idx_group.getValue("'2',"))
+            END IF
+            LET g_loc = 'd'
+            LET g_rec_b = g_nmbr2_d.getLength()
+            #add-point:資料輸入前 name="input.body2.before_input"
+            
+            #end add-point
+            
+         BEFORE INSERT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            LET l_insert = TRUE
+            LET l_n = ARR_COUNT()
+            LET l_cmd = 'a'
+            INITIALIZE g_nmbr2_d[l_ac].* TO NULL 
+            INITIALIZE g_nmbr2_d_t.* TO NULL 
+            INITIALIZE g_nmbr2_d_o.* TO NULL 
+            #公用欄位給值(單身2)
+            
+            #自定義預設值(單身2)
+                  LET g_nmbr2_d[l_ac].nmbw001 = "1"
+      LET g_nmbr2_d[l_ac].nmbw007 = "0"
+      LET g_nmbr2_d[l_ac].nmbw006 = "0"
+ 
+            #add-point:modify段before備份 name="input.body2.insert.before_bak"
+            SELECT MAX(nmbwseq) INTO g_nmbr2_d[l_ac].nmbwseq
+              FROM nmbw_t
+             WHERE nmbwent = g_enterprise 
+               AND nmbwdocno = g_nmbq_m.nmbqdocno
+            IF cl_null(g_nmbr2_d[l_ac].nmbwseq) THEN
+               LET g_nmbr2_d[l_ac].nmbwseq = 1
+            ELSE
+               LET g_nmbr2_d[l_ac].nmbwseq = g_nmbr2_d[l_ac].nmbwseq+1
+            END IF
+            #end add-point
+            LET g_nmbr2_d_t.* = g_nmbr2_d[l_ac].*     #新輸入資料
+            LET g_nmbr2_d_o.* = g_nmbr2_d[l_ac].*     #新輸入資料
+            CALL cl_show_fld_cont()
+            CALL anmt960_set_entry_b(l_cmd)
+            #add-point:modify段after_set_entry_b name="input.body2.insert.after_set_entry_b"
+            
+            #end add-point
+            CALL anmt960_set_no_entry_b(l_cmd)
+            IF lb_reproduce THEN
+               LET lb_reproduce = FALSE
+               LET g_nmbr2_d[li_reproduce_target].* = g_nmbr2_d[li_reproduce].*
+ 
+               LET g_nmbr2_d[li_reproduce_target].nmbwseq = NULL
+            END IF
+            
+ 
+            #add-point:modify段before insert name="input.body2.before_insert"
+            
+            #end add-point  
+ 
+         BEFORE ROW     
+            #add-point:modify段before row2 name="input.body2.before_row2"
+            
+            #end add-point  
+            LET l_insert = FALSE
+            LET l_cmd = ''
+            LET l_ac_t = l_ac 
+            LET g_detail_idx_list[2] = l_ac
+            LET l_ac = ARR_CURR()
+            LET g_detail_idx = l_ac
+            LET g_current_page = 2
+              
+            LET l_lock_sw = 'N'            #DEFAULT
+            LET l_n = ARR_COUNT()
+            DISPLAY l_ac TO FORMONLY.idx
+         
+            CALL s_transaction_begin()
+            OPEN anmt960_cl USING g_enterprise,g_nmbq_m.nmbqdocno
+            IF SQLCA.SQLCODE THEN   #(ver:78)
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "OPEN anmt960_cl:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+               LET g_errparam.popup = TRUE 
+               CLOSE anmt960_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               RETURN
+            END IF
+            
+            LET g_rec_b = g_nmbr2_d.getLength()
+            
+            IF g_rec_b >= l_ac 
+               AND g_nmbr2_d[l_ac].nmbwseq IS NOT NULL
+            THEN 
+               LET l_cmd='u'
+               LET g_nmbr2_d_t.* = g_nmbr2_d[l_ac].*  #BACKUP
+               LET g_nmbr2_d_o.* = g_nmbr2_d[l_ac].*  #BACKUP
+               CALL anmt960_set_entry_b(l_cmd)
+               #add-point:modify段after_set_entry_b name="input.body2.after_set_entry_b"
+               
+               #end add-point  
+               CALL anmt960_set_no_entry_b(l_cmd)
+               IF NOT anmt960_lock_b("nmbw_t","'2'") THEN
+                  LET l_lock_sw='Y'
+               ELSE
+                  FETCH anmt960_bcl2 INTO g_nmbr2_d[l_ac].nmbwseq,g_nmbr2_d[l_ac].nmbw001,g_nmbr2_d[l_ac].nmbw004, 
+                      g_nmbr2_d[l_ac].nmbw002,g_nmbr2_d[l_ac].nmbw003,g_nmbr2_d[l_ac].nmbw005,g_nmbr2_d[l_ac].nmbw007, 
+                      g_nmbr2_d[l_ac].nmbw006
+                  IF SQLCA.SQLCODE THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = SQLERRMESSAGE  
+                     LET g_errparam.code = SQLCA.SQLCODE 
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     LET l_lock_sw = "Y"
+                  END IF
+                  
+                  #遮罩相關處理
+                  LET g_nmbr2_d_mask_o[l_ac].* =  g_nmbr2_d[l_ac].*
+                  CALL anmt960_nmbw_t_mask()
+                  LET g_nmbr2_d_mask_n[l_ac].* =  g_nmbr2_d[l_ac].*
+                  
+                  LET g_bfill = "N"
+                  CALL anmt960_show()
+                  LET g_bfill = "Y"
+                  
+                  CALL cl_show_fld_cont()
+               END IF
+            ELSE
+               LET l_cmd='a'
+            END IF
+            #add-point:modify段before row name="input.body2.before_row"
+            IF NOT cl_null(g_nmbr2_d[l_ac].nmbw004) THEN 
+               CALL anmt960_get_nmbr006_str(g_nmbr2_d[l_ac].nmbw004) RETURNING g_nmbr006_str
+            END IF
+            #end add-point  
+            #其他table資料備份(確定是否更改用)
+            
+ 
+            #其他table進行lock
+            
+ 
+            
+         BEFORE DELETE                            #是否取消單身
+            IF l_cmd = 'a' THEN
+               LET l_cmd='d'
+               #add-point:單身AFTER DELETE (=d) name="input.body2.after_delete_d"
+               
+               #end add-point
+            ELSE
+               #add-point:單身刪除前 name="input.body2.b_delete_ask"
+               
+               #end add-point 
+               IF NOT cl_ask_del_detail() THEN
+                  CANCEL DELETE
+               END IF
+               IF l_lock_sw = "Y" THEN
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = "" 
+                  LET g_errparam.code = -263 
+                  LET g_errparam.popup = TRUE 
+                  CALL cl_err()
+                  CANCEL DELETE
+               END IF
+               
+               #add-point:單身2刪除前 name="input.body2.b_delete"
+               
+               #end add-point    
+                  
+               #取得該筆資料key值
+               INITIALIZE gs_keys TO NULL
+               LET gs_keys[01] = g_nmbq_m.nmbqdocno
+               LET gs_keys[gs_keys.getLength()+1] = g_nmbr2_d_t.nmbwseq
+            
+               #刪除同層單身
+               IF NOT anmt960_delete_b('nmbw_t',gs_keys,"'2'") THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE anmt960_bcl
+                  CANCEL DELETE
+               END IF
+    
+               #刪除下層單身
+               IF NOT anmt960_key_delete_b(gs_keys,'nmbw_t') THEN
+                  CALL s_transaction_end('N','0')
+                  CLOSE anmt960_bcl
+                  CANCEL DELETE
+               END IF
+               
+               #刪除多語言
+               
+ 
+               
+               #add-point:單身2刪除中 name="input.body2.m_delete"
+               
+               #end add-point    
+               
+               CALL s_transaction_end('Y','0')
+               CLOSE anmt960_bcl
+ 
+               LET g_rec_b = g_rec_b-1
+               #add-point:單身2刪除後 name="input.body2.a_delete"
+               
+               #end add-point
+               LET l_count = g_nmbr_d.getLength()
+               
+               #add-point:單身刪除後(<>d) name="input.body2.after_delete"
+               
+               #end add-point
+            END IF 
+ 
+         AFTER DELETE
+            #如果是最後一筆
+            IF l_ac = (g_nmbr2_d.getLength() + 1) THEN
+               CALL FGL_SET_ARR_CURR(l_ac-1)
+            END IF
+ 
+         AFTER INSERT    
+            LET l_insert = FALSE
+            IF INT_FLAG THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = 9001 
+               LET g_errparam.popup = FALSE 
+               CALL cl_err()
+               LET INT_FLAG = 0
+               CANCEL INSERT
+            END IF
+               
+            #add-point:單身2新增前 name="input.body2.b_a_insert"
+            
+            #end add-point
+               
+            LET l_count = 1  
+            SELECT COUNT(1) INTO l_count FROM nmbw_t 
+             WHERE nmbwent = g_enterprise AND nmbwdocno = g_nmbq_m.nmbqdocno
+               AND nmbwseq = g_nmbr2_d[l_ac].nmbwseq
+                
+            #資料未重複, 插入新增資料
+            IF l_count = 0 THEN 
+               #add-point:單身2新增前 name="input.body2.b_insert"
+               
+               #end add-point
+            
+                              INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_nmbq_m.nmbqdocno
+               LET gs_keys[2] = g_nmbr2_d[g_detail_idx].nmbwseq
+               CALL anmt960_insert_b('nmbw_t',gs_keys,"'2'")
+                           
+               #add-point:單身新增後2 name="input.body2.a_insert"
+               
+               #end add-point
+            ELSE    
+               INITIALIZE g_nmbr_d[l_ac].* TO NULL
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = 'INSERT' 
+               LET g_errparam.code = "std-00006" 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               CANCEL INSERT
+            END IF
+ 
+            IF SQLCA.SQLCODE THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "nmbw_t:",SQLERRMESSAGE 
+               LET g_errparam.code = SQLCA.SQLCODE 
+               LET g_errparam.popup = TRUE 
+               CALL s_transaction_end('N','0')                    
+               CALL cl_err()
+               CANCEL INSERT
+            ELSE
+               #先刷新資料
+               #CALL anmt960_b_fill()
+               #資料多語言用-增/改
+               
+               #add-point:單身新增後 name="input.body2.after_insert"
+               
+               #end add-point
+               CALL s_transaction_end('Y','0')
+               #ERROR 'INSERT O.K'
+               LET g_rec_b = g_rec_b + 1
+            END IF
+            
+         ON ROW CHANGE 
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               LET g_nmbr2_d[l_ac].* = g_nmbr2_d_t.*
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = 9001 
+               LET g_errparam.popup = FALSE 
+               CLOSE anmt960_bcl2
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               EXIT DIALOG 
+            END IF
+            
+            IF l_lock_sw = 'Y' THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = -263 
+               LET g_errparam.popup = TRUE 
+               CALL cl_err()
+               LET g_nmbr2_d[l_ac].* = g_nmbr2_d_t.*
+            ELSE
+               #add-point:單身page2修改前 name="input.body2.b_update"
+               
+               #end add-point
+               
+               #寫入修改者/修改日期資訊(單身2)
+               
+               
+               #將遮罩欄位還原
+               CALL anmt960_nmbw_t_mask_restore('restore_mask_o')
+                              
+               UPDATE nmbw_t SET (nmbwdocno,nmbwseq,nmbw001,nmbw004,nmbw002,nmbw003,nmbw005,nmbw007, 
+                   nmbw006) = (g_nmbq_m.nmbqdocno,g_nmbr2_d[l_ac].nmbwseq,g_nmbr2_d[l_ac].nmbw001,g_nmbr2_d[l_ac].nmbw004, 
+                   g_nmbr2_d[l_ac].nmbw002,g_nmbr2_d[l_ac].nmbw003,g_nmbr2_d[l_ac].nmbw005,g_nmbr2_d[l_ac].nmbw007, 
+                   g_nmbr2_d[l_ac].nmbw006) #自訂欄位頁簽
+                WHERE nmbwent = g_enterprise AND nmbwdocno = g_nmbq_m.nmbqdocno
+                  AND nmbwseq = g_nmbr2_d_t.nmbwseq #項次 
+                  
+               #add-point:單身page2修改中 name="input.body2.m_update"
+               
+               #end add-point
+                  
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     LET g_nmbr2_d[l_ac].* = g_nmbr2_d_t.*
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "nmbw_t" 
+                     LET g_errparam.code = "std-00009" 
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     
+                  WHEN SQLCA.SQLCODE #其他錯誤
+                     LET g_nmbr2_d[l_ac].* = g_nmbr2_d_t.*
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "nmbw_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE 
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     
+                  OTHERWISE
+                     #資料多語言用-增/改
+                     
+                                    INITIALIZE gs_keys TO NULL 
+               LET gs_keys[1] = g_nmbq_m.nmbqdocno
+               LET gs_keys_bak[1] = g_nmbqdocno_t
+               LET gs_keys[2] = g_nmbr2_d[g_detail_idx].nmbwseq
+               LET gs_keys_bak[2] = g_nmbr2_d_t.nmbwseq
+               CALL anmt960_update_b('nmbw_t',gs_keys,gs_keys_bak,"'2'")
+               END CASE
+               
+               #將遮罩欄位進行遮蔽
+               CALL anmt960_nmbw_t_mask_restore('restore_mask_n')
+               
+               #判斷key是否有改變
+               INITIALIZE gs_keys TO NULL
+               IF NOT (g_nmbr2_d[g_detail_idx].nmbwseq = g_nmbr2_d_t.nmbwseq 
+                  ) THEN
+                  LET gs_keys[01] = g_nmbq_m.nmbqdocno
+                  LET gs_keys[gs_keys.getLength()+1] = g_nmbr2_d_t.nmbwseq
+                  CALL anmt960_key_update_b(gs_keys,'nmbw_t')
+               END IF
+               
+               #修改歷程記錄(單身修改)
+               LET g_log1 = util.JSON.stringify(g_nmbq_m),util.JSON.stringify(g_nmbr2_d_t)
+               LET g_log2 = util.JSON.stringify(g_nmbq_m),util.JSON.stringify(g_nmbr2_d[l_ac])
+               IF NOT cl_log_modified_record_d(g_log1,g_log2) THEN 
+                  CALL s_transaction_end('N','0')
+               END IF
+               
+               #add-point:單身page2修改後 name="input.body2.a_update"
+               
+               #end add-point
+            END IF
+         
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbwseq
+            #add-point:BEFORE FIELD nmbwseq name="input.b.page2.nmbwseq"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbwseq
+            
+            #add-point:AFTER FIELD nmbwseq name="input.a.page2.nmbwseq"
+            #應用 a05 樣板自動產生(Version:3)
+            #確認資料無重複
+            IF  g_nmbq_m.nmbqdocno IS NOT NULL AND g_nmbr2_d[g_detail_idx].nmbwseq IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_nmbq_m.nmbqdocno != g_nmbqdocno_t OR g_nmbr2_d[g_detail_idx].nmbwseq != g_nmbr2_d_t.nmbwseq)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM nmbw_t WHERE "||"nmbwent = '" ||g_enterprise|| "' AND "||"nmbwdocno = '"||g_nmbq_m.nmbqdocno ||"' AND "|| "nmbwseq = '"||g_nmbr2_d[g_detail_idx].nmbwseq ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbwseq
+            #add-point:ON CHANGE nmbwseq name="input.g.page2.nmbwseq"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbw001
+            #add-point:BEFORE FIELD nmbw001 name="input.b.page2.nmbw001"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbw001
+            
+            #add-point:AFTER FIELD nmbw001 name="input.a.page2.nmbw001"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbw001
+            #add-point:ON CHANGE nmbw001 name="input.g.page2.nmbw001"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbw004
+            
+            #add-point:AFTER FIELD nmbw004 name="input.a.page2.nmbw004"
+            IF NOT cl_null(g_nmbr2_d[l_ac].nmbw004) THEN 
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_nmbr2_d[l_ac].nmbw004 != g_nmbr2_d_t.nmbw004 OR g_nmbr2_d_t.nmbw004 IS NULL )) THEN                         
+#此段落由子樣板a19產生
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_nmbr2_d[l_ac].nmbw004
+   
+                     
+                  IF NOT cl_chk_exist("v_ooef001") THEN
+                     #檢查失敗時後續處理
+                     LET g_nmbr2_d[l_ac].nmbw004 = g_nmbr2_d_t.nmbw004  
+                     CALL s_desc_get_department_desc(g_nmbr2_d[l_ac].nmbw004) RETURNING g_nmbr2_d[l_ac].nmbw004_desc
+                     DISPLAY g_nmbr2_d[l_ac].nmbw004_desc TO nmbw004_desc                     
+                     NEXT FIELD CURRENT
+                  END IF
+                  #檢查輸入組織代碼是否存在資金中心下法人範圍內
+                  IF s_chr_get_index_of(g_comp_wc,g_nmbr2_d[l_ac].nmbw004,1) = 0 THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'anm-00274'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_nmbr2_d[l_ac].nmbw004 = g_nmbr2_d_t.nmbw004  
+                     CALL s_desc_get_department_desc(g_nmbr2_d[l_ac].nmbw004) RETURNING g_nmbr2_d[l_ac].nmbw004_desc
+                     DISPLAY g_nmbr2_d[l_ac].nmbw004_desc TO nmbw004_desc  
+                     NEXT FIELD CURRENT                       
+                  END IF 
+                  #输入的组织需存在于本单的还款讯息页签中
+                  LET l_n = 0
+                  SELECT COUNT(*) INTO l_n
+                    FROM nmbr_t
+                   WHERE nmbrent = g_enterprise
+                     AND nmbrdocno = g_nmbq_m.nmbqdocno
+                     AND nmbr002 = g_nmbr2_d[l_ac].nmbw004
+                  IF l_n = 0 THEN 
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'anm-02990'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_nmbr2_d[l_ac].nmbw004 = g_nmbr2_d_t.nmbw004  
+                     CALL s_desc_get_department_desc(g_nmbr2_d[l_ac].nmbw004) RETURNING g_nmbr2_d[l_ac].nmbw004_desc
+                     DISPLAY g_nmbr2_d[l_ac].nmbw004_desc TO nmbw004_desc  
+                     NEXT FIELD CURRENT 
+                  END IF
+               END IF        
+            END IF
+            CALL s_desc_get_department_desc(g_nmbr2_d[l_ac].nmbw004) RETURNING g_nmbr2_d[l_ac].nmbw004_desc
+            DISPLAY g_nmbr2_d[l_ac].nmbw004_desc TO nmbw004_desc  
+            CALL anmt960_get_nmbr006_str(g_nmbr2_d[l_ac].nmbw004) RETURNING g_nmbr006_str
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbw004
+            #add-point:BEFORE FIELD nmbw004 name="input.b.page2.nmbw004"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbw004
+            #add-point:ON CHANGE nmbw004 name="input.g.page2.nmbw004"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbw002
+            #add-point:BEFORE FIELD nmbw002 name="input.b.page2.nmbw002"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbw002
+            
+            #add-point:AFTER FIELD nmbw002 name="input.a.page2.nmbw002"
+            IF NOT cl_null(g_nmbr2_d[l_ac].nmbw002) THEN 
+               #IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_nmbr2_d[l_ac].nmbw002 != g_nmbr2_d_t.nmbw002 OR g_nmbr2_d_t.nmbw002 IS NULL )) THEN #160824-00007#325 170119 By 08171 mark
+               IF cl_null(g_nmbr2_d_o.nmbw002) OR g_nmbr2_d[l_ac].nmbw002 != g_nmbr2_d_o.nmbw002 THEN #160824-00007#325 170119 By 08171 add
+                  #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+                  INITIALIZE g_chkparam.* TO NULL
+                  
+                  #設定g_chkparam.*的參數
+                  LET g_chkparam.arg1 = g_nmbr2_d[l_ac].nmbw002
+                  LET g_chkparam.err_str[2]= "sub-01332|anmt940|",cl_get_progname('anmt940',g_lang,"2"),"|:EXEPROGanmt940"
+                     
+                  IF cl_chk_exist("v_nmbqdocno") THEN
+                     IF NOT cl_null(g_nmbr2_d[l_ac].nmbw003) THEN 
+                        CALL anmt960_nmbw002_chk(g_nmbr2_d[l_ac].nmbw002,g_nmbr2_d[l_ac].nmbw003,g_nmbr2_d[l_ac].nmbwseq)
+                           
+                        IF NOT cl_null(g_errno) THEN 
+                           INITIALIZE g_errparam TO NULL
+                           LET g_errparam.code = g_errno
+                           LET g_errparam.extend = ''
+                           LET g_errparam.popup = TRUE
+                           CALL cl_err()
+                          #LET g_nmbr2_d[l_ac].nmbw002 = g_nmbr2_d_t.nmbw002 #160824-00007#325 170119 By 08171 mark
+                           LET g_nmbr2_d[l_ac].nmbw002 = g_nmbr2_d_o.nmbw002 #160824-00007#325 170119 By 08171 add
+                           CALL anmt960_nmbo_get()
+                           NEXT FIELD CURRENT 
+                        END IF
+
+                     END IF
+                  ELSE
+                     #檢查失敗時後續處理
+                    #LET g_nmbr2_d[l_ac].nmbw002 = g_nmbr2_d_t.nmbw002 #160824-00007#325 170119 By 08171 mark
+                     LET g_nmbr2_d[l_ac].nmbw002 = g_nmbr2_d_o.nmbw002 #160824-00007#325 170119 By 08171 add
+                     CALL anmt960_nmbo_get()                   
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF        
+            END IF
+            CALL anmt960_nmbo_get()
+            LET g_nmbr2_d_o.* = g_nmbr2_d[l_ac].* #160824-00007#325 170119 By 08171 add
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbw002
+            #add-point:ON CHANGE nmbw002 name="input.g.page2.nmbw002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbw003
+            #add-point:BEFORE FIELD nmbw003 name="input.b.page2.nmbw003"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbw003
+            
+            #add-point:AFTER FIELD nmbw003 name="input.a.page2.nmbw003"
+            IF NOT cl_null(g_nmbr2_d[l_ac].nmbw003) THEN 
+               #IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_nmbr2_d[l_ac].nmbw003 != g_nmbr2_d_t.nmbw003 OR g_nmbr2_d_t.nmbw003 IS NULL )) THEN #160824-00007#325 170119 By 08171 mark
+               IF cl_null(g_nmbr2_d_o.nmbw003) OR g_nmbr2_d[l_ac].nmbw003 != g_nmbr2_d_o.nmbw003 THEN #160824-00007#325 170119 By 08171 add
+                  IF NOT cl_null(g_nmbr2_d[l_ac].nmbw002) THEN                        
+                     CALL anmt960_nmbw002_chk(g_nmbr2_d[l_ac].nmbw002,g_nmbr2_d[l_ac].nmbw003,g_nmbr2_d[l_ac].nmbwseq)
+                        
+                     IF NOT cl_null(g_errno) THEN 
+                        INITIALIZE g_errparam TO NULL
+                        LET g_errparam.code = g_errno
+                        LET g_errparam.extend = ''
+                        LET g_errparam.popup = TRUE
+                        CALL cl_err()
+                       #LET g_nmbr2_d[l_ac].nmbw003 = g_nmbr2_d_t.nmbw003 #160824-00007#325 170119 By 08171 mark
+                        LET g_nmbr2_d[l_ac].nmbw003 = g_nmbr2_d_o.nmbw003 #160824-00007#325 170119 By 08171 add
+                        CALL anmt960_nmbo_get()
+                        NEXT FIELD CURRENT 
+                     END IF
+                  END IF
+               END IF
+            END IF
+            CALL anmt960_nmbo_get()
+            LET g_nmbr2_d_o.* = g_nmbr2_d[l_ac].* #160824-00007#325 170119 By 08171 add
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbw003
+            #add-point:ON CHANGE nmbw003 name="input.g.page2.nmbw003"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbw005
+            #add-point:BEFORE FIELD nmbw005 name="input.b.page2.nmbw005"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbw005
+            
+            #add-point:AFTER FIELD nmbw005 name="input.a.page2.nmbw005"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbw005
+            #add-point:ON CHANGE nmbw005 name="input.g.page2.nmbw005"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbo008
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_nmbr2_d[l_ac].nmbo008,"0.000","0","","","azz-00079",1) THEN
+               NEXT FIELD nmbo008
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD nmbo008 name="input.a.page2.nmbo008"
+            IF NOT cl_null(g_nmbr2_d[l_ac].nmbo008) THEN 
+            END IF 
+
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbo008
+            #add-point:BEFORE FIELD nmbo008 name="input.b.page2.nmbo008"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbo008
+            #add-point:ON CHANGE nmbo008 name="input.g.page2.nmbo008"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbw007
+            #add-point:BEFORE FIELD nmbw007 name="input.b.page2.nmbw007"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbw007
+            
+            #add-point:AFTER FIELD nmbw007 name="input.a.page2.nmbw007"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbw007
+            #add-point:ON CHANGE nmbw007 name="input.g.page2.nmbw007"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbw006
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_nmbr2_d[l_ac].nmbw006,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD nmbw006
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD nmbw006 name="input.a.page2.nmbw006"
+            IF NOT cl_null(g_nmbr2_d[l_ac].nmbw006) THEN 
+               IF l_cmd = 'a' OR (l_cmd = 'u' AND (g_nmbr2_d[l_ac].nmbw006 != g_nmbr2_d_t.nmbw006 OR g_nmbr2_d_t.nmbw006 IS NULL )) THEN         
+                  SELECT nmbw006 INTO l_nmbw006 
+                    FROM nmbq_t,nmbw_t 
+                   WHERE nmbqent = g_enterprise
+                     AND nmbw002 = g_nmbr2_d[l_ac].nmbw002  
+                     AND nmbw003 = g_nmbr2_d[l_ac].nmbw003  
+                     AND nmbqent = nmbwent
+                     AND nmbqdocno = nmbwdocno
+                     AND nmbqstus = 'N'                     
+                     AND ((nmbqdocno = g_nmbq_m.nmbqdocno   
+                     AND nmbwseq <> g_nmbr2_d[l_ac].nmbwseq)  
+                      OR nmbqdocno <> g_nmbq_m.nmbqdocno) 
+                      
+                  IF cl_null(l_nmbw006) THEN LET l_nmbw006 = 0 END IF
+
+                  IF g_nmbr2_d[l_ac].nmbw006 > g_nmbr2_d[l_ac].nmbo008 - g_nmbr2_d[l_ac].nmbw007 - l_nmbw006 THEN 
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'anm-02991'
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_nmbr2_d[l_ac].nmbw006 = g_nmbr2_d_t.nmbw006  
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbw006
+            #add-point:BEFORE FIELD nmbw006 name="input.b.page2.nmbw006"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbw006
+            #add-point:ON CHANGE nmbw006 name="input.g.page2.nmbw006"
+            
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page2.nmbwseq
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbwseq
+            #add-point:ON ACTION controlp INFIELD nmbwseq name="input.c.page2.nmbwseq"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmbw001
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbw001
+            #add-point:ON ACTION controlp INFIELD nmbw001 name="input.c.page2.nmbw001"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmbw004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbw004
+            #add-point:ON ACTION controlp INFIELD nmbw004 name="input.c.page2.nmbw004"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+ 
+            LET g_qryparam.default1 = g_nmbr2_d[l_ac].nmbw004             #給予default值
+            LET g_qryparam.where  = " nmbrdocno = '",g_nmbq_m.nmbqdocno,"'"
+            #給予arg
+            LET g_qryparam.arg1 = "" #s
+
+ 
+            CALL q_nmbr002()                                #呼叫開窗
+ 
+            LET g_nmbr2_d[l_ac].nmbw004 = g_qryparam.return1              
+
+            DISPLAY g_nmbr2_d[l_ac].nmbw004 TO nmbw004              #
+            CALL s_desc_get_department_desc(g_nmbr2_d[l_ac].nmbw004) RETURNING g_nmbr2_d[l_ac].nmbw004_desc
+            DISPLAY g_nmbr2_d[l_ac].nmbw004_desc TO nmbw004_desc
+            NEXT FIELD nmbw004                          #返回原欄位
+
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmbw002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbw002
+            #add-point:ON ACTION controlp INFIELD nmbw002 name="input.c.page2.nmbw002"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+ 
+            LET g_qryparam.default1 = g_nmbr2_d[l_ac].nmbw002             #給予default值
+            CALL anmt960_get_nmbr006_str(g_nmbr2_d[l_ac].nmbw004) RETURNING g_nmbr006_str
+            #給予arg
+            LET g_qryparam.arg1 = g_nmbq_m.nmbq001
+            LET g_qryparam.arg2 = g_nmbr006_str
+ 
+            CALL q_nmbodocno()                                #呼叫開窗
+ 
+            LET g_nmbr2_d[l_ac].nmbw002 = g_qryparam.return1              
+            LET g_nmbr2_d[l_ac].nmbw003 = g_qryparam.return2 
+            LET g_nmbr2_d[l_ac].nmbw006 = g_qryparam.return3 
+            DISPLAY g_nmbr2_d[l_ac].nmbw002 TO nmbw002              #
+            DISPLAY g_nmbr2_d[l_ac].nmbw003 TO nmbw003 #序號
+            DISPLAY g_nmbr2_d[l_ac].nmbw006 TO nmbw006
+            CALL anmt960_nmbo_get()
+            NEXT FIELD nmbw002                          #返回原欄位
+
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmbw003
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbw003
+            #add-point:ON ACTION controlp INFIELD nmbw003 name="input.c.page2.nmbw003"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmbw005
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbw005
+            #add-point:ON ACTION controlp INFIELD nmbw005 name="input.c.page2.nmbw005"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmbo008
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbo008
+            #add-point:ON ACTION controlp INFIELD nmbo008 name="input.c.page2.nmbo008"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmbw007
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbw007
+            #add-point:ON ACTION controlp INFIELD nmbw007 name="input.c.page2.nmbw007"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page2.nmbw006
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbw006
+            #add-point:ON ACTION controlp INFIELD nmbw006 name="input.c.page2.nmbw006"
+            
+            #END add-point
+ 
+ 
+ 
+ 
+         AFTER ROW
+            #add-point:單身page2 after_row name="input.body2.after_row"
+            
+            #end add-point
+            LET l_ac = ARR_CURR()
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               IF l_cmd = 'u' THEN
+                  LET g_nmbr2_d[l_ac].* = g_nmbr2_d_t.*
+               END IF
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = '' 
+               LET g_errparam.code = 9001 
+               LET g_errparam.popup = FALSE 
+               CLOSE anmt960_bcl2
+               CALL s_transaction_end('N','0')
+               CALL cl_err()
+               EXIT DIALOG 
+            END IF
+            
+            #其他table進行unlock
+            
+            CALL anmt960_unlock_b("nmbw_t","'2'")
+            CALL s_transaction_end('Y','0')
+            #add-point:單身page2 after_row2 name="input.body2.after_row2"
+            
+            #end add-point
+ 
+         AFTER INPUT
+            #add-point:input段after input  name="input.body2.after_input"
+            
+            #end add-point   
+    
+         ON ACTION controlo
+            IF l_insert THEN
+               LET li_reproduce = l_ac_t
+               LET li_reproduce_target = l_ac
+               LET g_nmbr2_d[li_reproduce_target].* = g_nmbr2_d[li_reproduce].*
+ 
+               LET g_nmbr2_d[li_reproduce_target].nmbwseq = NULL
+            ELSE
+               CALL FGL_SET_ARR_CURR(g_nmbr2_d.getLength()+1)
+               LET lb_reproduce = TRUE
+               LET li_reproduce = l_ac
+               LET li_reproduce_target = g_nmbr2_d.getLength()+1
+            END IF
+            
+      END INPUT
+ 
+      
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="anmt960.input.other" >}
+      
+      #add-point:自定義input name="input.more_input"
+      
+      #end add-point
+    
+      BEFORE DIALOG 
+         #CALL cl_err_collect_init()    
+         #add-point:input段before dialog name="input.before_dialog"
+         
+         #end add-point    
+         #重新導回資料到正確位置上
+         CALL DIALOG.setCurrentRow("s_detail1",g_idx_group.getValue("'1',"))      
+         CALL DIALOG.setCurrentRow("s_detail2",g_idx_group.getValue("'2',"))
+ 
+         #新增時強制從單頭開始填
+         IF p_cmd = 'a' THEN
+            #add-point:input段next_field name="input.next_field"
+            NEXT FIELD nmbq001
+            #end add-point  
+            NEXT FIELD nmbqdocno
+         ELSE
+            CASE g_aw
+               WHEN "s_detail1"
+                  NEXT FIELD nmbrseq
+               WHEN "s_detail2"
+                  NEXT FIELD nmbwseq
+ 
+               #add-point:input段modify_detail  name="input.modify_detail.other"
+               
+               #end add-point  
+            END CASE
+         END IF
+      
+      AFTER DIALOG
+         #add-point:input段after_dialog name="input.after_dialog"
+         
+         #end add-point    
+         
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name,g_fld_name,g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         #add-point:input段accept  name="input.accept"
+         
+         #end add-point    
+         ACCEPT DIALOG
+        
+      ON ACTION cancel      #在dialog button (放棄)
+         #add-point:input段cancel name="input.cancel"
+         
+         #end add-point  
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         #各個page指標
+         LET g_detail_idx_list[1] = 1 
+         LET g_detail_idx_list[2] = 1
+ 
+         CALL g_curr_diag.setCurrentRow("s_detail1",1)    
+         CALL g_curr_diag.setCurrentRow("s_detail2",1)
+ 
+         EXIT DIALOG
+ 
+      ON ACTION close       #在dialog 右上角 (X)
+         #add-point:input段close name="input.close"
+         
+         #end add-point  
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit        #toolbar 離開
+         #add-point:input段exit name="input.exit"
+         
+         #end add-point
+         LET INT_FLAG = TRUE 
+         LET g_detail_idx  = 1
+         LET g_detail_idx2 = 1
+         #各個page指標
+         LET g_detail_idx_list[1] = 1 
+         LET g_detail_idx_list[2] = 1
+ 
+         CALL g_curr_diag.setCurrentRow("s_detail1",1)    
+         CALL g_curr_diag.setCurrentRow("s_detail2",1)
+ 
+         EXIT DIALOG
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input  name="input.after_input"
+   CALL anmt960_show()
+   #end add-point    
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.show" >}
+#+ 單頭資料重新顯示及單身資料重抓
+PRIVATE FUNCTION anmt960_show()
+   #add-point:show段define(客製用) name="show.define_customerization"
+   
+   #end add-point  
+   DEFINE l_ac_t    LIKE type_t.num10
+   #add-point:show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="show.before"
+   SELECT ooef017 INTO g_comp
+     FROM ooef_t
+    WHERE ooefent = g_enterprise
+      AND ooef001 = g_nmbq_m.nmbq001
+   
+   SELECT glaald INTO g_ld
+     FROM glaa_t
+    WHERE glaacomp = g_comp
+      AND glaaent = g_enterprise
+      AND glaa014 = 'Y'
+   #end add-point
+   
+   
+   
+   IF g_bfill = "Y" THEN
+      CALL anmt960_b_fill() #單身填充
+      CALL anmt960_b_fill2('0') #單身填充
+   END IF
+     
+   #帶出公用欄位reference值
+   #應用 a12 樣板自動產生(Version:4)
+ 
+ 
+ 
+   
+   #顯示followup圖示
+   #應用 a48 樣板自動產生(Version:3)
+   CALL anmt960_set_pk_array()
+   #add-point:ON ACTION agendum name="show.follow_pic"
+   CALL anmt960_get_comp_wc(g_nmbq_m.nmbq001) RETURNING g_comp_wc
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+ 
+   
+   LET l_ac_t = l_ac
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference name="show.head.reference"
+   
+   #end add-point
+   
+   #遮罩相關處理
+   LET g_nmbq_m_mask_o.* =  g_nmbq_m.*
+   CALL anmt960_nmbq_t_mask()
+   LET g_nmbq_m_mask_n.* =  g_nmbq_m.*
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_nmbq_m.nmbq001,g_nmbq_m.nmbq001_desc,g_nmbq_m.nmbqdocno,g_nmbq_m.nmbqdocdt,g_nmbq_m.nmbqstus, 
+       g_nmbq_m.nmbqownid,g_nmbq_m.nmbqownid_desc,g_nmbq_m.nmbqowndp,g_nmbq_m.nmbqowndp_desc,g_nmbq_m.nmbqcrtid, 
+       g_nmbq_m.nmbqcrtid_desc,g_nmbq_m.nmbqcrtdp,g_nmbq_m.nmbqcrtdp_desc,g_nmbq_m.nmbqcrtdt,g_nmbq_m.nmbqmodid, 
+       g_nmbq_m.nmbqmodid_desc,g_nmbq_m.nmbqmoddt,g_nmbq_m.nmbqcnfid,g_nmbq_m.nmbqcnfid_desc,g_nmbq_m.nmbqcnfdt 
+ 
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_nmbq_m.nmbqstus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+ 
+ 
+ 
+   
+   #讀入ref值(單身)
+   FOR l_ac = 1 TO g_nmbr_d.getLength()
+      #add-point:show段單身reference name="show.body.reference"
+      
+      #end add-point
+   END FOR
+   
+   FOR l_ac = 1 TO g_nmbr2_d.getLength()
+      #add-point:show段單身reference name="show.body2.reference"
+      
+      #end add-point
+   END FOR
+ 
+   
+    
+   
+   #add-point:show段other name="show.other"
+   
+   #end add-point  
+   
+   LET l_ac = l_ac_t
+   
+   #移動上下筆可以連動切換資料
+   CALL cl_show_fld_cont()     
+ 
+   CALL anmt960_detail_show()
+ 
+   #add-point:show段之後 name="show.after"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.detail_show" >}
+#+ 第二階單身reference
+PRIVATE FUNCTION anmt960_detail_show()
+   #add-point:detail_show段define(客製用) name="detail_show.define_customerization"
+   
+   #end add-point  
+   #add-point:detail_show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_show.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="detail_show.before"
+   
+   #end add-point
+   
+   #add-point:detail_show段之後 name="detail_show.after"
+   
+   #end add-point
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.reproduce" >}
+#+ 資料複製
+PRIVATE FUNCTION anmt960_reproduce()
+   #add-point:reproduce段define(客製用) name="reproduce.define_customerization"
+   
+   #end add-point   
+   DEFINE l_newno     LIKE nmbq_t.nmbqdocno 
+   DEFINE l_oldno     LIKE nmbq_t.nmbqdocno 
+ 
+   DEFINE l_master    RECORD LIKE nmbq_t.* #此變數樣板目前無使用
+   DEFINE l_detail    RECORD LIKE nmbr_t.* #此變數樣板目前無使用
+   DEFINE l_detail2    RECORD LIKE nmbw_t.* #此變數樣板目前無使用
+ 
+ 
+ 
+   DEFINE l_cnt       LIKE type_t.num10
+   #add-point:reproduce段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="reproduce.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="reproduce.pre_function"
+   
+   #end add-point
+   
+   #切換畫面
+   
+   LET g_master_insert = FALSE
+   
+   IF g_nmbq_m.nmbqdocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "std-00003" 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+    
+   LET g_nmbqdocno_t = g_nmbq_m.nmbqdocno
+ 
+    
+   LET g_nmbq_m.nmbqdocno = ""
+ 
+ 
+   CALL cl_set_head_visible("","YES")
+ 
+   #公用欄位給予預設值
+   #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_nmbq_m.nmbqownid = g_user
+      LET g_nmbq_m.nmbqowndp = g_dept
+      LET g_nmbq_m.nmbqcrtid = g_user
+      LET g_nmbq_m.nmbqcrtdp = g_dept 
+      LET g_nmbq_m.nmbqcrtdt = cl_get_current()
+      LET g_nmbq_m.nmbqmodid = g_user
+      LET g_nmbq_m.nmbqmoddt = cl_get_current()
+      LET g_nmbq_m.nmbqstus = 'N'
+ 
+ 
+ 
+   
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前 name="reproduce.head.b_input"
+   
+   #end add-point
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_nmbq_m.nmbqstus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+ 
+ 
+ 
+   
+   #清空key欄位的desc
+   
+   
+   CALL anmt960_input("r")
+   
+   IF INT_FLAG AND NOT g_master_insert THEN
+      LET INT_FLAG = 0
+      DISPLAY g_detail_cnt  TO FORMONLY.h_count    #總筆數
+      DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+      LET INT_FLAG = 0
+      INITIALIZE g_nmbq_m.* TO NULL
+      INITIALIZE g_nmbr_d TO NULL
+      INITIALIZE g_nmbr2_d TO NULL
+ 
+      #add-point:複製取消後 name="reproduce.cancel"
+      
+      #end add-point
+      CALL anmt960_show()
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = '' 
+      LET g_errparam.code = 9001 
+      LET g_errparam.popup = FALSE 
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce", TRUE)
+   CALL anmt960_set_act_visible()   
+   CALL anmt960_set_act_no_visible()
+   
+   #將新增的資料併入搜尋條件中
+   LET g_nmbqdocno_t = g_nmbq_m.nmbqdocno
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " nmbqent = " ||g_enterprise|| " AND",
+                      " nmbqdocno = '", g_nmbq_m.nmbqdocno, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL anmt960_browser_fill("")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   #add-point:完成複製段落後 name="reproduce.after_reproduce"
+   
+   #end add-point
+   
+   CALL anmt960_idx_chk()
+   
+   LET g_data_owner = g_nmbq_m.nmbqownid      
+   LET g_data_dept  = g_nmbq_m.nmbqowndp
+   
+   #功能已完成,通報訊息中心
+   CALL anmt960_msgcentre_notify('reproduce')
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.detail_reproduce" >}
+#+ 單身自動複製
+PRIVATE FUNCTION anmt960_detail_reproduce()
+   #add-point:delete段define(客製用) name="detail_reproduce.define_customerization"
+   
+   #end add-point    
+   DEFINE ls_sql      STRING
+   DEFINE ld_date     DATETIME YEAR TO SECOND
+   DEFINE l_detail    RECORD LIKE nmbr_t.* #此變數樣板目前無使用
+   DEFINE l_detail2    RECORD LIKE nmbw_t.* #此變數樣板目前無使用
+ 
+ 
+ 
+   #add-point:delete段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="detail_reproduce.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="detail_reproduce.pre_function"
+   
+   #end add-point
+   
+   CALL s_transaction_begin()
+   
+   LET ld_date = cl_get_current()
+   
+   DROP TABLE anmt960_detail
+   
+   #add-point:單身複製前1 name="detail_reproduce.body.table1.b_insert"
+   
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   SELECT * FROM nmbr_t
+    WHERE nmbrent = g_enterprise AND nmbrdocno = g_nmbqdocno_t
+ 
+    INTO TEMP anmt960_detail
+ 
+   #將key修正為調整後   
+   UPDATE anmt960_detail 
+      #更新key欄位
+      SET nmbrdocno = g_nmbq_m.nmbqdocno
+ 
+      #更新共用欄位
+      
+ 
+   #add-point:單身修改前 name="detail_reproduce.body.table1.b_update"
+   
+   #end add-point                                       
+  
+   #將資料塞回原table   
+   INSERT INTO nmbr_t SELECT * FROM anmt960_detail
+   
+   IF SQLCA.SQLCODE THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "reproduce:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE 
+      LET g_errparam.popup = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #add-point:單身複製中1 name="detail_reproduce.body.table1.m_insert"
+   
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE anmt960_detail
+   
+   #add-point:單身複製後1 name="detail_reproduce.body.table1.a_insert"
+   
+   #end add-point
+ 
+   #add-point:單身複製前 name="detail_reproduce.body.table2.b_insert"
+   
+   #end add-point
+   
+   #CREATE TEMP TABLE
+   SELECT * FROM nmbw_t 
+    WHERE nmbwent = g_enterprise AND nmbwdocno = g_nmbqdocno_t
+ 
+    INTO TEMP anmt960_detail
+ 
+   #將key修正為調整後   
+   UPDATE anmt960_detail SET nmbwdocno = g_nmbq_m.nmbqdocno
+ 
+  
+   #add-point:單身修改前 name="detail_reproduce.body.table2.b_update"
+   
+   #end add-point    
+ 
+   #將資料塞回原table   
+   INSERT INTO nmbw_t SELECT * FROM anmt960_detail
+   
+   #add-point:單身複製中 name="detail_reproduce.body.table2.m_insert"
+   
+   #end add-point
+   
+   #刪除TEMP TABLE
+   DROP TABLE anmt960_detail
+   
+   #add-point:單身複製後 name="detail_reproduce.body.table2.a_insert"
+   
+   #end add-point
+ 
+ 
+   
+ 
+   
+   #多語言複製段落
+   
+   
+   CALL s_transaction_end('Y','0')
+   
+   #已新增完, 調整資料內容(修改時使用)
+   LET g_nmbqdocno_t = g_nmbq_m.nmbqdocno
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.delete" >}
+#+ 資料刪除
+PRIVATE FUNCTION anmt960_delete()
+   #add-point:delete段define(客製用) name="delete.define_customerization"
+   
+   #end add-point     
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   DEFINE  l_n             LIKE type_t.num10
+   #end add-point     
+   
+   #add-point:Function前置處理  name="delete.pre_function"
+   
+   #end add-point
+   
+   IF g_nmbq_m.nmbqdocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code = "std-00003" 
+      LET g_errparam.popup = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   
+   
+   CALL s_transaction_begin()
+ 
+   OPEN anmt960_cl USING g_enterprise,g_nmbq_m.nmbqdocno
+   IF SQLCA.SQLCODE THEN   #(ver:78)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN anmt960_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE   #(ver:78)
+      LET g_errparam.popup = TRUE 
+      CLOSE anmt960_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE anmt960_master_referesh USING g_nmbq_m.nmbqdocno INTO g_nmbq_m.nmbq001,g_nmbq_m.nmbqdocno, 
+       g_nmbq_m.nmbqdocdt,g_nmbq_m.nmbqstus,g_nmbq_m.nmbqownid,g_nmbq_m.nmbqowndp,g_nmbq_m.nmbqcrtid, 
+       g_nmbq_m.nmbqcrtdp,g_nmbq_m.nmbqcrtdt,g_nmbq_m.nmbqmodid,g_nmbq_m.nmbqmoddt,g_nmbq_m.nmbqcnfid, 
+       g_nmbq_m.nmbqcnfdt,g_nmbq_m.nmbq001_desc,g_nmbq_m.nmbqownid_desc,g_nmbq_m.nmbqowndp_desc,g_nmbq_m.nmbqcrtid_desc, 
+       g_nmbq_m.nmbqcrtdp_desc,g_nmbq_m.nmbqmodid_desc,g_nmbq_m.nmbqcnfid_desc
+   
+   
+   #檢查是否允許此動作
+   IF NOT anmt960_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_nmbq_m_mask_o.* =  g_nmbq_m.*
+   CALL anmt960_nmbq_t_mask()
+   LET g_nmbq_m_mask_n.* =  g_nmbq_m.*
+   
+   CALL anmt960_show()
+   
+   #add-point:delete段before ask name="delete.before_ask"
+   
+   #end add-point 
+ 
+   IF cl_ask_del_master() THEN              #確認一下
+   
+      #add-point:單頭刪除前 name="delete.head.b_delete"
+      
+      #end add-point   
+      
+      #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL anmt960_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove"
+      SELECT COUNT(*) INTO l_n FROM nmbr_t
+       WHERE nmbrent = g_enterprise AND nmbrdocno = g_nmbq_m.nmbqdocno  
+         AND nmbr003 NOT IN( SELECT UNIQUE nmll001 FROM nmll_t WHERE nmllent = g_enterprise AND nmll002 = g_user AND nmllstus ='Y')        
+         AND nmbr003 NOT IN( SELECT UNIQUE nmlm001 FROM nmlm_t WHERE nmlment = g_enterprise AND nmlm002 = g_dept AND nmlmstus ='Y')   
+         AND TRIM(nmbr003) IS NOT NULL
+
+      IF l_n > 0 THEN
+         IF NOT cl_ask_confirm('anm-00395') THEN
+            CLOSE anmt960_cl
+            CALL s_transaction_end('N','0')
+            RETURN
+          END IF
+      END IF
+      
+      IF NOT s_aooi200_fin_del_docno(g_ld,g_nmbq_m.nmbqdocno,g_nmbq_m.nmbqdocdt) THEN
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+  
+  
+      #資料備份
+      LET g_nmbqdocno_t = g_nmbq_m.nmbqdocno
+ 
+ 
+      DELETE FROM nmbq_t
+       WHERE nmbqent = g_enterprise AND nmbqdocno = g_nmbq_m.nmbqdocno
+ 
+       
+      #add-point:單頭刪除中 name="delete.head.m_delete"
+      
+      #end add-point
+       
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_nmbq_m.nmbqdocno,":",SQLERRMESSAGE  
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+         RETURN
+      END IF
+      
+      #add-point:單頭刪除後 name="delete.head.a_delete"
+      
+      #end add-point
+  
+      #add-point:單身刪除前 name="delete.body.b_delete"
+      
+      #end add-point
+      
+      DELETE FROM nmbr_t
+       WHERE nmbrent = g_enterprise AND nmbrdocno = g_nmbq_m.nmbqdocno
+ 
+ 
+      #add-point:單身刪除中 name="delete.body.m_delete"
+      
+      #end add-point
+         
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "nmbr_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+         RETURN
+      END IF    
+ 
+      #add-point:單身刪除後 name="delete.body.a_delete"
+      
+      #end add-point
+      
+            
+                                                               
+      #add-point:單身刪除前 name="delete.body.b_delete2"
+      
+      #end add-point
+      DELETE FROM nmbw_t
+       WHERE nmbwent = g_enterprise AND
+             nmbwdocno = g_nmbq_m.nmbqdocno
+      #add-point:單身刪除中 name="delete.body.m_delete2"
+      
+      #end add-point
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "nmbw_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+         RETURN
+      END IF      
+ 
+      #add-point:單身刪除後 name="delete.body.a_delete2"
+      
+      #end add-point
+ 
+ 
+ 
+ 
+      
+      #修改歷程記錄(刪除)
+      LET g_log1 = util.JSON.stringify(g_nmbq_m)   #(ver:78)
+      IF NOT cl_log_modified_record(g_log1,'') THEN    #(ver:78)
+         CLOSE anmt960_cl
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+             
+      CLEAR FORM
+      CALL g_nmbr_d.clear() 
+      CALL g_nmbr2_d.clear()       
+ 
+     
+      CALL anmt960_ui_browser_refresh()  
+      #CALL anmt960_ui_headershow()  
+      #CALL anmt960_ui_detailshow()
+ 
+      #add-point:多語言刪除 name="delete.lang.before_delete"
+      CALL g_nmbr3_d.clear()
+      #end add-point
+      
+      #單頭多語言刪除
+      
+      
+      #單身多語言刪除
+      
+      
+ 
+   
+      #add-point:多語言刪除 name="delete.lang.delete"
+      
+      #end add-point
+      
+      IF g_browser_cnt > 0 THEN 
+         #CALL anmt960_browser_fill("")
+         CALL anmt960_fetch('P')
+         DISPLAY g_browser_cnt TO FORMONLY.h_count   #總筆數的顯示
+         DISPLAY g_browser_cnt TO FORMONLY.b_count   #總筆數的顯示
+      ELSE
+         CLEAR FORM
+      END IF
+      
+      CALL s_transaction_end('Y','0')
+   ELSE
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE anmt960_cl
+ 
+   #功能已完成,通報訊息中心
+   CALL anmt960_msgcentre_notify('delete')
+    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.b_fill" >}
+#+ 單身陣列填充
+PRIVATE FUNCTION anmt960_b_fill()
+   #add-point:b_fill段define(客製用) name="b_fill.define_customerization"
+   
+   #end add-point     
+   DEFINE p_wc2      STRING
+   DEFINE li_idx     LIKE type_t.num10
+   #add-point:b_fill段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="b_fill.pre_function"
+   
+   #end add-point
+   
+   #清空第一階單身
+   CALL g_nmbr_d.clear()
+   CALL g_nmbr2_d.clear()
+ 
+ 
+   #add-point:b_fill段sql_before name="b_fill.sql_before"
+   CALL g_nmbr3_d.clear()
+   #end add-point
+   
+   #判斷是否填充
+   IF anmt960_fill_chk(1) THEN
+      #切換上下筆時不重組SQL
+      IF (g_action_choice = "query" OR cl_null(g_action_choice))
+      #add-point:b_fill段long_sql_if name="b_fill.long_sql_if"
+      
+      #end add-point
+      THEN
+         LET g_sql = "SELECT  DISTINCT nmbrseq,nmbr001,nmbr002,nmbr003,nmbr004,nmbr005,nmbr006,nmbr007 , 
+             t1.ooefl003 ,t2.ooefl003 FROM nmbr_t",   
+                     " INNER JOIN nmbq_t ON nmbqent = " ||g_enterprise|| " AND nmbqdocno = nmbrdocno ",
+ 
+                     #"",
+                     
+                     "",
+                     #下層單身所需的join條件
+ 
+                                    " LEFT JOIN ooefl_t t1 ON t1.ooeflent="||g_enterprise||" AND t1.ooefl001=nmbr002 AND t1.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooefl_t t2 ON t2.ooeflent="||g_enterprise||" AND t2.ooefl001=nmbr004 AND t2.ooefl002='"||g_dlang||"' ",
+ 
+                     " WHERE nmbrent=? AND nmbrdocno=?"
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         #add-point:b_fill段sql_before name="b_fill.body.fill_sql"
+         LET g_sql = g_sql," AND (nmbr003 IN (",g_sql_bank,") OR TRIM(nmbr003) IS NULL)" 
+         #end add-point
+         IF NOT cl_null(g_wc2_table1) THEN
+            LET g_sql = g_sql CLIPPED, " AND ", g_wc2_table1 CLIPPED
+         END IF
+         
+         #子單身的WC
+         
+         
+         LET g_sql = g_sql, " ORDER BY nmbr_t.nmbrseq"
+         
+         #add-point:單身填充控制 name="b_fill.sql"
+         
+         #end add-point
+         
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         PREPARE anmt960_pb FROM g_sql
+         DECLARE b_fill_cs CURSOR FOR anmt960_pb
+      END IF
+      
+      LET g_cnt = l_ac
+      LET l_ac = 1
+      
+   #  OPEN b_fill_cs USING g_enterprise,g_nmbq_m.nmbqdocno   #(ver:78)
+                                               
+      FOREACH b_fill_cs USING g_enterprise,g_nmbq_m.nmbqdocno INTO g_nmbr_d[l_ac].nmbrseq,g_nmbr_d[l_ac].nmbr001, 
+          g_nmbr_d[l_ac].nmbr002,g_nmbr_d[l_ac].nmbr003,g_nmbr_d[l_ac].nmbr004,g_nmbr_d[l_ac].nmbr005, 
+          g_nmbr_d[l_ac].nmbr006,g_nmbr_d[l_ac].nmbr007,g_nmbr_d[l_ac].nmbr002_desc,g_nmbr_d[l_ac].nmbr004_desc  
+            #(ver:78)
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充 name="b_fill.fill"
+         CALL anmt960_nmaa004_get(g_nmbr_d[l_ac].nmbr003) RETURNING g_nmbr_d[l_ac].nmbr003_desc
+         CALL anmt960_nmaa004_get(g_nmbr_d[l_ac].nmbr005) RETURNING g_nmbr_d[l_ac].nmbr005_desc
+         DISPLAY g_nmbr_d[l_ac].nmbr003_desc TO nmbr003_desc
+         DISPLAY g_nmbr_d[l_ac].nmbr005_desc TO nmbr005_desc
+         #end add-point
+      
+         IF l_ac > g_max_rec THEN
+            IF g_error_show = 1 THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = l_ac
+               LET g_errparam.code = 9035 
+               LET g_errparam.popup = TRUE 
+               CALL cl_err()
+            END IF
+            EXIT FOREACH
+         END IF
+         
+         LET l_ac = l_ac + 1
+      END FOREACH
+      LET g_error_show = 0
+   
+   END IF
+    
+   #判斷是否填充
+   IF anmt960_fill_chk(2) THEN
+      IF (g_action_choice = "query" OR cl_null(g_action_choice))
+         #add-point:b_fill段long_sql_if name="b_fill.body2.long_sql_if"
+         
+         #end add-point
+      THEN
+         LET g_sql = "SELECT  DISTINCT nmbwseq,nmbw001,nmbw004,nmbw002,nmbw003,nmbw005,nmbw007,nmbw006 , 
+             t3.ooefl003 FROM nmbw_t",   
+                     " INNER JOIN  nmbq_t ON nmbqent = " ||g_enterprise|| " AND nmbqdocno = nmbwdocno ",
+ 
+                     "",
+                     
+                                    " LEFT JOIN ooefl_t t3 ON t3.ooeflent="||g_enterprise||" AND t3.ooefl001=nmbw004 AND t3.ooefl002='"||g_dlang||"' ",
+ 
+                     " WHERE nmbwent=? AND nmbwdocno=?"   
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         #add-point:b_fill段fill_sql name="b_fill.body2.fill_sql"
+         
+         #end add-point
+         IF NOT cl_null(g_wc2_table2) THEN
+            LET g_sql = g_sql CLIPPED," AND ",g_wc2_table2 CLIPPED
+         END IF
+         
+         #子單身的WC
+         
+         
+         LET g_sql = g_sql, " ORDER BY nmbw_t.nmbwseq"
+         
+         #add-point:單身填充控制 name="b_fill.sql2"
+         
+         #end add-point
+         
+         LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+         PREPARE anmt960_pb2 FROM g_sql
+         DECLARE b_fill_cs2 CURSOR FOR anmt960_pb2
+      END IF
+    
+      LET l_ac = 1
+      
+   #  OPEN b_fill_cs2 USING g_enterprise,g_nmbq_m.nmbqdocno   #(ver:78)
+                                               
+      FOREACH b_fill_cs2 USING g_enterprise,g_nmbq_m.nmbqdocno INTO g_nmbr2_d[l_ac].nmbwseq,g_nmbr2_d[l_ac].nmbw001, 
+          g_nmbr2_d[l_ac].nmbw004,g_nmbr2_d[l_ac].nmbw002,g_nmbr2_d[l_ac].nmbw003,g_nmbr2_d[l_ac].nmbw005, 
+          g_nmbr2_d[l_ac].nmbw007,g_nmbr2_d[l_ac].nmbw006,g_nmbr2_d[l_ac].nmbw004_desc   #(ver:78)
+         IF SQLCA.SQLCODE THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "FOREACH:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+        
+         #add-point:b_fill段資料填充 name="b_fill2.fill"
+         CALL anmt960_nmbo_get()
+         #end add-point
+      
+         LET l_ac = l_ac + 1
+         IF l_ac > g_max_rec THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = l_ac
+            LET g_errparam.code = 9035 
+            LET g_errparam.popup = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+         
+      END FOREACH
+   END IF
+ 
+ 
+   
+   #add-point:browser_fill段其他table處理 name="browser_fill.other_fill"
+   LET g_sql = "SELECT DISTINCT nmbwseq,nmbw002,nmbw003,'','','','',nmbw006 ",
+               "  FROM nmbw_t ",
+               " WHERE nmbwent = ",g_enterprise,
+               "   AND nmbwdocno = '",g_nmbq_m.nmbqdocno,"'",
+               " ORDER BY nmbwseq"
+   PREPARE anmt960_pb3 FROM g_sql
+   DECLARE b_fill_cs3 CURSOR FOR anmt960_pb3
+   
+   LET l_ac = 1
+   FOREACH b_fill_cs3 INTO g_nmbr3_d[l_ac].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:",SQLERRMESSAGE 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+     
+      #add-point:b_fill段資料填充 name="b_fill2.fill"
+      SELECT nmbo001,nmbo005 INTO g_nmbr3_d[l_ac].nmbo001,g_nmbr3_d[l_ac].nmbo005
+        FROM nmbo_t
+       WHERE nmboent = g_enterprise
+         AND nmbodocno = g_nmbr3_d[l_ac].nmbodocno
+         AND nmboseq = g_nmbr3_d[l_ac].seq
+         
+      CALL anmt960_nmaa004_get(g_nmbr3_d[l_ac].nmbo005) RETURNING g_nmbr3_d[l_ac].nmaa004
+      DISPLAY g_nmbr3_d[l_ac].nmaa004 TO nmaa004
+      
+      CALL s_desc_get_department_desc(g_nmbr3_d[l_ac].nmbo001) RETURNING g_nmbr3_d[l_ac].nmbo001_desc
+      DISPLAY g_nmbr3_d[l_ac].nmbo001_desc TO nmbo001_desc
+      #end add-point
+   
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = l_ac
+         LET g_errparam.code   = 9035 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         EXIT FOREACH
+      END IF
+      
+   END FOREACH
+   CALL g_nmbr3_d.deleteElement(g_nmbr3_d.getLength())
+   #end add-point
+   
+   CALL g_nmbr_d.deleteElement(g_nmbr_d.getLength())
+   CALL g_nmbr2_d.deleteElement(g_nmbr2_d.getLength())
+ 
+   
+ 
+   LET l_ac = g_cnt
+   LET g_cnt = 0  
+   
+   FREE anmt960_pb
+   FREE anmt960_pb2
+ 
+ 
+   
+   LET li_idx = l_ac
+   
+   #遮罩相關處理
+   FOR l_ac = 1 TO g_nmbr_d.getLength()
+      LET g_nmbr_d_mask_o[l_ac].* =  g_nmbr_d[l_ac].*
+      CALL anmt960_nmbr_t_mask()
+      LET g_nmbr_d_mask_n[l_ac].* =  g_nmbr_d[l_ac].*
+   END FOR
+   
+   LET g_nmbr2_d_mask_o.* =  g_nmbr2_d.*
+   FOR l_ac = 1 TO g_nmbr2_d.getLength()
+      LET g_nmbr2_d_mask_o[l_ac].* =  g_nmbr2_d[l_ac].*
+      CALL anmt960_nmbw_t_mask()
+      LET g_nmbr2_d_mask_n[l_ac].* =  g_nmbr2_d[l_ac].*
+   END FOR
+ 
+   
+   LET l_ac = li_idx
+   
+   CALL cl_ap_performance_next_end()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.delete_b" >}
+#+ 刪除單身後其他table連動
+PRIVATE FUNCTION anmt960_delete_b(ps_table,ps_keys_bak,ps_page)
+   #add-point:delete_b段define(客製用) name="delete_b.define_customerization"
+   
+   #end add-point     
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys_bak DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:delete_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="delete_b.pre_function"
+   
+   #end add-point
+   
+   LET g_update = TRUE  
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前 name="delete_b.b_delete"
+      
+      #end add-point    
+      DELETE FROM nmbr_t
+       WHERE nmbrent = g_enterprise AND
+         nmbrdocno = ps_keys_bak[1] AND nmbrseq = ps_keys_bak[2]
+      #add-point:delete_b段刪除中 name="delete_b.m_delete"
+      
+      #end add-point    
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = ":",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_nmbr_d.deleteElement(li_idx) 
+      END IF 
+ 
+   END IF
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:delete_b段刪除前 name="delete_b.b_delete2"
+      
+      #end add-point    
+      DELETE FROM nmbw_t
+       WHERE nmbwent = g_enterprise AND
+             nmbwdocno = ps_keys_bak[1] AND nmbwseq = ps_keys_bak[2]
+      #add-point:delete_b段刪除中 name="delete_b.m_delete2"
+      
+      #end add-point    
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "nmbw_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'2'" THEN 
+         CALL g_nmbr2_d.deleteElement(li_idx) 
+      END IF 
+ 
+      #add-point:delete_b段刪除後 name="delete_b.a_delete2"
+      
+      #end add-point    
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:delete_b段other name="delete_b.other"
+   
+   #end add-point  
+   
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.insert_b" >}
+#+ 新增單身後其他table連動
+PRIVATE FUNCTION anmt960_insert_b(ps_table,ps_keys,ps_page)
+   #add-point:insert_b段define(客製用) name="insert_b.define_customerization"
+   
+   #end add-point     
+   DEFINE ps_table    STRING
+   DEFINE ps_page     STRING
+   DEFINE ps_keys     DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group    STRING
+   DEFINE ls_page     STRING
+   DEFINE li_idx      LIKE type_t.num10
+   #add-point:insert_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="insert_b.pre_function"
+   
+   #end add-point
+   
+   LET g_update = TRUE  
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前 name="insert_b.before_insert"
+      
+      #end add-point 
+      INSERT INTO nmbr_t
+                  (nmbrent,
+                   nmbrdocno,
+                   nmbrseq
+                   ,nmbr001,nmbr002,nmbr003,nmbr004,nmbr005,nmbr006,nmbr007) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2]
+                   ,g_nmbr_d[g_detail_idx].nmbr001,g_nmbr_d[g_detail_idx].nmbr002,g_nmbr_d[g_detail_idx].nmbr003, 
+                       g_nmbr_d[g_detail_idx].nmbr004,g_nmbr_d[g_detail_idx].nmbr005,g_nmbr_d[g_detail_idx].nmbr006, 
+                       g_nmbr_d[g_detail_idx].nmbr007)
+      #add-point:insert_b段資料新增中 name="insert_b.m_insert"
+      
+      #end add-point 
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "nmbr_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'1'" THEN 
+         CALL g_nmbr_d.insertElement(li_idx) 
+      END IF 
+ 
+      #add-point:insert_b段資料新增後 name="insert_b.after_insert"
+      
+      #end add-point 
+   END IF
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      #add-point:insert_b段資料新增前 name="insert_b.before_insert2"
+      
+      #end add-point 
+      INSERT INTO nmbw_t
+                  (nmbwent,
+                   nmbwdocno,
+                   nmbwseq
+                   ,nmbw001,nmbw004,nmbw002,nmbw003,nmbw005,nmbw007,nmbw006) 
+            VALUES(g_enterprise,
+                   ps_keys[1],ps_keys[2]
+                   ,g_nmbr2_d[g_detail_idx].nmbw001,g_nmbr2_d[g_detail_idx].nmbw004,g_nmbr2_d[g_detail_idx].nmbw002, 
+                       g_nmbr2_d[g_detail_idx].nmbw003,g_nmbr2_d[g_detail_idx].nmbw005,g_nmbr2_d[g_detail_idx].nmbw007, 
+                       g_nmbr2_d[g_detail_idx].nmbw006)
+      #add-point:insert_b段資料新增中 name="insert_b.m_insert2"
+      
+      #end add-point
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "nmbw_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = FALSE 
+         CALL cl_err()
+      END IF
+      
+      LET li_idx = g_detail_idx
+      IF ps_page <> "'2'" THEN 
+         CALL g_nmbr2_d.insertElement(li_idx) 
+      END IF 
+ 
+      #add-point:insert_b段資料新增後 name="insert_b.after_insert2"
+      
+      #end add-point
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:insert_b段other name="insert_b.other"
+   
+   #end add-point     
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.update_b" >}
+#+ 修改單身後其他table連動
+PRIVATE FUNCTION anmt960_update_b(ps_table,ps_keys,ps_keys_bak,ps_page)
+   #add-point:update_b段define(客製用) name="update_b.define_customerization"
+   
+   #end add-point   
+   DEFINE ps_table         STRING
+   DEFINE ps_page          STRING
+   DEFINE ps_keys          DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_keys_bak      DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ls_group         STRING
+   DEFINE li_idx           LIKE type_t.num10 
+   DEFINE lb_chk           BOOLEAN
+   DEFINE l_new_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key        DYNAMIC ARRAY OF STRING
+   DEFINE l_field_key      DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="update_b.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="update_b.pre_function"
+   
+   #end add-point
+   
+   LET g_update = TRUE   
+   
+   #判斷key是否有改變
+   LET lb_chk = TRUE
+   FOR li_idx = 1 TO ps_keys.getLength()
+      IF ps_keys[li_idx] <> ps_keys_bak[li_idx] THEN
+         LET lb_chk = FALSE
+         EXIT FOR
+      END IF
+   END FOR
+   
+   #不需要做處理
+   IF lb_chk THEN
+      RETURN
+   END IF
+   
+   #判斷是否是同一群組的table
+   LET ls_group = "'1',"
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "nmbr_t" THEN
+      #add-point:update_b段修改前 name="update_b.before_update"
+      
+      #end add-point 
+      
+      #將遮罩欄位還原
+      CALL anmt960_nmbr_t_mask_restore('restore_mask_o')
+               
+      UPDATE nmbr_t 
+         SET (nmbrdocno,
+              nmbrseq
+              ,nmbr001,nmbr002,nmbr003,nmbr004,nmbr005,nmbr006,nmbr007) 
+              = 
+             (ps_keys[1],ps_keys[2]
+              ,g_nmbr_d[g_detail_idx].nmbr001,g_nmbr_d[g_detail_idx].nmbr002,g_nmbr_d[g_detail_idx].nmbr003, 
+                  g_nmbr_d[g_detail_idx].nmbr004,g_nmbr_d[g_detail_idx].nmbr005,g_nmbr_d[g_detail_idx].nmbr006, 
+                  g_nmbr_d[g_detail_idx].nmbr007) 
+         WHERE nmbrent = g_enterprise AND nmbrdocno = ps_keys_bak[1] AND nmbrseq = ps_keys_bak[2]
+      #add-point:update_b段修改中 name="update_b.m_update"
+      
+      #end add-point   
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "nmbr_t" 
+            LET g_errparam.code = "std-00009" 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         WHEN SQLCA.SQLCODE #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "nmbr_t:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         OTHERWISE
+ 
+      END CASE
+      
+      #將遮罩欄位進行遮蔽
+      CALL anmt960_nmbr_t_mask_restore('restore_mask_n')
+               
+      #add-point:update_b段修改後 name="update_b.after_update"
+      
+      #end add-point  
+   END IF
+   
+   #子表處理
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      
+   END IF
+   
+   
+   LET ls_group = "'2',"
+   #判斷是否是同一群組的table
+   IF ls_group.getIndexOf(ps_page,1) > 0 AND ps_table <> "nmbw_t" THEN
+      #add-point:update_b段修改前 name="update_b.before_update2"
+      
+      #end add-point  
+      
+      #將遮罩欄位還原
+      CALL anmt960_nmbw_t_mask_restore('restore_mask_o')
+               
+      UPDATE nmbw_t 
+         SET (nmbwdocno,
+              nmbwseq
+              ,nmbw001,nmbw004,nmbw002,nmbw003,nmbw005,nmbw007,nmbw006) 
+              = 
+             (ps_keys[1],ps_keys[2]
+              ,g_nmbr2_d[g_detail_idx].nmbw001,g_nmbr2_d[g_detail_idx].nmbw004,g_nmbr2_d[g_detail_idx].nmbw002, 
+                  g_nmbr2_d[g_detail_idx].nmbw003,g_nmbr2_d[g_detail_idx].nmbw005,g_nmbr2_d[g_detail_idx].nmbw007, 
+                  g_nmbr2_d[g_detail_idx].nmbw006) 
+         WHERE nmbwent = g_enterprise AND nmbwdocno = ps_keys_bak[1] AND nmbwseq = ps_keys_bak[2]
+      #add-point:update_b段修改中 name="update_b.m_update2"
+      
+      #end add-point  
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "nmbw_t" 
+            LET g_errparam.code = "std-00009" 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         WHEN SQLCA.SQLCODE #其他錯誤
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "nmbw_t:",SQLERRMESSAGE 
+            LET g_errparam.code = SQLCA.SQLCODE 
+            LET g_errparam.popup = TRUE 
+            CALL s_transaction_end('N','0')
+            CALL cl_err()
+            
+         OTHERWISE
+          
+      END CASE
+      
+      #將遮罩欄位進行遮蔽
+      CALL anmt960_nmbw_t_mask_restore('restore_mask_n')
+ 
+      #add-point:update_b段修改後 name="update_b.after_update2"
+      
+      #end add-point  
+   END IF
+ 
+   #子表處理
+   IF ls_group.getIndexOf(ps_page,1) > 0 THEN
+      
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:update_b段other name="update_b.other"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.key_update_b" >}
+#+ 上層單身key欄位變動後, 連帶修正下層單身key欄位
+PRIVATE FUNCTION anmt960_key_update_b(ps_keys_bak,ps_table)
+   #add-point:update_b段define(客製用) name="key_update_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_keys_bak       DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_table          STRING
+   DEFINE l_field_key       DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak    DYNAMIC ARRAY OF STRING
+   DEFINE l_new_key         DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key         DYNAMIC ARRAY OF STRING
+   #add-point:update_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="key_update_b.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="key_update_b.pre_function"
+   
+   #end add-point
+   
+ 
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.key_delete_b" >}
+#+ 上層單身刪除後, 連帶刪除下層單身key欄位
+PRIVATE FUNCTION anmt960_key_delete_b(ps_keys_bak,ps_table)
+   #add-point:delete_b段define(客製用) name="key_delete_b.define_customerization"
+   
+   #end add-point
+   DEFINE ps_keys_bak       DYNAMIC ARRAY OF VARCHAR(500)
+   DEFINE ps_table          STRING
+   DEFINE l_field_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak    DYNAMIC ARRAY OF STRING
+   DEFINE l_new_key         DYNAMIC ARRAY OF STRING
+   DEFINE l_old_key         DYNAMIC ARRAY OF STRING
+   #add-point:delete_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="key_delete_b.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="key_delete_b.pre_function"
+   
+   #end add-point
+   
+ 
+   
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.lock_b" >}
+#+ 連動lock其他單身table資料
+PRIVATE FUNCTION anmt960_lock_b(ps_table,ps_page)
+   #add-point:lock_b段define(客製用) name="lock_b.define_customerization"
+   
+   #end add-point   
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:lock_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="lock_b.define"
+   
+   #end add-point   
+   
+   #add-point:Function前置處理  name="lock_b.pre_function"
+   
+   #end add-point
+    
+   #先刷新資料
+   #CALL anmt960_b_fill()
+   
+   #鎖定整組table
+   #LET ls_group = "'1',"
+   #僅鎖定自身table
+   LET ls_group = "nmbr_t"
+   
+   IF ls_group.getIndexOf(ps_table,1) THEN
+      OPEN anmt960_bcl USING g_enterprise,
+                                       g_nmbq_m.nmbqdocno,g_nmbr_d[g_detail_idx].nmbrseq     
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "anmt960_bcl:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+                                    
+   #鎖定整組table
+   #LET ls_group = "'2',"
+   #僅鎖定自身table
+   LET ls_group = "nmbw_t"
+   IF ls_group.getIndexOf(ps_table,1) THEN
+   
+      OPEN anmt960_bcl2 USING g_enterprise,
+                                             g_nmbq_m.nmbqdocno,g_nmbr2_d[g_detail_idx].nmbwseq
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "anmt960_bcl2:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE 
+         LET g_errparam.popup = TRUE 
+         CALL cl_err()
+         RETURN FALSE
+      END IF
+   END IF
+ 
+ 
+   
+ 
+   
+   #add-point:lock_b段other name="lock_b.other"
+   
+   #end add-point  
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.unlock_b" >}
+#+ 連動unlock其他單身table資料
+PRIVATE FUNCTION anmt960_unlock_b(ps_table,ps_page)
+   #add-point:unlock_b段define(客製用) name="unlock_b.define_customerization"
+   
+   #end add-point  
+   DEFINE ps_page     STRING
+   DEFINE ps_table    STRING
+   DEFINE ls_group    STRING
+   #add-point:unlock_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="unlock_b.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="unlock_b.pre_function"
+   
+   #end add-point
+    
+   LET ls_group = "'1',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE anmt960_bcl
+   END IF
+   
+   LET ls_group = "'2',"
+   
+   IF ls_group.getIndexOf(ps_page,1) THEN
+      CLOSE anmt960_bcl2
+   END IF
+ 
+ 
+   
+ 
+ 
+   #add-point:unlock_b段other name="unlock_b.other"
+   
+   #end add-point  
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.set_entry" >}
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION anmt960_set_entry(p_cmd)
+   #add-point:set_entry段define(客製用) name="set_entry.define_customerization"
+   
+   #end add-point       
+   DEFINE p_cmd   LIKE type_t.chr1  
+   #add-point:set_entry段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry.define"
+   
+   #end add-point       
+   
+   #add-point:Function前置處理  name="set_entry.pre_function"
+   
+   #end add-point
+   
+   CALL cl_set_comp_entry("nmbqdocno",TRUE)
+   
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("nmbqdocno",TRUE)
+      CALL cl_set_comp_entry("nmbqdocdt",TRUE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry段欄位控制 name="set_entry.field_control"
+      CALL cl_set_comp_entry("nmbqdocdt",TRUE)
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry段欄位控制後 name="set_entry.after_control"
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.set_no_entry" >}
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION anmt960_set_no_entry(p_cmd)
+   #add-point:set_no_entry段define(客製用) name="set_no_entry.define_customerization"
+   
+   #end add-point     
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_no_entry.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("nmbqdocno",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry段欄位控制 name="set_no_entry.field_control"
+      
+      #end add-point 
+   END IF 
+   
+   IF p_cmd = 'u' THEN  #docno,ld欄位確認是絕對關閉
+      CALL cl_set_comp_entry("nmbqdocno",FALSE)
+   END IF 
+ 
+#  IF p_cmd = 'u' THEN  #docdt欄位依照設定關閉(FALSE則為設定不同意修正) #(ver:78)
+      IF NOT cl_chk_update_docdt() THEN
+         CALL cl_set_comp_entry("nmbqdocdt",FALSE)
+      END IF
+#  END IF 
+   
+   #add-point:set_no_entry段欄位控制後 name="set_no_entry.after_control"
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.set_entry_b" >}
+#+ 單身欄位開啟設定
+PRIVATE FUNCTION anmt960_set_entry_b(p_cmd)
+   #add-point:set_entry_b段define(客製用) name="set_entry_b.define_customerization"
+   
+   #end add-point     
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_entry_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry_b.define"
+   
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_entry_b.pre_function"
+   
+   #end add-point
+    
+   IF p_cmd = 'a' THEN
+      CALL cl_set_comp_entry("",TRUE)
+      #add-point:set_entry段欄位控制 name="set_entry_b.field_control"
+      
+      #end add-point  
+   END IF
+   
+   #add-point:set_entry_b段 name="set_entry_b.set_entry_b"
+   
+   #end add-point  
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.set_no_entry_b" >}
+#+ 單身欄位關閉設定
+PRIVATE FUNCTION anmt960_set_no_entry_b(p_cmd)
+   #add-point:set_no_entry_b段define(客製用) name="set_no_entry_b.define_customerization"
+   
+   #end add-point    
+   DEFINE p_cmd   LIKE type_t.chr1   
+   #add-point:set_no_entry_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry_b.define"
+   
+   #end add-point    
+   
+   #add-point:Function前置處理  name="set_no_entry_b.pre_function"
+   
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("",FALSE)
+      #add-point:set_no_entry_b段欄位控制 name="set_no_entry_b.field_control"
+      
+      #end add-point 
+   END IF 
+   
+   #add-point:set_no_entry_b段 name="set_no_entry_b.set_no_entry_b"
+   
+   #end add-point     
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.set_act_visible" >}
+#+ 單頭權限開啟
+PRIVATE FUNCTION anmt960_set_act_visible()
+   #add-point:set_act_visible段define(客製用) name="set_act_visible.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_visible段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible.define"
+   
+   #end add-point   
+   #add-point:set_act_visible段 name="set_act_visible.set_act_visible"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.set_act_no_visible" >}
+#+ 單頭權限關閉
+PRIVATE FUNCTION anmt960_set_act_no_visible()
+   #add-point:set_act_no_visible段define(客製用) name="set_act_no_visible.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_no_visible段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible.define"
+   
+   #end add-point   
+   #add-point:set_act_no_visible段 name="set_act_no_visible.set_act_no_visible"
+   #應用 a63 樣板自動產生(Version:2)
+   IF g_nmbq_m.nmbqstus NOT MATCHES "[NDR]" THEN   # N未確認/D抽單/R已拒絕允許修改
+      CALL cl_set_act_visible("modify,delete,modify_detail", FALSE)
+   END IF
+
+
+
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.set_act_visible_b" >}
+#+ 單身權限開啟
+PRIVATE FUNCTION anmt960_set_act_visible_b()
+   #add-point:set_act_visible_b段define(客製用) name="set_act_visible_b.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_visible_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible_b.define"
+   
+   #end add-point   
+   #add-point:set_act_visible_b段 name="set_act_visible_b.set_act_visible_b"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.set_act_no_visible_b" >}
+#+ 單身權限關閉
+PRIVATE FUNCTION anmt960_set_act_no_visible_b()
+   #add-point:set_act_no_visible_b段define(客製用) name="set_act_no_visible_b.define_customerization"
+   
+   #end add-point   
+   #add-point:set_act_no_visible_b段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible_b.define"
+   
+   #end add-point   
+   #add-point:set_act_no_visible_b段 name="set_act_no_visible_b.set_act_no_visible_b"
+   
+   #end add-point   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION anmt960_default_search()
+   #add-point:default_search段define(客製用) name="default_search.define_customerization"
+   
+   #end add-point  
+   DEFINE li_idx     LIKE type_t.num10
+   DEFINE li_cnt     LIKE type_t.num10
+   DEFINE ls_wc      STRING
+   DEFINE la_wc      DYNAMIC ARRAY OF RECORD
+          tableid    STRING,
+          wc         STRING
+          END RECORD
+   DEFINE ls_where   STRING
+   #add-point:default_search段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理 name="default_search.before"
+   
+   #end add-point  
+   
+   LET g_pagestart = 1
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " nmbqdocno = '", g_argv[01], "' AND "
+   END IF
+   
+ 
+   
+   #add-point:default_search段after sql name="default_search.after_sql"
+   
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      #若無外部參數則預設為1=2
+      LET g_default = FALSE
+      
+      #預設查詢條件
+      CALL cl_qbe_get_default_qryplan() RETURNING ls_where
+      IF NOT cl_null(ls_where) THEN
+         CALL util.JSON.parse(ls_where, la_wc)
+         INITIALIZE g_wc, g_wc2,g_wc2_table1,g_wc2_extend TO NULL
+         INITIALIZE g_wc2_table2 TO NULL
+ 
+ 
+         FOR li_idx = 1 TO la_wc.getLength()
+            CASE
+               WHEN la_wc[li_idx].tableid = "nmbq_t" 
+                  LET g_wc = la_wc[li_idx].wc
+               WHEN la_wc[li_idx].tableid = "nmbr_t" 
+                  LET g_wc2_table1 = la_wc[li_idx].wc
+               WHEN la_wc[li_idx].tableid = "nmbw_t" 
+                  LET g_wc2_table2 = la_wc[li_idx].wc
+ 
+ 
+               WHEN la_wc[li_idx].tableid = "EXTENDWC"
+                  LET g_wc2_extend = la_wc[li_idx].wc
+            END CASE
+         END FOR
+         IF NOT cl_null(g_wc) OR NOT cl_null(g_wc2_table1) 
+            OR NOT cl_null(g_wc2_table2)
+ 
+ 
+            OR NOT cl_null(g_wc2_extend)
+            THEN
+            #組合g_wc2
+            IF g_wc2_table1 <> " 1=1" AND NOT cl_null(g_wc2_table1) THEN
+               LET g_wc2 = g_wc2_table1
+            END IF
+            IF g_wc2_table2 <> " 1=1" AND NOT cl_null(g_wc2_table2) THEN
+               LET g_wc2 = g_wc2 ," AND ", g_wc2_table2
+            END IF
+ 
+ 
+            IF g_wc2_extend <> " 1=1" AND NOT cl_null(g_wc2_extend) THEN
+               LET g_wc2 = g_wc2 ," AND ", g_wc2_extend
+            END IF
+         
+            IF g_wc2.subString(1,5) = " AND " THEN
+               LET g_wc2 = g_wc2.subString(6,g_wc2.getLength())
+            END IF
+         END IF
+      END IF
+    
+      IF cl_null(g_wc) AND cl_null(g_wc2) THEN
+         LET g_wc = " 1=2"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前 name="default_search.after"
+   
+   #end add-point  
+ 
+   IF g_wc.getIndexOf(" 1=2", 1) THEN
+      LET g_default = TRUE
+   END IF
+ 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.state_change" >}
+   #應用 a09 樣板自動產生(Version:17)
+#+ 確認碼變更 
+PRIVATE FUNCTION anmt960_statechange()
+   #add-point:statechange段define(客製用) name="statechange.define_customerization"
+   
+   #end add-point  
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:statechange段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="statechange.define"
+   DEFINE l_success     LIKE type_t.num5
+   #end add-point  
+   
+   #add-point:Function前置處理 name="statechange.before"
+   
+   #end add-point  
+   
+   ERROR ""     #清空畫面右下側ERROR區塊
+ 
+   IF g_nmbq_m.nmbqdocno IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   CALL s_transaction_begin()
+   
+   OPEN anmt960_cl USING g_enterprise,g_nmbq_m.nmbqdocno
+   IF STATUS THEN
+      CLOSE anmt960_cl
+      CALL s_transaction_end('N','0')
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN anmt960_cl:" 
+      LET g_errparam.code   = STATUS 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #顯示最新的資料
+   EXECUTE anmt960_master_referesh USING g_nmbq_m.nmbqdocno INTO g_nmbq_m.nmbq001,g_nmbq_m.nmbqdocno, 
+       g_nmbq_m.nmbqdocdt,g_nmbq_m.nmbqstus,g_nmbq_m.nmbqownid,g_nmbq_m.nmbqowndp,g_nmbq_m.nmbqcrtid, 
+       g_nmbq_m.nmbqcrtdp,g_nmbq_m.nmbqcrtdt,g_nmbq_m.nmbqmodid,g_nmbq_m.nmbqmoddt,g_nmbq_m.nmbqcnfid, 
+       g_nmbq_m.nmbqcnfdt,g_nmbq_m.nmbq001_desc,g_nmbq_m.nmbqownid_desc,g_nmbq_m.nmbqowndp_desc,g_nmbq_m.nmbqcrtid_desc, 
+       g_nmbq_m.nmbqcrtdp_desc,g_nmbq_m.nmbqmodid_desc,g_nmbq_m.nmbqcnfid_desc
+   
+ 
+   #檢查是否允許此動作
+   IF NOT anmt960_action_chk() THEN
+      CLOSE anmt960_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_nmbq_m.nmbq001,g_nmbq_m.nmbq001_desc,g_nmbq_m.nmbqdocno,g_nmbq_m.nmbqdocdt,g_nmbq_m.nmbqstus, 
+       g_nmbq_m.nmbqownid,g_nmbq_m.nmbqownid_desc,g_nmbq_m.nmbqowndp,g_nmbq_m.nmbqowndp_desc,g_nmbq_m.nmbqcrtid, 
+       g_nmbq_m.nmbqcrtid_desc,g_nmbq_m.nmbqcrtdp,g_nmbq_m.nmbqcrtdp_desc,g_nmbq_m.nmbqcrtdt,g_nmbq_m.nmbqmodid, 
+       g_nmbq_m.nmbqmodid_desc,g_nmbq_m.nmbqmoddt,g_nmbq_m.nmbqcnfid,g_nmbq_m.nmbqcnfid_desc,g_nmbq_m.nmbqcnfdt 
+ 
+ 
+   CASE g_nmbq_m.nmbqstus
+      WHEN "N"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+      WHEN "Y"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+      WHEN "X"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+      
+   END CASE
+ 
+   #add-point:資料刷新後 name="statechange.after_refresh"
+   CALL cl_err_collect_init()
+   #end add-point
+ 
+   MENU "" ATTRIBUTES (STYLE="popup")
+      BEFORE MENU
+         HIDE OPTION "approved"
+         HIDE OPTION "rejection"
+         CASE g_nmbq_m.nmbqstus
+            
+            WHEN "N"
+               HIDE OPTION "unconfirmed"
+            WHEN "Y"
+               HIDE OPTION "confirmed"
+            WHEN "X"
+               HIDE OPTION "invalid"
+         END CASE
+     
+      #add-point:menu前 name="statechange.before_menu"
+      CALL cl_set_act_visible("unconfirmed,invalid,confirmed",TRUE)
+      CASE g_nmbq_m.nmbqstus
+         WHEN "X"
+            CALL cl_set_act_visible("unconfirmed,confirmed,invalid",FALSE)
+            CALL s_transaction_end('N','0')   #160816-00068#7 add
+            RETURN
+         WHEN "Y"
+            CALL cl_set_act_visible("invalid,confirmed",FALSE)
+         WHEN "N"
+            CALL cl_set_act_visible("unconfirmed",FALSE)
+      END CASE
+      #end add-point
+      
+      
+	  
+      ON ACTION unconfirmed
+         IF cl_auth_chk_act("unconfirmed") THEN
+            LET lc_state = "N"
+            #add-point:action控制 name="statechange.unconfirmed"
+            CALL anmt960_upd_nmbo021('u') RETURNING l_success
+            IF l_success = FALSE THEN
+               CLOSE anmt960_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err_collect_show()
+               RETURN
+            END IF
+            CALL anmt960_confirm('-') RETURNING l_success
+            IF l_success = FALSE THEN
+               CLOSE anmt960_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err_collect_show()
+               RETURN
+            END IF
+            #end add-point
+         END IF
+         EXIT MENU
+      ON ACTION confirmed
+         IF cl_auth_chk_act("confirmed") THEN
+            LET lc_state = "Y"
+            #add-point:action控制 name="statechange.confirmed"
+            CALL anmt960_confirm_chk() RETURNING l_success
+            IF l_success = FALSE THEN
+               CLOSE anmt960_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err_collect_show()
+               RETURN
+            END IF
+
+            CALL anmt960_confirm('+') RETURNING l_success
+            IF l_success = FALSE THEN
+               CLOSE anmt960_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err_collect_show()
+               RETURN
+            END IF
+            CALL anmt960_upd_nmbo021('c') RETURNING l_success
+            IF l_success = FALSE THEN
+               CLOSE anmt960_cl
+               CALL s_transaction_end('N','0')
+               CALL cl_err_collect_show()
+               RETURN
+            END IF
+            #end add-point
+         END IF
+         EXIT MENU
+      ON ACTION invalid
+         IF cl_auth_chk_act("invalid") THEN
+            LET lc_state = "X"
+            #add-point:action控制 name="statechange.invalid"
+            
+            #end add-point
+         END IF
+         EXIT MENU
+ 
+      #add-point:stus控制 name="statechange.more_control"
+      
+      #end add-point
+      
+   END MENU
+   
+   #確認被選取的狀態碼在清單中
+   IF (lc_state <> "N" 
+      AND lc_state <> "Y"
+      AND lc_state <> "X"
+      ) OR 
+      g_nmbq_m.nmbqstus = lc_state OR cl_null(lc_state) THEN
+      CLOSE anmt960_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:stus修改前 name="statechange.b_update"
+   
+   #end add-point
+   
+   LET g_nmbq_m.nmbqmodid = g_user
+   LET g_nmbq_m.nmbqmoddt = cl_get_current()
+   LET g_nmbq_m.nmbqstus = lc_state
+   
+   #異動狀態碼欄位/修改人/修改日期
+   UPDATE nmbq_t 
+      SET (nmbqstus,nmbqmodid,nmbqmoddt) 
+        = (g_nmbq_m.nmbqstus,g_nmbq_m.nmbqmodid,g_nmbq_m.nmbqmoddt)     
+    WHERE nmbqent = g_enterprise AND nmbqdocno = g_nmbq_m.nmbqdocno
+ 
+    
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+   ELSE
+      CASE lc_state
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/unconfirmed.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/confirmed.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         
+      END CASE
+    
+      #撈取異動後的資料
+      EXECUTE anmt960_master_referesh USING g_nmbq_m.nmbqdocno INTO g_nmbq_m.nmbq001,g_nmbq_m.nmbqdocno, 
+          g_nmbq_m.nmbqdocdt,g_nmbq_m.nmbqstus,g_nmbq_m.nmbqownid,g_nmbq_m.nmbqowndp,g_nmbq_m.nmbqcrtid, 
+          g_nmbq_m.nmbqcrtdp,g_nmbq_m.nmbqcrtdt,g_nmbq_m.nmbqmodid,g_nmbq_m.nmbqmoddt,g_nmbq_m.nmbqcnfid, 
+          g_nmbq_m.nmbqcnfdt,g_nmbq_m.nmbq001_desc,g_nmbq_m.nmbqownid_desc,g_nmbq_m.nmbqowndp_desc,g_nmbq_m.nmbqcrtid_desc, 
+          g_nmbq_m.nmbqcrtdp_desc,g_nmbq_m.nmbqmodid_desc,g_nmbq_m.nmbqcnfid_desc
+      
+      #將資料顯示到畫面上
+      DISPLAY BY NAME g_nmbq_m.nmbq001,g_nmbq_m.nmbq001_desc,g_nmbq_m.nmbqdocno,g_nmbq_m.nmbqdocdt,g_nmbq_m.nmbqstus, 
+          g_nmbq_m.nmbqownid,g_nmbq_m.nmbqownid_desc,g_nmbq_m.nmbqowndp,g_nmbq_m.nmbqowndp_desc,g_nmbq_m.nmbqcrtid, 
+          g_nmbq_m.nmbqcrtid_desc,g_nmbq_m.nmbqcrtdp,g_nmbq_m.nmbqcrtdp_desc,g_nmbq_m.nmbqcrtdt,g_nmbq_m.nmbqmodid, 
+          g_nmbq_m.nmbqmodid_desc,g_nmbq_m.nmbqmoddt,g_nmbq_m.nmbqcnfid,g_nmbq_m.nmbqcnfid_desc,g_nmbq_m.nmbqcnfdt 
+ 
+   END IF
+ 
+   #add-point:stus修改後 name="statechange.a_update"
+   
+   #end add-point
+ 
+   #add-point:statechange段結束前 name="statechange.after"
+   CALL cl_err_collect_show()
+   CALL anmt960_show()
+   #end add-point  
+ 
+   CLOSE anmt960_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL anmt960_msgcentre_notify('statechange:'||lc_state)
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="anmt960.idx_chk" >}
+#+ 顯示正確的單身資料筆數
+PRIVATE FUNCTION anmt960_idx_chk()
+   #add-point:idx_chk段define(客製用) name="idx_chk.define_customerization"
+   
+   #end add-point  
+   #add-point:idx_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="idx_chk.define"
+   
+   #end add-point  
+   
+   #add-point:Function前置處理  name="idx_chk.pre_function"
+   
+   #end add-point
+   
+   IF g_current_page = 1 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail1")
+      IF g_detail_idx > g_nmbr_d.getLength() THEN
+         LET g_detail_idx = g_nmbr_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_nmbr_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_nmbr_d.getLength() TO FORMONLY.cnt
+   END IF
+   
+   IF g_current_page = 2 THEN
+      LET g_detail_idx = g_curr_diag.getCurrentRow("s_detail2")
+      IF g_detail_idx > g_nmbr2_d.getLength() THEN
+         LET g_detail_idx = g_nmbr2_d.getLength()
+      END IF
+      IF g_detail_idx = 0 AND g_nmbr2_d.getLength() <> 0 THEN
+         LET g_detail_idx = 1
+      END IF
+      DISPLAY g_detail_idx TO FORMONLY.idx
+      DISPLAY g_nmbr2_d.getLength() TO FORMONLY.cnt
+   END IF
+ 
+   
+   #add-point:idx_chk段other name="idx_chk.other"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.b_fill2" >}
+#+ 單身陣列填充2
+PRIVATE FUNCTION anmt960_b_fill2(pi_idx)
+   #add-point:b_fill2段define(客製用) name="b_fill2.define_customerization"
+   
+   #end add-point
+   DEFINE pi_idx                 LIKE type_t.num10
+   DEFINE li_ac                  LIKE type_t.num10
+   DEFINE li_detail_idx_tmp      LIKE type_t.num10
+   DEFINE ls_chk                 LIKE type_t.chr1
+   #add-point:b_fill2段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="b_fill2.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="b_fill2.pre_function"
+   
+   #end add-point
+   
+   LET li_ac = l_ac 
+   
+   IF g_detail_idx <= 0 THEN
+      RETURN
+   END IF
+   
+   LET li_detail_idx_tmp = g_detail_idx
+   
+ 
+      
+ 
+      
+   #add-point:單身填充後 name="b_fill2.after_fill"
+   
+   #end add-point
+    
+   LET l_ac = li_ac
+   
+   CALL anmt960_detail_show()
+   
+   LET g_detail_idx = li_detail_idx_tmp
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.fill_chk" >}
+#+ 單身填充確認
+PRIVATE FUNCTION anmt960_fill_chk(ps_idx)
+   #add-point:fill_chk段define(客製用) name="fill_chk.define_customerization"
+   
+   #end add-point
+   DEFINE ps_idx        LIKE type_t.chr10
+   #add-point:fill_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fill_chk.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="fill_chk.before_chk"
+   
+   #end add-point
+   
+   #此funtion功能暫時停用(2015/1/12)
+   #無論傳入值為何皆回傳true(代表要填充該單身)
+ 
+   #全部為1=1 or null時回傳true
+   IF (cl_null(g_wc2_table1) OR g_wc2_table1.trim() = '1=1')  AND 
+      (cl_null(g_wc2_table2) OR g_wc2_table2.trim() = '1=1') THEN
+      #add-point:fill_chk段other_chk name="fill_chk.other_chk"
+      
+      #end add-point
+      RETURN TRUE
+   END IF
+   
+   #add-point:fill_chk段after_chk name="fill_chk.after_chk"
+   
+   #end add-point
+   
+   RETURN TRUE
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.status_show" >}
+PRIVATE FUNCTION anmt960_status_show()
+   #add-point:status_show段define(客製用) name="status_show.define_customerization"
+   
+   #end add-point
+   #add-point:status_show段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="status_show.define"
+   
+   #end add-point
+   
+   #add-point:status_show段status_show name="status_show.status_show"
+   
+   #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.mask_functions" >}
+&include "erp/anm/anmt960_mask.4gl"
+ 
+{</section>}
+ 
+{<section id="anmt960.signature" >}
+   
+ 
+{</section>}
+ 
+{<section id="anmt960.set_pk_array" >}
+   #應用 a51 樣板自動產生(Version:8)
+#+ 給予pk_array內容
+PRIVATE FUNCTION anmt960_set_pk_array()
+   #add-point:set_pk_array段define name="set_pk_array.define_customerization"
+   
+   #end add-point
+   #add-point:set_pk_array段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_pk_array.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理 name="set_pk_array.before"
+   
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_nmbq_m.nmbqdocno
+   LET g_pk_array[1].column = 'nmbqdocno'
+ 
+   
+   #add-point:set_pk_array段之後 name="set_pk_array.after"
+   
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="anmt960.other_dialog" readonly="Y" >}
+   
+ 
+{</section>}
+ 
+{<section id="anmt960.msgcentre_notify" >}
+#應用 a66 樣板自動產生(Version:6)
+PRIVATE FUNCTION anmt960_msgcentre_notify(lc_state)
+   #add-point:msgcentre_notify段define name="msgcentre_notify.define_customerization"
+   
+   #end add-point   
+   DEFINE lc_state LIKE type_t.chr80
+   #add-point:msgcentre_notify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="msgcentre_notify.define"
+   
+   #end add-point
+   
+   #add-point:Function前置處理  name="msgcentre_notify.pre_function"
+   
+   #end add-point
+   
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = lc_state
+ 
+   #PK資料填寫
+   CALL anmt960_set_pk_array()
+   #單頭資料填寫
+   LET g_msgparam.data[1] = util.JSON.stringify(g_nmbq_m)
+ 
+   #add-point:msgcentre其他通知 name="msgcentre_notify.process"
+   
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="anmt960.action_chk" >}
+#+ 修改/刪除前行為檢查(是否可允許此動作), 若有其他行為須管控也可透過此段落
+PRIVATE FUNCTION anmt960_action_chk()
+   #add-point:action_chk段define(客製用) name="action_chk.define_customerization"
+   
+   #end add-point
+   #add-point:action_chk段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="action_chk.define"
+   
+   #end add-point
+   
+   #add-point:action_chk段action_chk name="action_chk.action_chk"
+   #160818-00017#25 add-S
+   SELECT nmbqstus  INTO g_nmbq_m.nmbqstus
+     FROM nmbq_t
+    WHERE nmbqent = g_enterprise
+      AND nmbqdocno = g_nmbq_m.nmbqdocno
+
+   IF (g_action_choice="modify" OR g_action_choice="delete" OR g_action_choice="modify_detail")  THEN
+     LET g_errno = NULL
+     CASE g_nmbq_m.nmbqstus
+        WHEN 'W'
+           LET g_errno = 'sub-00180'
+        WHEN 'X'
+           LET g_errno = 'sub-00229'
+        WHEN 'Y'
+           LET g_errno = 'sub-00178'
+        WHEN 'S'
+           LET g_errno = 'sub-00230'
+     END CASE
+
+     IF NOT cl_null(g_errno) THEN
+        INITIALIZE g_errparam TO NULL
+        LET g_errparam.code = g_errno
+        LET g_errparam.extend = g_nmbq_m.nmbqdocno
+        LET g_errparam.popup = TRUE
+        CALL cl_err()
+        LET g_errno = NULL
+        CALL anmt960_set_act_visible()
+        CALL anmt960_set_act_no_visible()
+        CALL anmt960_show()
+        RETURN FALSE
+     END IF
+   END IF
+   #160818-00017#25 add-E
+   #end add-point
+      
+   RETURN TRUE
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt960.other_function" readonly="Y" >}
+################################################################################
+# Descriptions...: 取得資金中心底下所屬的法人範圍,並轉換為sql條件
+# Memo...........:
+# Usage..........: CALL anmt960_get_comp_wc()
+#                  RETURNING r_wc
+# Input parameter: p_nmbq001      資金中心
+#
+# Return code....: r_wc           法人範圍條件
+#
+# Date & Author..: 16/03/29 By lujh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt960_get_comp_wc(p_nmbq001)
+   DEFINE p_nmbq001  LIKE nmbq_t.nmbq001
+   DEFINE r_wc       STRING
+   DEFINE tok        base.StringTokenizer
+   DEFINE l_str      STRING   
+   
+   #取得帳務組織下所屬成員
+   CALL s_fin_account_center_sons_query('6',p_nmbq001,g_today,'1')
+   #取得帳務組織下所屬成員之帳別   
+   CALL s_fin_account_center_comp_str() RETURNING r_wc
+   
+   LET tok = base.StringTokenizer.create(r_wc,",")
+   WHILE tok.hasMoreTokens()
+      IF cl_null(l_str) THEN
+         LET l_str = tok.nextToken()
+      ELSE
+         LET l_str = l_str,"','",tok.nextToken()
+      END IF      
+   END WHILE   
+   LET r_wc = "('",l_str,"')"
+   
+   RETURN r_wc 
+END FUNCTION
+# 抓取交易銀行
+PRIVATE FUNCTION anmt960_nmaa004_get(p_nmas002)
+   DEFINE p_nmas002           LIKE nmas_t.nmas002
+   DEFINE l_nmaa004           LIKE nmaa_t.nmaa004
+   DEFINE r_nmaa004_desc      LIKE type_t.chr80
+   
+   LET r_nmaa004_desc = ''
+   
+   SELECT nmaa004 INTO l_nmaa004
+     FROM nmaa_t,nmas_t
+    WHERE nmaaent = g_enterprise
+      AND nmaaent = nmasent
+      AND nmaa001 = nmas001
+      AND nmas002 = p_nmas002
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = l_nmaa004
+   CALL ap_ref_array2(g_ref_fields,"SELECT nmabl003 FROM nmabl_t WHERE nmablent='"
+      ||g_enterprise||"' AND nmabl001=? AND nmabl002='"||g_dlang||"'","") 
+      RETURNING g_rtn_fields
+   LET r_nmaa004_desc = l_nmaa004,g_rtn_fields[1]
+   
+   RETURN r_nmaa004_desc
+END FUNCTION
+# 将同一个还款组织的币别组成字符串
+PRIVATE FUNCTION anmt960_get_nmbr006_str(p_nmbw004)
+   DEFINE p_nmbw004           LIKE nmbw_t.nmbw004
+   DEFINE l_nmbr006           LIKE nmbr_t.nmbr006
+   DEFINE l_sql               STRING
+   DEFINE r_nmbr006_str       STRING
+   
+   LET r_nmbr006_str = ''
+   LET l_sql = "SELECT DISTINCT nmbr006 ",
+               "  FROM nmbr_t ",
+               " WHERE nmbrent = ",g_enterprise,
+               "   AND nmbrdocno = '",g_nmbq_m.nmbqdocno,"'",
+               "   AND nmbr002 = '",p_nmbw004,"'"
+   PREPARE anmt960_get_nmbr006_str_pre FROM l_sql
+   DECLARE anmt960_get_nmbr006_str_cs CURSOR FOR anmt960_get_nmbr006_str_pre
+   FOREACH anmt960_get_nmbr006_str_cs INTO l_nmbr006
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+   
+      IF cl_null(r_nmbr006_str) THEN 
+         LET r_nmbr006_str = "'",l_nmbr006,"'"
+      ELSE
+         LET r_nmbr006_str = r_nmbr006_str,",","'",l_nmbr006,"'"
+      END IF
+   END FOREACH 
+   
+   IF cl_null(r_nmbr006_str) THEN 
+      LET r_nmbr006_str = "'1'"
+   END IF
+   
+   RETURN r_nmbr006_str
+END FUNCTION
+# 根据单号+项次抓取资料
+PRIVATE FUNCTION anmt960_nmbo_get()
+   DEFINE l_sql          STRING
+   
+   LET g_nmbr2_d[l_ac].nmbw005 = ''
+   LET g_nmbr2_d[l_ac].nmbo008 = ''
+   LET g_nmbr2_d[l_ac].nmbw007 = ''
+   SELECT nmbo006,nmbo008,nmbo020
+     INTO g_nmbr2_d[l_ac].nmbw005,g_nmbr2_d[l_ac].nmbo008,g_nmbr2_d[l_ac].nmbw007
+     FROM nmbo_t
+    WHERE nmboent = g_enterprise
+      AND nmbodocno = g_nmbr2_d[l_ac].nmbw002
+      AND nmboseq = g_nmbr2_d[l_ac].nmbw003
+      
+   IF cl_null(g_nmbr2_d[l_ac].nmbw006) OR g_nmbr2_d[l_ac].nmbw006 = 0 THEN 
+      LET l_sql = "SELECT nmbo008 - nmbo020 - COALESCE((SELECT SUM(nmbw006) FROM nmbw_t,nmbq_t ",
+                  "                                      WHERE nmbwent = ",g_enterprise, 
+                  "                                        AND nmbqent = nmbwent ",
+                  "                            AND nmbqdocno = nmbwdocno ",
+                  "                            AND nmbqstus = 'N' ",
+                  "                            AND nmbw002||nmbw003 = a.nmbodocno||a.nmboseq),0) nmbo008 ",
+                  "  FROM nmbo_t a,nmbm_t ",
+                  " WHERE nmboent = ",g_enterprise, 
+                  "   AND nmboent = nmbment ",
+                  "   AND nmbodocno = nmbmdocno ",
+                  "   AND nmbm001 = '",g_nmbq_m.nmbq001,"'",
+                  "   AND nmbo006 IN (",g_nmbr006_str,")", 
+                  "   AND nmbmstus = 'Y' ",
+                  "   AND nmbodocno = '",g_nmbr2_d[l_ac].nmbw002,"'",
+                  "   AND nmboseq = ",g_nmbr2_d[l_ac].nmbw003
+      PREPARE anmt960_nmbo008_pre FROM l_sql
+      EXECUTE anmt960_nmbo008_pre INTO g_nmbr2_d[l_ac].nmbw006
+   END IF
+      
+   DISPLAY g_nmbr2_d[l_ac].nmbw005,g_nmbr2_d[l_ac].nmbo008,g_nmbr2_d[l_ac].nmbw007
+        TO nmbw005,nmbo008,nmbw007
+END FUNCTION
+# 審核檢查
+PRIVATE FUNCTION anmt960_confirm_chk()
+   DEFINE l_sql           STRING
+   DEFINE l_nmbr002       LIKE nmbr_t.nmbr002
+   DEFINE l_nmbr006       LIKE nmbr_t.nmbr006
+   DEFINE l_nmbr007       LIKE nmbr_t.nmbr007
+   DEFINE l_nmbw006       LIKE nmbw_t.nmbw006
+   DEFINE r_success       LIKE type_t.num5
+   
+   LET r_success = TRUE
+
+   LET l_sql = "SELECT DISTINCT nmbr002,nmbr006 ",
+               "  FROM nmbr_t ",
+               " WHERE nmbrent = ",g_enterprise,
+               "   AND nmbrdocno = '",g_nmbq_m.nmbqdocno,"'"
+   PREPARE anmt960_confirm_chk_pre1 FROM l_sql
+   DECLARE anmt960_confirm_chk_cs1 CURSOR FOR anmt960_confirm_chk_pre1
+   
+   FOREACH anmt960_confirm_chk_cs1 INTO l_nmbr002,l_nmbr006
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      SELECT SUM(nmbr007) INTO l_nmbr007
+        FROM nmbr_t
+       WHERE nmbrent = g_enterprise
+         AND nmbrdocno = g_nmbq_m.nmbqdocno
+         AND nmbr002 = l_nmbr002
+         AND nmbr006 = l_nmbr006
+   
+      IF cl_null(l_nmbr007) THEN LET l_nmbr007 = 0 END IF
+      
+      SELECT SUM(nmbw006) INTO l_nmbw006
+        FROM nmbw_t
+       WHERE nmbwent = g_enterprise
+         AND nmbwdocno = g_nmbq_m.nmbqdocno
+         AND nmbw004 = l_nmbr002
+         AND nmbw005 = l_nmbr006
+         
+      IF cl_null(l_nmbw006) THEN LET l_nmbw006 = 0 END IF
+         
+      IF l_nmbr007 <> l_nmbw006 THEN 
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'anm-02992'
+         LET g_errparam.extend = l_nmbr002,"/",l_nmbr006
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+      END IF
+   END FOREACH 
+   
+   
+   RETURN r_success
+END FUNCTION
+# 審核
+PRIVATE FUNCTION anmt960_confirm(p_sign)
+   DEFINE p_sign     LIKE type_t.chr1    #+.審核回寫  -.取消審核回寫
+   DEFINE l_sql      STRING
+   DEFINE l_nmbw002  LIKE nmbw_t.nmbw002
+   DEFINE l_nmbw003  LIKE nmbw_t.nmbw003
+   DEFINE l_nmbw006  LIKE nmbw_t.nmbw006
+   DEFINE r_success  LIKE type_t.num5
+   
+   LET r_success = TRUE
+   LET l_sql = "SELECT nmbw002,nmbw003,nmbw006 ",
+               "  FROM nmbw_t ",
+               " WHERE nmbwent = ",g_enterprise,
+               "   AND nmbwdocno = '",g_nmbq_m.nmbqdocno,"'"
+   PREPARE anmt960_confirm_pre1 FROM l_sql
+   DECLARE anmt960_confirm_cs1  CURSOR FOR anmt960_confirm_pre1
+   
+   LET l_sql = "UPDATE nmbo_t SET nmbo020 = nmbo020",p_sign," ? ",
+               " WHERE nmboent = ",g_enterprise,
+               "   AND nmbodocno = ? ",
+               "   AND nmboseq = ? "
+   PREPARE anmt960_confirm_nmbo_upd_pre FROM l_sql
+   
+   LET l_sql = "UPDATE nmbg_t SET nmbg020 = nmbg020",p_sign," ? ",
+               " WHERE nmbgent = ",g_enterprise,
+               "   AND nmbgdocno = ? ",
+               "   AND nmbgseq = ? "
+   PREPARE anmt960_confirm_nmbg_upd_pre FROM l_sql
+   
+   FOREACH anmt960_confirm_cs1 INTO l_nmbw002,l_nmbw003,l_nmbw006
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      EXECUTE anmt960_confirm_nmbo_upd_pre USING l_nmbw006,l_nmbw002,l_nmbw003
+      
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "upd nmbo" 
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      EXECUTE anmt960_confirm_nmbg_upd_pre USING l_nmbw006,l_nmbw002,l_nmbw003
+      
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "upd nmbg" 
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   
+   IF p_sign = '+' THEN 
+      CALL anmt960_ins_nmbc() RETURNING r_success
+   END IF
+   
+   RETURN r_success
+END FUNCTION
+# 若還款結束,則結案
+PRIVATE FUNCTION anmt960_upd_nmbo021(p_cmd)
+   DEFINE p_cmd      LIKE type_t.chr1    #c.審核  u.取消審核
+   DEFINE l_sql      STRING
+   DEFINE l_nmbw002  LIKE nmbw_t.nmbw002
+   DEFINE l_nmbw003  LIKE nmbw_t.nmbw003
+   DEFINE l_nmbo008  LIKE nmbo_t.nmbo008
+   DEFINE l_nmbo020  LIKE nmbo_t.nmbo020
+   DEFINE r_success  LIKE type_t.num5
+   
+   LET r_success = TRUE
+   LET l_sql = "SELECT DISTINCT nmbw002,nmbw003 ",
+               "  FROM nmbw_t ",
+               " WHERE nmbwent = ",g_enterprise,
+               "   AND nmbwdocno = '",g_nmbq_m.nmbqdocno,"'"
+   PREPARE anmt960_confirm_pre2 FROM l_sql
+   DECLARE anmt960_confirm_cs2  CURSOR FOR anmt960_confirm_pre2
+   
+   FOREACH anmt960_confirm_cs2 INTO l_nmbw002,l_nmbw003
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "FOREACH:" 
+         LET g_errparam.code   = SQLCA.sqlcode 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+ 
+         EXIT FOREACH
+      END IF
+      
+      SELECT nmbo008,nmbo020 INTO l_nmbo008,l_nmbo020
+        FROM nmbo_t
+       WHERE nmboent = g_enterprise
+         AND nmbodocno = l_nmbw002
+         AND nmboseq = l_nmbw003
+         
+      IF l_nmbo008 = l_nmbo020 THEN 
+         IF p_cmd = 'c' THEN    #審核
+            UPDATE nmbo_t SET nmbo021 = 'Y',
+                              nmbo022 = g_nmbq_m.nmbqdocdt
+             WHERE nmboent = g_enterprise
+               AND nmbodocno = l_nmbw002
+               AND nmboseq = l_nmbw003
+               
+            IF SQLCA.SQLCODE THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "upd nmbo" 
+               LET g_errparam.code   = SQLCA.sqlcode
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET r_success = FALSE
+               EXIT FOREACH
+            END IF
+            
+            UPDATE nmbg_t SET nmbg021 = 'Y',
+                              nmbg022 = g_nmbq_m.nmbqdocdt
+             WHERE nmbgent = g_enterprise
+               AND nmbgdocno = l_nmbw002
+               AND nmbgseq = l_nmbw003
+               
+            IF SQLCA.SQLCODE THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "upd nmbg" 
+               LET g_errparam.code   = SQLCA.sqlcode
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET r_success = FALSE
+               EXIT FOREACH
+            END IF
+               
+         ELSE   #取消審核
+            UPDATE nmbo_t SET nmbo021 = 'N',
+                              nmbo022 = ''
+             WHERE nmboent = g_enterprise
+               AND nmbodocno = l_nmbw002
+               AND nmboseq = l_nmbw003
+               
+            IF SQLCA.SQLCODE THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "upd nmbo" 
+               LET g_errparam.code   = SQLCA.sqlcode
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET r_success = FALSE
+               EXIT FOREACH
+            END IF
+            
+            UPDATE nmbg_t SET nmbg021 = 'N',
+                              nmbg022 = ''
+             WHERE nmbgent = g_enterprise
+               AND nmbgdocno = l_nmbw002
+               AND nmbgseq = l_nmbw003
+               
+            IF SQLCA.SQLCODE THEN
+               INITIALIZE g_errparam TO NULL 
+               LET g_errparam.extend = "upd nmbg" 
+               LET g_errparam.code   = SQLCA.sqlcode
+               LET g_errparam.popup  = TRUE 
+               CALL cl_err()
+               LET r_success = FALSE
+               EXIT FOREACH
+            END IF
+         END IF
+      END IF
+   END FOREACH
+   
+   IF p_cmd = 'u' THEN 
+      #刪除銀存收支異動檔
+      DELETE FROM nmbc_t
+       WHERE nmbcent = g_enterprise
+         AND nmbcdocno = g_nmbq_m.nmbqdocno
+         
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "del nmbc" 
+         LET g_errparam.code   = SQLCA.sqlcode
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         LET r_success = FALSE
+      END IF
+   END IF
+   
+   RETURN r_success   
+END FUNCTION
+# 单号+项次检查
+PRIVATE FUNCTION anmt960_nmbw002_chk(p_nmbw002,p_nmbw003,p_nmbwseq)
+   DEFINE p_nmbw002           LIKE nmbw_t.nmbw002
+   DEFINE p_nmbw003           LIKE nmbw_t.nmbw003
+   DEFINE p_nmbwseq           LIKE nmbw_t.nmbwseq
+   DEFINE l_nmbw006           LIKE nmbw_t.nmbw006
+   DEFINE l_nmbo006           LIKE nmbo_t.nmbo006
+   DEFINE l_nmbo008           LIKE nmbo_t.nmbo008
+   DEFINE l_nmbo020           LIKE nmbo_t.nmbo020
+   DEFINE l_n                 LIKE type_t.num5
+   DEFINE l_sql               STRING
+   
+   LET g_errno = ''
+   LET l_n = 0
+   SELECT COUNT(*) INTO l_n
+     FROM nmbo_t
+    WHERE nmboent = g_enterprise
+      AND nmbodocno = p_nmbw002
+      AND nmboseq = p_nmbw003
+      
+   IF l_n = 0 THEN 
+      LET g_errno = 'anm-02993'
+      RETURN
+   END IF
+   
+   SELECT nmbo008,nmbo020,nmbo006
+     INTO l_nmbo008,l_nmbo020,l_nmbo006
+     FROM nmbo_t
+    WHERE nmboent = g_enterprise
+      AND nmbodocno = p_nmbw002
+      AND nmboseq = p_nmbw003
+      
+   SELECT nmbw006 INTO l_nmbw006 
+     FROM nmbq_t,nmbw_t 
+    WHERE nmbqent = g_enterprise
+      AND nmbw002 = p_nmbw002
+      AND nmbw003 = p_nmbw003
+      AND nmbqent = nmbwent
+      AND nmbqdocno = nmbwdocno
+      AND nmbqstus = 'N'                     
+      AND ((nmbqdocno = g_nmbq_m.nmbqdocno   
+      AND nmbwseq <> p_nmbwseq)  
+       OR nmbqdocno <> g_nmbq_m.nmbqdocno) 
+       
+   IF cl_null(l_nmbw006) THEN LET l_nmbw006 = 0 END IF
+   
+   IF l_nmbo008 - l_nmbo020 - l_nmbw006 < = 0 THEN 
+      LET g_errno = 'anm-02994'
+      RETURN
+   END IF
+   
+   LET l_n = 0
+   LET l_sql = "SELECT COUNT(*) FROM nmbo_t ",
+               " WHERE nmboent = ",g_enterprise,
+               "   AND nmbodocno = '",p_nmbw002,"'",
+               "   AND nmboseq = ",p_nmbw003,
+               "   AND nmbo006 IN (",g_nmbr006_str,")",
+               "   AND nmbo006 = '",l_nmbo006,"'"
+   PREPARE anmt960_nnbo006_pre FROM l_sql
+   EXECUTE anmt960_nnbo006_pre INTO l_n
+   IF l_n = 0 THEN 
+      LET g_errno = 'anm-03000'
+      RETURN
+   END IF
+   
+END FUNCTION
+# 还款组织+币别唯一检查
+PRIVATE FUNCTION anmt960_nmbr002_nmbr006_chk()
+   DEFINE l_n                 LIKE type_t.num5
+   
+   LET g_errno = ''
+   LET l_n = 0
+   
+   SELECT COUNT(*) INTO l_n
+     FROM nmbr_t
+    WHERE nmbrent = g_enterprise
+      AND nmbrdocno = g_nmbq_m.nmbqdocno  
+      AND nmbr002 = g_nmbr_d[l_ac].nmbr002
+      AND nmbr006 = g_nmbr_d[l_ac].nmbr006
+      AND nmbrseq <> g_nmbr_d[l_ac].nmbrseq
+      
+   IF l_n > 0 THEN 
+      LET g_errno = 'anm-02995'
+      RETURN
+   END IF
+END FUNCTION
+# 插入nmbc_t
+PRIVATE FUNCTION anmt960_ins_nmbc()
+   DEFINE l_sql              STRING
+   DEFINE l_glaald           LIKE glaa_t.glaald
+   DEFINE l_glaa001          LIKE glaa_t.glaa001
+   DEFINE l_glaa015          LIKE glaa_t.glaa015
+   DEFINE l_glaa016          LIKE glaa_t.glaa016
+   DEFINE l_glaa019          LIKE glaa_t.glaa019
+   DEFINE l_glaa020          LIKE glaa_t.glaa020
+   DEFINE l_sfin4010         LIKE type_t.chr20
+   DEFINE l_sfin4011         LIKE type_t.chr20
+   #161128-00061#3-----modify--begin----------
+   #DEFINE l_nmbr             RECORD LIKE nmbr_t.*
+   #DEFINE l_nmbw             RECORD LIKE nmbw_t.*
+   #DEFINE l_nmbo             RECORD LIKE nmbo_t.*
+   #DEFINE l_nmbc             RECORD LIKE nmbc_t.*
+   DEFINE l_nmbr RECORD  #內部資金還款明細檔
+       nmbrent LIKE nmbr_t.nmbrent, #企業編碼
+       nmbrdocno LIKE nmbr_t.nmbrdocno, #還款單號
+       nmbrseq LIKE nmbr_t.nmbrseq, #序號
+       nmbr001 LIKE nmbr_t.nmbr001, #資金中心
+       nmbr002 LIKE nmbr_t.nmbr002, #還款組織
+       nmbr003 LIKE nmbr_t.nmbr003, #還款內部帳戶編號
+       nmbr004 LIKE nmbr_t.nmbr004, #受款組織
+       nmbr005 LIKE nmbr_t.nmbr005, #受款內部帳戶編號
+       nmbr006 LIKE nmbr_t.nmbr006, #幣別
+       nmbr007 LIKE nmbr_t.nmbr007  #還款金額
+       END RECORD
+   DEFINE l_nmbw RECORD  #內部資金還款單據明細檔
+       nmbwent LIKE nmbw_t.nmbwent, #企業編碼
+       nmbwdocno LIKE nmbw_t.nmbwdocno, #還款單號
+       nmbwseq LIKE nmbw_t.nmbwseq, #序號
+       nmbw001 LIKE nmbw_t.nmbw001, #內部交易性質
+       nmbw002 LIKE nmbw_t.nmbw002, #調度單號
+       nmbw003 LIKE nmbw_t.nmbw003, #調度單序號
+       nmbw004 LIKE nmbw_t.nmbw004, #還款組織
+       nmbw005 LIKE nmbw_t.nmbw005, #幣別
+       nmbw006 LIKE nmbw_t.nmbw006, #還款金額
+       nmbw007 LIKE nmbw_t.nmbw007  #已還金額
+       END RECORD
+
+   DEFINE l_nmbo RECORD  #內部資金排程撥出明細檔
+       nmboent LIKE nmbo_t.nmboent, #企業編碼
+       nmbodocno LIKE nmbo_t.nmbodocno, #調度單號
+       nmboseq LIKE nmbo_t.nmboseq, #序號
+       nmboseq2 LIKE nmbo_t.nmboseq2, #手續費序號
+       nmbo001 LIKE nmbo_t.nmbo001, #組織編號
+       nmbo002 LIKE nmbo_t.nmbo002, #調度項目
+       nmbo003 LIKE nmbo_t.nmbo003, #開戶銀行
+       nmbo004 LIKE nmbo_t.nmbo004, #交易帳戶
+       nmbo005 LIKE nmbo_t.nmbo005, #內部帳戶
+       nmbo006 LIKE nmbo_t.nmbo006, #幣別
+       nmbo007 LIKE nmbo_t.nmbo007, #匯率
+       nmbo008 LIKE nmbo_t.nmbo008, #原幣金額
+       nmbo009 LIKE nmbo_t.nmbo009, #本幣金額
+       nmbo010 LIKE nmbo_t.nmbo010, #存提碼
+       nmbo011 LIKE nmbo_t.nmbo011, #現金變動碼
+       nmbo012 LIKE nmbo_t.nmbo012, #出帳日期
+       nmbo013 LIKE nmbo_t.nmbo013, #主帳套帳務單號
+       nmbo014 LIKE nmbo_t.nmbo014, #年利率
+       nmbo015 LIKE nmbo_t.nmbo015, #手續費原幣
+       nmbo016 LIKE nmbo_t.nmbo016, #手續費本幣
+       nmbo017 LIKE nmbo_t.nmbo017, #手續費存提碼
+       nmbo018 LIKE nmbo_t.nmbo018, #手續費現金變動碼
+       nmbo019 LIKE nmbo_t.nmbo019, #累積利息
+       nmbo020 LIKE nmbo_t.nmbo020, #已還原幣金額
+       nmbo021 LIKE nmbo_t.nmbo021, #結案否
+       nmbo022 LIKE nmbo_t.nmbo022, #結案日期
+       nmbo023 LIKE nmbo_t.nmbo023, #次帳一帳務單號
+       nmbo024 LIKE nmbo_t.nmbo024, #次帳二帳務單號
+       nmbo025 LIKE nmbo_t.nmbo025  #內部交易對象
+       END RECORD
+
+   DEFINE l_nmbc RECORD  #銀存收支異動檔
+       nmbcent LIKE nmbc_t.nmbcent, #企業編號
+       nmbcownid LIKE nmbc_t.nmbcownid, #資料所有者
+       nmbcowndp LIKE nmbc_t.nmbcowndp, #資料所屬部門
+       nmbccrtid LIKE nmbc_t.nmbccrtid, #資料建立者
+       nmbccrtdp LIKE nmbc_t.nmbccrtdp, #資料建立部門
+       nmbccrtdt LIKE nmbc_t.nmbccrtdt, #資料創建日
+       nmbcmodid LIKE nmbc_t.nmbcmodid, #資料修改者
+       nmbcmoddt LIKE nmbc_t.nmbcmoddt, #最近修改日
+       nmbccnfid LIKE nmbc_t.nmbccnfid, #資料確認者
+       nmbccnfdt LIKE nmbc_t.nmbccnfdt, #資料確認日
+       nmbcpstid LIKE nmbc_t.nmbcpstid, #資料過帳者
+       nmbcpstdt LIKE nmbc_t.nmbcpstdt, #資料過帳日
+       nmbcstus LIKE nmbc_t.nmbcstus, #狀態碼
+       nmbccomp LIKE nmbc_t.nmbccomp, #法人
+       nmbcsite LIKE nmbc_t.nmbcsite, #資金中心
+       nmbcdocno LIKE nmbc_t.nmbcdocno, #來源單號
+       nmbcseq LIKE nmbc_t.nmbcseq, #項次
+       nmbc001 LIKE nmbc_t.nmbc001, #單據來源
+       nmbc002 LIKE nmbc_t.nmbc002, #交易帳戶編碼
+       nmbc003 LIKE nmbc_t.nmbc003, #交易對象
+       nmbc004 LIKE nmbc_t.nmbc004, #交易對象識別碼
+       nmbc005 LIKE nmbc_t.nmbc005, #銀行日期
+       nmbc006 LIKE nmbc_t.nmbc006, #異動別
+       nmbc007 LIKE nmbc_t.nmbc007, #存提碼
+       nmbc008 LIKE nmbc_t.nmbc008, #調節碼
+       nmbc009 LIKE nmbc_t.nmbc009, #對帳碼
+       nmbc010 LIKE nmbc_t.nmbc010, #網銀媒體檔轉出日期
+       nmbc011 LIKE nmbc_t.nmbc011, #網銀媒體檔轉出批號
+       nmbc100 LIKE nmbc_t.nmbc100, #交易帳戶幣別
+       nmbc101 LIKE nmbc_t.nmbc101, #主帳套匯率
+       nmbc103 LIKE nmbc_t.nmbc103, #主帳套原幣金額
+       nmbc113 LIKE nmbc_t.nmbc113, #主帳套本幣金額
+       nmbc121 LIKE nmbc_t.nmbc121, #主帳套本位幣二匯率
+       nmbc123 LIKE nmbc_t.nmbc123, #主帳套本位幣二金額
+       nmbc131 LIKE nmbc_t.nmbc131, #主帳套本位幣三匯率
+       nmbc133 LIKE nmbc_t.nmbc133, #主帳套本位幣三金額
+       nmbc012 LIKE nmbc_t.nmbc012, #票據號碼
+       nmbc013 LIKE nmbc_t.nmbc013, #款別
+       nmbc014 LIKE nmbc_t.nmbc014, #到期日
+       nmbc015 LIKE nmbc_t.nmbc015, #匯入銀行編號
+       nmbc016 LIKE nmbc_t.nmbc016, #匯入帳號
+       nmbc017 LIKE nmbc_t.nmbc017, #受款人全名
+       nmbcorga LIKE nmbc_t.nmbcorga  #來源組織
+       END RECORD
+
+   #161128-00061#3-----modify--end-----------
+   DEFINE r_success          LIKE type_t.num5
+   
+   LET r_success = TRUE
+   
+   INITIALIZE l_nmbr TO NULL 
+   INITIALIZE l_nmbw TO NULL
+   INITIALIZE l_nmbo TO NULL
+   INITIALIZE l_nmbc TO NULL
+   
+   #161128-00061#3-----modify--begin-----------
+   #LET l_sql = "SELECT * FROM nmbr_t ",
+   LET l_sql = "SELECT nmbrent,nmbrdocno,nmbrseq,nmbr001,nmbr002,nmbr003,nmbr004,nmbr005,nmbr006,nmbr007 FROM nmbr_t ",
+   #161128-00061#3-----modify--end-----------
+               " WHERE nmbrent = ",g_enterprise,
+               "   AND nmbrdocno = '",g_nmbq_m.nmbqdocno,"'"
+   PREPARE anmt960_ins_nmbc_pre1 FROM l_sql
+   DECLARE anmt960_ins_nmbc_cs1 CURSOR FOR anmt960_ins_nmbc_pre1
+   
+   FOREACH anmt960_ins_nmbc_cs1 INTO l_nmbr.*
+      #取得組織代號所屬法人
+      CALL s_fin_orga_get_comp_ld(l_nmbr.nmbr002)
+       RETURNING g_sub_success,g_errno,l_nmbc.nmbccomp,l_glaald
+      
+      #內部銀行還款撥出存提码
+      CALL cl_get_para(g_enterprise,l_nmbc.nmbccomp,'S-FIN-4011') RETURNING l_sfin4011
+       
+      #取匯率
+      CALL s_fin_get_curr_rate(l_nmbc.nmbccomp,l_glaald,g_nmbq_m.nmbqdocdt,l_nmbr.nmbr006,'S-FIN-4004')
+           RETURNING l_nmbc.nmbc101,l_nmbc.nmbc121,l_nmbc.nmbc131
+      #取使用幣別/本位幣2幣別/本位幣3幣別
+      CALL s_ld_sel_glaa(l_glaald,'glaa001|glaa015|glaa016|glaa019|glaa020')
+           RETURNING  g_sub_success,l_glaa001,l_glaa015,l_glaa016,l_glaa019,l_glaa020      
+     
+      LET l_nmbc.nmbcent = g_enterprise
+      LET l_nmbc.nmbcsite= g_nmbq_m.nmbq001
+      LET l_nmbc.nmbcdocno =g_nmbq_m.nmbqdocno
+      LET l_nmbc.nmbcseq = l_nmbr.nmbrseq
+      LET l_nmbc.nmbc001 = 'anmt960'
+      LET l_nmbc.nmbc002 = l_nmbr.nmbr003
+      LET l_nmbc.nmbc005 = g_nmbq_m.nmbqdocdt   
+      LET l_nmbc.nmbc006 = '2'
+      LET l_nmbc.nmbc007 = l_sfin4011
+      LET l_nmbc.nmbc100 = l_nmbr.nmbr006
+      LET l_nmbc.nmbc103 = l_nmbr.nmbr007
+      LET l_nmbc.nmbc113 = l_nmbc.nmbc103*l_nmbc.nmbc101  
+      IF l_glaa015 = 'Y' THEN            #本位幣2為啟用
+         LET l_nmbc.nmbc123 = l_nmbc.nmbc103 * l_nmbc.nmbc121
+         LET l_nmbc.nmbc123 = s_curr_round(l_nmbc.nmbccomp,l_glaa016,l_nmbc.nmbc123,2)
+      ELSE
+         LET l_nmbc.nmbc123 = 0
+      END IF
+      IF l_glaa019 = 'Y' THEN            #本位幣3為啟用
+         LET l_nmbc.nmbc133 = l_nmbc.nmbc103 * l_nmbc.nmbc131
+         LET l_nmbc.nmbc133 = s_curr_round(l_nmbc.nmbccomp,l_glaa020,l_nmbc.nmbc133,2)
+      ELSE
+         LET l_nmbc.nmbc133 = 0
+      END IF
+      LET l_nmbc.nmbcownid = g_user
+      LET l_nmbc.nmbcowndp = g_dept
+      LET l_nmbc.nmbccrtid = g_user
+      LET l_nmbc.nmbccrtdp = g_dept
+      LET l_nmbc.nmbccrtdt = cl_get_current()
+      LET l_nmbc.nmbcstus = 'N'      
+      LET l_nmbc.nmbcorga = l_nmbr.nmbr002  
+      
+      #161128-00061#3-----modify--begin-----------      
+      #INSERT INTO nmbc_t VALUES(l_nmbc.*)
+      INSERT INTO nmbc_t (nmbcent,nmbcownid,nmbcowndp,nmbccrtid,nmbccrtdp,nmbccrtdt,nmbcmodid,nmbcmoddt,
+                          nmbccnfid,nmbccnfdt,nmbcpstid,nmbcpstdt,nmbcstus,nmbccomp,nmbcsite,nmbcdocno,
+                          nmbcseq,nmbc001,nmbc002,nmbc003,nmbc004,nmbc005,nmbc006,nmbc007,nmbc008,nmbc009,
+                          nmbc010,nmbc011,nmbc100,nmbc101,nmbc103,nmbc113,nmbc121,nmbc123,nmbc131,nmbc133,
+                          nmbc012,nmbc013,nmbc014,nmbc015,nmbc016,nmbc017,nmbcorga)
+       VALUES(l_nmbc.nmbcent,l_nmbc.nmbcownid,l_nmbc.nmbcowndp,l_nmbc.nmbccrtid,l_nmbc.nmbccrtdp,l_nmbc.nmbccrtdt,l_nmbc.nmbcmodid,l_nmbc.nmbcmoddt,
+              l_nmbc.nmbccnfid,l_nmbc.nmbccnfdt,l_nmbc.nmbcpstid,l_nmbc.nmbcpstdt,l_nmbc.nmbcstus,l_nmbc.nmbccomp,l_nmbc.nmbcsite,l_nmbc.nmbcdocno,
+              l_nmbc.nmbcseq,l_nmbc.nmbc001,l_nmbc.nmbc002,l_nmbc.nmbc003,l_nmbc.nmbc004,l_nmbc.nmbc005,l_nmbc.nmbc006,l_nmbc.nmbc007,l_nmbc.nmbc008,l_nmbc.nmbc009,
+              l_nmbc.nmbc010,l_nmbc.nmbc011,l_nmbc.nmbc100,l_nmbc.nmbc101,l_nmbc.nmbc103,l_nmbc.nmbc113,l_nmbc.nmbc121,l_nmbc.nmbc123,l_nmbc.nmbc131,l_nmbc.nmbc133,
+              l_nmbc.nmbc012,l_nmbc.nmbc013,l_nmbc.nmbc014,l_nmbc.nmbc015,l_nmbc.nmbc016,l_nmbc.nmbc017,l_nmbc.nmbcorga)
+      #161128-00061#3-----modify--end-----------
+                  
+      IF SQLCA.SQLcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "ins nmbc_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+      END IF
+   END FOREACH 
+   #161128-00061#3-----modify--begin-----------
+   #LET l_sql = "SELECT * FROM nmbw_t ",
+   LET l_sql = "SELECT nmbwent,nmbwdocno,nmbwseq,nmbw001,nmbw002,nmbw003,nmbw004,nmbw005,nmbw006,nmbw007 FROM nmbw_t ",
+   #161128-00061#3-----modify--end-----------
+               " WHERE nmbwent = ",g_enterprise,
+               "   AND nmbwdocno = '",g_nmbq_m.nmbqdocno,"'"
+   PREPARE anmt960_ins_nmbc_pre2 FROM l_sql
+   DECLARE anmt960_ins_nmbc_cs2 CURSOR FOR anmt960_ins_nmbc_pre2
+   
+   FOREACH anmt960_ins_nmbc_cs2 INTO l_nmbw.*
+      #161128-00061#3-----modify--begin-----------
+      #SELECT * INTO l_nmbo.*
+      SELECT nmboent,nmbodocno,nmboseq,nmboseq2,nmbo001,nmbo002,nmbo003,nmbo004,nmbo005,nmbo006,
+             nmbo007,nmbo008,nmbo009,nmbo010,nmbo011,nmbo012,nmbo013,nmbo014,nmbo015,nmbo016,nmbo017,
+             nmbo018,nmbo019,nmbo020,nmbo021,nmbo022,nmbo023,nmbo024,nmbo025 INTO l_nmbo.*
+      #161128-00061#3-----modify--end-----------
+        FROM nmbo_t
+       WHERE nmboent = g_enterprise
+         AND nmbodocno = l_nmbw.nmbw002
+         AND nmboseq = l_nmbw.nmbw003
+         AND nmboseq2 <= 100
+         
+      #取得組織代號所屬法人
+      CALL s_fin_orga_get_comp_ld(l_nmbo.nmbo001)
+      RETURNING g_sub_success,g_errno,l_nmbc.nmbccomp,l_glaald
+          
+      #內部銀行還款撥入存提码
+      CALL cl_get_para(g_enterprise,l_nmbc.nmbccomp,'S-FIN-4010') RETURNING l_sfin4010
+       
+      #取匯率
+      CALL s_fin_get_curr_rate(l_nmbc.nmbccomp,l_glaald,g_nmbq_m.nmbqdocdt,l_nmbr.nmbr006,'S-FIN-4004')
+           RETURNING l_nmbc.nmbc101,l_nmbc.nmbc121,l_nmbc.nmbc131
+      #取使用幣別/本位幣2幣別/本位幣3幣別
+      CALL s_ld_sel_glaa(l_glaald,'glaa001|glaa015|glaa016|glaa019|glaa020')
+           RETURNING  g_sub_success,l_glaa001,l_glaa015,l_glaa016,l_glaa019,l_glaa020      
+     
+      LET l_nmbc.nmbcent = g_enterprise
+      LET l_nmbc.nmbcsite= g_nmbq_m.nmbq001
+      LET l_nmbc.nmbcdocno =g_nmbq_m.nmbqdocno
+      LET l_nmbc.nmbcseq = l_nmbw.nmbwseq
+      LET l_nmbc.nmbc001 = 'anmt960'
+      LET l_nmbc.nmbc002 = l_nmbo.nmbo004
+      LET l_nmbc.nmbc005 = g_nmbq_m.nmbqdocdt   
+      LET l_nmbc.nmbc006 = '1'
+      LET l_nmbc.nmbc007 = l_sfin4010
+      LET l_nmbc.nmbc100 = l_nmbw.nmbw005
+      LET l_nmbc.nmbc103 = l_nmbw.nmbw006
+      LET l_nmbc.nmbc113 = l_nmbc.nmbc103*l_nmbc.nmbc101  
+      IF l_glaa015 = 'Y' THEN            #本位幣2為啟用
+         LET l_nmbc.nmbc123 = l_nmbc.nmbc103 * l_nmbc.nmbc121
+         LET l_nmbc.nmbc123 = s_curr_round(l_nmbc.nmbccomp,l_glaa016,l_nmbc.nmbc123,2)
+      ELSE
+         LET l_nmbc.nmbc123 = 0
+      END IF
+      IF l_glaa019 = 'Y' THEN            #本位幣3為啟用
+         LET l_nmbc.nmbc133 = l_nmbc.nmbc103 * l_nmbc.nmbc131
+         LET l_nmbc.nmbc133 = s_curr_round(l_nmbc.nmbccomp,l_glaa020,l_nmbc.nmbc133,2)
+      ELSE
+         LET l_nmbc.nmbc133 = 0
+      END IF
+      LET l_nmbc.nmbcownid = g_user
+      LET l_nmbc.nmbcowndp = g_dept
+      LET l_nmbc.nmbccrtid = g_user
+      LET l_nmbc.nmbccrtdp = g_dept
+      LET l_nmbc.nmbccrtdt = cl_get_current()
+      LET l_nmbc.nmbcstus = 'N'      
+      LET l_nmbc.nmbcorga = l_nmbo.nmbo001     
+      #161128-00061#3-----modify--begin-----------      
+      #INSERT INTO nmbc_t VALUES(l_nmbc.*)
+      INSERT INTO nmbc_t (nmbcent,nmbcownid,nmbcowndp,nmbccrtid,nmbccrtdp,nmbccrtdt,nmbcmodid,nmbcmoddt,
+                          nmbccnfid,nmbccnfdt,nmbcpstid,nmbcpstdt,nmbcstus,nmbccomp,nmbcsite,nmbcdocno,
+                          nmbcseq,nmbc001,nmbc002,nmbc003,nmbc004,nmbc005,nmbc006,nmbc007,nmbc008,nmbc009,
+                          nmbc010,nmbc011,nmbc100,nmbc101,nmbc103,nmbc113,nmbc121,nmbc123,nmbc131,nmbc133,
+                          nmbc012,nmbc013,nmbc014,nmbc015,nmbc016,nmbc017,nmbcorga)
+       VALUES(l_nmbc.nmbcent,l_nmbc.nmbcownid,l_nmbc.nmbcowndp,l_nmbc.nmbccrtid,l_nmbc.nmbccrtdp,l_nmbc.nmbccrtdt,l_nmbc.nmbcmodid,l_nmbc.nmbcmoddt,
+              l_nmbc.nmbccnfid,l_nmbc.nmbccnfdt,l_nmbc.nmbcpstid,l_nmbc.nmbcpstdt,l_nmbc.nmbcstus,l_nmbc.nmbccomp,l_nmbc.nmbcsite,l_nmbc.nmbcdocno,
+              l_nmbc.nmbcseq,l_nmbc.nmbc001,l_nmbc.nmbc002,l_nmbc.nmbc003,l_nmbc.nmbc004,l_nmbc.nmbc005,l_nmbc.nmbc006,l_nmbc.nmbc007,l_nmbc.nmbc008,l_nmbc.nmbc009,
+              l_nmbc.nmbc010,l_nmbc.nmbc011,l_nmbc.nmbc100,l_nmbc.nmbc101,l_nmbc.nmbc103,l_nmbc.nmbc113,l_nmbc.nmbc121,l_nmbc.nmbc123,l_nmbc.nmbc131,l_nmbc.nmbc133,
+              l_nmbc.nmbc012,l_nmbc.nmbc013,l_nmbc.nmbc014,l_nmbc.nmbc015,l_nmbc.nmbc016,l_nmbc.nmbc017,l_nmbc.nmbcorga)
+      #161128-00061#3-----modify--end-----------
+                  
+      IF SQLCA.SQLcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "ins nmbc_t"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+      END IF
+   END FOREACH 
+   
+   RETURN r_success
+END FUNCTION
+
+ 
+{</section>}
+ 

@@ -1,0 +1,642 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="abgi045_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0002(2016-07-12 16:34:13), PR版次:0002(2016-07-12 17:05:39)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000026
+#+ Filename...: abgi045_02
+#+ Description: 由科目參照表整批產生
+#+ Creator....: 06821(2016-04-08 11:26:20)
+#+ Modifier...: 03080 -SD/PR- 03080
+ 
+{</section>}
+ 
+{<section id="abgi045_02.global" >}
+#應用 c01b 樣板自動產生(Version:9)
+#add-point:填寫註解說明
+#160425-00020#4 160428 By Jessy "由科目參照表整批產生"ACTION改由abgi040中執行，並同時產生abgi040+abgi045資料
+#160425-00020#4 160505 By Jessy ACTION INPUT增加"預算專案參照表號"當目標,由科目參照表當來源寫入單身,QBE增加統制/明細別&科目層級欄位
+#160630-00008#4 160704 By albireo 多寫入abgi140
+#160630-00008#6 160712 By 06821   由科目參照表整批產生: QBE統制明細別 : 下拉改為三個選項 1.統制+獨立  2.明細+獨立  3.統制
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+ 
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_glac_m        RECORD
+       bgae006 LIKE bgae_t.bgae006, 
+   bgae006_desc LIKE type_t.chr80, 
+   glac001 LIKE glac_t.glac001, 
+   glac001_desc LIKE type_t.chr80, 
+   glac002 LIKE glac_t.glac002, 
+   glac003 LIKE glac_t.glac003, 
+   glac005 LIKE glac_t.glac005
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+DEFINE g_wc         STRING  
+#end add-point
+ 
+DEFINE g_glac_m        type_g_glac_m
+ 
+   DEFINE g_glac001_t LIKE glac_t.glac001
+DEFINE g_glac002_t LIKE glac_t.glac002
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="abgi045_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION abgi045_02(--)
+   #add-point:input段變數傳入
+   
+   #end add-point
+   )
+   #add-point:input段define
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理)
+   DEFINE l_n             LIKE type_t.num10
+   DEFINE r_success       LIKE type_t.num5
+   DEFINE r_bgae006       LIKE bgae_t.bgae006
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_abgi045_02 WITH FORM cl_ap_formpath("abg","abgi045_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+   CLEAR FORM
+   WHENEVER ERROR CONTINUE
+   
+   INITIALIZE g_glac_m.* TO NULL
+   
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_glac_m.bgae006,g_glac_m.glac001 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+            
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD bgae006
+            
+            #add-point:AFTER FIELD bgae006 name="input.a.bgae006"
+            #此段落由子樣板a05產生
+            #160425-00020#4 --s add
+            IF NOT cl_null(g_glac_m.bgae006) THEN 
+               SELECT COUNT(*) INTO l_n FROM ooal_t WHERE ooalent = g_enterprise AND ooal001='11' AND ooal002 = g_glac_m.bgae006
+               IF l_n = 0 THEN
+                  LET g_glac_m.bgae006 = NULL
+                  LET g_glac_m.bgae006_desc = NULL
+                  DISPLAY BY NAME g_glac_m.bgae006_desc
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'sub-01305'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.replace[1] = 'aooi081'
+                  LET g_errparam.replace[2] = cl_get_progname('aooi081',g_lang,"2")
+                  LET g_errparam.exeprog = 'aooi081'
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  NEXT FIELD CURRENT
+               END IF
+               SELECT COUNT(*) INTO l_n FROM ooal_t WHERE ooalent = g_enterprise AND ooal001='11' AND ooalstus = 'Y' AND ooal002 = g_glac_m.bgae006
+               IF l_n = 0 THEN
+                  LET g_glac_m.bgae006 = NULL
+                  LET g_glac_m.bgae006_desc = NULL
+                  DISPLAY BY NAME g_glac_m.bgae006_desc
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = 'sub-01302'
+                  LET g_errparam.extend = ''
+                  LET g_errparam.replace[1] = 'aooi081'
+                  LET g_errparam.replace[2] = cl_get_progname('aooi081',g_lang,"2")
+                  LET g_errparam.exeprog = 'aooi081'
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_glac_m.bgae006
+            CALL ap_ref_array2(g_ref_fields,"SELECT ooall004 FROM ooall_t WHERE ooallent='"||g_enterprise||"' AND ooall001='11' AND ooall002=? AND ooall003='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_glac_m.bgae006_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_glac_m.bgae006_desc
+            #160425-00020#4 --e add
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD bgae006
+            #add-point:BEFORE FIELD bgae006 name="input.b.bgae006"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE bgae006
+            #add-point:ON CHANGE bgae006 name="input.g.bgae006"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD glac001
+            
+            #add-point:AFTER FIELD glac001 name="input.a.glac001"
+            LET g_glac_m.glac001_desc = ''
+            DISPLAY BY NAME g_glac_m.glac001_desc
+            IF NOT abgi045_02_glac001_chk(g_glac_m.glac001) THEN
+               LET g_glac_m.glac001 = ''
+               LET g_glac_m.glac001_desc = s_desc_ooal002_desc('0',g_glac_m.glac001)
+               DISPLAY BY NAME g_glac_m.glac001,g_glac_m.glac001_desc
+               NEXT FIELD glac001
+            END IF 
+            LET g_glac_m.glac001_desc = s_desc_ooal002_desc('0',g_glac_m.glac001)
+            DISPLAY BY NAME g_glac_m.glac001_desc
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD glac001
+            #add-point:BEFORE FIELD glac001 name="input.b.glac001"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE glac001
+            #add-point:ON CHANGE glac001 name="input.g.glac001"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.bgae006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD bgae006
+            #add-point:ON ACTION controlp INFIELD bgae006 name="input.c.bgae006"
+            #應用 a07 樣板自動產生(Version:3)   
+            #160425-00020#4 --s add
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+ 
+            LET g_qryparam.default1 = g_glac_m.bgae006             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+ 
+            CALL q_ooal002_12()                                #呼叫開窗
+ 
+            LET g_glac_m.bgae006 = g_qryparam.return1              
+
+            DISPLAY g_glac_m.bgae006 TO bgae006              #
+
+            NEXT FIELD bgae006                          #返回原欄位
+            #160425-00020#4 --e add
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.glac001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD glac001
+            #add-point:ON ACTION controlp INFIELD glac001 name="input.c.glac001"
+            #應用 a07 樣板自動產生(Version:3)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_glac_m.glac001  #給予default值
+            CALL q_ooal002_1()                          #呼叫開窗
+            LET g_glac_m.glac001 = g_qryparam.return1              
+            LET g_glac_m.glac001_desc = s_desc_ooal002_desc('0',g_glac_m.glac001)
+            DISPLAY BY NAME g_glac_m.glac001,g_glac_m.glac001_desc
+            NEXT FIELD glac001                          #返回原欄位
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input
+      CONSTRUCT BY NAME g_wc ON glac002,glac003,glac005
+         BEFORE CONSTRUCT
+         
+         ON ACTION controlp INFIELD glac002
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " glac001 = '",g_glac_m.glac001,"' "
+            CALL q_glac()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO glac002  #顯示到畫面上
+            NEXT FIELD glac002                     #返回原欄位
+
+         ON ACTION controlp INFIELD glac003
+       
+         ON ACTION controlp INFIELD glac005
+
+      END CONSTRUCT
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_abgi045_02 
+   
+   #add-point:input段after input 
+   LET r_success = TRUE
+   LET r_bgae006 = ''
+   
+   CALL cl_err_collect_init()
+   IF INT_FLAG THEN
+      LET r_success= FALSE
+      LET INT_FLAG = 0
+   ELSE
+      CALL abgi045_02_ins_bgae() RETURNING g_sub_success
+      IF NOT g_sub_success THEN
+         LET r_success= FALSE
+      ELSE
+         #LET r_bgae006 = g_glac_m.glac001 #160425-00020#4 mark
+         LET r_bgae006 = g_glac_m.bgae006  #160425-00020#4 add
+      END IF
+   END IF
+   CALL cl_err_collect_show()
+   
+   RETURN r_success,r_bgae006 
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="abgi045_02.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="abgi045_02.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 會計科目參照表檢核
+# Memo...........:
+# Usage..........: CALL abgi045_02_glac001_chk(p_glac001)
+# Date & Author..: 160408 By Jessy
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgi045_02_glac001_chk(p_glac001)
+DEFINE p_glac001 LIKE glac_t.glac001
+DEFINE r_success LIKE type_t.num5
+DEFINE l_n       LIKE type_t.num5
+
+   LET r_success = TRUE
+   IF NOT cl_null(p_glac001) THEN
+      #檢查是否存在且參照表類型為0
+      LET l_n = 0
+      SELECT COUNT(*) INTO l_n FROM ooal_t 
+       WHERE ooalent = g_enterprise AND ooal001 = '0' AND ooal002 = p_glac001
+      IF l_n = 0 THEN
+         INITIALIZE g_errparam.* TO NULL
+         LET g_errparam.extend = ''
+         LET g_errparam.code = 'sub-01305'
+         LET g_errparam.replace[1] = 'aooi070'
+         LET g_errparam.replace[2] = cl_get_progname('aooi070',g_lang,"2")
+         LET g_errparam.exeprog = 'aooi070'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()  
+         LET r_success = FALSE
+         RETURN r_success
+      END IF 
+      #檢查是否有效
+      IF r_success THEN
+         IF NOT ap_chk_isExist(p_glac001,"SELECT COUNT(*) FROM ooal_t WHERE "
+            ||"ooalent = '" ||g_enterprise|| "' AND "||"ooal001 = '0' AND ooal002 = ? AND ooalstus = 'Y'  ",'sub-01302','aooi070') THEN
+            LET r_success = FALSE
+         END IF 
+      END IF
+   END IF 
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 由科目參照表整批產生預算項目維度
+# Memo...........:
+# Usage..........: CALL abgi045_02_ins_bgae()
+# Date & Author..: 160408 By Jessy
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION abgi045_02_ins_bgae()
+DEFINE ld_date       DATETIME YEAR TO SECOND
+DEFINE l_sql         STRING
+DEFINE l_sql1        STRING                 #160425-00020#4 add
+DEFINE l_glac        RECORD                 #來源table
+         glac002	   LIKE glac_t.glac002,   #會計科目編號
+         glac017	   LIKE glac_t.glac017,   #啟用部門
+         glac018	   LIKE glac_t.glac018,   #啟用利潤成本
+         glac019	   LIKE glac_t.glac019,   #啟用區域
+         glac020	   LIKE glac_t.glac020,   #啟用交易客商
+         glac027	   LIKE glac_t.glac027,   #啟用帳款客商
+         glac021	   LIKE glac_t.glac021,   #啟用客群
+         glac022	   LIKE glac_t.glac022,   #啟用產品類別
+         glac023	   LIKE glac_t.glac023,   #啟用人員
+         glac025	   LIKE glac_t.glac025,   #啟用專案
+         glac026	   LIKE glac_t.glac026,   #啟用WBS
+         glac028	   LIKE glac_t.glac028,   #啟用經營方式
+         glac029	   LIKE glac_t.glac029,   #啟用渠道
+         glac030	   LIKE glac_t.glac030,   #啟用品牌
+         glac041	   LIKE glac_t.glac041,   #啟用自由核算項一
+         glac042	   LIKE glac_t.glac042,   #啟用自由核算項二
+         glac043	   LIKE glac_t.glac043,   #啟用自由核算項三
+         glac044	   LIKE glac_t.glac044,   #啟用自由核算項四
+         glac045	   LIKE glac_t.glac045,   #啟用自由核算項五
+         glac046	   LIKE glac_t.glac046,   #啟用自由核算項六
+         glac047	   LIKE glac_t.glac047,   #啟用自由核算項七
+         glac048	   LIKE glac_t.glac048,   #啟用自由核算項八
+         glac049	   LIKE glac_t.glac049,   #啟用自由核算項九
+         glac050	   LIKE glac_t.glac050,   #啟用自由核算項十
+         glac007	   LIKE glac_t.glac007,   #科目類別             #160425-00020#4 add
+         glac008	   LIKE glac_t.glac008,   #正常餘額形態         #160425-00020#4 add
+         glac016	   LIKE glac_t.glac016    #現金科目否           #160425-00020#4 add
+                     END RECORD
+#160425-00020#4 --s add                     
+DEFINE l_bgael       RECORD                 #多語言table
+         bgael006    LIKE bgael_t.bgael006, 
+         bgael001    LIKE bgael_t.bgael001, 
+         bgael002    LIKE bgael_t.bgael002, 
+         bgael003    LIKE bgael_t.bgael003, 
+         bgael004    LIKE bgael_t.bgael004
+                     END RECORD                                    
+DEFINE l_bgae003     LIKE bgae_t.bgae003            
+DEFINE l_bgae036     LIKE bgae_t.bgae036            
+DEFINE l_cnt         LIKE type_t.num10     
+#160425-00020#4 --e add    
+#160630-00008#4-----s
+DEFINE l_bgao        RECORD LIKE bgao_t.*
+#160630-00008#4-----e
+DEFINE r_success     LIKE type_t.num5
+
+   LET r_success = TRUE
+   WHENEVER ERROR CONTINUE
+   
+   #IF cl_null(g_wc) THEN LET g_wc = " 1=1" END IF #160425-00020#4 mark
+   #160425-00020#4 --s add 
+   IF cl_null(g_wc) THEN 
+      LET g_wc = " 1=1" 
+   ELSE
+      #LET g_wc = cl_replace_str(g_wc,"glac003='1'","glac003 IN ('1','3')")  #160630-00008#6 mark
+      #160630-00008#6 --s add
+      LET g_wc = cl_replace_str(g_wc,"glac003='1'","glac003 IN ('1','3')")  #1.統制+獨立
+      LET g_wc = cl_replace_str(g_wc,"glac003='2'","glac003 IN ('2','3')")  #2.明細+獨立
+      LET g_wc = cl_replace_str(g_wc,"glac003='3'","glac003 = '1' ")        #3.統制
+      #160630-00008#6 --e add
+   END IF
+   #160425-00020#4 --e add 
+   
+   LET ld_date = cl_get_current()  
+   
+   #160425-00020#4 --s add
+   #檢查若已有資料存在,是否重新產生_是:刪除後產生 / 否:取消執行
+   LET l_cnt = 0
+   SELECT COUNT(*) INTO l_cnt 
+     FROM bgae_t 
+    WHERE bgaeent = g_enterprise 
+      AND bgae006 = g_glac_m.bgae006  #160425-00020#4 add
+      #AND bgae006 = g_glac_m.glac001 #160425-00020#4 mark
+
+   IF cl_null(l_cnt) THEN LET l_cnt = 0 END IF
+   
+   IF l_cnt > 0 THEN
+      IF NOT cl_ask_confirm("ais-00196") THEN
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   END IF 
+
+   #取得科目多語言說明
+   LET l_sql1 = " SELECT glacl001,glacl002,glacl003,glacl004,glacl005 ",
+                "   FROM glacl_t ",
+                "  WHERE glaclent = '",g_enterprise,"'",
+                "    AND glacl001 = ? ",
+                "    AND glacl002 = ? "
+   DECLARE abgi045_02_glacl_c CURSOR FROM l_sql1
+   #160425-00020#4 --e add
+   
+   
+   #撈出會計科目表資訊agli021
+   INITIALIZE l_glac.* TO NULL
+   LET l_sql = " SELECT glac002,glac017,glac018,glac019,glac020,glac027,
+                        glac021,glac022,glac023,glac025,glac026,glac028,
+                        glac029,glac030,glac041,glac042,glac043,glac044,
+                        glac045,glac046,glac047,glac048,glac049,glac050,
+                        glac007,glac008,glac016", #160425-00020#4 add
+               "   FROM glac_t ",
+               "  WHERE glacent = ",g_enterprise,
+               "    AND glac001 = '",g_glac_m.glac001,"' ",
+               "    AND ",g_wc,               
+               "  ORDER BY glac001,glac002 "
+               
+   PREPARE abgi045_02_p FROM l_sql
+   DECLARE abgi045_02_c CURSOR FOR abgi045_02_p
+   FOREACH abgi045_02_c INTO l_glac.*
+      
+      #因可重覆執行,寫入前先刪除資料
+      DELETE FROM bgae_t 
+       WHERE bgaeent = g_enterprise 
+         #AND bgae006 = g_glac_m.glac001     #160425-00020#4 mark
+         AND bgae006 = g_glac_m.bgae006      #160425-00020#4 add
+         AND bgae001 = l_glac.glac002
+      
+      #160425-00020#4 --s add 
+      #資產損益別(科目類別)= 1,2,3,4 THEN = 1 ELSE = 2
+      LET l_bgae003 = ''
+      IF l_glac.glac007 MATCHES '[1234]' THEN
+         LET l_bgae003 = '1'
+      ELSE
+         LET l_bgae003 = '2'
+      END IF
+      
+      #現金類項目(現金科目) Y則 ='1' 現金類 ELSE 2.非現金類 
+      LET l_bgae036 = ''
+      IF l_glac.glac016 = 'Y' THEN
+         LET l_bgae036 = '1'
+      ELSE
+         LET l_bgae036 = '2'
+      END IF
+      #160425-00020#4 --e add
+
+      #寫入bgae_t      
+      INSERT INTO bgae_t(bgaeent,bgae006,bgae001,bgae037,bgae015,bgae016,
+                         bgae017,bgae018,bgae019,bgae020,bgae021,bgae022,
+                         bgae023,bgae024,bgae025,bgae040,bgae041,bgae026,
+                         bgae027,bgae028,bgae029,bgae030,bgae031,bgae032,
+                         bgae033,bgae034,bgae035,bgaeownid,bgaeowndp,bgaecrtid,
+                         #bgaecrtdp,bgaecrtdt,bgaemodid,bgaemoddt,bgae007)         #160425-00020#4 mark
+                         bgaecrtdp,bgaecrtdt,bgaemodid,bgaemoddt,bgae007,bgae002,  #160425-00020#4 add
+                         bgae003,bgae004,bgae005,bgae008,bgae036,bgaestus,         #160425-00020#4 add
+                         bgae039)                                                  #160425-00020#4 add
+                  #VALUES(g_enterprise,g_glac_m.glac001,l_glac.glac002,'Y',l_glac.glac017,l_glac.glac018, #160425-00020#4 mark
+                  VALUES(g_enterprise,g_glac_m.bgae006,l_glac.glac002,'Y',l_glac.glac017,l_glac.glac018,  #160425-00020#4 add
+                         l_glac.glac019,l_glac.glac020,l_glac.glac027,l_glac.glac021,l_glac.glac022,l_glac.glac023,
+                         l_glac.glac025,l_glac.glac026,l_glac.glac028,l_glac.glac029,l_glac.glac030,l_glac.glac041,
+                         l_glac.glac042,l_glac.glac043,l_glac.glac044,l_glac.glac045,l_glac.glac046,l_glac.glac047,
+                         l_glac.glac048,l_glac.glac049,l_glac.glac050,g_user,g_dept,g_user,
+                         #g_dept,ld_date,g_user,ld_date,'1')                       #160425-00020#4 mark
+                         g_dept,ld_date,g_user,ld_date,'1',l_glac.glac008,         #160425-00020#4 add
+                         l_bgae003,'1','7','2',l_bgae036,'Y',                      #160425-00020#4 add
+                         'N')                                                      #160425-00020#4 add
+                         
+      IF SQLCA.SQLcode  THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.extend = "ins_bgae_wrong"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+      
+      #160425-00020#4 --s add       
+      #刪除bgael 原多語言
+      DELETE FROM bgael_t 
+       WHERE bgaelent = g_enterprise
+         #AND bgael006 = g_glac_m.glac001     #160425-00020#4 mark
+         AND bgael006 = g_glac_m.bgae006      #160425-00020#4 add
+         AND bgael001 = l_glac.glac002
+      
+      #一併寫入多語言
+      INITIALIZE l_bgael.* TO NULL
+      FOREACH abgi045_02_glacl_c USING g_glac_m.glac001,l_glac.glac002 INTO l_bgael.*
+
+         #寫入bgael_t      
+         INSERT INTO bgael_t(bgaelent,bgael006,bgael001,bgael002,bgael003,bgael004)        #160425-00020#4 add
+                      VALUES(g_enterprise,g_glac_m.bgae006,l_bgael.bgael001,l_bgael.bgael002,l_bgael.bgael003,l_bgael.bgael004)  
+                      #VALUES(g_enterprise,l_bgael.*)  
+   
+         IF SQLCA.SQLcode  THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.SQLCODE
+            LET g_errparam.extend = "ins_bgael_wrong"
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET r_success = FALSE
+            EXIT FOREACH
+         END IF
+      END FOREACH
+      
+      IF NOT r_success THEN
+         LET r_success = FALSE
+         EXIT FOREACH
+      END IF
+      #160425-00020#4 --e add 
+      #160630-00008#4-----s
+      DELETE FROM bgao_t WHERE bgaoent = g_enterprise AND bgao001 = g_glac_m.bgae006 AND bgao002 = g_glac_m.glac001 AND bgao003 = l_glac.glac002 AND bgao004 = l_glac.glac002 
+      
+      INITIALIZE l_bgao.* TO NULL
+      LET l_bgao.bgaoent = g_enterprise
+      LET l_bgao.bgao001 = g_glac_m.bgae006
+      LET l_bgao.bgao002 = g_glac_m.glac001
+      LET l_bgao.bgao003 = l_glac.glac002
+      LET l_bgao.bgao004 = l_glac.glac002
+      LET l_bgao.bgaostus = 'Y'
+      LET l_bgao.bgaocrtid = g_user
+      LET l_bgao.bgaocrtdt = ld_date
+      LET l_bgao.bgaocrtdp = g_dept
+      LET l_bgao.bgaoownid = g_user
+      LET l_bgao.bgaoowndp = g_dept
+      INSERT INTO bgao_t VALUES(l_bgao.*)
+      
+      #160630-00008#4-----e
+   END FOREACH
+   
+   RETURN r_success
+END FUNCTION
+
+ 
+{</section>}
+ 

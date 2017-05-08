@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="apsr600_x01" std_prog="apsr600_x01" erpver="1.0" module="APS" ver="3" env="s" zone="t10prd" booking="Y" type="X" identity="s" section_flag="N" designer_ver="1.0">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="Y" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="component.get_var" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[p_arg1]]>
+  </point>
+  <point name="ins_data.before.save" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[       #生命週期狀態 
+       LET l_imaf016 = '' 
+       SELECT imaf016 INTO l_imaf016 
+         FROM imaf_t 
+        WHERE imafent  = g_enterprise 
+          AND imafsite = g_site 
+          AND imaf001  = sr.pspc050 
+       CALL s_desc_get_acc_desc('210',l_imaf016) RETURNING sr.l_imaf016_desc  
+       
+       #承認狀態  
+       LET l_bmif011 = '' 
+       SELECT MAX(bmif011) INTO l_bmif011 
+         FROM bmif_t 
+        WHERE bmifent = g_enterprise 
+          AND bmif001 = sr.pspc050 
+       
+       LET l_cnt = 0 
+       SELECT COUNT(*) INTO l_cnt 
+         FROM bmif_t 
+        WHERE bmifent = g_enterprise 
+          AND bmif001 = sr.pspc050 
+          AND bmif011 = l_bmif011  
+          
+       LET l_sql = "SELECT bmif009,bmif012 ", 
+                   "  FROM bmif_t ", 
+                   " WHERE bmifent = '",g_enterprise,"' ", 
+                   "   AND bmif001 = '",sr.pspc050,"' ", 
+                   "   AND bmif011 = '",l_bmif011,"' " 
+       IF l_cnt > 1 THEN 
+          LET l_sql = l_sql ," AND bmifmoddt = (SELECT MAX(bmifmoddt) ", 
+                             "                    FROM bmif_t ",  
+                             "                   WHERE bmifent = '",g_enterprise,"' ", 
+                             "                     AND bmif001 = '",sr.pspc050,"' ", 
+                             "                     AND bmif011 = '",l_bmif011,"') " 
+       END IF  
+       
+       LET l_bmif009 = '' 
+       PREPARE apsr600_x01_get_bmif_prep FROM l_sql 
+       EXECUTE apsr600_x01_get_bmif_prep INTO l_bmif009,sr.l_bmif012  
+       
+       CALL s_desc_get_acc_desc('1116',l_bmif009) RETURNING sr.l_bmif009_desc ]]>
+  </point>
+  <point name="ins_data.define" order="" ver="2" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE l_cnt      LIKE type_t.num5 
+   DEFINE l_bmif009  LIKE bmif_t.bmif009 
+   DEFINE l_bmif011  LIKE bmif_t.bmif011 
+   DEFINE l_imaf016  LIKE imaf_t.imaf016 
+   DEFINE l_sql      STRING ]]>
+  </point>
+  <point name="sel_prep.define" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[DEFINE l_pspc002     LIKE pspc_t.pspc002]]>
+  </point>
+  <point name="sel_prep.g_from" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="Y">
+    <![CDATA[   LET g_from =
+       "  FROM  pspc_t a LEFT JOIN imae_t  c ON c.imaeent =a.pspcent AND c.imaesite=a.pspcsite AND c.imae001=a.pspc050        ",
+       "                 LEFT JOIN imaf_t  d ON d.imafent =a.pspcent AND d.imafsite=a.pspcsite AND d.imaf001=a.pspc050        ",
+       "                 LEFT JOIN imaa_t  e ON e.imaaent =a.pspcent AND e.imaa001 =a.pspc050                                 ",
+       "                 LEFT JOIN imaal_t f ON f.imaalent=a.pspcent AND f.imaal001=a.pspc050  AND f.imaal002='",g_dlang,"',  ",               
+       " ( SELECT pspcent,pspcsite,pspc001,max(pspc002) AS pspc002 FROM pspc_t GROUP BY pspcent,pspcsite,pspc001 ) b          "]]>
+  </point>
+  <point name="sel_prep.g_select" order="" ver="3" cite_std="N" new="N" status="u" src="s" readonly="" mark_hard="Y">
+    <![CDATA[   LET g_select =" SELECT  a.pspc050,f.imaal003,f.imaal004,a.pspc051,a.pspc043,a.pspc014,a.pspc045,a.pspc010,a.pspc018, ", 
+                 "         '','','',a.pspc054,a.pspc061 " ]]>
+  </point>
+  <point name="sel_prep.g_where" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="Y">
+    <![CDATA[   LET g_where = " WHERE " ,tm.wc CLIPPED," AND  a.pspcent = b.pspcent AND  a.pspcsite = b.pspcsite ",
+                                          " AND  a.pspc001 = b.pspc001 AND  a.pspc002 = b.pspc002  AND a.pspc007 = 1"]]>
+  </point>
+  <section id="apsr600_x01.create_tmptable" ver="10" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION apsr600_x01_create_tmptable()
+ 
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.before
+   {<point name="create_tmp.before"/>}
+   #end add-point:create_tmp.before
+ 
+   #主報表TEMP TABLE的欄位SQL   
+   LET g_sql = "pspc050.pspc_t.pspc050,l_imaal003.type_t.chr80,l_imaal004.type_t.chr80,pspc051.pspc_t.pspc051,pspc043.pspc_t.pspc043,pspc014.pspc_t.pspc014,pspc045.pspc_t.pspc045,pspc010.pspc_t.pspc010,pspc018.pspc_t.pspc018,l_imaf016_desc.oocql_t.oocql004,l_bmif009_desc.oocql_t.oocql004,l_bmif012.bmif_t.bmif012,pspc054.pspc_t.pspc054,pspc061.pspc_t.pspc061" 
+   
+   #建立TEMP TABLE,主報表序號1 
+   IF NOT cl_xg_create_tmptable(g_sql,1) THEN
+      LET g_rep_success = 'N'            
+   END IF
+   #可切換資料庫，避免大量資料佔資源及空間
+   #add-point:create_tmp.after
+   {<point name="create_tmp.after"/>}
+   #end add-point:create_tmp.after
+END FUNCTION
+]]>
+  </section>
+  <section id="apsr600_x01.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:3,PR版次:3) Build-000042
+#+ 
+#+ Filename...: apsr600_x01
+#+ Description: APS請購開立建議表
+#+ Creator....: 05231(2014-07-16 17:30:17)
+#+ Modifier...: 05384(2015-06-23 14:19:26) -SD/PR-
+]]>
+  </section>
+  <section id="apsr600_x01.global" ver="5" status="" src="s" readonly="">
+    <![CDATA[#報表 x01 樣板自動產生(Version:1)
+ 
+IMPORT os
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+DEFINE tm RECORD
+       wc STRING                   #where conditon
+       END RECORD
+ 
+DEFINE g_str           STRING,                      #列印條件回傳值              
+       g_sql           STRING  
+ 
+ 
+#add-point:自定義環境變數(Global Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="apsr600_x01.ins_data" ver="7" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION apsr600_x01_ins_data()
+DEFINE sr RECORD 
+   pspc050 LIKE pspc_t.pspc050, 
+   l_imaal003 LIKE type_t.chr80, 
+   l_imaal004 LIKE type_t.chr80, 
+   pspc051 LIKE pspc_t.pspc051, 
+   pspc043 LIKE pspc_t.pspc043, 
+   pspc014 LIKE pspc_t.pspc014, 
+   pspc045 LIKE pspc_t.pspc045, 
+   pspc010 LIKE pspc_t.pspc010, 
+   pspc018 LIKE pspc_t.pspc018, 
+   l_imaf016_desc LIKE oocql_t.oocql004, 
+   l_bmif009_desc LIKE oocql_t.oocql004, 
+   l_bmif012 LIKE bmif_t.bmif012, 
+   pspc054 LIKE pspc_t.pspc054, 
+   pspc061 LIKE pspc_t.pspc061
+ END RECORD
+#add-point:ins_data段define
+{<point name="ins_data.define"/>}
+#end add-point
+ 
+    #add-point:ins_data段before
+    {<point name="ins_data.before"/>}
+    #end add-point
+ 
+    LET g_rep_success = 'Y'
+ 
+    FOREACH apsr600_x01_curs INTO sr.*                               
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach
+       {<point name="ins_data.foreach"/>}
+       #end add-point
+ 
+       #add-point:ins_data段before.save
+       {<point name="ins_data.before.save"/>}
+       #end add-point
+ 
+       #EXECUTE
+       EXECUTE insert_prep USING sr.pspc050,sr.l_imaal003,sr.l_imaal004,sr.pspc051,sr.pspc043,sr.pspc014,sr.pspc045,sr.pspc010,sr.pspc018,sr.l_imaf016_desc,sr.l_bmif009_desc,sr.l_bmif012,sr.pspc054,sr.pspc061
+ 
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = "apsr600_x01_execute"
+          LET g_errparam.code   = SQLCA.sqlcode
+          LET g_errparam.popup  = FALSE
+          CALL cl_err()       
+          LET g_rep_success = 'N'
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段after_save
+       {<point name="ins_data.after.save"/>}
+       #end add-point
+       
+    END FOREACH
+    
+    #add-point:ins_data段after
+    {<point name="ins_data.after"/>}
+    #end add-point
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apsr600_x01.ins_prep" ver="5" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION apsr600_x01_ins_prep()
+DEFINE i              INTEGER
+DEFINE l_prep_str     STRING
+#add-point:ins_prep.define
+{<point name="ins_prep.define"/>}
+#end add-point:ins_prep.define
+ 
+   FOR i = 1 TO g_rep_tmpname.getLength()
+      CALL cl_xg_del_data(g_rep_tmpname[i])
+      #LET g_sql = g_rep_ins_prep[i]              #透過此lib取得prepare字串 lib精簡
+      CASE i
+         WHEN 1
+         #INSERT INTO PREP
+         LET g_sql = " INSERT INTO ",g_rep_db CLIPPED,g_rep_tmpname[1] CLIPPED," VALUES(?,?,?,?,?,?, 
+             ?,?,?,?,?,?,?,?)"
+         PREPARE insert_prep FROM g_sql
+         IF STATUS THEN
+            LET l_prep_str ="insert_prep",i
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.extend = l_prep_str
+            LET g_errparam.code   = status
+            LET g_errparam.popup  = TRUE
+            CALL cl_err()
+            CALL cl_xg_drop_tmptable()
+            LET g_rep_success = 'N'           
+         END IF 
+         #add-point:insert_prep段
+         {<point name="insert_prep"/>}
+         #end add-point                  
+ 
+ 
+      END CASE
+   END FOR
+END FUNCTION
+]]>
+  </section>
+  <section id="apsr600_x01.main" ver="5" status="" src="s" readonly="">
+    <![CDATA[PUBLIC FUNCTION apsr600_x01(p_arg1)
+DEFINE  p_arg1 STRING                  #tm.wc  where conditon
+#add-point:init段define
+{<point name="component.define"/>}
+#end add-point
+ 
+   LET tm.wc = p_arg1
+ 
+   #add-point:報表元件參數準備
+   {<point name="component.arg.prep" />}
+   #end add-point
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'
+   
+   #報表元件代號      
+   LET g_rep_code = "apsr600_x01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #create 暫存檔
+   CALL apsr600_x01_create_tmptable()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #報表select欄位準備
+   CALL apsr600_x01_sel_prep()
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #報表insert的prepare
+   CALL apsr600_x01_ins_prep()  
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF
+   #將資料存入tmptable
+   CALL apsr600_x01_ins_data() 
+ 
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+   #將tmptable資料印出
+   CALL apsr600_x01_rep_data()
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apsr600_x01.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+  <section id="apsr600_x01.rep_data" ver="1" status="" src="s" readonly="">
+    <![CDATA[PRIVATE FUNCTION apsr600_x01_rep_data()
+#add-point:rep_data.define
+{<point name="rep_data.define"/>}
+#end add-point:rep_data.define
+ 
+    #add-point:rep_data.before
+    {<point name="rep_data.before"/>}
+    #end add-point:rep_data.before
+    
+    CALL cl_xg_view()
+    #add-point:rep_data.after
+    {<point name="rep_data.after"/>}
+    #end add-point:rep_data.after
+END FUNCTION
+]]>
+  </section>
+  <section id="apsr600_x01.sel_prep" ver="6" status="" src="s" readonly="">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION apsr600_x01_sel_prep()
+DEFINE g_select      STRING
+DEFINE g_from        STRING
+DEFINE g_where       STRING
+#add-point:sel_prep段define
+{<point name="sel_prep.define"/>}
+#end add-point
+ 
+   #add-point:sel_prep before
+   {<point name="sel_prep.before" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep g_select
+   {<point name="sel_prep.g_select" mark="Y"/>}
+   #end add-point
+   LET g_select = " SELECT pspc050,'','',pspc051,pspc043,pspc014,pspc045,pspc010,pspc018,'','','',pspc054, 
+       pspc061"
+ 
+   #add-point:sel_prep g_from
+   {<point name="sel_prep.g_from" mark="Y"/>}
+   #end add-point
+    LET g_from = " FROM pspc_t"
+ 
+   #add-point:sel_prep g_where
+   {<point name="sel_prep.g_where" mark="Y"/>}
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED
+ 
+   #add-point:sel_prep g_order
+   {<point name="sel_prep.g_order" mark="Y"/>}
+   #end add-point
+ 
+   #add-point:sel_prep.sql.before
+   {<point name="sel_prep.sql.before" mark="Y"/>}
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("pspc_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段
+ 
+   #add-point:sel_prep.sql.after
+   {<point name="sel_prep.sql.after" mark="Y"/>}
+   #end add-point
+   PREPARE apsr600_x01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()
+      LET g_rep_success = 'N' 
+   END IF
+   DECLARE apsr600_x01_curs CURSOR FOR apsr600_x01_prepare
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

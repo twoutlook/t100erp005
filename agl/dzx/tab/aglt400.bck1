@@ -1,0 +1,198 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aglt400" module="agl" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="02298" crtdt="2014-01-06 16:46:33" modid="02114" moddt="2016-08-25 16:42:11" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="傳票細項立沖開帳資料維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glaxld,glaxld_desc(chr80),glaxcomp,glaxcomp_desc(chr80),glaa001,glaa016,glaa020,glaxdocno,glaxdocdt,glax049,glax050,glaxstus,glax027_desc(chr80),glax028_desc(chr80),conf(chr80),crt(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glaxseq,glax002,lc_subject(chr500),glax005,glax006,glax007,glax008,glax009,glax010,glax003,glax051,glax052,glax055,glax056,glax048,glax001,edit1(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="glaxseq,glaxmodid,glaxmodid_desc(chr500),glaxownid,glaxownid_desc(chr500),glaxowndp,glaxowndp_desc(chr500),glaxcrtid,glaxcrtid_desc(chr500),glaxcrtdp,glaxcrtdp_desc(chr500),glaxcrtdt,glaxcnfid,glaxcnfid_desc(chr500),glaxcnfdt"/>
+      <var id="bs_field" value="glaxld,glaxld_desc(chr80),glaxdocno,glaxdocdt" pk="glaxld,glaxdocno" order=""/>
+      <bs_reference field="glaxld_desc" ref_field="glaxld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="bus_cons"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="fix_account"/>
+      <action id="statechange"/>
+      <action id="exchange_ld"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="aglt400" method="dialog">
+    <section id="input">
+      <input id="head" field="glaxld,glaxcomp,glaxdocno,glaxdocdt,glax049,glax050,glaxstus"/>
+      <input id="body" page="1" field="glaxseq,glax002,lc_subject,glax005,glax006,glax007,glax008,glax009,glax010,glax003,glax051,glax052,glax055,glax056,glax048,glax001" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="glaxld,glaxcomp,glaxdocno,glaxdocdt,glax049,glax050,glaxstus,glax027_desc,glax028_desc,conf,crt"/>
+      <construct id="body" page="1" field="glaxseq,glax002,lc_subject,glax005,glax006,glax007,glax008,glax009,glax010,glax003,glax051,glax052,glax055,glax056,glax048,glax001"/>
+      <construct id="body" page="2" field="glaxmodid,glaxownid,glaxowndp,glaxcrtid,glaxcrtdp,glaxcrtdt,glaxcnfid,glaxcnfdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="glaxld,glaxdocno"/>
+      <set id="head" type="no_entry" field="glaxld,glaxdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="glaxld">
+        <after>
+          <reference field="glaxld_desc" ref_field="glax_t.glaxld" map_field="glaxent,glaxld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="glaxld_desc"/>
+      <column id="glaxcomp">
+        <after>
+          <reference field="glaxcomp_desc" ref_field="glax_t.glaxcomp" map_field="glaxent,glaxcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooea001_2" state="c"/>
+      </column>
+      <column id="glaxcomp_desc"/>
+      <column id="glaa001"/>
+      <column id="glaa016"/>
+      <column id="glaa020"/>
+      <column id="glaxdocno">
+        <controlp form="q_ooba002_4" state="i"/>
+        <controlp form="q_glaxdocno" state="c"/>
+      </column>
+      <column id="glaxdocdt"/>
+      <column id="glax049"/>
+      <column id="glax050"/>
+      <column id="glaxstus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="glax027_desc"/>
+      <column id="glax028_desc"/>
+      <column id="conf"/>
+      <column id="crt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="glaxseq"/>
+      <column id="glax002">
+        <controlp form="aglt310_04" state="i"/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="lc_subject">
+        <controlp form="aglt310_04" state="i"/>
+        <controlp form="aglt310_04" state="c"/>
+      </column>
+      <column id="glax005">
+        <controlp form="q_ooai001" state="i"/>
+        <controlp form="q_ooai001" state="c"/>
+      </column>
+      <column id="glax006"/>
+      <column id="glax007">
+        <controlp form="q_ooca001_1" state="i"/>
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="glax008">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="glax009">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="glax010">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="glax003">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="glax051">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="glax052">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="glax055">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="glax056">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="glax048"/>
+      <column id="glax001"/>
+      <column id="edit1"/>
+    </init>
+    <init id="body" page="2">
+      <column id="glaxmodid">
+        <after>
+          <reference field="glaxmodid_desc" ref_field="glax_t.glaxmodid" map_field="glaxmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glaxmodid_desc"/>
+      <column id="glaxownid">
+        <after>
+          <reference field="glaxownid_desc" ref_field="glax_t.glaxownid" map_field="glaxownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glaxownid_desc"/>
+      <column id="glaxowndp">
+        <after>
+          <reference field="glaxowndp_desc" ref_field="glax_t.glaxowndp" map_field="glaxowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glaxowndp_desc"/>
+      <column id="glaxcrtid">
+        <after>
+          <reference field="glaxcrtid_desc" ref_field="glax_t.glaxcrtid" map_field="glaxcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glaxcrtid_desc"/>
+      <column id="glaxcrtdp">
+        <after>
+          <reference field="glaxcrtdp_desc" ref_field="glax_t.glaxcrtdp" map_field="glaxcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="glaxcrtdp_desc"/>
+      <column id="glaxcrtdt"/>
+      <column id="glaxcnfid">
+        <after>
+          <reference field="glaxcnfid_desc" ref_field="glax_t.glaxcnfid" map_field="glaxcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="glaxcnfid_desc"/>
+      <column id="glaxcnfdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="glax_t" pk="glaxld,glaxdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT glaxld,&apos;&apos;,glaxcomp,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,glaxdocno,glaxdocdt,glax049,glax050,glaxstus,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM glax_t WHERE glaxent= ? AND glaxld=? AND glaxdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT glaxld,&apos;&apos;,glaxcomp,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,glaxdocno,glaxdocdt,glax049,glax050,glaxstus,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM glax_t" order="glaxld,glaxdocno"/>
+    </head>
+    <body id="glax_t" page="1,2" linked="" pk="glaxseq" fk="glaxld,glaxdocno">
+      <sql id="forupd_sql_detail" query="SELECT glaxseq,glax002,&apos;&apos;,glax005,glax006,glax007,glax008,glax009,glax010,glax003,glax051,glax052,glax055,glax056,glax048,glax001,&apos;&apos;,&apos;&apos;,glaxmodid,&apos;&apos;,glaxownid,&apos;&apos;,glaxowndp,&apos;&apos;,glaxcrtid,&apos;&apos;,glaxcrtdp,&apos;&apos;,glaxcrtdt,glaxcnfid,&apos;&apos;,glaxcnfdt FROM glax_t WHERE glaxent=? AND glaxld=? AND glaxdocno=? AND glaxseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glaxseq,glax002,&apos;&apos;,glax005,glax006,glax007,glax008,glax009,glax010,glax003,glax051,glax052,glax055,glax056,glax048,glax001,&apos;&apos;,&apos;&apos;,glaxmodid,&apos;&apos;,glaxownid,&apos;&apos;,glaxowndp,&apos;&apos;,glaxcrtid,&apos;&apos;,glaxcrtdp,&apos;&apos;,glaxcrtdt,glaxcnfid,&apos;&apos;,glaxcnfdt FROM glax_t WHERE glaxent= ? AND glaxld=? AND glaxdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

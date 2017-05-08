@@ -1,0 +1,1482 @@
+<add_points prog="adep600" std_prog="adep600" erpver="1.0" module="ADE" ver="1" env="s" zone="t10dev" booking="Y" type="M" identity="s">
+  <other>
+    <code_template value="P" status="" />
+    <free_style value="N" status="" />
+  </other>
+  <point name="function.adep600_create_temp" cite_std="N" status="" ver="1" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 建立temp table
+# Memo...........:
+# Usage..........: CALL adep600_create_temp()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/07/04 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION adep600_create_temp()
+   #條件輸入的組織
+   DROP TABLE adep600_ooed004
+   CREATE TEMP TABLE adep600_ooed004(
+      ooed004   LIKE ooed_t.ooed004)
+   CREATE INDEX adep600_ooed004_01 on adep600_ooed004(ooed004)
+   
+   #組織往下展的(包含當不往下展的)
+   DROP TABLE adep600_ooed004_02
+   CREATE TEMP TABLE adep600_ooed004_02(
+      ooed004   LIKE ooed_t.ooed004)
+   CREATE INDEX adep600_ooed004_02_01 on adep600_ooed004_02(ooed004)
+   
+   DROP TABLE adep600_demb_tmp
+   CREATE TEMP TABLE adep600_demb_tmp(
+      seq      LIKE type_t.num10,     #項次
+      dembent  LIKE demb_t.dembent,   #企業編號
+      dembsite LIKE demb_t.dembsite,  #營運據點
+      demb001  LIKE demb_t.demb001,   #客戶經營類
+      demb002  LIKE demb_t.demb002,   #銷售日期
+      demb003  LIKE demb_t.demb003,   #會計週	
+      demb004  LIKE demb_t.demb004,   #會計期	
+      demb005  LIKE demb_t.demb005,   #經銷商編號
+      demb006  LIKE demb_t.demb006,   #合約編號
+      demb007  LIKE demb_t.demb007,   #經營方式
+      demb008  LIKE demb_t.demb008,   #結算類型
+      demb009  LIKE demb_t.demb009,   #結算方式
+      demb010  LIKE demb_t.demb010,   #商品編號
+      demb011  LIKE demb_t.demb011,   #商品條碼
+      demb012  LIKE demb_t.demb012,   #特徵碼
+      demb013  LIKE demb_t.demb013,   #品牌	
+      demb014  LIKE demb_t.demb014,   #稅別編號
+      demb015  LIKE demb_t.demb015,   #本幣幣別
+      demb016  LIKE demb_t.demb016,   #銷售單位
+      demb017  LIKE demb_t.demb017,   #銷售數量
+      demb018  LIKE demb_t.demb018,   #成本單位
+      demb019	LIKE demb_t.demb019,   #成本單價
+      demb020	LIKE demb_t.demb020,   #進價成本金額
+      demb021	LIKE demb_t.demb021,   #銷貨標準售價金額(未稅)
+      demb022	LIKE demb_t.demb022,   #銷貨標準售價金額(含稅)
+      demb023	LIKE demb_t.demb023,   #銷貨折扣金額
+      demb024	LIKE demb_t.demb024,   #銷貨實收金額(未稅)
+      demb025	LIKE demb_t.demb025,   #銷貨實收金額(含稅)
+      demb026	LIKE demb_t.demb026,   #毛利額
+      demb027	LIKE demb_t.demb027,   #毛利率
+      demb028	LIKE demb_t.demb028,   #促銷銷售數量
+      demb029	LIKE demb_t.demb029,   #促銷應收金額(未稅)
+      demb030	LIKE demb_t.demb030,   #促銷應收金額(含稅)
+      demb031	LIKE demb_t.demb031,   #退貨數量
+      demb032	LIKE demb_t.demb032,   #退貨標準售價金額(未稅)
+      demb033	LIKE demb_t.demb033,   #退貨標準售價金額(含稅)
+      demb034	LIKE demb_t.demb034,   #退貨折扣金額
+      demb035	LIKE demb_t.demb035,   #退貨實退金額(未稅)
+      demb036	LIKE demb_t.demb036,   #退貨實退金額(含稅)
+      demb037	LIKE demb_t.demb037,   #銷售標準售價淨額(未稅)
+      demb038	LIKE demb_t.demb038,   #銷售標準售價淨額(含稅)
+      demb039	LIKE demb_t.demb039,   #銷售折扣淨額
+      demb040	LIKE demb_t.demb040,   #銷售實收淨額(未稅)
+      demb041	LIKE demb_t.demb041,   #銷售實收淨額(含稅)
+      demb042	LIKE demb_t.demb042,   #訂貨數量
+      demb043	LIKE demb_t.demb043,   #訂貨標準售價金額(未稅)
+      demb044	LIKE demb_t.demb044,   #訂貨標準售價金額(含稅)
+      demb045	LIKE demb_t.demb045,   #訂貨折扣金額
+      demb046	LIKE demb_t.demb046,   #訂貨實收金額(未稅)
+      demb047  LIKE demb_t.demb047,   #訂貨實收金額(含稅)
+      curr     LIKE xmdk_t.xmdk016,   #單據幣別
+      type     LIKE type_t.chr1)      #類型
+   
+   DROP TABLE adep600_demb_sum
+   CREATE TEMP TABLE adep600_demb_sum(
+      dembent  LIKE demb_t.dembent,   #企業編號
+      dembsite LIKE demb_t.dembsite,  #營運據點
+      demb001  LIKE demb_t.demb001,   #客戶經營類
+      demb002  LIKE demb_t.demb002,   #銷售日期
+      demb003  LIKE demb_t.demb003,   #會計週	
+      demb004  LIKE demb_t.demb004,   #會計期	
+      demb005  LIKE demb_t.demb005,   #經銷商編號
+      demb006  LIKE demb_t.demb006,   #合約編號
+      demb007  LIKE demb_t.demb007,   #經營方式
+      demb008  LIKE demb_t.demb008,   #結算類型
+      demb009  LIKE demb_t.demb009,   #結算方式
+      demb010  LIKE demb_t.demb010,   #商品編號
+      demb011  LIKE demb_t.demb011,   #商品條碼
+      demb012  LIKE demb_t.demb012,   #特徵碼
+      demb013  LIKE demb_t.demb013,   #品牌	
+      demb014  LIKE demb_t.demb014,   #稅別編號
+      demb015  LIKE demb_t.demb015,   #本幣幣別
+      demb016  LIKE demb_t.demb016,   #銷售單位
+      demb017  LIKE demb_t.demb017,   #銷售數量
+      demb018  LIKE demb_t.demb018,   #成本單位
+      demb019	LIKE demb_t.demb019,   #成本單價
+      demb020	LIKE demb_t.demb020,   #進價成本金額
+      demb021	LIKE demb_t.demb021,   #銷貨標準售價金額(未稅)
+      demb022	LIKE demb_t.demb022,   #銷貨標準售價金額(含稅)
+      demb023	LIKE demb_t.demb023,   #銷貨折扣金額
+      demb024	LIKE demb_t.demb024,   #銷貨實收金額(未稅)
+      demb025	LIKE demb_t.demb025,   #銷貨實收金額(含稅)
+      demb026	LIKE demb_t.demb026,   #毛利額
+      demb027	LIKE demb_t.demb027,   #毛利率
+      demb028	LIKE demb_t.demb028,   #促銷銷售數量
+      demb029	LIKE demb_t.demb029,   #促銷應收金額(未稅)
+      demb030	LIKE demb_t.demb030,   #促銷應收金額(含稅)
+      demb031	LIKE demb_t.demb031,   #退貨數量
+      demb032	LIKE demb_t.demb032,   #退貨標準售價金額(未稅)
+      demb033	LIKE demb_t.demb033,   #退貨標準售價金額(含稅)
+      demb034	LIKE demb_t.demb034,   #退貨折扣金額
+      demb035	LIKE demb_t.demb035,   #退貨實退金額(未稅)
+      demb036	LIKE demb_t.demb036,   #退貨實退金額(含稅)
+      demb037	LIKE demb_t.demb037,   #銷售標準售價淨額(未稅)
+      demb038	LIKE demb_t.demb038,   #銷售標準售價淨額(含稅)
+      demb039	LIKE demb_t.demb039,   #銷售折扣淨額
+      demb040	LIKE demb_t.demb040,   #銷售實收淨額(未稅)
+      demb041	LIKE demb_t.demb041,   #銷售實收淨額(含稅)
+      demb042	LIKE demb_t.demb042,   #訂貨數量
+      demb043	LIKE demb_t.demb043,   #訂貨標準售價金額(未稅)
+      demb044	LIKE demb_t.demb044,   #訂貨標準售價金額(含稅)
+      demb045	LIKE demb_t.demb045,   #訂貨折扣金額
+      demb046	LIKE demb_t.demb046,   #訂貨實收金額(未稅)
+      demb047  LIKE demb_t.demb047,   #訂貨實收金額(含稅)
+      curr     LIKE xmdk_t.xmdk016)   #單據幣別
+      
+   DROP TABLE adep600_dema_sum
+   CREATE TEMP TABLE adep600_dema_sum(
+      demaent  LIKE dema_t.demaent,   #企業編號
+      demasite LIKE dema_t.demasite,  #營運據點
+      dema001  LIKE dema_t.dema001,   #客戶經營類型
+      dema002  LIKE dema_t.dema002,   #統計日期
+      dema003  LIKE dema_t.dema003,   #會計週
+      dema004  LIKE dema_t.dema004,   #會計期
+      dema005  LIKE dema_t.dema005,   #經銷商編號
+      dema006  LIKE dema_t.dema006,   #合同編號
+      dema007  LIKE dema_t.dema007,   #經營方式
+      dema008  LIKE dema_t.dema008,   #結算類型
+      dema009  LIKE dema_t.dema009,   #結算方式
+      dema010  LIKE dema_t.dema010,   #品牌
+      dema011  LIKE dema_t.dema011,   #稅別編號
+      dema012  LIKE dema_t.dema012,   #本幣幣別
+      dema013  LIKE dema_t.dema013,   #進價成本金額
+      dema014  LIKE dema_t.dema014,   #銷貨標準售價金額(未稅)
+      dema015  LIKE dema_t.dema015,   #銷貨標準售價金額(含稅)
+      dema016  LIKE dema_t.dema016,   #銷貨折扣金額
+      dema017  LIKE dema_t.dema017,   #銷貨實收金額(未稅)
+      dema018  LIKE dema_t.dema018,   #銷貨實收金額(含稅)
+      dema019  LIKE dema_t.dema019,   #毛利額
+      dema020  LIKE dema_t.dema020,   #毛利率
+      dema021  LIKE dema_t.dema021,   #促銷應收金額(未稅)
+      dema022  LIKE dema_t.dema022,   #促銷應收金額(含稅)
+      dema023  LIKE dema_t.dema023,   #退貨標準售價金額(未稅)
+      dema024  LIKE dema_t.dema024,   #退貨標準售價金額(含稅)
+      dema025  LIKE dema_t.dema025,   #退貨折扣金額
+      dema026  LIKE dema_t.dema026,   #退貨實退金額(未稅)
+      dema027  LIKE dema_t.dema027,   #退貨實退金額(含稅)
+      dema028  LIKE dema_t.dema028,   #銷售標準售價淨額(未稅)
+      dema029  LIKE dema_t.dema029,   #銷售標準售價淨額(含稅)
+      dema030  LIKE dema_t.dema030,   #銷售折扣淨額
+      dema031  LIKE dema_t.dema031,   #銷售實收淨額(未稅)
+      dema032  LIKE dema_t.dema032,   #銷售實收淨額(含稅)
+      dema033  LIKE dema_t.dema033,   #訂貨標準售價金額(未稅)
+      dema034  LIKE dema_t.dema034,   #訂貨標準售價金額(含稅)
+      dema035  LIKE dema_t.dema035,   #訂貨折扣金額
+      dema036  LIKE dema_t.dema036,   #訂貨實收金額(未稅)
+      dema037  LIKE dema_t.dema037,   #訂貨實收金額(含稅)
+      curr     LIKE xmdk_t.xmdk016)   #單據幣別
+END FUNCTION]]>
+</point>
+  <point name="function.adep600_ins_temp" cite_std="N" status="u" ver="1" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 把找出來的資料 放到temp table後 方便之後處理
+# Memo...........:
+# Usage..........: CALL adep600_ins_temp(ls_js)
+# Input parameter: ls_js
+# Return code....: 無
+# Date & Author..: 2014/07/04 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION adep600_ins_temp(ls_js)
+DEFINE ls_js       STRING
+DEFINE lc_param    type_parameter
+DEFINE l_cnt       LIKE type_t.num5
+DEFINE l_str       STRING
+DEFINE l_wc        STRING
+DEFINE l_wc1       STRING
+DEFINE l_wca       STRING
+DEFINE l_wcb       STRING
+DEFINE l_ooed004   LIKE ooed_t.ooed004
+DEFINE l_success   LIKE type_t.num5
+
+   CALL util.JSON.parse(ls_js,lc_param)
+   
+   #拆出門店
+   IF lc_param.type1 = 'Y' THEN
+      LET l_str = lc_param.wc
+      LET l_cnt = l_str.getIndexOf("demasite",1)
+      IF l_cnt > 0 THEN
+         IF l_cnt > 1 THEN
+            LET l_wc = l_str.subString(1,l_cnt -1)
+            LET l_wc1 = l_str.subString(l_cnt,l_str.getLength())
+         ELSE
+            LET l_wc = " 1=1"
+            LET l_wc1 = lc_param.wc
+         END IF
+         IF l_wc1 = "demasite like '%'" THEN
+            LET l_wc1 = NULL
+         END IF
+      ELSE
+         LET l_wc = lc_param.wc
+      END IF
+   ELSE
+      LET l_wc = lc_param.wc
+   END IF
+   
+   LET l_wca = cl_replace_str(l_wc,"demasite","xmdl212")
+   LET l_wca = cl_replace_str(l_wca,"dema002","xmdk001")
+   LET l_wcb = cl_replace_str(l_wc,"demasite","xmddsite")
+   LET l_wcb = cl_replace_str(l_wcb,"dema002","xmdadocdt")
+   
+   #塞入組織
+   LET g_sql = "INSERT INTO adep600_ooed004 ",
+               "SELECT DISTINCT ooed004 ",
+               "  FROM ooed_t ",
+               " WHERE ooedent = ",g_enterprise,
+               "   AND ooed001 = '2' ",
+               "   AND ooed006 <= '",g_today,"'",
+               "   AND (ooed007 >= '",g_today,"' OR ooed007 IS NULL) ",
+               "   AND ooed004 IN (SELECT ooed004 FROM ooed_t  ",
+               "                    START WITH ooed005 = ? ",
+               "                      AND ooed001 = '2' ",
+               "                      AND ooed006 <= '",g_today,"'",
+               "                      AND (ooed007 >= '",g_today,"' OR ooed007 IS NULL) ",
+               "                  CONNECT BY NOCYCLE PRIOR ooed004 = ooed005 ",
+               "                                       AND ooed001 = '2' ",
+               "                                       AND ooed006 <= '",g_today,"'",
+               "                                       AND (ooed007 >= '",g_today,"' OR ooed007 IS NULL) ",
+               "                    UNION ",
+               "                   SELECT ooed004 FROM ooed_t ",
+               "                    WHERE ooed004 = ? ) "
+   PREPARE adep600_pre FROM g_sql
+   
+   IF lc_param.type1 = 'Y' AND NOT cl_null(l_wc1) THEN
+      #以選擇門店展以下門店
+      LET g_sql = cl_replace_str(g_sql,"adep600_ooed004","adep600_ooed004_02")
+      PREPARE adep600_pre2 FROM g_sql
+      EXECUTE adep600_pre2 USING g_site,g_site
+
+      LET l_wc1 = cl_replace_str(l_wc1,"demasite","ooed004")
+      LET g_sql = " SELECT ooed004 ",
+                  "   FROM adep600_ooed004_02 ",
+                  "  WHERE ",l_wc1
+      PREPARE adep600_pre3 FROM g_sql
+      DECLARE adep600_curs3 CURSOR FOR adep600_pre3
+      FOREACH adep600_curs3 INTO l_ooed004
+         EXECUTE adep600_pre USING l_ooed004,l_ooed004
+      END FOREACH
+   ELSE
+      EXECUTE adep600_pre USING g_site,g_site
+   END IF
+   IF SQLCA.SQLcode THEN
+      CALL cl_errmsg('','',"Ins site",SQLCA.sqlcode,1)
+      RETURN
+   END IF
+   
+   LET g_sql = "SELECT ooed004 FROM adep600_ooed004"
+   PREPARE adep600_pre100 FROM g_sql
+   DECLARE adep600_curs100 CURSOR FOR adep600_pre100
+   LET l_cnt = 0
+   FOREACH adep600_curs100 INTO l_ooed004
+      LET l_cnt = l_cnt + 1
+   END FOREACH
+   LET g_sql = "SELECT ooed004 FROM adep600_ooed004_02"
+   PREPARE adep600_pre200 FROM g_sql
+   DECLARE adep600_curs200 CURSOR FOR adep600_pre200
+   LET l_cnt = 0
+   FOREACH adep600_curs200 INTO l_ooed004
+      LET l_cnt = l_cnt + 1
+   END FOREACH
+   
+   #出貨資料
+   LET g_sql = "INSERT INTO adep600_demb_tmp(",
+               "       seq,    ",
+               "       dembent, dembsite, demb001, demb002,",
+               "       demb003, demb004,  demb005, demb006,",
+               "       demb007, demb008,  demb009, demb010,",
+               "       demb011, demb012,  demb013, demb014,",
+               "       demb015, demb016,  demb017, demb018,",
+               
+               "       demb019, demb020, demb021, demb022,",
+               
+               "       demb023, demb024, demb025, demb026,",
+               "       demb027, demb028, demb029, demb030,",
+               "       demb031, demb032, demb033, demb034,",
+               "       demb035, demb036, demb037, demb038,",
+               
+               "       demb039, demb040, demb041, demb042,",
+               "       demb043, demb044, demb045, demb046,",
+               "       demb047, curr,    type) ",
+               
+               "SELECT ROW_NUMBER() OVER (ORDER BY xmdkent),",
+               "       xmdkent, xmdl212, NULL,    xmdk001,",
+               "       NULL,    NULL,    xmdk007, xmdl215,",
+               "       xmdl216, xmdl217, xmdl218, xmdl008,",
+               "       NULL,    xmdl009, NULL,    xmdl025,",
+               "       ooef016, xmdl017, COALESCE(xmdl018,0), NULL,   ",
+               
+               "       0,       0,COALESCE(xmdl028,0)*COALESCE(xmdl018,0),",
+               "       COALESCE(xmdl028,0)*COALESCE(xmdl018,0),",
+               
+               "       xmdl211, COALESCE(xmdl027,0), COALESCE(xmdl028,0), 0,",
+               "       0,      0,      0,      0,",
+               "       0,      0,      0,      0,",
+               "       0,      0,      0,      0,",
+               
+               "       0,      0,      0,      0,",
+               "       0,      0,      0,      0,",
+               "       0,      xmdk016,'1'",
+               "  FROM xmdk_t,xmdl_t",
+               "  LEFT OUTER JOIN ooef_t ON ooefent = xmdlent AND ooef001 = xmdl212",
+               " WHERE xmdkent = xmdlent",
+               "   AND xmdkdocno = xmdldocno",
+               "   AND xmdkent = ",g_enterprise,
+               #非簽退/銷退單
+               "   AND (xmdk000 between '1' and '4')",
+               #非簽收的出貨單 且 非寄銷 銷售組織有值
+               "   AND (((xmdl216 <> '13')",
+               #"   AND (xmdk002 <> '3')",
+               "   AND (xmdl212 IS NOT NULL)",
+               "   AND (xmdkstus = 'S'))",
+               #正式寄銷出貨單
+               "    OR (xmdk002 = '7')",
+               "   AND (xmdkstus = 'Y' OR xmdkstus = 'S'))",
+               "   AND EXISTS (SELECT ooed004 ",
+               "                 FROM adep600_ooed004 ",
+               "                WHERE ooed004 = xmdl212) ",
+               "   AND ",l_wca
+   PREPARE adep600_pre5 FROM g_sql
+   EXECUTE adep600_pre5
+   IF SQLCA.sqlcode THEN
+      CALL cl_errmsg('','',"Ins adep600_demb_tmp",SQLCA.sqlcode,1)
+      RETURN
+   END IF
+   
+   #訂單資料
+   LET g_sql = "INSERT INTO adep600_demb_tmp(",
+               "       seq,    ",
+               "       dembent, dembsite, demb001, demb002,",
+               "       demb003, demb004,  demb005, demb006,",
+               "       demb007, demb008,  demb009, demb010,",
+               "       demb011, demb012,  demb013, demb014,",
+               "       demb015, demb016,  demb017, demb018,",
+               
+               "       demb019, demb020, demb021, demb022,",
+               "       demb023, demb024, demb025, demb026,",
+               "       demb027, demb028, demb029, demb030,",
+               "       demb031, demb032, demb033, demb034,",
+               "       demb035, demb036, demb037, demb038,",
+               
+               "       demb039, demb040, demb041, demb042,",
+               "       demb043, demb044, demb045, demb046,",
+               "       demb047, curr   , type) ",
+               
+               "SELECT ROW_NUMBER() OVER (ORDER BY xmdaent),",
+               "       xmdaent, xmddsite, NULL,    xmdadocdt,",
+               "       NULL,    NULL,     xmda004, xmdd225,",
+               "       xmdd226, xmdd227,  xmdd228, xmdd001,",
+               "       NULL,    xmdd002,  NULL,    xmdd019,",
+               "       ooef016, xmdd004,  0,       NULL,   ",
+               
+               "       0,       0,        0,       0,      ",
+               "       0,       0,        0,       0,      ",
+               "       0,       0,        0,       0,      ",
+               "       0,       0,        0,       0,      ",
+               "       0,       0,        0,       0,      ",
+               
+               "       0,       0,        0,       c,      ",
+               "       d*e,     d*e,      f,       g,      ",
+               "       h,       xmda015,  '2'",
+               "  FROM (",
+               "SELECT (SELECT (COALESCE(SUM(COALESCE(xmdl018,0)),0)-",
+               "                    COALESCE(SUM(COALESCE(xmdd006,0)-",
+               "                    COALESCE(xmdd014,0)+COALESCE(xmdd016,0)+",
+               "                    COALESCE(xmdd034,0)),0))",
+               "          FROM xmdl_t,xmdk_t,xmdd_t  a",
+               "         WHERE  xmdlent = xmdkent",
+               "           AND xmdldocno = xmdkdocno ",
+               "           AND a.xmddent = xmdkent",
+               "           AND xmdkent = ",g_enterprise,
+               "           AND xmdk000 = '1' ",
+               "           AND xmdkstus NOT IN ('X','Y','S')",
+               "           AND xmdl003 = a.xmdddocno",
+               "           AND xmdl004 = a.xmddseq",
+               "           AND xmdl005 = a.xmddseq1",
+               "           AND xmdl006 = a.xmddseq2) c,",
+               "        xmdaent, xmddsite, xmdadocdt, xmda004,",
+               "        xmdd225, xmdd226,  xmdd227,   xmdd228,",
+               "        xmdd001, xmdd002,  xmdd019,   ooef016, ",
+               "        xmdd004, COALESCE(xmdd203,0) d, COALESCE(xmdd006,0) e,COALESCE(xmdd206,0) f,",
+               "        COALESCE(xmdd028,0) g, COALESCE(xmdd029,0) h,  xmda015",
+               "   FROM xmda_t,xmdd_t",
+               "   LEFT OUTER JOIN ooef_t ON ooefent = xmddent AND ooef001 = xmddsite",
+               "  WHERE xmdaent = xmddent",
+               "    AND xmdadocno = xmdddocno",
+               "    AND xmdaent = ",g_enterprise,
+               "    AND xmdastus = 'Y'",
+               "    AND EXISTS (SELECT ooed004 ",
+               "                 FROM adep600_ooed004 ",
+               "                WHERE ooed004 = xmddsite) ",
+               "   AND ",l_wcb,")",
+               " WHERE 0 < c"
+   PREPARE adep600_pre7 FROM g_sql
+   EXECUTE adep600_pre7
+   IF SQLCA.sqlcode THEN
+      CALL cl_errmsg('','',"Ins adep600_demb_tmp",SQLCA.sqlcode,1)
+      RETURN
+   END IF
+   
+   #銷退資料
+   LET g_sql = "INSERT INTO adep600_demb_tmp(",
+               "       seq,    ",
+               "       dembent, dembsite, demb001, demb002,",
+               "       demb003, demb004,  demb005, demb006,",
+               "       demb007, demb008,  demb009, demb010,",
+               "       demb011, demb012,  demb013, demb014,",
+               "       demb015, demb016,  demb017, demb018,",
+               
+               "       demb019, demb020, demb021, demb022,",
+               "       demb023, demb024, demb025, demb026,",
+               "       demb027, demb028, demb029, demb030,",
+               
+               "       demb031, demb032, demb033, demb034,",
+               
+               "       demb035, demb036, demb037, demb038,",
+               "       demb039, demb040, demb041, demb042,",
+               "       demb043, demb044, demb045, demb046,",
+               "       demb047, curr  ) ",
+               
+               "SELECT ROW_NUMBER() OVER (ORDER BY xmdkent),",
+               "       xmdkent,xmdl212,NULL,   xmdk001,",
+               "       NULL,   NULL,   xmdk007,xmdl215,",
+               "       xmdl216,xmdl217,xmdl218,xmdl008,",
+               "       NULL,   xmdl009,NULL,   xmdl025,",
+               "       ooef016,xmdl017,0,      NULL,   ",
+               
+               "       0,      0,      0,      0,      ",
+               "       0,      0,      0,      0,      ",
+               "       0,      0,      0,      0,      ",
+               
+               "       COALESCE(xmdl018,0), COALESCE(xmdl208,0)*COALESCE(xmdl018,0), ",
+               "       COALESCE(xmdl208,0)*COALESCE(xmdl018,0), COALESCE(xmdl211,0),",
+               
+               "       COALESCE(xmdl027,0),COALESCE(xmdl028,0),0,      0,      ",
+               "       0,      0,      0,      0,",
+               "       0,      0,      0,      0,",
+               "       0,      xmdk016 ",
+               "  FROM xmdk_t,xmdl_t",
+               "  LEFT OUTER JOIN ooef_t ON ooefent = xmdlent AND ooef001 = xmdl212",
+               " WHERE xmdkent = xmdlent",
+               "   AND xmdkdocno = xmdldocno",
+               "   AND xmdkent = ",g_enterprise,
+               "   AND (xmdk000 = '5' OR xmdk000 = '6')",
+               "   AND xmdkstus = 'Y'",
+               "   AND EXISTS (SELECT ooed004 ",
+               "                 FROM adep600_ooed004 ",
+               "                WHERE ooed004 = xmdl212) ",
+               "   AND ",l_wca
+   PREPARE adep600_pre8 FROM g_sql
+   EXECUTE adep600_pre8
+   IF SQLCA.sqlcode THEN
+      CALL cl_errmsg('','',"Ins adep600_demb_tmp",SQLCA.sqlcode,1)
+      RETURN
+   END IF
+   
+   #建index
+   CREATE INDEX adep600_demb_tmp_01 on adep600_demb_tmp
+      (dembent,dembsite,demb002,demb005,demb006,
+       demb007,demb008, demb009,demb010,demb012,
+       demb014,demb018, demb019,curr,   type)
+   IF SQLCA.SQLcode THEN
+      CALL cl_err("Create Index adep600_demb_tmp",SQLCA.sqlcode,1)
+      RETURN
+   END IF
+   
+   #客戶經營類型 demb001 (demb007-> pmaa092)
+   #會計週 demb003 會計期demb004 (dembsite,demb002->oogc008,oogc006)
+   #商品條碼 demb011 (demb010->imay003 WHERE imay006 = 'Y')
+   #品牌 demb13 (demb010->imaa126)
+   #成本單位 demb018 (dembsite,demb010->imag014)
+   LET g_sql = "UPDATE adep600_demb_tmp ",
+               "   SET demb001 = (SELECT pmaa092 FROM pmaa_t",
+               "                   WHERE pmaaent = dembent",
+               "                     AND pmaa001 = demb005), ",
+               "       (demb003,demb004) = (SELECT oogc008,oogc006",
+               "                              FROM oogc_t,ooef_t",
+               "                             WHERE oogcent = ooefent",
+               "                               AND oogc001 = ooef008",    #行事曆參照表號
+               "                               AND oogcent = dembent",
+               "                               AND oogc002 = '4'",        #行事曆類別
+               "                               AND ooef001 = dembsite",   #營運據點
+               "                               AND oogc003 = demb002),",  #日期
+               "       demb011 = (SELECT imay003 FROM imay_t",
+               "                   WHERE imayent = dembent",
+               "                     AND imay001 = demb010",
+               "                     AND imay006 = 'Y'), ",
+               "       demb013 = (SELECT imaa126 FROM imaa_t",
+               "                   WHERE imaaent = dembent",
+               "                     AND imaa001 = demb010),",
+               "       demb018 = (SELECT COALESCE(imag014,",
+               "                         (SELECT imag014",
+               "                            FROM imag_t",
+               "                           WHERE imagent = dembent",
+               "                             AND imagsite = 'ALL'",
+               "                             AND imag001 = demb010))",
+               "                    FROM imag_t,ooef_t",
+               "                   WHERE imagent = ooefent",
+               "                     AND imagsite = ooef017",
+               "                     AND imagent = dembent",
+               "                     AND ooef001 = dembsite",   #營運據點
+               "                     AND imag001 = demb010)"    #商品編號
+
+   PREPARE adep600_pre9 FROM g_sql
+   EXECUTE adep600_pre9
+   IF SQLCA.sqlcode THEN
+      CALL cl_errmsg('','',"Upd adep600_demb_tmp",SQLCA.sqlcode,1)
+      RETURN
+   END IF
+   
+   LET l_success = ''
+   CALL adep600_data_process() RETURNING l_success
+   IF NOT l_success THEN
+      RETURN
+   END IF
+   
+#   #把所有資料sum
+#   #銷售組織、　客戶經營類型、日結日期、會計週、　會計期
+#   #經銷商編號、合同編號、　　經營方式、結算類型、結算方式
+#   #商品編號、　商品條碼、　　特徵碼、　品牌、　　稅別編號
+#   #本幣幣別、　銷售單位、　　成本單位、成本單價、單據幣別
+#   LET g_sql = "INSERT INTO adep600_demb_sum (",
+#               "       dembent,dembsite,demb001,demb002,demb003,",
+#               "       demb004,demb005, demb006,demb007,demb008,",
+#               "       demb009,demb010, demb011,demb012,demb013,",
+#               "       demb014,demb015, demb016,demb018,demb019,",
+#               "       curr,",
+#               
+#               "       demb017, demb020,demb021,demb022,demb023,",
+#               "       demb024, demb025,demb026,demb027,demb028,",
+#               "       demb029, demb030,demb031,demb032,demb033,",
+#               "       demb034, demb035,demb036,demb037,demb038,",
+#               "       demb039, demb040,demb041,demb042,demb043,",
+#               "       demb044, demb045,demb046,demb047) ",
+#                                
+#               "SELECT dembent,dembsite,demb001,demb002,demb003,",
+#               "       demb004,demb005, demb006,demb007,demb008,",
+#               "       demb009,demb010, demb011,demb012,demb013,",
+#               "       demb014,demb015, demb016,demb018,demb019,",
+#               "       curr,   ",
+#               
+#               "       SUM(demb017),SUM(demb020),SUM(demb021),SUM(demb022),SUM(demb023),",
+#               "       SUM(demb024),SUM(demb025),SUM(demb026),SUM(demb027),SUM(demb028),",
+#               "       SUM(demb029),SUM(demb030),SUM(demb031),SUM(demb032),SUM(demb033),",
+#               "       SUM(demb034),SUM(demb035),SUM(demb036),SUM(demb037),SUM(demb038),",
+#               "       SUM(demb039),SUM(demb040),SUM(demb041),SUM(demb042),SUM(demb043),",
+#               "       SUM(demb044),SUM(demb045),SUM(demb046),SUM(demb047) ",
+#               "  FROM adep600_demb_tmp",
+#               " GROUP BY dembent,dembsite,demb001,demb002,demb003,",
+#               "          demb004,demb005, demb006,demb007,demb008,",
+#               "          demb009,demb010, demb011,demb012,demb013,",
+#               "          demb014,demb015, demb016,demb018,demb019,",
+#               "          curr"
+#   PREPARE adep600_pre10 FROM g_sql
+#   EXECUTE adep600_pre10
+#   IF SQLCA.sqlcode THEN
+#      CALL cl_errmsg('','',"Ins adep600_demb_sum",SQLCA.sqlcode,1)
+#      RETURN
+#   END IF
+   
+   #建index
+   CREATE INDEX adep600_demb_sum_01 on adep600_demb_sum
+      (dembent,dembsite,demb002,demb005,demb006,
+       demb007,demb008, demb009,demb010,demb012,
+       demb014,demb018, demb019,curr)
+   IF SQLCA.SQLcode THEN
+      CALL cl_err("Create Index adep600_demb_sum",SQLCA.sqlcode,1)
+      RETURN
+   END IF
+   
+   
+END FUNCTION]]>
+</point>
+  <point name="function.adep600_data_process" cite_std="N" status="u" ver="1" src="s" new="Y" order="3" mark_hard="N">
+<![CDATA[
+################################################################################
+# Descriptions...: 資料處理
+# Memo...........:
+# Usage..........: CALL adep600_data_process()
+#                  RETURNING r_success
+# Input parameter: 無
+# Return code....: r_success     True/False
+# Date & Author..: 2014/07/09 By pomelo
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION adep600_data_process()
+DEFINE r_success   LIKE type_t.num5
+DEFINE l_gzsz008   LIKE gzsz_t.gzsz008
+DEFINE l_rate      LIKE ooan_t.ooan005
+DEFINE l_success   LIKE type_t.num5
+DEFINE l_unit_rate LIKE inaj_t.inaj014
+DEFINE l_xrcd103   LIKE xrcd_t.xrcd103    #原幣未稅金額
+DEFINE l_xrcd104   LIKE xrcd_t.xrcd104    #原幣稅額
+DEFINE l_xrcd105   LIKE xrcd_t.xrcd105    #原幣含稅金額
+DEFINE l_xrcd113   LIKE xrcd_t.xrcd113    #本幣未稅金額
+DEFINE l_xrcd114   LIKE xrcd_t.xrcd114    #本幣稅額
+DEFINE l_xrcd115   LIKE xrcd_t.xrcd115    #本幣含稅金額
+DEFINE l_dembsite  LIKE demb_t.dembsite
+DEFINE l_demb      RECORD
+       type        LIKE type_t.chr1,      #類型
+       seq         LIKE type_t.num10,     #項次
+       dembsite    LIKE demb_t.dembsite,  #營運據點
+       demb002     LIKE demb_t.demb002,   #日結日期
+       demb010     LIKE demb_t.demb010,   #商品編號
+       demb014     LIKE demb_t.demb014,   #稅別編號
+       demb015     LIKE demb_t.demb015,   #本幣幣別
+       demb016     LIKE demb_t.demb016,   #銷售單位
+       demb017     LIKE demb_t.demb017,   #銷售數量
+       demb018     LIKE demb_t.demb018,   #成本單位
+       demb019     LIKE demb_t.demb019,   #成本單價
+       demb020     LIKE demb_t.demb020,   #進價成本金額
+       demb021     LIKE demb_t.demb021,   #銷貨標準售價金額(未稅)
+       demb022     LIKE demb_t.demb022,   #銷貨標準售價金額(含稅)
+       demb023     LIKE demb_t.demb023,   #銷貨折價金額
+       demb024     LIKE demb_t.demb024,   #銷售實收金額(未稅)
+       demb025     LIKE demb_t.demb025,   #銷售實收金額(含稅)
+       demb028     LIKE demb_t.demb028,   #促銷銷售數量
+       demb029     LIKE demb_t.demb029,   #促銷應收金額(未稅)
+       demb030     LIKE demb_t.demb030,   #促銷應收金額(含稅)
+       demb031     LIKE demb_t.demb031,   #退貨數量
+       demb032     LIKE demb_t.demb032,   #退貨標準售價金額(未稅)
+       demb033     LIKE demb_t.demb033,   #退貨標準售價金額(含稅)
+       demb034     LIKE demb_t.demb034,   #退貨折扣金額
+       demb035     LIKE demb_t.demb035,   #退貨實退金額(未稅)
+       demb036     LIKE demb_t.demb036,   #退貨實退金額(含稅)
+       demb042     LIKE demb_t.demb042,   #訂貨數量
+       demb043     LIKE demb_t.demb043,   #訂貨標準售價金額(未稅)
+       demb044     LIKE demb_t.demb044,   #訂貨標準售價金額(含稅)
+       demb045     LIKE demb_t.demb045,   #訂貨折扣金額
+       demb046     LIKE demb_t.demb046,   #訂貨標準售價金額(未稅)
+       demb047     LIKE demb_t.demb047,   #訂貨標準售價金額(含稅)
+       curr        LIKE xmdk_t.xmdk016    #原幣幣別
+                   END RECORD
+                   
+   LET r_success = TRUE
+   
+   #撈出需要處理的資料
+   LET g_sql = "SELECT type,   seq,    dembsite,demb002,",
+               "       demb010,demb014,demb015, demb016,",
+               "       demb017,demb018,demb019, demb021,",
+               "       demb022,demb023,demb024, demb025,",
+               "       demb031,demb032,demb033, demb034,",
+               "       demb035,demb036,demb042, demb043,",
+               "       demb044,demb045,demb046, demb047,",
+               "       curr   ",
+               "  FROM adep600_demb_tmp"
+   PREPARE adep600_pre11 FROM g_sql
+   DECLARE adep600_curs11 CURSOR FOR adep600_pre11
+   
+   LET l_dembsite = 'a'
+   INITIALIZE l_demb.* TO NULL
+   FOREACH adep600_curs11 INTO l_demb.type,   l_demb.seq,    l_demb.dembsite,l_demb.demb002,
+                               l_demb.demb010,l_demb.demb014,l_demb.demb015, l_demb.demb016,
+                               l_demb.demb017,l_demb.demb018,l_demb.demb019, l_demb.demb021,
+                               l_demb.demb022,l_demb.demb023,l_demb.demb024, l_demb.demb025,
+                               l_demb.demb031,l_demb.demb032,l_demb.demb033, l_demb.demb034,
+                               l_demb.demb035,l_demb.demb036,l_demb.demb042, l_demb.demb043,
+                               l_demb.demb044,l_demb.demb045,l_demb.demb046, l_demb.demb047,
+                               l_demb.curr
+      IF SQLCA.sqlcode THEN
+         CALL cl_errmsg('','',"Foreach adep600_curs11",SQLCA.sqlcode,1)
+         RETURN
+      END IF
+      
+      #取匯率類型
+      #當前一筆營運據點 與 現在這一筆資料的營運據點不相同的時
+      #才需要從新撈取據點及參數資料
+      IF l_dembsite = l_demb.dembsite THEN
+      ELSE
+         LET l_gzsz008 = cl_get_para(g_enterprise,l_demb.dembsite,'S-BAS-0010')
+      END IF
+      LET l_rate = ''
+      CALL s_aooi160_get_exrate('1',l_demb.dembsite,l_demb.demb002,l_demb.curr,
+                                         l_demb.demb015,1,l_gzsz008)
+         RETURNING l_rate
+      
+      #依類型判斷 需要處理的欄位不相同
+      CASE l_demb.type
+         WHEN '1'   #出貨資料
+            #原幣->本幣
+            #當本幣幣別 與 原幣幣別不相同時 call s_aooi160_get_exrate 算出轉換率
+            IF l_demb.demb015 = l_demb.curr THEN
+               #銷貨折價金額
+               CALL s_aooi160_get_exrate('1',l_demb.dembsite,l_demb.demb002,l_demb.curr,
+                                         l_demb.demb015,l_demb.demb023,l_gzsz008)
+                  RETURNING l_demb.demb023
+               #銷售實收金額(未稅)
+               CALL s_aooi160_get_exrate('1',l_demb.dembsite,l_demb.demb002,l_demb.curr,
+                                         l_demb.demb015,l_demb.demb024,l_gzsz008)
+                  RETURNING l_demb.demb024
+               #銷售實收金額(含稅)
+               CALL s_aooi160_get_exrate('1',l_demb.dembsite,l_demb.demb002,l_demb.curr,
+                                         l_demb.demb015,l_demb.demb025,l_gzsz008)
+                  RETURNING l_demb.demb025
+            END IF
+            
+            #當銷售折扣金額 <> 0
+            #促銷銷售數量 　　 (demb028) = 銷售數量(demb017)
+            #促銷應收金額(未稅)(demb029) = 銷售實收金額(未稅)(demb024)
+            #促銷應收金額(含稅)(demb030) = 銷售實收金額(含稅)(demb025)
+            IF l_demb.demb023 = 0 THEN
+            ELSE
+               LET l_demb.demb028 = l_demb.demb017
+               LET l_demb.demb029 = l_demb.demb024
+               LET l_demb.demb030 = l_demb.demb025
+            END IF
+            
+            #取的銷售單位.成本單位轉換率
+            #進價成本金額(demb020) = 成本單價(demb019)*銷售數量(demb017)*轉換率
+            LET l_success = ''
+            LET l_unit_rate = ''
+            CALL s_aimi190_get_convert(l_demb.demb010,l_demb.demb016,l_demb.demb018)
+               RETURNING l_success,l_unit_rate
+            LET l_demb.demb020 = l_demb.demb018 * l_demb.demb017 * l_unit_rate
+            
+            #銷貨標準售價金額(未稅) 銷貨標準售價金額(含稅)
+            CALL s_tax_count(l_demb.dembsite,l_demb.demb014,l_demb.demb021,
+                             l_demb.demb017,l_demb.curr,l_rate)
+               RETURNING l_xrcd103,l_xrcd104,l_xrcd105,    #原幣
+                         l_xrcd113,l_xrcd114,l_xrcd115     #本幣
+            LET l_demb.demb021 = l_xrcd113   #未稅
+            LET l_demb.demb022 = l_xrcd115   #含稅
+            
+         WHEN '2'   #訂單資料
+            #原幣->本幣
+            #當本幣幣別 與 原幣幣別不相同時 call s_aooi160_get_exrate 算出轉換率
+            IF l_demb.demb015 = l_demb.curr THEN
+               #訂貨折扣金額
+               CALL s_aooi160_get_exrate('1',l_demb.dembsite,l_demb.demb002,l_demb.curr,
+                                         l_demb.demb015,l_demb.demb045,l_gzsz008)
+                  RETURNING l_demb.demb045
+               #訂貨標準售價金額(未稅)
+               CALL s_aooi160_get_exrate('1',l_demb.dembsite,l_demb.demb002,l_demb.curr,
+                                         l_demb.demb015,l_demb.demb046,l_gzsz008)
+                  RETURNING l_demb.demb046
+               #訂貨標準售價金額(含稅)
+               CALL s_aooi160_get_exrate('1',l_demb.dembsite,l_demb.demb002,l_demb.curr,
+                                         l_demb.demb015,l_demb.demb047,l_gzsz008)
+                  RETURNING l_demb.demb047
+            END IF
+            
+            #訂貨標準售價金額(未稅) 訂貨標準售價金額(含稅)
+            CALL s_tax_count(l_demb.dembsite,l_demb.demb014,l_demb.demb043,
+                             l_demb.demb042,l_demb.curr,l_rate)
+               RETURNING l_xrcd103,l_xrcd104,l_xrcd105,    #原幣
+                         l_xrcd113,l_xrcd114,l_xrcd115     #本幣
+            LET l_demb.demb043 = l_xrcd113   #未稅
+            LET l_demb.demb044 = l_xrcd115   #含稅
+            
+         WHEN '3'   #銷退資料
+            #原幣->本幣
+            #當本幣幣別 與 原幣幣別不相同時 call s_aooi160_get_exrate 算出轉換率
+            IF l_demb.demb015 = l_demb.curr THEN
+               #退貨折扣金額
+               CALL s_aooi160_get_exrate('1',l_demb.dembsite,l_demb.demb002,l_demb.curr,
+                                         l_demb.demb015,l_demb.demb034,l_gzsz008)
+                  RETURNING l_demb.demb034
+               #退貨實退金額(未稅)
+               CALL s_aooi160_get_exrate('1',l_demb.dembsite,l_demb.demb002,l_demb.curr,
+                                         l_demb.demb015,l_demb.demb035,l_gzsz008)
+                  RETURNING l_demb.demb035
+               #退貨實退金額(含稅)
+               CALL s_aooi160_get_exrate('1',l_demb.dembsite,l_demb.demb002,l_demb.curr,
+                                         l_demb.demb015,l_demb.demb036,l_gzsz008)
+                  RETURNING l_demb.demb036
+            END IF
+            
+            #訂貨標準售價金額(未稅) 訂貨標準售價金額(含稅)
+            CALL s_tax_count(l_demb.dembsite,l_demb.demb014,l_demb.demb032,
+                             l_demb.demb031,l_demb.curr,l_rate)
+               RETURNING l_xrcd103,l_xrcd104,l_xrcd105,    #原幣
+                         l_xrcd113,l_xrcd114,l_xrcd115     #本幣
+            LET l_demb.demb032 = l_xrcd113   #未稅
+            LET l_demb.demb033 = l_xrcd115   #含稅
+            
+      END CASE
+      
+      LET l_dembsite = l_demb.dembsite
+      INITIALIZE l_demb.* TO NULL
+      
+   END FOREACH
+   
+   RETURN r_success
+   
+END FUNCTION]]>
+</point>
+  <point name="construct.c.demasite" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = g_site
+            LET g_qryparam.arg2 = '2'
+            CALL q_ooed004()                        #呼叫開窗
+            DISPLAY g_qryparam.return1 TO demasite  #顯示到畫面上
+            NEXT FIELD demasite                     #返回原欄位]]>
+</point>
+  <point name="global.parameter" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   type1                 LIKE type_t.chr1,
+   type2                 LIKE type_t.chr2,]]>
+</point>
+  <point name="input.m.before_input" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="main.background" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   LET lc_param.type1 = g_argv[1]             #銷售組織往下展開(必傳值)
+   LET lc_param.type2 = g_argv[2]             #已存在日結資料刪除重新結算(必傳值)
+   LET lc_param.wc = g_argv[3]                #條件(必傳值)
+   LET ls_js = util.JSON.stringify(lc_param)
+
+   IF NOT cl_null(lc_param.wc) AND NOT cl_null(lc_param.type1) AND
+      NOT cl_null(lc_param.type2) THEN
+      LET g_bgjob = "Y"
+   ELSE
+      LET g_bgjob = "N"
+   END IF]]>
+</point>
+  <point name="process.exit_dialog" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[      LET lc_param.type1 = g_master.type1
+      LET lc_param.type2 = g_master.type2
+      LET lc_param.wc = g_master.wc]]>
+</point>
+  <point name="process.process" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   CALL adep600_create_temp()
+   CALL adep600_ins_temp(ls_js)
+   ]]>
+</point>
+  <point name="transfer.argv.define" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[   LET la_cmdrun.param[1] = la_param.type1
+   LET la_cmdrun.param[2] = la_param.type2
+   LET la_cmdrun.param[3] = la_param.wc]]>
+</point>
+  <point name="ui_dialog.more_action" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[         BEFORE DIALOG
+            IF cl_null(g_master.type1) THEN
+               LET g_master.type1 = 'N'
+            END IF
+            IF cl_null(g_master.type2) THEN
+               LET g_master.type2 = 'N'
+            END IF
+            DISPLAY BY NAME g_master.type1,g_master.type2]]>
+</point>
+  <point name="ui_dialog.qbe_select" cite_std="N" status="" ver="1" src="s" new="N" mark_hard="N">
+<![CDATA[]]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.servicecall" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.before_close" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="main.exit" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="init.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="init.init" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_dialog" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.before_dialog2" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.type1" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.type1" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.type1" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.type2" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.type2" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.type2" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.type1" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.type2" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.m.after_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.other" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="cs.head.before_construct" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.demasite" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.demasite" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.b.dema002" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.a.dema002" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="construct.c.dema002" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="cs.other" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_construct" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.more_displayarray" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="ui_dialog.qbeclear" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.after_schedule" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.define" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.pre_process" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.count_progress" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.foreground_finish" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="process.background_finish" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <section id="adep600.description" ver="1" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PR版次:1) Build-000113
+#+ 
+#+ Filename...: adep600
+#+ Description: 經銷商銷售日結批次處理作業
+#+ Creator....: 04226(2014/07/04)
+#+ Modifier...: 04226(2014/07/08)
+#+ Buildtype..: 應用 p01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="adep600.global" ver="3" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       demasite LIKE dema_t.demasite, 
+   dema002 LIKE dema_t.dema002, 
+   type1 LIKE type_t.chr80, 
+   type2 LIKE type_t.chr80, 
+   stagenow LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+</section>
+  <section id="adep600.init" ver="1" status="" src="s">
+<![CDATA[#+ 初始化作業
+PRIVATE FUNCTION adep600_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+</section>
+  <section id="adep600.main" ver="1" status="" src="s">
+<![CDATA[MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point 
+  
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("ade","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+      CALL adep600_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_adep600 WITH FORM cl_ap_formpath("ade",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL adep600_init()
+ 
+      #進入選單 Menu (="N")
+      CALL adep600_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_adep600
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+</section>
+  <section id="adep600.other_function" ver="1" status="" src="s">
+<![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+</section>
+  <section id="adep600.process" ver="1" status="" src="s">
+<![CDATA[#+ 資料處理
+PRIVATE FUNCTION adep600_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   {<point name="process.define"/>}
+   #end add-point
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE adep600_process_cs CURSOR FROM ls_sql
+#  FOREACH adep600_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+   END IF
+END FUNCTION
+]]>
+</section>
+  <section id="adep600.transfer_argv" ver="1" status="" src="s">
+<![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION adep600_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+ 
+   CALL util.JSON.parse(ls_js,la_param)
+ 
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+</section>
+  <section id="adep600.ui_dialog" ver="3" status="" src="s">
+<![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION adep600_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+ 
+   #add-point:ui_dialog段before dialog
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2
+      {<point name="ui_dialog.before_dialog2"/>}
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #+ 此段落由子樣板a57產生
+         INPUT BY NAME g_master.type1,g_master.type2 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前
+               {<point name="input.m.before_input"/>}
+               #end add-point
+         
+                     #此段落由子樣板a01產生
+         BEFORE FIELD type1
+            #add-point:BEFORE FIELD type1
+            {<point name="input.b.type1" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD type1
+            
+            #add-point:AFTER FIELD type1
+            {<point name="input.a.type1" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE type1
+            #add-point:ON CHANGE type1
+            {<point name="input.g.type1" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD type2
+            #add-point:BEFORE FIELD type2
+            {<point name="input.b.type2" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD type2
+            
+            #add-point:AFTER FIELD type2
+            {<point name="input.a.type2" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE type2
+            #add-point:ON CHANGE type2
+            {<point name="input.g.type2" />}
+            #END add-point
+ 
+ 
+                     #Ctrlp:input.c.type1
+         ON ACTION controlp INFIELD type1
+            #add-point:ON ACTION controlp INFIELD type1
+            {<point name="input.c.type1" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.type2
+         ON ACTION controlp INFIELD type2
+            #add-point:ON ACTION controlp INFIELD type2
+            {<point name="input.c.type2" />}
+            #END add-point
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後
+               {<point name="input.m.after_input"/>}
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...)
+            {<point name="input.other"/>}
+            #end add-point
+               
+         END INPUT
+ 
+ 
+         
+         #+ 此段落由子樣板a57產生
+         CONSTRUCT BY NAME g_master.wc ON demasite,dema002
+         
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct
+               {<point name="cs.head.before_construct"/>}
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #此段落由子樣板a01產生
+         BEFORE FIELD demasite
+            #add-point:BEFORE FIELD demasite
+            {<point name="construct.b.demasite" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD demasite
+            
+            #add-point:AFTER FIELD demasite
+            {<point name="construct.a.demasite" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.demasite
+         ON ACTION controlp INFIELD demasite
+            #add-point:ON ACTION controlp INFIELD demasite
+            {<point name="construct.c.demasite" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD dema002
+            #add-point:BEFORE FIELD dema002
+            {<point name="construct.b.dema002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD dema002
+            
+            #add-point:AFTER FIELD dema002
+            {<point name="construct.a.dema002" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.dema002
+         ON ACTION controlp INFIELD dema002
+            #add-point:ON ACTION controlp INFIELD dema002
+            {<point name="construct.c.dema002" />}
+            #END add-point
+ 
+ 
+            
+            #add-point:其他管控
+            {<point name="cs.other"/>}
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+      
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               LET lc_param.wc = ls_wc
+               #取得條件後需要執行項目,應新增於下方adp
+               #add-point:ui_dialog段qbe_select後
+               {<point name="ui_dialog.qbe_select"/>}
+               #end add-point
+            END IF
+ 
+         ON ACTION qbe_save
+            CALL cl_qbe_save()
+ 
+         ON ACTION batch_execute
+            ACCEPT DIALOG
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE lc_param.* TO NULL
+            #add-point:ui_dialog段qbeclear
+            {<point name="ui_dialog.qbeclear"/>}
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         LET g_jobid = cl_schedule_get_jobid(g_prog)
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL adep600_process(ls_js)
+            WHEN g_schedule.gzpa003 = "1"
+            #    CALL cl_schedule_update_data(g_jobid,ls_js)
+                 LET ls_js = adep600_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule
+         {<point name="process.after_schedule"/>}
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+</section>
+</add_points>

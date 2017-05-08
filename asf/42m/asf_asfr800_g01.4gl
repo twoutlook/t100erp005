@@ -1,0 +1,2315 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="asfr800_g01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:7(2016-11-09 15:41:07), PR版次:0007(2016-11-11 10:50:25)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000071
+#+ Filename...: asfr800_g01
+#+ Description: ...
+#+ Creator....: 05384(2014-12-04 15:24:44)
+#+ Modifier...: 08993 -SD/PR- 08993
+ 
+{</section>}
+ 
+{<section id="asfr800_g01.global" readonly="Y" >}
+#報表 g01 樣板自動產生(Version:13)
+#add-point:填寫註解說明 name="global.memo"
+#160727-00025#8   2016/08/22   By zhujing       模具生產功能開發
+#161024-00057#5   2016/10/31   By shiun         刪除sfae_t、sfke_t相關程式
+#161027-00041#2   2016/11/11   By shiun         BPM簽核問題修改
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+PRIVATE TYPE sr1_r RECORD
+   sfka001 LIKE sfka_t.sfka001, 
+   sfka002 LIKE sfka_t.sfka002, 
+   sfka003 LIKE sfka_t.sfka003, 
+   sfka004 LIKE sfka_t.sfka004, 
+   sfka005 LIKE sfka_t.sfka005, 
+   sfka006 LIKE sfka_t.sfka006, 
+   sfka007 LIKE sfka_t.sfka007, 
+   sfka008 LIKE sfka_t.sfka008, 
+   sfka009 LIKE sfka_t.sfka009, 
+   sfka010 LIKE sfka_t.sfka010, 
+   sfka011 LIKE sfka_t.sfka011, 
+   sfka012 LIKE sfka_t.sfka012, 
+   sfka013 LIKE sfka_t.sfka013, 
+   sfka014 LIKE sfka_t.sfka014, 
+   sfka015 LIKE sfka_t.sfka015, 
+   sfka016 LIKE sfka_t.sfka016, 
+   sfka017 LIKE sfka_t.sfka017, 
+   sfka018 LIKE sfka_t.sfka018, 
+   sfka019 LIKE sfka_t.sfka019, 
+   sfka020 LIKE sfka_t.sfka020, 
+   sfka021 LIKE sfka_t.sfka021, 
+   sfka022 LIKE sfka_t.sfka022, 
+   sfka023 LIKE sfka_t.sfka023, 
+   sfka024 LIKE sfka_t.sfka024, 
+   sfka025 LIKE sfka_t.sfka025, 
+   sfka026 LIKE sfka_t.sfka026, 
+   sfka028 LIKE sfka_t.sfka028, 
+   sfka029 LIKE sfka_t.sfka029, 
+   sfka030 LIKE sfka_t.sfka030, 
+   sfka031 LIKE sfka_t.sfka031, 
+   sfka032 LIKE sfka_t.sfka032, 
+   sfka033 LIKE sfka_t.sfka033, 
+   sfka034 LIKE sfka_t.sfka034, 
+   sfka035 LIKE sfka_t.sfka035, 
+   sfka036 LIKE sfka_t.sfka036, 
+   sfka037 LIKE sfka_t.sfka037, 
+   sfka038 LIKE sfka_t.sfka038, 
+   sfka039 LIKE sfka_t.sfka039, 
+   sfka040 LIKE sfka_t.sfka040, 
+   sfka041 LIKE sfka_t.sfka041, 
+   sfka042 LIKE sfka_t.sfka042, 
+   sfka043 LIKE sfka_t.sfka043, 
+   sfka044 LIKE sfka_t.sfka044, 
+   sfka045 LIKE sfka_t.sfka045, 
+   sfka046 LIKE sfka_t.sfka046, 
+   sfka047 LIKE sfka_t.sfka047, 
+   sfka048 LIKE sfka_t.sfka048, 
+   sfka049 LIKE sfka_t.sfka049, 
+   sfka050 LIKE sfka_t.sfka050, 
+   sfka051 LIKE sfka_t.sfka051, 
+   sfka055 LIKE sfka_t.sfka055, 
+   sfka056 LIKE sfka_t.sfka056, 
+   sfka057 LIKE sfka_t.sfka057, 
+   sfka058 LIKE sfka_t.sfka058, 
+   sfka059 LIKE sfka_t.sfka059, 
+   sfka060 LIKE sfka_t.sfka060, 
+   sfka061 LIKE sfka_t.sfka061, 
+   sfka063 LIKE sfka_t.sfka063, 
+   sfka064 LIKE sfka_t.sfka064, 
+   sfka900 LIKE sfka_t.sfka900, 
+   sfka902 LIKE sfka_t.sfka902, 
+   sfka905 LIKE sfka_t.sfka905, 
+   sfka906 LIKE sfka_t.sfka906, 
+   sfkaacti LIKE sfka_t.sfkaacti, 
+   sfkadocno LIKE sfka_t.sfkadocno, 
+   sfkaent LIKE sfka_t.sfkaent, 
+   sfkasite LIKE sfka_t.sfkasite, 
+   sfkastus LIKE sfka_t.sfkastus, 
+   sfkg001 LIKE sfkg_t.sfkg001, 
+   sfkg002 LIKE sfkg_t.sfkg002, 
+   sfkg003 LIKE sfkg_t.sfkg003, 
+   sfkg004 LIKE sfkg_t.sfkg004, 
+   sfkg005 LIKE sfkg_t.sfkg005, 
+   sfkg006 LIKE sfkg_t.sfkg006, 
+   sfkg007 LIKE sfkg_t.sfkg007, 
+   sfkg008 LIKE sfkg_t.sfkg008, 
+   sfkg009 LIKE sfkg_t.sfkg009, 
+   sfkg010 LIKE sfkg_t.sfkg010, 
+   sfkg011 LIKE sfkg_t.sfkg011, 
+   sfkg012 LIKE sfkg_t.sfkg012, 
+   sfkg013 LIKE sfkg_t.sfkg013, 
+   sfkg014 LIKE sfkg_t.sfkg014, 
+   sfkg015 LIKE sfkg_t.sfkg015, 
+   sfkg016 LIKE sfkg_t.sfkg016, 
+   sfkg017 LIKE sfkg_t.sfkg017, 
+   sfkg018 LIKE sfkg_t.sfkg018, 
+   sfkg019 LIKE sfkg_t.sfkg019, 
+   sfkg020 LIKE sfkg_t.sfkg020, 
+   sfkg021 LIKE sfkg_t.sfkg021, 
+   sfkg022 LIKE sfkg_t.sfkg022, 
+   sfkg023 LIKE sfkg_t.sfkg023, 
+   sfkg024 LIKE sfkg_t.sfkg024, 
+   sfkg025 LIKE sfkg_t.sfkg025, 
+   sfkg026 LIKE sfkg_t.sfkg026, 
+   sfkg027 LIKE sfkg_t.sfkg027, 
+   sfkg028 LIKE sfkg_t.sfkg028, 
+   sfkg901 LIKE sfkg_t.sfkg901, 
+   sfkg904 LIKE sfkg_t.sfkg904, 
+   sfkg905 LIKE sfkg_t.sfkg905, 
+   sfkgseq LIKE sfkg_t.sfkgseq, 
+   sfkgseq1 LIKE sfkg_t.sfkgseq1, 
+   sfkgsite LIKE sfkg_t.sfkgsite, 
+   ooag_t_ooag011 LIKE ooag_t.ooag011, 
+   pmaal_t_pmaal004 LIKE pmaal_t.pmaal004, 
+   imaal_t_imaal003 LIKE imaal_t.imaal003, 
+   x_t7_imaal003 LIKE imaal_t.imaal003, 
+   x_t8_imaal003 LIKE imaal_t.imaal003, 
+   x_t11_imaal003 LIKE imaal_t.imaal003, 
+   t2_oocal003 LIKE oocal_t.oocal003, 
+   oocal_t_oocal003 LIKE oocal_t.oocal003, 
+   x_t6_oocal003 LIKE oocal_t.oocal003, 
+   ooefl_t_ooefl003 LIKE ooefl_t.ooefl003, 
+   pjbal_t_pjbal003 LIKE pjbal_t.pjbal003, 
+   pjbbl_t_pjbbl004 LIKE pjbbl_t.pjbbl004, 
+   pjbml_t_pjbml004 LIKE pjbml_t.pjbml004, 
+   oocql_t_oocql004 LIKE oocql_t.oocql004, 
+   t1_oocql004 LIKE oocql_t.oocql004, 
+   x_t3_oocql004 LIKE oocql_t.oocql004, 
+   x_t9_oocql004 LIKE oocql_t.oocql004, 
+   x_t10_oocql004 LIKE oocql_t.oocql004, 
+   x_imecl_t_imecl005 LIKE imecl_t.imecl005, 
+   l_sfka029_pjbbl004 LIKE type_t.chr1000, 
+   l_sfka009_pmaal004 LIKE type_t.chr100, 
+   l_sfka018_ooefl003 LIKE type_t.chr1000, 
+   l_sfka028_pjbal003 LIKE type_t.chr1000, 
+   l_sfka002_ooag011 LIKE type_t.chr300, 
+   l_sfka030_pjbml004 LIKE type_t.chr1000, 
+   sfkgdocno LIKE sfkg_t.sfkgdocno, 
+   sfkgent LIKE sfkg_t.sfkgent, 
+   sfkg900 LIKE sfkg_t.sfkg900, 
+   sfkadocdt LIKE sfka_t.sfkadocdt, 
+   l_sfkg021_show LIKE type_t.chr1, 
+   l_sfkg021_desc LIKE type_t.chr1000, 
+   l_sfkc006_show LIKE type_t.chr1, 
+   l_sfkc006_desc LIKE type_t.chr1000, 
+   l_sfkc006 LIKE sfkc_t.sfkc006, 
+   l_sfkc001 LIKE sfkc_t.sfkc001, 
+   l_sfka017_label LIKE type_t.chr1000, 
+   l_sfka006_label LIKE type_t.chr1000, 
+   l_ooff013_show LIKE type_t.chr1, 
+   l_imaal003_imaal004_b LIKE type_t.chr1000, 
+   l_imaal003_imaal004 LIKE type_t.chr1000, 
+   l_count LIKE type_t.num5, 
+   x_t7_imaal004 LIKE imaal_t.imaal004, 
+   imaal_t_imaal004 LIKE imaal_t.imaal004, 
+   l_sfka017_ooefl003 LIKE type_t.chr1000, 
+   l_sfkg008_desc LIKE gzcbl_t.gzcbl004, 
+   l_order LIKE type_t.chr30, 
+   l_new LIKE type_t.chr1, 
+   l_sfkgseq_sfkgseq1 LIKE type_t.chr30
+END RECORD
+ 
+PRIVATE TYPE sr2_r RECORD
+   ooff013 LIKE ooff_t.ooff013
+END RECORD
+ 
+ 
+DEFINE tm RECORD
+       wc STRING                   #where condition
+       END RECORD
+DEFINE sr DYNAMIC ARRAY OF sr1_r                   #宣告sr為sr1_t資料結構的動態陣列
+DEFINE g_select        STRING
+DEFINE g_from          STRING
+DEFINE g_where         STRING
+DEFINE g_order         STRING
+DEFINE g_sql           STRING                         #report_select_prep,REPORT段使用
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+TYPE sr3_r RECORD  #子報表01
+   sfkbdocno LIKE sfkb_t.sfkbdocno, #單號
+   sfkb001 LIKE sfkb_t.sfkb001,  #來源
+   sfkb006 LIKE sfkb_t.sfkb006,  #優先序
+   sfkb002 LIKE sfkb_t.sfkb002,  #來源單號
+   sfkb003 LIKE sfkb_t.sfkb003,  #項次
+   sfkb004 LIKE sfkb_t.sfkb004,  #項序
+   sfkb007 LIKE sfkb_t.sfkb007,  #數量
+   sfkbseq LIKE sfkb_t.sfkbseq,  #項次
+   l_sfkb002_sfkb003_sfkb004 LIKE type_t.chr100,  #單號/項次/項序
+   l_sfkb001_desc LIKE gzcbl_t.gzcbl004,  #來源說明
+   l_xmda004 LIKE xmda_t.xmda004, #客戶(編號)
+   l_count LIKE type_t.num5      #計數
+END RECORD
+TYPE sr4_r RECORD  #子報表02
+   sfkcdocno LIKE sfkc_t.sfkcdocno, #單號
+   sfkc002 LIKE sfkc_t.sfkc002,  #產出類型
+   sfkc001 LIKE sfkc_t.sfkc001,  #料號
+   sfkc003 LIKE sfkc_t.sfkc003,  #預計產出量
+   sfkc004 LIKE sfkc_t.sfkc004,  #產出單位
+   sfkcseq LIKE sfkc_t.sfkcseq,  #項次
+   l_sfkc002_desc LIKE gzcbl_t.gzcbl004,  #產出類型(說明)
+   l_imaal003 LIKE imaal_t.imaal003,  #品名
+   l_imaal004 LIKE imaal_t.imaal004,  #規格
+   l_imaal003_imaal004 LIKE type_t.chr100,  #品名/規格
+   l_count LIKE type_t.num5      #計數
+END RECORD
+TYPE sr5_r RECORD  #子報表03
+   sfkcdocno LIKE sfkc_t.sfkcdocno, #單號
+   sfkc001 LIKE sfkc_t.sfkc001,  #料號
+   sfkc003 LIKE sfkc_t.sfkc003,  #數量
+   sfkc006 LIKE sfkc_t.sfkc006,  #特徵
+   sfkcseq LIKE sfkc_t.sfkcseq,  #項次 
+   l_count LIKE type_t.num5,     #計數
+   l_sfkc006_desc LIKE type_t.chr1000 #特徵說明
+END RECORD
+#mark--161024-00057#5 By shiun--(S)
+#TYPE sr6_r RECORD  #子報表04
+#   sfkedocno LIKE sfke_t.sfkedocno, #單號
+#   sfke002 LIKE sfke_t.sfke002,  #預計完工日
+#   sfke001 LIKE sfke_t.sfke001,  #數量
+#   sfkeseq LIKE sfke_t.sfkeseq,  #項次
+#   l_count LIKE type_t.num5      #計數
+#END RECORD
+#mark--161024-00057#5 By shiun--(E)
+TYPE sr7_r RECORD  #單頭變更前欄位#
+   sfkh002_1       LIKE sfkh_t.sfkh002,   #變更欄位第一排
+   sfkh002_1_desc  LIKE dzeb_t.dzeb003,   #欄位名稱
+   sfkh004_1       LIKE sfkh_t.sfkh004,   #變更前內容
+   sfkh002_2       LIKE sfkh_t.sfkh002,   #變更欄位第二排
+   sfkh002_2_desc  LIKE dzeb_t.dzeb003,   #欄位名稱
+   sfkh004_2       LIKE sfkh_t.sfkh004    #變更前內容
+END RECORD
+TYPE sr8_r RECORD   #單頭變更資訊   
+   sfkh002   LIKE sfkh_t.sfkh002,   #變更欄位
+   sfkh004   LIKE sfkh_t.sfkh004    #變更前內容
+END RECORD
+DEFINE sr8 DYNAMIC ARRAY OF sr8_r
+TYPE sr12_r RECORD  #單頭變更前欄位#
+   sfkgseq         LIKE sfkg_t.sfkgseq,
+   sfkg002         LIKE sfkg_t.sfkg002,
+   sfkg003         LIKE sfkg_t.sfkg003,
+   sfkg006         LIKE sfkg_t.sfkg006,
+   sfkg008         LIKE sfkg_t.sfkg008,
+   sfkg009         LIKE sfkg_t.sfkg009,
+   sfkg013         LIKE sfkg_t.sfkg013,
+   sfkg014         LIKE sfkg_t.sfkg014,
+   sfkg021         LIKE sfkg_t.sfkg021,
+   sfkg028         LIKE sfkg_t.sfkg028,
+   l_imaal003      LIKE imaal_t.imaal003,
+   l_imaal004      LIKE imaal_t.imaal004,
+   l_sfkg002_desc  LIKE oocql_t.oocql004,
+   l_sfkg003_desc  LIKE oocql_t.oocql004,
+   l_sfkg008_desc  LIKE gzcbl_t.gzcbl004,
+   l_sfkg021_desc  LIKE type_t.chr1000
+END RECORD
+TYPE sr13_r  RECORD   #子报表15   #160727-00025#8 add
+   sfkidocno      LIKE sfki_t.sfkidocno,
+   sfki001        LIKE sfki_t.sfki001,
+   l_sfki001      LIKE imaal_t.imaal003,
+   l_sfki001_1    LIKE imaal_t.imaal003,
+   sfki002        LIKE sfki_t.sfki002,
+   sfki004        LIKE sfki_t.sfki004,
+   sfki003        LIKE sfki_t.sfki003,
+   sfki005        LIKE sfki_t.sfki005
+END RECORD
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asfr800_g01.main" readonly="Y" >}
+PUBLIC FUNCTION asfr800_g01(p_arg1)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition
+#add-point:init段define (客製用) name="component_name.define_customerization"
+
+#end add-point
+#add-point:init段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component_name.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   #報表元件代號
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'   
+   
+   LET g_rep_code = "asfr800_g01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #主報表select子句準備
+   CALL asfr800_g01_sel_prep()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料存入array
+   CALL asfr800_g01_ins_data()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料印出
+   CALL asfr800_g01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asfr800_g01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION asfr800_g01_sel_prep()
+   #add-point:sel_prep段define (客製用) name="sel_prep.define_customerization"
+   
+   #end add-point
+   #add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+   
+   #end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+   
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   LET g_select = " SELECT sfka001,sfka002,sfka003,sfka004,sfka005,sfka006,sfka007,sfka008,sfka009,sfka010, 
+       sfka011,sfka012,sfka013,sfka014,sfka015,sfka016,sfka017,sfka018,sfka019,sfka020,sfka021,sfka022, 
+       sfka023,sfka024,sfka025,sfka026,sfka028,sfka029,sfka030,sfka031,sfka032,sfka033,sfka034,sfka035, 
+       sfka036,sfka037,sfka038,sfka039,sfka040,sfka041,sfka042,sfka043,sfka044,sfka045,sfka046,sfka047, 
+       sfka048,sfka049,sfka050,sfka051,sfka055,sfka056,sfka057,sfka058,sfka059,sfka060,sfka061,sfka063, 
+       sfka064,sfka900,sfka902,sfka905,sfka906,sfkaacti,sfkadocno,sfkaent,sfkasite,sfkastus,sfkg001, 
+       sfkg002,sfkg003,sfkg004,sfkg005,sfkg006,sfkg007,sfkg008,sfkg009,sfkg010,sfkg011,sfkg012,sfkg013, 
+       sfkg014,sfkg015,sfkg016,sfkg017,sfkg018,sfkg019,sfkg020,sfkg021,sfkg022,sfkg023,sfkg024,sfkg025, 
+       sfkg026,sfkg027,sfkg028,sfkg901,sfkg904,sfkg905,sfkgseq,sfkgseq1,sfkgsite,ooag_t.ooag011,pmaal_t.pmaal004, 
+       imaal_t.imaal003,x.t7_imaal003,x.t8_imaal003,x.t11_imaal003,t2.oocal003,oocal_t.oocal003,x.t6_oocal003, 
+       ooefl_t.ooefl003,pjbal_t.pjbal003,pjbbl_t.pjbbl004,pjbml_t.pjbml004,oocql_t.oocql004,t1.oocql004, 
+       x.t3_oocql004,x.t9_oocql004,x.t10_oocql004, 
+       x.imecl_t_imecl005,trim(sfka029)||'.'||trim(pjbbl_t.pjbbl004),trim(sfka009)||'.'||trim(pmaal_t.pmaal004), 
+       trim(sfka018)||'.'||trim(ooefl_t.ooefl003),trim(sfka028)||'.'||trim(pjbal_t.pjbal003),trim(sfka002)||'.'||trim(ooag_t.ooag011), 
+       trim(sfka030)||'.'||trim(pjbml_t.pjbml004),
+       sfkgdocno,sfkgent,sfkg900,sfkadocdt,'','','','','','','','','','','','',x.t7_imaal004,imaal_t.imaal004, 
+       '','',trim(sfkadocno)||trim(TO_CHAR(sfka_t.sfka900,'0000')),'',trim(sfkgseq)||'/'||trim(sfkgseq1)"
+   LET g_select = " SELECT sfka001,sfka002,sfka003,sfka004,sfka005,sfka006,sfka007,sfka008,sfka009,sfka010, 
+       sfka011,sfka012,sfka013,sfka014,sfka015,sfka016,sfka017,sfka018,sfka019,sfka020,sfka021,sfka022, 
+       sfka023,sfka024,sfka025,sfka026,sfka028,sfka029,sfka030,sfka031,sfka032,sfka033,sfka034,sfka035, 
+       sfka036,sfka037,sfka038,sfka039,sfka040,sfka041,sfka042,sfka043,sfka044,sfka045,sfka046,sfka047, 
+       sfka048,sfka049,sfka050,sfka051,sfka055,sfka056,sfka057,sfka058,sfka059,sfka060,sfka061,sfka063, 
+       sfka064,sfka900,sfka902,sfka905,sfka906,sfkaacti,sfkadocno,sfkaent,sfkasite,sfkastus,sfkg001, 
+       sfkg002,sfkg003,sfkg004,sfkg005,sfkg006,sfkg007,sfkg008,sfkg009,sfkg010,sfkg011,sfkg012,sfkg013, 
+       sfkg014,sfkg015,sfkg016,sfkg017,sfkg018,sfkg019,sfkg020,sfkg021,sfkg022,sfkg023,sfkg024,sfkg025, 
+       sfkg026,sfkg027,sfkg028,sfkg901,sfkg904,sfkg905,sfkgseq,sfkgseq1,sfkgsite,
+       ( SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = sfka_t.sfka002 AND ooag_t.ooagent = sfka_t.sfkaent), 
+       ( SELECT pmaal004 FROM pmaal_t WHERE pmaal_t.pmaal001 = sfka_t.sfka009 AND pmaal_t.pmaalent = sfka_t.sfkaent AND pmaal_t.pmaal002 = '" ,g_dlang,"'" ,"),
+       ( SELECT imaal003 FROM imaal_t WHERE imaal_t.imaal001 = sfka_t.sfka010 AND imaal_t.imaalent = sfka_t.sfkaent AND imaal_t.imaal002 = '" ,g_dlang,"'" ,"),
+       x.t7_imaal003,x.t8_imaal003,x.t11_imaal003,
+       ( SELECT oocal003 FROM oocal_t t2 WHERE t2.oocal001 = sfka_t.sfka013 AND t2.oocalent = sfka_t.sfkaent AND t2.oocal002 = '" ,g_dlang,"'" ,"),
+       ( SELECT oocal003 FROM oocal_t WHERE oocal_t.oocal001 = sfka_t.sfka060 AND oocal_t.oocalent = sfka_t.sfkaent AND oocal_t.oocal002 = '" ,g_dlang,"'" ,"),
+       x.t6_oocal003,( SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = sfka_t.sfka018 AND ooefl_t.ooeflent = sfka_t.sfkaent AND ooefl_t.ooefl002 = '" ,g_dlang,"'" ,"),
+       ( SELECT pjbal003 FROM pjbal_t WHERE pjbal_t.pjbal001 = sfka_t.sfka028 AND pjbal_t.pjbalent = sfka_t.sfkaent AND pjbal_t.pjbal002 = '" ,g_dlang,"'" ,"),
+       ( SELECT pjbbl004 FROM pjbbl_t WHERE pjbbl_t.pjbbl001 = sfka_t.sfka028 AND pjbbl_t.pjbbl002 = sfka_t.sfka029 AND pjbbl_t.pjbblent = sfka_t.sfkaent AND pjbbl_t.pjbbl003 = '" ,g_dlang,"'" ,"),
+       ( SELECT pjbml004 FROM pjbml_t WHERE pjbml_t.pjbml001 = sfka_t.sfka028 AND pjbml_t.pjbml002 = sfka_t.sfka030 AND pjbml_t.pjbmlent = sfka_t.sfkaent AND pjbml_t.pjbml003 = '" ,g_dlang,"'" ,"),
+       ( SELECT oocql004 FROM oocql_t WHERE oocql_t.oocql001 = '225' AND oocql_t.oocql002 = sfka_t.sfka030 AND oocql_t.oocqlent = sfka_t.sfkaent AND oocql_t.oocql003 = '" ,g_dlang,"'" ,"),
+       ( SELECT oocql004 FROM oocql_t t1 WHERE t1.oocql001 = '225' AND t1.oocql002 = sfka_t.sfka905 AND t1.oocqlent = sfka_t.sfkaent AND t1.oocql003 = '" ,g_dlang,"'" ,"),
+       x.t3_oocql004,x.t9_oocql004,x.t10_oocql004,x.imecl_t_imecl005,trim(sfka029)||'.'||trim((SELECT pjbbl004 FROM pjbbl_t WHERE pjbbl_t.pjbbl001 = sfka_t.sfka028 AND pjbbl_t.pjbbl002 = sfka_t.sfka029 AND pjbbl_t.pjbblent = sfka_t.sfkaent AND pjbbl_t.pjbbl003 = '" ,g_dlang,"'" ,")),
+       trim(sfka009)||'.'||trim((SELECT pmaal004 FROM pmaal_t WHERE pmaal_t.pmaal001 = sfka_t.sfka009 AND pmaal_t.pmaalent = sfka_t.sfkaent AND pmaal_t.pmaal002 = '" ,g_dlang,"'" ,")),
+       trim(sfka018)||'.'||trim((SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = sfka_t.sfka018 AND ooefl_t.ooeflent = sfka_t.sfkaent AND ooefl_t.ooefl002 = '" ,g_dlang,"'" ,")),
+       trim(sfka028)||'.'||trim((SELECT pjbal003 FROM pjbal_t WHERE pjbal_t.pjbal001 = sfka_t.sfka028 AND pjbal_t.pjbalent = sfka_t.sfkaent AND pjbal_t.pjbal002 = '" ,g_dlang,"'" ,")),
+       trim(sfka002)||'.'||trim((SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = sfka_t.sfka002 AND ooag_t.ooagent = sfka_t.sfkaent)), 
+       trim(sfka030)||'.'||trim((SELECT pjbml004 FROM pjbml_t WHERE pjbml_t.pjbml001 = sfka_t.sfka028 AND pjbml_t.pjbml002 = sfka_t.sfka030 AND pjbml_t.pjbmlent = sfka_t.sfkaent AND pjbml_t.pjbml003 = '" ,g_dlang,"'" ,")),
+       sfkgdocno,sfkgent,sfkg900,sfkadocdt,'','','','','','','','','','','','',x.t7_imaal004, 
+       ( SELECT imaal004 FROM imaal_t WHERE imaal_t.imaal001 = sfka_t.sfka010 AND imaal_t.imaalent = sfka_t.sfkaent AND imaal_t.imaal002 = '" ,g_dlang,"'" ,"),
+       '','',trim(sfkadocno)||trim(TO_CHAR(sfka_t.sfka900,'0000')),'',trim(sfkgseq)||'/'||trim(sfkgseq1)"
+       
+#   #end add-point
+#   LET g_select = " SELECT sfka001,sfka002,sfka003,sfka004,sfka005,sfka006,sfka007,sfka008,sfka009,sfka010, 
+#       sfka011,sfka012,sfka013,sfka014,sfka015,sfka016,sfka017,sfka018,sfka019,sfka020,sfka021,sfka022, 
+#       sfka023,sfka024,sfka025,sfka026,sfka028,sfka029,sfka030,sfka031,sfka032,sfka033,sfka034,sfka035, 
+#       sfka036,sfka037,sfka038,sfka039,sfka040,sfka041,sfka042,sfka043,sfka044,sfka045,sfka046,sfka047, 
+#       sfka048,sfka049,sfka050,sfka051,sfka055,sfka056,sfka057,sfka058,sfka059,sfka060,sfka061,sfka063, 
+#       sfka064,sfka900,sfka902,sfka905,sfka906,sfkaacti,sfkadocno,sfkaent,sfkasite,sfkastus,sfkg001, 
+#       sfkg002,sfkg003,sfkg004,sfkg005,sfkg006,sfkg007,sfkg008,sfkg009,sfkg010,sfkg011,sfkg012,sfkg013, 
+#       sfkg014,sfkg015,sfkg016,sfkg017,sfkg018,sfkg019,sfkg020,sfkg021,sfkg022,sfkg023,sfkg024,sfkg025, 
+#       sfkg026,sfkg027,sfkg028,sfkg901,sfkg904,sfkg905,sfkgseq,sfkgseq1,sfkgsite,( SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = sfka_t.sfka002 AND ooag_t.ooagent = sfka_t.sfkaent), 
+#       ( SELECT pmaal004 FROM pmaal_t WHERE pmaal_t.pmaal001 = sfka_t.sfka009 AND pmaal_t.pmaalent = sfka_t.sfkaent AND pmaal_t.pmaal002 = '" , 
+#       g_dlang,"'" ,"),( SELECT imaal003 FROM imaal_t WHERE imaal_t.imaal001 = sfka_t.sfka010 AND imaal_t.imaalent = sfka_t.sfkaent AND imaal_t.imaal002 = '" , 
+#       g_dlang,"'" ,"),x.t7_imaal003,x.t8_imaal003,x.t11_imaal003,( SELECT oocal003 FROM oocal_t WHERE oocal_t.oocal001 = sfka_t.sfka013 AND oocal_t.oocalent = sfka_t.sfkaent AND oocal_t.oocal002 = '" , 
+#       g_dlang,"'" ,"),( SELECT oocal003 FROM oocal_t WHERE oocal_t.oocal001 = sfka_t.sfka060 AND oocal_t.oocalent = sfka_t.sfkaent AND oocal_t.oocal002 = '" , 
+#       g_dlang,"'" ,"),x.t6_oocal003,( SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = sfka_t.sfka018 AND ooefl_t.ooeflent = sfka_t.sfkaent AND ooefl_t.ooefl002 = '" , 
+#       g_dlang,"'" ,"),( SELECT pjbal003 FROM pjbal_t WHERE pjbal_t.pjbal001 = sfka_t.sfka028 AND pjbal_t.pjbalent = sfka_t.sfkaent AND pjbal_t.pjbal002 = '" , 
+#       g_dlang,"'" ,"),( SELECT pjbbl004 FROM pjbbl_t WHERE pjbbl_t.pjbbl001 = sfka_t.sfka028 AND pjbbl_t.pjbbl002 = sfka_t.sfka029 AND pjbbl_t.pjbblent = sfka_t.sfkaent AND pjbbl_t.pjbbl003 = '" , 
+#       g_dlang,"'" ,"),( SELECT pjbml004 FROM pjbml_t WHERE pjbml_t.pjbml001 = sfka_t.sfka028 AND pjbml_t.pjbml002 = sfka_t.sfka030 AND pjbml_t.pjbmlent = sfka_t.sfkaent AND pjbml_t.pjbml003 = '" , 
+#       g_dlang,"'" ,"),( SELECT oocql004 FROM oocql_t WHERE oocql_t.oocql001 = '225' AND oocql_t.oocql002 = sfka_t.sfka030 AND oocql_t.oocqlent = sfka_t.sfkaent AND oocql_t.oocql003 = '" , 
+#       g_dlang,"'" ,"),( SELECT oocql004 FROM oocql_t WHERE oocql_t.oocql001 = '225' AND oocql_t.oocql002 = sfka_t.sfka905 AND oocql_t.oocqlent = sfka_t.sfkaent AND oocql_t.oocql003 = '" , 
+#       g_dlang,"'" ,"),x.t3_oocql004,x.t9_oocql004,x.t10_oocql004,x.imecl_t_imecl005,trim(sfka029)||'.'||trim((SELECT pjbbl004 FROM pjbbl_t WHERE pjbbl_t.pjbbl001 = sfka_t.sfka028 AND pjbbl_t.pjbbl002 = sfka_t.sfka029 AND pjbbl_t.pjbblent = sfka_t.sfkaent AND pjbbl_t.pjbbl003 = '" , 
+#       g_dlang,"'" ,")),trim(sfka009)||'.'||trim((SELECT pmaal004 FROM pmaal_t WHERE pmaal_t.pmaal001 = sfka_t.sfka009 AND pmaal_t.pmaalent = sfka_t.sfkaent AND pmaal_t.pmaal002 = '" , 
+#       g_dlang,"'" ,")),trim(sfka018)||'.'||trim((SELECT ooefl003 FROM ooefl_t WHERE ooefl_t.ooefl001 = sfka_t.sfka018 AND ooefl_t.ooeflent = sfka_t.sfkaent AND ooefl_t.ooefl002 = '" , 
+#       g_dlang,"'" ,")),trim(sfka028)||'.'||trim((SELECT pjbal003 FROM pjbal_t WHERE pjbal_t.pjbal001 = sfka_t.sfka028 AND pjbal_t.pjbalent = sfka_t.sfkaent AND pjbal_t.pjbal002 = '" , 
+#       g_dlang,"'" ,")),trim(sfka002)||'.'||trim((SELECT ooag011 FROM ooag_t WHERE ooag_t.ooag001 = sfka_t.sfka002 AND ooag_t.ooagent = sfka_t.sfkaent)), 
+#       trim(sfka030)||'.'||trim((SELECT pjbml004 FROM pjbml_t WHERE pjbml_t.pjbml001 = sfka_t.sfka028 AND pjbml_t.pjbml002 = sfka_t.sfka030 AND pjbml_t.pjbmlent = sfka_t.sfkaent AND pjbml_t.pjbml003 = '" , 
+#       g_dlang,"'" ,")),sfkgdocno,sfkgent,sfkg900,sfkadocdt,'','','','','','','','','','','','',x.t7_imaal004, 
+#       ( SELECT imaal004 FROM imaal_t WHERE imaal_t.imaal001 = sfka_t.sfka010 AND imaal_t.imaalent = sfka_t.sfkaent AND imaal_t.imaal002 = '" , 
+#       g_dlang,"'" ,"),'','','','',''"
+# 
+#   #add-point:sel_prep g_from name="sel_prep.g_from"
+   
+   #end add-point
+    LET g_from = " FROM sfka_t LEFT OUTER JOIN ( SELECT sfkg_t.*,( SELECT imaal003 FROM imaal_t WHERE imaal_t.imaal001 = sfkg_t.sfkg006 AND imaal_t.imaalent = sfkg_t.sfkgent AND imaal_t.imaal002 = '" , 
+        g_dlang,"'" ,") t7_imaal003,( SELECT imaal003 FROM imaal_t WHERE imaal_t.imaal001 = sfkg_t.sfkg005 AND imaal_t.imaalent = sfkg_t.sfkgent AND imaal_t.imaal002 = '" , 
+        g_dlang,"'" ,") t8_imaal003,( SELECT imaal003 FROM imaal_t WHERE imaal_t.imaal001 = sfkg_t.sfkg001 AND imaal_t.imaalent = sfkg_t.sfkgent AND imaal_t.imaal002 = '" , 
+        g_dlang,"'" ,") t11_imaal003,( SELECT oocal003 FROM oocal_t WHERE oocal_t.oocal001 = sfkg_t.sfkg014 AND oocal_t.oocalent = sfkg_t.sfkgent AND oocal_t.oocal002 = '" , 
+        g_dlang,"'" ,") t6_oocal003,( SELECT oocql004 FROM oocql_t WHERE oocql_t.oocql001 = '225' AND oocql_t.oocql002 = sfkg_t.sfkg904 AND oocql_t.oocqlent = sfkg_t.sfkgent AND oocql_t.oocql003 = '" , 
+        g_dlang,"'" ,") t3_oocql004,( SELECT oocql004 FROM oocql_t WHERE oocql_t.oocql001 = '221' AND oocql_t.oocql002 = sfkg_t.sfkg003 AND oocql_t.oocqlent = sfkg_t.sfkgent AND oocql_t.oocql003 = '" , 
+        g_dlang,"'" ,") t9_oocql004,( SELECT oocql004 FROM oocql_t WHERE oocql_t.oocql001 = '215' AND oocql_t.oocql002 = sfkg_t.sfkg002 AND oocql_t.oocqlent = sfkg_t.sfkgent AND oocql_t.oocql003 = '" , 
+        g_dlang,"'" ,") t10_oocql004,( SELECT imecl005 FROM imecl_t WHERE imecl_t.imecl003 = sfkg_t.sfkg021 AND imecl_t.imeclent = sfkg_t.sfkgent AND imecl_t.imecl004 = '" , 
+        g_dlang,"'" ,") imecl_t_imecl005,( SELECT imaal004 FROM imaal_t WHERE imaal_t.imaal001 = sfkg_t.sfkg006 AND imaal_t.imaalent = sfkg_t.sfkgent AND imaal_t.imaal002 = '" , 
+        g_dlang,"'" ,") t7_imaal004 FROM sfkg_t ) x  ON sfka_t.sfkaent = x.sfkgent AND sfka_t.sfkadocno  
+        = x.sfkgdocno AND sfka_t.sfka900 = x.sfkg900"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+   
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED 
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   
+   #end add-point
+    LET g_order = " ORDER BY sfkadocno,sfka900,sfkgseq,sfkgseq1"
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("sfka_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED ," ",g_order CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段 
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   
+   #end add-point
+   PREPARE asfr800_g01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()   
+      LET g_rep_success = 'N'    
+   END IF
+   DECLARE asfr800_g01_curs CURSOR FOR asfr800_g01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asfr800_g01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION asfr800_g01_ins_data()
+#主報表record(用於select子句)
+   DEFINE sr_s RECORD 
+   sfka001 LIKE sfka_t.sfka001, 
+   sfka002 LIKE sfka_t.sfka002, 
+   sfka003 LIKE sfka_t.sfka003, 
+   sfka004 LIKE sfka_t.sfka004, 
+   sfka005 LIKE sfka_t.sfka005, 
+   sfka006 LIKE sfka_t.sfka006, 
+   sfka007 LIKE sfka_t.sfka007, 
+   sfka008 LIKE sfka_t.sfka008, 
+   sfka009 LIKE sfka_t.sfka009, 
+   sfka010 LIKE sfka_t.sfka010, 
+   sfka011 LIKE sfka_t.sfka011, 
+   sfka012 LIKE sfka_t.sfka012, 
+   sfka013 LIKE sfka_t.sfka013, 
+   sfka014 LIKE sfka_t.sfka014, 
+   sfka015 LIKE sfka_t.sfka015, 
+   sfka016 LIKE sfka_t.sfka016, 
+   sfka017 LIKE sfka_t.sfka017, 
+   sfka018 LIKE sfka_t.sfka018, 
+   sfka019 LIKE sfka_t.sfka019, 
+   sfka020 LIKE sfka_t.sfka020, 
+   sfka021 LIKE sfka_t.sfka021, 
+   sfka022 LIKE sfka_t.sfka022, 
+   sfka023 LIKE sfka_t.sfka023, 
+   sfka024 LIKE sfka_t.sfka024, 
+   sfka025 LIKE sfka_t.sfka025, 
+   sfka026 LIKE sfka_t.sfka026, 
+   sfka028 LIKE sfka_t.sfka028, 
+   sfka029 LIKE sfka_t.sfka029, 
+   sfka030 LIKE sfka_t.sfka030, 
+   sfka031 LIKE sfka_t.sfka031, 
+   sfka032 LIKE sfka_t.sfka032, 
+   sfka033 LIKE sfka_t.sfka033, 
+   sfka034 LIKE sfka_t.sfka034, 
+   sfka035 LIKE sfka_t.sfka035, 
+   sfka036 LIKE sfka_t.sfka036, 
+   sfka037 LIKE sfka_t.sfka037, 
+   sfka038 LIKE sfka_t.sfka038, 
+   sfka039 LIKE sfka_t.sfka039, 
+   sfka040 LIKE sfka_t.sfka040, 
+   sfka041 LIKE sfka_t.sfka041, 
+   sfka042 LIKE sfka_t.sfka042, 
+   sfka043 LIKE sfka_t.sfka043, 
+   sfka044 LIKE sfka_t.sfka044, 
+   sfka045 LIKE sfka_t.sfka045, 
+   sfka046 LIKE sfka_t.sfka046, 
+   sfka047 LIKE sfka_t.sfka047, 
+   sfka048 LIKE sfka_t.sfka048, 
+   sfka049 LIKE sfka_t.sfka049, 
+   sfka050 LIKE sfka_t.sfka050, 
+   sfka051 LIKE sfka_t.sfka051, 
+   sfka055 LIKE sfka_t.sfka055, 
+   sfka056 LIKE sfka_t.sfka056, 
+   sfka057 LIKE sfka_t.sfka057, 
+   sfka058 LIKE sfka_t.sfka058, 
+   sfka059 LIKE sfka_t.sfka059, 
+   sfka060 LIKE sfka_t.sfka060, 
+   sfka061 LIKE sfka_t.sfka061, 
+   sfka063 LIKE sfka_t.sfka063, 
+   sfka064 LIKE sfka_t.sfka064, 
+   sfka900 LIKE sfka_t.sfka900, 
+   sfka902 LIKE sfka_t.sfka902, 
+   sfka905 LIKE sfka_t.sfka905, 
+   sfka906 LIKE sfka_t.sfka906, 
+   sfkaacti LIKE sfka_t.sfkaacti, 
+   sfkadocno LIKE sfka_t.sfkadocno, 
+   sfkaent LIKE sfka_t.sfkaent, 
+   sfkasite LIKE sfka_t.sfkasite, 
+   sfkastus LIKE sfka_t.sfkastus, 
+   sfkg001 LIKE sfkg_t.sfkg001, 
+   sfkg002 LIKE sfkg_t.sfkg002, 
+   sfkg003 LIKE sfkg_t.sfkg003, 
+   sfkg004 LIKE sfkg_t.sfkg004, 
+   sfkg005 LIKE sfkg_t.sfkg005, 
+   sfkg006 LIKE sfkg_t.sfkg006, 
+   sfkg007 LIKE sfkg_t.sfkg007, 
+   sfkg008 LIKE sfkg_t.sfkg008, 
+   sfkg009 LIKE sfkg_t.sfkg009, 
+   sfkg010 LIKE sfkg_t.sfkg010, 
+   sfkg011 LIKE sfkg_t.sfkg011, 
+   sfkg012 LIKE sfkg_t.sfkg012, 
+   sfkg013 LIKE sfkg_t.sfkg013, 
+   sfkg014 LIKE sfkg_t.sfkg014, 
+   sfkg015 LIKE sfkg_t.sfkg015, 
+   sfkg016 LIKE sfkg_t.sfkg016, 
+   sfkg017 LIKE sfkg_t.sfkg017, 
+   sfkg018 LIKE sfkg_t.sfkg018, 
+   sfkg019 LIKE sfkg_t.sfkg019, 
+   sfkg020 LIKE sfkg_t.sfkg020, 
+   sfkg021 LIKE sfkg_t.sfkg021, 
+   sfkg022 LIKE sfkg_t.sfkg022, 
+   sfkg023 LIKE sfkg_t.sfkg023, 
+   sfkg024 LIKE sfkg_t.sfkg024, 
+   sfkg025 LIKE sfkg_t.sfkg025, 
+   sfkg026 LIKE sfkg_t.sfkg026, 
+   sfkg027 LIKE sfkg_t.sfkg027, 
+   sfkg028 LIKE sfkg_t.sfkg028, 
+   sfkg901 LIKE sfkg_t.sfkg901, 
+   sfkg904 LIKE sfkg_t.sfkg904, 
+   sfkg905 LIKE sfkg_t.sfkg905, 
+   sfkgseq LIKE sfkg_t.sfkgseq, 
+   sfkgseq1 LIKE sfkg_t.sfkgseq1, 
+   sfkgsite LIKE sfkg_t.sfkgsite, 
+   ooag_t_ooag011 LIKE ooag_t.ooag011, 
+   pmaal_t_pmaal004 LIKE pmaal_t.pmaal004, 
+   imaal_t_imaal003 LIKE imaal_t.imaal003, 
+   x_t7_imaal003 LIKE imaal_t.imaal003, 
+   x_t8_imaal003 LIKE imaal_t.imaal003, 
+   x_t11_imaal003 LIKE imaal_t.imaal003, 
+   t2_oocal003 LIKE oocal_t.oocal003, 
+   oocal_t_oocal003 LIKE oocal_t.oocal003, 
+   x_t6_oocal003 LIKE oocal_t.oocal003, 
+   ooefl_t_ooefl003 LIKE ooefl_t.ooefl003, 
+   pjbal_t_pjbal003 LIKE pjbal_t.pjbal003, 
+   pjbbl_t_pjbbl004 LIKE pjbbl_t.pjbbl004, 
+   pjbml_t_pjbml004 LIKE pjbml_t.pjbml004, 
+   oocql_t_oocql004 LIKE oocql_t.oocql004, 
+   t1_oocql004 LIKE oocql_t.oocql004, 
+   x_t3_oocql004 LIKE oocql_t.oocql004, 
+   x_t9_oocql004 LIKE oocql_t.oocql004, 
+   x_t10_oocql004 LIKE oocql_t.oocql004, 
+   x_imecl_t_imecl005 LIKE imecl_t.imecl005, 
+   l_sfka029_pjbbl004 LIKE type_t.chr1000, 
+   l_sfka009_pmaal004 LIKE type_t.chr100, 
+   l_sfka018_ooefl003 LIKE type_t.chr1000, 
+   l_sfka028_pjbal003 LIKE type_t.chr1000, 
+   l_sfka002_ooag011 LIKE type_t.chr300, 
+   l_sfka030_pjbml004 LIKE type_t.chr1000, 
+   sfkgdocno LIKE sfkg_t.sfkgdocno, 
+   sfkgent LIKE sfkg_t.sfkgent, 
+   sfkg900 LIKE sfkg_t.sfkg900, 
+   sfkadocdt LIKE sfka_t.sfkadocdt, 
+   l_sfkg021_show LIKE type_t.chr1, 
+   l_sfkg021_desc LIKE type_t.chr1000, 
+   l_sfkc006_show LIKE type_t.chr1, 
+   l_sfkc006_desc LIKE type_t.chr1000, 
+   l_sfkc006 LIKE sfkc_t.sfkc006, 
+   l_sfkc001 LIKE sfkc_t.sfkc001, 
+   l_sfka017_label LIKE type_t.chr1000, 
+   l_sfka006_label LIKE type_t.chr1000, 
+   l_ooff013_show LIKE type_t.chr1, 
+   l_imaal003_imaal004_b LIKE type_t.chr1000, 
+   l_imaal003_imaal004 LIKE type_t.chr1000, 
+   l_count LIKE type_t.num5, 
+   x_t7_imaal004 LIKE imaal_t.imaal004, 
+   imaal_t_imaal004 LIKE imaal_t.imaal004, 
+   l_sfka017_ooefl003 LIKE type_t.chr1000, 
+   l_sfkg008_desc LIKE gzcbl_t.gzcbl004, 
+   l_order LIKE type_t.chr30, 
+   l_new LIKE type_t.chr1, 
+   l_sfkgseq_sfkgseq1 LIKE type_t.chr30
+ END RECORD
+   DEFINE l_cnt           LIKE type_t.num10
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point   
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+DEFINE l_count   LIKE type_t.num5
+DEFINE l_success LIKE type_t.num5
+DEFINE l_sfkh003 LIKE sfkh_t.sfkh003
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    
+    #end add-point
+ 
+    CALL sr.clear()                                  #rep sr
+    LET l_cnt = 1
+    FOREACH asfr800_g01_curs INTO sr_s.*
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()       
+          LET g_rep_success = 'N'    
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       #單身"料件特徵"顯是否
+       IF cl_null(sr_s.sfkg021) THEN
+          LET sr_s.l_sfkg021_show = 'N'
+       ELSE
+          LET sr_s.l_sfkg021_show = 'Y'
+          CALL s_feature_description(sr_s.sfkg006,sr_s.sfkg021) RETURNING l_success,sr_s.l_sfkg021_desc
+       END IF
+       #單頭產品特徵顯示否
+       SELECT COUNT (DISTINCT sfkc006) INTO sr_s.l_count 
+         FROM sfkc_t
+        WHERE sfkcdocno = sr_s.sfkadocno
+          AND sfkcent = sr_s.sfkaent
+       IF sr_s.l_count = 1 THEN
+          SELECT sfkc001,sfkc006 INTO sr_s.l_sfkc001,sr_s.l_sfkc006
+            FROM sfkc_t
+           WHERE sfkcdocno = sr_s.sfkadocno
+             AND sfkcent = sr_s.sfkaent
+          IF sr_s.l_sfkc001 = sr_s.sfka010 THEN
+             LET sr_s.l_sfkc006_show = "Y"
+             CALL s_feature_description(sr_s.l_sfkc001,sr_s.l_sfkc006) RETURNING l_success,sr_s.l_sfkc006_desc
+          ELSE
+             LET sr_s.l_sfkc006_show = "N"
+          END IF
+       ELSE
+          LET sr_s.l_sfkc006_show = "N"
+       END IF
+       #必要特性分類碼轉換
+       CALL s_desc_gzcbl004_desc('1101',sr_s.sfkg008) RETURNING sr_s.l_sfkg008_desc
+       #組合品名/規格
+       IF cl_null(sr_s.imaal_t_imaal003) OR cl_null(sr_s.imaal_t_imaal004) THEN
+          LET sr_s.l_imaal003_imaal004 = sr_s.imaal_t_imaal003 , "/" , sr_s.imaal_t_imaal004
+       ELSE
+          LET sr_s.l_imaal003_imaal004 = sr_s.imaal_t_imaal003 || "/" || sr_s.imaal_t_imaal004
+       END IF
+       #mark--161024-00057#5 By shiun--(S)
+#       #計畫完工日選擇(sfka020 or sfke002)
+#       LET l_count = 0
+#       SELECT COUNT(sfkeseq) INTO l_count
+#          FROM sfke_t
+#         WHERE sfkedocno = sr_s.sfkadocno
+#           AND sfkeent = g_enterprise
+#       IF l_count = 1 THEN
+#          SELECT sfke002 INTO sr_s.sfke002
+#          FROM sfke_t
+#         WHERE sfkedocno = sr_s.sfkadocno
+#           AND sfkeent = sr_s.sfkaent
+#          IF sr_s.sfke002 <> sr_s.sfka020 THEN    
+#             LET sr_s.sfka020 = sr_s.sfke002
+#          END IF
+#       END IF
+       #mark--161024-00057#5 By shiun--(E)
+       CASE sr_s.sfka005
+          WHEN '2'
+             CALL cl_getmsg('asf-00346',g_lang) RETURNING sr_s.l_sfka006_label
+          WHEN '3'
+             CALL cl_getmsg('asf-00347',g_lang) RETURNING sr_s.l_sfka006_label
+          WHEN '4'
+             CALL cl_getmsg('asf-00348',g_lang) RETURNING sr_s.l_sfka006_label
+       END CASE
+       IF sr_s.sfka057 = '2' THEN
+          CALL cl_getmsg('asf-00349',g_lang) RETURNING sr_s.l_sfka017_label
+          CALL s_desc_get_trading_partner_abbr_desc(sr_s.sfka017) RETURNING sr_s.l_sfka017_ooefl003
+          LET sr_s.l_sfka017_ooefl003 = sr_s.sfka017,".",sr_s.l_sfka017_ooefl003
+       ELSE
+          CALL cl_getmsg('asf-00350',g_lang) RETURNING sr_s.l_sfka017_label
+          CALL s_desc_get_department_desc(sr_s.sfka017) RETURNING sr_s.l_sfka017_ooefl003
+          LET sr_s.l_sfka017_ooefl003 = sr_s.sfka017,".",sr_s.l_sfka017_ooefl003
+       END IF
+       #當前面編號為空時，清空編號.說明的字串(避免編號為空會只顯示一個 .)
+       CALL asfr800_g01_initialize(sr_s.sfka002,sr_s.l_sfka002_ooag011) RETURNING sr_s.l_sfka002_ooag011
+       CALL asfr800_g01_initialize(sr_s.sfka017,sr_s.l_sfka017_ooefl003) RETURNING sr_s.l_sfka017_ooefl003
+       CALL asfr800_g01_initialize(sr_s.sfkgseq,sr_s.l_sfkgseq_sfkgseq1) RETURNING sr_s.l_sfkgseq_sfkgseq1
+       INITIALIZE l_sfkh003 TO NULL
+       SELECT sfkh003 INTO l_sfkh003
+        FROM sfkh_t
+       WHERE sfkhdocno = sr_s.sfkadocno
+         AND sfkhent = sr_s.sfkaent
+         AND sfkhsite = sr_s.sfkasite
+         AND sfkh001 = sr_s.sfka900
+         AND sfkh002 = 'sfbaseq'
+         AND sfkhseq = sr_s.sfkgseq
+         AND sfkhseq1 = sr_s.sfkgseq1
+       IF l_sfkh003 = '13' THEN
+          LET sr_s.l_new = "Y"
+       ELSE
+          LET sr_s.l_new = "N"
+       END IF
+       #end add-point
+ 
+       #add-point:ins_data段before_arr name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #set rep array value
+       LET sr[l_cnt].sfka001 = sr_s.sfka001
+       LET sr[l_cnt].sfka002 = sr_s.sfka002
+       LET sr[l_cnt].sfka003 = sr_s.sfka003
+       LET sr[l_cnt].sfka004 = sr_s.sfka004
+       LET sr[l_cnt].sfka005 = sr_s.sfka005
+       LET sr[l_cnt].sfka006 = sr_s.sfka006
+       LET sr[l_cnt].sfka007 = sr_s.sfka007
+       LET sr[l_cnt].sfka008 = sr_s.sfka008
+       LET sr[l_cnt].sfka009 = sr_s.sfka009
+       LET sr[l_cnt].sfka010 = sr_s.sfka010
+       LET sr[l_cnt].sfka011 = sr_s.sfka011
+       LET sr[l_cnt].sfka012 = sr_s.sfka012
+       LET sr[l_cnt].sfka013 = sr_s.sfka013
+       LET sr[l_cnt].sfka014 = sr_s.sfka014
+       LET sr[l_cnt].sfka015 = sr_s.sfka015
+       LET sr[l_cnt].sfka016 = sr_s.sfka016
+       LET sr[l_cnt].sfka017 = sr_s.sfka017
+       LET sr[l_cnt].sfka018 = sr_s.sfka018
+       LET sr[l_cnt].sfka019 = sr_s.sfka019
+       LET sr[l_cnt].sfka020 = sr_s.sfka020
+       LET sr[l_cnt].sfka021 = sr_s.sfka021
+       LET sr[l_cnt].sfka022 = sr_s.sfka022
+       LET sr[l_cnt].sfka023 = sr_s.sfka023
+       LET sr[l_cnt].sfka024 = sr_s.sfka024
+       LET sr[l_cnt].sfka025 = sr_s.sfka025
+       LET sr[l_cnt].sfka026 = sr_s.sfka026
+       LET sr[l_cnt].sfka028 = sr_s.sfka028
+       LET sr[l_cnt].sfka029 = sr_s.sfka029
+       LET sr[l_cnt].sfka030 = sr_s.sfka030
+       LET sr[l_cnt].sfka031 = sr_s.sfka031
+       LET sr[l_cnt].sfka032 = sr_s.sfka032
+       LET sr[l_cnt].sfka033 = sr_s.sfka033
+       LET sr[l_cnt].sfka034 = sr_s.sfka034
+       LET sr[l_cnt].sfka035 = sr_s.sfka035
+       LET sr[l_cnt].sfka036 = sr_s.sfka036
+       LET sr[l_cnt].sfka037 = sr_s.sfka037
+       LET sr[l_cnt].sfka038 = sr_s.sfka038
+       LET sr[l_cnt].sfka039 = sr_s.sfka039
+       LET sr[l_cnt].sfka040 = sr_s.sfka040
+       LET sr[l_cnt].sfka041 = sr_s.sfka041
+       LET sr[l_cnt].sfka042 = sr_s.sfka042
+       LET sr[l_cnt].sfka043 = sr_s.sfka043
+       LET sr[l_cnt].sfka044 = sr_s.sfka044
+       LET sr[l_cnt].sfka045 = sr_s.sfka045
+       LET sr[l_cnt].sfka046 = sr_s.sfka046
+       LET sr[l_cnt].sfka047 = sr_s.sfka047
+       LET sr[l_cnt].sfka048 = sr_s.sfka048
+       LET sr[l_cnt].sfka049 = sr_s.sfka049
+       LET sr[l_cnt].sfka050 = sr_s.sfka050
+       LET sr[l_cnt].sfka051 = sr_s.sfka051
+       LET sr[l_cnt].sfka055 = sr_s.sfka055
+       LET sr[l_cnt].sfka056 = sr_s.sfka056
+       LET sr[l_cnt].sfka057 = sr_s.sfka057
+       LET sr[l_cnt].sfka058 = sr_s.sfka058
+       LET sr[l_cnt].sfka059 = sr_s.sfka059
+       LET sr[l_cnt].sfka060 = sr_s.sfka060
+       LET sr[l_cnt].sfka061 = sr_s.sfka061
+       LET sr[l_cnt].sfka063 = sr_s.sfka063
+       LET sr[l_cnt].sfka064 = sr_s.sfka064
+       LET sr[l_cnt].sfka900 = sr_s.sfka900
+       LET sr[l_cnt].sfka902 = sr_s.sfka902
+       LET sr[l_cnt].sfka905 = sr_s.sfka905
+       LET sr[l_cnt].sfka906 = sr_s.sfka906
+       LET sr[l_cnt].sfkaacti = sr_s.sfkaacti
+       LET sr[l_cnt].sfkadocno = sr_s.sfkadocno
+       LET sr[l_cnt].sfkaent = sr_s.sfkaent
+       LET sr[l_cnt].sfkasite = sr_s.sfkasite
+       LET sr[l_cnt].sfkastus = sr_s.sfkastus
+       LET sr[l_cnt].sfkg001 = sr_s.sfkg001
+       LET sr[l_cnt].sfkg002 = sr_s.sfkg002
+       LET sr[l_cnt].sfkg003 = sr_s.sfkg003
+       LET sr[l_cnt].sfkg004 = sr_s.sfkg004
+       LET sr[l_cnt].sfkg005 = sr_s.sfkg005
+       LET sr[l_cnt].sfkg006 = sr_s.sfkg006
+       LET sr[l_cnt].sfkg007 = sr_s.sfkg007
+       LET sr[l_cnt].sfkg008 = sr_s.sfkg008
+       LET sr[l_cnt].sfkg009 = sr_s.sfkg009
+       LET sr[l_cnt].sfkg010 = sr_s.sfkg010
+       LET sr[l_cnt].sfkg011 = sr_s.sfkg011
+       LET sr[l_cnt].sfkg012 = sr_s.sfkg012
+       LET sr[l_cnt].sfkg013 = sr_s.sfkg013
+       LET sr[l_cnt].sfkg014 = sr_s.sfkg014
+       LET sr[l_cnt].sfkg015 = sr_s.sfkg015
+       LET sr[l_cnt].sfkg016 = sr_s.sfkg016
+       LET sr[l_cnt].sfkg017 = sr_s.sfkg017
+       LET sr[l_cnt].sfkg018 = sr_s.sfkg018
+       LET sr[l_cnt].sfkg019 = sr_s.sfkg019
+       LET sr[l_cnt].sfkg020 = sr_s.sfkg020
+       LET sr[l_cnt].sfkg021 = sr_s.sfkg021
+       LET sr[l_cnt].sfkg022 = sr_s.sfkg022
+       LET sr[l_cnt].sfkg023 = sr_s.sfkg023
+       LET sr[l_cnt].sfkg024 = sr_s.sfkg024
+       LET sr[l_cnt].sfkg025 = sr_s.sfkg025
+       LET sr[l_cnt].sfkg026 = sr_s.sfkg026
+       LET sr[l_cnt].sfkg027 = sr_s.sfkg027
+       LET sr[l_cnt].sfkg028 = sr_s.sfkg028
+       LET sr[l_cnt].sfkg901 = sr_s.sfkg901
+       LET sr[l_cnt].sfkg904 = sr_s.sfkg904
+       LET sr[l_cnt].sfkg905 = sr_s.sfkg905
+       LET sr[l_cnt].sfkgseq = sr_s.sfkgseq
+       LET sr[l_cnt].sfkgseq1 = sr_s.sfkgseq1
+       LET sr[l_cnt].sfkgsite = sr_s.sfkgsite
+       LET sr[l_cnt].ooag_t_ooag011 = sr_s.ooag_t_ooag011
+       LET sr[l_cnt].pmaal_t_pmaal004 = sr_s.pmaal_t_pmaal004
+       LET sr[l_cnt].imaal_t_imaal003 = sr_s.imaal_t_imaal003
+       LET sr[l_cnt].x_t7_imaal003 = sr_s.x_t7_imaal003
+       LET sr[l_cnt].x_t8_imaal003 = sr_s.x_t8_imaal003
+       LET sr[l_cnt].x_t11_imaal003 = sr_s.x_t11_imaal003
+       LET sr[l_cnt].t2_oocal003 = sr_s.t2_oocal003
+       LET sr[l_cnt].oocal_t_oocal003 = sr_s.oocal_t_oocal003
+       LET sr[l_cnt].x_t6_oocal003 = sr_s.x_t6_oocal003
+       LET sr[l_cnt].ooefl_t_ooefl003 = sr_s.ooefl_t_ooefl003
+       LET sr[l_cnt].pjbal_t_pjbal003 = sr_s.pjbal_t_pjbal003
+       LET sr[l_cnt].pjbbl_t_pjbbl004 = sr_s.pjbbl_t_pjbbl004
+       LET sr[l_cnt].pjbml_t_pjbml004 = sr_s.pjbml_t_pjbml004
+       LET sr[l_cnt].oocql_t_oocql004 = sr_s.oocql_t_oocql004
+       LET sr[l_cnt].t1_oocql004 = sr_s.t1_oocql004
+       LET sr[l_cnt].x_t3_oocql004 = sr_s.x_t3_oocql004
+       LET sr[l_cnt].x_t9_oocql004 = sr_s.x_t9_oocql004
+       LET sr[l_cnt].x_t10_oocql004 = sr_s.x_t10_oocql004
+       LET sr[l_cnt].x_imecl_t_imecl005 = sr_s.x_imecl_t_imecl005
+       LET sr[l_cnt].l_sfka029_pjbbl004 = sr_s.l_sfka029_pjbbl004
+       LET sr[l_cnt].l_sfka009_pmaal004 = sr_s.l_sfka009_pmaal004
+       LET sr[l_cnt].l_sfka018_ooefl003 = sr_s.l_sfka018_ooefl003
+       LET sr[l_cnt].l_sfka028_pjbal003 = sr_s.l_sfka028_pjbal003
+       LET sr[l_cnt].l_sfka002_ooag011 = sr_s.l_sfka002_ooag011
+       LET sr[l_cnt].l_sfka030_pjbml004 = sr_s.l_sfka030_pjbml004
+       LET sr[l_cnt].sfkgdocno = sr_s.sfkgdocno
+       LET sr[l_cnt].sfkgent = sr_s.sfkgent
+       LET sr[l_cnt].sfkg900 = sr_s.sfkg900
+       LET sr[l_cnt].sfkadocdt = sr_s.sfkadocdt
+       LET sr[l_cnt].l_sfkg021_show = sr_s.l_sfkg021_show
+       LET sr[l_cnt].l_sfkg021_desc = sr_s.l_sfkg021_desc
+       LET sr[l_cnt].l_sfkc006_show = sr_s.l_sfkc006_show
+       LET sr[l_cnt].l_sfkc006_desc = sr_s.l_sfkc006_desc
+       LET sr[l_cnt].l_sfkc006 = sr_s.l_sfkc006
+       LET sr[l_cnt].l_sfkc001 = sr_s.l_sfkc001
+       LET sr[l_cnt].l_sfka017_label = sr_s.l_sfka017_label
+       LET sr[l_cnt].l_sfka006_label = sr_s.l_sfka006_label
+       LET sr[l_cnt].l_ooff013_show = sr_s.l_ooff013_show
+       LET sr[l_cnt].l_imaal003_imaal004_b = sr_s.l_imaal003_imaal004_b
+       LET sr[l_cnt].l_imaal003_imaal004 = sr_s.l_imaal003_imaal004
+       LET sr[l_cnt].l_count = sr_s.l_count
+       LET sr[l_cnt].x_t7_imaal004 = sr_s.x_t7_imaal004
+       LET sr[l_cnt].imaal_t_imaal004 = sr_s.imaal_t_imaal004
+       LET sr[l_cnt].l_sfka017_ooefl003 = sr_s.l_sfka017_ooefl003
+       LET sr[l_cnt].l_sfkg008_desc = sr_s.l_sfkg008_desc
+       LET sr[l_cnt].l_order = sr_s.l_order
+       LET sr[l_cnt].l_new = sr_s.l_new
+       LET sr[l_cnt].l_sfkgseq_sfkgseq1 = sr_s.l_sfkgseq_sfkgseq1
+ 
+ 
+       #add-point:ins_data段after_arr name="ins_data.after.save"
+       
+       #end add-point
+       LET l_cnt = l_cnt + 1
+    END FOREACH
+    CALL sr.deleteElement(l_cnt)
+ 
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asfr800_g01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION asfr800_g01_rep_data()
+   DEFINE HANDLER         om.SaxDocumentHandler
+   DEFINE l_i             INTEGER
+ 
+    #判斷是否有報表資料，若回彈出訊息視窗
+    IF sr.getLength() = 0 THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = "adz-00285"
+       LET g_errparam.extend = NULL
+       LET g_errparam.popup  = FALSE
+       LET g_errparam.replace[1] = ''
+       CALL cl_err()  
+       RETURN 
+    END IF
+    WHILE TRUE   
+       #add-point:rep_data段印前 name="rep_data.before"
+       
+       #end add-point     
+       LET handler = cl_gr_handler()
+       IF handler IS NOT NULL THEN
+          START REPORT asfr800_g01_rep TO XML HANDLER handler
+          FOR l_i = 1 TO sr.getLength()
+             OUTPUT TO REPORT asfr800_g01_rep(sr[l_i].*)
+             #報表中斷列印時，顯示錯誤訊息
+             IF fgl_report_getErrorStatus() THEN
+                DISPLAY "FGL: STOPPING REPORT msg=\"",fgl_report_getErrorString(),"\""
+                EXIT FOR
+             END IF                  
+          END FOR
+          FINISH REPORT asfr800_g01_rep
+       END IF
+       #add-point:rep_data段印完 name="rep_data.after"
+       
+       #end add-point       
+       IF g_rep_flag = TRUE THEN
+          LET g_rep_flag = FALSE
+          EXIT WHILE
+       END IF
+    END WHILE
+    #add-point:rep_data段離開while印完前 name="rep_data.end.before"
+    
+    #end add-point
+    CALL cl_gr_close_report()
+    #add-point:rep_data段離開while印完後 name="rep_data.end.after"
+    
+    #end add-point    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="asfr800_g01.rep" readonly="Y" >}
+PRIVATE REPORT asfr800_g01_rep(sr1)
+DEFINE sr1 sr1_r
+DEFINE sr2 sr2_r
+DEFINE l_subrep01_show  LIKE type_t.chr1,
+       l_subrep02_show  LIKE type_t.chr1,
+       l_subrep03_show  LIKE type_t.chr1,
+       l_subrep04_show  LIKE type_t.chr1
+DEFINE l_cnt           LIKE type_t.num10
+DEFINE l_sub_sql       STRING
+#add-point:rep段define  (客製用) name="rep.define_customerization"
+
+#end add-point
+#add-point:rep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep.define"
+DEFINE sr3       sr3_r
+DEFINE sr4       sr4_r
+DEFINE sr5       sr5_r
+#DEFINE sr6       sr6_r   #mark--161024-00057#5 By shiun
+DEFINE sr7       sr7_r
+DEFINE sr9       sr3_r
+DEFINE sr10      sr4_r
+DEFINE sr11      sr5_r
+DEFINE sr12      sr12_r
+#DEFINE sr13      sr6_r   #mark--161024-00057#5 By shiun
+DEFINE l_ac            INTEGER
+DEFINE l_i             INTEGER
+DEFINE l_subrep09_show LIKE type_t.chr5
+DEFINE l_subrep10_show LIKE type_t.chr5
+DEFINE l_subrep11_show LIKE type_t.chr5
+DEFINE l_subrep12_show LIKE type_t.chr5
+DEFINE l_subrep14_show LIKE type_t.chr5
+DEFINE l_count         LIKE type_t.chr5
+DEFINE l_success LIKE type_t.num5
+DEFINE l_sfkh003 LIKE sfkh_t.sfkh003
+DEFINE sr14       sr13_r                  #160727-00025#8 add
+DEFINE sr15       sr7_r                   #160727-00025#8 add
+DEFINE l_subrep15_show LIKE type_t.chr1   #160727-00025#8 add
+DEFINE l_subrep16_show LIKE type_t.chr1   #160727-00025#8 add
+#end add-point
+ 
+    #add-point:rep段ORDER_before name="rep.order.before"
+    
+    #end add-point
+    ORDER  BY sr1.l_order,sr1.sfkgseq,sr1.sfkgseq1
+    #add-point:rep段ORDER_after name="rep.order.after"
+    
+    #end add-point
+    
+    FORMAT
+       FIRST PAGE HEADER          
+          PRINTX g_user,g_pdate,g_rep_code,g_company,g_ptime,g_user_name,g_date_fmt
+          PRINTX tm.*
+          PRINTX g_grNumFmt.*
+          PRINTX g_rep_wcchp
+ 
+          #讀取beforeGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.l_order
+            #報表 d05 樣板自動產生(Version:6)
+            CALL cl_gr_title_clear()  #清除title變數值 
+            #add-point:rep.header  #公司資訊(不在公用變數內) name="rep.header"
+            CALL cl_gr_init_pageheader() #表頭資訊
+            PRINTX g_grPageHeader.*
+            PRINTX g_grPageFooter.*   #add--2015/11/02 By shiun
+#            CALL cl_gr_init_apr(sr1.sfkadocno)   #mark--161027-00041#2 By shiun
+#            #end add-point:rep.header 
+#            LET g_rep_docno = sr1.l_order
+#            CALL cl_gr_init_pageheader() #表頭資訊
+#            PRINTX g_grPageHeader.*
+#            PRINTX g_grPageFooter.*
+#            #add-point:rep.apr.signstr.before name="rep.apr.signstr.before"
+            #add--161027-00041#2 By shiun--(S)
+            LET g_doc_key = 'sfkaent=' ,sr1.sfkaent,'{+}sfkadocno=' ,sr1.sfkadocno
+            CALL cl_gr_init_apr(sr1.sfkadocno)
+            #add--161027-00041#2 By shiun--(E)            
+            #160727-00025#8 add-S
+            SELECT COUNT(1) INTO l_cnt
+              FROM sfka_t 
+             WHERE sfkaent = g_enterprise
+               AND sfkadocno = sr1.sfkadocno
+               AND sfka900 = sr1.sfka900
+               AND sfka003 = '5'
+            IF l_cnt > 0 AND NOT cl_null(l_cnt) THEN 
+               LET l_subrep15_show = 'Y'
+               LET l_subrep16_show = 'Y'
+            ELSE 
+               LET l_subrep15_show = 'N'
+               LET l_subrep16_show = 'N'
+            END IF
+            #160727-00025#8 add-S
+            LET g_sql = " SELECT DISTINCT sfkidocno,sfki001,imaal003,imaal004,sfki002,sfki004,sfki003,sfki005 ",
+                           "   FROM sfki_t LEFT OUTER JOIN imaal_t ON imaalent = sfkient AND imaal001 = sfki001 AND imaal002 = '",g_dlang,"' ",
+                           "  WHERE sfkient = ",g_enterprise,
+                           "    AND sfkisite = '",g_site,"' ",
+                           "    AND sfki900      = '",sr1.sfka900   CLIPPED,"'",
+                           "    AND sfkidocno = '",sr1.sfkadocno,"' ",
+                           "  ORDER BY sfki001 "
+            LET l_cnt = 0
+            LET l_sub_sql = ""
+            LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+            PREPARE asfr800_g01_repcur15_cnt_pre FROM l_sub_sql
+            EXECUTE asfr800_g01_repcur15_cnt_pre INTO l_cnt
+#            IF l_cnt > 0 THEN       #单头若无资料，也需显示栏位名称
+#               LET l_subrep15_show ="Y"
+#            END IF
+            PRINTX l_subrep15_show
+#            START REPORT asfr800_g01_subrep15
+            DECLARE asfr800_g01_repcur15 CURSOR FROM g_sql
+            FOREACH asfr800_g01_repcur15 INTO sr14.*
+               IF STATUS THEN 
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.extend = "asfr800_g01_repcur15:"
+                  LET g_errparam.code   = SQLCA.sqlcode
+                  LET g_errparam.popup  = FALSE
+                  CALL cl_err()                  
+                  EXIT FOREACH 
+               END IF
+               #add-point:rep.sub01.foreach name="rep.sub01.foreach"
+               IF NOT cl_null(sr14.l_sfki001) AND NOT cl_null(sr14.l_sfki001_1) THEN
+                  LET sr14.l_sfki001 = sr14.l_sfki001,'/',sr14.l_sfki001_1
+               END IF
+               #end add-point:rep.sub01.foreach
+#               OUTPUT TO REPORT asfr800_g01_subrep15(sr14.*)
+            END FOREACH
+            PRINTX sr14.*
+#            FINISH REPORT asfr800_g01_subrep15  
+            #160727-00025#8 add-E
+            #end add-point:rep.apr.signstr.before   
+            LET g_doc_key = 'sfkaent=' ,sr1.sfkaent,'{+}sfkadocno=' ,sr1.sfkadocno,'{+}sfka900=' ,sr1.sfka900         
+            CALL cl_gr_init_apr(sr1.l_order)
+            #add-point:rep.apr.signstr name="rep.apr.signstr"
+                          
+            #end add-point:rep.apr.signstr
+            PRINTX g_grSign.*
+ 
+ 
+ 
+           #add-point:rep.b_group.l_order.before name="rep.b_group.l_order.before"
+           
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub01.before name="rep.sub01.before"
+           
+           #end add-point:rep.sub01.before
+ 
+           #add-point:rep.sub01.sql name="rep.sub01.sql"
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='2' AND ooffent = '", 
+               sr1.sfkaent CLIPPED ,"'", " AND  ooff002 = '", sr1.sfkadocno CLIPPED ,"'", " AND  ooff003 = '", sr1.l_order CLIPPED ,"'"
+#           #end add-point:rep.sub01.sql
+# 
+#           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='2' AND ooff004=0 AND ooffent = '", 
+#                sr1.sfkaent CLIPPED ,"'", " AND  ooff003 = '", sr1.l_order CLIPPED ,"'"
+# 
+#           #add-point:rep.sub01.afsql name="rep.sub01.afsql"
+           
+           #end add-point:rep.sub01.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep01_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE asfr800_g01_repcur01_cnt_pre FROM l_sub_sql
+           EXECUTE asfr800_g01_repcur01_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep01_show ="Y"
+           END IF
+           PRINTX l_subrep01_show
+           START REPORT asfr800_g01_subrep01
+           DECLARE asfr800_g01_repcur01 CURSOR FROM g_sql
+           FOREACH asfr800_g01_repcur01 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "asfr800_g01_repcur01:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub01.foreach name="rep.sub01.foreach"
+              
+              #end add-point:rep.sub01.foreach
+              OUTPUT TO REPORT asfr800_g01_subrep01(sr2.*)
+           END FOREACH
+           FINISH REPORT asfr800_g01_subrep01
+           #add-point:rep.sub01.after name="rep.sub01.after"
+           
+           #end add-point:rep.sub01.after
+ 
+ 
+ 
+           #add-point:rep.b_group.l_order.after name="rep.b_group.l_order.after"
+           START REPORT asfr800_g01_subrep09
+              LET g_sql = "SELECT sfkh002,sfkh004 ",
+                          "  FROM sfkh_t ",
+                          " WHERE sfkhdocno    = '",sr1.sfkadocno CLIPPED,"'",
+                          "   AND sfkhent      = '",sr1.sfkaent   CLIPPED,"'",
+                          "   AND sfkhsite     = '",sr1.sfkasite  CLIPPED,"'",
+                          "   AND sfkh001      = '",sr1.sfka900   CLIPPED,"'",
+                          "   AND sfkh002 IN ('sfaadocno','sfaadocdt','sfaa002','sfaa006','sfaa009','sfaa010','sfaa012','sfaa013','sfaa017','sfaa018','sfaa019','sfaa020','sfaa058','sfaa060') ",
+#                          "   AND sfkh002 LIKE 'sfaa%'                      ",
+                          "   AND sfkhseq      = 0 ",
+                          "   AND sfkhseq1     = 0 "                        
+              LET l_ac = 1
+              CALL sr8.clear()
+              LET l_subrep09_show = "N"
+              DECLARE asfr800_g01_repcur09 CURSOR FROM g_sql
+              FOREACH asfr800_g01_repcur09 INTO sr8[l_ac].*
+                 IF STATUS THEN
+                    INITIALIZE g_errparam TO NULL
+                    LET g_errparam.extend = "asfr800_g01_repcur09:"
+                    LET g_errparam.code   = SQLCA.sqlcode
+                    LET g_errparam.popup  = FALSE
+                    CALL cl_err()
+                    EXIT FOREACH
+                 END IF                                                                             
+              LET l_ac = l_ac + 1
+              END FOREACH
+              LET l_ac = l_ac - 1            #最後多加了一次
+              LET l_i = 1                  #目前筆數              
+              IF l_ac > 0 THEN
+                 LET l_subrep09_show = "Y"
+                 WHILE TRUE
+                    INITIALIZE sr7.* TO NULL
+                    LET sr7.sfkh002_1 = sr8[l_i].sfkh002
+                    LET sr7.sfkh004_1 = sr8[l_i].sfkh004  
+                    CASE
+
+                       WHEN sr7.sfkh002_1  = 'sfaa002' #g生管人員
+                          CALL s_desc_get_person_desc(sr7.sfkh004_1) RETURNING sr7.sfkh004_1
+                       WHEN sr7.sfkh002_1  = 'sfaa003' #工單類型 
+                          CALL s_desc_gzcbl004_desc(4007,sr7.sfkh004_1)RETURNING sr7.sfkh004_1
+                       WHEN sr7.sfkh002_1  = 'sfaa057' #工單類型 
+                          CALL s_desc_gzcbl004_desc(4010,sr7.sfkh004_1)RETURNING sr7.sfkh004_1
+                          LET sr7.sfkh002_1 = 'sfaa002'
+                       WHEN sr7.sfkh002_1  = 'sfaa004' #發料制度 
+                          CALL s_desc_gzcbl004_desc(4008,sr7.sfkh004_1)RETURNING sr7.sfkh004_1 
+                       WHEN sr7.sfkh002_1  = 'sfaa005' #工單來源
+                          CALL s_desc_gzcbl004_desc(4009,sr7.sfkh004_1)RETURNING sr7.sfkh004_1  
+                       WHEN sr7.sfkh002_1  = 'sfaa009' #參考客戶
+                          CALL s_desc_get_trading_partner_abbr_desc(sr7.sfkh004_1)RETURNING sr7.sfkh004_1
+                       WHEN sr7.sfkh002_1  = 'sfaa013' #生產數量單位
+                          CALL s_desc_get_unit_desc(sr7.sfkh004_1)RETURNING sr7.sfkh004_1
+                       WHEN sr7.sfkh002_1  = 'sfaa060' #參考數量單位
+                          CALL s_desc_get_unit_desc(sr7.sfkh004_1)RETURNING sr7.sfkh004_1
+                       WHEN sr7.sfkh002_1  = 'sfaa017' #部門廠商 
+                          IF sr1.sfka057 = '1' THEN
+                             CALL s_desc_get_department_desc(sr7.sfkh004_1)RETURNING sr7.sfkh004_1
+                          ELSE
+                             CALL s_desc_get_trading_partner_abbr_desc(sr7.sfkh004_1)RETURNING sr7.sfkh004_1
+                          END IF
+                       WHEN sr7.sfkh002_1  = 'sfaa018' #協作據點
+                          CALL s_desc_get_department_desc(sr7.sfkh004_1)RETURNING sr7.sfkh004_1
+                       WHEN sr7.sfkh002_1  = 'sfaa068' #成本中心
+                          CALL s_desc_get_department_desc(sr7.sfkh004_1)RETURNING sr7.sfkh004_1
+                       WHEN sr7.sfkh002_1  = 'sfaa028' #專案代號
+                          CALL s_desc_get_project_desc(sr7.sfkh004_1)RETURNING sr7.sfkh004_1 
+                       WHEN sr7.sfkh002_1  = 'sfaa031' #理由碼
+                          CALL s_desc_get_acc_desc(225,sr7.sfkh004_1)RETURNING sr7.sfkh004_1
+                       WHEN sr7.sfkh002_1  = 'sfaa034' #預計入庫庫位
+                          CALL s_desc_get_stock_desc(g_site,sr7.sfkh004_1)RETURNING sr7.sfkh004_1
+                       WHEN sr7.sfkh002_1  = 'sfaa035' #預計入庫儲位
+                          CALL s_desc_get_locator_desc(g_site,sr1.sfka034,sr7.sfkh004_1) RETURNING sr7.sfkh004_1
+                    END CASE                    
+                    CALL asfr800_g01_sfkh002_ref(sr7.sfkh002_1) RETURNING sr7.sfkh002_1_desc                                                                
+                    IF (l_i + 1) <= l_ac THEN
+                       LET sr7.sfkh002_2 = sr8[l_i+1].sfkh002
+                       LET sr7.sfkh004_2 = sr8[l_i+1].sfkh004                       
+                       CASE
+                       WHEN sr7.sfkh002_2  = 'sfaa002' #生管人員
+                          CALL s_desc_get_person_desc(sr7.sfkh004_2) RETURNING sr7.sfkh004_2
+                       WHEN sr7.sfkh002_2  = 'sfaa003' #工單類型 
+                          CALL s_desc_gzcbl004_desc(4007,sr7.sfkh004_2)RETURNING sr7.sfkh004_2
+                       WHEN sr7.sfkh002_2  = 'sfaa057' #工單類型 
+                          CALL s_desc_gzcbl004_desc(4010,sr7.sfkh004_2)RETURNING sr7.sfkh004_2
+                          LET sr7.sfkh002_2 = 'sfaa002'
+                       WHEN sr7.sfkh002_2  = 'sfaa004' #發料制度 
+                          CALL s_desc_gzcbl004_desc(4008,sr7.sfkh004_2)RETURNING sr7.sfkh004_2 
+                       WHEN sr7.sfkh002_2  = 'sfaa005' #工單來源
+                          CALL s_desc_gzcbl004_desc(4009,sr7.sfkh004_2)RETURNING sr7.sfkh004_2  
+                       WHEN sr7.sfkh002_2  = 'sfaa009' #參考客戶
+                          CALL s_desc_get_trading_partner_abbr_desc(sr7.sfkh004_2)RETURNING sr7.sfkh004_2
+                       WHEN sr7.sfkh002_2  = 'sfaa013' #生產數量單位
+                          CALL s_desc_get_unit_desc(sr7.sfkh004_2)RETURNING sr7.sfkh004_2
+                       WHEN sr7.sfkh002_2  = 'sfaa060' #參考數量單位
+                          CALL s_desc_get_unit_desc(sr7.sfkh004_2)RETURNING sr7.sfkh004_2
+                       WHEN sr7.sfkh002_2  = 'sfaa017' #部門廠商 
+                          IF sr1.sfka057 = '1' THEN
+                             CALL s_desc_get_department_desc(sr7.sfkh004_2)RETURNING sr7.sfkh004_2
+                          ELSE
+                             CALL s_desc_get_trading_partner_abbr_desc(sr7.sfkh004_2)RETURNING sr7.sfkh004_2
+                          END IF
+                       WHEN sr7.sfkh002_2  = 'sfaa018' #協作據點
+                          CALL s_desc_get_department_desc(sr7.sfkh004_2)RETURNING sr7.sfkh004_2
+                       WHEN sr7.sfkh002_2  = 'sfaa068' #成本中心
+                          CALL s_desc_get_department_desc(sr7.sfkh004_2)RETURNING sr7.sfkh004_2
+                       WHEN sr7.sfkh002_2  = 'sfaa028' #專案代號
+                          CALL s_desc_get_project_desc(sr7.sfkh004_2)RETURNING sr7.sfkh004_2 
+                       WHEN sr7.sfkh002_2  = 'sfaa031' #理由碼
+                          CALL s_desc_get_acc_desc(225,sr7.sfkh004_2)RETURNING sr7.sfkh004_2
+                       WHEN sr7.sfkh002_2  = 'sfaa034' #預計入庫庫位
+                          CALL s_desc_get_stock_desc(g_site,sr7.sfkh004_2)RETURNING sr7.sfkh004_2
+                       WHEN sr7.sfkh002_2  = 'sfaa035' #預計入庫儲位
+                          CALL s_desc_get_locator_desc(g_site,sr1.sfka034,sr7.sfkh004_2) RETURNING sr7.sfkh004_2
+                    END CASE
+                       CALL asfr800_g01_sfkh002_ref(sr7.sfkh002_2) RETURNING sr7.sfkh002_2_desc                     
+                    END IF
+                    OUTPUT TO REPORT asfr800_g01_subrep09(sr7.*)
+                    LET l_i = l_i + 2
+                    IF l_i > l_ac THEN
+                       EXIT WHILE
+                    END IF
+                 END  WHILE
+              END IF
+           FINISH REPORT asfr800_g01_subrep09
+           PRINTX l_subrep09_show
+#           
+           #160727-00025#8 add-S
+#           LET g_sql = " SELECT DISTINCT sfkidocno,sfki001,trim(imaal003)||'/'||trim(imaal004),sfki002,sfki004,sfki003,sfki005 ",
+#                          "   FROM sfki_t LEFT OUTER JOIN imaal_t ON imaalent = sfkient AND imaal001 = sfki001 AND imaal002 = '",g_dlang,"' ",
+#                          "  WHERE sfkient = ",g_enterprise,
+#                          "    AND sfkisite = '",g_site,"' ",
+#                          "    AND sfki900      = '",sr1.sfka900   CLIPPED,"'",
+#                          "    AND sfkidocno = '",sr1.sfkadocno,"' ",
+#                          "  ORDER BY sfki001 "
+#           LET l_cnt = 0
+#           LET l_sub_sql = ""
+#           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+#           PREPARE asfr800_g01_repcur15_cnt_pre FROM l_sub_sql
+#           EXECUTE asfr800_g01_repcur15_cnt_pre INTO l_cnt
+##           IF l_cnt > 0 THEN       #单头若无资料，也需显示栏位名称
+##              LET l_subrep15_show ="Y"
+##           END IF
+#           PRINTX l_subrep15_show
+#           START REPORT asfr800_g01_subrep15
+#           DECLARE asfr800_g01_repcur15 CURSOR FROM g_sql
+#           FOREACH asfr800_g01_repcur15 INTO sr14.*
+#              IF STATUS THEN 
+#                 INITIALIZE g_errparam TO NULL
+#                 LET g_errparam.extend = "asfr800_g01_repcur15:"
+#                 LET g_errparam.code   = SQLCA.sqlcode
+#                 LET g_errparam.popup  = FALSE
+#                 CALL cl_err()                  
+#                 EXIT FOREACH 
+#              END IF
+#              #add-point:rep.sub01.foreach name="rep.sub01.foreach"
+#
+#              #end add-point:rep.sub01.foreach
+#              OUTPUT TO REPORT asfr800_g01_subrep15(sr14.*)
+#           END FOREACH
+#           FINISH REPORT asfr800_g01_subrep15  
+#                                     
+           LET g_sql = "SELECT sfkh002,sfkh004 ",
+                       "  FROM sfkh_t ",
+                       " WHERE sfkhdocno    = '",sr1.sfkadocno CLIPPED,"'",
+                       "   AND sfkhent      = '",sr1.sfkaent   CLIPPED,"'",
+                       "   AND sfkhsite     = '",sr1.sfkasite  CLIPPED,"'",
+                       "   AND sfkh001      = '",sr1.sfka900   CLIPPED,"'",
+                       "   AND sfkh002 IN ('sfai001','sfai002','sfai003','sfai004','sfai005') ",
+                       "   AND sfkhseq      = 0 ",
+                       "   AND sfkhseq1     = 0 "                        
+           LET l_ac = 1
+           CALL sr8.clear()
+           DECLARE asfr800_g01_repcur16 CURSOR FROM g_sql
+           FOREACH asfr800_g01_repcur16 INTO sr8[l_ac].*
+              IF STATUS THEN
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "asfr800_g01_repcur16:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()
+                 EXIT FOREACH
+              END IF                                                                             
+           LET l_ac = l_ac + 1
+           END FOREACH
+           LET l_ac = l_ac - 1            #最後多加了一次
+           LET l_i = 1                  #目前筆數              
+           IF l_ac > 0 THEN
+              LET l_subrep16_show = "Y"
+           ELSE 
+              LET l_subrep16_show = 'N'
+           END IF
+           PRINTX l_subrep16_show
+           START REPORT asfr800_g01_subrep16
+           WHILE TRUE
+              INITIALIZE sr15.* TO NULL
+              LET sr15.sfkh002_1 = sr8[l_i].sfkh002
+              LET sr15.sfkh004_1 = sr8[l_i].sfkh004  
+#              CASE
+#                 WHEN sr15.sfkh002_1  = 'sfki001' #制品料号
+#                    CALL s_desc_get_person_desc(sr15.sfkh004_1) RETURNING sr15.sfkh004_1
+#                 WHEN sr15.sfkh002_1  = 'sfki002' #送样数量
+#                    CALL s_desc_gzcbl004_desc(4007,sr15.sfkh004_1)RETURNING sr15.sfkh004_1
+#                 WHEN sr15.sfkh002_1  = 'sfki003' #图别 
+#                    CALL s_desc_gzcbl004_desc(4010,sr15.sfkh004_1)RETURNING sr15.sfkh004_1
+#                    LET sr15.sfkh002_1 = 'sfaa002'
+#                 WHEN sr15.sfkh002_1  = 'sfki004' #版别
+#                    CALL s_desc_gzcbl004_desc(4008,sr15.sfkh004_1)RETURNING sr15.sfkh004_1 
+#                 WHEN sr15.sfkh002_1  = 'sfki005' #穴数
+#              END CASE                    
+              CALL asfr800_g01_sfkh002_ref(sr15.sfkh002_1) RETURNING sr15.sfkh002_1_desc                                                                
+              IF (l_i + 1) <= l_ac THEN
+                 LET sr15.sfkh002_2 = sr8[l_i+1].sfkh002
+                 LET sr15.sfkh004_2 = sr8[l_i+1].sfkh004                       
+                 
+                 CALL asfr800_g01_sfkh002_ref(sr15.sfkh002_2) RETURNING sr15.sfkh002_2_desc                     
+              END IF
+              OUTPUT TO REPORT asfr800_g01_subrep16(sr15.*)
+              LET l_i = l_i + 2
+              IF l_i > l_ac THEN
+                 EXIT WHILE
+              END IF
+           END  WHILE
+        
+           FINISH REPORT asfr800_g01_subrep16
+
+           #160727-00025#8 add-S
+           
+           START REPORT asfr800_g01_subrep05
+              SELECT COUNT (1) INTO sr3.l_count
+                FROM sfkb_t
+               WHERE sfkbdocno = sr1.sfkadocno
+                 AND sfkbent = sr1.sfkaent
+                 AND sfkb900 = sr1.sfka900
+              IF sr1.sfka005 = '1' AND sr3.l_count > 1 THEN
+                 LET g_sql = "SELECT sfkbdocno,sfkb001,sfkb006,sfkb002,sfkb003,sfkb004,sfkb007 ",
+                             "  FROM sfkb_t ",
+                             " WHERE sfkbdocno = '",sr1.sfkadocno CLIPPED,"'",
+                             "   AND sfkbent   = '",sr1.sfkaent   CLIPPED,"'",
+                             "   AND sfkb900   = '",sr1.sfka900   CLIPPED,"'",
+                             "   ORDER BY sfkbseq "                                       
+   
+                 DECLARE asfr800_g01_repcur05 CURSOR FROM g_sql
+                 FOREACH asfr800_g01_repcur05 INTO sr3.*
+                    #來源(系統分類碼轉換)
+                    CALL s_desc_gzcbl004_desc('4009',sr3.sfkb001) RETURNING sr3.l_sfkb001_desc
+                    #當來源為訂單時帶入客戶編號   
+                    IF sr3.sfkb001 = 2 THEN   
+                       SELECT xmda004 INTO sr3.l_xmda004
+                         FROM xmda_t
+                        WHERE xmdaent = sr1.sfkaent
+                          AND xmdadocno = sr1.sfkadocno
+                    END IF
+                    #組合來源單號/項次/項序
+                    IF cl_null(sr3.sfkb002) OR cl_null(sr3.sfkb003) OR cl_null(sr3.sfkb004) THEN
+                       LET sr3.l_sfkb002_sfkb003_sfkb004 = sr3.sfkb002 , "/" , sr3.sfkb003 , "/" , sr3.sfkb004
+                    ELSE
+                       LET sr3.l_sfkb002_sfkb003_sfkb004 = sr3.sfkb002 || "/" || sr3.sfkb003 || "/" || sr3.sfkb004
+                    END IF
+                    OUTPUT TO REPORT asfr800_g01_subrep05(sr3.*)
+                 END FOREACH
+              END IF
+           FINISH REPORT asfr800_g01_subrep05
+#       
+           #asfr800_g01_subrep05-變更前資料
+           START REPORT asfr800_g01_subrep10
+              LET l_count = 0
+              IF sr1.sfka005 = '1' THEN
+                 SELECT COUNT (*) INTO l_count
+                   FROM sfkh_t
+                  WHERE sfkhdocno = sr1.sfkadocno
+                    AND sfkhent = sr1.sfkaent
+                    AND sfkhsite = sr1.sfkasite
+                    AND sfkh001 = sr1.sfka900
+                    AND sfkh002 IN ('sfab001','sfab006','sfab002','sfab003','sfab004','sfab007')
+                 SELECT COUNT (1) INTO sr3.l_count
+                   FROM sfkb_t
+                  WHERE sfkbdocno = sr1.sfkadocno
+                    AND sfkbent = sr1.sfkaent
+                    AND sfkb900 = sr1.sfka900
+                 IF l_count != 0 THEN
+                    LET g_sql = "SELECT sfkbdocno,sfkb001,sfkb006,sfkb002,sfkb003,sfkb004,sfkb007,sfkbseq ",
+                                "  FROM sfkb_t ",
+                                " WHERE sfkbdocno = '",sr1.sfkadocno CLIPPED,"'",
+                                "   AND sfkbent   = '",sr1.sfkaent   CLIPPED,"'",
+                                "   AND sfkb900   = '",sr1.sfka900   CLIPPED,"'",
+                                "   ORDER BY sfkbseq "                                       
+                    
+                    DECLARE asfr800_g01_repcur10 CURSOR FROM g_sql
+                    FOREACH asfr800_g01_repcur10 INTO sr9.*
+                       CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr9.sfkbseq,0,sr1.sfka900,'sfab001',sr9.sfkb001) RETURNING sr9.sfkb001
+                       CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr9.sfkbseq,0,sr1.sfka900,'sfab006',sr9.sfkb006) RETURNING sr9.sfkb006
+                       CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr9.sfkbseq,0,sr1.sfka900,'sfab002',sr9.sfkb002) RETURNING sr9.sfkb002
+                       CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr9.sfkbseq,0,sr1.sfka900,'sfab003',sr9.sfkb003) RETURNING sr9.sfkb003
+                       CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr9.sfkbseq,0,sr1.sfka900,'sfab004',sr9.sfkb004) RETURNING sr9.sfkb004
+                       CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr9.sfkbseq,0,sr1.sfka900,'sfab007',sr9.sfkb007) RETURNING sr9.sfkb007
+                       #來源(系統分類碼轉換)
+                       CALL s_desc_gzcbl004_desc('4009',sr9.sfkb001) RETURNING sr9.l_sfkb001_desc
+                       #當來源為訂單時帶入客戶編號   
+                       IF sr9.sfkb001 = 2 THEN   
+                          SELECT xmda004 INTO sr9.l_xmda004
+                            FROM xmda_t
+                           WHERE xmdaent = sr1.sfkaent
+                             AND xmdadocno = sr1.sfkadocno
+                       END IF
+                       #組合來源單號/項次/項序
+                       IF cl_null(sr9.sfkb002) OR cl_null(sr9.sfkb003) OR cl_null(sr9.sfkb004) THEN
+                          LET sr9.l_sfkb002_sfkb003_sfkb004 = sr9.sfkb002 , "/" , sr9.sfkb003 , "/" , sr9.sfkb004
+                       ELSE
+                          LET sr9.l_sfkb002_sfkb003_sfkb004 = sr9.sfkb002 || "/" || sr9.sfkb003 || "/" || sr9.sfkb004
+                       END IF
+                       OUTPUT TO REPORT asfr800_g01_subrep10(sr9.*)
+                    END FOREACH
+                 END IF
+              END IF
+           FINISH REPORT asfr800_g01_subrep10
+#
+           START REPORT asfr800_g01_subrep06 
+              LET g_sql = "SELECT sfkcdocno,sfkc002,sfkc001,sfkc003,sfkc004 ",
+                          "  FROM sfkc_t ",
+                          " WHERE sfkcdocno = '",sr1.sfkadocno CLIPPED,"'",
+                          "   AND sfkcent   = '",sr1.sfkaent   CLIPPED,"'",
+                          "   AND sfkc900   = '",sr1.sfka900   CLIPPED,"'",
+                          "   ORDER BY sfkcseq "                                       
+   
+              DECLARE asfr800_g01_repcur06 CURSOR FROM g_sql
+              FOREACH asfr800_g01_repcur06 INTO sr4.*
+                 SELECT COUNT (DISTINCT sfkc001) INTO sr4.l_count
+                   FROM sfkc_t
+                  WHERE sfkcdocno = sr1.sfkadocno
+                    AND sfkcent = sr1.sfkaent
+                    AND sfkc900 = sr1.sfka900
+                 IF sr4.l_count = 1 AND sr4.sfkc001 = sr1.sfka010 THEN
+                  CONTINUE FOREACH
+                 END IF
+                 
+                 #來源(系統分類碼轉換)
+                 CALL s_desc_gzcbl004_desc('4019',sr4.sfkc002) RETURNING sr4.l_sfkc002_desc                   
+                 #帶入品名/規格
+                 CALL s_desc_get_item_desc(sr4.sfkc001) RETURNING sr4.l_imaal003,sr4.l_imaal004
+   
+                 #組合品名/規格
+                 IF cl_null(sr4.l_imaal003) OR cl_null(sr4.l_imaal004) THEN
+                    LET sr4.l_imaal003_imaal004 = sr4.l_imaal003 , "/" , sr4.l_imaal004
+                 ELSE
+                    LET sr4.l_imaal003_imaal004 = sr4.l_imaal003 || "/" || sr4.l_imaal004
+                 END IF
+                
+                 OUTPUT TO REPORT asfr800_g01_subrep06(sr4.*)
+              END FOREACH
+           FINISH REPORT asfr800_g01_subrep06
+#
+           #asfr800_g01_subrep06-變更前資料
+           START REPORT asfr800_g01_subrep11
+              LET l_count = 0
+              SELECT COUNT (*) INTO l_count
+                FROM sfkh_t
+               WHERE sfkhdocno = sr1.sfkadocno
+                 AND sfkhent = sr1.sfkaent
+                 AND sfkhsite = sr1.sfkasite
+                 AND sfkh001 = sr1.sfka900
+                 AND sfkh002 IN ('sfac002','sfac001','sfac003','sfac004')
+              IF l_count != 0 THEN
+                 LET g_sql = "SELECT sfkcdocno,sfkc002,sfkc001,sfkc003,sfkc004,sfkcseq",
+                             "  FROM sfkc_t ",
+                             " WHERE sfkcdocno = '",sr1.sfkadocno CLIPPED,"'",
+                             "   AND sfkcent   = '",sr1.sfkaent   CLIPPED,"'",
+                             "   AND sfkc900   = '",sr1.sfka900   CLIPPED,"'",
+                             "   ORDER BY sfkcseq "                                       
+                 
+                 DECLARE asfr800_g01_repcur11 CURSOR FROM g_sql
+                 FOREACH asfr800_g01_repcur11 INTO sr10.*
+                    SELECT COUNT (DISTINCT sfkc001) INTO sr10.l_count
+                      FROM sfkc_t
+                     WHERE sfkcdocno = sr1.sfkadocno
+                       AND sfkcent = sr1.sfkaent
+                       AND sfkc900 = sr1.sfka900
+                    IF sr10.l_count = 1 AND sr10.sfkc001 = sr1.sfka010 THEN
+                     CONTINUE FOREACH
+                    END IF
+                    CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr10.sfkcseq,0,sr1.sfka900,'sfac002',sr10.sfkc002) RETURNING sr10.sfkc002
+                    CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr10.sfkcseq,0,sr1.sfka900,'sfac001',sr10.sfkc001) RETURNING sr10.sfkc001
+                    CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr10.sfkcseq,0,sr1.sfka900,'sfac003',sr10.sfkc003) RETURNING sr10.sfkc003
+                    CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr10.sfkcseq,0,sr1.sfka900,'sfac004',sr10.sfkc004) RETURNING sr10.sfkc004
+                    #來源(系統分類碼轉換)
+                    CALL s_desc_gzcbl004_desc('4019',sr10.sfkc002) RETURNING sr10.l_sfkc002_desc                   
+                    #帶入品名/規格
+                    CALL s_desc_get_item_desc(sr10.sfkc001) RETURNING sr10.l_imaal003,sr10.l_imaal004
+                 
+                    #組合品名/規格
+                    IF cl_null(sr10.l_imaal003) OR cl_null(sr10.l_imaal004) THEN
+                       LET sr10.l_imaal003_imaal004 = sr10.l_imaal003 , "/" , sr10.l_imaal004
+                    ELSE
+                       LET sr10.l_imaal003_imaal004 = sr10.l_imaal003 || "/" || sr10.l_imaal004
+                    END IF
+                    
+                    OUTPUT TO REPORT asfr800_g01_subrep11(sr10.*)
+                 END FOREACH
+              END IF
+           FINISH REPORT asfr800_g01_subrep11
+#           
+           START REPORT asfr800_g01_subrep07 
+              SELECT COUNT (DISTINCT sfkc006) INTO sr5.l_count
+                FROM sfkc_t
+               WHERE sfkcdocno = sr1.sfkadocno
+                 AND sfkcent = sr1.sfkaent
+                 AND sfkc900 = sr1.sfka900
+              IF sr5.l_count > 1 THEN
+                 LET g_sql = "SELECT sfkcdocno,sfkc001,sfkc003,sfkc006 ",
+                             "  FROM sfkc_t ",
+                             " WHERE sfkcdocno = '",sr1.sfkadocno CLIPPED,"'",
+                             "   AND sfkcent   = '",sr1.sfkaent   CLIPPED,"'",
+                             "   AND sfkc900   = '",sr1.sfka900   CLIPPED,"'",
+                             "   ORDER BY sfkcseq "                                       
+                       
+                 
+                 DECLARE asfr800_g01_repcur07 CURSOR FROM g_sql
+                 FOREACH asfr800_g01_repcur07 INTO sr5.*
+                     CALL s_feature_description(sr5.sfkc001,sr5.sfkc006) RETURNING l_success,sr5.l_sfkc006_desc
+                     OUTPUT TO REPORT asfr800_g01_subrep07(sr5.*)
+                 END FOREACH
+              END IF
+           FINISH REPORT asfr800_g01_subrep07
+#
+           #asfr800_g01_subrep07-變更前資料
+           START REPORT asfr800_g01_subrep12 
+              LET l_count = 0
+              SELECT COUNT (*) INTO l_count
+                FROM sfkh_t
+               WHERE sfkhdocno = sr1.sfkadocno
+                 AND sfkhent = sr1.sfkaent
+                 AND sfkhsite = sr1.sfkasite
+                 AND sfkh001 = sr1.sfka900
+                 AND sfkh002 IN ('sfac001','sfac003','sfac006')
+              IF l_count != 0 THEN
+                 SELECT COUNT (DISTINCT sfkc006) INTO sr11.l_count
+                   FROM sfkc_t
+                  WHERE sfkcdocno = sr1.sfkadocno
+                    AND sfkcent = sr1.sfkaent
+                    AND sfkc900 = sr1.sfka900
+                 IF sr11.l_count > 1 THEN
+                    LET g_sql = "SELECT sfkcdocno,sfkc001,sfkc003,sfkc006,sfkcseq ",
+                                "  FROM sfkc_t ",
+                                " WHERE sfkcdocno = '",sr1.sfkadocno CLIPPED,"'",
+                                "   AND sfkcent   = '",sr1.sfkaent   CLIPPED,"'",
+                                "   AND sfkc900   = '",sr1.sfka900   CLIPPED,"'",
+                                "   ORDER BY sfkcseq "                                       
+                          
+                    
+                    DECLARE asfr800_g01_repcur12 CURSOR FROM g_sql
+                    FOREACH asfr800_g01_repcur12 INTO sr11.*
+                        CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr11.sfkcseq,0,sr1.sfka900,'sfac001',sr11.sfkc001) RETURNING sr11.sfkc001
+                        CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr11.sfkcseq,0,sr1.sfka900,'sfac003',sr11.sfkc003) RETURNING sr11.sfkc003
+                        CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr11.sfkcseq,0,sr1.sfka900,'sfac006',sr11.sfkc006) RETURNING sr11.sfkc006
+                        CALL s_feature_description(sr11.sfkc001,sr11.sfkc006) RETURNING l_success,sr11.l_sfkc006_desc
+                        OUTPUT TO REPORT asfr800_g01_subrep12(sr11.*)
+                    END FOREACH
+                 END IF
+              END IF
+           FINISH REPORT asfr800_g01_subrep12
+#           
+           #mark--161024-00057#5 By shiun--(S)
+#           START REPORT asfr800_g01_subrep08
+#              SELECT COUNT (1) INTO sr6.l_count
+#                FROM sfke_t
+#               WHERE sfkedocno = sr1.sfkadocno
+#                 AND sfkeent = sr1.sfkaent
+#                 AND sfke900 = sr1.sfka900
+#              IF sr6.l_count > 1 THEN
+#                 LET g_sql = "SELECT sfkedocno,sfke002,sfke001 ",
+#                             "  FROM sfke_t ",
+#                             " WHERE sfkedocno = '",sr1.sfkadocno CLIPPED,"'",
+#                             "   AND sfkeent   = '",sr1.sfkaent   CLIPPED,"'",
+#                             "   AND sfke900   = '",sr1.sfka900   CLIPPED,"'",
+#                             "   ORDER BY sfkeseq "                                       
+#                       
+#                 
+#                 DECLARE asfr800_g01_repcur08 CURSOR FROM g_sql
+#                 FOREACH asfr800_g01_repcur08 INTO sr6.*             
+#                     OUTPUT TO REPORT asfr800_g01_subrep08(sr6.*)
+#                 END FOREACH 
+#              END IF
+#           FINISH REPORT asfr800_g01_subrep08
+##
+#           #asfr800_g01_subrep08-變更前資料
+#           START REPORT asfr800_g01_subrep13
+#              LET l_count = 0
+#              SELECT COUNT (*) INTO l_count
+#                FROM sfkh_t
+#               WHERE sfkhdocno = sr1.sfkadocno
+#                 AND sfkhent = sr1.sfkaent
+#                 AND sfkhsite = sr1.sfkasite
+#                 AND sfkh001 = sr1.sfka900
+#                 AND sfkh002 IN ('sfae002','sfae001')
+#              IF l_count != 0 THEN
+#                 SELECT COUNT (1) INTO sr13.l_count
+#                   FROM sfke_t
+#                  WHERE sfkedocno = sr1.sfkadocno
+#                    AND sfkeent = sr1.sfkaent
+#                    AND sfke900 = sr1.sfka900
+#                 IF sr13.l_count > 1 THEN
+#                    LET g_sql = "SELECT sfkedocno,sfke002,sfke001,sfkeseq ",
+#                                "  FROM sfke_t ",
+#                                " WHERE sfkedocno = '",sr1.sfkadocno CLIPPED,"'",
+#                                "   AND sfkeent   = '",sr1.sfkaent   CLIPPED,"'",
+#                                "   AND sfke900   = '",sr1.sfka900   CLIPPED,"'",
+#                                "   ORDER BY sfkeseq "                                       
+#                    DECLARE asfr800_g01_repcur13 CURSOR FROM g_sql
+#                    FOREACH asfr800_g01_repcur13 INTO sr13.*                      
+#                        CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr13.sfkeseq,0,sr1.sfka900,'sfae002',sr13.sfke002) RETURNING sr13.sfke002
+#                        CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr13.sfkeseq,0,sr1.sfka900,'sfae001',sr13.sfke001) RETURNING sr13.sfke001
+#                        OUTPUT TO REPORT asfr800_g01_subrep13(sr13.*)
+#                    END FOREACH 
+#                 END IF
+#              END IF
+#           FINISH REPORT asfr800_g01_subrep13
+           #mark--161024-00057#5 By shiun--(E)
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.sfkgseq
+ 
+           #add-point:rep.b_group.sfkgseq.before name="rep.b_group.sfkgseq.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.b_group.sfkgseq.after name="rep.b_group.sfkgseq.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.sfkgseq1
+ 
+           #add-point:rep.b_group.sfkgseq1.before name="rep.b_group.sfkgseq1.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.b_group.sfkgseq1.after name="rep.b_group.sfkgseq1.after"
+           
+           #end add-point:
+ 
+ 
+ 
+ 
+       ON EVERY ROW
+          #add-point:rep.everyrow.before name="rep.everyrow.before"
+          
+          #end add-point:rep.everyrow.before
+ 
+          #單身前備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub02.before name="rep.sub02.before"
+           
+           #end add-point:rep.sub02.before
+ 
+           #add-point:rep.sub02.sql name="rep.sub02.sql"
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='2' AND ooffent = '", 
+                sr1.sfkaent CLIPPED ,"'", " AND  ooff002 = '", sr1.sfkadocno CLIPPED ,"'", " AND  ooff003 = '", sr1.l_order CLIPPED ,"'", " AND  ooff004 = '", 
+                sr1.sfkgseq CLIPPED ,"'"
+#           #end add-point:rep.sub02.sql
+# 
+#           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='2' AND ooffent = '", 
+#                sr1.sfkaent CLIPPED ,"'", " AND  ooff003 = '", sr1.l_order CLIPPED ,"'"
+# 
+#           #add-point:rep.sub02.afsql name="rep.sub02.afsql"
+           
+           #end add-point:rep.sub02.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep02_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE asfr800_g01_repcur02_cnt_pre FROM l_sub_sql
+           EXECUTE asfr800_g01_repcur02_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep02_show ="Y"
+           END IF
+           PRINTX l_subrep02_show
+           START REPORT asfr800_g01_subrep02
+           DECLARE asfr800_g01_repcur02 CURSOR FROM g_sql
+           FOREACH asfr800_g01_repcur02 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "asfr800_g01_repcur02:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub02.foreach name="rep.sub02.foreach"
+              
+              #end add-point:rep.sub02.foreach
+              OUTPUT TO REPORT asfr800_g01_subrep02(sr2.*)
+           END FOREACH
+           FINISH REPORT asfr800_g01_subrep02
+           #add-point:rep.sub02.after name="rep.sub02.after"
+           
+           #end add-point:rep.sub02.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.beforerow name="rep.everyrow.beforerow"
+ 
+          #end add-point:rep.everyrow.beforerow
+            
+          PRINTX sr1.*
+ 
+          #add-point:rep.everyrow.afterrow name="rep.everyrow.afterrow"
+          START REPORT asfr800_g01_subrep14
+             LET l_count = 0
+             LET l_subrep14_show = 'N'
+             SELECT COUNT (*) INTO l_count
+               FROM sfkh_t
+              WHERE sfkhdocno = sr1.sfkadocno
+                AND sfkhent = sr1.sfkaent
+                AND sfkhsite = sr1.sfkasite
+                AND sfkh001 = sr1.sfka900
+                AND sfkh002 IN ('sfbaseq','sfba002','sfba003','sfba006','sfba008','sfba009','sfba013','sfba014','sfba021','sfba028')
+                AND sfkh003 != '13'
+                AND sfkhseq = sr1.sfkgseq
+                AND sfkhseq1 = sr1.sfkgseq1
+             IF l_count != 0 THEN
+                LET l_subrep14_show = 'Y'
+                LET g_sql = "SELECT sfkgseq,sfkg002,sfkg003,sfkg006,sfkg008,sfkg009,sfkg013,sfkg014,sfkg021,sfkg028 ",
+                            "  FROM sfkg_t ",
+                            " WHERE sfkgdocno = '",sr1.sfkadocno CLIPPED,"'",
+                            "   AND sfkgent   = '",sr1.sfkaent   CLIPPED,"'",
+                            "   AND sfkgsite  = '",sr1.sfkasite  CLIPPED,"'",
+                            "   AND sfkg900   = '",sr1.sfka900   CLIPPED,"'",
+                            "   AND sfkgseq   = '",sr1.sfkgseq   CLIPPED,"'",
+                            "   AND sfkgseq1  = '",sr1.sfkgseq1   CLIPPED,"'"                                    
+                DECLARE asfr800_g01_repcur14 CURSOR FROM g_sql
+                FOREACH asfr800_g01_repcur14 INTO sr12.*
+                    #是否變更單身各欄位內容
+                    CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr1.sfkgseq,sr1.sfkgseq1,sr1.sfka900,'sfbaseq',sr12.sfkgseq) RETURNING sr12.sfkgseq
+                    CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr1.sfkgseq,sr1.sfkgseq1,sr1.sfka900,'sfba002',sr12.sfkg002) RETURNING sr12.sfkg002
+                    CALL s_desc_get_acc_desc('215',sr12.sfkg002) RETURNING sr12.l_sfkg002_desc
+                    CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr1.sfkgseq,sr1.sfkgseq1,sr1.sfka900,'sfba003',sr12.sfkg003) RETURNING sr12.sfkg003
+                    CALL s_desc_get_acc_desc('221',sr12.sfkg003) RETURNING sr12.l_sfkg003_desc
+                    CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr1.sfkgseq,sr1.sfkgseq1,sr1.sfka900,'sfba006',sr12.sfkg006) RETURNING sr12.sfkg006
+                    CALL s_desc_get_item_desc(sr12.sfkg006) RETURNING sr12.l_imaal003,sr12.l_imaal004
+                    CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr1.sfkgseq,sr1.sfkgseq1,sr1.sfka900,'sfba008',sr12.sfkg008) RETURNING sr12.sfkg008
+                    CALL s_desc_gzcbl004_desc('1101',sr12.sfkg008) RETURNING sr12.l_sfkg008_desc
+                    CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr1.sfkgseq,sr1.sfkgseq1,sr1.sfka900,'sfba009',sr12.sfkg009) RETURNING sr12.sfkg009
+                    CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr1.sfkgseq,sr1.sfkgseq1,sr1.sfka900,'sfba013',sr12.sfkg013) RETURNING sr12.sfkg013
+                    CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr1.sfkgseq,sr1.sfkgseq1,sr1.sfka900,'sfba014',sr12.sfkg014) RETURNING sr12.sfkg014
+                    CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr1.sfkgseq,sr1.sfkgseq1,sr1.sfka900,'sfba021',sr12.sfkg021) RETURNING sr12.sfkg021
+                    CALL s_feature_description(sr12.sfkg006,sr12.sfkg021) RETURNING l_success,sr12.l_sfkg021_desc
+                    CALL asfr800_g01_change(sr1.sfkaent,sr1.sfkasite,sr1.sfkadocno,sr1.sfkgseq,sr1.sfkgseq1,sr1.sfka900,'sfba028',sr12.sfkg028) RETURNING sr12.sfkg028
+                    OUTPUT TO REPORT asfr800_g01_subrep14(sr12.*)
+                END FOREACH 
+             END IF
+          FINISH REPORT asfr800_g01_subrep14
+          #end add-point:rep.everyrow.afterrow
+ 
+          #單身後備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub03.before name="rep.sub03.before"
+           
+           #end add-point:rep.sub03.before
+ 
+           #add-point:rep.sub03.sql name="rep.sub03.sql"
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='1' AND ooffent = '", 
+                sr1.sfkaent CLIPPED ,"'", " AND  ooff002 = '", sr1.sfkadocno CLIPPED ,"'", " AND  ooff003 = '", sr1.l_order CLIPPED ,"'", " AND  ooff004 = '", 
+                sr1.sfkgseq CLIPPED ,"'"
+#           #end add-point:rep.sub03.sql
+# 
+#           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='1' AND ooff003 = '", 
+#                sr1.sfkaent CLIPPED ,"'"
+# 
+#           #add-point:rep.sub03.afsql name="rep.sub03.afsql"
+           
+           #end add-point:rep.sub03.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep03_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE asfr800_g01_repcur03_cnt_pre FROM l_sub_sql
+           EXECUTE asfr800_g01_repcur03_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep03_show ="Y"
+           END IF
+           PRINTX l_subrep03_show
+           START REPORT asfr800_g01_subrep03
+           DECLARE asfr800_g01_repcur03 CURSOR FROM g_sql
+           FOREACH asfr800_g01_repcur03 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "asfr800_g01_repcur03:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub03.foreach name="rep.sub03.foreach"
+              
+              #end add-point:rep.sub03.foreach
+              OUTPUT TO REPORT asfr800_g01_subrep03(sr2.*)
+           END FOREACH
+           FINISH REPORT asfr800_g01_subrep03
+           #add-point:rep.sub03.after name="rep.sub03.after"
+           
+           #end add-point:rep.sub03.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.after name="rep.everyrow.after"
+          
+          #end add-point:rep.everyrow.after        
+ 
+          #讀取afterGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.l_order
+ 
+           #add-point:rep.a_group.l_order.before name="rep.a_group.l_order.before"
+           
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub04.before name="rep.sub04.before"
+           
+           #end add-point:rep.sub04.before
+ 
+           #add-point:rep.sub04.sql name="rep.sub04.sql"
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='1' AND ooffent = '", 
+               sr1.sfkaent CLIPPED ,"'", " AND  ooff002 = '", sr1.sfkadocno CLIPPED ,"'", " AND  ooff003 = '", sr1.l_order CLIPPED ,"'"
+#           #end add-point:rep.sub04.sql
+# 
+#           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='1' AND ooff004=0 AND ooffent = '", 
+#                sr1.sfkaent CLIPPED ,"'", " AND  ooff003 = '", sr1.l_order CLIPPED ,"'"
+# 
+#           #add-point:rep.sub04.afsql name="rep.sub04.afsql"
+           
+           #end add-point:rep.sub04.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep04_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE asfr800_g01_repcur04_cnt_pre FROM l_sub_sql
+           EXECUTE asfr800_g01_repcur04_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep04_show ="Y"
+           END IF
+           PRINTX l_subrep04_show
+           START REPORT asfr800_g01_subrep04
+           DECLARE asfr800_g01_repcur04 CURSOR FROM g_sql
+           FOREACH asfr800_g01_repcur04 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "asfr800_g01_repcur04:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub04.foreach name="rep.sub04.foreach"
+              
+              #end add-point:rep.sub04.foreach
+              OUTPUT TO REPORT asfr800_g01_subrep04(sr2.*)
+           END FOREACH
+           FINISH REPORT asfr800_g01_subrep04
+           #add-point:rep.sub04.after name="rep.sub04.after"
+           
+           #end add-point:rep.sub04.after
+ 
+ 
+ 
+           #add-point:rep.a_group.l_order.after name="rep.a_group.l_order.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.sfkgseq
+ 
+           #add-point:rep.a_group.sfkgseq.before name="rep.a_group.sfkgseq.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.a_group.sfkgseq.after name="rep.a_group.sfkgseq.after"
+           
+           #end add-point:
+ 
+ 
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.sfkgseq1
+ 
+           #add-point:rep.a_group.sfkgseq1.before name="rep.a_group.sfkgseq1.before"
+           
+           #end add-point:
+ 
+ 
+           #add-point:rep.a_group.sfkgseq1.after name="rep.a_group.sfkgseq1.after"
+           
+           #end add-point:
+ 
+ 
+ 
+       ON LAST ROW
+            #add-point:rep.lastrow.before name="rep.lastrow.before"  
+                    
+            #end add-point :rep.lastrow.before
+ 
+            #add-point:rep.lastrow.after name="rep.lastrow.after"
+            
+            #end add-point :rep.lastrow.after
+END REPORT
+ 
+{</section>}
+ 
+{<section id="asfr800_g01.subrep_str" readonly="Y" >}
+#讀取子報表樣板
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT asfr800_g01_subrep01(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub01.define_customerization" 
+
+#end add-point
+#add-point:sub01.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub01.define" 
+
+#end add-point:sub01.define
+ 
+    #add-point:sub01.order.before name="sub01.order.before" 
+    
+    #end add-point:sub01.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub01.everyrow.before name="sub01.everyrow.before" 
+                          
+            #end add-point:sub01.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub01.everyrow.after name="sub01.everyrow.after" 
+            
+            #end add-point:sub01.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT asfr800_g01_subrep02(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub02.define_customerization" 
+
+#end add-point
+#add-point:sub02.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub02.define" 
+
+#end add-point:sub02.define
+ 
+    #add-point:sub02.order.before name="sub02.order.before" 
+    
+    #end add-point:sub02.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub02.everyrow.before name="sub02.everyrow.before" 
+                          
+            #end add-point:sub02.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub02.everyrow.after name="sub02.everyrow.after" 
+            
+            #end add-point:sub02.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT asfr800_g01_subrep03(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub03.define_customerization" 
+
+#end add-point
+#add-point:sub03.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub03.define" 
+
+#end add-point:sub03.define
+ 
+    #add-point:sub03.order.before name="sub03.order.before" 
+    
+    #end add-point:sub03.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub03.everyrow.before name="sub03.everyrow.before" 
+                          
+            #end add-point:sub03.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub03.everyrow.after name="sub03.everyrow.after" 
+            
+            #end add-point:sub03.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT asfr800_g01_subrep04(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub04.define_customerization" 
+
+#end add-point
+#add-point:sub04.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub04.define" 
+
+#end add-point:sub04.define
+ 
+    #add-point:sub04.order.before name="sub04.order.before" 
+    
+    #end add-point:sub04.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub04.everyrow.before name="sub04.everyrow.before" 
+                          
+            #end add-point:sub04.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub04.everyrow.after name="sub04.everyrow.after" 
+            
+            #end add-point:sub04.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="asfr800_g01.other_function" readonly="Y" >}
+
+PRIVATE FUNCTION asfr800_g01_initialize(p_arg,p_exp)
+DEFINE p_arg   STRING
+DEFINE p_exp   STRING
+DEFINE r_exp   STRING
+IF cl_null(p_arg) THEN
+   INITIALIZE r_exp TO NULL
+ELSE
+   LET r_exp = p_exp
+END IF
+RETURN r_exp
+END FUNCTION
+################################################################################
+# Descriptions...: 欄位編號轉欄位名稱
+# Usage..........: CALL asfr800_g01_sfkh002_ref(p_sfkh002)
+#                  RETURNING r_sfkh002_desc
+# Input parameter: p_sfkh002        欄位編號
+# Return code....: r_sfkh002_desc   欄位名稱
+# Date & Author..: 2014/12/05 By shiun
+################################################################################
+PRIVATE FUNCTION asfr800_g01_sfkh002_ref(p_sfkh002)
+DEFINE p_sfkh002         LIKE sfkh_t.sfkh002
+DEFINE r_sfkh002_desc    LIKE dzeb_t.dzeb003
+
+   SELECT dzebl003 INTO r_sfkh002_desc
+     FROM dzebl_t 
+    WHERE dzebl001 = p_sfkh002    #變更前欄名稱 
+      AND dzebl002 = g_dlang
+        
+   RETURN r_sfkh002_desc
+END FUNCTION
+
+################################################################################
+# Descriptions...: 更改單身欄位內容
+# Usage..........: CALL asfr800_g01_change(p_sfkaent,p_sfkasite,p_sfkadocno,p_sfkgseq,p_sfkgseq1,p_sfkh001,p_sfkh002,p_sfkh004)
+#                  RETURNING r_sfkh004
+# Input parameter: p_sfkhent    企業編號
+#                  p_sfkhsite   據點
+#                  p_sfkhdocno  單號
+#                  p_sfkhseq    項次
+#                  p_sfkhseq1   項序 
+#                  p_sfkh001    變更序
+#                  p_sfkh002    變更欄位
+# Return code....: r_sfkh004    更換內容
+# Date & Author..: 2014/12/05 By shiun
+################################################################################
+PRIVATE FUNCTION asfr800_g01_change(p_sfkaent,p_sfkasite,p_sfkadocno,p_sfkgseq,p_sfkgseq1,p_sfkh001,p_sfkh002,p_sfkh004)
+DEFINE p_sfkaent     LIKE sfka_t.sfkaent
+DEFINE p_sfkasite    LIKE sfka_t.sfkasite 
+DEFINE p_sfkadocno   LIKE sfka_t.sfkadocno
+DEFINE p_sfkgseq     LIKE sfkg_t.sfkgseq  
+DEFINE p_sfkgseq1    LIKE sfkg_t.sfkgseq1 
+DEFINE p_sfkh001     LIKE sfkh_t.sfkh001  
+DEFINE p_sfkh002     LIKE sfkh_t.sfkh002  
+DEFINE p_sfkh004     LIKE sfkh_t.sfkh004  
+DEFINE r_sfkh004     LIKE sfkh_t.sfkh004
+DEFINE l_count       LIKE type_t.num5
+
+   SELECT COUNT (*) INTO l_count
+     FROM sfkh_t
+    WHERE sfkhdocno = p_sfkadocno
+      AND sfkhent = p_sfkaent
+      AND sfkhsite = p_sfkasite
+      AND sfkh001 = p_sfkh001
+      AND sfkh002 = p_sfkh002
+      AND sfkh003 != '13'
+      AND sfkhseq = p_sfkgseq
+      AND sfkhseq1 = p_sfkgseq1
+   IF l_count != 0 THEN
+      SELECT sfkh004 INTO r_sfkh004
+        FROM sfkh_t
+       WHERE sfkhdocno = p_sfkadocno
+         AND sfkhent = p_sfkaent
+         AND sfkhsite = p_sfkasite
+         AND sfkh001 = p_sfkh001
+         AND sfkh002 = p_sfkh002
+         AND sfkh003 != '13'
+         AND sfkhseq = p_sfkgseq
+         AND sfkhseq1 = p_sfkgseq1
+   ELSE
+      LET r_sfkh004 = p_sfkh004
+   END IF
+   RETURN r_sfkh004
+END FUNCTION
+
+ 
+{</section>}
+ 
+{<section id="asfr800_g01.other_report" readonly="Y" >}
+
+PRIVATE REPORT asfr800_g01_subrep05(sr3)
+     DEFINE sr3 sr3_r
+     ORDER EXTERNAL BY sr3.sfkbdocno     
+     FORMAT
+        ON EVERY ROW       
+        PRINTX g_grNumFmt.*  
+        PRINTX sr3.*
+END REPORT
+
+PRIVATE REPORT asfr800_g01_subrep06(sr4)
+     DEFINE sr4 sr4_r
+     ORDER EXTERNAL BY sr4.sfkcdocno     
+     FORMAT
+        ON EVERY ROW       
+        PRINTX g_grNumFmt.*  
+        PRINTX sr4.*
+END REPORT
+
+PRIVATE REPORT asfr800_g01_subrep07(sr5)
+     DEFINE sr5 sr5_r
+     ORDER EXTERNAL BY sr5.sfkcdocno     
+     FORMAT
+        ON EVERY ROW       
+        PRINTX g_grNumFmt.*
+        PRINTX sr5.*
+END REPORT
+
+PRIVATE REPORT asfr800_g01_subrep12(sr11)
+     DEFINE sr11 sr5_r
+     ORDER EXTERNAL BY sr11.sfkcdocno     
+     FORMAT
+        ON EVERY ROW       
+        PRINTX g_grNumFmt.*
+        PRINTX sr11.*
+END REPORT
+
+PRIVATE REPORT asfr800_g01_subrep09(sr7)
+DEFINE sr7 sr7_r    
+    FORMAT
+           
+        ON EVERY ROW
+            PRINTX g_grNumFmt.*
+            PRINTX sr7.*
+END REPORT
+
+PRIVATE REPORT asfr800_g01_subrep10(sr9)
+     DEFINE sr9 sr3_r
+     ORDER EXTERNAL BY sr9.sfkbdocno     
+     FORMAT
+        ON EVERY ROW       
+        PRINTX g_grNumFmt.*  
+        PRINTX sr9.*
+END REPORT
+
+PRIVATE REPORT asfr800_g01_subrep11(sr10)
+     DEFINE sr10 sr4_r
+     ORDER EXTERNAL BY sr10.sfkcdocno     
+     FORMAT
+        ON EVERY ROW       
+        PRINTX g_grNumFmt.*  
+        PRINTX sr10.*
+END REPORT
+
+PRIVATE REPORT asfr800_g01_subrep14(sr12)
+DEFINE sr12 sr12_r    
+    FORMAT
+           
+        ON EVERY ROW
+            PRINTX g_grNumFmt.*
+            PRINTX sr12.*
+END REPORT
+#160727-00025#8 add
+################################################################################
+PRIVATE REPORT asfr800_g01_subrep15(sr14)
+DEFINE sr14 sr13_r    
+    FORMAT
+           
+        ON EVERY ROW
+            PRINTX g_grNumFmt.*
+            PRINTX sr14.*
+END REPORT
+#160727-00025#8 add
+################################################################################
+PRIVATE REPORT asfr800_g01_subrep16(sr7)
+DEFINE sr7 sr7_r    
+    FORMAT
+           
+        ON EVERY ROW
+            PRINTX g_grNumFmt.*
+            PRINTX sr7.*
+END REPORT
+
+ 
+{</section>}
+ 

@@ -1,0 +1,125 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisi060" module="ais" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="02295" crtdt="2013-12-30 10:35:01" modid="04152" moddt="2016-03-03 17:13:00" sdver="0005" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="稅別公式設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="isan001,isan001_desc(chr80),isan002,isanl004"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isan003,isan004,isan005,isan006,isan007,isan008,isan009,isanstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="isan003,isanownid,isanownid_desc(chr500),isanowndp,isanowndp_desc(chr500),isancrtid,isancrtid_desc(chr500),isancrtdp,isancrtdp_desc(chr500),isancrtdt,isanmodid,isanmodid_desc(chr500),isanmoddt"/>
+      <var id="bs_field" value="isan001,isan001_desc(chr80),isan002" pk="isan001,isan002" order=""/>
+      <bs_reference field="isan001_desc" ref_field="isan001" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;2&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="ais" filename="aisi060" method="dialog">
+    <section id="input">
+      <input id="head" field="isan001,isan002,isanl004"/>
+      <input id="body" page="1" field="isan003,isan004,isan005,isan006,isan007,isan008,isan009,isanstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="isan001,isan002,isanl004"/>
+      <construct id="body" page="1" field="isan003,isan004,isan005,isan006,isan007,isan008,isan009,isanstus"/>
+      <construct id="body" page="2" field="isanownid,isanowndp,isancrtid,isancrtdp,isancrtdt,isanmodid,isanmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="isan001,isan002"/>
+      <set id="head" type="no_entry" field="isan001,isan002"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="isan001">
+        <after>
+          <check chkid="v_ooal002_2" id="isExist"/>
+          <reference field="isan001_desc" ref_field="isan001" map_field="isan001" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;2&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooal002_11" state="i"/>
+        <controlp form="q_ooal002_11" state="c"/>
+      </column>
+      <column id="isan001_desc"/>
+      <column id="isan002">
+        <controlp form="q_isan002" state="c"/>
+      </column>
+      <column id="isanl004"/>
+    </init>
+    <init id="body" page="1">
+      <column id="isan003">
+        <after>
+          <check id="range" bt="1" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="isan004" type="S" default="1" def_scc="9723"/>
+      <column id="isan005" type="S" default="2" def_scc="9724"/>
+      <column id="isan006"/>
+      <column id="isan007"/>
+      <column id="isan008"/>
+      <column id="isan009"/>
+      <column id="isanstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="isanownid">
+        <after>
+          <reference field="isanownid_desc" ref_field="isan_t.isanownid" map_field="isanownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isanownid_desc"/>
+      <column id="isanowndp">
+        <after>
+          <reference field="isanowndp_desc" ref_field="isan_t.isanowndp" map_field="isanowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="isanowndp_desc"/>
+      <column id="isancrtid">
+        <after>
+          <reference field="isancrtid_desc" ref_field="isan_t.isancrtid" map_field="isancrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isancrtid_desc"/>
+      <column id="isancrtdp">
+        <after>
+          <reference field="isancrtdp_desc" ref_field="isan_t.isancrtdp" map_field="isancrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="isancrtdp_desc"/>
+      <column id="isancrtdt"/>
+      <column id="isanmodid">
+        <after>
+          <reference field="isanmodid_desc" ref_field="isan_t.isanmodid" map_field="isanmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isanmodid_desc"/>
+      <column id="isanmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="isan_t" pk="isan001,isan002">
+      <sql id="forupd_sql" type="sql" query="SELECT isan001,&apos;&apos;,isan002,&apos;&apos; FROM isan_t WHERE isanent= ? AND isan001=? AND isan002=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT isan001,&apos;&apos;,isan002,&apos;&apos; FROM isan_t" order="isan001,isan002"/>
+      <sql id="append" type="lang" target="isanl_t.isanl004" table="isanl_t" fk="isan001,isan002" pk="isanl001,isanl002,isanl003" field="isanl004"/>
+    </head>
+    <body id="isan_t" page="1,2" linked="" pk="isan003" fk="isan001,isan002">
+      <sql id="forupd_sql_detail" query="SELECT isan003,isan004,isan005,isan006,isan007,isan008,isan009,isanstus,&apos;&apos;,isanownid,&apos;&apos;,isanowndp,&apos;&apos;,isancrtid,&apos;&apos;,isancrtdp,&apos;&apos;,isancrtdt,isanmodid,&apos;&apos;,isanmoddt FROM isan_t WHERE isanent=? AND isan001=? AND isan002=? AND isan003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT isan003,isan004,isan005,isan006,isan007,isan008,isan009,isanstus,&apos;&apos;,isanownid,&apos;&apos;,isanowndp,&apos;&apos;,isancrtid,&apos;&apos;,isancrtdp,&apos;&apos;,isancrtdt,isanmodid,&apos;&apos;,isanmoddt FROM isan_t WHERE isanent= ? AND isan001=? AND isan002=?"/>
+    </body>
+  </dataset>
+</assembly>
+

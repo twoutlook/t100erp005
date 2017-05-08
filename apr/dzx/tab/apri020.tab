@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apri020" module="apr" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="03247" crtdt="2014-02-27 17:21:31" modid="06189" moddt="2015-05-25 12:50:37" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="促銷策略維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="praastus,praa000,praa001,praa002,praaunit"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apr" filename="apri020" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="praastus,praa000,praa001,praa002,praaunit" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="praastus,praa000,praa001,praa002,praaunit"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="praastus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="praa000"/>
+      <column id="praa001" def_scc="6027"/>
+      <column id="praa002">
+        <after>
+          <check id="range" bt="0.000" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="praaunit"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="praa_t" page="1" linked="" pk="praa001">
+      <sql id="forupd_sql_detail" query="SELECT praastus,praa000,praa001,praa002,praaunit FROM praa_t WHERE praaent=? AND praa001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT praastus,praa000,praa001,praa002,praaunit FROM praa_t WHERE praaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

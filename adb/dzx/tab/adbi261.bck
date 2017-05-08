@@ -1,0 +1,192 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adbi261" module="adb" jobmode="N" type="t02" industry="std" fix_arg="0" crtid="06815" crtdt="2015-11-20 19:34:36" modid="06815" moddt="2015-11-22 18:11:50" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="5" tabver="10001" description="物流組織倉庫出貨範圍設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="inaastus,inaasite,inaasite_desc(chr500),inaa001,inaa001_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="dbbgstus,dbbg002,dbbg003,dbbg003_desc(chr500)"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="dbbg002,dbbg003,dbbgownid,dbbgownid_desc(chr500),dbbgowndp,dbbgowndp_desc(chr500),dbbgcrtid,dbbgcrtid_desc(chr500),dbbgcrtdp,dbbgcrtdp_desc(chr500),dbbgcrtdt,dbbgmodid,dbbgmodid_desc(chr500),dbbgmoddt"/>
+      <var id="body" page="4" record="s_detail4" page_id="4" value="dbbhstus,dbbh002,dbbh002_desc(chr500)"/>
+      <var id="body" page="5" record="s_detail5" page_id="5" value="dbbh002,dbbhownid,dbbhownid_desc(chr500),dbbhowndp,dbbhowndp_desc(chr500),dbbhcrtid,dbbhcrtid_desc(chr500),dbbhcrtdp,dbbhcrtdp_desc(chr500),dbbhcrtdt,dbbhmodid,dbbhmodid_desc(chr500),dbbhmoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="2">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="3">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="4">
+      <action id="update_item"/>
+    </section>
+    <section id="detail_input" page="5">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="adb" filename="adbi261" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="inaastus,inaasite,inaa001,inaa001_desc" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="dbbgstus,dbbg002,dbbg003,dbbg003_desc" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="4" field="dbbhstus,dbbh002" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="inaastus,inaasite,inaa001,inaa001_desc"/>
+      <construct id="body" page="2" field="dbbgstus,dbbg002,dbbg003,dbbg003_desc"/>
+      <construct id="body" page="3" field="dbbgownid,dbbgowndp,dbbgcrtid,dbbgcrtdp,dbbgcrtdt,dbbgmodid,dbbgmoddt"/>
+      <construct id="body" page="4" field="dbbhstus,dbbh002"/>
+      <construct id="body" page="5" field="dbbhownid,dbbhowndp,dbbhcrtid,dbbhcrtdp,dbbhcrtdt,dbbhmodid,dbbhmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="inaastus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="inaasite">
+        <after>
+          <reference field="inaasite_desc" ref_field="inaa_t.inaasite" map_field="inaasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="inaasite_desc"/>
+      <column id="inaa001">
+        <controlp form="q_inaa001_13" state="c"/>
+      </column>
+      <column id="inaa001_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="dbbgstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="dbbg002" type="S" default="1"/>
+      <column id="dbbg003">
+        <after/>
+      </column>
+      <column id="dbbg003_desc"/>
+    </init>
+    <init id="body" page="3">
+      <column id="dbbgownid">
+        <after>
+          <reference field="dbbgownid_desc" ref_field="dbbg_t.dbbgownid" map_field="dbbgownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="dbbgownid_desc"/>
+      <column id="dbbgowndp">
+        <after>
+          <reference field="dbbgowndp_desc" ref_field="dbbg_t.dbbgowndp" map_field="dbbgowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="dbbgowndp_desc"/>
+      <column id="dbbgcrtid">
+        <after>
+          <reference field="dbbgcrtid_desc" ref_field="dbbg_t.dbbgcrtid" map_field="dbbgcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="dbbgcrtid_desc"/>
+      <column id="dbbgcrtdp">
+        <after>
+          <reference field="dbbgcrtdp_desc" ref_field="dbbg_t.dbbgcrtdp" map_field="dbbgcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="dbbgcrtdp_desc"/>
+      <column id="dbbgcrtdt"/>
+      <column id="dbbgmodid">
+        <after>
+          <reference field="dbbgmodid_desc" ref_field="dbbg_t.dbbgmodid" map_field="dbbgmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="dbbgmodid_desc"/>
+      <column id="dbbgmoddt"/>
+    </init>
+    <init id="body" page="4">
+      <column id="dbbhstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="dbbh002">
+        <after>
+          <reference field="dbbh002_desc" ref_field="dbbh_t.dbbh002" map_field="dbbh002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="dbbh002_desc"/>
+    </init>
+    <init id="body" page="5">
+      <column id="dbbhownid">
+        <after>
+          <reference field="dbbhownid_desc" ref_field="dbbh_t.dbbhownid" map_field="dbbhownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="dbbhownid_desc"/>
+      <column id="dbbhowndp">
+        <after>
+          <reference field="dbbhowndp_desc" ref_field="dbbh_t.dbbhowndp" map_field="dbbhowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="dbbhowndp_desc"/>
+      <column id="dbbhcrtid">
+        <after>
+          <reference field="dbbhcrtid_desc" ref_field="dbbh_t.dbbhcrtid" map_field="dbbhcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="dbbhcrtid_desc"/>
+      <column id="dbbhcrtdp">
+        <after>
+          <reference field="dbbhcrtdp_desc" ref_field="dbbh_t.dbbhcrtdp" map_field="dbbhcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="dbbhcrtdp_desc"/>
+      <column id="dbbhcrtdt"/>
+      <column id="dbbhmodid">
+        <after>
+          <reference field="dbbhmodid_desc" ref_field="dbbh_t.dbbhmodid" map_field="dbbhmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="dbbhmodid_desc"/>
+      <column id="dbbhmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="inaa_t" page="1" linked="" pk="inaasite,inaa001">
+      <sql id="forupd_sql_detail" query="SELECT inaastus,inaasite,&apos;&apos;,inaa001,&apos;&apos; FROM inaa_t WHERE inaaent=? AND inaa001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT inaastus,inaasite,&apos;&apos;,inaa001,&apos;&apos; FROM inaa_t WHERE inaaent= ? AND 1=1 "/>
+      <sql id="detail_append" type="lang" target="inaa001_desc" table="inayl_t" fk="inaa001" pk="inayl001,inayl002" field="inayl003"/>
+    </body>
+    <body id="dbbg_t" page="2,3" linked="" pk="dbbg002,dbbg003" fk="dbbgsite,dbbg001" detail="Y">
+      <sql id="forupd_sql_detail" query="SELECT dbbgstus,dbbg002,dbbg003,&apos;&apos;,&apos;&apos;,&apos;&apos;,dbbgownid,&apos;&apos;,dbbgowndp,&apos;&apos;,dbbgcrtid,&apos;&apos;,dbbgcrtdp,&apos;&apos;,dbbgcrtdt,dbbgmodid,&apos;&apos;,dbbgmoddt FROM dbbg_t WHERE dbbgent=? AND dbbgsite=? AND dbbg001=? AND dbbg002=? AND dbbg003=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT dbbgstus,dbbg002,dbbg003,&apos;&apos;,&apos;&apos;,&apos;&apos;,dbbgownid,&apos;&apos;,dbbgowndp,&apos;&apos;,dbbgcrtid,&apos;&apos;,dbbgcrtdp,&apos;&apos;,dbbgcrtdt,dbbgmodid,&apos;&apos;,dbbgmoddt FROM dbbg_t WHERE dbbgent=? AND dbbgsite=? AND dbbg001=?"/>
+    </body>
+    <body id="dbbh_t" page="4,5" linked="" pk="dbbh002" fk="dbbhsite,dbbh001" detail="Y">
+      <sql id="forupd_sql_detail" query="SELECT dbbhstus,dbbh002,&apos;&apos;,&apos;&apos;,dbbhownid,&apos;&apos;,dbbhowndp,&apos;&apos;,dbbhcrtid,&apos;&apos;,dbbhcrtdp,&apos;&apos;,dbbhcrtdt,dbbhmodid,&apos;&apos;,dbbhmoddt FROM dbbh_t WHERE dbbhent=? AND dbbhsite=? AND dbbh001=? AND dbbh002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT dbbhstus,dbbh002,&apos;&apos;,&apos;&apos;,dbbhownid,&apos;&apos;,dbbhowndp,&apos;&apos;,dbbhcrtid,&apos;&apos;,dbbhcrtdp,&apos;&apos;,dbbhcrtdt,dbbhmodid,&apos;&apos;,dbbhmoddt FROM dbbh_t WHERE dbbhent=? AND dbbhsite=? AND dbbh001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

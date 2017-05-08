@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmt595_01" module="afm" jobmode="N" type="c01b" industry="std" fix_arg="0" crtid="03080" crtdt="2015-05-18 17:59:06" modid="03080" moddt="2015-05-18 19:03:58" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="產生帳務資料">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="fmnesite,fmne001,fmnedocno,fmnedocdt,fmne002,fmne003"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="exporttoexcel"/>
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmt595_01" method="dialog">
+    <section id="input">
+      <input id="head" field="fmnesite,fmne001,fmnedocno,fmnedocdt,fmne002,fmne003"/>
+    </section>
+    <section id="construct"/>
+    <init id="field_set"/>
+    <init id="head">
+      <column id="fmnesite"/>
+      <column id="fmne001"/>
+      <column id="fmnedocno"/>
+      <column id="fmnedocdt"/>
+      <column id="fmne002" type="S" default="0"/>
+      <column id="fmne003" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="fmne_t" pk="fmnedocno">
+      <sql id="forupd_sql" type="sql" query="SELECT fmnesite,fmne001,fmnedocno,fmnedocdt,fmne002,fmne003 FROM fmne_t WHERE fmneent= ? AND fmnedocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="fmnedocno"/>
+    </head>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="astp740" std_prog="astp740" erpver="1.0" ver="1" module="AST" type="M" booking="Y" designer_ver="1.0" class="p" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 根据QBE条件自动产生结算单资料
+作業類型：批处理作業
+
+------------批處理邏輯---------------
+===============================================================================================
+功能名稱：内部结算单批处理产生作业
+功能目的：内部结算单批处理产生作业
+關鍵詞：结算中心、内部结算，结算会计期，结算单
+同義詞：结算中心、内部结算，结算会计期，结算单
+傳入參數：1.结算中心，2.结算对象1，3.结算对象2，3.结算会计期
+回傳值：1.檢核狀態(r_success) 2.錯誤訊息
+===============================================================================================
+“建议公用模式”即批次处理 与 结算单维护产生单身逻辑  可以使用同一个元件s_ins_stdh
+0.检查：
+  默认单别未设定，错误提示【XXX作业未设定默认单别，请到arti200中设定默认单别!】,并打开程序arti200方便维护
+1.条件筛选QBE
+  1.1抓取符合结算中心、结算对象1、结算对象2 匹配到资料（asti702结算配置档,即结算中心与结算对象范围)
+  1.2 如果QBE空白则，按照结算中心对应结算会计期=当前结算会计期(asti206)
+  1.3会计期间确定会计期的开始日期~截止日期
+  1.4抓取符合条件的inaj_t的资料 
+     其中条件： (结算对象1 =交易所属法人  AND 结算对象2=内部交易对象法人)  OR (结算对象2 =交易所属法人  AND 结算对象1=内部交易对象法人) 
+                AND 单据日期 IN  会计期期间日期范围
+2.产生结算资料(asti206)：
+  2.1若同一結算會計期+对象1+对象2 存在未审核的结算单，则不可产生结算单，并记录下来
+  2.2按照结算中心+对象1+对象2产生结算单    
+  2.3产生单头资料
+
+stdgent 企业编号  = 企业
+stdgunit 应用组织  = g_site
+stdgsite 所属组织  = 结算中心
+stdgdocno 单据编号  = 自动编号
+stdgdocdt 单据日期  = 当前日期
+stdg001 结算对象1 = 结算对象1
+stdg002 结算对象2 = 结算对象2
+stdg003 结算会计期= 结算会计期 
+stdg004 起始日期  = 起始日期
+stdg005 截止日期  = 截止日期
+stdg006 结算人员  = g_user
+stdg007 结算部门  = 对应g_user的部门
+stdgstus 状态码    = N
+
+  2.3产生单身资料
+stdhent 企业编号           = 同上
+stdhunit 制定组织           = 同上
+stdhsite 所属组织           = 同上
+stdhdocno 单据编号           = 同上
+stdhseq 单据项次           = 自动+1   
+stdh001 业务类型           = inaj.业务类型 
+stdh002 内部交易类型       = inaj.内部交易类型   
+stdh003 来源单据           = inaj.单据编号
+stdh004 来源项次           = inaj.项次  
+stdh005 来源日期           = inaj.日期
+stdh006 产品编号           = inaj.产品
+stdh007 费用编号           = ''  
+stdh008 币别               = inaj.币别
+stdh009 税别               = inaj.税别
+stdh010 方向               = 内部参数配置
+stdh011 未税金额           = inaj.未税金额
+stdh012 含税金额           = inaj.含税金额
+stdh013 未结算金额         = 含税金额
+stdh014 已结算金额         = 0
+stdh015 本次结算金额       = 含税金额
+stdh016 存货组织           =inaj.site
+stdh017 存货法人           =inaj.交易所属法人
+stdh018 仓库编码           =参数配置
+stdh019 交易对象           =inaj.交易对象
+stdh020 交易对象组织       =inaj.内部交易对象
+stdh021 交易对象法人       =inaj.内部交易法人  
+stdh022 结算会计期         =QBE  
+stdh023 财务会计年度       =结算会计期对应到年度 
+stdh024 财务会计期别       =结算会计期对应到期别
+stdh025 账务组织           =存货组织
+stdh026 账务法人           =存货法人
+stdh027 账务类型           =应付：1.采购:入库，仓退，2.调拨:拨入，退仓入库
+                                应收：1.销售：出货，销退，2.调拨:拨出，退出出库
+stdh028 主帐套已立账金额   =0
+stdh029 帐套二已立账金额   =0
+stdh030 帐套三已立账金额   =0
+      
+3.回傳r_success,錯誤訊息]]>
+  </all>
+  <field cite_std="N" name="stau004" ver="1" src="s" column="stau004" table="stau_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0.000" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="stdd001" ver="1" src="s" column="stdd001" table="stdd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooef001_24" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[结算中心：
+   ●開窗處理：
+      依照aooi500設定選擇開窗範圍]]>
+  </field>
+  <field cite_std="N" name="stdd004" ver="1" src="s" column="stdd004" table="stdd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooef001_2" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[结算对象1：
+   ●開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：组织，说明
+     新增/修改過濾條件：有效到组织，并且是法人组织]]>
+  </field>
+  <field cite_std="N" name="stdd005" ver="1" src="s" column="stdd005" table="stdd_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooef001_2" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[结算对象2：
+   ●開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：组织，说明
+     新增/修改過濾條件：有效到组织，并且是法人组织]]>
+  </field>
+  <field cite_std="N" name="buttonedit_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="buttonedit_2" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="edit_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field/>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="buttonedit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="buttonedit_2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="edit_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="stau004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdd001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdd004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="stdd005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="group_qbe" text="QBE條件" lstr=""/>
+    <sfield name="lbl_stdd001" text="結算中心" lstr=""/>
+    <sfield name="lbl_stdd004" text="結算對象1" lstr=""/>
+    <sfield name="lbl_stdd005" text="結算對象2" lstr=""/>
+    <sfield name="lbl_stau004" text="結算會計期" lstr=""/>
+    <sfield name="group_input" text="其他條件" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

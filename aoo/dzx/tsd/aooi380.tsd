@@ -1,0 +1,955 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aooi380" std_prog="aooi380" erpver="1.0" ver="2" module="AOO" type="M" booking="Y" class="i" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items="delete,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="ooha_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+    <tbl name="oohb_t" main="N" head="N" pk="" fk_detail="" parent="ooha_t" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="oohc_t" main="N" head="N" pk="" fk_detail="" parent="ooha_t" fk_master="" src="s" status="">
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="oohd_t" main="N" head="N" pk="" fk_detail="" parent="ooha_t" fk_master="" src="s" status="">
+      <sr name="s_detail3" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="oohe_t" main="N" head="N" pk="" fk_detail="" parent="ooha_t" fk_master="" src="s" status="">
+      <sr name="s_detail4" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="oohf_t" main="N" head="N" pk="" fk_detail="" parent="ooha_t" fk_master="" src="s" status="">
+      <sr name="s_detail5" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="oohg_t" main="N" head="N" pk="" fk_detail="" parent="ooha_t" fk_master="" src="s" status="">
+      <sr name="s_detail6" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="oohh_t" main="N" head="N" pk="" fk_detail="" parent="ooha_t" fk_master="" src="s" status="">
+      <sr name="s_detail7" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="oohi_t" main="N" head="N" pk="" fk_detail="" parent="ooha_t" fk_master="" src="s" status="">
+      <sr name="s_detail8" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="oohj_t" main="N" head="N" pk="" fk_detail="" parent="ooha_t" fk_master="" src="s" status="">
+      <sr name="s_detail9" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="oohk_t" main="N" head="N" pk="" fk_detail="" parent="ooha_t" fk_master="" src="s" status="">
+      <sr name="s_detail10" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="oohl_t" main="N" head="N" pk="" fk_detail="" parent="ooha_t" fk_master="" src="s" status="">
+      <sr name="s_detail11" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：本作業是用來維護控制組的設定資料，用來過濾後續單據資料可使用那些資料。
+作業功能：新增/修改/複製/刪除/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：基本資料維護作業
+輸入模式：雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)：ooha_t(控制組主檔)
+                      oohal_t(控制組多語言檔)
+作業資料來源(Detail)：oohb_t(控制組部門檔)
+                      ooeal_t(組織基本資料多語言檔)
+                      oohc_t(控制組人員檔)
+                      oofa_t(聯絡對象檔)
+                      oohd_t(控制組客戶分類檔)
+                      oocql_t(應用分類碼多語言檔)
+                      oohe_t(控制組客戶檔)
+                      pmaal_t(客戶多語言檔)
+                      oohf_t(控制組廠商分類檔)
+                      oohg_t(控制組廠商檔)
+                      pmaal_t(廠商多語言檔)
+                      oohh_t(控制組產品分類檔)
+                      rtaxl_t(品類多語言檔)
+                      oohi_t(控制組產品檔)
+                      imaal_t(料件多語言檔)
+                      oohj_t(控制組經營渠道檔)
+                      oohk_t(控制組營運據點檔)
+                      oohl_t(控制組據點庫位檔)
+                      oohz_t(控制組參數檔)
+單身串查：
+    單身欄位：客戶編號  串查程式：axmm200(客戶主檔維護作業)
+    單身欄位：廠商編號  串查程式：apmm200(廠商主檔維護作業)
+    單身欄位：產品編號  串查程式：aimm200(料件主檔維護作業)
+其他說明：
+    當執行aooi380時，傳入參數=null
+    當執行aooi381時，傳入參數=1
+    當執行aooi382時，傳入參數=2
+    當執行aooi383時，傳入參數=3
+    當執行aooi384時，傳入參數=4
+    當執行aooi385時，傳入參數=5
+TOPMENU:
+相关资料：aooi100組織維護作業
+          aooi130員工維護作業
+          axmi010客戶分類維護作業
+          axmm200客戶維護作業
+          apmi010廠商分類維護作業
+          apmm200廠商維護作業
+          arti202品類維護作業
+          aimm200料件主檔維護作業
+          aooi120營運據點維護作業
+          aini001庫位資料維護作業
+
+當執行aooi380時，傳入參數=null：
+    顯示單身所有頁籤
+當執行aooi381時，傳入參數=1(研發控制組)：
+    只顯示部門與參數、產品範圍、據點範圍
+當執行aooi382時，傳入參數=2(銷售控制組)：
+    只顯示部門與參數、客戶範圍、產品範圍、渠道範圍、據點範圍
+當執行aooi383時，傳入參數=3(請購控制組)：
+    只顯示部門與參數、廠商範圍、產品範圍、渠道範圍、據點範圍
+當執行aooi384時，傳入參數=4(採購控制組)：
+    只顯示部門與參數、廠商範圍、產品範圍、渠道範圍、據點範圍
+當執行aooi385時，傳入參數=5(庫存控制組)：
+    只顯示部門與參數、產品範圍、據點範圍、據點庫位
+當執行aooi386時，傳入參數=6(生管控制組)：
+    只顯示部門與參數、廠商範圍、產品範圍、據點範圍、據點庫位]]>
+  </all>
+  <field cite_std="N" name="b_ooha001" ver="1" src="s" column="ooha001" table="ooha_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="" c_zoom="q_ooha001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_ooha002" ver="1" src="s" column="ooha002" table="ooha_t" attribute="C816" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="26" default="" max="" min="" can_edit="N" can_query="N" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_desc" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="26" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_oohal003" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="26" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="lbl_oohal005_1" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="26" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooha_t.ooha001" ver="1" src="s" column="ooha001" table="ooha_t" attribute="C002" type="varchar2(10)" req="Y" i_zoom="" c_zoom="q_ooha001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[控制組編號：
+   ●欄位控管：
+     資料欄位:[T:控制組主檔].[C:控制組編號]/可Display可Input
+     預設值:無
+     校驗:[C:控制組編號]為Key值,不可重複
+     帶值:無
+     計算或處理:無
+
+   ●開窗處理：新增/修改時不提供開窗
+     參考函式：q_ooha001
+     查詢欄位：[T:控制組主檔].[C:控制組編號],[T:控制組多語言檔].[C:說明]
+     回值類型：查詢時多重回值]]]]>
+  </field>
+  <field cite_std="N" name="ooha_t.ooha002" ver="1" src="s" column="ooha002" table="ooha_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="26" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[控制組類型：
+   ●欄位控管：
+     資料欄位:[T:控制組主檔].[C:控制組類型]
+     允許空白:No
+     預設值:將傳入參數當作預設值
+     資料選項來源:SCC26
+     校驗:1.不允許空白
+          2.輸入值須存在[T:系統分類值檔].[C:系統分類值]且[C:系統分類碼]=26
+     帶值:無
+     計算或處理:當執行aooi380時,本欄位可維護;
+                當執行aooi381~aooi385時,本欄位NoEntry
+]]>
+  </field>
+  <field cite_std="N" name="ooha_t.oohacrtdp" ver="1" src="s" column="oohacrtdp" table="ooha_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooha_t.oohacrtdt" ver="1" src="s" column="oohacrtdt" table="ooha_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooha_t.oohacrtid" ver="1" src="s" column="oohacrtid" table="ooha_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooha_t.oohamoddt" ver="1" src="s" column="oohamoddt" table="ooha_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooha_t.oohamodid" ver="1" src="s" column="oohamodid" table="ooha_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooha_t.oohaowndp" ver="1" src="s" column="oohaowndp" table="ooha_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooha_t.oohaownid" ver="1" src="s" column="oohaownid" table="ooha_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="ooha_t.oohastus" ver="1" src="s" column="oohastus" table="ooha_t" attribute="C822" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[資料狀態碼：
+   ●欄位控管：
+     資料欄位:[T:控制組主檔].[C:資料狀態碼]
+     允許空白:No
+     預設值:Y
+     資料選項來源:SCC17
+     校驗:1.不允許空白
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field cite_std="N" name="oohb_t.oohb002" ver="1" src="s" column="oohb002" table="oohb_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="v_ooeg001" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[部門編號：
+   ●欄位控管：
+     資料欄位:[T:控制組部門檔].[C:部門編號]/可Display可Input
+     預設值:無
+     校驗:1.[C:控制組編號]+本欄位為Key值,不可重複
+              2.輸入值須存在[T:部門資料檔].[C:部門編號]且為生效的部門
+     帶值:自動帶出[T:組織多語言檔].[C:說明(簡稱)]到[C:部門名稱]
+     計算或處理:無
+
+   ●開窗函式：q_ooeg001]]>
+  </field>
+  <field cite_std="N" name="oohb_t.oohb003" ver="1" src="s" column="oohb003" table="oohb_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[   ●欄位控管：
+     資料欄位:[T:控制組部門檔].[C:生效日期]/可Display可Input
+     預設值:g_today
+     校驗:1.不允許空白
+          2.若[C:失效日期]有值,本欄位值不可大於[C:失效日期]
+     帶值:無
+     計算或處理:無]]>
+  </field>
+  <field cite_std="N" name="oohb_t.oohb004" ver="1" src="s" column="oohb004" table="oohb_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[   ●欄位控管：
+     資料欄位:[T:控制組部門檔].[C:失效日期]/可Display可Input
+     預設值:null
+     校驗:1.若本欄位有輸入值不可小於[C:生效日期]
+     帶值:無
+     計算或處理:無]]]]>
+  </field>
+  <field cite_std="N" name="oohc002_desc2" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oohc_t.oohc002" ver="1" src="s" column="oohc002" table="oohc_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="q_ooag001_2" c_zoom="q_ooag001_2" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[●欄位控管：
+     資料欄位:[T:控制組人員檔].[C:員工編號]/可Display可Input
+     預設值:無
+     校驗:1.[C:控制組編號]+本欄位為Key值,不可重複
+          2.輸入值須存在[T:員工檔].[C:員工編號]且為有效資料
+     帶值:1.以[C:員工編號]值到[T:員工檔]抓取[C:聯絡對象識別碼],再以[C:聯絡對象識別碼]
+            到[T:聯絡對象檔]中抓取[C:全名]來顯示
+          2.以[C:員工編號]值到[T:員工檔]抓取[C:職稱],再以[C:職稱]到[T:應用分類碼多語言檔]
+            中抓取[C:說明] WHERE [C:應用分類]=5 AND [C:應用分類碼]=[C:職稱]
+     計算或處理:無
+
+   ●開窗處理：
+     參考函式：q_ooag001_2
+     查詢欄位：[T:員工檔].[C:員工編號],[T:聯絡對象檔].[C:全名]
+     新增或修改時過濾條件：[T:員工檔].[C:聯絡對象識別碼]=[T:聯絡對象檔].[C:聯絡對象識別碼]且為有效資料
+     回值類型：查詢時多重回值;新增或修改時單一回值]]]]>
+  </field>
+  <field cite_std="N" name="oohc_t.oohc003" ver="1" src="s" column="oohc003" table="oohc_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[ ●欄位控管：
+     資料欄位:[T:控制組人员檔].[C:生效日期]/可Display可Input
+     預設值:g_today
+     校驗:1.不允許空白
+          2.若[C:失效日期]有值,本欄位值不可大於[C:失效日期]
+     帶值:無
+     計算或處理:無]]>
+  </field>
+  <field cite_std="N" name="oohc_t.oohc004" ver="1" src="s" column="oohc004" table="oohc_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[  ●欄位控管：
+     資料欄位:[T:控制組人员檔].[C:失效日期]/可Display可Input
+     預設值:null
+     校驗:1.若本欄位有輸入值不可小於[C:生效日期]
+     帶值:無
+     計算或處理:無]]]]>
+  </field>
+  <field cite_std="N" name="oohd_t.oohd002" ver="1" src="s" column="oohd002" table="oohd_t" attribute="C012" type="varchar2(10)" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[客戶分類：
+   ●欄位控管：
+     資料欄位:[T:控制組客戶分類檔].[C:客戶分類]/可Display可Input
+     預設值:無
+     校驗:1.[C:控制組編號]+本欄位為Key值,不可重複
+          2.輸入值須存在[T:應用分類碼檔(ACC)(oocq_t)].[C:應用分類碼]
+            WHERE [C:應用分類]=222(oocq001) 且為有效資料
+     帶值:帶出[T:應用分類碼多語言檔].[C:說明]到[C:分類說明]顯示
+          WHERE [C:應用分類]=222(oocq001) AND [C:應用分類碼](oocq002)=[C:客戶分類]
+計算或處理:無
+
+   ●開窗處理：
+     參考函式：q_oocq002
+     查詢欄位：[T:應用分類碼檔(ACC)].[C:應用分類瑪],[T:應用分類碼多語言檔].[C:說明]
+     新增或修改時過濾條件：[T:應用分類碼檔(ACC)].[C:應用分類]=222 且 有效資料
+     回值類型：查詢時多重回值;新增或修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="oohd_t.oohd003" ver="1" src="s" column="oohd003" table="oohd_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[[生效日期：
+   ●欄位控管：
+     資料欄位:[T:控制組客戶分類檔].[C:生效日期]/可Display可Input
+     預設值:g_today
+     校驗:1.不允許空白
+          2.若[C:失效日期]有值,本欄位值不可大於[C:失效日期]
+     帶值:無
+     計算或處理:無]]>
+  </field>
+  <field cite_std="N" name="oohd_t.oohd004" ver="1" src="s" column="oohd004" table="oohd_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[[失效日期：
+   ●欄位控管：
+     資料欄位:[T:控制組客戶分類檔].[C:失效日期]/可Display可Input
+     預設值:null
+     校驗:1.若本欄位有輸入值不可小於[C:生效日期]
+     帶值:無
+     計算或處理:無]]]]>
+  </field>
+  <field cite_std="N" name="oohe_t.oohe002" ver="1" src="s" column="oohe002" table="oohe_t" attribute="C004" type="varchar2(10)" req="N" i_zoom="q_pmaa001" c_zoom="q_pmaa001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[客戶編號：(客户主档未建)
+   ●欄位控管：
+     資料欄位:[T:控制組客戶檔].[C:客戶編號]/可Display可Input
+     預設值:無
+     校驗:1.[C:控制組編號]+本欄位為Key值,不可重複
+          2.輸入值須存在[T:交易對象主檔].[C:交易對象編號]且為已確認資料
+     帶值:帶出[T:交易對象多語言檔].[C:說明]到[C:客戶簡稱]顯示
+     計算或處理:無
+
+   ●開窗處理：
+     參考函式：q_pmaa001
+     查詢欄位：[T:交易对象主檔].[C:交易對象編號],[T:交易对象多語言檔].[C:全名]，[T:交易对象多語言檔].[C:简称]
+     过滤条件：交易對象類型pmaa002 = 2
+     回值類型：查詢時多重回值;新增或修改時單一回值]]
+
+單身串查：   
+單身欄位：客戶編號  串查程式：axmm200(客戶主檔維護作業)]]>
+  </field>
+  <field cite_std="N" name="oohe_t.oohe003" ver="1" src="s" column="oohe003" table="oohe_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[生效日期：
+   ●欄位控管：
+     資料欄位:[T:控制組客戶檔].[C:生效日期]/可Display可Input
+     預設值:g_today
+     校驗:1.不允許空白
+          2.若[C:失效日期]有值,本欄位值不可大於[C:失效日期]
+     帶值:無
+     計算或處理:無]]]]>
+  </field>
+  <field cite_std="N" name="oohe_t.oohe004" ver="1" src="s" column="oohe004" table="oohe_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[失效日期：
+   ●欄位控管：
+     資料欄位:[T:控制組客戶檔].[C:失效日期]/可Display可Input
+     預設值:null
+     校驗:1.若本欄位有輸入值不可小於[C:生效日期]
+     帶值:無
+     計算或處理:無]]]]>
+  </field>
+  <field cite_std="N" name="oohf_t.oohf002" ver="1" src="s" column="oohf002" table="oohf_t" attribute="C012" type="varchar2(10)" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[廠商分類：
+   ●欄位控管：
+     資料欄位:[T:控制組廠商分類檔].[C:廠商分類]/可Display可Input
+     預設值:無
+     校驗:1.[C:控制組編號]+本欄位為Key值,不可重複
+          2.輸入值須存在[T:應用分類碼檔(ACC)].[C:應用分類碼]
+            WHERE [C:應用分類]=237 且為有效資料
+     帶值:帶出[T:應用分類碼多語言檔].[C:說明]到[C:分類說明]顯示
+          WHERE [C:應用分類]=237 AND [C:應用分類碼]=[C:廠商分類]
+     計算或處理:無
+
+   ●開窗處理：
+     參考函式：q_oocq002
+     查詢欄位：[T:應用分類碼檔(ACC)].[C:應用分類瑪],[T:應用分類碼多語言檔].[C:說明]
+     新增或修改時過濾條件：[T:應用分類碼檔(ACC)].[C:應用分類]=237 且 有效資料
+     回值類型：查詢時多重回值;新增或修改時單一回值]]]]>
+  </field>
+  <field cite_std="N" name="oohf_t.oohf003" ver="1" src="s" column="oohf003" table="oohf_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[生效日期：
+   ●欄位控管：
+     資料欄位:[T:控制組部門檔].[C:生效日期]/可Display可Input
+     預設值:g_today
+     校驗:1.不允許空白
+          2.若[C:失效日期]有值,本欄位值不可大於[C:失效日期]
+     帶值:無
+     計算或處理:無]]]]>
+  </field>
+  <field cite_std="N" name="oohf_t.oohf004" ver="1" src="s" column="oohf004" table="oohf_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[[失效日期：
+   ●欄位控管：
+     資料欄位:[T:控制組部門檔].[C:失效日期]/可Display可Input
+     預設值:null
+     校驗:1.若本欄位有輸入值不可小於[C:生效日期]
+     帶值:無
+     計算或處理:無]]]>
+  </field>
+  <field cite_std="N" name="oohg_t.oohg002" ver="1" src="s" column="oohg002" table="oohg_t" attribute="C004" type="varchar2(10)" req="N" i_zoom="q_pmaa001" c_zoom="q_pmaa001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[廠商編號：
+   ●欄位控管：
+     資料欄位:[T:控制組廠商檔].[C:廠商編號]/可Display可Input
+     預設值:無
+     校驗:1.[C:控制組編號]+本欄位為Key值,不可重複
+          2.輸入值須存在[T:交易對象主檔].[C:交易對象編號]且為已確認資料
+     帶值:帶出[T:交易對象多語言檔].[C:說明]到[C:廠商簡稱]顯示
+     計算或處理:無
+
+   ●開窗處理：
+     參考函式:q_pmaa001
+     查詢欄位：[T:交易对象主檔].[C:交易對象編號],[T:交易对象多語言檔].[C:全名]，[T:交易对象多語言檔].[C:简称]
+     过滤条件：交易對象類型pmaa002 = 1
+     回值類型：查詢時多重回值;新增或修改時單一回值]]
+
+單身串查：   
+單身欄位：廠商編號  串查程式：apmm200(廠商主檔維護作業)
+
+]]>
+  </field>
+  <field cite_std="N" name="oohg_t.oohg003" ver="1" src="s" column="oohg003" table="oohg_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[●欄位控管：
+     資料欄位:[T:控制組廠商檔].[C:生效日期]/可Display可Input
+     預設值:g_today
+     校驗:1.不允許空白
+          2.若[C:失效日期]有值,本欄位值不可大於[C:失效日期]
+     帶值:無
+     計算或處理:無]]]]>
+  </field>
+  <field cite_std="N" name="oohg_t.oohg004" ver="1" src="s" column="oohg004" table="oohg_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[失效日期：
+   ●欄位控管：
+     資料欄位:[T:控制組廠商檔].[C:失效日期]/可Display可Input
+     預設值:null
+     校驗:1.若本欄位有輸入值不可小於[C:生效日期]
+     帶值:無
+     計算或處理:無]]]]>
+  </field>
+  <field cite_std="N" name="oohh_t.oohh002" ver="1" src="s" column="oohh002" table="oohh_t" attribute="C012" type="varchar2(10)" req="N" i_zoom="q_rtax001_1" c_zoom="q_rtax001_1" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[產品分類：
+   ●欄位控管：
+     資料欄位:[T:控制組產品分類檔].[C:產品分類]/可Display可Input
+     預設值:無
+     校驗:1.[C:控制組編號]+本欄位為Key值,不可重複
+          2.輸入值須存在[T:品類基本資料檔].[C:品類編號]且為有效資料
+     帶值:帶出[T:品類多語言檔].[C:說明]到[C:分類說明]顯示
+     計算或處理:無
+
+   ●開窗處理：
+     參考函式：q_rtax001_1
+     查詢欄位：[T:品類基本資料檔].[C:品類編號],[T:品類多語言檔].[C:說明]
+     新增或修改時過濾條件：有效資料
+     回值類型：查詢時多重回值;新增或修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="oohh_t.oohh003" ver="1" src="s" column="oohh003" table="oohh_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[生效日期：
+   ●欄位控管：
+     資料欄位:[T:控制組產品分類檔].[C:生效日期]/可Display可Input
+     預設值:g_today
+     校驗:1.不允許空白
+          2.若[C:失效日期]有值,本欄位值不可大於[C:失效日期]
+     帶值:無
+     計算或處理:無]]]>
+  </field>
+  <field cite_std="N" name="oohh_t.oohh004" ver="1" src="s" column="oohh004" table="oohh_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[失效日期：
+   ●欄位控管：
+     資料欄位:[T:控制組產品分類檔].[C:失效日期]/可Display可Input
+     預設值:null
+     校驗:1.若本欄位有輸入值不可小於[C:生效日期]
+     帶值:無
+     計算或處理:無]]>
+  </field>
+  <field cite_std="N" name="oohi002_desc2" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="FFLabel" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="oohi_t.oohi002" ver="1" src="s" column="oohi002" table="oohi_t" attribute="C301" type="varchar2(40)" req="N" i_zoom="q_imaa001_1" c_zoom="q_imaa001_1" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[產品編號：
+   ●欄位控管：
+     資料欄位:[T:控制組產品檔].[C:產品編號]/可Display可Input
+     預設值:無
+     校驗:1.[C:控制組編號]+本欄位為Key值,不可重複
+          2.輸入值須存在[T:料件主檔].[C:料號]且為已確認資料
+     帶值:帶出[T:料件多語言檔].[C:品名]與[C:規格]來顯示
+     計算或處理:無
+
+   ●開窗處理：
+     參考函式：q_imaa001_1
+     查詢欄位：[T:料件主檔].[C:料號],[T:料件多語言檔].[C:品名],[T:料件多語言檔].[C:規格]
+     新增或修改時過濾條件：已確認資料
+     回值類型：查詢時多重回值;新增或修改時單一回值]]
+
+單身串查： 
+單身欄位：產品編號  串查程式：aimm200(料件主檔維護作業)]]>
+  </field>
+  <field cite_std="N" name="oohi_t.oohi003" ver="1" src="s" column="oohi003" table="oohi_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[生效日期：
+   ●欄位控管：
+     資料欄位:[T:控制組產品檔].[C:生效日期]/可Display可Input
+     預設值:g_today
+     校驗:1.不允許空白
+          2.若[C:失效日期]有值,本欄位值不可大於[C:失效日期]
+     帶值:無
+     計算或處理:無]]>
+  </field>
+  <field cite_std="N" name="oohi_t.oohi004" ver="1" src="s" column="oohi004" table="oohi_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[[失效日期：
+   ●欄位控管：
+     資料欄位:[T:控制組產品檔].[C:失效日期]/可Display可Input
+     預設值:null
+     校驗:1.若本欄位有輸入值不可小於[C:生效日期]
+     帶值:無
+     計算或處理:無]]]]>
+  </field>
+  <field cite_std="N" name="oohj_t.oohj002" ver="1" src="s" column="oohj002" table="oohj_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="q_ooef001" c_zoom="q_ooef001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[經營渠道：
+   ●欄位控管：
+     資料欄位:[T:控制組營運據點檔].[C:經營渠道]/可Display可Input
+     預設值:無
+     校驗:1.[C:控制組編號]+本欄位為Key值,不可重複
+          2.輸入值須存在[T:營運據點檔].[C:營運據點]且為有效資料
+     帶值:帶出[T:組織基本資料多語言檔].[C:說明(簡稱)]到[C:名稱]顯示
+     計算或處理:無
+
+   ●開窗處理：
+     參考函式：q_ooef001
+     查詢欄位：[T:營運據點檔].[C:營運據點],[T:組織基本資料多語言檔].[C:說明(簡稱)]
+     新增或修改時過濾條件：有效資料
+     回值類型：查詢時多重回值;新增或修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="oohj_t.oohj003" ver="1" src="s" column="oohj003" table="oohj_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[生效日期：
+   ●欄位控管：
+     資料欄位:[T:控制組營業渠道檔].[C:生效日期]/可Display可Input
+     預設值:g_today
+     校驗:1.不允許空白
+          2.若[C:失效日期]有值,本欄位值不可大於[C:失效日期]
+     帶值:無
+     計算或處理:無]]>
+  </field>
+  <field cite_std="N" name="oohj_t.oohj004" ver="1" src="s" column="oohj004" table="oohj_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[失效日期：
+   ●欄位控管：
+     資料欄位:[T:控制組營業渠道檔].[C:失效日期]/可Display可Input
+     預設值:null
+     校驗:1.若本欄位有輸入值不可小於[C:生效日期]
+     帶值:無
+     計算或處理:無]]>
+  </field>
+  <field cite_std="N" name="oohk_t.oohk002" ver="1" src="s" column="oohk002" table="oohk_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="q_ooef001" c_zoom="q_ooef001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[營運據點：
+   ●欄位控管：
+     資料欄位:[T:控制組營運據點檔].[C:營運據點]/可Display可Input
+     預設值:無
+     校驗:1.[C:控制組編號]+本欄位為Key值,不可重複
+          2.輸入值須存在[T:營運據點檔].[C:營運據點]且為有效資料
+     帶值:帶出[T:組織基本資料多語言檔].[C:說明(簡稱)]到[C:據點名稱]顯示
+     計算或處理:無
+
+   ●開窗處理：
+     參考函式：q_ooef001
+     查詢欄位：[T:營運據點檔].[C:營運據點],[T:組織基本資料多語言檔].[C:說明(簡稱)]
+     新增或修改時過濾條件：有效資料
+     回值類型：查詢時多重回值;新增或修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="oohk_t.oohk003" ver="1" src="s" column="oohk003" table="oohk_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[生效日期：
+   ●欄位控管：
+     資料欄位:[T:控制組營運據點檔].[C:生效日期]/可Display可Input
+     預設值:g_today
+     校驗:1.不允許空白
+          2.若[C:失效日期]有值,本欄位值不可大於[C:失效日期]
+     帶值:無
+     計算或處理:無]]>
+  </field>
+  <field cite_std="N" name="oohk_t.oohk004" ver="1" src="s" column="oohk004" table="oohk_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[失效日期：
+   ●欄位控管：
+     資料欄位:[T:控制組營運據點檔].[C:失效日期]/可Display可Input
+     預設值:null
+     校驗:1.若本欄位有輸入值不可小於[C:生效日期]
+     帶值:無
+     計算或處理:無]]>
+  </field>
+  <field cite_std="N" name="oohl_t.oohl002" ver="1" src="s" column="oohl002" table="oohl_t" attribute="C007" type="varchar2(10)" req="Y" i_zoom="q_ooef001" c_zoom="q_ooef001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[營運據點：
+   ●欄位控管：
+     資料欄位:[T:控制組據點庫位檔].[C:營運據點]/可Display可Input
+     預設值:無
+     校驗:1.[C:控制組編號]+本欄位+[C:庫位編號]為Key值,不可重複
+          2.輸入值須存在[T:營運據點檔].[C:營運據點]且為有效資料
+     帶值:帶出[T:組織基本資料多語言檔].[C:說明(簡稱)]到[C:據點名稱]顯示
+     計算或處理:無
+
+   ●開窗處理：
+     參考函式：q_ooef001
+     查詢欄位：[T:營運據點檔].[C:營運據點],[T:組織基本資料多語言檔].[C:說明(簡稱)]
+     新增或修改時過濾條件：有效資料
+     回值類型：查詢時多重回值;新增或修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="oohl_t.oohl003" ver="1" src="s" column="oohl003" table="oohl_t" attribute="C303" type="varchar2(10)" req="Y" i_zoom="q_inaa001_3" c_zoom="q_inaa001_3" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[庫位編號：(inaa_t)
+   ●欄位控管：
+     資料欄位:[T:控制組據點庫位檔].[C:庫位編號]/可Display可Input
+     預設值:無
+     校驗:1.[C:控制組編號]+[C:營運據點]+本欄位為Key值,不可重複
+          2.輸入值須存在[T:庫位基本資料檔].[C:庫位編號]
+            WHERE [T:庫位基本資料檔].[C:營運據點]=[T:控制組據點庫位檔].[C:營運據點]
+            且為有效資料
+     帶值:帶出[T:庫位基本資料檔].[C:庫位名稱]來顯示
+     計算或處理:無
+
+   ●開窗處理：
+     參考函式：q_inaa001_1
+     查詢欄位：[T:庫位基本資料檔].[C:營運據點],[T:庫位基本資料檔].[C:庫位編號],
+               [T:庫位基本資料檔].[C:庫位名稱]
+     新增或修改時過濾條件：有效資料
+     回值類型：查詢時多重回值;新增或修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="oohl_t.oohl004" ver="1" src="s" column="oohl004" table="oohl_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[生效日期：
+   ●欄位控管：
+     資料欄位:[T:控制組據點庫位檔].[C:生效日期]/可Display可Input
+     預設值:g_today
+     校驗:1.不允許空白
+          2.若[C:失效日期]有值,本欄位值不可大於[C:失效日期]
+     帶值:無
+     計算或處理:無]]>
+  </field>
+  <field cite_std="N" name="oohl_t.oohl005" ver="1" src="s" column="oohl005" table="oohl_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[失效日期：
+   ●欄位控管：
+     資料欄位:[T:控制組據點庫位檔].[C:失效日期]/可Display可Input
+     預設值:null
+     校驗:1.若本欄位有輸入值不可小於[C:生效日期]
+     帶值:無
+     計算或處理:無]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="1" name="prog_oohe002" depend_field="oohe_t.oohe002" src="s" status="">
+      <program order="1" type="1" name="axmm200"/>
+    </pfield>
+    <pfield cite_std="N" ver="1" name="prog_oohg002" depend_field="oohg_t.oohg002" src="s" status="">
+      <program order="1" type="1" name="apmm200"/>
+    </pfield>
+    <pfield cite_std="N" ver="1" name="prog_oohi002" depend_field="oohi_t.oohi002" src="s" status="">
+      <program order="1" type="1" name="aimm200"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_ooha001_desc" src="s" depend_field="b_ooha001" correspon_key="oohaent,ooha001" ref_table="oohal_t" ref_fk="oohalent,oohal001" ref_dlang="oohal002" ref_rtn="oohal003" status=""/>
+    <rfield cite_std="N" ver="1" name="oohacrtdp_desc" src="s" depend_field="ooha_t.oohacrtdp" correspon_key="oohacrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="oohacrtid_desc" src="s" depend_field="ooha_t.oohacrtid" correspon_key="&apos;2&apos;,oohacrtid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="oohamodid_desc" src="s" depend_field="ooha_t.oohamodid" correspon_key="&apos;2&apos;,oohamodid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="oohaowndp_desc" src="s" depend_field="ooha_t.oohaowndp" correspon_key="oohaowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="oohaownid_desc" src="s" depend_field="ooha_t.oohaownid" correspon_key="&apos;2&apos;,oohaownid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="oohb002_desc" src="s" depend_field="oohb_t.oohb002" correspon_key="oohb002,oohbent" ref_table="ooefl_t" ref_fk="ooefl001,ooeflent" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="oohc002_desc" src="s" depend_field="oohc_t.oohc002" correspon_key="&apos;2&apos;,oohc002" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="oohd002_desc" src="s" depend_field="oohd_t.oohd002" correspon_key="oohdent,&apos;222&apos;,oohd002" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="oohe002_desc" src="s" depend_field="oohe_t.oohe002" correspon_key="ooheent,oohe002" ref_table="pmaal_t" ref_fk="pmaalent,pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="oohf002_desc" src="s" depend_field="oohf_t.oohf002" correspon_key="oohfent,&apos;237&apos;,oohf002" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="oohg002_desc" src="s" depend_field="oohg_t.oohg002" correspon_key="oohgent,oohg002" ref_table="pmaal_t" ref_fk="pmaalent,pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal004" status=""/>
+    <rfield cite_std="N" ver="1" name="oohh002_desc" src="s" depend_field="oohh_t.oohh002" correspon_key="oohhent,oohh002" ref_table="rtaxl_t" ref_fk="rtaxlent,rtax001" ref_dlang="rtaxl002" ref_rtn="rtaxl003" status=""/>
+    <rfield cite_std="N" ver="1" name="oohi002_desc" src="s" depend_field="oohi_t.oohi002" correspon_key="oohi002,oohient" ref_table="imaal_t" ref_fk="imaal001,imaalent" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="oohj002_desc" src="s" depend_field="oohj_t.oohj002" correspon_key="oohj002,oohjent" ref_table="ooefl_t" ref_fk="ooefl001,ooeflent" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="oohk002_desc" src="s" depend_field="oohk_t.oohk002" correspon_key="oohk002,oohkent" ref_table="ooefl_t" ref_fk="ooefl001,ooeflent" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="oohl002_desc" src="s" depend_field="oohl_t.oohl002" correspon_key="oohl002,oohlent" ref_table="ooefl_t" ref_fk="ooefl001,ooeflent" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="oohl003_desc" src="s" depend_field="oohl_t.oohl003" correspon_key="oohl003,oohl002,oohlent" ref_table="inaa_t" ref_fk="inaa001,inaasite,inaaent" ref_dlang="" ref_rtn="inaa002" status=""/>
+  </ref_field>
+  <multi_lang>
+    <mfield cite_std="N" ver="1" name="oohal_t.oohal003" src="s" depend_field="ooha_t.ooha001" correspon_key="oohaent,ooha001" lang_table="oohal_t" lang_fk="oohalent,oohal001" lang_dlang="oohal002" lang_rtn="oohal003" status="">
+      <![CDATA[]]>
+    </mfield>
+    <mfield cite_std="N" ver="1" name="oohal_t.oohal005" src="s" depend_field="ooha_t.ooha001" correspon_key="oohaent,ooha001" lang_table="oohal_t" lang_fk="oohalent,oohal001" lang_dlang="oohal002" lang_rtn="oohal005" status="">
+      <![CDATA[]]>
+    </mfield>
+  </multi_lang>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_ooha001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_ooha002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_desc" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_oohal003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="lbl_oohal005_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooha_t.ooha001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooha_t.ooha002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooha_t.oohacrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooha_t.oohacrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooha_t.oohacrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooha_t.oohamoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooha_t.oohamodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooha_t.oohaowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooha_t.oohaownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="ooha_t.oohastus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohb_t.oohb002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohb_t.oohb003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohb_t.oohb004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohc002_desc2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohc_t.oohc002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohc_t.oohc003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohc_t.oohc004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohd_t.oohd002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohd_t.oohd003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohd_t.oohd004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohe_t.oohe002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohe_t.oohe003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohe_t.oohe004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohf_t.oohf002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohf_t.oohf003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohf_t.oohf004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohg_t.oohg002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohg_t.oohg003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohg_t.oohg004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohh_t.oohh002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohh_t.oohh003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohh_t.oohh004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohi002_desc2" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohi_t.oohi002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohi_t.oohi003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohi_t.oohi004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohj_t.oohj002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohj_t.oohj003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohj_t.oohj004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohk_t.oohk002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohk_t.oohk003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohk_t.oohk004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohl_t.oohl002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohl_t.oohl003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohl_t.oohl004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="oohl_t.oohl005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_ooha002" text="控制組類型" lstr=""/>
+    <sfield name="lbl_ooha001" text="控制組編號" lstr=""/>
+    <sfield name="lbl_oohal003" text="說明" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_oohal005_1" text="描述說明" lstr=""/>
+    <sfield name="lbl_desc" text="注意：部門與人員頁簽至少選擇一種維護，不可皆無資料" lstr=""/>
+    <sfield name="lbl_oohastus" text="狀態碼" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="page_2" text="部門與參數" lstr=""/>
+    <sfield name="bpage_1" text="部門" lstr=""/>
+    <sfield name="lbl_oohb002" text="部門編號" lstr=""/>
+    <sfield name="lbl_oohb002_desc" text="部門名稱" lstr=""/>
+    <sfield name="lbl_oohb003" text="生效日期" lstr=""/>
+    <sfield name="lbl_oohb004" text="失效日期" lstr=""/>
+    <sfield name="page_9" text="人員" lstr=""/>
+    <sfield name="lbl_oohc002" text="人員編號" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_oohc002_desc2" text="職稱" lstr=""/>
+    <sfield name="lbl_oohc003" text="生效日期" lstr=""/>
+    <sfield name="lbl_oohc004" text="生效日期" lstr=""/>
+    <sfield name="page_13" text="客戶範圍" lstr=""/>
+    <sfield name="page_3" text="客戶分類" lstr=""/>
+    <sfield name="lbl_oohd002" text="客戶分類" lstr=""/>
+    <sfield name="lbl_oohf002_desc" text="分類說明" lstr=""/>
+    <sfield name="lbl_oohd003" text="生效日期" lstr=""/>
+    <sfield name="lbl_oohd004" text="失效日期" lstr=""/>
+    <sfield name="page_10" text="客戶" lstr=""/>
+    <sfield name="lbl_oohe002" text="客戶編號" lstr=""/>
+    <sfield name="lbl_oohe002_desc" text="客戶簡稱" lstr=""/>
+    <sfield name="lbl_oohe003" text="生效日期" lstr=""/>
+    <sfield name="lbl_oohe004" text="失效日期" lstr=""/>
+    <sfield name="page_14" text="廠商範圍" lstr=""/>
+    <sfield name="page_4" text="廠商分類" lstr=""/>
+    <sfield name="lbl_oohf002" text="廠商分類" lstr=""/>
+    <sfield name="lbl_oohf003" text="生效日期" lstr=""/>
+    <sfield name="lbl_oohf004" text="失效日期" lstr=""/>
+    <sfield name="page_11" text="廠商" lstr=""/>
+    <sfield name="lbl_oohg002" text="廠商編號" lstr=""/>
+    <sfield name="lbl_oohg002_desc" text="廠商簡稱" lstr=""/>
+    <sfield name="lbl_oohg003" text="生效日期" lstr=""/>
+    <sfield name="lbl_oohg004" text="失效日期" lstr=""/>
+    <sfield name="page_15" text="產品範圍" lstr=""/>
+    <sfield name="page_5" text="產品分類" lstr=""/>
+    <sfield name="lbl_oohh002" text="產品分類" lstr=""/>
+    <sfield name="lbl_oohh002_desc" text="分類說明" lstr=""/>
+    <sfield name="lbl_oohh003" text="生效日期" lstr=""/>
+    <sfield name="lbl_oohh004" text="失效日期" lstr=""/>
+    <sfield name="page_12" text="產品" lstr=""/>
+    <sfield name="lbl_oohi002" text="產品編號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_oohi002_desc2" text="規格" lstr=""/>
+    <sfield name="lbl_oohi003" text="生效日期" lstr=""/>
+    <sfield name="lbl_oohi004" text="失效日期" lstr=""/>
+    <sfield name="page_16" text="渠道範圍" lstr=""/>
+    <sfield name="page_6" text="渠道" lstr=""/>
+    <sfield name="lbl_oohj002" text="營業渠道" lstr=""/>
+    <sfield name="lbl_oohj002_desc" text="渠道說明" lstr=""/>
+    <sfield name="lbl_oohj003" text="生效日期" lstr=""/>
+    <sfield name="lbl_oohj004" text="失效日期" lstr=""/>
+    <sfield name="page_17" text="據點範圍" lstr=""/>
+    <sfield name="page_7" text="營運據點" lstr=""/>
+    <sfield name="lbl_oohk002" text="營運據點" lstr=""/>
+    <sfield name="lbl_oohk002_desc" text="據點名稱" lstr=""/>
+    <sfield name="lbl_oohk003" text="生效日期" lstr=""/>
+    <sfield name="lbl_oohk004" text="失效日期" lstr=""/>
+    <sfield name="page_18" text="據點庫位" lstr=""/>
+    <sfield name="page_8" text="據點庫位" lstr=""/>
+    <sfield name="lbl_oohl002" text="營運據點" lstr=""/>
+    <sfield name="lbl_oohl002_desc" text="據點名稱" lstr=""/>
+    <sfield name="lbl_oohl003" text="庫位編號" lstr=""/>
+    <sfield name="lbl_inaa002" text="庫位名稱" lstr=""/>
+    <sfield name="lbl_oohl004" text="生效日期" lstr=""/>
+    <sfield name="lbl_oohl005" text="失效日期" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_collect_gzze001" text="訊息代碼" lstr=""/>
+    <sfield name="lbl_collect_gzze003" text="訊息內容" lstr=""/>
+    <sfield name="lbl_collect_gzze006" text="進階訊息" lstr=""/>
+    <sfield name="lbl_cl_err_s02_accept" text="確定" lstr=""/>
+    <sfield name="lbl_err_detail" text="進階訊息" lstr=""/>
+    <sfield name="lbl_suggest_exe" text="建議執行" lstr=""/>
+    <sfield name="lbl_err_contact" text="反應問題" lstr=""/>
+    <sfield name="lbl_cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="lbl_group_cl_err_s01" text="進階訊息" lstr=""/>
+    <sfield name="lbl_gzze001" text="訊息代碼:" lstr=""/>
+    <sfield name="lbl_gzze006" text="訊息內容:" lstr=""/>
+    <sfield name="lbl_sqlerrd2" text="SQL錯誤碼:" lstr=""/>
+    <sfield name="lbl_gzxm001" text="QBE編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm005" text="設為首頁-自動查詢方案" lstr=""/>
+    <sfield name="lbl_gzxm002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxm003" text="員工編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm004" text="設為預設查詢條件" lstr=""/>
+    <sfield name="cl_qbe_s02.bpage_1" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn005" text="欄位說明" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="cl_qbe_s02_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s02_Cancel" text="取消" lstr=""/>
+    <sfield name="lbl_funid" text="函式代碼" lstr=""/>
+    <sfield name="lbl_fundesc" text="函式說明" lstr=""/>
+    <sfield name="cl_qbe_s01_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s01_Cancel" text="取消" lstr=""/>
+    <sfield name="cl_qbe_s03.bpage_1" text="查詢方案列表" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxmstus" text="有效" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm004" text="預設" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm005" text="顯示於首頁" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm009" text="順序" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxml005" text="查詢方案說明" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm007" text="自設SQL條件" lstr=""/>
+    <sfield name="cl_qbe_s03.page_2" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn004" text="序號" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn005" text="條件欄位" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="page_cl_doc_s01_page1" text="相關文件清單" lstr=""/>
+    <sfield name="lbl_loaa006" text="文件版本" lstr=""/>
+    <sfield name="lbl_loaa007" text="文件序號" lstr=""/>
+    <sfield name="lbl_loaa011" text="文件型態" lstr=""/>
+    <sfield name="lbl_loaa013" text="文件說明" lstr=""/>
+    <sfield name="lbl_loaa010" text="文件原始檔名" lstr=""/>
+    <sfield name="btn_upload" text="本地文件上傳" lstr=""/>
+    <sfield name="btn_crt_text" text="新建純文字紀錄" lstr=""/>
+    <sfield name="btn_doccrt_url" text="新建URL" lstr=""/>
+    <sfield name="btn_docopen" text="文件下載" lstr=""/>
+    <sfield name="btn_docupdate" text="文件資料修改" lstr=""/>
+    <sfield name="btn_docremove" text="文件刪除" lstr=""/>
+    <sfield name="btn_exit" text="關閉功能" lstr=""/>
+    <sfield name="page_cl_doc_s01_page2" text="文件基本資料" lstr=""/>
+    <sfield name="lbl_loaa004" text="用途類別" lstr=""/>
+    <sfield name="lbl_loaa005" text="預設顯示圖片" lstr=""/>
+    <sfield name="lbl_loaa012" text="文件位置(URL)" lstr=""/>
+    <sfield name="page_cl_doc_s01_page4" text="權限設定" lstr=""/>
+    <sfield name="group_read" text="讀取權限" lstr=""/>
+    <sfield name="group_modify" text="修改權限" lstr=""/>
+    <sfield name="page_cl_doc_s01_page3" text="異動資訊" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="btn_doccancel" text="放棄修改" lstr=""/>
+    <sfield name="btn_docmodify" text="資料存檔" lstr=""/>
+    <sfield name="lbl_gzxp007_1" text="選擇分類" lstr=""/>
+    <sfield name="add_catalog" text="" lstr=""/>
+    <sfield name="lbl_gzxp007_2" text="自訂分類" lstr=""/>
+    <sfield name="lbl_gzxp008" text="追蹤說明" lstr=""/>
+    <sfield name="accept" text="確定" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="follow_list" text="待追蹤" lstr=""/>
+    <sfield name="signature_list" text="待簽核" lstr=""/>
+    <sfield name="announcement" text="作業公告" lstr=""/>
+    <sfield name="cancelfollow" text="取消追蹤" lstr=""/>
+    <sfield name="assigncatalog" text="指定分類" lstr=""/>
+    <sfield name="cl_user_overview_s01.lbl_name" text="" lstr=""/>
+    <sfield name="lbl_gzxp002" text="作業名稱" lstr=""/>
+    <sfield name="lbl_gzxp006" text="單據日期" lstr=""/>
+    <sfield name="add_favorite_catalog" text="新增目錄" lstr=""/>
+    <sfield name="modify_favorite_desc" text="修改" lstr=""/>
+    <sfield name="favorite_del" text="移除" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_ooag001" text="員工編號" lstr=""/>
+    <sfield name="lbl_ooea001" text="組織編號" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_oohal001" text="控制組編號" lstr=""/>
+    <sfield name="lbl_oohal002" text="語言別" lstr=""/>
+    <sfield name="lbl_oohal004" text="助記碼" lstr=""/>
+    <sfield name="lbl_oohal005" text="備註" lstr=""/>
+    <sfield name="cl_ask_s04_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s03_Test" text="測試" lstr=""/>
+    <sfield name="cl_ask_s03_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s01_Choice" text="選擇" lstr=""/>
+    <sfield name="lbl_ooeg001" text="部門編號" lstr=""/>
+    <sfield name="lbl_ooef001" text="組織編號" lstr=""/>
+    <sfield name="lbl_inaa001" text="庫位編號" lstr=""/>
+    <sfield name="lbl_oocq002" text="應用分類碼" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_pmaa001" text="交易對象編號" lstr=""/>
+    <sfield name="lbl_pmaal003" text="交易對象全名" lstr=""/>
+    <sfield name="lbl_pmaal004" text="交易對象簡稱" lstr=""/>
+    <sfield name="lbl_rtax001" text="品類編號" lstr=""/>
+    <sfield name="lbl_rtaxl003" text="說明" lstr=""/>
+    <sfield name="lbl_imaa001" text="料號" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="cl_progress_bar_Current" text="目前進度" lstr=""/>
+    <sfield name="cl_progress_bar_Total" text="全部" lstr=""/>
+    <sfield name="cl_progress_bar_%" text="%" lstr=""/>
+    <sfield name="lbl_select" text="選擇" lstr=""/>
+    <sfield name="lbl_gzgdl002" text="樣版說明" lstr=""/>
+    <sfield name="lbl_gzgd003" text="客製否" lstr=""/>
+    <sfield name="lbl_gzgd007" text="樣版名稱(4rp)" lstr=""/>
+    <sfield name="lbl_rep_fmt" text="輸出格式" lstr=""/>
+    <sfield name="lbl_outputformat_1" text="預覽與列印(SVG)" lstr=""/>
+    <sfield name="lbl_outputformat_2" text="Adobe Acrobat (PDF)" lstr=""/>
+    <sfield name="lbl_outputformat_3" text="Microsoft Excel (XLS)" lstr=""/>
+    <sfield name="lbl_outputformat_4" text="Microsoft Excel (XLS) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_5" text="Microsoft Excel (XLSX)" lstr=""/>
+    <sfield name="lbl_outputformat_6" text="Microsoft Excel (XLSX) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_7" text="Microsoft Word (RTF)" lstr=""/>
+    <sfield name="lbl_outputformat_8" text="網頁 (HTML)" lstr=""/>
+    <sfield name="lbl_outputformat_9" text="郵件 (Mail)" lstr=""/>
+    <sfield name="lbl_set_default" text="設為預設樣版" lstr=""/>
+    <sfield name="lbl_btn_accept" text="確定" lstr=""/>
+    <sfield name="lbl_btn_cancel" text="放棄" lstr=""/>
+    <sfield name="lbl_gzza003" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzza001" text="程式編號" lstr=""/>
+    <sfield name="lbl_gzza002" text="程式類別" lstr=""/>
+    <sfield name="lbl_gzde002" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzde001" text="規格編號" lstr=""/>
+    <sfield name="lbl_gzdel003" text="說明" lstr=""/>
+    <sfield name="lbl_gzdf002" text="子畫面規格編號" lstr=""/>
+    <sfield name="lbl_gzdfl003" text="子畫面檔案名稱" lstr=""/>
+    <sfield name="lbl_gzcbl004" text="說明" lstr=""/>
+    <sfield name="lbl_gzde003" text="規格類別" lstr=""/>
+    <sfield name="lbl_dzfv004" text="畫面代號" lstr=""/>
+    <sfield name="lbl_dzfv005" text="主/子程式" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

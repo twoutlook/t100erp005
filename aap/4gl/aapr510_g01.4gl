@@ -1,0 +1,1101 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aapr510_g01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:3(2016-11-09 16:12:13), PR版次:0003(1900-01-01 00:00:00)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000028
+#+ Filename...: aapr510_g01
+#+ Description: ...
+#+ Creator....: 03080(2016-03-31 16:22:29)
+#+ Modifier...: 08993 -SD/PR- 00000
+ 
+{</section>}
+ 
+{<section id="aapr510_g01.global" readonly="Y" >}
+#報表 g01 樣板自動產生(Version:13)
+#add-point:填寫註解說明 name="global.memo"
+#160414-00018#17     160516 By albireo 效能調整
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+PRIVATE TYPE sr1_r RECORD
+   apga001 LIKE apga_t.apga001, 
+   apga002 LIKE apga_t.apga002, 
+   apga003 LIKE apga_t.apga003, 
+   apga004 LIKE apga_t.apga004, 
+   apga005 LIKE apga_t.apga005, 
+   apga006 LIKE apga_t.apga006, 
+   apga007 LIKE apga_t.apga007, 
+   apga008 LIKE apga_t.apga008, 
+   apga009 LIKE apga_t.apga009, 
+   apga010 LIKE apga_t.apga010, 
+   apga011 LIKE apga_t.apga011, 
+   apga012 LIKE apga_t.apga012, 
+   apga013 LIKE apga_t.apga013, 
+   apga014 LIKE apga_t.apga014, 
+   apga015 LIKE apga_t.apga015, 
+   apga016 LIKE apga_t.apga016, 
+   apga017 LIKE apga_t.apga017, 
+   apga018 LIKE apga_t.apga018, 
+   apga019 LIKE apga_t.apga019, 
+   apga020 LIKE apga_t.apga020, 
+   apga021 LIKE apga_t.apga021, 
+   apga022 LIKE apga_t.apga022, 
+   apga023 LIKE apga_t.apga023, 
+   apga024 LIKE apga_t.apga024, 
+   apga025 LIKE apga_t.apga025, 
+   apga026 LIKE apga_t.apga026, 
+   apga027 LIKE apga_t.apga027, 
+   apga028 LIKE apga_t.apga028, 
+   apga029 LIKE apga_t.apga029, 
+   apga030 LIKE apga_t.apga030, 
+   apga031 LIKE apga_t.apga031, 
+   apga100 LIKE apga_t.apga100, 
+   apga101 LIKE apga_t.apga101, 
+   apga103 LIKE apga_t.apga103, 
+   apga104 LIKE apga_t.apga104, 
+   apga105 LIKE apga_t.apga105, 
+   apga106 LIKE apga_t.apga106, 
+   apga107 LIKE apga_t.apga107, 
+   apga108 LIKE apga_t.apga108, 
+   apga113 LIKE apga_t.apga113, 
+   apga114 LIKE apga_t.apga114, 
+   apga115 LIKE apga_t.apga115, 
+   apgacnfdt LIKE apga_t.apgacnfdt, 
+   apgacnfid LIKE apga_t.apgacnfid, 
+   apgacomp LIKE apga_t.apgacomp, 
+   apgacrtdp LIKE apga_t.apgacrtdp, 
+   apgacrtdt DATETIME YEAR TO SECOND, 
+   apgacrtid LIKE apga_t.apgacrtid, 
+   apgadocdt LIKE apga_t.apgadocdt, 
+   apgadocno LIKE apga_t.apgadocno, 
+   apgaent LIKE apga_t.apgaent, 
+   apgamoddt DATETIME YEAR TO SECOND, 
+   apgamodid LIKE apga_t.apgamodid, 
+   apgaowndp LIKE apga_t.apgaowndp, 
+   apgaownid LIKE apga_t.apgaownid, 
+   apgapstdt LIKE apga_t.apgapstdt, 
+   apgapstid LIKE apga_t.apgapstid, 
+   apgastus LIKE apga_t.apgastus, 
+   l_apga005_desc LIKE type_t.chr100, 
+   l_apga004_desc LIKE type_t.chr100, 
+   l_apga006_desc LIKE type_t.chr100, 
+   l_apga007_desc LIKE type_t.chr100, 
+   l_apga008_desc LIKE type_t.chr100
+END RECORD
+ 
+PRIVATE TYPE sr2_r RECORD
+   ooff013 LIKE ooff_t.ooff013
+END RECORD
+ 
+ 
+DEFINE tm RECORD
+       wc STRING                   #where condition
+       END RECORD
+DEFINE sr DYNAMIC ARRAY OF sr1_r                   #宣告sr為sr1_t資料結構的動態陣列
+DEFINE g_select        STRING
+DEFINE g_from          STRING
+DEFINE g_where         STRING
+DEFINE g_order         STRING
+DEFINE g_sql           STRING                         #report_select_prep,REPORT段使用
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+TYPE sr3_r RECORD #子報表01
+   apgcdocno        LIKE apgc_t.apgcdocno,
+   apgcseq          LIKE apgc_t.apgcseq,
+   apgc001          LIKE apgc_t.apgc001,
+   apgc001_desc     LIKE type_t.chr100,
+   apgc006          LIKE apgc_t.apgc006, #稅別
+   apgc006_desc     LIKE apgc_t.apgc101, #稅
+   apgc009          LIKE apgc_t.apgc009, #發票號碼
+   apgc014          LIKE apgc_t.apgc014, #付款帳戶
+   apgc100          LIKE apgc_t.apgc100, 
+   apgc101          LIKE apgc_t.apgc101,
+   apgc103          LIKE apgc_t.apgc103, #原幣未稅金額
+   apgc104          LIKE apgc_t.apgc104, #稅額
+   apgc105          LIKE apgc_t.apgc105, #原幣含稅金額
+   apgc113          LIKE apgc_t.apgc113, #本幣未稅金額
+   apgc114          LIKE apgc_t.apgc114, #本幣稅額
+   apgc115          LIKE apgc_t.apgc115 #本幣含稅金額
+        END RECORD
+        
+TYPE sr4_r RECORD #子報表02
+   apgbcomp         LIKE apgb_t.apgbcomp,
+   apgbdocno        LIKE apgb_t.apgbdocno,
+   apgbseq          LIKE apgb_t.apgbseq,
+   apgb001          LIKE apgb_t.apgb001,
+   apgb002          LIKE apgb_t.apgb002,
+   apgb003          LIKE apgb_t.apgb003,
+   apgb004          LIKE apgb_t.apgb004,
+   apgb008          LIKE apgb_t.apgb008,
+   apgb009          LIKE apgb_t.apgb009,
+   apgb105          LIKE apgb_t.apgb105
+        END RECORD
+#end add-point
+ 
+{</section>}
+ 
+{<section id="aapr510_g01.main" readonly="Y" >}
+PUBLIC FUNCTION aapr510_g01(p_arg1)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition
+#add-point:init段define (客製用) name="component_name.define_customerization"
+
+#end add-point
+#add-point:init段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component_name.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   #報表元件代號
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'   
+   
+   LET g_rep_code = "aapr510_g01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #主報表select子句準備
+   CALL aapr510_g01_sel_prep()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料存入array
+   CALL aapr510_g01_ins_data()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料印出
+   CALL aapr510_g01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapr510_g01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION aapr510_g01_sel_prep()
+   #add-point:sel_prep段define (客製用) name="sel_prep.define_customerization"
+   
+   #end add-point
+   #add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+   
+   #end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+   
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+   LET g_select = " SELECT apga001,apga002,apga003,apga004,apga005,apga006,apga007,apga008,apga009,apga010, 
+       apga011,apga012,apga013,apga014,apga015,apga016,apga017,apga018,apga019,apga020,apga021,apga022, 
+       apga023,apga024,apga025,apga026,apga027,apga028,apga029,apga030,apga031,apga100,apga101,apga103, 
+       apga104,apga105,apga106,apga107,apga108,apga113,apga114,apga115,apgacnfdt,apgacnfid,apgacomp, 
+       apgacrtdp,apgacrtdt,apgacrtid,apgadocdt,apgadocno,apgaent,apgamoddt,apgamodid,apgaowndp,apgaownid, 
+       apgapstdt,apgapstid,apgastus,",
+        #160414-00018#17-----s
+       "(SELECT ta05.ooag011 FROM ooag_t ta05 WHERE ta05.ooagent = apgaent AND ta05.ooag001 = apga005),",
+       "(SELECT ta04.pmaal004 FROM pmaal_t ta04 WHERE ta04.pmaalent = apgaent AND ta04.pmaal001 = apga004 AND pmaal002 = '",g_dlang,"'),",
+       "(SELECT ta06.gzcbl004 FROM gzcbl_t ta06 WHERE ta06.gzcbl001 = '8517' AND ta06.gzcbl002 = apga006 AND ta06.gzcbl003 = '",g_dlang,"'),",
+       "(SELECT ta07.nmabl003 FROM nmabl_t ta07 WHERE ta07.nmablent = apgaent AND ta07.nmabl001 = apga007 AND ta07.nmabl002 = '",g_dlang,"'),",
+       "(SELECT ta08.gzcbl004 FROM gzcbl_t ta08 WHERE ta08.gzcbl001 = '8515' AND ta08.gzcbl002 = apga008 AND ta08.gzcbl003 = '",g_dlang,"')"
+        #160414-00018#17-----e
+ 
+#   #end add-point
+#   LET g_select = " SELECT apga001,apga002,apga003,apga004,apga005,apga006,apga007,apga008,apga009,apga010, 
+#       apga011,apga012,apga013,apga014,apga015,apga016,apga017,apga018,apga019,apga020,apga021,apga022, 
+#       apga023,apga024,apga025,apga026,apga027,apga028,apga029,apga030,apga031,apga100,apga101,apga103, 
+#       apga104,apga105,apga106,apga107,apga108,apga113,apga114,apga115,apgacnfdt,apgacnfid,apgacomp, 
+#       apgacrtdp,apgacrtdt,apgacrtid,apgadocdt,apgadocno,apgaent,apgamoddt,apgamodid,apgaowndp,apgaownid, 
+#       apgapstdt,apgapstid,apgastus,'','','','',''"
+# 
+#   #add-point:sel_prep g_from name="sel_prep.g_from"
+   
+   #end add-point
+    LET g_from = " FROM apga_t"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+   
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED 
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   
+   #end add-point
+    LET g_order = " ORDER BY apgadocno"
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("apga_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED ," ",g_order CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段 
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   
+   #end add-point
+   PREPARE aapr510_g01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()   
+      LET g_rep_success = 'N'    
+   END IF
+   DECLARE aapr510_g01_curs CURSOR FOR aapr510_g01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapr510_g01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION aapr510_g01_ins_data()
+#主報表record(用於select子句)
+   DEFINE sr_s RECORD 
+   apga001 LIKE apga_t.apga001, 
+   apga002 LIKE apga_t.apga002, 
+   apga003 LIKE apga_t.apga003, 
+   apga004 LIKE apga_t.apga004, 
+   apga005 LIKE apga_t.apga005, 
+   apga006 LIKE apga_t.apga006, 
+   apga007 LIKE apga_t.apga007, 
+   apga008 LIKE apga_t.apga008, 
+   apga009 LIKE apga_t.apga009, 
+   apga010 LIKE apga_t.apga010, 
+   apga011 LIKE apga_t.apga011, 
+   apga012 LIKE apga_t.apga012, 
+   apga013 LIKE apga_t.apga013, 
+   apga014 LIKE apga_t.apga014, 
+   apga015 LIKE apga_t.apga015, 
+   apga016 LIKE apga_t.apga016, 
+   apga017 LIKE apga_t.apga017, 
+   apga018 LIKE apga_t.apga018, 
+   apga019 LIKE apga_t.apga019, 
+   apga020 LIKE apga_t.apga020, 
+   apga021 LIKE apga_t.apga021, 
+   apga022 LIKE apga_t.apga022, 
+   apga023 LIKE apga_t.apga023, 
+   apga024 LIKE apga_t.apga024, 
+   apga025 LIKE apga_t.apga025, 
+   apga026 LIKE apga_t.apga026, 
+   apga027 LIKE apga_t.apga027, 
+   apga028 LIKE apga_t.apga028, 
+   apga029 LIKE apga_t.apga029, 
+   apga030 LIKE apga_t.apga030, 
+   apga031 LIKE apga_t.apga031, 
+   apga100 LIKE apga_t.apga100, 
+   apga101 LIKE apga_t.apga101, 
+   apga103 LIKE apga_t.apga103, 
+   apga104 LIKE apga_t.apga104, 
+   apga105 LIKE apga_t.apga105, 
+   apga106 LIKE apga_t.apga106, 
+   apga107 LIKE apga_t.apga107, 
+   apga108 LIKE apga_t.apga108, 
+   apga113 LIKE apga_t.apga113, 
+   apga114 LIKE apga_t.apga114, 
+   apga115 LIKE apga_t.apga115, 
+   apgacnfdt LIKE apga_t.apgacnfdt, 
+   apgacnfid LIKE apga_t.apgacnfid, 
+   apgacomp LIKE apga_t.apgacomp, 
+   apgacrtdp LIKE apga_t.apgacrtdp, 
+   apgacrtdt DATETIME YEAR TO SECOND, 
+   apgacrtid LIKE apga_t.apgacrtid, 
+   apgadocdt LIKE apga_t.apgadocdt, 
+   apgadocno LIKE apga_t.apgadocno, 
+   apgaent LIKE apga_t.apgaent, 
+   apgamoddt DATETIME YEAR TO SECOND, 
+   apgamodid LIKE apga_t.apgamodid, 
+   apgaowndp LIKE apga_t.apgaowndp, 
+   apgaownid LIKE apga_t.apgaownid, 
+   apgapstdt LIKE apga_t.apgapstdt, 
+   apgapstid LIKE apga_t.apgapstid, 
+   apgastus LIKE apga_t.apgastus, 
+   l_apga005_desc LIKE type_t.chr100, 
+   l_apga004_desc LIKE type_t.chr100, 
+   l_apga006_desc LIKE type_t.chr100, 
+   l_apga007_desc LIKE type_t.chr100, 
+   l_apga008_desc LIKE type_t.chr100
+ END RECORD
+   DEFINE l_cnt           LIKE type_t.num10
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point   
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+    
+    #end add-point
+ 
+    CALL sr.clear()                                  #rep sr
+    LET l_cnt = 1
+    FOREACH aapr510_g01_curs INTO sr_s.*
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()       
+          LET g_rep_success = 'N'    
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       #160414-00018#17 mark-----s
+       #LET sr_s.l_apga005_desc = s_desc_get_person_desc(sr_s.apga005)
+       #LET sr_s.l_apga004_desc = s_desc_get_trading_partner_abbr_desc(sr_s.apga004)
+       #LET sr_s.l_apga006_desc = sr_s.apga006,".",s_desc_gzcbl004_desc('8517',sr_s.apga006)
+       #LET sr_s.l_apga007_desc = NULL
+       #SELECT nmabl003 INTO sr_s.l_apga007_desc
+       #  FROM nmabl_t
+       # WHERE nmablent = g_enterprise
+       #   AND nmabl001 = sr_s.apga007
+       #   AND nmabl002 = g_dlang
+       #LET sr_s.l_apga008_desc = sr_s.apga008,".",s_desc_gzcbl004_desc('8515',sr_s.apga008)
+       #160414-00018#17 mark-----e
+       
+       #160414-00018#17-----s
+       LET sr_s.l_apga006_desc = sr_s.apga006,".",sr_s.l_apga006_desc
+       LET sr_s.l_apga008_desc = sr_s.apga008,".",sr_s.l_apga008_desc    
+       #160414-00018#17-----e
+       #end add-point
+ 
+       #add-point:ins_data段before_arr name="ins_data.before.save"
+       
+       #end add-point
+ 
+       #set rep array value
+       LET sr[l_cnt].apga001 = sr_s.apga001
+       LET sr[l_cnt].apga002 = sr_s.apga002
+       LET sr[l_cnt].apga003 = sr_s.apga003
+       LET sr[l_cnt].apga004 = sr_s.apga004
+       LET sr[l_cnt].apga005 = sr_s.apga005
+       LET sr[l_cnt].apga006 = sr_s.apga006
+       LET sr[l_cnt].apga007 = sr_s.apga007
+       LET sr[l_cnt].apga008 = sr_s.apga008
+       LET sr[l_cnt].apga009 = sr_s.apga009
+       LET sr[l_cnt].apga010 = sr_s.apga010
+       LET sr[l_cnt].apga011 = sr_s.apga011
+       LET sr[l_cnt].apga012 = sr_s.apga012
+       LET sr[l_cnt].apga013 = sr_s.apga013
+       LET sr[l_cnt].apga014 = sr_s.apga014
+       LET sr[l_cnt].apga015 = sr_s.apga015
+       LET sr[l_cnt].apga016 = sr_s.apga016
+       LET sr[l_cnt].apga017 = sr_s.apga017
+       LET sr[l_cnt].apga018 = sr_s.apga018
+       LET sr[l_cnt].apga019 = sr_s.apga019
+       LET sr[l_cnt].apga020 = sr_s.apga020
+       LET sr[l_cnt].apga021 = sr_s.apga021
+       LET sr[l_cnt].apga022 = sr_s.apga022
+       LET sr[l_cnt].apga023 = sr_s.apga023
+       LET sr[l_cnt].apga024 = sr_s.apga024
+       LET sr[l_cnt].apga025 = sr_s.apga025
+       LET sr[l_cnt].apga026 = sr_s.apga026
+       LET sr[l_cnt].apga027 = sr_s.apga027
+       LET sr[l_cnt].apga028 = sr_s.apga028
+       LET sr[l_cnt].apga029 = sr_s.apga029
+       LET sr[l_cnt].apga030 = sr_s.apga030
+       LET sr[l_cnt].apga031 = sr_s.apga031
+       LET sr[l_cnt].apga100 = sr_s.apga100
+       LET sr[l_cnt].apga101 = sr_s.apga101
+       LET sr[l_cnt].apga103 = sr_s.apga103
+       LET sr[l_cnt].apga104 = sr_s.apga104
+       LET sr[l_cnt].apga105 = sr_s.apga105
+       LET sr[l_cnt].apga106 = sr_s.apga106
+       LET sr[l_cnt].apga107 = sr_s.apga107
+       LET sr[l_cnt].apga108 = sr_s.apga108
+       LET sr[l_cnt].apga113 = sr_s.apga113
+       LET sr[l_cnt].apga114 = sr_s.apga114
+       LET sr[l_cnt].apga115 = sr_s.apga115
+       LET sr[l_cnt].apgacnfdt = sr_s.apgacnfdt
+       LET sr[l_cnt].apgacnfid = sr_s.apgacnfid
+       LET sr[l_cnt].apgacomp = sr_s.apgacomp
+       LET sr[l_cnt].apgacrtdp = sr_s.apgacrtdp
+       LET sr[l_cnt].apgacrtdt = sr_s.apgacrtdt
+       LET sr[l_cnt].apgacrtid = sr_s.apgacrtid
+       LET sr[l_cnt].apgadocdt = sr_s.apgadocdt
+       LET sr[l_cnt].apgadocno = sr_s.apgadocno
+       LET sr[l_cnt].apgaent = sr_s.apgaent
+       LET sr[l_cnt].apgamoddt = sr_s.apgamoddt
+       LET sr[l_cnt].apgamodid = sr_s.apgamodid
+       LET sr[l_cnt].apgaowndp = sr_s.apgaowndp
+       LET sr[l_cnt].apgaownid = sr_s.apgaownid
+       LET sr[l_cnt].apgapstdt = sr_s.apgapstdt
+       LET sr[l_cnt].apgapstid = sr_s.apgapstid
+       LET sr[l_cnt].apgastus = sr_s.apgastus
+       LET sr[l_cnt].l_apga005_desc = sr_s.l_apga005_desc
+       LET sr[l_cnt].l_apga004_desc = sr_s.l_apga004_desc
+       LET sr[l_cnt].l_apga006_desc = sr_s.l_apga006_desc
+       LET sr[l_cnt].l_apga007_desc = sr_s.l_apga007_desc
+       LET sr[l_cnt].l_apga008_desc = sr_s.l_apga008_desc
+ 
+ 
+       #add-point:ins_data段after_arr name="ins_data.after.save"
+       
+       #end add-point
+       LET l_cnt = l_cnt + 1
+    END FOREACH
+    CALL sr.deleteElement(l_cnt)
+ 
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapr510_g01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION aapr510_g01_rep_data()
+   DEFINE HANDLER         om.SaxDocumentHandler
+   DEFINE l_i             INTEGER
+ 
+    #判斷是否有報表資料，若回彈出訊息視窗
+    IF sr.getLength() = 0 THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = "adz-00285"
+       LET g_errparam.extend = NULL
+       LET g_errparam.popup  = FALSE
+       LET g_errparam.replace[1] = ''
+       CALL cl_err()  
+       RETURN 
+    END IF
+    WHILE TRUE   
+       #add-point:rep_data段印前 name="rep_data.before"
+       
+       #end add-point     
+       LET handler = cl_gr_handler()
+       IF handler IS NOT NULL THEN
+          START REPORT aapr510_g01_rep TO XML HANDLER handler
+          FOR l_i = 1 TO sr.getLength()
+             OUTPUT TO REPORT aapr510_g01_rep(sr[l_i].*)
+             #報表中斷列印時，顯示錯誤訊息
+             IF fgl_report_getErrorStatus() THEN
+                DISPLAY "FGL: STOPPING REPORT msg=\"",fgl_report_getErrorString(),"\""
+                EXIT FOR
+             END IF                  
+          END FOR
+          FINISH REPORT aapr510_g01_rep
+       END IF
+       #add-point:rep_data段印完 name="rep_data.after"
+       
+       #end add-point       
+       IF g_rep_flag = TRUE THEN
+          LET g_rep_flag = FALSE
+          EXIT WHILE
+       END IF
+    END WHILE
+    #add-point:rep_data段離開while印完前 name="rep_data.end.before"
+    
+    #end add-point
+    CALL cl_gr_close_report()
+    #add-point:rep_data段離開while印完後 name="rep_data.end.after"
+    
+    #end add-point    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aapr510_g01.rep" readonly="Y" >}
+PRIVATE REPORT aapr510_g01_rep(sr1)
+DEFINE sr1 sr1_r
+DEFINE sr2 sr2_r
+DEFINE l_subrep01_show  LIKE type_t.chr1,
+       l_subrep02_show  LIKE type_t.chr1,
+       l_subrep03_show  LIKE type_t.chr1,
+       l_subrep04_show  LIKE type_t.chr1
+DEFINE l_cnt           LIKE type_t.num10
+DEFINE l_sub_sql       STRING
+#add-point:rep段define  (客製用) name="rep.define_customerization"
+
+#end add-point
+#add-point:rep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep.define"
+DEFINE sr3       sr3_r
+DEFINE l_subrep05_show LIKE type_t.chr1
+DEFINE l_oodb004    LIKE oodb_t.oodb004
+DEFINE l_oodb011    LIKE oodb_t.oodb011
+DEFINE l_apcb105    LIKE apcb_t.apcb105
+DEFINE l_apca013    LIKE apca_t.apca013
+DEFINE l_apca012    LIKE apca_t.apca012
+DEFINE sr4       sr4_r
+#end add-point
+ 
+    #add-point:rep段ORDER_before name="rep.order.before"
+    
+    #end add-point
+    ORDER  BY sr1.apgadocno
+    #add-point:rep段ORDER_after name="rep.order.after"
+    
+    #end add-point
+    
+    FORMAT
+       FIRST PAGE HEADER          
+          PRINTX g_user,g_pdate,g_rep_code,g_company,g_ptime,g_user_name,g_date_fmt
+          PRINTX tm.*
+          PRINTX g_grNumFmt.*
+          PRINTX g_rep_wcchp
+ 
+          #讀取beforeGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.apgadocno
+            #報表 d05 樣板自動產生(Version:6)
+            CALL cl_gr_title_clear()  #清除title變數值 
+            #add-point:rep.header  #公司資訊(不在公用變數內) name="rep.header"
+            
+            #end add-point:rep.header 
+            LET g_rep_docno = sr1.apgadocno
+            CALL cl_gr_init_pageheader() #表頭資訊
+            PRINTX g_grPageHeader.*
+            PRINTX g_grPageFooter.*
+            #add-point:rep.apr.signstr.before name="rep.apr.signstr.before"
+                          
+            #end add-point:rep.apr.signstr.before   
+            LET g_doc_key = 'apgaent=' ,sr1.apgaent,'{+}apgacomp=' ,sr1.apgacomp,'{+}apgadocno=' ,sr1.apgadocno         
+            CALL cl_gr_init_apr(sr1.apgadocno)
+            #add-point:rep.apr.signstr name="rep.apr.signstr"
+                          
+            #end add-point:rep.apr.signstr
+            PRINTX g_grSign.*
+ 
+ 
+ 
+           #add-point:rep.b_group.apgadocno.before name="rep.b_group.apgadocno.before"
+           
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub01.before name="rep.sub01.before"
+           
+           #end add-point:rep.sub01.before
+ 
+           #add-point:rep.sub01.sql name="rep.sub01.sql"
+           
+           #end add-point:rep.sub01.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='2' AND ooff004=0 AND ooffent = '", 
+                sr1.apgaent CLIPPED ,"'", " AND  ooff003 = '", sr1.apgadocno CLIPPED ,"'"
+ 
+           #add-point:rep.sub01.afsql name="rep.sub01.afsql"
+           
+           #end add-point:rep.sub01.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep01_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE aapr510_g01_repcur01_cnt_pre FROM l_sub_sql
+           EXECUTE aapr510_g01_repcur01_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep01_show ="Y"
+           END IF
+           PRINTX l_subrep01_show
+           START REPORT aapr510_g01_subrep01
+           DECLARE aapr510_g01_repcur01 CURSOR FROM g_sql
+           FOREACH aapr510_g01_repcur01 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "aapr510_g01_repcur01:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub01.foreach name="rep.sub01.foreach"
+              
+              #end add-point:rep.sub01.foreach
+              OUTPUT TO REPORT aapr510_g01_subrep01(sr2.*)
+           END FOREACH
+           FINISH REPORT aapr510_g01_subrep01
+           #add-point:rep.sub01.after name="rep.sub01.after"
+           
+           #end add-point:rep.sub01.after
+ 
+ 
+ 
+           #add-point:rep.b_group.apgadocno.after name="rep.b_group.apgadocno.after"
+           
+           #end add-point:
+ 
+ 
+ 
+ 
+       ON EVERY ROW
+          #add-point:rep.everyrow.before name="rep.everyrow.before"
+          
+          #end add-point:rep.everyrow.before
+ 
+          #單身前備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub02.before name="rep.sub02.before"
+           
+           #end add-point:rep.sub02.before
+ 
+           #add-point:rep.sub02.sql name="rep.sub02.sql"
+           
+           #end add-point:rep.sub02.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='2' AND ooffent = '", 
+                sr1.apgaent CLIPPED ,"'", " AND  ooff003 = '", sr1.apgadocno CLIPPED ,"'"
+ 
+           #add-point:rep.sub02.afsql name="rep.sub02.afsql"
+           
+           #end add-point:rep.sub02.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep02_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE aapr510_g01_repcur02_cnt_pre FROM l_sub_sql
+           EXECUTE aapr510_g01_repcur02_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep02_show ="Y"
+           END IF
+           PRINTX l_subrep02_show
+           START REPORT aapr510_g01_subrep02
+           DECLARE aapr510_g01_repcur02 CURSOR FROM g_sql
+           FOREACH aapr510_g01_repcur02 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "aapr510_g01_repcur02:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub02.foreach name="rep.sub02.foreach"
+              
+              #end add-point:rep.sub02.foreach
+              OUTPUT TO REPORT aapr510_g01_subrep02(sr2.*)
+           END FOREACH
+           FINISH REPORT aapr510_g01_subrep02
+           #add-point:rep.sub02.after name="rep.sub02.after"
+           
+           #end add-point:rep.sub02.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.beforerow name="rep.everyrow.beforerow"
+          
+          #end add-point:rep.everyrow.beforerow
+            
+          PRINTX sr1.*
+ 
+          #add-point:rep.everyrow.afterrow name="rep.everyrow.afterrow"
+          
+          #end add-point:rep.everyrow.afterrow
+ 
+          #單身後備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub03.before name="rep.sub03.before"
+           
+           #end add-point:rep.sub03.before
+ 
+           #add-point:rep.sub03.sql name="rep.sub03.sql"
+           
+           #end add-point:rep.sub03.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='1' AND ooff003 = '", 
+                sr1.apgaent CLIPPED ,"'"
+ 
+           #add-point:rep.sub03.afsql name="rep.sub03.afsql"
+           
+           #end add-point:rep.sub03.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep03_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE aapr510_g01_repcur03_cnt_pre FROM l_sub_sql
+           EXECUTE aapr510_g01_repcur03_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep03_show ="Y"
+           END IF
+           PRINTX l_subrep03_show
+           START REPORT aapr510_g01_subrep03
+           DECLARE aapr510_g01_repcur03 CURSOR FROM g_sql
+           FOREACH aapr510_g01_repcur03 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "aapr510_g01_repcur03:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub03.foreach name="rep.sub03.foreach"
+              
+              #end add-point:rep.sub03.foreach
+              OUTPUT TO REPORT aapr510_g01_subrep03(sr2.*)
+           END FOREACH
+           FINISH REPORT aapr510_g01_subrep03
+           #add-point:rep.sub03.after name="rep.sub03.after"
+           
+           #end add-point:rep.sub03.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.after name="rep.everyrow.after"
+          
+          #end add-point:rep.everyrow.after        
+ 
+          #讀取afterGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.apgadocno
+ 
+           #add-point:rep.a_group.apgadocno.before name="rep.a_group.apgadocno.before"
+           #subrep 採購
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET g_sql = " SELECT apgbcomp,apgbdocno,apgbseq,apgb001,apgb002,apgb003,apgb004,apgb008,apgb009,apgb105 ",
+                       "   FROM apgb_t WHERE apgbent = '",g_enterprise,"' ",                       
+                       "    AND apgbdocno = '",sr1.apgadocno,"'           ",
+                       "    AND apgbcomp  = '",sr1.apgacomp,"'            ",
+                       "   ORDER BY apgbseq "
+           LET l_sub_sql = "SELECT COUNT(*) FROM (",g_sql,")"
+           PREPARE aapr510_g01_repcur06_cnt_pre FROM l_sub_sql
+           EXECUTE aapr510_g01_repcur06_cnt_pre INTO l_cnt
+#           IF l_cnt > 0 THEN
+#              LET l_subrep05_show ="Y"
+#           END IF
+           START REPORT aapr510_g01_subrep06
+           DECLARE aapr510_g01_repcur06 CURSOR FROM g_sql
+           FOREACH aapr510_g01_repcur06 INTO sr4.*
+           
+#              CALL s_desc_get_acc_desc('3117',sr3.apgc001) RETURNING sr3.apgc001_desc
+#              CALL s_tax_chk(sr1.apgacomp,sr3.apgc006)
+#                     RETURNING g_sub_success,l_oodb004,l_apca013,l_apca012,l_oodb011
+#              LET sr3.apgc006_desc = l_apca012
+              OUTPUT TO REPORT aapr510_g01_subrep06(sr4.*)
+           END FOREACH
+           FINISH REPORT aapr510_g01_subrep06
+           
+           #subrep 費用資訊
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep05_show = 'N'
+           LET g_sql = " SELECT apgcdocno,apgcseq,apgc001,",
+                       "        (SELECT oocql004 FROM oocql_t WHERE oocqlent = apgcent AND oocql001 = '3117' AND oocql002 = apgc001 AND oocql003 = '",g_dlang,"')     ,",   #160414-00018#17 
+                       "        apgc006,",
+                       "        (SELECT oodb006 FROM oodb_t,ooef_t WHERE oodbent = ooefent AND oodb001 = ooef019 AND oodb002 = apgc006 AND ooefent = apgcent  AND ooef001 = '",sr1.apgacomp,"' )       ,",   #160414-00018#17 
+                       "apgc009,                        ",
+                       "        apgc014,apgc100,apgc101,apgc103,apgc104,  ",
+                       "        apgc105,apgc113,apgc114,apgc115           ",
+                       "   FROM apgc_t WHERE apgcent = '",g_enterprise,"' ",                       
+                       "    AND apgcdocno = '",sr1.apgadocno,"'           ",
+                       "    AND apgccomp  = '",sr1.apgacomp,"'            ",
+                       "    AND apgc900 = '0' ",
+                       " ORDER BY apgcseq"
+           
+           LET l_sub_sql = "SELECT COUNT(*) FROM (",g_sql,")"
+           PREPARE aapr510_g01_repcur05_cnt_pre FROM l_sub_sql
+           EXECUTE aapr510_g01_repcur05_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN
+              LET l_subrep05_show ="Y"
+           END IF
+           START REPORT aapr510_g01_subrep05
+           DECLARE aapr510_g01_repcur05 CURSOR FROM g_sql
+           FOREACH aapr510_g01_repcur05 INTO sr3.*
+           
+              #160414-00018#17 mark-----s
+              #CALL s_desc_get_acc_desc('3117',sr3.apgc001) RETURNING sr3.apgc001_desc
+              #CALL s_tax_chk(sr1.apgacomp,sr3.apgc006)
+              #       RETURNING g_sub_success,l_oodb004,l_apca013,l_apca012,l_oodb011
+              #LET sr3.apgc006_desc = l_apca012
+              #160414-00018#17 mark-----e
+              OUTPUT TO REPORT aapr510_g01_subrep05(sr3.*)
+           END FOREACH
+           FINISH REPORT aapr510_g01_subrep05
+           PRINTX l_subrep05_show
+           
+
+           #PRINTX l_subrep05_show
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub04.before name="rep.sub04.before"
+           
+           #end add-point:rep.sub04.before
+ 
+           #add-point:rep.sub04.sql name="rep.sub04.sql"
+           
+           #end add-point:rep.sub04.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='1' AND ooff004=0 AND ooffent = '", 
+                sr1.apgaent CLIPPED ,"'", " AND  ooff003 = '", sr1.apgadocno CLIPPED ,"'"
+ 
+           #add-point:rep.sub04.afsql name="rep.sub04.afsql"
+           
+           #end add-point:rep.sub04.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep04_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE aapr510_g01_repcur04_cnt_pre FROM l_sub_sql
+           EXECUTE aapr510_g01_repcur04_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep04_show ="Y"
+           END IF
+           PRINTX l_subrep04_show
+           START REPORT aapr510_g01_subrep04
+           DECLARE aapr510_g01_repcur04 CURSOR FROM g_sql
+           FOREACH aapr510_g01_repcur04 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "aapr510_g01_repcur04:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub04.foreach name="rep.sub04.foreach"
+              
+              #end add-point:rep.sub04.foreach
+              OUTPUT TO REPORT aapr510_g01_subrep04(sr2.*)
+           END FOREACH
+           FINISH REPORT aapr510_g01_subrep04
+           #add-point:rep.sub04.after name="rep.sub04.after"
+           
+           #end add-point:rep.sub04.after
+ 
+ 
+ 
+           #add-point:rep.a_group.apgadocno.after name="rep.a_group.apgadocno.after"
+           
+           #end add-point:
+ 
+ 
+ 
+       ON LAST ROW
+            #add-point:rep.lastrow.before name="rep.lastrow.before"  
+                    
+            #end add-point :rep.lastrow.before
+ 
+            #add-point:rep.lastrow.after name="rep.lastrow.after"
+            
+            #end add-point :rep.lastrow.after
+END REPORT
+ 
+{</section>}
+ 
+{<section id="aapr510_g01.subrep_str" readonly="Y" >}
+#讀取子報表樣板
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT aapr510_g01_subrep01(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub01.define_customerization" 
+
+#end add-point
+#add-point:sub01.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub01.define" 
+
+#end add-point:sub01.define
+ 
+    #add-point:sub01.order.before name="sub01.order.before" 
+    
+    #end add-point:sub01.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub01.everyrow.before name="sub01.everyrow.before" 
+                          
+            #end add-point:sub01.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub01.everyrow.after name="sub01.everyrow.after" 
+            
+            #end add-point:sub01.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT aapr510_g01_subrep02(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub02.define_customerization" 
+
+#end add-point
+#add-point:sub02.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub02.define" 
+
+#end add-point:sub02.define
+ 
+    #add-point:sub02.order.before name="sub02.order.before" 
+    
+    #end add-point:sub02.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub02.everyrow.before name="sub02.everyrow.before" 
+                          
+            #end add-point:sub02.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub02.everyrow.after name="sub02.everyrow.after" 
+            
+            #end add-point:sub02.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT aapr510_g01_subrep03(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub03.define_customerization" 
+
+#end add-point
+#add-point:sub03.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub03.define" 
+
+#end add-point:sub03.define
+ 
+    #add-point:sub03.order.before name="sub03.order.before" 
+    
+    #end add-point:sub03.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub03.everyrow.before name="sub03.everyrow.before" 
+                          
+            #end add-point:sub03.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub03.everyrow.after name="sub03.everyrow.after" 
+            
+            #end add-point:sub03.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT aapr510_g01_subrep04(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub04.define_customerization" 
+
+#end add-point
+#add-point:sub04.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub04.define" 
+
+#end add-point:sub04.define
+ 
+    #add-point:sub04.order.before name="sub04.order.before" 
+    
+    #end add-point:sub04.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub04.everyrow.before name="sub04.everyrow.before" 
+                          
+            #end add-point:sub04.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub04.everyrow.after name="sub04.everyrow.after" 
+            
+            #end add-point:sub04.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="aapr510_g01.other_function" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aapr510_g01.other_report" readonly="Y" >}
+
+PRIVATE REPORT aapr510_g01_subrep05(sr3)
+DEFINE sr3 sr3_r
+DEFINE l_apgc103_sum  LIKE apgc_t.apgc103
+DEFINE l_apgc104_sum  LIKE apgc_t.apgc104
+DEFINE l_apgc105_sum  LIKE apgc_t.apgc105
+DEFINE l_apgc113_sum  LIKE apgc_t.apgc113
+DEFINE l_apgc114_sum  LIKE apgc_t.apgc114
+DEFINE l_apgc115_sum  LIKE apgc_t.apgc115
+
+ ORDER EXTERNAL BY sr3.apgcdocno
+   FORMAT
+
+      ON EVERY ROW
+         PRINTX sr3.*
+         PRINTX g_grNumFmt.*
+
+      AFTER GROUP OF sr3.apgcdocno
+         LET l_apgc103_sum = GROUP SUM(sr3.apgc103)
+         LET l_apgc104_sum = GROUP SUM(sr3.apgc104)
+         LET l_apgc105_sum = GROUP SUM(sr3.apgc105)
+         LET l_apgc113_sum = GROUP SUM(sr3.apgc113)
+         LET l_apgc114_sum = GROUP SUM(sr3.apgc114)
+         LET l_apgc115_sum = GROUP SUM(sr3.apgc115)         
+         PRINTX l_apgc103_sum,l_apgc104_sum,l_apgc105_sum,
+                l_apgc113_sum,l_apgc114_sum,l_apgc115_sum
+END REPORT
+
+PRIVATE REPORT aapr510_g01_subrep06(sr4)
+   DEFINE sr4 sr4_r
+   DEFINE l_apgb105_sum  LIKE apgb_t.apgb105
+   ORDER EXTERNAL BY sr4.apgbdocno
+   
+   FORMAT
+
+      ON EVERY ROW
+         PRINTX sr4.*
+         PRINTX g_grNumFmt.*
+         
+      AFTER GROUP OF sr4.apgbdocno
+         LET l_apgb105_sum = GROUP SUM(sr4.apgb105)
+         PRINTX l_apgb105_sum
+END REPORT
+
+ 
+{</section>}
+ 

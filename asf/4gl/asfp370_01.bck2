@@ -1,0 +1,845 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="asfp370_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0006(2015-01-06 17:08:34), PR版次:0006(2016-08-04 13:40:38)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000101
+#+ Filename...: asfp370_01
+#+ Description: 發料前調撥作業—調撥料號挑選
+#+ Creator....: 00768(2014-07-01 15:48:05)
+#+ Modifier...: 00768 -SD/PR- 08734
+ 
+{</section>}
+ 
+{<section id="asfp370_01.global" >}
+#應用 p00 樣板自動產生(Version:4)
+#add-point:填寫註解說明
+#150101 单位转换率改写
+#150105 未確認的發料單也要能產生發料前調撥的資料
+#150106 增加拨入库储选项
+#160318-00025#21   2016/04/19  BY 07900    校验代码重复错误讯息的修改
+#160727-00019#18   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 p370_01_lock_b_t ——> asfp370_tmp01
+#end add-point
+#add-point:填寫註解說明(客製用)
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔
+#GLOBALS "../4gl/asfp370_01.inc"
+GLOBALS "../../asf/4gl/asfp370.inc"
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asfp370_01.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable)
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asfp370_01.global_variable" >}
+#add-point:自定義模組變數(Module Variable)
+DEFINE g_rec_b               LIKE type_t.num5 
+DEFINE l_ac                  LIKE type_t.num5
+DEFINE g_master_idx          LIKE type_t.num5
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="asfp370_01.other_dialog" >}
+
+DIALOG asfp370_01_construct()
+   DEFINE l_success  LIKE type_t.num5
+   
+   CONSTRUCT BY NAME g_wc_01 ON sfdcdocno,sfdc004
+      BEFORE CONSTRUCT                                                          
+         IF NOT cl_null(g_sfdcdocno_01) THEN                                       
+            DISPLAY g_sfdcdocno_01 TO sfdcdocno
+            LET g_sfdcdocno_01 = ''            
+         END IF
+         
+      ON ACTION controlp INFIELD sfdcdocno
+         #開窗c段
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'c'
+         LET g_qryparam.reqry = FALSE
+         #LET g_qryparam.where = " sfdasite ='",g_site,"' AND sfdastus = 'Y' AND sfda002 not in ('16','26')"
+         LET g_qryparam.where = " sfdasite ='",g_site,"' AND sfdastus in('N','Y') AND sfda002 not in ('16','26')"
+         CALL q_sfdadocno()                           #呼叫開窗
+         DISPLAY g_qryparam.return1 TO sfdcdocno  #顯示到畫面上
+         NEXT FIELD sfdcdocno                     #返回原欄位
+         
+      ON ACTION controlp INFIELD sfdc004
+         #需求料号
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = "c"
+         LET g_qryparam.reqry = FALSE
+         LET g_qryparam.where = " sfdcsite ='",g_site,"' "
+         CALL q_sfdc004()
+         DISPLAY g_qryparam.return1 TO sfdc004
+         NEXT FIELD sfdc004                     #返回原欄位
+
+      ON ACTION accept
+         IF g_asfp370_01_m.rdo_sel='2' AND cl_null(g_asfp370_01_m.inaa001) THEN
+            #请维护必输字段值！
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'sub-00379'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            NEXT FIELD inaa001
+         END IF
+         DELETE FROM asfp370_01_temp
+         CALL asfp370_01_sel_need() RETURNING l_success
+         IF NOT l_success THEN
+            NEXT FIELD CURRENT
+         END IF
+         CALL asfp370_01_b_fill()
+
+       ON ACTION selall
+          CALL asfp370_01_sel_all("Y")
+       
+       ON ACTION selnone
+          CALL asfp370_01_sel_all("N")
+       
+   END CONSTRUCT
+END DIALOG
+
+DIALOG asfp370_01_input()
+   INPUT ARRAY g_sfdc01_d FROM s_detail1_asfp370_01.*
+       ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+               INSERT ROW = FALSE,DELETE ROW = FALSE,APPEND ROW = FALSE)
+       BEFORE INPUT
+       
+       BEFORE ROW
+          LET l_ac = ARR_CURR()
+          
+       AFTER FIELD sel_01
+          IF cl_null(g_sfdc01_d[l_ac].sel) THEN
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.code = 'aqc-00006'
+             LET g_errparam.extend = ''
+             LET g_errparam.popup = TRUE
+             CALL cl_err()
+
+             NEXT FIELD CURRENT
+          END IF
+          IF g_sfdc01_d[l_ac].sel NOT MATCHES '[NY]' THEN
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.code = 'agl-00144'
+             LET g_errparam.extend = ''
+             LET g_errparam.popup = TRUE
+             CALL cl_err()
+
+             NEXT FIELD CURRENT
+          END IF
+          
+       ON ROW CHANGE
+          
+       ON CHANGE sel_01
+          UPDATE asfp370_01_temp SET sel = g_sfdc01_d[l_ac].sel
+           WHERE sfdcdocno = g_sfdc01_d[l_ac].sfdcdocno
+             AND sfdcseq   = g_sfdc01_d[l_ac].sfdcseq
+          IF SQLCA.sqlcode THEN
+             INITIALIZE g_errparam TO NULL
+             LET g_errparam.code = SQLCA.sqlcode
+             LET g_errparam.extend = 'upd asfp370_01_temp'
+             LET g_errparam.popup = TRUE
+             CALL cl_err()
+
+             NEXT FIELD CURRENT
+          END IF 
+
+       ON ACTION selall
+          CALL asfp370_01_sel_all("Y")
+       
+       ON ACTION selnone
+          CALL asfp370_01_sel_all("N")
+       
+   END INPUT
+
+END DIALOG
+
+#單頭INPUT條件
+#add 150106
+DIALOG asfp370_01_input0()
+   DEFINE l_success  LIKE type_t.num5
+   
+   INPUT BY NAME g_asfp370_01_m.rdo_sel,g_asfp370_01_m.inaa001,g_asfp370_01_m.inab002
+      ATTRIBUTE(WITHOUT DEFAULTS)
+
+      BEFORE INPUT
+
+      #BEFORE FIELD rdo_sel
+      #   CALL cl_set_comp_entry("inaa001,inab002",TRUE)
+      
+      AFTER FIELD rdo_sel
+         IF NOT cl_null(g_asfp370_01_m.rdo_sel) THEN
+            IF g_asfp370_01_m.rdo_sel NOT MATCHES '[12]' THEN
+               NEXT FIELD CURRENT
+            END IF
+         END IF
+      
+      ON CHANGE rdo_sel
+         CALL cl_set_comp_entry("inaa001,inab002",TRUE)
+         IF g_asfp370_01_m.rdo_sel = '1' THEN
+            LET g_asfp370_01_m.inaa001 = ''
+            LET g_asfp370_01_m.inaa001_desc = ''
+            LET g_asfp370_01_m.inab002 = ''
+            LET g_asfp370_01_m.inab002_desc = ''
+            DISPLAY BY NAME g_asfp370_01_m.inaa001_desc
+            DISPLAY BY NAME g_asfp370_01_m.inab002_desc
+            CALL cl_set_comp_entry("inaa001,inab002",FALSE)
+         END IF
+
+      AFTER FIELD inaa001
+         IF NOT cl_null(g_asfp370_01_m.inaa001) THEN
+            #是否存在库位资料
+            INITIALIZE g_chkparam.* TO NULL
+            LET g_chkparam.arg1 = g_asfp370_01_m.inaa001
+            #160318-00025#21  by 07900 --add-str
+           LET g_errshow = TRUE #是否開窗                   
+           LET g_chkparam.err_str[1] ="aim-00065:sub-01302|aini001|",cl_get_progname("aini001",g_lang,"2"),"|:EXEPROGaini001"
+           #160318-00025#21  by 07900 --add-end 
+            IF NOT cl_chk_exist("v_inaa001_2") THEN
+               NEXT FIELD CURRENT
+            END IF
+            #如果储位已有，检查储位
+            IF NOT cl_null(g_asfp370_01_m.inab002) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_site
+               LET g_chkparam.arg2 = g_asfp370_01_m.inaa001
+               LET g_chkparam.arg3 = g_asfp370_01_m.inab002
+               #160318-00025#21  by 07900 --add-str
+              LET g_errshow = TRUE #是否開窗                   
+              LET g_chkparam.err_str[1] ="aim-00063:sub-01302|aini002|",cl_get_progname("aini002",g_lang,"2"),"|:EXEPROGaini002"
+              #160318-00025#21  by 07900 --add-end 
+               IF NOT cl_chk_exist("v_inab002") THEN
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            CALL s_desc_get_stock_desc(g_site,g_asfp370_01_m.inaa001) RETURNING g_asfp370_01_m.inaa001_desc
+            DISPLAY BY NAME g_asfp370_01_m.inaa001_desc
+         END IF
+
+      AFTER FIELD inab002
+         IF NOT cl_null(g_asfp370_01_m.inab002) THEN
+            #检查库位+储位
+            IF NOT cl_null(g_asfp370_01_m.inaa001) THEN
+               INITIALIZE g_chkparam.* TO NULL
+               LET g_chkparam.arg1 = g_site
+               LET g_chkparam.arg2 = g_asfp370_01_m.inaa001
+               LET g_chkparam.arg3 = g_asfp370_01_m.inab002
+                #160318-00025#21  by 07900 --add-str
+              LET g_errshow = TRUE #是否開窗                   
+              LET g_chkparam.err_str[1] ="aim-00063:sub-01302|aini002|",cl_get_progname("aini002",g_lang,"2"),"|:EXEPROGaini002"
+              #160318-00025#21  by 07900 --add-end 
+               IF NOT cl_chk_exist("v_inab002") THEN
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            CALL s_desc_get_locator_desc(g_site,g_asfp370_01_m.inaa001,g_asfp370_01_m.inab002)
+               RETURNING g_asfp370_01_m.inab002_desc
+            DISPLAY BY NAME g_asfp370_01_m.inab002_desc
+         END IF
+
+      ON ACTION controlp INFIELD inaa001
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'i'
+         LET g_qryparam.reqry = FALSE
+         LET g_qryparam.default1 = g_asfp370_01_m.inaa001           #給予default值
+         CALL q_inaa001_12()                                #呼叫開窗
+         LET g_asfp370_01_m.inaa001 = g_qryparam.return1
+         DISPLAY g_asfp370_01_m.inaa001 TO inaa001
+         CALL s_desc_get_stock_desc(g_site,g_asfp370_01_m.inaa001) RETURNING g_asfp370_01_m.inaa001_desc
+         DISPLAY BY NAME g_asfp370_01_m.inaa001_desc
+         NEXT FIELD inaa001              #返回原欄位
+
+      ON ACTION controlp INFIELD inab002
+         IF cl_null(g_asfp370_01_m.inaa001) THEN
+            #请先维护库位
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'asf-00419'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            NEXT FIELD inaa001
+         END IF
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'i'
+         LET g_qryparam.reqry = FALSE
+         LET g_qryparam.arg1  = g_asfp370_01_m.inaa001
+         LET g_qryparam.default1 = g_asfp370_01_m.inab002           #給予default值
+         CALL q_inab002_5()  #储位
+         LET g_asfp370_01_m.inab002 = g_qryparam.return1
+         DISPLAY g_asfp370_01_m.inab002 TO inab002
+         CALL s_desc_get_locator_desc(g_site,g_asfp370_01_m.inaa001,g_asfp370_01_m.inab002)
+            RETURNING g_asfp370_01_m.inab002_desc
+         DISPLAY BY NAME g_asfp370_01_m.inab002_desc
+         NEXT FIELD inab002              #返回原欄位
+         
+      ON ACTION accept
+         IF g_asfp370_01_m.rdo_sel='2' AND cl_null(g_asfp370_01_m.inaa001) THEN
+            #请维护必输字段值！
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'sub-00379'
+            LET g_errparam.extend = ''
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            NEXT FIELD inaa001
+         END IF
+         DELETE FROM asfp370_01_temp
+         CALL asfp370_01_sel_need() RETURNING l_success
+         IF NOT l_success THEN
+            NEXT FIELD CURRENT
+         END IF
+         CALL asfp370_01_b_fill()
+
+   END INPUT
+END DIALOG
+
+ 
+{</section>}
+ 
+{<section id="asfp370_01.other_function" readonly="Y" >}
+
+#畫面資料初始化
+PUBLIC FUNCTION asfp370_01_init()
+
+   WHENEVER ERROR CONTINUE
+   
+   #當整體參數有使用參考單位時才顯示
+   IF g_ref_unit = 'N' THEN
+      CALL cl_set_comp_visible("sfdc009_01,sfdc010_01,inag025_01,diffr_01",FALSE) #參考單位
+   END IF
+
+END FUNCTION
+
+PUBLIC FUNCTION asfp370_01_b_fill()
+   DEFINE l_sql        STRING
+   DEFINE l_ac_t       LIKE type_t.num5
+   DEFINE l_rate       LIKE inaj_t.inaj014  #单位换算率
+   DEFINE l_success    LIKE type_t.num5
+   #160120-00002#1 s983961--add(s)   
+   DEFINE l_where      STRING
+   DEFINE l_sfdcdocno  LIKE sfdc_t.sfdcdocno
+   DEFINE l_sfdcseq    LIKE sfdc_t.sfdcseq  
+   #160120-00002#1 s983961--add(e) 
+   WHENEVER ERROR CONTINUE
+   CALL g_sfdc01_d.clear()
+   
+   LET l_sql = "SELECT UNIQUE sel,sfdcdocno,sfdcseq,sfdc001,sfdc002, ",
+               "       sfdc003,sfdc004,imaal003,imaal004,sfdc005, ",
+               "       sfdc006,sfba013,sfba016,sfdc007,inag008,0, ",
+               "       sfdc009,sfdc010,inag025,0,sfdc012,sfdc013  ",
+               "  FROM asfp370_01_temp LEFT JOIN imaal_t ON imaalent='"||g_enterprise||"' AND imaal001=sfdc004 AND imaal002='"||g_dlang||"' ",
+               "                       LEFT JOIN sfba_t ON sfbaent='"||g_enterprise||"' AND sfbadocno=sfdc001 AND sfbaseq=sfdc002 AND sfbaseq1=sfdc003 ",
+               "       ,sfda_t ",
+               " ORDER BY sfdcdocno,sfdcseq"
+   PREPARE asfp370_01_b_fill_sel FROM l_sql
+   DECLARE asfp370_01_b_fill_curs CURSOR FOR asfp370_01_b_fill_sel
+   LET l_ac_t = l_ac
+   LET l_ac = 1
+   ERROR "Searching!"
+   FOREACH asfp370_01_b_fill_curs INTO g_sfdc01_d[l_ac].*
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:asfp370_01_b_fill_curs"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+   
+      #160120-00002#8 s983961--add(s)   
+      LET l_sfdcdocno = ''
+      LET l_sfdcseq = ''       
+      LET l_sql = "SELECT sfdcdocno,sfdcseq ", 
+                  "  FROM sfdc_t ", 
+                  " WHERE sfdcdocno = '",g_sfdc01_d[l_ac].sfdcdocno,"'  ",  
+                  "   AND sfdcseq = '",g_sfdc01_d[l_ac].sfdcseq,"'  ",   
+                  "   AND sfdc001 = '",g_sfdc01_d[l_ac].sfdc001,"' ",
+                  "   AND sfdc002 = '",g_sfdc01_d[l_ac].sfdc002,"' ",
+                  "   AND sfdc003 = '",g_sfdc01_d[l_ac].sfdc003,"' ",                     
+                  "   FOR UPDATE SKIP LOCKED " 
+      PREPARE asfp370_01_chk_locked_prep FROM l_sql 
+      EXECUTE asfp370_01_chk_locked_prep INTO l_sfdcdocno,l_sfdcseq
+      IF cl_null(l_sfdcdocno) AND cl_null(l_sfdcseq)  THEN 
+         CONTINUE FOREACH 
+      END IF 
+      DISPLAY l_sql
+      #160120-00002#8 s983961--add(e)    
+      #计算差异量
+      LET g_sfdc01_d[l_ac].diff  = g_sfdc01_d[l_ac].sfdc007 - g_sfdc01_d[l_ac].inag008     #差异数量
+      LET g_sfdc01_d[l_ac].diffr = g_sfdc01_d[l_ac].sfdc010 - g_sfdc01_d[l_ac].inag025     #参考单位差异数量
+
+      LET l_ac = l_ac + 1
+      IF l_ac > g_max_rec THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code =  9035
+         LET g_errparam.extend =  ""
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   LET g_rec_b = l_ac - 1
+   CALL g_sfdc01_d.deleteElement(l_ac)
+   LET l_ac = l_ac_t
+   CLOSE asfp370_01_b_fill_curs
+   FREE asfp370_01_b_fill_sel
+   
+   LET g_master_idx = l_ac
+
+END FUNCTION
+#计算单身库存量
+PUBLIC FUNCTION asfp370_01_get_inag008(p_sfdc004,p_sfdc005,p_sfdc012,p_sfdc013,p_sfdc006)
+   DEFINE p_sfdc004    LIKE sfdc_t.sfdc004  #料件編號
+   DEFINE p_sfdc005    LIKE sfdc_t.sfdc005  #產品特徵
+   DEFINE p_sfdc012    LIKE sfdc_t.sfdc012  #庫位編號
+   DEFINE p_sfdc013    LIKE sfdc_t.sfdc013  #儲位編號
+   DEFINE p_sfdc006    LIKE sfdc_t.sfdc006  #庫存單位
+   DEFINE r_inag008    LIKE inag_t.inag008  #库存量
+   DEFINE l_sql        STRING
+   DEFINE l_success    LIKE type_t.num5
+   DEFINE l_qty        LIKE inag_t.inag008
+   DEFINE l_inag006    LIKE inag_t.inag006
+   DEFINE l_inag003    LIKE inag_t.inag003
+
+   WHENEVER ERROR CONTINUE
+   
+   LET r_inag008 = 0
+   LET l_sql = "SELECT UNIQUE inag006,inag003  ", #批号，库存管理特征
+               "  FROM inag_t ",
+               " WHERE inagent =",g_enterprise,
+               "   AND inagsite= '",g_site,"'",
+               "   AND inag001 = '",p_sfdc004,"' ",  #料件編號
+               "   AND inag002 = '",p_sfdc005,"' ",  #產品特徵
+               "   AND inag004 = '",p_sfdc012,"' ",  #庫位編號
+               "   AND inag005 = '",p_sfdc013,"' ",  #儲位編號
+               "   AND inag007 = '",p_sfdc006,"' "   #庫存單位
+   PREPARE asfp370_01_get_inag008_sel FROM l_sql
+   DECLARE asfp370_01_get_inag008_curs CURSOR FOR asfp370_01_get_inag008_sel
+   FOREACH asfp370_01_get_inag008_curs INTO l_inag006,l_inag003
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:asfp370_01_get_inag008_curs"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+      
+      CALL s_inventory_get_inag008_3(g_site,p_sfdc004,p_sfdc005,p_sfdc012,p_sfdc013,l_inag006,l_inag003,p_sfdc006)
+         RETURNING l_success,l_qty
+      IF NOT l_success THEN
+         EXIT FOREACH
+      END IF
+      LET r_inag008 = r_inag008 + l_qty
+   END FOREACH
+   CLOSE asfp370_01_get_inag008_curs
+   FREE asfp370_01_get_inag008_sel
+   
+   RETURN r_inag008
+END FUNCTION
+
+PUBLIC FUNCTION asfp370_01_sel_all(p_flag)
+   DEFINE p_flag         LIKE type_t.chr1
+   DEFINE l_i            LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+   
+   IF g_rec_b = 0 THEN
+      RETURN
+   END IF
+   
+   FOR l_i = 1 TO g_rec_b
+       LET g_sfdc01_d[l_i].sel = p_flag
+       #更新临时表
+       UPDATE asfp370_01_temp SET sel = g_sfdc01_d[l_i].sel
+        WHERE sfdcdocno = g_sfdc01_d[l_i].sfdcdocno
+          AND sfdcseq   = g_sfdc01_d[l_i].sfdcseq
+       IF SQLCA.sqlcode THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.code = SQLCA.sqlcode
+          LET g_errparam.extend = 'upd asfp370_01_temp'
+          LET g_errparam.popup = TRUE
+          CALL cl_err()
+
+          EXIT FOR
+       END IF 
+   END FOR
+END FUNCTION
+
+PUBLIC FUNCTION asfp370_01_create_temp_table()
+   DEFINE r_success         LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+
+   LET r_success = TRUE
+
+   IF NOT asfp370_01_drop_temp_table() THEN
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+
+   CREATE TEMP TABLE asfp370_01_temp(
+      sel                  LIKE type_t.chr1,        #选择
+      sfdcdocno            LIKE sfdc_t.sfdcdocno,   #发料单号
+      sfdcseq              LIKE sfdc_t.sfdcseq,     #项次
+      sfdc001              LIKE sfdc_t.sfdc001,     #工单单号
+      sfdc002              LIKE sfdc_t.sfdc002,     #工单项次
+      sfdc003              LIKE sfdc_t.sfdc003,     #工单项序
+      sfdc004              LIKE sfdc_t.sfdc004,     #需求料号
+      sfdc005              LIKE sfdc_t.sfdc005,     #特征
+      sfdc006              LIKE sfdc_t.sfdc006,     #单位
+      sfdc007              LIKE sfdc_t.sfdc007,     #申请数量
+      inag008              LIKE inag_t.inag008,     #库存数量
+      sfdc009              LIKE sfdc_t.sfdc009,     #参考单位
+      sfdc010              LIKE sfdc_t.sfdc010,     #参考单位申请数量
+      inag025              LIKE inag_t.inag025,     #参考单位库存数量
+      sfdc012              LIKE sfdc_t.sfdc012,     #拨入库位
+      sfdc013              LIKE sfdc_t.sfdc013      #拨入储位
+      )
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create asfp370_01_temp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   CREATE UNIQUE INDEX asfp370_01_temp_01 on asfp370_01_temp (sfdcdocno,sfdcseq)
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'create index asfp370_01_temp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   
+   #160120-00002#9 s983961--add(s)  
+   CREATE TEMP TABLE asfp370_tmp01(  #160727-00019#18   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 p370_01_lock_b_t ——> asfp370_tmp01
+      sfdcdocno            LIKE sfdc_t.sfdcdocno,   #发料单号
+      sfdcseq              LIKE sfdc_t.sfdcseq,     #项次
+      sfdc001              LIKE sfdc_t.sfdc001,     #工单单号
+      sfdc002              LIKE sfdc_t.sfdc002,     #工单项次
+      sfdc003              LIKE sfdc_t.sfdc003     #工单项序
+      )
+   #160120-00002#9 s983961--add(e)   
+   RETURN r_success
+END FUNCTION
+
+PUBLIC FUNCTION asfp370_01_drop_temp_table()
+   DEFINE r_success          LIKE type_t.num5
+
+   WHENEVER ERROR CONTINUE
+
+   LET r_success = TRUE
+
+   DROP TABLE asfp370_01_temp
+
+   IF NOT (SQLCA.sqlcode = 0 OR SQLCA.sqlcode = -206) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = 'drop asfp370_01_temp'
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      LET r_success = FALSE
+      RETURN r_success
+   END IF
+   #160120-00002#9 s983961--add(s)  
+   DROP TABLE asfp370_tmp01   #160727-00019#18   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 p370_01_lock_b_t ——> asfp370_tmp01
+   #160120-00002#9 s983961--add(e)  
+   RETURN r_success
+END FUNCTION
+
+#删除临时表中的资料
+PUBLIC FUNCTION asfp370_01_delete_temp_table()
+   
+   WHENEVER ERROR CONTINUE
+   
+   DELETE FROM asfp370_01_temp
+   
+   #160120-00002#9 s983961--add(s) 
+   DELETE FROM asfp370_tmp01     #160727-00019#18   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 p370_01_lock_b_t ——> asfp370_tmp01
+   #160120-00002#9 s983961--add(e)  
+END FUNCTION
+
+#获取需求资料
+PUBLIC FUNCTION asfp370_01_sel_need()
+   DEFINE r_success    LIKE type_t.num5
+   DEFINE l_sql        STRING
+   DEFINE l_rate       LIKE inaj_t.inaj014  #单位换算率
+   DEFINE l_success    LIKE type_t.num5
+   #插入临时表
+   DEFINE l_sfdcdocno  LIKE sfdc_t.sfdcdocno
+   DEFINE l_sfdcseq    LIKE sfdc_t.sfdcseq  
+   DEFINE l_sfdc001    LIKE sfdc_t.sfdc001  
+   DEFINE l_sfdc002    LIKE sfdc_t.sfdc002  
+   DEFINE l_sfdc003    LIKE sfdc_t.sfdc003  
+   DEFINE l_sfdc004    LIKE sfdc_t.sfdc004 #料件編號 
+   DEFINE l_sfdc005    LIKE sfdc_t.sfdc005 #產品特徵 
+   DEFINE l_sfdc006    LIKE sfdc_t.sfdc006 #庫存單位
+   DEFINE l_sfdc007    LIKE sfdc_t.sfdc007 #需求数量
+   DEFINE l_sfdc009    LIKE sfdc_t.sfdc009 #参考单位
+   DEFINE l_sfdc010    LIKE sfdc_t.sfdc010 #参考单位库存数量
+   DEFINE l_sfdc012    LIKE sfdc_t.sfdc012 #庫位編號 
+   DEFINE l_sfdc013    LIKE sfdc_t.sfdc013 #儲位編號
+   DEFINE l_inag008    LIKE inag_t.inag008 #库存数量
+   DEFINE l_inag025    LIKE inag_t.inag025 #参考单位库存数量
+   DEFINE l_imae092    LIKE imae_t.imae092 #发料前调拨
+   DEFINE l_imae101    LIKE imae_t.imae101
+   DEFINE l_imae102    LIKE imae_t.imae102
+   #插入临时表--end 
+   #160120-00002#9 s983961--add(s)   
+   DEFINE l_cnt        LIKE type_t.num5
+   DEFINE l_where      STRING
+   DEFINE l_sfdcdocno2 LIKE sfdc_t.sfdcdocno
+   DEFINE l_sfdcseq2   LIKE sfdc_t.sfdcseq  
+   #160120-00002#9 s983961--add(e)   
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = TRUE
+   
+   LET l_sql = "SELECT UNIQUE sfdcdocno,sfdcseq   ,sfdc001   ,sfdc002   , ",
+               "              sfdc003  ,sfdc004   ,sfdc005   ,sfdc006   , ",
+               "              sfdc007  ,sfdc009   ,sfdc010   ,sfdc012   , ",
+               "              sfdc013  ",
+               "  FROM sfdc_t,sfda_t ",
+               " WHERE sfdadocno = sfdcdocno AND sfdaent = sfdcent ",
+               "   AND sfdcent =",g_enterprise,
+               "   AND sfdcsite='",g_site,"'",
+               "   AND ",g_wc_01 CLIPPED,
+               "   AND sfda002 NOT IN('16','26') ",  #排除重复性生产
+               #"   AND sfdastus = 'Y' ",
+               "   AND sfdastus in('N','Y') ",
+               " ORDER BY sfdcdocno,sfdcseq"
+   PREPARE asfp370_01_sel_need_sel FROM l_sql
+   DECLARE asfp370_01_sel_need_curs CURSOR FOR asfp370_01_sel_need_sel
+   ERROR "Searching!"
+   FOREACH asfp370_01_sel_need_curs INTO l_sfdcdocno,l_sfdcseq,l_sfdc001,l_sfdc002,
+                                       l_sfdc003,l_sfdc004,l_sfdc005,l_sfdc006,
+                                       l_sfdc007,l_sfdc009,l_sfdc010,l_sfdc012,
+                                       l_sfdc013 
+              
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "FOREACH:asfp370_01_sel_need_curs"
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+         LET r_success = FALSE
+         RETURN r_success
+      END IF
+   
+      #160120-00002#8 s983961--add(s)   
+      #LET l_sfdcdocno2 = ''
+      #LET l_sfdcseq2 = ''       
+      #LET l_sql = "SELECT sfdcdocno,sfdcseq ", 
+      #            "  FROM sfdc_t ", 
+      #            " WHERE sfdcdocno = '",l_sfdcdocno,"'  ",  
+      #            "   AND sfdcseq = '",l_sfdcseq,"'  ",   
+      #            "   AND sfdc001 = '",l_sfdc001,"' ",
+      #            "   AND sfdc002 = '",l_sfdc002,"' ",
+      #            "   AND sfdc003 = '",l_sfdc003,"' ",                     
+      #            "   FOR UPDATE SKIP LOCKED "       
+      #PREPARE asfp370_02_chk_locked_prep FROM l_sql 
+      #EXECUTE asfp370_02_chk_locked_prep INTO l_sfdcdocno2,l_sfdcseq2
+      #IF cl_null(l_sfdcdocno2) AND cl_null(l_sfdcseq2)  THEN 
+      #   CONTINUE FOREACH 
+      #END IF 
+      #160120-00002#8 s983961--add(e)  
+   
+      #发料前调拨
+      SELECT imae092,imae101,imae102
+        INTO l_imae092,l_imae101,l_imae102
+        FROM imae_t
+       WHERE imaeent = g_enterprise
+         AND imaesite= g_site
+         AND imae001 = l_sfdc004
+      IF cl_null(l_imae092) OR l_imae092='N' THEN
+         CONTINUE FOREACH
+      END IF
+      
+      #add 150106
+      IF g_asfp370_01_m.rdo_sel = '1'THEN
+         LET l_sfdc012 = l_imae101
+         LET l_sfdc013 = l_imae102
+      ELSE
+         LET l_sfdc012 = g_asfp370_01_m.inaa001
+         LET l_sfdc013 = g_asfp370_01_m.inab002
+      END IF
+      IF cl_null(l_sfdc012) THEN LET l_sfdc012 = ' ' END IF
+      IF cl_null(l_sfdc013) THEN LET l_sfdc013 = ' ' END IF
+      #add 150106 end
+      
+      #计算库存量
+      CALL asfp370_01_get_inag008(l_sfdc004,l_sfdc005,l_sfdc012,l_sfdc013,l_sfdc006) RETURNING l_inag008  #库存数量
+      
+      IF NOT cl_null(l_sfdc009) THEN
+         #mod 150101
+         ##计算单位换算率
+         #CALL s_aimi190_get_convert(l_sfdc004,l_sfdc006,l_sfdc009)
+         #   RETURNING l_success,l_rate
+         #IF NOT l_success THEN
+         #   LET l_rate = 1
+         #END IF
+         ##计算参考单位库存量及差异量
+         #LET l_inag025 = l_inag008 * l_rate  #参考单位库存数量
+         #mod 150101 end
+         #add 150101
+         #计算参考单位库存量及差异量
+         CALL s_aooi250_convert_qty(l_sfdc004,l_sfdc006,l_sfdc009,l_inag008)
+            RETURNING l_success,l_inag025
+         IF NOT l_success THEN
+            LET l_inag025 = l_inag008
+         END IF
+         #add 150101 end
+      ELSE
+         LET l_sfdc010 = 0   #参考单位需求数量
+         LET l_inag025 = 0   #参考单位库存数量
+      END IF
+
+      INSERT INTO asfp370_01_temp(sel      ,sfdcdocno,sfdcseq  ,sfdc001  ,sfdc002  ,
+                                  sfdc003  ,sfdc004  ,sfdc005  ,sfdc006  ,sfdc007  ,
+                                  inag008  ,sfdc009  ,sfdc010  ,inag025  ,sfdc012  ,
+                                  sfdc013 )
+         VALUES('N'        ,l_sfdcdocno,l_sfdcseq  ,l_sfdc001  ,l_sfdc002  ,
+                l_sfdc003  ,l_sfdc004  ,l_sfdc005  ,l_sfdc006  ,l_sfdc007  ,
+                l_inag008  ,l_sfdc009  ,l_sfdc010  ,l_inag025  ,l_sfdc012  ,
+                l_sfdc013 )
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = 'ins asfp370_01_temp'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         LET r_success = FALSE
+         RETURN r_success
+      END IF 
+      
+      #160120-00002#9 s983961--add(s) 
+      #LET l_cnt = 0
+      #SELECT COUNT(*) INTO l_cnt
+      #  FROM p370_01_lock_b_t
+      # WHERE sfdcdocno = l_sfdcdocno
+      #   AND sfdcseq   = l_sfdcseq
+      #   AND sfdc001   = l_sfdc001
+      #   AND sfdc002   = l_sfdc002
+      #   AND sfdc003   = l_sfdc003
+      #IF cl_null(l_cnt) OR l_cnt = 0 THEN
+      #   INSERT INTO p370_01_lock_b_t VALUES(l_sfdcdocno,l_sfdcseq,l_sfdc001,l_sfdc002,l_sfdc003)
+      #END IF
+      #160120-00002#9 s983961--add(e) 
+      
+   END FOREACH
+   CLOSE asfp370_01_sel_need_curs
+   FREE asfp370_01_sel_need_sel
+   
+   #160120-00002#9 s983961--add(s) 
+   
+   #160120-00002#9 s983961--add(e) 
+   
+   RETURN r_success
+END FUNCTION
+
+################################################################################
+# Descriptions...: 將選取的資料寫入lock底稿
+# Memo...........:
+# Usage..........: CALL asfp370_01_save()
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION asfp370_01_save()
+   #160120-00002#9 s983961--add(s)   
+   DEFINE l_cnt        LIKE type_t.num5
+   DEFINE l_where      STRING
+   DEFINE l_i          LIKE type_t.num5
+   DEFINE l_flag       LIKE type_t.chr1 
+   DEFINE l_sfdcdocno  LIKE sfdc_t.sfdcdocno
+   DEFINE l_sfdcseq    LIKE sfdc_t.sfdcseq  
+   DEFINE l_sfdc001    LIKE sfdc_t.sfdc001  
+   DEFINE l_sfdc002    LIKE sfdc_t.sfdc002  
+   DEFINE l_sfdc003    LIKE sfdc_t.sfdc003  
+   DEFINE l_sql        STRING   
+   #160120-00002#9 s983961--add(e)   
+   
+   WHENEVER ERROR CONTINUE
+   
+   FOR l_i = 1 TO g_sfdc01_d.getLength()
+       #未勾選不需寫入底稿
+       IF g_sfdc01_d[l_i].sel = 'N' THEN
+          CONTINUE FOR
+       END IF 
+       #將勾選的資料寫 
+       LET l_cnt = 0
+      SELECT COUNT(*) INTO l_cnt
+        FROM asfp370_tmp01  #160727-00019#18   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 p370_01_lock_b_t ——> asfp370_tmp01
+       WHERE sfdcdocno = g_sfdc01_d[l_i].sfdcdocno
+         AND sfdcseq   = g_sfdc01_d[l_i].sfdcseq
+         AND sfdc001   = g_sfdc01_d[l_i].sfdc001
+         AND sfdc002   = g_sfdc01_d[l_i].sfdc002
+         AND sfdc003   = g_sfdc01_d[l_i].sfdc003
+      IF cl_null(l_cnt) OR l_cnt = 0 THEN
+         INSERT INTO asfp370_tmp01 VALUES(g_sfdc01_d[l_i].sfdcdocno,g_sfdc01_d[l_i].sfdcseq,g_sfdc01_d[l_i].sfdc001,g_sfdc01_d[l_i].sfdc002,g_sfdc01_d[l_i].sfdc003)  #160727-00019#18   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 p370_01_lock_b_t ——> asfp370_tmp01
+      END IF
+   END FOR    
+   
+   #LOCK資料
+   LET l_sql = "SELECT sfdcdocno,sfdcseq,sfdc001,sfdc002,sfdc003 ",
+               "  FROM asfp370_tmp01 ",  #160727-00019#18   16/08/04 By 08734 临时表长度超过15码的减少到15码以下 p370_01_lock_b_t ——> asfp370_tmp01
+               " ORDER BY sfdcdocno,sfdcseq,sfdc001,sfdc002,sfdc003 "
+   PREPARE asfp370_lock_prep FROM l_sql
+   DECLARE asfp370_lock_curs CURSOR FOR asfp370_lock_prep
+
+   LET l_sql = "SELECT sfdcdocno,sfdcseq,sfdc001,sfdc002,sfdc003 ",
+               "  FROM sfdc_t ",
+               " WHERE "
+
+   LET l_where = ''
+   FOREACH asfp370_lock_curs INTO l_sfdcdocno,l_sfdcseq,l_sfdc001,l_sfdc002,l_sfdc003
+      IF cl_null(l_where) THEN
+         LET l_where = "(sfdcdocno = '",l_sfdcdocno,"' AND sfdcseq = '",l_sfdcseq,"' AND sfdc001 = '",l_sfdc001,"' AND sfdc002 = '",l_sfdc002,"' AND sfdc003 = '",l_sfdc003,"') "
+      ELSE
+         LET l_where = l_where," OR ","(sfdcdocno = '",l_sfdcdocno,"' AND sfdcseq = '",l_sfdcseq,"' AND sfdc001 = '",l_sfdc001,"' AND sfdc002 = '",l_sfdc002,"' AND sfdc003 = '",l_sfdc003,"') "
+      END IF
+   END FOREACH
+   
+   LET l_sql = l_sql,l_where," FOR UPDATE "
+   PREPARE asfp370_lock_body_prep FROM l_sql 
+   DECLARE asfp370_lock_body_curs CURSOR FOR asfp370_lock_body_prep
+   OPEN asfp370_lock_body_curs
+   
+END FUNCTION
+
+ 
+{</section>}
+ 

@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aglp530" std_prog="aglp530" erpver="1.0" ver="1" module="AGL" type="M" booking="N" class="p" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items="output"/>
+  <table ver="" cite_std="N"/>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：1.每期期末時利用本作業產生期末損益結轉傳票,將虛帳戶總餘額結清,轉入實帳戶
+                2.若遇每年最後一期,本作業將自動再做年底結轉,將實帳戶年底餘額轉為下年期初餘額
+                3.本作業可對任何關帳前的年度期別做重新結轉動作
+                4.為避免已正確結帳期別被再度誤結,結帳完成後請執行關帳設定以確保正確性
+作業功能：說明/離開
+作業類型：批次作業
+輸入模式： 
+資料來源：傳票憑證單頭檔(glap_t)
+          傳票憑證單身檔(glaq_t)
+          會計期餘額檔(glar_t)
+
+期末結轉作業步驟:
+
+→當該帳別選擇的期末結帳方式='表結法'(月结)
+    依据当前账套，抓取法人，币别（给glaq005）
+
+  A.產生一張期末結轉傳票(CE)
+    法人 = 账套对应的法人
+    傳票單別=總帳參數設定檔.結轉用單別
+    傳票日期=執行年期的當期最末一日(執行年期:2013/06,則CE傳票日=2013/06/30)
+    來源類型='CE'的傳票單頭單身資料(glap_t,glaq_t)且
+    傳票狀態='已過帳'
+    借贷金额 = 传票金额    
+
+    法人 = 单头法人
+    科目編號=帳別會計科目設定檔(glab_t).期末結轉本期損益（損益類）/期末結轉本期損益（資產類）
+    币别 = 该帐套下对应的币别
+    汇率 = 1
+    傳票金額=科目期餘額檔(glar_t).損益類科目餘額(貸減借)累加(需為帳戶科目且屬獨立或明細科目）
+             IF 傳票金額>0 THEN
+                借:期末結轉本期損益（損益類）
+                貸:期末結轉本期損益（資產類）
+                传票金额 = 传票金额
+             ELSE
+                傳票金額*(-1)
+                借:期末結轉本期損益（資產類）
+                貸:期末結轉本期損益（損益類）
+                传票金额 = 传票金额
+             END IF
+     傳票單身：本期结转损益(资产类) 本期结转损益(负债类)需按照科目核算项设置+site汇总金额，產生對應的單身資料
+                      當傳票單據別為紅字傳票時，金額可為負數，反之，借貸相反，金額*（-1）
+
+  B.新增當期科目期餘額檔資料(即步驟A.CE傳票的過帳動作)
+    insert 兩筆當期餘額檔,科目分別是期末結轉本期損益（損益類）/期末結轉本期損益（資產類),金額=步驟A.傳票金額
+    call s_voucher_post_xxx()
+
+→當該帳別選擇的期末結帳方式='帳結法'
+   
+  A.產生兩張期末結轉傳票(CE)
+    A-1.費用科目結轉本年利潤
+        傳票單別=總帳參數設定檔.結轉用單別
+        傳票日期=執行年期的當期最末一日
+        來源類型='CE'的傳票單頭單身資料(glap_t,glaq_t)且傳票狀態='已過帳'
+        科目編號=當期傳票有費用類科目的傳票憑證單身資料(glaq_t).科目編號(費用科目的判斷=損益類科目且餘額型態為借方)
+        傳票金額=原當期傳票費用科目的傳票單身金額但借貸相反
+        上述費用類科目逐一產生對應的傳票單身資料後, 其金額總和另增一筆傳票單身,借:總帳參數設定檔.本年利潤
+        產生利潤科目單身資料：須按照營運據點+核算項做group產生多筆的本年利潤+營運據點核算項的CE憑證單身
+                                            營運據點未必要核算項，其餘11組固定核算項是否group, 則看本年利潤這個科目在agli030裡有沒有勾選啟用該核算項來決定    
+  分录：费用类(案例)
+        传票1：借：应付   100      传票2：借：费用C    100
+               贷：费用A  50              贷：费用D    50 
+               贷：费用B  50              贷：现金     150
+        应产生的资料
+        借：费用A    50
+        借：费用B    50
+        贷：费用C    100
+        借：费用D    50
+        本年利润-贷：50
+        本年利润= sum（借）-sum（贷）
+        IF 本年利润 > 0 THNE
+           产生贷方金额 = 本年利润
+        ELSE 
+           产生借方金额 = 本年利润
+        END IF 
+
+    A-2.收入科目結轉本年利潤
+        傳票單別=總帳參數設定檔.結轉用單別
+        傳票日期=執行年期的當期最末一日
+        來源類型='CE'的傳票單頭單身資料(glap_t,glaq_t)且傳票狀態='已過帳'
+        科目編號=當期傳票有收入類科目的傳票憑證單身資料(glar_q).科目編號(收入科目的判斷=損益類科目且餘額型態為貸方)
+        傳票金額=原當期傳票收入科目的傳票單身金額但借貸相反
+        上述收入類科目逐一產生對應的傳票單身資料後, 其金額總和另增一筆傳票單身,貸:總帳參數設定檔.本年利潤
+        產生利潤科目單身資料：須按照營運據點+核算項做group產生多筆的本年利潤+營運據點核算項的CE憑證單身
+                                            營運據點未必要核算項，其餘11組固定核算項是否group, 則看本年利潤這個科目在agli030裡有沒有勾選啟用該核算項來決定
+   分录：收入类(案例)
+        传票1：借：收入A  100      
+               借：收入B  50              
+               贷：应收   150             
+        应产生的资料
+        借：本年利润     150
+        贷：收入A    100
+        贷：收入B    50
+        金额差异= sum（贷）-sum（借）
+        IF 本年利润 > 0 THNE
+           产生借方金额 = 本年利润
+        ELSE 
+           产生贷方金额 = 本年利润
+        END IF 
+
+  B.新增/累計當期科目期餘額檔資料(即步驟A.兩張CE傳票的過帳動作)
+    insert 一筆當期餘額檔,科目=總帳參數設定檔.本年利潤,金額=步驟A-1及A-2本年利潤金額的累計總和
+    更新步驟A.各損益科目對應的當期科目期餘額檔金額(損益科目結清)
+
+→產生次期應計調整傳票(RA)
+  →當執行期別為當年度最末一期,則系統呼叫年度結轉作業(aglp540)並傳入年度訊息自動執行之.
+  IF 画面期别 = 12 THEN
+     呼叫aglp540，并传入当前的年度，
+     执行成功后，更新指定帳別的帳別基本資料檔(glaa_t).年度 = 年度+1,期别 =1 
+  ELSE
+　  A.先將次期已產生過的'RA'傳票刪除(已經過帳的需先過帳還原後再進行刪除動作),再重新產生次期'RA'傳票)
+    每張當期應計傳票(AC,已过帐)同步產生一張次期且傳票狀態='已過帳'的RA傳票
+    傳票單別=總帳參數設定檔.應計調整用單別  
+    傳票日期=執行年期的次期起始日(執行年期:2013/06,則RA傳票日=2013/07/01)
+    來源類型='RA'
+    科目編號=同AC傳票單身
+    傳票金額=同AC傳票單身但借貸相反
+    若總帳單據別參數.紅字傳票否='Y',則產生的RA傳票借貸按原AC傳票,僅借貸金額均為原金額*(-1),即依參數設定決定是否產生負數傳票
+    IF 紅字傳票否='Y' THEN
+       LET 借方金额 = 借方金额 * -1
+       LET 贷方金额 = 贷方金额 * -1
+    ELSE
+       傳票金額=同AC傳票單身但借貸相反
+    END IF 
+
+    B.累計當期科目期餘額檔資料(即步驟A.RA傳票的過帳動作)
+    更新指定帳別的帳別基本資料檔(glaa_t).現行會計期別(累加一期)
+  END IF 
+
+#备注：可能会有CE类凭证产生不了的情况，比如改期无余额档或者无资料，则在下面提示
+
+因應立沖功能,增補期末結轉作業的規格(aglp530)
+  期末結轉作業產生完會計科目各期餘額檔(glar_t)之後,進行以下處理：
+  1.先刪除期末結轉作業指定的帳別+年度+期別的立沖餘額檔資料(glaz_t)
+  2.產生傳票項次立沖各期餘額檔資料(glaz_t)
+      2-1.上期未沖完的餘額資料應結轉下期
+            取上期(同帳別的上一個年度+期別)的立沖餘額檔資料未沖完的資料(立帳-已沖>0)
+            每筆相應新增一筆本期的立沖餘額檔資料
+            本幣立帳金額(glaz004)=上期的未沖餘額(glaz004-glaz005)
+            本幣已沖金額(glaz005)=0
+            立帳數量(glaz007)=上期的未沖餘額(glaz007-glaz008)
+            已沖數量(glaz008)=0
+            原幣立帳金額(glaz010)=上期的未沖餘額(glaz010-glaz011)
+            原幣已沖金額(glaz011)=0
+            會計年度(glaz001)=期末結轉年度
+            會計期別(glaz002)=期末結轉期別
+            其餘欄位均同上期
+      2-2.取得2-1的立帳傳票編號+項次,累加期餘額檔(glaz_t).當期已沖
+            抓出對應的當期沖帳資料(glay_t)
+            每筆資料 UPDATE 本幣已沖金額(glaz005)=本幣已沖金額+沖帳金額(glay003)
+                            已沖數量(glaz008)=已沖數量+沖帳金額(glay008)
+                            原幣已沖金額(glaz011)=原幣已沖金額+沖帳金額(glay010)
+      2-3.本期新增的立帳資料產生相應餘額檔
+            取符合帳別+年度+期別的傳票項次立帳異動資料(glax_t)
+            每筆相應新增一筆餘額檔資料,本幣已沖金額(glaz005)=0,已沖數量(glaz008)=0,原幣已沖金額(glaz011)=0,其餘欄位均同立帳資料
+      2-4.取得2-3的立帳傳票編號+項次,累加期餘額檔(glaz_t).當期已沖
+            同2-2]]>
+  </all>
+  <field cite_std="N" name="glap_t.glap002" ver="1" src="s" column="glap002" table="glap_t" attribute="N401" type="number(5,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[1.預設輸入帳別的現行會計年度期別
+2.輸入的年度期若為該帳別關帳日之前,應提示訊息且不可執行本作業]]>
+  </field>
+  <field cite_std="N" name="glap_t.glap004" ver="1" src="s" column="glap004" table="glap_t" attribute="N402" type="number(5,0)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="glap_t.glapld" ver="1" src="s" column="glapld" table="glap_t" attribute="C501" type="varchar2(5)" req="Y" i_zoom="q_authorised_ld" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[欄位名稱：帳別
+   ●欄位控管：INPUT/Display
+     開窗:q_authorised_ld
+     預設值: 當前營運據點對應的法人編號預設的主帳別]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="glapld_desc" src="s" depend_field="glap_t.glapld" correspon_key="glapent,glapld" ref_table="glaal_t" ref_fk="glaalent,glaalld" ref_dlang="glaal001" ref_rtn="glaal002" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="glap_t.glap002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glap_t.glap004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="glap_t.glapld" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <strings>
+    <sfield name="condition_page" text="條件輸入" lstr=""/>
+    <sfield name="group_input" text="條件選項" lstr=""/>
+    <sfield name="lbl_glapld" text="帳別" lstr=""/>
+    <sfield name="lbl_glaal002" text="說明" lstr=""/>
+    <sfield name="lbl_car_for" text="結轉年度期別" lstr=""/>
+    <sfield name="lbl_f" text="/" lstr=""/>
+    <sfield name="group_progress" text="處理進度" lstr=""/>
+    <sfield name="lbl_stagenow" text="目前處理階段:" lstr=""/>
+    <sfield name="lbl_stagecomplete" text="整體完成進度:" lstr=""/>
+    <sfield name="scheduling_page" text="排程設定" lstr=""/>
+    <sfield name="history_page" text="執行歷程" lstr=""/>
+    <sfield name="lbl_collect_gzze001" text="訊息代碼" lstr=""/>
+    <sfield name="lbl_collect_gzze003" text="訊息內容" lstr=""/>
+    <sfield name="lbl_collect_gzze006" text="進階訊息" lstr=""/>
+    <sfield name="lbl_cl_err_s02_accept" text="確定" lstr=""/>
+    <sfield name="lbl_err_detail" text="進階訊息" lstr=""/>
+    <sfield name="lbl_suggest_exe" text="建議執行" lstr=""/>
+    <sfield name="lbl_err_contact" text="反應問題" lstr=""/>
+    <sfield name="lbl_cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="lbl_group_cl_err_s01" text="進階訊息" lstr=""/>
+    <sfield name="lbl_gzze001" text="訊息代碼:" lstr=""/>
+    <sfield name="lbl_gzze006" text="訊息內容:" lstr=""/>
+    <sfield name="lbl_sqlerrd2" text="SQL錯誤碼:" lstr=""/>
+    <sfield name="lbl_gzpd001" text="排程執行序號" lstr=""/>
+    <sfield name="lbl_gzpd002" text="排程編號" lstr=""/>
+    <sfield name="lbl_gzpd003" text="序號" lstr=""/>
+    <sfield name="lbl_gzpd004" text="執行作業" lstr=""/>
+    <sfield name="lbl_gzpd005" text="傳入參數" lstr=""/>
+    <sfield name="lbl_gzpc006" text="執行結束時間" lstr=""/>
+    <sfield name="lbl_gzpd007" text="作業執行狀態" lstr=""/>
+    <sfield name="lbl_gzpd008" text="作業執行時間" lstr=""/>
+    <sfield name="lbl_gzpd009" text="執行使用者編號" lstr=""/>
+    <sfield name="lbl_gzpd010" text="作業完成時間" lstr=""/>
+    <sfield name="btn_schedule_reexec" text="重新執行" lstr=""/>
+    <sfield name="btn_view" text="重新查看" lstr=""/>
+    <sfield name="btn_schedule_adv" text="進階查詢" lstr=""/>
+    <sfield name="lbl_gzpa003" text="執行類型" lstr=""/>
+    <sfield name="lbl_gzpa002" text="排程說明" lstr=""/>
+    <sfield name="lbl_asign" text="指定時間執行" lstr=""/>
+    <sfield name="lbl_gzpa007" text="預定執行時間" lstr=""/>
+    <sfield name="lbl_exec" text="執行時間設定" lstr=""/>
+    <sfield name="lbl_wk1" text="第一週" lstr=""/>
+    <sfield name="lbl_wk2" text="第二週" lstr=""/>
+    <sfield name="lbl_wk3" text="第三週" lstr=""/>
+    <sfield name="lbl_wk4" text="第四週" lstr=""/>
+    <sfield name="lbl_wk5" text="第五週" lstr=""/>
+    <sfield name="lbl_wd0" text="週日" lstr=""/>
+    <sfield name="lbl_wd1" text="週一" lstr=""/>
+    <sfield name="lbl_wd2" text="週二" lstr=""/>
+    <sfield name="lbl_wd3" text="週三" lstr=""/>
+    <sfield name="lbl_wd4" text="週四" lstr=""/>
+    <sfield name="lbl_wd5" text="週五" lstr=""/>
+    <sfield name="lbl_wd6" text="週六" lstr=""/>
+    <sfield name="lbl_dayend" text="月底" lstr=""/>
+    <sfield name="lbl_sc1" text="時段一" lstr=""/>
+    <sfield name="lbl_to" text="至" lstr=""/>
+    <sfield name="lbl_per" text="每" lstr=""/>
+    <sfield name="lbl_times" text="執行一次" lstr=""/>
+    <sfield name="lbl_sc2" text="時段二" lstr=""/>
+    <sfield name="lbl_sc3" text="時段三" lstr=""/>
+    <sfield name="lbl_spec" text="特殊指定" lstr=""/>
+    <sfield name="lbl_gzpa029" text="執行日遇到假日" lstr=""/>
+    <sfield name="lbl_gzpa031" text="前一程序未完成時不執行新程序" lstr=""/>
+    <sfield name="lbl_end_call" text="執行結束通知人員" lstr=""/>
+    <sfield name="lbl_gzpe003" text="執行狀況" lstr=""/>
+    <sfield name="lbl_gzpe004" text="收件人員工編號" lstr=""/>
+    <sfield name="lbl_gzpe004_desc" text="員工姓名" lstr=""/>
+    <sfield name="lbl_addr" text="收件人信件位址" lstr=""/>
+    <sfield name="lbl_gzpe005" text="信件主旨" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_glaald" text="帳別編號" lstr=""/>
+    <sfield name="lbl_glaacomp" text="歸屬法人" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_glaa004" text="會計科目參照表號" lstr=""/>
+    <sfield name="lbl_glaa008" text="平行記帳否" lstr=""/>
+    <sfield name="lbl_glaa014" text="主帳套" lstr=""/>
+    <sfield name="lbl_glaastus" text="狀態碼" lstr=""/>
+    <sfield name="lbl_gzxm001" text="QBE編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm005" text="設為首頁-自動查詢方案" lstr=""/>
+    <sfield name="lbl_gzxm002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxm003" text="員工編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm004" text="設為預設查詢條件" lstr=""/>
+    <sfield name="cl_qbe_s02.bpage_1" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn005" text="欄位說明" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="cl_qbe_s02_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s02_Cancel" text="取消" lstr=""/>
+    <sfield name="lbl_funid" text="函式代碼" lstr=""/>
+    <sfield name="lbl_fundesc" text="函式說明" lstr=""/>
+    <sfield name="cl_qbe_s01_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s01_Cancel" text="取消" lstr=""/>
+    <sfield name="cl_qbe_s03.bpage_1" text="查詢方案列表" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxmstus" text="有效" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm004" text="預設" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm005" text="顯示於首頁" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm009" text="順序" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxml005" text="查詢方案說明" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm007" text="自設SQL條件" lstr=""/>
+    <sfield name="cl_qbe_s03.page_2" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn004" text="序號" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn005" text="條件欄位" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="add_favorite_catalog" text="新增目錄" lstr=""/>
+    <sfield name="modify_favorite_desc" text="修改" lstr=""/>
+    <sfield name="favorite_del" text="移除" lstr=""/>
+    <sfield name="add_catalog" text="" lstr=""/>
+    <sfield name="accept" text="確定" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" lstr=""/>
+    <sfield name="cl_ask_s04_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s03_Test" text="測試" lstr=""/>
+    <sfield name="cl_ask_s03_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s01_Choice" text="選擇" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_ooag001" text="員工編號" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="cl_progress_bar_Current" text="目前進度" lstr=""/>
+    <sfield name="cl_progress_bar_Total" text="全部" lstr=""/>
+    <sfield name="cl_progress_bar_%" text="%" lstr=""/>
+    <sfield name="lbl_select" text="選擇" lstr=""/>
+    <sfield name="lbl_gzgdl002" text="樣版說明" lstr=""/>
+    <sfield name="lbl_gzgd003" text="客製否" lstr=""/>
+    <sfield name="lbl_gzgd007" text="樣版名稱(4rp)" lstr=""/>
+    <sfield name="lbl_rep_fmt" text="輸出格式" lstr=""/>
+    <sfield name="lbl_outputformat_1" text="預覽與列印(SVG)" lstr=""/>
+    <sfield name="lbl_outputformat_2" text="Adobe Acrobat (PDF)" lstr=""/>
+    <sfield name="lbl_outputformat_3" text="Microsoft Excel (XLS)" lstr=""/>
+    <sfield name="lbl_outputformat_4" text="Microsoft Excel (XLS) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_5" text="Microsoft Excel (XLSX)" lstr=""/>
+    <sfield name="lbl_outputformat_6" text="Microsoft Excel (XLSX) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_7" text="Microsoft Word (RTF)" lstr=""/>
+    <sfield name="lbl_outputformat_8" text="網頁 (HTML)" lstr=""/>
+    <sfield name="lbl_outputformat_9" text="郵件 (Mail)" lstr=""/>
+    <sfield name="lbl_set_default" text="設為預設樣版" lstr=""/>
+    <sfield name="lbl_btn_accept" text="確定" lstr=""/>
+    <sfield name="lbl_btn_cancel" text="放棄" lstr=""/>
+    <sfield name="lbl_gzza003" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzza001" text="程式編號" lstr=""/>
+    <sfield name="lbl_gzza002" text="程式類別" lstr=""/>
+    <sfield name="lbl_gzde002" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzde001" text="規格編號" lstr=""/>
+    <sfield name="lbl_gzdel003" text="說明" lstr=""/>
+    <sfield name="lbl_gzdf002" text="子畫面規格編號" lstr=""/>
+    <sfield name="lbl_gzdfl003" text="子畫面檔案名稱" lstr=""/>
+    <sfield name="lbl_gzcbl004" text="說明" lstr=""/>
+    <sfield name="lbl_gzde003" text="規格類別" lstr=""/>
+    <sfield name="lbl_dzfv004" text="畫面代號" lstr=""/>
+    <sfield name="lbl_dzfv005" text="主/子程式" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

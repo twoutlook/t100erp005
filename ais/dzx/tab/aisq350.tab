@@ -1,0 +1,101 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisq350" module="ais" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="04152" crtdt="2015-01-08 15:49:25" modid="04152" moddt="2015-01-30 11:34:51" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="業務往來對帳單查詢">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isafdocno,isafcomp,isafcomp_desc(chr500),isaf003,isaf003_desc(chr500),isaf100,l_isaf105_1(num20_6),l_isaf105_2(num20_6),l_isaf105_3(num20_6),l_isaf105_4(num20_6),l_isaf115_1(num20_6),l_isaf115_2(num20_6),l_isaf115_3(num20_6),l_isaf115_4(num20_6)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="isafcomp,isafcomp_2_desc(chr500),l_isaf003_2(chr10),l_isaf003_2_desc(chr500),l_isaf100_2(chr10),l_isafdocno_2(chr20),isafdocdt,isaf057,l_isaf057_desc(chr500),isag001,isag002,l_isaf105_5(num20_6),l_isaf115_5(num20_6),l_isaf105_6(num20_6),l_isaf115_6(num20_6),l_prog(chr500)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isafdocno(b_isafdocno),isafcomp(b_isafcomp),isafcomp_desc(b_isafcomp_desc),isaf003(b_isaf003),isaf003_desc(b_isaf003_desc),isaf100(b_isaf100),l_isaf105_1(l_isaf105_1),l_isaf105_2(l_isaf105_2),l_isaf105_3(l_isaf105_3),l_isaf105_4(l_isaf105_4),l_isaf115_1(l_isaf115_1),l_isaf115_2(l_isaf115_2),l_isaf115_3(l_isaf115_3),l_isaf115_4(l_isaf115_4)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="isafcomp_2(isafcomp_2),isafcomp_2_desc(isafcomp_2_desc),l_isaf003_2(l_isaf003_2),l_isaf003_2_desc(l_isaf003_2_desc),l_isaf100_2(l_isaf100_2),l_isafdocno_2(l_isafdocno_2),isafdocdt(b_isafdocdt),isaf057(b_isaf057),l_isaf057_desc(l_isaf057_desc),isag001(b_isag001),isag002(b_isag002),l_isaf105_5(l_isaf105_5),l_isaf115_5(l_isaf115_5),l_isaf105_6(l_isaf105_6),l_isaf115_6(l_isaf115_6),l_prog(l_prog)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+    <section id="detail_show" page="2">
+      <cluster id="prog_l_isafdocno_2" qry_field="l_isafdocno_2" prog="aist310" parameter="l_isafdocno_2"/>
+      <action id="detail_qrystr" mode="popup">
+        <action id="prog_aist310" prog="aist310" parameter="l_isafdocno_2"/>
+      </action>
+    </section>
+  </structure>
+  <form id="0" module="ais" filename="aisq350" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="isafcomp,isaf003,isaf100" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="isafcomp(b_isafcomp),isaf003(b_isaf003),isaf100(b_isaf100)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="isafdocno"/>
+      <column id="isafcomp">
+        <after>
+          <reference field="isafcomp_desc" ref_field="isafcomp" map_field="isafent,isafcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="isafcomp_desc"/>
+      <column id="isaf003">
+        <after>
+          <check chkid="v_pmaa001_2" id="isExist"/>
+          <reference field="isaf003_desc" ref_field="isaf003" map_field="isafent,isaf003" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001" state="i"/>
+        <controlp form="q_pmaa001" state="c"/>
+      </column>
+      <column id="isaf003_desc"/>
+      <column id="isaf100">
+        <after>
+          <check chkid="v_ooai001" id="isExist"/>
+        </after>
+        <controlp form="q_aooi001_1" state="c"/>
+      </column>
+      <column id="l_isaf105_1"/>
+      <column id="l_isaf105_2"/>
+      <column id="l_isaf105_3"/>
+      <column id="l_isaf105_4"/>
+      <column id="l_isaf115_1"/>
+      <column id="l_isaf115_2"/>
+      <column id="l_isaf115_3"/>
+      <column id="l_isaf115_4"/>
+    </init>
+    <init id="body" page="2">
+      <column id="isafcomp_2_desc"/>
+      <column id="l_isaf003_2">
+        <after/>
+      </column>
+      <column id="l_isaf003_2_desc"/>
+      <column id="l_isaf100_2"/>
+      <column id="l_isafdocno_2"/>
+      <column id="isafdocdt"/>
+      <column id="isaf057">
+        <after/>
+      </column>
+      <column id="l_isaf057_desc"/>
+      <column id="isag001" def_scc="24"/>
+      <column id="isag002"/>
+      <column id="l_isaf105_5"/>
+      <column id="l_isaf115_5"/>
+      <column id="l_isaf105_6"/>
+      <column id="l_isaf115_6"/>
+      <column id="l_prog"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="isaf_t" page="1,2" linked="" pk="isafcomp,isafdocno">
+      <sql id="b_fill_sql" query="SELECT isafdocno,isafcomp,&apos;&apos;,isaf003,&apos;&apos;,isaf100,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,isafdocdt,isaf057,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM isaf_t WHERE isafent= ? AND 1=1 "/>
+      <sql id="detail_append" type="single" table="isag_t" pk="isagcomp,isagdocno,isagseq" field="isag001,isag002"/>
+    </body>
+  </dataset>
+</assembly>
+

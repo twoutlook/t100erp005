@@ -1,0 +1,861 @@
+<add_points prog="azzi991_01" std_prog="azzi991_01" erpver="1.0" module="AZZ" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="function.azzi991_01_insert_ooac" cite_std="N" status="d" ver="1" src="s" new="Y" order="2" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 將參數資料新增到ooac_t
+################################################################################
+PUBLIC FUNCTION azzi991_01_insert_ooac(p_gzsy,p_gzsz008)
+DEFINE p_gzsy      RECORD LIKE gzsy_t.*
+DEFINE p_gzsz008   LIKE gzsz_t.gzsz008
+DEFINE l_oobaent   LIKE ooba_t.oobaent
+DEFINE l_ooba001   LIKE ooba_t.ooba001
+DEFINE l_ooba002   LIKE ooba_t.ooba002
+DEFINE l_ooac      RECORD LIKE ooac_t.*
+DEFINE l_current   DATETIME YEAR TO SECOND
+DEFINE l_cnt       LIKE type_t.num5
+
+   DECLARE sel_ooba_cur CURSOR FOR
+    SELECT oobaent,ooba001,ooba002 FROM ooba_t,oobx_t
+     WHERE oobxent = oobaent
+       AND oobx001 = ooba002
+       AND oobx003 = p_gzsy.gzsy004
+   FOREACH sel_ooba_cur INTO l_oobaent,l_ooba001,l_ooba002
+      #若資料已存在，則不新增
+      LET l_cnt = 0
+      SELECT COUNT(*) INTO l_cnt FROM ooac_t
+       WHERE ooacent = l_oobaent
+         AND ooac001 = l_ooba001
+         AND ooac002 = l_ooba002
+         AND ooac003 = p_gzsy.gzsy002
+      IF cl_null(l_cnt) OR l_cnt <= 0 THEN  
+         INITIALIZE l_ooac.* TO NULL
+         LET l_ooac.ooacent = l_oobaent
+         LET l_ooac.ooac001 = l_ooba001
+         LET l_ooac.ooac002 = l_ooba002
+         LET l_ooac.ooac003 = p_gzsy.gzsy002
+         LET l_ooac.ooac004 = p_gzsz008
+         LET l_ooac.ooacownid = g_user
+         LET l_ooac.ooacowndp = g_dept
+         LET l_ooac.ooaccrtid = g_user
+         LET l_ooac.ooaccrtdp = g_dept
+         LET l_current = cl_get_current()
+         LET l_ooac.ooacstus = 'Y'
+         INSERT INTO ooac_t(ooacent,ooac001,ooac002,ooac003,ooac004,
+                            ooacownid,ooacowndp,ooaccrtid,ooaccrtdp,
+                            ooaccrtdt,ooacmodid,ooacmoddt,ooacstus)
+                VALUES(l_ooac.ooacent,l_ooac.ooac001,l_ooac.ooac002,
+                       l_ooac.ooac003,l_ooac.ooac004,l_ooac.ooacownid,
+                       l_ooac.ooacowndp,l_ooac.ooaccrtid,l_ooac.ooaccrtdp,
+                       l_current,l_ooac.ooacmodid,l_ooac.ooacmoddt,
+                       l_ooac.ooacstus)
+         IF SQLCA.sqlcode OR SQLCA.sqlerrd[3] = 0 THEN
+            CALL cl_err('INSERT ooac_t',SQLCA.sqlcode,1)
+            LET g_errno = 'N'
+            EXIT FOREACH
+         END IF
+      END IF
+      
+      #更新gzsy_t的已拋轉='Y'
+      UPDATE gzsy_t SET gzsy005 = 'Y'
+       WHERE gzsy001 = p_gzsy.gzsy001
+         AND gzsy002 = p_gzsy.gzsy002
+         AND gzsy004 = p_gzsy.gzsy004
+      CASE
+         WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+              CALL cl_err("gzsy_t","std-00009",1)
+              LET g_errno = 'N'
+              EXIT FOREACH
+         WHEN SQLCA.sqlcode #其他錯誤
+              CALL cl_err("gzsy_t",SQLCA.sqlcode,1)
+              LET g_errno = 'N'
+              EXIT FOREACH
+      END CASE
+   END FOREACH
+END FUNCTION]]>
+</point>
+  <point name="input.a.page1.gzsz001" cite_std="N" status="" ver="1" src="s" new="N" order="0" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_gzsz_d[g_detail_idx].gzsz001 IS NOT NULL AND g_gzsz_d[g_detail_idx].gzsz002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_gzsz_d[g_detail_idx].gzsz001 != g_gzsz_d_t.gzsz001 OR g_gzsz_d[g_detail_idx].gzsz002 != g_gzsz_d_t.gzsz002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzsz_t WHERE "||"gzsz001 = '"||g_gzsz_d[g_detail_idx].gzsz001 ||"' AND "|| "gzsz002 = '"||g_gzsz_d[g_detail_idx].gzsz002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="input.a.page1.gzsz002" cite_std="N" status="" ver="1" src="s" new="N" order="0" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  g_gzsz_d[g_detail_idx].gzsz001 IS NOT NULL AND g_gzsz_d[g_detail_idx].gzsz002 IS NOT NULL THEN 
+               IF l_cmd = 'a' OR ( l_cmd = 'u' AND (g_gzsz_d[g_detail_idx].gzsz001 != g_gzsz_d_t.gzsz001 OR g_gzsz_d[g_detail_idx].gzsz002 != g_gzsz_d_t.gzsz002)) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM gzsz_t WHERE "||"gzsz001 = '"||g_gzsz_d[g_detail_idx].gzsz001 ||"' AND "|| "gzsz002 = '"||g_gzsz_d[g_detail_idx].gzsz002 ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+]]>
+</point>
+  <point name="show.body.reference" cite_std="N" status="" ver="1" src="s" new="N" order="0" mark_hard="N">
+<![CDATA[
+   INITIALIZE g_ref_fields TO NULL 
+   LET g_ref_fields[1] = g_gzsz_d[l_ac].gzsz001
+   LET g_ref_fields[2] = g_gzsz_d[l_ac].gzsz002
+   CALL ap_ref_array2(g_ref_fields," SELECT gzszl004 FROM gzszl_t WHERE gzszl001 = ? AND gzszl002 = ? AND gzszl003 = '"||g_dlang||"'","") RETURNING g_rtn_fields 
+   LET g_gzsz_d[l_ac].gzszl004 = g_rtn_fields[1] 
+   DISPLAY BY NAME g_gzsz_d[l_ac].gzszl004]]>
+</point>
+  <point name="function.azzi991_01_b_fill" cite_std="N" status="" ver="1" src="s" new="Y" order="1" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 將需要產生到單據別參數檔的資料抓取出來
+# Date & Author..: 2013/12/06 by stellar
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION azzi991_01_b_fill()
+DEFINE l_sql     STRING
+DEFINE l_ac1     LIKE type_t.num5
+DEFINE l_cnt     LIKE type_t.num5
+
+   LET l_sql = "SELECT 'Y',gzsz001,gzsz011,gzsz002,gzszl004,gzsz003,gzsz009,gzsz008,'' ",
+               "  FROM gzsz_t ",
+               "  LEFT OUTER JOIN gzszl_t ON gzszl001 = gzsz001 ",
+               "   AND gzszl002 = gzsz002 AND gzszl003 = '",g_dlang,"' ",
+               " WHERE gzsz001 = 'ooac_t' ",
+               "   AND NOT EXISTS(SELECT * FROM ooac_t WHERE ooac003 = gzsz002) ",
+               " ORDER BY gzsz011,gzsz002 "
+               
+   PREPARE azzi991_01_pb FROM l_sql
+   DECLARE b_fill_curs CURSOR FOR azzi991_01_pb
+
+   CALL g_gzsz_d.clear()
+   LET l_ac1 = 1
+   FOREACH b_fill_curs INTO g_gzsz_d[l_ac1].*
+      IF SQLCA.sqlcode THEN
+         CALL cl_err("FOREACH:",SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+      
+      #若gzsy_t沒有任何資料，備註就顯示"沒有設定單據性質！"
+      LET l_cnt = 0
+      SELECT COUNT(*) INTO l_cnt FROM gzsy_t
+       WHERE gzsy001 = g_gzsz_d[l_ac1].gzsz001
+         AND gzsy002 = g_gzsz_d[l_ac1].gzsz002
+      IF cl_null(l_cnt) OR l_cnt = 0 THEN
+         LET g_gzsz_d[l_ac1].choice = 'N'
+         LET g_gzsz_d[l_ac1].memo = cl_getmsg("azz-00128",g_lang)
+      END IF
+      
+      LET l_ac1 = l_ac1 + 1
+      IF l_ac1 > g_max_rec THEN
+         EXIT FOREACH
+      END IF
+
+   END FOREACH
+   CALL g_gzsz_d.deleteElement(g_gzsz_d.getLength())
+   LET g_rec_b = l_ac1 - 1
+   DISPLAY g_rec_b TO FORMONLY.cnt
+   CLOSE b_fill_curs
+   FREE azzi991_01_pb
+END FUNCTION]]>
+</point>
+  <point name="input.action" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[         BEFORE ROW
+            LET g_detail_idx = ARR_CURR()
+            #若備註有值，則不可勾選
+            IF NOT cl_null(g_gzsz_d[g_detail_idx].memo) THEN
+               IF g_detail_idx < g_rec_b THEN
+                  FOR l_i = g_detail_idx + 1 TO g_rec_b
+                     IF cl_null(g_gzsz_d[l_i].memo) THEN
+                        LET g_detail_idx = l_i
+                        LET l_choice = 'N'
+                        EXIT DIALOG
+                     END IF
+                  END FOR
+                  LET g_detail_idx = g_rec_b
+               END IF
+               IF g_detail_idx >= g_rec_b THEN
+                  FOR l_i = g_rec_b-1 TO 1 STEP -1
+                     IF cl_null(g_gzsz_d[l_i].memo) THEN
+                        LET g_detail_idx = l_i
+                        LET l_choice = 'N'
+                        EXIT DIALOG
+                     END IF
+                  END FOR
+               END IF
+            END IF]]>
+</point>
+  <point name="input.before_close" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[      IF INT_FLAG THEN
+         EXIT WHILE
+      END IF
+      
+      #此判斷是備註不為空時，不可勾選，跳到別筆資料
+      IF l_choice = 'N' THEN
+         CONTINUE WHILE
+      END IF
+      
+      #若都沒選擇，則顯示錯誤並CONTINUE WHILE
+      LET l_choice = 'N'
+      FOR l_i = 1 TO g_rec_b
+         IF g_gzsz_d[l_i].choice = 'Y' THEN
+            LET l_choice = 'Y'
+            EXIT FOR
+         END IF
+      END FOR
+      IF l_choice = 'N' THEN
+         CONTINUE WHILE
+      END IF
+      
+      EXIT WHILE
+   END WHILE
+   
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0
+   ELSE
+      #按下確定後，將資料新增到ooac_t
+      CALL s_transaction_begin()
+      LET l_success = TRUE
+      CALL cl_showmsg_init()
+   
+      FOR l_i = 1 TO g_rec_b
+         IF g_gzsz_d[l_i].choice = 'N' THEN
+            CONTINUE FOR
+         END IF
+      
+         CALL s_azzi991_carry('1',g_gzsz_d[l_i].gzsz002)
+              RETURNING l_success
+         IF NOT l_success THEN
+            EXIT FOR
+         END IF
+      END FOR
+      
+      IF l_success THEN
+         CALL s_transaction_end('Y',0)
+         CALL cl_showmsg()
+         CALL cl_ask_end1()
+      ELSE
+         CALL s_transaction_end('N',0)
+      END IF
+   END IF]]>
+</point>
+  <point name="input.define" cite_std="N" status="u" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   DEFINE l_choice        LIKE type_t.chr1
+   DEFINE l_i             LIKE type_t.num5
+   DEFINE l_gzsy          RECORD LIKE gzsy_t.*
+   DEFINE l_cnt           LIKE type_t.num5
+   DEFINE l_msg           STRING
+   DEFINE l_msg1          STRING
+   DEFINE l_success       LIKE type_t.num5]]>
+</point>
+  <point name="input.more_input" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[      BEFORE DIALOG
+         CALL DIALOG.setCurrentRow("s_detail1", g_detail_idx)]]>
+</point>
+  <point name="input.pre_input" cite_std="N" status="" ver="1" src="s" new="N" order="" mark_hard="N">
+<![CDATA[   CALL cl_set_combo_scc('gzsz011','90')
+   CALL cl_set_combo_scc('gzsz003','89')
+   LET g_detail_idx = 1
+   
+   LET l_allow_insert = FALSE
+   LET l_allow_delete = FALSE
+   
+   #先抓取資料
+   CALL azzi991_01_b_fill()
+
+   #先檢查單身是否有資料可以勾選
+   LET l_choice = 'N'
+   FOR l_i=1 TO g_gzsz_d.getLength()
+      IF cl_null(g_gzsz_d[l_i].memo) THEN
+         LET l_choice = 'Y'
+         EXIT FOR
+      END IF
+   END FOR  
+   IF l_choice = 'N' THEN
+      CLOSE WINDOW w_azzi991_01 
+      CALL cl_err('','azz-00129',1)
+      RETURN
+   END IF
+   
+   WHILE TRUE
+      LET l_choice = 'Y']]>
+</point>
+  <point name="global.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.import" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.inc" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="global.argv" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.get_var" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.detail_input.page1.update_item" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.before_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.choice" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.choice" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.choice" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.gzsz001" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.gzsz001" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.gzsz011" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.gzsz011" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.gzsz011" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.gzsz002" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.gzsz002" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.gzszl004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.gzszl004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.gzszl004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.gzsz003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.gzsz003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.gzsz003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.gzsz009" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.gzsz009" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.gzsz009" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.gzsz008" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.gzsz008" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.gzsz008" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.b.page1.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.a.page1.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.g.page1.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.choice" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.gzsz001" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.gzsz011" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.gzsz002" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.gzszl004" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.gzsz003" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.gzsz009" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.gzsz008" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.c.page1.memo" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.after_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <point name="input.post_input" cite_std="N" status="" ver="" src="s" new="Y">
+<![CDATA[]]>
+</point>
+  <section id="azzi991_01.description" ver="6" status="" src="s">
+<![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:1,PD版次:1) Build-000063
+#+ 
+#+ Filename...: azzi991_01
+#+ Description: ...
+#+ Creator....: 02587(2013/11/26)
+#+ Modifier...: 01588(2013/12/06)
+#+ Buildtype..: 應用 c02b 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+</section>
+  <section id="azzi991_01.global" ver="2" status="" src="s">
+<![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_gzsz_d        RECORD
+       choice LIKE type_t.chr80, 
+   gzsz001 LIKE gzsz_t.gzsz001, 
+   gzsz011 LIKE gzsz_t.gzsz011, 
+   gzsz002 LIKE gzsz_t.gzsz002, 
+   gzszl004 LIKE gzszl_t.gzszl004, 
+   gzsz003 LIKE gzsz_t.gzsz003, 
+   gzsz009 LIKE gzsz_t.gzsz009, 
+   gzsz008 LIKE gzsz_t.gzsz008, 
+   memo LIKE type_t.chr80
+       END RECORD
+ 
+ 
+DEFINE g_gzsz_d          DYNAMIC ARRAY OF type_g_gzsz_d
+DEFINE g_gzsz_d_t        type_g_gzsz_d
+ 
+ 
+DEFINE g_gzsz001_t   LIKE gzsz_t.gzsz001    #Key值備份
+DEFINE g_gzsz002_t      LIKE gzsz_t.gzsz002    #Key值備份
+ 
+ 
+DEFINE l_ac                  LIKE type_t.num5
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num5  
+DEFINE g_detail_idx          LIKE type_t.num5  
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+    
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point	
+]]>
+</section>
+  <section id="azzi991_01.input" ver="3" status="" src="s">
+<![CDATA[#+ 資料輸入
+PUBLIC FUNCTION azzi991_01(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   #add-point:input段define
+   {<point name="input.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_azzi991_01 WITH FORM cl_ap_formpath("azz","azzi991_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單身前置處理
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT ARRAY g_gzsz_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單身前置處理
+         {<point name="input.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+ 
+         #+ 此段落由子樣板a43產生
+         ON ACTION update_item
+            LET g_action_choice="update_item"
+            IF cl_auth_chk_act("update_item") THEN
+               
+               #add-point:ON ACTION update_item
+               {<point name="input.detail_input.page1.update_item" />}
+               #END add-point
+            END IF
+ 
+ 
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理
+            {<point name="input.before_input"/>}
+            #end add-point
+          
+         #---------------------<  Detail: page1  >---------------------
+         #----<<choice>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD choice
+            #add-point:BEFORE FIELD choice
+            {<point name="input.b.page1.choice" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD choice
+            
+            #add-point:AFTER FIELD choice
+            {<point name="input.a.page1.choice" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE choice
+            #add-point:ON CHANGE choice
+            {<point name="input.g.page1.choice" />}
+            #END add-point
+ 
+         #----<<gzsz001>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzsz001
+            #add-point:BEFORE FIELD gzsz001
+            {<point name="input.b.page1.gzsz001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzsz001
+            
+            #add-point:AFTER FIELD gzsz001
+            {<point name="input.a.page1.gzsz001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gzsz001
+            #add-point:ON CHANGE gzsz001
+            {<point name="input.g.page1.gzsz001" />}
+            #END add-point
+ 
+         #----<<gzsz011>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzsz011
+            #add-point:BEFORE FIELD gzsz011
+            {<point name="input.b.page1.gzsz011" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzsz011
+            
+            #add-point:AFTER FIELD gzsz011
+            {<point name="input.a.page1.gzsz011" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gzsz011
+            #add-point:ON CHANGE gzsz011
+            {<point name="input.g.page1.gzsz011" />}
+            #END add-point
+ 
+         #----<<gzsz002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzsz002
+            #add-point:BEFORE FIELD gzsz002
+            {<point name="input.b.page1.gzsz002" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzsz002
+            
+            #add-point:AFTER FIELD gzsz002
+            {<point name="input.a.page1.gzsz002" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gzsz002
+            #add-point:ON CHANGE gzsz002
+            {<point name="input.g.page1.gzsz002" />}
+            #END add-point
+ 
+         #----<<gzszl004>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzszl004
+            #add-point:BEFORE FIELD gzszl004
+            {<point name="input.b.page1.gzszl004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzszl004
+            
+            #add-point:AFTER FIELD gzszl004
+            {<point name="input.a.page1.gzszl004" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gzszl004
+            #add-point:ON CHANGE gzszl004
+            {<point name="input.g.page1.gzszl004" />}
+            #END add-point
+ 
+         #----<<gzsz003>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzsz003
+            #add-point:BEFORE FIELD gzsz003
+            {<point name="input.b.page1.gzsz003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzsz003
+            
+            #add-point:AFTER FIELD gzsz003
+            {<point name="input.a.page1.gzsz003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gzsz003
+            #add-point:ON CHANGE gzsz003
+            {<point name="input.g.page1.gzsz003" />}
+            #END add-point
+ 
+         #----<<gzsz009>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzsz009
+            #add-point:BEFORE FIELD gzsz009
+            {<point name="input.b.page1.gzsz009" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzsz009
+            
+            #add-point:AFTER FIELD gzsz009
+            {<point name="input.a.page1.gzsz009" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gzsz009
+            #add-point:ON CHANGE gzsz009
+            {<point name="input.g.page1.gzsz009" />}
+            #END add-point
+ 
+         #----<<gzsz008>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD gzsz008
+            #add-point:BEFORE FIELD gzsz008
+            {<point name="input.b.page1.gzsz008" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD gzsz008
+            
+            #add-point:AFTER FIELD gzsz008
+            {<point name="input.a.page1.gzsz008" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE gzsz008
+            #add-point:ON CHANGE gzsz008
+            {<point name="input.g.page1.gzsz008" />}
+            #END add-point
+ 
+         #----<<memo>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD memo
+            #add-point:BEFORE FIELD memo
+            {<point name="input.b.page1.memo" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD memo
+            
+            #add-point:AFTER FIELD memo
+            {<point name="input.a.page1.memo" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE memo
+            #add-point:ON CHANGE memo
+            {<point name="input.g.page1.memo" />}
+            #END add-point
+ 
+ 
+         #---------------------<  Detail: page1  >---------------------
+         #----<<choice>>----
+         #Ctrlp:input.c.page1.choice
+         ON ACTION controlp INFIELD choice
+            #add-point:ON ACTION controlp INFIELD choice
+            {<point name="input.c.page1.choice" />}
+            #END add-point
+ 
+         #----<<gzsz001>>----
+         #Ctrlp:input.c.page1.gzsz001
+         ON ACTION controlp INFIELD gzsz001
+            #add-point:ON ACTION controlp INFIELD gzsz001
+            {<point name="input.c.page1.gzsz001" />}
+            #END add-point
+ 
+         #----<<gzsz011>>----
+         #Ctrlp:input.c.page1.gzsz011
+         ON ACTION controlp INFIELD gzsz011
+            #add-point:ON ACTION controlp INFIELD gzsz011
+            {<point name="input.c.page1.gzsz011" />}
+            #END add-point
+ 
+         #----<<gzsz002>>----
+         #Ctrlp:input.c.page1.gzsz002
+         ON ACTION controlp INFIELD gzsz002
+            #add-point:ON ACTION controlp INFIELD gzsz002
+            {<point name="input.c.page1.gzsz002" />}
+            #END add-point
+ 
+         #----<<gzszl004>>----
+         #Ctrlp:input.c.page1.gzszl004
+         ON ACTION controlp INFIELD gzszl004
+            #add-point:ON ACTION controlp INFIELD gzszl004
+            {<point name="input.c.page1.gzszl004" />}
+            #END add-point
+ 
+         #----<<gzsz003>>----
+         #Ctrlp:input.c.page1.gzsz003
+         ON ACTION controlp INFIELD gzsz003
+            #add-point:ON ACTION controlp INFIELD gzsz003
+            {<point name="input.c.page1.gzsz003" />}
+            #END add-point
+ 
+         #----<<gzsz009>>----
+         #Ctrlp:input.c.page1.gzsz009
+         ON ACTION controlp INFIELD gzsz009
+            #add-point:ON ACTION controlp INFIELD gzsz009
+            {<point name="input.c.page1.gzsz009" />}
+            #END add-point
+ 
+         #----<<gzsz008>>----
+         #Ctrlp:input.c.page1.gzsz008
+         ON ACTION controlp INFIELD gzsz008
+            #add-point:ON ACTION controlp INFIELD gzsz008
+            {<point name="input.c.page1.gzsz008" />}
+            #END add-point
+ 
+         #----<<memo>>----
+         #Ctrlp:input.c.page1.memo
+         ON ACTION controlp INFIELD memo
+            #add-point:ON ACTION controlp INFIELD memo
+            {<point name="input.c.page1.memo" />}
+            #END add-point
+ 
+ 
+ 
+         AFTER INPUT
+            #add-point:單身輸入後處理
+            {<point name="input.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_azzi991_01 
+   
+   #add-point:input段after input 
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+]]>
+</section>
+  <section id="azzi991_01.other_dialog" ver="1" status="" src="s">
+<![CDATA[{<point name="other.dialog"/>}
+]]>
+</section>
+  <section id="azzi991_01.other_function" ver="2" status="" src="s">
+<![CDATA[{<point name="other.function"/>}
+]]>
+</section>
+</add_points>

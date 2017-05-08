@@ -1,0 +1,52 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrp920" module="axr" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="01727" crtdt="2014-08-13 00:00:00" modid="01727" moddt="2014-12-08 16:31:16" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="應收帳款重評價計算作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="site,site_desc(chr80),xref001,xref002"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),xrebld,xrebld_desc(chr500),xrebcomp,xrebcomp_desc(chr500),xreb100,glav004,xreb008,glca002(chr500),glca003(chr500),xreg005"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),xrebld(b_xrebld),xrebld_desc(b_xrebld_desc),xrebcomp(b_xrebcomp),xrebcomp_desc(b_xrebcomp_desc),xreb100(b_xreb100),glav004(b_glav004),xreb008(b_xreb008),glca002(b_glca002),glca003(b_glca003),xreg005(b_xreg005)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axrp920" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="xrebld,xrebld_desc,xrebcomp,xrebcomp_desc,xreb100,glav004,xreb008,glca002,glca003,xreg005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="xrebld(b_xrebld),xrebcomp(b_xrebcomp),xreb100(b_xreb100),glav004(b_glav004),xreb008(b_xreb008),xreg005(b_xreg005)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="xrebld">
+        <after/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xrebld_desc"/>
+      <column id="xrebcomp">
+        <after/>
+      </column>
+      <column id="xrebcomp_desc"/>
+      <column id="xreb100"/>
+      <column id="glav004"/>
+      <column id="xreb008"/>
+      <column id="glca002" def_scc="8317"/>
+      <column id="glca003" def_scc="40"/>
+      <column id="xreg005"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="xreb_t" page="1" linked="" pk="xrebld,xreb001,xreb002,xreb003,xreb005,xreb006,xreb007">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,xrebld,&apos;&apos;,xrebcomp,&apos;&apos;,xreb100,&apos;&apos;,xreb008,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM xreb_t WHERE xrebent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,68 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adeq142" module="ade" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="02159" crtdt="2016-11-17 17:34:17" modid="02159" moddt="2016-11-18 10:06:39" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="會員卡消費商品明細查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="deca035,decasite,deca009,l_date_s,l_date_e"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),deca035,decasite,decasite_desc(chr500),deca010,deca009,deca009_desc(chr500),deca009_desc_1(chr500),l_standard_price(num20_6),deca022,deca025,l_deca036_n(num20_6),l_amt(num20_6),deca036,deca027,deca031"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),deca035(b_deca035),decasite(b_decasite),decasite_desc(b_decasite_desc),deca010(b_deca010),deca009(b_deca009),deca009_desc(b_deca009_desc),deca009_desc_1(b_deca009_desc_1),l_standard_price(l_standard_price),deca022(b_deca022),deca025(b_deca025),l_deca036_n(l_deca036_n),l_amt(l_amt),deca036(b_deca036),deca027(b_deca027),deca031(b_deca031)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adeq142" method="dialog">
+    <section id="input"/>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="deca035(b_deca035),decasite(b_decasite),deca010(b_deca010),deca009(b_deca009)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="deca035">
+        <controlp form="q_mmaq001_3" state="c"/>
+      </column>
+      <column id="decasite">
+        <after>
+          <reference field="decasite_desc" ref_field="decasite" map_field="decasitee" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="decasite_desc"/>
+      <column id="deca010">
+        <controlp form="q_imay003_2" state="c"/>
+      </column>
+      <column id="deca009">
+        <after>
+          <reference field="deca009_desc" ref_field="deca009" map_field="deca009" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtdx001" state="c"/>
+      </column>
+      <column id="deca009_desc"/>
+      <column id="deca009_desc_1"/>
+      <column id="l_standard_price"/>
+      <column id="deca022" type="S" default="0"/>
+      <column id="deca025" type="S" default="0"/>
+      <column id="l_deca036_n"/>
+      <column id="l_amt"/>
+      <column id="deca036" type="S" default="0"/>
+      <column id="deca027" type="S" default="0"/>
+      <column id="deca031" type="S" default="0"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="deca_t" page="1" linked="" pk="decasite,deca002,deca005,deca009,deca017,deca018,deca019,deca020,deca035">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,deca035,decasite,&apos;&apos;,deca010,deca009,&apos;&apos;,&apos;&apos;,&apos;&apos;,deca022,deca025,&apos;&apos;,&apos;&apos;,deca036,deca027,deca031 FROM deca_t WHERE decaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

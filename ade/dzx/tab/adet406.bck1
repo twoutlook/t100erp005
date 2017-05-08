@@ -1,0 +1,121 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="adet406" module="ade" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="02114" crtdt="2016-06-20 10:14:34" modid="02114" moddt="2016-08-16 17:26:37" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="門店收銀交款出納結帳作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="deadsite,deadsite_desc(chr80),deaddocdt,deadstamp(timestamp),deaddocno,dead001,dead001_desc(chr80),deadstus,deadownid,deadownid_desc(chr80),deadowndp,deadowndp_desc(chr80),deadcrtid,deadcrtid_desc(chr80),deadcrtdp,deadcrtdp_desc(chr80),deadcrtdt,deadmodid,deadmodid_desc(chr80),deadmoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="deae002,deae001,deae001_desc(chr500),deae003,deae004,deae005,deae006,deae007,deaesite"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="adet406_s01"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ade" filename="adet406" method="dialog">
+    <section id="input">
+      <input id="head" field="deadsite,deaddocdt,deadstamp,deaddocno,dead001,deadstus"/>
+      <input id="body" page="1" field="deae002,deae001,deae003,deae004,deae005,deae006,deae007,deaesite" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="deadsite,deaddocdt,deadstamp,deaddocno,dead001,deadstus,deadownid,deadowndp,deadcrtid,deadcrtdp,deadcrtdt,deadmodid,deadmoddt"/>
+      <construct id="body" page="1" field="deae002,deae001,deae003,deae004,deae005,deae006,deae007,deaesite"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="deaddocno"/>
+      <set id="head" type="no_entry" field="deaddocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="deadsite">
+        <after>
+          <reference field="deadsite_desc" ref_field="dead_t.deadsite" map_field="deadsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="deadsite_desc"/>
+      <column id="deaddocdt"/>
+      <column id="deadstamp"/>
+      <column id="deaddocno"/>
+      <column id="dead001">
+        <after>
+          <reference field="dead001_desc" ref_field="dead001" map_field="dead001" ref_sql="SELECT pcab003 FROM pcab_t WHERE pcabent=$varg_enterprise$var AND pcab001=? "/>
+        </after>
+      </column>
+      <column id="dead001_desc"/>
+      <column id="deadstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="deadownid">
+        <after>
+          <reference field="deadownid_desc" ref_field="dead_t.deadownid" map_field="deadownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="deadownid_desc"/>
+      <column id="deadowndp">
+        <after>
+          <reference field="deadowndp_desc" ref_field="dead_t.deadowndp" map_field="deadowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="deadowndp_desc"/>
+      <column id="deadcrtid">
+        <after>
+          <reference field="deadcrtid_desc" ref_field="dead_t.deadcrtid" map_field="deadcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="deadcrtid_desc"/>
+      <column id="deadcrtdp">
+        <after>
+          <reference field="deadcrtdp_desc" ref_field="dead_t.deadcrtdp" map_field="deadcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="deadcrtdp_desc"/>
+      <column id="deadcrtdt"/>
+      <column id="deadmodid">
+        <after>
+          <reference field="deadmodid_desc" ref_field="dead_t.deadmodid" map_field="deadmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="deadmodid_desc"/>
+      <column id="deadmoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="deae002"/>
+      <column id="deae001">
+        <after>
+          <reference field="deae001_desc" ref_field="deae_t.deae001" map_field="deae001" ref_sql="SELECT ooial003 FROM ooial_t WHERE ooialent=$varg_enterprise$var AND ooial001=? AND ooial002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="deae001_desc"/>
+      <column id="deae003" type="S" default="0"/>
+      <column id="deae004" type="S" default="0"/>
+      <column id="deae005" type="S" default="0"/>
+      <column id="deae006" type="S" default="0"/>
+      <column id="deae007" type="S" default="0"/>
+      <column id="deaesite"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="dead_t" pk="deaddocno">
+      <sql id="forupd_sql" type="sql" query="SELECT deadsite,&apos;&apos;,deaddocdt,deadstamp,deaddocno,dead001,&apos;&apos;,deadstus,deadownid,&apos;&apos;,deadowndp,&apos;&apos;,deadcrtid,&apos;&apos;,deadcrtdp,&apos;&apos;,deadcrtdt,deadmodid,&apos;&apos;,deadmoddt FROM dead_t WHERE deadent= ? AND deaddocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT deadsite,&apos;&apos;,deaddocdt,deadstamp,deaddocno,dead001,&apos;&apos;,deadstus,deadownid,&apos;&apos;,deadowndp,&apos;&apos;,deadcrtid,&apos;&apos;,deadcrtdp,&apos;&apos;,deadcrtdt,deadmodid,&apos;&apos;,deadmoddt FROM dead_t" order="deaddocno"/>
+    </head>
+    <body id="deae_t" page="1" linked="" pk="deae001" fk="deaedocno">
+      <sql id="forupd_sql_detail" query="SELECT deae002,deae001,&apos;&apos;,deae003,deae004,deae005,deae006,deae007,deaesite FROM deae_t WHERE deaeent=? AND deaedocno=? AND deae001=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT deae002,deae001,&apos;&apos;,deae003,deae004,deae005,deae006,deae007,deaesite FROM deae_t WHERE deaeent=? AND deaedocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

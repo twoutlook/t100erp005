@@ -1,0 +1,54 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apsr820" module="aps" jobmode="N" type="r01" industry="std" fix_arg="0" crtid="05384" crtdt="2015-03-02 15:48:47" modid="05384" moddt="2015-03-03 17:26:38" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="集團MRP建議工單表">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="psgbsite,psgb002,imae012,psgb004,imaa009,imae011,psfa001(chr10),psfa001_desc(chr80),datestart(chr500),dateend(chr500),psgb028(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="aps" filename="apsr820" method="dialog">
+    <section id="input">
+      <input id="head" field="psfa001,datestart,dateend,psgb028"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="psgbsite,psgb002,imae012,psgb004,imaa009,imae011"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field=""/>
+      <set id="head" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="psgbsite">
+        <controlp form="q_ooef001_12" state="c"/>
+      </column>
+      <column id="psgb002">
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="imae012">
+        <controlp form="q_ooag001_2" state="c"/>
+      </column>
+      <column id="psgb004"/>
+      <column id="imaa009">
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="imae011">
+        <controlp form="q_imcf011_1" state="c"/>
+      </column>
+      <column id="psfa001">
+        <after>
+          <check chkid="v_psfa001" id="isExist"/>
+          <reference field="psfa001_desc" ref_field="psfa001" map_field="psfaent,psfa001" ref_sql="SELECT psfal003 FROM psfal_t WHERE psfalent=$varg_enterprise$var AND psfal001=? AND psfal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_psfa001" state="c"/>
+      </column>
+      <column id="psfa001_desc"/>
+      <column id="datestart"/>
+      <column id="dateend"/>
+      <column id="psgb028"/>
+    </init>
+  </form>
+</assembly>
+

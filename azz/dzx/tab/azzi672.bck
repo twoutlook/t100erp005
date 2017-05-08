@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="azzi672" module="azz" jobmode="N" type="i02" industry="std" fix_arg="0" crtid="05423" crtdt="2016-12-29 16:04:23" modid="05423" moddt="2017-01-23 16:27:06" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="異常管理權限設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="gzat001,gzat001_desc(chr500),gzat002,gzat002_desc(chr500)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="azz" filename="azzi672" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="gzat001,gzat002" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="gzat001,gzat002"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="gzat001">
+        <after>
+          <reference field="gzat001_desc" ref_field="gzat_t.gzat001" map_field="gzat001" ref_sql="SELECT gzyal003 FROM gzyal_t WHERE gzyalent=$varg_enterprise$var AND gzyal001=? AND gzyal002=$varg_lang$var"/>
+        </after>
+      </column>
+      <column id="gzat001_desc"/>
+      <column id="gzat002">
+        <after>
+          <check chkid="v_gzas002" id="isExist"/>
+          <reference field="gzat002_desc" ref_field="gzat_t.gzat002" map_field="gzatent,gzat002" ref_sql="SELECT gzasl004 FROM gzasl_t WHERE gzaslent=$varg_enterprise$var AND gzasl002=? AND gzasl003=$varg_lang$var"/>
+        </after>
+        <controlp form="q_gzas001_1" state="i"/>
+        <controlp form="q_gzas001_1" state="c"/>
+      </column>
+      <column id="gzat002_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="gzat_t" page="1" linked="" pk="gzat001,gzat002">
+      <sql id="forupd_sql_detail" query="SELECT gzat001,&apos;&apos;,gzat002,&apos;&apos; FROM gzat_t WHERE gzatent=? AND gzat001=? AND gzat002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT gzat001,&apos;&apos;,gzat002,&apos;&apos; FROM gzat_t WHERE gzatent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

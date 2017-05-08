@@ -1,0 +1,90 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aooi359" module="aoo" jobmode="N" type="i10" industry="std" fix_arg="0" crtid="02299" crtdt="2013-07-01 00:00:00" modid="02295" moddt="2016-05-16 14:04:30" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="常用備註維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="oofe001,oofe008,oofe002,oofe003,oofe004,oofe005,oofe006,oofe007,oofestus,oofeownid,oofeownid_desc(chr80),oofeowndp,oofeowndp_desc(chr80),oofecrtid,oofecrtid_desc(chr80),oofecrtdp,oofecrtdp_desc(chr80),oofecrtdt,oofemodid,oofemodid_desc(chr80),oofemoddt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aoo" filename="aooi359" method="dialog">
+    <section id="input">
+      <input id="head" field="oofe001,oofe008,oofe002,oofe003,oofe004,oofe005,oofe006,oofe007,oofestus,oofeownid,oofeowndp,oofecrtid,oofecrtdp,oofecrtdt,oofemodid,oofemoddt"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="oofe001,oofe008,oofe002,oofe003,oofe004,oofe005,oofe006,oofe007,oofestus,oofeownid,oofeowndp,oofecrtid,oofecrtdp,oofecrtdt,oofemodid,oofemoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="oofe001,oofe002,oofe003,oofe004,oofe005,oofe006"/>
+      <set id="head" type="no_entry" field="oofe001,oofe002,oofe003,oofe004,oofe005,oofe006"/>
+    </init>
+    <init id="head">
+      <column id="oofe001" type="S" default="1" def_scc="3"/>
+      <column id="oofe008"/>
+      <column id="oofe002"/>
+      <column id="oofe003"/>
+      <column id="oofe004"/>
+      <column id="oofe005"/>
+      <column id="oofe006"/>
+      <column id="oofe007"/>
+      <column id="oofestus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="oofeownid">
+        <after>
+          <reference field="oofeownid_desc" ref_field="oofe_t.oofeownid" map_field="oofeownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oofeownid_desc"/>
+      <column id="oofeowndp">
+        <after>
+          <reference field="oofeowndp_desc" ref_field="oofe_t.oofeowndp" map_field="oofeowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oofeowndp_desc"/>
+      <column id="oofecrtid">
+        <after>
+          <reference field="oofecrtid_desc" ref_field="oofe_t.oofecrtid" map_field="oofecrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oofecrtid_desc"/>
+      <column id="oofecrtdp">
+        <after>
+          <reference field="oofecrtdp_desc" ref_field="oofe_t.oofecrtdp" map_field="oofecrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="oofecrtdp_desc"/>
+      <column id="oofecrtdt"/>
+      <column id="oofemodid">
+        <after>
+          <reference field="oofemodid_desc" ref_field="oofe_t.oofemodid" map_field="oofemodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="oofemodid_desc"/>
+      <column id="oofemoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="oofe_t" pk="oofe001,oofe002,oofe003,oofe004,oofe005,oofe006">
+      <sql id="forupd_sql" type="sql" query="SELECT oofe001,oofe008,oofe002,oofe003,oofe004,oofe005,oofe006,oofe007,oofestus,oofeownid,&apos;&apos;,oofeowndp,&apos;&apos;,oofecrtid,&apos;&apos;,oofecrtdp,&apos;&apos;,oofecrtdt,oofemodid,&apos;&apos;,oofemoddt FROM oofe_t WHERE oofeent= ? AND oofe001=? AND oofe002=? AND oofe003=? AND oofe004=? AND oofe005=? AND oofe006=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT oofe001,oofe002,oofe003,oofe004,oofe005,oofe006 FROM oofe_t" order="oofe001,oofe002,oofe003,oofe004,oofe005,oofe006"/>
+    </head>
+  </dataset>
+</assembly>
+

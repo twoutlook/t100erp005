@@ -1,0 +1,660 @@
+{<section id="armt400_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0003(2015-08-13 10:13:06), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000054
+#+ Filename...: armt400_01
+#+ Description: 多庫儲批資料維護
+#+ Creator....: 05423(2015-08-07 17:06:02)
+#+ Modifier...: 05423 -SD/PR-
+{</section>}
+ 
+ 
+ 
+{<section id="armt400_01.global" >}
+#應用 c03b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import"/>}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_rmdb_m        RECORD
+       rmdbdocno LIKE rmdb_t.rmdbdocno, 
+   rmdbseq LIKE rmdb_t.rmdbseq, 
+   rmdbsite LIKE rmdb_t.rmdbsite, 
+   rmdb003 LIKE rmdb_t.rmdb003, 
+   rmdb003_desc LIKE type_t.chr500, 
+   rmdb003_desc1 LIKE type_t.chr500, 
+   rmdb004 LIKE rmdb_t.rmdb004, 
+   rmdb004_desc LIKE type_t.chr80, 
+   rmdb005 LIKE rmdb_t.rmdb005, 
+   rmdb005_desc LIKE type_t.chr80, 
+   rmdb006 LIKE rmdb_t.rmdb006
+       END RECORD
+DEFINE g_rmdb_m        type_g_rmdb_m
+ 
+   DEFINE g_rmdbdocno_t LIKE rmdb_t.rmdbdocno
+DEFINE g_rmdbseq_t LIKE rmdb_t.rmdbseq
+ 
+ 
+#單身 type 宣告
+PRIVATE TYPE type_g_rmdc_d        RECORD
+       rmdcseq1 LIKE rmdc_t.rmdcseq1, 
+   rmdc001 LIKE rmdc_t.rmdc001, 
+   rmdc002 LIKE rmdc_t.rmdc002, 
+   rmdc005 LIKE rmdc_t.rmdc005, 
+   rmdc005_desc LIKE type_t.chr500, 
+   rmdc006 LIKE rmdc_t.rmdc006, 
+   rmdc006_desc LIKE type_t.chr500, 
+   rmdc007 LIKE rmdc_t.rmdc007, 
+   rmdc008 LIKE rmdc_t.rmdc008, 
+   rmdc003 LIKE rmdc_t.rmdc003, 
+   rmdc003_desc LIKE type_t.chr500, 
+   rmdc004 LIKE rmdc_t.rmdc004, 
+   rmdcsite LIKE rmdc_t.rmdcsite
+       END RECORD
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+DEFINE g_rmdc_d          DYNAMIC ARRAY OF type_g_rmdc_d
+DEFINE g_rmdc_d_t        type_g_rmdc_d
+ 
+ 
+DEFINE g_rmdcseq1_t   LIKE rmdc_t.rmdcseq1    #Key值備份
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rec_b               LIKE type_t.num10
+DEFINE l_ac                  LIKE type_t.num10
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+     
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+{</section>}
+ 
+{<section id="armt400_01.input" >}   
+#+ 資料輸入
+PUBLIC FUNCTION armt400_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   {<point name="input.get_var"/>}
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE l_cmd           LIKE type_t.chr5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_armt400_01 WITH FORM cl_ap_formpath("arm","armt400_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   LET l_allow_insert = cl_auth_detail_input("insert")
+   LET l_allow_delete = cl_auth_detail_input("delete")
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   {<point name="input.pre_input"/>}
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      INPUT BY NAME g_rmdb_m.rmdbdocno,g_rmdb_m.rmdbseq,g_rmdb_m.rmdb003,g_rmdb_m.rmdb004,g_rmdb_m.rmdb005, 
+          g_rmdb_m.rmdb006 ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.head.action"
+         {<point name="input.head.action"/>}
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.head.before_input"
+            {<point name="input.head.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rmdbdocno
+            #add-point:BEFORE FIELD rmdbdocno name="input.b.rmdbdocno"
+            {<point name="input.b.rmdbdocno" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rmdbdocno
+            
+            #add-point:AFTER FIELD rmdbdocno name="input.a.rmdbdocno"
+            {<point name="input.a.rmdbdocno" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rmdbdocno
+            #add-point:ON CHANGE rmdbdocno name="input.g.rmdbdocno"
+            {<point name="input.g.rmdbdocno" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rmdbseq
+            #add-point:BEFORE FIELD rmdbseq name="input.b.rmdbseq"
+            {<point name="input.b.rmdbseq" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rmdbseq
+            
+            #add-point:AFTER FIELD rmdbseq name="input.a.rmdbseq"
+            {<point name="input.a.rmdbseq" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rmdbseq
+            #add-point:ON CHANGE rmdbseq name="input.g.rmdbseq"
+            {<point name="input.g.rmdbseq" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rmdb003
+            
+            #add-point:AFTER FIELD rmdb003 name="input.a.rmdb003"
+            {<point name="input.a.rmdb003" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rmdb003
+            #add-point:BEFORE FIELD rmdb003 name="input.b.rmdb003"
+            {<point name="input.b.rmdb003" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rmdb003
+            #add-point:ON CHANGE rmdb003 name="input.g.rmdb003"
+            {<point name="input.g.rmdb003" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rmdb004
+            
+            #add-point:AFTER FIELD rmdb004 name="input.a.rmdb004"
+            {<point name="input.a.rmdb004" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rmdb004
+            #add-point:BEFORE FIELD rmdb004 name="input.b.rmdb004"
+            {<point name="input.b.rmdb004" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rmdb004
+            #add-point:ON CHANGE rmdb004 name="input.g.rmdb004"
+            {<point name="input.g.rmdb004" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rmdb005
+            
+            #add-point:AFTER FIELD rmdb005 name="input.a.rmdb005"
+            {<point name="input.a.rmdb005" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rmdb005
+            #add-point:BEFORE FIELD rmdb005 name="input.b.rmdb005"
+            {<point name="input.b.rmdb005" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rmdb005
+            #add-point:ON CHANGE rmdb005 name="input.g.rmdb005"
+            {<point name="input.g.rmdb005" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rmdb006
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_rmdb_m.rmdb006,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD rmdb006
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD rmdb006 name="input.a.rmdb006"
+            {<point name="input.a.rmdb006" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rmdb006
+            #add-point:BEFORE FIELD rmdb006 name="input.b.rmdb006"
+            {<point name="input.b.rmdb006" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rmdb006
+            #add-point:ON CHANGE rmdb006 name="input.g.rmdb006"
+            {<point name="input.g.rmdb006" />}
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.rmdbdocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rmdbdocno
+            #add-point:ON ACTION controlp INFIELD rmdbdocno name="input.c.rmdbdocno"
+            {<point name="input.c.rmdbdocno" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.rmdbseq
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rmdbseq
+            #add-point:ON ACTION controlp INFIELD rmdbseq name="input.c.rmdbseq"
+            {<point name="input.c.rmdbseq" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.rmdb003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rmdb003
+            #add-point:ON ACTION controlp INFIELD rmdb003 name="input.c.rmdb003"
+            {<point name="input.c.rmdb003" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.rmdb004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rmdb004
+            #add-point:ON ACTION controlp INFIELD rmdb004 name="input.c.rmdb004"
+            {<point name="input.c.rmdb004" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.rmdb005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rmdb005
+            #add-point:ON ACTION controlp INFIELD rmdb005 name="input.c.rmdb005"
+            {<point name="input.c.rmdb005" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.rmdb006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rmdb006
+            #add-point:ON ACTION controlp INFIELD rmdb006 name="input.c.rmdb006"
+            {<point name="input.c.rmdb006" />}
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.head.after_input"
+            {<point name="input.head.after_input"/>}
+            #end add-point
+            
+      END INPUT
+   
+      INPUT ARRAY g_rmdc_d FROM s_detail1.*
+          ATTRIBUTE(COUNT = g_rec_b,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS, 
+                  INSERT ROW = l_allow_insert,
+                  DELETE ROW = l_allow_delete,
+                  APPEND ROW = l_allow_insert)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.body.action"
+         {<point name="input.body.action"/>}
+         #end add-point
+         
+         #自訂ACTION(detail_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單身輸入前處理 name="input.body.before_input"
+            {<point name="input.body.before_input"/>}
+            #end add-point
+          
+                  #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rmdcseq1
+            #add-point:BEFORE FIELD rmdcseq1 name="input.b.page1.rmdcseq1"
+            {<point name="input.b.page1.rmdcseq1" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rmdcseq1
+            
+            #add-point:AFTER FIELD rmdcseq1 name="input.a.page1.rmdcseq1"
+            {<point name="input.a.page1.rmdcseq1" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rmdcseq1
+            #add-point:ON CHANGE rmdcseq1 name="input.g.page1.rmdcseq1"
+            {<point name="input.g.page1.rmdcseq1" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rmdc005
+            
+            #add-point:AFTER FIELD rmdc005 name="input.a.page1.rmdc005"
+            {<point name="input.a.page1.rmdc005" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rmdc005
+            #add-point:BEFORE FIELD rmdc005 name="input.b.page1.rmdc005"
+            {<point name="input.b.page1.rmdc005" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rmdc005
+            #add-point:ON CHANGE rmdc005 name="input.g.page1.rmdc005"
+            {<point name="input.g.page1.rmdc005" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rmdc006
+            
+            #add-point:AFTER FIELD rmdc006 name="input.a.page1.rmdc006"
+            {<point name="input.a.page1.rmdc006" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rmdc006
+            #add-point:BEFORE FIELD rmdc006 name="input.b.page1.rmdc006"
+            {<point name="input.b.page1.rmdc006" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rmdc006
+            #add-point:ON CHANGE rmdc006 name="input.g.page1.rmdc006"
+            {<point name="input.g.page1.rmdc006" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rmdc007
+            
+            #add-point:AFTER FIELD rmdc007 name="input.a.page1.rmdc007"
+            {<point name="input.a.page1.rmdc007" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rmdc007
+            #add-point:BEFORE FIELD rmdc007 name="input.b.page1.rmdc007"
+            {<point name="input.b.page1.rmdc007" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rmdc007
+            #add-point:ON CHANGE rmdc007 name="input.g.page1.rmdc007"
+            {<point name="input.g.page1.rmdc007" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rmdc008
+            #add-point:BEFORE FIELD rmdc008 name="input.b.page1.rmdc008"
+            {<point name="input.b.page1.rmdc008" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rmdc008
+            
+            #add-point:AFTER FIELD rmdc008 name="input.a.page1.rmdc008"
+            {<point name="input.a.page1.rmdc008" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rmdc008
+            #add-point:ON CHANGE rmdc008 name="input.g.page1.rmdc008"
+            {<point name="input.g.page1.rmdc008" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rmdc004
+            #應用 a15 樣板自動產生(Version:3)
+            #確認欄位值在特定區間內
+            IF NOT cl_ap_chk_range(g_rmdc_d[l_ac].rmdc004,"0","1","","","azz-00079",1) THEN
+               NEXT FIELD rmdc004
+            END IF 
+ 
+ 
+ 
+            #add-point:AFTER FIELD rmdc004 name="input.a.page1.rmdc004"
+            {<point name="input.a.page1.rmdc004" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rmdc004
+            #add-point:BEFORE FIELD rmdc004 name="input.b.page1.rmdc004"
+            {<point name="input.b.page1.rmdc004" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rmdc004
+            #add-point:ON CHANGE rmdc004 name="input.g.page1.rmdc004"
+            {<point name="input.g.page1.rmdc004" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD rmdcsite
+            #add-point:BEFORE FIELD rmdcsite name="input.b.page1.rmdcsite"
+            {<point name="input.b.page1.rmdcsite" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD rmdcsite
+            
+            #add-point:AFTER FIELD rmdcsite name="input.a.page1.rmdcsite"
+            {<point name="input.a.page1.rmdcsite" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE rmdcsite
+            #add-point:ON CHANGE rmdcsite name="input.g.page1.rmdcsite"
+            {<point name="input.g.page1.rmdcsite" />}
+            #END add-point 
+ 
+ 
+ 
+                  #Ctrlp:input.c.page1.rmdcseq1
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rmdcseq1
+            #add-point:ON ACTION controlp INFIELD rmdcseq1 name="input.c.page1.rmdcseq1"
+            {<point name="input.c.page1.rmdcseq1" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rmdc005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rmdc005
+            #add-point:ON ACTION controlp INFIELD rmdc005 name="input.c.page1.rmdc005"
+            {<point name="input.c.page1.rmdc005" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rmdc006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rmdc006
+            #add-point:ON ACTION controlp INFIELD rmdc006 name="input.c.page1.rmdc006"
+            {<point name="input.c.page1.rmdc006" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rmdc007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rmdc007
+            #add-point:ON ACTION controlp INFIELD rmdc007 name="input.c.page1.rmdc007"
+            {<point name="input.c.page1.rmdc007" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rmdc008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rmdc008
+            #add-point:ON ACTION controlp INFIELD rmdc008 name="input.c.page1.rmdc008"
+            {<point name="input.c.page1.rmdc008" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rmdc004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rmdc004
+            #add-point:ON ACTION controlp INFIELD rmdc004 name="input.c.page1.rmdc004"
+            {<point name="input.c.page1.rmdc004" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.page1.rmdcsite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD rmdcsite
+            #add-point:ON ACTION controlp INFIELD rmdcsite name="input.c.page1.rmdcsite"
+            {<point name="input.c.page1.rmdcsite" />}
+            #END add-point
+ 
+ 
+ 
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.body.after_input"
+            {<point name="input.body.after_input"/>}
+            #end add-point
+            
+      END INPUT
+      
+ 
+      
+      #add-point:自定義input name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   {<point name="input.before_close"/>}
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_armt400_01 
+   
+   #add-point:input段after input name="input.post_input"
+   {<point name="input.post_input"/>}
+   #end add-point    
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="armt400_01.other_dialog" readonly="Y" >}
+{<point name="other.dialog"/>}
+{</section>}
+{<section id="armt400_01.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+ 

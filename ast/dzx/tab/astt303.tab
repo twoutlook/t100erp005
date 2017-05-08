@@ -1,0 +1,216 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astt303" module="ast" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="02003" crtdt="2015-12-03 15:33:23" modid="02003" moddt="2015-12-04 14:40:05" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="5" tabver="10001" description="自營合約進項稅變更作業維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="stfxsite,stfxsite_desc(chr80),stfxdocdt,stfxdocno,stfx003,stfx003_desc(chr80),stfx001,stfx002,stfx004,stfx005,stfx006,stfxstus,stfx007,stfx007_desc(chr80),stfx009,stfx009_desc(chr80),stfx011,stfx008,stfx008_desc(chr80),stfx010,stfx010_desc(chr80),stfx012,stfx013,stfxunit,stfxownid,stfxownid_desc(chr80),stfxowndp,stfxowndp_desc(chr80),stfxcrtid,stfxcrtid_desc(chr80),stfxcrtdp,stfxcrtdp_desc(chr80),stfxcrtdt,stfxmodid,stfxmodid_desc(chr80),stfxmoddt,stfxcnfid,stfxcnfid_desc(chr80),stfxcnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="stfyseq,stfy015,stfy003,stfy003_desc(chr500),stfy001,stfy004,stfy002,stfy005,stfy005_desc(chr500),stfy006,stfy006_desc(chr500),stfy007,stfy009,stfy010,stfy011,stfysite,stfyunit"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="stfyseq,stfy015,stfy003,stfy003_2_desc(chr500),stfy001,stfy004,stfy002,stfy005,stfy005_2_desc(chr500),stfy006,stfy006_2_desc(chr500),stfy007,stfy009,stfy010,stfy011,stfysite,stfyunit"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="stfyseq,stfy015,stfy003,stfy003_3_desc(chr500),stfy001,stfy002,stfy005,stfy005_3_desc(chr500),stfy006,stfy006_3_desc(chr500),stfy007,stfy009,stfy010,stfy011,stfysite,stfyunit"/>
+      <var id="body" page="4" record="s_detail4" page_id="4" value="stfyseq,stfy015,stfy003,stfy003_4_desc(chr500),stfy012,stfy014,stfy001,stfy002,stfy006,stfy006_4_desc(chr500),stfy007,stfy008,stfy009,stfy010,stfysite,stfyunit"/>
+      <var id="body" page="5" record="s_detail5" page_id="5" value="stfyseq,stfy015,stfy003,stfy003_5_desc(chr500),stfy001,stfy002,stfy006,stfy006_5_desc(chr500),stfy007,stfy008,stfy009,stfysite,stfyunit"/>
+      <var id="bs_field" value="stfxsite,stfxdocdt,stfxdocno,stfx001,stfx002,stfx003,stfx004,stfx005,stfx006,stfx007,stfx008,stfx009,stfx010,stfx011,stfx012,stfx013" pk="stfxdocno" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="astt303_01"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="astt303" method="dialog">
+    <section id="input">
+      <input id="head" field="stfxsite,stfxdocdt,stfxdocno,stfx003,stfx001,stfx002,stfx004,stfx005,stfx006,stfxstus,stfx007,stfx009,stfx011,stfx008,stfx010,stfx012,stfx013,stfxunit"/>
+      <input id="body" page="1" field="stfyseq,stfy015,stfy003,stfy001,stfy004,stfy002,stfy005,stfy006,stfy007,stfy009,stfy010,stfy011,stfysite,stfyunit" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="stfxsite,stfxdocdt,stfxdocno,stfx003,stfx001,stfx002,stfx004,stfx005,stfx006,stfxstus,stfx007,stfx009,stfx011,stfx008,stfx010,stfx012,stfx013,stfxunit,stfxownid,stfxowndp,stfxcrtid,stfxcrtdp,stfxcrtdt,stfxmodid,stfxmoddt,stfxcnfid,stfxcnfdt"/>
+      <construct id="body" page="1" field="stfyseq,stfy015,stfy003,stfy001,stfy004,stfy002,stfy005,stfy006,stfy007,stfy009,stfy010,stfy011,stfysite,stfyunit"/>
+      <construct id="body" page="4" field="stfy014"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="stfxdocno"/>
+      <set id="head" type="no_entry" field="stfxdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="stfxsite">
+        <after>
+          <reference field="stfxsite_desc" ref_field="stfx_t.stfxsite" map_field="stfxsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="stfxsite_desc"/>
+      <column id="stfxdocdt"/>
+      <column id="stfxdocno"/>
+      <column id="stfx003">
+        <after>
+          <reference field="stfx003_desc" ref_field="stfx_t.stfx003" map_field="stfx003" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_1" state="i"/>
+        <controlp form="q_pmaa001_1" state="c"/>
+      </column>
+      <column id="stfx003_desc"/>
+      <column id="stfx001">
+        <controlp form="q_stan001_1" state="i"/>
+        <controlp form="q_stan001_1" state="c"/>
+      </column>
+      <column id="stfx002"/>
+      <column id="stfx004" def_scc="6013"/>
+      <column id="stfx005" def_scc="6785"/>
+      <column id="stfx006"/>
+      <column id="stfxstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="stfx007">
+        <after>
+          <reference field="stfx007_desc" ref_field="stfx_t.stfx007" map_field="stfx007" ref_sql="SELECT oodbl004 FROM oodbl_t WHERE oodblent=$varg_enterprise$var AND oodbl002=? AND oodbl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oodb002_10" state="i"/>
+        <controlp form="q_oodb002_10" state="c"/>
+      </column>
+      <column id="stfx007_desc"/>
+      <column id="stfx009">
+        <after/>
+        <controlp form="q_isac002_2" state="i"/>
+        <controlp form="q_isac002_2" state="c"/>
+      </column>
+      <column id="stfx009_desc"/>
+      <column id="stfx011"/>
+      <column id="stfx008">
+        <after>
+          <reference field="stfx008_desc" ref_field="stfx_t.stfx008" map_field="stfx008" ref_sql="SELECT oodbl004 FROM oodbl_t WHERE oodblent=$varg_enterprise$var AND oodbl002=? AND oodbl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oodb002_10" state="i"/>
+        <controlp form="q_oodb002_10" state="c"/>
+      </column>
+      <column id="stfx008_desc"/>
+      <column id="stfx010">
+        <after/>
+        <controlp form="q_isac002_2" state="i"/>
+        <controlp form="q_isac002_2" state="c"/>
+      </column>
+      <column id="stfx010_desc"/>
+      <column id="stfx012"/>
+      <column id="stfx013"/>
+      <column id="stfxunit"/>
+      <column id="stfxownid">
+        <after>
+          <reference field="stfxownid_desc" ref_field="stfx_t.stfxownid" map_field="stfxownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stfxownid_desc"/>
+      <column id="stfxowndp">
+        <after>
+          <reference field="stfxowndp_desc" ref_field="stfx_t.stfxowndp" map_field="stfxowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="stfxowndp_desc"/>
+      <column id="stfxcrtid">
+        <after>
+          <reference field="stfxcrtid_desc" ref_field="stfx_t.stfxcrtid" map_field="stfxcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stfxcrtid_desc"/>
+      <column id="stfxcrtdp">
+        <after>
+          <reference field="stfxcrtdp_desc" ref_field="stfx_t.stfxcrtdp" map_field="stfxcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="stfxcrtdp_desc"/>
+      <column id="stfxcrtdt"/>
+      <column id="stfxmodid">
+        <after>
+          <reference field="stfxmodid_desc" ref_field="stfx_t.stfxmodid" map_field="stfxmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stfxmodid_desc"/>
+      <column id="stfxmoddt"/>
+      <column id="stfxcnfid">
+        <after>
+          <reference field="stfxcnfid_desc" ref_field="stfx_t.stfxcnfid" map_field="stfxcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stfxcnfid_desc"/>
+      <column id="stfxcnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="stfyseq" type="S" default="0"/>
+      <column id="stfy015"/>
+      <column id="stfy003">
+        <after>
+          <reference field="stfy003_desc" ref_field="stfy_t.stfy003" map_field="styf003" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stfy003_desc"/>
+      <column id="stfy001"/>
+      <column id="stfy004"/>
+      <column id="stfy002" type="S" default="0"/>
+      <column id="stfy005">
+        <after>
+          <reference field="stfy005_desc" ref_field="stfy_t.stfy005" map_field="stfy005" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stfy005_desc"/>
+      <column id="stfy006">
+        <after>
+          <reference field="stfy006_desc" ref_field="stfy_t.stfy006" map_field="stfy006" ref_sql="SELECT oodbl004 FROM oodbl_t WHERE oodblent=$varg_enterprise$var AND oodbl002=? AND oodbl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oodb002_10" state="c"/>
+      </column>
+      <column id="stfy006_desc"/>
+      <column id="stfy007" type="S" default="0"/>
+      <column id="stfy009" type="S" default="0"/>
+      <column id="stfy010" type="S" default="0"/>
+      <column id="stfy011" type="S" default="0"/>
+      <column id="stfysite"/>
+      <column id="stfyunit"/>
+    </init>
+    <init id="body" page="2">
+      <column id="stfy003_2_desc"/>
+      <column id="stfy005_2_desc"/>
+      <column id="stfy006_2_desc"/>
+    </init>
+    <init id="body" page="3">
+      <column id="stfy003_3_desc"/>
+      <column id="stfy005_3_desc"/>
+      <column id="stfy006_3_desc"/>
+    </init>
+    <init id="body" page="4">
+      <column id="stfy003_4_desc"/>
+      <column id="stfy014"/>
+      <column id="stfy006_4_desc"/>
+    </init>
+    <init id="body" page="5">
+      <column id="stfy003_5_desc"/>
+      <column id="stfy006_5_desc"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="stfx_t" pk="stfxdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT stfxsite,&apos;&apos;,stfxdocdt,stfxdocno,stfx003,&apos;&apos;,stfx001,stfx002,stfx004,stfx005,stfx006,stfxstus,stfx007,&apos;&apos;,stfx009,&apos;&apos;,stfx011,stfx008,&apos;&apos;,stfx010,&apos;&apos;,stfx012,stfx013,stfxunit,stfxownid,&apos;&apos;,stfxowndp,&apos;&apos;,stfxcrtid,&apos;&apos;,stfxcrtdp,&apos;&apos;,stfxcrtdt,stfxmodid,&apos;&apos;,stfxmoddt,stfxcnfid,&apos;&apos;,stfxcnfdt FROM stfx_t WHERE stfxent= ? AND stfxdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT stfxsite,&apos;&apos;,stfxdocdt,stfxdocno,stfx003,&apos;&apos;,stfx001,stfx002,stfx004,stfx005,stfx006,stfxstus,stfx007,&apos;&apos;,stfx009,&apos;&apos;,stfx011,stfx008,&apos;&apos;,stfx010,&apos;&apos;,stfx012,stfx013,stfxunit,stfxownid,&apos;&apos;,stfxowndp,&apos;&apos;,stfxcrtid,&apos;&apos;,stfxcrtdp,&apos;&apos;,stfxcrtdt,stfxmodid,&apos;&apos;,stfxmoddt,stfxcnfid,&apos;&apos;,stfxcnfdt FROM stfx_t" order="stfxdocno"/>
+    </head>
+    <body id="stfy_t" page="1,2,3,4,5" linked="" pk="stfyseq" fk="stfydocno">
+      <sql id="forupd_sql_detail" query="SELECT stfyseq,stfy015,stfy003,&apos;&apos;,stfy001,stfy004,stfy002,stfy005,&apos;&apos;,stfy006,&apos;&apos;,stfy007,stfy009,stfy010,stfy011,stfysite,stfyunit,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,stfy014,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM stfy_t WHERE stfyent=? AND stfydocno=? AND stfyseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT stfyseq,stfy015,stfy003,&apos;&apos;,stfy001,stfy004,stfy002,stfy005,&apos;&apos;,stfy006,&apos;&apos;,stfy007,stfy009,stfy010,stfy011,stfysite,stfyunit,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,stfy014,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM stfy_t WHERE stfyent=? AND stfydocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

@@ -1,0 +1,291 @@
+<add_points prog="asrt340_02" std_prog="asrt340_02" erpver="1.0" module="ASR" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="free_style.variable" cite_std="N" status="" ver="1" src="s" new="N" order="0" cite_ver="" mark_hard="N">
+<![CDATA[{<Module define>}
+#單頭 type 宣告
+ type type_g_qcba_m        RECORD
+       qcbadocno LIKE qcba_t.qcbadocno,
+       qcbadocdt LIKE qcba_t.qcbadocdt
+       END RECORD
+DEFINE g_qcba_m        type_g_qcba_m
+
+DEFINE g_qcbadocno_t   LIKE qcba_t.qcbadocno    #Key值備份
+
+
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+{</Module define>}]]>
+</point>
+  <point name="function.asrt340_02" cite_std="N" status="u" ver="1" src="s" new="Y" order="1" cite_ver="" mark_hard="N">
+<![CDATA[
+PUBLIC FUNCTION asrt340_02(--)
+   #add-point:input段變數傳入
+   {<point name="input.get_var"/>}
+   p_sfeadocno   
+   #end add-point
+   )
+
+   DEFINE p_sfeadocno     LIKE sfea_t.sfeadocno
+   DEFINE r_success       LIKE type_t.num5
+   DEFINE l_site          LIKE ooef_t.ooef001
+   DEFINE l_success       LIKE type_t.num5
+   DEFINE l_ooef004       LIKE ooef_t.ooef004
+   DEFINE l_start_no      LIKE sfea_t.sfeadocno
+   DEFINE l_end_no        LIKE sfea_t.sfeadocno
+
+   WHENEVER ERROR CONTINUE
+   LET r_success = FALSE
+   
+   IF cl_null(p_sfeadocno) THEN
+      RETURN r_success
+   END IF
+   
+   CALL asrt340_02_chk(p_sfeadocno)
+        RETURNING l_success
+   IF NOT l_success THEN
+      RETURN r_success
+   END IF
+   
+   SELECT sfeasite INTO l_site FROM sfea_t WHERE sfeaent = g_enterprise AND sfeadocno = p_sfeadocno
+
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_asrt340_02 WITH FORM cl_ap_formpath("asr","asrt340_02")
+
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qcba_m.qcbadocdt = cl_get_today()
+   DISPLAY BY NAME g_qcba_m.qcbadocdt
+
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+      #輸入開始
+      INPUT BY NAME g_qcba_m.qcbadocno,g_qcba_m.qcbadocdt ATTRIBUTE(WITHOUT DEFAULTS)
+
+         AFTER FIELD qcbadocno
+            IF cl_null(g_qcba_m.qcbadocno) THEN
+               NEXT FIELD qcbadocno
+            END IF
+            CALL s_aooi200_chk_slip(l_site,'',g_qcba_m.qcbadocno,'aqct300')
+                 RETURNING l_success
+            IF NOT l_success THEN
+               NEXT FIELD qcbadocno
+            END IF
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD qcbadocdt
+
+            #add-point:AFTER FIELD qcbadocdt
+            {<point name="input.a.qcbadocdt" />}
+            #END add-point
+
+         ON ACTION controlp INFIELD qcbadocno
+            #add-point:ON ACTION controlp INFIELD qcbadocno
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+            LET g_qryparam.default1 = g_qcba_m.qcbadocno             #給予default值
+            #給予arg
+            SELECT ooef004 INTO l_ooef004
+              FROM ooef_t
+             WHERE ooefent = g_enterprise
+               AND ooef001 = l_site
+            LET g_qryparam.arg1 = l_ooef004
+            LET g_qryparam.arg2 = "aqct300"
+            CALL q_ooba002_6()                                #呼叫開窗
+            LET g_qcba_m.qcbadocno = g_qryparam.return1       #將開窗取得的值回傳到變數
+            DISPLAY g_qcba_m.qcbadocno TO qcbadocno           #顯示到畫面上
+            NEXT FIELD qcbadocno                          
+
+         AFTER INPUT
+#            IF cl_ask_sure() THEN
+               LET g_prog = 'aqct300'
+               CALL s_aqct300_gen('2',p_sfeadocno,0,g_qcba_m.qcbadocno,g_qcba_m.qcbadocdt)
+                    RETURNING l_success,l_start_no,l_end_no
+               DISPLAY "Start No:",l_start_no,"    End No:",l_end_no
+               LET r_success = l_success
+               LET g_prog = 'asrt340'
+               EXIT DIALOG
+ #           END IF
+
+      END INPUT
+
+      #add-point:自定義input
+      {<point name="input.more_input"/>}
+      #end add-point
+
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION close
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION exit
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+
+   #add-point:畫面關閉前
+   {<point name="input.before_close"/>}
+   #end add-point
+
+   #畫面關閉
+   CLOSE WINDOW w_asrt340_02
+   RETURN r_success
+
+   #add-point:input段after input
+   {<point name="input.post_input"/>}
+   #end add-point
+
+END FUNCTION]]>
+</point>
+  <point name="function.asrt340_02_chk" cite_std="N" status="u" ver="1" src="s" new="Y" order="2" cite_ver="" mark_hard="N">
+<![CDATA[################################################################################
+# Descriptions...: 入库单状态检查
+# Memo...........:
+# Usage..........: CALL asrt340_02_chk(p_sfeadocno)
+#                  RETURNING r_success
+# Input parameter: p_sfeadocno    完工入库单
+# Return code....: r_success      可以转FQC否
+# Date & Author..: 2014-01-16 By Carrier
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION asrt340_02_chk(p_sfeadocno)
+   DEFINE p_sfeadocno       LIKE sfea_t.sfeadocno
+   DEFINE r_success         LIKE type_t.num5
+   DEFINE l_cnt             LIKE type_t.num5
+   DEFINE l_sfeb            RECORD LIKE sfeb_t.*
+   DEFINE l_qc_qty          LIKE sfec_t.sfec009
+   DEFINE l_flag            LIKE type_t.chr1
+   
+   LET r_success = FALSE
+   
+   #1.检查完工入库单存在否 + 状态是 审核 否
+   INITIALIZE g_chkparam.* TO NULL
+   LET g_chkparam.arg1 = p_sfeadocno
+   IF NOT cl_chk_exist("v_sfeadocno") THEN
+      RETURN r_success
+   END IF
+   
+   #2.工单中是否有需FQC的单身
+   LET l_cnt = 0
+   SELECT COUNT(*) INTO l_cnt FROM sfeb_t
+    WHERE sfebent   = g_enterprise
+      AND sfebdocno = p_sfeadocno
+      AND sfeb002 = 'Y'
+      
+   IF cl_null(l_cnt) THEN LET l_cnt = 0 END IF
+   IF l_cnt = 0 THEN
+      CALL cl_err(p_sfeadocno,'asf-00081',1)
+      RETURN r_success
+   END IF
+   
+   #3.工单有FQC的单身,检查是否全数FQC了
+   DECLARE asrt340_02_cs1 CURSOR FOR
+    SELECT * FROM sfeb_t
+     WHERE sfebent   = g_enterprise
+       AND sfebdocno = p_sfeadocno
+       AND sfeb002   = 'Y'
+       
+   LET l_flag = 'N'
+   FOREACH asrt340_02_cs1 INTO l_sfeb.*
+      IF SQLCA.sqlcode THEN
+         CALL cl_err('foreach asrt340_02_cs1',SQLCA.sqlcode,1)
+         RETURN r_success         
+      END IF
+      
+      LET l_qc_qty = 0
+      SELECT SUM(qcba017) INTO l_qc_qty FROM qcba_t
+       WHERE qcbaent  = g_enterprise
+         AND qcbasite = l_sfeb.sfebsite
+         AND qcba001  = l_sfeb.sfebdocno
+         AND qcba002  = l_sfeb.sfebseq
+         AND qcbastus <> 'X'
+      IF cl_null(l_qc_qty) THEN LET l_qc_qty = 0 END IF
+      #检查是否还有剩余可FQC的量
+      IF l_qc_qty < l_sfeb.sfeb008 THEN
+         LET l_flag = 'Y'
+         EXIT FOREACH
+      END IF
+   END FOREACH
+   IF l_flag = 'N' THEN
+      CALL cl_err(p_sfeadocno,'asf-00082',1)
+      RETURN r_success
+   END IF
+      
+   LET r_success = TRUE
+   RETURN r_success
+
+END FUNCTION]]>
+</point>
+  <point name="construct.c.qcbadocno" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+			LET g_qryparam.reqry = FALSE
+            CALL q_ooba002_1()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO qcbadocno  #顯示到畫面上
+
+            NEXT FIELD qcbadocno                     #返回原欄位
+
+]]>
+</point>
+  <point name="input.a.qcbadocno" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_qcba_m.qcbadocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_qcba_m.qcbadocno != g_qcbadocno_t )) THEN 
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM qcba_t WHERE "||"qcbaent = '" ||g_enterprise|| "' AND qcbasite = '" ||g_site|| "' AND "||"qcbadocno = '"||g_qcba_m.qcbadocno ||"'",'std-00004',0) THEN 
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+]]>
+</point>
+  <point name="input.c.qcbadocno" cite_std="N" status="" ver="1" src="s" new="N" order="" cite_ver="" mark_hard="N">
+<![CDATA[#此段落由子樣板a07產生            
+            #開窗i段
+			INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+			LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_qcba_m.qcbadocno             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+            LET g_qryparam.arg2 = "" #
+
+            CALL q_ooba002_1()                                #呼叫開窗
+
+            LET g_qcba_m.qcbadocno = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+            DISPLAY g_qcba_m.qcbadocno TO qcbadocno              #顯示到畫面上
+
+            NEXT FIELD qcbadocno                          #返回原欄位
+
+]]>
+</point>
+  <point name="main.memo" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="main.import" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="global.variable" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+  <point name="free_style.function" cite_std="N" status="" ver="" src="" new="Y" order="">
+<![CDATA[]]>
+</point>
+</add_points>

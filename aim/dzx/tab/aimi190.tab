@@ -1,0 +1,143 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aimi190" module="aim" jobmode="N" type="i12" industry="std" fix_arg="0" crtid="02482" crtdt="2013-07-17 17:28:04" modid="02294" moddt="2015-07-09 11:19:57" sdver="0004" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="料件單位換算維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="imad001,imaa009(chr80),imaa009_desc(chr80),imaal003(chr80),imaa003(chr80),imaa003_desc(chr80),imaal004(chr80),imaa006(chr80),imaa006_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="imadstus,imad003,imad002,imad002_desc(chr500),lbl_imad003_desc(chr500),imad005,imad004,imad004_desc(chr500)"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="imad002,imad004,imadmodid,imadmodid_desc(chr500),imadmoddt,imadownid,imadownid_desc(chr500),imadowndp,imadowndp_desc(chr500),imadcrtid,imadcrtid_desc(chr500),imadcrtdp,imadcrtdp_desc(chr500),imadcrtdt"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+      <action id="prog_imad001" prog="aimm200" parameter="imad001"/>
+    </section>
+  </structure>
+  <form id="0" module="aim" filename="aimi190" method="dialog">
+    <section id="input">
+      <input id="head" field="imad001"/>
+      <input id="body" page="1" field="imadstus,imad003,imad002,imad005,imad004" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="imad001,imaa009,imaal003,imaa003,imaal004,imaa006"/>
+      <construct id="body" page="1" field="imadstus,imad003,imad002,imad005,imad004"/>
+      <construct id="body" page="2" field="imadmodid,imadmoddt,imadownid,imadowndp,imadcrtid,imadcrtdp,imadcrtdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="imad001"/>
+      <set id="head" type="no_entry" field="imad001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="imad001">
+        <after>
+          <check chkid="v_imaa001_5" id="isExist"/>
+        </after>
+        <controlp form="q_imaa001" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="imaa009">
+        <after/>
+      </column>
+      <column id="imaa009_desc"/>
+      <column id="imaal003"/>
+      <column id="imaa003">
+        <after/>
+        <controlp form="q_imck001" state="i"/>
+      </column>
+      <column id="imaa003_desc"/>
+      <column id="imaal004"/>
+      <column id="imaa006">
+        <after/>
+      </column>
+      <column id="imaa006_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="imadstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="imad003">
+        <after/>
+      </column>
+      <column id="imad002">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="imad002_desc" ref_field="imad_t.imad002" map_field="imad002" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001" state="i"/>
+        <controlp form="q_ooca001" state="c"/>
+      </column>
+      <column id="imad002_desc"/>
+      <column id="lbl_imad003_desc"/>
+      <column id="imad005"/>
+      <column id="imad004">
+        <after>
+          <check chkid="v_ooca001" id="isExist"/>
+          <reference field="imad004_desc" ref_field="imad_t.imad004" map_field="imad004" ref_sql="SELECT oocal003 FROM oocal_t WHERE oocalent=$varg_enterprise$var AND oocal001=? AND oocal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooca001" state="i"/>
+        <controlp form="q_ooca001" state="c"/>
+      </column>
+      <column id="imad004_desc"/>
+    </init>
+    <init id="body" page="2">
+      <column id="imadmodid">
+        <after>
+          <reference field="imadmodid_desc" ref_field="imad_t.imadmodid" map_field="imadmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imadmodid_desc"/>
+      <column id="imadmoddt"/>
+      <column id="imadownid">
+        <after>
+          <reference field="imadownid_desc" ref_field="imad_t.imadownid" map_field="imadownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imadownid_desc"/>
+      <column id="imadowndp">
+        <after>
+          <reference field="imadowndp_desc" ref_field="imad_t.imadowndp" map_field="imadowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imadowndp_desc"/>
+      <column id="imadcrtid">
+        <after>
+          <reference field="imadcrtid_desc" ref_field="imad_t.imadcrtid" map_field="imadcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="imadcrtid_desc"/>
+      <column id="imadcrtdp">
+        <after>
+          <reference field="imadcrtdp_desc" ref_field="imad_t.imadcrtdp" map_field="imadcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="imadcrtdp_desc"/>
+      <column id="imadcrtdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="imad_t" pk="imad001">
+      <sql id="forupd_sql" type="sql" query="SELECT imad001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM imad_t WHERE imadent= ? AND imad001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT imad001,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM imad_t" order="imad001"/>
+    </head>
+    <body id="imad_t" page="1,2" linked="" pk="imad002,imad004" fk="imad001">
+      <sql id="forupd_sql_detail" query="SELECT imadstus,imad003,imad002,&apos;&apos;,&apos;&apos;,imad005,imad004,&apos;&apos;,&apos;&apos;,&apos;&apos;,imadmodid,&apos;&apos;,imadmoddt,imadownid,&apos;&apos;,imadowndp,&apos;&apos;,imadcrtid,&apos;&apos;,imadcrtdp,&apos;&apos;,imadcrtdt FROM imad_t WHERE imadent=? AND imad001=? AND imad002=? AND imad004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT imadstus,imad003,imad002,&apos;&apos;,&apos;&apos;,imad005,imad004,&apos;&apos;,&apos;&apos;,&apos;&apos;,imadmodid,&apos;&apos;,imadmoddt,imadownid,&apos;&apos;,imadowndp,&apos;&apos;,imadcrtid,&apos;&apos;,imadcrtdp,&apos;&apos;,imadcrtdt FROM imad_t WHERE imadent= ? AND imad001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

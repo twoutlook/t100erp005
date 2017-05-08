@@ -1,0 +1,205 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="artt460" module="art" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="01533" crtdt="2015-03-09 15:09:21" modid="01533" moddt="2015-03-12 15:13:10" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="供應商清場清退作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="rtdisite,rtdisite_desc(chr80),rtdidocdt,rtdidocno,rtdi001,rtdi001_desc(chr80),rtdi002,rtdi002_desc(chr80),rtdi003,rtdi003_desc(chr80),rtdi004,rtdi004_desc(chr80),rtdistus,rtdi005,rtdi006,rtdi007,rtdi008,rtdi009,rtdi010,rtdiunit,rtdiownid,rtdiownid_desc(chr80),rtdicrtid,rtdicrtid_desc(chr80),rtdiowndp,rtdiowndp_desc(chr80),rtdicrtdp,rtdicrtdp_desc(chr80),rtdicrtdt,rtdimodid,rtdimodid_desc(chr80),rtdicnfid,rtdicnfid_desc(chr80),rtdimoddt,rtdicnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="rtdjseq,rtdj001,rtdj001_desc(chr500),rtdjsite,rtdjunit"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="rtdkseq,rtdksite,rtdksite_desc(chr500),rtdk002,rtdk001,rtdk001_desc(chr500),rtdk003,rtdk004,rtdk005,rtdk006,rtdk007,rtdkunit"/>
+      <var id="bs_field" value="rtdisite,rtdidocno,rtdidocdt,rtdi001,rtdi002,rtdi003,rtdi004,rtdi005,rtdi006,rtdi007,rtdi008,rtdi009,rtdi010" pk="rtdidocno" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="art" filename="artt460" method="dialog">
+    <section id="input">
+      <input id="head" field="rtdisite,rtdidocdt,rtdidocno,rtdi001,rtdi002,rtdi003,rtdi004,rtdistus,rtdi005,rtdi006,rtdi007,rtdi008,rtdi009,rtdi010,rtdiunit"/>
+      <input id="body" page="1" field="rtdjseq,rtdj001,rtdjsite,rtdjunit" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="rtdkseq,rtdksite,rtdk002,rtdk001,rtdk003,rtdk004,rtdk005,rtdk006,rtdk007,rtdkunit" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="rtdisite,rtdidocdt,rtdidocno,rtdi001,rtdi002,rtdi003,rtdi004,rtdistus,rtdi005,rtdi006,rtdi007,rtdi008,rtdi009,rtdi010,rtdiunit,rtdiownid,rtdicrtid,rtdiowndp,rtdicrtdp,rtdicrtdt,rtdimodid,rtdicnfid,rtdimoddt,rtdicnfdt"/>
+      <construct id="body" page="1" field="rtdjseq,rtdj001,rtdjsite,rtdjunit"/>
+      <construct id="body" page="2" field="rtdkseq,rtdksite,rtdk002,rtdk001,rtdk003,rtdk004,rtdk005,rtdk006,rtdk007,rtdkunit"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="rtdidocno"/>
+      <set id="head" type="no_entry" field="rtdidocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="rtdisite">
+        <after>
+          <reference field="rtdisite_desc" ref_field="rtdi_t.rtdisite" map_field="rtdisite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="rtdisite_desc"/>
+      <column id="rtdidocdt"/>
+      <column id="rtdidocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_rtdidocno" state="c"/>
+      </column>
+      <column id="rtdi001">
+        <after>
+          <reference field="rtdi001_desc" ref_field="rtdi_t.rtdi001" map_field="rtdi001" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_1" state="i"/>
+        <controlp form="q_pmaa001_1" state="c"/>
+      </column>
+      <column id="rtdi001_desc"/>
+      <column id="rtdi002">
+        <after>
+          <reference field="rtdi002_desc" ref_field="rtdi002" map_field="rtdi002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2117&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="rtdi002_desc"/>
+      <column id="rtdi003">
+        <after>
+          <check chkid="v_ooag001" id="isExist"/>
+          <reference field="rtdi003_desc" ref_field="rtdi_t.rtdi003" map_field="rtdi003" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtdi003_desc"/>
+      <column id="rtdi004">
+        <after>
+          <check chkid="v_ooeg001" id="isExist"/>
+          <reference field="rtdi004_desc" ref_field="rtdi_t.rtdi004" map_field="rtdi004" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="i"/>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="rtdi004_desc"/>
+      <column id="rtdistus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="rtdi005"/>
+      <column id="rtdi006"/>
+      <column id="rtdi007"/>
+      <column id="rtdi008"/>
+      <column id="rtdi009"/>
+      <column id="rtdi010"/>
+      <column id="rtdiunit"/>
+      <column id="rtdiownid">
+        <after>
+          <reference field="rtdiownid_desc" ref_field="rtdi_t.rtdiownid" map_field="rtdiownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtdiownid_desc"/>
+      <column id="rtdicrtid">
+        <after>
+          <reference field="rtdicrtid_desc" ref_field="rtdi_t.rtdicrtid" map_field="rtdicrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtdicrtid_desc"/>
+      <column id="rtdiowndp">
+        <after>
+          <reference field="rtdiowndp_desc" ref_field="rtdi_t.rtdiowndp" map_field="rtdiowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtdiowndp_desc"/>
+      <column id="rtdicrtdp">
+        <after>
+          <reference field="rtdicrtdp_desc" ref_field="rtdi_t.rtdicrtdp" map_field="rtdicrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="rtdicrtdp_desc"/>
+      <column id="rtdicrtdt"/>
+      <column id="rtdimodid">
+        <after>
+          <reference field="rtdimodid_desc" ref_field="rtdi_t.rtdimodid" map_field="rtdimodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtdimodid_desc"/>
+      <column id="rtdicnfid">
+        <after>
+          <reference field="rtdicnfid_desc" ref_field="rtdi_t.rtdicnfid" map_field="rtdicnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="rtdicnfid_desc"/>
+      <column id="rtdimoddt"/>
+      <column id="rtdicnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="rtdjseq"/>
+      <column id="rtdj001">
+        <after>
+          <reference field="rtdj001_desc" ref_field="rtdj_t.rtdj001" map_field="rtdj001" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="rtdj001_desc"/>
+      <column id="rtdjsite"/>
+      <column id="rtdjunit"/>
+    </init>
+    <init id="body" page="2">
+      <column id="rtdkseq"/>
+      <column id="rtdksite">
+        <after>
+          <reference field="rtdksite_desc" ref_field="rtdk_t.rtdksite" map_field="rtdksite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="rtdksite_desc"/>
+      <column id="rtdk002">
+        <controlp form="q_imay003_8" state="c"/>
+      </column>
+      <column id="rtdk001">
+        <after>
+          <reference field="rtdk001_desc" ref_field="rtdk_t.rtdk001" map_field="rtdk001" ref_sql="SELECT imaal003 FROM imaal_t WHERE imaalent=$varg_enterprise$var AND imaal001=? AND imaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtdx001_9" state="c"/>
+      </column>
+      <column id="rtdk001_desc"/>
+      <column id="rtdk003"/>
+      <column id="rtdk004">
+        <controlp form="q_ooca001_1" state="c"/>
+      </column>
+      <column id="rtdk005"/>
+      <column id="rtdk006"/>
+      <column id="rtdk007"/>
+      <column id="rtdkunit"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="rtdi_t" pk="rtdidocno">
+      <sql id="forupd_sql" type="sql" query="SELECT rtdisite,&apos;&apos;,rtdidocdt,rtdidocno,rtdi001,&apos;&apos;,rtdi002,&apos;&apos;,rtdi003,&apos;&apos;,rtdi004,&apos;&apos;,rtdistus,rtdi005,rtdi006,rtdi007,rtdi008,rtdi009,rtdi010,rtdiunit,rtdiownid,&apos;&apos;,rtdicrtid,&apos;&apos;,rtdiowndp,&apos;&apos;,rtdicrtdp,&apos;&apos;,rtdicrtdt,rtdimodid,&apos;&apos;,rtdicnfid,&apos;&apos;,rtdimoddt,rtdicnfdt FROM rtdi_t WHERE rtdient= ? AND rtdidocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT rtdisite,&apos;&apos;,rtdidocdt,rtdidocno,rtdi001,&apos;&apos;,rtdi002,&apos;&apos;,rtdi003,&apos;&apos;,rtdi004,&apos;&apos;,rtdistus,rtdi005,rtdi006,rtdi007,rtdi008,rtdi009,rtdi010,rtdiunit,rtdiownid,&apos;&apos;,rtdicrtid,&apos;&apos;,rtdiowndp,&apos;&apos;,rtdicrtdp,&apos;&apos;,rtdicrtdt,rtdimodid,&apos;&apos;,rtdicnfid,&apos;&apos;,rtdimoddt,rtdicnfdt FROM rtdi_t" order="rtdidocno"/>
+    </head>
+    <body id="rtdj_t" page="1" linked="" pk="rtdjseq" fk="rtdjdocno">
+      <sql id="forupd_sql_detail" query="SELECT rtdjseq,rtdj001,&apos;&apos;,rtdjsite,rtdjunit FROM rtdj_t WHERE rtdjent=? AND rtdjdocno=? AND rtdjseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rtdjseq,rtdj001,&apos;&apos;,rtdjsite,rtdjunit FROM rtdj_t WHERE rtdjent=? AND rtdjdocno=?"/>
+    </body>
+    <body id="rtdk_t" page="2" linked="" pk="rtdkseq" fk="rtdkdocno">
+      <sql id="forupd_sql_detail" query="SELECT rtdkseq,rtdksite,&apos;&apos;,rtdk002,rtdk001,&apos;&apos;,rtdk003,rtdk004,rtdk005,rtdk006,rtdk007,rtdkunit FROM rtdk_t WHERE rtdkent=? AND rtdkdocno=? AND rtdkseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT rtdkseq,rtdksite,&apos;&apos;,rtdk002,rtdk001,&apos;&apos;,rtdk003,rtdk004,rtdk005,rtdk006,rtdk007,rtdkunit FROM rtdk_t WHERE rtdkent=? AND rtdkdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

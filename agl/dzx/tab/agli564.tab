@@ -1,0 +1,138 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="agli564" module="agl" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="06821" crtdt="2016-02-04 09:15:02" modid="06821" moddt="2016-05-26 17:06:19" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="4" tabver="10001" description="合併現金流量表間接法期初開帳金額設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="glemld,glemld_desc(chr80),glem001,glem001_desc(chr80),glem002,glem003(chr500),glem004,glem004_desc(chr80),l_glem006(chr10),l_glem009(chr10),l_glem012(chr10)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="glem005,glem005_desc(chr500),glem015,glem007,glem008,glem006,glemstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="glem005,glemownid,glemownid_desc(chr500),glemowndp,glemowndp_desc(chr500),glemcrtid,glemcrtid_desc(chr500),glemcrtdp,glemcrtdp_desc(chr500),glemcrtdt,glemmodid,glemmodid_desc(chr500),glemmoddt"/>
+      <var id="body" page="3" record="s_detail3" page_id="3" value="glem005_1(chr500),glem005_desc_1(chr500),glem016,glem010,glem011,glem009"/>
+      <var id="body" page="4" record="s_detail4" page_id="4" value="glem005_3(chr500),glem005_desc_3(chr500),glem017,glem013,glem014,glem012"/>
+      <var id="bs_field" value="glemld,glem001,glem002,glem003,glem004" pk="glemld,glem001,glem002,glem003,glem004" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="agl" filename="agli564" method="dialog">
+    <section id="input">
+      <input id="head" field="glemld,glem001,glem002,glem003,glem004,l_glem006,l_glem009,l_glem012"/>
+      <input id="body" page="1" field="glem005,glem015,glem007,glem008,glem006,glemstus" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="3" field="glem005_1,glem016,glem010,glem011,glem009" insert="N" append="N" delete="N"/>
+      <input id="body" page="4" field="glem005_3,glem017,glem013,glem014,glem012" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="glemld,glem001,glem002,glem003,glem004,l_glem006,l_glem009,l_glem012"/>
+      <construct id="body" page="1" field="glem005,glem015,glem007,glem008,glem006,glemstus"/>
+      <construct id="body" page="2" field="glemownid,glemowndp,glemcrtid,glemcrtdp,glemcrtdt,glemmodid,glemmoddt"/>
+      <construct id="body" page="3" field="glem005_1,glem016,glem010,glem011,glem009"/>
+      <construct id="body" page="4" field="glem005_3,glem017,glem013,glem014,glem012"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="glemld,glem001,glem002,glem003,glem004"/>
+      <set id="head" type="no_entry" field="glemld,glem001,glem002,glem003,glem004"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="glemld">
+        <after/>
+      </column>
+      <column id="glemld_desc"/>
+      <column id="glem001">
+        <after/>
+      </column>
+      <column id="glem001_desc"/>
+      <column id="glem002"/>
+      <column id="glem003"/>
+      <column id="glem004">
+        <after/>
+      </column>
+      <column id="glem004_desc"/>
+      <column id="l_glem006"/>
+      <column id="l_glem009"/>
+      <column id="l_glem012"/>
+    </init>
+    <init id="body" page="1">
+      <column id="glem005">
+        <after/>
+      </column>
+      <column id="glem005_desc"/>
+      <column id="glem015" type="S" default="0"/>
+      <column id="glem007" type="S" default="0"/>
+      <column id="glem008" type="S" default="0"/>
+      <column id="glem006"/>
+      <column id="glemstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="glemownid">
+        <after>
+          <reference field="glemownid_desc" ref_field="glemownid" map_field="glemownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="glemownid_desc"/>
+      <column id="glemowndp">
+        <after>
+          <reference field="glemowndp_desc" ref_field="glemowndp" map_field="glemowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="glemowndp_desc"/>
+      <column id="glemcrtid">
+        <after>
+          <reference field="glemcrtid_desc" ref_field="glemcrtid" map_field="glemcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="glemcrtid_desc"/>
+      <column id="glemcrtdp">
+        <after>
+          <reference field="glemcrtdp_desc" ref_field="glemcrtdp" map_field="glemcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="glemcrtdp_desc"/>
+      <column id="glemcrtdt"/>
+      <column id="glemmodid">
+        <after>
+          <reference field="glemmodid_desc" ref_field="glemmodid" map_field="glemmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+      </column>
+      <column id="glemmodid_desc"/>
+      <column id="glemmoddt"/>
+    </init>
+    <init id="body" page="3">
+      <column id="glem005_1"/>
+      <column id="glem005_desc_1"/>
+      <column id="glem016" type="S" default="0"/>
+      <column id="glem010" type="S" default="0"/>
+      <column id="glem011" type="S" default="0"/>
+      <column id="glem009"/>
+    </init>
+    <init id="body" page="4">
+      <column id="glem005_3"/>
+      <column id="glem005_desc_3"/>
+      <column id="glem017" type="S" default="0"/>
+      <column id="glem013" type="S" default="0"/>
+      <column id="glem014" type="S" default="0"/>
+      <column id="glem012"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="glem_t" pk="glemld,glem001,glem002,glem003,glem004">
+      <sql id="forupd_sql" type="sql" query="SELECT glemld,&apos;&apos;,glem001,&apos;&apos;,glem002,&apos;&apos;,glem004,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM glem_t WHERE glement= ? AND glemld=? AND glem001=? AND glem002=? AND glem003=? AND glem004=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT glemld,&apos;&apos;,glem001,&apos;&apos;,glem002,&apos;&apos;,glem004,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM glem_t" order="glemld,glem001,glem002,glem003,glem004"/>
+    </head>
+    <body id="glem_t" page="1,2,3,4" linked="" pk="glem005" fk="glemld,glem001,glem002,glem003,glem004">
+      <sql id="forupd_sql_detail" query="SELECT glem005,&apos;&apos;,glem015,glem007,glem008,glem006,glemstus,&apos;&apos;,glemownid,&apos;&apos;,glemowndp,&apos;&apos;,glemcrtid,&apos;&apos;,glemcrtdp,&apos;&apos;,glemcrtdt,glemmodid,&apos;&apos;,glemmoddt,&apos;&apos;,&apos;&apos;,glem016,glem010,glem011,glem009,&apos;&apos;,&apos;&apos;,glem017,glem013,glem014,glem012 FROM glem_t WHERE glement=? AND glemld=? AND glem001=? AND glem002=? AND glem003=? AND glem004=? AND glem005=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT glem005,&apos;&apos;,glem015,glem007,glem008,glem006,glemstus,&apos;&apos;,glemownid,&apos;&apos;,glemowndp,&apos;&apos;,glemcrtid,&apos;&apos;,glemcrtdp,&apos;&apos;,glemcrtdt,glemmodid,&apos;&apos;,glemmoddt,&apos;&apos;,&apos;&apos;,glem016,glem010,glem011,glem009,&apos;&apos;,&apos;&apos;,glem017,glem013,glem014,glem012 FROM glem_t WHERE glement= ? AND glemld=? AND glem001=? AND glem002=? AND glem003=? AND glem004=?"/>
+    </body>
+  </dataset>
+</assembly>
+

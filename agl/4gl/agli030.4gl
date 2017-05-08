@@ -1,0 +1,2587 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="agli030.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0017(2015-10-27 16:26:08), PR版次:0017(2016-12-16 16:23:54)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000440
+#+ Filename...: agli030
+#+ Description: 帳套科目設定作業
+#+ Creator....: 02299(2013-09-22 18:14:47)
+#+ Modifier...: 02291 -SD/PR- 07900
+ 
+{</section>}
+ 
+{<section id="agli030.global" >}
+#應用 i00 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#150527-00028#1  2015/05/27 By apo     沒有列印功能,按鈕灰階
+#150827-00036#7  2015/09/14 by 02291   添加“是否是子系统科目”字段，如果打勾后在总账凭证输入时不能选该类科目
+#150814-00006#2  2015/10/14 By 02599   现金变动码修改成：借方现金变动码、贷方现金变动码
+#160318-00005#13  2016/03/25 by 07675  將重複內容的錯誤訊息置換為公用錯誤訊息
+#160420-00001#9  2016/05/03 By 02599   当科目已被凭证使用，设置该科目核算项等资料时提示讯息
+#160614-00023#1  2016/06/14 By 02599   展开节点时抓取glac_t资料SQL语句加上ENT条件
+#160811-00039#5  2016/08/25 By 02599   查询及建立资料时（包括直接查询全部、开窗、输入值后的检核）及更改和删除，要考虑账套权限。
+#160905-00007#3  2016/09/05 By zhujing 调整系统中无ENT的SQL条件增加ent
+#161006-00028#1  2016/10/11 By 02599   修改或无效操作时，判断科目是否存在于分录底稿或凭证中，如果存在提示用户，但可以继续操作；
+#                                      删除操作时，判断科目是否存在于分录底稿或凭证中，如果存在提示用户，不可以执行删除操作
+#161108-00019#1  2016/11/08 By 07900   g_browser_cnt 改为num10
+#161118-00019#1  2016/11/21 By 07900   numt5 to num10(需人工调整部分)
+#161214-00032#2  2016/12/15 By 07900   石狮通达权限设置.freestyle或者是改过section者,需检核规格【资料表关联设定】主表要跟现在程序主表一致;主sql部分要补上cl_sql_add_filter
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+IMPORT util
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+{<Module define>}
+
+#單頭 type 宣告
+ TYPE type_g_glad_m RECORD
+       gladld LIKE glad_t.gladld,
+   gladld_desc LIKE type_t.chr80,
+   l_legal LIKE type_t.chr80,
+   l_legal_desc LIKE type_t.chr80,
+   glad001 LIKE glad_t.glad001,
+   glad030 LIKE glad_t.glad030,
+   glad002 LIKE glad_t.glad002,
+   glad003 LIKE glad_t.glad003,
+   glad004 LIKE glad_t.glad004,
+   glad005 LIKE glad_t.glad005,
+   glad006 LIKE glad_t.glad006,
+   glad006_desc LIKE type_t.chr80,
+   glad036 LIKE glad_t.glad036,      #150814-00006#2 add
+   glad036_desc LIKE type_t.chr80,   #150814-00006#2 add
+   glad034 LIKE glad_t.glad034,
+   glad035 LIKE glad_t.glad035,      #150827-00036#7
+   glad007 LIKE glad_t.glad007,
+   glad031 LIKE glad_t.glad031,
+   glad008 LIKE glad_t.glad008,
+   glad032 LIKE glad_t.glad032,
+   glad009 LIKE glad_t.glad009,
+   glad033 LIKE glad_t.glad033,
+   glad010 LIKE glad_t.glad010,
+   glad013 LIKE glad_t.glad013,
+   glad027 LIKE glad_t.glad027,
+   glad015 LIKE glad_t.glad015,
+   glad011 LIKE glad_t.glad011,
+   glad016 LIKE glad_t.glad016,
+   glad012 LIKE glad_t.glad012,
+   gladstus LIKE glad_t.gladstus,
+   glad017 LIKE glad_t.glad017,
+   glad0171 LIKE glad_t.glad0171,
+   glad0171_desc LIKE type_t.chr80,
+   glad0172 LIKE glad_t.glad0172,
+   glad018 LIKE glad_t.glad018,
+   glad0181 LIKE glad_t.glad0181,
+   glad0181_desc LIKE type_t.chr80,
+   glad0182 LIKE glad_t.glad0182,
+   glad019 LIKE glad_t.glad019,
+   glad0191 LIKE glad_t.glad0191,
+   glad0191_desc LIKE type_t.chr80,
+   glad0192 LIKE glad_t.glad0192,
+   glad020 LIKE glad_t.glad020,
+   glad0201 LIKE glad_t.glad0201,
+   glad0201_desc LIKE type_t.chr80,
+   glad0202 LIKE glad_t.glad0202,
+   glad021 LIKE glad_t.glad021,
+   glad0211 LIKE glad_t.glad0211,
+   glad0211_desc LIKE type_t.chr80,
+   glad0212 LIKE glad_t.glad0212,
+   glad022 LIKE glad_t.glad022,
+   glad0221 LIKE glad_t.glad0221,
+   glad0221_desc LIKE type_t.chr80,
+   glad0222 LIKE glad_t.glad0222,
+   glad023 LIKE glad_t.glad023,
+   glad0231 LIKE glad_t.glad0231,
+   glad0231_desc LIKE type_t.chr80,
+   glad0232 LIKE glad_t.glad0232,
+   glad024 LIKE glad_t.glad024,
+   glad0241 LIKE glad_t.glad0241,
+   glad0241_desc LIKE type_t.chr80,
+   glad0242 LIKE glad_t.glad0242,
+   glad025 LIKE glad_t.glad025,
+   glad0251 LIKE glad_t.glad0251,
+   glad0251_desc LIKE type_t.chr80,
+   glad0252 LIKE glad_t.glad0252,
+   glad026 LIKE glad_t.glad026,
+   glad0261 LIKE glad_t.glad0261,
+   glad0261_desc LIKE type_t.chr80,
+   glad0262 LIKE glad_t.glad0262,
+   gladownid LIKE glad_t.gladownid,
+   gladownid_desc LIKE type_t.chr80,
+   gladowndp LIKE glad_t.gladowndp,
+   gladowndp_desc LIKE type_t.chr80,
+   gladcrtid LIKE glad_t.gladcrtid,
+   gladcrtid_desc LIKE type_t.chr80,
+   gladcrtdt DATETIME YEAR TO SECOND,
+   gladcrtdp LIKE glad_t.gladcrtdp,
+   gladcrtdp_desc LIKE type_t.chr80,
+   gladmodid LIKE glad_t.gladmodid,
+   gladmodid_desc LIKE type_t.chr80,
+   gladmoddt DATETIME YEAR TO SECOND
+       END RECORD
+
+#模組變數(Module Variables)
+DEFINE g_glad_m        type_g_glad_m
+DEFINE g_glad_m_t      type_g_glad_m
+DEFINE g_wc                  STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_t                STRING                        #儲存 user 的查詢條件
+DEFINE g_wc_filter           STRING
+DEFINE g_wc_filter_t         STRING
+
+DEFINE g_sql                 STRING                        #組 sql 用
+DEFINE g_forupd_sql          STRING                        #SELECT ... FOR UPDATE  SQL
+DEFINE g_cnt                 LIKE type_t.num10
+DEFINE g_jump                LIKE type_t.num10             #查詢指定的筆數
+DEFINE g_no_ask              LIKE type_t.num5              #是否開啟指定筆視窗
+DEFINE g_rec_b               LIKE type_t.num10              #單身筆數             #161108-00019#1 mod type_t.num5 -> type_t.num10 
+DEFINE l_ac                  LIKE type_t.num10              #目前處理的ARRAY CNT  #161108-00019#1 mod type_t.num5 -> type_t.num10
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_pagestart           LIKE type_t.num10             #page起始筆數          #161118-00019#1 mod type_t.num5 -> type_t.num10
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_state               STRING
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+
+#快速搜尋用
+DEFINE g_searchcol           STRING             #查詢欄位代碼
+DEFINE g_searchstr           STRING             #查詢欄位字串
+DEFINE g_order               STRING             #查詢排序模式
+
+#Browser用
+DEFINE g_current_idx         LIKE type_t.num10   #Browser 所在筆數(當下page)  #161108-00019#1 mod type_t.num5 -> type_t.num10  
+DEFINE g_current_row         LIKE type_t.num10  #Browser 所在筆數(暫存用)    #161108-00019#1 mod type_t.num5 -> type_t.num10 
+DEFINE g_current_cnt         LIKE type_t.num10  #Browser 總筆數(當下page)
+DEFINE g_browser_idx         LIKE type_t.num10   #Browser 所在筆數(所有資料)   #161108-00019#1 mod type_t.num5 -> type_t.num10 
+DEFINE g_browser_cnt         LIKE type_t.num10   #Browser 總筆數(所有資料)    #161108-00019#1 mod type_t.num5 -> type_t.num10 
+DEFINE g_tmp_page            LIKE type_t.num5
+DEFINE g_row_index           LIKE type_t.num10    #161108-00019#1 mod type_t.num5 -> type_t.num10  
+DEFINE g_searchtype          LIKE type_t.chr200
+{</Module define>}
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD    #資料瀏覽之欄位  
+       #外顯欄位
+       b_show          LIKE type_t.chr100,
+       #父節點id
+       b_pid           LIKE type_t.chr100,
+       #本身節點id
+       b_id            LIKE type_t.chr100,
+       #是否展開
+       b_exp           LIKE type_t.chr100,
+       #是否有子節點
+       b_hasC          LIKE type_t.num5,
+       #是否已展開
+       b_isExp         LIKE type_t.num5,
+       #展開值
+       b_expcode       LIKE type_t.num5,
+       #tree自定義欄位
+      b_glac001 LIKE glac_t.glac001,
+      b_glac004 LIKE glac_t.glac004,
+      b_glac002 LIKE glac_t.glac002,
+      b_glac003 LIKE glac_t.glac003,
+#      b_glac005 LIKE glac_t.glac005,
+#      b_glac006 LIKE glac_t.glac006,
+#      b_glac007 LIKE glac_t.glac007,
+#      b_glac008 LIKE glac_t.glac008,
+#      b_glac009 LIKE glac_t.glac009,
+#      b_glac010 LIKE glac_t.glac010,
+#      b_glac011 LIKE glac_t.glac011,
+#      b_glac016 LIKE glac_t.glac016,
+#      b_glac012 LIKE glac_t.glac012,
+#      b_glac013 LIKE glac_t.glac013,
+#      b_glac014 LIKE glac_t.glac014,
+#      b_glac015 LIKE glac_t.glac015,
+      b_glad007 LIKE glad_t.glad007,
+      b_glad008 LIKE glad_t.glad008,
+      b_glad009 LIKE glad_t.glad009,
+      b_glad010 LIKE glad_t.glad010,
+      b_glad027 LIKE glad_t.glad027,
+      b_glad011 LIKE glad_t.glad011,
+      b_glad012 LIKE glad_t.glad012,
+      b_glad031 LIKE glad_t.glad031,
+      b_glad032 LIKE glad_t.glad032,
+      b_glad033 LIKE glad_t.glad033,
+      b_glad013 LIKE glad_t.glad013,
+      b_glad015 LIKE glad_t.glad015,
+      b_glad016 LIKE glad_t.glad016,
+      b_glad002 LIKE glad_t.glad002,
+      b_glad003 LIKE glad_t.glad003,
+      b_glad004 LIKE glad_t.glad004,
+      b_glad005 LIKE glad_t.glad005,
+      b_glad006 LIKE glad_t.glad006,
+      b_glad036 LIKE glad_t.glad036,      #150814-00006#2
+      b_glad034 LIKE glad_t.glad034,
+      b_glad035 LIKE glad_t.glad035,      #150827-00036#7
+      b_glad0171_desc LIKE glael_t.glael003,
+      b_glad0181_desc LIKE glael_t.glael003,
+      b_glad0191_desc LIKE glael_t.glael003,
+      b_glad0201_desc LIKE glael_t.glael003,
+      b_glad0211_desc LIKE glael_t.glael003,
+      b_glad0221_desc LIKE glael_t.glael003,
+      b_glad0231_desc LIKE glael_t.glael003,
+      b_glad0241_desc LIKE glael_t.glael003,
+      b_glad0251_desc LIKE glael_t.glael003,
+      b_glad0261_desc LIKE glael_t.glael003
+       END RECORD
+       
+DEFINE g_browser_root    DYNAMIC ARRAY OF INTEGER    
+DEFINE g_root_search         BOOLEAN
+DEFINE g_glac007_wc          STRING        
+DEFINE g_gladld          LIKE glad_t.gladld
+DEFINE g_glad001         LIKE glad_t.glad001 
+DEFINE g_glaa004         LIKE glaa_t.glaa004 
+DEFINE g_type_table      LIKE type_t.chr10
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="agli030.main" >}
+#+ 作業開始
+MAIN
+   #add-point:main段define name="main.define"
+   
+   #end add-point    
+   #add-point:main段define(客製用) name="main.define_customerization"
+   
+   #end add-point
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #add-point:初始化前定義 name="main.before_ap_init"
+   
+   #end add-point
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("agl","")
+ 
+   #add-point:作業初始化 name="main.init"
+   LET g_gladld = g_argv[1]
+   
+   #end add-point
+ 
+   #add-point:SQL_define name="main.define_sql"
+   #150814-00006#2 add glad036
+   LET g_forupd_sql = "SELECT gladld,'','','',glad001,glad002,glad003,glad004,glad005,glad006,glad036,glad034,glad035,glad007,
+   glad012,glad008,glad013,glad009,glad010,glad027,glad015,glad011,glad016,glad030,glad031,glad032,glad033,
+   glad017,glad022,glad018,glad023,glad019,glad024,glad020,glad025,glad021,glad026,gladstus,glad0171,'',glad0172,
+   glad0181,'',glad0182,glad0191,'',glad0192,glad0201,'',glad0202,glad0211,'',glad0212,glad0221,'',
+   glad0222,glad0231,'',glad0232,glad0241,'',glad0242,glad0251,'',glad0252,glad0261,'',glad0262,
+   gladownid,'',gladowndp,'',gladcrtid,'',gladcrtdt,gladcrtdp,'',gladmodid,'',gladmoddt 
+   FROM glad_t WHERE gladent= ? AND gladld=? AND glad001=? FOR UPDATE"      #150827-00036#7 add glad035
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)    #轉換不同資料庫語法
+   DECLARE agli030_cl CURSOR FROM g_forupd_sql 
+   
+   IF g_bgjob = "Y" THEN
+ 
+      #add-point:Service Call name="main.servicecall"
+      
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_agli030 WITH FORM cl_ap_formpath("agl",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL agli030_init()
+ 
+      #進入選單 Menu (='N')
+      CALL agli030_ui_dialog()
+   
+      #畫面關閉
+      CLOSE WINDOW w_agli030
+   END IF
+ 
+   #add-point:作業離開前 name="main.exit"
+   
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+ 
+END MAIN
+ 
+{</section>}
+ 
+{<section id="agli030.other_function" readonly="Y" >}
+#add-point:自定義元件(Function) name="other.function"
+
+PUBLIC FUNCTION agli030_init()
+   DEFINE l_success     LIKE type_t.num5
+   DEFINE l_pass        LIKE type_t.num5
+   
+   CALL cl_set_combo_scc_part('gladstus','17','N,Y')
+
+   CALL cl_set_combo_scc('glad004','8020') 
+   CALL cl_set_combo_scc('glad0172','8019') 
+   CALL cl_set_combo_scc('glad0182','8019') 
+   CALL cl_set_combo_scc('glad0192','8019') 
+   CALL cl_set_combo_scc('glad0202','8019') 
+   CALL cl_set_combo_scc('glad0212','8019') 
+   CALL cl_set_combo_scc('glad0222','8019') 
+   CALL cl_set_combo_scc('glad0232','8019') 
+   CALL cl_set_combo_scc('glad0242','8019') 
+   CALL cl_set_combo_scc('glad0252','8019') 
+   CALL cl_set_combo_scc('glad0262','8019') 
+   #first tree
+   CALL cl_set_combo_scc('b_glac003','8011')
+   CALL cl_set_combo_scc('b_glad004','8020')
+   CALL cl_set_combo_scc('b_glad007','8016')
+   CALL cl_set_combo_scc('b_glad008','8016')
+   CALL cl_set_combo_scc('b_glad009','8016')
+   CALL cl_set_combo_scc('b_glad010','8016')
+   CALL cl_set_combo_scc('b_glad011','8016')
+   CALL cl_set_combo_scc('b_glad012','8016')
+   CALL cl_set_combo_scc('b_glad013','8016')
+   CALL cl_set_combo_scc('b_glad031','8016')
+   CALL cl_set_combo_scc('b_glad032','8016')
+   CALL cl_set_combo_scc('b_glad033','8016')
+   CALL cl_set_combo_scc('b_glad015','8016')
+   CALL cl_set_combo_scc('b_glad016','8016')
+   CALL cl_set_combo_scc('b_glad002','8016')
+   CALL cl_set_combo_scc('b_glad003','8016')
+   CALL cl_set_combo_scc('b_glad005','8016')
+   CALL cl_set_combo_scc('b_glad027','8016')
+   CALL cl_set_combo_scc('b_glad034','8016')
+   CALL cl_set_combo_scc('b_glad035','8016')      #150827-00036#7
+   #second tree
+   CALL cl_set_combo_scc('b_glac4','8011')
+   CALL cl_set_combo_scc('b_glad13','8020')
+   CALL cl_set_combo_scc('b_glad1','8016')
+   CALL cl_set_combo_scc('b_glad2','8016')
+   CALL cl_set_combo_scc('b_glad3','8016')
+   CALL cl_set_combo_scc('b_glad4','8016')
+   CALL cl_set_combo_scc('b_glad5','8016')
+   CALL cl_set_combo_scc('b_glad6','8016')
+   CALL cl_set_combo_scc('b_glad7','8016')
+   CALL cl_set_combo_scc('b_glad131','8016')
+   CALL cl_set_combo_scc('b_glad132','8016')
+   CALL cl_set_combo_scc('b_glad133','8016')
+   CALL cl_set_combo_scc('b_glad9','8016')
+   CALL cl_set_combo_scc('b_glad10','8016')
+   CALL cl_set_combo_scc('b_glad11','8016')
+   CALL cl_set_combo_scc('b_glad12','8016')
+   CALL cl_set_combo_scc('b_glad14','8016')
+   CALL cl_set_combo_scc('b_glad126','8016')
+   CALL cl_set_combo_scc('b_glad0341','8016')
+   CALL cl_set_combo_scc('b_glad0351','8016')      #150827-00036#7
+   #third tree
+   CALL cl_set_combo_scc('b_glac8','8011')
+   CALL cl_set_combo_scc('b_glad38','8020')
+   CALL cl_set_combo_scc('b_glad26','8016')
+   CALL cl_set_combo_scc('b_glad27','8016')
+   CALL cl_set_combo_scc('b_glad28','8016')
+   CALL cl_set_combo_scc('b_glad29','8016')
+   CALL cl_set_combo_scc('b_glad30','8016')
+   CALL cl_set_combo_scc('b_glad31','8016')
+   CALL cl_set_combo_scc('b_glad32','8016')
+   CALL cl_set_combo_scc('b_glad134','8016')
+   CALL cl_set_combo_scc('b_glad135','8016')
+   CALL cl_set_combo_scc('b_glad136','8016')
+   CALL cl_set_combo_scc('b_glad34','8016')
+   CALL cl_set_combo_scc('b_glad35','8016')
+   CALL cl_set_combo_scc('b_glad36','8016')
+   CALL cl_set_combo_scc('b_glad37','8016')
+   CALL cl_set_combo_scc('b_glad39','8016')
+   CALL cl_set_combo_scc('b_glad127','8016')
+   CALL cl_set_combo_scc('b_glad0342','8016')
+   CALL cl_set_combo_scc('b_glad0352','8016')      #150827-00036#7
+   #forth tree
+   CALL cl_set_combo_scc('b_glac12','8011')
+   CALL cl_set_combo_scc('b_glad63','8020')
+   CALL cl_set_combo_scc('b_glad51','8016')
+   CALL cl_set_combo_scc('b_glad52','8016')
+   CALL cl_set_combo_scc('b_glad53','8016')
+   CALL cl_set_combo_scc('b_glad54','8016')
+   CALL cl_set_combo_scc('b_glad55','8016')
+   CALL cl_set_combo_scc('b_glad56','8016')
+   CALL cl_set_combo_scc('b_glad57','8016')
+   CALL cl_set_combo_scc('b_glad137','8016')
+   CALL cl_set_combo_scc('b_glad138','8016')
+   CALL cl_set_combo_scc('b_glad139','8016')
+   CALL cl_set_combo_scc('b_glad59','8016')
+   CALL cl_set_combo_scc('b_glad60','8016')
+   CALL cl_set_combo_scc('b_glad61','8016')
+   CALL cl_set_combo_scc('b_glad62','8016')
+   CALL cl_set_combo_scc('b_glad64','8016')
+   CALL cl_set_combo_scc('b_glad128','8016')
+   CALL cl_set_combo_scc('b_glad0343','8016')
+   CALL cl_set_combo_scc('b_glad0353','8016')      #150827-00036#7
+   #fifth tree
+   CALL cl_set_combo_scc('b_glac16','8011')
+   CALL cl_set_combo_scc('b_glad88','8020')
+   CALL cl_set_combo_scc('b_glad76','8016')
+   CALL cl_set_combo_scc('b_glad77','8016')
+   CALL cl_set_combo_scc('b_glad78','8016')
+   CALL cl_set_combo_scc('b_glad79','8016')
+   CALL cl_set_combo_scc('b_glad80','8016')
+   CALL cl_set_combo_scc('b_glad81','8016')
+   CALL cl_set_combo_scc('b_glad82','8016')
+   CALL cl_set_combo_scc('b_glad140','8016')
+   CALL cl_set_combo_scc('b_glad141','8016')
+   CALL cl_set_combo_scc('b_glad142','8016')
+   CALL cl_set_combo_scc('b_glad84','8016')
+   CALL cl_set_combo_scc('b_glad85','8016')
+   CALL cl_set_combo_scc('b_glad86','8016')
+   CALL cl_set_combo_scc('b_glad87','8016')
+   CALL cl_set_combo_scc('b_glad89','8016')
+   CALL cl_set_combo_scc('b_glad129','8016')
+   CALL cl_set_combo_scc('b_glad0344','8016')
+   CALL cl_set_combo_scc('b_glad0354','8016')      #150827-00036#7
+   #sixth tree
+   CALL cl_set_combo_scc('b_glac20','8011')
+   CALL cl_set_combo_scc('b_glad113','8020')
+   CALL cl_set_combo_scc('b_glad101','8016')
+   CALL cl_set_combo_scc('b_glad102','8016')
+   CALL cl_set_combo_scc('b_glad103','8016')
+   CALL cl_set_combo_scc('b_glad104','8016')
+   CALL cl_set_combo_scc('b_glad105','8016')
+   CALL cl_set_combo_scc('b_glad106','8016')
+   CALL cl_set_combo_scc('b_glad107','8016')
+   CALL cl_set_combo_scc('b_glad143','8016')
+   CALL cl_set_combo_scc('b_glad144','8016')
+   CALL cl_set_combo_scc('b_glad145','8016')
+   CALL cl_set_combo_scc('b_glad109','8016')
+   CALL cl_set_combo_scc('b_glad110','8016')
+   CALL cl_set_combo_scc('b_glad111','8016')
+   CALL cl_set_combo_scc('b_glad112','8016')
+   CALL cl_set_combo_scc('b_glad114','8016')
+   CALL cl_set_combo_scc('b_glad130','8016')
+   CALL cl_set_combo_scc('b_glad0345','8016')
+   CALL cl_set_combo_scc('b_glad0355','8016')      #150827-00036#7
+
+   LET g_glaa004 = ''
+   IF cl_null(g_gladld) THEN
+#      SELECT glaald INTO g_gladld FROM glaa_t
+#       WHERE glaaent = g_enterprise AND glaacomp = g_legal
+#         AND glaa014 = 'Y' 
+      CALL s_ld_bookno()  RETURNING l_success,g_gladld
+      IF l_success = FALSE THEN
+         RETURN 
+      END IF
+      CALL s_ld_chk_authorization(g_user,g_gladld) RETURNING l_pass
+      IF l_pass = FALSE THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'agl-00164'
+         LET g_errparam.extend = g_gladld
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         RETURN
+      END IF      
+#      IF cl_null(g_gladld) THEN
+#         INITIALIZE g_errparam TO NULL
+#         LET g_errparam.code = 'agl-00014'
+#         LET g_errparam.extend = ''
+#         LET g_errparam.popup = TRUE
+#         CALL cl_err()
+#
+#         CLOSE WINDOW w_agli030 
+#         CALL cl_ap_exitprogram("0")
+#      END IF 
+   END IF 
+   SELECT glaa004,glaacomp INTO g_glaa004,g_legal FROM glaa_t
+    WHERE glaaent = g_enterprise AND glaald = g_gladld
+   
+   CALL agli030_default_search()
+END FUNCTION
+ FUNCTION agli030_default_search()
+   IF cl_null(g_wc) THEN
+      LET g_wc = " 1=1"
+   END IF
+   IF g_searchtype = 0 OR cl_null(g_searchtype) THEN
+      LET g_searchtype = 3
+   END IF
+END FUNCTION
+
+PUBLIC FUNCTION agli030_ui_dialog()
+   
+   DEFINE li_exit      LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_wc        LIKE type_t.chr200
+   
+   LET li_exit = FALSE
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm() 
+
+   CALL gfrm_curr.setElementHidden("folder_2",1)
+   CALL gfrm_curr.setElementImage("mainhidden","small/arr-u.png")
+   LET g_main_hidden = 1         
+
+   WHILE li_exit = FALSE
+      CALL agli030_browser_fill(g_wc,g_searchtype)
+      
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         
+            INPUT g_searchstr,g_searchcol,g_searchtype FROM formonly.searchstr,formonly.cbo_searchcol,formonly.rdo_searchtype
+               BEFORE INPUT
+            END INPUT
+            
+            #左側瀏覽頁簽
+            DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTE(COUNT=g_rec_b)
+            
+               BEFORE ROW
+                  #回歸舊筆數位置 (回到當時異動的筆數)
+                  LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+                  IF g_current_row > 1 AND g_current_sw = FALSE THEN
+                     CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+                     LET g_current_idx = g_current_row
+                  END IF
+                  LET g_current_row = g_current_idx #目前指標
+                  LET g_current_sw = TRUE
+                  CALL cl_show_fld_cont() 
+                  CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+                   
+                  CALL agli030_fetch('')  #當每次點任一筆資料都會需要用到
+                  CALL agli030_gladld_show()
+                  
+               ON EXPAND (g_row_index)
+                  #樹展開
+                  CALL agli030_browser_expand(g_row_index)
+                  LET g_browser[g_row_index].b_isExp = 1
+               
+               ON COLLAPSE (g_row_index)
+                  #樹關閉
+            
+            END DISPLAY
+    
+            #add-point:ui_dialog段其他頁簽的 display array
+            DISPLAY ARRAY g_browser TO s_browse1.* ATTRIBUTE(COUNT=g_rec_b)
+            
+               BEFORE ROW
+                  #回歸舊筆數位置 (回到當時異動的筆數)
+                  LET g_current_idx = DIALOG.getCurrentRow("s_browse1")
+                  IF g_current_row > 1 AND g_current_sw = FALSE THEN
+                     CALL DIALOG.setCurrentRow("s_browse1",g_current_row)
+                     LET g_current_idx = g_current_row
+                  END IF
+                  LET g_current_row = g_current_idx #目前指標
+                  LET g_current_sw = TRUE
+                  CALL cl_show_fld_cont() 
+                  CALL DIALOG.setCurrentRow("s_browse1",g_current_row)
+                   
+                  CALL agli030_fetch('')  #當每次點任一筆資料都會需要用到
+                  CALL agli030_gladld_show()
+                  
+               ON EXPAND (g_row_index)
+                  #樹展開
+                  CALL agli030_browser_expand(g_row_index)
+                  LET g_browser[g_row_index].b_isExp = 1
+               
+               ON COLLAPSE (g_row_index)
+                  #樹關閉
+            
+            END DISPLAY
+            DISPLAY ARRAY g_browser TO s_browse2.* ATTRIBUTE(COUNT=g_rec_b)
+            
+               BEFORE ROW
+                  #回歸舊筆數位置 (回到當時異動的筆數)
+                  LET g_current_idx = DIALOG.getCurrentRow("s_browse2")
+                  IF g_current_row > 1 AND g_current_sw = FALSE THEN
+                     CALL DIALOG.setCurrentRow("s_browse2",g_current_row)
+                     LET g_current_idx = g_current_row
+                  END IF
+                  LET g_current_row = g_current_idx #目前指標
+                  LET g_current_sw = TRUE
+                  CALL cl_show_fld_cont() 
+                  CALL DIALOG.setCurrentRow("s_browse2",g_current_row)
+                   
+                  CALL agli030_fetch('')  #當每次點任一筆資料都會需要用到
+                  CALL agli030_gladld_show()
+                  
+               ON EXPAND (g_row_index)
+                  #樹展開
+                  CALL agli030_browser_expand(g_row_index)
+                  LET g_browser[g_row_index].b_isExp = 1
+               
+               ON COLLAPSE (g_row_index)
+                  #樹關閉
+            
+            END DISPLAY
+            DISPLAY ARRAY g_browser TO s_browse3.* ATTRIBUTE(COUNT=g_rec_b)
+            
+               BEFORE ROW
+                  #回歸舊筆數位置 (回到當時異動的筆數)
+                  LET g_current_idx = DIALOG.getCurrentRow("s_browse3")
+                  IF g_current_row > 1 AND g_current_sw = FALSE THEN
+                     CALL DIALOG.setCurrentRow("s_browse3",g_current_row)
+                     LET g_current_idx = g_current_row
+                  END IF
+                  LET g_current_row = g_current_idx #目前指標
+                  LET g_current_sw = TRUE
+                  CALL cl_show_fld_cont() 
+                  CALL DIALOG.setCurrentRow("s_browse3",g_current_row)
+                   
+                  CALL agli030_fetch('')  #當每次點任一筆資料都會需要用到
+                  CALL agli030_gladld_show()
+                  
+               ON EXPAND (g_row_index)
+                  #樹展開
+                  CALL agli030_browser_expand(g_row_index)
+                  LET g_browser[g_row_index].b_isExp = 1
+               
+               ON COLLAPSE (g_row_index)
+                  #樹關閉
+            
+            END DISPLAY
+            DISPLAY ARRAY g_browser TO s_browse4.* ATTRIBUTE(COUNT=g_rec_b)
+            
+               BEFORE ROW
+                  #回歸舊筆數位置 (回到當時異動的筆數)
+                  LET g_current_idx = DIALOG.getCurrentRow("s_browse4")
+                  IF g_current_row > 1 AND g_current_sw = FALSE THEN
+                     CALL DIALOG.setCurrentRow("s_browse4",g_current_row)
+                     LET g_current_idx = g_current_row
+                  END IF
+                  LET g_current_row = g_current_idx #目前指標
+                  LET g_current_sw = TRUE
+                  CALL cl_show_fld_cont() 
+                  CALL DIALOG.setCurrentRow("s_browse4",g_current_row)
+                   
+                  CALL agli030_fetch('')  #當每次點任一筆資料都會需要用到
+                  CALL agli030_gladld_show()
+                  
+               ON EXPAND (g_row_index)
+                  #樹展開
+                  CALL agli030_browser_expand(g_row_index)
+                  LET g_browser[g_row_index].b_isExp = 1
+               
+               ON COLLAPSE (g_row_index)
+                  #樹關閉
+            
+            END DISPLAY
+            DISPLAY ARRAY g_browser TO s_browse5.* ATTRIBUTE(COUNT=g_rec_b)
+            
+               BEFORE ROW
+                  #回歸舊筆數位置 (回到當時異動的筆數)
+                  LET g_current_idx = DIALOG.getCurrentRow("s_browse5")
+                  IF g_current_row > 1 AND g_current_sw = FALSE THEN
+                     CALL DIALOG.setCurrentRow("s_browse5",g_current_row)
+                     LET g_current_idx = g_current_row
+                  END IF
+                  LET g_current_row = g_current_idx #目前指標
+                  LET g_current_sw = TRUE
+                  CALL cl_show_fld_cont() 
+                  CALL DIALOG.setCurrentRow("s_browse5",g_current_row)
+                   
+                  CALL agli030_fetch('')  #當每次點任一筆資料都會需要用到
+                  CALL agli030_gladld_show()
+                  
+               ON EXPAND (g_row_index)
+                  #樹展開
+                  CALL agli030_browser_expand(g_row_index)
+                  LET g_browser[g_row_index].b_isExp = 1
+               
+               ON COLLAPSE (g_row_index)
+                  #樹關閉
+            
+            END DISPLAY
+            
+            ON ACTION zc
+               LET g_action_choice="zc"
+               IF cl_auth_chk_act("zc") THEN
+                  LET g_glac007_wc = "  glac007 = '1' "
+                  EXIT DIALOG
+               END IF
+            ON ACTION fz
+               LET g_action_choice="fz"
+               IF cl_auth_chk_act("fz") THEN
+                  LET g_glac007_wc = "  glac007 = '2' "
+                  EXIT DIALOG
+               END IF
+            ON ACTION gy
+               LET g_action_choice="gy"
+               IF cl_auth_chk_act("gy") THEN
+                  LET g_glac007_wc = "  glac007 = '3' "
+                  EXIT DIALOG
+               END IF
+            ON ACTION gdyy
+               LET g_action_choice="gdyy"
+               IF cl_auth_chk_act("gdyy") THEN
+                  LET g_glac007_wc = "  glac007 = '4' "
+                  EXIT DIALOG
+               END IF
+            ON ACTION cb  
+               LET g_action_choice="cb"
+               IF cl_auth_chk_act("cb") THEN
+                  LET g_glac007_wc = "  glac007 = '5' "
+                  EXIT DIALOG
+               END IF
+            ON ACTION sy
+               LET g_action_choice="sy"
+               IF cl_auth_chk_act("sy") THEN
+                  LET g_glac007_wc = "  glac007 = '6' "
+                  EXIT DIALOG
+               END IF          {#ADP版次:1#}
+            #end add-point
+            
+            BEFORE DIALOG
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               LET g_current_sw = FALSE
+
+               #回歸舊筆數位置 (回到當時異動的筆數)
+               LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+               IF g_current_row > 1 AND g_current_sw = FALSE THEN
+                  IF g_current_row > g_browser.getLength() THEN
+                     LEt g_current_row = g_browser.getLength()
+                  END IF 
+                  CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+                  LET g_current_idx = g_current_row
+               END IF
+               LET g_current_row = g_current_idx #目前指標
+               LET g_current_sw = TRUE
+               CALL cl_show_fld_cont() 
+               CALL DIALOG.setCurrentRow("s_browse",g_current_row)
+               IF g_current_idx > 0 THEN
+               CALL agli030_fetch('')            #當每次點任一筆資料都會需要用到
+               END IF
+               CALL agli030_gladld_show()
+            
+            ON ACTION statechange
+               CALL agli030_statechange()
+               EXIT DIALOG
+            
+            #一般搜尋
+            ON ACTION searchdata
+               LET g_searchstr = GET_FLDBUF(searchstr)
+               LET g_searchcol = GET_FLDBUF(cbo_searchcol)
+               #若無輸入關鍵字則查找出所有資料
+               IF g_searchcol='0' AND NOT cl_null(g_searchstr) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = "std-00001"
+                  LET g_errparam.extend = "searchcol:"
+                  LET g_errparam.popup = FALSE
+                  CALL cl_err()
+
+                  CONTINUE DIALOG
+               END IF 
+               LET g_type_table = "glac_t"
+               IF NOT cl_null(g_searchstr) THEN
+                  LET g_wc = " lower(", g_searchcol, ") LIKE '%", g_searchstr, "%'"
+                  LET g_wc = g_wc.toLowerCase()
+               ELSE
+                  LET g_wc = " 1=1 "
+               END IF  
+               EXIT DIALOG               
+
+            
+            #ACTION表單列
+            ON ACTION mainhidden       #主頁摺疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("folder_2",0)
+                  CALL gfrm_curr.setElementImage("mainhidden","small/arr-d.png")
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("folder_2",1)
+                  CALL gfrm_curr.setElementImage("mainhidden","small/arr-u.png")
+                  LET g_main_hidden = 1
+               END IF 
+            ON ACTION first
+               LET g_current_idx = 1
+               CALL agli030_fetch('')
+               LET g_current_row = g_current_idx
+            
+            ON ACTION next
+               LET g_current_idx = g_current_idx + 1
+               CALL agli030_fetch('')
+               LET g_current_row = g_current_idx
+            
+            ON ACTION jump
+               CALL agli030_fetch('/')
+               LET g_current_row = g_current_idx
+            
+            ON ACTION previous
+               LET g_current_idx = g_current_idx - 1
+               CALL agli030_fetch('')
+               LET g_current_row = g_current_idx
+            
+            ON ACTION last 
+               LET g_current_idx = g_browser_cnt
+               CALL agli030_fetch('')  
+               LET g_current_row = g_current_idx
+            
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+            
+            ON ACTION close
+               LET li_exit = TRUE
+               EXIT DIALOG
+            
+            
+            ON ACTION controls      #單頭摺疊，可利用hot key "Ctrl-s"開啟/關閉單頭
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("worksheet_detail",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("worksheet_detail",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden
+               END IF
+               
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN 
+               CALL agli030_query()
+               CALL gfrm_curr.setElementHidden("folder_2",1)
+               CALL gfrm_curr.setElementImage("mainhidden","small/arr-u.png")
+               LET g_main_hidden = 1
+            END IF
+ 
+ 
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN 
+               CALL agli030_reproduce()
+                EXIT DIALOG
+            END IF
+
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN 
+               CALL agli030_modify()
+               #EXIT DIALOG
+            END IF
+
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN 
+               CALL agli030_delete()
+               EXIT DIALOG         
+            END IF
+ 
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN 
+               CALL agli030_insert()
+               EXIT DIALOG
+            END IF
+ 
+         
+         ON ACTION open_agli043
+            LET g_action_choice="open_agli043"
+            IF cl_auth_chk_act("open_agli043") THEN 
+               CALL agli030_open_action("agli043")
+               EXIT DIALOG
+            END IF
+            
+         ON ACTION open_agli060
+            LET g_action_choice="open_agli060"
+            IF cl_auth_chk_act("open_agli060") THEN 
+               CALL agli030_open_action("agli060")
+               EXIT DIALOG
+            END IF
+ 
+         ON ACTION p_aglp030
+            LET g_action_choice="p_aglp030"
+            IF cl_auth_chk_act("p_aglp030") THEN
+               CALL cl_cmdrun("aglp030")               
+            END IF
+
+         ON ACTION p_aglp030_01
+            LET g_action_choice="p_aglp030_01"
+            IF cl_auth_chk_act("p_aglp030_01") THEN
+               CALL aglp030_01()
+            END IF
+
+         ON ACTION p_aglp030_02
+            LET g_action_choice="p_aglp030_02"
+            IF cl_auth_chk_act("p_aglp030_02") THEN
+               CALL aglp030_02()
+            END IF
+        #150527-00028#1--mark--(s)
+        #ON ACTION output
+        #
+        #   LET g_action_choice="output"
+        #   IF cl_auth_chk_act("output") THEN 
+        #       EXIT DIALOG
+        #   END IF
+        #150527-00028#1--mark--(e)
+ 
+            &include "relating_action.4gl"
+            &include "main_menu.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END DIALOG 
+
+      
+   END WHILE
+ 
+END FUNCTION
+
+PUBLIC FUNCTION agli030_browser_expand(p_id)
+   DEFINE p_id          LIKE type_t.num10
+   DEFINE l_id          LIKE type_t.num10
+   DEFINE l_cnt         LIKE type_t.num10
+   DEFINE l_keyvalue    LIKE type_t.chr50
+   DEFINE l_typevalue   LIKE type_t.chr50
+   DEFINE l_type        LIKE type_t.chr50
+   DEFINE l_sql         LIKE type_t.chr500
+   DEFINE ls_source     LIKE type_t.chr500
+   DEFINE ls_exp_code   LIKE type_t.chr500
+   DEFINE l_return      LIKE type_t.num5
+   
+   #若已經展開
+   IF g_browser[p_id].b_isExp = 1 THEN
+      RETURN
+   END IF
+   
+   LET l_return = FALSE
+ 
+   LET l_keyvalue = g_browser[p_id].b_glac002
+   LET l_typevalue = g_browser[p_id].b_glac001
+   
+   CASE g_browser[p_id].b_expcode
+      WHEN -1
+         CALL g_browser.deleteElement(p_id)
+      WHEN 0
+         RETURN
+      WHEN 1
+         LET ls_source = "agli030_tmp"
+         LET ls_exp_code = "exp_code"
+      WHEN 2
+         LET ls_source = "glac_t"
+         LET ls_exp_code = "'2'"
+   END CASE
+   
+   LET l_sql = " SELECT UNIQUE '','','','FALSE','','',",ls_exp_code,",glac001,glac004,glac002,glac003,glac005,glac006,glac007,glac008,glac009,glac010,glac011,glac016,glac012,glac013,glac014,glac015",
+               " FROM   ",ls_source,
+               " WHERE  glac004 = '", l_keyvalue,
+               "' AND   glac002 <> glac004",
+               " AND  glac001 = '", l_typevalue,"'"
+   #160614-00023#1--add--str--
+   IF g_browser[p_id].b_expcode=2 THEN
+      LET l_sql=l_sql," AND glacent=",g_enterprise
+   END IF
+   LET l_sql=l_sql,
+   #160614-00023#1--add--end
+               " ORDER BY glac002"
+   
+   PREPARE tree_expand FROM l_sql
+   DECLARE tree_ex_cur CURSOR FOR tree_expand
+  
+   LET l_id = p_id + 1
+   CALL g_browser.insertElement(l_id)
+   LET l_cnt = 1
+   FOREACH tree_ex_cur INTO g_browser[l_id].*
+      #pid=父節點id
+      LET g_browser[l_id].b_pid  = g_browser[p_id].b_id
+      #id=本身節點id(採流水號遞增)
+      LET g_browser[l_id].b_id   = g_browser[p_id].b_id||"."||l_cnt
+      #hasC=確認該節點是否有子孫
+      #LET g_browser[l_id].b_glac002 = g_browser[l_id].b_glac002 CLIPPED
+      CALL agli030_desc_show(l_id)
+      LET g_browser[l_id].b_hasC = agli030_chk_hasC(l_id)
+      LET l_id = l_id + 1
+      CALL g_browser.insertElement(l_id)
+      LET l_cnt = l_cnt + 1
+      
+      LET l_return = TRUE
+   END FOREACH
+   
+   #刪除空資料
+   CALL g_browser.deleteElement(l_id)
+END FUNCTION
+
+PRIVATE FUNCTION agli030_statechange()
+   DEFINE lc_state LIKE type_t.chr5
+
+   ERROR ""     #清空畫面右下側ERROR區塊
+ 
+   IF g_glad_m.glad001 IS NULL THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "std-00003"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      RETURN
+   END IF
+ 
+   MENU "" ATTRIBUTES (STYLE="popup")
+      BEFORE MENU
+         CASE g_glad_m.gladstus
+            WHEN "N"
+               HIDE OPTION "invalid"
+            WHEN "Y"
+               HIDE OPTION "valid"
+         END CASE
+
+      ON ACTION invalid
+         LET lc_state = "N"
+         EXIT MENU
+      ON ACTION valid
+         LET lc_state = "Y"        
+         EXIT MENU
+  
+   END MENU
+   
+   IF (lc_state <> "N" 
+      AND lc_state <> "Y"
+      ) OR 
+      cl_null(lc_state) THEN
+      RETURN
+   END IF
+   UPDATE glad_t SET gladstus = lc_state 
+    WHERE gladent = g_enterprise AND glad001 = g_glad_m.glad001
+      AND gladld = g_glad_m.gladld
+ 
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+   ELSE
+      CASE lc_state
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/valid.png")
+      END CASE
+   END IF
+END FUNCTION
+
+PRIVATE FUNCTION agli030_fetch(p_flag)
+   DEFINE p_flag     LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   DEFINE ls_chk     STRING
+   DEFINE li_idx     LIKE type_t.num10   #161108-00019#1 mod type_t.num5 -> type_t.num10
+   DEFINE li_count   LIKE type_t.num5
+
+   CALL cl_set_act_visible("statechange,insert,modify,delete,reproduce,open_agli043,open_agli060", FALSE)
+   CALL cl_set_act_visible("relating_data01,relating_data02",TRUE)
+   LET ls_chk = g_browser[g_current_idx].b_id 
+   DISPLAY g_browser_cnt TO FORMONLY.b_count
+   CALL agli030_gladld_show()
+   IF ls_chk.getIndexOf('.',1) = 0 THEN
+      INITIALIZE g_glad_m.* TO NULL
+      DISPLAY BY NAME g_glad_m.*
+      CALL agli030_gladld_show()
+      CALL cl_set_act_visible("statechange,insert,modify,delete,reproduce,open_agli043,open_agli060", FALSE)
+      DISPLAY '' TO FORMONLY.b_index
+      RETURN
+   END IF
+   
+   #瀏覽頁筆數顯示
+   LET li_idx = 1
+   FOR li_idx = 1 TO g_browser_root.getLength()
+      IF g_browser_root[li_idx] > g_current_idx THEN
+       EXIT FOR
+      END IF
+   END FOR
+   LET li_idx = g_current_idx - li_idx + 1
+   DISPLAY li_idx TO FORMONLY.b_index   #當下筆數
+      
+   IF p_flag = '/' THEN
+      IF (NOT g_no_ask) THEN      
+         CALL cl_getmsg('fetch',g_lang) RETURNING ls_msg
+         LET INT_FLAG = 0
+ 
+         PROMPT ls_msg CLIPPED,': ' FOR g_jump
+            #交談指令共用ACTION
+            &include "common_action.4gl" 
+         END PROMPT
+ 
+         IF INT_FLAG THEN
+            LET INT_FLAG = 0
+         ELSE
+            IF g_jump > 0 AND g_jump <= g_browser.getLength() THEN
+               LET g_current_idx = g_jump
+            END IF
+            LET g_no_ask = FALSE  
+         END IF           
+      END IF
+   END IF    
+   
+   #若無資料則離開
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+   
+              
+   LET g_glad_m.gladld = g_gladld
+   LET g_glad_m.glad001 = g_browser[g_current_idx].b_glac002
+    
+   #重讀DB,因TEMP有不被更新特性
+   SELECT UNIQUE gladld,glad001,glad002,glad003,glad004,glad005,glad006,'',glad036,glad034,glad035,glad007,glad008,glad009,  #150827-00036#7 add glad035 #150814-00006#2 add glad036
+                 glad010,glad011,glad012,glad013,glad015,glad016,glad030,glad031,glad032,glad033,
+                 glad017,glad0171,glad0172,glad018,glad0181,glad0182,glad019,glad0191,glad0192,glad020,glad0201,glad0202,
+                 glad021,glad0211,glad0212,glad022,glad0221,glad0222,glad023,glad0231,glad0232,glad024,glad0241,glad0242,
+                 glad025,glad0251,glad0252,glad026,glad0261,glad0262,glad027,
+                 gladownid,gladowndp,gladcrtid,gladcrtdt,gladcrtdp,gladmodid,gladmoddt,gladstus
+    INTO g_glad_m.gladld,g_glad_m.glad001,g_glad_m.glad002,g_glad_m.glad003,g_glad_m.glad004,
+         g_glad_m.glad005,g_glad_m.glad006,g_glad_m.glad006_desc,g_glad_m.glad036,g_glad_m.glad034,g_glad_m.glad035,g_glad_m.glad007,g_glad_m.glad008,g_glad_m.glad009, #150827-00036#7 add g_glad_m.glad035 #150814-00006#2 g_glad_m.glad036 
+         g_glad_m.glad010,g_glad_m.glad011,g_glad_m.glad012,g_glad_m.glad013,g_glad_m.glad015,g_glad_m.glad016,
+         g_glad_m.glad030,g_glad_m.glad031,g_glad_m.glad032,g_glad_m.glad033,
+         g_glad_m.glad017,g_glad_m.glad0171,g_glad_m.glad0172,g_glad_m.glad018,g_glad_m.glad0181,g_glad_m.glad0182,
+         g_glad_m.glad019,g_glad_m.glad0191,g_glad_m.glad0192,g_glad_m.glad020,g_glad_m.glad0201,g_glad_m.glad0202,
+         g_glad_m.glad021,g_glad_m.glad0211,g_glad_m.glad0212,g_glad_m.glad022,g_glad_m.glad0221,g_glad_m.glad0222,
+         g_glad_m.glad023,g_glad_m.glad0231,g_glad_m.glad0232,g_glad_m.glad024,g_glad_m.glad0241,g_glad_m.glad0242,
+         g_glad_m.glad025,g_glad_m.glad0251,g_glad_m.glad0252,g_glad_m.glad026,g_glad_m.glad0261,g_glad_m.glad0262,
+         g_glad_m.glad027,
+         g_glad_m.gladownid,g_glad_m.gladowndp,g_glad_m.gladcrtid,g_glad_m.gladcrtdt,g_glad_m.gladcrtdp,
+         g_glad_m.gladmodid,g_glad_m.gladmoddt,g_glad_m.gladstus
+    FROM glad_t
+   WHERE gladent = g_enterprise AND gladld = g_glad_m.gladld AND glad001 = g_glad_m.glad001
+   
+   IF SQLCA.sqlcode THEN
+       INITIALIZE g_glad_m.* TO NULL
+       CALL cl_set_act_visible("insert", TRUE)
+   END IF
+   
+   #若無資料則關閉相關功能
+   
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,insert,modify,delete,reproduce,open_agli043,open_agli060", FALSE)
+   ELSE
+      LET li_count = 0
+      SELECT count(*) INTO li_count FROM glad_t 
+       WHERE gladent = g_enterprise AND gladld = g_glad_m.gladld
+         AND glad001 = g_glad_m.glad001
+      IF li_count = 0 THEN 
+         CALL cl_set_act_visible("insert,open_agli043,open_agli060", TRUE)
+      ELSE
+         CALL cl_set_act_visible("statechange,modify,delete,reproduce,open_agli043,open_agli060", TRUE)
+      END IF 
+   END IF
+   IF g_browser[g_current_idx].b_glac003 = '1' THEN
+      CALL cl_set_act_visible("statechange,insert,modify,delete,reproduce,open_agli043,open_agli060", FALSE)
+   END IF 
+   
+   #重新顯示
+   CALL agli030_show()
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   DISPLAY g_browser_cnt TO FORMONLY.b_count
+   CALL agli030_gladld_show()
+END FUNCTION
+
+PRIVATE FUNCTION agli030_show()
+   DEFINE l_glaa005 LIKE glaa_t.glaa005
+   LET l_glaa005 = '' 
+   LET g_glad_m_t.* = g_glad_m.*
+   CALL cl_show_fld_cont()
+
+   DISPLAY BY NAME g_glad_m.gladld,g_glad_m.glad001,g_glad_m.glad002,g_glad_m.glad003,g_glad_m.glad004,
+         g_glad_m.glad005,g_glad_m.glad006,g_glad_m.glad036,g_glad_m.glad034,g_glad_m.glad035,g_glad_m.glad007,g_glad_m.glad008,g_glad_m.glad009,  #150827-00036#7 add g_glad_m.glad035 #150814-00006#2 add g_glad_m.glad036 
+         g_glad_m.glad010,g_glad_m.glad027,g_glad_m.glad011,g_glad_m.glad012,g_glad_m.glad013,
+         g_glad_m.glad015,g_glad_m.glad016,g_glad_m.glad030,g_glad_m.glad031,g_glad_m.glad032,g_glad_m.glad033,
+         g_glad_m.glad017,g_glad_m.glad0171,g_glad_m.glad0172,g_glad_m.glad018,g_glad_m.glad0181,g_glad_m.glad0182,
+         g_glad_m.glad019,g_glad_m.glad0191,g_glad_m.glad0192,g_glad_m.glad020,g_glad_m.glad0201,g_glad_m.glad0202,
+         g_glad_m.glad021,g_glad_m.glad0211,g_glad_m.glad0212,g_glad_m.glad022,g_glad_m.glad0221,g_glad_m.glad0222,
+         g_glad_m.glad023,g_glad_m.glad0231,g_glad_m.glad0232,g_glad_m.glad024,g_glad_m.glad0241,g_glad_m.glad0242,
+         g_glad_m.glad025,g_glad_m.glad0251,g_glad_m.glad0252,g_glad_m.glad026,g_glad_m.glad0261,g_glad_m.glad0262,
+         g_glad_m.gladownid,g_glad_m.gladowndp,g_glad_m.gladcrtid,g_glad_m.gladcrtdt,g_glad_m.gladcrtdp,
+         g_glad_m.gladmodid,g_glad_m.gladmoddt,g_glad_m.gladstus
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_glad_m.gladownid
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+   LET g_glad_m.gladownid_desc = g_rtn_fields[1]
+   DISPLAY BY NAME g_glad_m.gladownid_desc
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_glad_m.gladowndp
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_glad_m.gladowndp_desc = g_rtn_fields[1] 
+   DISPLAY BY NAME g_glad_m.gladowndp_desc
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_glad_m.gladcrtid
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+   LET g_glad_m.gladcrtid_desc = g_rtn_fields[1]
+   DISPLAY BY NAME g_glad_m.gladcrtid_desc
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_glad_m.gladcrtdp
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooefl003 FROM ooefl_t WHERE ooeflent='"||g_enterprise||"' AND ooefl001=? AND ooefl002='"||g_dlang||"'","") RETURNING g_rtn_fields
+   LET g_glad_m.gladcrtdp_desc = g_rtn_fields[1]
+   DISPLAY BY NAME g_glad_m.gladcrtdp_desc
+
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = g_glad_m.gladmodid
+   CALL ap_ref_array2(g_ref_fields,"SELECT ooag011 FROM ooag_t WHERE ooagent='"||g_enterprise||"' AND ooag001=? ","") RETURNING g_rtn_fields
+   LET g_glad_m.gladmodid_desc = g_rtn_fields[1] 
+   DISPLAY BY NAME g_glad_m.gladmodid_desc
+   #欄位給值
+   SELECT glaal002 INTO g_glad_m.gladld_desc FROM glaal_t
+    WHERE glaalent = g_enterprise AND glaalld = g_gladld
+      AND glaal001 = g_dlang
+   DISPLAY g_glad_m.gladld_desc TO gladld_desc
+   
+   SELECT ooefl003 INTO g_glad_m.l_legal_desc FROM ooefl_t
+    WHERE ooeflent=g_enterprise AND ooefl001=g_legal 
+      AND ooefl002=g_dlang
+      
+   DISPLAY g_glad_m.l_legal_desc TO l_legal_desc 
+   SELECT glaa005 INTO l_glaa005 FROM glaa_t
+    WHERE glaaent = g_enterprise AND glaald = g_gladld
+   SELECT nmail004 INTO g_glad_m.glad006_desc FROM nmail_t 
+    WHERE nmailent=g_enterprise AND nmail001= l_glaa005 AND nmail002=g_glad_m.glad006 AND nmail003=g_dlang
+   DISPLAY g_glad_m.glad006_desc TO glad006_desc
+   #150814-00006#2--add--str--
+   SELECT nmail004 INTO g_glad_m.glad036_desc FROM nmail_t 
+    WHERE nmailent=g_enterprise AND nmail001= l_glaa005 AND nmail002=g_glad_m.glad036 AND nmail003=g_dlang
+   DISPLAY g_glad_m.glad036_desc TO glad036_desc
+   #150814-00006#2--add--end
+   CALL agli030_hsx_ref(g_glad_m.glad0171) RETURNING g_glad_m.glad0171_desc
+   CALL agli030_hsx_ref(g_glad_m.glad0181) RETURNING g_glad_m.glad0181_desc
+   CALL agli030_hsx_ref(g_glad_m.glad0191) RETURNING g_glad_m.glad0191_desc
+   CALL agli030_hsx_ref(g_glad_m.glad0201) RETURNING g_glad_m.glad0201_desc
+   CALL agli030_hsx_ref(g_glad_m.glad0211) RETURNING g_glad_m.glad0211_desc
+   CALL agli030_hsx_ref(g_glad_m.glad0221) RETURNING g_glad_m.glad0221_desc
+   CALL agli030_hsx_ref(g_glad_m.glad0231) RETURNING g_glad_m.glad0231_desc
+   CALL agli030_hsx_ref(g_glad_m.glad0241) RETURNING g_glad_m.glad0241_desc
+   CALL agli030_hsx_ref(g_glad_m.glad0251) RETURNING g_glad_m.glad0251_desc
+   CALL agli030_hsx_ref(g_glad_m.glad0261) RETURNING g_glad_m.glad0261_desc
+   DISPLAY g_glad_m.glad0171_desc TO glad0171_desc
+   DISPLAY g_glad_m.glad0181_desc TO glad0181_desc
+   DISPLAY g_glad_m.glad0191_desc TO glad0191_desc
+   DISPLAY g_glad_m.glad0201_desc TO glad0201_desc
+   DISPLAY g_glad_m.glad0211_desc TO glad0211_desc
+   DISPLAY g_glad_m.glad0221_desc TO glad0221_desc
+   DISPLAY g_glad_m.glad0231_desc TO glad0231_desc
+   DISPLAY g_glad_m.glad0241_desc TO glad0241_desc
+   DISPLAY g_glad_m.glad0251_desc TO glad0251_desc
+   DISPLAY g_glad_m.glad0261_desc TO glad0261_desc
+   CASE g_glad_m.gladstus
+      WHEN "N"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/invalid.png")
+      WHEN "Y"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/valid.png")
+   END CASE
+END FUNCTION
+
+PRIVATE FUNCTION agli030_hsx_ref(p_hsx)
+   DEFINE p_hsx LIKE glad_t.glad0171
+   DEFINE r_glael003 LIKE glael_t.glael003
+
+   LET r_glael003 = ''
+   INITIALIZE g_ref_fields TO NULL
+   LET g_ref_fields[1] = p_hsx
+   CALL ap_ref_array2(g_ref_fields,"SELECT glael003 FROM glael_t WHERE glaelent='"||g_enterprise||"' AND glael001=? AND glael002='"||g_dlang||"'","") 
+      RETURNING g_rtn_fields
+   LET r_glael003  = g_rtn_fields[1]
+   RETURN r_glael003
+END FUNCTION
+
+PRIVATE FUNCTION agli030_browser_fill(p_wc,p_type)
+   DEFINE p_wc       STRING 
+   DEFINE p_type     LIKE type_t.chr10
+   DEFINE l_cnt      LIKE type_t.num10
+   DEFINE l_cnt2     LIKE type_t.num10
+   DEFINE l_ld_str   STRING   #160811-00039#5
+   
+   IF cl_null(g_glac007_wc) THEN
+      LET g_glac007_wc = " glac007 = '1' "
+   END IF 
+   IF NOT cl_null(g_type_table) THEN
+      LET p_wc = p_wc ," AND ",g_glac007_wc  
+      LET g_type_table = ''
+   ELSE
+      #161214-00032#2--add--s--
+      IF cl_sql_add_filter("glad_t") = " AND 1=1 " THEN
+         LET p_wc = p_wc
+      ELSE
+         LET p_wc = p_wc,cl_sql_add_filter("glad_t")      
+      END IF
+      #161214-00032#2--add--e--
+      IF p_wc = " 1=1" THEN
+         LET p_wc = p_wc CLIPPED," AND ",g_glac007_wc         
+      ELSE
+#         LET p_wc = "glac002 IN (SELECT glad001 FROM glad_t WHERE ",p_wc,") AND ",g_glac007_wc    #160905-00007#3 marked
+         LET p_wc = "glac002 IN (SELECT glad001 FROM glad_t WHERE gladent = ",g_enterprise," AND ",p_wc,") AND ",g_glac007_wc #160905-00007#3 mod
+      END IF 
+   END IF 
+   #160811-00039#5--add--str--
+   CALL s_ld_sel_authority_sql(g_user,g_dept) RETURNING l_ld_str
+   LET p_wc = p_wc," AND glac001 IN (SELECT glaa004 FROM glaa_t ",
+                   "                  WHERE glaaent=",g_enterprise," AND ",l_ld_str,")"
+   #160811-00039#5--add--end
+   
+   CALL g_browser.clear()
+   CLEAR FORM
+   LET l_cnt = 0
+   LET l_cnt2 = 0
+   
+   DROP TABLE agli030_tmp
+   
+   #Create temp table
+   CREATE TEMP TABLE agli030_tmp
+   (
+         glac001 VARCHAR(500),
+   glac004 VARCHAR(500),
+   glac002 VARCHAR(500),
+   glac003 VARCHAR(500),
+#   glac005 VARCHAR(500),
+#   glac006 VARCHAR(500),
+#   glac007 VARCHAR(500),
+#   glac008 VARCHAR(500),
+#   glac009 VARCHAR(500),
+#   glac010 VARCHAR(500),
+#   glac011 VARCHAR(500),
+#   glac016 VARCHAR(500),
+#   glac012 VARCHAR(500),
+#   glac013 VARCHAR(500),
+#   glac014 VARCHAR(500),
+#   glac015 VARCHAR(500),
+      #僅含browser的欄位
+      exp_code  VARCHAR(5)
+   );
+ 
+   #先確定搜尋範圍(若無條件搜尋則只找root出來)
+   SELECT COUNT(*) INTO l_cnt FROM glac_t 
+   WHERE glacent=g_enterprise  #160614-00023#1 add
+   
+   #取得符合p_wc的所有資料
+   LET g_sql = "SELECT COUNT(*)",
+               " FROM glac_t  ",
+               " WHERE glacent = '" ||g_enterprise|| "' AND ",p_wc
+              
+   PREPARE master_cnt FROM g_sql
+   DECLARE master_cntcur CURSOR FOR master_cnt
+   OPEN master_cntcur
+   FETCH master_cntcur INTO l_cnt2
+   LET g_root_search = FALSE
+   
+    
+   IF l_cnt = l_cnt2 THEN
+      #未輸入條件時則只查找root節點
+      LET p_wc = " glac002 = glac004 "
+      LET g_root_search = TRUE
+   END IF
+   
+   #取得符合p_wc的所有資料
+   #LET g_sql = "SELECT glac001,glac004,glac002,glac003,glac005,glac006,glac007,glac008,glac009,glac010,glac011,glac016,glac012,glac013,glac014,glac015 ",
+   LET g_sql = "SELECT glac001,glac004,glac002,glac003 ",
+               " FROM glac_t  ",
+               " WHERE glacent = '" ||g_enterprise|| "' AND glac001 = '",g_glaa004,"' AND ",p_wc,
+               "  ORDER BY glac004,glac002 "
+   PREPARE master_ext FROM g_sql
+   DECLARE master_extcur CURSOR FOR master_ext
+ 
+   #搜尋建構樹所需的節點
+   CASE p_type
+      WHEN "1" #上推
+         CALL agli030_match_node(p_wc,p_type) 
+      WHEN "2" #下展
+         #CALL agli030_find_speed_tbl(p_wc,p_type) 
+         CALL agli030_match_node(p_wc,p_type) 
+      WHEN "3" #全部
+         CALL agli030_match_node(p_wc,p_type) 
+   END CASE
+ 
+   CALL agli030_browser_create(p_type)
+END FUNCTION
+
+PRIVATE FUNCTION agli030_delete()
+   DEFINE l_cnt           LIKE type_t.num5 #160420-00001#9
+   DEFINE l_pass          LIKE type_t.num5 #160811-00039#5
+   
+#   IF cl_null(g_glad_m.glad002) THEN #160811-00039#5 mark
+   IF cl_null(g_glad_m.glad001) THEN  #160811-00039#5 add
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "std-00003"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      RETURN
+   END IF 
+   #160811-00039#5--add--str--
+   CALL s_ld_chk_authorization(g_user,g_glad_m.gladld) RETURNING l_pass
+   IF l_pass = FALSE THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = 'agl-00165'
+      LET g_errparam.extend = g_glad_m.gladld
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+   
+      RETURN
+   END IF
+   #160811-00039#5--add--end
+   
+   CALL s_transaction_begin()
+   OPEN agli030_cl USING g_enterprise,g_glad_m.gladld,g_glad_m.glad001
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "OPEN agli030_cl:"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      CLOSE agli030_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+
+   FETCH agli030_cl INTO g_glad_m.gladld,g_glad_m.gladld_desc,g_glad_m.l_legal,g_glad_m.l_legal_desc,g_glad_m.glad001,
+      g_glad_m.glad002,g_glad_m.glad003,g_glad_m.glad004,g_glad_m.glad005,g_glad_m.glad006,g_glad_m.glad036,g_glad_m.glad034,g_glad_m.glad035,   #150827-00036#7 add g_glad_m.glad035 #150814-00006#2 add g_glad_m.glad036
+      g_glad_m.glad007,g_glad_m.glad012,g_glad_m.glad008,g_glad_m.glad013,g_glad_m.glad009,
+      g_glad_m.glad010,g_glad_m.glad027,g_glad_m.glad015,g_glad_m.glad011,g_glad_m.glad016,
+      g_glad_m.glad030,g_glad_m.glad031,g_glad_m.glad032,g_glad_m.glad033,
+      g_glad_m.glad017,g_glad_m.glad022,g_glad_m.glad018,g_glad_m.glad023,g_glad_m.glad019,
+      g_glad_m.glad024,g_glad_m.glad020,g_glad_m.glad025,g_glad_m.glad021,g_glad_m.glad026,
+      g_glad_m.gladstus,g_glad_m.glad0171,g_glad_m.glad0171_desc,g_glad_m.glad0172,
+      g_glad_m.glad0181,g_glad_m.glad0181_desc,g_glad_m.glad0182,g_glad_m.glad0191,
+      g_glad_m.glad0191_desc,g_glad_m.glad0192,g_glad_m.glad0201,g_glad_m.glad0201_desc,
+      g_glad_m.glad0202,g_glad_m.glad0211,g_glad_m.glad0211_desc,g_glad_m.glad0212,
+      g_glad_m.glad0221,g_glad_m.glad0221_desc,g_glad_m.glad0222,g_glad_m.glad0231,
+      g_glad_m.glad0231_desc,g_glad_m.glad0232,g_glad_m.glad0241,g_glad_m.glad0241_desc,
+      g_glad_m.glad0242,g_glad_m.glad0251,g_glad_m.glad0251_desc,g_glad_m.glad0252,
+      g_glad_m.glad0261,g_glad_m.glad0261_desc,g_glad_m.glad0262,
+      g_glad_m.gladownid,g_glad_m.gladownid_desc,g_glad_m.gladowndp,g_glad_m.gladowndp_desc,
+      g_glad_m.gladcrtid,g_glad_m.gladcrtid_desc,g_glad_m.gladcrtdt,g_glad_m.gladcrtdp,
+      g_glad_m.gladcrtdp_desc,g_glad_m.gladmodid,g_glad_m.gladmodid_desc,g_glad_m.gladmoddt 
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = g_glad_m.glad001
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      CLOSE agli030_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+
+   #160420-00001#9--add--str--
+   #判断科目是否已在分录底稿中使用，如果已存在，提示用户‘该科目已存在于凭证中，不可删除！’
+   LET l_cnt = 0
+   SELECT COUNT(*) INTO l_cnt FROM glaq_t 
+    WHERE glaqent=g_enterprise AND glaqld=g_glad_m.gladld AND glaq002=g_glad_m.glad001
+   IF l_cnt = 0 THEN
+      SELECT COUNT(*) INTO l_cnt FROM glar_t
+       WHERE glarent=g_enterprise AND glarld=g_glad_m.gladld AND glar001=g_glad_m.glad001
+   END IF
+   IF l_cnt > 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = g_glad_m.glad001
+#      LET g_errparam.code   = "agl-00443"  #161006-00028#1 mark
+      LET g_errparam.code   = "agl-00331"   #161006-00028#1 add
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      #161006-00028#1--add--str--
+      CLOSE agli030_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+      #161006-00028#1--add--end
+   END IF
+   #160420-00001#9--add--end
+   #161006-00028#1--add--str--
+   #判断科目是否已在分录底稿中使用，如果已存在，提示用户‘该科目已存在于分录底稿中，不可删除！’
+   IF l_cnt = 0 THEN
+      SELECT COUNT(1) INTO l_cnt FROM glgb_t
+       WHERE glgbent=g_enterprise AND glgbld=g_glad_m.gladld AND glgb002=g_glad_m.glad001
+      IF l_cnt > 0 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_glad_m.glad001
+         LET g_errparam.code   = "agl-00330" 
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+         CLOSE agli030_cl
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+   END IF      
+   #161006-00028#1--add--end
+   
+   IF cl_ask_delete() THEN
+      INITIALIZE g_doc.* TO NULL
+      LET g_doc.column1 = "glad001"
+      LET g_doc.value1 = g_glad_m.glad001
+      CALL cl_doc_remove()
+
+      DELETE FROM glad_t
+       WHERE gladent = g_enterprise AND gladld = g_glad_m.gladld
+         AND glad001 = g_glad_m.glad001
+         
+      CLEAR FORM
+
+      IF SQLCA.sqlcode THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = SQLCA.sqlcode
+         LET g_errparam.extend = "glad_t"
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+         CALL s_transaction_end('N','0')
+      END IF
+   END IF 
+   #修改歷程記錄
+   CLOSE agli030_cl
+   CALL s_transaction_end('Y','0')
+
+   #流程通知預埋點-D
+   CALL cl_flow_notify(g_glad_m.glad001,'D')
+END FUNCTION
+
+PRIVATE FUNCTION agli030_insert()
+   DEFINE la_param  RECORD
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING   
+   CALL s_transaction_begin()
+   LET g_glad001 = ''
+   WHILE TRUE 
+      IF g_current_idx = 0 THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = '-400'
+         LET g_errparam.extend = ''
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+      ELSE
+         IF NOT cl_null(g_browser[g_current_idx].b_glac004) THEN 
+            IF g_browser[g_current_idx].b_glac004 != '1' THEN
+               LET g_glad001 = g_browser[g_current_idx].b_glac002
+            ELSE
+               
+            END IF 
+         ELSE
+            
+         END IF 
+      END IF 
+      IF NOT cl_null(g_glad001) AND NOT cl_null(g_gladld) THEN
+         #CALL agli030_01("a",g_gladld,g_glad001)   #2015/1/8   liuym mark
+         #2015/1/8 liuym add -----str--------
+         LET la_param.prog = 'agli031'
+         LET la_param.param[1] = g_gladld
+         LET la_param.param[2] = g_glad001
+         LET la_param.param[3] = 'a' #新增
+         LET ls_js = util.JSON.stringify(la_param)
+         CALL cl_cmdrun(ls_js)
+         #2015/1/8 liuym add -----end--------
+      END IF 
+      EXIT WHILE
+   END WHILE 
+END FUNCTION
+
+PRIVATE FUNCTION agli030_modify()
+   DEFINE la_param  RECORD
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING     
+
+   CALL agli030_modify1()
+   RETURN
+
+   IF cl_null(g_glad_m.glad002) THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = "std-00003"
+      LET g_errparam.extend = ""
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      RETURN
+   END IF 
+   
+   CALL s_transaction_begin()
+   OPEN agli030_cl USING g_enterprise,g_glad_m.gladld,g_glad_m.glad001
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code =  STATUS
+      LET g_errparam.extend = "OPEN agli030_cl:"
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+      CLOSE agli030_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+
+   FETCH agli030_cl INTO g_glad_m.gladld,g_glad_m.gladld_desc,g_glad_m.l_legal,g_glad_m.l_legal_desc,g_glad_m.glad001,
+      g_glad_m.glad002,g_glad_m.glad003,g_glad_m.glad004,g_glad_m.glad005,g_glad_m.glad006,g_glad_m.glad036,g_glad_m.glad034,g_glad_m.glad035,   #150827-00036#7 add g_glad_m.glad035 #150814-00006#2 add g_glad_m.glad036
+      g_glad_m.glad007,g_glad_m.glad012,g_glad_m.glad008,g_glad_m.glad013,g_glad_m.glad009,
+      g_glad_m.glad010,g_glad_m.glad027,g_glad_m.glad015,g_glad_m.glad011,g_glad_m.glad016,
+      g_glad_m.glad030,g_glad_m.glad031,g_glad_m.glad032,g_glad_m.glad033,
+      g_glad_m.glad017,g_glad_m.glad022,g_glad_m.glad018,g_glad_m.glad023,g_glad_m.glad019,
+      g_glad_m.glad024,g_glad_m.glad020,g_glad_m.glad025,g_glad_m.glad021,g_glad_m.glad026,
+      g_glad_m.gladstus,g_glad_m.glad0171,g_glad_m.glad0171_desc,g_glad_m.glad0172,
+      g_glad_m.glad0181,g_glad_m.glad0181_desc,g_glad_m.glad0182,g_glad_m.glad0191,
+      g_glad_m.glad0191_desc,g_glad_m.glad0192,g_glad_m.glad0201,g_glad_m.glad0201_desc,
+      g_glad_m.glad0202,g_glad_m.glad0211,g_glad_m.glad0211_desc,g_glad_m.glad0212,
+      g_glad_m.glad0221,g_glad_m.glad0221_desc,g_glad_m.glad0222,g_glad_m.glad0231,
+      g_glad_m.glad0231_desc,g_glad_m.glad0232,g_glad_m.glad0241,g_glad_m.glad0241_desc,
+      g_glad_m.glad0242,g_glad_m.glad0251,g_glad_m.glad0251_desc,g_glad_m.glad0252,
+      g_glad_m.glad0261,g_glad_m.glad0261_desc,g_glad_m.glad0262,
+      g_glad_m.gladownid,g_glad_m.gladownid_desc,g_glad_m.gladowndp,g_glad_m.gladowndp_desc,
+      g_glad_m.gladcrtid,g_glad_m.gladcrtid_desc,g_glad_m.gladcrtdt,g_glad_m.gladcrtdp,
+      g_glad_m.gladcrtdp_desc,g_glad_m.gladmodid,g_glad_m.gladmodid_desc,g_glad_m.gladmoddt 
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = SQLCA.sqlcode
+      LET g_errparam.extend = g_glad_m.glad001
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+      CLOSE agli030_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+
+   #WHILE TRUE 
+      #CALL agli030_01("u",g_glad_m.gladld,g_glad_m.glad001)    #2015/1/8 liuym mark
+      #EXIT WHILE
+   #END WHILE
+   #2015/1/8 liuym add -----str--------
+   IF cl_null(g_glad_m.gladld) AND cl_null(g_glad_m.glad001) THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "Modify Info:" 
+      LET g_errparam.code   = "asf-00342" 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   ELSE
+      LET la_param.prog = 'agli031'
+      LET la_param.param[1] = g_glad_m.gladld
+      LET la_param.param[2] = g_glad_m.glad001
+      LET la_param.param[3] = 'u' #修改
+      LET ls_js = util.JSON.stringify(la_param)
+      CALL cl_cmdrun_wait(ls_js)
+   END IF 
+   #2015/1/8 liuym add -----end--------
+   #修改歷程記錄
+   IF NOT cl_log_modified_record(g_glad_m.glad001,g_site) THEN
+      CALL s_transaction_end('N','0')
+   END IF
+
+   CLOSE agli030_cl
+   CALL s_transaction_end('Y','0')
+
+   #流程通知預埋點-U
+   CALL cl_flow_notify(g_glad_m.glad001,'U')
+
+END FUNCTION
+
+PRIVATE FUNCTION agli030_query()
+   DEFINE ls_wc STRING 
+   #畫面開啟
+   CALL gfrm_curr.setElementHidden("folder_2",0)
+   CALL gfrm_curr.setElementImage("mainhidden","small/arr-d.png")
+   LET g_header_hidden = 0
+   #查詢動作
+   LET INT_FLAG = 0
+   LET ls_wc = g_wc
+
+   DISPLAY ' ' TO FORMONLY.b_count
+   CALL agli030_construct()
+   IF INT_FLAG THEN
+      LET INT_FLAG = 0 
+      LET g_wc = ls_wc
+      CALL agli030_fetch("")
+      RETURN
+   ELSE
+      LET g_current_row = 1
+      LET g_browser_cnt = 0
+      LET g_current_idx = 1
+      CALL g_browser.clear()
+   END IF
+
+   LET g_searchtype = '3'
+   LET g_searchcol = '0'
+   CALL agli030_browser_fill(g_wc,g_searchtype)
+
+   IF g_browser_cnt = 0 THEN
+      LET g_wc = cl_wc_parser(g_wc) 
+      CALL agli030_browser_fill(g_wc,g_searchtype)
+   END IF 
+
+   IF g_browser_cnt = 0 THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = '-100'
+      LET g_errparam.extend = ''
+      LET g_errparam.popup = TRUE
+      CALL cl_err()
+
+   END IF
+   CALL agli030_gladld_show()
+END FUNCTION
+
+PRIVATE FUNCTION agli030_gladld_show()
+   DISPLAY g_gladld TO gladld
+   DISPLAY g_legal TO l_legal
+   SELECT glaal002 INTO g_glad_m.gladld_desc FROM glaal_t
+    WHERE glaalent = g_enterprise AND glaalld = g_gladld
+      AND glaal001 = g_dlang
+   DISPLAY g_glad_m.gladld_desc TO gladld_desc
+   
+   SELECT ooefl003 INTO g_glad_m.l_legal_desc FROM ooefl_t
+    WHERE ooeflent=g_enterprise AND ooefl001=g_legal 
+      AND ooefl002=g_dlang
+      
+   DISPLAY g_glad_m.l_legal_desc TO l_legal_desc 
+END FUNCTION
+
+PRIVATE FUNCTION agli030_construct()
+   DEFINE lc_qbe_sn   LIKE type_t.num10
+   DEFINE ls_return   STRING
+   DEFINE ls_result   STRING 
+   DEFINE ls_wc       STRING
+   #清除畫面
+   CLEAR FORM                 
+   INITIALIZE g_glad_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   LET g_qryparam.state = "c"
+   #CALL agli030_gladld_show()
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+      INPUT g_gladld,g_legal FROM  gladld,l_legal
+         BEFORE INPUT
+         
+         AFTER FIELD gladld
+            DISPLAY '' TO gladld_desc
+            DISPLAY '' TO l_legal_desc
+            IF NOT agli030_gladld_chk(g_gladld) THEN
+               LET g_gladld = ''
+               LET g_legal = ''
+               DISPLAY g_legal TO l_legal
+               DISPLAY g_gladld TO gladld
+               NEXT FIELD gladld
+            END IF 
+            SELECT glaa004,glaacomp INTO g_glaa004,g_legal FROM glaa_t
+             WHERE glaaent = g_enterprise 
+               AND glaald = g_gladld
+            CALL agli030_gladld_show()
+         ON ACTION controlp INFIELD gladld
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.default1 = g_gladld
+            #160811-00039#5--add--str--
+            LET g_qryparam.arg1 = g_user 
+            LET g_qryparam.arg2 = g_dept 
+            CALL q_authorised_ld() 
+            #160811-00039#5--add--end
+#            CALL q_glaald()       #160811-00039#5 mark                    #呼叫開窗
+            LET g_gladld = g_qryparam.return1
+            SELECT glaa004,glaacomp INTO g_glaa004,g_legal FROM glaa_t
+             WHERE glaaent = g_enterprise 
+               AND glaald = g_gladld
+            CALL agli030_gladld_show()    
+            NEXT FIELD gladld                    #返回原欄位
+      END INPUT
+      CONSTRUCT BY NAME g_wc ON glad030,glad002,glad003,glad004,glad005,glad006,glad036,glad034,glad035,glad007,glad031,   #150827-00036#7 add glad035 #150814-00006#2 add glad036
+      glad008,glad032,glad009,glad033,glad010,glad013,glad027,glad015,glad011,glad016,glad012,glad017,
+glad022,glad018,glad023,glad019,glad024,glad020,glad025,glad021,glad026,gladstus,glad0171,glad0172,glad0181,glad0182,glad0191,glad0192,glad0201
+,glad0202,glad0211,glad0212,glad0221,glad0222,glad0231,glad0232,glad0241,glad0242,glad0251,glad0252,glad0261,glad0262,gladownid,gladowndp,
+gladcrtid,gladcrtdt,gladcrtdp,gladmodid,gladmoddt
+         BEFORE CONSTRUCT
+            CALL cl_qbe_init()
+            
+         ON ACTION controlp INFIELD glad006
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_nmai002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO glad006  #顯示到畫面上
+            NEXT FIELD glad006                     #返回原欄位
+         #150814-00006#2--add--str--
+         ON ACTION controlp INFIELD glad036
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_nmai002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO glad036  #顯示到畫面上
+            NEXT FIELD glad036                     #返回原欄位
+         #150814-00006#2--add--end    
+         ON ACTION controlp INFIELD glad0171
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_glae001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO glad0171  #顯示到畫面上
+            NEXT FIELD glad0171                     #返回原欄位
+            
+         ON ACTION controlp INFIELD glad0181
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_glae001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO glad0181  #顯示到畫面上
+            NEXT FIELD glad0181                     #返回原欄位
+            
+         ON ACTION controlp INFIELD glad0191
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_glae001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO glad0191  #顯示到畫面上
+            NEXT FIELD glad0191                     #返回原欄位
+            
+         ON ACTION controlp INFIELD glad0201
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_glae001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO glad0201  #顯示到畫面上
+            NEXT FIELD glad0201                     #返回原欄位
+            
+         ON ACTION controlp INFIELD glad0211
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_glae001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO glad0211  #顯示到畫面上
+            NEXT FIELD glad0211                     #返回原欄位
+            
+         ON ACTION controlp INFIELD glad0221
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_glae001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO glad0221  #顯示到畫面上
+            NEXT FIELD glad0221                     #返回原欄位
+            
+         ON ACTION controlp INFIELD glad0241
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_glae001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO glad0241  #顯示到畫面上
+            NEXT FIELD glad0241                     #返回原欄位
+            
+         ON ACTION controlp INFIELD glad0251
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_glae001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO glad0251  #顯示到畫面上
+            NEXT FIELD glad0251                     #返回原欄位
+            
+         ON ACTION controlp INFIELD glad0261
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_glae001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO glad0261  #顯示到畫面上
+            NEXT FIELD glad0261                     #返回原欄位
+            
+         ON ACTION controlp INFIELD glad0231
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_glae001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO glad0231  #顯示到畫面上
+            NEXT FIELD glad0231                     #返回原欄位
+            
+         ON ACTION controlp INFIELD gladownid  
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'         
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO gladownid  #顯示到畫面上
+
+            NEXT FIELD gladownid                     #返回原欄位
+
+
+         ON ACTION controlp INFIELD gladowndp
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO gladowndp  #顯示到畫面上
+
+            NEXT FIELD gladowndp                     #返回原欄位
+
+         ON ACTION controlp INFIELD gladcrtid 
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO gladcrtid  #顯示到畫面上
+
+            NEXT FIELD gladcrtid                     #返回原欄位
+
+         ON ACTION controlp INFIELD gladcrtdp  
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_9()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO gladcrtdp  #顯示到畫面上
+
+            NEXT FIELD gladcrtdp                     #返回原欄位
+
+         ON ACTION controlp INFIELD gladmodid
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO gladmodid  #顯示到畫面上
+
+            NEXT FIELD gladmodid                     #返回原欄位
+       
+      END CONSTRUCT 
+      ON ACTION qbe_select     #條件查詢
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+#         CALL cl_qbe_display_condition(lc_qbe_sn)
+      
+      ON ACTION qbe_save       #條件儲存
+         CALL cl_qbe_save()
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+      
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+         
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+      CONTINUE DIALOG
+  
+   END DIALOG
+   IF INT_FLAG THEN
+      IF cl_null(g_legal) THEN
+         SELECT ooef002 INTO g_legal FROM ooef_t
+          WHERE ooefent = g_enterprise AND ooef001 = g_site
+      END IF
+      LET g_gladld = ''
+      LET g_glaa004 = ''
+      SELECT glaald INTO g_gladld FROM glaa_t
+       WHERE glaaent = g_enterprise AND glaacomp = g_legal
+         AND glaa014 = 'Y' 
+      SELECT glaa004 INTO g_glaa004 FROM glaa_t
+       WHERE glaaent = g_enterprise AND glaacomp = g_legal
+         AND glaa014 = 'Y' AND glaald = g_gladld
+      RETURN
+   END IF
+END FUNCTION
+
+PRIVATE FUNCTION agli030_gladld_chk(p_gladld)
+   DEFINE p_gladld LIKE glad_t.gladld
+   DEFINE r_success LIKE type_t.num5
+   DEFINE l_pass    LIKE type_t.num5 #160811-00039#5
+   
+   LET r_success = TRUE
+   
+   IF r_success THEN
+      IF NOT ap_chk_isExist(p_gladld,"SELECT COUNT(*) FROM glaa_t WHERE glaaent = '"
+         ||g_enterprise||"'  AND glaald = ? ",'aoo-00017',0 ) THEN
+         LET r_success = FALSE
+      END IF
+   END IF 
+   IF r_success THEN
+      IF NOT ap_chk_isExist(p_gladld,"SELECT COUNT(*) FROM glaa_t WHERE glaaent = '"
+#         ||g_enterprise||"'  AND glaald = ? AND glaastus = 'Y' ",'agl-00051',0 ) THEN
+          ||g_enterprise||"'  AND glaald = ? AND glaastus = 'Y' ",'sub-01302','agli010' ) THEN
+         LET r_success = FALSE
+      END IF
+   END IF 
+   #160811-00039#5--add--str--
+    CALL s_ld_chk_authorization(g_user,p_gladld) RETURNING l_pass
+    IF l_pass = FALSE THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = 'agl-00165'
+       LET g_errparam.extend = p_gladld
+       LET g_errparam.popup = TRUE
+       CALL cl_err()
+       LET r_success = FALSE
+    END IF
+    #160811-00039#5--add--end
+   RETURN r_success
+END FUNCTION
+
+PRIVATE FUNCTION agli030_reproduce()
+   #2015/1/8 liuym add -----str--------
+   DEFINE la_param  RECORD
+          prog   STRING,
+          param  DYNAMIC ARRAY OF STRING
+                 END RECORD
+   DEFINE ls_js     STRING   
+   
+   IF cl_null(g_glad_m.gladld) AND cl_null(g_glad_m.glad001) THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "reproduce Info:" 
+      LET g_errparam.code   = "asf-00342" 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   ELSE     
+       LET la_param.prog = 'agli031'   
+       LET la_param.param[1] = g_glad_m.gladld
+       LET la_param.param[2] = g_glad_m.glad001
+       LET la_param.param[3] = 'c' #复制
+       LET ls_js = util.JSON.stringify(la_param)
+       CALL cl_cmdrun(ls_js)
+   END IF 
+   
+   #2015/1/8 liuym add -----end--------
+   
+   #CALL agli030_01('c',g_glad_m.gladld,g_glad_m.glad001)   #2015/1/8 liuym mark
+END FUNCTION
+
+PRIVATE FUNCTION agli030_desc_show(pi_ac)
+   DEFINE pi_ac   LIKE type_t.num10    #161108-00019#1 mod type_t.num5 -> type_t.num10
+   DEFINE li_tmp  LIKE type_t.num10     #161108-00019#1 mod type_t.num5 -> type_t.num10
+   DEFINE l_ref   LIKE type_t.chr80
+   DEFINE l_glad  RECORD 
+      glad0171 LIKE glad_t.glad0171,
+      glad0181 LIKE glad_t.glad0181,
+      glad0191 LIKE glad_t.glad0191,
+      glad0201 LIKE glad_t.glad0201,
+      glad0211 LIKE glad_t.glad0211,
+      glad0221 LIKE glad_t.glad0221,
+      glad0231 LIKE glad_t.glad0231,
+      glad0241 LIKE glad_t.glad0241,
+      glad0251 LIKE glad_t.glad0251,
+      glad0261 LIKE glad_t.glad0261
+      END RECORD
+   LET li_tmp = l_ac
+   LET l_ac = pi_ac
+   
+    LET l_ref = ''
+    IF cl_null(g_browser[l_ac].b_glac004) THEN
+       SELECT ooall004 INTO l_ref FROM ooall_t
+        WHERE ooallent = g_enterprise AND ooall001 = '0' AND ooall002 = g_browser[l_ac].b_glac001
+          AND ooall003 = g_lang
+       LET g_browser[l_ac].b_show = g_browser[l_ac].b_glac001,"(",l_ref,")"
+    ELSE
+       LET g_browser[l_ac].b_glad007 =  ''
+       LET g_browser[l_ac].b_glad008 =  ''
+       LET g_browser[l_ac].b_glad009 =  ''
+       LET g_browser[l_ac].b_glad010 =  ''
+       LET g_browser[l_ac].b_glad011 =  ''
+       LET g_browser[l_ac].b_glad012 =  ''
+       LET g_browser[l_ac].b_glad013 =  ''
+#       LET g_browser[l_ac].b_glad014 =  ''
+       LET g_browser[l_ac].b_glad015 =  ''
+       LET g_browser[l_ac].b_glad016 =  ''
+       LET g_browser[l_ac].b_glad031 =  ''
+       LET g_browser[l_ac].b_glad032 =  ''
+       LET g_browser[l_ac].b_glad033 =  ''
+       LET g_browser[l_ac].b_glad002 =  ''
+       LET g_browser[l_ac].b_glad003 =  ''
+       LET g_browser[l_ac].b_glad004 =  ''
+       LET g_browser[l_ac].b_glad005 =  ''
+       LET g_browser[l_ac].b_glad006 =  ''
+       LET g_browser[l_ac].b_glad036 =  ''    #150814-00006#2 add
+       LET g_browser[l_ac].b_glad034=  ''
+       LET g_browser[l_ac].b_glad035=  ''     #150827-00036#7  add
+       LET g_browser[l_ac].b_glad027 =  ''
+       
+       SELECT glacl004 INTO l_ref FROM glacl_t 
+        WHERE glaclent = g_enterprise AND glacl001 = g_browser[l_ac].b_glac001 AND glacl002 = g_browser[l_ac].b_glac002
+          AND glacl003 = g_lang
+       LET g_browser[l_ac].b_show = g_browser[l_ac].b_glac002,"(",l_ref,")"
+       SELECT glad007,glad008,glad009,glad010,glad011,glad012,glad013,glad015,glad016,glad031,glad032,glad033,
+              glad002,glad003,glad004,glad005,glad006,glad036,glad034,glad035,   #150827-00036#7 add glad035 #150814-00006#2 add glad036
+              glad0171,glad0181,glad0191,glad0201,glad0211,glad0221,glad0231,glad0241,glad0251,glad0261,
+              glad027
+         INTO g_browser[l_ac].b_glad007,g_browser[l_ac].b_glad008,g_browser[l_ac].b_glad009,g_browser[l_ac].b_glad010,
+              g_browser[l_ac].b_glad011,g_browser[l_ac].b_glad012,g_browser[l_ac].b_glad013,g_browser[l_ac].b_glad015,
+              g_browser[l_ac].b_glad016,g_browser[l_ac].b_glad031,g_browser[l_ac].b_glad032,g_browser[l_ac].b_glad033,
+              g_browser[l_ac].b_glad002,g_browser[l_ac].b_glad003,
+              g_browser[l_ac].b_glad004,g_browser[l_ac].b_glad005,g_browser[l_ac].b_glad006,g_browser[l_ac].b_glad036,g_browser[l_ac].b_glad034, #150814-00006#2 add glad036
+              g_browser[l_ac].b_glad035,   #150827-00036#7 add g_browser[l_ac].b_glad035
+              l_glad.glad0171,l_glad.glad0181,l_glad.glad0191,l_glad.glad0201,
+              l_glad.glad0211,l_glad.glad0221,l_glad.glad0231,l_glad.glad0241,
+              l_glad.glad0251,l_glad.glad0261,g_browser[l_ac].b_glad027
+         FROM glad_t
+        WHERE gladent = g_enterprise AND gladld = g_gladld AND glad001 = g_browser[l_ac].b_glac002
+        
+       CALL agli030_hsx_ref(l_glad.glad0171) RETURNING g_browser[l_ac].b_glad0171_desc
+       CALL agli030_hsx_ref(l_glad.glad0181) RETURNING g_browser[l_ac].b_glad0181_desc
+       CALL agli030_hsx_ref(l_glad.glad0191) RETURNING g_browser[l_ac].b_glad0191_desc
+       CALL agli030_hsx_ref(l_glad.glad0201) RETURNING g_browser[l_ac].b_glad0201_desc
+       CALL agli030_hsx_ref(l_glad.glad0211) RETURNING g_browser[l_ac].b_glad0211_desc
+       CALL agli030_hsx_ref(l_glad.glad0221) RETURNING g_browser[l_ac].b_glad0221_desc
+       CALL agli030_hsx_ref(l_glad.glad0231) RETURNING g_browser[l_ac].b_glad0231_desc
+       CALL agli030_hsx_ref(l_glad.glad0241) RETURNING g_browser[l_ac].b_glad0241_desc
+       CALL agli030_hsx_ref(l_glad.glad0251) RETURNING g_browser[l_ac].b_glad0251_desc
+       CALL agli030_hsx_ref(l_glad.glad0261) RETURNING g_browser[l_ac].b_glad0261_desc
+    END IF          
+ 
+   LET l_ac = li_tmp
+END FUNCTION
+
+PRIVATE FUNCTION agli030_chk_hasC(pi_id)
+   DEFINE pi_id    INTEGER
+   DEFINE li_cnt   INTEGER
+   
+   LET g_sql = "SELECT COUNT(glac004) FROM agli030_tmp ",
+               " WHERE ",
+                "glac004 = ? AND ",
+                "exp_code <> '-1' AND glac002 <> glac004 "
+                 ," AND ",
+                "glac001 = ?"
+ 
+   PREPARE agli030_temp_chk_tree FROM g_sql
+ 
+   LET g_sql = "SELECT COUNT(*) FROM glac_t ",
+               " WHERE glacent = '" ||g_enterprise|| "' AND ",
+               "glac002 <> glac004 AND ",
+               "glac004 = ? "
+                ," AND ",
+               "glac001 = ?"   
+   
+   PREPARE agli030_master_chk_tree FROM g_sql
+   
+   CASE g_browser[pi_id].b_expcode 
+      WHEN -1
+         RETURN FALSE
+      WHEN 0
+         RETURN FALSE
+      WHEN 1
+         EXECUTE agli030_temp_chk_tree
+           USING g_browser[pi_id].b_glac002
+                 ,g_browser[pi_id].b_glac001
+            INTO li_cnt
+         FREE agli030_temp_chk_tree
+      WHEN 2 
+         EXECUTE agli030_master_chk_tree 
+           USING g_browser[pi_id].b_glac002
+                 ,g_browser[pi_id].b_glac001
+            INTO li_cnt
+         FREE agli030_master_chk_tree
+   END CASE
+    
+   IF li_cnt > 0 THEN
+      RETURN TRUE
+   ELSE
+      RETURN FALSE
+   END IF
+END FUNCTION
+
+PRIVATE FUNCTION agli030_match_node(p_wc,p_type)
+   DEFINE p_wc         LIKE type_t.chr200
+   DEFINE p_type       LIKE type_t.chr10
+   DEFINE ls_code      LIKE type_t.chr50
+   DEFINE ls_code2     LIKE type_t.chr50
+   DEFINE l_bstmp      RECORD    #body欄位   
+   glac001 VARCHAR(500),
+   glac004 VARCHAR(500),
+   glac002 VARCHAR(500),
+   glac003 VARCHAR(500)
+#   glac005 VARCHAR(500),
+#   glac006 VARCHAR(500),
+#   glac007 VARCHAR(500),
+#   glac008 VARCHAR(500),
+#   glac009 VARCHAR(500),
+#   glac010 VARCHAR(500),
+#   glac011 VARCHAR(500),
+#   glac016 VARCHAR(500),
+#   glac012 VARCHAR(500),
+#   glac013 VARCHAR(500),
+#   glac014 VARCHAR(500),
+#   glac015 VARCHAR(500)
+          #僅含單身table的欄位
+   END RECORD 
+   DEFINE l_child_list DYNAMIC ARRAY OF RECORD    #body欄位   
+             glac001 VARCHAR(500),
+   glac004 VARCHAR(500),
+   glac002 VARCHAR(500),
+   glac003 VARCHAR(500)
+#   glac005 VARCHAR(500),
+#   glac006 VARCHAR(500),
+#   glac007 VARCHAR(500),
+#   glac008 VARCHAR(500),
+#   glac009 VARCHAR(500),
+#   glac010 VARCHAR(500),
+#   glac011 VARCHAR(500),
+#   glac016 VARCHAR(500),
+#   glac012 VARCHAR(500),
+#   glac013 VARCHAR(500),
+#   glac014 VARCHAR(500),
+#   glac015 VARCHAR(500)
+          #僅含單身table的欄位
+   END RECORD 
+   
+   #先找出符合條件的節點並給予展開值
+   CASE p_type
+      WHEN 1
+         LET ls_code = "0"
+      WHEN 2
+         LET ls_code = "2"
+      WHEN 3
+         LET ls_code = "2"
+   END CASE
+   
+   IF cl_null('glac004') THEN
+      LET ls_code = '0'
+   END IF 
+   
+   CALL s_transaction_begin()
+ 
+   #LET g_sql = " INSERT INTO agli030_tmp (glac001,glac004,glac002,glac003,glac005,glac006,glac007,glac008,glac009,glac010,glac011,glac016,glac012,glac013,glac014,glac015,exp_code) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)"
+   LET g_sql = " INSERT INTO agli030_tmp(glac001,glac004,glac002,glac003,exp_code) VALUES (?,?,?,?,?)"
+   PREPARE master_tmp FROM g_sql
+   
+   IF g_root_search THEN
+
+      FOREACH master_extcur INTO l_bstmp.*
+         EXECUTE master_tmp USING l_bstmp.*,ls_code
+      END FOREACH
+      CALL s_transaction_end('Y','0')
+      RETURN
+   END IF
+ 
+   FOREACH master_extcur INTO l_bstmp.*
+      EXECUTE master_tmp USING l_bstmp.*,ls_code
+      LET l_child_list[l_child_list.getLength()+1].* = l_bstmp.*
+       
+      #找出符合條件的節點的所有祖先並給予展開值
+      CASE p_type
+         WHEN 1
+            LET ls_code2 = "1"
+         WHEN 2
+            LET ls_code2 = "-1"
+         WHEN 3
+            LET ls_code2 = "1"
+      END CASE
+      
+      #若pid欄位存在才進行後續處理
+      #擷取該節點的父節點到temp table中
+      #LET g_sql = " SELECT glac001,glac004,glac002,glac003,glac005,glac006,glac007,glac008,glac009,glac010,glac011,glac016,glac012,glac013,glac014,glac015 ",
+      LET g_sql = " SELECT glac001,glac004,glac002,glac003 ",
+                  " FROM glac_t  ",
+                  " WHERE glacent = '" ||g_enterprise|| "' AND glac002 = ? "
+                  ," AND glac001 = ? "
+      PREPARE master_getparent_up FROM g_sql
+      
+      #擷取該節點的所有父節點
+      WHILE TRUE
+         IF cl_null(l_child_list[1].glac002) THEN
+            IF l_child_list.getLength() = 1 THEN
+               EXIT WHILE
+            ELSE
+               CALL l_child_list.deleteElement(1)
+               CONTINUE WHILE
+            END IF
+         END IF
+      
+         EXECUTE master_getparent_up USING l_child_list[1].glac004
+                                           ,l_child_list[1].glac001
+                                           INTO l_bstmp.*
+         IF SQLCA.sqlcode THEN
+            FREE master_getparent_up
+            EXIT WHILE
+         END IF
+         FREE master_getparent_up
+      #確定該節點是否存在於temp table中
+         
+         IF STATUS = 0 AND agli030_tmp_tbl_chk(l_bstmp.glac002,ls_code2
+                     ,l_bstmp.glac001
+                     ) THEN
+            EXECUTE master_tmp USING l_bstmp.*,ls_code2
+            LET l_child_list[l_child_list.getLength()+1].* = l_bstmp.*
+         END IF
+         CALL l_child_list.deleteElement(1)
+      
+      END WHILE
+   
+   END FOREACH  
+   
+   CLOSE master_tmp
+   
+   CALL s_transaction_end('Y','0')
+END FUNCTION
+
+PRIVATE FUNCTION agli030_tmp_tbl_chk(ps_id,pi_code,ps_type)
+   DEFINE ps_id       STRING
+   DEFINE pi_code     LIKE type_t.num10
+   DEFINE ps_type     STRING
+   DEFINE ls_id       LIKE type_t.chr500
+   DEFINE ls_search   LIKE type_t.chr500
+   DEFINE ls_type     LIKE type_t.chr500
+   DEFINE li_cnt      LIKE type_t.num10
+   DEFINE li_code     LIKE type_t.num10
+   
+   LET ls_id = ps_id
+   LET ls_type = ps_type
+  
+   IF cl_null(ls_id) THEN
+      RETURN TRUE
+   END IF
+   
+   LET g_sql = " SELECT COUNT(*) FROM agli030_tmp ", 
+               " WHERE glac002 = ? "
+                ," AND glac001 = ? "
+ 
+   PREPARE agli030_get_cnt FROM g_sql
+   EXECUTE agli030_get_cnt USING ls_id ,ls_type
+                                     INTO li_cnt
+   FREE agli030_get_cnt
+                                     
+   IF li_cnt = 0 OR SQLCA.sqlcode THEN
+      RETURN TRUE
+   ELSE
+    
+      #資料已存在, 確定是否需要更新展開值
+      LET g_sql = " SELECT exp_code FROM agli030_tmp  ",
+                  " WHERE glac002 = ? " 
+                   ," AND glac001 = ? "
+ 
+      PREPARE agli030_chk_exp FROM g_sql
+      
+      EXECUTE agli030_chk_exp USING ls_id ,ls_type
+                                        INTO li_code
+      FREE agli030_chk_exp
+      
+      #若新展開值>原展開值則做更新
+      IF pi_code > li_code THEN
+         LET g_sql = " UPDATE agli030_tmp SET (exp_code) = ('",pi_code,"') ",
+                     " WHERE glac002 = ? "
+                      ," AND glac001 = ? "
+         PREPARE agli030_upd_exp FROM g_sql
+         EXECUTE agli030_upd_exp USING ls_id ,ls_type
+         FREE agli030_upd_exp
+      END IF      
+      
+      RETURN FALSE
+   END IF
+END FUNCTION
+
+PRIVATE FUNCTION agli030_browser_create(p_type)
+   DEFINE p_type   LIKE type_t.chr50
+   DEFINE l_pid    LIKE type_t.chr50
+
+   
+   #先找出所有的帳別資料
+   LET g_sql = " SELECT UNIQUE glac001 FROM agli030_tmp ORDER BY glac001"
+   PREPARE master_type FROM g_sql
+   DECLARE master_typecur CURSOR FOR master_type
+   
+   INITIALIZE g_browser_root TO NULL
+   
+   LET l_ac = 1
+   FOREACH master_typecur INTO g_browser[l_ac].b_glac001
+      #確定root節點所在
+      LET g_browser_root[g_browser_root.getLength()+1] = l_ac
+      #此處為帳別部分(LV-1)
+      LET g_browser[l_ac].b_glac002  = g_browser[l_ac].b_glac001
+      LET g_browser[l_ac].b_glac001 = g_browser[l_ac].b_glac001
+      LET g_browser[l_ac].b_pid = '0' CLIPPED
+      LET g_browser[l_ac].b_id = l_ac USING "<<<"
+      LET g_browser[l_ac].b_exp = TRUE
+      LET g_browser[l_ac].b_hasC = TRUE
+      LET l_pid = g_browser[l_ac].b_id CLIPPED
+      LET l_ac = l_ac + 1
+      
+      #抓出LV2的所有資料
+      #LET g_sql = " SELECT UNIQUE glac001,glac004,glac002,glac003,glac005,glac006,glac007,glac008,glac009,glac010,glac011,glac016,glac012,glac013,glac014,glac015,exp_code FROM agli030_tmp a ",
+      #LET g_sql = " SELECT UNIQUE glac001,glac004,glac002,glac003,glac005,glac006,glac007,glac008,glac009,glac010,glac011,glac016,glac012,glac013,glac014,glac015 FROM agli030_tmp a ",
+      LET g_sql = "SELECT UNIQUE glac001,glac004,glac002,glac003 FROM agli030_tmp a ",
+                  " WHERE ",
+                  "a.glac001 = ? ",
+                  " AND ",
+                  " (( SELECT COUNT(*) FROM agli030_tmp b WHERE a.glac004 = b.glac002 ", 
+                  " AND a.glac001 = b.glac001",
+                  ") = 0 OR ", 
+                  " a.glac002 = a.glac004 )", 
+                  " ORDER BY a.glac002"
+      PREPARE master_getLV2 FROM g_sql
+      DECLARE master_getLV2cur CURSOR FOR master_getLV2
+      
+      #以下為一般資料root(LV-2)
+      OPEN master_getLV2cur USING g_browser[l_ac-1].b_glac001
+      
+      LET g_cnt = l_ac
+      
+      #FOREACH master_getLV2cur INTO g_browser[g_cnt].b_glac001,g_browser[g_cnt].b_glac004,g_browser[g_cnt].b_glac002,g_browser[g_cnt].b_glac003,g_browser[g_cnt].b_glac005,g_browser[g_cnt].b_glac006,g_browser[g_cnt].b_glac007,g_browser[g_cnt].b_glac008,g_browser[g_cnt].b_glac009,g_browser[g_cnt].b_glac010,g_browser[g_cnt].b_glac011,g_browser[g_cnt].b_glac016,g_browser[g_cnt].b_glac012,g_browser[g_cnt].b_glac013,g_browser[g_cnt].b_glac014,g_browser[g_cnt].b_glac015 #,g_browser[g_cnt].b_expcode
+      FOREACH master_getLV2cur INTO g_browser[g_cnt].b_glac001,g_browser[g_cnt].b_glac004,g_browser[g_cnt].b_glac002,g_browser[g_cnt].b_glac003
+         #去除多餘空白
+         #LET g_browser[g_cnt].b_glac002 = g_browser[g_cnt].b_glac002 CLIPPED
+         LET g_browser[g_cnt].b_pid = l_pid
+         LET g_browser[g_cnt].b_id = l_pid,".",g_cnt USING "<<<"
+         LET g_browser[g_cnt].b_exp = FALSE
+         LET g_browser[g_cnt].b_expcode = 2
+         IF cl_null(g_browser[g_cnt].b_glac004) THEN
+            LET g_browser[g_cnt].b_hasC = FALSE
+         ELSE
+            LET g_browser[g_cnt].b_hasC = TRUE
+         END IF
+ 
+         LET g_cnt = g_cnt + 1   
+      END FOREACH
+      LET l_ac = g_browser.getLength()
+      
+   END FOREACH
+   
+   #組合描述欄位&刪除多於資料
+   FOR l_ac = 1 TO g_browser.getLength()
+      IF cl_null(g_browser[l_ac].b_glac002) THEN
+         CALL g_browser.deleteElement(l_ac)
+         LET l_ac = l_ac - 1
+      ELSE
+         CALL agli030_desc_show(l_ac)
+      END IF
+   END FOR
+   CALL g_browser.deleteElement(l_ac)
+   
+   LET g_browser_cnt = g_browser.getLength() - g_browser_root.getLength()
+   
+   FREE tree_expand
+   FREE master_getLV2
+END FUNCTION
+
+PRIVATE FUNCTION agli030_open_action(p_program_name)
+   DEFINE p_program_name STRING 
+   
+   IF p_program_name = "agli041" THEN
+      CALL cl_cmdrun("agli041")
+   END IF 
+   IF p_program_name = "agli042" THEN
+      CALL cl_cmdrun("agli042")
+   END IF
+   IF p_program_name = "agli043" THEN
+      CALL cl_cmdrun("agli043 "||g_glad_m.gladld||" "||g_glad_m.glad001)
+   END IF
+   IF p_program_name = "agli060" THEN
+      CALL cl_cmdrun("agli060 "||g_glad_m.gladld||" "||g_glad_m.glad001)
+   END IF
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION agli030_modify1()
+      DEFINE la_param  RECORD
+             prog   STRING,
+             param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING   
+   DEFINE l_glac001 LIKE glac_t.glac001
+   DEFINE l_pass    LIKE type_t.num5     #160811-00039#5
+   
+   IF cl_null(g_glad_m.gladld) AND cl_null(g_glad_m.glad001) THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "Modify Info:" 
+      LET g_errparam.code   = "asf-00342" 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   ELSE
+      #160811-00039#5--add--str--
+      CALL s_ld_chk_authorization(g_user,g_glad_m.gladld) RETURNING l_pass
+      IF l_pass = FALSE THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = 'agl-00165'
+         LET g_errparam.extend = g_glad_m.gladld
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+      
+         RETURN
+      END IF
+      #160811-00039#5--add--end
+      LET la_param.prog = 'agli031'
+      LET la_param.param[1] = g_glad_m.gladld
+      LET la_param.param[2] = g_glad_m.glad001
+      LET la_param.param[3] = 'u' #修改
+      LET ls_js = util.JSON.stringify(la_param)
+      CALL cl_cmdrun_wait(ls_js)
+   END IF
+
+   CALL agli030_browser_fill(g_wc,g_searchtype)
+
+   SELECT glaa004 INTO l_glac001 FROM glaa_t WHERE glaaent = g_enterprise
+      AND glaald = g_glad_m.gladld
+
+   CALL agli030_dis(l_glac001,g_glad_m.glad001)
+
+   #重讀DB,因TEMP有不被更新特性
+   SELECT UNIQUE gladld,glad001,glad002,glad003,glad004,glad005,glad006,'',glad036,glad034,glad035,glad007,glad008,glad009,  #150827-00036#7 add glad035 #150814-00006#2 add glad036
+                 glad010,glad011,glad012,glad013,glad015,glad016,glad030,glad031,glad032,glad033,
+                 glad017,glad0171,glad0172,glad018,glad0181,glad0182,glad019,glad0191,glad0192,glad020,glad0201,glad0202,
+                 glad021,glad0211,glad0212,glad022,glad0221,glad0222,glad023,glad0231,glad0232,glad024,glad0241,glad0242,
+                 glad025,glad0251,glad0252,glad026,glad0261,glad0262,glad027,
+                 gladownid,gladowndp,gladcrtid,gladcrtdt,gladcrtdp,gladmodid,gladmoddt,gladstus
+    INTO g_glad_m.gladld,g_glad_m.glad001,g_glad_m.glad002,g_glad_m.glad003,g_glad_m.glad004,
+         g_glad_m.glad005,g_glad_m.glad006,g_glad_m.glad006_desc,g_glad_m.glad036,g_glad_m.glad034,g_glad_m.glad035,g_glad_m.glad007,g_glad_m.glad008,g_glad_m.glad009, #150827-00036#7 add g_glad_m.glad035 #150814-00006#2 add glad036 
+         g_glad_m.glad010,g_glad_m.glad011,g_glad_m.glad012,g_glad_m.glad013,g_glad_m.glad015,g_glad_m.glad016,
+         g_glad_m.glad030,g_glad_m.glad031,g_glad_m.glad032,g_glad_m.glad033,
+         g_glad_m.glad017,g_glad_m.glad0171,g_glad_m.glad0172,g_glad_m.glad018,g_glad_m.glad0181,g_glad_m.glad0182,
+         g_glad_m.glad019,g_glad_m.glad0191,g_glad_m.glad0192,g_glad_m.glad020,g_glad_m.glad0201,g_glad_m.glad0202,
+         g_glad_m.glad021,g_glad_m.glad0211,g_glad_m.glad0212,g_glad_m.glad022,g_glad_m.glad0221,g_glad_m.glad0222,
+         g_glad_m.glad023,g_glad_m.glad0231,g_glad_m.glad0232,g_glad_m.glad024,g_glad_m.glad0241,g_glad_m.glad0242,
+         g_glad_m.glad025,g_glad_m.glad0251,g_glad_m.glad0252,g_glad_m.glad026,g_glad_m.glad0261,g_glad_m.glad0262,
+         g_glad_m.glad027,
+         g_glad_m.gladownid,g_glad_m.gladowndp,g_glad_m.gladcrtid,g_glad_m.gladcrtdt,g_glad_m.gladcrtdp,
+         g_glad_m.gladmodid,g_glad_m.gladmoddt,g_glad_m.gladstus
+    FROM glad_t
+   WHERE gladent = g_enterprise AND gladld = g_glad_m.gladld AND glad001 = g_glad_m.glad001
+   
+   CALL agli030_show()
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION agli030_dis(p_glac001,p_glac002)
+   DEFINE p_glac001      LIKE glac_t.glac001
+   DEFINE p_glac002      LIKE glac_t.glac002
+   DEFINE l_glac004      LIKE glac_t.glac004
+
+   SELECT glac004 INTO l_glac004 FROM glac_t
+    WHERE glacent = g_enterprise AND glac001 = p_glac001 AND glac002 = p_glac002
+   IF l_glac004 <> p_glac002 THEN
+      CALL agli030_dis(p_glac001,l_glac004)
+   END IF
+
+   #獲取需要展開的節點坐標
+   FOR l_ac = 1 TO g_browser.getLength()
+      IF g_browser[l_ac].b_glac001 = p_glac001 AND 
+         g_browser[l_ac].b_glac002 = p_glac002 THEN 
+         LET g_current_idx = l_ac
+         LET g_browser[l_ac].b_exp = TRUE
+         EXIT FOR
+      END IF     
+   END FOR
+   IF g_row_index > 0 THEN
+      CALL agli030_browser_expand(g_current_idx)
+      LET g_browser[g_current_idx].b_isExp = 1
+   END IF
+
+END FUNCTION
+
+#end add-point
+ 
+{</section>}
+ 

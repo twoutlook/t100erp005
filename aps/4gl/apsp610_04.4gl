@@ -1,0 +1,878 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="apsp610_04.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2016-06-13 21:47:54), PR版次:0004(2017-01-05 15:33:02)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000030
+#+ Filename...: apsp610_04
+#+ Description: APS產生採購單作業_結果檢視
+#+ Creator....: 05384(2016-01-22 11:33:26)
+#+ Modifier...: 03079 -SD/PR- 00700
+ 
+{</section>}
+ 
+{<section id="apsp610_04.global" >}
+#應用 p00 樣板自動產生(Version:5)
+#add-point:填寫註解說明 name="main.memo"
+#160318-00025#1   2016/04/06  By 07675       將重複內容的錯誤訊息置換為公用錯誤訊息(r.v） 
+#160512-00016#5   2016/06/01  By ming        增加保稅欄位 
+#160601-00032#3   2016/06/13  By ming        增加欄位 庫存管理特徵 
+#170104-00066#1   2017/01/04  By Rainy       筆數相關變數由num5放大至num10
+#end add-point
+#add-point:填寫註解說明(客製用) name="main.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+#add-point:增加匯入項目 name="main.import"
+IMPORT util
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+#add-point:增加匯入變數檔 name="global.inc"
+GLOBALS "../../aps/4gl/apsp610_04.inc"
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apsp610_04.free_style_variable" >}
+#add-point:free_style模組變數(Module Variable) name="free_style.variable"
+ TYPE type_g_pmdl_d RECORD
+                              keyno_04_01         LIKE type_t.num10,       #keyno 
+                              result_04_01        LIKE type_t.chr1000,     #執行結果 
+                              pmdldocno_04_01     LIKE pmdl_t.pmdldocno,   #採購單號  
+                              pmdl004_04_01       LIKE pmdl_t.pmdl004,     #供應商   
+                              pmaal004_04_01      LIKE pmaal_t.pmaal004,   #供應商名稱 
+                              pmdl009_04_01       LIKE pmdl_t.pmdl009,     #付款條件  
+                              pmdl010_04_01       LIKE pmdl_t.pmdl010,     #交易條件   
+                              pmdl011_04_01       LIKE pmdl_t.pmdl011,     #稅別   
+                              pmdl012_04_01       LIKE pmdl_t.pmdl012,     #稅率   
+                              pmdl013_04_01       LIKE pmdl_t.pmdl013,     #含稅否   
+                              pmdl015_04_01       LIKE pmdl_t.pmdl015,     #幣別   
+                              pmdl016_04_01       LIKE pmdl_t.pmdl016,     #匯率   
+                              pmdl017_04_01       LIKE pmdl_t.pmdl017      #取價方式  
+                           END RECORD 
+ TYPE type_g_pmdn_d RECORD
+                              pmdnseq_04_02       LIKE pmdn_t.pmdnseq,     #項次   
+                              pmdn001_04_02       LIKE pmdn_t.pmdn001,     #採購料件  
+                              imaal003_04_02      LIKE imaal_t.imaal003,   #品名  
+                              imaal004_04_02      LIKE imaal_t.imaal004,   #規格 
+                              pmdn002_04_02       LIKE pmdn_t.pmdn002,     #採購產品特徵  
+                              pmdn002_04_02_desc  LIKE type_t.chr80,       #產品特徵說明 
+                              #160512-00016#5 20160601 add by ming -----(S) 
+                              pmdn021_04_02       LIKE pmdn_t.pmdn021,     #保稅 
+                              #160512-00016#5 20160601 add by ming -----(E) 
+                              pmdn006_04_02       LIKE pmdn_t.pmdn006,     #採購單位  
+                              pmdn006_04_02_desc  LIKE type_t.chr80,       #單位說明 
+                              pmdn007_04_02       LIKE pmdn_t.pmdn007,     #採購數量 
+                              pmdn008_04_02       LIKE pmdn_t.pmdn008,     #參考單位 
+                              pmdn008_04_02_desc  LIKE type_t.chr80,       #單位說明 
+                              pmdn009_04_02       LIKE pmdn_t.pmdn009,     #參考數量 
+                              pmdn010_04_02       LIKE pmdn_t.pmdn010,     #計價單位  
+                              pmdn010_04_02_desc  LIKE type_t.chr80,       #單位說明 
+                              pmdn011_04_02       LIKE pmdn_t.pmdn011,     #計價數量  
+                              pmdn012_04_02       LIKE pmdn_t.pmdn012,     #交貨日期  
+                              pmdn013_04_02       LIKE pmdn_t.pmdn013,     #到廠日期  
+                              pmdn014_04_02       LIKE pmdn_t.pmdn014,     #到庫日期   
+                              pmdn015_04_02       LIKE pmdn_t.pmdn015,     #單價  
+                              pmdn050_04_02       LIKE pmdn_t.pmdn050,     #備註
+                              pmdn053_04_02       LIKE pmdn_t.pmdn053      #庫存管理特徵 #160601-00032#3 20160613 add 
+                           END RECORD
+ TYPE type_g_pmdp_d RECORD
+                              pmdpseq_04_03       LIKE pmdp_t.pmdpseq,     #項次 
+                              pmdpseq1_04_03      LIKE pmdp_t.pmdpseq1,    #項序 
+                              pmdp001_04_03       LIKE pmdp_t.pmdp001,     #料號 
+                              pspc004_04_03       LIKE pspc_t.pspc004,     #請購單號 
+                              pmdp004_04_03       LIKE pmdp_t.pmdp004,     #請購項次 
+                              pmdp007_04_03       LIKE pmdp_t.pmdp007,     #請購料號  
+                              pmdp008_04_03       LIKE pmdp_t.pmdp008,     #請購產品特徵  
+                              pmdp008_04_03_desc  LIKE type_t.chr80,       #產品特徵說明 
+                              pmdp021_04_03       LIKE pmdp_t.pmdp021,     #沖銷順序 
+                              pmdp022_04_03       LIKE pmdp_t.pmdp022,     #需求單位 
+                              pmdp023_04_03       LIKE pmdp_t.pmdp023,     #需求數量   
+                              pmdp024_04_03       LIKE pmdp_t.pmdp024      #折合採購量 
+                           END RECORD 
+ TYPE type_g_pmdo_d RECORD
+                              pmdoseq_04_04       LIKE pmdo_t.pmdoseq,     #項次 
+                              pmdoseq1_04_04      LIKE pmdo_t.pmdoseq1,    #項序 
+                              pmdo001_04_04       LIKE pmdo_t.pmdo001,     #採購料號 
+                              pmdo002_04_04       LIKE pmdo_t.pmdo002,     #採購產品特徵  
+                              pmdo002_04_04_desc  LIKE type_t.chr80,       #產品特徵說明 
+                              pmdo004_04_04       LIKE pmdo_t.pmdo004,     #採購單位  
+                              pmdo005_04_04       LIKE pmdo_t.pmdo005,     #採購數量 
+                              pmdoseq2_04_04      LIKE pmdo_t.pmdoseq2,    #分批序 
+                              pmdo006_04_04       LIKE pmdo_t.pmdo006,     #分批採購數量 
+                              pmdo011_04_04       LIKE pmdo_t.pmdo011,     #交貨日期 
+                              pmdo012_04_04       LIKE pmdo_t.pmdo012,     #到廠日期 
+                              pmdo013_04_04       LIKE pmdo_t.pmdo013      #到庫日期 
+                           END RECORD
+DEFINE g_pmdl_d            DYNAMIC ARRAY OF type_g_pmdl_d
+DEFINE g_pmdn_d            DYNAMIC ARRAY OF type_g_pmdn_d
+DEFINE g_pmdp_d            DYNAMIC ARRAY OF type_g_pmdp_d
+DEFINE g_pmdo_d            DYNAMIC ARRAY OF type_g_pmdo_d
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apsp610_04.global_variable" >}
+#add-point:自定義模組變數(Module Variable) name="global.variable"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="apsp610_04.other_dialog" >}
+
+DIALOG apsp610_04_display01()
+   DEFINE l_wc     STRING
+
+   DISPLAY ARRAY g_pmdl_d TO s_apsp610_04_detail1.* ATTRIBUTE(COUNT=g_d_cnt_p61004_01)
+      BEFORE DISPLAY
+         CALL FGL_SET_ARR_CURR(g_d_idx_p61004_01)
+
+      BEFORE ROW
+         LET g_d_idx_p61004_01 = DIALOG.getCurrentRow("s_apsp610_04_detail1")
+         LET g_appoint_idx = g_d_idx_p61004_01
+
+         LET l_wc = "keyno = '",g_pmdl_d[g_d_idx_p61004_01].keyno_04_01,"' "
+         CALL apsp610_04_b_fill_02(l_wc)
+         CALL apsp610_04_b_fill_03(l_wc)
+         CALL apsp610_04_b_fill_04(l_wc)
+
+
+   END DISPLAY
+END DIALOG
+
+DIALOG apsp610_04_display02()
+   DISPLAY ARRAY g_pmdn_d TO s_apsp610_04_detail2.* ATTRIBUTE(COUNT=g_d_cnt_p61004_02)
+      BEFORE DISPLAY
+         CALL FGL_SET_ARR_CURR(g_d_idx_p61004_02)
+
+      BEFORE ROW
+         LET g_d_idx_p61004_02 = DIALOG.getCurrentRow("s_apsp610_04_detail2")
+         LET g_appoint_idx = g_d_idx_p61004_02
+   END DISPLAY
+END DIALOG
+
+DIALOG apsp610_04_display03()
+   DISPLAY ARRAY g_pmdp_d TO s_apsp610_04_detail3.* ATTRIBUTE(COUNT=g_d_cnt_p61004_03)
+      BEFORE DISPLAY
+         CALL FGL_SET_ARR_CURR(g_d_idx_p61004_03)
+
+      BEFORE ROW
+         LET g_d_idx_p61004_03 = DIALOG.getCurrentRow("s_apsp610_04_detail3")
+         LET g_appoint_idx = g_d_idx_p61004_03
+   END DISPLAY
+END DIALOG
+
+DIALOG apsp610_04_display04()
+   DISPLAY ARRAY g_pmdo_d TO s_apsp610_04_detail4.* ATTRIBUTE(COUNT=g_d_cnt_p61004_04)
+      BEFORE DISPLAY
+         CALL FGL_SET_ARR_CURR(g_d_idx_p61004_04)
+
+      BEFORE ROW
+         LET g_d_idx_p61004_04 = DIALOG.getCurrentRow("s_apsp610_04_detail4")
+         LET g_appoint_idx = g_d_idx_p61004_04
+   END DISPLAY
+END DIALOG
+
+ 
+{</section>}
+ 
+{<section id="apsp610_04.other_function" readonly="Y" >}
+
+PUBLIC FUNCTION apsp610_04(--)
+   #add-point:input段變數傳入
+
+   #end add-point
+   )
+   {
+   DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否
+   DEFINE l_count         LIKE type_t.num5
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define
+
+   #end add-point
+
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_apsp610_04 WITH FORM cl_ap_formpath("apm","apsp610_04")
+
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+
+   #輸入前處理
+   #add-point:單頭前置處理
+
+   #end add-point
+
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+
+      #輸入開始
+      INPUT BY NAME g_apaa_m.apaa001,g_apaa_m.apaa002 ATTRIBUTE(WITHOUT DEFAULTS)
+
+         #自訂ACTION
+         #add-point:單頭前置處理
+
+         #end add-point
+
+         #自訂ACTION(master_input)
+
+
+         BEFORE INPUT
+            #add-point:單頭輸入前處理
+
+            #end add-point
+
+         #---------------------------<  Master  >---------------------------
+         #----<<apaa001>>----
+         #此段落由子樣板a02產生
+         AFTER FIELD apaa001
+
+            #add-point:AFTER FIELD apaa001
+            IF NOT cl_null(g_apaa_m.apaa001) THEN
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+
+               #設定g_chkparam.*的參數
+               LET g_chkparam.arg2 = '參數2'
+               #160318-00025#1--add--str
+               LET g_errshow = TRUE 
+               LET g_chkparam.err_str[1] = "abm-00079:sub-01302|apmm100|",cl_get_progname("apmm100",g_lang,"2"),"|:EXEPROGapmm100"
+               #160318-00025#1--add--end
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist_and_ref_val("v_apaa001") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+
+
+            END IF
+            INITIALIZE g_ref_fields TO NULL
+            LET g_ref_fields[1] = g_apaa_m.apaa001
+            CALL ap_ref_array2(g_ref_fields,"SELECT pmaal004 FROM pmaal_t WHERE pmaalent='"||g_enterprise||"' AND pmaal001=? AND pmaal002='"||g_dlang||"'","") RETURNING g_rtn_fields
+            LET g_apaa_m.apaa001_desc = '', g_rtn_fields[1] , ''
+            DISPLAY BY NAME g_apaa_m.apaa001_desc
+
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_apaa_m.apaa001) AND NOT cl_null(g_apaa_m.apaa002) THEN
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_apaa_m.apaa001 != g_apaa001_t  OR g_apaa_m.apaa002 != g_apaa002_t )) THEN
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM apaa_t WHERE "||"apaaent = '" ||g_enterprise|| "' AND apaasite = '" ||g_site|| "' AND "||"apaa001 = '"||g_apaa_m.apaa001 ||"' AND "|| "apaa002 = '"||g_apaa_m.apaa002 ||"'",'std-00004',0) THEN
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+            #END add-point
+
+
+         #此段落由子樣板a01產生
+         BEFORE FIELD apaa001
+            #add-point:BEFORE FIELD apaa001
+
+            #END add-point
+
+         #此段落由子樣板a04產生
+         ON CHANGE apaa001
+            #add-point:ON CHANGE apaa001
+
+            #END add-point
+
+         #----<<apaa001_desc>>----
+         #----<<apaa002>>----
+         #此段落由子樣板a01產生
+         BEFORE FIELD apaa002
+            #add-point:BEFORE FIELD apaa002
+
+            #END add-point
+
+         #此段落由子樣板a02產生
+         AFTER FIELD apaa002
+
+            #add-point:AFTER FIELD apaa002
+            #此段落由子樣板a05產生
+            IF  NOT cl_null(g_apaa_m.apaa001) AND NOT cl_null(g_apaa_m.apaa002) THEN
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_apaa_m.apaa001 != g_apaa001_t  OR g_apaa_m.apaa002 != g_apaa002_t )) THEN
+                  IF NOT ap_chk_notDup("","SELECT COUNT(*) FROM apaa_t WHERE "||"apaaent = '" ||g_enterprise|| "' AND apaasite = '" ||g_site|| "' AND "||"apaa001 = '"||g_apaa_m.apaa001 ||"' AND "|| "apaa002 = '"||g_apaa_m.apaa002 ||"'",'std-00004',0) THEN
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+
+
+            #END add-point
+
+
+         #此段落由子樣板a04產生
+         ON CHANGE apaa002
+            #add-point:ON CHANGE apaa002
+
+            #END add-point
+
+ #欄位檢查
+         #---------------------------<  Master  >---------------------------
+         #----<<apaa001>>----
+         #Ctrlp:input.c.apaa001
+         ON ACTION controlp INFIELD apaa001
+            #add-point:ON ACTION controlp INFIELD apaa001
+            #此段落由子樣板a07產生
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_apaa_m.apaa001             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+
+            CALL q_pmaa001_1()                                #呼叫開窗
+
+            LET g_apaa_m.apaa001 = g_qryparam.return1
+
+            DISPLAY g_apaa_m.apaa001 TO apaa001              #
+
+            NEXT FIELD apaa001                          #返回原欄位
+
+
+            #END add-point
+
+         #----<<apaa001_desc>>----
+         #----<<apaa002>>----
+         #Ctrlp:input.c.apaa002
+#         ON ACTION controlp INFIELD apaa002
+            #add-point:ON ACTION controlp INFIELD apaa002
+
+            #END add-point
+
+ #欄位開窗
+
+         AFTER INPUT
+            #add-point:單頭輸入後處理
+
+            #end add-point
+
+      END INPUT
+
+      #add-point:自定義input
+
+      #end add-point
+
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+
+      ON ACTION cancel
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION close
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      ON ACTION exit
+         LET INT_FLAG = TRUE
+         EXIT DIALOG
+
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+
+   #add-point:畫面關閉前
+
+   #end add-point
+
+   #畫面關閉
+   CLOSE WINDOW w_apsp610_04
+
+   #add-point:input段after input
+
+   #end add-point
+   }
+END FUNCTION
+
+################################################################################
+# Descriptions...: 建立temp table
+# Memo...........:
+# Usage..........: CALL apsp610_04_create_temp_table()
+# Date & Author..: 2016/01/22 By shiun
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apsp610_04_create_temp_table()
+   
+   WHENEVER ERROR CONTINUE 
+   
+   CREATE TEMP TABLE p610_04_pmdl_t(
+      keyno          LIKE type_t.num10,       #temp table之間的關聯key  
+      pmdldocno      LIKE pmdl_t.pmdldocno,   #採購單號  
+      pmdl004        LIKE pmdl_t.pmdl004,     #供應商  
+      pmdl009        LIKE pmdl_t.pmdl009,     #付款條件  
+      pmdl010        LIKE pmdl_t.pmdl010,     #交易條件  
+      pmdl011        LIKE pmdl_t.pmdl011,     #稅別  
+      pmdl012        LIKE pmdl_t.pmdl012,     #稅率  
+      pmdl013        LIKE pmdl_t.pmdl013,     #含稅否  
+      pmdl015        LIKE pmdl_t.pmdl015,     #幣別  
+      pmdl016        LIKE pmdl_t.pmdl016,     #匯率  
+      pmdl017        LIKE pmdl_t.pmdl017,     #取價方式  
+      result         LIKE type_t.chr1000      #執行結果 
+   ) 
+   
+   CREATE TEMP TABLE p610_04_pmdn_t(
+      keyno          LIKE type_t.num10,       #temp table之間的關聯key 
+      pmdndocno      LIKE pmdn_t.pmdndocno,   #採購單號  
+      pmdnseq        LIKE pmdn_t.pmdnseq,     #項次   
+      pmdn001        LIKE pmdn_t.pmdn001,     #採購料號  
+      pmdn002        LIKE pmdn_t.pmdn002,     #採購產品特徵  
+      pmdn021        LIKE pmdn_t.pmdn021,     #保稅    #160512-00016#5 20160601 add 
+      pmdn006        LIKE pmdn_t.pmdn006,     #採購單位  
+      pmdn007        LIKE pmdn_t.pmdn007,     #採購數量  
+      pmdn008        LIKE pmdn_t.pmdn008,     #參考單位 
+      pmdn009        LIKE pmdn_t.pmdn009,     #參考數量 
+      pmdn010        LIKE pmdn_t.pmdn010,     #計價單位  
+      pmdn011        LIKE pmdn_t.pmdn011,     #計價數量  
+      pmdn012        LIKE pmdn_t.pmdn012,     #交貨日期  
+      pmdn013        LIKE pmdn_t.pmdn013,     #到廠日期  
+      pmdn014        LIKE pmdn_t.pmdn014,     #到庫日期 
+      pmdn015        LIKE pmdn_t.pmdn015,     #單價  
+      pmdn050        LIKE pmdn_t.pmdn050,     #備註 
+      pmdn053        LIKE pmdn_t.pmdn053      #庫存管理特徵   #160601-00032#3 20160613 add 
+   ) 
+   
+   CREATE TEMP TABLE p610_04_pmdp_t(
+      keyno          LIKE type_t.num10,       #temp table之間的關聯key 
+      pmdpdocno      LIKE pmdp_t.pmdpdocno,   #採購單號  
+      pmdpseq        LIKE pmdp_t.pmdpseq,     #項次  
+      pmdpseq1       LIKE pmdp_t.pmdpseq1,    #項序  
+      pmdp001        LIKE pmdp_t.pmdp001,     #料號  
+      pspc004        LIKE pspc_t.pspc004,     #來源單號  
+      pmdp004        LIKE pmdp_t.pmdp004,     #來源項次  
+      pmdp007        LIKE pmdp_t.pmdp007,     #請購料號  
+      pmdp008        LIKE pmdp_t.pmdp008,     #請購產品特徵  
+      pmdp021        LIKE pmdp_t.pmdp021,     #沖銷順序  
+      pmdp022        LIKE pmdp_t.pmdp022,     #需求單位  
+      pmdp023        LIKE pmdp_t.pmdp023,     #需求數量  
+      pmdp024        LIKE pmdp_t.pmdp024      #折合採購量  
+   ) 
+   
+   CREATE TEMP TABLE p610_04_pmdo_t(
+      keyno          LIKE type_t.num10,       #temp table之間的關聯key 
+      pmdodocno      LIKE pmdo_t.pmdodocno,
+      pmdoseq        LIKE pmdo_t.pmdoseq,
+      pmdoseq1       LIKE pmdo_t.pmdoseq1,
+      pmdo001        LIKE pmdo_t.pmdo001,
+      pmdo002        LIKE pmdo_t.pmdo002,
+      pmdo004        LIKE pmdo_t.pmdo004,
+      pmdo005        LIKE pmdo_t.pmdo005,
+      pmdoseq2       LIKE pmdo_t.pmdoseq2,   
+      pmdo006        LIKE pmdo_t.pmdo006,    
+      pmdo011        LIKE pmdo_t.pmdo011,
+      pmdo012        LIKE pmdo_t.pmdo012,
+      pmdo013        LIKE pmdo_t.pmdo013
+   )
+END FUNCTION
+
+################################################################################
+# Descriptions...: 刪除temp table
+# Memo...........:
+# Usage..........: CALL apsp610_04_drop_temp_table()
+# Date & Author..: 2016/01/22 By shiun
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apsp610_04_drop_temp_table()
+   
+   WHENEVER ERROR CONTINUE 
+   
+   DROP TABLE p610_04_pmdl_t;
+   DROP TABLE p610_04_pmdn_t;
+   DROP TABLE p610_04_pmdp_t;
+   DROP TABLE p610_04_pmdo_t;
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL apsp610_04_b_fill_01(p_wc)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2016/01/22 By shiun
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apsp610_04_b_fill_01(p_wc)
+   DEFINE p_wc     STRING
+   DEFINE l_sql    STRING
+   #DEFINE l_cnt    LIKE type_t.num5   #170104-00066#1 17/01/05 mark by rainy
+   DEFINE l_cnt    LIKE type_t.num10   #170104-00066#1 17/01/05 add by rainy
+   DEFINE l_wc     STRING 
+   
+   WHENEVER ERROR CONTINUE 
+
+   CALL g_pmdl_d.clear()
+
+   LET l_sql = "SELECT keyno,result,pmdldocno,pmdl004,'',pmdl009,pmdl010,pmdl011, ",
+               "       pmdl012,pmdl013,pmdl015,pmdl016,pmdl017 ",
+               "  FROM p610_04_pmdl_t ",
+               " ORDER BY pmdldocno "
+   PREPARE apsp610_04_get_pmdl_prep FROM l_sql
+   DECLARE apsp610_04_get_pmdl_curs CURSOR FOR apsp610_04_get_pmdl_prep
+
+   LET l_cnt = 1
+   FOREACH apsp610_04_get_pmdl_curs INTO g_pmdl_d[l_cnt].*
+      IF STATUS THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = STATUS
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      CALL apsp610_04_get_pmaal004(g_pmdl_d[l_cnt].pmdl004_04_01)
+           RETURNING g_pmdl_d[l_cnt].pmaal004_04_01
+
+      LET l_cnt = l_cnt + 1
+   END FOREACH 
+   
+   CALL g_pmdl_d.deleteElement(l_cnt)
+   LET l_cnt = l_cnt - 1
+
+   IF l_cnt > 0 THEN
+      LET l_wc = "keyno = '",g_pmdl_d[1].keyno_04_01,"' "
+      CALL apsp610_04_b_fill_02(l_wc)
+      CALL apsp610_04_b_fill_03(l_wc)
+      CALL apsp610_04_b_fill_04(l_wc)
+   END IF
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL apsp610_04_b_fill_02(p_wc)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2016/01/22 By shiun
+# Modify.........: 160512-00016#5  2016/06/01 by ming 增加保稅欄位
+################################################################################
+PUBLIC FUNCTION apsp610_04_b_fill_02(p_wc)
+   DEFINE p_wc      STRING
+   DEFINE l_sql     STRING
+   #DEFINE l_cnt    LIKE type_t.num5   #170104-00066#1 17/01/05 mark by rainy
+   DEFINE l_cnt    LIKE type_t.num10   #170104-00066#1 17/01/05 add by rainy
+   DEFINE l_success LIKE type_t.num5  
+   
+   WHENEVER ERROR CONTINUE 
+
+   CALL g_pmdn_d.clear()
+
+   #160601-00032#3 20160613 modify by ming -----(S) 
+   ##160512-00016#5 20160601 modify by ming -----(S) 
+   ##LET l_sql = "SELECT pmdnseq,pmdn001,'','',pmdn002,'',pmdn006,'',pmdn007,",
+   ##            "       pmdn008,'',pmdn009,pmdn010,'',pmdn011,pmdn012,pmdn013,pmdn014,",
+   ##            "       pmdn015,pmdn050 ",
+   ##            "  FROM p610_04_pmdn_t ",
+   ##            " WHERE ",p_wc,
+   ##            " ORDER BY pmdnseq "
+   #LET l_sql = "SELECT pmdnseq,pmdn001,'','',pmdn002,'',pmdn021,pmdn006,'',pmdn007,",
+   #            "       pmdn008,'',pmdn009,pmdn010,'',pmdn011,pmdn012,pmdn013,pmdn014,",
+   #            "       pmdn015,pmdn050 ",
+   #            "  FROM p610_04_pmdn_t ",
+   #            " WHERE ",p_wc,
+   #            " ORDER BY pmdnseq "           
+   ##160512-00016#5 20160601 modify by ming -----(E) 
+   LET l_sql = "SELECT pmdnseq,pmdn001,'','',pmdn002,'',pmdn021,pmdn006,'',pmdn007,",
+               "       pmdn008,'',pmdn009,pmdn010,'',pmdn011,pmdn012,pmdn013,pmdn014,",
+               "       pmdn015,pmdn050,pmdn053 ",
+               "  FROM p610_04_pmdn_t ",
+               " WHERE ",p_wc,
+               " ORDER BY pmdnseq "     
+   #160601-00032#3 20160613 modify by ming -----(E) 
+   PREPARE apsp610_04_get_pmdn_prep FROM l_sql
+   DECLARE apsp610_04_get_pmdn_curs CURSOR FOR apsp610_04_get_pmdn_prep
+
+   LET l_cnt = 1
+   FOREACH apsp610_04_get_pmdn_curs INTO g_pmdn_d[l_cnt].*
+      IF STATUS THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = STATUS
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      SELECT imaal003,imaal004 INTO g_pmdn_d[l_cnt].imaal003_04_02,
+                                    g_pmdn_d[l_cnt].imaal004_04_02
+        FROM imaal_t
+       WHERE imaalent = g_enterprise
+         AND imaal001 = g_pmdn_d[l_cnt].pmdn001_04_02
+         AND imaal002 = g_dlang 
+         
+      #取得產品特徵說明 
+      CALL s_feature_description(g_pmdn_d[l_cnt].pmdn001_04_02,g_pmdn_d[l_cnt].pmdn002_04_02)
+           RETURNING l_success,g_pmdn_d[l_cnt].pmdn002_04_02_desc 
+           
+      CALL s_desc_get_unit_desc(g_pmdn_d[l_cnt].pmdn006_04_02)
+           RETURNING g_pmdn_d[l_cnt].pmdn006_04_02_desc
+
+      CALL s_desc_get_unit_desc(g_pmdn_d[l_cnt].pmdn008_04_02)
+           RETURNING g_pmdn_d[l_cnt].pmdn008_04_02_desc
+
+      CALL s_desc_get_unit_desc(g_pmdn_d[l_cnt].pmdn010_04_02)
+           RETURNING g_pmdn_d[l_cnt].pmdn010_04_02_desc
+
+      LET l_cnt = l_cnt + 1 
+   END FOREACH
+
+   CALL g_pmdn_d.deleteElement(l_cnt)
+   LET l_cnt = l_cnt - 1
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL apsp610_04_b_fill_03(p_wc)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2016/01/22 By shiun
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apsp610_04_b_fill_03(p_wc)
+   DEFINE p_wc      STRING
+   DEFINE l_sql     STRING
+   #DEFINE l_cnt    LIKE type_t.num5   #170104-00066#1 17/01/05 mark by rainy
+   DEFINE l_cnt    LIKE type_t.num10   #170104-00066#1 17/01/05 add by rainy
+   DEFINE l_success LIKE type_t.num5  
+   
+   WHENEVER ERROR CONTINUE 
+
+   CALL g_pmdp_d.clear()
+
+   LET l_sql = "SELECT pmdpseq,pmdpseq1,pmdp001,pspc004,pmdp004,pmdp007,'', ",
+               "       pmdp008,pmdp021,pmdp022,pmdp023,pmdp024 ",
+               "  FROM p610_04_pmdp_t ",
+               " WHERE ",p_wc,
+               " ORDER BY pmdpseq,pmdpseq1 "
+   PREPARE apsp610_04_get_pmdp_prep FROM l_sql
+   DECLARE apsp610_04_get_pmdp_curs CURSOR FOR apsp610_04_get_pmdp_prep
+
+   LET l_cnt = 1
+   FOREACH apsp610_04_get_pmdp_curs INTO g_pmdp_d[l_cnt].*
+      IF STATUS THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = STATUS
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF 
+      
+      #取得產品特徵說明 
+      CALL s_feature_description(g_pmdp_d[l_cnt].pmdp007_04_03,g_pmdp_d[l_cnt].pmdp008_04_03)
+           RETURNING l_success,g_pmdp_d[l_cnt].pmdp008_04_03_desc
+
+      LET l_cnt = l_cnt + 1
+   END FOREACH
+
+   CALL g_pmdp_d.deleteElement(l_cnt)
+   LET l_cnt = l_cnt - 1
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL apsp610_04_b_fill_04(p_wc)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2016/01/22 By shiun
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apsp610_04_b_fill_04(p_wc)
+   DEFINE p_wc      STRING
+   DEFINE l_sql     STRING
+   #DEFINE l_cnt    LIKE type_t.num5   #170104-00066#1 17/01/05 mark by rainy
+   DEFINE l_cnt    LIKE type_t.num10   #170104-00066#1 17/01/05 add by rainy
+   DEFINE l_success LIKE type_t.num5  
+   
+   WHENEVER ERROR CONTINUE 
+
+   CALL g_pmdo_d.clear()
+
+   LET l_sql = "SELECT pmdoseq,pmdoseq1,pmdo001,pmdo002,'',pmdo004,pmdo005, ",
+               "       pmdoseq2,pmdo006,pmdo011,pmdo012,pmdo013 ",
+               "  FROM p610_04_pmdo_t ",
+               " WHERE ",p_wc,
+               " ORDER BY pmdoseq,pmdoseq1,pmdoseq2"
+   PREPARE apsp610_04_get_pmdo_prep FROM l_sql
+   DECLARE apsp610_04_get_pmdo_curs CURSOR FOR apsp610_04_get_pmdo_prep
+
+   LET l_cnt = 1
+   FOREACH apsp610_04_get_pmdo_curs INTO g_pmdo_d[l_cnt].*
+      IF STATUS THEN
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = STATUS
+         LET g_errparam.extend = 'foreach:'
+         LET g_errparam.popup = TRUE
+         CALL cl_err()
+
+         EXIT FOREACH
+      END IF
+
+      #取得產品特徵說明 
+      CALL s_feature_description(g_pmdo_d[l_cnt].pmdo001_04_04,g_pmdo_d[l_cnt].pmdo002_04_04)
+           RETURNING l_success,g_pmdo_d[l_cnt].pmdo002_04_04_desc
+
+      LET l_cnt = l_cnt + 1
+   END FOREACH
+
+   CALL g_pmdo_d.deleteElement(l_cnt)
+   LET l_cnt = l_cnt - 1
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL apsp610_04_get_pmaal004(p_pmaal001)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 2016/01/22 By shiun
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apsp610_04_get_pmaal004(p_pmaal001)
+   DEFINE p_pmaal001     LIKE pmaal_t.pmaal001
+   DEFINE r_pmaal004     LIKE pmaal_t.pmaal004 
+   
+   WHENEVER ERROR CONTINUE 
+
+   LET r_pmaal004 = ''
+   SELECT pmaal004 INTO r_pmaal004
+     FROM pmaal_t
+    WHERE pmaalent = g_enterprise
+      AND pmaal001 = p_pmaal001
+      AND pmaal002 = g_dlang
+
+   RETURN r_pmaal004
+END FUNCTION
+
+################################################################################
+# Descriptions...: 執行apmt500
+# Memo...........:
+# Usage..........: CALL apsp610_04_open_apmt500()
+# Date & Author..: 2016/01/22 By shiun
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apsp610_04_open_apmt500()
+   DEFINE la_param  RECORD
+                       prog   STRING,
+                       param  DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING 
+   
+   WHENEVER ERROR CONTINUE 
+
+   DISPLAY g_pmdl_d[g_d_idx_p61004_01].pmdldocno_04_01     
+
+   IF NOT cl_null(g_pmdl_d[g_d_idx_p61004_01].pmdldocno_04_01) THEN 
+      LET la_param.prog = 'apmt500'
+      LET la_param.param[1] = g_pmdl_d[g_d_idx_p61004_01].pmdldocno_04_01 
+      LET ls_js = util.JSON.stringify( la_param )
+
+      CALL cl_cmdrun(ls_js)
+
+   END IF
+END FUNCTION
+
+PUBLIC FUNCTION apsp610_04_init()
+   
+   WHENEVER ERROR CONTINUE 
+   
+   #如果不使用產品特徵的話 就設定隱藏 
+   IF cl_get_para(g_enterprise,g_site,"S-BAS-0036") = 'N' THEN
+      CALL cl_set_comp_visible("pmdn002_04_02,pmdn002_04_02_desc",FALSE)
+      CALL cl_set_comp_visible("pmdp008_04_03,pmdp008_04_03_desc",FALSE)
+      CALL cl_set_comp_visible("pmdo002_04_04,pmdo002_04_04_desc",FALSE) 
+   END IF 
+   
+   #取得據點參數，若不使用參考單位時，則參考單位、數量需隱藏，不可維護 
+   IF cl_get_para(g_enterprise,g_site,'S-BAS-0028') = 'N' THEN 
+      CALL cl_set_comp_visible('pmdn008_04_02,pmdn008_04_02_desc,pmdn009_04_02',FALSE) 
+   END IF 
+   
+   #取得據點參數，若不使用計價單位時，則計價單位、數量需隱藏，不可維護 
+   IF cl_get_para(g_enterprise,g_site,'S-BAS-0019') = 'N' THEN 
+      CALL cl_set_comp_visible('pmdn010_04_02,pmdn010_04_02_desc,pmdn011_04_02',FALSE) 
+   END IF  
+   
+   CALL g_pmdl_d.clear()    
+   CALL g_pmdn_d.clear()    
+   CALL g_pmdp_d.clear()    
+   CALL g_pmdo_d.clear() 
+END FUNCTION
+
+################################################################################
+# Descriptions...: 組出可放入IN中的採購單號
+# Memo...........:
+# Usage..........: CALL apsp610_04_output_apmt500()
+#                  RETURNING r_where
+# Return code....: r_where：組好的單號
+# Date & Author..: 2016/01/22 By shiun
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apsp610_04_output_apmt500()
+   #DEFINE l_i    LIKE type_t.num5   #170104-00066#1 17/01/05 mark by rainy
+   DEFINE l_i    LIKE type_t.num10   #170104-00066#1 17/01/05 add by rainy   
+   DEFINE r_where     STRING 
+   
+   WHENEVER ERROR CONTINUE 
+
+   LET r_where = ''
+   FOR l_i = 1 TO g_pmdl_d.getLength() 
+      IF cl_null(g_pmdl_d[l_i].pmdldocno_04_01) THEN 
+         CONTINUE FOR 
+      END IF 
+
+      IF cl_null(r_where) THEN
+         LET r_where = " '",g_pmdl_d[l_i].pmdldocno_04_01,"' "
+      ELSE
+         LET r_where = r_where CLIPPED ,",'",g_pmdl_d[l_i].pmdldocno_04_01,"' "
+      END IF 
+   END FOR
+
+   RETURN r_where
+END FUNCTION
+
+ 
+{</section>}
+ 

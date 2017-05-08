@@ -1,0 +1,188 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="axrt360" module="axr" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="02114" crtdt="2017-02-03 15:33:09" modid="02114" moddt="2017-02-13 10:42:25" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="收款條件變更申請單作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="xrcgcomp,xrcgcomp_desc(chr80),xrcgld,xrcgld_desc(chr80),xrcgsite,xrcgsite_desc(chr80),xrcgdocno,xrcgdocdt,xrcg001,xrcg001_desc(chr80),xrcg010,xrcg010_desc(chr80),xrcgstus"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="xrcgseq,xrcg002,xrca001(chr10),xrcg003,xrcg004,xrcg004_desc(chr500),xrcg005,xrcg005_desc(chr500),xrcg006,xrcg007,xrcg008,xrcg009"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="xrcgseq,xrcgownid,xrcgownid_desc(chr500),xrcgowndp,xrcgowndp_desc(chr500),xrcgcrtid,xrcgcrtid_desc(chr500),xrcgcrtdp,xrcgcrtdp_desc(chr500),xrcgcrtdt,xrcgmodid,xrcgmodid_desc(chr500),xrcgmoddt,xrcgcnfid,xrcgcnfid_desc(chr500),xrcgcnfdt,xrcgpstid,xrcgpstid_desc(chr500),xrcgpstdt"/>
+      <var id="bs_field" value="xrcgld,xrcgdocno" pk="xrcgld,xrcgdocno" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="axr" filename="axrt360" method="dialog">
+    <section id="input">
+      <input id="head" field="xrcgcomp,xrcgld,xrcgsite,xrcgdocno,xrcgdocdt,xrcg001,xrcg010,xrcgstus"/>
+      <input id="body" page="1" field="xrcgseq,xrcg002,xrca001,xrcg003,xrcg004,xrcg005,xrcg006,xrcg007,xrcg008,xrcg009" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="xrcgcomp,xrcgld,xrcgsite,xrcgdocno,xrcgdocdt,xrcg001,xrcg010,xrcgstus"/>
+      <construct id="body" page="1" field="xrcgseq,xrcg002,xrca001,xrcg003,xrcg004,xrcg005,xrcg006,xrcg007,xrcg008,xrcg009"/>
+      <construct id="body" page="2" field="xrcgownid,xrcgowndp,xrcgcrtid,xrcgcrtdp,xrcgcrtdt,xrcgmodid,xrcgmoddt,xrcgcnfid,xrcgcnfdt,xrcgpstid,xrcgpstdt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="xrcgld,xrcgdocno"/>
+      <set id="head" type="no_entry" field="xrcgld,xrcgdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="xrcgcomp">
+        <after>
+          <check chkid="v_ooef001_1" id="isExist"/>
+          <reference field="xrcgcomp_desc" ref_field="xrcg_t.xrcgcomp" map_field="xrcgcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="i"/>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="xrcgcomp_desc"/>
+      <column id="xrcgld">
+        <after>
+          <reference field="xrcgld_desc" ref_field="xrcg_t.xrcgld" map_field="xrcgld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="xrcgld_desc"/>
+      <column id="xrcgsite">
+        <after>
+          <reference field="xrcgsite_desc" ref_field="xrcg_t.xrcgsite" map_field="xrcgsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_14" state="i"/>
+        <controlp form="q_ooef001_14" state="c"/>
+      </column>
+      <column id="xrcgsite_desc"/>
+      <column id="xrcgdocno">
+        <controlp form="q_ooba002_3" state="i"/>
+        <controlp form="q_xrcgdocno" state="c"/>
+      </column>
+      <column id="xrcgdocdt"/>
+      <column id="xrcg001">
+        <after>
+          <reference field="xrcg001_desc" ref_field="xrcg_t.xrcg001" map_field="xrcg001" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_pmaa001_1" state="i"/>
+        <controlp form="q_pmaa001_1" state="c"/>
+      </column>
+      <column id="xrcg001_desc"/>
+      <column id="xrcg010">
+        <after>
+          <reference field="xrcg010_desc" ref_field="xrcg_t.xrcg010" map_field="xrcg010" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="i"/>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xrcg010_desc"/>
+      <column id="xrcgstus" scc="13">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="X" pic="invalid"/>
+        <stus id="Y" pic="confirmed"/>
+      </column>
+    </init>
+    <init id="body" page="1">
+      <column id="xrcgseq"/>
+      <column id="xrcg002">
+        <controlp form="q_xrccdocno" state="i"/>
+        <controlp form="q_xrccdocno" state="c"/>
+      </column>
+      <column id="xrca001"/>
+      <column id="xrcg003">
+        <controlp form="q_xrccseq" state="i"/>
+        <controlp form="q_xrccseq" state="c"/>
+      </column>
+      <column id="xrcg004">
+        <after>
+          <reference field="xrcg004_desc" ref_field="xrcg_t.xrcg004" map_field="xrcg004" ref_sql="SELECT ooibl004 FROM ooibl_t WHERE ooiblent=$varg_enterprise$var AND ooibl002=? AND ooibl003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="xrcg004_desc"/>
+      <column id="xrcg005">
+        <after>
+          <reference field="xrcg005_desc" ref_field="xrcg_t.xrcg005" map_field="xrcg005" ref_sql="SELECT ooibl004 FROM ooibl_t WHERE ooiblent=$varg_enterprise$var AND ooibl002=? AND ooibl003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooib001_1" state="i"/>
+        <controlp form="q_ooib001_1" state="c"/>
+      </column>
+      <column id="xrcg005_desc"/>
+      <column id="xrcg006"/>
+      <column id="xrcg007"/>
+      <column id="xrcg008"/>
+      <column id="xrcg009"/>
+    </init>
+    <init id="body" page="2">
+      <column id="xrcgownid">
+        <after>
+          <reference field="xrcgownid_desc" ref_field="xrcg_t.xrcgownid" map_field="xrcgownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xrcgownid_desc"/>
+      <column id="xrcgowndp">
+        <after>
+          <reference field="xrcgowndp_desc" ref_field="xrcg_t.xrcgowndp" map_field="xrcgowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xrcgowndp_desc"/>
+      <column id="xrcgcrtid">
+        <after>
+          <reference field="xrcgcrtid_desc" ref_field="xrcg_t.xrcgcrtid" map_field="xrcgcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xrcgcrtid_desc"/>
+      <column id="xrcgcrtdp">
+        <after>
+          <reference field="xrcgcrtdp_desc" ref_field="xrcg_t.xrcgcrtdp" map_field="xrcgcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="xrcgcrtdp_desc"/>
+      <column id="xrcgcrtdt"/>
+      <column id="xrcgmodid">
+        <after>
+          <reference field="xrcgmodid_desc" ref_field="xrcg_t.xrcgmodid" map_field="xrcgmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xrcgmodid_desc"/>
+      <column id="xrcgmoddt"/>
+      <column id="xrcgcnfid">
+        <after>
+          <reference field="xrcgcnfid_desc" ref_field="xrcg_t.xrcgcnfid" map_field="xrcgcnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xrcgcnfid_desc"/>
+      <column id="xrcgcnfdt"/>
+      <column id="xrcgpstid">
+        <after>
+          <reference field="xrcgpstid_desc" ref_field="xrcg_t.xrcgpstid" map_field="xrcgpstid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="xrcgpstid_desc"/>
+      <column id="xrcgpstdt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="xrcg_t" pk="xrcgld,xrcgdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT xrcgcomp,&apos;&apos;,xrcgld,&apos;&apos;,xrcgsite,&apos;&apos;,xrcgdocno,xrcgdocdt,xrcg001,&apos;&apos;,xrcg010,&apos;&apos;,xrcgstus FROM xrcg_t WHERE xrcgent= ? AND xrcgld=? AND xrcgdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT xrcgcomp,&apos;&apos;,xrcgld,&apos;&apos;,xrcgsite,&apos;&apos;,xrcgdocno,xrcgdocdt,xrcg001,&apos;&apos;,xrcg010,&apos;&apos;,xrcgstus FROM xrcg_t" order="xrcgld,xrcgdocno"/>
+    </head>
+    <body id="xrcg_t" page="1,2" linked="" pk="xrcgseq" fk="xrcgld,xrcgdocno">
+      <sql id="forupd_sql_detail" query="SELECT xrcgseq,xrcg002,&apos;&apos;,xrcg003,xrcg004,&apos;&apos;,xrcg005,&apos;&apos;,xrcg006,xrcg007,xrcg008,xrcg009,&apos;&apos;,xrcgownid,&apos;&apos;,xrcgowndp,&apos;&apos;,xrcgcrtid,&apos;&apos;,xrcgcrtdp,&apos;&apos;,xrcgcrtdt,xrcgmodid,&apos;&apos;,xrcgmoddt,xrcgcnfid,&apos;&apos;,xrcgcnfdt,xrcgpstid,&apos;&apos;,xrcgpstdt FROM xrcg_t WHERE xrcgent=? AND xrcgld=? AND xrcgdocno=? AND xrcgseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT xrcgseq,xrcg002,&apos;&apos;,xrcg003,xrcg004,&apos;&apos;,xrcg005,&apos;&apos;,xrcg006,xrcg007,xrcg008,xrcg009,&apos;&apos;,xrcgownid,&apos;&apos;,xrcgowndp,&apos;&apos;,xrcgcrtid,&apos;&apos;,xrcgcrtdp,&apos;&apos;,xrcgcrtdt,xrcgmodid,&apos;&apos;,xrcgmoddt,xrcgcnfid,&apos;&apos;,xrcgcnfdt,xrcgpstid,&apos;&apos;,xrcgpstdt FROM xrcg_t WHERE xrcgent= ? AND xrcgld=? AND xrcgdocno=?"/>
+    </body>
+  </dataset>
+</assembly>
+

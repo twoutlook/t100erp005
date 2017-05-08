@@ -1,0 +1,116 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="anmi960" module="anm" jobmode="N" type="i13" industry="std" fix_arg="0" crtid="04152" crtdt="2014-08-11 19:43:55" modid="04152" moddt="2014-09-03 09:27:39" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="資金計劃審批權限設定">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="nmbh001,nmbh002,nmbh003,nmbh004,nmbh004_desc(chr80),nmbh005,nmbh005_desc(chr80),nmbh006,nmbh006_desc(chr80),nmbh007,nmbh007_desc(chr80),nmbh008,nmbh008_desc(chr80),nmbhstus,nmbhownid,nmbhownid_desc(chr80),nmbhowndp,nmbhowndp_desc(chr80),nmbhcrtid,nmbhcrtid_desc(chr80),nmbhcrtdp,nmbhcrtdp_desc(chr80),nmbhcrtdt,nmbhmodid,nmbhmodid_desc(chr80),nmbhmoddt"/>
+      <var id="bs_field" value="ooej001(ooej_t.ooej001),ooej002(ooej_t.ooej002),ooej003(ooej_t.ooej003),ooej004(ooej_t.ooej004),ooej005(ooej_t.ooej005),nmbh006_desc(chr80),nmbh007_desc(chr80),nmbh008_desc(chr80),nmbh001,nmbh002,nmbh003,nmbh004,nmbh005" pk="nmbh001,nmbh002,nmbh003,nmbh004,nmbh005" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="anm" filename="anmi960" method="dialog">
+    <section id="input">
+      <input id="head" field="nmbh001,nmbh002,nmbh003,nmbh004,nmbh005,nmbh006,nmbh007,nmbh008,nmbhstus"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="nmbh001,nmbh002,nmbh003,nmbh004,nmbh004_desc,nmbh005,nmbh005_desc,nmbh006,nmbh006_desc,nmbh007,nmbh007_desc,nmbh008,nmbh008_desc,nmbhstus,nmbhownid,nmbhowndp,nmbhcrtid,nmbhcrtdp,nmbhcrtdt,nmbhmodid,nmbhmoddt"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="nmbh001,nmbh002,nmbh003,nmbh004,nmbh005"/>
+      <set id="head" type="no_entry" field="nmbh001,nmbh002,nmbh003,nmbh004,nmbh005"/>
+    </init>
+    <init id="head">
+      <column id="nmbh001" type="S" default="7"/>
+      <column id="nmbh002"/>
+      <column id="nmbh003"/>
+      <column id="nmbh004">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+        </after>
+      </column>
+      <column id="nmbh004_desc"/>
+      <column id="nmbh005">
+        <after/>
+        <controlp form="q_nmbd002_01" state="c"/>
+      </column>
+      <column id="nmbh005_desc"/>
+      <column id="nmbh006">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="nmbh006_desc"/>
+      <column id="nmbh007">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="nmbh007_desc"/>
+      <column id="nmbh008">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+        </after>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="nmbh008_desc"/>
+      <column id="nmbhstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="nmbhownid">
+        <after>
+          <reference field="nmbhownid_desc" ref_field="nmbh_t.nmbhownid" map_field="nmbhownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbhownid_desc"/>
+      <column id="nmbhowndp">
+        <after>
+          <reference field="nmbhowndp_desc" ref_field="nmbh_t.nmbhowndp" map_field="nmbhowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmbhowndp_desc"/>
+      <column id="nmbhcrtid">
+        <after>
+          <reference field="nmbhcrtid_desc" ref_field="nmbh_t.nmbhcrtid" map_field="nmbhcrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbhcrtid_desc"/>
+      <column id="nmbhcrtdp">
+        <after>
+          <reference field="nmbhcrtdp_desc" ref_field="nmbh_t.nmbhcrtdp" map_field="nmbhcrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="nmbhcrtdp_desc"/>
+      <column id="nmbhcrtdt"/>
+      <column id="nmbhmodid">
+        <after>
+          <reference field="nmbhmodid_desc" ref_field="nmbh_t.nmbhmodid" map_field="nmbhmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="nmbhmodid_desc"/>
+      <column id="nmbhmoddt"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="nmbh_t" lid="nmbh003" type="nmbh004" type2="" type3="" type4="" type5="" type6="" desc="" pk="nmbh001,nmbh002,nmbh003,nmbh004,nmbh005">
+      <sql id="forupd_sql" type="sql" query="SELECT nmbh001,nmbh002,nmbh003,nmbh004,&apos;&apos;,nmbh005,&apos;&apos;,nmbh006,&apos;&apos;,nmbh007,&apos;&apos;,nmbh008,&apos;&apos;,nmbhstus,nmbhownid,&apos;&apos;,nmbhowndp,&apos;&apos;,nmbhcrtid,&apos;&apos;,nmbhcrtdp,&apos;&apos;,nmbhcrtdt,nmbhmodid,&apos;&apos;,nmbhmoddt FROM nmbh_t WHERE nmbhent= ? AND nmbh001=? AND nmbh002=? AND nmbh003=? AND nmbh004=? AND nmbh005=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT nmbh001,nmbh002,nmbh003,nmbh004,nmbh005 FROM nmbh_t" order="nmbh001,nmbh002,nmbh003,nmbh004,nmbh005"/>
+    </head>
+  </dataset>
+</assembly>
+

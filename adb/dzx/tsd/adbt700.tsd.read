@@ -1,0 +1,492 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="adbt700" std_prog="adbt700" erpver="1.0" ver="6" module="ADB" type="M" booking="N" designer_ver="1.0" class="t" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="dbea_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+    <tbl name="dbeb_t" main="N" head="N" pk="" fk_detail="" parent="dbea_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail2" src="s" insert="N" delete="N" append="N" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="dbec_t" main="N" head="N" pk="" fk_detail="" parent="dbeb_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail3" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+    <tbl name="dbed_t" main="N" head="N" pk="" fk_detail="" parent="dbea_t" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="3" src="s" status="">
+    <![CDATA[程式說明及目的： 提供出貨配送排車計劃設定
+標準作業功能取消：無
+狀態功能：確認/取消確認/作廢
+作業類型：交易單據 維護作業
+輸入模式：雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)：dbea_t(配送預排單頭檔)
+作業資料來源(Detail)：  dbed_t(配送預排車次發貨組織明細檔)
+                                           dbeb_t(配送預排路線單身檔)
+                                           dbec_t(配送預排車次單身檔)
+複製：只複製單頭與配送發貨組織範圍
+
+TopMenu：
+1.整單操作：產生配送資訊
+                       重新產生配送資訊時，需要重新計算預排容積和重量
+資料處理：
+1.單身配送發貨組織範圍，同一發貨組織，同一出貨日期不可存在多張排車計劃表
+2.新增完單頭資訊後，開啟子視窗"維護配送發貨組織" 供USER勾選要加入預排的發貨組織
+3.維護完加入預排的發貨組織後自動產生"配送資訊"單身資料，產生方式如下： (此段應拉出獨立FUNCTION，與ACTION重新產生配資訊時共用)
+  (1).配送資訊抓取來源：由出貨單+調撥單抓取欲配送資料，抓取"配送發貨組織"清單中的發貨組織出貨單及調撥單來產生
+  (2).資料抓取方式
+    (2-1).出貨單
+       -依庫存組織site+出貨日期抓取"已確認/已扣帳"出貨單
+       -出貨性質=1.一般訂單 2.換貨訂單 3.簽收訂單 (不包括調貨訂單)
+       -抓取符合資料寫入暫存檔
+         路線編號 = 依[T:出貨/簽收/銷退單單頭檔][C:送貨站點編號] xmdk205 取[T:站點基本資料檔][C:片區編號] dbad002
+                          再依[T:站點基本資料檔][C:片區編號]取[T:片區基本資料檔][C:預設路線編號] dbac002  
+         裝載點   = 依路線編號取[T:路線基本資料檔][C:裝載點編號] dbab002
+         體積     = 依[T:出貨/簽收/銷退單單身明細檔][C:料件編號]取[T:料件主檔][C:體積]imaa025、[T:料件主檔][C:體積單位]imaa026,[T:料件據點進銷存檔][C:據點庫存單位] imaf053
+                          將[T:出貨/簽收/銷退單單身明細檔][C:數量] 依[T:出貨/簽收/銷退單單身明細檔][C:包裝單位] xmdl204 和[T:料件據點進銷存檔][C:據點庫存單位]
+                          換算出總共有多少庫存單位的出貨數量(A)
+         LET 體積=  A *[T:料件主檔][C:體積]* 體積單位與參數(車量承載容積單位E-CIR-0012)的換算率
+         重量     = 依[T:出貨/簽收/銷退單單身明細檔][C:料件編號]取[T:料件主檔][C:毛重]imaa016、[T:料件主檔][C:重量單位]imaa018,[T:料件主檔][C:據點庫存單位] imaf053
+                          將[T:出貨/簽收/銷退單單身明細檔][C:數量] 依[T:出貨/簽收/銷退單單身明細檔][C:包裝單位]和[T:料件據點進銷存檔][C:據點庫存單位] imaf053
+                          換算出總共有多少庫存單位的出貨數量(A)
+         LET 重量= A *[T:料件主檔][C:毛重]*重量單位與參數(車量承載重量單位E-CIR-0013)的換算率
+   (2-2) 抓取調撥單資料
+       -依撥出組織+調撥日期抓取撥出營運組織=單頭庫存組織 的"未確認" 調撥單
+       -抓取符合資料寫入暫存檔
+         路線編號 = 依[T:調撥單單頭檔][C:撥入營運據點] 取[T:聯絡地址檔]中[C:地址類型(oofb008)] = 3, 且[C:主要聯絡地址(oofb010)] = Y 的[C:收貨站點(oofb022)] 
+                             再取[T:站點基本資料檔][C:片區編號(dbad002)] 和[T:片區基本資料檔][C:預設路線編號(dbac002)]      (20141110調整)
+                             若未設定主要出貨地址，則顯示錯誤 (20141110調整)
+         裝載點   = 依路線編號取[T:路線基本資料檔][C:裝載點編號] dbab002
+         容積     = 依[T:調撥單單身明細檔][C:商品編號]取[T:料件主檔][C:體積]、[T:料件主檔][C:體積單位],[T:料件據點進銷存檔][C:據點庫存單位]
+                          將[T:調撥單單身明細檔][C:撥出數量]依[T:調撥單單身明細檔][C:庫存單位]和[T:料件據點進銷存檔][C:據點庫存單位]
+                          換算以庫存單位為準的撥出數量，換算出總共有多少庫存單位的撥出數量(A)
+         LET 容積= A *[T:料件主檔][C:體積]* 體積單位與參數(車量承載容積單位E-CIR-002)的換算率
+         重量     = 依[T:調撥單單身明細檔][C:商品編號]取[T:料件主檔][C:毛重]、[T:料件主檔][C:重量單位],[T:料件據點進銷存檔][C:據點庫存單位]
+                          將[T:調撥單單身明細檔][C:撥出數量]依[T:調撥單單身明細檔][C:庫存單位]和[T:料件據點進銷存檔][C:據點庫存單位]
+                          換算以庫存單位為準的撥出數量,換算出總共有多少庫存單位的撥出數量(A)
+         LET 重量= A *[T:料件主檔][C:毛重] *庫存單位與參數(車量承載重量單位E-CIR-0013)的換算率     
+    (2-3)依路線編號 加總容積,重量並依配送承載重量基準單位,配送承載容積基準單位參數換算後回寫[T:配送預排路線單身檔dbeb_t]
+        [T:配送預排路線單身檔][C:路線編號]
+                              [C:裝載點]
+                              [C:計劃承載容積]
+                              [C:預排承載容積]
+                              [C:承載容積單位]  = 參數E-CIR-0012的設定值
+                              [C:計劃承載重量]
+                              [C:預排承載重量]
+                              [C:承載重量單位]  = 參數E-CIR-0013的設定值
+      -若取不到則站點=空白,以空白的方式匯總
+4.配送資訊單身為Display Only 不可修改.
+5.輸入預排資訊每筆資料存檔後同時加總更新顯示路線編號對應的預排承載容積重量,預排承載重量
+
+[20150120 狀態變更彈窗詢問] 注意是否有被彙總訊息包覆]]>
+  </all>
+  <di_all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[輸入預排資訊存檔後同時加總更新顯示路線編號對應的預排承載容積重量,預排承載重量]]>
+  </di_all>
+  <field cite_std="N" name="b_dbea001" ver="1" src="s" column="dbea001" table="dbea_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_dbea002" ver="1" src="s" column="dbea002" table="dbea_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_dbea003" ver="1" src="s" column="dbea003" table="dbea_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_dbeadocdt" ver="1" src="s" column="dbeadocdt" table="dbea_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_dbeadocno" ver="1" src="s" column="dbeadocno" table="dbea_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_dbeasite" ver="1" src="s" column="dbeasite" table="dbea_t" attribute="" type="" req="N" i_zoom="q_ooed004" c_zoom="q_ooed004" chk_ref="v_ooed004" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbea_t.dbea001" ver="1" src="s" column="dbea001" table="dbea_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[出貨日期：dbea001
+預設值：g_today, 但如果同一個配送組織+g_today已存在送排車計劃單, 則給空值
+校驗：同一個配送組織+出貨日期只能存在一張配送排車計劃單(非作廢)]]>
+  </field>
+  <field cite_std="N" name="dbea_t.dbea002" ver="5" src="s" column="dbea002" table="dbea_t" attribute="" type="" req="N" i_zoom="q_ooag001" c_zoom="q_ooag001" chk_ref="v_ooag001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預排人員：dbea002
+預設值：g_user
+校驗：v_ooag001, arg1 = dbea002
+帶值：帶出該人員的所屬部門]]>
+  </field>
+  <field cite_std="N" name="dbea_t.dbea003" ver="1" src="s" column="dbea003" table="dbea_t" attribute="" type="" req="N" i_zoom="q_ooeg001_4" c_zoom="q_ooeg001_4" chk_ref="v_ooeg001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[申請部門：oojl004
+預設值：由申請人員預設帶出對應申請部門
+開窗：q_ooeg001_4, arg1 = g_today
+校驗：v_ooeg001, arg1 = dbea003 ,arg2 = g_today]]>
+  </field>
+  <field cite_std="N" name="dbea_t.dbeacnfdt" ver="1" src="s" column="dbeacnfdt" table="dbea_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbea_t.dbeacnfid" ver="1" src="s" column="dbeacnfid" table="dbea_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbea_t.dbeacrtdp" ver="1" src="s" column="dbeacrtdp" table="dbea_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbea_t.dbeacrtdt" ver="1" src="s" column="dbeacrtdt" table="dbea_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbea_t.dbeacrtid" ver="1" src="s" column="dbeacrtid" table="dbea_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbea_t.dbeadocdt" ver="1" src="s" column="dbeadocdt" table="dbea_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[預排日期：dbeadocdt
+預設值：g_today]]>
+  </field>
+  <field cite_std="N" name="dbea_t.dbeadocno" ver="1" src="s" column="dbeadocno" table="dbea_t" attribute="" type="" req="Y" i_zoom="q_ooba002_1" c_zoom="q_dbeadocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[單據編號：dbeadocno
+預設值：CALL s_arti200_get_def_doc_type(dbeasite,g_prog,'1')取預設單別
+計算或處理：1.當新增時才可輸入單別，修改時此欄位為NoEntry
+                        2.新增存檔時，CALL s_aooi200_gen_docno自動編申請單號
+開窗：編輯：q_ooba002_1, arg1 = ooef004 ,arg2 = g_prog
+            查詢：q_dbeadocno
+校驗：s_aooi200_chk_slip
+]]>
+  </field>
+  <field cite_std="N" name="dbea_t.dbeamoddt" ver="1" src="s" column="dbeamoddt" table="dbea_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbea_t.dbeamodid" ver="1" src="s" column="dbeamodid" table="dbea_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbea_t.dbeaowndp" ver="1" src="s" column="dbeaowndp" table="dbea_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbea_t.dbeaownid" ver="1" src="s" column="dbeaownid" table="dbea_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbea_t.dbeasite" ver="1" src="s" column="dbeasite" table="dbea_t" attribute="" type="" req="Y" i_zoom="q_ooef001_24" c_zoom="q_ooef001_24" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[配送組織：dbeasite
+預設值：用 s_aooi500_default 取預設值
+開窗處理：使用q_ooef001_24，CALL s_aooi500_q_where(g_prog,'dbeasite',g_dbea_m.dbeasite)
+校驗：s_aooi500_chk(g_prog,'dbeasite',g_dbea_m.dbeasite,g_dbea_m.dbeasite)
+計算及處理：離開此欄位時則不允許再更改
+]]>
+  </field>
+  <field cite_std="N" name="dbea_t.dbeastus" ver="1" src="s" column="dbeastus" table="dbea_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbea_t.dbeaunit" ver="1" src="s" column="dbeaunit" table="dbea_t" attribute="" type="" req="N" i_zoom="q_ooef001_24" c_zoom="q_ooef001_24" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[應用組織：dbeaunit
+預設值：＝dbeasite
+開窗處理：使用q_ooef001_24，CALL s_aooi500_q_where(g_prog,'dbeasite',g_dbea_m.dbeasite)
+校驗：s_aooi500_chk(g_prog,'dbeasite',g_dbea_m.dbeasite,g_dbea_m.dbeasite)]]>
+  </field>
+  <field cite_std="N" name="dbeb_t.dbeb001" ver="1" src="s" column="dbeb001" table="dbeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_dbab001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbeb_t.dbeb002" ver="1" src="s" column="dbeb002" table="dbeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_dbae001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbeb_t.dbeb003" ver="1" src="s" column="dbeb003" table="dbeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbeb_t.dbeb004" ver="1" src="s" column="dbeb004" table="dbeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbeb_t.dbeb005" ver="1" src="s" column="dbeb005" table="dbeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooca001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbeb_t.dbeb006" ver="1" src="s" column="dbeb006" table="dbeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbeb_t.dbeb007" ver="1" src="s" column="dbeb007" table="dbeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbeb_t.dbeb008" ver="1" src="s" column="dbeb008" table="dbeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooca001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbeb_t.dbebsite" ver="1" src="s" column="dbebsite" table="dbeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[營運據點：dbebsite
+預設值：等於dbeasite]]>
+  </field>
+  <field cite_std="N" name="dbeb_t.dbebunit" ver="1" src="s" column="dbebunit" table="dbeb_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="Edit" status="">
+    <![CDATA[應用組織：dbebunit
+預設值：等於dbeasite]]>
+  </field>
+  <field cite_std="N" name="dbec_t.dbec002" ver="1" src="s" column="dbec002" table="dbec_t" attribute="" type="" req="Y" i_zoom="" c_zoom="q_dbec002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[車次：dbec002
+預設值：於新增時自動編號(依年月日+流水號: YYYYMMDD999)
+]]>
+  </field>
+  <field cite_std="N" name="dbec_t.dbec003" ver="3" src="s" column="dbec003" table="dbec_t" attribute="" type="" req="Y" i_zoom="q_mrba001_8" c_zoom="q_mrba001_8" chk_ref="v_mrba001_9" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[車輛編號：dbec003
+開窗：1.q_mrba001_8
+            2.g_qryparam.state = 'c'：arg1=g_site
+            3.g_qryparam.state = 'i'：arg1=g_dbea_m.dbeasite
+校驗：1.v_mrba001_9, arg1 = dbec003, arg2 = g_dbea_m.dbeasite
+            2.同一配送組織+出貨日期+路線,車輛編號不允許重複存在(不包括作廢資料)      
+            3.車輛的據點mrbasite=配送組織dbeasite
+帶值：1.依車輛編號抓取[T:資源主檔]顯示對應的車牌號碼/承載容積/承載容積單位/承載重量/承載重量單位顯示
+#20150303_修改
+iput段開窗 (q_mrba001_8)
+加上g_qryparam.where = '1 = 1 AND mrba100 = 1' 條件
+只顯示使用中的車輛
+]]>
+  </field>
+  <field cite_std="N" name="dbec_t.dbec004" ver="1" src="s" column="dbec004" table="dbec_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_mrba061" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbec_t.dbec005" ver="1" src="s" column="dbec005" table="dbec_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbec_t.dbec006" ver="1" src="s" column="dbec006" table="dbec_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbec_t.dbec007" ver="1" src="s" column="dbec007" table="dbec_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbec_t.dbec008" ver="1" src="s" column="dbec008" table="dbec_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbec_t.dbec009" ver="1" src="s" column="dbec009" table="dbec_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TimeEdit" status="">
+    <![CDATA[備貨時間：dbec009
+備貨時間<到達時間<裝車時間<發車時間<回程時間]]>
+  </field>
+  <field cite_std="N" name="dbec_t.dbec010" ver="1" src="s" column="dbec010" table="dbec_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TimeEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbec_t.dbec011" ver="1" src="s" column="dbec011" table="dbec_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TimeEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbec_t.dbec012" ver="1" src="s" column="dbec012" table="dbec_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TimeEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbec_t.dbec013" ver="1" src="s" column="dbec013" table="dbec_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TimeEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbec_t.dbec014" ver="1" src="s" column="dbec014" table="dbec_t" attribute="" type="" req="N" i_zoom="q_dbec002" c_zoom="q_dbec002" chk_ref="v_dbec002" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[合併車次：dbec014
+校驗：v_dbec002, arg1 = g_dbea_m.dbeadocno, arg2 = dbec014
+]]>
+  </field>
+  <field cite_std="N" name="dbec_t.dbec015" ver="1" src="s" column="dbec015" table="dbec_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="dbec_t.dbecsite" ver="1" src="s" column="dbecsite" table="dbec_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[營運據點：dbecsite
+預設值：等於dbeasite]]>
+  </field>
+  <field cite_std="N" name="dbec_t.dbecunit" ver="1" src="s" column="dbecunit" table="dbec_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[應用組織：dbeaunit
+預設值：等於dbeasite]]>
+  </field>
+  <field cite_std="N" name="dbed_t.dbed001" ver="1" src="s" column="dbed001" table="dbed_t" attribute="" type="" req="N" i_zoom="q_ooef001_24" c_zoom="q_ooef001_24" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[發貨組織：dbed001
+開窗：1.IF s_aooi500_set_point(檢查aooi500有無設定) THEN 
+                   q_ooef001_24, LET g_qryparam.where = s_aooi500_q_where(g_prog,'dbed001',g_dbea_m.dbeasite)
+               ELSE
+                   q_ooed004, arg1 = g_site, arg2 = 11
+               END IF
+校驗：1.IF s_aooi500_set_point(檢查aooi500有無設定) THEN 
+                   s_aooi500_chk(g_prog,'dbeasite',g_dbed_d[l_ac].dbed001,g_dbea_m.dbeasite)
+                ELSE
+                   只能輸入發貨組織=dbeasite，且不可修改
+                END IF
+            2.如配送資訊已存在資料，則不可修改或刪除發貨組織資訊
+            3.單身配送發貨組織範圍，同一發貨組織，同一出貨日期不可存在多張排車計劃表
+]]>
+  </field>
+  <field cite_std="N" name="dbed_t.dbedsite" ver="1" src="s" column="dbedsite" table="dbed_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[營運據點：dbedsite
+預設值：等於dbeasite]]>
+  </field>
+  <field cite_std="N" name="dbed_t.dbedunit" ver="1" src="s" column="dbedunit" table="dbed_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[應用組織：dbedunit
+預設值：等於dbeasite]]>
+  </field>
+  <prog_rel>
+    <pfield cite_std="N" ver="5" name="prog_aooi130" depend_field="dbea_t.dbea002" src="s" status="">
+      <program order="1" type="2" name="cl_user_contact(&quot;aooi130&quot;, &quot;ooag_t&quot;, &quot;ooag002&quot;, &quot;ooag001&quot;)"/>
+    </pfield>
+  </prog_rel>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_dbea002_desc" src="s" depend_field="b_dbea002" correspon_key="dbea002" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="b_dbea003_desc" src="s" depend_field="b_dbea003" correspon_key="dbea003" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_dbeasite_desc" src="s" depend_field="b_dbeasite" correspon_key="dbeasite" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="dbea002_desc" src="s" depend_field="dbea_t.dbea002" correspon_key="dbea002" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="dbea003_desc" src="s" depend_field="dbea_t.dbea003" correspon_key="dbea003" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="dbeacnfid_desc" src="s" depend_field="dbea_t.dbeacnfid" correspon_key="dbeacnfid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="dbeacrtdp_desc" src="s" depend_field="dbea_t.dbeacrtdp" correspon_key="dbeacrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="dbeacrtid_desc" src="s" depend_field="dbea_t.dbeacrtid" correspon_key="dbeacrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="dbeamodid_desc" src="s" depend_field="dbea_t.dbeamodid" correspon_key="dbeamodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="dbeaowndp_desc" src="s" depend_field="dbea_t.dbeaowndp" correspon_key="dbeaowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="dbeaownid_desc" src="s" depend_field="dbea_t.dbeaownid" correspon_key="dbeaownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="dbeasite_desc" src="s" depend_field="dbea_t.dbeasite" correspon_key="dbeasite" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="dbeb001_desc" src="s" depend_field="dbeb_t.dbeb001" correspon_key="dbeb001" ref_table="dbabl_t" ref_fk="dbabl001" ref_dlang="dbabl002" ref_rtn="dbabl003" status=""/>
+    <rfield cite_std="N" ver="1" name="dbeb002_desc" src="s" depend_field="dbeb_t.dbeb002" correspon_key="dbeb002" ref_table="dbael_t" ref_fk="dbael001" ref_dlang="dbael002" ref_rtn="dbael003" status=""/>
+    <rfield cite_std="N" ver="1" name="dbeb005_desc" src="s" depend_field="dbeb_t.dbeb005" correspon_key="dbeb005" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="dbeb008_desc" src="s" depend_field="dbeb_t.dbeb008" correspon_key="dbeb008" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="dbec006_desc" src="s" depend_field="dbec_t.dbec006" correspon_key="dbec006" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="dbec008_desc" src="s" depend_field="dbec_t.dbec008" correspon_key="dbec008" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="dbed001_desc" src="s" depend_field="dbed_t.dbed001" correspon_key="dbed001" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_dbea001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_dbea002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_dbea003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_dbeadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_dbeadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_dbeasite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbea_t.dbea001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="5" name="dbea_t.dbea002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbea_t.dbea003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbea_t.dbeacnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbea_t.dbeacnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbea_t.dbeacrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbea_t.dbeacrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbea_t.dbeacrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbea_t.dbeadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbea_t.dbeadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbea_t.dbeamoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbea_t.dbeamodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbea_t.dbeaowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbea_t.dbeaownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbea_t.dbeasite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbea_t.dbeastus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbea_t.dbeaunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbeb_t.dbeb001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbeb_t.dbeb002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbeb_t.dbeb003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbeb_t.dbeb004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbeb_t.dbeb005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbeb_t.dbeb006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbeb_t.dbeb007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbeb_t.dbeb008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbeb_t.dbebsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbeb_t.dbebunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbec_t.dbec002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="3" name="dbec_t.dbec003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbec_t.dbec004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbec_t.dbec005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbec_t.dbec006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbec_t.dbec007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbec_t.dbec008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbec_t.dbec009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbec_t.dbec010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbec_t.dbec011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbec_t.dbec012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbec_t.dbec013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbec_t.dbec014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbec_t.dbec015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbec_t.dbecsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbec_t.dbecunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbed_t.dbed001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbed_t.dbedsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="dbed_t.dbedunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="auto_ins_dbeb" ver="1" src="s" type="all,mi" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_dbeasite" text="配送組織" lstr=""/>
+    <sfield name="lbl_ooefl003_3" text="組織說明" lstr=""/>
+    <sfield name="lbl_dbeadocdt" text="預排日期" lstr=""/>
+    <sfield name="lbl_dbeadocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_dbea001" text="出貨日期" lstr=""/>
+    <sfield name="lbl_dbea002" text="預排人員" lstr=""/>
+    <sfield name="lbl_ooag011" text="全名" lstr=""/>
+    <sfield name="lbl_dbea003" text="預排部門" lstr=""/>
+    <sfield name="lbl_ooefl003_1" text="部門說明" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_ooefl003" text="組織說明" lstr=""/>
+    <sfield name="lbl_dbeaunit" text="應用組織" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="page_3.adbt700" text="配送資訊" lstr=""/>
+    <sfield name="lbl_dbeb001" text="路線編號" lstr=""/>
+    <sfield name="lbl_dbabl003" text="路線說明" lstr=""/>
+    <sfield name="lbl_dbeb002" text="裝載點" lstr=""/>
+    <sfield name="lbl_dbael003" text="裝載點說明" lstr=""/>
+    <sfield name="lbl_dbeb003" text="計劃承載容積" lstr=""/>
+    <sfield name="lbl_dbeb004" text="預排承載容積" lstr=""/>
+    <sfield name="lbl_dbeb005" text="承載容積單位" lstr=""/>
+    <sfield name="lbl_oocal003" text="容積單位說明" lstr=""/>
+    <sfield name="lbl_dbeb006" text="計劃承載重量" lstr=""/>
+    <sfield name="lbl_dbeb007" text="預排承載重量" lstr=""/>
+    <sfield name="lbl_dbeb008" text="承載重量單位" lstr=""/>
+    <sfield name="lbl_oocal003_1" text="重量單位說明" lstr=""/>
+    <sfield name="lbl_dbebsite" text="營運據點" lstr=""/>
+    <sfield name="lbl_dbebunit" text="應用組織" lstr=""/>
+    <sfield name="bpage_1" text="配送發貨組織範圍" lstr=""/>
+    <sfield name="lbl_dbed001" text="發貨組織" lstr=""/>
+    <sfield name="lbl_ooefl003_2" text="發貨組織說明" lstr=""/>
+    <sfield name="lbl_dbedsite" text="營運據點" lstr=""/>
+    <sfield name="lbl_dbedunit" text="應用組織" lstr=""/>
+    <sfield name="page_4.adbt700" text="預排資訊" lstr=""/>
+    <sfield name="lbl_dbec002" text="車次" lstr=""/>
+    <sfield name="lbl_dbec003" text="車輛編號" lstr=""/>
+    <sfield name="lbl_dbec004" text="車牌號碼" lstr=""/>
+    <sfield name="lbl_dbec005" text="承載容積" lstr=""/>
+    <sfield name="lbl_dbec006" text="承載容積單位" lstr=""/>
+    <sfield name="lbl_dbec007" text="承載重量" lstr=""/>
+    <sfield name="lbl_dbec008" text="承載重量單位" lstr=""/>
+    <sfield name="lbl_dbec009" text="備貨時間" lstr=""/>
+    <sfield name="lbl_dbec010" text="到達時間" lstr=""/>
+    <sfield name="lbl_dbec011" text="裝車時間" lstr=""/>
+    <sfield name="lbl_dbec012" text="發車時間" lstr=""/>
+    <sfield name="lbl_dbec013" text="回程時間" lstr=""/>
+    <sfield name="lbl_dbec014" text="合併車次" lstr=""/>
+    <sfield name="lbl_dbec015" text="備註" lstr=""/>
+    <sfield name="lbl_dbecsite" text="營運據點" lstr=""/>
+    <sfield name="lbl_dbecunit" text="應用組織" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+    <sact name="auto_ins_dbeb" text="產生配送資訊" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="5" cite_std="N" src="s">
+    <widget name="dbec_t.dbecunit" status=""/>
+  </exclude>
+</spec>

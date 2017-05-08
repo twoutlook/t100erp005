@@ -1,0 +1,850 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="anmt561_01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0004(2015-04-28 17:29:57), PR版次:0004(2016-11-30 16:04:23)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000041
+#+ Filename...: anmt561_01
+#+ Description: 匯入回款清單
+#+ Creator....: 01727(2015-04-28 17:05:01)
+#+ Modifier...: 01727 -SD/PR- 02481
+ 
+{</section>}
+ 
+{<section id="anmt561_01.global" >}
+#應用 c01b 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#161128-00061#2  2016/11/30 by 02481  标准程式定义采用宣告模式,弃用.*写法
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+#IMPORT JAVA com.dsc.tiptop.netutil.ExCustRateGetter
+#IMPORT JAVA com.dsc.tiptop.netutil.ExRateGetter
+#160321-00016#40 2016/03/30 By Jessy    將重複內容的錯誤訊息置換為公用錯誤訊息
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE type type_g_nmba_m        RECORD
+       nmbasite LIKE nmba_t.nmbasite, 
+   nmbasite_desc LIKE type_t.chr80, 
+   nmba002 LIKE nmba_t.nmba002, 
+   nmba002_desc LIKE type_t.chr80, 
+   nmbacomp LIKE nmba_t.nmbacomp, 
+   nmbacomp_desc LIKE type_t.chr80, 
+   nmbadocno LIKE nmba_t.nmbadocno, 
+   nmbadocdt LIKE nmba_t.nmbadocdt, 
+   excel LIKE type_t.chr500
+       END RECORD
+	   
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+DEFINE g_nmba_m        type_g_nmba_m
+ 
+   DEFINE g_nmbacomp_t LIKE nmba_t.nmbacomp
+DEFINE g_nmbadocno_t LIKE nmba_t.nmbadocno
+ 
+ 
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="anmt561_01.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION anmt561_01(--)
+   #add-point:input段變數傳入 name="input.get_var"
+   
+   #end add-point
+   )
+   #add-point:input段define name="input.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   DEFINE p_cmd           LIKE type_t.chr5
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   DEFINE  l_success             LIKE type_t.num5
+   DEFINE  l_errno               LIKE gzze_t.gzze001
+   DEFINE  l_glaald              LIKE glaa_t.glaald
+   DEFINE  l_glaa003             LIKE glaa_t.glaa003
+   DEFINE  l_glaa024             LIKE glaa_t.glaa024
+   DEFINE  l_ooab002             LIKE ooab_t.ooab002
+   DEFINE l_excel                STRING 
+   DEFINE ls_str                 STRING
+   DEFINE l_chr                  LIKE type_t.chr1   
+   DEFINE l_chr1                 LIKE type_t.chr1 
+   DEFINE l_chr2                 LIKE type_t.chr5   
+   DEFINE l_num                  LIKE type_t.num5
+   #end add-point
+   
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_anmt561_01 WITH FORM cl_ap_formpath("anm","anmt561_01")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   LET p_cmd = 'a'
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="input.pre_input"
+   
+   #end add-point
+  
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      INPUT BY NAME g_nmba_m.nmbasite,g_nmba_m.nmba002,g_nmba_m.nmbacomp,g_nmba_m.nmbadocno,g_nmba_m.nmbadocdt, 
+          g_nmba_m.excel ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION
+         #add-point:單頭前置處理 name="input.action"
+         
+         #end add-point
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            #add-point:單頭輸入前處理 name="input.before_input"
+            LET g_nmba_m.nmbadocdt = g_today   #立帳日期
+            #取得預設的資金中心,因新增階段的時候,並不會知道site,所以以登入人員做為依據
+            CALL s_fin_get_account_center('',g_user,'6',g_today) RETURNING l_success,g_nmba_m.nmbasite,g_errno
+
+            SELECT ooef017 INTO g_nmba_m.nmbacomp FROM ooef_t
+             WHERE ooefent = g_enterprise AND ooef001 = g_nmba_m.nmbasite
+
+            LET g_nmba_m.nmba002 = g_user
+
+            CALL s_axrt300_xrca_ref('xrcasite',g_nmba_m.nmbasite,'','')
+               RETURNING l_success,g_nmba_m.nmbasite_desc
+            CALL s_axrt300_xrca_ref('xrcasite',g_nmba_m.nmbacomp,'','')
+               RETURNING l_success,g_nmba_m.nmbacomp_desc
+
+            #end add-point
+          
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbasite
+            
+            #add-point:AFTER FIELD nmbasite name="input.a.nmbasite"
+            IF NOT cl_null(g_nmba_m.nmbasite) THEN 
+               LET l_errno = NULL
+               CALL s_fin_account_center_chk(g_nmba_m.nmbasite,'','6',g_nmba_m.nmbadocdt) RETURNING l_success,l_errno
+               IF NOT cl_null(l_errno) THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = l_errno
+                  LET g_errparam.extend = g_nmba_m.nmbasite
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+               
+                  LET g_nmba_m.nmbasite = ''
+                  CALL s_axrt300_xrca_ref('xrcasite',g_nmba_m.nmbasite,'','') RETURNING l_success,g_nmba_m.nmbasite_desc
+                  NEXT FIELD CURRENT
+               END IF
+               IF NOT cl_null(g_nmba_m.nmbacomp) THEN
+                  SELECT glaald INTO l_glaald FROM glaa_t
+                   WHERE glaaent = g_enterprise AND glaa014 = 'Y'
+                     AND glaacomp = g_nmba_m.nmbacomp
+
+                  LET l_errno = NULL
+                  CALL s_fin_account_center_with_ld_chk(g_nmba_m.nmbasite,l_glaald,g_nmba_m.nmba002,'6','N','',g_nmba_m.nmbadocdt)
+                     RETURNING l_success,l_errno
+                  IF NOT cl_null(l_errno) THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = l_errno
+                     LET g_errparam.extend = g_nmba_m.nmbasite
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                  
+                     LET g_nmba_m.nmbasite = ''
+                     CALL s_axrt300_xrca_ref('xrcasite',g_nmba_m.nmbasite,'','') RETURNING l_success,g_nmba_m.nmbasite_desc
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF 
+            CALL s_axrt300_xrca_ref('xrcasite',g_nmba_m.nmbasite,'','') RETURNING l_success,g_nmba_m.nmbasite_desc
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbasite
+            #add-point:BEFORE FIELD nmbasite name="input.b.nmbasite"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbasite
+            #add-point:ON CHANGE nmbasite name="input.g.nmbasite"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmba002
+            
+            #add-point:AFTER FIELD nmba002 name="input.a.nmba002"
+            LET g_nmba_m.nmba002_desc = ' '
+            DISPLAY BY NAME g_nmba_m.nmba002_desc
+            IF NOT cl_null(g_nmba_m.nmba002) THEN
+               #資料存在性、有效性檢查
+               CALL s_employee_chk(g_nmba_m.nmba002) RETURNING l_success
+               IF NOT l_success THEN
+                  LET g_nmba_m.nmba002 = ''
+                  CALL s_axrt300_xrca_ref('xrca003',g_nmba_m.nmba002,'','') RETURNING l_success,g_nmba_m.nmba002_desc
+                  DISPLAY BY NAME g_nmba_m.nmba002_desc
+                  NEXT FIELD CURRENT
+               END IF
+            END IF
+            CALL s_axrt300_xrca_ref('xrca003',g_nmba_m.nmba002,'','') RETURNING l_success,g_nmba_m.nmba002_desc
+            DISPLAY BY NAME g_nmba_m.nmba002,g_nmba_m.nmba002_desc
+
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmba002
+            #add-point:BEFORE FIELD nmba002 name="input.b.nmba002"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmba002
+            #add-point:ON CHANGE nmba002 name="input.g.nmba002"
+            
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbacomp
+            
+            #add-point:AFTER FIELD nmbacomp name="input.a.nmbacomp"
+            IF  NOT cl_null(g_nmba_m.nmbacomp) AND NOT cl_null(g_nmba_m.nmbadocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_nmba_m.nmbacomp != g_nmbacomp_t  OR g_nmba_m.nmbadocno != g_nmbadocno_t )) THEN 
+                  IF NOT ap_chk_notDup(g_nmba_m.nmbacomp,"SELECT COUNT(*) FROM nmba_t WHERE "||"nmbaent = '" ||g_enterprise|| "' AND "||"nmbacomp = '"||g_nmba_m.nmbacomp ||"' AND "|| "nmbadocno = '"||g_nmba_m.nmbadocno ||"'",'std-00004',0) THEN 
+                     LET g_nmba_m.nmbacomp = ''
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+            IF NOT cl_null(g_nmba_m.nmbacomp) THEN
+               LET l_errno = NULL
+               CALL s_fin_comp_chk(g_nmba_m.nmbacomp) RETURNING l_success,l_errno
+               IF NOT l_success THEN
+                  INITIALIZE g_errparam TO NULL
+                  LET g_errparam.code = l_errno
+                  LET g_errparam.extend = ''
+                  #160321-00016#40 --s add
+                  LET g_errparam.replace[1] = 'aooi100'
+                  LET g_errparam.replace[2] = cl_get_progname('aooi100',g_lang,"2")
+                  LET g_errparam.exeprog = 'aooi100'
+                  #160321-00016#40 --e add
+                  LET g_errparam.popup = TRUE
+                  CALL cl_err()
+                  LET g_nmba_m.nmbacomp = ''
+                  CALL s_axrt300_xrca_ref('xrcasite',g_nmba_m.nmbasite,'','') RETURNING l_success,g_nmba_m.nmbasite_desc
+                  NEXT FIELD CURRENT
+               END IF
+               
+               IF NOT cl_null(g_nmba_m.nmbacomp)THEN
+                  SELECT glaald INTO l_glaald FROM glaa_t
+                   WHERE glaaent = g_enterprise AND glaa014 = 'Y'
+                     AND glaacomp = g_nmba_m.nmbacomp
+                  LET l_errno = NULL
+                  CALL s_fin_account_center_with_ld_chk(g_nmba_m.nmbasite,l_glaald,g_user,'6','Y','',g_nmba_m.nmbadocdt) 
+                     RETURNING l_success,l_errno
+                  IF NOT l_success THEN
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = l_errno
+                     LET g_errparam.extend = ''
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+                     LET g_nmba_m.nmbacomp = ''
+                     CALL s_axrt300_xrca_ref('xrcasite',g_nmba_m.nmbasite,'','') RETURNING l_success,g_nmba_m.nmbasite_desc
+                     NEXT FIELD CURRENT
+                  END IF   
+               END IF
+            END IF
+            CALL s_axrt300_xrca_ref('xrcasite',g_nmba_m.nmbasite,'','') RETURNING l_success,g_nmba_m.nmbasite_desc
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbacomp
+            #add-point:BEFORE FIELD nmbacomp name="input.b.nmbacomp"
+            
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbacomp
+            #add-point:ON CHANGE nmbacomp name="input.g.nmbacomp"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbadocno
+            #add-point:BEFORE FIELD nmbadocno name="input.b.nmbadocno"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbadocno
+            
+            #add-point:AFTER FIELD nmbadocno name="input.a.nmbadocno"
+            IF  NOT cl_null(g_nmba_m.nmbacomp) AND NOT cl_null(g_nmba_m.nmbadocno) THEN 
+               IF p_cmd = 'a' OR ( p_cmd = 'u' AND (g_nmba_m.nmbacomp != g_nmbacomp_t  OR g_nmba_m.nmbadocno != g_nmbadocno_t )) THEN 
+                  IF NOT ap_chk_notDup(g_nmba_m.nmbadocno,"SELECT COUNT(*) FROM nmba_t WHERE "||"nmbaent = '" ||g_enterprise|| "' AND "||"nmbacomp = '"||g_nmba_m.nmbacomp ||"' AND "|| "nmbadocno = '"||g_nmba_m.nmbadocno ||"'",'std-00004',0) THEN 
+                     LET g_nmba_m.nmbadocno = ''
+                     NEXT FIELD CURRENT
+                  END IF
+               END IF
+            END IF
+
+            IF NOT cl_null(g_nmba_m.nmbadocno) AND NOT cl_null(g_nmba_m.nmbacomp) THEN
+                     SELECT glaald,glaa024 INTO l_glaald,l_glaa024 FROM glaa_t
+                      WHERE glaaent = g_enterprise AND glaa014 = 'Y'
+                        AND glaacomp = g_nmba_m.nmbacomp
+               CALL s_aooi200_fin_chk_slip(l_glaald,l_glaa024,g_nmba_m.nmbadocno,'anmt560') RETURNING l_success
+               IF l_success = FALSE THEN 
+                  LET g_nmba_m.nmbadocno = ''
+                  NEXT FIELD nmbadocno
+               END IF
+            END IF
+
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbadocno
+            #add-point:ON CHANGE nmbadocno name="input.g.nmbadocno"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD nmbadocdt
+            #add-point:BEFORE FIELD nmbadocdt name="input.b.nmbadocdt"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD nmbadocdt
+            
+            #add-point:AFTER FIELD nmbadocdt name="input.a.nmbadocdt"
+            IF NOT cl_null(g_nmba_m.nmbadocdt) THEN 
+               LET l_ooab002 = ''
+               SELECT ooab002 INTO l_ooab002
+                 FROM ooab_t
+                WHERE ooabent = g_enterprise
+                  AND ooab001 = 'S-FIN-4002'
+                  AND ooabsite = g_nmba_m.nmbacomp
+               IF g_nmba_m.nmbadocdt < l_ooab002 THEN 
+                  IF p_cmd = 'a' THEN 
+                     DISPLAY '' TO nmbadocdt
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'anm-00036'
+                     LET g_errparam.extend = g_nmba_m.nmbadocdt
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_nmba_m.nmbadocdt = ''
+                  ELSE
+                     DISPLAY '' TO nmbadocdt
+                     INITIALIZE g_errparam TO NULL
+                     LET g_errparam.code = 'anm-00036'
+                     LET g_errparam.extend = g_nmba_m.nmbadocdt
+                     LET g_errparam.popup = TRUE
+                     CALL cl_err()
+
+                     LET g_nmba_m.nmbadocdt = ''
+                  END IF
+                  NEXT FIELD nmbadocdt
+               END IF
+            END IF
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE nmbadocdt
+            #add-point:ON CHANGE nmbadocdt name="input.g.nmbadocdt"
+            
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD excel
+            #add-point:BEFORE FIELD excel name="input.b.excel"
+            
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD excel
+            
+            #add-point:AFTER FIELD excel name="input.a.excel"
+            
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE excel
+            #add-point:ON CHANGE excel name="input.g.excel"
+            
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.nmbasite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbasite
+            #add-point:ON ACTION controlp INFIELD nmbasite name="input.c.nmbasite"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmba_m.nmbasite             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+
+           # CALL q_xrah002_3()                                #呼叫開窗
+
+            LET g_nmba_m.nmbasite = g_qryparam.return1              
+
+            DISPLAY g_nmba_m.nmbasite TO nmbasite              #
+
+            NEXT FIELD nmbasite                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmba002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmba002
+            #add-point:ON ACTION controlp INFIELD nmba002 name="input.c.nmba002"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmba_m.nmba002             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+
+            CALL q_ooag001_2()                                #呼叫開窗
+
+            LET g_nmba_m.nmba002 = g_qryparam.return1              
+
+            DISPLAY g_nmba_m.nmba002 TO nmba002              #
+
+            NEXT FIELD nmba002                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmbacomp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbacomp
+            #add-point:ON ACTION controlp INFIELD nmbacomp name="input.c.nmbacomp"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmba_m.nmbacomp             #給予default值
+            LET g_qryparam.default2 = "" #g_nmba_m.ooefl003 #說明(簡稱)
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+
+            CALL q_ooef001()                                #呼叫開窗
+
+            LET g_nmba_m.nmbacomp = g_qryparam.return1              
+            #LET g_nmba_m.ooefl003 = g_qryparam.return2 
+            DISPLAY g_nmba_m.nmbacomp TO nmbacomp              #
+            #DISPLAY g_nmba_m.ooefl003 TO ooefl003 #說明(簡稱)
+            NEXT FIELD nmbacomp                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmbadocno
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbadocno
+            #add-point:ON ACTION controlp INFIELD nmbadocno name="input.c.nmbadocno"
+            #應用 a07 樣板自動產生(Version:2)   
+            #開窗i段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'i'
+            LET g_qryparam.reqry = FALSE
+
+            LET g_qryparam.default1 = g_nmba_m.nmbadocno             #給予default值
+
+            #給予arg
+            LET g_qryparam.arg1 = "" #
+
+
+            CALL q_ooba002_4()                                #呼叫開窗
+
+            LET g_nmba_m.nmbadocno = g_qryparam.return1              
+
+            DISPLAY g_nmba_m.nmbadocno TO nmbadocno              #
+
+            NEXT FIELD nmbadocno                          #返回原欄位
+
+
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.nmbadocdt
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD nmbadocdt
+            #add-point:ON ACTION controlp INFIELD nmbadocdt name="input.c.nmbadocdt"
+            
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.excel
+#         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD excel
+            #add-point:ON ACTION controlp INFIELD excel name="input.c.excel"
+            
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #add-point:單頭輸入後處理 name="input.after_input"
+            
+            #end add-point
+            
+      END INPUT
+    
+      #add-point:自定義input name="input.more_input"
+      ON ACTION browser   #瀏覽
+         CALL cl_client_browse_file() RETURNING g_nmba_m.excel
+         DISPLAY BY NAME g_nmba_m.excel
+         LET ls_str= ''
+         LET l_chr2 = ''
+         LET ls_str = g_nmba_m.excel
+         LET l_num = ls_str.getlength()
+         LET l_chr2 = ls_str.substring(l_num-2,l_num)
+         IF l_chr2 <>'xls' THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = 'aoo-00260'
+            LET g_errparam.extend = g_nmba_m.excel
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+
+            NEXT FIELD excel
+         END IF 
+         
+      ON ACTION download
+         CALL cl_client_browse_dir() RETURNING l_excel
+         LET ls_str= ''
+         LET l_chr = ''
+         LET l_chr1 = ''
+         LET ls_str = l_excel
+         #抓取目录斜杆
+         LET l_num =ls_str.getIndexOf(':',1)                                    #抓取：后的字符位置
+         LET l_chr = ls_str.substring(l_num+1,l_num+1)                          #截取冒号后的字符 
+         LET l_chr1 = ls_str.substring(ls_str.getLength(),ls_str.getLength())   #判断是否为根目录
+         IF l_chr <> l_chr1  THEN         
+            LET l_excel = l_excel||l_chr||"exrate.xls"
+         ELSE
+            LET l_excel = l_excel||"exrate.xls"
+         END IF
+         IF NOT cl_null(l_excel) THEN         
+            LET g_bgjob = 'Y'    
+            LET status =  cl_client_download_file("$RES/std/exrate.xls",l_excel) 
+            IF STATUS THEN
+               ERROR "Download OK!!"
+            ELSE
+               ERROR "Download fail!!"
+            END IF         
+         END IF    
+      #end add-point
+    
+      #公用action
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="input.before_close"
+   
+   #end add-point
+   
+   #畫面關閉
+   CLOSE WINDOW w_anmt561_01 
+   
+   #add-point:input段after input name="input.post_input"
+   #取消  
+   IF INT_FLAG THEN
+      RETURN
+   END IF
+   #确定
+   CALL anmt561_01_get_data() 
+ 
+   #end add-point    
+   
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="anmt561_01.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="anmt561_01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt561_01_get_data()
+DEFINE l_excelname STRING               #excel档名
+DEFINE l_count     LIKE type_t.num10
+DEFINE li_i        LIKE type_t.num10
+DEFINE li_j        LIKE type_t.num10
+DEFINE xlapp,iRes,iRow    LIKE type_t.num5
+#161128-00061#2---modify----begin----------
+#DEFINE l_ooan      RECORD LIKE ooan_t.*
+DEFINE l_ooan RECORD  #日匯率資料檔
+       ooanent LIKE ooan_t.ooanent, #企業編號
+       ooan001 LIKE ooan_t.ooan001, #匯率參照表號
+       ooan002 LIKE ooan_t.ooan002, #交易幣別
+       ooan003 LIKE ooan_t.ooan003, #基礎幣別
+       ooan004 LIKE ooan_t.ooan004, #日期
+       ooan005 LIKE ooan_t.ooan005, #銀行買入匯率
+       ooan006 LIKE ooan_t.ooan006, #銀行賣出匯率
+       ooan007 LIKE ooan_t.ooan007, #銀行中價匯率
+       ooan008 LIKE ooan_t.ooan008, #海關買入匯率
+       ooan009 LIKE ooan_t.ooan009, #海關賣出匯率
+       ooan010 LIKE ooan_t.ooan010, #更新時間
+       ooan011 LIKE ooan_t.ooan011, #更新方式
+       ooan012 LIKE ooan_t.ooan012, #交易貨幣批量
+       ooan013 LIKE ooan_t.ooan013  #匯率輸入方式
+       END RECORD
+
+#161128-00061#2---modify----end----------
+DEFINE l_today     DATETIME YEAR TO SECOND
+
+   LET l_today= cl_get_current()
+   LET l_count = LENGTH(g_nmba_m.excel CLIPPED)
+   #转换路径分隔符
+   FOR li_i = 1 TO l_count
+       IF g_nmba_m.excel[li_i,li_i] ="/" THEN
+          LET l_excelname = l_excelname CLIPPED,'\\'
+       ELSE
+          LET l_excelname = l_excelname CLIPPED,g_nmba_m.excel[li_i,li_i]
+       END IF
+   END FOR
+
+   CALL ui.interface.frontCall('WinCOM','CreateInstance',
+                               ['Excel.Application'],[xlApp])
+   IF xlApp <> -1 THEN
+      CALL ui.interface.frontCall('WinCOM','CallMethod',
+                                  [xlApp,'WorkBooks.Open',l_excelname],[iRes])
+      IF iRes <> -1 THEN
+         CALL ui.interface.frontCall('WinCOM','GetProperty',
+              [xlApp,'ActiveSheet.UsedRange.Rows.Count'],[iRow])
+         IF iRow > 1 THEN
+            #第一行是欄位的中文說明，第二行是範例,要求誤刪...
+            FOR li_i = 3 TO iRow
+                INITIALIZE l_ooan.* TO NULL
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',1).Value'],[l_ooan.ooan002])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',2).Value'],[l_ooan.ooan005])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',3).Value'],[l_ooan.ooan006])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',4).Value'],[l_ooan.ooan008])
+                CALL ui.interface.frontCall('WinCOM','GetProperty',[xlApp,'ActiveSheet.Cells('||li_i||',5).Value'],[l_ooan.ooan009])
+                IF cl_null(l_ooan.ooan005) THEN LET l_ooan.ooan005=0 END IF
+                IF cl_null(l_ooan.ooan006) THEN LET l_ooan.ooan006=0 END IF
+                IF cl_null(l_ooan.ooan008) THEN LET l_ooan.ooan008=0 END IF
+                IF cl_null(l_ooan.ooan009) THEN LET l_ooan.ooan009=0 END IF
+                LET l_ooan.ooanent = g_enterprise
+                LET l_ooan.ooan007 = (l_ooan.ooan005 + l_ooan.ooan006)/2
+                #赋默认值
+                LET l_ooan.ooan010 = l_today   #更新时间
+                LET l_ooan.ooan011 = '2'       #自动转入
+                LET l_ooan.ooan013 = '1'       #匯率輸入方式 1：正向
+                #LET l_ooan.ooan004 = l_ooan.ooan004 USING "yyyymmdd"
+
+
+                #zll 以后需修改成遇到错误整体汇总的方式最后一起显示，失败继续执行 用CONTINUE FOE
+                #zll 暂时是遇挫就失败跳出 用EXIT FOR
+
+                #关键字检查
+                IF cl_null(l_ooan.ooan002) THEN
+                   #数据缺失，请检查excel中是否有漏维护
+                   INITIALIZE g_errparam TO NULL
+                   LET g_errparam.code = 'sub-00059'
+                   LET g_errparam.extend = ''
+                   LET g_errparam.popup = FALSE
+                   CALL cl_err()
+
+                   EXIT FOR
+                END IF
+
+                #交易币别检查
+                SELECT COUNT(*) INTO l_count FROM ooai_t
+                 WHERE ooaient = g_enterprise
+                   AND ooai001 = l_ooan.ooan002
+                   AND ooaistus='Y'
+                IF l_count < 1 THEN
+                   #excel中有不合法币别，请检查币别档是否有缺失或excel中是否正确
+                   INITIALIZE g_errparam TO NULL
+                   LET g_errparam.code = 'sub-00062'
+                   LET g_errparam.extend = ''
+                   LET g_errparam.popup = FALSE
+                   CALL cl_err()
+
+                   EXIT FOR
+                END IF
+
+                   #INSERT INTO ooan_t VALUES(l_ooan.*)
+                   INSERT INTO ooan_t(ooanent,ooan001,ooan002,ooan003,ooan004,ooan005,ooan006,ooan007,ooan008,ooan009,ooan010,ooan011,ooan012,ooan013)
+                    VALUES(l_ooan.ooanent,l_ooan.ooan001,l_ooan.ooan002,l_ooan.ooan003,l_ooan.ooan004,l_ooan.ooan005,l_ooan.ooan006,l_ooan.ooan007,l_ooan.ooan008,l_ooan.ooan009,l_today,l_ooan.ooan011,l_ooan.ooan012,l_ooan.ooan013)
+                   IF SQLCA.sqlcode THEN
+                      INITIALIZE g_errparam TO NULL
+                      LET g_errparam.code = SQLCA.sqlcode
+                      LET g_errparam.extend = 'ins ooan'
+                      LET g_errparam.popup = FALSE
+                      CALL cl_err()
+
+                      EXIT FOR
+                   END IF
+
+            END FOR
+         END IF
+      ELSE
+         INITIALIZE g_errparam TO NULL
+         LET g_errparam.code = ''
+         LET g_errparam.extend = 'NO FILE'
+         LET g_errparam.popup = FALSE
+         CALL cl_err()
+
+      END IF
+   ELSE
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.code = ''
+      LET g_errparam.extend = 'NO EXCEL'
+      LET g_errparam.popup = FALSE
+      CALL cl_err()
+
+   END IF
+
+   CALL ui.interface.frontCall('WinCOM','CallMethod',[xlApp,'Quit'],[iRes])
+   CALL ui.interface.frontCall('WinCOM','ReleaseInstance',[xlApp],[iRes])
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt561_01_ins_nmba()
+
+END FUNCTION
+
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL s_aooi150_ins (传入参数)
+#                  RETURNING 回传参数
+# Input parameter: 传入参数变量1   传入参数变量说明1
+#                : 传入参数变量2   传入参数变量说明2
+# Return code....: 回传参数变量1   回传参数变量说明1
+#                : 回传参数变量2   回传参数变量说明2
+# Date & Author..: 日期 By 作者
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION anmt561_01_ins_nmbc()
+
+END FUNCTION
+
+ 
+{</section>}
+ 

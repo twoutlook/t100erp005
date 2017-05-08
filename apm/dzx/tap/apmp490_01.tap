@@ -1,0 +1,616 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="apmp490_01" std_prog="apmp490_01" erpver="1.0" module="APM" ver="1" env="s" zone="t10dev" booking="Y">
+  <point name="dialog.apmp490_01_input01" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL apmp490_01_input01()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/04/18 By ming
+# Modify.........:
+################################################################################
+DIALOG apmp490_01_input01()
+   DEFINE l_flag     LIKE type_t.num5
+   DEFINE l_success  LIKE type_t.num5
+   
+   INPUT BY NAME g_apmp490_01_input.pmdldocno,g_apmp490_01_input.imaf142,
+                 g_apmp490_01_input.cb01
+      BEFORE INPUT
+
+      AFTER INPUT
+         #DISPLAY g_apmp490_01_input.pmdldocno
+
+      AFTER FIELD pmdldocno
+        #CALL s_aooi200_get_slip_desc(g_pmdl_m.pmdldocno) RETURNING g_pmdl_m.pmdldocno_desc
+        #DISPLAY BY NAME g_pmdl_m.pmdldocno_desc
+
+         IF NOT cl_null(g_apmp490_01_input.pmdldocno) THEN
+            #檢核輸入的單據別是否可以被key人員對應的控制組使用,'4' 為採購控制組類型
+            CALL s_control_chk_doc('1',g_apmp490_01_input.pmdldocno,'4',g_user,g_dept,'','')
+                 RETURNING l_success,l_flag
+            IF l_success THEN
+               IF NOT l_flag THEN
+                  CALL cl_err(g_apmp490_01_input.pmdldocno,'apm-00266',1)  #輸入的單據別不可以被當前人員和部門對應的採購控制組使用！ 
+                 #LET g_pmdl_m.pmdldocno = g_pmdldocno_t
+                 #CALL s_aooi200_get_slip_desc(g_pmdl_m.pmdldocno) RETURNING g_pmdl_m.pmdldocno_desc
+                 #DISPLAY BY NAME g_pmdl_m.pmdldocno_desc
+                  NEXT FIELD CURRENT
+               END IF
+            ELSE
+              #LET g_pmdl_m.pmdldocno = g_pmdldocno_t
+              #CALL s_aooi200_get_slip_desc(g_pmdl_m.pmdldocno) RETURNING g_pmdl_m.pmdldocno_desc
+              #DISPLAY BY NAME g_pmdl_m.pmdldocno_desc 
+               NEXT FIELD CURRENT
+            END IF
+
+            IF NOT s_aooi200_chk_slip(g_site,'',g_apmp490_01_input.pmdldocno,'apmt500') THEN
+              #LET g_pmdl_m.pmdldocno = g_pmdldocno_t
+              #CALL s_aooi200_get_slip_desc(g_pmdl_m.pmdldocno) RETURNING g_pmdl_m.pmdldocno_desc
+              #DISPLAY BY NAME g_pmdl_m.pmdldocno_desc
+               NEXT FIELD CURRENT
+            END IF
+         END IF 
+            
+            #CALL apmt500_get_col_default()   #取得欄位預設值  
+            
+      AFTER FIELD imaf142
+        #CALL apmt500_pmdl002_ref(g_pmdl_m.pmdl002) RETURNING g_pmdl_m.pmdl002_desc
+        #DISPLAY BY NAME g_pmdl_m.pmdl002_desc
+
+         IF NOT cl_null(g_apmp490_01_input.imaf142) THEN
+            INITIALIZE g_chkparam.* TO NULL
+            LET g_chkparam.arg1 = g_apmp490_01_input.imaf142
+
+            IF cl_chk_exist("v_ooag001") THEN
+              #SELECT ooag003 INTO g_pmdl_m.pmdl003 FROM ooag_t WHERE ooagent = g_enterprise AND ooag001 = g_pmdl_m.pmdl002
+              #CALL apmt500_pmdl003_ref(g_pmdl_m.pmdl003) RETURNING g_pmdl_m.pmdl003_desc
+              #DISPLAY BY NAME g_pmdl_m.pmdl003_desc
+            ELSE
+              ##檢查失敗時後續處理
+              #LET g_pmdl_m.pmdl002 = g_pmdl_m_t.pmdl002
+              #CALL apmt500_pmdl002_ref(g_pmdl_m.pmdl002) RETURNING g_pmdl_m.pmdl002_desc
+              #DISPLAY BY NAME g_pmdl_m.pmdl002_desc
+              #NEXT FIELD CURRENT
+
+            END IF
+         END IF 
+         
+      ON ACTION controlp INFIELD pmdldocno
+         #開窗i段
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'i'
+         LET g_qryparam.reqry = FALSE
+
+         LET g_qryparam.default1 = g_apmp490_01_input.pmdldocno             #給予default值
+
+         #給予arg
+        #LET g_qryparam.arg1 = l_ooef004
+        #LET g_qryparam.arg2 = g_prog
+         LET g_qryparam.arg1 = g_apmp490_01_ooef004
+         LET g_qryparam.arg2 = 'apmt500'
+
+         CALL q_ooba002_1()                                #呼叫開窗
+
+         LET g_apmp490_01_input.pmdldocno = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+         DISPLAY g_apmp490_01_input.pmdldocno TO pmdldocno              #顯示到畫面上
+        #CALL s_aooi200_get_slip_desc(g_pmdl_m.pmdldocno) RETURNING g_pmdl_m.pmdldocno_desc
+        #DISPLAY BY NAME g_pmdl_m.pmdldocno_desc
+
+         NEXT FIELD pmdldocno                          #返回原欄位 
+      ON ACTION controlp INFIELD imaf142
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'i'
+         LET g_qryparam.reqry = FALSE
+
+         LET g_qryparam.default1 = g_apmp490_01_input.imaf142             #給予default值
+
+         #給予arg
+
+         CALL q_ooag001()                                #呼叫開窗
+
+         LET g_apmp490_01_input.imaf142 = g_qryparam.return1              #將開窗取得的值回傳到變數
+
+         DISPLAY g_apmp490_01_input.imaf142 TO imaf142                    #顯示到畫面上
+         #CALL apmt500_pmdl002_ref(g_pmdl_m.pmdl002) RETURNING g_pmdl_m.pmdl002_desc
+         #DISPLAY BY NAME g_pmdl_m.pmdl002_desc
+
+         NEXT FIELD imaf142                          #返回原欄位 
+         
+   END INPUT
+END DIALOG]]>
+  </point>
+  <point name="function.apmp490_01_b_fill" order="1" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL apmp490_01_b_fill(p_wc)
+#                  RETURNING 回传参数
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/04/24 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmp490_01_b_fill(p_wc)
+   DEFINE p_wc      STRING
+   DEFINE l_sql     STRING
+   DEFINE l_ac1     LIKE type_t.num5
+   DEFINE l_pmdb_d  type_g_pmdb_d
+   DEFINE l_count   LIKE type_t.num5
+
+   LET l_sql = "SELECT 'N',pmdbdocno,pmdbseq,pmdb004, ",
+               "       pmdb005,pmdb007,pmdb006, ",
+               "       (pmdb006-NVL(pmdb049,0)),pmdb030,pmdb033,",
+               "       pmdbent,pmdbsite ",             #ming add 
+               "  FROM pmda_t,pmdb_t,imaf_t ",
+               " WHERE pmdaent = '",g_enterprise,"' ",
+               "   AND pmdasite ='",g_site,"' ",
+               "   AND pmdaent = pmdbent ",
+               "   AND pmdasite = pmdbsite ",
+               "   AND pmdadocno = pmdbdocno ",
+               "   AND pmdbent = imafent ",
+               "   AND pmdasite = imafsite ",
+               "   AND pmdb004 = imaf001 ",
+               "   AND ",p_wc,
+               " ORDER BY pmdbdocno,pmdbseq "
+
+   PREPARE p490_01_prep FROM l_sql
+   DECLARE p490_01_curs CURSOR FOR p490_01_prep
+
+   CALL g_pmdb_d.clear() 
+   
+   LET l_ac1 = 1
+   INITIALIZE l_pmdb_d.* TO NULL
+
+   FOREACH p490_01_curs INTO l_pmdb_d.*
+      IF SQLCA.sqlcode THEN
+         CALL cl_err('foreach:',SQLCA.sqlcode,1)
+         EXIT FOREACH
+      END IF
+
+      LET l_count = 0
+      SELECT COUNT(*) INTO l_count
+        FROM p490_01_pmdb_t
+       WHERE pmdbdocno = l_pmdb_d.pmdbdocno
+         AND pmdbseq = l_pmdb_d.pmdbseq
+         AND NVL(pmdb004,' ') = NVL(l_pmdb_d.pmdb004,' ')
+         AND NVL(pmdb005,' ') = NVL(l_pmdb_d.pmdb005,' ')
+         AND NVL(pmdb007,' ') = NVL(l_pmdb_d.pmdb007,' ')
+         AND NVL(pmdb006,'0') = NVL(l_pmdb_d.pmdb006,'0')
+         AND pmdb030 = l_pmdb_d.pmdb030
+         AND NVL(pmdb033,' ') = NVL(l_pmdb_d.pmdb033,' ')
+
+      IF l_count > 0 THEN
+         INITIALIZE l_pmdb_d.* TO NULL
+         CONTINUE FOREACH
+      END IF
+
+      LET g_pmdb_d[l_ac1].* = l_pmdb_d.* 
+      
+      LET l_ac1 = l_ac1 + 1
+      INITIALIZE l_pmdb_d.* TO NULL
+
+      IF l_ac1 > g_max_rec THEN
+         #CALL cl_err('',9035,0) 
+         EXIT FOREACH
+      END IF
+   END FOREACH
+
+   #CALL g_pmdb_d.deleteElement(g_pmdb_d.getLength()) 
+   #LET g_rec_b = l_ac1 - 1 
+   LET g_rec_b = l_ac1
+
+  #DISPLAY g_rec_b TO FORMONLY.cnt
+  ##將總筆數, 目前筆數指定到共用變數中
+  #IF g_rec_b > 0 THEN
+  #   LET g_d_idx_i35001 = 1
+  #ELSE
+  #   LET g_d_idx_i35001 = 0
+  #END IF
+  #LET g_d_cnt_i35001 = g_rec_b
+  #CLOSE b_fill_curs
+  #FREE aooi350_01_pb
+END FUNCTION]]>
+  </point>
+  <point name="dialog.apmp490_01_construct" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL apmp490_01_construct()
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/04/18 By ming
+# Modify.........:
+################################################################################
+DIALOG apmp490_01_construct()
+   DEFINE l_sql     STRING
+   DEFINE l_success LIKE type_t.num5
+   
+   CONSTRUCT BY NAME g_apmp490_01_wc ON pmdadocno,pmdadocdt,pmdb030,pmdb004,imaf153,imaf141
+      BEFORE CONSTRUCT 
+      
+      ON ACTION controlp INFIELD pmdadocno
+         INITIALIZE g_qryparam.* TO NULL
+         LET g_qryparam.state = 'c'
+         LET g_qryparam.reqry = FALSE
+         CALL q_pmdadocno()                       #呼叫開窗
+         DISPLAY g_qryparam.return1 TO pmdadocno  #顯示到畫面上
+         NEXT FIELD pmdadocno                     #返回原欄位 
+
+      ON ACTION controlp INFIELD pmdb004
+         LET g_qryparam.state = 'c'
+         LET g_qryparam.reqry = FALSE
+         LET g_qryparam.where = "1=1 "
+
+         LET l_sql = ''
+         CALL s_control_get_sql("imaa001",'6','3',g_user,g_dept) RETURNING l_success,l_sql
+         IF l_success THEN
+            LET g_qryparam.where = g_qryparam.where ," AND ",l_sql
+         END IF
+         CALL q_imaf001()                       #呼叫開窗
+         DISPLAY g_qryparam.return1 TO pmdb004  #顯示到畫面上
+
+         NEXT FIELD pmdb004                     #返回原欄位 
+   END CONSTRUCT
+END DIALOG]]>
+  </point>
+  <point name="function.apmp490_01_sel_all" order="2" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL apmp490_01_sel_all()
+#                  RETURNING 回传参数
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/04/24 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmp490_01_sel_all()
+   DEFINE l_i     LIKE type_t.num5
+
+   FOR l_i = 1 TO g_pmdb_d.getLength()
+      LET g_pmdb_d[l_i].sel = 'Y'
+   END FOR
+END FUNCTION]]>
+  </point>
+  <point name="dialog.apmp490_01_input02" order="3" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL apmp490_01_input02()
+#                  RETURNING 回传参数
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/04/24 By ming
+# Modify.........:
+################################################################################
+DIALOG apmp490_01_input02()
+   INPUT ARRAY g_pmdb_d FROM s_apmp490_01_detail1.*
+         ATTRIBUTE(COUNT = g_d_cnt_p49001,MAXCOUNT = g_max_rec,WITHOUT DEFAULTS,
+                   INSERT ROW = FALSE,
+                   DELETE ROW = FALSE,
+                   APPEND ROW = FALSE)
+      BEFORE INPUT
+   END INPUT
+END DIALOG]]>
+  </point>
+  <point name="function.apmp490_01_nosel_all" order="3" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL apmp490_01_nosel_all()
+#                  RETURNING 回传参数
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/04/24 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmp490_01_nosel_all()
+   DEFINE l_i     LIKE type_t.num5
+
+   FOR l_i = 1 TO g_pmdb_d.getLength()
+      LET g_pmdb_d[l_i].sel = 'N'
+   END FOR
+END FUNCTION]]>
+  </point>
+  <point name="dialog.apmp490_01_display" order="4" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL apmp490_01_display()
+#                  RETURNING 回传参数
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/04/24 By ming
+# Modify.........:
+################################################################################
+DIALOG apmp490_01_display()
+   DISPLAY ARRAY g_pmdb_d TO s_apmp490_01_detail1.* ATTRIBUTE(COUNT=g_d_cnt_p49001)
+      BEFORE DISPLAY
+         CALL FGL_SET_ARR_CURR(g_d_idx_p49001)
+         #單身不連動, 所以進入單身時, 要重新顯示單身筆數
+         #DISPLAY g_d_idx_i35001, g_d_cnt_i35001 TO FORMONLY.idx, FORMONLY.cnt 
+
+         BEFORE ROW
+         LET g_d_idx_p49001 = DIALOG.getCurrentRow("s_apmp490_01_detail1")
+         #DISPLAY g_d_idx_p49001 TO FORMONLY.idx
+         # 點的當筆放入g_appoint_idx中, 可讓雙擊直接進入指定筆
+         LET g_appoint_idx = g_d_idx_p49001
+   END DISPLAY
+END DIALOG]]>
+  </point>
+  <point name="function.apmp490_01_sel" order="4" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL apmp490_01_sel(p_ac)
+#                  RETURNING 回传参数
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/04/24 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmp490_01_sel(p_ac)
+   DEFINE p_ac     LIKE type_t.num5
+
+   IF p_ac <= 0 THEN
+      RETURN
+   END IF
+
+   IF g_pmdb_d[p_ac].sel = 'Y' THEN
+      LET g_pmdb_d[p_ac].sel = 'N'
+   ELSE
+      LET g_pmdb_d[p_ac].sel = 'Y'
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.apmp490_01_create_temp_table" order="5" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL apmp490_01_create_temp_table()
+#                  RETURNING 回传参数
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/04/24 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmp490_01_create_temp_table()
+   CREATE TEMP TABLE p490_01_pmdb_t(
+      pmdbdocno     LIKE pmdb_t.pmdbdocno,      #請購單號   
+      pmdbseq       LIKE pmdb_t.pmdbseq,        #項次  
+      pmdb004       LIKE pmdb_t.pmdb004,        #料號  
+      pmdb005       LIKE pmdb_t.pmdb005,        #產品特徵  
+      pmdb007       LIKE pmdb_t.pmdb007,        #單位   
+      pmdb006       LIKE pmdb_t.pmdb006,        #需求數量  
+      qty           LIKE pmdb_t.pmdb006,        #未轉採購量  #ming add   
+      pmdb030       LIKE pmdb_t.pmdb030,        #需求日期  
+      pmdb033       LIKE pmdb_t.pmdb033,        #緊急度 
+      pmdbent       LIKE pmdb_t.pmdbent,        #ming  
+      pmdbsite      LIKE pmdb_t.pmdbsite)       #ming  
+END FUNCTION]]>
+  </point>
+  <point name="function.apmp490_01_save" order="6" ver="1" cite_std="N" new="Y" status="" src="s" mark_hard="N">
+    <![CDATA[
+################################################################################
+# Descriptions...: 描述说明
+# Memo...........:
+# Usage..........: CALL apmp490_01_save()
+#                  RETURNING 回传参数
+# Input parameter: 無
+# Return code....: 無
+# Date & Author..: 2014/04/24 By ming
+# Modify.........:
+################################################################################
+PUBLIC FUNCTION apmp490_01_save()
+   DEFINE l_i     LIKE type_t.num5
+
+   IF g_pmdb_d.getLength() = 0 THEN
+      RETURN
+   END IF
+
+   FOR l_i = 1 TO g_pmdb_d.getLength()
+      IF g_pmdb_d[l_i].sel = 'Y' THEN
+         INSERT INTO p490_01_pmdb_t(pmdbdocno,pmdbseq,pmdb004,pmdb005,
+                                    pmdb007,pmdb006,qty,pmdb030,pmdb033,
+                                    pmdbent,pmdbsite) 
+         VALUES(g_pmdb_d[l_i].pmdbdocno,g_pmdb_d[l_i].pmdbseq,g_pmdb_d[l_i].pmdb004,
+                g_pmdb_d[l_i].pmdb005,g_pmdb_d[l_i].pmdb007,g_pmdb_d[l_i].pmdb006,
+                g_pmdb_d[l_i].qty,g_pmdb_d[l_i].pmdb030,g_pmdb_d[l_i].pmdb033,
+                g_pmdb_d[l_i].pmdbent,g_pmdb_d[l_i].pmdbsite)
+      END IF
+   END FOR
+END FUNCTION]]>
+  </point>
+  <point name="global.inc" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[GLOBALS "../4gl/apmp490_01.inc"
+]]>
+  </point>
+  <point name="global.variable" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[ TYPE type_g_pmdb_d RECORD
+                              sel       LIKE type_t.chr1,          #選擇  
+                              pmdbdocno LIKE pmdb_t.pmdbdocno,     #請購單號  
+                              pmdbseq   LIKE pmdb_t.pmdbseq,       #項次 
+                              pmdb004   LIKE pmdb_t.pmdb004,       #料號 
+                              pmdb005   LIKE pmdb_t.pmdb005,       #產品特徵 
+                              pmdb007   LIKE pmdb_t.pmdb007,       #單位 
+                              pmdb006   LIKE pmdb_t.pmdb006,       #需求數量 
+                              qty       LIKE pmdb_t.pmdb006,       #未轉採購數量 #ming add   
+                              pmdb030   LIKE pmdb_t.pmdb030,       #需求日期 
+                              pmdb033   LIKE pmdb_t.pmdb033,       #緊急度 
+                              pmdbent   LIKE pmdb_t.pmdbent,
+                              pmdbsite  LIKE pmdb_t.pmdbsite
+                           END RECORD 
+DEFINE g_pmdb_d            DYNAMIC ARRAY OF type_g_pmdb_d
+DEFINE g_pmdb_d_t          type_g_pmdb_d
+DEFINE l_ac                LIKE type_t.num5
+DEFINE g_ref_fields        DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields        DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列 
+DEFINE g_rec_b             LIKE type_t.num5
+DEFINE g_detail_idx        LIKE type_t.num5]]>
+  </point>
+  <section id="apmp490_01.global" ver="2" status="" src="m">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔
+{<point name="global.inc" />}
+#end add-point
+ 
+#DEFINE g_rec_b               LIKE type_t.num5   
+#DEFINE g_wc                  STRING
+#DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+#DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+#DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv)
+{<point name="global.argv"/>}
+#end add-point  
+]]>
+  </section>
+  <section id="apmp490_01.input" ver="1" status="" src="m">
+    <![CDATA[#+ 資料輸入
+PUBLIC FUNCTION apmp490_01(--)
+   #add-point:construct段變數傳入
+{<point name="construct.get_var"/>}
+   #end add-point
+   )
+   #DEFINE l_ac_t          LIKE type_t.num5        #未取消的ARRAY CNT 
+   #DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   #DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   #DEFINE l_count         LIKE type_t.num5
+   #DEFINE l_insert        LIKE type_t.num5
+   #add-point:construct段define
+{<point name="construct.define"/>}
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   #OPEN WINDOW w_apmp490_01 WITH FORM cl_ap_formpath("apm","apmp490_01")
+ 
+   #瀏覽頁簽資料初始化
+   #CALL cl_ui_init()
+   
+   #LET g_qryparam.state = "i"
+   
+   #輸入前處理
+   #add-point:單頭前置處理
+{<point name="construct.pre_construct"/>}
+   #end add-point
+   
+   #DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   #
+   #   #輸入開始
+   #   CONSTRUCT BY NAME g_wc ON pmdadocno,pmdadocdt 
+   #   
+   #         #add-point:自定義action
+{<point name="construct.action"/>}
+   #         #end add-point
+   #	  
+   #      BEFORE CONSTRUCT
+   #         #add-point:單頭輸入前處理
+{<point name="construct.before_construct"/>}
+   #         #end add-point
+   #         
+   #      AFTER CONSTRUCT
+   #         #add-point:單頭輸入後處理
+{<point name="construct.after_construct"/>}
+   #         #end add-point
+   #          
+   #   END CONSTRUCT
+ 
+   #   #add-point:自定義construct
+{<point name="construct.more_construct"/>}
+   #   #end add-point
+      
+   #   ON ACTION accept
+   #      ACCEPT DIALOG
+   #     
+   #   ON ACTION cancel
+   #      LET INT_FLAG = TRUE 
+   #      EXIT DIALOG
+ 
+   #   ON ACTION close
+   #      LET INT_FLAG = TRUE 
+   #      EXIT DIALOG
+ 
+   #   ON ACTION exit
+   #      LET INT_FLAG = TRUE 
+   #      EXIT DIALOG
+   
+   #   #交談指令共用ACTION
+   #   &include "common_action.4gl" 
+   #      CONTINUE DIALOG 
+         
+   #END DIALOG
+ 
+   ##add-point:畫面關閉前
+{<point name="construct.before_close"/>}
+   ##end add-point 
+   
+   ##畫面關閉
+   #CLOSE WINDOW w_apmp490_01 
+   
+   ##add-point:construct段after construct 
+{<point name="construct.post_construct"/>}
+   ##end add-point 
+ 
+END FUNCTION
+]]>
+  </section>
+  <section id="apmp490_01.description" ver="11" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(版次:1) Build-000010
+#+ 
+#+ Filename...: apmp490_01
+#+ Description: ...
+#+ Creator....: 01588(2014/04/15)
+#+ Modifier...: 01588(2014/04/15)
+#+ Buildtype..: 應用 c01c 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="apmp490_01.free_style_variable" ver="1" status="" src="s">
+    <![CDATA[#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="apmp490_01.global_variable" ver="1" status="" src="s">
+    <![CDATA[#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+]]>
+  </section>
+  <section id="apmp490_01.other_dialog" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.dialog"/>}
+]]>
+  </section>
+  <section id="apmp490_01.other_function" ver="1" status="" src="s">
+    <![CDATA[{<point name="other.function"/>}
+]]>
+  </section>
+</add_points>

@@ -1,0 +1,4688 @@
+{<section id="amhm320.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0006(2016-06-21 16:08:16), PR版次:
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:
+#+ Build......: 000043
+#+ Filename...: amhm320
+#+ Description: 離職人員資料維護作業
+#+ Creator....: 03247(2015-04-07 14:04:16)
+#+ Modifier...: 07142 -SD/PR-
+{</section>}
+ 
+ 
+ 
+{<section id="amhm320.global" >}
+#應用 i01 樣板自動產生(Version:50)
+#add-point:填寫註解說明 name="global.memo"
+{<point name="global.memo" edit="s"/>}
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+{<point name="global.memo_customerization" edit="c"/>}
+#end add-point
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"  
+ 
+#add-point:增加匯入變數檔 name="global.inc"
+{<point name="global.inc" mark="Y"/>}
+#end add-point
+ 
+#單頭 type 宣告
+PRIVATE TYPE type_g_mhag_m RECORD
+       mhagsite LIKE mhag_t.mhagsite, 
+   mhagsite_desc LIKE type_t.chr80, 
+   mhag001 LIKE mhag_t.mhag001, 
+   mhag001_desc LIKE type_t.chr80, 
+   mhag002 LIKE mhag_t.mhag002, 
+   mhaf004 LIKE mhaf_t.mhaf004, 
+   mhaf004_desc LIKE type_t.chr80, 
+   mhaf005 LIKE mhaf_t.mhaf005, 
+   mhaf007 LIKE mhaf_t.mhaf007, 
+   mhag003 LIKE mhag_t.mhag003, 
+   mhaf009 LIKE mhaf_t.mhaf009, 
+   mhaf018 LIKE mhaf_t.mhaf018, 
+   mhaf012 LIKE mhaf_t.mhaf012, 
+   mhaf012_desc LIKE type_t.chr500, 
+   mhaf019 LIKE mhaf_t.mhaf019, 
+   mhaf019_desc LIKE type_t.chr80, 
+   mhaf013 LIKE mhaf_t.mhaf013, 
+   mhaf013_desc LIKE type_t.chr80, 
+   mhag004 LIKE mhag_t.mhag004, 
+   mhag004_desc LIKE type_t.chr80, 
+   mhag005 LIKE mhag_t.mhag005, 
+   mhag006 LIKE mhag_t.mhag006, 
+   mhagunit LIKE mhag_t.mhagunit, 
+   mhag007 LIKE mhag_t.mhag007, 
+   mhag008 LIKE mhag_t.mhag008, 
+   mhag008_desc LIKE type_t.chr80, 
+   mhag009 LIKE mhag_t.mhag009, 
+   mhagstus LIKE mhag_t.mhagstus, 
+   mhagownid LIKE mhag_t.mhagownid, 
+   mhagownid_desc LIKE type_t.chr80, 
+   mhagowndp LIKE mhag_t.mhagowndp, 
+   mhagowndp_desc LIKE type_t.chr80, 
+   mhagcrtid LIKE mhag_t.mhagcrtid, 
+   mhagcrtid_desc LIKE type_t.chr80, 
+   mhagcrtdp LIKE mhag_t.mhagcrtdp, 
+   mhagcrtdp_desc LIKE type_t.chr80, 
+   mhagcrtdt LIKE mhag_t.mhagcrtdt, 
+   mhagmodid LIKE mhag_t.mhagmodid, 
+   mhagmodid_desc LIKE type_t.chr80, 
+   mhagmoddt LIKE mhag_t.mhagmoddt, 
+   mhagcnfid LIKE mhag_t.mhagcnfid, 
+   mhagcnfid_desc LIKE type_t.chr80, 
+   mhagcnfdt LIKE mhag_t.mhagcnfdt
+       END RECORD
+ 
+DEFINE g_browser    DYNAMIC ARRAY OF RECORD  #查詢方案用陣列 
+         b_statepic     LIKE type_t.chr50,
+            b_mhagsite LIKE mhag_t.mhagsite,
+   b_mhagsite_desc LIKE type_t.chr80,
+      b_mhag001 LIKE mhag_t.mhag001,
+   b_mhag001_desc LIKE type_t.chr80,
+      b_mhag002 LIKE mhag_t.mhag002,
+      b_mhag003 LIKE mhag_t.mhag003,
+      b_mhag004 LIKE mhag_t.mhag004,
+      b_mhag005 LIKE mhag_t.mhag005,
+      b_mhag006 LIKE mhag_t.mhag006,
+      b_mhag007 LIKE mhag_t.mhag007,
+      b_mhag008 LIKE mhag_t.mhag008
+      END RECORD 
+ 
+#add-point:自定義模組變數(Module Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+{<point name="global.variable"/>}
+#end add-point
+ 
+#模組變數(Module Variables)
+DEFINE g_mhag_m        type_g_mhag_m  #單頭變數宣告
+DEFINE g_mhag_m_t      type_g_mhag_m  #單頭舊值宣告(系統還原用)
+DEFINE g_mhag_m_o      type_g_mhag_m  #單頭舊值宣告(其他用途)
+DEFINE g_mhag_m_mask_o type_g_mhag_m  #轉換遮罩前資料
+DEFINE g_mhag_m_mask_n type_g_mhag_m  #轉換遮罩後資料
+ 
+   DEFINE g_mhag001_t LIKE mhag_t.mhag001
+ 
+   
+ 
+   
+ 
+DEFINE g_wc                  STRING                        #儲存查詢條件
+DEFINE g_wc_t                STRING                        #備份查詢條件
+DEFINE g_wc_filter           STRING                        #儲存過濾查詢條件
+DEFINE g_wc_filter_t         STRING                        #備份過濾查詢條件
+DEFINE g_sql                 STRING                        #資料撈取用SQL(含reference)
+DEFINE g_forupd_sql          STRING                        #資料鎖定用SQL
+DEFINE g_cnt                 LIKE type_t.num10             #指標/統計用變數
+DEFINE g_jump                LIKE type_t.num10             #查詢指定的筆數 
+DEFINE g_no_ask              LIKE type_t.num5              #是否開啟指定筆視窗 
+DEFINE g_rec_b               LIKE type_t.num10             #單身筆數                         
+DEFINE l_ac                  LIKE type_t.num10             #目前處理的ARRAY CNT 
+DEFINE g_curr_diag           ui.Dialog                     #Current Dialog     
+DEFINE gwin_curr             ui.Window                     #Current Window
+DEFINE gfrm_curr             ui.Form                       #Current Form
+DEFINE g_pagestart           LIKE type_t.num10             #page起始筆數
+DEFINE g_page_action         STRING                        #page action
+DEFINE g_header_hidden       LIKE type_t.num5              #隱藏單頭
+DEFINE g_worksheet_hidden    LIKE type_t.num5              #隱藏工作Panel
+DEFINE g_page                STRING                        #第幾頁
+DEFINE g_current_sw          BOOLEAN                       #Browser所在筆數用開關
+DEFINE g_ch                  base.Channel                  #外串程式用
+DEFINE g_state               STRING                        #確認前一個動作是否為新增/複製
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #reference用陣列
+DEFINE g_error_show          LIKE type_t.num5              #是否顯示資料過多的錯誤訊息
+DEFINE g_aw                  STRING                        #確定當下點擊的單身(modify_detail用)
+DEFINE g_chk                 BOOLEAN                       #助記碼判斷用
+DEFINE g_default             BOOLEAN                       #是否有外部參數查詢
+DEFINE g_log1                STRING                        #cl_log_modified_record用(舊值)
+DEFINE g_log2                STRING                        #cl_log_modified_record用(新值)
+ 
+#快速搜尋用
+DEFINE g_searchcol           STRING                        #查詢欄位代碼
+DEFINE g_searchstr           STRING                        #查詢欄位字串
+DEFINE g_order               STRING                        #查詢排序模式
+ 
+#Browser用
+DEFINE g_current_idx         LIKE type_t.num10             #Browser 所在筆數(當下page)
+DEFINE g_current_row         LIKE type_t.num10             #Browser 所在筆數(暫存用)
+DEFINE g_current_cnt         LIKE type_t.num10             #Browser 總筆數(當下page)
+DEFINE g_browser_idx         LIKE type_t.num10             #Browser 所在筆數(所有資料)
+DEFINE g_browser_cnt         LIKE type_t.num10             #Browser 總筆數(所有資料)
+DEFINE g_row_index           LIKE type_t.num10             #階層樹狀用指標
+DEFINE g_add_browse          STRING                        #新增填充用WC
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization" 
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+{<point name="global.argv"/>}
+#end add-point
+{</section>}
+ 
+{<section id="amhm320.main" >}
+#應用 a26 樣板自動產生(Version:7)
+#+ 作業開始(主程式類型)
+MAIN
+   #add-point:main段define(客製用) name="main.define_customerization"
+   {<point name="main.define_customerization" edit="c" mark="Y"/>}
+   #end add-point   
+   #add-point:main段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="main.define"
+   {<point name="main.define"/>}
+   #end add-point   
+   
+   OPTIONS
+   INPUT NO WRAP
+   DEFER INTERRUPT
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+       
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("amh","")
+ 
+   #add-point:作業初始化 name="main.init"
+   {<point name="main.init" />}
+   #end add-point
+   
+   
+ 
+   #LOCK CURSOR (identifier)
+   #add-point:SQL_define name="main.define_sql"
+   {<point name="main.define_sql" />}
+   #end add-point
+   LET g_forupd_sql = " SELECT mhagsite,'',mhag001,'',mhag002,'','','','',mhag003,'','','','','','', 
+       '','',mhag004,'',mhag005,mhag006,mhagunit,mhag007,mhag008,'',mhag009,mhagstus,mhagownid,'',mhagowndp, 
+       '',mhagcrtid,'',mhagcrtdp,'',mhagcrtdt,mhagmodid,'',mhagmoddt,mhagcnfid,'',mhagcnfdt", 
+                      " FROM mhag_t",
+                      " WHERE mhagent= ? AND mhag001=? FOR UPDATE"
+   #add-point:SQL_define name="main.after_define_sql"
+   {<point name="main.after_define_sql"/>}
+   #end add-point
+   LET g_forupd_sql = cl_sql_forupd(g_forupd_sql)                #轉換不同資料庫語法
+   LET g_forupd_sql = cl_sql_add_mask(g_forupd_sql)              #遮蔽特定資料
+   DECLARE amhm320_cl CURSOR FROM g_forupd_sql                 # LOCK CURSOR
+ 
+   LET g_sql = " SELECT DISTINCT t0.mhagsite,t0.mhag001,t0.mhag002,t0.mhag003,t0.mhag004,t0.mhag005, 
+       t0.mhag006,t0.mhagunit,t0.mhag007,t0.mhag008,t0.mhag009,t0.mhagstus,t0.mhagownid,t0.mhagowndp, 
+       t0.mhagcrtid,t0.mhagcrtdp,t0.mhagcrtdt,t0.mhagmodid,t0.mhagmoddt,t0.mhagcnfid,t0.mhagcnfdt,t1.ooefl003 , 
+       t2.mhaf002 ,t6.oocql004 ,t7.oocql004 ,t8.ooag011 ,t9.ooefl003 ,t10.ooag011 ,t11.ooefl003 ,t12.ooag011 , 
+       t13.ooag011",
+               " FROM mhag_t t0",
+                              " LEFT JOIN ooefl_t t1 ON t1.ooeflent="||g_enterprise||" AND t1.ooefl001=t0.mhagsite AND t1.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN mhaf_t t2 ON t2.mhafent="||g_enterprise||" AND t2.mhaf001=t0.mhag001  ",
+               " LEFT JOIN oocql_t t6 ON t6.oocqlent="||g_enterprise||" AND t6.oocql001='2128' AND t6.oocql002=t0.mhag004 AND t6.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN oocql_t t7 ON t7.oocqlent="||g_enterprise||" AND t7.oocql001='2129' AND t7.oocql002=t0.mhag008 AND t7.oocql003='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t8 ON t8.ooagent="||g_enterprise||" AND t8.ooag001=t0.mhagownid  ",
+               " LEFT JOIN ooefl_t t9 ON t9.ooeflent="||g_enterprise||" AND t9.ooefl001=t0.mhagowndp AND t9.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t10 ON t10.ooagent="||g_enterprise||" AND t10.ooag001=t0.mhagcrtid  ",
+               " LEFT JOIN ooefl_t t11 ON t11.ooeflent="||g_enterprise||" AND t11.ooefl001=t0.mhagcrtdp AND t11.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN ooag_t t12 ON t12.ooagent="||g_enterprise||" AND t12.ooag001=t0.mhagmodid  ",
+               " LEFT JOIN ooag_t t13 ON t13.ooagent="||g_enterprise||" AND t13.ooag001=t0.mhagcnfid  ",
+ 
+               " WHERE t0.mhagent = " ||g_enterprise|| " AND t0.mhag001 = ?"
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   #add-point:SQL_define name="main.after_refresh_sql"
+   {<point name="main.after_refresh_sql"/>}
+   #end add-point
+   PREPARE amhm320_master_referesh FROM g_sql
+ 
+    
+ 
+   
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call name="main.servicecall"
+      {<point name="main.servicecall" />}
+      #end add-point
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_amhm320 WITH FORM cl_ap_formpath("amh",g_code)
+   
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+   
+      #程式初始化
+      CALL amhm320_init()   
+ 
+      #進入選單 Menu (="N")
+      CALL amhm320_ui_dialog() 
+      
+      #add-point:畫面關閉前 name="main.before_close"
+      {<point name="main.before_close" />}
+      #end add-point
+ 
+      #畫面關閉
+      CLOSE WINDOW w_amhm320
+      
+   END IF 
+   
+   CLOSE amhm320_cl
+   
+   
+ 
+   #add-point:作業離開前 name="main.exit"
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="amhm320.init" >}
+#+ 瀏覽頁簽資料初始化
+PRIVATE FUNCTION amhm320_init()
+   #add-point:init段define(客製用) name="init.define_customerization"
+   {<point name="init.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:init段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="init.define"
+   {<point name="init.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="init.pre_function"
+   {<point name="init.pre_function"/>}
+   #end add-point
+   
+   #定義combobox狀態
+      CALL cl_set_combo_scc_part('mhagstus','50','N,Y,X')
+ 
+      CALL cl_set_combo_scc('mhaf005','6773') 
+   CALL cl_set_combo_scc('mhaf009','6774') 
+ 
+   LET g_error_show = 1
+   LET gwin_curr = ui.Window.getCurrent()
+   LET gfrm_curr = gwin_curr.getForm()   
+   
+   #add-point:畫面資料初始化 name="init.init"
+   {<point name="init.init" />}
+   #end add-point
+   
+   #根據外部參數進行搜尋
+   CALL amhm320_default_search()
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="amhm320.ui_dialog" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION amhm320_ui_dialog() 
+   #add-point:ui_dialog段define(客製用) name="ui_dialog.define_customerization"
+   {<point name="ui_dialog.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE li_exit   LIKE type_t.num10       #判別是否為離開作業
+   DEFINE li_idx    LIKE type_t.num10       #指標變數
+   DEFINE ls_wc     STRING                  #wc用
+   DEFINE la_param  RECORD                  #程式串查用變數
+          prog       STRING,
+          actionid   STRING,
+          background LIKE type_t.chr1,
+          param      DYNAMIC ARRAY OF STRING
+                    END RECORD
+   DEFINE ls_js     STRING                  #轉換後的json字串
+   DEFINE l_cmd_token           base.StringTokenizer   #報表作業cmdrun使用 
+   DEFINE l_cmd_next            STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_cnt             LIKE type_t.num5       #報表作業cmdrun使用
+   DEFINE l_cmd_prog_arg        STRING                 #報表作業cmdrun使用
+   DEFINE l_cmd_arg             STRING                 #報表作業cmdrun使用
+   #add-point:ui_dialog段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_dialog.define"
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="ui_dialog.pre_function"
+   {<point name="ui_dialog.pre_function"/>}
+   #end add-point
+   
+   LET li_exit = FALSE
+   LET g_current_row = 0
+   LET g_current_idx = 0
+ 
+   #若有外部參數查詢, 則直接顯示資料(隱藏查詢方案)
+   IF g_default THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   ELSE
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF
+   
+   #action default動作
+   #應用 a42 樣板自動產生(Version:3)
+   #進入程式時預設執行的動作
+   CASE g_actdefault
+      WHEN "insert"
+         LET g_action_choice="insert"
+         LET g_actdefault = ""
+         IF cl_auth_chk_act("insert") THEN
+            CALL amhm320_insert()
+            #add-point:ON ACTION insert name="menu.default.insert"
+            {<point name="menu.default.insert" />}
+            #END add-point
+         END IF
+ 
+      #add-point:action default自訂 name="ui_dialog.action_default"
+      {<point name="ui_dialog.action_default"/>}
+      #end add-point
+      OTHERWISE
+   END CASE
+ 
+ 
+ 
+   
+   #add-point:ui_dialog段before dialog  name="ui_dialog.before_dialog"
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE li_exit = FALSE
+   
+      IF g_action_choice = "logistics" THEN
+         #清除畫面及相關資料
+         CLEAR FORM
+         CALL g_browser.clear()       
+         INITIALIZE g_mhag_m.* TO NULL
+         LET g_wc  = ' 1=2'
+         LET g_action_choice = ""
+         CALL amhm320_init()
+      END IF
+      
+      CALL lib_cl_dlg.cl_dlg_before_display()
+      CALL cl_notice()
+    
+      #確保g_current_idx位於正常區間內
+      #小於,等於0則指到第1筆
+      IF g_current_idx <= 0 THEN
+         LET g_current_idx = 1
+      END IF
+               
+      IF g_main_hidden = 0 THEN
+         MENU
+            BEFORE MENU 
+               #先填充browser資料
+               CALL amhm320_browser_fill(g_wc,"")
+               CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               
+               #還原為原本指定筆數
+               IF g_current_row > 0 THEN
+                  LET g_current_idx = g_current_row
+               END IF
+ 
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL amhm320_fetch("")   
+               END IF               
+               #add-point:ui_dialog段 before menu name="ui_dialog.before_menu"
+               {<point name="ui_dialog.before_menu"/>}
+               #end add-point
+            
+            #狀態碼切換
+            ON ACTION statechange
+               CALL amhm320_statechange()
+               LET g_action_choice="statechange"
+               #根據資料狀態切換action狀態
+               CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+               CALL amhm320_set_act_visible()
+               CALL amhm320_set_act_no_visible()
+               IF NOT (g_mhag_m.mhag001 IS NULL
+ 
+                 ) THEN
+                  #組合條件
+                  LET g_add_browse = " mhagent = " ||g_enterprise|| " AND",
+                                     " mhag001 = '", g_mhag_m.mhag001, "' "
+ 
+                  #填到對應位置
+                  CALL amhm320_browser_fill(g_wc,"")
+               END IF
+               
+            #第一筆資料
+            ON ACTION first
+               CALL amhm320_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            #下一筆資料
+            ON ACTION next
+               CALL amhm320_fetch("N")
+               LET g_current_row = g_current_idx
+            
+            #指定筆資料
+            ON ACTION jump
+               CALL amhm320_fetch("/")
+               LET g_current_row = g_current_idx
+            
+            #上一筆資料
+            ON ACTION previous
+               CALL amhm320_fetch("P")
+               LET g_current_row = g_current_idx
+            
+            #最後筆資料
+            ON ACTION last 
+               CALL amhm320_fetch("L")  
+               LET g_current_row = g_current_idx
+            
+            #離開程式
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU 
+            
+            #離開程式
+            ON ACTION close
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT MENU
+            
+            #主頁摺疊
+            ON ACTION mainhidden   
+               LET g_action_choice = "mainhidden"            
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+                  CALL cl_notice()
+               END IF
+               EXIT MENU
+               
+            ON ACTION worksheethidden   #瀏覽頁折疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               EXIT MENU
+            
+            #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+          
+            #查詢方案用
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL amhm320_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            #查詢方案用
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL amhm320_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "-100" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL amhm320_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+            
+            
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL amhm320_modify()
+               #add-point:ON ACTION modify name="menu2.modify"
+               {<point name="menu2.modify" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL amhm320_delete()
+               #add-point:ON ACTION delete name="menu2.delete"
+               {<point name="menu2.delete" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL amhm320_insert()
+               #add-point:ON ACTION insert name="menu2.insert"
+               {<point name="menu2.insert" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION ins_blacklist
+            LET g_action_choice="ins_blacklist"
+            IF cl_auth_chk_act("ins_blacklist") THEN
+               
+               #add-point:ON ACTION ins_blacklist name="menu2.ins_blacklist"
+               {<point name="menu2.ins_blacklist" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu2.output"
+               {<point name="menu2.output" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu2.quickprint"
+               {<point name="menu2.quickprint" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION produce_payment
+            LET g_action_choice="produce_payment"
+            IF cl_auth_chk_act("produce_payment") THEN
+               
+               #add-point:ON ACTION produce_payment name="menu2.produce_payment"
+               {<point name="menu2.produce_payment" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL amhm320_reproduce()
+               #add-point:ON ACTION reproduce name="menu2.reproduce"
+               {<point name="menu2.reproduce" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL amhm320_query()
+               #add-point:ON ACTION query name="menu2.query"
+               {<point name="menu2.query" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION del_blacklist
+            LET g_action_choice="del_blacklist"
+            IF cl_auth_chk_act("del_blacklist") THEN
+               
+               #add-point:ON ACTION del_blacklist name="menu2.del_blacklist"
+               {<point name="menu2.del_blacklist" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+            
+            
+            
+            #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL amhm320_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.menu.related_document"
+               {<point name="ui_dialog.menu.related_document"/>}
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL amhm320_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.menu.agendum"
+            {<point name="ui_dialog.menu.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL amhm320_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.menu.followup"
+            {<point name="ui_dialog.menu.followup"/>}
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+ 
+            
+            #主選單用ACTION
+            &include "main_menu_exit_menu.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END MENU
+      
+      ELSE
+      
+         DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+           
+      
+            #左側瀏覽頁簽
+            DISPLAY ARRAY g_browser TO s_browse.* ATTRIBUTE(COUNT=g_rec_b)
+            
+               BEFORE ROW
+                  #回歸舊筆數位置 (回到當時異動的筆數)
+                  LET g_current_idx = DIALOG.getCurrentRow("s_browse")
+                  IF g_current_idx = 0 THEN
+                     LET g_current_idx = 1
+                  END IF
+                  LET g_current_row = g_current_idx  #目前指標
+                  LET g_current_sw = TRUE
+                  CALL cl_show_fld_cont()     
+                  
+                  #當每次點任一筆資料都會需要用到               
+                  CALL amhm320_fetch("")
+ 
+               ON ACTION qbefield_user   #欄位隱藏設定 
+                  LET g_action_choice="qbefield_user"
+                  CALL cl_ui_qbefield_user()
+    
+               
+            
+            END DISPLAY
+ 
+            #add-point:ui_dialog段自定義display array name="ui_dialog.more_displayarray"
+            {<point name="ui_dialog.more_displayarray"/>}
+            #end add-point
+ 
+            #查詢方案用
+            SUBDIALOG lib_cl_dlg.cl_dlg_qryplan
+            SUBDIALOG lib_cl_dlg.cl_dlg_relateapps
+         
+            BEFORE DIALOG
+               #先填充browser資料
+               IF g_action_choice <> "mainhidden" THEN
+                  CALL amhm320_browser_fill(g_wc,"")
+               END IF
+               CALL cl_navigator_setting(g_current_idx, g_current_cnt)
+               LET g_curr_diag = ui.DIALOG.getCurrent()
+               #還原為原本指定筆數
+               IF g_current_row > 1 THEN
+                  #當刪除最後一筆資料時可能產生錯誤, 進行額外判斷
+                  IF g_current_row > g_browser.getLength() THEN
+                     LET g_current_row = g_browser.getLength()
+                  END IF 
+                  LET g_current_idx = g_current_row
+                  CALL DIALOG.setCurrentRow("s_browse",g_current_idx)
+               END IF
+ 
+               #當每次點任一筆資料都會需要用到  
+               IF g_browser_cnt > 0 THEN
+                  CALL amhm320_fetch("")   
+               END IF          
+               CALL cl_notice()
+               
+               #add-point:ui_dialog段before name="ui_dialog.b_dialog"
+               {<point name="ui_dialog.b_dialog"/>}
+               #end add-point  
+            
+            AFTER DIALOG
+               #add-point:ui_dialog段 after dialog name="ui_dialog.after_dialog"
+               {<point name="ui_dialog.after_dialog"/>}
+               #end add-point
+            
+            #狀態碼切換
+            ON ACTION statechange
+               CALL amhm320_statechange()
+               LET g_action_choice="statechange"
+               #根據資料狀態切換action狀態
+               CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+               CALL amhm320_set_act_visible()
+               CALL amhm320_set_act_no_visible()
+               IF NOT (g_mhag_m.mhag001 IS NULL
+ 
+                 ) THEN
+                  #組合條件
+                  LET g_add_browse = " mhagent = " ||g_enterprise|| " AND",
+                                     " mhag001 = '", g_mhag_m.mhag001, "' "
+ 
+                  #填到對應位置
+                  CALL amhm320_browser_fill(g_wc,"")
+               END IF
+         
+            #應用 a49 樣板自動產生(Version:4)
+            #過濾瀏覽頁資料
+            ON ACTION filter
+               LET g_action_choice = "fetch"
+               #add-point:filter action name="ui_dialog.action.filter"
+               {<point name="ui_dialog.action.filter"/>}
+               #end add-point
+               CALL amhm320_filter()
+               EXIT DIALOG
+ 
+ 
+ 
+            
+            #第一筆資料
+            ON ACTION first
+               CALL amhm320_fetch("F") 
+               LET g_current_row = g_current_idx
+            
+            #下一筆資料
+            ON ACTION next
+               CALL amhm320_fetch("N")
+               LET g_current_row = g_current_idx
+         
+            #指定筆資料
+            ON ACTION jump
+               CALL amhm320_fetch("/")
+               LET g_current_row = g_current_idx
+         
+            #上一筆資料
+            ON ACTION previous
+               CALL amhm320_fetch("P")
+               LET g_current_row = g_current_idx
+          
+            #最後筆資料
+            ON ACTION last 
+               CALL amhm320_fetch("L")  
+               LET g_current_row = g_current_idx
+         
+            #離開程式
+            ON ACTION exit
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+         
+            #離開程式
+            ON ACTION close
+               LET g_action_choice="exit"
+               LET INT_FLAG = FALSE
+               LET li_exit = TRUE
+               EXIT DIALOG 
+    
+            #主頁摺疊
+            ON ACTION mainhidden 
+               LET g_action_choice = "mainhidden"                
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+                  CALL cl_notice()
+               END IF
+               #EXIT DIALOG
+               
+            ON ACTION worksheethidden   #瀏覽頁折疊
+               IF g_main_hidden THEN
+                  CALL gfrm_curr.setElementHidden("mainlayout",0)
+                  CALL gfrm_curr.setElementHidden("worksheet",1)
+                  LET g_main_hidden = 0
+               ELSE
+                  CALL gfrm_curr.setElementHidden("mainlayout",1)
+                  CALL gfrm_curr.setElementHidden("worksheet",0)
+                  LET g_main_hidden = 1
+               END IF
+               #EXIT DIALOG
+         
+            ON ACTION exporttoexcel
+               LET g_action_choice="exporttoexcel"
+               IF cl_auth_chk_act("exporttoexcel") THEN
+                  #browser
+                  CALL g_export_node.clear()
+                  LET g_export_node[1] = base.typeInfo.create(g_browser)
+                  LET g_export_id[1]   = "s_browse"
+                  CALL cl_export_to_excel()
+               END IF
+         
+            #單頭摺疊，可利用hot key "Alt-s"開啟/關閉單頭
+            ON ACTION controls   
+               IF g_header_hidden THEN
+                  CALL gfrm_curr.setElementHidden("vb_master",0)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+                  LET g_header_hidden = 0     #visible
+               ELSE
+                  CALL gfrm_curr.setElementHidden("vb_master",1)
+                  CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+                  LET g_header_hidden = 1     #hidden     
+               END IF
+ 
+            
+            #查詢方案用
+            ON ACTION queryplansel
+               CALL cl_dlg_qryplan_select() RETURNING ls_wc
+               #不是空條件才寫入g_wc跟重新找資料
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  CALL amhm320_browser_fill(g_wc,"F")   #browser_fill()會將notice區塊清空
+                  CALL cl_notice()   #重新顯示,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               END IF
+            
+            #查詢方案用
+            ON ACTION qbe_select
+               CALL cl_qbe_list("m") RETURNING ls_wc
+               IF NOT cl_null(ls_wc) THEN
+                  LET g_wc = ls_wc
+                  #取得條件後需要重查、跳到結果第一筆資料的功能程式段
+                  CALL amhm320_browser_fill(g_wc,"F")
+                  IF g_browser_cnt = 0 THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "" 
+                     LET g_errparam.code   = "-100" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     CLEAR FORM
+                  ELSE
+                     CALL amhm320_fetch("F")
+                  END IF
+               END IF
+               #重新搜尋會將notice區塊清空,此處不可用EXIT DIALOG, SUBDIALOG重讀會導致部分變數消失
+               CALL cl_notice()
+               
+            
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION modify
+            LET g_action_choice="modify"
+            IF cl_auth_chk_act("modify") THEN
+               LET g_aw = ''
+               CALL amhm320_modify()
+               #add-point:ON ACTION modify name="menu.modify"
+               {<point name="menu.modify" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION delete
+            LET g_action_choice="delete"
+            IF cl_auth_chk_act("delete") THEN
+               CALL amhm320_delete()
+               #add-point:ON ACTION delete name="menu.delete"
+               {<point name="menu.delete" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION insert
+            LET g_action_choice="insert"
+            IF cl_auth_chk_act("insert") THEN
+               CALL amhm320_insert()
+               #add-point:ON ACTION insert name="menu.insert"
+               {<point name="menu.insert" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION ins_blacklist
+            LET g_action_choice="ins_blacklist"
+            IF cl_auth_chk_act("ins_blacklist") THEN
+               
+               #add-point:ON ACTION ins_blacklist name="menu.ins_blacklist"
+               {<point name="menu.ins_blacklist" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION output
+            LET g_action_choice="output"
+            IF cl_auth_chk_act("output") THEN
+               
+               #add-point:ON ACTION output name="menu.output"
+               {<point name="menu.output" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION quickprint
+            LET g_action_choice="quickprint"
+            IF cl_auth_chk_act("quickprint") THEN
+               
+               #add-point:ON ACTION quickprint name="menu.quickprint"
+               {<point name="menu.quickprint" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION produce_payment
+            LET g_action_choice="produce_payment"
+            IF cl_auth_chk_act("produce_payment") THEN
+               
+               #add-point:ON ACTION produce_payment name="menu.produce_payment"
+               {<point name="menu.produce_payment" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION reproduce
+            LET g_action_choice="reproduce"
+            IF cl_auth_chk_act("reproduce") THEN
+               CALL amhm320_reproduce()
+               #add-point:ON ACTION reproduce name="menu.reproduce"
+               {<point name="menu.reproduce" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION query
+            LET g_action_choice="query"
+            IF cl_auth_chk_act("query") THEN
+               CALL amhm320_query()
+               #add-point:ON ACTION query name="menu.query"
+               {<point name="menu.query" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+         #應用 a43 樣板自動產生(Version:4)
+         ON ACTION del_blacklist
+            LET g_action_choice="del_blacklist"
+            IF cl_auth_chk_act("del_blacklist") THEN
+               
+               #add-point:ON ACTION del_blacklist name="menu.del_blacklist"
+               {<point name="menu.del_blacklist" mark="Y"/>}
+               #END add-point
+               
+            END IF
+ 
+ 
+ 
+ 
+            
+            
+ 
+            #應用 a46 樣板自動產生(Version:3)
+         #新增相關文件
+         ON ACTION related_document
+            CALL amhm320_set_pk_array()
+            IF cl_auth_chk_act("related_document") THEN
+               #add-point:ON ACTION related_document name="ui_dialog.dialog.related_document"
+               {<point name="ui_dialog.dialog.related_document"/>}
+               #END add-point
+               CALL cl_doc()
+            END IF
+            
+         ON ACTION agendum
+            CALL amhm320_set_pk_array()
+            #add-point:ON ACTION agendum name="ui_dialog.dialog.agendum"
+            {<point name="ui_dialog.dialog.agendum"/>}
+            #END add-point
+            CALL cl_user_overview()
+            CALL cl_user_overview_set_follow_pic()
+         
+         ON ACTION followup
+            CALL amhm320_set_pk_array()
+            #add-point:ON ACTION followup name="ui_dialog.dialog.followup"
+            {<point name="ui_dialog.dialog.followup"/>}
+            #END add-point
+            CALL cl_user_overview_follow('')
+ 
+ 
+ 
+ 
+            #主選單用ACTION
+            &include "main_menu_exit_dialog.4gl"
+            &include "relating_action.4gl"
+            #交談指令共用ACTION
+            &include "common_action.4gl"
+            
+         END DIALOG 
+      
+      END IF
+      
+      #add-point:ui_dialog段 after dialog name="ui_dialog.exit_dialog"
+      {<point name="ui_dialog.exit_dialog"/>}
+      #end add-point
+      
+      #(ver:50) ---start---
+      IF li_exit THEN
+         #add-point:ui_dialog段離開dialog前 name="ui_dialog.b_exit"
+         {<point name="ui_dialog.b_exit"/>}
+         #end add-point
+         EXIT WHILE
+      END IF
+      #(ver:50) --- end ---
+ 
+   END WHILE
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="amhm320.browser_fill" >}
+#應用 a29 樣板自動產生(Version:15)
+#+ 瀏覽頁簽資料填充(一般單檔)
+PRIVATE FUNCTION amhm320_browser_fill(p_wc,ps_page_action) 
+   #add-point:browser_fill段define name="browser_fill.define_customerization"
+   {<point name="browser_fill.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_wc              STRING
+   DEFINE ls_wc             STRING
+   DEFINE ps_page_action    STRING
+   DEFINE l_searchcol       STRING
+   DEFINE l_sql             STRING
+   DEFINE l_sql_rank        STRING
+   #add-point:browser_fill段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="browser_fill.define"
+   {<point name="browser_fill.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="browser_fill.pre_function"
+   {<point name="browser_fill.pre_function"/>}
+   #end add-point
+   
+   LET l_searchcol = "mhag001"
+ 
+   LET p_wc = p_wc.trim() #當查詢按下Q時 按下放棄 g_wc = "  " 所以要清掉空白
+   IF cl_null(p_wc) THEN  #p_wc 查詢條件
+      LET p_wc = " 1=1 " 
+   END IF
+   #add-point:browser_fill段wc控制 name="browser_fill.wc"
+   {<point name="browser_fill.wc"/>}
+   #end add-point
+ 
+   LET g_sql = " SELECT COUNT(1) FROM mhag_t ",
+               "  ",
+               "  ",
+               " WHERE mhagent = " ||g_enterprise|| " AND ", 
+               p_wc CLIPPED, cl_sql_add_filter("mhag_t")
+                
+   #add-point:browser_fill段cnt_sql name="browser_fill.cnt_sql"
+   {<point name="browser_fill.cnt_sql"/>}
+   #end add-point
+                
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE header_cnt_pre FROM g_sql
+      EXECUTE header_cnt_pre INTO g_browser_cnt
+      FREE header_cnt_pre 
+   END IF
+   
+   #若超過最大顯示筆數
+   IF g_browser_cnt > g_max_browse THEN
+      IF g_error_show = 1 THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = g_browser_cnt 
+         LET g_errparam.code   = 9035
+         LET g_errparam.popup  = TRUE 
+         CALL cl_err()
+      END IF
+   END IF
+   
+   LET g_error_show = 0
+   
+   IF ps_page_action = "F" OR
+      ps_page_action = "P"  OR
+      ps_page_action = "N"  OR
+      ps_page_action = "L"  THEN
+      LET g_page_action = ps_page_action
+   END IF
+   
+   IF cl_null(g_add_browse) THEN
+      #清除畫面
+      CLEAR FORM
+      INITIALIZE g_mhag_m.* TO NULL
+      CALL g_browser.clear()
+      LET g_cnt = 1
+      LET ls_wc = p_wc
+   ELSE
+      LET ls_wc = g_add_browse
+      LET g_cnt = g_current_idx
+   END IF
+   
+   LET g_sql = " SELECT t0.mhagstus,t0.mhagsite,t0.mhag001,t0.mhag002,t0.mhag003,t0.mhag004,t0.mhag005, 
+       t0.mhag006,t0.mhag007,t0.mhag008,t1.ooefl003 ,t2.mhaf002",
+               " FROM mhag_t t0 ",
+               "  ",
+                              " LEFT JOIN ooefl_t t1 ON t1.ooeflent="||g_enterprise||" AND t1.ooefl001=t0.mhagsite AND t1.ooefl002='"||g_dlang||"' ",
+               " LEFT JOIN mhaf_t t2 ON t2.mhafent="||g_enterprise||" AND t2.mhaf001=t0.mhag001  ",
+ 
+               " WHERE t0.mhagent = " ||g_enterprise|| " AND ", ls_wc, cl_sql_add_filter("mhag_t")
+   #add-point:browser_fill段fill_wc name="browser_fill.fill_wc"
+   {<point name="browser_fill.fill_wc"/>}
+   #end add-point 
+   LET g_sql = g_sql, " ORDER BY ",l_searchcol," ",g_order
+   #add-point:browser_fill段before_pre name="browser_fill.before_pre"
+   {<point name="browser_fill.before_pre"/>}
+   #end add-point                    
+ 
+   #LET g_sql = cl_sql_add_tabid(g_sql,"mhag_t")             #WC重組
+   LET g_sql = cl_sql_add_mask(g_sql)              #遮蔽特定資料
+   
+   IF g_sql.getIndexOf(" 1=2",1) THEN
+      DISPLAY "INFO: 1=2 jumped!"
+   ELSE
+      PREPARE browse_pre FROM g_sql
+      DECLARE browse_cur CURSOR FOR browse_pre
+      
+      FOREACH browse_cur INTO g_browser[g_cnt].b_statepic,g_browser[g_cnt].b_mhagsite,g_browser[g_cnt].b_mhag001, 
+          g_browser[g_cnt].b_mhag002,g_browser[g_cnt].b_mhag003,g_browser[g_cnt].b_mhag004,g_browser[g_cnt].b_mhag005, 
+          g_browser[g_cnt].b_mhag006,g_browser[g_cnt].b_mhag007,g_browser[g_cnt].b_mhag008,g_browser[g_cnt].b_mhagsite_desc, 
+          g_browser[g_cnt].b_mhag001_desc
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL 
+            LET g_errparam.extend = "foreach:" 
+            LET g_errparam.code   = SQLCA.sqlcode 
+            LET g_errparam.popup  = TRUE 
+            CALL cl_err()
+            EXIT FOREACH
+         END IF
+         
+         
+         
+         #add-point:browser_fill段reference name="browser_fill.reference"
+         {<point name="browser_fill.reference"/>}
+         #end add-point
+         
+         #遮罩相關處理
+         CALL amhm320_browser_mask()
+         
+               #應用 a24 樣板自動產生(Version:3)
+      #browser顯示圖片
+      CASE g_browser[g_cnt].b_statepic
+         WHEN "N"
+            LET g_browser[g_cnt].b_statepic = "stus/16/open.png"
+         WHEN "Y"
+            LET g_browser[g_cnt].b_statepic = "stus/16/valid.png"
+         WHEN "X"
+            LET g_browser[g_cnt].b_statepic = "stus/16/void.png"
+         
+      END CASE
+ 
+ 
+ 
+         LET g_cnt = g_cnt + 1
+         IF g_cnt > g_max_rec THEN
+            EXIT FOREACH
+         END IF
+      END FOREACH
+ 
+      FREE browse_pre
+ 
+   END IF
+ 
+   #清空g_add_browse, 並指定指標位置
+   IF NOT cl_null(g_add_browse) THEN
+      LET g_add_browse = ""
+      CALL g_curr_diag.setCurrentRow("s_browse",g_current_idx)
+   END IF
+   
+   IF cl_null(g_browser[g_cnt].b_mhag001) THEN
+      CALL g_browser.deleteElement(g_cnt)
+   END IF
+   
+   LET g_header_cnt = g_browser.getLength()
+   LET g_current_cnt = g_browser.getLength()
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_rec_b = g_browser.getLength()
+   LET g_cnt = 0
+   DISPLAY g_browser_cnt TO FORMONLY.b_count
+   DISPLAY g_browser_cnt TO FORMONLY.h_count
+   
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+   
+   #add-point:browser_fill段結束前 name="browser_fill.after"
+   {<point name="browser_fill.after"/>}
+   #end add-point   
+   
+END FUNCTION
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="amhm320.construct" >}
+#+ QBE資料查詢
+PRIVATE FUNCTION amhm320_construct()
+   #add-point:cs段define(客製用) name="cs.define_customerization"
+   {<point name="cs.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ls_return      STRING
+   DEFINE ls_result      STRING 
+   DEFINE ls_wc          STRING 
+   #add-point:cs段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="cs.define"
+   {<point name="cs.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="cs.pre_function"
+   {<point name="cs.pre_function"/>}
+   #end add-point
+   
+   #清空畫面&資料初始化
+   CLEAR FORM
+   INITIALIZE g_mhag_m.* TO NULL
+   INITIALIZE g_wc TO NULL
+   LET g_current_row = 1
+ 
+   LET g_qryparam.state = "c"
+ 
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #螢幕上取條件
+      CONSTRUCT BY NAME g_wc ON mhagsite,mhag001,mhag002,mhaf004,mhaf005,mhaf007,mhag003,mhaf009,mhaf018, 
+          mhaf012,mhaf012_desc,mhaf019,mhaf013,mhag004,mhag005,mhag006,mhagunit,mhag007,mhag008,mhag009, 
+          mhagstus,mhagownid,mhagowndp,mhagcrtid,mhagcrtdp,mhagcrtdt,mhagmodid,mhagmoddt,mhagcnfid,mhagcnfdt 
+
+      
+         BEFORE CONSTRUCT                                    
+            #add-point:cs段more_construct name="cs.before_construct"
+            {<point name="cs.before_construct"/>}
+            #end add-point             
+      
+         #公用欄位開窗相關處理
+         #應用 a11 樣板自動產生(Version:3)
+         #共用欄位查詢處理  
+         ##----<<mhagcrtdt>>----
+         AFTER FIELD mhagcrtdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+ 
+         #----<<mhagmoddt>>----
+         AFTER FIELD mhagmoddt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<mhagcnfdt>>----
+         AFTER FIELD mhagcnfdt
+            CALL FGL_DIALOG_GETBUFFER() RETURNING ls_result
+            IF NOT cl_null(ls_result) THEN
+               IF NOT cl_chk_date_symbol(ls_result) THEN
+                  LET ls_result = cl_add_date_extra_cond(ls_result)
+               END IF
+            END IF
+            CALL FGL_DIALOG_SETBUFFER(ls_result)
+         
+         #----<<mhagpstdt>>----
+ 
+ 
+ 
+      
+         #一般欄位
+                  #Ctrlp:construct.c.mhagsite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhagsite
+            #add-point:ON ACTION controlp INFIELD mhagsite name="construct.c.mhagsite"
+            {<point name="construct.c.mhagsite" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhagsite
+            #add-point:BEFORE FIELD mhagsite name="construct.b.mhagsite"
+            {<point name="construct.b.mhagsite" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhagsite
+            
+            #add-point:AFTER FIELD mhagsite name="construct.a.mhagsite"
+            {<point name="construct.a.mhagsite" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.mhag001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhag001
+            #add-point:ON ACTION controlp INFIELD mhag001 name="construct.c.mhag001"
+            {<point name="construct.c.mhag001" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhag001
+            #add-point:BEFORE FIELD mhag001 name="construct.b.mhag001"
+            {<point name="construct.b.mhag001" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhag001
+            
+            #add-point:AFTER FIELD mhag001 name="construct.a.mhag001"
+            {<point name="construct.a.mhag001" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.mhag002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhag002
+            #add-point:ON ACTION controlp INFIELD mhag002 name="construct.c.mhag002"
+            {<point name="construct.c.mhag002" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhag002
+            #add-point:BEFORE FIELD mhag002 name="construct.b.mhag002"
+            {<point name="construct.b.mhag002" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhag002
+            
+            #add-point:AFTER FIELD mhag002 name="construct.a.mhag002"
+            {<point name="construct.a.mhag002" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.mhaf004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhaf004
+            #add-point:ON ACTION controlp INFIELD mhaf004 name="construct.c.mhaf004"
+            {<point name="construct.c.mhaf004" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhaf004
+            #add-point:BEFORE FIELD mhaf004 name="construct.b.mhaf004"
+            {<point name="construct.b.mhaf004" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhaf004
+            
+            #add-point:AFTER FIELD mhaf004 name="construct.a.mhaf004"
+            {<point name="construct.a.mhaf004" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhaf005
+            #add-point:BEFORE FIELD mhaf005 name="construct.b.mhaf005"
+            {<point name="construct.b.mhaf005" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhaf005
+            
+            #add-point:AFTER FIELD mhaf005 name="construct.a.mhaf005"
+            {<point name="construct.a.mhaf005" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.mhaf005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhaf005
+            #add-point:ON ACTION controlp INFIELD mhaf005 name="construct.c.mhaf005"
+            {<point name="construct.c.mhaf005" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhaf007
+            #add-point:BEFORE FIELD mhaf007 name="construct.b.mhaf007"
+            {<point name="construct.b.mhaf007" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhaf007
+            
+            #add-point:AFTER FIELD mhaf007 name="construct.a.mhaf007"
+            {<point name="construct.a.mhaf007" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.mhaf007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhaf007
+            #add-point:ON ACTION controlp INFIELD mhaf007 name="construct.c.mhaf007"
+            {<point name="construct.c.mhaf007" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhag003
+            #add-point:BEFORE FIELD mhag003 name="construct.b.mhag003"
+            {<point name="construct.b.mhag003" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhag003
+            
+            #add-point:AFTER FIELD mhag003 name="construct.a.mhag003"
+            {<point name="construct.a.mhag003" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.mhag003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhag003
+            #add-point:ON ACTION controlp INFIELD mhag003 name="construct.c.mhag003"
+            {<point name="construct.c.mhag003" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhaf009
+            #add-point:BEFORE FIELD mhaf009 name="construct.b.mhaf009"
+            {<point name="construct.b.mhaf009" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhaf009
+            
+            #add-point:AFTER FIELD mhaf009 name="construct.a.mhaf009"
+            {<point name="construct.a.mhaf009" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.mhaf009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhaf009
+            #add-point:ON ACTION controlp INFIELD mhaf009 name="construct.c.mhaf009"
+            {<point name="construct.c.mhaf009" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhaf018
+            #add-point:BEFORE FIELD mhaf018 name="construct.b.mhaf018"
+            {<point name="construct.b.mhaf018" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhaf018
+            
+            #add-point:AFTER FIELD mhaf018 name="construct.a.mhaf018"
+            {<point name="construct.a.mhaf018" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.mhaf018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhaf018
+            #add-point:ON ACTION controlp INFIELD mhaf018 name="construct.c.mhaf018"
+            {<point name="construct.c.mhaf018" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.mhaf012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhaf012
+            #add-point:ON ACTION controlp INFIELD mhaf012 name="construct.c.mhaf012"
+            {<point name="construct.c.mhaf012" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhaf012
+            #add-point:BEFORE FIELD mhaf012 name="construct.b.mhaf012"
+            {<point name="construct.b.mhaf012" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhaf012
+            
+            #add-point:AFTER FIELD mhaf012 name="construct.a.mhaf012"
+            {<point name="construct.a.mhaf012" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhaf012_desc
+            #add-point:BEFORE FIELD mhaf012_desc name="construct.b.mhaf012_desc"
+            {<point name="construct.b.mhaf012_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhaf012_desc
+            
+            #add-point:AFTER FIELD mhaf012_desc name="construct.a.mhaf012_desc"
+            {<point name="construct.a.mhaf012_desc" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.mhaf012_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhaf012_desc
+            #add-point:ON ACTION controlp INFIELD mhaf012_desc name="construct.c.mhaf012_desc"
+            {<point name="construct.c.mhaf012_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhaf019
+            #add-point:BEFORE FIELD mhaf019 name="construct.b.mhaf019"
+            {<point name="construct.b.mhaf019" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhaf019
+            
+            #add-point:AFTER FIELD mhaf019 name="construct.a.mhaf019"
+            {<point name="construct.a.mhaf019" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.mhaf019
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhaf019
+            #add-point:ON ACTION controlp INFIELD mhaf019 name="construct.c.mhaf019"
+            {<point name="construct.c.mhaf019" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.mhaf013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhaf013
+            #add-point:ON ACTION controlp INFIELD mhaf013 name="construct.c.mhaf013"
+            {<point name="construct.c.mhaf013" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhaf013
+            #add-point:BEFORE FIELD mhaf013 name="construct.b.mhaf013"
+            {<point name="construct.b.mhaf013" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhaf013
+            
+            #add-point:AFTER FIELD mhaf013 name="construct.a.mhaf013"
+            {<point name="construct.a.mhaf013" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.mhag004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhag004
+            #add-point:ON ACTION controlp INFIELD mhag004 name="construct.c.mhag004"
+            {<point name="construct.c.mhag004" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhag004
+            #add-point:BEFORE FIELD mhag004 name="construct.b.mhag004"
+            {<point name="construct.b.mhag004" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhag004
+            
+            #add-point:AFTER FIELD mhag004 name="construct.a.mhag004"
+            {<point name="construct.a.mhag004" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhag005
+            #add-point:BEFORE FIELD mhag005 name="construct.b.mhag005"
+            {<point name="construct.b.mhag005" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhag005
+            
+            #add-point:AFTER FIELD mhag005 name="construct.a.mhag005"
+            {<point name="construct.a.mhag005" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.mhag005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhag005
+            #add-point:ON ACTION controlp INFIELD mhag005 name="construct.c.mhag005"
+            {<point name="construct.c.mhag005" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhag006
+            #add-point:BEFORE FIELD mhag006 name="construct.b.mhag006"
+            {<point name="construct.b.mhag006" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhag006
+            
+            #add-point:AFTER FIELD mhag006 name="construct.a.mhag006"
+            {<point name="construct.a.mhag006" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.mhag006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhag006
+            #add-point:ON ACTION controlp INFIELD mhag006 name="construct.c.mhag006"
+            {<point name="construct.c.mhag006" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhagunit
+            #add-point:BEFORE FIELD mhagunit name="construct.b.mhagunit"
+            {<point name="construct.b.mhagunit" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhagunit
+            
+            #add-point:AFTER FIELD mhagunit name="construct.a.mhagunit"
+            {<point name="construct.a.mhagunit" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.mhagunit
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhagunit
+            #add-point:ON ACTION controlp INFIELD mhagunit name="construct.c.mhagunit"
+            {<point name="construct.c.mhagunit" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhag007
+            #add-point:BEFORE FIELD mhag007 name="construct.b.mhag007"
+            {<point name="construct.b.mhag007" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhag007
+            
+            #add-point:AFTER FIELD mhag007 name="construct.a.mhag007"
+            {<point name="construct.a.mhag007" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.mhag007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhag007
+            #add-point:ON ACTION controlp INFIELD mhag007 name="construct.c.mhag007"
+            {<point name="construct.c.mhag007" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.mhag008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhag008
+            #add-point:ON ACTION controlp INFIELD mhag008 name="construct.c.mhag008"
+            {<point name="construct.c.mhag008" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhag008
+            #add-point:BEFORE FIELD mhag008 name="construct.b.mhag008"
+            {<point name="construct.b.mhag008" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhag008
+            
+            #add-point:AFTER FIELD mhag008 name="construct.a.mhag008"
+            {<point name="construct.a.mhag008" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhag009
+            #add-point:BEFORE FIELD mhag009 name="construct.b.mhag009"
+            {<point name="construct.b.mhag009" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhag009
+            
+            #add-point:AFTER FIELD mhag009 name="construct.a.mhag009"
+            {<point name="construct.a.mhag009" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.mhag009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhag009
+            #add-point:ON ACTION controlp INFIELD mhag009 name="construct.c.mhag009"
+            {<point name="construct.c.mhag009" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhagstus
+            #add-point:BEFORE FIELD mhagstus name="construct.b.mhagstus"
+            {<point name="construct.b.mhagstus" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhagstus
+            
+            #add-point:AFTER FIELD mhagstus name="construct.a.mhagstus"
+            {<point name="construct.a.mhagstus" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.mhagstus
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhagstus
+            #add-point:ON ACTION controlp INFIELD mhagstus name="construct.c.mhagstus"
+            {<point name="construct.c.mhagstus" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.mhagownid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhagownid
+            #add-point:ON ACTION controlp INFIELD mhagownid name="construct.c.mhagownid"
+            {<point name="construct.c.mhagownid" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhagownid
+            #add-point:BEFORE FIELD mhagownid name="construct.b.mhagownid"
+            {<point name="construct.b.mhagownid" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhagownid
+            
+            #add-point:AFTER FIELD mhagownid name="construct.a.mhagownid"
+            {<point name="construct.a.mhagownid" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.mhagowndp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhagowndp
+            #add-point:ON ACTION controlp INFIELD mhagowndp name="construct.c.mhagowndp"
+            {<point name="construct.c.mhagowndp" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhagowndp
+            #add-point:BEFORE FIELD mhagowndp name="construct.b.mhagowndp"
+            {<point name="construct.b.mhagowndp" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhagowndp
+            
+            #add-point:AFTER FIELD mhagowndp name="construct.a.mhagowndp"
+            {<point name="construct.a.mhagowndp" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.mhagcrtid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhagcrtid
+            #add-point:ON ACTION controlp INFIELD mhagcrtid name="construct.c.mhagcrtid"
+            {<point name="construct.c.mhagcrtid" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhagcrtid
+            #add-point:BEFORE FIELD mhagcrtid name="construct.b.mhagcrtid"
+            {<point name="construct.b.mhagcrtid" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhagcrtid
+            
+            #add-point:AFTER FIELD mhagcrtid name="construct.a.mhagcrtid"
+            {<point name="construct.a.mhagcrtid" />}
+            #END add-point
+            
+ 
+ 
+         #Ctrlp:construct.c.mhagcrtdp
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhagcrtdp
+            #add-point:ON ACTION controlp INFIELD mhagcrtdp name="construct.c.mhagcrtdp"
+            {<point name="construct.c.mhagcrtdp" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhagcrtdp
+            #add-point:BEFORE FIELD mhagcrtdp name="construct.b.mhagcrtdp"
+            {<point name="construct.b.mhagcrtdp" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhagcrtdp
+            
+            #add-point:AFTER FIELD mhagcrtdp name="construct.a.mhagcrtdp"
+            {<point name="construct.a.mhagcrtdp" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhagcrtdt
+            #add-point:BEFORE FIELD mhagcrtdt name="construct.b.mhagcrtdt"
+            {<point name="construct.b.mhagcrtdt" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.mhagmodid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhagmodid
+            #add-point:ON ACTION controlp INFIELD mhagmodid name="construct.c.mhagmodid"
+            {<point name="construct.c.mhagmodid" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhagmodid
+            #add-point:BEFORE FIELD mhagmodid name="construct.b.mhagmodid"
+            {<point name="construct.b.mhagmodid" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhagmodid
+            
+            #add-point:AFTER FIELD mhagmodid name="construct.a.mhagmodid"
+            {<point name="construct.a.mhagmodid" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhagmoddt
+            #add-point:BEFORE FIELD mhagmoddt name="construct.b.mhagmoddt"
+            {<point name="construct.b.mhagmoddt" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:construct.c.mhagcnfid
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhagcnfid
+            #add-point:ON ACTION controlp INFIELD mhagcnfid name="construct.c.mhagcnfid"
+            {<point name="construct.c.mhagcnfid" />}
+            #END add-point
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhagcnfid
+            #add-point:BEFORE FIELD mhagcnfid name="construct.b.mhagcnfid"
+            {<point name="construct.b.mhagcnfid" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhagcnfid
+            
+            #add-point:AFTER FIELD mhagcnfid name="construct.a.mhagcnfid"
+            {<point name="construct.a.mhagcnfid" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhagcnfdt
+            #add-point:BEFORE FIELD mhagcnfdt name="construct.b.mhagcnfdt"
+            {<point name="construct.b.mhagcnfdt" />}
+            #END add-point
+ 
+ 
+ 
+           
+      END CONSTRUCT
+      
+      #add-point:cs段more_construct name="cs.more_construct"
+      {<point name="cs.more_construct"/>}
+      #end add-point   
+      
+      BEFORE DIALOG
+         CALL cl_qbe_init()
+         #add-point:cs段b_dialog name="cs.b_dialog"
+         {<point name="cs.b_dialog"/>}
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG
+ 
+      #查詢方案列表
+      ON ACTION qbe_select
+         LET ls_wc = ""
+         CALL cl_qbe_list("c") RETURNING ls_wc
+    
+      #條件儲存為方案
+      ON ACTION qbe_save
+         CALL cl_qbe_save()
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl"
+         CONTINUE DIALOG
+   END DIALOG
+  
+   #add-point:cs段after_construct name="cs.after_construct"
+   {<point name="cs.after_construct"/>}
+   #end add-point
+  
+END FUNCTION
+{</section>}
+ 
+{<section id="amhm320.filter" >}
+#應用 a50 樣板自動產生(Version:8)
+#+ filter過濾功能
+PRIVATE FUNCTION amhm320_filter()
+   #add-point:filter段define name="filter.define_customerization"
+   {<point name="filter.define_customerization" edit="c" mark="Y"/>}
+   #end add-point   
+   #add-point:filter段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter.define"
+   {<point name="filter.define"/>}
+   #end add-point   
+   
+   #add-point:Function前置處理  name="filter.pre_function"
+   {<point name="filter.pre_function"/>}
+   #end add-point
+   
+   #切換畫面
+   IF NOT g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",1)
+      CALL gfrm_curr.setElementHidden("worksheet",0)
+      LET g_main_hidden = 1
+   END IF   
+ 
+   LET INT_FLAG = 0
+ 
+   LET g_qryparam.state = 'c'
+ 
+   LET g_wc_filter_t = g_wc_filter.trim()
+   LET g_wc_t = g_wc
+ 
+   LET g_wc = cl_replace_str(g_wc, g_wc_filter_t, '')
+ 
+   #使用DIALOG包住 單頭CONSTRUCT及單身CONSTRUCT
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+ 
+      #單頭
+      CONSTRUCT g_wc_filter ON mhagsite,mhag001,mhag002,mhag003,mhag004,mhag005,mhag006,mhag007,mhag008 
+
+                          FROM s_browse[1].b_mhagsite,s_browse[1].b_mhag001,s_browse[1].b_mhag002,s_browse[1].b_mhag003, 
+                              s_browse[1].b_mhag004,s_browse[1].b_mhag005,s_browse[1].b_mhag006,s_browse[1].b_mhag007, 
+                              s_browse[1].b_mhag008
+ 
+         BEFORE CONSTRUCT
+               DISPLAY amhm320_filter_parser('mhagsite') TO s_browse[1].b_mhagsite
+            DISPLAY amhm320_filter_parser('mhag001') TO s_browse[1].b_mhag001
+            DISPLAY amhm320_filter_parser('mhag002') TO s_browse[1].b_mhag002
+            DISPLAY amhm320_filter_parser('mhag003') TO s_browse[1].b_mhag003
+            DISPLAY amhm320_filter_parser('mhag004') TO s_browse[1].b_mhag004
+            DISPLAY amhm320_filter_parser('mhag005') TO s_browse[1].b_mhag005
+            DISPLAY amhm320_filter_parser('mhag006') TO s_browse[1].b_mhag006
+            DISPLAY amhm320_filter_parser('mhag007') TO s_browse[1].b_mhag007
+            DISPLAY amhm320_filter_parser('mhag008') TO s_browse[1].b_mhag008
+      
+         #add-point:filter段cs_ctrl name="filter.cs_ctrl"
+         {<point name="filter.cs_ctrl"/>}
+         #end add-point
+      
+      END CONSTRUCT
+ 
+      #add-point:filter段add_cs name="filter.add_cs"
+      {<point name="filter.add_cs"/>}
+      #end add-point
+ 
+      BEFORE DIALOG
+         #add-point:filter段b_dialog name="filter.b_dialog"
+         {<point name="filter.b_dialog"/>}
+         #end add-point  
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+ 
+      ON ACTION cancel
+         LET INT_FLAG = 1
+         EXIT DIALOG 
+ 
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG
+   
+   END DIALOG
+ 
+   IF NOT INT_FLAG THEN
+      LET g_wc_filter = "   AND   ", g_wc_filter, "   "
+      LET g_wc = g_wc , g_wc_filter
+   ELSE
+      LET g_wc_filter = g_wc_filter_t
+      LET g_wc = g_wc_t
+   END IF
+ 
+      CALL amhm320_filter_show('mhagsite')
+   CALL amhm320_filter_show('mhag001')
+   CALL amhm320_filter_show('mhag002')
+   CALL amhm320_filter_show('mhag003')
+   CALL amhm320_filter_show('mhag004')
+   CALL amhm320_filter_show('mhag005')
+   CALL amhm320_filter_show('mhag006')
+   CALL amhm320_filter_show('mhag007')
+   CALL amhm320_filter_show('mhag008')
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="amhm320.filter_parser" >}
+#+ filter過濾功能
+PRIVATE FUNCTION amhm320_filter_parser(ps_field)
+   #add-point:filter段define name="filter_parser.define_customerization"
+   {<point name="filter_parser.define_customerization" edit="c" mark="Y"/>}
+   #end add-point    
+   DEFINE ps_field   STRING
+   DEFINE ls_tmp     STRING
+   DEFINE li_tmp     LIKE type_t.num10
+   DEFINE li_tmp2    LIKE type_t.num10
+   DEFINE ls_var     STRING
+   #add-point:filter段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="filter_parser.define"
+   {<point name="filter_parser.define"/>}
+   #end add-point    
+   
+   #一般條件解析
+   LET ls_tmp = ps_field, "='"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+   END IF
+ 
+   #模糊條件解析
+   LET ls_tmp = ps_field, " like '"
+   LET li_tmp = g_wc_filter.getIndexOf(ls_tmp,1)
+   IF li_tmp > 0 THEN
+      LET li_tmp = ls_tmp.getLength() + li_tmp
+      LET li_tmp2 = g_wc_filter.getIndexOf("'",li_tmp + 1) - 1
+      LET ls_var = g_wc_filter.subString(li_tmp,li_tmp2)
+      LET ls_var = cl_replace_str(ls_var,'%','*')
+   END IF
+ 
+   RETURN ls_var
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="amhm320.filter_show" >}
+#+ 顯示過濾條件
+PRIVATE FUNCTION amhm320_filter_show(ps_field)
+   DEFINE ps_field         STRING
+   DEFINE lnode_item       om.DomNode
+   DEFINE ls_title         STRING
+   DEFINE ls_name          STRING
+   DEFINE ls_condition     STRING
+ 
+   LET ls_name = "formonly.b_", ps_field
+   LET lnode_item = gfrm_curr.findNode("TableColumn", ls_name)
+   LET ls_title = lnode_item.getAttribute("text")
+   IF ls_title.getIndexOf('※',1) > 0 THEN
+      LEt ls_title = ls_title.subString(1,ls_title.getIndexOf('※',1)-1)
+   END IF
+ 
+   #顯示資料組合
+   LET ls_condition = amhm320_filter_parser(ps_field)
+   IF NOT cl_null(ls_condition) THEN
+      LET ls_title = ls_title, '※', ls_condition, '※'
+   END IF
+ 
+   #將資料顯示回去
+   CALL lnode_item.setAttribute("text",ls_title)
+ 
+END FUNCTION
+{</section>}
+ 
+ 
+ 
+ 
+ 
+{<section id="amhm320.query" >}
+#+ 資料查詢QBE功能準備
+PRIVATE FUNCTION amhm320_query()
+   #add-point:query段define(客製用) name="query.define_customerization"
+   {<point name="query.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE ls_wc STRING
+   #add-point:query段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="query.define"
+   {<point name="query.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="query.pre_function"
+   {<point name="query.pre_function"/>}
+   #end add-point
+   
+   LET INT_FLAG = 0
+   LET ls_wc = g_wc
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+ 
+   CALL g_browser.clear() 
+ 
+   #browser panel折疊
+   IF g_worksheet_hidden THEN
+      CALL gfrm_curr.setElementHidden("worksheet_vbox",0)
+      CALL gfrm_curr.setElementImage("worksheethidden","worksheethidden-24.png")
+      LET g_worksheet_hidden = 0
+   END IF
+   
+   #單頭折疊
+   IF g_header_hidden THEN
+      CALL gfrm_curr.setElementHidden("vb_master",0)
+      CALL gfrm_curr.setElementImage("controls","headerhidden-24")
+      LET g_header_hidden = 0
+   END IF
+ 
+   INITIALIZE g_mhag_m.* TO NULL
+   ERROR ""
+ 
+   DISPLAY " " TO FORMONLY.b_count
+   DISPLAY " " TO FORMONLY.h_count
+   CALL amhm320_construct()
+ 
+   IF INT_FLAG THEN
+      #取消查詢
+      LET INT_FLAG = 0
+      #LET g_wc = ls_wc
+      LET g_wc = " 1=2"
+      CALL amhm320_browser_fill(g_wc,"F")
+      CALL amhm320_fetch("")
+      RETURN
+   ELSE
+      LET g_current_row = 1
+      LET g_current_cnt = 0
+   END IF
+   
+   #根據條件從新抓取資料
+   LET g_error_show = 1
+   CALL amhm320_browser_fill(g_wc,"F")   # 移到第一頁
+   
+   #儲存WC資訊
+   CALL cl_dlg_save_user_latestqry("("||g_wc||")")
+   
+   #備份搜尋條件
+   LET ls_wc = g_wc
+   
+   IF g_browser.getLength() = 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "-100" 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   ELSE
+      CALL amhm320_fetch("F") 
+   END IF
+   
+   LET g_wc_filter = ""
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="amhm320.fetch" >}
+#+ 指定PK後抓取單頭其他資料
+PRIVATE FUNCTION amhm320_fetch(p_fl)
+   #add-point:fetch段define(客製用) name="fetch.define_customerization"
+   {<point name="fetch.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_fl       LIKE type_t.chr1
+   DEFINE ls_msg     STRING
+   #add-point:fetch段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="fetch.define"
+   {<point name="fetch.define"/>}
+   #end add-point  
+   
+   #add-point:Function前置處理  name="fetch.pre_function"
+   {<point name="fetch.pre_function"/>}
+   #end add-point
+   
+   #根據傳入的條件決定抓取的資料
+   CASE p_fl
+      WHEN "F" 
+         LET g_current_idx = 1
+      WHEN "P"
+         IF g_current_idx > 1 THEN               
+            LET g_current_idx = g_current_idx - 1
+         END IF 
+      WHEN "N"
+         IF g_current_idx < g_header_cnt THEN
+            LET g_current_idx =  g_current_idx + 1
+         END IF        
+      WHEN "L" 
+         #LET g_current_idx = g_header_cnt        
+         LET g_current_idx = g_browser.getLength()    
+      WHEN "/"
+         #詢問要指定的筆數
+         IF (NOT g_no_ask) THEN      
+            CALL cl_getmsg("fetch", g_lang) RETURNING ls_msg
+            LET INT_FLAG = 0
+ 
+            PROMPT ls_msg CLIPPED,": " FOR g_jump
+               #交談指令共用ACTION
+               &include "common_action.4gl"
+            END PROMPT
+            
+            IF INT_FLAG THEN
+               LET INT_FLAG = 0
+               EXIT CASE  
+            END IF           
+         END IF
+         IF g_jump > 0 THEN
+            LET g_current_idx = g_jump
+         END IF
+         LET g_no_ask = FALSE     
+   END CASE
+ 
+   #筆數顯示
+   LET g_browser_idx = g_current_idx 
+   IF g_browser_cnt > 0 THEN
+      DISPLAY g_browser_idx TO FORMONLY.b_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.b_count #總筆數
+      DISPLAY g_browser_idx TO FORMONLY.h_index #當下筆數
+      DISPLAY g_browser_cnt TO FORMONLY.h_count #總筆數
+   ELSE
+      DISPLAY '' TO FORMONLY.b_index #當下筆數
+      DISPLAY '' TO FORMONLY.b_count #總筆數
+      DISPLAY '' TO FORMONLY.h_index #當下筆數
+      DISPLAY '' TO FORMONLY.h_count #總筆數
+   END IF
+   
+   
+   
+   #避免超出browser資料筆數上限
+   IF g_current_idx > g_browser.getLength() THEN
+      LET g_browser_idx = g_browser.getLength()
+      LET g_current_idx = g_browser.getLength() 
+   END IF
+   
+   # 設定browse索引
+   CALL g_curr_diag.setCurrentRow("s_browse", g_current_idx)
+   CALL cl_navigator_setting(g_browser_idx, g_browser_cnt) 
+ 
+   #代表沒有資料, 無需做後續資料撈取之動作
+   IF g_current_idx = 0 THEN
+      RETURN
+   END IF
+ 
+   #根據選定的筆數給予key欄位值
+   LET g_mhag_m.mhag001 = g_browser[g_current_idx].b_mhag001
+ 
+                       
+   #讀取單頭所有欄位資料
+   EXECUTE amhm320_master_referesh USING g_mhag_m.mhag001 INTO g_mhag_m.mhagsite,g_mhag_m.mhag001,g_mhag_m.mhag002, 
+       g_mhag_m.mhag003,g_mhag_m.mhag004,g_mhag_m.mhag005,g_mhag_m.mhag006,g_mhag_m.mhagunit,g_mhag_m.mhag007, 
+       g_mhag_m.mhag008,g_mhag_m.mhag009,g_mhag_m.mhagstus,g_mhag_m.mhagownid,g_mhag_m.mhagowndp,g_mhag_m.mhagcrtid, 
+       g_mhag_m.mhagcrtdp,g_mhag_m.mhagcrtdt,g_mhag_m.mhagmodid,g_mhag_m.mhagmoddt,g_mhag_m.mhagcnfid, 
+       g_mhag_m.mhagcnfdt,g_mhag_m.mhagsite_desc,g_mhag_m.mhag001_desc,g_mhag_m.mhag004_desc,g_mhag_m.mhag008_desc, 
+       g_mhag_m.mhagownid_desc,g_mhag_m.mhagowndp_desc,g_mhag_m.mhagcrtid_desc,g_mhag_m.mhagcrtdp_desc, 
+       g_mhag_m.mhagmodid_desc,g_mhag_m.mhagcnfid_desc
+   
+   #遮罩相關處理
+   LET g_mhag_m_mask_o.* =  g_mhag_m.*
+   CALL amhm320_mhag_t_mask()
+   LET g_mhag_m_mask_n.* =  g_mhag_m.*
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL amhm320_set_act_visible()
+   CALL amhm320_set_act_no_visible()
+ 
+   #add-point:fetch段action控制 name="fetch.action_control"
+   {<point name="fetch.action_control"/>}
+   #end add-point  
+   
+   
+   
+   #保存單頭舊值
+   LET g_mhag_m_t.* = g_mhag_m.*
+   LET g_mhag_m_o.* = g_mhag_m.*
+   
+   LET g_data_owner = g_mhag_m.mhagownid      
+   LET g_data_dept  = g_mhag_m.mhagowndp
+   
+   #重新顯示
+   CALL amhm320_show()
+   
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="amhm320.insert" >}
+#+ 資料新增
+PRIVATE FUNCTION amhm320_insert()
+   #add-point:insert段define(客製用) name="insert.define_customerization"
+   {<point name="insert.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:insert段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="insert.define"
+   {<point name="insert.define"/>}
+   #end add-point    
+   
+   #add-point:Function前置處理  name="insert.pre_function"
+   {<point name="insert.pre_function"/>}
+   #end add-point
+   
+   CLEAR FORM #清畫面欄位內容
+   INITIALIZE g_mhag_m.* TO NULL             #DEFAULT 設定
+   LET g_mhag001_t = NULL
+ 
+   
+   #add-point:insert段before name="insert.before"
+   {<point name="insert.before"/>}
+   #end add-point    
+   
+   CALL s_transaction_begin()
+   
+   WHILE TRUE
+      
+      #公用欄位給值
+      #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_mhag_m.mhagownid = g_user
+      LET g_mhag_m.mhagowndp = g_dept
+      LET g_mhag_m.mhagcrtid = g_user
+      LET g_mhag_m.mhagcrtdp = g_dept 
+      LET g_mhag_m.mhagcrtdt = cl_get_current()
+      LET g_mhag_m.mhagmodid = g_user
+      LET g_mhag_m.mhagmoddt = cl_get_current()
+      LET g_mhag_m.mhagstus = 'N'
+ 
+ 
+ 
+ 
+      #append欄位給值
+      
+     
+      #一般欄位給值
+            LET g_mhag_m.mhag005 = "N"
+      LET g_mhag_m.mhag007 = "N"
+ 
+ 
+      #add-point:單頭預設值 name="insert.default"
+      {<point name="insert.default"/>}
+      #end add-point   
+     
+      #顯示狀態(stus)圖片
+            #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_mhag_m.mhagstus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/open.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/valid.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/void.png")
+         
+      END CASE
+ 
+ 
+ 
+     
+      #資料輸入
+      CALL amhm320_input("a")
+      
+      #add-point:單頭輸入後 name="insert.after_insert"
+      {<point name="insert.after_insert"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         #取消
+         LET INT_FLAG = 0
+         DISPLAY g_current_cnt TO FORMONLY.h_count     #總筆數
+         DISPLAY g_current_idx TO FORMONLY.h_index     #當下筆數
+         INITIALIZE g_mhag_m.* TO NULL
+         CALL amhm320_show()
+         CALL s_transaction_end('N','0')
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         RETURN
+      END IF
+ 
+      LET g_rec_b = 0
+      EXIT WHILE
+   END WHILE
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL amhm320_set_act_visible()
+   CALL amhm320_set_act_no_visible()
+ 
+   #將新增的資料併入搜尋條件中
+   LET g_state = "insert"
+   
+   LET g_mhag001_t = g_mhag_m.mhag001
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " mhagent = " ||g_enterprise|| " AND",
+                      " mhag001 = '", g_mhag_m.mhag001, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL amhm320_browser_fill("","")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+ 
+   #撈取異動後的資料(主要是帶出reference)
+   EXECUTE amhm320_master_referesh USING g_mhag_m.mhag001 INTO g_mhag_m.mhagsite,g_mhag_m.mhag001,g_mhag_m.mhag002, 
+       g_mhag_m.mhag003,g_mhag_m.mhag004,g_mhag_m.mhag005,g_mhag_m.mhag006,g_mhag_m.mhagunit,g_mhag_m.mhag007, 
+       g_mhag_m.mhag008,g_mhag_m.mhag009,g_mhag_m.mhagstus,g_mhag_m.mhagownid,g_mhag_m.mhagowndp,g_mhag_m.mhagcrtid, 
+       g_mhag_m.mhagcrtdp,g_mhag_m.mhagcrtdt,g_mhag_m.mhagmodid,g_mhag_m.mhagmoddt,g_mhag_m.mhagcnfid, 
+       g_mhag_m.mhagcnfdt,g_mhag_m.mhagsite_desc,g_mhag_m.mhag001_desc,g_mhag_m.mhag004_desc,g_mhag_m.mhag008_desc, 
+       g_mhag_m.mhagownid_desc,g_mhag_m.mhagowndp_desc,g_mhag_m.mhagcrtid_desc,g_mhag_m.mhagcrtdp_desc, 
+       g_mhag_m.mhagmodid_desc,g_mhag_m.mhagcnfid_desc
+   
+   
+   #遮罩相關處理
+   LET g_mhag_m_mask_o.* =  g_mhag_m.*
+   CALL amhm320_mhag_t_mask()
+   LET g_mhag_m_mask_n.* =  g_mhag_m.*
+   
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_mhag_m.mhagsite,g_mhag_m.mhagsite_desc,g_mhag_m.mhag001,g_mhag_m.mhag001_desc,g_mhag_m.mhag002, 
+       g_mhag_m.mhaf004,g_mhag_m.mhaf004_desc,g_mhag_m.mhaf005,g_mhag_m.mhaf007,g_mhag_m.mhag003,g_mhag_m.mhaf009, 
+       g_mhag_m.mhaf018,g_mhag_m.mhaf012,g_mhag_m.mhaf012_desc,g_mhag_m.mhaf019,g_mhag_m.mhaf019_desc, 
+       g_mhag_m.mhaf013,g_mhag_m.mhaf013_desc,g_mhag_m.mhag004,g_mhag_m.mhag004_desc,g_mhag_m.mhag005, 
+       g_mhag_m.mhag006,g_mhag_m.mhagunit,g_mhag_m.mhag007,g_mhag_m.mhag008,g_mhag_m.mhag008_desc,g_mhag_m.mhag009, 
+       g_mhag_m.mhagstus,g_mhag_m.mhagownid,g_mhag_m.mhagownid_desc,g_mhag_m.mhagowndp,g_mhag_m.mhagowndp_desc, 
+       g_mhag_m.mhagcrtid,g_mhag_m.mhagcrtid_desc,g_mhag_m.mhagcrtdp,g_mhag_m.mhagcrtdp_desc,g_mhag_m.mhagcrtdt, 
+       g_mhag_m.mhagmodid,g_mhag_m.mhagmodid_desc,g_mhag_m.mhagmoddt,g_mhag_m.mhagcnfid,g_mhag_m.mhagcnfid_desc, 
+       g_mhag_m.mhagcnfdt
+ 
+   #add-point:新增結束後 name="insert.after"
+   {<point name="insert.after"/>}
+   #end add-point 
+ 
+   LET g_data_owner = g_mhag_m.mhagownid      
+   LET g_data_dept  = g_mhag_m.mhagowndp
+ 
+   #功能已完成,通報訊息中心
+   CALL amhm320_msgcentre_notify('insert')
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="amhm320.modify" >}
+#+ 資料修改
+PRIVATE FUNCTION amhm320_modify()
+   #add-point:modify段define(客製用) name="modify.define_customerization"
+   {<point name="modify.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:modify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="modify.define"
+   {<point name="modify.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理 name="modify.pre_function"
+   {<point name="modify.pre_function"/>}
+   #end add-point
+   
+   #先確定key值無遺漏
+   IF g_mhag_m.mhag001 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF 
+ 
+   ERROR ""
+  
+   #備份key值
+   LET g_mhag001_t = g_mhag_m.mhag001
+ 
+   
+   CALL s_transaction_begin()
+   
+   #先lock資料
+   OPEN amhm320_cl USING g_enterprise,g_mhag_m.mhag001
+   IF SQLCA.SQLCODE THEN    #(ver:49)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN amhm320_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.popup = TRUE 
+      CLOSE amhm320_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE amhm320_master_referesh USING g_mhag_m.mhag001 INTO g_mhag_m.mhagsite,g_mhag_m.mhag001,g_mhag_m.mhag002, 
+       g_mhag_m.mhag003,g_mhag_m.mhag004,g_mhag_m.mhag005,g_mhag_m.mhag006,g_mhag_m.mhagunit,g_mhag_m.mhag007, 
+       g_mhag_m.mhag008,g_mhag_m.mhag009,g_mhag_m.mhagstus,g_mhag_m.mhagownid,g_mhag_m.mhagowndp,g_mhag_m.mhagcrtid, 
+       g_mhag_m.mhagcrtdp,g_mhag_m.mhagcrtdt,g_mhag_m.mhagmodid,g_mhag_m.mhagmoddt,g_mhag_m.mhagcnfid, 
+       g_mhag_m.mhagcnfdt,g_mhag_m.mhagsite_desc,g_mhag_m.mhag001_desc,g_mhag_m.mhag004_desc,g_mhag_m.mhag008_desc, 
+       g_mhag_m.mhagownid_desc,g_mhag_m.mhagowndp_desc,g_mhag_m.mhagcrtid_desc,g_mhag_m.mhagcrtdp_desc, 
+       g_mhag_m.mhagmodid_desc,g_mhag_m.mhagcnfid_desc
+ 
+   #檢查是否允許此動作
+   IF NOT amhm320_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #遮罩相關處理
+   LET g_mhag_m_mask_o.* =  g_mhag_m.*
+   CALL amhm320_mhag_t_mask()
+   LET g_mhag_m_mask_n.* =  g_mhag_m.*
+   
+   
+ 
+   #顯示資料
+   CALL amhm320_show()
+   
+   WHILE TRUE
+      LET g_mhag_m.mhag001 = g_mhag001_t
+ 
+      
+      #寫入修改者/修改日期資訊
+      LET g_mhag_m.mhagmodid = g_user 
+LET g_mhag_m.mhagmoddt = cl_get_current()
+LET g_mhag_m.mhagmodid_desc = cl_get_username(g_mhag_m.mhagmodid)
+      
+      #add-point:modify段修改前 name="modify.before_input"
+      {<point name="modify.before_input"/>}
+      #end add-point
+ 
+      #資料輸入
+      CALL amhm320_input("u")     
+ 
+      #add-point:modify段修改後 name="modify.after_input"
+      {<point name="modify.after_input"/>}
+      #end add-point
+      
+      IF INT_FLAG THEN
+         CALL s_transaction_end('N','0')
+         LET INT_FLAG = 0
+         LET g_mhag_m.* = g_mhag_m_t.*
+         CALL amhm320_show()
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "" 
+         LET g_errparam.code   = 9001 
+         LET g_errparam.popup  = FALSE 
+         CALL cl_err()
+         EXIT WHILE
+      END IF
+ 
+      #若有modid跟moddt則進行update
+      UPDATE mhag_t SET (mhagmodid,mhagmoddt) = (g_mhag_m.mhagmodid,g_mhag_m.mhagmoddt)
+       WHERE mhagent = g_enterprise AND mhag001 = g_mhag001_t
+ 
+ 
+      EXIT WHILE
+      
+   END WHILE
+ 
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL amhm320_set_act_visible()
+   CALL amhm320_set_act_no_visible()
+ 
+   #組合新增資料的條件
+   LET g_add_browse = " mhagent = " ||g_enterprise|| " AND",
+                      " mhag001 = '", g_mhag_m.mhag001, "' "
+ 
+   #填到對應位置
+   CALL amhm320_browser_fill(g_wc,"")
+ 
+   CLOSE amhm320_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL amhm320_msgcentre_notify('modify')
+   
+   LET g_worksheet_hidden = 0
+   
+END FUNCTION   
+{</section>}
+ 
+{<section id="amhm320.input" >}
+#+ 資料輸入
+PRIVATE FUNCTION amhm320_input(p_cmd)
+   #add-point:input段define(客製用) name="input.define_customerization"
+   {<point name="input.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_cmd           LIKE type_t.chr1
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_n             LIKE type_t.num10       #檢查重複用  
+   DEFINE l_cnt           LIKE type_t.num10       #檢查重複用  
+   DEFINE l_lock_sw       LIKE type_t.chr1        #單身鎖住否  
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_i             LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num10
+   DEFINE ls_return       STRING
+   DEFINE l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   DEFINE l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE l_fields        DYNAMIC ARRAY OF STRING
+   #add-point:input段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="input.define"
+   {<point name="input.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="input.pre_function"
+   {<point name="input.pre_function"/>}
+   #end add-point
+   
+   #切換至輸入畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+   
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_mhag_m.mhagsite,g_mhag_m.mhagsite_desc,g_mhag_m.mhag001,g_mhag_m.mhag001_desc,g_mhag_m.mhag002, 
+       g_mhag_m.mhaf004,g_mhag_m.mhaf004_desc,g_mhag_m.mhaf005,g_mhag_m.mhaf007,g_mhag_m.mhag003,g_mhag_m.mhaf009, 
+       g_mhag_m.mhaf018,g_mhag_m.mhaf012,g_mhag_m.mhaf012_desc,g_mhag_m.mhaf019,g_mhag_m.mhaf019_desc, 
+       g_mhag_m.mhaf013,g_mhag_m.mhaf013_desc,g_mhag_m.mhag004,g_mhag_m.mhag004_desc,g_mhag_m.mhag005, 
+       g_mhag_m.mhag006,g_mhag_m.mhagunit,g_mhag_m.mhag007,g_mhag_m.mhag008,g_mhag_m.mhag008_desc,g_mhag_m.mhag009, 
+       g_mhag_m.mhagstus,g_mhag_m.mhagownid,g_mhag_m.mhagownid_desc,g_mhag_m.mhagowndp,g_mhag_m.mhagowndp_desc, 
+       g_mhag_m.mhagcrtid,g_mhag_m.mhagcrtid_desc,g_mhag_m.mhagcrtdp,g_mhag_m.mhagcrtdp_desc,g_mhag_m.mhagcrtdt, 
+       g_mhag_m.mhagmodid,g_mhag_m.mhagmodid_desc,g_mhag_m.mhagmoddt,g_mhag_m.mhagcnfid,g_mhag_m.mhagcnfid_desc, 
+       g_mhag_m.mhagcnfdt
+   
+   CALL cl_set_head_visible("","YES")  
+   
+   #a-新增,r-複製,u-修改
+   IF p_cmd = 'r' THEN
+      #此段落的r動作等同於a
+      LET p_cmd = 'a'
+   END IF
+ 
+   LET l_insert = FALSE
+   LET g_action_choice = ""
+ 
+   LET g_qryparam.state = "i"
+   
+   #控制key欄位可否輸入
+   CALL amhm320_set_entry(p_cmd)
+   #add-point:set_entry後 name="input.after_set_entry"
+   {<point name="input.after_set_entry"/>}
+   #end add-point
+   CALL amhm320_set_no_entry(p_cmd)
+   
+   #關閉被遮罩相關欄位輸入, 無法確定USER是否會需要輸入此欄位
+   #因此先行關閉, 若有需要可於下方add-point中自行開啟
+   CALL cl_mask_set_no_entry()
+   #add-point:資料輸入前 name="input.before_input"
+   {<point name="input.before_input"/>}
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #單頭段
+      INPUT BY NAME g_mhag_m.mhagsite,g_mhag_m.mhag001,g_mhag_m.mhag002,g_mhag_m.mhaf004,g_mhag_m.mhaf005, 
+          g_mhag_m.mhaf007,g_mhag_m.mhag003,g_mhag_m.mhaf009,g_mhag_m.mhaf018,g_mhag_m.mhaf012,g_mhag_m.mhaf012_desc, 
+          g_mhag_m.mhaf019,g_mhag_m.mhaf013,g_mhag_m.mhag004,g_mhag_m.mhag005,g_mhag_m.mhag006,g_mhag_m.mhagunit, 
+          g_mhag_m.mhag007,g_mhag_m.mhag008,g_mhag_m.mhag009,g_mhag_m.mhagstus 
+         ATTRIBUTE(WITHOUT DEFAULTS)
+         
+         #自訂ACTION(master_input)
+         
+         
+         BEFORE INPUT
+            IF s_transaction_chk("N",0) THEN
+               CALL s_transaction_begin()
+            END IF
+            #其他table資料備份(確定是否更改用)
+            
+            #add-point:input開始前 name="input.before.input"
+            {<point name="input.before.input"/>}
+            #end add-point
+   
+                  #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhagsite
+            
+            #add-point:AFTER FIELD mhagsite name="input.a.mhagsite"
+            {<point name="input.a.mhagsite" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhagsite
+            #add-point:BEFORE FIELD mhagsite name="input.b.mhagsite"
+            {<point name="input.b.mhagsite" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mhagsite
+            #add-point:ON CHANGE mhagsite name="input.g.mhagsite"
+            {<point name="input.g.mhagsite" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhag001
+            
+            #add-point:AFTER FIELD mhag001 name="input.a.mhag001"
+            {<point name="input.a.mhag001" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhag001
+            #add-point:BEFORE FIELD mhag001 name="input.b.mhag001"
+            {<point name="input.b.mhag001" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mhag001
+            #add-point:ON CHANGE mhag001 name="input.g.mhag001"
+            {<point name="input.g.mhag001" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhag002
+            
+            #add-point:AFTER FIELD mhag002 name="input.a.mhag002"
+            {<point name="input.a.mhag002" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhag002
+            #add-point:BEFORE FIELD mhag002 name="input.b.mhag002"
+            {<point name="input.b.mhag002" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mhag002
+            #add-point:ON CHANGE mhag002 name="input.g.mhag002"
+            {<point name="input.g.mhag002" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhaf004
+            
+            #add-point:AFTER FIELD mhaf004 name="input.a.mhaf004"
+            {<point name="input.a.mhaf004" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhaf004
+            #add-point:BEFORE FIELD mhaf004 name="input.b.mhaf004"
+            {<point name="input.b.mhaf004" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mhaf004
+            #add-point:ON CHANGE mhaf004 name="input.g.mhaf004"
+            {<point name="input.g.mhaf004" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhaf005
+            #add-point:BEFORE FIELD mhaf005 name="input.b.mhaf005"
+            {<point name="input.b.mhaf005" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhaf005
+            
+            #add-point:AFTER FIELD mhaf005 name="input.a.mhaf005"
+            {<point name="input.a.mhaf005" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mhaf005
+            #add-point:ON CHANGE mhaf005 name="input.g.mhaf005"
+            {<point name="input.g.mhaf005" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhaf007
+            #add-point:BEFORE FIELD mhaf007 name="input.b.mhaf007"
+            {<point name="input.b.mhaf007" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhaf007
+            
+            #add-point:AFTER FIELD mhaf007 name="input.a.mhaf007"
+            {<point name="input.a.mhaf007" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mhaf007
+            #add-point:ON CHANGE mhaf007 name="input.g.mhaf007"
+            {<point name="input.g.mhaf007" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhag003
+            #add-point:BEFORE FIELD mhag003 name="input.b.mhag003"
+            {<point name="input.b.mhag003" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhag003
+            
+            #add-point:AFTER FIELD mhag003 name="input.a.mhag003"
+            {<point name="input.a.mhag003" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mhag003
+            #add-point:ON CHANGE mhag003 name="input.g.mhag003"
+            {<point name="input.g.mhag003" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhaf009
+            #add-point:BEFORE FIELD mhaf009 name="input.b.mhaf009"
+            {<point name="input.b.mhaf009" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhaf009
+            
+            #add-point:AFTER FIELD mhaf009 name="input.a.mhaf009"
+            {<point name="input.a.mhaf009" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mhaf009
+            #add-point:ON CHANGE mhaf009 name="input.g.mhaf009"
+            {<point name="input.g.mhaf009" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhaf018
+            #add-point:BEFORE FIELD mhaf018 name="input.b.mhaf018"
+            {<point name="input.b.mhaf018" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhaf018
+            
+            #add-point:AFTER FIELD mhaf018 name="input.a.mhaf018"
+            {<point name="input.a.mhaf018" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mhaf018
+            #add-point:ON CHANGE mhaf018 name="input.g.mhaf018"
+            {<point name="input.g.mhaf018" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhaf012
+            
+            #add-point:AFTER FIELD mhaf012 name="input.a.mhaf012"
+            {<point name="input.a.mhaf012" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhaf012
+            #add-point:BEFORE FIELD mhaf012 name="input.b.mhaf012"
+            {<point name="input.b.mhaf012" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mhaf012
+            #add-point:ON CHANGE mhaf012 name="input.g.mhaf012"
+            {<point name="input.g.mhaf012" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhaf012_desc
+            #add-point:BEFORE FIELD mhaf012_desc name="input.b.mhaf012_desc"
+            {<point name="input.b.mhaf012_desc" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhaf012_desc
+            
+            #add-point:AFTER FIELD mhaf012_desc name="input.a.mhaf012_desc"
+            {<point name="input.a.mhaf012_desc" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mhaf012_desc
+            #add-point:ON CHANGE mhaf012_desc name="input.g.mhaf012_desc"
+            {<point name="input.g.mhaf012_desc" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhaf019
+            
+            #add-point:AFTER FIELD mhaf019 name="input.a.mhaf019"
+            {<point name="input.a.mhaf019" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhaf019
+            #add-point:BEFORE FIELD mhaf019 name="input.b.mhaf019"
+            {<point name="input.b.mhaf019" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mhaf019
+            #add-point:ON CHANGE mhaf019 name="input.g.mhaf019"
+            {<point name="input.g.mhaf019" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhaf013
+            
+            #add-point:AFTER FIELD mhaf013 name="input.a.mhaf013"
+            {<point name="input.a.mhaf013" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhaf013
+            #add-point:BEFORE FIELD mhaf013 name="input.b.mhaf013"
+            {<point name="input.b.mhaf013" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mhaf013
+            #add-point:ON CHANGE mhaf013 name="input.g.mhaf013"
+            {<point name="input.g.mhaf013" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhag004
+            
+            #add-point:AFTER FIELD mhag004 name="input.a.mhag004"
+            {<point name="input.a.mhag004" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhag004
+            #add-point:BEFORE FIELD mhag004 name="input.b.mhag004"
+            {<point name="input.b.mhag004" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mhag004
+            #add-point:ON CHANGE mhag004 name="input.g.mhag004"
+            {<point name="input.g.mhag004" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhag005
+            #add-point:BEFORE FIELD mhag005 name="input.b.mhag005"
+            {<point name="input.b.mhag005" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhag005
+            
+            #add-point:AFTER FIELD mhag005 name="input.a.mhag005"
+            {<point name="input.a.mhag005" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mhag005
+            #add-point:ON CHANGE mhag005 name="input.g.mhag005"
+            {<point name="input.g.mhag005" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhag006
+            #add-point:BEFORE FIELD mhag006 name="input.b.mhag006"
+            {<point name="input.b.mhag006" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhag006
+            
+            #add-point:AFTER FIELD mhag006 name="input.a.mhag006"
+            {<point name="input.a.mhag006" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mhag006
+            #add-point:ON CHANGE mhag006 name="input.g.mhag006"
+            {<point name="input.g.mhag006" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhagunit
+            #add-point:BEFORE FIELD mhagunit name="input.b.mhagunit"
+            {<point name="input.b.mhagunit" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhagunit
+            
+            #add-point:AFTER FIELD mhagunit name="input.a.mhagunit"
+            {<point name="input.a.mhagunit" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mhagunit
+            #add-point:ON CHANGE mhagunit name="input.g.mhagunit"
+            {<point name="input.g.mhagunit" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhag007
+            #add-point:BEFORE FIELD mhag007 name="input.b.mhag007"
+            {<point name="input.b.mhag007" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhag007
+            
+            #add-point:AFTER FIELD mhag007 name="input.a.mhag007"
+            {<point name="input.a.mhag007" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mhag007
+            #add-point:ON CHANGE mhag007 name="input.g.mhag007"
+            {<point name="input.g.mhag007" />}
+            #END add-point 
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhag008
+            
+            #add-point:AFTER FIELD mhag008 name="input.a.mhag008"
+            {<point name="input.a.mhag008" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhag008
+            #add-point:BEFORE FIELD mhag008 name="input.b.mhag008"
+            {<point name="input.b.mhag008" />}
+            #END add-point
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mhag008
+            #add-point:ON CHANGE mhag008 name="input.g.mhag008"
+            {<point name="input.g.mhag008" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhag009
+            #add-point:BEFORE FIELD mhag009 name="input.b.mhag009"
+            {<point name="input.b.mhag009" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhag009
+            
+            #add-point:AFTER FIELD mhag009 name="input.a.mhag009"
+            {<point name="input.a.mhag009" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mhag009
+            #add-point:ON CHANGE mhag009 name="input.g.mhag009"
+            {<point name="input.g.mhag009" />}
+            #END add-point 
+ 
+ 
+         #應用 a01 樣板自動產生(Version:2)
+         BEFORE FIELD mhagstus
+            #add-point:BEFORE FIELD mhagstus name="input.b.mhagstus"
+            {<point name="input.b.mhagstus" />}
+            #END add-point
+ 
+ 
+         #應用 a02 樣板自動產生(Version:2)
+         AFTER FIELD mhagstus
+            
+            #add-point:AFTER FIELD mhagstus name="input.a.mhagstus"
+            {<point name="input.a.mhagstus" />}
+            #END add-point
+            
+ 
+ 
+         #應用 a04 樣板自動產生(Version:3)
+         ON CHANGE mhagstus
+            #add-point:ON CHANGE mhagstus name="input.g.mhagstus"
+            {<point name="input.g.mhagstus" />}
+            #END add-point 
+ 
+ 
+ #欄位檢查
+                  #Ctrlp:input.c.mhagsite
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhagsite
+            #add-point:ON ACTION controlp INFIELD mhagsite name="input.c.mhagsite"
+            {<point name="input.c.mhagsite" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mhag001
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhag001
+            #add-point:ON ACTION controlp INFIELD mhag001 name="input.c.mhag001"
+            {<point name="input.c.mhag001" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mhag002
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhag002
+            #add-point:ON ACTION controlp INFIELD mhag002 name="input.c.mhag002"
+            {<point name="input.c.mhag002" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mhaf004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhaf004
+            #add-point:ON ACTION controlp INFIELD mhaf004 name="input.c.mhaf004"
+            {<point name="input.c.mhaf004" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mhaf005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhaf005
+            #add-point:ON ACTION controlp INFIELD mhaf005 name="input.c.mhaf005"
+            {<point name="input.c.mhaf005" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mhaf007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhaf007
+            #add-point:ON ACTION controlp INFIELD mhaf007 name="input.c.mhaf007"
+            {<point name="input.c.mhaf007" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mhag003
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhag003
+            #add-point:ON ACTION controlp INFIELD mhag003 name="input.c.mhag003"
+            {<point name="input.c.mhag003" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mhaf009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhaf009
+            #add-point:ON ACTION controlp INFIELD mhaf009 name="input.c.mhaf009"
+            {<point name="input.c.mhaf009" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mhaf018
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhaf018
+            #add-point:ON ACTION controlp INFIELD mhaf018 name="input.c.mhaf018"
+            {<point name="input.c.mhaf018" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mhaf012
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhaf012
+            #add-point:ON ACTION controlp INFIELD mhaf012 name="input.c.mhaf012"
+            {<point name="input.c.mhaf012" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mhaf012_desc
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhaf012_desc
+            #add-point:ON ACTION controlp INFIELD mhaf012_desc name="input.c.mhaf012_desc"
+            {<point name="input.c.mhaf012_desc" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mhaf019
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhaf019
+            #add-point:ON ACTION controlp INFIELD mhaf019 name="input.c.mhaf019"
+            {<point name="input.c.mhaf019" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mhaf013
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhaf013
+            #add-point:ON ACTION controlp INFIELD mhaf013 name="input.c.mhaf013"
+            {<point name="input.c.mhaf013" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mhag004
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhag004
+            #add-point:ON ACTION controlp INFIELD mhag004 name="input.c.mhag004"
+            {<point name="input.c.mhag004" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mhag005
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhag005
+            #add-point:ON ACTION controlp INFIELD mhag005 name="input.c.mhag005"
+            {<point name="input.c.mhag005" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mhag006
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhag006
+            #add-point:ON ACTION controlp INFIELD mhag006 name="input.c.mhag006"
+            {<point name="input.c.mhag006" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mhagunit
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhagunit
+            #add-point:ON ACTION controlp INFIELD mhagunit name="input.c.mhagunit"
+            {<point name="input.c.mhagunit" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mhag007
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhag007
+            #add-point:ON ACTION controlp INFIELD mhag007 name="input.c.mhag007"
+            {<point name="input.c.mhag007" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mhag008
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhag008
+            #add-point:ON ACTION controlp INFIELD mhag008 name="input.c.mhag008"
+            {<point name="input.c.mhag008" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mhag009
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhag009
+            #add-point:ON ACTION controlp INFIELD mhag009 name="input.c.mhag009"
+            {<point name="input.c.mhag009" />}
+            #END add-point
+ 
+ 
+         #Ctrlp:input.c.mhagstus
+         #應用 a03 樣板自動產生(Version:3)
+         ON ACTION controlp INFIELD mhagstus
+            #add-point:ON ACTION controlp INFIELD mhagstus name="input.c.mhagstus"
+            {<point name="input.c.mhagstus" />}
+            #END add-point
+ 
+ 
+ #欄位開窗
+ 
+         AFTER INPUT
+            #若點選cancel則離開dialog
+            IF INT_FLAG THEN
+               EXIT DIALOG
+            END IF
+            
+            #錯誤訊息統整顯示
+            #CALL cl_err_collect_show()
+            #CALL cl_showmsg()
+  
+            IF p_cmd <> "u" THEN
+               #當p_cmd不為u代表為新增/複製
+               LET l_count = 1  
+ 
+               #確定新增的資料不存在(不重複)
+               SELECT COUNT(1) INTO l_count FROM mhag_t
+                WHERE mhagent = g_enterprise AND mhag001 = g_mhag_m.mhag001
+ 
+               IF l_count = 0 THEN
+               
+                  #add-point:單頭新增前 name="input.head.b_insert"
+                  {<point name="input.head.b_insert" mark="Y"/>}
+                  #end add-point
+               
+                  #將新增的單頭資料寫入資料庫
+                  INSERT INTO mhag_t (mhagent,mhagsite,mhag001,mhag002,mhag003,mhag004,mhag005,mhag006, 
+                      mhagunit,mhag007,mhag008,mhag009,mhagstus,mhagownid,mhagowndp,mhagcrtid,mhagcrtdp, 
+                      mhagcrtdt,mhagmodid,mhagmoddt,mhagcnfid,mhagcnfdt)
+                  VALUES (g_enterprise,g_mhag_m.mhagsite,g_mhag_m.mhag001,g_mhag_m.mhag002,g_mhag_m.mhag003, 
+                      g_mhag_m.mhag004,g_mhag_m.mhag005,g_mhag_m.mhag006,g_mhag_m.mhagunit,g_mhag_m.mhag007, 
+                      g_mhag_m.mhag008,g_mhag_m.mhag009,g_mhag_m.mhagstus,g_mhag_m.mhagownid,g_mhag_m.mhagowndp, 
+                      g_mhag_m.mhagcrtid,g_mhag_m.mhagcrtdp,g_mhag_m.mhagcrtdt,g_mhag_m.mhagmodid,g_mhag_m.mhagmoddt, 
+                      g_mhag_m.mhagcnfid,g_mhag_m.mhagcnfdt) 
+                  
+                  #add-point:單頭新增中 name="input.head.m_insert"
+                  {<point name="input.head.m_insert"/>}
+                  #end add-point
+                  
+                  #若寫入錯誤則提示錯誤訊息並返回輸入頁面
+                  IF SQLCA.SQLCODE THEN
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "mhag_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  END IF
+                  
+                  
+                  
+                  #資料多語言用-增/改
+                  
+                  
+                  #add-point:單頭新增後 name="input.head.a_insert"
+                  {<point name="input.head.a_insert"/>}
+                  #end add-point
+                  
+                  CALL s_transaction_end('Y','0')
+               ELSE
+                  CALL s_transaction_end('N','0')
+                  INITIALIZE g_errparam TO NULL 
+                  LET g_errparam.extend = g_mhag_m.mhag001
+                  LET g_errparam.code   = "std-00006" 
+                  LET g_errparam.popup  = TRUE 
+                  CALL cl_err()
+               END IF 
+            ELSE
+               #add-point:單頭修改前 name="input.head.b_update"
+               {<point name="input.head.b_update" mark="Y"/>}
+               #end add-point
+               
+               #將遮罩欄位還原
+               CALL amhm320_mhag_t_mask_restore('restore_mask_o')
+               
+               UPDATE mhag_t SET (mhagsite,mhag001,mhag002,mhag003,mhag004,mhag005,mhag006,mhagunit, 
+                   mhag007,mhag008,mhag009,mhagstus,mhagownid,mhagowndp,mhagcrtid,mhagcrtdp,mhagcrtdt, 
+                   mhagmodid,mhagmoddt,mhagcnfid,mhagcnfdt) = (g_mhag_m.mhagsite,g_mhag_m.mhag001,g_mhag_m.mhag002, 
+                   g_mhag_m.mhag003,g_mhag_m.mhag004,g_mhag_m.mhag005,g_mhag_m.mhag006,g_mhag_m.mhagunit, 
+                   g_mhag_m.mhag007,g_mhag_m.mhag008,g_mhag_m.mhag009,g_mhag_m.mhagstus,g_mhag_m.mhagownid, 
+                   g_mhag_m.mhagowndp,g_mhag_m.mhagcrtid,g_mhag_m.mhagcrtdp,g_mhag_m.mhagcrtdt,g_mhag_m.mhagmodid, 
+                   g_mhag_m.mhagmoddt,g_mhag_m.mhagcnfid,g_mhag_m.mhagcnfdt)
+                WHERE mhagent = g_enterprise AND mhag001 = g_mhag001_t #
+ 
+               #add-point:單頭修改中 name="input.head.m_update"
+               {<point name="input.head.m_update"/>}
+               #end add-point
+               CASE
+                  WHEN SQLCA.sqlerrd[3] = 0  #更新不到的處理
+                     CALL s_transaction_end('N','0')
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "mhag_t" 
+                     LET g_errparam.code   = "std-00009" 
+                     LET g_errparam.popup  = TRUE 
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  WHEN SQLCA.SQLCODE #其他錯誤
+                     INITIALIZE g_errparam TO NULL 
+                     LET g_errparam.extend = "mhag_t:",SQLERRMESSAGE 
+                     LET g_errparam.code = SQLCA.SQLCODE
+                     LET g_errparam.popup = TRUE 
+                     CALL s_transaction_end('N','0')
+                     CALL cl_err()
+                     NEXT FIELD CURRENT
+                  OTHERWISE
+                     
+                     #資料多語言用-增/改
+                     
+                     
+                     #將遮罩欄位進行遮蔽
+                     CALL amhm320_mhag_t_mask_restore('restore_mask_n')
+                     
+                     #add-point:單頭修改後 name="input.head.a_update"
+                     {<point name="input.head.a_update"/>}
+                     #end add-point
+                     #修改歷程記錄(單頭修改)
+                     LET g_log1 = util.JSON.stringify(g_mhag_m_t)
+                     LET g_log2 = util.JSON.stringify(g_mhag_m)
+                     IF NOT cl_log_modified_record(g_log1,g_log2) THEN 
+                        CALL s_transaction_end('N','0')
+                     ELSE
+                        CALL s_transaction_end('Y','0')
+                     END IF
+               END CASE
+               
+            END IF
+           #controlp
+      END INPUT
+      
+      #add-point:input段more input  name="input.more_input"
+      {<point name="input.more_input"/>}
+      #end add-point
+    
+      BEFORE DIALOG
+         #CALL cl_err_collect_init()
+         #add-point:input段before_dialog  name="input.before_dialog"
+         {<point name="input.before_dialog"/>}
+         #end add-point
+          
+      ON ACTION controlf
+         CALL cl_set_focus_form(ui.Interface.getRootNode()) RETURNING g_fld_name,g_frm_name
+         CALL cl_fldhelp(g_frm_name, g_fld_name, g_lang)
+ 
+      ON ACTION controlr
+         CALL cl_show_req_fields()
+ 
+      ON ACTION controls
+         IF g_header_hidden THEN
+            CALL gfrm_curr.setElementHidden("vb_master",0)
+            CALL gfrm_curr.setElementImage("controls","small/arr-u.png")
+            LET g_header_hidden = 0     #visible
+         ELSE
+            CALL gfrm_curr.setElementHidden("vb_master",1)
+            CALL gfrm_curr.setElementImage("controls","small/arr-d.png")
+            LET g_header_hidden = 1     #hidden     
+         END IF
+ 
+      ON ACTION accept
+         ACCEPT DIALOG
+         
+      #放棄輸入
+      ON ACTION cancel
+         LET g_action_choice=""
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      #在dialog 右上角 (X)
+      ON ACTION close 
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+    
+      #toolbar 離開
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+   END DIALOG
+    
+   #add-point:input段after input  name="input.after_input"
+   {<point name="input.after_input"/>}
+   #end add-point    
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="amhm320.reproduce" >}
+#+ 資料複製
+PRIVATE FUNCTION amhm320_reproduce()
+   #add-point:reproduce段define(客製用) name="reproduce.define_customerization"
+   {<point name="reproduce.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_newno     LIKE mhag_t.mhag001 
+   DEFINE l_oldno     LIKE mhag_t.mhag001 
+ 
+   DEFINE l_master    RECORD LIKE mhag_t.* #此變數樣板目前無使用
+   DEFINE l_cnt       LIKE type_t.num10
+   #add-point:reproduce段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="reproduce.define"
+   {<point name="reproduce.define"/>}
+   #end add-point   
+   
+   #add-point:Function前置處理  name="reproduce.pre_function"
+   {<point name="reproduce.pre_function"/>}
+   #end add-point
+   
+   #切換畫面
+   IF g_main_hidden THEN
+      CALL gfrm_curr.setElementHidden("mainlayout",0)
+      CALL gfrm_curr.setElementHidden("worksheet",1)
+      LET g_main_hidden = 0
+   END IF
+   
+   #先確定key值無遺漏
+   IF g_mhag_m.mhag001 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #備份key值
+   LET g_mhag001_t = g_mhag_m.mhag001
+ 
+   
+   #清空key值
+   LET g_mhag_m.mhag001 = ""
+ 
+    
+   CALL amhm320_set_entry("a")
+   CALL amhm320_set_no_entry("a")
+   
+   #公用欄位給予預設值
+   #應用 a14 樣板自動產生(Version:5)    
+      #公用欄位新增給值  
+      LET g_mhag_m.mhagownid = g_user
+      LET g_mhag_m.mhagowndp = g_dept
+      LET g_mhag_m.mhagcrtid = g_user
+      LET g_mhag_m.mhagcrtdp = g_dept 
+      LET g_mhag_m.mhagcrtdt = cl_get_current()
+      LET g_mhag_m.mhagmodid = g_user
+      LET g_mhag_m.mhagmoddt = cl_get_current()
+      LET g_mhag_m.mhagstus = 'N'
+ 
+ 
+ 
+   
+   CALL s_transaction_begin()
+   
+   #add-point:複製輸入前 name="reproduce.head.b_input"
+   {<point name="reproduce.head.b_input"/>}
+   #end add-point
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_mhag_m.mhagstus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/open.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/valid.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/void.png")
+         
+      END CASE
+ 
+ 
+ 
+   
+   #清空key欄位的desc
+      LET g_mhag_m.mhag001_desc = ''
+   DISPLAY BY NAME g_mhag_m.mhag001_desc
+ 
+   
+   #資料輸入
+   CALL amhm320_input("r")
+   
+   IF INT_FLAG THEN
+      #取消
+      INITIALIZE g_mhag_m.* TO NULL
+      CALL amhm320_show()
+      CALL s_transaction_end('N','0')
+      LET INT_FLAG = 0
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = 9001 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   CALL s_transaction_begin()
+   
+   #add-point:單頭複製前 name="reproduce.head.b_insert"
+   {<point name="reproduce.head.b_insert" mark="Y"/>}
+   #end add-point
+   
+   #add-point:單頭複製中 name="reproduce.head.m_insert"
+   {<point name="reproduce.head.m_insert"/>}
+   #end add-point
+   
+   IF SQLCA.SQLCODE THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "mhag_t:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.popup = TRUE 
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #add-point:單頭複製後 name="reproduce.head.a_insert"
+   {<point name="reproduce.head.a_insert"/>}
+   #end add-point
+   
+   CALL s_transaction_end('Y','0')
+   
+   #根據資料狀態切換action狀態
+   CALL cl_set_act_visible("statechange,modify,delete,reproduce", TRUE)
+   CALL amhm320_set_act_visible()
+   CALL amhm320_set_act_no_visible()
+ 
+   #將新增的資料併入搜尋條件中
+   LET g_state = "insert"
+   
+   LET g_mhag001_t = g_mhag_m.mhag001
+ 
+   
+   #組合新增資料的條件
+   LET g_add_browse = " mhagent = " ||g_enterprise|| " AND",
+                      " mhag001 = '", g_mhag_m.mhag001, "' "
+ 
+   #填到最後面
+   LET g_current_idx = g_browser.getLength() + 1
+   CALL amhm320_browser_fill("","")
+   
+   DISPLAY g_browser_cnt TO FORMONLY.h_count    #總筆數
+   DISPLAY g_current_idx TO FORMONLY.h_index    #當下筆數
+   CALL cl_navigator_setting(g_current_idx, g_browser_cnt)
+   
+   #add-point:完成複製段落後 name="reproduce.after_reproduce"
+   {<point name="reproduce.after_reproduce" />}
+   #end add-point
+              
+   LET g_data_owner = g_mhag_m.mhagownid      
+   LET g_data_dept  = g_mhag_m.mhagowndp
+              
+   #功能已完成,通報訊息中心
+   CALL amhm320_msgcentre_notify('reproduce')
+                 
+END FUNCTION
+{</section>}
+ 
+{<section id="amhm320.show" >}
+#+ 資料顯示 
+PRIVATE FUNCTION amhm320_show()
+   #add-point:show段define(客製用) name="show.define_customerization"
+   {<point name="show.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:show段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="show.define"
+   {<point name="show.define"/>}
+   #end add-point  
+   
+   #add-point:show段Function前置處理  name="show.before"
+   {<point name="show.before"/>}
+   #end add-point
+   
+   
+   
+   #帶出公用欄位reference值
+   #應用 a12 樣板自動產生(Version:4)
+ 
+ 
+ 
+    
+   #顯示followup圖示
+   #應用 a48 樣板自動產生(Version:3)
+   CALL amhm320_set_pk_array()
+   #add-point:ON ACTION agendum name="show.follow_pic"
+   {<point name="show.follow_pic"/>}
+   #END add-point
+   CALL cl_user_overview_set_follow_pic()
+  
+ 
+ 
+ 
+   
+   #讀入ref值(單頭)
+   #add-point:show段reference name="show.head.reference"
+   {<point name="show.head.reference"/>}
+   #end add-point
+ 
+   #將資料輸出到畫面上
+   DISPLAY BY NAME g_mhag_m.mhagsite,g_mhag_m.mhagsite_desc,g_mhag_m.mhag001,g_mhag_m.mhag001_desc,g_mhag_m.mhag002, 
+       g_mhag_m.mhaf004,g_mhag_m.mhaf004_desc,g_mhag_m.mhaf005,g_mhag_m.mhaf007,g_mhag_m.mhag003,g_mhag_m.mhaf009, 
+       g_mhag_m.mhaf018,g_mhag_m.mhaf012,g_mhag_m.mhaf012_desc,g_mhag_m.mhaf019,g_mhag_m.mhaf019_desc, 
+       g_mhag_m.mhaf013,g_mhag_m.mhaf013_desc,g_mhag_m.mhag004,g_mhag_m.mhag004_desc,g_mhag_m.mhag005, 
+       g_mhag_m.mhag006,g_mhag_m.mhagunit,g_mhag_m.mhag007,g_mhag_m.mhag008,g_mhag_m.mhag008_desc,g_mhag_m.mhag009, 
+       g_mhag_m.mhagstus,g_mhag_m.mhagownid,g_mhag_m.mhagownid_desc,g_mhag_m.mhagowndp,g_mhag_m.mhagowndp_desc, 
+       g_mhag_m.mhagcrtid,g_mhag_m.mhagcrtid_desc,g_mhag_m.mhagcrtdp,g_mhag_m.mhagcrtdp_desc,g_mhag_m.mhagcrtdt, 
+       g_mhag_m.mhagmodid,g_mhag_m.mhagmodid_desc,g_mhag_m.mhagmoddt,g_mhag_m.mhagcnfid,g_mhag_m.mhagcnfid_desc, 
+       g_mhag_m.mhagcnfdt
+   
+   #儲存PK
+   LET l_ac = g_current_idx
+   CALL amhm320_set_pk_array()
+   
+   #顯示狀態(stus)圖片
+         #應用 a21 樣板自動產生(Version:3)
+	  #根據當下狀態碼顯示圖片
+      CASE g_mhag_m.mhagstus 
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/open.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/valid.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/void.png")
+         
+      END CASE
+ 
+ 
+ 
+ 
+   #顯示有特殊格式設定的欄位或說明
+   CALL cl_show_fld_cont()
+ 
+   #add-point:show段之後 name="show.after"
+   {<point name="show.after"/>}
+   #end add-point
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="amhm320.delete" >}
+#+ 資料刪除 
+PRIVATE FUNCTION amhm320_delete()
+   #add-point:delete段define(客製用) name="delete.define_customerization"
+   {<point name="delete.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE  l_var_keys      DYNAMIC ARRAY OF STRING
+   DEFINE  l_field_keys    DYNAMIC ARRAY OF STRING
+   DEFINE  l_vars          DYNAMIC ARRAY OF STRING
+   DEFINE  l_fields        DYNAMIC ARRAY OF STRING
+   DEFINE  l_var_keys_bak  DYNAMIC ARRAY OF STRING
+   #add-point:delete段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="delete.define"
+   {<point name="delete.define"/>}
+   #end add-point  
+   
+   #add-point:Function前置處理  name="delete.pre_function"
+   {<point name="delete.pre_function"/>}
+   #end add-point
+   
+   #先確定key值無遺漏
+   IF g_mhag_m.mhag001 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   CALL s_transaction_begin()
+    
+   LET g_mhag001_t = g_mhag_m.mhag001
+ 
+   
+   
+ 
+   OPEN amhm320_cl USING g_enterprise,g_mhag_m.mhag001
+   IF SQLCA.SQLCODE THEN    #(ver:49)
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN amhm320_cl:",SQLERRMESSAGE 
+      LET g_errparam.code = SQLCA.SQLCODE
+      LET g_errparam.popup = TRUE 
+      CLOSE amhm320_cl
+      CALL s_transaction_end('N','0')
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   #顯示最新的資料
+   EXECUTE amhm320_master_referesh USING g_mhag_m.mhag001 INTO g_mhag_m.mhagsite,g_mhag_m.mhag001,g_mhag_m.mhag002, 
+       g_mhag_m.mhag003,g_mhag_m.mhag004,g_mhag_m.mhag005,g_mhag_m.mhag006,g_mhag_m.mhagunit,g_mhag_m.mhag007, 
+       g_mhag_m.mhag008,g_mhag_m.mhag009,g_mhag_m.mhagstus,g_mhag_m.mhagownid,g_mhag_m.mhagowndp,g_mhag_m.mhagcrtid, 
+       g_mhag_m.mhagcrtdp,g_mhag_m.mhagcrtdt,g_mhag_m.mhagmodid,g_mhag_m.mhagmoddt,g_mhag_m.mhagcnfid, 
+       g_mhag_m.mhagcnfdt,g_mhag_m.mhagsite_desc,g_mhag_m.mhag001_desc,g_mhag_m.mhag004_desc,g_mhag_m.mhag008_desc, 
+       g_mhag_m.mhagownid_desc,g_mhag_m.mhagowndp_desc,g_mhag_m.mhagcrtid_desc,g_mhag_m.mhagcrtdp_desc, 
+       g_mhag_m.mhagmodid_desc,g_mhag_m.mhagcnfid_desc
+   
+   
+   #檢查是否允許此動作
+   IF NOT amhm320_action_chk() THEN
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #遮罩相關處理
+   LET g_mhag_m_mask_o.* =  g_mhag_m.*
+   CALL amhm320_mhag_t_mask()
+   LET g_mhag_m_mask_n.* =  g_mhag_m.*
+   
+   #將最新資料顯示到畫面上
+   CALL amhm320_show()
+   
+   IF cl_ask_delete() THEN
+ 
+      #add-point:單頭刪除前 name="delete.head.b_delete"
+      {<point name="delete.head.b_delete" mark="Y"/>}
+      #end add-point
+ 
+      #應用 a47 樣板自動產生(Version:4)
+      #刪除相關文件
+      CALL amhm320_set_pk_array()
+      #add-point:相關文件刪除前 name="delete.befroe.related_document_remove"
+      {<point name="delete.befroe.related_document_remove"/>}
+      #end add-point   
+      CALL cl_doc_remove()  
+ 
+ 
+ 
+ 
+ 
+      DELETE FROM mhag_t 
+       WHERE mhagent = g_enterprise AND mhag001 = g_mhag_m.mhag001 
+ 
+ 
+      #add-point:單頭刪除中 name="delete.head.m_delete"
+      {<point name="delete.head.m_delete"/>}
+      #end add-point
+         
+      IF SQLCA.SQLCODE THEN
+         INITIALIZE g_errparam TO NULL 
+         LET g_errparam.extend = "mhag_t:",SQLERRMESSAGE 
+         LET g_errparam.code = SQLCA.SQLCODE
+         LET g_errparam.popup = FALSE 
+         CALL s_transaction_end('N','0')
+         CALL cl_err()
+      END IF
+  
+      
+      
+      #add-point:單頭刪除後 name="delete.head.a_delete"
+      {<point name="delete.head.a_delete"/>}
+      #end add-point
+      
+       
+ 
+      #修改歷程記錄(刪除)
+      LET g_log1 = util.JSON.stringify(g_mhag_m)   #(ver:49)
+      IF NOT cl_log_modified_record(g_log1,'') THEN    #(ver:49)
+         CLOSE amhm320_cl
+         CALL s_transaction_end('N','0')
+         RETURN
+      END IF
+      
+      CLEAR FORM
+      CALL amhm320_ui_browser_refresh()
+      
+      #確保畫面上保有資料
+      IF g_browser_cnt > 0 THEN
+         #CALL amhm320_browser_fill(g_wc,"")
+         CALL amhm320_fetch("P")
+      ELSE
+         CLEAR FORM
+      END IF
+      CALL s_transaction_end('Y','0')
+   ELSE    
+      CALL s_transaction_end('N','0')
+   END IF
+ 
+   CLOSE amhm320_cl
+ 
+   #功能已完成,通報訊息中心
+   CALL amhm320_msgcentre_notify('delete')
+ 
+   #add-point:單頭刪除完成後 name="delete.a_delete"
+   {<point name="delete.a_delete"/>}
+   #end add-point
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="amhm320.ui_browser_refresh" >}
+#+ 瀏覽頁簽資料重新顯示
+PRIVATE FUNCTION amhm320_ui_browser_refresh()
+   #add-point:ui_browser_refresh段define(客製用) name="ui_browser_refresh.define_customerization"
+   {<point name="ui_browser_refresh.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE l_i  LIKE type_t.num10
+   #add-point:ui_browser_refresh段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ui_browser_refresh.define"
+   {<point name="ui_browser_refresh.define"/>}
+   #end add-point    
+   
+   #add-point:Function前置處理  name="ui_browser_refresh.pre_function"
+   {<point name="ui_browser_refresh.pre_function"/>}
+   #end add-point
+   
+   LET g_browser_cnt = g_browser.getLength()
+   LET g_header_cnt  = g_browser.getLength()
+   FOR l_i =1 TO g_browser.getLength()
+      IF g_browser[l_i].b_mhag001 = g_mhag_m.mhag001
+ 
+         THEN
+         CALL g_browser.deleteElement(l_i)
+       END IF
+   END FOR
+   LET g_browser_cnt = g_browser_cnt - 1
+   LET g_header_cnt = g_header_cnt - 1
+   
+   DISPLAY g_browser_cnt TO FORMONLY.b_count     #page count
+   DISPLAY g_header_cnt  TO FORMONLY.h_count     #page count
+  
+   #若無資料則關閉相關功能
+   IF g_browser_cnt = 0 THEN
+      CALL cl_set_act_visible("statechange,modify,modify_detail,delete,reproduce,mainhidden", FALSE)
+      CALL cl_navigator_setting(0,0)
+      CLEAR FORM
+   ELSE
+      CALL cl_set_act_visible("mainhidden", TRUE)
+   END IF
+  
+END FUNCTION
+{</section>}
+ 
+{<section id="amhm320.set_entry" >}
+#+ 單頭欄位開啟設定
+PRIVATE FUNCTION amhm320_set_entry(p_cmd)
+   #add-point:set_entry段define(客製用) name="set_entry.define_customerization" 
+   {<point name="set_entry.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_entry段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_entry.define"
+   {<point name="set_entry.define"/>}
+   #end add-point     
+    
+   #add-point:Function前置處理 name="set_entry.pre_function"
+   {<point name="set_entry.pre_function"/>}
+   #end add-point
+   
+   IF p_cmd = "a" THEN
+      CALL cl_set_comp_entry("mhag001",TRUE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,TRUE)
+      END IF
+      #add-point:set_entry段欄位控制 name="set_entry.field_control"
+      {<point name="set_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_entry段欄位控制後 name="set_entry.after_control"
+   {<point name="set_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="amhm320.set_no_entry" >}
+#+ 單頭欄位關閉設定
+PRIVATE FUNCTION amhm320_set_no_entry(p_cmd)
+   #add-point:set_no_entry段define(客製用) name="set_no_entry.define_customerization"
+   {<point name="set_no_entry.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE p_cmd LIKE type_t.chr1
+   #add-point:set_no_entry段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_no_entry.define"
+   {<point name="set_no_entry.define"/>}
+   #end add-point     
+   
+   #add-point:Function前置處理  name="set_no_entry.pre_function"
+   {<point name="set_no_entry.pre_function"/>}
+   #end add-point
+   
+   IF p_cmd = 'u' AND g_chkey = 'N' THEN
+      CALL cl_set_comp_entry("mhag001",FALSE)
+      #根據azzi850使用者身分開關特定欄位
+      IF NOT cl_null(g_no_entry) THEN
+         CALL cl_set_comp_entry(g_no_entry,FALSE)
+      END IF
+      #add-point:set_no_entry段欄位控制 name="set_no_entry.field_control"
+      {<point name="set_no_entry.field_control"/>}
+      #end add-point 
+   END IF
+   
+   #add-point:set_no_entry段欄位控制後 name="set_no_entry.after_control"
+   {<point name="set_no_entry.after_control"/>}
+   #end add-point 
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="amhm320.set_act_visible" >}
+#+ 單頭權限開啟
+PRIVATE FUNCTION amhm320_set_act_visible()
+   #add-point:set_act_visible段define(客製用) name="set_act_visible.define_customerization" 
+   {<point name="set_act_visible.define_customerization" edit="c" mark="Y"/>}
+   #end add-point  
+   #add-point:set_act_visible段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_visible.define"
+   {<point name="set_act_visible.define"/>}
+   #end add-point
+   #add-point:set_act_visible段 name="set_act_visible.set_act_visible"
+   {<point name="set_act_visible.set_act_visible"/>}
+   #end add-point
+END FUNCTION
+{</section>}
+ 
+{<section id="amhm320.set_act_no_visible" >}
+#+ 單頭權限關閉
+PRIVATE FUNCTION amhm320_set_act_no_visible()
+   #add-point:set_act_no_visible段define(客製用) name="set_act_no_visible.define_customerization"
+   {<point name="set_act_no_visible.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:set_act_no_visible段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_act_no_visible.define"
+   {<point name="set_act_no_visible.define"/>}
+   #end add-point
+   #add-point:set_act_no_visible段 name="set_act_no_visible.set_act_no_visible"
+   {<point name="set_act_no_visible.set_act_no_visible"/>}
+   #end add-point
+END FUNCTION
+{</section>}
+ 
+{<section id="amhm320.default_search" >}
+#+ 外部參數搜尋
+PRIVATE FUNCTION amhm320_default_search()
+   #add-point:default_search段define(客製用) name="default_search.define_customerization" 
+   {<point name="default_search.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   DEFINE li_idx  LIKE type_t.num10
+   DEFINE li_cnt  LIKE type_t.num10
+   DEFINE ls_wc   STRING
+   #add-point:default_search段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="default_search.define"
+   {<point name="default_search.define"/>}
+   #end add-point  
+   
+   #add-point:Function前置處理  name="default_search.pre_function"
+   {<point name="default_search.pre_function"/>}
+   #end add-point
+   
+   IF cl_null(g_order) THEN
+      LET g_order = "ASC"
+   END IF
+   
+   #add-point:default_search段開始前 name="default_search.before"
+   {<point name="default_search.before"/>}
+   #end add-point  
+   
+   #根據外部參數(g_argv)組合wc
+   IF NOT cl_null(g_argv[01]) THEN
+      LET ls_wc = ls_wc, " mhag001 = '", g_argv[01], "' AND "
+   END IF
+   
+ 
+   
+   #add-point:default_search段after sql name="default_search.after_sql"
+   {<point name="default_search.after_sql"/>}
+   #end add-point  
+   
+   IF NOT cl_null(ls_wc) THEN
+      #若有外部參數則根據該參數組合
+      LET g_wc = ls_wc.subString(1,ls_wc.getLength()-5)
+      LET g_default = TRUE
+   ELSE
+      #若無外部參數則預設為1=2
+      LET g_default = FALSE
+      #預設查詢條件
+      LET g_wc = cl_qbe_get_default_qryplan()
+      IF cl_null(g_wc) THEN
+         LET g_wc = " 1=2"
+      END IF
+   END IF
+   
+   #add-point:default_search段結束前 name="default_search.after"
+   {<point name="default_search.after"/>}
+   #end add-point  
+ 
+   IF g_wc.getIndexOf(" 1=2", 1) THEN
+      LET g_default = TRUE
+   END IF
+ 
+ 
+END FUNCTION
+{</section>}
+ 
+{<section id="amhm320.mask_functions" >}
+&include "erp/amh/amhm320_mask.4gl"
+{</section>}
+ 
+{<section id="amhm320.state_change" >}
+   #應用 a09 樣板自動產生(Version:17)
+#+ 確認碼變更 
+PRIVATE FUNCTION amhm320_statechange()
+   #add-point:statechange段define(客製用) name="statechange.define_customerization"
+   {<point name="statechange.define_customerization" edit="c" mark="Y"/>}
+   #end add-point  
+   DEFINE lc_state LIKE type_t.chr5
+   #add-point:statechange段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="statechange.define"
+   {<point name="statechange.define"/>}
+   #end add-point  
+   
+   #add-point:Function前置處理 name="statechange.before"
+   {<point name="statechange.before"/>}
+   #end add-point  
+   
+   ERROR ""     #清空畫面右下側ERROR區塊
+ 
+   IF g_mhag_m.mhag001 IS NULL
+ 
+   THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "std-00003" 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF
+ 
+   CALL s_transaction_begin()
+   
+   OPEN amhm320_cl USING g_enterprise,g_mhag_m.mhag001
+   IF STATUS THEN
+      CLOSE amhm320_cl
+      CALL s_transaction_end('N','0')
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "OPEN amhm320_cl:" 
+      LET g_errparam.code   = STATUS 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+      RETURN
+   END IF
+   
+   #顯示最新的資料
+   EXECUTE amhm320_master_referesh USING g_mhag_m.mhag001 INTO g_mhag_m.mhagsite,g_mhag_m.mhag001,g_mhag_m.mhag002, 
+       g_mhag_m.mhag003,g_mhag_m.mhag004,g_mhag_m.mhag005,g_mhag_m.mhag006,g_mhag_m.mhagunit,g_mhag_m.mhag007, 
+       g_mhag_m.mhag008,g_mhag_m.mhag009,g_mhag_m.mhagstus,g_mhag_m.mhagownid,g_mhag_m.mhagowndp,g_mhag_m.mhagcrtid, 
+       g_mhag_m.mhagcrtdp,g_mhag_m.mhagcrtdt,g_mhag_m.mhagmodid,g_mhag_m.mhagmoddt,g_mhag_m.mhagcnfid, 
+       g_mhag_m.mhagcnfdt,g_mhag_m.mhagsite_desc,g_mhag_m.mhag001_desc,g_mhag_m.mhag004_desc,g_mhag_m.mhag008_desc, 
+       g_mhag_m.mhagownid_desc,g_mhag_m.mhagowndp_desc,g_mhag_m.mhagcrtid_desc,g_mhag_m.mhagcrtdp_desc, 
+       g_mhag_m.mhagmodid_desc,g_mhag_m.mhagcnfid_desc
+   
+ 
+   #檢查是否允許此動作
+   IF NOT amhm320_action_chk() THEN
+      CLOSE amhm320_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+ 
+   #將資料顯示到畫面上
+   DISPLAY BY NAME g_mhag_m.mhagsite,g_mhag_m.mhagsite_desc,g_mhag_m.mhag001,g_mhag_m.mhag001_desc,g_mhag_m.mhag002, 
+       g_mhag_m.mhaf004,g_mhag_m.mhaf004_desc,g_mhag_m.mhaf005,g_mhag_m.mhaf007,g_mhag_m.mhag003,g_mhag_m.mhaf009, 
+       g_mhag_m.mhaf018,g_mhag_m.mhaf012,g_mhag_m.mhaf012_desc,g_mhag_m.mhaf019,g_mhag_m.mhaf019_desc, 
+       g_mhag_m.mhaf013,g_mhag_m.mhaf013_desc,g_mhag_m.mhag004,g_mhag_m.mhag004_desc,g_mhag_m.mhag005, 
+       g_mhag_m.mhag006,g_mhag_m.mhagunit,g_mhag_m.mhag007,g_mhag_m.mhag008,g_mhag_m.mhag008_desc,g_mhag_m.mhag009, 
+       g_mhag_m.mhagstus,g_mhag_m.mhagownid,g_mhag_m.mhagownid_desc,g_mhag_m.mhagowndp,g_mhag_m.mhagowndp_desc, 
+       g_mhag_m.mhagcrtid,g_mhag_m.mhagcrtid_desc,g_mhag_m.mhagcrtdp,g_mhag_m.mhagcrtdp_desc,g_mhag_m.mhagcrtdt, 
+       g_mhag_m.mhagmodid,g_mhag_m.mhagmodid_desc,g_mhag_m.mhagmoddt,g_mhag_m.mhagcnfid,g_mhag_m.mhagcnfid_desc, 
+       g_mhag_m.mhagcnfdt
+ 
+   CASE g_mhag_m.mhagstus
+      WHEN "N"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/open.png")
+      WHEN "Y"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/valid.png")
+      WHEN "X"
+         CALL gfrm_curr.setElementImage("statechange", "stus/32/void.png")
+      
+   END CASE
+ 
+   #add-point:資料刷新後 name="statechange.after_refresh"
+   {<point name="statechange.after_refresh"/>}
+   #end add-point
+ 
+   MENU "" ATTRIBUTES (STYLE="popup")
+      BEFORE MENU
+         HIDE OPTION "approved"
+         HIDE OPTION "rejection"
+         CASE g_mhag_m.mhagstus
+            
+            WHEN "N"
+               HIDE OPTION "open"
+            WHEN "Y"
+               HIDE OPTION "valid"
+            WHEN "X"
+               HIDE OPTION "void"
+         END CASE
+     
+      #add-point:menu前 name="statechange.before_menu"
+      {<point name="statechange.before_menu"/>}
+      #end add-point
+      
+      
+	  
+      ON ACTION open
+         IF cl_auth_chk_act("open") THEN
+            LET lc_state = "N"
+            #add-point:action控制 name="statechange.open"
+            {<point name="statechange.open"/>}
+            #end add-point
+         END IF
+         EXIT MENU
+      ON ACTION valid
+         IF cl_auth_chk_act("valid") THEN
+            LET lc_state = "Y"
+            #add-point:action控制 name="statechange.valid"
+            {<point name="statechange.valid"/>}
+            #end add-point
+         END IF
+         EXIT MENU
+      ON ACTION void
+         IF cl_auth_chk_act("void") THEN
+            LET lc_state = "X"
+            #add-point:action控制 name="statechange.void"
+            {<point name="statechange.void"/>}
+            #end add-point
+         END IF
+         EXIT MENU
+ 
+      #add-point:stus控制 name="statechange.more_control"
+      {<point name="statechange.more_control"/>}
+      #end add-point
+      
+   END MENU
+   
+   #確認被選取的狀態碼在清單中
+   IF (lc_state <> "N" 
+      AND lc_state <> "Y"
+      AND lc_state <> "X"
+      ) OR 
+      g_mhag_m.mhagstus = lc_state OR cl_null(lc_state) THEN
+      CLOSE amhm320_cl
+      CALL s_transaction_end('N','0')
+      RETURN
+   END IF
+   
+   #add-point:stus修改前 name="statechange.b_update"
+   {<point name="statechange.b_update"/>}
+   #end add-point
+   
+   LET g_mhag_m.mhagmodid = g_user
+   LET g_mhag_m.mhagmoddt = cl_get_current()
+   LET g_mhag_m.mhagstus = lc_state
+   
+   #異動狀態碼欄位/修改人/修改日期
+   UPDATE mhag_t 
+      SET (mhagstus,mhagmodid,mhagmoddt) 
+        = (g_mhag_m.mhagstus,g_mhag_m.mhagmodid,g_mhag_m.mhagmoddt)     
+    WHERE mhagent = g_enterprise AND mhag001 = g_mhag_m.mhag001
+ 
+    
+   IF SQLCA.sqlcode THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = SQLCA.sqlcode 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+   ELSE
+      CASE lc_state
+         WHEN "N"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/open.png")
+         WHEN "Y"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/valid.png")
+         WHEN "X"
+            CALL gfrm_curr.setElementImage("statechange", "stus/32/void.png")
+         
+      END CASE
+    
+      #撈取異動後的資料
+      EXECUTE amhm320_master_referesh USING g_mhag_m.mhag001 INTO g_mhag_m.mhagsite,g_mhag_m.mhag001, 
+          g_mhag_m.mhag002,g_mhag_m.mhag003,g_mhag_m.mhag004,g_mhag_m.mhag005,g_mhag_m.mhag006,g_mhag_m.mhagunit, 
+          g_mhag_m.mhag007,g_mhag_m.mhag008,g_mhag_m.mhag009,g_mhag_m.mhagstus,g_mhag_m.mhagownid,g_mhag_m.mhagowndp, 
+          g_mhag_m.mhagcrtid,g_mhag_m.mhagcrtdp,g_mhag_m.mhagcrtdt,g_mhag_m.mhagmodid,g_mhag_m.mhagmoddt, 
+          g_mhag_m.mhagcnfid,g_mhag_m.mhagcnfdt,g_mhag_m.mhagsite_desc,g_mhag_m.mhag001_desc,g_mhag_m.mhag004_desc, 
+          g_mhag_m.mhag008_desc,g_mhag_m.mhagownid_desc,g_mhag_m.mhagowndp_desc,g_mhag_m.mhagcrtid_desc, 
+          g_mhag_m.mhagcrtdp_desc,g_mhag_m.mhagmodid_desc,g_mhag_m.mhagcnfid_desc
+      
+      #將資料顯示到畫面上
+      DISPLAY BY NAME g_mhag_m.mhagsite,g_mhag_m.mhagsite_desc,g_mhag_m.mhag001,g_mhag_m.mhag001_desc, 
+          g_mhag_m.mhag002,g_mhag_m.mhaf004,g_mhag_m.mhaf004_desc,g_mhag_m.mhaf005,g_mhag_m.mhaf007, 
+          g_mhag_m.mhag003,g_mhag_m.mhaf009,g_mhag_m.mhaf018,g_mhag_m.mhaf012,g_mhag_m.mhaf012_desc, 
+          g_mhag_m.mhaf019,g_mhag_m.mhaf019_desc,g_mhag_m.mhaf013,g_mhag_m.mhaf013_desc,g_mhag_m.mhag004, 
+          g_mhag_m.mhag004_desc,g_mhag_m.mhag005,g_mhag_m.mhag006,g_mhag_m.mhagunit,g_mhag_m.mhag007, 
+          g_mhag_m.mhag008,g_mhag_m.mhag008_desc,g_mhag_m.mhag009,g_mhag_m.mhagstus,g_mhag_m.mhagownid, 
+          g_mhag_m.mhagownid_desc,g_mhag_m.mhagowndp,g_mhag_m.mhagowndp_desc,g_mhag_m.mhagcrtid,g_mhag_m.mhagcrtid_desc, 
+          g_mhag_m.mhagcrtdp,g_mhag_m.mhagcrtdp_desc,g_mhag_m.mhagcrtdt,g_mhag_m.mhagmodid,g_mhag_m.mhagmodid_desc, 
+          g_mhag_m.mhagmoddt,g_mhag_m.mhagcnfid,g_mhag_m.mhagcnfid_desc,g_mhag_m.mhagcnfdt
+   END IF
+ 
+   #add-point:stus修改後 name="statechange.a_update"
+   {<point name="statechange.a_update"/>}
+   #end add-point
+ 
+   #add-point:statechange段結束前 name="statechange.after"
+   {<point name="statechange.after"/>}
+   #end add-point  
+ 
+   CLOSE amhm320_cl
+   CALL s_transaction_end('Y','0')
+ 
+   #功能已完成,通報訊息中心
+   CALL amhm320_msgcentre_notify('statechange:'||lc_state)
+   
+END FUNCTION
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="amhm320.signature" >}
+   
+{</section>}
+ 
+{<section id="amhm320.set_pk_array" >}
+   #應用 a51 樣板自動產生(Version:8)
+#+ 給予pk_array內容
+PRIVATE FUNCTION amhm320_set_pk_array()
+   #add-point:set_pk_array段define name="set_pk_array.define_customerization"
+   {<point name="set_pk_array.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:set_pk_array段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="set_pk_array.define"
+   {<point name="set_pk_array.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理 name="set_pk_array.before"
+   {<point name="set_pk_array.before"/>}
+   #end add-point  
+   
+   #若l_ac<=0代表沒有資料
+   IF l_ac <= 0 THEN
+      RETURN
+   END IF
+   
+   CALL g_pk_array.clear()
+   LET g_pk_array[1].values = g_mhag_m.mhag001
+   LET g_pk_array[1].column = 'mhag001'
+ 
+   
+   #add-point:set_pk_array段之後 name="set_pk_array.after"
+   {<point name="set_pk_array.after"/>}
+   #end add-point  
+   
+END FUNCTION
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="amhm320.other_dialog" readonly="Y" >}
+ 
+{</section>}
+ 
+{<section id="amhm320.msgcentre_notify" >}
+#應用 a66 樣板自動產生(Version:6)
+PRIVATE FUNCTION amhm320_msgcentre_notify(lc_state)
+   #add-point:msgcentre_notify段define name="msgcentre_notify.define_customerization"
+   {<point name="msgcentre_notify.define_customerization" edit="c" mark="Y"/>}
+   #end add-point   
+   DEFINE lc_state LIKE type_t.chr80
+   #add-point:msgcentre_notify段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="msgcentre_notify.define"
+   {<point name="msgcentre_notify.define"/>}
+   #end add-point
+   
+   #add-point:Function前置處理  name="msgcentre_notify.pre_function"
+   {<point name="msgcentre_notify.pre_function"/>}
+   #end add-point
+   
+   INITIALIZE g_msgparam TO NULL
+ 
+   #action-id與狀態填寫
+   LET g_msgparam.state = lc_state
+ 
+   #PK資料填寫
+   CALL amhm320_set_pk_array()
+   #單頭資料填寫
+   LET g_msgparam.data[1] = util.JSON.stringify(g_mhag_m)
+ 
+   #add-point:msgcentre其他通知 name="msgcentre_notify.process"
+   {<point name="msgcentre_notify.process"/>}
+   #end add-point
+ 
+   #呼叫訊息中心傳遞本關完成訊息
+   CALL cl_msgcentre_notify()
+ 
+END FUNCTION
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="amhm320.action_chk" >}
+#+ 修改/刪除前行為檢查(是否可允許此動作), 若有其他行為須管控也可透過此段落
+PRIVATE FUNCTION amhm320_action_chk()
+   #add-point:action_chk段define(客製用) name="action_chk.define_customerization" 
+   {<point name="action_chk.define_customerization" edit="c" mark="Y"/>}
+   #end add-point
+   #add-point:action_chk段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="action_chk.define"
+   {<point name="action_chk.define"/>}
+   #end add-point
+   
+   #add-point:action_chk段action_chk name="action_chk.action_chk"
+   {<point name="action_chk.action_chk"/>}
+   #end add-point
+   
+   RETURN TRUE
+   
+END FUNCTION
+{</section>}
+ 
+{<section id="amhm320.other_function" readonly="Y" >}
+{<point name="other.function"/>}
+{</section>}
+ 
+ 

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="aooi420_02" std_prog="aooi420_02" erpver="1.0" ver="1" module="AOO" booking="Y" class="i" template="F001_00" normal_style="Y" env="s" zone="t10dev">
+  <toolbar items="insert,modify,delete,reproduce,output,query"/>
+  <table ver="1">
+    <tbl name="oogc_t" parent="" main="Y" src="s" status=""/>
+  </table>
+  <all src="s" ver="1" cite_std="" cite_ver="" status="">
+    <![CDATA[程式說明及目的：整批更新行事曆檔裡的上班時數。
+作業功能：確定/放棄
+作業類型：子作業
+輸入模式：單檔(子作業)F001_00
+作業資料來源(Master)：
+	資料來源表：oogc_t(行事曆檔)
+	            ooall_t(參照表多語言檔)
+
+當執行"確認"時,
+1.先抓取符合條件範圍且[T:行事曆檔].[C:休假類型]=0.工作日的行事曆檔資料
+2.將[T:行事曆檔].[C:上班時數]=更新為畫面上的上班時數
+3.若更新成功,則顯示"更新完成"訊息;
+  若更新失敗,則顯示"更新失敗"訊息
+
+當執行"放棄"後,不做任何更新,直接離開
+]]>
+  </all>
+  <field column="oogc003" name="bdate" ver="1" table="oogc_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[日期起：
+   ●欄位控管：
+     資料欄位:[C:日期起]/Input Only
+     預設值:當前年份的下一年第一天
+     校驗:必輸
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field column="oogc003" name="edate" ver="1" table="oogc_t" attribute="D001" type="date" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[日期迄：
+   ●欄位控管：
+     資料欄位:[C:日期迄]/Input Only
+     預設值:當前年份下一年的最後一天
+     校驗:本欄位值不可小於[C:日期起]
+             必輸
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field column="oogc009" name="hours" ver="1" table="oogc_t" attribute="N403" type="number(15,3)" req="N" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="0.000" can_edit="Y" can_query="Y" widget="Edit" cite_std="N" cite_ver="" status="">
+    <![CDATA[上班時數：
+   ●欄位控管：
+     資料欄位:[C:上班時數]/Input Only
+     預設值:Null
+     校驗:1.不可空白
+          2.不可小於0
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <field column="" name="lbl_hours" ver="1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="" name="lbl_to" ver="1" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Label" cite_std="N" cite_ver="" status="">
+    <![CDATA[]]>
+  </field>
+  <field column="oogc001" name="oogc_t.oogc001" ver="1" table="oogc_t" attribute="C812" type="varchar2(5)" req="Y" i_zoom="q_ooal002" c_zoom="" chk_ref="" src="s" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" cite_std="N" cite_ver="" status="">
+    <![CDATA[行事曆參照表號：
+   ●欄位控管：
+     資料欄位:[T:行事曆檔].[C:行事曆參照表號]/Input Only
+     預設值:aooi420畫面上的[C:行事曆參照表號]欄位值
+     校驗:1.不允許空白
+          2.輸入值須存在[T:行事曆檔].[C:行事曆參照表號]
+     帶值:帶出[T:參照表多語言檔].[C:說明]到參照表說明顯示
+     計算或處理:無
+
+   ●開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：[T:行事曆檔].[C:行事曆參照表號],[T:參照表多語言檔].[C:說明]
+     過濾條件：[T:參照表檔].[C:參照表類型]=4
+     回值類型：單一回值
+]]>
+  </field>
+  <field column="oogc002" name="oogc_t.oogc002" ver="1" table="oogc_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" src="s" items="25" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" cite_std="N" cite_ver="" status="">
+    <![CDATA[行事曆類別：
+   ●欄位控管：
+     資料欄位:[T:行事曆檔].[C:行事曆類別]
+     允許空白:No
+     預設值:aooi420畫面上的[C:行事曆類別]欄位值
+     資料選項來源: 
+       資料庫: 抓取[T:系統分類值檔].[C:系統分類碼]=25的資料,
+　　     　　　　　[T:系統分類值檔].[C:系統分類值]為下拉選項代號,
+                   [T:系統分類值多語言檔].[C:說明]為下拉選項說明
+     校驗:1.不允許空白
+          2.[C:行事曆參照表號]+[C:行事曆類別]需存在[T:行事曆檔]裡
+     帶值:無
+     計算或處理:無
+]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield src="s" ver="1" name="oogc001_desc" depend_filed="oogc_t.oogc001" correspon_key="oogcent,oogc001" ref_table="ooall_t" ref_fk="ooallent,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code/>
+  <strings>
+    <sfield name="lbl_oogc001" text="行事曆參照表號" comment="" lstr=""/>
+    <sfield name="lbl_oogc002" text="行事曆類別" comment="" lstr=""/>
+    <sfield name="lbl_oogc003" text="日期" comment="" lstr=""/>
+    <sfield name="lbl_oogc009" text="上班時數" comment="" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" comment="" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" comment="" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" comment="" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="1"/>
+</spec>

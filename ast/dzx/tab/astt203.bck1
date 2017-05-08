@@ -1,0 +1,192 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="astt203" module="ast" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="01726" crtdt="2013-10-23 17:35:09" modid="06189" moddt="2016-06-22 14:48:12" sdver="0007" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="費用編號異動申請作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="stacsite,stacsite_desc(chr80),stacdocdt,stacdocno,stacunit,stac000,stac001,stac001_desc(chr80),stac002,stac002_desc(chr80),stacstus,stacownid,stacownid_desc(chr80),stacowndp,stacowndp_desc(chr80),staccrtid,staccrtid_desc(chr80),staccrtdp,staccrtdp_desc(chr80),staccrtdt,stacmodid,stacmodid_desc(chr80),stacmoddt,staccnfid,staccnfid_desc(chr80),staccnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="stadseq,stad001,stadl002,stadl003,stad002,stad014,stad003,stad003_desc(chr500),stad004,stad005,stad006,stad011,stad007,stad008,stad008_desc(chr500),stad009,stad010,stad010_desc(chr500),stadacti,stad012,stad013,stad013_desc(chr500),stad015,stad016"/>
+      <var id="bs_field" value="stacsite,stacsite_desc(chr80),stacdocno,stacdocdt,stac000,stac001,stac001_desc(chr80),stac002,stac002_desc(chr80)" pk="stacdocno" order=""/>
+      <bs_reference field="stacsite_desc" ref_field="stacsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+      <bs_reference field="stac001_desc" ref_field="stac001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+      <bs_reference field="stac002_desc" ref_field="stac002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="astt203" method="dialog">
+    <section id="input">
+      <input id="head" field="stacsite,stacdocdt,stacdocno,stacunit,stac000,stac001,stac002,stacstus"/>
+      <input id="body" page="1" field="stadseq,stad001,stadl002,stadl003,stad002,stad014,stad003,stad004,stad005,stad006,stad011,stad007,stad008,stad009,stad010,stadacti,stad012,stad013,stad015,stad016" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="stacsite,stacdocdt,stacdocno,stacunit,stac000,stac001,stac002,stacstus,stacownid,stacowndp,staccrtid,staccrtdp,staccrtdt,stacmodid,stacmoddt,staccnfid,staccnfdt"/>
+      <construct id="body" page="1" field="stadseq,stad001,stadl002,stadl003,stad002,stad014,stad003,stad004,stad005,stad006,stad011,stad007,stad008,stad009,stad010,stadacti,stad012,stad013,stad015,stad016"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="stacdocno"/>
+      <set id="head" type="no_entry" field="stacdocno"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="stacsite">
+        <after>
+          <reference field="stacsite_desc" ref_field="stac_t.stacsite" map_field="stacsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="stacsite_desc"/>
+      <column id="stacdocdt"/>
+      <column id="stacdocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_stacdocno" state="c"/>
+      </column>
+      <column id="stacunit"/>
+      <column id="stac000" type="S" default="I" def_scc="32"/>
+      <column id="stac001">
+        <after>
+          <reference field="stac001_desc" ref_field="stac_t.stac001" map_field="stac001" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001_4" state="i"/>
+        <controlp form="q_ooag001_4" state="c"/>
+      </column>
+      <column id="stac001_desc"/>
+      <column id="stac002">
+        <after>
+          <reference field="stac002_desc" ref_field="stac_t.stac002" map_field="stacent,stac002" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001" state="c"/>
+      </column>
+      <column id="stac002_desc"/>
+      <column id="stacstus" scc="13" type="S" default="N">
+        <stus id="N" pic="unconfirmed"/>
+        <stus id="Y" pic="confirmed"/>
+        <stus id="A" pic="approved"/>
+        <stus id="D" pic="withdraw"/>
+        <stus id="R" pic="rejection"/>
+        <stus id="W" pic="signing"/>
+        <stus id="X" pic="invalid"/>
+      </column>
+      <column id="stacownid">
+        <after>
+          <reference field="stacownid_desc" ref_field="stac_t.stacownid" map_field="stacownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stacownid_desc"/>
+      <column id="stacowndp">
+        <after>
+          <reference field="stacowndp_desc" ref_field="stac_t.stacowndp" map_field="stacowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="stacowndp_desc"/>
+      <column id="staccrtid">
+        <after>
+          <reference field="staccrtid_desc" ref_field="stac_t.staccrtid" map_field="staccrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="staccrtid_desc"/>
+      <column id="staccrtdp">
+        <after>
+          <reference field="staccrtdp_desc" ref_field="stac_t.staccrtdp" map_field="staccrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="staccrtdp_desc"/>
+      <column id="staccrtdt"/>
+      <column id="stacmodid">
+        <after>
+          <reference field="stacmodid_desc" ref_field="stac_t.stacmodid" map_field="stacmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="stacmodid_desc"/>
+      <column id="stacmoddt"/>
+      <column id="staccnfid">
+        <after>
+          <reference field="staccnfid_desc" ref_field="stac_t.staccnfid" map_field="staccnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="staccnfid_desc"/>
+      <column id="staccnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="stadseq"/>
+      <column id="stad001">
+        <controlp form="q_stae001_1" state="i"/>
+        <controlp form="q_stad001" state="c"/>
+      </column>
+      <column id="stadl002"/>
+      <column id="stadl003"/>
+      <column id="stad002" def_scc="6003"/>
+      <column id="stad014" def_scc="6820"/>
+      <column id="stad003">
+        <after>
+          <reference field="stad003_desc" ref_field="stad003" map_field="stad003" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2058&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="stad003_desc"/>
+      <column id="stad004" def_scc="6004"/>
+      <column id="stad005" def_scc="6005"/>
+      <column id="stad006" def_scc="6006"/>
+      <column id="stad011" type="S" default="Y"/>
+      <column id="stad007" type="S" default="N"/>
+      <column id="stad008">
+        <after>
+          <reference field="stad008_desc" ref_field="stad_t.stad008" map_field="stadent,stad008" ref_sql="SELECT stael003 FROM stael_t WHERE staelent=$varg_enterprise$var AND stael001=? AND stael002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_stad001_1" state="i"/>
+        <controlp form="q_stad008" state="c"/>
+      </column>
+      <column id="stad008_desc"/>
+      <column id="stad009" type="S" default="Y"/>
+      <column id="stad010">
+        <after/>
+        <controlp form="q_oodb002_1" state="i"/>
+        <controlp form="q_oodb002_1" state="c"/>
+      </column>
+      <column id="stad010_desc"/>
+      <column id="stadacti" type="S" default="Y"/>
+      <column id="stad012" def_scc="6932"/>
+      <column id="stad013">
+        <after>
+          <check chkid="v_ooef001" id="isExist"/>
+          <reference field="stad013_desc" ref_field="stad_t.stad013" map_field="stadent,stad013" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="stad013_desc"/>
+      <column id="stad015"/>
+      <column id="stad016" type="S" default="N"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="stac_t" pk="stacdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT stacsite,&apos;&apos;,stacdocdt,stacdocno,stacunit,stac000,stac001,&apos;&apos;,stac002,&apos;&apos;,stacstus,stacownid,&apos;&apos;,stacowndp,&apos;&apos;,staccrtid,&apos;&apos;,staccrtdp,&apos;&apos;,staccrtdt,stacmodid,&apos;&apos;,stacmoddt,staccnfid,&apos;&apos;,staccnfdt FROM stac_t WHERE stacent= ? AND stacdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT stacsite,&apos;&apos;,stacdocdt,stacdocno,stacunit,stac000,stac001,&apos;&apos;,stac002,&apos;&apos;,stacstus,stacownid,&apos;&apos;,stacowndp,&apos;&apos;,staccrtid,&apos;&apos;,staccrtdp,&apos;&apos;,staccrtdt,stacmodid,&apos;&apos;,stacmoddt,staccnfid,&apos;&apos;,staccnfdt FROM stac_t" order="stacdocno"/>
+    </head>
+    <body id="stad_t" page="1" linked="" pk="stadseq" fk="staddocno">
+      <sql id="forupd_sql_detail" query="SELECT stadseq,stad001,&apos;&apos;,&apos;&apos;,stad002,stad014,stad003,&apos;&apos;,stad004,stad005,stad006,stad011,stad007,stad008,&apos;&apos;,stad009,stad010,&apos;&apos;,stadacti,stad012,stad013,&apos;&apos;,stad015,stad016 FROM stad_t WHERE stadent=? AND staddocno=? AND stadseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT stadseq,stad001,&apos;&apos;,&apos;&apos;,stad002,stad014,stad003,&apos;&apos;,stad004,stad005,stad006,stad011,stad007,stad008,&apos;&apos;,stad009,stad010,&apos;&apos;,stadacti,stad012,stad013,&apos;&apos;,stad015,stad016 FROM stad_t WHERE stadent=? AND staddocno=?"/>
+      <sql id="detail_append" type="lang" target="stadl_t.stadl002,stadl_t.stadl003" table="stadl_t" fk="stacdocno,stadseq" pk="stadldocno,stadlseq,stadl001" field="stadl002,stadl003"/>
+    </body>
+  </dataset>
+</assembly>
+

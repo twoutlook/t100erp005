@@ -1,0 +1,119 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisi080" module="ais" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="02599" crtdt="2014-01-20 23:16:55" modid="04152" moddt="2015-03-13 10:57:36" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="稅區發票相關資料設定">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="isai001,isai001_desc(chr80),isai004,isai008,isai003,isai002,isai005,isai006,isai007,isaistus(chr500),isaiownid,isaiownid_desc(chr80),isaiowndp,isaiowndp_desc(chr80),isaicrtid,isaicrtid_desc(chr80),isaicrtdp,isaicrtdp_desc(chr80),isaicrtdt,isaimodid,isaimodid_desc(chr80),isaimoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isap002,isapl004,isap003,isapstus"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="detail_input" page="1">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="ais" filename="aisi080" method="dialog">
+    <section id="input">
+      <input id="head" field="isai001,isai004,isai008,isai003,isai002,isai005,isai006,isai007,isaistus"/>
+      <input id="body" page="1" field="isap002,isapl004,isap003,isapstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="isai001,isai004,isai008,isai003,isai002,isai005,isai006,isai007,isaistus,isaiownid,isaiowndp,isaicrtid,isaicrtdp,isaicrtdt,isaimodid,isaimoddt"/>
+      <construct id="body" page="1" field="isap002,isapl004,isap003,isapstus"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="isai001"/>
+      <set id="head" type="no_entry" field="isai001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="isai001">
+        <after>
+          <check chkid="v_ooal002_2" id="isExist"/>
+          <reference field="isai001_desc" ref_field="isai001" map_field="isai001" ref_sql="SELECT ooall004 FROM ooall_t WHERE ooallent=$varg_enterprise$var AND ooall001=&apos;2&apos; AND ooall002=? AND ooall003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooal002" state="i"/>
+        <controlp form="q_isai001" state="c"/>
+      </column>
+      <column id="isai001_desc"/>
+      <column id="isai004" type="S" default="1" def_scc="9728"/>
+      <column id="isai008"/>
+      <column id="isai003" type="S" default="Y"/>
+      <column id="isai002" type="S" default="1" def_scc="9714"/>
+      <column id="isai005"/>
+      <column id="isai006" type="S" default="N"/>
+      <column id="isai007" type="S" default="1" def_scc="9739"/>
+      <column id="isaistus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="isaiownid">
+        <after>
+          <reference field="isaiownid_desc" ref_field="isai_t.isaiownid" map_field="isaiownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isaiownid_desc"/>
+      <column id="isaiowndp">
+        <after>
+          <reference field="isaiowndp_desc" ref_field="isai_t.isaiowndp" map_field="isaiowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="isaiowndp_desc"/>
+      <column id="isaicrtid">
+        <after>
+          <reference field="isaicrtid_desc" ref_field="isai_t.isaicrtid" map_field="isaicrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isaicrtid_desc"/>
+      <column id="isaicrtdp">
+        <after>
+          <reference field="isaicrtdp_desc" ref_field="isai_t.isaicrtdp" map_field="isaicrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="isaicrtdp_desc"/>
+      <column id="isaicrtdt"/>
+      <column id="isaimodid">
+        <after>
+          <reference field="isaimodid_desc" ref_field="isai_t.isaimodid" map_field="isaimodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="isaimodid_desc"/>
+      <column id="isaimoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="isap002"/>
+      <column id="isapl004"/>
+      <column id="isap003" type="S" default="N"/>
+      <column id="isapstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="isai_t" pk="isai001">
+      <sql id="forupd_sql" type="sql" query="SELECT isai001,&apos;&apos;,isai004,isai008,isai003,isai002,isai005,isai006,isai007,&apos;&apos;,isaiownid,&apos;&apos;,isaiowndp,&apos;&apos;,isaicrtid,&apos;&apos;,isaicrtdp,&apos;&apos;,isaicrtdt,isaimodid,&apos;&apos;,isaimoddt FROM isai_t WHERE isaient= ? AND isai001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT isai001,&apos;&apos;,isai004,isai008,isai003,isai002,isai005,isai006,isai007,&apos;&apos;,isaiownid,&apos;&apos;,isaiowndp,&apos;&apos;,isaicrtid,&apos;&apos;,isaicrtdp,&apos;&apos;,isaicrtdt,isaimodid,&apos;&apos;,isaimoddt FROM isai_t" order="isai001"/>
+    </head>
+    <body id="isap_t" page="1" linked="" pk="isap002" fk="isap001">
+      <sql id="forupd_sql_detail" query="SELECT isap002,&apos;&apos;,isap003,isapstus FROM isap_t WHERE isapent=? AND isap001=? AND isap002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT isap002,&apos;&apos;,isap003,isapstus FROM isap_t WHERE isapent=? AND isap001=?"/>
+      <sql id="detail_append" type="lang" target="isapl_t.isapl004" table="isapl_t" fk="isai001,isap002" pk="isapl001,isapl002,isapl003" field="isapl004"/>
+    </body>
+  </dataset>
+</assembly>
+

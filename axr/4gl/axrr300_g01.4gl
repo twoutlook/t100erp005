@@ -1,0 +1,1750 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="axrr300_g01.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:10(2016-12-05 17:01:23), PR版次:0010(2016-12-05 17:06:29)
+#+ Customerized Version.: SD版次:(), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000084
+#+ Filename...: axrr300_g01
+#+ Description: ...
+#+ Creator....: 01251(2014-12-12 14:47:52)
+#+ Modifier...: 07900 -SD/PR- 07900
+ 
+{</section>}
+ 
+{<section id="axrr300_g01.global" readonly="Y" >}
+#報表 g01 樣板自動產生(Version:13)
+#add-point:填寫註解說明 name="global.memo"
+#160518-00075#9  2016/07/25 By 07900   (依單別參數作權限管理)aooi200的控制組設定, 取7/8 設定的部門及人員
+#161104-00049#3  2016/12/05 By 07900   報表輸出的【報表名稱】title,改為依單別名稱輸出
+#end add-point
+#add-point:填寫註解說明 name="global.memo_customerization"
+
+ 
+IMPORT os
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_report.inc"                  #報表使用的global
+ 
+#報表 type 宣告
+PRIVATE TYPE sr1_r RECORD
+   xrcadocno LIKE xrca_t.xrcadocno, 
+   xrcadocdt LIKE xrca_t.xrcadocdt, 
+   xrca014 LIKE xrca_t.xrca014, 
+   xrca015 LIKE xrca_t.xrca015, 
+   xrca007 LIKE xrca_t.xrca007, 
+   xrca053 LIKE xrca_t.xrca053, 
+   xrca039 LIKE xrca_t.xrca039, 
+   xrca004 LIKE xrca_t.xrca004, 
+   xrca005 LIKE xrca_t.xrca005, 
+   xrca008 LIKE xrca_t.xrca008, 
+   xrca054 LIKE xrca_t.xrca054, 
+   xrca022 LIKE xrca_t.xrca022, 
+   xrca019 LIKE xrca_t.xrca019, 
+   xrcc003 LIKE xrcc_t.xrcc003, 
+   xrcc004 LIKE xrcc_t.xrcc004, 
+   xrcc002 LIKE xrcc_t.xrcc002, 
+   xrcc100 LIKE xrcc_t.xrcc100, 
+   xrcc108 LIKE xrcc_t.xrcc108, 
+   xrcc118 LIKE xrcc_t.xrcc118, 
+   xrcaent LIKE xrca_t.xrcaent, 
+   xrcc001 LIKE xrcc_t.xrcc001, 
+   xrcc002_desc LIKE type_t.chr50, 
+   xrcc108_desc LIKE type_t.chr50, 
+   xrcc118_desc LIKE type_t.chr50, 
+   xrca015_desc LIKE type_t.chr200, 
+   xrca014_desc LIKE type_t.chr200, 
+   xrca007_desc LIKE type_t.chr200, 
+   xrca004_desc LIKE type_t.chr200, 
+   xrca005_desc LIKE type_t.chr200, 
+   xrca008_desc LIKE type_t.chr200, 
+   xrca054_desc LIKE type_t.chr200, 
+   xrca011 LIKE xrca_t.xrca011, 
+   xrca012 LIKE xrca_t.xrca012, 
+   xrca011_desc LIKE type_t.chr200
+END RECORD
+ 
+PRIVATE TYPE sr2_r RECORD
+   ooff013 LIKE ooff_t.ooff013
+END RECORD
+ 
+ 
+DEFINE tm RECORD
+       wc STRING,                  #where condition 
+       a1 LIKE type_t.chr5          #账套
+       END RECORD
+DEFINE sr DYNAMIC ARRAY OF sr1_r                   #宣告sr為sr1_t資料結構的動態陣列
+DEFINE g_select        STRING
+DEFINE g_from          STRING
+DEFINE g_where         STRING
+DEFINE g_order         STRING
+DEFINE g_sql           STRING                         #report_select_prep,REPORT段使用
+ 
+#add-point:自定義環境變數(Global Variable)(客製用) name="global.variable_customerization"
+
+#end add-point
+#add-point:自定義環境變數(Global Variable) (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+ TYPE sr3_r RECORD
+   xrcbdocno    LIKE xrcb_t.xrcbdocno,
+   xrcbseq      LIKE xrcb_t.xrcbseq,
+   xrcb004      LIKE xrcb_t.xrcb004,
+   xrcb005      LIKE xrcb_t.xrcb005,
+   xrcb002      LIKE xrcb_t.xrcb002,
+   xrcb003      LIKE xrcb_t.xrcb003,
+   xrcb007      LIKE xrcb_t.xrcb007,
+   xrcb006      LIKE xrcb_t.xrcb006,
+   xrcb100      LIKE xrcb_t.xrcb100,
+   xrcb101      LIKE xrcb_t.xrcb101,
+   xrcb103      LIKE xrcb_t.xrcb103,
+   xrcb104      LIKE xrcb_t.xrcb104,
+   xrcb105      LIKE xrcb_t.xrcb105,
+   xrcb023      LIKE xrcb_t.xrcb023,
+   xrcb113      LIKE xrcb_t.xrcb113,
+   xrcb114      LIKE xrcb_t.xrcb114,
+   xrcb115      LIKE xrcb_t.xrcb115    
+END RECORD
+
+ TYPE sr4_r RECORD
+   xrcedocno    LIKE xrce_t.xrcedocno,
+   xrceseq      LIKE xrce_t.xrceseq,
+   xrce002      LIKE xrce_t.xrce002,
+   xrce002_desc LIKE type_t.chr200,
+   xrce003      LIKE xrce_t.xrce003,
+   xrce004      LIKE xrce_t.xrce004,
+   xrce003_04   LIKE type_t.chr50,
+   xrce010      LIKE xrce_t.xrce010,
+   xrce100      LIKE xrce_t.xrce100,
+   xrce109      LIKE xrce_t.xrce109,
+   xrce101      LIKE xrce_t.xrce101,
+   xrce119      LIKE xrce_t.xrce119
+END RECORD
+ TYPE sr5_r RECORD
+   xrcfdocno   LIKE xrcf_t.xrcfdocno,
+   xrcfseq     LIKE xrcf_t.xrcfseq,
+   xrcf008     LIKE xrcf_t.xrcf008,
+   xrcf009     LIKE xrcf_t.xrcf009,
+   xrcf008_09  LIKE type_t.chr50,
+   xrcf007     LIKE xrcf_t.xrcf007, 
+   xrcf102     LIKE xrcf_t.xrcf102, 
+   xrcf103     LIKE xrcf_t.xrcf103,
+   xrcf105     LIKE xrcf_t.xrcf105,  
+   xrcf113     LIKE xrcf_t.xrcf113,    
+   xrcf115     LIKE xrcf_t.xrcf115, 
+   xrcf106     LIKE xrcf_t.xrcf106,    
+   xrcf116     LIKE xrcf_t.xrcf116,    
+   xrcf117     LIKE xrcf_t.xrcf117
+END RECORD
+ TYPE sr6_r RECORD
+   isaf035      LIKE isaf_t.isaf035,
+   isatdocno    LIKE isat_t.isatdocno,
+   isatseq      LIKE isat_t.isatseq,
+   isat001      LIKE isat_t.isat001,
+   isat001_desc LIKE type_t.chr200,
+   isat014      LIKE isat_t.isat014, 
+   isat003      LIKE isat_t.isat003, 
+   isat004      LIKE isat_t.isat004, 
+   isat007      LIKE isat_t.isat007, 
+   isat100      LIKE isat_t.isat100,
+   isat103      LIKE isat_t.isat103,   
+   isat104      LIKE isat_t.isat104, 
+   isat105      LIKE isat_t.isat105,   
+   isat101      LIKE isat_t.isat101, 
+   isat113      LIKE isat_t.isat113,   
+   isat114      LIKE isat_t.isat114,  
+   isat115      LIKE isat_t.isat115
+END RECORD
+
+ TYPE sr7_r RECORD
+   xrcedocno       LIKE xrce_t.xrcedocno,
+   xrce100         LIKE xrce_t.xrce100,
+   xrce109         LIKE xrce_t.xrce109
+END RECORD
+
+#end add-point
+ 
+{</section>}
+ 
+{<section id="axrr300_g01.main" readonly="Y" >}
+PUBLIC FUNCTION axrr300_g01(p_arg1,p_arg2)
+DEFINE  p_arg1 STRING                  #tm.wc  where condition 
+DEFINE  p_arg2 LIKE type_t.chr5         #tm.a1  账套
+#add-point:init段define (客製用) name="component_name.define_customerization"
+
+#end add-point
+#add-point:init段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="component_name.define"
+
+#end add-point
+ 
+   LET tm.wc = p_arg1
+   LET tm.a1 = p_arg2
+ 
+   #add-point:報表元件參數準備 name="component.arg.prep"
+   
+   #end add-point
+   #報表元件代號
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   ##報表元件執行期間是否有錯誤代碼
+   LET g_rep_success = 'Y'   
+   
+   LET g_rep_code = "axrr300_g01"
+   IF cl_null(tm.wc) THEN LET tm.wc = " 1=1" END IF
+ 
+   #主報表select子句準備
+   CALL axrr300_g01_sel_prep()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料存入array
+   CALL axrr300_g01_ins_data()
+   
+   IF g_rep_success = 'N' THEN
+      RETURN
+   END IF   
+ 
+   #將資料印出
+   CALL axrr300_g01_rep_data()
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrr300_g01.sel_prep" readonly="Y" >}
+#+ 選單功能實際執行處
+PRIVATE FUNCTION axrr300_g01_sel_prep()
+   #add-point:sel_prep段define (客製用) name="sel_prep.define_customerization"
+   
+   #end add-point
+   #add-point:sel_prep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sel_prep.define"
+   DEFINE g_sql_ctr2    STRING                #160518-00075#9
+DEFINE g_sql_ctr3    STRING                #160518-00075#9
+DEFINE l_glaa024     LIKE glaa_t.glaa024   #160518-00075#9
+DEFINE l_site_len    LIKE type_t.num5      #SITE段长度 #160518-00075#9
+DEFINE l_slip_len    LIKE type_t.num5      #单别段长度 #160518-00075#9
+DEFINE l_i           LIKE type_t.num5      #160518-00075#9
+DEFINE l_j           LIKE type_t.num5      #160518-00075#9
+DEFINE l_xrcald       LIKE xrca_t.xrcald   #160518-00075#9
+   #end add-point
+ 
+   #add-point:sel_prep before name="sel_prep.before"
+   
+   #end add-point
+   
+   #add-point:sel_prep g_select name="sel_prep.g_select"
+  
+   #end add-point
+   LET g_select = " SELECT xrcadocno,xrcadocdt,xrca014,xrca015,xrca007,xrca053,xrca039,xrca004,xrca005, 
+       xrca008,xrca054,xrca022,xrca019,xrcc003,xrcc004,xrcc002,xrcc100,xrcc108,xrcc118,xrcaent,xrcc001, 
+       NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,xrca011,xrca012,NULL"
+ 
+   #add-point:sel_prep g_from name="sel_prep.g_from"
+   LET g_select = " SELECT xrcadocno,xrcadocdt,xrca014,xrca015,xrca007,xrca053,xrca039,xrca004,xrca005, 
+       xrca008,xrca054,xrca022,xrca019,xrcc003,xrcc004,xrcc002,xrcc100,SUM(xrcc108),SUM(xrcc118),xrcaent,xrcc001,'','','','','','','','','','',xrca011,xrca012,''"        
+   #end add-point
+    LET g_from = " FROM xrca_t,xrcc_t"
+ 
+   #add-point:sel_prep g_where name="sel_prep.g_where"
+    LET g_from = " FROM xrca_t LEFT JOIN xrcc_t ON xrcaent=xrccent AND xrcald=xrccld AND xrcadocno=xrccdocno "
+   #end add-point
+    LET g_where = " WHERE " ,tm.wc CLIPPED 
+ 
+   #add-point:sel_prep g_order name="sel_prep.g_order"
+   LET g_where = " WHERE " ,tm.wc CLIPPED, 
+                 "   AND xrcaent='",g_enterprise,"'"
+   #160518-00075#9  2016/07/25 By 07900   (依單別參數作權限管理)aooi200的控制組設定, 取7/8 設定的部門及人員--s--
+     #SITE 长度
+   LET l_site_len = cl_get_para(g_enterprise,g_site,'E-COM-0003')
+   
+   #单别长度
+   LET l_slip_len = cl_get_para(g_enterprise,g_site,'E-COM-0001')
+   
+   #第一个分隔符
+   IF cl_get_para(g_enterprise,g_site,'E-COM-0008') = '1' THEN    #据点+单别
+      LET l_i = l_site_len + 2
+      LET l_j = l_slip_len
+   ELSE
+      LET l_i = 1
+      LET l_j = l_slip_len
+   END IF   
+   LET l_xrcald =tm.a1
+ SELECT glaa024 INTO l_glaa024 FROM glaa_t WHERE glaaent = g_enterprise AND glaald = l_xrcald
+   #出货单限定单别
+   CALL s_control_get_docno_sql_q(g_user,g_dept,l_glaa024) RETURNING g_sub_success,g_sql_ctr2,g_sql_ctr3 
+   LET g_where = g_where ,"  AND (substr(xrcadocno,",l_i,",",l_j,") ",g_sql_ctr2," OR substr(xrcadocno,",l_i,",",l_j,") ",g_sql_ctr3,")"
+     
+   #160518-00075#9  2016/07/25 By 07900   (依單別參數作權限管理)aooi200的控制組設定, 取7/8 設定的部門及人員--e--
+   #end add-point
+    LET g_order = " ORDER BY xrcadocno"
+ 
+   #add-point:sel_prep.sql.before name="sel_prep.sql.before"
+   LET g_order =""
+   #end add-point:sel_prep.sql.before
+   LET g_where = g_where ,cl_sql_add_filter("xrca_t")   #資料過濾功能
+   LET g_sql = g_select CLIPPED ," ",g_from CLIPPED ," ",g_where CLIPPED ," ",g_order CLIPPED
+   LET g_sql = cl_sql_add_mask(g_sql)    #遮蔽特定資料, 若寫至add-point也需複製此段 
+ 
+   #add-point:sel_prep.sql.after name="sel_prep.sql.after"
+   LET g_sql=g_sql CLIPPED," GROUP BY xrcaent,xrcadocno,xrcadocdt,xrca014,xrca015,xrca007,xrca053,xrca039,xrca004,xrca005,xrca008,xrca054,xrca022,xrca019,xrca011,xrca012,",
+                           "          xrcc001,xrcc003,xrcc004,xrcc002,xrcc100",
+                           " ORDER BY xrcaent,xrcadocno,xrcadocdt"
+   #end add-point
+   PREPARE axrr300_g01_prepare FROM g_sql
+   IF STATUS THEN
+      INITIALIZE g_errparam TO NULL
+      LET g_errparam.extend = 'prepare:'
+      LET g_errparam.code   = STATUS
+      LET g_errparam.popup  = TRUE
+      CALL cl_err()   
+      LET g_rep_success = 'N'    
+   END IF
+   DECLARE axrr300_g01_curs CURSOR FOR axrr300_g01_prepare
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrr300_g01.ins_data" readonly="Y" >}
+PRIVATE FUNCTION axrr300_g01_ins_data()
+#主報表record(用於select子句)
+   DEFINE sr_s RECORD 
+   xrcadocno LIKE xrca_t.xrcadocno, 
+   xrcadocdt LIKE xrca_t.xrcadocdt, 
+   xrca014 LIKE xrca_t.xrca014, 
+   xrca015 LIKE xrca_t.xrca015, 
+   xrca007 LIKE xrca_t.xrca007, 
+   xrca053 LIKE xrca_t.xrca053, 
+   xrca039 LIKE xrca_t.xrca039, 
+   xrca004 LIKE xrca_t.xrca004, 
+   xrca005 LIKE xrca_t.xrca005, 
+   xrca008 LIKE xrca_t.xrca008, 
+   xrca054 LIKE xrca_t.xrca054, 
+   xrca022 LIKE xrca_t.xrca022, 
+   xrca019 LIKE xrca_t.xrca019, 
+   xrcc003 LIKE xrcc_t.xrcc003, 
+   xrcc004 LIKE xrcc_t.xrcc004, 
+   xrcc002 LIKE xrcc_t.xrcc002, 
+   xrcc100 LIKE xrcc_t.xrcc100, 
+   xrcc108 LIKE xrcc_t.xrcc108, 
+   xrcc118 LIKE xrcc_t.xrcc118, 
+   xrcaent LIKE xrca_t.xrcaent, 
+   xrcc001 LIKE xrcc_t.xrcc001, 
+   xrcc002_desc LIKE type_t.chr50, 
+   xrcc108_desc LIKE type_t.chr50, 
+   xrcc118_desc LIKE type_t.chr50, 
+   xrca015_desc LIKE type_t.chr200, 
+   xrca014_desc LIKE type_t.chr200, 
+   xrca007_desc LIKE type_t.chr200, 
+   xrca004_desc LIKE type_t.chr200, 
+   xrca005_desc LIKE type_t.chr200, 
+   xrca008_desc LIKE type_t.chr200, 
+   xrca054_desc LIKE type_t.chr200, 
+   xrca011 LIKE xrca_t.xrca011, 
+   xrca012 LIKE xrca_t.xrca012, 
+   xrca011_desc LIKE type_t.chr200
+ END RECORD
+   DEFINE l_cnt           LIKE type_t.num10
+#add-point:ins_data段define (客製用) name="ins_data.define_customerization"
+
+#end add-point   
+#add-point:ins_data段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="ins_data.define"
+DEFINE l_xrcald     LIKE xrca_t.xrcald
+DEFINE l_glaa001    LIKE glaa_t.glaa001
+DEFINE l_success    LIKE type_t.num5
+DEFINE l_slip       LIKE ooac_t.ooac002
+DEFINE l_xrcacomp   LIKE xrca_t.xrcacomp
+DEFINE l_ooef019    LIKE ooef_t.ooef019
+DEFINE l_xrca012    LIKE type_t.chr10
+
+#end add-point
+ 
+    #add-point:ins_data段before name="ins_data.before"
+ 
+    #end add-point
+ 
+    CALL sr.clear()                                  #rep sr
+    LET l_cnt = 1
+    FOREACH axrr300_g01_curs INTO sr_s.*
+       IF STATUS THEN
+          INITIALIZE g_errparam TO NULL
+          LET g_errparam.extend = 'foreach:'
+          LET g_errparam.code   = STATUS
+          LET g_errparam.popup  = TRUE
+          CALL cl_err()       
+          LET g_rep_success = 'N'    
+          EXIT FOREACH
+       END IF
+ 
+       #add-point:ins_data段foreach name="ins_data.foreach"
+       
+       #end add-point
+ 
+       #add-point:ins_data段before_arr name="ins_data.before.save"
+       
+     
+       
+       #業務人員
+       LET sr_s.xrca014_desc=''
+       SELECT ooag011 INTO sr_s.xrca014_desc
+         FROM ooag_t 
+        WHERE ooagent=g_enterprise 
+          AND ooag001=sr_s.xrca014 
+       IF NOT cl_null(sr_s.xrca014_desc) THEN
+          LET sr_s.xrca014_desc=sr_s.xrca014||'.'||sr_s.xrca014_desc
+       ELSE
+          LET sr_s.xrca014_desc=sr_s.xrca014
+       END IF
+       #業務部門
+       LET sr_s.xrca015_desc=''      
+       SELECT ooefl003 INTO sr_s.xrca015_desc
+         FROM ooefl_t 
+        WHERE ooeflent=g_enterprise 
+          AND ooefl001=sr_s.xrca015 
+          AND ooefl002=g_dlang
+       IF NOT cl_null(sr_s.xrca015_desc) THEN
+          LET sr_s.xrca015_desc=sr_s.xrca015||'.'||sr_s.xrca015_desc
+       ELSE
+          LET sr_s.xrca015_desc=sr_s.xrca015
+       END IF
+       #帳款類別     
+       LET sr_s.xrca007_desc=''
+        SELECT oocql004 INTO sr_s.xrca007_desc
+          FROM oocql_t 
+         WHERE oocqlent=g_enterprise 
+           AND oocql001='3111' 
+           AND oocql002=sr_s.xrca007 
+           AND oocql003=g_dlang
+       IF NOT cl_null(sr_s.xrca007_desc) THEN
+          LET sr_s.xrca007_desc=sr_s.xrca007||'.'||sr_s.xrca007_desc
+       ELSE
+          LET sr_s.xrca007_desc=sr_s.xrca007
+       END IF
+       #稅別說明
+       LET l_xrcacomp=''
+       SELECT xrcacomp INTO l_xrcacomp
+         FROM xrca_t
+        WHERE xrcaent=g_enterprise
+          AND xrcadocno=sr_s.xrcadocno
+       LET l_ooef019=''
+       SELECT ooef019 INTO l_ooef019 
+         FROM ooef_t 
+        WHERE ooefent = g_enterprise 
+          AND ooef001 = l_xrcacomp         
+       SELECT oodbl004 INTO sr_s.xrca011_desc
+         FROM oodbl_t
+        WHERE oodblent=g_enterprise
+          AND oodbl001=l_ooef019
+          AND oodbl002=sr_s.xrca011
+          AND oodbl003=g_dlang      
+       LET l_xrca012=sr_s.xrca012       
+       LET sr_s.xrca011_desc=sr_s.xrca011_desc||'  '||l_xrca012||'%'
+       #帳款對象
+       LET sr_s.xrca004_desc=''
+       #SELECT pmaal004 INTO sr_s.xrca004_desc 改全稱 20150817
+       SELECT pmaal003 INTO sr_s.xrca004_desc  #改全稱 20150817
+         FROM pmaal_t 
+         WHERE pmaalent=g_enterprise 
+           AND pmaal001=sr_s.xrca004 
+           AND pmaal002=g_dlang
+       IF NOT cl_null(sr_s.xrca004_desc) THEN
+          LET sr_s.xrca004_desc=sr_s.xrca004||'.'||sr_s.xrca004_desc
+       ELSE
+          LET sr_s.xrca004_desc=sr_s.xrca004
+       END IF
+       #收款對象
+       LET sr_s.xrca005_desc=''
+       #SELECT pmaal004 INTO sr_s.xrca005_desc
+       SELECT pmaal003 INTO sr_s.xrca005_desc #改全稱 20150817
+         FROM pmaal_t 
+         WHERE pmaalent=g_enterprise 
+           AND pmaal001=sr_s.xrca005 
+           AND pmaal002=g_dlang 
+       IF NOT cl_null(sr_s.xrca005_desc) THEN           
+          LET sr_s.xrca005_desc=sr_s.xrca005||'.'||sr_s.xrca005_desc  
+       ELSE
+          LET sr_s.xrca005_desc=sr_s.xrca005
+       END IF
+       #收款條件
+       LET sr_s.xrca008_desc=''
+       SELECT ooibl004 INTO sr_s.xrca008_desc
+         FROM ooibl_t
+        WHERE ooiblent=g_enterprise
+          AND ooibl002=sr_s.xrca008 
+          AND ooibl003=g_dlang   
+       IF NOT cl_null(sr_s.xrca008_desc) THEN
+          LET sr_s.xrca008_desc=sr_s.xrca008||'.'||sr_s.xrca008_desc   
+       ELSE
+          LET sr_s.xrca008_desc=sr_s.xrca008
+       END IF
+       #帳期條件
+       LET sr_s.xrca054_desc=''
+       SELECT oocql004 INTO sr_s.xrca054_desc
+         FROM oocql_t 
+        WHERE oocqlent=g_enterprise 
+          AND oocql001='3114' 
+          AND oocql002=sr_s.xrca054 
+          AND oocql003=g_dlang   
+       IF NOT cl_null(sr_s.xrca054_desc) THEN          
+          LET sr_s.xrca054_desc=sr_s.xrca054||'.'||sr_s.xrca054_desc
+       ELSE
+          LET sr_s.xrca054_desc=sr_s.xrca054
+       END IF
+       #收款類型     
+       LET sr_s.xrcc002_desc=''
+       SELECT gzcbl004 INTO sr_s.xrcc002_desc
+         FROM gzcbl_t
+        WHERE gzcbl001='8310'
+          AND gzcbl002=sr_s.xrcc002
+          AND gzcbl003=g_dlang
+                
+       ##本幣金額---本幣+金額
+       #LET l_xrcald=''
+       #SELECT xrcald INTO l_xrcald
+       #  FROM xrca_t
+       # WHERE xrcaent=g_enterprise
+       #   AND xrcadocno=sr_s.xrcadocno
+       #LET l_glaa001=''
+       #SELECT glaa001 INTO l_glaa001
+       #  FROM glaa_t
+       # WHERE glaaent=g_enterprise
+       #   AND glaald=l_xrcald          
+       #LET sr_s.xrcc118_desc=l_glaa001
+       
+       
+       #end add-point
+ 
+       #set rep array value
+       LET sr[l_cnt].xrcadocno = sr_s.xrcadocno
+       LET sr[l_cnt].xrcadocdt = sr_s.xrcadocdt
+       LET sr[l_cnt].xrca014 = sr_s.xrca014
+       LET sr[l_cnt].xrca015 = sr_s.xrca015
+       LET sr[l_cnt].xrca007 = sr_s.xrca007
+       LET sr[l_cnt].xrca053 = sr_s.xrca053
+       LET sr[l_cnt].xrca039 = sr_s.xrca039
+       LET sr[l_cnt].xrca004 = sr_s.xrca004
+       LET sr[l_cnt].xrca005 = sr_s.xrca005
+       LET sr[l_cnt].xrca008 = sr_s.xrca008
+       LET sr[l_cnt].xrca054 = sr_s.xrca054
+       LET sr[l_cnt].xrca022 = sr_s.xrca022
+       LET sr[l_cnt].xrca019 = sr_s.xrca019
+       LET sr[l_cnt].xrcc003 = sr_s.xrcc003
+       LET sr[l_cnt].xrcc004 = sr_s.xrcc004
+       LET sr[l_cnt].xrcc002 = sr_s.xrcc002
+       LET sr[l_cnt].xrcc100 = sr_s.xrcc100
+       LET sr[l_cnt].xrcc108 = sr_s.xrcc108
+       LET sr[l_cnt].xrcc118 = sr_s.xrcc118
+       LET sr[l_cnt].xrcaent = sr_s.xrcaent
+       LET sr[l_cnt].xrcc001 = sr_s.xrcc001
+       LET sr[l_cnt].xrcc002_desc = sr_s.xrcc002_desc
+       LET sr[l_cnt].xrcc108_desc = sr_s.xrcc108_desc
+       LET sr[l_cnt].xrcc118_desc = sr_s.xrcc118_desc
+       LET sr[l_cnt].xrca015_desc = sr_s.xrca015_desc
+       LET sr[l_cnt].xrca014_desc = sr_s.xrca014_desc
+       LET sr[l_cnt].xrca007_desc = sr_s.xrca007_desc
+       LET sr[l_cnt].xrca004_desc = sr_s.xrca004_desc
+       LET sr[l_cnt].xrca005_desc = sr_s.xrca005_desc
+       LET sr[l_cnt].xrca008_desc = sr_s.xrca008_desc
+       LET sr[l_cnt].xrca054_desc = sr_s.xrca054_desc
+       LET sr[l_cnt].xrca011 = sr_s.xrca011
+       LET sr[l_cnt].xrca012 = sr_s.xrca012
+       LET sr[l_cnt].xrca011_desc = sr_s.xrca011_desc
+ 
+ 
+       #add-point:ins_data段after_arr name="ins_data.after.save"
+       
+       #end add-point
+       LET l_cnt = l_cnt + 1
+    END FOREACH
+    CALL sr.deleteElement(l_cnt)
+ 
+    #add-point:ins_data段after name="ins_data.after"
+    
+    #end add-point
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrr300_g01.rep_data" readonly="Y" >}
+PRIVATE FUNCTION axrr300_g01_rep_data()
+   DEFINE HANDLER         om.SaxDocumentHandler
+   DEFINE l_i             INTEGER
+ 
+    #判斷是否有報表資料，若回彈出訊息視窗
+    IF sr.getLength() = 0 THEN
+       INITIALIZE g_errparam TO NULL
+       LET g_errparam.code = "adz-00285"
+       LET g_errparam.extend = NULL
+       LET g_errparam.popup  = FALSE
+       LET g_errparam.replace[1] = ''
+       CALL cl_err()  
+       RETURN 
+    END IF
+    WHILE TRUE   
+       #add-point:rep_data段印前 name="rep_data.before"
+       
+       #end add-point     
+       LET handler = cl_gr_handler()
+       IF handler IS NOT NULL THEN
+          START REPORT axrr300_g01_rep TO XML HANDLER handler
+          FOR l_i = 1 TO sr.getLength()
+             OUTPUT TO REPORT axrr300_g01_rep(sr[l_i].*)
+             #報表中斷列印時，顯示錯誤訊息
+             IF fgl_report_getErrorStatus() THEN
+                DISPLAY "FGL: STOPPING REPORT msg=\"",fgl_report_getErrorString(),"\""
+                EXIT FOR
+             END IF                  
+          END FOR
+          FINISH REPORT axrr300_g01_rep
+       END IF
+       #add-point:rep_data段印完 name="rep_data.after"
+       
+       #end add-point       
+       IF g_rep_flag = TRUE THEN
+          LET g_rep_flag = FALSE
+          EXIT WHILE
+       END IF
+    END WHILE
+    #add-point:rep_data段離開while印完前 name="rep_data.end.before"
+    
+    #end add-point
+    CALL cl_gr_close_report()
+    #add-point:rep_data段離開while印完後 name="rep_data.end.after"
+    
+    #end add-point    
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="axrr300_g01.rep" readonly="Y" >}
+PRIVATE REPORT axrr300_g01_rep(sr1)
+DEFINE sr1 sr1_r
+DEFINE sr2 sr2_r
+DEFINE l_subrep01_show  LIKE type_t.chr1,
+       l_subrep02_show  LIKE type_t.chr1,
+       l_subrep03_show  LIKE type_t.chr1,
+       l_subrep04_show  LIKE type_t.chr1
+DEFINE l_cnt           LIKE type_t.num10
+DEFINE l_sub_sql       STRING
+#add-point:rep段define  (客製用) name="rep.define_customerization"
+
+#end add-point
+#add-point:rep段define (請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="rep.define"
+DEFINE sr3 sr3_r
+DEFINE sr4 sr4_r
+DEFINE sr5 sr5_r
+DEFINE sr6 sr6_r
+DEFINE l_xrca001        LIKE xrca_t.xrca001
+DEFINE l_gzcbl004       LIKE gzcbl_t.gzcbl004
+DEFINE l_subrep05_show  LIKE type_t.chr1
+DEFINE l_subrep06_show  LIKE type_t.chr1
+DEFINE l_subrep07_show  LIKE type_t.chr1
+DEFINE l_subrep08_show  LIKE type_t.chr1
+DEFINE l_xrcb007        LIKE type_t.num15_3
+DEFINE l_xrce003_04     LIKE type_t.chr50
+DEFINE l_xrcacomp       LIKE xrca_t.xrcacomp
+DEFINE l_isat101        LIKE type_t.num15_3
+DEFINE l_ooef019        LIKE ooef_t.ooef019
+DEFINE l_format1        LIKE type_t.chr30
+DEFINE l_format2        LIKE type_t.chr30
+DEFINE l_format3        LIKE type_t.chr30
+DEFINE l_xrca101        LIKE xrca_t.xrca101
+DEFINE l_xrca100        LIKE xrca_t.xrca100
+DEFINE l_xrcald         LIKE xrca_t.xrcald
+DEFINE l_xrcc108_sum    LIKE xrcc_t.xrcc108
+DEFINE l_xrcc118_sum    LIKE xrcc_t.xrcc118
+DEFINE l_oobxl003       LIKE oobxl_t.oobxl003  #161104-00049#3 add
+#end add-point
+ 
+    #add-point:rep段ORDER_before name="rep.order.before"
+    
+    #end add-point
+    ORDER EXTERNAL BY sr1.xrcadocno
+    #add-point:rep段ORDER_after name="rep.order.after"
+    
+    #end add-point
+    
+    FORMAT
+       FIRST PAGE HEADER          
+          PRINTX g_user,g_pdate,g_rep_code,g_company,g_ptime,g_user_name,g_date_fmt
+          PRINTX tm.*
+          PRINTX g_grNumFmt.*
+          PRINTX g_rep_wcchp
+ 
+          #讀取beforeGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        BEFORE GROUP OF sr1.xrcadocno
+            #報表 d05 樣板自動產生(Version:6)
+            CALL cl_gr_title_clear()  #清除title變數值 
+            #add-point:rep.header  #公司資訊(不在公用變數內) name="rep.header"
+            LET l_xrca001=''
+            LET l_xrca100=''
+            LET l_xrca101=''
+            SELECT xrca001,xrca100,xrca101 INTO l_xrca001,l_xrca100,l_xrca101
+              FROM xrca_t
+             WHERE xrcaent=g_enterprise
+               AND xrcadocno=sr1.xrcadocno
+            PRINTX l_xrca100
+            PRINTX l_xrca101
+            
+            SELECT gzcbl004 INTO l_gzcbl004
+              FROM gzcbl_t
+             WHERE gzcbl001='8302'
+               AND gzcbl002=l_xrca001
+               AND gzcbl003=g_dlang               
+            LET g_grPageHeader.title0201=l_gzcbl004
+            CALL s_aooi200_fin_get_slip_desc(sr1.xrcadocno) RETURNING l_oobxl003 #161104-00049#3 add
+            LET g_grPageHeader.title0201 = l_oobxl003                            #161104-00049#3 add
+            #根據本幣--單價、金額、匯率---報表顯示格式。
+            CALL axrr300_g01_getooaj(sr1.xrcadocno) RETURNING l_format1,l_format2,l_format3
+        
+            PRINTX l_format1
+            PRINTX l_format2
+            PRINTX l_format3   
+
+            #應收原幣金額、應收本幣金額
+            LET l_xrcald=''
+            SELECT xrcald INTO l_xrcald
+              FROM xrca_t
+             WHERE xrcaent=g_enterprise
+               AND xrcadocno=sr1.xrcadocno  
+            
+            LET l_xrcc108_sum=''
+            LET l_xrcc118_sum=''
+            SELECT SUM(xrcc108),SUM(xrcc118) INTO l_xrcc108_sum,l_xrcc118_sum
+              FROM xrcc_t
+             WHERE xrccent=sr1.xrcaent
+               AND xrccld=l_xrcald
+               AND xrccdocno=sr1.xrcadocno
+              
+            PRINTX l_xrcc108_sum
+            PRINTX l_xrcc118_sum             
+            
+            #end add-point:rep.header 
+            LET g_rep_docno = sr1.xrcadocno
+            CALL cl_gr_init_pageheader() #表頭資訊
+            PRINTX g_grPageHeader.*
+            PRINTX g_grPageFooter.*
+            #add-point:rep.apr.signstr.before name="rep.apr.signstr.before"
+                          
+            #end add-point:rep.apr.signstr.before   
+            LET g_doc_key = 'xrcaent=' ,sr1.xrcaent,'{+}xrcadocno=' ,sr1.xrcadocno         
+            CALL cl_gr_init_apr(sr1.xrcadocno)
+            #add-point:rep.apr.signstr name="rep.apr.signstr"
+                          
+            #end add-point:rep.apr.signstr
+            PRINTX g_grSign.*
+ 
+ 
+ 
+           #add-point:rep.b_group.xrcadocno.before name="rep.b_group.xrcadocno.before"
+           
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub01.before name="rep.sub01.before"
+           
+           #end add-point:rep.sub01.before
+ 
+           #add-point:rep.sub01.sql name="rep.sub01.sql"
+           
+           #end add-point:rep.sub01.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='2' AND ooff004=0 AND ooffent = '", 
+                sr1.xrcaent CLIPPED ,"'", " AND  ooff003 = '", sr1.xrcadocno CLIPPED ,"'"
+ 
+           #add-point:rep.sub01.afsql name="rep.sub01.afsql"
+           
+           #end add-point:rep.sub01.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep01_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE axrr300_g01_repcur01_cnt_pre FROM l_sub_sql
+           EXECUTE axrr300_g01_repcur01_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep01_show ="Y"
+           END IF
+           PRINTX l_subrep01_show
+           START REPORT axrr300_g01_subrep01
+           DECLARE axrr300_g01_repcur01 CURSOR FROM g_sql
+           FOREACH axrr300_g01_repcur01 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "axrr300_g01_repcur01:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub01.foreach name="rep.sub01.foreach"
+              
+              #end add-point:rep.sub01.foreach
+              OUTPUT TO REPORT axrr300_g01_subrep01(sr2.*)
+           END FOREACH
+           FINISH REPORT axrr300_g01_subrep01
+           #add-point:rep.sub01.after name="rep.sub01.after"
+           
+           #end add-point:rep.sub01.after
+ 
+ 
+ 
+           #add-point:rep.b_group.xrcadocno.after name="rep.b_group.xrcadocno.after"
+           
+           #end add-point:
+ 
+ 
+ 
+ 
+       ON EVERY ROW
+          #add-point:rep.everyrow.before name="rep.everyrow.before"
+          
+          #end add-point:rep.everyrow.before
+ 
+          #單身前備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub02.before name="rep.sub02.before"
+           
+           #end add-point:rep.sub02.before
+ 
+           #add-point:rep.sub02.sql name="rep.sub02.sql"
+           
+           #end add-point:rep.sub02.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='2' AND ooffent = '", 
+                sr1.xrcaent CLIPPED ,"'", " AND  ooff003 = '", sr1.xrcadocno CLIPPED ,"'"
+ 
+           #add-point:rep.sub02.afsql name="rep.sub02.afsql"
+           
+           #end add-point:rep.sub02.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep02_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE axrr300_g01_repcur02_cnt_pre FROM l_sub_sql
+           EXECUTE axrr300_g01_repcur02_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep02_show ="Y"
+           END IF
+           PRINTX l_subrep02_show
+           START REPORT axrr300_g01_subrep02
+           DECLARE axrr300_g01_repcur02 CURSOR FROM g_sql
+           FOREACH axrr300_g01_repcur02 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "axrr300_g01_repcur02:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub02.foreach name="rep.sub02.foreach"
+              
+              #end add-point:rep.sub02.foreach
+              OUTPUT TO REPORT axrr300_g01_subrep02(sr2.*)
+           END FOREACH
+           FINISH REPORT axrr300_g01_subrep02
+           #add-point:rep.sub02.after name="rep.sub02.after"
+           
+           #end add-point:rep.sub02.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.beforerow name="rep.everyrow.beforerow"
+          
+          #end add-point:rep.everyrow.beforerow
+            
+          PRINTX sr1.*
+ 
+          #add-point:rep.everyrow.afterrow name="rep.everyrow.afterrow"
+          
+          #end add-point:rep.everyrow.afterrow
+ 
+          #單身後備註
+             #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub03.before name="rep.sub03.before"
+           
+           #end add-point:rep.sub03.before
+ 
+           #add-point:rep.sub03.sql name="rep.sub03.sql"
+           
+           #end add-point:rep.sub03.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='7' AND ooff012='1' AND ooff003 = '", 
+                sr1.xrcaent CLIPPED ,"'"
+ 
+           #add-point:rep.sub03.afsql name="rep.sub03.afsql"
+           
+           #end add-point:rep.sub03.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep03_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE axrr300_g01_repcur03_cnt_pre FROM l_sub_sql
+           EXECUTE axrr300_g01_repcur03_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep03_show ="Y"
+           END IF
+           PRINTX l_subrep03_show
+           START REPORT axrr300_g01_subrep03
+           DECLARE axrr300_g01_repcur03 CURSOR FROM g_sql
+           FOREACH axrr300_g01_repcur03 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "axrr300_g01_repcur03:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub03.foreach name="rep.sub03.foreach"
+              
+              #end add-point:rep.sub03.foreach
+              OUTPUT TO REPORT axrr300_g01_subrep03(sr2.*)
+           END FOREACH
+           FINISH REPORT axrr300_g01_subrep03
+           #add-point:rep.sub03.after name="rep.sub03.after"
+           
+           #end add-point:rep.sub03.after
+ 
+ 
+ 
+          #add-point:rep.everyrow.after name="rep.everyrow.after"
+       
+          #end add-point:rep.everyrow.after        
+ 
+          #讀取afterGrup子樣板+子報表樣板
+        #報表 d01 樣板自動產生(Version:2)
+        AFTER GROUP OF sr1.xrcadocno
+ 
+           #add-point:rep.a_group.xrcadocno.before name="rep.a_group.xrcadocno.before"
+           
+           #end add-point:
+ 
+           #報表 d03 樣板自動產生(Version:3)
+           #add-point:rep.sub04.before name="rep.sub04.before"
+           
+           #end add-point:rep.sub04.before
+ 
+           #add-point:rep.sub04.sql name="rep.sub04.sql"
+           
+           #end add-point:rep.sub04.sql
+ 
+           LET g_sql = " SELECT ooff013 FROM ooff_t WHERE ooffstus='Y' and ooff001='6' AND ooff012='1' AND ooff004=0 AND ooffent = '", 
+                sr1.xrcaent CLIPPED ,"'", " AND  ooff003 = '", sr1.xrcadocno CLIPPED ,"'"
+ 
+           #add-point:rep.sub04.afsql name="rep.sub04.afsql"
+           
+           #end add-point:rep.sub04.afsql           
+           LET l_cnt = 0
+           LET l_sub_sql = ""
+           LET l_subrep04_show ="N"
+           LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+           PREPARE axrr300_g01_repcur04_cnt_pre FROM l_sub_sql
+           EXECUTE axrr300_g01_repcur04_cnt_pre INTO l_cnt
+           IF l_cnt > 0 THEN 
+              LET l_subrep04_show ="Y"
+           END IF
+           PRINTX l_subrep04_show
+           START REPORT axrr300_g01_subrep04
+           DECLARE axrr300_g01_repcur04 CURSOR FROM g_sql
+           FOREACH axrr300_g01_repcur04 INTO sr2.*
+              IF STATUS THEN 
+                 INITIALIZE g_errparam TO NULL
+                 LET g_errparam.extend = "axrr300_g01_repcur04:"
+                 LET g_errparam.code   = SQLCA.sqlcode
+                 LET g_errparam.popup  = FALSE
+                 CALL cl_err()                  
+                 EXIT FOREACH 
+              END IF
+              #add-point:rep.sub04.foreach name="rep.sub04.foreach"
+              
+              #end add-point:rep.sub04.foreach
+              OUTPUT TO REPORT axrr300_g01_subrep04(sr2.*)
+           END FOREACH
+           FINISH REPORT axrr300_g01_subrep04
+           #add-point:rep.sub04.after name="rep.sub04.after"
+           
+           #end add-point:rep.sub04.after
+ 
+ 
+ 
+           #add-point:rep.a_group.xrcadocno.after name="rep.a_group.xrcadocno.after"
+----------------------子報表一：帳款交易明細---begin
+          LET l_subrep05_show = "N"
+          LET l_cnt=0
+          LET g_sql = "SELECT xrcbdocno,xrcbseq,xrcb004,xrcb005,xrcb002,xrcb003,xrcb007,xrcb006,xrcb100,xrcb101,xrcb103*xrcb022,xrcb104*xrcb022,xrcb105*xrcb022,xrcb023,xrcb113*xrcb022,xrcb114*xrcb022,xrcb115*xrcb022 ",
+                      "  FROM xrcb_t,xrca_t ",
+                      " WHERE xrcaent=xrcbent",
+                      "   AND xrcadocno=xrcbdocno",
+                      "   AND xrcald=xrcbld",
+                      "   AND xrcbent='",sr1.xrcaent,"'",
+                      "   AND xrcbdocno='",sr1.xrcadocno,"'",
+                      " ORDER BY xrcbseq"
+                      
+          LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+          
+          PREPARE axrr300_g01_repcur05_cnt_pre FROM l_sub_sql
+          EXECUTE axrr300_g01_repcur05_cnt_pre INTO l_cnt
+         
+          IF l_cnt > 0 THEN 
+            LET l_subrep05_show ="Y"
+          ELSE 
+            LET l_subrep05_show = "N"
+          END IF
+          PRINTX l_subrep05_show             
+           
+          START REPORT axrr300_g01_subrep05
+          DECLARE axrr300_g01_repcur05 CURSOR FROM g_sql
+     
+          FOREACH axrr300_g01_repcur05 INTO sr3.*
+             LET l_xrcb007 =sr3.xrcb007
+             
+             OUTPUT TO REPORT axrr300_g01_subrep05(sr3.*)
+
+          END FOREACH
+          FINISH REPORT axrr300_g01_subrep05
+----------------------子報表一：帳款交易明細---end  
+
+----------------------子報表二：收款及沖銷信息---begin
+          LET l_subrep06_show = "N"
+          LET l_cnt=0
+       
+          LET g_sql = "SELECT a,b,c,'',d,e,'',f,g,h,i,j ",
+                      "  FROM ",          
+                      "  (SELECT xrcedocno a,xrceseq b,xrce002 c,'',xrce003 d,xrce004 e,'',xrce010 f,xrce100 g,CASE xrce015 WHEN 'D' THEN xrce109 ELSE xrce109*-1 END h,xrce101 i,CASE xrce015 WHEN 'D' THEN xrce119 ELSE xrce119*-1 END j ",
+                      "     FROM xrce_t,xrca_t",
+                      "    WHERE xrceent=xrcaent",
+                      "      AND xrcedocno=xrcadocno",
+                      "      AND xrceld=xrcald",
+                      "      AND xrceent='",sr1.xrcaent,"'",
+                      "      AND xrcedocno='",sr1.xrcadocno,"'",
+                      #"    UNION ALL ",
+                      #"   SELECT xrcedocno a,xrceseq b,xrce002 c,'',xrce003 d,xrce004 e,'',xrce010 f,xrce100 g,CASE xrce015 WHEN 'D' THEN xrce109 ELSE xrce109*-1 END h,xrce101 i,CASE xrce015 WHEN 'D' THEN xrce119 ELSE xrce119*-1 END j ",
+                      #"     FROM xrce_t,xrca_t",
+                      #"    WHERE xrceent=xrcaent",
+                      #"      AND xrce003=xrcadocno",
+                      #"      AND xrceld=xrcald",
+                      #"      AND xrceent='",sr1.xrcaent,"'",
+                      #"      AND xrce003='",sr1.xrcadocno,"'",
+                      "    UNION ALL ",
+                      "   SELECT xrdedocno a,xrdeseq b,xrde002 c,'',xrde003 d,xrde004 e,'',xrde010 f,xrde100 g,CASE xrde015 WHEN 'D' THEN xrde109 ELSE xrde109*-1 END h,xrde101 i,CASE xrde015 WHEN 'D' THEN xrde119 ELSE xrde119*-1 END j  ",
+                      "     FROM xrde_t,xrca_t",
+                      "    WHERE xrdeent=xrcaent",
+                      "      AND xrdedocno=xrcadocno",
+                      "      AND xrdeld=xrcald",
+                      "      AND xrdeent='",sr1.xrcaent,"'",
+                      "      AND xrdedocno='",sr1.xrcadocno,"'",
+                      "  )",
+                      " ORDER BY b"
+                      
+          LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+          
+          PREPARE axrr300_g01_repcur06_cnt_pre FROM l_sub_sql
+          EXECUTE axrr300_g01_repcur06_cnt_pre INTO l_cnt
+         
+          IF l_cnt > 0 THEN 
+            LET l_subrep06_show ="Y"
+          ELSE 
+            LET l_subrep06_show = "N"
+          END IF
+          PRINTX l_subrep06_show             
+           
+          START REPORT axrr300_g01_subrep06
+          DECLARE axrr300_g01_repcur06 CURSOR FROM g_sql
+     
+          FOREACH axrr300_g01_repcur06 INTO sr4.*
+            SELECT gzcbl004 INTO sr4.xrce002_desc
+              FROM gzcbl_t
+             WHERE gzcbl001='8306'
+               AND gzcbl002=sr4.xrce002
+               AND gzcbl003=g_dlang       
+               
+             LET sr4.xrce003_04=sr4.xrce003||'--'||sr4.xrce004
+             OUTPUT TO REPORT axrr300_g01_subrep06(sr4.*,sr1.xrcadocno)
+
+          END FOREACH
+          FINISH REPORT axrr300_g01_subrep06
+----------------------子報表二：收款及沖銷信息---end   
+
+----------------------子報表三：沖暫估明細---begin
+          LET l_subrep07_show = "N"
+          LET l_cnt=0
+          LET g_sql = "SELECT xrcfdocno,xrcfseq,xrcf008,xrcf009,'',xrcf007,xrcf102,xrcf103,xrcf105,xrcf113,xrcf115,xrcf106,xrcf116,xrcf117 ",
+                      "  FROM xrcf_t,xrca_t",
+                      " WHERE xrcfent=xrcaent",
+                      "   AND xrcfld=xrcald",
+                      "   AND xrcfdocno=xrcadocno",
+                      "   AND xrcfent='",sr1.xrcaent,"'",
+                      "   AND xrcfdocno='",sr1.xrcadocno,"'",
+                      " UNION ALL ",
+                      "SELECT xrcfdocno,xrcfseq,xrcf008,xrcf009,'',xrcf007,xrcf102,xrcf103,xrcf105,xrcf113,xrcf115,xrcf106,xrcf116,xrcf117 ",
+                      "  FROM xrcf_t,xrca_t",
+                      " WHERE xrcfent=xrcaent",
+                      "   AND xrcfld=xrcald",
+                      "   AND xrcf008=xrcadocno",
+                      "   AND xrcfent='",sr1.xrcaent,"'",
+                      "   AND xrcf008='",sr1.xrcadocno,"'",                      
+                      " ORDER BY xrcfseq"
+                      
+          LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+          
+          PREPARE axrr300_g01_repcur07_cnt_pre FROM l_sub_sql
+          EXECUTE axrr300_g01_repcur07_cnt_pre INTO l_cnt
+         
+          IF l_cnt > 0 THEN 
+            LET l_subrep07_show ="Y"
+          ELSE 
+            LET l_subrep07_show = "N"
+          END IF
+          PRINTX l_subrep07_show             
+           
+          START REPORT axrr300_g01_subrep07
+          DECLARE axrr300_g01_repcur07 CURSOR FROM g_sql
+     
+          FOREACH axrr300_g01_repcur07 INTO sr5.*
+             IF NOT cl_null(sr5.xrcf008) AND NOT cl_null(sr5.xrcf009) THEN
+                LET sr5.xrcf008_09=sr5.xrcf008||'--'||sr5.xrcf009
+             END IF
+             IF NOT cl_null(sr5.xrcf008) AND cl_null(sr5.xrcf009) THEN
+                LET sr5.xrcf008_09=sr5.xrcf008||'--'||' '
+             END IF
+             IF cl_null(sr5.xrcf008) AND NOT cl_null(sr5.xrcf009) THEN
+                LET sr5.xrcf008_09=' '||'--'||sr5.xrcf009
+             END IF             
+             OUTPUT TO REPORT axrr300_g01_subrep07(sr5.*,sr1.xrcadocno)
+
+          END FOREACH
+          FINISH REPORT axrr300_g01_subrep07
+----------------------子報表三：沖暫估明細----end  
+
+----------------------子報表四：發票明細---begin
+          LET l_xrcacomp=''
+          SELECT xrcacomp INTO l_xrcacomp
+            FROM xrca_t
+           WHERE xrcaent=g_enterprise
+             AND xrcadocno=sr1.xrcadocno
+             
+          LET l_subrep08_show = "N"
+          LET l_cnt=0
+          LET g_sql = "SELECT isaf035,'',isatseq,isat001,'',isat014,isat003,isat004,isat007,isat100,isat103,isat104,isat105,isat101,isat113,isat114,isat115 ",
+                      "  FROM isat_t,isaf_t",
+                      " WHERE isafcomp=isatcomp",
+                      "   AND isafent=isatent",
+                      "   AND isafdocno=isatdocno",
+                      "   AND isatent='",sr1.xrcaent,"'",
+                      "   AND isaf035='",sr1.xrcadocno,"'",
+                      "   AND isafcomp='",l_xrcacomp,"'",
+                      " ORDER BY isatdocno,isatseq"
+
+                      
+          LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+          
+          PREPARE axrr300_g01_repcur08_cnt_pre FROM l_sub_sql
+          EXECUTE axrr300_g01_repcur08_cnt_pre INTO l_cnt
+         
+          IF l_cnt > 0 THEN 
+            LET l_subrep08_show ="Y"
+          ELSE 
+            LET l_subrep08_show = "N"
+          END IF
+          PRINTX l_subrep08_show             
+           
+          START REPORT axrr300_g01_subrep08
+          DECLARE axrr300_g01_repcur08 CURSOR FROM g_sql
+     
+          FOREACH axrr300_g01_repcur08 INTO sr6.*
+             LET l_xrcacomp=''
+             SELECT xrcacomp INTO l_xrcacomp
+               FROM xrca_t
+              WHERE xrcaent=g_enterprise
+                AND xrcadocno=sr1.xrcadocno          
+             SELECT ooef019 INTO l_ooef019
+               FROM ooef_t
+              WHERE ooefent = g_enterprise
+                AND ooef001 = l_xrcacomp
+                AND ooefstus = 'Y'
+             SELECT isacl004 INTO sr6.isat001_desc
+               FROM isacl_t
+              WHERE isaclent=g_enterprise
+                AND isacl001=l_ooef019
+                AND isacl002=sr6.isat001
+                AND isacl003=g_dlang
+          
+             LET sr6.isaf035=sr1.xrcadocno
+
+             OUTPUT TO REPORT axrr300_g01_subrep08(sr6.*,sr1.xrcadocno)
+
+          END FOREACH
+          FINISH REPORT axrr300_g01_subrep08
+----------------------子報表四：發票明細----end 
+           #end add-point:
+ 
+ 
+ 
+       ON LAST ROW
+            #add-point:rep.lastrow.before name="rep.lastrow.before"  
+                    
+            #end add-point :rep.lastrow.before
+ 
+            #add-point:rep.lastrow.after name="rep.lastrow.after"
+            
+            #end add-point :rep.lastrow.after
+END REPORT
+ 
+{</section>}
+ 
+{<section id="axrr300_g01.subrep_str" readonly="Y" >}
+#讀取子報表樣板
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT axrr300_g01_subrep01(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub01.define_customerization" 
+
+#end add-point
+#add-point:sub01.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub01.define" 
+
+#end add-point:sub01.define
+ 
+    #add-point:sub01.order.before name="sub01.order.before" 
+    
+    #end add-point:sub01.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub01.everyrow.before name="sub01.everyrow.before" 
+                          
+            #end add-point:sub01.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub01.everyrow.after name="sub01.everyrow.after" 
+            
+            #end add-point:sub01.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT axrr300_g01_subrep02(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub02.define_customerization" 
+
+#end add-point
+#add-point:sub02.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub02.define" 
+
+#end add-point:sub02.define
+ 
+    #add-point:sub02.order.before name="sub02.order.before" 
+    
+    #end add-point:sub02.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub02.everyrow.before name="sub02.everyrow.before" 
+                          
+            #end add-point:sub02.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub02.everyrow.after name="sub02.everyrow.after" 
+            
+            #end add-point:sub02.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT axrr300_g01_subrep03(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub03.define_customerization" 
+
+#end add-point
+#add-point:sub03.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub03.define" 
+
+#end add-point:sub03.define
+ 
+    #add-point:sub03.order.before name="sub03.order.before" 
+    
+    #end add-point:sub03.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub03.everyrow.before name="sub03.everyrow.before" 
+                          
+            #end add-point:sub03.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub03.everyrow.after name="sub03.everyrow.after" 
+            
+            #end add-point:sub03.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+#報表 d02 樣板自動產生(Version:3)
+PRIVATE REPORT axrr300_g01_subrep04(sr2)
+DEFINE  sr2  sr2_r
+#add-point:query段define(客製用) name="sub04.define_customerization" 
+
+#end add-point
+#add-point:sub04.define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="sub04.define" 
+
+#end add-point:sub04.define
+ 
+    #add-point:sub04.order.before name="sub04.order.before" 
+    
+    #end add-point:sub04.order.before
+ 
+ 
+ 
+    FORMAT
+ 
+ 
+ 
+       ON EVERY ROW
+            #add-point:sub04.everyrow.before name="sub04.everyrow.before" 
+                          
+            #end add-point:sub04.everyrow.before
+ 
+            PRINTX sr2.*
+ 
+            #add-point:sub04.everyrow.after name="sub04.everyrow.after" 
+            
+            #end add-point:sub04.everyrow.after
+ 
+ 
+END REPORT
+ 
+ 
+ 
+ 
+{</section>}
+ 
+{<section id="axrr300_g01.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 根據本幣取得單價、金額、匯率的報表顯示樣式
+# Memo...........:
+# Usage..........: CALL axrr300_g01_getooaj(p_xrcadocno)
+#                  RETURNING r_format1,r_format2,r_format3
+# Input parameter: p_xrcadocno 單據編號
+# Return code....: r_format1   單價的樣式
+#                : r_format2   金額的樣式
+#                : r_format3   匯率的樣式
+# Date & Author..: 20150121 By huangrh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION axrr300_g01_getooaj(p_xrcadocno)
+DEFINE p_xrcadocno    LIKE xrca_t.xrcadocno
+DEFINE r_format1      LIKE type_t.chr30
+DEFINE r_format2      LIKE type_t.chr30
+DEFINE r_format3      LIKE type_t.chr30
+DEFINE l_xrcald       LIKE xrca_t.xrcald
+DEFINE l_glaa001      LIKE glaa_t.glaa001
+DEFINE l_glaa026      LIKE glaa_t.glaa026
+DEFINE l_ooaj003      LIKE ooaj_t.ooaj003
+DEFINE l_ooaj004      LIKE ooaj_t.ooaj004
+DEFINE l_ooaj005      LIKE ooaj_t.ooaj005
+DEFINE l_i            LIKE type_t.num5
+DEFINE l_str          LIKE type_t.chr30
+
+
+   LET l_xrcald=''
+   SELECT xrcald INTO l_xrcald
+     FROM xrca_t
+    WHERE xrcaent=g_enterprise
+      AND xrcadocno=p_xrcadocno
+   #幣別參照表號
+   LET l_glaa026=''
+   LET l_glaa001=''
+   SELECT glaa001,glaa026 INTO l_glaa001,l_glaa026
+     FROM glaa_t
+    WHERE glaaent=g_enterprise
+      AND glaald=l_xrcald
+   #給默認值  
+   LET l_ooaj003='' #單價
+   LET l_ooaj004='' #金額
+   LET l_ooaj005='' #匯率
+   SELECT ooaj003,ooaj004,ooaj005 INTO l_ooaj003,l_ooaj004,l_ooaj005
+     FROM ooaj_t
+    WHERE ooajent=g_enterprise
+      AND ooaj001=l_glaa026
+      AND ooaj002=l_glaa001
+      AND ooajstus='Y' 
+      
+   LET r_format1='' #單價--報表樣式
+   LET r_format2='' #金額--報表樣式 
+   LET r_format3='' #匯率--報表樣式           
+   IF NOT cl_null(l_ooaj003) THEN
+      LET r_format1="--,---,---,---,--&"
+      LET l_str=""
+      FOR l_i=1 TO l_ooaj003  
+          LET l_str=l_str,"&"
+      END FOR
+      IF NOT cl_null(l_str) THEN
+         LET r_format1=r_format1,".",l_str
+      END IF
+   END IF
+   IF NOT cl_null(l_ooaj004) THEN
+      LET r_format2="--,---,---,---,--&"
+      LET l_str=""
+      FOR l_i=1 TO l_ooaj004  
+          LET l_str=l_str,"&"
+      END FOR
+      IF NOT cl_null(l_str) THEN
+         LET r_format2=r_format2,".",l_str
+      END IF
+   END IF
+   IF NOT cl_null(l_ooaj005) THEN
+      LET r_format3="--,---,---,---,--&"
+      LET l_str=""
+      FOR l_i=1 TO l_ooaj005  
+          LET l_str=l_str,"&"
+      END FOR
+      IF NOT cl_null(l_str) THEN
+         LET r_format3=r_format3,".",l_str
+      END IF
+   END IF
+   
+   RETURN r_format1,r_format2,r_format3
+END FUNCTION
+
+ 
+{</section>}
+ 
+{<section id="axrr300_g01.other_report" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 帳款交易明細
+# Memo...........:
+# Usage..........: CALL axrr300_g01_subrep05(sr3)
+# Input parameter: sr3
+# Return code....: 
+# Date & Author..: 20141218 By huangrh
+# Modify.........:
+################################################################################
+PRIVATE REPORT axrr300_g01_subrep05(sr3)
+DEFINE sr3              sr3_r
+DEFINE l_xrcb103_sum    LIKE xrcb_t.xrcb103
+DEFINE l_xrcb104_sum    LIKE xrcb_t.xrcb104
+DEFINE l_xrcb105_sum    LIKE xrcb_t.xrcb105
+DEFINE l_xrcb113_sum    LIKE xrcb_t.xrcb113
+DEFINE l_xrcb113_chr    LIKE type_t.chr200
+DEFINE l_xrcb114_sum    LIKE xrcb_t.xrcb114
+DEFINE l_xrcb115_sum    LIKE xrcb_t.xrcb115
+DEFINE l_xrca101        LIKE xrca_t.xrca101
+DEFINE l_xrcald         LIKE xrca_t.xrcald
+DEFINE l_gzze003        LIKE gzze_t.gzze003
+DEFINE l_format1        LIKE type_t.chr30
+DEFINE l_format2        LIKE type_t.chr30
+DEFINE l_format3        LIKE type_t.chr30
+
+
+    ORDER EXTERNAL BY sr3.xrcbdocno
+    FORMAT
+        
+        ON EVERY ROW
+            PRINTX g_grNumFmt.*
+            PRINTX sr3.*
+            
+        AFTER GROUP OF sr3.xrcbdocno  
+           CALL axrr300_g01_getooaj(sr3.xrcbdocno) RETURNING l_format1,l_format2,l_format3
+        
+            PRINTX l_format1
+            PRINTX l_format2
+            PRINTX l_format3
+            
+            SELECT xrcald,xrca101 INTO l_xrcald,l_xrca101
+              FROM xrca_t
+             WHERE xrcaent=g_enterprise
+               AND xrcadocno=sr3.xrcbdocno
+            LET l_xrcb103_sum=  GROUP SUM(sr3.xrcb103)            
+            LET l_xrcb104_sum=  GROUP SUM(sr3.xrcb104)
+            LET l_xrcb105_sum=  GROUP SUM(sr3.xrcb105) 
+            LET l_xrcb113_sum=  GROUP SUM(sr3.xrcb113)  
+            LET l_xrcb114_sum=  GROUP SUM(sr3.xrcb114)
+            LET l_xrcb115_sum=  GROUP SUM(sr3.xrcb115)             
+            PRINTX l_xrcb103_sum
+            PRINTX l_xrcb104_sum
+            PRINTX l_xrcb105_sum
+            PRINTX l_xrca101
+            PRINTX l_xrcb113_sum
+            PRINTX l_xrcb114_sum
+            PRINTX l_xrcb115_sum
+
+END REPORT
+
+################################################################################
+# Descriptions...: 收款及沖銷信息
+# Memo...........:
+# Usage..........: CALL axrr300_g01_subrep06(sr4,p_xrcadocno)
+# Input parameter: sr4
+#                : p_xrcadocno
+# Return code....: 
+# Date & Author..: 20141219 By huangrh
+# Modify.........:
+################################################################################
+PRIVATE REPORT axrr300_g01_subrep06(sr4,p_xrcadocno)
+DEFINE sr4              sr4_r
+DEFINE p_xrcadocno      LIKE xrca_t.xrcadocno
+DEFINE l_subrep09_show  LIKE type_t.chr1
+DEFINE l_cnt            LIKE type_t.num5
+DEFINE l_sub_sql        STRING
+DEFINE sr7              sr7_r
+DEFINE l_xrce119_sum    LIKE xrce_t.xrce119 
+DEFINE l_xrcald         LIKE xrca_t.xrcald
+DEFINE l_format1        LIKE type_t.chr30
+DEFINE l_format2        LIKE type_t.chr30
+DEFINE l_format3        LIKE type_t.chr30
+
+
+    ORDER EXTERNAL BY p_xrcadocno
+    FORMAT
+        
+        ON EVERY ROW
+            PRINTX g_grNumFmt.*
+            PRINTX sr4.*
+            
+        AFTER GROUP OF p_xrcadocno  
+          CALL axrr300_g01_getooaj(p_xrcadocno) RETURNING l_format1,l_format2,l_format3
+        
+          PRINTX l_format1
+          PRINTX l_format2
+          PRINTX l_format3
+            
+          LET l_xrcald=''
+          SELECT xrcald INTO l_xrcald
+            FROM xrca_t
+           WHERE xrcaent=g_enterprise
+             AND xrcadocno=p_xrcadocno
+
+          LET l_xrce119_sum=  GROUP SUM(sr4.xrce119)
+          PRINTX l_xrce119_sum    
+          
+          LET l_subrep09_show = "N"
+          LET l_cnt=0
+         
+          LET g_sql = " SELECT a,b,SUM(c) FROM ",
+                      "  (",
+                      "  SELECT xrcedocno a,xrce100 b,CASE xrce015 WHEN 'D' THEN xrce109 ELSE xrce109*-1 END c ",
+                      "    FROM xrce_t,xrca_t",
+                      "   WHERE xrceent=xrcaent",
+                      "     AND xrcedocno=xrcadocno",
+                      "     AND xrceld=xrcald",
+                      "     AND xrceent='",g_enterprise,"'",
+                      "     AND xrcedocno='",p_xrcadocno,"'",
+                      "   UNION ALL ",
+                      "  SELECT xrce003 a,xrce100 b,CASE xrce015 WHEN 'D' THEN xrce109 ELSE xrce109*-1 END c ",
+                      "    FROM xrce_t,xrca_t",
+                      "   WHERE xrceent=xrcaent",
+                      "     AND xrce003=xrcadocno",
+                      "     AND xrceld=xrcald",
+                      "     AND xrceent='",g_enterprise,"'",
+                      "     AND xrce003='",p_xrcadocno,"'", 
+                      "   UNION ALL ",
+                      "   SELECT xrdedocno a,xrde100 b,CASE xrde015 WHEN 'D' THEN xrde109 ELSE xrde109*-1 END c ",
+                      "     FROM xrde_t,xrca_t",
+                      "    WHERE xrdeent=xrcaent",
+                      "      AND xrdedocno=xrcadocno",
+                      "      AND xrdeld=xrcald",
+                      "      AND xrdeent='",g_enterprise,"'",
+                      "      AND xrdedocno='",p_xrcadocno,"'",                      
+                      "   )",
+                      "   GROUP BY a,b"
+                      
+          LET l_sub_sql = "SELECT COUNT(1) FROM (",g_sql,")"
+          
+          PREPARE axrr300_g01_repcur09_cnt_pre FROM l_sub_sql
+          EXECUTE axrr300_g01_repcur09_cnt_pre INTO l_cnt
+         
+          IF l_cnt > 0 THEN 
+            LET l_subrep09_show ="Y"
+          ELSE 
+            LET l_subrep09_show = "N"
+          END IF
+          PRINTX l_subrep09_show             
+           
+          START REPORT axrr300_g01_subrep09
+          DECLARE axrr300_g01_repcur09 CURSOR FROM g_sql
+     
+          FOREACH axrr300_g01_repcur09 INTO sr7.*
+             OUTPUT TO REPORT axrr300_g01_subrep09(sr7.*)
+
+          END FOREACH
+          FINISH REPORT axrr300_g01_subrep09
+          
+END REPORT
+
+################################################################################
+# Descriptions...: 沖暫估信息
+# Memo...........:
+# Usage..........: CALL axrr300_g01_subrep07(sr5,p_xrcadocno)
+# Input parameter: sr5
+# Input parameter: p_xrcadocno
+# Return code....: 
+# Date & Author..: 20141219 By huangrh
+# Modify.........:
+################################################################################
+PRIVATE REPORT axrr300_g01_subrep07(sr5,p_xrcadocno)
+DEFINE sr5              sr5_r
+DEFINE p_xrcadocno      LIKE xrca_t.xrcadocno
+DEFINE l_xrcf103_sum    LIKE xrcf_t.xrcf103
+DEFINE l_xrcf105_sum    LIKE xrcf_t.xrcf105
+DEFINE l_xrcf113_sum    LIKE xrcf_t.xrcf113
+DEFINE l_xrcf115_sum    LIKE xrcf_t.xrcf115
+DEFINE l_xrcf106_sum    LIKE xrcf_t.xrcf106
+DEFINE l_xrcf116_sum    LIKE xrcf_t.xrcf116
+DEFINE l_xrcf117_sum    LIKE xrcf_t.xrcf117
+DEFINE l_format1        LIKE type_t.chr30
+DEFINE l_format2        LIKE type_t.chr30
+DEFINE l_format3        LIKE type_t.chr30
+
+
+    ORDER EXTERNAL BY p_xrcadocno
+    FORMAT
+        
+        ON EVERY ROW
+            PRINTX g_grNumFmt.*
+            PRINTX sr5.*
+            
+        AFTER GROUP OF p_xrcadocno  
+            CALL axrr300_g01_getooaj(p_xrcadocno) RETURNING l_format1,l_format2,l_format3
+            
+            PRINTX l_format1
+            PRINTX l_format2
+            PRINTX l_format3        
+            LET l_xrcf103_sum=  GROUP SUM(sr5.xrcf103)
+            LET l_xrcf105_sum=  GROUP SUM(sr5.xrcf105)
+            LET l_xrcf106_sum=  GROUP SUM(sr5.xrcf106)            
+            LET l_xrcf113_sum=  GROUP SUM(sr5.xrcf113)
+            LET l_xrcf115_sum=  GROUP SUM(sr5.xrcf115)
+            LET l_xrcf116_sum=  GROUP SUM(sr5.xrcf116)         
+            LET l_xrcf117_sum=  GROUP SUM(sr5.xrcf117)  
+            PRINTX l_xrcf103_sum
+            PRINTX l_xrcf105_sum
+            PRINTX l_xrcf106_sum
+            PRINTX l_xrcf113_sum
+            PRINTX l_xrcf115_sum
+            PRINTX l_xrcf116_sum
+            PRINTX l_xrcf117_sum
+            
+END REPORT
+
+################################################################################
+# Descriptions...: 沖暫估信息
+# Memo...........:
+# Usage..........: CALL axrr300_g01_subrep08(sr6,p_xrcadocno)
+# Input parameter: sr6,p_xrcadocno
+# Return code....: 
+# Date & Author..: 20141219 By huangrh
+# Modify.........:
+################################################################################
+PRIVATE REPORT axrr300_g01_subrep08(sr6,p_xrcadocno)
+DEFINE sr6              sr6_r
+DEFINE p_xrcadocno      LIKE xrca_t.xrcadocno
+DEFINE l_isat103_sum    LIKE isat_t.isat103
+DEFINE l_isat104_sum    LIKE isat_t.isat104
+DEFINE l_isat105_sum    LIKE isat_t.isat105
+DEFINE l_isat113_sum    LIKE isat_t.isat113
+DEFINE l_isat114_sum    LIKE isat_t.isat114
+DEFINE l_isat115_sum    LIKE isat_t.isat115
+DEFINE l_xrcald         LIKE xrca_t.xrcald
+DEFINE l_format1        LIKE type_t.chr30
+DEFINE l_format2        LIKE type_t.chr30
+DEFINE l_format3        LIKE type_t.chr30
+
+
+    ORDER EXTERNAL BY sr6.isaf035
+    FORMAT
+        
+        ON EVERY ROW
+            PRINTX g_grNumFmt.*
+            PRINTX sr6.*
+            
+        AFTER GROUP OF sr6.isaf035  
+          CALL axrr300_g01_getooaj(p_xrcadocno) RETURNING l_format1,l_format2,l_format3
+          
+          PRINTX l_format1
+          PRINTX l_format2
+          PRINTX l_format3
+            
+          LET l_xrcald=''
+          SELECT xrcald INTO l_xrcald
+            FROM xrca_t
+           WHERE xrcaent=g_enterprise
+             AND xrcadocno=p_xrcadocno     
+          
+          LET l_isat103_sum=  GROUP SUM(sr6.isat103)       
+          LET l_isat104_sum=  GROUP SUM(sr6.isat104)  
+          LET l_isat105_sum=  GROUP SUM(sr6.isat105)  
+          LET l_isat113_sum=  GROUP SUM(sr6.isat113)              
+          LET l_isat114_sum=  GROUP SUM(sr6.isat114)  
+          LET l_isat115_sum=  GROUP SUM(sr6.isat115)
+          
+          PRINTX l_isat103_sum
+          PRINTX l_isat104_sum 
+          PRINTX l_isat105_sum         
+          PRINTX l_isat113_sum
+          PRINTX l_isat114_sum
+          PRINTX l_isat115_sum
+          
+END REPORT
+
+################################################################################
+# Descriptions...: 收款及沖款信息統計項
+# Memo...........:
+# Usage..........: CALL axrr300_g01_subrep09(sr7)
+# Input parameter: sr7
+# Return code....: 
+# Date & Author..: 20141226 By huangrh
+# Modify.........:
+################################################################################
+PRIVATE REPORT axrr300_g01_subrep09(sr7)
+DEFINE sr7              sr7_r
+DEFINE l_format1        LIKE type_t.chr30
+DEFINE l_format2        LIKE type_t.chr30
+DEFINE l_format3        LIKE type_t.chr30
+
+    ORDER EXTERNAL BY sr7.xrcedocno
+    FORMAT
+        
+        ON EVERY ROW
+            PRINTX g_grNumFmt.*
+            PRINTX sr7.*
+            CALL axrr300_g01_getooaj(sr7.xrcedocno) RETURNING l_format1,l_format2,l_format3
+            
+            PRINTX l_format1
+            PRINTX l_format2
+            PRINTX l_format3
+          
+END REPORT
+
+ 
+{</section>}
+ 

@@ -1,0 +1,168 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="ammm201" module="amm" jobmode="N" type="t01" industry="std" fix_arg="0" crtid="01533" crtdt="2013-11-28 16:11:53" modid="01533" moddt="2014-08-13 16:28:14" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="2" tabver="10001" description="會員等級升降策略設定作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="mmcu001,mmcu002,mmcul003,mmcul004,mmcuunit,mmcuunit_desc(chr80),mmcu004,mmcu005,mmcustus,mmcuownid,mmcuownid_desc(chr80),mmcuowndp,mmcuowndp_desc(chr80),mmcucrtid,mmcucrtid_desc(chr80),mmcucrtdp,mmcucrtdp_desc(chr80),mmcucrtdt,mmcumodid,mmcumodid_desc(chr80),mmcumoddt,mmcucnfid,mmcucnfid_desc(chr80),mmcucnfdt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="mmcv002,mmcv002_desc(chr500),mmcv003,mmcv004,mmcv005,mmcv006,mmcv007,mmcv008,mmcvstus"/>
+      <var id="body" page="2" record="s_detail2" page_id="2" value="mmcw002,mmcw002_desc(chr500),mmcwstus"/>
+      <var id="bs_field" value="mmcu001,mmcu001_desc(chr80),mmcu002,mmcu004,mmcu005,mmcuunit" pk="mmcu001" order=""/>
+      <bs_reference field="mmcu001_desc" ref_field="mmcu001" ref_sql="SELECT mmcul003 FROM mmcul_t WHERE mmculent=$varg_enterprise$var AND mmcul001=? AND mmcul002=$varg_dlang$var"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+    <section id="master_input">
+      <action id="update_item"/>
+    </section>
+  </structure>
+  <form id="0" module="amm" filename="ammm201" method="dialog">
+    <section id="input">
+      <input id="head" field="mmcu001,mmcu002,mmcul003,mmcul004,mmcuunit,mmcu004,mmcu005,mmcustus,mmcucnfid,mmcucnfdt"/>
+      <input id="body" page="1" field="mmcv002,mmcv003,mmcv004,mmcv005,mmcv006,mmcv007,mmcv008,mmcvstus" insert="Y" append="Y" delete="Y"/>
+      <input id="body" page="2" field="mmcw002,mmcwstus" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="mmcu001,mmcu002,mmcul003,mmcul004,mmcuunit,mmcu004,mmcu005,mmcustus,mmcuownid,mmcuowndp,mmcucrtid,mmcucrtdp,mmcucrtdt,mmcumodid,mmcumoddt,mmcucnfid,mmcucnfdt"/>
+      <construct id="body" page="1" field="mmcv002,mmcv003,mmcv004,mmcv005,mmcv006,mmcv007,mmcv008,mmcvstus"/>
+      <construct id="body" page="2" field="mmcw002,mmcwstus"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="mmcu001"/>
+      <set id="head" type="no_entry" field="mmcu001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="mmcu001">
+        <controlp form="q_mmcu001" state="c"/>
+      </column>
+      <column id="mmcu002"/>
+      <column id="mmcul003"/>
+      <column id="mmcul004"/>
+      <column id="mmcuunit">
+        <after>
+          <reference field="mmcuunit_desc" ref_field="mmcu_t.mmcuunit" map_field="mmcuent,mmcuunit" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="mmcuunit_desc"/>
+      <column id="mmcu004" type="S" default="N"/>
+      <column id="mmcu005" type="S" default="N"/>
+      <column id="mmcustus" scc="50" type="S" default="N">
+        <stus id="N" pic="open"/>
+        <stus id="Y" pic="valid"/>
+        <stus id="X" pic="void"/>
+      </column>
+      <column id="mmcuownid">
+        <after>
+          <reference field="mmcuownid_desc" ref_field="mmcu_t.mmcuownid" map_field="mmcuownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmcuownid_desc"/>
+      <column id="mmcuowndp">
+        <after>
+          <reference field="mmcuowndp_desc" ref_field="mmcu_t.mmcuowndp" map_field="mmcuowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mmcuowndp_desc"/>
+      <column id="mmcucrtid">
+        <after>
+          <reference field="mmcucrtid_desc" ref_field="mmcu_t.mmcucrtid" map_field="mmcucrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmcucrtid_desc"/>
+      <column id="mmcucrtdp">
+        <after>
+          <reference field="mmcucrtdp_desc" ref_field="mmcu_t.mmcucrtdp" map_field="mmcucrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="mmcucrtdp_desc"/>
+      <column id="mmcucrtdt"/>
+      <column id="mmcumodid">
+        <after>
+          <reference field="mmcumodid_desc" ref_field="mmcu_t.mmcumodid" map_field="mmcumodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmcumodid_desc"/>
+      <column id="mmcumoddt"/>
+      <column id="mmcucnfid">
+        <after>
+          <reference field="mmcucnfid_desc" ref_field="mmcu_t.mmcucnfid" map_field="mmcucnfid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="mmcucnfid_desc"/>
+      <column id="mmcucnfdt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="mmcv002">
+        <after>
+          <reference field="mmcv002_desc" ref_field="mmcv002" map_field="mmcv002" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2024&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="mmcv002_desc"/>
+      <column id="mmcv003">
+        <after>
+          <check id="range" bt="0" bt_type="0" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+      <column id="mmcv004"/>
+      <column id="mmcv005" type="S" default="1" def_scc="6532"/>
+      <column id="mmcv006"/>
+      <column id="mmcv007" type="S" default="0"/>
+      <column id="mmcv008"/>
+      <column id="mmcvstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+    <init id="body" page="2">
+      <column id="mmcw002">
+        <after>
+          <check chkid="v_mman001" id="isExist"/>
+          <reference field="mmcw002_desc" ref_field="mmcw_t.mmcw002" map_field="mmcwent,mmcw002" ref_sql="SELECT mmanl003 FROM mmanl_t WHERE mmanlent=$varg_enterprise$var AND mmanl001=? AND mmanl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_mman001" state="i"/>
+        <controlp form="q_mman001" state="c"/>
+      </column>
+      <column id="mmcw002_desc"/>
+      <column id="mmcwstus" scc="17" type="S" default="Y">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="mmcu_t" pk="mmcu001">
+      <sql id="forupd_sql" type="sql" query="SELECT mmcu001,mmcu002,&apos;&apos;,&apos;&apos;,mmcuunit,&apos;&apos;,mmcu004,mmcu005,mmcustus,mmcuownid,&apos;&apos;,mmcuowndp,&apos;&apos;,mmcucrtid,&apos;&apos;,mmcucrtdp,&apos;&apos;,mmcucrtdt,mmcumodid,&apos;&apos;,mmcumoddt,mmcucnfid,&apos;&apos;,mmcucnfdt FROM mmcu_t WHERE mmcuent= ? AND mmcu001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT mmcu001,mmcu002,&apos;&apos;,&apos;&apos;,mmcuunit,&apos;&apos;,mmcu004,mmcu005,mmcustus,mmcuownid,&apos;&apos;,mmcuowndp,&apos;&apos;,mmcucrtid,&apos;&apos;,mmcucrtdp,&apos;&apos;,mmcucrtdt,mmcumodid,&apos;&apos;,mmcumoddt,mmcucnfid,&apos;&apos;,mmcucnfdt FROM mmcu_t" order="mmcu001"/>
+      <sql id="append" type="lang" target="mmcul_t.mmcul003,mmcul_t.mmcul004" table="mmcul_t" fk="mmcu001" pk="mmcul001,mmcul002" field="mmcul003,mmcul004"/>
+    </head>
+    <body id="mmcv_t" page="1" linked="" pk="mmcv002,mmcv003,mmcv004" fk="mmcv001">
+      <sql id="forupd_sql_detail" query="SELECT mmcv002,&apos;&apos;,mmcv003,mmcv004,mmcv005,mmcv006,mmcv007,mmcv008,mmcvstus FROM mmcv_t WHERE mmcvent=? AND mmcv001=? AND mmcv002=? AND mmcv003=? AND mmcv004=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mmcv002,&apos;&apos;,mmcv003,mmcv004,mmcv005,mmcv006,mmcv007,mmcv008,mmcvstus FROM mmcv_t WHERE mmcvent=? AND mmcv001=?"/>
+    </body>
+    <body id="mmcw_t" page="2" linked="" pk="mmcw002" fk="mmcw001">
+      <sql id="forupd_sql_detail" query="SELECT mmcw002,&apos;&apos;,mmcwstus FROM mmcw_t WHERE mmcwent=? AND mmcw001=? AND mmcw002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT mmcw002,&apos;&apos;,mmcwstus FROM mmcw_t WHERE mmcwent=? AND mmcw001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

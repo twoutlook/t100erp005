@@ -1,0 +1,343 @@
+#該程式未解開Section, 採用最新樣板產出!
+{<section id="aglp030_02.description" >}
+#應用 a00 樣板自動產生(Version:3)
+#+ Standard Version.....: SD版次:0005(2015-09-14 16:57:54), PR版次:0005(2016-05-03 17:52:56)
+#+ Customerized Version.: SD版次:0000(1900-01-01 00:00:00), PR版次:0000(1900-01-01 00:00:00)
+#+ Build......: 000064
+#+ Filename...: aglp030_02
+#+ Description: 整批刪除
+#+ Creator....: 01251(2015-03-06 10:47:52)
+#+ Modifier...: 02291 -SD/PR- 02599
+ 
+{</section>}
+ 
+{<section id="aglp030_02.global" >}
+#應用 c01c 樣板自動產生(Version:10)
+#add-point:填寫註解說明 name="global.memo"
+#160318-00005#16  2016/03/25 by 07675   將重複內容的錯誤訊息置換為公用錯誤訊息
+#160420-00001#9   2016/05/03 By 02599   当科目已被凭证使用，设置该科目核算项等资料时提示讯息
+#end add-point
+#add-point:填寫註解說明(客製用) name="global.memo_customerization"
+
+#end add-point
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目 name="global.import"
+
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:增加匯入變數檔 name="global.inc" name="global.inc"
+
+#end add-point
+ 
+DEFINE g_rec_b               LIKE type_t.num10
+DEFINE g_wc                  STRING
+DEFINE g_ref_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_rtn_fields          DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+DEFINE g_ref_vars            DYNAMIC ARRAY OF VARCHAR(500) #ap_ref用陣列
+ 
+ 
+#add-point:自定義模組變數(Module Variable)(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="global.variable"
+
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable) name="global.variable_customerization"
+
+#end add-point
+ 
+#add-point:傳入參數說明(global.argv) name="global.argv"
+
+#end add-point  
+ 
+{</section>}
+ 
+{<section id="aglp030_02.input" >}
+#+ 資料輸入
+PUBLIC FUNCTION aglp030_02(--)
+   #add-point:construct段變數傳入 name="construct.get_var"
+   
+   #end add-point
+   )
+   #add-point:construct段define name="construct.define_customerization"
+   
+   #end add-point
+   DEFINE l_ac_t          LIKE type_t.num10       #未取消的ARRAY CNT 
+   DEFINE l_allow_insert  LIKE type_t.num5        #可新增否 
+   DEFINE l_allow_delete  LIKE type_t.num5        #可刪除否  
+   DEFINE l_count         LIKE type_t.num10
+   DEFINE l_insert        LIKE type_t.num5
+   #add-point:construct段define(請盡量不要在客製環境修改此段落內容, 否則將後續patch的調整需人工處理) name="construct.define"
+   
+   #end add-point
+ 
+   #畫面開啟 (identifier)
+   OPEN WINDOW w_aglp030_02 WITH FORM cl_ap_formpath("agl","aglp030_02")
+ 
+   #瀏覽頁簽資料初始化
+   CALL cl_ui_init()
+   
+   LET g_qryparam.state = "i"
+   
+   #輸入前處理
+   #add-point:單頭前置處理 name="construct.pre_construct"
+   CALL cl_set_combo_scc('glac007','8002')
+   #end add-point
+   
+   DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+   
+      #輸入開始
+      CONSTRUCT BY NAME g_wc ON gladld,glad001,glac007,glac012,glac013,glac014,glac015 
+      
+            #add-point:自定義action name="construct.action"
+         ON ACTION controlp INFIELD gladld
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            CALL q_glaa()
+            
+            DISPLAY g_qryparam.return1 TO gladld  #顯示到畫面上
+            NEXT FIELD gladld                     #返回原欄位      
+
+         ON ACTION controlp INFIELD glad001
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL aglt310_04()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO glad001  #顯示到畫面上
+            NEXT FIELD glad001                     #返回原欄位
+
+            
+         ON ACTION controlp INFIELD glac012
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = "3006"
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO glac012  #顯示到畫面上
+            NEXT FIELD glac012                     #返回原欄位 
+
+         ON ACTION controlp INFIELD glac013
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = "3006"
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO glac013  #顯示到畫面上
+            NEXT FIELD glac013                     #返回原欄位  
+  
+         ON ACTION controlp INFIELD glac014
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = "3006"
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO glac014  #顯示到畫面上
+            NEXT FIELD glac014                     #返回原欄位 
+
+
+         ON ACTION controlp INFIELD glac015
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c' 
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.arg1 = "3006"
+            CALL q_oocq002()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO glac015  #顯示到畫面上
+            NEXT FIELD glac015                     #返回原欄位  
+            
+            #end add-point
+      
+         BEFORE CONSTRUCT
+            #add-point:單頭輸入前處理 name="construct.before_construct"
+            
+            #end add-point
+            
+         AFTER CONSTRUCT
+            #add-point:單頭輸入後處理 name="construct.after_construct"
+            
+            #end add-point
+            
+         
+ 
+         
+       
+      END CONSTRUCT
+ 
+      #add-point:自定義construct name="construct.more_construct"
+      
+      #end add-point
+      
+      ON ACTION accept
+         ACCEPT DIALOG
+        
+      ON ACTION cancel
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION close
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+ 
+      ON ACTION exit
+         LET INT_FLAG = TRUE 
+         EXIT DIALOG
+   
+      #交談指令共用ACTION
+      &include "common_action.4gl" 
+         CONTINUE DIALOG 
+         
+   END DIALOG
+ 
+   #add-point:畫面關閉前 name="construct.before_close"
+
+   IF NOT INT_FLAG THEN
+      CALL aglp030_02_del()
+      CALL cl_ask_confirm3("std-00012","")
+   END IF
+
+
+   #end add-point 
+   
+   #畫面關閉
+   CLOSE WINDOW w_aglp030_02 
+   
+   #add-point:construct段after construct name="construct.post_construct"
+   
+   #end add-point 
+ 
+END FUNCTION
+ 
+{</section>}
+ 
+{<section id="aglp030_02.other_dialog" readonly="Y" >}
+
+ 
+{</section>}
+ 
+{<section id="aglp030_02.other_function" readonly="Y" >}
+
+################################################################################
+# Descriptions...: 整批刪除
+# Memo...........:
+# Usage..........: CALL aglp030_02_del()
+# Input parameter: 
+# Return code....: 
+# Date & Author..: 20150306 By huangrh
+# Modify.........:
+################################################################################
+PRIVATE FUNCTION aglp030_02_del()
+DEFINE l_sql            STRING
+DEFINE l_count          LIKE type_t.num10
+DEFINE l_success        LIKE type_t.num5
+DEFINE l_gladld         LIKE glad_t.gladld
+DEFINE l_glad001        LIKE glad_t.glad001
+DEFINE l_sql1           STRING #160420-00001#9
+
+   IF cl_null(g_wc) THEN
+      LET g_wc=" 1=1"
+   END IF
+   
+   #沒有滿足條件的資料
+   LET l_count=0
+   LET l_sql="SELECT COUNT(*) ",
+             "  FROM glac_t,glad_t",
+             " WHERE glacent='",g_enterprise,"'",
+             "   AND ", g_wc CLIPPED,
+             "   AND glacent=gladent",
+             "   AND glac002=glad001",
+             "   AND glacstus='Y'"
+             
+   PREPARE aglp030_glac_pre FROM l_sql
+   EXECUTE  aglp030_glac_pre INTO l_count 
+   
+   IF l_count=0 OR cl_null(l_count) THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = "" 
+      LET g_errparam.code   = "sub-01321" #"axm-00276"  #160318-00005#16 mod 
+      LET g_errparam.popup  = FALSE 
+      CALL cl_err()
+      RETURN
+   END IF   
+   
+   #160420-00001#9--add--str--
+   #判断科目是否已存在于凭证中，如果存在提示用户，异动科目可能导致凭证不正确
+   LET l_count = 0 
+   LET l_sql1="SELECT DISTINCT gladld,glad001 ",
+              "  FROM glac_t,glad_t",
+              " WHERE glacent='",g_enterprise,"'",
+              "   AND ", g_wc CLIPPED,
+              "   AND glacent=gladent",
+              "   AND glac002=glad001",
+              "   AND glacstus='Y'"   
+              
+   LET l_sql="SELECT COUNT(*) FROM glaq_t,(",l_sql1,") a",
+             " WHERE glaqent=",g_enterprise," AND glaqld=a.gladld AND glaq002=a.glad001"
+   PREPARE aglp030_02_sel_glaq_pr FROM l_sql
+   EXECUTE aglp030_02_sel_glaq_pr INTO l_count
+   IF l_count = 0 THEN
+      LET l_sql="SELECT COUNT(*) FROM glar_t,(",l_sql1,") a",
+                " WHERE glarent=",g_enterprise," AND glarld=a.gladld AND glar001=a.glad001"
+      PREPARE aglp030_02_sel_glar_pr FROM l_sql
+      EXECUTE aglp030_02_sel_glar_pr INTO l_count
+   END IF
+   IF l_count > 0 THEN
+      INITIALIZE g_errparam TO NULL 
+      LET g_errparam.extend = ''
+      LET g_errparam.code   = "agl-00443" 
+      LET g_errparam.popup  = TRUE 
+      CALL cl_err()
+   END IF
+   #160420-00001#9--add--end
+   
+   IF cl_ask_confirm("aoo-00191") THEN
+   
+      CALL s_transaction_begin()
+      LET l_success=TRUE
+      
+      LET l_sql="SELECT DISTINCT gladld,glad001 ",
+                "  FROM glac_t,glad_t",
+                " WHERE glacent='",g_enterprise,"'",
+                "   AND ", g_wc CLIPPED,
+                "   AND glacent=gladent",
+                "   AND glac002=glad001",
+                "   AND glacstus='Y'"   
+                
+      PREPARE aglp030_02_pre FROM l_sql
+      DECLARE aglp030_02_cur CURSOR FOR aglp030_02_pre
+
+      FOREACH aglp030_02_cur INTO l_gladld,l_glad001
+         #刪除
+         DELETE FROM glad_t
+          WHERE gladent=g_enterprise
+            AND gladld=l_gladld
+            AND glad001=l_glad001
+         IF SQLCA.sqlcode THEN
+            INITIALIZE g_errparam TO NULL
+            LET g_errparam.code = SQLCA.SQLCODE
+            LET g_errparam.extend = 'del glad_t'
+            LET g_errparam.popup = TRUE
+            CALL cl_err()
+            LET l_success=FALSE
+            EXIT FOREACH
+         END IF           
+      END FOREACH
+      
+      IF NOT l_success THEN
+         CALL s_transaction_end('N','0')                 
+         RETURN
+      ELSE
+         CALL s_transaction_end('Y','1')
+      END IF    
+         
+   END IF      
+
+   
+END FUNCTION
+
+ 
+{</section>}
+ 

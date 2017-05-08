@@ -1,0 +1,80 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asrt801_01" module="asr" jobmode="N" type="c03a" industry="std" fix_arg="0" crtid="01258" crtdt="2015-01-06 13:53:41" modid="01258" moddt="2015-01-07 16:46:12" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="重複性生產製程多上站作業維護">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="srcc007,srcc008,srcc008_desc(chr80),srcc009,srcc001,srcc000,srcc002,srcc004,srcc900,srccsite,srcc005,srcc006"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="srceseq,srce008,srce008_desc(chr500),srce009,srce901,srce902,srce905,srce905_desc(chr500),srce906"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu"/>
+  </structure>
+  <form id="0" module="asr" filename="asrt801_01" method="dialog">
+    <section id="input">
+      <input id="head" field="srcc007,srcc008,srcc009"/>
+      <input id="body" page="1" field="srce008,srce009,srce901,srce902,srce905,srce906" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="srcc007,srcc008,srcc009"/>
+      <construct id="body" page="1" field="srce008,srce009,srce901,srce902,srce905,srce906"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="srccsite,srcc000,srcc001,srcc002,srcc004,srcc005,srcc006,srcc007,srcc900"/>
+      <set id="head" type="no_entry" field="srccsite,srcc000,srcc001,srcc002,srcc004,srcc005,srcc006,srcc007,srcc900"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="srcc007"/>
+      <column id="srcc008">
+        <after>
+          <reference field="srcc008_desc" ref_field="srcc008" map_field="srcc008" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;225&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="srcc008_desc"/>
+      <column id="srcc009"/>
+      <column id="srcc001"/>
+      <column id="srcc000"/>
+      <column id="srcc002"/>
+      <column id="srcc004"/>
+      <column id="srcc900"/>
+      <column id="srccsite"/>
+      <column id="srcc005"/>
+      <column id="srcc006"/>
+    </init>
+    <init id="body" page="1">
+      <column id="srceseq"/>
+      <column id="srce008">
+        <after>
+          <reference field="srce008_desc" ref_field="srce008" map_field="srce008" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;225&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+        <controlp form="q_oocq002" state="c"/>
+      </column>
+      <column id="srce008_desc"/>
+      <column id="srce009"/>
+      <column id="srce901" type="S" default="3"/>
+      <column id="srce902"/>
+      <column id="srce905">
+        <after>
+          <reference field="srce905_desc" ref_field="srce905" map_field="srce905" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;225&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_oocq002" state="i"/>
+      </column>
+      <column id="srce905_desc"/>
+      <column id="srce906"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="srcc_t" pk="srccsite,srcc000,srcc001,srcc002,srcc004,srcc005,srcc006,srcc007,srcc900">
+      <sql id="forupd_sql" type="sql" query="SELECT srcc007,srcc008,&apos;&apos;,srcc009,srcc001,srcc000,srcc002,srcc004,srcc900,srccsite,srcc005,srcc006 FROM srcc_t WHERE srccent= ? AND srccsite=? AND srcc000=? AND srcc001=? AND srcc002=? AND srcc004=? AND srcc005=? AND srcc006=? AND srcc007=? AND srcc900=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT srcc007,srcc008,&apos;&apos;,srcc009,srcc001,srcc000,srcc002,srcc004,srcc900,srccsite,srcc005,srcc006 FROM srcc_t" order="srccsite,srcc000,srcc001,srcc002,srcc004,srcc005,srcc006,srcc007,srcc900"/>
+    </head>
+    <body id="srce_t" page="1" linked="" pk="srceseq" fk="srcesite,srce000,srce001,srce002,srce004,srce005,srce006,srce007,srce900">
+      <sql id="forupd_sql_detail" query="SELECT srceseq,srce008,&apos;&apos;,srce009,srce901,srce902,srce905,&apos;&apos;,srce906 FROM srce_t WHERE srceent=? AND srcesite=? AND srce000=? AND srce001=? AND srce002=? AND srce004=? AND srce005=? AND srce006=? AND srce007=? AND srce900=? AND srceseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT srceseq,srce008,&apos;&apos;,srce009,srce901,srce902,srce905,&apos;&apos;,srce906 FROM srce_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

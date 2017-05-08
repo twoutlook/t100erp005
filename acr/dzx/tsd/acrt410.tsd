@@ -1,0 +1,722 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="acrt410" std_prog="acrt410" erpver="1.0" ver="1" module="ACR" type="M" booking="Y" class="t" env="s" zone="t10dev" identity="s">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items="delete,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="crba_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+    <tbl name="crbb_t" main="N" head="N" pk="" fk_detail="" parent="crba_t" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 主要是收集会员或大客户对公司产品服务等之抱怨，及公司各部门对客诉处理之过程；
+標準作業功能取消：新增/修改/刪除/複製/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+狀態功能：开立/审核处理中/结案/作废   （繁體：開立/確認處理中/結案/作廢）
+作業類型：交易單據維護作業
+輸入模式：雙檔搭配查詢方案模式F003_sc
+作業資料來源(Master)：
+ 資料來源表：crba_t(客诉单维护单头档)
+ 
+作業資料來源(Detail)：
+ 資料來源表：crbb_t(客诉单维护单身档)
+
+資料處理：
+1、如果出货单号与项次不为空的情况下，基本资料页签与商品资料页签相关栏位预设为出货单上的来源资料
+2、如果出货单号与项次为空，则根据客户编号在【axmm200】中取币别与汇率显示出来]]>
+  </all>
+  <field cite_std="N" name="b_crba001" ver="1" src="s" column="crba001" table="crba_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="q_ooag001_6" c_zoom="q_ooag001_6" chk_ref="v_ooag001" items="" default="" max="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_crba002" ver="1" src="s" column="crba002" table="crba_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="v_ooeg001" items="" default="" max="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_crba004" ver="1" src="s" column="crba004" table="crba_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_crba005" ver="1" src="s" column="crba005" table="crba_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_crbadocdt" ver="1" src="s" column="crbadocdt" table="crba_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_crbadocno" ver="1" src="s" column="crbadocno" table="crba_t" attribute="C203" type="varchar2(20)" req="Y" i_zoom="q_ooba002_1" c_zoom="q_crbadocno" chk_ref="v_ooba002" items="" default="" max="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_crbasite" ver="1" src="s" column="crbasite" table="crba_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba001" ver="1" src="s" column="crba001" table="crba_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="q_ooag001_6" c_zoom="q_ooag001_6" chk_ref="v_ooag001" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[業務人員：
+   ●欄位控管：
+     預設值:g_user
+     校驗:1.輸入值須存在[T:員工檔].[C:員工編號]且為有效資料
+     帶值:1.顯示時以crba001值到[T:員工檔]抓取[C:聯絡對象識別碼],再以[C:聯絡對象識別碼]
+            到[T:聯絡對象檔]中抓取[C:全名]到本欄位後面顯示
+          2.依據crba001的值到[T:員工檔]抓取[C:歸屬部門]的值，並預設到crba002(業務部門)欄位上
+
+   ●開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：[T:員工檔].[C:員工編號],[T:聯絡對象檔].[C:全名]
+     新增或修改時過濾條件：[T:員工檔].[C:聯絡對象識別碼]=[T:聯絡對象檔].[C:聯絡對象識別碼]且為有效資料
+     回值類型：查詢時多重回值;新增或修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba002" ver="1" src="s" column="crba002" table="crba_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="q_ooeg001" c_zoom="q_ooeg001" chk_ref="v_ooeg001" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[業務部門：
+   ●欄位控管：
+     預設值:g_dept
+     校驗:1.輸入值須存在[T:組織基本資料檔].[C:組織編號]WHERE [C:部門否]='Y' 且為有效資料
+     帶值:1.自動帶出[T:組織多語言檔].[C:說明(簡稱)]到[C:部門名稱]
+
+   ●開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：[T:組織基本資料檔].[C:組織編號],[T:組織多語言檔].[C:說明(簡稱)]
+     查詢時過濾條件：[T:組織基本資料檔].[C:部門否]='Y'
+     新增/修改時過濾條件：[T:組織基本資料檔].[C:部門否]='Y' 且有效資料
+     回值類型：查詢時多重回值，新增/修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba003" ver="1" src="s" column="crba003" table="crba_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="q_ooag001_6" c_zoom="q_ooag001_6" chk_ref="v_ooag001" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[負責業務：
+   ●欄位控管：
+     校驗:1.輸入值須存在人員檔裡且為有效資料
+     帶值:人員全名
+
+   ●開窗處理：
+     參考函式：q_ooag001_6]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba004" ver="1" src="s" column="crba004" table="crba_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[處理期限：
+   ●欄位控管：
+     預設值:NULL
+     校驗:1.不可空白]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba005" ver="1" src="s" column="crba005" table="crba_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[結案日期：
+   ●欄位控管：
+     Display only
+     預設值:NULL]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba006" ver="1" src="s" column="crba006" table="crba_t" attribute="C203" type="varchar2(20)" req="N" i_zoom="q_crba026" c_zoom="q_crba026" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[原銷售單號：
+   ●欄位控管：
+     校驗:1.輸入值須存在artt600且為審核過賬資料
+     帶值:1.如果開窗或者銷售單號與項次都不為空時，自動帶出來源單號,原銷售日期,客戶訂單,客戶編號,客戶簡稱,會員卡號,會員編號,會員姓名,產品編號,品名,規格,幣種,匯率,單價,負責業務........顯示
+     2.原銷售單號不為空但項次為空時，自動帶出來源單號,原銷售日期,客戶訂單,客戶編號,客戶簡稱,會員卡號,會員編號,會員姓名,負責業務........顯示
+
+   ●開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：來源類型，來源單號，銷售單號,銷售日期,送貨客戶編號,客戶簡稱,會員卡號,會員編號,姓名,銷售項次,產品編號,品名,規格
+     新增/修改過濾條件：已审核过账的资料
+     回值類型：查詢時多重回值;新增或修改時回值两个 銷售单号与项次crba007]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba007" ver="1" src="s" column="crba007" table="crba_t" attribute="N004" type="number(10,0)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[原銷售項次：
+   ●欄位控管：
+     校驗:1.輸入值須存在artt600且為審核過賬資料
+     帶值:1.自動帶出原銷售日期,客戶訂單,客戶編號,客戶簡稱,會員卡號,會員編號,會員姓名,產品編號,品名,規格,幣種,匯率,單價,負責業務........顯示
+     計算或處理:1.需是crba006這筆出貨單號中存在的項次]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba008" ver="1" src="s" column="crba008" table="crba_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba009" ver="1" src="s" column="crba009" table="crba_t" attribute="C004" type="varchar2(10)" req="N" i_zoom="q_pmaa001_13" c_zoom="q_pmaa001_13" chk_ref="v_pmaa001_3" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[客戶編號：
+   ●欄位控管：
+     校驗:1.輸入值須存在pmaa_t且為有效資料,且確認的資料
+     帶值:1.自動帶出pmaal004客戶簡稱到crba010
+     計算或處理:1.抓取對象類型為2.客戶或3.交易對象               
+
+   ●開窗處理：
+     參考函式：q_pmaa001_13]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba010" ver="1" src="s" column="crba010" table="crba_t" attribute="C101" type="varchar2(80)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba011" ver="1" src="s" column="crba011" table="crba_t" attribute="C602" type="varchar2(30)" req="N" i_zoom="q_mmaq001_2" c_zoom="q_mmaq001_2" chk_ref="v_mmaq001" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[會員卡號：
+   ●欄位控管：
+     校驗:1.輸入值須存在mmaq_t.mmaq001的資料
+     帶值:1.自動帶出mmaq003會員編號到crba012
+          2.根據crba012自動帶出mmaf_t.mmaf008到crba013,mmaf016到crba009 再带出客户简称
+               
+   ●開窗處理：
+     參考函式：q_mmaq001_2]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba012" ver="1" src="s" column="crba012" table="crba_t" attribute="C602" type="varchar2(30)" req="N" i_zoom="q_mmaf001" c_zoom="q_mmaf001" chk_ref="v_mmaf001" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[會員編號：
+   ●欄位控管：
+     校驗:1.輸入值須存在mmaq_t.mmaf001的資料
+     帶值:1.自動帶出mmaf008會員姓名到crba013,mmaf016到crba009   再带出客户简稱              
+
+   ●開窗處理：
+     參考函式：q_mmaf001]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba013" ver="1" src="s" column="crba013" table="crba_t" attribute="N101" type="number(20, 6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba014" ver="1" src="s" column="crba014" table="crba_t" attribute="C552" type="varchar2(20)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba015" ver="1" src="s" column="crba015" table="crba_t" attribute="C203" type="varchar2(20)" req="N" i_zoom="q_crba015" c_zoom="q_crba015" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[客戶訂單：
+   ●欄位控管：
+     校驗:1.輸入值須存在【零售订单资料档】且為審核過賬資料
+     帶值:1.自動帶出客戶編號,客戶簡稱,會員卡號,會員編號,會員姓名,負責業務........顯示
+
+   ●開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：訂單單號,訂單日期,客戶編號,客戶簡稱,會員卡號,會員編號,姓名
+     新增/修改過濾條件：已审核过账的资料
+     回值類型：查詢時多重回值;新增或修改時單一回值]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba016" ver="1" src="s" column="crba016" table="crba_t" attribute="C301" type="varchar2(40)" req="N" i_zoom="q_imaa001" c_zoom="q_imaa001" chk_ref="v_imaa001" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[產品編號：
+   ●欄位控管：
+     校驗:1輸入值須存在imaa_t.imaa001且為有效資料
+     帶值:1.自動帶出 品名imaal003, 規格imaal004...顯示
+
+   ●開窗處理：
+     參考函式：q_imaa001]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba017" ver="1" src="s" column="crba017" table="crba_t" attribute="C302" type="varchar2(255)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba018" ver="1" src="s" column="crba018" table="crba_t" attribute="C008" type="varchar2(10)" req="N" i_zoom="q_ooai001_1" c_zoom="q_ooai001_1" chk_ref="v_ooai001" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[幣別：
+   ●欄位控管：
+     校驗:1輸入值須存在ooai_t.ooai001且為有效資料
+     帶值:1.自動帶出說明ooail003..顯示
+          2.根据aoos020中内销外币使用汇率来源  aooi160 根据币别抓取相应的汇率 显示到crba019
+
+   ●開窗處理：
+     參考函式：q_aooi001_1]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba019" ver="1" src="s" column="crba019" table="crba_t" attribute="N203" type="number(20,10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="1" max="" min="&gt;=,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[汇率：
+   ●欄位控管：
+     預設值:1
+     校驗:1.不可小於0]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba020" ver="1" src="s" column="crba020" table="crba_t" attribute="N201" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max="" min="&gt;=,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[单价：
+   ●欄位控管：
+     預設值:0
+     校驗:1.不可小於0]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba021" ver="1" src="s" column="crba021" table="crba_t" attribute="N003" type="number(15,3)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max="" min="&gt;=,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[客诉数量：
+   ●欄位控管：
+     預設值:0
+     校驗:1.不可小於0]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba022" ver="1" src="s" column="crba022" table="crba_t" attribute="N003" type="number(15,3)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max="" min="&gt;=,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[补货数量：
+   ●欄位控管：
+     預設值:0
+     校驗:1.不可小於0]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba023" ver="1" src="s" column="crba023" table="crba_t" attribute="N003" type="number(15,3)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max="" min="&gt;=,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[换货数量：
+   ●欄位控管：
+     預設值:0
+     校驗:1.不可小於0]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba024" ver="1" src="s" column="crba024" table="crba_t" attribute="N003" type="number(15,3)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max="" min="&gt;=,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[销退数量：
+   ●欄位控管：
+     預設值:0
+     校驗:1.不可小於0]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba025" ver="1" src="s" column="crba025" table="crba_t" attribute="N202" type="number(20,6)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max="" min="&gt;=,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[折价金额：
+   ●欄位控管：
+     預設值:0
+     校驗:1.不可小於0]]>
+  </field>
+  <field cite_std="N" name="crba_t.crba026" ver="1" src="s" column="crba026" table="crba_t" attribute="C203" type="varchar2(20)" req="N" i_zoom="q_crba026" c_zoom="q_crba026" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[來源單號：
+   ●欄位控管：
+     校驗:1.輸入值須存在artt600（rtia033)且為審核過賬資料
+     帶值:1.如果開窗或來源單號,銷售單號與項次都不為空時，自動帶出原銷售單號,原銷售日期,客戶訂單,客戶編號,客戶簡稱,會員卡號,會員編號,會員姓名,產品編號,品名,規格,幣種,匯率,單價,負責業務........顯示
+          2.如果手工KEY單號，自動帶出原銷售單號,原銷售日期,客戶訂單,客戶編號,客戶簡稱,會員卡號,會員編號,會員姓名，負責業務........顯示
+   ●開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：來源類型,來源單號,銷售單號,銷售日期,送貨客戶編號,客戶簡稱,會員卡號,會員編號,姓名,銷售項次,產品編號,品名,規格
+     新增/修改過濾條件：已审核过账的资料
+     回值類型：查詢時多重回值;新增或修改時三個回值 來源單號crba026,銷售单号crbadocno与项次crba007]]>
+  </field>
+  <field cite_std="N" name="crba_t.crbacnfdt" ver="1" src="s" column="crbacnfdt" table="crba_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="crba_t.crbacnfid" ver="1" src="s" column="crbacnfid" table="crba_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="crba_t.crbacrtdp" ver="1" src="s" column="crbacrtdp" table="crba_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="crba_t.crbacrtdt" ver="1" src="s" column="crbacrtdt" table="crba_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="crba_t.crbacrtid" ver="1" src="s" column="crbacrtid" table="crba_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="crba_t.crbadocdt" ver="1" src="s" column="crbadocdt" table="crba_t" attribute="D001" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[客訴日期：
+   ●欄位控管:
+     預設值:g_today
+     校驗:1.不允許空白]]>
+  </field>
+  <field cite_std="N" name="crba_t.crbadocno" ver="1" src="s" column="crbadocno" table="crba_t" attribute="C203" type="varchar2(20)" req="Y" i_zoom="q_ooba002_1" c_zoom="q_crbadocno" chk_ref="v_ooba002" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[客訴單號：
+   ●欄位控管：
+     校驗:1.不允許空白
+     計算或處理:1.當新增時才可輸入單別，修改時此欄位為NoEntry
+                2.新增存檔時，呼叫應用元件s_aooi200_gen_docno自動編申請單號
+
+   ●開窗處理：
+        1.查詢時：
+          參考函式：依標準查詢視窗
+          查詢欄位：[T:客訴單維護單頭檔].[C:客訴單號],[T:客訴單維護單頭檔].[C:客訴日期],
+                    [T:客訴單維護單頭檔].[C:狀態],[T:客訴單維護單頭檔].[C:負責業務],
+                    [T:客訴單維護單頭檔].[C:業務部門]
+          回值類型：多重回值
+        2.新增：
+          參考函式：依標準查詢視窗
+          查詢欄位：[T:單據別檔].[C:單據別],[T:單據別檔].[C:說明]
+          查詢條件：[T:單據別檔].[C:參照表號] = 當前登入組織設定的單據別使用參照表
+                    AND [T:單據別檔].[C:對應程式代號] ='acrt410'
+                    AND [T:單據別檔].[C:資料狀態碼] = 'Y'
+          回值類型：單一傳回]]>
+  </field>
+  <field cite_std="N" name="crba_t.crbamoddt" ver="1" src="s" column="crbamoddt" table="crba_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="crba_t.crbamodid" ver="1" src="s" column="crbamodid" table="crba_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="crba_t.crbaowndp" ver="1" src="s" column="crbaowndp" table="crba_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="crba_t.crbaownid" ver="1" src="s" column="crbaownid" table="crba_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="crba_t.crbasite" ver="1" src="s" column="crbasite" table="crba_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="q_ooed004" c_zoom="q_ooef001_4" chk_ref="v_ooed004" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[營運組織：
+●欄位控管：
+  預設值:g_site
+  計算或處理:錄入時只能錄當前據點或下級據點
+●開窗處理：
+  參考函式：依標準查詢視窗 
+  查詢欄位：[T:組織基本資料檔][C:組織編號],[T:多語言檔][C:說明(簡稱)]
+  回值類型：新增/修改時單一回值，查詢時(多重回值)]]>
+  </field>
+  <field cite_std="N" name="crba_t.crbastus" ver="1" src="s" column="crbastus" table="crba_t" attribute="C822" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="crbb_t.crbb001" ver="1" src="s" column="crbb001" table="crbb_t" attribute="C104" type="varchar2(500)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="crbb_t.crbb002" ver="1" src="s" column="crbb002" table="crbb_t" attribute="C105" type="varchar2(255)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="crbb_t.crbbseq" ver="1" src="s" column="crbbseq" table="crbb_t" attribute="N004" type="number(10,0)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;,0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[項次：
+     預設值:首行默認為1
+     校驗:1.不允許空白
+            2.不可小於0
+     計算或處理:1.自動加1
+               2.首行默認為1]]>
+  </field>
+  <field cite_std="N" name="crbb_t.crbbsite" ver="1" src="s" column="crbbsite" table="crbb_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設單頭site值
+欄位隱藏]]>
+  </field>
+  <field cite_std="N" name="imaal004" ver="1" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_crba001_desc" src="s" depend_field="b_crba001" correspon_key="&apos;2&apos;,crba001" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="b_crba002_desc" src="s" depend_field="b_crba002" correspon_key="crba002" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_crbasite_desc" src="s" depend_field="b_crbasite" correspon_key="crbasite" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="crba001_desc" src="s" depend_field="crba_t.crba001" correspon_key="&apos;2&apos;,crba001" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="crba002_desc" src="s" depend_field="crba_t.crba002" correspon_key="crba002" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="crba003_desc" src="s" depend_field="crba_t.crba003" correspon_key="&apos;2&apos;,crba003" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="crba018_desc" src="s" depend_field="crba_t.crba018" correspon_key="crba018" ref_table="ooail_t" ref_fk="ooailent,ooail001" ref_dlang="ooail002" ref_rtn="ooail003" status=""/>
+    <rfield cite_std="N" ver="1" name="crbacnfid_desc" src="s" depend_field="crba_t.crbacnfid" correspon_key="&apos;2&apos;,crbacnfid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="crbacrtdp_desc" src="s" depend_field="crba_t.crbacrtdp" correspon_key="crbacrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="crbacrtid_desc" src="s" depend_field="crba_t.crbacrtid" correspon_key="&apos;2&apos;,crbacrtid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="crbamodid_desc" src="s" depend_field="crba_t.crbamodid" correspon_key="&apos;2&apos;,crbamodid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="crbaowndp_desc" src="s" depend_field="crba_t.crbaowndp" correspon_key="crbaowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="crbaownid_desc" src="s" depend_field="crba_t.crbaownid" correspon_key="&apos;2&apos;,crbaownid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="crbasite_desc" src="s" depend_field="crba_t.crbasite" correspon_key="crbasite" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_crba001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_crba002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_crba004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_crba005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_crbadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_crbadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_crbasite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba023" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba024" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba025" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crba026" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crbacnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crbacnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crbacrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crbacrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crbacrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crbadocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crbadocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crbamoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crbamodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crbaowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crbaownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crbasite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crba_t.crbastus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crbb_t.crbb001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crbb_t.crbb002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crbb_t.crbbseq" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="crbb_t.crbbsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="imaal004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="audit" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="closed" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="confirm_record" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="method" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reason" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="remarks" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="result" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_crbasite" text="營運據點" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_crbadocdt" text="客訴日期" lstr=""/>
+    <sfield name="lbl_crbadocno" text="客訴單號" lstr=""/>
+    <sfield name="lbl_crba004" text="處理期限" lstr=""/>
+    <sfield name="lbl_crba005" text="結案日期" lstr=""/>
+    <sfield name="lbl_crba001" text="處理人員" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_crba002" text="處理部門" lstr=""/>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_crba026" text="來源單號" lstr=""/>
+    <sfield name="lbl_crba006" text="原銷售單號" lstr=""/>
+    <sfield name="lbl_crba007" text="原銷售項次" lstr=""/>
+    <sfield name="lbl_crba008" text="原銷售日期" lstr=""/>
+    <sfield name="lbl_crba014" text="發票號碼" lstr=""/>
+    <sfield name="lbl_crba015" text="客戶訂單" lstr=""/>
+    <sfield name="lbl_crba011" text="會員卡號" lstr=""/>
+    <sfield name="lbl_crba012" text="會員編號" lstr=""/>
+    <sfield name="lbl_crba013" text="會員姓名" lstr=""/>
+    <sfield name="lbl_crba009" text="客戶編號" lstr=""/>
+    <sfield name="lbl_crba010" text="客戶簡稱" lstr=""/>
+    <sfield name="lbl_crba003" text="負責業務" lstr=""/>
+    <sfield name="page_2" text="商品資料" lstr=""/>
+    <sfield name="lbl_crba016" text="產品編號" lstr=""/>
+    <sfield name="lbl_crba017" text="品名" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="lbl_crba018" text="幣別" lstr=""/>
+    <sfield name="lbl_ooail003" text="說明" lstr=""/>
+    <sfield name="lbl_crba019" text="匯率" lstr=""/>
+    <sfield name="lbl_crba020" text="單價" lstr=""/>
+    <sfield name="lbl_crba021" text="客訴數量" lstr=""/>
+    <sfield name="lbl_crba022" text="補貨數量" lstr=""/>
+    <sfield name="lbl_crba023" text="換貨數量" lstr=""/>
+    <sfield name="lbl_crba024" text="銷貨退回" lstr=""/>
+    <sfield name="lbl_crba025" text="折讓金額" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="lbl_crbbseq" text="項次" lstr=""/>
+    <sfield name="lbl_crbb001" text="客訴內容" lstr=""/>
+    <sfield name="lbl_crbb002" text="備註" lstr=""/>
+    <sfield name="lbl_crbbsite" text="營運據點" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_collect_gzze001" text="訊息代碼" lstr=""/>
+    <sfield name="lbl_collect_gzze003" text="訊息內容" lstr=""/>
+    <sfield name="lbl_collect_gzze006" text="進階訊息" lstr=""/>
+    <sfield name="lbl_cl_err_s02_accept" text="確定" lstr=""/>
+    <sfield name="lbl_err_detail" text="進階訊息" lstr=""/>
+    <sfield name="lbl_suggest_exe" text="建議執行" lstr=""/>
+    <sfield name="lbl_err_contact" text="反應問題" lstr=""/>
+    <sfield name="lbl_cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="lbl_group_cl_err_s01" text="進階訊息" lstr=""/>
+    <sfield name="lbl_gzze001" text="訊息代碼:" lstr=""/>
+    <sfield name="lbl_gzze006" text="訊息內容:" lstr=""/>
+    <sfield name="lbl_sqlerrd2" text="SQL錯誤碼:" lstr=""/>
+    <sfield name="lbl_gzxm001" text="QBE編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm005" text="設為首頁-自動查詢方案" lstr=""/>
+    <sfield name="lbl_gzxm002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxm003" text="員工編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm004" text="設為預設查詢條件" lstr=""/>
+    <sfield name="cl_qbe_s02.bpage_1" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn005" text="欄位說明" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="cl_qbe_s02_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s02_Cancel" text="取消" lstr=""/>
+    <sfield name="lbl_funid" text="函式代碼" lstr=""/>
+    <sfield name="lbl_fundesc" text="函式說明" lstr=""/>
+    <sfield name="cl_qbe_s01_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s01_Cancel" text="取消" lstr=""/>
+    <sfield name="cl_qbe_s03.bpage_1" text="查詢方案列表" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxmstus" text="有效" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm004" text="預設" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm005" text="顯示於首頁" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm009" text="順序" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxml005" text="查詢方案說明" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm007" text="自設SQL條件" lstr=""/>
+    <sfield name="cl_qbe_s03.page_2" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn004" text="序號" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn005" text="條件欄位" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="lbl_crbcsite" text="客訴組織" lstr=""/>
+    <sfield name="lbl_crbcdocno" text="客訴單號" lstr=""/>
+    <sfield name="lbl_crbc000" text="類別" lstr=""/>
+    <sfield name="lbl_crbc001" text="主辦人員" lstr=""/>
+    <sfield name="lbl_crbc002" text="確認人員" lstr=""/>
+    <sfield name="lbl_crbc003" text="責任單位" lstr=""/>
+    <sfield name="lbl_crbeseq" text="項次" lstr=""/>
+    <sfield name="lbl_crbe001e" text="結案注記" lstr=""/>
+    <sfield name="lbl_crbe002" text="備註" lstr=""/>
+    <sfield name="lbl_crbesite" text="營運據點" lstr=""/>
+    <sfield name="lbl_crbe001c" text="確認記錄" lstr=""/>
+    <sfield name="lbl_crbe001a" text="調查結果" lstr=""/>
+    <sfield name="lbl_crbe001d" text="核決" lstr=""/>
+    <sfield name="lbl_crbe001b" text="處理對策及改善對策" lstr=""/>
+    <sfield name="lbl_ooff001" text="備註類型" lstr=""/>
+    <sfield name="lbl_ooff002" text="第一KEY值" lstr=""/>
+    <sfield name="lbl_ooff004" text="第三KEY值" lstr=""/>
+    <sfield name="lbl_ooff005" text="第四KEY值" lstr=""/>
+    <sfield name="lbl_ooff006" text="第五KEY值" lstr=""/>
+    <sfield name="lbl_ooff007" text="第六KEY值" lstr=""/>
+    <sfield name="lbl_ooff008" text="第七KEY值" lstr=""/>
+    <sfield name="lbl_ooff009" text="第八KEY值" lstr=""/>
+    <sfield name="lbl_ooff010" text="第九KEY值" lstr=""/>
+    <sfield name="lbl_ooff011" text="第十KEY值" lstr=""/>
+    <sfield name="lbl_ooff003" text="單據項次" lstr=""/>
+    <sfield name="lbl_ooff012" text="控制類型" lstr=""/>
+    <sfield name="lbl_ooff013" text="備註" lstr=""/>
+    <sfield name="lbl_ooff014" text="失效日期" lstr=""/>
+    <sfield name="lbl_crbdseq" text="項次" lstr=""/>
+    <sfield name="lbl_crbd001" text="客訴原因編號" lstr=""/>
+    <sfield name="lbl_crbd001_desc" text="說明" lstr=""/>
+    <sfield name="lbl_crbd002" text="備註" lstr=""/>
+    <sfield name="lbl_crbdsite" text="營運據點" lstr=""/>
+    <sfield name="page_cl_doc_s01_page1" text="相關文件清單" lstr=""/>
+    <sfield name="lbl_loaa006" text="文件版本" lstr=""/>
+    <sfield name="lbl_loaa007" text="文件序號" lstr=""/>
+    <sfield name="lbl_loaa011" text="文件型態" lstr=""/>
+    <sfield name="lbl_loaa013" text="文件說明" lstr=""/>
+    <sfield name="lbl_loaa010" text="文件原始檔名" lstr=""/>
+    <sfield name="btn_upload" text="本地文件上傳" lstr=""/>
+    <sfield name="btn_crt_text" text="新建純文字紀錄" lstr=""/>
+    <sfield name="btn_doccrt_url" text="新建URL" lstr=""/>
+    <sfield name="btn_docopen" text="文件下載" lstr=""/>
+    <sfield name="btn_docupdate" text="文件資料修改" lstr=""/>
+    <sfield name="btn_docremove" text="文件刪除" lstr=""/>
+    <sfield name="btn_exit" text="關閉功能" lstr=""/>
+    <sfield name="page_cl_doc_s01_page2" text="文件基本資料" lstr=""/>
+    <sfield name="lbl_loaa004" text="用途類別" lstr=""/>
+    <sfield name="lbl_loaa005" text="預設顯示圖片" lstr=""/>
+    <sfield name="lbl_loaa012" text="文件位置(URL)" lstr=""/>
+    <sfield name="page_cl_doc_s01_page4" text="權限設定" lstr=""/>
+    <sfield name="group_read" text="讀取權限" lstr=""/>
+    <sfield name="group_modify" text="修改權限" lstr=""/>
+    <sfield name="page_cl_doc_s01_page3" text="異動資訊" lstr=""/>
+    <sfield name="btn_doccancel" text="放棄修改" lstr=""/>
+    <sfield name="btn_docmodify" text="資料存檔" lstr=""/>
+    <sfield name="lbl_gzxp007_1" text="選擇分類" lstr=""/>
+    <sfield name="add_catalog" text="" lstr=""/>
+    <sfield name="lbl_gzxp007_2" text="自訂分類" lstr=""/>
+    <sfield name="lbl_gzxp008" text="追蹤說明" lstr=""/>
+    <sfield name="accept" text="確定" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="follow_list" text="待追蹤" lstr=""/>
+    <sfield name="signature_list" text="待簽核" lstr=""/>
+    <sfield name="announcement" text="作業公告" lstr=""/>
+    <sfield name="cancelfollow" text="取消追蹤" lstr=""/>
+    <sfield name="assigncatalog" text="指定分類" lstr=""/>
+    <sfield name="cl_user_overview_s01.lbl_name" text="" lstr=""/>
+    <sfield name="lbl_gzxp002" text="作業名稱" lstr=""/>
+    <sfield name="lbl_gzxp006" text="單據日期" lstr=""/>
+    <sfield name="add_favorite_catalog" text="新增目錄" lstr=""/>
+    <sfield name="modify_favorite_desc" text="修改" lstr=""/>
+    <sfield name="favorite_del" text="移除" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_ooef001" text="組織編號" lstr=""/>
+    <sfield name="lbl_crbastus" text="狀態碼" lstr=""/>
+    <sfield name="lbl_ooag001" text="員工編號" lstr=""/>
+    <sfield name="lbl_ooag003" text="歸屬部門" lstr=""/>
+    <sfield name="lbl_ooeg001" text="部門編號" lstr=""/>
+    <sfield name="lbl_rtja032" text="資料來源" lstr=""/>
+    <sfield name="lbl_rtja033" text="資料來源單號" lstr=""/>
+    <sfield name="lbl_rtjadocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_rtjadocdt" text="單據日期" lstr=""/>
+    <sfield name="lbl_rtja010" text="送貨客戶編號" lstr=""/>
+    <sfield name="lbl_pmaal004" text="交易對象簡稱" lstr=""/>
+    <sfield name="lbl_rtja001" text="會員卡號" lstr=""/>
+    <sfield name="lbl_mmaq003" text="會員編號" lstr=""/>
+    <sfield name="lbl_mmaa008" text="會員姓名" lstr=""/>
+    <sfield name="lbl_rtjbseq" text="項次" lstr=""/>
+    <sfield name="lbl_rtjb004" text="商品編號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_rtjb001" text="來源單號" lstr=""/>
+    <sfield name="lbl_xmdadocdt" text="訂單日期" lstr=""/>
+    <sfield name="lbl_rtja002" text="客戶編號" lstr=""/>
+    <sfield name="lbl_mmaq001" text="會員卡號" lstr=""/>
+    <sfield name="lbl_mmaq002" text="卡種編號" lstr=""/>
+    <sfield name="lbl_mmanl003" text="說明" lstr=""/>
+    <sfield name="lbl_mmaf008" text="會員姓名" lstr=""/>
+    <sfield name="lbl_mmaf014" text="會員手機號碼" lstr=""/>
+    <sfield name="lbl_mmaf001" text="會員編號" lstr=""/>
+    <sfield name="lbl_mmaf015" text="會員出生日期" lstr=""/>
+    <sfield name="lbl_pmaa001" text="交易對象編號" lstr=""/>
+    <sfield name="lbl_imaa001" text="料號" lstr=""/>
+    <sfield name="lbl_ooai001" text="幣別編號" lstr=""/>
+    <sfield name="lbl_ooail004" text="助記碼" lstr=""/>
+    <sfield name="lbl_ooea001" text="組織編號" lstr=""/>
+    <sfield name="lbl_ooeal003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_ooed004" text="組織編號" lstr=""/>
+    <sfield name="lbl_ooba002" text="單據別編號" lstr=""/>
+    <sfield name="lbl_oobxl003" text="說明" lstr=""/>
+    <sfield name="lbl_oobxl004" text="助記碼" lstr=""/>
+    <sfield name="cl_ask_s04_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s03_Test" text="測試" lstr=""/>
+    <sfield name="cl_ask_s03_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s01_Choice" text="選擇" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" lstr=""/>
+    <sfield name="lbl_oocq002" text="應用分類碼" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_oofd001" text="備註類型" lstr=""/>
+    <sfield name="lbl_oofd002" text="第一key值" lstr=""/>
+    <sfield name="lbl_oofd012" text="備註說明" lstr=""/>
+    <sfield name="lbl_oofe001" text="備註類型" lstr=""/>
+    <sfield name="lbl_oofe002" text="第一key值" lstr=""/>
+    <sfield name="lbl_oofe003" text="第二key值" lstr=""/>
+    <sfield name="lbl_oofe007" text="備註說明" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="cl_progress_bar_Current" text="目前進度" lstr=""/>
+    <sfield name="cl_progress_bar_Total" text="全部" lstr=""/>
+    <sfield name="cl_progress_bar_%" text="%" lstr=""/>
+    <sfield name="lbl_select" text="選擇" lstr=""/>
+    <sfield name="lbl_gzgdl002" text="樣版說明" lstr=""/>
+    <sfield name="lbl_gzgd003" text="客製否" lstr=""/>
+    <sfield name="lbl_gzgd007" text="樣版名稱(4rp)" lstr=""/>
+    <sfield name="lbl_rep_fmt" text="輸出格式" lstr=""/>
+    <sfield name="lbl_outputformat_1" text="預覽與列印(SVG)" lstr=""/>
+    <sfield name="lbl_outputformat_2" text="Adobe Acrobat (PDF)" lstr=""/>
+    <sfield name="lbl_outputformat_3" text="Microsoft Excel (XLS)" lstr=""/>
+    <sfield name="lbl_outputformat_4" text="Microsoft Excel (XLS) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_5" text="Microsoft Excel (XLSX)" lstr=""/>
+    <sfield name="lbl_outputformat_6" text="Microsoft Excel (XLSX) - 每頁獨立工作簿" lstr=""/>
+    <sfield name="lbl_outputformat_7" text="Microsoft Word (RTF)" lstr=""/>
+    <sfield name="lbl_outputformat_8" text="網頁 (HTML)" lstr=""/>
+    <sfield name="lbl_outputformat_9" text="郵件 (Mail)" lstr=""/>
+    <sfield name="lbl_set_default" text="設為預設樣版" lstr=""/>
+    <sfield name="lbl_btn_accept" text="確定" lstr=""/>
+    <sfield name="lbl_btn_cancel" text="放棄" lstr=""/>
+    <sfield name="lbl_gzza003" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzza001" text="程式編號" lstr=""/>
+    <sfield name="lbl_gzza002" text="程式類別" lstr=""/>
+    <sfield name="lbl_gzde002" text="歸屬模組" lstr=""/>
+    <sfield name="lbl_gzde001" text="規格編號" lstr=""/>
+    <sfield name="lbl_gzdel003" text="說明" lstr=""/>
+    <sfield name="lbl_gzdf002" text="子畫面規格編號" lstr=""/>
+    <sfield name="lbl_gzdfl003" text="子畫面檔案名稱" lstr=""/>
+    <sfield name="lbl_gzcbl004" text="說明" lstr=""/>
+    <sfield name="lbl_gzde003" text="規格類別" lstr=""/>
+    <sfield name="lbl_dzfv004" text="畫面代號" lstr=""/>
+    <sfield name="lbl_dzfv005" text="主/子程式" lstr=""/>
+    <sact name="audit" text="核決" lstr=""/>
+    <sact name="closed" text="結案註記" lstr=""/>
+    <sact name="confirm_record" text="客訴單確認記錄" lstr=""/>
+    <sact name="method" text="處理對策及改善對策" lstr=""/>
+    <sact name="reason" text="客訴原因" lstr=""/>
+    <sact name="remarks" text="備註" lstr=""/>
+    <sact name="result" text="調查結果" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

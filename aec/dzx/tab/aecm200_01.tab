@@ -1,0 +1,69 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aecm200_01" module="aec" jobmode="N" type="c03a" industry="std" fix_arg="0" crtid="02482" crtdt="" modid="02482" moddt="2013-11-13 16:17:40" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="多上站作業資料">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="ecbb001,ecbb002,ecbb003,ecbb004,ecbb004_desc(chr80),ecbb005"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="ecbeseq,ecbe004,ecbe004_desc(chr500),ecbe005"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="insert" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="aec" filename="aecm200_01" method="dialog">
+    <section id="input">
+      <input id="head" field="ecbb001,ecbb002,ecbb003,ecbb004,ecbb005"/>
+      <input id="body" page="1" field="ecbeseq,ecbe004,ecbe005" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="ecbb001,ecbb002,ecbb003,ecbb004,ecbb005"/>
+      <construct id="body" page="1" field="ecbeseq,ecbe004,ecbe005"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="ecbb001,ecbb002,ecbb003"/>
+      <set id="head" type="no_entry" field="ecbb001,ecbb002,ecbb003"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="ecbb001">
+        <controlp form="q_imaa001" state="i"/>
+        <controlp form="q_imaa001" state="c"/>
+      </column>
+      <column id="ecbb002"/>
+      <column id="ecbb003"/>
+      <column id="ecbb004">
+        <after>
+          <reference field="ecbb004_desc" ref_field="ecbb_t.ecbb004" map_field="ecbbent,ecbb004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="ecbb004_desc"/>
+      <column id="ecbb005"/>
+    </init>
+    <init id="body" page="1">
+      <column id="ecbeseq"/>
+      <column id="ecbe004">
+        <after>
+          <reference field="ecbe004_desc" ref_field="ecbe_t.ecbe004" map_field="ecbeent,ecbe004" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ecbb004" state="i"/>
+      </column>
+      <column id="ecbe004_desc"/>
+      <column id="ecbe005"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="ecbb_t" pk="ecbb001,ecbb002,ecbb003">
+      <sql id="forupd_sql" type="sql" query="SELECT ecbb001,ecbb002,ecbb003,ecbb004,&apos;&apos;,ecbb005 FROM ecbb_t WHERE ecbbent= ? AND ecbbsite= ? AND ecbb001=? AND ecbb002=? AND ecbb003=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT ecbb001,ecbb002,ecbb003,ecbb004,&apos;&apos;,ecbb005 FROM ecbb_t" order="ecbb001,ecbb002,ecbb003"/>
+    </head>
+    <body id="ecbe_t" page="1" linked="" pk="ecbeseq" fk="ecbe001,ecbe002,ecbe003">
+      <sql id="forupd_sql_detail" query="SELECT ecbeseq,ecbe004,&apos;&apos;,ecbe005 FROM ecbe_t WHERE ecbeent=? AND ecbesite=? AND ecbe001=? AND ecbe002=? AND ecbe003=? AND ecbeseq=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT ecbeseq,ecbe004,&apos;&apos;,ecbe005 FROM ecbe_t WHERE "/>
+    </body>
+  </dataset>
+</assembly>
+

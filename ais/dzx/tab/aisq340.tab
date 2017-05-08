@@ -1,0 +1,74 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="aisq340" module="ais" jobmode="N" type="q02" industry="std" fix_arg="0" crtid="05016" crtdt="2014-12-19 16:02:32" modid="04152" moddt="2015-02-26 14:07:35" sdver="0003" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="發票收款查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isafcomp,isafcomp_desc(chr500),isafdocno,isafdocdt,isaf055,isaf055_desc(chr500),isaf100,isaf056,isbc001,isbc002,isbadocno,isbadocdt,isba001,isba001_desc(chr500),isba002,isba002_desc(chr500),isbc103,isbc104"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="isafcomp(b_isafcomp),isafcomp_desc(b_isafcomp_desc),isafdocno(b_isafdocno),isafdocdt(b_isafdocdt),isaf055(b_isaf055),isaf055_desc(isaf055_desc),isaf100(b_isaf100),isaf056(b_isaf056),isbc001(b_isbc001),isbc002(b_isbc002),isbadocno(b_isbadocno),isbadocdt(b_isbadocdt),isba001(b_isba001),isba001_desc(isba001_desc),isba002(b_isba002),isba002_desc(isba002_desc),isbc103(b_isbc103),isbc104(b_isbc104)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="ais" filename="aisq340" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="isafcomp,isafdocno,isafdocdt,isaf055,isaf100,isaf056,isbc001,isbc002,isbadocno,isbadocdt,isba001,isba002,isbc103,isbc104" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="body" page="1" field="isafcomp(b_isafcomp),isafdocno(b_isafdocno),isafdocdt(b_isafdocdt),isaf055(b_isaf055),isaf100(b_isaf100),isaf056(b_isaf056),isbc001(b_isbc001),isbc002(b_isbc002),isbadocno(b_isbadocno),isbadocdt(b_isbadocdt),isba001(b_isba001),isba002(b_isba002),isbc103(b_isbc103),isbc104(b_isbc104)"/>
+    </section>
+    <init id="field_set">
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="body" page="1">
+      <column id="isafcomp">
+        <after>
+          <reference field="isafcomp_desc" ref_field="isafcomp" map_field="isafent,isafcomp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_2" state="c"/>
+      </column>
+      <column id="isafcomp_desc"/>
+      <column id="isafdocno">
+        <after>
+          <check chkid="v_ooba002" id="isExist"/>
+        </after>
+        <controlp form="q_isafdocno" state="c"/>
+      </column>
+      <column id="isafdocdt"/>
+      <column id="isaf055">
+        <after/>
+      </column>
+      <column id="isaf055_desc"/>
+      <column id="isaf100">
+        <controlp form="q_aooi001_1" state="c"/>
+      </column>
+      <column id="isaf056"/>
+      <column id="isbc001"/>
+      <column id="isbc002"/>
+      <column id="isbadocno"/>
+      <column id="isbadocdt"/>
+      <column id="isba001">
+        <after/>
+      </column>
+      <column id="isba001_desc"/>
+      <column id="isba002">
+        <after/>
+      </column>
+      <column id="isba002_desc"/>
+      <column id="isbc103"/>
+      <column id="isbc104"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="isaf_t" page="1" linked="" pk="isafcomp,isafdocno">
+      <sql id="b_fill_sql" query="SELECT isafcomp,&apos;&apos;,isafdocno,isafdocdt,isaf055,&apos;&apos;,isaf100,isaf056,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM isaf_t WHERE isafent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

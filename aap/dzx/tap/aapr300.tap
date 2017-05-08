@@ -1,0 +1,925 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="aapr300" std_prog="aapr300" erpver="1.0" module="AAP" ver="2" env="s" zone="t10dev" booking="Y" type="M" identity="s">
+  <other>
+    <code_template value="R" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <point name="construct.c.apca003" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO apca003  #顯示到畫面上
+            NEXT FIELD apca003                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.apca004" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            INITIALIZE g_qryparam.* TO NULL                     
+            LET g_qryparam.state = "c"
+            LET g_qryparam.reqry = FALSE
+            LET g_qryparam.where = " pmaastus = 'Y' AND (pmaa002 ='1' OR pmaa002 ='3') AND (pmaa004 = '1' OR pmaa004 = '3')" 
+            CALL q_pmaa001()   
+            DISPLAY g_qryparam.return1 TO apca004                
+            NEXT FIELD apca004    
+    
+
+]]>
+  </point>
+  <point name="construct.c.apca005" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_pmac002_2()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO apca005  #顯示到畫面上
+            NEXT FIELD apca005                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.apca014" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooag001()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO apca014  #顯示到畫面上
+            NEXT FIELD apca014                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.apca015" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_ooeg001_4()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO apca015  #顯示到畫面上
+            NEXT FIELD apca015                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="construct.c.apcadocno" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #應付單號                 
+            INITIALIZE g_qryparam.* TO NULL 
+            LET g_qryparam.state = "c"
+            LET g_qryparam.reqry = FALSE                                      
+            LET g_qryparam.where = " apca001 IN ('13') AND apcald = '",g_master.apcald,"' "
+            CALL q_apcadocno()
+            DISPLAY g_qryparam.return1 TO apcadocno
+            NEXT FIELD apcadocno 
+
+]]>
+  </point>
+  <point name="construct.c.apcald" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            #此段落由子樣板a08產生
+            #開窗c段
+            INITIALIZE g_qryparam.* TO NULL
+            LET g_qryparam.state = 'c'
+            LET g_qryparam.reqry = FALSE
+            CALL q_authorised_ld()                           #呼叫開窗
+            DISPLAY g_qryparam.return1 TO apcald  #顯示到畫面上
+            NEXT FIELD apcald                     #返回原欄位
+    
+
+]]>
+  </point>
+  <point name="global.import" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[GLOBALS "../../cfg/top_finance.inc"    #財務模組使用]]>
+  </point>
+  <point name="global.memo" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="global.parameter" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         success1         LIKE type_t.num10,   
+         errno            LIKE gzze_t.gzze001,]]>
+  </point>
+  <point name="global.variable" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[DEFINE g_param type_parameter]]>
+  </point>
+  <point name="init.init" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   CALL cl_set_combo_scc_part('apca001','8502','13') 
+   LET g_master.p ="N" 
+   LET g_master.s ="N"      
+   LET g_master.apca001 = 13
+   
+   #如果g_glaald和g_glaacomp為空 則使用使用者當下的帳別和法人
+   IF cl_null(g_glaald) AND cl_null(g_glaacomp) THEN
+       CALL s_fin_ld_carry('',g_user) RETURNING g_param.success1,g_master.apcald,g_master.apcacomp,g_param.errno
+       LET g_glaald = g_master.apcald
+       LET g_glaacomp = g_master.apcacomp                      
+   END IF        
+   #帳別說明
+   LET g_master.apcald_desc = g_master.apcald CLIPPED,"(",s_desc_get_ld_desc(g_master.apcald) CLIPPED,")"
+   #法人說明
+   LET g_master.apcacomp_desc = g_master.apcacomp CLIPPED,"(",s_desc_get_department_desc(g_master.apcacomp) CLIPPED,")"  
+  ]]>
+  </point>
+  <point name="input.a.apca004" order="" ver="1" cite_std="" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[            IF NOT cl_null(g__m.apca004) THEN 
+#此段落由子樣板a19產生
+               #設定g_chkparam.*的參數前，先將其初始化，避免之前設定遺留的參數值造成影響。
+               INITIALIZE g_chkparam.* TO NULL
+               
+               #設定g_chkparam.*的參數
+
+                  
+               #呼叫檢查存在並帶值的library
+               IF cl_chk_exist_and_ref_val("v_pmaa001_8") THEN
+                  #檢查成功時後續處理
+                  #LET  = g_chkparam.return1
+                  #DISPLAY BY NAME 
+               ELSE
+                  #檢查失敗時後續處理
+                  NEXT FIELD CURRENT
+               END IF
+            
+
+            END IF 
+
+]]>
+  </point>
+  <point name="input.a.apcacomp" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.a.apcald" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   ]]>
+  </point>
+  <point name="input.a.p" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.c.apcald" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="input.m.before_input" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[               ]]>
+  </point>
+  <point name="main.servicecall" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[  ]]>
+  </point>
+  <point name="process.exit_dialog" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[  ]]>
+  </point>
+  <point name="process.pre_process" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[   IF cl_null(lc_param.wc) THEN
+      LET lc_param.wc =" 1=1"
+   END IF          
+   IF g_master.p = "N" AND g_master.s = "N" AND g_master.wc = " 1=1" THEN 
+      CALL cl_err('','aap-00066',1)
+      RETURN 
+   END IF
+   LET g_master.wc = g_master.wc CLIPPED, " AND apca001 = '",g_master.apca001,"' AND apcaent ='",g_enterprise,"' ",
+                                 " AND apcald = '",g_master.apcald,"' "
+
+   CALL aapr300_g01(g_master.wc,g_master.p,g_master.s)
+  ]]>
+  </point>
+  <point name="ui_dialog.before_dialog" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[]]>
+  </point>
+  <point name="ui_dialog.before_dialog2" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[      DISPLAY g_master.apca001  TO apca001
+      DISPLAY g_master.apcald   TO apcald
+      DISPLAY g_master.apcacomp TO apcacomp
+      DISPLAY g_master.apcald_desc TO apcald_desc
+      DISPLAY g_master.apcacomp_desc TO apcacomp_desc]]>
+  </point>
+  <point name="ui_dialog.more_action" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[                     ]]>
+  </point>
+  <point name="ui_dialog.more_construct" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[  ]]>
+  </point>
+  <point name="ui_dialog.more_displayarray" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[         ]]>
+  </point>
+  <point name="ui_dialog.more_input" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[ 
+       ]]>
+  </point>
+  <point name="ui_dialog.qbe_select" order="" ver="1" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[        ]]>
+  </point>
+  <point name="ui_dialog.qbeclear" order="" ver="2" cite_std="N" new="N" status="" src="s" mark_hard="N">
+    <![CDATA[             LET g_master.p ="N" 
+             LET g_master.s ="N"                  
+             LET g_master.apca001 = 13
+             
+             #如果g_glaald和g_glaacomp為空 則使用使用者當下的帳別和法人
+             IF cl_null(g_glaald) AND cl_null(g_glaacomp) THEN
+                 CALL s_fin_ld_carry('',g_user) RETURNING g_param.success1,g_master.apcald,g_master.apcacomp,g_param.errno
+                 LET g_glaald = g_master.apcald
+                 LET g_glaacomp = g_master.apcacomp                      
+             END IF                  
+             #法人說明
+             LET g_master.apcald_desc = g_master.apcald CLIPPED,"(",s_desc_get_ld_desc(g_master.apcald) CLIPPED,")"              
+             #帳別說明
+             LET g_master.apcacomp_desc = g_master.apcacomp CLIPPED,"(",s_desc_get_department_desc(g_master.apcacomp) CLIPPED,")"
+             DISPLAY g_master.apca001  TO apca001
+             DISPLAY g_master.apcald   TO apcald
+             DISPLAY g_master.apcacomp TO apcacomp
+             DISPLAY g_master.apcald_desc TO apcald_desc
+             DISPLAY g_master.apcacomp_desc TO apcacomp_desc]]>
+  </point>
+  <section id="aapr300.description" ver="264" status="" src="s">
+    <![CDATA[#+ Version..: T100-ERP-1.00.00(SD版次:2,PR版次:2) Build-000319
+#+ 
+#+ Filename...: aapr300
+#+ Description: 應付帳款憑單列印
+#+ Creator....: 05016(2014/04/22)
+#+ Modifier...: 05016(2014/07/10)
+#+ Buildtype..: 應用 r01 樣板自動產生
+#+ 以上段落由子樣板a00產生
+]]>
+  </section>
+  <section id="aapr300.global" ver="7" status="" src="s">
+    <![CDATA[{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT util
+IMPORT FGL lib_cl_schedule
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+GLOBALS "../../cfg/top_schedule.inc"
+GLOBALS
+   DEFINE gwin_curr2  ui.Window
+   DEFINE gfrm_curr2  ui.Form
+   DEFINE gi_hiden_asign       LIKE type_t.num5
+   DEFINE gi_hiden_exec        LIKE type_t.num5
+   DEFINE gi_hiden_spec        LIKE type_t.num5
+   DEFINE gi_hiden_exec_end    LIKE type_t.num5
+END GLOBALS
+ 
+PRIVATE TYPE type_parameter RECORD
+   #add-point:自定背景執行須傳遞的參數(Module Variable)
+   {<point name="global.parameter"/>}
+   #end add-point
+        wc               STRING
+                     END RECORD
+ 
+DEFINE g_sql             STRING        #組 sql 用
+DEFINE g_forupd_sql      STRING        #SELECT ... FOR UPDATE  SQL
+DEFINE g_error_show      LIKE type_t.num5
+DEFINE g_jobid           STRING
+DEFINE g_wc              STRING
+ 
+PRIVATE TYPE type_master RECORD
+       apcald LIKE apca_t.apcald, 
+   apcald_desc LIKE type_t.chr80, 
+   apca001 LIKE apca_t.apca001, 
+   apcacomp_desc LIKE type_t.chr80, 
+   apcacomp LIKE apca_t.apcacomp, 
+   apcadocno LIKE apca_t.apcadocno, 
+   apca003 LIKE apca_t.apca003, 
+   apcadocdt LIKE apca_t.apcadocdt, 
+   apca014 LIKE apca_t.apca014, 
+   apca015 LIKE apca_t.apca015, 
+   apca004 LIKE apca_t.apca004, 
+   apca005 LIKE apca_t.apca005, 
+   p LIKE type_t.chr80, 
+   s LIKE type_t.chr80,
+       wc               STRING
+       END RECORD
+ 
+#模組變數(Module Variables)
+DEFINE g_master type_master
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable"/>}
+#end add-point
+ 
+#add-point:傳入參數說明
+{<point name="global.argv"/>}
+#end add-point
+]]>
+  </section>
+  <section id="aapr300.init" ver="1" status="" src="s">
+    <![CDATA[#+ 初始化作業
+PRIVATE FUNCTION aapr300_init()
+   #add-point:init段define
+   {<point name="init.define"/>}
+   #end add-point
+ 
+   LET g_error_show = 1
+   LET gwin_curr2 = ui.Window.getCurrent()
+   LET gfrm_curr2 = gwin_curr2.getForm()
+   CALL cl_schedule_import_4fd()
+   CALL cl_set_combo_scc("gzpa003","75")
+   IF cl_get_para(g_enterprise,"","E-SYS-0005") = "N" THEN
+       CALL cl_set_comp_visible("scheduling_page,history_page",FALSE)
+   END IF 
+   #add-point:畫面資料初始化
+   {<point name="init.init" />}
+   #end add-point
+   
+END FUNCTION
+]]>
+  </section>
+  <section id="aapr300.main" ver="2" status="" src="s">
+    <![CDATA[MAIN
+   DEFINE ls_js    STRING
+   DEFINE lc_param type_parameter  
+   #add-point:main段define
+   {<point name="main.define"/>}
+   #end add-point 
+   
+   #設定SQL錯誤記錄方式 (模組內定義有效)
+   WHENEVER ERROR CALL cl_err_msg_log
+ 
+   #依模組進行系統初始化設定(系統設定)
+   CALL cl_ap_init("aap","")
+ 
+   #add-point:定義背景狀態與整理進入需用參數ls_js
+   {<point name="main.background"/>}
+   #end add-point
+ 
+   IF g_bgjob = "Y" THEN
+      #add-point:Service Call
+      {<point name="main.servicecall" />}
+      #end add-point
+      CALL aapr300_process(ls_js)
+   ELSE
+      #畫面開啟 (identifier)
+      OPEN WINDOW w_aapr300 WITH FORM cl_ap_formpath("aap",g_code)
+ 
+      #瀏覽頁簽資料初始化
+      CALL cl_ui_init()
+ 
+      #程式初始化
+      CALL aapr300_init()
+ 
+      #進入選單 Menu (="N")
+      CALL aapr300_ui_dialog()
+ 
+      #add-point:畫面關閉前
+      {<point name="main.before_close" />}
+      #end add-point
+      #畫面關閉
+      CLOSE WINDOW w_aapr300
+   END IF
+ 
+   #add-point:作業離開前
+   {<point name="main.exit" />}
+   #end add-point
+ 
+   #離開作業
+   CALL cl_ap_exitprogram("0")
+END MAIN
+]]>
+  </section>
+  <section id="aapr300.other_function" ver="1" status="" src="s">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+  <section id="aapr300.process" ver="2" status="" src="s">
+    <![CDATA[#+ 資料處理
+PRIVATE FUNCTION aapr300_process(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE lc_param    type_parameter
+   DEFINE li_stus     LIKE type_t.num5
+   DEFINE li_count    LIKE type_t.num10  #progressbar計量
+   DEFINE ls_sql      STRING             #主SQL
+   #add-point:process段define
+   {<point name="process.define"/>}
+   #end add-point
+ 
+   CALL util.JSON.parse(ls_js,lc_param)
+ 
+   #add-point:process段前處理
+   {<point name="process.pre_process"/>}
+   #end add-point
+ 
+   #預先計算progressbar迴圈次數
+   IF g_bgjob <> "Y" THEN
+      #add-point:process段count_progress
+      {<point name="process.count_progress"/>}
+      #end add-point
+   END IF
+ 
+   #主SQL及相關FOREACH前置處理
+#  DECLARE aapr300_process_cs CURSOR FROM ls_sql
+#  FOREACH aapr300_process_cs INTO
+   #add-point:process段process
+   {<point name="process.process"/>}
+   #end add-point
+#  END FOREACH
+ 
+   IF g_bgjob = "N" THEN
+      #前景作業完成處理
+      #add-point:process段foreground完成處理
+      {<point name="process.foreground_finish"/>}
+      #end add-point
+      CALL cl_ask_confirm3("std-00012","")
+   ELSE
+      #背景作業完成處理
+      #add-point:process段background完成處理
+      {<point name="process.background_finish"/>}
+      #end add-point
+   END IF
+END FUNCTION
+]]>
+  </section>
+  <section id="aapr300.transfer_argv" ver="1" status="" src="s">
+    <![CDATA[#+ 轉換本地參數至cmdrun參數內,準備進入背景執行
+PRIVATE FUNCTION aapr300_transfer_argv(ls_js)
+   DEFINE ls_js       STRING
+   DEFINE la_cmdrun   RECORD
+             prog     STRING,
+             param    DYNAMIC ARRAY OF STRING
+                  END RECORD
+   DEFINE la_param    type_parameter
+ 
+   CALL util.JSON.parse(ls_js,la_param)
+ 
+   LET la_cmdrun.prog = g_prog
+   #add-point:transfer.argv段define
+   {<point name="transfer.argv.define"/>}
+   #end add-point
+ 
+   RETURN util.JSON.stringify( la_cmdrun )
+END FUNCTION
+]]>
+  </section>
+  <section id="aapr300.ui_dialog" ver="13" status="" src="s">
+    <![CDATA[#+ 選單功能實際執行處
+PRIVATE FUNCTION aapr300_ui_dialog()
+   DEFINE li_exit  LIKE type_t.num5    #判別是否為離開作業
+   DEFINE li_idx   LIKE type_t.num5
+   DEFINE ls_js    STRING
+   DEFINE ls_wc    STRING
+   DEFINE lc_param type_parameter
+   #add-point:ui_dialog段define
+   {<point name="ui_dialog.define"/>}
+   #end add-point
+ 
+   #add-point:ui_dialog段before dialog
+   {<point name="ui_dialog.before_dialog"/>}
+   #end add-point
+ 
+   WHILE TRUE
+      #add-point:ui_dialog段before dialog2
+      {<point name="ui_dialog.before_dialog2"/>}
+      #end add-point
+ 
+      DIALOG ATTRIBUTES(UNBUFFERED,FIELD ORDER FORM)
+         #+ 此段落由子樣板a57產生
+         INPUT BY NAME g_master.apcald,g_master.apca001,g_master.apcacomp,g_master.p,g_master.s 
+            ATTRIBUTE(WITHOUT DEFAULTS)
+            
+            #自訂ACTION(master_input)
+            
+         
+            BEFORE INPUT
+               #add-point:資料輸入前
+               {<point name="input.m.before_input"/>}
+               #end add-point
+         
+                     #此段落由子樣板a02產生
+         AFTER FIELD apcald
+            
+            #add-point:AFTER FIELD apcald
+            {<point name="input.a.apcald" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD apcald
+            #add-point:BEFORE FIELD apcald
+            {<point name="input.b.apcald" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE apcald
+            #add-point:ON CHANGE apcald
+            {<point name="input.g.apcald" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD apca001
+            #add-point:BEFORE FIELD apca001
+            {<point name="input.b.apca001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD apca001
+            
+            #add-point:AFTER FIELD apca001
+            {<point name="input.a.apca001" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE apca001
+            #add-point:ON CHANGE apca001
+            {<point name="input.g.apca001" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD apcacomp
+            
+            #add-point:AFTER FIELD apcacomp
+            {<point name="input.a.apcacomp" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD apcacomp
+            #add-point:BEFORE FIELD apcacomp
+            {<point name="input.b.apcacomp" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE apcacomp
+            #add-point:ON CHANGE apcacomp
+            {<point name="input.g.apcacomp" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD p
+            
+            #add-point:AFTER FIELD p
+            {<point name="input.a.p" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD p
+            #add-point:BEFORE FIELD p
+            {<point name="input.b.p" />}
+            #END add-point
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE p
+            #add-point:ON CHANGE p
+            {<point name="input.g.p" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD s
+            #add-point:BEFORE FIELD s
+            {<point name="input.b.s" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD s
+            
+            #add-point:AFTER FIELD s
+            {<point name="input.a.s" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a04產生
+         ON CHANGE s
+            #add-point:ON CHANGE s
+            {<point name="input.g.s" />}
+            #END add-point
+ 
+ 
+                     #Ctrlp:input.c.apcald
+         ON ACTION controlp INFIELD apcald
+            #add-point:ON ACTION controlp INFIELD apcald
+            {<point name="input.c.apcald" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.apca001
+         ON ACTION controlp INFIELD apca001
+            #add-point:ON ACTION controlp INFIELD apca001
+            {<point name="input.c.apca001" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.apcacomp
+         ON ACTION controlp INFIELD apcacomp
+            #add-point:ON ACTION controlp INFIELD apcacomp
+            {<point name="input.c.apcacomp" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.p
+         ON ACTION controlp INFIELD p
+            #add-point:ON ACTION controlp INFIELD p
+            {<point name="input.c.p" />}
+            #END add-point
+ 
+         #Ctrlp:input.c.s
+         ON ACTION controlp INFIELD s
+            #add-point:ON ACTION controlp INFIELD s
+            {<point name="input.c.s" />}
+            #END add-point
+ 
+ 
+               
+            AFTER INPUT
+               #add-point:資料輸入後
+               {<point name="input.m.after_input"/>}
+               #end add-point
+               
+            #add-point:其他管控(on row change, etc...)
+            {<point name="input.other"/>}
+            #end add-point
+               
+         END INPUT
+ 
+ 
+         
+         #+ 此段落由子樣板a57產生
+         CONSTRUCT BY NAME g_master.wc ON apcadocno,apca003,apcadocdt,apca014,apca015,apca004,apca005 
+
+         
+            BEFORE CONSTRUCT
+               #add-point:cs段before_construct
+               {<point name="cs.head.before_construct"/>}
+               #end add-point 
+         
+            #公用欄位開窗相關處理
+            
+               
+            #一般欄位開窗相關處理    
+                     #Ctrlp:construct.c.apcadocno
+         ON ACTION controlp INFIELD apcadocno
+            #add-point:ON ACTION controlp INFIELD apcadocno
+            {<point name="construct.c.apcadocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD apcadocno
+            #add-point:BEFORE FIELD apcadocno
+            {<point name="construct.b.apcadocno" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD apcadocno
+            
+            #add-point:AFTER FIELD apcadocno
+            {<point name="construct.a.apcadocno" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.apca003
+         ON ACTION controlp INFIELD apca003
+            #add-point:ON ACTION controlp INFIELD apca003
+            {<point name="construct.c.apca003" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD apca003
+            #add-point:BEFORE FIELD apca003
+            {<point name="construct.b.apca003" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD apca003
+            
+            #add-point:AFTER FIELD apca003
+            {<point name="construct.a.apca003" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD apcadocdt
+            #add-point:BEFORE FIELD apcadocdt
+            {<point name="construct.b.apcadocdt" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD apcadocdt
+            
+            #add-point:AFTER FIELD apcadocdt
+            {<point name="construct.a.apcadocdt" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.apcadocdt
+         ON ACTION controlp INFIELD apcadocdt
+            #add-point:ON ACTION controlp INFIELD apcadocdt
+            {<point name="construct.c.apcadocdt" />}
+            #END add-point
+ 
+         #Ctrlp:construct.c.apca014
+         ON ACTION controlp INFIELD apca014
+            #add-point:ON ACTION controlp INFIELD apca014
+            {<point name="construct.c.apca014" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD apca014
+            #add-point:BEFORE FIELD apca014
+            {<point name="construct.b.apca014" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD apca014
+            
+            #add-point:AFTER FIELD apca014
+            {<point name="construct.a.apca014" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.apca015
+         ON ACTION controlp INFIELD apca015
+            #add-point:ON ACTION controlp INFIELD apca015
+            {<point name="construct.c.apca015" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD apca015
+            #add-point:BEFORE FIELD apca015
+            {<point name="construct.b.apca015" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD apca015
+            
+            #add-point:AFTER FIELD apca015
+            {<point name="construct.a.apca015" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.apca004
+         ON ACTION controlp INFIELD apca004
+            #add-point:ON ACTION controlp INFIELD apca004
+            {<point name="construct.c.apca004" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD apca004
+            #add-point:BEFORE FIELD apca004
+            {<point name="construct.b.apca004" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD apca004
+            
+            #add-point:AFTER FIELD apca004
+            {<point name="construct.a.apca004" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.apca005
+         ON ACTION controlp INFIELD apca005
+            #add-point:ON ACTION controlp INFIELD apca005
+            {<point name="construct.c.apca005" />}
+            #END add-point
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD apca005
+            #add-point:BEFORE FIELD apca005
+            {<point name="construct.b.apca005" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD apca005
+            
+            #add-point:AFTER FIELD apca005
+            {<point name="construct.a.apca005" />}
+            #END add-point
+            
+ 
+         #此段落由子樣板a01產生
+         BEFORE FIELD p
+            #add-point:BEFORE FIELD p
+            {<point name="construct.b.p" />}
+            #END add-point
+ 
+         #此段落由子樣板a02產生
+         AFTER FIELD p
+            
+            #add-point:AFTER FIELD p
+            {<point name="construct.a.p" />}
+            #END add-point
+            
+ 
+         #Ctrlp:construct.c.p
+         ON ACTION controlp INFIELD p
+            #add-point:ON ACTION controlp INFIELD p
+            {<point name="construct.c.p" />}
+            #END add-point
+ 
+ 
+            
+            #add-point:其他管控
+            {<point name="cs.other"/>}
+            #end add-point
+            
+         END CONSTRUCT
+ 
+ 
+      
+         #add-point:ui_dialog段construct
+         {<point name="ui_dialog.more_construct"/>}
+         #end add-point
+         #add-point:ui_dialog段input
+         {<point name="ui_dialog.more_input"/>}
+         #end add-point
+         #add-point:ui_dialog段自定義display array
+         {<point name="ui_dialog.more_displayarray"/>}
+         #end add-point
+ 
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting
+         SUBDIALOG lib_cl_schedule.cl_schedule_setting_exec_call
+         SUBDIALOG lib_cl_schedule.cl_schedule_select_show_history
+         SUBDIALOG lib_cl_schedule.cl_schedule_show_history
+ 
+         ON ACTION qbe_select
+            CALL cl_qbe_list("m") RETURNING ls_wc
+            IF NOT cl_null(ls_wc) THEN
+               LET lc_param.wc = ls_wc
+               #取得條件後需要執行項目,應新增於下方adp
+               #add-point:ui_dialog段qbe_select後
+               {<point name="ui_dialog.qbe_select"/>}
+               #end add-point
+            END IF
+ 
+         ON ACTION qbe_save
+            CALL cl_qbe_save()
+ 
+         ON ACTION output
+            ACCEPT DIALOG
+ 
+         ON ACTION qbeclear         
+            CLEAR FORM
+            INITIALIZE lc_param.* TO NULL
+            #add-point:ui_dialog段qbeclear
+            {<point name="ui_dialog.qbeclear"/>}
+            #end add-point
+ 
+         ON ACTION history_fill
+            CALL cl_schedule_history_fill()
+ 
+         ON ACTION close
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+         
+         ON ACTION exit
+            LET INT_FLAG = TRUE
+            EXIT DIALOG
+ 
+         #add-point:ui_dialog段action
+         {<point name="ui_dialog.more_action"/>}
+         #end add-point
+ 
+         #主選單用ACTION
+         &include "main_menu.4gl"
+         &include "relating_action.4gl"
+         #交談指令共用ACTION
+         &include "common_action.4gl"
+            CONTINUE DIALOG
+      END DIALOG
+ 
+      #add-point:ui_dialog段exit dialog
+      {<point name="process.exit_dialog"/>}
+      #end add-point
+ 
+      LET ls_js = util.JSON.stringify(lc_param)
+ 
+      IF INT_FLAG THEN
+         LET INT_FLAG = FALSE
+         EXIT WHILE
+      ELSE
+         LET g_jobid = cl_schedule_get_jobid(g_prog)
+         CASE 
+            WHEN g_schedule.gzpa003 = "0"
+                 CALL aapr300_process(ls_js)
+            WHEN g_schedule.gzpa003 = "1"
+            #    CALL cl_schedule_update_data(g_jobid,ls_js)
+                 LET ls_js = aapr300_transfer_argv(ls_js)
+                 CALL cl_cmdrun(ls_js)
+            WHEN g_schedule.gzpa003 = "2"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+            WHEN g_schedule.gzpa003 = "3"
+                 CALL cl_schedule_update_data(g_jobid,ls_js)
+         END CASE    
+         LET g_schedule.gzpa003 = "0" #預設一開始 立即於前景執行
+ 
+         #add-point:ui_dialog段after schedule
+         {<point name="process.after_schedule"/>}
+         #end add-point
+ 
+         #欄位初始資訊 
+         CALL cl_schedule_init_info("all",g_schedule.gzpa003) 
+         LET gi_hiden_asign = FALSE 
+         LET gi_hiden_exec = FALSE 
+         LET gi_hiden_spec = FALSE 
+         LET gi_hiden_exec_end = FALSE 
+         CALL cl_schedule_hidden()
+      END IF
+   END WHILE
+ 
+END FUNCTION
+]]>
+  </section>
+</add_points>

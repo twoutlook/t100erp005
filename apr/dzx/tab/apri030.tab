@@ -1,0 +1,96 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="apri030" module="apr" jobmode="N" type="i09" industry="std" fix_arg="0" crtid="01726" crtdt="2014-05-14 16:43:59" modid="02003" moddt="2015-06-14 15:42:49" sdver="0002" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="零售銷售取價策略維護作業">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="prac001,prac002,prac003,prac004,pracstus,pracownid,pracownid_desc(chr80),pracowndp,pracowndp_desc(chr80),praccrtid,praccrtid_desc(chr80),praccrtdp,praccrtdp_desc(chr80),praccrtdt,pracmodid,pracmodid_desc(chr80),pracmoddt"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="prad002,prad003,prad004"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="modify" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="apr" filename="apri030" method="dialog">
+    <section id="input">
+      <input id="head" field="prac001,prac002,prac003,prac004,pracstus"/>
+      <input id="body" page="1" field="prad002,prad003,prad004" insert="N" append="N" delete="N"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="prac001,prac002,prac003,prac004,pracstus,pracownid,pracowndp,praccrtid,praccrtdp,praccrtdt,pracmodid,pracmoddt"/>
+      <construct id="body" page="1" field="prad002,prad003,prad004"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="prac001"/>
+      <set id="head" type="no_entry" field="prac001"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="prac001"/>
+      <column id="prac002" type="S" default="1" def_scc="6720"/>
+      <column id="prac003" type="S" default="N"/>
+      <column id="prac004" type="S" default="N"/>
+      <column id="pracstus" scc="17">
+        <stus id="N" pic="inactive"/>
+        <stus id="Y" pic="active"/>
+      </column>
+      <column id="pracownid">
+        <after>
+          <reference field="pracownid_desc" ref_field="prac_t.pracownid" map_field="pracownid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pracownid_desc"/>
+      <column id="pracowndp">
+        <after>
+          <reference field="pracowndp_desc" ref_field="prac_t.pracowndp" map_field="pracowndp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="pracowndp_desc"/>
+      <column id="praccrtid">
+        <after>
+          <reference field="praccrtid_desc" ref_field="prac_t.praccrtid" map_field="praccrtid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="praccrtid_desc"/>
+      <column id="praccrtdp">
+        <after>
+          <reference field="praccrtdp_desc" ref_field="prac_t.praccrtdp" map_field="praccrtdp" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooeg001_9" state="c"/>
+      </column>
+      <column id="praccrtdp_desc"/>
+      <column id="praccrtdt"/>
+      <column id="pracmodid">
+        <after>
+          <reference field="pracmodid_desc" ref_field="prac_t.pracmodid" map_field="pracmodid" ref_sql="SELECT ooag011 FROM ooag_t WHERE ooagent=$varg_enterprise$var AND ooag001=? "/>
+        </after>
+        <controlp form="q_ooag001" state="c"/>
+      </column>
+      <column id="pracmodid_desc"/>
+      <column id="pracmoddt"/>
+    </init>
+    <init id="body" page="1">
+      <column id="prad002"/>
+      <column id="prad003" def_scc="6721"/>
+      <column id="prad004" def_scc="6722"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="prac_t" pk="prac001">
+      <sql id="forupd_sql" type="sql" query="SELECT prac001,prac002,prac003,prac004,pracstus,pracownid,&apos;&apos;,pracowndp,&apos;&apos;,praccrtid,&apos;&apos;,praccrtdp,&apos;&apos;,praccrtdt,pracmodid,&apos;&apos;,pracmoddt FROM prac_t WHERE pracent= ? AND prac001=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT prac001,prac002,prac003,prac004,pracstus,pracownid,&apos;&apos;,pracowndp,&apos;&apos;,praccrtid,&apos;&apos;,praccrtdp,&apos;&apos;,praccrtdt,pracmodid,&apos;&apos;,pracmoddt FROM prac_t" order="prac001"/>
+    </head>
+    <body id="prad_t" page="1" linked="" pk="prad002" fk="prad001">
+      <sql id="forupd_sql_detail" query="SELECT prad002,prad003,prad004 FROM prad_t WHERE pradent=? AND prad001=? AND prad002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT prad002,prad003,prad004 FROM prad_t WHERE pradent=? AND prad001=?"/>
+    </body>
+  </dataset>
+</assembly>
+

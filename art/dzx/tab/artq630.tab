@@ -1,0 +1,112 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="artq630" module="art" jobmode="N" type="q01" industry="std" fix_arg="0" crtid="06814" crtdt="2016-05-20 17:35:33" modid="07142" moddt="2016-09-27 12:05:07" sdver="0006" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="商戶銷售分析查詢作業">
+  <structure>
+    <section id="global_var">
+      <var id="qbe" value="rtjasite,stje007,stje008,l_xiaot,stje019,stje020,stje021,stje028,l_bdate,l_edate,combobox_1,field1,combobox_2,field2,combobox_3,field3"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(chr1),rtjadocdt,rtjasite,rtjasite_desc(chr500),stje007,stje007_desc_desc(chr500),stje007_desc(chr500),stje008,stje008_desc(chr500),stje025,stje019,stje019_desc(chr500),stje020,stje020_desc(chr500),stje021,stje021_desc(chr500),stje028(chr10),stje028_desc(chr500),stje029,stje029_desc(chr500),l_bdate_1(dat),l_edate_1(dat),l_sumxs(num20_6),l_sumxt(num20_6),l_sum_rtja049(num20_6),l_rank(num10),l_sum_rtjf031(num20_6),l_sell_area(num20_6),l_rank_1(num10),l_keshu(num20_6),l_keshu_rank(num10)"/>
+    </section>
+    <section id="form_field">
+      <var id="body" page="1" record="s_detail1" page_id="1" value="sel(sel),rtjadocdt(b_rtjadocdt),rtjasite(b_rtjasite),rtjasite_desc(b_rtjasite_desc),stje007(b_stje007),stje007_desc_desc(b_stje007_desc_desc),stje007_desc(b_stje007_desc),stje008(b_stje008),stje008_desc(b_stje008_desc),stje025(b_stje025),stje019(b_stje019),stje019_desc(b_stje019_desc),stje020(b_stje020),stje020_desc(b_stje020_desc),stje021(b_stje021),stje021_desc(b_stje021_desc),stje028(b_stje028),stje028_desc(b_stje028_desc),stje029(b_stje029),stje029_desc(b_stje029_desc),l_bdate_1(l_bdate_1),l_edate_1(l_edate_1),l_sumxs(l_sumxs),l_sumxt(l_sumxt),l_sum_rtja049(l_sum_rtja049),l_rank(l_rank),l_sum_rtjf031(l_sum_rtjf031),l_sell_area(l_sell_area),l_rank_1(l_rank_1),l_keshu(l_keshu),l_keshu_rank(l_keshu_rank)"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="query" type="standard"/>
+      <action id="datainfo"/>
+    </section>
+  </structure>
+  <form id="0" module="art" filename="artq630" method="dialog">
+    <section id="input">
+      <input id="body" page="1" field="rtjadocdt,rtjasite,stje007,stje008,stje025,stje019,stje020,stje021,stje028,stje029" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field=""/>
+      <construct id="body" page="1" field="rtjadocdt(b_rtjadocdt),rtjasite(b_rtjasite),stje007(b_stje007),stje008(b_stje008),stje025(b_stje025),stje019(b_stje019),stje020(b_stje020),stje021(b_stje021),stje029(b_stje029)"/>
+    </section>
+    <init id="field_set"/>
+    <init id="body" page="1">
+      <column id="sel"/>
+      <column id="rtjadocdt"/>
+      <column id="rtjasite">
+        <after>
+          <check chkid="v_ooed004" id="isExist"/>
+          <reference field="rtjasite_desc" ref_field="rtjasite" map_field="rtjaent,rtjasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooed004" state="c"/>
+      </column>
+      <column id="rtjasite_desc"/>
+      <column id="stje007">
+        <after>
+          <reference field="stje007_desc" ref_field="stje007" map_field="stje007" ref_sql="SELECT pmaal003 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stje007_desc_desc"/>
+      <column id="stje007_desc">
+        <after>
+          <reference field="stje007_desc_desc" ref_field="stje007" map_field="stje007" ref_sql="SELECT pmaal004 FROM pmaal_t WHERE pmaalent=$varg_enterprise$var AND pmaal001=? AND pmaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stje008">
+        <after>
+          <reference field="stje008_desc" ref_field="stje008" map_field="stje008" ref_sql="SELECT mhbel003 FROM mhbel_t WHERE mhbelent=$varg_enterprise$var AND mhbel001=? AND mhbel002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stje008_desc"/>
+      <column id="stje025"/>
+      <column id="stje019">
+        <after>
+          <reference field="stje019_desc" ref_field="stje019" map_field="stje019" ref_sql="SELECT mhaal003 FROM mhaal_t WHERE mhaalent=$varg_enterprise$var AND mhaal001=? AND mhaal002=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stje019_desc"/>
+      <column id="stje020">
+        <after>
+          <reference field="stje020_desc" ref_field="stje019,stje020" map_field="stje019,stje020" ref_sql="SELECT mhabl004 FROM mhabl_t WHERE mhablent=$varg_enterprise$var AND mhabl001=? AND mhabl002=? AND mhabl003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stje020_desc"/>
+      <column id="stje021">
+        <after>
+          <reference field="stje021_desc" ref_field="stje019,stje020,stje021" map_field="stje019,stje020,stje021" ref_sql="SELECT mhacl005 FROM mhacl_t WHERE mhaclent=$varg_enterprise$var AND mhacl001=? AND mhacl002=? AND mhacl003=? AND mhacl004=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stje021_desc"/>
+      <column id="stje028">
+        <after>
+          <check chkid="v_imaa001" id="isExist"/>
+          <reference field="stje028_desc" ref_field="stje028" map_field="rtax001" ref_sql="SELECT rtaxl003 FROM rtaxl_t WHERE rtaxlent=$varg_enterprise$var AND rtaxl001=? AND rtaxl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_rtax001" state="i"/>
+        <controlp form="q_rtax001" state="c"/>
+      </column>
+      <column id="stje028_desc"/>
+      <column id="stje029">
+        <after>
+          <reference field="stje029_desc" ref_field="stje029" map_field="stje029" ref_sql="SELECT oocql004 FROM oocql_t WHERE oocqlent=$varg_enterprise$var AND oocql001=&apos;2002&apos; AND oocql002=? AND oocql003=$varg_dlang$var"/>
+        </after>
+      </column>
+      <column id="stje029_desc"/>
+      <column id="l_bdate_1"/>
+      <column id="l_edate_1"/>
+      <column id="l_sumxs"/>
+      <column id="l_sumxt"/>
+      <column id="l_sum_rtja049"/>
+      <column id="l_rank"/>
+      <column id="l_sum_rtjf031"/>
+      <column id="l_sell_area"/>
+      <column id="l_rank_1"/>
+      <column id="l_keshu"/>
+      <column id="l_keshu_rank"/>
+    </init>
+  </form>
+  <dataset>
+    <body id="rtja_t" page="1" linked="" pk="rtjadocno">
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,rtjadocdt,rtjasite,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos;,&apos;&apos; FROM rtja_t WHERE rtjaent= ? AND 1=1 "/>
+    </body>
+  </dataset>
+</assembly>
+

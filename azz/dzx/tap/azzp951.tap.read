@@ -1,0 +1,866 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<add_points prog="azzp951" std_prog="azzp951" erpver="1.0" module="AZZ" ver="12" env="s" zone="t10prd" booking="N" type="M" identity="s" section_flag="Y" designer_ver="1.0">
+  <other>
+    <code_template value="P" status=""/>
+    <free_style value="Y" status=""/>
+    <start_arg value="" status=""/>
+  </other>
+  <point name="function.azzp951_cycle" order="1" ver="11" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzp951_cycle()
+   DEFINE ld_now        DATETIME YEAR TO FRACTION(3)
+
+   #檢查參數是否繼續執行背景批次
+   IF cl_get_para(g_enterprise,g_site,"A-SYS-0005") IS NOT NULL AND
+      cl_get_para(g_enterprise,g_site,"A-SYS-0005") = "Y" THEN
+   ELSE
+      LET gs_temp = "INFO: 系統設置為不允許執行背景作業(azzs010/A-SYS-0005)"
+      CALL azzp951_output_log(gs_temp)
+      RETURN FALSE
+   END IF
+
+   CALL azzp951_channel()
+
+   LET ld_now = CURRENT
+   LET gs_temp = "-------------Start 時間:",ld_now,"----------------"
+   CALL azzp951_output_log(gs_temp)
+
+   CALL azzp951_detail_job(ld_now)
+   CALL azzp951_execute_log()
+
+   LET ld_now = CURRENT
+   LET gs_temp = "-------------End   時間:",ld_now,"------------------"
+   CALL azzp951_output_log(gs_temp)
+   CALL g_gen_ch.close()
+
+   RETURN TRUE
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp951_detail_job" order="2" ver="11" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzp951_detail_job(ld_now)
+   DEFINE ld_now        DATETIME YEAR TO MINUTE
+   DEFINE lc_gzpc000    LIKE gzpc_t.gzpc000
+   DEFINE lc_gzpc003    LIKE gzpc_t.gzpc003
+   DEFINE ls_msg        STRING
+
+   #第一layer 看目前時間=排程執行時間 啟動job
+   DECLARE gzpc_cs CURSOR FOR
+    SELECT gzpcent,gzpc000,gzpc003 FROM gzpc_t
+     WHERE gzpc002 <= ld_now
+       AND gzpc003 = "A"    #標示為自動啟動
+       AND gzpc004 = "N"    #目前狀態為N:Normal的
+
+   FOREACH gzpc_cs INTO gc_ent,lc_gzpc000,lc_gzpc003
+      LET gs_temp = "  新JOB: ENT:",gc_ent," gzpc000=",lc_gzpc000," 狀態=",lc_gzpc003
+      CALL azzp951_output_log(gs_temp)
+
+      CALL azzp951_job_start(lc_gzpc000)
+   END FOREACH
+
+   CLOSE gzpc_cs
+   FREE gzpc_cs
+
+   #第二layer 看job 完成 啟動下一個job 要有順序性 第一個序號執行完，才能執行第二個 以此類推
+   #重新scan gzpc_t 來啟動未完成的job
+   DECLARE gzpc_cs2 CURSOR FOR
+    SELECT gzpcent,gzpc000,gzpc003 FROM gzpc_t
+     WHERE gzpc003 = "A"     #標示為自動啟動
+       AND gzpc004 = "R"     #執行中的
+
+   FOREACH gzpc_cs2 INTO gc_ent,lc_gzpc000,lc_gzpc003
+      LET gs_temp = "  老JOB: ENT:",gc_ent," gzpc000=",lc_gzpc000," 狀態=",lc_gzpc003
+      CALL azzp951_output_log(gs_temp)
+      CALL azzp951_job_scan(lc_gzpc000)
+   END FOREACH
+
+   CLOSE gzpc_cs2
+   FREE gzpc_cs2
+
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp951_job_start" order="3" ver="11" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#+ Description: 新的PROCESS第一個JOB啟動
+PRIVATE FUNCTION azzp951_job_start(pc_gzpc000)
+   DEFINE pc_gzpc000    LIKE gzpc_t.gzpc000
+   DEFINE lc_gzpc001    LIKE gzpc_t.gzpc001
+   DEFINE lc_gzpd001    LIKE gzpd_t.gzpd001  #排程執行序號 (UUID)
+   DEFINE lc_gzpd002    LIKE gzpd_t.gzpd002  #原始設定排程編號
+   DEFINE lc_gzpd003    LIKE gzpd_t.gzpd003  #序號
+   DEFINE lc_gzpd004    LIKE gzpd_t.gzpd004  #執行作業
+   DEFINE lc_gzpd005    LIKE gzpd_t.gzpd005  #傳入參數
+   DEFINE lc_gzpd006    LIKE gzpd_t.gzpd006  #執行營運據點
+   DEFINE lc_gzpd009    LIKE gzpd_t.gzpd009
+   DEFINE lc_gzpd011    LIKE gzpd_t.gzpd011  #執行順序
+   DEFINE lc_gzpd011_o  LIKE gzpd_t.gzpd011
+   DEFINE ld_now        DATETIME YEAR TO SECOND
+   DEFINE ls_cmd        STRING
+   DEFINE ls_sessionkey STRING
+
+   LET lc_gzpd011_o = 0
+   DECLARE azzp951_job_start_cs CURSOR FOR
+    SELECT gzpd001,gzpd002,gzpd003,gzpd004,gzpd005,gzpd006,gzpd009,gzpd011 FROM gzpd_t
+     WHERE gzpdent = gc_ent
+       AND gzpd001 = pc_gzpc000
+       AND gzpd007 = "N"
+     ORDER BY gzpdent ASC, gzpd001 ASC, gzpd011 ASC   #依照執行順序排序
+
+   FOREACH azzp951_job_start_cs INTO lc_gzpd001,lc_gzpd002,lc_gzpd003,lc_gzpd004,lc_gzpd005,
+                                     lc_gzpd006,lc_gzpd009,lc_gzpd011
+      #一次啟動一個job 執行順序相同繼續啟動下一個job，執行順序不同就不繼續啟動下一個job
+      IF lc_gzpd011_o <> 0 THEN
+         #上一筆和目前執行順序不同不繼續啟動下一個job
+         IF lc_gzpd011 <> lc_gzpd011_o THEN
+            EXIT FOREACH
+         END IF
+      END IF
+
+      #組參數
+      LET g_schedule_id = lc_gzpd002     #背景執行的排程編號
+      LET g_schedule_seq = lc_gzpd003    #背景執行的排程序號
+      LET gs_temp = "job Start cmdrun before:執行作業 ",lc_gzpd004," 傳入參數 ",lc_gzpd005," 執行使用者編號 ",lc_gzpd009 
+      CALL azzp951_output_log(gs_temp)
+      LET ls_sessionkey = azzp951_cmdrun(lc_gzpd004,lc_gzpd005,lc_gzpd006,lc_gzpd009)
+      
+      #更新
+      CALL azzp951_upd_gzpc(lc_gzpd001,"R")  #變更為執行中
+      CALL azzp951_upd_gzpd_by_job(lc_gzpd001,lc_gzpd003,ls_sessionkey,"R")
+      LET gs_temp = "job Start:排程執行序號 ",lc_gzpd001," 序號 ",lc_gzpd003," 執行順序 ",lc_gzpd011
+      CALL azzp951_output_log(gs_temp)
+
+      LET lc_gzpd011_o = lc_gzpd011
+   END FOREACH
+
+   CLOSE azzp951_job_start_cs
+   FREE azzp951_job_start_cs
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp951_job_scan" order="4" ver="12" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#+ Description: PROCESS的JOB第二個到結束PROCESS的動作
+PRIVATE FUNCTION azzp951_job_scan(pc_gzpc000)
+   DEFINE pc_gzpc000     LIKE gzpc_t.gzpc000
+   DEFINE lc_gzpc001     LIKE gzpc_t.gzpc001
+   DEFINE lc_gzpd001     LIKE gzpd_t.gzpd001    #排程執行序號
+   DEFINE lc_gzpd002     LIKE gzpd_t.gzpd002    #排程編號
+   DEFINE lc_gzpd003     LIKE gzpd_t.gzpd003    #序號
+   DEFINE lc_gzpd004     LIKE gzpd_t.gzpd004    #執行作業
+   DEFINE lc_gzpd005     LIKE gzpd_t.gzpd005    #傳入參數
+   DEFINE lc_gzpd006     LIKE gzpd_t.gzpd006    #執行營運據點
+   DEFINE lc_gzpd007     LIKE gzpd_t.gzpd007    #作業執行狀態
+   DEFINE lc_gzpd008     LIKE gzpd_t.gzpd008    #作業執行狀態
+   DEFINE lc_gzpd009     LIKE gzpd_t.gzpd009
+   DEFINE lc_gzpd011     LIKE gzpd_t.gzpd011    #執行順序
+   DEFINE lc_gzpd012     LIKE gzpd_t.gzpd012    #SESSIONKEY
+   DEFINE lc_gzpd002_o   LIKE gzpd_t.gzpd002    #排程編號 (備份)
+   DEFINE lc_gzpd003_o   LIKE gzpd_t.gzpd003    #序號 (備份)
+   DEFINE lc_gzpd011_o   LIKE gzpd_t.gzpd011
+   DEFINE lc_gzpd007_o   LIKE gzpd_t.gzpd007    #作業執行狀態
+   DEFINE ls_sessionkey  STRING
+   DEFINE lc_status      LIKE type_t.chr1       #此作業串執行狀態
+   DEFINE ld_now         DATETIME YEAR TO SECOND
+   DEFINE li_totalcnt    LIKE type_t.num5
+
+   LET lc_status = "F" #先標示總體狀況為 "已完成" 在轉移為各自狀況
+   LET lc_gzpd011_o = ""
+
+   DECLARE azzp951_job_scan_cs CURSOR FOR
+    SELECT gzpd001,gzpd002,gzpd003,gzpd004,gzpd005,gzpd006,gzpd007,gzpd009,gzpd011,gzpd012
+      FROM gzpd_t #排程執行編號001/002排程編號/序號003/執行作業004/傳入參數005/執行營運據點006/狀態007/工號009/執行順序011
+     WHERE gzpdent = gc_ent
+       AND gzpd001 = pc_gzpc000
+     ORDER BY gzpdent ASC,gzpd011 ASC  #依照執行順序(gzpdent,gzpd011)排序(由小到大)
+
+   #gzpd007
+   # N 未執行(normal)/R 執行中(running)/F 已完成(finish)/P 暫停(suspend)/S 停止(stop)/E 錯誤(error)/W 等待(wait)
+   FOREACH azzp951_job_scan_cs INTO lc_gzpd001,lc_gzpd002,lc_gzpd003,lc_gzpd004,lc_gzpd005,
+                                    lc_gzpd006,lc_gzpd007,lc_gzpd009,lc_gzpd011,lc_gzpd012
+      CASE
+         WHEN lc_gzpd007 = "N"  #狀態007為待處理 N
+            #執行順序跟上一筆一樣
+            IF lc_gzpd011_o IS NULL OR lc_gzpd011_o = lc_gzpd011 THEN
+               #上一筆是N,上一筆都未啟動,往下可以不再查,離開此序列
+               IF lc_gzpd007_o IS NOT NULL AND lc_gzpd007_o = "N" THEN
+                  LET lc_status = "N"  #偵測到未處理的跳出
+                  EXIT FOREACH
+               END IF
+            #執行順序跟上一筆不同
+            ELSE
+               #是完成，繼續；不是完成,離開此序列
+               IF lc_gzpd007_o = "F" THEN
+                  #把上一個步驟的成功寄發出去
+                  LET ld_now = CURRENT
+                  LET g_gzpc004 = "R"
+                  CALL azzp951_send_mail(pc_gzpc000,lc_gzpd002_o,lc_gzpd003_o,ld_now,"F")
+               ELSE
+                  LET lc_status = "N"  #跳出
+                  EXIT FOREACH
+               END IF
+            END IF
+
+            #組參數
+            LET gs_temp = "job Scan cmdrun before:執行作業 ",lc_gzpd004," 傳入參數 ",lc_gzpd005," 執行使用者編號 ",lc_gzpd009 
+            CALL azzp951_output_log(gs_temp)
+            LET ls_sessionkey = azzp951_cmdrun(lc_gzpd004,lc_gzpd005,lc_gzpd006,lc_gzpd009)
+
+            #更新
+            CALL azzp951_upd_gzpd_by_job(lc_gzpd001,lc_gzpd003,ls_sessionkey,"R")
+            
+            LET gs_temp = "job Start: 排程執行序號 ",lc_gzpd001," 序號 ",lc_gzpd003," 執行順序 ",lc_gzpd011
+            CALL azzp951_output_log(gs_temp)
+
+            LET lc_status = "R"
+            LET lc_gzpd007 = "R"
+
+         WHEN lc_gzpd007 = "F"  #狀態007為已完成 F
+            #把資料備份下來，但不做任何處理
+            LET lc_gzpd002_o = lc_gzpd002
+            LET lc_gzpd003_o = lc_gzpd003
+
+            #確認一下，如果這一筆只有單job,而且是F，就要當作整組已完成
+            SELECT COUNT(*) INTO li_totalcnt FROM gzpd_t
+             WHERE gzpdent = gc_ent
+               AND gzpd001 = pc_gzpc000
+            IF li_totalcnt = 1 THEN
+               CALL azzp951_send_mail(pc_gzpc000,lc_gzpd002_o,lc_gzpd003_o,ld_now,"F")
+            END IF
+
+         WHEN lc_gzpd007 = "E"  #狀態007為錯誤 E
+            #把上一個步驟的錯誤寄發出去
+            LET ld_now = CURRENT
+            LET g_gzpc004 = "E"
+            CALL azzp951_send_mail(pc_gzpc000,lc_gzpd002_o,lc_gzpd003_o,ld_now,"E")
+            CALL azzp951_upd_gzpc(pc_gzpc000,"E")
+            LET lc_status = "E"
+            LET gs_temp = "process end: 排程執行序號 ",lc_gzpd001," 發生錯誤,回壓gzpc整體狀況為Error"
+            CALL azzp951_output_log(gs_temp)
+
+         WHEN lc_gzpd007 = "S"  #狀態007為停止 S
+            CALL azzp951_upd_gzpc(pc_gzpc000,"S")
+            CALL azzp951_upd_gzpd_by_job(lc_gzpd001,lc_gzpd003,ls_sessionkey,"S")
+            LET gs_temp = "process end: 排程執行序號 ",lc_gzpd001," 強制停止,回壓gzpc整體狀況為Stop"
+            CALL azzp951_output_log(gs_temp)
+            LET lc_status = "S"
+
+         WHEN lc_gzpd007 = "R"  #狀態007為執行中 R
+            IF NOT azzp951_chk_process_exists(lc_gzpd012) THEN
+               #把這個步驟的錯誤寄發出去
+               LET ld_now = CURRENT
+               LET g_gzpc004 = "E"
+               CALL azzp951_send_mail(pc_gzpc000,lc_gzpd002,lc_gzpd003,ld_now,"E")
+               CALL azzp951_upd_gzpc(pc_gzpc000,"E")
+               LET lc_status = "E"
+               CALL azzp951_upd_gzpd_by_job(lc_gzpd001,lc_gzpd003,ls_sessionkey,"E")
+               LET gs_temp = "job Error: 排程執行序號 ",lc_gzpd001," 序號 ",lc_gzpd003," 執行順序 ",lc_gzpd011," 程序遺失!可能發生無預警錯誤!!"
+               CALL azzp951_output_log(gs_temp)
+               LET gs_temp = "process end: 排程執行序號 ",lc_gzpd001," 發生錯誤,回壓gzpc整體狀況為Error"
+               CALL azzp951_output_log(gs_temp)
+            ELSE
+               LET lc_status = "R"
+            END IF
+
+         #job gzpd007 R執行中/P暫停/W等待 都不處理
+         OTHERWISE
+            LET lc_status = "R"
+      END CASE
+
+      LET lc_gzpd011_o = lc_gzpd011
+      LET lc_gzpd007_o = lc_gzpd007
+   END FOREACH
+
+   #如果全部都已經完成 (finish),則更新整個排程狀態,與完成時間
+   IF lc_status = "F" THEN
+      CALL azzp951_upd_gzpc(pc_gzpc000,"F")
+      #回壓gzpa_t
+      CALL azzp951_upd_gzpa(lc_gzpd002)
+      LET ld_now = CURRENT
+      LET g_gzpc004 = "R"
+      CALL azzp951_send_mail(pc_gzpc000,lc_gzpd002_o,lc_gzpd003_o,ld_now,"TF")
+
+      LET gs_temp = "process end: 排程執行序號 ",lc_gzpd001," 已完成,回壓gzpc整體狀況為Finish"
+      CALL azzp951_output_log(gs_temp)
+   END IF
+
+   CLOSE azzp951_job_scan_cs
+   FREE azzp951_job_scan_cs
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp951_only_job_start" order="5" ver="10" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#+ Description: 單獨啟動job
+PRIVATE FUNCTION azzp951_only_job_start(ps_param)
+   DEFINE ps_param      LIKE gzpa_t.gzpa001
+   DEFINE li_cnt        LIKE type_t.num5
+   DEFINE ls_sessionkey STRING
+   DEFINE lc_gzpa001    LIKE gzpa_t.gzpa001
+   DEFINE lc_gzpa003    LIKE gzpa_t.gzpa003
+   DEFINE lc_gzpa006    LIKE gzpa_t.gzpa006
+   DEFINE lc_gzpa007    LIKE gzpa_t.gzpa007
+   DEFINE lc_gzpb002    LIKE gzpb_t.gzpb002
+   DEFINE lc_gzpb003    LIKE gzpb_t.gzpb003
+   DEFINE lc_gzpb004    LIKE gzpb_t.gzpb004
+   DEFINE lc_gzpb005    LIKE gzpb_t.gzpb005
+   DEFINE lc_gzpb007    LIKE gzpb_t.gzpb007
+   DEFINE ls_exec_time  STRING 
+   DEFINE ld_exec_time  DATETIME YEAR TO FRACTION(2)
+
+   SELECT gzpa003,gzpa006,gzpa007 INTO lc_gzpa003,lc_gzpa006,lc_gzpa007 FROM gzpa_t 
+    WHERE gzpa001 = ps_param 
+      AND gzpaent = gc_ent 
+
+   DISPLAY "執行類型(lc_gzpa003):",lc_gzpa003 , " sqlca.sqlcode " ,sqlca.sqlcode
+
+   IF lc_gzpa003 = "2" THEN
+      DECLARE azzp951_only_job_start_cs CURSOR FOR
+       SELECT gzpb002,gzpb003,gzpb004,gzpb005,gzpb007 FROM gzpb_t
+        WHERE gzpbent = gc_ent
+          AND gzpb001 = ps_param
+        ORDER BY gzpb001 ASC
+
+      FOREACH azzp951_only_job_start_cs INTO lc_gzpb002,lc_gzpb003,lc_gzpb004,lc_gzpb005,lc_gzpb007
+         LET ls_sessionkey = azzp951_cmdrun(lc_gzpb003,lc_gzpb004,lc_gzpb005,lc_gzpb007)
+         LET ls_exec_time = lc_gzpa006  USING "yyyy-mm-dd" ," ",lc_gzpa007
+         DISPLAY "job start:"
+         DISPLAY "序號(lc_gzpb002):",lc_gzpb002 , " 執行作業(lc_gzpb003):",lc_gzpb003 ," 傳入參數(lc_gzpb004):", lc_gzpb004 ," 執行營運據點(lc_gzpb005):",lc_gzpb005 , " 執行使用者編號(lc_gzpb007):",lc_gzpb007 
+         CALL azzp951_send_mail('',ps_param,lc_gzpb002,ls_exec_time,"R")
+      END FOREACH  
+   END IF 
+
+   CLOSE azzp951_only_job_start_cs 
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp951_cmdrun" order="6" ver="11" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzp951_cmdrun(ps_gzpd004,ps_gzpd005,pc_gzpd006,pc_gzpd009)
+   DEFINE ps_gzpd004    STRING
+   DEFINE ps_gzpd005    STRING
+   DEFINE pc_gzpd006    LIKE gzpd_t.gzpd006   #指定執行營運據點
+   DEFINE pc_gzpd009    LIKE gzpd_t.gzpd009   #指定執行account
+   DEFINE ls_cmd        STRING
+   DEFINE la_param      RECORD
+            prog         STRING,
+            actionid     STRING,
+            userid       STRING,
+            background   LIKE type_t.chr1,
+            param        DYNAMIC ARRAY OF STRING
+                        END RECORD
+   DEFINE ls_js         STRING
+   DEFINE ls_sessionkey STRING
+   DEFINE obj           util.JSONObject
+   DEFINE li_cnt        LIKE type_t.num5
+
+   LET la_param.prog = ps_gzpd004 CLIPPED
+   LET la_param.background = "Y"
+   LET la_param.param[1] = ps_gzpd005 CLIPPED
+   LET ls_js = util.JSON.stringify( la_param )
+
+   #員工編號及營業據點
+   CALL FGL_SETENV("BACKGROUND_START","azzp951")
+   CALL FGL_SETENV("BACKGROUND_LOGNAME",pc_gzpd009)
+   CALL FGL_SETENV("BACKGROUND_SITE",pc_gzpd006)
+   LET ls_sessionkey = cl_cmdrun(ls_js)
+
+   LET gs_temp = "cmdrun: 傳入參數 ",ls_js," sessionkey:",ls_sessionkey
+   CALL azzp951_output_log(gs_temp)
+
+   RETURN ls_sessionkey
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp951_send_mail" order="7" ver="12" cite_std="N" new="Y" status="u" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+#+ Description: 寄送信件彙總
+#+
+PRIVATE FUNCTION azzp951_send_mail(pc_gzpc000,pc_gzpe001,pc_gzpe002,pc_gzpd008,ps_status)
+   DEFINE pc_gzpc000    LIKE gzpc_t.gzpc000 #排程執行序號
+   DEFINE pc_gzpe001    LIKE gzpe_t.gzpe001 #排程編號
+   DEFINE pc_gzpe002    LIKE gzpe_t.gzpe002 #序號
+   DEFINE pc_gzpd008    LIKE gzpd_t.gzpd008
+   DEFINE ps_status     STRING              #信件寄送彙總
+   DEFINE lc_gzpe003    LIKE gzpe_t.gzpe003 #執行狀況 
+   DEFINE lc_gzpe004    LIKE gzpe_t.gzpe004 #收件人員工編號
+   DEFINE lc_gzpe005    LIKE gzpe_t.gzpe005 #信件主旨
+   DEFINE lc_gzpe006    LIKE gzpe_t.gzpe006 #信件內文
+   DEFINE ls_file       STRING
+   DEFINE lc_channel    base.Channel
+   DEFINE ls_text       STRING
+   DEFINE ls_tmp        STRING
+   DEFINE li_cnt        LIKE type_t.num5
+   DEFINE ls_run_cmd    STRING 
+   DEFINE lc_gzpe002    LIKE gzpe_t.gzpe002 #排程序號
+   DEFINE lb_run_result BOOLEAN
+   DEFINE ls_err_msg    STRING
+
+   #信件暫存檔案路徑
+   #每一筆新的檔案把之前一筆delete 保持最新的一筆
+   LET ls_file = "azzp951_mail_",pc_gzpe001,".txt"
+   LET ls_file = os.Path.join(FGL_GETENV("TEMPDIR"),ls_file)
+   
+   IF ps_status = "TF" THEN
+      LET lc_gzpe003 = "F"
+   ELSE
+      LET lc_gzpe003 = ps_status.trim()
+   END IF
+ 
+   #信件檔案
+   LET lc_channel = base.Channel.create()
+   CALL lc_channel.openFile( ls_file CLIPPED, "w" )
+   CALL lc_channel.setDelimiter("")
+
+   LET li_cnt =  1
+
+   DECLARE azzp951_send_mail_cs CURSOR FOR
+    SELECT gzpe002,gzpe003,gzpe004,gzpe005,gzpe006 
+      FROM gzpe_t
+     WHERE gzpeent = gc_ent
+       AND gzpe001 = pc_gzpe001 AND gzpe002 = pc_gzpe002 AND gzpe003 = lc_gzpe003
+     ORDER BY gzpe011
+
+   FOREACH azzp951_send_mail_cs INTO lc_gzpe002,lc_gzpe003,lc_gzpe004,lc_gzpe005,lc_gzpe006  
+      IF os.Path.exists(ls_file) THEN
+         IF os.Path.delete(ls_file) THEN END IF
+         CALL lc_channel.openFile( ls_file CLIPPED, "w" )
+         CALL lc_channel.setDelimiter("")
+      END IF
+      
+      #信件主旨
+      INITIALIZE g_xml.* TO NULL
+   
+      IF ps_status = "TF" THEN
+         LET g_xml.subject = "[T100排程執行成功通知] 編號:",pc_gzpe001,"(",lc_gzpe005,")"
+         LET ls_text = "[T100排程執行成功通知] \n排程編號:",pc_gzpe001
+         LET ls_text = ls_text,"\n排程說明:",lc_gzpe005,"\n\n"
+         LET ls_text = ls_text,"本次執行細節\n"
+         LET ls_text = ls_text,"==================================================\n"
+         LET ls_text = ls_text,"執行時間:","由", pc_gzpd008 ,"起\n" #，至 gzpc006 止 \n"
+         LET ls_text = ls_text,"執行序號:",pc_gzpc000 ,"\n"
+         LET ls_text = ls_text,"執行模式:",g_gzpc003  ,"(",azzp951_get_gzpc003_desc(g_gzpc003),")\n"
+         LET ls_text = ls_text,"執行狀況:",g_gzpc004  ,"(",azzp951_get_gzpc004_desc(g_gzpc004),")\n"
+         LET ls_text = ls_text,"總共執行作業數量:",azzp951_cnt_gzpd(pc_gzpc000),"\n"
+         LET ls_text = ls_text,"備註:","\n"
+         LET ls_text = ls_text,"個別項目執行可參考 $LOGDIR/azzp951_",TODAY USING "yyyymmdd",".log\n\n"
+         LET ls_text = ls_text,"信件內文:",lc_gzpe006
+      ELSE
+         LET g_xml.subject = lc_gzpe005
+         LET ls_text = ls_text,"執行時間:",pc_gzpd008,"\n"
+         LET ls_text = ls_text,"執行狀況:",lc_gzpe003," (R執行中(Running)/F已完成(finish)/P暫停(suspend)/S停止(stop)/E錯誤(error)/W等待(wait))\n"
+         LET ls_text = ls_text,"信件內文:",lc_gzpe006
+      END IF
+
+      CALL azzp951_output_log("信件內容:" || ls_text)
+      CALL lc_channel.write(ls_text)
+
+      #信件本文
+      LET g_xml.body = ls_file
+      #寄信人
+     #LET g_xml.sender = "azzp951.",FGL_GETENV("ZONE") CLIPPED,"@digiwin.biz"  #必須要寫@後面的mail address
+
+      #收件者  改用 s_aooi350_get_user_contact() 取email
+      LET g_xml.recipient = s_aooi350_get_user_contact(lc_gzpe004,"4") CLIPPED
+      LET ls_tmp = "e-mail:",g_xml.recipient
+      CALL azzp951_output_log(ls_tmp)
+      
+      #寄發mail
+      CALL cl_jmail() RETURNING ls_tmp
+      LET gs_temp = "send_mail:",ls_tmp
+      CALL azzp951_output_log(gs_temp)
+      LET gs_temp = "send_mail: 排程編號 ", pc_gzpe001," 收件人員工編號 ",lc_gzpe004
+      CALL azzp951_output_log(gs_temp)
+#15/06/09 先註解
+#     IF cl_msgcentre_report() THEN  #驗證碼                   #排程ID:gzpa001 #排程序號:gzpb002
+#        LET ls_tmp = "r.r awsp300 ",g_msgparam.rpt_code," ", pc_gzpe001," ",lc_gzpe002
+#        CALL cl_cmdrun_openpipe("r.r awsp300", ls_tmp, FALSE) RETURNING lb_run_result,ls_err_msg
+#     END IF
+#15/06/09
+   END FOREACH
+
+   CALL lc_channel.close()
+   CLOSE azzp951_send_mail_cs
+   FREE azzp951_send_mail_cs
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp951_channel" order="8" ver="10" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzp951_channel()
+   DEFINE ls_log_file STRING
+   DEFINE ls_begin    STRING
+   DEFINE lt_time     INTERVAL HOUR TO MINUTE
+
+   LET ls_begin = TODAY USING "yyyymmdd"
+
+   LET g_gen_ch = base.Channel.create()
+
+   LET ls_log_file = "azzp951_",ls_begin CLIPPED ,".log"
+   LET ls_log_file = os.Path.join(FGL_GETENV("LOGDIR"),ls_log_file)
+   
+   IF NOT os.Path.exists(ls_log_file) THEN
+      CALL g_gen_ch.openFile(ls_log_file, "w")
+   ELSE
+      CALL g_gen_ch.openFile(ls_log_file, "a")
+   END IF
+
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp951_output_log" order="9" ver="10" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzp951_output_log(p_msg)
+   DEFINE p_msg   STRING
+
+   CALL g_gen_ch.writeLine(p_msg)
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp951_execute_log" order="10" ver="10" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzp951_execute_log()
+   DEFINE lc_lopa001 LIKE lopa_t.lopa001
+   DEFINE lc_lopa002 DATETIME YEAR TO SECOND
+
+   LET lc_lopa001 = FGL_GETPID()
+   LET lc_lopa002 = CURRENT YEAR TO SECOND
+   #刪除其他紀錄
+   DELETE FROM lopa_t
+   #只新增現在最後一筆的執行紀錄
+   INSERT INTO lopa_t(lopa001,lopa002) VALUES(lc_lopa001,lc_lopa002)
+
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp951_gzpd005_token" order="11" ver="10" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzp951_gzpd005_token(ps_token)
+   DEFINE ps_token  STRING
+   DEFINE l_token   base.StringTokenizer
+   DEFINE ls_text   STRING
+   DEFINE li_rtn    LIKE type_t.num5
+
+   LET ps_token = ps_token.trim()
+
+   #針對參數組進行token
+   LET l_token = base.StringTokenizer.create(ps_token,",")
+   LET li_rtn = FALSE
+   WHILE l_token.hasMoreTokens()
+      LET ls_text = ls_text,l_token.nextToken()," "
+   END WHILE
+
+   RETURN ls_text
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp951_upd_gzpc" order="12" ver="10" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzp951_upd_gzpc(pc_gzpc000,pc_gzpc004)
+   DEFINE pc_gzpcent   LIKE gzpc_t.gzpcent
+   DEFINE pc_gzpc000   LIKE gzpc_t.gzpc000
+   DEFINE pc_gzpc004   LIKE gzpc_t.gzpc004
+   DEFINE ld_now       DATETIME YEAR TO SECOND
+
+   IF pc_gzpc004 = "F" THEN
+      LET ld_now = CURRENT
+   ELSE
+      LET ld_now = ""
+   END IF
+
+   UPDATE gzpc_t SET gzpc004 = pc_gzpc004,gzpc006 = ld_now
+    WHERE gzpcent = gc_ent
+      AND gzpc000 = pc_gzpc000
+
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp951_upd_gzpa" order="13" ver="10" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzp951_upd_gzpa(pc_gzpa001)
+   DEFINE pc_gzpa001   LIKE gzpa_t.gzpa001
+   DEFINE lc_gzpa003   LIKE gzpa_t.gzpa003
+   DEFINE ld_now       DATETIME YEAR TO SECOND
+
+   SELECT gzpa003 INTO lc_gzpa003 FROM gzpa_t
+    WHERE gzpaent = gc_ent
+      AND gzpa001 = pc_gzpa001
+
+   IF lc_gzpa003 = "2" THEN #指定時間於背景執行
+      LET ld_now = CURRENT
+      UPDATE gzpa_t SET gzpastus = 'N',gzpamoddt = ld_now
+       WHERE gzpaent = gc_ent
+         AND gzpa001 = pc_gzpa001
+   END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp951_upd_gzpd_by_job" order="14" ver="11" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzp951_upd_gzpd_by_job(pc_gzpd001,pc_gzpd003,pc_gzpd012,pc_gzpd007)
+   DEFINE pc_gzpd001 LIKE gzpd_t.gzpd001
+   DEFINE pc_gzpd003 LIKE gzpd_t.gzpd003
+   DEFINE pc_gzpd007 LIKE gzpd_t.gzpd007
+   DEFINE pc_gzpd012 LIKE gzpd_t.gzpd012
+   DEFINE ld_now     DATETIME YEAR TO SECOND
+   DEFINE ls_error   STRING
+
+   #gzpd007
+   #N 未執行(normal)/R 執行中(running)/F 已完成(finish)/P 暫停(suspend)/S 停止(stop)/E 錯誤(error)/W 等待(wait)
+   LET ld_now = CURRENT
+
+   UPDATE gzpd_t SET gzpd007 = pc_gzpd007, gzpd008 = ld_now, gzpd012 = pc_gzpd012
+    WHERE gzpdent = gc_ent
+      AND gzpd001 = pc_gzpd001
+      AND gzpd003 = pc_gzpd003
+    IF SQLCA.SQLCODE OR SQLCA.SQLERRD[3] = 0 THEN
+       LET ls_error = ls_error,'error: sqlca.sqlcod:',sqlca.sqlcode,"\n"
+       LET ls_error = ls_error,'error: sqlerrd3:',sqlca.sqlerrd[3],"\n"
+       LET ls_error = ls_error,'error: ent=',gc_ent,' 001=',pc_gzpd001,' 003=',pc_gzpd003,"\n"
+       LET ls_error = ls_error,'error: 007=',pc_gzpd007,' 008=',ld_now,' 012=',pc_gzpd012
+       CALL azzp951_output_log(ls_error)
+       LET ls_error = ""
+    END IF
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp951_cnt_gzpd" order="15" ver="11" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzp951_cnt_gzpd(pc_gzpd001)
+   DEFINE pc_gzpd001 LIKE gzpd_t.gzpd001
+   DEFINE li_cnt     LIKE type_t.num5
+
+   SELECT COUNT(*) INTO li_cnt FROM gzpd_t
+    WHERE gzpdent = gc_ent 
+      AND gzpd001 = pc_gzpd001
+
+   RETURN li_cnt
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp951_get_gzpc003_desc" order="16" ver="11" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzp951_get_gzpc003_desc(pc_gzpc003)
+   DEFINE pc_gzpc003 LIKE gzpc_t.gzpc003
+   DEFINE lc_gzcbl004 LIKE gzcbl_t.gzcbl004
+
+   SELECT gzcbl004 INTO lc_gzcbl004 FROM gzcbl_t
+    WHERE gzcbl001 = '66'
+      AND gzcbl002 = pc_gzpc003
+      AND gzcbl003 = 'zh_TW'
+   RETURN lc_gzcbl004
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp951_get_gzpc004_desc" order="17" ver="11" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzp951_get_gzpc004_desc(pc_gzpc004)
+   DEFINE pc_gzpc004 LIKE gzpc_t.gzpc004
+   DEFINE lc_gzcbl004 LIKE gzcbl_t.gzcbl004
+
+   SELECT gzcbl004 INTO lc_gzcbl004 FROM gzcbl_t
+    WHERE gzcbl001 = '65'
+      AND gzcbl002 = pc_gzpc004
+      AND gzcbl003 = 'zh_TW'
+   RETURN lc_gzcbl004
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp951_kill_azzp951_ps" order="18" ver="11" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzp951_kill_azzp951_ps()
+   DEFINE ls_id       STRING
+   DEFINE lch_pipe    base.Channel
+   DEFINE ls_tmp      STRING
+   DEFINE ls_tmp2     STRING
+   DEFINE ls_cmd      STRING
+   DEFINE li_chk      LIKE type_t.num5
+   DEFINE ls_self_pid STRING
+
+   LET li_chk = FALSE
+   LET lch_pipe = base.Channel.create()
+   LET ls_self_pid = FGL_GETPID()
+   LET ls_cmd = "ps -ef --sort=start_time | grep azzp951 | grep $ZONE | grep -v grep | awk '{print $1 \" \" $2 }' "
+
+   CALL lch_pipe.openPipe(ls_cmd, "r")
+   WHILE lch_pipe.read(ls_tmp)
+       IF ls_tmp.trim() IS NULL THEN CONTINUE WHILE END IF
+       LET ls_tmp2 = ls_tmp
+       DISPLAY "PID:",ls_tmp2
+       LET ls_id = ls_tmp2.subString(ls_tmp2.getIndexOf(" ",1)+1,ls_tmp2.getLength())
+       IF ls_id = ls_self_pid THEN
+       ELSE
+          LET ls_cmd = "kill ",ls_id
+          RUN ls_cmd
+       END IF
+   END WHILE
+   CALL lch_pipe.close()
+END FUNCTION]]>
+  </point>
+  <point name="function.azzp951_chk_process_exists" order="19" ver="11" cite_std="N" new="Y" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[
+PRIVATE FUNCTION azzp951_chk_process_exists(lc_gzpd012)
+   DEFINE ls_cmd      STRING
+   DEFINE lch_pipe    base.Channel
+   DEFINE lc_gzpd012  LIKE gzpd_t.gzpd012
+   DEFINE ls_tmp      STRING
+   DEFINE ls_tmp2     STRING
+   DEFINE li_status   LIKE type_t.num5
+
+   #先檢查session key是否為 NULL
+   IF lc_gzpd012 IS NULL OR lc_gzpd012 = " " THEN
+      LET li_status = FALSE
+      RETURN li_status
+   END IF
+
+   LET ls_cmd = "ps -ef | grep ",lc_gzpd012 CLIPPED," | grep fglrun | grep -iv 'ps -ef'"
+   LET lch_pipe = base.Channel.create()
+   LET ls_tmp = "" 
+   LET ls_tmp2 = ""
+
+   CALL lch_pipe.openPipe(ls_cmd, "r")
+   WHILE lch_pipe.read(ls_tmp)
+       IF ls_tmp.trim() IS NULL THEN CONTINUE WHILE END IF
+       LET ls_tmp2 = ls_tmp2,ls_tmp
+   END WHILE
+
+   IF ls_tmp2.getLength() > 0 THEN
+      LET li_status = TRUE
+   ELSE
+      LET li_status = FALSE
+   END IF
+   CALL lch_pipe.close()
+   RETURN li_status
+END FUNCTION]]>
+  </point>
+  <point name="free_style.variable" order="" ver="9" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[GLOBALS
+   DEFINE g_schedule_id   LIKE gzpe_t.gzpe001     #報表背景執行的排程編號
+   DEFINE g_schedule_seq  LIKE gzpe_t.gzpe002     #報表背景執行的排程序號
+END GLOBALS
+DEFINE g_gen_ch   base.Channel
+DEFINE gc_ent     LIKE gzpa_t.gzpaent  #enterprise code
+DEFINE gs_temp    STRING
+DEFINE g_gzpc003  LIKE gzpc_t.gzpc003
+DEFINE g_gzpc004  LIKE gzpc_t.gzpc004]]>
+  </point>
+  <point name="global.import" order="" ver="1" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[IMPORT util]]>
+  </point>
+  <point name="main.define" order="" ver="8" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   DEFINE la_param   RECORD
+             sessionkey   STRING,
+             parent       STRING,
+             background   LIKE type_t.chr1,
+             prog         STRING,
+             account      STRING,
+             actionid     STRING,
+             param        DYNAMIC ARRAY OF STRING,
+             notify       STRING
+             END RECORD
+   DEFINE ls_param   STRING
+   DEFINE li_sleep   LIKE type_t.num10]]>
+  </point>
+  <point name="main.init" order="" ver="11" cite_std="N" new="N" status="" src="s" readonly="" mark_hard="N">
+    <![CDATA[   LET g_prog = "azzp951"
+   LET g_account = FGL_GETENV("LOGNAME")
+
+   #測試傳入的編號
+   IF NOT cl_null(ARG_VAL(1)) THEN 
+      CALL util.JSON.parse(ARG_VAL(1),la_param)
+      IF NOT cl_null(la_param.param[1]) THEN
+         LET ls_param = la_param.param[1]
+         LET gc_ent = FGL_GETENV("TOPENT") 
+         DISPLAY "參數:",ls_param ," 企業編號:",gc_ent
+      END IF 
+   END IF
+    
+   IF g_account = "tiptop" AND cl_null(ls_param) THEN
+      #背景批次迴圈
+      WHILE TRUE
+         LET g_bgjob = "Y"       #重新再設定
+         LET g_prog = "azzp951"  #重新再設定
+         #連結資料庫後執行工作
+         CALL cl_db_connect("ds",FALSE)
+         IF NOT azzp951_cycle() THEN
+            EXIT WHILE    #如果參數改變成不執行批次背景，由此處離開
+         END IF
+
+         #查看參數確認休息時間:自我算出下次啟動時間
+         LET li_sleep = cl_ap_background_job("azzp951") #每分鐘啟動一次
+         CALL cl_db_disconnect_current()
+
+         SLEEP li_sleep
+      END WHILE
+   ELSE
+      CALL cl_db_connect("ds",FALSE)
+
+      IF cl_get_para(g_enterprise,g_site,"A-SYS-0005") IS NOT NULL AND
+         cl_get_para(g_enterprise,g_site,"A-SYS-0005") = "Y" THEN
+      ELSE
+         DISPLAY "INFO: 系統設置為不允許執行背景作業(azzs010/A-SYS-0005)"
+         EXIT PROGRAM
+      END IF
+
+      IF cl_null(ls_param) THEN
+      ELSE
+         CASE 
+            WHEN ls_param = "kill"
+               CALL s_azzp950_kill_ps("azzp951")
+            OTHERWISE
+               CALL azzp951_only_job_start(ls_param)
+         END CASE  
+      END IF 
+
+      #查看參數確認休息時間:自我算出下次啟動時間
+      CALL cl_db_disconnect_current()
+   END IF]]>
+  </point>
+  <section id="azzp951.description" ver="1" status="" src="s" readonly="">
+    <![CDATA[#應用 a00 樣板自動產生(Version:1)
+#+ Version..: T100-ERP-1.00.00(SD版次:12,PR版次:12) Build-000031
+#+ 
+#+ Filename...: azzp951
+#+ Description: watchdog喚醒工具
+#+ Creator....: 01856(2014-07-31 14:57:03)
+#+ Modifier...: 00000() -SD/PR-
+]]>
+  </section>
+  <section id="azzp951.global" ver="3" status="" src="s" readonly="">
+    <![CDATA[#應用 i00 樣板自動產生(Version:3)
+{<point name="global.memo" />}
+ 
+IMPORT os
+IMPORT FGL lib_cl_dlg
+#add-point:增加匯入項目
+{<point name="global.import" />}
+#end add-point
+ 
+SCHEMA ds
+ 
+GLOBALS "../../cfg/top_global.inc"
+ 
+#add-point:free_style模組變數(Module Variable)
+{<point name="free_style.variable"/>}
+#end add-point
+ 
+#add-point:自定義模組變數(Module Variable)
+{<point name="global.variable" edit="s"/>}
+#end add-point
+ 
+#add-point:自定義客戶專用模組變數(Module Variable)
+{<point name="global.variable_customerization" edit="c"/>}
+#end add-point
+]]>
+  </section>
+  <section id="azzp951.main" ver="1" status="" src="m" readonly="">
+    <![CDATA[#+ 作業開始
+MAIN
+   #add-point:main段define
+{<point name="main.define"/>}
+   #end add-point    
+ 
+   #定義在其他link的程式則無效
+   WHENEVER ERROR CALL cl_err_msg_log
+   
+   LET g_bgjob = "Y"
+{<point name="main.init"/>}
+
+{<point name="main.define_sql" />}
+ 
+{<point name="main.servicecall" />}
+
+{<point name="main.exit" />}
+END MAIN]]>
+  </section>
+  <section id="azzp951.other_function" ver="1" status="" src="s" readonly="">
+    <![CDATA[#add-point:自定義元件(Function)
+{<point name="other.function"/>}
+#end add-point
+]]>
+  </section>
+</add_points>

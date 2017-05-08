@@ -1,0 +1,500 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="artm700" std_prog="artm700" erpver="1.0" ver="1" module="ART" booking="Y" class="m" template="F003_00" env="s" zone="t10dev">
+  <other>
+    <code_template value="F" status=""/>
+    <free_style value="N" status=""/>
+  </other>
+  <toolbar items="delete,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="rtkf_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" status="">
+      <sr name="s_detail1" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+      <sr name="s_detail2" src="s" insert="Y" delete="Y" append="Y" cascade="Y" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的： 設定各門店商品的自動補貨參數，供自動補貨計算時應用。
+標準作業功能取消：複制
+作業類型：基本資料 維護作業
+輸入模式：假雙檔無搭配任何方案F003_00
+作業資料來源(Master)：
+ 資料來源表：rtkf_t(門店商品自動補貨參數檔)
+ 相關資料表：rtdx_t(門店商品清單)
+
+資料處理:
+1.應用組織rtkfunit = g_site
+2.新增狀態時，單身資料應自動於輸入門店編號後產生
+  產生來源為門店商品清單(rtdx_t)
+  排除[T:自動補貨排除條件設定檔](rtke_t)中，相關的店群/門店/品類/商品資訊後，將需要自動補貨的商品清單產生於單身
+
+註：新品標記　欄位未開立]]>
+  </all>
+  <field cite_std="N" name="imaa009" ver="1" src="s" column="imaa009" table="imaa_t" attribute="C002" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtkf002_2" ver="1" src="s" column="rtkf002" table="rtkf_t" attribute="C301" type="varchar2(40)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtkf_t.rtkf001" ver="1" src="s" column="rtkf001" table="rtkf_t" attribute="C007" type="varchar2(10)" req="Y" i_zoom="q_ooef001_3" c_zoom="q_ooef001_3" chk_ref="v_ooef001_2" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[門店編號：
+欄位控管：
+　校驗：v_ooef001_2
+　　　　參數一：arg1 = rtkf001
+　　　　參數二：arg2 = 'F'
+計算或處理：1.修改時，此欄位不允許更改
+　　　　　　2.新增時，輸入門店編號後，抓取門店商品清單(rtdx_t)中的商品資訊 ，自動產生單身的商品資料
+                     
+開窗處理：
+　參考函式：q_ooef001_3
+　參數一：arg1 = 'F' ]]>
+  </field>
+  <field cite_std="N" name="rtkf_t.rtkf002" ver="1" src="s" column="rtkf002" table="rtkf_t" attribute="C301" type="varchar2(40)" req="Y" i_zoom="q_rtdx001_13" c_zoom="q_rtdx001_13" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[商品編號：
+欄位控管：
+　校驗：1.同門店內不允許重複商品編號
+　　　　2.需存在門店商品清單中(rtdx_t)
+　帶值：品名/品類及說明
+開窗處理：
+　參考函式：q_rtdx001_13
+　參數一：arg1 = 單頭門店編號
+　參數二：arg2 = 門店編號的店群編號]]>
+  </field>
+  <field cite_std="N" name="rtkf_t.rtkf003" ver="1" src="s" column="rtkf003" table="rtkf_t" attribute="C009" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooca001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtkf_t.rtkf004" ver="1" src="s" column="rtkf004" table="rtkf_t" attribute="C816" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6014" default="" max="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtkf_t.rtkf005" ver="1" src="s" column="rtkf005" table="rtkf_t" attribute="C004" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_pmaa001" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[供應商：
+欄位控管：
+     預設值：於輸入商品編號後，自動由門店商品清單檔中的主供應商帶入，且不可修改     
+     帶值：1.顯示時將[T:交易對象多語言檔].[C:簡稱]帶回欄位後面顯示
+
+開窗處理：
+       參考函式：q_pmaa001
+       查詢條件：[T:交易對象主檔].[C:交易對象類型]pmaa002='1' OR '3'
+     ]]>
+  </field>
+  <field cite_std="N" name="rtkf_t.rtkf006" ver="1" src="s" column="rtkf006" table="rtkf_t" attribute="N001" type="number(5,0)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtkf_t.rtkf007" ver="1" src="s" column="rtkf007" table="rtkf_t" attribute="N001" type="number(5,0)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtkf_t.rtkf008" ver="1" src="s" column="rtkf008" table="rtkf_t" attribute="N001" type="number(5,0)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtkf_t.rtkf009" ver="1" src="s" column="rtkf009" table="rtkf_t" attribute="N003" type="number(15,3)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtkf_t.rtkf010" ver="1" src="s" column="rtkf010" table="rtkf_t" attribute="N003" type="number(15,3)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtkf_t.rtkf011" ver="1" src="s" column="rtkf011" table="rtkf_t" attribute="N003" type="number(15,3)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="&gt;0.000" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtkf_t.rtkfcrtdp" ver="1" src="s" column="rtkfcrtdp" table="rtkf_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtkf_t.rtkfcrtdt" ver="1" src="s" column="rtkfcrtdt" table="rtkf_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtkf_t.rtkfcrtid" ver="1" src="s" column="rtkfcrtid" table="rtkf_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtkf_t.rtkfmoddt" ver="1" src="s" column="rtkfmoddt" table="rtkf_t" attribute="D002" type="date" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtkf_t.rtkfmodid" ver="1" src="s" column="rtkfmodid" table="rtkf_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtkf_t.rtkfowndp" ver="1" src="s" column="rtkfowndp" table="rtkf_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooea001_1" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtkf_t.rtkfownid" ver="1" src="s" column="rtkfownid" table="rtkf_t" attribute="C006" type="varchar2(10)" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtkf_t.rtkfstus" ver="1" src="s" column="rtkfstus" table="rtkf_t" attribute="C822" type="varchar2(10)" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtkf_t.rtkfunit" ver="1" src="s" column="rtkfunit" table="rtkf_t" attribute="C007" type="varchar2(10)" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="imaa009_desc" src="s" depend_field="imaa009" correspon_key="imaa009" ref_table="rtaxl_t" ref_fk="rtaxl001" ref_dlang="rtaxl002" ref_rtn="rtaxl003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtkf001_desc" src="s" depend_field="rtkf_t.rtkf001" correspon_key="rtkf001" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtkf002_desc" src="s" depend_field="rtkf_t.rtkf002" correspon_key="rtkf002" ref_table="imaal_t" ref_fk="imaal001" ref_dlang="imaal002" ref_rtn="imaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtkf003_desc" src="s" depend_field="rtkf_t.rtkf003" correspon_key="rtkf003" ref_table="oocal_t" ref_fk="oocal001" ref_dlang="oocal002" ref_rtn="oocal003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtkf005_desc" src="s" depend_field="rtkf_t.rtkf005" correspon_key="rtkf005" ref_table="pmaal_t" ref_fk="pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtkfcrtdp_desc" src="s" depend_field="rtkf_t.rtkfcrtdp" correspon_key="rtkfcrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtkfcrtid_desc" src="s" depend_field="rtkf_t.rtkfcrtid" correspon_key="&apos;2&apos;,rtkfcrtid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="rtkfmodid_desc" src="s" depend_field="rtkf_t.rtkfmodid" correspon_key="&apos;2&apos;,rtkfmodid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+    <rfield cite_std="N" ver="1" name="rtkfowndp_desc" src="s" depend_field="rtkf_t.rtkfowndp" correspon_key="rtkfowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtkfownid_desc" src="s" depend_field="rtkf_t.rtkfownid" correspon_key="&apos;2&apos;,rtkfownid" ref_table="oofa_t" ref_fk="oofa002,oofa003" ref_dlang="" ref_rtn="oofa011" status=""/>
+  </ref_field>
+  <multi_lang/>
+  <help_code/>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="page_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_rtkf001" text="門店編號" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="bpage_1" text="基本資料" lstr=""/>
+    <sfield name="lbl_rtkfunit" text="應用組織" lstr=""/>
+    <sfield name="lbl_rtkfstus" text="有效" lstr=""/>
+    <sfield name="lbl_rtkf002" text="商品編號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaa009" text="商品品類" lstr=""/>
+    <sfield name="lbl_rtaxl003" text="品類說明" lstr=""/>
+    <sfield name="lbl_rtkf003" text="庫存單位" lstr=""/>
+    <sfield name="lbl_oocal003" text="單位說明" lstr=""/>
+    <sfield name="lbl_rtkf004" text="採購方式" lstr=""/>
+    <sfield name="lbl_rtkf006" text="目標庫存天數" lstr=""/>
+    <sfield name="lbl_rtkf007" text="安全庫存天數" lstr=""/>
+    <sfield name="lbl_rtkf008" text="最小庫存天數" lstr=""/>
+    <sfield name="lbl_rtkf009" text="最小庫存數量" lstr=""/>
+    <sfield name="lbl_rtkf010" text="DMS" lstr=""/>
+    <sfield name="lbl_rtkf011" text="促銷PDMS" lstr=""/>
+    <sfield name="lbl_rtkf005" text="主供應商" lstr=""/>
+    <sfield name="lbl_pmaal003" text="供應商名稱" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="lbl_rtkf002" text="商品編號" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="ownid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="owndp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="crtid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="crtdp_desc" text="部門名" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="modid_desc" text="員工名" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="cl_err_s01_Detail" text="詳細資訊" lstr=""/>
+    <sfield name="cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="cl_err_s01_Detail" text="詳細資訊" lstr=""/>
+    <sfield name="cl_err_s01_Sure" text="確定" lstr=""/>
+    <sfield name="cl_where_Condition" text="條件" lstr=""/>
+    <sfield name="cl_where_FieldName" text="欄位名稱" lstr=""/>
+    <sfield name="cl_where_Operator" text="操作行為" lstr=""/>
+    <sfield name="cl_where_BETWEEN" text="BETWEEN" lstr=""/>
+    <sfield name="cl_where_IN" text="IN" lstr=""/>
+    <sfield name="cl_where_LIKE" text="LIKE" lstr=""/>
+    <sfield name="cl_where_ISNULL" text="IS NULL" lstr=""/>
+    <sfield name="cl_where_ISNOTNULL" text="IS NOT NULL" lstr=""/>
+    <sfield name="cl_where_Values" text="值" lstr=""/>
+    <sfield name="cl_where_Logicope" text="邏輯運算" lstr=""/>
+    <sfield name="cl_where_AND" text="AND" lstr=""/>
+    <sfield name="cl_where_OR" text="OR" lstr=""/>
+    <sfield name="cl_where_MakeConditions" text="設定條件" lstr=""/>
+    <sfield name="cl_where_WhereConditions" text="WHERE條件" lstr=""/>
+    <sfield name="lbl_gzxm001" text="QBE編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm005" text="查詢方案名稱" lstr=""/>
+    <sfield name="lbl_gzxm002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxm003" text="員工編號" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxm004" text="設為預設查詢條件" lstr=""/>
+    <sfield name="cl_qbe_s02.bpage_1" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn005" text="欄位說明" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s02.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="cl_qbe_s02_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s02_Cancel" text="取消" lstr=""/>
+    <sfield name="lbl_funid" text="函式代碼" lstr=""/>
+    <sfield name="lbl_fundesc" text="函式說明" lstr=""/>
+    <sfield name="cl_qbe_s01_Accept" text="確認" lstr=""/>
+    <sfield name="cl_qbe_s01_Cancel" text="取消" lstr=""/>
+    <sfield name="cl_qbe_s03.bpage_1" text="查詢方案列表" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxmstus" text="有效" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm004" text="預設" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm009" text="順序" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxml005" text="查詢方案說明" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxm007" text="自設SQL條件" lstr=""/>
+    <sfield name="cl_qbe_s03.page_2" text="條件組合內容" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn004" text="序號" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn005" text="條件欄位" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn006" text="運算子" lstr=""/>
+    <sfield name="cl_qbe_s03.lbl_gzxn007" text="條件值" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="page_cl_doc_s01_page1" text="相關文件清單" lstr=""/>
+    <sfield name="lbl_loaa006" text="文件版本" lstr=""/>
+    <sfield name="lbl_loaa007" text="文件序號" lstr=""/>
+    <sfield name="lbl_loaa011" text="文件型態" lstr=""/>
+    <sfield name="lbl_loaa010" text="文件原始檔名" lstr=""/>
+    <sfield name="btn_upload" text="本地文件上傳" lstr=""/>
+    <sfield name="btn_docopen" text="文件下載" lstr=""/>
+    <sfield name="btn_docremove" text="文件刪除" lstr=""/>
+    <sfield name="btn_exit" text="關閉功能" lstr=""/>
+    <sfield name="page_cl_doc_s01_page2" text="文件基本資料" lstr=""/>
+    <sfield name="lbl_loaa012" text="文件關聯位置" lstr=""/>
+    <sfield name="lbl_loaa013" text="文件內容" lstr=""/>
+    <sfield name="page_cl_doc_s01_page3" text="異動資訊" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_oofa011" text="全名" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="lbl_gzxp007_1" text="選擇分類" lstr=""/>
+    <sfield name="add_catalog" text="" lstr=""/>
+    <sfield name="lbl_gzxp007_2" text="自訂分類" lstr=""/>
+    <sfield name="lbl_gzxp008" text="追蹤說明" lstr=""/>
+    <sfield name="accept" text="確定" lstr=""/>
+    <sfield name="cancel" text="取消" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="follow_list" text="待追蹤" lstr=""/>
+    <sfield name="signature_list" text="待簽核" lstr=""/>
+    <sfield name="cancelfollow" text="取消追蹤" lstr=""/>
+    <sfield name="assigncatalog" text="指定分類" lstr=""/>
+    <sfield name="cl_user_overview_s01.lbl_name" text="" lstr=""/>
+    <sfield name="lbl_gzxp008" text="追蹤說明" lstr=""/>
+    <sfield name="lbl_gzxp002" text="作業名稱" lstr=""/>
+    <sfield name="lbl_gzxp006" text="單據日期" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="cl_about_s02_StackMesg" text="訊息" lstr=""/>
+    <sfield name="cl_about_s02_YesISee" text="是的，我瞭解了！" lstr=""/>
+    <sfield name="cl_cmdask_s01_Run" text="請輸入執行作業編號" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_ooef001" text="組織編號" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_rtdx001" text="商品編號" lstr=""/>
+    <sfield name="lbl_imaal003" text="品名" lstr=""/>
+    <sfield name="lbl_imaal004" text="規格" lstr=""/>
+    <sfield name="lbl_imaa009" text="產品分類" lstr=""/>
+    <sfield name="lbl_rtaxl003" text="說明" lstr=""/>
+    <sfield name="lbl_rtdx027" text="採購類型" lstr=""/>
+    <sfield name="lbl_rtdx031" text="主供應商" lstr=""/>
+    <sfield name="lbl_pmaal003" text="交易對象全名" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_ooca001" text="單位編號" lstr=""/>
+    <sfield name="lbl_oocal003" text="說明" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_pmaa001" text="交易對象編號" lstr=""/>
+    <sfield name="lbl_pmaal003" text="交易對象全名" lstr=""/>
+    <sfield name="lbl_pmaal004" text="交易對象簡稱" lstr=""/>
+    <sfield name="cl_ask_s04_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s03_Test" text="測試" lstr=""/>
+    <sfield name="cl_ask_s03_OK" text="OK" lstr=""/>
+    <sfield name="cl_ask_s01_Choice" text="選擇" lstr=""/>
+    <sfield name="lbl_check" text="多選" lstr=""/>
+    <sfield name="lbl_gzzz001" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzzal003" text="程式名稱" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+  </strings>
+  <sa_spec>
+    <sa_field name="imba009">
+      <![CDATA[品類編號：
+●欄位控管：
+  資料欄位: imba009/Display Only
+  預設值:   無 
+  校驗:無
+  帶值:自動帶出品類說明
+  計算或處理:無
+●開窗處理：
+  參考函式：依標準查詢視窗 
+  查詢欄位：[T:品類基本資料檔].[C:品類編號] ,[T:品類多語言檔].[C:說明]
+  過濾條件：[C:下及分類數] = 0 
+  回值類型：多重回值
+]]>
+    </sa_field>
+    <sa_field name="rtkf001">
+      <![CDATA[門店編號：
+●欄位控管：
+  資料欄位:rtkf001 /可DISPLAY 可INPUT
+  預設值:無
+  校驗:1.不允许空白
+       2.輸入的門店編號應於組織樹中屬於當前組織及其下級展至底層的各組織         
+  帶值:織織說明
+  計算或處理:1.修改時，此欄位不允許更改
+             2.新增時，輸入門店編號後，抓取門店商品清單(rtdx_t)中的商品資訊 ，自動產生單身的商品資料
+                     
+●開窗處理：
+  參考函式：依標準查詢視窗 
+  設定類型=1.依店群時
+         查詢欄位：[T:店群基本資料檔][C:店群編號],[T:多語言檔][C:說明(簡稱)]
+         過濾條件：有效的店群基本资料   AND  店群性质=2.採購店群
+]]>
+    </sa_field>
+    <sa_field name="rtkf002">
+      <![CDATA[商品編號:
+  ●欄位控管：
+     資料欄位:rtkf002/可Display可Input
+     允許空白:No
+     預設值:無
+     校驗:1.不允许空白
+          2.同門店內不允許重複商品編號
+          3.需存在門店商品清單中(rtdx_t)
+  帶值:品名/品類及說明/庫存單位/採購方式/主供應商及名稱
+  計算或處理:無
+●開窗處理：
+  參考函式：依標準查詢視窗 
+  查詢欄位：[T:門店商品清單檔].商品編號,品名,規格,商品品類及說明,採購方式,主供應商及名稱
+  過濾條件：有效的資料且門店編號=單頭門店編號
+]]>
+    </sa_field>
+    <sa_field name="rtkf004">
+      <![CDATA[採購類型：
+   ●欄位控管：
+     資料欄位:rtdx027/Display Only
+     允許空白:不可空白
+     預設值: 無
+     資料選項來源: SCC6014
+     校驗:無
+     帶值:無
+     計算或處理:無
+]]>
+    </sa_field>
+    <sa_field name="rtkf005">
+      <![CDATA[供應商：
+   ●欄位控管：
+     資料欄位:rtdx031 /Display Only
+     預設值:於輸入商品編號後，自動由門店商品清單檔中的主供應商帶入，且不可修改
+     校驗:無          
+     帶值:1.顯示時將[T:交易對象多語言檔].[C:簡稱]帶回欄位後面顯示
+     計算或處理:無
+
+   ●開窗處理：
+  
+       參考函式：依標準查詢視窗 
+       查詢欄位：[T:交易對象主檔].[C:交易對象編號],[T:交易對象多語言檔].[C:簡稱]
+       查詢條件：[T:交易對象主檔].[C:交易對象類型]='1' OR '3'
+       回值類型：多重回值
+     
+]]>
+    </sa_field>
+    <sa_field name="rtkf006">
+      <![CDATA[目標庫存天數：
+●欄位控管：
+  資料欄位: rtkf006/可INPUT 可Display
+  預設值:   無 
+  校驗:1.可空白
+       2.如有輸入，不可<=0
+  帶值:無
+  計算或處理:無
+
+]]>
+    </sa_field>
+    <sa_field name="rtkf007">
+      <![CDATA[安全庫存天數：
+●欄位控管：
+  資料欄位: rtkf007/可Input
+  預設值:   無 
+  校驗:1.可空白,由後續補貨模型回填
+       2.如有輸入，不可<=0
+  帶值:無
+  計算或處理:無
+ 
+
+]]>
+    </sa_field>
+    <sa_field name="rtkf008">
+      <![CDATA[最小庫存天數：
+●欄位控管：
+  資料欄位: rtkf008/可Input
+  預設值:   無 
+  校驗:1.可空白
+       2.如有輸入，不可<=0
+  帶值:無
+  計算或處理:無
+]]>
+    </sa_field>
+    <sa_field name="rtkf009">
+      <![CDATA[安全庫存量：
+●欄位控管：
+  資料欄位: rtkf009/Display Only
+  預設值:   無 
+  校驗:無
+  帶值:無
+  計算或處理:由貨架管理回寫，不維護
+]]>
+    </sa_field>
+    <sa_field name="rtkf010">
+      <![CDATA[DMS:
+●欄位控管：
+  資料欄位: rtkf010/Display Only
+  預設值:   無 
+  校驗:1.可空白,由後續補貨模型回填
+       2.如有輸入，不可<=0
+  帶值:無
+  計算或處理:無
+]]>
+    </sa_field>
+    <sa_field name="rtkf011">
+      <![CDATA[促销DMS:
+●欄位控管：
+  資料欄位: rtkf011/Display Only
+  預設值:   無 
+  校驗:1.可空白,由後續補貨模型回填
+       2.如有輸入，不可<=0
+  帶值:無
+  計算或處理:無
+]]>
+    </sa_field>
+    <sa_field name="s_rtkf">
+      <![CDATA[]]>
+    </sa_field>
+    <sa_field name="主視窗">
+      <![CDATA[程式說明及目的： 設定各門店商品的自動補貨參數，供自動補貨計算時應用。
+標準作業功能取消：複制
+作業類型：基本資料 維護作業
+輸入模式：假雙檔無搭配任何方案F003_00
+作業資料來源(Master)：
+	資料來源表：rtkf_t(門店商品自動補貨參數檔)
+	相關資料表：rtdx_t(門店商品清單)
+
+]]>
+    </sa_field>
+    <sa_act name="PopupMenuRole1">
+      <![CDATA[1.依門店補貨參數中的"補貨模型"(S-CIR-1000)值，抓取補貨模型資訊
+2.單身各商品的依補貨模型中的"品類參數預設"中的資訊，"安全庫存天數"/"最小庫存天數"/ "DMS預設值" / "促銷PDMS預設值"
+  依商品品類對應回寫
+]]>
+    </sa_act>
+  </sa_spec>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

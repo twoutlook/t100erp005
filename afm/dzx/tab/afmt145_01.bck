@@ -1,0 +1,61 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="afmt145_01" module="afm" jobmode="N" type="c01a" industry="std" fix_arg="0" crtid="02291" crtdt="2015-12-16 09:30:36" modid="02291" moddt="2015-12-18 10:01:49" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" tabver="10001" description="整批產生">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="fmctsite,fmctsite_desc(chr80),fmctld,fmctld_desc(chr80),fmctdocno,fmctcomp,fmctdocdt,fmct001"/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="insert" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="afm" filename="afmt145_01" method="dialog">
+    <section id="input">
+      <input id="head" field="fmctsite,fmctld,fmctdocno,fmctcomp,fmctdocdt,fmct001"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="fmctsite,fmctld,fmctdocno,fmctcomp,fmctdocdt,fmct001"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="fmctdocno"/>
+      <set id="head" type="no_entry" field="fmctdocno"/>
+    </init>
+    <init id="head">
+      <column id="fmctsite">
+        <after>
+          <reference field="fmctsite_desc" ref_field="fmct_t.fmctsite" map_field="fmctsite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="fmctsite_desc"/>
+      <column id="fmctld">
+        <after>
+          <reference field="fmctld_desc" ref_field="fmct_t.fmctld" map_field="fmctent,fmctld" ref_sql="SELECT glaal002 FROM glaal_t WHERE glaalent=$varg_enterprise$var AND glaalld=? AND glaal001=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_authorised_ld" state="i"/>
+        <controlp form="q_authorised_ld" state="c"/>
+      </column>
+      <column id="fmctld_desc"/>
+      <column id="fmctdocno">
+        <controlp form="q_ooba002_1" state="i"/>
+        <controlp form="q_fmctdocno" state="c"/>
+      </column>
+      <column id="fmctcomp">
+        <controlp form="q_ooef001" state="i"/>
+        <controlp form="q_ooef001" state="c"/>
+      </column>
+      <column id="fmctdocdt"/>
+      <column id="fmct001" type="S" default="1"/>
+    </init>
+  </form>
+  <dataset>
+    <head id="fmct_t" pk="fmctdocno">
+      <sql id="forupd_sql" type="sql" query="SELECT fmctsite,&apos;&apos;,fmctld,&apos;&apos;,fmctdocno,fmctcomp,fmctdocdt,fmct001 FROM fmct_t WHERE fmctent= ? AND fmctdocno=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" order="fmctdocno"/>
+    </head>
+  </dataset>
+</assembly>
+

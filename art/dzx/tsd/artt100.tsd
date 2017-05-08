@@ -1,0 +1,929 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<spec prog="artt100" std_prog="artt100" erpver="1.0" ver="4" module="ART" type="M" booking="Y" designer_ver="1.0" class="t" env="s" zone="t10prd" identity="s">
+  <other>
+    <code_template value="F" status="u"/>
+    <free_style value="Y" status="u"/>
+    <start_arg value="" status="u"/>
+  </other>
+  <toolbar items="delete,exporttoexcel,insert,modify,output,query,reproduce"/>
+  <table ver="1" cite_std="N">
+    <tbl name="rtbc_t" main="Y" head="Y" pk="" fk_detail="" parent="" fk_master="" src="s" upper_table="" upper_key="" this_key="" status="">
+      <sr name="s_browse" src="s" insert="Y" delete="Y" append="Y" cascade="N" kind="Table" status=""/>
+    </tbl>
+  </table>
+  <all cite_std="N" ver="1" src="s" status="">
+    <![CDATA[程式說明及目的：維護企業底下所有營運據點資料
+作業功能：新增/修改/列印/匯出Excel/查詢/條件查詢/條件儲存/相關文件/說明/離開
+作業類型：基本資料維護作業
+輸入模式：單檔搭配查詢方案模式F001_sc
+作業資料來源(Master)：
+ 資料來源表：rtbc_t (門店資訊准入檔)
+ 關聯資料表：rtbcl_t(門店資訊多語言檔)
+             ooall_t(參照表多語言檔)
+             oocgl_t(國家地區多語言檔)
+             gzcbl_t(系統分類值多語言檔)
+             ooail_t(幣別檔多語言檔)
+
+=================================
+1.地址頁籤的畫面是嵌入aooi350_01子作業的畫面,裡面欄位的處理由aooi350_01來做
+2.通訊方式頁籤的畫面是嵌入aooi350_02子作業的畫面,裡面欄位的處理由aooi350_02來做
+3.法人類型預設為 N.非法人 (參考SCC 42) 
+
+=================================
+至azzi903中設定相關作業 
+aooi100組織基本資料維護作業
+agli010帳別資料維護作業
+aooi020國家地區維護作業
+aooi070參照表維護作業
+
+
+]]>
+  </all>
+  <field cite_std="N" name="b_rtbc000" ver="1" src="s" column="rtbc000" table="rtbc_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="32" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_rtbc001" ver="1" src="s" column="rtbc001" table="rtbc_t" attribute="" type="" req="" i_zoom="" c_zoom="q_ooef001_3" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_rtbcdocdt" ver="1" src="s" column="rtbcdocdt" table="rtbc_t" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_rtbcdocno" ver="1" src="s" column="rtbcdocno" table="rtbc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_rtbcsite" ver="2" src="s" column="rtbcsite" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="N" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="b_rtbcunit" ver="1" src="s" column="rtbcunit" table="rtbc_t" attribute="" type="" req="" i_zoom="q_ooed004" c_zoom="q_ooed004" chk_ref="v_ooed004" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc000" ver="1" src="s" column="rtbc000" table="rtbc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="32" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc001" ver="2" src="s" column="rtbc001" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooef001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[門店編號：
+●欄位處理：
+  校驗:
+    1.允許空白: Yes，但門店資訊確認時，不允許空白
+    2.當申請類別為'新增'時，應檢查輸入的值不可存在[T:組織基本資料檔].[C:組織編號]中
+    3.當申請類別為'修改'時，應檢查輸入的值應存在[T:組織基本資料檔].[C:組織編號]中
+
+  帶值:
+    1.當申請類別為'修改'時，供應商編號輸入完後應自動將供應商相關主檔中的欄位帶至畫面上
+      相關檔案：[T:組織基本資料檔]
+                          [T:組織基本資料多語言檔]
+
+  計算或處理:
+    1.申請類別為'修改'時，應判斷是否有同門店編號，且未確認的門店資訊准入單，錯誤訊息「已存在一張相同門店編號,但未拋轉的門店資訊准入單!」
+
+
+●開窗處理：
+   1.查詢參考函式：q_ooef001
+                                  where = 'ooef304='Y'門店'
+   2.當申請類型 為 I.新增 時,不提供開窗
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc002" ver="1" src="s" column="rtbc002" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc003" ver="2" src="s" column="rtbc003" table="rtbc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="N" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="RadioGroup" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc004" ver="1" src="s" column="rtbc004" table="rtbc_t" attribute="" type="" req="Y" i_zoom="q_ooal002_2" c_zoom="q_ooal002_2" chk_ref="v_ooal002_3" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc005" ver="1" src="s" column="rtbc005" table="rtbc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[單據據點代號：
+   ●欄位控管：
+     校驗:1.輸入值不可重複
+
+     計算或處理:1.依據參數設定(目前參數Table未訂,待後補),若輸入值超過規定長度需截斷
+                          2.此欄位值均轉為大寫]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc006" ver="1" src="s" column="rtbc006" table="rtbc_t" attribute="" type="" req="Y" i_zoom="q_oocg001" c_zoom="q_oocg001" chk_ref="v_oocg001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc007" ver="1" src="s" column="rtbc007" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc008" ver="1" src="s" column="rtbc008" table="rtbc_t" attribute="" type="" req="Y" i_zoom="q_ooal002_5" c_zoom="q_ooal002_5" chk_ref="v_ooal002_4" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc009" ver="1" src="s" column="rtbc009" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc010" ver="1" src="s" column="rtbc010" table="rtbc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="25" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc011" ver="1" src="s" column="rtbc011" table="rtbc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="27" default="0" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc012" ver="1" src="s" column="rtbc012" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc013" ver="1" src="s" column="rtbc013" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="10" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc014" ver="1" src="s" column="rtbc014" table="rtbc_t" attribute="" type="" req="Y" i_zoom="q_ooal002_0" c_zoom="q_ooal002_0" chk_ref="v_ooal002_10" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc015" ver="1" src="s" column="rtbc015" table="rtbc_t" attribute="" type="" req="Y" i_zoom="q_ooal002_3" c_zoom="q_ooal002_3" chk_ref="v_ooal002_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc016" ver="1" src="s" column="rtbc016" table="rtbc_t" attribute="" type="" req="Y" i_zoom="q_ooaj002" c_zoom="q_ooaj002" chk_ref="v_ooaj002_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[主幣別編號：
+   ●欄位控管：
+     欄位處理: 進欄位前 如發現rtbc014 為空值時,導回rtbc014
+     校驗:v_ooaj002_1
+             arg1 = rtbc014
+             arg2 = rtbc016
+
+   ●開窗處理：
+     參考函式：q_ooaj002_3
+     新增時過濾條件：arg1=rtbc014]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc017" ver="2" src="s" column="rtbc017" table="rtbc_t" attribute="" type="" req="Y" i_zoom="q_ooef001_2" c_zoom="q_ooef001_2" chk_ref="v_ooef001_1" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[所屬法人:
+  ●欄位控制：
+    校驗:v_ooef001_1
+            arg1 = rtbc017
+
+  ●開窗處理：
+       1.參考函式：q_ooef001_2
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc018" ver="1" src="s" column="rtbc018" table="rtbc_t" attribute="" type="" req="Y" i_zoom="q_gzot001_1" c_zoom="q_gzot001_1" chk_ref="v_gzot001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc019" ver="1" src="s" column="rtbc019" table="rtbc_t" attribute="" type="" req="Y" i_zoom="q_ooal002_11" c_zoom="q_ooal002_11" chk_ref="v_ooal002_2" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc020" ver="1" src="s" column="rtbc020" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc021" ver="1" src="s" column="rtbc021" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[(隱藏)]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc022" ver="1" src="s" column="rtbc022" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[註冊資本：
+  當rtbc003='Y'(代表是法人)時,才需要維護本欄位
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc023" ver="1" src="s" column="rtbc023" table="rtbc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="49" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc024" ver="1" src="s" column="rtbc024" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_pmaa001" c_zoom="q_pmaa001" chk_ref="v_pmaa001_2" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[據點對應客戶/廠商編號：
+   ●欄位控管：
+     其他說明:本欄位用於多角貿易預設用
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc025" ver="1" src="s" column="rtbc025" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[(隱藏)]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc026" ver="2" src="s" column="rtbc026" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_nmas002_3" c_zoom="q_nmas002_3" chk_ref="v_nmas002_2" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc100" ver="1" src="s" column="rtbc100" table="rtbc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6542" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc101" ver="1" src="s" column="rtbc101" table="rtbc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6540" default="3" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc102" ver="1" src="s" column="rtbc102" table="rtbc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6201" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc103" ver="1" src="s" column="rtbc103" table="rtbc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="6541" default="1" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc104" ver="1" src="s" column="rtbc104" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[商圈：
+   ●欄位控管：
+     校驗:1.輸入值須存在 商圈ACC 2076 且為有效資料
+                 呼叫應用元件s_azzi650_chk_exist() 進行校驗
+
+   ●開窗處理：
+     參考函式：q_oocq002
+                        arg1 = '2076'
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc105" ver="2" src="s" column="rtbc105" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_ooef001" c_zoom="q_ooef001" chk_ref="v_ooef001_35" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[可比店：
+所屬法人:
+  ●欄位控制：
+    校驗:v_ooef001_35
+            arg1 = rtbc017
+
+  ●開窗處理：
+       1.參考函式：q_ooef001
+                             where = 'ooef304='Y'門店'
+
+   
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc106" ver="2" src="s" column="rtbc106" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_ooef001" c_zoom="q_ooef001" chk_ref="v_ooef001_35" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[價格參照標準：
+   ●欄位控管：
+     校驗:v_ooef001_35
+             arg1 = 'rtbc106'
+
+   ●開窗處理：  
+       參考函式：q_ooef001
+                         where = 'ooef304='Y'門店'
+   
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc107" ver="1" src="s" column="rtbc107" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="TextEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc108" ver="4" src="s" column="rtbc108" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_pmaa001_15" c_zoom="q_pmaa001_15" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="u">
+    <![CDATA[散客編號：
+   ●欄位控管：
+     校驗:1.輸入值須存在pmaa001，pmaa002 = '2.客戶' 且pmaastus='Y'(已確認)
+              2.查出pmabsite = 'ALL' 且pmaa001 = pmab001的資料 從
+                  pmab087 串至 ooib002 符合 ooib007 = 'Y' 的客戶 (現金交易='Y' 的客戶 即代表散客)
+              3.相關資料於 pmaa_t,pmab_t,ooib_t 的狀態碼均要為 'Y'
+    #20150506校驗新增條件：pmaa230='1'(直接客戶) 且 pmaa092='1' (客戶經營類型為一般)
+
+   ●開窗處理：
+     參考函式：依標準查詢視窗
+     查詢欄位：pmaa001,pmaal004,pmal003
+     新增過濾條件：pmaa002='2'(散客) AND pmaastus='Y'(已確認)
+     #20150506 開窗新增過濾條件：pmaa230='1'(直接客戶) AND pmaa092='1'(客戶經營類型為一般)
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc109" ver="1" src="s" column="rtbc109" table="rtbc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc110" ver="1" src="s" column="rtbc110" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc111" ver="1" src="s" column="rtbc111" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc112" ver="1" src="s" column="rtbc112" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc113" ver="1" src="s" column="rtbc113" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="0" max_compare="" max="" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc114" ver="1" src="s" column="rtbc114" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="&gt;" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc115" ver="1" src="s" column="rtbc115" table="rtbc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="Y" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc116" ver="4" src="s" column="rtbc116" table="rtbc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items=" " default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="u">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc120" ver="1" src="s" column="rtbc120" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="&lt;=" max="100" min_compare="&gt;=" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc121" ver="1" src="s" column="rtbc121" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="&lt;=" max="100" min_compare="&gt;=" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc122" ver="1" src="s" column="rtbc122" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="&lt;=" max="100" min_compare="&gt;=" min="0" can_edit="Y" can_query="Y" widget="Edit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc123" ver="1" src="s" column="rtbc123" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_inaa001_6" c_zoom="q_inaa001_6" chk_ref="v_inaa001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設收貨倉：
+   ●欄位控管：
+     校驗: v_inaa001
+              arg1 = '單頭的門店編號 rtbc001'
+              arg2 = rtbc123                
+     計算或處理:當異動類型為 I.新增時,欄位no_entry
+
+   ●開窗處理：    
+       參考函式：q_inaa001_6
+                           arg1= '單頭的門店編號 rtbc001'  
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc124" ver="1" src="s" column="rtbc124" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_inaa001_6" c_zoom="q_inaa001_6" chk_ref="v_inaa001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設出貨倉：
+   ●欄位控管：
+     校驗: v_inaa001
+              arg1 = '單頭的門店編號 rtbc001'
+              arg2 = rtbc124                
+     計算或處理:當異動類型為 I.新增時,欄位no_entry
+
+   ●開窗處理：    
+       參考函式：q_inaa001_6
+                           arg1= '單頭的門店編號 rtbc001'  
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc125" ver="1" src="s" column="rtbc125" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_inaa001_6" c_zoom="q_inaa001_6" chk_ref="v_inaa001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[預設在途倉：
+   ●欄位控管：
+     校驗: v_inaa001
+              arg1 = '單頭的門店編號 rtbc001'
+              arg2 = rtbc125                
+     計算或處理:當異動類型為 I.新增時,欄位no_entry
+
+   ●開窗處理：    
+       參考函式：q_inaa001_6
+                           arg1= '單頭的門店編號 rtbc001'  
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc150" ver="1" src="s" column="rtbc150" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[門店類別：
+   ●欄位控管：
+     校驗:1.輸入值須存在 商圈ACC 2077 且為有效資料
+                 呼叫應用元件s_azzi650_chk_exist() 進行校驗
+
+   ●開窗處理：
+     參考函式：q_oocq002
+                        arg1 = '2077'
+
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc151" ver="1" src="s" column="rtbc151" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[規模類別：
+   ●欄位控管：
+     校驗:1.輸入值須存在 商圈ACC 2078 且為有效資料
+                 呼叫應用元件s_azzi650_chk_exist() 進行校驗
+
+   ●開窗處理：
+     參考函式：q_oocq002
+                        arg1 = '2078'
+
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc152" ver="1" src="s" column="rtbc152" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[門店週期：
+   ●欄位控管：
+     校驗:1.輸入值須存在 商圈ACC 2079 且為有效資料
+                 呼叫應用元件s_azzi650_chk_exist() 進行校驗
+
+   ●開窗處理：
+     參考函式：q_oocq002
+                        arg1 = '2079'
+
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc153" ver="1" src="s" column="rtbc153" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[銷售區域：
+   ●欄位控管：
+     校驗:1.輸入值須存在 商圈ACC 2080 且為有效資料
+                 呼叫應用元件s_azzi650_chk_exist() 進行校驗
+
+   ●開窗處理：
+     參考函式：q_oocq002
+                        arg1 = '2080'
+
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc154" ver="1" src="s" column="rtbc154" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[銷售省區：
+   ●欄位控管：
+     校驗:1.輸入值須存在 商圈ACC 2081 且為有效資料
+                 呼叫應用元件s_azzi650_chk_exist() 進行校驗
+
+   ●開窗處理：
+     參考函式：q_oocq002
+                        arg1 = '2081'
+
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc155" ver="1" src="s" column="rtbc155" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[銷售地區：
+   ●欄位控管：
+     校驗:1.輸入值須存在 商圈ACC 2082 且為有效資料
+                 呼叫應用元件s_azzi650_chk_exist() 進行校驗
+
+   ●開窗處理：
+     參考函式：q_oocq002
+                        arg1 = '2082'
+
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc156" ver="2" src="s" column="rtbc156" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_dbac001" c_zoom="q_dbac001" chk_ref="v_dbac001" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[銷售地區：rtbc156
+(20141121調整)
+1.銷售片區改抓 adbi252, ACC(2083)維護作業(arti025) 刪掉
+   校驗：v_dbac001, arg1 = rtbc156
+2.存檔時判斷銷售片區如有值，應check銷售片區與主要送貨地址對應的片區是否相同，如不同應自動更新
+3.維護完地址資訊後，應將勾選主要送貨地址對應的片區同步易銷售片區
+4.若主要送貨地址有設對應地片區，則不可修改
+
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc157" ver="1" src="s" column="rtbc157" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[其他屬性一：
+   ●欄位控管：
+     校驗:1.輸入值須存在 商圈ACC 2084 且為有效資料
+                 呼叫應用元件s_azzi650_chk_exist() 進行校驗
+
+   ●開窗處理：
+     參考函式：q_oocq002
+                        arg1 = '2084'
+
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc158" ver="1" src="s" column="rtbc158" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[其他屬性二
+   ●欄位控管：
+     校驗:1.輸入值須存在 商圈ACC 2085 且為有效資料
+                 呼叫應用元件s_azzi650_chk_exist() 進行校驗
+
+   ●開窗處理：
+     參考函式：q_oocq002
+                        arg1 = '2085'
+
+
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc159" ver="1" src="s" column="rtbc159" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[其他屬性三：
+   ●欄位控管：
+     校驗:1.輸入值須存在 商圈ACC 2086 且為有效資料
+                 呼叫應用元件s_azzi650_chk_exist() 進行校驗
+
+   ●開窗處理：
+     參考函式：q_oocq002
+                        arg1 = '2086']]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc160" ver="1" src="s" column="rtbc160" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[其他屬性四：
+   ●欄位控管：
+     校驗:1.輸入值須存在 商圈ACC 2087 且為有效資料
+                 呼叫應用元件s_azzi650_chk_exist() 進行校驗
+
+   ●開窗處理：
+     參考函式：q_oocq002
+                        arg1 = '2087'
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc161" ver="1" src="s" column="rtbc161" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[其他屬性五：
+   ●欄位控管：
+     校驗:1.輸入值須存在 商圈ACC 2088 且為有效資料
+                 呼叫應用元件s_azzi650_chk_exist() 進行校驗
+
+   ●開窗處理：
+     參考函式：q_oocq002
+                        arg1 = '2088']]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc162" ver="1" src="s" column="rtbc162" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[其他屬性六：
+   ●欄位控管：
+     校驗:1.輸入值須存在 商圈ACC 2089 且為有效資料
+                 呼叫應用元件s_azzi650_chk_exist() 進行校驗
+
+   ●開窗處理：
+     參考函式：q_oocq002
+                        arg1 = '2089'
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc163" ver="1" src="s" column="rtbc163" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[其他屬性七：
+   ●欄位控管：
+     校驗:1.輸入值須存在 商圈ACC 2090 且為有效資料
+                 呼叫應用元件s_azzi650_chk_exist() 進行校驗
+
+   ●開窗處理：
+     參考函式：q_oocq002
+                        arg1 = '2090'
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc164" ver="1" src="s" column="rtbc164" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[其他屬性八：
+   ●欄位控管：
+     校驗:1.輸入值須存在 商圈ACC 2091 且為有效資料
+                 呼叫應用元件s_azzi650_chk_exist() 進行校驗
+
+   ●開窗處理：
+     參考函式：q_oocq002
+                        arg1 = '2091'
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc165" ver="1" src="s" column="rtbc165" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[其他屬性九：
+   ●欄位控管：
+     校驗:1.輸入值須存在 商圈ACC 2092 且為有效資料
+                 呼叫應用元件s_azzi650_chk_exist() 進行校驗
+
+   ●開窗處理：
+     參考函式：q_oocq002
+                        arg1 = '2092'
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbc166" ver="1" src="s" column="rtbc166" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_oocq002" c_zoom="q_oocq002" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[其他屬性十：
+   ●欄位控管：
+     校驗:1.輸入值須存在 商圈ACC 2093 且為有效資料
+                 呼叫應用元件s_azzi650_chk_exist() 進行校驗
+
+   ●開窗處理：
+     參考函式：q_oocq002
+                        arg1 = '2093']]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbcacti" ver="1" src="s" column="rtbcacti" table="rtbc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="CheckBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbccnfdt" ver="1" src="s" column="rtbccnfdt" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbccnfid" ver="1" src="s" column="rtbccnfid" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbccrtdp" ver="1" src="s" column="rtbccrtdp" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbccrtdt" ver="1" src="s" column="rtbccrtdt" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbccrtid" ver="1" src="s" column="rtbccrtid" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbcdocdt" ver="1" src="s" column="rtbcdocdt" table="rtbc_t" attribute="" type="" req="Y" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[單據日期：
+   預設值:系統日期 g_todoay
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbcdocno" ver="1" src="s" column="rtbcdocno" table="rtbc_t" attribute="" type="" req="Y" i_zoom="q_ooba002_1" c_zoom="q_rtbcdocno" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[申請單號：
+   ●欄位控管：
+     預設值: 呼叫s_arti200_get_def_doc_type 取得預設單別
+     校驗:
+        1.呼叫s_aooi200_chk_slip
+
+     計算或處理:
+        1.當新增狀態時才可輸入單別，修改狀態時此欄位為NoEntry
+        2.新增存檔時，依此欄位輸入的單據別CALL 自動編碼應用元件(s_aooi200_gen_docno)自動編單據編號
+
+   ●開窗處理：
+        1.查詢時：
+          參考函式：q_rtbcdocno
+
+        2.新增：
+          參考函式：q_ooba002_1
+                             arg1: 當前登入組織設定的單據別使用參照表
+                             arg2: 'artt100'
+]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbcmoddt" ver="1" src="s" column="rtbcmoddt" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="DateEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbcmodid" ver="1" src="s" column="rtbcmodid" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbcowndp" ver="1" src="s" column="rtbcowndp" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooeg001_9" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbcownid" ver="1" src="s" column="rtbcownid" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="q_ooag001" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="N" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbcsite" ver="2" src="s" column="rtbcsite" table="rtbc_t" attribute="" type="" req="Y" i_zoom="q_ooef001_24" c_zoom="q_ooef001_24" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[開窗和校驗根據aooi500設置動態控制]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbcstus" ver="1" src="s" column="rtbcstus" table="rtbc_t" attribute="" type="" req="N" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ComboBox" status="">
+    <![CDATA[]]>
+  </field>
+  <field cite_std="N" name="rtbc_t.rtbcunit" ver="2" src="s" column="rtbcunit" table="rtbc_t" attribute="" type="" req="N" i_zoom="q_ooed004_3" c_zoom="q_ooed004_3" chk_ref="v_ooed004" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="Y" can_query="Y" widget="ButtonEdit" status="">
+    <![CDATA[制定組織：
+   ●欄位控管：
+     校驗: v_ooed004 
+             arg1: rtbcunit
+             arg2:'2.營運組織'
+             arg3:g_site
+       
+   ●開窗處理：
+     函式:  q_ooed004
+             arg1:'2.營運組織'
+             arg2:g_site
+]]>
+  </field>
+  <field cite_std="N" name="combobox_1" ver="4" src="s" column="" table="" attribute="" type="" req="" i_zoom="" c_zoom="" chk_ref="" items="" default="" max_compare="" max="" min_compare="" min="" can_edit="" can_query="" widget="" status="d">
+    <![CDATA[]]>
+  </field>
+  <prog_rel/>
+  <ref_field>
+    <rfield cite_std="N" ver="1" name="b_rtbc001_desc" src="s" depend_field="b_rtbc001" correspon_key="rtbcdocno" ref_table="rtbcl_t" ref_fk="rtbcldocno" ref_dlang="rtbcl001" ref_rtn="rtbcl002" status=""/>
+    <rfield cite_std="N" ver="1" name="b_rtbc001_desc_desc" src="s" depend_field="b_rtbc001_desc" correspon_key="rtbcdocno" ref_table="rtbcl_t" ref_fk="rtbcldocno" ref_dlang="rtbcl001" ref_rtn="rtbcl003" status=""/>
+    <rfield cite_std="N" ver="2" name="b_rtbcsite_desc" src="s" depend_field="b_rtbcsite" correspon_key="rtbcsite" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="b_rtbcunit_desc" src="s" depend_field="b_rtbcunit" correspon_key="rtbcent,rtbcunit" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc004_desc" src="s" depend_field="rtbc_t.rtbc004" correspon_key="&apos;3&apos;,rtbc004" ref_table="ooall_t" ref_fk="ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc006_desc" src="s" depend_field="rtbc_t.rtbc006" correspon_key="rtbc006" ref_table="oocgl_t" ref_fk="oocgl001" ref_dlang="oocgl002" ref_rtn="oocgl003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc008_desc" src="s" depend_field="rtbc_t.rtbc008" correspon_key="&apos;4&apos;,rtbc008" ref_table="ooall_t" ref_fk="ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc014_desc" src="s" depend_field="rtbc_t.rtbc014" correspon_key="rtbcent,&apos;10&apos;,rtbc014" ref_table="ooall_t" ref_fk="ooallent,ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc015_desc" src="s" depend_field="rtbc_t.rtbc015" correspon_key="rtbcent,&apos;1&apos;,rtbc015" ref_table="ooall_t" ref_fk="ooallent,ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc016_desc" src="s" depend_field="rtbc_t.rtbc016" correspon_key="rtbc016" ref_table="ooail_t" ref_fk="ooailent,ooail001" ref_dlang="ooail002" ref_rtn="ooail003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc017_desc" src="s" depend_field="rtbc_t.rtbc017" correspon_key="rtbc017" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc018_desc" src="s" depend_field="rtbc_t.rtbc018" correspon_key="rtbc018" ref_table="gzot_t" ref_fk="gzot001" ref_dlang="" ref_rtn="gzot002" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc019_desc" src="s" depend_field="rtbc_t.rtbc019" correspon_key="&apos;2&apos;,rtbc019" ref_table="ooall_t" ref_fk="ooall001,ooall002" ref_dlang="ooall003" ref_rtn="ooall004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc024_desc" src="s" depend_field="rtbc_t.rtbc024" correspon_key="rtbc024" ref_table="pmaal_t" ref_fk="pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal003" status=""/>
+    <rfield cite_std="N" ver="2" name="rtbc026_desc" src="s" depend_field="rtbc_t.rtbc026" correspon_key="rtbc026" ref_table="nmaal_t" ref_fk="nmaal001" ref_dlang="nmaal002" ref_rtn="nmaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc104_desc" src="s" depend_field="rtbc_t.rtbc104" correspon_key="rtbcent,&apos;2076&apos;,rtbc104" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc105_desc" src="s" depend_field="rtbc_t.rtbc105" correspon_key="rtbcent,rtbc105" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc106_desc" src="s" depend_field="rtbc_t.rtbc106" correspon_key="rtbcet,rtbc106" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc108_desc" src="s" depend_field="rtbc_t.rtbc108" correspon_key="rtbcent,rtbc108" ref_table="pmaal_t" ref_fk="pmaalent,pmaal001" ref_dlang="pmaal002" ref_rtn="pmaal003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc123_desc" src="s" depend_field="rtbc_t.rtbc123" correspon_key="rtbc123" ref_table="inaa_t" ref_fk="inaa001" ref_dlang="" ref_rtn="inaa002" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc124_desc" src="s" depend_field="rtbc_t.rtbc124" correspon_key="rtbc124" ref_table="inaa_t" ref_fk="inaa001" ref_dlang="" ref_rtn="inaa002" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc125_desc" src="s" depend_field="rtbc_t.rtbc125" correspon_key="rtbc125" ref_table="inaa_t" ref_fk="inaa001" ref_dlang="" ref_rtn="inaa002" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc150_desc" src="s" depend_field="rtbc_t.rtbc150" correspon_key="rtbcent,&apos;2077&apos;,rtbc150" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc151_desc" src="s" depend_field="rtbc_t.rtbc151" correspon_key="rtbcent,&apos;2078&apos;,rtbc151" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc152_desc" src="s" depend_field="rtbc_t.rtbc152" correspon_key="rtbcent,&apos;2079&apos;,rtbc152" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc153_desc" src="s" depend_field="rtbc_t.rtbc153" correspon_key="rtbcent,&apos;2080&apos;,rtbc153" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc154_desc" src="s" depend_field="rtbc_t.rtbc154" correspon_key="rtbcent,&apos;2081&apos;,rtbc154" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc155_desc" src="s" depend_field="rtbc_t.rtbc155" correspon_key="rtbcent,&apos;2082&apos;,rtbc155" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc156_desc" src="s" depend_field="rtbc_t.rtbc156" correspon_key="rtbcent,&apos;2083&apos;,rtbc156" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc157_desc" src="s" depend_field="rtbc_t.rtbc157" correspon_key="rtbcent,&apos;2084&apos;,rtbc157" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc158_desc" src="s" depend_field="rtbc_t.rtbc158" correspon_key="rtbcent,&apos;2085&apos;,rtbc158" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc159_desc" src="s" depend_field="rtbc_t.rtbc159" correspon_key="rtbcent,&apos;2086&apos;,rtbc159" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc160_desc" src="s" depend_field="rtbc_t.rtbc160" correspon_key="rtbcent,&apos;2087&apos;,rtbc160" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc161_desc" src="s" depend_field="rtbc_t.rtbc161" correspon_key="rtbcent,&apos;2088&apos;,rtbc161" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc162_desc" src="s" depend_field="rtbc_t.rtbc162" correspon_key="rtbcent,&apos;2089&apos;,rtbc162" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc163_desc" src="s" depend_field="rtbc_t.rtbc163" correspon_key="rtbcent,&apos;2090&apos;,rtbc163" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc164_desc" src="s" depend_field="rtbc_t.rtbc164" correspon_key="rtbcent,&apos;2091&apos;,rtbc164" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc165_desc" src="s" depend_field="rtbc_t.rtbc165" correspon_key="rtbcent,&apos;2092&apos;,rtbc165" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbc166_desc" src="s" depend_field="rtbc_t.rtbc166" correspon_key="rtbcent,&apos;2093&apos;,rtbc166" ref_table="oocql_t" ref_fk="oocqlent,oocql001,oocql002" ref_dlang="oocql003" ref_rtn="oocql004" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbccnfid_desc" src="s" depend_field="rtbc_t.rtbccnfid" correspon_key="rtbccnfid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbccrtdp_desc" src="s" depend_field="rtbc_t.rtbccrtdp" correspon_key="rtbccrtdp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbccrtid_desc" src="s" depend_field="rtbc_t.rtbccrtid" correspon_key="rtbccrtid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbcmodid_desc" src="s" depend_field="rtbc_t.rtbcmodid" correspon_key="rtbcmodid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbcowndp_desc" src="s" depend_field="rtbc_t.rtbcowndp" correspon_key="rtbcowndp" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbcownid_desc" src="s" depend_field="rtbc_t.rtbcownid" correspon_key="rtbcownid" ref_table="ooag_t" ref_fk="ooag001" ref_dlang="" ref_rtn="ooag011" status=""/>
+    <rfield cite_std="N" ver="2" name="rtbcsite_desc" src="s" depend_field="rtbc_t.rtbcsite" correspon_key="rtbcsite" ref_table="ooefl_t" ref_fk="ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+    <rfield cite_std="N" ver="1" name="rtbcunit_desc" src="s" depend_field="rtbc_t.rtbcunit" correspon_key="rtbcent,rtbcunit" ref_table="ooefl_t" ref_fk="ooeflent,ooefl001" ref_dlang="ooefl002" ref_rtn="ooefl003" status=""/>
+  </ref_field>
+  <multi_lang>
+    <mfield cite_std="N" ver="1" name="rtbcl_t.rtbcl002" src="s" depend_field="rtbc_t.rtbcdocno" correspon_key="rtbcent,rtbcdocno" lang_table="rtbcl_t" lang_fk="rtbclent,rtbcldocno" lang_dlang="rtbcl001" lang_rtn="rtbcl002" status="">
+      <![CDATA[]]>
+    </mfield>
+    <mfield cite_std="N" ver="1" name="rtbcl_t.rtbcl003" src="s" depend_field="rtbc_t.rtbcdocno" correspon_key="rtbcent,rtbcdocno" lang_table="rtbcl_t" lang_fk="rtbclent,rtbcldocno" lang_dlang="rtbcl001" lang_rtn="rtbcl003" status="">
+      <![CDATA[]]>
+    </mfield>
+    <mfield cite_std="N" ver="1" name="rtbcl_t.rtbcl004" src="s" depend_field="rtbc_t.rtbcdocno" correspon_key="rtbcent,rtbcdocno" lang_table="rtbcl_t" lang_fk="rtbclent,rtbcldocno" lang_dlang="rtbcl001" lang_rtn="rtbcl004" status="">
+      <![CDATA[]]>
+    </mfield>
+  </multi_lang>
+  <help_code>
+    <hfield cite_std="N" ver="1" name="b_rtbc000" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_rtbc001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_rtbcdocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_rtbcdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="b_rtbcsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="b_rtbcunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="combobox_1" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="d"/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc000" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="rtbc_t.rtbc001" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc002" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="rtbc_t.rtbc003" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc004" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc005" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc006" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc007" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc008" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc009" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc010" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc011" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc012" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc013" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc014" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc015" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc016" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="rtbc_t.rtbc017" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc018" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc019" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc020" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc021" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc022" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc023" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc024" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc025" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="rtbc_t.rtbc026" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc100" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc101" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc102" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc103" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc104" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="rtbc_t.rtbc105" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="rtbc_t.rtbc106" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc107" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="rtbc_t.rtbc108" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc109" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc110" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc111" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc112" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc113" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc114" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc115" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="4" name="rtbc_t.rtbc116" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status="u"/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc120" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc121" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc122" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc123" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc124" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc125" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc150" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc151" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc152" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc153" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc154" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc155" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="rtbc_t.rtbc156" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc157" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc158" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc159" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc160" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc161" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc162" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc163" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc164" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc165" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbc166" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbcacti" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbccnfdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbccnfid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbccrtdp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbccrtdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbccrtid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbcdocdt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbcdocno" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbcmoddt" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbcmodid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbcowndp" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbcownid" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="rtbc_t.rtbcsite" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="1" name="rtbc_t.rtbcstus" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+    <hfield cite_std="N" ver="2" name="rtbc_t.rtbcunit" src="s" help_table="" help_find="" help_dlang="" help_field="" help_wc="" mapping_widget="" status=""/>
+  </help_code>
+  <act cite_std="N" id="delete" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="insert" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="modify" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="output" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="query" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <act cite_std="N" id="reproduce" ver="1" src="s" type="all" gen_code="Y" status="">
+    <![CDATA[]]>
+  </act>
+  <strings>
+    <sfield name="lbl_oofcstus" text="狀態碼" lstr=""/>
+    <sfield name="lbl_oofc001" text="通訊方式識別碼" lstr=""/>
+    <sfield name="lbl_oofc008" text="通訊類型" lstr=""/>
+    <sfield name="lbl_oofc009" text="通訊應用分類" lstr=""/>
+    <sfield name="lbl_oocql004_desc" text="通訊應用分類碼說明" lstr=""/>
+    <sfield name="lbl_oofc012" text="通訊內容" lstr=""/>
+    <sfield name="lbl_oofc010" text="主要通訊方式" lstr=""/>
+    <sfield name="lbl_oofc014" text="簡要代碼" lstr=""/>
+    <sfield name="lbl_oofc011" text="簡要說明" lstr=""/>
+    <sfield name="lbl_oofc015" text="寄發郵件" lstr=""/>
+    <sfield name="lbl_oofc013" text="失效日期" lstr=""/>
+    <sfield name="lbl_dbegin" text="第" lstr=""/>
+    <sfield name="lbl_dsep" text="項(共" lstr=""/>
+    <sfield name="lbl_dend" text="項)" lstr=""/>
+    <sfield name="lbl_oofbstus" text="有效" lstr=""/>
+    <sfield name="lbl_oofb001" text="聯絡地址識別碼" lstr=""/>
+    <sfield name="lbl_oofb019" text="簡要代碼" lstr=""/>
+    <sfield name="lbl_oofb011" text="簡要說明" lstr=""/>
+    <sfield name="lbl_oofb008" text="地址類型" lstr=""/>
+    <sfield name="lbl_oofb009" text="地址應用分類" lstr=""/>
+    <sfield name="lbl_oocql004x" text="地址應用分類碼說明" lstr=""/>
+    <sfield name="lbl_oofb010" text="主要聯絡地址" lstr=""/>
+    <sfield name="lbl_oofb012" text="國家/地區" lstr=""/>
+    <sfield name="lbl_oocgl003_desc" text="國家/地區說明" lstr=""/>
+    <sfield name="lbl_oofb013" text="郵政編號" lstr=""/>
+    <sfield name="lbl_oofb014" text="州/省/直轄市" lstr=""/>
+    <sfield name="lbl_oocil004_desc" text="州/省/直轄市說明" lstr=""/>
+    <sfield name="lbl_oofb015" text="縣/市" lstr=""/>
+    <sfield name="lbl_oockl005_desc" text="說明" lstr=""/>
+    <sfield name="lbl_oofb016" text="行政區域" lstr=""/>
+    <sfield name="lbl_oocml006_desc" text="行政地區說明" lstr=""/>
+    <sfield name="lbl_oofb017" text="地址" lstr=""/>
+    <sfield name="lbl_oofb022" text="送貨站點" lstr=""/>
+    <sfield name="lbl_dbadl003_desc" text="站點簡稱" lstr=""/>
+    <sfield name="lbl_oofb020" text="經度" lstr=""/>
+    <sfield name="lbl_oofb021" text="維度" lstr=""/>
+    <sfield name="lbl_oofb018" text="失效日期" lstr=""/>
+    <sfield name="lbl_rtbcsite" text="申請組織" lstr=""/>
+    <sfield name="lbl_b_rtbcsite_desc" text="申請組織說明" lstr=""/>
+    <sfield name="lbl_rtbcunit" text="制定組織" lstr=""/>
+    <sfield name="lbl_ooefl003" text="說明(簡稱)" lstr=""/>
+    <sfield name="lbl_rtbcdocdt" text="申請日期" lstr=""/>
+    <sfield name="lbl_rtbcdocno" text="單據編號" lstr=""/>
+    <sfield name="lbl_rtbc000" text="申請類別" lstr=""/>
+    <sfield name="lbl_rtbc001" text="門店編號" lstr=""/>
+    <sfield name="lbl_rtbcl002" text="簡稱" lstr=""/>
+    <sfield name="lbl_rtbcl003" text="全稱" lstr=""/>
+    <sfield name="lbl_rtbcacti" text="門店有效" lstr=""/>
+    <sfield name="lbl_rtbcl004" text="助記碼" lstr=""/>
+    <sfield name="page_1" text="門店資訊" lstr=""/>
+    <sfield name="lbl_rtbc017" text="所屬法人" lstr=""/>
+    <sfield name="lbl_rtbc101" text="層級類型" lstr=""/>
+    <sfield name="lbl_rtbc105" text="可比店" lstr=""/>
+    <sfield name="lbl_rtbc102" text="業態" lstr=""/>
+    <sfield name="lbl_rtbc103" text="渠道" lstr=""/>
+    <sfield name="lbl_rtbc100" text="門店狀態" lstr=""/>
+    <sfield name="lbl_rtbc104" text="商圈" lstr=""/>
+    <sfield name="lbl_oocql004" text="說明" lstr=""/>
+    <sfield name="lbl_rtbc106" text="價格參考標準" lstr=""/>
+    <sfield name="lbl_rtbc108" text="散客編號" lstr=""/>
+    <sfield name="lbl_pmaal003" text="交易對象全名" lstr=""/>
+    <sfield name="lbl_rtbc107" text="店慶會計期" lstr=""/>
+    <sfield name="lbl_rtbc115" text="24小時營業" lstr=""/>
+    <sfield name="lbl_rtbc116" text="語言別" lstr=""/>
+    <sfield name="lbl_rtbc109" text="開業日期" lstr=""/>
+    <sfield name="lbl_rtbc110" text="閉店日期" lstr=""/>
+    <sfield name="lbl_rtbc111" text="測量面積" lstr=""/>
+    <sfield name="lbl_rtbc112" text="建築面積" lstr=""/>
+    <sfield name="lbl_rtbc113" text="經營面積" lstr=""/>
+    <sfield name="lbl_rtbc114" text="合作對象總數" lstr=""/>
+    <sfield name="page_5.artt100" text="交易參數" lstr=""/>
+    <sfield name="lbl_rtbc120" text="本店取貨(%)" lstr=""/>
+    <sfield name="lbl_rtbc121" text="異店取貨(%)" lstr=""/>
+    <sfield name="lbl_rtbc122" text="總部配送(%)" lstr=""/>
+    <sfield name="lbl_rtbc123" text="收貨倉" lstr=""/>
+    <sfield name="lbl_inaa002" text="庫位名稱" lstr=""/>
+    <sfield name="lbl_rtbc124" text="出貨倉" lstr=""/>
+    <sfield name="lbl_rtbc125" text="在途倉" lstr=""/>
+    <sfield name="page_info_1" text="異動資訊" lstr=""/>
+    <sfield name="group_belong" text="資料歸屬" lstr=""/>
+    <sfield name="lbl_ownid" text="資料所有者" lstr=""/>
+    <sfield name="lbl_owndp" text="資料所有部門" lstr=""/>
+    <sfield name="lbl_crtid" text="資料建立者" lstr=""/>
+    <sfield name="lbl_crtdp" text="資料建立部門" lstr=""/>
+    <sfield name="lbl_crtdt" text="資料建立日期" lstr=""/>
+    <sfield name="group_state" text="資料異動" lstr=""/>
+    <sfield name="lbl_modid" text="最近修改者" lstr=""/>
+    <sfield name="lbl_moddt" text="最近修改日期" lstr=""/>
+    <sfield name="lbl_cnfid" text="資料確認者" lstr=""/>
+    <sfield name="lbl_cnfdt" text="資料確認日期" lstr=""/>
+    <sfield name="page_7.artt100" text="門店設定" lstr=""/>
+    <sfield name="lbl_rtbc014" text="幣別參照表號" lstr=""/>
+    <sfield name="lbl_ooall004" text="說明" lstr=""/>
+    <sfield name="lbl_rtbc016" text="主幣別編號" lstr=""/>
+    <sfield name="lbl_ooail003" text="說明" lstr=""/>
+    <sfield name="lbl_rtbc015" text="匯率參照表號" lstr=""/>
+    <sfield name="lbl_rtbc006" text="所屬國家地區" lstr=""/>
+    <sfield name="lbl_oocgl003" text="說明" lstr=""/>
+    <sfield name="lbl_rtbc018" text="時區" lstr=""/>
+    <sfield name="lbl_gzot002" text="時區簡碼" lstr=""/>
+    <sfield name="lbl_rtbc019" text="所屬稅區編號" lstr=""/>
+    <sfield name="lbl_rtbc011" text="專屬國家地區功能" lstr=""/>
+    <sfield name="lbl_rtbc013" text="日期顯示格式" lstr=""/>
+    <sfield name="lbl_rtbc023" text="數字/金額顯示格式" lstr=""/>
+    <sfield name="lbl_rtbc025" text="品管參照表號" lstr=""/>
+    <sfield name="lbl_rtbc021" text="法人代表" lstr=""/>
+    <sfield name="lbl_rtbc007" text="上市櫃公司代號" lstr=""/>
+    <sfield name="lbl_rtbc020" text="工商登記號" lstr=""/>
+    <sfield name="lbl_rtbc022" text="註冊資本" lstr=""/>
+    <sfield name="lbl_rtbc010" text="辦公行事曆對應類別" lstr=""/>
+    <sfield name="lbl_rtbc008" text="行事曆參照表號" lstr=""/>
+    <sfield name="lbl_rtbc004" text="單據別參照表號" lstr=""/>
+    <sfield name="lbl_rtbc005" text="單據據點代號" lstr=""/>
+    <sfield name="lbl_rtbc024" text="據點對應客戶/廠商編號" lstr=""/>
+    <sfield name="lbl_rtbc026" text="預設存款銀行帳戶" lstr=""/>
+    <sfield name="lbl_nmaal003" text="說明" lstr=""/>
+    <sfield name="page_3.artt100" text="門店地址" lstr=""/>
+    <sfield name="page_4.artt100" text="通訊方式" lstr=""/>
+    <sfield name="page_9.artt100" text="門店屬性" lstr=""/>
+    <sfield name="lbl_rtbc150" text="門店類別" lstr=""/>
+    <sfield name="lbl_rtbc151" text="規模類別" lstr=""/>
+    <sfield name="lbl_rtbc152" text="門店週期" lstr=""/>
+    <sfield name="lbl_rtbc153" text="銷售區域" lstr=""/>
+    <sfield name="lbl_rtbc154" text="銷售省區" lstr=""/>
+    <sfield name="lbl_rtbc155" text="銷售地區" lstr=""/>
+    <sfield name="lbl_rtbc156" text="銷售片區" lstr=""/>
+    <sfield name="lbl_rtbc157" text="其他屬性一" lstr=""/>
+    <sfield name="lbl_rtbc158" text="其他屬性二" lstr=""/>
+    <sfield name="lbl_rtbc159" text="其他屬性三" lstr=""/>
+    <sfield name="lbl_rtbc160" text="其他屬性四" lstr=""/>
+    <sfield name="lbl_rtbc161" text="其他屬性五" lstr=""/>
+    <sfield name="lbl_rtbc162" text="其他屬性六" lstr=""/>
+    <sfield name="lbl_rtbc163" text="其他屬性七" lstr=""/>
+    <sfield name="lbl_rtbc164" text="其他屬性八" lstr=""/>
+    <sfield name="lbl_rtbc165" text="其他屬性九" lstr=""/>
+    <sfield name="lbl_rtbc166" text="其他屬性十" lstr=""/>
+    <sfield name="page_12.artt100" text="其他" lstr=""/>
+    <sfield name="lbl_rtbc002" text="統一編號" lstr=""/>
+    <sfield name="lbl_rtbc009" text="製造行事曆對應類別" lstr=""/>
+    <sfield name="lbl_rtbc012" text="聯絡對象識別碼" lstr=""/>
+    <sfield name="lbl_hbegin" text="第" lstr=""/>
+    <sfield name="lbl_hsep" text="筆(共" lstr=""/>
+    <sfield name="lbl_hend" text="筆)" lstr=""/>
+    <sfield name="lbl_gzxml001" text="QBE編號" lstr=""/>
+    <sfield name="lbl_gzxml002" text="作業編號" lstr=""/>
+    <sfield name="lbl_gzxml003" text="員工編號" lstr=""/>
+    <sfield name="lbl_gzxml004" text="語言別" lstr=""/>
+    <sfield name="lbl_gzxml005" text="說明" lstr=""/>
+    <sfield name="lbl_gzxml006" text="註記碼" lstr=""/>
+    <sfield name="lbl_rtbcldocno" text="申請單號" lstr=""/>
+    <sfield name="lbl_rtbcl001" text="語言別" lstr=""/>
+    <sfield name="lbl_titlename" text="名稱" lstr=""/>
+    <sfield name="s_azzi933_s01.page_1" text="編輯" lstr=""/>
+    <sfield name="s_azzi933_s01.page_2" text="預覽" lstr=""/>
+    <sfield name="lbl_act_save" text="儲存" lstr=""/>
+    <sfield name="lbl_act_exit" text="取消" lstr=""/>
+  </strings>
+  <sa_spec/>
+  <exclude ver="" cite_std="N" src=""/>
+</spec>

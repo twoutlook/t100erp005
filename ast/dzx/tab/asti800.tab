@@ -1,0 +1,76 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<assembly name="asti800" module="ast" jobmode="N" type="i07" industry="std" fix_arg="0" crtid="08172" crtdt="2016-04-14 11:20:28" modid="08172" moddt="2016-04-14 12:12:30" sdver="0001" cusdt="1900-01-01 00:00:00" cusver="0000" page="1" tabver="10001" description="招商租賃門店參數設定">
+  <structure>
+    <section id="global_var">
+      <var id="head" value="stjasite,stjasite_desc(chr80)"/>
+      <var id="body" page="1" record="s_detail1" page_id="1" value="stja001(chr10),stja002,stja002_desc(chr500),stja003"/>
+      <var id="bs_field" value="stjasite" pk="stjasite" order=""/>
+    </section>
+    <section id="prog_init">
+      <property id="bgjob" type="N"/>
+    </section>
+    <section id="menu">
+      <action id="modify" type="standard"/>
+      <action id="delete" type="standard"/>
+      <action id="insert" type="standard"/>
+      <action id="output"/>
+      <action id="quickprint"/>
+      <action id="reproduce" type="standard"/>
+      <action id="query" type="standard"/>
+    </section>
+  </structure>
+  <form id="0" module="ast" filename="asti800" method="dialog">
+    <section id="input">
+      <input id="head" field="stjasite"/>
+      <input id="body" page="1" field="stja001,stja002,stja003" insert="Y" append="Y" delete="Y"/>
+    </section>
+    <section id="construct">
+      <construct id="head" field="stjasite"/>
+      <construct id="body" page="1" field="stja001,stja002,stja003"/>
+    </section>
+    <init id="field_set">
+      <set id="head" type="entry" field="stjasite"/>
+      <set id="head" type="no_entry" field="stjasite"/>
+      <set id="body" type="entry" field=""/>
+      <set id="body" type="no_entry" field=""/>
+    </init>
+    <init id="head">
+      <column id="stjasite">
+        <after>
+          <reference field="stjasite_desc" ref_field="stja_t.stjasite" map_field="stjasite" ref_sql="SELECT ooefl003 FROM ooefl_t WHERE ooeflent=$varg_enterprise$var AND ooefl001=? AND ooefl002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_ooef001_24" state="i"/>
+        <controlp form="q_ooef001_24" state="c"/>
+      </column>
+      <column id="stjasite_desc"/>
+    </init>
+    <init id="body" page="1">
+      <column id="stja001" type="S" default="1"/>
+      <column id="stja002">
+        <after>
+          <check chkid="v_stae001" id="isExist"/>
+          <reference field="stja002_desc" ref_field="stja_t.stja002" map_field="stja002" ref_sql="SELECT stael003 FROM stael_t WHERE staelent=$varg_enterprise$var AND stael001=? AND stael002=$varg_dlang$var"/>
+        </after>
+        <controlp form="q_stae001_4" state="i"/>
+        <controlp form="q_stae001_4" state="c"/>
+      </column>
+      <column id="stja002_desc"/>
+      <column id="stja003" type="S" default="1">
+        <after>
+          <check id="range" bt="0" bt_type="1" errno="azz-00079" ow="1"/>
+        </after>
+      </column>
+    </init>
+  </form>
+  <dataset>
+    <head id="stja_t" pk="stjasite">
+      <sql id="forupd_sql" type="sql" query="SELECT stjasite,&apos;&apos; FROM stja_t WHERE stjaent= ? AND stjasite=? FOR UPDATE"/>
+      <sql id="cs_sql" type="construct" query="SELECT stjasite,&apos;&apos; FROM stja_t" order="stjasite"/>
+    </head>
+    <body id="stja_t" page="1" linked="" pk="stja001,stja002" fk="stjasite">
+      <sql id="forupd_sql_detail" query="SELECT &apos;&apos;,stja002,&apos;&apos;,stja003 FROM stja_t WHERE stjaent=? AND stjasite=? AND stja001=? AND stja002=? FOR UPDATE"/>
+      <sql id="b_fill_sql" query="SELECT &apos;&apos;,stja002,&apos;&apos;,stja003 FROM stja_t WHERE stjaent= ? AND stjasite=?"/>
+    </body>
+  </dataset>
+</assembly>
+
